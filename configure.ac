@@ -237,7 +237,8 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       echo Will download one form the website. 
       echo This library is only for non-commerical use only.
       MKL=mkl${cpu}.tar.bz2
-      wget -q http://lianqiw.caltech.edu/maos/${MKL} -O /tmp/${MKL} 
+      wget -q http://github.com/downloads/lianqiw/maos/${MKL}  -O /tmp/${MKL} 
+      #wget -q http://lianqiw.caltech.edu/maos/${MKL} -O /tmp/${MKL} 
       tar axvf /tmp/${MKL} -C ${SRC_DIR}/external >/dev/null 2>&1 || exit 1
       rm /tmp/${MKL} >/dev/null 2>&1
    fi

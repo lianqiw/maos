@@ -13,9 +13,3 @@ EXTRA_DIST = doxygen.cfg doxygen_layout.xml
 #be included.
 
 EXTRA_DIST += mex/Makefile mex/write.c mex/read.c mex/io.c mex/io.h
-
-EXTRA_DIST += test/Makefile.am test/Makefile.in test/convert_psfout.c	\
-test/test_cmat2.c test/test_fft.c test/test_proj.c test/test_tomo.c	\
-test/test_accphi.c test/test_draw.c test/test_loc.c test/test_rand.c	\
-test/test_atm.c test/test_eigs.c test/test_mat.c test/test_sanea.c	\
-test/test_chol.c test/test_fd.c test/test_plot.c test/test_sparse.c

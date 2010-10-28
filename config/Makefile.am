@@ -1,8 +1,7 @@
 nobase_dist_pkgdata_DATA=\
-maos/TMT_CurDesign.bin.gz\
-maos/KECK.bin.gz\
-maos/NapMean.bin.gz\
-maos/M3.conf\
+maos/bin/TMT_CurDesign.bin.gz\
+maos/bin/KECK.bin.gz\
+maos/bin/NapMean.bin.gz\
 maos/aper_tmt.conf\
 maos/atm_mk13n25p.conf\
 maos/atm_mk13n50p.conf\
