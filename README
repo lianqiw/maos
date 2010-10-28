@@ -1,0 +1,66 @@
+Profile the code using oprofile
+
+opcontrol --callgraph=16
+opcontrol --start 
+run maos
+opcontrol --stop
+opcontrol --dump
+
+opreport -cgf -l maos | gprof2dot.py -f oprofile | dot -Tpng -o output.png
+or 
+opgprof maos | gprof2dot.py | dot -Tpng -o output.png
+
+Be careful:
+In genseotf and from opd to psf,
+the psf needs to be square (not rectangular) for polar coordinate ccd. because there is a rotation of psf. if psf is rectngular. rotation will cause signal level change
+
+Bugs:
+
+*) 2009-11-28
+   AOS using LAOS geom has similar performance to LAOS. using its own geom has slightly worse performance in NGS modes. Need to understand the reason.
+   Use larger guard should not change the result a lot.
+   Noisy performance is worse than laos.
+
+   suspects: 1) Noise weighting didn't discard cross coupling between r/a gradients
+   2) noise is wrong.
+   
+   found: 
+   *)using matched filter with photon/read out noise gives larger err. replaced the noise model with adding noise to final r/a gradients. The performance is better than laos in LGS modes. 
+   *)Comparing the image betweel i0 and ints: ints has higher peak and lower wing than i0.
+   *)The max of pistat doesn't agree with the max of average i0 psf. it has an distribution that has an mean larger than that of i0 psf which is distributed very differently. On the other hand, the sum of pistat and psf does agree! This is directly related to the fact that I am interpolating/rotating OTF which conserves total PSF energy but doesn't conserv peak intensity if the edge of the OTF is truncated. The integral of OTF is proportional to the peak intensity of the PSF. I can re normalize the integral of rotated OTF to preserve peak intensity of PSF. This also agrees with the fact that the OTFs of the pistat are elliptical with axis along the radial/azimuthal direction.
+   ==>Should rotate PSF instead of OTF.
+   
+*) 2009-12-01
+   Further examination revealed that the SAENA along azimuthal direction is larger than LAOS (using either shifted i0 or true i0).
+   The problem is directly related to the larger wing in i0y1, i0y2 than LAOS. The LAOS version that uses shifted i0 has lowest SANEA. With true i0 has larger.
+   By C code has even larger sanea along azimuthal direction. The larger wing on i0y1, i0y2 is probably related to the fact that the rotated PSF is only enough to form an image the size of detector (small compy). When trying to form i0y1, i0y2, there is an inevitable wrap around that causes the large wing. To fix, either simply shift i0 (no wraping) to form i0y1,i0y2 and i0x1,i0x2, or make compy larger which  is not desired.
+   Decision: will remove computation of i0x1, i0x2, i0y1, i0y2 from gensei and simply shift i0 to form these images in AOS. They won't help even if do accurately.
+This way, I will lose the possibility of doing partial constraint.
+*) 2009-12-01
+   Scaling the precomputed i0 upto match the noramlized area doesn't help.
+   This code is still 10 nm worse than LAOS.
+   Will stop debugging the LGS physical optics. Now debug NGS mode
+
+Changelog:
+
+Collection of knowledge:
+
+About PSF OTF
+
+When you sample the wavefront with certain sampling and number of points. The highest frequency component is determined. Therefore in the PSF, the light is scattered at most to the edge by this highest frequency component, no more, and the total light intensity is perserved, to 1. The PSF *always* sum to 1. If the wavefront have higher order of aberrations that you do not sample, you end up over estimating the strength of the PSF due to aliasing because the high order wavefront that scatters light away from the size of your PSF disappeard. If you had sampled the PSF with higher sampling, some light will be scattered to the out region of the *larger* PSF, and if you cut the larger PSF to smaller PSF, the smaller PSF will not sum to 1.
+When you have to rotate the image,  rotating OTF will preserve the total intensity, and only the highest frequency component that lies in the edge of the OTF will be affected, which affects the high frequency component of your image, but not the total strength. But this method affects the peak intensity!!!
+
+====
+Difference between LAOS and AOS
+*)Matched filter
+	  LAOS shifts i0. One row/col is missing after shift.
+	  AOS shifts PSF and then form i0. No row/col is missing after shift.
+	  The LAOS method has lower error in azimuthal direction than aos method.
+	  modified laos to do the same thing.
+
+
+===
+Parameters to explore after comparing against laos
+1) powfs.cpl
+2) powfs.radrot
+3) powfs.i0scale

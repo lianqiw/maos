@@ -1,0 +1,2 @@
+When converting LAOS sodium profile to AOS sodium profile.
+Makefure the first and last profile ans zero strength to avoid truncation by interpolation

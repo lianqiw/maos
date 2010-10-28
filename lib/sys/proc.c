@@ -1,0 +1,110 @@
+/*
+  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+   Obtain information about system load
+   
+*/
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <math.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <dirent.h>
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#include <mach/mach_init.h>
+#include <mach/mach_host.h>
+#include <mach/mach_types.h>
+#include <mach/task_info.h>
+#include <mach/task.h>
+#include <mach/vm_statistics.h>
+#include <mach/vm_map.h>
+#elif defined(__FreeBSD__)||defined(__NetBSD__)
+#include <sys/resource.h>
+#endif
+#include "common.h"
+#include "misc.h"
+#include "proc.h"
+#include "process.h"
+int NCPU;
+int TCK;
+static __attribute__((constructor))void init(){
+    NCPU= get_ncpu();
+    TCK = sysconf(_SC_CLK_TCK);
+}
+
+double get_usage_cpu(void){
+    static double lasttime=0;
+    double thistime=myclockd();
+    static long user1, tot1;
+    static double cent=100;
+    long user2, tot2;
+    if(thistime >=lasttime+2){//information was too old.
+	read_usage_cpu(&user1, &tot1);
+	usleep(50000);
+    }
+    if(thistime <=lasttime+0.1){
+	return cent;
+    }
+    read_usage_cpu(&user2, &tot2);
+    long user=user2-user1;
+    long tot=tot2-tot1;
+    if(tot==0) 
+	cent=0;
+    else
+	cent=(double)user/(double)tot;
+    lasttime=thistime;
+    user1=user2;
+    tot1=tot2;
+    return cent;
+}
+int get_cpu_avail(void){
+    /*
+      Return number of idle CPUs that are available to run jobs.
+     */
+    int avail=0;
+    double load=get_usage_load();
+    double cent=get_usage_cpu();
+    int nrunning=get_usage_running();
+    info("load=%g, vent=%g, nrun=%d, ncpu=%d\n", load, cent, nrunning, NCPU);
+    if(load>NCPU+1){//don't want to put too much load on the machine.
+	return 0;
+    }
+    avail=(int)round((1.-cent)*NCPU);
+    if(avail>NCPU-nrunning){
+	avail=NCPU-nrunning;
+    }
+    if(avail<0) avail=0;
+    //info("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail);
+    return avail;
+}
+
+void wait_cpu(int nthread){
+    char fnlock[64];
+    snprintf(fnlock,64,"%s/aos.lock", getenv("HOME"));
+    int fd;
+    while((fd=lock_file(fnlock,-1))<0){
+	sleep(1);
+    }
+    while(get_cpu_avail()<nthread-1){
+	sleep(5);
+    }
+    close(fd);//remove lock
+}
+

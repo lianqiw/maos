@@ -1,0 +1,9 @@
+#!/bin/sh
+#gprof -l -a # is not good
+if [ $# -le 1 ];then
+    BIN=maos
+else
+    BIN=$1
+fi
+gprof  "$BIN" |./gprof2dot.py -n0.05 -e0.01 -f prof -s -w |dot -T png >call.png
+gpicview call.png &

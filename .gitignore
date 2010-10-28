@@ -1,0 +1,25 @@
+#Ignore auxilary files created by autotools
+aclocal.m4
+autom4te.cache
+compile
+Makefile.in
+config.guess
+config.h.in
+config.h.in~
+config.sub
+configure
+depcomp
+INSTALL
+install-sh
+ltmain.sh
+m4/libtool.m4
+m4/ltversion.m4
+m4/ltoptions.m4
+missing
+.svn
+#*#
+#Ignore files that are not distributed.
+external/mkl
+
+#Ignore files that are produced by `make`
+lib/tmp.c

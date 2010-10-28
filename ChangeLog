@@ -1,0 +1,115 @@
+2010-10-27 Version 0.6.1
+	Changed mkh by removing renorm optim. This changed DTF SI
+	generation. But improves performance a bit initially
+2010-09-26 Version 0.5.1
+	Implemented documentation for most of functions.
+
+2010-08-20 Version 0.5.0
+	Many Improvements:
+	non-active actuator slaving using active actuators
+	upper DM constraint only on active actuators
+	NGS modes in MVST are orthnormalized. MVST beats ahst in both
+	ztilt and physical optics modes.
+	skycoverage is implemented and tested.
+	Integrated simulations agree with postprocessing.
+
+2010-05-28 Version 0.4.3
+	Fixed FDPCG implementation. See recon_fdpcg.c
+
+2010-05-27 Version 0.4.2
+	Merged dmat/cmat into mat with preprocessor techniques. same for sparse
+
+2010-04-10 Version 0.4.0
+	Fourier Domain Preconditioner CG (PFPCG) is implemented. Works for
+	mixes over sampling ratios for different layers.
+
+2010-03-22 Version 0.3.6
+	Improved the scheduler and monitor. will show correct time and
+	path.
+2010-03-17 Version 0.3.5
+	Implemented dtrat>1 case for MVST.
+	Implemented Rayleigh backscatter modeling
+
+2010-03-12 Version 0.3.3
+	Reorganized .conf
+	Renamed fitting to fit
+        Implemented surface M1, M2, M3.
+	Improved drawing routines.
+
+2010-03-10 Version 0.3.1
+	Fixed MVST implementation. Gives identical results to integrated
+	tomography if use CBS in both tomo/fitting
+
+2009-01-01
+	Improved cembed and prop_grid_pts to speed up a bit Investigated
+	-ffast-math and fount that it changes the atmosphere for Gcc-4.3,
+	but not for gcc-4.1. So not use this flag. But picked two
+	individual flags that helps to speed up a bit.
+
+2009-12-31
+	Improved cembed and accphi by using a+=ratio instead of a=i*ratio
+	inside a loop.In polaris, with optimization flags. Was 27.35 at
+	r945, but reduced to 25.20 at r959
+
+2009-12-30
+	Notes about inline, extern inline, static inline
+	GNU89 definition:
+	*) inline: The function may be inlined, an outline function is
+	always emitted and externally visible. so never put inline in a header.
+	*) static inline: Will not generate an externally visible
+	out-of-line version, though it may generate a file static one.
+	*) extern inline: Will not generate an out-of-line version, but
+	might call one.
+	C99 (or GNU99) definition:
+	*) inline: like GNU "extern inline", no externally visible
+	function is emitted, but one might be called so must exist.
+	*) extern inline: like GNU "inline", externally visible code is
+	emitted.
+	*) static inline: like GNU "static inline". this is the only
+	portable one.
+
+	Conclustion: stick to static inline.
+
+2009-11-25
+	In order to store NGS psf with ideal correction on NGS modes
+	Perfevl is done before wfsgrad for CL. in the end for OL
+	filter_cl and filter_ol united.
+
+2009-12-24
+	Change area normalization to set the largest subaperture to
+	1. This complies to laos default.
+
+2009-11-03
+	Perfevl is fixed for reentrant problem. Changed FoV, LGS siglev to
+	NFIRAOS baseline. (15", 900)Changed randn close_open to
+	open_open. log(0)*0 caused nan.
+
+2009-05-18
+	Initial development. Implemented basic matrix distribution for
+	real, double ,rea complex and double Complex. Implemented random
+	number generators for linear, normal, and poisson
+	distributions. Implemented matrix dot product, vector product,
+	matrix multiplication.
+
+	Need to do: Implement a hash function that can take a pointer and
+	a size and gives an uniq number.  Implement a integer array/matrix
+	to store integer arrays.  Use an array to record the array uid,
+	memory address and struct address. When allocate memory, check
+	whether it is already allocated. When program exits, go over the
+	recorded array to check whether any array is not freeed, which
+	implies memory leak.
+
+	The program should open a socket in a seperate thread to allow
+	talking to it from outside, like to obtain the information of
+	something, or let it stop.
+
+	The program should hash the relevant parameters it used to
+	generate a big array/configuration. Store the parameters and the
+	array in a central place and later load the whole array to speed
+	up simulations.
+
+	Speed and code clarity should have the first priorities.
+
+
+
+

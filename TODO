@@ -1,0 +1,12 @@
+2010-10-10:
+switch from posix shared memory to unix V shared memory.
+
+
+A list of TODOs
+*) Do a zernike decomposition of atmosphere, corrected atmosphere, DM commands, etc Test the generated atmosphere
+*) Look into sub harmornic method to create enough tip/tilt. (Generate tip/tilt and low order screens with coarse sampling but large scale. Then add the correction to the generated atmosphere.)
+*) Write a Fresnel propagator to study near field effects.
+*) Instead of using independent routine drawdaemon, consider using plugin like library like matlab. dynamically load the library if need to draw plots.
+*) Revisint LLT geomtry. keep same sampling as subaperture. But can have more points. The resulted otf have the same sampling of the subaperture image and can be mutiplied directly.
+*) Implement split tomography for single conjugate mode?
+
