@@ -1,0 +1,18 @@
+<area shape="rect" id="node3" href="$dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="208,5,259,35">
+<area shape="rect" id="node5" href="$dmat_8h.html#a9c20ae37907780af63d91312d4fea38" title="creat a X(mat) reference an existing X(mat)." alt="" coords="212,59,255,88">
+<area shape="rect" id="node7" href="$dmat_8h.html#705d6399ce6e7f7064d12f4eb131d47d" title="set values of each element in a X(mat) to val." alt="" coords="211,112,256,141">
+<area shape="rect" id="node9" href="$fdpcg_8c.html#8af00f91380661f9d85542ac9738ba95" title="Prepare data for Tomography Fourier Domain Preconditioner." alt="" coords="183,165,284,195">
+<area shape="rect" id="node11" href="$ahst_8c.html#55c65679c193d90bc7f5175ebb17733f" title="setup NGS modes and reconstructor using AHST for one or two DMs." alt="" coords="180,219,287,248">
+<area shape="rect" id="node13" href="$setup__recon_8c.html#0182734530b87fcf5498aea2e8d1e5c0" title="Setup the deformable mirrors grid aloc." alt="" coords="172,272,295,301">
+<area shape="rect" id="node15" href="$setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix." alt="" coords="157,325,309,355">
+<area shape="rect" id="node17" href="$setup__recon_8c.html#4f4abf13c9b0972de67fab348bb9f470" title="Create the reconstructor to reconstruct the residual focus error due to LGS sodium..." alt="" coords="168,379,299,408">
+<area shape="rect" id="node19" href="$setup__recon_8c.html#61353f3760139816643f225db8e6d3bc" title="Setup gradient operator G0, GA on xloc, aloc." alt="" coords="165,432,301,461">
+<area shape="rect" id="node21" href="$setup__recon_8c.html#fa92eb0639f142dd512c13688b21d813" title="Setup ray tracing operator HX,HA from xloc, aloc to aperture ploc." alt="" coords="167,485,300,515">
+<area shape="rect" id="node23" href="$setup__recon_8c.html#3a5b99570039882f39e51b69236b1a0e" title="Prepare the propagation H matrix for MOAO and compute the reconstructor." alt="" coords="168,539,299,568">
+<area shape="rect" id="node25" href="$setup__recon_8c.html#2bd8394adbdb99d342f9ac9d3a0faa6f" title="compute the MVST split tomography NGS mode reconstructor." alt="" coords="171,592,296,621">
+<area shape="rect" id="node27" href="$setup__recon_8c.html#928f34035de84ed317aa075e7a7ddac9" title="Setting up PLOC grid, which is a coarse sampled (similar to subaperture spacing)..." alt="" coords="172,645,295,675">
+<area shape="rect" id="node29" href="$setup__recon_8c.html#3f6cf2f9b4c4e8dbe3cba7df6a41fa9b" title="Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance..." alt="" coords="164,699,303,728">
+<area shape="rect" id="node31" href="$setup__recon_8c.html#764bf903a38cfc81220e42699e911884" title="assemble tomography matrix." alt="" coords="148,752,319,781">
+<area shape="rect" id="node33" href="$setup__recon_8c.html#2ade74dd6feba7dba0a4b6f38fe134a8" title="Prepares for tomography." alt="" coords="153,805,313,835">
+<area shape="rect" id="node35" href="$setup__recon_8c.html#caa963e8fb3e5e0201f312327e4d94e8" title="wrapps setup_recon_TTR() and setup_recon_DFR() to removal global tip/tilt and differential..." alt="" coords="168,859,299,888">
+<area shape="rect" id="node37" href="$setup__recon_8c.html#93517d5a67108f02872fea3ca166df0a" title="Setup the tomography grids xloc which is used for Tomography." alt="" coords="172,912,295,941">
