@@ -271,11 +271,12 @@ if test "x$have_chol" = "xyes" ;then
 else
     echo "cholmod is not available, will download the source and compile."
     LDCHOL="../external/cholmod/libcholmod.la"
-    CFLAGS="$CFLAGS -I../external/cholmod/Include"
+    CFLAGS="$CFLAGS -I${srcdir}/external/cholmod/Include"
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
 AC_CHECK_HEADERS([unistd.h])
-LDOPTS="$LAPACK $LDFFT $FLIBS $LDARPACK $LDCHOL -lz -lm $LDSYS"
+#LDARPACK and LDCHOL must be before LAPACK and FLIBS
+LDOPTS="$LDARPACK $LDCHOL $LAPACK $LDFFT -lz -lm $LDSYS $FLIBS"
 #put all-static should be behind AC_F77_LIBRARY_LDFLAGS and/or AC_F77_FUNC, otherwise it will panics gcc linking with fortran.
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
 AC_SUBST(OPTS)
