@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: skyc/setup_powfs.c File Reference</title>
+<title>maos-0.6.4: skyc/setup_powfs.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -175,7 +165,7 @@ See <a class="el" href="maos_2setup__powfs_8c.html" title="Setting up WFS geomet
 <a name="l00076"></a>00076         cfree(nominal);
 <a name="l00077"></a>00077 
 <a name="l00078"></a>00078         <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *loc_psf=<a class="code" href="loc_8c.html#9b68fa77107ecb06a9407fe1ad31eb24" title="Create a loc array contains coorindates in a square map of size nx*ny, with sampling...">mksqloc</a>(ncomp, ncomp, dtheta, -ncomp2*dtheta, -ncomp2*dtheta);
-<a name="l00079"></a>00079         powfs[ipowfs].<a class="code" href="structPOWFS__S.html#2ec71b0be1ddaad0b8bf97d534779c19" title="array of dtf for each wvl">dtf</a>[iwvl].<a class="code" href="structDTF__S.html#48ac12e36ce9ecde7e21ad9a240b5f8b" title="The pixel selection.">si</a>=<a class="code" href="mkh_8c.html#30a870f4967f90f2b169b56e2338cf24" title="Create ray tracing operator from coordinate locin to locout.">mkh</a>(loc_psf,loc_ccd,NULL,0,0,1,1);
+<a name="l00079"></a>00079         powfs[ipowfs].<a class="code" href="structPOWFS__S.html#2ec71b0be1ddaad0b8bf97d534779c19" title="array of dtf for each wvl">dtf</a>[iwvl].<a class="code" href="structDTF__S.html#48ac12e36ce9ecde7e21ad9a240b5f8b" title="The pixel selection.">si</a>=<a class="code" href="mkh_8c.html#7164e1a11394d36094ddd13e916a0340" title="Create ray tracing operator from coordinate locin to locout.">mkh</a>(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 <a name="l00080"></a>00080         locfree(loc_psf);
 <a name="l00081"></a>00081         <span class="keywordflow">if</span>(parms-&gt;skyc.dbg){
 <a name="l00082"></a>00082         <a class="code" href="cmat_8h.html#9593e890699be4f48e826d9048018c04" title="User callable function to write dense matrix into a file.">cwrite</a>(powfs[ipowfs].dtf[iwvl].nominal,
@@ -470,7 +460,7 @@ Release memory.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

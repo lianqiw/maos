@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: maos/perfevl.c File Reference</title>
+<title>maos-0.6.4: maos/perfevl.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -303,10 +293,10 @@ Performance evaluation for each direction in parallel mode.
 <a name="l00226"></a>00226 
 <a name="l00227"></a>00227         }<span class="keywordflow">else</span>{
 <a name="l00228"></a>00228             <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#cf71d816fd769fe830d2e03f82c28b12" title="use cubic spline.">cubic</a>){
-<a name="l00229"></a>00229             <a class="code" href="accphi_8c.html#80091f05f81ff011303fed158eda2565" title="like prop_nongrid but with cubic influence functions.">prop_nongrid_cubic</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm], simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,
+<a name="l00229"></a>00229             <a class="code" href="accphi_8c.html#653ec67b44b3a2fb82cd2616c38e16ef" title="like prop_nongrid but with cubic influence functions.">prop_nongrid_cubic</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm], simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,
 <a name="l00230"></a>00230                        aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>, NULL, iopdevl-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,-1,
 <a name="l00231"></a>00231                        displacex, displacey,scale,
-<a name="l00232"></a>00232                        parms-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#fca1c9ed9b0f9ce5a25147eb5906947b" title="Inter-Actuator Coupling coefficient.">iac</a>,1,0,0);
+<a name="l00232"></a>00232                        parms-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#fca1c9ed9b0f9ce5a25147eb5906947b" title="Inter-Actuator Coupling coefficient.">iac</a>,0,0);
 <a name="l00233"></a>00233             }<span class="keywordflow">else</span>{
 <a name="l00234"></a>00234             <a class="code" href="accphi_8c.html#33015a685252b9238783b98a8ec5b159" title="Propagate OPD defines on coordinate locin to coordinate locout.">prop_nongrid</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm], simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,
 <a name="l00235"></a>00235                      aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>, NULL, iopdevl-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,-1,
@@ -326,9 +316,9 @@ Performance evaluation for each direction in parallel mode.
 <a name="l00249"></a>00249         <span class="comment">//TIC;tic;</span>
 <a name="l00250"></a>00250         <span class="comment">//prop is faster than spmulvec</span>
 <a name="l00251"></a>00251         <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#2de7b678eb1df1bcc6fd4af8a3340fd0" title="Array of MOAO.">moao</a>[imoao].<a class="code" href="structMOAO__CFG__T.html#6ccaefa7d6eb62c0bd011e9c79f7cfef" title="Whether use cubic influence function.">cubic</a>){
-<a name="l00252"></a>00252             <a class="code" href="accphi_8c.html#80091f05f81ff011303fed158eda2565" title="like prop_nongrid but with cubic influence functions.">prop_nongrid_cubic</a>(recon-&gt;<a class="code" href="structRECON__T.html#da6266bf34011ea0bdf22ad4863dca9b">moao</a>[imoao].<a class="code" href="structMOAO__T.html#79a3e21d8953ba5034820ecc3957b9ca">aloc</a>,dmevl[ievl][simu-&gt;<a class="code" href="structSIM__T.html#b637adfa4528f55e986cfc7df75f2b01">moao_evl</a>-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>-1]-&gt;p,
+<a name="l00252"></a>00252             <a class="code" href="accphi_8c.html#653ec67b44b3a2fb82cd2616c38e16ef" title="like prop_nongrid but with cubic influence functions.">prop_nongrid_cubic</a>(recon-&gt;<a class="code" href="structRECON__T.html#da6266bf34011ea0bdf22ad4863dca9b">moao</a>[imoao].<a class="code" href="structMOAO__T.html#79a3e21d8953ba5034820ecc3957b9ca">aloc</a>,dmevl[ievl][simu-&gt;<a class="code" href="structSIM__T.html#b637adfa4528f55e986cfc7df75f2b01">moao_evl</a>-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>-1]-&gt;p,
 <a name="l00253"></a>00253                        aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>, NULL, iopdevl-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, -1, 0,0,1,
-<a name="l00254"></a>00254                        parms-&gt;<a class="code" href="structPARMS__T.html#2de7b678eb1df1bcc6fd4af8a3340fd0" title="Array of MOAO.">moao</a>[imoao].<a class="code" href="structMOAO__CFG__T.html#f52f25ca1fec25148e7163d40d059691" title="Inter-actuator-coupling for cubic influence function.">iac</a>, 1,
+<a name="l00254"></a>00254                        parms-&gt;<a class="code" href="structPARMS__T.html#2de7b678eb1df1bcc6fd4af8a3340fd0" title="Array of MOAO.">moao</a>[imoao].<a class="code" href="structMOAO__CFG__T.html#f52f25ca1fec25148e7163d40d059691" title="Inter-actuator-coupling for cubic influence function.">iac</a>, 
 <a name="l00255"></a>00255                        0,0);
 <a name="l00256"></a>00256         }<span class="keywordflow">else</span>{
 <a name="l00257"></a>00257             <a class="code" href="accphi_8c.html#33015a685252b9238783b98a8ec5b159" title="Propagate OPD defines on coordinate locin to coordinate locout.">prop_nongrid</a>(recon-&gt;<a class="code" href="structRECON__T.html#da6266bf34011ea0bdf22ad4863dca9b">moao</a>[imoao].<a class="code" href="structMOAO__T.html#79a3e21d8953ba5034820ecc3957b9ca">aloc</a>,dmevl[ievl][simu-&gt;<a class="code" href="structSIM__T.html#b637adfa4528f55e986cfc7df75f2b01">moao_evl</a>-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>-1]-&gt;p,
@@ -603,7 +593,7 @@ Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

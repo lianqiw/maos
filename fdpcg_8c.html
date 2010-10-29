@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: maos/fdpcg.c File Reference</title>
+<title>maos-0.6.4: maos/fdpcg.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -593,7 +583,7 @@ Prepare data for Tomography Fourier Domain Preconditioner.
 <a name="l00291"></a>00291     <span class="comment">//Concatenate invpsd;</span>
 <a name="l00292"></a>00292     dcomplex *invpsd=calloc(nxtot, <span class="keyword">sizeof</span>(dcomplex));
 <a name="l00293"></a>00293     <span class="keywordtype">long</span> offset=0;
-<a name="l00294"></a>00294     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#654d89a9becf3ea9e32d11e470416f7c" title="information about reconstructed atm">atmr</a>.<a class="code" href="structATMR__CFG__T.html#6a050f8dc89b871fed9d590ba5885bb7" title="use inverse of PSD in tomography instead of biharmonic approx">invpsd</a>){
+<a name="l00294"></a>00294     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#92f6b0b737aa1df6e7544bd56ca5f8e7" title="use inverse of PSD in tomography instead of biharmonic approx">invpsd</a>){
 <a name="l00295"></a>00295     <span class="comment">//forward matrix uses inverse PSD. we use here also.</span>
 <a name="l00296"></a>00296     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
 <a name="l00297"></a>00297         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *tmp=<a class="code" href="dmat_8h.html#7ecadca31195b8b40135b7dbeb808906" title="duplicate a X(mat) array">ddup</a>(recon-&gt;<a class="code" href="structRECON__T.html#313519f327a94f69131d467277321d8a">invpsd</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]);
@@ -1029,7 +1019,7 @@ Free fdpcg related data structs.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:13 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

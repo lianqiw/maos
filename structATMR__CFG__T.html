@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: ATMR_CFG_T Struct Reference</title>
+<title>maos-0.6.4: ATMR_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -103,24 +93,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structATMR__CFG__T.html#7ef59da57ba267630d5fc5e067f75c99">os</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">over sampling factor of xloc over actuator spacing  <a href="#7ef59da57ba267630d5fc5e067f75c99"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structATMR__CFG__T.html#c64e4b93348f8c0544aa76f9c3908c57">pos</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">over sampling factor of ploc over actuator spacing  <a href="#c64e4b93348f8c0544aa76f9c3908c57"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structATMR__CFG__T.html#e0ec245d13404e08afcb1c4670f54348">cone</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">use cone coordinate  <a href="#e0ec245d13404e08afcb1c4670f54348"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structATMR__CFG__T.html#2a286e84160801fd89366d02f005a39e">square</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">use square/rectangular grid instead of tighter irregular grid  <a href="#2a286e84160801fd89366d02f005a39e"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structATMR__CFG__T.html#14584f027f0a847b43f47fbbf53e6324">nps</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of phase screens  <a href="#14584f027f0a847b43f47fbbf53e6324"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structATMR__CFG__T.html#6a050f8dc89b871fed9d590ba5885bb7">invpsd</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">use inverse of PSD in tomography instead of biharmonic approx  <a href="#6a050f8dc89b871fed9d590ba5885bb7"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structATMR__CFG__T.html#868c9e4b83b40ac1df7e6d580ef759f3">guard</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">guard rings of reconstruction grid xloc  <a href="#868c9e4b83b40ac1df7e6d580ef759f3"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains input parameters for the atmospheric reconstruction. 
@@ -262,57 +237,6 @@ over sampling factor of xloc over actuator spacing
 
 </div>
 </div><p>
-<a class="anchor" name="c64e4b93348f8c0544aa76f9c3908c57"></a><!-- doxytag: member="ATMR_CFG_T::pos" ref="c64e4b93348f8c0544aa76f9c3908c57" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structATMR__CFG__T.html#c64e4b93348f8c0544aa76f9c3908c57">ATMR_CFG_T::pos</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-over sampling factor of ploc over actuator spacing 
-<p>
-
-</div>
-</div><p>
-<a class="anchor" name="e0ec245d13404e08afcb1c4670f54348"></a><!-- doxytag: member="ATMR_CFG_T::cone" ref="e0ec245d13404e08afcb1c4670f54348" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structATMR__CFG__T.html#e0ec245d13404e08afcb1c4670f54348">ATMR_CFG_T::cone</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-use cone coordinate 
-<p>
-
-</div>
-</div><p>
-<a class="anchor" name="2a286e84160801fd89366d02f005a39e"></a><!-- doxytag: member="ATMR_CFG_T::square" ref="2a286e84160801fd89366d02f005a39e" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structATMR__CFG__T.html#2a286e84160801fd89366d02f005a39e">ATMR_CFG_T::square</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-use square/rectangular grid instead of tighter irregular grid 
-<p>
-
-</div>
-</div><p>
 <a class="anchor" name="14584f027f0a847b43f47fbbf53e6324"></a><!-- doxytag: member="ATMR_CFG_T::nps" ref="14584f027f0a847b43f47fbbf53e6324" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -330,44 +254,10 @@ number of phase screens
 
 </div>
 </div><p>
-<a class="anchor" name="6a050f8dc89b871fed9d590ba5885bb7"></a><!-- doxytag: member="ATMR_CFG_T::invpsd" ref="6a050f8dc89b871fed9d590ba5885bb7" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structATMR__CFG__T.html#6a050f8dc89b871fed9d590ba5885bb7">ATMR_CFG_T::invpsd</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-use inverse of PSD in tomography instead of biharmonic approx 
-<p>
-
-</div>
-</div><p>
-<a class="anchor" name="868c9e4b83b40ac1df7e6d580ef759f3"></a><!-- doxytag: member="ATMR_CFG_T::guard" ref="868c9e4b83b40ac1df7e6d580ef759f3" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structATMR__CFG__T.html#868c9e4b83b40ac1df7e6d580ef759f3">ATMR_CFG_T::guard</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-guard rings of reconstruction grid xloc 
-<p>
-
-</div>
-</div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2parms_8h.html">parms.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:03 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

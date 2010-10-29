@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: SIM_T Struct Reference</title>
+<title>maos-0.6.4: SIM_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li class="current"><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -307,6 +297,15 @@ STATUS_T *&nbsp;</td><td class="memItemRight" valign="bottom"><b>status</b></td>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a627421bfd2a0fa6b2c746463f075bef"></a><!-- doxytag: member="SIM_T::gcov" ref="a627421bfd2a0fa6b2c746463f075bef" args="" -->
 <a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>gcov</b></td></tr>
 
+<tr><td class="memItemLeft" nowrap align="right" valign="top">thread_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#2201998d1bf3907a381f73a7ad3fa153">wfs_prop_dm</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wrap of data for ray tracing from DM in <a class="el" href="wfsgrad_8c.html" title="contains functions that computes WFS gradients in geometric or physical optics mode...">wfsgrad.c</a>  <a href="#2201998d1bf3907a381f73a7ad3fa153"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7b4cc96acefa449d39faf921dff586ae"></a><!-- doxytag: member="SIM_T::wfs_propdata_dm" ref="7b4cc96acefa449d39faf921dff586ae" args="" -->
+PROPDATA_T *&nbsp;</td><td class="memItemRight" valign="bottom"><b>wfs_propdata_dm</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="500847fe36d1973dcfed62a43528e568"></a><!-- doxytag: member="SIM_T::ploc_stat" ref="500847fe36d1973dcfed62a43528e568" args="" -->
+<a class="el" href="structLOCSTAT__T.html">LOCSTAT_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>ploc_stat</b></td></tr>
+
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="4f9c43677faa9f6745d3220bed8b8977"></a><!-- doxytag: member="SIM_T::nthread" ref="4f9c43677faa9f6745d3220bed8b8977" args="" -->
 int&nbsp;</td><td class="memItemRight" valign="bottom"><b>nthread</b></td></tr>
 
@@ -366,10 +365,28 @@ int&nbsp;</td><td class="memItemRight" valign="bottom"><b>last_report_time</b></
 
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-contains all the run time data struct. <hr>The documentation for this struct was generated from the following file:<ul>
+contains all the run time data struct. <hr><h2>Field Documentation</h2>
+<a class="anchor" name="2201998d1bf3907a381f73a7ad3fa153"></a><!-- doxytag: member="SIM_T::wfs_prop_dm" ref="2201998d1bf3907a381f73a7ad3fa153" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">thread_t* <a class="el" href="structSIM__T.html#2201998d1bf3907a381f73a7ad3fa153">SIM_T::wfs_prop_dm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+wrap of data for ray tracing from DM in <a class="el" href="wfsgrad_8c.html" title="contains functions that computes WFS gradients in geometric or physical optics mode...">wfsgrad.c</a> 
+<p>
+
+</div>
+</div><p>
+<hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:03 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

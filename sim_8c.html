@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: maos/sim.c File Reference</title>
+<title>maos-0.6.4: maos/sim.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -81,6 +71,9 @@ window.onload = initDynSections;
 <tr><td colspan="2"><br><h2>Defines</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="233897295c25911d66bd28ab51efc280"></a><!-- doxytag: member="sim.c::TIMING_MEAN" ref="233897295c25911d66bd28ab51efc280" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>TIMING_MEAN</b></td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="db2d9505bae635c86de4a47561d7d930"></a><!-- doxytag: member="sim.c::PARALLEL" ref="db2d9505bae635c86de4a47561d7d930" args="" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>PARALLEL</b></td></tr>
 
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873">sim</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structAPER__T.html">APER_T</a> *aper, <a class="el" href="structRECON__T.html">RECON_T</a> *recon)</td></tr>
@@ -165,65 +158,85 @@ It calls <a class="el" href="sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84
 <a name="l00082"></a>00082         dcellfree(simu-&gt;<a class="code" href="structSIM__T.html#d248dc53ba37345772d26a2ea1e32472">dmfit_hi</a>);
 <a name="l00083"></a>00083         dcellfree(simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>);
 <a name="l00084"></a>00084         }
-<a name="l00085"></a>00085         <span class="keywordflow">if</span>(CL){<span class="comment">//before wfsgrad so we can apply ideal NGS modes</span>
-<a name="l00086"></a>00086         <a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>(simu);
-<a name="l00087"></a>00087         }
-<a name="l00088"></a>00088         <span class="keywordtype">double</span> ck_1=myclockd(); <span class="keywordtype">double</span> cpu_1=read_self_cpu();
-<a name="l00089"></a>00089         <a class="code" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel.">wfsgrad</a>(simu);
-<a name="l00090"></a>00090         <span class="keywordtype">double</span> ck_2=myclockd(); <span class="keywordtype">double</span> cpu_2=read_self_cpu();
-<a name="l00091"></a>00091         <a class="code" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit.">tomofit</a>(simu);
-<a name="l00092"></a>00092         <span class="keywordtype">double</span> ck_3=myclockd(); <span class="keywordtype">double</span> cpu_3=read_self_cpu();
-<a name="l00093"></a>00093         <a class="code" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter</a>(simu);<span class="comment">//updates dmreal.</span>
-<a name="l00094"></a>00094         <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#da6266bf34011ea0bdf22ad4863dca9b">moao</a>)
-<a name="l00095"></a>00095         <a class="code" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into...">moao_recon</a>(simu);
-<a name="l00096"></a>00096         <span class="keywordtype">double</span> ck_4=myclockd(); <span class="keywordtype">double</span> cpu_4=read_self_cpu();
-<a name="l00097"></a>00097         <span class="keywordflow">if</span>(!CL){<span class="comment">//Only in Open loop</span>
-<a name="l00098"></a>00098         <a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>(simu);
-<a name="l00099"></a>00099         }
-<a name="l00100"></a>00100         <a class="code" href="sim__utils_8c.html#245796513a02d7892e76cea88316394e" title="Save telemetry data during simulation every 50 time steps.">save_simu</a>(simu);
-<a name="l00101"></a>00101         <span class="keywordtype">double</span> ck_5=myclockd();
-<a name="l00102"></a>00102         <span class="keywordtype">long</span> steps_done=iseed*(simend-simstart)+(isim+1-simstart);
-<a name="l00103"></a>00103         <span class="keywordtype">long</span> steps_rest=parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#6021b395d1b8ca9bb3f3449b67ed7935" title="How many simulation seed.">nseed</a>*(simend-simstart)-steps_done;
-<a name="l00104"></a>00104         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;rest=(long)((ck_5-tk_0-(tk_2-tk_1)*(iseed+1))/steps_done*steps_rest
-<a name="l00105"></a>00105                       +(tk_2-tk_1)*(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#6021b395d1b8ca9bb3f3449b67ed7935" title="How many simulation seed.">nseed</a>-iseed-1));
-<a name="l00106"></a>00106         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;laps=(long)(ck_5-tk_0);
-<a name="l00107"></a>00107 <span class="preprocessor">#if TIMING_MEAN == 1</span>
-<a name="l00108"></a>00108 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(isim&gt;simstart+2){
-<a name="l00109"></a>00109         <span class="comment">/*</span>
-<a name="l00110"></a>00110 <span class="comment">          skip first three time steps that </span>
-<a name="l00111"></a>00111 <span class="comment">          are not representative </span>
-<a name="l00112"></a>00112 <span class="comment">          due to missing DM commands</span>
-<a name="l00113"></a>00113 <span class="comment">        */</span>
-<a name="l00114"></a>00114         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;wfs  +=(double)(ck_2-ck_1);
-<a name="l00115"></a>00115         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;recon+=(double)(ck_3-ck_2);
-<a name="l00116"></a>00116         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;cache+=(double)(ck_4-ck_3);
-<a name="l00117"></a>00117         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;eval +=(double)(ck_1-ck_0+ck_5-ck_4);
-<a name="l00118"></a>00118         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;tot  +=(double)(ck_5-ck_0);
-<a name="l00119"></a>00119         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;scale=1./(double)(isim-simstart-2);
-<a name="l00120"></a>00120         }
-<a name="l00121"></a>00121 <span class="preprocessor">#else</span>
-<a name="l00122"></a>00122 <span class="preprocessor"></span>        simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;wfs  =(double)(ck_2-ck_1);
-<a name="l00123"></a>00123         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;recon=(double)(ck_3-ck_2);
-<a name="l00124"></a>00124         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;cache=(double)(ck_4-ck_3);
-<a name="l00125"></a>00125         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;eval =(double)(ck_1-ck_0+ck_5-ck_4);
-<a name="l00126"></a>00126         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;tot  =(double)(ck_5-ck_0);
-<a name="l00127"></a>00127         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;scale=1;
-<a name="l00128"></a>00128 <span class="preprocessor">#endif</span>
-<a name="l00129"></a>00129 <span class="preprocessor"></span>        <span class="keywordtype">int</span> this_time=myclocki();
-<a name="l00130"></a>00130         <span class="keywordflow">if</span>(this_time&gt;simu-&gt;<a class="code" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">last_report_time</a>+1){
-<a name="l00131"></a>00131         <span class="comment">//we don't print out or report too frequency.</span>
-<a name="l00132"></a>00132         simu-&gt;<a class="code" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">last_report_time</a>=this_time;
-<a name="l00133"></a>00133         scheduler_report(simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>);
-<a name="l00134"></a>00134         }
-<a name="l00135"></a>00135         <a class="code" href="sim__utils_8c.html#0be16bd01f2529c9b983cbc5db7fe691" title="Print out wavefront error information and timing at each time step.">print_progress</a>(simu);
-<a name="l00136"></a>00136         <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>&gt;1){
-<a name="l00137"></a>00137         info2(<span class="stringliteral">"CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n"</span>,
-<a name="l00138"></a>00138               cpu_2, cpu_3, cpu_4, cpu_1, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);
-<a name="l00139"></a>00139         }
-<a name="l00140"></a>00140     }<span class="comment">//isim</span>
-<a name="l00141"></a>00141     <a class="code" href="sim__utils_8c.html#84b825eee317f2e6b919c95773cd847f" title="Release memory of simu (of type SIM_T) and close files.">free_simu</a>(simu);
-<a name="l00142"></a>00142     }
-<a name="l00143"></a>00143 }
+<a name="l00085"></a>00085 <span class="preprocessor">#define PARALLEL 0</span>
+<a name="l00086"></a>00086 <span class="preprocessor"></span><span class="preprocessor">#if PARALLEL == 1 //does not help in T410s. Need to test taurus</span>
+<a name="l00087"></a>00087 <span class="preprocessor"></span>        pthread_t thread_perfevl, thread_wfsgrad, thread_tomofit;
+<a name="l00088"></a>00088         <span class="keywordflow">if</span>(CL){
+<a name="l00089"></a>00089         pthread_create(&amp;thread_perfevl, NULL, (<span class="keywordtype">void</span>*(*)(<span class="keywordtype">void</span>*))<a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>, (<span class="keywordtype">void</span>*)simu);
+<a name="l00090"></a>00090         }
+<a name="l00091"></a>00091         pthread_create(&amp;thread_wfsgrad, NULL, (<span class="keywordtype">void</span>*(*)(<span class="keywordtype">void</span>*))<a class="code" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel.">wfsgrad</a>, (<span class="keywordtype">void</span>*)simu);
+<a name="l00092"></a>00092         pthread_join(thread_wfsgrad,NULL);
+<a name="l00093"></a>00093         pthread_create(&amp;thread_tomofit, NULL, (<span class="keywordtype">void</span>*(*)(<span class="keywordtype">void</span>*))<a class="code" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit.">tomofit</a>, (<span class="keywordtype">void</span>*)simu);
+<a name="l00094"></a>00094         pthread_join(thread_tomofit,NULL);
+<a name="l00095"></a>00095         <span class="keywordflow">if</span>(CL){
+<a name="l00096"></a>00096         pthread_join(thread_perfevl,NULL);
+<a name="l00097"></a>00097         }
+<a name="l00098"></a>00098 
+<a name="l00099"></a>00099         <span class="keywordtype">double</span> ck_1=myclockd(); <span class="keywordtype">double</span> cpu_1=read_self_cpu();
+<a name="l00100"></a>00100         <span class="keywordtype">double</span> ck_2=myclockd(); <span class="keywordtype">double</span> cpu_2=read_self_cpu();
+<a name="l00101"></a>00101         <span class="keywordtype">double</span> ck_3=myclockd(); <span class="keywordtype">double</span> cpu_3=read_self_cpu();
+<a name="l00102"></a>00102 <span class="preprocessor">#else  </span>
+<a name="l00103"></a>00103 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(CL){<span class="comment">//before wfsgrad so we can apply ideal NGS modes</span>
+<a name="l00104"></a>00104         <a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>(simu);
+<a name="l00105"></a>00105         }
+<a name="l00106"></a>00106         <span class="keywordtype">double</span> ck_1=myclockd(); <span class="keywordtype">double</span> cpu_1=read_self_cpu();
+<a name="l00107"></a>00107         <a class="code" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel.">wfsgrad</a>(simu);
+<a name="l00108"></a>00108         <span class="keywordtype">double</span> ck_2=myclockd(); <span class="keywordtype">double</span> cpu_2=read_self_cpu();
+<a name="l00109"></a>00109         <a class="code" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit.">tomofit</a>(simu);
+<a name="l00110"></a>00110         <span class="keywordtype">double</span> ck_3=myclockd(); <span class="keywordtype">double</span> cpu_3=read_self_cpu();
+<a name="l00111"></a>00111 <span class="preprocessor">#endif</span>
+<a name="l00112"></a>00112 <span class="preprocessor"></span>        <a class="code" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter</a>(simu);<span class="comment">//updates dmreal.</span>
+<a name="l00113"></a>00113         <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#da6266bf34011ea0bdf22ad4863dca9b">moao</a>)
+<a name="l00114"></a>00114         <a class="code" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into...">moao_recon</a>(simu);
+<a name="l00115"></a>00115         <span class="keywordtype">double</span> ck_4=myclockd(); <span class="keywordtype">double</span> cpu_4=read_self_cpu();
+<a name="l00116"></a>00116         <span class="keywordflow">if</span>(!CL){<span class="comment">//Only in Open loop</span>
+<a name="l00117"></a>00117         <a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>(simu);
+<a name="l00118"></a>00118         }
+<a name="l00119"></a>00119         <a class="code" href="sim__utils_8c.html#245796513a02d7892e76cea88316394e" title="Save telemetry data during simulation every 50 time steps.">save_simu</a>(simu);
+<a name="l00120"></a>00120         <span class="keywordtype">double</span> ck_5=myclockd();
+<a name="l00121"></a>00121         <span class="keywordtype">long</span> steps_done=iseed*(simend-simstart)+(isim+1-simstart);
+<a name="l00122"></a>00122         <span class="keywordtype">long</span> steps_rest=parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#6021b395d1b8ca9bb3f3449b67ed7935" title="How many simulation seed.">nseed</a>*(simend-simstart)-steps_done;
+<a name="l00123"></a>00123         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;rest=(long)((ck_5-tk_0-(tk_2-tk_1)*(iseed+1))/steps_done*steps_rest
+<a name="l00124"></a>00124                       +(tk_2-tk_1)*(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#6021b395d1b8ca9bb3f3449b67ed7935" title="How many simulation seed.">nseed</a>-iseed-1));
+<a name="l00125"></a>00125         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;laps=(long)(ck_5-tk_0);
+<a name="l00126"></a>00126         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;mean=(ck_5-tk_2)/(<span class="keywordtype">double</span>)(isim+1-simstart);
+<a name="l00127"></a>00127 <span class="preprocessor">#if TIMING_MEAN == 1</span>
+<a name="l00128"></a>00128 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(isim&gt;simstart+2){
+<a name="l00129"></a>00129         <span class="comment">/*</span>
+<a name="l00130"></a>00130 <span class="comment">          skip first three time steps that </span>
+<a name="l00131"></a>00131 <span class="comment">          are not representative </span>
+<a name="l00132"></a>00132 <span class="comment">          due to missing DM commands</span>
+<a name="l00133"></a>00133 <span class="comment">        */</span>
+<a name="l00134"></a>00134         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;wfs  +=(ck_2-ck_1);
+<a name="l00135"></a>00135         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;recon+=(ck_3-ck_2);
+<a name="l00136"></a>00136         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;cache+=(ck_4-ck_3);
+<a name="l00137"></a>00137         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;eval +=(ck_1-ck_0+ck_5-ck_4);
+<a name="l00138"></a>00138         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;tot  +=(ck_5-ck_0);
+<a name="l00139"></a>00139         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;scale=1./(double)(isim-simstart-2);
+<a name="l00140"></a>00140         }
+<a name="l00141"></a>00141 <span class="preprocessor">#else</span>
+<a name="l00142"></a>00142 <span class="preprocessor"></span>        simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;wfs  =ck_2-ck_1;
+<a name="l00143"></a>00143         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;recon=ck_3-ck_2;
+<a name="l00144"></a>00144         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;cache=ck_4-ck_3;
+<a name="l00145"></a>00145         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;eval =ck_1-ck_0+ck_5-ck_4;
+<a name="l00146"></a>00146         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;tot  =ck_5-ck_0;
+<a name="l00147"></a>00147         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;scale=1;
+<a name="l00148"></a>00148 <span class="preprocessor">#endif</span>
+<a name="l00149"></a>00149 <span class="preprocessor"></span>        <span class="keywordtype">int</span> this_time=myclocki();
+<a name="l00150"></a>00150         <span class="keywordflow">if</span>(this_time&gt;simu-&gt;<a class="code" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">last_report_time</a>+1){
+<a name="l00151"></a>00151         <span class="comment">//we don't print out or report too frequency.</span>
+<a name="l00152"></a>00152         simu-&gt;<a class="code" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">last_report_time</a>=this_time;
+<a name="l00153"></a>00153         scheduler_report(simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>);
+<a name="l00154"></a>00154         }
+<a name="l00155"></a>00155         <a class="code" href="sim__utils_8c.html#0be16bd01f2529c9b983cbc5db7fe691" title="Print out wavefront error information and timing at each time step.">print_progress</a>(simu);
+<a name="l00156"></a>00156         <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>&gt;1){
+<a name="l00157"></a>00157         info2(<span class="stringliteral">"CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n"</span>,
+<a name="l00158"></a>00158               cpu_2, cpu_3, cpu_4, cpu_1, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);
+<a name="l00159"></a>00159         }
+<a name="l00160"></a>00160     }<span class="comment">//isim</span>
+<a name="l00161"></a>00161     <a class="code" href="sim__utils_8c.html#84b825eee317f2e6b919c95773cd847f" title="Release memory of simu (of type SIM_T) and close files.">free_simu</a>(simu);
+<a name="l00162"></a>00162     }
+<a name="l00163"></a>00163 }
 </pre></div>
 <p>
 
@@ -239,7 +252,7 @@ Here is the call graph for this function:</div>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:03 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

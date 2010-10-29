@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: lib/accphi.c File Reference</title>
+<title>maos-0.6.4: lib/accphi.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -113,15 +103,15 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ffbc809aa885e1096d019ef1c627b25e">prop_nongrid_pts</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, const double *phiin, const <a class="el" href="structPTS__T.html">PTS_T</a> *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, long start, long end, long step)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Propagate OPD defines on coordinate locin to subapertures pts.  <a href="#ffbc809aa885e1096d019ef1c627b25e"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#80091f05f81ff011303fed158eda2565">prop_nongrid_cubic</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, const double *phiin, const <a class="el" href="structLOC__T.html">LOC_T</a> *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, int cubic_norm, long start, long end)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#653ec67b44b3a2fb82cd2616c38e16ef">prop_nongrid_cubic</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, const double *phiin, const <a class="el" href="structLOC__T.html">LOC_T</a> *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">like prop_nongrid but with cubic influence functions.  <a href="#80091f05f81ff011303fed158eda2565"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#004b2d819d86d086112f212cfa994132">prop_nongrid_pts_cubic</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, const double *phiin, const <a class="el" href="structPTS__T.html">PTS_T</a> *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, int cubic_norm, long start, long end, long step)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">like prop_nongrid but with cubic influence functions.  <a href="#653ec67b44b3a2fb82cd2616c38e16ef"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#2978e878c113c47804ae296f24a01661">prop_nongrid_pts_cubic</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, const double *phiin, const <a class="el" href="structPTS__T.html">PTS_T</a> *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end, long step)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">like prop_nongrid_pts but with cubic influence functions.  <a href="#004b2d819d86d086112f212cfa994132"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#bad66bb6a73490f0dc12fe14c7e2fb38">prop_nongrid_map_cubic</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, const double *phiin, <a class="el" href="structMAP__T.html">MAP_T</a> *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, int cubic_norm, long start, long end, long step)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">like prop_nongrid_pts but with cubic influence functions.  <a href="#2978e878c113c47804ae296f24a01661"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#9d7063670363d64e194ee8a59ca6befb">prop_nongrid_map_cubic</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, const double *phiin, <a class="el" href="structMAP__T.html">MAP_T</a> *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end, long step)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">like prop_nongrid_map but with cubic influence functions.  <a href="#bad66bb6a73490f0dc12fe14c7e2fb38"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">like prop_nongrid_map but with cubic influence functions.  <a href="#9d7063670363d64e194ee8a59ca6befb"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#71a4a35bc06d7a2db0d995da3da4f1c0">prop_nongrid_reverse</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *locin, double *phiin, const <a class="el" href="structLOC__T.html">LOC_T</a> *locout, const double *ampout, const double *phiout, double alpha, double displacex, double displacey, double scale)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">the following routine is used to do down sampling by doing *reverse* ray tracing.  <a href="#71a4a35bc06d7a2db0d995da3da4f1c0"></a><br></td></tr>
@@ -195,28 +185,28 @@ Handles threading. <div class="fragment"><pre class="fragment"><a name="l00054">
 <a name="l00097"></a>00097     <span class="keywordflow">if</span>(propdata-&gt;cubic){
 <a name="l00098"></a>00098         <span class="keywordflow">if</span>(propdata-&gt;locout){
 <a name="l00099"></a>00099         <span class="keywordflow">if</span>(done) error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l00100"></a>00100         <a class="code" href="accphi_8c.html#80091f05f81ff011303fed158eda2565" title="like prop_nongrid but with cubic influence functions.">prop_nongrid_cubic</a>(propdata-&gt;locin, propdata-&gt;phiin,
+<a name="l00100"></a>00100         <a class="code" href="accphi_8c.html#653ec67b44b3a2fb82cd2616c38e16ef" title="like prop_nongrid but with cubic influence functions.">prop_nongrid_cubic</a>(propdata-&gt;locin, propdata-&gt;phiin,
 <a name="l00101"></a>00101                    propdata-&gt;locout, propdata-&gt;ampout, propdata-&gt;phiout,
 <a name="l00102"></a>00102                    propdata-&gt;alpha, propdata-&gt;displacex, propdata-&gt;displacey, 
-<a name="l00103"></a>00103                    propdata-&gt;scale, propdata-&gt;cubic_iac, propdata-&gt;cubic_norm,
+<a name="l00103"></a>00103                    propdata-&gt;scale, propdata-&gt;cubic_iac, 
 <a name="l00104"></a>00104                    data-&gt;start, data-&gt;end);
 <a name="l00105"></a>00105         done=1;
 <a name="l00106"></a>00106         }
 <a name="l00107"></a>00107         <span class="keywordflow">if</span>(propdata-&gt;mapout){
 <a name="l00108"></a>00108         <span class="keywordflow">if</span>(done) error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l00109"></a>00109         <a class="code" href="accphi_8c.html#bad66bb6a73490f0dc12fe14c7e2fb38" title="like prop_nongrid_map but with cubic influence functions.">prop_nongrid_map_cubic</a>(propdata-&gt;locin, propdata-&gt;phiin,
+<a name="l00109"></a>00109         <a class="code" href="accphi_8c.html#9d7063670363d64e194ee8a59ca6befb" title="like prop_nongrid_map but with cubic influence functions.">prop_nongrid_map_cubic</a>(propdata-&gt;locin, propdata-&gt;phiin,
 <a name="l00110"></a>00110                        propdata-&gt;mapout, 
 <a name="l00111"></a>00111                        propdata-&gt;alpha, propdata-&gt;displacex, propdata-&gt;displacey, 
-<a name="l00112"></a>00112                        propdata-&gt;scale, propdata-&gt;cubic_iac, propdata-&gt;cubic_norm,
+<a name="l00112"></a>00112                        propdata-&gt;scale, propdata-&gt;cubic_iac, 
 <a name="l00113"></a>00113                        data-&gt;start, data-&gt;end, data-&gt;step);
 <a name="l00114"></a>00114         done=1;
 <a name="l00115"></a>00115         }
 <a name="l00116"></a>00116         <span class="keywordflow">if</span>(propdata-&gt;ptsout){
 <a name="l00117"></a>00117         <span class="keywordflow">if</span>(done) error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l00118"></a>00118         <a class="code" href="accphi_8c.html#004b2d819d86d086112f212cfa994132" title="like prop_nongrid_pts but with cubic influence functions.">prop_nongrid_pts_cubic</a>(propdata-&gt;locin, propdata-&gt;phiin,
+<a name="l00118"></a>00118         <a class="code" href="accphi_8c.html#2978e878c113c47804ae296f24a01661" title="like prop_nongrid_pts but with cubic influence functions.">prop_nongrid_pts_cubic</a>(propdata-&gt;locin, propdata-&gt;phiin,
 <a name="l00119"></a>00119                        propdata-&gt;ptsout, propdata-&gt;ampout, propdata-&gt;phiout,
 <a name="l00120"></a>00120                        propdata-&gt;alpha, propdata-&gt;displacex, propdata-&gt;displacey, 
-<a name="l00121"></a>00121                        propdata-&gt;scale, propdata-&gt;cubic_iac, propdata-&gt;cubic_norm,
+<a name="l00121"></a>00121                        propdata-&gt;scale, propdata-&gt;cubic_iac, 
 <a name="l00122"></a>00122                        data-&gt;start, data-&gt;end, data-&gt;step);
 <a name="l00123"></a>00123         done=1;
 <a name="l00124"></a>00124         }
@@ -1684,7 +1674,7 @@ alpha is the scaling of data. displacex, displacy is the displacement of the cen
 
 </div>
 </div><p>
-<a class="anchor" name="80091f05f81ff011303fed158eda2565"></a><!-- doxytag: member="accphi.c::prop_nongrid_cubic" ref="80091f05f81ff011303fed158eda2565" args="(LOC_T *locin, const double *phiin, const LOC_T *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, int cubic_norm, long start, long end)" -->
+<a class="anchor" name="653ec67b44b3a2fb82cd2616c38e16ef"></a><!-- doxytag: member="accphi.c::prop_nongrid_cubic" ref="653ec67b44b3a2fb82cd2616c38e16ef" args="(LOC_T *locin, const double *phiin, const LOC_T *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1747,12 +1737,6 @@ alpha is the scaling of data. displacex, displacy is the displacement of the cen
           <td></td>
           <td class="paramtype">double&nbsp;</td>
           <td class="paramname"> <em>cubic_iac</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>cubic_norm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1841,7 +1825,7 @@ like prop_nongrid but with cubic influence functions.
 
 </div>
 </div><p>
-<a class="anchor" name="004b2d819d86d086112f212cfa994132"></a><!-- doxytag: member="accphi.c::prop_nongrid_pts_cubic" ref="004b2d819d86d086112f212cfa994132" args="(LOC_T *locin, const double *phiin, const PTS_T *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, int cubic_norm, long start, long end, long step)" -->
+<a class="anchor" name="2978e878c113c47804ae296f24a01661"></a><!-- doxytag: member="accphi.c::prop_nongrid_pts_cubic" ref="2978e878c113c47804ae296f24a01661" args="(LOC_T *locin, const double *phiin, const PTS_T *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end, long step)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1904,12 +1888,6 @@ like prop_nongrid but with cubic influence functions.
           <td></td>
           <td class="paramtype">double&nbsp;</td>
           <td class="paramname"> <em>cubic_iac</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>cubic_norm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -2013,7 +1991,7 @@ like prop_nongrid_pts but with cubic influence functions.
 
 </div>
 </div><p>
-<a class="anchor" name="bad66bb6a73490f0dc12fe14c7e2fb38"></a><!-- doxytag: member="accphi.c::prop_nongrid_map_cubic" ref="bad66bb6a73490f0dc12fe14c7e2fb38" args="(LOC_T *locin, const double *phiin, MAP_T *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, int cubic_norm, long start, long end, long step)" -->
+<a class="anchor" name="9d7063670363d64e194ee8a59ca6befb"></a><!-- doxytag: member="accphi.c::prop_nongrid_map_cubic" ref="9d7063670363d64e194ee8a59ca6befb" args="(LOC_T *locin, const double *phiin, MAP_T *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end, long step)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -2064,12 +2042,6 @@ like prop_nongrid_pts but with cubic influence functions.
           <td></td>
           <td class="paramtype">double&nbsp;</td>
           <td class="paramname"> <em>cubic_iac</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>cubic_norm</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -2320,7 +2292,7 @@ locin is coarse sampling, locout is fine sampling. phiin is the unknown <div cla
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:13 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:01 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

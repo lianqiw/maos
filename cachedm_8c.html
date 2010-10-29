@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: maos/cachedm.c File Reference</title>
+<title>maos-0.6.4: maos/cachedm.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -174,31 +164,25 @@ Prepares the DM caching structs.
 <a name="l00096"></a>00096         cpropdata[ic].scale=1;
 <a name="l00097"></a>00097         cpropdata[ic].cubic=simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#cf71d816fd769fe830d2e03f82c28b12" title="use cubic spline.">cubic</a>;
 <a name="l00098"></a>00098         cpropdata[ic].cubic_iac=simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#fca1c9ed9b0f9ce5a25147eb5906947b" title="Inter-Actuator Coupling coefficient.">iac</a>;
-<a name="l00099"></a>00099         cpropdata[ic].cubic_norm=1;
-<a name="l00100"></a>00100 <span class="preprocessor">#define INTERLACED 0</span>
-<a name="l00101"></a>00101 <span class="preprocessor"></span>        thread_prep(cprop[ic], 0, cpropdata[ic].mapout-&gt;ny, INTERLACED, 
-<a name="l00102"></a>00102             simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>, (<span class="keywordtype">void</span>*)&amp;cpropdata[ic]);
-<a name="l00103"></a>00103     }
-<a name="l00104"></a>00104     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a>==2){<span class="comment">//use sparse matrix instead of ray tracing.</span>
-<a name="l00105"></a>00105     warning(<span class="stringliteral">"This approach takes too much memory and is not fast. Don't use.\n"</span>);
-<a name="l00106"></a>00106     simu-&gt;<a class="code" href="structSIM__T.html#0241d38e89ddccb476d83c26163f67d9">HACT</a>=<a class="code" href="dsp_8h.html#af5362fa0fc6afc00fc3af29e4fb536d" title="Create a new sparse cell.">spcellnew</a>(simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>, 1);
-<a name="l00107"></a>00107     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ic=0; ic&lt;simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>; ic++){
-<a name="l00108"></a>00108         <span class="keywordtype">int</span> idm=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][0];
-<a name="l00109"></a>00109         <span class="keywordtype">int</span> iscale=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][1];
-<a name="l00110"></a>00110         <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *locout=<a class="code" href="loc_8c.html#f4422a314360edf5af650cd73591dbbe" title="Create a loc array that covers the MAP_T.">mksqloc_map</a>(&amp;simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale]);
-<a name="l00111"></a>00111         <span class="comment">//scale is one because the plane lives on the DM altitude.</span>
-<a name="l00112"></a>00112         <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#cf71d816fd769fe830d2e03f82c28b12" title="use cubic spline.">cubic</a>){
-<a name="l00113"></a>00113         simu-&gt;<a class="code" href="structSIM__T.html#0241d38e89ddccb476d83c26163f67d9">HACT</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[ic]=<a class="code" href="mkh_8c.html#25d8dd43c28bec5abb97f36becb411c5" title="Create back propagator matrix for from locout back to locin using cubic influence...">mkhb_cubic</a>(simu-&gt;<a class="code" href="structSIM__T.html#632412546828fc6e45a9538c42f9ed53">recon</a>-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm], locout, NULL, 
-<a name="l00114"></a>00114                          0, 0, 1, simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#fca1c9ed9b0f9ce5a25147eb5906947b" title="Inter-Actuator Coupling coefficient.">iac</a>, 1);
-<a name="l00115"></a>00115         }<span class="keywordflow">else</span>{
-<a name="l00116"></a>00116         simu-&gt;<a class="code" href="structSIM__T.html#0241d38e89ddccb476d83c26163f67d9">HACT</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[ic]=<a class="code" href="mkh_8c.html#8d6ae4511d18adfbb15f19ae6873738e" title="Create the transpose of the interpolator matrix for from locin to locout.">mkhb</a>(simu-&gt;<a class="code" href="structSIM__T.html#632412546828fc6e45a9538c42f9ed53">recon</a>-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm], locout, NULL, 
-<a name="l00117"></a>00117                        0, 0, 1, 0);
-<a name="l00118"></a>00118         }
-<a name="l00119"></a>00119     }
-<a name="l00120"></a>00120     }<span class="keywordflow">else</span>{
-<a name="l00121"></a>00121     error(<span class="stringliteral">"simu-&gt;parms-&gt;sim.cachedm=%d is invalid\n"</span>, simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a>);
-<a name="l00122"></a>00122     }
-<a name="l00123"></a>00123 }
+<a name="l00099"></a>00099 <span class="preprocessor">#define INTERLACED 0</span>
+<a name="l00100"></a>00100 <span class="preprocessor"></span>        thread_prep(cprop[ic], 0, cpropdata[ic].mapout-&gt;ny, INTERLACED, 
+<a name="l00101"></a>00101             simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>, (<span class="keywordtype">void</span>*)&amp;cpropdata[ic]);
+<a name="l00102"></a>00102     }
+<a name="l00103"></a>00103     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a>==2){<span class="comment">//use sparse matrix instead of ray tracing.</span>
+<a name="l00104"></a>00104     warning(<span class="stringliteral">"This approach takes too much memory and is not fast. Don't use.\n"</span>);
+<a name="l00105"></a>00105     simu-&gt;<a class="code" href="structSIM__T.html#0241d38e89ddccb476d83c26163f67d9">HACT</a>=<a class="code" href="dsp_8h.html#af5362fa0fc6afc00fc3af29e4fb536d" title="Create a new sparse cell.">spcellnew</a>(simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>, 1);
+<a name="l00106"></a>00106     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ic=0; ic&lt;simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>; ic++){
+<a name="l00107"></a>00107         <span class="keywordtype">int</span> idm=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][0];
+<a name="l00108"></a>00108         <span class="keywordtype">int</span> iscale=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][1];
+<a name="l00109"></a>00109         <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *locout=<a class="code" href="loc_8c.html#f4422a314360edf5af650cd73591dbbe" title="Create a loc array that covers the MAP_T.">mksqloc_map</a>(&amp;simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale]);
+<a name="l00110"></a>00110         <span class="comment">//scale is one because the plane lives on the DM altitude.</span>
+<a name="l00111"></a>00111         simu-&gt;<a class="code" href="structSIM__T.html#0241d38e89ddccb476d83c26163f67d9">HACT</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[ic]=<a class="code" href="mkh_8c.html#ab2a5c3f1e01e34f9f9befd6813451ad" title="Create transpose of mkh() result.">mkhb</a>(simu-&gt;<a class="code" href="structSIM__T.html#632412546828fc6e45a9538c42f9ed53">recon</a>-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm], locout, NULL, 0, 0, 1, 
+<a name="l00112"></a>00112                    simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#cf71d816fd769fe830d2e03f82c28b12" title="use cubic spline.">cubic</a>, simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#c2f69a649e1ac2d2e55e790ac067d46c" title="Array of DM.">dm</a>[idm].<a class="code" href="structDM__CFG__T.html#fca1c9ed9b0f9ce5a25147eb5906947b" title="Inter-Actuator Coupling coefficient.">iac</a>);
+<a name="l00113"></a>00113     }
+<a name="l00114"></a>00114     }<span class="keywordflow">else</span>{
+<a name="l00115"></a>00115     error(<span class="stringliteral">"simu-&gt;parms-&gt;sim.cachedm=%d is invalid\n"</span>, simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a>);
+<a name="l00116"></a>00116     }
+<a name="l00117"></a>00117 }
 </pre></div>
 <p>
 
@@ -223,13 +207,13 @@ Prepares the DM caching structs.
 <p>
 Executed by threads. 
 <p>
-Each thread handle the next job when done. <div class="fragment"><pre class="fragment"><a name="l00128"></a>00128                                         {
-<a name="l00129"></a>00129     <span class="keywordtype">int</span> ic;
-<a name="l00130"></a>00130     <span class="keywordtype">int</span> icend=simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>*simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>;
-<a name="l00131"></a>00131     <span class="keywordflow">while</span>(LOCK(simu-&gt;mutex_cachedm),ic=simu-&gt;<a class="code" href="structSIM__T.html#5ef0623895ff7f7823b92c8fb8f8d50b">cachedm_i</a>++,UNLOCK(simu-&gt;mutex_cachedm), ic&lt;icend){
-<a name="l00132"></a>00132     <a class="code" href="accphi_8c.html#56055820d17e7869e938c41ff78e087a" title="A wrapper prop routine that handles all the different cases by calling the different...">prop</a>(&amp;simu-&gt;<a class="code" href="structSIM__T.html#94acc92cf68283f0ca866d4b3086cb37">cachedm_prop</a>[ic]);
-<a name="l00133"></a>00133     }
-<a name="l00134"></a>00134 }
+Each thread handle the next job when done. <div class="fragment"><pre class="fragment"><a name="l00122"></a>00122                                         {
+<a name="l00123"></a>00123     <span class="keywordtype">int</span> ic;
+<a name="l00124"></a>00124     <span class="keywordtype">int</span> icend=simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>*simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>;
+<a name="l00125"></a>00125     <span class="keywordflow">while</span>(LOCK(simu-&gt;mutex_cachedm),ic=simu-&gt;<a class="code" href="structSIM__T.html#5ef0623895ff7f7823b92c8fb8f8d50b">cachedm_i</a>++,UNLOCK(simu-&gt;mutex_cachedm), ic&lt;icend){
+<a name="l00126"></a>00126     <a class="code" href="accphi_8c.html#56055820d17e7869e938c41ff78e087a" title="A wrapper prop routine that handles all the different cases by calling the different...">prop</a>(&amp;simu-&gt;<a class="code" href="structSIM__T.html#94acc92cf68283f0ca866d4b3086cb37">cachedm_prop</a>[ic]);
+<a name="l00127"></a>00127     }
+<a name="l00128"></a>00128 }
 </pre></div>
 <p>
 
@@ -254,38 +238,38 @@ Each thread handle the next job when done. <div class="fragment"><pre class="fra
 <p>
 Partition the ray tracing by DM/Destination combinations, as well as segments in each combination to maximum efficiency. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00140"></a>00140                               {
-<a name="l00141"></a>00141     <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a> &amp;&amp; simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>){
-<a name="l00142"></a>00142     simu-&gt;<a class="code" href="structSIM__T.html#5ef0623895ff7f7823b92c8fb8f8d50b">cachedm_i</a>=0;
-<a name="l00143"></a>00143     <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a>==1){
-<a name="l00144"></a>00144         PROPDATA_T *cpropdata=simu-&gt;<a class="code" href="structSIM__T.html#6766b9d62d3bf6c25f02d5b38b55cf50">cachedm_propdata</a>;
-<a name="l00145"></a>00145         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ic=0; ic&lt;simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>; ic++){
-<a name="l00146"></a>00146         <span class="keywordtype">int</span> idm=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][0];
-<a name="l00147"></a>00147         <span class="keywordtype">int</span> iscale=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][1];
-<a name="l00148"></a>00148         cpropdata[ic].phiin=simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00149"></a>00149         memset(simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#5d370c46ec22b469f87691d90a855030" title="The OPD.">p</a>,0, 
-<a name="l00150"></a>00150                <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>) 
-<a name="l00151"></a>00151                *simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#e7003c76b669b6547f0cf76883e4ae9e" title="Number of points along x.">nx</a> 
-<a name="l00152"></a>00152                *simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#122764d79d9e115f057f73f38f26b0b8" title="Number of points along y.">ny</a>);
-<a name="l00153"></a>00153         }
-<a name="l00154"></a>00154         CALL(<a class="code" href="cachedm_8c.html#8d69760c7293b232f5d70ce4af9fecd5" title="Executed by threads.">calc_cachedm_ic</a>,simu,simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>);
-<a name="l00155"></a>00155     }<span class="keywordflow">else</span>{
-<a name="l00156"></a>00156         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ic=0; ic&lt;simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>; ic++){
-<a name="l00157"></a>00157         <span class="keywordtype">int</span> idm=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][0];
-<a name="l00158"></a>00158         <span class="keywordtype">int</span> iscale=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][1];
-<a name="l00159"></a>00159         <a class="code" href="dsp_8h.html#914f0cb44155fa214c1e64283b732f9e" title="Threaded version of sptmulvec.">sptmulvec_thread</a>(simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#5d370c46ec22b469f87691d90a855030" title="The OPD.">p</a>, simu-&gt;<a class="code" href="structSIM__T.html#0241d38e89ddccb476d83c26163f67d9">HACT</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[ic],
-<a name="l00160"></a>00160                  simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, 1, simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>);
-<a name="l00161"></a>00161         }
-<a name="l00162"></a>00162     }
-<a name="l00163"></a>00163     }
-<a name="l00164"></a>00164 }
+<div class="fragment"><pre class="fragment"><a name="l00134"></a>00134                               {
+<a name="l00135"></a>00135     <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a> &amp;&amp; simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>){
+<a name="l00136"></a>00136     simu-&gt;<a class="code" href="structSIM__T.html#5ef0623895ff7f7823b92c8fb8f8d50b">cachedm_i</a>=0;
+<a name="l00137"></a>00137     <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#1e7a8af66d62b8d1c0e6b1c31e1c248f" title="cache dm shape on fine sampled grid matched WFS or Science grid">cachedm</a>==1){
+<a name="l00138"></a>00138         PROPDATA_T *cpropdata=simu-&gt;<a class="code" href="structSIM__T.html#6766b9d62d3bf6c25f02d5b38b55cf50">cachedm_propdata</a>;
+<a name="l00139"></a>00139         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ic=0; ic&lt;simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>; ic++){
+<a name="l00140"></a>00140         <span class="keywordtype">int</span> idm=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][0];
+<a name="l00141"></a>00141         <span class="keywordtype">int</span> iscale=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][1];
+<a name="l00142"></a>00142         cpropdata[ic].phiin=simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
+<a name="l00143"></a>00143         memset(simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#5d370c46ec22b469f87691d90a855030" title="The OPD.">p</a>,0, 
+<a name="l00144"></a>00144                <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>) 
+<a name="l00145"></a>00145                *simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#e7003c76b669b6547f0cf76883e4ae9e" title="Number of points along x.">nx</a> 
+<a name="l00146"></a>00146                *simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#122764d79d9e115f057f73f38f26b0b8" title="Number of points along y.">ny</a>);
+<a name="l00147"></a>00147         }
+<a name="l00148"></a>00148         CALL(<a class="code" href="cachedm_8c.html#8d69760c7293b232f5d70ce4af9fecd5" title="Executed by threads.">calc_cachedm_ic</a>,simu,simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>);
+<a name="l00149"></a>00149     }<span class="keywordflow">else</span>{
+<a name="l00150"></a>00150         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ic=0; ic&lt;simu-&gt;<a class="code" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a>; ic++){
+<a name="l00151"></a>00151         <span class="keywordtype">int</span> idm=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][0];
+<a name="l00152"></a>00152         <span class="keywordtype">int</span> iscale=simu-&gt;<a class="code" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a>[ic][1];
+<a name="l00153"></a>00153         <a class="code" href="dsp_8h.html#914f0cb44155fa214c1e64283b732f9e" title="Threaded version of sptmulvec.">sptmulvec_thread</a>(simu-&gt;<a class="code" href="structSIM__T.html#a33c072fbed475a7a22f7b4fc7e27334">cachedm</a>[idm][iscale].<a class="code" href="structMAP__T.html#5d370c46ec22b469f87691d90a855030" title="The OPD.">p</a>, simu-&gt;<a class="code" href="structSIM__T.html#0241d38e89ddccb476d83c26163f67d9">HACT</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[ic],
+<a name="l00154"></a>00154                  simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, 1, simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>);
+<a name="l00155"></a>00155         }
+<a name="l00156"></a>00156     }
+<a name="l00157"></a>00157     }
+<a name="l00158"></a>00158 }
 </pre></div>
 <p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:13 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

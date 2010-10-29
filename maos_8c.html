@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: maos/maos.c File Reference</title>
+<title>maos-0.6.4: maos/maos.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,16 +53,6 @@ window.onload = initDynSections;
       <li><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li class="current"><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
   <div class="tabs">
@@ -109,37 +99,37 @@ Contains <a class="el" href="maos_8c.html#3c04138a5bfe5d72780bb7e82a18e627" titl
 <p>
 This is the routine that calls various functions to do the simulation. 
 <p>
-<a class="el" href="maos_8c.html#03b12a216d3e6a33a008f5e35da726e3" title="This is the routine that calls various functions to do the simulation.">maos()</a> calls <a class="el" href="setup__aper_8c.html#bf63108c7633e5a353e73cd913fc9c26" title="Setting up aperture cordinate grid aper_locs, and amplitude map for performance evaluation...">setup_aper()</a>, <a class="el" href="maos_2setup__powfs_8c.html#c7b704504acb96d7fbcbdd60f15c6cf8" title="Setup the powfs struct based on parms and aper.">setup_powfs()</a>, and <a class="el" href="setup__recon_8c.html#6ec32666222d37047d7775b874969a2e" title="Sets up the reconstruction structs including wavefront reconstructor and DM fitting...">setup_recon()</a> to set up the aperture (of type <a class="el" href="structAPER__T.html" title="contains the data associated with the aperture and performance evaluation.">APER_T</a>), wfs (of type <a class="el" href="structPOWFS__T.html" title="contains the data associated with a certain type of WFS.">POWFS_T</a>), and reconstructor (of type <a class="el" href="structRECON__T.html" title="contains data related to wavefront reconstruction and DM fitting.">RECON_T</a>) structs and then hands control to <a class="el" href="sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop.">sim()</a>, which then stars the simulation. <div class="fragment"><pre class="fragment"><a name="l00530"></a>00530                                {    
-<a name="l00531"></a>00531     <a class="code" href="structAPER__T.html" title="contains the data associated with the aperture and performance evaluation.">APER_T</a>  * aper;
-<a name="l00532"></a>00532     <a class="code" href="structPOWFS__T.html" title="contains the data associated with a certain type of WFS.">POWFS_T</a> * powfs;
-<a name="l00533"></a>00533     <a class="code" href="structRECON__T.html" title="contains data related to wavefront reconstruction and DM fitting.">RECON_T</a> * recon;
-<a name="l00534"></a>00534 
-<a name="l00535"></a>00535     aper  = <a class="code" href="setup__aper_8c.html#bf63108c7633e5a353e73cd913fc9c26" title="Setting up aperture cordinate grid aper_locs, and amplitude map for performance evaluation...">setup_aper</a>(parms);
-<a name="l00536"></a>00536     info2(<span class="stringliteral">"After setup_aper:\t%.2f MiB\n"</span>,get_job_mem()/1024.);
-<a name="l00537"></a>00537     powfs = <a class="code" href="maos_2setup__powfs_8c.html#c7b704504acb96d7fbcbdd60f15c6cf8" title="Setup the powfs struct based on parms and aper.">setup_powfs</a>(parms, aper);
-<a name="l00538"></a>00538     info2(<span class="stringliteral">"After setup_powfs:\t%.2f MiB\n"</span>,get_job_mem()/1024.);
-<a name="l00539"></a>00539     
-<a name="l00540"></a>00540     recon = <a class="code" href="setup__recon_8c.html#6ec32666222d37047d7775b874969a2e" title="Sets up the reconstruction structs including wavefront reconstructor and DM fitting...">setup_recon</a>(parms, powfs, aper);
-<a name="l00541"></a>00541     info2(<span class="stringliteral">"After setup_recon:\t%.2f MiB\n"</span>,get_job_mem()/1024.);
-<a name="l00542"></a>00542     <span class="comment">/*</span>
-<a name="l00543"></a>00543 <span class="comment">      Before entering real simulation, make sure to delete all variables that</span>
-<a name="l00544"></a>00544 <span class="comment">      won't be used later on to save memory.</span>
-<a name="l00545"></a>00545 <span class="comment">    */</span>
-<a name="l00546"></a>00546     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#8fdfce1e68e018f54640c3d7214fcc33" title="Specify debugging parameters.">dbg</a>.<a class="code" href="structDBG__CFG__T.html#3de775b1c4b44f88d8a856cbe05f8def" title="evaluate open loop error only">evlol</a>){
-<a name="l00547"></a>00547     <a class="code" href="sim__utils_8c.html#1e1e48b76ff317024b24ae00f7096a56" title="Just do open loop error evalution.">sim_evlol</a>(parms, powfs, aper, recon);
-<a name="l00548"></a>00548     }<span class="keywordflow">else</span>{
-<a name="l00549"></a>00549     <a class="code" href="sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop.">sim</a>(parms, powfs, aper, recon);
-<a name="l00550"></a>00550     }
-<a name="l00551"></a>00551     <span class="comment">/*Free all allocated memory in setup_* functions. So that we</span>
-<a name="l00552"></a>00552 <span class="comment">      keep track of all the memory allocation.*/</span>
-<a name="l00553"></a>00553     free_recon(parms, recon); recon=NULL;
-<a name="l00554"></a>00554     <a class="code" href="maos_2setup__powfs_8c.html#4fdd29141f0d60af1fd7c6b2385f0031" title="Free all parameters of powfs at the end of simulation.">free_powfs</a>(parms, powfs); powfs=NULL;
-<a name="l00555"></a>00555     <a class="code" href="setup__aper_8c.html#ea65e60525339d2921549850d52e8464" title="Free the aper structure after simulation.">free_aper</a>(aper); powfs=NULL;
-<a name="l00556"></a>00556 <span class="preprocessor">#if USE_PTHREAD == 2</span>
-<a name="l00557"></a>00557 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#7691a6a576a70e837fa68092a6ca26de" title="Number of threads to run the simulation.">nthread</a>&gt;1)
-<a name="l00558"></a>00558     thr_pool_destroy(default_pool);
-<a name="l00559"></a>00559 <span class="preprocessor">#endif</span>
-<a name="l00560"></a>00560 <span class="preprocessor"></span>}
+<a class="el" href="maos_8c.html#03b12a216d3e6a33a008f5e35da726e3" title="This is the routine that calls various functions to do the simulation.">maos()</a> calls <a class="el" href="setup__aper_8c.html#bf63108c7633e5a353e73cd913fc9c26" title="Setting up aperture cordinate grid aper_locs, and amplitude map for performance evaluation...">setup_aper()</a>, <a class="el" href="maos_2setup__powfs_8c.html#c7b704504acb96d7fbcbdd60f15c6cf8" title="Setup the powfs struct based on parms and aper.">setup_powfs()</a>, and <a class="el" href="setup__recon_8c.html#6ec32666222d37047d7775b874969a2e" title="Sets up the reconstruction structs including wavefront reconstructor and DM fitting...">setup_recon()</a> to set up the aperture (of type <a class="el" href="structAPER__T.html" title="contains the data associated with the aperture and performance evaluation.">APER_T</a>), wfs (of type <a class="el" href="structPOWFS__T.html" title="contains the data associated with a certain type of WFS.">POWFS_T</a>), and reconstructor (of type <a class="el" href="structRECON__T.html" title="contains data related to wavefront reconstruction and DM fitting.">RECON_T</a>) structs and then hands control to <a class="el" href="sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop.">sim()</a>, which then stars the simulation. <div class="fragment"><pre class="fragment"><a name="l00039"></a>00039                                {    
+<a name="l00040"></a>00040     <a class="code" href="structAPER__T.html" title="contains the data associated with the aperture and performance evaluation.">APER_T</a>  * aper;
+<a name="l00041"></a>00041     <a class="code" href="structPOWFS__T.html" title="contains the data associated with a certain type of WFS.">POWFS_T</a> * powfs;
+<a name="l00042"></a>00042     <a class="code" href="structRECON__T.html" title="contains data related to wavefront reconstruction and DM fitting.">RECON_T</a> * recon;
+<a name="l00043"></a>00043 
+<a name="l00044"></a>00044     aper  = <a class="code" href="setup__aper_8c.html#bf63108c7633e5a353e73cd913fc9c26" title="Setting up aperture cordinate grid aper_locs, and amplitude map for performance evaluation...">setup_aper</a>(parms);
+<a name="l00045"></a>00045     info2(<span class="stringliteral">"After setup_aper:\t%.2f MiB\n"</span>,get_job_mem()/1024.);
+<a name="l00046"></a>00046     powfs = <a class="code" href="maos_2setup__powfs_8c.html#c7b704504acb96d7fbcbdd60f15c6cf8" title="Setup the powfs struct based on parms and aper.">setup_powfs</a>(parms, aper);
+<a name="l00047"></a>00047     info2(<span class="stringliteral">"After setup_powfs:\t%.2f MiB\n"</span>,get_job_mem()/1024.);
+<a name="l00048"></a>00048     
+<a name="l00049"></a>00049     recon = <a class="code" href="setup__recon_8c.html#6ec32666222d37047d7775b874969a2e" title="Sets up the reconstruction structs including wavefront reconstructor and DM fitting...">setup_recon</a>(parms, powfs, aper);
+<a name="l00050"></a>00050     info2(<span class="stringliteral">"After setup_recon:\t%.2f MiB\n"</span>,get_job_mem()/1024.);
+<a name="l00051"></a>00051     <span class="comment">/*</span>
+<a name="l00052"></a>00052 <span class="comment">      Before entering real simulation, make sure to delete all variables that</span>
+<a name="l00053"></a>00053 <span class="comment">      won't be used later on to save memory.</span>
+<a name="l00054"></a>00054 <span class="comment">    */</span>
+<a name="l00055"></a>00055     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#8fdfce1e68e018f54640c3d7214fcc33" title="Specify debugging parameters.">dbg</a>.<a class="code" href="structDBG__CFG__T.html#3de775b1c4b44f88d8a856cbe05f8def" title="evaluate open loop error only">evlol</a>){
+<a name="l00056"></a>00056     <a class="code" href="sim__utils_8c.html#1e1e48b76ff317024b24ae00f7096a56" title="Just do open loop error evalution.">sim_evlol</a>(parms, powfs, aper, recon);
+<a name="l00057"></a>00057     }<span class="keywordflow">else</span>{
+<a name="l00058"></a>00058     <a class="code" href="sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop.">sim</a>(parms, powfs, aper, recon);
+<a name="l00059"></a>00059     }
+<a name="l00060"></a>00060     <span class="comment">/*Free all allocated memory in setup_* functions. So that we</span>
+<a name="l00061"></a>00061 <span class="comment">      keep track of all the memory allocation.*/</span>
+<a name="l00062"></a>00062     free_recon(parms, recon); recon=NULL;
+<a name="l00063"></a>00063     <a class="code" href="maos_2setup__powfs_8c.html#4fdd29141f0d60af1fd7c6b2385f0031" title="Free all parameters of powfs at the end of simulation.">free_powfs</a>(parms, powfs); powfs=NULL;
+<a name="l00064"></a>00064     <a class="code" href="setup__aper_8c.html#ea65e60525339d2921549850d52e8464" title="Free the aper structure after simulation.">free_aper</a>(aper); powfs=NULL;
+<a name="l00065"></a>00065 <span class="preprocessor">#if USE_PTHREAD == 2</span>
+<a name="l00066"></a>00066 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#7691a6a576a70e837fa68092a6ca26de" title="Number of threads to run the simulation.">nthread</a>&gt;1)
+<a name="l00067"></a>00067     thr_pool_destroy(default_pool);
+<a name="l00068"></a>00068 <span class="preprocessor">#endif</span>
+<a name="l00069"></a>00069 <span class="preprocessor"></span>}
 </pre></div>
 <p>
 
@@ -196,105 +186,105 @@ Other optional parameters: <div class="fragment"><pre class="fragment">
    -s 2 -s 4   set seeds to [2 4]
    -n 4        launch 4 threads.
    -f          To disable job scheduler and force proceed
-   </pre></div> In detached mode, drawing is automatically disabled. <div class="fragment"><pre class="fragment"><a name="l00602"></a>00602                                {
-<a name="l00603"></a>00603 
-<a name="l00604"></a>00604     <span class="keywordtype">char</span>*fn=mybasename(argv[0]);
-<a name="l00605"></a>00605     <span class="keywordflow">if</span>(!strncmp(fn, <span class="stringliteral">"scheduler"</span>,9)){<span class="comment">//launch the scheduler.</span>
-<a name="l00606"></a>00606     scheduler();
-<a name="l00607"></a>00607     exit(0);
-<a name="l00608"></a>00608     }
-<a name="l00609"></a>00609     <span class="keywordtype">char</span> *scmd=argv2str(argc,argv);
-<a name="l00610"></a>00610     strcpy(argv[0],fn);
-<a name="l00611"></a>00611     free(fn);
-<a name="l00612"></a>00612 
-<a name="l00613"></a>00613     <a class="code" href="structARG__T.html" title="ARG_T is used for command line parsing.">ARG_T</a>* arg=<a class="code" href="maos_2utils_8c.html#cb9c938dc842d5c52a16c7443fdb4ae3" title="Parse command line arguments argc, argv.">parse_args</a>(argc,argv);
-<a name="l00614"></a>00614     <span class="comment">/*In detach mode send to background and disable drawing*/</span>
-<a name="l00615"></a>00615     <span class="keywordflow">if</span>(arg-&gt;<a class="code" href="structARG__T.html#2c3209f38638cec0a050260bab246299" title="Detach from the command line and run in background.">detach</a>){
-<a name="l00616"></a>00616     disable_draw=1;<span class="comment">//disable drawing.</span>
-<a name="l00617"></a>00617     <span class="comment">//info2("Sending to background\n");</span>
-<a name="l00618"></a>00618     daemonize();
-<a name="l00619"></a>00619     fprintf(stderr, <span class="stringliteral">"%s\n"</span>, scmd);
-<a name="l00620"></a>00620     }
-<a name="l00621"></a>00621     info2(<span class="stringliteral">"MAOS Version %s. "</span>, PACKAGE_VERSION);
-<a name="l00622"></a>00622 <span class="preprocessor">#ifdef SVN_REV</span>
-<a name="l00623"></a>00623 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(strlen(SVN_REV)&gt;1 &amp;&amp; strcmp(SVN_REV,<span class="stringliteral">"exported"</span>)){
-<a name="l00624"></a>00624     info2(<span class="stringliteral">"Revision %s. "</span>, SVN_REV);
-<a name="l00625"></a>00625     }
-<a name="l00626"></a>00626 <span class="preprocessor">#endif</span>
-<a name="l00627"></a>00627 <span class="preprocessor"></span>    info2(<span class="stringliteral">"Launched at %s in %s.\n"</span>,myasctime(),myhostname());
-<a name="l00628"></a>00628     info2(<span class="stringliteral">"Compiled on %s %s by %s "</span>, __DATE__, __TIME__, __VERSION__);
-<a name="l00629"></a>00629 <span class="preprocessor">#ifdef __OPTIMIZE__</span>
-<a name="l00630"></a>00630 <span class="preprocessor"></span>    info2(<span class="stringliteral">"with optimization.\n"</span>);
-<a name="l00631"></a>00631 <span class="preprocessor">#else</span>
-<a name="l00632"></a>00632 <span class="preprocessor"></span>    info2(<span class="stringliteral">"without optimization!!!\n"</span>);
-<a name="l00633"></a>00633 <span class="preprocessor">#endif</span>
-<a name="l00634"></a>00634 <span class="preprocessor"></span>    <span class="comment">//register signal handler</span>
-<a name="l00635"></a>00635     register_signal_handler(<a class="code" href="maos_2utils_8c.html#6331baae7550213ee98a12f9c3bbc5ce" title="Handles signals.">maos_signal_handler</a>);
-<a name="l00636"></a>00636   
-<a name="l00637"></a>00637 
-<a name="l00638"></a>00638     scheduler_start(scmd,arg-&gt;<a class="code" href="structARG__T.html#18bb19154482544ae53621864bab3756" title="Number of threads.">nthread</a>,!arg-&gt;<a class="code" href="structARG__T.html#c55657110f55a48957f1d60a18c4bf08" title="For start, bypassing scheduler.">force</a>);
-<a name="l00639"></a>00639     <span class="comment">//setting up parameters before asking scheduler to check for any errors.</span>
-<a name="l00640"></a>00640     <a class="code" href="structPARMS__T.html" title="is a wrapper of all _CFG_T data types.">PARMS_T</a> * parms=<a class="code" href="maos_2parms_8h.html#97bc282d28009f59b0b4e51013062588" title="This routine calles other routines in this file to setup the parms parameter struct...">setup_parms</a>(arg);
-<a name="l00641"></a>00641     info2(<span class="stringliteral">"After setup_parms:\t %.2f MiB\n"</span>,get_job_mem()/1024.);
-<a name="l00642"></a>00642     <span class="keywordflow">if</span>(!<a class="code" href="maos_2utils_8c.html#a54aacd870579af5c2d7f1023f7a5624" title="Try to lock file for each seed.">lock_seeds</a>(parms)){
-<a name="l00643"></a>00643     warning(<span class="stringliteral">"There are no seed to run. Exit\n"</span>);
-<a name="l00644"></a>00644     maos_done(0);
-<a name="l00645"></a>00645     <span class="keywordflow">return</span> 1;
-<a name="l00646"></a>00646     }
-<a name="l00647"></a>00647     <span class="keywordflow">if</span>(!arg-&gt;<a class="code" href="structARG__T.html#c55657110f55a48957f1d60a18c4bf08" title="For start, bypassing scheduler.">force</a>){
-<a name="l00648"></a>00648     <span class="comment">/*</span>
-<a name="l00649"></a>00649 <span class="comment">      Ask job scheduler for permission to proceed. If no CPUs are</span>
-<a name="l00650"></a>00650 <span class="comment">      available, will block until ones are available.</span>
-<a name="l00651"></a>00651 <span class="comment">      if arg-&gt;force==1, will run immediately.</span>
-<a name="l00652"></a>00652 <span class="comment">    */</span>
-<a name="l00653"></a>00653     info2(<span class="stringliteral">"Waiting start signal from the scheduler ...\n"</span>);
-<a name="l00654"></a>00654     <span class="keywordtype">int</span> count=0;
-<a name="l00655"></a>00655     <span class="keywordflow">while</span>(scheduler_wait()&amp;&amp; count&lt;60){
-<a name="l00656"></a>00656         <span class="comment">/*Failed to wait. fall back to own checking.*/</span>
-<a name="l00657"></a>00657         warning3(<span class="stringliteral">"failed to get reply from scheduler. retry\n"</span>);
-<a name="l00658"></a>00658         sleep(10);
-<a name="l00659"></a>00659         count++;
-<a name="l00660"></a>00660         scheduler_start(scmd,arg-&gt;<a class="code" href="structARG__T.html#18bb19154482544ae53621864bab3756" title="Number of threads.">nthread</a>,!arg-&gt;<a class="code" href="structARG__T.html#c55657110f55a48957f1d60a18c4bf08" title="For start, bypassing scheduler.">force</a>);
-<a name="l00661"></a>00661     }
-<a name="l00662"></a>00662     <span class="keywordflow">if</span>(count&gt;=60){
-<a name="l00663"></a>00663         warning3(<span class="stringliteral">"fall back to own checker\n"</span>);
-<a name="l00664"></a>00664         wait_cpu(arg-&gt;<a class="code" href="structARG__T.html#18bb19154482544ae53621864bab3756" title="Number of threads.">nthread</a>);
-<a name="l00665"></a>00665     }
-<a name="l00666"></a>00666     }
-<a name="l00667"></a>00667     info2(<span class="stringliteral">"\n*** Simulation started at %s in %s. ***\n\n"</span>,myasctime(),myhostname());
-<a name="l00668"></a>00668     free(scmd);
-<a name="l00669"></a>00669     free(arg-&gt;<a class="code" href="structARG__T.html#e850f463984604b4981a0f3020554613" title="Array of seeds.">seeds</a>);
-<a name="l00670"></a>00670     free(arg-&gt;<a class="code" href="structARG__T.html#e50d58a11ebd55e899f48ad1b073e3e7" title="Result output directory.">dirout</a>);
-<a name="l00671"></a>00671     free(arg-&gt;<a class="code" href="structARG__T.html#989ce68b27a48e963ca257974c3e720d">conf</a>);
-<a name="l00672"></a>00672     free(arg);
-<a name="l00673"></a>00673     
-<a name="l00674"></a>00674 <span class="preprocessor">#if USE_PTHREAD == 2</span>
-<a name="l00675"></a>00675 <span class="preprocessor"></span>    <span class="comment">//Create thread pool.</span>
-<a name="l00676"></a>00676     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#7691a6a576a70e837fa68092a6ca26de" title="Number of threads to run the simulation.">nthread</a>&gt;1)
-<a name="l00677"></a>00677     default_pool=thr_pool_create(1,parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#7691a6a576a70e837fa68092a6ca26de" title="Number of threads to run the simulation.">nthread</a>,3600,NULL);
-<a name="l00678"></a>00678 <span class="preprocessor">#endif</span>
-<a name="l00679"></a>00679 <span class="preprocessor"></span>    dirsetup=stradd(<span class="stringliteral">"setup"</span>,NULL);
-<a name="l00680"></a>00680     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00681"></a>00681     mymkdir(<span class="stringliteral">"%s"</span>,dirsetup);
-<a name="l00682"></a>00682     <a class="code" href="path_8c.html#8539b4e587a7ea71221206e43f29ead5" title="Add a directory to path.">addpath</a>(dirsetup);
-<a name="l00683"></a>00683     }
-<a name="l00684"></a>00684     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#8615676f068e88311d6f774e6cb92354" title="1: we are doing skycoverage preprocessing">skysim</a>){
-<a name="l00685"></a>00685     dirskysim=stradd(<span class="stringliteral">"skysim"</span>,NULL);
-<a name="l00686"></a>00686     mymkdir(<span class="stringliteral">"%s"</span>,dirskysim);
-<a name="l00687"></a>00687     }<span class="keywordflow">else</span>{
-<a name="l00688"></a>00688     dirskysim=mystrdup(<span class="stringliteral">"."</span>);
-<a name="l00689"></a>00689     }
-<a name="l00690"></a>00690 
-<a name="l00691"></a>00691     <span class="comment">/*Loads the main software*/</span>
-<a name="l00692"></a>00692     <a class="code" href="maos_8c.html#03b12a216d3e6a33a008f5e35da726e3" title="This is the routine that calls various functions to do the simulation.">maos</a>(parms);
-<a name="l00693"></a>00693     maos_done(0);
-<a name="l00694"></a>00694     free_parms(parms);
-<a name="l00695"></a>00695     free(dirsetup);
-<a name="l00696"></a>00696     free(dirskysim);
-<a name="l00697"></a>00697     info2(<span class="stringliteral">"Job finished at %s\t%.2f MiB\n"</span>,myasctime(),get_job_mem()/1024.);
-<a name="l00698"></a>00698     exit_success=1;<span class="comment">//tell mem.c to print non-freed memory in debug mode.</span>
-<a name="l00699"></a>00699     <span class="keywordflow">return</span> 0;
-<a name="l00700"></a>00700 }
+   </pre></div> In detached mode, drawing is automatically disabled. <div class="fragment"><pre class="fragment"><a name="l00111"></a>00111                                {
+<a name="l00112"></a>00112 
+<a name="l00113"></a>00113     <span class="keywordtype">char</span>*fn=mybasename(argv[0]);
+<a name="l00114"></a>00114     <span class="keywordflow">if</span>(!strncmp(fn, <span class="stringliteral">"scheduler"</span>,9)){<span class="comment">//launch the scheduler.</span>
+<a name="l00115"></a>00115     scheduler();
+<a name="l00116"></a>00116     exit(0);
+<a name="l00117"></a>00117     }
+<a name="l00118"></a>00118     <span class="keywordtype">char</span> *scmd=argv2str(argc,argv);
+<a name="l00119"></a>00119     strcpy(argv[0],fn);
+<a name="l00120"></a>00120     free(fn);
+<a name="l00121"></a>00121 
+<a name="l00122"></a>00122     <a class="code" href="structARG__T.html" title="ARG_T is used for command line parsing.">ARG_T</a>* arg=<a class="code" href="maos_2utils_8c.html#cb9c938dc842d5c52a16c7443fdb4ae3" title="Parse command line arguments argc, argv.">parse_args</a>(argc,argv);
+<a name="l00123"></a>00123     <span class="comment">/*In detach mode send to background and disable drawing*/</span>
+<a name="l00124"></a>00124     <span class="keywordflow">if</span>(arg-&gt;<a class="code" href="structARG__T.html#2c3209f38638cec0a050260bab246299" title="Detach from the command line and run in background.">detach</a>){
+<a name="l00125"></a>00125     disable_draw=1;<span class="comment">//disable drawing.</span>
+<a name="l00126"></a>00126     <span class="comment">//info2("Sending to background\n");</span>
+<a name="l00127"></a>00127     daemonize();
+<a name="l00128"></a>00128     fprintf(stderr, <span class="stringliteral">"%s\n"</span>, scmd);
+<a name="l00129"></a>00129     }
+<a name="l00130"></a>00130     info2(<span class="stringliteral">"MAOS Version %s. "</span>, PACKAGE_VERSION);
+<a name="l00131"></a>00131 <span class="preprocessor">#ifdef SVN_REV</span>
+<a name="l00132"></a>00132 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(strlen(SVN_REV)&gt;1 &amp;&amp; strcmp(SVN_REV,<span class="stringliteral">"exported"</span>)){
+<a name="l00133"></a>00133     info2(<span class="stringliteral">"Revision %s. "</span>, SVN_REV);
+<a name="l00134"></a>00134     }
+<a name="l00135"></a>00135 <span class="preprocessor">#endif</span>
+<a name="l00136"></a>00136 <span class="preprocessor"></span>    info2(<span class="stringliteral">"Launched at %s in %s.\n"</span>,myasctime(),myhostname());
+<a name="l00137"></a>00137     info2(<span class="stringliteral">"Compiled on %s %s by %s "</span>, __DATE__, __TIME__, __VERSION__);
+<a name="l00138"></a>00138 <span class="preprocessor">#ifdef __OPTIMIZE__</span>
+<a name="l00139"></a>00139 <span class="preprocessor"></span>    info2(<span class="stringliteral">"with optimization.\n"</span>);
+<a name="l00140"></a>00140 <span class="preprocessor">#else</span>
+<a name="l00141"></a>00141 <span class="preprocessor"></span>    info2(<span class="stringliteral">"without optimization!!!\n"</span>);
+<a name="l00142"></a>00142 <span class="preprocessor">#endif</span>
+<a name="l00143"></a>00143 <span class="preprocessor"></span>    <span class="comment">//register signal handler</span>
+<a name="l00144"></a>00144     register_signal_handler(<a class="code" href="maos_2utils_8c.html#6331baae7550213ee98a12f9c3bbc5ce" title="Handles signals.">maos_signal_handler</a>);
+<a name="l00145"></a>00145   
+<a name="l00146"></a>00146 
+<a name="l00147"></a>00147     scheduler_start(scmd,arg-&gt;<a class="code" href="structARG__T.html#18bb19154482544ae53621864bab3756" title="Number of threads.">nthread</a>,!arg-&gt;<a class="code" href="structARG__T.html#c55657110f55a48957f1d60a18c4bf08" title="For start, bypassing scheduler.">force</a>);
+<a name="l00148"></a>00148     <span class="comment">//setting up parameters before asking scheduler to check for any errors.</span>
+<a name="l00149"></a>00149     <a class="code" href="structPARMS__T.html" title="is a wrapper of all _CFG_T data types.">PARMS_T</a> * parms=<a class="code" href="maos_2parms_8h.html#97bc282d28009f59b0b4e51013062588" title="This routine calles other routines in this file to setup the parms parameter struct...">setup_parms</a>(arg);
+<a name="l00150"></a>00150     info2(<span class="stringliteral">"After setup_parms:\t %.2f MiB\n"</span>,get_job_mem()/1024.);
+<a name="l00151"></a>00151     <span class="keywordflow">if</span>(!<a class="code" href="maos_2utils_8c.html#a54aacd870579af5c2d7f1023f7a5624" title="Try to lock file for each seed.">lock_seeds</a>(parms)){
+<a name="l00152"></a>00152     warning(<span class="stringliteral">"There are no seed to run. Exit\n"</span>);
+<a name="l00153"></a>00153     maos_done(0);
+<a name="l00154"></a>00154     <span class="keywordflow">return</span> 1;
+<a name="l00155"></a>00155     }
+<a name="l00156"></a>00156     <span class="keywordflow">if</span>(!arg-&gt;<a class="code" href="structARG__T.html#c55657110f55a48957f1d60a18c4bf08" title="For start, bypassing scheduler.">force</a>){
+<a name="l00157"></a>00157     <span class="comment">/*</span>
+<a name="l00158"></a>00158 <span class="comment">      Ask job scheduler for permission to proceed. If no CPUs are</span>
+<a name="l00159"></a>00159 <span class="comment">      available, will block until ones are available.</span>
+<a name="l00160"></a>00160 <span class="comment">      if arg-&gt;force==1, will run immediately.</span>
+<a name="l00161"></a>00161 <span class="comment">    */</span>
+<a name="l00162"></a>00162     info2(<span class="stringliteral">"Waiting start signal from the scheduler ...\n"</span>);
+<a name="l00163"></a>00163     <span class="keywordtype">int</span> count=0;
+<a name="l00164"></a>00164     <span class="keywordflow">while</span>(scheduler_wait()&amp;&amp; count&lt;60){
+<a name="l00165"></a>00165         <span class="comment">/*Failed to wait. fall back to own checking.*/</span>
+<a name="l00166"></a>00166         warning3(<span class="stringliteral">"failed to get reply from scheduler. retry\n"</span>);
+<a name="l00167"></a>00167         sleep(10);
+<a name="l00168"></a>00168         count++;
+<a name="l00169"></a>00169         scheduler_start(scmd,arg-&gt;<a class="code" href="structARG__T.html#18bb19154482544ae53621864bab3756" title="Number of threads.">nthread</a>,!arg-&gt;<a class="code" href="structARG__T.html#c55657110f55a48957f1d60a18c4bf08" title="For start, bypassing scheduler.">force</a>);
+<a name="l00170"></a>00170     }
+<a name="l00171"></a>00171     <span class="keywordflow">if</span>(count&gt;=60){
+<a name="l00172"></a>00172         warning3(<span class="stringliteral">"fall back to own checker\n"</span>);
+<a name="l00173"></a>00173         wait_cpu(arg-&gt;<a class="code" href="structARG__T.html#18bb19154482544ae53621864bab3756" title="Number of threads.">nthread</a>);
+<a name="l00174"></a>00174     }
+<a name="l00175"></a>00175     }
+<a name="l00176"></a>00176     info2(<span class="stringliteral">"\n*** Simulation started at %s in %s. ***\n\n"</span>,myasctime(),myhostname());
+<a name="l00177"></a>00177     free(scmd);
+<a name="l00178"></a>00178     free(arg-&gt;<a class="code" href="structARG__T.html#e850f463984604b4981a0f3020554613" title="Array of seeds.">seeds</a>);
+<a name="l00179"></a>00179     free(arg-&gt;<a class="code" href="structARG__T.html#e50d58a11ebd55e899f48ad1b073e3e7" title="Result output directory.">dirout</a>);
+<a name="l00180"></a>00180     free(arg-&gt;<a class="code" href="structARG__T.html#989ce68b27a48e963ca257974c3e720d">conf</a>);
+<a name="l00181"></a>00181     free(arg);
+<a name="l00182"></a>00182     
+<a name="l00183"></a>00183 <span class="preprocessor">#if USE_PTHREAD == 2</span>
+<a name="l00184"></a>00184 <span class="preprocessor"></span>    <span class="comment">//Create thread pool.</span>
+<a name="l00185"></a>00185     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#7691a6a576a70e837fa68092a6ca26de" title="Number of threads to run the simulation.">nthread</a>&gt;1)
+<a name="l00186"></a>00186     default_pool=thr_pool_create(1,parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#7691a6a576a70e837fa68092a6ca26de" title="Number of threads to run the simulation.">nthread</a>,3600,NULL);
+<a name="l00187"></a>00187 <span class="preprocessor">#endif</span>
+<a name="l00188"></a>00188 <span class="preprocessor"></span>    dirsetup=stradd(<span class="stringliteral">"setup"</span>,NULL);
+<a name="l00189"></a>00189     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
+<a name="l00190"></a>00190     mymkdir(<span class="stringliteral">"%s"</span>,dirsetup);
+<a name="l00191"></a>00191     <a class="code" href="path_8c.html#8539b4e587a7ea71221206e43f29ead5" title="Add a directory to path.">addpath</a>(dirsetup);
+<a name="l00192"></a>00192     }
+<a name="l00193"></a>00193     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#8615676f068e88311d6f774e6cb92354" title="1: we are doing skycoverage preprocessing">skysim</a>){
+<a name="l00194"></a>00194     dirskysim=stradd(<span class="stringliteral">"skysim"</span>,NULL);
+<a name="l00195"></a>00195     mymkdir(<span class="stringliteral">"%s"</span>,dirskysim);
+<a name="l00196"></a>00196     }<span class="keywordflow">else</span>{
+<a name="l00197"></a>00197     dirskysim=mystrdup(<span class="stringliteral">"."</span>);
+<a name="l00198"></a>00198     }
+<a name="l00199"></a>00199 
+<a name="l00200"></a>00200     <span class="comment">/*Loads the main software*/</span>
+<a name="l00201"></a>00201     <a class="code" href="maos_8c.html#03b12a216d3e6a33a008f5e35da726e3" title="This is the routine that calls various functions to do the simulation.">maos</a>(parms);
+<a name="l00202"></a>00202     maos_done(0);
+<a name="l00203"></a>00203     free_parms(parms);
+<a name="l00204"></a>00204     free(dirsetup);
+<a name="l00205"></a>00205     free(dirskysim);
+<a name="l00206"></a>00206     info2(<span class="stringliteral">"Job finished at %s\t%.2f MiB\n"</span>,myasctime(),get_job_mem()/1024.);
+<a name="l00207"></a>00207     exit_success=1;<span class="comment">//tell mem.c to print non-freed memory in debug mode.</span>
+<a name="l00208"></a>00208     <span class="keywordflow">return</span> 0;
+<a name="l00209"></a>00209 }
 </pre></div>
 <p>
 
@@ -310,7 +300,7 @@ Here is the call graph for this function:</div>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>
