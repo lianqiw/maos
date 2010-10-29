@@ -81,10 +81,10 @@ static void print_usage(const void *key, VISIT value, int level){
 	print_backtrace_symbol(key2->func, key2->nfunc-2);
     }
 }
-static __attribute__((constructor(1000))) void init(){
+static __attribute__((constructor)) void init(){
     warning2("Memory management is in use\n");
 }
-static __attribute__((destructor(1000))) void deinit(){
+static __attribute__((destructor)) void deinit(){
     if(exit_success){
 	if(MROOT){
 	    warning("%lld allocated memory not freed!!!\n",memcnt);

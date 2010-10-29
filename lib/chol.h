@@ -26,21 +26,12 @@
 #include "cmat.h"
 
 /* assume large file support.  If problems occur, compile with -DNLARGEFILE */
-#include "../external/cholmod/Include/cholmod_io64.h"
-/* define UF_long */
-#include "../external/cholmod/Include/UFconfig.h"
-#include "../external/cholmod/Include/cholmod_config.h"
-#include "../external/cholmod/Include/cholmod_core.h"
 
-typedef struct spchol{
-    cholmod_factor *L;
-    cholmod_common c;
-}spchol;
+typedef struct spchol spchol;
 spchol* chol_factorize(dsp *A_in);
 void chol_solve(dmat **x, spchol *A, const dmat *y);
 void chol_free_do(spchol *A);
 #define chol_free(A) ({chol_free_do(A);A=NULL;})
-//dsp* chol_sp(spchol *A, int keep);
 void chol_save(spchol *A, const char *format,...) CHECK_ARG(2);
 void chol_convert(dsp **Cs, long **Cp, spchol *A, int keep);
 void chol_solve_lower(dmat **x, dsp *A, long *p, const dmat *y);

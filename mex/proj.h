@@ -12,11 +12,11 @@ typedef struct RECTMAP_T{
 /*map of locs*/
 typedef struct LOCMAP_T{
     struct LOC_T *loc;
-    long *p; //map is mxn
+    long *p; /*map is mxn*/
     double ox;
     double oy;
     int nx,ny;
-    int npad;//just for checking. no need in computation.
+    int npad;/*just for checking. no need in computation.*/
 }LOCMAP_T;
 
 typedef struct LOC_T{

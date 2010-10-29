@@ -104,7 +104,8 @@ dsp *spcat(const dsp *A, const dsp *B, int type){
 	memcpy(C->i+A->nzmax, B->i, B->nzmax*sizeof(long));
 	memcpy(C->x+A->nzmax, B->x, B->nzmax*sizeof(long));
 	const long Anzmax=A->nzmax;
-	for(long i=0; i<B->n+1; i++){
+	long i;
+	for(i=0; i<B->n+1; i++){
 	    C->p[i+A->n]=Anzmax+B->p[i];
 	}
     }else{

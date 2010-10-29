@@ -83,7 +83,7 @@ void freepath(void){
     }
     PATH=NULL;
 }
-static __attribute__((destructor(1001))) void deinit(){
+static __attribute__((destructor)) void deinit(){
     freepath();
 }
 /**

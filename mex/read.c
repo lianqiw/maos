@@ -1,4 +1,3 @@
-#include <mex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,11 +24,12 @@ static mxArray *readdata(file_t *fp){
     case MC_INT64:
 	{
 	    mwIndex nx,ny;
+	    mwIndex ix;
 	    readfile(&nx, sizeof(mwIndex), 1,fp);
 	    readfile(&ny, sizeof(mwIndex), 1,fp);
 	    if(fp->eof) return NULL;
 	    out=mxCreateCellMatrix(nx,ny);
-	    for(mwIndex ix=0; ix<nx*ny; ix++){
+	    for(ix=0; ix<nx*ny; ix++){
 		mxArray *tmp=readdata(fp);
 		if(fp->eof){
 		    break;
@@ -62,6 +62,7 @@ static mxArray *readdata(file_t *fp){
     case M_CSP:/*complex sparse*/
 	{
 	    mwIndex m,n,nzmax;
+	    long i;
 	    readfile(&m,sizeof(mwIndex),1,fp);
 	    readfile(&n,sizeof(mwIndex),1,fp);
 	    if(m!=0 && n!=0){
@@ -78,7 +79,7 @@ static mxArray *readdata(file_t *fp){
 		readfile(tmp, sizeof(dcomplex), nzmax, fp);
 		double *Pr=mxGetPr(out);
 		double *Pi=mxGetPi(out);
-		for(long i=0; i<nzmax; i++){
+		for(i=0; i<nzmax; i++){
 		    Pr[i]=creal(tmp[i]);
 		    Pi[i]=cimag(tmp[i]);
 		}
@@ -106,7 +107,7 @@ static mxArray *readdata(file_t *fp){
 	    if(fp->eof) return NULL;
 	    out=mxCreateNumericMatrix(nx,ny,mxINT64_CLASS,mxREAL);
 	    if(nx!=0 && ny!=0){
-		//Don't use sizeof(mxINT64_CLASS), it is just an integer, not a valid C type.
+		/*Don't use sizeof(mxINT64_CLASS), it is just an integer, not a valid C type.*/
 		readfile(mxGetPr(out), 8,nx*ny,fp);
 	    }
 	}
@@ -135,7 +136,8 @@ static mxArray *readdata(file_t *fp){
 		readfile(tmp,sizeof(dcomplex),nx*ny,fp);
 		double *Pr=mxGetPr(out);
 		double *Pi=mxGetPi(out);
-		for(long i=0; i<nx*ny; i++){
+		long i;
+		for(i=0; i<nx*ny; i++){
 		    Pr[i]=creal(tmp[i]);
 		    Pi[i]=cimag(tmp[i]);
 		}

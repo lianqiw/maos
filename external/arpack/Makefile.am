@@ -1,21 +1,15 @@
 #Specifying per object CFLAGS can avoid name conflict.
 AM_FFLAGS=-DNDEBUG=1 -O3 -DUSE_MEM=0 -DHAVE_SSE2=1
-#AM_CFLAGS=-DNDEBUG=1 -O3 -DUSE_MEM=0 -DHAVE_SSE2=1 -fPIC 
-#AM_LDFLAGS=-static-libgfortran #override the value provided by configure
-#LIBS= #while LIBS contains fftw3 by default
-#if DO_SO
+EXTRA_DIST=
+if COMP_ARPACK
 lib_LTLIBRARIES=libarpack.la
 libarpack_la_SOURCES=$(ARPACK_SRC)
 libarpack_la_FFLAGS=$(AM_FFLAGS)
-#libarpack_la_CFLAGS=$(AM_CFLAGS)
 libarpack_la_LDFLAGS=-static-libgfortran
-#else
-#lib_LIBRARIES=libarpack.a
-#libarpack_a_SOURCES=$(ARPACK_SRC)
-#libarpack_a_FFLAGS=$(AM_FFLAGS)
-#libarpack_a_CFLAGS=$(AM_CFLAGS)
-#endif
-EXTRA_DIST=SRC/debug.h\
+else
+EXTRA_DIST+=$(ARPACK_SRC)
+endif
+EXTRA_DIST+=SRC/debug.h\
 SRC/stat.h\
 SRC/version.h
 ARPACK_SRC=./SRC/dnaupd.f\

@@ -15,13 +15,17 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include "cholmod.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
 #include "matbin.h"
 #include "chol.h"
-#include "../external/cholmod/Include/cholmod.h"
+
+struct spchol{
+    cholmod_factor *L;
+    cholmod_common *c;
+};
 /**
 \file chol.c
 Wraps the CHOLESKY Library to provide a simple interface.*/
@@ -68,11 +72,11 @@ static dsp* chol_sp(spchol *A, int keep){
 
     cholmod_factor *L;
     if(keep){
-	L=cholmod_l_copy_factor(A->L, &(A->c));
+	L=cholmod_l_copy_factor(A->L, A->c);
     }else{
 	L=A->L;
     }
-    cholmod_sparse *B=cholmod_l_factor_to_sparse(L, &(A->c));
+    cholmod_sparse *B=cholmod_l_factor_to_sparse(L, A->c);
     dsp *out=spnew(B->nrow, B->ncol, 0);
     //out->m=B->nrow;
     //out->n=B->ncol;
@@ -81,9 +85,9 @@ static dsp* chol_sp(spchol *A, int keep){
     out->x=B->x;
     out->nzmax=B->nzmax;
     free(B);
-    cholmod_l_free_factor(&L, &(A->c));
+    cholmod_l_free_factor(&L, A->c);
     if(!keep){
-	cholmod_l_finish(&(A->c));
+	cholmod_l_finish(A->c);
 	free(A);
     }
     return out;
@@ -95,10 +99,11 @@ spchol* chol_factorize(dsp *A_in){
     if(!A_in) return NULL;
     TIC;tic;
     spchol *out=calloc(1, sizeof(spchol));
-    cholmod_l_start(&out->c);
+    out->c=calloc(1, sizeof(cholmod_common));
+    cholmod_l_start(out->c);
     cholmod_sparse *A=sp2chol(A_in);
-    out->c.status=CHOLMOD_OK;
-    out->c.final_super=0;
+    out->c->status=CHOLMOD_OK;
+    out->c->final_super=0;//we want a simple result
     {
 	//Try AMD ordering only. SLOW
 	/*
@@ -109,12 +114,10 @@ spchol* chol_factorize(dsp *A_in){
 	*/
     }
     info2("analyzing...");
-    out->L=cholmod_l_analyze(A,&out->c);
+    out->L=cholmod_l_analyze(A,out->c);
     info2("factoring...");
     if(!out->L) error("Analyze failed\n");
-    cholmod_l_factorize(A,out->L, &out->c);
-    //info2("done, packing...");
-    //cholmod_l_pack_factor(out->L, &out->c);
+    cholmod_l_factorize(A,out->L, out->c);
     free(A);
     toc2("done.");
     return out;
@@ -126,7 +129,7 @@ void chol_solve(dmat **x, spchol *A, const dmat *y){
     //solve A*x=Y;
     cholmod_dense *y2=d2chol(y);//share pointer.
     if(A->L->xtype==0) error("A->L is pattern only!\n");
-    cholmod_dense *x2=cholmod_l_solve(CHOLMOD_A,A->L,y2,&A->c);
+    cholmod_dense *x2=cholmod_l_solve(CHOLMOD_A,A->L,y2,A->c);
     if(!x2) error("chol_solve failed\n");
     if(x2->z){
 	error("why is this?\n");
@@ -150,8 +153,9 @@ void chol_solve(dmat **x, spchol *A, const dmat *y){
    Free cholesky factor*/
 void chol_free_do(spchol *A){
     if(A){
-	cholmod_l_free_factor(&A->L, &A->c);
-	cholmod_l_finish(&A->c);
+	cholmod_l_free_factor(&A->L, A->c);
+	cholmod_l_finish(A->c);
+	free(A->c);
 	free(A);
     }
 }

@@ -1,4 +1,3 @@
-#include <mex.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +21,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr){
 	int issparse=0;
 	mxArray *in;
 	int type2;
+	long ix;
 	if(mxGetNumberOfElements(arr)==0){
 	    in=NULL;
 	    issparse=0;
@@ -52,7 +52,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr){
 	writefile(&magic, sizeof(int), 1, fp);
 	writefile(&m, sizeof(long), 1, fp);
 	writefile(&n, sizeof(long), 1, fp);
-	for(int ix=0; ix<mxGetNumberOfElements(arr); ix++){
+	for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
 	    in=mxGetCell(arr, ix);
 	    if(in && mxIsSparse(in) !=issparse)
 		error("can only save cell array of all sparse or all dense");

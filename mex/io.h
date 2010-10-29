@@ -4,6 +4,7 @@
 #include <zlib.h>
 #include <signal.h>
 #include <mex.h>
+#include <matrix.h>
 typedef double __complex__ dcomplex;
 #define warning(A...) {							\
 	fprintf(stderr,"\033[01;33m%-15s:%-3d\t", __FILE__, __LINE__);	\

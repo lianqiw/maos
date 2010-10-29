@@ -117,24 +117,30 @@ ARG_S *parse_args(int argc, char **argv){
     //Setup PATH and result directory
 
     const char *aos_config_path=getenv("AOS_CONFIG_PATH");
-    char *config_path;
+    char *config_path=NULL;
     if(aos_config_path){
 	config_path=stradd(aos_config_path,"/skyc/",NULL);
-    } else{	/*If not specified, assume it is in the source tree*/
+    }
+    if(!exist(config_path) && exist(SRCDIR)){
+	/*If not specified, assume it is in the source tree*/
+	if(config_path) free(config_path);
 	config_path=stradd(SRCDIR,"/config/skyc/",NULL);
     }
     if(!exist(config_path)){
-	warning("%s does not exist\n",config_path);
 	free(config_path);
-	const char *progname=get_job_progname();
-	char *base=mybasename(progname);
-	config_path=stradd(base,"/config/",NULL);
-	free(base);
-	if(!exist(config_path)){
-	    warning("%s doesnt exist\n",config_path);
-	    error("Unable to find config path that contains .config files.\n"
-		  "Please set it using environment variable AOS_CONFIG_PATH\n");
+	config_path=stradd(getenv("HOME"),"/.aos/config/skyc/",NULL);
+    }
+    if(!exist(config_path)){
+	warning("Unable to determine the path to the configuration files.\n");
+	warning("Will download a copy from the website and put in %ss/.aos/config\n",getenv("HOME"));
+	char cmd[400];
+	snprintf(cmd,400,"wget %s/maos_config.tar.bz2 -C /tmp/ && tar axvf /tmp/maos_config.tar.bz2 -C %s/.aos/",BASEURL, getenv("HOME"));
+	if(system(cmd)){
+	    error("Unable to download the configuration files from the internet and extract to %s/.aos/config", getenv("HOME"));
 	}
+    }
+    if(!exist(config_path)){
+	warning("Unable to determine the path to the configuration files.\n");
     }
     addpath(config_path);
     free(config_path);

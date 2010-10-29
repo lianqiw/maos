@@ -27,18 +27,18 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     if(mod[0]=='r'){
 	if(!exist(fn2)){
 	    if(strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
-		//ended with bin.gz
+		/*ended with bin.gz*/
 		fn2[strlen(fn2)-3]='\0';
 		if(!exist(fn2)){
 		    error("Neither %s nor %s exist\n", fn,fn2);
 		}
 	    }else if(strlen(fn2)>=4&&!strncmp(fn2+strlen(fn2)-4,".bin",4)){
-		//ended with .bin
+		/*ended with .bin*/
 		strncat(fn2, ".gz", 3);
 		if(!exist(fn2)){
 		    error("Neither %s nor %s exist\n", fn,fn2);
 		}
-	    }else{//no recognized suffix
+	    }else{/*no recognized suffix*/
 		strncat(fn2, ".bin", 4);
 		if(!exist(fn2)){
 		    strncat(fn2,".gz",3);
@@ -49,7 +49,7 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 		}
 	    }
 	}
-    }else if (mod[0]=='w'){//for write, no suffix. we append .bin.gz
+    }else if (mod[0]=='w'){/*for write, no suffix. we append .bin.gz*/
 	if(!((strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7))
 	     || (strlen(fn2)>=4&&!strncmp(fn2+strlen(fn2)-4,".bin",4)))){
 	    if(gzip)
@@ -57,7 +57,7 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 	    else
 		strncat(fn2,".bin",4);
 	}
-	if(exist(fn2)){//remove old file to avoid write over a symbolic link.
+	if(exist(fn2)){/*remove old file to avoid write over a symbolic link.*/
 	    remove(fn2);
 	}
     }else{
@@ -103,7 +103,8 @@ void writefile(const void* ptr, const size_t size, const size_t nmemb, file_t *f
 }
 void writefile_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp){
     dcomplex *tmp=malloc(sizeof(dcomplex)*nmemb);
-    for(long i=0; i<nmemb; i++){
+    long i;
+    for(i=0; i<nmemb; i++){
 	tmp[i]=pr[i]+I*pi[i];
     }
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/

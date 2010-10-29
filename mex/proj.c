@@ -4,7 +4,7 @@
 #include "proj.h"
 #define SPLIT(A,B,C) {C=(int)floor(A); B=A-C;}
 const double pi=3.1415926535897932384626433832795;
-static inline double cosangle(double a[3], double b[3]){
+static __inline double cosangle(double a[3], double b[3]){
     return (a[0]*b[0]+a[1]*b[1]+a[2]*b[2])
 	/sqrt((a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
 	      *(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]));
@@ -55,9 +55,10 @@ proj_rect_grid(RECTMAP_T *mapin, double thetax, double thetay,
     double vi[3];
     vi[2]=-hs;
     double sc2;
-    for(int iloc=0; iloc<locout->nloc; iloc++){
+    int iloc;
+    for(iloc=0; iloc<locout->nloc; iloc++){
 	if(ampout && fabs(ampout[iloc])<1.e-10)
-	    continue;//skip points that has zero amplitude
+	    continue;/*skip points that has zero amplitude*/
 	double alx=atan2(locout->locx[iloc]*ratiox+offx,hs);
 	double aly=atan2(locout->locy[iloc]*ratioy+offy,hs);
 	double btx=thetax-alx;
@@ -66,13 +67,10 @@ proj_rect_grid(RECTMAP_T *mapin, double thetax, double thetay,
 	double dplocy=ddy*sin(aly)/sin(bty)+a0y;
 	vi[0]=locout->locx[iloc]*ratiox+offx;
 	vi[1]=locout->locy[iloc]*ratioy+offy;
-	//info("x=%g, y=%g, dplocx=%g, dplocy=%g\n",
-	//    locout->locx[iloc],locout->locy[iloc],
-	//    dplocx,dplocy);
+	
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
-	//info("dplocx=%g, dplocy=%g,nplocx=%d, nplocy=%d\n",
-	//   dplocx,dplocy,nplocx,nplocy);
+	
 	if(nplocx<0||nplocx>=wrapx||nplocy<0||nplocy>=wrapy){
 	    continue;
 	}else{
@@ -80,7 +78,7 @@ proj_rect_grid(RECTMAP_T *mapin, double thetax, double thetay,
 	    nplocy1=nplocy+1;
 	}
 	sc2=sc*cosangle(vi,vm3);
-	//sc2=sc*0.707;
+	
 	phiout[iloc]+=sc2*(phiin[nplocy][nplocx]*(1.-dplocx)*(1.-dplocy)
 			  +phiin[nplocy][nplocx1]*(dplocx)*(1.-dplocy)
 			  +phiin[nplocy1][nplocx]*(1.-dplocx)*(dplocy)
@@ -94,9 +92,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	P_SURF,
 	P_X,
 	P_Y,
-	P_ALX,//M3 tilt X . pi/2 is no tilt
-	P_ALY,//M3 tilt Y 
-	P_THETAX,//guide star offset
+	P_ALX,/*M3 tilt X . pi/2 is no tilt*/
+	P_ALY,/*M3 tilt Y */
+	P_THETAX,/*guide star offset*/
 	P_THETAY,
 	P_LOC,
 	P_AMP,
@@ -127,10 +125,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     if (Y[mapin->ny-1]-Y[0]-(mapin->ny-1)*mapin->dy > 1.e-10)
 	mexErrMsgTxt("Y has non even spacing\n");
     
-    double d_m3_f=20.;//from m3 to focus
+    double d_m3_f=20.;/*from m3 to focus*/
     double d_exitpupil_f=46.38661051;
-    //double d_m2_m3=23.59375000;
-    //double d_m2_f=43.59375000;
     double d_exitpupil_m3=d_exitpupil_f-d_m3_f;
     double r_exitpupil=1.546220350;
     double r_pupil=15;

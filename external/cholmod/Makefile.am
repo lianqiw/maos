@@ -1,8 +1,5 @@
-#We don't do debugging in this external code. don't use OPTS.
-#ICC performs bad in nehalem based machines.
-#CCsave=$(CC)
-#CC=gcc
-EXTRA_DIST=./Include\
+EXTRA_DIST=\
+./Include\
 ./Supernodal/t_cholmod_super_numeric.c\
 ./Supernodal/t_cholmod_super_solve.c\
 ./Core/t_cholmod_triplet.c\
@@ -33,17 +30,13 @@ EXTRA_DIST=./Include\
 
 #remove _DNPARTITION is METIS is installed 
 AM_CFLAGS=-DNDEBUG=1 -O3 -DUSE_MEM=0 -DHAVE_SSE2=1 -DDLONG -DNPARTITION 
-
-#if DO_SO
-lib_LTLIBRARIES=libchol.la
-libchol_la_CFLAGS=$(AM_CFLAGS) -I$(srcdir)/Include
-libchol_la_SOURCES=$(CHOL_SRC)
-#else
-#lib_LIBRARIES=libchol.a
-#libchol_a_CFLAGS=$(AM_CFLAGS) -I$(srcdir)/Include 
-#libchol_a_SOURCES=$(CHOL_SRC)
-#endif
-
+if COMP_CHOL
+lib_LTLIBRARIES=libcholmod.la
+libcholmod_la_CFLAGS=$(AM_CFLAGS) -I$(srcdir)/Include
+libcholmod_la_SOURCES=$(CHOL_SRC)
+else
+EXTRA_DIST+=$(CHOL_SRC)
+endif
 CHOL_SRC=\
 ./Supernodal/cholmod_super_solve.c \
 ./Supernodal/cholmod_super_numeric.c \
