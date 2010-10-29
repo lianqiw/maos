@@ -34,6 +34,7 @@ if COMP_CHOL
 lib_LTLIBRARIES=libcholmod.la
 libcholmod_la_CFLAGS=$(AM_CFLAGS) -I$(srcdir)/Include
 libcholmod_la_SOURCES=$(CHOL_SRC)
+libcholmod_la_LIBADD=$(FLIBS) -lm
 else
 EXTRA_DIST+=$(CHOL_SRC)
 endif

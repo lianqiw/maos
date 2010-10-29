@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.6.2, lianqiw@gmail.com)
+AC_INIT(maos, 0.6.4, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
@@ -66,7 +66,7 @@ AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
 OPTScommon=" -Wshadow  -Wall -fPIC" #-all-static will produce a static exe.
-LDSYS=""
+LDSYS="-lz -lm"
 OPTSextra=""
 use_shm="no"
 use_static="no"
@@ -258,7 +258,8 @@ else
    if test "x$use_ifort" = "xyes";then
       AC_PROG_F77([ifort ifc]) #Use intel compiler
    else
-      AC_PROG_F77 #use g77 or gfortran
+      F77=gfortran #force use of gfortran. not g77
+      AC_PROG_F77([gfortran]) #use gfortran (gcc4), not g77(gcc3)
    fi
    AC_PROG_F77_C_O #Check the compiler
    AC_F77_LIBRARY_LDFLAGS #create FLIBS FCLIBS
@@ -271,19 +272,22 @@ if test "x$have_chol" = "xyes" ;then
 else
     echo "cholmod is not available, will download the source and compile."
     LDCHOL="../external/cholmod/libcholmod.la"
-    CFLAGS="$CFLAGS -I${srcdir}/external/cholmod/Include"
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
 AC_CHECK_HEADERS([unistd.h])
 #LDARPACK and LDCHOL must be before LAPACK and FLIBS
-LDOPTS="$LDARPACK $LDCHOL $LAPACK $LDFFT -lz -lm $LDSYS $FLIBS"
+LDOPTS="$LAPACK  $LDSYS"
 #put all-static should be behind AC_F77_LIBRARY_LDFLAGS and/or AC_F77_FUNC, otherwise it will panics gcc linking with fortran.
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)
 AC_SUBST(LDEXE)
 AC_SUBST(LDSYS)
+AC_SUBST(LDARPACK)
+AC_SUBST(LDCHOL)
+AC_SUBST(LDFFT)
 AC_SUBST(LAPACK)
+AC_SUBST(FLIBS)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 LIBS="" #somehow LIBS contain -fftw3

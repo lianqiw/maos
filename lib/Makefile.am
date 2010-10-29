@@ -1,6 +1,8 @@
 SUBDIRS=sys/ .
-AM_CFLAGS=$(OPTS) -I $(top_srcdir)
-
+AM_CFLAGS=$(OPTS) -I$(top_srcdir)
+if COMP_CHOL
+AM_CFLAGS+=-I$(top_srcdir)/external/cholmod/Include
+endif
 #include_HEADERS
 nobase_include_HEADERS=accphi.h common.h type.h eigs.h locbin.h misc.h mathmisc.h	\
 random.h sp.h dsp.h csp.h bin.h cell.h mkg.h path.h readcfg.h suitesparse.h	\
@@ -17,10 +19,8 @@ fft.c genotf.c
 
 
 lib_LTLIBRARIES=libaos.la
-libaos_la_CFLAGS=$(OPTS) 
 libaos_la_SOURCES=$(AOS_SRC)
-libaos_la_LDFLAGS=
-
+libaos_la_LIBADD=sys/libsys.la $(LDARPACK) $(LDCHOL) $(LDFFT)
 
 #The following enables the generation of documentation for cmat, ccell, csp functions.
 dmat.c:tmp.c

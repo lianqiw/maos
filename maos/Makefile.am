@@ -5,7 +5,7 @@ AM_LDFLAGS=$(LDEXE)
 
 #the following libs can not be in AM_LDFLAGS otherwise in mac the binary will not be updated when the libs change (in MAC)#Notice the order. previous dependent on later
 
-LDADD=../lib/libaos.la ../lib/sys/libsys.la $(LDOPTS)
+LDADD=../lib/libaos.la $(LDOPTS)
 
 bin_PROGRAMS=../bin/maos 
 ___bin_maos_SOURCES=maos.h maos.c parms.h setup_parms.c types.h utils.h utils.c	\
@@ -14,4 +14,3 @@ ___bin_maos_SOURCES=maos.h maos.c parms.h setup_parms.c types.h utils.h utils.c	
 	 perfevl.c wfsints.c genseotf.c genseotf.h mtch.c mtch.h cachedm.c	\
 	 filter.c ahst.c ahst.h sim_utils.c sim_utils.h setup_surf.c		\
 	 setup_surf.h recon_utils.c recon_utils.h cn2est.c cn2est.h
-

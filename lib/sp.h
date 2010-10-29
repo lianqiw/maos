@@ -27,8 +27,6 @@ X(sp) *Y(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 void Y(spmove)(X(sp) *A, X(sp) *res);\
 X(sp) *Y(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 X(sp)* Y(spnewrandu)(int nx, int ny, const T mean, double fill,struct_rand *rstat) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spshm_ro)(key_t shmkey) CHECK_UNUSED_RESULT;\
-X(sp) *Y(spshm_rw)(key_t shmkey, int m, int n, int nzmax, int type) CHECK_UNUSED_RESULT;\
 void Y(spsetnzmax)(X(sp) *sp, long nzmax);\
 void Y(spfree_do)(X(sp) *sp);\
 void Y(sparrfree)(X(sp) **sparr, int n);\
