@@ -93,11 +93,10 @@ case "$host_os" in
     OPTSextra="-D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
     if test -f "$mkl_lib" ;then
        use_mkl_default="yes"
-       use_static_default="yes"
     else
        use_mkl_default="no"
-       use_static_default="no"
     fi
+    use_static_default="no"
     if test -d /dev/shm ;then
        use_shm_default="yes"
     else
@@ -214,9 +213,9 @@ if test "x$use_icc" = "xno" ;then
     fi
 fi
 #call convention of fortran libraries
-AC_F77_FUNC(dgemm)
-AC_F77_FUNC(dposv)
-AC_F77_FUNC(dsaupd)
+#AC_F77_FUNC(dgemm)
+#AC_F77_FUNC(dposv)
+#AC_F77_FUNC(dsaupd)
 if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
       echo The MKL library is not available at "$mkl_lib"
@@ -238,15 +237,15 @@ else
        LAPACK="-lblas -llapack"
    fi
    echo LAPACK=$LAPACK
-   AC_CHECK_LIB([blas],[$dgemm],[],[AC_MSG_ERROR(Please install blas or use --enable-mkl to down MKL from MAOS website)],[$LAPACK])
-   AC_CHECK_LIB([lapack],[$dposv],[],[AC_MSG_ERROR(Please install lapackor use --enable-mkl to down MKL from MAOS websit)],[$LAPACK])
+   AC_CHECK_LIB([blas],[dgemm_],[],[AC_MSG_ERROR(Please install blas or use --enable-mkl to down MKL from MAOS website)],[$LAPACK])
+   AC_CHECK_LIB([lapack],[dposv_],[],[AC_MSG_ERROR(Please install lapackor use --enable-mkl to down MKL from MAOS websit)],[$LAPACK])
 fi
 
 #Check for FFTW3 header and library.
 AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 LDFFT="-lfftw3"
-AC_CHECK_LIB([arpack], [$dsaupd],[have_arpack="yes"],[have_arpack="no"])
+AC_CHECK_LIB([arpack], [dsaupd_],[have_arpack="yes"],[have_arpack="no"])
 if test "x$have_arpack" = "xyes" ;then
    echo "Arpack is installed in the system. will use it."
    LDARPACK="-larpack"
