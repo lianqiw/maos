@@ -10,7 +10,7 @@ SUBDIRS=external/arpack/ external/cholmod/ lib/ maos/ skyc/
 
 include $(top_srcdir)/aminclude.am
 
-EXTRA_DIST = doxygen.cfg doxygen_layout.xml 
+EXTRA_DIST = doxygen.cfg doxygen_layout.xml doxygen.css index.c
 
 #Note: in EXTRA_DIST, don't specify a folder. If you do, everything in that
 #folder, including compiled files (in the compiled folder), svn directory, will
