@@ -3902,28 +3902,28 @@ center if at bin n/2. <div class="fragment"><pre class="fragment"><a name="l0156
 <p>
 if x has only 1 column: x is the coordinate. y is the function value. if x has two columns: first column is the coordinate, y is null.<p>
 It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .<p>
-If the values of a function <img class="formulaInl" alt="$f(x)$" src="form_3.png"> and its derivative are know at x=0, and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.<p>
+If the values of a function <img class="formulaInl" alt="$f(x)$" src="form_6.png"> and its derivative are know at x=0, and x=1 (normalized coordinate), then the function can be interpolated on the interval [0,1] using a third degree polynomial. This is called cubic interpolation. The formula of this polynomial can be easily derived.<p>
 A third degree polynomial and its derivative: <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f(x)=ax^3+bx^2+cx+d \]" src="form_4.png">
+<img class="formulaDsp" alt="\[ f(x)=ax^3+bx^2+cx+d \]" src="form_7.png">
 <p>
  <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ f(x)=3ax^3+2bx+c \]" src="form_5.png">
+<img class="formulaDsp" alt="\[ f(x)=3ax^3+2bx+c \]" src="form_8.png">
 <p>
  The coefficients can be derived from the value and derivatives: <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&amp;=&amp;-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&amp;=&amp;f^\prime(0)\\ d&amp;=&amp;f(0)\\ \end{eqnarray*}" src="form_6.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;2f(0)-2f(1)+f^\prime (0)+f^\prime(1)\\ b&amp;=&amp;-3f(0)+3f(1)-2f^\prime(0)-f^\prime(0)\\ c&amp;=&amp;f^\prime(0)\\ d&amp;=&amp;f(0)\\ \end{eqnarray*}" src="form_9.png">
 <p>
  the derivatives can be computed as <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} f^\prime(0)&amp;=&amp;\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&amp;=&amp;\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}" src="form_7.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} f^\prime(0)&amp;=&amp;\frac{f(1)-f(-1)}{2}\\ f^\prime(1)&amp;=&amp;\frac{f(2)-f(0)}{2}\\ \end{eqnarray*}" src="form_10.png">
 <p>
  so we have the formula <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&amp;=&amp; f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&amp;=&amp;-0.5 f(-1) + 0.5 f(1) \\ d&amp;=&amp; f(0) \\ \end{eqnarray*}" src="form_8.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} a&amp;=&amp;-0.5 f(-1) + 1.5 f(0) - 1.5 f(1) + 0.5 f(2)\\ b&amp;=&amp; f(-1) - 2.5 f(0) + 2 f(1) - 0.5 f(2)\\ c&amp;=&amp;-0.5 f(-1) + 0.5 f(1) \\ d&amp;=&amp; f(0) \\ \end{eqnarray*}" src="form_11.png">
 <p>
 <p>
 for the boundary pints, replace <p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_9.png">
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_12.png">
 <p>
  by <p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_10.png">
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_13.png">
 <p>
  Otehr type of boundaries are handled in the same way.<p>
 see <a href="http://www.paulinternet.nl/?page=bicubicx">http://www.paulinternet.nl/?page=bicubicx</a> <div class="fragment"><pre class="fragment"><a name="l01630"></a>01630                                             {
@@ -4117,10 +4117,10 @@ Do 1D cubic spline all at once by calling X(spline_prep) and X(spline_evald).
 <p>
 x is the x coordinate vector of the 2-d grid. y is the y coordinate vector of the 2-d grid. z is defined on the 2-d grid. It is upto the user to make sure that the coordinate is increasingly ordered and evenly spaced .<p>
 The boundaries are handled in the same way is X(spline). i.e. replace <p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_9.png">
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(-1))/2\]" src="form_12.png">
 <p>
  by <p class="formulaDsp">
-<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_10.png">
+<img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_13.png">
 <p>
  Otehr type of boundaries are handled in the same way. <div class="fragment"><pre class="fragment"><a name="l01720"></a>01720                                                        {
 <a name="l01721"></a>01721     <span class="keyword">const</span> <span class="keywordtype">long</span> nx=x-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>;
@@ -6778,7 +6778,7 @@ be aware that the data is not 8-byte aligned. The file is truncated if already e
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:09 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

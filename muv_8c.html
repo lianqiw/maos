@@ -71,7 +71,7 @@ window.onload = initDynSections;
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8c.html#2bbd39c499e8875359bc94f9e4925793">muv</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const <a class="el" href="structMUV__T.html">MUV_T</a> *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const double alpha)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply the sparse plug low rand compuation to xin without scaling of alpha: <img class="formulaInl" alt="$xout=(muv.M-muv.U*muv.V')*xin*alpha$" src="form_15.png">; U,V are low rank.  <a href="#2bbd39c499e8875359bc94f9e4925793"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply the sparse plug low rand compuation to xin without scaling of alpha: <img class="formulaInl" alt="$xout=(muv.M-muv.U*muv.V')*xin*alpha$" src="form_18.png">; U,V are low rank.  <a href="#2bbd39c499e8875359bc94f9e4925793"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="muv_8c.html#a4328cb15b28f10526bb59c0e1a8ab38">muv_chol_solve</a> (<a class="el" href="structdmat.html">dmat</a> **xout, const <a class="el" href="structMUV__T.html">MUV_T</a> *A, const <a class="el" href="structdmat.html">dmat</a> *xin)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply cholesky backsubstitution solve to xin to get xout.  <a href="#a4328cb15b28f10526bb59c0e1a8ab38"></a><br></td></tr>
@@ -130,7 +130,7 @@ Apply M - u*v' <hr><h2>Function Documentation</h2>
 <div class="memdoc">
 
 <p>
-Apply the sparse plug low rand compuation to xin without scaling of alpha: <img class="formulaInl" alt="$xout=(muv.M-muv.U*muv.V')*xin*alpha$" src="form_15.png">; U,V are low rank. 
+Apply the sparse plug low rand compuation to xin without scaling of alpha: <img class="formulaInl" alt="$xout=(muv.M-muv.U*muv.V')*xin*alpha$" src="form_18.png">; U,V are low rank. 
 <p>
 <div class="fragment"><pre class="fragment"><a name="l00030"></a>00030                                                                             {
 <a name="l00031"></a>00031     <a class="code" href="dsp_8h.html#8d54733ac98a65ca9f99c97713362125" title="Multiply a spcell with a dense cell: C=C+A*B*alpha.">spcellmulmat</a>(xout, A-&gt;<a class="code" href="structMUV__T.html#573a633efd57964aef3250a0d014f227" title="block sparse matrix">M</a>, xin, alpha);
@@ -358,7 +358,7 @@ Free <a class="el" href="structMUV__T.html" title="Decompose an operator into a 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:09 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

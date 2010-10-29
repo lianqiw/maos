@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: Profiling MAOS</title>
+<title>maos-0.6.4: Programming Guidelines</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,34 +53,50 @@ window.onload = initDynSections;
       <li class="current"><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
 </div>
 <div class="contents">
-<h1><a class="anchor" name="page5">Profiling MAOS </a></h1>MAOS is a pthread enabled software, and in the current stage, the gprof based profiling does not generate useful information.<p>
-Instead, we have to reply on system wide profilers, such as the oprofile.<p>
-Prepare:<p>
-<code>opcontrol --callgraph=16</code><p>
-<code>opcontrol --start </code><p>
-Then Run MAOS<p>
-View profile:<p>
-<code>opcontrol --stop</code><p>
-<code>opcontrol --dump</code><p>
-<code>opreport -cgf -l maos | gprof2dot.py -f oprofile | dot -Tpng -o output.png</code><p>
-or<p>
-<code>opgprof maos | gprof2dot.py | dot -Tpng -o output.png</code><p>
-gprof2dot.py can be found in the scripts folder. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<h1><a class="anchor" name="page5">Programming Guidelines </a></h1><h2><a class="anchor" name="sect-guide">
+Guidelines</a></h2>
+When modifying the code, please adhere to the following guidelines as strictly as possible.<p>
+Memory allocation:<p>
+<ul>
+<li>When declaring a struct, always initialize it to zero by calling calloc or memset, unless you have a good reason not to.</li></ul>
+<p>
+<ul>
+<li>Use calloc instead of malloc to initialize the memory unless for large arrays that you will initialize immediately.</li></ul>
+<p>
+Functions:<p>
+<ul>
+<li>The input parameters that is also the output should be grouped in the beginning.</li></ul>
+<p>
+<ul>
+<li>In any function, there should usually be at most 1 return statement unless NULL or error code are returned before matural.</li></ul>
+<p>
+<ul>
+<li>One utility function should be handle only one major mask to maximize reusability.</li></ul>
+<p>
+<ul>
+<li>Input arguments to utility functions (in lib folder) should be basic types to maximize resuability. Input arguments to simulation functions can be wrapped (like simu) to maximum readability.</li></ul>
+<p>
+Others:<p>
+<ul>
+<li>Avoid non constant static variables/pointers unless you have a good reason to do so. static variables are bad for multi-threading and hard to free after usage.</li></ul>
+<p>
+<ul>
+<li>whenever modify something temporarily for debugging, make a warning. let it easily identifiable. not make a hidden bug.</li></ul>
+<p>
+<ul>
+<li>Do not hard code adjustable parameters.</li></ul>
+<p>
+<ul>
+<li>Always declare unchanged variables to constants. declare pointers as restrict if possible.</li></ul>
+<p>
+<ul>
+<li>Do not include system headers in header files unless necessary. include thoese headers in .c file. </li></ul>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

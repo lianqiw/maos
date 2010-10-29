@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: Run the code</title>
+<title>maos-0.6.4: Defining Simulation Parameters</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,115 +53,23 @@ window.onload = initDynSections;
       <li class="current"><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
 </div>
 <div class="contents">
-<h1><a class="anchor" name="page3">Run the code </a></h1><h2><a class="anchor" name="sect-run">
-Run the code</a></h2>
-<h3><a class="anchor" name="sect-prep">
-Preparing the folders and compiling</a></h3>
-We recommend using three different folders to 1) store the source tree, 2) compile the code, and 3) run the simulation.<p>
-The source tree is where the source is extracted. Obtain the software in the form of the compressed tar ball: maos_version.tar.gz. Extract it into some directory and name the directory src_dir. Example:<p>
-<div class="fragment"><pre class="fragment">
-    cd ~/work/programming
-    tar zxvf maos_version.tar.gz 
-    cd maos_version
-    export src_dir=$(pwd)
-    </pre></div><p>
-Next we create another folder, where we are going to compile the code. example:<p>
-<div class="fragment"><pre class="fragment">
-    cd ~/work/maos
-    mkdir comp_optim &amp;&amp; cd comp_optim
-    $src_dir/configure
-    make
-    </pre></div><p>
-which will config the compiling folder with GCC compiler and default optimization flags and compile the code.<p>
-To use intel C++ compiler, do the following<p>
-<div class="fragment"><pre class="fragment">
-    cd ~/work/maos
-    mkdir comp_icc &amp;&amp; cd comp_icc
-    $src_dir/configure --enable-icc
-    make
-    </pre></div><p>
-To use the redistributed Intel MKL library (for fast cholesky decomposition) <div class="fragment"><pre class="fragment">
-    $src_dir/configure --enable-icc --enable-mkl
-    </pre></div><p>
-To enable debug mode <div class="fragment"><pre class="fragment">
-    $src_dir/configure --enable-debug
-    </pre></div><p>
-To specify your own compiler using gcc4.1 which is not the system default <div class="fragment"><pre class="fragment">
-    CC=gcc4.1 $src_dir/configure
-    </pre></div><p>
-The compiled executable is maos in the sub-folder “bin” of the compiling folder. You do not have to do "make install" to run the simulations.<h3><a class="anchor" name="sect-monitor">
-Using the job monitor</a></h3>
-When reasonably recent GTK+ and Cairo libraries are present in the system, two additional executives will be compiled, “drawdaemon” and “monitor”. The plotting utility “drawdaemon” is located in sub-folder “lib”. It is launched automatically when plotting commands are issued in the software. The monitoring utility “monitor” is located in sub-folder “bin”. Link monitor to a folder that is in your PATH and type “monitor” in the command line to use it.<p>
-In order to use monitor to monitor jobs in different machines, follow these steps:<p>
-Create a folder .aos in your home folder, create two files in there. Put these files in all the machines you want to monitor. <div class="fragment"><pre class="fragment">
-~/.aos/hosts  Each line contains a machine's hostname you want to monitor. 
-              They should be the names returned by command "hostname", 
-              and you should be able to log into those machines 
-              with these names. Set up /etc/hosts properly to ensure this.
-~/.aos/port   contains the port you want the scheduler to bind to 
-              so that the monitor can connect to it. 
-              Any non-previledged port numbers are fine (like 10000). 
-              Different users should have different port number. 
-	      The port has to be the same on all the machines. 
-    </pre></div><h3><a class="anchor" name="sect-simu-setup">
-Defining simulation setup files</a></h3>
+<h1><a class="anchor" name="page3">Defining Simulation Parameters </a></h1><h2><a class="anchor" name="sect-simu-setup">
+Defining Simulation Parameters</a></h2>
 All user modifiable options are configured through these config files with suffix “.conf”. The supplied default setup files are stored in sub-folder “config/maos”. The config files are organized in a modular way. One .conf file can include another .conf file with include=”filename.conf”. Most of the .conf files in “config/maos” file are self-documented.<p>
 All the options are in the form of key=value. The usually convention is: if the entry in parms called parms.wfs.thetax, the entry in .conf file will be in the form wfs.thetax=value. Array values are embraced by[], string are embraced by double quote “”. a line ended with \ will be concatenated with the next line (no space is allowed after \). Anything after comment string # will be ignored during reading. The config key=value can be specified multiple times for any key, in which case the latter value will override the previous value. The software will complain and exit if any key=value pair is not understood or required but not provided.<p>
-The usual way to organize config files for a specific problem is to keep a baseline .conf file in sub-folder “config/maos” in the source folder that specify all the necessary key=value entries through optionally including other .conf files, and one or multiple overriding file (in the simulation folder, not inside “config/maos”) override the values you want to change from the baseline.<p>
-In the “config/maos” sub-folder in the source folder, there are three baseline .conf files: 1) nfiraos.conf for NFIRAOS mcao simulations, 2) scao_lgs.conf for single conjugate LGS simulation, and 2) scao_ngs.conf for single conjugate NGS simulation. Each of this file include a few other .conf files by specifying include=”filename.conf”, for example, all the three baseline .conf files include 1) “sim.conf” to specify closed loop information such as loop gain, number of time steps, etc, 2) “recon.conf” to specify reconstruction parameters in closed loop, 3) “dbg.conf” to specify debugging parameters. The MCAO baseline “nfiraos.conf” includes “atm_mk13n50p.conf” to specify MK13N median seeing turbulence profile, while the two SCAO baselines include “atm_scao.conf” that specifies the turbulence information with only a single turbulence layer.<p>
-In the MCAO case, you can put include=”atm_srd.conf” in your overriding .conf file to use the TMT SRD profile instead of the default MK13N median seeing turbulence profile.<p>
-The .conf files in the “config/maos” folder are only modified during code development and should not be modified by the end user. Use overriding .conf files in simulation folders to modify the values.<h3><a class="anchor" name="sect-run">
-Run the code</a></h3>
-The simulation is usually done outside of the source and compilation folder by linking the maos executable into the simulation folder or link maos into a direction that is in the PATH. Example<p>
-<div class="fragment"><pre class="fragment">
-cd ~/work/maos
-mkdir NFIRAOS &amp;&amp; cd NFIRAOS
-ln ~/work/aos/comp_optim/bin/maos . -s
-./maos
-    </pre></div><p>
-You can also link “maos” into your PATH and run “maos” instead of “./maos”<p>
-<div class="fragment"><pre class="fragment">
-    cd ~/local/bin #make sure this is in your PATH
-    ln ~/work/aos/comp_optim/bin/maos . -s 
-    #Make sure you use -s to make symbolic link
-    </pre></div><p>
-Use the following command to get the help message: <div class="fragment"><pre class="fragment">
-    maos -h  #will print the help message and exit.
-    </pre></div><p>
-If maos is launched without any parameters, the baseline NFIRAOS configuration nfiraos.conf will be used. The valid command line arguments are as follows<p>
-<div class="fragment"><pre class="fragment">
--c scao_lgs.conf   Change the baseline config from nfiraos.conf to scao_lgs.conf
--d     deteach from the console and run in background. You can then close
-       the terminal and log out without killing the job
--n 4   use 4 threads. (default is 1)
--s 2   to override the seed (normally specified in sim.seed) to 2. 
-       repeat to have multiple seeds (-s1 -s2 -s3)
--f     Force starting immediately. Otherwise only proceed when cpu is available
-       as controlled by the built-in "scheduler"
-a.conf Append a.conf to the config file list
--o ABC Put the results in folder ABC (create if not already exists). If not 
-       specified the default output folder name will be composed of the data 
-       and time string in the form of 2010-03-05-161539.
-    </pre></div><p>
-Example: <div class="fragment"><pre class="fragment">
-    maos -c scao_lgs.conf override.conf -n 4 -d -o test 
-    </pre></div><p>
-Will launch the software using “scao_lgs.conf” (Single conjugate, LGS system) as the baseline and override some parameters by override.conf. It will launch 4 threads in simulation, detach from the console, and output the results into folder “test”. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+The recommanded way to organize config files for a specific problem is to keep a baseline .conf file in sub-folder “config/maos” in the source folder that specify all the necessary key=value entries through optionally including other .conf files. Embed the options in the command line (embrace it with quote if the option contains spaces, like arrays) or put in one or multiple overriding file (in the simulation folder, not inside “config/maos”) to override the values you want to change from the baseline.<p>
+The .conf files in the “config/maos” folder are only modified during code development and should not be modified by the end user. Use overriding .conf files in simulation folders or embed configurations in the command line to modify the values.<p>
+In the “config/maos” sub-folder in the source folder, there are three baseline .conf files:<p>
+<ul>
+<li>nfiraos.conf for NFIRAOS mcao simulations,</li><li>scao_lgs.conf for single conjugate LGS simulation</li><li>scao_ngs.conf for single conjugate NGS simulation.</li></ul>
+<p>
+Each of this file include a few other .conf files by specifying include=”filename.conf”, for example, all the three baseline .conf files include 1) “sim.conf” to specify closed loop information such as loop gain, number of time steps, etc, 2) “recon.conf” to specify reconstruction parameters in closed loop, 3) “dbg.conf” to specify debugging parameters. The MCAO baseline “nfiraos.conf” includes “atm_mk13n50p.conf” to specify MK13N median seeing turbulence profile, while the two SCAO baselines include “atm_scao.conf” that specifies the turbulence information with only a single reconstruction layer.<p>
+<a class="el" href="conf0.html">nfiraos.conf</a> shows the full content of nfiraos.conf </div>
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

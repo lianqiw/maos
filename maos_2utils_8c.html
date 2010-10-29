@@ -1086,7 +1086,7 @@ Parse command line arguments argc, argv.
 Computes strehl from OPD without doing FFT. 
 <p>
 The strehl is simply<p>
-<img class="formulaInl" alt="$s=\sum(A*exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]) $" src="form_61.png"><p>
+<img class="formulaInl" alt="$s=\sum(A*exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]) $" src="form_64.png"><p>
 where A is the amplitude map. <div class="fragment"><pre class="fragment"><a name="l00550"></a>00550                                                                                            {
 <a name="l00551"></a>00551     <a class="code" href="structccell.html" title="an 2-d block matrix of cmat.">ccell</a> *psf2s=<a class="code" href="cmat_8h.html#cdcbda2dbd5dfec8344b8bada36a0a35" title="create a new block matrix.">ccellnew</a>(nwvl,1);
 <a name="l00552"></a>00552     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iwvl=0; iwvl&lt;nwvl; iwvl++){
@@ -1164,7 +1164,7 @@ where A is the amplitude map. <div class="fragment"><pre class="fragment"><a nam
 Computes PSF from OPD by doing FFT. 
 <p>
 The PSF is computed as<p>
-<img class="formulaInl" alt="$\textrm{PSF}=\mathcal{F}[A\times exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]]$" src="form_62.png"><p>
+<img class="formulaInl" alt="$\textrm{PSF}=\mathcal{F}[A\times exp[\frac{2\pi i}{\lambda}*\textrm{OPD}]]$" src="form_65.png"><p>
 The peak value (center) in the computed PSF is normalized by the peak value in the differaction limited PSF. In other words, the peak value in the computed PSF is the Strehl. Keep this in mind when you compute enclosed energy. <div class="fragment"><pre class="fragment"><a name="l00575"></a>00575                                              {
 <a name="l00576"></a>00576     <span class="keywordflow">if</span>(psfsize==1){
 <a name="l00577"></a>00577     <span class="keywordflow">return</span> <a class="code" href="maos_2utils_8c.html#23f278c19893472d21761319c7eb4ebc" title="Computes strehl from OPD without doing FFT.">strehlcomp</a>(iopdevl, amp, nwvl, wvl);
@@ -1487,7 +1487,7 @@ Estimate generalized aniso angle theta2 from Fried parameter r0, and layer heigh
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:03 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

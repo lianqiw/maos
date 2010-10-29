@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: Introduction</title>
+<title>maos-0.6.4: Introduction to MAOS</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,21 +53,11 @@ window.onload = initDynSections;
       <li class="current"><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
 </div>
 <div class="contents">
-<h1><a class="anchor" name="page1">Introduction </a></h1><h2><a class="anchor" name="sect-intro">
+<h1><a class="anchor" name="page1">Introduction to MAOS </a></h1><h2><a class="anchor" name="sect-intro">
 Introduction</a></h2>
 This code is a complete new implementation of the MCAO simulator LAOS, which was written in MATLAB language. The motivation to develop this software is to create a multi-conjugate adaptive optics simulator that runs fast, consumes less memory, and does the job without MATLAB, which is proprietary and has a large memory footprint. The code is written in C language with a function oriented design. The code is completely configurable through configuration files. The code tries its best to check the configuration for any apparent errors or conflicts. The configuration files are very readable and easy to maintain. The final development goal is to make an efficient, easy to use, general purpose adaptive optics simulator to help the development of adaptive optics systems, particularly advanced, very high order systems for TMT and other ELTs.<p>
 Atmospheric turbulence is represented as one or multiple discrete screen(s) at different heights that evolves according to frozen flow with given wind velocity. The resulting aberrations are sensed by one or multiple natural guide star (NGS) or laser guide star (LGS) Shack-Hartmann wavefront sensor(s) (WFS). The sensors can be simulated as idealized wavefront gradient sensors, best Zernike fit tilt sensors, or a physical optic WFS using user specified pixel characteristics and a matched filter estimation algorithm. The laser guide star wavefront sensing model includes the impact of guide star elongation for a specified sodium layer profile and (an optional) polar coordinate CCD. The tomographic wavefront reconstruction then estimates the turbulence in one or several different heights from the pseudo open loop gradients measured by the WFS, using a computationally efficient implementation of a minimum variance reconstruction algorithm as described in [Ellerbroek, 2002]. These reconstructed turbulence screens are then fit to the actuators on one or several deformable mirrors (DMs) to achieve best possible correction over a specified field of view (FoV). Performance evaluation is done in terms of RMS wavefront error, Strehl ratio, and point spread function (PSFs) at a few science objects in the target FoV, which might be different from the FoV used for the fitting step. A range of additional specified features are implemented, such as telescope wavefront aberrations and the “split tomography” control algorithm.<p>
@@ -76,7 +66,7 @@ A C99 compliant compiler is required to compile the code, such as GCC 4 or Intel
 This software also contains two optional executable (drawdaemon, monitor) for plotting and job monitoring (jobs can be monitored on several different machines). These two executable requires GTK+ and the Cairo development and run-time library.<p>
 The multi-threading is achieved using Posix Threads (no MPI is implemented). This parallelism works fairly well in multi-core, shared memory machines. For example, in a recently purchased desktop with Intel Core i5 quad-core processor at 2.66 GHz, the software (configured in a NFIRAOS split tomography mode with physical optics LGS and geometric best fit Zernike tilt NGS), compiled with Intel C++ compiler version 10, can run at 10 seconds per simulation time step with 1 thread and 3 seconds per time step with 4 threads. The same setup in a dual Intel W5590 server runs 7 seconds per simulation time step with 1 thread and 4 seconds per step with 2 threads. The scaling with number of cores is fairly good. The memory consumption in the NFIRAOS baseline case is about 2 G.<p>
 The code contains three main directories. The lib, maos, and skyc directory. The directory lib contains routines that are not specific to the simulations and can be adopted by other routines. The directory maos contains routines that are specific the adaptive optics simulations. The directory skyc contains routines for sky coverage postprocessing. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

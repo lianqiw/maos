@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.1: Guidelines</title>
+<title>maos-0.6.4: Interpreting Simulation Results</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -53,60 +53,70 @@ window.onload = initDynSections;
       <li class="current"><a href="pages.html"><span>Related&nbsp;Pages</span></a></li>
       <li><a href="annotated.html"><span>Data&nbsp;Structures</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
-    <li>
-      <form action="search.php" method="get">
-        <table cellspacing="0" cellpadding="0" border="0">
-          <tr>
-            <td><label>&nbsp;<u>S</u>earch&nbsp;for&nbsp;</label></td>
-            <td><input type="text" name="query" value="" size="20" accesskey="s"/></td>
-          </tr>
-        </table>
-      </form>
-    </li>
     </ul>
   </div>
 </div>
 <div class="contents">
-<h1><a class="anchor" name="page4">Guidelines </a></h1><h2><a class="anchor" name="sect-guide">
-Guidelines</a></h2>
-When modifying the code, please adhere to the following guidelines as strictly as possible.<p>
-Memory allocation:<p>
+<h1><a class="anchor" name="page4">Interpreting Simulation Results </a></h1>MAOS will generate output in binary format <code></code>.bin or zipped <code></code>.bin.gz files as described below.<p>
+There are two MATLAB mex routines <code>read</code> and <code>write</code> that can read and write <code></code>.bin or <code></code>.bin.gz files in MATLAB. The source of these mex routines are located in sub-folderx <code>mex</code>. Cd to this folder and issue <code>make</code> to compile these mex routines. Copy <code>write.mexa64</code> and <code>read.mexa64</code> into a folder that is in your matlab path, such as $HOME/matlab. The usage in MATLAB is as follows:<p>
+<div class="fragment"><pre class="fragment">
+   cle=read('Res_1'); 
+or cle=read('Res_1.bin'); 
+or cle=read('Res_1.bin.gz');
+   each wil try to read Res_1.bin or Res_1.bin.gz 
+   
+   write(cle,'Res_1');     will write the data to Res_1.bin.gz;
+   write(cle,'Res_1.bin'); will write the data to Res_1.bin without compression.
+</pre></div><p>
+There will be several files created during simulation in the result folder. The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these .bin or .bin.gz files using provided mex function <code>read</code> in MATLAB.<p>
 <ul>
-<li>When declaring a struct, always initialize it to zero by calling calloc or memset, unless you have a good reason not to.</li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Res_1.bin</a>:</code> A binary file containing a cell array that include the main results. i.e. res=read('Res_1');<ul>
+<li><code>res{1}</code> contains the open loop wavefront variance (WFV in units of <img class="formulaInl" alt="$m^2$" src="form_0.png">) in row vectors. The rows are<ul>
+<li>Piston removed WFV</li><li>WFV in tip/tilt modes</li><li>Piston/tip/tilt removed WFV</li></ul>
+</li><li><code>res{2}</code> contains the residual wavefront variance after the tomography phase screen is directly applied as the correction in open loop mode. Empty is <a class="el" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">evl.tomo</a> is zero.</li><li><code>res{3}</code> contains the closed loop wavefront variance in row vectors. The rows are<ul>
+<li>Piston removed WFV</li><li>WVF in tip/tilt modes</li><li>Piston/tip/tilt removed WFV</li></ul>
+</li><li><code>res{4}</code> (Only in split tomography) contains the closed loop wavefront variance. The rows are<ul>
+<li>WFV in LGS contains modes</li><li>WFV in NGS Tip/Tilt modes</li><li>WFV in NGS modes (includeing Tip/Tilt and additional modes controlled by NGS (On-Instrument WFS)</li></ul>
+</li></ul>
+</li></ul>
 <p>
 <ul>
-<li>Use calloc instead of malloc to initialize the memory unless for large arrays that you will initialize immediately.</li></ul>
-<p>
-Functions:<p>
-<ul>
-<li>The input parameters that is also the output should be grouped in the beginning.</li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resolep_1.bin</a>:</code> Open loop wavefront variance for each science field point. Each cell represent a science field point. The format is similar to res{1} above.</li></ul>
 <p>
 <ul>
-<li>In any function, there should usually be at most 1 return statement unless NULL or error code are returned before matural.</li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resolmp_1.bin</a>:</code> Open loop wavefront Zernike (not normalized wrt radius) modes defined on not-normalized coordinate on the aperture. The format is similar as <code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resolep_1.bin</a></code> </li></ul>
 <p>
 <ul>
-<li>One utility function should be handle only one major mask to maximize reusability.</li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resclep_1.bin</a>:</code> Closed loop wavefront variance for each science field point, in the same format as <a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resolep_1.bin</a></li></ul>
 <p>
 <ul>
-<li>Input arguments to utility functions (in lib folder) should be basic types to maximize resuability. Input arguments to simulation functions can be wrapped (like simu) to maximum readability.</li></ul>
-<p>
-Others:<p>
-<ul>
-<li>Avoid non constant static variables/pointers unless you have a good reason to do so. static variables are bad for multi-threading and hard to free after usage.</li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resclmp_1.bin</a>:</code> Close loop wavefront Zernike modes, in the same format as <a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resolmp_1.bin</a></li></ul>
 <p>
 <ul>
-<li>whenever modify something temporarily for debugging, make a warning. let it easily identifiable. not make a hidden bug.</li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resclemp_1.bin</a>:</code> (Only in split tomography) LGS/TT/NGS mode wavefront error for each direction.</li></ul>
 <p>
 <ul>
-<li>Do not hard code adjustable parameters.</li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">RescleNGSm_1.bin</a>:</code> (Only in split tomography) contains a row vector array of either the residual NGS modes (in radian like unit) or the applied NGS mode correction if ideal NGS mode correction is made. Mainly used to save the ideal NGS modes applied in skycoverage pre-simulation.</li></ul>
 <p>
 <ul>
-<li>Always declare unchanged variables to constants. declare pointers as restrict if possible.</li></ul>
+<li><code>maos_975.conf:</code> The final effective arrays of the configurations for MAOS run with PID 975. Can be used to reproduce the simulation or check the configurations.</li></ul>
 <p>
 <ul>
-<li>Do not include system headers in header files unless necessary. include thoese headers in .c file. </li></ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">sanea_sim_1.bin</a>:</code> When wavefront sensors are running in physical optics mode, the average gradinet measurement error for that wavefront sensor is saved (in order) in a cell in this file. Each cell is a column vector with elements twice the number of subaperture. The first half is for x (or radial) gradient, and the second half is for y (or azimuthal) gradient. They are in units of <img class="formulaInl" alt="$rad^2$" src="form_1.png">.</li></ul>
+<p>
+<ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">evlpsfmean_1.bin</a>:</code> When evl.psfmean is 1, contains the time averaged psf. if is a cell array of <img class="formulaInl" alt="$n_{wvl}\times n_{evl}$" src="form_2.png">. Each cell contains a center cut of the science PSF.</li></ul>
+<p>
+<ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">evlpsfhist_1_ievlx.bin</a>:</code> When evl.psfhist is 1, each of these files contains the time history of the complex PSF of evaluation direction x.</li></ul>
+<p>
+<ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resuptcmd_1.bin</a>:</code> Each cell contains the uplink tip/tilt command (only none empty for LGS WFS) history in unit of radian.</li></ul>
+<p>
+<ul>
+<li><code><a class="el" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">Resupterr_1.bin</a>:</code> Each cell contains the uplink tip/tilt error history in unit of radian. </li></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Oct 27 12:43:14 2010 for maos-0.6.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

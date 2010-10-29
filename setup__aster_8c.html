@@ -71,7 +71,7 @@ window.onload = initDynSections;
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#d3fa807794f44992a3e1a8b7dc0edd00">comb_select</a> (long n, long k)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Computes the number of possibilities of selection k items from n items <img class="formulaInl" alt="$C_n^k$" src="form_63.png">.  <a href="#d3fa807794f44992a3e1a8b7dc0edd00"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Computes the number of possibilities of selection k items from n items <img class="formulaInl" alt="$C_n^k$" src="form_66.png">.  <a href="#d3fa807794f44992a3e1a8b7dc0edd00"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aster_8c.html#76b6d28cf50738ecd9851d4b11c61664">comb_init</a> (long k)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">initialize an initial combination composed a vector of non-negative numbers 0,1,2,.  <a href="#76b6d28cf50738ecd9851d4b11c61664"></a><br></td></tr>
@@ -145,7 +145,7 @@ Routines to handle asterisms.
 <div class="memdoc">
 
 <p>
-Computes the number of possibilities of selection k items from n items <img class="formulaInl" alt="$C_n^k$" src="form_63.png">. 
+Computes the number of possibilities of selection k items from n items <img class="formulaInl" alt="$C_n^k$" src="form_66.png">. 
 <p>
 <div class="fragment"><pre class="fragment"><a name="l00034"></a>00034                                        {
 <a name="l00035"></a>00035     <span class="comment">//number of possibilities of selecting k from n.</span>
@@ -667,17 +667,17 @@ pgm is the reconstructor. ineam is the error inverse. <dl compact><dt><b>Paramet
 Setup the reconstructor for each <a class="el" href="structASTER__S.html" title="asterism dependent data.">ASTER_S</a>. 
 <p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\[R_{ngs}=(G_M^T C_n^{-1} G_M)^{-1})G_M^T C_n^{-1}\]" src="form_64.png">
+<img class="formulaDsp" alt="\[R_{ngs}=(G_M^T C_n^{-1} G_M)^{-1})G_M^T C_n^{-1}\]" src="form_67.png">
 <p>
 <p>
 <ul>
-<li><img class="formulaInl" alt="$R_{ngs}$" src="form_65.png"> is the reconstructor.</li></ul>
+<li><img class="formulaInl" alt="$R_{ngs}$" src="form_68.png"> is the reconstructor.</li></ul>
 <p>
 <ul>
-<li><img class="formulaInl" alt="$C_n^{-1}$" src="form_66.png"> is the measurement error covariance matrix. Inclue both the measurement error and tilt anisoplanatism effects (computed as the variance of noise free gradient on PSFs that have ideal NGS compensation</li></ul>
+<li><img class="formulaInl" alt="$C_n^{-1}$" src="form_69.png"> is the measurement error covariance matrix. Inclue both the measurement error and tilt anisoplanatism effects (computed as the variance of noise free gradient on PSFs that have ideal NGS compensation</li></ul>
 <p>
 <ul>
-<li><img class="formulaInl" alt="$G_M^T$" src="form_67.png"> is the NGS mode to gradient operator. </li></ul>
+<li><img class="formulaInl" alt="$G_M^T$" src="form_70.png"> is the NGS mode to gradient operator. </li></ul>
 <div class="fragment"><pre class="fragment"><a name="l00283"></a>00283                                                                           {
 <a name="l00284"></a>00284     <span class="keywordtype">int</span> ndtrat=parms-&gt;skyc.ndtrat;
 <a name="l00285"></a>00285     <span class="keywordflow">if</span>(aster-&gt;<a class="code" href="structASTER__S.html#2750bea046eff686756f1ba0eccf8c46" title="mode reconstructor">pgm</a>){
@@ -809,7 +809,7 @@ Setup the reconstructor for each <a class="el" href="structASTER__S.html" title=
 Optimize type II servo gains beased on measurement noise and signal PSD. 
 <p>
 We try to minimize <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ \sigma^2=\int \textrm{PSD}_{ngs,ws}H_{rej}\textrm{d}\nu + \int_0^{\nu_{nyquist}} \textrm{PSF}\textrm{d}\nu \]" src="form_68.png">
+<img class="formulaDsp" alt="\[ \sigma^2=\int \textrm{PSD}_{ngs,ws}H_{rej}\textrm{d}\nu + \int_0^{\nu_{nyquist}} \textrm{PSF}\textrm{d}\nu \]" src="form_71.png">
 <p>
  <div class="fragment"><pre class="fragment"><a name="l00381"></a>00381                                                                          {
 <a name="l00382"></a>00382     <span class="comment">//Focus tracking error?</span>
@@ -1327,7 +1327,7 @@ Free the <a class="el" href="structASTER__S.html" title="asterism dependent data
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:03 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

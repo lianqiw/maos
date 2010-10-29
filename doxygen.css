@@ -12,10 +12,12 @@ h1 {
 
 h2 {
 	font-size: 120%;
+	font-weight: bold;
 }
 
 h3 {
 	font-size: 100%;
+	font-weight: bold;
 }
 
 /* @end */

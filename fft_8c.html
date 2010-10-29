@@ -114,7 +114,7 @@ static&nbsp;</td><td class="memItemRight" valign="bottom"><b>__attribute__</b> (
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Do 2d FFT transforms and scale the output by 1/sqrt(nx*ny).  <a href="#9ee95d19c60ca917f6f61708ff6544b6"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="fft_8c.html#b3159a1cba08cacee28341ac4fc74cd9">cfft2partial</a> (<a class="el" href="structcmat.html">cmat</a> *A, int ncomp, int dir)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply 2d FFT partially over ncomp <img class="formulaInl" alt="$\times$" src="form_2.png">ncomp region use two 1d plans that takes 1d fft through its column and selectly for its rows to produce smaller psf.  <a href="#b3159a1cba08cacee28341ac4fc74cd9"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply 2d FFT partially over ncomp <img class="formulaInl" alt="$\times$" src="form_5.png">ncomp region use two 1d plans that takes 1d fft through its column and selectly for its rows to produce smaller psf.  <a href="#b3159a1cba08cacee28341ac4fc74cd9"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="fft_8c.html#7b04bda35e161da1cb91a619fcf46829">cffttreat</a> (<a class="el" href="structcmat.html">cmat</a> *A)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">returns IFFT(fftshift(FFT(A)))  <a href="#7b04bda35e161da1cb91a619fcf46829"></a><br></td></tr>
@@ -420,7 +420,7 @@ Do 2d FFT transforms and scale the output by 1/sqrt(nx*ny).
 <div class="memdoc">
 
 <p>
-Apply 2d FFT partially over ncomp <img class="formulaInl" alt="$\times$" src="form_2.png">ncomp region use two 1d plans that takes 1d fft through its column and selectly for its rows to produce smaller psf. 
+Apply 2d FFT partially over ncomp <img class="formulaInl" alt="$\times$" src="form_5.png">ncomp region use two 1d plans that takes 1d fft through its column and selectly for its rows to produce smaller psf. 
 <p>
 <div class="fragment"><pre class="fragment"><a name="l00153"></a>00153                                               {
 <a name="l00154"></a>00154     assert(abs(dir)==1);
@@ -475,7 +475,7 @@ returns IFFT(fftshift(FFT(A)))
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:09 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

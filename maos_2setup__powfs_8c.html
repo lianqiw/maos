@@ -963,32 +963,32 @@ Free the detector transfer function.
 Setting up Detector transfer function used to translate PSFs from FFTs to detector pixel images. 
 <p>
 Integration over pixel size and leaking between pixels are considered.<p>
-We are going to sample the PSF <img class="formulaInl" alt="$\phi(\theta)$" src="form_19.png"> onto detectors. For a detector pixel <img class="formulaInl" alt="$i$" src="form_20.png"> at <img class="formulaInl" alt="$\theta_{i}$" src="form_21.png">, oriented along angle <img class="formulaInl" alt="$\alpha$" src="form_22.png">, we have <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ I(\theta_{i})=\int\textrm{d}\theta\phi(\theta)S(\theta-\theta_{i})=\int\textrm{d}\theta\phi(\theta-\theta_{i})S(\theta)\]" src="form_23.png">
+We are going to sample the PSF <img class="formulaInl" alt="$\phi(\theta)$" src="form_22.png"> onto detectors. For a detector pixel <img class="formulaInl" alt="$i$" src="form_23.png"> at <img class="formulaInl" alt="$\theta_{i}$" src="form_24.png">, oriented along angle <img class="formulaInl" alt="$\alpha$" src="form_25.png">, we have <p class="formulaDsp">
+<img class="formulaDsp" alt="\[ I(\theta_{i})=\int\textrm{d}\theta\phi(\theta)S(\theta-\theta_{i})=\int\textrm{d}\theta\phi(\theta-\theta_{i})S(\theta)\]" src="form_26.png">
 <p>
- where <img class="formulaInl" alt="$S(\theta)$" src="form_24.png"> is the pixel weighting function. Rewrite the equation in Fourier domain,<p>
+ where <img class="formulaInl" alt="$S(\theta)$" src="form_27.png"> is the pixel weighting function. Rewrite the equation in Fourier domain,<p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} I(\theta_{i}) &amp; = &amp; \int\textrm{d}\theta\int\textrm{d} u\hat{\phi}(u)e^{2\pi i(\theta-\theta_{i})u}S(\theta)\\ &amp; = &amp; \int\textrm{d} u\hat{\phi}(u)\hat{S}(-u)e^{2\pi i\theta_{i}u}\\ &amp; = &amp; \mathcal{F}^{-1}[\hat{\phi}(u)\hat{S}(-u)](\theta_{i})\end{eqnarray*}" src="form_25.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} I(\theta_{i}) &amp; = &amp; \int\textrm{d}\theta\int\textrm{d} u\hat{\phi}(u)e^{2\pi i(\theta-\theta_{i})u}S(\theta)\\ &amp; = &amp; \int\textrm{d} u\hat{\phi}(u)\hat{S}(-u)e^{2\pi i\theta_{i}u}\\ &amp; = &amp; \mathcal{F}^{-1}[\hat{\phi}(u)\hat{S}(-u)](\theta_{i})\end{eqnarray*}" src="form_28.png">
 <p>
 <p>
 For a polar coordinate CCD with pixel edges alonging , we have<p>
 The detector pixels can be modeled as a square, convolved with a Gaussian to model the pixel blurring (charge leaking) <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ S(\theta)=S^{\prime}(\theta_{ra})=\sqcap(\theta_{r}/\Delta)\sqcap(\theta_{a}/\Delta)*\frac{1}{2\pi \theta_b^2}\exp(-\frac{\theta_r^2+\theta_u^2}{2\theta_b^2}) \]" src="form_26.png">
+<img class="formulaDsp" alt="\[ S(\theta)=S^{\prime}(\theta_{ra})=\sqcap(\theta_{r}/\Delta)\sqcap(\theta_{a}/\Delta)*\frac{1}{2\pi \theta_b^2}\exp(-\frac{\theta_r^2+\theta_u^2}{2\theta_b^2}) \]" src="form_29.png">
 <p>
-, where <img class="formulaInl" alt="$R$" src="form_27.png"> is the rotation matrix and <img class="formulaInl" alt="$\theta_{ra}=R^{T}\theta$" src="form_28.png"> is the coordinate in the local radial-azimuthal coordinate system for a Polar coordinate CCD, <img class="formulaInl" alt="$\theta_b$" src="form_29.png"> is a measure of the blurring of the pixel. For a pixel aligned along <img class="formulaInl" alt="$x/y$" src="form_30.png"> directions, <img class="formulaInl" alt="$R$" src="form_27.png"> is simply identity.<p>
-The Fourier transform of the detector pixel function <img class="formulaInl" alt="$S(\theta)$" src="form_24.png"> is then<p>
+, where <img class="formulaInl" alt="$R$" src="form_30.png"> is the rotation matrix and <img class="formulaInl" alt="$\theta_{ra}=R^{T}\theta$" src="form_31.png"> is the coordinate in the local radial-azimuthal coordinate system for a Polar coordinate CCD, <img class="formulaInl" alt="$\theta_b$" src="form_32.png"> is a measure of the blurring of the pixel. For a pixel aligned along <img class="formulaInl" alt="$x/y$" src="form_33.png"> directions, <img class="formulaInl" alt="$R$" src="form_30.png"> is simply identity.<p>
+The Fourier transform of the detector pixel function <img class="formulaInl" alt="$S(\theta)$" src="form_27.png"> is then<p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} \hat{S}(u) &amp; = &amp; \int\textrm{d}\theta S(\theta)e^{-2\pi i\theta^{T}u}\\ &amp; = &amp; \int\textrm{d}\theta S^{\prime}(R^{T}\theta)e^{-2\pi i\theta^{T}u}\\ &amp; = &amp;\int\textrm{d}(R^{T}\theta)S^{\prime}(R^{T}\theta)e^{-2\pi i(R^{T}\theta)^{T}(R^{T}u)}\\ &amp; = &amp; \hat{S^{\prime}}(R^{T}u)\end{eqnarray*}" src="form_31.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} \hat{S}(u) &amp; = &amp; \int\textrm{d}\theta S(\theta)e^{-2\pi i\theta^{T}u}\\ &amp; = &amp; \int\textrm{d}\theta S^{\prime}(R^{T}\theta)e^{-2\pi i\theta^{T}u}\\ &amp; = &amp;\int\textrm{d}(R^{T}\theta)S^{\prime}(R^{T}\theta)e^{-2\pi i(R^{T}\theta)^{T}(R^{T}u)}\\ &amp; = &amp; \hat{S^{\prime}}(R^{T}u)\end{eqnarray*}" src="form_34.png">
 <p>
 <p>
-The Fourier transform of <img class="formulaInl" alt="$\hat{S^{\prime}}$" src="form_32.png"> is <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ \hat{S^{\prime}}(u_{ra})=\Delta^{2}\textrm{sinc}(u_{r}\Delta)\textrm{sinc}(u_{\theta}\Delta) \exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)] \]" src="form_33.png">
+The Fourier transform of <img class="formulaInl" alt="$\hat{S^{\prime}}$" src="form_35.png"> is <p class="formulaDsp">
+<img class="formulaDsp" alt="\[ \hat{S^{\prime}}(u_{ra})=\Delta^{2}\textrm{sinc}(u_{r}\Delta)\textrm{sinc}(u_{\theta}\Delta) \exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)] \]" src="form_36.png">
 <p>
 <p>
 Finally, we have <p class="formulaDsp">
-<img class="formulaDsp" alt="\[ I(\theta_{i})=\mathcal{F}^{-1}[\hat{\phi}(u)\Delta^{2}\textrm{sinc}(\Delta(u_{x}\cos\theta+u_{y}\sin\theta))\textrm{sinc}(\Delta(-u_{x}\sin\theta+u_{y}\cos\theta))\exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)](\theta_{i})\]" src="form_34.png">
+<img class="formulaDsp" alt="\[ I(\theta_{i})=\mathcal{F}^{-1}[\hat{\phi}(u)\Delta^{2}\textrm{sinc}(\Delta(u_{x}\cos\theta+u_{y}\sin\theta))\textrm{sinc}(\Delta(-u_{x}\sin\theta+u_{y}\cos\theta))\exp[-2\pi^2\theta_b^2(u_r^2+u_a^2)](\theta_{i})\]" src="form_37.png">
 <p>
- the last <img class="formulaInl" alt="$\theta_{i}$" src="form_21.png"> means evaluate the function at <img class="formulaInl" alt="$\theta_{i}$" src="form_21.png"> by interpolation. When there is leaking between actuators. We can multiply the sinc functions with a Gaussian blurring function. <div class="fragment"><pre class="fragment"><a name="l00693"></a>00693                                                                {
+ the last <img class="formulaInl" alt="$\theta_{i}$" src="form_24.png"> means evaluate the function at <img class="formulaInl" alt="$\theta_{i}$" src="form_24.png"> by interpolation. When there is leaking between actuators. We can multiply the sinc functions with a Gaussian blurring function. <div class="fragment"><pre class="fragment"><a name="l00693"></a>00693                                                                {
 <a name="l00694"></a>00694     tic;
 <a name="l00695"></a>00695     <span class="comment">//wvl independent parameters</span>
 <a name="l00696"></a>00696     <span class="keyword">const</span> <span class="keywordtype">double</span> dxsa=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#b60c0105ea57177379331a702f3bf054">pts</a>-&gt;<a class="code" href="structPTS__T.html#c719d677f4114b4654d40bb0f00ecc58" title="side length of subaperture">dsa</a>;
@@ -2125,7 +2125,7 @@ Free all parameters of powfs at the end of simulation.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:09 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

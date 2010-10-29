@@ -86,7 +86,7 @@ window.onload = initDynSections;
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">apply weighting W0/W1 with weighting wt for each block.  <a href="#ac31a93d205900027f62a385a321de0b"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#c2bca0565f72973497ae8d589a8be63d">calcWmcc</a> (const <a class="el" href="structdcell.html">dcell</a> *A, const <a class="el" href="structdcell.html">dcell</a> *B, const <a class="el" href="structdsp.html">dsp</a> *W0, const <a class="el" href="structdmat.html">dmat</a> *W1, const <a class="el" href="structdmat.html">dmat</a> *wt)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compute W0/W1 weighting dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_18.png">.  <a href="#c2bca0565f72973497ae8d589a8be63d"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compute W0/W1 weighting dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_21.png">.  <a href="#c2bca0565f72973497ae8d589a8be63d"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#9a7179685cb86edbe6f89371ab9034f4">act_slaving</a> (<a class="el" href="structLOC__T.html">LOC_T</a> **aloc, <a class="el" href="structspcell.html">spcell</a> *HA, <a class="el" href="structdmat.html">dmat</a> *W1, <a class="el" href="structdcell.html">dcell</a> *NW)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compute slaving actuator regularization.  <a href="#9a7179685cb86edbe6f89371ab9034f4"></a><br></td></tr>
@@ -438,7 +438,7 @@ W0*xin-W1*(W1'*xin); <div class="fragment"><pre class="fragment"><a name="l00106
 <div class="memdoc">
 
 <p>
-Compute W0/W1 weighting dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_18.png">. 
+Compute W0/W1 weighting dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_21.png">. 
 <p>
 <div class="fragment"><pre class="fragment"><a name="l00124"></a>00124                                        {
 <a name="l00125"></a>00125 
@@ -675,7 +675,7 @@ HA is used to compute active actuators. If NW is non NULL, orthogonalize it with
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:02 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:09 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

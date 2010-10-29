@@ -1235,10 +1235,10 @@ assemble tomography matrix.
 <p>
 In CG mode, this function is not executed if tomo.assemble=0, Instead, the algorithm is contained in <a class="el" href="recon_8c.html" title="Wavefront reconstruction and DM fitting routines.">recon.c</a>. When you modify anything, make sure you also do it there.<p>
 For integrated tomograhy:<p>
-<img class="formulaInl" alt="$\hat{x}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1}+G_{ngs}^{T}C_{ngs}^{-1} G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\equiv}RL^{-1}RR s.$" src="form_35.png"><p>
+<img class="formulaInl" alt="$\hat{x}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1}+G_{ngs}^{T}C_{ngs}^{-1} G_{ngs})^{-1}(G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}+G_{ngs}^{T}C_{ngs}^{-1}s_{ngs}){\equiv}RL^{-1}RR s.$" src="form_38.png"><p>
 For split tomography, the terms regarding NGS are dropped:<p>
-<img class="formulaInl" alt="$\hat{x}_{lgs}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1})^{-1} G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv RL^{-1} RR s.$" src="form_36.png"><p>
-The left hand side of linear equation (inside the inverse) is stored in RL. The right hand side of the linear equation (outside of the inverse) is stored in RR. The terms regarding the NGS are handled using low rank terms. The gradients from LGS and NGS and concatenated to <img class="formulaInl" alt="$s$" src="form_37.png">.<p>
+<img class="formulaInl" alt="$\hat{x}_{lgs}=(G_{lgs}^{T}C_{lgs}^{-1}G_{lgs}+C_{x}^{-1})^{-1} G_{lgs}^{T}C_{lgs}^{-1}s_{lgs}\equiv RL^{-1} RR s.$" src="form_39.png"><p>
+The left hand side of linear equation (inside the inverse) is stored in RL. The right hand side of the linear equation (outside of the inverse) is stored in RR. The terms regarding the NGS are handled using low rank terms. The gradients from LGS and NGS and concatenated to <img class="formulaInl" alt="$s$" src="form_40.png">.<p>
 In the LGS part, there is a global tip/tilt removal operator because LGS is insensitive to global tip/tilts.<p>
 For details see <a href="http://www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803">http://www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803</a> <div class="fragment"><pre class="fragment"><a name="l00848"></a>00848                                                                   {
 <a name="l00849"></a>00849     <span class="comment">//if not cg or forced, build explicitly the tomography matrix.</span>
@@ -1917,8 +1917,8 @@ We only need a reconstructor for every different MOAO type. <div class="fragment
 <p>
 Assemble the DM fitting matrix. 
 <p>
-The fitting is done by minimizing <img class="formulaInl" alt="$||H_X x - H_A a||^2_W$" src="form_38.png"> where <img class="formulaInl" alt="$H_X, H_A$" src="form_39.png"> are ray tracing operator from tomography grid xloc, and deformable mirror grid aloc to pupil grid ploc. The norm is weighted using bilinear influence functions within the telescope aperture. We have<p>
-<img class="formulaInl" alt="$a=\left[H_A^T(W_0-W_1 W_1^T)H_A\right]^{-1} H_A^T (W_0-W_1) H_X x$" src="form_40.png"><p>
+The fitting is done by minimizing <img class="formulaInl" alt="$||H_X x - H_A a||^2_W$" src="form_41.png"> where <img class="formulaInl" alt="$H_X, H_A$" src="form_42.png"> are ray tracing operator from tomography grid xloc, and deformable mirror grid aloc to pupil grid ploc. The norm is weighted using bilinear influence functions within the telescope aperture. We have<p>
+<img class="formulaInl" alt="$a=\left[H_A^T(W_0-W_1 W_1^T)H_A\right]^{-1} H_A^T (W_0-W_1) H_X x$" src="form_43.png"><p>
 For details see <a href="http://www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803">http://www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803</a> <div class="fragment"><pre class="fragment"><a name="l01346"></a>01346                                                             {
 <a name="l01347"></a>01347     <span class="keyword">const</span> <span class="keywordtype">int</span> nfit=parms-&gt;<a class="code" href="structPARMS__T.html#3b8ffe6fa411ea23ef7c1383fe61abbf" title="DM fit parameters.">fit</a>.<a class="code" href="structFIT__CFG__T.html#6e582e718e6c2418d8b9238fdcdfcb9d" title="Number of DM fit directions.">nfit</a>;
 <a name="l01348"></a>01348     <span class="keyword">const</span> <span class="keywordtype">int</span> ndm=parms-&gt;<a class="code" href="structPARMS__T.html#6492c3b89e0243fe23d88ebedb044b0e" title="Number of DMs.">ndm</a>;
@@ -2287,21 +2287,21 @@ compute the MVST split tomography NGS mode reconstructor.
 2010-03-16: New Implementation.<p>
 Definition:<p>
 <ul>
-<li><img class="formulaInl" alt="$G_{lgs}$" src="form_41.png"> is LGS gradient operator from xloc, contained in recon-&gt;G0tomo as <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a></li><li><img class="formulaInl" alt="$G_{ngs}$" src="form_42.png"> is NGS gradient operator from xloc, contained in recon-&gt;G0L as dense matrix</li><li><img class="formulaInl" alt="$C_{lgs}, C_{ngs}$" src="form_43.png"> is the LGS, and NGS measurement noise covariance matrix.</li><li><img class="formulaInl" alt="$\hat{x}_{lgs}$" src="form_44.png"> is LGS tomography output</li><li><img class="formulaInl" alt="$\hat{x}_{ngs}$" src="form_45.png"> is NGS minimum variance split tomography output</li><li><img class="formulaInl" alt="$a_{ngs}$" src="form_46.png"> is NGS minimum variance DM output.</li><li><img class="formulaInl" alt="$F$" src="form_47.png"> is the fitting operator</li><li><img class="formulaInl" alt="$H_A$" src="form_48.png"> is the ray tracing operator from aloc to ploc, contained in recon-&gt;HA.</li><li><img class="formulaInl" alt="$MVModes$" src="form_49.png"> is the MVST NGS modes</li><li><img class="formulaInl" alt="$MVRngs$" src="form_50.png"> is the MVST NGS reconstructor</li></ul>
+<li><img class="formulaInl" alt="$G_{lgs}$" src="form_44.png"> is LGS gradient operator from xloc, contained in recon-&gt;G0tomo as <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a></li><li><img class="formulaInl" alt="$G_{ngs}$" src="form_45.png"> is NGS gradient operator from xloc, contained in recon-&gt;G0L as dense matrix</li><li><img class="formulaInl" alt="$C_{lgs}, C_{ngs}$" src="form_46.png"> is the LGS, and NGS measurement noise covariance matrix.</li><li><img class="formulaInl" alt="$\hat{x}_{lgs}$" src="form_47.png"> is LGS tomography output</li><li><img class="formulaInl" alt="$\hat{x}_{ngs}$" src="form_48.png"> is NGS minimum variance split tomography output</li><li><img class="formulaInl" alt="$a_{ngs}$" src="form_49.png"> is NGS minimum variance DM output.</li><li><img class="formulaInl" alt="$F$" src="form_50.png"> is the fitting operator</li><li><img class="formulaInl" alt="$H_A$" src="form_51.png"> is the ray tracing operator from aloc to ploc, contained in recon-&gt;HA.</li><li><img class="formulaInl" alt="$MVModes$" src="form_52.png"> is the MVST NGS modes</li><li><img class="formulaInl" alt="$MVRngs$" src="form_53.png"> is the MVST NGS reconstructor</li></ul>
 <p>
 We have<p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} \hat{x}_{lgs}&amp;=&amp;A^{-1}G^{T}_{lgs}C_{lgs}^{-1}s_{lgs}\\ Uw&amp;=&amp;A^{-1}G_{ngs}^TC_{ngs}\\ \hat{x}_{ngs}&amp;=&amp;Uw(1+G_{ngs}Uw)^{-1}(s_{ngs}-G_{ngs}\hat{x}_{lgs});\\ a_{NGS}&amp;=&amp;F\hat{x}_{ngs}\\ MVModes&amp;=&amp;F\cdot Uw\\ MVRngs&amp;=&amp;(1+G_{ngs}Uw)^{-1} \end{eqnarray*}" src="form_51.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} \hat{x}_{lgs}&amp;=&amp;A^{-1}G^{T}_{lgs}C_{lgs}^{-1}s_{lgs}\\ Uw&amp;=&amp;A^{-1}G_{ngs}^TC_{ngs}\\ \hat{x}_{ngs}&amp;=&amp;Uw(1+G_{ngs}Uw)^{-1}(s_{ngs}-G_{ngs}\hat{x}_{lgs});\\ a_{NGS}&amp;=&amp;F\hat{x}_{ngs}\\ MVModes&amp;=&amp;F\cdot Uw\\ MVRngs&amp;=&amp;(1+G_{ngs}Uw)^{-1} \end{eqnarray*}" src="form_54.png">
 <p>
 <p>
-We need to orthnormalize the NGS modes. Propagate the NGS modes <img class="formulaInl" alt="$F\cdot Uw$" src="form_52.png"> to fitting directions and compute the cross-coupling matrix with weighting on <img class="formulaInl" alt="$W_0, W_1$" src="form_53.png">, we have<p>
+We need to orthnormalize the NGS modes. Propagate the NGS modes <img class="formulaInl" alt="$F\cdot Uw$" src="form_55.png"> to fitting directions and compute the cross-coupling matrix with weighting on <img class="formulaInl" alt="$W_0, W_1$" src="form_56.png">, we have<p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} Q&amp;=&amp;H_A\cdot F \cdot Uw\\ M_{CC}&amp;=&amp;Q^T(W_0-W_1 W_1^T)Q\\ \end{eqnarray*}" src="form_54.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} Q&amp;=&amp;H_A\cdot F \cdot Uw\\ M_{CC}&amp;=&amp;Q^T(W_0-W_1 W_1^T)Q\\ \end{eqnarray*}" src="form_57.png">
 <p>
 <p>
-Do SVD on <img class="formulaInl" alt="$MCC$" src="form_55.png"> we have <img class="formulaInl" alt="$M_{CC}=u\Sigma v^T $" src="form_56.png"> where <img class="formulaInl" alt="$u{\equiv}v$" src="form_57.png"> because <img class="formulaInl" alt="$MCC$" src="form_55.png"> is symmetric. Redefine the NGS modes and reconstructor as<p>
+Do SVD on <img class="formulaInl" alt="$MCC$" src="form_58.png"> we have <img class="formulaInl" alt="$M_{CC}=u\Sigma v^T $" src="form_59.png"> where <img class="formulaInl" alt="$u{\equiv}v$" src="form_60.png"> because <img class="formulaInl" alt="$MCC$" src="form_58.png"> is symmetric. Redefine the NGS modes and reconstructor as<p>
 <p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} MVModes&amp;=&amp;F\cdot Uw\cdot u \Sigma^{-1/2}\\ MVRngs&amp;=&amp;\Sigma^{1/2}u^T (1+G_{ngs}A^{-1}G_{ngs}^T C_{ngs}^{-1})^{-1} \end{eqnarray*}" src="form_58.png">
+<img class="formulaDsp" alt="\begin{eqnarray*} MVModes&amp;=&amp;F\cdot Uw\cdot u \Sigma^{-1/2}\\ MVRngs&amp;=&amp;\Sigma^{1/2}u^T (1+G_{ngs}A^{-1}G_{ngs}^T C_{ngs}^{-1})^{-1} \end{eqnarray*}" src="form_61.png">
 <p>
  <div class="fragment"><pre class="fragment"><a name="l01695"></a>01695                                                       {
 <a name="l01696"></a>01696     <span class="comment">/*</span>
@@ -2664,7 +2664,7 @@ Here is the call graph for this function:</div>
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:31:03 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>
