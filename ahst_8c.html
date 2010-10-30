@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.4: maos/ahst.c File Reference</title>
+<title>maos-0.7.0: maos/ahst.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -1034,53 +1034,66 @@ setup NGS modes and reconstructor using AHST for one or two DMs.
 <a name="l00596"></a>00596     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#8fdfce1e68e018f54640c3d7214fcc33" title="Specify debugging parameters.">dbg</a>.<a class="code" href="structDBG__CFG__T.html#a26dd47b19f6a0d34b6835e82dbbea80" title="method to compute wa for ngsmod removal.">wamethod</a>==0){
 <a name="l00597"></a>00597         info(<span class="stringliteral">"Wa using DM mode\n"</span>);
 <a name="l00598"></a>00598         tic;
-<a name="l00599"></a>00599         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>=<a class="code" href="ahst_8c.html#93a5f84318748435a67e0d7d3c4b228e" title="Compute NGS mode aperture weighting using science field.">ngsmod_Wa</a>(parms,recon,aper,0);
-<a name="l00600"></a>00600         <a class="code" href="eigs_8c.html#45367708d512ccf95ac48292c25419f8" title="Apply tikhonov regulation with threshold of thres*max(eig(A)).">spcelltikcr</a>(ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>, 1e-9);<span class="comment">//Always do this. Wa is not SPD.</span>
-<a name="l00601"></a>00601         toc(<span class="stringliteral">"Wa"</span>);
-<a name="l00602"></a>00602         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>=dcellpinv(ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">Mdm</a>, NULL,ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>);
-<a name="l00603"></a>00603         toc(<span class="stringliteral">"Pngs"</span>);
-<a name="l00604"></a>00604         <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#34e9b29344aab2d74ce12502e1c2e717" title="remote tip/tilt in high order DM fit output in split mode">split_rtt</a>){
-<a name="l00605"></a>00605         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#6492c3b89e0243fe23d88ebedb044b0e" title="Number of DMs.">ndm</a>,1);
-<a name="l00606"></a>00606         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
-<a name="l00607"></a>00607             <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *Matt=<a class="code" href="loc_8c.html#7e0b28fc7b9234d93ec2af2a8b5ff33b" title="Create a dmat containing locx and locy in two columns.">loc2mat</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm],0);
-<a name="l00608"></a>00608             ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]=<a class="code" href="dmat_8h.html#cac32a8e663201109abf36bd322e9a46" title="compute the pseudo inverse of matrix A with weigthing of full matrix W or sparse...">dpinv</a>(Matt, NULL, ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[idm+idm*ndm]);
-<a name="l00609"></a>00609             dfree(Matt);
-<a name="l00610"></a>00610         }
-<a name="l00611"></a>00611         }
-<a name="l00612"></a>00612     }<span class="keywordflow">else</span>{
-<a name="l00613"></a>00613         info(<span class="stringliteral">"Wa using science mode\n"</span>);
-<a name="l00614"></a>00614         tic;
-<a name="l00615"></a>00615         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>=<a class="code" href="ahst_8c.html#7851621262fbc9e1d6bc1019c61bb139" title="compute NGS mode removal from LGS commands using aperture weighting.">ngsmod_Pngs_Wa</a>(parms,recon,aper,0);
-<a name="l00616"></a>00616         toc(<span class="stringliteral">"Pngs_Wa"</span>);
+<a name="l00599"></a>00599         
+<a name="l00600"></a>00600         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>=<a class="code" href="ahst_8c.html#93a5f84318748435a67e0d7d3c4b228e" title="Compute NGS mode aperture weighting using science field.">ngsmod_Wa</a>(parms,recon,aper,0);
+<a name="l00601"></a>00601         {
+<a name="l00602"></a>00602         <span class="comment">/*</span>
+<a name="l00603"></a>00603 <span class="comment">          Add tikhonov regularization. H is from aloc to some other loc. </span>
+<a name="l00604"></a>00604 <span class="comment">          the eigen value of H'*amp*H is about 4/aloc-&gt;nloc.</span>
+<a name="l00605"></a>00605 <span class="comment">         */</span>
+<a name="l00606"></a>00606         <span class="keywordtype">int</span> nact=0;
+<a name="l00607"></a>00607         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;parms-&gt;<a class="code" href="structPARMS__T.html#6492c3b89e0243fe23d88ebedb044b0e" title="Number of DMs.">ndm</a>; idm++){
+<a name="l00608"></a>00608             nact+=recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
+<a name="l00609"></a>00609         }
+<a name="l00610"></a>00610         <span class="keywordtype">double</span> maxeig=4./nact;
+<a name="l00611"></a>00611         <a class="code" href="dsp_8h.html#e87c19de7800d82f18c211b88943f841" title="Add alpha times identity to sparse array.">spcelladdI</a>(ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>, 1e-9*maxeig);
+<a name="l00612"></a>00612         }
+<a name="l00613"></a>00613         <span class="comment">//spcelltikcr(ngsmod-&gt;Wa, 1e-9);//Always do this. Wa is not SPD.</span>
+<a name="l00614"></a>00614         toc(<span class="stringliteral">"Wa"</span>);
+<a name="l00615"></a>00615         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>=dcellpinv(ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">Mdm</a>, NULL,ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>);
+<a name="l00616"></a>00616         toc(<span class="stringliteral">"Pngs"</span>);
 <a name="l00617"></a>00617         <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#34e9b29344aab2d74ce12502e1c2e717" title="remote tip/tilt in high order DM fit output in split mode">split_rtt</a>){
-<a name="l00618"></a>00618         tic;
-<a name="l00619"></a>00619         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>=<a class="code" href="ahst_8c.html#e3113f442d824e6b7ffcc6ffe4d16361" title="compute NGS mode removal from LGS commands using aperture weighting.">ngsmod_Ptt_Wa</a>(parms,recon,aper,0);
-<a name="l00620"></a>00620         toc(<span class="stringliteral">"Pngs_Ptt"</span>);
-<a name="l00621"></a>00621         }
-<a name="l00622"></a>00622     }
-<a name="l00623"></a>00623     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#a9d49170afccefe4bdbf0507759dab89" title="0: use Wg, 1: using Wa">split_wt</a>==3){<span class="comment">//Identity weighting.</span>
-<a name="l00624"></a>00624     ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>=dcellpinv(ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">Mdm</a>, NULL,NULL);
-<a name="l00625"></a>00625     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#34e9b29344aab2d74ce12502e1c2e717" title="remote tip/tilt in high order DM fit output in split mode">split_rtt</a>){
-<a name="l00626"></a>00626         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#6492c3b89e0243fe23d88ebedb044b0e" title="Number of DMs.">ndm</a>,1);
-<a name="l00627"></a>00627         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
-<a name="l00628"></a>00628         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *Matt=<a class="code" href="loc_8c.html#7e0b28fc7b9234d93ec2af2a8b5ff33b" title="Create a dmat containing locx and locy in two columns.">loc2mat</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm],0);
-<a name="l00629"></a>00629         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]=<a class="code" href="dmat_8h.html#cac32a8e663201109abf36bd322e9a46" title="compute the pseudo inverse of matrix A with weigthing of full matrix W or sparse...">dpinv</a>(Matt, NULL,NULL);
-<a name="l00630"></a>00630         dfree(Matt);
-<a name="l00631"></a>00631         }
-<a name="l00632"></a>00632     }
-<a name="l00633"></a>00633     }<span class="keywordflow">else</span>{
-<a name="l00634"></a>00634     error(<span class="stringliteral">"Invalid parms-&gt;tomo.split_wt=%d\n"</span>, parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#a9d49170afccefe4bdbf0507759dab89" title="0: use Wg, 1: using Wa">split_wt</a>);
+<a name="l00618"></a>00618         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#6492c3b89e0243fe23d88ebedb044b0e" title="Number of DMs.">ndm</a>,1);
+<a name="l00619"></a>00619         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
+<a name="l00620"></a>00620             <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *Matt=<a class="code" href="loc_8c.html#7e0b28fc7b9234d93ec2af2a8b5ff33b" title="Create a dmat containing locx and locy in two columns.">loc2mat</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm],0);
+<a name="l00621"></a>00621             ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]=<a class="code" href="dmat_8h.html#cac32a8e663201109abf36bd322e9a46" title="compute the pseudo inverse of matrix A with weigthing of full matrix W or sparse...">dpinv</a>(Matt, NULL, ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[idm+idm*ndm]);
+<a name="l00622"></a>00622             dfree(Matt);
+<a name="l00623"></a>00623         }
+<a name="l00624"></a>00624         }
+<a name="l00625"></a>00625     }<span class="keywordflow">else</span>{
+<a name="l00626"></a>00626         info(<span class="stringliteral">"Wa using science mode\n"</span>);
+<a name="l00627"></a>00627         tic;
+<a name="l00628"></a>00628         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>=<a class="code" href="ahst_8c.html#7851621262fbc9e1d6bc1019c61bb139" title="compute NGS mode removal from LGS commands using aperture weighting.">ngsmod_Pngs_Wa</a>(parms,recon,aper,0);
+<a name="l00629"></a>00629         toc(<span class="stringliteral">"Pngs_Wa"</span>);
+<a name="l00630"></a>00630         <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#34e9b29344aab2d74ce12502e1c2e717" title="remote tip/tilt in high order DM fit output in split mode">split_rtt</a>){
+<a name="l00631"></a>00631         tic;
+<a name="l00632"></a>00632         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>=<a class="code" href="ahst_8c.html#e3113f442d824e6b7ffcc6ffe4d16361" title="compute NGS mode removal from LGS commands using aperture weighting.">ngsmod_Ptt_Wa</a>(parms,recon,aper,0);
+<a name="l00633"></a>00633         toc(<span class="stringliteral">"Pngs_Ptt"</span>);
+<a name="l00634"></a>00634         }
 <a name="l00635"></a>00635     }
-<a name="l00636"></a>00636     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00637"></a>00637     <span class="comment">//ahst stands for ad hoc split tomography</span>
-<a name="l00638"></a>00638         <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#a4accdf268607c75aa27360648f8249c">GM</a>,  <span class="stringliteral">"%s/ahst_GM"</span>,  dirsetup);
-<a name="l00639"></a>00639     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#514dd751c537bb91de904edc719535df">Rngs</a>,<span class="stringliteral">"%s/ahst_Rngs"</span>,dirsetup);
-<a name="l00640"></a>00640     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>,<span class="stringliteral">"%s/ahst_Pngs"</span>,dirsetup);
-<a name="l00641"></a>00641     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>, <span class="stringliteral">"%s/ahst_Ptt"</span>, dirsetup);
-<a name="l00642"></a>00642     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">Mdm</a>, <span class="stringliteral">"%s/ahst_Mdm"</span>, dirsetup);
-<a name="l00643"></a>00643     <a class="code" href="dmat_8h.html#fa58b8e2aea2a94ae0422ede37957a0f" title="User callable function to write cell array of sparse matrix into file.">spcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>, <span class="stringliteral">"%s/ahst_Wa"</span>, dirsetup);
-<a name="l00644"></a>00644     }
-<a name="l00645"></a>00645 }
+<a name="l00636"></a>00636     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#a9d49170afccefe4bdbf0507759dab89" title="0: use Wg, 1: using Wa">split_wt</a>==3){<span class="comment">//Identity weighting.</span>
+<a name="l00637"></a>00637     ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>=dcellpinv(ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">Mdm</a>, NULL,NULL);
+<a name="l00638"></a>00638     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#34e9b29344aab2d74ce12502e1c2e717" title="remote tip/tilt in high order DM fit output in split mode">split_rtt</a>){
+<a name="l00639"></a>00639         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#6492c3b89e0243fe23d88ebedb044b0e" title="Number of DMs.">ndm</a>,1);
+<a name="l00640"></a>00640         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
+<a name="l00641"></a>00641         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *Matt=<a class="code" href="loc_8c.html#7e0b28fc7b9234d93ec2af2a8b5ff33b" title="Create a dmat containing locx and locy in two columns.">loc2mat</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm],0);
+<a name="l00642"></a>00642         ngsmod-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]=<a class="code" href="dmat_8h.html#cac32a8e663201109abf36bd322e9a46" title="compute the pseudo inverse of matrix A with weigthing of full matrix W or sparse...">dpinv</a>(Matt, NULL,NULL);
+<a name="l00643"></a>00643         dfree(Matt);
+<a name="l00644"></a>00644         }
+<a name="l00645"></a>00645     }
+<a name="l00646"></a>00646     }<span class="keywordflow">else</span>{
+<a name="l00647"></a>00647     error(<span class="stringliteral">"Invalid parms-&gt;tomo.split_wt=%d\n"</span>, parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#a9d49170afccefe4bdbf0507759dab89" title="0: use Wg, 1: using Wa">split_wt</a>);
+<a name="l00648"></a>00648     }
+<a name="l00649"></a>00649     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
+<a name="l00650"></a>00650     <span class="comment">//ahst stands for ad hoc split tomography</span>
+<a name="l00651"></a>00651         <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#a4accdf268607c75aa27360648f8249c">GM</a>,  <span class="stringliteral">"%s/ahst_GM"</span>,  dirsetup);
+<a name="l00652"></a>00652     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#514dd751c537bb91de904edc719535df">Rngs</a>,<span class="stringliteral">"%s/ahst_Rngs"</span>,dirsetup);
+<a name="l00653"></a>00653     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a>,<span class="stringliteral">"%s/ahst_Pngs"</span>,dirsetup);
+<a name="l00654"></a>00654     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a>, <span class="stringliteral">"%s/ahst_Ptt"</span>, dirsetup);
+<a name="l00655"></a>00655     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">Mdm</a>, <span class="stringliteral">"%s/ahst_Mdm"</span>, dirsetup);
+<a name="l00656"></a>00656     <a class="code" href="dmat_8h.html#fa58b8e2aea2a94ae0422ede37957a0f" title="User callable function to write cell array of sparse matrix into file.">spcellwrite</a>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a>, <span class="stringliteral">"%s/ahst_Wa"</span>, dirsetup);
+<a name="l00657"></a>00657     }
+<a name="l00658"></a>00658 }
 </pre></div>
 <p>
 
@@ -1150,69 +1163,69 @@ setup NGS modes and reconstructor using AHST for one or two DMs.
 <p>
 used in performance evaluation on science opds. 
 <p>
-accumulate to out <div class="fragment"><pre class="fragment"><a name="l00652"></a>00652                                          {
-<a name="l00653"></a>00653 
-<a name="l00654"></a>00654     <span class="keyword">const</span> <span class="keywordtype">double</span> *amp=aper-&gt;<a class="code" href="structAPER__T.html#cde71207f6ad1532a957fba93f3505f5" title="amplitude map defined on locs, if exists.">amp</a>;
-<a name="l00655"></a>00655     <span class="keyword">const</span> <span class="keywordtype">double</span> *locx=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
-<a name="l00656"></a>00656     <span class="keyword">const</span> <span class="keywordtype">double</span> *locy=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
-<a name="l00657"></a>00657     <span class="keyword">const</span> <span class="keywordtype">double</span> MCC_fcp=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">aper_fcp</a>;
-<a name="l00658"></a>00658     <span class="keyword">const</span> <span class="keywordtype">double</span> ht=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#bfd835d27201eba2f87965d5650e3fd9">ht</a>;
-<a name="l00659"></a>00659     <span class="keyword">const</span> <span class="keywordtype">double</span> scale=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">scale</a>;
-<a name="l00660"></a>00660     <span class="keyword">const</span> <span class="keywordtype">double</span> scale1=1.-scale;
-<a name="l00661"></a>00661     <span class="keywordtype">double</span> coeff[6]={0,0,0,0,0,0};
-<a name="l00662"></a>00662     <span class="keywordtype">double</span> tot=0;
-<a name="l00663"></a>00663     <span class="keyword">const</span> <span class="keywordtype">double</span> thetax=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#dcb390bcffd7629411575788c77de50e" title="x Coordinate of evaluation directions">thetax</a>[ievl]; 
-<a name="l00664"></a>00664     <span class="keyword">const</span> <span class="keywordtype">double</span> thetay=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#76b3e6506ff40743e8e28ad6aa36afa4" title="y Coordinate of evaluation directions">thetay</a>[ievl]; 
-<a name="l00665"></a>00665     <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==2){
-<a name="l00666"></a>00666     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
-<a name="l00667"></a>00667         <span class="keyword">const</span> <span class="keywordtype">double</span> junk=amp[iloc]*opd[iloc];
-<a name="l00668"></a>00668         tot+=junk*opd[iloc];
-<a name="l00669"></a>00669         <span class="keyword">const</span> <span class="keywordtype">double</span> junkx=locx[iloc]*junk;
-<a name="l00670"></a>00670         <span class="keyword">const</span> <span class="keywordtype">double</span> junky=locy[iloc]*junk;
-<a name="l00671"></a>00671         coeff[0]+=junk;
-<a name="l00672"></a>00672         coeff[1]+=junkx;
-<a name="l00673"></a>00673         coeff[2]+=junky;
-<a name="l00674"></a>00674     }
-<a name="l00675"></a>00675     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==5){
-<a name="l00676"></a>00676     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
-<a name="l00677"></a>00677         <span class="keyword">const</span> <span class="keywordtype">double</span> junk=amp[iloc]*opd[iloc];
-<a name="l00678"></a>00678         tot+=junk*opd[iloc];
-<a name="l00679"></a>00679         <span class="keyword">const</span> <span class="keywordtype">double</span> junkx=locx[iloc]*junk;
-<a name="l00680"></a>00680         <span class="keyword">const</span> <span class="keywordtype">double</span> junky=locy[iloc]*junk;
-<a name="l00681"></a>00681         coeff[0]+=junk;
-<a name="l00682"></a>00682         coeff[1]+=junkx;
-<a name="l00683"></a>00683         coeff[2]+=junky;
-<a name="l00684"></a>00684         coeff[3]+=locx[iloc]*junkx;
-<a name="l00685"></a>00685         coeff[4]+=locy[iloc]*junky;
-<a name="l00686"></a>00686         coeff[5]+=locx[iloc]*junky;
+accumulate to out <div class="fragment"><pre class="fragment"><a name="l00665"></a>00665                                          {
+<a name="l00666"></a>00666 
+<a name="l00667"></a>00667     <span class="keyword">const</span> <span class="keywordtype">double</span> *amp=aper-&gt;<a class="code" href="structAPER__T.html#cde71207f6ad1532a957fba93f3505f5" title="amplitude map defined on locs, if exists.">amp</a>;
+<a name="l00668"></a>00668     <span class="keyword">const</span> <span class="keywordtype">double</span> *locx=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
+<a name="l00669"></a>00669     <span class="keyword">const</span> <span class="keywordtype">double</span> *locy=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
+<a name="l00670"></a>00670     <span class="keyword">const</span> <span class="keywordtype">double</span> MCC_fcp=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">aper_fcp</a>;
+<a name="l00671"></a>00671     <span class="keyword">const</span> <span class="keywordtype">double</span> ht=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#bfd835d27201eba2f87965d5650e3fd9">ht</a>;
+<a name="l00672"></a>00672     <span class="keyword">const</span> <span class="keywordtype">double</span> scale=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">scale</a>;
+<a name="l00673"></a>00673     <span class="keyword">const</span> <span class="keywordtype">double</span> scale1=1.-scale;
+<a name="l00674"></a>00674     <span class="keywordtype">double</span> coeff[6]={0,0,0,0,0,0};
+<a name="l00675"></a>00675     <span class="keywordtype">double</span> tot=0;
+<a name="l00676"></a>00676     <span class="keyword">const</span> <span class="keywordtype">double</span> thetax=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#dcb390bcffd7629411575788c77de50e" title="x Coordinate of evaluation directions">thetax</a>[ievl]; 
+<a name="l00677"></a>00677     <span class="keyword">const</span> <span class="keywordtype">double</span> thetay=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#76b3e6506ff40743e8e28ad6aa36afa4" title="y Coordinate of evaluation directions">thetay</a>[ievl]; 
+<a name="l00678"></a>00678     <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==2){
+<a name="l00679"></a>00679     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
+<a name="l00680"></a>00680         <span class="keyword">const</span> <span class="keywordtype">double</span> junk=amp[iloc]*opd[iloc];
+<a name="l00681"></a>00681         tot+=junk*opd[iloc];
+<a name="l00682"></a>00682         <span class="keyword">const</span> <span class="keywordtype">double</span> junkx=locx[iloc]*junk;
+<a name="l00683"></a>00683         <span class="keyword">const</span> <span class="keywordtype">double</span> junky=locy[iloc]*junk;
+<a name="l00684"></a>00684         coeff[0]+=junk;
+<a name="l00685"></a>00685         coeff[1]+=junkx;
+<a name="l00686"></a>00686         coeff[2]+=junky;
 <a name="l00687"></a>00687     }
-<a name="l00688"></a>00688     }<span class="keywordflow">else</span>{
-<a name="l00689"></a>00689     error(<span class="stringliteral">"Invalid nmod\n"</span>);
-<a name="l00690"></a>00690     }
-<a name="l00691"></a>00691     <span class="keywordflow">if</span>(pttrcoeff_out){
-<a name="l00692"></a>00692     memset(pttrcoeff_out, 0, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*3);
-<a name="l00693"></a>00693     <a class="code" href="dmat_8h.html#108a4a2f57a5f271427d7af94a71abd8" title="multiply a X(mat) matrix with a vector and accumulate to y: y+=A*x*alpha">dmulvec</a>(pttrcoeff_out, aper-&gt;<a class="code" href="structAPER__T.html#a28b4297d4a9d7a58d2474f003b522a7" title="inverse of mode cross coupling for evaluations.">imcc</a>, coeff, 1);
-<a name="l00694"></a>00694     }
-<a name="l00695"></a>00695     <span class="keywordflow">if</span>(pttr_out){
-<a name="l00696"></a>00696     <span class="comment">//compute TT removed wavefront variance as a side product</span>
-<a name="l00697"></a>00697     <span class="keywordtype">double</span> pis=aper-&gt;<a class="code" href="structAPER__T.html#a0c4649669d4a65aed9127f986efb5f6" title="piston term in imcc.">ipcc</a>*coeff[0]*coeff[0];
-<a name="l00698"></a>00698     <span class="keywordtype">double</span> ptt=<a class="code" href="dmat_8h.html#2ad0b887d8ae79cd753310e095e2bd07" title="special version of dwdot for just 3 element vectors.">dwdot3</a>(coeff, aper-&gt;<a class="code" href="structAPER__T.html#a28b4297d4a9d7a58d2474f003b522a7" title="inverse of mode cross coupling for evaluations.">imcc</a>, coeff);
-<a name="l00699"></a>00699     pttr_out[0]=tot-pis;<span class="comment">//PR</span>
-<a name="l00700"></a>00700     pttr_out[1]=ptt-pis;<span class="comment">//TT</span>
-<a name="l00701"></a>00701     pttr_out[2]=tot-ptt;<span class="comment">//PTTR</span>
-<a name="l00702"></a>00702     }
-<a name="l00703"></a>00703     <span class="comment">//don't use +=. need locking</span>
-<a name="l00704"></a>00704     ngsmod_out[0]=coeff[1];
-<a name="l00705"></a>00705     ngsmod_out[1]=coeff[2];
-<a name="l00706"></a>00706     <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==5){
-<a name="l00707"></a>00707     ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
-<a name="l00708"></a>00708                -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
-<a name="l00709"></a>00709     ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
-<a name="l00710"></a>00710                -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
-<a name="l00711"></a>00711     ngsmod_out[4]=(scale1*(coeff[5])
-<a name="l00712"></a>00712                -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
-<a name="l00713"></a>00713     }
-<a name="l00714"></a>00714 }
+<a name="l00688"></a>00688     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==5){
+<a name="l00689"></a>00689     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
+<a name="l00690"></a>00690         <span class="keyword">const</span> <span class="keywordtype">double</span> junk=amp[iloc]*opd[iloc];
+<a name="l00691"></a>00691         tot+=junk*opd[iloc];
+<a name="l00692"></a>00692         <span class="keyword">const</span> <span class="keywordtype">double</span> junkx=locx[iloc]*junk;
+<a name="l00693"></a>00693         <span class="keyword">const</span> <span class="keywordtype">double</span> junky=locy[iloc]*junk;
+<a name="l00694"></a>00694         coeff[0]+=junk;
+<a name="l00695"></a>00695         coeff[1]+=junkx;
+<a name="l00696"></a>00696         coeff[2]+=junky;
+<a name="l00697"></a>00697         coeff[3]+=locx[iloc]*junkx;
+<a name="l00698"></a>00698         coeff[4]+=locy[iloc]*junky;
+<a name="l00699"></a>00699         coeff[5]+=locx[iloc]*junky;
+<a name="l00700"></a>00700     }
+<a name="l00701"></a>00701     }<span class="keywordflow">else</span>{
+<a name="l00702"></a>00702     error(<span class="stringliteral">"Invalid nmod\n"</span>);
+<a name="l00703"></a>00703     }
+<a name="l00704"></a>00704     <span class="keywordflow">if</span>(pttrcoeff_out){
+<a name="l00705"></a>00705     memset(pttrcoeff_out, 0, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*3);
+<a name="l00706"></a>00706     <a class="code" href="dmat_8h.html#108a4a2f57a5f271427d7af94a71abd8" title="multiply a X(mat) matrix with a vector and accumulate to y: y+=A*x*alpha">dmulvec</a>(pttrcoeff_out, aper-&gt;<a class="code" href="structAPER__T.html#a28b4297d4a9d7a58d2474f003b522a7" title="inverse of mode cross coupling for evaluations.">imcc</a>, coeff, 1);
+<a name="l00707"></a>00707     }
+<a name="l00708"></a>00708     <span class="keywordflow">if</span>(pttr_out){
+<a name="l00709"></a>00709     <span class="comment">//compute TT removed wavefront variance as a side product</span>
+<a name="l00710"></a>00710     <span class="keywordtype">double</span> pis=aper-&gt;<a class="code" href="structAPER__T.html#a0c4649669d4a65aed9127f986efb5f6" title="piston term in imcc.">ipcc</a>*coeff[0]*coeff[0];
+<a name="l00711"></a>00711     <span class="keywordtype">double</span> ptt=<a class="code" href="dmat_8h.html#2ad0b887d8ae79cd753310e095e2bd07" title="special version of dwdot for just 3 element vectors.">dwdot3</a>(coeff, aper-&gt;<a class="code" href="structAPER__T.html#a28b4297d4a9d7a58d2474f003b522a7" title="inverse of mode cross coupling for evaluations.">imcc</a>, coeff);
+<a name="l00712"></a>00712     pttr_out[0]=tot-pis;<span class="comment">//PR</span>
+<a name="l00713"></a>00713     pttr_out[1]=ptt-pis;<span class="comment">//TT</span>
+<a name="l00714"></a>00714     pttr_out[2]=tot-ptt;<span class="comment">//PTTR</span>
+<a name="l00715"></a>00715     }
+<a name="l00716"></a>00716     <span class="comment">//don't use +=. need locking</span>
+<a name="l00717"></a>00717     ngsmod_out[0]=coeff[1];
+<a name="l00718"></a>00718     ngsmod_out[1]=coeff[2];
+<a name="l00719"></a>00719     <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==5){
+<a name="l00720"></a>00720     ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
+<a name="l00721"></a>00721                -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+<a name="l00722"></a>00722     ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
+<a name="l00723"></a>00723                -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
+<a name="l00724"></a>00724     ngsmod_out[4]=(scale1*(coeff[5])
+<a name="l00725"></a>00725                -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
+<a name="l00726"></a>00726     }
+<a name="l00727"></a>00727 }
 </pre></div>
 <p>
 
@@ -1259,68 +1272,68 @@ accumulate to out <div class="fragment"><pre class="fragment"><a name="l00652"><
 Convert NGS modes to DM actuator commands using analytical expression. 
 <p>
 <dl compact><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>switch to use mode vectors </dd></dl>
-<div class="fragment"><pre class="fragment"><a name="l00719"></a>00719                                                                               {
-<a name="l00720"></a>00720     <span class="keywordflow">if</span>(!M) <span class="keywordflow">return</span>;
-<a name="l00721"></a>00721     <span class="keywordtype">double</span> scale=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">scale</a>;
-<a name="l00722"></a>00722     <span class="keywordtype">double</span> MCC_fcp=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">aper_fcp</a>;
-<a name="l00723"></a>00723     <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> **aloc=recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>;
-<a name="l00724"></a>00724     <span class="comment">//convert mode vector and add to dm commands</span>
-<a name="l00725"></a>00725     <span class="keyword">const</span> <span class="keywordtype">int</span> ndm=recon-&gt;<a class="code" href="structRECON__T.html#1fbfc84eb66bf5bee54a38e6b268e50a">ndm</a>;
-<a name="l00726"></a>00726     <span class="keywordflow">if</span>(!*dmc){
-<a name="l00727"></a>00727     *dmc=dcellnew(ndm,1);
-<a name="l00728"></a>00728     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
-<a name="l00729"></a>00729         (*dmc)-&gt;p[idm]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>, 1);
-<a name="l00730"></a>00730     }
-<a name="l00731"></a>00731     }
-<a name="l00732"></a>00732 
-<a name="l00733"></a>00733     <span class="keywordflow">if</span>(ndm&gt;2) error(<span class="stringliteral">"Error Usage\n"</span>);
-<a name="l00734"></a>00734     <span class="comment">//first dm</span>
-<a name="l00735"></a>00735     assert(M-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>==1 &amp;&amp; M-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>==1);
-<a name="l00736"></a>00736     <span class="keywordtype">double</span> *pm=M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00737"></a>00737     <span class="keywordflow">if</span>(ndm==1){
-<a name="l00738"></a>00738     <span class="keywordflow">if</span>(M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>!=2) error(<span class="stringliteral">"Invalid mode\n"</span>);
-<a name="l00739"></a>00739     <span class="keywordtype">int</span> idm=0;
-<a name="l00740"></a>00740     <span class="keywordtype">double</span> *p=(*dmc)-&gt;p[idm]-&gt;p;
-<a name="l00741"></a>00741     <span class="keywordtype">double</span> *xloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
-<a name="l00742"></a>00742     <span class="keywordtype">double</span> *yloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
-<a name="l00743"></a>00743     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> nloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
-<a name="l00744"></a>00744     <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> iloc=0; iloc&lt;nloc; iloc++){
-<a name="l00745"></a>00745         p[iloc]+=gain*(pm[0]*xloc[iloc]+pm[1]*yloc[iloc]);
-<a name="l00746"></a>00746     }
-<a name="l00747"></a>00747     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(ndm==2){
-<a name="l00748"></a>00748     <span class="keywordflow">if</span>(M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>!=5) error(<span class="stringliteral">"Invalid mode\n"</span>);
-<a name="l00749"></a>00749     <span class="keywordtype">double</span> scale2=-scale*gain;
-<a name="l00750"></a>00750     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
-<a name="l00751"></a>00751         <span class="keywordtype">double</span> *p=(*dmc)-&gt;p[idm]-&gt;p;
-<a name="l00752"></a>00752         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> nloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
-<a name="l00753"></a>00753         <span class="keywordtype">double</span> *xloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
-<a name="l00754"></a>00754         <span class="keywordtype">double</span> *yloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
-<a name="l00755"></a>00755         <span class="keywordflow">if</span>(idm==0){
-<a name="l00756"></a>00756         <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> iloc=0; iloc&lt;nloc; iloc++){
-<a name="l00757"></a>00757             <span class="keywordtype">double</span> xx=xloc[iloc]*xloc[iloc];
-<a name="l00758"></a>00758             <span class="keywordtype">double</span> xy=xloc[iloc]*yloc[iloc];
-<a name="l00759"></a>00759             <span class="keywordtype">double</span> yy=yloc[iloc]*yloc[iloc];
-<a name="l00760"></a>00760             p[iloc]+=gain*(pm[0]*xloc[iloc]
-<a name="l00761"></a>00761                    +pm[1]*yloc[iloc]
-<a name="l00762"></a>00762                    +pm[2]*(xx+yy-MCC_fcp)
-<a name="l00763"></a>00763                    +pm[3]*(xx-yy)
-<a name="l00764"></a>00764                    +pm[4]*(xy));
-<a name="l00765"></a>00765         }
-<a name="l00766"></a>00766         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(idm==1){
-<a name="l00767"></a>00767         <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> iloc=0; iloc&lt;nloc; iloc++){
-<a name="l00768"></a>00768             <span class="keywordtype">double</span> xx=xloc[iloc]*xloc[iloc];
-<a name="l00769"></a>00769             <span class="keywordtype">double</span> xy=xloc[iloc]*yloc[iloc];
-<a name="l00770"></a>00770             <span class="keywordtype">double</span> yy=yloc[iloc]*yloc[iloc];
-<a name="l00771"></a>00771             p[iloc]+=scale2*(pm[2]*(xx+yy-MCC_fcp)
-<a name="l00772"></a>00772                      +pm[3]*(xx-yy)
-<a name="l00773"></a>00773                      +pm[4]*(xy));
-<a name="l00774"></a>00774         }
-<a name="l00775"></a>00775         }<span class="keywordflow">else</span>{
-<a name="l00776"></a>00776         error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l00777"></a>00777         }   
-<a name="l00778"></a>00778     }
-<a name="l00779"></a>00779     }
-<a name="l00780"></a>00780 }
+<div class="fragment"><pre class="fragment"><a name="l00732"></a>00732                                                                               {
+<a name="l00733"></a>00733     <span class="keywordflow">if</span>(!M) <span class="keywordflow">return</span>;
+<a name="l00734"></a>00734     <span class="keywordtype">double</span> scale=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">scale</a>;
+<a name="l00735"></a>00735     <span class="keywordtype">double</span> MCC_fcp=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">aper_fcp</a>;
+<a name="l00736"></a>00736     <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> **aloc=recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>;
+<a name="l00737"></a>00737     <span class="comment">//convert mode vector and add to dm commands</span>
+<a name="l00738"></a>00738     <span class="keyword">const</span> <span class="keywordtype">int</span> ndm=recon-&gt;<a class="code" href="structRECON__T.html#1fbfc84eb66bf5bee54a38e6b268e50a">ndm</a>;
+<a name="l00739"></a>00739     <span class="keywordflow">if</span>(!*dmc){
+<a name="l00740"></a>00740     *dmc=dcellnew(ndm,1);
+<a name="l00741"></a>00741     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
+<a name="l00742"></a>00742         (*dmc)-&gt;p[idm]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(recon-&gt;<a class="code" href="structRECON__T.html#f3c06f40df1bcd845129fc9944f438ed">aloc</a>[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>, 1);
+<a name="l00743"></a>00743     }
+<a name="l00744"></a>00744     }
+<a name="l00745"></a>00745 
+<a name="l00746"></a>00746     <span class="keywordflow">if</span>(ndm&gt;2) error(<span class="stringliteral">"Error Usage\n"</span>);
+<a name="l00747"></a>00747     <span class="comment">//first dm</span>
+<a name="l00748"></a>00748     assert(M-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>==1 &amp;&amp; M-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>==1);
+<a name="l00749"></a>00749     <span class="keywordtype">double</span> *pm=M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
+<a name="l00750"></a>00750     <span class="keywordflow">if</span>(ndm==1){
+<a name="l00751"></a>00751     <span class="keywordflow">if</span>(M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>!=2) error(<span class="stringliteral">"Invalid mode\n"</span>);
+<a name="l00752"></a>00752     <span class="keywordtype">int</span> idm=0;
+<a name="l00753"></a>00753     <span class="keywordtype">double</span> *p=(*dmc)-&gt;p[idm]-&gt;p;
+<a name="l00754"></a>00754     <span class="keywordtype">double</span> *xloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
+<a name="l00755"></a>00755     <span class="keywordtype">double</span> *yloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
+<a name="l00756"></a>00756     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> nloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
+<a name="l00757"></a>00757     <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> iloc=0; iloc&lt;nloc; iloc++){
+<a name="l00758"></a>00758         p[iloc]+=gain*(pm[0]*xloc[iloc]+pm[1]*yloc[iloc]);
+<a name="l00759"></a>00759     }
+<a name="l00760"></a>00760     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(ndm==2){
+<a name="l00761"></a>00761     <span class="keywordflow">if</span>(M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>!=5) error(<span class="stringliteral">"Invalid mode\n"</span>);
+<a name="l00762"></a>00762     <span class="keywordtype">double</span> scale2=-scale*gain;
+<a name="l00763"></a>00763     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
+<a name="l00764"></a>00764         <span class="keywordtype">double</span> *p=(*dmc)-&gt;p[idm]-&gt;p;
+<a name="l00765"></a>00765         <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> nloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
+<a name="l00766"></a>00766         <span class="keywordtype">double</span> *xloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
+<a name="l00767"></a>00767         <span class="keywordtype">double</span> *yloc=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
+<a name="l00768"></a>00768         <span class="keywordflow">if</span>(idm==0){
+<a name="l00769"></a>00769         <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> iloc=0; iloc&lt;nloc; iloc++){
+<a name="l00770"></a>00770             <span class="keywordtype">double</span> xx=xloc[iloc]*xloc[iloc];
+<a name="l00771"></a>00771             <span class="keywordtype">double</span> xy=xloc[iloc]*yloc[iloc];
+<a name="l00772"></a>00772             <span class="keywordtype">double</span> yy=yloc[iloc]*yloc[iloc];
+<a name="l00773"></a>00773             p[iloc]+=gain*(pm[0]*xloc[iloc]
+<a name="l00774"></a>00774                    +pm[1]*yloc[iloc]
+<a name="l00775"></a>00775                    +pm[2]*(xx+yy-MCC_fcp)
+<a name="l00776"></a>00776                    +pm[3]*(xx-yy)
+<a name="l00777"></a>00777                    +pm[4]*(xy));
+<a name="l00778"></a>00778         }
+<a name="l00779"></a>00779         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(idm==1){
+<a name="l00780"></a>00780         <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> iloc=0; iloc&lt;nloc; iloc++){
+<a name="l00781"></a>00781             <span class="keywordtype">double</span> xx=xloc[iloc]*xloc[iloc];
+<a name="l00782"></a>00782             <span class="keywordtype">double</span> xy=xloc[iloc]*yloc[iloc];
+<a name="l00783"></a>00783             <span class="keywordtype">double</span> yy=yloc[iloc]*yloc[iloc];
+<a name="l00784"></a>00784             p[iloc]+=scale2*(pm[2]*(xx+yy-MCC_fcp)
+<a name="l00785"></a>00785                      +pm[3]*(xx-yy)
+<a name="l00786"></a>00786                      +pm[4]*(xy));
+<a name="l00787"></a>00787         }
+<a name="l00788"></a>00788         }<span class="keywordflow">else</span>{
+<a name="l00789"></a>00789         error(<span class="stringliteral">"Invalid\n"</span>);
+<a name="l00790"></a>00790         }   
+<a name="l00791"></a>00791     }
+<a name="l00792"></a>00792     }
+<a name="l00793"></a>00793 }
 </pre></div>
 <p>
 
@@ -1384,44 +1397,44 @@ Convert NGS modes to DM actuator commands using analytical expression.
 <p>
 Convert NGS mode vector to aperture grid for science directions. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00785"></a>00785                                                   {
-<a name="l00786"></a>00786     <span class="keyword">const</span> <span class="keywordtype">double</span> *locx=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
-<a name="l00787"></a>00787     <span class="keyword">const</span> <span class="keywordtype">double</span> *locy=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
-<a name="l00788"></a>00788     <span class="keyword">const</span> <span class="keywordtype">double</span> *mod=M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00789"></a>00789     <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==2){
-<a name="l00790"></a>00790     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
-<a name="l00791"></a>00791         <span class="keywordtype">double</span> tmp=locx[iloc]*mod[0]+locy[iloc]*mod[1];
-<a name="l00792"></a>00792         iopdevl-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[iloc]+=tmp*gain;
-<a name="l00793"></a>00793     }
-<a name="l00794"></a>00794     }<span class="keywordflow">else</span>{
-<a name="l00795"></a>00795     <span class="keyword">const</span> <span class="keywordtype">double</span> MCC_fcp=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">aper_fcp</a>;
-<a name="l00796"></a>00796     <span class="keyword">const</span> <span class="keywordtype">double</span> ht=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#bfd835d27201eba2f87965d5650e3fd9">ht</a>;
-<a name="l00797"></a>00797     <span class="keyword">const</span> <span class="keywordtype">double</span> scale=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">scale</a>;
-<a name="l00798"></a>00798     <span class="keyword">const</span> <span class="keywordtype">double</span> scale1=1.-scale;
-<a name="l00799"></a>00799     <span class="keyword">const</span> <span class="keywordtype">double</span> thetax=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#dcb390bcffd7629411575788c77de50e" title="x Coordinate of evaluation directions">thetax</a>[ievl]; 
-<a name="l00800"></a>00800     <span class="keyword">const</span> <span class="keywordtype">double</span> thetay=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#76b3e6506ff40743e8e28ad6aa36afa4" title="y Coordinate of evaluation directions">thetay</a>[ievl];
-<a name="l00801"></a>00801     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
-<a name="l00802"></a>00802         <span class="keywordtype">double</span> x=locx[iloc];
-<a name="l00803"></a>00803         <span class="keywordtype">double</span> y=locy[iloc];
-<a name="l00804"></a>00804         <span class="keywordtype">double</span> xy=x*y;
-<a name="l00805"></a>00805         <span class="keywordtype">double</span> x2=x*x;
-<a name="l00806"></a>00806         <span class="keywordtype">double</span> y2=y*y;
-<a name="l00807"></a>00807         <span class="keywordtype">double</span> tmp= locx[iloc]*mod[0]
-<a name="l00808"></a>00808         +locy[iloc]*mod[1]
-<a name="l00809"></a>00809         +mod[2]*((x2+y2-MCC_fcp)*scale1-2*scale*ht*(thetax*x+thetay*y))
-<a name="l00810"></a>00810         +mod[3]*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
-<a name="l00811"></a>00811         +mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y));
-<a name="l00812"></a>00812         iopdevl-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[iloc]+=tmp*gain;
-<a name="l00813"></a>00813     }
-<a name="l00814"></a>00814     }
-<a name="l00815"></a>00815 }
+<div class="fragment"><pre class="fragment"><a name="l00798"></a>00798                                                   {
+<a name="l00799"></a>00799     <span class="keyword">const</span> <span class="keywordtype">double</span> *locx=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
+<a name="l00800"></a>00800     <span class="keyword">const</span> <span class="keywordtype">double</span> *locy=aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
+<a name="l00801"></a>00801     <span class="keyword">const</span> <span class="keywordtype">double</span> *mod=M-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
+<a name="l00802"></a>00802     <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a>==2){
+<a name="l00803"></a>00803     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
+<a name="l00804"></a>00804         <span class="keywordtype">double</span> tmp=locx[iloc]*mod[0]+locy[iloc]*mod[1];
+<a name="l00805"></a>00805         iopdevl-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[iloc]+=tmp*gain;
+<a name="l00806"></a>00806     }
+<a name="l00807"></a>00807     }<span class="keywordflow">else</span>{
+<a name="l00808"></a>00808     <span class="keyword">const</span> <span class="keywordtype">double</span> MCC_fcp=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">aper_fcp</a>;
+<a name="l00809"></a>00809     <span class="keyword">const</span> <span class="keywordtype">double</span> ht=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#bfd835d27201eba2f87965d5650e3fd9">ht</a>;
+<a name="l00810"></a>00810     <span class="keyword">const</span> <span class="keywordtype">double</span> scale=recon-&gt;<a class="code" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a>-&gt;<a class="code" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">scale</a>;
+<a name="l00811"></a>00811     <span class="keyword">const</span> <span class="keywordtype">double</span> scale1=1.-scale;
+<a name="l00812"></a>00812     <span class="keyword">const</span> <span class="keywordtype">double</span> thetax=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#dcb390bcffd7629411575788c77de50e" title="x Coordinate of evaluation directions">thetax</a>[ievl]; 
+<a name="l00813"></a>00813     <span class="keyword">const</span> <span class="keywordtype">double</span> thetay=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#76b3e6506ff40743e8e28ad6aa36afa4" title="y Coordinate of evaluation directions">thetay</a>[ievl];
+<a name="l00814"></a>00814     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;aper-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; iloc++){
+<a name="l00815"></a>00815         <span class="keywordtype">double</span> x=locx[iloc];
+<a name="l00816"></a>00816         <span class="keywordtype">double</span> y=locy[iloc];
+<a name="l00817"></a>00817         <span class="keywordtype">double</span> xy=x*y;
+<a name="l00818"></a>00818         <span class="keywordtype">double</span> x2=x*x;
+<a name="l00819"></a>00819         <span class="keywordtype">double</span> y2=y*y;
+<a name="l00820"></a>00820         <span class="keywordtype">double</span> tmp= locx[iloc]*mod[0]
+<a name="l00821"></a>00821         +locy[iloc]*mod[1]
+<a name="l00822"></a>00822         +mod[2]*((x2+y2-MCC_fcp)*scale1-2*scale*ht*(thetax*x+thetay*y))
+<a name="l00823"></a>00823         +mod[3]*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
+<a name="l00824"></a>00824         +mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y));
+<a name="l00825"></a>00825         iopdevl-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[iloc]+=tmp*gain;
+<a name="l00826"></a>00826     }
+<a name="l00827"></a>00827     }
+<a name="l00828"></a>00828 }
 </pre></div>
 <p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:09 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

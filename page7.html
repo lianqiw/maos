@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.4: C Fundementals</title>
+<title>maos-0.7.0: C Fundementals</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -89,7 +89,7 @@ Beware about a const pointer and pointer that points to constant memory regions:
 A 2D pointer is like a 1D pointer. It stores the address of a memory region. However, unlike the 1D pointer, the compiler knows some additional infos about the 2D pointer. The compiler knows the length of the first dimension so that is can compute the memory location given 2D index like a[2][3]; <code>double (*p)[2]=calloc(3*2,sizeof(double))</code> can be used in the same way as <code>double a[3][2]</code>. The last index changes fastest.<p>
 The pointer p in our <a class="el" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> (or <a class="el" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a>) struct points to the allocated memory. It can be cast to a two-d vector to facilitize visiting of the elements. The cast is conveniently done by PDMAT(a,pa) for <a class="el" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> a, which simply declares a 2-d pointer and assign a-&gt;p to it:<p>
 <code>double (pa*)[2]=(void*)a-&gt;p</code>. a-&gt;p is first cast to void * because it is a double * and can not be assigned to double (*)[2] directly. The array elements (ix,jy) can be accessed by pa[iy][ix]. Notice that ix changes fastest. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

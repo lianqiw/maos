@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.6.4: Data Fields</title>
+<title>maos-0.7.0: Data Fields</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -263,6 +263,8 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="dsp_8h.html#55a721406266e38174283509208e78c8">dsp.h</a>
 <li>spadd2()
 : <a class="el" href="dsp_8h.html#a55aa866dc8f53618cdb5ded64643f69">dsp.h</a>
+<li>spaddI()
+: <a class="el" href="dsp_8h.html#d42323e7141830c2275bd7c5e6d0556c">dsp.h</a>
 <li>sparrfree()
 : <a class="el" href="dsp_8h.html#c4a9220a4bd635c7027ef27e9cd7b677">dsp.h</a>
 <li>spblockextract()
@@ -273,16 +275,14 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="dsp_8h.html#5d94fe9f6ba76a7d6b4ea76243e70198">dsp.h</a>
 <li>spcelladd()
 : <a class="el" href="dsp_8h.html#50a4c44bf6e5fdbc087a94fa815ed94a">dsp.h</a>
+<li>spcelladdI()
+: <a class="el" href="dsp_8h.html#e87c19de7800d82f18c211b88943f841">dsp.h</a>
 <li>spcelldropeps()
 : <a class="el" href="dsp_8h.html#86932c91ee953ec4cbfb6ece9f6de414">dsp.h</a>
 <li>spcellfree_do()
 : <a class="el" href="dsp_8h.html#6279b6b982b02b5ed30ba76643e5c989">dsp.h</a>
 <li>spcellfull()
 : <a class="el" href="dsp_8h.html#515d52002c4c1055b5fd53004b6d7af7">dsp.h</a>
-<li>spcellmaxeig()
-: <a class="el" href="eigs_8c.html#0b948d56a1a0e93ee7f7c855fa3f7b0d">eigs.c</a>
-<li>spcellmineig()
-: <a class="el" href="eigs_8c.html#01d49b980312d92985daa49ce046e5e2">eigs.c</a>
 <li>spcellmulmat()
 : <a class="el" href="dsp_8h.html#8d54733ac98a65ca9f99c97713362125">dsp.h</a>
 <li>spcellmulmat_each_do()
@@ -303,8 +303,6 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="dsp_8h.html#928b798c235560783e958341fbc1c401">dsp.h</a>
 <li>spcellsym()
 : <a class="el" href="dsp_8h.html#e575353f52b29ec1c1faec4cc4fa42c4">dsp.h</a>
-<li>spcelltikcr()
-: <a class="el" href="eigs_8c.html#45367708d512ccf95ac48292c25419f8">eigs.c</a>
 <li>spcelltrans()
 : <a class="el" href="dsp_8h.html#a4691afd2563e44ec261422a3648ff01">dsp.h</a>
 <li>spcellwdinn()
@@ -329,10 +327,6 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="dsp_8h.html#1f816ec221da7595c0e1b598caaef328">dsp.h</a>
 <li>spinvbdiag()
 : <a class="el" href="dsp_8h.html#650a5b5e2f5fe7c7a74941d141ccd34b">dsp.h</a>
-<li>spmaxeig()
-: <a class="el" href="eigs_8c.html#6675370020d32ec48734628ef0440eee">eigs.c</a>
-<li>spmineig()
-: <a class="el" href="eigs_8c.html#2bf7fe4e3f79d2f4bad93deadb0f5db8">eigs.c</a>
 <li>spmove()
 : <a class="el" href="dsp_8h.html#3d1611bee106c350a6c0466a6d6b7781">dsp.h</a>
 <li>spmulcreal()
@@ -385,8 +379,6 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="dsp_8h.html#22d09bf9b395e05d1fd28865ef4db635">dsp.h</a>
 <li>sptfull()
 : <a class="el" href="dsp_8h.html#f9a447cc8dfb7398a1d9b26b6b905bb4">dsp.h</a>
-<li>sptikcr()
-: <a class="el" href="eigs_8c.html#255286467d9695f26603231a989d7e5f">eigs.c</a>
 <li>sptmulmat()
 : <a class="el" href="dsp_8h.html#7f7a73c20dd1397db2034e9b39e05bff">dsp.h</a>
 <li>sptmulsp()
@@ -415,7 +407,7 @@ Here is a list of all documented functions, variables, defines, enums, and typed
 : <a class="el" href="maos_2utils_8c.html#23f278c19893472d21761319c7eb4ebc">utils.c</a>
 </ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 14:37:10 2010 for maos-0.6.4 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>
