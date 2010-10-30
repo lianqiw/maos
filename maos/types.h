@@ -245,6 +245,8 @@ typedef struct RECON_T{
     spcell *actslave;//force slave actuators to have similar value to active ones.
     double fitscl;//strength of fitting FLM low rank terms (vectors)
     spcell *saneai;//inverse of sanea^2
+    dmat *neam;//subaperture averaged nea for each wfs
+    double neamhi;//average of neam for high order wfs.
     MUV_T RR;//recon, solve RL*x=RR*y
     MUV_T RL;
     MUV_T FR;//fit, solve FL*x=FR*y

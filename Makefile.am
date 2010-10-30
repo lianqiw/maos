@@ -1,12 +1,5 @@
 ACLOCAL_AMFLAGS=-I m4 --install
-#SUBDIRS=
-#if COMP_ARPACK
-#SUBDIRS+=external/arpack/
-#endif
-#if COMP_CHOL
-#SUBDIRS+=external/cholmod/
-#endif
-SUBDIRS=external/arpack/ external/cholmod/ lib/ maos/ skyc/ 
+SUBDIRS=external/cholmod/ lib/ maos/ skyc/ 
 
 include $(top_srcdir)/aminclude.am
 

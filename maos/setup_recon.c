@@ -581,7 +581,38 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 	    saneai->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,neai->p,1.);
 	    dfree(neai);
 	}
+    }//iwfs
+    
+    //Compute the averaged SANEA for each WFS
+    recon->neam=dnew(parms->nwfs, 1);
+    double neamhi=0; 
+    int counthi=0;
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	const int nsa=powfs[ipowfs].pts->nsa;
+	dmat *sanea=spdiag(recon->saneai->p[iwfs+iwfs*parms->nwfs]);
+	double area_thres;
+	if(nsa>4){
+	    area_thres=0.9;
+	}else{
+	    area_thres=0;
+	}
+	double nea2_sum=0;
+	int count=0;
+	for(int isa=0; isa<nsa; isa++){
+	    if(powfs[ipowfs].pts->area[isa]>area_thres){
+		nea2_sum+=1./(sanea->p[isa])+1./(sanea->p[isa+nsa]);
+		count++;
+	    }
+	}
+	dfree(sanea);
+	recon->neam->p[iwfs]=sqrt(nea2_sum/count/2);
+	if(!parms->powfs[ipowfs].lo){
+	    neamhi+=pow(recon->neam->p[iwfs],2);
+	    counthi++;
+	}
     }
+    recon->neamhi=sqrt(neamhi/counthi);
     info2("\n");
     if(parms->save.setup){
 	spcellwrite(recon->saneai,"%s/saneai",dirsetup);
@@ -901,15 +932,13 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}else{
 	    /*Apply tikholnov regularization.*/
-	    info("Adding tikhonov constraint of %g to RLM\n", 
-		 parms->tomo.tik_cstr);
-	    tic;
-	    if(fabs(parms->tomo.tik_cstr)>1.e-200){
+	    if(fabs(parms->tomo.tik_cstr)>1.e-15){	    
+		//Estimated from the Formula
+		double maxeig=pow(recon->neamhi * recon->xloc[0]->dx, -2);
+		info("Adding tikhonov constraint of %g to RLM\n", parms->tomo.tik_cstr);
+		info("The maximum eigen value is estimated to be around %g\n", maxeig);
 		double tikcr=parms->tomo.tik_cstr;
-		if(fabs(tikcr)<1.e-14){
-		    warning("tikcr=%g is too small\n",tikcr);
-		}
-		spcelltikcr(recon->RL.M,tikcr);
+		spcelladdI(recon->RL.M, tikcr*maxeig);
 	    }
 	    toc("done");
 	}
@@ -1463,12 +1492,18 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	spcellfree(HATc);
-	if(fabs(parms->fit.tik_cstr)>1.e-200){
+	if(fabs(parms->fit.tik_cstr)>1.e-15){
 	    double tikcr=parms->fit.tik_cstr;
-	    if(fabs(tikcr)<1.e-14){
-		warning("tickcr=%g is too small\n",tikcr);
+	    /*Estimated from the formula.  1/nloc is due to W0, the other
+	      scaling is due to ray tracing between different sampling freq.*/
+	    int nact=0;
+	    for(int idm=0; idm<parms->ndm; idm++){
+		nact+=recon->aloc[idm]->nloc;
 	    }
-	    spcelltikcr(recon->FL.M,tikcr);
+	    double maxeig=4./nact;
+	    info("Adding tikhonov constraint of %g to FLM\n", tikcr);
+	    info("The maximum eigen value is estimated to be around %g\n", maxeig);
+	    spcelladdI(recon->FL.M,tikcr*maxeig);
 	}
 
 	recon->FL.U=dcellnew(ndm, 1);

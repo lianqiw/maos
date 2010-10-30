@@ -43,7 +43,6 @@
 #include "suitesparse.h"
 #include "bin.h"
 #include "misc.h"
-#include "eigs.h"
 #include "common.h"
 
 #ifndef USE_COMPLEX
@@ -960,6 +959,24 @@ void Y(spcelladd)(Y(spcell) **A0, const Y(spcell) *B){
 	for(int i=0; i<B->nx*B->ny; i++){
 	    Y(spadd)(&((*A0)->p[i]), B->p[i]);
 	}
+    }
+}
+/**
+   Add alpha times identity to a sparse matrix
+*/
+void Y(spaddI)(X(sp) **A, double alpha){
+    assert((*A)->m==(*A)->n);
+    X(sp) *B=Y(spnewdiag)((*A)->m,NULL,alpha);
+    Y(spadd)(A,B);
+    Y(spfree)(B);
+}
+/**
+   Add alpha times identity to sparse array.
+ */
+void Y(spcelladdI)(Y(spcell) *A, double alpha){
+    assert(A->nx==A->ny);
+    for(int ii=0; ii<A->ny; ii++){
+	Y(spaddI)(&A->p[ii+ii*A->nx],alpha);
     }
 }
 /**

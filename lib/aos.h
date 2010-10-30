@@ -28,7 +28,6 @@
 #include "cmat_extra.h"
 #include "dsp.h"
 #include "csp.h"
-#include "eigs.h"
 #include "path.h"
 #include "bin.h"
 #include "matbin.h"

@@ -264,7 +264,6 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
     LOC_T *saloc=powfs[hipowfs].saloc;
     const double hs=parms->powfs[hipowfs].hs;
-    const long nsa=powfs[hipowfs].pts->nsa;
     const long nps=recon->npsr;
     long os[nps];//oversampling ratio of each layer.
     const long* nx=recon->xloc_nx;
@@ -359,20 +358,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	cspwrite(Mmid,"%s/fdpcg_Mmid",dirsetup);
     }
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
-	//for(int jwfs=1; jwfs<2; jwfs++){
 	int iwfs=parms->powfs[hipowfs].wfs[jwfs];
-	//Use cartesian component of SANEA (not radial/azimuthal).
-	dmat *saneai=spdiag(recon->saneai->p[iwfs+iwfs*parms->nwfs]);
-	double nea2_sum=0;
-	long count=0;
-	for(int isa=0; isa<nsa; isa++){
-	    if(powfs[hipowfs].pts->area[isa]>0.9){
-		nea2_sum+=1./(saneai->p[isa])+1./(saneai->p[isa+nsa]);
-		count++;
-	    }
-	}
-	dfree(saneai);
-	double neai=sqrt(nea2_sum/count/2);
+	double neai=recon->neam->p[iwfs];
 	info("sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai);
 	for(long ips=0; ips<nps; ips++){
 	    /*

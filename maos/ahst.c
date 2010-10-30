@@ -596,8 +596,21 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	if(parms->dbg.wamethod==0){
 	    info("Wa using DM mode\n");
 	    tic;
+	    
 	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,0);
-	    spcelltikcr(ngsmod->Wa, 1e-9);//Always do this. Wa is not SPD.
+	    {
+		/*
+		  Add tikhonov regularization. H is from aloc to some other loc. 
+		  the eigen value of H'*amp*H is about 4/aloc->nloc.
+		 */
+		int nact=0;
+		for(int idm=0; idm<parms->ndm; idm++){
+		    nact+=recon->aloc[idm]->nloc;
+		}
+		double maxeig=4./nact;
+		spcelladdI(ngsmod->Wa, 1e-9*maxeig);
+	    }
+	    //spcelltikcr(ngsmod->Wa, 1e-9);//Always do this. Wa is not SPD.
 	    toc("Wa");
 	    ngsmod->Pngs=dcellpinv(ngsmod->Mdm, NULL,ngsmod->Wa);
 	    toc("Pngs");

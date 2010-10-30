@@ -58,6 +58,8 @@ void Y(sptcellfull)(X(cell) **out0, const Y(spcell) *A, const T f);\
 X(sp) *Y(spadd2)(X(sp) *A,X(sp)*B,T a,T b) CHECK_UNUSED_RESULT;\
 void Y(spadd)(X(sp) **A0, const X(sp) *B);\
 void Y(spcelladd)(Y(spcell) **A0, const Y(spcell) *B);\
+void Y(spaddI)(X(sp) **A0, double alpha);\
+void Y(spcelladdI)(Y(spcell) *A0, double alpha);\
 X(sp) *Y(sptrans)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\
 X(sp) *Y(sptmulsp)(const X(sp) *A, const X(sp) *B) CHECK_UNUSED_RESULT;\

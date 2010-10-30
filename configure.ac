@@ -1,26 +1,11 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.6.4, lianqiw@gmail.com)
+AC_INIT(maos, 0.7.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
-####NOTES####
-#USE F77 Instead of FC. FC is for fortran90/95 compiling.
-#############
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
-fi
-#For CPP. not really used here. 
-if test -z "$CXXFLAGS" ;then
-   CXXFLAGS=" "
-fi
-#for F77.  don't want warning as it is external code
-if test -z "$FFLAGS" ;then
-   FFLAGS=" "
-fi
-#for f90 not really used here
-if test -z "$FCFLAGS" ;then
-   FCFLAGS=" "
 fi
 if test -z "$LIBS" ;then
    LIBS=" "
@@ -31,13 +16,6 @@ AC_LANG([C])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
-
-#echo host=$host
-#echo host_alias=$host_alias
-#echo host_cpu=$host_cpu
-#echo host_vendor=$host_vendor
-#echo host_os=$host_os
-
 
 AC_TYPE_SIZE_T  
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
@@ -215,7 +193,6 @@ fi
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
-#AC_F77_FUNC(dsaupd)
 if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
       echo The MKL library is not available at "$mkl_lib"
@@ -245,24 +222,6 @@ fi
 AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 LDFFT="-lfftw3"
-AC_CHECK_LIB([arpack], [dsaupd_],[have_arpack="yes"],[have_arpack="no"])
-if test "x$have_arpack" = "xyes" ;then
-   echo "Arpack is installed in the system. will use it."
-   LDARPACK="-larpack"
-   AM_CONDITIONAL(COMP_ARPACK, false)
-else
-   echo "Arpack is not available, will download the source and compile. We will require a fortran compiler."
-   LDARPACK="../external/arpack/libarpack.la"
-   AM_CONDITIONAL(COMP_ARPACK, true)
-   if test "x$use_ifort" = "xyes";then
-      AC_PROG_F77([ifort ifc]) #Use intel compiler
-   else
-      F77=gfortran #force use of gfortran. not g77
-      AC_PROG_F77([gfortran]) #use gfortran (gcc4), not g77(gcc3)
-   fi
-   AC_PROG_F77_C_O #Check the compiler
-   AC_F77_LIBRARY_LDFLAGS #create FLIBS FCLIBS
-fi
 AC_CHECK_LIB([cholmod],[cholmod_l_factorize], [have_chol="yes"], [have_chol="no"])
 if test "x$have_chol" = "xyes" ;then
     echo "cholmod is installed in the system. will use it."
@@ -274,19 +233,16 @@ else
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
 AC_CHECK_HEADERS([unistd.h])
-#LDARPACK and LDCHOL must be before LAPACK and FLIBS
-LDOPTS="$LAPACK  $LDSYS"
-#put all-static should be behind AC_F77_LIBRARY_LDFLAGS and/or AC_F77_FUNC, otherwise it will panics gcc linking with fortran.
+#LDCHOL must be before LAPACK
+LDOPTS="$LAPACK $LDSYS"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)
 AC_SUBST(LDEXE)
 AC_SUBST(LDSYS)
-AC_SUBST(LDARPACK)
 AC_SUBST(LDCHOL)
 AC_SUBST(LDFFT)
 AC_SUBST(LAPACK)
-AC_SUBST(FLIBS)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 LIBS="" #somehow LIBS contain -fftw3
@@ -302,7 +258,7 @@ DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
 
-#The following must be after AC_PROG_CC and AC_PROG_F77
+#The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 AC_DISABLE_SHARED #disable shared object build on LTLIBARIRIES. should be before AC_PROG_LIBTOOL
@@ -318,9 +274,6 @@ AC_CONFIG_FILES( [Makefile
 if test -d ${srcdir}/test ;then
 AC_CONFIG_FILES([test/Makefile])
 fi
-if test -d ${srcdir}/external/arpack ;then
-AC_CONFIG_FILES([external/arpack/Makefile])
-fi
 if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
@@ -331,52 +284,9 @@ echo use_static=$use_static
 echo host_os=$host_os
 
 echo CC=$CC
-echo F77=$F77
-echo FLIBS=$FLIBS
 echo LIBS=$LIBS
 echo LDEXE=$LDEXE
 echo SRC_DIR=$SRC_DIR
 echo SVN_REV=$SVN_REV
 echo BUILD_DIR=$BUILD_DIR
 AC_OUTPUT
-
-#The folloing flags need to be tested before turned on.
-#OPTS="$OPTS -funroll-loops"
-#don't use the following.
-#OPTS="$OPTS -funsafe-loop-optimizations -Wunsafe-loop-optimizations"
-
-#-ffast-math changes the result, thus the atmosphere in gcc-4.3 (Tablet), but in polaris, the atm is the same as without. This flag is dangers. don't set it. rather, use individual flags. When something goes differently after changing compiler, check this part.
-#OPTS="$OPTS -ffast-math"
-#The following flags are dangerous. don't enable.
-#OPTS="$OPTS -fassociative-math -fno-signed-zeros -fno-trapping-math -freciprocal-math "
-
-#Make OPTS available in Makefile.am/in
-
-#use FLIBS to link to fortran compiler library
-#LAPACK="-lmkl_blas_lapack"
-#LAPACK="-lblas -llapack"
-
-
-#Notes for icc:
-#-fast uses static binding, which is bad for drawdaemon
-#-no-prec-div causes error
-#-ipo causes dnew etc not found
-#-axT 
-#-xHOST causes illegal operations
-#
-
-#2009-12-28:
-#Mac related: autoreconf -vfi in mac complains about the missing of AM_CONDITIONAL
-#Copyed m4 folder in polaris to the mac. succeed. need to distrubite m4 directory.
-
-#The grammar in configure.ac and configure is similar but not identical to shell
-#scripts.  in if, don't use [, must use test because [ is treated as quote my
-#autoconf.
-
-#Maintainer mode causes configure to not regenerate Makefile when makefile.am is changed
-#AM_MAINTAINER_MODE
-
-#The bug I had in test_accphi is due to the fact that I didn't set  -DHAVE_SSE2=1 for icc.
-#remove presented cflags
-#We should not modify user variables CFLAGS LDFLAGS etc.
-   #LAPACK="-Wl,-rpath,${SRC_DIR}/external/mkl -L${SRC_DIR}/external/mkl -lmkl64"
