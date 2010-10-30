@@ -99,19 +99,18 @@
     This software is written in the C language (revision 99), with external
     dependent libraries of FFTW version 3 (www.fftw.org) and blas/lapack
     (http://www.netlib.org/lapack/). The code contains a local copy of the
-    package Arpack (http://www.caam.rice.edu/software/ARPACK/, to find eigen-
-    value/vectors of sparse matrices, written in f77, so a FORTRAN compiler is
-    needed) and Cholmod (http://www.cise.ufl.edu/research/sparse/SuiteSparse/,
-    to do Cholesky factorization, copied from suite-sparse). An optimized blas
-    library such ATLAS, GOTO-BLAS, or Intel MKL is necessary to get good
-    performance for Cholesky decompositions of the tomography and/or fitting
-    matrix..
+    Cholmod (http://www.cise.ufl.edu/research/sparse/SuiteSparse/, to do
+    Cholesky factorization, copied from suite-sparse). It will be compile if
+    cholmod is not found in the system. An optimized blas library such ATLAS,
+    GOTO-BLAS, or Intel MKL is necessary to get good performance for Cholesky
+    decompositions of the tomography and/or fitting matrix. Use --enable-mkl
+    when running configure to download a redistributed copy of MKL.
 
     A C99 compliant compiler is required to compile the code, such as GCC 4 or
-    Intel C++ compiler. The code has been successfully compiled on 64 bit
-    GNU/Linux using GNU GCC and the Intel C++ compiler ICC (in C mode), and in
-    MAC OS X 10.5 using the GCC compiler. For machines with Intel CPUs, the code
-    generally runs faster when compiled with ICC.
+    Intel C++ compiler. The code has been successfully compiled on GNU/Linux
+    using GNU GCC and the Intel C++ compiler ICC (in C mode), and in MAC OS X
+    10.5 using the GCC compiler. For machines with Intel CPUs, the code
+    generally runs faster when compiled with ICC and linked with MKL.
 
     This software also contains two optional executable (drawdaemon, monitor)
     for plotting and job monitoring (jobs can be monitored on several different
@@ -148,8 +147,6 @@
 
     - C99 compliant compiler: GCC4 or ICC.
 
-    - FORTRAN compiler: gfortran or Intel IFC
-
     - FFTW version 3. Can usually be installed through the linux distribution
     official repository or using source from www.fftw.org
     
@@ -160,6 +157,8 @@
     
     - (Optional) GTK+ and Cairo. For drawdaemon and monitor.
 
+    - (Optional) cholmod. If not found in the system, will compile and use the
+      shipped cholmod.
 
     \section sect-run Run the code
     \subsection sect-prep Preparing the folders and compiling
