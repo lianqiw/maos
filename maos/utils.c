@@ -518,7 +518,9 @@ ARG_T * parse_args(int argc, char **argv){
 	warning("Unable to determine the path to the configuration files.\n");
 	warning("Will download a copy from the website and put in %ss/.aos/config\n",getenv("HOME"));
 	char cmd[400];
-	snprintf(cmd,400,"wget %s/maos_config.tar.bz2 -C /tmp/ && tar axvf /tmp/maos_config.tar.bz2 -C %s/.aos/",BASEURL, getenv("HOME"));
+	snprintf(cmd,400,"wget %s/maos_config.tar.bz2 -O /tmp/maos_config.tar.bz2 "
+		 "&& tar axvf /tmp/maos_config.tar.bz2 -C %s/.aos/ "
+		 "&& rm -rf  /tmp/maos_config.tar.bz2",BASEURL, getenv("HOME"));
 	if(system(cmd)){
 	    error("Unable to download the configuration files from the internet and extract to %s/.aos/config", getenv("HOME"));
 	}
