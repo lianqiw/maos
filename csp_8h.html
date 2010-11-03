@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: lib/csp.h File Reference</title>
+<title>maos-0.7.1: lib/csp.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -84,9 +84,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#ba26181f356f45e0c66bb677a6c32698">cspnew2</a> (const <a class="el" href="structcsp.html">csp</a> *A)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a new X(sp) matrix of the same size as A.  <a href="#ba26181f356f45e0c66bb677a6c32698"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#491f95a564ed7edeb3ed3c2bc8c76575">cspnewrandu</a> (int nx, int ny, const dcomplex mean, double fill, <a class="el" href="structmt__state.html">mt_state</a> *rstat)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#44da99a2eead0d399880a17533e36b2b">cspnewrandu</a> (int nx, int ny, const dcomplex mean, double fill, <a class="el" href="structmt__state.html">rand_t</a> *rstat)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a new X(sp) matrix and fill in uniform random numbers with filling factor of 'fill'.  <a href="#491f95a564ed7edeb3ed3c2bc8c76575"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a new X(sp) matrix and fill in uniform random numbers with filling factor of 'fill'.  <a href="#44da99a2eead0d399880a17533e36b2b"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#0f62850af8a0a48f2cc063bf95df8856">cspsetnzmax</a> (<a class="el" href="structcsp.html">csp</a> *sp, long nzmax)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">resize a X(sp) matrix  <a href="#0f62850af8a0a48f2cc063bf95df8856"></a><br></td></tr>
@@ -123,9 +123,6 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#54fc8f015cdea3064a1dd4d404e428c1">cspmulvec</a> (dcomplex *restrict y, const <a class="el" href="structcsp.html">csp</a> *A, const dcomplex *restrict x, dcomplex alpha)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">sparse matrix multiply with a vector  <a href="#54fc8f015cdea3064a1dd4d404e428c1"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d85c0b07b56612cbbbcea5fc0f34fa7c"></a><!-- doxytag: member="csp.h::cspmulvec_mkl" ref="d85c0b07b56612cbbbcea5fc0f34fa7c" args="(dcomplex *restrict y, const csp *A, const dcomplex *restrict x, dcomplex alpha)" -->
-void&nbsp;</td><td class="memItemRight" valign="bottom"><b>cspmulvec_mkl</b> (dcomplex *restrict y, const <a class="el" href="structcsp.html">csp</a> *A, const dcomplex *restrict x, dcomplex alpha)</td></tr>
-
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#9a5940fca0abf0d7876eafd923bc78e9">cspmulcreal</a> (dcomplex *restrict y, const <a class="el" href="structcsp.html">csp</a> *A, const dcomplex *restrict x, dcomplex alpha)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Multiply a sparse matrix with the real part of a complex vector.  <a href="#9a5940fca0abf0d7876eafd923bc78e9"></a><br></td></tr>
@@ -159,6 +156,9 @@ void&nbsp;</td><td class="memItemRight" valign="bottom"><b>cspmulvec_mkl</b> (dc
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#2016cdf467cae24f45f30eb7cd4c236b">csptcellmulmat_thread</a> (<a class="el" href="structccell.html">ccell</a> **C, const <a class="el" href="structcspcell.html">cspcell</a> *A, const <a class="el" href="structccell.html">ccell</a> *B, const dcomplex alpha, const int nthread)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">threaded version of Y(sptcellmulmat  <a href="#2016cdf467cae24f45f30eb7cd4c236b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#7a8a319c9dcfc015746e77a9899bea5a">cspcellmulmat_each</a> (<a class="el" href="structccell.html">ccell</a> **xout, <a class="el" href="structcspcell.html">cspcell</a> *A, <a class="el" href="structccell.html">ccell</a> *xin, dcomplex alpha, int trans, int nthread)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Threaded multiply each cell in <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a> with each cell in <a class="el" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a>.  <a href="#7a8a319c9dcfc015746e77a9899bea5a"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#6644c43d1ac2abf3b7767935a5e2ab46">cspfull</a> (<a class="el" href="structcmat.html">cmat</a> **out0, const <a class="el" href="structcsp.html">csp</a> *A, const dcomplex f)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert sparse matrix into dense matrix and add to output: out0=out0+full(A)*alpha.  <a href="#6644c43d1ac2abf3b7767935a5e2ab46"></a><br></td></tr>
@@ -222,9 +222,9 @@ void&nbsp;</td><td class="memItemRight" valign="bottom"><b>cspmulvec_mkl</b> (dc
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#fb8a40bc13c4f0c04b1a1431e7d1a5b5">cspsumabs</a> (const <a class="el" href="structcsp.html">csp</a> *A, int col)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sum abs of elements of sparse array along dimension dim.  <a href="#fb8a40bc13c4f0c04b1a1431e7d1a5b5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="15d688b55bb9b7ef506cad3f5ccfb772"></a><!-- doxytag: member="csp.h::cspclean" ref="15d688b55bb9b7ef506cad3f5ccfb772" args="(csp *A)" -->
-void&nbsp;</td><td class="memItemRight" valign="bottom"><b>cspclean</b> (<a class="el" href="structcsp.html">csp</a> *A)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#15d688b55bb9b7ef506cad3f5ccfb772">cspclean</a> (<a class="el" href="structcsp.html">csp</a> *A)</td></tr>
 
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Clean up a sparse array by dropping zeros.  <a href="#15d688b55bb9b7ef506cad3f5ccfb772"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="csp_8h.html#d212aea4c404ea3b85aa820a02f2fe78">cspcellmulvec</a> (dcomplex *restrict yc, const <a class="el" href="structcspcell.html">cspcell</a> *Ac, const dcomplex *restrict xc, dcomplex alpha)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Multiply a <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a> with vectors.  <a href="#d212aea4c404ea3b85aa820a02f2fe78"></a><br></td></tr>
@@ -297,25 +297,6 @@ Contains functions for complex sparse <a class="el" href="structcsp.html" title=
 <p>
 Create a nx*ny X(sp) matrix with memory for nmax max elements allocated. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03230"></a>03230                                              {
-<a name="l03231"></a>03231 
-<a name="l03232"></a>03232     X(sp) *sp;
-<a name="l03233"></a>03233     sp = calloc(1, <span class="keyword">sizeof</span>(X(sp)));
-<a name="l03234"></a>03234     <span class="keywordflow">if</span>(nzmax&gt;0){
-<a name="l03235"></a>03235     sp-&gt;p=malloc((ny+1)*<span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l03236"></a>03236     sp-&gt;i=malloc(nzmax*<span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l03237"></a>03237     sp-&gt;x=malloc(nzmax*<span class="keyword">sizeof</span>(T));
-<a name="l03238"></a>03238     }
-<a name="l03239"></a>03239     sp-&gt;m=nx;
-<a name="l03240"></a>03240     sp-&gt;n=ny;
-<a name="l03241"></a>03241     sp-&gt;nzmax=nzmax;
-<a name="l03242"></a>03242     sp-&gt;nz=-1;
-<a name="l03243"></a>03243     sp-&gt;nref=calloc(1,<span class="keyword">sizeof</span>(T));
-<a name="l03244"></a>03244     sp-&gt;nref[0]=1;
-<a name="l03245"></a>03245     <span class="keywordflow">return</span> sp;
-<a name="l03246"></a>03246 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -338,18 +319,6 @@ Create a nx*ny X(sp) matrix with memory for nmax max elements allocated.
 <p>
 reference a sparse object. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03251"></a>03251                          {
-<a name="l03252"></a>03252     X(sp) *out = calloc(1, <span class="keyword">sizeof</span>(X(sp)));
-<a name="l03253"></a>03253     <span class="keywordflow">if</span>(!A-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>){
-<a name="l03254"></a>03254     A-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>=calloc(1, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l03255"></a>03255     A-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>[0]=1;
-<a name="l03256"></a>03256     }
-<a name="l03257"></a>03257     memcpy(out,A,<span class="keyword">sizeof</span>(X(sp)));
-<a name="l03258"></a>03258     out-&gt;nref[0]++;
-<a name="l03259"></a>03259     <span class="keywordflow">return</span> out;
-<a name="l03260"></a>03260 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -371,17 +340,6 @@ reference a sparse object.
 
 <p>
 copy a X(sp) matrix to another. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03265"></a>03265                                {
-<a name="l03266"></a>03266     <span class="keywordtype">long</span> nmax=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>];
-<a name="l03267"></a>03267     X(sp) *out;
-<a name="l03268"></a>03268     out=Y(spnew)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, nmax);
-<a name="l03269"></a>03269     memcpy(out-&gt;p, A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>)*(A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>+1));
-<a name="l03270"></a>03270     memcpy(out-&gt;i, A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>)*nmax);
-<a name="l03271"></a>03271     memcpy(out-&gt;x, A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>, <span class="keyword">sizeof</span>(T)*nmax);
-<a name="l03272"></a>03272     <span class="keywordflow">return</span> out;
-<a name="l03273"></a>03273 }
-</pre></div>
 <p>
 
 </div>
@@ -414,20 +372,6 @@ copy a X(sp) matrix to another.
 <p>
 move the matrix from res to A. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03278"></a>03278                                     {
-<a name="l03279"></a>03279     <span class="keywordflow">if</span>(!res || !A) 
-<a name="l03280"></a>03280     error(<span class="stringliteral">"Trying to move an NULL matrix\n"</span>);
-<a name="l03281"></a>03281     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>){
-<a name="l03282"></a>03282     free(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>); 
-<a name="l03283"></a>03283     free(A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>); 
-<a name="l03284"></a>03284     free(A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>); 
-<a name="l03285"></a>03285     free(A-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>);
-<a name="l03286"></a>03286     }
-<a name="l03287"></a>03287     memcpy(A,res,<span class="keyword">sizeof</span>(X(sp)));
-<a name="l03288"></a>03288     free(res);
-<a name="l03289"></a>03289 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -450,15 +394,10 @@ move the matrix from res to A.
 <p>
 Create a new X(sp) matrix of the same size as A. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03294"></a>03294                                 {
-<a name="l03295"></a>03295     <span class="keywordflow">return</span> Y(spnew)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]);
-<a name="l03296"></a>03296 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
-<a class="anchor" name="491f95a564ed7edeb3ed3c2bc8c76575"></a><!-- doxytag: member="csp.h::cspnewrandu" ref="491f95a564ed7edeb3ed3c2bc8c76575" args="(int nx, int ny, const dcomplex mean, double fill, mt_state *rstat)" -->
+<a class="anchor" name="44da99a2eead0d399880a17533e36b2b"></a><!-- doxytag: member="csp.h::cspnewrandu" ref="44da99a2eead0d399880a17533e36b2b" args="(int nx, int ny, const dcomplex mean, double fill, rand_t *rstat)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -489,7 +428,7 @@ Create a new X(sp) matrix of the same size as A.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structmt__state.html">mt_state</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structmt__state.html">rand_t</a> *&nbsp;</td>
           <td class="paramname"> <em>rstat</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -503,43 +442,6 @@ Create a new X(sp) matrix of the same size as A.
 
 <p>
 Create a new X(sp) matrix and fill in uniform random numbers with filling factor of 'fill'. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03302"></a>03302                                             {
-<a name="l03303"></a>03303     <span class="keywordflow">if</span>(fill&gt;1) fill=1.;
-<a name="l03304"></a>03304     <span class="keywordflow">if</span>(fill&lt;0) fill=0.;
-<a name="l03305"></a>03305     <span class="keyword">const</span> <span class="keywordtype">long</span> nzmax=nx*ny;
-<a name="l03306"></a>03306     <span class="keywordtype">long</span> nz1=nx*ny*fill*4;
-<a name="l03307"></a>03307     <span class="keywordflow">if</span>(nz1&gt;nzmax) nz1=nzmax;
-<a name="l03308"></a>03308     X(sp) *A=Y(spnew)(nx,ny,nz1);
-<a name="l03309"></a>03309     <span class="keywordtype">long</span> *pp=A-&gt;p;
-<a name="l03310"></a>03310     <span class="keywordtype">long</span> *pi=A-&gt;i;
-<a name="l03311"></a>03311     T *px=A-&gt;x;
-<a name="l03312"></a>03312     <span class="keywordtype">long</span> count=0;
-<a name="l03313"></a>03313     <span class="keywordtype">double</span> thres=1.-fill;
-<a name="l03314"></a>03314     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> icol=0; icol&lt;A-&gt;n; icol++){
-<a name="l03315"></a>03315     pp[icol]=count;
-<a name="l03316"></a>03316     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> irow=0; irow&lt;A-&gt;m; irow++){
-<a name="l03317"></a>03317         <span class="keywordflow">if</span>(randu(rstat)&gt;thres){
-<a name="l03318"></a>03318         pi[count]=irow;
-<a name="l03319"></a>03319         px[count]=RANDU(rstat)*mean;
-<a name="l03320"></a>03320         count++;
-<a name="l03321"></a>03321         <span class="keywordflow">if</span>(count&gt;nz1){
-<a name="l03322"></a>03322             <span class="comment">//check out of bound;</span>
-<a name="l03323"></a>03323             nz1=nz1*2; <span class="keywordflow">if</span>(nz1&gt;nzmax) nz1=nzmax;
-<a name="l03324"></a>03324             Y(spsetnzmax)(A,nz1);
-<a name="l03325"></a>03325             <span class="comment">//the pointers may change</span>
-<a name="l03326"></a>03326             pp=A-&gt;p;
-<a name="l03327"></a>03327             pi=A-&gt;i;
-<a name="l03328"></a>03328             px=A-&gt;x;
-<a name="l03329"></a>03329         }
-<a name="l03330"></a>03330         }
-<a name="l03331"></a>03331     }
-<a name="l03332"></a>03332     }
-<a name="l03333"></a>03333     pp[A-&gt;n]=count;
-<a name="l03334"></a>03334     Y(spsetnzmax)(A,count);
-<a name="l03335"></a>03335     <span class="keywordflow">return</span> A;
-<a name="l03336"></a>03336 }
-</pre></div>
 <p>
 
 </div>
@@ -572,15 +474,6 @@ Create a new X(sp) matrix and fill in uniform random numbers with filling factor
 <p>
 resize a X(sp) matrix 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03341"></a>03341                                          {
-<a name="l03342"></a>03342     <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#1ac262485faf97bba7f808626854a480" title="maximum number of entries">nzmax</a>!=nzmax){
-<a name="l03343"></a>03343     sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>=realloc(sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>)*nzmax);
-<a name="l03344"></a>03344     sp-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>=realloc(sp-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>, <span class="keyword">sizeof</span>(T)*nzmax);
-<a name="l03345"></a>03345     sp-&gt;<a class="code" href="structcsp.html#1ac262485faf97bba7f808626854a480" title="maximum number of entries">nzmax</a>=nzmax;
-<a name="l03346"></a>03346     }
-<a name="l03347"></a>03347 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -602,28 +495,6 @@ resize a X(sp) matrix
 
 <p>
 free a X(sp) matrix 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03350"></a>03350                             {
-<a name="l03351"></a>03351     <span class="keywordflow">if</span>(!sp) <span class="keywordflow">return</span>;
-<a name="l03352"></a>03352     <span class="keywordflow">if</span>(!sp-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a> || sp-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>[0]&lt;=1){
-<a name="l03353"></a>03353     <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>[0]!=1){
-<a name="l03354"></a>03354         warning(<span class="stringliteral">"nref should nevre be less than 1\n"</span>);
-<a name="l03355"></a>03355     }
-<a name="l03356"></a>03356     free(sp-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>);
-<a name="l03357"></a>03357     free(sp-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>);
-<a name="l03358"></a>03358     free(sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>);
-<a name="l03359"></a>03359     <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>){
-<a name="l03360"></a>03360         free(sp-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>);
-<a name="l03361"></a>03361     }<span class="keywordflow">else</span>{
-<a name="l03362"></a>03362         warning(<span class="stringliteral">"X(sp) was corrected incorrectly\n"</span>);
-<a name="l03363"></a>03363     }
-<a name="l03364"></a>03364     }<span class="keywordflow">else</span>{
-<a name="l03365"></a>03365     sp-&gt;<a class="code" href="structcsp.html#958127f0cf4c4f832662333c548bb127" title="reference counting like cmat">nref</a>[0]--;
-<a name="l03366"></a>03366     <span class="comment">//warning("data is retained. nref=%ld\n",sp-&gt;nref[0]);</span>
-<a name="l03367"></a>03367     }
-<a name="l03368"></a>03368     free(sp);
-<a name="l03369"></a>03369 }
-</pre></div>
 <p>
 
 </div>
@@ -656,17 +527,6 @@ free a X(sp) matrix
 <p>
 free a X(sp) array 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03372"></a>03372                                        {
-<a name="l03373"></a>03373     <span class="keywordtype">int</span> i;
-<a name="l03374"></a>03374     <span class="keywordflow">if</span>(sparr){
-<a name="l03375"></a>03375     <span class="keywordflow">for</span>(i=0; i&lt;n; i++){
-<a name="l03376"></a>03376         Y(spfree)(sparr[i]);
-<a name="l03377"></a>03377     }
-<a name="l03378"></a>03378     free(sparr); 
-<a name="l03379"></a>03379     }
-<a name="l03380"></a>03380 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -689,33 +549,6 @@ free a X(sp) array
 <p>
 Display a X(sp) array. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03383"></a>03383                                {
-<a name="l03384"></a>03384     <span class="keywordtype">long</span> ic,ir;
-<a name="l03385"></a>03385     <span class="keywordtype">long</span> imax;
-<a name="l03386"></a>03386     <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#1ac262485faf97bba7f808626854a480" title="maximum number of entries">nzmax</a>==0){
-<a name="l03387"></a>03387     info(<span class="stringliteral">"Y(spdisp): All zeros\n"</span>);
-<a name="l03388"></a>03388     }<span class="keywordflow">else</span>{
-<a name="l03389"></a>03389     info(<span class="stringliteral">"Y(spdisp):\n"</span>);
-<a name="l03390"></a>03390     <span class="keywordflow">for</span>(ic=0; ic&lt;sp-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; ic++){
-<a name="l03391"></a>03391         imax=-1;
-<a name="l03392"></a>03392         <span class="keywordflow">for</span>(ir=sp-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[ic];ir&lt;sp-&gt;p[ic+1];ir++){ 
-<a name="l03393"></a>03393 <span class="preprocessor">#ifdef USE_COMPLEX</span>
-<a name="l03394"></a>03394 <span class="preprocessor"></span>        printf(<span class="stringliteral">"(%ld,%ld)=(%g,%g)\n"</span>, 
-<a name="l03395"></a>03395                sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ir], ic, creal(sp-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ir]),cimag(sp-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ir]));
-<a name="l03396"></a>03396 <span class="preprocessor">#else       </span>
-<a name="l03397"></a>03397 <span class="preprocessor"></span>        printf(<span class="stringliteral">"(%ld,%ld)=%g\n"</span>, sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ir], ic, sp-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ir]);
-<a name="l03398"></a>03398 <span class="preprocessor">#endif</span>
-<a name="l03399"></a>03399 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ir]&gt;imax){
-<a name="l03400"></a>03400             imax=sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ir];
-<a name="l03401"></a>03401         }<span class="keywordflow">else</span>{
-<a name="l03402"></a>03402             warning(<span class="stringliteral">"Wrong order"</span>);
-<a name="l03403"></a>03403         }
-<a name="l03404"></a>03404         }
-<a name="l03405"></a>03405     }
-<a name="l03406"></a>03406     }
-<a name="l03407"></a>03407 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -737,33 +570,6 @@ Display a X(sp) array.
 
 <p>
 Check a X(sp) array for wrong orders. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03410"></a>03410                                 {
-<a name="l03411"></a>03411     <span class="keywordflow">if</span>(sp){
-<a name="l03412"></a>03412     <span class="keywordtype">long</span> ic,ir;
-<a name="l03413"></a>03413     <span class="keywordtype">long</span> imax;
-<a name="l03414"></a>03414     <span class="keywordflow">for</span>(ic=0; ic&lt;sp-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; ic++){
-<a name="l03415"></a>03415         imax=-1;
-<a name="l03416"></a>03416         <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[ic+1]&lt;sp-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[ic]){
-<a name="l03417"></a>03417         error(<span class="stringliteral">"p in column %ld is smaller than %ld\n"</span>,ic+1,ic);
-<a name="l03418"></a>03418         }
-<a name="l03419"></a>03419         <span class="keywordflow">for</span>(ir=sp-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[ic];ir&lt;sp-&gt;p[ic+1];ir++){ 
-<a name="l03420"></a>03420         <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ir]&gt;imax){
-<a name="l03421"></a>03421             imax=sp-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ir];
-<a name="l03422"></a>03422         }<span class="keywordflow">else</span>{
-<a name="l03423"></a>03423             warning(<span class="stringliteral">"Wrong order at column %ld"</span>,ic);
-<a name="l03424"></a>03424         }
-<a name="l03425"></a>03425         }
-<a name="l03426"></a>03426         <span class="keywordflow">if</span>(imax&gt;=sp-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>){
-<a name="l03427"></a>03427         error(<span class="stringliteral">"imax=%ld exceeds column size at column %ld\n"</span>,imax,ic);
-<a name="l03428"></a>03428         }
-<a name="l03429"></a>03429     }
-<a name="l03430"></a>03430     <span class="keywordflow">if</span>(sp-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[sp-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]!=sp-&gt;<a class="code" href="structcsp.html#1ac262485faf97bba7f808626854a480" title="maximum number of entries">nzmax</a>){
-<a name="l03431"></a>03431         warning(<span class="stringliteral">"real nzmax is %ld, allocated is %ld\n"</span>,sp-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[sp-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>],sp-&gt;<a class="code" href="structcsp.html#1ac262485faf97bba7f808626854a480" title="maximum number of entries">nzmax</a>);
-<a name="l03432"></a>03432     }
-<a name="l03433"></a>03433     }
-<a name="l03434"></a>03434 }
-</pre></div>
 <p>
 
 </div>
@@ -796,15 +602,6 @@ Check a X(sp) array for wrong orders.
 <p>
 inplace scale X(sp) matrix elements. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03437"></a>03437                                        {
-<a name="l03438"></a>03438     <span class="keywordflow">if</span>(A){
-<a name="l03439"></a>03439     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]; i++){
-<a name="l03440"></a>03440         A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[i]*=beta;
-<a name="l03441"></a>03441     }
-<a name="l03442"></a>03442     }
-<a name="l03443"></a>03443 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -835,13 +632,6 @@ inplace scale X(sp) matrix elements.
 
 <p>
 inplace scale a X(spcell) object 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03446"></a>03446                                                {
-<a name="l03447"></a>03447     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>*A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; i++){
-<a name="l03448"></a>03448     Y(spscale)(A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[i],beta);
-<a name="l03449"></a>03449     }
-<a name="l03450"></a>03450 }
-</pre></div>
 <p>
 
 </div>
@@ -880,32 +670,6 @@ inplace scale a X(spcell) object
 <p>
 Create a new sparse matrix with diagonal elements set to vec*alpha. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03453"></a>03453                                             {
-<a name="l03454"></a>03454     X(sp) *out=Y(spnew)(N,N,N);
-<a name="l03455"></a>03455     <span class="keywordtype">long</span> *pp=out-&gt;p;
-<a name="l03456"></a>03456     <span class="keywordtype">long</span> *pi=out-&gt;i;
-<a name="l03457"></a>03457     T *px=out-&gt;x;
-<a name="l03458"></a>03458     <span class="keywordtype">long</span> count=0;
-<a name="l03459"></a>03459     <span class="keywordflow">if</span>(vec){
-<a name="l03460"></a>03460     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=0; icol&lt;out-&gt;n; icol++){
-<a name="l03461"></a>03461         pp[icol]=count;
-<a name="l03462"></a>03462         pi[count]=icol;
-<a name="l03463"></a>03463         px[count]=vec[icol]*alpha;
-<a name="l03464"></a>03464         count++;
-<a name="l03465"></a>03465     }
-<a name="l03466"></a>03466     }<span class="keywordflow">else</span>{
-<a name="l03467"></a>03467     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=0; icol&lt;out-&gt;n; icol++){
-<a name="l03468"></a>03468         pp[icol]=count;
-<a name="l03469"></a>03469         pi[count]=icol;
-<a name="l03470"></a>03470         px[count]=alpha;
-<a name="l03471"></a>03471         count++;
-<a name="l03472"></a>03472     }
-<a name="l03473"></a>03473     }
-<a name="l03474"></a>03474     pp[out-&gt;n]=count;
-<a name="l03475"></a>03475     <span class="keywordflow">return</span> out;
-<a name="l03476"></a>03476 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -927,23 +691,6 @@ Create a new sparse matrix with diagonal elements set to vec*alpha.
 
 <p>
 Extract diagonal element of A and return. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03480"></a>03480                                  {
-<a name="l03481"></a>03481     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>!=A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>){
-<a name="l03482"></a>03482     error(<span class="stringliteral">"Only work for square matrix\n"</span>);
-<a name="l03483"></a>03483     }
-<a name="l03484"></a>03484     X(mat) *out=X(<span class="keyword">new</span>)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>,1);
-<a name="l03485"></a>03485     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03486"></a>03486     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> irow=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; irow&lt;A-&gt;p[icol+1]; irow++){
-<a name="l03487"></a>03487         <span class="keywordtype">long</span> row=A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[irow];
-<a name="l03488"></a>03488         <span class="keywordflow">if</span>(row==icol){
-<a name="l03489"></a>03489         out-&gt;p[icol]=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[irow];
-<a name="l03490"></a>03490         }
-<a name="l03491"></a>03491     }
-<a name="l03492"></a>03492     }
-<a name="l03493"></a>03493     <span class="keywordflow">return</span> out;
-<a name="l03494"></a>03494 }
-</pre></div>
 <p>
 
 </div>
@@ -982,19 +729,7 @@ Extract diagonal element of A and return.
 <p>
 Multiply a X(sp) matrix inplace with a diagonal weighting matrix whose diagonal values are stored in w. 
 <p>
-W_ii=w_i; W_ij=0 if i!=j A=A*W*alpha; W is a diagonal X(sp) matrix. diag(W) is w multiply w[i] to all numbers in column[i] <div class="fragment"><pre class="fragment"><a name="l03503"></a>03503                                                          {
-<a name="l03504"></a>03504     <span class="keywordflow">if</span>(A &amp;&amp; w){
-<a name="l03505"></a>03505     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03506"></a>03506         <span class="keyword">const</span> T wi=w[icol]*alpha;
-<a name="l03507"></a>03507         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03508"></a>03508         A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*=wi;
-<a name="l03509"></a>03509         }
-<a name="l03510"></a>03510     }
-<a name="l03511"></a>03511     }
-<a name="l03512"></a>03512 }
-</pre></div>
-<p>
-
+W_ii=w_i; W_ij=0 if i!=j A=A*W*alpha; W is a diagonal X(sp) matrix. diag(W) is w multiply w[i] to all numbers in column[i] 
 </div>
 </div><p>
 <a class="anchor" name="8e28cfb4fabbf2ca0080e55d488304a3"></a><!-- doxytag: member="csp.h::cspmulvec_thread" ref="8e28cfb4fabbf2ca0080e55d488304a3" args="(dcomplex *restrict y, const csp *A, const dcomplex *restrict x, dcomplex alpha, int nthread)" -->
@@ -1043,51 +778,7 @@ W_ii=w_i; W_ij=0 if i!=j A=A*W*alpha; W is a diagonal X(sp) matrix. diag(W) is w
 <p>
 Multiply a sparse with a vector using multithread. 
 <p>
-Speed up is not signicant because need to allocate new memory. <div class="fragment"><pre class="fragment"><a name="l03562"></a>03562                                                        {
-<a name="l03563"></a>03563     <span class="keywordflow">if</span>(!A || !x) <span class="keywordflow">return</span>;    
-<a name="l03564"></a>03564     assert(y);
-<a name="l03565"></a>03565     <span class="keywordflow">if</span>(nthread&lt;=1){
-<a name="l03566"></a>03566     <span class="comment">/* </span>
-<a name="l03567"></a>03567 <span class="comment">       When I did the timing, calling spmulvec is twice as slow as calling</span>
-<a name="l03568"></a>03568 <span class="comment">       spmulvec directly from the calling routine. I don't understand.</span>
-<a name="l03569"></a>03569 <span class="comment">    */</span>
-<a name="l03570"></a>03570     <span class="keywordtype">long</span> icol, ix;
-<a name="l03571"></a>03571     <span class="keywordflow">if</span>(ABS(alpha-1.)&lt;EPS){
-<a name="l03572"></a>03572         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03573"></a>03573         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03574"></a>03574             y[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*x[icol];
-<a name="l03575"></a>03575         }
-<a name="l03576"></a>03576         }
-<a name="l03577"></a>03577     }<span class="keywordflow">else</span>{
-<a name="l03578"></a>03578         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03579"></a>03579         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03580"></a>03580             y[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=alpha*A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*x[icol];
-<a name="l03581"></a>03581         }
-<a name="l03582"></a>03582         }
-<a name="l03583"></a>03583     }
-<a name="l03584"></a>03584     }<span class="keywordflow">else</span>{
-<a name="l03585"></a>03585     sp_thread_t data;
-<a name="l03586"></a>03586     data.A=A;
-<a name="l03587"></a>03587     data.y=y;
-<a name="l03588"></a>03588     data.<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>=x;
-<a name="l03589"></a>03589     data.alpha=alpha;
-<a name="l03590"></a>03590     data.ytmp=calloc(nthread,<span class="keyword">sizeof</span>(T*));
-<a name="l03591"></a>03591     data.nthread=nthread;
-<a name="l03592"></a>03592     thread_t mul[nthread];
-<a name="l03593"></a>03593     thread_t acc[nthread];
-<a name="l03594"></a>03594     thread_prep(mul, 0, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, 0, nthread, &amp;data);
-<a name="l03595"></a>03595     CALL_EACH(Y(spmulvec_thread_do_mul), mul, nthread);
-<a name="l03596"></a>03596     thread_prep(acc, 0, A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, 0, nthread, &amp;data);
-<a name="l03597"></a>03597     CALL_EACH(Y(spmulvec_thread_do_acc), acc, nthread);
-<a name="l03598"></a>03598     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ithread=0; ithread&lt;nthread; ithread++){
-<a name="l03599"></a>03599         free(data.ytmp[ithread]);
-<a name="l03600"></a>03600     }
-<a name="l03601"></a>03601     free(data.ytmp);
-<a name="l03602"></a>03602     }
-<a name="l03603"></a>03603 }
-</pre></div>
-<p>
-
+Speed up is not signicant because need to allocate new memory. 
 </div>
 </div><p>
 <a class="anchor" name="54fc8f015cdea3064a1dd4d404e428c1"></a><!-- doxytag: member="csp.h::cspmulvec" ref="54fc8f015cdea3064a1dd4d404e428c1" args="(dcomplex *restrict y, const csp *A, const dcomplex *restrict x, dcomplex alpha)" -->
@@ -1129,27 +820,6 @@ Speed up is not signicant because need to allocate new memory. <div class="fragm
 
 <p>
 sparse matrix multiply with a vector 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03607"></a>03607                                        {
-<a name="l03608"></a>03608     <span class="keywordflow">if</span>(A &amp;&amp; x){
-<a name="l03609"></a>03609     <span class="keywordtype">long</span> icol, ix;
-<a name="l03610"></a>03610     assert(y);
-<a name="l03611"></a>03611     <span class="keywordflow">if</span>(ABS(alpha-1.)&lt;EPS){
-<a name="l03612"></a>03612         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03613"></a>03613         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03614"></a>03614             y[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*x[icol];
-<a name="l03615"></a>03615         }
-<a name="l03616"></a>03616         }
-<a name="l03617"></a>03617     }<span class="keywordflow">else</span>{
-<a name="l03618"></a>03618         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03619"></a>03619         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03620"></a>03620             y[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=alpha*A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*x[icol];
-<a name="l03621"></a>03621         }
-<a name="l03622"></a>03622         }
-<a name="l03623"></a>03623     }
-<a name="l03624"></a>03624     }
-<a name="l03625"></a>03625 }
-</pre></div>
 <p>
 
 </div>
@@ -1194,27 +864,6 @@ sparse matrix multiply with a vector
 <p>
 Multiply a sparse matrix with the real part of a complex vector. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03714"></a>03714                    {
-<a name="l03715"></a>03715     <span class="comment">//y=y+alpha*A*creal(x);</span>
-<a name="l03716"></a>03716     <span class="keywordflow">if</span>(A &amp;&amp; x){
-<a name="l03717"></a>03717     <span class="keywordtype">long</span> icol, ix;
-<a name="l03718"></a>03718     <span class="keywordflow">if</span>(ABS(alpha-1.)&lt;EPS){
-<a name="l03719"></a>03719         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03720"></a>03720         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03721"></a>03721             y[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*creal(x[icol]);
-<a name="l03722"></a>03722         }
-<a name="l03723"></a>03723         }
-<a name="l03724"></a>03724     }<span class="keywordflow">else</span>{
-<a name="l03725"></a>03725         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03726"></a>03726         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03727"></a>03727             y[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=alpha*A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*creal(x[icol]);
-<a name="l03728"></a>03728         }
-<a name="l03729"></a>03729         }
-<a name="l03730"></a>03730     }
-<a name="l03731"></a>03731     }
-<a name="l03732"></a>03732 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1257,28 +906,6 @@ Multiply a sparse matrix with the real part of a complex vector.
 
 <p>
 Multiply transpose of a sparse matrix with a vector. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03690"></a>03690                                              {
-<a name="l03691"></a>03691     <span class="keywordflow">if</span>(A &amp;&amp; x){
-<a name="l03692"></a>03692     <span class="comment">//y=y+alpha*A'*x;</span>
-<a name="l03693"></a>03693     assert(y);
-<a name="l03694"></a>03694     <span class="keywordtype">long</span> icol, ix;
-<a name="l03695"></a>03695     <span class="keywordflow">if</span>(ABS(alpha-1.)&lt;EPS){
-<a name="l03696"></a>03696         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03697"></a>03697         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03698"></a>03698             y[icol]+=CONJ(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix])*x[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]];
-<a name="l03699"></a>03699         }
-<a name="l03700"></a>03700         }
-<a name="l03701"></a>03701     }<span class="keywordflow">else</span>{
-<a name="l03702"></a>03702         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03703"></a>03703         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03704"></a>03704             y[icol]+=alpha*CONJ(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix])*x[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]];
-<a name="l03705"></a>03705         }
-<a name="l03706"></a>03706         }
-<a name="l03707"></a>03707     }
-<a name="l03708"></a>03708     }
-<a name="l03709"></a>03709 }
-</pre></div>
 <p>
 
 </div>
@@ -1329,40 +956,6 @@ Multiply transpose of a sparse matrix with a vector.
 <p>
 Threaded version of sptmulvec. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03655"></a>03655                                                              {
-<a name="l03656"></a>03656     tic;
-<a name="l03657"></a>03657     <span class="keywordflow">if</span>(!A || !x) <span class="keywordflow">return</span>;
-<a name="l03658"></a>03658     assert(y);
-<a name="l03659"></a>03659     <span class="keywordflow">if</span>(nthread&lt;=1){
-<a name="l03660"></a>03660     <span class="keywordtype">long</span> icol, ix;
-<a name="l03661"></a>03661     <span class="keywordflow">if</span>(ABS(alpha-1.)&lt;EPS){
-<a name="l03662"></a>03662         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03663"></a>03663         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03664"></a>03664             y[icol]+=CONJ(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix])*x[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]];
-<a name="l03665"></a>03665         }
-<a name="l03666"></a>03666         }
-<a name="l03667"></a>03667     }<span class="keywordflow">else</span>{
-<a name="l03668"></a>03668         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03669"></a>03669         <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03670"></a>03670             y[icol]+=alpha*CONJ(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix])*x[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]];
-<a name="l03671"></a>03671         }
-<a name="l03672"></a>03672         }
-<a name="l03673"></a>03673     }
-<a name="l03674"></a>03674     }<span class="keywordflow">else</span>{
-<a name="l03675"></a>03675     sp_thread_t data;
-<a name="l03676"></a>03676     data.A=A;
-<a name="l03677"></a>03677     data.y=y;
-<a name="l03678"></a>03678     data.<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>=x;
-<a name="l03679"></a>03679     data.alpha=alpha;
-<a name="l03680"></a>03680     data.nthread=nthread;
-<a name="l03681"></a>03681     thread_t mul[nthread];
-<a name="l03682"></a>03682     thread_prep(mul, 0, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, 0, nthread, &amp;data);<span class="comment">//interlaced is not good.</span>
-<a name="l03683"></a>03683     toc(<span class="stringliteral">"prep"</span>);
-<a name="l03684"></a>03684     CALL_EACH(Y(sptmulvec_thread_do), mul, nthread);
-<a name="l03685"></a>03685     }
-<a name="l03686"></a>03686 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1405,44 +998,6 @@ Threaded version of sptmulvec.
 
 <p>
 Multiply a sparse matrix X(sp) with a dense matrix X(mat). 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03737"></a>03737                        {
-<a name="l03738"></a>03738     <span class="keywordflow">if</span>(A&amp;&amp;x){
-<a name="l03739"></a>03739     <span class="comment">// y=y+alpha*A*x;</span>
-<a name="l03740"></a>03740     <span class="keywordtype">long</span> icol, ix;
-<a name="l03741"></a>03741     <span class="keywordflow">if</span>(!*yout){
-<a name="l03742"></a>03742         *yout=X(<span class="keyword">new</span>)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, x-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>); 
-<a name="l03743"></a>03743     }
-<a name="l03744"></a>03744     X(mat) *y=*yout;
-<a name="l03745"></a>03745     assert(x-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>==y-&gt;ny);
-<a name="l03746"></a>03746     assert(A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>==x-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>);
-<a name="l03747"></a>03747     <span class="keywordflow">if</span>(x-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>==1){
-<a name="l03748"></a>03748         Y(spmulvec)(y-&gt;p, A, x-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,  alpha);
-<a name="l03749"></a>03749     }<span class="keywordflow">else</span>{
-<a name="l03750"></a>03750         <span class="keywordtype">int</span> jcol;
-<a name="l03751"></a>03751         T (* restrict Y)[y-&gt;nx]=(T(*)[y-&gt;nx])y-&gt;p;
-<a name="l03752"></a>03752         T (* restrict X)[x-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>]=(T(*)[x-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>])x-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>;
-<a name="l03753"></a>03753         <span class="keywordflow">if</span>(ABS(alpha-1.)&lt;EPS){
-<a name="l03754"></a>03754         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03755"></a>03755             <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03756"></a>03756             <span class="keywordflow">for</span>(jcol=0; jcol&lt;y-&gt;ny; jcol++){
-<a name="l03757"></a>03757                 Y[jcol][A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*X[jcol][icol];
-<a name="l03758"></a>03758             }
-<a name="l03759"></a>03759             }
-<a name="l03760"></a>03760         }
-<a name="l03761"></a>03761         }<span class="keywordflow">else</span>{
-<a name="l03762"></a>03762         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03763"></a>03763             <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03764"></a>03764             <span class="keywordflow">for</span>(jcol=0; jcol&lt;y-&gt;ny; jcol++){
-<a name="l03765"></a>03765                 Y[jcol][A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]+=alpha*A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*X[jcol][icol];
-<a name="l03766"></a>03766             }
-<a name="l03767"></a>03767             }
-<a name="l03768"></a>03768         }
-<a name="l03769"></a>03769         }
-<a name="l03770"></a>03770     }
-<a name="l03771"></a>03771     }
-<a name="l03772"></a>03772 }
-</pre></div>
 <p>
 
 </div>
@@ -1487,43 +1042,6 @@ Multiply a sparse matrix X(sp) with a dense matrix X(mat).
 <p>
 y=y+alpha*A'*x; 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03776"></a>03776                                                                                 {
-<a name="l03777"></a>03777     <span class="keywordflow">if</span>(A&amp;&amp;x){
-<a name="l03778"></a>03778     <span class="keywordtype">long</span> icol, ix;
-<a name="l03779"></a>03779     <span class="keywordflow">if</span>(!*yout){
-<a name="l03780"></a>03780         *yout=X(<span class="keyword">new</span>)(A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, x-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>);
-<a name="l03781"></a>03781     }
-<a name="l03782"></a>03782     X(mat) *y=*yout;
-<a name="l03783"></a>03783     assert(x-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>==y-&gt;ny);
-<a name="l03784"></a>03784     assert(A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>==y-&gt;nx);
-<a name="l03785"></a>03785     <span class="keywordflow">if</span>(x-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>==1){
-<a name="l03786"></a>03786         Y(sptmulvec)(y-&gt;p, A, x-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>, alpha);
-<a name="l03787"></a>03787     }<span class="keywordflow">else</span>{
-<a name="l03788"></a>03788         <span class="keywordtype">int</span> jcol;
-<a name="l03789"></a>03789         PMAT(x,X);
-<a name="l03790"></a>03790         PMAT(y,Y);
-<a name="l03791"></a>03791         <span class="keywordflow">if</span>(ABS(alpha-1.)&lt;EPS){
-<a name="l03792"></a>03792         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03793"></a>03793             <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03794"></a>03794             <span class="keywordflow">for</span>(jcol=0; jcol&lt;y-&gt;ny; jcol++){
-<a name="l03795"></a>03795                 Y[jcol][icol]+=CONJ(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix])*X[jcol][A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]];
-<a name="l03796"></a>03796             }
-<a name="l03797"></a>03797             }
-<a name="l03798"></a>03798         }
-<a name="l03799"></a>03799         }<span class="keywordflow">else</span>{
-<a name="l03800"></a>03800         <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03801"></a>03801             <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03802"></a>03802             <span class="keywordflow">for</span>(jcol=0; jcol&lt;y-&gt;ny; jcol++){
-<a name="l03803"></a>03803                 Y[jcol][icol]+=alpha*CONJ(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix])*X[jcol][A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]];
-<a name="l03804"></a>03804             }
-<a name="l03805"></a>03805             }
-<a name="l03806"></a>03806         }
-<a name="l03807"></a>03807         }
-<a name="l03808"></a>03808     }
-<a name="l03809"></a>03809     }
-<a name="l03810"></a>03810 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1561,27 +1079,7 @@ y=y+alpha*A'*x;
 <p>
 Multiply two matrices with weighting by sparse matrix. 
 <p>
-return y'*(A*x) <div class="fragment"><pre class="fragment"><a name="l03813"></a>03813                                                               {
-<a name="l03814"></a>03814     <span class="comment">//X(sp) weighted ddot.</span>
-<a name="l03815"></a>03815     <span class="comment">//computes y'*(A*x). x,y are vectors</span>
-<a name="l03816"></a>03816     T res=0;
-<a name="l03817"></a>03817     <span class="keywordflow">if</span>(x &amp;&amp; y){
-<a name="l03818"></a>03818     <span class="keywordflow">if</span>(A){
-<a name="l03819"></a>03819         assert(x-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>==1 &amp;&amp; y-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>==1 &amp;&amp; A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>==y-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a> &amp;&amp; A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>==x-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>);
-<a name="l03820"></a>03820         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03821"></a>03821         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03822"></a>03822             res+=y-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix]]*A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix]*x-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>[icol];
-<a name="l03823"></a>03823         }
-<a name="l03824"></a>03824         }
-<a name="l03825"></a>03825     }<span class="keywordflow">else</span>{
-<a name="l03826"></a>03826         res=X(inn)(x,y);
-<a name="l03827"></a>03827     }
-<a name="l03828"></a>03828     }
-<a name="l03829"></a>03829     <span class="keywordflow">return</span> res;
-<a name="l03830"></a>03830 }
-</pre></div>
-<p>
-
+return y'*(A*x) 
 </div>
 </div><p>
 <a class="anchor" name="d52ad07f584725c01825cd2e1fa38724"></a><!-- doxytag: member="csp.h::cspcellwdinn" ref="d52ad07f584725c01825cd2e1fa38724" args="(const ccell *y, const cspcell *A, const ccell *x)" -->
@@ -1617,26 +1115,6 @@ return y'*(A*x) <div class="fragment"><pre class="fragment"><a name="l03813"></a
 
 <p>
 Multiply two cell arrays with weighting by sparse matrix. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03833"></a>03833                                                                         {
-<a name="l03834"></a>03834     <span class="comment">//computes y'*(A*x)</span>
-<a name="l03835"></a>03835     T res=0;
-<a name="l03836"></a>03836     <span class="keywordflow">if</span>(x &amp;&amp; y){
-<a name="l03837"></a>03837     <span class="keywordflow">if</span>(A){
-<a name="l03838"></a>03838         assert(x-&gt;<a class="code" href="structccell.html#02882865ece8aa1dab5515077834d67e" title="number of columns">ny</a>==1 &amp;&amp; y-&gt;<a class="code" href="structccell.html#02882865ece8aa1dab5515077834d67e" title="number of columns">ny</a>==1 &amp;&amp; A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>==y-&gt;<a class="code" href="structccell.html#b08666a33e3b77dc0ebad13f58cd6f86" title="number of rows">nx</a> &amp;&amp; A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>==x-&gt;<a class="code" href="structccell.html#b08666a33e3b77dc0ebad13f58cd6f86" title="number of rows">nx</a>);
-<a name="l03839"></a>03839         X(sp) *(*Ap)[A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>]=(X(sp) *(*)[A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>])A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>;
-<a name="l03840"></a>03840         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;A-&gt;ny; iy++){
-<a name="l03841"></a>03841         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>; ix++){
-<a name="l03842"></a>03842             res+=Y(spwdinn)(y-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ix], Ap[iy][ix], x-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[iy]);
-<a name="l03843"></a>03843         }
-<a name="l03844"></a>03844         }
-<a name="l03845"></a>03845     }<span class="keywordflow">else</span>{
-<a name="l03846"></a>03846         res = X(cellinn)(x,y);
-<a name="l03847"></a>03847     }
-<a name="l03848"></a>03848     }
-<a name="l03849"></a>03849     <span class="keywordflow">return</span> res;
-<a name="l03850"></a>03850 }
-</pre></div>
 <p>
 
 </div>
@@ -1681,11 +1159,6 @@ Multiply two cell arrays with weighting by sparse matrix.
 <p>
 Multiply a <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a> with a dense cell: C=C+A*B*alpha. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03890"></a>03890                                                                                     {
-<a name="l03891"></a>03891     <span class="keywordflow">return</span> Y(spcellmulmat2)(C,A,B,alpha,0);
-<a name="l03892"></a>03892 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1728,11 +1201,6 @@ Multiply a <a class="el" href="structspcell.html" title="an 2-d array of sparse.
 
 <p>
 C=C+A'*B*alpha. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03895"></a>03895                                                                                      {
-<a name="l03896"></a>03896     <span class="keywordflow">return</span> Y(spcellmulmat2)(C,A,B,alpha,1);
-<a name="l03897"></a>03897 }
-</pre></div>
 <p>
 
 </div>
@@ -1783,11 +1251,6 @@ C=C+A'*B*alpha.
 <p>
 threaded version of Y(spcellmulmat) 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03958"></a>03958                                   {
-<a name="l03959"></a>03959     Y(spcellmulmat_thread2)(C,A,B,alpha,0,nthread);
-<a name="l03960"></a>03960 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1837,10 +1300,60 @@ threaded version of Y(spcellmulmat)
 <p>
 threaded version of Y(sptcellmulmat 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03965"></a>03965                                    {
-<a name="l03966"></a>03966     Y(spcellmulmat_thread2)(C,A,B,alpha,1,nthread);
-<a name="l03967"></a>03967 }
-</pre></div>
+
+</div>
+</div><p>
+<a class="anchor" name="7a8a319c9dcfc015746e77a9899bea5a"></a><!-- doxytag: member="csp.h::cspcellmulmat_each" ref="7a8a319c9dcfc015746e77a9899bea5a" args="(ccell **xout, cspcell *A, ccell *xin, dcomplex alpha, int trans, int nthread)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cspcellmulmat_each           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structccell.html">ccell</a> **&nbsp;</td>
+          <td class="paramname"> <em>xout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcspcell.html">cspcell</a> *&nbsp;</td>
+          <td class="paramname"> <em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td>
+          <td class="paramname"> <em>xin</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">dcomplex&nbsp;</td>
+          <td class="paramname"> <em>alpha</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>trans</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>nthread</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Threaded multiply each cell in <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a> with each cell in <a class="el" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a>. 
 <p>
 
 </div>
@@ -1879,31 +1392,6 @@ threaded version of Y(sptcellmulmat
 <p>
 Convert sparse matrix into dense matrix and add to output: out0=out0+full(A)*alpha. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l03971"></a>03971                                                             {
-<a name="l03972"></a>03972     <span class="keywordflow">if</span>(!A)
-<a name="l03973"></a>03973     <span class="keywordflow">return</span>;<span class="comment"></span>
-<a name="l03974"></a>03974 <span class="comment">    /**</span>
-<a name="l03975"></a>03975 <span class="comment">       add A*f to dense matrix located in p;</span>
-<a name="l03976"></a>03976 <span class="comment">    */</span>
-<a name="l03977"></a>03977     <span class="keywordtype">long</span> nx=A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>;
-<a name="l03978"></a>03978     <span class="keywordtype">long</span> icol,ix,irow;
-<a name="l03979"></a>03979     <span class="keywordflow">if</span>(!*out0){
-<a name="l03980"></a>03980     *out0=X(<span class="keyword">new</span>)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>);
-<a name="l03981"></a>03981     }
-<a name="l03982"></a>03982     X(mat) *out=*out0;
-<a name="l03983"></a>03983     assert(out-&gt;nx==A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a> &amp;&amp; out-&gt;ny==A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>);
-<a name="l03984"></a>03984     PMAT(out,pp);
-<a name="l03985"></a>03985     <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l03986"></a>03986     <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l03987"></a>03987         irow=A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix];
-<a name="l03988"></a>03988         <span class="keywordflow">if</span>(irow&gt;=nx)
-<a name="l03989"></a>03989         error(<span class="stringliteral">"invalid row:%ld, %ld"</span>,irow,nx);
-<a name="l03990"></a>03990         pp[icol][irow]+=alpha*A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix];
-<a name="l03991"></a>03991     }
-<a name="l03992"></a>03992     }
-<a name="l03993"></a>03993 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1940,30 +1428,6 @@ Convert sparse matrix into dense matrix and add to output: out0=out0+full(A)*alp
 
 <p>
 Convert the transpose of a sparse matrix into dense matrix and add to output: out0=out0+full(A')*alpha;. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l03997"></a>03997                                                              {
-<a name="l03998"></a>03998     <span class="keywordflow">if</span>(!A) <span class="keywordflow">return</span>;<span class="comment"></span>
-<a name="l03999"></a>03999 <span class="comment">    /**</span>
-<a name="l04000"></a>04000 <span class="comment">       add A*f to dense matrix located in p;</span>
-<a name="l04001"></a>04001 <span class="comment">    */</span>
-<a name="l04002"></a>04002     <span class="keywordtype">long</span> nx=A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>;
-<a name="l04003"></a>04003     <span class="keywordtype">long</span> icol,ix,irow;
-<a name="l04004"></a>04004     <span class="keywordflow">if</span>(!*out0){
-<a name="l04005"></a>04005     *out0=X(<span class="keyword">new</span>)(A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>);
-<a name="l04006"></a>04006     }
-<a name="l04007"></a>04007     X(mat) *out=*out0;
-<a name="l04008"></a>04008     assert(out-&gt;nx==A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a> &amp;&amp; out-&gt;ny==A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>);
-<a name="l04009"></a>04009     PMAT(out,pp);
-<a name="l04010"></a>04010     <span class="keywordflow">for</span>(icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l04011"></a>04011     <span class="keywordflow">for</span>(ix=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; ix&lt;A-&gt;p[icol+1]; ix++){
-<a name="l04012"></a>04012         irow=A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[ix];
-<a name="l04013"></a>04013         <span class="keywordflow">if</span>(irow&gt;=nx)
-<a name="l04014"></a>04014         error(<span class="stringliteral">"invalid row:%ld, %ld"</span>,irow,nx);
-<a name="l04015"></a>04015         pp[irow][icol]+=alpha*A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[ix];
-<a name="l04016"></a>04016     }
-<a name="l04017"></a>04017     }
-<a name="l04018"></a>04018 }
-</pre></div>
 <p>
 
 </div>
@@ -2002,24 +1466,6 @@ Convert the transpose of a sparse matrix into dense matrix and add to output: ou
 <p>
 Convert sparse cell to dense matrix cell: out0=out0+full(A)*alpha. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04021"></a>04021                                                                      {
-<a name="l04022"></a>04022     <span class="keywordflow">if</span>(!A) <span class="keywordflow">return</span>;
-<a name="l04023"></a>04023     X(cell) *out=*out0;
-<a name="l04024"></a>04024     <span class="keywordflow">if</span>(!out){
-<a name="l04025"></a>04025     out=*out0=X(cellnew)(A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>, A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>);
-<a name="l04026"></a>04026     }<span class="keywordflow">else</span>{
-<a name="l04027"></a>04027     assert(out-&gt;nx==A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a> &amp;&amp; out-&gt;ny==A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>);
-<a name="l04028"></a>04028     }
-<a name="l04029"></a>04029     PSPCELL(A,pA);
-<a name="l04030"></a>04030     PXCELL(out,pout);
-<a name="l04031"></a>04031     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; iy++){
-<a name="l04032"></a>04032     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>; ix++){
-<a name="l04033"></a>04033         Y(spfull)(&amp;pout[iy][ix], pA[iy][ix], alpha);
-<a name="l04034"></a>04034     }
-<a name="l04035"></a>04035     }
-<a name="l04036"></a>04036 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2056,24 +1502,6 @@ Convert sparse cell to dense matrix cell: out0=out0+full(A)*alpha.
 
 <p>
 Convert transpose of sparse cell to dense matrix cell: out0=out0+full(A')*alpha. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04039"></a>04039                                                                       {
-<a name="l04040"></a>04040     <span class="keywordflow">if</span>(!A) <span class="keywordflow">return</span>;
-<a name="l04041"></a>04041     X(cell) *out=*out0;
-<a name="l04042"></a>04042     <span class="keywordflow">if</span>(!out){
-<a name="l04043"></a>04043     out=*out0=X(cellnew)(A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>, A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>);
-<a name="l04044"></a>04044     }<span class="keywordflow">else</span>{
-<a name="l04045"></a>04045     assert(out-&gt;nx==A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a> &amp;&amp; out-&gt;ny==A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>);
-<a name="l04046"></a>04046     }
-<a name="l04047"></a>04047     PSPCELL(A,pA);
-<a name="l04048"></a>04048     PXCELL(out, pout);
-<a name="l04049"></a>04049     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; iy++){
-<a name="l04050"></a>04050     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>; ix++){
-<a name="l04051"></a>04051         Y(spfull)(&amp;pout[ix][iy], pA[iy][ix], alpha);
-<a name="l04052"></a>04052     }
-<a name="l04053"></a>04053     } 
-<a name="l04054"></a>04054 }
-</pre></div>
 <p>
 
 </div>
@@ -2118,13 +1546,6 @@ Convert transpose of sparse cell to dense matrix cell: out0=out0+full(A')*alpha.
 <p>
 Added two sparse matrices: return A*a+B*b. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04057"></a>04057                                           {
-<a name="l04058"></a>04058     X(sp) *C=Y(cs_add)(A,B,a,b);
-<a name="l04059"></a>04059     Y(cs_dropzeros)(C);
-<a name="l04060"></a>04060     <span class="keywordflow">return</span> C;
-<a name="l04061"></a>04061 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2155,25 +1576,6 @@ Added two sparse matrices: return A*a+B*b.
 
 <p>
 Add a sparse matrix to another: A0=A0+B. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04064"></a>04064                                          {
-<a name="l04065"></a>04065     <span class="comment">//add B to A.</span>
-<a name="l04066"></a>04066     <span class="keywordflow">if</span>(B){
-<a name="l04067"></a>04067     <span class="keywordflow">if</span>(!*A0) 
-<a name="l04068"></a>04068         *A0=Y(spdup)(B);
-<a name="l04069"></a>04069     <span class="keywordflow">else</span>{
-<a name="l04070"></a>04070         <span class="keywordflow">if</span>((*A0)-&gt;m!=B-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a> || (*A0)-&gt;n!=B-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>) {
-<a name="l04071"></a>04071         error(<span class="stringliteral">"X(sp) matrix mismatch: (%ldx%ld) vs (%ldx%ld\n"</span>,
-<a name="l04072"></a>04072               (*A0)-&gt;m, (*A0)-&gt;n, B-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, B-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>);
-<a name="l04073"></a>04073         }
-<a name="l04074"></a>04074         X(sp) *res=Y(cs_add)(*A0,B,1.,1.);
-<a name="l04075"></a>04075         Y(cs_dropzeros)(res);
-<a name="l04076"></a>04076         <span class="comment">//move the data over.</span>
-<a name="l04077"></a>04077         Y(spmove)(*A0,res);<span class="comment">//move the data from res to A.</span>
-<a name="l04078"></a>04078     }
-<a name="l04079"></a>04079     }
-<a name="l04080"></a>04080 }
-</pre></div>
 <p>
 
 </div>
@@ -2206,18 +1608,6 @@ Add a sparse matrix to another: A0=A0+B.
 <p>
 Add a sparse cell to another: A0=A0+B. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04083"></a>04083                                                      {
-<a name="l04084"></a>04084     <span class="keywordflow">if</span>(B){
-<a name="l04085"></a>04085     <span class="keywordflow">if</span>(!*A0){
-<a name="l04086"></a>04086         *A0=Y(spcellnew)(B-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>, B-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>);
-<a name="l04087"></a>04087     }
-<a name="l04088"></a>04088     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;B-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>*B-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; i++){
-<a name="l04089"></a>04089         Y(spadd)(&amp;((*A0)-&gt;p[i]), B-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[i]);
-<a name="l04090"></a>04090     }
-<a name="l04091"></a>04091     }
-<a name="l04092"></a>04092 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2248,14 +1638,6 @@ Add a sparse cell to another: A0=A0+B.
 
 <p>
 Add alpha times identity to a sparse matrix. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04096"></a>04096                                        {
-<a name="l04097"></a>04097     assert((*A)-&gt;m==(*A)-&gt;n);
-<a name="l04098"></a>04098     X(sp) *B=Y(spnewdiag)((*A)-&gt;m,NULL,alpha);
-<a name="l04099"></a>04099     Y(spadd)(A,B);
-<a name="l04100"></a>04100     Y(spfree)(B);
-<a name="l04101"></a>04101 }
-</pre></div>
 <p>
 
 </div>
@@ -2288,14 +1670,6 @@ Add alpha times identity to a sparse matrix.
 <p>
 Add alpha times identity to sparse array. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04105"></a>04105                                               {
-<a name="l04106"></a>04106     assert(A-&gt;nx==A-&gt;ny);
-<a name="l04107"></a>04107     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ii=0; ii&lt;A-&gt;ny; ii++){
-<a name="l04108"></a>04108     Y(spaddI)(&amp;A-&gt;p[ii+ii*A-&gt;nx],alpha);
-<a name="l04109"></a>04109     }
-<a name="l04110"></a>04110 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2317,14 +1691,6 @@ Add alpha times identity to sparse array.
 
 <p>
 Transpose a sparse array. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04113"></a>04113                                  {
-<a name="l04114"></a>04114     <span class="keywordflow">if</span>(!A) <span class="keywordflow">return</span> NULL;
-<a name="l04115"></a>04115     X(sp) *res=Y(cs_transpose)(A,1);
-<a name="l04116"></a>04116     Y(cs_dropzeros)(res);
-<a name="l04117"></a>04117     <span class="keywordflow">return</span> res;
-<a name="l04118"></a>04118 }
-</pre></div>
 <p>
 
 </div>
@@ -2357,15 +1723,6 @@ Transpose a sparse array.
 <p>
 Multiply two sparse arrays: return A*B. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04121"></a>04121                                                  {      
-<a name="l04122"></a>04122     <span class="comment">//return C=(A*B)</span>
-<a name="l04123"></a>04123     <span class="keywordflow">if</span>(!A || !B) <span class="keywordflow">return</span> NULL;
-<a name="l04124"></a>04124     X(sp) *C=Y(cs_multiply)(A, B);
-<a name="l04125"></a>04125     Y(cs_dropzeros)(C);
-<a name="l04126"></a>04126     <span class="keywordflow">return</span> C;
-<a name="l04127"></a>04127 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2396,17 +1753,6 @@ Multiply two sparse arrays: return A*B.
 
 <p>
 Multiply the transpose of a sparse with another: return A'*B. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04130"></a>04130                                                   {
-<a name="l04131"></a>04131     <span class="comment">//return A'*B;</span>
-<a name="l04132"></a>04132     <span class="comment">//fixme : may need to improve this so that tranpose of A is not necessary.</span>
-<a name="l04133"></a>04133     X(sp) *At=Y(sptrans)(A);
-<a name="l04134"></a>04134     X(sp) *C=Y(spmulsp)(At, B);
-<a name="l04135"></a>04135     Y(spfree)(At);
-<a name="l04136"></a>04136     Y(cs_dropzeros)(C);
-<a name="l04137"></a>04137     <span class="keywordflow">return</span> C;
-<a name="l04138"></a>04138 }
-</pre></div>
 <p>
 
 </div>
@@ -2451,23 +1797,6 @@ Multiply the transpose of a sparse with another: return A'*B.
 <p>
 Multiply two sparse arrays and add to the third: C0=C0+A*B*scale. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04142"></a>04142                        {
-<a name="l04143"></a>04143     <span class="comment">//return C=C+ alpha*(A*B)</span>
-<a name="l04144"></a>04144     <span class="keywordflow">if</span>(!A || !B) <span class="keywordflow">return</span>;
-<a name="l04145"></a>04145     X(sp) *res=Y(cs_multiply)(A, B);
-<a name="l04146"></a>04146     <span class="keywordflow">if</span>(ABS(scale-1.)&gt;EPS){
-<a name="l04147"></a>04147     Y(spscale)(res, scale);
-<a name="l04148"></a>04148     }
-<a name="l04149"></a>04149     <span class="keywordflow">if</span>(!*C0) 
-<a name="l04150"></a>04150     *C0=res;
-<a name="l04151"></a>04151     <span class="keywordflow">else</span>{
-<a name="l04152"></a>04152     Y(spadd)(C0, res);
-<a name="l04153"></a>04153     Y(spfree)(res);
-<a name="l04154"></a>04154     }
-<a name="l04155"></a>04155     Y(cs_dropzeros)(*C0);
-<a name="l04156"></a>04156 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2505,26 +1834,6 @@ Multiply two sparse arrays and add to the third: C0=C0+A*B*scale.
 <p>
 Multiply two sparse cell. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04161"></a>04161                                 {
-<a name="l04162"></a>04162     <span class="comment">//return C=A*B;</span>
-<a name="l04163"></a>04163     <span class="keywordflow">if</span>(!A || !B) <span class="keywordflow">return</span> NULL;
-<a name="l04164"></a>04164     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>!=B-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>) error(<span class="stringliteral">"mismatch\n"</span>);
-<a name="l04165"></a>04165     Y(<a class="code" href="structspcell.html" title="an 2-d array of sparse.">spcell</a>) *C=Y(spcellnew)(A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>, B-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>);
-<a name="l04166"></a>04166     X(sp) *(*Ap)[A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>] = (X(sp) *(*)[A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>]) A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>;
-<a name="l04167"></a>04167     X(sp) *(*Bp)[B-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>] = (X(sp) *(*)[B-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>]) B-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>;
-<a name="l04168"></a>04168     X(sp) *(*Cp)[C-&gt;nx] = (X(sp) *(*)[C-&gt;nx]) C-&gt;p;
-<a name="l04169"></a>04169     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;B-&gt;ny; iy++){
-<a name="l04170"></a>04170     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>; ix++){
-<a name="l04171"></a>04171         Cp[iy][ix]=NULL;
-<a name="l04172"></a>04172         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iz=0; iz&lt;A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; iz++){
-<a name="l04173"></a>04173         Y(spmulsp2)(&amp;Cp[iy][ix],Ap[iz][ix],Bp[iy][iz],scale);
-<a name="l04174"></a>04174         }
-<a name="l04175"></a>04175     }
-<a name="l04176"></a>04176     }
-<a name="l04177"></a>04177     <span class="keywordflow">return</span> C;
-<a name="l04178"></a>04178 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2556,16 +1865,6 @@ Multiply two sparse cell.
 <p>
 Create a new sparse cell. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04181"></a>04181                                                      {
-<a name="l04182"></a>04182     Y(<a class="code" href="structspcell.html" title="an 2-d array of sparse.">spcell</a>) *spc;
-<a name="l04183"></a>04183     spc=calloc(1, <span class="keyword">sizeof</span>(<a class="code" href="structspcell.html" title="an 2-d array of sparse.">spcell</a>));
-<a name="l04184"></a>04184     spc-&gt;nx=nx;
-<a name="l04185"></a>04185     spc-&gt;ny=ny;
-<a name="l04186"></a>04186     spc-&gt;p=calloc(nx*ny, <span class="keyword">sizeof</span>(X(sp) *));
-<a name="l04187"></a>04187     <span class="keywordflow">return</span> spc;
-<a name="l04188"></a>04188 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2588,22 +1887,6 @@ Create a new sparse cell.
 <p>
 Transpose a sparse cell. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04191"></a>04191                                                {
-<a name="l04192"></a>04192     <span class="keywordflow">if</span>(!spc) <span class="keywordflow">return</span> NULL;
-<a name="l04193"></a>04193     <span class="keywordtype">long</span> nx,ny;
-<a name="l04194"></a>04194     nx=spc-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>;
-<a name="l04195"></a>04195     ny=spc-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>;
-<a name="l04196"></a>04196     Y(<a class="code" href="structspcell.html" title="an 2-d array of sparse.">spcell</a>) *spct=Y(spcellnew)(ny,nx);
-<a name="l04197"></a>04197     
-<a name="l04198"></a>04198     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;ny; iy++){
-<a name="l04199"></a>04199     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;nx; ix++){
-<a name="l04200"></a>04200         spct-&gt;p[iy+ix*ny]=Y(sptrans)(spc-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[ix+iy*nx]);
-<a name="l04201"></a>04201     }
-<a name="l04202"></a>04202     }
-<a name="l04203"></a>04203     <span class="keywordflow">return</span> spct;
-<a name="l04204"></a>04204 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2625,16 +1908,6 @@ Transpose a sparse cell.
 
 <p>
 Free a sparse cell data. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04207"></a>04207                                      {
-<a name="l04208"></a>04208     <span class="keywordflow">if</span>(!spc || !spc-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>) <span class="keywordflow">return</span>;
-<a name="l04209"></a>04209     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;spc-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>*spc-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; ix++){
-<a name="l04210"></a>04210     Y(spfree)(spc-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[ix]);
-<a name="l04211"></a>04211     }
-<a name="l04212"></a>04212     free(spc-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>);
-<a name="l04213"></a>04213     free(spc);
-<a name="l04214"></a>04214 }
-</pre></div>
 <p>
 
 </div>
@@ -2673,37 +1946,6 @@ Free a sparse cell data.
 <p>
 Concatenate two sparse array along dim dimension. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04217"></a>04217                                                         {
-<a name="l04218"></a>04218     X(sp) *C=NULL;
-<a name="l04219"></a>04219     <span class="keywordflow">if</span>(dim==0){
-<a name="l04220"></a>04220     error(<span class="stringliteral">"Not implemented\n"</span>);
-<a name="l04221"></a>04221     <span class="comment">/*</span>
-<a name="l04222"></a>04222 <span class="comment">      |A|</span>
-<a name="l04223"></a>04223 <span class="comment">      |B|</span>
-<a name="l04224"></a>04224 <span class="comment">    */</span>
-<a name="l04225"></a>04225     }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(dim==1){
-<a name="l04226"></a>04226     <span class="comment">/*|AB|*/</span>
-<a name="l04227"></a>04227     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a> != B-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>){
-<a name="l04228"></a>04228         error(<span class="stringliteral">"X(sp) matrix doesn't match\n"</span>);
-<a name="l04229"></a>04229     }
-<a name="l04230"></a>04230     <span class="keyword">const</span> <span class="keywordtype">long</span> nzmax=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]+B-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[B-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>];
-<a name="l04231"></a>04231     C=Y(spnew)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>+B-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, nzmax);
-<a name="l04232"></a>04232     memcpy(C-&gt;p, A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>*<span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l04233"></a>04233     memcpy(C-&gt;i, A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>, A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]*<span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l04234"></a>04234     memcpy(C-&gt;x, A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>, A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]*<span class="keyword">sizeof</span>(T));
-<a name="l04235"></a>04235     memcpy(C-&gt;i+A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>], B-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>, B-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[B-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]*<span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l04236"></a>04236     memcpy(C-&gt;x+A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>], B-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>, B-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[B-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]*<span class="keyword">sizeof</span>(T));
-<a name="l04237"></a>04237     <span class="keyword">const</span> <span class="keywordtype">long</span> Anzmax=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>];
-<a name="l04238"></a>04238     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;B-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>+1; i++){
-<a name="l04239"></a>04239         C-&gt;p[i+A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]=Anzmax+B-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[i];
-<a name="l04240"></a>04240     }
-<a name="l04241"></a>04241     }<span class="keywordflow">else</span>{
-<a name="l04242"></a>04242     error(<span class="stringliteral">"Wrong dimension\n"</span>);
-<a name="l04243"></a>04243     }
-<a name="l04244"></a>04244     <span class="keywordflow">return</span> C;
-<a name="l04245"></a>04245 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2725,49 +1967,6 @@ Concatenate two sparse array along dim dimension.
 
 <p>
 Concatenate a <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a> to sparse array. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04248"></a>04248                                        {
-<a name="l04249"></a>04249     <span class="comment">//convert Y(spcell) to sparse.</span>
-<a name="l04250"></a>04250     X(sp) *(*Ap)[A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>] = (X(sp) *(*)[A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>])A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>;
-<a name="l04251"></a>04251     <span class="keywordtype">long</span> nx=0,ny=0,nzmax=0;
-<a name="l04252"></a>04252     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=0; ix&lt;A-&gt;nx; ix++){
-<a name="l04253"></a>04253     nx+=Ap[0][ix]-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>;
-<a name="l04254"></a>04254     }
-<a name="l04255"></a>04255     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iy=0; iy&lt;A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; iy++){
-<a name="l04256"></a>04256     ny+=Ap[iy][0]-&gt;n;
-<a name="l04257"></a>04257     }
-<a name="l04258"></a>04258     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>*A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; i++){
-<a name="l04259"></a>04259     nzmax+=A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[i]-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[i]-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>];
-<a name="l04260"></a>04260     <span class="comment">//nzmax+=A-&gt;p[i]-&gt;nzmax;</span>
-<a name="l04261"></a>04261     }
-<a name="l04262"></a>04262     X(sp) *out=Y(spnew)(nx,ny,nzmax);
-<a name="l04263"></a>04263     <span class="keywordtype">long</span> count=0;
-<a name="l04264"></a>04264     <span class="keywordtype">long</span> jcol=0;
-<a name="l04265"></a>04265     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iy=0; iy&lt;A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; iy++){
-<a name="l04266"></a>04266     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=0; icol&lt;Ap[iy][0]-&gt;n; icol++){
-<a name="l04267"></a>04267         out-&gt;p[jcol+icol]=count;
-<a name="l04268"></a>04268         <span class="keywordtype">long</span> kr=0;
-<a name="l04269"></a>04269         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=0; ix&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>; ix++){
-<a name="l04270"></a>04270         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ir=Ap[iy][ix]-&gt;p[icol]; 
-<a name="l04271"></a>04271             ir&lt;Ap[iy][ix]-&gt;p[icol+1]; ir++){
-<a name="l04272"></a>04272             out-&gt;x[count]=Ap[iy][ix]-&gt;x[ir];
-<a name="l04273"></a>04273             out-&gt;i[count]=Ap[iy][ix]-&gt;i[ir]+kr;
-<a name="l04274"></a>04274             count++;
-<a name="l04275"></a>04275         }
-<a name="l04276"></a>04276         kr+=Ap[iy][ix]-&gt;m;
-<a name="l04277"></a>04277         }
-<a name="l04278"></a>04278     }
-<a name="l04279"></a>04279     jcol+=Ap[iy][0]-&gt;n;
-<a name="l04280"></a>04280     }
-<a name="l04281"></a>04281     out-&gt;p[ny]=count;
-<a name="l04282"></a>04282     <span class="keywordflow">if</span>(count&gt;nzmax){
-<a name="l04283"></a>04283     error(<span class="stringliteral">"Y(spcell2sp) gets Wrong results. count=%ld, nzmax=%ld\n"</span>,count,nzmax);
-<a name="l04284"></a>04284     }
-<a name="l04285"></a>04285     <span class="comment">//nzmax maybe smaller than A-&gt;p[A-&gt;n] </span>
-<a name="l04286"></a>04286     <span class="comment">//because nzmax simply show the slots available.</span>
-<a name="l04287"></a>04287     <span class="keywordflow">return</span> out;
-<a name="l04288"></a>04288 }
-</pre></div>
 <p>
 
 </div>
@@ -2800,36 +1999,6 @@ Concatenate a <a class="el" href="structspcell.html" title="an 2-d array of spar
 <p>
 Sum elements of sparse array along dimension dim. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04293"></a>04293                                          {
-<a name="l04294"></a>04294     <span class="comment">//Sum X(sp) matrix along col or row to form a vector</span>
-<a name="l04295"></a>04295     X(mat) *v=NULL;
-<a name="l04296"></a>04296     T *p;
-<a name="l04297"></a>04297     <span class="keywordflow">switch</span>(dim){
-<a name="l04298"></a>04298     <span class="keywordflow">case</span> 1:<span class="comment">//sum along col</span>
-<a name="l04299"></a>04299     v=X(<span class="keyword">new</span>)(1,A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>);
-<a name="l04300"></a>04300     p=v-&gt;p;
-<a name="l04301"></a>04301     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l04302"></a>04302         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> irow=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; irow&lt;A-&gt;p[icol+1]; irow++){
-<a name="l04303"></a>04303         p[icol]+=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[irow];
-<a name="l04304"></a>04304         }
-<a name="l04305"></a>04305     }
-<a name="l04306"></a>04306     <span class="keywordflow">break</span>;
-<a name="l04307"></a>04307     <span class="keywordflow">case</span> 2:<span class="comment">//sum along row</span>
-<a name="l04308"></a>04308     v=X(<span class="keyword">new</span>)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>,1);
-<a name="l04309"></a>04309     p=v-&gt;p;
-<a name="l04310"></a>04310     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l04311"></a>04311         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> irow=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; irow&lt;A-&gt;p[icol+1]; irow++){
-<a name="l04312"></a>04312         p[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[irow]]+=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[irow];
-<a name="l04313"></a>04313         }
-<a name="l04314"></a>04314     }
-<a name="l04315"></a>04315     <span class="keywordflow">break</span>;
-<a name="l04316"></a>04316     <span class="keywordflow">default</span>:
-<a name="l04317"></a>04317     error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l04318"></a>04318     }
-<a name="l04319"></a>04319     <span class="keywordflow">return</span> v;
-<a name="l04320"></a>04320 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2861,34 +2030,27 @@ Sum elements of sparse array along dimension dim.
 <p>
 Sum abs of elements of sparse array along dimension dim. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04323"></a>04323                                             {
-<a name="l04324"></a>04324     X(mat) *v=NULL;
-<a name="l04325"></a>04325     T *p;
-<a name="l04326"></a>04326     <span class="keywordflow">switch</span>(col){
-<a name="l04327"></a>04327     <span class="keywordflow">case</span> 1:<span class="comment">//sum along col</span>
-<a name="l04328"></a>04328     v=X(<span class="keyword">new</span>)(1,A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>);
-<a name="l04329"></a>04329     p=v-&gt;p;
-<a name="l04330"></a>04330     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l04331"></a>04331         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> irow=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; irow&lt;A-&gt;p[icol+1]; irow++){
-<a name="l04332"></a>04332         p[icol]+=ABS(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[irow]);
-<a name="l04333"></a>04333         }
-<a name="l04334"></a>04334     }
-<a name="l04335"></a>04335     <span class="keywordflow">break</span>;
-<a name="l04336"></a>04336     <span class="keywordflow">case</span> 2:<span class="comment">//sum along row</span>
-<a name="l04337"></a>04337     v=X(<span class="keyword">new</span>)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>,1);
-<a name="l04338"></a>04338     p=v-&gt;p;
-<a name="l04339"></a>04339     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> icol=0; icol&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; icol++){
-<a name="l04340"></a>04340         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> irow=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; irow&lt;A-&gt;p[icol+1]; irow++){
-<a name="l04341"></a>04341         p[A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[irow]]+=ABS(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[irow]);
-<a name="l04342"></a>04342         }
-<a name="l04343"></a>04343     }
-<a name="l04344"></a>04344     <span class="keywordflow">break</span>;
-<a name="l04345"></a>04345     <span class="keywordflow">default</span>:
-<a name="l04346"></a>04346     error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l04347"></a>04347     }
-<a name="l04348"></a>04348     <span class="keywordflow">return</span> v;
-<a name="l04349"></a>04349 }
-</pre></div>
+
+</div>
+</div><p>
+<a class="anchor" name="15d688b55bb9b7ef506cad3f5ccfb772"></a><!-- doxytag: member="csp.h::cspclean" ref="15d688b55bb9b7ef506cad3f5ccfb772" args="(csp *A)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void cspclean           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td>
+          <td class="paramname"> <em>A</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Clean up a sparse array by dropping zeros. 
 <p>
 
 </div>
@@ -2933,23 +2095,6 @@ Sum abs of elements of sparse array along dimension dim.
 <p>
 Multiply a <a class="el" href="structspcell.html" title="an 2-d array of sparse.">spcell</a> with vectors. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04358"></a>04358                                             {
-<a name="l04359"></a>04359     <span class="comment">//y=y+alpha*A*creal(x); Ac X(sp) cell. xc is vector.</span>
-<a name="l04360"></a>04360     <span class="keywordflow">if</span>(Ac &amp;&amp; xc){
-<a name="l04361"></a>04361     <span class="keyword">const</span> T *restrict x=xc;
-<a name="l04362"></a>04362     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icy=0; icy&lt;Ac-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; icy++){
-<a name="l04363"></a>04363         T *restrict y=yc;
-<a name="l04364"></a>04364         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icx=0; icx&lt;Ac-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>; icx++){
-<a name="l04365"></a>04365         <span class="keyword">const</span> X(sp) *A=Ac-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[icx+icy*Ac-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>];
-<a name="l04366"></a>04366         Y(spmulvec)(y,A,x,alpha);
-<a name="l04367"></a>04367         y+=A-&gt;m;
-<a name="l04368"></a>04368         }
-<a name="l04369"></a>04369         x+=Ac-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[icy*Ac-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>]-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>;
-<a name="l04370"></a>04370     }
-<a name="l04371"></a>04371     }
-<a name="l04372"></a>04372 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -2971,17 +2116,6 @@ Multiply a <a class="el" href="structspcell.html" title="an 2-d array of sparse.
 
 <p>
 Drop elements that are EPS times the largest value. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04376"></a>04376                            {
-<a name="l04377"></a>04377     <span class="keywordtype">double</span> max;
-<a name="l04378"></a>04378 <span class="preprocessor">#ifdef USE_COMPLEX</span>
-<a name="l04379"></a>04379 <span class="preprocessor"></span>    maxmincmp(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>,A-&gt;<a class="code" href="structcsp.html#1ac262485faf97bba7f808626854a480" title="maximum number of entries">nzmax</a>,&amp;max,NULL,NULL);
-<a name="l04380"></a>04380 <span class="preprocessor">#else</span>
-<a name="l04381"></a>04381 <span class="preprocessor"></span>    max=<a class="code" href="mathmisc_8c.html#ac7d23a6f61a359934d93f1fbdc570ea" title="compute the maximum of the abs of double vector">maxabs</a>(A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>, A-&gt;<a class="code" href="structcsp.html#1ac262485faf97bba7f808626854a480" title="maximum number of entries">nzmax</a>);
-<a name="l04382"></a>04382 <span class="preprocessor">#endif</span>
-<a name="l04383"></a>04383 <span class="preprocessor"></span>    Y(cs_droptol)(A, max*EPS);
-<a name="l04384"></a>04384 }
-</pre></div>
 <p>
 
 </div>
@@ -3005,13 +2139,6 @@ Drop elements that are EPS times the largest value.
 <p>
 Drop elements that are EPS times the largest value. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04388"></a>04388                                    {
-<a name="l04389"></a>04389     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>*A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; i++){
-<a name="l04390"></a>04390     Y(spdropeps)(A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[i]);
-<a name="l04391"></a>04391     }
-<a name="l04392"></a>04392 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -3033,27 +2160,6 @@ Drop elements that are EPS times the largest value.
 
 <p>
 Make sure the elements are sorted correctly. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04404"></a>04404                         {
-<a name="l04405"></a>04405     spelem *col=NULL;
-<a name="l04406"></a>04406     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>; i++){
-<a name="l04407"></a>04407     <span class="keywordtype">long</span> nelem=(A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[i+1]-A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[i]);
-<a name="l04408"></a>04408     <span class="keywordflow">if</span>(nelem==0) <span class="keywordflow">continue</span>;
-<a name="l04409"></a>04409     col=realloc(col, nelem*<span class="keyword">sizeof</span>(spelem));
-<a name="l04410"></a>04410     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> j=0; j&lt;nelem; j++){
-<a name="l04411"></a>04411         col[j].i=A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[i]+j];
-<a name="l04412"></a>04412         col[j].x=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[i]+j];
-<a name="l04413"></a>04413     }
-<a name="l04414"></a>04414     qsort(col, nelem, <span class="keyword">sizeof</span>(spelem), (<span class="keywordtype">int</span>(*)(<span class="keyword">const</span> <span class="keywordtype">void</span>*,<span class="keyword">const</span> <span class="keywordtype">void</span>*))spelemcmp);
-<a name="l04415"></a>04415     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> j=0; j&lt;nelem; j++){
-<a name="l04416"></a>04416         A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[i]+j]=col[j].i;
-<a name="l04417"></a>04417         A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[i]+j]=col[j].x;
-<a name="l04418"></a>04418     }
-<a name="l04419"></a>04419     }
-<a name="l04420"></a>04420     free(col);
-<a name="l04421"></a>04421 
-<a name="l04422"></a>04422 }
-</pre></div>
 <p>
 
 </div>
@@ -3077,13 +2183,6 @@ Make sure the elements are sorted correctly.
 <p>
 Make sure the elements are sorted correctly. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04426"></a>04426                                 {
-<a name="l04427"></a>04427     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;A-&gt;<a class="code" href="structcspcell.html#53908c34870ae6094f472897f2be9a7e" title="number of rows">nx</a>*A-&gt;<a class="code" href="structcspcell.html#2000cf8ce69a38a69473e4b681adb21a" title="number of columns">ny</a>; i++){
-<a name="l04428"></a>04428     Y(spsort)(A-&gt;<a class="code" href="structcspcell.html#06df329300f7b799f44ef08a5008e0e8" title="Contains an array of pointers to csp.">p</a>[i]);
-<a name="l04429"></a>04429     }
-<a name="l04430"></a>04430 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -3105,16 +2204,6 @@ Make sure the elements are sorted correctly.
 
 <p>
 symmetricize a X(sp) matrix and drop values below a threshold. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04435"></a>04435                        {
-<a name="l04436"></a>04436     X(sp) *B=Y(sptrans)(A);
-<a name="l04437"></a>04437     Y(spadd)(&amp;A,B);
-<a name="l04438"></a>04438     Y(spscale)(A,0.5);
-<a name="l04439"></a>04439     Y(spfree)(B);
-<a name="l04440"></a>04440     Y(spdropeps)(A);
-<a name="l04441"></a>04441     Y(spsort)(A);<span class="comment">//This is important to make chol work.</span>
-<a name="l04442"></a>04442 }
-</pre></div>
 <p>
 
 </div>
@@ -3138,16 +2227,6 @@ symmetricize a X(sp) matrix and drop values below a threshold.
 <p>
 symmetricize a X(sp) cell and drop values below a threshold. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04447"></a>04447                                {
-<a name="l04448"></a>04448     Y(<a class="code" href="structspcell.html" title="an 2-d array of sparse.">spcell</a>) *B=Y(spcelltrans)(A);
-<a name="l04449"></a>04449     Y(spcelladd)(&amp;A,B);
-<a name="l04450"></a>04450     Y(spcellfree)(B);
-<a name="l04451"></a>04451     Y(spcellscale)(A,0.5);
-<a name="l04452"></a>04452     Y(spcelldropeps)(A);
-<a name="l04453"></a>04453     Y(spcellsort)(A);
-<a name="l04454"></a>04454 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -3169,65 +2248,6 @@ symmetricize a X(sp) cell and drop values below a threshold.
 
 <p>
 Create a X(sp) convolution operator C with C(i,j)=A(i-j); A must be very X(sp) with only a view non-zero value otherwise C will be too full. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04461"></a>04461                                 {
-<a name="l04462"></a>04462     <span class="comment">//First collect statistics on A.</span>
-<a name="l04463"></a>04463     <span class="keywordtype">long</span> nini=10;
-<a name="l04464"></a>04464     T *vals=calloc(nini, <span class="keyword">sizeof</span>(T));
-<a name="l04465"></a>04465     <span class="keywordtype">long</span> *sepx=calloc(nini, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l04466"></a>04466     <span class="keywordtype">long</span> *sepy=calloc(nini, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l04467"></a>04467     <span class="keywordtype">long</span> count=0;
-<a name="l04468"></a>04468     <span class="keyword">const</span> <span class="keywordtype">long</span> nx=A-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>;
-<a name="l04469"></a>04469     <span class="keyword">const</span> <span class="keywordtype">long</span> ny=A-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>;
-<a name="l04470"></a>04470     <span class="keyword">const</span> <span class="keywordtype">long</span> nn=nx*ny;
-<a name="l04471"></a>04471     PMAT(A,PA);
-<a name="l04472"></a>04472     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iy=0; iy&lt;A-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>; iy++){
-<a name="l04473"></a>04473     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=0; ix&lt;A-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>; ix++){
-<a name="l04474"></a>04474         <span class="keywordflow">if</span>(ABS(PA[iy][ix])&gt;0){
-<a name="l04475"></a>04475         vals[count]=PA[iy][ix];
-<a name="l04476"></a>04476         sepx[count]=ix;
-<a name="l04477"></a>04477         sepy[count]=iy;
-<a name="l04478"></a>04478         count++;
-<a name="l04479"></a>04479         }
-<a name="l04480"></a>04480         <span class="keywordflow">if</span>(count&gt;=nini){
-<a name="l04481"></a>04481         nini*=2;
-<a name="l04482"></a>04482         vals=realloc(vals, <span class="keyword">sizeof</span>(T)*nini);
-<a name="l04483"></a>04483         sepx=realloc(sepx, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>)*nini);
-<a name="l04484"></a>04484         sepy=realloc(sepy, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>)*nini);
-<a name="l04485"></a>04485         }
-<a name="l04486"></a>04486     }
-<a name="l04487"></a>04487     }
-<a name="l04488"></a>04488     <span class="keywordflow">if</span>(count&gt;10){
-<a name="l04489"></a>04489     warning(<span class="stringliteral">"Number of coupled points %ld is too large\n"</span>,count);
-<a name="l04490"></a>04490     }
-<a name="l04491"></a>04491     <span class="keywordtype">long</span> nsep=count;
-<a name="l04492"></a>04492     X(sp) *out=Y(spnew)(nn,nn,nn*count);
-<a name="l04493"></a>04493     <span class="keywordtype">long</span> *pp=out-&gt;p;
-<a name="l04494"></a>04494     <span class="keywordtype">long</span> *pi=out-&gt;i;
-<a name="l04495"></a>04495     T *px=out-&gt;x;
-<a name="l04496"></a>04496     count=0;
-<a name="l04497"></a>04497     <span class="keywordtype">long</span> icol=0;
-<a name="l04498"></a>04498     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iiy=0; iiy&lt;A-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>; iiy++){
-<a name="l04499"></a>04499     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iix=0; iix&lt;A-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>; iix++){
-<a name="l04500"></a>04500         pp[icol]=count;
-<a name="l04501"></a>04501         icol++;
-<a name="l04502"></a>04502         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> irow=0; irow&lt;nsep; irow++){
-<a name="l04503"></a>04503         <span class="keywordtype">long</span> jix=(iix+sepx[irow])%nx;
-<a name="l04504"></a>04504         <span class="keywordtype">long</span> jiy=(iiy+sepy[irow])%ny;
-<a name="l04505"></a>04505         pi[count]=jix+jiy*nx;
-<a name="l04506"></a>04506         px[count]=vals[irow];
-<a name="l04507"></a>04507         count++;
-<a name="l04508"></a>04508         }
-<a name="l04509"></a>04509     }
-<a name="l04510"></a>04510     }
-<a name="l04511"></a>04511     pp[nn]=count;
-<a name="l04512"></a>04512     free(vals);
-<a name="l04513"></a>04513     free(sepx);
-<a name="l04514"></a>04514     free(sepy);
-<a name="l04515"></a>04515     Y(spsort)(out);
-<a name="l04516"></a>04516     <span class="keywordflow">return</span> out;
-<a name="l04517"></a>04517 }
-</pre></div>
 <p>
 
 </div>
@@ -3272,25 +2292,6 @@ Create a X(sp) convolution operator C with C(i,j)=A(i-j); A must be very X(sp) w
 <p>
 Permute rows and columns of X(sp) matrix A;. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04553"></a>04553                                                                {
-<a name="l04554"></a>04554     X(sp) *out;
-<a name="l04555"></a>04555     <span class="keywordflow">if</span>(pcol){
-<a name="l04556"></a>04556     out=Y(sppermcol)(A,reverse,pcol);
-<a name="l04557"></a>04557     }<span class="keywordflow">else</span>{
-<a name="l04558"></a>04558     out=Y(spref)(A);
-<a name="l04559"></a>04559     }
-<a name="l04560"></a>04560     <span class="keywordflow">if</span>(prow){
-<a name="l04561"></a>04561     X(sp) *Ap=Y(sptrans)(out);
-<a name="l04562"></a>04562     X(sp) *App=Y(sppermcol)(Ap,reverse,prow);
-<a name="l04563"></a>04563     Y(spfree)(Ap);
-<a name="l04564"></a>04564     Y(spfree)(out);
-<a name="l04565"></a>04565     out=Y(sptrans)(App);
-<a name="l04566"></a>04566     Y(spfree)(App);
-<a name="l04567"></a>04567     }
-<a name="l04568"></a>04568     <span class="keywordflow">return</span> out;
-<a name="l04569"></a>04569 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -3321,43 +2322,6 @@ Permute rows and columns of X(sp) matrix A;.
 
 <p>
 Invert a SPD X(sp) matrix that is block diagonal with block sizes of bs. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l04575"></a>04575                                              {
-<a name="l04576"></a>04576     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>!=A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>){
-<a name="l04577"></a>04577     error(<span class="stringliteral">"Must be a square matrix\n"</span>);
-<a name="l04578"></a>04578     }
-<a name="l04579"></a>04579     <span class="keywordtype">long</span> nb=A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>/bs;
-<a name="l04580"></a>04580     X(sp) *B=Y(spnew)(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>, A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>, nb*bs*bs);
-<a name="l04581"></a>04581     X(mat) *bk=X(<span class="keyword">new</span>)(bs,bs);
-<a name="l04582"></a>04582     PMAT(bk,pbk);
-<a name="l04583"></a>04583     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ib=0;ib&lt;nb; ib++){
-<a name="l04584"></a>04584     <span class="keywordtype">long</span> is=ib*bs;<span class="comment">//starting col</span>
-<a name="l04585"></a>04585     X(zero)(bk);
-<a name="l04586"></a>04586 
-<a name="l04587"></a>04587     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=is; icol&lt;is+bs; icol++){
-<a name="l04588"></a>04588         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> irow=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; irow&lt;A-&gt;p[icol+1]; irow++){
-<a name="l04589"></a>04589         <span class="keywordtype">long</span> row=A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[irow];
-<a name="l04590"></a>04590         <span class="keywordtype">long</span> ind=row-is;
-<a name="l04591"></a>04591         <span class="keywordflow">if</span>(ind&lt;0 || ind&gt;=bs){
-<a name="l04592"></a>04592             info(<span class="stringliteral">"solving block %ld\n"</span>,ib);
-<a name="l04593"></a>04593             error(<span class="stringliteral">"The array is not block diagonal matrix or not calculated property\n"</span>);
-<a name="l04594"></a>04594         }
-<a name="l04595"></a>04595         pbk[icol-is][ind]=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[irow];
-<a name="l04596"></a>04596         }
-<a name="l04597"></a>04597     }
-<a name="l04598"></a>04598     X(inv_inplace)(bk);
-<a name="l04599"></a>04599     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=is; icol&lt;is+bs; icol++){
-<a name="l04600"></a>04600         B-&gt;p[icol]=icol*bs;
-<a name="l04601"></a>04601         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> irow=0; irow&lt;bs; irow++){
-<a name="l04602"></a>04602         B-&gt;i[B-&gt;p[icol]+irow]=irow+is;
-<a name="l04603"></a>04603         B-&gt;x[B-&gt;p[icol]+irow]=pbk[icol-is][irow];
-<a name="l04604"></a>04604         }
-<a name="l04605"></a>04605     }
-<a name="l04606"></a>04606     }
-<a name="l04607"></a>04607     B-&gt;p[A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>]=nb*bs*bs;
-<a name="l04608"></a>04608     <span class="keywordflow">return</span> B;
-<a name="l04609"></a>04609 }
-</pre></div>
 <p>
 
 </div>
@@ -3390,37 +2354,11 @@ Invert a SPD X(sp) matrix that is block diagonal with block sizes of bs.
 <p>
 Extrat the diagonal blocks of size bs into cell arrays. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l04613"></a>04613                                                    {
-<a name="l04614"></a>04614     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>!=A-&gt;<a class="code" href="structcsp.html#3c3ba5850365cc78c4b4f227ea70eaa9" title="number of columns">n</a>){
-<a name="l04615"></a>04615     error(<span class="stringliteral">"Must be a square matrix\n"</span>);
-<a name="l04616"></a>04616     }
-<a name="l04617"></a>04617     <span class="keywordtype">long</span> nb=A-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>/bs;
-<a name="l04618"></a>04618     X(cell) *out=X(cellnew)(nb,1);
-<a name="l04619"></a>04619     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ib=0;ib&lt;nb; ib++){
-<a name="l04620"></a>04620     <span class="keywordtype">long</span> is=ib*bs;<span class="comment">//starting col</span>
-<a name="l04621"></a>04621     out-&gt;p[ib]=X(<span class="keyword">new</span>)(bs,bs);
-<a name="l04622"></a>04622     PMAT(out-&gt;p[ib],pbk);
-<a name="l04623"></a>04623     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> icol=is; icol&lt;is+bs; icol++){
-<a name="l04624"></a>04624         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> irow=A-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>[icol]; irow&lt;A-&gt;p[icol+1]; irow++){
-<a name="l04625"></a>04625         <span class="keywordtype">long</span> row=A-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>[irow];
-<a name="l04626"></a>04626         <span class="keywordtype">long</span> ind=row-is;
-<a name="l04627"></a>04627         <span class="keywordflow">if</span>(ind&lt;0 || ind&gt;=bs){
-<a name="l04628"></a>04628             info(<span class="stringliteral">"solving block %ld\n"</span>,ib);
-<a name="l04629"></a>04629             error(<span class="stringliteral">"The array is not block diagonal matrix or not calculated property\n"</span>);
-<a name="l04630"></a>04630         }
-<a name="l04631"></a>04631         pbk[icol-is][ind]=A-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>[irow];
-<a name="l04632"></a>04632         }
-<a name="l04633"></a>04633     }
-<a name="l04634"></a>04634     }
-<a name="l04635"></a>04635     <span class="keywordflow">return</span> out;
-<a name="l04636"></a>04636 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:51 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

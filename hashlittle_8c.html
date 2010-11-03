@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: lib/hashlittle.c File Reference</title>
+<title>maos-0.7.1: lib/hashlittle.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -141,93 +141,11 @@ hash the data and return an hash number.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>initval</em>&nbsp;</td><td>The initial hash number </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00082"></a>00082 {
-<a name="l00083"></a>00083   
-<a name="l00084"></a>00084   uint32_t a,b,c;                                          <span class="comment">/* internal state */</span>
-<a name="l00085"></a>00085   <span class="keywordtype">size_t</span> dstep=(length/10000);<span class="comment">/*jump */</span>
-<a name="l00086"></a>00086   dstep=dstep&lt;1?1:dstep;
-<a name="l00087"></a>00087 
-<a name="l00088"></a>00088   <span class="keywordtype">size_t</span> dstep12=dstep*12;
-<a name="l00089"></a>00089   <span class="keywordtype">size_t</span> dstep3=dstep*3;
-<a name="l00090"></a>00090 
-<a name="l00091"></a>00091   <span class="comment">/* Set up the internal state */</span>
-<a name="l00092"></a>00092   a = b = c = 0xdeadbeef + ((uint32_t)length) + initval;
-<a name="l00093"></a>00093 
-<a name="l00094"></a>00094 
-<a name="l00095"></a>00095   <span class="keyword">const</span> uint32_t *k = (<span class="keyword">const</span> uint32_t *)key;         <span class="comment">/* read 32-bit chunks */</span>
-<a name="l00096"></a>00096 
-<a name="l00097"></a>00097   <span class="comment">/*------ all but last block: aligned reads and affect 32 bits of (a,b,c) */</span>
-<a name="l00098"></a>00098   <span class="keywordflow">while</span> (length &gt; dstep12)
-<a name="l00099"></a>00099     {
-<a name="l00100"></a>00100       a += k[0];
-<a name="l00101"></a>00101       b += k[1];
-<a name="l00102"></a>00102       c += k[2];
-<a name="l00103"></a>00103       mix(a,b,c);
-<a name="l00104"></a>00104       length -= dstep12;
-<a name="l00105"></a>00105       k += dstep3;
-<a name="l00106"></a>00106     }
-<a name="l00107"></a>00107 
-<a name="l00108"></a>00108   <span class="comment">/*----------------------------- handle the last (probably partial) block */</span>
-<a name="l00109"></a>00109   <span class="comment">/* </span>
-<a name="l00110"></a>00110 <span class="comment">   * "k[2]&amp;0xffffff" actually reads beyond the end of the string, but</span>
-<a name="l00111"></a>00111 <span class="comment">   * then masks off the part it's not allowed to read.  Because the</span>
-<a name="l00112"></a>00112 <span class="comment">   * string is aligned, the masked-off tail is in the same word as the</span>
-<a name="l00113"></a>00113 <span class="comment">   * rest of the string.  Every machine with memory protection I've seen</span>
-<a name="l00114"></a>00114 <span class="comment">   * does it on word boundaries, so is OK with this.  But VALGRIND will</span>
-<a name="l00115"></a>00115 <span class="comment">   * still catch it and complain.  The masking trick does make the hash</span>
-<a name="l00116"></a>00116 <span class="comment">   * noticably faster for short strings (like English words).</span>
-<a name="l00117"></a>00117 <span class="comment">   */</span>
-<a name="l00118"></a>00118 <span class="preprocessor">#ifndef VALGRIND</span>
-<a name="l00119"></a>00119 <span class="preprocessor"></span>
-<a name="l00120"></a>00120   <span class="keywordflow">switch</span>(length)
-<a name="l00121"></a>00121     {
-<a name="l00122"></a>00122     <span class="keywordflow">case</span> 12: c+=k[2]; b+=k[1]; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00123"></a>00123     <span class="keywordflow">case</span> 11: c+=k[2]&amp;0xffffff; b+=k[1]; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00124"></a>00124     <span class="keywordflow">case</span> 10: c+=k[2]&amp;0xffff; b+=k[1]; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00125"></a>00125     <span class="keywordflow">case</span> 9 : c+=k[2]&amp;0xff; b+=k[1]; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00126"></a>00126     <span class="keywordflow">case</span> 8 : b+=k[1]; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00127"></a>00127     <span class="keywordflow">case</span> 7 : b+=k[1]&amp;0xffffff; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00128"></a>00128     <span class="keywordflow">case</span> 6 : b+=k[1]&amp;0xffff; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00129"></a>00129     <span class="keywordflow">case</span> 5 : b+=k[1]&amp;0xff; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00130"></a>00130     <span class="keywordflow">case</span> 4 : a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00131"></a>00131     <span class="keywordflow">case</span> 3 : a+=k[0]&amp;0xffffff; <span class="keywordflow">break</span>;
-<a name="l00132"></a>00132     <span class="keywordflow">case</span> 2 : a+=k[0]&amp;0xffff; <span class="keywordflow">break</span>;
-<a name="l00133"></a>00133     <span class="keywordflow">case</span> 1 : a+=k[0]&amp;0xff; <span class="keywordflow">break</span>;
-<a name="l00134"></a>00134     <span class="keywordflow">case</span> 0 : <span class="keywordflow">return</span> c;              <span class="comment">/* zero length strings require no mixing */</span>
-<a name="l00135"></a>00135     }
-<a name="l00136"></a>00136 
-<a name="l00137"></a>00137 <span class="preprocessor">#else </span><span class="comment">/* make valgrind happy */</span>
-<a name="l00138"></a>00138   {
-<a name="l00139"></a>00139   <span class="keyword">const</span> uint8_t  *k8;
-<a name="l00140"></a>00140   k8 = (<span class="keyword">const</span> uint8_t *)k;
-<a name="l00141"></a>00141   <span class="keywordflow">switch</span>(length)
-<a name="l00142"></a>00142     {
-<a name="l00143"></a>00143     <span class="keywordflow">case</span> 12: c+=k[2]; b+=k[1]; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00144"></a>00144     <span class="keywordflow">case</span> 11: c+=((uint32_t)k8[10])&lt;&lt;16;  <span class="comment">/* fall through */</span>
-<a name="l00145"></a>00145     <span class="keywordflow">case</span> 10: c+=((uint32_t)k8[9])&lt;&lt;8;    <span class="comment">/* fall through */</span>
-<a name="l00146"></a>00146     <span class="keywordflow">case</span> 9 : c+=k8[8];                   <span class="comment">/* fall through */</span>
-<a name="l00147"></a>00147     <span class="keywordflow">case</span> 8 : b+=k[1]; a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00148"></a>00148     <span class="keywordflow">case</span> 7 : b+=((uint32_t)k8[6])&lt;&lt;16;   <span class="comment">/* fall through */</span>
-<a name="l00149"></a>00149     <span class="keywordflow">case</span> 6 : b+=((uint32_t)k8[5])&lt;&lt;8;    <span class="comment">/* fall through */</span>
-<a name="l00150"></a>00150     <span class="keywordflow">case</span> 5 : b+=k8[4];                   <span class="comment">/* fall through */</span>
-<a name="l00151"></a>00151     <span class="keywordflow">case</span> 4 : a+=k[0]; <span class="keywordflow">break</span>;
-<a name="l00152"></a>00152     <span class="keywordflow">case</span> 3 : a+=((uint32_t)k8[2])&lt;&lt;16;   <span class="comment">/* fall through */</span>
-<a name="l00153"></a>00153     <span class="keywordflow">case</span> 2 : a+=((uint32_t)k8[1])&lt;&lt;8;    <span class="comment">/* fall through */</span>
-<a name="l00154"></a>00154     <span class="keywordflow">case</span> 1 : a+=k8[0]; <span class="keywordflow">break</span>;
-<a name="l00155"></a>00155     <span class="keywordflow">case</span> 0 : <span class="keywordflow">return</span> c;
-<a name="l00156"></a>00156     }
-<a name="l00157"></a>00157   }
-<a name="l00158"></a>00158 <span class="preprocessor">#endif </span><span class="comment">/* !valgrind */</span>
-<a name="l00159"></a>00159   <span class="keyword">final</span>(a,b,c);
-<a name="l00160"></a>00160   <span class="keywordflow">return</span> c;
-<a name="l00161"></a>00161 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

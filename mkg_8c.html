@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: lib/mkg.c File Reference</title>
+<title>maos-0.7.1: lib/mkg.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -115,31 +115,31 @@ window.onload = initDynSections;
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>INTERP</b>(A, B, C, D)</td></tr>
 
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8c.html#d2d54fdeed820b8e4d88ec444b446299">mkgt</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *xloc, <a class="el" href="structLOC__T.html">LOC_T</a> *ploc, double *amp, <a class="el" href="structLOC__T.html">LOC_T</a> *saloc, int saorc, double scale, double *displace, int do_partial)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8c.html#33f93ee06dc231b4912937d07ba05602">mkgt</a> (<a class="el" href="structloc__t.html">loc_t</a> *xloc, <a class="el" href="structloc__t.html">loc_t</a> *ploc, double *amp, <a class="el" href="structloc__t.html">loc_t</a> *saloc, int saorc, double scale, double *displace, int do_partial)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the transpose of a average gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc with ploc as the intermediate pupil plane.  <a href="#d2d54fdeed820b8e4d88ec444b446299"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8c.html#7a94831f1db656a61e22c6f1c5a85ebb">mkg</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *xloc, <a class="el" href="structLOC__T.html">LOC_T</a> *ploc, double *amp, <a class="el" href="structLOC__T.html">LOC_T</a> *saloc, int saorc, double scale, double *displace, int do_partial)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the transpose of a average gradient operator that converts the OPDs defined on xloc to subapertures defines on saloc with ploc as the intermediate pupil plane.  <a href="#33f93ee06dc231b4912937d07ba05602"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkg_8c.html#8c00706a5de1f50673e35824930421f7">mkg</a> (<a class="el" href="structloc__t.html">loc_t</a> *xloc, <a class="el" href="structloc__t.html">loc_t</a> *ploc, double *amp, <a class="el" href="structloc__t.html">loc_t</a> *saloc, int saorc, double scale, double *displace, int do_partial)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the transpose of <a class="el" href="mkg_8c.html#d2d54fdeed820b8e4d88ec444b446299" title="Returns the transpose of a average gradient operator that converts the OPDs defined...">mkgt()</a>.  <a href="#7a94831f1db656a61e22c6f1c5a85ebb"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Returns the transpose of <a class="el" href="mkg_8c.html#33f93ee06dc231b4912937d07ba05602" title="Returns the transpose of a average gradient operator that converts the OPDs defined...">mkgt()</a>.  <a href="#8c00706a5de1f50673e35824930421f7"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Contains function that creates average gradient operator. 
 <p>
 Contains function that creates ztilt gradient operator.<hr><h2>Function Documentation</h2>
-<a class="anchor" name="d2d54fdeed820b8e4d88ec444b446299"></a><!-- doxytag: member="mkg.c::mkgt" ref="d2d54fdeed820b8e4d88ec444b446299" args="(LOC_T *xloc, LOC_T *ploc, double *amp, LOC_T *saloc, int saorc, double scale, double *displace, int do_partial)" -->
+<a class="anchor" name="33f93ee06dc231b4912937d07ba05602"></a><!-- doxytag: member="mkg.c::mkgt" ref="33f93ee06dc231b4912937d07ba05602" args="(loc_t *xloc, loc_t *ploc, double *amp, loc_t *saloc, int saorc, double scale, double *displace, int do_partial)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structdsp.html">dsp</a>* mkgt           </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>xloc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>ploc</em>, </td>
         </tr>
         <tr>
@@ -151,7 +151,7 @@ Contains function that creates ztilt gradient operator.<hr><h2>Function Document
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>saloc</em>, </td>
         </tr>
         <tr>
@@ -202,384 +202,23 @@ Returns the transpose of a average gradient operator that converts the OPDs defi
     <tr><td valign="top"></td><td valign="top"><em>do_partial</em>&nbsp;</td><td>1: use points that are outside of by close to a subaperture. 0: do not use. </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00137"></a>00137                              : saloc is the center of the subapertures. 1: saloc is the origin of the subapertures.*/
-<a name="l00138"></a>00138        <span class="keywordtype">double</span> scale,    <span class="comment">/**&lt;cone effect*/</span>
-<a name="l00139"></a>00139        <span class="keywordtype">double</span> *displace,<span class="comment">/**&lt;displacement due to beam angle (2 vector). similar as accphi routines*/</span>
-<a name="l00140"></a>00140        <span class="keywordtype">int</span> do_partial   <span class="comment">/**&lt;1: use points that are outside of by close to a subaperture. 0: do not use.*/</span>
-<a name="l00141"></a>00141        )
-<a name="l00142"></a>00142 {
-<a name="l00143"></a>00143     <span class="comment">/*</span>
-<a name="l00144"></a>00144 <span class="comment">      </span>
-<a name="l00145"></a>00145 <span class="comment">      Create an average gradient influence matrix from XLOC to SALOC, with</span>
-<a name="l00146"></a>00146 <span class="comment">      amplitude maps defined on PLOC. PLOC and SALOC are defined on the same</span>
-<a name="l00147"></a>00147 <span class="comment">      plan. The offset *displace* and scaling *scale* is between PLOC/SALOC and</span>
-<a name="l00148"></a>00148 <span class="comment">      XLOC, when projected onto XLOC plane,</span>
-<a name="l00149"></a>00149 <span class="comment">      SALOC-&gt;SALOC*scale+displace. PLOC-&gt;PLOC*scale+dispace. There are no offset</span>
-<a name="l00150"></a>00150 <span class="comment">      or scaling between PLOC and SALOC</span>
-<a name="l00151"></a>00151 <span class="comment"></span>
-<a name="l00152"></a>00152 <span class="comment">      saorc: SALOC is subaperture origin or center. </span>
-<a name="l00153"></a>00153 <span class="comment">      1: origin (lower left corner), </span>
-<a name="l00154"></a>00154 <span class="comment">      0: center.</span>
-<a name="l00155"></a>00155 <span class="comment">    */</span>
-<a name="l00156"></a>00156     <span class="keywordtype">double</span> *ampcopy;
-<a name="l00157"></a>00157     <span class="keywordtype">double</span> dsa2;
-<a name="l00158"></a>00158     <span class="keywordtype">double</span> scx, scy;
-<a name="l00159"></a>00159     <span class="keywordtype">double</span> weight[2];
-<a name="l00160"></a>00160     <span class="keywordtype">double</span> dx1,dx2;
-<a name="l00161"></a>00161     <span class="keywordtype">double</span> dp1,dp2,poffset[2];
-<a name="l00162"></a>00162     <span class="keywordtype">double</span> displacex=0, displacey=0;
-<a name="l00163"></a>00163    
-<a name="l00164"></a>00164     <span class="keywordtype">int</span> nsa,isa;
-<a name="l00165"></a>00165     <span class="keywordtype">int</span> limx, limy;
-<a name="l00166"></a>00166     <span class="keywordtype">int</span> same;
-<a name="l00167"></a>00167     <span class="keywordtype">double</span> dx=xloc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>;
-<a name="l00168"></a>00168     <span class="keywordtype">double</span> dp=ploc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>;
-<a name="l00169"></a>00169     <span class="keywordtype">double</span> dsa=saloc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>;
-<a name="l00170"></a>00170 
-<a name="l00171"></a>00171     nsa=saloc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
-<a name="l00172"></a>00172     dx1=1./dx;
-<a name="l00173"></a>00173     dp1=1./dp;
-<a name="l00174"></a>00174     dx2=scale*dx1;
-<a name="l00175"></a>00175 
-<a name="l00176"></a>00176     <span class="comment">/*</span>
-<a name="l00177"></a>00177 <span class="comment">      if do_partial is 1, will use points that are outside of the subaperture,</span>
-<a name="l00178"></a>00178 <span class="comment">      but contribute.</span>
-<a name="l00179"></a>00179 <span class="comment">    */</span>
-<a name="l00180"></a>00180     <span class="comment">/*notice, this map is in matlab index*/</span>
-<a name="l00181"></a>00181     <a class="code" href="loc_8c.html#6d3ba3927af00f9e95812485b8cca6dd" title="Create a map for loc with padding of 1.">loc_create_map</a>(ploc);
-<a name="l00182"></a>00182     poffset[0]=ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a035d06a3ddd28ba504f54434970d471" title="Origin of the map along x.">ox</a>;
-<a name="l00183"></a>00183     poffset[1]=ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#0a28d333e471c48f6955517e9106fb49" title="Origin of the map along y.">oy</a>;
-<a name="l00184"></a>00184     <span class="keywordflow">if</span>(xloc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a> &amp;&amp; ploc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a> != xloc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>){
-<a name="l00185"></a>00185     <span class="comment">/*</span>
-<a name="l00186"></a>00186 <span class="comment">      If XLOC is present and different from PLOC, </span>
-<a name="l00187"></a>00187 <span class="comment">      treat the misregistration</span>
-<a name="l00188"></a>00188 <span class="comment">      as between PLOC and XLOC. SALOC and PLOC has no misregistration.</span>
-<a name="l00189"></a>00189 <span class="comment">    */</span>
-<a name="l00190"></a>00190     same=0;
-<a name="l00191"></a>00191     <a class="code" href="loc_8c.html#6d3ba3927af00f9e95812485b8cca6dd" title="Create a map for loc with padding of 1.">loc_create_map</a>(xloc);
-<a name="l00192"></a>00192     poffset[0]*=-dp1;
-<a name="l00193"></a>00193     poffset[1]*=-dp1;
-<a name="l00194"></a>00194 
-<a name="l00195"></a>00195     <span class="comment">/*displace between PLOC(SALOC) and XLOC. Only used if same==0;*/</span>
-<a name="l00196"></a>00196     displacex=(displace[0]-xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a035d06a3ddd28ba504f54434970d471" title="Origin of the map along x.">ox</a>)*dx1;
-<a name="l00197"></a>00197     displacey=(displace[1]-xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#0a28d333e471c48f6955517e9106fb49" title="Origin of the map along y.">oy</a>)*dx1;  
-<a name="l00198"></a>00198     dp2=dp1;
-<a name="l00199"></a>00199     <span class="keywordflow">if</span>(fabs(scale-1)&gt;1.e-10)
-<a name="l00200"></a>00200         fprintf(stderr,<span class="stringliteral">"This is a bug in mkg to do three plane mkg when scale!=1\n"</span>);
-<a name="l00201"></a>00201     }<span class="keywordflow">else</span>{
-<a name="l00202"></a>00202     <span class="comment">/*</span>
-<a name="l00203"></a>00203 <span class="comment">      If XLOC is missing or XLOC and PLOC are the same, treat the</span>
-<a name="l00204"></a>00204 <span class="comment">      misregistration as between SALOC and PLOC</span>
-<a name="l00205"></a>00205 <span class="comment">    */</span>
-<a name="l00206"></a>00206     same=1;
-<a name="l00207"></a>00207     poffset[0]=(displace[0]-ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a035d06a3ddd28ba504f54434970d471" title="Origin of the map along x.">ox</a>)*dp1;
-<a name="l00208"></a>00208     poffset[1]=(displace[1]-ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#0a28d333e471c48f6955517e9106fb49" title="Origin of the map along y.">oy</a>)*dp1;
-<a name="l00209"></a>00209     dp2=dp1*scale;
-<a name="l00210"></a>00210     }
-<a name="l00211"></a>00211 
-<a name="l00212"></a>00212     
-<a name="l00213"></a>00213     <span class="comment">/*Spacing of half subaperture on pupil plane.*/</span>
-<a name="l00214"></a>00214     dsa2=dsa/2.*dp2;
-<a name="l00215"></a>00215     <span class="comment">/*To store the weights.*/</span>
-<a name="l00216"></a>00216 
-<a name="l00217"></a>00217     poffset[0]+=dsa2*saorc;<span class="comment">/*offset to SALOC to make it subaperture center.*/</span>
-<a name="l00218"></a>00218     poffset[1]+=dsa2*saorc;
-<a name="l00219"></a>00219     
-<a name="l00220"></a>00220     long (*pmaps)[ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a53b9f6a08b042a3aa5333de8ff4598d" title="Number of points along x.">nx</a>]=(long (*)[ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a53b9f6a08b042a3aa5333de8ff4598d" title="Number of points along x.">nx</a>])ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a6884f997b7bf3fc1406b6fe4e6ff44b" title="The map, of size nx*ny.">p</a>;
-<a name="l00221"></a>00221     long (*xmaps)[xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a53b9f6a08b042a3aa5333de8ff4598d" title="Number of points along x.">nx</a>]=(long (*)[xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a53b9f6a08b042a3aa5333de8ff4598d" title="Number of points along x.">nx</a>])xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a6884f997b7bf3fc1406b6fe4e6ff44b" title="The map, of size nx*ny.">p</a>;
-<a name="l00222"></a>00222     <span class="keywordtype">double</span> amp2[3][3];
-<a name="l00223"></a>00223     <span class="keywordtype">double</span> wtfull[4]={0.5/3, 1./3, 0.5, 0.5};
-<a name="l00224"></a>00224     <span class="keywordtype">double</span> *wtalpha, *wtbeta;
-<a name="l00225"></a>00225     <span class="keywordtype">double</span> signx, signy;
-<a name="l00226"></a>00226     <span class="keywordtype">double</span> ampsum;
-<a name="l00227"></a>00227     <span class="keywordtype">double</span> limx1, limx2, limy1, limy2;
-<a name="l00228"></a>00228     <span class="keywordtype">double</span> alpha1, alpha2, beta1, beta2;
-<a name="l00229"></a>00229     <span class="keywordtype">double</span> dplocx,plocx,dplocy,plocy;
-<a name="l00230"></a>00230     <span class="keywordtype">double</span> wt0,wtsum;
-<a name="l00231"></a>00231     <span class="keywordtype">int</span> nplocx,nplocy;
-<a name="l00232"></a>00232     <span class="keywordtype">int</span> ipix,ipix2,itmp,jtmp;
-<a name="l00233"></a>00233     <span class="keywordtype">int</span> indx[2],indy[2];
-<a name="l00234"></a>00234     <span class="keywordtype">int</span> valid=1;
-<a name="l00235"></a>00235     <span class="keywordtype">int</span> iw;
-<a name="l00236"></a>00236     <span class="keywordtype">int</span> iphi;
-<a name="l00237"></a>00237     <span class="keywordflow">if</span>(!same &amp;&amp; amp){
-<a name="l00238"></a>00238     <span class="comment">/*</span>
-<a name="l00239"></a>00239 <span class="comment">      Copy and modify amplitude map to fix boundry</span>
-<a name="l00240"></a>00240 <span class="comment">      issues when propage between two planes.  This</span>
-<a name="l00241"></a>00241 <span class="comment">      generally applies to the case that XLOC is smaller</span>
-<a name="l00242"></a>00242 <span class="comment">      than PLOC.</span>
-<a name="l00243"></a>00243 <span class="comment">    */</span>
-<a name="l00244"></a>00244     ampcopy=malloc(<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*ploc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>);
-<a name="l00245"></a>00245     memcpy(ampcopy,amp,<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*ploc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>);
-<a name="l00246"></a>00246     <span class="keywordflow">for</span>(ipix=0; ipix&lt;ploc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; ipix++){
-<a name="l00247"></a>00247         plocx=ploc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>[ipix]*dx2+displacex;
-<a name="l00248"></a>00248         plocy=ploc-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>[ipix]*dx2+displacey;
-<a name="l00249"></a>00249         SPLIT(plocx,dplocx,nplocx);
-<a name="l00250"></a>00250         SPLIT(plocy,dplocy,nplocy);
-<a name="l00251"></a>00251         <span class="comment">/*Find out whether this PLOC point has XLOC points associated,</span>
-<a name="l00252"></a>00252 <span class="comment">          if not, will scale the amplitude of this PLOC point.*/</span>
-<a name="l00253"></a>00253         wtsum=0;
-<a name="l00254"></a>00254         ADDWT(nplocx,1-dplocx,nplocy,1-dplocy);
-<a name="l00255"></a>00255         ADDWT(1+nplocx,dplocx,nplocy,1-dplocy);
-<a name="l00256"></a>00256         ADDWT(nplocx,1-dplocx,1+nplocy,dplocy);
-<a name="l00257"></a>00257         ADDWT(1+nplocx,dplocx,1+nplocy,dplocy);
-<a name="l00258"></a>00258         ampcopy[ipix]*=wtsum;
-<a name="l00259"></a>00259     }
-<a name="l00260"></a>00260     }<span class="keywordflow">else</span>{
-<a name="l00261"></a>00261     ampcopy=amp;
-<a name="l00262"></a>00262     }
-<a name="l00263"></a>00263     <span class="keywordflow">if</span>(do_partial){
-<a name="l00264"></a>00264     wtalpha=(<span class="keywordtype">double</span>*)alloca(<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*4);
-<a name="l00265"></a>00265     wtbeta =(<span class="keywordtype">double</span>*)alloca(<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*4);
-<a name="l00266"></a>00266     }<span class="keywordflow">else</span>{
-<a name="l00267"></a>00267     wtalpha=(<span class="keywordtype">double</span>*)wtfull;
-<a name="l00268"></a>00268     wtbeta =(<span class="keywordtype">double</span>*)wtfull;
-<a name="l00269"></a>00269     }
-<a name="l00270"></a>00270     <span class="comment">/*if no amplitude weighting, set all to one.*/</span>
-<a name="l00271"></a>00271     <span class="keywordflow">if</span>(!amp){
-<a name="l00272"></a>00272     <span class="keywordflow">for</span>(jtmp=0; jtmp&lt;3; jtmp++){
-<a name="l00273"></a>00273         <span class="keywordflow">for</span>(itmp=0;itmp&lt;3;itmp++){
-<a name="l00274"></a>00274         amp2[jtmp][itmp]=1;
-<a name="l00275"></a>00275         }
-<a name="l00276"></a>00276     }
-<a name="l00277"></a>00277     }
-<a name="l00278"></a>00278     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *GS0t[2];
-<a name="l00279"></a>00279     <span class="keywordtype">long</span> nzmax[2];
-<a name="l00280"></a>00280     <span class="keywordtype">long</span> *restrict pp[2];
-<a name="l00281"></a>00281     <span class="keywordtype">long</span> *restrict pi[2];
-<a name="l00282"></a>00282     <span class="keywordtype">double</span>  *restrict px[2];
-<a name="l00283"></a>00283     <span class="keywordtype">long</span> count[2];
-<a name="l00284"></a>00284     <span class="keywordflow">for</span>(iw=0; iw&lt;2; iw++){
-<a name="l00285"></a>00285     nzmax[iw]=nsa*(dsa/dx)*16;<span class="comment">//four row in each side.</span>
-<a name="l00286"></a>00286     GS0t[iw]=<a class="code" href="dsp_8h.html#ad23f2152cd2622871367fd28ac0ff6b" title="Create a nx*ny X(sp) matrix with memory for nmax max elements allocated.">spnew</a>(xloc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>, nsa, nzmax[iw]);
-<a name="l00287"></a>00287     pp[iw]=GS0t[iw]-&gt;p; 
-<a name="l00288"></a>00288     pi[iw]=GS0t[iw]-&gt;i; 
-<a name="l00289"></a>00289     px[iw]=GS0t[iw]-&gt;x;
-<a name="l00290"></a>00290     count[iw]=0;
-<a name="l00291"></a>00291     }
-<a name="l00292"></a>00292     <span class="keywordflow">for</span>(isa=0; isa&lt;nsa; isa++){
-<a name="l00293"></a>00293     <span class="keywordflow">for</span>(iw=0; iw&lt;2; iw++){
-<a name="l00294"></a>00294         pp[iw][isa]=count[iw];
-<a name="l00295"></a>00295     }
-<a name="l00296"></a>00296     <span class="comment">/*center of subaperture when mapped onto PLOC MAP.*/</span>
-<a name="l00297"></a>00297     scx=saloc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>[isa]*dp2+poffset[0];
-<a name="l00298"></a>00298     scy=saloc-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>[isa]*dp2+poffset[1];
-<a name="l00299"></a>00299     ampsum=0; <span class="comment">/*Accumulated amplitude integral in this subaperture*/</span>
-<a name="l00300"></a>00300     <span class="comment">/*Boundary of PLOC points covered by this subaperture.*/</span>
-<a name="l00301"></a>00301     limx1=(scx-dsa2);
-<a name="l00302"></a>00302     limx2=(scx+dsa2);
-<a name="l00303"></a>00303     limy1=(scy-dsa2);
-<a name="l00304"></a>00304     limy2=(scy+dsa2);
-<a name="l00305"></a>00305     <span class="comment">/*</span>
-<a name="l00306"></a>00306 <span class="comment">      was the following when only account for fully illuminated subaps.</span>
-<a name="l00307"></a>00307 <span class="comment">      for (limy=FLOOR(limy1); limy&lt;CEIL(limy2)+1; limy++){</span>
-<a name="l00308"></a>00308 <span class="comment">      for (limx=FLOOR(limx1); limx&lt;CEIL(limx2)+1; limx++){</span>
-<a name="l00309"></a>00309 <span class="comment">      The new limits are used to include points that are outside of </span>
-<a name="l00310"></a>00310 <span class="comment">      but adjacent to the subaperture</span>
-<a name="l00311"></a>00311 <span class="comment">    */</span>
-<a name="l00312"></a>00312         
-<a name="l00313"></a>00313     <span class="keywordflow">for</span> (limy=CEIL(limy1)-1; limy&lt;FLOOR(limy2)+2; limy++){
-<a name="l00314"></a>00314         <span class="keywordflow">for</span> (limx=CEIL(limx1)-1; limx&lt;FLOOR(limx2)+2; limx++){
-<a name="l00315"></a>00315         PMAP(ipix,limx,limy);
-<a name="l00316"></a>00316 
-<a name="l00317"></a>00317         <span class="keywordflow">if</span> (ipix--){
-<a name="l00318"></a>00318             weight[0]=0;
-<a name="l00319"></a>00319             weight[1]=0;
-<a name="l00320"></a>00320             <span class="comment">/*if amplitude map is defined, fetch the 3x3 map surrounding this point.*/</span>
-<a name="l00321"></a>00321             <span class="keywordflow">if</span>(amp){
-<a name="l00322"></a>00322             <span class="keywordflow">for</span>(jtmp=0; jtmp&lt;3; jtmp++){
-<a name="l00323"></a>00323                 <span class="keywordflow">for</span>(itmp=0; itmp&lt;3; itmp++){
-<a name="l00324"></a>00324                 PMAP(ipix2,limx+itmp-1,limy+jtmp-1);
-<a name="l00325"></a>00325                 <span class="keywordflow">if</span>(ipix2--){
-<a name="l00326"></a>00326                     amp2[jtmp][itmp]=ampcopy[ipix2];
-<a name="l00327"></a>00327                 }<span class="keywordflow">else</span>{
-<a name="l00328"></a>00328                     amp2[jtmp][itmp]=0;
-<a name="l00329"></a>00329                 }
-<a name="l00330"></a>00330                 }
-<a name="l00331"></a>00331             }
-<a name="l00332"></a>00332             }
-<a name="l00333"></a>00333             <span class="comment">/*</span>
-<a name="l00334"></a>00334 <span class="comment">              Integrate over the four quadrants surround the point</span>
-<a name="l00335"></a>00335 <span class="comment">              ipix, inside the subaperture</span>
-<a name="l00336"></a>00336 <span class="comment">              limx, limy are the coordinate of the point in PLOC MAP.</span>
-<a name="l00337"></a>00337 <span class="comment">              [limx1,limx2] [limy1,limy2] bound the subaperture.</span>
-<a name="l00338"></a>00338 <span class="comment"></span>
-<a name="l00339"></a>00339 <span class="comment">              Notice that the coordinates are positive to the left/top for integral.</span>
-<a name="l00340"></a>00340 <span class="comment">            */</span>
-<a name="l00341"></a>00341             <span class="comment">/*left use 0 1*/</span>
-<a name="l00342"></a>00342             alpha1=limx-limx2;<span class="comment">/*The lower bound to do integral (right)*/</span>
-<a name="l00343"></a>00343             alpha2=limx-limx1;<span class="comment">/*The upper bound to do integral (left)*/</span>
-<a name="l00344"></a>00344             <span class="keywordflow">if</span>(do_partial||(alpha1&lt;TOL &amp;&amp; alpha2&gt;1.-TOL)){
-<a name="l00345"></a>00345             indx[0]=0; indx[1]=1;
-<a name="l00346"></a>00346             signx=1.;
-<a name="l00347"></a>00347             <span class="comment">/*bottom use 0 1*/</span>
-<a name="l00348"></a>00348             beta1=limy-limy2;
-<a name="l00349"></a>00349             beta2=limy-limy1;
-<a name="l00350"></a>00350             <span class="keywordflow">if</span>(do_partial||(beta1&lt;TOL &amp;&amp; beta2&gt;1.-TOL)){
-<a name="l00351"></a>00351                 indy[0]=0; indy[1]=1;
-<a name="l00352"></a>00352                 signy=1.;
-<a name="l00353"></a>00353                 DO_CALC;
-<a name="l00354"></a>00354             }
-<a name="l00355"></a>00355             <span class="comment">/*top use 2 1 */</span>
-<a name="l00356"></a>00356             beta1=limy1-limy;
-<a name="l00357"></a>00357             beta2=limy2-limy;
-<a name="l00358"></a>00358             <span class="keywordflow">if</span>(do_partial||(beta1&lt;TOL &amp;&amp; beta2&gt;1.-TOL)){
-<a name="l00359"></a>00359                 indy[0]=2; indy[1]=1;
-<a name="l00360"></a>00360                 signy=-1.;
-<a name="l00361"></a>00361                 DO_CALC;
-<a name="l00362"></a>00362             }
-<a name="l00363"></a>00363             }
-<a name="l00364"></a>00364             <span class="comment">/*right  use 2 1*/</span>
-<a name="l00365"></a>00365             alpha1=limx1-limx;
-<a name="l00366"></a>00366             alpha2=limx2-limx;
-<a name="l00367"></a>00367             <span class="keywordflow">if</span>(do_partial||(alpha1&lt;TOL &amp;&amp; alpha2&gt;1.-TOL)){
-<a name="l00368"></a>00368             indx[0]=2; indx[1]=1;
-<a name="l00369"></a>00369             signx=-1.;
-<a name="l00370"></a>00370             <span class="comment">/*bottom use 0 1*/</span>
-<a name="l00371"></a>00371             beta1=limy-limy2;
-<a name="l00372"></a>00372             beta2=limy-limy1;
-<a name="l00373"></a>00373             <span class="keywordflow">if</span>(do_partial||(beta1&lt;TOL &amp;&amp; beta2&gt;1.-TOL)){
-<a name="l00374"></a>00374                 indy[0]=0; indy[1]=1;
-<a name="l00375"></a>00375                 signy=1.;
-<a name="l00376"></a>00376                 DO_CALC;
-<a name="l00377"></a>00377             }
-<a name="l00378"></a>00378             <span class="comment">/*top use 2 1 */</span>
-<a name="l00379"></a>00379             beta1=limy1-limy;
-<a name="l00380"></a>00380             beta2=limy2-limy;
-<a name="l00381"></a>00381             <span class="keywordflow">if</span>(do_partial||(beta1&lt;TOL &amp;&amp; beta2&gt;1.-TOL)){
-<a name="l00382"></a>00382                 indy[0]=2; indy[1]=1;
-<a name="l00383"></a>00383                 signy=-1.;
-<a name="l00384"></a>00384                 DO_CALC;
-<a name="l00385"></a>00385             }
-<a name="l00386"></a>00386             }
-<a name="l00387"></a>00387             <span class="keywordflow">for</span>(iw=0; iw&lt;2; iw++){
-<a name="l00388"></a>00388             <span class="keywordflow">if</span>(count[iw]+4&gt;nzmax[iw]){
-<a name="l00389"></a>00389                 nzmax[iw]=nzmax[iw]*2;
-<a name="l00390"></a>00390                 <a class="code" href="dsp_8h.html#3e88790d921e0805e21feded80f4b0e2" title="resize a X(sp) matrix">spsetnzmax</a>(GS0t[iw], nzmax[iw]);
-<a name="l00391"></a>00391                 pp[iw]=GS0t[iw]-&gt;<a class="code" href="structdsp.html#a9f3db1d7c4d321157e4efac11f3351a" title="column pointers (size n+1) or col indlces (size nzmax) when nz!=-1">p</a>; 
-<a name="l00392"></a>00392                 pi[iw]=GS0t[iw]-&gt;<a class="code" href="structdsp.html#1d87a5584935632deb8bf23ea8eb46bf" title="row indices, size nzmax">i</a>; 
-<a name="l00393"></a>00393                 px[iw]=GS0t[iw]-&gt;<a class="code" href="structdsp.html#72f5e4eabdf69453be2ec0708558f023" title="numerical values, size nzmax">x</a>;
-<a name="l00394"></a>00394             }
-<a name="l00395"></a>00395             <span class="keywordflow">if</span>(fabs(weight[iw])&gt;TOL){
-<a name="l00396"></a>00396                 <span class="keywordflow">if</span>(same){
-<a name="l00397"></a>00397                 <span class="comment">/*XLOC and PLOC are the same, </span>
-<a name="l00398"></a>00398 <span class="comment">                  and no misregistration.*/</span>
-<a name="l00399"></a>00399                 pi[iw][count[iw]]=ipix;
-<a name="l00400"></a>00400                 px[iw][count[iw]++]=weight[iw];
-<a name="l00401"></a>00401                 }<span class="keywordflow">else</span>{
-<a name="l00402"></a>00402                 <span class="comment">/*</span>
-<a name="l00403"></a>00403 <span class="comment">                  XLOC and PLOC are not the same, find the</span>
-<a name="l00404"></a>00404 <span class="comment">                  points on XLOC that couples in to ipix.</span>
-<a name="l00405"></a>00405 <span class="comment">                */</span>
-<a name="l00406"></a>00406 
-<a name="l00407"></a>00407                 plocx=ploc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>[ipix]*dx2+displacex;
-<a name="l00408"></a>00408                 plocy=ploc-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>[ipix]*dx2+displacey;
-<a name="l00409"></a>00409                 SPLIT(plocx,dplocx,nplocx);
-<a name="l00410"></a>00410                 SPLIT(plocy,dplocy,nplocy);
-<a name="l00411"></a>00411                 <span class="comment">//info2("weight[%d]=%g\n",iw,weight[iw]);</span>
-<a name="l00412"></a>00412                 <span class="comment">//info2("(%g, %g, %d), (%g, %g, %d)\n",</span>
-<a name="l00413"></a>00413                 <span class="comment">//    plocx,dplocx,nplocx,</span>
-<a name="l00414"></a>00414                 <span class="comment">//   plocy,dplocy,nplocy);</span>
-<a name="l00415"></a>00415                 wtsum=0;
-<a name="l00416"></a>00416                 ADDWT(nplocx,1-dplocx,nplocy,1-dplocy);
-<a name="l00417"></a>00417                 ADDWT(1+nplocx,dplocx,nplocy,1-dplocy);
-<a name="l00418"></a>00418                 ADDWT(nplocx,1-dplocx,1+nplocy,dplocy);
-<a name="l00419"></a>00419                 ADDWT(1+nplocx,dplocx,1+nplocy,dplocy);
-<a name="l00420"></a>00420                 <span class="comment">//info2("wtsum=%g\n",wtsum);</span>
-<a name="l00421"></a>00421                 wtsum=1./wtsum;
-<a name="l00422"></a>00422                 <span class="comment">/*We are computing gradients on the PLOC.</span>
-<a name="l00423"></a>00423 <span class="comment">                  This gradient is scaled by 1/scale in XLOC*/</span>
-<a name="l00424"></a>00424                 <span class="keywordflow">if</span>(!same)
-<a name="l00425"></a>00425                     wtsum/=scale;
-<a name="l00426"></a>00426 <span class="preprocessor">#define INTERP(A,B,C,D)                         \</span>
-<a name="l00427"></a>00427 <span class="preprocessor">    XMAP(iphi,A,C);                         \</span>
-<a name="l00428"></a>00428 <span class="preprocessor">    if(iphi--){                             \</span>
-<a name="l00429"></a>00429 <span class="preprocessor">    </span><span class="comment">/*Check whether we already have the weight for this point.*/</span>    \
-<a name="l00430"></a>00430     if(fabs(wt0=weight[iw]*(B)*(D)*wtsum)&gt;TOL){         \
-<a name="l00431"></a>00431         <span class="comment">/*info2("(%d,%d)=%g)\n",isa+nsa*iw,iphi,wt0);*/</span>     \
-<a name="l00432"></a>00432         for(itmp=pp[iw][isa]; itmp&lt;count[iw]; itmp++){      \
-<a name="l00433"></a>00433         if(pi[iw][itmp]==iphi){                 \
-<a name="l00434"></a>00434             px[iw][itmp]+=wt0;                  \
-<a name="l00435"></a>00435             break;                      \
-<a name="l00436"></a>00436         }                           \
-<a name="l00437"></a>00437         }                               \
-<a name="l00438"></a>00438         if(itmp == count[iw]){<span class="comment">/*not found*/</span>             \
-<a name="l00439"></a>00439         pi[iw][count[iw]]=iphi;                 \
-<a name="l00440"></a>00440         px[iw][count[iw]++]=wt0;                \
-<a name="l00441"></a>00441         }                               \
-<a name="l00442"></a>00442     }                               \
-<a name="l00443"></a>00443     }
-<a name="l00444"></a>00444                     
-<a name="l00445"></a>00445                 INTERP(nplocx,1-dplocx,nplocy,1-dplocy);
-<a name="l00446"></a>00446                 INTERP(1+nplocx,dplocx,nplocy,1-dplocy);
-<a name="l00447"></a>00447                 INTERP(nplocx,1-dplocx,1+nplocy,dplocy);
-<a name="l00448"></a>00448                 INTERP(1+nplocx,dplocx,1+nplocy,dplocy);
-<a name="l00449"></a>00449 <span class="preprocessor">#undef INTERP</span>
-<a name="l00450"></a>00450 <span class="preprocessor"></span>                }
-<a name="l00451"></a>00451             }
-<a name="l00452"></a>00452             }
-<a name="l00453"></a>00453         }<span class="comment">/*if ipix*/</span>
-<a name="l00454"></a>00454         }<span class="comment">/*limx*/</span>
-<a name="l00455"></a>00455     }<span class="comment">/*limy*/</span>
-<a name="l00456"></a>00456     <span class="comment">//info2("ampsum=%g\n",ampsum);</span>
-<a name="l00457"></a>00457     <span class="keywordflow">if</span>(ampsum&gt;TOL){
-<a name="l00458"></a>00458         ampsum=1./ampsum;
-<a name="l00459"></a>00459     }<span class="keywordflow">else</span>{
-<a name="l00460"></a>00460         ampsum=0;
-<a name="l00461"></a>00461     }
-<a name="l00462"></a>00462     <span class="keywordflow">for</span>(iw=0; iw&lt;2; iw++){
-<a name="l00463"></a>00463         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ii=pp[iw][isa]; ii&lt;count[iw]; ii++){
-<a name="l00464"></a>00464         px[iw][ii]*=ampsum;
-<a name="l00465"></a>00465         }
-<a name="l00466"></a>00466     }
-<a name="l00467"></a>00467         <span class="comment">//raise(SIGSEGV);</span>
-<a name="l00468"></a>00468     }<span class="comment">/*isa*/</span>
-<a name="l00469"></a>00469     <span class="keywordflow">for</span>(iw=0; iw&lt;2; iw++){
-<a name="l00470"></a>00470     <span class="keywordflow">if</span>(count[iw]&gt;nzmax[iw]){
-<a name="l00471"></a>00471         error(<span class="stringliteral">"Over flow\n"</span>);<span class="comment">//should never happen</span>
-<a name="l00472"></a>00472     }
-<a name="l00473"></a>00473     pp[iw][nsa]=count[iw];
-<a name="l00474"></a>00474     <a class="code" href="dsp_8h.html#3e88790d921e0805e21feded80f4b0e2" title="resize a X(sp) matrix">spsetnzmax</a>(GS0t[iw],count[iw]);
-<a name="l00475"></a>00475     }
-<a name="l00476"></a>00476     <span class="keywordflow">if</span>(ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>){
-<a name="l00477"></a>00477     free(ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a6884f997b7bf3fc1406b6fe4e6ff44b" title="The map, of size nx*ny.">p</a>);
-<a name="l00478"></a>00478     free(ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>);
-<a name="l00479"></a>00479     ploc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>=NULL;
-<a name="l00480"></a>00480     }
-<a name="l00481"></a>00481     <span class="keywordflow">if</span>(xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>){
-<a name="l00482"></a>00482     free(xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a6884f997b7bf3fc1406b6fe4e6ff44b" title="The map, of size nx*ny.">p</a>);
-<a name="l00483"></a>00483     free(xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>);
-<a name="l00484"></a>00484     xloc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>=NULL;
-<a name="l00485"></a>00485     }
-<a name="l00486"></a>00486     <span class="keywordflow">if</span>(ampcopy!=amp)
-<a name="l00487"></a>00487     free(ampcopy);
-<a name="l00488"></a>00488     <span class="comment">//concatenate x and y gradient operators together.</span>
-<a name="l00489"></a>00489     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *GS0=<a class="code" href="dsp_8h.html#9c43a97ba91966d8bb56640fe0b9cd40" title="Concatenate two sparse array along dim dimension.">spcat</a>(GS0t[0], GS0t[1],1);
-<a name="l00490"></a>00490     spfree(GS0t[0]); GS0t[0]=NULL;
-<a name="l00491"></a>00491     spfree(GS0t[1]); GS0t[1]=NULL;
-<a name="l00492"></a>00492     <a class="code" href="loc_8c.html#b4bdd0977410c63912eb4dd14c241f7e" title="Free the MAP in LOC_T.">loc_free_map</a>(ploc);
-<a name="l00493"></a>00493     <a class="code" href="loc_8c.html#b4bdd0977410c63912eb4dd14c241f7e" title="Free the MAP in LOC_T.">loc_free_map</a>(xloc);
-<a name="l00494"></a>00494     <span class="keywordflow">return</span> GS0;
-<a name="l00495"></a>00495 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
-<a class="anchor" name="7a94831f1db656a61e22c6f1c5a85ebb"></a><!-- doxytag: member="mkg.c::mkg" ref="7a94831f1db656a61e22c6f1c5a85ebb" args="(LOC_T *xloc, LOC_T *ploc, double *amp, LOC_T *saloc, int saorc, double scale, double *displace, int do_partial)" -->
+<a class="anchor" name="8c00706a5de1f50673e35824930421f7"></a><!-- doxytag: member="mkg.c::mkg" ref="8c00706a5de1f50673e35824930421f7" args="(loc_t *xloc, loc_t *ploc, double *amp, loc_t *saloc, int saorc, double scale, double *displace, int do_partial)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structdsp.html">dsp</a>* mkg           </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>xloc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>ploc</em>, </td>
         </tr>
         <tr>
@@ -591,7 +230,7 @@ Returns the transpose of a average gradient operator that converts the OPDs defi
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>saloc</em>, </td>
         </tr>
         <tr>
@@ -628,22 +267,13 @@ Returns the transpose of a average gradient operator that converts the OPDs defi
 <div class="memdoc">
 
 <p>
-Returns the transpose of <a class="el" href="mkg_8c.html#d2d54fdeed820b8e4d88ec444b446299" title="Returns the transpose of a average gradient operator that converts the OPDs defined...">mkgt()</a>. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00501"></a>00501                                                                {
-<a name="l00502"></a>00502     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *GS0T=<a class="code" href="mkg_8c.html#d2d54fdeed820b8e4d88ec444b446299" title="Returns the transpose of a average gradient operator that converts the OPDs defined...">mkgt</a>(xloc, ploc, amp, saloc, 
-<a name="l00503"></a>00503            saorc, scale, displace, do_partial);
-<a name="l00504"></a>00504     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *GS0=<a class="code" href="dsp_8h.html#c8975e7b8152e52b2c8cd8e785c25310" title="Transpose a sparse array.">sptrans</a>(GS0T);
-<a name="l00505"></a>00505     spfree(GS0T);
-<a name="l00506"></a>00506     <span class="keywordflow">return</span> GS0;
-<a name="l00507"></a>00507 }
-</pre></div>
+Returns the transpose of <a class="el" href="mkg_8c.html#33f93ee06dc231b4912937d07ba05602" title="Returns the transpose of a average gradient operator that converts the OPDs defined...">mkgt()</a>. 
 <p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

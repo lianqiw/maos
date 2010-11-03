@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: mt_state Struct Reference</title>
+<title>maos-0.7.1: mt_state Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,21 +69,73 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="11de820957450a4b49de2e90f046f596"></a><!-- doxytag: member="mt_state::statevec" ref="11de820957450a4b49de2e90f046f596" args="[624]" -->
-mt_u32bit_t&nbsp;</td><td class="memItemRight" valign="bottom"><b>statevec</b> [624]</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">mt_u32bit_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmt__state.html#11de820957450a4b49de2e90f046f596">statevec</a> [624]</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ee0052353c8cec5ac527484928f36745"></a><!-- doxytag: member="mt_state::stateptr" ref="ee0052353c8cec5ac527484928f36745" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>stateptr</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Vector holding current state.  <a href="#11de820957450a4b49de2e90f046f596"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmt__state.html#ee0052353c8cec5ac527484928f36745">stateptr</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7273ec6a71e66185cddddd4372a1c823"></a><!-- doxytag: member="mt_state::initialized" ref="7273ec6a71e66185cddddd4372a1c823" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>initialized</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Next state entry to be used.  <a href="#ee0052353c8cec5ac527484928f36745"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structmt__state.html#7273ec6a71e66185cddddd4372a1c823">initialized</a></td></tr>
 
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NZ if state was initialized.  <a href="#7273ec6a71e66185cddddd4372a1c823"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-Contains state of a random stream. <hr>The documentation for this struct was generated from the following file:<ul>
+Contains state of a random stream. <hr><h2>Field Documentation</h2>
+<a class="anchor" name="11de820957450a4b49de2e90f046f596"></a><!-- doxytag: member="mt_state::statevec" ref="11de820957450a4b49de2e90f046f596" args="[624]" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">mt_u32bit_t <a class="el" href="structmt__state.html#11de820957450a4b49de2e90f046f596">mt_state::statevec</a>[624]          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Vector holding current state. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="ee0052353c8cec5ac527484928f36745"></a><!-- doxytag: member="mt_state::stateptr" ref="ee0052353c8cec5ac527484928f36745" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structmt__state.html#ee0052353c8cec5ac527484928f36745">mt_state::stateptr</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Next state entry to be used. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="7273ec6a71e66185cddddd4372a1c823"></a><!-- doxytag: member="mt_state::initialized" ref="7273ec6a71e66185cddddd4372a1c823" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structmt__state.html#7273ec6a71e66185cddddd4372a1c823">mt_state::initialized</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+NZ if state was initialized. 
+<p>
+
+</div>
+</div><p>
+<hr>The documentation for this struct was generated from the following file:<ul>
 <li>lib/random.h</ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

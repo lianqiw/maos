@@ -1,47 +1,48 @@
-<area shape="rect" id="node3" href="$setup__aper_8c.html#ea65e60525339d2921549850d52e8464" title="Free the aper structure after simulation." alt="" coords="120,165,195,195">
-<area shape="rect" id="node5" href="$maos_2setup__powfs_8c.html#4fdd29141f0d60af1fd7c6b2385f0031" title="Free all parameters of powfs at the end of simulation." alt="" coords="116,219,199,248">
-<area shape="rect" id="node7" href="$setup__aper_8c.html#bf63108c7633e5a353e73cd913fc9c26" title="Setting up aperture cordinate grid aper_locs, and amplitude map for performance evaluation..." alt="" coords="115,272,200,301">
-<area shape="rect" id="node9" href="$maos_2setup__powfs_8c.html#c7b704504acb96d7fbcbdd60f15c6cf8" title="Setup the powfs struct based on parms and aper." alt="" coords="111,325,204,355">
-<area shape="rect" id="node31" href="$setup__recon_8c.html#6ec32666222d37047d7775b874969a2e" title="Sets up the reconstruction structs including wavefront reconstructor and DM fitting..." alt="" coords="111,1605,204,1635">
-<area shape="rect" id="node69" href="$sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop." alt="" coords="136,805,179,835">
-<area shape="rect" id="node96" href="$sim__utils_8c.html#1e1e48b76ff317024b24ae00f7096a56" title="Just do open loop error evalution." alt="" coords="120,619,195,648">
-<area shape="rect" id="node11" href="$maos_2setup__powfs_8c.html#b1890fbc6facc2013338054962b1398a" title="Setting up Detector transfer function used to translate PSFs from FFTs to detector..." alt="" coords="283,5,397,35">
-<area shape="rect" id="node13" href="$maos_2setup__powfs_8c.html#bd59ad37c2a3372a70066e4b5cf34ac1" title="Compute Elongation Transfer function." alt="" coords="283,59,397,88">
-<area shape="rect" id="node15" href="$maos_2setup__powfs_8c.html#7bbae2bc69e06f553d55c7c2d8c68ff3" title="setup the range to sodium layer as an additional parameter." alt="" coords="275,112,405,141">
-<area shape="rect" id="node17" href="$maos_2setup__powfs_8c.html#77b6fd986d6105964adf2c844ee9df87" title="setting up subaperture geometry." alt="" coords="273,165,407,195">
-<area shape="rect" id="node19" href="$maos_2setup__powfs_8c.html#e92ae33f8f650cb9c7975044bd82432f" title="Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture..." alt="" coords="277,219,403,248">
-<area shape="rect" id="node21" href="$maos_2setup__powfs_8c.html#a8ee626a374ebefb84c2d560793c4c1e" title="setting up uplink pts/amp lotf" alt="" coords="285,272,395,301">
-<area shape="rect" id="node23" href="$maos_2setup__powfs_8c.html#a16bf88378b48f5765294689df77c22f" title="Setup the matched filter pixel processing parameters for physical optics wfs." alt="" coords="275,325,405,355">
-<area shape="rect" id="node25" href="$maos_2setup__powfs_8c.html#2589e29c8b5c4bd05b33da3638e8ae53" title="Set up NCPA maps for each WFS." alt="" coords="276,379,404,408">
-<area shape="rect" id="node27" href="$maos_2setup__powfs_8c.html#b1409e69dddf8131559ea35731109bda" title="Prepare the parameters for physical optics setup." alt="" coords="263,432,417,461">
-<area shape="rect" id="node29" href="$maos_2setup__powfs_8c.html#e2eab1b8ad97f659e38afe630140834e" title="Load and smooth out sodium profile." alt="" coords="269,485,411,515">
-<area shape="rect" id="node33" href="$dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="476,1205,527,1235">
-<area shape="rect" id="node35" href="$dmat_8h.html#a9c20ae37907780af63d91312d4fea38" title="creat a X(mat) reference an existing X(mat)." alt="" coords="319,1869,361,1899">
-<area shape="rect" id="node37" href="$dmat_8h.html#705d6399ce6e7f7064d12f4eb131d47d" title="set values of each element in a X(mat) to val." alt="" coords="317,1923,363,1952">
-<area shape="rect" id="node39" href="$fdpcg_8c.html#8af00f91380661f9d85542ac9738ba95" title="Prepare data for Tomography Fourier Domain Preconditioner." alt="" coords="289,1976,391,2005">
-<area shape="rect" id="node41" href="$ahst_8c.html#55c65679c193d90bc7f5175ebb17733f" title="setup NGS modes and reconstructor using AHST for one or two DMs." alt="" coords="287,2029,393,2059">
-<area shape="rect" id="node43" href="$setup__recon_8c.html#0182734530b87fcf5498aea2e8d1e5c0" title="Setup the deformable mirrors grid aloc." alt="" coords="279,2083,401,2112">
-<area shape="rect" id="node45" href="$setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix." alt="" coords="264,1179,416,1208">
-<area shape="rect" id="node47" href="$setup__recon_8c.html#4f4abf13c9b0972de67fab348bb9f470" title="Create the reconstructor to reconstruct the residual focus error due to LGS sodium..." alt="" coords="275,1232,405,1261">
-<area shape="rect" id="node49" href="$setup__recon_8c.html#61353f3760139816643f225db8e6d3bc" title="Setup gradient operator G0, GA on xloc, aloc." alt="" coords="272,1285,408,1315">
-<area shape="rect" id="node51" href="$setup__recon_8c.html#fa92eb0639f142dd512c13688b21d813" title="Setup ray tracing operator HX,HA from xloc, aloc to aperture ploc." alt="" coords="273,1339,407,1368">
-<area shape="rect" id="node53" href="$setup__recon_8c.html#3a5b99570039882f39e51b69236b1a0e" title="Prepare the propagation H matrix for MOAO and compute the reconstructor." alt="" coords="275,1392,405,1421">
-<area shape="rect" id="node55" href="$setup__recon_8c.html#2bd8394adbdb99d342f9ac9d3a0faa6f" title="compute the MVST split tomography NGS mode reconstructor." alt="" coords="277,1445,403,1475">
-<area shape="rect" id="node57" href="$setup__recon_8c.html#928f34035de84ed317aa075e7a7ddac9" title="Setting up PLOC grid, which is a coarse sampled (similar to subaperture spacing)..." alt="" coords="279,1499,401,1528">
-<area shape="rect" id="node59" href="$setup__recon_8c.html#3f6cf2f9b4c4e8dbe3cba7df6a41fa9b" title="Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance..." alt="" coords="271,1552,409,1581">
-<area shape="rect" id="node61" href="$setup__recon_8c.html#764bf903a38cfc81220e42699e911884" title="assemble tomography matrix." alt="" coords="255,1605,425,1635">
-<area shape="rect" id="node63" href="$setup__recon_8c.html#2ade74dd6feba7dba0a4b6f38fe134a8" title="Prepares for tomography." alt="" coords="260,1659,420,1688">
-<area shape="rect" id="node65" href="$setup__recon_8c.html#caa963e8fb3e5e0201f312327e4d94e8" title="wrapps setup_recon_TTR() and setup_recon_DFR() to removal global tip/tilt and differential..." alt="" coords="275,1712,405,1741">
-<area shape="rect" id="node67" href="$setup__recon_8c.html#93517d5a67108f02872fea3ca166df0a" title="Setup the tomography grids xloc which is used for Tomography." alt="" coords="279,1765,401,1795">
-<area shape="rect" id="node71" href="$filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol()." alt="" coords="317,859,363,888">
-<area shape="rect" id="node73" href="$sim__utils_8c.html#84b825eee317f2e6b919c95773cd847f" title="Release memory of simu (of type SIM_T) and close files." alt="" coords="301,645,379,675">
-<area shape="rect" id="node75" href="$sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens." alt="" coords="299,592,381,621">
-<area shape="rect" id="node78" href="$sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84" title="Initialize simu (of type SIM_T) and various simulation data structs." alt="" coords="303,699,377,728">
-<area shape="rect" id="node80" href="$recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into..." alt="" coords="293,912,387,941">
-<area shape="rect" id="node82" href="$perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean..." alt="" coords="311,752,369,781">
-<area shape="rect" id="node84" href="$sim__utils_8c.html#0be16bd01f2529c9b983cbc5db7fe691" title="Print out wavefront error information and timing at each time step." alt="" coords="288,539,392,568">
-<area shape="rect" id="node86" href="$sim__utils_8c.html#245796513a02d7892e76cea88316394e" title="Save telemetry data during simulation every 50 time steps." alt="" coords="299,965,381,995">
-<area shape="rect" id="node88" href="$sim__utils_8c.html#f566f334aaf19cf9ad3ed5a847c2aee9" title="Output parameters necessary to run postproc using skyc/skyc.c." alt="" coords="299,1019,381,1048">
-<area shape="rect" id="node90" href="$sim__utils_8c.html#de5601f0c0ffa73c27aa90ec087d54ac" title="Evolving the Sodium layer by updating the elongation transfer function." alt="" coords="285,1072,395,1101">
-<area shape="rect" id="node92" href="$recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit." alt="" coords="309,1125,371,1155">
-<area shape="rect" id="node94" href="$wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel." alt="" coords="307,805,373,835">
+<area shape="rect" id="node3" href="$setup__aper_8c.html#ea65e60525339d2921549850d52e8464" title="Free the aper structure after simulation." alt="" coords="120,112,195,141">
+<area shape="rect" id="node5" href="$maos_2setup__powfs_8c.html#4fdd29141f0d60af1fd7c6b2385f0031" title="Free all parameters of powfs at the end of simulation." alt="" coords="116,165,199,195">
+<area shape="rect" id="node7" href="$setup__recon_8c.html#810c17bd7027feae0decafb93f48efcf" title="Free the recon struct." alt="" coords="116,219,199,248">
+<area shape="rect" id="node9" href="$setup__aper_8c.html#bf63108c7633e5a353e73cd913fc9c26" title="Setting up aperture cordinate grid aper_locs, and amplitude map for performance evaluation..." alt="" coords="115,272,200,301">
+<area shape="rect" id="node11" href="$maos_2setup__powfs_8c.html#c7b704504acb96d7fbcbdd60f15c6cf8" title="Setup the powfs struct based on parms and aper." alt="" coords="111,325,204,355">
+<area shape="rect" id="node33" href="$setup__recon_8c.html#6ec32666222d37047d7775b874969a2e" title="Sets up the reconstruction structs including wavefront reconstructor and DM fitting..." alt="" coords="111,1605,204,1635">
+<area shape="rect" id="node71" href="$sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop." alt="" coords="136,805,179,835">
+<area shape="rect" id="node98" href="$sim__utils_8c.html#1e1e48b76ff317024b24ae00f7096a56" title="Just do open loop error evalution." alt="" coords="120,619,195,648">
+<area shape="rect" id="node13" href="$maos_2setup__powfs_8c.html#b1890fbc6facc2013338054962b1398a" title="Setting up Detector transfer function used to translate PSFs from FFTs to detector..." alt="" coords="283,5,397,35">
+<area shape="rect" id="node15" href="$maos_2setup__powfs_8c.html#bd59ad37c2a3372a70066e4b5cf34ac1" title="Compute Elongation Transfer function." alt="" coords="283,59,397,88">
+<area shape="rect" id="node17" href="$maos_2setup__powfs_8c.html#7bbae2bc69e06f553d55c7c2d8c68ff3" title="setup the range to sodium layer as an additional parameter." alt="" coords="275,112,405,141">
+<area shape="rect" id="node19" href="$maos_2setup__powfs_8c.html#77b6fd986d6105964adf2c844ee9df87" title="setting up subaperture geometry." alt="" coords="273,165,407,195">
+<area shape="rect" id="node21" href="$maos_2setup__powfs_8c.html#e92ae33f8f650cb9c7975044bd82432f" title="Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture..." alt="" coords="277,219,403,248">
+<area shape="rect" id="node23" href="$maos_2setup__powfs_8c.html#a8ee626a374ebefb84c2d560793c4c1e" title="setting up uplink pts/amp lotf" alt="" coords="285,272,395,301">
+<area shape="rect" id="node25" href="$maos_2setup__powfs_8c.html#a16bf88378b48f5765294689df77c22f" title="Setup the matched filter pixel processing parameters for physical optics wfs." alt="" coords="275,325,405,355">
+<area shape="rect" id="node27" href="$maos_2setup__powfs_8c.html#2589e29c8b5c4bd05b33da3638e8ae53" title="Set up NCPA maps for each WFS." alt="" coords="276,379,404,408">
+<area shape="rect" id="node29" href="$maos_2setup__powfs_8c.html#b1409e69dddf8131559ea35731109bda" title="Prepare the parameters for physical optics setup." alt="" coords="263,432,417,461">
+<area shape="rect" id="node31" href="$maos_2setup__powfs_8c.html#e2eab1b8ad97f659e38afe630140834e" title="Load and smooth out sodium profile." alt="" coords="269,485,411,515">
+<area shape="rect" id="node35" href="$dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="476,1205,527,1235">
+<area shape="rect" id="node37" href="$dmat_8h.html#a9c20ae37907780af63d91312d4fea38" title="creat a X(mat) reference an existing X(mat)." alt="" coords="319,1869,361,1899">
+<area shape="rect" id="node39" href="$dmat_8h.html#705d6399ce6e7f7064d12f4eb131d47d" title="set values of each element in a X(mat) to val." alt="" coords="317,1923,363,1952">
+<area shape="rect" id="node41" href="$fdpcg_8c.html#8af00f91380661f9d85542ac9738ba95" title="Prepare data for Tomography Fourier Domain Preconditioner." alt="" coords="289,1976,391,2005">
+<area shape="rect" id="node43" href="$ahst_8c.html#55c65679c193d90bc7f5175ebb17733f" title="setup NGS modes and reconstructor using AHST for one or two DMs." alt="" coords="287,2029,393,2059">
+<area shape="rect" id="node45" href="$setup__recon_8c.html#0182734530b87fcf5498aea2e8d1e5c0" title="Setup the deformable mirrors grid aloc." alt="" coords="279,2083,401,2112">
+<area shape="rect" id="node47" href="$setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix." alt="" coords="264,1179,416,1208">
+<area shape="rect" id="node49" href="$setup__recon_8c.html#4f4abf13c9b0972de67fab348bb9f470" title="Create the reconstructor to reconstruct the residual focus error due to LGS sodium..." alt="" coords="275,1232,405,1261">
+<area shape="rect" id="node51" href="$setup__recon_8c.html#912dce9181aa58d65477058caa4d0c13" title="Setup gradient operator GX, GA on xloc, aloc." alt="" coords="272,1285,408,1315">
+<area shape="rect" id="node53" href="$setup__recon_8c.html#dcd024580204a29e51a9345202d56e73" title="Setup ray tracing operator HXF,HA from xloc, aloc to aperture ploc." alt="" coords="269,1339,411,1368">
+<area shape="rect" id="node55" href="$setup__recon_8c.html#8300ff84b2b46910d45f4ce801252535" title="Prepare the propagation H matrix for MOAO and compute the reconstructor." alt="" coords="275,1392,405,1421">
+<area shape="rect" id="node57" href="$setup__recon_8c.html#2bd8394adbdb99d342f9ac9d3a0faa6f" title="compute the MVST split tomography NGS mode reconstructor." alt="" coords="277,1445,403,1475">
+<area shape="rect" id="node59" href="$setup__recon_8c.html#928f34035de84ed317aa075e7a7ddac9" title="Setting up PLOC grid, which is a coarse sampled (similar to subaperture spacing)..." alt="" coords="279,1499,401,1528">
+<area shape="rect" id="node61" href="$setup__recon_8c.html#3f6cf2f9b4c4e8dbe3cba7df6a41fa9b" title="Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance..." alt="" coords="271,1552,409,1581">
+<area shape="rect" id="node63" href="$setup__recon_8c.html#764bf903a38cfc81220e42699e911884" title="assemble tomography matrix." alt="" coords="255,1605,425,1635">
+<area shape="rect" id="node65" href="$setup__recon_8c.html#2ade74dd6feba7dba0a4b6f38fe134a8" title="Prepares for tomography." alt="" coords="260,1659,420,1688">
+<area shape="rect" id="node67" href="$setup__recon_8c.html#caa963e8fb3e5e0201f312327e4d94e8" title="wrapps setup_recon_TTR() and setup_recon_DFR() to removal global tip/tilt and differential..." alt="" coords="275,1712,405,1741">
+<area shape="rect" id="node69" href="$setup__recon_8c.html#93517d5a67108f02872fea3ca166df0a" title="Setup the tomography grids xloc which is used for Tomography." alt="" coords="279,1765,401,1795">
+<area shape="rect" id="node73" href="$filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol()." alt="" coords="317,859,363,888">
+<area shape="rect" id="node75" href="$sim__utils_8c.html#84b825eee317f2e6b919c95773cd847f" title="Release memory of simu (of type SIM_T) and close files." alt="" coords="301,645,379,675">
+<area shape="rect" id="node77" href="$sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens." alt="" coords="299,592,381,621">
+<area shape="rect" id="node80" href="$sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84" title="Initialize simu (of type SIM_T) and various simulation data structs." alt="" coords="303,699,377,728">
+<area shape="rect" id="node82" href="$recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into..." alt="" coords="293,912,387,941">
+<area shape="rect" id="node84" href="$perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean..." alt="" coords="311,752,369,781">
+<area shape="rect" id="node86" href="$sim__utils_8c.html#0be16bd01f2529c9b983cbc5db7fe691" title="Print out wavefront error information and timing at each time step." alt="" coords="288,539,392,568">
+<area shape="rect" id="node88" href="$sim__utils_8c.html#245796513a02d7892e76cea88316394e" title="Save telemetry data during simulation every 50 time steps." alt="" coords="299,965,381,995">
+<area shape="rect" id="node90" href="$sim__utils_8c.html#f566f334aaf19cf9ad3ed5a847c2aee9" title="Output parameters necessary to run postproc using skyc/skyc.c." alt="" coords="299,1019,381,1048">
+<area shape="rect" id="node92" href="$sim__utils_8c.html#de5601f0c0ffa73c27aa90ec087d54ac" title="Evolving the Sodium layer by updating the elongation transfer function." alt="" coords="285,1072,395,1101">
+<area shape="rect" id="node94" href="$recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit." alt="" coords="309,1125,371,1155">
+<area shape="rect" id="node96" href="$wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel." alt="" coords="307,805,373,835">

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: skyc/genstars.c File Reference</title>
+<title>maos-0.7.1: skyc/genstars.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,12 +69,12 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="979623c2f8146085a7cc71eaaadb7cd8"></a><!-- doxytag: member="genstars.c::sortfun" ref="979623c2f8146085a7cc71eaaadb7cd8" args="(const double *p1, const double *p2)" -->
-static int&nbsp;</td><td class="memItemRight" valign="bottom"><b>sortfun</b> (const double *p1, const double *p2)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genstars_8c.html#979623c2f8146085a7cc71eaaadb7cd8">sortfun</a> (const double *p1, const double *p2)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genstars_8c.html#9f53e5550f298d818117d6a19b45d331">genstars</a> (long nsky, double lat, double lon, double catscl, double fov, int nwvl, double *wvls, <a class="el" href="structmt__state.html">mt_state</a> *rstat)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The sort function for stars.  <a href="#979623c2f8146085a7cc71eaaadb7cd8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genstars_8c.html#f377e43e41abef8317d6537d636910b1">genstars</a> (long nsky, double lat, double lon, double catscl, double fov, int nwvl, double *wvls, <a class="el" href="structmt__state.html">rand_t</a> *rstat)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate stars for nsky star fields from star catalog.  <a href="#9f53e5550f298d818117d6a19b45d331"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate stars for nsky star fields from star catalog.  <a href="#f377e43e41abef8317d6537d636910b1"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genstars_8c.html#de78e28809f94fa8b6e65bb1e3e563d0">sortstars</a> (<a class="el" href="structdcell.html">dcell</a> *stars)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sort the stars with J band magnitude from brightest to dimmest.  <a href="#de78e28809f94fa8b6e65bb1e3e563d0"></a><br></td></tr>
@@ -83,7 +83,38 @@ static int&nbsp;</td><td class="memItemRight" valign="bottom"><b>sortfun</b> (co
 Generate random stars from besancon star counting model. 
 <p>
 The data file contains J and H magnitudes of all stars within 5 square degree FoV. The location of the stars are assumed to be randomly distributed. Therefore, the possible number of stars within any sub-field is a poisson distribution with mean equal to the average density multiplied with area. <hr><h2>Function Documentation</h2>
-<a class="anchor" name="9f53e5550f298d818117d6a19b45d331"></a><!-- doxytag: member="genstars.c::genstars" ref="9f53e5550f298d818117d6a19b45d331" args="(long nsky, double lat, double lon, double catscl, double fov, int nwvl, double *wvls, mt_state *rstat)" -->
+<a class="anchor" name="979623c2f8146085a7cc71eaaadb7cd8"></a><!-- doxytag: member="genstars.c::sortfun" ref="979623c2f8146085a7cc71eaaadb7cd8" args="(const double *p1, const double *p2)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int sortfun           </td>
+          <td>(</td>
+          <td class="paramtype">const double *&nbsp;</td>
+          <td class="paramname"> <em>p1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double *&nbsp;</td>
+          <td class="paramname"> <em>p2</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+The sort function for stars. 
+<p>
+Sort stars according total flux. 
+</div>
+</div><p>
+<a class="anchor" name="f377e43e41abef8317d6537d636910b1"></a><!-- doxytag: member="genstars.c::genstars" ref="f377e43e41abef8317d6537d636910b1" args="(long nsky, double lat, double lon, double catscl, double fov, int nwvl, double *wvls, rand_t *rstat)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -132,7 +163,7 @@ The data file contains J and H magnitudes of all stars within 5 square degree Fo
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structmt__state.html">mt_state</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structmt__state.html">rand_t</a> *&nbsp;</td>
           <td class="paramname"> <em>rstat</em></td><td>&nbsp;</td>
         </tr>
         <tr>
@@ -160,55 +191,6 @@ Generate stars for nsky star fields from star catalog.
     <tr><td valign="top"></td><td valign="top"><em>rstat</em>&nbsp;</td><td>random stream </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00050"></a>00050  {
-<a name="l00051"></a>00051     <span class="keywordtype">char</span> temp[80];
-<a name="l00052"></a>00052     <span class="keywordtype">double</span> cat_fov;<span class="comment">//catalogue fov</span>
-<a name="l00053"></a>00053     <span class="keywordflow">if</span>(nwvl==2 &amp;&amp; fabs(wvls[0]-1.25e-6)&lt;1.e-10 &amp;&amp; fabs(wvls[1]-1.65e-6)&lt;1.e-10){
-<a name="l00054"></a>00054     snprintf(temp,80,<span class="stringliteral">"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin.gz"</span>, lat, lon);
-<a name="l00055"></a>00055     cat_fov=5.0;<span class="comment">//5 arc-degree squared.</span>
-<a name="l00056"></a>00056     }<span class="keywordflow">else</span>{
-<a name="l00057"></a>00057     error(<span class="stringliteral">"We only have stars for J+H band. Please fill this part\n"</span>);
-<a name="l00058"></a>00058     }
-<a name="l00059"></a>00059     <span class="keywordtype">char</span> *fn=<a class="code" href="path_8c.html#25730e4c54130615ab7657ac89c39150" title="Locate a file in path and return its absolute filename.">find_file</a>(temp);
-<a name="l00060"></a>00060     info(<span class="stringliteral">"Loading star catalogue from \n%s\n"</span>,fn);
-<a name="l00061"></a>00061     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *catalog=<a class="code" href="dmat_8h.html#6406403e91ec976bb0d6c2e12b5d5a0f" title="User callable function to read dense matrix into memory from file.">dread</a>(<span class="stringliteral">"%s"</span>,fn); free(fn);
-<a name="l00062"></a>00062     <span class="keywordflow">if</span>(catalog-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>!=nwvl){
-<a name="l00063"></a>00063     error(<span class="stringliteral">"Catalogue and wanted doesn't match\n"</span>);
-<a name="l00064"></a>00064     }
-<a name="l00065"></a>00065     <span class="keywordtype">long</span> ntot=catalog-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>;
-<a name="l00066"></a>00066     <span class="keywordtype">double</span> navg=M_PI*pow(fov/2./3600.,2)/cat_fov * ntot * catscl;
-<a name="l00067"></a>00067     info(<span class="stringliteral">"Average number of stars: %g, after scaled by %g\n"</span>, navg, catscl);
-<a name="l00068"></a>00068     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *res=dcellnew(nsky,1);
-<a name="l00069"></a>00069     PDMAT(catalog, pcatalog);
-<a name="l00070"></a>00070     <span class="keywordtype">double</span> fov22=pow(fov/2/206265,2);
-<a name="l00071"></a>00071     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> isky=0; isky&lt;nsky; isky++){
-<a name="l00072"></a>00072     <span class="keywordtype">long</span> nstar=randp(rstat, navg);
-<a name="l00073"></a>00073     <span class="keywordflow">if</span>(nstar&gt;0){
-<a name="l00074"></a>00074         res-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(nwvl+2, nstar);
-<a name="l00075"></a>00075         PDMAT(res-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky],pres);
-<a name="l00076"></a>00076         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> istar=0; istar&lt;nstar; istar++){
-<a name="l00077"></a>00077         <span class="keywordtype">long</span> ind=round(ntot*randu(rstat));<span class="comment">//randomly draw a star index in the catlog</span>
-<a name="l00078"></a>00078         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iwvl=0; iwvl&lt;nwvl; iwvl++){
-<a name="l00079"></a>00079             pres[istar][2+iwvl]=pcatalog[iwvl][ind];
-<a name="l00080"></a>00080         }
-<a name="l00081"></a>00081         <span class="comment">//randomly draw the star location.</span>
-<a name="l00082"></a>00082         <span class="keywordtype">double</span> r=sqrt(fov22*randu(rstat));
-<a name="l00083"></a>00083         <span class="keywordtype">double</span> th=2*M_PI*randu(rstat);
-<a name="l00084"></a>00084         pres[istar][0]=r*cos(th);
-<a name="l00085"></a>00085         pres[istar][1]=r*sin(th);
-<a name="l00086"></a>00086         }
-<a name="l00087"></a>00087         <span class="comment">//sort the stars from brigtest to dimmest</span>
-<a name="l00088"></a>00088         qsort(res-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, res-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>, res-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>*<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>), 
-<a name="l00089"></a>00089           (<span class="keywordtype">int</span>(*)(<span class="keyword">const</span> <span class="keywordtype">void</span>*, <span class="keyword">const</span> <span class="keywordtype">void</span>*))sortfun);
-<a name="l00090"></a>00090     }<span class="keywordflow">else</span>{
-<a name="l00091"></a>00091         res-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]=NULL;
-<a name="l00092"></a>00092     }
-<a name="l00093"></a>00093     }
-<a name="l00094"></a>00094     dfree(catalog);
-<a name="l00095"></a>00095     <span class="keywordflow">return</span> res;
-<a name="l00096"></a>00096 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -231,20 +213,11 @@ Generate stars for nsky star fields from star catalog.
 <p>
 Sort the stars with J band magnitude from brightest to dimmest. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00100"></a>00100                             {
-<a name="l00101"></a>00101     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> isky=0; isky&lt;stars-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>*stars-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>; isky++){
-<a name="l00102"></a>00102     <span class="keywordflow">if</span>(!stars-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]) <span class="keywordflow">continue</span>;
-<a name="l00103"></a>00103     qsort(stars-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, stars-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>,stars-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isky]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>*<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>),
-<a name="l00104"></a>00104           (<span class="keywordtype">int</span>(*)(<span class="keyword">const</span> <span class="keywordtype">void</span>*, <span class="keyword">const</span> <span class="keywordtype">void</span> *))sortfun);
-<a name="l00105"></a>00105     }
-<a name="l00106"></a>00106 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

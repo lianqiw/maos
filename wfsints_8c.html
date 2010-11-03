@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: maos/wfsints.c File Reference</title>
+<title>maos-0.7.1: maos/wfsints.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -63,7 +63,7 @@ window.onload = initDynSections;
   </div>
 </div>
 <div class="contents">
-<h1>maos/wfsints.c File Reference</h1>Contains <a class="el" href="wfsints_8c.html#401f9870f0cf424f8899e389681671dc" title="compute physical optics images and add to ints.">wfsints()</a> that computes physical optics WFS subaperture images from OPDs.  
+<h1>maos/wfsints.c File Reference</h1>Contains <a class="el" href="wfsints_8c.html#a4db5730b6e86224b2c446405d974b93" title="compute physical optics images and add to ints.">wfsints()</a> that computes physical optics WFS subaperture images from OPDs.  
 <a href="#_details">More...</a>
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -73,15 +73,15 @@ window.onload = initDynSections;
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>TIMING</b></td></tr>
 
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsints_8c.html#401f9870f0cf424f8899e389681671dc">wfsints</a> (<a class="el" href="structdcell.html">dcell</a> *ints, <a class="el" href="structccell.html">ccell</a> *psfout, <a class="el" href="structdcell.html">dcell</a> *pistatout, const <a class="el" href="structdmat.html">dmat</a> *gradref, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, int isim, const <a class="el" href="structdmat.html">dmat</a> *opd, const <a class="el" href="structdmat.html">dmat</a> *lltopd)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsints_8c.html#a4db5730b6e86224b2c446405d974b93">wfsints</a> (<a class="el" href="structdcell.html">dcell</a> *ints, <a class="el" href="structccell.html">ccell</a> *psfout, <a class="el" href="structdcell.html">dcell</a> *pistatout, const <a class="el" href="structdmat.html">dmat</a> *gradref, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, const <a class="el" href="structdmat.html">dmat</a> *opd, const <a class="el" href="structdmat.html">dmat</a> *lltopd)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute physical optics images and add to ints.  <a href="#401f9870f0cf424f8899e389681671dc"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute physical optics images and add to ints.  <a href="#a4db5730b6e86224b2c446405d974b93"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-Contains <a class="el" href="wfsints_8c.html#401f9870f0cf424f8899e389681671dc" title="compute physical optics images and add to ints.">wfsints()</a> that computes physical optics WFS subaperture images from OPDs. 
+Contains <a class="el" href="wfsints_8c.html#a4db5730b6e86224b2c446405d974b93" title="compute physical optics images and add to ints.">wfsints()</a> that computes physical optics WFS subaperture images from OPDs. 
 <p>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="401f9870f0cf424f8899e389681671dc"></a><!-- doxytag: member="wfsints.c::wfsints" ref="401f9870f0cf424f8899e389681671dc" args="(dcell *ints, ccell *psfout, dcell *pistatout, const dmat *gradref, const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int isim, const dmat *opd, const dmat *lltopd)" -->
+<a class="anchor" name="a4db5730b6e86224b2c446405d974b93"></a><!-- doxytag: member="wfsints.c::wfsints" ref="a4db5730b6e86224b2c446405d974b93" args="(dcell *ints, ccell *psfout, dcell *pistatout, const dmat *gradref, const PARMS_T *parms, const POWFS_T *powfs, int iwfs, const dmat *opd, const dmat *lltopd)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -130,12 +130,6 @@ Contains <a class="el" href="wfsints_8c.html#401f9870f0cf424f8899e389681671dc" t
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>isim</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&nbsp;</td>
           <td class="paramname"> <em>opd</em>, </td>
         </tr>
@@ -157,285 +151,11 @@ Contains <a class="el" href="wfsints_8c.html#401f9870f0cf424f8899e389681671dc" t
 <p>
 compute physical optics images and add to ints. 
 <p>
-be careful that fftw inverse fft doesn't have 1/n^2 scaling. this function lives inside the threading routine wfsgradx <div class="fragment"><pre class="fragment"><a name="l00038"></a>00038                                             {
-<a name="l00039"></a>00039     
-<a name="l00040"></a>00040     <span class="keyword">const</span> <span class="keywordtype">int</span> ipowfs=parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#c6eeef5eba99a8dea64c1692bb60f5ff" title="powfs type">powfs</a>;
-<a name="l00041"></a>00041     <span class="keyword">const</span> <span class="keywordtype">int</span> hasllt=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#649a628036ca2785673990cc5af15c13" title="whether having llt.">hasllt</a>;
-<a name="l00042"></a>00042     <span class="keyword">const</span> <span class="keywordtype">int</span> nsa=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#b60c0105ea57177379331a702f3bf054">pts</a>-&gt;<a class="code" href="structPTS__T.html#0ee420c53f81102c0120b6a1014d4673" title="number of subapertures.">nsa</a>;
-<a name="l00043"></a>00043     <span class="keyword">const</span> <span class="keywordtype">int</span> nx=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#b60c0105ea57177379331a702f3bf054">pts</a>-&gt;<a class="code" href="structPTS__T.html#b91d3c743b83de5ad8bda5920e3ee0e4" title="number of col and row of points per subaperture">nx</a>;
-<a name="l00044"></a>00044     <span class="keyword">const</span> <span class="keywordtype">int</span> ncompx=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#67bf34f36dd078a571e7a14cdf0755de">ncompx</a>;<span class="comment">//necessary size to build detector image.</span>
-<a name="l00045"></a>00045     <span class="keyword">const</span> <span class="keywordtype">int</span> ncompy=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#21071d969e8a6f006203a6c004339e0f">ncompy</a>;
-<a name="l00046"></a>00046     <span class="keyword">const</span> <span class="keywordtype">int</span> npsf=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#b60c0105ea57177379331a702f3bf054">pts</a>-&gt;<a class="code" href="structPTS__T.html#b91d3c743b83de5ad8bda5920e3ee0e4" title="number of col and row of points per subaperture">nx</a>*parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#d58b943a21a2fabebd9e9acdc83ff3d4" title="Embed subaperture atm OPD before fft.">embfac</a>;
-<a name="l00047"></a>00047     <span class="keyword">const</span> <span class="keywordtype">int</span> nwvl=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#6e5b056212ee8f0d6c64d447b87f19e7" title="Number of wavelength.">nwvl</a>;
-<a name="l00048"></a>00048 
-<a name="l00049"></a>00049     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *psflarge=NULL;
-<a name="l00050"></a>00050     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *psf=NULL;
-<a name="l00051"></a>00051     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *psftmp=NULL;
-<a name="l00052"></a>00052     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *otf=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(ncompx,ncompy);
-<a name="l00053"></a>00053     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(otf,-1);
-<a name="l00054"></a>00054     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(otf,1);
-<a name="l00055"></a>00055     <span class="comment">//make sure we use 2d for LGS, need to multiply to lotfc.</span>
-<a name="l00056"></a>00056     <span class="keyword">const</span> <span class="keywordtype">int</span> use1d=(npsf&gt;ncompy?1:0)&amp;&amp;(!hasllt)&amp;&amp;(!lltopd);
-<a name="l00057"></a>00057     <span class="keyword">const</span> <span class="keywordtype">int</span> ncompm=ncompx&gt;ncompy?ncompx:ncompy;
-<a name="l00058"></a>00058     <span class="keyword">const</span> <span class="keywordtype">int</span> nxsa=nx*nx;
-<a name="l00059"></a>00059     <span class="keywordflow">if</span>(use1d){
-<a name="l00060"></a>00060     psflarge=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(npsf,npsf);
-<a name="l00061"></a>00061     <a class="code" href="fft_8c.html#c952e6cd84358728122ec12213811b90" title="make plans for cfft2partial">cfft2partialplan</a>(psflarge,ncompm, -1);
-<a name="l00062"></a>00062     <span class="comment">//there should be no inverse fft2 here.</span>
-<a name="l00063"></a>00063     psf=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(ncompx,ncompy);
-<a name="l00064"></a>00064     }<span class="keywordflow">else</span>{
-<a name="l00065"></a>00065     psf=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(npsf,npsf);
-<a name="l00066"></a>00066     }
-<a name="l00067"></a>00067     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(psf,-1);
-<a name="l00068"></a>00068     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(psf,1);
-<a name="l00069"></a>00069   
-<a name="l00070"></a>00070     <span class="keywordtype">int</span> illt=0;
-<a name="l00071"></a>00071     <span class="keywordflow">if</span>(hasllt){
-<a name="l00072"></a>00072     <span class="comment">//has llt</span>
-<a name="l00073"></a>00073     <span class="keyword">const</span> <span class="keywordtype">int</span> indwfs=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#ac1b34e2f1f4455c53212bc350f5064b" title="indwfs[iwfs] gives the index of the wfs in this powfs group">indwfs</a>[iwfs];
-<a name="l00074"></a>00074     illt=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#13e13c12137584448baeae372526550e" title="configuration for LLT">llt</a>-&gt;<a class="code" href="structLLT__CFG__T.html#8b48a0d2966a34279ed54edf5f5ed7a0" title="Index into llt for this iwfs.">i</a>[indwfs];
-<a name="l00075"></a>00075     }
-<a name="l00076"></a>00076     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *fftpsfout=NULL;
-<a name="l00077"></a>00077     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *(*ppsfout)[nsa]=NULL;
-<a name="l00078"></a>00078     <span class="keywordflow">if</span>(psfout){
-<a name="l00079"></a>00079     assert(psfout-&gt;<a class="code" href="structccell.html#b08666a33e3b77dc0ebad13f58cd6f86" title="number of rows">nx</a>==nsa &amp;&amp; psfout-&gt;<a class="code" href="structccell.html#02882865ece8aa1dab5515077834d67e" title="number of columns">ny</a>==nwvl);
-<a name="l00080"></a>00080     ppsfout=(<span class="keywordtype">void</span>*)psfout-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>;
-<a name="l00081"></a>00081     fftpsfout=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(psf-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>, psf-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>);
-<a name="l00082"></a>00082     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(fftpsfout,1);
-<a name="l00083"></a>00083     }
-<a name="l00084"></a>00084     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *(*ppistatout)[nsa]=NULL;
-<a name="l00085"></a>00085     <span class="keywordtype">double</span> *gx=NULL; <span class="keywordtype">double</span> *gy=NULL;
-<a name="l00086"></a>00086     <span class="keywordflow">if</span>(pistatout){
-<a name="l00087"></a>00087     assert(pistatout-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>==nsa &amp;&amp; pistatout-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>==nwvl);
-<a name="l00088"></a>00088     ppistatout=(<span class="keywordtype">void</span>*)pistatout-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>;
-<a name="l00089"></a>00089     psftmp=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(psf-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>,psf-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>);
-<a name="l00090"></a>00090     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(psftmp,1);
-<a name="l00091"></a>00091     <span class="keywordflow">if</span>(gradref){
-<a name="l00092"></a>00092         gx=gradref-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00093"></a>00093         gy=gradref-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>+nsa;
-<a name="l00094"></a>00094     }
-<a name="l00095"></a>00095     }
-<a name="l00096"></a>00096 
-<a name="l00097"></a>00097     <span class="keywordtype">int</span> ilocm=0;
-<a name="l00098"></a>00098     <span class="keywordflow">if</span>(powfs[ipowfs].locm &amp;&amp; powfs[ipowfs].nlocm&gt;1){<span class="comment">//misregistration.</span>
-<a name="l00099"></a>00099     ilocm=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#ac1b34e2f1f4455c53212bc350f5064b" title="indwfs[iwfs] gives the index of the wfs in this powfs group">indwfs</a>[iwfs];
-<a name="l00100"></a>00100     }
-<a name="l00101"></a>00101     <span class="keywordtype">double</span> *realamp;
-<a name="l00102"></a>00102     <span class="keywordflow">if</span>(powfs[ipowfs].locm){
-<a name="l00103"></a>00103     realamp=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#8c4f3f1f3e24ea9b5e2d08c5798a901b">ampm</a>[ilocm];
-<a name="l00104"></a>00104     }<span class="keywordflow">else</span>{
-<a name="l00105"></a>00105     realamp=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#f406342d034ac6bda9785ba035e61ceb">amp</a>;
-<a name="l00106"></a>00106     }
-<a name="l00107"></a>00107 
-<a name="l00108"></a>00108     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iwvl=0; iwvl&lt;nwvl; iwvl++){
-<a name="l00109"></a>00109     
-<a name="l00110"></a>00110     <span class="keywordtype">double</span> wvl=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#086be0f3919fffb2809d891e895bab83" title="list of wavelength">wvl</a>[iwvl];
-<a name="l00111"></a>00111     <span class="keyword">const</span> <span class="keywordtype">double</span> dtheta1=(powfs[ipowfs].<a class="code" href="structPOWFS__T.html#b60c0105ea57177379331a702f3bf054">pts</a>-&gt;<a class="code" href="structPTS__T.html#b91d3c743b83de5ad8bda5920e3ee0e4" title="number of col and row of points per subaperture">nx</a>*parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#d58b943a21a2fabebd9e9acdc83ff3d4" title="Embed subaperture atm OPD before fft.">embfac</a>
-<a name="l00112"></a>00112                   *powfs[ipowfs].<a class="code" href="structPOWFS__T.html#b60c0105ea57177379331a702f3bf054">pts</a>-&gt;<a class="code" href="structPTS__T.html#bb59cf5f9d52f9eb787a71f78d23f5cf" title="sampling of points in each subaperture">dx</a>)/wvl;
-<a name="l00113"></a>00113     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *lotfc=NULL;
-<a name="l00114"></a>00114     <span class="comment">//const double lltxc=parms-&gt;powfs[ipowfs].llt[iwfs].ox;</span>
-<a name="l00115"></a>00115     <span class="keywordflow">if</span>(lltopd){
-<a name="l00116"></a>00116         lotfc=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(npsf,npsf);
-<a name="l00117"></a>00117         <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(lotfc,-1);
-<a name="l00118"></a>00118         <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(lotfc,1);
-<a name="l00119"></a>00119         <span class="comment">//build otf. use same config as subaperture</span>
-<a name="l00120"></a>00120         <a class="code" href="cmat__extra_8c.html#b7a468d8dccd7e9095745af0367d51c6" title="reshape amp.">cembed_wvf</a>(lotfc,lltopd-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,powfs[ipowfs].<a class="code" href="structPOWFS__T.html#34262914f5314a1e008aa158010dab9d">lotf</a>-&gt;<a class="code" href="structLOTF__T.html#87490e75239e15d544b5e8a61ee084ae" title="The amplitude defined on loc.">amp</a>,nx,nx,wvl,0);
-<a name="l00121"></a>00121         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(lotfc,-1);
-<a name="l00122"></a>00122         <a class="code" href="cmat__extra_8c.html#23f317cbb6e5cad3b80acefd960f7c7f" title="Put abs square of each element into its realpart.">cabs2toreal</a>(lotfc);
-<a name="l00123"></a>00123         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(lotfc,1);<span class="comment">//lotfc has peak npsf*npsf in corner.</span>
-<a name="l00124"></a>00124         <span class="comment">//lotfc need to be scaled by 1/(npsf*npsf).</span>
-<a name="l00125"></a>00125         <span class="comment">// another 1/(npsf*npsf) to cancel out this FFT pair later.</span>
-<a name="l00126"></a>00126         <span class="comment">//cscale(lotfc,1./(double)((long)npsf*npsf*npsf*npsf));</span>
-<a name="l00127"></a>00127         <a class="code" href="cmat_8h.html#204751357459432e00c5f5ee8d261f56" title="scale each element of A by w">cscale</a>(lotfc,1./(<span class="keywordtype">double</span>)((<span class="keywordtype">long</span>)npsf*npsf));<span class="comment">//max of 1</span>
-<a name="l00128"></a>00128         <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#fc81107952639fb2bf16950bc6ec2bc6" title="derived parameter to specify which powfs to save opd">powfs_opd</a>[ipowfs]){
-<a name="l00129"></a>00129         <a class="code" href="cmat_8h.html#9593e890699be4f48e826d9048018c04" title="User callable function to write dense matrix into a file.">cwrite</a>(lotfc,<span class="stringliteral">"lotfc_%d_wfs%d.bin"</span>,isim,iwfs);
-<a name="l00130"></a>00130         }
-<a name="l00131"></a>00131     }
-<a name="l00132"></a>00132 <span class="preprocessor">#if ROT_OTF == 1</span>
-<a name="l00133"></a>00133 <span class="preprocessor"></span>    <span class="keywordtype">double</span> xscale=(double)npsf/(<span class="keywordtype">double</span>)ncompx;
-<a name="l00134"></a>00134     <span class="keywordtype">double</span> yscale=(double)npsf/(<span class="keywordtype">double</span>)ncompy;
-<a name="l00135"></a>00135 <span class="preprocessor">#endif</span>
-<a name="l00136"></a>00136 <span class="preprocessor"></span>    <span class="comment">/*</span>
-<a name="l00137"></a>00137 <span class="comment"></span>
-<a name="l00138"></a>00138 <span class="comment">      Originally norm=(powfs[ipowfs].pts-&gt;area[isa]/maxarea)</span>
-<a name="l00139"></a>00139 <span class="comment">      /(powfs[ipowfs].pts-&gt;sumamp2[isa]*npsf*npsf*ncompx*ncompy);</span>
-<a name="l00140"></a>00140 <span class="comment">      with maxarea=max(powfs[ipowfs].pts-&gt;area[isa]);</span>
-<a name="l00141"></a>00141 <span class="comment">      where </span>
-<a name="l00142"></a>00142 <span class="comment">      (ncompx*ncompy) is to cancel out the scaling in DTF nominal.</span>
-<a name="l00143"></a>00143 <span class="comment">      *npsf*npsf is to cancel out psf normalization</span>
-<a name="l00144"></a>00144 <span class="comment"></span>
-<a name="l00145"></a>00145 <span class="comment">      The area is normalized by square subaperture area.</span>
-<a name="l00146"></a>00146 <span class="comment">      We have powfs[ipowfs].pts-&gt;area[isa]=powfs[ipowfs].pts-&gt;sumamp2[isa]*dx*dx/(dsa*dsa);</span>
-<a name="l00147"></a>00147 <span class="comment">      therefore powfs[ipowfs].pts-&gt;area[isa]/powfs[ipowfs].pts-&gt;sumamp2[isa])</span>
-<a name="l00148"></a>00148 <span class="comment">      =dsa*dsa/(dx*dx)=pts-&gt;nx*pts-&gt;nx;</span>
-<a name="l00149"></a>00149 <span class="comment">      therefore norm=(1/maxarea)/(pts-&gt;nx*pts-&gt;nx*npsfx*npsfy*ncompx*ncompy);</span>
-<a name="l00150"></a>00150 <span class="comment">      we set 1/maxarea to powfs[ipowfs].areascale .</span>
-<a name="l00151"></a>00151 <span class="comment">      so the new norm becomes</span>
-<a name="l00152"></a>00152 <span class="comment">      norm=norm_otf/(ncompx*nocmpy);</span>
-<a name="l00153"></a>00153 <span class="comment">      with norm_otf=areascale/(pts-&gt;nx*pts-&gt;nx*npsf*npsf));</span>
-<a name="l00154"></a>00154 <span class="comment"></span>
-<a name="l00155"></a>00155 <span class="comment">      </span>
-<a name="l00156"></a>00156 <span class="comment">      Notice that fftw ifft doesn't normalize. a forward</span>
-<a name="l00157"></a>00157 <span class="comment">      and backward fft doesn't bring data back to</span>
-<a name="l00158"></a>00158 <span class="comment">      original value, instead Nx*Ny times larger.</span>
-<a name="l00159"></a>00159 <span class="comment"></span>
-<a name="l00160"></a>00160 <span class="comment">      Notice: the non-rotated case is handled properly</span>
-<a name="l00161"></a>00161 <span class="comment">      in ROT_OTF or ROT_PSF mode without executing extra</span>
-<a name="l00162"></a>00162 <span class="comment">      FFT.</span>
-<a name="l00163"></a>00163 <span class="comment">     */</span>
-<a name="l00164"></a>00164 
-<a name="l00165"></a>00165     <span class="comment">//normalize complex psf</span>
-<a name="l00166"></a>00166     <span class="keywordtype">double</span> norm_psf=sqrt(powfs[ipowfs].areascale)/((double)powfs[ipowfs].pts-&gt;nx*npsf);
-<a name="l00167"></a>00167     <span class="keywordtype">double</span> norm_otf;
-<a name="l00168"></a>00168 <span class="preprocessor">#if ROT_OTF == 1</span>
-<a name="l00169"></a>00169 <span class="preprocessor"></span>    <span class="comment">//norm_otf noramlized otf before mul ccwm to 1.</span>
-<a name="l00170"></a>00170     norm_otf=norm_psf*norm_psf;
-<a name="l00171"></a>00171 <span class="preprocessor">#else</span>
-<a name="l00172"></a>00172 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(lltopd || ppistatout){
-<a name="l00173"></a>00173         norm_otf=norm_psf*norm_psf/((double)psf-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>*psf-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>);
-<a name="l00174"></a>00174     }<span class="keywordflow">else</span>{
-<a name="l00175"></a>00175         norm_otf=norm_psf*norm_psf;
-<a name="l00176"></a>00176     }
-<a name="l00177"></a>00177 <span class="preprocessor">#endif</span>
-<a name="l00178"></a>00178 <span class="preprocessor"></span>    <span class="comment">//this ncompx*ncompy is due to cfft2 after </span>
-<a name="l00179"></a>00179     <span class="comment">//cwm and detector transfer function.</span>
-<a name="l00180"></a>00180     <span class="keywordtype">double</span> norm=norm_otf/((double)ncompx*ncompy);
-<a name="l00181"></a>00181     <span class="comment">//normalized pistat</span>
-<a name="l00182"></a>00182     <span class="keywordtype">double</span> norm_pistat=norm_psf*norm_psf/((double)psf-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>*psf-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>);
-<a name="l00183"></a>00183     <span class="keywordtype">int</span> multi_nominal=(powfs[ipowfs].<a class="code" href="structPOWFS__T.html#e9fc7510d040ab4d3b80fdd1b4194f9e">dtf</a>[iwvl].<a class="code" href="structDTF__T.html#e3f3495e330b12ff92cbd0370793df26" title="The pixel selection.">si</a>-&gt;<a class="code" href="structspcell.html#ba098ee8e31aa0222beb2c25c9ab1e3a" title="number of rows">nx</a>==nsa);
-<a name="l00184"></a>00184     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *nominal=NULL;
-<a name="l00185"></a>00185     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *si=NULL;
-<a name="l00186"></a>00186     <span class="keywordflow">if</span>(!multi_nominal){
-<a name="l00187"></a>00187         <span class="comment">/*true only if 1) no elongation, 2) no radpix or 3) radpix &amp;&amp; radrot is true*/</span>
-<a name="l00188"></a>00188         <span class="keywordflow">if</span>(!powfs[ipowfs].dtf[iwvl].fused){
-<a name="l00189"></a>00189         nominal=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#e9fc7510d040ab4d3b80fdd1b4194f9e">dtf</a>[iwvl].<a class="code" href="structDTF__T.html#09ef991e4e93b35bef6106fb80030ffd" title="The FFT of the pixel functions.">nominal</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[0];
-<a name="l00190"></a>00190         }
-<a name="l00191"></a>00191         si=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#e9fc7510d040ab4d3b80fdd1b4194f9e">dtf</a>[iwvl].<a class="code" href="structDTF__T.html#e3f3495e330b12ff92cbd0370793df26" title="The pixel selection.">si</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[0];
-<a name="l00192"></a>00192     }
-<a name="l00193"></a>00193     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *(*petf)[nsa]=NULL;
-<a name="l00194"></a>00194     void (*pccwm)(<a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a>*,<span class="keyword">const</span> <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a>*,<span class="keyword">const</span> cmat*)=NULL;
-<a name="l00195"></a>00195     <span class="keywordflow">if</span>(hasllt){
-<a name="l00196"></a>00196         <span class="keywordflow">if</span>(powfs[ipowfs].etfsim[iwvl].p1){
-<a name="l00197"></a>00197         petf=(<span class="keywordtype">void</span>*)powfs[ipowfs].etfsim[iwvl].p1-&gt;p;
-<a name="l00198"></a>00198         pccwm=<a class="code" href="cmat__extra_8c.html#c537b0ad1d3d03883f4a5979e96bf761" title="component wise multiply of 2d complex matrix A,W and 1d vector B.">ccwm3col</a>;
-<a name="l00199"></a>00199         }<span class="keywordflow">else</span>{
-<a name="l00200"></a>00200         petf=(<span class="keywordtype">void</span>*)powfs[ipowfs].etfsim[iwvl].p2-&gt;p;
-<a name="l00201"></a>00201         pccwm=<a class="code" href="cmat__extra_8c.html#128c1f2e5ec78e2d83e7de64982b3f34" title="component-wise multiply of three matrices.">ccwm3</a>;
-<a name="l00202"></a>00202         }
-<a name="l00203"></a>00203     }
-<a name="l00204"></a>00204     <span class="keywordtype">int</span> rotpsfotf=(hasllt &amp;&amp; parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#421d5f37ceb33e1a40262faf7ec4ef1d" title="For radial format CCD, rotate OTF into coordinate plane.">radrot</a>);
-<a name="l00205"></a>00205     <span class="keywordtype">double</span> angle=0;
-<a name="l00206"></a>00206     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> isa=0; isa&lt;nsa; isa++){
-<a name="l00207"></a>00207         <span class="keywordflow">if</span>(multi_nominal){
-<a name="l00208"></a>00208         <span class="keywordflow">if</span>(!powfs[ipowfs].dtf[iwvl].fused){
-<a name="l00209"></a>00209             nominal=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#e9fc7510d040ab4d3b80fdd1b4194f9e">dtf</a>[iwvl].<a class="code" href="structDTF__T.html#09ef991e4e93b35bef6106fb80030ffd" title="The FFT of the pixel functions.">nominal</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[isa+nsa*illt];
-<a name="l00210"></a>00210         }
-<a name="l00211"></a>00211         si=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#e9fc7510d040ab4d3b80fdd1b4194f9e">dtf</a>[iwvl].<a class="code" href="structDTF__T.html#e3f3495e330b12ff92cbd0370793df26" title="The pixel selection.">si</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[isa+nsa*illt];
-<a name="l00212"></a>00212         }
-<a name="l00213"></a>00213         <span class="keywordflow">if</span>(rotpsfotf){
-<a name="l00214"></a>00214         angle=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#fd0302013032e547054f9431d7aee502">srot</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[illt]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[isa];
-<a name="l00215"></a>00215         }
-<a name="l00216"></a>00216         <span class="keywordtype">int</span> ioffset=isa*nxsa;
-<a name="l00217"></a>00217         <span class="comment">//embed amp/opd to complex wvf with a embedding factor of 2.</span>
-<a name="l00218"></a>00218         <span class="keywordflow">if</span>(use1d){
-<a name="l00219"></a>00219         <a class="code" href="cmat__extra_8c.html#b7a468d8dccd7e9095745af0367d51c6" title="reshape amp.">cembed_wvf</a>(psflarge,opd-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>+ioffset, 
-<a name="l00220"></a>00220                realamp+ioffset,nx,nx,
-<a name="l00221"></a>00221                parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#086be0f3919fffb2809d891e895bab83" title="list of wavelength">wvl</a>[iwvl],0);
-<a name="l00222"></a>00222         <span class="comment">//fft</span>
-<a name="l00223"></a>00223         <a class="code" href="fft_8c.html#b3159a1cba08cacee28341ac4fc74cd9" title="Apply 2d FFT partially over ncomp ncomp region use two 1d plans that takes 1d fft...">cfft2partial</a>(psflarge,ncompm, -1);
-<a name="l00224"></a>00224         <span class="comment">//move from psflarge to psf</span>
-<a name="l00225"></a>00225         <a class="code" href="cmat__extra_8c.html#b5a692d8dd9656bde4d9fe988d26695a" title="copy and embed/crop psfin into psfout">ccpcorner</a>(psf,psflarge,C_FULL);
-<a name="l00226"></a>00226         }<span class="keywordflow">else</span>{
-<a name="l00227"></a>00227         <a class="code" href="cmat__extra_8c.html#b7a468d8dccd7e9095745af0367d51c6" title="reshape amp.">cembed_wvf</a>(psf,opd-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>+ioffset, 
-<a name="l00228"></a>00228                realamp+ioffset,nx,nx,
-<a name="l00229"></a>00229                parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#086be0f3919fffb2809d891e895bab83" title="list of wavelength">wvl</a>[iwvl],0);
-<a name="l00230"></a>00230         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(psf,-1);
-<a name="l00231"></a>00231         <span class="comment">//form PSF.</span>
-<a name="l00232"></a>00232         }
-<a name="l00233"></a>00233         <span class="comment">//sum(psf) is sumamp2*npsf*npsf</span>
-<a name="l00234"></a>00234         <span class="keywordflow">if</span>(ppsfout){
-<a name="l00235"></a>00235         <a class="code" href="cmat_8h.html#db3c55ee96a9e7249403f738d251688c" title="copy the values from one X(mat) to another.">ccp</a>(&amp;fftpsfout, psf);
-<a name="l00236"></a>00236         <a class="code" href="cmat_8h.html#204751357459432e00c5f5ee8d261f56" title="scale each element of A by w">cscale</a>(fftpsfout, norm_psf);
-<a name="l00237"></a>00237         <a class="code" href="fft_8c.html#b773d97e4de22b835cebd7b622f60ee2" title="Do 2d inverse FFT (scaling factor of 1/(nx*ny) is applied).">cifft2</a>(fftpsfout,1);<span class="comment">//peak in corner. WVF. cifft2 is normalized.</span>
-<a name="l00238"></a>00238         <a class="code" href="cmat__extra_8c.html#772387b5274cd5438d1612a1fd58d8d2" title="Embed array B into A with rotation theta CW.">cembed</a>(ppsfout[iwvl][isa], fftpsfout, 0, C_FULL);
-<a name="l00239"></a>00239         <span class="comment">/*</span>
-<a name="l00240"></a>00240 <span class="comment">          ccp(&amp;ppsfout[iwvl][isa], psf);</span>
-<a name="l00241"></a>00241 <span class="comment">          cscale(ppsfout[iwvl][isa], norm_psf);</span>
-<a name="l00242"></a>00242 <span class="comment">          cfftshift(ppsfout[iwvl][isa]);//peak in center.</span>
-<a name="l00243"></a>00243 <span class="comment">        */</span>
-<a name="l00244"></a>00244         }
-<a name="l00245"></a>00245         <a class="code" href="cmat__extra_8c.html#23f317cbb6e5cad3b80acefd960f7c7f" title="Put abs square of each element into its realpart.">cabs2toreal</a>(psf);<span class="comment">//peak in corner</span>
-<a name="l00246"></a>00246 <span class="preprocessor">#if ROT_OTF == 1</span>
-<a name="l00247"></a>00247 <span class="preprocessor"></span>        <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(psf,-1);
-<a name="l00248"></a>00248 <span class="preprocessor">#elif ROT_OTF == 0</span>
-<a name="l00249"></a>00249 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(lltopd || ppistatout){
-<a name="l00250"></a>00250         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(psf,-1);<span class="comment">//turn to otf. peak in corner</span>
-<a name="l00251"></a>00251         }
-<a name="l00252"></a>00252 <span class="preprocessor">#endif</span>
-<a name="l00253"></a>00253 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(lltopd){<span class="comment">//lotfc</span>
-<a name="l00254"></a>00254         <a class="code" href="cmat_8h.html#2417a6c93f1245cf129586dce262aba3" title="Compute component wise multiply B=B.">ccwm</a>(psf,lotfc);<span class="comment">//normalization done in gen of lotfc.</span>
-<a name="l00255"></a>00255         }
-<a name="l00256"></a>00256         <span class="keywordflow">if</span>(ppistatout){
-<a name="l00257"></a>00257         <span class="comment">//remove tip/tilt from OTF using tilt reference.</span>
-<a name="l00258"></a>00258         <a class="code" href="cmat_8h.html#db3c55ee96a9e7249403f738d251688c" title="copy the values from one X(mat) to another.">ccp</a>(&amp;psftmp,psf);<span class="comment">//peak is in the corner</span>
-<a name="l00259"></a>00259         <span class="keywordflow">if</span>(gradref){
-<a name="l00260"></a>00260             <a class="code" href="cmat__extra_8c.html#f912fcd3192a45180c528f075f1d0988" title="Tilt the otf to make the image shift.">ctilt</a>(psftmp,-gx[isa]*dtheta1,-gy[isa]*dtheta1,0);
-<a name="l00261"></a>00261         }
-<a name="l00262"></a>00262         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(psftmp,1);
-<a name="l00263"></a>00263         <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(psftmp);
-<a name="l00264"></a>00264         <a class="code" href="cmat__extra_8c.html#952faac0b7598955f5d6108d66222707" title="Put abs of each elemnt into its realpart.">cabstoreal</a>(psftmp);<span class="comment">//take abs. peak at center.</span>
-<a name="l00265"></a>00265         <span class="keywordflow">if</span>(!gradref){
-<a name="l00266"></a>00266             <a class="code" href="cmat_8h.html#47b5130ae904c436b75d6699abf025c6" title="Shift the image in A to center on physical center+[offsetx,offsety] using cog and...">cshift2center</a>(psftmp,0.5,0.5);
-<a name="l00267"></a>00267         }
-<a name="l00268"></a>00268         <a class="code" href="cmat__extra_8c.html#b2baa26f7bd8861ab342eee97889522d" title="Copy real part of a cmat to dmat with optional scaling: A0=A0.">creal2d</a>(&amp;ppistatout[iwvl][isa],1,psftmp,norm_pistat);
-<a name="l00269"></a>00269         }
-<a name="l00270"></a>00270         <span class="keywordflow">if</span>(ints){
-<a name="l00271"></a>00271 <span class="preprocessor">#if ROT_OTF == 1 //rotate OTF preserves sum(PSF)</span>
-<a name="l00272"></a>00272 <span class="preprocessor"></span>        <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(psf);<span class="comment">//OTF with peak in center</span>
-<a name="l00273"></a>00273         <span class="comment">//rotate from xy to ra, so negative angle.</span>
-<a name="l00274"></a>00274         <span class="comment">//Rotate and scale otf (in psf var) into otf.</span>
-<a name="l00275"></a>00275         <a class="code" href="cmat__extra_8c.html#6f86acfdccdc2c5a1c3d02d4ae33ac15" title="rotate (around fft center: (nx/2,ny/2)) CCW theta and embed in into A.">cembedscaleout</a>(otf,psf,xscale,yscale,-angle,C_FULL);
-<a name="l00276"></a>00276         <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(otf);<span class="comment">//put otf peak in corner</span>
-<a name="l00277"></a>00277 <span class="preprocessor">#elif ROT_OTF == 0 //rotate PSF. preserves maximum PSF (strehl)</span>
-<a name="l00278"></a>00278 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(lltopd || ppistatout){
-<a name="l00279"></a>00279             <span class="comment">//turn back to PSF. peak in corner. should be real</span>
-<a name="l00280"></a>00280             <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(psf,1);
-<a name="l00281"></a>00281         }
-<a name="l00282"></a>00282         <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(psf);<span class="comment">//peak in center</span>
-<a name="l00283"></a>00283         <a class="code" href="cmat__extra_8c.html#772387b5274cd5438d1612a1fd58d8d2" title="Embed array B into A with rotation theta CW.">cembed</a>(otf,psf,-angle,C_REAL);
-<a name="l00284"></a>00284         <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(otf);<span class="comment">//peak in corner</span>
-<a name="l00285"></a>00285         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(otf,-1);<span class="comment">//turn to OTF. peak in corner</span>
-<a name="l00286"></a>00286 <span class="preprocessor">#endif</span>
-<a name="l00287"></a>00287 <span class="preprocessor"></span>        <span class="comment">//fft to otf. peak in corner</span>
-<a name="l00288"></a>00288         <span class="keywordflow">if</span>(hasllt){<span class="comment">//has llt, ETF</span>
-<a name="l00289"></a>00289             (*pccwm)(otf,nominal,petf[illt][isa]);
-<a name="l00290"></a>00290         }<span class="keywordflow">else</span>{
-<a name="l00291"></a>00291             <a class="code" href="cmat_8h.html#2417a6c93f1245cf129586dce262aba3" title="Compute component wise multiply B=B.">ccwm</a>(otf,nominal);
-<a name="l00292"></a>00292         }
-<a name="l00293"></a>00293         <span class="comment">//max(otf) is 1. peak in corner </span>
-<a name="l00294"></a>00294         <span class="comment">//Now peak in center because nominal has excessive freq. </span>
-<a name="l00295"></a>00295         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(otf,1);
-<a name="l00296"></a>00296         <a class="code" href="dsp_8h.html#d14bb136cb7b8eef7ed55c732999f026" title="Multiply a sparse matrix with the real part of a complex vector.">spmulcreal</a>(ints-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,si,
-<a name="l00297"></a>00297                otf-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>, parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#8c33157663ab4c88862edbb6c6150c2f" title="Weights of signal value for each wavelength.">wvlwts</a>[iwvl]*norm);
-<a name="l00298"></a>00298         }
-<a name="l00299"></a>00299     }
-<a name="l00300"></a>00300     <span class="keywordflow">if</span>(lotfc) cfree(lotfc);
-<a name="l00301"></a>00301     }<span class="comment">//iwvl</span>
-<a name="l00302"></a>00302     cfree(psf);
-<a name="l00303"></a>00303     cfree(psflarge);
-<a name="l00304"></a>00304     cfree(psftmp);
-<a name="l00305"></a>00305     cfree(otf);
-<a name="l00306"></a>00306     <span class="keywordflow">if</span>(psfout){
-<a name="l00307"></a>00307     cfree(fftpsfout);
-<a name="l00308"></a>00308     }
-<a name="l00309"></a>00309 }
-</pre></div>
-<p>
-
+be careful that fftw inverse fft doesn't have 1/n^2 scaling. this function lives inside the threading routine wfsgradx 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

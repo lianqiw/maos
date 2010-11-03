@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: POWFS_T Struct Reference</title>
+<title>maos-0.7.1: POWFS_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,116 +69,695 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="12924bc2d4136e38b777d78e4c618f9e"></a><!-- doxytag: member="POWFS_T::saloc" ref="12924bc2d4136e38b777d78e4c618f9e" args="" -->
-<a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>saloc</b></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#c0307a05a1be22e9d81682a318df38c9">saloc</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="b60c0105ea57177379331a702f3bf054"></a><!-- doxytag: member="POWFS_T::pts" ref="b60c0105ea57177379331a702f3bf054" args="" -->
-<a class="el" href="structPTS__T.html">PTS_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>pts</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">lower left corner of the subaperture  <a href="#c0307a05a1be22e9d81682a318df38c9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structpts__t.html">pts_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#73be78cbe5dacc8a8e4094e71a215810">pts</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="2a4eca6c9237397fb7383b557f87adea"></a><!-- doxytag: member="POWFS_T::loc" ref="2a4eca6c9237397fb7383b557f87adea" args="" -->
-<a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>loc</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">records lower left-most point of each sa in a regular grid  <a href="#73be78cbe5dacc8a8e4094e71a215810"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#f05e3e57eed3b132f01d6f07a9df121b">loc</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0c80663120f8c0e599a063147043edda"></a><!-- doxytag: member="POWFS_T::locm" ref="0c80663120f8c0e599a063147043edda" args="" -->
-<a class="el" href="structLOC__T.html">LOC_T</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>locm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">explicit pts in a regular grid.  <a href="#f05e3e57eed3b132f01d6f07a9df121b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#3d1f74a15a557e4f369e643832af7f1e">locm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="2990d6343a6195f3d0be9b133069a114"></a><!-- doxytag: member="POWFS_T::ncpa" ref="2990d6343a6195f3d0be9b133069a114" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>ncpa</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">mis-registered loc, if any.  <a href="#3d1f74a15a557e4f369e643832af7f1e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#2990d6343a6195f3d0be9b133069a114">ncpa</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="18e39eb0dc4dee989858507587ea37fa"></a><!-- doxytag: member="POWFS_T::ncpa_grad" ref="18e39eb0dc4dee989858507587ea37fa" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>ncpa_grad</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NCPA OPDs to add to WFS OPD during simulation.  <a href="#2990d6343a6195f3d0be9b133069a114"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#18e39eb0dc4dee989858507587ea37fa">ncpa_grad</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="e9fc7510d040ab4d3b80fdd1b4194f9e"></a><!-- doxytag: member="POWFS_T::dtf" ref="e9fc7510d040ab4d3b80fdd1b4194f9e" args="" -->
-<a class="el" href="structDTF__T.html">DTF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>dtf</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NCPA grads to subtract from measurement.  <a href="#18e39eb0dc4dee989858507587ea37fa"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structDTF__T.html">DTF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#e9fc7510d040ab4d3b80fdd1b4194f9e">dtf</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="009cd8a55bb6dd1c05e3119bf229458a"></a><!-- doxytag: member="POWFS_T::sodium" ref="009cd8a55bb6dd1c05e3119bf229458a" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>sodium</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">array of dtf for each wvl  <a href="#e9fc7510d040ab4d3b80fdd1b4194f9e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#009cd8a55bb6dd1c05e3119bf229458a">sodium</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="09d11667df6efd9bab59b16505ea524e"></a><!-- doxytag: member="POWFS_T::etfprep" ref="09d11667df6efd9bab59b16505ea524e" args="" -->
-<a class="el" href="structETF__T.html">ETF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>etfprep</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Loaded and downsampled sodium profile from the file.  <a href="#009cd8a55bb6dd1c05e3119bf229458a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structETF__T.html">ETF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#09d11667df6efd9bab59b16505ea524e">etfprep</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a7f1f27f5404099b70ac042a2db8bb3d"></a><!-- doxytag: member="POWFS_T::etfsim" ref="a7f1f27f5404099b70ac042a2db8bb3d" args="" -->
-<a class="el" href="structETF__T.html">ETF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>etfsim</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ETF for computing short exposure matched filter.  <a href="#09d11667df6efd9bab59b16505ea524e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structETF__T.html">ETF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a7f1f27f5404099b70ac042a2db8bb3d">etfsim</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6a873a35f09a8cbf5a924eb55f0d7c6f"></a><!-- doxytag: member="POWFS_T::focus" ref="6a873a35f09a8cbf5a924eb55f0d7c6f" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>focus</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ETF for simulation.  <a href="#a7f1f27f5404099b70ac042a2db8bb3d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#6a873a35f09a8cbf5a924eb55f0d7c6f">focus</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="34262914f5314a1e008aa158010dab9d"></a><!-- doxytag: member="POWFS_T::lotf" ref="34262914f5314a1e008aa158010dab9d" args="" -->
-<a class="el" href="structLOTF__T.html">LOTF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>lotf</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">additional focus error.  <a href="#6a873a35f09a8cbf5a924eb55f0d7c6f"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structLOTF__T.html">LOTF_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#34262914f5314a1e008aa158010dab9d">lotf</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="706fa25774d7c7dbfc0ab1c3925196b8"></a><!-- doxytag: member="POWFS_T::mcc" ref="706fa25774d7c7dbfc0ab1c3925196b8" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>mcc</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">uplink aperture  <a href="#34262914f5314a1e008aa158010dab9d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#706fa25774d7c7dbfc0ab1c3925196b8">mcc</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="8c1a97256a90efbb53166fc1ab5c16a9"></a><!-- doxytag: member="POWFS_T::imcc" ref="8c1a97256a90efbb53166fc1ab5c16a9" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>imcc</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">P/T/T cross coupling matrix with amplitude weighting.  <a href="#706fa25774d7c7dbfc0ab1c3925196b8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#8c1a97256a90efbb53166fc1ab5c16a9">imcc</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fd0302013032e547054f9431d7aee502"></a><!-- doxytag: member="POWFS_T::srot" ref="fd0302013032e547054f9431d7aee502" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>srot</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">inverse of mcc.  <a href="#8c1a97256a90efbb53166fc1ab5c16a9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#fd0302013032e547054f9431d7aee502">srot</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="1aeacf2ddfafb73167818e8a23dcdf59"></a><!-- doxytag: member="POWFS_T::srsa" ref="1aeacf2ddfafb73167818e8a23dcdf59" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>srsa</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">subaperture rotation wrt LLT  <a href="#fd0302013032e547054f9431d7aee502"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#1aeacf2ddfafb73167818e8a23dcdf59">srsa</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6a47d02cbb65e3d42a7d2d0ef062b17a"></a><!-- doxytag: member="POWFS_T::srsamax" ref="6a47d02cbb65e3d42a7d2d0ef062b17a" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>srsamax</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">subaperture distance wrt LLT  <a href="#1aeacf2ddfafb73167818e8a23dcdf59"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#6a47d02cbb65e3d42a7d2d0ef062b17a">srsamax</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6c60f2cb244e43a6dd87887c98a37c20"></a><!-- doxytag: member="POWFS_T::sprint" ref="6c60f2cb244e43a6dd87887c98a37c20" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>sprint</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">max of srsa for each llt.  <a href="#6a47d02cbb65e3d42a7d2d0ef062b17a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#6c60f2cb244e43a6dd87887c98a37c20">sprint</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="3c0808eeb946b29d473da332466e827d"></a><!-- doxytag: member="POWFS_T::intstat" ref="3c0808eeb946b29d473da332466e827d" args="" -->
-<a class="el" href="structINTSTAT__T.html">INTSTAT_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>intstat</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">which subapertures to print sanea  <a href="#6c60f2cb244e43a6dd87887c98a37c20"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structINTSTAT__T.html">INTSTAT_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#3c0808eeb946b29d473da332466e827d">intstat</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="61ba7e824f0228b45378bbb92efaebe3"></a><!-- doxytag: member="POWFS_T::GS0" ref="61ba7e824f0228b45378bbb92efaebe3" args="" -->
-<a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>GS0</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">matched filter i0 and its derivative.  <a href="#3c0808eeb946b29d473da332466e827d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#61ba7e824f0228b45378bbb92efaebe3">GS0</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6af618140755d7b9cfbcebac9ab58453"></a><!-- doxytag: member="POWFS_T::ZS0" ref="6af618140755d7b9cfbcebac9ab58453" args="" -->
-<a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>ZS0</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">gtilt (average gradient)  <a href="#61ba7e824f0228b45378bbb92efaebe3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#6af618140755d7b9cfbcebac9ab58453">ZS0</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f406342d034ac6bda9785ba035e61ceb"></a><!-- doxytag: member="POWFS_T::amp" ref="f406342d034ac6bda9785ba035e61ceb" args="" -->
-double *&nbsp;</td><td class="memItemRight" valign="bottom"><b>amp</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ztilt (zernike best fit tip/tilt)  <a href="#6af618140755d7b9cfbcebac9ab58453"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#f406342d034ac6bda9785ba035e61ceb">amp</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="8c4f3f1f3e24ea9b5e2d08c5798a901b"></a><!-- doxytag: member="POWFS_T::ampm" ref="8c4f3f1f3e24ea9b5e2d08c5798a901b" args="" -->
-double **&nbsp;</td><td class="memItemRight" valign="bottom"><b>ampm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">amplitude map, max at 1.  <a href="#f406342d034ac6bda9785ba035e61ceb"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#8c4f3f1f3e24ea9b5e2d08c5798a901b">ampm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fa84bfe5be5b4a95270aeddf7ffe8d55"></a><!-- doxytag: member="POWFS_T::areascale" ref="fa84bfe5be5b4a95270aeddf7ffe8d55" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>areascale</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">amplitude map on misregistered grid, locm.  <a href="#8c4f3f1f3e24ea9b5e2d08c5798a901b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#fa84bfe5be5b4a95270aeddf7ffe8d55">areascale</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="48b216d44f49a49cd1e5f6e32534739d"></a><!-- doxytag: member="POWFS_T::dtheta" ref="48b216d44f49a49cd1e5f6e32534739d" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>dtheta</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">1.  <a href="#fa84bfe5be5b4a95270aeddf7ffe8d55"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#48b216d44f49a49cd1e5f6e32534739d">dtheta</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ce22bc0f58b30c9ef182186ef59d18e1"></a><!-- doxytag: member="POWFS_T::bkgrnd" ref="ce22bc0f58b30c9ef182186ef59d18e1" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>bkgrnd</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">sampling of the imaging fft grid.  <a href="#48b216d44f49a49cd1e5f6e32534739d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ce22bc0f58b30c9ef182186ef59d18e1">bkgrnd</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0d6aa5337620310c098fcdc3a0b4734c"></a><!-- doxytag: member="POWFS_T::nwfs" ref="0d6aa5337620310c098fcdc3a0b4734c" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>nwfs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wfs background image.  <a href="#ce22bc0f58b30c9ef182186ef59d18e1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#0d6aa5337620310c098fcdc3a0b4734c">nwfs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c45bc64d4ee12ed2fdfbbc8956dd699c"></a><!-- doxytag: member="POWFS_T::npts" ref="c45bc64d4ee12ed2fdfbbc8956dd699c" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>npts</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of wfs belonging to this wfs  <a href="#0d6aa5337620310c098fcdc3a0b4734c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#c45bc64d4ee12ed2fdfbbc8956dd699c">npts</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="915b1fe018f86447586950dbac3383ef"></a><!-- doxytag: member="POWFS_T::namp" ref="915b1fe018f86447586950dbac3383ef" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>namp</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of total opd points in all subaps  <a href="#c45bc64d4ee12ed2fdfbbc8956dd699c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#915b1fe018f86447586950dbac3383ef">namp</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="9ec5687c5268785533c22d746016e663"></a><!-- doxytag: member="POWFS_T::pixpsax" ref="9ec5687c5268785533c22d746016e663" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>pixpsax</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of amplitude maps  <a href="#915b1fe018f86447586950dbac3383ef"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#9ec5687c5268785533c22d746016e663">pixpsax</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="091e911bea2900efcc9b160126ebf4ca"></a><!-- doxytag: member="POWFS_T::pixpsay" ref="091e911bea2900efcc9b160126ebf4ca" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>pixpsay</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of detector pixels along x  <a href="#9ec5687c5268785533c22d746016e663"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#091e911bea2900efcc9b160126ebf4ca">pixpsay</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="67bf34f36dd078a571e7a14cdf0755de"></a><!-- doxytag: member="POWFS_T::ncompx" ref="67bf34f36dd078a571e7a14cdf0755de" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>ncompx</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of detector pixels along y  <a href="#091e911bea2900efcc9b160126ebf4ca"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#67bf34f36dd078a571e7a14cdf0755de">ncompx</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="21071d969e8a6f006203a6c004339e0f"></a><!-- doxytag: member="POWFS_T::ncompy" ref="21071d969e8a6f006203a6c004339e0f" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>ncompy</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dimension of FFT for subaperture imaging along x.  <a href="#67bf34f36dd078a571e7a14cdf0755de"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#21071d969e8a6f006203a6c004339e0f">ncompy</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="3f8067507fad08b3bcb049e7bbb6b65f"></a><!-- doxytag: member="POWFS_T::nlocm" ref="3f8067507fad08b3bcb049e7bbb6b65f" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>nlocm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Dimension of FFT for subaperture imaging along y.  <a href="#21071d969e8a6f006203a6c004339e0f"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#3f8067507fad08b3bcb049e7bbb6b65f">nlocm</a></td></tr>
 
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of misregistered loc.  <a href="#3f8067507fad08b3bcb049e7bbb6b65f"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains the data associated with a certain type of WFS. 
 <p>
-not necessarily physical optics WFS.x <hr>The documentation for this struct was generated from the following file:<ul>
+not necessarily physical optics WFS.x <hr><h2>Field Documentation</h2>
+<a class="anchor" name="c0307a05a1be22e9d81682a318df38c9"></a><!-- doxytag: member="POWFS_T::saloc" ref="c0307a05a1be22e9d81682a318df38c9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* <a class="el" href="structPOWFS__T.html#c0307a05a1be22e9d81682a318df38c9">POWFS_T::saloc</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+lower left corner of the subaperture 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="73be78cbe5dacc8a8e4094e71a215810"></a><!-- doxytag: member="POWFS_T::pts" ref="73be78cbe5dacc8a8e4094e71a215810" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structpts__t.html">pts_t</a>* <a class="el" href="structPOWFS__T.html#73be78cbe5dacc8a8e4094e71a215810">POWFS_T::pts</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+records lower left-most point of each sa in a regular grid 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="f05e3e57eed3b132f01d6f07a9df121b"></a><!-- doxytag: member="POWFS_T::loc" ref="f05e3e57eed3b132f01d6f07a9df121b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* <a class="el" href="structPOWFS__T.html#f05e3e57eed3b132f01d6f07a9df121b">POWFS_T::loc</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+explicit pts in a regular grid. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="3d1f74a15a557e4f369e643832af7f1e"></a><!-- doxytag: member="POWFS_T::locm" ref="3d1f74a15a557e4f369e643832af7f1e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>** <a class="el" href="structPOWFS__T.html#3d1f74a15a557e4f369e643832af7f1e">POWFS_T::locm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+mis-registered loc, if any. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="2990d6343a6195f3d0be9b133069a114"></a><!-- doxytag: member="POWFS_T::ncpa" ref="2990d6343a6195f3d0be9b133069a114" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#2990d6343a6195f3d0be9b133069a114">POWFS_T::ncpa</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+NCPA OPDs to add to WFS OPD during simulation. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="18e39eb0dc4dee989858507587ea37fa"></a><!-- doxytag: member="POWFS_T::ncpa_grad" ref="18e39eb0dc4dee989858507587ea37fa" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#18e39eb0dc4dee989858507587ea37fa">POWFS_T::ncpa_grad</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+NCPA grads to subtract from measurement. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="e9fc7510d040ab4d3b80fdd1b4194f9e"></a><!-- doxytag: member="POWFS_T::dtf" ref="e9fc7510d040ab4d3b80fdd1b4194f9e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structDTF__T.html">DTF_T</a>* <a class="el" href="structPOWFS__T.html#e9fc7510d040ab4d3b80fdd1b4194f9e">POWFS_T::dtf</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+array of dtf for each wvl 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="009cd8a55bb6dd1c05e3119bf229458a"></a><!-- doxytag: member="POWFS_T::sodium" ref="009cd8a55bb6dd1c05e3119bf229458a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structPOWFS__T.html#009cd8a55bb6dd1c05e3119bf229458a">POWFS_T::sodium</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Loaded and downsampled sodium profile from the file. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="09d11667df6efd9bab59b16505ea524e"></a><!-- doxytag: member="POWFS_T::etfprep" ref="09d11667df6efd9bab59b16505ea524e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structETF__T.html">ETF_T</a>* <a class="el" href="structPOWFS__T.html#09d11667df6efd9bab59b16505ea524e">POWFS_T::etfprep</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+ETF for computing short exposure matched filter. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="a7f1f27f5404099b70ac042a2db8bb3d"></a><!-- doxytag: member="POWFS_T::etfsim" ref="a7f1f27f5404099b70ac042a2db8bb3d" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structETF__T.html">ETF_T</a>* <a class="el" href="structPOWFS__T.html#a7f1f27f5404099b70ac042a2db8bb3d">POWFS_T::etfsim</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+ETF for simulation. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="6a873a35f09a8cbf5a924eb55f0d7c6f"></a><!-- doxytag: member="POWFS_T::focus" ref="6a873a35f09a8cbf5a924eb55f0d7c6f" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structPOWFS__T.html#6a873a35f09a8cbf5a924eb55f0d7c6f">POWFS_T::focus</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+additional focus error. 
+<p>
+(llt-&gt;fnrange) 
+</div>
+</div><p>
+<a class="anchor" name="34262914f5314a1e008aa158010dab9d"></a><!-- doxytag: member="POWFS_T::lotf" ref="34262914f5314a1e008aa158010dab9d" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structLOTF__T.html">LOTF_T</a>* <a class="el" href="structPOWFS__T.html#34262914f5314a1e008aa158010dab9d">POWFS_T::lotf</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+uplink aperture 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="706fa25774d7c7dbfc0ab1c3925196b8"></a><!-- doxytag: member="POWFS_T::mcc" ref="706fa25774d7c7dbfc0ab1c3925196b8" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#706fa25774d7c7dbfc0ab1c3925196b8">POWFS_T::mcc</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+P/T/T cross coupling matrix with amplitude weighting. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="8c1a97256a90efbb53166fc1ab5c16a9"></a><!-- doxytag: member="POWFS_T::imcc" ref="8c1a97256a90efbb53166fc1ab5c16a9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#8c1a97256a90efbb53166fc1ab5c16a9">POWFS_T::imcc</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+inverse of mcc. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="fd0302013032e547054f9431d7aee502"></a><!-- doxytag: member="POWFS_T::srot" ref="fd0302013032e547054f9431d7aee502" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#fd0302013032e547054f9431d7aee502">POWFS_T::srot</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+subaperture rotation wrt LLT 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="1aeacf2ddfafb73167818e8a23dcdf59"></a><!-- doxytag: member="POWFS_T::srsa" ref="1aeacf2ddfafb73167818e8a23dcdf59" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#1aeacf2ddfafb73167818e8a23dcdf59">POWFS_T::srsa</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+subaperture distance wrt LLT 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="6a47d02cbb65e3d42a7d2d0ef062b17a"></a><!-- doxytag: member="POWFS_T::srsamax" ref="6a47d02cbb65e3d42a7d2d0ef062b17a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structPOWFS__T.html#6a47d02cbb65e3d42a7d2d0ef062b17a">POWFS_T::srsamax</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+max of srsa for each llt. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="6c60f2cb244e43a6dd87887c98a37c20"></a><!-- doxytag: member="POWFS_T::sprint" ref="6c60f2cb244e43a6dd87887c98a37c20" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#6c60f2cb244e43a6dd87887c98a37c20">POWFS_T::sprint</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+which subapertures to print sanea 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="3c0808eeb946b29d473da332466e827d"></a><!-- doxytag: member="POWFS_T::intstat" ref="3c0808eeb946b29d473da332466e827d" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structINTSTAT__T.html">INTSTAT_T</a>* <a class="el" href="structPOWFS__T.html#3c0808eeb946b29d473da332466e827d">POWFS_T::intstat</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+matched filter i0 and its derivative. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="61ba7e824f0228b45378bbb92efaebe3"></a><!-- doxytag: member="POWFS_T::GS0" ref="61ba7e824f0228b45378bbb92efaebe3" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdsp.html">dsp</a>* <a class="el" href="structPOWFS__T.html#61ba7e824f0228b45378bbb92efaebe3">POWFS_T::GS0</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+gtilt (average gradient) 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="6af618140755d7b9cfbcebac9ab58453"></a><!-- doxytag: member="POWFS_T::ZS0" ref="6af618140755d7b9cfbcebac9ab58453" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdsp.html">dsp</a>* <a class="el" href="structPOWFS__T.html#6af618140755d7b9cfbcebac9ab58453">POWFS_T::ZS0</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+ztilt (zernike best fit tip/tilt) 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="f406342d034ac6bda9785ba035e61ceb"></a><!-- doxytag: member="POWFS_T::amp" ref="f406342d034ac6bda9785ba035e61ceb" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double* <a class="el" href="structPOWFS__T.html#f406342d034ac6bda9785ba035e61ceb">POWFS_T::amp</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+amplitude map, max at 1. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="8c4f3f1f3e24ea9b5e2d08c5798a901b"></a><!-- doxytag: member="POWFS_T::ampm" ref="8c4f3f1f3e24ea9b5e2d08c5798a901b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double** <a class="el" href="structPOWFS__T.html#8c4f3f1f3e24ea9b5e2d08c5798a901b">POWFS_T::ampm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+amplitude map on misregistered grid, locm. 
+<p>
+used for simulation 
+</div>
+</div><p>
+<a class="anchor" name="fa84bfe5be5b4a95270aeddf7ffe8d55"></a><!-- doxytag: member="POWFS_T::areascale" ref="fa84bfe5be5b4a95270aeddf7ffe8d55" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structPOWFS__T.html#fa84bfe5be5b4a95270aeddf7ffe8d55">POWFS_T::areascale</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+1. 
+<p>
+/max(area noramlized by dsa*dsa) 
+</div>
+</div><p>
+<a class="anchor" name="48b216d44f49a49cd1e5f6e32534739d"></a><!-- doxytag: member="POWFS_T::dtheta" ref="48b216d44f49a49cd1e5f6e32534739d" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structPOWFS__T.html#48b216d44f49a49cd1e5f6e32534739d">POWFS_T::dtheta</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+sampling of the imaging fft grid. 
+<p>
+wvl/(embfac*dxsa); 
+</div>
+</div><p>
+<a class="anchor" name="ce22bc0f58b30c9ef182186ef59d18e1"></a><!-- doxytag: member="POWFS_T::bkgrnd" ref="ce22bc0f58b30c9ef182186ef59d18e1" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#ce22bc0f58b30c9ef182186ef59d18e1">POWFS_T::bkgrnd</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+wfs background image. 
+<p>
+from parms-&gt;powfs[ipowfs].bkgrndfn. 
+</div>
+</div><p>
+<a class="anchor" name="0d6aa5337620310c098fcdc3a0b4734c"></a><!-- doxytag: member="POWFS_T::nwfs" ref="0d6aa5337620310c098fcdc3a0b4734c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#0d6aa5337620310c098fcdc3a0b4734c">POWFS_T::nwfs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+number of wfs belonging to this wfs 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="c45bc64d4ee12ed2fdfbbc8956dd699c"></a><!-- doxytag: member="POWFS_T::npts" ref="c45bc64d4ee12ed2fdfbbc8956dd699c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#c45bc64d4ee12ed2fdfbbc8956dd699c">POWFS_T::npts</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+number of total opd points in all subaps 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="915b1fe018f86447586950dbac3383ef"></a><!-- doxytag: member="POWFS_T::namp" ref="915b1fe018f86447586950dbac3383ef" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#915b1fe018f86447586950dbac3383ef">POWFS_T::namp</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+number of amplitude maps 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9ec5687c5268785533c22d746016e663"></a><!-- doxytag: member="POWFS_T::pixpsax" ref="9ec5687c5268785533c22d746016e663" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#9ec5687c5268785533c22d746016e663">POWFS_T::pixpsax</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+number of detector pixels along x 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="091e911bea2900efcc9b160126ebf4ca"></a><!-- doxytag: member="POWFS_T::pixpsay" ref="091e911bea2900efcc9b160126ebf4ca" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#091e911bea2900efcc9b160126ebf4ca">POWFS_T::pixpsay</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+number of detector pixels along y 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="67bf34f36dd078a571e7a14cdf0755de"></a><!-- doxytag: member="POWFS_T::ncompx" ref="67bf34f36dd078a571e7a14cdf0755de" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#67bf34f36dd078a571e7a14cdf0755de">POWFS_T::ncompx</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Dimension of FFT for subaperture imaging along x. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="21071d969e8a6f006203a6c004339e0f"></a><!-- doxytag: member="POWFS_T::ncompy" ref="21071d969e8a6f006203a6c004339e0f" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#21071d969e8a6f006203a6c004339e0f">POWFS_T::ncompy</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Dimension of FFT for subaperture imaging along y. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="3f8067507fad08b3bcb049e7bbb6b65f"></a><!-- doxytag: member="POWFS_T::nlocm" ref="3f8067507fad08b3bcb049e7bbb6b65f" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structPOWFS__T.html#3f8067507fad08b3bcb049e7bbb6b65f">POWFS_T::nlocm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+number of misregistered loc. 
+<p>
+1 or nwfs of this powfs. 
+</div>
+</div><p>
+<hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

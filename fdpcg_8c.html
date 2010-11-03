@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: maos/fdpcg.c File Reference</title>
+<title>maos-0.7.1: maos/fdpcg.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -73,9 +73,9 @@ window.onload = initDynSections;
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>PRE_PERMUT</b></td></tr>
 
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#db2d3f25e05cbd6a03a6d59ebc93d5e2">fdpcg_saselect</a> (long nx, long ny, double dx, <a class="el" href="structLOC__T.html">LOC_T</a> *saloc, double *saa)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#d7fab5e16936b3bb3d1eed399e0d1f48">fdpcg_saselect</a> (long nx, long ny, double dx, <a class="el" href="structloc__t.html">loc_t</a> *saloc, double *saa)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create aperture selection function that selects the gradients for valid subapertures from ground layer xloc (or ploc).  <a href="#db2d3f25e05cbd6a03a6d59ebc93d5e2"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create aperture selection function that selects the gradients for valid subapertures from ground layer xloc (or ploc).  <a href="#d7fab5e16936b3bb3d1eed399e0d1f48"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">long *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#8237a1605e01a23072de807bc3da901d">fdpcg_perm</a> (const long *nx, const long *ny, const long *os, int nps)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create a permulation acting on xhat (fft of x on xloc) so that points of the same spatial frequency in all layers are grouped together.  <a href="#8237a1605e01a23072de807bc3da901d"></a><br></td></tr>
@@ -108,7 +108,7 @@ window.onload = initDynSections;
 Fourier Domain Preconditioner for Tomography step. 
 <p>
 cfft2s(A,-1) and cfft2s(A,1) are hermitian ffts because they have the same scale. <hr><h2>Function Documentation</h2>
-<a class="anchor" name="db2d3f25e05cbd6a03a6d59ebc93d5e2"></a><!-- doxytag: member="fdpcg.c::fdpcg_saselect" ref="db2d3f25e05cbd6a03a6d59ebc93d5e2" args="(long nx, long ny, double dx, LOC_T *saloc, double *saa)" -->
+<a class="anchor" name="d7fab5e16936b3bb3d1eed399e0d1f48"></a><!-- doxytag: member="fdpcg.c::fdpcg_saselect" ref="d7fab5e16936b3bb3d1eed399e0d1f48" args="(long nx, long ny, double dx, loc_t *saloc, double *saa)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -133,7 +133,7 @@ cfft2s(A,-1) and cfft2s(A,1) are hermitian ffts because they have the same scale
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>saloc</em>, </td>
         </tr>
         <tr>
@@ -153,40 +153,6 @@ cfft2s(A,-1) and cfft2s(A,1) are hermitian ffts because they have the same scale
 
 <p>
 Create aperture selection function that selects the gradients for valid subapertures from ground layer xloc (or ploc). 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00040"></a>00040                                                                           {
-<a name="l00041"></a>00041     <span class="keyword">const</span> <span class="keywordtype">long</span> threas=1;
-<a name="l00042"></a>00042     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *xsel=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(nx,ny);
-<a name="l00043"></a>00043     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(xsel,-1);
-<a name="l00044"></a>00044     PCMAT(xsel,pxsel);
-<a name="l00045"></a>00045     <span class="keywordtype">double</span> dx1=1./dx;
-<a name="l00046"></a>00046     <span class="keywordtype">long</span> offx=nx/2+saloc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>*0.5*dx1;
-<a name="l00047"></a>00047     <span class="keywordtype">long</span> offy=ny/2+saloc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>*0.5*dx1;
-<a name="l00048"></a>00048     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> isa=0; isa&lt;saloc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>; isa++){
-<a name="l00049"></a>00049     <span class="keywordflow">if</span>(saa[isa]&gt;0.9){
-<a name="l00050"></a>00050         <span class="keywordtype">long</span> ix=(saloc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>[isa])*dx1+offx;<span class="comment">//subaperture center.</span>
-<a name="l00051"></a>00051         <span class="keywordtype">long</span> iy=(saloc-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>[isa])*dx1+offy;
-<a name="l00052"></a>00052         pxsel[iy][ix]=1;
-<a name="l00053"></a>00053     }
-<a name="l00054"></a>00054     }
-<a name="l00055"></a>00055     <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(xsel);
-<a name="l00056"></a>00056     <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(xsel,-1);
-<a name="l00057"></a>00057     <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(xsel);
-<a name="l00058"></a>00058     <a class="code" href="cmat_8h.html#204751357459432e00c5f5ee8d261f56" title="scale each element of A by w">cscale</a>(xsel,1./(<span class="keywordtype">double</span>)(nx*ny));<span class="comment">//cancel FFT effect.</span>
-<a name="l00059"></a>00059     <span class="keywordtype">double</span> xselc=creal(pxsel[ny/2][nx/2])*threas;<span class="comment">//Fourier center</span>
-<a name="l00060"></a>00060    
-<a name="l00061"></a>00061     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=0; ix&lt;nx; ix++){
-<a name="l00062"></a>00062     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iy=0; iy&lt;ny; iy++){
-<a name="l00063"></a>00063         <span class="keywordflow">if</span>(cabs(pxsel[iy][ix])&lt;xselc){
-<a name="l00064"></a>00064         pxsel[iy][ix]=0;
-<a name="l00065"></a>00065         }
-<a name="l00066"></a>00066     }
-<a name="l00067"></a>00067     }
-<a name="l00068"></a>00068     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *sel=<a class="code" href="csp_8h.html#293ebbfa0acf47f8783a3493966ad4ba" title="Create a X(sp) convolution operator C with C(i,j)=A(i-j); A must be very X(sp) with...">cspconvolvop</a>(xsel);
-<a name="l00069"></a>00069     cfree(xsel);
-<a name="l00070"></a>00070     <span class="keywordflow">return</span> sel;
-<a name="l00071"></a>00071 }
-</pre></div>
 <p>
 
 </div>
@@ -232,53 +198,7 @@ Create aperture selection function that selects the gradients for valid subapert
 Create a permulation acting on xhat (fft of x on xloc) so that points of the same spatial frequency in all layers are grouped together. 
 <p>
 In this implementation, it implies that all the screens have the same spatial sampling frequency, or they have the same tot spatial size.<p>
-The ray tracing couples the screens but only on points with same or harmonic spatial frequencies. Group them together. <div class="fragment"><pre class="fragment"><a name="l00084"></a>00084                                                                          {
-<a name="l00085"></a>00085     <span class="keywordtype">long</span> nx2[nps],ny2[nps];
-<a name="l00086"></a>00086     <span class="keywordtype">long</span> noff[nps];
-<a name="l00087"></a>00087     <span class="keywordtype">long</span> xloctot=0;
-<a name="l00088"></a>00088     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00089"></a>00089     nx2[ips]=nx[ips]/2;
-<a name="l00090"></a>00090     ny2[ips]=ny[ips]/2;
-<a name="l00091"></a>00091     noff[ips]=xloctot;
-<a name="l00092"></a>00092     xloctot+=nx[ips]*ny[ips];
-<a name="l00093"></a>00093     <span class="keywordflow">if</span>(os[ips]&gt;os[0]){
-<a name="l00094"></a>00094         error(<span class="stringliteral">"Layer %ld os is greater than ground\n"</span>, ips);
-<a name="l00095"></a>00095     }
-<a name="l00096"></a>00096     }
-<a name="l00097"></a>00097     <span class="keywordtype">long</span> *perm=calloc(xloctot, <span class="keyword">sizeof</span>(<span class="keywordtype">long</span>));
-<a name="l00098"></a>00098     <span class="keywordtype">long</span> use_os=os[0];
-<a name="l00099"></a>00099     <span class="keywordtype">long</span> adim=nx[0]/use_os;
-<a name="l00100"></a>00100     <span class="keywordtype">long</span> osx=nx[0]/2;
-<a name="l00101"></a>00101     <span class="keywordtype">long</span> count=0;
-<a name="l00102"></a>00102     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iy=-adim/2; iy&lt;adim/2; iy++){
-<a name="l00103"></a>00103     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=-adim/2; ix&lt;adim/2; ix++){
-<a name="l00104"></a>00104         <span class="comment">//(ix,iy) is the frequency in SALOC grid.</span>
-<a name="l00105"></a>00105         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> juse_os=0; juse_os&lt;use_os; juse_os++){
-<a name="l00106"></a>00106         <span class="keywordtype">long</span> jy=(iy+adim*juse_os);
-<a name="l00107"></a>00107         <span class="keywordflow">if</span>(jy&gt;=osx) jy-=nx[0];
-<a name="l00108"></a>00108         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iuse_os=0; iuse_os&lt;use_os; iuse_os++){
-<a name="l00109"></a>00109             <span class="keywordtype">long</span> jx=(ix+adim*iuse_os);
-<a name="l00110"></a>00110             <span class="keywordflow">if</span>(jx&gt;=osx) jx-=nx[0];
-<a name="l00111"></a>00111 
-<a name="l00112"></a>00112             <span class="comment">//jx, jy is the frequency in XLOC grid.</span>
-<a name="l00113"></a>00113             <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00114"></a>00114             <span class="comment">//this layer has such freq.</span>
-<a name="l00115"></a>00115             <span class="keywordflow">if</span>(jy&gt;=-ny2[ips] &amp;&amp; jy&lt;ny2[ips] 
-<a name="l00116"></a>00116                &amp;&amp; jx&gt;=-nx2[ips] &amp;&amp; jx&lt;nx2[ips]){
-<a name="l00117"></a>00117                 perm[count]=noff[ips]
-<a name="l00118"></a>00118                 +(jx+nx2[ips])+(jy+ny2[ips])*nx[ips];
-<a name="l00119"></a>00119                 count++;
-<a name="l00120"></a>00120             }
-<a name="l00121"></a>00121             }
-<a name="l00122"></a>00122         }
-<a name="l00123"></a>00123         }
-<a name="l00124"></a>00124     }
-<a name="l00125"></a>00125     }
-<a name="l00126"></a>00126     <span class="keywordflow">return</span> perm;
-<a name="l00127"></a>00127 }
-</pre></div>
-<p>
-
+The ray tracing couples the screens but only on points with same or harmonic spatial frequencies. Group them together. 
 </div>
 </div><p>
 <a class="anchor" name="c2daf71a65006a481dd9dd2d688fd4a9"></a><!-- doxytag: member="fdpcg.c::fdpcg_g" ref="c2daf71a65006a481dd9dd2d688fd4a9" args="(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa)" -->
@@ -332,53 +252,6 @@ The ray tracing couples the screens but only on points with same or harmonic spa
 
 <p>
 Compute gradient operator in Fourier domain. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00132"></a>00132                                                                            {
-<a name="l00133"></a>00133     <span class="keywordtype">long</span> os=(long)(dsa/dx);
-<a name="l00134"></a>00134     <span class="keywordflow">if</span>(fabs(dsa-dx*os)&gt;1.e-10){
-<a name="l00135"></a>00135     error(<span class="stringliteral">"dsa must be multiple of dx"</span>);
-<a name="l00136"></a>00136     }
-<a name="l00137"></a>00137  
-<a name="l00138"></a>00138     <span class="keywordtype">double</span> *wt=alloca(<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*(os+1));
-<a name="l00139"></a>00139     <span class="keywordtype">double</span> *st=alloca(<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)*(os+1));
-<a name="l00140"></a>00140     <span class="comment">//Trapzoidal weights for averaging.</span>
-<a name="l00141"></a>00141     wt[os]=wt[0]=0.5/(double)os/dsa;
-<a name="l00142"></a>00142     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ios=1; ios&lt;os; ios++){
-<a name="l00143"></a>00143     wt[ios]=1./(double)os/dsa;
-<a name="l00144"></a>00144     }
-<a name="l00145"></a>00145     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ios=0; ios&lt;os+1; ios++){
-<a name="l00146"></a>00146     st[ios]=ios*dx;
-<a name="l00147"></a>00147     }
-<a name="l00148"></a>00148     <span class="keywordtype">long</span> ny2=ny/2;
-<a name="l00149"></a>00149     <span class="keywordtype">long</span> nx2=nx/2;
-<a name="l00150"></a>00150     dcomplex cf=2*M_PI*I;
-<a name="l00151"></a>00151     <span class="keywordtype">double</span> dfy=1/(ny*dx);
-<a name="l00152"></a>00152     <span class="keywordtype">double</span> dfx=1/(nx*dx);
-<a name="l00153"></a>00153     *gx=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(nx*ny,1);
-<a name="l00154"></a>00154     *gy=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(nx*ny,1);
-<a name="l00155"></a>00155     dcomplex *pgx=(*gx)-&gt;p;
-<a name="l00156"></a>00156     dcomplex *pgy=(*gy)-&gt;p;
-<a name="l00157"></a>00157     <span class="keywordtype">double</span> dsa2=dsa*0.5;
-<a name="l00158"></a>00158     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iy=0; iy&lt;ny; iy++){
-<a name="l00159"></a>00159     <span class="keywordtype">double</span> fy=(double)(iy-ny2)*dfy;
-<a name="l00160"></a>00160     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=0; ix&lt;nx; ix++){
-<a name="l00161"></a>00161         <span class="keywordtype">double</span> fx=(double)(ix-nx2)*dfx;
-<a name="l00162"></a>00162         dcomplex tx=0;
-<a name="l00163"></a>00163         dcomplex ty=0;
-<a name="l00164"></a>00164         dcomplex offset=1;
-<a name="l00165"></a>00165         <span class="keywordflow">if</span>(os&gt;1){
-<a name="l00166"></a>00166         offset=cexp(-cf*(fx+fy)*dsa2);<span class="comment">//shift by half a subaperture</span>
-<a name="l00167"></a>00167         }
-<a name="l00168"></a>00168         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ios=0; ios&lt;os+1; ios++){
-<a name="l00169"></a>00169         tx+=wt[ios]*(cexp(cf*(fx*dsa+fy*st[ios]))-cexp(cf*(fy*st[ios])));
-<a name="l00170"></a>00170         ty+=wt[ios]*(cexp(cf*(fy*dsa+fx*st[ios]))-cexp(cf*(fx*st[ios])));
-<a name="l00171"></a>00171         }
-<a name="l00172"></a>00172         pgx[ix+iy*nx]=offset*tx;
-<a name="l00173"></a>00173         pgy[ix+iy*nx]=offset*ty;
-<a name="l00174"></a>00174     }
-<a name="l00175"></a>00175     }
-<a name="l00176"></a>00176 }
-</pre></div>
 <p>
 
 </div>
@@ -435,76 +308,6 @@ Compute gradient operator in Fourier domain.
 <p>
 Propagate operator for nlayer screens to ground of size nxg*nxg, sampling dx, with displacement of dispx, dispy. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00182"></a>00182                                                                                             {
-<a name="l00183"></a>00183     <span class="keywordtype">long</span> nxi[nps],nxi2[nps],nxi3[nps],noff[nps];
-<a name="l00184"></a>00184     <span class="keywordtype">long</span> nxtot=0;
-<a name="l00185"></a>00185     <span class="keywordtype">double</span> dk=1./(nxg*dx);
-<a name="l00186"></a>00186     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00187"></a>00187     nxi[ips]=nxg/os[0]*os[ips];
-<a name="l00188"></a>00188     nxi2[ips]=nxi[ips]/2;
-<a name="l00189"></a>00189     nxi3[ips]=nxi[ips]/2+nxi[ips];
-<a name="l00190"></a>00190     noff[ips]=nxtot;
-<a name="l00191"></a>00191     nxtot+=nxi[ips]*nxi[ips];
-<a name="l00192"></a>00192     }
-<a name="l00193"></a>00193     <span class="keywordtype">long</span> nxg2=nxg/2;
-<a name="l00194"></a>00194     <span class="comment">/*We build the transposed matrix.*/</span>
-<a name="l00195"></a>00195     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *propt=<a class="code" href="csp_8h.html#c487a2b9ebd0931e631626a37965fd24" title="Create a nx*ny X(sp) matrix with memory for nmax max elements allocated.">cspnew</a>(nxtot,nxg*nxg,nxg*nxg*nps);
-<a name="l00196"></a>00196     <span class="keywordtype">long</span> *pp=propt-&gt;<a class="code" href="structcsp.html#1bcaea71f32f3e914f531bf446620040" title="column pointers (size n+1) or col indlces (size nzmax)">p</a>;
-<a name="l00197"></a>00197     <span class="keywordtype">long</span> *pi=propt-&gt;<a class="code" href="structcsp.html#812b9ead226e426b45f9edfaf5545a82" title="row indices, size nzmax">i</a>;
-<a name="l00198"></a>00198     dcomplex *px=propt-&gt;<a class="code" href="structcsp.html#84cb4018d85a67a745c1c73720e30fdb" title="numerical values, size nzmax">x</a>;
-<a name="l00199"></a>00199     <span class="keywordtype">long</span> count=0;
-<a name="l00200"></a>00200     dcomplex cf=2*M_PI*I;
-<a name="l00201"></a>00201     <span class="keywordtype">double</span> cfr=2*M_PI;
-<a name="l00202"></a>00202     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> iy=0; iy&lt;nxg; iy++){
-<a name="l00203"></a>00203     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ix=0; ix&lt;nxg; ix++){
-<a name="l00204"></a>00204         <span class="keywordtype">double</span> fxg=(ix-nxg2)*dk;<span class="comment">//spatial frequency in ground layer.</span>
-<a name="l00205"></a>00205         <span class="keywordtype">double</span> fyg=(iy-nxg2)*dk;
-<a name="l00206"></a>00206         <span class="keywordtype">long</span> icol=ix+iy*nxg;
-<a name="l00207"></a>00207         pp[icol]=count;
-<a name="l00208"></a>00208         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00209"></a>00209         <span class="keywordtype">long</span> jx=((ix-nxg2)+nxi3[ips])%nxi[ips];<span class="comment">//map to layer ips.</span>
-<a name="l00210"></a>00210         <span class="keywordtype">long</span> jy=((iy-nxg2)+nxi3[ips])%nxi[ips];<span class="comment">//map to layer ips.</span>
-<a name="l00211"></a>00211         <span class="keywordtype">double</span> fx=(jx-nxi2[ips])*dk;<span class="comment">//spatial frequency in plane ips.</span>
-<a name="l00212"></a>00212         <span class="keywordtype">double</span> fy=(jy-nxi2[ips])*dk;
-<a name="l00213"></a>00213         pi[count]=jx+jy*nxi[ips]+noff[ips];
-<a name="l00214"></a>00214         dcomplex shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
-<a name="l00215"></a>00215         <span class="keywordflow">switch</span>(os[0]/os[ips]){
-<a name="l00216"></a>00216         <span class="keywordflow">case</span> 1:
-<a name="l00217"></a>00217             px[count]=conj(shift);
-<a name="l00218"></a>00218             <span class="keywordflow">break</span>;
-<a name="l00219"></a>00219         <span class="keywordflow">case</span> 2:
-<a name="l00220"></a>00220             {
-<a name="l00221"></a>00221             <span class="comment">/*</span>
-<a name="l00222"></a>00222 <span class="comment">              2010-05-28:</span>
-<a name="l00223"></a>00223 <span class="comment">              We are using hermitian FFT in that FFT'=IFFT so that</span>
-<a name="l00224"></a>00224 <span class="comment">              we can apply G'G. We need to multiply 0.5 to account</span>
-<a name="l00225"></a>00225 <span class="comment">              for this scaling effect.</span>
-<a name="l00226"></a>00226 <span class="comment">            */</span>
-<a name="l00227"></a>00227             <span class="comment">/*</span>
-<a name="l00228"></a>00228 <span class="comment">              dcomplex shiftx=cexp(cf*(fxg*dx));</span>
-<a name="l00229"></a>00229 <span class="comment">              dcomplex shifty=cexp(cf*(fyg*dx));</span>
-<a name="l00230"></a>00230 <span class="comment">              px[count]=conj(shift*(1+0.5*shiftx+0.5*conj(shiftx))</span>
-<a name="l00231"></a>00231 <span class="comment">              *(1+0.5*shifty+0.5*conj(shifty)));</span>
-<a name="l00232"></a>00232 <span class="comment">              //the following is equivalent.</span>
-<a name="l00233"></a>00233 <span class="comment">              */</span>
-<a name="l00234"></a>00234             px[count]=conj(shift*(1+cos(cfr*(fxg*dx)))*(1+cos(cfr*(fyg*dx))))*0.5;
-<a name="l00235"></a>00235             }
-<a name="l00236"></a>00236             <span class="keywordflow">break</span>;
-<a name="l00237"></a>00237         <span class="keywordflow">default</span>:
-<a name="l00238"></a>00238             error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l00239"></a>00239         }
-<a name="l00240"></a>00240         count++;
-<a name="l00241"></a>00241         }
-<a name="l00242"></a>00242     }
-<a name="l00243"></a>00243     }
-<a name="l00244"></a>00244     pp[nxg*nxg]=count;
-<a name="l00245"></a>00245     <span class="comment">//we put conj above because csptrans applies a conjugation.</span>
-<a name="l00246"></a>00246     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *propf=<a class="code" href="csp_8h.html#7c380d6d6ef6d0965e5a35fd4b7ce680" title="Transpose a sparse array.">csptrans</a>(propt);
-<a name="l00247"></a>00247     cspfree(propt);
-<a name="l00248"></a>00248     <span class="keywordflow">return</span> propf;
-<a name="l00249"></a>00249 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -542,207 +345,6 @@ Propagate operator for nlayer screens to ground of size nxg*nxg, sampling dx, wi
 <p>
 Prepare data for Tomography Fourier Domain Preconditioner. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00253"></a>00253                                                                                         {
-<a name="l00254"></a>00254     <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> **xloc=recon-&gt;<a class="code" href="structRECON__T.html#36b84d627a34e401174d98e5a2daaafe">xloc</a>;
-<a name="l00255"></a>00255     <span class="keywordtype">int</span> hipowfs=-1;
-<a name="l00256"></a>00256     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ipowfs=0; ipowfs&lt;parms-&gt;<a class="code" href="structPARMS__T.html#184dc967ffbedc29f2d48cd49889ddd2" title="Number of wfs types.">npowfs</a>; ipowfs++){
-<a name="l00257"></a>00257     <span class="keywordflow">if</span>(!parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#0324889316992d35cd3e1e3df9d17382" title="whether this is a low order wfs.">lo</a>){
-<a name="l00258"></a>00258         <span class="keywordflow">if</span>(hipowfs==-1){
-<a name="l00259"></a>00259         hipowfs=ipowfs;
-<a name="l00260"></a>00260         }<span class="keywordflow">else</span>{
-<a name="l00261"></a>00261         error(<span class="stringliteral">"Multiple High order powfs found\n"</span>);
-<a name="l00262"></a>00262         }
-<a name="l00263"></a>00263     }
-<a name="l00264"></a>00264     }
-<a name="l00265"></a>00265     <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *saloc=powfs[hipowfs].<a class="code" href="structPOWFS__T.html#12924bc2d4136e38b777d78e4c618f9e">saloc</a>;
-<a name="l00266"></a>00266     <span class="keyword">const</span> <span class="keywordtype">double</span> hs=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[hipowfs].<a class="code" href="structPOWFS__CFG__T.html#3b65158c197ddc07b117b5f8b1aa567b" title="height of guide star">hs</a>;
-<a name="l00267"></a>00267     <span class="keyword">const</span> <span class="keywordtype">long</span> nps=recon-&gt;<a class="code" href="structRECON__T.html#85cbd136845ab75a8af2e315bd6be75e">npsr</a>;
-<a name="l00268"></a>00268     <span class="keywordtype">long</span> os[nps];<span class="comment">//oversampling ratio of each layer.</span>
-<a name="l00269"></a>00269     <span class="keyword">const</span> <span class="keywordtype">long</span>* nx=recon-&gt;<a class="code" href="structRECON__T.html#54e253baae89cc860fb94219b4f03a69">xloc_nx</a>;
-<a name="l00270"></a>00270     <span class="keyword">const</span> <span class="keywordtype">long</span>* ny=recon-&gt;<a class="code" href="structRECON__T.html#e7353a5a6f858993ef8dc77eb0e4294b">xloc_ny</a>;
-<a name="l00271"></a>00271     <span class="keyword">const</span> <span class="keywordtype">double</span> *ht=parms-&gt;<a class="code" href="structPARMS__T.html#654d89a9becf3ea9e32d11e470416f7c" title="information about reconstructed atm">atmr</a>.<a class="code" href="structATMR__CFG__T.html#c2d70c6f4dd690896de2145333728abc" title="height of each layer">ht</a>;
-<a name="l00272"></a>00272     <span class="keywordtype">long</span> nxtot=0;
-<a name="l00273"></a>00273     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00274"></a>00274     os[ips]=(long)round(saloc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>/(xloc[ips]-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>/(1.-ht[ips]/hs)));
-<a name="l00275"></a>00275     nxtot+=nx[ips]*ny[ips];
-<a name="l00276"></a>00276     }
-<a name="l00277"></a>00277     <span class="comment">//Subaperture selection operator</span>
-<a name="l00278"></a>00278     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *sel=<a class="code" href="fdpcg_8c.html#db2d3f25e05cbd6a03a6d59ebc93d5e2" title="Create aperture selection function that selects the gradients for valid subapertures...">fdpcg_saselect</a>(nx[0],ny[0],xloc[0]-&gt;dx, 
-<a name="l00279"></a>00279                 saloc, powfs[hipowfs].pts-&gt;area);
-<a name="l00280"></a>00280     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00281"></a>00281     <a class="code" href="cmat_8h.html#ffeec010de1565a36f9d12612f9fae2f" title="User callable function to write sparse matrix into file.">cspwrite</a>(sel,<span class="stringliteral">"%s/fdpcg_sel.bin.gz"</span>,dirsetup);
-<a name="l00282"></a>00282     }
-<a name="l00283"></a>00283     <span class="comment">//Gradient operator.</span>
-<a name="l00284"></a>00284     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *gx, *gy;
-<a name="l00285"></a>00285     <a class="code" href="fdpcg_8c.html#c2daf71a65006a481dd9dd2d688fd4a9" title="Compute gradient operator in Fourier domain.">fdpcg_g</a>(&amp;gx,&amp;gy,nx[0],ny[0],xloc[0]-&gt;dx,saloc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>);<span class="comment">//tested ok.</span>
-<a name="l00286"></a>00286     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00287"></a>00287     <a class="code" href="cmat_8h.html#9593e890699be4f48e826d9048018c04" title="User callable function to write dense matrix into a file.">cwrite</a>(gx,<span class="stringliteral">"%s/fdpcg_gx.bin.gz"</span>,dirsetup);
-<a name="l00288"></a>00288     <a class="code" href="cmat_8h.html#9593e890699be4f48e826d9048018c04" title="User callable function to write dense matrix into a file.">cwrite</a>(gy,<span class="stringliteral">"%s/fdpcg_gy.bin.gz"</span>,dirsetup);
-<a name="l00289"></a>00289     }
-<a name="l00290"></a>00290     <span class="comment">//Concatenate invpsd;</span>
-<a name="l00291"></a>00291     dcomplex *invpsd=calloc(nxtot, <span class="keyword">sizeof</span>(dcomplex));
-<a name="l00292"></a>00292     <span class="keywordtype">long</span> offset=0;
-<a name="l00293"></a>00293     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#97445ce9015e982a22199e400b2271e4" title="tomography parameters">tomo</a>.<a class="code" href="structTOMO__CFG__T.html#92f6b0b737aa1df6e7544bd56ca5f8e7" title="use inverse of PSD in tomography instead of biharmonic approx">invpsd</a>){
-<a name="l00294"></a>00294     <span class="comment">//forward matrix uses inverse PSD. we use here also.</span>
-<a name="l00295"></a>00295     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00296"></a>00296         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *tmp=<a class="code" href="dmat_8h.html#7ecadca31195b8b40135b7dbeb808906" title="duplicate a X(mat) array">ddup</a>(recon-&gt;<a class="code" href="structRECON__T.html#313519f327a94f69131d467277321d8a">invpsd</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]);
-<a name="l00297"></a>00297         <a class="code" href="dmat_8h.html#9d9ed91255390f1e4649fc623dfa17ce" title="shift frequency components by n/2">dfftshift</a>(tmp);
-<a name="l00298"></a>00298         <a class="code" href="dmat_8h.html#9a9da6ac02ccf42247a8a78a131ca73a" title="scale each element of A by w">dscale</a>(tmp,(<span class="keywordtype">double</span>)(nx[ips]*ny[ips]));<span class="comment">//cancel the scaling applied in invpsd routine.</span>
-<a name="l00299"></a>00299         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;nx[ips]*ny[ips]; i++){
-<a name="l00300"></a>00300         invpsd[offset+i]=tmp-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[i];
-<a name="l00301"></a>00301         }
-<a name="l00302"></a>00302         offset+=nx[ips]*ny[ips];
-<a name="l00303"></a>00303         dfree(tmp);
-<a name="l00304"></a>00304     }
-<a name="l00305"></a>00305     }<span class="keywordflow">else</span>{<span class="comment">//forward matrix uses biharmonic approx. We use here also.</span>
-<a name="l00306"></a>00306     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00307"></a>00307         <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *psd=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(nx[ips],ny[ips]);
-<a name="l00308"></a>00308         <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(psd,-1);
-<a name="l00309"></a>00309         <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *tmp=<a class="code" href="dsp_8h.html#b3929bab7dcd7cf4be34e9e4f7579c90" title="Multiply the transpose of a sparse with another: return A&amp;#39;*B.">sptmulsp</a>(recon-&gt;<a class="code" href="structRECON__T.html#6b77529f7c42bb0d6a2fd545d5dcf623">L2</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[ips+nps*ips], 
-<a name="l00310"></a>00310                  recon-&gt;<a class="code" href="structRECON__T.html#6b77529f7c42bb0d6a2fd545d5dcf623">L2</a>-&gt;<a class="code" href="structspcell.html#43b142bc607510084f627498b7b0431b" title="Contains an array of pointers to dsp.">p</a>[ips+nps*ips]);
-<a name="l00311"></a>00311         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> irow=tmp-&gt;<a class="code" href="structdsp.html#a9f3db1d7c4d321157e4efac11f3351a" title="column pointers (size n+1) or col indlces (size nzmax) when nz!=-1">p</a>[0]; irow&lt;tmp-&gt;p[1]; irow++){
-<a name="l00312"></a>00312         psd-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>[tmp-&gt;<a class="code" href="structdsp.html#1d87a5584935632deb8bf23ea8eb46bf" title="row indices, size nzmax">i</a>[irow]]=tmp-&gt;<a class="code" href="structdsp.html#72f5e4eabdf69453be2ec0708558f023" title="numerical values, size nzmax">x</a>[irow];
-<a name="l00313"></a>00313         }
-<a name="l00314"></a>00314         <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(psd,-1);
-<a name="l00315"></a>00315         <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(psd);
-<a name="l00316"></a>00316         <span class="keyword">const</span> <span class="keywordtype">double</span> eps=2.220446049250313e-16;<span class="comment">//look for a way to obtain this automatically.</span>
-<a name="l00317"></a>00317         <span class="keywordtype">double</span> max;
-<a name="l00318"></a>00318         maxmincmp(psd-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,psd-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>*psd-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>,&amp;max,NULL,NULL);
-<a name="l00319"></a>00319         max=max*sqrt(eps);
-<a name="l00320"></a>00320         <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;nx[ips]*ny[ips]; i++){
-<a name="l00321"></a>00321         invpsd[offset+i]=creal(psd-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>[i])+max;
-<a name="l00322"></a>00322         }
-<a name="l00323"></a>00323         offset+=nx[ips]*ny[ips];
-<a name="l00324"></a>00324         cfree(psd);
-<a name="l00325"></a>00325     }
-<a name="l00326"></a>00326     }
-<a name="l00327"></a>00327 
-<a name="l00328"></a>00328     <span class="comment">//make it sparse diagonal operator</span>
-<a name="l00329"></a>00329     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *Mhat=<a class="code" href="csp_8h.html#1cb1312e34d6d65db22b2277ef34080c" title="Create a new sparse matrix with diagonal elements set to vec*alpha.">cspnewdiag</a>(nxtot,invpsd,1);
-<a name="l00330"></a>00330     free(invpsd);
-<a name="l00331"></a>00331     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00332"></a>00332     <a class="code" href="cmat_8h.html#ffeec010de1565a36f9d12612f9fae2f" title="User callable function to write sparse matrix into file.">cspwrite</a>(Mhat,<span class="stringliteral">"%s/fdpcg_invpsd.bin.gz"</span>,dirsetup);
-<a name="l00333"></a>00333     }
-<a name="l00334"></a>00334 
-<a name="l00335"></a>00335     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *Mmid=NULL;
-<a name="l00336"></a>00336     <span class="comment">//Compute gx'*sel'*sel*gx+gy'*sel'*sel*gy as Mmid</span>
-<a name="l00337"></a>00337     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;2; i++){
-<a name="l00338"></a>00338     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *g;
-<a name="l00339"></a>00339     <span class="keywordflow">if</span>(i==0){
-<a name="l00340"></a>00340         g=gx;
-<a name="l00341"></a>00341     }<span class="keywordflow">else</span>{
-<a name="l00342"></a>00342         g=gy;
-<a name="l00343"></a>00343     }
-<a name="l00344"></a>00344     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *tmp=<a class="code" href="csp_8h.html#6f0c670abe3c96cce9afb0f0e733b350" title="copy a X(sp) matrix to another.">cspdup</a>(sel);
-<a name="l00345"></a>00345     <a class="code" href="csp_8h.html#41e52911fa532cd4d5651e2a9c75e91d" title="Multiply a X(sp) matrix inplace with a diagonal weighting matrix whose diagonal values...">cspmuldiag</a>(tmp,g-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,1);
-<a name="l00346"></a>00346     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *tmp2=<a class="code" href="csp_8h.html#b7e0a8ab070321e84b17ac255ffd8844" title="Multiply the transpose of a sparse with another: return A&amp;#39;*B.">csptmulsp</a>(tmp,tmp);
-<a name="l00347"></a>00347     <a class="code" href="csp_8h.html#2425634b2e026e5beb40d3e32dbf05a2" title="Add a sparse matrix to another: A0=A0+B.">cspadd</a>(&amp;Mmid, tmp2);
-<a name="l00348"></a>00348     cspfree(tmp);
-<a name="l00349"></a>00349     cspfree(tmp2);
-<a name="l00350"></a>00350     }
-<a name="l00351"></a>00351     cfree(gx);
-<a name="l00352"></a>00352     cfree(gy);
-<a name="l00353"></a>00353     cspfree(sel);
-<a name="l00354"></a>00354     <span class="keywordtype">double</span> dispx[nps];
-<a name="l00355"></a>00355     <span class="keywordtype">double</span> dispy[nps];
-<a name="l00356"></a>00356     <span class="comment">//Ray tracing operator for each WFS</span>
-<a name="l00357"></a>00357     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00358"></a>00358     <a class="code" href="cmat_8h.html#ffeec010de1565a36f9d12612f9fae2f" title="User callable function to write sparse matrix into file.">cspwrite</a>(Mmid,<span class="stringliteral">"%s/fdpcg_Mmid"</span>,dirsetup);
-<a name="l00359"></a>00359     }
-<a name="l00360"></a>00360     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> jwfs=0; jwfs&lt;parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[hipowfs].<a class="code" href="structPOWFS__CFG__T.html#a27c8ce02a72294c46d8db61c68c4e61" title="number of wfs belonging to this powfs">nwfs</a>; jwfs++){
-<a name="l00361"></a>00361     <span class="keywordtype">int</span> iwfs=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[hipowfs].<a class="code" href="structPOWFS__CFG__T.html#be03195a4e1fece4903a6297931ac09c" title="array of wfs belongs to this powfs">wfs</a>[jwfs];
-<a name="l00362"></a>00362     <span class="keywordtype">double</span> neai=recon-&gt;<a class="code" href="structRECON__T.html#357e0cd6aee4b715455859643f109008">neam</a>-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[iwfs];
-<a name="l00363"></a>00363     info(<span class="stringliteral">"sanea used for wfs %d is %g mas\n"</span>,iwfs, 206265000*neai);
-<a name="l00364"></a>00364     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00365"></a>00365         <span class="comment">/*</span>
-<a name="l00366"></a>00366 <span class="comment">          2010-05-28:</span>
-<a name="l00367"></a>00367 <span class="comment">          The cone effect cancels with the cone coordinate. so we are like</span>
-<a name="l00368"></a>00368 <span class="comment">          doing parallel beam propagation. Removed scaling by 1/(1-ht[ips]/hs);</span>
-<a name="l00369"></a>00369 <span class="comment">        */</span>
-<a name="l00370"></a>00370         dispx[ips]=ht[ips]*parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#ebd74c669d9a3f057f4d4b4a43eda163" title="x direction">thetax</a>;
-<a name="l00371"></a>00371         dispy[ips]=ht[ips]*parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#3344f596561dfaf1d9d197112e2cefbd" title="y direction">thetay</a>;
-<a name="l00372"></a>00372     }
-<a name="l00373"></a>00373     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *propx=<a class="code" href="fdpcg_8c.html#14291891e819287ccc8eda6ed921c1a1" title="Propagate operator for nlayer screens to ground of size nxg*nxg, sampling dx, with...">fdpcg_prop</a>(nps,os,nx[0],xloc[0]-&gt;dx,dispx,dispy);
-<a name="l00374"></a>00374     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00375"></a>00375         <a class="code" href="cmat_8h.html#ffeec010de1565a36f9d12612f9fae2f" title="User callable function to write sparse matrix into file.">cspwrite</a>(propx,<span class="stringliteral">"%s/fdpcg_prop_wfs%d.bin.gz"</span>,dirsetup,iwfs);
-<a name="l00376"></a>00376     }
-<a name="l00377"></a>00377     <span class="comment">//need to test this in spatial domain.</span>
-<a name="l00378"></a>00378     <a class="code" href="csp_8h.html#dd8d261f3e339da0ae0b34f77c49efe5" title="inplace scale X(sp) matrix elements.">cspscale</a>(propx,1./neai);<span class="comment">//prop is not real for off axis wfs.</span>
-<a name="l00379"></a>00379     <span class="comment">//Compute propx'*Mmid*propx and add to Mhat;</span>
-<a name="l00380"></a>00380     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *tmp=<a class="code" href="csp_8h.html#1334089c91c23cfe696e5ebfdce273dd" title="Multiply two sparse arrays: return A*B.">cspmulsp</a>(Mmid,propx);
-<a name="l00381"></a>00381     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *tmp2=<a class="code" href="csp_8h.html#b7e0a8ab070321e84b17ac255ffd8844" title="Multiply the transpose of a sparse with another: return A&amp;#39;*B.">csptmulsp</a>(propx,tmp);
-<a name="l00382"></a>00382     cspfree(tmp);
-<a name="l00383"></a>00383     cspfree(propx);
-<a name="l00384"></a>00384     <a class="code" href="csp_8h.html#2425634b2e026e5beb40d3e32dbf05a2" title="Add a sparse matrix to another: A0=A0+B.">cspadd</a>(&amp;Mhat,tmp2);
-<a name="l00385"></a>00385     cspfree(tmp2);
-<a name="l00386"></a>00386     }
-<a name="l00387"></a>00387   
-<a name="l00388"></a>00388     cspfree(Mmid);
-<a name="l00389"></a>00389     <a class="code" href="csp_8h.html#de98f70161730502163dbc410cb5740a" title="Drop elements that are EPS times the largest value.">cspdropeps</a>(Mhat);
-<a name="l00390"></a>00390     <a class="code" href="csp_8h.html#f1f35ec3c6167455751a8b1a74f35b99" title="symmetricize a X(sp) matrix and drop values below a threshold.">cspsym</a>(Mhat);
-<a name="l00391"></a>00391     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00392"></a>00392     <a class="code" href="cmat_8h.html#ffeec010de1565a36f9d12612f9fae2f" title="User callable function to write sparse matrix into file.">cspwrite</a>(Mhat,<span class="stringliteral">"%s/fdpcg_Mhat"</span>,dirsetup);
-<a name="l00393"></a>00393     }
-<a name="l00394"></a>00394     <span class="comment">//Now invert each block.</span>
-<a name="l00395"></a>00395     <span class="comment">//First blocksize.</span>
-<a name="l00396"></a>00396     <span class="keywordtype">long</span> bs=0;
-<a name="l00397"></a>00397     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ips=0; ips&lt;nps; ips++){
-<a name="l00398"></a>00398     <span class="keywordflow">if</span>(os[0]==2){
-<a name="l00399"></a>00399         <span class="keywordflow">if</span>(os[ips]==2){
-<a name="l00400"></a>00400         bs+=4;
-<a name="l00401"></a>00401         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(os[ips]==1){
-<a name="l00402"></a>00402         bs+=1;
-<a name="l00403"></a>00403         }<span class="keywordflow">else</span>{
-<a name="l00404"></a>00404         error(<span class="stringliteral">"Invalid"</span>);
-<a name="l00405"></a>00405         }
-<a name="l00406"></a>00406     }<span class="keywordflow">else</span>{
-<a name="l00407"></a>00407         bs+=1;
-<a name="l00408"></a>00408     }
-<a name="l00409"></a>00409     }
-<a name="l00410"></a>00410     <span class="keywordtype">long</span> nb=Mhat-&gt;<a class="code" href="structcsp.html#2fc683f3c656de7244ea28ba8bba3204" title="number of rows">m</a>/bs;
-<a name="l00411"></a>00411     info(<span class="stringliteral">"Block size is %ld, there are %ld blocks\n"</span>,bs,nb);
-<a name="l00412"></a>00412     <span class="comment">//Permutation vector</span>
-<a name="l00413"></a>00413     <a class="code" href="structFDPCG__T.html" title="contains data for Fourier Domain Preconditioner.">FDPCG_T</a> *fdpcg=calloc(1, <span class="keyword">sizeof</span>(<a class="code" href="structFDPCG__T.html" title="contains data for Fourier Domain Preconditioner.">FDPCG_T</a>));
-<a name="l00414"></a>00414     <span class="keywordtype">long</span> *perm=<a class="code" href="fdpcg_8c.html#8237a1605e01a23072de807bc3da901d" title="Create a permulation acting on xhat (fft of x on xloc) so that points of the same...">fdpcg_perm</a>(nx,ny,os, nps);
-<a name="l00415"></a>00415     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *Mhatp=<a class="code" href="csp_8h.html#f6059c535e9ed5cdff0c4974dd077c6f" title="Permute rows and columns of X(sp) matrix A;.">cspperm</a>(Mhat,0,perm,perm);<span class="comment">//forward permutation.</span>
-<a name="l00416"></a>00416     cspfree(Mhat);
-<a name="l00417"></a>00417 <span class="preprocessor">#if PRE_PERMUT == 1</span>
-<a name="l00418"></a>00418 <span class="preprocessor"></span>    <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *Minvp=<a class="code" href="csp_8h.html#ae348f4ec8480c2f9ad28bf5c7091bd9" title="Invert a SPD X(sp) matrix that is block diagonal with block sizes of bs.">cspinvbdiag</a>(Mhatp,bs);
-<a name="l00419"></a>00419     cspfree(Mhatp);
-<a name="l00420"></a>00420     <a class="code" href="structcsp.html" title="a sparse array of double complex numbers stored in compressed column format">csp</a> *Minv=<a class="code" href="csp_8h.html#f6059c535e9ed5cdff0c4974dd077c6f" title="Permute rows and columns of X(sp) matrix A;.">cspperm</a>(Minvp,1,perm, perm);<span class="comment">//revert permutation</span>
-<a name="l00421"></a>00421     cspfree(Minvp);
-<a name="l00422"></a>00422     free(perm);
-<a name="l00423"></a>00423     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#befe9064fa1192a3b075bf4555c0a72c">Minv</a>=Minv;
-<a name="l00424"></a>00424     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#e8cbc9dfdcddc18df6c55c9a76edfdc2" title="Specify what to save to file for debugging.">save</a>.<a class="code" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220" title="save preparation matrices">setup</a>){
-<a name="l00425"></a>00425     <a class="code" href="cmat_8h.html#ffeec010de1565a36f9d12612f9fae2f" title="User callable function to write sparse matrix into file.">cspwrite</a>(Minv,<span class="stringliteral">"%s/fdpcg_Minv"</span>,dirsetup);
-<a name="l00426"></a>00426     }
-<a name="l00427"></a>00427 <span class="preprocessor">#else</span>
-<a name="l00428"></a>00428 <span class="preprocessor"></span>    fdpcg-&gt;<a class="code" href="structFDPCG__T.html#d3301ed08251b6be5121730931dac766">perm</a>=perm;
-<a name="l00429"></a>00429     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">Mbinv</a>=<a class="code" href="csp_8h.html#cecaf203a653ac718dd234bf7119e580" title="Extrat the diagonal blocks of size bs into cell arrays.">cspblockextract</a>(Mhatp,bs);
-<a name="l00430"></a>00430     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ib=0; ib&lt;nb; ib++){
-<a name="l00431"></a>00431     <a class="code" href="cmat_8h.html#fe6927dc25de67288c63961b3340f69c" title="inplace invert a general square matrix using lapack dgesv_">cinv_inplace</a>(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">Mbinv</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ib]);
-<a name="l00432"></a>00432     }
-<a name="l00433"></a>00433 <span class="preprocessor">#endif</span>
-<a name="l00434"></a>00434 <span class="preprocessor"></span>    fdpcg-&gt;<a class="code" href="structFDPCG__T.html#fc0c7c80ecd76538be73f60522c083a9">xhat</a>=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(nxtot,1);
-<a name="l00435"></a>00435     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#0b80bcda9a14effe6cc6811efc4e7af9">xhat2</a>=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(nxtot,1);
-<a name="l00436"></a>00436     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>=<a class="code" href="cmat_8h.html#cdcbda2dbd5dfec8344b8bada36a0a35" title="create a new block matrix.">ccellnew</a>(nps,1);
-<a name="l00437"></a>00437     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#c240d2d71d88ee684fb0ad1a6a100c84">xhat2i</a>=<a class="code" href="cmat_8h.html#cdcbda2dbd5dfec8344b8bada36a0a35" title="create a new block matrix.">ccellnew</a>(nps,1);
-<a name="l00438"></a>00438     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#460ef5e20810aa51556d9647fe69d078">scale</a>=calloc(nps,<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>));
-<a name="l00439"></a>00439     offset=0;
-<a name="l00440"></a>00440     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ips=0; ips&lt;nps; ips++){
-<a name="l00441"></a>00441     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]=<a class="code" href="cmat_8h.html#0e9274761076691022cbd210922e2107" title="Creat a X(mat) object with already allocated memory chunk.">cnew_data</a>(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#fc0c7c80ecd76538be73f60522c083a9">xhat</a>-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>+offset,nx[ips],ny[ips]);
-<a name="l00442"></a>00442     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#c240d2d71d88ee684fb0ad1a6a100c84">xhat2i</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]=<a class="code" href="cmat_8h.html#0e9274761076691022cbd210922e2107" title="Creat a X(mat) object with already allocated memory chunk.">cnew_data</a>(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#0b80bcda9a14effe6cc6811efc4e7af9">xhat2</a>-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>+offset,nx[ips],ny[ips]);
-<a name="l00443"></a>00443     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],-1);
-<a name="l00444"></a>00444     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#c240d2d71d88ee684fb0ad1a6a100c84">xhat2i</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],1);
-<a name="l00445"></a>00445     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#460ef5e20810aa51556d9647fe69d078">scale</a>[ips]=1./(double)(nx[ips]*ny[ips]);
-<a name="l00446"></a>00446     offset+=nx[ips]*ny[ips];
-<a name="l00447"></a>00447     }
-<a name="l00448"></a>00448 
-<a name="l00449"></a>00449     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#d59ff42104cef75ef2e920462b571931">nxtot</a>=nxtot;
-<a name="l00450"></a>00450     <span class="keywordflow">return</span> fdpcg;
-<a name="l00451"></a>00451 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -764,31 +366,6 @@ Prepare data for Tomography Fourier Domain Preconditioner.
 
 <p>
 Copy x vector and do FFT on each layer. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00463"></a>00463                               {
-<a name="l00464"></a>00464     thread_info *info=p;
-<a name="l00465"></a>00465     <span class="keywordtype">int</span> ips;
-<a name="l00466"></a>00466     <a class="code" href="structFDPCG__T.html" title="contains data for Fourier Domain Preconditioner.">FDPCG_T</a> *fdpcg=info-&gt;fdpcg;
-<a name="l00467"></a>00467     <span class="keywordtype">int</span> nps=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>-&gt;<a class="code" href="structccell.html#b08666a33e3b77dc0ebad13f58cd6f86" title="number of rows">nx</a>;
-<a name="l00468"></a>00468     <a class="code" href="structccell.html" title="an 2-d block matrix of cmat.">ccell</a> *xhati=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>;
-<a name="l00469"></a>00469     <span class="keyword">const</span> <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *xin=info-&gt;xin;
-<a name="l00470"></a>00470  repeat:
-<a name="l00471"></a>00471     LOCK(info-&gt;lock);
-<a name="l00472"></a>00472     ips=info-&gt;ips++;
-<a name="l00473"></a>00473     UNLOCK(info-&gt;lock);
-<a name="l00474"></a>00474     <span class="keywordflow">if</span>(ips&lt;nps){
-<a name="l00475"></a>00475     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;xhati-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>*xhati-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>; i++){
-<a name="l00476"></a>00476         xhati-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>[i]=xin-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[i];
-<a name="l00477"></a>00477     }
-<a name="l00478"></a>00478     <span class="comment">//Apply FFT. first fftshift is not necessary.</span>
-<a name="l00479"></a>00479     <span class="comment">//cfftshift(xhati-&gt;p[ips]);//enable this needs enable the one in fdpcg_ifft.</span>
-<a name="l00480"></a>00480     <span class="comment">//cfft2(xhati-&gt;p[ips],-1);</span>
-<a name="l00481"></a>00481     <a class="code" href="fft_8c.html#9ee95d19c60ca917f6f61708ff6544b6" title="Do 2d FFT transforms and scale the output by 1/sqrt(nx*ny).">cfft2s</a>(xhati-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],-1);
-<a name="l00482"></a>00482     <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(xhati-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]);
-<a name="l00483"></a>00483     <span class="keywordflow">goto</span> repeat;
-<a name="l00484"></a>00484     }
-<a name="l00485"></a>00485 }
-</pre></div>
 <p>
 
 </div>
@@ -812,25 +389,6 @@ Copy x vector and do FFT on each layer.
 <p>
 Multiply each block in pthreads. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00489"></a>00489                                    {
-<a name="l00490"></a>00490     thread_info *info=p;
-<a name="l00491"></a>00491     <span class="keywordtype">int</span> ib;
-<a name="l00492"></a>00492     <a class="code" href="structFDPCG__T.html" title="contains data for Fourier Domain Preconditioner.">FDPCG_T</a> *fdpcg=info-&gt;fdpcg;
-<a name="l00493"></a>00493     <span class="keywordtype">long</span> bs=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">Mbinv</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[0]-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>;
-<a name="l00494"></a>00494     <span class="keywordtype">long</span> nb=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#d59ff42104cef75ef2e920462b571931">nxtot</a>/bs;
-<a name="l00495"></a>00495     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *xhat=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#fc0c7c80ecd76538be73f60522c083a9">xhat</a>;
-<a name="l00496"></a>00496     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *xhat2=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#0b80bcda9a14effe6cc6811efc4e7af9">xhat2</a>;
-<a name="l00497"></a>00497  repeat:
-<a name="l00498"></a>00498     LOCK(info-&gt;lock);
-<a name="l00499"></a>00499     ib=info-&gt;ib++;
-<a name="l00500"></a>00500     UNLOCK(info-&gt;lock);
-<a name="l00501"></a>00501     <span class="keywordflow">if</span>(ib&lt;nb){
-<a name="l00502"></a>00502     <a class="code" href="cmat_8h.html#5012aabec0611cd938b01765c892f6b3" title="multiply a X(mat) matrix with a vector and accumulate to y: y+=A*x*alpha">cmulvec</a>(xhat-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>+ib*bs, fdpcg-&gt;<a class="code" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">Mbinv</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ib], xhat2-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>+ib*bs,1);
-<a name="l00503"></a>00503     <span class="keywordflow">goto</span> repeat;
-<a name="l00504"></a>00504     }
-<a name="l00505"></a>00505 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -852,34 +410,6 @@ Multiply each block in pthreads.
 
 <p>
 Inverse FFT for each block. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00509"></a>00509                                {
-<a name="l00510"></a>00510     thread_info *info=p;
-<a name="l00511"></a>00511     <span class="keywordtype">int</span> ips;
-<a name="l00512"></a>00512     <a class="code" href="structFDPCG__T.html" title="contains data for Fourier Domain Preconditioner.">FDPCG_T</a> *fdpcg=info-&gt;fdpcg;
-<a name="l00513"></a>00513     <span class="keywordtype">int</span> nps=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>-&gt;<a class="code" href="structccell.html#b08666a33e3b77dc0ebad13f58cd6f86" title="number of rows">nx</a>;
-<a name="l00514"></a>00514     <a class="code" href="structccell.html" title="an 2-d block matrix of cmat.">ccell</a> *xhat2i=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#c240d2d71d88ee684fb0ad1a6a100c84">xhat2i</a>;
-<a name="l00515"></a>00515     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *xout=info-&gt;xout;
-<a name="l00516"></a>00516     <span class="keyword">const</span> <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *xin=info-&gt;xin;
-<a name="l00517"></a>00517  repeat:
-<a name="l00518"></a>00518     LOCK(info-&gt;lock);
-<a name="l00519"></a>00519     ips=info-&gt;ips++;
-<a name="l00520"></a>00520     UNLOCK(info-&gt;lock);
-<a name="l00521"></a>00521     <span class="keywordflow">if</span>(ips&lt;nps){
-<a name="l00522"></a>00522     <a class="code" href="cmat_8h.html#2e68e24dcc5d7ffd8d9b2c575e0830b9" title="shift frequency components by n/2">cfftshift</a>(xhat2i-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]);
-<a name="l00523"></a>00523     <a class="code" href="fft_8c.html#9ee95d19c60ca917f6f61708ff6544b6" title="Do 2d FFT transforms and scale the output by 1/sqrt(nx*ny).">cfft2s</a>(xhat2i-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],1);
-<a name="l00524"></a>00524     <span class="comment">//cfftshift(xhat2i-&gt;p[ips]);//enable this needs enable the one in fdpcg_fft.</span>
-<a name="l00525"></a>00525     <span class="keywordflow">if</span>(!xout-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]){
-<a name="l00526"></a>00526         xout-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(xin-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>,xin-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>);
-<a name="l00527"></a>00527     }
-<a name="l00528"></a>00528     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *xhat2ii=<a class="code" href="dmat_8h.html#9033c130427b2e4cc3eabd68c9630948" title="create an new X(mat) reference another with different shape.">dref_reshape</a>(xout-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips],xhat2i-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>,xhat2i-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>);
-<a name="l00529"></a>00529     <span class="comment">//creal2d(&amp;xhat2ii,0,xhat2i-&gt;p[ips],fdpcg-&gt;scale[ips]);</span>
-<a name="l00530"></a>00530     <a class="code" href="cmat__extra_8c.html#b2baa26f7bd8861ab342eee97889522d" title="Copy real part of a cmat to dmat with optional scaling: A0=A0.">creal2d</a>(&amp;xhat2ii,0,xhat2i-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],1);
-<a name="l00531"></a>00531     dfree(xhat2ii);
-<a name="l00532"></a>00532     <span class="keywordflow">goto</span> repeat;
-<a name="l00533"></a>00533     }
-<a name="l00534"></a>00534 }
-</pre></div>
 <p>
 
 </div>
@@ -918,46 +448,7 @@ Inverse FFT for each block.
 <p>
 Apply the Fourier domain preconditioner. 
 <p>
-Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain via xout=IFFT(M*FFT(xin)); <div class="fragment"><pre class="fragment"><a name="l00541"></a>00541                                                                  {
-<a name="l00542"></a>00542     <span class="keyword">const</span> <a class="code" href="structRECON__T.html" title="contains data related to wavefront reconstruction and DM fitting.">RECON_T</a> *recon=(<a class="code" href="structRECON__T.html" title="contains data related to wavefront reconstruction and DM fitting.">RECON_T</a>*)A;
-<a name="l00543"></a>00543     <span class="keywordflow">if</span>(xin-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>!=1){
-<a name="l00544"></a>00544     error(<span class="stringliteral">"Invalid\n"</span>);
-<a name="l00545"></a>00545     }
-<a name="l00546"></a>00546     <a class="code" href="structFDPCG__T.html" title="contains data for Fourier Domain Preconditioner.">FDPCG_T</a> *fdpcg=recon-&gt;<a class="code" href="structRECON__T.html#827909e242293f38820fe66212640b3d">fdpcg</a>;
-<a name="l00547"></a>00547     <span class="keywordtype">long</span> nxtot=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#d59ff42104cef75ef2e920462b571931">nxtot</a>;
-<a name="l00548"></a>00548     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *xhat=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#fc0c7c80ecd76538be73f60522c083a9">xhat</a>;
-<a name="l00549"></a>00549     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *xhat2=fdpcg-&gt;<a class="code" href="structFDPCG__T.html#0b80bcda9a14effe6cc6811efc4e7af9">xhat2</a>;
-<a name="l00550"></a>00550     thread_info info;
-<a name="l00551"></a>00551     info.ips=0;
-<a name="l00552"></a>00552     info.ib=0;
-<a name="l00553"></a>00553     PINIT(info.lock);
-<a name="l00554"></a>00554     info.fdpcg=recon-&gt;<a class="code" href="structRECON__T.html#827909e242293f38820fe66212640b3d">fdpcg</a>;
-<a name="l00555"></a>00555     info.xin=xin;
-<a name="l00556"></a>00556     <span class="keywordflow">if</span>(!*xout){
-<a name="l00557"></a>00557     *xout=dcellnew(xin-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>, xin-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>);
-<a name="l00558"></a>00558     }
-<a name="l00559"></a>00559     info.xout=*xout;
-<a name="l00560"></a>00560     <span class="comment">//apply forward FFT</span>
-<a name="l00561"></a>00561     CALL(<a class="code" href="fdpcg_8c.html#159d31730b2c6ce38220133e70505cc4" title="Copy x vector and do FFT on each layer.">fdpcg_fft</a>,&amp;info,recon-&gt;<a class="code" href="structRECON__T.html#b4fef9ce2df8e8c5b05f3b6ea35f506a">nthread</a>);
-<a name="l00562"></a>00562 
-<a name="l00563"></a>00563     <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#827909e242293f38820fe66212640b3d">fdpcg</a>-&gt;<a class="code" href="structFDPCG__T.html#befe9064fa1192a3b075bf4555c0a72c">Minv</a>){
-<a name="l00564"></a>00564     <a class="code" href="cmat_8h.html#5f6b5be2adda9848d051174da45fc340" title="initialize all numbers in a X(mat) object to 0">czero</a>(xhat2);
-<a name="l00565"></a>00565     <a class="code" href="csp_8h.html#54fc8f015cdea3064a1dd4d404e428c1" title="sparse matrix multiply with a vector">cspmulvec</a>(xhat2-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>, recon-&gt;<a class="code" href="structRECON__T.html#827909e242293f38820fe66212640b3d">fdpcg</a>-&gt;<a class="code" href="structFDPCG__T.html#befe9064fa1192a3b075bf4555c0a72c">Minv</a>, xhat-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>, 1);
-<a name="l00566"></a>00566     }<span class="keywordflow">else</span>{
-<a name="l00567"></a>00567     <span class="comment">//permute xhat and put into xhat2</span>
-<a name="l00568"></a>00568     <a class="code" href="mathmisc_8c.html#550da10b63ddcacfcb3a590d1a21bab5" title="Permute the vector so that out(:)=in(p);.">cvecperm</a>(xhat2-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,xhat-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,recon-&gt;<a class="code" href="structRECON__T.html#827909e242293f38820fe66212640b3d">fdpcg</a>-&gt;<a class="code" href="structFDPCG__T.html#d3301ed08251b6be5121730931dac766">perm</a>,nxtot);
-<a name="l00569"></a>00569     <a class="code" href="cmat_8h.html#5f6b5be2adda9848d051174da45fc340" title="initialize all numbers in a X(mat) object to 0">czero</a>(xhat);
-<a name="l00570"></a>00570     CALL(<a class="code" href="fdpcg_8c.html#a23e246a45929bc3a27d5689733f2ada" title="Multiply each block in pthreads.">fdpcg_mulblock</a>,&amp;info,recon-&gt;<a class="code" href="structRECON__T.html#b4fef9ce2df8e8c5b05f3b6ea35f506a">nthread</a>);
-<a name="l00571"></a>00571     <span class="comment">//permute back to have natural order.</span>
-<a name="l00572"></a>00572     <a class="code" href="mathmisc_8c.html#0248d08bd84265ffa1392a6765107535" title="Reverse permute the vector so that out(p)=in(:);.">cvecpermi</a>(xhat2-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,xhat-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,fdpcg-&gt;<a class="code" href="structFDPCG__T.html#d3301ed08251b6be5121730931dac766">perm</a>,nxtot);
-<a name="l00573"></a>00573     }
-<a name="l00574"></a>00574     info.ips=0;
-<a name="l00575"></a>00575     <span class="comment">//Apply inverse FFT</span>
-<a name="l00576"></a>00576     CALL(<a class="code" href="fdpcg_8c.html#11013a3fc934eb0da91c7ffb992c7932" title="Inverse FFT for each block.">fdpcg_ifft</a>,&amp;info,recon-&gt;<a class="code" href="structRECON__T.html#b4fef9ce2df8e8c5b05f3b6ea35f506a">nthread</a>);
-<a name="l00577"></a>00577 }
-</pre></div>
-<p>
-
+Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M^-1 is applied in Fourier Domain via xout=IFFT(M*FFT(xin)); 
 </div>
 </div><p>
 <a class="anchor" name="39d6c9be2ba21e2556b11d2e56d215fe"></a><!-- doxytag: member="fdpcg.c::fdpcg_free" ref="39d6c9be2ba21e2556b11d2e56d215fe" args="(FDPCG_T *fdpcg)" -->
@@ -979,34 +470,11 @@ Preconditioner solves xout=M^-1*xin where M is the preconditioner matrix. Here M
 <p>
 Free fdpcg related data structs. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00581"></a>00581                                {
-<a name="l00582"></a>00582     <span class="keywordflow">if</span>(!fdpcg) <span class="keywordflow">return</span>;
-<a name="l00583"></a>00583     cspfree(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#befe9064fa1192a3b075bf4555c0a72c">Minv</a>);
-<a name="l00584"></a>00584     <span class="keywordflow">if</span>(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">Mbinv</a>){
-<a name="l00585"></a>00585     free(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#d3301ed08251b6be5121730931dac766">perm</a>);
-<a name="l00586"></a>00586     ccellfree(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">Mbinv</a>);
-<a name="l00587"></a>00587     }
-<a name="l00588"></a>00588     
-<a name="l00589"></a>00589     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ips=0; ips&lt;fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>-&gt;<a class="code" href="structccell.html#b08666a33e3b77dc0ebad13f58cd6f86" title="number of rows">nx</a>; ips++){
-<a name="l00590"></a>00590     <span class="comment">/*The pointers are owned by xhat, we set to NULL so</span>
-<a name="l00591"></a>00591 <span class="comment">      ccellfree won't try to free the memory*/</span>
-<a name="l00592"></a>00592     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#c240d2d71d88ee684fb0ad1a6a100c84">xhat2i</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>=NULL;
-<a name="l00593"></a>00593     fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>=NULL;
-<a name="l00594"></a>00594     }
-<a name="l00595"></a>00595     ccellfree(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a>);
-<a name="l00596"></a>00596     ccellfree(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#c240d2d71d88ee684fb0ad1a6a100c84">xhat2i</a>);
-<a name="l00597"></a>00597     cfree(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#fc0c7c80ecd76538be73f60522c083a9">xhat</a>);
-<a name="l00598"></a>00598     cfree(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#0b80bcda9a14effe6cc6811efc4e7af9">xhat2</a>);
-<a name="l00599"></a>00599     free(fdpcg-&gt;<a class="code" href="structFDPCG__T.html#460ef5e20810aa51556d9647fe69d078">scale</a>);
-<a name="l00600"></a>00600     free(fdpcg);
-<a name="l00601"></a>00601 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

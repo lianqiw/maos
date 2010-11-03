@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: maos/setup_surf.c File Reference</title>
+<title>maos-0.7.1: maos/setup_surf.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -100,123 +100,6 @@ Setup additional NCPA surface.
 Setup tilted surface (M3) by ray tracing from the tilted surface to WFS and Science grid. 
 <p>
 <dl compact><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>Merge setup_tsurf, setup_surf, and setup_powfs_ncpa. Be careful about which NCPA is compensated by WFS offsets. setup_tsurf and setup_surf act on surfaces intersect with most WFS and science, while setup_powfs_ncpa act on individual surfaces for each WFS. Maybe it is good idea to keep them separate. </dd></dl>
-<div class="fragment"><pre class="fragment"><a name="l00035"></a>00035                              {
-<a name="l00036"></a>00036     <span class="keyword">const</span> <a class="code" href="structPARMS__T.html" title="is a wrapper of all _CFG_T data types.">PARMS_T</a> *parms=simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>;
-<a name="l00037"></a>00037     <a class="code" href="structPOWFS__T.html" title="contains the data associated with a certain type of WFS.">POWFS_T</a> *powfs=simu-&gt;<a class="code" href="structSIM__T.html#574e2dc6ebf0b42d7677c64eee329cac">powfs</a>;
-<a name="l00038"></a>00038     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#635a98dc98b7c99a8cb7662bb04f1f20" title="Number of tilted surfaces.">ntsurf</a>&lt;=0) <span class="keywordflow">return</span>;
-<a name="l00039"></a>00039     info(<span class="stringliteral">"Setting up tilt surface (M3)\n"</span>);
-<a name="l00040"></a>00040     <span class="keywordflow">if</span>(!parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#5c3b782dc6c8ab71ad93712166eaa0f2" title="cache surface on fine sampled grid matched WFS or Science grid">cachesurf</a>){
-<a name="l00041"></a>00041     error(<span class="stringliteral">"Not yet finished\n"</span>);
-<a name="l00042"></a>00042     }
-<a name="l00043"></a>00043     <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>){
-<a name="l00044"></a>00044     simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#b6833beca5a29a5936d41ac934e66d24" title="Number of wfs.">nwfs</a>,1);
-<a name="l00045"></a>00045     }
-<a name="l00046"></a>00046     <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>){
-<a name="l00047"></a>00047     simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#9f76679213a98ac7e3eb0fe92d645799" title="Number of evaluation directions.">nevl</a>,1);
-<a name="l00048"></a>00048     }
-<a name="l00049"></a>00049  
-<a name="l00050"></a>00050     simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>=calloc(parms-&gt;<a class="code" href="structPARMS__T.html#635a98dc98b7c99a8cb7662bb04f1f20" title="Number of tilted surfaces.">ntsurf</a>, <span class="keyword">sizeof</span>(<a class="code" href="structRECTMAP__T.html" title="Map with different x/y sampling.">RECTMAP_T</a>*));
-<a name="l00051"></a>00051     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> itsurf=0; itsurf&lt;parms-&gt;<a class="code" href="structPARMS__T.html#635a98dc98b7c99a8cb7662bb04f1f20" title="Number of tilted surfaces.">ntsurf</a>; itsurf++){
-<a name="l00052"></a>00052     <span class="keywordtype">char</span> *fn=<a class="code" href="path_8c.html#25730e4c54130615ab7657ac89c39150" title="Locate a file in path and return its absolute filename.">find_file</a>(parms-&gt;<a class="code" href="structPARMS__T.html#8f85b3977b13fda7201dde02c10126de" title="Tilted surfaces, surface, not OPD.">tsurf</a>[itsurf]);
-<a name="l00053"></a>00053     info(<span class="stringliteral">"Loading tilt surface from %s\n"</span>, fn);
-<a name="l00054"></a>00054     simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf]=rectmapread(<span class="stringliteral">"%s"</span>,fn); 
-<a name="l00055"></a>00055     free(fn);
-<a name="l00056"></a>00056     }
-<a name="l00057"></a>00057     <span class="keywordflow">if</span>(!parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#5c3b782dc6c8ab71ad93712166eaa0f2" title="cache surface on fine sampled grid matched WFS or Science grid">cachesurf</a>){
-<a name="l00058"></a>00058     <span class="keywordflow">return</span>;
-<a name="l00059"></a>00059     }
-<a name="l00060"></a>00060 
-<a name="l00061"></a>00061     <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *locevl;
-<a name="l00062"></a>00062     <span class="keyword">const</span> <span class="keywordtype">double</span> rot=-parms-&gt;<a class="code" href="structPARMS__T.html#674d3d0b966b2d7c27767e909dfcb30f" title="aperture parameters">aper</a>.<a class="code" href="structAPER__CFG__T.html#bf64dffc1048f103b91ee16d94eee779" title="pupil rotation in degree">rotdeg</a>/180.*M_PI;
-<a name="l00063"></a>00063     <span class="keywordtype">int</span> do_rot=(fabs(rot)&gt;1.e-10);
-<a name="l00064"></a>00064 
-<a name="l00065"></a>00065     <span class="keywordflow">if</span>(do_rot){
-<a name="l00066"></a>00066     locevl=<a class="code" href="loc_8c.html#b579e505c2c50d59e69519da150c8f7b" title="duplicate a LOC_T object;">locdup</a>(simu-&gt;<a class="code" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a>-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>);
-<a name="l00067"></a>00067     <a class="code" href="loc_8c.html#181d4d51ddcecd01146183b5c26ca886" title="Rotate the coordinates by theta CCW.">locrot</a>(locevl,rot);
-<a name="l00068"></a>00068     }<span class="keywordflow">else</span>{
-<a name="l00069"></a>00069     locevl=simu-&gt;<a class="code" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a>-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>;
-<a name="l00070"></a>00070     }
-<a name="l00071"></a>00071 
-<a name="l00072"></a>00072     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> itsurf=0; itsurf&lt;parms-&gt;<a class="code" href="structPARMS__T.html#635a98dc98b7c99a8cb7662bb04f1f20" title="Number of tilted surfaces.">ntsurf</a>; itsurf++){
-<a name="l00073"></a>00073     <span class="keyword">const</span> <span class="keywordtype">double</span> alx=simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf]-&gt;<a class="code" href="structRECTMAP__T.html#6666991b51462a5b6eeba641d7907415" title="the x tilt angle in degree wrt beam (90 is prep),">txdeg</a>/180*M_PI;
-<a name="l00074"></a>00074     <span class="keyword">const</span> <span class="keywordtype">double</span> aly=simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf]-&gt;<a class="code" href="structRECTMAP__T.html#a0a55eb915536e48268e6a5bc84a1943" title="the y tilt angle in degree wrt beam (90 is prep),">tydeg</a>/180*M_PI;
-<a name="l00075"></a>00075     <span class="keyword">const</span> <span class="keywordtype">double</span> ftel=simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf]-&gt;<a class="code" href="structRECTMAP__T.html#cce27785f6b6de6e6e0aff3821c68f4e" title="Effective focal length of the telescope.">ftel</a>;
-<a name="l00076"></a>00076     <span class="keyword">const</span> <span class="keywordtype">double</span> fexit=simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf]-&gt;<a class="code" href="structRECTMAP__T.html#142dc14435b5aa5a24d4a5b9e851fa93" title="The distance between the exit pupil and the focus.">fexit</a>;
-<a name="l00077"></a>00077     <span class="keyword">const</span> <span class="keywordtype">double</span> fsurf=simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf]-&gt;<a class="code" href="structRECTMAP__T.html#842abfb371a284b2938b203bbab94a06" title="The distance between the tilted surface (M3) and the focus.">fsurf</a>;
-<a name="l00078"></a>00078     <span class="keyword">const</span> <span class="keywordtype">double</span> mag=fexit/ftel;
-<a name="l00079"></a>00079     <span class="keyword">const</span> <span class="keywordtype">double</span> scalex=-mag;
-<a name="l00080"></a>00080     <span class="keyword">const</span> <span class="keywordtype">double</span> scaley=mag;
-<a name="l00081"></a>00081     <span class="keyword">const</span> <span class="keywordtype">double</span> scaleopd=-2;
-<a name="l00082"></a>00082     <span class="keyword">const</span> <span class="keywordtype">double</span> het=fexit-fsurf;<span class="comment">//distance between exit pupil and M3.</span>
-<a name="l00083"></a>00083     <a class="code" href="structRECTMAP__T.html" title="Map with different x/y sampling.">RECTMAP_T</a> *mapsurf=simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf];
-<a name="l00084"></a>00084 
-<a name="l00085"></a>00085     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ievl=0; ievl&lt;parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#9f76679213a98ac7e3eb0fe92d645799" title="Number of evaluation directions.">nevl</a>; ievl++){
-<a name="l00086"></a>00086         <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ievl]){
-<a name="l00087"></a>00087         simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ievl]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(simu-&gt;<a class="code" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a>-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>, 1);
-<a name="l00088"></a>00088         }
-<a name="l00089"></a>00089         <span class="keywordtype">double</span> bx=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#dcb390bcffd7629411575788c77de50e" title="x Coordinate of evaluation directions">thetax</a>[ievl]/mag;<span class="comment">//2010-04-02: do not put - sign</span>
-<a name="l00090"></a>00090         <span class="keywordtype">double</span> by=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#76b3e6506ff40743e8e28ad6aa36afa4" title="y Coordinate of evaluation directions">thetay</a>[ievl]/mag;
-<a name="l00091"></a>00091         <span class="keywordtype">double</span> d_img_exit=fexit;
-<a name="l00092"></a>00092         proj_rect_grid(mapsurf,alx,aly,locevl,scalex,scaley,
-<a name="l00093"></a>00093                NULL,simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ievl]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,scaleopd,
-<a name="l00094"></a>00094                d_img_exit, het, bx,by);
-<a name="l00095"></a>00095     }
-<a name="l00096"></a>00096 
-<a name="l00097"></a>00097     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iwfs=0; iwfs&lt;parms-&gt;<a class="code" href="structPARMS__T.html#b6833beca5a29a5936d41ac934e66d24" title="Number of wfs.">nwfs</a>; iwfs++){
-<a name="l00098"></a>00098         <span class="keywordtype">int</span> ipowfs=parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#c6eeef5eba99a8dea64c1692bb60f5ff" title="powfs type">powfs</a>;
-<a name="l00099"></a>00099         <span class="keywordtype">int</span> ilocm=0;
-<a name="l00100"></a>00100         <span class="keywordflow">if</span>(powfs[ipowfs].locm &amp;&amp; powfs[ipowfs].nlocm&gt;1){<span class="comment">//misregistration.</span>
-<a name="l00101"></a>00101         ilocm=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#ac1b34e2f1f4455c53212bc350f5064b" title="indwfs[iwfs] gives the index of the wfs in this powfs group">indwfs</a>[iwfs];
-<a name="l00102"></a>00102         }
-<a name="l00103"></a>00103         <span class="keywordtype">double</span> hs=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#3b65158c197ddc07b117b5f8b1aa567b" title="height of guide star">hs</a>;
-<a name="l00104"></a>00104         <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *locwfs, *locwfsin;
-<a name="l00105"></a>00105         <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[iwfs]){
-<a name="l00106"></a>00106         simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[iwfs]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(simu-&gt;<a class="code" href="structSIM__T.html#574e2dc6ebf0b42d7677c64eee329cac">powfs</a>[ipowfs].<a class="code" href="structPOWFS__T.html#c45bc64d4ee12ed2fdfbbc8956dd699c">npts</a>,1);
-<a name="l00107"></a>00107         }
-<a name="l00108"></a>00108         <span class="keywordflow">if</span>(powfs[ipowfs].locm){
-<a name="l00109"></a>00109         locwfsin=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#0c80663120f8c0e599a063147043edda">locm</a>[ilocm];
-<a name="l00110"></a>00110         }<span class="keywordflow">else</span>{
-<a name="l00111"></a>00111         locwfsin=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#2a4eca6c9237397fb7383b557f87adea">loc</a>;
-<a name="l00112"></a>00112         }
-<a name="l00113"></a>00113         <span class="keywordflow">if</span>(do_rot){
-<a name="l00114"></a>00114         locwfs=<a class="code" href="loc_8c.html#b579e505c2c50d59e69519da150c8f7b" title="duplicate a LOC_T object;">locdup</a>(locwfsin);
-<a name="l00115"></a>00115         <a class="code" href="loc_8c.html#181d4d51ddcecd01146183b5c26ca886" title="Rotate the coordinates by theta CCW.">locrot</a>(locwfs,rot);
-<a name="l00116"></a>00116         }<span class="keywordflow">else</span>{
-<a name="l00117"></a>00117         locwfs=locwfsin;
-<a name="l00118"></a>00118         }
-<a name="l00119"></a>00119 
-<a name="l00120"></a>00120         <span class="keywordtype">double</span> d_img_focus=1./(1./ftel-1./hs)-ftel;
-<a name="l00121"></a>00121         <span class="comment">//info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus);</span>
-<a name="l00122"></a>00122         <span class="keywordtype">double</span> d_img_exit=fexit+d_img_focus;
-<a name="l00123"></a>00123         
-<a name="l00124"></a>00124         <span class="comment">//2010-04-02: do not put - sign</span>
-<a name="l00125"></a>00125         <span class="keywordtype">double</span> bx=parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#ebd74c669d9a3f057f4d4b4a43eda163" title="x direction">thetax</a>*(d_img_focus+ftel)/d_img_exit;
-<a name="l00126"></a>00126         <span class="keywordtype">double</span> by=parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#3344f596561dfaf1d9d197112e2cefbd" title="y direction">thetay</a>*(d_img_focus+ftel)/d_img_exit;
-<a name="l00127"></a>00127         proj_rect_grid(mapsurf,alx,aly,locwfs,scalex,scaley,
-<a name="l00128"></a>00128                NULL,simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[iwfs]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,scaleopd,
-<a name="l00129"></a>00129                d_img_exit, het, bx, by);
-<a name="l00130"></a>00130         
-<a name="l00131"></a>00131         <span class="keywordflow">if</span>(do_rot){
-<a name="l00132"></a>00132         locfree(locwfs);
-<a name="l00133"></a>00133         }
-<a name="l00134"></a>00134     }
-<a name="l00135"></a>00135     
-<a name="l00136"></a>00136         <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>,<span class="stringliteral">"surfwfs.bin"</span>);
-<a name="l00137"></a>00137     <a class="code" href="dmat_8h.html#70cd951a3932002ccc9270944d2005ec" title="User callable function to write cell array of dense matrix into a file.">dcellwrite</a>(simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>,<span class="stringliteral">"surfevl.bin"</span>);
-<a name="l00138"></a>00138     <span class="comment">//exit(0);</span>
-<a name="l00139"></a>00139     
-<a name="l00140"></a>00140     }
-<a name="l00141"></a>00141     <span class="keywordflow">if</span>(do_rot){
-<a name="l00142"></a>00142     locfree(locevl);
-<a name="l00143"></a>00143     }
-<a name="l00144"></a>00144     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#5c3b782dc6c8ab71ad93712166eaa0f2" title="cache surface on fine sampled grid matched WFS or Science grid">cachesurf</a>){
-<a name="l00145"></a>00145     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> itsurf=0; itsurf&lt;parms-&gt;<a class="code" href="structPARMS__T.html#635a98dc98b7c99a8cb7662bb04f1f20" title="Number of tilted surfaces.">ntsurf</a>; itsurf++){
-<a name="l00146"></a>00146         rectmapfree(simu-&gt;<a class="code" href="structSIM__T.html#a386a2f978740a45eb0837b410c8ce12">tsurf</a>[itsurf]);
-<a name="l00147"></a>00147     }
-<a name="l00148"></a>00148     }
-<a name="l00149"></a>00149 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -239,111 +122,11 @@ Setup tilted surface (M3) by ray tracing from the tilted surface to WFS and Scie
 <p>
 Setup surface perpendicular to the beam by ray tracing from the surface to WFS and Science grid. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00154"></a>00154                            {
-<a name="l00155"></a>00155     <span class="keyword">const</span> <a class="code" href="structPARMS__T.html" title="is a wrapper of all _CFG_T data types.">PARMS_T</a> *parms=simu-&gt;<a class="code" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a>;
-<a name="l00156"></a>00156     <a class="code" href="structPOWFS__T.html" title="contains the data associated with a certain type of WFS.">POWFS_T</a> *powfs=simu-&gt;<a class="code" href="structSIM__T.html#574e2dc6ebf0b42d7677c64eee329cac">powfs</a>;
-<a name="l00157"></a>00157     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#9810b604788d4ac18f7f202096756308" title="Number of OPD surfaces.">nsurf</a>&lt;=0){
-<a name="l00158"></a>00158     info2(<span class="stringliteral">"There are no surface map\n"</span>);
-<a name="l00159"></a>00159     <span class="keywordflow">return</span>;
-<a name="l00160"></a>00160     }<span class="keywordflow">else</span>{
-<a name="l00161"></a>00161     info2(<span class="stringliteral">"Setting up surface OPD (M1/M2/M3)\n"</span>);
-<a name="l00162"></a>00162     }
-<a name="l00163"></a>00163     <span class="keywordflow">if</span>(!parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#5c3b782dc6c8ab71ad93712166eaa0f2" title="cache surface on fine sampled grid matched WFS or Science grid">cachesurf</a>){
-<a name="l00164"></a>00164     error(<span class="stringliteral">"Not yet finished\n"</span>);
-<a name="l00165"></a>00165     }
-<a name="l00166"></a>00166     <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>){
-<a name="l00167"></a>00167     simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#b6833beca5a29a5936d41ac934e66d24" title="Number of wfs.">nwfs</a>,1);
-<a name="l00168"></a>00168     }
-<a name="l00169"></a>00169     <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>){
-<a name="l00170"></a>00170     simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>=dcellnew(parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#9f76679213a98ac7e3eb0fe92d645799" title="Number of evaluation directions.">nevl</a>,1);
-<a name="l00171"></a>00171     }
-<a name="l00172"></a>00172     simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>=calloc(parms-&gt;<a class="code" href="structPARMS__T.html#9810b604788d4ac18f7f202096756308" title="Number of OPD surfaces.">nsurf</a>, <span class="keyword">sizeof</span>(<a class="code" href="structMAP__T.html" title="OPD or Amplitude map defined on square/rectangular grids.">MAP_T</a>*));
-<a name="l00173"></a>00173     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> isurf=0; isurf&lt;parms-&gt;<a class="code" href="structPARMS__T.html#9810b604788d4ac18f7f202096756308" title="Number of OPD surfaces.">nsurf</a>; isurf++){
-<a name="l00174"></a>00174     <span class="keywordflow">if</span>(!parms-&gt;<a class="code" href="structPARMS__T.html#0b0b6d37dbd4660e5e68021ce3dcc887" title="OPD surfaces.">surf</a>[isurf]) <span class="keywordflow">continue</span>;
-<a name="l00175"></a>00175     <span class="keywordtype">char</span> *fn=<a class="code" href="path_8c.html#25730e4c54130615ab7657ac89c39150" title="Locate a file in path and return its absolute filename.">find_file</a>(parms-&gt;<a class="code" href="structPARMS__T.html#0b0b6d37dbd4660e5e68021ce3dcc887" title="OPD surfaces.">surf</a>[isurf]);
-<a name="l00176"></a>00176     info(<span class="stringliteral">"Loading surface OPD from %s\n"</span>, fn);
-<a name="l00177"></a>00177     simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>[isurf]=sqmapread(<span class="stringliteral">"%s"</span>,fn); free(fn);
-<a name="l00178"></a>00178     }
-<a name="l00179"></a>00179     <span class="keywordflow">if</span>(!parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#5c3b782dc6c8ab71ad93712166eaa0f2" title="cache surface on fine sampled grid matched WFS or Science grid">cachesurf</a>){
-<a name="l00180"></a>00180     <span class="keywordflow">return</span>;
-<a name="l00181"></a>00181     }
-<a name="l00182"></a>00182 
-<a name="l00183"></a>00183     <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *locevl;
-<a name="l00184"></a>00184     <span class="keyword">const</span> <span class="keywordtype">double</span> rot=-parms-&gt;<a class="code" href="structPARMS__T.html#674d3d0b966b2d7c27767e909dfcb30f" title="aperture parameters">aper</a>.<a class="code" href="structAPER__CFG__T.html#bf64dffc1048f103b91ee16d94eee779" title="pupil rotation in degree">rotdeg</a>/180.*M_PI;
-<a name="l00185"></a>00185     <span class="keywordtype">int</span> do_rot=(fabs(rot)&gt;1.e-10);
-<a name="l00186"></a>00186     <span class="keywordflow">if</span>(do_rot){
-<a name="l00187"></a>00187     locevl=<a class="code" href="loc_8c.html#b579e505c2c50d59e69519da150c8f7b" title="duplicate a LOC_T object;">locdup</a>(simu-&gt;<a class="code" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a>-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>);
-<a name="l00188"></a>00188     <a class="code" href="loc_8c.html#181d4d51ddcecd01146183b5c26ca886" title="Rotate the coordinates by theta CCW.">locrot</a>(locevl,rot);
-<a name="l00189"></a>00189     }<span class="keywordflow">else</span>{
-<a name="l00190"></a>00190     locevl=simu-&gt;<a class="code" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a>-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>;
-<a name="l00191"></a>00191     }
-<a name="l00192"></a>00192     
-<a name="l00193"></a>00193   
-<a name="l00194"></a>00194     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> isurf=0; isurf&lt;parms-&gt;<a class="code" href="structPARMS__T.html#9810b604788d4ac18f7f202096756308" title="Number of OPD surfaces.">nsurf</a>; isurf++){
-<a name="l00195"></a>00195     <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>[isurf]) <span class="keywordflow">continue</span>;
-<a name="l00196"></a>00196     <span class="keywordtype">double</span> hl=simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>[isurf]-&gt;<a class="code" href="structMAP__T.html#7cad352b82624ab945b7808ea931f282" title="Heigh conjugation of this surface.">h</a>;
-<a name="l00197"></a>00197     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ievl=0; ievl&lt;parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#9f76679213a98ac7e3eb0fe92d645799" title="Number of evaluation directions.">nevl</a>; ievl++){
-<a name="l00198"></a>00198         <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ievl]){
-<a name="l00199"></a>00199         simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ievl]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(simu-&gt;<a class="code" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a>-&gt;<a class="code" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e" title="PLOCS in laos.">locs</a>-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>, 1);
-<a name="l00200"></a>00200         }
-<a name="l00201"></a>00201         <span class="keywordtype">double</span> displacex=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#dcb390bcffd7629411575788c77de50e" title="x Coordinate of evaluation directions">thetax</a>[ievl]*hl;
-<a name="l00202"></a>00202         <span class="keywordtype">double</span> displacey=parms-&gt;<a class="code" href="structPARMS__T.html#4121e9dc728705be0ad2c58dcaf4cd75" title="Performance evaluation parameters.">evl</a>.<a class="code" href="structEVL__CFG__T.html#76b3e6506ff40743e8e28ad6aa36afa4" title="y Coordinate of evaluation directions">thetay</a>[ievl]*hl;
-<a name="l00203"></a>00203         
-<a name="l00204"></a>00204         <span class="keywordflow">if</span>(do_rot){
-<a name="l00205"></a>00205         <a class="code" href="accphi_8c.html#5ba7f2c5f6336b56caa056adcee4f11c" title="Propagate OPD defines on grid mapin to coordinate locout.">prop_grid</a>(simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>[isurf], locevl, simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ievl]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, 
-<a name="l00206"></a>00206               1, displacex, displacey, 1, 0, 0, 0);
-<a name="l00207"></a>00207         }<span class="keywordflow">else</span>{
-<a name="l00208"></a>00208         <a class="code" href="accphi_8c.html#ddff6b827e73815196b2a7bbd1b370f4" title="Propagate OPD defines on grid mapin to locstat_t that stores the starting point of...">prop_grid_stat</a>(simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>[isurf], simu-&gt;<a class="code" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a>-&gt;<a class="code" href="structAPER__T.html#6a91f03da0654196381718c098f23bfe" title="record the starting location of each column in locs, used to accelerate accphi">locs_stat</a>, 
-<a name="l00209"></a>00209                    simu-&gt;<a class="code" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ievl]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, 
-<a name="l00210"></a>00210                    1, displacex, displacey, 1, 0, 0, 0, 1);
-<a name="l00211"></a>00211         }
-<a name="l00212"></a>00212     }
-<a name="l00213"></a>00213     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iwfs=0; iwfs&lt;parms-&gt;<a class="code" href="structPARMS__T.html#b6833beca5a29a5936d41ac934e66d24" title="Number of wfs.">nwfs</a>; iwfs++){
-<a name="l00214"></a>00214         <span class="keywordtype">int</span> ipowfs=parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#c6eeef5eba99a8dea64c1692bb60f5ff" title="powfs type">powfs</a>;
-<a name="l00215"></a>00215         <span class="keywordtype">int</span> ilocm=0;
-<a name="l00216"></a>00216         <span class="keywordflow">if</span>(powfs[ipowfs].locm &amp;&amp; powfs[ipowfs].nlocm&gt;1){<span class="comment">//misregistration.</span>
-<a name="l00217"></a>00217         ilocm=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#ac1b34e2f1f4455c53212bc350f5064b" title="indwfs[iwfs] gives the index of the wfs in this powfs group">indwfs</a>[iwfs];
-<a name="l00218"></a>00218         }
-<a name="l00219"></a>00219         <span class="keywordtype">double</span> hs=parms-&gt;<a class="code" href="structPARMS__T.html#5cfc96549c1047f9f39a888842cdef92" title="Array of wfs type.">powfs</a>[ipowfs].<a class="code" href="structPOWFS__CFG__T.html#3b65158c197ddc07b117b5f8b1aa567b" title="height of guide star">hs</a>;
-<a name="l00220"></a>00220         <span class="keyword">const</span> <span class="keywordtype">double</span> scale=1.-hl/hs;
-<a name="l00221"></a>00221         <span class="keyword">const</span> <span class="keywordtype">double</span> displacex=parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#ebd74c669d9a3f057f4d4b4a43eda163" title="x direction">thetax</a>*hl;
-<a name="l00222"></a>00222         <span class="keyword">const</span> <span class="keywordtype">double</span> displacey=parms-&gt;<a class="code" href="structPARMS__T.html#19246602a8b7d0261d79416e281d6ca4" title="Array of wfs.">wfs</a>[iwfs].<a class="code" href="structWFS__CFG__T.html#3344f596561dfaf1d9d197112e2cefbd" title="y direction">thetay</a>*hl;
-<a name="l00223"></a>00223         <span class="keywordflow">if</span>(!simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[iwfs]){
-<a name="l00224"></a>00224         simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[iwfs]=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(simu-&gt;<a class="code" href="structSIM__T.html#574e2dc6ebf0b42d7677c64eee329cac">powfs</a>[ipowfs].<a class="code" href="structPOWFS__T.html#c45bc64d4ee12ed2fdfbbc8956dd699c">npts</a>,1);
-<a name="l00225"></a>00225         }
-<a name="l00226"></a>00226         <a class="code" href="structLOC__T.html" title="Struct for loc like plocs, xloc, aloc etc.">LOC_T</a> *locwfs, *locwfsin;
-<a name="l00227"></a>00227         <span class="keywordflow">if</span>(powfs[ipowfs].locm){
-<a name="l00228"></a>00228         locwfsin=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#0c80663120f8c0e599a063147043edda">locm</a>[ilocm];
-<a name="l00229"></a>00229         }<span class="keywordflow">else</span>{
-<a name="l00230"></a>00230         locwfsin=powfs[ipowfs].<a class="code" href="structPOWFS__T.html#2a4eca6c9237397fb7383b557f87adea">loc</a>;
-<a name="l00231"></a>00231         }
-<a name="l00232"></a>00232         <span class="keywordflow">if</span>(do_rot){
-<a name="l00233"></a>00233         locwfs=<a class="code" href="loc_8c.html#b579e505c2c50d59e69519da150c8f7b" title="duplicate a LOC_T object;">locdup</a>(locwfsin);
-<a name="l00234"></a>00234         <a class="code" href="loc_8c.html#181d4d51ddcecd01146183b5c26ca886" title="Rotate the coordinates by theta CCW.">locrot</a>(locwfs,rot);
-<a name="l00235"></a>00235         }<span class="keywordflow">else</span>{
-<a name="l00236"></a>00236         locwfs=locwfsin;
-<a name="l00237"></a>00237         }
-<a name="l00238"></a>00238         <a class="code" href="accphi_8c.html#5ba7f2c5f6336b56caa056adcee4f11c" title="Propagate OPD defines on grid mapin to coordinate locout.">prop_grid</a>(simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>[isurf], locwfs, simu-&gt;<a class="code" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a>-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[iwfs]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, 
-<a name="l00239"></a>00239               1, displacex, displacey, scale, 1., 0, 0); 
-<a name="l00240"></a>00240         <span class="keywordflow">if</span>(do_rot){
-<a name="l00241"></a>00241         locfree(locwfs);
-<a name="l00242"></a>00242         }
-<a name="l00243"></a>00243     }
-<a name="l00244"></a>00244     }
-<a name="l00245"></a>00245     <span class="keywordflow">if</span>(do_rot){
-<a name="l00246"></a>00246     locfree(locevl);
-<a name="l00247"></a>00247     }
-<a name="l00248"></a>00248     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#5c3b782dc6c8ab71ad93712166eaa0f2" title="cache surface on fine sampled grid matched WFS or Science grid">cachesurf</a>){
-<a name="l00249"></a>00249     sqmaparrfree(simu-&gt;<a class="code" href="structSIM__T.html#8763538dc5c96c59969447cb3cb8830e">surf</a>, parms-&gt;<a class="code" href="structPARMS__T.html#9810b604788d4ac18f7f202096756308" title="Number of OPD surfaces.">nsurf</a>);
-<a name="l00250"></a>00250     }
-<a name="l00251"></a>00251 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

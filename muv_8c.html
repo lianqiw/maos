@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: lib/muv.c File Reference</title>
+<title>maos-0.7.1: lib/muv.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -132,18 +132,6 @@ Apply M - u*v' <hr><h2>Function Documentation</h2>
 <p>
 Apply the sparse plug low rand compuation to xin without scaling of alpha: <img class="formulaInl" alt="$xout=(muv.M-muv.U*muv.V')*xin*alpha$" src="form_18.png">; U,V are low rank. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00030"></a>00030                                                                             {
-<a name="l00031"></a>00031     <a class="code" href="dsp_8h.html#8d54733ac98a65ca9f99c97713362125" title="Multiply a spcell with a dense cell: C=C+A*B*alpha.">spcellmulmat</a>(xout, A-&gt;<a class="code" href="structMUV__T.html#573a633efd57964aef3250a0d014f227" title="block sparse matrix">M</a>, xin, alpha);
-<a name="l00032"></a>00032     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *tmp=NULL;
-<a name="l00033"></a>00033     dcellmm(&amp;tmp,A-&gt;<a class="code" href="structMUV__T.html#fa9644721152188dc815327f091610c0" title="low rank terms V">V</a>, xin, <span class="stringliteral">"tn"</span>, -1.);
-<a name="l00034"></a>00034     dcellmm(xout,A-&gt;<a class="code" href="structMUV__T.html#40294a9e5e8cd011fc71cdeda57837ec" title="low rank terms U">U</a>, tmp, <span class="stringliteral">"nn"</span>, alpha);
-<a name="l00035"></a>00035     dcellfree(tmp);
-<a name="l00036"></a>00036     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structMUV__T.html#3e9fb771da66419d7d4b697405bdc9b6" title="Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute.">extra</a>){
-<a name="l00037"></a>00037     (*A-&gt;<a class="code" href="structMUV__T.html#0a370be0b229e7b207dbb93f9e5c06fb" title="Optionally attach an extra function that applies extra data.">exfun</a>)(xout, A-&gt;<a class="code" href="structMUV__T.html#3e9fb771da66419d7d4b697405bdc9b6" title="Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute.">extra</a>, xin, alpha);
-<a name="l00038"></a>00038     }
-<a name="l00039"></a>00039 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -181,17 +169,7 @@ Apply the sparse plug low rand compuation to xin without scaling of alpha: <img 
 <p>
 Apply cholesky backsubstitution solve to xin to get xout. 
 <p>
-Create xout is not exist already. The cholesky factors are prepared in <a class="el" href="setup__recon_8c.html" title="Contains routines that setup the wavefront reconstructor and DM fitting.">setup_recon.c</a> and stored in ((MUV_T*)A)-&gt;C <div class="fragment"><pre class="fragment"><a name="l00047"></a>00047                                                                  {
-<a name="l00048"></a>00048     <a class="code" href="dmat_8h.html#e98618064b54869b4180d0c7fd895645" title="initialize all numbers in a X(mat) object to 0">dzero</a>(*xout);
-<a name="l00049"></a>00049     <a class="code" href="chol_8c.html#da0ce1a175b77c9e140d8c826ff88907" title="Solve A*x=Y where the cholesky factor of A is stored in A.">chol_solve</a>(xout,A-&gt;<a class="code" href="structMUV__T.html#94e4b5e2b57d787f3467a9f1c81354fb">C</a>,xin);
-<a name="l00050"></a>00050     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *tmp=NULL;
-<a name="l00051"></a>00051     <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;tmp,A-&gt;<a class="code" href="structMUV__T.html#54a774e1ae6a7e9409f443003f72b25e">Vp</a>,xin,<span class="stringliteral">"tn"</span>,-1);
-<a name="l00052"></a>00052     <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(xout,A-&gt;<a class="code" href="structMUV__T.html#a1bf8aa22d80f36c063a078cd2284f6f">Up</a>,tmp,<span class="stringliteral">"nn"</span>,1);
-<a name="l00053"></a>00053     dfree(tmp);
-<a name="l00054"></a>00054 }
-</pre></div>
-<p>
-
+Create xout is not exist already. The cholesky factors are prepared in <a class="el" href="setup__recon_8c.html" title="Contains routines that setup the wavefront reconstructor and DM fitting.">setup_recon.c</a> and stored in ((MUV_T*)A)-&gt;C 
 </div>
 </div><p>
 <a class="anchor" name="de96309b1d59bf9740f3c6eeed3b4a7a"></a><!-- doxytag: member="muv.c::muv_chol_solve_cell" ref="de96309b1d59bf9740f3c6eeed3b4a7a" args="(dcell **xout, const MUV_T *A, const dcell *xin)" -->
@@ -228,16 +206,6 @@ Create xout is not exist already. The cholesky factors are prepared in <a class=
 <p>
 convert the data from <a class="el" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> to <a class="el" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> and apply <a class="el" href="muv_8c.html#a4328cb15b28f10526bb59c0e1a8ab38" title="Apply cholesky backsubstitution solve to xin to get xout.">muv_chol_solve()</a> 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00057"></a>00057                                                                         {
-<a name="l00058"></a>00058     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *xin2=dcell2m(xin);
-<a name="l00059"></a>00059     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *xout2=NULL;
-<a name="l00060"></a>00060     <a class="code" href="muv_8c.html#a4328cb15b28f10526bb59c0e1a8ab38" title="Apply cholesky backsubstitution solve to xin to get xout.">muv_chol_solve</a>(&amp;xout2, A, xin2);
-<a name="l00061"></a>00061     dfree(xin2);
-<a name="l00062"></a>00062     d2cell(xout,xout2,xin);<span class="comment">//xin is the reference for dimensions. copy data into xout.</span>
-<a name="l00063"></a>00063     dfree(xout2);
-<a name="l00064"></a>00064 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -259,35 +227,6 @@ convert the data from <a class="el" href="structdcell.html" title="an 2-d block 
 
 <p>
 Cholesky factorization on the sparse matrix and its low rank terms. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00067"></a>00067                             { 
-<a name="l00068"></a>00068     <span class="keywordflow">if</span>(!A-&gt;<a class="code" href="structMUV__T.html#573a633efd57964aef3250a0d014f227" title="block sparse matrix">M</a>) error(<span class="stringliteral">"M has to be none NULL\n"</span>);
-<a name="l00069"></a>00069     info(<span class="stringliteral">"muv_chol_prep:"</span>);
-<a name="l00070"></a>00070     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *muvM=<a class="code" href="dsp_8h.html#5d94fe9f6ba76a7d6b4ea76243e70198" title="Concatenate a spcell to sparse array.">spcell2sp</a>(A-&gt;<a class="code" href="structMUV__T.html#573a633efd57964aef3250a0d014f227" title="block sparse matrix">M</a>);
-<a name="l00071"></a>00071     A-&gt;<a class="code" href="structMUV__T.html#94e4b5e2b57d787f3467a9f1c81354fb">C</a>=<a class="code" href="chol_8c.html#43ab12416b0a5f5b4bb88587edbb9b12" title="Factorize a sparse array into LL&amp;#39;.">chol_factorize</a>(muvM);
-<a name="l00072"></a>00072     spfree(muvM);
-<a name="l00073"></a>00073     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structMUV__T.html#40294a9e5e8cd011fc71cdeda57837ec" title="low rank terms U">U</a>){
-<a name="l00074"></a>00074     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *U=dcell2m(A-&gt;<a class="code" href="structMUV__T.html#40294a9e5e8cd011fc71cdeda57837ec" title="low rank terms U">U</a>);
-<a name="l00075"></a>00075     A-&gt;<a class="code" href="structMUV__T.html#a1bf8aa22d80f36c063a078cd2284f6f">Up</a>=NULL;
-<a name="l00076"></a>00076     <a class="code" href="chol_8c.html#da0ce1a175b77c9e140d8c826ff88907" title="Solve A*x=Y where the cholesky factor of A is stored in A.">chol_solve</a>(&amp;(A-&gt;<a class="code" href="structMUV__T.html#a1bf8aa22d80f36c063a078cd2284f6f">Up</a>),A-&gt;<a class="code" href="structMUV__T.html#94e4b5e2b57d787f3467a9f1c81354fb">C</a>,U);
-<a name="l00077"></a>00077 
-<a name="l00078"></a>00078     dfree(U);
-<a name="l00079"></a>00079     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *V=dcell2m(A-&gt;<a class="code" href="structMUV__T.html#fa9644721152188dc815327f091610c0" title="low rank terms V">V</a>);
-<a name="l00080"></a>00080     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *UpV=NULL;<span class="comment">//UpV=I-Up'*V</span>
-<a name="l00081"></a>00081     <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;UpV,A-&gt;<a class="code" href="structMUV__T.html#a1bf8aa22d80f36c063a078cd2284f6f">Up</a>,V,<span class="stringliteral">"tn"</span>,-1);
-<a name="l00082"></a>00082     <span class="keywordflow">for</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> ii=0; ii&lt;UpV-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>; ii++){
-<a name="l00083"></a>00083         UpV-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[ii+ii*UpV-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>]+=1;
-<a name="l00084"></a>00084     }
-<a name="l00085"></a>00085     <a class="code" href="dmat_8h.html#661f5d1ec1bbcf8237c0f99b2b659314" title="inplace invert a general square matrix using lapack dgesv_">dinv_inplace</a>(UpV);<span class="comment">//Upv=(Upv)^-1</span>
-<a name="l00086"></a>00086     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *VI=NULL;<span class="comment">//VI=V*UpV</span>
-<a name="l00087"></a>00087     <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;VI,V,UpV,<span class="stringliteral">"nn"</span>,-1);
-<a name="l00088"></a>00088     dfree(UpV);
-<a name="l00089"></a>00089     dfree(V);
-<a name="l00090"></a>00090     <a class="code" href="chol_8c.html#da0ce1a175b77c9e140d8c826ff88907" title="Solve A*x=Y where the cholesky factor of A is stored in A.">chol_solve</a>(&amp;(A-&gt;<a class="code" href="structMUV__T.html#54a774e1ae6a7e9409f443003f72b25e">Vp</a>),A-&gt;<a class="code" href="structMUV__T.html#94e4b5e2b57d787f3467a9f1c81354fb">C</a>,VI);
-<a name="l00091"></a>00091     dfree(VI);
-<a name="l00092"></a>00092     }
-<a name="l00093"></a>00093 }
-</pre></div>
 <p>
 
 </div>
@@ -311,16 +250,6 @@ Cholesky factorization on the sparse matrix and its low rank terms.
 <p>
 Free cholesky decompositions. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00097"></a>00097                             {
-<a name="l00098"></a>00098     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structMUV__T.html#94e4b5e2b57d787f3467a9f1c81354fb">C</a>){
-<a name="l00099"></a>00099     chol_free(A-&gt;<a class="code" href="structMUV__T.html#94e4b5e2b57d787f3467a9f1c81354fb">C</a>);
-<a name="l00100"></a>00100     dfree(A-&gt;<a class="code" href="structMUV__T.html#a1bf8aa22d80f36c063a078cd2284f6f">Up</a>);
-<a name="l00101"></a>00101     dfree(A-&gt;<a class="code" href="structMUV__T.html#54a774e1ae6a7e9409f443003f72b25e">Vp</a>);
-<a name="l00102"></a>00102     A-&gt;<a class="code" href="structMUV__T.html#94e4b5e2b57d787f3467a9f1c81354fb">C</a>=NULL;
-<a name="l00103"></a>00103     }
-<a name="l00104"></a>00104 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -343,22 +272,11 @@ Free cholesky decompositions.
 <p>
 Free <a class="el" href="structMUV__T.html" title="Decompose an operator into a sparse operator and optional low rank terms.">MUV_T</a> struct. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00108"></a>00108                        {
-<a name="l00109"></a>00109     spcellfree(A-&gt;<a class="code" href="structMUV__T.html#573a633efd57964aef3250a0d014f227" title="block sparse matrix">M</a>);
-<a name="l00110"></a>00110     dcellfree(A-&gt;<a class="code" href="structMUV__T.html#40294a9e5e8cd011fc71cdeda57837ec" title="low rank terms U">U</a>);
-<a name="l00111"></a>00111     dcellfree(A-&gt;<a class="code" href="structMUV__T.html#fa9644721152188dc815327f091610c0" title="low rank terms V">V</a>);
-<a name="l00112"></a>00112     <span class="keywordflow">if</span>(A-&gt;<a class="code" href="structMUV__T.html#3e9fb771da66419d7d4b697405bdc9b6" title="Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute.">extra</a>){
-<a name="l00113"></a>00113     free(A-&gt;<a class="code" href="structMUV__T.html#3e9fb771da66419d7d4b697405bdc9b6" title="Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute.">extra</a>);<span class="comment">//a struct contains pointers.</span>
-<a name="l00114"></a>00114     }
-<a name="l00115"></a>00115     <a class="code" href="muv_8c.html#9f12e851e069ceb3a39173ea24c099f4" title="Free cholesky decompositions.">muv_chol_free</a>(A);
-<a name="l00116"></a>00116 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

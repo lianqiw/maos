@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: skyc/mtch.c File Reference</title>
+<title>maos-0.7.1: skyc/mtch.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -133,36 +133,6 @@ Routings regarding matched filter computation.
 Compute pixel intensity i0, and gradient of pixel intensity gx, gy from the PSF. 
 <p>
 <dl compact><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>merge this file with <a class="el" href="maos_2mtch_8c.html" title="Setting up matched filter.">maos/mtch.c</a> and put in lib folder. </dd></dl>
-<div class="fragment"><pre class="fragment"><a name="l00030"></a>00030                                                                     {
-<a name="l00031"></a>00031     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *otf=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(psf-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>, psf-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>);
-<a name="l00032"></a>00032     <a class="code" href="structcmat.html" title="a double complex matrix object contains 2-d arrays of double complex numbers.">cmat</a> *otfsave=<a class="code" href="cmat_8h.html#bb2b86ffc48237c760e652708aaf1415" title="Create a new T matrix object.">cnew</a>(psf-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>, psf-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>);
-<a name="l00033"></a>00033     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(otf, 1);
-<a name="l00034"></a>00034     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(otf, -1);
-<a name="l00035"></a>00035     <a class="code" href="fft_8c.html#8b872386a7d070a175aa54dadcf2c68e" title="Create FFTW plans for 2d FFT transforms.">cfft2plan</a>(otfsave,1);
-<a name="l00036"></a>00036     <a class="code" href="cmat__extra_8c.html#4ff6717c6a0f3919c71a2dc6fde5aae8" title="Copy a dmat into real part of cmat.">ccpd</a>(&amp;otf, psf);<span class="comment">//loaded psf has peak in corner</span>
-<a name="l00037"></a>00037     <a class="code" href="fft_8c.html#b773d97e4de22b835cebd7b622f60ee2" title="Do 2d inverse FFT (scaling factor of 1/(nx*ny) is applied).">cifft2</a>(otf, 1);<span class="comment">//turn to OTF, peak in corner</span>
-<a name="l00038"></a>00038     <a class="code" href="cmat_8h.html#2417a6c93f1245cf129586dce262aba3" title="Compute component wise multiply B=B.">ccwm</a>(otf, dtf-&gt;<a class="code" href="structDTF__S.html#73fe93b8afcdb01347ca1954536b2c2a" title="The FFT of the pixel functions.">nominal</a>);
-<a name="l00039"></a>00039     <a class="code" href="cmat_8h.html#db3c55ee96a9e7249403f738d251688c" title="copy the values from one X(mat) to another.">ccp</a>(&amp;otfsave, otf);
-<a name="l00040"></a>00040     <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(otf, -1);<span class="comment">//turn back.</span>
-<a name="l00041"></a>00041     <a class="code" href="dsp_8h.html#d14bb136cb7b8eef7ed55c732999f026" title="Multiply a sparse matrix with the real part of a complex vector.">spmulcreal</a>(i0-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, dtf-&gt;<a class="code" href="structDTF__S.html#48ac12e36ce9ecde7e21ad9a240b5f8b" title="The pixel selection.">si</a>, otf-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>, 1);
-<a name="l00042"></a>00042     <a class="code" href="cmat_8h.html#db3c55ee96a9e7249403f738d251688c" title="copy the values from one X(mat) to another.">ccp</a>(&amp;otf, otfsave);
-<a name="l00043"></a>00043     PCMAT(otf, potf);
-<a name="l00044"></a>00044     PCMAT(otfsave, potfsave);
-<a name="l00045"></a>00045     <span class="comment">//Now derivative</span>
-<a name="l00046"></a>00046     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;otf-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>; iy++){
-<a name="l00047"></a>00047     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;otf-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>; ix++){
-<a name="l00048"></a>00048         potf[iy][ix]*=dtf-&gt;<a class="code" href="structDTF__S.html#bab8285eff3c934cab29be046162a15b" title="Special frequency vector along x.">U</a>-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>[ix];
-<a name="l00049"></a>00049         potfsave[iy][ix]*=dtf-&gt;<a class="code" href="structDTF__S.html#bab8285eff3c934cab29be046162a15b" title="Special frequency vector along x.">U</a>-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>[iy];
-<a name="l00050"></a>00050     }
-<a name="l00051"></a>00051     }
-<a name="l00052"></a>00052     <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(otf, 1);
-<a name="l00053"></a>00053     <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(otfsave, 1);
-<a name="l00054"></a>00054     <a class="code" href="dsp_8h.html#d14bb136cb7b8eef7ed55c732999f026" title="Multiply a sparse matrix with the real part of a complex vector.">spmulcreal</a>(gx-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,dtf-&gt;<a class="code" href="structDTF__S.html#48ac12e36ce9ecde7e21ad9a240b5f8b" title="The pixel selection.">si</a>,otf-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,1);
-<a name="l00055"></a>00055     <a class="code" href="dsp_8h.html#d14bb136cb7b8eef7ed55c732999f026" title="Multiply a sparse matrix with the real part of a complex vector.">spmulcreal</a>(gy-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>,dtf-&gt;<a class="code" href="structDTF__S.html#48ac12e36ce9ecde7e21ad9a240b5f8b" title="The pixel selection.">si</a>,otfsave-&gt;<a class="code" href="structcmat.html#8b3042714ec7576bcdb1204030e8532a" title="the pointer to allocated memory.">p</a>,1);
-<a name="l00056"></a>00056     cfree(otf); cfree(otfsave);
-<a name="l00057"></a>00057 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -206,20 +176,6 @@ Compute pixel intensity i0, and gradient of pixel intensity gx, gy from the PSF.
 <p>
 shift without wraping i0 into i0x1 (+1) and i0x2 (-1) 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00062"></a>00062                                                                        {
-<a name="l00063"></a>00063     <span class="keywordtype">int</span> nx=i0-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>;
-<a name="l00064"></a>00064     double (*i0p)[nx]=(<span class="keywordtype">void</span>*)i0-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00065"></a>00065     double (*i0x1p)[nx]=(<span class="keywordtype">void</span>*)i0x1;
-<a name="l00066"></a>00066     double (*i0x2p)[nx]=(<span class="keywordtype">void</span>*)i0x2;
-<a name="l00067"></a>00067     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;i0-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>; iy++){
-<a name="l00068"></a>00068     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;i0-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>-1; ix++){
-<a name="l00069"></a>00069         i0x1p[iy][ix+1]=i0p[iy][ix]*scale;
-<a name="l00070"></a>00070         i0x2p[iy][ix]=i0p[iy][ix+1]*scale;
-<a name="l00071"></a>00071     }
-<a name="l00072"></a>00072     }
-<a name="l00073"></a>00073 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -262,20 +218,6 @@ shift without wraping i0 into i0x1 (+1) and i0x2 (-1)
 
 <p>
 shift without wraping i0 into i0y1 (+1) and i0y2 (-1) 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00077"></a>00077                                                                        {
-<a name="l00078"></a>00078     <span class="keywordtype">int</span> nx=i0-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>;
-<a name="l00079"></a>00079     double (*i0p)[nx]=(<span class="keywordtype">void</span>*)i0-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00080"></a>00080     double (*i0y1p)[nx]=(<span class="keywordtype">void</span>*)i0y1;
-<a name="l00081"></a>00081     double (*i0y2p)[nx]=(<span class="keywordtype">void</span>*)i0y2;
-<a name="l00082"></a>00082     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;i0-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>-1; iy++){
-<a name="l00083"></a>00083     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;i0-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>; ix++){
-<a name="l00084"></a>00084         i0y1p[iy+1][ix]=i0p[iy][ix]*scale;
-<a name="l00085"></a>00085         i0y2p[iy][ix]=i0p[iy+1][ix]*scale;
-<a name="l00086"></a>00086     }
-<a name="l00087"></a>00087     }
-<a name="l00088"></a>00088 }
-</pre></div>
 <p>
 
 </div>
@@ -350,72 +292,11 @@ shift without wraping i0 into i0y1 (+1) and i0y2 (-1)
 <p>
 Compute matched filter. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00094"></a>00094                                         {
-<a name="l00095"></a>00095     <span class="keywordtype">double</span> kp=1./pixtheta;
-<a name="l00096"></a>00096     <span class="keyword">const</span> <span class="keywordtype">double</span> psfvar=0;
-<a name="l00097"></a>00097     <span class="keywordtype">int</span> nmod=3;
-<a name="l00098"></a>00098     <span class="keywordflow">if</span>(cr){
-<a name="l00099"></a>00099     nmod=7;
-<a name="l00100"></a>00100     }
-<a name="l00101"></a>00101     <span class="keyword">const</span> <span class="keywordtype">long</span> nsa=i0-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>;
-<a name="l00102"></a>00102     <span class="keyword">const</span> <span class="keywordtype">long</span> nx=i0-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>;
-<a name="l00103"></a>00103     <span class="keyword">const</span> <span class="keywordtype">long</span> ny=i0-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[0]-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>;
-<a name="l00104"></a>00104     <span class="keyword">const</span> <span class="keywordtype">long</span> npixtot=nx*ny;
-<a name="l00105"></a>00105     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *i0m=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(2,nmod);
-<a name="l00106"></a>00106     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *i0g=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(npixtot, nmod);
-<a name="l00107"></a>00107     PDMAT(i0m,pi0m);
-<a name="l00108"></a>00108     PDMAT(i0g,pi0g);
-<a name="l00109"></a>00109     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *wt=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(npixtot, 1);
-<a name="l00110"></a>00110     
-<a name="l00111"></a>00111     *mtche=dcellnew(nsa,1);
-<a name="l00112"></a>00112     *sanea=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(nsa*2,1);
-<a name="l00113"></a>00113     
-<a name="l00114"></a>00114     pi0m[0][0]=1;
-<a name="l00115"></a>00115     pi0m[1][1]=1;
-<a name="l00116"></a>00116 
-<a name="l00117"></a>00117     <span class="keywordflow">if</span>(cr){
-<a name="l00118"></a>00118     pi0m[3][0]=1;
-<a name="l00119"></a>00119     pi0m[4][0]=-1;
-<a name="l00120"></a>00120     pi0m[5][1]=1;
-<a name="l00121"></a>00121     pi0m[6][1]=-1;
-<a name="l00122"></a>00122     }
-<a name="l00123"></a>00123     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> isa=0; isa&lt;nsa; isa++){    
-<a name="l00124"></a>00124 
-<a name="l00125"></a>00125     <a class="code" href="dmat_8h.html#e98618064b54869b4180d0c7fd895645" title="initialize all numbers in a X(mat) object to 0">dzero</a>(i0g);
-<a name="l00126"></a>00126     <span class="comment">//kp is here to ensure good conditioning</span>
-<a name="l00127"></a>00127     <a class="code" href="mathmisc_8c.html#e6678a16da8597133231f3c10f1adb40" title="add two double vectors: out=out*alpha+in*beta">adddbl</a>(pi0g[0], 1, gx-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, npixtot, 1);
-<a name="l00128"></a>00128     <a class="code" href="mathmisc_8c.html#e6678a16da8597133231f3c10f1adb40" title="add two double vectors: out=out*alpha+in*beta">adddbl</a>(pi0g[1], 1, gy-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, npixtot, 1);
-<a name="l00129"></a>00129     <a class="code" href="mathmisc_8c.html#e6678a16da8597133231f3c10f1adb40" title="add two double vectors: out=out*alpha+in*beta">adddbl</a>(pi0g[2], 1, i0-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, npixtot, kp);
-<a name="l00130"></a>00130     <span class="keywordflow">if</span>(cr){
-<a name="l00131"></a>00131         <a class="code" href="maos_2mtch_8c.html#4e92fad39aa9b75b81c20b9a4c3d12a2" title="shift i0 without wraping into i0x1 (+1) and i0x2 (-1)">mki0shx</a>(pi0g[3], pi0g[4], i0-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa], kp);
-<a name="l00132"></a>00132         <a class="code" href="maos_2mtch_8c.html#339982ae0e776543172cef78798ccba6" title="shift i0 without wraping into i0y1 (+1) and i0y2 (-1)">mki0shy</a>(pi0g[5], pi0g[6], i0-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa], kp);
-<a name="l00133"></a>00133     }
-<a name="l00134"></a>00134     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> ipix=0; ipix&lt;npixtot; ipix++){
-<a name="l00135"></a>00135         wt-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[ipix]=1./(rne*rne+bkgrnd+i0-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[ipix]+psfvar*i0-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[isa]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[ipix]);
-<a name="l00136"></a>00136     }
-<a name="l00137"></a>00137     
-<a name="l00138"></a>00138     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *tmp=<a class="code" href="dmat_8h.html#cac32a8e663201109abf36bd322e9a46" title="compute the pseudo inverse of matrix A with weigthing of full matrix W or sparse...">dpinv</a>(i0g, wt,NULL);
-<a name="l00139"></a>00139     <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;(*mtche)-&gt;p[isa],i0m,tmp,<span class="stringliteral">"nn"</span>,1);
-<a name="l00140"></a>00140     dfree(tmp);
-<a name="l00141"></a>00141     <a class="code" href="dmat_8h.html#b6f63a9e507f7a58e4f1ba98d7bb3288" title="Raise all elements to power power.">dcwpow</a>(wt,-1);
-<a name="l00142"></a>00142     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *nea2=<a class="code" href="dmat_8h.html#81d6ed373bf09f884a5114c8b0f543ac" title="compute (A*W*A&amp;#39;); where diag(W)=wt">dtmcc</a>((*mtche)-&gt;p[isa], wt);
-<a name="l00143"></a>00143     <span class="comment">//Drop coupling in x/y gradients.</span>
-<a name="l00144"></a>00144     (*sanea)-&gt;p[isa]=sqrt(nea2-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[0]);
-<a name="l00145"></a>00145     (*sanea)-&gt;p[isa+nsa]=sqrt(nea2-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[3]);
-<a name="l00146"></a>00146     dfree(nea2);
-<a name="l00147"></a>00147     }
-<a name="l00148"></a>00148   
-<a name="l00149"></a>00149     dfree(wt);
-<a name="l00150"></a>00150     dfree(i0g);
-<a name="l00151"></a>00151     dfree(i0m);
-<a name="l00152"></a>00152 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: skyc/skyc.c File Reference</title>
+<title>maos-0.7.1: skyc/skyc.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -63,7 +63,7 @@ window.onload = initDynSections;
   </div>
 </div>
 <div class="contents">
-<h1>skyc/skyc.c File Reference</h1>This file contains main routine that does the job management and calls setup_parms and then skysim to start the simulation.  
+<h1>skyc/skyc.c File Reference</h1>This file contains main routine about skycoverage.  
 <a href="#_details">More...</a>
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
@@ -74,7 +74,7 @@ window.onload = initDynSections;
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The <a class="el" href="maos_8c.html#3c04138a5bfe5d72780bb7e82a18e627" title="This is the standard entrance routine to the program.">main()</a>.  <a href="#3c04138a5bfe5d72780bb7e82a18e627"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-This file contains main routine that does the job management and calls setup_parms and then skysim to start the simulation. 
+This file contains main routine about skycoverage. 
 <p>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="3c04138a5bfe5d72780bb7e82a18e627"></a><!-- doxytag: member="skyc.c::main" ref="3c04138a5bfe5d72780bb7e82a18e627" args="(int argc, char **argv)" -->
@@ -105,114 +105,11 @@ This file contains main routine that does the job management and calls setup_par
 <p>
 The <a class="el" href="maos_8c.html#3c04138a5bfe5d72780bb7e82a18e627" title="This is the standard entrance routine to the program.">main()</a>. 
 <p>
-It parses the command line, setup the parms, ask the scheduler for signal to proceed, and then starts skysim to do sky coverage. <div class="fragment"><pre class="fragment"><a name="l00030"></a>00030                                {
-<a name="l00031"></a>00031     <span class="keywordflow">if</span>(strcmp(argv[0], <span class="stringliteral">"scheduler"</span>)==0){<span class="comment">//launch the scheduler.</span>
-<a name="l00032"></a>00032     scheduler();
-<a name="l00033"></a>00033     exit(0);
-<a name="l00034"></a>00034     }
-<a name="l00035"></a>00035     dirstart=mygetcwd();
-<a name="l00036"></a>00036     <span class="comment">//Strip out PATH information from the command line.</span>
-<a name="l00037"></a>00037     <span class="keywordtype">char</span>*fn=mybasename(argv[0]);
-<a name="l00038"></a>00038     strcpy(argv[0],fn);
-<a name="l00039"></a>00039     free(fn);
-<a name="l00040"></a>00040     
-<a name="l00041"></a>00041     <a class="code" href="structARG__S.html" title="ARG_S is used for command line parsing.">ARG_S</a>* arg=<a class="code" href="maos_2utils_8c.html#cb9c938dc842d5c52a16c7443fdb4ae3" title="Parse command line arguments argc, argv.">parse_args</a>(argc,argv);
-<a name="l00042"></a>00042     <span class="comment">/*In detach mode send to background and disable drawing*/</span>
-<a name="l00043"></a>00043     <span class="keywordflow">if</span>(arg-&gt;<a class="code" href="structARG__S.html#839e4bfe832fc2c5b10cf2d19ae2da4c" title="Detach from the command line and run in background.">detach</a>){
-<a name="l00044"></a>00044     disable_draw=1;<span class="comment">//disable drawing.</span>
-<a name="l00045"></a>00045     daemonize();
-<a name="l00046"></a>00046     }
-<a name="l00047"></a>00047     info2(<span class="stringliteral">"Output folder is '%s' %d threads\n"</span>,arg-&gt;<a class="code" href="structARG__S.html#29fbc454c84e22a683e8a7267786fd42" title="Result output directory.">dirout</a>, arg-&gt;<a class="code" href="structARG__S.html#17f4c0619b93ee1a18f2d7458ea0f3af" title="Number of threads.">nthread</a>);
-<a name="l00048"></a>00048 
-<a name="l00049"></a>00049 <span class="preprocessor">#ifdef SVN_REV</span>
-<a name="l00050"></a>00050 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(strlen(SVN_REV)&gt;1 &amp;&amp; strcmp(SVN_REV,<span class="stringliteral">"exported"</span>)){
-<a name="l00051"></a>00051     info2(<span class="stringliteral">"MAOS Version %s, Revision %s,"</span>,PACKAGE_VERSION,SVN_REV);
-<a name="l00052"></a>00052     }
-<a name="l00053"></a>00053 <span class="preprocessor">#else</span>
-<a name="l00054"></a>00054 <span class="preprocessor"></span>    info2(<span class="stringliteral">"MAOS Version %s,"</span>,PACKAGE_VERSION);
-<a name="l00055"></a>00055 <span class="preprocessor">#endif</span>
-<a name="l00056"></a>00056 <span class="preprocessor"></span>    info2(<span class="stringliteral">"Launched at %s in %s.\n"</span>,myasctime(),myhostname());
-<a name="l00057"></a>00057 
-<a name="l00058"></a>00058     fprintf(stderr, <span class="stringliteral">"Compiled on %s %s by %s "</span>,
-<a name="l00059"></a>00059         __DATE__, __TIME__, __VERSION__);
-<a name="l00060"></a>00060 <span class="preprocessor">#ifdef __OPTIMIZE__</span>
-<a name="l00061"></a>00061 <span class="preprocessor"></span>    fprintf(stderr, <span class="stringliteral">"with optimization.\n"</span>);
-<a name="l00062"></a>00062 <span class="preprocessor">#else</span>
-<a name="l00063"></a>00063 <span class="preprocessor"></span>    fprintf(stderr, <span class="stringliteral">"without optimization!!!\n"</span>);
-<a name="l00064"></a>00064 <span class="preprocessor">#endif</span>
-<a name="l00065"></a>00065 <span class="preprocessor"></span>    <span class="comment">//register signal handler</span>
-<a name="l00066"></a>00066     register_signal_handler(skyc_signal_handler);
-<a name="l00067"></a>00067     <span class="comment">/*</span>
-<a name="l00068"></a>00068 <span class="comment">      Ask job scheduler for permission to proceed. If no CPUs are available,</span>
-<a name="l00069"></a>00069 <span class="comment">      will block until ones are available.  if arg-&gt;force==1, will run</span>
-<a name="l00070"></a>00070 <span class="comment">      immediately.</span>
-<a name="l00071"></a>00071 <span class="comment">    */</span>
-<a name="l00072"></a>00072     <span class="keywordtype">char</span> *cwd=mygetcwd();
-<a name="l00073"></a>00073     <span class="keywordtype">int</span> slen=strlen(cwd)+2;
-<a name="l00074"></a>00074     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iarg=0; iarg&lt;argc; iarg++){
-<a name="l00075"></a>00075     slen+=1+strlen(argv[iarg]);
-<a name="l00076"></a>00076     }
-<a name="l00077"></a>00077     <span class="keywordtype">char</span> scmd[slen];
-<a name="l00078"></a>00078     <span class="keywordtype">char</span> *home=getenv(<span class="stringliteral">"HOME"</span>);<span class="comment">//don't free</span>
-<a name="l00079"></a>00079     <span class="keywordflow">if</span>(!strncmp(cwd,home,strlen(home))){
-<a name="l00080"></a>00080     strcpy(scmd,<span class="stringliteral">"~"</span>);
-<a name="l00081"></a>00081     strcat(scmd,cwd+strlen(home));
-<a name="l00082"></a>00082     }<span class="keywordflow">else</span>{
-<a name="l00083"></a>00083     strcpy(scmd,cwd);
-<a name="l00084"></a>00084     }
-<a name="l00085"></a>00085     strcat(scmd,<span class="stringliteral">"/"</span>);
-<a name="l00086"></a>00086     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iarg=0; iarg&lt;argc; iarg++){
-<a name="l00087"></a>00087     strcat(scmd,argv[iarg]);
-<a name="l00088"></a>00088     strcat(scmd,<span class="stringliteral">" "</span>);
-<a name="l00089"></a>00089     }
-<a name="l00090"></a>00090     <span class="keywordflow">if</span>(strlen(scmd)&gt;slen-1) error(<span class="stringliteral">"Overflow\n"</span>);
-<a name="l00091"></a>00091     scheduler_start(scmd,arg-&gt;<a class="code" href="structARG__S.html#17f4c0619b93ee1a18f2d7458ea0f3af" title="Number of threads.">nthread</a>,!arg-&gt;<a class="code" href="structARG__S.html#3ba41e4dae21863591a365d27e1a7a51" title="For start, bypassing scheduler.">force</a>);
-<a name="l00092"></a>00092     <span class="comment">//setting up parameters before asking scheduler to check for any errors.</span>
-<a name="l00093"></a>00093     dirsetup=stradd(<span class="stringliteral">"setup"</span>,NULL);
-<a name="l00094"></a>00094     PARMS_S * parms=<a class="code" href="maos_2parms_8h.html#97bc282d28009f59b0b4e51013062588" title="This routine calles other routines in this file to setup the parms parameter struct...">setup_parms</a>(arg);
-<a name="l00095"></a>00095     <span class="keywordflow">if</span>(parms-&gt;skyc.dbg){
-<a name="l00096"></a>00096     mymkdir(<span class="stringliteral">"%s"</span>,dirsetup);
-<a name="l00097"></a>00097     }
-<a name="l00098"></a>00098     <span class="keywordflow">if</span>(!arg-&gt;<a class="code" href="structARG__S.html#3ba41e4dae21863591a365d27e1a7a51" title="For start, bypassing scheduler.">force</a>){
-<a name="l00099"></a>00099     info2(<span class="stringliteral">"Waiting start signal from the scheduler ...\n"</span>);
-<a name="l00100"></a>00100     <span class="comment">/*Failed to wait. fall back to own checking.*/</span>
-<a name="l00101"></a>00101     <span class="keywordtype">int</span> count=0;
-<a name="l00102"></a>00102     <span class="keywordflow">while</span>(scheduler_wait()&amp;&amp; count&lt;60){
-<a name="l00103"></a>00103         warning3(<span class="stringliteral">"failed to get reply from scheduler. retry\n"</span>);
-<a name="l00104"></a>00104         sleep(10);
-<a name="l00105"></a>00105         count++;
-<a name="l00106"></a>00106         scheduler_start(scmd,arg-&gt;<a class="code" href="structARG__S.html#17f4c0619b93ee1a18f2d7458ea0f3af" title="Number of threads.">nthread</a>,!arg-&gt;<a class="code" href="structARG__S.html#3ba41e4dae21863591a365d27e1a7a51" title="For start, bypassing scheduler.">force</a>);
-<a name="l00107"></a>00107     }
-<a name="l00108"></a>00108     <span class="keywordflow">if</span>(count&gt;=60){
-<a name="l00109"></a>00109         warning3(<span class="stringliteral">"fall back to own checker\n"</span>);
-<a name="l00110"></a>00110         wait_cpu(arg-&gt;<a class="code" href="structARG__S.html#17f4c0619b93ee1a18f2d7458ea0f3af" title="Number of threads.">nthread</a>);
-<a name="l00111"></a>00111     }
-<a name="l00112"></a>00112     }
-<a name="l00113"></a>00113     info2(<span class="stringliteral">"Simulation started at %s in %s.\n"</span>,myasctime(),myhostname());
-<a name="l00114"></a>00114  
-<a name="l00115"></a>00115     free(arg);
-<a name="l00116"></a>00116     <span class="comment">/*Loads the main software*/</span>
-<a name="l00117"></a>00117 <span class="preprocessor">#if USE_PTHREAD == 2</span>
-<a name="l00118"></a>00118 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(parms-&gt;skyc.nthread&gt;1)
-<a name="l00119"></a>00119     default_pool=thr_pool_create(1,parms-&gt;skyc.nthread,3600,NULL);
-<a name="l00120"></a>00120 <span class="preprocessor">#endif</span>
-<a name="l00121"></a>00121 <span class="preprocessor"></span>    <a class="code" href="skysim_8c.html#f8d01af26f9797cb337a56def4eaad4e" title="Setup the stars fields and then calls skysim_isky() to handle each star field.">skysim</a>(parms);
-<a name="l00122"></a>00122     free_parms(parms);
-<a name="l00123"></a>00123     skyc_done(0);
-<a name="l00124"></a>00124     free(cwd);
-<a name="l00125"></a>00125     free(dirsetup);
-<a name="l00126"></a>00126     free(dirstart);
-<a name="l00127"></a>00127     info2(<span class="stringliteral">"End:\t%.2f MiB\n"</span>,get_job_mem()/1024.);
-<a name="l00128"></a>00128     info2(<span class="stringliteral">"Simulation finished at %s in %s.\n"</span>,myasctime(),myhostname());
-<a name="l00129"></a>00129     <span class="keywordflow">return</span> 0;
-<a name="l00130"></a>00130 }
-</pre></div>
-<p>
-
+It parses the command line, setup the parms, ask the scheduler for signal to proceed, and then starts skysim to do sky coverage. 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

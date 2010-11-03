@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: Compile and Run the Code</title>
+<title>maos-0.7.1: Compile and Run the Code</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -63,9 +63,6 @@ Requirements</a></h2>
 <li>C99 compliant compiler: GCC4 or ICC.</li></ul>
 <p>
 <ul>
-<li>FORTRAN compiler: gfortran or Intel IFC</li></ul>
-<p>
-<ul>
 <li>FFTW version 3. Can usually be installed through the linux distribution official repository or using source from www.fftw.org</li></ul>
 <p>
 <ul>
@@ -73,6 +70,9 @@ Requirements</a></h2>
 <p>
 <ul>
 <li>(Optional) GTK+ and Cairo. For drawdaemon and monitor.</li></ul>
+<p>
+<ul>
+<li>(Optional) cholmod. If not found in the system, will compile and use the shipped cholmod.</li></ul>
 <h2><a class="anchor" name="sect-run">
 Run the code</a></h2>
 <h3><a class="anchor" name="sect-prep">
@@ -160,7 +160,7 @@ Example: <div class="fragment"><pre class="fragment">
     maos -c scao_lgs.conf override.conf -n 4 -d -o test 
     </pre></div><p>
 Will launch the software using “scao_lgs.conf” (Single conjugate, LGS system) as the baseline and override some parameters by override.conf. It will launch 4 threads in simulation, detach from the console, and output the results into folder “test”. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

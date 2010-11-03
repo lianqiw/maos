@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: maos/sim.c File Reference</title>
+<title>maos-0.7.1: maos/sim.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -124,135 +124,20 @@ Call various functions to do the simulation and evaluate performance.
 <p>
 Closed loop simulation main loop. 
 <p>
-It calls <a class="el" href="sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84" title="Initialize simu (of type SIM_T) and various simulation data structs.">init_simu()</a> to initialize the simulation struct. Then calls <a class="el" href="sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens.">genscreen()</a> to generate atmospheric turbulence screens. Then for every time step, it calls <a class="el" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl()</a> to evaluate performance, <a class="el" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel.">wfsgrad()</a> to do wfs measurement, <a class="el" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit.">tomofit()</a> to do tomography and DM fit, <a class="el" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter()</a> to do DM command filtering. In MOAO mode, it call calls <a class="el" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into...">moao_recon()</a> for MOAO DM fitting. <div class="fragment"><pre class="fragment"><a name="l00051"></a>00051                                    {
-<a name="l00052"></a>00052     <span class="keywordtype">int</span> simend=parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#7939a4003b5c376eb09702a8a1572ce5" title="time step to stop simulation.">end</a>;
-<a name="l00053"></a>00053     <span class="keywordtype">int</span> simstart=parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#9e65d6a0d29a750075158ff470386f5e" title="time step to start simulation.">start</a>;
-<a name="l00054"></a>00054     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#8615676f068e88311d6f774e6cb92354" title="1: we are doing skycoverage preprocessing">skysim</a>){
-<a name="l00055"></a>00055     <a class="code" href="sim__utils_8c.html#f566f334aaf19cf9ad3ed5a847c2aee9" title="Output parameters necessary to run postproc using skyc/skyc.c.">save_skyc</a>(powfs,recon,parms);
-<a name="l00056"></a>00056     }
-<a name="l00057"></a>00057     <span class="keywordflow">if</span>(simstart&gt;=simend) <span class="keywordflow">return</span>;
-<a name="l00058"></a>00058     <span class="keywordtype">double</span> tk_0=myclockd();
-<a name="l00059"></a>00059 
-<a name="l00060"></a>00060     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iseed=0; iseed&lt;parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#6021b395d1b8ca9bb3f3449b67ed7935" title="How many simulation seed.">nseed</a>; iseed++){
-<a name="l00061"></a>00061     <span class="keywordtype">double</span> tk_1=myclockd();
-<a name="l00062"></a>00062     <a class="code" href="structSIM__T.html" title="contains all the run time data struct.">SIM_T</a> *simu=<a class="code" href="sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84" title="Initialize simu (of type SIM_T) and various simulation data structs.">init_simu</a>(parms,powfs,aper,recon,iseed);
-<a name="l00063"></a>00063     <span class="keywordflow">if</span>(!simu) <span class="keywordflow">continue</span>;<span class="comment">//skip.</span>
-<a name="l00064"></a>00064     <span class="keywordflow">if</span>(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#c524d5bd3cfcdc5ca45ba1641c8d1b0e" title="frozen flow.">frozenflow</a>){
-<a name="l00065"></a>00065         <span class="comment">/*Generating atmospheric screen(s) that frozen flows.*/</span>
-<a name="l00066"></a>00066         <a class="code" href="sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens.">genscreen</a>(simu);
-<a name="l00067"></a>00067     }
-<a name="l00068"></a>00068     <span class="keywordtype">double</span> tk_2=myclockd();
-<a name="l00069"></a>00069     <span class="keyword">const</span> <span class="keywordtype">int</span> CL=parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#0408bb89e89669682cba86f7fb98b2dc" title="closed loop or open loop">closeloop</a>;
-<a name="l00070"></a>00070     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> isim=simstart; isim&lt;simend; isim++){
-<a name="l00071"></a>00071         read_self_cpu();<span class="comment">//initialize CPU usage counter</span>
-<a name="l00072"></a>00072         simu-&gt;<a class="code" href="structSIM__T.html#04f684f8fb2c48643e6fcaa4bbf519a8">isim</a>=isim;
-<a name="l00073"></a>00073         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;isim=isim;
-<a name="l00074"></a>00074         <a class="code" href="sim__utils_8c.html#de5601f0c0ffa73c27aa90ec087d54ac" title="Evolving the Sodium layer by updating the elongation transfer function.">sim_update_etf</a>(simu);
-<a name="l00075"></a>00075         <span class="keywordtype">double</span> ck_0=myclockd();
-<a name="l00076"></a>00076         <span class="keywordflow">if</span>(!parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#c524d5bd3cfcdc5ca45ba1641c8d1b0e" title="frozen flow.">frozenflow</a>){
-<a name="l00077"></a>00077         <span class="comment">//re-seed the atmosphere in case atm is loaded from shm</span>
-<a name="l00078"></a>00078         seed_rand(&amp;simu-&gt;<a class="code" href="structSIM__T.html#aaaffcb8a2ecae5b338e79471d71e2c4">atm_rand</a>, lrand(&amp;simu-&gt;<a class="code" href="structSIM__T.html#aed2790ae0fbcdf99ab9952dcd41b5c7">init</a>));
-<a name="l00079"></a>00079         disable_atm_shm=1;
-<a name="l00080"></a>00080         <a class="code" href="sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens.">genscreen</a>(simu);
-<a name="l00081"></a>00081         dcellfree(simu-&gt;<a class="code" href="structSIM__T.html#2f33626ab1590a06d8897380abb49c00">opdr</a>); 
-<a name="l00082"></a>00082         dcellfree(simu-&gt;<a class="code" href="structSIM__T.html#d248dc53ba37345772d26a2ea1e32472">dmfit_hi</a>);
-<a name="l00083"></a>00083         dcellfree(simu-&gt;<a class="code" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a>);
-<a name="l00084"></a>00084         }
-<a name="l00085"></a>00085 <span class="preprocessor">#define PARALLEL 0</span>
-<a name="l00086"></a>00086 <span class="preprocessor"></span><span class="preprocessor">#if PARALLEL == 1 //does not help in T410s. Need to test taurus</span>
-<a name="l00087"></a>00087 <span class="preprocessor"></span>        pthread_t thread_perfevl, thread_wfsgrad, thread_tomofit;
-<a name="l00088"></a>00088         <span class="keywordflow">if</span>(CL){
-<a name="l00089"></a>00089         pthread_create(&amp;thread_perfevl, NULL, (<span class="keywordtype">void</span>*(*)(<span class="keywordtype">void</span>*))<a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>, (<span class="keywordtype">void</span>*)simu);
-<a name="l00090"></a>00090         }
-<a name="l00091"></a>00091         pthread_create(&amp;thread_wfsgrad, NULL, (<span class="keywordtype">void</span>*(*)(<span class="keywordtype">void</span>*))<a class="code" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel.">wfsgrad</a>, (<span class="keywordtype">void</span>*)simu);
-<a name="l00092"></a>00092         pthread_join(thread_wfsgrad,NULL);
-<a name="l00093"></a>00093         pthread_create(&amp;thread_tomofit, NULL, (<span class="keywordtype">void</span>*(*)(<span class="keywordtype">void</span>*))<a class="code" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit.">tomofit</a>, (<span class="keywordtype">void</span>*)simu);
-<a name="l00094"></a>00094         pthread_join(thread_tomofit,NULL);
-<a name="l00095"></a>00095         <span class="keywordflow">if</span>(CL){
-<a name="l00096"></a>00096         pthread_join(thread_perfevl,NULL);
-<a name="l00097"></a>00097         }
-<a name="l00098"></a>00098 
-<a name="l00099"></a>00099         <span class="keywordtype">double</span> ck_1=myclockd(); <span class="keywordtype">double</span> cpu_1=read_self_cpu();
-<a name="l00100"></a>00100         <span class="keywordtype">double</span> ck_2=myclockd(); <span class="keywordtype">double</span> cpu_2=read_self_cpu();
-<a name="l00101"></a>00101         <span class="keywordtype">double</span> ck_3=myclockd(); <span class="keywordtype">double</span> cpu_3=read_self_cpu();
-<a name="l00102"></a>00102 <span class="preprocessor">#else  </span>
-<a name="l00103"></a>00103 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(CL){<span class="comment">//before wfsgrad so we can apply ideal NGS modes</span>
-<a name="l00104"></a>00104         <a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>(simu);
-<a name="l00105"></a>00105         }
-<a name="l00106"></a>00106         <span class="keywordtype">double</span> ck_1=myclockd(); <span class="keywordtype">double</span> cpu_1=read_self_cpu();
-<a name="l00107"></a>00107         <a class="code" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel.">wfsgrad</a>(simu);
-<a name="l00108"></a>00108         <span class="keywordtype">double</span> ck_2=myclockd(); <span class="keywordtype">double</span> cpu_2=read_self_cpu();
-<a name="l00109"></a>00109         <a class="code" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit.">tomofit</a>(simu);
-<a name="l00110"></a>00110         <span class="keywordtype">double</span> ck_3=myclockd(); <span class="keywordtype">double</span> cpu_3=read_self_cpu();
-<a name="l00111"></a>00111 <span class="preprocessor">#endif</span>
-<a name="l00112"></a>00112 <span class="preprocessor"></span>        <a class="code" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter</a>(simu);<span class="comment">//updates dmreal.</span>
-<a name="l00113"></a>00113         <span class="keywordflow">if</span>(recon-&gt;<a class="code" href="structRECON__T.html#da6266bf34011ea0bdf22ad4863dca9b">moao</a>)
-<a name="l00114"></a>00114         <a class="code" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into...">moao_recon</a>(simu);
-<a name="l00115"></a>00115         <span class="keywordtype">double</span> ck_4=myclockd(); <span class="keywordtype">double</span> cpu_4=read_self_cpu();
-<a name="l00116"></a>00116         <span class="keywordflow">if</span>(!CL){<span class="comment">//Only in Open loop</span>
-<a name="l00117"></a>00117         <a class="code" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl</a>(simu);
-<a name="l00118"></a>00118         }
-<a name="l00119"></a>00119         <a class="code" href="sim__utils_8c.html#245796513a02d7892e76cea88316394e" title="Save telemetry data during simulation every 50 time steps.">save_simu</a>(simu);
-<a name="l00120"></a>00120         <span class="keywordtype">double</span> ck_5=myclockd();
-<a name="l00121"></a>00121         <span class="keywordtype">long</span> steps_done=iseed*(simend-simstart)+(isim+1-simstart);
-<a name="l00122"></a>00122         <span class="keywordtype">long</span> steps_rest=parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#6021b395d1b8ca9bb3f3449b67ed7935" title="How many simulation seed.">nseed</a>*(simend-simstart)-steps_done;
-<a name="l00123"></a>00123         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;rest=(long)((ck_5-tk_0-(tk_2-tk_1)*(iseed+1))/steps_done*steps_rest
-<a name="l00124"></a>00124                       +(tk_2-tk_1)*(parms-&gt;<a class="code" href="structPARMS__T.html#fc4942859637870067cc23401f5eeedc" title="Simulation information.">sim</a>.<a class="code" href="structSIM__CFG__T.html#6021b395d1b8ca9bb3f3449b67ed7935" title="How many simulation seed.">nseed</a>-iseed-1));
-<a name="l00125"></a>00125         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;laps=(long)(ck_5-tk_0);
-<a name="l00126"></a>00126         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;mean=(ck_5-tk_2)/(<span class="keywordtype">double</span>)(isim+1-simstart);
-<a name="l00127"></a>00127 <span class="preprocessor">#if TIMING_MEAN == 1</span>
-<a name="l00128"></a>00128 <span class="preprocessor"></span>        <span class="keywordflow">if</span>(isim&gt;simstart+2){
-<a name="l00129"></a>00129         <span class="comment">/*</span>
-<a name="l00130"></a>00130 <span class="comment">          skip first three time steps that </span>
-<a name="l00131"></a>00131 <span class="comment">          are not representative </span>
-<a name="l00132"></a>00132 <span class="comment">          due to missing DM commands</span>
-<a name="l00133"></a>00133 <span class="comment">        */</span>
-<a name="l00134"></a>00134         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;wfs  +=(ck_2-ck_1);
-<a name="l00135"></a>00135         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;recon+=(ck_3-ck_2);
-<a name="l00136"></a>00136         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;cache+=(ck_4-ck_3);
-<a name="l00137"></a>00137         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;eval +=(ck_1-ck_0+ck_5-ck_4);
-<a name="l00138"></a>00138         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;tot  +=(ck_5-ck_0);
-<a name="l00139"></a>00139         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;scale=1./(double)(isim-simstart-2);
-<a name="l00140"></a>00140         }
-<a name="l00141"></a>00141 <span class="preprocessor">#else</span>
-<a name="l00142"></a>00142 <span class="preprocessor"></span>        simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;wfs  =ck_2-ck_1;
-<a name="l00143"></a>00143         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;recon=ck_3-ck_2;
-<a name="l00144"></a>00144         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;cache=ck_4-ck_3;
-<a name="l00145"></a>00145         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;eval =ck_1-ck_0+ck_5-ck_4;
-<a name="l00146"></a>00146         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;tot  =ck_5-ck_0;
-<a name="l00147"></a>00147         simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>-&gt;scale=1;
-<a name="l00148"></a>00148 <span class="preprocessor">#endif</span>
-<a name="l00149"></a>00149 <span class="preprocessor"></span>        <span class="keywordtype">int</span> this_time=myclocki();
-<a name="l00150"></a>00150         <span class="keywordflow">if</span>(this_time&gt;simu-&gt;<a class="code" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">last_report_time</a>+1){
-<a name="l00151"></a>00151         <span class="comment">//we don't print out or report too frequency.</span>
-<a name="l00152"></a>00152         simu-&gt;<a class="code" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">last_report_time</a>=this_time;
-<a name="l00153"></a>00153         scheduler_report(simu-&gt;<a class="code" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a>);
-<a name="l00154"></a>00154         }
-<a name="l00155"></a>00155         <a class="code" href="sim__utils_8c.html#0be16bd01f2529c9b983cbc5db7fe691" title="Print out wavefront error information and timing at each time step.">print_progress</a>(simu);
-<a name="l00156"></a>00156         <span class="keywordflow">if</span>(simu-&gt;<a class="code" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a>&gt;1){
-<a name="l00157"></a>00157         info2(<span class="stringliteral">"CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n"</span>,
-<a name="l00158"></a>00158               cpu_2, cpu_3, cpu_4, cpu_1, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);
-<a name="l00159"></a>00159         }
-<a name="l00160"></a>00160     }<span class="comment">//isim</span>
-<a name="l00161"></a>00161     <a class="code" href="sim__utils_8c.html#84b825eee317f2e6b919c95773cd847f" title="Release memory of simu (of type SIM_T) and close files.">free_simu</a>(simu);
-<a name="l00162"></a>00162     }
-<a name="l00163"></a>00163 }
-</pre></div>
-<p>
-
+It calls <a class="el" href="sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84" title="Initialize simu (of type SIM_T) and various simulation data structs.">init_simu()</a> to initialize the simulation struct. Then calls <a class="el" href="sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens.">genscreen()</a> to generate atmospheric turbulence screens. Then for every time step, it calls <a class="el" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean...">perfevl()</a> to evaluate performance, <a class="el" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel.">wfsgrad()</a> to do wfs measurement, <a class="el" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit.">tomofit()</a> to do tomography and DM fit, <a class="el" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter()</a> to do DM command filtering. In MOAO mode, it call calls <a class="el" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into...">moao_recon()</a> for MOAO DM fitting. 
 <p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dynsection">
 <p><center><img src="sim_8c_b5fd8ff2c1fe7a6270dad89ec5da4873_cgraph.png" border="0" usemap="#sim_8c_b5fd8ff2c1fe7a6270dad89ec5da4873_cgraph_map" alt=""></center>
 <map name="sim_8c_b5fd8ff2c1fe7a6270dad89ec5da4873_cgraph_map">
-<area shape="rect" id="node3" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol()." alt="" coords="129,5,175,35"><area shape="rect" id="node5" href="sim__utils_8c.html#84b825eee317f2e6b919c95773cd847f" title="Release memory of simu (of type SIM_T) and close files." alt="" coords="113,59,191,88"><area shape="rect" id="node7" href="sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens." alt="" coords="111,112,193,141"><area shape="rect" id="node17" href="sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84" title="Initialize simu (of type SIM_T) and various simulation data structs." alt="" coords="115,165,189,195"><area shape="rect" id="node19" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into..." alt="" coords="105,219,199,248"><area shape="rect" id="node21" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean..." alt="" coords="123,272,181,301"><area shape="rect" id="node23" href="sim__utils_8c.html#0be16bd01f2529c9b983cbc5db7fe691" title="Print out wavefront error information and timing at each time step." alt="" coords="100,325,204,355"><area shape="rect" id="node25" href="sim__utils_8c.html#245796513a02d7892e76cea88316394e" title="Save telemetry data during simulation every 50 time steps." alt="" coords="111,379,193,408"><area shape="rect" id="node27" href="sim__utils_8c.html#f566f334aaf19cf9ad3ed5a847c2aee9" title="Output parameters necessary to run postproc using skyc/skyc.c." alt="" coords="111,432,193,461"><area shape="rect" id="node29" href="sim__utils_8c.html#de5601f0c0ffa73c27aa90ec087d54ac" title="Evolving the Sodium layer by updating the elongation transfer function." alt="" coords="97,485,207,515"><area shape="rect" id="node31" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit." alt="" coords="121,539,183,568"><area shape="rect" id="node33" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel." alt="" coords="119,592,185,621"><area shape="rect" id="node9" href="turbulence_8c.html#0ee9d0775731bbaf8324ad8e617ac15b" title="Generate screens from PSD with power of 12/3 instead of 11/3." alt="" coords="256,32,387,61"><area shape="rect" id="node11" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="296,85,347,115"><area shape="rect" id="node13" href="draw_8c.html#cd04347e8f08fcef0e42ee57056d32ed" title="like ddraw, acting on sqmap object." alt="" coords="284,139,359,168"><area shape="rect" id="node15" href="turbulence_8c.html#ded1c5f6bbc8fb085bf74c8da452dfb2" title="Generate vonkarman screens from turbulence statistics." alt="" coords="256,192,387,221"></map>
+<area shape="rect" id="node3" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol()." alt="" coords="129,5,175,35"><area shape="rect" id="node5" href="sim__utils_8c.html#84b825eee317f2e6b919c95773cd847f" title="Release memory of simu (of type SIM_T) and close files." alt="" coords="113,59,191,88"><area shape="rect" id="node7" href="sim__utils_8c.html#399be906c89239f2d06949ee5df937ee" title="wrap of the generic vonkarman_genscreen to generate turbulence screens." alt="" coords="111,112,193,141"><area shape="rect" id="node17" href="sim__utils_8c.html#27c195134fbcb70dbf90b5ff2ee82a84" title="Initialize simu (of type SIM_T) and various simulation data structs." alt="" coords="115,165,189,195"><area shape="rect" id="node19" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf" title="mao_recon happens after the common DM fitting and its integrator output to take into..." alt="" coords="105,219,199,248"><area shape="rect" id="node21" href="perfevl_8c.html#19afa47f9c816174b2fab7b46eba5c32" title="Evaluate performance by calling perfevl_ievl in parallel and then calls perfevl_mean..." alt="" coords="123,272,181,301"><area shape="rect" id="node23" href="sim__utils_8c.html#0be16bd01f2529c9b983cbc5db7fe691" title="Print out wavefront error information and timing at each time step." alt="" coords="100,325,204,355"><area shape="rect" id="node25" href="sim__utils_8c.html#245796513a02d7892e76cea88316394e" title="Save telemetry data during simulation every 50 time steps." alt="" coords="111,379,193,408"><area shape="rect" id="node27" href="sim__utils_8c.html#f566f334aaf19cf9ad3ed5a847c2aee9" title="Output parameters necessary to run postproc using skyc/skyc.c." alt="" coords="111,432,193,461"><area shape="rect" id="node29" href="sim__utils_8c.html#de5601f0c0ffa73c27aa90ec087d54ac" title="Evolving the Sodium layer by updating the elongation transfer function." alt="" coords="97,485,207,515"><area shape="rect" id="node31" href="recon_8c.html#17defa53668245c14cd494b9fab761f1" title="Calls tomo() and fit() to do the tomography and DM fit." alt="" coords="121,539,183,568"><area shape="rect" id="node33" href="wfsgrad_8c.html#99e7e23b2226afc767fc176f352f6e11" title="Calls wfsgrad_iwfs() to computes WFS gradient in parallel." alt="" coords="119,592,185,621"><area shape="rect" id="node9" href="turbulence_8c.html#4d1f13df09896188e9b77b998f19a8d8" title="Generate screens from PSD with power of 12/3 instead of 11/3." alt="" coords="256,32,387,61"><area shape="rect" id="node11" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="296,85,347,115"><area shape="rect" id="node13" href="draw_8c.html#92e1482bf0fce35d3ff3789695bfecd8" title="like ddraw, acting on sqmap object." alt="" coords="284,139,359,168"><area shape="rect" id="node15" href="turbulence_8c.html#8f2a0c217281c3160efef75176b047dc" title="Generate vonkarman screens from turbulence statistics." alt="" coords="256,192,387,221"></map>
 </div>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

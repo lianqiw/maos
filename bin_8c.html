@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: lib/bin.c File Reference</title>
+<title>maos-0.7.1: lib/bin.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -165,64 +165,7 @@ All file read/write operators are through functions in this file. <hr><h2>Functi
 <p>
 Process the input file name and return file names that can be open to read/write. 
 <p>
-If the file name does not end with .bin or .bin.gz it will add to the end .bin or .bin.gz depending on the value of defaultgzip. For read only access, it will also look into the path for files. <div class="fragment"><pre class="fragment"><a name="l00069"></a>00069                                                                     {
-<a name="l00070"></a>00070     <span class="keywordtype">char</span> *fn2;
-<a name="l00071"></a>00071     <span class="keywordflow">if</span>(fn[0]==<span class="charliteral">'~'</span>){
-<a name="l00072"></a>00072     <span class="keywordtype">char</span> *HOME=getenv(<span class="stringliteral">"HOME"</span>);
-<a name="l00073"></a>00073     fn2=malloc(strlen(HOME)+strlen(fn)+16);
-<a name="l00074"></a>00074     strcpy(fn2,HOME);
-<a name="l00075"></a>00075     strcat(fn2,fn+1);
-<a name="l00076"></a>00076     }<span class="keywordflow">else</span>{
-<a name="l00077"></a>00077     fn2=malloc(strlen(fn)+16);
-<a name="l00078"></a>00078     strcpy(fn2,fn);
-<a name="l00079"></a>00079     }
-<a name="l00080"></a>00080     <span class="keywordflow">if</span>(mod[0]==<span class="charliteral">'r'</span>){
-<a name="l00081"></a>00081     <span class="keywordtype">char</span> *fnr=NULL;
-<a name="l00082"></a>00082     <span class="keywordflow">if</span>(!(fnr=<a class="code" href="path_8c.html#0e3cda5e813f058b64cceb451bf88e64" title="Try to find a file in path and return its absolute filename of exist, NULL otherwise...">search_file</a>(fn2))){
-<a name="l00083"></a>00083         <span class="keywordflow">if</span>(strlen(fn2)&gt;=7&amp;&amp;!strncmp(fn2+strlen(fn2)-7,<span class="stringliteral">".bin.gz"</span>,7)){
-<a name="l00084"></a>00084         <span class="comment">//ended with bin.gz</span>
-<a name="l00085"></a>00085         fn2[strlen(fn2)-3]=<span class="charliteral">'\0'</span>;
-<a name="l00086"></a>00086         <span class="keywordflow">if</span>(!(fnr=<a class="code" href="path_8c.html#0e3cda5e813f058b64cceb451bf88e64" title="Try to find a file in path and return its absolute filename of exist, NULL otherwise...">search_file</a>(fn2))){
-<a name="l00087"></a>00087             error(<span class="stringliteral">"Neither %s nor %s exist\n"</span>, fn,fn2);
-<a name="l00088"></a>00088         }
-<a name="l00089"></a>00089         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(strlen(fn2)&gt;=4&amp;&amp;!strncmp(fn2+strlen(fn2)-4,<span class="stringliteral">".bin"</span>,4)){
-<a name="l00090"></a>00090         <span class="comment">//ended with .bin</span>
-<a name="l00091"></a>00091         strncat(fn2, <span class="stringliteral">".gz"</span>, 3);
-<a name="l00092"></a>00092         <span class="keywordflow">if</span>(!(fnr=<a class="code" href="path_8c.html#0e3cda5e813f058b64cceb451bf88e64" title="Try to find a file in path and return its absolute filename of exist, NULL otherwise...">search_file</a>(fn2))){
-<a name="l00093"></a>00093             error(<span class="stringliteral">"Neither %s nor %s exist\n"</span>, fn,fn2);
-<a name="l00094"></a>00094         }
-<a name="l00095"></a>00095         }<span class="keywordflow">else</span>{<span class="comment">//no recognized suffix</span>
-<a name="l00096"></a>00096         strncat(fn2, <span class="stringliteral">".bin"</span>, 4);
-<a name="l00097"></a>00097         <span class="keywordflow">if</span>(!(fnr=<a class="code" href="path_8c.html#0e3cda5e813f058b64cceb451bf88e64" title="Try to find a file in path and return its absolute filename of exist, NULL otherwise...">search_file</a>(fn2))){
-<a name="l00098"></a>00098             strncat(fn2,<span class="stringliteral">".gz"</span>,3);
-<a name="l00099"></a>00099             <span class="keywordflow">if</span>(!(fnr=<a class="code" href="path_8c.html#0e3cda5e813f058b64cceb451bf88e64" title="Try to find a file in path and return its absolute filename of exist, NULL otherwise...">search_file</a>(fn2))){
-<a name="l00100"></a>00100             error(<span class="stringliteral">"Neither %s, %s.bin, nor %s.bin.gz exist\n"</span>,
-<a name="l00101"></a>00101                   fn,fn,fn);
-<a name="l00102"></a>00102             }
-<a name="l00103"></a>00103         }
-<a name="l00104"></a>00104         }
-<a name="l00105"></a>00105     }
-<a name="l00106"></a>00106     free(fn2);
-<a name="l00107"></a>00107     fn2=fnr;
-<a name="l00108"></a>00108     }<span class="keywordflow">else</span> <span class="keywordflow">if</span> (mod[0]==<span class="charliteral">'w'</span>){<span class="comment">//for write, no suffix. we append .bin.gz</span>
-<a name="l00109"></a>00109     <span class="keywordflow">if</span>(!((strlen(fn2)&gt;=7&amp;&amp;!strncmp(fn2+strlen(fn2)-7,<span class="stringliteral">".bin.gz"</span>,7))
-<a name="l00110"></a>00110          || (strlen(fn2)&gt;=4&amp;&amp;!strncmp(fn2+strlen(fn2)-4,<span class="stringliteral">".bin"</span>,4)))){
-<a name="l00111"></a>00111         <span class="keywordflow">if</span>(defaultgzip)
-<a name="l00112"></a>00112         strncat(fn2,<span class="stringliteral">".bin.gz"</span>,7);
-<a name="l00113"></a>00113         <span class="keywordflow">else</span>
-<a name="l00114"></a>00114         strncat(fn2,<span class="stringliteral">".bin"</span>,4);
-<a name="l00115"></a>00115     }
-<a name="l00116"></a>00116     <span class="keywordflow">if</span>(exist(fn2)){<span class="comment">//remove old file to avoid write over a symbolic link.</span>
-<a name="l00117"></a>00117         <span class="keyword">remove</span>(fn2);
-<a name="l00118"></a>00118     }
-<a name="l00119"></a>00119     }<span class="keywordflow">else</span>{
-<a name="l00120"></a>00120     error(<span class="stringliteral">"Invalid mode\n"</span>);
-<a name="l00121"></a>00121     }
-<a name="l00122"></a>00122     <span class="keywordflow">return</span> fn2;
-<a name="l00123"></a>00123 }
-</pre></div>
-<p>
-
+If the file name does not end with .bin or .bin.gz it will add to the end .bin or .bin.gz depending on the value of defaultgzip. For read only access, it will also look into the path for files. 
 </div>
 </div><p>
 <a class="anchor" name="3d9545eb7bf658ee050828326040278c"></a><!-- doxytag: member="bin.c::zfopen" ref="3d9545eb7bf658ee050828326040278c" args="(const char *fn, char *mod)" -->
@@ -253,31 +196,6 @@ If the file name does not end with .bin or .bin.gz it will add to the end .bin o
 <p>
 Open the file and return a <a class="el" href="structfile__t.html" title="contains information about opened files.">file_t</a> struct that either contains a file descriptor (for .bin) or a zlib file pointer. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00129"></a>00129                                          {
-<a name="l00130"></a>00130     LOCK(lock);
-<a name="l00131"></a>00131     <a class="code" href="structfile__t.html" title="contains information about opened files.">file_t</a>* fp=calloc(1, <span class="keyword">sizeof</span>(<a class="code" href="structfile__t.html" title="contains information about opened files.">file_t</a>));
-<a name="l00132"></a>00132     PINIT(fp-&gt;lock);
-<a name="l00133"></a>00133     fp-&gt;<a class="code" href="structfile__t.html#4d36389ab82800c404acc8cfe646bc5d">fn</a>=<a class="code" href="bin_8c.html#3460abaa987907e837b1a0c7ff627034" title="Process the input file name and return file names that can be open to read/write...">procfn</a>(fn,mod,1);
-<a name="l00134"></a>00134     <span class="keyword">const</span> <span class="keywordtype">char</span>* fn2=fp-&gt;<a class="code" href="structfile__t.html#4d36389ab82800c404acc8cfe646bc5d">fn</a>;
-<a name="l00135"></a>00135 <span class="preprocessor">#if IO_TIMMING == 1</span>
-<a name="l00136"></a>00136 <span class="preprocessor"></span>    gettimeofday(&amp;(fp-&gt;tv1), NULL);
-<a name="l00137"></a>00137 <span class="preprocessor">#endif</span>
-<a name="l00138"></a>00138 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(strlen(fn2)&gt;=3 &amp;&amp; !strcmp(fn2+strlen(fn2)-3,<span class="stringliteral">".gz"</span>)){
-<a name="l00139"></a>00139     fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>=1;
-<a name="l00140"></a>00140     <span class="keywordflow">if</span>(!(fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>=gzopen(fn2,mod))){
-<a name="l00141"></a>00141         error(<span class="stringliteral">"Error gzopen for %s\n"</span>,fn2);
-<a name="l00142"></a>00142     }
-<a name="l00143"></a>00143     }<span class="keywordflow">else</span>{ 
-<a name="l00144"></a>00144     fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>=0;
-<a name="l00145"></a>00145     <span class="keywordflow">if</span>(!(fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>=fopen(fn2,mod))){
-<a name="l00146"></a>00146         error(<span class="stringliteral">"Error fopen for %s\n"</span>,fn2);
-<a name="l00147"></a>00147     }
-<a name="l00148"></a>00148     }
-<a name="l00149"></a>00149     UNLOCK(lock);
-<a name="l00150"></a>00150     <span class="keywordflow">return</span> fp;
-<a name="l00151"></a>00151 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -299,36 +217,6 @@ Open the file and return a <a class="el" href="structfile__t.html" title="contai
 
 <p>
 Close the file. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00155"></a>00155                         {
-<a name="l00156"></a>00156     LOCK(lock);
-<a name="l00157"></a>00157     PDEINIT(fp-&gt;lock);
-<a name="l00158"></a>00158 <span class="preprocessor">#if IO_TIMMING == 1</span>
-<a name="l00159"></a>00159 <span class="preprocessor"></span>    <span class="keywordtype">long</span> fpos;
-<a name="l00160"></a>00160     <span class="keywordflow">if</span>(fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>){
-<a name="l00161"></a>00161     fpos=gztell((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00162"></a>00162     }<span class="keywordflow">else</span>{
-<a name="l00163"></a>00163     fpos=ftell((FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00164"></a>00164     }
-<a name="l00165"></a>00165     <span class="keywordtype">double</span> size=(double)fpos/1024./1024.;
-<a name="l00166"></a>00166     <span class="keyword">struct </span>timeval tv2;
-<a name="l00167"></a>00167     gettimeofday(&amp;tv2, NULL);
-<a name="l00168"></a>00168     <span class="keywordtype">double</span> tm=(double)tv2.tv_sec+(<span class="keywordtype">double</span>)tv2.tv_usec*1e-6
-<a name="l00169"></a>00169     -((double)fp-&gt;tv1.tv_sec+(<span class="keywordtype">double</span>)fp-&gt;tv1.tv_usec*1e-6);
-<a name="l00170"></a>00170     <span class="keyword">const</span> <span class="keywordtype">char</span> *type[2]={<span class="stringliteral">"\033[33mUncompress"</span>, <span class="stringliteral">"\033[32mCompressed"</span>};
-<a name="l00171"></a>00171     fprintf(stderr, <span class="stringliteral">"%s File %7.2f MiB takes %5.2f s at %6.1f MiB/s: "</span>
-<a name="l00172"></a>00172         <span class="stringliteral">"%s\033[00m\n"</span>, type[fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>], size, tm, size/tm, fp-&gt;<a class="code" href="structfile__t.html#4d36389ab82800c404acc8cfe646bc5d">fn</a>);
-<a name="l00173"></a>00173 <span class="preprocessor">#endif</span>
-<a name="l00174"></a>00174 <span class="preprocessor"></span>    <span class="keywordflow">if</span>(fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>){
-<a name="l00175"></a>00175     gzclose((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00176"></a>00176     }<span class="keywordflow">else</span>{
-<a name="l00177"></a>00177     fclose((FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00178"></a>00178     }
-<a name="l00179"></a>00179     free(fp-&gt;<a class="code" href="structfile__t.html#4d36389ab82800c404acc8cfe646bc5d">fn</a>);
-<a name="l00180"></a>00180     free(fp);
-<a name="l00181"></a>00181     UNLOCK(lock);
-<a name="l00182"></a>00182 }
-</pre></div>
 <p>
 
 </div>
@@ -373,21 +261,7 @@ Close the file.
 <p>
 Write to the file. 
 <p>
-If in gzip mode, calls gzwrite, otherwise, calls fwrite. Follows the interface of fwrite. <div class="fragment"><pre class="fragment"><a name="l00188"></a>00188                                         {
-<a name="l00189"></a>00189     <span class="comment">/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/</span>
-<a name="l00190"></a>00190     LOCK(fp-&gt;lock);
-<a name="l00191"></a>00191     <span class="keywordflow">if</span>(fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>){
-<a name="l00192"></a>00192     gzwrite((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>, ptr, size*nmemb);
-<a name="l00193"></a>00193     }<span class="keywordflow">else</span>{
-<a name="l00194"></a>00194     <span class="keywordtype">size_t</span> ct=fwrite(ptr, size, nmemb, (FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00195"></a>00195     <span class="keywordflow">if</span>(ct!=nmemb)
-<a name="l00196"></a>00196         error_write;
-<a name="l00197"></a>00197     }
-<a name="l00198"></a>00198     UNLOCK(fp-&gt;lock);
-<a name="l00199"></a>00199 }
-</pre></div>
-<p>
-
+If in gzip mode, calls gzwrite, otherwise, calls fwrite. Follows the interface of fwrite. 
 </div>
 </div><p>
 <a class="anchor" name="6f90c7b343cad172afd005feb5112c30"></a><!-- doxytag: member="bin.c::zfread" ref="6f90c7b343cad172afd005feb5112c30" args="(void *ptr, const size_t size, const size_t nmemb, file_t *fp)" -->
@@ -430,31 +304,7 @@ If in gzip mode, calls gzwrite, otherwise, calls fwrite. Follows the interface o
 <p>
 Read from the file. 
 <p>
-if in gzip mode, calls gzread, otherwise calls fread. follows the interface of fread. <div class="fragment"><pre class="fragment"><a name="l00204"></a>00204                                                                          {
-<a name="l00205"></a>00205     <span class="comment">/*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/</span>
-<a name="l00206"></a>00206     LOCK(fp-&gt;lock);
-<a name="l00207"></a>00207     <span class="keywordflow">if</span>(fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>){
-<a name="l00208"></a>00208     <span class="keywordtype">int</span> status;
-<a name="l00209"></a>00209     <span class="keywordflow">if</span>((status=gzread((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>, ptr, size*nmemb))&lt;1){
-<a name="l00210"></a>00210         <span class="keywordflow">if</span>(status==-1){
-<a name="l00211"></a>00211         warning(<span class="stringliteral">"Error happened in reading\n"</span>);
-<a name="l00212"></a>00212         }<span class="keywordflow">else</span>{
-<a name="l00213"></a>00213         warning(<span class="stringliteral">"End of File encoutnered\n"</span>);
-<a name="l00214"></a>00214         }
-<a name="l00215"></a>00215     }
-<a name="l00216"></a>00216     }<span class="keywordflow">else</span>{
-<a name="l00217"></a>00217     <span class="keywordtype">size_t</span> ct=fread(ptr, size, nmemb, (FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00218"></a>00218     <span class="keywordflow">if</span>(ct!=nmemb){
-<a name="l00219"></a>00219         error(<span class="stringliteral">"Reading from %s failed\n"</span>, fp-&gt;<a class="code" href="structfile__t.html#4d36389ab82800c404acc8cfe646bc5d">fn</a>);
-<a name="l00220"></a>00220     }
-<a name="l00221"></a>00221     <span class="keywordflow">if</span>(feof((FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>))
-<a name="l00222"></a>00222         warning(<span class="stringliteral">"End of File encountered in %s\n"</span>,fp-&gt;<a class="code" href="structfile__t.html#4d36389ab82800c404acc8cfe646bc5d">fn</a>);
-<a name="l00223"></a>00223     }
-<a name="l00224"></a>00224     UNLOCK(fp-&gt;lock);
-<a name="l00225"></a>00225 }
-</pre></div>
-<p>
-
+if in gzip mode, calls gzread, otherwise calls fread. follows the interface of fread. 
 </div>
 </div><p>
 <a class="anchor" name="3d718e30cd4faabe0c6b902e3ede141c"></a><!-- doxytag: member="bin.c::zfseek" ref="3d718e30cd4faabe0c6b902e3ede141c" args="(file_t *fp, long offset, int whence)" -->
@@ -491,15 +341,6 @@ if in gzip mode, calls gzread, otherwise calls fread. follows the interface of f
 <p>
 Move the current position pointer, like fseek. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00229"></a>00229                                                {
-<a name="l00230"></a>00230     <span class="keywordflow">if</span>(fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>){
-<a name="l00231"></a>00231     <span class="keywordflow">return</span> gzseek((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>,offset,whence);
-<a name="l00232"></a>00232     }<span class="keywordflow">else</span>{
-<a name="l00233"></a>00233     <span class="keywordflow">return</span> fseek((FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>,offset,whence);
-<a name="l00234"></a>00234     }
-<a name="l00235"></a>00235 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -522,31 +363,6 @@ Move the current position pointer, like fseek.
 <p>
 Tell whether we end of file is reached. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00239"></a>00239                      {
-<a name="l00240"></a>00240     LOCK(fp-&gt;lock);
-<a name="l00241"></a>00241     <span class="keywordtype">int</span> ans;
-<a name="l00242"></a>00242     <span class="keywordtype">long</span> cpos, fpos;
-<a name="l00243"></a>00243     <span class="keywordflow">if</span>(fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>){
-<a name="l00244"></a>00244     cpos=gztell((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00245"></a>00245     gzseek((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>,0,SEEK_END);
-<a name="l00246"></a>00246     fpos=gztell((voidp)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00247"></a>00247     }<span class="keywordflow">else</span>{
-<a name="l00248"></a>00248     cpos=ftell((FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00249"></a>00249     fseek((FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>, 0, SEEK_END);    
-<a name="l00250"></a>00250     fpos=ftell((FILE*)fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00251"></a>00251     }
-<a name="l00252"></a>00252     <span class="keywordflow">if</span>(cpos!=fpos){
-<a name="l00253"></a>00253     fprintf(stderr,<span class="stringliteral">"There are unread bytes near the end of the file\n"</span>
-<a name="l00254"></a>00254         <span class="stringliteral">"Current position is %ld, File END is %ld\n"</span>,cpos, fpos);
-<a name="l00255"></a>00255     ans=1;
-<a name="l00256"></a>00256     }<span class="keywordflow">else</span>{
-<a name="l00257"></a>00257     ans=0;
-<a name="l00258"></a>00258     }
-<a name="l00259"></a>00259     UNLOCK(fp-&gt;lock);
-<a name="l00260"></a>00260     <span class="keywordflow">return</span> ans;
-<a name="l00261"></a>00261 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -568,15 +384,6 @@ Tell whether we end of file is reached.
 
 <p>
 Flush the buffer. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00265"></a>00265                        {
-<a name="l00266"></a>00266     <span class="keywordflow">if</span>(fp-&gt;<a class="code" href="structfile__t.html#812bd29e4d103ec5c8d3aa6f027b85f5">isgzip</a>){
-<a name="l00267"></a>00267     gzflush(fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>,4);
-<a name="l00268"></a>00268     }<span class="keywordflow">else</span>{
-<a name="l00269"></a>00269     fflush(fp-&gt;<a class="code" href="structfile__t.html#049d2fe81403226e58a4c44986e37d7e">p</a>);
-<a name="l00270"></a>00270     }
-<a name="l00271"></a>00271 }
-</pre></div>
 <p>
 
 </div>
@@ -615,19 +422,7 @@ Flush the buffer.
 <p>
 Write multiple long numbers into the file. 
 <p>
-To write three numbers, a, b, c, call with zfwritelarr(fp, 3, &amp;a, &amp;b, &amp;c); <div class="fragment"><pre class="fragment"><a name="l00275"></a>00275                                             {
-<a name="l00276"></a>00276     va_list ap;
-<a name="l00277"></a>00277     <span class="keywordtype">int</span> i;
-<a name="l00278"></a>00278     va_start (ap, count);              <span class="comment">//Initialize the argument list.</span>
-<a name="l00279"></a>00279     <span class="keywordflow">for</span> (i = 0; i &lt; count; i++){
-<a name="l00280"></a>00280     uint64_t *addr=va_arg (ap, uint64_t*);  <span class="comment">//Get the next argument value.  </span>
-<a name="l00281"></a>00281     <a class="code" href="bin_8c.html#67c349fe1033d91feb34b436dbb7e6b3" title="Write to the file.">zfwrite</a>(addr, <span class="keyword">sizeof</span>(uint64_t), 1, fp);
-<a name="l00282"></a>00282     }
-<a name="l00283"></a>00283     va_end (ap);                       <span class="comment">// Clean up. </span>
-<a name="l00284"></a>00284 }
-</pre></div>
-<p>
-
+To write three numbers, a, b, c, call with zfwritelarr(fp, 3, &amp;a, &amp;b, &amp;c); 
 </div>
 </div><p>
 <a class="anchor" name="f2343993fa331cbf30672791bdf90e7d"></a><!-- doxytag: member="bin.c::zfreadlarr" ref="f2343993fa331cbf30672791bdf90e7d" args="(file_t *fp, int count,...)" -->
@@ -664,19 +459,7 @@ To write three numbers, a, b, c, call with zfwritelarr(fp, 3, &amp;a, &amp;b, &a
 <p>
 Read multiple long numbers from the file. 
 <p>
-To read three numbers, a, b, c, call with zfreadlarr(fp, 3, &amp;a, &amp;b, &amp;c); <div class="fragment"><pre class="fragment"><a name="l00289"></a>00289                                            {
-<a name="l00290"></a>00290     va_list ap;
-<a name="l00291"></a>00291     <span class="keywordtype">int</span> i;
-<a name="l00292"></a>00292     va_start (ap, count);              <span class="comment">//Initialize the argument list.</span>
-<a name="l00293"></a>00293     <span class="keywordflow">for</span> (i = 0; i &lt; count; i++){
-<a name="l00294"></a>00294     uint64_t *addr=va_arg (ap, uint64_t*);  <span class="comment">//Get the next argument value.  </span>
-<a name="l00295"></a>00295     <a class="code" href="bin_8c.html#6f90c7b343cad172afd005feb5112c30" title="Read from the file.">zfread</a>(addr, <span class="keyword">sizeof</span>(uint64_t), 1, fp);
-<a name="l00296"></a>00296     }
-<a name="l00297"></a>00297     va_end (ap);                       <span class="comment">// Clean up. </span>
-<a name="l00298"></a>00298 }
-</pre></div>
-<p>
-
+To read three numbers, a, b, c, call with zfreadlarr(fp, 3, &amp;a, &amp;b, &amp;c); 
 </div>
 </div><p>
 <a class="anchor" name="1604f7a3a2eb8ec34d8d22c063458613"></a><!-- doxytag: member="bin.c::do_write" ref="1604f7a3a2eb8ec34d8d22c063458613" args="(const void *fpn, const int isfile, const size_t size, const uint32_t magic, const void *p, const uint64_t nx, const uint64_t ny)" -->
@@ -748,25 +531,6 @@ First write a magic number that represents the data type. Then write two numbers
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>ny</em>&nbsp;</td><td>Number of columns. 1 for vector </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00311"></a>00311            {
-<a name="l00312"></a>00312     <a class="code" href="structfile__t.html" title="contains information about opened files.">file_t</a> *fp;
-<a name="l00313"></a>00313     <span class="keywordflow">if</span>(isfile){
-<a name="l00314"></a>00314     fp=<a class="code" href="bin_8c.html#3d9545eb7bf658ee050828326040278c" title="Open the file and return a file_t struct that either contains a file descriptor (for...">zfopen</a>((<span class="keywordtype">char</span>*)fpn, <span class="stringliteral">"wb"</span>);
-<a name="l00315"></a>00315     }<span class="keywordflow">else</span>{
-<a name="l00316"></a>00316     fp=(<a class="code" href="structfile__t.html" title="contains information about opened files.">file_t</a>*) fpn;
-<a name="l00317"></a>00317     }
-<a name="l00318"></a>00318     <a class="code" href="bin_8c.html#67c349fe1033d91feb34b436dbb7e6b3" title="Write to the file.">zfwrite</a>(&amp;magic, <span class="keyword">sizeof</span>(uint32_t),1,fp);
-<a name="l00319"></a>00319     <span class="keywordflow">if</span>(p &amp;&amp; nx&gt;0 &amp;&amp; ny&gt;0){
-<a name="l00320"></a>00320     <a class="code" href="bin_8c.html#661981dba53025cce58eb981094679b7" title="Write multiple long numbers into the file.">zfwritelarr</a>(fp, 2, &amp;nx, &amp;ny);
-<a name="l00321"></a>00321     <a class="code" href="bin_8c.html#67c349fe1033d91feb34b436dbb7e6b3" title="Write to the file.">zfwrite</a>(p, size, nx*ny,fp);
-<a name="l00322"></a>00322     }<span class="keywordflow">else</span>{
-<a name="l00323"></a>00323     uint64_t zero=0;
-<a name="l00324"></a>00324     <a class="code" href="bin_8c.html#661981dba53025cce58eb981094679b7" title="Write multiple long numbers into the file.">zfwritelarr</a>(fp, 2, &amp;zero, &amp;zero);
-<a name="l00325"></a>00325     }
-<a name="l00326"></a>00326     <span class="keywordflow">if</span>(isfile) <a class="code" href="bin_8c.html#4ed840d37c980314e41e565e7dd617d3" title="Close the file.">zfclose</a>(fp);
-<a name="l00327"></a>00327 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -839,30 +603,6 @@ First a magic number is read from the file and compared with magicin. If mismatc
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>pny</em>&nbsp;</td><td>Return number of columns </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00340"></a>00340           {
-<a name="l00341"></a>00341     <a class="code" href="structfile__t.html" title="contains information about opened files.">file_t</a> *fp;
-<a name="l00342"></a>00342     <span class="keywordflow">if</span>(isfile){
-<a name="l00343"></a>00343     fp=<a class="code" href="bin_8c.html#3d9545eb7bf658ee050828326040278c" title="Open the file and return a file_t struct that either contains a file descriptor (for...">zfopen</a>((<span class="keywordtype">char</span>*)fpn, <span class="stringliteral">"rb"</span>);
-<a name="l00344"></a>00344     }<span class="keywordflow">else</span>{
-<a name="l00345"></a>00345     fp=(<a class="code" href="structfile__t.html" title="contains information about opened files.">file_t</a>*) fpn;
-<a name="l00346"></a>00346     }
-<a name="l00347"></a>00347     uint32_t magic2;
-<a name="l00348"></a>00348     <a class="code" href="bin_8c.html#6f90c7b343cad172afd005feb5112c30" title="Read from the file.">zfread</a>(&amp;magic2, <span class="keyword">sizeof</span>(uint32_t),1,fp);
-<a name="l00349"></a>00349     <span class="keywordflow">if</span>(magic2!=magic){
-<a name="l00350"></a>00350     error(<span class="stringliteral">"File is wrong format. magic is %x, wanted %x\n"</span>,magic2, magic);
-<a name="l00351"></a>00351     }
-<a name="l00352"></a>00352     <a class="code" href="bin_8c.html#f2343993fa331cbf30672791bdf90e7d" title="Read multiple long numbers from the file.">zfreadlarr</a>(fp, 2, pnx, pny);
-<a name="l00353"></a>00353     <span class="keywordflow">if</span>(*pnx==0 || *pny==0){
-<a name="l00354"></a>00354     *p=NULL;
-<a name="l00355"></a>00355     }<span class="keywordflow">else</span>{
-<a name="l00356"></a>00356     <span class="keywordflow">if</span>(*p) warning(<span class="stringliteral">"*p should be null\n"</span>);
-<a name="l00357"></a>00357     *p=malloc(size*(*pnx)*(*pny));
-<a name="l00358"></a>00358     <a class="code" href="bin_8c.html#6f90c7b343cad172afd005feb5112c30" title="Read from the file.">zfread</a>(*p, size, (*pnx)*(*pny),fp);
-<a name="l00359"></a>00359     }
-<a name="l00360"></a>00360     <span class="keywordflow">if</span>(isfile) <a class="code" href="bin_8c.html#4ed840d37c980314e41e565e7dd617d3" title="Close the file.">zfclose</a>(fp);
-<a name="l00361"></a>00361 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -911,12 +651,6 @@ First a magic number is read from the file and compared with magicin. If mismatc
 
 <p>
 Write a double array of size nx*ny to file. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00365"></a>00365                                                                       {
-<a name="l00366"></a>00366     format2fn;
-<a name="l00367"></a>00367     <a class="code" href="bin_8c.html#1604f7a3a2eb8ec34d8d22c063458613" title="Write an 1-d or 2-d array into the file.">do_write</a>(fn, 1, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>), M_DBL, p, (uint64_t)nx, (uint64_t)ny);
-<a name="l00368"></a>00368 }
-</pre></div>
 <p>
 
 </div>
@@ -967,12 +701,6 @@ Write a double array of size nx*ny to file.
 <p>
 Write a double complex array of size nx*ny to file. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00372"></a>00372                                                                         {
-<a name="l00373"></a>00373     format2fn;
-<a name="l00374"></a>00374     <a class="code" href="bin_8c.html#1604f7a3a2eb8ec34d8d22c063458613" title="Write an 1-d or 2-d array into the file.">do_write</a>(fn, 1, <span class="keyword">sizeof</span>(dcomplex), M_CMP, p, (uint64_t)nx, (uint64_t)ny);
-<a name="l00375"></a>00375 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1021,12 +749,6 @@ Write a double complex array of size nx*ny to file.
 
 <p>
 Write a 64 bit integer array of size nx*ny to file. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00379"></a>00379                                                                            {
-<a name="l00380"></a>00380     format2fn;
-<a name="l00381"></a>00381     <a class="code" href="bin_8c.html#1604f7a3a2eb8ec34d8d22c063458613" title="Write an 1-d or 2-d array into the file.">do_write</a>(fn, 1, <span class="keyword">sizeof</span>(int64_t), M_INT64, p, (uint64_t)nx, (uint64_t)ny);
-<a name="l00382"></a>00382 }
-</pre></div>
 <p>
 
 </div>
@@ -1077,12 +799,6 @@ Write a 64 bit integer array of size nx*ny to file.
 <p>
 Write a 32 bit integer array of size nx*ny to file. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00386"></a>00386                                                                            {
-<a name="l00387"></a>00387     format2fn;
-<a name="l00388"></a>00388     <a class="code" href="bin_8c.html#1604f7a3a2eb8ec34d8d22c063458613" title="Write an 1-d or 2-d array into the file.">do_write</a>(fn, 1, <span class="keyword">sizeof</span>(int32_t), M_INT32, p, (uint64_t)nx, (uint64_t)ny);
-<a name="l00389"></a>00389 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1131,18 +847,6 @@ Write a 32 bit integer array of size nx*ny to file.
 
 <p>
 Read a double array of size nx*ny from file. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00393"></a>00393                                                                     {
-<a name="l00394"></a>00394     format2fn;
-<a name="l00395"></a>00395     uint64_t nx2,ny2;
-<a name="l00396"></a>00396     <a class="code" href="bin_8c.html#b62b85852b39160e2164042df6b9a914" title="Read an 1-d or 2-d array from the file.">do_read</a>(fn, 1, <span class="keyword">sizeof</span>(<span class="keywordtype">double</span>), M_DBL, (<span class="keywordtype">void</span>**)p, &amp;nx2, &amp;ny2);
-<a name="l00397"></a>00397     *nx=nx2;
-<a name="l00398"></a>00398     *ny=ny2;
-<a name="l00399"></a>00399     <span class="keywordflow">if</span>(*nx!=nx2 || *ny!=ny2){
-<a name="l00400"></a>00400     warning(<span class="stringliteral">"Data overflow\n"</span>);
-<a name="l00401"></a>00401     }
-<a name="l00402"></a>00402 }
-</pre></div>
 <p>
 
 </div>
@@ -1193,18 +897,6 @@ Read a double array of size nx*ny from file.
 <p>
 Read a 64 bit integer array of size nx*ny from file. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00408"></a>00408                                 {
-<a name="l00409"></a>00409     format2fn;
-<a name="l00410"></a>00410     uint64_t nx2,ny2;
-<a name="l00411"></a>00411     <a class="code" href="bin_8c.html#b62b85852b39160e2164042df6b9a914" title="Read an 1-d or 2-d array from the file.">do_read</a>(fn, 1, <span class="keyword">sizeof</span>(uint64_t), M_INT64, (<span class="keywordtype">void</span>**)p, &amp;nx2, &amp;ny2);
-<a name="l00412"></a>00412     *nx=nx2;
-<a name="l00413"></a>00413     *ny=ny2;
-<a name="l00414"></a>00414     <span class="keywordflow">if</span>(*nx!=nx2 || *ny!=ny2){
-<a name="l00415"></a>00415     warning(<span class="stringliteral">"Data overflow\n"</span>);
-<a name="l00416"></a>00416     }
-<a name="l00417"></a>00417 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -1254,23 +946,11 @@ Read a 64 bit integer array of size nx*ny from file.
 <p>
 Read a 32 bit integer array of size nx*ny from file. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00423"></a>00423                                 {
-<a name="l00424"></a>00424     format2fn;
-<a name="l00425"></a>00425     uint64_t nx2,ny2;
-<a name="l00426"></a>00426     <a class="code" href="bin_8c.html#b62b85852b39160e2164042df6b9a914" title="Read an 1-d or 2-d array from the file.">do_read</a>(fn, 1,  <span class="keyword">sizeof</span>(uint32_t), M_INT32, (<span class="keywordtype">void</span>**)p, &amp;nx2, &amp;ny2);
-<a name="l00427"></a>00427     *nx=nx2;
-<a name="l00428"></a>00428     *ny=ny2;
-<a name="l00429"></a>00429     <span class="keywordflow">if</span>(*nx!=nx2 || *ny!=ny2){
-<a name="l00430"></a>00430     warning(<span class="stringliteral">"Data overflow\n"</span>);
-<a name="l00431"></a>00431     }
-<a name="l00432"></a>00432 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:51 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: LOCSTATCOL_T Struct Reference</title>
+<title>maos-0.7.1: locstat_t Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -63,71 +63,71 @@ window.onload = initDynSections;
   </div>
 </div>
 <div class="contents">
-<h1>LOCSTATCOL_T Struct Reference</h1><!-- doxytag: class="LOCSTATCOL_T" -->Store starting x,y for each col.  
+<h1>locstat_t Struct Reference</h1><!-- doxytag: class="locstat_t" -->Stores array of <a class="el" href="structlocstatcol__t.html" title="Store starting x,y for each col.">locstatcol_t</a>.  
 <a href="#_details">More...</a>
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLOCSTATCOL__T.html#c37f0b89bdf0c0f94a89616d6717c781">xstart</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structlocstatcol__t.html">locstatcol_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlocstat__t.html#a938bf320ac6d8dc99350665c2e5949a">cols</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">starting x of this column  <a href="#c37f0b89bdf0c0f94a89616d6717c781"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLOCSTATCOL__T.html#034938b87bbaef2de1bf4734814c912c">ystart</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Information about each column.  <a href="#a938bf320ac6d8dc99350665c2e5949a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlocstat__t.html#97e5f52c821e34ebf38586a6a019d652">ncol</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">starting y of this column  <a href="#034938b87bbaef2de1bf4734814c912c"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLOCSTATCOL__T.html#b303a5c59f009741bb845b85f2dda780">pos</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Number of consecutive columns found.  <a href="#97e5f52c821e34ebf38586a6a019d652"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structlocstat__t.html#22508d2484125473516ecae516bdaec8">dx</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">starting index of this column  <a href="#b303a5c59f009741bb845b85f2dda780"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sampling of the grid.  <a href="#22508d2484125473516ecae516bdaec8"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-Store starting x,y for each col. <hr><h2>Field Documentation</h2>
-<a class="anchor" name="c37f0b89bdf0c0f94a89616d6717c781"></a><!-- doxytag: member="LOCSTATCOL_T::xstart" ref="c37f0b89bdf0c0f94a89616d6717c781" args="" -->
+Stores array of <a class="el" href="structlocstatcol__t.html" title="Store starting x,y for each col.">locstatcol_t</a>. <hr><h2>Field Documentation</h2>
+<a class="anchor" name="a938bf320ac6d8dc99350665c2e5949a"></a><!-- doxytag: member="locstat_t::cols" ref="a938bf320ac6d8dc99350665c2e5949a" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="structLOCSTATCOL__T.html#c37f0b89bdf0c0f94a89616d6717c781">LOCSTATCOL_T::xstart</a>          </td>
+          <td class="memname"><a class="el" href="structlocstatcol__t.html">locstatcol_t</a>* <a class="el" href="structlocstat__t.html#a938bf320ac6d8dc99350665c2e5949a">locstat_t::cols</a>          </td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 
 <p>
-starting x of this column 
+Information about each column. 
 <p>
 
 </div>
 </div><p>
-<a class="anchor" name="034938b87bbaef2de1bf4734814c912c"></a><!-- doxytag: member="LOCSTATCOL_T::ystart" ref="034938b87bbaef2de1bf4734814c912c" args="" -->
+<a class="anchor" name="97e5f52c821e34ebf38586a6a019d652"></a><!-- doxytag: member="locstat_t::ncol" ref="97e5f52c821e34ebf38586a6a019d652" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="structLOCSTATCOL__T.html#034938b87bbaef2de1bf4734814c912c">LOCSTATCOL_T::ystart</a>          </td>
+          <td class="memname">long <a class="el" href="structlocstat__t.html#97e5f52c821e34ebf38586a6a019d652">locstat_t::ncol</a>          </td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 
 <p>
-starting y of this column 
+Number of consecutive columns found. 
 <p>
 
 </div>
 </div><p>
-<a class="anchor" name="b303a5c59f009741bb845b85f2dda780"></a><!-- doxytag: member="LOCSTATCOL_T::pos" ref="b303a5c59f009741bb845b85f2dda780" args="" -->
+<a class="anchor" name="22508d2484125473516ecae516bdaec8"></a><!-- doxytag: member="locstat_t::dx" ref="22508d2484125473516ecae516bdaec8" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">long <a class="el" href="structLOCSTATCOL__T.html#b303a5c59f009741bb845b85f2dda780">LOCSTATCOL_T::pos</a>          </td>
+          <td class="memname">double <a class="el" href="structlocstat__t.html#22508d2484125473516ecae516bdaec8">locstat_t::dx</a>          </td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 
 <p>
-starting index of this column 
+Sampling of the grid. 
 <p>
 
 </div>
@@ -135,7 +135,7 @@ starting index of this column
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>lib/loc.h</ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

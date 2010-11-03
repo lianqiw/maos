@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: APER_T Struct Reference</title>
+<title>maos-0.7.1: APER_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,21 +69,21 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e">locs</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#d64a2021ba3b67e880d3e045f2890bff">locs</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">PLOCS in laos.  <a href="#d5b31b5785d613903670f270a00c3e3e"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structLOCSTAT__T.html">LOCSTAT_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#6a91f03da0654196381718c098f23bfe">locs_stat</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">PLOCS in laos.  <a href="#d64a2021ba3b67e880d3e045f2890bff"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structlocstat__t.html">locstat_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#80c7cf62fb8fa514cf6f2692e9edbaf1">locs_stat</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">record the starting location of each column in locs, used to accelerate accphi  <a href="#6a91f03da0654196381718c098f23bfe"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">record the starting location of each column in locs, used to accelerate accphi  <a href="#80c7cf62fb8fa514cf6f2692e9edbaf1"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">double *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#cde71207f6ad1532a957fba93f3505f5">amp</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">amplitude map defined on locs, if exists.  <a href="#cde71207f6ad1532a957fba93f3505f5"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">double *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#bda68ec718e6c59283e9893dd9abd7db">amp1</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">amplitude map defined o locs, maximum is 1.  <a href="#bda68ec718e6c59283e9893dd9abd7db"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structMAP__T.html">MAP_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#5718bd50cf398a113f1e5adb151da2ca">ampground</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#77d0f908f2430868976cf33fcfe20558">ampground</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The input amplitude map on ground level read from file.  <a href="#5718bd50cf398a113f1e5adb151da2ca"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The input amplitude map on ground level read from file.  <a href="#77d0f908f2430868976cf33fcfe20558"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAPER__T.html#552e29223bf8c2355f6e85eb7e264b27">mod</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">modal columne vectors if parms-&gt;evl.nmax&gt;1  <a href="#552e29223bf8c2355f6e85eb7e264b27"></a><br></td></tr>
@@ -111,12 +111,12 @@ window.onload = initDynSections;
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains the data associated with the aperture and performance evaluation. <hr><h2>Field Documentation</h2>
-<a class="anchor" name="d5b31b5785d613903670f270a00c3e3e"></a><!-- doxytag: member="APER_T::locs" ref="d5b31b5785d613903670f270a00c3e3e" args="" -->
+<a class="anchor" name="d64a2021ba3b67e880d3e045f2890bff"></a><!-- doxytag: member="APER_T::locs" ref="d64a2021ba3b67e880d3e045f2890bff" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structLOC__T.html">LOC_T</a>* <a class="el" href="structAPER__T.html#d5b31b5785d613903670f270a00c3e3e">APER_T::locs</a>          </td>
+          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* <a class="el" href="structAPER__T.html#d64a2021ba3b67e880d3e045f2890bff">APER_T::locs</a>          </td>
         </tr>
       </table>
 </div>
@@ -128,12 +128,12 @@ PLOCS in laos.
 the fine sampled grid on aperture for peformance evaluation. 
 </div>
 </div><p>
-<a class="anchor" name="6a91f03da0654196381718c098f23bfe"></a><!-- doxytag: member="APER_T::locs_stat" ref="6a91f03da0654196381718c098f23bfe" args="" -->
+<a class="anchor" name="80c7cf62fb8fa514cf6f2692e9edbaf1"></a><!-- doxytag: member="APER_T::locs_stat" ref="80c7cf62fb8fa514cf6f2692e9edbaf1" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structLOCSTAT__T.html">LOCSTAT_T</a>* <a class="el" href="structAPER__T.html#6a91f03da0654196381718c098f23bfe">APER_T::locs_stat</a>          </td>
+          <td class="memname"><a class="el" href="structlocstat__t.html">locstat_t</a>* <a class="el" href="structAPER__T.html#80c7cf62fb8fa514cf6f2692e9edbaf1">APER_T::locs_stat</a>          </td>
         </tr>
       </table>
 </div>
@@ -179,12 +179,12 @@ amplitude map defined o locs, maximum is 1.
 
 </div>
 </div><p>
-<a class="anchor" name="5718bd50cf398a113f1e5adb151da2ca"></a><!-- doxytag: member="APER_T::ampground" ref="5718bd50cf398a113f1e5adb151da2ca" args="" -->
+<a class="anchor" name="77d0f908f2430868976cf33fcfe20558"></a><!-- doxytag: member="APER_T::ampground" ref="77d0f908f2430868976cf33fcfe20558" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structMAP__T.html">MAP_T</a>* <a class="el" href="structAPER__T.html#5718bd50cf398a113f1e5adb151da2ca">APER_T::ampground</a>          </td>
+          <td class="memname"><a class="el" href="structmap__t.html">map_t</a>* <a class="el" href="structAPER__T.html#77d0f908f2430868976cf33fcfe20558">APER_T::ampground</a>          </td>
         </tr>
       </table>
 </div>
@@ -335,7 +335,7 @@ piston correction in focus term.
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: NGSMOD_T Struct Reference</title>
+<title>maos-0.7.1: NGSMOD_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -63,63 +63,321 @@ window.onload = initDynSections;
   </div>
 </div>
 <div class="contents">
-<h1>NGSMOD_T Struct Reference</h1><!-- doxytag: class="NGSMOD_T" -->NGS mode in ad hoc split tomography.  
+<h1>NGSMOD_T Struct Reference</h1><!-- doxytag: class="NGSMOD_T" -->NGS mode and reconstructors in ad hoc split tomography.  
 <a href="#_details">More...</a>
 <p>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="13b17076926281174eafb963077daab5"></a><!-- doxytag: member="NGSMOD_T::hs" ref="13b17076926281174eafb963077daab5" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>hs</b></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#13b17076926281174eafb963077daab5">hs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="bfd835d27201eba2f87965d5650e3fd9"></a><!-- doxytag: member="NGSMOD_T::ht" ref="bfd835d27201eba2f87965d5650e3fd9" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>ht</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">height of LGS  <a href="#13b17076926281174eafb963077daab5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#bfd835d27201eba2f87965d5650e3fd9">ht</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="04fe94fcd2b18eb124a0e5b1170d9387"></a><!-- doxytag: member="NGSMOD_T::scale" ref="04fe94fcd2b18eb124a0e5b1170d9387" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>scale</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">height of upper DM.  <a href="#bfd835d27201eba2f87965d5650e3fd9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">scale</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="9980921108b4ea0d7f6ebafa6686304f"></a><!-- doxytag: member="NGSMOD_T::aper_fcp" ref="9980921108b4ea0d7f6ebafa6686304f" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>aper_fcp</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">(1-ht/hs)^-2  <a href="#04fe94fcd2b18eb124a0e5b1170d9387"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">aper_fcp</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7a8f4d2ffc082c0a6180fcfd67bddb18"></a><!-- doxytag: member="NGSMOD_T::MCC" ref="7a8f4d2ffc082c0a6180fcfd67bddb18" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>MCC</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">piston term in focus in plocs.  <a href="#9980921108b4ea0d7f6ebafa6686304f"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#7a8f4d2ffc082c0a6180fcfd67bddb18">MCC</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d647f344bd6f0b22fa4e7d29251358e8"></a><!-- doxytag: member="NGSMOD_T::MCC_OA" ref="d647f344bd6f0b22fa4e7d29251358e8" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>MCC_OA</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">cross coupling of the NGS modes.  <a href="#7a8f4d2ffc082c0a6180fcfd67bddb18"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#d647f344bd6f0b22fa4e7d29251358e8">MCC_OA</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="b75976d620d5c445e308977b3fdb6c6b"></a><!-- doxytag: member="NGSMOD_T::IMCC_TT" ref="b75976d620d5c445e308977b3fdb6c6b" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>IMCC_TT</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">cross coupling of the modes for on axis direction only.  <a href="#d647f344bd6f0b22fa4e7d29251358e8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#b75976d620d5c445e308977b3fdb6c6b">IMCC_TT</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="9109e1451b9bd21e3f5bc5d284caa591"></a><!-- doxytag: member="NGSMOD_T::IMCC" ref="9109e1451b9bd21e3f5bc5d284caa591" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>IMCC</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">inv of cross coupling of tip/tilt modes only.  <a href="#b75976d620d5c445e308977b3fdb6c6b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#9109e1451b9bd21e3f5bc5d284caa591">IMCC</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a4accdf268607c75aa27360648f8249c"></a><!-- doxytag: member="NGSMOD_T::GM" ref="a4accdf268607c75aa27360648f8249c" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>GM</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">inv of MCC.  <a href="#9109e1451b9bd21e3f5bc5d284caa591"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#a4accdf268607c75aa27360648f8249c">GM</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="514dd751c537bb91de904edc719535df"></a><!-- doxytag: member="NGSMOD_T::Rngs" ref="514dd751c537bb91de904edc719535df" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Rngs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ngsmod vector to gradient operator  <a href="#a4accdf268607c75aa27360648f8249c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#514dd751c537bb91de904edc719535df">Rngs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="3e0a759744994377aef5ba9eaefdb90d"></a><!-- doxytag: member="NGSMOD_T::Pngs" ref="3e0a759744994377aef5ba9eaefdb90d" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Pngs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NGS reconstructor from NGS grad to NGS mod vec.  <a href="#514dd751c537bb91de904edc719535df"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">Pngs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="46b52e4544e498d577399cec1f6e0baf"></a><!-- doxytag: member="NGSMOD_T::Mdm" ref="46b52e4544e498d577399cec1f6e0baf" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Mdm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Project DM command to NGS modes.  <a href="#3e0a759744994377aef5ba9eaefdb90d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">Mdm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="cae8e0b2e457d89909ae6a3a6c670dd8"></a><!-- doxytag: member="NGSMOD_T::nmod" ref="cae8e0b2e457d89909ae6a3a6c670dd8" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>nmod</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">DM vector for the modes.  <a href="#46b52e4544e498d577399cec1f6e0baf"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">Ptt</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="e45f01f0921c2ad9c9c599ff9e0bd072"></a><!-- doxytag: member="NGSMOD_T::Ptt" ref="e45f01f0921c2ad9c9c599ff9e0bd072" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Ptt</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Invidual DM tip/tilt removal.  <a href="#e45f01f0921c2ad9c9c599ff9e0bd072"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">Wa</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c152fb7687bbbc451a6cc7e7062ca49e"></a><!-- doxytag: member="NGSMOD_T::Wa" ref="c152fb7687bbbc451a6cc7e7062ca49e" args="" -->
-<a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Wa</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Aperture weighting.  <a href="#c152fb7687bbbc451a6cc7e7062ca49e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">nmod</a></td></tr>
 
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">nmod: 5 for 2 dm, 2 for 1 dm.  <a href="#cae8e0b2e457d89909ae6a3a6c670dd8"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-NGS mode in ad hoc split tomography. <hr>The documentation for this struct was generated from the following file:<ul>
+NGS mode and reconstructors in ad hoc split tomography. 
+<p>
+Only useful with 1 or 2 DMs. <hr><h2>Field Documentation</h2>
+<a class="anchor" name="13b17076926281174eafb963077daab5"></a><!-- doxytag: member="NGSMOD_T::hs" ref="13b17076926281174eafb963077daab5" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structNGSMOD__T.html#13b17076926281174eafb963077daab5">NGSMOD_T::hs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+height of LGS 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="bfd835d27201eba2f87965d5650e3fd9"></a><!-- doxytag: member="NGSMOD_T::ht" ref="bfd835d27201eba2f87965d5650e3fd9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structNGSMOD__T.html#bfd835d27201eba2f87965d5650e3fd9">NGSMOD_T::ht</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+height of upper DM. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="04fe94fcd2b18eb124a0e5b1170d9387"></a><!-- doxytag: member="NGSMOD_T::scale" ref="04fe94fcd2b18eb124a0e5b1170d9387" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structNGSMOD__T.html#04fe94fcd2b18eb124a0e5b1170d9387">NGSMOD_T::scale</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+(1-ht/hs)^-2 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9980921108b4ea0d7f6ebafa6686304f"></a><!-- doxytag: member="NGSMOD_T::aper_fcp" ref="9980921108b4ea0d7f6ebafa6686304f" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structNGSMOD__T.html#9980921108b4ea0d7f6ebafa6686304f">NGSMOD_T::aper_fcp</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+piston term in focus in plocs. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="7a8f4d2ffc082c0a6180fcfd67bddb18"></a><!-- doxytag: member="NGSMOD_T::MCC" ref="7a8f4d2ffc082c0a6180fcfd67bddb18" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structNGSMOD__T.html#7a8f4d2ffc082c0a6180fcfd67bddb18">NGSMOD_T::MCC</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+cross coupling of the NGS modes. 
+<p>
+2x2 for 1 dm. 5x5 for 2 dms 
+</div>
+</div><p>
+<a class="anchor" name="d647f344bd6f0b22fa4e7d29251358e8"></a><!-- doxytag: member="NGSMOD_T::MCC_OA" ref="d647f344bd6f0b22fa4e7d29251358e8" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structNGSMOD__T.html#d647f344bd6f0b22fa4e7d29251358e8">NGSMOD_T::MCC_OA</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+cross coupling of the modes for on axis direction only. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="b75976d620d5c445e308977b3fdb6c6b"></a><!-- doxytag: member="NGSMOD_T::IMCC_TT" ref="b75976d620d5c445e308977b3fdb6c6b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structNGSMOD__T.html#b75976d620d5c445e308977b3fdb6c6b">NGSMOD_T::IMCC_TT</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+inv of cross coupling of tip/tilt modes only. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9109e1451b9bd21e3f5bc5d284caa591"></a><!-- doxytag: member="NGSMOD_T::IMCC" ref="9109e1451b9bd21e3f5bc5d284caa591" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structNGSMOD__T.html#9109e1451b9bd21e3f5bc5d284caa591">NGSMOD_T::IMCC</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+inv of MCC. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="a4accdf268607c75aa27360648f8249c"></a><!-- doxytag: member="NGSMOD_T::GM" ref="a4accdf268607c75aa27360648f8249c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structNGSMOD__T.html#a4accdf268607c75aa27360648f8249c">NGSMOD_T::GM</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+ngsmod vector to gradient operator 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="514dd751c537bb91de904edc719535df"></a><!-- doxytag: member="NGSMOD_T::Rngs" ref="514dd751c537bb91de904edc719535df" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structNGSMOD__T.html#514dd751c537bb91de904edc719535df">NGSMOD_T::Rngs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+NGS reconstructor from NGS grad to NGS mod vec. 
+<p>
+pinv of GM 
+</div>
+</div><p>
+<a class="anchor" name="3e0a759744994377aef5ba9eaefdb90d"></a><!-- doxytag: member="NGSMOD_T::Pngs" ref="3e0a759744994377aef5ba9eaefdb90d" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structNGSMOD__T.html#3e0a759744994377aef5ba9eaefdb90d">NGSMOD_T::Pngs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Project DM command to NGS modes. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="46b52e4544e498d577399cec1f6e0baf"></a><!-- doxytag: member="NGSMOD_T::Mdm" ref="46b52e4544e498d577399cec1f6e0baf" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structNGSMOD__T.html#46b52e4544e498d577399cec1f6e0baf">NGSMOD_T::Mdm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+DM vector for the modes. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="e45f01f0921c2ad9c9c599ff9e0bd072"></a><!-- doxytag: member="NGSMOD_T::Ptt" ref="e45f01f0921c2ad9c9c599ff9e0bd072" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structNGSMOD__T.html#e45f01f0921c2ad9c9c599ff9e0bd072">NGSMOD_T::Ptt</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Invidual DM tip/tilt removal. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="c152fb7687bbbc451a6cc7e7062ca49e"></a><!-- doxytag: member="NGSMOD_T::Wa" ref="c152fb7687bbbc451a6cc7e7062ca49e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structspcell.html">spcell</a>* <a class="el" href="structNGSMOD__T.html#c152fb7687bbbc451a6cc7e7062ca49e">NGSMOD_T::Wa</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Aperture weighting. 
+<p>
+Ha'*W*Ha. It has zeros in diagonal. Add tikholnov 
+</div>
+</div><p>
+<a class="anchor" name="cae8e0b2e457d89909ae6a3a6c670dd8"></a><!-- doxytag: member="NGSMOD_T::nmod" ref="cae8e0b2e457d89909ae6a3a6c670dd8" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structNGSMOD__T.html#cae8e0b2e457d89909ae6a3a6c670dd8">NGSMOD_T::nmod</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+nmod: 5 for 2 dm, 2 for 1 dm. 
+<p>
+
+</div>
+</div><p>
+<hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

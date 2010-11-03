@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: maos/recon_utils.c File Reference</title>
+<title>maos-0.7.1: maos/recon_utils.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -72,7 +72,7 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#d59691de300baba36caae207d8ec691b">apply_L2</a> (<a class="el" href="structdcell.html">dcell</a> **xout, <a class="el" href="structspcell.html">spcell</a> *L2, const <a class="el" href="structdcell.html">dcell</a> *xin, double alpha, int nthread)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply Laplacian2 to xin and accumulates to xout.  <a href="#d59691de300baba36caae207d8ec691b"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#4426460a3e86bfd2b5ff2457f6333740">apply_invpsd</a> (<a class="el" href="structdcell.html">dcell</a> **xout, INVPSD_T *extra, const <a class="el" href="structdcell.html">dcell</a> *xin, double alpha)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#4426460a3e86bfd2b5ff2457f6333740">apply_invpsd</a> (<a class="el" href="structdcell.html">dcell</a> **xout, <a class="el" href="structINVPSD__T.html">INVPSD_T</a> *extra, const <a class="el" href="structdcell.html">dcell</a> *xin, double alpha)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply turbulence invpsd to x in Fourier space, scaled by alpha.  <a href="#4426460a3e86bfd2b5ff2457f6333740"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#08347b75d2ff1eb95c0a179873921e98">TTFR</a> (<a class="el" href="structdcell.html">dcell</a> *x, const <a class="el" href="structdcell.html">dcell</a> *TTF, const <a class="el" href="structdcell.html">dcell</a> *PTTF)</td></tr>
@@ -87,9 +87,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#c2bca0565f72973497ae8d589a8be63d">calcWmcc</a> (const <a class="el" href="structdcell.html">dcell</a> *A, const <a class="el" href="structdcell.html">dcell</a> *B, const <a class="el" href="structdsp.html">dsp</a> *W0, const <a class="el" href="structdmat.html">dmat</a> *W1, const <a class="el" href="structdmat.html">dmat</a> *wt)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compute W0/W1 weighting dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_21.png">.  <a href="#c2bca0565f72973497ae8d589a8be63d"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#9a7179685cb86edbe6f89371ab9034f4">act_slaving</a> (<a class="el" href="structLOC__T.html">LOC_T</a> **aloc, <a class="el" href="structspcell.html">spcell</a> *HA, <a class="el" href="structdmat.html">dmat</a> *W1, <a class="el" href="structdcell.html">dcell</a> *NW)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#0c0381f6d7fa8f926a5527b2bcb4e6bc">act_slaving</a> (<a class="el" href="structloc__t.html">loc_t</a> **aloc, <a class="el" href="structspcell.html">spcell</a> *HA, <a class="el" href="structdmat.html">dmat</a> *W1, <a class="el" href="structdcell.html">dcell</a> *NW)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compute slaving actuator regularization.  <a href="#9a7179685cb86edbe6f89371ab9034f4"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Compute slaving actuator regularization.  <a href="#0c0381f6d7fa8f926a5527b2bcb4e6bc"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Reusable utilities for wavefront reconstruction and DM fitting. 
@@ -141,14 +141,6 @@ Reusable utilities for wavefront reconstruction and DM fitting.
 <p>
 Apply Laplacian2 to xin and accumulates to xout. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00030"></a>00030                                     {
-<a name="l00031"></a>00031     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *xx=NULL;
-<a name="l00032"></a>00032     <a class="code" href="dsp_8h.html#982d5b6a6ebe469d8fc222eab370da9d" title="threaded version of Y(spcellmulmat)">spcellmulmat_thread</a>(&amp;xx, L2, xin, 1.,nthread);
-<a name="l00033"></a>00033     <a class="code" href="dsp_8h.html#22d09bf9b395e05d1fd28865ef4db635" title="threaded version of Y(sptcellmulmat">sptcellmulmat_thread</a>(xout, L2, xx, alpha, nthread);
-<a name="l00034"></a>00034     dcellfree(xx);
-<a name="l00035"></a>00035 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -165,7 +157,7 @@ Apply Laplacian2 to xin and accumulates to xout.
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">INVPSD_T *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structINVPSD__T.html">INVPSD_T</a> *&nbsp;</td>
           <td class="paramname"> <em>extra</em>, </td>
         </tr>
         <tr>
@@ -191,41 +183,6 @@ Apply Laplacian2 to xin and accumulates to xout.
 
 <p>
 Apply turbulence invpsd to x in Fourier space, scaled by alpha. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00041"></a>00041                                          {
-<a name="l00042"></a>00042     <span class="keywordtype">long</span> **xembed=extra-&gt;xembed;
-<a name="l00043"></a>00043     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *invpsd=extra-&gt;invpsd;
-<a name="l00044"></a>00044     <a class="code" href="structccell.html" title="an 2-d block matrix of cmat.">ccell</a> *fftxopd=extra-&gt;fftxopd;
-<a name="l00045"></a>00045     <span class="keyword">static</span> <span class="keywordtype">int</span> icall=0;
-<a name="l00046"></a>00046     icall++;
-<a name="l00047"></a>00047     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ips=0; ips&lt;xin-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>*xin-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>; ips++){
-<a name="l00048"></a>00048     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *xini;
-<a name="l00049"></a>00049     <span class="keywordtype">long</span> nx=fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#a4194b0fe36568f0dd5101cde603cb3c" title="number of rows">nx</a>;
-<a name="l00050"></a>00050     <span class="keywordtype">long</span> ny=fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips]-&gt;<a class="code" href="structcmat.html#f5f56097ef44115b7454dad413d6bba2" title="number of columns">ny</a>;
-<a name="l00051"></a>00051     <span class="keywordflow">if</span>(xembed){
-<a name="l00052"></a>00052         xini=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(nx, ny);
-<a name="l00053"></a>00053         <a class="code" href="maos_2utils_8c.html#bd8c62a4ca2f063bea3a863d2f7e0107" title="Simple embed and accumulation.">embed_in</a>(xini-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, xin-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, xin-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips]-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>, xembed[ips]);
-<a name="l00054"></a>00054     }<span class="keywordflow">else</span>{
-<a name="l00055"></a>00055         xini=<a class="code" href="dmat_8h.html#9033c130427b2e4cc3eabd68c9630948" title="create an new X(mat) reference another with different shape.">dref_reshape</a>(xin-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips], nx, ny);
-<a name="l00056"></a>00056     }
-<a name="l00057"></a>00057     <a class="code" href="cmat__extra_8c.html#4ff6717c6a0f3919c71a2dc6fde5aae8" title="Copy a dmat into real part of cmat.">ccpd</a>(&amp;fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips], xini);
-<a name="l00058"></a>00058     dfree(xini);
-<a name="l00059"></a>00059     <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],-1);
-<a name="l00060"></a>00060     <a class="code" href="cmat__extra_8c.html#42e5c392b9c07427312ef94f0e55ea33" title="component multiply dmat A with cmat B.">ccwmd</a>(fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips], invpsd-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ips], 1);
-<a name="l00061"></a>00061     <a class="code" href="fft_8c.html#5e22d51b30da1c5c057cb5b8f121273d" title="Do 2d FFT transforms.">cfft2</a>(fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],1);
-<a name="l00062"></a>00062     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *xouti=NULL;
-<a name="l00063"></a>00063     <span class="keywordflow">if</span>(xembed){
-<a name="l00064"></a>00064         <a class="code" href="cmat__extra_8c.html#b2baa26f7bd8861ab342eee97889522d" title="Copy real part of a cmat to dmat with optional scaling: A0=A0.">creal2d</a>(&amp;xouti,1,fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],alpha);
-<a name="l00065"></a>00065         <a class="code" href="maos_2utils_8c.html#82fb97c6bab04cdbdc0867c62c76626a" title="Simple embed and accumulation.">embed_out</a>(xouti-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, (*xout)-&gt;p[ips]-&gt;p, 
-<a name="l00066"></a>00066               (*xout)-&gt;p[ips]-&gt;nx, xembed[ips]);
-<a name="l00067"></a>00067     }<span class="keywordflow">else</span>{
-<a name="l00068"></a>00068         xouti=<a class="code" href="dmat_8h.html#9033c130427b2e4cc3eabd68c9630948" title="create an new X(mat) reference another with different shape.">dref_reshape</a>((*xout)-&gt;p[ips], nx, ny);
-<a name="l00069"></a>00069         <a class="code" href="cmat__extra_8c.html#b2baa26f7bd8861ab342eee97889522d" title="Copy real part of a cmat to dmat with optional scaling: A0=A0.">creal2d</a>(&amp;xouti,1,fftxopd-&gt;<a class="code" href="structccell.html#be5a18937f4edac1e20c91da302d4838" title="Contains an array of pointers to cmat.">p</a>[ips],alpha);
-<a name="l00070"></a>00070     }
-<a name="l00071"></a>00071     dfree(xouti);
-<a name="l00072"></a>00072     }
-<a name="l00073"></a>00073 }
-</pre></div>
 <p>
 
 </div>
@@ -264,18 +221,7 @@ Apply turbulence invpsd to x in Fourier space, scaled by alpha.
 <p>
 Removing Tip/Tilt/Focus from LGS grads. 
 <p>
-TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. <div class="fragment"><pre class="fragment"><a name="l00077"></a>00077                                                         {
-<a name="l00078"></a>00078     <span class="keywordflow">if</span>(!TTF || !PTTF){
-<a name="l00079"></a>00079     <span class="keywordflow">return</span>;
-<a name="l00080"></a>00080     }
-<a name="l00081"></a>00081     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *junk=NULL;
-<a name="l00082"></a>00082     dcellmm(&amp;junk, PTTF, x, <span class="stringliteral">"nn"</span>, 1);
-<a name="l00083"></a>00083     dcellmm(&amp;x, TTF, junk, <span class="stringliteral">"nn"</span>, -1);
-<a name="l00084"></a>00084     dcellfree(junk);
-<a name="l00085"></a>00085 }
-</pre></div>
-<p>
-
+TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted by subaperture noise. 
 </div>
 </div><p>
 <a class="anchor" name="39b00d4db78618dec7b4a508b46331e3"></a><!-- doxytag: member="recon_utils.c::applyWeach" ref="39b00d4db78618dec7b4a508b46331e3" args="(dmat *xin, const dsp *W0, const dmat *W1, const double wt)" -->
@@ -318,22 +264,7 @@ TTF is the Tip/tilt/focus modes, and PTTF is the pseudo inverse of it, weighted 
 <p>
 Apply weighting W0/W1 to a vector. 
 <p>
-W0*x-W1*(W1'*x) <div class="fragment"><pre class="fragment"><a name="l00089"></a>00089                                                                                  {
-<a name="l00090"></a>00090     <span class="keywordflow">if</span>(!W0 || !W1) {
-<a name="l00091"></a>00091     warning(<span class="stringliteral">"W0 or W1 is NULL\n"</span>);
-<a name="l00092"></a>00092     <span class="keywordflow">return</span>;
-<a name="l00093"></a>00093     }
-<a name="l00094"></a>00094     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *xout=NULL;
-<a name="l00095"></a>00095     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *tmp=NULL;
-<a name="l00096"></a>00096     <a class="code" href="dsp_8h.html#4c30a51c7a0d15e4ff0e58bdbc43c932" title="Multiply a sparse matrix X(sp) with a dense matrix X(mat).">spmulmat</a>(&amp;xout, W0, xin, wt);
-<a name="l00097"></a>00097     <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;tmp, W1, xin, <span class="stringliteral">"tn"</span>, -1);
-<a name="l00098"></a>00098     <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;xout,W1, tmp, <span class="stringliteral">"nn"</span>, wt);
-<a name="l00099"></a>00099     <a class="code" href="dmat_8h.html#b5adc5cd1e79d9a79751ba482728f230" title="copy the values from one X(mat) to another.">dcp</a>(&amp;xin, xout);
-<a name="l00100"></a>00100     dfree(xout); dfree(tmp);
-<a name="l00101"></a>00101 }
-</pre></div>
-<p>
-
+W0*x-W1*(W1'*x) 
 </div>
 </div><p>
 <a class="anchor" name="ac31a93d205900027f62a385a321de0b"></a><!-- doxytag: member="recon_utils.c::applyW" ref="ac31a93d205900027f62a385a321de0b" args="(dcell *xin, const dsp *W0, const dmat *W1, const double *wt)" -->
@@ -376,22 +307,7 @@ W0*x-W1*(W1'*x) <div class="fragment"><pre class="fragment"><a name="l00089"></a
 <p>
 apply weighting W0/W1 with weighting wt for each block. 
 <p>
-W0*xin-W1*(W1'*xin); <div class="fragment"><pre class="fragment"><a name="l00106"></a>00106                                                                         {
-<a name="l00107"></a>00107     <span class="keywordflow">if</span>(!W0 || !W1) {
-<a name="l00108"></a>00108     warning(<span class="stringliteral">"W0 or W1 is NULL\n"</span>);
-<a name="l00109"></a>00109     <span class="keywordflow">return</span>;
-<a name="l00110"></a>00110     }
-<a name="l00111"></a>00111     <span class="keyword">const</span> <span class="keywordtype">int</span> nevl=xin-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>;
-<a name="l00112"></a>00112     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;xin-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>; iy++){
-<a name="l00113"></a>00113     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ievl=0; ievl&lt;nevl; ievl++){
-<a name="l00114"></a>00114         <span class="keywordtype">int</span> ind=iy*nevl+ievl;
-<a name="l00115"></a>00115         <a class="code" href="recon__utils_8c.html#39b00d4db78618dec7b4a508b46331e3" title="Apply weighting W0/W1 to a vector.">applyWeach</a>(xin-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ind], W0, W1, wt[ievl]);
-<a name="l00116"></a>00116     }
-<a name="l00117"></a>00117     }
-<a name="l00118"></a>00118 }
-</pre></div>
-<p>
-
+W0*xin-W1*(W1'*xin); 
 </div>
 </div><p>
 <a class="anchor" name="c2bca0565f72973497ae8d589a8be63d"></a><!-- doxytag: member="recon_utils.c::calcWmcc" ref="c2bca0565f72973497ae8d589a8be63d" args="(const dcell *A, const dcell *B, const dsp *W0, const dmat *W1, const dmat *wt)" -->
@@ -440,41 +356,17 @@ W0*xin-W1*(W1'*xin); <div class="fragment"><pre class="fragment"><a name="l00106
 <p>
 Compute W0/W1 weighting dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (W1^T B))$" src="form_21.png">. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00124"></a>00124                                        {
-<a name="l00125"></a>00125 
-<a name="l00126"></a>00126     assert(wt-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>==B-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a> &amp;&amp; wt-&gt;<a class="code" href="structdmat.html#690854282ff0f4fbd5d734d6c377c9b2" title="number of columns">ny</a>==1 &amp;&amp; A-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a> == B-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>);
-<a name="l00127"></a>00127     <span class="keyword">const</span> <span class="keywordtype">int</span> nevl=B-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>;
-<a name="l00128"></a>00128     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *res=dcellnew(A-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>, B-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>);
-<a name="l00129"></a>00129     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iy=0; iy&lt;B-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>; iy++){
-<a name="l00130"></a>00130     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ievl=0; ievl&lt;nevl; ievl++){
-<a name="l00131"></a>00131         <span class="keywordtype">int</span> ind=iy*nevl+ievl;
-<a name="l00132"></a>00132         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *xout=NULL;
-<a name="l00133"></a>00133         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *tmp=NULL;
-<a name="l00134"></a>00134         <a class="code" href="dsp_8h.html#4c30a51c7a0d15e4ff0e58bdbc43c932" title="Multiply a sparse matrix X(sp) with a dense matrix X(mat).">spmulmat</a>(&amp;xout, W0, B-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ind], wt-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[ievl]);
-<a name="l00135"></a>00135         <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;tmp, W1, B-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ind], <span class="stringliteral">"tn"</span>, -1);
-<a name="l00136"></a>00136         <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;xout, W1, tmp, <span class="stringliteral">"nn"</span>, wt-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[ievl]);
-<a name="l00137"></a>00137         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ix=0; ix&lt;A-&gt;<a class="code" href="structdcell.html#cd7579d2c13ae676bbfba099ae78b35c" title="number of columns">ny</a>; ix++){
-<a name="l00138"></a>00138         <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;res-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ix+iy*res-&gt;<a class="code" href="structdcell.html#c88fed44e9f978c6757ec8dfcfb31589" title="number of rows">nx</a>], A-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[ix*nevl+ievl], xout, <span class="stringliteral">"tn"</span>, 1);
-<a name="l00139"></a>00139         }
-<a name="l00140"></a>00140         dfree(xout);
-<a name="l00141"></a>00141         dfree(tmp);
-<a name="l00142"></a>00142     }
-<a name="l00143"></a>00143     }
-<a name="l00144"></a>00144     <span class="keywordflow">return</span> res;
-<a name="l00145"></a>00145 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
-<a class="anchor" name="9a7179685cb86edbe6f89371ab9034f4"></a><!-- doxytag: member="recon_utils.c::act_slaving" ref="9a7179685cb86edbe6f89371ab9034f4" args="(LOC_T **aloc, spcell *HA, dmat *W1, dcell *NW)" -->
+<a class="anchor" name="0c0381f6d7fa8f926a5527b2bcb4e6bc"></a><!-- doxytag: member="recon_utils.c::act_slaving" ref="0c0381f6d7fa8f926a5527b2bcb4e6bc" args="(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="structspcell.html">spcell</a>* act_slaving           </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> **&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> **&nbsp;</td>
           <td class="paramname"> <em>aloc</em>, </td>
         </tr>
         <tr>
@@ -507,175 +399,11 @@ Compute W0/W1 weighting dot product: <img class="formulaInl" alt="$A^T(W0 B-W1 (
 <p>
 Compute slaving actuator regularization. 
 <p>
-HA is used to compute active actuators. If NW is non NULL, orthogonalize it with the slaving regularization. When the actuators are in the NULL space of HA, we want to contraint their values to be close to the ones that are active. We put an additional term in the fitting matrix to force this. Becaure with it when using tip/tilt constraint and cholesky back solve. <div class="fragment"><pre class="fragment"><a name="l00154"></a>00154                                                                   {
-<a name="l00155"></a>00155     <span class="keywordflow">if</span>(!HA) {
-<a name="l00156"></a>00156     error(<span class="stringliteral">"HA is not supplied\n"</span>);
-<a name="l00157"></a>00157     }
-<a name="l00158"></a>00158     PSPCELL(HA,pHA);
-<a name="l00159"></a>00159     <span class="keywordtype">int</span> ndm=HA-&gt;<a class="code" href="structspcell.html#0758b8001e69d1c246adfbe94bbf101c" title="number of columns">ny</a>;
-<a name="l00160"></a>00160     <a class="code" href="structdcell.html" title="an 2-d block matrix of dmat.">dcell</a> *actcplc=dcellnew(ndm, 1);
-<a name="l00161"></a>00161     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
-<a name="l00162"></a>00162     <span class="keywordtype">int</span> nact=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
-<a name="l00163"></a>00163     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ifit=0; ifit&lt;HA-&gt;<a class="code" href="structspcell.html#0758b8001e69d1c246adfbe94bbf101c" title="number of columns">ny</a>; ifit++){
-<a name="l00164"></a>00164         <a class="code" href="dsp_8h.html#7f7a73c20dd1397db2034e9b39e05bff" title="y=y+alpha*A&amp;#39;*x;">sptmulmat</a>(&amp;actcplc-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm], pHA[idm][ifit], W1, 1);
-<a name="l00165"></a>00165     }
-<a name="l00166"></a>00166     <a class="code" href="mathmisc_8c.html#4ed0395a68a0c06d7bab414a7ba61ca2" title="normalize vector to max to max;">normalize_max</a>(actcplc-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>, nact, 1);<span class="comment">//bring max to 1;</span>
-<a name="l00167"></a>00167     }
-<a name="l00168"></a>00168     <span class="keywordtype">double</span> scl=1./pHA[0][0]-&gt;m;
-<a name="l00169"></a>00169     
-<a name="l00170"></a>00170     <span class="keywordtype">int</span> nslavetot=0;
-<a name="l00171"></a>00171     <span class="keyword">const</span> <span class="keywordtype">double</span> slave_thres=0.1;
-<a name="l00172"></a>00172     <a class="code" href="structspcell.html" title="an 2-d array of sparse.">spcell</a> *actslavec=<a class="code" href="dsp_8h.html#af5362fa0fc6afc00fc3af29e4fb536d" title="Create a new sparse cell.">spcellnew</a>(ndm, ndm);<span class="comment">//block diagonal.</span>
-<a name="l00173"></a>00173     PSPCELL(actslavec, actslave);
-<a name="l00174"></a>00174     
-<a name="l00175"></a>00175     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idm=0; idm&lt;ndm; idm++){
-<a name="l00176"></a>00176     <span class="keywordtype">int</span>  nact     = aloc[idm]-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
-<a name="l00177"></a>00177     <span class="keywordtype">double</span> *actcpl= actcplc-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00178"></a>00178     <span class="keywordtype">double</span> *actcpl0 = actcpl-1;
-<a name="l00179"></a>00179     <span class="keywordtype">int</span>  nslave   = 0;
-<a name="l00180"></a>00180     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iact=0; iact&lt;nact; iact++){
-<a name="l00181"></a>00181         <span class="keywordflow">if</span>(actcpl[iact]&lt;slave_thres){
-<a name="l00182"></a>00182         nslave++;
-<a name="l00183"></a>00183         }
-<a name="l00184"></a>00184     }
-<a name="l00185"></a>00185     nslavetot+=nslave;
-<a name="l00186"></a>00186     info(<span class="stringliteral">"dm %d: there are %d slave actuators\n"</span>, idm, nslave);
-<a name="l00187"></a>00187     <span class="keywordflow">if</span>(nslave==0) {
-<a name="l00188"></a>00188         <span class="keywordflow">continue</span>;
-<a name="l00189"></a>00189     }
-<a name="l00190"></a>00190     <a class="code" href="loc_8c.html#4d37a2dfb2ce138d1d72772d5ff5a7ed" title="Create a map for loc so that we can obtain the index in loc by x,y coordinate.">loc_create_map_npad</a>(aloc[idm],1);
-<a name="l00191"></a>00191     long (*map)[aloc[idm]-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a53b9f6a08b042a3aa5333de8ff4598d" title="Number of points along x.">nx</a>]=(<span class="keywordtype">void</span>*)aloc[idm]-&gt;map-&gt;p;
-<a name="l00192"></a>00192     <span class="keywordtype">double</span> ox=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a035d06a3ddd28ba504f54434970d471" title="Origin of the map along x.">ox</a>;
-<a name="l00193"></a>00193     <span class="keywordtype">double</span> oy=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#0a28d333e471c48f6955517e9106fb49" title="Origin of the map along y.">oy</a>;
-<a name="l00194"></a>00194     <span class="keywordtype">double</span> dx1=1./aloc[idm]-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>;
-<a name="l00195"></a>00195     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *slavet=<a class="code" href="dsp_8h.html#ad23f2152cd2622871367fd28ac0ff6b" title="Create a nx*ny X(sp) matrix with memory for nmax max elements allocated.">spnew</a>(nact,nslave,nslave*5);
-<a name="l00196"></a>00196     <span class="keywordtype">long</span> *pp=slavet-&gt;<a class="code" href="structdsp.html#a9f3db1d7c4d321157e4efac11f3351a" title="column pointers (size n+1) or col indlces (size nzmax) when nz!=-1">p</a>;
-<a name="l00197"></a>00197     <span class="keywordtype">long</span> *pi=slavet-&gt;i;
-<a name="l00198"></a>00198     <span class="keywordtype">double</span> *px=slavet-&gt;x;
-<a name="l00199"></a>00199     <span class="keyword">const</span> <span class="keywordtype">double</span> *locx=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>;
-<a name="l00200"></a>00200     <span class="keyword">const</span> <span class="keywordtype">double</span> *locy=aloc[idm]-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>;
-<a name="l00201"></a>00201     <span class="keywordtype">long</span> count=0;
-<a name="l00202"></a>00202     <span class="keywordtype">long</span> icol=0;
-<a name="l00203"></a>00203     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iact=0; iact&lt;nact; iact++){
-<a name="l00204"></a>00204         <span class="keywordflow">if</span>(actcpl[iact]&lt;slave_thres){<span class="comment">//slave actuators</span>
-<a name="l00205"></a>00205         pp[icol]=count;
-<a name="l00206"></a>00206         <span class="keywordtype">long</span> mapx=(long)round((locx[iact]-ox)*dx1);
-<a name="l00207"></a>00207         <span class="keywordtype">long</span> mapy=(long)round((locy[iact]-oy)*dx1);
-<a name="l00208"></a>00208         <span class="keywordflow">if</span>(map[mapy][mapx]-1!=iact){
-<a name="l00209"></a>00209             error(<span class="stringliteral">"mapping is used incorrectly\n"</span>);
-<a name="l00210"></a>00210         }
-<a name="l00211"></a>00211         <span class="keywordtype">int</span> near_active=0;
-<a name="l00212"></a>00212         <span class="keywordtype">int</span> near_exist=0;
-<a name="l00213"></a>00213         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idy=-1; idy&lt;2; idy++){
-<a name="l00214"></a>00214             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idx=-1; idx&lt;2; idx++){
-<a name="l00215"></a>00215             <span class="keywordflow">if</span>((idx!=0 &amp;&amp; idy!=0) || (idx==0 &amp;&amp; idy==0)){
-<a name="l00216"></a>00216                 <span class="keywordflow">continue</span>;<span class="comment">//skip center and corner</span>
-<a name="l00217"></a>00217             }
-<a name="l00218"></a>00218             <span class="keywordflow">if</span>(map[mapy+idy][mapx+idx]){
-<a name="l00219"></a>00219                 near_exist++;
-<a name="l00220"></a>00220                 <span class="keywordflow">if</span>(actcpl0[map[mapy+idy][mapx+idx]]&gt;0.1){
-<a name="l00221"></a>00221                 near_active++;
-<a name="l00222"></a>00222                 }
-<a name="l00223"></a>00223             }
-<a name="l00224"></a>00224         
-<a name="l00225"></a>00225             }
-<a name="l00226"></a>00226         }
-<a name="l00227"></a>00227         <span class="keywordflow">if</span>(near_exist){
-<a name="l00228"></a>00228             pi[count]=iact;
-<a name="l00229"></a>00229             px[count]=scl;
-<a name="l00230"></a>00230             <span class="comment">//also limits the strength</span>
-<a name="l00231"></a>00231             <span class="keywordflow">if</span>(actcpl[iact]&lt;0.1){
-<a name="l00232"></a>00232             px[count]+=scl*1;
-<a name="l00233"></a>00233             }
-<a name="l00234"></a>00234            
-<a name="l00235"></a>00235             <span class="comment">/*</span>
-<a name="l00236"></a>00236 <span class="comment">            if(actcpl[iact]&lt;0.1 &amp;&amp; actcpl[iact]&gt;0){</span>
-<a name="l00237"></a>00237 <span class="comment">            double scale=-0.001*log(actcpl[iact]);</span>
-<a name="l00238"></a>00238 <span class="comment">            if(scale&gt;0.01){</span>
-<a name="l00239"></a>00239 <span class="comment">                scale=0.01;</span>
-<a name="l00240"></a>00240 <span class="comment">            }</span>
-<a name="l00241"></a>00241 <span class="comment">            px[count]=scl*(1+scale);</span>
-<a name="l00242"></a>00242 <span class="comment">            }*/</span>
-<a name="l00243"></a>00243             count++;
-<a name="l00244"></a>00244         }<span class="keywordflow">else</span>{
-<a name="l00245"></a>00245             error(<span class="stringliteral">"This is an isolated actuator\n"</span>);
-<a name="l00246"></a>00246         }
-<a name="l00247"></a>00247         <span class="keywordflow">if</span>(near_active&gt;0){
-<a name="l00248"></a>00248             <span class="keywordtype">double</span> value=-scl/near_active;
-<a name="l00249"></a>00249             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idy=-1; idy&lt;2; idy++){
-<a name="l00250"></a>00250             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idx=-1; idx&lt;2; idx++){
-<a name="l00251"></a>00251                 <span class="keywordflow">if</span>((idx!=0 &amp;&amp; idy!=0) || (idx==0 &amp;&amp; idy==0)){
-<a name="l00252"></a>00252                 <span class="keywordflow">continue</span>;<span class="comment">//skip center and corner</span>
-<a name="l00253"></a>00253                 }
-<a name="l00254"></a>00254                 <span class="keywordflow">if</span>(map[mapy+idy][mapx+idx] &amp;&amp; actcpl0[map[mapy+idy][mapx+idx]]&gt;0.1){
-<a name="l00255"></a>00255                 pi[count]=map[mapy+idy][mapx+idx]-1;
-<a name="l00256"></a>00256                 px[count]=value;
-<a name="l00257"></a>00257                 count++;
-<a name="l00258"></a>00258                 }
-<a name="l00259"></a>00259             }
-<a name="l00260"></a>00260             }
-<a name="l00261"></a>00261         }<span class="keywordflow">else</span>{
-<a name="l00262"></a>00262             <span class="keywordtype">double</span> value=-scl/near_exist;
-<a name="l00263"></a>00263             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idy=-1; idy&lt;2; idy++){
-<a name="l00264"></a>00264             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> idx=-1; idx&lt;2; idx++){
-<a name="l00265"></a>00265                 <span class="keywordflow">if</span>((idx!=0 &amp;&amp; idy!=0) || (idx==0 &amp;&amp; idy==0)){
-<a name="l00266"></a>00266                 <span class="keywordflow">continue</span>;<span class="comment">//skip center and corner</span>
-<a name="l00267"></a>00267                 }
-<a name="l00268"></a>00268                 <span class="keywordflow">if</span>(map[mapy+idy][mapx+idx]){
-<a name="l00269"></a>00269                 pi[count]=map[mapy+idy][mapx+idx]-1;
-<a name="l00270"></a>00270                 px[count]=value;
-<a name="l00271"></a>00271                 count++;
-<a name="l00272"></a>00272                 }
-<a name="l00273"></a>00273             }
-<a name="l00274"></a>00274             }
-<a name="l00275"></a>00275     
-<a name="l00276"></a>00276         }
-<a name="l00277"></a>00277         icol++;
-<a name="l00278"></a>00278         }
-<a name="l00279"></a>00279     }
-<a name="l00280"></a>00280     pp[icol]=count;
-<a name="l00281"></a>00281     <span class="keywordflow">if</span>(icol!=nslave){
-<a name="l00282"></a>00282         error(<span class="stringliteral">"Doesnot match\n"</span>);
-<a name="l00283"></a>00283     }
-<a name="l00284"></a>00284     <a class="code" href="dsp_8h.html#3e88790d921e0805e21feded80f4b0e2" title="resize a X(sp) matrix">spsetnzmax</a>(slavet, count);
-<a name="l00285"></a>00285 
-<a name="l00286"></a>00286     <a class="code" href="loc_8c.html#b4bdd0977410c63912eb4dd14c241f7e" title="Free the MAP in LOC_T.">loc_free_map</a>(aloc[idm]);
-<a name="l00287"></a>00287     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *slave=<a class="code" href="dsp_8h.html#c8975e7b8152e52b2c8cd8e785c25310" title="Transpose a sparse array.">sptrans</a>(slavet);
-<a name="l00288"></a>00288     actslave[idm][idm]=<a class="code" href="dsp_8h.html#ccfcfe9fff4e25824ae3ad516f01b864" title="Multiply two sparse arrays: return A*B.">spmulsp</a>(slavet, slave);
-<a name="l00289"></a>00289 
-<a name="l00290"></a>00290     <span class="keywordflow">if</span>(NW){
-<a name="l00291"></a>00291         <span class="comment">/*Now we need to make sure NW is in the NULL</span>
-<a name="l00292"></a>00292 <span class="comment">          space of the slaving regularization, especiall</span>
-<a name="l00293"></a>00293 <span class="comment">          the tip/tilt constraints.*/</span>
-<a name="l00294"></a>00294         <span class="keywordflow">if</span>(NW-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm]){
-<a name="l00295"></a>00295         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *H=NULL;
-<a name="l00296"></a>00296         <a class="code" href="dsp_8h.html#1f816ec221da7595c0e1b598caaef328" title="Convert sparse matrix into dense matrix and add to output: out0=out0+full(A)*alpha...">spfull</a>(&amp;H, slavet, 1);
-<a name="l00297"></a>00297         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *Hinv=<a class="code" href="dmat_8h.html#cac32a8e663201109abf36bd322e9a46" title="compute the pseudo inverse of matrix A with weigthing of full matrix W or sparse...">dpinv</a>(H,NULL,NULL);
-<a name="l00298"></a>00298         <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *mod=NULL;
-<a name="l00299"></a>00299         <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;mod, Hinv, NW-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm], <span class="stringliteral">"nn"</span>, 1);
-<a name="l00300"></a>00300         <a class="code" href="dmat_8h.html#a9ddb63c56fcc2219955260936ee9e40" title="compute matrix product using blas dgemm with beta=1; C=beta*C+ alpha *trans(A)*trans(B);...">dmm</a>(&amp;NW-&gt;<a class="code" href="structdcell.html#c6bfb5d224d69b6fa412f4e84b550d6f" title="Contains an array of pointers to dmat.">p</a>[idm], H, mod,<span class="stringliteral">"nn"</span>, -1);
-<a name="l00301"></a>00301         dfree(H);
-<a name="l00302"></a>00302         dfree(Hinv);
-<a name="l00303"></a>00303         dfree(mod);
-<a name="l00304"></a>00304         }
-<a name="l00305"></a>00305     }
-<a name="l00306"></a>00306     spfree(slave);
-<a name="l00307"></a>00307     spfree(slavet);
-<a name="l00308"></a>00308     }<span class="comment">//idm</span>
-<a name="l00309"></a>00309     dcellfree(actcplc);
-<a name="l00310"></a>00310     <span class="keywordflow">if</span>(nslavetot==0){
-<a name="l00311"></a>00311     spcellfree(actslavec);
-<a name="l00312"></a>00312     actslavec=NULL;
-<a name="l00313"></a>00313     }
-<a name="l00314"></a>00314     <span class="keywordflow">return</span> actslavec;
-<a name="l00315"></a>00315 }
-</pre></div>
-<p>
-
+HA is used to compute active actuators. If NW is non NULL, orthogonalize it with the slaving regularization. When the actuators are in the NULL space of HA, we want to contraint their values to be close to the ones that are active. We put an additional term in the fitting matrix to force this. Becaure with it when using tip/tilt constraint and cholesky back solve. 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

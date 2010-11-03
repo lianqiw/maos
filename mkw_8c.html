@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: lib/mkw.c File Reference</title>
+<title>maos-0.7.1: lib/mkw.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,40 +69,40 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#6ee011d51cc4b91b274ce7481b2bb567">mkw_amp</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *loc, double *amp, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#575689005068d3c5eb641fbe306743b2">mkw_amp</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double *amp, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function.  <a href="#6ee011d51cc4b91b274ce7481b2bb567"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="04f1e3520dfcf058bf3e0ab094a43f54"></a><!-- doxytag: member="mkw.c::calcwtcorner" ref="04f1e3520dfcf058bf3e0ab094a43f54" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
-static double&nbsp;</td><td class="memItemRight" valign="bottom"><b>calcwtcorner</b> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function.  <a href="#575689005068d3c5eb641fbe306743b2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#04f1e3520dfcf058bf3e0ab094a43f54">calcwtcorner</a> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="201e684236068166885ce098f2519e17"></a><!-- doxytag: member="mkw.c::calcwtlr" ref="201e684236068166885ce098f2519e17" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
-static double&nbsp;</td><td class="memItemRight" valign="bottom"><b>calcwtlr</b> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">calculate the integral of a box with two points on corner to corner.  <a href="#04f1e3520dfcf058bf3e0ab094a43f54"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#201e684236068166885ce098f2519e17">calcwtlr</a> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0c017c2f64055115aa116b20a9cb1db8"></a><!-- doxytag: member="mkw.c::calcwtud" ref="0c017c2f64055115aa116b20a9cb1db8" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
-static double&nbsp;</td><td class="memItemRight" valign="bottom"><b>calcwtud</b> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">calculate the integral of a box with two points on left/right inside a circle at (icx,icy) with circle icr.  <a href="#201e684236068166885ce098f2519e17"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#0c017c2f64055115aa116b20a9cb1db8">calcwtud</a> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ff18b87ec16ef77df1ebb5ca5b437560"></a><!-- doxytag: member="mkw.c::calcwtcenter" ref="ff18b87ec16ef77df1ebb5ca5b437560" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
-static double&nbsp;</td><td class="memItemRight" valign="bottom"><b>calcwtcenter</b> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">calculate the integral of a box with two points on bottom/top.  <a href="#0c017c2f64055115aa116b20a9cb1db8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#ff18b87ec16ef77df1ebb5ca5b437560">calcwtcenter</a> (int ix, int iy, int jx, int jy, double icx, double icy, double icr)</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#14a6f51d037ddb45b21b651d78617eb4">mkw_circular</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *loc, double cx, double cy, double cr, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">calculate the integral of a box with the same point.  <a href="#ff18b87ec16ef77df1ebb5ca5b437560"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#1aa5366a6c4fe1e8db2e9ba96cc32c96">mkw_circular</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double cr, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function for a circular aperture of radius cr, so that for OPD vector A defined on grid loc, the piston removed wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront error for a continuous OPD that are interpolated bi-linearly using the OPD on the grid.  <a href="#14a6f51d037ddb45b21b651d78617eb4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#906ebb2ba8e44067e06845789d769132">mkw_annular</a> (<a class="el" href="structLOC__T.html">LOC_T</a> *loc, double cx, double cy, double cri, double cro, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function for a circular aperture of radius cr, so that for OPD vector A defined on grid loc, the piston removed wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront error for a continuous OPD that are interpolated bi-linearly using the OPD on the grid.  <a href="#1aa5366a6c4fe1e8db2e9ba96cc32c96"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="mkw_8c.html#4db4d6190f9660f18f25bf2263b316c3">mkw_annular</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double cx, double cy, double cri, double cro, <a class="el" href="structdsp.html">dsp</a> **W0, <a class="el" href="structdmat.html">dmat</a> **W1)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro.  <a href="#906ebb2ba8e44067e06845789d769132"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro.  <a href="#4db4d6190f9660f18f25bf2263b316c3"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Contains functions that computes the bilinear weighting function W0, W1. 
 <p>
 <hr><h2>Function Documentation</h2>
-<a class="anchor" name="6ee011d51cc4b91b274ce7481b2bb567"></a><!-- doxytag: member="mkw.c::mkw_amp" ref="6ee011d51cc4b91b274ce7481b2bb567" args="(LOC_T *loc, double *amp, dsp **W0, dmat **W1)" -->
+<a class="anchor" name="575689005068d3c5eb641fbe306743b2"></a><!-- doxytag: member="mkw.c::mkw_amp" ref="575689005068d3c5eb641fbe306743b2" args="(loc_t *loc, double *amp, dsp **W0, dmat **W1)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void mkw_amp           </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>loc</em>, </td>
         </tr>
         <tr>
@@ -137,149 +137,261 @@ compute the W0, W1 for bilinear influence function.
 <p>
 The normalization is very important. We need to have sum(amp)==1; W0 and W1 can not be scaled because: 1) they scale the same way as amp, 2) we are using W0-W1*W1', one is linear, one is quadratic. So the result will be different.<p>
 for the result, we must have 1) sum(W0,1)==W1, sum(W0,2)==W1, 2) sum(W1)==1 2009-11-20: bug found: using a circular gray pixel amplitude map, sum(W1) is less than 1 if loc is not enough large. This method is not good! Prefer the mkw_circular instead which follows closely the loas method. The LAOS W0/W1 gives very good performance in NGS modes.<p>
-This function does not work well. <div class="fragment"><pre class="fragment"><a name="l00046"></a>00046                                                        {
-<a name="l00047"></a>00047 
-<a name="l00048"></a>00048     <span class="keywordtype">long</span> nloc=loc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
-<a name="l00049"></a>00049     <span class="keywordtype">double</span> constamp=0;
-<a name="l00050"></a>00050     <span class="keywordflow">if</span>(amp){
-<a name="l00051"></a>00051     <span class="keywordtype">double</span> sumamp=<a class="code" href="mathmisc_8c.html#1642051eb049131a4dd20a4585f80d98" title="compute sum(p1.">dotdbl</a>(amp,NULL,NULL,nloc);
-<a name="l00052"></a>00052     <span class="keywordflow">if</span>(fabs(sumamp-1)&gt;1.e-6){
-<a name="l00053"></a>00053         error(<span class="stringliteral">"amp must be normalized to sum to 1\n"</span>);
-<a name="l00054"></a>00054     }
-<a name="l00055"></a>00055     }<span class="keywordflow">else</span>{
-<a name="l00056"></a>00056     constamp=1./(double)nloc;
-<a name="l00057"></a>00057     }
-<a name="l00058"></a>00058     *W0=<a class="code" href="dsp_8h.html#ad23f2152cd2622871367fd28ac0ff6b" title="Create a nx*ny X(sp) matrix with memory for nmax max elements allocated.">spnew</a>(nloc,nloc,9*nloc);
-<a name="l00059"></a>00059     <a class="code" href="loc_8c.html#4d37a2dfb2ce138d1d72772d5ff5a7ed" title="Create a map for loc so that we can obtain the index in loc by x,y coordinate.">loc_create_map_npad</a>(loc,1);<span class="comment">//pad by one</span>
-<a name="l00060"></a>00060     
-<a name="l00061"></a>00061     <span class="keywordtype">double</span> ox=loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a035d06a3ddd28ba504f54434970d471" title="Origin of the map along x.">ox</a>;
-<a name="l00062"></a>00062     <span class="keywordtype">double</span> oy=loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#0a28d333e471c48f6955517e9106fb49" title="Origin of the map along y.">oy</a>;
-<a name="l00063"></a>00063     <span class="keywordtype">long</span> nxmap=loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a53b9f6a08b042a3aa5333de8ff4598d" title="Number of points along x.">nx</a>;
-<a name="l00064"></a>00064     long(*map)[nxmap]=(long(*)[nxmap])loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a6884f997b7bf3fc1406b6fe4e6ff44b" title="The map, of size nx*ny.">p</a>;
-<a name="l00065"></a>00065     <span class="keywordtype">double</span> idx=1./loc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>;
-<a name="l00066"></a>00066     <span class="keywordtype">long</span> *W0p=(*W0)-&gt;p;
-<a name="l00067"></a>00067     <span class="keywordtype">long</span> *W0i=(*W0)-&gt;i;
-<a name="l00068"></a>00068     <span class="keywordtype">double</span> *W0x=(*W0)-&gt;x;
-<a name="l00069"></a>00069     <span class="keywordtype">long</span> count=0;
-<a name="l00070"></a>00070     <span class="keywordtype">double</span> *amp0=NULL;
-<a name="l00071"></a>00071     <span class="keywordflow">if</span>(amp){
-<a name="l00072"></a>00072     amp0=amp-1;<span class="comment">//offset by -1</span>
-<a name="l00073"></a>00073     }
-<a name="l00074"></a>00074     *W1=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(nloc,1);
-<a name="l00075"></a>00075     <span class="keywordtype">double</span> *W1p=(*W1)-&gt;p;
-<a name="l00076"></a>00076     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;nloc ;iloc++){
-<a name="l00077"></a>00077     <span class="keywordtype">int</span> ix=(int)round((loc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>[iloc]-ox)*idx);
-<a name="l00078"></a>00078     <span class="keywordtype">int</span> iy=(int)round((loc-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>[iloc]-oy)*idx);
-<a name="l00079"></a>00079     <span class="keywordtype">double</span> camp=0;
-<a name="l00080"></a>00080     <span class="keywordflow">if</span>(amp) camp=amp[iloc];
-<a name="l00081"></a>00081     <span class="keywordtype">double</span> wt2=0;
-<a name="l00082"></a>00082     W0p[iloc]=count;
-<a name="l00083"></a>00083     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> jy=iy-1; jy&lt;iy+2; jy++){
-<a name="l00084"></a>00084         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> jx=ix-1;jx&lt;ix+2; jx++){
-<a name="l00085"></a>00085         <span class="keywordtype">int</span> aloc1=map[jy][jx];
-<a name="l00086"></a>00086         <span class="keywordflow">if</span>(!aloc1) <span class="keywordflow">continue</span>; <span class="keywordflow">else</span> aloc1--;
-<a name="l00087"></a>00087         <span class="keywordtype">double</span> bamp=0; <span class="keywordflow">if</span>(amp) bamp=amp[aloc1]; 
-<a name="l00088"></a>00088         <span class="keywordtype">double</span> wt=0;
-<a name="l00089"></a>00089         <span class="keywordflow">if</span>(abs(ix-jx)==1 &amp;&amp; abs(iy-jy)==1){
-<a name="l00090"></a>00090             <span class="comment">//corner to corner</span>
-<a name="l00091"></a>00091             <span class="keywordtype">int</span> bloc0=map[jy][ix]; 
-<a name="l00092"></a>00092             <span class="keywordtype">int</span> bloc1=map[iy][jx]; 
-<a name="l00093"></a>00093             <span class="keywordflow">if</span>(bloc0 &amp;&amp; bloc1){
-<a name="l00094"></a>00094             <span class="keywordflow">if</span>(amp){
-<a name="l00095"></a>00095                 wt+=(camp+bamp+amp0[bloc0]+amp0[bloc1])/144.;
-<a name="l00096"></a>00096             }<span class="keywordflow">else</span>{
-<a name="l00097"></a>00097                 wt+=constamp*4./144.;
-<a name="l00098"></a>00098             }
-<a name="l00099"></a>00099             }
-<a name="l00100"></a>00100         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(abs(iy-jy)==1){
-<a name="l00101"></a>00101             <span class="comment">//neighbor, up/down</span>
-<a name="l00102"></a>00102             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ioff=-1; ioff&lt;2; ioff+=2){
-<a name="l00103"></a>00103             <span class="keywordtype">int</span> bloc0=map[jy][ix+ioff];
-<a name="l00104"></a>00104             <span class="keywordtype">int</span> bloc1=map[iy][jx+ioff];
-<a name="l00105"></a>00105             <span class="keywordflow">if</span>(bloc0 &amp;&amp; bloc1){
-<a name="l00106"></a>00106                 <span class="keywordflow">if</span>(amp){
-<a name="l00107"></a>00107                 wt+=(camp+bamp)/48.+(amp0[bloc0]+amp0[bloc1])/144.;
-<a name="l00108"></a>00108                 }<span class="keywordflow">else</span>{
-<a name="l00109"></a>00109                 wt+=constamp*8./144.;
-<a name="l00110"></a>00110                 }
-<a name="l00111"></a>00111             }
-<a name="l00112"></a>00112             }
-<a name="l00113"></a>00113         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(abs(ix-jx)==1){
-<a name="l00114"></a>00114             <span class="comment">//neighbor, left/right</span>
-<a name="l00115"></a>00115             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> joff=-1; joff&lt;2; joff+=2){
-<a name="l00116"></a>00116             <span class="keywordtype">int</span> bloc0=map[jy+joff][ix];
-<a name="l00117"></a>00117             <span class="keywordtype">int</span> bloc1=map[iy+joff][jx];
-<a name="l00118"></a>00118             <span class="keywordflow">if</span>(bloc0 &amp;&amp; bloc1){
-<a name="l00119"></a>00119                 <span class="keywordflow">if</span>(amp){
-<a name="l00120"></a>00120                 wt+=(camp+bamp)/48.+(amp0[bloc0]+amp0[bloc1])/144.;
-<a name="l00121"></a>00121                 }<span class="keywordflow">else</span>{
-<a name="l00122"></a>00122                 wt+=constamp*8./144.;
-<a name="l00123"></a>00123                 }
-<a name="l00124"></a>00124             }
-<a name="l00125"></a>00125             }
-<a name="l00126"></a>00126         }<span class="keywordflow">else</span>{
-<a name="l00127"></a>00127             <span class="comment">//same point.</span>
-<a name="l00128"></a>00128             <span class="comment">//loop over four corners;</span>
-<a name="l00129"></a>00129             <span class="keywordflow">for</span> (<span class="keywordtype">int</span> joff=-1; joff&lt;2; joff+=2){
-<a name="l00130"></a>00130             <span class="keywordflow">for</span>(<span class="keywordtype">int</span> ioff=-1; ioff&lt;2; ioff+=2){
-<a name="l00131"></a>00131                 <span class="keywordtype">int</span> bloc0=map[iy+joff][ix]; 
-<a name="l00132"></a>00132                 <span class="keywordtype">int</span> bloc1=map[iy][ix+ioff];
-<a name="l00133"></a>00133                 <span class="keywordtype">int</span> cloc0=map[iy+joff][ix+ioff];
-<a name="l00134"></a>00134                 <span class="keywordflow">if</span>(bloc0 &amp;&amp; bloc1 &amp;&amp; cloc0){
-<a name="l00135"></a>00135                 <span class="keywordflow">if</span>(amp){
-<a name="l00136"></a>00136                     wt+=camp/16.+(amp0[bloc0]+amp0[bloc1])/48.
-<a name="l00137"></a>00137                     +amp0[cloc0]/144;
-<a name="l00138"></a>00138                     wt2+=camp/9.+(amp0[bloc0]+amp0[bloc1])/18.
-<a name="l00139"></a>00139                     +amp0[cloc0]/36;
-<a name="l00140"></a>00140                 }<span class="keywordflow">else</span>{
-<a name="l00141"></a>00141                     wt+=constamp*1./9.;
-<a name="l00142"></a>00142                     wt2+=constamp*0.25;
-<a name="l00143"></a>00143                 }
-<a name="l00144"></a>00144                 }
-<a name="l00145"></a>00145             }
-<a name="l00146"></a>00146             }
-<a name="l00147"></a>00147         }
-<a name="l00148"></a>00148         <span class="keywordflow">if</span>(wt&gt;0){
-<a name="l00149"></a>00149             W0i[count]=aloc1;
-<a name="l00150"></a>00150             W0x[count]=wt;
-<a name="l00151"></a>00151             count++;
-<a name="l00152"></a>00152         }
-<a name="l00153"></a>00153         }<span class="comment">//jx</span>
-<a name="l00154"></a>00154     }<span class="comment">//jy</span>
-<a name="l00155"></a>00155     W1p[iloc]=wt2;
-<a name="l00156"></a>00156     }<span class="comment">//iloc</span>
-<a name="l00157"></a>00157     W0p[nloc]=count;
-<a name="l00158"></a>00158     <a class="code" href="dsp_8h.html#3e88790d921e0805e21feded80f4b0e2" title="resize a X(sp) matrix">spsetnzmax</a>(*W0,count);
-<a name="l00159"></a>00159     <span class="keywordtype">double</span> sumW1=<a class="code" href="dmat_8h.html#176e534c9042ace51d05a620a2294248" title="create sum of all the elements in A.">dsum</a>(*W1);
-<a name="l00160"></a>00160     <span class="keywordflow">if</span>(fabs(sumW1-1)&gt;1.e-12){
-<a name="l00161"></a>00161     <span class="keywordtype">double</span> sc=1./sumW1;
-<a name="l00162"></a>00162     warning(<span class="stringliteral">"Sum W1 is not equal to 1. "</span>
-<a name="l00163"></a>00163         <span class="stringliteral">"Probably loc grid is too small. "</span>
-<a name="l00164"></a>00164         <span class="stringliteral">"Rescaling W0, W1\n"</span>);
-<a name="l00165"></a>00165     <span class="keywordtype">double</span> *p=(*W1)-&gt;p;
-<a name="l00166"></a>00166     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;(*W1)-&gt;nx; i++){
-<a name="l00167"></a>00167         p[i]*=sc;
-<a name="l00168"></a>00168     }
-<a name="l00169"></a>00169     p=(*W0)-&gt;x;
-<a name="l00170"></a>00170     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;(*W0)-&gt;nzmax; i++){
-<a name="l00171"></a>00171         p[i]*=sc;
-<a name="l00172"></a>00172     }
-<a name="l00173"></a>00173     }
-<a name="l00174"></a>00174     <a class="code" href="loc_8c.html#b4bdd0977410c63912eb4dd14c241f7e" title="Free the MAP in LOC_T.">loc_free_map</a>(loc);
-<a name="l00175"></a>00175 }
-</pre></div>
+This function does not work well. 
+</div>
+</div><p>
+<a class="anchor" name="04f1e3520dfcf058bf3e0ab094a43f54"></a><!-- doxytag: member="mkw.c::calcwtcorner" ref="04f1e3520dfcf058bf3e0ab094a43f54" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static double calcwtcorner           </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>ix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>iy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icr</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+calculate the integral of a box with two points on corner to corner. 
+<p>
+inside a circle at (icx,icy) with circle icr. 
+</div>
+</div><p>
+<a class="anchor" name="201e684236068166885ce098f2519e17"></a><!-- doxytag: member="mkw.c::calcwtlr" ref="201e684236068166885ce098f2519e17" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static double calcwtlr           </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>ix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>iy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icr</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+calculate the integral of a box with two points on left/right inside a circle at (icx,icy) with circle icr. 
 <p>
 
 </div>
 </div><p>
-<a class="anchor" name="14a6f51d037ddb45b21b651d78617eb4"></a><!-- doxytag: member="mkw.c::mkw_circular" ref="14a6f51d037ddb45b21b651d78617eb4" args="(LOC_T *loc, double cx, double cy, double cr, dsp **W0, dmat **W1)" -->
+<a class="anchor" name="0c017c2f64055115aa116b20a9cb1db8"></a><!-- doxytag: member="mkw.c::calcwtud" ref="0c017c2f64055115aa116b20a9cb1db8" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static double calcwtud           </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>ix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>iy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icr</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+calculate the integral of a box with two points on bottom/top. 
+<p>
+inside a circle at (icx,icy) with circle icr. 
+</div>
+</div><p>
+<a class="anchor" name="ff18b87ec16ef77df1ebb5ca5b437560"></a><!-- doxytag: member="mkw.c::calcwtcenter" ref="ff18b87ec16ef77df1ebb5ca5b437560" args="(int ix, int iy, int jx, int jy, double icx, double icy, double icr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static double calcwtcenter           </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>ix</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>iy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>jy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&nbsp;</td>
+          <td class="paramname"> <em>icr</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+calculate the integral of a box with the same point. 
+<p>
+inside a circle at (icx,icy) with circle icr. 
+</div>
+</div><p>
+<a class="anchor" name="1aa5366a6c4fe1e8db2e9ba96cc32c96"></a><!-- doxytag: member="mkw.c::mkw_circular" ref="1aa5366a6c4fe1e8db2e9ba96cc32c96" args="(loc_t *loc, double cx, double cy, double cr, dsp **W0, dmat **W1)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void mkw_circular           </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>loc</em>, </td>
         </tr>
         <tr>
@@ -326,7 +438,7 @@ compute the W0, W1 for bilinear influence function for a circular aperture of ra
 <p>
 <dl compact><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
-    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>loc</em>&nbsp;</td><td>grid </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>loc</em>&nbsp;</td><td>grid coordinate </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cx</em>&nbsp;</td><td>center of circle, x </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cy</em>&nbsp;</td><td>center of circle, y </td></tr>
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cr</em>&nbsp;</td><td>circle radius </td></tr>
@@ -334,95 +446,17 @@ compute the W0, W1 for bilinear influence function for a circular aperture of ra
     <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>W1</em>&nbsp;</td><td>dense W1 </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00383"></a>00383                                             {
-<a name="l00384"></a>00384     <span class="keywordtype">long</span> nloc=loc-&gt;<a class="code" href="structLOC__T.html#fa098eeedb2e665fdd77526f1ff2ca8a" title="number of points">nloc</a>;
-<a name="l00385"></a>00385     *W0=<a class="code" href="dsp_8h.html#ad23f2152cd2622871367fd28ac0ff6b" title="Create a nx*ny X(sp) matrix with memory for nmax max elements allocated.">spnew</a>(nloc,nloc,9*nloc);
-<a name="l00386"></a>00386     <a class="code" href="loc_8c.html#4d37a2dfb2ce138d1d72772d5ff5a7ed" title="Create a map for loc so that we can obtain the index in loc by x,y coordinate.">loc_create_map_npad</a>(loc,1);<span class="comment">//pad by one</span>
-<a name="l00387"></a>00387     <span class="keywordtype">double</span> ox=loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a035d06a3ddd28ba504f54434970d471" title="Origin of the map along x.">ox</a>;
-<a name="l00388"></a>00388     <span class="keywordtype">double</span> oy=loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#0a28d333e471c48f6955517e9106fb49" title="Origin of the map along y.">oy</a>;
-<a name="l00389"></a>00389     <span class="keywordtype">long</span> nxmap=loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a53b9f6a08b042a3aa5333de8ff4598d" title="Number of points along x.">nx</a>;
-<a name="l00390"></a>00390     long(*map)[nxmap]=(long(*)[nxmap])loc-&gt;<a class="code" href="structLOC__T.html#72938c54993e6e9d0b00bb211d66f2d1" title="point to the map used for identifying neihboring points.">map</a>-&gt;<a class="code" href="structLOCMAP__T.html#a6884f997b7bf3fc1406b6fe4e6ff44b" title="The map, of size nx*ny.">p</a>;
-<a name="l00391"></a>00391     <span class="keywordtype">long</span> *W0p=(*W0)-&gt;p;
-<a name="l00392"></a>00392     <span class="keywordtype">long</span> *W0i=(*W0)-&gt;i;
-<a name="l00393"></a>00393     <span class="keywordtype">double</span> *W0x=(*W0)-&gt;x;
-<a name="l00394"></a>00394     <span class="keywordtype">long</span> count=0;
-<a name="l00395"></a>00395     *W1=<a class="code" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object.">dnew</a>(nloc,1);
-<a name="l00396"></a>00396     <span class="keywordtype">double</span> *W1p=(*W1)-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>;
-<a name="l00397"></a>00397     <span class="keywordtype">double</span> idx=1./loc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>;
-<a name="l00398"></a>00398     <span class="comment">//center of circle in the map.</span>
-<a name="l00399"></a>00399     <span class="keywordtype">double</span> icx=(cx-ox)*idx;
-<a name="l00400"></a>00400     <span class="keywordtype">double</span> icy=(cy-oy)*idx;
-<a name="l00401"></a>00401     <span class="comment">//radius of circle in unit of the map.</span>
-<a name="l00402"></a>00402     <span class="keywordtype">double</span> icr=cr*idx;
-<a name="l00403"></a>00403     <span class="keywordtype">double</span> sc=1./(M_PI*pow(icr,2));
-<a name="l00404"></a>00404     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> iloc=0; iloc&lt;nloc ;iloc++){
-<a name="l00405"></a>00405     <span class="keywordtype">double</span> xx=loc-&gt;<a class="code" href="structLOC__T.html#ed5d420f317a8b4d3f723c02d66a81d4" title="x coordinates of each point">locx</a>[iloc];
-<a name="l00406"></a>00406     <span class="keywordtype">double</span> yy=loc-&gt;<a class="code" href="structLOC__T.html#a265d16ab090298e35c3315fcb8daf59" title="y coordinates of each point">locy</a>[iloc];
-<a name="l00407"></a>00407     <span class="keywordtype">int</span> ix=(int)round((xx-ox)*idx);
-<a name="l00408"></a>00408     <span class="keywordtype">int</span> iy=(int)round((yy-oy)*idx);
-<a name="l00409"></a>00409     <span class="keywordtype">double</span> wt2=0;
-<a name="l00410"></a>00410     <span class="keywordtype">double</span> wt=0;
-<a name="l00411"></a>00411     W0p[iloc]=count;
-<a name="l00412"></a>00412     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> jy=iy-1; jy&lt;iy+2; jy++){
-<a name="l00413"></a>00413         <span class="keywordflow">for</span>(<span class="keywordtype">int</span> jx=ix-1;jx&lt;ix+2; jx++){
-<a name="l00414"></a>00414         <span class="keywordtype">int</span> aloc1=map[jy][jx];
-<a name="l00415"></a>00415         <span class="keywordflow">if</span>(!aloc1) <span class="keywordflow">continue</span>; <span class="keywordflow">else</span> aloc1--;
-<a name="l00416"></a>00416         <span class="comment">/*</span>
-<a name="l00417"></a>00417 <span class="comment">          We calculate the integration for different relative position</span>
-<a name="l00418"></a>00418 <span class="comment">          of the points. </span>
-<a name="l00419"></a>00419 <span class="comment">         */</span>
-<a name="l00420"></a>00420         <span class="keywordflow">if</span>(abs(ix-jx)==1 &amp;&amp; abs(iy-jy)==1){
-<a name="l00421"></a>00421             <span class="comment">//corner to corner</span>
-<a name="l00422"></a>00422             wt=calcwtcorner(ix,iy,jx,jy,icx,icy,icr);
-<a name="l00423"></a>00423         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(abs(iy-jy)==1){
-<a name="l00424"></a>00424             <span class="comment">//up to down</span>
-<a name="l00425"></a>00425             wt=calcwtud(ix,iy,jx,jy,icx,icy,icr);
-<a name="l00426"></a>00426         }<span class="keywordflow">else</span> <span class="keywordflow">if</span>(abs(ix-jx)==1){
-<a name="l00427"></a>00427             <span class="comment">//left to right</span>
-<a name="l00428"></a>00428             wt=calcwtlr(ix,iy,jx,jy,icx,icy,icr);
-<a name="l00429"></a>00429         }<span class="keywordflow">else</span>{ 
-<a name="l00430"></a>00430             <span class="comment">//self</span>
-<a name="l00431"></a>00431             wt=calcwtcenter(ix,iy,jx,jy,icx,icy,icr);
-<a name="l00432"></a>00432         }
-<a name="l00433"></a>00433         <span class="keywordflow">if</span>(wt&gt;0){
-<a name="l00434"></a>00434             W0i[count]=aloc1;
-<a name="l00435"></a>00435             W0x[count]=wt*sc;
-<a name="l00436"></a>00436             count++;
-<a name="l00437"></a>00437         }
-<a name="l00438"></a>00438         wt2+=wt;
-<a name="l00439"></a>00439         }<span class="comment">//jx</span>
-<a name="l00440"></a>00440     }<span class="comment">//jy</span>
-<a name="l00441"></a>00441     W1p[iloc]=wt2*sc;
-<a name="l00442"></a>00442     }<span class="comment">//iloc</span>
-<a name="l00443"></a>00443     W0p[nloc]=count;
-<a name="l00444"></a>00444     <a class="code" href="dsp_8h.html#3e88790d921e0805e21feded80f4b0e2" title="resize a X(sp) matrix">spsetnzmax</a>(*W0,count);
-<a name="l00445"></a>00445     <span class="keywordtype">double</span> sumW1=<a class="code" href="dmat_8h.html#176e534c9042ace51d05a620a2294248" title="create sum of all the elements in A.">dsum</a>(*W1);
-<a name="l00446"></a>00446     <span class="keywordflow">if</span>(fabs(sumW1-1)&gt;1.e-12){
-<a name="l00447"></a>00447     sc=1./sumW1;
-<a name="l00448"></a>00448     <span class="keywordtype">double</span> *p=(*W1)-&gt;p;
-<a name="l00449"></a>00449     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;(*W1)-&gt;nx; i++){
-<a name="l00450"></a>00450         p[i]*=sc;
-<a name="l00451"></a>00451     }
-<a name="l00452"></a>00452     p=(*W0)-&gt;x;
-<a name="l00453"></a>00453     <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;(*W0)-&gt;nzmax; i++){
-<a name="l00454"></a>00454         p[i]*=sc;
-<a name="l00455"></a>00455     }
-<a name="l00456"></a>00456     }
-<a name="l00457"></a>00457     <a class="code" href="loc_8c.html#b4bdd0977410c63912eb4dd14c241f7e" title="Free the MAP in LOC_T.">loc_free_map</a>(loc);
-<a name="l00458"></a>00458 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
-<a class="anchor" name="906ebb2ba8e44067e06845789d769132"></a><!-- doxytag: member="mkw.c::mkw_annular" ref="906ebb2ba8e44067e06845789d769132" args="(LOC_T *loc, double cx, double cy, double cri, double cro, dsp **W0, dmat **W1)" -->
+<a class="anchor" name="4db4d6190f9660f18f25bf2263b316c3"></a><!-- doxytag: member="mkw.c::mkw_annular" ref="4db4d6190f9660f18f25bf2263b316c3" args="(loc_t *loc, double cx, double cy, double cri, double cro, dsp **W0, dmat **W1)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void mkw_annular           </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structLOC__T.html">LOC_T</a> *&nbsp;</td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>loc</em>, </td>
         </tr>
         <tr>
@@ -473,37 +507,22 @@ compute the W0, W1 for bilinear influence function for a circular aperture of ra
 <p>
 compute the W0, W1 for bilinear influence function for a annular aperture of radius inner radius cri, and outer radius cro. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00464"></a>00464                              {
-<a name="l00465"></a>00465     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *W0o = NULL;
-<a name="l00466"></a>00466     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *W1o= NULL;
-<a name="l00467"></a>00467     <a class="code" href="structdsp.html" title="a sparse array of double numbers stored in compressed column format, i.e.">dsp</a> *W0i = NULL;
-<a name="l00468"></a>00468     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *W1i= NULL;
-<a name="l00469"></a>00469     <a class="code" href="mkw_8c.html#14a6f51d037ddb45b21b651d78617eb4" title="compute the W0, W1 for bilinear influence function for a circular aperture of radius...">mkw_circular</a>(loc, cx, cy, cri, &amp;W0i, &amp;W1i);<span class="comment">//inner</span>
-<a name="l00470"></a>00470     <a class="code" href="mkw_8c.html#14a6f51d037ddb45b21b651d78617eb4" title="compute the W0, W1 for bilinear influence function for a circular aperture of radius...">mkw_circular</a>(loc, cx, cy, cro, &amp;W0o, &amp;W1o);<span class="comment">//outer</span>
-<a name="l00471"></a>00471 
-<a name="l00472"></a>00472     <span class="comment">//Calculate the factor applied in mkw_circular</span>
-<a name="l00473"></a>00473     <span class="keywordtype">double</span> idx=1./loc-&gt;<a class="code" href="structLOC__T.html#ae9e38522a793c7d018028a38fc34ce0" title="Sampling.">dx</a>;
-<a name="l00474"></a>00474     <span class="keywordtype">double</span> sco=1/(M_PI*pow(cro*idx, 2));
-<a name="l00475"></a>00475     <span class="keywordtype">double</span> sci=1/(M_PI*pow(cri*idx, 2));
-<a name="l00476"></a>00476 
-<a name="l00477"></a>00477     *W1 = W1o;
-<a name="l00478"></a>00478     <a class="code" href="dmat_8h.html#4c4f53dc9572106deb6933eb103bf40b" title="compute B=bc*B+ac*A behavior changed on 2009-11-02.">dadd</a>(W1, 1./sco, W1i, -1/sci);<span class="comment">//cancel the factor applied in mkw_circular</span>
-<a name="l00479"></a>00479     <span class="keywordtype">double</span> sc=1./<a class="code" href="dmat_8h.html#176e534c9042ace51d05a620a2294248" title="create sum of all the elements in A.">dsum</a>(*W1);
-<a name="l00480"></a>00480     <a class="code" href="dmat_8h.html#9a9da6ac02ccf42247a8a78a131ca73a" title="scale each element of A by w">dscale</a>(*W1, sc);
-<a name="l00481"></a>00481     <span class="comment">//cancel the factor applied in mkw_circular and apply the new factor</span>
-<a name="l00482"></a>00482     *W0 = <a class="code" href="dsp_8h.html#a55aa866dc8f53618cdb5ded64643f69" title="Added two sparse matrices: return A*a+B*b.">spadd2</a>(W0o, W0i, sc/sco, -sc/sci);
-<a name="l00483"></a>00483 
-<a name="l00484"></a>00484     spfree(W0o);
-<a name="l00485"></a>00485     spfree(W0i);
-<a name="l00486"></a>00486     dfree(W1i);
-<a name="l00487"></a>00487 }
-</pre></div>
-<p>
+see mkw(). <dl compact><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>loc</em>&nbsp;</td><td>grid coordinate </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cx</em>&nbsp;</td><td>center of circle, x </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cy</em>&nbsp;</td><td>center of circle, y </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cri</em>&nbsp;</td><td>inner circular hole radius </td></tr>
+    <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>cro</em>&nbsp;</td><td>outer circle radius </td></tr>
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>W0</em>&nbsp;</td><td>sparse W0 </td></tr>
+    <tr><td valign="top"><tt>[out]</tt>&nbsp;</td><td valign="top"><em>W1</em>&nbsp;</td><td>dense W1 </td></tr>
+  </table>
+</dl>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

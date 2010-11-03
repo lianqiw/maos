@@ -6,9 +6,9 @@
 <area shape="rect" id="node13" href="$setup__recon_8c.html#0182734530b87fcf5498aea2e8d1e5c0" title="Setup the deformable mirrors grid aloc." alt="" coords="172,272,295,301">
 <area shape="rect" id="node15" href="$setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix." alt="" coords="157,325,309,355">
 <area shape="rect" id="node17" href="$setup__recon_8c.html#4f4abf13c9b0972de67fab348bb9f470" title="Create the reconstructor to reconstruct the residual focus error due to LGS sodium..." alt="" coords="168,379,299,408">
-<area shape="rect" id="node19" href="$setup__recon_8c.html#61353f3760139816643f225db8e6d3bc" title="Setup gradient operator G0, GA on xloc, aloc." alt="" coords="165,432,301,461">
-<area shape="rect" id="node21" href="$setup__recon_8c.html#fa92eb0639f142dd512c13688b21d813" title="Setup ray tracing operator HX,HA from xloc, aloc to aperture ploc." alt="" coords="167,485,300,515">
-<area shape="rect" id="node23" href="$setup__recon_8c.html#3a5b99570039882f39e51b69236b1a0e" title="Prepare the propagation H matrix for MOAO and compute the reconstructor." alt="" coords="168,539,299,568">
+<area shape="rect" id="node19" href="$setup__recon_8c.html#912dce9181aa58d65477058caa4d0c13" title="Setup gradient operator GX, GA on xloc, aloc." alt="" coords="165,432,301,461">
+<area shape="rect" id="node21" href="$setup__recon_8c.html#dcd024580204a29e51a9345202d56e73" title="Setup ray tracing operator HXF,HA from xloc, aloc to aperture ploc." alt="" coords="163,485,304,515">
+<area shape="rect" id="node23" href="$setup__recon_8c.html#8300ff84b2b46910d45f4ce801252535" title="Prepare the propagation H matrix for MOAO and compute the reconstructor." alt="" coords="168,539,299,568">
 <area shape="rect" id="node25" href="$setup__recon_8c.html#2bd8394adbdb99d342f9ac9d3a0faa6f" title="compute the MVST split tomography NGS mode reconstructor." alt="" coords="171,592,296,621">
 <area shape="rect" id="node27" href="$setup__recon_8c.html#928f34035de84ed317aa075e7a7ddac9" title="Setting up PLOC grid, which is a coarse sampled (similar to subaperture spacing)..." alt="" coords="172,645,295,675">
 <area shape="rect" id="node29" href="$setup__recon_8c.html#3f6cf2f9b4c4e8dbe3cba7df6a41fa9b" title="Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance..." alt="" coords="164,699,303,728">

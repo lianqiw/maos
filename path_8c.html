@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: lib/path.c File Reference</title>
+<title>maos-0.7.1: lib/path.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -81,9 +81,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8c.html#f4d7c608d3c193573c706d3dfd7e070c">freepath</a> (void)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Empty the path.  <a href="#f4d7c608d3c193573c706d3dfd7e070c"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7f400e70d869030323eab6b41ab8e833"></a><!-- doxytag: member="path.c::__attribute__" ref="7f400e70d869030323eab6b41ab8e833" args="((destructor))" -->
-static&nbsp;</td><td class="memItemRight" valign="bottom"><b>__attribute__</b> ((destructor))</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8c.html#7f400e70d869030323eab6b41ab8e833">__attribute__</a> ((destructor))</td></tr>
 
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free the path at exit.  <a href="#7f400e70d869030323eab6b41ab8e833"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8c.html#0e3cda5e813f058b64cceb451bf88e64">search_file</a> (const char *fn)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Try to find a file in path and return its absolute filename of exist, NULL otherwise.  <a href="#0e3cda5e813f058b64cceb451bf88e64"></a><br></td></tr>
@@ -114,15 +114,6 @@ This file contains function managing the searching path for files, behaves as PA
 <p>
 Add a directory to path. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00036"></a>00036                              {
-<a name="l00037"></a>00037     <span class="keywordtype">char</span> *abspath=myabspath(path);
-<a name="l00038"></a>00038     PATH_T *node=calloc(1,<span class="keyword">sizeof</span>(PATH_T));
-<a name="l00039"></a>00039     node-&gt;path=abspath;
-<a name="l00040"></a>00040     node-&gt;next=PATH;
-<a name="l00041"></a>00041     PATH=node;
-<a name="l00042"></a>00042 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -144,28 +135,6 @@ Add a directory to path.
 
 <p>
 Remove a directory from path. 
-<p>
-<div class="fragment"><pre class="fragment"><a name="l00046"></a>00046                              {
-<a name="l00047"></a>00047     <span class="keywordtype">char</span> *abspath=myabspath(path);
-<a name="l00048"></a>00048     PATH_T *ia,*ib=NULL;
-<a name="l00049"></a>00049     <span class="keywordflow">for</span>(ia=PATH;ia;ia=ia-&gt;next){
-<a name="l00050"></a>00050     <span class="keywordflow">if</span>(!strcmp(ia-&gt;path,abspath)){
-<a name="l00051"></a>00051         <span class="keywordflow">if</span>(ib){
-<a name="l00052"></a>00052         ib-&gt;next=ia-&gt;next;
-<a name="l00053"></a>00053         }<span class="keywordflow">else</span>{
-<a name="l00054"></a>00054         PATH=ia-&gt;next;
-<a name="l00055"></a>00055         }
-<a name="l00056"></a>00056         free(ia-&gt;path);
-<a name="l00057"></a>00057         <span class="keywordflow">break</span>;
-<a name="l00058"></a>00058     }
-<a name="l00059"></a>00059     ib=ia;
-<a name="l00060"></a>00060     }
-<a name="l00061"></a>00061     <span class="keywordflow">if</span>(!ia){
-<a name="l00062"></a>00062     warning(<span class="stringliteral">"%s not foun idn PATH\n"</span>,path);
-<a name="l00063"></a>00063     }
-<a name="l00064"></a>00064     free(abspath);
-<a name="l00065"></a>00065 }
-</pre></div>
 <p>
 
 </div>
@@ -189,14 +158,6 @@ Remove a directory from path.
 <p>
 Print current path. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00069"></a>00069                     {
-<a name="l00070"></a>00070     info2(<span class="stringliteral">"PATH is :\n"</span>);
-<a name="l00071"></a>00071     <span class="keywordflow">for</span>(PATH_T *ia=PATH;ia;ia=ia-&gt;next){
-<a name="l00072"></a>00072     info2(<span class="stringliteral">"%s\n"</span>,ia-&gt;path);
-<a name="l00073"></a>00073     }
-<a name="l00074"></a>00074 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -219,15 +180,27 @@ Print current path.
 <p>
 Empty the path. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00078"></a>00078                    {
-<a name="l00079"></a>00079     PATH_T *ib;
-<a name="l00080"></a>00080     <span class="keywordflow">for</span>(PATH_T *ia=PATH;ia;ia=ib){
-<a name="l00081"></a>00081     ib=ia-&gt;next;
-<a name="l00082"></a>00082     free(ia);
-<a name="l00083"></a>00083     }
-<a name="l00084"></a>00084     PATH=NULL;
-<a name="l00085"></a>00085 }
-</pre></div>
+
+</div>
+</div><p>
+<a class="anchor" name="7f400e70d869030323eab6b41ab8e833"></a><!-- doxytag: member="path.c::__attribute__" ref="7f400e70d869030323eab6b41ab8e833" args="((destructor))" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static __attribute__           </td>
+          <td>(</td>
+          <td class="paramtype">(destructor)&nbsp;</td>
+          <td class="paramname">          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Free the path at exit. 
 <p>
 
 </div>
@@ -251,29 +224,6 @@ Empty the path.
 <p>
 Try to find a file in path and return its absolute filename of exist, NULL otherwise. 
 <p>
-<div class="fragment"><pre class="fragment"><a name="l00092"></a>00092                                  {
-<a name="l00093"></a>00093     <span class="keywordflow">if</span>(!fn) <span class="keywordflow">return</span> NULL;
-<a name="l00094"></a>00094     <span class="keywordtype">char</span> *fnout=NULL;
-<a name="l00095"></a>00095     <span class="keywordflow">if</span>(exist(fn)){
-<a name="l00096"></a>00096     fnout=strdup(fn);
-<a name="l00097"></a>00097     }<span class="keywordflow">else</span>{
-<a name="l00098"></a>00098     PATH_T *ia;
-<a name="l00099"></a>00099     <span class="keywordtype">char</span> fntmp[PATH_MAX];
-<a name="l00100"></a>00100     <span class="keywordflow">for</span>(ia=PATH;ia;ia=ia-&gt;next){
-<a name="l00101"></a>00101         strcpy(fntmp,ia-&gt;path);
-<a name="l00102"></a>00102         <span class="keywordflow">if</span>(strlen(ia-&gt;path)&gt;0 &amp;&amp; fntmp[strlen(ia-&gt;path)-1]!=<span class="charliteral">'/'</span>) 
-<a name="l00103"></a>00103         strcat(fntmp,<span class="stringliteral">"/"</span>);
-<a name="l00104"></a>00104         strcat(fntmp,fn);
-<a name="l00105"></a>00105         <span class="keywordflow">if</span>(exist(fntmp)){
-<a name="l00106"></a>00106         fnout=strdup(fntmp);
-<a name="l00107"></a>00107         <span class="keywordflow">break</span>;
-<a name="l00108"></a>00108         }
-<a name="l00109"></a>00109     }
-<a name="l00110"></a>00110     }
-<a name="l00111"></a>00111     <span class="keywordflow">return</span> fnout;
-<a name="l00112"></a>00112 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -296,23 +246,11 @@ Try to find a file in path and return its absolute filename of exist, NULL other
 <p>
 Locate a file in path and return its absolute filename. 
 <p>
-Will emit error if not found. <div class="fragment"><pre class="fragment"><a name="l00117"></a>00117                                {
-<a name="l00118"></a>00118     <span class="keywordtype">char</span> *fnout=<a class="code" href="path_8c.html#0e3cda5e813f058b64cceb451bf88e64" title="Try to find a file in path and return its absolute filename of exist, NULL otherwise...">search_file</a>(fn);
-<a name="l00119"></a>00119     <span class="keywordflow">if</span>(!fnout || !exist(fnout)){
-<a name="l00120"></a>00120     info(<span class="stringliteral">"File is %s\n"</span>,fnout);
-<a name="l00121"></a>00121     <a class="code" href="path_8c.html#07766b8acb6b809987722bd8f9bf2700" title="Print current path.">printpath</a>();
-<a name="l00122"></a>00122     error(<span class="stringliteral">"Unable to find file %s.\n"</span>,fn);
-<a name="l00123"></a>00123     <span class="keywordflow">return</span> NULL;
-<a name="l00124"></a>00124     }
-<a name="l00125"></a>00125     <span class="keywordflow">return</span> fnout;
-<a name="l00126"></a>00126 }
-</pre></div>
-<p>
-
+Will emit error if not found. 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:57 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

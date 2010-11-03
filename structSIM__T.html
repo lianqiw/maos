@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: SIM_T Struct Reference</title>
+<title>maos-0.7.1: SIM_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,309 +69,1564 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a33c072fbed475a7a22f7b4fc7e27334"></a><!-- doxytag: member="SIM_T::cachedm" ref="a33c072fbed475a7a22f7b4fc7e27334" args="" -->
-<a class="el" href="structMAP__T.html">MAP_T</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>cachedm</b></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#7cdef62c9a304e969d4d955ed0070d73">atm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="94acc92cf68283f0ca866d4b3086cb37"></a><!-- doxytag: member="SIM_T::cachedm_prop" ref="94acc92cf68283f0ca866d4b3086cb37" args="" -->
-thread_t *&nbsp;</td><td class="memItemRight" valign="bottom"><b>cachedm_prop</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">fine sampled simulation turbulence screens  <a href="#7cdef62c9a304e969d4d955ed0070d73"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#8fc95235c97ce09c01929163dfcbc66a">cachedm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6766b9d62d3bf6c25f02d5b38b55cf50"></a><!-- doxytag: member="SIM_T::cachedm_propdata" ref="6766b9d62d3bf6c25f02d5b38b55cf50" args="" -->
-PROPDATA_T *&nbsp;</td><td class="memItemRight" valign="bottom"><b>cachedm_propdata</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">grid cache dm actuator to a finer sampled screen.  <a href="#8fc95235c97ce09c01929163dfcbc66a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int(*&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#06e13fc279426037c8f829719720f432">pcachedm</a> )[2]</td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="06e13fc279426037c8f829719720f432"></a><!-- doxytag: member="SIM_T::pcachedm" ref="06e13fc279426037c8f829719720f432" args=")[2]" -->
-int(*&nbsp;</td><td class="memItemRight" valign="bottom"><b>pcachedm</b> )[2]</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">information about cachedm struct.  <a href="#06e13fc279426037c8f829719720f432"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structPROPDATA__T.html">PROPDATA_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#6766b9d62d3bf6c25f02d5b38b55cf50">cachedm_propdata</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="23aa8a9bcecfe29c0e170b50fe0423d3"></a><!-- doxytag: member="SIM_T::cacheatm" ref="23aa8a9bcecfe29c0e170b50fe0423d3" args="" -->
-<a class="el" href="structMAP__T.html">MAP_T</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>cacheatm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wrapped data for ray tracing from aloc to cachedm  <a href="#6766b9d62d3bf6c25f02d5b38b55cf50"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structthread__t.html">thread_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#94acc92cf68283f0ca866d4b3086cb37">cachedm_prop</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0241d38e89ddccb476d83c26163f67d9"></a><!-- doxytag: member="SIM_T::HACT" ref="0241d38e89ddccb476d83c26163f67d9" args="" -->
-<a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>HACT</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wrapped cachedm_propdata for threading  <a href="#94acc92cf68283f0ca866d4b3086cb37"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#90b521b076481fe938a37cbe4b1c5b79">winddir</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6a36b9c3590a438ecb1985dfaf33cb58"></a><!-- doxytag: member="SIM_T::atm" ref="6a36b9c3590a438ecb1985dfaf33cb58" args="" -->
-<a class="el" href="structMAP__T.html">MAP_T</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>atm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">input wind direction  <a href="#90b521b076481fe938a37cbe4b1c5b79"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">surfwfs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="90b521b076481fe938a37cbe4b1c5b79"></a><!-- doxytag: member="SIM_T::winddir" ref="90b521b076481fe938a37cbe4b1c5b79" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>winddir</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">additional OPD surface for each WFS.  <a href="#63db4cfd2859ab3331ea32ec21d7b747"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">surfevl</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="63db4cfd2859ab3331ea32ec21d7b747"></a><!-- doxytag: member="SIM_T::surfwfs" ref="63db4cfd2859ab3331ea32ec21d7b747" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>surfwfs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">additional OPD surcace for each evaluation field  <a href="#ee3d52037a51574e3d11586be7c2d708"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structrectmap__t.html">rectmap_t</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#fe3961c872dd3333b7dd35cdb5f6ccfc">tsurf</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ee3d52037a51574e3d11586be7c2d708"></a><!-- doxytag: member="SIM_T::surfevl" ref="ee3d52037a51574e3d11586be7c2d708" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>surfevl</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">input tilted M3 surface  <a href="#fe3961c872dd3333b7dd35cdb5f6ccfc"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#1699fa8983ac54f0e4b2c08355b6d524">surf</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a386a2f978740a45eb0837b410c8ce12"></a><!-- doxytag: member="SIM_T::tsurf" ref="a386a2f978740a45eb0837b410c8ce12" args="" -->
-<a class="el" href="structRECTMAP__T.html">RECTMAP_T</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>tsurf</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">input surface: M1, M2 or else.  <a href="#1699fa8983ac54f0e4b2c08355b6d524"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#1ce78a265b859aa46fe4bd4d055073e8">gradcl</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="8763538dc5c96c59969447cb3cb8830e"></a><!-- doxytag: member="SIM_T::surf" ref="8763538dc5c96c59969447cb3cb8830e" args="" -->
-<a class="el" href="structMAP__T.html">MAP_T</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>surf</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">cl grad output.  <a href="#1ce78a265b859aa46fe4bd4d055073e8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#d6da04a1c5a9dcaa24db9167ed1a8014">gradpsol</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="1ce78a265b859aa46fe4bd4d055073e8"></a><!-- doxytag: member="SIM_T::gradcl" ref="1ce78a265b859aa46fe4bd4d055073e8" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>gradcl</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">WFS pseudo open loop grad output.  <a href="#d6da04a1c5a9dcaa24db9167ed1a8014"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a738e7a4294a049073428945f65695e0">gradacc</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d6da04a1c5a9dcaa24db9167ed1a8014"></a><!-- doxytag: member="SIM_T::gradpsol" ref="d6da04a1c5a9dcaa24db9167ed1a8014" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>gradpsol</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">accumulate gradident for dtrat&gt;1  <a href="#a738e7a4294a049073428945f65695e0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#2f33626ab1590a06d8897380abb49c00">opdr</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a738e7a4294a049073428945f65695e0"></a><!-- doxytag: member="SIM_T::gradacc" ref="a738e7a4294a049073428945f65695e0" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>gradacc</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reconstructed OPD defined on xloc in tomography output.  <a href="#2f33626ab1590a06d8897380abb49c00"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#fe6605f55d778938848f8e7caccac524">opdrmvst</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="2f33626ab1590a06d8897380abb49c00"></a><!-- doxytag: member="SIM_T::opdr" ref="2f33626ab1590a06d8897380abb49c00" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>opdr</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">average of opdr for MVST  <a href="#fe6605f55d778938848f8e7caccac524"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#2ee38673dc380b119869dc5349c87e23">opdevl</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fe6605f55d778938848f8e7caccac524"></a><!-- doxytag: member="SIM_T::opdrmvst" ref="fe6605f55d778938848f8e7caccac524" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>opdrmvst</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">evaluation opd for selected directions.  <a href="#2ee38673dc380b119869dc5349c87e23"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#1c958097d5e0b72e47a308658085aead">opdevlground</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="2ee38673dc380b119869dc5349c87e23"></a><!-- doxytag: member="SIM_T::opdevl" ref="2ee38673dc380b119869dc5349c87e23" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>opdevl</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">evaluation opd for ground layer turbulence to save ray tracing.  <a href="#1c958097d5e0b72e47a308658085aead"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#e7c3be846a2bcf3ce66afb764880604c">opdrhat</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="1c958097d5e0b72e47a308658085aead"></a><!-- doxytag: member="SIM_T::opdevlground" ref="1c958097d5e0b72e47a308658085aead" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>opdevlground</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">For wind estimation (testing).  <a href="#e7c3be846a2bcf3ce66afb764880604c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#65207b82230e05888d85ba37decbfc7f">opdrhatlast</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="e7c3be846a2bcf3ce66afb764880604c"></a><!-- doxytag: member="SIM_T::opdrhat" ref="e7c3be846a2bcf3ce66afb764880604c" args="" -->
-<a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>opdrhat</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">for wind estimation.  <a href="#65207b82230e05888d85ba37decbfc7f"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#ec5148b2cbcb290d3f6d3e9c6f587b58">windest</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="b7219d0797daeda112563e0f0d6bed9b"></a><!-- doxytag: member="SIM_T::opdrhatlast" ref="b7219d0797daeda112563e0f0d6bed9b" args="" -->
-<a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>opdrhatlast</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">estimated wind velocity.  <a href="#ec5148b2cbcb290d3f6d3e9c6f587b58"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#c13a335178113fe760f472df5990463b">windshift</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ec5148b2cbcb290d3f6d3e9c6f587b58"></a><!-- doxytag: member="SIM_T::windest" ref="ec5148b2cbcb290d3f6d3e9c6f587b58" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>windest</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">operator to do wind shift on opdr  <a href="#c13a335178113fe760f472df5990463b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#af2fc0d68cf124447162f684585d5125">dmpsol</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c13a335178113fe760f472df5990463b"></a><!-- doxytag: member="SIM_T::windshift" ref="c13a335178113fe760f472df5990463b" args="" -->
-<a class="el" href="structspcell.html">spcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>windshift</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">time averaged dm command (dtrat&gt;1) for psol grad  <a href="#af2fc0d68cf124447162f684585d5125"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#da7dc24074ead7e87d800f8b99584fce">ints</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="af2fc0d68cf124447162f684585d5125"></a><!-- doxytag: member="SIM_T::dmpsol" ref="af2fc0d68cf124447162f684585d5125" args="" -->
-<a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>dmpsol</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">WFS subaperture images.  <a href="#da7dc24074ead7e87d800f8b99584fce"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#7175cc941d5dbae02503ff90df35a7b3">wfspsfout</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="da7dc24074ead7e87d800f8b99584fce"></a><!-- doxytag: member="SIM_T::ints" ref="da7dc24074ead7e87d800f8b99584fce" args="" -->
-<a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>ints</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">output WFS PSF history.  <a href="#7175cc941d5dbae02503ff90df35a7b3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#1c33b2746b273def2a8b91c078e04e43">wfspsfoutcellarr</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7175cc941d5dbae02503ff90df35a7b3"></a><!-- doxytag: member="SIM_T::wfspsfout" ref="7175cc941d5dbae02503ff90df35a7b3" args="" -->
-<a class="el" href="structccell.html">ccell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>wfspsfout</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">special file to save wfs psf history  <a href="#1c33b2746b273def2a8b91c078e04e43"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#52a7f7ea349954a1de5660339c3d1246">ztiltoutcellarr</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="1c33b2746b273def2a8b91c078e04e43"></a><!-- doxytag: member="SIM_T::wfspsfoutcellarr" ref="1c33b2746b273def2a8b91c078e04e43" args="" -->
-<a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>wfspsfoutcellarr</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">special file to save zernike wfs tilt history  <a href="#52a7f7ea349954a1de5660339c3d1246"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#9150a4d2687fb6e309da0a1857930e2e">pistatout</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="52a7f7ea349954a1de5660339c3d1246"></a><!-- doxytag: member="SIM_T::ztiltoutcellarr" ref="52a7f7ea349954a1de5660339c3d1246" args="" -->
-<a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>ztiltoutcellarr</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">WFS time averaged tip/tilt removed PSF.  <a href="#9150a4d2687fb6e309da0a1857930e2e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#9fa58c6d12a9a59b829d2578c800ab20">sanea_sim</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="9150a4d2687fb6e309da0a1857930e2e"></a><!-- doxytag: member="SIM_T::pistatout" ref="9150a4d2687fb6e309da0a1857930e2e" args="" -->
-<a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>pistatout</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">accumulate effective sanea during simulation.  <a href="#9fa58c6d12a9a59b829d2578c800ab20"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#549cb58b9176ad9c3010e10a1c49e183">clep</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="9fa58c6d12a9a59b829d2578c800ab20"></a><!-- doxytag: member="SIM_T::sanea_sim" ref="9fa58c6d12a9a59b829d2578c800ab20" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>sanea_sim</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CL error per direction.  <a href="#549cb58b9176ad9c3010e10a1c49e183"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#74c93d556aa71e088d126fc9b46a8b05">clmp</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="549cb58b9176ad9c3010e10a1c49e183"></a><!-- doxytag: member="SIM_T::clep" ref="549cb58b9176ad9c3010e10a1c49e183" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>clep</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CL mode coefficient per direction.  <a href="#74c93d556aa71e088d126fc9b46a8b05"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#5624b2fcac9387ae85b62b5e44859ccb">cleptomo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="74c93d556aa71e088d126fc9b46a8b05"></a><!-- doxytag: member="SIM_T::clmp" ref="74c93d556aa71e088d126fc9b46a8b05" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>clmp</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CL error for tomography compensation perdirection.  <a href="#5624b2fcac9387ae85b62b5e44859ccb"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#cb2343b0ab41ed2017b12161da590ab4">clmptomo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="5624b2fcac9387ae85b62b5e44859ccb"></a><!-- doxytag: member="SIM_T::cleptomo" ref="5624b2fcac9387ae85b62b5e44859ccb" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>cleptomo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">CL mode coefficient for tomography compensation.  <a href="#cb2343b0ab41ed2017b12161da590ab4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#c65e9ce3a4423029555fa2efec78b435">olep</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="cb2343b0ab41ed2017b12161da590ab4"></a><!-- doxytag: member="SIM_T::clmptomo" ref="cb2343b0ab41ed2017b12161da590ab4" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>clmptomo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">OL error per direction.  <a href="#c65e9ce3a4423029555fa2efec78b435"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#4280db22efbabe02df141c3a7af83b93">olmp</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c65e9ce3a4423029555fa2efec78b435"></a><!-- doxytag: member="SIM_T::olep" ref="c65e9ce3a4423029555fa2efec78b435" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>olep</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">OL mode coefficient per direction.  <a href="#4280db22efbabe02df141c3a7af83b93"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#cb6e3153c3ba12a9310f503d1cb5fa8e">ole</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="4280db22efbabe02df141c3a7af83b93"></a><!-- doxytag: member="SIM_T::olmp" ref="4280db22efbabe02df141c3a7af83b93" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>olmp</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">field averaged OL error  <a href="#cb6e3153c3ba12a9310f503d1cb5fa8e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#1e10c517d94504ae3b0d3368735364ba">cle</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="cb6e3153c3ba12a9310f503d1cb5fa8e"></a><!-- doxytag: member="SIM_T::ole" ref="cb6e3153c3ba12a9310f503d1cb5fa8e" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>ole</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">field averaged CL error  <a href="#1e10c517d94504ae3b0d3368735364ba"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#fe4ac255e40b5ebc4c1bab33c1e13550">cletomo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="1e10c517d94504ae3b0d3368735364ba"></a><!-- doxytag: member="SIM_T::cle" ref="1e10c517d94504ae3b0d3368735364ba" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>cle</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">field averaged tomography error  <a href="#fe4ac255e40b5ebc4c1bab33c1e13550"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#172a004f720d68b39d1239c39b4c1faa">clem</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fe4ac255e40b5ebc4c1bab33c1e13550"></a><!-- doxytag: member="SIM_T::cletomo" ref="fe4ac255e40b5ebc4c1bab33c1e13550" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>cletomo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">lgs/ngs mod error in split tomography  <a href="#172a004f720d68b39d1239c39b4c1faa"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#829764afdeb37528717cab28e1bbd0ed">clemp</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="172a004f720d68b39d1239c39b4c1faa"></a><!-- doxytag: member="SIM_T::clem" ref="172a004f720d68b39d1239c39b4c1faa" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>clem</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">lgs/ngs mod error per direction.  <a href="#829764afdeb37528717cab28e1bbd0ed"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#20b5e3a20c72f11e59e3ba4551a4bc48">corrNGSm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="829764afdeb37528717cab28e1bbd0ed"></a><!-- doxytag: member="SIM_T::clemp" ref="829764afdeb37528717cab28e1bbd0ed" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>clemp</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Correction of NGS mode.  <a href="#20b5e3a20c72f11e59e3ba4551a4bc48"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#627edda515a52ab3fbdcfc51c9eac958">cleNGSm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="20b5e3a20c72f11e59e3ba4551a4bc48"></a><!-- doxytag: member="SIM_T::corrNGSm" ref="20b5e3a20c72f11e59e3ba4551a4bc48" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>corrNGSm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Close loop ngs mods in split tomogrpahy.  <a href="#627edda515a52ab3fbdcfc51c9eac958"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#cee2a0d50823b17fb488974140b4cf36">cleNGSmp</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="627edda515a52ab3fbdcfc51c9eac958"></a><!-- doxytag: member="SIM_T::cleNGSm" ref="627edda515a52ab3fbdcfc51c9eac958" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>cleNGSm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">(M'*w*phi);  <a href="#cee2a0d50823b17fb488974140b4cf36"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#b7ed28903f3831b3433b7c8a7175cfd9">res</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="cee2a0d50823b17fb488974140b4cf36"></a><!-- doxytag: member="SIM_T::cleNGSmp" ref="cee2a0d50823b17fb488974140b4cf36" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>cleNGSmp</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">warping of ole,cletomo,cle,clem for easy saving.  <a href="#b7ed28903f3831b3433b7c8a7175cfd9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#7f1f7e6320e5a18c9662e14316f7ea28">gtypeII_lo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="b7ed28903f3831b3433b7c8a7175cfd9"></a><!-- doxytag: member="SIM_T::res" ref="b7ed28903f3831b3433b7c8a7175cfd9" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>res</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">gain for type II array.  <a href="#7f1f7e6320e5a18c9662e14316f7ea28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">dmreal</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7f1f7e6320e5a18c9662e14316f7ea28"></a><!-- doxytag: member="SIM_T::gtypeII_lo" ref="7f1f7e6320e5a18c9662e14316f7ea28" args="" -->
-<a class="el" href="structdmat.html">dmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>gtypeII_lo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">real dm command  <a href="#e4b9c297eaa0b2ceb57bb9885caef135"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#7a78096b3a9ce0681a6c0c0548b41942">dmhist</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="e4b9c297eaa0b2ceb57bb9885caef135"></a><!-- doxytag: member="SIM_T::dmreal" ref="e4b9c297eaa0b2ceb57bb9885caef135" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>dmreal</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">histogram of dm commands.  <a href="#7a78096b3a9ce0681a6c0c0548b41942"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#de7f377f433b1b9f08b9b8fc01624cba">dmint</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7a78096b3a9ce0681a6c0c0548b41942"></a><!-- doxytag: member="SIM_T::dmhist" ref="7a78096b3a9ce0681a6c0c0548b41942" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>dmhist</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">dm integrator.  <a href="#de7f377f433b1b9f08b9b8fc01624cba"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#d248dc53ba37345772d26a2ea1e32472">dmfit_hi</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="de7f377f433b1b9f08b9b8fc01624cba"></a><!-- doxytag: member="SIM_T::dmint" ref="de7f377f433b1b9f08b9b8fc01624cba" args="" -->
-<a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>dmint</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">direct high order fit output  <a href="#d248dc53ba37345772d26a2ea1e32472"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a70fe28180281a0771c8c2d17ff63e50">dmerr_hi</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d248dc53ba37345772d26a2ea1e32472"></a><!-- doxytag: member="SIM_T::dmfit_hi" ref="d248dc53ba37345772d26a2ea1e32472" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>dmfit_hi</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">high order dm error signal.  <a href="#a70fe28180281a0771c8c2d17ff63e50"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#bddc06629ca1d3fd07bba2db8e50be47">dmint_hi</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a70fe28180281a0771c8c2d17ff63e50"></a><!-- doxytag: member="SIM_T::dmerr_hi" ref="a70fe28180281a0771c8c2d17ff63e50" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>dmerr_hi</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">integrator for high order (only if fuseint==0)  <a href="#bddc06629ca1d3fd07bba2db8e50be47"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#9fcd4a9ae6ec0828b3e6700dfe52730d">Merr_lo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="bddc06629ca1d3fd07bba2db8e50be47"></a><!-- doxytag: member="SIM_T::dmint_hi" ref="bddc06629ca1d3fd07bba2db8e50be47" args="" -->
-<a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>dmint_hi</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">split tomography NGS mode error signal.  <a href="#9fcd4a9ae6ec0828b3e6700dfe52730d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#d8fad0a83bdeed5dc290068f05bd8b0b">Mint_lo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="9fcd4a9ae6ec0828b3e6700dfe52730d"></a><!-- doxytag: member="SIM_T::Merr_lo" ref="9fcd4a9ae6ec0828b3e6700dfe52730d" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Merr_lo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NGS integrator (only used if fuseint==0).  <a href="#d8fad0a83bdeed5dc290068f05bd8b0b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structTYPEII__T.html">TYPEII_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#0637d5bd3ccd951ee328c83af2bdfc5b">MtypeII_lo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d8fad0a83bdeed5dc290068f05bd8b0b"></a><!-- doxytag: member="SIM_T::Mint_lo" ref="d8fad0a83bdeed5dc290068f05bd8b0b" args="" -->
-<a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>Mint_lo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">intermediate results for type II/lead filter  <a href="#0637d5bd3ccd951ee328c83af2bdfc5b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#bba8d28f43dad706c9d9669d409e5136">upterr</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0637d5bd3ccd951ee328c83af2bdfc5b"></a><!-- doxytag: member="SIM_T::MtypeII_lo" ref="0637d5bd3ccd951ee328c83af2bdfc5b" args="" -->
-<a class="el" href="structTYPEII__T.html">TYPEII_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>MtypeII_lo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">uplink error  <a href="#bba8d28f43dad706c9d9669d409e5136"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#3916ecec49d28516ab554abc7e00abac">upterrlast</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="bba8d28f43dad706c9d9669d409e5136"></a><!-- doxytag: member="SIM_T::upterr" ref="bba8d28f43dad706c9d9669d409e5136" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>upterr</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">uplink error from last step  <a href="#3916ecec49d28516ab554abc7e00abac"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#1a1715f09be296fb2667b7a05c5fdc65">uptreal</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="3916ecec49d28516ab554abc7e00abac"></a><!-- doxytag: member="SIM_T::upterrlast" ref="3916ecec49d28516ab554abc7e00abac" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>upterrlast</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">uplink real  <a href="#1a1715f09be296fb2667b7a05c5fdc65"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#66934ca62e886bf8b24470dbb403d117">uptint</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="1a1715f09be296fb2667b7a05c5fdc65"></a><!-- doxytag: member="SIM_T::uptreal" ref="1a1715f09be296fb2667b7a05c5fdc65" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>uptreal</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">uplink integrator output.  <a href="#66934ca62e886bf8b24470dbb403d117"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#bfefb2f79338c2280a987cc512465ca5">upterrs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="66934ca62e886bf8b24470dbb403d117"></a><!-- doxytag: member="SIM_T::uptint" ref="66934ca62e886bf8b24470dbb403d117" args="" -->
-<a class="el" href="structdcell.html">dcell</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>uptint</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">mmaped file to store upterr history  <a href="#bfefb2f79338c2280a987cc512465ca5"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#071e7f2036849234d609e8179e809945">uptcmds</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="bfefb2f79338c2280a987cc512465ca5"></a><!-- doxytag: member="SIM_T::upterrs" ref="bfefb2f79338c2280a987cc512465ca5" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>upterrs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">mmaped file to store uptcmd history  <a href="#071e7f2036849234d609e8179e809945"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#dd680e809db812c7b0493e18b816a68e">focuslpf</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="071e7f2036849234d609e8179e809945"></a><!-- doxytag: member="SIM_T::uptcmds" ref="071e7f2036849234d609e8179e809945" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>uptcmds</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">focus tracking low pass filter  <a href="#dd680e809db812c7b0493e18b816a68e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#cf19af635f4448413fce6adba8078d6e">focusint</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="dd680e809db812c7b0493e18b816a68e"></a><!-- doxytag: member="SIM_T::focuslpf" ref="dd680e809db812c7b0493e18b816a68e" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>focuslpf</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">focus tracking integrator  <a href="#cf19af635f4448413fce6adba8078d6e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#4037361401c5977a3798921e2e5b8a2c">evlpsfmean</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="cf19af635f4448413fce6adba8078d6e"></a><!-- doxytag: member="SIM_T::focusint" ref="cf19af635f4448413fce6adba8078d6e" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>focusint</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">science field psf time average  <a href="#4037361401c5977a3798921e2e5b8a2c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#16b4c0d42cda469528352c2dd595bc78">evlpsfolmean</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="4037361401c5977a3798921e2e5b8a2c"></a><!-- doxytag: member="SIM_T::evlpsfmean" ref="4037361401c5977a3798921e2e5b8a2c" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>evlpsfmean</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">science field OL PSF time averging  <a href="#16b4c0d42cda469528352c2dd595bc78"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#178508be9fce4d9e7809fa6292ab2823">evlpsftomomean</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="3543ea582865503921076eb72e4ef9c9"></a><!-- doxytag: member="SIM_T::evlpsftomomean" ref="3543ea582865503921076eb72e4ef9c9" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>evlpsftomomean</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">science field psf time average with direct correction from tomography  <a href="#178508be9fce4d9e7809fa6292ab2823"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#bf25c10a8c8ac84b7745e2834bb52a16">evlpsfhist</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="62461b878ba4da08a310c2edd070de64"></a><!-- doxytag: member="SIM_T::evlpsfolmean" ref="62461b878ba4da08a310c2edd070de64" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>evlpsfolmean</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">to save time history of science field psf  <a href="#bf25c10a8c8ac84b7745e2834bb52a16"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#300488d2b1ecc70046e7c0fe41c6a31b">evlpsftomohist</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="bf25c10a8c8ac84b7745e2834bb52a16"></a><!-- doxytag: member="SIM_T::evlpsfhist" ref="bf25c10a8c8ac84b7745e2834bb52a16" args="" -->
-<a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>evlpsfhist</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">to save time history of science field psf with direct correction from tomography  <a href="#300488d2b1ecc70046e7c0fe41c6a31b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmt__state.html">rand_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#ab7097204306d1dccab994da046db694">wfs_rand</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="4cb9542747fe08a763f0f70da1111214"></a><!-- doxytag: member="SIM_T::evlpsftomohist" ref="4cb9542747fe08a763f0f70da1111214" args="" -->
-<a class="el" href="structcellarr.html">cellarr</a> **&nbsp;</td><td class="memItemRight" valign="bottom"><b>evlpsftomohist</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">random stream for each wfs.  <a href="#ab7097204306d1dccab994da046db694"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmt__state.html">rand_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#2b9b48a41f4f3f875d37009506996502">atm_rand</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c734b503cc64094c916e677bade1313e"></a><!-- doxytag: member="SIM_T::wfs_rand" ref="c734b503cc64094c916e677bade1313e" args="" -->
-struct_rand *&nbsp;</td><td class="memItemRight" valign="bottom"><b>wfs_rand</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">random stream for atmosphere turbulence generation  <a href="#2b9b48a41f4f3f875d37009506996502"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmt__state.html">rand_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#36bd8e4187d641743b7e7a9982d31d48">atmwd_rand</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="aaaffcb8a2ecae5b338e79471d71e2c4"></a><!-- doxytag: member="SIM_T::atm_rand" ref="aaaffcb8a2ecae5b338e79471d71e2c4" args="" -->
-struct_rand&nbsp;</td><td class="memItemRight" valign="bottom"><b>atm_rand</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">random stream for wind direction  <a href="#36bd8e4187d641743b7e7a9982d31d48"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structmt__state.html">rand_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#cc7efd363d00b097ab312656cb261dad">init</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ece4f6a3512229a2bb0b062e1158965f"></a><!-- doxytag: member="SIM_T::atmwd_rand" ref="ece4f6a3512229a2bb0b062e1158965f" args="" -->
-struct_rand&nbsp;</td><td class="memItemRight" valign="bottom"><b>atmwd_rand</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">random stream to initialize other streams  <a href="#cc7efd363d00b097ab312656cb261dad"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structSTATUS__T.html">STATUS_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">status</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="aed2790ae0fbcdf99ab9952dcd41b5c7"></a><!-- doxytag: member="SIM_T::init" ref="aed2790ae0fbcdf99ab9952dcd41b5c7" args="" -->
-struct_rand&nbsp;</td><td class="memItemRight" valign="bottom"><b>init</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">status report to scheduler.  <a href="#26aad0819c9a098cfc44f9c2ac25ffc7"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#40ec16c1de056c1350fa3bda4ca65da1">moao_wfs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="26aad0819c9a098cfc44f9c2ac25ffc7"></a><!-- doxytag: member="SIM_T::status" ref="26aad0819c9a098cfc44f9c2ac25ffc7" args="" -->
-STATUS_T *&nbsp;</td><td class="memItemRight" valign="bottom"><b>status</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">moao DM command for wfs  <a href="#40ec16c1de056c1350fa3bda4ca65da1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#b637adfa4528f55e986cfc7df75f2b01">moao_evl</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="40ec16c1de056c1350fa3bda4ca65da1"></a><!-- doxytag: member="SIM_T::moao_wfs" ref="40ec16c1de056c1350fa3bda4ca65da1" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>moao_wfs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">moao DM command for science field  <a href="#b637adfa4528f55e986cfc7df75f2b01"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a627421bfd2a0fa6b2c746463f075bef">gcov</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="b637adfa4528f55e986cfc7df75f2b01"></a><!-- doxytag: member="SIM_T::moao_evl" ref="b637adfa4528f55e986cfc7df75f2b01" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>moao_evl</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">covariance of psuedo open loop gradients.  <a href="#a627421bfd2a0fa6b2c746463f075bef"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structPROPDATA__T.html">PROPDATA_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#7b4cc96acefa449d39faf921dff586ae">wfs_propdata_dm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a627421bfd2a0fa6b2c746463f075bef"></a><!-- doxytag: member="SIM_T::gcov" ref="a627421bfd2a0fa6b2c746463f075bef" args="" -->
-<a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>gcov</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wrap of data for ray tracing from DM in <a class="el" href="wfsgrad_8c.html" title="contains functions that computes WFS gradients in geometric or physical optics mode...">wfsgrad.c</a>  <a href="#7b4cc96acefa449d39faf921dff586ae"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structthread__t.html">thread_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#2201998d1bf3907a381f73a7ad3fa153">wfs_prop_dm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top">thread_t *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#2201998d1bf3907a381f73a7ad3fa153">wfs_prop_dm</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wrap of wfs_propdata_dm for threaded ray tracing  <a href="#2201998d1bf3907a381f73a7ad3fa153"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structlocstat__t.html">locstat_t</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#9a65dee3698876a38cfd8feaa6a5aa28">ploc_stat</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">wrap of data for ray tracing from DM in <a class="el" href="wfsgrad_8c.html" title="contains functions that computes WFS gradients in geometric or physical optics mode...">wfsgrad.c</a>  <a href="#2201998d1bf3907a381f73a7ad3fa153"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="7b4cc96acefa449d39faf921dff586ae"></a><!-- doxytag: member="SIM_T::wfs_propdata_dm" ref="7b4cc96acefa449d39faf921dff586ae" args="" -->
-PROPDATA_T *&nbsp;</td><td class="memItemRight" valign="bottom"><b>wfs_propdata_dm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">statistics of columns in ploc  <a href="#9a65dee3698876a38cfd8feaa6a5aa28"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d3363c736619477f95401561d0dda42c"></a><!-- doxytag: member="SIM_T::save" ref="d3363c736619477f95401561d0dda42c" args="" -->
+SIM_SAVE_T *&nbsp;</td><td class="memItemRight" valign="bottom"><b>save</b></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="500847fe36d1973dcfed62a43528e568"></a><!-- doxytag: member="SIM_T::ploc_stat" ref="500847fe36d1973dcfed62a43528e568" args="" -->
-<a class="el" href="structLOCSTAT__T.html">LOCSTAT_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>ploc_stat</b></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">nthread</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="4f9c43677faa9f6745d3220bed8b8977"></a><!-- doxytag: member="SIM_T::nthread" ref="4f9c43677faa9f6745d3220bed8b8977" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>nthread</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">number of threads  <a href="#4f9c43677faa9f6745d3220bed8b8977"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#e58d71938f9fa82ce8088e07c98c3da9">wfsgrad_iwfs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="e58d71938f9fa82ce8088e07c98c3da9"></a><!-- doxytag: member="SIM_T::wfsgrad_iwfs" ref="e58d71938f9fa82ce8088e07c98c3da9" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>wfsgrad_iwfs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">counter for threaded calling  <a href="#e58d71938f9fa82ce8088e07c98c3da9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#8610e61619b439a4980bcdc718636483">perfevl_ievl</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="8610e61619b439a4980bcdc718636483"></a><!-- doxytag: member="SIM_T::perfevl_ievl" ref="8610e61619b439a4980bcdc718636483" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>perfevl_ievl</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">counter for threaded calling  <a href="#8610e61619b439a4980bcdc718636483"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#f3ef56bd760168170d2bb3089ac9864d">perfevl_iground</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f3ef56bd760168170d2bb3089ac9864d"></a><!-- doxytag: member="SIM_T::perfevl_iground" ref="f3ef56bd760168170d2bb3089ac9864d" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>perfevl_iground</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">index of the layer at ground  <a href="#f3ef56bd760168170d2bb3089ac9864d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#5ef0623895ff7f7823b92c8fb8f8d50b">cachedm_i</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="5ef0623895ff7f7823b92c8fb8f8d50b"></a><!-- doxytag: member="SIM_T::cachedm_i" ref="5ef0623895ff7f7823b92c8fb8f8d50b" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>cachedm_i</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">counter for threaded calling  <a href="#5ef0623895ff7f7823b92c8fb8f8d50b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">cachedm_n</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="69fdb47e9ffb4cdd5bf09039df2fa200"></a><!-- doxytag: member="SIM_T::cachedm_n" ref="69fdb47e9ffb4cdd5bf09039df2fa200" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>cachedm_n</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">length of pcachedm array  <a href="#69fdb47e9ffb4cdd5bf09039df2fa200"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#1a656b8e93b33589d4899dc65c098e52">dtrat_hi</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="1a656b8e93b33589d4899dc65c098e52"></a><!-- doxytag: member="SIM_T::dtrat_hi" ref="1a656b8e93b33589d4899dc65c098e52" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>dtrat_hi</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ratio of sampling period over clock of high order wfs  <a href="#1a656b8e93b33589d4899dc65c098e52"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#9f39b6479237b645bd05cc13cf4b7e7c">dtrat_lo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="9f39b6479237b645bd05cc13cf4b7e7c"></a><!-- doxytag: member="SIM_T::dtrat_lo" ref="9f39b6479237b645bd05cc13cf4b7e7c" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>dtrat_lo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">dtrat of the lower order loop.  <a href="#9f39b6479237b645bd05cc13cf4b7e7c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#57edb71c63c975b466252cc9d9322b14">seed</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="57edb71c63c975b466252cc9d9322b14"></a><!-- doxytag: member="SIM_T::seed" ref="57edb71c63c975b466252cc9d9322b14" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>seed</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">current running seed.  <a href="#57edb71c63c975b466252cc9d9322b14"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#04f684f8fb2c48643e6fcaa4bbf519a8">isim</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="04f684f8fb2c48643e6fcaa4bbf519a8"></a><!-- doxytag: member="SIM_T::isim" ref="04f684f8fb2c48643e6fcaa4bbf519a8" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>isim</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">record current simulations step.  <a href="#04f684f8fb2c48643e6fcaa4bbf519a8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">parms</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="085df4ec8f2e9f439643ca1fff3db942"></a><!-- doxytag: member="SIM_T::parms" ref="085df4ec8f2e9f439643ca1fff3db942" args="" -->
-const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>parms</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">pointer to parms  <a href="#085df4ec8f2e9f439643ca1fff3db942"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">const <a class="el" href="structAPER__T.html">APER_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">aper</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="632412546828fc6e45a9538c42f9ed53"></a><!-- doxytag: member="SIM_T::recon" ref="632412546828fc6e45a9538c42f9ed53" args="" -->
-<a class="el" href="structRECON__T.html">RECON_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>recon</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">pointer to aper  <a href="#32c1411e2b4624790b8506e9b54449d4"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structRECON__T.html">RECON_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#632412546828fc6e45a9538c42f9ed53">recon</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="574e2dc6ebf0b42d7677c64eee329cac"></a><!-- doxytag: member="SIM_T::powfs" ref="574e2dc6ebf0b42d7677c64eee329cac" args="" -->
-<a class="el" href="structPOWFS__T.html">POWFS_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>powfs</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">pointer to recon  <a href="#632412546828fc6e45a9538c42f9ed53"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#574e2dc6ebf0b42d7677c64eee329cac">powfs</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="32c1411e2b4624790b8506e9b54449d4"></a><!-- doxytag: member="SIM_T::aper" ref="32c1411e2b4624790b8506e9b54449d4" args="" -->
-const <a class="el" href="structAPER__T.html">APER_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>aper</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">pointer to powfs  <a href="#574e2dc6ebf0b42d7677c64eee329cac"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#083c2102dc1e5f022aee842e76e25a75">dt</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="083c2102dc1e5f022aee842e76e25a75"></a><!-- doxytag: member="SIM_T::dt" ref="083c2102dc1e5f022aee842e76e25a75" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>dt</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">System baseline clock period.  <a href="#083c2102dc1e5f022aee842e76e25a75"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#710cca584fede7acc2dd64cb2e598f23">dtlo</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="710cca584fede7acc2dd64cb2e598f23"></a><!-- doxytag: member="SIM_T::dtlo" ref="710cca584fede7acc2dd64cb2e598f23" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>dtlo</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">low order wfs sampling period  <a href="#710cca584fede7acc2dd64cb2e598f23"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#b5fbb14ecc0a7bc801bc4191f67cc3a3">dthi</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="b5fbb14ecc0a7bc801bc4191f67cc3a3"></a><!-- doxytag: member="SIM_T::dthi" ref="b5fbb14ecc0a7bc801bc4191f67cc3a3" args="" -->
-double&nbsp;</td><td class="memItemRight" valign="bottom"><b>dthi</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">high order wfs sampling period  <a href="#b5fbb14ecc0a7bc801bc4191f67cc3a3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#3cb4d8b6835f5d6e7295c05788750665">has_upt</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="3cb4d8b6835f5d6e7295c05788750665"></a><!-- doxytag: member="SIM_T::has_upt" ref="3cb4d8b6835f5d6e7295c05788750665" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>has_upt</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">whether we have uplink pointer loop.  <a href="#3cb4d8b6835f5d6e7295c05788750665"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">last_report_time</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="a6f36964d076cb50f3cfae9d4573f61a"></a><!-- doxytag: member="SIM_T::last_report_time" ref="a6f36964d076cb50f3cfae9d4573f61a" args="" -->
-int&nbsp;</td><td class="memItemRight" valign="bottom"><b>last_report_time</b></td></tr>
-
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The time we lasted reported status to the scheduler.  <a href="#a6f36964d076cb50f3cfae9d4573f61a"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains all the run time data struct. <hr><h2>Field Documentation</h2>
-<a class="anchor" name="2201998d1bf3907a381f73a7ad3fa153"></a><!-- doxytag: member="SIM_T::wfs_prop_dm" ref="2201998d1bf3907a381f73a7ad3fa153" args="" -->
+<a class="anchor" name="7cdef62c9a304e969d4d955ed0070d73"></a><!-- doxytag: member="SIM_T::atm" ref="7cdef62c9a304e969d4d955ed0070d73" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">thread_t* <a class="el" href="structSIM__T.html#2201998d1bf3907a381f73a7ad3fa153">SIM_T::wfs_prop_dm</a>          </td>
+          <td class="memname"><a class="el" href="structmap__t.html">map_t</a>** <a class="el" href="structSIM__T.html#7cdef62c9a304e969d4d955ed0070d73">SIM_T::atm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+fine sampled simulation turbulence screens 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="8fc95235c97ce09c01929163dfcbc66a"></a><!-- doxytag: member="SIM_T::cachedm" ref="8fc95235c97ce09c01929163dfcbc66a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmap__t.html">map_t</a>** <a class="el" href="structSIM__T.html#8fc95235c97ce09c01929163dfcbc66a">SIM_T::cachedm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+grid cache dm actuator to a finer sampled screen. 
+<p>
+for fast ray tracing to WFS and aper 
+</div>
+</div><p>
+<a class="anchor" name="06e13fc279426037c8f829719720f432"></a><!-- doxytag: member="SIM_T::pcachedm" ref="06e13fc279426037c8f829719720f432" args=")[2]" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int(* <a class="el" href="structSIM__T.html#06e13fc279426037c8f829719720f432">SIM_T::pcachedm</a>)[2]          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+information about cachedm struct. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="6766b9d62d3bf6c25f02d5b38b55cf50"></a><!-- doxytag: member="SIM_T::cachedm_propdata" ref="6766b9d62d3bf6c25f02d5b38b55cf50" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structPROPDATA__T.html">PROPDATA_T</a>* <a class="el" href="structSIM__T.html#6766b9d62d3bf6c25f02d5b38b55cf50">SIM_T::cachedm_propdata</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+wrapped data for ray tracing from aloc to cachedm 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="94acc92cf68283f0ca866d4b3086cb37"></a><!-- doxytag: member="SIM_T::cachedm_prop" ref="94acc92cf68283f0ca866d4b3086cb37" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structthread__t.html">thread_t</a>* <a class="el" href="structSIM__T.html#94acc92cf68283f0ca866d4b3086cb37">SIM_T::cachedm_prop</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+wrapped cachedm_propdata for threading 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="90b521b076481fe938a37cbe4b1c5b79"></a><!-- doxytag: member="SIM_T::winddir" ref="90b521b076481fe938a37cbe4b1c5b79" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#90b521b076481fe938a37cbe4b1c5b79">SIM_T::winddir</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+input wind direction 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="63db4cfd2859ab3331ea32ec21d7b747"></a><!-- doxytag: member="SIM_T::surfwfs" ref="63db4cfd2859ab3331ea32ec21d7b747" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#63db4cfd2859ab3331ea32ec21d7b747">SIM_T::surfwfs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+additional OPD surface for each WFS. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="ee3d52037a51574e3d11586be7c2d708"></a><!-- doxytag: member="SIM_T::surfevl" ref="ee3d52037a51574e3d11586be7c2d708" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#ee3d52037a51574e3d11586be7c2d708">SIM_T::surfevl</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+additional OPD surcace for each evaluation field 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="fe3961c872dd3333b7dd35cdb5f6ccfc"></a><!-- doxytag: member="SIM_T::tsurf" ref="fe3961c872dd3333b7dd35cdb5f6ccfc" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structrectmap__t.html">rectmap_t</a>** <a class="el" href="structSIM__T.html#fe3961c872dd3333b7dd35cdb5f6ccfc">SIM_T::tsurf</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+input tilted M3 surface 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="1699fa8983ac54f0e4b2c08355b6d524"></a><!-- doxytag: member="SIM_T::surf" ref="1699fa8983ac54f0e4b2c08355b6d524" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmap__t.html">map_t</a>** <a class="el" href="structSIM__T.html#1699fa8983ac54f0e4b2c08355b6d524">SIM_T::surf</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+input surface: M1, M2 or else. 
+<p>
+common to all wfs and science field. 
+</div>
+</div><p>
+<a class="anchor" name="1ce78a265b859aa46fe4bd4d055073e8"></a><!-- doxytag: member="SIM_T::gradcl" ref="1ce78a265b859aa46fe4bd4d055073e8" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#1ce78a265b859aa46fe4bd4d055073e8">SIM_T::gradcl</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+cl grad output. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="d6da04a1c5a9dcaa24db9167ed1a8014"></a><!-- doxytag: member="SIM_T::gradpsol" ref="d6da04a1c5a9dcaa24db9167ed1a8014" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#d6da04a1c5a9dcaa24db9167ed1a8014">SIM_T::gradpsol</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+WFS pseudo open loop grad output. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="a738e7a4294a049073428945f65695e0"></a><!-- doxytag: member="SIM_T::gradacc" ref="a738e7a4294a049073428945f65695e0" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#a738e7a4294a049073428945f65695e0">SIM_T::gradacc</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+accumulate gradident for dtrat&gt;1 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="2f33626ab1590a06d8897380abb49c00"></a><!-- doxytag: member="SIM_T::opdr" ref="2f33626ab1590a06d8897380abb49c00" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#2f33626ab1590a06d8897380abb49c00">SIM_T::opdr</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+reconstructed OPD defined on xloc in tomography output. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="fe6605f55d778938848f8e7caccac524"></a><!-- doxytag: member="SIM_T::opdrmvst" ref="fe6605f55d778938848f8e7caccac524" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#fe6605f55d778938848f8e7caccac524">SIM_T::opdrmvst</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+average of opdr for MVST 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="2ee38673dc380b119869dc5349c87e23"></a><!-- doxytag: member="SIM_T::opdevl" ref="2ee38673dc380b119869dc5349c87e23" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#2ee38673dc380b119869dc5349c87e23">SIM_T::opdevl</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+evaluation opd for selected directions. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="1c958097d5e0b72e47a308658085aead"></a><!-- doxytag: member="SIM_T::opdevlground" ref="1c958097d5e0b72e47a308658085aead" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#1c958097d5e0b72e47a308658085aead">SIM_T::opdevlground</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+evaluation opd for ground layer turbulence to save ray tracing. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="e7c3be846a2bcf3ce66afb764880604c"></a><!-- doxytag: member="SIM_T::opdrhat" ref="e7c3be846a2bcf3ce66afb764880604c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structccell.html">ccell</a>* <a class="el" href="structSIM__T.html#e7c3be846a2bcf3ce66afb764880604c">SIM_T::opdrhat</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+For wind estimation (testing). 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="65207b82230e05888d85ba37decbfc7f"></a><!-- doxytag: member="SIM_T::opdrhatlast" ref="65207b82230e05888d85ba37decbfc7f" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structccell.html">ccell</a>* <a class="el" href="structSIM__T.html#65207b82230e05888d85ba37decbfc7f">SIM_T::opdrhatlast</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+for wind estimation. 
+<p>
+(testing) 
+</div>
+</div><p>
+<a class="anchor" name="ec5148b2cbcb290d3f6d3e9c6f587b58"></a><!-- doxytag: member="SIM_T::windest" ref="ec5148b2cbcb290d3f6d3e9c6f587b58" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#ec5148b2cbcb290d3f6d3e9c6f587b58">SIM_T::windest</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+estimated wind velocity. 
+<p>
+(testing) 
+</div>
+</div><p>
+<a class="anchor" name="c13a335178113fe760f472df5990463b"></a><!-- doxytag: member="SIM_T::windshift" ref="c13a335178113fe760f472df5990463b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structspcell.html">spcell</a>* <a class="el" href="structSIM__T.html#c13a335178113fe760f472df5990463b">SIM_T::windshift</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+operator to do wind shift on opdr 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="af2fc0d68cf124447162f684585d5125"></a><!-- doxytag: member="SIM_T::dmpsol" ref="af2fc0d68cf124447162f684585d5125" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#af2fc0d68cf124447162f684585d5125">SIM_T::dmpsol</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+time averaged dm command (dtrat&gt;1) for psol grad 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="da7dc24074ead7e87d800f8b99584fce"></a><!-- doxytag: member="SIM_T::ints" ref="da7dc24074ead7e87d800f8b99584fce" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#da7dc24074ead7e87d800f8b99584fce">SIM_T::ints</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+WFS subaperture images. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="7175cc941d5dbae02503ff90df35a7b3"></a><!-- doxytag: member="SIM_T::wfspsfout" ref="7175cc941d5dbae02503ff90df35a7b3" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structccell.html">ccell</a>** <a class="el" href="structSIM__T.html#7175cc941d5dbae02503ff90df35a7b3">SIM_T::wfspsfout</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+output WFS PSF history. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="1c33b2746b273def2a8b91c078e04e43"></a><!-- doxytag: member="SIM_T::wfspsfoutcellarr" ref="1c33b2746b273def2a8b91c078e04e43" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcellarr.html">cellarr</a>** <a class="el" href="structSIM__T.html#1c33b2746b273def2a8b91c078e04e43">SIM_T::wfspsfoutcellarr</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+special file to save wfs psf history 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="52a7f7ea349954a1de5660339c3d1246"></a><!-- doxytag: member="SIM_T::ztiltoutcellarr" ref="52a7f7ea349954a1de5660339c3d1246" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcellarr.html">cellarr</a>** <a class="el" href="structSIM__T.html#52a7f7ea349954a1de5660339c3d1246">SIM_T::ztiltoutcellarr</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+special file to save zernike wfs tilt history 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9150a4d2687fb6e309da0a1857930e2e"></a><!-- doxytag: member="SIM_T::pistatout" ref="9150a4d2687fb6e309da0a1857930e2e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#9150a4d2687fb6e309da0a1857930e2e">SIM_T::pistatout</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+WFS time averaged tip/tilt removed PSF. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9fa58c6d12a9a59b829d2578c800ab20"></a><!-- doxytag: member="SIM_T::sanea_sim" ref="9fa58c6d12a9a59b829d2578c800ab20" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#9fa58c6d12a9a59b829d2578c800ab20">SIM_T::sanea_sim</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+accumulate effective sanea during simulation. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="549cb58b9176ad9c3010e10a1c49e183"></a><!-- doxytag: member="SIM_T::clep" ref="549cb58b9176ad9c3010e10a1c49e183" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#549cb58b9176ad9c3010e10a1c49e183">SIM_T::clep</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+CL error per direction. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="74c93d556aa71e088d126fc9b46a8b05"></a><!-- doxytag: member="SIM_T::clmp" ref="74c93d556aa71e088d126fc9b46a8b05" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#74c93d556aa71e088d126fc9b46a8b05">SIM_T::clmp</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+CL mode coefficient per direction. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="5624b2fcac9387ae85b62b5e44859ccb"></a><!-- doxytag: member="SIM_T::cleptomo" ref="5624b2fcac9387ae85b62b5e44859ccb" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#5624b2fcac9387ae85b62b5e44859ccb">SIM_T::cleptomo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+CL error for tomography compensation perdirection. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="cb2343b0ab41ed2017b12161da590ab4"></a><!-- doxytag: member="SIM_T::clmptomo" ref="cb2343b0ab41ed2017b12161da590ab4" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#cb2343b0ab41ed2017b12161da590ab4">SIM_T::clmptomo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+CL mode coefficient for tomography compensation. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="c65e9ce3a4423029555fa2efec78b435"></a><!-- doxytag: member="SIM_T::olep" ref="c65e9ce3a4423029555fa2efec78b435" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#c65e9ce3a4423029555fa2efec78b435">SIM_T::olep</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+OL error per direction. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="4280db22efbabe02df141c3a7af83b93"></a><!-- doxytag: member="SIM_T::olmp" ref="4280db22efbabe02df141c3a7af83b93" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#4280db22efbabe02df141c3a7af83b93">SIM_T::olmp</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+OL mode coefficient per direction. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="cb6e3153c3ba12a9310f503d1cb5fa8e"></a><!-- doxytag: member="SIM_T::ole" ref="cb6e3153c3ba12a9310f503d1cb5fa8e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#cb6e3153c3ba12a9310f503d1cb5fa8e">SIM_T::ole</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+field averaged OL error 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="1e10c517d94504ae3b0d3368735364ba"></a><!-- doxytag: member="SIM_T::cle" ref="1e10c517d94504ae3b0d3368735364ba" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#1e10c517d94504ae3b0d3368735364ba">SIM_T::cle</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+field averaged CL error 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="fe4ac255e40b5ebc4c1bab33c1e13550"></a><!-- doxytag: member="SIM_T::cletomo" ref="fe4ac255e40b5ebc4c1bab33c1e13550" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#fe4ac255e40b5ebc4c1bab33c1e13550">SIM_T::cletomo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+field averaged tomography error 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="172a004f720d68b39d1239c39b4c1faa"></a><!-- doxytag: member="SIM_T::clem" ref="172a004f720d68b39d1239c39b4c1faa" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#172a004f720d68b39d1239c39b4c1faa">SIM_T::clem</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+lgs/ngs mod error in split tomography 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="829764afdeb37528717cab28e1bbd0ed"></a><!-- doxytag: member="SIM_T::clemp" ref="829764afdeb37528717cab28e1bbd0ed" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#829764afdeb37528717cab28e1bbd0ed">SIM_T::clemp</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+lgs/ngs mod error per direction. 
+<p>
+only on-axis is computed. 
+</div>
+</div><p>
+<a class="anchor" name="20b5e3a20c72f11e59e3ba4551a4bc48"></a><!-- doxytag: member="SIM_T::corrNGSm" ref="20b5e3a20c72f11e59e3ba4551a4bc48" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#20b5e3a20c72f11e59e3ba4551a4bc48">SIM_T::corrNGSm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Correction of NGS mode. 
+<p>
+(integrator output) 
+</div>
+</div><p>
+<a class="anchor" name="627edda515a52ab3fbdcfc51c9eac958"></a><!-- doxytag: member="SIM_T::cleNGSm" ref="627edda515a52ab3fbdcfc51c9eac958" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#627edda515a52ab3fbdcfc51c9eac958">SIM_T::cleNGSm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Close loop ngs mods in split tomogrpahy. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="cee2a0d50823b17fb488974140b4cf36"></a><!-- doxytag: member="SIM_T::cleNGSmp" ref="cee2a0d50823b17fb488974140b4cf36" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#cee2a0d50823b17fb488974140b4cf36">SIM_T::cleNGSmp</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+(M'*w*phi); 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="b7ed28903f3831b3433b7c8a7175cfd9"></a><!-- doxytag: member="SIM_T::res" ref="b7ed28903f3831b3433b7c8a7175cfd9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#b7ed28903f3831b3433b7c8a7175cfd9">SIM_T::res</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+warping of ole,cletomo,cle,clem for easy saving. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="7f1f7e6320e5a18c9662e14316f7ea28"></a><!-- doxytag: member="SIM_T::gtypeII_lo" ref="7f1f7e6320e5a18c9662e14316f7ea28" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#7f1f7e6320e5a18c9662e14316f7ea28">SIM_T::gtypeII_lo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+gain for type II array. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="e4b9c297eaa0b2ceb57bb9885caef135"></a><!-- doxytag: member="SIM_T::dmreal" ref="e4b9c297eaa0b2ceb57bb9885caef135" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#e4b9c297eaa0b2ceb57bb9885caef135">SIM_T::dmreal</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+real dm command 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="7a78096b3a9ce0681a6c0c0548b41942"></a><!-- doxytag: member="SIM_T::dmhist" ref="7a78096b3a9ce0681a6c0c0548b41942" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#7a78096b3a9ce0681a6c0c0548b41942">SIM_T::dmhist</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+histogram of dm commands. 
+<p>
+if dbg.dmhist is 1. 
+</div>
+</div><p>
+<a class="anchor" name="de7f377f433b1b9f08b9b8fc01624cba"></a><!-- doxytag: member="SIM_T::dmint" ref="de7f377f433b1b9f08b9b8fc01624cba" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#de7f377f433b1b9f08b9b8fc01624cba">SIM_T::dmint</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+dm integrator. 
+<p>
+(used of fuseint==1) 
+</div>
+</div><p>
+<a class="anchor" name="d248dc53ba37345772d26a2ea1e32472"></a><!-- doxytag: member="SIM_T::dmfit_hi" ref="d248dc53ba37345772d26a2ea1e32472" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#d248dc53ba37345772d26a2ea1e32472">SIM_T::dmfit_hi</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+direct high order fit output 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="a70fe28180281a0771c8c2d17ff63e50"></a><!-- doxytag: member="SIM_T::dmerr_hi" ref="a70fe28180281a0771c8c2d17ff63e50" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#a70fe28180281a0771c8c2d17ff63e50">SIM_T::dmerr_hi</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+high order dm error signal. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="bddc06629ca1d3fd07bba2db8e50be47"></a><!-- doxytag: member="SIM_T::dmint_hi" ref="bddc06629ca1d3fd07bba2db8e50be47" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#bddc06629ca1d3fd07bba2db8e50be47">SIM_T::dmint_hi</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+integrator for high order (only if fuseint==0) 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9fcd4a9ae6ec0828b3e6700dfe52730d"></a><!-- doxytag: member="SIM_T::Merr_lo" ref="9fcd4a9ae6ec0828b3e6700dfe52730d" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#9fcd4a9ae6ec0828b3e6700dfe52730d">SIM_T::Merr_lo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+split tomography NGS mode error signal. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="d8fad0a83bdeed5dc290068f05bd8b0b"></a><!-- doxytag: member="SIM_T::Mint_lo" ref="d8fad0a83bdeed5dc290068f05bd8b0b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#d8fad0a83bdeed5dc290068f05bd8b0b">SIM_T::Mint_lo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+NGS integrator (only used if fuseint==0). 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="0637d5bd3ccd951ee328c83af2bdfc5b"></a><!-- doxytag: member="SIM_T::MtypeII_lo" ref="0637d5bd3ccd951ee328c83af2bdfc5b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structTYPEII__T.html">TYPEII_T</a>* <a class="el" href="structSIM__T.html#0637d5bd3ccd951ee328c83af2bdfc5b">SIM_T::MtypeII_lo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+intermediate results for type II/lead filter 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="bba8d28f43dad706c9d9669d409e5136"></a><!-- doxytag: member="SIM_T::upterr" ref="bba8d28f43dad706c9d9669d409e5136" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#bba8d28f43dad706c9d9669d409e5136">SIM_T::upterr</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+uplink error 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="3916ecec49d28516ab554abc7e00abac"></a><!-- doxytag: member="SIM_T::upterrlast" ref="3916ecec49d28516ab554abc7e00abac" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#3916ecec49d28516ab554abc7e00abac">SIM_T::upterrlast</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+uplink error from last step 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="1a1715f09be296fb2667b7a05c5fdc65"></a><!-- doxytag: member="SIM_T::uptreal" ref="1a1715f09be296fb2667b7a05c5fdc65" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#1a1715f09be296fb2667b7a05c5fdc65">SIM_T::uptreal</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+uplink real 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="66934ca62e886bf8b24470dbb403d117"></a><!-- doxytag: member="SIM_T::uptint" ref="66934ca62e886bf8b24470dbb403d117" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#66934ca62e886bf8b24470dbb403d117">SIM_T::uptint</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+uplink integrator output. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="bfefb2f79338c2280a987cc512465ca5"></a><!-- doxytag: member="SIM_T::upterrs" ref="bfefb2f79338c2280a987cc512465ca5" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#bfefb2f79338c2280a987cc512465ca5">SIM_T::upterrs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+mmaped file to store upterr history 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="071e7f2036849234d609e8179e809945"></a><!-- doxytag: member="SIM_T::uptcmds" ref="071e7f2036849234d609e8179e809945" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#071e7f2036849234d609e8179e809945">SIM_T::uptcmds</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+mmaped file to store uptcmd history 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="dd680e809db812c7b0493e18b816a68e"></a><!-- doxytag: member="SIM_T::focuslpf" ref="dd680e809db812c7b0493e18b816a68e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#dd680e809db812c7b0493e18b816a68e">SIM_T::focuslpf</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+focus tracking low pass filter 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="cf19af635f4448413fce6adba8078d6e"></a><!-- doxytag: member="SIM_T::focusint" ref="cf19af635f4448413fce6adba8078d6e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#cf19af635f4448413fce6adba8078d6e">SIM_T::focusint</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+focus tracking integrator 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="4037361401c5977a3798921e2e5b8a2c"></a><!-- doxytag: member="SIM_T::evlpsfmean" ref="4037361401c5977a3798921e2e5b8a2c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#4037361401c5977a3798921e2e5b8a2c">SIM_T::evlpsfmean</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+science field psf time average 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="16b4c0d42cda469528352c2dd595bc78"></a><!-- doxytag: member="SIM_T::evlpsfolmean" ref="16b4c0d42cda469528352c2dd595bc78" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#16b4c0d42cda469528352c2dd595bc78">SIM_T::evlpsfolmean</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+science field OL PSF time averging 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="178508be9fce4d9e7809fa6292ab2823"></a><!-- doxytag: member="SIM_T::evlpsftomomean" ref="178508be9fce4d9e7809fa6292ab2823" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#178508be9fce4d9e7809fa6292ab2823">SIM_T::evlpsftomomean</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+science field psf time average with direct correction from tomography 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="bf25c10a8c8ac84b7745e2834bb52a16"></a><!-- doxytag: member="SIM_T::evlpsfhist" ref="bf25c10a8c8ac84b7745e2834bb52a16" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcellarr.html">cellarr</a>** <a class="el" href="structSIM__T.html#bf25c10a8c8ac84b7745e2834bb52a16">SIM_T::evlpsfhist</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+to save time history of science field psf 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="300488d2b1ecc70046e7c0fe41c6a31b"></a><!-- doxytag: member="SIM_T::evlpsftomohist" ref="300488d2b1ecc70046e7c0fe41c6a31b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcellarr.html">cellarr</a>** <a class="el" href="structSIM__T.html#300488d2b1ecc70046e7c0fe41c6a31b">SIM_T::evlpsftomohist</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+to save time history of science field psf with direct correction from tomography 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="ab7097204306d1dccab994da046db694"></a><!-- doxytag: member="SIM_T::wfs_rand" ref="ab7097204306d1dccab994da046db694" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmt__state.html">rand_t</a>* <a class="el" href="structSIM__T.html#ab7097204306d1dccab994da046db694">SIM_T::wfs_rand</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+random stream for each wfs. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="2b9b48a41f4f3f875d37009506996502"></a><!-- doxytag: member="SIM_T::atm_rand" ref="2b9b48a41f4f3f875d37009506996502" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmt__state.html">rand_t</a>* <a class="el" href="structSIM__T.html#2b9b48a41f4f3f875d37009506996502">SIM_T::atm_rand</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+random stream for atmosphere turbulence generation 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="36bd8e4187d641743b7e7a9982d31d48"></a><!-- doxytag: member="SIM_T::atmwd_rand" ref="36bd8e4187d641743b7e7a9982d31d48" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmt__state.html">rand_t</a>* <a class="el" href="structSIM__T.html#36bd8e4187d641743b7e7a9982d31d48">SIM_T::atmwd_rand</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+random stream for wind direction 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="cc7efd363d00b097ab312656cb261dad"></a><!-- doxytag: member="SIM_T::init" ref="cc7efd363d00b097ab312656cb261dad" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structmt__state.html">rand_t</a>* <a class="el" href="structSIM__T.html#cc7efd363d00b097ab312656cb261dad">SIM_T::init</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+random stream to initialize other streams 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="26aad0819c9a098cfc44f9c2ac25ffc7"></a><!-- doxytag: member="SIM_T::status" ref="26aad0819c9a098cfc44f9c2ac25ffc7" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structSTATUS__T.html">STATUS_T</a>* <a class="el" href="structSIM__T.html#26aad0819c9a098cfc44f9c2ac25ffc7">SIM_T::status</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+status report to scheduler. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="40ec16c1de056c1350fa3bda4ca65da1"></a><!-- doxytag: member="SIM_T::moao_wfs" ref="40ec16c1de056c1350fa3bda4ca65da1" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#40ec16c1de056c1350fa3bda4ca65da1">SIM_T::moao_wfs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+moao DM command for wfs 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="b637adfa4528f55e986cfc7df75f2b01"></a><!-- doxytag: member="SIM_T::moao_evl" ref="b637adfa4528f55e986cfc7df75f2b01" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#b637adfa4528f55e986cfc7df75f2b01">SIM_T::moao_evl</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+moao DM command for science field 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="a627421bfd2a0fa6b2c746463f075bef"></a><!-- doxytag: member="SIM_T::gcov" ref="a627421bfd2a0fa6b2c746463f075bef" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#a627421bfd2a0fa6b2c746463f075bef">SIM_T::gcov</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+covariance of psuedo open loop gradients. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="7b4cc96acefa449d39faf921dff586ae"></a><!-- doxytag: member="SIM_T::wfs_propdata_dm" ref="7b4cc96acefa449d39faf921dff586ae" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structPROPDATA__T.html">PROPDATA_T</a>* <a class="el" href="structSIM__T.html#7b4cc96acefa449d39faf921dff586ae">SIM_T::wfs_propdata_dm</a>          </td>
         </tr>
       </table>
 </div>
@@ -383,10 +1638,367 @@ wrap of data for ray tracing from DM in <a class="el" href="wfsgrad_8c.html" tit
 
 </div>
 </div><p>
+<a class="anchor" name="2201998d1bf3907a381f73a7ad3fa153"></a><!-- doxytag: member="SIM_T::wfs_prop_dm" ref="2201998d1bf3907a381f73a7ad3fa153" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structthread__t.html">thread_t</a>* <a class="el" href="structSIM__T.html#2201998d1bf3907a381f73a7ad3fa153">SIM_T::wfs_prop_dm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+wrap of wfs_propdata_dm for threaded ray tracing 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9a65dee3698876a38cfd8feaa6a5aa28"></a><!-- doxytag: member="SIM_T::ploc_stat" ref="9a65dee3698876a38cfd8feaa6a5aa28" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structlocstat__t.html">locstat_t</a>* <a class="el" href="structSIM__T.html#9a65dee3698876a38cfd8feaa6a5aa28">SIM_T::ploc_stat</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+statistics of columns in ploc 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="4f9c43677faa9f6745d3220bed8b8977"></a><!-- doxytag: member="SIM_T::nthread" ref="4f9c43677faa9f6745d3220bed8b8977" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#4f9c43677faa9f6745d3220bed8b8977">SIM_T::nthread</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+number of threads 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="e58d71938f9fa82ce8088e07c98c3da9"></a><!-- doxytag: member="SIM_T::wfsgrad_iwfs" ref="e58d71938f9fa82ce8088e07c98c3da9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#e58d71938f9fa82ce8088e07c98c3da9">SIM_T::wfsgrad_iwfs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+counter for threaded calling 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="8610e61619b439a4980bcdc718636483"></a><!-- doxytag: member="SIM_T::perfevl_ievl" ref="8610e61619b439a4980bcdc718636483" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#8610e61619b439a4980bcdc718636483">SIM_T::perfevl_ievl</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+counter for threaded calling 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="f3ef56bd760168170d2bb3089ac9864d"></a><!-- doxytag: member="SIM_T::perfevl_iground" ref="f3ef56bd760168170d2bb3089ac9864d" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#f3ef56bd760168170d2bb3089ac9864d">SIM_T::perfevl_iground</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+index of the layer at ground 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="5ef0623895ff7f7823b92c8fb8f8d50b"></a><!-- doxytag: member="SIM_T::cachedm_i" ref="5ef0623895ff7f7823b92c8fb8f8d50b" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#5ef0623895ff7f7823b92c8fb8f8d50b">SIM_T::cachedm_i</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+counter for threaded calling 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="69fdb47e9ffb4cdd5bf09039df2fa200"></a><!-- doxytag: member="SIM_T::cachedm_n" ref="69fdb47e9ffb4cdd5bf09039df2fa200" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#69fdb47e9ffb4cdd5bf09039df2fa200">SIM_T::cachedm_n</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+length of pcachedm array 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="1a656b8e93b33589d4899dc65c098e52"></a><!-- doxytag: member="SIM_T::dtrat_hi" ref="1a656b8e93b33589d4899dc65c098e52" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#1a656b8e93b33589d4899dc65c098e52">SIM_T::dtrat_hi</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+ratio of sampling period over clock of high order wfs 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="9f39b6479237b645bd05cc13cf4b7e7c"></a><!-- doxytag: member="SIM_T::dtrat_lo" ref="9f39b6479237b645bd05cc13cf4b7e7c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#9f39b6479237b645bd05cc13cf4b7e7c">SIM_T::dtrat_lo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+dtrat of the lower order loop. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="57edb71c63c975b466252cc9d9322b14"></a><!-- doxytag: member="SIM_T::seed" ref="57edb71c63c975b466252cc9d9322b14" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#57edb71c63c975b466252cc9d9322b14">SIM_T::seed</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+current running seed. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="04f684f8fb2c48643e6fcaa4bbf519a8"></a><!-- doxytag: member="SIM_T::isim" ref="04f684f8fb2c48643e6fcaa4bbf519a8" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#04f684f8fb2c48643e6fcaa4bbf519a8">SIM_T::isim</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+record current simulations step. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="085df4ec8f2e9f439643ca1fff3db942"></a><!-- doxytag: member="SIM_T::parms" ref="085df4ec8f2e9f439643ca1fff3db942" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structPARMS__T.html">PARMS_T</a>* <a class="el" href="structSIM__T.html#085df4ec8f2e9f439643ca1fff3db942">SIM_T::parms</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+pointer to parms 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="32c1411e2b4624790b8506e9b54449d4"></a><!-- doxytag: member="SIM_T::aper" ref="32c1411e2b4624790b8506e9b54449d4" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structAPER__T.html">APER_T</a>* <a class="el" href="structSIM__T.html#32c1411e2b4624790b8506e9b54449d4">SIM_T::aper</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+pointer to aper 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="632412546828fc6e45a9538c42f9ed53"></a><!-- doxytag: member="SIM_T::recon" ref="632412546828fc6e45a9538c42f9ed53" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structRECON__T.html">RECON_T</a>* <a class="el" href="structSIM__T.html#632412546828fc6e45a9538c42f9ed53">SIM_T::recon</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+pointer to recon 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="574e2dc6ebf0b42d7677c64eee329cac"></a><!-- doxytag: member="SIM_T::powfs" ref="574e2dc6ebf0b42d7677c64eee329cac" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structPOWFS__T.html">POWFS_T</a>* <a class="el" href="structSIM__T.html#574e2dc6ebf0b42d7677c64eee329cac">SIM_T::powfs</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+pointer to powfs 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="083c2102dc1e5f022aee842e76e25a75"></a><!-- doxytag: member="SIM_T::dt" ref="083c2102dc1e5f022aee842e76e25a75" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structSIM__T.html#083c2102dc1e5f022aee842e76e25a75">SIM_T::dt</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+System baseline clock period. 
+<p>
+1/800 s 
+</div>
+</div><p>
+<a class="anchor" name="710cca584fede7acc2dd64cb2e598f23"></a><!-- doxytag: member="SIM_T::dtlo" ref="710cca584fede7acc2dd64cb2e598f23" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structSIM__T.html#710cca584fede7acc2dd64cb2e598f23">SIM_T::dtlo</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+low order wfs sampling period 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="b5fbb14ecc0a7bc801bc4191f67cc3a3"></a><!-- doxytag: member="SIM_T::dthi" ref="b5fbb14ecc0a7bc801bc4191f67cc3a3" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structSIM__T.html#b5fbb14ecc0a7bc801bc4191f67cc3a3">SIM_T::dthi</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+high order wfs sampling period 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="3cb4d8b6835f5d6e7295c05788750665"></a><!-- doxytag: member="SIM_T::has_upt" ref="3cb4d8b6835f5d6e7295c05788750665" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#3cb4d8b6835f5d6e7295c05788750665">SIM_T::has_upt</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+whether we have uplink pointer loop. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="a6f36964d076cb50f3cfae9d4573f61a"></a><!-- doxytag: member="SIM_T::last_report_time" ref="a6f36964d076cb50f3cfae9d4573f61a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__T.html#a6f36964d076cb50f3cfae9d4573f61a">SIM_T::last_report_time</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+The time we lasted reported status to the scheduler. 
+<p>
+
+</div>
+</div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

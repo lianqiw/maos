@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: FDPCG_T Struct Reference</title>
+<title>maos-0.7.1: FDPCG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,39 +69,193 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="befe9064fa1192a3b075bf4555c0a72c"></a><!-- doxytag: member="FDPCG_T::Minv" ref="befe9064fa1192a3b075bf4555c0a72c" args="" -->
-<a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Minv</b></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#befe9064fa1192a3b075bf4555c0a72c">Minv</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ad7247977bffff075d7481eada6969c0"></a><!-- doxytag: member="FDPCG_T::Mbinv" ref="ad7247977bffff075d7481eada6969c0" args="" -->
-<a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>Mbinv</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">inverse of fourier domain preconditioner matrix M.  <a href="#befe9064fa1192a3b075bf4555c0a72c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">Mbinv</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d3301ed08251b6be5121730931dac766"></a><!-- doxytag: member="FDPCG_T::perm" ref="d3301ed08251b6be5121730931dac766" args="" -->
-long *&nbsp;</td><td class="memItemRight" valign="bottom"><b>perm</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">block version of Minv.  <a href="#ad7247977bffff075d7481eada6969c0"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">long *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#d3301ed08251b6be5121730931dac766">perm</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="d59ff42104cef75ef2e920462b571931"></a><!-- doxytag: member="FDPCG_T::nxtot" ref="d59ff42104cef75ef2e920462b571931" args="" -->
-long&nbsp;</td><td class="memItemRight" valign="bottom"><b>nxtot</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Permutation vector to get block diagonal matrix.  <a href="#d3301ed08251b6be5121730931dac766"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">long&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#d59ff42104cef75ef2e920462b571931">nxtot</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="fc0c7c80ecd76538be73f60522c083a9"></a><!-- doxytag: member="FDPCG_T::xhat" ref="fc0c7c80ecd76538be73f60522c083a9" args="" -->
-<a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>xhat</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Total number of reconstructed phase points.  <a href="#d59ff42104cef75ef2e920462b571931"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#fc0c7c80ecd76538be73f60522c083a9">xhat</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0b80bcda9a14effe6cc6811efc4e7af9"></a><!-- doxytag: member="FDPCG_T::xhat2" ref="0b80bcda9a14effe6cc6811efc4e7af9" args="" -->
-<a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>xhat2</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intermediate matrices.  <a href="#fc0c7c80ecd76538be73f60522c083a9"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#5919a7e2d52ab54a5ba17b8c01a87456">xhat2</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="adab1107295449f48d4d606521245dd3"></a><!-- doxytag: member="FDPCG_T::xhati" ref="adab1107295449f48d4d606521245dd3" args="" -->
-<a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>xhati</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intermediate matrices.  <a href="#5919a7e2d52ab54a5ba17b8c01a87456"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">xhati</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="c240d2d71d88ee684fb0ad1a6a100c84"></a><!-- doxytag: member="FDPCG_T::xhat2i" ref="c240d2d71d88ee684fb0ad1a6a100c84" args="" -->
-<a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><b>xhat2i</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intermediate matrices.  <a href="#adab1107295449f48d4d606521245dd3"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#dfeac0c2436913a0b83a168255890e8a">xhat2i</a></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="460ef5e20810aa51556d9647fe69d078"></a><!-- doxytag: member="FDPCG_T::scale" ref="460ef5e20810aa51556d9647fe69d078" args="" -->
-double *&nbsp;</td><td class="memItemRight" valign="bottom"><b>scale</b></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Intermediate matrices.  <a href="#dfeac0c2436913a0b83a168255890e8a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFDPCG__T.html#460ef5e20810aa51556d9647fe69d078">scale</a></td></tr>
 
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Scaling factor for each layer.  <a href="#460ef5e20810aa51556d9647fe69d078"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
-contains data for Fourier Domain Preconditioner. <hr>The documentation for this struct was generated from the following file:<ul>
+contains data for Fourier Domain Preconditioner. <hr><h2>Field Documentation</h2>
+<a class="anchor" name="befe9064fa1192a3b075bf4555c0a72c"></a><!-- doxytag: member="FDPCG_T::Minv" ref="befe9064fa1192a3b075bf4555c0a72c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcsp.html">csp</a>* <a class="el" href="structFDPCG__T.html#befe9064fa1192a3b075bf4555c0a72c">FDPCG_T::Minv</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+inverse of fourier domain preconditioner matrix M. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="ad7247977bffff075d7481eada6969c0"></a><!-- doxytag: member="FDPCG_T::Mbinv" ref="ad7247977bffff075d7481eada6969c0" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structccell.html">ccell</a>* <a class="el" href="structFDPCG__T.html#ad7247977bffff075d7481eada6969c0">FDPCG_T::Mbinv</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+block version of Minv. 
+<p>
+(in permuted order) 
+</div>
+</div><p>
+<a class="anchor" name="d3301ed08251b6be5121730931dac766"></a><!-- doxytag: member="FDPCG_T::perm" ref="d3301ed08251b6be5121730931dac766" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">long* <a class="el" href="structFDPCG__T.html#d3301ed08251b6be5121730931dac766">FDPCG_T::perm</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Permutation vector to get block diagonal matrix. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="d59ff42104cef75ef2e920462b571931"></a><!-- doxytag: member="FDPCG_T::nxtot" ref="d59ff42104cef75ef2e920462b571931" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">long <a class="el" href="structFDPCG__T.html#d59ff42104cef75ef2e920462b571931">FDPCG_T::nxtot</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Total number of reconstructed phase points. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="fc0c7c80ecd76538be73f60522c083a9"></a><!-- doxytag: member="FDPCG_T::xhat" ref="fc0c7c80ecd76538be73f60522c083a9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcmat.html">cmat</a>* <a class="el" href="structFDPCG__T.html#fc0c7c80ecd76538be73f60522c083a9">FDPCG_T::xhat</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Intermediate matrices. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="5919a7e2d52ab54a5ba17b8c01a87456"></a><!-- doxytag: member="FDPCG_T::xhat2" ref="5919a7e2d52ab54a5ba17b8c01a87456" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcmat.html">cmat</a>* <a class="el" href="structFDPCG__T.html#5919a7e2d52ab54a5ba17b8c01a87456">FDPCG_T::xhat2</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Intermediate matrices. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="adab1107295449f48d4d606521245dd3"></a><!-- doxytag: member="FDPCG_T::xhati" ref="adab1107295449f48d4d606521245dd3" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structccell.html">ccell</a>* <a class="el" href="structFDPCG__T.html#adab1107295449f48d4d606521245dd3">FDPCG_T::xhati</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Intermediate matrices. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="dfeac0c2436913a0b83a168255890e8a"></a><!-- doxytag: member="FDPCG_T::xhat2i" ref="dfeac0c2436913a0b83a168255890e8a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structccell.html">ccell</a>* <a class="el" href="structFDPCG__T.html#dfeac0c2436913a0b83a168255890e8a">FDPCG_T::xhat2i</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Intermediate matrices. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="460ef5e20810aa51556d9647fe69d078"></a><!-- doxytag: member="FDPCG_T::scale" ref="460ef5e20810aa51556d9647fe69d078" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double* <a class="el" href="structFDPCG__T.html#460ef5e20810aa51556d9647fe69d078">FDPCG_T::scale</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Scaling factor for each layer. 
+<p>
+
+</div>
+</div><p>
+<hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

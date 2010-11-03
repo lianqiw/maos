@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.0: skyc/nafocus.c File Reference</title>
+<title>maos-0.7.1: skyc/nafocus.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -138,20 +138,6 @@ Compute Zoom optics focus corrector open loop transfer function.
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>fzc</em>&nbsp;</td><td>frequency of zoom corrector </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00034"></a>00034                     {
-<a name="l00035"></a>00035     <span class="keyword">const</span> dcomplex s=2*M_PI*I*nu;
-<a name="l00036"></a>00036     <span class="keyword">const</span> dcomplex fsovers=fs/s;
-<a name="l00037"></a>00037     <span class="keyword">const</span> dcomplex Hint=fsovers;
-<a name="l00038"></a>00038     <span class="keyword">const</span> dcomplex Hwfs=(1.-cexp(-1./fsovers))*fsovers;
-<a name="l00039"></a>00039     <span class="keyword">const</span> dcomplex Hlag=cexp(-s*tau);
-<a name="l00040"></a>00040     <span class="keyword">const</span> dcomplex Hdac=1;
-<a name="l00041"></a>00041     <span class="keyword">const</span> <span class="keywordtype">double</span> omega=fzc*2*M_PI;
-<a name="l00042"></a>00042     <span class="keyword">const</span> dcomplex Hzoom=omega*omega/(s*s+2*zeta*omega*s+omega*omega);
-<a name="l00043"></a>00043     <span class="keyword">const</span> dcomplex Hol=Hwfs*Hlag*Hint*Hdac*Hzoom;
-<a name="l00044"></a>00044     <span class="keywordflow">return</span> Hol;
-<a name="l00045"></a>00045 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
@@ -189,12 +175,7 @@ Compute Zoom optics focus corrector open loop transfer function.
 <p>
 Compute sodium power spectrum density. 
 <p>
-alpha, beta are the parameters of the sodium power spectrum obtained by fitting measurement data at UBC. <div class="fragment"><pre class="fragment"><a name="l00049"></a>00049                                                                         {
-<a name="l00050"></a>00050     <span class="keywordflow">return</span> pow(10,beta)*pow(nu,alpha);<span class="comment">//we don't divide 2pi</span>
-<a name="l00051"></a>00051 }
-</pre></div>
-<p>
-
+alpha, beta are the parameters of the sodium power spectrum obtained by fitting measurement data at UBC. 
 </div>
 </div><p>
 <a class="anchor" name="26387e490ee6a093113d3992d14f4942"></a><!-- doxytag: member="nafocus.c::nafocus_residual" ref="26387e490ee6a093113d3992d14f4942" args="(double fs, double tau, double zcf, double zeta, double D, double hs, double alpha, double beta)" -->
@@ -275,67 +256,11 @@ Written: 2010-06-15 Tested ok against RC's skycoverage code: 2010-06-15. <dl com
     <tr><td valign="top"><tt>[in]</tt>&nbsp;</td><td valign="top"><em>beta</em>&nbsp;</td><td>parameter of sodium layer height PSD. </td></tr>
   </table>
 </dl>
-<div class="fragment"><pre class="fragment"><a name="l00070"></a>00070              {
-<a name="l00071"></a>00071     <span class="keywordtype">int</span> inu=1;
-<a name="l00072"></a>00072     <span class="keywordtype">double</span> nu;
-<a name="l00073"></a>00073     <span class="keywordtype">double</span> margin=M_PI/4;
-<a name="l00074"></a>00074     <span class="keywordtype">double</span> aw=-(M_PI-margin);
-<a name="l00075"></a>00075     dcomplex Hol;
-<a name="l00076"></a>00076     <span class="keywordtype">double</span> angle;
-<a name="l00077"></a>00077     <span class="keywordflow">while</span>(1){
-<a name="l00078"></a>00078     nu=inu;
-<a name="l00079"></a>00079     Hol=<a class="code" href="nafocus_8c.html#d7dee6b8e1e24707d63efefcf642610d" title="Compute Zoom optics focus corrector open loop transfer function.">nafocus_Hol</a>(nu, fs, tau, zeta, zcf);
-<a name="l00080"></a>00080     angle=atan2(cimag(Hol),creal(Hol));
-<a name="l00081"></a>00081     <span class="keywordflow">if</span>(angle&gt;aw){
-<a name="l00082"></a>00082         inu++;
-<a name="l00083"></a>00083     }<span class="keywordflow">else</span>{
-<a name="l00084"></a>00084         <span class="keywordflow">break</span>;
-<a name="l00085"></a>00085     }
-<a name="l00086"></a>00086     }
-<a name="l00087"></a>00087     <span class="keywordtype">double</span> nu1=nu-1;
-<a name="l00088"></a>00088     <span class="keywordtype">double</span> nu2=nu;
-<a name="l00089"></a>00089     <span class="comment">//true nu lies in between nu1 and nu2.</span>
-<a name="l00090"></a>00090     
-<a name="l00091"></a>00091     dcomplex Hol1=<a class="code" href="nafocus_8c.html#d7dee6b8e1e24707d63efefcf642610d" title="Compute Zoom optics focus corrector open loop transfer function.">nafocus_Hol</a>(nu1, fs, tau, zeta, zcf);<span class="comment">//&gt;aw</span>
-<a name="l00092"></a>00092     dcomplex Hol2=<a class="code" href="nafocus_8c.html#d7dee6b8e1e24707d63efefcf642610d" title="Compute Zoom optics focus corrector open loop transfer function.">nafocus_Hol</a>(nu2, fs, tau, zeta, zcf);<span class="comment">//&lt;aw</span>
-<a name="l00093"></a>00093     <span class="keywordtype">double</span> a1=atan2(cimag(Hol1), creal(Hol1));<span class="comment">//bigger than aw</span>
-<a name="l00094"></a>00094     <span class="keywordtype">double</span> a2=atan2(cimag(Hol2), creal(Hol2));
-<a name="l00095"></a>00095     <span class="keywordflow">while</span>(fabs(nu1-nu2)&gt;1.e-5){
-<a name="l00096"></a>00096     nu=(nu1+nu2)/2;
-<a name="l00097"></a>00097     Hol=<a class="code" href="nafocus_8c.html#d7dee6b8e1e24707d63efefcf642610d" title="Compute Zoom optics focus corrector open loop transfer function.">nafocus_Hol</a>(nu, fs, tau, zeta, zcf);
-<a name="l00098"></a>00098     <span class="keywordtype">double</span> am=atan2(cimag(Hol), creal(Hol));
-<a name="l00099"></a>00099     <span class="keywordflow">if</span>(am&gt;aw){
-<a name="l00100"></a>00100         nu1=nu;
-<a name="l00101"></a>00101     }<span class="keywordflow">else</span>{
-<a name="l00102"></a>00102         nu2=nu;
-<a name="l00103"></a>00103     }
-<a name="l00104"></a>00104     }
-<a name="l00105"></a>00105     nu=nu1+(nu2-nu1)*(a1-aw)/(a1-a2);
-<a name="l00106"></a>00106     Hol=<a class="code" href="nafocus_8c.html#d7dee6b8e1e24707d63efefcf642610d" title="Compute Zoom optics focus corrector open loop transfer function.">nafocus_Hol</a>(nu, fs, tau, zeta, zcf);
-<a name="l00107"></a>00107     angle=atan2(cimag(Hol), creal(Hol));
-<a name="l00108"></a>00108     <span class="keywordtype">double</span> gain=1./cabs(Hol);
-<a name="l00109"></a>00109     <span class="comment">//We integrate over f, not f*2pi</span>
-<a name="l00110"></a>00110     <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> *nus=<a class="code" href="dmat_8h.html#3d3dc034d88f0a526fe242b1c1d3b1e5" title="Create log spaced vector.">dlogspace</a>(-3,5,2000);<span class="comment">//agrees good with skycoverage matlab code.</span>
-<a name="l00111"></a>00111     <span class="keywordtype">double</span> rms=0;
-<a name="l00112"></a>00112     <span class="keywordflow">for</span>(<span class="keywordtype">long</span> i=0; i&lt;nus-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>; i++){
-<a name="l00113"></a>00113     nu=nus-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[i];
-<a name="l00114"></a>00114     Hol=<a class="code" href="nafocus_8c.html#d7dee6b8e1e24707d63efefcf642610d" title="Compute Zoom optics focus corrector open loop transfer function.">nafocus_Hol</a>(nu, fs, tau, zeta, zcf);
-<a name="l00115"></a>00115     <span class="keyword">const</span> dcomplex Hrej=1./(1.+gain*Hol);
-<a name="l00116"></a>00116     <span class="keyword">const</span> <span class="keywordtype">double</span> NaPSD=<a class="code" href="nafocus_8c.html#33a8af9ab97fcffa838a91ba5fc4f593" title="Compute sodium power spectrum density.">nafocus_NaPSD</a>(nu, alpha, beta);
-<a name="l00117"></a>00117     rms+=NaPSD*pow(cabs(Hrej),2)*nu;<span class="comment">//we integratr f(nu)nu d(log(nu))</span>
-<a name="l00118"></a>00118     }
-<a name="l00119"></a>00119     rms*=(log(nus-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[nus-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>-1])-log(nus-&gt;<a class="code" href="structdmat.html#653d0780e19f58a3f74ead17630d9dcb" title="the pointer to allocated memory.">p</a>[0]))/(nus-&gt;<a class="code" href="structdmat.html#983086836d817046db8588de2873dd36" title="number of rows">nx</a>-1);
-<a name="l00120"></a>00120     <span class="keywordtype">double</span> focus=sqrt(rms)*1./(16*sqrt(3))*pow((D/hs),2);<span class="comment">//convert to focus error in meter.</span>
-<a name="l00121"></a>00121     dfree(nus);
-<a name="l00122"></a>00122     <span class="keywordflow">return</span> focus;
-<a name="l00123"></a>00123 }
-</pre></div>
-<p>
 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Oct 29 21:16:58 2010 for maos-0.7.0 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>
