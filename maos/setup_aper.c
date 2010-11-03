@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -64,12 +64,12 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }else{
 	if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6){
 	    //LOCSTAT records the starting of each row to speed up accphi
-	    aper->locs_stat=calloc(1, sizeof(LOCSTAT_T));
+	    aper->locs_stat=calloc(1, sizeof(locstat_t));
 	    info2("Using amplitude map to generate aper grid\n");
 	    aper->locs=mkcirloc_amp(&(aper->amp), aper->locs_stat,
 		     aper->ampground, d, dx,parms->aper.cropamp);
 	}else{
-	    MAP_T *pmap=create_metapupil_wrap(parms,0,dx,0,0,0,T_PLOC,0,0);
+	    map_t *pmap=create_metapupil_wrap(parms,0,dx,0,0,0,T_PLOC,0,0);
 	    aper->locs=sqmap2loc(pmap);
 	    sqmapfree(pmap);
 	    warning("No amplitude map defined or matched to aperture dx.\n");

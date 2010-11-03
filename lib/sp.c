@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -103,8 +103,8 @@ X(sp)* Y(spnew)(long nx, long ny, long nzmax){
     X(sp) *sp;
     sp = calloc(1, sizeof(X(sp)));
     if(nzmax>0){
-	sp->p=malloc((ny+1)*sizeof(long));
-	sp->i=malloc(nzmax*sizeof(long));
+	sp->p=malloc((ny+1)*sizeof(spint));
+	sp->i=malloc(nzmax*sizeof(spint));
 	sp->x=malloc(nzmax*sizeof(T));
     }
     sp->m=nx;
@@ -137,8 +137,8 @@ X(sp) *Y(spdup)(const X(sp) *A){
     long nmax=A->p[A->n];
     X(sp) *out;
     out=Y(spnew)(A->m, A->n, nmax);
-    memcpy(out->p, A->p, sizeof(long)*(A->n+1));
-    memcpy(out->i, A->i, sizeof(long)*nmax);
+    memcpy(out->p, A->p, sizeof(spint)*(A->n+1));
+    memcpy(out->i, A->i, sizeof(spint)*nmax);
     memcpy(out->x, A->x, sizeof(T)*nmax);
     return out;
 }
@@ -170,15 +170,15 @@ X(sp) *Y(spnew2)(const X(sp) *A){
    numbers with filling factor of 'fill'
 */
 X(sp)* Y(spnewrandu)(int nx, int ny, const T mean, 
-		     double fill,struct_rand *rstat){
+		     double fill,rand_t *rstat){
     if(fill>1) fill=1.;
     if(fill<0) fill=0.;
     const long nzmax=nx*ny;
     long nz1=nx*ny*fill*4;
     if(nz1>nzmax) nz1=nzmax;
     X(sp) *A=Y(spnew)(nx,ny,nz1);
-    long *pp=A->p;
-    long *pi=A->i;
+    spint *pp=A->p;
+    spint *pi=A->i;
     T *px=A->x;
     long count=0;
     double thres=1.-fill;
@@ -211,7 +211,7 @@ X(sp)* Y(spnewrandu)(int nx, int ny, const T mean,
 */
 void Y(spsetnzmax)(X(sp) *sp, long nzmax){
     if(sp->nzmax!=nzmax){
-	sp->i=realloc(sp->i, sizeof(long)*nzmax);
+	sp->i=realloc(sp->i, sizeof(spint)*nzmax);
 	sp->x=realloc(sp->x, sizeof(T)*nzmax);
 	sp->nzmax=nzmax;
     }
@@ -263,9 +263,9 @@ void Y(spdisp)(const X(sp) *sp){
 	    for(ir=sp->p[ic];ir<sp->p[ic+1];ir++){ 
 #ifdef USE_COMPLEX
 		printf("(%ld,%ld)=(%g,%g)\n", 
-		       sp->i[ir], ic, creal(sp->x[ir]),cimag(sp->x[ir]));
+		       (long)sp->i[ir], (long)ic, creal(sp->x[ir]),cimag(sp->x[ir]));
 #else		
-		printf("(%ld,%ld)=%g\n", sp->i[ir], ic, sp->x[ir]);
+		printf("(%ld,%ld)=%g\n", (long)sp->i[ir], (long)ic, sp->x[ir]);
 #endif
 		if(sp->i[ir]>imax){
 		    imax=sp->i[ir];
@@ -299,7 +299,7 @@ void Y(spcheck)(const X(sp) *sp){
 	    }
 	}
 	if(sp->p[sp->n]!=sp->nzmax){
-	    warning("real nzmax is %ld, allocated is %ld\n",sp->p[sp->n],sp->nzmax);
+	    warning("real nzmax is %ld, allocated is %ld\n",(long)sp->p[sp->n],sp->nzmax);
 	}
     }
 }
@@ -323,8 +323,8 @@ void Y(spcellscale)(Y(spcell) *A, const T beta){
  * Create a new sparse matrix with diagonal elements set to vec*alpha*/
 X(sp)* Y(spnewdiag)(long N, T *vec, T alpha){
     X(sp) *out=Y(spnew)(N,N,N);
-    long *pp=out->p;
-    long *pi=out->i;
+    spint *pp=out->p;
+    spint *pi=out->i;
     T *px=out->x;
     long count=0;
     if(vec){
@@ -837,6 +837,55 @@ void Y(sptcellmulmat_thread)(X(cell) **C, const Y(spcell)*A,
     Y(spcellmulmat_thread2)(C,A,B,alpha,1,nthread);
 }
 /**
+   Data for use in spcellmulmat_each
+ */
+typedef struct{
+    int ic;
+#if USE_PTHREAD > 0
+    pthread_mutex_t ilock;
+#endif
+    int nc;
+    X(cell) *xout;
+    Y(spcell) *A;
+    X(cell) *xin; 
+    T alpha;
+    int trans;
+}EACH_T;
+/**
+   Multiply each cell in spcell with each cell in dcell.
+*/
+static void Y(spcellmulmat_each_do)(EACH_T *info){
+    int ic;
+    while(LOCK(info->ilock),ic=info->ic++,UNLOCK(info->ilock),ic<info->nc){
+	if(info->trans){
+	    Y(sptmulmat)(&info->xout->p[ic], info->A->p[ic], info->xin->p[ic], info->alpha);
+	}else{
+	    Y(spmulmat)(&info->xout->p[ic], info->A->p[ic], info->xin->p[ic], info->alpha);
+	}
+    }
+}
+/**
+   Threaded multiply each cell in spcell with each cell in dcell.
+*/
+void Y(spcellmulmat_each)(X(cell) **xout, Y(spcell) *A, X(cell) *xin, 
+			  T alpha, int trans, int nthread){
+    if(!*xout){
+	*xout=X(cellnew)(xin->nx, xin->ny);
+    }
+    assert(xin->ny==1);
+    EACH_T info;
+    info.xout=*xout;
+    info.A=A;
+    info.xin=xin;
+    info.alpha=alpha;
+    info.trans=trans;
+    info.ic=0;
+    info.nc=info.xout->nx;
+    PINIT(info.ilock);
+    CALL(Y(spcellmulmat_each_do), &info, nthread);
+}
+
+/**
  * Convert sparse matrix into dense matrix and add to output:
  * out0=out0+full(A)*alpha*/
 void Y(spfull)(X(mat) **out0, const X(sp) *A, const T alpha){
@@ -1100,10 +1149,10 @@ X(sp) *Y(spcat)(const X(sp) *A, const X(sp) *B, int dim){
 	}
 	const long nzmax=A->p[A->n]+B->p[B->n];
 	C=Y(spnew)(A->m, A->n+B->n, nzmax);
-	memcpy(C->p, A->p, A->n*sizeof(long));
-	memcpy(C->i, A->i, A->p[A->n]*sizeof(long));
+	memcpy(C->p, A->p, A->n*sizeof(spint));
+	memcpy(C->i, A->i, A->p[A->n]*sizeof(spint));
 	memcpy(C->x, A->x, A->p[A->n]*sizeof(T));
-	memcpy(C->i+A->p[A->n], B->i, B->p[B->n]*sizeof(long));
+	memcpy(C->i+A->p[A->n], B->i, B->p[B->n]*sizeof(spint));
 	memcpy(C->x+A->p[A->n], B->x, B->p[B->n]*sizeof(T));
 	const long Anzmax=A->p[A->n];
 	for(long i=0; i<B->n+1; i++){
@@ -1218,8 +1267,8 @@ X(mat) *Y(spsumabs)(const X(sp) *A, int col){
     }
     return v;
 }
-/*
- * Clean up a sparse array by dropping zeros*/
+/**
+   Clean up a sparse array by dropping zeros*/
 void Y(spclean)(X(sp) *A){
     Y(cs_dropzeros)(A);
 }
@@ -1333,8 +1382,8 @@ X(sp) *Y(spconvolvop)(X(mat) *A){
     //First collect statistics on A.
     long nini=10;
     T *vals=calloc(nini, sizeof(T));
-    long *sepx=calloc(nini, sizeof(long));
-    long *sepy=calloc(nini, sizeof(long));
+    long *sepx=calloc(nini, sizeof(spint));
+    long *sepy=calloc(nini, sizeof(spint));
     long count=0;
     const long nx=A->nx;
     const long ny=A->ny;
@@ -1351,8 +1400,8 @@ X(sp) *Y(spconvolvop)(X(mat) *A){
 	    if(count>=nini){
 		nini*=2;
 		vals=realloc(vals, sizeof(T)*nini);
-		sepx=realloc(sepx, sizeof(long)*nini);
-		sepy=realloc(sepy, sizeof(long)*nini);
+		sepx=realloc(sepx, sizeof(spint)*nini);
+		sepy=realloc(sepy, sizeof(spint)*nini);
 	    }
 	}
     }
@@ -1361,8 +1410,8 @@ X(sp) *Y(spconvolvop)(X(mat) *A){
     }
     long nsep=count;
     X(sp) *out=Y(spnew)(nn,nn,nn*count);
-    long *pp=out->p;
-    long *pi=out->i;
+    spint *pp=out->p;
+    spint *pi=out->i;
     T *px=out->x;
     count=0;
     long icol=0;

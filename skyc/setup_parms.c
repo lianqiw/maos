@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -159,6 +159,9 @@ static void setup_parms_skyc(PARMS_S *parms){
 
     READ_STR(skyc.stars);
 }
+/**
+   Setup infromation output from maos run.
+*/
 static void setup_parms_maos(PARMS_S *parms){
     READ_DBL(maos.r0z);
     READ_DBL(maos.dt);
@@ -315,6 +318,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }
     return parms;
 }
+/**
+   Free the data in parms.
+ */
 void free_parms(PARMS_S *parms){
     dfree(parms->skyc.psd_ngs);
     dfree(parms->skyc.psd_tt);

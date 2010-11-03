@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -30,7 +30,4 @@ void writeint(int fd, int cmd);
 int readint(int fd);
 void fwriteint(FILE *fp, int cmd);
 int   freadint(FILE *fp);
-
-
-//extern struct PATH_T *PATH;
 #endif

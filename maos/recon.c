@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -28,47 +28,6 @@
    Wavefront reconstruction and DM fitting routines
 */
 
-typedef struct{
-    int ic;
-#if USE_PTHREAD > 0
-    pthread_mutex_t ilock;
-#endif
-    int nc;
-    dcell *xout;
-    spcell *A;
-    dcell *xin; 
-    double alpha;
-    int trans;
-}EACH_T;
-/**
-   added temporarily to test speed
- */
-static void spcellmulmat_each_do(EACH_T *info){
-    int ic;
-    while(LOCK(info->ilock),ic=info->ic++,UNLOCK(info->ilock),ic<info->nc){
-	if(info->trans){
-	    sptmulmat(&info->xout->p[ic], info->A->p[ic], info->xin->p[ic], info->alpha);
-	}else{
-	    spmulmat(&info->xout->p[ic], info->A->p[ic], info->xin->p[ic], info->alpha);
-	}
-    }
-}
-static void spcellmulmat_each(dcell **xout, spcell *A, dcell *xin, double alpha, int trans, int nthread){
-    if(!*xout){
-	*xout=dcellnew(xin->nx, xin->ny);
-    }
-    assert(xin->ny==1);
-    EACH_T info;
-    info.xout=*xout;
-    info.A=A;
-    info.xin=xin;
-    info.alpha=alpha;
-    info.trans=trans;
-    info.ic=0;
-    info.nc=info.xout->nx;
-    PINIT(info.ilock);
-    CALL(spcellmulmat_each_do, &info, nthread);
-}
 
 /**
    Apply tomography right hand operator without using assembled matrix. Fast and
@@ -83,8 +42,8 @@ void TomoR(dcell **xout, const void *A,
     dcell *g3=NULL;
     spcellmulmat_thread(&g3,recon->saneai, g2, 1,recon->nthread);
     dcell *xx2=NULL;
-    spcellmulmat_each(&xx2, recon->GG, g3, alpha, 1, recon->nthread);
-    sptcellmulmat_thread(xout, recon->H0tomo, xx2, 1, recon->nthread);
+    spcellmulmat_each(&xx2, recon->GP, g3, alpha, 1, recon->nthread);
+    sptcellmulmat_thread(xout, recon->HXWtomo, xx2, 1, recon->nthread);
     dcellfree(xx2);
     dcellfree(g2);
     dcellfree(g3);
@@ -99,16 +58,16 @@ void TomoL(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     dcell *gg=NULL;
     dcell *xx=NULL;
-    spcellmulmat_thread(&xx, recon->H0tomo, xin, 1., recon->nthread);
-    spcellmulmat_each(&gg, recon->GG, xx, 1., 0, recon->nthread);
+    spcellmulmat_thread(&xx, recon->HXWtomo, xin, 1., recon->nthread);
+    spcellmulmat_each(&gg, recon->GP, xx, 1., 0, recon->nthread);
     dcellfree(xx);
     TTFR(gg, recon->TTF, recon->PTTF);
     dcell *gg2=NULL;
     spcellmulmat_thread(&gg2, recon->saneai, gg,1,recon->nthread);
     dcellfree(gg);
     dcell *xx2=NULL;
-    spcellmulmat_each(&xx2, recon->GG, gg2, alpha, 1, recon->nthread);
-    sptcellmulmat_thread(xout, recon->H0tomo, xx2, 1, recon->nthread);
+    spcellmulmat_each(&xx2, recon->GP, gg2, alpha, 1, recon->nthread);
+    sptcellmulmat_thread(xout, recon->HXWtomo, xx2, 1, recon->nthread);
     dcellfree(xx2);
 
     dcellfree(gg2);
@@ -132,7 +91,7 @@ void FitR(dcell **xout, const void *A,
 	  const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     dcell *xp=NULL;
-    spcellmulmat(&xp, recon->HX, xin, 1.);
+    spcellmulmat(&xp, recon->HXF, xin, 1.);
     applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
     sptcellmulmat(xout, recon->HA, xp, alpha);
     dcellfree(xp);
@@ -241,7 +200,7 @@ void focus_tracking(SIM_T*simu){
     const RECON_T *recon=simu->recon;
     dcell *graduse=dcellnew(parms->nwfs,1);
     PSPCELL(recon->GA,GA);
-    PSPCELL(recon->G0focus,G0);
+    PSPCELL(recon->GXfocus,GX);
     int ngs_psol=0;
     int ngs_x=0;
     int lgs_psol=0;
@@ -284,10 +243,10 @@ void focus_tracking(SIM_T*simu){
 	if(gs_x){
 	    info("Subtracing tomo grad from wfs %d\n",iwfs);
 	    for(int ips=0; ips<simu->recon->npsr; ips++){
-		if(!G0[ips][iwfs]){
-		    error("G0[%d][%d] is empty\n",ips,iwfs);
+		if(!GX[ips][iwfs]){
+		    error("GX[%d][%d] is empty\n",ips,iwfs);
 		}
-		spmulmat(&graduse->p[iwfs],G0[ips][iwfs],simu->opdr->p[ips],-1);
+		spmulmat(&graduse->p[iwfs],GX[ips][iwfs],simu->opdr->p[ips],-1);
 	    }
 	}
     }
@@ -419,7 +378,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 	  double thetax, double thetay, double hs, 
 	  const dcell *opdr, const dcell *dmcommon, dcell **rhsout, const double alpha){
   
-    //LOC_T *maloc=recon->moao[imoao].aloc;
+    //loc_t *maloc=recon->moao[imoao].aloc;
     dcell *xp=dcellnew(1,1);
     xp->p[0]=dnew(recon->ploc->nloc,1);
     
@@ -528,14 +487,15 @@ void moao_recon(SIM_T *simu){
 		    drawopd("MOAO WFS", recon->moao[imoao].aloc, dmmoao->p[0]->p,
 			    "MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 		}
+	
+		if(parms->save.dm){
+		    cellarr_dmat(simu->save->moao_wfs[iwfs], dmmoao->p[0]);
+		}
 		dcellfree(rhsout);
 		dcellfree(dmmoao);
 	    }//if imoao
 	}//if wfs
 
-	if(parms->save.run){
-	    dcellwrite(simu->moao_wfs,"moao_%d/moao_wfs_%d",simu->seed, simu->isim);
-	}
     }
     if(simu->moao_evl){
 	PDCELL(simu->moao_evl, dmevl);
@@ -549,9 +509,6 @@ void moao_recon(SIM_T *simu){
 		      parms->evl.thetax[ievl], parms->evl.thetay[ievl],
 		      INFINITY, simu->opdr, dmcommon, &rhsout, 1);
 	    
-	    if(parms->save.run){
-		dwrite(rhsout->p[0],"moao_%d/moao_rhs_evl%d_%d",simu->seed,ievl,simu->isim);
-	    }
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		1, parms->fit.maxit);
 	    if(!isinf(parms->moao[imoao].stroke)){
@@ -570,15 +527,11 @@ void moao_recon(SIM_T *simu){
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){
-		dwrite(rhsout->p[0], "moao_evlrhs_%d_%d", imoao, simu->isim);
-		dwrite(dmmoao->p[0], "moao_evl_%d_%d", imoao, simu->isim);
-	    }
+		cellarr_dmat(simu->save->moao_evl[ievl], dmmoao->p[0]);
+	    }	 
 	    dcellfree(dmmoao);
 	    dcellfree(rhsout);
 	}//ievl
-	if(parms->save.run){
-	    dcellwrite(simu->moao_evl,"moao_%d/moao_evl_%d",simu->seed,simu->isim);
-	}
     }
     dcellfree(dmcommon);
     dcellfree(rhs);
@@ -626,16 +579,30 @@ void tomofit(SIM_T *simu){
 
 	fit(&simu->dmfit_hi,parms,recon,simu->opdr);
 	if(parms->save.opdr){
-	    dcellwrite(simu->opdr,"opdr_%d/opdr_%d.bin", simu->seed,simu->isim);
+	    cellarr_dcell(simu->save->opdr, simu->opdr);
 	}
-	if(parms->save.opdx){
-	    dcell *opdx=atm2xloc(simu);
-	    dcellwrite(opdx,"opdx_%d/opdx_%d.bin.gz",simu->seed,simu->isim);
-	    dcellfree(opdx);
+	if(parms->save.opdx || parms->plot.opdx){
+	    dcell *opdx;
+	    if(parms->dbg.fitonly){
+		opdx=simu->opdr;
+	    }else{
+		opdx=atm2xloc(simu);
+	    }
+	    if(parms->save.opdx){
+		cellarr_dcell(simu->save->opdx, opdx);
+	    }
+	    if(parms->plot.opdx){ //draw opdx
+		for(int i=0; i<opdx->nx; i++){
+		    drawopd("Recon", recon->xloc[i], opdx->p[i]->p, 
+			    "Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
+		}
+	    }
+	    if(!parms->dbg.fitonly){
+		dcellfree(opdx);
+	    }
 	}
 	if(parms->save.dm){
-	    dcellwrite(simu->dmfit_hi,"dmfit_hi_%d/dmfit_hi_%d.bin.gz",
-		       simu->seed,simu->isim);
+	    cellarr_dcell(simu->save->dmfit_hi, simu->dmfit_hi);
 	}
 	//Ploting.
 	if(parms->plot.run){
@@ -682,14 +649,11 @@ void tomofit(SIM_T *simu){
 	}
 
 	if(parms->save.dm){
-	    dcellwrite(simu->dmerr_hi,"dmerr_hi_%d/dmerr_hi_%d_raw.bin.gz",
-		       simu->seed,simu->isim);
+	    cellarr_dcell(simu->save->dmerr_hi, simu->dmerr_hi);
 	    if(parms->sim.fuseint){
-		dcellwrite(simu->dmint[0],"dmint_%d/dmint_%d.bin",
-			   simu->seed,simu->isim);
+		cellarr_dcell(simu->save->dmint, simu->dmint[0]);
 	    }else{
-		dcellwrite(simu->dmint_hi[0],"dmint_hi_%d/dmint_hi_%d.bin",
-			   simu->seed,simu->isim);   
+		cellarr_dcell(simu->save->dmint_hi, simu->dmint_hi[0]);
 	    }
 	}
 
@@ -700,10 +664,7 @@ void tomofit(SIM_T *simu){
 	    remove_dm_tt(simu, simu->dmerr_hi);
 	}
 	
-	if(parms->save.dm){
-	    dcellwrite(simu->dmerr_hi,"dmerr_hi_%d/dmerr_hi_%d_net.bin.gz",
-		       simu->seed,simu->isim);
-	}
+
 	if(parms->plot.run){
 	    for(int idm=0; idm<parms->ndm; idm++){
 		drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,
@@ -730,7 +691,7 @@ void tomofit(SIM_T *simu){
 	    }
 		break;
 	    case 2:{
-		dcellmm(&simu->gradpsol, recon->G0L, simu->opdrmvst, "nn",-1);
+		dcellmm(&simu->gradpsol, recon->GXL, simu->opdrmvst, "nn",-1);
 		dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradpsol, "nn",1);
 		if(parms->sim.fuseint){
 		    dcelladd(&simu->Merr_lo, 1., simu->dmint[1], -1);
@@ -766,9 +727,9 @@ void tomofit(SIM_T *simu){
 	}
 
 	if(parms->save.dm){
-	    dcellwrite(simu->Merr_lo, "Merr_lo_%d/Merr_lo_%d", simu->seed,simu->isim);
+	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
 	    if(simu->Mint_lo){
-		dcellwrite(simu->Mint_lo[0], "Mint_lo_%d/Mint_lo_%d", simu->seed,simu->isim);
+		cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo[0]);
 	    }
 	}
     }

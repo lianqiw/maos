@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -32,6 +32,9 @@
    This file contains necessary routines to read parametes for
 WFS, DM and wavefront reconstruction.  */
 #define FREE_IF_NOT_NULL(p) if(p) free(p)
+/**
+   Free the parms struct.
+ */
 void free_parms(PARMS_T *parms){
     free(parms->atm.ht);
     free(parms->atm.wt);
@@ -61,7 +64,7 @@ void free_parms(PARMS_T *parms){
     free(parms->sim.seeds);
 
     free(parms->cn2.pair);
-    free(parms->dbg.gcov);
+    free(parms->save.gcov);
 
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	free(parms->surf[isurf]);
@@ -610,6 +613,7 @@ static void readcfg_plot(PARMS_T *parms){
     READ_INT(plot.setup);
     READ_INT(plot.atm);
     READ_INT(plot.run);
+    READ_INT(plot.opdx);
 }
 /**
    Read in debugging parameters
@@ -621,10 +625,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.noatm);
     READ_INT(dbg.clemp_all);
     READ_INT(dbg.wamethod);
-    READ_INT(dbg.opdx);
     READ_INT(dbg.atm);
-    parms->dbg.ngcov=readcfg_intarr(&parms->dbg.gcov,"dbg.gcov")/2;
-    READ_INT(dbg.gcovp);
     READ_INT(dbg.fitonly);
     READ_INT(dbg.keepshm);
     READ_INT(dbg.mvstlimit);
@@ -633,7 +634,31 @@ static void readcfg_dbg(PARMS_T *parms){
     shm_keep_unused=parms->dbg.keepshm;
 #endif
 }
-
+/**
+   Split the option to high and low order numbers.
+ */
+static void wfs_hi_lo(int *hi, int *lo, int tot){
+    switch(tot){
+    case 0:
+	*hi=0;
+	*lo=0;
+	break;
+    case 1:
+	*hi=1;
+	*lo=1;
+	break;
+    case 2:
+	*hi=1;
+	*lo=0;
+	break;
+    case 3:
+	*hi=0;
+	*lo=1;
+	break;
+    default:
+	error("Invalid");
+    }
+}
 /**
    Specify which variables to save
 */
@@ -647,23 +672,25 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.run);
     READ_INT(save.opdr);//reconstructed OPD on XLOC
     READ_INT(save.opdx);//ATM propagated to XLOC
-    READ_INT(save.intshi);//WFS integration
-    READ_INT(save.intslo);//WFS integration
-    READ_INT(save.wfsopdhi);//WFS OPD
-    READ_INT(save.wfsopdlo);//WFS OPD
+    READ_INT(save.ints);//WFS integration
+    READ_INT(save.wfsopd);//WFS OPD
     READ_INT(save.evlopd);//Science OPD
     READ_INT(save.dm);//save DM commands
 
     READ_INT(save.dmpttr);
-    READ_INT(save.gradhi);
-    READ_INT(save.gradlo);
-    READ_INT(save.gradgeomhi);
-    READ_INT(save.gradgeomlo);
+    READ_INT(save.grad);
+    READ_INT(save.gradgeom);
+
     if(parms->save.run){
 	parms->save.dm=1;
-	parms->save.gradhi=1;
-	parms->save.gradlo=1;
+	parms->save.grad=1;
     }
+    wfs_hi_lo(&parms->save.intshi, &parms->save.intslo, parms->save.ints);
+    wfs_hi_lo(&parms->save.wfsopdhi, &parms->save.wfsopdlo, parms->save.wfsopd);
+    wfs_hi_lo(&parms->save.gradhi, &parms->save.gradlo, parms->save.grad);
+    wfs_hi_lo(&parms->save.gradgeomhi, &parms->save.gradgeomlo, parms->save.gradgeom);
+    parms->save.ngcov=readcfg_intarr(&parms->save.gcov,"save.gcov")/2;
+    READ_INT(save.gcovp);
 }
 
 /**
@@ -677,9 +704,10 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.xloc);
     READ_STR(load.ploc);
     READ_STR(load.L2);
-    READ_STR(load.HX);
+    READ_STR(load.HXF);
+    READ_STR(load.HXW);
     READ_STR(load.HA);
-    READ_STR(load.G0);
+    READ_STR(load.GP);
     READ_STR(load.GA);
     READ_INT(load.mvst);
     READ_INT(load.GS0);
@@ -1193,12 +1221,12 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	info2(" %d", parms->sim.seeds[i]);
     }
     info2("\n");
-    if(parms->dbg.gcovp<10){
-	warning("parms->dbg.gcovp=%d is too small. You will fill your disk!\n",
-		parms->dbg.gcovp);
+    if(parms->save.gcovp<10){
+	warning("parms->save.gcovp=%d is too small. You will fill your disk!\n",
+		parms->save.gcovp);
     }
-    if(parms->dbg.gcovp>parms->sim.end){
-	parms->dbg.gcovp=parms->sim.end;
+    if(parms->save.gcovp>parms->sim.end){
+	parms->save.gcovp=parms->sim.end;
     }
     
     /*Fitting tip/tilt constraint is only intended for multi DM*/
@@ -1224,24 +1252,24 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    warning("cachedm disabled for SCAO\n");
 	}
     }
-    if(parms->dbg.fitonly){
-	parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    double dist=INFINITY;
-	    int kpsr=-1;
-	    double ht=parms->atm.ht[ips];
-	    for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-		double htr=parms->atmr.ht[ipsr];
-		double dist2=fabs(ht-htr);
-		if(dist2<dist){
-		    dist=dist2;
-		    kpsr=ipsr;
-		}
+    //Assign each turbulence layer to a corresponding reconstructon layer
+    parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
+    for(int ips=0; ips<parms->atm.nps; ips++){
+	double dist=INFINITY;
+	int kpsr=-1;
+	double ht=parms->atm.ht[ips];
+	for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
+	    double htr=parms->atmr.ht[ipsr];
+	    double dist2=fabs(ht-htr);
+	    if(dist2<dist){
+		dist=dist2;
+		kpsr=ipsr;
 	    }
-	    parms->atm.ipsr[ips]=kpsr;
-	    info("atm layer %d is maped to atmr %d\n", ips,kpsr);
 	}
+	parms->atm.ipsr[ips]=kpsr;
+	info("atm layer %d is maped to atmr %d\n", ips,kpsr);
     }
+
     if(!parms->sim.closeloop){
 	warning2("psfisim is set from %d to 0 in openloop mode\n", parms->evl.psfisim);
 	parms->evl.psfisim=0;

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -43,7 +43,7 @@ instead of kolmogorov) */
  */
 void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     //create a grid representing the aperture.
-    LOC_T *loc=mksqloc(powfs[ipowfs].pts->nx,
+    loc_t *loc=mksqloc(powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->dx,
 		       0,0);
@@ -99,7 +99,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
    */
 void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
-    LOC_T *loc=mksqloc(powfs[ipowfs].lotf->pts->nx,
+    loc_t *loc=mksqloc(powfs[ipowfs].lotf->pts->nx,
 		       powfs[ipowfs].lotf->pts->nx,
 		       powfs[ipowfs].lotf->pts->dx,
 		       0,0);

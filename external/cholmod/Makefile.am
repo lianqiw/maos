@@ -29,7 +29,10 @@ EXTRA_DIST=\
 ./Modify/License.txt
 
 #remove _DNPARTITION is METIS is installed 
-AM_CFLAGS=-DNDEBUG=1 -O3 -DUSE_MEM=0 -DHAVE_SSE2=1 -DDLONG -DNPARTITION 
+AM_CFLAGS=-DNDEBUG=1 -O3 -DUSE_MEM=0 -DHAVE_SSE2=1 -DNPARTITION 
+if USE_LONG
+AM_CFLAGS+=-DDLONG
+endif
 if COMP_CHOL
 lib_LTLIBRARIES=libcholmod.la
 libcholmod_la_CFLAGS=$(AM_CFLAGS) -I$(srcdir)/Include

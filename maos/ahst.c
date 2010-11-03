@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -57,7 +57,7 @@ static dmat* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, cons
     int nloc;
     double *amp=NULL;
   
-    const LOC_T *plocs=aper->locs;
+    const loc_t *plocs=aper->locs;
     x=plocs->locx;
     y=plocs->locy;
     nloc=plocs->nloc;
@@ -138,7 +138,7 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 			 APER_T *aper, int use_ploc){
     const double *wt=parms->evl.wt;
     const int ndm=parms->ndm;
-    LOC_T *loc;
+    loc_t *loc;
     double *amp=NULL;
     if(use_ploc){
 	loc=recon->ploc;
@@ -193,7 +193,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     const double *wt=parms->evl.wt;
     const int ndm=parms->ndm;
     const int nmod=ngsmod->nmod;
-    LOC_T *loc;
+    loc_t *loc;
     double *x, *y;
     int nloc;
     double *amp=NULL;
@@ -282,7 +282,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     const double *wt=parms->evl.wt;
     const int ndm=parms->ndm;
     const int nmod=2;
-    LOC_T *loc;
+    loc_t *loc;
     double *x, *y;
     int nloc;
     double *amp=NULL;
@@ -355,7 +355,7 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
     M->p[0]=dnew(nmod,1);
     dcell *mod=dcellnew(ndm,1);
     dcell *dmt=dcellnew(ndm,1);
-    LOC_T **aloc=recon->aloc;
+    loc_t **aloc=recon->aloc;
     for(int idm=0; idm<ndm; idm++){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
 	mod->p[idm]=dnew(aloc[idm]->nloc,nmod);
@@ -383,7 +383,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon,
     //double R=parms->aper.d/2;
     //double R2=R*R;
     int ndm=parms->ndm;
-    LOC_T **aloc=recon->aloc;
+    loc_t **aloc=recon->aloc;
     int nmod=ngsmod->nmod;
     dcell *ZSN=dcellnew(parms->nwfs,1);
     //NGS mode vector
@@ -430,7 +430,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon,
 dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
     //Build NGS mod in science direction using accphi
     NGSMOD_T *ngsmod=recon->ngsmod;
-    LOC_T **aloc=recon->aloc;
+    loc_t **aloc=recon->aloc;
     const int ndm=parms->ndm;
     dcell *dmt=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){
@@ -733,7 +733,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     if(!M) return;
     double scale=recon->ngsmod->scale;
     double MCC_fcp=recon->ngsmod->aper_fcp;
-    LOC_T **aloc=recon->aloc;
+    loc_t **aloc=recon->aloc;
     //convert mode vector and add to dm commands
     const int ndm=recon->ndm;
     if(!*dmc){

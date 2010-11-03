@@ -3,12 +3,12 @@
 #include <string.h>
 #include "../lib/aos.h"
 
-struct_rand rstat;/*a struct for each sequence*/
-struct_rand rstat2;
+rand_t rstat;/*a struct for each sequence*/
+rand_t rstat2;
 
 #include <time.h>
 static void test_number(){
-    struct_rand a,b;
+    rand_t a,b;
     seed_rand(&a,1);
     info("First number is %g\n",randn(&a));
     seed_rand(&a,1);

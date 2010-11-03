@@ -40,9 +40,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#ifndef DLONG
-#define DLONG
-#endif
+
 #include <limits.h>
 
 /* ========================================================================== */

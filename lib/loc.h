@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -26,7 +26,7 @@
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
    on x/y */
-typedef struct MAP_T{
+typedef struct map_t{
     double *p;      /**<The OPD*/
     long nx;        /**<Number of points along x*/
     long ny;        /**<Number of points along y*/
@@ -36,12 +36,12 @@ typedef struct MAP_T{
     double h;       /**<Heigh conjugation of this surface*/
     double vx, vy;  /**Wind velocity. Useful for atmospheric grid*/
     long shm;       /**Records the length of the memory mmaped of positive. -1 means it is part of shared shm.*/
-} MAP_T;
+} map_t;
 
 /**
    Map with different x/y sampling.
 */
-typedef struct RECTMAP_T{
+typedef struct rectmap_t{
     double *p;      /**<The OPD*/
     long nx;        /**<Number of points along x*/
     long ny;        /**<Number of points along y*/
@@ -54,13 +54,13 @@ typedef struct RECTMAP_T{
     double ftel;    /**<Effective focal length of the telescope*/
     double fexit;   /**<The distance between the exit pupil and the focus*/
     double fsurf;   /**<The distance between the tilted surface (M3) and the focus*/
-}RECTMAP_T;
+}rectmap_t;
 
 /**
    map of locs
 */
-typedef struct LOCMAP_T{
-    struct LOC_T *loc;
+typedef struct locmap_t{
+    struct loc_t *loc;
     int nloc;      /**<record nloc. to check against loc to see if loc has changed.*/
     long *p;       /**<The map, of size nx*ny*/
     double ox;     /**<Origin of the map along x*/
@@ -68,41 +68,41 @@ typedef struct LOCMAP_T{
     int nx;        /**<Number of points along x*/
     int ny;        /**<Number of points along y*/
     int npad;      /**<Padding along the boundary. just for checking. no need in computation.*/
-}LOCMAP_T;
+}locmap_t;
 
 /**
    Struct for loc like plocs, xloc, aloc etc.
 */
-typedef struct LOC_T{
+typedef struct loc_t{
     double *locx;  /**< x coordinates of each point*/
     double *locy;  /**< y coordinates of each point*/
     long   nloc;   /**< number of points*/
     double dx;     /**< Sampling*/
-    LOCMAP_T *map; /**< point to the map used for identifying neihboring points.*/
-}LOC_T;
+    locmap_t *map; /**< point to the map used for identifying neihboring points.*/
+}loc_t;
 
 /**
    Store starting x,y for each col
 */
-typedef struct LOCSTATCOL_T{
+typedef struct locstatcol_t{
     double xstart; /**<starting x of this column*/
     double ystart; /**<starting y of this column*/
     long   pos;    /**<starting index of this column*/
-}LOCSTATCOL_T;
+}locstatcol_t;
 
 /**
-   Stores array of LOCSTATCOL_T
+   Stores array of locstatcol_t
 */
-typedef struct LOCSTAT_T{
-    LOCSTATCOL_T *cols; /**<Information about each column*/
+typedef struct locstat_t{
+    locstatcol_t *cols; /**<Information about each column*/
     long   ncol;        /**<Number of consecutive columns found*/
     double dx;          /**<Sampling of the grid*/
-}LOCSTAT_T;
+}locstat_t;
 /**
    low left point of each subaperture.
    
-   don't change the leading 5 elements. so that PTS_T can be
-   cast to LOC_T
+   don't change the leading 5 elements. so that pts_t can be
+   cast to loc_t
 
    2009-12-08: Bug found: I set the origx, origy to the lower
    left point in the subaperture instead of the true
@@ -111,79 +111,79 @@ typedef struct LOCSTAT_T{
    powfs->saloc as the orig of subapertures. PTS just for ray
    tracing.
 */
-typedef struct PTS_T{
+typedef struct pts_t{
     double *origx; /**<The x origin of each subaperture*/
     double *origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
     double dsa;    /**<side length of subaperture*/
-    LOCMAP_T *map; /**<treat PTS_T as LOC_T and compute the MAP*/
+    locmap_t *map; /**<treat pts_t as loc_t and compute the MAP*/
     double *area;  /**<subaperture area, sum(amp^2)*/
     double dx;     /**<sampling of points in each subaperture*/
     int nx;        /**<number of col and row of points per subaperture*/
-}PTS_T;
-int *loc_create_embed(int *nembed, const LOC_T *loc);
-void loc_create_map_npad(LOC_T *loc, int npad);
-void loc_create_map(LOC_T *loc);
+}pts_t;
+int *loc_create_embed(int *nembed, const loc_t *loc);
+void loc_create_map_npad(loc_t *loc, int npad);
+void loc_create_map(loc_t *loc);
 
-LOC_T * map2loc(double dx, long nx, long ny, 
+loc_t * map2loc(double dx, long nx, long ny, 
 		double ox, double oy, double *map);
 long *map2embed(long nx, long ny, double *map);
-LOC_T * sqmap2loc(MAP_T *amp);
-long* sqmap2embed(MAP_T *amp);
-void rectmapfree_do(RECTMAP_T *map);
+loc_t * sqmap2loc(map_t *amp);
+long* sqmap2embed(map_t *amp);
+void rectmapfree_do(rectmap_t *map);
 #define rectmapfree(A) ({rectmapfree_do(A);A=NULL;})
-void sqmapfree_do(MAP_T *map);
+void sqmapfree_do(map_t *map);
 #define sqmapfree(A) ({sqmapfree_do(A);A=NULL;})
-void sqmaparrfree_do(MAP_T **map, int nmap);
+void sqmaparrfree_do(map_t **map, int nmap);
 #define sqmaparrfree(A,B) ({sqmaparrfree_do(A,B);A=NULL;})
-void loc_free_map(LOC_T *loc);
+void loc_free_map(loc_t *loc);
 
-void locfree_do(LOC_T *loc);
+void locfree_do(loc_t *loc);
 #define locfree(A) ({locfree_do(A);A=NULL;})
-void ptsfree_do(PTS_T *pts);
+void ptsfree_do(pts_t *pts);
 #define ptsfree(A) ({ptsfree_do(A);A=NULL;})
-void locarrfree_do(LOC_T **loc, int nloc);
+void locarrfree_do(loc_t **loc, int nloc);
 #define locarrfree(A,B) ({locarrfree_do(A,B);A=NULL;})
 
-void locstatfree_do(LOCSTAT_T *locstat);
+void locstatfree_do(locstat_t *locstat);
 #define locstatfree(A) ({locstatfree_do(A);A=NULL;})
 
-int loccenter(LOC_T *loc);
+int loccenter(loc_t *loc);
 
 void loc_calc_ptt(double *out, double *coeffout, 
-		  const LOC_T *loc, const double ipcc, 
+		  const loc_t *loc, const double ipcc, 
 	       const dmat *imcc, const double *amp, const double *opd);
 void loc_calc_mod(double *out, double *coeffout, 
 		 const dmat *mod, const double *amp, double *opd);
-dmat *loc_mcc_ptt(const LOC_T *loc, const double *amp);
-dcell *pts_mcc_ptt(const PTS_T *pts, const double *amp);
-void loc_remove_ptt(double *opd, const double *ptt, const LOC_T *loc);
-void loc_add_ptt(double *opd, const double *ptt, const LOC_T *loc);
-void pts_ztilt(double *out, const PTS_T *pts, const dcell *imcc,
+dmat *loc_mcc_ptt(const loc_t *loc, const double *amp);
+dcell *pts_mcc_ptt(const pts_t *pts, const double *amp);
+void loc_remove_ptt(double *opd, const double *ptt, const loc_t *loc);
+void loc_add_ptt(double *opd, const double *ptt, const loc_t *loc);
+void pts_ztilt(double *out, const pts_t *pts, const dcell *imcc,
 	       const double *amp, const double *opd);
-LOC_T *mk1dloc_vec(double *x, long nx);
-LOC_T *mk1dloc(double x0, double dx, long nx);
-LOC_T *mksqloc_auto(long nx, long ny, double dx);
-LOC_T *mksqloc_map(MAP_T*map);
-LOC_T *mksqloc(long nx, long ny, double dx, double ox, double oy);
-LOC_T *mksqlocrot(long nx, long ny, double dx, 
+loc_t *mk1dloc_vec(double *x, long nx);
+loc_t *mk1dloc(double x0, double dx, long nx);
+loc_t *mksqloc_auto(long nx, long ny, double dx);
+loc_t *mksqloc_map(map_t*map);
+loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy);
+loc_t *mksqlocrot(long nx, long ny, double dx, 
 		  double ox, double oy, double theta);
-LOC_T *mkcirloc(double d, double dx);
-LOC_T *mkcirloc_amp(double** restrict ampout, LOCSTAT_T *cstat, 
-		    MAP_T* ampin, double dtel, double dx, int cropamp);
-LOCSTAT_T *mklocstat(const LOC_T *loc);
-void loccircle(double *phi,LOC_T *loc,double cx,double cy,double r,double val);
-void locellipse(double *phi,LOC_T *loc,double cx,double cy,
+loc_t *mkcirloc(double d, double dx);
+loc_t *mkcirloc_amp(double** restrict ampout, locstat_t *cstat, 
+		    map_t* ampin, double dtel, double dx, int cropamp);
+locstat_t *mklocstat(const loc_t *loc);
+void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val);
+void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val);
-void loc_reduce_spcell(LOC_T *loc, spcell *sp, int dim, int cont);
-void loc_reduce_sp(LOC_T *loc, dsp *sp, int dim, int cont);
+void loc_reduce_spcell(loc_t *loc, spcell *sp, int dim, int cont);
+void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont);
 
-dmat* loc_zernike(LOC_T *loc, double R, int nr);
-void loc_add_focus(double *opd, LOC_T *loc, double val);
-dmat *loc2mat(LOC_T *loc,int piston);
-LOC_T *pts2loc(PTS_T *pts);
-void locrot(LOC_T *loc, const double theta);
-LOC_T *locdup(LOC_T *loc);
-LOC_T *loctransform(LOC_T *loc, dmat **coeff);
-void loc_nxny(long *nx, long *ny, const LOC_T *loc);
+dmat* loc_zernike(loc_t *loc, double R, int nr);
+void loc_add_focus(double *opd, loc_t *loc, double val);
+dmat *loc2mat(loc_t *loc,int piston);
+loc_t *pts2loc(pts_t *pts);
+void locrot(loc_t *loc, const double theta);
+loc_t *locdup(loc_t *loc);
+loc_t *loctransform(loc_t *loc, dmat **coeff);
+void loc_nxny(long *nx, long *ny, const loc_t *loc);
 #endif

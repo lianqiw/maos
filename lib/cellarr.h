@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -35,4 +35,5 @@ void cellarr_ccell(cellarr *ca, const ccell *A);
 void cellarr_dmat(cellarr *ca, const dmat *A);
 void cellarr_cmat(cellarr *ca, const cmat *A);
 void cellarr_close(cellarr *ca);
+void cellarr_close_n(cellarr **ca, int nc);
 #endif

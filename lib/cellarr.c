@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -77,6 +77,7 @@ void cellarr_cmat(cellarr *ca, const cmat *A){
    Close the cellarr.
 */
 void cellarr_close(cellarr *ca){
+    if(!ca) return;
     if(ca->cur !=ca->tot){
 	warning("cellarr is initialized with %ld elements, "
 		"but %ld elements are written\n",ca->tot,ca->cur);
@@ -85,5 +86,15 @@ void cellarr_close(cellarr *ca){
 	zfwrite(&totx,sizeof(uint64_t),1,ca->fp);
     }
     zfclose(ca->fp);
+    free(ca);
+}
+/**
+   Close an array of cellarr
+ */
+void cellarr_close_n(cellarr **ca, int nc){
+    if(!ca) return;
+    for(int ic=0; ic<nc; ic++){
+	cellarr_close(ca[ic]);
+    }
     free(ca);
 }

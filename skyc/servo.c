@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -361,7 +361,7 @@ dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtlgs, int dtrat){
 /**
    Generate random time series using temporal PSD.
 */
-dmat *psd2temp(dmat *psdin, double dt, double N, struct_rand* rstat){
+dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     double df=1./(N*dt);
     dmat *f=dlinspace(df,(N-1)*df,N);
     dmat *psdx=dnew_ref(psdin->p,          psdin->nx,1);

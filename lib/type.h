@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -22,6 +22,11 @@
 #include "common.h"
 #include <fftw3.h>
 #include "misc.h"
+#if defined(DLONG)
+typedef long spint; //we use 32 bit in sparse index.
+#else
+typedef int spint;
+#endif
 /**
    \file lib/type.h Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.  */
@@ -100,8 +105,8 @@ typedef struct dsp{
     long nzmax ;/**< maximum number of entries */
     long m ;	/**< number of rows */
     long n ;	/**< number of columns */
-    long *p ;   /**< column pointers (size n+1) or col indlces (size nzmax) when nz!=-1 */
-    long *i ;   /**< row indices, size nzmax */
+    spint *p ;   /**< column pointers (size n+1) or col indlces (size nzmax) when nz!=-1 */
+    spint *i ;   /**< row indices, size nzmax */
     double *x ;	/**< numerical values, size nzmax */
     long nz ;   /**< number of entries in triplet matrix, -1 for compressed-col */
     long *nref; /**< reference counting like dmat */
@@ -121,8 +126,8 @@ typedef struct csp{
     long nzmax ;/**< maximum number of entries */
     long m ;	/**< number of rows */
     long n ;	/**< number of columns */
-    long *p ;   /**< column pointers (size n+1) or col indlces (size nzmax) */
-    long *i ;   /**< row indices, size nzmax */
+    spint *p ;   /**< column pointers (size n+1) or col indlces (size nzmax) */
+    spint *i ;   /**< row indices, size nzmax */
     dcomplex *x;/**< numerical values, size nzmax */
     long nz ;   /**< # of entries in triplet matrix, -1 for compressed-col */
     long *nref; /**< reference counting like cmat*/

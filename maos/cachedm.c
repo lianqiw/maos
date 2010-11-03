@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -41,9 +41,9 @@
 void prep_cachedm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(!simu->cachedm){
-	simu->cachedm=calloc(parms->ndm, sizeof(MAP_T*));
+	simu->cachedm=calloc(parms->ndm, sizeof(map_t*));
 	for(int idm=0; idm<parms->ndm; idm++){
-	    simu->cachedm[idm]=calloc(parms->dm[idm].nscale, sizeof(MAP_T));
+	    simu->cachedm[idm]=calloc(parms->dm[idm].nscale, sizeof(map_t));
 	    for(int iscale=0; iscale<parms->dm[idm].nscale; iscale++){
 		long nxout, nyout;
 		double oxout, oyout;
@@ -78,41 +78,27 @@ void prep_cachedm(SIM_T *simu){
 	    count++;
 	}
     }
-    if(simu->parms->sim.cachedm==1){//new scheme for ray tracing
-	simu->cachedm_prop=calloc(simu->cachedm_n*simu->nthread, sizeof(thread_t));
-	simu->cachedm_propdata=calloc(simu->cachedm_n, sizeof(PROPDATA_T));
-	thread_t (*cprop)[simu->nthread]=(void*)simu->cachedm_prop;
-	PROPDATA_T *cpropdata=simu->cachedm_propdata;
-	for(int ic=0; ic<simu->cachedm_n; ic++){
-	    int idm=simu->pcachedm[ic][0];
-	    int iscale=simu->pcachedm[ic][1];
+    //new scheme for ray tracing
+    simu->cachedm_prop=calloc(simu->cachedm_n*simu->nthread, sizeof(thread_t));
+    simu->cachedm_propdata=calloc(simu->cachedm_n, sizeof(PROPDATA_T));
+    thread_t (*cprop)[simu->nthread]=(void*)simu->cachedm_prop;
+    PROPDATA_T *cpropdata=simu->cachedm_propdata;
+    for(int ic=0; ic<simu->cachedm_n; ic++){
+	int idm=simu->pcachedm[ic][0];
+	int iscale=simu->pcachedm[ic][1];
 
-	    cpropdata[ic].locin=simu->recon->aloc[idm];
-	    //cpropdata[ic].phiin=simu->dmreal->p[idm]->p;need to do this at execution
-	    cpropdata[ic].mapout=&simu->cachedm[idm][iscale];
-	    cpropdata[ic].alpha=1;
-	    cpropdata[ic].displacex=0;
-	    cpropdata[ic].displacey=0;
-	    cpropdata[ic].scale=1;
-	    cpropdata[ic].cubic=simu->parms->dm[idm].cubic;
-	    cpropdata[ic].cubic_iac=simu->parms->dm[idm].iac;
+	cpropdata[ic].locin=simu->recon->aloc[idm];
+	//cpropdata[ic].phiin=simu->dmreal->p[idm]->p;need to do this at execution
+	cpropdata[ic].mapout=&simu->cachedm[idm][iscale];
+	cpropdata[ic].alpha=1;
+	cpropdata[ic].displacex=0;
+	cpropdata[ic].displacey=0;
+	cpropdata[ic].scale=1;
+	cpropdata[ic].cubic=simu->parms->dm[idm].cubic;
+	cpropdata[ic].cubic_iac=simu->parms->dm[idm].iac;
 #define INTERLACED 0
-	    thread_prep(cprop[ic], 0, cpropdata[ic].mapout->ny, INTERLACED, 
-			simu->nthread, (void*)&cpropdata[ic]);
-	}
-    }else if(simu->parms->sim.cachedm==2){//use sparse matrix instead of ray tracing.
-	warning("This approach takes too much memory and is not fast. Don't use.\n");
-	simu->HACT=spcellnew(simu->cachedm_n, 1);
-	for(int ic=0; ic<simu->cachedm_n; ic++){
-	    int idm=simu->pcachedm[ic][0];
-	    int iscale=simu->pcachedm[ic][1];
-	    LOC_T *locout=mksqloc_map(&simu->cachedm[idm][iscale]);
-	    //scale is one because the plane lives on the DM altitude.
-	    simu->HACT->p[ic]=mkhb(simu->recon->aloc[idm], locout, NULL, 0, 0, 1, 
-				   simu->parms->dm[idm].cubic, simu->parms->dm[idm].iac);
-	}
-    }else{
-	error("simu->parms->sim.cachedm=%d is invalid\n", simu->parms->sim.cachedm);
+	thread_prep(cprop[ic], 0, cpropdata[ic].mapout->ny, INTERLACED, 
+		    simu->nthread, (void*)&cpropdata[ic]);
     }
 }
 
@@ -134,7 +120,7 @@ static void calc_cachedm_ic(SIM_T *simu){
 void calc_cachedm(SIM_T *simu){
     if(simu->parms->sim.cachedm && simu->dmreal){
 	simu->cachedm_i=0;
-	if(simu->parms->sim.cachedm==1){
+	if(simu->parms->sim.cachedm){
 	    PROPDATA_T *cpropdata=simu->cachedm_propdata;
 	    for(int ic=0; ic<simu->cachedm_n; ic++){
 		int idm=simu->pcachedm[ic][0];
@@ -146,13 +132,6 @@ void calc_cachedm(SIM_T *simu){
 		       *simu->cachedm[idm][iscale].ny);
 	    }
 	    CALL(calc_cachedm_ic,simu,simu->nthread);
-	}else{
-	    for(int ic=0; ic<simu->cachedm_n; ic++){
-		int idm=simu->pcachedm[ic][0];
-		int iscale=simu->pcachedm[ic][1];
-		sptmulvec_thread(simu->cachedm[idm][iscale].p, simu->HACT->p[ic],
-				 simu->dmreal->p[idm]->p, 1, simu->nthread);
-	    }
 	}
     }
 }

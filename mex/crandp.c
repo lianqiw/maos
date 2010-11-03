@@ -5,12 +5,12 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    struct_rand *strand;
+    rand_t *strand;
     double *p,*pin;
     int nx,ny;
     int i;
     if(nrhs!=2) mexErrMsgTxt("Except two input\n");
-    strand=(struct_rand*)mxGetPr(prhs[0]);
+    strand=(rand_t*)mxGetPr(prhs[0]);
     nx=mxGetM(prhs[1]);
     ny=mxGetN(prhs[1]);
     pin=mxGetPr(prhs[1]);

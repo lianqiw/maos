@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,10 +18,6 @@
 
 #ifndef AOS_LIB_PATH_H
 #define AOS_LIB_PATH_H
-typedef struct PATH_T{
-    char *path;
-    struct PATH_T *next;
-}PATH_T;
 
 void addpath(const char*path);
 void rmpath(const char *path);

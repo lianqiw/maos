@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -81,22 +81,25 @@ dmat *vonkarman_invpsd(int nx, int ny, double dx, double r0, double L0){
     return psd;
 }
 typedef struct GENSCREEN_T{
-    struct_rand *rstat;
+    rand_t *rstat;
     dmat *spect;
-    MAP_T **screen;
+    map_t **screen;
     double *wt;
     int nlayer;
     int ilayer;
     pthread_mutex_t mutex_ilayer;
 }GENSCREEN_T;
+/**
+   Generate turbulence screens.
+ */
 static void *genscreen_do(GENSCREEN_T *data){
     const dmat *spect=data->spect;
-    struct_rand *rstat=data->rstat;
+    rand_t *rstat=data->rstat;
     
     const long m=spect->nx;
     const long n=spect->ny;
     const long nlayer=data->nlayer;
-    MAP_T** screen=data->screen;
+    map_t** screen=data->screen;
     const double *wt=data->wt;
     cmat* cspect=cnew(m,n);
     cfft2plan(cspect,-1);
@@ -137,7 +140,7 @@ static void *genscreen_do(GENSCREEN_T *data){
 /**
    Generates multiple screens from spectrum.
 */
-MAP_T** genscreen_from_spect(struct_rand *rstat, dmat *spect, double dx,
+map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,
 			       double* wt, int nlayer, int nthread){
   
     GENSCREEN_T screendata;
@@ -151,12 +154,12 @@ MAP_T** genscreen_from_spect(struct_rand *rstat, dmat *spect, double dx,
     spect->p[0]=0;//zero out piston.
     long m=spect->nx;
     long n=spect->ny;
-    MAP_T** screen;
+    map_t** screen;
 
-    screen=calloc(nlayer,sizeof(MAP_T*));
+    screen=calloc(nlayer,sizeof(map_t*));
     screendata.screen=screen; 
     for(int ilayer=0; ilayer<nlayer; ilayer++){
-	screen[ilayer]=calloc(1, sizeof(MAP_T));
+	screen[ilayer]=calloc(1, sizeof(map_t));
 	screen[ilayer]->nx=m;
 	screen[ilayer]->ny=n;
 	screen[ilayer]->ox=-m*dx/2;
@@ -172,7 +175,7 @@ MAP_T** genscreen_from_spect(struct_rand *rstat, dmat *spect, double dx,
 	use_shm=0;
 	shm_free_unused("",0);
     }else{
-	key=hashlittle(rstat, sizeof(struct_rand), 0);//contains seed
+	key=hashlittle(rstat, sizeof(rand_t), 0);//contains seed
 	key=hashlittle(spect->p, m*n*sizeof(double), key);
 	key=hashlittle(wt, nlayer*sizeof(double), key);
 	snprintf(fnshm,NAME_MAX,"/maos_atm_%ud_%d_%ld_%g",key,nlayer,m,dx);
@@ -285,7 +288,7 @@ MAP_T** genscreen_from_spect(struct_rand *rstat, dmat *spect, double dx,
 /**
    Generate vonkarman screens from turbulence statistics.
 */
-MAP_T** vonkarman_screen(struct_rand *rstat, int m, int n, double dx, 
+map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx, 
 			   double r0, double L0, double* wt, int nlayer, int nthread){
    
     char fnspect[PATH_MAX];
@@ -303,7 +306,7 @@ MAP_T** vonkarman_screen(struct_rand *rstat, int m, int n, double dx,
 	toc2("done");
 	dwrite(spect,"%s",fnspect);
     }
-    MAP_T **screen=genscreen_from_spect(rstat,spect,dx,wt,nlayer,nthread);
+    map_t **screen=genscreen_from_spect(rstat,spect,dx,wt,nlayer,nthread);
     dfree(spect);
     return(screen);
 }
@@ -345,7 +348,7 @@ static dmat *biharmonic_spect(int nx, int ny, double dx, double r0, double L0){
 /**
    Generate screens from PSD with power of 12/3 instead of 11/3.
 */
-MAP_T** biharmonic_screen(struct_rand *rstat, int m, int n, double dx, 
+map_t** biharmonic_screen(rand_t *rstat, int m, int n, double dx, 
 			    double r0, double L0, double* wt, int nlayer, int nthread){
     /**
        Generate vonkarman screen.
@@ -359,7 +362,7 @@ MAP_T** biharmonic_screen(struct_rand *rstat, int m, int n, double dx,
     spect=biharmonic_spect(m,n,dx,r0,L0);
     toc2("done");
 
-    MAP_T **screen=genscreen_from_spect(rstat,spect,dx,wt,nlayer, nthread);
+    map_t **screen=genscreen_from_spect(rstat,spect,dx,wt,nlayer, nthread);
     dfree(spect);
     return(screen);
 }

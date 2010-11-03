@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -19,8 +19,8 @@
 #ifndef AOS_MKZ_H
 #define AOS_MKZ_H
 #include "loc.h"
-dsp * mkzt(LOC_T* xloc, double *amp,LOC_T *saloc, 
+dsp * mkzt(loc_t* xloc, double *amp,loc_t *saloc, 
 	      int saorc, double scale, double *displace);
-dsp *mkz(LOC_T* xloc, double *amp,LOC_T *saloc, 
+dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc, 
 	    int saorc, double scale, double *displace);
 #endif

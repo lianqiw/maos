@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -15,30 +15,40 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+/**
+   \file random.c
+   Routine to generate random numbers.
+*/
 #include <signal.h>
 #include <math.h>
-//#define MT_NO_EXTERN //disable inline for random.h
 #include "common.h"
 #include "random.h"
 #include "misc.h"
-struct_rand *new_rand(int seed){
-    struct_rand *out=calloc(1, sizeof(struct_rand));
+/**
+   Create a new random stream, seeded with seed.
+*/
+rand_t *new_rand(int seed){
+    rand_t *out=calloc(1, sizeof(rand_t));
     seed_rand(out, seed);
     return out;
 }
-void writerand(struct_rand *rstat, const char *format, ...){
+/**
+   Save random stream to file.
+ */
+void writerand(rand_t *rstat, const char *format, ...){
     format2fn;
     FILE *fp=fopen(fn,"w");
-    if(fwrite(rstat, 1, sizeof(struct_rand), fp)!=1) 
+    if(fwrite(rstat, 1, sizeof(rand_t), fp)!=1) 
 	error("Error writing\n");
     fclose(fp);
 }
-void readrand(struct_rand *rstat, const char *format,...){
+/**
+   Seed a random stream*/
+void readrand(rand_t *rstat, const char *format,...){
     format2fn;
     if(rstat){
 	FILE *fp=fopen(fn,"r");
-	if(fread(rstat, 1, sizeof(struct_rand), fp)!=1)
+	if(fread(rstat, 1, sizeof(rand_t), fp)!=1)
 	    error("Error reading\n");
 	fclose(fp);
     }
@@ -79,17 +89,14 @@ void readrand(struct_rand *rstat, const char *format,...){
  * Parameters of Knuth's PRNG (p. 106 of "The Art of Computer
  * Programming, Vol. 2, 3rd ed).
  */
-#define KNUTH_MULTIPLIER_NEW \
-			1812433253ul
+#define KNUTH_MULTIPLIER_NEW 1812433253ul
 #define KNUTH_SHIFT	30		// Even on a 64-bit machine!
 
 /*
  * Default 32-bit random seed if mts_seed32 wasn't called
  */
-#define DEFAULT_SEED32_OLD \
-			4357
-#define DEFAULT_SEED32_NEW \
-			5489ul
+#define DEFAULT_SEED32_OLD 4357
+#define DEFAULT_SEED32_NEW 5489ul
 
 /*
  * Where to get random numbers
@@ -99,15 +106,18 @@ void readrand(struct_rand *rstat, const char *format,...){
 
 static mt_u32bit_t	matrix_decider[2] =
 			  {0x0, MATRIX_A};
-
-static void mts_mark_initialized(
-    mt_state*		state)		/* State vector to mark initialized */
-    {
-	state->initialized = 1;
-    }
-void mts_refresh(
-    register mt_state*	state)		/* State for the PRNG */
-    {
+/**
+   Mark state as initialized.
+ */
+static void mts_mark_initialized(mt_state* state /**< State vector to mark initialized */
+				 ){
+    state->initialized = 1;
+}
+/**
+   Refresh the state for next set of random numbers.
+ */
+void mts_refresh(register mt_state* state /**< State for the PRNG */
+		 ){
     register int	i;		/* Index into the state */
     register mt_u32bit_t*
 			state_ptr;	/* Next place to get from state */
@@ -176,14 +186,9 @@ void mts_refresh(
     state->stateptr = MT_STATE_SIZE;
     }
 
-/*
- * Save state to a file.  The save format is compatible with Richard
- * J. Wagner's format, although the details are different.  Returns NZ
- * if the save succeeded.  Produces one very long line containing 625
- * numbers.
+/**
+   See the state vector.
  */
-
-
 void mts_seed32(
     mt_state*		state,		/* State vector to initialize */
     unsigned long	seed)		/* 32-bit seed to start from */
@@ -215,18 +220,11 @@ void mts_seed32(
      */
     mts_refresh(state);
     }
-/*
-static double explut[13];
-static __attribute__((constructor)) void initalize_randp(){
-    for(int i=0; i<13; i++){
-	explut[i]=exp(-(double)i);
-    }
-}
+
+/**
+   Get a poisson random number.
 */
-long randp(struct_rand *rstat, double xm){
-    /**
-       The number must be integer, but the average does not need to be.
-     */
+long randp(rand_t *rstat, double xm){
     double g, t;
     const long thres=200;/*use gaussian distribution instead*/
     double xu,xmu;
@@ -238,7 +236,6 @@ long randp(struct_rand *rstat, double xm){
 	while(xm>0){
 	    xmu = xm > 12 ? 12 : xm;
 	    xm-=xmu;
-	    //g=explut[xmu];//
 	    g=exp(-xmu);
 	    xu=-1;
 	    t=1;
@@ -265,31 +262,31 @@ static  double  wtab[LEVELS];
 static  double  x1,x11;
 static  double  v;
 
-static inline double
-ff (double xr)
-/* the target density */
-{
-  return  exp(-xr*xr*0.5);
+/**
+   the target density */
+static inline double ff (double xr){
+    return  exp(-xr*xr*0.5);
 }
-static inline double
-f_inv (double y)
-/* the inverse of the target density */
-{
-  return  sqrt(-2.*log(y));
+/**
+   the inverse of the target density */
+static inline double f_inv (double y){
+    return  sqrt(-2.*log(y));
 }
-static double
-try_r_value (double r)
-{
-  int  i;
-  v = r*ff(r) + exp(-0.5*r*r)/r;
-  //v = r*ff(r) + sqrt(M_PI*0.5)*erfc(r/sqrt(2.));
-  xx[LEVELS-1] = r;
-  for (i=LEVELS-1; i>1; --i) {
-    xx[i-1] = f_inv(v/xx[i]+ff(xx[i]));
-  }
-  return  xx[1]*(1-ff(xx[1]))/v;
+/**
+   try_r_value
+*/
+static double try_r_value (double r){
+    int  i;
+    v = r*ff(r) + exp(-0.5*r*r)/r;
+    xx[LEVELS-1] = r;
+    for (i=LEVELS-1; i>1; --i) {
+	xx[i-1] = f_inv(v/xx[i]+ff(xx[i]));
+    }
+    return  xx[1]*(1-ff(xx[1]))/v;
 }
-
+/**
+   Initialize the data to do norm distribution.
+ */
 static __attribute__((constructor)) void initalize(){
     double  a, b, aa, bb, r;
     double  q;
@@ -325,9 +322,10 @@ static __attribute__((constructor)) void initalize(){
     }
     wtab[LEVELS-1]=v*RANGE_R/ff(x1);
 }
-
-//use a small LEVELS to check the correctness of the tail checking.
-double randn(struct_rand *rstat){
+/**
+   Get normal distributed random number.
+*/
+double randn(rand_t *rstat){
     double x=0;
     double U;
     unsigned int l;

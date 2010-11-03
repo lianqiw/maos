@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -37,7 +37,7 @@
 /**
    Create aperture selection function that selects the gradients for valid
    subapertures from ground layer xloc (or ploc).  */
-csp* fdpcg_saselect(long nx, long ny, double dx,LOC_T *saloc, double *saa){
+csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     const long threas=1;
     cmat *xsel=cnew(nx,ny);
     cfft2plan(xsel,-1);
@@ -193,8 +193,8 @@ csp *fdpcg_prop(long nps, const long *os, long nxg, double dx, double *dispx, do
     long nxg2=nxg/2;
     /*We build the transposed matrix.*/
     csp *propt=cspnew(nxtot,nxg*nxg,nxg*nxg*nps);
-    long *pp=propt->p;
-    long *pi=propt->i;
+    spint *pp=propt->p;
+    spint *pi=propt->i;
     dcomplex *px=propt->x;
     long count=0;
     dcomplex cf=2*M_PI*I;
@@ -251,7 +251,7 @@ csp *fdpcg_prop(long nps, const long *os, long nxg, double dx, double *dispx, do
   Prepare data for Tomography Fourier Domain Preconditioner
 */
 FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs){
-    LOC_T **xloc=recon->xloc;
+    loc_t **xloc=recon->xloc;
     int hipowfs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].lo){
@@ -262,7 +262,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    }
 	}
     }
-    LOC_T *saloc=powfs[hipowfs].saloc;
+    loc_t *saloc=powfs[hipowfs].saloc;
     const double hs=parms->powfs[hipowfs].hs;
     const long nps=recon->npsr;
     long os[nps];//oversampling ratio of each layer.

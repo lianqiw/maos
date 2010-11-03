@@ -1,11 +1,11 @@
 #include "../aos.h"
 char *dirout;
 static void test_ints(){
-    struct_rand init;
+    rand_t init;
     seed_rand(&init,1);
     const int nwfs=6;
     lrand(&init);//atm
-    struct_rand wfs_rand[nwfs];
+    rand_t wfs_rand[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	seed_rand(wfs_rand+iwfs,lrand(&init));
     }
@@ -44,7 +44,7 @@ static void test_ints(){
 }
 /*
 static void test_i0(){
-    struct_rand i0rand;
+    rand_t i0rand;
     seed_rand(&i0rand,100);
     dcell *mtche=dcellread("powfs0_mtche.bin.gz");
     int nsim=500;

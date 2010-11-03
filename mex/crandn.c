@@ -5,13 +5,13 @@
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    struct_rand *strand;
+    rand_t *strand;
     double *p;
     int nelem=1,M;
     int i;
     if(nrhs<1) 
 	mexErrMsgTxt("Except one or more input\n");
-    strand=(struct_rand*)mxGetPr(prhs[0]);
+    strand=(rand_t*)mxGetPr(prhs[0]);
     if(nrhs==1){
 	plhs[0]=mxCreateDoubleMatrix(1,1,mxREAL);
     }else if(nrhs>=2){

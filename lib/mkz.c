@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -32,7 +32,7 @@
    Returns the transpose of a ztilt gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc.
  */
-dsp * mkzt(LOC_T* xloc, double *amp, LOC_T *saloc, 
+dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc, 
 	      int saorc, double scale, double *displace)
 {
     /*compute ztilt influence function from xloc to saloc
@@ -51,7 +51,7 @@ dsp * mkzt(LOC_T* xloc, double *amp, LOC_T *saloc,
     double dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
     long *ind=calloc(nmax, sizeof(long));
-    LOC_T *sloc=calloc(1, sizeof(LOC_T));
+    loc_t *sloc=calloc(1, sizeof(loc_t));
     sloc->dx=xloc->dx;
     sloc->locx=calloc(nmax,sizeof(double));
     sloc->locy=calloc(nmax,sizeof(double));
@@ -61,12 +61,12 @@ dsp * mkzt(LOC_T* xloc, double *amp, LOC_T *saloc,
     dsp*zax=spnew(xloc->nloc,nsa,xloc->nloc);
     dsp*zay=spnew(xloc->nloc,nsa,xloc->nloc);
     long xcount=0,ycount=0;
-    long *xpp=zax->p;
-    long *xpi=zax->i;
+    spint *xpp=zax->p;
+    spint *xpi=zax->i;
     double *xpx=zax->x;
     
-    long *ypp=zay->p;
-    long *ypi=zay->i;
+    spint *ypp=zay->p;
+    spint *ypi=zay->i;
     double *ypx=zay->x;
     const double *locx=xloc->locx;
     const double *locy=xloc->locy;
@@ -137,7 +137,7 @@ dsp * mkzt(LOC_T* xloc, double *amp, LOC_T *saloc,
    Returns a ztilt gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc.
  */
-dsp *mkz(LOC_T* xloc, double *amp,LOC_T *saloc, 
+dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc, 
 	      int saorc, double scale, double *displace)
 {
     dsp *zt=mkzt(xloc,amp,saloc,saorc,scale,displace);

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -20,15 +20,15 @@
 #define AOS_LOCBIN_H
 #include "bin.h"
 #include "loc.h"
-void locwrite(const LOC_T *loc, const char *format,...) CHECK_ARG(2);
-LOC_T *locread(const char *format,...) CHECK_ARG(1);
-void locarrwrite(LOC_T ** loc, int nloc, const char *format,...) CHECK_ARG(3);
-LOC_T ** locarrread(int *nloc, const char *format,...) CHECK_ARG(2);
+void locwrite(const loc_t *loc, const char *format,...) CHECK_ARG(2);
+loc_t *locread(const char *format,...) CHECK_ARG(1);
+void locarrwrite(loc_t ** loc, int nloc, const char *format,...) CHECK_ARG(3);
+loc_t ** locarrread(int *nloc, const char *format,...) CHECK_ARG(2);
 
-MAP_T *sqmapread(const char *format,...) CHECK_ARG(1);
-RECTMAP_T *rectmapread(const char *format,...) CHECK_ARG(1);
-void sqmapwrite(const MAP_T *map, const char *format,...) CHECK_ARG(2);
+map_t *sqmapread(const char *format,...) CHECK_ARG(1);
+rectmap_t *rectmapread(const char *format,...) CHECK_ARG(1);
+void sqmapwrite(const map_t *map, const char *format,...) CHECK_ARG(2);
 
-void sqmaparrwrite(MAP_T ** map, int nmap, const char *format,...) CHECK_ARG(3);
-MAP_T **sqmaparrread(int*nlayer, const char *format,...) CHECK_ARG(2);
+void sqmaparrwrite(map_t ** map, int nmap, const char *format,...) CHECK_ARG(3);
+map_t **sqmaparrread(int*nlayer, const char *format,...) CHECK_ARG(2);
 #endif

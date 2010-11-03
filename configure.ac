@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.7.0, lianqiw@gmail.com)
+AC_INIT(maos, 0.7.1, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
@@ -60,7 +60,7 @@ case "$host_cpu" in
 *64)
     cpu="64";;
 *)
-    AC_MSG_ERROR([Unrecognized host_cpu]);
+    AC_MSG_ERROR([Unrecognized host_cpu])
 esac
 mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
 case "$host_os" in
@@ -98,7 +98,13 @@ AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [d
 AC_ARG_ENABLE(icc,   [  --enable-icc    Using intel compiler], [use_icc="$enableval"], [use_icc=$use_icc_default])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
-
+AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="no"])
+if test "x$use_long" = "xyes" ;then
+   OPTScommon="$OPTScommon -DDLONG"
+   AM_CONDITIONAL(USE_LONG, true)
+else
+   AM_CONDITIONAL(USE_LONG, false)
+fi
 if test "x$use_static" = "xyes" ;then
    LDEXE="-all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)

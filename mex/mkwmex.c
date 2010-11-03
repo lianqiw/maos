@@ -16,7 +16,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     };
     if(nlhs!=PL_TOT || nrhs!=P_TOT)
 	mexErrMsgTxt("Invalid number of arguments");
-    LOC_T *loc=mx2loc(prhs[P_LOC]);
+    loc_t *loc=mx2loc(prhs[P_LOC]);
     double R=mxGetScalar(prhs[P_R]);
     sparse *W0;
     dmat *W1;

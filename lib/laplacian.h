@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -22,6 +22,6 @@
 void apply_laplacian_map(int nx, int ny, double dx, double r0, double weight, 
 			 double *opd, double *opdout);
 dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight);
-dsp* mklaplacian_loc(LOC_T *loc, double r0, double weight);
+dsp* mklaplacian_loc(loc_t *loc, double r0, double weight);
 double laplacian_coef(double r0, double weight, double dx);
 #endif

@@ -5,7 +5,7 @@ int main(){
     dsp *F=FLM->p[0];
     spchol *Fchol=chol_factorize(F);
  
-    struct_rand rrand;
+    rand_t rrand;
     seed_rand(&rrand,1);
     dmat *y=dnew(F->m,10);
     drandu(y,1,&rrand);
@@ -31,7 +31,7 @@ int main(int argc, char* argv[]){
     tic;info2("chol ...");
     spchol *R1=chol_factorize(RLMc);
     toc("done");
-    struct_rand rstat;
+    rand_t rstat;
     seed_rand(&rstat,1);
     dmat *y=dnew(RLMc->m, 1);
     drandn(y, 1, &rstat);

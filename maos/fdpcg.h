@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -19,7 +19,7 @@
 #ifndef AOS_RECON_FDPCG
 #define AOS_RECON_FDPCG
 #include "maos.h"
-csp* fdpcg_saselect(long nx, long ny, double dx, LOC_T *saloc, double *saa);
+csp* fdpcg_saselect(long nx, long ny, double dx, loc_t *saloc, double *saa);
 long *fdpcg_perm(const long *nx, const long *ny, const long *os, int nps);
 void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa);
 csp *fdpcg_prop(long nps, const long *os, long nxg, double dx, 

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -271,7 +271,6 @@ void filter_cl(SIM_T *simu){
 		    nny[idm]=simu->dmint[0]->p[idm]->nx*simu->dmint[0]->p[idm]->ny;
 		}
 		simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, "dmhist_%d.bin",simu->seed);
-		//simu->dmhist=dcellnew(parms->ndm,1);
 	    }
 	    for(int idm=0; idm<parms->ndm; idm++){
 		dhistfill(&simu->dmhist->p[idm], simu->dmint[0]->p[idm],0,
@@ -279,7 +278,7 @@ void filter_cl(SIM_T *simu){
 	    }
 	}
 	if(parms->save.dmpttr){//2 cycle delay.
-	    dcellwrite(simu->dmint[0], "dmpttr_%d/dmpttr_%d.bin",simu->seed,simu->isim+2);
+	    cellarr_dcell(simu->save->dmpttr, simu->dmint[0]);
 	}
 	double totalptt[3]={0,0,0};
 	for(int idm=0; idm<ndm; idm++){
@@ -292,7 +291,6 @@ void filter_cl(SIM_T *simu){
     }
     //Uplink 
     dcellcp(&simu->uptreal, simu->uptint[0]);
-    //shift_inte(simt->napupt,simt->apupt,simu->uptint);
     if(simu->upterr){
 	//uplink tip/tilt mirror. use Integrator/Derivative control
 	//update command for next step.
@@ -329,13 +327,13 @@ void filter_ol(SIM_T *simu){
 void filter(SIM_T *simu){
     if(simu->parms->sim.closeloop){
 	if(simu->parms->save.dm){
-	    dcellwrite(simu->dmreal, "dmreal_%d/dmreal_%d.bin", simu->seed,simu->isim);
+	    cellarr_dcell(simu->save->dmreal, simu->dmreal);
 	}
 	filter_cl(simu);
     }else{
 	filter_ol(simu);
 	if(simu->parms->save.dm){
-	    dcellwrite(simu->dmreal, "dmreal_%d/dmreal_%d.bin", simu->seed,simu->isim);
+	    cellarr_dcell(simu->save->dmreal, simu->dmreal);
 	}
     }
 }

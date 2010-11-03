@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -20,7 +20,7 @@
 #define SKYC_GETSTARS_H
 #include "skyc.h"
 dcell *genstars(long nsky, double lat, double lon, double catscl, double fov, int nwvl, double *wvls,
-		struct_rand *rstat);
+		rand_t *rstat);
 
 void sortstars(dcell *stars);
 #endif

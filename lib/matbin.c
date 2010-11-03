@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -31,7 +31,9 @@
 #define Y(A) c##A
 #define M_T M_CMP
 #define MC_T MC_CMP
-#define M_SPT M_CSP
+#define M_SPT64 M_CSP64
+#define MC_SPT MC_CSP
+#define M_SPT32 M_CSP32
 #define MC_SPT MC_CSP
 #else
 #define T double
@@ -39,7 +41,8 @@
 #define Y(A) A
 #define M_T M_DBL
 #define MC_T MC_DBL
-#define M_SPT M_SP
+#define M_SPT64 M_SP64
+#define M_SPT32 M_SP32
 #define MC_SPT MC_SP
 #endif
 /**
@@ -164,10 +167,19 @@ X(cell)* X(cellread)(const char *format,...){
 }
 /**
    Function to write sparse matrix data into file pointed using a file
-   pointer. Generally used by library developer.
+   pointer. Generally used by library developer.  We do not convert data during
+   saving, but rather do the conversion during reading.
+
  */
 void Y(spwritedata)(file_t *fp, const X(sp) *sp){
-    uint32_t magic=M_SPT;
+    uint32_t magic;
+    if(sizeof(spint)==4)
+	magic=M_SPT32;
+    else if(sizeof(spint)==8)
+	magic=M_SPT64;
+    else
+	error("Invalid");
+    
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(sp){
 	uint64_t m,n,nzmax;
@@ -175,25 +187,8 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
 	n=sp->n;
 	nzmax=sp->p[n];//don't use sp->nzmax, which maybe larger than actual
 	zfwritelarr(fp, 3, &m, &n, &nzmax);
-	if(sizeof(*sp->i)!=sizeof(uint64_t)){
-	    //need to convert data
-	    warning("Converting data in spwritedata\n");
-	    uint64_t *p,*i;
-	    p=malloc(sizeof(uint64_t)*(n+1));
-	    i=malloc(sizeof(uint64_t)*(nzmax));
-	    for(unsigned long j=0; j<n+1; j++){
-		p[j]=sp->p[j];
-	    }
-	    for(unsigned long j=0; j<nzmax; j++){
-		i[j]=sp->i[j];
-	    }
-	    zfwrite(p ,sizeof(uint64_t),n+1,fp);
-	    zfwrite(i ,sizeof(uint64_t),nzmax,fp);
-	    free(p); free(i);
-	}else{
-	    zfwrite(sp->p ,sizeof(uint64_t),n+1,fp);
-	    zfwrite(sp->i ,sizeof(uint64_t),nzmax,fp);
-	}
+	zfwrite(sp->p, sizeof(spint), n+1, fp);
+	zfwrite(sp->i, sizeof(spint), nzmax, fp);
 	zfwrite(sp->x ,sizeof(T),nzmax,fp);  
     }else{
 	uint64_t zero=0;
@@ -207,34 +202,50 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
 X(sp) *Y(spreaddata)(file_t *fp){
     uint32_t magic;
     zfread(&magic, sizeof(uint32_t),1,fp);
-    if(magic!=M_SPT){
-	error("This is not a sparse matrix file\n");
+    uint32_t size;
+    if(magic==M_SPT64){
+	size=8;
+    }else if(magic==M_SPT32){
+	size=4;
+    }else{
+	error("This is not a valid sparse matrix file\n");
     }
     uint64_t m,n,nzmax;
     zfreadlarr(fp, 2, &m, &n);
     X(sp) *out;
     if(m==0 || n==0){
-	out=0;
+	out=NULL;
     }else{
-	uint64_t *p;
-	uint64_t *i;
 	zfread(&nzmax,sizeof(uint64_t),1,fp);
 	out=Y(spnew)(m,n,nzmax);
-	if(sizeof(*out->p)==sizeof(uint64_t)){
-	    p=(uint64_t*)out->p;
-	    i=(uint64_t*)out->i;
-	    zfread(p, sizeof(uint64_t),n+1, fp);
-	    zfread(i, sizeof(uint64_t),nzmax, fp);
-	}else{
-	    p=malloc(sizeof(uint64_t)*(n+1));
-	    i=malloc(sizeof(uint64_t)*(nzmax));
-	    zfread(p, sizeof(uint64_t),n+1, fp);
-	    zfread(i, sizeof(uint64_t),nzmax, fp);
+	if(sizeof(spint)==size){//data match.
+	    zfread(out->p, sizeof(spint), n+1, fp);
+	    zfread(out->i, sizeof(spint), nzmax, fp);
+	}else if(size==8){//convert uint64_t to uint32_t
+	    assert(sizeof(spint)==4);
+	    uint64_t *p=malloc(sizeof(uint64_t)*(n+1));
+	    uint64_t *i=malloc(sizeof(uint64_t)*nzmax);
+	    zfread(p, sizeof(uint64_t), n+1, fp);
+	    zfread(i, sizeof(uint64_t), nzmax, fp);
 	    for(unsigned long j=0; j<n+1; j++){
-		out->p[j]=p[j];
+		out->p[j]=(spint)p[j];
 	    }
 	    for(unsigned long j=0; j<nzmax; j++){
-		out->i[j]=i[j];
+		out->i[j]=(spint)i[j];
+	    }
+	    free(p);
+	    free(i);
+	}else if(size==4){//convert uint32_t to uint64_t
+	    assert(sizeof(spint)==8);
+	    uint32_t *p=malloc(sizeof(uint32_t)*(n+1));
+	    uint32_t *i=malloc(sizeof(uint32_t)*nzmax);
+	    zfread(p, sizeof(uint32_t), n+1, fp);
+	    zfread(i, sizeof(uint32_t), nzmax, fp);
+	    for(unsigned long j=0; j<n+1; j++){
+		out->p[j]=(spint)p[j];
+	    }
+	    for(unsigned long j=0; j<nzmax; j++){
+		out->i[j]=(spint)i[j];
 	    }
 	    free(p);
 	    free(i);

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -204,8 +204,8 @@ static dmat* gen_unwrap(long nx, long ny){
     //}
     dsp *Ht=spnew(nx*ny,nx*ny*2, nx*ny*2*2);//forward
     long count=0;
-    long *pp=Ht->p;
-    long *pi=Ht->i;
+    spint *pp=Ht->p;
+    spint *pi=Ht->i;
     double *px=Ht->x;
     long col=0;
     for(long iy=0; iy<ny; iy++){
@@ -432,7 +432,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     /*  
 	//test phase unwrap.
 	{
-	struct_rand rstat;
+	rand_t rstat;
 	seed_rand(&rstat,1);
 	double wt=1;
 	const int npsf=16;

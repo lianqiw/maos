@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -50,7 +50,7 @@ void X(celldropzero)(X(cell) *B, double thres);\
 double X(celldiff)(const X(cell) *A, const X(cell) *B);\
 int X(cellclip)(X(cell) *Ac, double min, double max);\
 void X(celltikcr)(X(cell) *A, double thres);\
-X(cell) *X(cellpinv)(const X(cell) *A, const X(cell) *wt, const Y(spcell) *Wsp);\
+X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const Y(spcell) *Wsp);\
 void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, double alpha);\
 void X(celladdI)(X(cell) *A, double a);\
 void X(cellsvd_pow)(X(cell) *A, double power);\

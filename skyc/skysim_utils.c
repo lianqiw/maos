@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -27,7 +27,7 @@
 /**
    add photon and read out noise.  pcaclib part of bkgrnd is calibrated out.
    set to 1 usually.  */
-static void addnoise(dmat *A, struct_rand* rstat, 
+static void addnoise(dmat *A, rand_t* rstat, 
 		     const double bkgrnd, const double pcalib, 
 		     const double rne){
     for(int ix=0; ix<A->nx*A->ny; ix++){
@@ -50,7 +50,7 @@ static void addnoise(dmat *A, struct_rand* rstat,
 void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 		double wvl,           /**<[in] the wavelength*/
 		const dmat *modm,     /**<[in] the NGS mode vector*/
-		const LOC_T *cloc,    /**<[in] the subaperture coarse sampled loc*/
+		const loc_t *cloc,    /**<[in] the subaperture coarse sampled loc*/
 		double fpc,           /**<[in] focus piston coupling.
 					 (mean(x^2+y^2) to eliminate piston term
 					 in focus)*/

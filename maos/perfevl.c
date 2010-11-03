@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -103,7 +103,7 @@ static void perfevl_ievl(SIM_T *simu){
 	tk[0]+=myclockd()-ck00; ck00=myclockd(); //Time:1.36s
 #endif
 	if(parms->save.evlopd){
-	    dwrite(iopdevl,"evlopd_%d/evlopd_OL_%d_evl%d.bin",simu->seed,isim,ievl);
+	    cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
 	}
 	if(parms->plot.run){
 	    drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1, 
@@ -257,12 +257,6 @@ static void perfevl_ievl(SIM_T *simu){
 		    prop_nongrid(recon->moao[imoao].aloc,dmevl[ievl][simu->moao_evl->nx-1]->p,
 				 aper->locs, NULL, iopdevl->p, -1, 0,0,1,0,0);
 		}
-		/*
-		toc("prop");tic;
-		spmulvec(iopdevl->p, recon->moao[imoao].HAS->p[0], 
-			 dmevl[ievl][simu->moao_evl->nx-1]->p, 1);
-		toc("spmul");
-		*/
 	    }
 	}
 	if(parms->plot.run){
@@ -271,7 +265,7 @@ static void perfevl_ievl(SIM_T *simu){
 		       "CL %d",ievl);
 	}
 	if(parms->save.evlopd){
-	    dwrite(iopdevl,"evlopd_%d/evlopd_CL_%d_evl%d.bin",simu->seed,isim,ievl);
+	    cellarr_dmat(simu->save->evlopdcl[ievl],iopdevl);
 	}
 	//Evaluate closed loop performance.
 	if(parms->tomo.split){//for split tomography

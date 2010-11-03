@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -22,6 +22,13 @@
 
 #include "path.h"
 #include "common.h"
+/**
+   The linked list to store path where we look for files.
+*/
+typedef struct PATH_T{
+    char *path;
+    struct PATH_T *next;
+}PATH_T;
 
 /**
    \file path.c
@@ -83,6 +90,9 @@ void freepath(void){
     }
     PATH=NULL;
 }
+/**
+   Free the path at exit.
+ */
 static __attribute__((destructor)) void deinit(){
     freepath();
 }

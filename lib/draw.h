@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -62,7 +62,7 @@ void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit,
 		    const char *format,...) CHECK_ARG(10);
 void plot_coord(char *fig, long npts, const double *ptsx, const double *ptsy, 
 		const long *style, const double *limit,
-		int ncir, const void *pcir, 
+		int ncir, double(*pcir)[4], 
 		const char *title, const char *xlabel, const char *ylabel,
 		const char *format,...) CHECK_ARG(12);
 void ddraw(char *fig, const dmat *A, 
@@ -78,16 +78,16 @@ void cdrawri(char *fig, const cmat *A,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char*format,...) CHECK_ARG(6);
 
-void drawmap(char *fig, const MAP_T *map, 
+void drawmap(char *fig, const map_t *map, 
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(6);
-void drawloc(char *fig, LOC_T *loc, 
+void drawloc(char *fig, loc_t *loc, 
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...) CHECK_ARG(6);
-void drawopd(char *fig, LOC_T *loc, const double *opd, 
+void drawopd(char *fig, loc_t *loc, const double *opd, 
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...) CHECK_ARG(7);
-void drawopdamp(char *fig, LOC_T *loc, const double *opd, const double *amp, 
+void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, 
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...) CHECK_ARG(8);
 

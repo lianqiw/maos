@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -362,6 +362,9 @@ typedef struct SIM_CFG_T{
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
 }SIM_CFG_T;
+/**
+   Parameters for Cn square estimation.
+ */
 typedef struct CN2EST_CFG_T{
     int *pair;       /**<If non empty, paris of WFS to use for cn2
 			estimation. Empty: disable cn2 estimation*/
@@ -385,6 +388,7 @@ typedef struct PLOT_CFG_T{
     int setup;       /**<Plot various information in setup process*/
     int atm;         /**<Plot the generated atmosphere*/
     int run;         /**<Plot information during simulation*/
+    int opdx;        /**<Plot turbulence projected onto xloc.*/
 }PLOT_CFG_T;
 /**
    contains input parameters for debugging.
@@ -395,11 +399,7 @@ typedef struct DBG_CFG_T{
     int noatm;       /**<disable atmosphere*/
     int clemp_all;   /**<output NGS mode error evaluation for each direction*/
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
-    int opdx;        /**<propagate turbulence to reconstructor grid xloc*/
     int atm;         /**<test special atmosphere*/
-    int gcovp;       /**<output cumulative gradient covariance average every gcovp step*/
-    int ngcov;       /**<number of pairs of gradient covariance to compute*/
-    int *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
     int fitonly;     /**<do DM fitting only, by replacing opdr with opdx. see above*/
     int keepshm;     /**<keep the atmospehre in the shared memory.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
@@ -426,9 +426,10 @@ typedef struct LOAD_CFG_T{
     char *xloc;      /**<load xloc for recon from*/
     char *ploc;      /**<load ploc for recon from*/
     char *L2;        /**<load laplacian from to do Cxx^-1 in tomo.*/
-    char *HX;        /**<load HX from.*/
+    char *HXF;       /**<load HXF from.*/
+    char *HXW;       /**<load HXW from.*/
     char *HA;        /**<load HA from.*/
-    char *G0;        /**<load G0 from.*/
+    char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
     int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin.gz*/
@@ -456,21 +457,32 @@ typedef struct SAVE_CFG_T{
     int dm;          /**<save computed DM actuator commands for each time step*/
     int evlopd;      /**<save science OPD for each time step*/
 
-    //for WFS
-    int wfsopdhi;    /**<save high order WFS OPD*/
-    int wfsopdlo;    /**<save low order WFS OPD*/
-    int intshi;      /**<save high orrder WFS integration*/
-    int intslo;      /**<save low orrder WFS integration*/
-    int gradhi;      /**<save WFS gradients for high order wfs*/
-    int gradlo;      /**<save WFS gradients for low order wfs*/
-    int gradgeomhi;  /**<save WFS geometric gradient during physical optics simulations.*/
-    int gradgeomlo;  /**<save WFS geometric gradient during physical optics simulations.*/
 
+    //for WFS. 1: both, 2: high order only, 3: lo only
+    int wfsopd;      /**<save WFS OPD:*/
+    int ints;        /**<save WFS subaperture image*/
+    int grad;        /**<save WFS gradients*/
+    int gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
+    
+    //The following are derived from above.
+    int wfsopdhi;    /**<save high order WFS OPD(derived)*/
+    int wfsopdlo;    /**<save low order WFS OPD(derived)*/
+    int intshi;      /**<save high orrder WFS integration(derived)*/
+    int intslo;      /**<save low orrder WFS integration(derived)*/
+    int gradhi;      /**<save WFS gradients for high order wfs (derived)*/
+    int gradlo;      /**<save WFS gradients for low order wfs (derived)*/
+    int gradgeomhi;  /**<save WFS geometric gradient during physical optics simulations.(derived)*/
+    int gradgeomlo;  /**<save WFS geometric gradient during physical optics simulations.(derived)*/
+
+    int gcovp;       /**<output cumulative gradient covariance average every gcovp step*/
+    int ngcov;       /**<number of pairs of gradient covariance to compute*/
+    int *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
     //The following are derived parameters for powfs from grad, ints, wfsopd
     int* powfs_opd;  /**<derived parameter to specify which powfs to save opd*/
     int* wfsints; /**<derived parameter to specify which powfs to save ints*/
     int* powfs_grad; /**<derived parameter to specify which powfs to save grad*/
     int* powfs_gradgeom;/**<derived parameter to specify which powfs to save geometric grad*/
+
 }SAVE_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.

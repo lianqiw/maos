@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -97,23 +97,17 @@ typedef unsigned int	mt_u32bit_t;
    Contains state of a random stream.
  */
 typedef struct
-    {
-    mt_u32bit_t		statevec[MT_STATE_SIZE];
-					/* Vector holding current state */
-    int			stateptr;	/* Next state entry to be used */
-    int			initialized;	/* NZ if state was initialized */
-    }
-			mt_state;
+{
+    mt_u32bit_t		statevec[MT_STATE_SIZE]; /**< Vector holding current state */
+    int			stateptr;	/**< Next state entry to be used */
+    int			initialized;	/**< NZ if state was initialized */
+}mt_state;
 #define MT_TEMPERING_MASK_B 0x9d2c5680
 #define MT_TEMPERING_MASK_C 0xefc60000
-#define MT_TEMPERING_SHIFT_U(y) \
-			(y >> 11)
-#define MT_TEMPERING_SHIFT_S(y) \
-			(y << 7)
-#define MT_TEMPERING_SHIFT_T(y) \
-			(y << 15)
-#define MT_TEMPERING_SHIFT_L(y) \
-			(y >> 18)
+#define MT_TEMPERING_SHIFT_U(y) (y >> 11)
+#define MT_TEMPERING_SHIFT_S(y) (y << 7)
+#define MT_TEMPERING_SHIFT_T(y) (y << 15)
+#define MT_TEMPERING_SHIFT_L(y) (y >> 18)
 
 /*
  * Macros to do the tempering.  MT_PRE_TEMPER does all but the last step;
@@ -150,8 +144,7 @@ static double mt_64_to_double=1./18446744073709551616.;
 MT_INLINE unsigned long mts_lrand(//32 bit val
     register mt_state*	state)		/* State for the PRNG */
     {
-    register unsigned long
-			random_value;	/* Pseudorandom value generated */
+    register unsigned long random_value;	/* Pseudorandom value generated */
 
     if (state->stateptr <= 0)
 	mts_refresh(state);
@@ -163,8 +156,7 @@ MT_INLINE unsigned long mts_lrand(//32 bit val
 MT_INLINE double mts_drand( //32 bit precision double. [0,1)
     register mt_state*	state)		/* State for the PRNG */
     {
-    register unsigned long
-			random_value;	/* Pseudorandom value generated */
+    register unsigned long random_value;	/* Pseudorandom value generated */
 
     if (state->stateptr <= 0)
 	mts_refresh(state);
@@ -180,10 +172,8 @@ MT_INLINE double mts_ldrand( //64 bit precision double
 #if MT_MACHINE_BITS == 64
     unsigned long long	final_value;	/* Final (integer) value */
 #endif /* MT_MACHINE_BITS */
-    register unsigned long
-			random_value_1;	/* 1st pseudorandom value generated */
-    register unsigned long
-			random_value_2;	/* 2nd pseudorandom value generated */
+    register unsigned long random_value_1;	/* 1st pseudorandom value generated */
+    register unsigned long random_value_2;	/* 2nd pseudorandom value generated */
 
     /*
      * For maximum speed, we'll handle the two overflow cases
@@ -220,25 +210,15 @@ MT_INLINE double mts_ldrand( //64 bit precision double
 #endif /* MT_MACHINE_BITS */
     }
 
-void mts_seed32(
-    mt_state*		state,		/* State vector to initialize */
-    unsigned long	seed);
-
-#define struct_rand mt_state 
+void mts_seed32(mt_state* state, unsigned long	seed);
+typedef mt_state  rand_t;
 #define seed_rand mts_seed32
-#define lrand mts_lrand //rand integer
-#define randu mts_drand //rand double [0,1)
-#define lrandu mts_ldrand//rand double with 64 bit precision within [0,1)
-double randn(struct_rand *rstat);/*normal distribution with 1*/
-long   randp(struct_rand *rstat, double xm);
-struct_rand *new_rand(int seed);
-void writerand(struct_rand *rstat,const char *format,...) CHECK_ARG(2);
-void readrand(struct_rand *rstat, const char *format,...) CHECK_ARG(2);
-struct RNORREXP_T{
-    unsigned long jz, jsr;
-    long hz;
-    unsigned long iz, kn[128], ke[256];
-    float wn[128],fn[128], we[256],fe[256];
-};
-typedef struct RNORREXP_T struct_randn;
+#define lrand     mts_lrand //rand integer
+#define randu     mts_drand //rand double [0,1)
+#define lrandu    mts_ldrand//rand double with 64 bit precision within [0,1)
+double randn(rand_t *rstat);/*normal distribution with 1*/
+long   randp(rand_t *rstat, double xm);
+rand_t *new_rand(int seed);
+void writerand(rand_t *rstat,const char *format,...) CHECK_ARG(2);
+void readrand(rand_t *rstat, const char *format,...) CHECK_ARG(2);
 #endif

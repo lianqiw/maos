@@ -1,7 +1,7 @@
 #include "../lib/aos.h"
 /*
 static void test_w1(){
-    LOC_T *loc=mksqloc2(200,200,1./64.);
+    loc_t *loc=mksqloc2(200,200,1./64.);
     double *amp=calloc(loc->nloc, sizeof(double));
     loccircle(amp,loc,0,0, 1,1);
     drawopd("test_loc",loc,amp,"loc");
@@ -16,7 +16,7 @@ static void test_w1(){
     locwrite(loc,"loc");
 }
 static void test_wploc(){
-    LOC_T *loc=locread("ploc.bin.gz");
+    loc_t *loc=locread("ploc.bin.gz");
     double *amp=NULL; long nx,ny;
     readdbl(&amp,&nx,&ny,"pamp.bin.gz");
     double ampmax=maxdbl(amp,nx);
@@ -36,7 +36,7 @@ static void test_wploc(){
     spwrite(W0,"pW0");
 }
 static void test_wcir(){
-    LOC_T *loc=mksqloc2(100,100,1./4.);
+    loc_t *loc=mksqloc2(100,100,1./4.);
     dsp *W0=NULL;
     dmat *W1=NULL;
     mkw_circular(loc,0,0,10,&W0,&W1);
@@ -72,7 +72,7 @@ static void test_int_rand(){
     double cr=0.3;
     double cr2=cr*cr;
     int area=0;
-    struct_rand stat;
+    rand_t stat;
     seed_rand(&stat,1);
     for(int i=0; i<n; i++){
 	//double x=randu(&stat);
@@ -91,17 +91,17 @@ static void test_int_rand(){
 static void test_sqlocrot(void){
     int nn=64;
     double dx=1./64.;
-    LOC_T *loc=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,0);
+    loc_t *loc=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,0);
     locwrite(loc,"loc_0deg.bin.gz");
-    LOC_T *loc2=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,M_PI/10);
+    loc_t *loc2=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,M_PI/10);
     locwrite(loc2,"loc_18deg.bin.gz");
     }*/
 /*
 void test_loc_reduce_sp(void){
     int nloc;
-    LOC_T **xloc=locarrread(&nloc,"xloc.bin.gz");
+    loc_t **xloc=locarrread(&nloc,"xloc.bin.gz");
     spcell *G0=spcellread("G0.bin.gz");
-    //LOC_T *saloc=locread("powfs0_saloc.bin.gz");
+    //loc_t *saloc=locread("powfs0_saloc.bin.gz");
     loc_reduce_sp(xloc[0],G0->p[0],2,1);
     locarrwrite(xloc,nloc,"xloc2");
     spcellwrite(G0,"G02.bin.gz");
@@ -118,7 +118,7 @@ void test_loc_reduce_sp(void){
 
 static void test_loc_reduce_spcell(void){
     int nloc;
-    LOC_T **xloc=locarrread(&nloc,"xloc.bin.gz");
+    loc_t **xloc=locarrread(&nloc,"xloc.bin.gz");
     spcell *G0=spcellread("G0.bin.gz");
     spcell *G0t=spcelltrans(G0);
     loc_reduce_spcell(xloc[0],G0t,1,1);
@@ -127,7 +127,7 @@ static void test_loc_reduce_spcell(void){
     locarrwrite(xloc,nloc,"xloc5");
     }*/
 static void test_zernike(){
-    LOC_T *loc=locread("loc_circle.bin");
+    loc_t *loc=locread("loc_circle.bin");
     dmat *mod=loc_zernike(loc,1,10);
     locwrite(loc,"loc");
     dwrite(mod,"mod");

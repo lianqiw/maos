@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -75,7 +75,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    double ck_0=myclockd();
 	    if(!parms->sim.frozenflow){
 		//re-seed the atmosphere in case atm is loaded from shm
-		seed_rand(&simu->atm_rand, lrand(&simu->init));
+		seed_rand(simu->atm_rand, lrand(simu->init));
 		disable_atm_shm=1;
 		genscreen(simu);
 		dcellfree(simu->opdr); 

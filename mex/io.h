@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <mex.h>
 #include <matrix.h>
+#include <stdint.h>
 typedef double __complex__ dcomplex;
 #define warning(A...) {							\
 	fprintf(stderr,"\033[01;33m%-15s:%-3d\t", __FILE__, __LINE__);	\
@@ -18,8 +19,10 @@ typedef struct file_t{
     int isgzip;
     int eof;
 }file_t;
-#define M_CSP 0x6400
-#define M_SP  0x6401
+#define M_CSP64 0x6400
+#define M_SP64  0x6401
+#define M_CSP32  0x6406
+#define M_SP32   0x6407
 #define M_DBL 0x6402
 #define M_INT64 0x6403
 #define M_CMP 0x6404
@@ -33,11 +36,13 @@ typedef struct file_t{
 #define MCC_ANY  0x6421
 #define MCC_DBL 0x6422
 #define MCC_CMP 0x6424
+
+#define MAT_SP 0xFF01
+#define MAT_CSP 0xFF02
 file_t* openfile(const char *fn, char *mod);
 void closefile(file_t *fp);
 void writefile(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 void writefile_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);
 void readfile(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 int test_eof(file_t *fp);
-
 #endif

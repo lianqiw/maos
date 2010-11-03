@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -22,9 +22,9 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
-void mkw_amp(LOC_T *loc,double *amp,dsp **W0,dmat **W1);
-void mkw_circular(LOC_T *loc,double cx, double cy,
+void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1);
+void mkw_circular(loc_t *loc,double cx, double cy,
 		   double r,dsp **W0,dmat **W1);
-void mkw_annular(LOC_T *loc, double cx, double cy, double cri, double cro, 
+void mkw_annular(loc_t *loc, double cx, double cy, double cri, double cro, 
 		 dsp **W0, dmat **W1);
 #endif

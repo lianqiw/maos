@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -41,7 +41,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	const double pixoffy=parms->skyc.pixoffy[ipowfs];
 	const double pxo=-(pixpsa/2-0.5+pixoffx)*pixtheta;
 	const double pyo=-(pixpsa/2-0.5+pixoffy)*pixtheta;
-	LOC_T *loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pxo, pyo);
+	loc_t *loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pxo, pyo);
 	powfs[ipowfs].dtf=calloc(parms->maos.nwvl, sizeof(DTF_S));
 	for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 	    const double wvl=parms->maos.wvl[iwvl];
@@ -75,7 +75,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    ccp(&powfs[ipowfs].dtf[iwvl].nominal, nominal);
 	    cfree(nominal);
 
-	    LOC_T *loc_psf=mksqloc(ncomp, ncomp, dtheta, -ncomp2*dtheta, -ncomp2*dtheta);
+	    loc_t *loc_psf=mksqloc(ncomp, ncomp, dtheta, -ncomp2*dtheta, -ncomp2*dtheta);
 	    powfs[ipowfs].dtf[iwvl].si=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 	    locfree(loc_psf);
 	    if(parms->skyc.dbg){
@@ -105,7 +105,7 @@ static void read_powfs_locamp(POWFS_S *powfs, const PARMS_S *parms){
 	powfs[ipowfs].amp=dread("%s",parms->maos.fnwfsamp[ipowfs]);
 	powfs[ipowfs].saloc=locread("%s",parms->maos.fnsaloc[ipowfs]);
 	powfs[ipowfs].saloc->dx=parms->maos.dxsa[ipowfs];
-	const LOC_T *loc=powfs[ipowfs].loc;
+	const loc_t *loc=powfs[ipowfs].loc;
 	const dmat *amp=powfs[ipowfs].amp;
 	const long nsa=parms->maos.nsa[ipowfs];
 	const long ptspsa=loc->nloc/nsa;
@@ -135,7 +135,7 @@ function.  */
 static void setup_powfs_coarseloc(POWFS_S *powfs, const PARMS_S *parms){
     for(long ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	const long nsa=parms->maos.nsa[ipowfs];
-	powfs[ipowfs].cloc=calloc(nsa, sizeof(LOC_T*));
+	powfs[ipowfs].cloc=calloc(nsa, sizeof(loc_t*));
 	powfs[ipowfs].fpc=calloc(nsa,sizeof(double));
 
 	const long ptspsa=parms->maos.ncomp[ipowfs]/2;

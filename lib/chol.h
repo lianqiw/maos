@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,9 +18,6 @@
 
 #ifndef AOS_CHOL_H
 #define AOS_CHOL_H
-#ifndef DLONG
-#define DLONG
-#endif
 #include "dsp.h"
 #include "dmat.h"
 #include "cmat.h"

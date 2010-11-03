@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -135,6 +135,9 @@ typedef struct SKYC_S{
     dmat *resfocus;  /**<residual focus error at each sampling frequency.*/
     char *stars;     /**<file name of not NULL to load stars from*/
 }SKYC_S;
+/**
+   Parameters for skycoverage.
+ */
 typedef struct PARMS_S{
     MAOS_S maos;     /**<parameters exported by maos*/
     SKYC_S skyc;     /**<parameters supplied by user*/

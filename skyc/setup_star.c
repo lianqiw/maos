@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -89,10 +89,10 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
     return star;
 }
 
+/**
+   Read in pistat information, used to compute matched filter, and SANEA.
+*/
 static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int seed){
-    /**
-       Read in pistat information, used to compute matched filter, and SANEA.
-    */
     const PARMS_S *parms=simu->parms;
     const int npowfs=parms->maos.npowfs;
     const int nwvl=parms->maos.nwvl;
@@ -184,10 +184,10 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
     }
 }
 
+/**
+   Compute Signal level
+*/
 static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
-    /**
-       Compute Signal level
-     */
     const long npowfs=parms->maos.npowfs;
     const long nwvl=parms->maos.nwvl;
     PDMAT(parms->skyc.rnefs,rnefs);
@@ -230,12 +230,11 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 	}
     }
 }
+/**
+   Compute an additional gradient measurement noise that is caused by gradients
+   in ideal NGS mode corrected PSFs. This is to be treated as an additional
+   measurement error.  */
 static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
-    /**
-      Compute an additional gradient measurement noise that is caused by
-      gradients in ideal NGS mode corrected PSFs. This is to be treated as an
-      additional measurement error.
-     */
     const long npowfs=parms->maos.npowfs;
     const int phystart=parms->skyc.phystart;
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -282,6 +281,9 @@ static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
 	}
     }
 }
+/**
+   Setup matched filter for stars.
+ */
 static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int nstar){
     const long nwvl=parms->maos.nwvl;
     const long npowfs=parms->maos.npowfs;
@@ -349,8 +351,8 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
     }//for ipowfs
 }
 /**
-      Compute Modal to gradient operator using average gradients. Similar to Z
-tilt since the mode is low order
+   Compute Modal to gradient operator using average gradients. Similar to Z tilt
+since the mode is low order
  */
 static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int nstar){
     const long npowfs=parms->maos.npowfs;
@@ -387,8 +389,9 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 	}
     }
 }
+/**
+   Read in asterism WFS wvf and ztilt.*/
 long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed){
-    //Read in asterism WFS wvf and ztilt.
     const double ngsgrid=parms->maos.ngsgrid;
     const int nwvl=parms->maos.nwvl;
     long nstep;

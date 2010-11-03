@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -20,8 +20,7 @@
 #include "utils.h"
 #include "skysim.h"
 /**
-   \file skyc.c This file contains main routine that does the job management and
-   calls setup_parms and then skysim to start the simulation.  */
+   \file skyc.c This file contains main routine about skycoverage.*/
 char *dirstart;
 /**
    The main(). It parses the command line, setup the parms, ask the scheduler

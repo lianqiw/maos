@@ -38,7 +38,7 @@ static void test_spmul(){
     dshow(w);
     dsp *spw=spnewdiag(w->nx,w->p,1);
     spdisp(spw);
-    struct_rand stat;
+    rand_t stat;
     seed_rand(&stat,1);
     dsp *A=spnewrandu(10,10,10,0.2,&stat);
     dsp *Aw=NULL;
@@ -72,7 +72,7 @@ static void test_spmul(){
     TIC;
     spcell *Ac=spcellread("RLM.bin");
     dsp *A=Ac->p[0];
-    struct_rand rstat;
+    rand_t rstat;
     seed_rand(&rstat,1);
     dmat *x=dnew(A->n,1);
     drandn(x,1,&rstat);

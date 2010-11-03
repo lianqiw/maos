@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -36,12 +36,12 @@ typedef struct DTF_S{
 typedef struct POWFS_S{
     int     ipowfs;    /**<Which ipowfs this is*/
     DTF_S  *dtf;       /**<array of dtf for each wvl*/
-    LOC_T  *loc;       /**<explicit pts in a regular grid. */
+    loc_t  *loc;       /**<explicit pts in a regular grid. */
     dmat   *amp;       /**<amplitude map defined on loc*/
     double *locxamp;   /**<dot(loc->locx,amp);*/
     double *locyamp;   /**<dot(loc->locy,amp);*/
-    LOC_T **cloc;      /**<coarse loc;*/
-    LOC_T  *saloc;     /**<subaperture location*/
+    loc_t **cloc;      /**<coarse loc;*/
+    loc_t  *saloc;     /**<subaperture location*/
     double *fpc;       /**<focus-piston-coupling.*/
     dmat   *dettf;     /**<matrix to demote TTF to TT*/
 }POWFS_S;
@@ -133,7 +133,7 @@ typedef struct ASTER_S{
     dmat *res_ngs;     /**<residual ngs mode error after servo. */
     int mdtrat;        /**<dtrat of minimum rms in OL estimation.*/
     double mresol;     /**<miminum rms on OL restimation.*/
-    struct_rand rand;  /**<random stream*/
+    rand_t rand;  /**<random stream*/
     int idtratmin;     /**<minimum index of dtrat allowed*/
     int idtratmax;     /**<maximum index of dtrat allowed*/
 }ASTER_S;
@@ -152,7 +152,7 @@ typedef struct SIM_S{
     int seed_maos;     /**<Current MAOS seed to read in PSF*/
     int seed_skyc;     /**<Current skyc seed to generate stars and pixel noise*/
     int nstep;         /**<Number of steps*/
-    struct_rand rand;  /**<Random stream*/
+    rand_t rand;  /**<Random stream*/
     dmat *res;         /**<residual error. 5*nsky. 
 			  - Total
 			  - NGS mode

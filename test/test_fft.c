@@ -7,7 +7,7 @@
 int main(){
     int nlen=200;
     cmat *data[nlen];
-    struct_rand stat;
+    rand_t stat;
     seed_rand(&stat,1);
     int i;
     for(i=2; i<nlen; i++){
@@ -47,7 +47,7 @@ static int test_fft_speed_small(){
 	is[ii]=ii+1;
     }
     ccell *ac=ccellnew(nis,1);
-    struct_rand stat;
+    rand_t stat;
     seed_rand(&stat,1);
     for(int ii=0; ii<nis; ii++){
 	ac->p[ii]=cnew(is[ii],is[ii]);
@@ -75,7 +75,7 @@ static void test_fft_speed(){
 	is[ii]=(ii+1)*2;
     }
     ccell *ac=ccellnew(nis,1);
-    struct_rand stat;
+    rand_t stat;
     seed_rand(&stat,1);
     TIC;
     for(int ii=0; ii<nis; ii++){
@@ -113,7 +113,7 @@ static void test_fft_special(){
     is[0]=3824;
     is[1]=4096;
     ccell *ac=ccellnew(nis,1);
-    struct_rand rstat;
+    rand_t rstat;
     seed_rand(&rstat,1);
     TIC;
     for(int ii=0; ii<nis; ii++){

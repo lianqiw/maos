@@ -40,41 +40,132 @@ static mxArray *readdata(file_t *fp){
 	    }
 	}
 	break;
-    case M_SP:/*sparse*/
+    case M_SP64:
+    case M_SP32:
 	{
 	    mwIndex m,n,nzmax;
-	    readfile(&m,sizeof(mwIndex),1,fp);
-	    readfile(&n,sizeof(mwIndex),1,fp);
-	    if(m!=0 && n!=0){
-		readfile(&nzmax,sizeof(mwIndex),1,fp);
-	    }else{
-		nzmax=0;
+	    size_t size;
+	    if(magic==M_SP32){
+		size=4;
+	    }else if(magic==M_SP64){
+		size=8;
 	    }
+	    uint64_t m2,n2,nzmax2;
+	    readfile(&m2,sizeof(uint64_t),1,fp);
+	    readfile(&n2,sizeof(uint64_t),1,fp);
+	    if(m!=0 && n!=0){
+		readfile(&nzmax2,sizeof(uint64_t),1,fp);
+	    }else{
+		nzmax2=0;
+	    }
+	    m=m2;
+	    n=n2;
+	    nzmax=nzmax2;
 	    if(fp->eof) return NULL;
 	    out=mxCreateSparse(m,n,nzmax,mxREAL);
 	    if(m!=0 && n!=0){
-		readfile(mxGetJc(out), sizeof(mwIndex),n+1,fp);
-		readfile(mxGetIr(out), sizeof(mwIndex),nzmax, fp);
+		if(sizeof(mwIndex)==size){
+		    readfile(mxGetJc(out), sizeof(mwIndex),n+1,fp);
+		    readfile(mxGetIr(out), sizeof(mwIndex),nzmax, fp);
+		}else{
+		    long i;
+		    mwIndex *Jc0=mxGetJc(out);
+		    mwIndex *Ir0=mxGetIr(out);
+		    void *Jc=malloc(size*(n+1));
+		    void *Ir=malloc(size*nzmax);
+		    readfile(Jc, size, n+1, fp);
+		    readfile(Ir, size, nzmax, fp);
+		    if(size==4){
+			uint32_t* Jc2=Jc;
+			uint32_t* Ir2=Ir;
+			for(i=0; i<n+1; i++){
+			    Jc0[i]=Jc2[i];
+			}
+			for(i=0; i<nzmax; i++){
+			    Ir0[i]=Ir2[i];
+			}
+			free(Jc);
+			free(Ir);
+		    }else if(size==8){
+			uint64_t* Jc2=Jc;
+			uint64_t* Ir2=Ir;
+			for(i=0; i<n+1; i++){
+			    Jc0[i]=Jc2[i];
+			}
+			for(i=0; i<nzmax; i++){
+			    Ir0[i]=Ir2[i];
+			}
+			free(Jc);
+			free(Ir);
+		    }else{
+			mexErrMsgTxt("Invalid sparse format\n");
+		    }
+		}
 		readfile(mxGetPr(out), sizeof(double), nzmax, fp);
 	    }
 	}
 	break;
-    case M_CSP:/*complex sparse*/
+    case M_CSP64:
+    case M_CSP32:/*complex sparse*/
 	{
 	    mwIndex m,n,nzmax;
-	    long i;
-	    readfile(&m,sizeof(mwIndex),1,fp);
-	    readfile(&n,sizeof(mwIndex),1,fp);
-	    if(m!=0 && n!=0){
-		readfile(&nzmax,sizeof(mwIndex),1,fp);
-	    }else{
-		nzmax=0;
+	    size_t size;
+	    if(magic==M_SP32){
+		size=4;
+	    }else if(magic==M_SP64){
+		size=8;
 	    }
+	    uint64_t m2,n2,nzmax2;
+	    readfile(&m2,sizeof(uint64_t),1,fp);
+	    readfile(&n2,sizeof(uint64_t),1,fp);
+	    if(m!=0 && n!=0){
+		readfile(&nzmax2,sizeof(uint64_t),1,fp);
+	    }else{
+		nzmax2=0;
+	    }
+	    m=m2;
+	    n=n2;
+	    nzmax=nzmax2;
 	    if(fp->eof) return NULL;
 	    out=mxCreateSparse(m,n,nzmax,mxCOMPLEX);
 	    if(m!=0 && n!=0){
-		readfile(mxGetJc(out), sizeof(mwIndex),n+1,fp);
-		readfile(mxGetIr(out), sizeof(mwIndex),nzmax, fp);
+		long i;
+		if(sizeof(mwIndex)==size){
+		    readfile(mxGetJc(out), sizeof(mwIndex),n+1,fp);
+		    readfile(mxGetIr(out), sizeof(mwIndex),nzmax, fp);
+		}else{
+		    mwIndex *Jc0=mxGetJc(out);
+		    mwIndex *Ir0=mxGetIr(out);
+		    void *Jc=malloc(size*(n+1));
+		    void *Ir=malloc(size*nzmax);
+		    readfile(Jc, size, n+1, fp);
+		    readfile(Ir, size, nzmax, fp);
+		    if(size==4){
+			uint32_t* Jc2=Jc;
+			uint32_t* Ir2=Ir;
+			for(i=0; i<n+1; i++){
+			    Jc0[i]=Jc2[i];
+			}
+			for(i=0; i<nzmax; i++){
+			    Ir0[i]=Ir2[i];
+			}
+			free(Jc);
+			free(Ir);
+		    }else if(size==8){
+			uint64_t* Jc2=Jc;
+			uint64_t* Ir2=Ir;
+			for(i=0; i<n+1; i++){
+			    Jc0[i]=Jc2[i];
+			}
+			for(i=0; i<nzmax; i++){
+			    Ir0[i]=Ir2[i];
+			}
+			free(Jc);
+			free(Ir);
+		    }else{
+			mexErrMsgTxt("Invalid sparse format\n");
+		    }
+		}
 		dcomplex *tmp=malloc(sizeof(dcomplex)*nzmax);
 		readfile(tmp, sizeof(dcomplex), nzmax, fp);
 		double *Pr=mxGetPr(out);

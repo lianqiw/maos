@@ -30,7 +30,7 @@ dsp * spnew(long nx, long ny, long nzmax){
     sp->shmkey=0;
     return sp;
 }
-void loc_free_map(LOC_T *loc){
+void loc_free_map(loc_t *loc){
     if(loc->map && loc->map->loc==loc){
 	free(loc->map->p);
 	loc->map->p=NULL;
@@ -39,7 +39,7 @@ void loc_free_map(LOC_T *loc){
 	loc->map=NULL;
     }
 }
-void loc_create_map(LOC_T *loc){
+void loc_create_map(loc_t *loc){
 #define NPAD 0 /*We don't need pad. This makes wrapping possible*/
     if(loc->map){
 	if(loc->map->loc==loc)/*already have a map that is valid.*/
@@ -47,7 +47,7 @@ void loc_create_map(LOC_T *loc){
 	else
 	    loc->map=NULL;
     }
-    loc->map = calloc(1,sizeof(LOCMAP_T));
+    loc->map = calloc(1,sizeof(locmap_t));
     loc->map->loc = loc;
     double xmin,xmax,ymin,ymax;
     maxmin(loc->locx, loc->nloc, &xmax, &xmin);
@@ -149,7 +149,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     };
     int do_partial;
     int saorc;
-    LOC_T xloc,ploc,saloc;
+    loc_t xloc,ploc,saloc;
     double *amp;
     double scale, *displace;
     if(nrhs!=P_TOT){

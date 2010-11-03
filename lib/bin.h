@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -25,8 +25,10 @@
 #include "common.h"
 #define IO_TIMMING 0
 //The definitions here should not be changed once set.
-#define M_SP     0x6401  //sparse
-#define M_CSP    0x6400  //sparse complex
+#define M_CSP64  0x6400  //sparse complex
+#define M_SP64   0x6401  //sparse
+#define M_CSP32  0x6406  //sparse complex 32 bit
+#define M_SP32   0x6407  //sparse 32 bit
 #define M_DBL    0x6402  //double
 #define M_INT64  0x6403  //int 64 array
 #define M_CMP    0x6404  //complex array
@@ -48,13 +50,13 @@
 typedef void* voidp;
 char* procfn(const char *fn, const char *mod,const int defaultgzip);
 voidp gzopen(const char *path, const char *mod);
-long gztell(voidp gzfile);
-int gzclose(voidp gzfile);
-int gzwrite(voidp gzfile, const void* buf, unsigned len);
-long gztell(voidp gzfile);
-int gzread(voidp gzfile, voidp buf, unsigned len);
-int gzseek(voidp file, long offset, int whence);
-int gzflush(voidp gzfile, int flush);
+long  gztell(voidp gzfile);
+int   gzclose(voidp gzfile);
+int   gzwrite(voidp gzfile, const void* buf, unsigned len);
+long  gztell(voidp gzfile);
+int   gzread(voidp gzfile, voidp buf, unsigned len);
+int   gzseek(voidp file, long offset, int whence);
+int   gzflush(voidp gzfile, int flush);
 #endif
 /**
    contains information about opened files.
@@ -92,7 +94,6 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 */
 void zfwritelarr(file_t* fp,int count, ...);
 void zfreadlarr(file_t* fp,int count, ...);
-
 
 void do_write(const void *fpn, const int isfile, const size_t size, const uint32_t magic, 
 	      const void *p, const uint64_t nx, const uint64_t ny);

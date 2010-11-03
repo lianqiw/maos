@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,7 +18,7 @@
 #ifndef SKYC_SIM_H
 #define SKYC_SIM_H
 void ngsmod2wvf(cmat *wvf, double wvl, const dmat *modm,
-		const LOC_T *cloc, double fpc, double thetax, double thetay, 
+		const loc_t *cloc, double fpc, double thetax, double thetay, 
 		const PARMS_S *parms);
 dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms);
 dmat* skysim_phy(dmat **mres,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs, const PARMS_S *parms, 

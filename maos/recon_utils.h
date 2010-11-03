@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -29,5 +29,5 @@ void applyW(dcell *xin, const dsp *W0,
 dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, 
 		const dmat *W1, const dmat *wt);
 
-spcell *act_slaving(LOC_T **aloc, spcell *HA, dmat *W1, dcell *NW);
+spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW);
 #endif

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -26,7 +26,7 @@ X(sp) *Y(spref)(X(sp) *A) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spdup)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 void Y(spmove)(X(sp) *A, X(sp) *res);\
 X(sp) *Y(spnew2)(const X(sp) *A) CHECK_UNUSED_RESULT;\
-X(sp)* Y(spnewrandu)(int nx, int ny, const T mean, double fill,struct_rand *rstat) CHECK_UNUSED_RESULT;\
+X(sp)* Y(spnewrandu)(int nx, int ny, const T mean, double fill,rand_t *rstat) CHECK_UNUSED_RESULT;\
 void Y(spsetnzmax)(X(sp) *sp, long nzmax);\
 void Y(spfree_do)(X(sp) *sp);\
 void Y(sparrfree)(X(sp) **sparr, int n);\
@@ -39,7 +39,6 @@ X(mat) *Y(spdiag)(const X(sp) *A) CHECK_UNUSED_RESULT;\
 void Y(spmuldiag)(X(sp) *restrict A, const T* w, T alpha);\
 void Y(spmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha, int nthread);	\
 void Y(spmulvec)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha);\
-void Y(spmulvec_mkl)(T *restrict y, const X(sp) *A, const T * restrict x, T alpha);			\
 void Y(spmulcreal)(T *restrict y, const X(sp) *A, const dcomplex * restrict x, T alpha);\
 void Y(sptmulvec)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha);\
 void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A, const T * restrict x,const T alpha, int nthread); \
@@ -51,6 +50,7 @@ void Y(spcellmulmat)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T al
 void Y(sptcellmulmat)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha);\
 void Y(spcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha, const int nthread);\
 void Y(sptcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha, const int nthread);\
+void Y(spcellmulmat_each)(X(cell) **xout, Y(spcell) *A, X(cell) *xin, T alpha, int trans, int nthread); \
 void Y(spfull)(X(mat) **out0, const X(sp) *A, const T f);\
 void Y(sptfull)(X(mat) **out0, const X(sp) *A, const T f);\
 void Y(spcellfull)(X(cell) **out0, const Y(spcell) *A, const T f);\

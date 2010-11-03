@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -42,6 +42,9 @@ static inline uint16_t myhtons(uint16_t port){
     return ans;
 }
 #endif
+/**
+   Status about each process. Timing, wavefront error, etc.
+ */
 typedef struct STATUS_T{
     //Individual timing
     double wfs;
@@ -67,23 +70,22 @@ typedef struct STATUS_T{
     time_t timstart;
     time_t timend;
 }STATUS_T;
-/*
-  Struct to hold information of queued jobs waited to start.
- */
+/**
+   Struct to hold information of queued jobs waited to start.
+*/
 typedef struct QUEUE_T{
     int pid;
     int sock;
     int nthread;
 }QUEUE_T;
-/*
-  Struct to hold information of running jobs.
+/**
+   Struct to hold information of running jobs.
 */
 typedef struct RUN_T{
     struct RUN_T *next;
     STATUS_T status;
     double started;//started execution.
     double launchtime;
-    //int hid;
     int pid;
     int sock;
     int nthread;
@@ -91,7 +93,7 @@ typedef struct RUN_T{
     char *path;
 }RUN_T;
 
-/*
+/**
   Struct to hold available monitors waiting for information.
 */
 typedef struct MONITOR_T{

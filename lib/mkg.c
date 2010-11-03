@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -130,10 +130,10 @@ typedef struct{
    Returns the transpose of a average gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc with ploc as the intermediate pupil plane.
  */
-dsp * mkgt(LOC_T* xloc,     /**<the grid on which OPDs are defined*/
-	   LOC_T *ploc,     /**<the grid on the aperture plan*/
+dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
+	   loc_t *ploc,     /**<the grid on the aperture plan*/
 	   double *amp,     /**<the amplitude on ploc*/
-	   LOC_T *saloc,    /**<Coordinate of the subapertures*/
+	   loc_t *saloc,    /**<Coordinate of the subapertures*/
 	   int saorc,       /**<0: saloc is the center of the subapertures. 1: saloc is the origin of the subapertures.*/
 	   double scale,    /**<cone effect*/
 	   double *displace,/**<displacement due to beam angle (2 vector). similar as accphi routines*/
@@ -277,8 +277,8 @@ dsp * mkgt(LOC_T* xloc,     /**<the grid on which OPDs are defined*/
     }
     dsp *GS0t[2];
     long nzmax[2];
-    long *restrict pp[2];
-    long *restrict pi[2];
+    spint *restrict pp[2];
+    spint *restrict pi[2];
     double  *restrict px[2];
     long count[2];
     for(iw=0; iw<2; iw++){
@@ -497,7 +497,7 @@ dsp * mkgt(LOC_T* xloc,     /**<the grid on which OPDs are defined*/
 /**
    Returns the transpose of mkgt()
  */
-dsp *mkg(LOC_T* xloc, LOC_T *ploc, double *amp, LOC_T *saloc, 
+dsp *mkg(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
 	 int saorc, double scale, double *displace, int do_partial){
     dsp *GS0T=mkgt(xloc, ploc, amp, saloc, 
 		   saorc, scale, displace, do_partial);

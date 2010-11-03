@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -25,7 +25,7 @@ dmat* servo_typeII_optim(double *ress, double *resn, const dmat *psdin,
 double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt);
 void servo_typeII_filter(SERVO_S *st, dmat *merr, double dtngs, const dmat *gain);
 void servo_typeI_filter(SERVO_S *st, dmat *merr, double gain);
-dmat *psd2temp(dmat *psdin, double dt, double N, struct_rand* rstat);
+dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat);
 dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtngs, int dtrat);
 void servo_free(SERVO_S *st);
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt);

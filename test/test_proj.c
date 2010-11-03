@@ -12,7 +12,7 @@ static void test_grid_proj(){
     double bx=tmp->p[0];
     double by=tmp->p[1];
     dfree(tmp);
-    RECTMAP_T *mapin=calloc(1, sizeof(RECTMAP_T));
+    rectmap_t *mapin=calloc(1, sizeof(rectmap_t));
     mapin->p=junk->p;
     mapin->ox=X->p[0];
     mapin->oy=Y->p[0];
@@ -37,8 +37,8 @@ static void test_grid_proj(){
     free(junk);//don't dfree
     dfree(X); dfree(Y);
     //direction of guide star
-    //LOC_T *loc2=mksqloc2(2000,2000,1./64.);
-    LOC_T* loc2=locread("aper_locs.bin.gz");
+    //loc_t *loc2=mksqloc2(2000,2000,1./64.);
+    loc_t* loc2=locread("aper_locs.bin.gz");
     long nx,ny;
     double *amp=NULL;
     readdbl(&amp,&nx,&ny,"aper_amp.bin.gz");

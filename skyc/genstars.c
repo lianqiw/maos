@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -28,7 +28,9 @@
    a poisson distribution with mean equal to the average density multiplied with
    area.
  */
-
+/**
+   The sort function for stars. Sort stars according total flux.
+ */
 static int sortfun(const double *p1, const double *p2){
     double tot1=Z_J*pow(10,-0.4*p1[2])+Z_H*pow(10,-0.4*p1[3]);//tot flux
     double tot2=Z_J*pow(10,-0.4*p2[2])+Z_H*pow(10,-0.4*p2[3]);
@@ -46,7 +48,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 		double fov,        /**<diameter of the patrol field of view in arcsec.*/
 		int nwvl,          /**<number of wavelength*/
 		double *wvls,      /**<wavelength vector*/
-		struct_rand *rstat /**<random stream*/
+		rand_t *rstat /**<random stream*/
 ){
     char temp[80];
     double cat_fov;//catalogue fov

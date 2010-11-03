@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -717,8 +717,8 @@ void X(celltikcr)(X(cell) *A, double thres){
 
 /**
    compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
-   sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$; */
-X(cell) *X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
+   sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
+X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
 		     const X(cell) *wt,   /**<[in] Use a dense matrix for weighting*/
 		     const Y(spcell) *Wsp /**<[in] Use a sparse matrix for weighting*/
 		     ){

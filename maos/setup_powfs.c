@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -33,7 +33,7 @@ TIC;
 /**
    \file maos/setup_powfs.c
 
-   Setting up WFS geometry like the subaperture location, subaperture grid
+   Setting up WFS geometry. like the subaperture location, subaperture grid
    points, physical optics detection transfer function, LGS elongation transfer
    function, etc.
 
@@ -106,12 +106,12 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     //r2max: Maximum distance^2 from the center to keep a subaperture
     r2max -= 2.*(0.5+offset)*(0.5+offset);
     //the lower left *grid* coordinate of the subaperture
-    powfs[ipowfs].pts =calloc(1, sizeof(PTS_T));
+    powfs[ipowfs].pts =calloc(1, sizeof(pts_t));
     powfs[ipowfs].pts->origx =malloc(sizeof(double)*order*order);
     powfs[ipowfs].pts->origy =malloc(sizeof(double)*order*order);
     powfs[ipowfs].pts->area  =malloc(sizeof(double)*order*order);
     //The coordinate of the subaperture (lower left coordinate)
-    powfs[ipowfs].saloc=calloc(1,sizeof(LOC_T));
+    powfs[ipowfs].saloc=calloc(1,sizeof(loc_t));
     powfs[ipowfs].saloc->locx =malloc(sizeof(double)*order*order);
     powfs[ipowfs].saloc->locy =malloc(sizeof(double)*order*order);
     powfs[ipowfs].pts->dsa   =dxsa;
@@ -265,7 +265,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}else{
 	    error("%s is in wrong format\n",parms->powfs[ipowfs].misreg);
 	}
-	powfs[ipowfs].locm=calloc(powfs[ipowfs].nlocm, sizeof(LOC_T*));
+	powfs[ipowfs].locm=calloc(powfs[ipowfs].nlocm, sizeof(loc_t*));
 	powfs[ipowfs].ampm=calloc(powfs[ipowfs].nlocm, sizeof(double*));
 	PDCELL(misreg,pmisreg);
 	for(int ilocm=0; ilocm<powfs[ipowfs].nlocm; ilocm++){
@@ -292,7 +292,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
     }
     if(parms->save.setup){
-	locwrite((LOC_T*)powfs[ipowfs].pts,
+	locwrite((loc_t*)powfs[ipowfs].pts,
 		 "%s/powfs%d_pts.bin.gz",dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].saloc,
 		 "%s/powfs%d_saloc.bin.gz",dirsetup,ipowfs); 
@@ -343,9 +343,9 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].imcc=dcellinvspd_each(powfs[ipowfs].mcc);
 	double displace[2]={0,0};
 	//ZS0 is a large matrix. 
-	//only use for generating GA, G0 and testing
+	//only use for generating GA, GX and testing
 	powfs[ipowfs].ZS0=mkz(powfs[ipowfs].loc,powfs[ipowfs].amp,
-			      (LOC_T*)powfs[ipowfs].pts, 1,1,displace);
+			      (loc_t*)powfs[ipowfs].pts, 1,1,displace);
     }
     if(parms->save.setup){
 	dcellwrite(powfs[ipowfs].imcc,"%s/powfs%d_imcc.bin.gz", dirsetup,ipowfs);
@@ -531,7 +531,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(fn_ncpa){//Always make nwfs NCPA's
 	char *fn=find_file(fn_ncpa);
 	int nncpa_in;
-	MAP_T **ncpa=sqmaparrread(&nncpa_in, "%s",fn);
+	map_t **ncpa=sqmaparrread(&nncpa_in, "%s",fn);
 	free(fn);
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	if(nncpa_in != 1 && nncpa_in != nwfs){
@@ -558,7 +558,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    if(!powfs[ipowfs].ncpa->p[iwfs]){
 		powfs[ipowfs].ncpa->p[iwfs]=dnew(powfs[ipowfs].npts,1);
 	    }
-	    LOC_T *locwfsin, *locwfs;
+	    loc_t *locwfsin, *locwfs;
 	    if(powfs[ipowfs].locm){
 		locwfsin=powfs[ipowfs].locm[ilocm];
 	    }else{
@@ -749,7 +749,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	cfft2plan(nominal,-1);
 	cfft2plan(nominal,1);
 	PCMAT(nominal,pn);
-	LOC_T *loc_psf=mksqloc(ncompx,ncompy,dtheta, -ncompx2*dtheta, -ncompy2*dtheta);
+	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta, -ncompx2*dtheta, -ncompy2*dtheta);
 	double theta=0;
 	double ct=cos(theta);
 	double st=sin(theta);
@@ -783,7 +783,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		
 		ccp(&nominals[illt][isa], nominal);
 		//nominals[illt][isa]=cffttreat(nominal);
-		LOC_T *loc_ccd=mksqlocrot(pixpsax,pixpsay,
+		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay,
 					  pixtheta,pxo,pyo,theta);
 		sis[illt][isa]=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 		locfree(loc_ccd);
@@ -863,8 +863,8 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	if(dxnew > dxin * 2){
 	    info("Smoothing sodium profile\n");
 	    const long nxnew=ceil((nain->p[nxin-1]-x0in)/dxnew);
-	    LOC_T *loc_in=mk1dloc_vec(nain->p, nxin);
-	    LOC_T *loc_out=mk1dloc(x0in, dxnew, nxnew);
+	    loc_t *loc_in=mk1dloc_vec(nain->p, nxin);
+	    loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
 	    dsp *ht=mkhb(loc_out, loc_in, NULL, 0, 0, 1,0,0);
 	    powfs[ipowfs].sodium=dnew(nxnew, nain->ny);
 	    memcpy(powfs[ipowfs].sodium->p, loc_out->locx, sizeof(double)*nxnew);
@@ -1192,7 +1192,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     powfs[ipowfs].lotf=calloc(1, sizeof(LOTF_T));
-    PTS_T *lpts=powfs[ipowfs].lotf->pts=calloc(1, sizeof(PTS_T));
+    pts_t *lpts=powfs[ipowfs].lotf->pts=calloc(1, sizeof(pts_t));
     lpts->nsa=1;
     const double dx = powfs[ipowfs].pts->dx;
     double lltd=parms->powfs[ipowfs].llt->d;
@@ -1251,11 +1251,12 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	=dcellinvspd_each(powfs[ipowfs].lotf->mcc);
 
     if(parms->save.setup){
+	locwrite(powfs[ipowfs].lotf->loc, "%s/powfs%d_llt_loc",dirsetup,ipowfs);
 	writedbl(powfs[ipowfs].lotf->amp,powfs[ipowfs].pts->nx,
-		 powfs[ipowfs].pts->nx, "%s/powfs%d_lotfamp.bin.gz", dirsetup,ipowfs);
+		 powfs[ipowfs].pts->nx, "%s/powfs%d_llt_amp", dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].srot, "%s/powfs%d_srot",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].srsa, "%s/powfs%d_srsa",dirsetup,ipowfs);
-	dcellwrite(powfs[ipowfs].lotf->imcc, "%s/powfs%d_lotf_imcc",dirsetup,ipowfs);
+	dcellwrite(powfs[ipowfs].lotf->imcc, "%s/powfs%d_llt_imcc",dirsetup,ipowfs);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    if(powfs[ipowfs].etfprep[iwvl].p1){
 		ccellwrite(powfs[ipowfs].etfprep[iwvl].p1, 

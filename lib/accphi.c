@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -19,34 +19,21 @@
 #include <math.h>
 #include "accphi.h"
 /*
-   2010-01-02
-   use a=(int)b instead of a=(int)floor(b).
-   call to floor is slow and unnecessary.
-   This only works if b is positive.
-*/
+   2010-01-02: use a=(int)b instead of a=(int)floor(b).  call to floor is slow
+   and unnecessary.  This only works if b is positive.  */
 /**
-   \file accphi.c
-   Contains ray tracing routines optimized for different input/output formats
+   \file accphi.c Contains ray tracing routines optimized for different
+   input/output formats. Notice that the OPDs are accumulated.
  */
 #undef  EPS
-#define EPS 1.e-12
+#define EPS 1.e-12 /**<A threashold*/
 /*
-  prop a rectangular grid onto grids defined by pts which has special
-  configurations.*/
-/*
-  for a point in loc out its mapping to loc in is x*scale+displace. first scale
-  then displace where displace is the beam center displacement.  scale is
-  scaling factor=1-hs/h
-*/
-/*The myfma() function computes x * y + z. without rounding, may be slower than x*y+z*/
-
+  The myfma() function computes x * y + z. without rounding, may be slower than x*y+z*/
 /*
   Carefull: when design any algorithm, make sure you consider all possible cases
-  and handle them properly. In paper. It is not a good idea to leave the
-  potential bugs in the code to debug latter.
-*/
+  and handle them properly. */
 
-#define ONLY_FULL 0 //set to 1 to be compatible with other props.
+#define ONLY_FULL 0 /**<set to 1 to be compatible with other props.*/
 /**
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
@@ -159,12 +146,16 @@ void prop(thread_t *data){
    Propagate OPD defines on grid mapin to grid mapout.  alpha is the scaling of
    data. displacex, displacy is the displacement of the center of the beam on
    the input grid. scale is the cone effect.*/
-void prop_grid_grid(const MAP_T *mapin, MAP_T *mapout,
-		    double alpha,
-		    double displacex, double displacey, 
-		    double scale, int wrap){
+void prop_grid_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
+		    map_t *mapout,      /**<[in,out] OPD defind on a square grid*/
+		    double alpha,       /**<[in] scaling of OPD*/
+		    double displacex,   /**<[in] displacement of the ray */
+		    double displacey,   /**<[in] displacement of the ray*/
+		    double scale,       /**<[in] scaling of the beam diameter (cone)*/
+		    int wrap            /**<[in] wrap input OPD or not*/
+		    ){
     //A convenient function. Not optimized
-    PTS_T pts;
+    pts_t pts;
     pts.nsa=1;
     pts.origx=&mapout->ox;
     pts.origy=&mapout->oy;
@@ -177,16 +168,22 @@ void prop_grid_grid(const MAP_T *mapin, MAP_T *mapout,
    Propagate OPD defines on grid mapin to subapertures.  alpha is the scaling of
    data. displacex, displacy is the displacement of the center of the beam on
    the input grid.  scale is the cone effect.*/
-void prop_grid_pts(const MAP_T *mapin, const PTS_T *pts,
-		   double *phiout0, double alpha,
-		   double displacex, double displacey, 
-		   double scale, int wrap, 
-		   long sastart, long saend, int optim){
+void prop_grid_pts(const map_t *mapin, /**<[in] OPD defind on a square grid*/
+		   const pts_t *pts,   /**<[in] defining each subaperture*/
+		   double *phiout0,    /**<[in,out] OPDs for each subaperture*/
+		   double alpha,       /**<[in] scaling of OPD*/
+		   double displacex,   /**<[in] displacement of the beam */
+		   double displacey,   /**<[in] displacement of the beam */
+		   double scale,       /**<[in] scaling of the beam diameter (cone)*/
+		   int wrap,           /**<[in] wrap input OPD or not*/
+		   long sastart,       /**<[in] The starting subaperture to trace ray*/
+		   long saend,         /**<[in] The last (exclusive) subaperture to trace ray*/
+		   int optim           /**<[in] Use the optimized procedure (for testing)*/
+		   ){
     /*
-       2010-01-02: Improved by saving x interpolations for each
-       subaperture during non-matched case. original function
-       renamed to prop_grid_pts_old time cut by almost 3 fold for
-       each LGS WFS.  0.40s->0.16s
+       2010-01-02: Improved by saving x interpolations for each subaperture
+       during non-matched case. original function renamed to prop_grid_pts_old
+       time cut by almost 3 fold for each LGS WFS.  0.40s->0.16s
      */
     int isa, ipix,jpix;
     int mx,my;
@@ -482,12 +479,18 @@ void prop_grid_pts(const MAP_T *mapin, const PTS_T *pts,
    point of each column.  alpha is the scaling of data. displacex, displacy is
    the displacement of the center of the beam on the input grid.  scale is the
    cone effect.*/
-void prop_grid_stat(const MAP_T *mapin, const LOCSTAT_T *ostat, 
-		    double *phiout0, double alpha,
-		    double displacex, double displacey,
-		    double scale, int wrap,
-		    long colstart, long colend, int optim){
-    
+void prop_grid_stat(const map_t *mapin, /**<[in] OPD defind on a square grid*/
+		    const locstat_t *ostat, /**<[in] information about each clumn of a output loc grid*/
+		    double *phiout0,    /**<[in,out] OPD defined on ostat*/
+		    double alpha,       /**<[in] scaling of OPD*/
+		    double displacex,   /**<[in] displacement of the ray */
+		    double displacey,   /**<[in] displacement of the ray */
+		    double scale,       /**<[in] scaling of the beam diameter (cone)*/
+		    int wrap,           /**<[in] wrap input OPD or not*/
+		    long colstart,      /**<[in] First column to do ray tracing*/
+		    long colend,        /**<[in] Last column (exclusive) to do ray tracing*/
+		    int optim           /**<[in] Use the optimized procedure (for testing)*/
+		    ){
     double *phiout;
     double dplocx, dplocy;
     int nplocx, nplocy;
@@ -751,11 +754,17 @@ void prop_grid_stat(const MAP_T *mapin, const LOCSTAT_T *ostat,
    Propagate OPD defines on grid mapin to coordinate locout.  alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
    beam on the input grid.  scale is the cone effect.*/
-void prop_grid(const MAP_T *mapin, const LOC_T *locout, 
-	       double *phiout, double alpha,
-	       double displacex, double displacey,
-	       double scale,  int wrap,
-	       long start, long end){
+void prop_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
+	       const loc_t *locout,/**<[in] coordinate of irregular destination grid*/
+	       double *phiout,     /**<[in,out] OPD defined on locout*/
+	       double alpha,       /**<[in] scaling of OPD*/
+	       double displacex,   /**<[in] displacement of the ray */
+	       double displacey,   /**<[in] displacement of the ray */
+	       double scale,       /**<[in] wrap input OPD or not*/
+	       int wrap,           /**<[in] wrap input OPD or not*/
+	       long start,         /**<[in] First point to do*/
+	       long end            /**<[in] Last point to do*/
+	       ){
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
     int iloc;
@@ -815,14 +824,21 @@ void prop_grid(const MAP_T *mapin, const LOC_T *locout,
 }
 /**
    Propagate OPD defines on coordinate locin to coordinate locout.  This is the
-   slowest. alpha is the scaling of data. displacex, displacy is the
+   <em>slowest</em>. alpha is the scaling of data. displacex, displacy is the
    displacement of the center of the beam on the input grid.  scale is the cone
-   effect.*/
-void prop_nongrid(LOC_T *locin, const double* phiin, 
-		  const LOC_T *locout, const double *ampout, 
-		  double* phiout, double alpha,
-		  double displacex, double displacey,
-		  double scale, long start, long end){
+   effect. See prop_grid() for definition of other parameters.*/
+void prop_nongrid(loc_t *locin,        /**<[in] Coordinate of iregular source grid*/
+		  const double* phiin, /**<[in] Input OPD defined in locin*/
+		  const loc_t *locout, /**<[in] Coordinate of irregular output grid*/
+		  const double *ampout,/**<[in] Amplitude defined on locout. skip point of amp is 0*/
+		  double* phiout,      /**<[in,out] Output OPD defined in locout*/
+		  double alpha,        /**<[in] scaling of OPD*/
+		  double displacex,    /**<[in] displacement of the ray */
+		  double displacey,    /**<[in] displacement of the ray */
+		  double scale,        /**<[in] wrap input OPD or not*/
+		  long start,          /**<[in] First point to do*/
+		  long end             /**<[in] Last point to do*/
+		  ){
     loc_create_map_npad(locin,1);
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
@@ -897,11 +913,18 @@ void prop_nongrid(LOC_T *locin, const double* phiin,
 /**
    Propagate OPD defines on coordinate locin to grid mapout. alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
-   beam on the input grid.  scale is the cone effect.*/
-void prop_nongrid_map(LOC_T *locin, const double *phiin,
-		      MAP_T *mapout, double alpha,
-		      double displacex, double displacey,
-		      double scale, long start, long end, long step){
+   beam on the input grid.  scale is the cone effect. */
+void prop_nongrid_map(loc_t *locin,     /**<[in] Coordinate of iregular source grid*/
+		      const double *phiin,/**<[in] Input OPD defined in locin*/
+		      map_t *mapout,    /**<[in,out] Output OPD defined in a square grid*/
+		      double alpha,     /**<[in] scaling of OPD*/
+		      double displacex, /**<[in] displacement of the ray */
+		      double displacey, /**<[in] displacement of the ray */
+		      double scale,     /**<[in] wrap input OPD or not*/
+		      long start,       /**<[in] First point to do*/
+		      long end,         /**<[in] Last point to do*/
+		      long step         /**<[in] stride, do tracing every step points.*/
+		      ){
     //propagate to a square map.
     loc_create_map_npad(locin,2);//will only do once and save in locin.
 
@@ -977,12 +1000,20 @@ void prop_nongrid_map(LOC_T *locin, const double *phiin,
 /**
    Propagate OPD defines on coordinate locin to subapertures pts. alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
-   beam on the input grid.  scale is the cone effect.*/
-void prop_nongrid_pts(LOC_T *locin, const double *phiin,
-		      const PTS_T *pts, const double *ampout, 
-		      double *phiout, double alpha,
-		      double displacex, double displacey,
-		      double scale, long start, long end, long step){
+   beam on the input grid.  scale is the cone effect. See prop_groid().*/
+void prop_nongrid_pts(loc_t *locin,         /**<[in] Coordinate of iregular source grid*/
+		      const double *phiin,  /**<[in] Input OPD defined in locin*/
+		      const pts_t *pts,     /**<[in] defining each subaperture*/
+		      const double *ampout, /**<[in] Amplitude of subaps. skip point of amp is 0*/
+		      double *phiout,       /**<[in,out] OPD for subaps*/
+		      double alpha,         /**<[in] scaling of OPD*/
+		      double displacex,     /**<[in] displacement of the ray */
+		      double displacey,     /**<[in] displacement of the ray */
+		      double scale,         /**<[in] wrap input OPD or not*/
+		      long start,           /**<[in] First point to do*/
+		      long end,             /**<[in] Last point to do*/
+		      long step             /**<[in] stride, do tracing every step points.*/
+		      ){
     //propagate to a square map.
     loc_create_map_npad(locin,1);//will only do once and save in locin.
 
@@ -1065,15 +1096,16 @@ void prop_nongrid_pts(LOC_T *locin, const double *phiin,
     const double c1=(4.*cubic_iac-2.5)*cubicn;			\
     const double c2=(1.5-3.*cubic_iac)*cubicn;			\
     const double c3=(2.*cubic_iac-0.5)*cubicn;			\
-    const double c4=(0.5-cubic_iac)*cubicn
+    const double c4=(0.5-cubic_iac)*cubicn /**<For cubic interpolation.*/
 /**
-   like prop_nongrid but with cubic influence functions.
-*/
-void prop_nongrid_cubic(LOC_T *locin, const double* phiin, 
-			const LOC_T *locout, const double *ampout,
+   like prop_nongrid() but with cubic influence functions. cubic_iac is the
+   inter-actuator coupling.*/
+void prop_nongrid_cubic(loc_t *locin, const double* phiin, 
+			const loc_t *locout, const double *ampout,
 			double* phiout, double alpha,
 			double displacex, double displacey,
-			double scale,double cubic_iac, 
+			double scale,
+			double cubic_iac,
 			long start, long end){
     loc_create_map_npad(locin,2);//padding to avoid test boundary
     double dplocx, dplocy;
@@ -1133,10 +1165,10 @@ void prop_nongrid_cubic(LOC_T *locin, const double* phiin,
     }
 }
 /**
-   like prop_nongrid_pts but with cubic influence functions.
-*/
-void prop_nongrid_pts_cubic(LOC_T *locin, const double* phiin, 
-			    const PTS_T *pts, const double *ampout, 
+   like prop_nongrid_pts() but with cubic influence functions. cubic_iac is the
+inter-actuator-coupling.  */
+void prop_nongrid_pts_cubic(loc_t *locin, const double* phiin, 
+			    const pts_t *pts, const double *ampout, 
 			    double* phiout, double alpha,
 			    double displacex, double displacey,
 			    double scale,double cubic_iac, 
@@ -1208,10 +1240,10 @@ void prop_nongrid_pts_cubic(LOC_T *locin, const double* phiin,
     }
 }
 /**
-   like prop_nongrid_map but with cubic influence functions.
-*/
-void prop_nongrid_map_cubic(LOC_T *locin, const double* phiin, 
-			    MAP_T* mapout, double alpha,
+   like prop_nongrid_map() but with cubic influence functions. cubic_iac is the
+inter-actuator-coupling. */
+void prop_nongrid_map_cubic(loc_t *locin, const double* phiin, 
+			    map_t* mapout, double alpha,
 			    double displacex, double displacey,
 			    double scale,double cubic_iac,
 			    long start, long end, long step){
@@ -1280,13 +1312,18 @@ void prop_nongrid_map_cubic(LOC_T *locin, const double* phiin,
 }
 
 /**
-  the following routine is used to do down sampling by doing *reverse* ray tracing.
-  locin is coarse sampling, locout is fine sampling. phiin is the unknown
-*/
-void prop_nongrid_reverse(LOC_T *locin,double* phiin, 
-			  const LOC_T *locout,const double *ampout,
-			  const double* phiout, double alpha,
-			  double displacex, double displacey,
+  the following routine is used to do down sampling by doing *reverse* ray
+  tracing.  locin is coarse sampling, locout is fine sampling. phiin is the
+  destination OPD. The weightings are obtained by interpolating from locin to
+  locout, but the OPD are reversed computed */
+void prop_nongrid_reverse(loc_t *locin,       
+			  double* phiin,      
+			  const loc_t *locout,
+			  const double *ampout,
+			  const double* phiout,
+			  double alpha,
+			  double displacex,
+			  double displacey,
 			  double scale){
     if(locin->dx<locout->dx) {
 	error("This routine is designed for down sampling.\n");

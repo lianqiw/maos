@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -19,8 +19,8 @@
 #ifndef AOS_PROJ_H
 #define AOS_PROJ_H
 
-void proj_rect_grid(RECTMAP_T *mapin, double thetax, double thetay,
-		    const LOC_T *locout,const double ratiox, const double ratioy,
+void proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
+		    const loc_t *locout,const double ratiox, const double ratioy,
 		    const double *ampout, double* phiout, 
 		    double sc, double hs, double ht,
 		    double betax, double betay);

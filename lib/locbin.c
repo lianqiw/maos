@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -19,7 +19,7 @@
 #include "locbin.h"
 #include "matbin.h"
 #include "cell.h"
-static LOC_T *locreaddata(file_t *fp){
+static loc_t *locreaddata(file_t *fp){
     uint32_t magic;
     zfread(&magic, sizeof(uint32_t), 1, fp);
     if(magic!=0x6402){
@@ -28,14 +28,14 @@ static LOC_T *locreaddata(file_t *fp){
     uint64_t nx,ny;
     zfread(&nx, sizeof(uint64_t), 1, fp);
     zfread(&ny, sizeof(uint64_t), 1, fp);
-    LOC_T *out;
+    loc_t *out;
     if(nx==0 || ny==0){
 	out=NULL;
     }else{
 	if(ny!=2){
 	    error("This is not a LOC file\n");
 	}
-	out=calloc(1, sizeof(LOC_T));
+	out=calloc(1, sizeof(loc_t));
 	out->nloc=nx;
 	out->locx=malloc(sizeof(double)*nx);
 	zfread(out->locx, sizeof(double), nx, fp);
@@ -51,7 +51,7 @@ static LOC_T *locreaddata(file_t *fp){
     }
     return out;
 }
-static void locwritedata(file_t *fp, const LOC_T *loc){
+static void locwritedata(file_t *fp, const loc_t *loc){
     uint32_t magic=M_DBL;
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(loc){
@@ -67,14 +67,14 @@ static void locwritedata(file_t *fp, const LOC_T *loc){
 	zfwrite(&nx, sizeof(uint64_t),1,fp);
     }
 }
-void locwrite(const LOC_T *loc, const char *format,...){
+void locwrite(const loc_t *loc, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
     locwritedata(fp, loc);
     zfclose(fp);
 }
 
-void locarrwrite(LOC_T ** loc, int nloc, const char *format,...){
+void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
     uint32_t magic=MC_DBL;
@@ -88,14 +88,14 @@ void locarrwrite(LOC_T ** loc, int nloc, const char *format,...){
     }
     zfclose(fp);
 }
-LOC_T *locread(const char *format,...){
+loc_t *locread(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn, "rb");
-    LOC_T *loc=locreaddata(fp);
+    loc_t *loc=locreaddata(fp);
     zfclose(fp);
     return loc;
 }
-LOC_T ** locarrread(int *nloc, const char*format,...){
+loc_t ** locarrread(int *nloc, const char*format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     uint32_t magic;
@@ -107,14 +107,14 @@ LOC_T ** locarrread(int *nloc, const char*format,...){
     zfread(&nx, sizeof(uint64_t), 1, fp);
     zfread(&ny, sizeof(uint64_t), 1, fp);
     *nloc=nx*ny;
-    LOC_T **locarr=calloc(nx*ny, sizeof(LOC_T*));
+    loc_t **locarr=calloc(nx*ny, sizeof(loc_t*));
     for(long ix=0; ix<nx*ny; ix++){
 	locarr[ix]=locreaddata(fp);
     }
     zfclose(fp);
     return locarr;
 }
-static void sqmapwritedata(file_t *fp, const MAP_T *map){
+static void sqmapwritedata(file_t *fp, const map_t *map){
     uint32_t magic=M_DBL;
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(map){
@@ -130,9 +130,9 @@ static void sqmapwritedata(file_t *fp, const MAP_T *map){
     }
 }
 
-MAP_T *sqmapread(const char *format,...){
+map_t *sqmapread(const char *format,...){
     format2fn;
-    MAP_T *sqmap=calloc(1, sizeof(MAP_T));
+    map_t *sqmap=calloc(1, sizeof(map_t));
     dcell *tmp=dcellread("%s",fn); 
     /*
       File should contain two cells. The first cell contains the information. 
@@ -161,9 +161,9 @@ MAP_T *sqmapread(const char *format,...){
     return sqmap;
 }
 
-RECTMAP_T *rectmapread(const char *format,...){
+rectmap_t *rectmapread(const char *format,...){
     format2fn;
-    RECTMAP_T *rectmap=calloc(1, sizeof(MAP_T));
+    rectmap_t *rectmap=calloc(1, sizeof(map_t));
     dcell *tmp=dcellread("%s",fn); 
     rectmap->dx=tmp->p[0]->p[0];
     rectmap->dy=tmp->p[0]->p[1];
@@ -189,13 +189,13 @@ RECTMAP_T *rectmapread(const char *format,...){
     return rectmap;
 }
 
-void sqmapwrite(const MAP_T *map, const char *format,...){
+void sqmapwrite(const map_t *map, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
     sqmapwritedata(fp, map);
     zfclose(fp);
 }
-void sqmaparrwrite(MAP_T ** map, int nmap, 
+void sqmaparrwrite(map_t ** map, int nmap, 
 		   const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
@@ -218,18 +218,18 @@ void sqmaparrwrite(MAP_T ** map, int nmap,
     dfree(info);
     zfclose(fp);
 }
-MAP_T **sqmaparrread(int*nlayer, const char *format,...){
+map_t **sqmaparrread(int*nlayer, const char *format,...){
     format2fn;
     dcell *X=dcellread("%s",fn);
-    MAP_T **screens;
+    map_t **screens;
     if(X->ny==1 && (X->nx!=2 || X->p[0]->nx*X->p[0]->ny!=5) ){
 	warning("Deprecated format\n");
 	*nlayer=X->nx;
-	screens=calloc(X->nx,sizeof(MAP_T*));
+	screens=calloc(X->nx,sizeof(map_t*));
         double dx=1./64.;//assume this is 1/64
 	warning("dx is assumed to be %g\n",dx);
 	for(int ilayer=0; ilayer<X->nx; ilayer++){
-	    screens[ilayer]=calloc(1, sizeof(MAP_T));
+	    screens[ilayer]=calloc(1, sizeof(map_t));
 	    screens[ilayer]->nx=X->p[ilayer]->nx;
 	    screens[ilayer]->ny=X->p[ilayer]->ny;
 	    screens[ilayer]->p=X->p[ilayer]->p;
@@ -240,10 +240,10 @@ MAP_T **sqmaparrread(int*nlayer, const char *format,...){
 	}
     }else if(X->nx==2){//New format. file contains 2*n
 	*nlayer=X->ny;
-    	screens=calloc(X->ny, sizeof(MAP_T*));
+    	screens=calloc(X->ny, sizeof(map_t*));
 	PDCELL(X,pX);
 	for(int ilayer=0; ilayer<X->ny; ilayer++){
-	    screens[ilayer]=calloc(1, sizeof(MAP_T));
+	    screens[ilayer]=calloc(1, sizeof(map_t));
 	    screens[ilayer]->nx=pX[ilayer][1]->nx;
 	    screens[ilayer]->ny=pX[ilayer][1]->ny;
 	    screens[ilayer]->p =pX[ilayer][1]->p;

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -21,7 +21,13 @@
 #include "dsp.h"
 #include "matbin.h"
 #include "chol.h"
-
+#if defined(DLONG)
+#define MOD(A) cholmod_l_##A
+#define ITYPE CHOLMOD_LONG
+#else
+#define MOD(A) cholmod_##A
+#define ITYPE CHOLMOD_INT
+#endif
 struct spchol{
     cholmod_factor *L;
     cholmod_common *c;
@@ -29,6 +35,10 @@ struct spchol{
 /**
 \file chol.c
 Wraps the CHOLESKY Library to provide a simple interface.*/
+
+/**
+   convert out dsp spase type to cholmod_sparse type.
+ */
 static cholmod_sparse *sp2chol(dsp *A){
     cholmod_sparse *B=calloc(1, sizeof(cholmod_sparse));
     B->nrow=A->m;
@@ -38,7 +48,7 @@ static cholmod_sparse *sp2chol(dsp *A){
     B->i=A->i;
     B->x=A->x;
     B->stype=1;//assume data is symmetric. upper triangular part is used.
-    B->itype=CHOLMOD_LONG;
+    B->itype=ITYPE;
     B->xtype=CHOLMOD_REAL;
     B->dtype=CHOLMOD_DOUBLE;
     B->sorted=0;
@@ -46,6 +56,9 @@ static cholmod_sparse *sp2chol(dsp *A){
     B->nz=NULL;
     return B;
 }
+/**
+   Convert our dmat type to cholmod_dense type.
+ */
 static cholmod_dense* d2chol(const dmat *A){
     cholmod_dense* B=calloc(1, sizeof(cholmod_dense));
     B->nrow=A->nx;
@@ -62,45 +75,41 @@ static cholmod_dense* d2chol(const dmat *A){
    Convert spchol to sparse matrix.
    keep=1: A is kept intact, otherwise destroyed. The matrix is in lower left side.
 
-   This routine works only if the factor is using
-   simplicity factor. not supernodal. so, in
-   chol_factorize, we have set c.final_super=0, so that
-   the final result is always in simplicity factor.
-*/
+   This routine works only if the factor is using simplicity factor. not
+   supernodal. so, in chol_factorize, we have set c.final_super=0, so that the
+   final result is always in simplicity factor.  */
 static dsp* chol_sp(spchol *A, int keep){
     if(!A) return NULL;
 
     cholmod_factor *L;
     if(keep){
-	L=cholmod_l_copy_factor(A->L, A->c);
+	L=MOD(copy_factor)(A->L, A->c);
     }else{
 	L=A->L;
     }
-    cholmod_sparse *B=cholmod_l_factor_to_sparse(L, A->c);
+    cholmod_sparse *B=MOD(factor_to_sparse)(L, A->c);
     dsp *out=spnew(B->nrow, B->ncol, 0);
-    //out->m=B->nrow;
-    //out->n=B->ncol;
     out->p=B->p;
     out->i=B->i;
     out->x=B->x;
     out->nzmax=B->nzmax;
     free(B);
-    cholmod_l_free_factor(&L, A->c);
+    MOD(free_factor)(&L, A->c);
     if(!keep){
-	cholmod_l_finish(A->c);
+	MOD(finish)(A->c);
 	free(A);
     }
     return out;
 }
 /**
-   Factorize a sparse array into LL'
+   Factorize a sparse array into LL'.
 */
 spchol* chol_factorize(dsp *A_in){
     if(!A_in) return NULL;
     TIC;tic;
     spchol *out=calloc(1, sizeof(spchol));
     out->c=calloc(1, sizeof(cholmod_common));
-    cholmod_l_start(out->c);
+    MOD(start)(out->c);
     cholmod_sparse *A=sp2chol(A_in);
     out->c->status=CHOLMOD_OK;
     out->c->final_super=0;//we want a simple result
@@ -114,10 +123,10 @@ spchol* chol_factorize(dsp *A_in){
 	*/
     }
     info2("analyzing...");
-    out->L=cholmod_l_analyze(A,out->c);
+    out->L=MOD(analyze)(A,out->c);
     info2("factoring...");
     if(!out->L) error("Analyze failed\n");
-    cholmod_l_factorize(A,out->L, out->c);
+    MOD(factorize)(A,out->L, out->c);
     free(A);
     toc2("done.");
     return out;
@@ -129,7 +138,7 @@ void chol_solve(dmat **x, spchol *A, const dmat *y){
     //solve A*x=Y;
     cholmod_dense *y2=d2chol(y);//share pointer.
     if(A->L->xtype==0) error("A->L is pattern only!\n");
-    cholmod_dense *x2=cholmod_l_solve(CHOLMOD_A,A->L,y2,A->c);
+    cholmod_dense *x2=MOD(solve)(CHOLMOD_A,A->L,y2,A->c);
     if(!x2) error("chol_solve failed\n");
     if(x2->z){
 	error("why is this?\n");
@@ -150,11 +159,11 @@ void chol_solve(dmat **x, spchol *A, const dmat *y){
     free(x2);//x2->x is kept.
 }
 /**
-   Free cholesky factor*/
+   Free cholesky factor.*/
 void chol_free_do(spchol *A){
     if(A){
-	cholmod_l_free_factor(&A->L, A->c);
-	cholmod_l_finish(A->c);
+	MOD(free_factor)(&A->L, A->c);
+	MOD(finish)(A->c);
 	free(A->c);
 	free(A);
     }
@@ -188,8 +197,10 @@ void chol_convert(dsp **Cs, long **Cp, spchol *A, int keep){
     memcpy(*Cp, A->L->Perm, sizeof(long)*A->L->n);
     *Cs=chol_sp(A, keep);
 }
+/**
+   forward permutation.
+*/
 static inline void chol_perm_f(dmat **out, long *perm, const dmat *in){
-    //forward permutation
     if(!*out){
 	*out=dnew(in->nx, in->ny);
     }else{
@@ -203,8 +214,10 @@ static inline void chol_perm_f(dmat **out, long *perm, const dmat *in){
 	}
     }
 }
+/**
+   backward permutation.
+*/
 static inline void chol_perm_b(dmat **out, long *perm, const dmat *in){
-    //backward permutation
     if(!*out){
 	*out=dnew(in->nx, in->ny);
     }else{
@@ -223,19 +236,18 @@ static inline void chol_perm_b(dmat **out, long *perm, const dmat *in){
 */
 /**
    Solve A*x=Y where the A=LL' and L is stored in A.
+   
+   Solve the cholesky backsubstitution when it's expressed in sparse matrix and
+   a permutation vector. Notice only the lower left side of the sparse matrix is
+   stored.
+   
+   The original matrix B=A*A';
+   solve B*x=y or A*(A'*x)=y 
+   first solve A\\y
+   then solve A'\\(A\\y)
+   
 */
 void chol_solve_lower(dmat **x, dsp *A, long *perm, const dmat *y){
-    /**
-      Solve the cholesky backsubstitution when it's
-      expressed in sparse matrix and a permutation
-      vector. Notice only the lower left side is stored.
-      
-      The original matrix B=A*A';
-      solve B*x=y or A*(A'*x)=y 
-      first solve A\y
-      then solve A'\(A\y)
-      
-    */
     assert(A && A->m==A->n && A->m==y->nx);
     if(!*x){
 	*x=dnew(y->nx,y->ny);
@@ -245,8 +257,8 @@ void chol_solve_lower(dmat **x, dsp *A, long *perm, const dmat *y){
     dmat *y2=NULL;
     chol_perm_f(&y2, perm, y);
     double *Ax=A->x;
-    long *Ap=A->p;
-    long *Ai=A->i;
+    spint *Ap=A->p;
+    spint *Ai=A->i;
     if(y2->ny==1){
 	//Solve L\y
 	double *py=y2->p;
@@ -301,14 +313,16 @@ void chol_solve_lower(dmat **x, dsp *A, long *perm, const dmat *y){
 }
 /**
    Solve A*x=Y where the A=U'U and U is stored in A.
+
+   Solve the cholesky backsubstitution when it's expressed in sparse matrix and
+   a permutation vector. Notice only the lower left side of the sparse matrix is
+   stored.
+   
+   The original matrix B=A'*A;
 */
 void chol_solve_upper(dmat **x, dsp *A, long *perm, const dmat *y){
     /*
-       Solve the cholesky backsubstitution when it's
-       expressed in sparse matrix and a permutation
-       vector. Notice only the lower left side is stored.
-       
-       The original matrix B=A'*A;
+  
     */
     assert(A && A->m==A->n && A->m==y->nx);
     if(!*x){
@@ -319,8 +333,8 @@ void chol_solve_upper(dmat **x, dsp *A, long *perm, const dmat *y){
     dmat *y2=NULL;
     chol_perm_f(&y2, perm, y);
     double *Ax=A->x;
-    long *Ap=A->p;
-    long *Ai=A->i;
+    spint *Ap=A->p;
+    spint *Ai=A->i;
     if(y2->ny==1){
 	//Solve R'\y
 	double *py=y2->p;

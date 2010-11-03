@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -450,6 +450,9 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	dwrite(aster->res_ngs,"%s/aster_res_ngs",dirsetup);
     }
 }
+/**
+   for sort incrementally.
+ */
 static int sortfun(const double *a, const double *b){
     return a[0]<b[0]?-1:1;
 }

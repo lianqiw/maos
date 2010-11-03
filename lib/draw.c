@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -72,6 +72,9 @@ int disable_draw=0;
 #define FIFO_ERROR				\
     perror("fwrite");				\
     goto done
+/**
+   Open a fifo (created by the drawdaemon) and start writing to it.
+*/
 static FILE *fifo_open(const char *fifo){
     int fd;
     int retry=0;
@@ -94,8 +97,14 @@ static FILE *fifo_open(const char *fifo){
 	return fp;
     }
 }
-inline static int fifo_write(const void *ptr, size_t size, 
-			     size_t nmemb, FILE *fp){
+/**
+   Write data to the fifo. Handle exceptions.
+ */
+inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
+			     size_t size,     /**<Size of each element*/
+			     size_t nmemb,    /**<Number of elements*/
+			     FILE *fp         /**<Pointer to the File*/
+			     ){
  retry:
     if(fwrite(ptr,size,nmemb,fp)!=nmemb){
 	perror("fifo_write");
@@ -116,11 +125,19 @@ inline static int fifo_write(const void *ptr, size_t size,
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
  */
-void plot_coord(char *fig, long npts, const double *ptsx, const double *ptsy, 
-	      const long *style, const double *limit,
-	      int ncir, const void *pcir, 
-	      const char *title, const char *xlabel, const char *ylabel,
-	      const char *format,...){
+void plot_coord(char *fig,          /**<Category of the figure*/
+		long npts,          /**<Number of points to plot*/
+		const double *ptsx, /**<x coord of points*/
+		const double *ptsy, /**<y coord of points*/
+		const long *style,  /**<Style of each point*/
+		const double *limit,/**<x min, xmax, ymin and ymax*/
+		int ncir,           /**<Number of circles*/
+		double (*pcir)[4],  /**<Data for the circles: x, y origin, radius, and color*/
+		const char *title,  /**<title of the plot*/
+		const char *xlabel, /**<x axis label*/
+		const char *ylabel, /**<y axis label*/
+		const char *format, /**<subcategory of the plot.*/
+		...){
     FILE *fp=NULL;
     if(disable_draw) return;
     format2fn;
@@ -170,11 +187,21 @@ void plot_coord(char *fig, long npts, const double *ptsx, const double *ptsy,
     if(fp) fclose(fp);
     UNLOCK(lock); 
 }
-	      
-static void imagesc_do(char *fig, long nx, long ny, const double *limit, 
-		       const void *p, int type, int color, 
-		       const char *title, const char *xlabel, const char *ylabel,
-		       const char *format,...){
+/**
+   Draw an image.
+ */
+static void imagesc_do(char *fig, /**<Category of the figure*/
+		       long nx,   /**<the image is of size nx*ny*/
+		       long ny,   /**<the image is of size nx*ny*/
+		       const double *limit, /**<x min, xmax, ymin and ymax*/
+		       const void *p, /**<The image*/
+		       int type,  /**<Type of the data, double or long*/
+		       int color, /**<Colored or not*/
+		       const char *title,  /**<title of the plot*/
+		       const char *xlabel, /**<x axis label*/
+		       const char *ylabel, /**<y axis label*/
+		       const char *format, /**<subcategory of the plot.*/
+		       ...){
     FILE *fp=NULL;
     if(disable_draw) return;
     format2fn;
@@ -234,7 +261,7 @@ static void imagesc_do(char *fig, long nx, long ny, const double *limit,
 }
 
 /**
-   Draw the OPD of double p defined on nx*ny grid
+   Draw the OPD of double p defined on nx*ny grid. see imagesc_do()
 */
 void imagesc(char *fig, long nx, long ny, const double *limit,
 	     const double *p, int color, 
@@ -244,7 +271,7 @@ void imagesc(char *fig, long nx, long ny, const double *limit,
     imagesc_do(fig, nx, ny, limit, p, T_DOUBLE, color, title, xlabel, ylabel, "%s",fn);
 }
 /**
-   Draw the OPD of long p defined on nx*ny grid
+   Draw the OPD of long p defined on nx*ny grid. see imagesc_do()
 */
 void imagesc_long(char *fig, long nx, long ny,  const double *limit,
 		  const long *p, int color, 
@@ -254,7 +281,7 @@ void imagesc_long(char *fig, long nx, long ny,  const double *limit,
     imagesc_do(fig, nx, ny, limit, p, T_LONG, color, title, xlabel, ylabel, "%s",fn);
 }
 /**
-   Draw the OPD of abs of complex p defined on nx*ny grid
+   Draw the OPD of abs of complex p defined on nx*ny grid. see imagesc_do()
 */
 void imagesc_cmp(char *fig, long nx, long ny, const double *limit,
 		 const dcomplex *p, int color, 
@@ -265,7 +292,7 @@ void imagesc_cmp(char *fig, long nx, long ny, const double *limit,
 	       title, xlabel, ylabel, "%s abs", fn);
 }
 /**
-   Draw the OPD of real and imaginary of complex p defined on nx*ny grid
+   Draw the OPD of real and imaginary of complex p defined on nx*ny grid. see imagesc_do()
 */
 void imagesc_cmp_ri(char *fig, long nx, long ny, const double *limit,
 		    const dcomplex *p, int color, 
@@ -289,7 +316,7 @@ void imagesc_cmp_ri(char *fig, long nx, long ny, const double *limit,
     free(pi);
 }
 /**
-   Draw the OPD of abs and phase of complex p defined on nx*ny grid
+   Draw the OPD of abs and phase of complex p defined on nx*ny grid. see imagesc_do()
 */
 void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit,
 		    const dcomplex *p, int color, 
@@ -333,7 +360,8 @@ void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit,
 */
 /**
    Mapping the floating point numbers onto screen with scaling similar to matlab
-   imagesc.  */
+   imagesc.  . see imagesc_do()
+*/
 void ddraw(char *fig, const dmat *A, 
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
@@ -344,7 +372,7 @@ void ddraw(char *fig, const dmat *A,
     imagesc(fig,A->nx,A->ny,NULL,A->p,1,title, xlabel, ylabel,"%s",fn);
 }
 /**
-   Mapping the absolution value of complex array.
+   Mapping the absolution value of complex array. see imagesc_do()
 */
 void cdrawabs(char *fig, const cmat *A, 
 	      const char *title, const char *xlabel, const char *ylabel,
@@ -357,7 +385,7 @@ void cdrawabs(char *fig, const cmat *A,
 }
 
 /**
-   Mapping the real/imaginary part of complex array.
+   Mapping the real/imaginary part of complex array. see imagesc_do()
 */
 void cdrawri(char *fig, const cmat *A, 
 	     const char *title, const char *xlabel, const char *ylabel,
@@ -370,7 +398,7 @@ void cdrawri(char *fig, const cmat *A,
 }
 
 /**
-   Mapping the absolute and phase of complex array.
+   Mapping the absolute and phase of complex array. see imagesc_do()
 */
 void cdraw(char *fig, const cmat *A, 
 	   const char *title, const char *xlabel, const char *ylabel,
@@ -382,9 +410,9 @@ void cdraw(char *fig, const cmat *A,
 }
 
 /**
-   like ddraw, acting on sqmap object.
+   like ddraw, acting on sqmap object. see imagesc_do()
 */
-void drawmap(char *fig, const MAP_T *map, 
+void drawmap(char *fig, const map_t *map, 
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     format2fn;
@@ -398,9 +426,9 @@ void drawmap(char *fig, const MAP_T *map,
     imagesc(fig, map->nx, map->ny, limit, map->p, 1, title, xlabel, ylabel,"%s",fn);
 }
 /**
-   Plot the loc on the screen.
+   Plot the loc on the screen. see imagesc_do()
 */
-void drawloc(char *fig, LOC_T *loc,
+void drawloc(char *fig, loc_t *loc,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
     format2fn;
@@ -425,9 +453,9 @@ void drawloc(char *fig, LOC_T *loc,
 }
 
 /**
-   Plot the opd using coordinate loc.
+   Plot the opd using coordinate loc. see imagesc_do()
 */
-void drawopd(char *fig, LOC_T *loc, const double *opd, 
+void drawopd(char *fig, loc_t *loc, const double *opd, 
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
 
@@ -456,9 +484,9 @@ void drawopd(char *fig, LOC_T *loc, const double *opd,
     free(opd0);
 }
 /**
-   Plot opd*amp with coordinate loc.
+   Plot opd*amp with coordinate loc. see imagesc_do()
 */
-void drawopdamp(char *fig, LOC_T *loc, const double *opd, const double *amp, 
+void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, 
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...){
     format2fn;
@@ -488,6 +516,7 @@ void drawopdamp(char *fig, LOC_T *loc, const double *opd, const double *amp,
     free(opd0);
 }
 #endif //USE_DAEMON.
+
 /**
    bin a double matrix from nx*ny to (nx/factor)*(ny*factor)
 */

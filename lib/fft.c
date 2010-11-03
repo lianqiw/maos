@@ -1,8 +1,25 @@
+/*
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
-#define USE_COMPLEX
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#define USE_COMPLEX /**<for complex data*/
 #include <sys/file.h>
 #include <complex.h>
-//need to imclude complex.h before fftw3.h
+//need to include complex.h before fftw3.h
 #include <fftw3.h>
 #include "common.h"
 #include "misc.h"
@@ -18,7 +35,10 @@ PNEW(mutex_fftw);
 */
 
 static char fnwisdom[64];
-static void load_plan(){
+/**
+   load FFT wisdom from file.
+ */
+static void load_wisdom(){
     FILE *fpwisdom;
     if((fpwisdom=fopen(fnwisdom,"r"))){
 	int fd=fileno(fpwisdom);
@@ -31,7 +51,10 @@ static void load_plan(){
 	fclose(fpwisdom);
     }
 }
-static void save_plan(){
+/**
+   save FFT wisdom to file.
+ */
+static void save_wisdom(){
     FILE *fpwisdom;
     if((fpwisdom=fopen(fnwisdom,"w"))){
 	int fd=fileno(fpwisdom);
@@ -44,13 +67,19 @@ static void save_plan(){
 	fclose(fpwisdom);
     }
 }
+/**
+   executed before main().
+ */
 static __attribute__((constructor))void init(){
     mymkdir("%s/.aos/",getenv("HOME"));
     sprintf(fnwisdom, "%s/.aos/fftw_wisdom",getenv("HOME"));
-    load_plan();
+    load_wisdom();
 }
+/**
+   executed after main() exits.
+ */
 static __attribute__((destructor))void deinit(){
-    save_plan();
+    save_wisdom();
 }
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in

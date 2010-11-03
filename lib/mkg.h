@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -19,11 +19,11 @@
 #ifndef AOS_MKG_H
 #define AOS_MKG_H
 #include "loc.h"
-dsp *mkg(LOC_T* xloc, LOC_T *ploc, double *amp, LOC_T *saloc, 
+dsp *mkg(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
     int saorc, double scale, double *displace, int do_partial);
-dsp *mkgt(LOC_T* xloc, LOC_T *ploc, double *amp, LOC_T *saloc, 
+dsp *mkgt(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
     int saorc, double scale, double *displace, int do_partial);
-//dsp *mkgold(LOC_T* xloc, LOC_T *ploc, double *amp, LOC_T *saloc, 
+//dsp *mkgold(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
 //   int saorc, double scale, double *displace, int do_partial);
 
 #endif

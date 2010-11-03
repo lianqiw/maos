@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -21,6 +21,9 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
+/**
+   Information for each process.
+*/
 typedef struct PROC_T{
     int hid;//host id. hosts[hid] gives hostname.
     int pid;

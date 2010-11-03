@@ -1,3 +1,20 @@
+/*
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
 /**
 \file genotf.c
    Routines to generate short exposure OTFs of an aperture in present of
@@ -23,7 +40,7 @@ typedef struct GENOTF_T{
     pthread_mutex_t mutex_isa;
 #endif
     cmat **otf;
-    LOC_T *loc;     /**<the common aperture grid*/
+    loc_t *loc;     /**<the common aperture grid*/
     const double *amp;    /**<The amplitude map of all the (sub)apertures*/
     const double *opdbias;/**<The static OPD bias. */
     const double *area;   /**<area of a (sub)aperture*/
@@ -43,7 +60,7 @@ typedef struct GENOTF_T{
    Remove tip/tilt from the B matrix
 */
 static double* pttr_B(const double *B0,   /**<The B matrix. */
-		      LOC_T *loc,  /**<The aperture grid*/
+		      loc_t *loc,  /**<The aperture grid*/
 		      const double *amp /**<The amplitude map*/
 		   ){
     double *locx=loc->locx;
@@ -149,7 +166,7 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
    Generate OTF from the B or tip/tilted removed B matrix.
 */
 static void genotf_do(cmat **otf, int pttr, long notfx, long notfy, 
-		      LOC_T *loc, const double *amp, const double *opdbias, double wvl,
+		      loc_t *loc, const double *amp, const double *opdbias, double wvl,
 		      const double* B,  const T_VALID *pval){
     int nloc=loc->nloc;
     double (*BP)[nloc];
@@ -223,7 +240,7 @@ static void *genotf_wrap(GENOTF_T *data){
     long isa=0;
     const long nsa=data->nsa;
     cmat**otf=(cmat**)data->otf;
-    LOC_T *loc=data->loc;
+    loc_t *loc=data->loc;
     const long nxsa=loc->nloc;
     const double wvl=data->wvl;
     const long ncompx=data->ncompx;
@@ -253,7 +270,7 @@ static void *genotf_wrap(GENOTF_T *data){
 /**
    Generate pairs of overlapping points for structure function.
  */
-static T_VALID *gen_pval(int notfx, int notfy, LOC_T *loc,const double *amp,
+static T_VALID *gen_pval(int notfx, int notfy, loc_t *loc,const double *amp,
 			 double dtheta, double wvl){
     double dux=1./(dtheta*notfx);
     double duy=1./(dtheta*notfy);
@@ -266,7 +283,7 @@ static T_VALID *gen_pval(int notfx, int notfy, LOC_T *loc,const double *amp,
     T_VALID (*restrict qval)[notfx]=(T_VALID (*)[notfx])(pval);
     int count=0,count2;
     loc_create_map(loc);
-    LOCMAP_T *map=loc->map;
+    locmap_t *map=loc->map;
     int notfx2=notfx/2;
     int notfy2=notfy/2;
     double duxwvl=dux*wvl;
@@ -305,7 +322,7 @@ static T_VALID *gen_pval(int notfx, int notfy, LOC_T *loc,const double *amp,
 /**
    Generate the B matrix.
 */
-static double* genotfB(LOC_T *loc, double wvl, double r0, double L0){
+static double* genotfB(loc_t *loc, double wvl, double r0, double L0){
     (void)L0;
     long nloc=loc->nloc;
     double *locx=loc->locx;
@@ -327,7 +344,7 @@ static double* genotfB(LOC_T *loc, double wvl, double r0, double L0){
    diffraction limited OTF. make r0 to infinity and opdbias to none null to
    build OTF for a static map.*/
 void genotf(cmat **otf,    /**<The otf array for output*/
-	    LOC_T *loc,    /**<the aperture grid (same for all apertures)*/
+	    loc_t *loc,    /**<the aperture grid (same for all apertures)*/
 	    const double *amp,   /**<The amplitude map of all the (sub)apertures*/
 	    const double *opdbias,  /**<The static OPD bias. */
 	    const double *area, /**<normalized area of the (sub)apertures*/

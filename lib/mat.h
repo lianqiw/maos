@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -43,8 +43,8 @@ void X(zero)(X(mat) *out);\
 double X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 double X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 double X(norm2)(const X(mat) *in) CHECK_UNUSED_RESULT;\
-void X(randu)(X(mat) *A, const T mean, struct_rand *rstat);\
-void X(randn)(X(mat) *A, const T sigma, struct_rand *rstat);\
+void X(randu)(X(mat) *A, const T mean, rand_t *rstat);\
+void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);\
 void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);\
 void X(scale)(X(mat) *A, T w);\
 T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;\

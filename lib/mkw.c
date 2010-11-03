@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -43,7 +43,7 @@ int nres=50;
 
    This function does not work well. 
 */
-void mkw_amp(LOC_T *loc,double *amp,dsp **W0,dmat **W1){
+void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 
     long nloc=loc->nloc;
     double constamp=0;
@@ -63,8 +63,8 @@ void mkw_amp(LOC_T *loc,double *amp,dsp **W0,dmat **W1){
     long nxmap=loc->map->nx;
     long(*map)[nxmap]=(long(*)[nxmap])loc->map->p;
     double idx=1./loc->dx;
-    long *W0p=(*W0)->p;
-    long *W0i=(*W0)->i;
+    spint *W0p=(*W0)->p;
+    spint *W0i=(*W0)->i;
     double *W0x=(*W0)->x;
     long count=0;
     double *amp0=NULL;
@@ -173,14 +173,13 @@ void mkw_amp(LOC_T *loc,double *amp,dsp **W0,dmat **W1){
     }
     loc_free_map(loc);
 }
+/**
+   calculate the integral of a box with two points on corner to corner.  inside
+   a circle at (icx,icy) with circle icr.  */
+
 static double calcwtcorner(int ix, int iy, 
 		    int jx, int jy,
 		    double icx, double icy, double icr){
-    /*
-      calculate the integral of a box 
-      with two points on corner to corner.
-      inside a circle at (icx,icy) with circle icr.
-    */
     if(ix==jx || iy==jy) error("Invalid\n");
     double icr2=icr*icr;
     if(pow(ix-icx,2)+pow(iy-icy,2)<icr2
@@ -214,14 +213,13 @@ static double calcwtcorner(int ix, int iy,
     }
     return wt*dres*dres;
 }
+/**
+   calculate the integral of a box with two points on left/right inside a circle
+   at (icx,icy) with circle icr.  */
 static double calcwtlr(int ix, int iy, 
 		int jx, int jy,
 		double icx, double icy, double icr){
-    /*
-      calculate the integral of a box 
-      with two points on left/right
-      inside a circle at (icx,icy) with circle icr.
-    */
+
     if(iy!=jy || ix==jx) error("Invalid\n");
     double icr2=icr*icr;
     if(pow(ix-icx,2)+pow(iy+1-icy,2)<icr2
@@ -262,15 +260,13 @@ static double calcwtlr(int ix, int iy,
     }
     return wt*dres*dres;
 }
-
+/**
+   calculate the integral of a box with two points on bottom/top.  inside a
+   circle at (icx,icy) with circle icr.
+*/
 static double calcwtud(int ix, int iy, 
 		int jx, int jy,
 		double icx, double icy, double icr){
-    /*
-      calculate the integral of a box 
-      with two points on bottom/top.
-      inside a circle at (icx,icy) with circle icr.
-    */
     if(ix!=jx) error("Invalid\n");
     double icr2=icr*icr;
     if(pow(ix-1-icx,2)+pow(iy-icy,2)<icr2
@@ -312,13 +308,12 @@ static double calcwtud(int ix, int iy,
     }
     return wt*dres*dres;
 }
+/**
+  calculate the integral of a box with the same point.  inside a circle at
+  (icx,icy) with circle icr.  */
 static double calcwtcenter(int ix, int iy, int jx, int jy,
-		    double icx, double icy, double icr){
-    /*
-      calculate the integral of a box 
-      with the same point.
-      inside a circle at (icx,icy) with circle icr.
-    */
+			   double icx, double icy, double icr){
+  
     if(ix!=jx || iy!=jy) error("Invalid\n");
     double icr2=icr*icr;
     if(pow(ix+1-icx,2)+pow(iy+1-icy,2)<icr2
@@ -336,8 +331,6 @@ static double calcwtcenter(int ix, int iy, int jx, int jy,
 	return 0;
     }
     double dres=1./(double)nres;
-    //double ddx=(double)(jx-ix)/(double)nres;
-    //double ddy=(double)(jy-iy)/(double)nres;
     double ddy=1./(double)nres;
     double ddx=ddy;
     double wt=0.;
@@ -375,7 +368,7 @@ static double calcwtcenter(int ix, int iy, int jx, int jy,
    wavefront error, calculated as A'*(W0-W1*W1')*A is equal to the wavefront
    error for a continuous OPD that are interpolated bi-linearly using the OPD on
    the grid.*/
-void mkw_circular(LOC_T *loc,/**<[in] grid */
+void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 		   double cx, /**<[in] center of circle, x*/
 		   double cy, /**<[in] center of circle, y*/
 		   double cr, /**<[in] circle radius*/
@@ -388,8 +381,8 @@ void mkw_circular(LOC_T *loc,/**<[in] grid */
     double oy=loc->map->oy;
     long nxmap=loc->map->nx;
     long(*map)[nxmap]=(long(*)[nxmap])loc->map->p;
-    long *W0p=(*W0)->p;
-    long *W0i=(*W0)->i;
+    spint *W0p=(*W0)->p;
+    spint *W0i=(*W0)->i;
     double *W0x=(*W0)->x;
     long count=0;
     *W1=dnew(nloc,1);
@@ -458,10 +451,16 @@ void mkw_circular(LOC_T *loc,/**<[in] grid */
 }
 /**
    compute the  W0, W1 for bilinear influence function for a annular aperture of
-   radius inner radius cri, and outer radius cro. 
+   radius inner radius cri, and outer radius cro. see mkw().
  */
-void mkw_annular(LOC_T *loc, double cx, double cy, double cri, double cro, 
-		 dsp **W0, dmat **W1){
+void mkw_annular(loc_t *loc, /**<[in] grid coordinate */
+		 double cx,  /**<[in] center of circle, x*/
+		 double cy,  /**<[in] center of circle, y*/
+		 double cri, /**<[in] inner circular hole radius*/
+		 double cro, /**<[in] outer circle radius*/
+		 dsp **W0,   /**<[out] sparse W0*/
+		 dmat **W1   /**<[out] dense  W1*/
+		 ){
     dsp *W0o = NULL;
     dmat *W1o= NULL;
     dsp *W0i = NULL;

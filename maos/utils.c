@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -41,7 +41,7 @@ char *dirskysim=NULL;
    add photon and read out noise.  pcalib part of bkgrnd is calibrated
 out. pcalib2 part of bkgrnd2 is calibrated out.  */
 void addnoise(dmat *A,              /**<The pixel intensity array*/
-	      struct_rand* rstat,   /**<The random stream*/
+	      rand_t* rstat,   /**<The random stream*/
 	      const double bkgrnd,  /**<background in PDEs per pixel per frame*/
 	      const double pcalib,  /**<Fraction of bkgrnd that is calibrated out*/
 	      const double *bkgrnd2,/**<background in PDEs of each pixel per frame.*/
@@ -63,12 +63,12 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
     }
 }
 /**
-   Calls create_metapupil is simplified interface by returning a MAP_T object.
+   Calls create_metapupil is simplified interface by returning a map_t object.
  */
-MAP_T * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
+map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
 				double offset,double guard, long nin,
 				T_TYPE type, int pad,int square){
-    MAP_T * amp=calloc(sizeof(MAP_T),1);
+    map_t * amp=calloc(sizeof(map_t),1);
     create_metapupil(parms,ht,dx,offset,&(amp->nx),&(amp->ny),
 		     &(amp->ox),&(amp->oy),&(amp->p),guard, nin, type,pad,square);
     amp->dx=dx;
@@ -246,7 +246,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
    Plot the projection of all the different FoVs on a certain grid. used in setup_recon
  */
 void plotloc(char *fig, const PARMS_T *parms, 
-	     LOC_T *loc, double ht, char *format,...){
+	     loc_t *loc, double ht, char *format,...){
     format2fn;
     int ncir=parms->evl.nevl + parms->nwfs;
     double (*cir)[4];

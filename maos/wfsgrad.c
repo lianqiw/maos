@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -44,11 +44,11 @@ static void wfsgrad_iwfs(SIM_T *simu){
     */
     //input
     const PARMS_T *parms=simu->parms;
-    MAP_T **atm=simu->atm;
+    map_t **atm=simu->atm;
     const RECON_T *recon=simu->recon;
     const POWFS_T *powfs=simu->powfs;
     const dcell *dmreal=simu->dmreal;
-    MAP_T **cachedm=simu->cachedm;
+    map_t **cachedm=simu->cachedm;
     //output
     const int CL=parms->sim.closeloop;
     const int isim=simu->isim;
@@ -204,7 +204,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 	    loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
 	}
 	if(save_opd){
-	    dwrite(opd,"wfsopd_%d/wfsopd_%d_wfs%d.bin",simu->seed,isim,iwfs);
+	    cellarr_dmat(simu->save->wfsopd[iwfs], opd);
 	}
 
 	/*
@@ -315,7 +315,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		}
 	    }
 	    if(save_opd){
-		dwrite(lltopd,"wfsopd_%d/wfslltopd_%d_wfs%d.bin",simu->seed,isim,iwfs);
+		cellarr_dmat(simu->save->wfslltopd[iwfs],lltopd);
 	    }
 	    dmat *gradref=NULL;
 	    if(pistatout){
@@ -327,14 +327,14 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		}
 	    }
 	    wfsints(ints,psfout,pistatout,gradref,
-	    	       parms,powfs,iwfs,isim,opd,lltopd);
+		    parms,powfs,iwfs,opd,lltopd);
 	    dfree(lltopd);
 	    if(psfout){
 		cellarr_ccell(psfoutcellarr,psfout);
 		cellarr_dmat(ztiltoutcellarr, *gradacc);
 	    }
 	    if(save_ints && ints && dtrat_output){
-		dcellwrite(ints, "ints_%d/ints_%d_wfs%d.bin",simu->seed,isim,iwfs);
+		cellarr_dcell(simu->save->intsnf[iwfs], ints);
 	    }
 	}
 	TIM(2);
@@ -467,7 +467,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		}
 	    };
 	    if(save_ints && ints && dtrat_output){
-		dcellwrite(ints, "ints_%d/intsny_%d_wfs%d.bin",simu->seed, isim,iwfs);
+		cellarr_dcell(simu->save->intsny[iwfs], ints);
 	    }
 	    if(parms->powfs[ipowfs].llt){
 		if(!recon->PTT || !recon->PTT->p[iwfs+iwfs*nwfs]){
@@ -512,9 +512,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		    }
 		    double nea=neause/206265000./sqrt(dtrat);
 		    if(save_grad){
-			dwrite(simu->gradcl->p[iwfs],
-			       "gradnf_%d/gradnf_iwfs%d_%d.bin.gz",
-			       simu->seed,iwfs,isim);
+			cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
 		    }
 		    if(nea>1.e-20){
 			//info("Adding noise %g mas to geom grads\n", nea*206265000);
@@ -540,24 +538,17 @@ static void wfsgrad_iwfs(SIM_T *simu){
 	    if(dtrat!=1){
 		dscale(gradtmp,1./dtrat);
 	    }
-	    dwrite(gradtmp,"gradgeom_%d/gradgeom_%d_wfs%d.bin",
-		   simu->seed,isim,iwfs);
+	    cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);
 	}
-	/*
-	  if(dtrat_output){
-	  warning("WFS %d output\n",iwfs);
-	  }else{
-	  warning("WFS %d integrating\n",iwfs);
-	  }
-	*/
+
 	if(parms->plot.run){
 	    drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,powfs[ipowfs].amp,
 		       "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
-	    drawopd("Gclx",(LOC_T*)powfs[ipowfs].pts, 
+	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, 
 		    simu->gradcl->p[iwfs]->p, 
 		    "WFS Closeloop Gradients (x)","x (m)", "y (m)",
 		    "x %d",  iwfs);
-	    drawopd("Gcly",(LOC_T*)powfs[ipowfs].pts,
+	    drawopd("Gcly",(loc_t*)powfs[ipowfs].pts,
 		    simu->gradcl->p[iwfs]->p+nsa, 
 		    "WFS Closeloop Gradients (y)","x (m)", "y (m)",
 		    "y %d",  iwfs);
@@ -579,21 +570,19 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		}
 	    }
 	    if(parms->plot.run){
-		drawopd("Gpolx",(LOC_T*)powfs[ipowfs].pts,
+		drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts,
 			simu->gradpsol->p[iwfs]->p,
 			"WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)",
 			"x %d",  iwfs);
-		drawopd("Gpoly",(LOC_T*)powfs[ipowfs].pts,
+		drawopd("Gpoly",(loc_t*)powfs[ipowfs].pts,
 			simu->gradpsol->p[iwfs]->p+nsa, 
 			"WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)",
 			"y %d",  iwfs);
 	    }
 	}
 	if(save_grad){
-	    dwrite(simu->gradcl->p[iwfs],  "gradcl_%d/gradcl_%d_wfs%d.bin", 
-		   simu->seed, simu->isim, iwfs);
-	    dwrite(simu->gradpsol->p[iwfs],"gradpsol_%d/gradpsol_%d_wfs%d.bin", 
-		   simu->seed, simu->isim, iwfs);
+	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
+	    cellarr_dmat(simu->save->gradpsol[iwfs], simu->gradpsol->p[iwfs]);
 	}
 	if(parms->cn2.pair && recon->cn2est->wfscov[iwfs]){
 	    cn2est_embed(recon->cn2est, simu->gradpsol->p[iwfs], iwfs);
@@ -641,11 +630,11 @@ void wfsgrad(SIM_T *simu){
     simu->wfsgrad_iwfs=0;//start from 0.
     CALL(wfsgrad_iwfs,simu,recon->nthread);//no splace allowd
   
-    if(parms->dbg.ngcov>0){
+    if(parms->save.ngcov>0){
 	//Outputing psol gradient covariance.
-	for(int igcov=0; igcov<parms->dbg.ngcov; igcov++){
-	    int iwfs1=parms->dbg.gcov[igcov*2];
-	    int iwfs2=parms->dbg.gcov[igcov*2+1];
+	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
+	    int iwfs1=parms->save.gcov[igcov*2];
+	    int iwfs2=parms->save.gcov[igcov*2+1];
 	    info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
 	    dmm(&simu->gcov->p[igcov], simu->gradpsol->p[iwfs1], simu->gradpsol->p[iwfs2],"nt",1);
 	}

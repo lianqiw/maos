@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -151,7 +151,7 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
    contraint their values to be close to the ones that are active. We put an
    additional term in the fitting matrix to force this. Becaure with it when
    using tip/tilt constraint and cholesky back solve.*/
-spcell *act_slaving(LOC_T **aloc, spcell *HA, dmat *W1, dcell *NW){
+spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW){
     if(!HA) {
 	error("HA is not supplied\n");
     }
@@ -193,8 +193,8 @@ spcell *act_slaving(LOC_T **aloc, spcell *HA, dmat *W1, dcell *NW){
 	double oy=aloc[idm]->map->oy;
 	double dx1=1./aloc[idm]->dx;
 	dsp *slavet=spnew(nact,nslave,nslave*5);
-	long *pp=slavet->p;
-	long *pi=slavet->i;
+	spint *pp=slavet->p;
+	spint *pi=slavet->i;
 	double *px=slavet->x;
 	const double *locx=aloc[idm]->locx;
 	const double *locy=aloc[idm]->locy;

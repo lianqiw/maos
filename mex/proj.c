@@ -10,8 +10,8 @@ static __inline double cosangle(double a[3], double b[3]){
 	      *(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]));
 }
 static void 
-proj_rect_grid(RECTMAP_T *mapin, double thetax, double thetay,
-	       const LOC_T *locout,const double ratiox, const double ratioy,
+proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
+	       const loc_t *locout,const double ratiox, const double ratioy,
 	       const double *ampout, double* phiout, 
 	       double sc, double hs, 
 	       double betax, double betay){
@@ -106,7 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     };
     if(P_TOT!=nrhs) mexErrMsgTxt("Incorrect input arguments");
     if(PL_TOT!=nlhs) mexErrMsgTxt("Incorrect output arguments");
-    RECTMAP_T *mapin=calloc(1, sizeof(RECTMAP_T));
+    rectmap_t *mapin=calloc(1, sizeof(rectmap_t));
     mapin->p=mxGetPr(prhs[P_SURF]);
     mapin->nx=mxGetM(prhs[P_SURF]);
     mapin->ny=mxGetN(prhs[P_SURF]);
@@ -131,7 +131,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     double r_exitpupil=1.546220350;
     double r_pupil=15;
     mapin->h=d_exitpupil_m3;
-    LOC_T* loc2=calloc(1, sizeof(LOC_T));
+    loc_t* loc2=calloc(1, sizeof(loc_t));
     loc2->locx=mxGetPr(prhs[P_LOC]);
     loc2->nloc=mxGetM(prhs[P_LOC]);
     loc2->locy=loc2->locx+loc2->nloc;

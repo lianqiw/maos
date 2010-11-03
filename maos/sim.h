@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -30,7 +30,7 @@ void filter_ol(SIM_T *simu);
 void filter(SIM_T *simu);
 void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
 		const dmat *gradref, const PARMS_T *parms, 
-		const POWFS_T *powfs, int iwfs, int isim,
+		const POWFS_T *powfs, int iwfs,
 		const dmat *opd, const dmat *lltopd);
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain);

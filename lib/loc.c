@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -33,18 +33,18 @@
 #include "mathmisc.h"
 /**
    \file loc.c
-   This file defines functions relates to PTS_T, LOC_T, MAP_T, etc.
+   This file defines functions relates to pts_t, loc_t, map_t, etc.
  */
 /**
-   Free PTS_T data
+   Free pts_t data
 */
-void ptsfree_do(PTS_T *pts){
+void ptsfree_do(pts_t *pts){
     if(pts){
 	if(pts->origx){
 	    free(pts->origx);
 	    free(pts->origy);
 	}
-	if(pts->map && pts->map->loc==(LOC_T*)pts){
+	if(pts->map && pts->map->loc==(loc_t*)pts){
 	    free(pts->map->p);
 	    free(pts->map);
 	}
@@ -55,16 +55,16 @@ void ptsfree_do(PTS_T *pts){
     }
 }
 /**
-   Free LOCSTAT_T data
+   Free locstat_t data
 */
-void locstatfree_do(LOCSTAT_T *locstat){
+void locstatfree_do(locstat_t *locstat){
     free(locstat->cols);
     free(locstat);
 }
 /**
-   Free the MAP in LOC_T
+   Free the MAP in loc_t
 */
-void loc_free_map(LOC_T *loc){
+void loc_free_map(loc_t *loc){
     if(loc->map && loc->map->loc==loc){
 	free(loc->map->p);
 	loc->map->p=NULL;
@@ -74,9 +74,9 @@ void loc_free_map(LOC_T *loc){
     }
 }
 /**
-   Free LOC_T data
+   Free loc_t data
  */
-void locfree_do(LOC_T *loc){
+void locfree_do(loc_t *loc){
     if(!loc) return;
     if(loc->locx){
 	free(loc->locx);
@@ -87,9 +87,9 @@ void locfree_do(LOC_T *loc){
 }
 
 /**
-   Free LOC_T array
+   Free loc_t array
 */
-void locarrfree_do(LOC_T **loc, int nloc){
+void locarrfree_do(loc_t **loc, int nloc){
     if(!loc) return;
     for(int iloc=0; iloc<nloc; iloc++){
 	locfree(loc[iloc]);
@@ -97,9 +97,9 @@ void locarrfree_do(LOC_T **loc, int nloc){
     free(loc);
 }
 /**
-   Free MAP_T data
+   Free map_t data
 */
-void sqmapfree_do(MAP_T *map){
+void sqmapfree_do(map_t *map){
     if (!map) return;
     if(map->shm){
 #if USE_POSIX_SHM
@@ -116,9 +116,9 @@ void sqmapfree_do(MAP_T *map){
 }
 
 /**
-   Free MAP_T array
+   Free map_t array
  */
-void sqmaparrfree_do(MAP_T **map, int nmap){
+void sqmaparrfree_do(map_t **map, int nmap){
     if(!map) return;
     for(int imap=0; imap<nmap; imap++){
 	sqmapfree(map[imap]);
@@ -127,9 +127,9 @@ void sqmaparrfree_do(MAP_T **map, int nmap){
 }
 
 /**
-   Free RECTMAP_T data
+   Free rectmap_t data
 */
-void rectmapfree_do(RECTMAP_T *map){
+void rectmapfree_do(rectmap_t *map){
     if (!map) return;
     free(map->p);
     free(map);
@@ -138,7 +138,7 @@ void rectmapfree_do(RECTMAP_T *map){
 /**
    Create an vector to embed OPD into square array for FFT purpose.
 */
-int *loc_create_embed(int *nembed, const LOC_T *loc){
+int *loc_create_embed(int *nembed, const loc_t *loc){
     double xmin,xmax,ymin,ymax,tmp;
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin,&tmp);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin,&tmp);
@@ -171,7 +171,7 @@ int *loc_create_embed(int *nembed, const LOC_T *loc){
 /**
    Create a map for loc with padding of 1. 
 */
-void loc_create_map(LOC_T *loc){
+void loc_create_map(loc_t *loc){
     loc_create_map_npad(loc,1);
 }
 PNEW(maplock);
@@ -179,7 +179,7 @@ PNEW(maplock);
    Create a map for loc so that we can obtain the index in
    loc by x,y coordinate. Useful in ray tracing (accphi.c)
 */
-void loc_create_map_npad(LOC_T *loc, int npad){
+void loc_create_map_npad(loc_t *loc, int npad){
     LOCK(maplock);
     if(loc->map){
 	if(loc->map->loc==loc)//already have a map that is valid.
@@ -192,7 +192,7 @@ void loc_create_map_npad(LOC_T *loc, int npad){
 	else
 	    loc->map=NULL;
     }
-    loc->map = calloc(1,sizeof(LOCMAP_T));
+    loc->map = calloc(1,sizeof(locmap_t));
     loc->map->loc = loc;
     loc->map->nloc= loc->nloc;
     loc->map->npad = npad;//just record the information.
@@ -232,23 +232,23 @@ void loc_create_map_npad(LOC_T *loc, int npad){
    convert a sqmap to a loc object. only positive numbers are
    converted.
 */
-LOC_T* sqmap2loc(MAP_T *amp){
+loc_t* sqmap2loc(map_t *amp){
     return map2loc(amp->dx,amp->nx,amp->ny,amp->ox,amp->oy,amp->p);
 }
 /**
    Create an index array can put embed opd defined in loc from map2loc into
    a square array of size nx*ny
 */
-long *sqmap2embed(MAP_T *amp){
+long *sqmap2embed(map_t *amp){
     return map2embed(amp->nx,amp->ny,amp->p);
 }
 /**
    Convert a map to a loc that collects all positive entries. */
-LOC_T* map2loc(double dx, long nx, long ny, 
+loc_t* map2loc(double dx, long nx, long ny, 
 	       double ox, double oy, double *map){
     double (*map0)[nx]=(double(*)[nx]) map;
     long ix,iy;
-    LOC_T *loc=calloc(1,sizeof(LOC_T));;
+    loc_t *loc=calloc(1,sizeof(loc_t));;
     loc->locx=malloc(sizeof(double)*nx*ny);
     loc->locy=malloc(sizeof(double)*nx*ny);
 
@@ -288,8 +288,8 @@ long *map2embed(long nx, long ny, double *map){
 /**
    Create 1 dimensional loc with given vector.
 */
-LOC_T *mk1dloc_vec(double *x, long nx){
-    LOC_T *loc=calloc(1, sizeof(LOC_T));
+loc_t *mk1dloc_vec(double *x, long nx){
+    loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx;
     loc->dx=(x[nx-1]-x[0])/(nx-1);
     loc->locx=malloc(sizeof(double)*nx);
@@ -300,8 +300,8 @@ LOC_T *mk1dloc_vec(double *x, long nx){
 /**
    Create 1 dimensional loc with origin at x0, sampling of dx, and nx numbers.
 */
-LOC_T *mk1dloc(double x0, double dx, long nx){
-    LOC_T *loc=calloc(1, sizeof(LOC_T));
+loc_t *mk1dloc(double x0, double dx, long nx){
+    loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx;
     loc->dx=dx;
     loc->locx=malloc(sizeof(double)*nx);
@@ -312,24 +312,24 @@ LOC_T *mk1dloc(double x0, double dx, long nx){
     return loc;
 }
 /**
-   Create a loc array that covers the MAP_T. Notice that it is different from
+   Create a loc array that covers the map_t. Notice that it is different from
    sqmap2loc which only covers valid (value>0) regions.
  */
-LOC_T *mksqloc_map(MAP_T*map){
+loc_t *mksqloc_map(map_t*map){
     return mksqloc(map->nx, map->ny, map->dx, map->ox, map->oy);
 }
 /**
    Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)
  */
-LOC_T *mksqloc_auto(long nx, long ny, double dx){
+loc_t *mksqloc_auto(long nx, long ny, double dx){
     return mksqloc(nx,ny,dx,-nx/2*dx,-ny/2*dx);
 }
 /**
    Create a loc array contains coorindates in a square map of size nx*ny, with
    sampling dx, and at origin ox,oy */
-LOC_T *mksqloc(long nx, long ny, double dx, double ox, double oy){
+loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy){
     
-    LOC_T *loc=calloc(1, sizeof(LOC_T));
+    loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx*ny;
     loc->dx=dx;
     loc->locx=malloc(sizeof(double)*loc->nloc);
@@ -351,8 +351,8 @@ LOC_T *mksqloc(long nx, long ny, double dx, double ox, double oy){
    like mksqloc, but roated theta CCW. Useful in creating the
    pixel coordinates in a polar coordinate CCD.
 */
-LOC_T *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double theta){
-    LOC_T *loc=calloc(1, sizeof(LOC_T));
+loc_t *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double theta){
+    loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx*ny;
     loc->dx=dx;
     loc->locx=malloc(sizeof(double)*loc->nloc);
@@ -376,11 +376,11 @@ LOC_T *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double thet
 /**
    Create rough circular grid, within diameter of dcir. Not used often.
  */
-LOC_T *mkcirloc(double dcir, double dx){
+loc_t *mkcirloc(double dcir, double dx){
     double rmax2,xmax2;
     int N,i,j,count;
     N=iceil(dcir/dx/2+5)*2;
-    LOC_T *loc=calloc(1, sizeof(LOC_T));
+    loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=malloc(sizeof(double)*N*N);
     loc->locy=malloc(sizeof(double)*N*N);
     rmax2=(dcir/dx/2.+1*1.414);
@@ -413,16 +413,16 @@ LOC_T *mkcirloc(double dcir, double dx){
    - cropmap=1: LOC is forced to be within dcir. ampin is cropped.
    
    cstat records the starting point for each row to speed up accphi.  */
-LOC_T* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
-		    LOCSTAT_T *cstat, /**<[out] statistics on loc*/
-		    MAP_T* ampin,     /**<[in/out] the amplitude that defines
+loc_t* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
+		    locstat_t *cstat, /**<[out] statistics on loc*/
+		    map_t* ampin,     /**<[in/out] the amplitude that defines
 					 the circular aperture, modified to
 					 widhtin dtel if cropmap=1*/
 		    double dcir,      /**<[in] maximum diameter of the circular loc*/
 		    double dx,        /**<[in] sampling of output loc*/
 		    int cropamp       /**<[in] do we zero ampin points if it outside of dcir*/
 		    ){
-    LOC_T *loc=calloc(1, sizeof(LOC_T));
+    loc_t *loc=calloc(1, sizeof(loc_t));
     double *restrict ampp = ampin->p;
     int count,colcount,count0;
     double rmax2=(dcir/dx/2.+1*1.414);
@@ -447,7 +447,7 @@ LOC_T* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
 
     int ncolstat=ampin->ny+1;
     if(cstat){
-	cstat->cols=calloc(ncolstat, sizeof(LOCSTATCOL_T));
+	cstat->cols=calloc(ncolstat, sizeof(locstatcol_t));
     }
     int offsety=ampin->ny/2;
     int offsetx=ampin->nx/2;
@@ -490,7 +490,7 @@ LOC_T* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
 		/*row valid*/
 		if(colcount>=ncolstat){
 		    ncolstat*=2;
-		    cstat->cols=realloc(cstat->cols, sizeof(LOCSTATCOL_T)*ncolstat);
+		    cstat->cols=realloc(cstat->cols, sizeof(locstatcol_t)*ncolstat);
 		}
 		(cstat->cols)[colcount].xstart=loc->locx[count0];
 		(cstat->cols)[colcount].ystart=loc->locy[count0];
@@ -502,7 +502,7 @@ LOC_T* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
     /*append an addition row which marks the boundary*/
     if(cstat){
 	cstat->cols[colcount].pos=count;/*record last*/
-	cstat->cols = realloc(cstat->cols, sizeof(LOCSTATCOL_T)*(colcount+1));
+	cstat->cols = realloc(cstat->cols, sizeof(locstatcol_t)*(colcount+1));
 	cstat->ncol = colcount;
 	cstat->dx   = dx;
     }
@@ -519,7 +519,7 @@ LOC_T* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
    Find the point that closes to origin (0,0) in loc. Useful in single point
    piston constraint in creating reconstructor.
 */
-int loccenter(LOC_T *loc){
+int loccenter(loc_t *loc){
     int ipix,jpix=0;
     double r2,r2min=INFINITY;
     
@@ -536,7 +536,7 @@ int loccenter(LOC_T *loc){
 /**
    assemble modes of piston/tip/tilt into Nx3 matrix M, and compute their
    inverse covariance matrix.  mcc=M'*(amp.*M) */
-dmat *loc_mcc_ptt(const LOC_T *loc, const double *amp){
+dmat *loc_mcc_ptt(const loc_t *loc, const double *amp){
     const int nmod=3;
     double *mod[nmod];
     dmat *mcc=dnew(nmod,nmod);
@@ -556,7 +556,7 @@ dmat *loc_mcc_ptt(const LOC_T *loc, const double *amp){
    same as loc_mcc_ptt, except using pts instead of loc.
    this is used to build imcc for TT/F powfs ztilt imcc
 */
-dcell *pts_mcc_ptt(const PTS_T *pts, const double *amp){
+dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
     const int nmod=3;
     const int nsa=pts->nsa;
     dcell *mcc=dcellnew(nsa,1);
@@ -596,7 +596,7 @@ dcell *pts_mcc_ptt(const PTS_T *pts, const double *amp){
    output coeffout in unit of radian like units.
 */
 void loc_calc_ptt(double *rmsout, double *coeffout,
-		  const LOC_T *loc, const double ipcc, 
+		  const loc_t *loc, const double ipcc, 
 		  const dmat *imcc, const double *amp, const double *opd){
     assert(imcc->nx==imcc->ny && imcc->nx==3);
     const long nloc=loc->nloc;
@@ -696,7 +696,7 @@ void loc_calc_mod(double *rmsout, double *coeffout,const dmat *mod,
 /**
    Remove Piston/Tip/Tilt (in radian) from OPD
 */
-void loc_remove_ptt(double *opd, const double *ptt, const LOC_T *loc){
+void loc_remove_ptt(double *opd, const double *ptt, const loc_t *loc){
     double ptt1[3];
     ptt1[0]=-ptt[0];
     ptt1[1]=-ptt[1];
@@ -707,7 +707,7 @@ void loc_remove_ptt(double *opd, const double *ptt, const LOC_T *loc){
 /**
    Add Piston/Tip/Tilt from OPD
 */
-void loc_add_ptt(double *opd, const double *ptt, const LOC_T *loc){
+void loc_add_ptt(double *opd, const double *ptt, const loc_t *loc){
     const long nloc=loc->nloc;
     const double *restrict locx=loc->locx;
     const double *restrict locy=loc->locy;
@@ -718,7 +718,7 @@ void loc_add_ptt(double *opd, const double *ptt, const LOC_T *loc){
 /**
    Compute zernike best fit for all subapertures. add result to out.  returns
    radians not zernike modes of tip/tilt. Used in wfsgrad */
-void pts_ztilt(double *out, const PTS_T *pts, const dcell *imcc,
+void pts_ztilt(double *out, const pts_t *pts, const dcell *imcc,
 	       const double *amp, const double *opd){
     const int nsa=pts->nsa;
     assert(imcc->nx==nsa && imcc->ny==1);
@@ -759,14 +759,14 @@ void pts_ztilt(double *out, const PTS_T *pts, const dcell *imcc,
 /**
    Gather information about the starting of each column in loc.
  */
-LOCSTAT_T *mklocstat(const LOC_T *loc){
-    LOCSTAT_T *locstat=calloc(1, sizeof(LOCSTAT_T));
+locstat_t *mklocstat(const loc_t *loc){
+    locstat_t *locstat=calloc(1, sizeof(locstat_t));
     const double *locx=loc->locx;
     const double *locy=loc->locy;
     int nloc=loc->nloc;
     double dx=locstat->dx=loc->dx;
     int ncolmax=(int)round((locy[nloc-1]-locy[0])/dx)+2;
-    locstat->cols=malloc(ncolmax*sizeof(LOCSTATCOL_T));
+    locstat->cols=malloc(ncolmax*sizeof(locstatcol_t));
     int colcount=0;
     int iloc=0;
     locstat->cols[colcount].pos=iloc;
@@ -778,7 +778,7 @@ LOCSTAT_T *mklocstat(const LOC_T *loc){
 	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1.e-12){
 	    if(colcount>=ncolmax){
 		ncolmax*=2;
-		locstat->cols=realloc(locstat->cols, ncolmax*sizeof(LOCSTATCOL_T));
+		locstat->cols=realloc(locstat->cols, ncolmax*sizeof(locstatcol_t));
 	    }
 	    locstat->cols[colcount].pos=iloc;
 	    locstat->cols[colcount].xstart=locx[iloc];
@@ -790,13 +790,13 @@ LOCSTAT_T *mklocstat(const LOC_T *loc){
     locstat->cols[colcount].pos=loc->nloc;
     locstat->cols[colcount].xstart=locx[loc->nloc-1];
     locstat->cols[colcount].ystart=locy[loc->nloc-1];
-    locstat->cols=realloc(locstat->cols,(locstat->ncol+1)*sizeof(LOCSTATCOL_T));
+    locstat->cols=realloc(locstat->cols,(locstat->ncol+1)*sizeof(locstatcol_t));
     return locstat;
 }
 /**
    Create a gray pixel circular map in phi using coordinates defined in loc, center
 defined using cx, cy, radius of r, and value of val */
-void loccircle(double *phi,LOC_T *loc,double cx,double cy,double r,double val){
+void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
     //cx,cy,r are in unit of true unit, as in loc
     double dx=loc->dx;
     int nres=10;
@@ -835,7 +835,7 @@ void loccircle(double *phi,LOC_T *loc,double cx,double cy,double r,double val){
 /**
  Create a gray pixel elliptical map in phi using coordinates defined in loc,
 center defined using cx, cy, radii of rx, ry, and value of val */
-void locellipse(double *phi,LOC_T *loc,double cx,double cy,
+void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val){
     //cx,cy,r are in unit of true unit, as in loc
     double dx=loc->dx;
@@ -880,7 +880,7 @@ void locellipse(double *phi,LOC_T *loc,double cx,double cy,
 /**
    Remove uncoupled points in loc. debugged on 2009-12-20. Not used often. using
    a spcell, to compute the coupling which is modified accordingly.  */
-void loc_reduce_spcell(LOC_T *loc, spcell *spc, int dim, int cont){
+void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
     int nloc=loc->nloc;
     int32_t *skip=calloc(nloc,sizeof(int32_t));
     dmat *sum=NULL;
@@ -895,7 +895,7 @@ void loc_reduce_spcell(LOC_T *loc, spcell *spc, int dim, int cont){
 	error("Mismatch\n");
     }
     if(cont){//make sure loc is continuous.
-	LOCSTAT_T *locstat=mklocstat(loc);
+	locstat_t *locstat=mklocstat(loc);
 	int ncol=locstat->ncol;
 	for(int icol=0; icol<ncol; icol++){
 	    int pstart=locstat->cols[icol].pos;
@@ -972,7 +972,7 @@ void loc_reduce_spcell(LOC_T *loc, spcell *spc, int dim, int cont){
 /**
    Remove uncoupled points in loc. debugged on 2009-12-20.  use single sparse
    matrix, which is modified accordingly.  */
-void loc_reduce_sp(LOC_T *loc, dsp *sp, int dim, int cont){
+void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     loc_free_map(loc);//remove the internal map before touchlong loc.
     int nloc=loc->nloc;
     if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
@@ -980,7 +980,7 @@ void loc_reduce_sp(LOC_T *loc, dsp *sp, int dim, int cont){
     int32_t *skip=calloc(nloc,sizeof(int32_t));
     dmat* sum=spsumabs(sp,3-dim);
     if(cont){//make sure loc is continuous.
-	LOCSTAT_T *locstat=mklocstat(loc);
+	locstat_t *locstat=mklocstat(loc);
 	int ncol=locstat->ncol;
 	for(int icol=0; icol<ncol; icol++){
 	    int pstart=locstat->cols[icol].pos;
@@ -1083,7 +1083,7 @@ static dmat *genRnm(dmat *locr, int ir, int im){
    nr=2 is quadratic modes
    
 */
-dmat* loc_zernike(LOC_T *loc, double R, int nr){
+dmat* loc_zernike(loc_t *loc, double R, int nr){
     if(nr<0) error("Invalid nr\n");
     int nmod=(nr+1)*(nr+2)/2;
     const long nloc=loc->nloc;
@@ -1140,7 +1140,7 @@ dmat* loc_zernike(LOC_T *loc, double R, int nr){
    Add val amount of focus to opd. The unit is in radian like.
    Piston is not removed.
 */
-void loc_add_focus(double *opd, LOC_T *loc, double val){
+void loc_add_focus(double *opd, loc_t *loc, double val){
     if(fabs(val)<1.e-15) return;
     const double *restrict locx=loc->locx;
     const double *restrict locy=loc->locy;
@@ -1151,7 +1151,7 @@ void loc_add_focus(double *opd, LOC_T *loc, double val){
 /**
    Create a dmat containing locx and locy in two columns
 */
-dmat *loc2mat(LOC_T *loc,int piston){
+dmat *loc2mat(loc_t *loc,int piston){
     dmat *out=NULL;
     double *ptt=NULL;
     if(piston){
@@ -1170,11 +1170,11 @@ dmat *loc2mat(LOC_T *loc,int piston){
 }
 
 /**
-   Convert PTS_T to LOC_T. Each entry in pts recors the lower
+   Convert pts_t to loc_t. Each entry in pts recors the lower
    left point in each subaperture. 
 */
-LOC_T *pts2loc(PTS_T *pts){
-    LOC_T*loc = calloc(1, sizeof(LOC_T));
+loc_t *pts2loc(pts_t *pts){
+    loc_t*loc = calloc(1, sizeof(loc_t));
     long nsa  = pts->nsa;
     long nx   = pts->nx;
     long nxsa = nx*nx;
@@ -1201,7 +1201,7 @@ LOC_T *pts2loc(PTS_T *pts){
 /**
    Rotate the coordinates by theta CCW.
 */
-void locrot(LOC_T *loc, const double theta){
+void locrot(loc_t *loc, const double theta){
     const double ctheta=cos(theta);
     const double stheta=sin(theta);
 
@@ -1215,9 +1215,9 @@ void locrot(LOC_T *loc, const double theta){
 }
 
 /**
-   duplicate a LOC_T object; */
-LOC_T *locdup(LOC_T *loc){
-    LOC_T *new=calloc(1,sizeof(LOC_T));
+   duplicate a loc_t object; */
+loc_t *locdup(loc_t *loc){
+    loc_t *new=calloc(1,sizeof(loc_t));
     new->locx=malloc(loc->nloc*sizeof(double));
     new->locy=malloc(loc->nloc*sizeof(double));
     new->nloc=loc->nloc;
@@ -1232,7 +1232,7 @@ LOC_T *locdup(LOC_T *loc){
    xm{ip}=\{sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic)))
    ym{ip}=\{sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic)))
 */
-LOC_T *loctransform(LOC_T *loc, dmat **coeff){
+loc_t *loctransform(loc_t *loc, dmat **coeff){
 
     if(coeff[0]->nx!=3 || coeff[1]->nx!=3){
 	error("Coeff is in wrong format\n");
@@ -1240,7 +1240,7 @@ LOC_T *loctransform(LOC_T *loc, dmat **coeff){
     PDMAT(coeff[0],cx);
     PDMAT(coeff[1],cy);
 
-    LOC_T *locm=calloc(1, sizeof(LOC_T));
+    loc_t *locm=calloc(1, sizeof(loc_t));
     locm->nloc=loc->nloc;
     locm->dx=loc->dx;
     locm->locx=calloc(locm->nloc, sizeof(double));
@@ -1265,7 +1265,7 @@ LOC_T *loctransform(LOC_T *loc, dmat **coeff){
    Compute the size of a map that is used to build loc or can fully contain loc
    (embed)
 */
-void loc_nxny(long *nx, long *ny, const LOC_T *loc){
+void loc_nxny(long *nx, long *ny, const loc_t *loc){
     double xmax, xmin, ymax, ymin;
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin, NULL);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin, NULL);

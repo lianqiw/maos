@@ -3,8 +3,8 @@
 */
 #include "../lib/aos.h"
 int main(){
-    struct_rand rstat;
-    struct_rand bstat;
+    rand_t rstat;
+    rand_t bstat;
     seed_rand(&bstat,1);
     seed_rand(&rstat,lrand(&bstat));
     int nthread=6;
@@ -21,6 +21,6 @@ int main(){
 	default_pool=thr_pool_create(1,nthread,3600,NULL);
 #endif
     }
-    MAP_T **map=genscreen_from_spect(&rstat, spect, dx, wt, nlayer, nthread);
+    map_t **map=genscreen_from_spect(&rstat, spect, dx, wt, nlayer, nthread);
     sqmaparrwrite(map, nlayer, "atm.bin");
 }

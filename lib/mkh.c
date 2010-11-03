@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -32,7 +32,7 @@
    \file mkh.c
    Contains functions that create ray tracing operator
 */
-static dsp *mkhb_cubic(LOC_T *locin, LOC_T *locout, const double *ampout,
+static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		       double displacex, double displacey, double scale,double cubic_iac);
 /**
    Create ray tracing operator from coordinate locin to locout.  Locin is
@@ -58,7 +58,7 @@ static dsp *mkhb_cubic(LOC_T *locin, LOC_T *locout, const double *ampout,
    that it sums to 1.
 
  */
-dsp* mkh(LOC_T *locin, LOC_T *locout, const double *ampout,
+dsp* mkh(loc_t *locin, loc_t *locout, const double *ampout,
 	 double displacex, double displacey, double scale,
 	 int cubic, double cubic_iac){
     dsp *Hb=mkhb(locin, locout, ampout,displacex, displacey, scale, cubic, cubic_iac);
@@ -69,7 +69,7 @@ dsp* mkh(LOC_T *locin, LOC_T *locout, const double *ampout,
 /**
    Create transpose of mkh() result.
 */
-dsp* mkhb(LOC_T *locin, LOC_T *locout, const double *ampout,
+dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	  double displacex, double displacey, double scale,
 	  int cubic, double cubic_iac){
     if(cubic){
@@ -96,17 +96,13 @@ dsp* mkhb(LOC_T *locin, LOC_T *locout, const double *ampout,
     long iphi;
 #endif
     //-1 because we count from 1 in the map.
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->nx])(locin->map->p);
-    long *bp,*bi;
-    double *bx;
-  
+    long (*map)[locin->map->nx] =(long(*)[locin->map->nx])(locin->map->p);
     //transpose of hfor
     long nzmax=locout->nloc*4;
     hback = spnew(locin->nloc, locout->nloc, nzmax);
-    bp=hback->p;
-    bi=hback->i;
-    bx=hback->x;
+    spint *bp=hback->p;
+    spint *bi=hback->i;
+    double *bx=hback->x;
     long count=0;
     double weight;
     //double *phiin0=phiin-1;
@@ -202,7 +198,7 @@ dsp* mkhb(LOC_T *locin, LOC_T *locout, const double *ampout,
 /**
    Create transpose of ray tracing operator from locin to locout using cubic
    influence function that can reproduce piston/tip/tilt.  */
-static dsp *mkhb_cubic(LOC_T *locin, LOC_T *locout, const double *ampout,
+static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		double displacex, double displacey, double scale,double cubic_iac){
     loc_create_map_npad(locin,2);
     dsp *hback;
@@ -230,14 +226,12 @@ static dsp *mkhb_cubic(LOC_T *locin, LOC_T *locout, const double *ampout,
     const double c3=(2*cubic_iac-0.5)*cubicn;
     const double c4=(0.5-cubic_iac)*cubicn;
     double dplocx0, dplocy0;
-    long *bp,*bi;
-    double *bx;
     long nzmax=locout->nloc*16;
     hback = spnew(locin->nloc, locout->nloc, nzmax);
   
-    bp=hback->p;
-    bi=hback->i;
-    bx=hback->x;
+    spint *bp=hback->p;
+    spint *bi=hback->i;
+    double *bx=hback->x;
     long count=0;
     const int nmapx3=locin->map->nx-3;
     const int nmapy3=locin->map->ny-3;

@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -23,10 +23,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-
 #include "common.h"
+#include "type.h"
 //Obtain from SuiteSparse cs_multiply. Gather together
-#define CS_INT long
+typedef spint CS_INT;
 
 #ifdef USE_COMPLEX
 #define cs csp
@@ -56,14 +56,16 @@
 #define CS_CSC(A) (A && (A->nz == -1))
 #define CS_TRIPLET(A) (A && (A->nz >= 0))
 
-/* wrapper for free */
+/**
+ wrapper for free */
 static void *cs_free (void *p)
 {
     if (p) free (p) ;       /* free p if it is not already NULL */
     return (NULL) ;         /* return NULL to simplify the use of cs_free */
 }
 
-/* free a sparse matrix */
+/**
+ free a sparse matrix */
 static cs *cs_spfree (cs *A)
 {
     if (!A) return (NULL) ;     /* do nothing if A already NULL */
@@ -73,18 +75,21 @@ static cs *cs_spfree (cs *A)
     return (cs_free (A)) ;      /* free the cs struct and return NULL */
 }
 
-/* wrapper for malloc */
+/**
+ wrapper for malloc */
 static void *cs_malloc (CS_INT n, size_t size)
 {
     return (malloc (CS_MAX (n,1) * size)) ;
 }
 
-/* wrapper for calloc */
+/**
+ wrapper for calloc */
 static void *cs_calloc (CS_INT n, size_t size)
 {
     return (calloc (CS_MAX (n,1), size)) ;
 }
-/* wrapper for realloc */
+/**
+ wrapper for realloc */
 static void *cs_realloc (void *p, CS_INT n, size_t size, CS_INT *ok)
 {
     void *pnew ;
@@ -93,7 +98,8 @@ static void *cs_realloc (void *p, CS_INT n, size_t size, CS_INT *ok)
     return ((*ok) ? pnew : p) ;             /* return original p if failure */
 }
 
-/* allocate a sparse matrix (triplet form or compressed-column form) */
+/**
+ allocate a sparse matrix (triplet form or compressed-column form) */
 static cs *cs_spalloc (CS_INT m, CS_INT n, CS_INT nzmax, CS_INT values, CS_INT triplet)
 {
     cs *A = cs_calloc (1, sizeof (cs)) ;    /* allocate the cs struct */
@@ -110,7 +116,8 @@ static cs *cs_spalloc (CS_INT m, CS_INT n, CS_INT nzmax, CS_INT values, CS_INT t
     return ((!A->p || !A->i || (values && !A->x)) ? cs_spfree (A) : A) ;
 }
 
-/* change the max # of entries sparse matrix */
+/**
+ change the max # of entries sparse matrix */
 static CS_INT cs_sprealloc (cs *A, CS_INT nzmax)
 {
     CS_INT ok, oki, okj = 1, okx = 1 ;
@@ -124,7 +131,8 @@ static CS_INT cs_sprealloc (cs *A, CS_INT nzmax)
     return (ok) ;
 }
 
-/* free workspace and return a sparse matrix result */
+/**
+ free workspace and return a sparse matrix result */
 static cs *cs_done (cs *C, void *w, void *x, CS_INT ok)
 {
     cs_free (w) ;                       /* free workspace */
@@ -132,7 +140,8 @@ static cs *cs_done (cs *C, void *w, void *x, CS_INT ok)
     return (ok ? C : cs_spfree (C)) ;   /* return result if OK, else free it */
 }
 
-/* x = x + beta * A(:,j), where x is a dense vector and A(:,j) is dsp */
+/**
+ x = x + beta * A(:,j), where x is a dense vector and A(:,j) is dsp */
 static CS_INT cs_scatter (const cs *A, CS_INT j, CS_ENTRY beta, CS_INT *w, CS_ENTRY *x, CS_INT mark,
     cs *C, CS_INT nz)
 {
@@ -154,7 +163,8 @@ static CS_INT cs_scatter (const cs *A, CS_INT j, CS_ENTRY beta, CS_INT *w, CS_EN
     return (nz) ;
 }
 
-/* C = A*B */
+/**
+ C = A*B */
 cs* Y(cs_multiply) (const cs *A, const cs *B)
 {
     CS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values, *Bi ;
@@ -189,7 +199,8 @@ cs* Y(cs_multiply) (const cs *A, const cs *B)
     return (cs_done (C, w, x, 1)) ;     /* success; free workspace, return C */
 }
 
-/* C = alpha*A + beta*B */
+/**
+ C = alpha*A + beta*B */
 cs* Y(cs_add) (const cs *A, const cs *B, CS_ENTRY alpha, CS_ENTRY beta)
 {
     CS_INT p, j, nz = 0, anz, *Cp, *Ci, *Bp, m, n, bnz, *w, values ;
@@ -217,7 +228,8 @@ cs* Y(cs_add) (const cs *A, const cs *B, CS_ENTRY alpha, CS_ENTRY beta)
     return (cs_done (C, w, x, 1)) ;     /* success; free workspace, return C */
 }
 
-/* drop entries for which fkeep(A(i,j)) is false; return nz if OK, else -1 */
+/**
+ drop entries for which fkeep(A(i,j)) is false; return nz if OK, else -1 */
 static CS_INT cs_fkeep (cs *A, CS_INT (*fkeep) (CS_INT, CS_INT, CS_ENTRY, void *), void *other)
 {
     CS_INT j, p, nz = 0, n, *Ap, *Ai ;
@@ -241,6 +253,9 @@ static CS_INT cs_fkeep (cs *A, CS_INT (*fkeep) (CS_INT, CS_INT, CS_ENTRY, void *
     cs_sprealloc (A, 0) ;                   /* remove extra space from A */
     return (nz) ;
 }
+/**
+   return true of is not zero.
+*/
 static CS_INT cs_nonzero (CS_INT i, CS_INT j, CS_ENTRY aij, void *other)
 {
     (void) i;
@@ -248,16 +263,25 @@ static CS_INT cs_nonzero (CS_INT i, CS_INT j, CS_ENTRY aij, void *other)
     (void) other;
     return CS_ABS(aij)>1e-50 ;
 }
+/**
+   drop zeros in the sparse matrix.
+ */
 CS_INT Y(cs_dropzeros) (cs *A)
 {
     return (cs_fkeep (A, &cs_nonzero, NULL)) ;  /* keep all nonzero entries */
-} 
+}
+/**
+   whether value is below threshold.
+ */
 static CS_INT cs_tol (CS_INT i, CS_INT j, CS_ENTRY aij, void *tol)
 {
     (void) i;
     (void) j;
     return (CS_ABS (aij) > *((double *) tol)) ;
 }
+/**
+   drop values below threashold of tol.
+*/ 
 CS_INT Y(cs_droptol) (cs *A, double tol)
 {
     return (cs_fkeep (A, &cs_tol, &tol)) ;    /* keep all large entries */

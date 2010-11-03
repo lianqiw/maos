@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -47,7 +47,7 @@ void setup_tsurf(SIM_T *simu){
 	simu->surfevl=dcellnew(parms->evl.nevl,1);
     }
  
-    simu->tsurf=calloc(parms->ntsurf, sizeof(RECTMAP_T*));
+    simu->tsurf=calloc(parms->ntsurf, sizeof(rectmap_t*));
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	char *fn=find_file(parms->tsurf[itsurf]);
 	info("Loading tilt surface from %s\n", fn);
@@ -58,7 +58,7 @@ void setup_tsurf(SIM_T *simu){
 	return;
     }
 
-    LOC_T *locevl;
+    loc_t *locevl;
     const double rot=-parms->aper.rotdeg/180.*M_PI;
     int do_rot=(fabs(rot)>1.e-10);
 
@@ -80,7 +80,7 @@ void setup_tsurf(SIM_T *simu){
 	const double scaley=mag;
 	const double scaleopd=-2;
 	const double het=fexit-fsurf;//distance between exit pupil and M3.
-	RECTMAP_T *mapsurf=simu->tsurf[itsurf];
+	rectmap_t *mapsurf=simu->tsurf[itsurf];
 
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->surfevl->p[ievl]){
@@ -101,7 +101,7 @@ void setup_tsurf(SIM_T *simu){
 		ilocm=parms->powfs[ipowfs].indwfs[iwfs];
 	    }
 	    double hs=parms->powfs[ipowfs].hs;
-	    LOC_T *locwfs, *locwfsin;
+	    loc_t *locwfs, *locwfsin;
 	    if(!simu->surfwfs->p[iwfs]){
 		simu->surfwfs->p[iwfs]=dnew(simu->powfs[ipowfs].npts,1);
 	    }
@@ -169,7 +169,7 @@ void setup_surf(SIM_T*simu){
     if(!simu->surfevl){
 	simu->surfevl=dcellnew(parms->evl.nevl,1);
     }
-    simu->surf=calloc(parms->nsurf, sizeof(MAP_T*));
+    simu->surf=calloc(parms->nsurf, sizeof(map_t*));
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	if(!parms->surf[isurf]) continue;
 	char *fn=find_file(parms->surf[isurf]);
@@ -180,7 +180,7 @@ void setup_surf(SIM_T*simu){
 	return;
     }
 
-    LOC_T *locevl;
+    loc_t *locevl;
     const double rot=-parms->aper.rotdeg/180.*M_PI;
     int do_rot=(fabs(rot)>1.e-10);
     if(do_rot){
@@ -223,7 +223,7 @@ void setup_surf(SIM_T*simu){
 	    if(!simu->surfwfs->p[iwfs]){
 		simu->surfwfs->p[iwfs]=dnew(simu->powfs[ipowfs].npts,1);
 	    }
-	    LOC_T *locwfs, *locwfsin;
+	    loc_t *locwfs, *locwfsin;
 	    if(powfs[ipowfs].locm){
 		locwfsin=powfs[ipowfs].locm[ilocm];
 	    }else{

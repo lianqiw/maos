@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -59,7 +59,8 @@
   length. Modified the routine to first 64 bit read/write.
   nx,ny, are uint64_t for 64 and 32 bit machines
   magic is uint32_t always to be backward compatible.
- */
+*/
+
 /**
    Process the input file name and return file names that can be open to
    read/write. If the file name does not end with .bin or .bin.gz it will add to

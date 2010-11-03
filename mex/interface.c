@@ -32,8 +32,8 @@ mxArray *c2mx(const cmat *A){
     return out;
 }
 
-LOC_T *mx2loc(const mxArray *A){
-    LOC_T *loc=calloc(1, sizeof(LOC_T));
+loc_t *mx2loc(const mxArray *A){
+    loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
     loc->locy=loc->locx+loc->nloc;

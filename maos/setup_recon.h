@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -25,7 +25,7 @@ void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms);
 void free_recon(const PARMS_T *parms, RECON_T *recon);
-void test_recon_G0(RECON_T *recon, const PARMS_T *parms, 
+void test_recon_GX(RECON_T *recon, const PARMS_T *parms, 
 		   const POWFS_T *powfs);
 void test_recon_GA(RECON_T *recon, const PARMS_T *parms, 
 		   const POWFS_T *powfs);

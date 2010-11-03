@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -102,7 +102,9 @@
 #define PDEINIT(A)
 #define PNEW(A)
 #endif
-
+/**
+   Information about job to launch for each thread. start and end are the two indices.
+*/
 typedef struct thread_t{
     long start;
     long end;

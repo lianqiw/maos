@@ -5,7 +5,7 @@
 #include <sys/mman.h>
 #include "../lib/aos.h"
 static void test_dpinv(){
-    struct_rand rstat;
+    rand_t rstat;
     seed_rand(&rstat,1);
     dmat *A=dnew(10,4);
     drandn(A,1,&rstat);
@@ -96,7 +96,7 @@ static void test_dshift2center(){
 static void test_clip(){
     int N=64;
     dmat *A=dnew(N,N);
-    struct_rand rstat;
+    rand_t rstat;
     seed_rand(&rstat,1);
     drandn(A,1,&rstat);
     dwrite(A,"A1");
@@ -108,7 +108,7 @@ static void test_hist(){
     int N=64;
     dmat *A=dnew(N,N);
     dmat *B=NULL;
-    struct_rand rstat;
+    rand_t rstat;
     seed_rand(&rstat,1);
     for(int i=0; i<100; i++){
 	drandn(A, 1, &rstat);
@@ -143,7 +143,7 @@ static void test_dcellcat(int argc, char**argv){
 static void test_save(void){//passed
     //info("page size is %ld\n",sysconf(_SC_PAGE_SIZE));
     dmat *a=dnew_mmap(20,20,"a");
-    struct_rand rstat;
+    rand_t rstat;
     seed_rand(&rstat,1);
     drandn(a,1,&rstat);
     dwrite(a,"a2.bin");

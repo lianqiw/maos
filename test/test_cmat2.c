@@ -167,7 +167,7 @@ static void test_ctilt(){
 */
 static void bench_ccwm(void){
     int N=1024*4;
-    struct_rand strand;
+    rand_t strand;
     seed_rand(&strand,1);
     cmat *A=cnew(N,N);
     cmat *B=cnew(N,N);

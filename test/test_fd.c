@@ -6,7 +6,7 @@
 */
 #include "../lib/aos.h"
 
-static csp* fdpcg_sa(LOC_T *xloc, LOC_T *saloc, double *saa){
+static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
     /**
        Create aperture selection function selects the gradients
        for valid subapertures from ground layer xloc (or ploc).
@@ -57,7 +57,7 @@ static csp* fdpcg_sa(LOC_T *xloc, LOC_T *saloc, double *saa){
     cfree(xsel);
     return sel;
 }
-static long *fdpcg_perm(long *nperm, LOC_T **xloc, int nps, LOC_T *saloc){
+static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
     /**
        Create a permulation acting on xhat (fft of x on xloc) so that points of
        the same spatial frequency in all layers are grouped together.
@@ -236,11 +236,11 @@ static csp *fdpcg_prop(long nps, const long *os, long nxg, double dx,
     return prop0;
 }
 int main(){
-    LOC_T *xloc=mksqloc_auto(256,256,0.25);
-    LOC_T *saloc=locread("saloc.bin.gz");
+    loc_t *xloc=mksqloc_auto(256,256,0.25);
+    loc_t *saloc=locread("saloc.bin.gz");
     saloc->dx=0.5;
     long nps=6;
-    LOC_T **xlocs=calloc(nps, sizeof(LOC_T*));
+    loc_t **xlocs=calloc(nps, sizeof(loc_t*));
     long os[nps];
     for(long ips=0; ips<nps; ips++){
 	xlocs[ips]=xloc;

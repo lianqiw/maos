@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -110,8 +110,7 @@ static void skysim_isky(SIM_S *simu){
     PDMAT(simu->res, pres);
     PDMAT(simu->res_oa, pres_oa);
     PDMAT(simu->res_ol, pres_ol);
-    while(LOCK(simu->mutex_isky),isky=simu->isky++,
-	  UNLOCK(simu->mutex_isky),isky<simu->isky_end){
+    while(LOCK(simu->mutex_isky),isky=simu->isky++,UNLOCK(simu->mutex_isky),isky<simu->isky_end){
 	double tk_1=myclockd();
 	//Setup star parameters.
 	STAR_S *star=setup_star(&nstar, simu,stars->p[isky],seed_maos);

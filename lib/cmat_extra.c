@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -18,7 +18,6 @@
 
 
 #include <sys/file.h>
-#define USE_COMPLEX
 #include "common.h"
 #include "random.h"
 #include "misc.h"
@@ -344,24 +343,34 @@ void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
 	}
     }
 }
-#define cmpcpy(A,B,S) memcpy(A,B,S*sizeof(dcomplex));
+#define cmpcpy(A,B,S) memcpy(A,B,S*sizeof(dcomplex)); /**<macro to do copying*/
+/**
+   do a modules square and copy to real part of output
+*/
 inline static void sq2cpy(dcomplex *out, const dcomplex *in, const size_t length){
     for(size_t i=0; i<length; i++){
 	out[i]=cabs2(in[i]);
     }
 }
+/**
+   Copy the real part.
+*/
 inline static void realcpy(dcomplex *out, const dcomplex *in, const size_t length){
     for(size_t i=0; i<length; i++){
 	out[i]=creal(in[i]);
     }
 }
+/**
+   Copy the absolute value to output.
+ */
 inline static void abscpy(dcomplex *out, const dcomplex *in, const size_t length){
     for(size_t i=0; i<length; i++){
 	out[i]=cabs(in[i]);
     }
 }
-#define RA2XY(A) (creal(A)*(cos(cimag(A))+I*sin(cimag(A))))
-#define XY2RA(A) (cabs(A)+I*atan2(cimag(A),creal(A)))
+#define RA2XY(A) (creal(A)*(cos(cimag(A))+I*sin(cimag(A)))) /**<macro to convert r/a to x/y*/
+#define XY2RA(A) (cabs(A)+I*atan2(cimag(A),creal(A))) /**<macro to convert x/y to r/a*/
+
 
 /**
    Embed array B into A with rotation theta CW.  Current version, preferred */
@@ -465,7 +474,7 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	    }								\
 	    x4+=stheta;							\
 	    y4+=ctheta;							\
-	}
+	} 
 	//it is not good to embed flag in the inner most loop.
 	switch(flag){
 	case C_FULL:
@@ -518,8 +527,6 @@ void cembedscaleout(cmat *restrict A, const cmat *B,
     int niny2=niny/2;
     int nouty2=nouty/2;
     int ix2, iy2;
-#define RA2XY(A) (creal(A)*(cos(cimag(A))+I*sin(cimag(A))))
-#define XY2RA(A) (cabs(A)+I*atan2(cimag(A),creal(A)))
 #define DO_LOOP(AFTER,CMD)						\
     for(int iy=0; iy<nouty; iy++){					\
 	y=(iy-nouty2)*youtscale;					\
@@ -592,7 +599,8 @@ void ccpcorner(cmat *A, const cmat *restrict B, CEMBED flag){
     memset(psfout, 0, sizeof(dcomplex)*nx*ny);
     const int ny2=(ny<niny)?ny/2:niny/2;
     const int nx2=(nx<ninx)?nx/2:ninx/2;
-#define DO_COPY2(CCMD)					\
+
+#define DO_COPY2(CCMD)			\
 	CCMD(psfout+(ny-ny2+i)*nx+(nx-nx2),		\
 	     psfin+(niny-ny2+i)*ninx+(ninx-nx2),nx2);	\
 	CCMD(psfout+(ny-ny2+i)*nx,			\
@@ -600,7 +608,7 @@ void ccpcorner(cmat *A, const cmat *restrict B, CEMBED flag){
 	CCMD(psfout+i*nx+(nx-nx2),			\
 	     psfin+i*ninx+(ninx-nx2), nx2);		\
 	CCMD(psfout+i*nx,				\
-	     psfin+i*ninx, nx2);
+	     psfin+i*ninx, nx2); 
     for(int i=0; i<ny2; i++){
 	switch(flag){
 	case C_FULL:

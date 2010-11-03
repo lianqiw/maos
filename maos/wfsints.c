@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -34,7 +34,7 @@
    routine wfsgradx  */
 void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
 		const dmat *gradref,const PARMS_T *parms,
-		const POWFS_T *powfs,int iwfs, int isim,
+		const POWFS_T *powfs,int iwfs,
 		const dmat *opd, const dmat *lltopd){
     
     const int ipowfs=parms->wfs[iwfs].powfs;
@@ -125,9 +125,6 @@ void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
 	    // another 1/(npsf*npsf) to cancel out this FFT pair later.
 	    //cscale(lotfc,1./(double)((long)npsf*npsf*npsf*npsf));
 	    cscale(lotfc,1./(double)((long)npsf*npsf));//max of 1
-	    if(parms->save.powfs_opd[ipowfs]){
-		cwrite(lotfc,"lotfc_%d_wfs%d.bin",isim,iwfs);
-	    }
 	}
 #if ROT_OTF == 1
 	double xscale=(double)npsf/(double)ncompx;

@@ -9,8 +9,8 @@ usage write(filename, data);
 #include "io.h"
 
 static void writedata(file_t *fp, int type, const mxArray *arr){
-    int magic;
-    long m,n;
+    uint32_t magic;
+    uint64_t m,n;
     if(!arr){
 	m=0; n=0;
     }else{
@@ -33,10 +33,10 @@ static void writedata(file_t *fp, int type, const mxArray *arr){
 		issparse=1;
 		if(mxIsComplex(in)){
 		    magic=MC_CSP;
-		    type2=M_CSP;
+		    type2=MAT_CSP;
 		}else{
 		    magic=MC_SP;
-		    type2=M_SP;
+		    type2=MAT_SP;
 		}
 	    }else{
 		issparse=0;
@@ -49,20 +49,24 @@ static void writedata(file_t *fp, int type, const mxArray *arr){
 		}
 	    }
 	}
-	writefile(&magic, sizeof(int), 1, fp);
-	writefile(&m, sizeof(long), 1, fp);
-	writefile(&n, sizeof(long), 1, fp);
+	writefile(&magic, sizeof(uint32_t), 1, fp);
+	writefile(&m, sizeof(uint64_t), 1, fp);
+	writefile(&n, sizeof(uint64_t), 1, fp);
 	for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
 	    in=mxGetCell(arr, ix);
 	    if(in && mxIsSparse(in) !=issparse)
 		error("can only save cell array of all sparse or all dense");
 	    writedata(fp, type2, in);
 	}
-    }else if(type == M_SP || ((arr) && mxIsSparse(arr))){
-	magic=M_SP;
-	writefile(&magic, sizeof(int), 1, fp);
-	writefile(&m, sizeof(long), 1, fp);
-	writefile(&n, sizeof(long), 1, fp);
+    }else if(type == MAT_SP || ((arr) && mxIsSparse(arr))){
+	if(sizeof(mwIndex)==4){
+	    magic=M_SP32;
+	}else{
+	    magic=M_SP64;
+	}
+	writefile(&magic, sizeof(uint32_t), 1, fp);
+	writefile(&m, sizeof(uint64_t), 1, fp);
+	writefile(&n, sizeof(uint64_t), 1, fp);
 	if(m!=0 && n!=0){
 	    mwIndex *Jc=mxGetJc(arr);
 	    long nzmax=Jc[n];
@@ -71,11 +75,15 @@ static void writedata(file_t *fp, int type, const mxArray *arr){
 	    writefile(mxGetIr(arr), sizeof(mwIndex), nzmax, fp);
 	    writefile(mxGetPr(arr), sizeof(double), nzmax, fp);
 	}
-    }else if(type == M_CSP || ((arr) && mxIsSparse(arr))){
-	magic=M_CSP;
-	writefile(&magic, sizeof(int), 1, fp);
-	writefile(&m, sizeof(long), 1, fp);
-	writefile(&n, sizeof(long), 1, fp);
+    }else if(type == MAT_CSP || ((arr) && mxIsSparse(arr))){
+	if(sizeof(mwIndex)==4){
+	    magic=M_CSP32;
+	}else{
+	    magic=M_CSP64;
+	}
+	writefile(&magic, sizeof(uint32_t), 1, fp);
+	writefile(&m, sizeof(uint64_t), 1, fp);
+	writefile(&n, sizeof(uint64_t), 1, fp);
 	if(m!=0 && n!=0){
 	    mwIndex *Jc=mxGetJc(arr);
 	    long nzmax=Jc[n];
@@ -86,17 +94,17 @@ static void writedata(file_t *fp, int type, const mxArray *arr){
 	}
     }else if(type == M_DBL || ((arr)&& mxIsDouble(arr))){
 	magic=M_DBL;
-	writefile(&magic, sizeof(int), 1, fp);
-	writefile(&m, sizeof(long), 1, fp);
-	writefile(&n, sizeof(long), 1, fp);
+	writefile(&magic, sizeof(uint32_t), 1, fp);
+	writefile(&m, sizeof(uint64_t), 1, fp);
+	writefile(&n, sizeof(uint64_t), 1, fp);
 	if(m!=0 && n!=0){
 	    writefile(mxGetPr(arr), sizeof(double), m*n, fp);
 	}  
     }else if(type == M_CMP || ((arr)&& mxIsDouble(arr))){
 	magic=M_CMP;
-	writefile(&magic, sizeof(int), 1, fp);
-	writefile(&m, sizeof(long), 1, fp);
-	writefile(&n, sizeof(long), 1, fp);
+	writefile(&magic, sizeof(uint32_t), 1, fp);
+	writefile(&m, sizeof(uint64_t), 1, fp);
+	writefile(&n, sizeof(uint64_t), 1, fp);
 	if(m!=0 && n!=0){
 	    writefile_complex(mxGetPr(arr),mxGetPi(arr), m*n, fp);
 	}

@@ -7,9 +7,9 @@ TIC;
 /*for propagation to WFS PTS*/
 typedef struct PROP_GRD_PTS2_T{
     /*input*/
-    MAP_T *mapin;
+    map_t *mapin;
     /*output*/
-    PTS_T *pts;           /*out*/
+    pts_t *pts;           /*out*/
     double *phiout;       /*stores out opd. needs to be preallocated.*/
     double alpha;
     double displace[2];
@@ -27,8 +27,8 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
        renamed to prop_grid_pts_old time cut by almost 3 fold for
        each LGS WFS.  0.40s->0.16s
      */
-    MAP_T *mapin=data->mapin;
-    PTS_T *pts=data->pts;
+    map_t *mapin=data->mapin;
+    pts_t *pts=data->pts;
     double *phiout0=data->phiout;
     double alpha=data->alpha;
     double displacex=data->displace[0];
@@ -339,7 +339,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
 static void test_accuracy(void){
     double r0=0.15;
     double L0=30;
-    struct_rand rstat;
+    rand_t rstat;
     //long m=2048, n=2048;
     double dx=1./2.;
     long m=(long)round(10/dx/16)*16;
@@ -348,26 +348,26 @@ static void test_accuracy(void){
     seed_rand(&rstat, 2);
     int nlayer=1;
     double wt[1]={1};
-    MAP_T **screens;
+    map_t **screens;
     screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,1);
-    MAP_T *screen=screens[0];
+    map_t *screen=screens[0];
     sqmapwrite(screen,"accphi_screen");
     //loc for the map
-    LOC_T *locin=mksqloc(m,n,dx,screen->ox,screen->oy);
+    loc_t *locin=mksqloc(m,n,dx,screen->ox,screen->oy);
 
     dmat *A=dnew(60,60);
     dcircle(A,30,30,30,1);
     dwrite(A,"accphi_A");
-    PTS_T *pts=calloc(1,sizeof(PTS_T));
-    LOC_T *tmp=map2loc(0.5,A->nx,A->ny,-(A->nx/2-1)*0.5,-(A->ny/2-1)*0.5,A->p);
-    memcpy(pts,tmp,sizeof(LOC_T));
+    pts_t *pts=calloc(1,sizeof(pts_t));
+    loc_t *tmp=map2loc(0.5,A->nx,A->ny,-(A->nx/2-1)*0.5,-(A->ny/2-1)*0.5,A->p);
+    memcpy(pts,tmp,sizeof(loc_t));
     free(tmp);
     pts->dx=1./64.;
     pts->nx=32;
-    LOC_T *loc=pts2loc(pts);
+    loc_t *loc=pts2loc(pts);
     
-    LOCSTAT_T *locstat=mklocstat(loc); 
-    locwrite((LOC_T*)pts,"accphi_pts");
+    locstat_t *locstat=mklocstat(loc); 
+    locwrite((loc_t*)pts,"accphi_pts");
     locwrite(loc,"accphi_loc");
     double *phi_pts, *phi_loc, *phi_stat, *phi_pts1, *phi_stat1;
     double *phi_loc2loc, *phi_h, *phi_cub, *phi_cubh;
@@ -533,7 +533,7 @@ static void test_accuracy(void){
 static void test_speed(int nthread){
    double r0=0.15;
     double L0=30;
-    struct_rand rstat;
+    rand_t rstat;
     //long m=2048, n=2048;
     double dx=1./2.;
     long m=(long)round(10/dx/16)*16;
@@ -542,20 +542,20 @@ static void test_speed(int nthread){
     seed_rand(&rstat, 2);
     int nlayer=1;
     double wt[1]={1};
-    MAP_T **screens;
+    map_t **screens;
     screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,1);
     info("\n");
-    MAP_T *screen=screens[0];
+    map_t *screen=screens[0];
     double dsa=0.1;
     dmat *A=dnew(30/dsa,30/dsa);
     dcircle(A,30,30,15/dsa,1);
-    PTS_T *pts=calloc(1,sizeof(PTS_T));
-    LOC_T *tmp=map2loc(dsa,A->nx,A->ny,-(A->nx/2-1)*dsa,-(A->ny/2-1)*dsa,A->p);
-    memcpy(pts,tmp,sizeof(LOC_T));
+    pts_t *pts=calloc(1,sizeof(pts_t));
+    loc_t *tmp=map2loc(dsa,A->nx,A->ny,-(A->nx/2-1)*dsa,-(A->ny/2-1)*dsa,A->p);
+    memcpy(pts,tmp,sizeof(loc_t));
     free(tmp);
     pts->dx=1./64.;
     pts->nx=32;
-    LOC_T *loc=pts2loc(pts);
+    loc_t *loc=pts2loc(pts);
     double *phi_pts=calloc(loc->nloc, sizeof(double));
     double displacex,displacey,scale;
     displacex=0;

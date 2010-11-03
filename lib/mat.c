@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -448,7 +448,7 @@ double X(norm2)(const X(mat)*A){
 /**
    Fill A with random uniform numbers between [0, 1]*max
 */
-void X(randu)(X(mat) *A, const T max, struct_rand *rstat){
+void X(randu)(X(mat) *A, const T max, rand_t *rstat){
     if(!A) return;
     for(int i=0; i<A->nx*A->ny; i++){
 	A->p[i]=RANDU(rstat)*max;
@@ -458,7 +458,7 @@ void X(randu)(X(mat) *A, const T max, struct_rand *rstat){
    Fill A with random normal distribution numbers with
    standard deviation of sigma.
 */
-void X(randn)(X(mat) *A, const T sigma, struct_rand *rstat){
+void X(randn)(X(mat) *A, const T sigma, rand_t *rstat){
     if(!A) return;
     for(int i=0; i<A->nx*A->ny; i++){
 	A->p[i]=RANDN(rstat)*sigma;

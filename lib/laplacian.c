@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -68,8 +68,8 @@ dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
     /*build laplacian on square map using periodic conditions*/
     dsp *L2=spnew(nx*ny,nx*ny,nx*ny*5);
     int iy,ix;
-    long *pp=L2->p;
-    long *pi=L2->i;
+    spint *pp=L2->p;
+    spint *pi=L2->i;
     double *px=L2->x;
     double *px0=px;
     double cf=laplacian_coef(r0, weight, dx);
@@ -94,7 +94,7 @@ dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
     return L2r;
 }
  
-dsp* mklaplacian_loc(LOC_T *loc, double r0, double weight){
+dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     /*
       The laplacian here is l=delta^2(u)/4;
       There is a scaling factor of 4.
@@ -116,8 +116,8 @@ dsp* mklaplacian_loc(LOC_T *loc, double r0, double weight){
     int ix,iy;
     int nx1=loc->map->nx-1;
     int ny1=loc->map->ny-1;
-    long *pp=L2->p;
-    long *pi=L2->i;
+    spint *pp=L2->p;
+    spint *pi=L2->i;
     double  *px=L2->x;
     double  *px0=L2->x;
     long (*map)[loc->map->nx]=(long (*)[loc->map->nx])loc->map->p;

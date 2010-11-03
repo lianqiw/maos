@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -22,14 +22,14 @@
 #include "type.h"
 dsp *cs_multiply (const dsp *A, const dsp *B);
 dsp *cs_add (const dsp *A, const dsp *B, double alpha, double beta);
-long cs_dropzeros (dsp *A);
-long cs_droptol (dsp *A, double tol);
-dsp *cs_transpose (const dsp *A, long values);
+spint cs_dropzeros (dsp *A);
+spint cs_droptol (dsp *A, double tol);
+dsp *cs_transpose (const dsp *A, spint values);
 
 
 csp *ccs_multiply (const csp *A, const csp *B);
 csp *ccs_add (const csp *A, const csp *B, dcomplex alpha, dcomplex beta);
-long ccs_dropzeros (csp *A);
-long ccs_droptol (csp *A, double tol);
-csp *ccs_transpose (const csp *A, long values);
+spint ccs_dropzeros (csp *A);
+spint ccs_droptol (csp *A, double tol);
+csp *ccs_transpose (const csp *A, spint values);
 #endif

@@ -1,3 +1,5 @@
+2010-10-31 Version 0.7.0
+	Eliminated dependency on Arpack. So fortran compiler is no longer required.
 2010-10-27 Version 0.6.1
 	Changed mkh by removing renorm optim. This changed DTF SI
 	generation. But improves performance a bit initially

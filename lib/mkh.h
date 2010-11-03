@@ -1,5 +1,5 @@
 /*
-  Copyright 2009,2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -22,17 +22,17 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
-dsp * mkhb(LOC_T *locin, LOC_T *locout, const double *ampout,
+dsp * mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	   double displacex, double displacey,double scale,
 	   int cubic, double cubic_iac);
-dsp * mkh(LOC_T *locin, LOC_T *locout, const double *ampout,
+dsp * mkh(loc_t *locin, loc_t *locout, const double *ampout,
 	  double displacex, double displacey,double scale,
 	  int cubic, double cubic_iac);
 /*
-dsp * mkhb_cubic(LOC_T *locin, LOC_T *locout, const double *ampout,
+dsp * mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		 double displacex, double displacey,
 		 double scale,double cubic);
-dsp * mkh_cubic(LOC_T *locin, LOC_T *locout, const double *ampout,
+dsp * mkh_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		double displacex, double displacey,
 		double scale,double cubic);*/
 dsp *mkhbin1d(dmat *xin, dmat *xout);		   
