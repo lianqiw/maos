@@ -205,7 +205,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       echo Will download one form the website. 
       echo This library is only for non-commerical use only.
       fn=mkl${cpu}_redistributed.tar.bz2
-      wget ${BASEURL}/${fn}  -O /tmp/${fn}  || exit 1
+      wget --no-check-certificate ${BASEURL}/${fn}  -O /tmp/${fn}  || exit 1
       if test ! -d ${SRC_DIR}/external ;then
       	  mkdir -p ${SRC_DIR}/external || exit 1
       fi
