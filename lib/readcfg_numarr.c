@@ -74,7 +74,7 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
 		    *ret=(TYPE*)realloc(*ret, sizeof(TYPE)*nret);
 		}
 		(*ret)[count]=(TYPE)data;
-		while(endptr[0]==','||endptr[0]==';'||!isgraph(endptr[0])){
+		while(endptr[0]==','||endptr[0]==';'||!isgraph((int)endptr[0])){
 		    endptr++;
 		}
 		startptr=endptr;
@@ -124,7 +124,7 @@ TYPE TYPEFUN2(const char*format,...){
 		    data*=data2;
 		}
 	    }
-	    while(isspace(endptr[0])) endptr++;
+	    while(isspace((int)endptr[0])) endptr++;
 	    if(strlen(endptr)>0){
 		warning("Garbage found for key \"%s\":\t\"%s\"\n", key, endptr);
 	    }

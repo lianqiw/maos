@@ -15,8 +15,8 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_SCHEDULER_H
-#define AOS_SCHEDULER_H
+#ifndef AOS_SCHEDULER_SERVER_H
+#define AOS_SCHEDULER_SERVER_H
 #define MAXMSG  512
 /*
 #include <sys/types.h>       

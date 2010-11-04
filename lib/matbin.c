@@ -202,7 +202,7 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
 X(sp) *Y(spreaddata)(file_t *fp){
     uint32_t magic;
     zfread(&magic, sizeof(uint32_t),1,fp);
-    uint32_t size;
+    uint32_t size=0;
     if(magic==M_SPT64){
 	size=8;
     }else if(magic==M_SPT32){

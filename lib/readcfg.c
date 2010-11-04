@@ -60,9 +60,9 @@ trim the spaces, ", ', before and after string.*/
 static void strtrim(char **str){
     if(!*str) return;
     int iend;
-    while((*str)[0]!='\0' && isspace((*str)[0])) (*str)++;
+    while((*str)[0]!='\0' && isspace((int)(*str)[0])) (*str)++;
     iend=strlen(*str)-1;
-    while(isspace((*str)[iend]) && iend>=0){
+    while(isspace((int)(*str)[iend]) && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
@@ -97,13 +97,13 @@ static char *squeeze(char *line){
 	    comment[0]='\0';
 	/*Remove trailing linebreak and spaces*/
 	int nread=strlen(line)-1;
-	while(nread>=0 && (isspace(line[nread])||line[nread]==';')){
+	while(nread>=0 && (isspace((int)line[nread])||line[nread]==';')){
 	    line[nread]='\0';
 	    nread--;
 	}
 	/*Remove leading spaces*/
 	sline=line;
-	while(isspace(sline[0])) sline++;
+	while(isspace((int)sline[0])) sline++;
 	if(sline[0]=='\0')  sline=NULL;
 	//Convert single quote ' to double quotes" if any
 	if(sline){
@@ -355,7 +355,7 @@ int readcfg_strarr(char ***res, const char *format,...){
 	sdata2=sdata+1;
 	sdataend--;
 	//find each string.
-	while(sdata2<sdataend && (sdata2[0]==','||sdata2[0]==';'||!isgraph(sdata2[0]))){
+	while(sdata2<sdataend && (sdata2[0]==','||sdata2[0]==';'||!isgraph((int)sdata2[0]))){
 	    sdata2++;
 	}
 	while(sdata2<sdataend){
@@ -376,7 +376,7 @@ int readcfg_strarr(char ***res, const char *format,...){
 	    }
 	    count++;
 	    sdata2=sdata4+1;
-	    while(sdata2<sdataend && (sdata2[0]==','||sdata2[0]==';'||!isgraph(sdata2[0]))){
+	    while(sdata2<sdataend && (sdata2[0]==','||sdata2[0]==';'||!isgraph((int)sdata2[0]))){
 		sdata2++;
 	    }
 	}

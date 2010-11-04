@@ -64,7 +64,7 @@ case "$host_cpu" in
     AC_MSG_ERROR([Unrecognized host_cpu])
 esac
 mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
-
+win32=no
 case "$host_os" in
  *linux*)
     AM_CONDITIONAL(LINUX, true)
@@ -85,7 +85,6 @@ case "$host_os" in
 #We only have MKL redistributable for linux
 AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
 AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
-AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
@@ -98,6 +97,7 @@ AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static
  LAPACK="-Wl,-rpath,extern/win -Lextern/win -lblas -llapack"
  win32=yes
 esac
+AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 
 #Common configure options.
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
@@ -126,8 +126,8 @@ else
 fi 
 
 AC_CHECK_LIB([pthread],[__pthread_unwind_next],[pthread_good="yes"],[pthread_good="no"])
-if test -z "$win32" ;then
-OPTSprof="-pthread"
+if test  "x$win32" = "xno" ;then
+    OPTSprof="-pthread"
 fi
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
@@ -239,12 +239,11 @@ else
    fi
    fi
 fi
-if test -z "$win32";then
 #Check for FFTW3 header and library.
 AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 LDFFT="-lfftw3"
-fi
+
 AC_CHECK_LIB([cholmod],[cholmod_l_factorize], [have_chol="yes"], [have_chol="no"])
 if test "x$have_chol" = "xyes" ;then
     echo "cholmod is installed in the system. will use it."

@@ -52,7 +52,6 @@
 #define SQRT(A) sqrt(A)
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
-#define POW(A,B) pow(A,B)
 #define PRINT(A) printf("%10.3e",A);
 #define CONJ(x) (x)
 #define dot_do dotdbl
@@ -66,7 +65,6 @@
 #define SQRT(A) csqrt(A)
 #define RANDU(A) (randu(A)+I*randu(A))
 #define RANDN(A) (randn(A)+I*randn(A))
-#define POW(A,B) cpow(A,B)
 #define PRINT(A) printf("(%10.3e %10.3eI)",creal(A),cimag(A));
 #define CONJ(x) conj(x)
 #define dot_do dotcmp

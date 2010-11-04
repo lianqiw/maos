@@ -418,7 +418,6 @@ typedef struct SIM_T{
     rand_t *atmwd_rand;/**<random stream for wind direction*/
     rand_t *init;      /**<random stream to initialize other streams*/
     STATUS_T *status;  /**<status report to scheduler.*/
-    
     dcell *moao_wfs;   /**<moao DM command for wfs*/
     dcell *moao_evl;   /**<moao DM command for science field*/
 
