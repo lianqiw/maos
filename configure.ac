@@ -16,7 +16,7 @@ AC_LANG([C])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
-
+echo host_os=$host_os
 AC_TYPE_SIZE_T  
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
 AM_CONDITIONAL(DRAW,true)
@@ -35,6 +35,7 @@ AC_SUBST(MON_LIBS)
 AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
 AM_CONDITIONAL(DARWIN, false)
+AM_CONDITIONAL(WIN,    false)
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd $srcdir && pwd)
 SVN_REV=$(svnversion -n $SRC_DIR)
@@ -43,7 +44,7 @@ AC_DEFINE_UNQUOTED(SVN_REV, ["$SVN_REV"], ["Define SVN revision number"])
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
-OPTScommon=" -Wshadow  -Wall -fPIC" #-all-static will produce a static exe.
+OPTScommon=" -Wshadow  -Wall " #-all-static will produce a static exe.
 LDSYS="-lz -lm"
 OPTSextra=""
 use_shm="no"
@@ -63,6 +64,7 @@ case "$host_cpu" in
     AC_MSG_ERROR([Unrecognized host_cpu])
 esac
 mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
+
 case "$host_os" in
  *linux*)
     AM_CONDITIONAL(LINUX, true)
@@ -91,6 +93,10 @@ AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static
 *bsd*)
  AM_CONDITIONAL(BSD, true)
 ;;
+*w32)
+ AM_CONDITIONAL(WIN, true)
+ LAPACK="-Wl,-rpath,extern/win -Lextern/win -lblas -llapack"
+ win32=yes
 esac
 
 #Common configure options.
@@ -120,7 +126,9 @@ else
 fi 
 
 AC_CHECK_LIB([pthread],[__pthread_unwind_next],[pthread_good="yes"],[pthread_good="no"])
+if test -z "$win32" ;then
 OPTSprof="-pthread"
+fi
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AM_CONDITIONAL(DO_THRPOOL,true)
@@ -214,27 +222,36 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    fi
    LAPACK="$mkl_lib ${SRC_DIR}/external/mkl${cpu}/libguide.la"
 else
-   if test -n "$(pkg-config --libs blas lapack)" ;then
-       LAPACK=$(pkg-config --libs blas lapack)
-   else
-       LAPACK="-lblas -llapack"
-   fi
+   if test -z "$LAPACK" ;then
+       if test -n "$(pkg-config --libs blas lapack)" ;then
+           LAPACK=$(pkg-config --libs blas lapack)
+       else
+           LAPACK="-lblas -llapack"
+       fi
+   
    echo LAPACK=$LAPACK
-   AC_CHECK_LIB([blas],[dgemm_],[],[AC_MSG_ERROR(Please install blas or use --enable-mkl to down MKL from MAOS website)],[$LAPACK])
-   AC_CHECK_LIB([lapack],[dposv_],[],[AC_MSG_ERROR(Please install lapackor use --enable-mkl to down MKL from MAOS websit)],[$LAPACK])
+   AC_CHECK_LIB([blas],  [dgemm_],[],[lapack_not_found=yes],[$LAPACK])
+   AC_CHECK_LIB([lapack],[dposv_],[],[lapack_not_found=yes],[$LAPACK])
+   if test  "x$lapack_not_found" = "xyes" ;then
+       if test -n "$use_mkl_default" ;then
+           AC_MSG_ERROR(Please install blas or use --enable-mkl to down MKL from MAOS website)
+       fi
+   fi
+   fi
 fi
-
+if test -z "$win32";then
 #Check for FFTW3 header and library.
 AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 LDFFT="-lfftw3"
+fi
 AC_CHECK_LIB([cholmod],[cholmod_l_factorize], [have_chol="yes"], [have_chol="no"])
 if test "x$have_chol" = "xyes" ;then
     echo "cholmod is installed in the system. will use it."
     LDCHOL="-lcholmod"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
-    echo "cholmod is not available, will download the source and compile."
+    echo "cholmod is not available, will use the shipped source."
     LDCHOL="../external/cholmod/libcholmod.la"
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
@@ -287,7 +304,6 @@ fi
 echo use_icc=$use_icc
 echo use_ifort=$use_ifort
 echo use_static=$use_static
-echo host_os=$host_os
 
 echo CC=$CC
 echo LIBS=$LIBS

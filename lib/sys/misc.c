@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <execinfo.h>
+//#include <execinfo.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>//added in apple.

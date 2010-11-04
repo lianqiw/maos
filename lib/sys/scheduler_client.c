@@ -16,6 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 // make a client address
+#ifndef __CYGWIN__
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -325,3 +327,4 @@ char* scheduler_get_drawdaemon(int pid){
     }
     return fifo;
 }
+#endif
