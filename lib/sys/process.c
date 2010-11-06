@@ -133,6 +133,7 @@ void single_instance_daemonize(const char *lockfolder_in,
 	    return;
 	}else{
 	    _exit(EXIT_SUCCESS);
+	    return;//just in case
 	}
     }
     //lock success, forking and put to background.
