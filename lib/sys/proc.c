@@ -80,20 +80,15 @@ void init_path(void){
 	HOME=getenv("HOME");
 	const char *temp="/tmp";
 #endif
-	info("temp=%s\n",temp);
 	TEMP=stradd(temp,"/","maos-",USER,NULL);
 	mymkdir("%s",TEMP);
 	mymkdir("%s/.aos/",HOME);
-	info("TEMP=%s\n",TEMP);
-	info("HOME=%s\n",HOME);
-	info("USER=%s\n",USER);
     }
 }
 static __attribute__((constructor))void init(){
     NCPU= get_ncpu();
     TCK = sysconf(_SC_CLK_TCK);
     init_path();
-    info("sizeof(long)=%d\n",(int)sizeof(long));
 }
 
 double get_usage_cpu(void){

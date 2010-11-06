@@ -92,7 +92,7 @@ int lock_file(const char *fnlock, long version){
 	    if(write(fd,strpid,strlen(strpid)+1)!=strlen(strpid)+1){
 		warning("Write pid %d to %s failed\n",(int)getpid(),fnlock);
 	    }else{
-		info("Write pid %d to %s success\n",(int)getpid(),fnlock);
+		//info("Write pid %d to %s success\n",(int)getpid(),fnlock);
 	    }
 	    fsync(fd);//don't close file. maintain lock.
 	}
