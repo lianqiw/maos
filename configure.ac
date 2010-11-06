@@ -149,10 +149,10 @@ if test x$use_oprof = "xyes" ;then
 fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
-OPTIM_ICC="-Werror -g -O3 -xO -funroll-loops -DHAVE_SSE2=1 -wd981 -vec-report=0 -static-intel"
-OPTIM_GCC="-Werror -g -O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc" 
+OPTIM_ICC="-O3 -xO -funroll-loops -DHAVE_SSE2=1 -wd981 -vec-report=0 -static-intel"
+OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc" 
 OPTIM_OPENCC="-O3"
-OPT_DEBUG="-g -rdynamic -ggdb -Werror -O0 -DDEBUG_TRACE"
+OPT_DEBUG="-g -rdynamic -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
 AM_CONDITIONAL(USE_OPENCC,false)
 use_ifort="no"

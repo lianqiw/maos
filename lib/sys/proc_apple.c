@@ -110,7 +110,7 @@ int read_usage_cpu(long *user, long *tot){
     if (host_processor_info (mach_host_self (),
 			     PROCESSOR_CPU_LOAD_INFO,
 			     &ncpu0,
-			     (processor_info_array_t*)&pinfo,
+			     (processor_info_array_t*) &pinfo,
 			     &info_count)) {
 	return -1;
     }

@@ -765,7 +765,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
  */
 void free_simu(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    free(simu->save);
     free(simu->init);
     free(simu->atm_rand);
     free(simu->atmwd_rand);
@@ -916,6 +915,7 @@ void free_simu(SIM_T *simu){
 	snprintf(fn, 80, "Res_%d.lock",simu->seed);
 	(void)remove(fn);
     }
+    free(simu->save);
     free(simu);
 }
 /**
