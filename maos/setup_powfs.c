@@ -1355,7 +1355,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	    }
 	    
 	    char fnotf[PATH_MAX];
-	    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/",getenv("HOME"));
+	    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/",HOME);
 	    if(!exist(fnotf)) 
 		mymkdir("%s",fnotf);
 	    if(parms->powfs[ipowfs].ncpa && parms->powfs[ipowfs].ncpa_method==2){
@@ -1369,7 +1369,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			 "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
 			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d.bin.gz",
-			 getenv("HOME"), fnprefix,
+			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
 			 parms->atm.r0, parms->atm.l0, 
 			 powfs[ipowfs].pts->dsa,nsa,
@@ -1394,7 +1394,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
 			     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d.bin.gz",
-			     getenv("HOME"), fnprefix,
+			     HOME, fnprefix,
 			     parms->aper.d,parms->aper.din, 
 			     parms->atm.r0, parms->atm.l0, 
 			     powfs[ipowfs].pts->dsa,nsa,
@@ -1412,7 +1412,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			 "r0_%g_L0%g_dsa%g_lltd%g_dx1_%g_"
 			 "nwvl%d_%g_embfac%d_%dx%d_SELOTF.bin.gz", 
-			 getenv("HOME"), fnprefix,
+			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
 			 parms->atm.r0, parms->atm.l0, 
 			 powfs[ipowfs].lotf->pts->dsa,
@@ -1460,7 +1460,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
     dcellfree(intstat->saneara);
     dcellfree(intstat->saneaxy);
     //Remove OTFs that are older than 30 days.
-    char *dirotf=stradd(getenv("HOME"), "/.aos/otfc", NULL);
+    char *dirotf=stradd(HOME, "/.aos/otfc", NULL);
     remove_file_older(dirotf, 30*24*3600);
     free(dirotf);
 }

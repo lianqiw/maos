@@ -500,36 +500,9 @@ ARG_T * parse_args(int argc, char **argv){
     }
     info2("Main config file is %s\n",arg->conf);
     //Setup PATH and result directory
-    const char *aos_config_path=getenv("AOS_CONFIG_PATH");
-    char *config_path=NULL;
-    if(aos_config_path){
-	config_path=stradd(aos_config_path,"/maos/",NULL);
-    }
-    if(!exist(config_path) && exist(SRCDIR)){
-	/*If not specified, assume it is in the source tree*/
-	if(config_path) free(config_path);
-	config_path=stradd(SRCDIR,"/config/maos/",NULL);
-    }
-    if(!exist(config_path)){
-	free(config_path);
-	config_path=stradd(getenv("HOME"),"/.aos/config/maos/",NULL);
-    }
-    if(!exist(config_path)){
-	warning("Unable to determine the path to the configuration files.\n");
-	warning("Will download a copy from the website and put in %ss/.aos/config\n",getenv("HOME"));
-	char cmd[400];
-	snprintf(cmd,400,"wget %s/maos_config.tar.bz2 -O /tmp/maos_config.tar.bz2 "
-		 "&& tar axvf /tmp/maos_config.tar.bz2 -C %s/.aos/ "
-		 "&& rm -rf  /tmp/maos_config.tar.bz2",BASEURL, getenv("HOME"));
-	if(system(cmd)){
-	    error("Unable to download the configuration files from the internet and extract to %s/.aos/config", getenv("HOME"));
-	}
-    }
-    if(!exist(config_path)){
-	warning("Unable to determine the path to the configuration files.\n");
-    }
-    addpath(config_path);
+    char *config_path=find_config("maos");
     char *bin_path=stradd(config_path, "/bin", NULL);
+    addpath(config_path);
     addpath(bin_path);
     free(bin_path);
     free(config_path);

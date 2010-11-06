@@ -197,7 +197,7 @@ static void* calc_pistat(GENPISTAT_S *data){
 static dmat* gen_unwrap(long nx, long ny){
     //Create phase unwrap operator
     char fn[PATH_MAX];
-    snprintf(fn,PATH_MAX,"%s/.aos/unwrap_%ld_%ld.bin",getenv("HOME"),nx,ny);
+    snprintf(fn,PATH_MAX,"%s/.aos/unwrap_%ld_%ld.bin",HOME,nx,ny);
     //if(exist(fn)){
     //	cmat *out=cread(fn);
     //	return out;

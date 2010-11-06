@@ -37,16 +37,63 @@
 #include <mach/vm_map.h>
 #elif defined(__FreeBSD__)||defined(__NetBSD__)
 #include <sys/resource.h>
+#elif defined __CYGWIN__
+#include <sys/cygwin.h>
 #endif
 #include "common.h"
 #include "misc.h"
 #include "proc.h"
 #include "process.h"
+#include "private.h"
 int NCPU;
 int TCK;
+const char *HOME=NULL;
+const char *TEMP=NULL;
+const char *USER=NULL;
+void init_path(void){
+#if defined(__CYGWIN__)
+    cygwin_internal(CW_SYNC_WINENV);
+#endif
+    if(!HOME){
+	USER=getenv("USER");
+	if(!USER){
+	    USER=getenv("USERNAME");
+	}
+#if defined(__CYGWIN__)
+	HOME=getenv("USERPROFILE");
+	const char *temp=getenv("TMP");
+	if(!temp){
+	    temp=getenv("TEMP");
+	}
+	if(!temp || !exist(temp)){
+	    temp="C:/Windows/Temp";
+	}
+	if(!exist(temp)){
+	    temp=HOME;//set to home
+	}
+	if(!exist(temp)){
+	    error("Unable to determine the path to temporary files");
+	}
+	HOME=cygwin_create_path(CCP_WIN_A_TO_POSIX,HOME);
+	temp=cygwin_create_path(CCP_WIN_A_TO_POSIX,temp);
+#else
+	HOME=getenv("HOME");
+	const char *temp="/tmp";
+#endif
+	info("temp=%s\n",temp);
+	TEMP=stradd(temp,"/","maos-",USER,NULL);
+	mymkdir("%s",TEMP);
+	mymkdir("%s/.aos/",HOME);
+	info("TEMP=%s\n",TEMP);
+	info("HOME=%s\n",HOME);
+	info("USER=%s\n",USER);
+    }
+}
 static __attribute__((constructor))void init(){
     NCPU= get_ncpu();
     TCK = sysconf(_SC_CLK_TCK);
+    init_path();
+    info("sizeof(long)=%d\n",(int)sizeof(long));
 }
 
 double get_usage_cpu(void){

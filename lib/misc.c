@@ -117,10 +117,9 @@ char *argv2str(int argc, char **argv){
 	slen+=1+strlen(argv[iarg]);
     }
     char *scmd=calloc(slen, sizeof(char));
-    char *home=getenv("HOME");//don't free
-    if(!strncmp(cwd,home,strlen(home))){
+    if(!strncmp(cwd,HOME,strlen(HOME))){
 	strcpy(scmd,"~");
-	strcat(scmd,cwd+strlen(home));
+	strcat(scmd,cwd+strlen(HOME));
     }else{
 	strcpy(scmd,cwd);
     }

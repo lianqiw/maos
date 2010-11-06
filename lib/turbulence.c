@@ -293,9 +293,9 @@ map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx,
    
     char fnspect[PATH_MAX];
     dmat *spect;
-    mymkdir("%s/.aos/spect/",getenv("HOME"));
+    mymkdir("%s/.aos/spect/",HOME);
     snprintf(fnspect,PATH_MAX,"%s/.aos/spect/spect_%dx%d_dx1_%g_r0%g_L0%g.bin",
-	     getenv("HOME"),m,n,1./dx,r0,L0);
+	     HOME,m,n,1./dx,r0,L0);
     if(exist(fnspect)){
 	spect=({char fn[PATH_MAX];strcpy(fn,fnspect);dread("%s",fn);});
     }else{

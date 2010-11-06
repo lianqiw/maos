@@ -932,7 +932,7 @@ void save_simu(const SIM_T *simu){
 		scale=1./(double)(simu->isim-parms->evl.psfisim+1);
 		if(simu->evlpsfmean){
 		    dcell_mean_and_save(simu->evlpsfmean, scale,
-					"evlpsf_%d.bin",seed);
+					"evlpsfcl_%d.bin",seed);
 		}
 		scale=1./(double)(simu->isim-parms->sim.start+1);
 		if(parms->evl.psfol==2){

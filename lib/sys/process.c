@@ -65,7 +65,7 @@ int lock_file(const char *fnlock, long version){
 		    remove(fnlock);
 		    goto retry;
 		}else{//already running. check version
-		    warning("Process %ld already locks file %s\n",pid,fnlock);
+		    //warning("Process %ld already locks file %s\n",pid,fnlock);
 		    long version_old=0;
 		    if(version>0 && (fscanf(fp,"%ld",&version_old)==EOF || version_old < version)){
 			info("Killing old executive\n");

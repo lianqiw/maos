@@ -170,8 +170,12 @@ static void readcfg_powfs(PARMS_T *parms){
     char **strjunk;
     int npowfs,i;
     char temp[MAX_STRLEN];
-    parms->npowfs=readcfg_int("npowfs");
+    parms->npowfs=readcfg_intarr(&intjunk,"powfs.order");
     parms->powfs=calloc(parms->npowfs,sizeof(POWFS_CFG_T));
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	parms->powfs[ipowfs].order=intjunk[ipowfs];
+    }
+    free(intjunk);
     npowfs=parms->npowfs;
     READ_POWFS(int,nwvl);
     double *wvllist=NULL;
@@ -207,7 +211,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,pixoffy);
     READ_POWFS(int,phyusenea);
     READ_POWFS(str,fnllt);
-    READ_POWFS(int,order);
     READ_POWFS(int,trs);
     READ_POWFS(int,dfrs);
     READ_POWFS(int,lo);
@@ -750,7 +753,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(parms->ndm>0){
 		parms->powfs[ipowfs].order=parms->dm[0].order;
 	    }else{
-		error("Please specify powfs[%d].order", ipowfs);
+		error("Please specify powfs[%d].order in MOAO mode\n", ipowfs);
 	    }
 	}
 	/* 
@@ -770,7 +773,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning2("powfs %d pixtheta set to %.1fx %g/%g: %g mas\n",
 		     ipowfs, ratio, wvl,dxsa,parms->powfs[ipowfs].pixtheta*206265000);
 	}
-	if (parms->powfs[ipowfs].phystep!=0){
+	if (parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom){
 	    parms->powfs[ipowfs].hasGS0=1;
 	}else{
 	    parms->powfs[ipowfs].hasGS0=0;
@@ -1304,9 +1307,6 @@ static void setup_parms_postproc_save(PARMS_T *parms){
 	    if(parms->save.gradgeomhi)
 		parms->save.powfs_gradgeom[ipowfs]=1;
 	}
-	info("powfs %d: %d %d %d %d\n",
-	     ipowfs, parms->save.powfs_opd[ipowfs], parms->save.wfsints[ipowfs],
-	     parms->save.powfs_grad[ipowfs],parms->save.powfs_gradgeom[ipowfs]);
     }
 }
 /**

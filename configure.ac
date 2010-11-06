@@ -49,6 +49,7 @@ LDSYS="-lz -lm"
 OPTSextra=""
 use_shm="no"
 use_static="no"
+
 if test -n "$(icc -dumpversion)" ;then	
    use_icc_default="yes"
 else
@@ -56,17 +57,18 @@ else
    use_icc_default="no"
 fi
 case "$host_cpu" in 
-*86)
-    cpu="32";;
-*64)
-    cpu="64";;
-*)
-    AC_MSG_ERROR([Unrecognized host_cpu])
+    *86)
+        cpu="32";;
+    *64)
+        cpu="64";;
+    *)
+        AC_MSG_ERROR([Unrecognized host_cpu])
 esac
+
 mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
 win32=no
 case "$host_os" in
- *linux*)
+*linux*)
     AM_CONDITIONAL(LINUX, true)
     LDSYS="$LDSYS -lrt" #Real time library
     #Enable System V Interface definition (IPC,SHM)
@@ -82,20 +84,24 @@ case "$host_os" in
     else
        use_shm_default="no"
     fi
-#We only have MKL redistributable for linux
-AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
-AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
-;;
+    #We only have MKL redistributable for linux
+    AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
+    AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
+    ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
 ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)
 ;;
-*w32)
+*cygwin*)
  AM_CONDITIONAL(WIN, true)
- LAPACK="-Wl,-rpath,extern/win -Lextern/win -lblas -llapack"
+ LAPACK="-lblas -llapack -lgfortran"
  win32=yes
+ use_static_default=yes #blas/lapack are linked statically, but others are still dynamic. ship those
+;;
+*)
+AC_MSG_ERROR([Unrecognized OS])
 esac
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 
@@ -144,7 +150,7 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 OPTIM_ICC="-Werror -g -O3 -xO -funroll-loops -DHAVE_SSE2=1 -wd981 -vec-report=0 -static-intel"
-OPTIM_GCC="-Werror -g -O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only" 
+OPTIM_GCC="-Werror -g -O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc" 
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -rdynamic -ggdb -Werror -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)

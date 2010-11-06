@@ -129,7 +129,7 @@ static void scheduler_launch(void *junk){
     (void)junk;
     const char *prog=get_job_progname();
     char prog2[PATH_MAX];
-    snprintf(prog2, PATH_MAX,"/tmp/maos-%s/scheduler",getenv("USER"));
+    snprintf(prog2, PATH_MAX,"%s/scheduler",TEMP);
     if(exist(prog)){
 	int a;
 	a=unlink(prog2);
@@ -158,7 +158,7 @@ static void scheduler_report_path(char *path){
 // called by mcao to wait for available cpu.
 int scheduler_start(char *path, int nthread, int waiting){
     char lockpath[PATH_MAX];
-    snprintf(lockpath,PATH_MAX,"/tmp/maos-%s/",getenv("USER"));
+    snprintf(lockpath,PATH_MAX,"%s",TEMP);
     //launch scheduler if it is not already running.
     single_instance_daemonize(lockpath,"scheduler", scheduler_version,
 			      (void(*)(void*))scheduler_launch,NULL);
@@ -282,7 +282,7 @@ char* scheduler_get_drawdaemon(int pid){
     static char *fifo=NULL;
     if(!fifo){
 	fifo=malloc(100);
-	snprintf(fifo,100,"/tmp/maos-%s/drawdaemon_%d.fifo",getenv("USER"),pid);
+	snprintf(fifo,100,"%s/drawdaemon_%d.fifo",TEMP,pid);
 	fifo=realloc(fifo,strlen(fifo)+1);
 	launch++;
 	

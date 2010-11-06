@@ -35,6 +35,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
 #include "misc.h"
+#include "proc.h"
 #include "icon-draw.h"
 char *defname="Title";
 char *deffig="Figure";
@@ -934,7 +935,7 @@ static void tool_save(GtkToolButton *button){
 	    (GTK_FILE_CHOOSER(dialog), folder);
     }else{
 	gtk_file_chooser_set_current_folder
-	    (GTK_FILE_CHOOSER(dialog), getenv("HOME"));
+	    (GTK_FILE_CHOOSER(dialog), HOME);
     }
 
     if(gtk_dialog_run(GTK_DIALOG(dialog))==GTK_RESPONSE_ACCEPT){
@@ -1284,7 +1285,7 @@ int main(int argc, char *argv[])
     fifo=argv[1];
     {
 	char fnlog[PATH_MAX];
-	snprintf(fnlog, PATH_MAX,"/tmp/maos-%s/drawdaemon.log", getenv("USER"));
+	snprintf(fnlog, PATH_MAX,"%s/drawdaemon.log", TEMP);
 	if(!freopen(fnlog, "w", stdout)) {
 	    perror("freopen");
 	    warning("Error redirect stdout\n");

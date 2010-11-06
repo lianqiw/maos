@@ -50,10 +50,9 @@ int main(int argc, char **argv){
     char *cwd=mygetcwd();
     int slen=strlen(cwd)+3+strlen(argv[1]);
     char scmd[slen];
-    char *home=getenv("HOME");//don't free
-    if(!strncmp(cwd,home,strlen(home))){
+    if(!strncmp(cwd,HOME,strlen(HOME))){
 	strcpy(scmd,"~");
-	strcat(scmd,cwd+strlen(home));
+	strcat(scmd,cwd+strlen(HOME));
     }else{
 	strcpy(scmd,cwd);
     }

@@ -70,7 +70,6 @@
 char* procfn(const char *fn, const char *mod, const int defaultgzip){
     char *fn2;
     if(fn[0]=='~'){
-	char *HOME=getenv("HOME");
 	fn2=malloc(strlen(HOME)+strlen(fn)+16);
 	strcpy(fn2,HOME);
 	strcat(fn2,fn+1);

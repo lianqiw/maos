@@ -66,6 +66,7 @@
 #include "process.h"
 #include "scheduler_server.h"
 #include "shm.h"
+#include "private.h"
 char** hosts;
 int nhost;
 static int all_done=0;
@@ -109,14 +110,10 @@ int myhostid(const char *host){
 }
 //Initialize hosts and associate an id number
 static __attribute__((constructor))void init(){
-    const char *HOME=getenv("HOME");
-    const char *USER=getenv("USER");
+    init_path();//the constructor in proc.c may not have been called.
     char fn[PATH_MAX];
-    snprintf(fn,PATH_MAX,"/tmp/maos-%s/",USER);
-    mkdir(fn,0700);
-    snprintf(fn,PATH_MAX,"/tmp/maos-%s/jobs.log",USER);
+    snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
     fnlog=strdup(fn);
-
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;
     if(exist(fn)){

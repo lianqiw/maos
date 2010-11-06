@@ -74,13 +74,16 @@ int main(int argc, char **argv){
 	slen+=1+strlen(argv[iarg]);
     }
     char scmd[slen];
-    char *home=getenv("HOME");//don't free
-    if(!strncmp(cwd,home,strlen(home))){
+#ifndef __CYGWIN__
+    if(!strncmp(cwd,HOME,strlen(HOME))){
 	strcpy(scmd,"~");
-	strcat(scmd,cwd+strlen(home));
+	strcat(scmd,cwd+strlen(HOME));
     }else{
 	strcpy(scmd,cwd);
     }
+#else
+    strcpy(scmd,cwd);
+#endif
     strcat(scmd,"/");
     for(int iarg=0; iarg<argc; iarg++){
 	strcat(scmd,argv[iarg]);

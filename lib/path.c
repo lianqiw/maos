@@ -134,3 +134,44 @@ char *find_file(const char *fn){
     }
     return fnout;
 }
+/**
+   Find the directory that hold the configuration files. name is "maos" for
+maos, "skyc" for skyc.  */
+char *find_config(const char *name){
+    const char *aos_config_path=getenv("AOS_CONFIG_PATH");
+    char *config_path=NULL;
+    if(aos_config_path){
+	config_path=stradd(aos_config_path,"/",name,NULL);
+    }
+    if(!exist(config_path) && exist(SRCDIR)){
+	/*If not specified, assume it is in the source tree*/
+	if(config_path) free(config_path);
+	config_path=stradd(SRCDIR,"/config/",name,NULL);
+    }
+    if(!exist(config_path)){
+	free(config_path);
+	config_path=stradd(HOME,"/.aos/config/",name,NULL);
+    }
+    if(!exist(config_path)){
+	free(config_path);
+	char *cwd=mygetcwd();
+	config_path=stradd(cwd,"/config",name,NULL);
+	free(cwd);
+    }
+    if(!exist(config_path)){
+	warning("Unable to determine the path to the configuration files.\n");
+	warning("Will download a copy from the website and put in %ss/.aos/config\n",HOME);
+	char cmd[400];
+	snprintf(cmd,400,"wget %s/maos_config.tar.bz2 -O %s/maos_config.tar.bz2 "
+		 "&& tar axvf %s/maos_config.tar.bz2 -C %s/.aos/ "
+		 "&& rm -rf %s/maos_config.tar.bz2",BASEURL,TEMP, TEMP, HOME, TEMP);
+	if(system(cmd)){
+	    error("Unable to download the configuration files from the internet "
+		  "and extract to %s/.aos/config", HOME);
+	}
+    }
+    if(!exist(config_path)){
+	error("Unable to determine the path to the configuration files.\n");
+    }
+    return config_path;
+}

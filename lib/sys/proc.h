@@ -17,6 +17,7 @@
 */
 #ifndef AOS_PROC_H
 #define AOS_PROC_H
+
 int    get_usage_running(void);
 double get_usage_load(void);
 double get_usage_mem(void);
@@ -32,5 +33,8 @@ void wait_cpu(int nthread);
 double read_self_cpu(void);
 extern int NCPU;
 extern int TCK;
+extern const char *HOME;//the user home
+extern const char *TEMP;//the temporary folder
+extern const char *USER;//the user name
 int get_ncpu(void);
 #endif

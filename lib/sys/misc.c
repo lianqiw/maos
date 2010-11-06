@@ -35,6 +35,7 @@
 #include "common.h"
 #include "thread.h"
 #include "misc.h"
+#include "proc.h"
 /**
    Get current time in seconds.
 */
@@ -177,7 +178,6 @@ void expand_filename(char **fnout, const char *fn){
     if(!(*fnout)){
 	char *out;
 	if(fn[0]=='~'){
-	    char *HOME=getenv("HOME");
 	    out=stradd(HOME,fn+1,NULL);
 	}else{
 	    out=mystrdup(fn);
@@ -186,7 +186,6 @@ void expand_filename(char **fnout, const char *fn){
     }else{
 	char *out=*fnout;
 	if(fn[0]=='~'){
-	    char *HOME=getenv("HOME");
 	    strcpy(out,HOME);
 	    strcat(out,fn+1);
 	}else{

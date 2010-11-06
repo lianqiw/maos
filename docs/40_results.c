@@ -73,7 +73,7 @@ results. i.e. res=read('Res_1');
    gradient, and the second half is for y (or azimuthal) gradient. They are in
    units of \f$rad^2\f$.
 
- - \c evlpsf_1: When evl.psfmean is 1, contains the time averaged science
+ - \c evlpsfcl_1: When evl.psfmean is 1, contains the time averaged science
    closed loop psf. if is a cell array of \f$n_{wvl}\times n_{evl}\f$. Each cell
    contains a center cut of the science PSF.
 

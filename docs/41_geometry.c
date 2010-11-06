@@ -22,7 +22,7 @@
    </td></tr><tr><td>\c ahst_Wa   </td><td>ahst, the weighting using science field.
    </td></tr><tr><td>\c aloc      </td><td>DM actuator grid.
    </td></tr><tr><td>\c ploc      </td><td>The coarse sampled grid on aperture for reconstruction
-   </td></tr><tr><td>\c xloc      </td><td>The xloc grid.
+   </td></tr><tr><td>\c xloc      </td><td>The tomography grid.
    </td></tr><tr><td>\c TT        </td><td>The global tip/tilt modes for wfs
    </td></tr><tr><td>\c PTT       </td><td>The global tip/tilt removal operator for wfs
    </td></tr><tr><td>\c saneai    </td><td>The inverse of nea^2 used in tomography (rad^2)
