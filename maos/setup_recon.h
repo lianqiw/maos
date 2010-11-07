@@ -29,4 +29,5 @@ void test_recon_GX(RECON_T *recon, const PARMS_T *parms,
 		   const POWFS_T *powfs);
 void test_recon_GA(RECON_T *recon, const PARMS_T *parms, 
 		   const POWFS_T *powfs);
+void setup_recon_mvst(RECON_T *recon, const PARMS_T *parms);
 #endif

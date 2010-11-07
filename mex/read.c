@@ -49,11 +49,13 @@ static mxArray *readdata(file_t *fp){
 		size=4;
 	    }else if(magic==M_SP64){
 		size=8;
+	    }else{
+		error("Invalid magic\n");
 	    }
 	    uint64_t m2,n2,nzmax2;
 	    readfile(&m2,sizeof(uint64_t),1,fp);
 	    readfile(&n2,sizeof(uint64_t),1,fp);
-	    if(m!=0 && n!=0){
+	    if(m2!=0 && n2!=0){
 		readfile(&nzmax2,sizeof(uint64_t),1,fp);
 	    }else{
 		nzmax2=0;
@@ -75,6 +77,7 @@ static mxArray *readdata(file_t *fp){
 		    void *Ir=malloc(size*nzmax);
 		    readfile(Jc, size, n+1, fp);
 		    readfile(Ir, size, nzmax, fp);
+		    warning("Converting from %zu to %zu bytes\n",size,sizeof(mwIndex));
 		    if(size==4){
 			uint32_t* Jc2=Jc;
 			uint32_t* Ir2=Ir;
@@ -118,7 +121,7 @@ static mxArray *readdata(file_t *fp){
 	    uint64_t m2,n2,nzmax2;
 	    readfile(&m2,sizeof(uint64_t),1,fp);
 	    readfile(&n2,sizeof(uint64_t),1,fp);
-	    if(m!=0 && n!=0){
+	    if(m2!=0 && n2!=0){
 		readfile(&nzmax2,sizeof(uint64_t),1,fp);
 	    }else{
 		nzmax2=0;

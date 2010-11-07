@@ -150,25 +150,32 @@ char *find_config(const char *name){
     }
     if(!exist(config_path)){
 	free(config_path);
+	info("Configuration files not found in %s\n", config_path);
 	config_path=stradd(HOME,"/.aos/config/",name,NULL);
     }
     if(!exist(config_path)){
+	info("Configuration files not found in %s\n", config_path);
 	free(config_path);
 	char *cwd=mygetcwd();
-	config_path=stradd(cwd,"/config",name,NULL);
+	config_path=stradd(cwd,"/config/",name,NULL);
 	free(cwd);
     }
     if(!exist(config_path)){
+	info("Configuration files not found in %s\n", config_path);
+#ifdef __CYGWIN__
+	error("Please download the configuration files from github.com/lianqiw/maos/downloads and extract to current folder.\n");
+#else
 	warning("Unable to determine the path to the configuration files.\n");
 	warning("Will download a copy from the website and put in %ss/.aos/config\n",HOME);
 	char cmd[400];
-	snprintf(cmd,400,"wget %s/maos_config.tar.bz2 -O %s/maos_config.tar.bz2 "
-		 "&& tar axvf %s/maos_config.tar.bz2 -C %s/.aos/ "
-		 "&& rm -rf %s/maos_config.tar.bz2",BASEURL,TEMP, TEMP, HOME, TEMP);
+	const char *FN="maos_config.tar.bz2";
+	snprintf(cmd,400,"wget %s/%s -O %s/%s && tar axvf %s/maos_config.tar.bz2 -C %s/.aos/ "
+		 "&& rm -rf %s/%s",BASEURL,FN,TEMP,FN,TEMP,HOME,TEMP,FN);
 	if(system(cmd)){
 	    error("Unable to download the configuration files from the internet "
 		  "and extract to %s/.aos/config", HOME);
 	}
+#endif
     }
     if(!exist(config_path)){
 	error("Unable to determine the path to the configuration files.\n");

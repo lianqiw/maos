@@ -560,10 +560,11 @@ void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
     recon->r0=cn2est->r0m;
     recon->l0=cn2est->l0;
     setup_recon_tomo_prep(recon, parms);//redo L2, invpsd
-    if(parms->tomo.alg==1){//in CG mode, only need to adjust RL.M
-	setup_recon_tomo_matrix_update(recon, parms);
-    }else{//need to rebuild the whole thing
-	setup_recon_tomo_matrix(recon, parms);
+    if(parms->tomo.alg==0 || parms->tomo.split==2){
+	muv_chol_prep(&(recon->RL));
+	if(parms->tomo.split==2){
+	    setup_recon_mvst(recon,parms);
+	}
     }
 }
 /**

@@ -724,17 +724,21 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
 		     ){
     if(!A) return NULL;
     X(cell) *wA=NULL;
-    if(!wt){
-	wA=X(cellref)(A);
-    }else if(Wsp && !wt){
-	assert(Wsp->nx==A->nx && Wsp->ny==A->nx);
-	Y(spcellmulmat)(&wA,Wsp,A,1);
-    }else if(wt && !Wsp){
+    if(wt){
+	if(Wsp){
+	    error("Both wt and Wsp are specified.\n");
+	}
 	assert(wt->nx==A->nx && wt->ny==A->nx);
 	X(cellmm)(&wA, wt, A, "nn",1);
     }else{
-	error("Both wt and Wsp are specified.\n");
+	if(Wsp){
+	    assert(Wsp->nx==A->nx && Wsp->ny==A->nx);
+	    Y(spcellmulmat)(&wA,Wsp,A,1);
+	}else{
+	    wA=X(cellref)(A);
+	}
     }
+
     X(cell) *ata=NULL;
     X(cell) *iata;
     X(cellmm)(&ata,wA,A,"tn",1);

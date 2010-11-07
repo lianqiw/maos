@@ -951,7 +951,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		info("Adding tikhonov constraint of %g to RLM\n", parms->tomo.tik_cstr);
 		info("The maximum eigen value is estimated to be around %g\n", maxeig);
 		double tikcr=parms->tomo.tik_cstr;
+		spcellwrite(recon->RL.M,"RLM0");
 		spcelladdI(recon->RL.M, tikcr*maxeig);
+		spcellwrite(recon->RL.M,"RLM1");
 	    }
 	    toc("done");
 	}
@@ -1046,7 +1048,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	spcellfree(GXtomoT);
     }
     info2("After assemble matrix:\t%.2f MiB\n",get_job_mem()/1024.);
-    if(parms->tomo.alg==0 || (parms->tomo.split==2 && !parms->load.mvst)){
+    if(parms->tomo.alg==0 || parms->tomo.split==2){
+	//We need cholesky decomposition in CBS or MVST method.
 	muv_chol_prep(&(recon->RL));
 	if(parms->save.setup && parms->save.recon){
 	    chol_save(recon->RL.C,"%s/RLC",dirsetup);
@@ -1054,13 +1057,15 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	info2("After cholesky on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
     if(parms->tomo.assemble && !parms->cn2.tomo){
+	//We already assembled tomo matrix. don't need these matric any more.
 	dcellfree(recon->TTF);
 	dcellfree(recon->PTTF);
 	//Don't free PTT. Used in forming LGS uplink err
 	if(parms->tomo.piston_cr)
 	    spcellfree(recon->ZZT);
     }
-    if(!parms->tomo.assemble || parms->tomo.alg==0){
+    if((!parms->tomo.assemble || parms->tomo.alg==0) && !parms->cn2.tomo){
+	//We just need cholesky factors.
 	info("Freeing RL.M,U,V\n");
 	spcellfree(recon->RL.M);
 	dcellfree(recon->RL.U);
@@ -1076,10 +1081,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
    Update assembled tomography matrix with new L2.
  */
 void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms){
-    if(parms->tomo.alg!=1){
-	error("This is only to be used in CG mode\n");
-    }
-    if(!parms->tomo.assemble){//no need to do anything
+    if(parms->tomo.alg==1&&!parms->tomo.assemble){//no need to do anything
 	return;
     }
     if(parms->tomo.invpsd){
@@ -1499,7 +1501,9 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    double maxeig=4./nact;
 	    info("Adding tikhonov constraint of %g to FLM\n", tikcr);
 	    info("The maximum eigen value is estimated to be around %g\n", maxeig);
+	    spcellwrite(recon->FL.M,"FLM0");
 	    spcelladdI(recon->FL.M,tikcr*maxeig);
+	    spcellwrite(recon->FL.M,"FLM1");
 	}
 
 	recon->FL.U=dcellnew(ndm, 1);
@@ -1545,7 +1549,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     info2("After assemble matrix:\t%.2f MiB\n",get_job_mem()/1024.);
-    if(parms->fit.alg==0  || (parms->tomo.split==2 && !parms->load.mvst)){
+    if(parms->fit.alg==0  || parms->tomo.split==2){
 	if(fabs(parms->fit.tik_cstr)<1.e-14){
 	    warning("tickcr=%g is too small or not applied\n", 
 		    parms->fit.tik_cstr);
@@ -1722,7 +1726,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
    \f}
 */
 
-static void
+void
 setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     /*
       Notice that: Solve Fitting on Uw and using FUw to form Rngs gives
@@ -1901,7 +1905,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	recon->os=dref(cn2est->os);
 	recon->wt=dref(cn2est->wtrecon->p[0]);
 	//the following will be updated later in simulation.
-	dset(recon->wt, 1./recon->wt->nx);//evenly distributed. delta function is bad for cbs
+	dset(recon->wt, 1./recon->wt->nx);//evenly distributed. 
 	recon->r0=0.15;//random guess
 	recon->l0=30;//random guess
     }else{//use input information from atmr
@@ -1972,12 +1976,11 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     //tomo_prep should be after recon_GXGA as xloc maybe modified there.
     setup_recon_tomo_prep(recon,parms);
 
-    
     //setup LGS tip/tilt/diff focus removal
     setup_recon_TTFR(recon,parms,powfs);
     setup_recon_HXFHA(recon,parms);
     
-    if(parms->tomo.assemble || (parms->tomo.split==2 && !parms->load.mvst)){
+    if(parms->tomo.assemble || parms->tomo.split==2){
 	//assemble the matrix only if not using CG
 	//CG apply the matrices on fly. 
 	setup_recon_tomo_matrix(recon,parms);
@@ -2005,7 +2008,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	recon->fdpcg=fdpcg_prepare(parms, recon, powfs);
 	toc2("fdpcg_prepare");
     }
- 
+    //The following have been used in fit matrix.
     dcellfree(recon->NW);
     spcellfree(recon->actslave);
     spfree(recon->W0); 
@@ -2033,10 +2036,12 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
      */
     sqmapfree(aper->ampground);
     spcellfree(recon->GX);
-    spcellfree(recon->GXtomo);//we use HXWtomo instead. faster
-    spcellfree(recon->GXlo);
     spcellfree(recon->GXhi);
-    if(parms->tomo.assemble){
+    spcellfree(recon->GXtomo);//we use HXWtomo instead. faster
+    if(!parms->cn2.tomo){
+	spcellfree(recon->GXlo);
+    }
+    if(parms->tomo.alg!=1 || parms->tomo.assemble){
 	spcellfree(recon->HXWtomo);
     }
     toc2("setup_recon");

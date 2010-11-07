@@ -67,6 +67,7 @@ void muv_chol_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin){
 void muv_chol_prep(MUV_T *A){ 
     if(!A->M) error("M has to be none NULL\n");
     info("muv_chol_prep:");
+    muv_chol_free(A);
     dsp *muvM=spcell2sp(A->M);
     A->C=chol_factorize(muvM);
     spfree(muvM);
