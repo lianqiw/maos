@@ -127,7 +127,7 @@ char *search_file(const char *fn){
 char *find_file(const char *fn){
     char *fnout=search_file(fn);
     if(!fnout || !exist(fnout)){
-	info("File is %s\n",fnout);
+	info("Looking for %s, found %s\n",fn, fnout);
 	printpath();
 	error("Unable to find file %s.\n",fn);
 	return NULL;

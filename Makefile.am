@@ -41,7 +41,7 @@ config/maos/sim.conf\
 config/maos/skyc_10.conf\
 config/maos/skyc_20.conf\
 config/maos/wfs_lgs_tt.conf\
-config/maos/wfs_lgs_tt_ttf.conf\
+config/maos/wfs_lgs_ttf_tt.conf\
 config/maos/wfs_ngs.conf\
 config/skyc/maos.conf\
 config/skyc/skyc.conf\

@@ -225,7 +225,7 @@ static void readcfg_powfs(PARMS_T *parms){
     double *siglev=NULL;
     int nsiglev=readcfg_dblarr(&siglev, "powfs.siglev");
     if(nwvllist != nwvlwts && nwvlwts != 0){
-	error("powfs.wvl is not empty and does not match powfs.wvlwts\n");
+	error("powfs.wvlwts is not empty and does not match powfs.wvlwts\n");
     }
     if(nsiglev!=0 && nsiglev!=parms->npowfs){
 	error("powfs.siglev is not empty and does not match npowfs");
