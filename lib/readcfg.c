@@ -346,6 +346,10 @@ int readcfg_strarr(char ***res, const char *format,...){
     *res=calloc(maxcount,sizeof(char*));
     if(irecord!=-1){
 	const char *sdata=store[irecord].data;
+	if(!sdata){
+	    *res=NULL;
+	    return 0;
+	}
 	const char *sdataend=sdata+strlen(sdata)-1;
 	const char *sdata2, *sdata3, *sdata4;
 	if(sdata[0]!='[' || sdataend[0]!=']'){

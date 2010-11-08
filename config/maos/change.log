@@ -12,3 +12,6 @@ tomo.split_idealngs ==> tomo.ahst_idealngs
 tomo.split_rtt ==> tomo.ahst_rtt
 fit.tik_cstr  ==> fit.tikcr
 evl.wvl      ==> evl.psfwvl
+wfs.siglev ==>powfs.siglev or wfs.siglev
+wfs.wvlwts ==>powfs.wvlwts or wfs.wvlwts
+

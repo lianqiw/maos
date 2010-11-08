@@ -77,6 +77,9 @@ void free_parms(PARMS_T *parms){
 
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	free(parms->powfs[ipowfs].wvl);
+	if(parms->powfs[ipowfs].wvlwts){
+	    free(parms->powfs[ipowfs].wvlwts);
+	}
 	if(parms->powfs[ipowfs].llt){
 	    FREE_IF_NOT_NULL(parms->powfs[ipowfs].llt->fnrange);
 	    FREE_IF_NOT_NULL(parms->powfs[ipowfs].llt->fn);
@@ -219,25 +222,41 @@ static void readcfg_powfs(PARMS_T *parms){
     int nwvllist=readcfg_dblarr(&wvllist,"powfs.wvl");
     double *wvlwts=NULL;
     int nwvlwts=readcfg_dblarr(&wvlwts, "powfs.wvlwts");
-    if(nwvllist != nwvlwts){
-	error("powfs.wvl does not match powfs.wvlwts\n");
+    double *siglev=NULL;
+    int nsiglev=readcfg_dblarr(&siglev, "powfs.siglev");
+    if(nwvllist != nwvlwts && nwvlwts != 0){
+	error("powfs.wvl is not empty and does not match powfs.wvlwts\n");
+    }
+    if(nsiglev!=0 && nsiglev!=parms->npowfs){
+	error("powfs.siglev is not empty and does not match npowfs");
     }
     int count=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	int nwvl=parms->powfs[ipowfs].nwvl;
 	parms->powfs[ipowfs].wvl=calloc(nwvl, sizeof(double));
-	parms->powfs[ipowfs].wvlwts=calloc(nwvl, sizeof(double));
 	memcpy(parms->powfs[ipowfs].wvl,wvllist+count,sizeof(double)*nwvl);
-	memcpy(parms->powfs[ipowfs].wvlwts, wvlwts+count,sizeof(double)*nwvl);
-	normalize(parms->powfs[ipowfs].wvlwts, nwvl, 1);
+	if(nwvlwts){
+	    parms->powfs[ipowfs].wvlwts=calloc(nwvl, sizeof(double));
+	    memcpy(parms->powfs[ipowfs].wvlwts, wvlwts+count,sizeof(double)*nwvl);
+	    normalize(parms->powfs[ipowfs].wvlwts, nwvl, 1);
+	}
+	if(nsiglev){
+	    parms->powfs[ipowfs].siglev=siglev[ipowfs];
+	}else{
+	    parms->powfs[ipowfs].siglev=-1;
+	}
 	count+=nwvl;
     }
     if(count!=nwvllist){
 	error("powfs.wvl has wrong value\n");
     }
     free(wvllist);
-    free(wvlwts);
-
+    if(nwvlwts){
+	free(wvlwts);
+    }
+    if(nsiglev){
+	free(siglev);
+    }
     READ_POWFS(str,piinfile);
     READ_POWFS(str,sninfile);
     READ_POWFS(dbl,hs);
@@ -286,7 +305,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,dtrat);
     READ_POWFS(int,i0scale);
     READ_POWFS(dbl,sigscale);
-    READ_POWFS(dbl,siglev);
     READ_POWFS(int,moao);
     int illt=0;
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -378,11 +396,17 @@ static void readcfg_wfs(PARMS_T *parms){
 	}else{
 	    memcpy(parms->wfs[i].wvlwts,wvlwts+count,sizeof(double)*nwvl);
 	    count+=nwvl;
+	    if(parms->powfs[ipowfs].wvlwts){
+		error("when wfs.wvlwts is specified, must set powfs.wvlwts=[]\n");
+	    }
 	}
 	if(nsiglev==0){
 	    parms->wfs[i].siglev=parms->powfs[ipowfs].siglev;
 	}else{
 	    parms->wfs[i].siglev=siglev[i];
+	    if(parms->powfs[ipowfs].siglev>0){
+		error("when wfs.siglev is specified, must set powfs.siglev=[]\n");
+	    }
 	}
     }
     if(nsiglev>0){
@@ -1672,7 +1696,9 @@ static void setup_config(ARG_T*arg){
 	int inline_conf=0;
 	for(int iconf=arg->iconf; iconf<arg->argc; iconf++){
 	    char *fno=arg->argv[iconf];
-	    if(index(fno,'=')){
+	    if(strlen(fno)==0){
+		continue;
+	    }else if(index(fno,'=')){
 		inline_conf++;
 		fprintf(fptmp,"%s\n",fno);
 	    }else if(check_suffix(fno,".conf")){
@@ -1692,7 +1718,7 @@ static void setup_config(ARG_T*arg){
 	    warning("Unable to remove file %s\n",fntmp);
 	}
     }else{
-	warning2("No override file is used\n");
+	info2("No override file is used\n");
     }
 }
 /**

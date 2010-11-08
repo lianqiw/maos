@@ -17,6 +17,9 @@
 */
 
 //To be included by read_config.c
+/**
+   Read in an array of double or int numbers. Supports *,/ operations
+*/
 int TYPEFUN1(TYPE **ret, const char *format,...)
 {
     format2key;
@@ -32,6 +35,9 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
     long irecord=getrecord(key);
     if(irecord!=-1){
 	startptr=store[irecord].data;
+	if(!startptr){
+	    return 0;
+	}
 	if(startptr[0]!='['){
 	    error("Invalid entry to parse for numerical array: (%s)\n", startptr);
 	}
@@ -93,6 +99,9 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
     }
     return count;
 }
+/**
+   Read in a single double or int number. Supports *,/ operations.
+*/
 TYPE TYPEFUN2(const char*format,...){
     format2key;
     TYPE data, data2;
@@ -100,6 +109,9 @@ TYPE TYPEFUN2(const char*format,...){
     long irecord=getrecord(key);
     if(irecord!=-1){
 	startptr=store[irecord].data;
+	if(!startptr){
+	    error("We expect a %s, but nothing is given\n", TYPENAME);
+	}
 	data=TYPECFUN(startptr, &endptr);
 	if(startptr==endptr){
 	    error("Error parsing line '%s' for %s\n", startptr,TYPENAME);
