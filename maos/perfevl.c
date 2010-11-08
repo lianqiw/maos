@@ -128,7 +128,7 @@ static void perfevl_ievl(SIM_T *simu){
 		loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
 	    }
 	    ccell *psf2s=psfcomp(opdevlcopy, aper->amp, aper->embed, aper->nembed,
-				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	    dfree(opdevlcopy);
 	    int nwvl=parms->evl.nwvl;
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -189,7 +189,7 @@ static void perfevl_ievl(SIM_T *simu){
 		    loc_remove_ptt(iopdevltomo->p,pclmp[isim], aper->locs);
 		}
 		ccell *psf2s=psfcomp(iopdevltomo, aper->amp, aper->embed, aper->nembed,
-				     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+				     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 		int nwvl=parms->evl.nwvl;
 		if(parms->evl.psfmean){
 		    PDCELL(simu->evlpsftomomean, pevlpsftomomean);
@@ -310,7 +310,7 @@ static void perfevl_ievl(SIM_T *simu){
 		loc_remove_ptt(iopdevl->p,pclmp[isim], aper->locs);
 	    }
 	    ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
-				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	    int nwvl=parms->evl.nwvl;
 	    if(parms->evl.psfmean){
 		PDCELL(simu->evlpsfmean, pevlpsfmean);
@@ -406,7 +406,7 @@ static void perfevl_mean(SIM_T *simu){
 	    memcpy(pcleNGSm,modngs,sizeof(double)*nngsmod);
 	    dcell *Mngs=dcellnew(1,1);
 	    Mngs->p[0]=dnew_ref(pcleNGSm,nngsmod,1);//ref the data
-	    if(simu->parms->tomo.split_idealngs){
+	    if(simu->parms->tomo.ahst_idealngs){
 		/*
 		  apply ideal ngs modes immediately to dmreal.
 		  Don't forget to updated DM Cache.

@@ -119,6 +119,8 @@ typedef struct POWFS_CFG_T{
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
     double sigscale;/**<scale the signal level for simulation.*/
+    double siglev;  /**<signal level. will be override by wfs.siglev is specified.*/
+    double *wvlwts; /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
     struct LLT_CFG_T *llt;/**<configuration for LLT*/
     char* fnllt;    /**<filename of LLT configuration. empty means no llt.*/
     int hasllt;     /**<whether having llt.  True for LGS, False for NGS*/
@@ -191,10 +193,12 @@ typedef struct POWFS_CFG_T{
    contains input parmaeters for each wfs
  */
 typedef struct WFS_CFG_T{
-    double *wvlwts; /**<Weights of signal value for each wavelength*/
+    double *wvlwts; /**<Weights of signal value for each wavelength. if not
+		       specified in config, will use powfs.wvlwts*/
     double thetax;  /**<x direction*/
     double thetay;  /**<y direction*/
-    double siglev;  /**<Total signal value for all wavelength*/
+    double siglev;  /**<Total signal value for all wavelength. if not specified
+		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
     int powfs;      /**<powfs type*/
 }WFS_CFG_T;
@@ -233,7 +237,7 @@ typedef struct EVL_CFG_T{
     double *thetax; /**<x Coordinate of evaluation directions*/
     double *thetay; /**<y Coordinate of evaluation directions*/
     double *wt;     /**<weight of each direction*/
-    double *wvl;    /**<wavelength for PSF and strehl computation*/
+    double *psfwvl; /**<wavelength for PSF and strehl computation*/
     double ht;
     int nwvl;       /**<Number of wavelength*/
     int *psf;       /**<1: participant in psf evaluation.*/
@@ -273,18 +277,15 @@ typedef struct TOMO_CFG_T{
     int invpsd;      /**<use inverse of PSD in tomography instead of biharmonic approx*/
     int guard;       /**<guard rings of reconstruction grid xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
-    double tik_cstr; /**<tikhonov regularization.*/
-    int xloc_tight;  /**<reduce uncoupled points in xloc. Keep False*/
+    double tikcr; /**<tikhonov regularization.*/
     int piston_cr;   /**<single point piston constraint. */
     int split;       /**<split tomography type.
 			- 0: integrated tomography
 			- 1: adhoc split tomography
 			- 2: minimum variance split tomography*/
-    int split_wt;    /**<0: use Wg, 1: using Wa*/
-    int split_Rngs_svd;/**<use svd method to calculate NGS mode in split
-			 tomography mode. \todo implement this*/
-    int split_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
-    int split_rtt;   /**<remote tip/tilt in high order DM fit output in split mode*/
+    int ahst_wt;    /**<0: use Wg, 1: using Wa*/
+    int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
+    int ahst_rtt;   /**<remote tip/tilt in high order DM fit output in split mode*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -307,7 +308,7 @@ typedef struct FIT_CFG_T{
     double *thetax;  /**<x Coordinate of DM fitting directions. */
     double *thetay;  /**<y Coordinate of DM fitting directions. */
     double *wt;      /**<weight of each direction*/
-    double tik_cstr; /**<tikhonov regularization*/
+    double tikcr; /**<tikhonov regularization*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
     int nfit;        /**<Number of DM fit directions */
     int lrt_piston;  /**<Piston constraint low rank term in fit coefficient matrix*/

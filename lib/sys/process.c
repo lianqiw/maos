@@ -79,6 +79,7 @@ int lock_file(const char *fnlock, long version){
 			fclose(fp);//closed fd also.
 			goto retry;
 		    }else{
+			fclose(fp);
 			return -pid;
 		    }
 		}
@@ -128,7 +129,7 @@ void single_instance_daemonize(const char *lockfolder_in,
     free(fnlock0);
 
     fd=lock_file(fnlock,version);
-    if(fd<0){//lock failed. no need to start the daemon.
+    if(fd<0){//lock failed. daemon already running. no need to start the daemon.
 	if(daemon_func){
 	    return;
 	}else{

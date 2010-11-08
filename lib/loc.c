@@ -103,7 +103,7 @@ void sqmapfree_do(map_t *map){
     if (!map) return;
     if(map->shm){
 #if USE_POSIX_SHM
-	shm_unmap(map->p, map->shm);
+	shm_unmap(map->p, map->shm-1);
 #else
 	error("Fatal Error. Should never happen\n");
 #endif

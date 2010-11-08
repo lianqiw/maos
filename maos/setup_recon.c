@@ -945,12 +945,12 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}else{
 	    /*Apply tikholnov regularization.*/
-	    if(fabs(parms->tomo.tik_cstr)>1.e-15){	    
+	    if(fabs(parms->tomo.tikcr)>1.e-15){	    
 		//Estimated from the Formula
 		double maxeig=pow(recon->neamhi * recon->xloc[0]->dx, -2);
-		info("Adding tikhonov constraint of %g to RLM\n", parms->tomo.tik_cstr);
+		info("Adding tikhonov constraint of %g to RLM\n", parms->tomo.tikcr);
 		info("The maximum eigen value is estimated to be around %g\n", maxeig);
-		double tikcr=parms->tomo.tik_cstr;
+		double tikcr=parms->tomo.tikcr;
 		spcellwrite(recon->RL.M,"RLM0");
 		spcelladdI(recon->RL.M, tikcr*maxeig);
 		spcellwrite(recon->RL.M,"RLM1");
@@ -1265,6 +1265,8 @@ static void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	spfree(recon->moao[imoao].W0);
 	dfree(recon->moao[imoao].W1);
     }
+    free(recon->moao);
+    recon->moao=NULL;
 }
 /**
    Prepare the propagation H matrix for MOAO and compute the reconstructor. We
@@ -1490,8 +1492,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	spcellfree(HATc);
-	if(fabs(parms->fit.tik_cstr)>1.e-15){
-	    double tikcr=parms->fit.tik_cstr;
+	if(fabs(parms->fit.tikcr)>1.e-15){
+	    double tikcr=parms->fit.tikcr;
 	    /*Estimated from the formula.  1/nloc is due to W0, the other
 	      scaling is due to ray tracing between different sampling freq.*/
 	    int nact=0;
@@ -1550,9 +1552,9 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }
     info2("After assemble matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     if(parms->fit.alg==0  || parms->tomo.split==2){
-	if(fabs(parms->fit.tik_cstr)<1.e-14){
+	if(fabs(parms->fit.tikcr)<1.e-14){
 	    warning("tickcr=%g is too small or not applied\n", 
-		    parms->fit.tik_cstr);
+		    parms->fit.tikcr);
 	}
 	muv_chol_prep(&(recon->FL));
 	if(parms->save.setup && parms->save.recon){
@@ -2051,6 +2053,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
    Free the recon struct.
 */
 void free_recon(const PARMS_T *parms, RECON_T *recon){
+    free_recon_moao(recon, parms);
     dfree(recon->ht);
     dfree(recon->os);
     dfree(recon->wt);

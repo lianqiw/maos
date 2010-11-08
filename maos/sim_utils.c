@@ -325,6 +325,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->powfs=powfs;
     simu->recon=recon;
     simu->aper=aper;    
+    simu->iseed=iseed;
     simu->seed=parms->sim.seeds[iseed];
     if(simu->seed==0){
 	simu->seed=myclocki();
@@ -384,7 +385,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	//compute diffraction limited PSF.
 	dmat *iopdevl=dnew(simu->aper->locs->nloc,1);
 	ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
-			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	dfree(iopdevl);
 	int nwvl=parms->evl.nwvl;
 	dcell *evlpsfdl=dcellnew(nwvl,1);
@@ -909,8 +910,9 @@ void free_simu(SIM_T *simu){
     dfree(simu->winddir);
     dfree(simu->windest);
     spcellfree(simu->windshift);
-    close(parms->fdlock[simu->seed]);//release the lock and close the file.
     {
+	//release the lock and close the file.
+	close(parms->fdlock[simu->iseed]);
 	char fn[80];
 	snprintf(fn, 80, "Res_%d.lock",simu->seed);
 	(void)remove(fn);

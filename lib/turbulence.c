@@ -245,6 +245,7 @@ map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,
 	}else{
 	    info2("\nReusing %s ...",fnshm);
 	}
+	//fd might be zero.
 	futimes(fd, NULL);//set access, modification time to current.
 	if(flock(fd, LOCK_SH)){
 	    error("Failed to apply a shared lock on shared segment.\n");
@@ -263,8 +264,9 @@ map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,
 	}
 	if(screen[0]->p<0){
 	    error("Unable to mmap for read/write\n");
-	}
-	screen[0]->shm=fd;//save file descriptor of shared mem for easy munmap later and close fd
+	}								
+	//since fd might be 0. we add fd by 1 and assign to shm.
+	screen[0]->shm=fd+1;//save file descriptor of shared mem for easy munmap later and close fd
 	for(int ilayer=1; ilayer<nlayer; ilayer++){
 	    screen[ilayer]->shm = -1;//say this is a part of the shared mem
 	    screen[ilayer]->p = screen[0]->p+m*n*ilayer;

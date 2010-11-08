@@ -325,6 +325,7 @@ int get_ncpu(void){
     warning("_SC_NPROCESSORS_ONLN gives %d cpus, but we found %d cpus\n",
     ncpu0, ncpu1);
     }*/
+    fclose(fp);
     return ncpu0<ncpu1?ncpu0:ncpu1;
 }
 

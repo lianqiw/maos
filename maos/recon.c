@@ -272,9 +272,9 @@ void focus_tracking(SIM_T*simu){
 }
 /**
    remove NGS modes from LGS DM commands
-   if split_wt==1
+   if ahst_wt==1
    Rngs*GA*dmerr is zero
-   if split_wt==2
+   if ahst_wt==2
    Doesn't perturb NGS modes in science direction.
 */
 static inline void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
@@ -660,7 +660,7 @@ void tomofit(SIM_T *simu){
 	if(!parms->dbg.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
-	if(parms->tomo.split_rtt && parms->tomo.split){
+	if(parms->tomo.ahst_rtt && parms->tomo.split){
 	    remove_dm_tt(simu, simu->dmerr_hi);
 	}
 	
@@ -685,7 +685,7 @@ void tomofit(SIM_T *simu){
 	    switch(parms->tomo.split){
 	    case 1:{
 		NGSMOD_T *ngsmod=recon->ngsmod;
-		if(!parms->tomo.split_idealngs){//Low order NGS recon.
+		if(!parms->tomo.ahst_idealngs){//Low order NGS recon.
 		    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradcl,"nn",1);
 		}//else: there is ideal NGS correction done in perfevl.
 	    }

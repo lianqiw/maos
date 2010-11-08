@@ -49,7 +49,7 @@ void free_parms(PARMS_T *parms){
 
     free(parms->evl.thetax);
     free(parms->evl.thetay);
-    free(parms->evl.wvl);
+    free(parms->evl.psfwvl);
     free(parms->evl.wt);
     free(parms->evl.psf);
     free(parms->evl.psfgridsize);
@@ -146,6 +146,43 @@ static int readcfg_intarr_n(int n,int **p, const char*format,...){
     }
     return 0;
     }
+/**
+   Read in int array of n elements from the configuration files. If not enough
+numbers available, will fill with zeros.  */
+static int readcfg_intarr_n_relax(int n,int **p, const char*format,...){
+    format2key;
+    int m=readcfg_intarr(p,"%s",key);
+    if(m==0){
+	*p=calloc(m, sizeof(int));
+    }else if(m==1){
+	*p=realloc(*p, m*sizeof(int));
+	for(int ii=1; ii<m; ii++){
+	    p[ii]=p[0];
+	}
+    }else if(m!=n){
+	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
+    }
+    return 0;
+}
+/**
+   Read in double array of n elements from the configuration files. If not enough
+numbers available, will fill with zeros.  */
+/*static int readcfg_dblarr_n_relax(int n, double **p, const char*format,...){
+    format2key;
+    int m=readcfg_dblarr(p,"%s",key);
+    if(m==0){
+	*p=calloc(m, sizeof(double));
+    }else if(m==1){
+	*p=realloc(*p, m*sizeof(double));
+	for(int ii=1; ii<m; ii++){
+	    p[ii]=p[0];
+	}
+    }else if(m!=n){
+	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
+    }
+    return 0;
+}
+*/
 #define READ_INT(A) parms->A = readcfg_int(#A) //read a key with int value.
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) //read a key with double value
 #define READ_STR(A) parms->A = readcfg_str(#A) //read a key with string value.
@@ -180,17 +217,26 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,nwvl);
     double *wvllist=NULL;
     int nwvllist=readcfg_dblarr(&wvllist,"powfs.wvl");
+    double *wvlwts=NULL;
+    int nwvlwts=readcfg_dblarr(&wvlwts, "powfs.wvlwts");
+    if(nwvllist != nwvlwts){
+	error("powfs.wvl does not match powfs.wvlwts\n");
+    }
     int count=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	int nwvl=parms->powfs[ipowfs].nwvl;
 	parms->powfs[ipowfs].wvl=calloc(nwvl, sizeof(double));
+	parms->powfs[ipowfs].wvlwts=calloc(nwvl, sizeof(double));
 	memcpy(parms->powfs[ipowfs].wvl,wvllist+count,sizeof(double)*nwvl);
+	memcpy(parms->powfs[ipowfs].wvlwts, wvlwts+count,sizeof(double)*nwvl);
+	normalize(parms->powfs[ipowfs].wvlwts, nwvl, 1);
 	count+=nwvl;
     }
     if(count!=nwvllist){
 	error("powfs.wvl has wrong value\n");
     }
     free(wvllist);
+    free(wvlwts);
 
     READ_POWFS(str,piinfile);
     READ_POWFS(str,sninfile);
@@ -240,6 +286,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,dtrat);
     READ_POWFS(int,i0scale);
     READ_POWFS(dbl,sigscale);
+    READ_POWFS(dbl,siglev);
     READ_POWFS(int,moao);
     int illt=0;
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -309,7 +356,6 @@ static void readcfg_wfs(PARMS_T *parms){
     }
     free(dbljunk);
     READ_WFS(dbl,thetay);
-    READ_WFS(dbl,siglev);
     for(i=0; i<parms->nwfs; i++){
 	parms->wfs[i].thetax/=206265.;
 	parms->wfs[i].thetay/=206265.;
@@ -317,13 +363,30 @@ static void readcfg_wfs(PARMS_T *parms){
     READ_WFS(int,powfs);
     double *wvlwts=0;
     int nwvlwts=readcfg_dblarr(&wvlwts,"wfs.wvlwts");
+    double *siglev=0;
+    int nsiglev=readcfg_dblarr(&siglev,"wfs.siglev");
     int count=0;
+    if(nsiglev!=0 && nsiglev!=parms->nwfs){
+	error("wfs.siglev can be either empty or %d\n",parms->nwfs);
+    }
     for(i=0; i<parms->nwfs; i++){
 	int ipowfs=parms->wfs[i].powfs;
 	int nwvl=parms->powfs[ipowfs].nwvl;
 	parms->wfs[i].wvlwts=malloc(nwvl*sizeof(double));
-	memcpy(parms->wfs[i].wvlwts,wvlwts+count,sizeof(double)*nwvl);
-	count+=nwvl;
+	if(nwvlwts==0){
+	    memcpy(parms->wfs[i].wvlwts,parms->powfs[ipowfs].wvlwts,sizeof(double)*nwvl);
+	}else{
+	    memcpy(parms->wfs[i].wvlwts,wvlwts+count,sizeof(double)*nwvl);
+	    count+=nwvl;
+	}
+	if(nsiglev==0){
+	    parms->wfs[i].siglev=parms->powfs[ipowfs].siglev;
+	}else{
+	    parms->wfs[i].siglev=siglev[i];
+	}
+    }
+    if(nsiglev>0){
+	free(siglev);
     }
     free(wvlwts);
     if(count!=nwvlwts){
@@ -454,9 +517,9 @@ static void readcfg_evl(PARMS_T *parms){
     parms->evl.nevl=readcfg_dblarr((double**)(void*)&(parms->evl.thetax),"evl.thetax");
     readcfg_dblarr_n(parms->evl.nevl, (double**)(void*)&(parms->evl.thetay),"evl.thetay");
     readcfg_dblarr_n(parms->evl.nevl, &(parms->evl.wt), "evl.wt");
-    readcfg_intarr_n(parms->evl.nevl, &(parms->evl.psf), "evl.psf");
-    parms->evl.nwvl = readcfg_dblarr(&(parms->evl.wvl), "evl.wvl");
-    readcfg_intarr_n(parms->evl.nwvl, &(parms->evl.psfgridsize),"evl.psfgridsize");
+    readcfg_intarr_n_relax(parms->evl.nevl, &(parms->evl.psf), "evl.psf");
+    parms->evl.nwvl = readcfg_dblarr(&(parms->evl.psfwvl), "evl.psfwvl");
+    readcfg_intarr_n_relax(parms->evl.nwvl, &(parms->evl.psfgridsize),"evl.psfgridsize");
     int ievl;
     parms->evl.indoa=-1;
     for(ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -496,14 +559,12 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.square);
     READ_INT(tomo.invpsd);
     READ_INT(tomo.guard);
-    READ_DBL(tomo.tik_cstr);
-    READ_INT(tomo.xloc_tight);
+    READ_DBL(tomo.tikcr);
     READ_INT(tomo.piston_cr);
     READ_INT(tomo.split);
-    READ_INT(tomo.split_wt);
-    READ_INT(tomo.split_Rngs_svd);
-    READ_INT(tomo.split_idealngs);
-    READ_INT(tomo.split_rtt);
+    READ_INT(tomo.ahst_wt);
+    READ_INT(tomo.ahst_idealngs);
+    READ_INT(tomo.ahst_rtt);
     READ_INT(tomo.alg);
     READ_INT(tomo.precond);
     READ_INT(tomo.maxit);
@@ -527,7 +588,7 @@ static void readcfg_fit(PARMS_T *parms){
 	parms->fit.thetay[ifit]/=206265;
     }
 
-    READ_DBL(fit.tik_cstr);
+    READ_DBL(fit.tikcr);
     READ_INT(fit.actslave);
     READ_INT(fit.lrt_piston);
     READ_INT(fit.lrt_tt);
@@ -862,13 +923,13 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 		parms->tomo.split=1;
 	    }
-	    if(parms->tomo.split_wt==1){
-		warning("split_wt changed from 1 to 3 when outputing PSF for NGS.\n");
-		parms->tomo.split_wt=3;
+	    if(parms->tomo.ahst_wt==1){
+		warning("ahst_wt changed from 1 to 3 when outputing PSF for NGS.\n");
+		parms->tomo.ahst_wt=3;
 	    }
-	    if(parms->tomo.split_idealngs!=1){
+	    if(parms->tomo.ahst_idealngs!=1){
 		warning("Can only output psf with ideal correction on NGS modes. Changed\n");
-		parms->tomo.split_idealngs=1;
+		parms->tomo.ahst_idealngs=1;
 	    }
 	}
     }

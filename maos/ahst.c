@@ -571,10 +571,10 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     ngsmod->GM=ngsmod_g(parms,recon,powfs);
     ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,recon->saneai);
 
-    if(parms->tomo.split_wt==1){
+    if(parms->tomo.ahst_wt==1){
 	//Use gradient weighting.
 	dcellmulsp(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, 1);
-	if(parms->tomo.split_rtt){
+	if(parms->tomo.ahst_rtt){
 	    ngsmod->Ptt=dcellnew(parms->ndm,1);
 	    for(int idm=0; idm<ndm; idm++){
 		dcell *Matt=dcellnew(ndm,1);
@@ -591,7 +591,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		dcellfree(Matt);
 	    }
 	}
-    }else if(parms->tomo.split_wt==2){
+    }else if(parms->tomo.ahst_wt==2){
 	//Use aperture weighting.
 	if(parms->dbg.wamethod==0){
 	    info("Wa using DM mode\n");
@@ -614,7 +614,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    toc("Wa");
 	    ngsmod->Pngs=dcellpinv(ngsmod->Mdm, NULL,ngsmod->Wa);
 	    toc("Pngs");
-	    if(parms->tomo.split_rtt){
+	    if(parms->tomo.ahst_rtt){
 		ngsmod->Ptt=dcellnew(parms->ndm,1);
 		for(int idm=0; idm<ndm; idm++){
 		    dmat *Matt=loc2mat(recon->aloc[idm],0);
@@ -627,15 +627,15 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    tic;
 	    ngsmod->Pngs=ngsmod_Pngs_Wa(parms,recon,aper,0);
 	    toc("Pngs_Wa");
-	    if(parms->tomo.split_rtt){
+	    if(parms->tomo.ahst_rtt){
 		tic;
 		ngsmod->Ptt=ngsmod_Ptt_Wa(parms,recon,aper,0);
 		toc("Pngs_Ptt");
 	    }
 	}
-    }else if(parms->tomo.split_wt==3){//Identity weighting.
+    }else if(parms->tomo.ahst_wt==3){//Identity weighting.
 	ngsmod->Pngs=dcellpinv(ngsmod->Mdm, NULL,NULL);
-	if(parms->tomo.split_rtt){
+	if(parms->tomo.ahst_rtt){
 	    ngsmod->Ptt=dcellnew(parms->ndm,1);
 	    for(int idm=0; idm<ndm; idm++){
 		dmat *Matt=loc2mat(recon->aloc[idm],0);
@@ -644,7 +644,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    }
 	}
     }else{
-	error("Invalid parms->tomo.split_wt=%d\n", parms->tomo.split_wt);
+	error("Invalid parms->tomo.ahst_wt=%d\n", parms->tomo.ahst_wt);
     }
     if(parms->save.setup){
 	//ahst stands for ad hoc split tomography

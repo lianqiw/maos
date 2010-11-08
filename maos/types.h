@@ -444,6 +444,7 @@ typedef struct SIM_T{
     int dtrat_hi;      /**<ratio of sampling period over clock of high order wfs*/
     int dtrat_lo;      /**<dtrat of the lower order loop.*/
     int seed;          /**<current running seed.*/
+    int iseed;         /**<index of current running seed.*/
     int isim;          /**<record current simulations step.*/
     //maintain pointer of other structs for use in thread functions.
     const PARMS_T *parms; /**<pointer to parms*/
