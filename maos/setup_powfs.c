@@ -1368,7 +1368,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	    for(int iotf=0; iotf<intstat->notf; iotf++){
 		snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			 "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d.bin.gz",
+			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d_v1.bin.gz",
 			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
 			 parms->atm.r0, parms->atm.l0, 
@@ -1393,7 +1393,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		for(int iotf=0; iotf<intstat->notf; iotf++){
 		    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d.bin.gz",
+			     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d_v1.bin.gz",
 			     HOME, fnprefix,
 			     parms->aper.d,parms->aper.din, 
 			     parms->atm.r0, parms->atm.l0, 
@@ -1411,7 +1411,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		char fnlotf[PATH_MAX];
 		snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			 "r0_%g_L0%g_dsa%g_lltd%g_dx1_%g_"
-			 "nwvl%d_%g_embfac%d_%dx%d_SELOTF.bin.gz", 
+			 "nwvl%d_%g_embfac%d_%dx%d_SELOTF_v1.bin.gz", 
 			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
 			 parms->atm.r0, parms->atm.l0, 

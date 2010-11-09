@@ -175,7 +175,6 @@ static void genotf_do(cmat **otf, int pttr, long notfx, long notfy,
     }else{
 	BP=(void*)B;
     }
-   
     if(!*otf){
 	*otf=cnew(notfx,notfy);
     }
@@ -187,11 +186,13 @@ static void genotf_do(cmat **otf, int pttr, long notfx, long notfy,
     for(int iloc=0; iloc<nloc; iloc++){
 	BPD[iloc]=pow(BP[iloc][iloc],-0.5);
     }
+
     double otfnorm;
     otfnorm=0;
     for(int iloc=0; iloc<nloc; iloc++){
 	otfnorm+=amp[iloc]*amp[iloc];
     }
+
     otfnorm=1./otfnorm;
     struct T_VALID (*qval)[notfx]=(struct T_VALID (*)[notfx])pval;
     if(opdbias){
@@ -249,10 +250,11 @@ static void *genotf_wrap(GENOTF_T *data){
     const double thres=data->thres;
     const cmat *otffull=data->otffull;
     const double *amp=data->amp;
+    const int pttr=data->pttr;
     double *B=data->B;
     const T_VALID *pval=data->pval;
     while(LOCK(data->mutex_isa),isa=data->isa++,UNLOCK(data->mutex_isa),isa<nsa){
-	fprintf(stderr,"%4ld of %4ld\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
+	fprintf(stderr,"%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
 	const double *opdbiasi=NULL;
 	if(data->opdbias){
 	    opdbiasi=data->opdbias+isa*nxsa;
@@ -262,15 +264,19 @@ static void *genotf_wrap(GENOTF_T *data){
 	if(otffull && area[isa]>thres){
 	    ccp(&otf[isa],otffull);//just copy the full array
 	}else{ 
-	    genotf_do(&otf[isa],1,ncompx,ncompy,loc,amp+isa*nxsa,opdbiasi,wvl,B,pval);
+	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp+isa*nxsa,opdbiasi,wvl,B,pval);
 	}
     }
     return NULL;
 }
 /**
-   Generate pairs of overlapping points for structure function.
+   Generate pairs of overlapping points for structure function. 
+   Changelog:
+
+   2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
+   first subaperture to build pval, but this one is not fully illuminated. 
  */
-static T_VALID *gen_pval(int notfx, int notfy, loc_t *loc,const double *amp,
+static T_VALID *gen_pval(int notfx, int notfy, loc_t *loc,
 			 double dtheta, double wvl){
     double dux=1./(dtheta*notfx);
     double duy=1./(dtheta*notfy);
@@ -289,7 +295,6 @@ static T_VALID *gen_pval(int notfx, int notfy, loc_t *loc,const double *amp,
     double duxwvl=dux*wvl;
     double duywvl=duy*wvl;
     double dx1=1./loc->dx;
-    double ampth=1.e-10*maxdbl(amp, nloc);
     long (*mapp)[map->nx]=(long(*)[map->nx])map->p;
     for(int jm=0; jm<notfy; jm++){
 	int jm2=(jm-notfy2);//peak in the center
@@ -303,7 +308,7 @@ static T_VALID *gen_pval(int notfx, int notfy, loc_t *loc,const double *amp,
 		int ix=(int)round((locx[iloc]+im2*duxwvl-map->ox)*dx1);
 		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
 		    long iloc2=mapp[iy][ix];
-		    if(iloc2-- && amp[iloc]>ampth && amp[iloc2]>ampth){
+		    if(iloc2--){
 			pval0[count][0]=iloc;
 			pval0[count][1]=iloc2;
 			count++;
@@ -361,10 +366,9 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	     ){
    /*creating pairs of points that both exist with given separation for
       computing structure function*/
-    T_VALID *pval=gen_pval(ncompx, ncompy, loc, amp, dtheta, wvl);//returns T_VALID array.
+    T_VALID *pval=gen_pval(ncompx, ncompy, loc, dtheta, wvl);//returns T_VALID array.
     /* Generate the B matrix. */
     double *B=genotfB(loc, wvl, r0, l0);
-    writedbl(B,loc->nloc,loc->nloc,"B");
     cmat *otffull=NULL;
     const long nloc=loc->nloc;
     int isafull=-1;
@@ -384,21 +388,23 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     GENOTF_T data;
     memset(&data, 0, sizeof(GENOTF_T));
     data.isa=0;
-    data.nsa=nsa;
     PINIT(data.mutex_isa);
     data.otf=otf;
-    data.ncompx=ncompx;
-    data.ncompy=ncompy;
     data.loc=loc;
     data.amp=amp;
     data.opdbias=opdbias;
+    data.area=area;
+    data.thres=thres;
     data.wvl=wvl;
+    data.ncompx=ncompx;
+    data.ncompy=ncompy;
+    data.nsa=nsa;
+    data.pttr=pttr;//was missing.
     data.B=B;
     data.pval=pval;
     data.isafull=isafull;
     data.otffull=otffull;
-    data.thres=thres;
-    data.area=area;
+
     CALL(genotf_wrap, &data, nthread);
     cfree(otffull);
     free(B);
