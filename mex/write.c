@@ -116,19 +116,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     file_t *fp;
     char fn[MAX_FN_LEN];
     mxGetString(prhs[1],fn,MAX_FN_LEN+1);
-    /*if(fn[0]=='~'){
-	const char *HOME=getenv("HOME");
-	if(!HOME){
-	    error("Unable to get user home\n");
-	}
-	int fnlen=strlen(fn);
-	int homelen=strlen(HOME);
-	if(fnlen+homelen>=MAX_FN_LEN){
-	    error("MAX_FN_LEN is too small\n");
-	}
-	memmove(fn+homelen, fn+1, fnlen);
-	memcpy(fn, HOME, homelen);
-	}*/
     fp=openfile(fn,"w");
     (void)nlhs;
     (void)nrhs;
