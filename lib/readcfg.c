@@ -279,17 +279,19 @@ void open_config(const char* config_file, long protect){
 /**
    Get the record number of a key.
  */
-static long getrecord(char *key){
+static long getrecord(char *key, int mark){
     long irecord;
     ENTRY entry, *entryfind;
     strtrim(&key);
     entry.key=key;
     if((entryfind=hsearch(entry,FIND))){
 	irecord=(long)entryfind->data;
-	if(store[irecord].count){
-	    error("This record %s is already read\n",key);
+	if(mark){
+	    if(store[irecord].count){
+		error("This record %s is already read\n",key);
+	    }
+	    store[irecord].count++;//record read
 	}
-	store[irecord].count++;//record read
     }else{
 	irecord=-1;
 	print_file("change.log");
@@ -304,14 +306,24 @@ static long getrecord(char *key){
 int readcfg_peek(const char *format,...){
     //Check whether key exists
     format2key;
-    ENTRY entry;
-    char *key2=key;
-    strtrim(&key2);
-    entry.key=key2;
-    if(hsearch(entry,FIND)){
-	return 1;
-    }else{
+    long irecord=getrecord(key, 0);
+    if(irecord==-1){
 	return 0;
+    }else{
+	return 1;
+    }
+}
+/**
+   Check whether the record is overriden by user supplied conf files.
+*/
+int readcfg_override(const char *format,...){
+    //Check whether key exists
+    format2key;
+    long irecord=getrecord(key, 0);
+    if(irecord==-1){
+	return 0;
+    }else{
+	return store[irecord].protect;
     }
 }
 /**
@@ -320,7 +332,7 @@ int readcfg_peek(const char *format,...){
 char *readcfg_str(const char *format,...){
     format2key;
     char *data;
-    long irecord=getrecord(key);
+    long irecord=getrecord(key, 1);
     if(irecord!=-1){
 	const char *sdata=store[irecord].data;
 	if(sdata && strlen(sdata)>0){
@@ -341,7 +353,7 @@ char *readcfg_str(const char *format,...){
 int readcfg_strarr(char ***res, const char *format,...){
     //Read str array.
     format2key;
-    long irecord=getrecord(key);
+    long irecord=getrecord(key, 1);
     int count=0, maxcount=5;
     *res=calloc(maxcount,sizeof(char*));
     if(irecord!=-1){

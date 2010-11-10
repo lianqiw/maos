@@ -1,3 +1,8 @@
+2010-11-09 Version 0.7.2
+	Found a bug in genseotf and fixed.
+	The sum of the input sodium profile now scales the signal level
+2010-11-01 Version 0.7.1
+	Reorganizing .conf files
 2010-10-31 Version 0.7.0
 	Eliminated dependency on Arpack. So fortran compiler is no longer required.
 2010-10-27 Version 0.6.1

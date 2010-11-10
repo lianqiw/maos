@@ -74,7 +74,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	if(has_ncpa){
 	    info2("There is NCPA bias for powfs %d\n", ipowfs);
 	    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-		info("Generating otf for wfs %d of this powfs\n",iwfs);
+		info2("Generating otf for wfs %d of this powfs\n",iwfs);
 		double *opdbias=powfs[ipowfs].ncpa->p[iwfs]->p;
 		double thres=1;
 		genotf(powfs[ipowfs].intstat->otf[iwfs]->p+iwvl*nsa,
@@ -177,9 +177,9 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
    sodium layer, and the detector transfer function. */
 void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 #if ROT_OTF == 1
-    info("Rotating OTF for Polar CCD\n");//Used mainly for off-axis launch
+    info2("Rotating OTF for Polar CCD\n");//Used mainly for off-axis launch
 #elif ROT_OTF==0
-    info("Rotating PSF for Polar CCD\n");//Used mainly for on-axis launch
+    info2("Rotating PSF for Polar CCD\n");//Used mainly for on-axis launch
 #else
     error("Invalid ROT_OTF\n");
 #endif
@@ -240,7 +240,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
 	ni0=parms->powfs[ipowfs].nwfs;
     }
-    info("powfs %d: number of i0 for matched filter is %d\n",ipowfs,ni0);
+    info2("powfs %d: number of i0 for matched filter is %d\n",ipowfs,ni0);
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("Number of i0 must be either 1 or %d, but is %d\n",
 	      parms->powfs[ipowfs].nwfs,ni0);
@@ -343,7 +343,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    int iwfs=parms->powfs[ipowfs].wfs[ii0];
 	    double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
-	    info("powfs %d: iwvl=%d, iwfs=%d, wvlsig=%g\n",ipowfs,iwvl,iwfs,wvlsig);
+	    info2("powfs %d: iwvl=%d, iwfs=%d, wvlsig=%g\n",ipowfs,iwvl,iwfs,wvlsig);
 	    dmat *(*psepsf)[nsa]=(void*)powfs[ipowfs].intstat->sepsf[isepsf]->p;
 	    double pgrad[2];
 	    cmat **nominals=NULL;
@@ -391,7 +391,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		cfftshift(seotfk);//PSF, peak in corner;
 		cfft2(seotfk,-1);//turn to OTF peak in corner
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
-		    //info("grad in psf is %g %g\n",pgrad[0],pgrad[1]);
 		    ctilt(seotfk,-pgrad[0],-pgrad[1],0);
 		}
 #endif

@@ -474,7 +474,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     fprintf(fp,"sim.end=5000\n");
     fprintf(fp,"sim.dt=%g\n", parms->maos.dt);
     fprintf(fp,"atm.r0z=%.4f\n", parms->maos.r0z);
-    fprintf(fp,"atm.zadeg=%g\n", parms->maos.zadeg);
+    fprintf(fp,"sim.zadeg=%g\n", parms->maos.zadeg);
     fprintf(fp,"atm.size=[128 128]\n");
     fprintf(fp,"tomo.split_wt=3\n");
     PDMAT(parms->skyc.rnefs,rnefs);

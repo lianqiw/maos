@@ -37,6 +37,7 @@ void   open_config (const char*fn, long protect);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
+int    readcfg_override(const char *format,...) CHECK_ARG(1);
 char*  readcfg_str (const char*format,...) CHECK_ARG(1);
 /**
    Read an int number from config hash table*/

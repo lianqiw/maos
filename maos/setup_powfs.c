@@ -506,7 +506,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		  ipowfs, parms->powfs[ipowfs].bkgrndrm);
 	}
 	char *fn=find_file(parms->powfs[ipowfs].bkgrndfn);
-	info("Loading sky background/rayleigh backscatter from %s\n",fn);
+	info2("Loading sky background/rayleigh backscatter from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrnd);
 	powfs[ipowfs].bkgrnd=dcellread("%s",fn);
 	free(fn);
@@ -543,7 +543,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	if(nncpa_in==nwfs){
 	    incpa_mul=1;
 	}
-	info("Creating NCPA\n");
+	info2("Creating NCPA\n");
 	dcellfree(powfs[ipowfs].ncpa);
 	powfs[ipowfs].ncpa=dcellnew(nwfs,1);
 	
@@ -553,7 +553,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		ilocm=parms->powfs[ipowfs].indwfs[iwfs];
 	    }
 	    int incpa_in=incpa_mul*iwfs;
-	    info("iwfs=%d, incpa_in=%d\n", iwfs, incpa_in);
+	    info2("iwfs=%d, incpa_in=%d\n", iwfs, incpa_in);
 
 	    if(!powfs[ipowfs].ncpa->p[iwfs]){
 		powfs[ipowfs].ncpa->p[iwfs]=dnew(powfs[ipowfs].npts,1);
@@ -565,7 +565,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		locwfsin=powfs[ipowfs].loc;
 	    }
 	    if(do_rot){
-		info("Rotating telescope pupil\n");
+		info2("Rotating telescope pupil\n");
 		locwfs=locdup(locwfsin);
 		locrot(locwfs,rot);
 	    }else{
@@ -841,54 +841,55 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 }
 
 /**
-  Load and smooth out sodium profile
-*/
+  Load and smooth out sodium profile. We preserve the sum of the sodium profile,
+which represents a scaling factor of the signal level.  */
 static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     char *lltfn=find_file(parms->powfs[ipowfs].llt->fn);
-    dmat *nain=dread("%s",lltfn);
-    if(nain->ny<2){
-	error("nain %s is in wrong fromat\n", lltfn);
+    dmat *Nain=dread("%s",lltfn);
+    if(Nain->ny<2){
+	error("The sodium profile input %s is in wrong fromat\n", lltfn);
     }
     free(lltfn);
-    if(parms->powfs[0].llt->smooth){
+
+    if(parms->powfs[0].llt->smooth){//resampling the sodium profile by binning.
 	//Make new sampling:
 	double rsamax=dmax(powfs[ipowfs].srsamax);
 	double dthetamin=dmin(powfs[ipowfs].dtheta);
-	const double x0in=nain->p[0];
-	const long nxin=nain->nx;
-	double dxin=(nain->p[nxin-1]-x0in)/(nxin-1);
+	const double x0in=Nain->p[0];
+	const long nxin=Nain->nx;
+	double dxin=(Nain->p[nxin-1]-x0in)/(nxin-1);
 	//minimum sampling required.
 	double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
-	
 	if(dxnew > dxin * 2){
-	    info("Smoothing sodium profile\n");
-	    const long nxnew=ceil((nain->p[nxin-1]-x0in)/dxnew);
-	    loc_t *loc_in=mk1dloc_vec(nain->p, nxin);
+	    info2("Smoothing sodium profile\n");
+	    const long nxnew=ceil((Nain->p[nxin-1]-x0in)/dxnew);
+	    loc_t *loc_in=mk1dloc_vec(Nain->p, nxin);
 	    loc_t *loc_out=mk1dloc(x0in, dxnew, nxnew);
 	    dsp *ht=mkhb(loc_out, loc_in, NULL, 0, 0, 1,0,0);
-	    powfs[ipowfs].sodium=dnew(nxnew, nain->ny);
+	    powfs[ipowfs].sodium=dnew(nxnew, Nain->ny);
 	    memcpy(powfs[ipowfs].sodium->p, loc_out->locx, sizeof(double)*nxnew);
-	    for(long icol=1; icol<nain->ny; icol++){
-		spmulvec(powfs[ipowfs].sodium->p + nxnew*icol,
-			 ht, nain->p + nxin * icol, 1);
+			     
+	    for(long icol=1; icol<Nain->ny; icol++){
+		//input profile
+		double *pin=Nain->p + nxin * icol;
+		//output profile
+		double *pout=powfs[ipowfs].sodium->p + nxnew*icol;
+		//preserve sum of input profile
+		double Nasum=dblsum(pin, nxin);
+		spmulvec(pout, ht, pin, 1);
+		normalize(pout, nxnew, Nasum);
 	    }
 	    spfree(ht);
 	    locfree(loc_in);
 	    locfree(loc_out);
-	    dfree(nain);
+	    dfree(Nain);
 	}else{
 	    warning("Not smoothing sodium profile\n");
-	    powfs[ipowfs].sodium=nain;
+	    powfs[ipowfs].sodium=Nain;
 	}
     }else{
 	warning("Not smoothing sodium profile\n");
-	powfs[ipowfs].sodium=nain;
-    }
-    for(long icol=1; icol<powfs[ipowfs].sodium->ny; icol++){
-	double *p=powfs[ipowfs].sodium->p+icol*powfs[ipowfs].sodium->nx;
-	//Zero the two ends.
-	p[0]=0;	p[powfs[ipowfs].sodium->nx-1]=0;
-	normalize_max(p, powfs[ipowfs].sodium->nx,1);
+	powfs[ipowfs].sodium=Nain;
     }
     if(parms->save.setup){
 	dwrite(powfs[ipowfs].sodium, "%s/powfs%d_sodium",dirsetup,ipowfs);
@@ -925,11 +926,11 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		error("powfs %d: Please call setup_powfs_etf with mode = 0 first\n",ipowfs);
 	    }
 	    powfs[ipowfs].etfsim=powfs[ipowfs].etfprep;
-	    warning("powfs %d: simulation and reconstruction using same etf\n",ipowfs);
+	    info2("powfs %d: simulation and reconstruction using same etf\n",ipowfs);
 	    return;
 	}
 	if(powfs[ipowfs].etfsim){
-	    info("powfs %d: Free previous etfsim\n",ipowfs);
+	    info2("powfs %d: Free previous etfsim\n",ipowfs);
 	    for(int iwvl=0;iwvl<parms->powfs[ipowfs].nwvl;iwvl++){
 		ccellfree(powfs[ipowfs].etfsim[iwvl].p1);
 		ccellfree(powfs[ipowfs].etfsim[iwvl].p2);
@@ -996,9 +997,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	      2010-01-04: Fuse dtf nominal into etf for this case.
 	    */
 	    if(parms->powfs[ipowfs].radpix){
-		warning("powfs %d: 2D ETF for Radial CCD\n",ipowfs);
+		info2("powfs %d: 2D ETF for Radial CCD\n",ipowfs);
 	    }else{
-		warning("powfs %d: Non-Radial CCD\n",ipowfs);
+		info2("powfs %d: Non-Radial CCD\n",ipowfs);
 	    }
 	    powfsetf[iwvl].p2=ccellnew(nsa,nllt);
 	    petf=(void*)powfsetf[iwvl].p2->p;
@@ -1066,15 +1067,23 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    error("Invalid configuration. colprep or colsim is too big\n");
 	}
 	colstart=colskip+istep%(sodium->ny-1-colskip);
-	warning("powfs %d: Na using column %d in %s\n",ipowfs,colstart,
-		mode==0?"preparation":"simulation");
+	info2("powfs %d: Na using column %d in %s\n",ipowfs,colstart,
+	     mode==0?"preparation":"simulation");
+	//points to the effective sodium profile.
 	double* pp=sodium->p+nhp*(1+colstart);
-	if(fabs(pp[0])>1.e-15 || fabs(pp[nhp-1])>1.e-15){
+	/*if(fabs(pp[0])>1.e-15 || fabs(pp[nhp-1])>1.e-15){
 	    warning("Changed sodium profile both ends to zero.\n");
 	    pp[0]=0;
 	    pp[nhp-1]=0;
+	    }*/
+	//the sum of pp determines the scaling of the pixel intensity.
+	double i0scale=dblsum(pp, nhp);
+	if(fabs(i0scale-1)>0.01){
+	    warning("powfs %d: siglev is scaled by %g by sodium profile\n", ipowfs, i0scale);
 	}
-
+	if(i0scale<0.8 || i0scale>2){
+	    error("Check whether this is valid. Relax the restriction if desired.\n");
+	}
 	for(int illt=0; illt<nllt; illt++){
 	    for(int isa=0; isa<nsa; isa++){
 		//1d ETF along radius.
@@ -1102,10 +1111,17 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		    }
 		}
 		if(fabs(etf2sum)>1.e-20){
-		    /*normalize the etf before fft so that
-		      after fft it max to 1. The strength of
-		      original profile doesn't matter.*/
-		    cscale(etf,1./etf2sum);
+		    /*2010-11-09:
+
+		      We used to normalize the etf before fft so that after fft
+		      it max to 1. The strength of original profile doesn't
+		      matter.
+		    
+		      Changed: We no longer normalize the etf, so we can model
+		      the variation of the intensity and meteor trails.
+		      
+		    */
+		    cscale(etf,i0scale/etf2sum);
 		    cfftshift(etf);//put peak in corner;
 		    cfft2(etf, -1);
 		    if(use1d){
@@ -1171,9 +1187,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    if(parms->powfs[ipowfs].llt->colprep==parms->powfs[ipowfs].llt->colsim
 	       && parms->powfs[ipowfs].llt->colsimdtrat==0){
 		ccellfree(powfs[ipowfs].dtf[iwvl].nominal);
-		info("powfs %d: DTF nominal is fused to ETF and freed\n", ipowfs);
+		info2("powfs %d: DTF nominal is fused to ETF and freed\n", ipowfs);
 	    }else{
-		info("powfs %d: DTF nominal is fused to ETF but kept\n", ipowfs);
+		info2("powfs %d: DTF nominal is fused to ETF but kept\n", ipowfs);
 	    }
 	}	    
 	
@@ -1368,7 +1384,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	    for(int iotf=0; iotf<intstat->notf; iotf++){
 		snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			 "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d.bin.gz",
+			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d_v1.bin.gz",
 			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
 			 parms->atm.r0, parms->atm.l0, 
@@ -1393,7 +1409,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		for(int iotf=0; iotf<intstat->notf; iotf++){
 		    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d.bin.gz",
+			     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d_v1.bin.gz",
 			     HOME, fnprefix,
 			     parms->aper.d,parms->aper.din, 
 			     parms->atm.r0, parms->atm.l0, 
@@ -1402,7 +1418,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			     parms->powfs[ipowfs].nwvl,
 			     parms->powfs[ipowfs].wvl[0]*1.e6,
 			     parms->powfs[ipowfs].embfac,npsfx,npsfy, iotf);
-		    info("saving otf to %s\n", fnotf);
+		    info2("saving otf to %s\n", fnotf);
 		    ccellwrite(intstat->otf[iotf], "%s",fnotf);
 		}
 	    }
@@ -1411,7 +1427,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		char fnlotf[PATH_MAX];
 		snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			 "r0_%g_L0%g_dsa%g_lltd%g_dx1_%g_"
-			 "nwvl%d_%g_embfac%d_%dx%d_SELOTF.bin.gz", 
+			 "nwvl%d_%g_embfac%d_%dx%d_SELOTF_v1.bin.gz", 
 			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
 			 parms->atm.r0, parms->atm.l0, 

@@ -1,7 +1,7 @@
 The following have been renamed:
 atm.zadeg ==> sim.zadeg
 powfs.msa ==> powfs.order
-save.grad ==>save.gradhi and save.gradlo  ==> save.grad
+save.grad ==> save.gradhi and save.gradlo ==> save.grad
 save.ints ==> save.intshi and save.intslo ==> save.ints
 save.wfsopd   ==> save.wfsopdhi and save.wfsopdlo ==> save.wfsopd
 save.gradgeom ==> save.gradgeomhi and save.gradgeomlo ==> save.gradgeom
@@ -14,4 +14,3 @@ fit.tik_cstr  ==> fit.tikcr
 evl.wvl      ==> evl.psfwvl
 wfs.siglev ==>powfs.siglev or wfs.siglev
 wfs.wvlwts ==>powfs.wvlwts or wfs.wvlwts
-

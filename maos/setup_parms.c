@@ -383,6 +383,8 @@ static void readcfg_wfs(PARMS_T *parms){
     int nwvlwts=readcfg_dblarr(&wvlwts,"wfs.wvlwts");
     double *siglev=0;
     int nsiglev=readcfg_dblarr(&siglev,"wfs.siglev");
+    int powfs_siglev_override=readcfg_override("powfs.siglev");
+    int powfs_wvlwts_override=readcfg_override("powfs.wvlwts");
     int count=0;
     if(nsiglev!=0 && nsiglev!=parms->nwfs){
 	error("wfs.siglev can be either empty or %d\n",parms->nwfs);
@@ -396,16 +398,18 @@ static void readcfg_wfs(PARMS_T *parms){
 	}else{
 	    memcpy(parms->wfs[i].wvlwts,wvlwts+count,sizeof(double)*nwvl);
 	    count+=nwvl;
-	    if(parms->powfs[ipowfs].wvlwts){
-		error("when wfs.wvlwts is specified, must set powfs.wvlwts=[]\n");
+	    if(parms->powfs[ipowfs].wvlwts && powfs_wvlwts_override){
+		error("when both powfs.wvlwts and wfs.wvlwts are overriden "
+		      "must set powfs.wvlwts=[]\n");
 	    }
 	}
 	if(nsiglev==0){
 	    parms->wfs[i].siglev=parms->powfs[ipowfs].siglev;
 	}else{
 	    parms->wfs[i].siglev=siglev[i];
-	    if(parms->powfs[ipowfs].siglev>0){
-		error("when wfs.siglev is specified, must set powfs.siglev=[]\n");
+	    if(parms->powfs[ipowfs].siglev>0 && powfs_siglev_override){
+		error("when both powfs.siglev and wfs.siglev are overriden "
+		      "must set powfs.siglev=[]\n");
 	    }
 	}
     }
@@ -1235,6 +1239,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(!parms->tomo.split && !parms->sim.fuseint){
 	parms->sim.fuseint=1;//integrated tomo. only 1 integrator.
     }
+    if(parms->evl.tomo && parms->tomo.split){
+	warning("Evaluating tomography performance is best done with integrated tomography. Changed\n");
+	parms->tomo.split=0;
+    }
     if(parms->tomo.precond==1 && parms->tomo.square!=1){
 	warning("FDPCG requires square XLOC. changed\n");
 	parms->tomo.square=1;
@@ -1659,9 +1667,7 @@ static void check_parms(const PARMS_T *parms){
 	    }
 	}
     }
-    if(parms->evl.tomo && parms->tomo.split){
-	warning("Evaluating tomography performance is best done with integrated tomography\n");
-    }
+ 
     if(parms->tomo.alg<0 || parms->tomo.alg>1){
 	error("parms->tomo.alg=%d is invalid\n", parms->tomo.alg);
     }
@@ -1727,7 +1733,6 @@ static void setup_config(ARG_T*arg){
    returned from setup_parms. */
 PARMS_T * setup_parms(ARG_T *arg){
     setup_config(arg);
-
     PARMS_T* parms=calloc(1, sizeof(PARMS_T));
     readcfg_aper(parms);
     readcfg_atm(parms);
@@ -1771,6 +1776,5 @@ PARMS_T * setup_parms(ARG_T *arg){
     setup_parms_postproc_misc(parms, arg);
     check_parms(parms);
     print_parms(parms);
-
     return parms;
 }
