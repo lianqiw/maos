@@ -384,19 +384,19 @@ int scheduler_remove_job(int host, int pid){
     close(sock);
     return 0;//success
 }
-static void add_host(void){
-    /*From GTK Manual: g_io_channel_get_flags (): Gets the
-      current flags for a GIOChannel, including read-only flags
-      such as G_IO_FLAG_IS_READABLE.  The values of the flags
-      G_IO_FLAG_IS_READABLE and G_IO_FLAG_IS_WRITEABLE are cached
-      for internal use by the channel when it is created. If they
-      should change at some later point (e.g. partial shutdown of
-      a socket with the UNIX shutdown() function), the user
-      should immediately call g_io_channel_get_flags() to update
-      the internal values of these flags.*/
+static void add_host_thread(void){
+    /*From GTK Manual: g_io_channel_get_flags (): Gets the current flags for a
+      GIOChannel, including read-only flags such as G_IO_FLAG_IS_READABLE.  The
+      values of the flags G_IO_FLAG_IS_READABLE and G_IO_FLAG_IS_WRITEABLE are
+      cached for internal use by the channel when it is created. If they should
+      change at some later point (e.g. partial shutdown of a socket with the
+      UNIX shutdown() function), the user should immediately call
+      g_io_channel_get_flags() to update the internal values of these flags.*/
+    /*
+      This thread lives in a separate thread, so need to use gdk_thread_enter
+      before calls gtk functions.
+     */
     for(int ihost=0; ihost<nhost; ihost++){
-	while (gtk_events_pending ())
-	    gtk_main_iteration ();
 	if(!hsock[ihost]){
 	    int sock=scheduler_connect(ihost,0,0);
 	    if(sock==-1){
@@ -410,7 +410,7 @@ static void add_host(void){
 		    hsock[ihost]=0;
 		}else{
 		    shutdown(sock,SHUT_WR);//2010-07-03:we don't write. to detect remote close.
-		    
+		    gdk_threads_enter();
 		    GIOChannel *channel=g_io_channel_unix_new(sock);
 		    g_io_channel_set_encoding(channel,NULL,NULL);
 		    //must be not buffered
@@ -422,18 +422,26 @@ static void add_host(void){
 			 respond,GINT_TO_POINTER(sock),channel_removed);
 		    
 		    g_io_channel_unref(channel);
+		    gdk_threads_leave();
 		    hsock[ihost]=sock;
 		}
 	    }
+	    gdk_threads_enter();
 	    if(hsock[ihost]){
 		host_up(ihost);
 	    }else{
 		host_down(ihost,0);
 	    }
+	    gdk_threads_leave();
 	}
     }
 }
-
+static void add_host(void){
+    //Create a new thread and run add_host_thread
+    if(NULL==g_thread_create((GThreadFunc)add_host_thread, NULL, FALSE, NULL)){
+	warning("Thread creation failed.\n");
+    }
+}
 void notify_user(PROC_T *p){
     if(p->status.done) return;
 #if NOTIFY_IS_SUPPORTED
@@ -731,6 +739,10 @@ GtkWidget *monitor_new_progress(int vertical, int length){
 
 int main(int argc, char *argv[])
 {
+    if(!g_thread_supported()){
+	g_thread_init(NULL);
+	gdk_threads_init();
+    }
     gtk_init(&argc, &argv);
 #if NOTIFY_IS_SUPPORTED
     if(!notify_init("AOS Notification")){
@@ -857,6 +869,8 @@ int main(int argc, char *argv[])
     }
  
     add_host();
+    gdk_threads_enter();
     gtk_main();
+    gdk_threads_leave();
     gdk_color_free(bg);
 }
