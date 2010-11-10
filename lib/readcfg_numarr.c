@@ -32,7 +32,7 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
     if(!(*ret=(TYPE*)malloc(sizeof(TYPE)*nret))){
 	error("Failed to allocate memory for ret\n");
     }
-    long irecord=getrecord(key);
+    long irecord=getrecord(key, 1);
     if(irecord!=-1){
 	startptr=store[irecord].data;
 	if(!startptr){
@@ -106,7 +106,7 @@ TYPE TYPEFUN2(const char*format,...){
     format2key;
     TYPE data, data2;
     char *endptr, *startptr;
-    long irecord=getrecord(key);
+    long irecord=getrecord(key, 1);
     if(irecord!=-1){
 	startptr=store[irecord].data;
 	if(!startptr){

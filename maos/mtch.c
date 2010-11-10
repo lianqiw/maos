@@ -161,14 +161,13 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    pi0m[mtchcry][1]=shift*kp;
 	    pi0m[mtchcry+1][1]=-shift*kp;
 	}
-
+	double i0summax=0;
 	for(int isa=0; isa<nsa; isa++){
 	    i0sum[ii0][isa]=dsum(i0s[ii0][isa]);
-	    double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
-	    if(i0sum[ii0][isa]<siglev*0.05 || i0sum[ii0][isa]>siglev){
-		warning("powfs %d: i0 sum to %g, but wfs %d has siglev of %g\n",
-			ipowfs, i0sum[ii0][isa], iwfs, siglev);
+	    if(i0sum[ii0][isa]>i0summax){
+		i0summax=i0sum[ii0][isa];
 	    }
+	
 	    double* bkgrnd2=NULL;
 	    if(powfs[ipowfs].bkgrnd && powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]){
 		bkgrnd2= powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]->p; 
@@ -243,6 +242,11 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }
 	    saneaixy[ii0][isa]=dinvspd(saneaxy[ii0][isa]);
 	}//isa 
+	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
+	if(i0summax<siglev*0.8 || i0summax>siglev){
+	    warning("powfs %d: i0 sum to maximum of %g, wfs %d has siglev of %g\n",
+		    ipowfs, i0summax, iwfs, siglev);
+	}
     }//ii0
     info2("powfs %d: matched filter sanea:\n",ipowfs);
     if(powfs[ipowfs].sprint){

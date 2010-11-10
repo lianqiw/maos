@@ -517,7 +517,7 @@ typedef struct PARMS_T{
     int nsurf;       /**<Number of OPD surfaces*/
     char **tsurf;    /**<Tilted surfaces, surface, not OPD*/
     int ntsurf;      /**<Number of tilted surfaces*/
-    int *fdlock;    /**<Records the fd of the seed lock file. if -1 will skip the seed*/
+    int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.

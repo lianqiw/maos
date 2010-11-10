@@ -20,7 +20,7 @@ function readdata,unit
   MAT_SP=65281
   MAT_CSP=65282
 
-  magic=ulong(1)
+  magic=ulong(1) ;silly int is only 2 byte.
   nx=long64(1)
   ny=long64(1)
   readu,unit,magic,nx,ny

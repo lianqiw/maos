@@ -153,7 +153,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		scheduler_report(simu->status);
 	    }
 	    print_progress(simu);
-	    if(simu->nthread>1){
+	    if(simu->nthread>1 && !detached){
 		info2("CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n",
 		      cpu_2, cpu_3, cpu_4, cpu_1, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);
 	    }

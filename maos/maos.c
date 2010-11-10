@@ -140,14 +140,16 @@ int main(int argc, char **argv){
 #else
     info2("without optimization!!!\n");
 #endif
-    //register signal handler
-    register_signal_handler(maos_signal_handler);
-  
-
-    scheduler_start(scmd,arg->nthread,!arg->force);
     //setting up parameters before asking scheduler to check for any errors.
     PARMS_T * parms=setup_parms(arg);
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
+    
+    //register signal handler
+    register_signal_handler(maos_signal_handler);
+
+    scheduler_start(scmd,arg->nthread,!arg->force);
+
+
     if(!lock_seeds(parms)){
 	warning("There are no seed to run. Exit\n");
 	maos_done(0);

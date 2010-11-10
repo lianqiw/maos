@@ -254,7 +254,9 @@ static void *genotf_wrap(GENOTF_T *data){
     double *B=data->B;
     const T_VALID *pval=data->pval;
     while(LOCK(data->mutex_isa),isa=data->isa++,UNLOCK(data->mutex_isa),isa<nsa){
-	fprintf(stderr,"%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
+	if(!detached){
+	    fprintf(stderr,"%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
+	}
 	const double *opdbiasi=NULL;
 	if(data->opdbias){
 	    opdbiasi=data->opdbias+isa*nxsa;

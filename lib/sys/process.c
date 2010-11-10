@@ -198,7 +198,7 @@ void single_instance_daemonize(const char *lockfolder_in,
 	return;
     }
 }
-
+int detached=0;
 void daemonize(void){
     /* Fork off the parent process */       
     pid_t pid = fork();
@@ -220,6 +220,7 @@ void daemonize(void){
 	_exit(EXIT_SUCCESS);
     }else{
 	umask(0077);
+	detached=1;/*we are in detached mode, disable certain print outs.*/
 	/*
 	  Closing stdin makes a file opened after freopen for stdout and stderr
 	  to have an fd of 2, which is the stderr fd. then after another
