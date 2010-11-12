@@ -13,4 +13,5 @@ ___bin_maos_SOURCES=maos.h maos.c parms.h setup_parms.c types.h utils.h utils.c	
 	 setup_recon.h sim.c sim.h recon.c recon.h fdpcg.c fdpcg.h wfsgrad.c	\
 	 perfevl.c wfsints.c genseotf.c genseotf.h mtch.c mtch.h cachedm.c	\
 	 filter.c ahst.c ahst.h sim_utils.c sim_utils.h setup_surf.c		\
-	 setup_surf.h recon_utils.c recon_utils.h cn2est.c cn2est.h
+	 setup_surf.h recon_utils.c recon_utils.h moao.c moao.h cn2est.c	\
+	 cn2est.h

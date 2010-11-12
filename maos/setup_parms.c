@@ -156,11 +156,11 @@ static int readcfg_intarr_n_relax(int n,int **p, const char*format,...){
     format2key;
     int m=readcfg_intarr(p,"%s",key);
     if(m==0){
-	*p=calloc(m, sizeof(int));
+	*p=calloc(m, sizeof(int));//initialize to zeros.
     }else if(m==1){
-	*p=realloc(*p, m*sizeof(int));
-	for(int ii=1; ii<m; ii++){
-	    p[ii]=p[0];
+	*p=realloc(*p, n*sizeof(int));
+	for(int ii=1; ii<n; ii++){
+	    (*p)[ii]=(*p)[0];
 	}
     }else if(m!=n){
 	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
@@ -176,9 +176,9 @@ numbers available, will fill with zeros.  */
     if(m==0){
 	*p=calloc(m, sizeof(double));
     }else if(m==1){
-	*p=realloc(*p, m*sizeof(double));
-	for(int ii=1; ii<m; ii++){
-	    p[ii]=p[0];
+	*p=realloc(*p, n*sizeof(double));
+	for(int ii=1; ii<n; ii++){
+	    (*p)[ii]=(*p)[0];
 	}
     }else if(m!=n){
 	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
@@ -531,6 +531,9 @@ static void readcfg_atmr(PARMS_T *parms){
 static void readcfg_aper(PARMS_T *parms){
     READ_DBL(aper.d);
     READ_DBL(aper.din);
+    if(parms->aper.d <= parms->aper.din){
+	error("Inner dimeter: %g, Outer Diameter: %g. Illegal\n", parms->aper.din, parms->aper.d);
+    }
     READ_DBL(aper.dx);
     READ_DBL(aper.rotdeg);
     READ_INT(aper.cropamp);
@@ -722,6 +725,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.keepshm);
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
+    parms->dbg.ntomo_maxit=readcfg_intarr(&parms->dbg.tomo_maxit, "dbg.tomo_maxit");
 #if USE_POSIX_SHM
     shm_keep_unused=parms->dbg.keepshm;
 #endif
@@ -824,6 +828,16 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    }
 	}
     }
+    if(parms->dbg.ntomo_maxit){
+	warning("dbg.tomo_maxit is set. Will run in open loop mode\n repeat the simulations"
+		" with different values of tomo.maxit.\n");
+	parms->sim.closeloop=0;
+	parms->sim.frozenflow=1;
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    parms->atm.ws[ips]=0;//set windspeed to zero.
+	}
+	parms->sim.end=parms->dbg.ntomo_maxit;
+    }
 }
 /**
    postproc various WFS parameters based on other input information
@@ -920,9 +934,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     if(parms->tomo.split){
 	int hi_found=0;
 	int lo_found=0;
-	if(parms->tomo.split == 1 && !parms->sim.closeloop){
-	    warning("split tomography does not work in open loop\n");
-	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		lo_found=1;
@@ -1232,6 +1243,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
     }
+    if(parms->tomo.split == 1 && !parms->sim.closeloop){
+	warning("ahst split tomography does not have good NGS correction in open loop\n");
+    }
     if(parms->tomo.split==2 && parms->sim.fuseint==1){
 	warning("MVST Mode can only use separated integrator for the moment. Changed\n");
 	parms->sim.fuseint=0;
@@ -1239,9 +1253,11 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(!parms->tomo.split && !parms->sim.fuseint){
 	parms->sim.fuseint=1;//integrated tomo. only 1 integrator.
     }
-    if(parms->evl.tomo && parms->tomo.split){
-	warning("Evaluating tomography performance is best done with integrated tomography. Changed\n");
-	parms->tomo.split=0;
+    if(parms->tomo.split && parms->evl.tomo){
+	warning("Evaluating tomography performance is best done with integrated tomography.\n");
+    }
+    if(parms->tomo.precond==1 && !parms->tomo.split && parms->tomo.maxit<10){
+	warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
     }
     if(parms->tomo.precond==1 && parms->tomo.square!=1){
 	warning("FDPCG requires square XLOC. changed\n");
@@ -1363,7 +1379,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    }
 	}
 	parms->atm.ipsr[ips]=kpsr;
-	info("atm layer %d is maped to atmr %d\n", ips,kpsr);
+	//info("atm layer %d is maped to atmr %d\n", ips,kpsr);
     }
 
     if(!parms->sim.closeloop){
@@ -1568,6 +1584,7 @@ static void print_parms(const PARMS_T *parms){
     default:
 	error(" Invalid\n");
     }
+    info2("\033[0;32mDM Fitting\033[0;0m is using ");
     switch(parms->fit.alg){
     case 0:
 	info2("Cholesky back solve");

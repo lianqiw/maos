@@ -34,6 +34,7 @@
 
 #include "maos.h"
 #include "recon.h"
+#include "moao.h"
 #include "setup_powfs.h"
 #include "sim.h"
 #include "sim_utils.h"
@@ -74,13 +75,10 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    sim_update_etf(simu);
 	    double ck_0=myclockd();
 	    if(!parms->sim.frozenflow){
-		//re-seed the atmosphere in case atm is loaded from shm
-		seed_rand(simu->atm_rand, lrand(simu->init));
 		disable_atm_shm=1;
 		genscreen(simu);
-		dcellfree(simu->opdr); 
-		dcellfree(simu->dmfit_hi);
-		dcellfree(simu->dmreal);
+		//re-seed the atmosphere in case atm is loaded from shm
+		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
 #define PARALLEL 0
 #if PARALLEL == 1 //does not help in T410s. Need to test taurus
@@ -110,8 +108,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    double ck_3=myclockd(); double cpu_3=read_self_cpu();
 #endif
 	    filter(simu);//updates dmreal.
-	    if(recon->moao)
+	    if(recon->moao){
 		moao_recon(simu);
+	    }
 	    double ck_4=myclockd(); double cpu_4=read_self_cpu();
 	    if(!CL){//Only in Open loop
 		perfevl(simu);

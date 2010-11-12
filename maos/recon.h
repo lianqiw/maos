@@ -31,10 +31,10 @@ void FitR(dcell **xout, const void *A,
 	  const dcell *xin, const double alpha);
 
 void tomo(dcell **opdr, const PARMS_T *parms, 
-	  const RECON_T *recon, const dcell *grad);
+	  const RECON_T *recon, const dcell *grad, int maxit);
 void fit(dcell **adm, const PARMS_T *parms, 
 		const RECON_T *recon, const dcell *opdr);
 void focus_tracking(SIM_T*simu);
 void tomofit(SIM_T *simu);
-void moao_recon(SIM_T *simu);
+
 #endif

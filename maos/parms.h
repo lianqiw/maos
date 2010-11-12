@@ -405,6 +405,8 @@ typedef struct DBG_CFG_T{
     int keepshm;     /**<keep the atmospehre in the shared memory.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
+    int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
+    int ntomo_maxit; /**<Number of elements in tomo_maxit*/
 }DBG_CFG_T;
 /**
    contains input parameters for each MOAO type.

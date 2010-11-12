@@ -131,6 +131,7 @@ int exist(const char *fn){
     /**
        Test whether a file exists.
     */
+    if(!fn) return 0;
     struct stat buf;
     return !stat(fn, &buf);
 }
@@ -197,29 +198,40 @@ void expand_filename(char **fnout, const char *fn){
 #undef strdup
 #undef strndup
 
+/**
+   declare strndup so my memory mangement mem.c is happy when DEBUG=1
+*/
 char *mystrndup(const char *A, int len){
-    /**
-       declare strndup so my memory mangement mem.c is happy when DEBUG=1
-    */
     if(!A) return NULL;
-    int ncpy=strlen(A);
-    if(ncpy>len) ncpy=len;
-    char *B=malloc(sizeof(char)*(ncpy+1));
-    memcpy(B,A,sizeof(char)*ncpy);
-    B[ncpy]='\0';
+    int nlenA=strlen(A);
+    if(len>nlenA){
+	len=nlenA;
+    }
+    char *B=malloc(sizeof(char)*(len+1));
+    memcpy(B,A,sizeof(char)*len);
+    B[len]='\0';
     return B;
 }
+/**
+   declare strdup so my memory mangement mem.c is happy when DEBUG=1
+*/
 char *mystrdup(const char *A){
-    /**
-       declare strdup so my memory mangement mem.c is happy when DEBUG=1
-    */
-    if(!A) return NULL;
-    return mystrndup(A, strlen(A));
+    if(!A){
+	return NULL;
+    }else{
+	return mystrndup(A, strlen(A));
+    }
 }
 /**
  Compute max, min and sum of a double vector*/
 void maxmindbl(const double *restrict p, long N, 
 	       double *restrict max, double *restrict min, double *restrict sum){
+    if(N==0){
+	*max=0;
+	*min=0;
+	*sum=0;
+	return;
+    }
     double a,b,s;
     long i;
     a=p[0]; b=p[0];s=0;

@@ -186,6 +186,7 @@ typedef struct MOAO_T{
     dmat *W1;         /**<Weighting matrix on PLOC. same as recon->W1*/
     dsp *W0;          /**<Weighting matrix on PLOC. same as recon->W0*/
     spcell *actslave; /**<Slaving operator for actuators not illuminated*/
+    dmat *aimcc;      /**<used for tip/tilt removal from DM commands.*/
 }MOAO_T;
 /**
    A convenient wrap of the data to embed into MUV_T
@@ -262,7 +263,6 @@ typedef struct RECON_T{
     MUV_T FR;          /**<DM fit right hand size matrix, solve FL*x=FR*y*/
     MUV_T FL;          /**<DM fit left hand size matrix*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
-
     //For focus tracking.
     dcell *RFlgs;      /**<focus reconstruction from each LGS grad*/
     dcell *RFngs;      /**<focus reconstruction from NGS grad.*/
@@ -279,6 +279,7 @@ typedef struct RECON_T{
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
     int calc_invpsd;   /**<Whether we need to compute inverve of psd*/
+    int warm_restart;  /**<Use warm restart.*/
 }RECON_T;
 
 /**

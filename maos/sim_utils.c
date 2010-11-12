@@ -369,7 +369,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->evlpsfhist=calloc(nevl, sizeof(cellarr*));
 	for(int ievl=0; ievl<nevl; ievl++){
 	    if(!parms->evl.psf[ievl]) continue;
-	    if(parms->evl.tomo!=2){
+	    if(parms->evl.tomo!=2){//only evaluate tomography result.
 		simu->evlpsfhist[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim, 
 						    "evlpsfhist_%d_ievl%d.bin",
 						    seed,ievl);
@@ -440,7 +440,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
 	if(parms->evl.moao>-1){
 	    if(parms->sim.closeloop){
-		//we only need 2 here because perfevl is ahead of recon
+		//we only need 2 here because perfevl is ahead of moao_recon
 		simu->moao_evl=dcellnew(2,parms->evl.nevl);
 	    }else{
 		simu->moao_evl=dcellnew(1,parms->evl.nevl);

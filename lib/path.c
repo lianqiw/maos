@@ -151,7 +151,7 @@ char *find_config(const char *name){
     if(!exist(config_path)){
 	free(config_path);
 	info("Configuration files not found in %s\n", config_path);
-	config_path=stradd(HOME,"/.aos/config/",name,NULL);
+	config_path=stradd(HOME,"/.aos/config-",PACKAGE_VERSION,"/",name,NULL);
     }
     if(!exist(config_path)){
 	info("Configuration files not found in %s\n", config_path);

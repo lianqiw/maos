@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.7.2, lianqiw@gmail.com)
+AC_INIT(maos, 0.7.3, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos

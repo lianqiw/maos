@@ -111,7 +111,7 @@ void maos(const PARMS_T *parms){
 int main(int argc, char **argv){
 
     char*fn=mybasename(argv[0]);
-    if(!strncmp(fn, "scheduler",9)){//launch the scheduler.
+    if(!strcmp(fn, "scheduler")){//launch the scheduler.
 	scheduler();
 	exit(0);
     }
@@ -122,7 +122,7 @@ int main(int argc, char **argv){
     ARG_T* arg=parse_args(argc,argv);
     /*In detach mode send to background and disable drawing*/
     if(arg->detach){
-	disable_draw=1;//disable drawing.
+	//disable_draw=1;//disable drawing.
 	//info2("Sending to background\n");
 	daemonize();
 	fprintf(stderr, "%s\n", scmd);

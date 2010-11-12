@@ -82,7 +82,7 @@ int shm_free_unused(char *fnshm, int timeout){
     long sec2=myclocki()-timeout;
     while((dp=readdir(dir))){
 	snprintf(fnshm2,NAME_MAX,"/%s", dp->d_name);
-	if(!strncmp(fnshm2, "/maos_atm_", 10)){//this is a maos atm
+	if(!strcmp(fnshm2, "/maos_atm_")){//this is a maos atm
 	    if(!fnshm || strcmp(fnshm, fnshm2)){
 		//not equal to fnshm. 
 		if(!shm_keep_unused){

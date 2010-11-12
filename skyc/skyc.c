@@ -75,7 +75,7 @@ int main(int argc, char **argv){
     }
     char scmd[slen];
 #ifndef __CYGWIN__
-    if(!strncmp(cwd,HOME,strlen(HOME))){
+    if(!strcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
     }else{
