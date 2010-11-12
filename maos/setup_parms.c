@@ -156,8 +156,8 @@ static int readcfg_intarr_n_relax(int n,int **p, const char*format,...){
     format2key;
     int m=readcfg_intarr(p,"%s",key);
     if(m==0){
-	*p=calloc(m, sizeof(int));//initialize to zeros.
-    }else if(m==1){
+	*p=calloc(n, sizeof(int));//initialize to zeros.
+    }else if(m==1 && m<n){
 	*p=realloc(*p, n*sizeof(int));
 	for(int ii=1; ii<n; ii++){
 	    (*p)[ii]=(*p)[0];
