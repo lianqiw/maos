@@ -111,7 +111,7 @@ void maos(const PARMS_T *parms){
 int main(int argc, char **argv){
 
     char*fn=mybasename(argv[0]);
-    if(!strcmp(fn, "scheduler")){//launch the scheduler.
+    if(!mystrcmp(fn, "scheduler")){//launch the scheduler.
 	scheduler();
 	exit(0);
     }

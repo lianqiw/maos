@@ -112,7 +112,7 @@ int check_suffix(const char *fn, const char *suffix){
     int lfn=strlen(fn);
     int lsu=strlen(suffix);
     if(lfn < lsu) return 0;
-    if(strcmp(fn+lfn-lsu,suffix)){
+    if(mystrcmp(fn+lfn-lsu,suffix)){
 	return 0;
     }else{
 	return 1;
@@ -126,7 +126,7 @@ char *argv2str(int argc, char **argv){
 	slen+=1+strlen(argv[iarg]);
     }
     char *scmd=calloc(slen, sizeof(char));
-    if(!strcmp(cwd,HOME)){
+    if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
     }else{

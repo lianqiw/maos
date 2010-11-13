@@ -90,7 +90,10 @@ static __attribute__((constructor))void init(){
     TCK = sysconf(_SC_CLK_TCK);
     init_path();
 }
-
+static __attribute__((destructor)) void deinit(){
+    //don't free HOME, USER
+    free((char*)TEMP);
+}
 double get_usage_cpu(void){
     static double lasttime=0;
     double thistime=myclockd();

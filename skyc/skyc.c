@@ -27,7 +27,7 @@ char *dirstart;
    for signal to proceed, and then starts skysim to do sky coverage.
  */
 int main(int argc, char **argv){
-    if(strcmp(argv[0], "scheduler")==0){//launch the scheduler.
+    if(mystrcmp(argv[0], "scheduler")==0){//launch the scheduler.
 	scheduler();
 	exit(0);
     }
@@ -75,7 +75,7 @@ int main(int argc, char **argv){
     }
     char scmd[slen];
 #ifndef __CYGWIN__
-    if(!strcmp(cwd,HOME)){
+    if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
     }else{

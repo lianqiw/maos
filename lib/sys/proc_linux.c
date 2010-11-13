@@ -30,7 +30,7 @@
 #include <signal.h>
 #include "common.h"
 #include "proc.h"
-
+#include "misc.h"
 const char *get_job_progname(void){
     static char *progname=NULL;
     if(!progname){
@@ -59,7 +59,7 @@ int get_job_mem(void){
 	}
 	char field[80], unit[4];
 	sscanf(line, "%s %d %s", field, &mem, unit);
-	if (strcmp(unit,"kB")) {
+	if (mystrcmp(unit,"kB")) {
 	    error("Unknown unit\n");
 	}
 	fclose(pfile);
@@ -279,7 +279,7 @@ int get_ncpu(void){
     const char *s_cores="cpu cores"; //should record number of cores per cpu.
     int ncore=0;
     while(fgets(line,1024,fp)){
-	if(!strcmp(line,s_phy)){//contains physical id
+	if(!mystrcmp(line,s_phy)){//contains physical id
 	    int kphy;
 	    char *ss=index(line,':');
 	    int jphy=strtol(ss+1, NULL, 10);
@@ -295,7 +295,8 @@ int get_ncpu(void){
 		    error("Over flow. Please make nmax bigger\n");
 		}
 	    }
-	}else if(!strcmp(line,s_core)){//contains core id
+	}
+	if(!mystrcmp(line,s_core)){//contains core id
 	    int kcore;
 	    char *ss=index(line,':');
 	    int jcore=strtol(ss+1, NULL, 10);
@@ -312,7 +313,7 @@ int get_ncpu(void){
 		}
 	    }
 	}
-	if(!strcmp(line,s_cores)){//contains cpu cores
+	if(!mystrcmp(line,s_cores)){//contains cpu cores
 	    int mcore=strtol(index(line,':')+1,NULL,10);
 	    if(ncore==0 || ncore == mcore){
 		ncore=mcore;
@@ -321,10 +322,10 @@ int get_ncpu(void){
 	    }
 	}
     }
-#undef nmax
     int ncpu1=iphy*(ncore>icore?icore:ncore);
     fclose(fp);
     return ncpu0<ncpu1?ncpu0:ncpu1;
+#undef nmax
 }
 
 #endif

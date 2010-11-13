@@ -39,7 +39,7 @@ static void kill_matlab(int sig){
     exit(EXIT_FAILURE);
 }
 int main(int argc, char **argv){
-    if(strcmp(argv[0], "scheduler")==0){//launch the scheduler.
+    if(mystrcmp(argv[0], "scheduler")==0){//launch the scheduler.
 	scheduler();
 	exit(0);
     }
@@ -50,7 +50,7 @@ int main(int argc, char **argv){
     char *cwd=mygetcwd();
     int slen=strlen(cwd)+3+strlen(argv[1]);
     char scmd[slen];
-    if(!strcmp(cwd,HOME)){
+    if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
     }else{

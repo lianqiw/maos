@@ -20,7 +20,7 @@
 #include "common.h"
 int myclocki(void);
 double myclockd(void);
-char *myasctime(void);
+const char *myasctime(void);
 char *strtime(void);
 const char *myhostname(void);
 char *mygetcwd(void);
@@ -40,4 +40,5 @@ void maxmincmp(const dcomplex *restrict p, long N,
 	       double *restrict max, double *restrict min, double *restrict sum);
 void remove_file_older(const char *fndir, long sec);
 void mymkdir(const char *format,...) CHECK_ARG(1);
+int mystrcmp(const char *a, const char *b);
 #endif

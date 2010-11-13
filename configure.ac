@@ -72,7 +72,7 @@ case "$host_os" in
     AM_CONDITIONAL(LINUX, true)
     LDSYS="$LDSYS -lrt" #Real time library
     #Enable System V Interface definition (IPC,SHM)
-    OPTSextra="-D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
+    OPTSextra="-g -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
     if test -f "$mkl_lib" ;then
        use_mkl_default="yes"
     else
@@ -111,6 +111,7 @@ AC_ARG_ENABLE(icc,   [  --enable-icc    Using intel compiler], [use_icc="$enable
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="no"])
+AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 if test "x$use_long" = "xyes" ;then
    OPTScommon="$OPTScommon -DDLONG"
    AM_CONDITIONAL(USE_LONG, true)
@@ -143,6 +144,10 @@ else
     AM_CONDITIONAL(DO_THRPOOL,false)
     AC_DEFINE(USE_PTHREAD,[1], ["Disable thread pool"])
 fi
+if test "x$use_duma" = "xyes" ;then	
+    AC_CHECK_LIB([duma],[malloc],[],[AC_MSG_ERROR([duma not found])])
+    LDSYS="$LDSYS -lduma"
+fi 
 
 if test x$use_oprof = "xyes" ;then
    OPTSprof="$OPTSprof -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"

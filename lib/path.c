@@ -90,6 +90,11 @@ void freepath(void){
     }
     PATH=NULL;
 }
+#if USE_MEM==1
+static __attribute__((constructor))void init(){
+    call_freepath=freepath;//register the function for mem.c
+}
+#endif
 /**
    Free the path at exit.
  */

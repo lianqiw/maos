@@ -54,5 +54,5 @@ size_t memsize(void *p);//return allocated size
 #define mem_usage(A)
 #endif
 extern int exit_success;
-void freepath(void);
+extern void (*call_freepath)(void);
 #endif

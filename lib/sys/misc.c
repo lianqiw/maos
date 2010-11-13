@@ -47,22 +47,24 @@ int myclocki(){
    Get current time in ascii string for easy print. The string
    contains spaces and is not suitable to use in filename. The
    returned string should not be modified.  */
-char *myasctime(void){
+const char *myasctime(void){
+    static char st[64];
     time_t a;
     time(&a);
-    char *st=ctime(&a);
+    ctime_r(&a, st);
     st[strlen(st)-1]='\0';//remove final \n
     return st;
 }
 /**
    Get furrent time in ascii string that doesn't contain
    spaces. Suitable for use in filenames. The returnned string
-   should be freed. */
+   must be freed. */
 char *strtime(void){
     char str[64];
     time_t t=myclocki();
-    struct tm *tmp=localtime(&t);//don't free tmp
-    strftime(str,64,"%F-%H%M%S",tmp);
+    struct tm tmp;
+    localtime_r(&t,&tmp);//don't free tmp
+    strftime(str,64,"%F-%H%M%S",&tmp);
     char *dir=strdup(str);
     return dir;
 }
@@ -93,12 +95,10 @@ double myclockd(void){
    Get current directory. The returnned string must be freed.
 */
 char *mygetcwd(void){
-    char *cwd0=malloc(sizeof(char)*PATH_MAX);
+    char cwd0[PATH_MAX];
     if(!getcwd(cwd0,PATH_MAX)) 
 	error("Error getting current directory\n");
-    cwd0=realloc(cwd0,strlen(cwd0)+1);
-    if(!exist(cwd0)) error("Failed to get current directory\n");
-    return cwd0;
+    return strdup(cwd0);
 }
 /**
    Translate a path into absolute path.
@@ -329,6 +329,20 @@ void mymkdir(const char *format, ...){
 		error("Unable to mkdir '%s'\n",fn);
 	    }
 	}
+    }
+}
+/**
+   Compare two strings upto the length of b. if length of a is less than b,
+   return false. 1 means not equal.
+ */
+int mystrcmp(const char *a, const char *b){
+    if(!a || !b) return 1;
+    int la=strlen(a);
+    int lb=strlen(b);
+    if(la==0 || lb==0 || la<lb){
+	return 1;
+    }else{
+	return strncmp(a,b,lb);
     }
 }
 #if defined (__CYGWIN__)

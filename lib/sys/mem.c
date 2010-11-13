@@ -61,7 +61,7 @@ PNEW(mutex_mem);
 
 static void *MROOT=NULL;
 static long long memcnt=0;
-
+void (*call_freepath)(void)=NULL;
 
 //max depth in backtrace
 #define DT 12
@@ -85,6 +85,9 @@ static __attribute__((constructor)) void init(){
     warning2("Memory management is in use\n");
 }
 static __attribute__((destructor)) void deinit(){
+    if(call_freepath){
+	call_freepath();
+    }
     if(exit_success){
 	if(MROOT){
 	    warning("%lld allocated memory not freed!!!\n",memcnt);
