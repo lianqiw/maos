@@ -117,7 +117,7 @@ void FitL(dcell **xout, const void *A,
    Carry out tomography. (Precondition) CG with pcg() and Cholesky
    Backsubtitution with muv_chol_solve() is implemented.
 */
-void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell *grad){
+void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell *grad, int maxit){
     dcell *rhs=NULL;
     if(parms->tomo.assemble){
 	muv(&rhs, &(recon->RR), grad, 1);
@@ -129,25 +129,34 @@ void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell 
 	muv_chol_solve_cell(opdr,&(recon->RL), rhs);
 	break;
     case 1:{
-	PREFUN pfun=NULL;
-	const void *pdata=NULL;
+	PREFUN pfun;
+	const void *pdata;
+	CGFUN cgfun;
+	const void *cgdata;
 	switch(parms->tomo.precond){
-	case 0:
+	case 0: /*This is no preconditioner*/
 	    pfun=NULL;
 	    pdata=NULL;
 	    break;
-	case 1:
+	case 1: /*Fourier Domain preconditioner*/
 	    pfun=fdpcg_precond;
 	    pdata=(void*)recon;
 	    break;
 	default:
+	    pfun=NULL;
+	    pdata=NULL;
 	    error("Invalid tomo.precond\n");
 	}
+
 	if(parms->tomo.assemble){
-	    pcg(opdr, (CGFUN)muv, &(recon->RL), pfun, pdata,rhs, 1, parms->tomo.maxit);
+	    cgfun=(CGFUN)muv;
+	    cgdata=&(recon->RL);
 	}else{
-	    pcg(opdr, TomoL, recon, pfun,pdata,rhs, 1, parms->tomo.maxit);
+	    cgfun=TomoL;
+	    cgdata=recon;
 	}
+	pcg(opdr, cgfun, cgdata, pfun, pdata, rhs, 
+	    recon->warm_restart, maxit);
     }
 	break;
     default:
@@ -167,9 +176,27 @@ void fit(dcell **adm, const PARMS_T *parms,
     case 0:
 	muv_chol_solve_cell(adm,&(recon->FL),rhs);
 	break;
-    case 1:
-	pcg(adm, (CGFUN)muv, &(recon->FL),NULL,NULL, rhs, 1, parms->fit.maxit);
+    case 1:{
+	PREFUN pfun;
+	const void *pdata;
+	CGFUN cgfun;
+	const void *cgdata;
+	switch(parms->fit.precond){
+	case 0:
+	    pfun=NULL;
+	    pdata=NULL;
+	    break;
+	default:
+	    pfun=NULL;
+	    pdata=NULL;
+	    error("Invalid fit.precond\n");
+	}
+	cgfun=(CGFUN)muv;
+	cgdata=&(recon->FL);
+	pcg(adm, cgfun, cgdata, pfun, pdata, rhs, 
+	    recon->warm_restart, parms->fit.maxit);
 	break;
+    }
     default:
 	error("Not implemented: alg=%d\n",parms->fit.alg);
     }
@@ -270,49 +297,8 @@ void focus_tracking(SIM_T*simu){
     dcellfree(NGSfocus);
     dcellfree(graduse);
 }
-/**
-   remove NGS modes from LGS DM commands
-   if ahst_wt==1
-   Rngs*GA*dmerr is zero
-   if ahst_wt==2
-   Doesn't perturb NGS modes in science direction.
-*/
-static inline void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
-    const RECON_T *recon=simu->recon;
-    dcell *Mngs=NULL;
-    dcellmm(&Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
-    ngsmod2dm(&dmerr,recon, Mngs,-1);
-    /*{
-      info("NGSmod before removal\n");
-      dshow(Mngs->p[0]);
-      dcellzero(Mngs);
-      dcellmm(&Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
-      info("NGSmod after removal\n");
-      dshow(Mngs->p[0]);
-      }*/
-    dcellfree(Mngs);
-}
-/**
-   Removal tip/tilt on invidual DMs. Be careful about the roll off near the
-edge.  */
-static inline void remove_dm_tt(SIM_T *simu, dcell *dmerr){
-    const RECON_T *recon=simu->recon;
-    for(int idm=0; idm<simu->parms->ndm; idm++){
-	dmat *utt=NULL;
-	dmm(&utt, recon->ngsmod->Ptt->p[idm], dmerr->p[idm], "nn", -1);
-	double *ptt;
-	if(utt->nx==2){
-	    ptt=alloca(3*sizeof(double));
-	    ptt[0]=0; ptt[1]=utt->p[0]; ptt[2]=utt->p[1];
-	}else{
-	    ptt=utt->p;
-	}
-	loc_add_ptt(dmerr->p[idm]->p, ptt, recon->aloc[idm]);
-	info("Adding P/T/T %g m %f %f mas to dm %d\n",
-	     ptt[0],ptt[1]*206265000,ptt[2]*206265000,idm);
-	dfree(utt);
-    }
-}
+
+
 /**
    Experimental routine to do wind estimation using correlation tracking of
 tomography outputs. Not finished. Not verified.  */
@@ -352,190 +338,8 @@ static void windest(SIM_T *simu){
 	exit(0);
     }
 }
-/**
-   cyclic shift the dmats.  */
-static void shift_ring(int nap, dmat **ring, dmat *new){
-    dmat *keep=ring[nap-1];
-    for(int iap=nap-1; iap>=0; iap--){
-	if(!iap){
-	    ring[iap]=dref(new);
-	}else{
-	    ring[iap]=ring[iap-1];
-	}
-    }
-    dfree(keep);
-}
 
-/**
-   Apply fit right hand side matrix in CG mode without using assembled matrix
-   for MOAO. subtract contributions from DMs that are in common path. Be careful
-   which time step the dmcommon is. The DM common should use the commands on the
-   step that you are going to apply the MOAO command for. That is the integrator
-   output after this computation.  */
 
-static void 
-moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao, 
-	  double thetax, double thetay, double hs, 
-	  const dcell *opdr, const dcell *dmcommon, dcell **rhsout, const double alpha){
-  
-    //loc_t *maloc=recon->moao[imoao].aloc;
-    dcell *xp=dcellnew(1,1);
-    xp->p[0]=dnew(recon->ploc->nloc,1);
-    
-    for(int ipsr=0; ipsr<recon->npsr; ipsr++){
-	const double ht = parms->atmr.ht[ipsr];
-	double scale=1.-ht/hs;
-	prop_nongrid(recon->xloc[ipsr], opdr->p[ipsr]->p,
-		     recon->ploc, NULL, xp->p[0]->p, 1, 
-		     thetax*ht, thetay*ht, scale, 
-		     0, 0);
-    }
-    for(int idm=0; idm<recon->ndm; idm++){
-	const double ht = parms->dm[idm].ht;
-	double scale=1.-ht/hs;
-	prop_nongrid_cubic(recon->aloc[idm], dmcommon->p[idm]->p,
-			   recon->ploc, NULL, xp->p[0]->p, -1, 
-			   thetax*ht, thetay*ht, scale, 
-			   parms->dm[idm].iac, 0, 0);
-    }
-    if(rhsout){
-	*rhsout=dcelldup(xp);
-    }
-    double wt=1;
-    applyW(xp, recon->moao[imoao].W0, recon->moao[imoao].W1, &wt);
-    sptcellmulmat(xout, recon->moao[imoao].HA, xp, alpha);
-    dcellfree(xp);
-}
-/**
-   Apply fit left hand side matrix in CG mode
-   without using assembled matrix. Slow. don't
-   use. Assembled matridx is faster because of multiple
-   directions.
-*/
-
-static void 
-moao_FitL(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha){
-    const MOAO_T *moao=(const MOAO_T *)A;
-    dcell *xp=NULL;
-    double wt=1;
-    spcellmulmat(&xp, moao->HA, xin, 1.);
-    applyW(xp, moao->W0, moao->W1, &wt);
-    sptcellmulmat(xout, moao->HA, xp, alpha);
-    dcellfree(xp);xp=NULL;
-    dcellmm(&xp, moao->NW, xin, "tn", 1);
-    dcellmm(xout,moao->NW, xp, "nn", alpha);
-    dcellfree(xp);
-    spcellmulmat(xout, moao->actslave, xin, alpha);
-}
-/**
-   mao_recon happens after the common DM fitting and its integrator output
-   to take into account the delay in DM commands. there is no close loop
-   filtering in MOAO DM commands, but there is still a time delay of 2
-   cycles.
-*/
-
-void moao_recon(SIM_T *simu){
-    const PARMS_T *parms=simu->parms;
-    const RECON_T *recon=simu->recon;
-    dcell *dmcommon=NULL;
-    if(1){//Take OL result
-	dcellcp(&dmcommon, simu->dmfit_hi);
-    }else{//CL result
-	if(parms->sim.closeloop){
-	    if(parms->sim.fuseint){
-		dcellcp(&dmcommon, simu->dmint[0]);
-		if(parms->tomo.split){
-		    remove_dm_ngsmod(simu, dmcommon);
-		}
-	    }else{
-		dcellcp(&dmcommon, simu->dmint_hi[0]);
-		//addlow2dm(&dmcommon, simu,simu->Mint_lo[0], 1);
-	    }
-	}else{
-	    dcellcp(&dmcommon, simu->dmerr_hi);
-	}
-    }
-    dcell *rhs=NULL;
-    if(simu->moao_wfs){
-	PDCELL(simu->moao_wfs, dmwfs);
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int imoao=parms->powfs[ipowfs].moao;
-	    dcell *dmmoao=NULL;
-	    dcell *rhsout=NULL;
-	    if(imoao>-1){
-		double hs=parms->powfs[ipowfs].hs;
-		dcellzero(rhs);
-		moao_FitR(&rhs, recon, parms,  imoao, 
-			  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
-			  hs, simu->opdr, dmcommon, &rhsout, 1);
-		pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs, 
-		    1, parms->fit.maxit);
-		if(!isinf(parms->moao[imoao].stroke)){
-		    int nclip=dclip(dmmoao->p[0],
-				    -parms->moao[imoao].stroke,
-				    parms->moao[imoao].stroke);
-		    if(nclip>0){
-			info("wfs %d: %d actuators clipped\n", iwfs, nclip);
-		    }
-		}
-		shift_ring(simu->moao_wfs->nx, dmwfs[iwfs], dmmoao->p[0]);
-		if(parms->plot.run){
-		    drawopd("MOAO WFS RHS", recon->ploc, rhsout->p[0]->p, 
-			    "MOAO for WFS","x (m)", "y(m)", "Wfs rhs %d", iwfs);
-		    drawopd("MOAO WFS", recon->moao[imoao].aloc, dmmoao->p[0]->p,
-			    "MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
-		}
-	
-		if(parms->save.dm){
-		    cellarr_dmat(simu->save->moao_wfs[iwfs], dmmoao->p[0]);
-		}
-		dcellfree(rhsout);
-		dcellfree(dmmoao);
-	    }//if imoao
-	}//if wfs
-
-    }
-    if(simu->moao_evl){
-	PDCELL(simu->moao_evl, dmevl);
-	int imoao=parms->evl.moao;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    dcell *dmmoao=dcellnew(1,1);
-	    dmmoao->p[0]=ddup(dmevl[ievl][0]);//warm restart.
-	    dcell *rhsout=NULL;
-	    dcellzero(rhs);
-	    moao_FitR(&rhs, recon, parms, imoao, 
-		      parms->evl.thetax[ievl], parms->evl.thetay[ievl],
-		      INFINITY, simu->opdr, dmcommon, &rhsout, 1);
-	    
-	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
-		1, parms->fit.maxit);
-	    if(!isinf(parms->moao[imoao].stroke)){
-		int nclip=dclip(dmmoao->p[0],
-				-parms->moao[imoao].stroke,
-				parms->moao[imoao].stroke);
-		if(nclip>0){
-		    info("evl %d: %d actuators clipped\n", ievl, nclip);
-		}
-	    }
-	    shift_ring(simu->moao_evl->nx, dmevl[ievl], dmmoao->p[0]);
-	    if(parms->plot.run){
-		drawopd("MOAO EVL RHS", recon->ploc, rhsout->p[0]->p, 
-			"MOAO for WFS","x (m)", "y(m)", "Evl %d", ievl);
-		drawopd("MOAO EVL", recon->moao[imoao].aloc, dmevl[ievl][0]->p,
-			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
-	    }
-	    if(parms->save.dm){
-		cellarr_dmat(simu->save->moao_evl[ievl], dmmoao->p[0]);
-	    }	 
-	    dcellfree(dmmoao);
-	    dcellfree(rhsout);
-	}//ievl
-    }
-    dcellfree(dmcommon);
-    dcellfree(rhs);
-}
 /**
    Calls tomo() and fit() to do the tomography and DM fit. Do error signal and
    split tomography.  */
@@ -548,7 +352,16 @@ void tomofit(SIM_T *simu){
 	    dcellfree(simu->opdr);
 	    simu->opdr=atm2xloc(simu);
 	}else{
-	    tomo(&simu->opdr,parms,recon,simu->gradpsol);
+	    int maxit=parms->tomo.maxit;
+	    if(parms->dbg.ntomo_maxit){
+		if(simu->isim<parms->dbg.ntomo_maxit){
+		    maxit=parms->dbg.tomo_maxit[simu->isim];
+		    info2("Running tomo.maxit=%d\n",maxit);
+		}else{
+		    error("Out of range\n");
+		}
+	    }
+	    tomo(&simu->opdr,parms,recon,simu->gradpsol,maxit);
 	}
 	if(parms->tomo.windest){
 	    info2("Estimating wind direction and speed using FFT method\n");

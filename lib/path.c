@@ -54,19 +54,18 @@ void rmpath(const char *path){
     char *abspath=myabspath(path);
     PATH_T *ia,*ib=NULL;
     for(ia=PATH;ia;ia=ia->next){
-	if(!strcmp(ia->path,abspath)){
-	    if(ib){
+	if(!strcmp(ia->path,abspath)){//found
+	    if(ib){//there is parent node
 		ib->next=ia->next;
 	    }else{
 		PATH=ia->next;
 	    }
 	    free(ia->path);
-	    break;
+	    free(ia);
+	    ia=ib;
+	}else{
+	    ib=ia;
 	}
-	ib=ia;
-    }
-    if(!ia){
-	warning("%s not foun idn PATH\n",path);
     }
     free(abspath);
 }
@@ -86,10 +85,16 @@ void freepath(void){
     PATH_T *ib;
     for(PATH_T *ia=PATH;ia;ia=ib){
 	ib=ia->next;
+	free(ia->path);
 	free(ia);
     }
     PATH=NULL;
 }
+#if USE_MEM==1
+static __attribute__((constructor))void init(){
+    call_freepath=freepath;//register the function for mem.c
+}
+#endif
 /**
    Free the path at exit.
  */
@@ -148,17 +153,19 @@ char *find_config(const char *name){
 	if(config_path) free(config_path);
 	config_path=stradd(SRCDIR,"/config/",name,NULL);
     }
-    if(!exist(config_path)){
-	free(config_path);
-	info("Configuration files not found in %s\n", config_path);
-	config_path=stradd(HOME,"/.aos/config/",name,NULL);
-    }
+ 
     if(!exist(config_path)){
 	info("Configuration files not found in %s\n", config_path);
 	free(config_path);
 	char *cwd=mygetcwd();
 	config_path=stradd(cwd,"/config/",name,NULL);
 	free(cwd);
+    }
+
+    if(!exist(config_path)){
+	free(config_path);
+	info("Configuration files not found in %s\n", config_path);
+	config_path=stradd(HOME,"/.aos/config-",PACKAGE_VERSION,"/",name,NULL);
     }
     if(!exist(config_path)){
 	info("Configuration files not found in %s\n", config_path);
@@ -168,9 +175,10 @@ char *find_config(const char *name){
 	warning("Unable to determine the path to the configuration files.\n");
 	warning("Will download a copy from the website and put in %ss/.aos/config\n",HOME);
 	char cmd[400];
-	const char *FN="maos_config.tar.bz2";
-	snprintf(cmd,400,"wget %s/%s -O %s/%s && tar axvf %s/maos_config.tar.bz2 -C %s/.aos/ "
-		 "&& rm -rf %s/%s",BASEURL,FN,TEMP,FN,TEMP,HOME,TEMP,FN);
+	char FN[80];
+	snprintf(FN,40,"config-%s.tar.bz2", PACKAGE_VERSION);
+	snprintf(cmd,400,"wget %s/%s -O %s/%s && tar axvf %s/%s -C %s/.aos/ && rm -rf %s/%s",
+		 BASEURL,FN,TEMP,FN,TEMP,FN,HOME,TEMP,FN);
 	if(system(cmd)){
 	    error("Unable to download the configuration files from the internet "
 		  "and extract to %s/.aos/config", HOME);

@@ -54,16 +54,22 @@ char* FF(const char *format, ...){
 
 
 
+/**
+   Obtain the basename of a file. The returnned string must be freed.
+*/
 char *mybasename(const char *fn){
-    /**
-       Obtain the basename of a file. The returnned string must be freed.
-    */
-    char fn2[strlen(fn)+1];
+    if(!fn || strlen(fn)==0) return NULL;
+    char fn2[PATH_MAX];
     strcpy(fn2,fn);
+    //If this is a folder, remove the last /
     if(fn2[strlen(fn2)-1]=='/')
 	fn2[strlen(fn2)-1]='\0';
     char* sep=strrchr(fn2,'/');
-    if(!sep) sep=fn2; else sep++;
+    if(!sep){
+	sep=fn2; 
+    }else{
+	sep++;
+    }
     char *bn=malloc(strlen(sep)+1);
     strcpy(bn,sep);
     return bn;
@@ -102,8 +108,11 @@ int check_suffix(const char *fn, const char *suffix){
     /**
        Check the suffix of a file.
     */
-    if(!fn) return 0;
-    if(strncmp(fn+strlen(fn)-strlen(suffix),suffix,strlen(suffix))){
+    if(!fn || !suffix) return 0;
+    int lfn=strlen(fn);
+    int lsu=strlen(suffix);
+    if(lfn < lsu) return 0;
+    if(mystrcmp(fn+lfn-lsu,suffix)){
 	return 0;
     }else{
 	return 1;
@@ -117,7 +126,7 @@ char *argv2str(int argc, char **argv){
 	slen+=1+strlen(argv[iarg]);
     }
     char *scmd=calloc(slen, sizeof(char));
-    if(!strncmp(cwd,HOME,strlen(HOME))){
+    if(!mystrcmp(cwd,HOME)){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
     }else{
@@ -143,11 +152,6 @@ void print_file(const char *fnin){
 	error("Open %s failed\n",fn);
     }
     copyfile_fp(stderr, fp);
-    /*const int nmax=128;
-    char line[nmax];
-    while(fgets(line, nmax, fp)){
-	fprintf(stderr,"%s\n",line);
-	}*/
     fclose(fp);
     free(fn);
 }

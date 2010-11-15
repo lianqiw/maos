@@ -47,22 +47,24 @@ int myclocki(){
    Get current time in ascii string for easy print. The string
    contains spaces and is not suitable to use in filename. The
    returned string should not be modified.  */
-char *myasctime(void){
+const char *myasctime(void){
+    static char st[64];
     time_t a;
     time(&a);
-    char *st=ctime(&a);
+    ctime_r(&a, st);
     st[strlen(st)-1]='\0';//remove final \n
     return st;
 }
 /**
    Get furrent time in ascii string that doesn't contain
    spaces. Suitable for use in filenames. The returnned string
-   should be freed. */
+   must be freed. */
 char *strtime(void){
     char str[64];
     time_t t=myclocki();
-    struct tm *tmp=localtime(&t);//don't free tmp
-    strftime(str,64,"%F-%H%M%S",tmp);
+    struct tm tmp;
+    localtime_r(&t,&tmp);//don't free tmp
+    strftime(str,64,"%F-%H%M%S",&tmp);
     char *dir=strdup(str);
     return dir;
 }
@@ -93,12 +95,10 @@ double myclockd(void){
    Get current directory. The returnned string must be freed.
 */
 char *mygetcwd(void){
-    char *cwd0=malloc(sizeof(char)*PATH_MAX);
+    char cwd0[PATH_MAX];
     if(!getcwd(cwd0,PATH_MAX)) 
 	error("Error getting current directory\n");
-    cwd0=realloc(cwd0,strlen(cwd0)+1);
-    if(!exist(cwd0)) error("Failed to get current directory\n");
-    return cwd0;
+    return strdup(cwd0);
 }
 /**
    Translate a path into absolute path.
@@ -131,6 +131,7 @@ int exist(const char *fn){
     /**
        Test whether a file exists.
     */
+    if(!fn) return 0;
     struct stat buf;
     return !stat(fn, &buf);
 }
@@ -180,7 +181,7 @@ void expand_filename(char **fnout, const char *fn){
 	if(fn[0]=='~'){
 	    out=stradd(HOME,fn+1,NULL);
 	}else{
-	    out=mystrdup(fn);
+	    out=strdup(fn);
 	}
 	*fnout=out;
     }else{
@@ -193,33 +194,39 @@ void expand_filename(char **fnout, const char *fn){
 	}
     }
 }
-
-#undef strdup
-#undef strndup
-
 char *mystrndup(const char *A, int len){
-    /**
-       declare strndup so my memory mangement mem.c is happy when DEBUG=1
-    */
-    if(!A) return NULL;
-    int ncpy=strlen(A);
-    if(ncpy>len) ncpy=len;
-    char *B=malloc(sizeof(char)*(ncpy+1));
-    memcpy(B,A,sizeof(char)*ncpy);
-    B[ncpy]='\0';
+    int len2=strlen(A);
+    if(len2<len) len=len2;
+    char *B=malloc(len+1);
+    memcpy(B,A,len);
+    B[len]='\0';
     return B;
 }
+#if USE_MEM == 1
+#undef strdup
+/**
+   declare strdup so my memory mangement mem.c is happy when DEBUG=1. Handles
+NULL pointer correctly.  */
 char *mystrdup(const char *A){
-    /**
-       declare strdup so my memory mangement mem.c is happy when DEBUG=1
-    */
-    if(!A) return NULL;
-    return mystrndup(A, strlen(A));
+    if(!A){
+	return NULL;
+    }else{
+	int nlen=strlen(A);
+	char *B=malloc(nlen+1);
+	memcpy(B,A,nlen+1);
+    }
 }
+#endif
 /**
  Compute max, min and sum of a double vector*/
 void maxmindbl(const double *restrict p, long N, 
 	       double *restrict max, double *restrict min, double *restrict sum){
+    if(N==0){
+	*max=0;
+	*min=0;
+	*sum=0;
+	return;
+    }
     double a,b,s;
     long i;
     a=p[0]; b=p[0];s=0;
@@ -317,6 +324,20 @@ void mymkdir(const char *format, ...){
 		error("Unable to mkdir '%s'\n",fn);
 	    }
 	}
+    }
+}
+/**
+   Compare two strings upto the length of b. if length of a is less than b,
+   return false. 1 means not equal.
+ */
+int mystrcmp(const char *a, const char *b){
+    if(!a || !b) return 1;
+    int la=strlen(a);
+    int lb=strlen(b);
+    if(la==0 || lb==0 || la<lb){
+	return 1;
+    }else{
+	return strncmp(a,b,lb);
     }
 }
 #if defined (__CYGWIN__)

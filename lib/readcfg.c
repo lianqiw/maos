@@ -185,18 +185,17 @@ void open_config(const char* config_file, long protect){
     if(!(fd=fopen(fn,"r"))){
 	error("File %s doesn't exist\n",fn);
     }
-    const size_t sslineln=4096;
-    char ssline[sslineln];
+#define MAXLN 4096
+    char ssline[MAXLN];
     ssline[0]='\0';//stores the available line.
-    const int linemax=4096;
-    char line[linemax];
-    while (fgets(line, linemax, fd)){
+    char line[MAXLN];
+    while (fgets(line, MAXLN, fd)){
 	sline=squeeze(line);
 	//lines ended with \ will continue on next line
 	if(!sline || sline[0]=='\0')
 	    continue;
 	if(sline){
-	    if((strlen(sline)+strlen(ssline))>=sslineln){
+	    if((strlen(sline)+strlen(ssline))>=MAXLN){
 		error("Please make ssline longer\n");
 	    }
 	    strcat(ssline, sline);
@@ -275,6 +274,7 @@ void open_config(const char* config_file, long protect){
     fclose(fd);
     info2("loaded %3d new records from %s\n",recordcount,fn);
     free(fn);
+#undef MAXLN
 }
 /**
    Get the record number of a key.
@@ -353,15 +353,19 @@ char *readcfg_str(const char *format,...){
 int readcfg_strarr(char ***res, const char *format,...){
     //Read str array.
     format2key;
+    *res=NULL;//initialize
     long irecord=getrecord(key, 1);
-    int count=0, maxcount=5;
-    *res=calloc(maxcount,sizeof(char*));
-    if(irecord!=-1){
+    if(irecord==-1){//record not found.
+	error("key '%s' not found\n", key);
+	return 0;
+    }else{
 	const char *sdata=store[irecord].data;
-	if(!sdata){
-	    *res=NULL;
+	if(!sdata){//record is empty.
 	    return 0;
 	}
+	int count=0, maxcount=5;
+	*res=calloc(maxcount,sizeof(char*));
+
 	const char *sdataend=sdata+strlen(sdata)-1;
 	const char *sdata2, *sdata3, *sdata4;
 	if(sdata[0]!='[' || sdataend[0]!=']'){
@@ -369,7 +373,7 @@ int readcfg_strarr(char ***res, const char *format,...){
 	    error("key %s: Entry (%s) should start with [ and end with ]\n",key, sdata);
 	}
 	sdata2=sdata+1;
-	sdataend--;
+	//sdataend--;
 	//find each string.
 	while(sdata2<sdataend && (sdata2[0]==','||sdata2[0]==';'||!isgraph((int)sdata2[0]))){
 	    sdata2++;
@@ -386,7 +390,7 @@ int readcfg_strarr(char ***res, const char *format,...){
 		    maxcount*=2;
 		    *res=realloc(*res,sizeof(char*)*maxcount);
 		}
-		(*res)[count]=strndup(sdata3,sdata4-sdata3);
+		(*res)[count]=mystrndup(sdata3, sdata4-sdata3);
 	    }else{
 		(*res)[count]=NULL;
 	    }
@@ -396,15 +400,9 @@ int readcfg_strarr(char ***res, const char *format,...){
 		sdata2++;
 	    }
 	}
-	/*if(*sdata2!=']'){
-	    error("Entry (%s) does not have the right format\n", sdata);
-	    }*/
 	*res=realloc(*res,sizeof(char*)*count);
-    }else{
-	error("key '%s' not found\n", key);
-	*res=NULL;
+	return count;
     }
-    return count;
 }
 #define TYPE int
 #define TYPEFUN1 readcfg_intarr

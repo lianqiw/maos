@@ -192,6 +192,9 @@ void loc_create_map_npad(loc_t *loc, int npad){
 	else
 	    loc->map=NULL;
     }
+    if(loc->nloc==0){
+	return;
+    }
     loc->map = calloc(1,sizeof(locmap_t));
     loc->map->loc = loc;
     loc->map->nloc= loc->nloc;

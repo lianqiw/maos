@@ -32,8 +32,6 @@ typedef struct MUV_T{
     spcell *M;     /**<block sparse matrix*/
     dcell  *U;     /**<low rank terms U*/
     dcell  *V;     /**<low rank terms V*/
-    //dcell *UP;     /**<*/
-    //dcell *VP;
     spchol *C;     //Cholesky factor.
     dsp   *Cs;       //Converted cholesky factor.
     long  *Cp;    //permutation vector for Cs.

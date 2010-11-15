@@ -30,4 +30,5 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 		const dmat *W1, const dmat *wt);
 
 spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW);
+
 #endif

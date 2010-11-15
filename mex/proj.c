@@ -1,3 +1,6 @@
+#ifdef __INTEL_COMPILER
+#undef _GNU_SOURCE /*avoid compiling problem*/
+#endif
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

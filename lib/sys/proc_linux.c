@@ -30,7 +30,7 @@
 #include <signal.h>
 #include "common.h"
 #include "proc.h"
-
+#include "misc.h"
 const char *get_job_progname(void){
     static char *progname=NULL;
     if(!progname){
@@ -52,17 +52,18 @@ int get_job_mem(void){
     FILE* pfile;
     sprintf(fn,"/proc/%d/status",pid);
     if ((pfile=fopen(fn,"r"))!=NULL){
-	const int nmax=800;
+#define nmax 800
 	char line[nmax];
 	for (int i=15;i>0;i--) {
 	    if(!fgets(line, nmax, pfile)) error("Error in read\n");
 	}
 	char field[80], unit[4];
 	sscanf(line, "%s %d %s", field, &mem, unit);
-	if (strcmp(unit,"kB")) {
+	if (mystrcmp(unit,"kB")) {
 	    error("Unknown unit\n");
 	}
 	fclose(pfile);
+#undef nmax
     } else {
 	mem=0;
     }
@@ -262,20 +263,23 @@ double read_self_cpu(void){//return CPU usage of current process
     s_last=s_tot;
     return frac;
 }
+/**
+   parsing /proc/cpuinfo to find real number of physical cores, while
+   hyper-threading may be cheating us.*/
 int get_ncpu(void){
     int ncpu0 = sysconf( _SC_NPROCESSORS_ONLN );
     FILE *fp=fopen("/proc/cpuinfo","r");
-    const int nmax=1024;
+#define nmax 4096
     char line[1024];
-    int phyid[nmax];
-    int coreid[nmax];
+    int phyid[nmax];//record the list of physical cpu ids
+    int coreid[nmax];//record the list of core ids
     int iphy=0, icore=0;
     const char *s_phy="physical id"; //records number of CPUs
     const char *s_core="core id";    //should record number of cores per cpu
     const char *s_cores="cpu cores"; //should record number of cores per cpu.
     int ncore=0;
     while(fgets(line,1024,fp)){
-	if(!strncmp(line,s_phy, strlen(s_phy))){
+	if(!mystrcmp(line,s_phy)){//contains physical id
 	    int kphy;
 	    char *ss=index(line,':');
 	    int jphy=strtol(ss+1, NULL, 10);
@@ -288,11 +292,11 @@ int get_ncpu(void){
 		phyid[iphy]=jphy;
 		iphy++;
 		if(iphy>nmax){
-		    error("Over flow\n");
+		    error("Over flow. Please make nmax bigger\n");
 		}
 	    }
 	}
-	if(!strncmp(line,s_core, strlen(s_core))){
+	if(!mystrcmp(line,s_core)){//contains core id
 	    int kcore;
 	    char *ss=index(line,':');
 	    int jcore=strtol(ss+1, NULL, 10);
@@ -309,7 +313,7 @@ int get_ncpu(void){
 		}
 	    }
 	}
-	if(!strncmp(line,s_cores, strlen(s_cores))){
+	if(!mystrcmp(line,s_cores)){//contains cpu cores
 	    int mcore=strtol(index(line,':')+1,NULL,10);
 	    if(ncore==0 || ncore == mcore){
 		ncore=mcore;
@@ -319,14 +323,9 @@ int get_ncpu(void){
 	}
     }
     int ncpu1=iphy*(ncore>icore?icore:ncore);
-    /*
-    //info("ncore=%d, iphy=%d, icore=%d\n", ncore, iphy, icore);
-    if(ncpu1!=ncpu0){
-    warning("_SC_NPROCESSORS_ONLN gives %d cpus, but we found %d cpus\n",
-    ncpu0, ncpu1);
-    }*/
     fclose(fp);
     return ncpu0<ncpu1?ncpu0:ncpu1;
+#undef nmax
 }
 
 #endif

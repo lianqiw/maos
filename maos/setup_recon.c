@@ -23,6 +23,7 @@
 #include "ahst.h"
 #include "cn2est.h"
 #include "recon_utils.h"
+#include "moao.h"
 /**
    \file setup_recon.c
    Contains routines that setup the wavefront reconstructor and DM fitting.
@@ -450,8 +451,7 @@ setup_recon_GXGA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     PSPCELL(recon->GAlo,GAlo);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	if(!(parms->tomo.split && recon->skipwfs[iwfs])){
-	    //for tomography
+	if(!parms->wfs[iwfs].skip){//for tomography
 	    for(int ips=0; ips<npsr; ips++){
 		GXtomo[ips][iwfs]=spref(GX[ips][iwfs]);
 		HXWtomo[ips][iwfs]=spref(HXW[ips][iwfs]);
@@ -516,7 +516,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		    double nea2x=nea->p[isa];
 		    double nea2y=nea->p[isa+nsa];
 		    if(nea1x<0.5*nea2x || nea1x>2*nea2x || nea1y<0.5*nea2y || nea1y>2*nea2y){
-			warning("\niwfs %d, isa %d : Phy nea: %g %g mas. Provided nea: %g %g mas.\n",
+			warning2("iwfs %d, isa %d : Phy nea: %g %g mas. Provided nea: %g %g mas.\n",
 			      iwfs,isa,nea1x*206265000, nea1y*206265000, 
 			      nea2x*206265000, nea2y*206265000);
 		    }
@@ -663,7 +663,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms,
 	    }
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(recon->skipwfs&&recon->skipwfs[iwfs]){
+		if(parms->wfs[iwfs].skip){
 		    error("This WFS %d should be included in Tomo.\n", iwfs);
 		}
 		dcp(&recon->TT->p[iwfs+iwfs*nwfs], TT);
@@ -710,7 +710,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
 	     */
 	    for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(recon->skipwfs&&recon->skipwfs[iwfs]){
+		if(parms->wfs[iwfs].skip){
 		    error("This WFS %d should be included in Tomo.\n", iwfs);
 		}
 		dcp(&recon->DF->p[iwfs*nwfs], DF);
@@ -989,7 +989,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	dcell *VLo=dcellnew(npsr,nwfs);
 	PDCELL(VLo, pVLo);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    if(recon->skipwfs&&recon->skipwfs[iwfs]){
+	    if(parms->wfs[iwfs].skip){
 		continue;
 	    }
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -1251,114 +1251,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	dcellwrite(recon->NW,"%s/NW.bin.gz",dirsetup);
     }
 }
-/**
-   Free MOAO_T
- */
-static void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
-    if(!recon->moao) return;
-    for(int imoao=0; imoao<parms->nmoao; imoao++){
-	if(!recon->moao[imoao].used) continue;
-	locfree(recon->moao[imoao].aloc);
-	spcellfree(recon->moao[imoao].HA);
-	dcellfree(recon->moao[imoao].NW);
-	spcellfree(recon->moao[imoao].actslave);
-	spfree(recon->moao[imoao].W0);
-	dfree(recon->moao[imoao].W1);
-    }
-    free(recon->moao);
-    recon->moao=NULL;
-}
-/**
-   Prepare the propagation H matrix for MOAO and compute the reconstructor. We
-   only need a reconstructor for every different MOAO type.  */
-static void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
-    const int nmoao=parms->nmoao;
-    int used[parms->nmoao];
-    memset(used,0,sizeof(int)*nmoao);
-    
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].moao>-1){
-	    int imoao=parms->powfs[ipowfs].moao;
-	    if(imoao<parms->nmoao){
-		used[imoao]++;
-	    }else{
-		error("powfs[%d].moao=%d is inused\n", ipowfs, imoao);
-	    }
-	}
-    }
-    if(parms->evl.moao>-1){
-	int imoao=parms->evl.moao;
-	if(imoao<parms->nmoao){
-	    used[imoao]++;
-	}else{
-	    error("evl.moao=%d is inused\n",imoao);
-	}
-    }
-    int nused=0;
-    for(int imoao=0; imoao<nmoao; imoao++){
-	if(used[imoao]){
-	    nused++;
-	}
-    }
-    if(nused==0) return;//nothing need to be done.
-    if(recon->moao){
-	free_recon_moao(recon, parms);
-    }
-    recon->moao=calloc(nmoao, sizeof(MOAO_T));
-    for(int imoao=0; imoao<nmoao; imoao++){
-	if(!used[imoao]) continue;
-	recon->moao[imoao].used=1;
-	int order=parms->moao[imoao].order;
-	if(order==0){
-	    if(parms->ndm>0){
-		order=parms->dm[0].order;//inherits.
-	    }else{
-		error("Please specify the order of the moao DM\n");
-	    }
-	}
-	double dxr=parms->aper.d/order;
-	map_t *map=create_metapupil_wrap(parms,0,dxr,0,0,0,T_ALOC,0,parms->fit.square);
-	recon->moao[imoao].aloc=sqmap2loc(map);
-	sqmapfree(map);
-	recon->moao[imoao].HA=spcellnew(1,1);
-	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc, recon->ploc, 
-					NULL, 0, 0, 1, 
-					parms->moao[imoao].cubic,parms->moao[imoao].iac); 
-	if(parms->moao[imoao].lrt_ptt){
-	    recon->moao[imoao].NW=dcellnew(1,1);
-	    long nloc=recon->moao[imoao].aloc->nloc;
-	    recon->moao[imoao].NW->p[0]=dnew(nloc,3);
-	    PDMAT(recon->moao[imoao].NW->p[0], pNW);
-	    double scl=1./nloc;
-	    double scl2=scl*2./parms->aper.d;
-	    const double *locx=recon->moao[imoao].aloc->locx;
-	    const double *locy=recon->moao[imoao].aloc->locy;
-	    for(long iloc=0; iloc<nloc; iloc++){
-		//We don't want piston/tip/tilt on the mems.
-		pNW[0][iloc]=scl;//piston;
-		pNW[1][iloc]=scl2*locx[iloc];//tip
-		pNW[2][iloc]=scl2*locy[iloc];//tilt
-	    }
-	}
-	recon->moao[imoao].W0=spref(recon->W0);
-	recon->moao[imoao].W1=dref(recon->W1);
-	if(parms->moao[imoao].actslave){
-	    recon->moao[imoao].actslave=act_slaving(&recon->moao[imoao].aloc, 
-						    recon->moao[imoao].HA, 
-						    recon->moao[imoao].W1,
-						    recon->moao[imoao].NW);
-	}
-	if(parms->save.setup){
-	    locwrite(recon->moao[imoao].aloc,"%s/moao%d_aloc",dirsetup,imoao);
-	    spcellwrite(recon->moao[imoao].HA, "%s/moao%d_HA",dirsetup,imoao);
-	    dcellwrite(recon->moao[imoao].NW, "%s/moao%d_NW",dirsetup,imoao);
-	    spcellwrite(recon->moao[imoao].actslave, "%s/moao%d_actslave",dirsetup,imoao);
-	}
-	if(parms->plot.setup){
-	    plotloc("FoV",parms,recon->moao[imoao].aloc,0,"moao_aloc");
-	}
-    }//imoao
-}
+
 /**
    Assemble the DM fitting matrix
 
@@ -1503,9 +1396,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    double maxeig=4./nact;
 	    info2("Adding tikhonov constraint of %g to FLM\n", tikcr);
 	    info2("The maximum eigen value is estimated to be around %e\n", maxeig);
-	    spcellwrite(recon->FL.M,"FLM0");
 	    spcelladdI(recon->FL.M,tikcr*maxeig);
-	    spcellwrite(recon->FL.M,"FLM1");
 	}
 
 	recon->FL.U=dcellnew(ndm, 1);
@@ -1911,6 +1802,12 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     recon->npsr= recon->ht->nx;
     recon->ndm = parms->ndm;
     recon->calc_invpsd=parms->tomo.invpsd || parms->tomo.precond==1;
+    recon->warm_restart = parms->sim.frozenflow && !parms->dbg.ntomo_maxit;
+    if(recon->warm_restart){
+	info2("Using warm restart\n");
+    }else{
+	warning2("Do not use warm restart\n");
+    }
     int nfit=parms->fit.nfit;
     recon->fitwt=dnew(nfit,1);
     memcpy(recon->fitwt->p,parms->fit.wt,sizeof(double)*nfit);
@@ -1930,20 +1827,6 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    break;
 	}
     }   
-    recon->skipwfs=calloc(parms->nwfs,sizeof(int));
-    if(parms->tomo.split){
-	info2("Split Tomo:");
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    const int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].lo){
-		recon->skipwfs[iwfs]=1;
-		info2(" Skip");
-	    }else{
-		info2(" Use");
-	    }
-	}
-	info2("\n");
-    }
     
     //setup pupil coarse grid
     setup_recon_ploc(recon,parms);
@@ -1952,16 +1835,18 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     //setup atm reconstruction layer grid
     setup_recon_xloc(recon,parms);
     //setup xloc/aloc to WFS grad
+    toc("loc done");
     setup_recon_GXGA(recon,parms,powfs);
     //setup inverse noise covariance matrix.
+    toc("GX GA");
     setup_recon_saneai(recon,parms,powfs);
     //tomo_prep should be after recon_GXGA as xloc maybe modified there.
     setup_recon_tomo_prep(recon,parms);
-
+    toc("tomo_prep");
     //setup LGS tip/tilt/diff focus removal
     setup_recon_TTFR(recon,parms,powfs);
     setup_recon_HXFHA(recon,parms);
-    
+    toc("HXFHA");
     if(parms->tomo.assemble || parms->tomo.split==2){
 	//assemble the matrix only if not using CG
 	//CG apply the matrices on fly. 
@@ -1969,12 +1854,14 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     }
     //always assemble fit matrix, faster
     setup_recon_fit_matrix(recon,parms);
+    toc("fit_matrix");
     //moao
     setup_recon_moao(recon,parms);
+    toc("moao");
     if(parms->sim.mffocus){
 	setup_recon_focus(recon, powfs, parms);
     }
-    if(parms->tomo.split && parms->ndm>0){
+    if(parms->tomo.split){
 	//split tomography
 	if(parms->tomo.split && parms->ndm<=2){
 	    setup_ngsmod(parms,recon,aper,powfs);
@@ -2077,7 +1964,6 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	dcellfree(recon->ngsmod->Ptt);
 	free(recon->ngsmod);
     }
-    free(recon->skipwfs);
 
     int npsr = recon->npsr;
     int ndm = parms->ndm;

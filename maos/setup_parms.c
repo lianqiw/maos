@@ -31,7 +31,7 @@
    \file maos/setup_parms.c
    This file contains necessary routines to read parametes for
 WFS, DM and wavefront reconstruction.  */
-#define FREE_IF_NOT_NULL(p) if(p) free(p)
+
 /**
    Free the parms struct.
  */
@@ -65,7 +65,6 @@ void free_parms(PARMS_T *parms){
 
     free(parms->cn2.pair);
     free(parms->save.gcov);
-
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	free(parms->surf[isurf]);
     }
@@ -81,8 +80,8 @@ void free_parms(PARMS_T *parms){
 	    free(parms->powfs[ipowfs].wvlwts);
 	}
 	if(parms->powfs[ipowfs].llt){
-	    FREE_IF_NOT_NULL(parms->powfs[ipowfs].llt->fnrange);
-	    FREE_IF_NOT_NULL(parms->powfs[ipowfs].llt->fn);
+	    free(parms->powfs[ipowfs].llt->fnrange);
+	    free(parms->powfs[ipowfs].llt->fn);
 	    free(parms->powfs[ipowfs].llt->i);
 	    free(parms->powfs[ipowfs].llt->ox);
 	    free(parms->powfs[ipowfs].llt->oy);
@@ -91,13 +90,13 @@ void free_parms(PARMS_T *parms){
 	free(parms->powfs[ipowfs].wfs);
 	free(parms->powfs[ipowfs].indwfs);
 	free(parms->powfs[ipowfs].scalegroup);
-	FREE_IF_NOT_NULL(parms->powfs[ipowfs].fnllt);
-	FREE_IF_NOT_NULL(parms->powfs[ipowfs].piinfile);
-	FREE_IF_NOT_NULL(parms->powfs[ipowfs].sninfile);
-	FREE_IF_NOT_NULL(parms->powfs[ipowfs].neareconfile);
-	FREE_IF_NOT_NULL(parms->powfs[ipowfs].bkgrndfn);
-	FREE_IF_NOT_NULL(parms->powfs[ipowfs].misreg);
-	FREE_IF_NOT_NULL(parms->powfs[ipowfs].ncpa);
+	free(parms->powfs[ipowfs].fnllt);
+	free(parms->powfs[ipowfs].piinfile);
+	free(parms->powfs[ipowfs].sninfile);
+	free(parms->powfs[ipowfs].neareconfile);
+	free(parms->powfs[ipowfs].bkgrndfn);
+	free(parms->powfs[ipowfs].misreg);
+	free(parms->powfs[ipowfs].ncpa);
 	
     }
     free(parms->powfs);
@@ -110,14 +109,12 @@ void free_parms(PARMS_T *parms){
     }
     free(parms->dm);
     free(parms->moao);
-   
     free(parms->evl.scalegroup);
-
-    FREE_IF_NOT_NULL(parms->aper.fnamp);
-    free(parms->save.powfs_opd  );
-    free(parms->save.wfsints );
-    free(parms->save.powfs_grad );
-    free(parms->save.powfs_gradgeom );
+    free(parms->aper.fnamp);
+    free(parms->save.powfs_opd);
+    free(parms->save.powfs_ints);
+    free(parms->save.powfs_grad);
+    free(parms->save.powfs_gradgeom);
     free(parms->fdlock);
     free(parms);
 }
@@ -156,11 +153,11 @@ static int readcfg_intarr_n_relax(int n,int **p, const char*format,...){
     format2key;
     int m=readcfg_intarr(p,"%s",key);
     if(m==0){
-	*p=calloc(m, sizeof(int));
-    }else if(m==1){
-	*p=realloc(*p, m*sizeof(int));
-	for(int ii=1; ii<m; ii++){
-	    p[ii]=p[0];
+	*p=calloc(n, sizeof(int));//initialize to zeros.
+    }else if(m==1 && m<n){
+	*p=realloc(*p, n*sizeof(int));
+	for(int ii=1; ii<n; ii++){
+	    (*p)[ii]=(*p)[0];
 	}
     }else if(m!=n){
 	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
@@ -176,9 +173,9 @@ numbers available, will fill with zeros.  */
     if(m==0){
 	*p=calloc(m, sizeof(double));
     }else if(m==1){
-	*p=realloc(*p, m*sizeof(double));
-	for(int ii=1; ii<m; ii++){
-	    p[ii]=p[0];
+	*p=realloc(*p, n*sizeof(double));
+	for(int ii=1; ii<n; ii++){
+	    (*p)[ii]=(*p)[0];
 	}
     }else if(m!=n){
 	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
@@ -348,7 +345,10 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].phytypesim==-1){
 	    parms->powfs[ipowfs].phytypesim=parms->powfs[ipowfs].phytype;
 	}
-    }
+	//round phystep to be multiple of dtrat.
+	parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
+	    *parms->powfs[ipowfs].dtrat;
+    }//ipowfs
 }
 #define READ_WFS(A,B)							\
     if((i=readcfg_##A##arr(&A##junk,"wfs."#B))!=parms->nwfs){		\
@@ -531,6 +531,9 @@ static void readcfg_atmr(PARMS_T *parms){
 static void readcfg_aper(PARMS_T *parms){
     READ_DBL(aper.d);
     READ_DBL(aper.din);
+    if(parms->aper.d <= parms->aper.din){
+	error("Inner dimeter: %g, Outer Diameter: %g. Illegal\n", parms->aper.din, parms->aper.d);
+    }
     READ_DBL(aper.dx);
     READ_DBL(aper.rotdeg);
     READ_INT(aper.cropamp);
@@ -722,6 +725,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.keepshm);
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
+    parms->dbg.ntomo_maxit=readcfg_intarr(&parms->dbg.tomo_maxit, "dbg.tomo_maxit");
 #if USE_POSIX_SHM
     shm_keep_unused=parms->dbg.keepshm;
 #endif
@@ -755,7 +759,7 @@ static void wfs_hi_lo(int *hi, int *lo, int tot){
    Specify which variables to save
 */
 static void readcfg_save(PARMS_T *parms){
-  
+    READ_INT(save.all);
     READ_INT(save.setup);
     READ_INT(save.recon);
     READ_INT(save.mvst);
@@ -764,19 +768,37 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.run);
     READ_INT(save.opdr);//reconstructed OPD on XLOC
     READ_INT(save.opdx);//ATM propagated to XLOC
-    READ_INT(save.ints);//WFS integration
-    READ_INT(save.wfsopd);//WFS OPD
     READ_INT(save.evlopd);//Science OPD
     READ_INT(save.dm);//save DM commands
-
     READ_INT(save.dmpttr);
+    READ_INT(save.ints);
+    READ_INT(save.wfsopd);
     READ_INT(save.grad);
     READ_INT(save.gradgeom);
+
+    if(parms->save.all){//enables everything
+	warning("Enabling saving everything.\n");
+	parms->save.setup=1;
+	parms->save.recon=1;
+	parms->save.mvst=1;
+	parms->save.atm=1;
+	parms->save.run=1;
+	parms->save.opdr=1;
+	parms->save.opdx=1;
+	parms->save.evlopd=1;
+	parms->save.dm=1;
+	parms->save.dmpttr=1;
+	parms->save.ints=1;
+	parms->save.wfsopd=1;
+	parms->save.grad=1;
+	parms->save.gradgeom=1;
+    }
 
     if(parms->save.run){
 	parms->save.dm=1;
 	parms->save.grad=1;
     }
+
     wfs_hi_lo(&parms->save.intshi, &parms->save.intslo, parms->save.ints);
     wfs_hi_lo(&parms->save.wfsopdhi, &parms->save.wfsopdlo, parms->save.wfsopd);
     wfs_hi_lo(&parms->save.gradhi, &parms->save.gradlo, parms->save.grad);
@@ -823,6 +845,16 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 		//parms->powfs[ipowfs].pistatout=1;//also output pistat. need gstat as well
 	    }
 	}
+    }
+    if(parms->dbg.ntomo_maxit){
+	warning("dbg.tomo_maxit is set. Will run in open loop mode\n repeat the simulations"
+		" with different values of tomo.maxit.\n");
+	parms->sim.closeloop=0;
+	parms->sim.frozenflow=1;
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    parms->atm.ws[ips]=0;//set windspeed to zero.
+	}
+	parms->sim.end=parms->dbg.ntomo_maxit;
     }
 }
 /**
@@ -920,9 +952,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     if(parms->tomo.split){
 	int hi_found=0;
 	int lo_found=0;
-	if(parms->tomo.split == 1 && !parms->sim.closeloop){
-	    warning("split tomography does not work in open loop\n");
-	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		lo_found=1;
@@ -1232,6 +1261,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
     }
+    if(parms->tomo.split == 1 && !parms->sim.closeloop){
+	warning("ahst split tomography does not have good NGS correction in open loop\n");
+    }
     if(parms->tomo.split==2 && parms->sim.fuseint==1){
 	warning("MVST Mode can only use separated integrator for the moment. Changed\n");
 	parms->sim.fuseint=0;
@@ -1239,9 +1271,11 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(!parms->tomo.split && !parms->sim.fuseint){
 	parms->sim.fuseint=1;//integrated tomo. only 1 integrator.
     }
-    if(parms->evl.tomo && parms->tomo.split){
-	warning("Evaluating tomography performance is best done with integrated tomography. Changed\n");
-	parms->tomo.split=0;
+    if(parms->tomo.split && parms->evl.tomo){
+	warning("Evaluating tomography performance is best done with integrated tomography.\n");
+    }
+    if(parms->tomo.precond==1 && !parms->tomo.split && parms->tomo.maxit<10){
+	warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
     }
     if(parms->tomo.precond==1 && parms->tomo.square!=1){
 	warning("FDPCG requires square XLOC. changed\n");
@@ -1257,6 +1291,14 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->sim.mffocus && (!parms->sim.closeloop || parms->dbg.fitonly)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
+    }
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	if(parms->tomo.split && parms->powfs[ipowfs].lo){
+	    parms->wfs[iwfs].skip=1;
+	}else{
+	    parms->wfs[iwfs].skip=0;
+	}
     }
 }
 
@@ -1363,7 +1405,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    }
 	}
 	parms->atm.ipsr[ips]=kpsr;
-	info("atm layer %d is maped to atmr %d\n", ips,kpsr);
+	//info("atm layer %d is maped to atmr %d\n", ips,kpsr);
     }
 
     if(!parms->sim.closeloop){
@@ -1377,15 +1419,15 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 static void setup_parms_postproc_save(PARMS_T *parms){
     const int npowfs=parms->npowfs;
     parms->save.powfs_opd  = calloc(npowfs, sizeof(int));
-    parms->save.wfsints = calloc(npowfs, sizeof(int));
+    parms->save.powfs_ints = calloc(npowfs, sizeof(int));
     parms->save.powfs_grad = calloc(npowfs, sizeof(int));
     parms->save.powfs_gradgeom = calloc(npowfs, sizeof(int));
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].lo){//low order wfs
 	    if(parms->save.wfsopdlo)
 		parms->save.powfs_opd[ipowfs]=1;
-	    if(parms->save.intslo)
-		parms->save.wfsints[ipowfs]=1;
+	    if(parms->save.intslo && parms->powfs[ipowfs].usephy)
+		parms->save.powfs_ints[ipowfs]=1;
 	    if(parms->save.gradlo)
 		parms->save.powfs_grad[ipowfs]=1;
 	    if(parms->save.gradgeomlo)
@@ -1393,8 +1435,8 @@ static void setup_parms_postproc_save(PARMS_T *parms){
 	}else{//high order wfs
 	    if(parms->save.wfsopdhi)
 		parms->save.powfs_opd[ipowfs]=1;
-	    if(parms->save.intshi)
-		parms->save.wfsints[ipowfs]=1;
+	    if(parms->save.intshi && parms->powfs[ipowfs].usephy)
+		parms->save.powfs_ints[ipowfs]=1;
 	    if(parms->save.gradhi)
 		parms->save.powfs_grad[ipowfs]=1;
 	    if(parms->save.gradgeomhi)
@@ -1568,6 +1610,7 @@ static void print_parms(const PARMS_T *parms){
     default:
 	error(" Invalid\n");
     }
+    info2("\033[0;32mDM Fitting\033[0;0m is using ");
     switch(parms->fit.alg){
     case 0:
 	info2("Cholesky back solve");

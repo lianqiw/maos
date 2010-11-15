@@ -1,3 +1,6 @@
+#ifdef __INTEL_COMPILER
+#undef _GNU_SOURCE /*avoid compiling problem*/
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -214,7 +217,7 @@ static mxArray *readdata(file_t *fp){
 	break;
     default:
 	fprintf(stderr,"magic=%x\n",magic);
-	warning("Unrecognized file");
+	warning("Unrecognized file. Please recompile the mex routines in the newest code\n");
 	out=NULL;
     }
     return out;

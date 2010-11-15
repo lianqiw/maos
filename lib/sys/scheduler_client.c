@@ -122,7 +122,7 @@ int scheduler_connect_self(int block, int mode){
     scheduler_shutdown(&sock,mode);
     return sock;
 }
-static void scheduler_launch(void *junk){
+static void scheduler_launch_do(void *junk){
     /**
        This function is already in a new process.
      */
@@ -131,19 +131,20 @@ static void scheduler_launch(void *junk){
     char prog2[PATH_MAX];
     snprintf(prog2, PATH_MAX,"%s/scheduler",TEMP);
     if(exist(prog)){
+	//this will rename the exe to scheduler. avoids accidental killing
 	int a;
 	a=unlink(prog2);
 	a=symlink(prog,prog2);
 	if(a<0) warning("unable to link");
 	execl(prog2,"scheduler",NULL);
-    }else{
+    }else{//fall back
 	scheduler();
     }
 }
 static void scheduler_report_path(char *path){
     if(path){
 	if(path_save) free(path_save);
-	path_save=strdup(path);//don't use mystrdup.
+	path_save=strdup(path);
     }else{
 	if(!path_save){
 	    path_save="unknown";
@@ -155,13 +156,17 @@ static void scheduler_report_path(char *path){
     swriteintarr(&psock, cmd, 2);
     swritestr(&psock,path_save);
 }
-// called by mcao to wait for available cpu.
-int scheduler_start(char *path, int nthread, int waiting){
+//launch the scheduler if not running
+void scheduler_launch(void){
     char lockpath[PATH_MAX];
     snprintf(lockpath,PATH_MAX,"%s",TEMP);
     //launch scheduler if it is not already running.
     single_instance_daemonize(lockpath,"scheduler", scheduler_version,
-			      (void(*)(void*))scheduler_launch,NULL);
+			      (void(*)(void*))scheduler_launch_do,NULL);
+}
+// called by mcao to wait for available cpu.
+int scheduler_start(char *path, int nthread, int waiting){
+    scheduler_launch();
     psock=scheduler_connect_self(1,0);
     if(psock==-1){
 	warning3("Failed to connect to scheduler\n");
@@ -284,25 +289,23 @@ char* scheduler_get_drawdaemon(int pid){
 	fifo=malloc(100);
 	snprintf(fifo,100,"%s/drawdaemon_%d.fifo",TEMP,pid);
 	fifo=realloc(fifo,strlen(fifo)+1);
-	launch++;
-	
+    }
+    if(exist(fifo)){//fifo already exist. test when drawdaemon exists
+	int fd=open(fifo,O_NONBLOCK|O_WRONLY);
+	if(fd==-1){
+	    warning2("Enable to open drawdaemon.");
+	    launch=1;
+	}else{
+	    close(fd);
+	}
+    }else{
 	if(mkfifo(fifo,0700)){
 	    warning3("Error making fifo\n");
 	}
-    }
-    if(!exist(fifo)){
-	warning("fifo is lost\n");
-	sleep(1);
-	if(!exist(fifo)){
-	    if(mkfifo(fifo,0700)){
-		warning3("Error making fifo\n");
-	    }
-	    launch=1;
-	}
+	launch=1;
     }
 
     if(launch){
-	info2("Launch drawdaemon\n");
 	int sock=scheduler_connect_self(0,0);
 	if(sock==-1){
 	    warning3("failed to connect to scheduler\n");

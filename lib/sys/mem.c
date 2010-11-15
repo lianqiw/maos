@@ -61,7 +61,7 @@ PNEW(mutex_mem);
 
 static void *MROOT=NULL;
 static long long memcnt=0;
-
+void (*call_freepath)(void)=NULL;
 
 //max depth in backtrace
 #define DT 12
@@ -85,6 +85,9 @@ static __attribute__((constructor)) void init(){
     warning2("Memory management is in use\n");
 }
 static __attribute__((destructor)) void deinit(){
+    if(call_freepath){
+	call_freepath();
+    }
     if(exit_success){
 	if(MROOT){
 	    warning("%lld allocated memory not freed!!!\n",memcnt);
@@ -129,36 +132,32 @@ static void memkey_add(void *p,size_t size){
 static void memkey_update(void*p, size_t size){
     if(!p) return;
     LOCK(mutex_mem);
-    T_MEMKEY* key=calloc(1,sizeof(T_MEMKEY));
-    key->p=p;
+    T_MEMKEY key;
+    key.p=p;
     void **found;
-    if(!(found=tfind(key, &MROOT, key_cmp))){
+    if(!(found=tfind(&key, &MROOT, key_cmp))){
 	error("Record not found for memkey_update %p\n",p);
     }
     T_MEMKEY*key0=*found;
     key0->size=size;
     key0->nfunc=backtrace(key0->func,DT);
     meminfo("%p realloced with %lu bytes\n", p, size);
-    free(key);
     UNLOCK(mutex_mem);
 }
 static void memkey_del(void*p){
     if(!p) return;
     LOCK(mutex_mem);
     void **found;
-    T_MEMKEY *key=calloc(1,sizeof(T_MEMKEY));
-    key->p=p;
-    if(!(found=tfind(key, &MROOT, key_cmp))){
-	//warning("Record not found for memkey_del %p\n",p);
-	UNLOCK(mutex_mem);
-	return;
+    T_MEMKEY key;
+    key.p=p;
+    if((found=tfind(&key, &MROOT, key_cmp))){//found.
+	T_MEMKEY* key1=*found;//the address of allocated T_MEMKEY.
+	if(!tdelete(&key, &MROOT, key_cmp)){//return parent.
+	    error("Error deleting old record\n");
+	}
+	free(key1);
+	memcnt--;
     }
-    T_MEMKEY* key1=*found;//the address of allocated T_MEMKEY.
-    if(!tdelete(key, &MROOT, key_cmp)){//return parent.
-	error("Error deleting old record\n");
-    }
-    free(key1);
-    memcnt--;
     UNLOCK(mutex_mem);
 }
 void *CALLOC(size_t nmemb, size_t size){

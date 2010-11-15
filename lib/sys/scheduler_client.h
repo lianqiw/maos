@@ -40,6 +40,7 @@ int scheduler_connect(int ihost, int block,int mode);
 int scheduler_connect_self(int block,int mode);
 //called by maos
 //call scheduler_start, and then scheduler_wait if waiting is 1.
+void scheduler_launch(void);
 int scheduler_start(char *path, int nthread, int waiting);
 int scheduler_wait(void);
 void scheduler_finish(int status);

@@ -19,7 +19,36 @@
 #include "locbin.h"
 #include "matbin.h"
 #include "cell.h"
-static loc_t *locreaddata(file_t *fp){
+/**
+   \file locbin.c
+   i/o functions for loc_t, map_t.
+*/
+/**
+   Read in the loc_t data after magic and dimension has been read and verified.
+*/
+loc_t *locreaddata2(file_t *fp, long nx, long ny){
+    if(ny!=2){
+	error("This is not a LOC file\n");
+    }
+    loc_t *out=calloc(1, sizeof(loc_t));
+    out->nloc=nx;
+    out->locx=malloc(sizeof(double)*nx);
+    zfread(out->locx, sizeof(double), nx, fp);
+    out->locy=malloc(sizeof(double)*nx);
+    zfread(out->locy, sizeof(double), nx, fp);
+    if((out->locx[2]+out->locx[0]-2.*out->locx[1])<1.e-10){
+	out->dx=out->locx[1]-out->locx[0];
+    }else{
+	out->dx=NAN;
+	warning("Unable to determine dx from the loc file %s. Please set manually.\n", fp->fn);
+    }
+    out->map=NULL;
+    return out;
+}
+/**
+   Verify the magic, dimension and read in the loc_t by calling locreaddata2().
+ */
+loc_t *locreaddata(file_t *fp){
     uint32_t magic;
     zfread(&magic, sizeof(uint32_t), 1, fp);
     if(magic!=0x6402){
@@ -32,26 +61,11 @@ static loc_t *locreaddata(file_t *fp){
     if(nx==0 || ny==0){
 	out=NULL;
     }else{
-	if(ny!=2){
-	    error("This is not a LOC file\n");
-	}
-	out=calloc(1, sizeof(loc_t));
-	out->nloc=nx;
-	out->locx=malloc(sizeof(double)*nx);
-	zfread(out->locx, sizeof(double), nx, fp);
-	out->locy=malloc(sizeof(double)*nx);
-	zfread(out->locy, sizeof(double), nx, fp);
-	if((out->locx[2]+out->locx[0]-2.*out->locx[1])<1.e-10){
-	    out->dx=out->locx[1]-out->locx[0];
-	}else{
-	    out->dx=NAN;
-	    warning("Unable to determine dx from the loc file %s. Please set manually.\n", fp->fn);
-	}
-	out->map=NULL;
+	out=locreaddata2(fp, nx, ny);
     }
     return out;
 }
-static void locwritedata(file_t *fp, const loc_t *loc){
+void locwritedata(file_t *fp, const loc_t *loc){
     uint32_t magic=M_DBL;
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(loc){

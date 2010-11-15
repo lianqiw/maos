@@ -20,6 +20,6 @@
 #define AOS_SETUP_APER
 #include "maos.h"
 APER_T* setup_aper (const PARMS_T *parms);
-void free_aper(APER_T *aper);
+void free_aper(APER_T *aper, const PARMS_T *parms);
 #endif
 

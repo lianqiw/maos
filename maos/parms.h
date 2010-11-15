@@ -201,6 +201,7 @@ typedef struct WFS_CFG_T{
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
     int powfs;      /**<powfs type*/
+    int skip;       /**<skip in tomography, for split tomo (derived parameter)*/
 }WFS_CFG_T;
 /**
    contains input parameters for each deformable mirror.
@@ -405,6 +406,8 @@ typedef struct DBG_CFG_T{
     int keepshm;     /**<keep the atmospehre in the shared memory.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
+    int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
+    int ntomo_maxit; /**<Number of elements in tomo_maxit*/
 }DBG_CFG_T;
 /**
    contains input parameters for each MOAO type.
@@ -443,6 +446,7 @@ typedef struct LOAD_CFG_T{
    contains input parameters for saving variables.
 */
 typedef struct SAVE_CFG_T{
+    int all;         /**<save absolutely everything. mainly for debugging*/
     int setup;       /**<save preparation matrices*/
     int recon;       /**<save reconstructor information. large*/
     int mvst;        /**<MVST computation intermediate matrices*/
@@ -480,7 +484,7 @@ typedef struct SAVE_CFG_T{
     int *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
     //The following are derived parameters for powfs from grad, ints, wfsopd
     int* powfs_opd;  /**<derived parameter to specify which powfs to save opd*/
-    int* wfsints; /**<derived parameter to specify which powfs to save ints*/
+    int* powfs_ints; /**<derived parameter to specify which powfs to save ints*/
     int* powfs_grad; /**<derived parameter to specify which powfs to save grad*/
     int* powfs_gradgeom;/**<derived parameter to specify which powfs to save geometric grad*/
 

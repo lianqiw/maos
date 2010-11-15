@@ -20,6 +20,9 @@
 #define AOS_LOCBIN_H
 #include "bin.h"
 #include "loc.h"
+loc_t *locreaddata2(file_t *fp, long nx, long ny);
+loc_t *locreaddata(file_t *fp);
+void locwritedata(file_t *fp, const loc_t *loc);
 void locwrite(const loc_t *loc, const char *format,...) CHECK_ARG(2);
 loc_t *locread(const char *format,...) CHECK_ARG(1);
 void locarrwrite(loc_t ** loc, int nloc, const char *format,...) CHECK_ARG(3);

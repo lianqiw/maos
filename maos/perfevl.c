@@ -53,6 +53,7 @@ static void perfevl_ievl(SIM_T *simu){
     const int npsr=parms->atmr.nps;
     const int imoao=parms->evl.moao;
     const double dt=simu->dt;
+    const int do_psf=(parms->evl.psfmean || parms->evl.psfhist) && isim>=parms->evl.psfisim;
     dmat *iopdevl=dnew(aper->locs->nloc,1);
     int ievl;
 #if TIMING==1
@@ -180,8 +181,7 @@ static void perfevl_ievl(SIM_T *simu){
 			    aper->mod,aper->amp,iopdevltomo->p);
 	    }
 	    //Evaluate closed loop PSF time history and time average
-	    if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim
-	       &&(parms->evl.psfmean || parms->evl.psfhist)){
+	    if(do_psf && parms->evl.psf[ievl] ){
 		if(parms->evl.psfpttr){
 		    if(isim==parms->sim.start && ievl==0){
 			warning("Removing tip/tilt from PSF\n");
@@ -300,8 +300,7 @@ static void perfevl_ievl(SIM_T *simu){
 	    }
 	}
 	//Evaluate closed loop PSF.
-	if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim
-	   &&(parms->evl.psfmean || parms->evl.psfhist)){
+	if(do_psf && parms->evl.psf[ievl]){
 	    //warning("Output PSF for direction %d\n",ievl);
 	    if(parms->evl.psfpttr){
 		if(isim==parms->sim.start && ievl==0){

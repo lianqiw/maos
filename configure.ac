@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.7.2, lianqiw@gmail.com)
+AC_INIT(maos, 0.7.4, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
@@ -72,7 +72,7 @@ case "$host_os" in
     AM_CONDITIONAL(LINUX, true)
     LDSYS="$LDSYS -lrt" #Real time library
     #Enable System V Interface definition (IPC,SHM)
-    OPTSextra="-D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
+    OPTSextra="-g -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
     if test -f "$mkl_lib" ;then
        use_mkl_default="yes"
     else
@@ -111,6 +111,7 @@ AC_ARG_ENABLE(icc,   [  --enable-icc    Using intel compiler], [use_icc="$enable
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="no"])
+AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 if test "x$use_long" = "xyes" ;then
    OPTScommon="$OPTScommon -DDLONG"
    AM_CONDITIONAL(USE_LONG, true)
@@ -143,6 +144,10 @@ else
     AM_CONDITIONAL(DO_THRPOOL,false)
     AC_DEFINE(USE_PTHREAD,[1], ["Disable thread pool"])
 fi
+if test "x$use_duma" = "xyes" ;then	
+    AC_CHECK_LIB([duma],[malloc],[],[AC_MSG_ERROR([duma not found])])
+    LDSYS="$LDSYS -lduma"
+fi 
 
 if test x$use_oprof = "xyes" ;then
    OPTSprof="$OPTSprof -g -fno-omit-frame-pointer -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
@@ -250,10 +255,19 @@ AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 LDFFT="-lfftw3"
 
-AC_CHECK_LIB([cholmod],[cholmod_l_factorize], [have_chol="yes"], [have_chol="no"])
-if test "x$have_chol" = "xyes" ;then
-    echo "cholmod is installed in the system. will use it."
-    LDCHOL="-lcholmod"
+# Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not
+# use the cholmod in the system even if it is available because we want to
+# customize the dependency on blas/lapack.
+
+AC_CHECK_LIB([cholmod_long],[cholmod_l_factorize], [have_chol_long="yes"], [have_chol_long="no"],[$LAPACK])
+AC_CHECK_LIB([cholmod_int],[cholmod_factorize], [have_chol_int="yes"], [have_chol_int="no"],[$LAPACK])
+if test "x$use_long" = "xyes" -a "x$have_chol_long" = "xyes" ;then
+    echo "cholmod_long is installed in the system. will use it."
+    LDCHOL="-lcholmod_long"
+    AM_CONDITIONAL(COMP_CHOL, false)
+elif test "x$use_long" = "xno" -a "x$have_chol_int" = "xyes"  ;then
+    echo "cholmod_int is installed in the system. will use it."
+    LDCHOL="-lcholmod_int"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
     echo "cholmod is not available, will use the shipped source."

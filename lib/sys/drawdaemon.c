@@ -78,7 +78,7 @@ typedef struct drawdata_t{
     int font_name_version;
 }drawdata_t;
 #define DRAWAREA_MIN_WIDTH 440
-#define DRAWAREA_MIN_HEIGHT 300
+#define DRAWAREA_MIN_HEIGHT 320
 //static FILE *fp=NULL;
 //static int fd;
 static const char *fifo=NULL;
@@ -101,7 +101,12 @@ double SP_YT;//space reserved for title
 double SP_YB;//space reserved for xlabel
 double SP_XR;//space reserved for legend
 
-
+static const char *rc_string_notebook={
+    "style \"noborder\"{                      \n"
+    "GtkNoteBook::draw-border={0 0 0 0}       \n"
+    "}                                        \n"
+    "class \"GtkNoteBook\" style \"noborder\" \n"
+};
 #define error_msg(A...) {				\
 	GtkWidget *dialog0=gtk_message_dialog_new	\
 	    (GTK_WINDOW(window),			\
@@ -633,13 +638,16 @@ static void do_zoom(drawdata_t *drawdata, int mode){
 	drawdata->offx=0;
 	drawdata->offy=0;
     }
-    if(drawdata->zoom<0.01)
-	drawdata->zoom=0.01;
-    else if(drawdata->zoom>100){
-	drawdata->zoom=100;
+    if(drawdata->zoom<0.0001)
+	drawdata->zoom=0.0001;
+    else if(drawdata->zoom>10000){
+	drawdata->zoom=10000;
     }
     update_pixmap(drawdata);
 }
+/**
+   Delete a figure page.
+*/
 static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
     (void)btn;
     GtkWidget *root;
@@ -652,6 +660,10 @@ static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
     gtk_notebook_remove_page(GTK_NOTEBOOK(root), ipage);
     drawdata_free(*drawdatawrap);
     free(drawdatawrap);
+    if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(root))<=0){
+	int jpage=gtk_notebook_page_num(GTK_NOTEBOOK(notebook), root);
+	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook),jpage);
+    }
 }
 
 static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
@@ -673,19 +685,17 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
     rcstyle = gtk_rc_style_new();
     rcstyle->xthickness = rcstyle->ythickness = 0;
     gtk_widget_modify_style(close_btn, rcstyle);
-    gtk_rc_style_unref(rcstyle);
-
+    gtk_widget_set_size_request(close_btn,13,10);
     /* create label for tab */
     label = gtk_label_new(str);
-    gtk_widget_set_size_request(GTK_WIDGET(label), 50, -1);
-    gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 0, 0);
     out=gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(out), label, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(out), gtk_label_new(""), 
-		       TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(out), close_btn, TRUE, TRUE, 0);
+    //gtk_widget_modify_style(label, rcstyle);
+    //gtk_widget_modify_style(out, rcstyle);
+    gtk_rc_style_unref(rcstyle);
     gtk_widget_show_all(out);
     return out;
 }
@@ -833,6 +843,7 @@ static void addpage(drawdata_t **drawdatawrap)
 	gtk_notebook_set_show_border(GTK_NOTEBOOK(root), TRUE);
 	GtkWidget *button=gtk_label_new(drawdata->fig);
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),root,button);
+	gtk_container_set_border_width(GTK_CONTAINER(notebook),0);
     }
     GtkWidget *page=NULL;
     for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(root)); itab++){
@@ -999,7 +1010,7 @@ static void tool_font_set(GtkFontButton *btn){
 	=pango_font_description_from_string(font_name_new);
     font_name_version++;
     if(font_name) free(font_name);
-    font_name=mystrdup(pango_font_description_get_family(pfd));
+    font_name=strdup(pango_font_description_get_family(pfd));
     
     PangoStyle style=pango_font_description_get_style(pfd);
     switch(style){
@@ -1343,10 +1354,11 @@ int main(int argc, char *argv[])
 			 G_CALLBACK (quitdraw), NULL);
 	gtk_window_set_position(GTK_WINDOW(window), 
 				GTK_WIN_POS_CENTER);
-	gtk_window_set_default_size(GTK_WINDOW(window), 600, 450);
+	gtk_window_set_default_size(GTK_WINDOW(window), 600, 500);
 	gtk_widget_show_all(window); 
 	tool_font_set(GTK_FONT_BUTTON(fontsel));//initialize.
     }
+    gtk_rc_parse_string(rc_string_notebook);
     open_fifo(NULL);
     gtk_main();
 }

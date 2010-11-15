@@ -27,6 +27,7 @@
 #include "common.h"
 #include "misc.h"
 #include "mathmisc.h"
+int DRAW_ID=0;
 #if USE_DAEMON==1
 /*
   draw by calling gtkdraw via daemon
@@ -142,7 +143,10 @@ void plot_coord(char *fig,          /**<Category of the figure*/
     if(disable_draw) return;
     format2fn;
     LOCK(lock);
-    fifo_save=scheduler_get_drawdaemon(getpid());
+    if(!DRAW_ID){
+	DRAW_ID=getpid();
+    }
+    fifo_save=scheduler_get_drawdaemon(DRAW_ID);
     if(!fifo_save){
 	disable_draw=1;
 	warning("Unable to draw. check whether drawdaemon is "
@@ -206,7 +210,10 @@ static void imagesc_do(char *fig, /**<Category of the figure*/
     if(disable_draw) return;
     format2fn;
     LOCK(lock);
-    fifo_save=scheduler_get_drawdaemon(getpid());
+    if(!DRAW_ID){
+	DRAW_ID=getpid();
+    }
+    fifo_save=scheduler_get_drawdaemon(DRAW_ID);
     if(!fifo_save){
 	disable_draw=1;
 	warning("Unable to draw. check whether drawdaemon is "

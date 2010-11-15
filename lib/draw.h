@@ -22,6 +22,7 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "loc.h"
+extern int DRAW_ID;//number to use for drawdaemon, usually PID.
 #if USE_DAEMON==0
 #define plot_psf(A...)
 #define imagesc(A...)

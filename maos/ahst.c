@@ -396,7 +396,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon,
     }
     PSPCELL(recon->GA,GA);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	if(!recon->skipwfs[iwfs])
+	if(!parms->wfs[iwfs].skip)
 	    continue;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
@@ -824,5 +824,41 @@ void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 		+mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y));
 	    iopdevl->p[iloc]+=tmp*gain;
 	}
+    }
+}
+
+/**
+   remove NGS modes from LGS DM commands
+   if ahst_wt==1
+   Rngs*GA*dmerr is zero
+   if ahst_wt==2
+   Doesn't perturb NGS modes in science direction.
+*/
+void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
+    const RECON_T *recon=simu->recon;
+    dcell *Mngs=NULL;
+    dcellmm(&Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
+    ngsmod2dm(&dmerr,recon, Mngs,-1);
+    dcellfree(Mngs);
+}
+/**
+   Removal tip/tilt on invidual DMs. Be careful about the roll off near the
+   edge.  */
+void remove_dm_tt(SIM_T *simu, dcell *dmerr){
+    const RECON_T *recon=simu->recon;
+    for(int idm=0; idm<simu->parms->ndm; idm++){
+	dmat *utt=NULL;
+	dmm(&utt, recon->ngsmod->Ptt->p[idm], dmerr->p[idm], "nn", -1);
+	double *ptt;
+	if(utt->nx==2){
+	    ptt=alloca(3*sizeof(double));
+	    ptt[0]=0; ptt[1]=utt->p[0]; ptt[2]=utt->p[1];
+	}else{
+	    ptt=utt->p;
+	}
+	loc_add_ptt(dmerr->p[idm]->p, ptt, recon->aloc[idm]);
+	info("Adding P/T/T %g m %f %f mas to dm %d\n",
+	     ptt[0],ptt[1]*206265000,ptt[2]*206265000,idm);
+	dfree(utt);
     }
 }

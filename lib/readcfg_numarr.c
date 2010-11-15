@@ -23,26 +23,28 @@
 int TYPEFUN1(TYPE **ret, const char *format,...)
 {
     format2key;
-    /*arrays should start with {, [, or nothing and end with }, ] or nothing.*/
+    *ret=NULL;//initialize
+    /*arrays should start with [ and end with ] or empty.*/
     TYPE data, data2;
     char *endptr,*startptr;
-    int nret,count;
-    count=-1;
-    nret=10;
-    if(!(*ret=(TYPE*)malloc(sizeof(TYPE)*nret))){
-	error("Failed to allocate memory for ret\n");
-    }
+    int nmax;//temporary max number of elements.
+    int count=0;//actual number
+    nmax=10;
     long irecord=getrecord(key, 1);
     if(irecord!=-1){
 	startptr=store[irecord].data;
-	if(!startptr){
+	if(!startptr){//empty
 	    return 0;
 	}
+	if(!(*ret=malloc(sizeof(TYPE)*nmax))){
+	    error("Failed to allocate memory for ret\n");
+	}
+
 	if(startptr[0]!='['){
 	    error("Invalid entry to parse for numerical array: (%s)\n", startptr);
 	}
 	startptr++;
-	while(startptr[0]!=']' && startptr[0]!='}' && startptr[0]!='\0'){
+	while(startptr[0]!=']' && startptr[0]!='\0'){
 	    data=TYPECFUN(startptr, &endptr);
 	    if(startptr==endptr){
 #if STRICT==1
@@ -51,7 +53,6 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
 #endif
 		startptr++;
 	    }else{
-		count++;
 		//no space allowed for * or /
 		//while(isspace(endptr[0])) endptr++;
 		while(endptr[0]=='/' || endptr[0]=='*'){
@@ -74,12 +75,12 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
 			//while(isspace(endptr[0])) endptr++;
 		    }
 		}
-		
-		if(count>=nret){
-		    nret*=2;
-		    *ret=(TYPE*)realloc(*ret, sizeof(TYPE)*nret);
-		}
 		(*ret)[count]=(TYPE)data;
+		count++;
+		if(count>=nmax){
+		    nmax*=2;
+		    *ret=realloc(*ret, sizeof(TYPE)*nmax);
+		}
 		while(endptr[0]==','||endptr[0]==';'||!isgraph((int)endptr[0])){
 		    endptr++;
 		}
@@ -90,13 +91,7 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
 	error("key '%s' not found\n", key);
 	count=0;
     }
-    count++;
-    if(count>0)
-	*ret=(TYPE*)realloc(*ret, sizeof(TYPE)*count);
-    else{
-	free(*ret);
-	*ret=NULL;
-    }
+    *ret=realloc(*ret, sizeof(TYPE)*count);
     return count;
 }
 /**

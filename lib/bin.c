@@ -80,13 +80,13 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
     if(mod[0]=='r'){
 	char *fnr=NULL;
 	if(!(fnr=search_file(fn2))){
-	    if(strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
+	    if(check_suffix(fn2, ".bin.gz")){
 		//ended with bin.gz
 		fn2[strlen(fn2)-3]='\0';
 		if(!(fnr=search_file(fn2))){
 		    error("Neither %s nor %s exist\n", fn,fn2);
 		}
-	    }else if(strlen(fn2)>=4&&!strncmp(fn2+strlen(fn2)-4,".bin",4)){
+	    }else if(check_suffix(fn2, ".bin")){
 		//ended with .bin
 		strncat(fn2, ".gz", 3);
 		if(!(fnr=search_file(fn2))){
@@ -105,13 +105,13 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	}
 	free(fn2);
 	fn2=fnr;
-    }else if (mod[0]=='w'){//for write, no suffix. we append .bin.gz
-	if(!((strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7))
-	     || (strlen(fn2)>=4&&!strncmp(fn2+strlen(fn2)-4,".bin",4)))){
-	    if(defaultgzip)
+    }else if (mod[0]=='w'){//for write, no suffix. we append .bin or .bin.gz
+	if(!(check_suffix(fn2, ".bin.gz") || check_suffix(fn2, ".bin"))){
+	    if(defaultgzip){
 		strncat(fn2,".bin.gz",7);
-	    else
+	    }else{
 		strncat(fn2,".bin",4);
+	    }
 	}
 	if(exist(fn2)){//remove old file to avoid write over a symbolic link.
 	    remove(fn2);
@@ -135,7 +135,7 @@ file_t* zfopen(const char *fn, char *mod){
 #if IO_TIMMING == 1
     gettimeofday(&(fp->tv1), NULL);
 #endif
-    if(strlen(fn2)>=3 && !strcmp(fn2+strlen(fn2)-3,".gz")){
+    if(check_suffix(fn2, ".gz")){
 	fp->isgzip=1;
 	if(!(fp->p=gzopen(fn2,mod))){
 	    error("Error gzopen for %s\n",fn2);
@@ -218,8 +218,9 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	if(ct!=nmemb){
 	    error("Reading from %s failed\n", fp->fn);
 	}
-	if(feof((FILE*)fp->p))
+	if(feof((FILE*)fp->p)){
 	    warning("End of File encountered in %s\n",fp->fn);
+	}
     }
     UNLOCK(fp->lock);
 }
@@ -228,7 +229,11 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 */
 int zfseek(file_t *fp, long offset, int whence){
     if(fp->isgzip){
-	return gzseek((voidp)fp->p,offset,whence);
+	int res=gzseek((voidp)fp->p,offset,whence);
+	if(res<0)
+	    return 1;
+	else
+	    return 0;
     }else{
 	return fseek((FILE*)fp->p,offset,whence);
     }
