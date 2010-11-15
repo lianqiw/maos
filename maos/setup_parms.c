@@ -347,7 +347,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	}
 	//round phystep to be multiple of dtrat.
 	parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
-	    *parms->powfs[ipowfs].phystep;
+	    *parms->powfs[ipowfs].dtrat;
     }//ipowfs
 }
 #define READ_WFS(A,B)							\
