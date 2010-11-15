@@ -787,6 +787,9 @@ static void Y(spcellmulmat_thread_do)(spcell_thread_t *info){
 	goto repeat;
     }
 }
+/**
+   A common routine that can handle spcellmulmat_thread and sptcellmulmat_thread
+ */
 static void Y(spcellmulmat_thread2)(X(cell) **C0, const Y(spcell)*A, 
 				    const X(cell)*B, const T alpha, 
 				    const int trans, const int nthread){

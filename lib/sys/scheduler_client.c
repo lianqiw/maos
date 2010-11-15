@@ -143,7 +143,7 @@ static void scheduler_launch(void *junk){
 static void scheduler_report_path(char *path){
     if(path){
 	if(path_save) free(path_save);
-	path_save=strdup(path);//don't use mystrdup.
+	path_save=strdup(path);
     }else{
 	if(!path_save){
 	    path_save="unknown";

@@ -255,10 +255,19 @@ AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 LDFFT="-lfftw3"
 
-AC_CHECK_LIB([cholmod],[cholmod_l_factorize], [have_chol="yes"], [have_chol="no"])
-if test "x$have_chol" = "xyes" ;then
-    echo "cholmod is installed in the system. will use it."
-    LDCHOL="-lcholmod"
+# Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not
+# use the cholmod in the system even if it is available because we want to
+# customize the dependency on blas/lapack.
+
+AC_CHECK_LIB([cholmod_long],[cholmod_l_factorize], [have_chol_long="yes"], [have_chol_long="no"],[$LAPACK])
+AC_CHECK_LIB([cholmod_int],[cholmod_factorize], [have_chol_int="yes"], [have_chol_int="no"],[$LAPACK])
+if test "x$use_long" = "xyes" -a "x$have_chol_long" = "xyes" ;then
+    echo "cholmod_long is installed in the system. will use it."
+    LDCHOL="-lcholmod_long"
+    AM_CONDITIONAL(COMP_CHOL, false)
+elif test "x$use_long" = "xno" -a "x$have_chol_int" = "xyes"  ;then
+    echo "cholmod_int is installed in the system. will use it."
+    LDCHOL="-lcholmod_int"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
     echo "cholmod is not available, will use the shipped source."

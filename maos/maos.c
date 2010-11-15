@@ -61,7 +61,7 @@ void maos(const PARMS_T *parms){
       keep track of all the memory allocation.*/
     free_recon(parms, recon); recon=NULL;
     free_powfs(parms, powfs); powfs=NULL;
-    free_aper(aper); powfs=NULL;
+    free_aper(aper, parms); aper=NULL;
 #if USE_PTHREAD == 2
     if(parms->sim.nthread>1)
 	thr_pool_destroy(default_pool);
@@ -109,7 +109,6 @@ void maos(const PARMS_T *parms){
    \callgraph
 */
 int main(int argc, char **argv){
-
     char*fn=mybasename(argv[0]);
     if(!mystrcmp(fn, "scheduler")){//launch the scheduler.
 	scheduler();
@@ -196,7 +195,7 @@ int main(int argc, char **argv){
 	dirskysim=stradd("skysim",NULL);
 	mymkdir("%s",dirskysim);
     }else{
-	dirskysim=mystrdup(".");
+	dirskysim=strdup(".");
     }
 
     /*Loads the main software*/

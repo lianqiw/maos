@@ -999,7 +999,7 @@ static void tool_font_set(GtkFontButton *btn){
 	=pango_font_description_from_string(font_name_new);
     font_name_version++;
     if(font_name) free(font_name);
-    font_name=mystrdup(pango_font_description_get_family(pfd));
+    font_name=strdup(pango_font_description_get_family(pfd));
     
     PangoStyle style=pango_font_description_get_style(pfd);
     switch(style){

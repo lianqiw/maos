@@ -267,7 +267,6 @@ typedef struct RECON_T{
     dcell *RFlgs;      /**<focus reconstruction from each LGS grad*/
     dcell *RFngs;      /**<focus reconstruction from NGS grad.*/
     dcell *RFtomo;     /**<focus recon from reconstructed X.*/
-    int *skipwfs;      /**<skip the wfs in split tomo. (NGS)*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
     int *xdim;         /**<length of each xloc layer.*/

@@ -1,3 +1,4 @@
+#define USE_MEM 0
 #include "../lib/genotf.h"
 #include "interface.h"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])

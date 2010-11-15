@@ -451,8 +451,7 @@ setup_recon_GXGA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     PSPCELL(recon->GAlo,GAlo);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	if(!(parms->tomo.split && recon->skipwfs[iwfs])){
-	    //for tomography
+	if(!parms->wfs[iwfs].skip){//for tomography
 	    for(int ips=0; ips<npsr; ips++){
 		GXtomo[ips][iwfs]=spref(GX[ips][iwfs]);
 		HXWtomo[ips][iwfs]=spref(HXW[ips][iwfs]);
@@ -664,7 +663,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms,
 	    }
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(recon->skipwfs&&recon->skipwfs[iwfs]){
+		if(parms->wfs[iwfs].skip){
 		    error("This WFS %d should be included in Tomo.\n", iwfs);
 		}
 		dcp(&recon->TT->p[iwfs+iwfs*nwfs], TT);
@@ -711,7 +710,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
 	     */
 	    for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(recon->skipwfs&&recon->skipwfs[iwfs]){
+		if(parms->wfs[iwfs].skip){
 		    error("This WFS %d should be included in Tomo.\n", iwfs);
 		}
 		dcp(&recon->DF->p[iwfs*nwfs], DF);
@@ -990,7 +989,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	dcell *VLo=dcellnew(npsr,nwfs);
 	PDCELL(VLo, pVLo);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    if(recon->skipwfs&&recon->skipwfs[iwfs]){
+	    if(parms->wfs[iwfs].skip){
 		continue;
 	    }
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -1828,20 +1827,6 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    break;
 	}
     }   
-    recon->skipwfs=calloc(parms->nwfs,sizeof(int));
-    if(parms->tomo.split){
-	info2("Split Tomo:");
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    const int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].lo){
-		recon->skipwfs[iwfs]=1;
-		info2(" Skip");
-	    }else{
-		info2(" Use");
-	    }
-	}
-	info2("\n");
-    }
     
     //setup pupil coarse grid
     setup_recon_ploc(recon,parms);
@@ -1979,7 +1964,6 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	dcellfree(recon->ngsmod->Ptt);
 	free(recon->ngsmod);
     }
-    free(recon->skipwfs);
 
     int npsr = recon->npsr;
     int ndm = parms->ndm;

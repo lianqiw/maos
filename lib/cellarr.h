@@ -24,7 +24,6 @@
    used to save array of dmat, cmat, ccell or dcell. mainly used to save
 psfout. No user modifiable entries.  */
 typedef struct cellarr{
-    const char *fn; /**<file name*/
     file_t *fp;     /**<pointer to file*/
     long cur;       /**<Current element*/
     long tot;       /**<Total number of elements*/

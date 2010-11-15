@@ -95,8 +95,6 @@ static void typeII_filter(TYPEII_T *MtypeII, dmat *gain, double dtngs, dcell *Me
 	}else{
 	    error("Wrong format\n");
 	}
-	info("nmod=%ld, indmul=%ld\n",nmod,indmul);
-
 	double *mlead=MtypeII->lead->p[imlo]->p;
 	double *merr=Merr->p[imlo]->p;
 	double *merrlast=MtypeII->errlast->p[imlo]->p;

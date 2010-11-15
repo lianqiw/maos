@@ -181,7 +181,7 @@ void expand_filename(char **fnout, const char *fn){
 	if(fn[0]=='~'){
 	    out=stradd(HOME,fn+1,NULL);
 	}else{
-	    out=mystrdup(fn);
+	    out=strdup(fn);
 	}
 	*fnout=out;
     }else{
@@ -194,34 +194,29 @@ void expand_filename(char **fnout, const char *fn){
 	}
     }
 }
-
-#undef strdup
-#undef strndup
-
-/**
-   declare strndup so my memory mangement mem.c is happy when DEBUG=1
-*/
 char *mystrndup(const char *A, int len){
-    if(!A) return NULL;
-    int nlenA=strlen(A);
-    if(len>nlenA){
-	len=nlenA;
-    }
-    char *B=malloc(sizeof(char)*(len+1));
-    memcpy(B,A,sizeof(char)*len);
+    int len2=strlen(A);
+    if(len2<len) len=len2;
+    char *B=malloc(len+1);
+    memcpy(B,A,len);
     B[len]='\0';
     return B;
 }
+#if USE_MEM == 1
+#undef strdup
 /**
-   declare strdup so my memory mangement mem.c is happy when DEBUG=1
-*/
+   declare strdup so my memory mangement mem.c is happy when DEBUG=1. Handles
+NULL pointer correctly.  */
 char *mystrdup(const char *A){
     if(!A){
 	return NULL;
     }else{
-	return mystrndup(A, strlen(A));
+	int nlen=strlen(A);
+	char *B=malloc(nlen+1);
+	memcpy(B,A,nlen+1);
     }
 }
+#endif
 /**
  Compute max, min and sum of a double vector*/
 void maxmindbl(const double *restrict p, long N, 

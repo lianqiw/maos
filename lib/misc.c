@@ -54,10 +54,10 @@ char* FF(const char *format, ...){
 
 
 
+/**
+   Obtain the basename of a file. The returnned string must be freed.
+*/
 char *mybasename(const char *fn){
-    /**
-       Obtain the basename of a file. The returnned string must be freed.
-    */
     if(!fn || strlen(fn)==0) return NULL;
     char fn2[PATH_MAX];
     strcpy(fn2,fn);
@@ -152,11 +152,6 @@ void print_file(const char *fnin){
 	error("Open %s failed\n",fn);
     }
     copyfile_fp(stderr, fp);
-    /*const int nmax=128;
-    char line[nmax];
-    while(fgets(line, nmax, fp)){
-	fprintf(stderr,"%s\n",line);
-	}*/
     fclose(fp);
     free(fn);
 }

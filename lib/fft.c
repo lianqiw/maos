@@ -140,7 +140,9 @@ void cfree_plan(cmat *A){
 	    UNLOCK_FFT;
 	}
 	if(A->plan[idir+1]){
+	    LOCK_FFT;
 	    fftw_destroy_plan(A->plan[idir+1]);
+	    UNLOCK_FFT;
 	}
     }
 }

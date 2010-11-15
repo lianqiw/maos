@@ -218,8 +218,9 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	if(ct!=nmemb){
 	    error("Reading from %s failed\n", fp->fn);
 	}
-	if(feof((FILE*)fp->p))
+	if(feof((FILE*)fp->p)){
 	    warning("End of File encountered in %s\n",fp->fn);
+	}
     }
     UNLOCK(fp->lock);
 }
@@ -228,7 +229,11 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 */
 int zfseek(file_t *fp, long offset, int whence){
     if(fp->isgzip){
-	return gzseek((voidp)fp->p,offset,whence);
+	int res=gzseek((voidp)fp->p,offset,whence);
+	if(res<0)
+	    return 1;
+	else
+	    return 0;
     }else{
 	return fseek((FILE*)fp->p,offset,whence);
     }

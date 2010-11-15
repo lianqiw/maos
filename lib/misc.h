@@ -20,10 +20,6 @@
 #define AOS_LIB_MISC_H
 //#include "common.h"
 #include "sys/misc.h"
-#undef strdup
-#define strdup mystrdup //our strdup handles NULL correctly.
-#undef strndup
-#define strndup mystrndup //our strdup handles NULL correctly.
 
 char *FF(const char *format,...) CHECK_ARG(1);
 long factorial(long n);

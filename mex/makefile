@@ -28,3 +28,5 @@ MATHSRC=../lib/genotf.c ../lib/dmat.c ../lib/cmat.c ../lib/cmat_extra.c		\
 ../lib/csp.c ../lib/random.c ../lib/bin.c ../lib/sys/thread.c ../lib/path.c
 genotfmex.mexa64:genotfmex.c interface.c $(MATHSRC)
 	mex genotfmex.c interface.c $(MATHSRC) -largeArrayDims -lz -lmwblas -lmwlapack -lfftw3 -lm 
+clean:
+	rm *.mexa64

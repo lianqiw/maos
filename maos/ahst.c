@@ -396,7 +396,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon,
     }
     PSPCELL(recon->GA,GA);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	if(!recon->skipwfs[iwfs])
+	if(!parms->wfs[iwfs].skip)
 	    continue;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;

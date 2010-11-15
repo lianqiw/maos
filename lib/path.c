@@ -54,19 +54,18 @@ void rmpath(const char *path){
     char *abspath=myabspath(path);
     PATH_T *ia,*ib=NULL;
     for(ia=PATH;ia;ia=ia->next){
-	if(!strcmp(ia->path,abspath)){
-	    if(ib){
+	if(!strcmp(ia->path,abspath)){//found
+	    if(ib){//there is parent node
 		ib->next=ia->next;
 	    }else{
 		PATH=ia->next;
 	    }
 	    free(ia->path);
-	    break;
+	    free(ia);
+	    ia=ib;
+	}else{
+	    ib=ia;
 	}
-	ib=ia;
-    }
-    if(!ia){
-	warning("%s not foun idn PATH\n",path);
     }
     free(abspath);
 }
@@ -86,6 +85,7 @@ void freepath(void){
     PATH_T *ib;
     for(PATH_T *ia=PATH;ia;ia=ib){
 	ib=ia->next;
+	free(ia->path);
 	free(ia);
     }
     PATH=NULL;

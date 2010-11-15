@@ -141,7 +141,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 }
 /**
    Free the aper structure after simulation*/
-void free_aper(APER_T *aper){
+void free_aper(APER_T *aper, const PARMS_T *parms){
     //aper->ampground is freed on setup_recon
     locfree(aper->locs);
     if(aper->locs_stat){
@@ -155,6 +155,9 @@ void free_aper(APER_T *aper){
     dfree(aper->mcc);
     dfree(aper->mod);
     if(aper->embed){
+	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+	    free(aper->embed[iwvl]);
+	}
 	free(aper->embed);
 	free(aper->nembed);
     }

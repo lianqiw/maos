@@ -30,8 +30,6 @@ int exist(const char *fn);/*test file exist*/
 void touch(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
 void expand_filename(char **fnout, const char *fn);
-char *mystrndup(const char *A, int len);
-char *mystrdup(const char *A);
 void maxmindbl(const double *restrict p, long N, 
 	       double *restrict max, double *restrict min, double *restrict sum);
 void maxminlong(const long *restrict p, long N,
@@ -41,4 +39,10 @@ void maxmincmp(const dcomplex *restrict p, long N,
 void remove_file_older(const char *fndir, long sec);
 void mymkdir(const char *format,...) CHECK_ARG(1);
 int mystrcmp(const char *a, const char *b);
+char *mystrndup(const char *A, int len);
+#if USE_MEM == 1
+char *mystrdup(const char *A);
+#undef strdup
+#define strdup mystrdup //our strdup handles NULL correctly.
+#endif //USE_MEM=1
 #endif

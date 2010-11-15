@@ -25,7 +25,7 @@
 #include <signal.h>
 #include <errno.h>
 typedef double __complex__ dcomplex;
-typedef double ddouble;//just for saving.
+typedef double ddouble;/*just for saving.*/
 #include <stdarg.h>
 
 #define format2fn					\

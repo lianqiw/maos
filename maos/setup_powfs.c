@@ -427,8 +427,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    }
 	}
 	if(parms->save.setup){
-	    dcellwrite(powfs[ipowfs].sprint,"%s/powfs%d_sprint",
-		       dirsetup,ipowfs);
+	    dcellwrite(powfs[ipowfs].sprint,"%s/powfs%d_sprint", dirsetup,ipowfs);
 	}
     }
     int pixpsax=pixpsay;
