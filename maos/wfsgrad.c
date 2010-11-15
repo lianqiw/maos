@@ -397,22 +397,22 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		  or mask out. This is important when bkgrndrm is greater
 		  than 1.
 		*/
-		if(noisy){//compute noise free gradients
-		    double pmax;
-		    gnf[0]=0; gnf[1]=0;
-		    switch(parms->powfs[ipowfs].phytypesim){
-		    case 1:
-			dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
-			break;
-		    case 2:
-			pmax=dmax(ints->p[isa]);
-			dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
-			gnf[0]*=pixtheta;
-			gnf[1]*=pixtheta;
-			break;
-		    default:
-			error("Invalid");
-		    }
+		double pmax;
+		gnf[0]=0; gnf[1]=0;
+		switch(parms->powfs[ipowfs].phytypesim){
+		case 1:
+		    dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
+		    break;
+		case 2:
+		    pmax=dmax(ints->p[isa]);
+		    dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
+		    gnf[0]*=pixtheta;
+		    gnf[1]*=pixtheta;
+		    break;
+		default:
+		    error("Invalid");
+		}
+		if(noisy){//add noise
 		    double *bkgrnd2i;
 		    double bkgrnd2irm=0;
 		    if(bkgrnd2 && bkgrnd2[isa]){
@@ -423,34 +423,32 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		    }
 		    addnoise(ints->p[isa], &simu->wfs_rand[iwfs],bkgrnd,1.,
 			     bkgrnd2i, bkgrnd2irm, rne);
-		    pgradnfx[isa]=gnf[0];
-		    pgradnfy[isa]=gnf[1];
-		}
-		gny[0]=0; gny[1]=0;
-		switch(parms->powfs[ipowfs].phytypesim){
-		    double pmax;
-		case 1:
-		    dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
-		    if(parms->powfs[ipowfs].mtchscl){
-			double scale=i0sum[isa]/dsum(ints->p[isa]);
-			//info("scale wfs %d, isa %d by %g\n",iwfs,isa,scale);
-			gny[0]*=scale;
-			gny[1]*=scale;
+		    gny[0]=0; gny[1]=0;
+		    switch(parms->powfs[ipowfs].phytypesim){
+			double pmax;
+		    case 1:
+			dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
+			if(parms->powfs[ipowfs].mtchscl){
+			    double scale=i0sum[isa]/dsum(ints->p[isa]);
+			    //info("scale wfs %d, isa %d by %g\n",iwfs,isa,scale);
+			    gny[0]*=scale;
+			    gny[1]*=scale;
+			}
+			break;
+		    case 2:
+			pmax=dmax(ints->p[isa]);
+			dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
+			gny[0]*=pixtheta;
+			gny[1]*=pixtheta;
+			break;
+		    default:
+			error("Invalid");
 		    }
-		    break;
-		case 2:
-		    pmax=dmax(ints->p[isa]);
-		    dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
-		    gny[0]*=pixtheta;
-		    gny[1]*=pixtheta;
-		    break;
-		default:
-		    error("Invalid");
-		}
-	
-		if(noisy){
 		    simu->sanea_sim->p[iwfs]->p[isa]+=pow(gny[0]-gnf[0],2);
 		    simu->sanea_sim->p[iwfs]->p[isa+nsa]+=pow(gny[1]-gnf[1],2);
+		}else{
+		    gny[0]=gnf[0];
+		    gny[1]=gnf[1];
 		}
 		if(parms->powfs[ipowfs].radpix){
 		    /*
@@ -466,10 +464,14 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		    
 		    const double sth=sin(theta);
 		    const double cth=cos(theta);
+		    pgradnfx[isa]=gnf[0]*cth-gnf[1]*sth;
+		    pgradnfy[isa]=gnf[0]*sth+gnf[1]*cth;
 		    pgradx[isa]=gny[0]*cth-gny[1]*sth;
 		    pgrady[isa]=gny[0]*sth+gny[1]*cth;
 		}else{
 		    //already xy
+		    pgradnfx[isa]=gnf[0];
+		    pgradnfy[isa]=gnf[1];
 		    pgradx[isa]=gny[0];
 		    pgrady[isa]=gny[1];
 		}

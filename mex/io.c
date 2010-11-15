@@ -131,19 +131,19 @@ void readfile(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	if((status=gzread((voidp)fp->p, ptr, size*nmemb))<1){
 	    if(status==-1){
 		warning("Error happened in reading");
-	    }
-	    else{
+	    }else{
 		warning("End of File encoutnered");
-		fp->eof=1;
 	    }
+	    fp->eof=1;
 	}
     }else{
 	if(fread(ptr, size, nmemb, (FILE*)fp->p)!=nmemb){
-	    error("Read failed\n");
-	}
-	if(feof((FILE*)fp->p)){
-	    warning("End of File encountered!\n");
 	    fp->eof=1;
+	    if(feof((FILE*)fp->p)){
+		warning("End of File encountered!\n");
+	    }else{
+		warning("Read failed. Unknown error.\n");
+	    }
 	}
     }
 }
