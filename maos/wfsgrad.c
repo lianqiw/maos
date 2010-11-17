@@ -425,7 +425,6 @@ static void wfsgrad_iwfs(SIM_T *simu){
 			     bkgrnd2i, bkgrnd2irm, rne);
 		    gny[0]=0; gny[1]=0;
 		    switch(parms->powfs[ipowfs].phytypesim){
-			double pmax;
 		    case 1:
 			dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
 			if(parms->powfs[ipowfs].mtchscl){

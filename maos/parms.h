@@ -106,6 +106,9 @@ typedef struct POWFS_CFG_T{
 			   radian. _wfs# is added when reading file.*/
     double nearecon;/**<NEA used in reconstruction*/
     double neasim;  /**<NEA used in simulation. -1 to use nearecon*/
+    double neaspeckle;/**<NEA caused by speckle noise. Added to matched filter
+			  estimation of NEA due to photon and detector noise in
+			  physical optics mode for reconstructor*/
     double bkgrnd;  /**<background in electron per pixel per LGS frame*/
     char *bkgrndfn; /**<file contains sky background/rayleigh scatter input for
 		     each subaperture in each wfs. */

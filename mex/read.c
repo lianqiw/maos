@@ -6,7 +6,7 @@
 #include <string.h>
 #define MAX_FN_LEN 800
 /*compile with 
-  mex read.c -largeArrayDims*/
+  mex read.c*/
 #include "io.h"
 #include <complex.h>
 
@@ -226,10 +226,10 @@ static mxArray *readdata(file_t *fp){
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     file_t *fp;
     char fn[MAX_FN_LEN];
+    if(nrhs!=1 || nlhs>1){
+	mexErrMsgTxt("Usage:var=read('filename')\n");
+    }
     mxGetString(prhs[0],fn,MAX_FN_LEN+1);
-    (void)nlhs;
-    (void)nrhs;
-  
     fp=openfile(fn,"r");
     plhs[0]=readdata(fp);
     test_eof(fp);

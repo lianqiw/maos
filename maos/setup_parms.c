@@ -262,6 +262,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(str,neareconfile);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,neasim);
+    READ_POWFS(dbl,neaspeckle);
     READ_POWFS(dbl,bkgrnd);
     READ_POWFS(str,bkgrndfn);
     READ_POWFS(dbl,bkgrndrm);

@@ -522,8 +522,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		    }
 		}
 	    }
-	    info2(" FILE(%.2f)",dsum(nea)/(2*nsa)*206265000);
-
+	 
 	    dcwpow(nea,-2);//rad^-2
 	    saneai->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
 	    dfree(nea);
@@ -535,6 +534,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		spint *pp=saneai->p[iwfs+iwfs*nwfs]->p;
 		spint *pi=saneai->p[iwfs+iwfs*nwfs]->i;
 		double *px=saneai->p[iwfs+iwfs*nwfs]->x;
+	
 		long count=0;
 		const int nmtch=powfs[ipowfs].intstat->mtche->ny;
 		int indsanea=0;
@@ -545,9 +545,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		}else{
 		    error("invalid\n");
 		}
+
 		PDCELL(powfs[ipowfs].intstat->saneaixy, saneaixy);
-		//dmat *(*saneaixy)[nsa]
-		//  =(void*)powfs[ipowfs].intstat->saneaixy->p;
 		for(int isa=0; isa<nsa; isa++){
 		    pp[isa]=count;
 		    pi[count]=isa;//xx
@@ -567,17 +566,11 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		    count++;
 		}
 		pp[nsa*2]=count;
-		double neasum=0;
-		for(int isa=0; isa<nsa; isa++){
-		    neasum+=pow(saneaixy[indsanea][isa]->p[0],-0.5)+
-			pow(saneaixy[indsanea][isa]->p[3],-0.5);
-		}
-		info2(" mtch(%.2f)",neasum/(2*nsa)*206265000);
+	
 	    }else{
 		error("Not implemented yet\n");
 	    }
 	}else{
-	    info2(" geom(%.2f)",parms->powfs[ipowfs].nearecon);
 	    const double nea=parms->powfs[ipowfs].nearecon/206265000.;
 	    if(nea<1.e-15) error("nea is too small\n");
 	    //nea scales as sqrt(1/dtrat) so neaisq scales as dtrat.
@@ -619,7 +612,17 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 	    }
 	}
 	dfree(sanea);
-	recon->neam->p[iwfs]=sqrt(nea2_sum/count/2);
+	recon->neam->p[iwfs]=sqrt(nea2_sum/count/2);//average sanea in radian
+	char *neatype;
+	if(parms->powfs[ipowfs].neareconfile){
+	    neatype="FILE";
+	}else if((parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy) && 
+		 !parms->powfs[ipowfs].phyusenea){
+	    neatype="mtch";
+	}else{
+	    neatype="geom";
+	}
+	info2(" %s(%.2f)", neatype, recon->neam->p[iwfs]*206265000);
 	if(!parms->powfs[ipowfs].lo){
 	    neamhi+=pow(recon->neam->p[iwfs],2);
 	    counthi++;

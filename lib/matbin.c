@@ -179,7 +179,7 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
 	magic=M_SPT64;
     else
 	error("Invalid");
-    
+    Y(spsort)((X(sp)*)sp);//sort the matrix to have the right order
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(sp){
 	uint64_t m,n,nzmax;
@@ -339,7 +339,7 @@ static int mmap_open(char *fn){
     if(strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
 	error("new_mmap does not support gzip\n");
     }
-    int fd=open(fn2,O_RDWR|O_CREAT,0700);
+    int fd=open(fn2,O_RDWR|O_CREAT,0600);
     if(fd==-1){
 	perror("open");
 	error("Error ");

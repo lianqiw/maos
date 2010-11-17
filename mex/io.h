@@ -6,6 +6,9 @@
 #include <mex.h>
 #include <matrix.h>
 #include <stdint.h>
+#if !defined(MX_API_VER) || MX_API_VER < 0x07030000
+typedef unsigned int mwIndex;
+#endif
 typedef double __complex__ dcomplex;
 #define warning(A...) {							\
 	fprintf(stderr,"\033[01;33m%-15s:%-3d\t", __FILE__, __LINE__);	\

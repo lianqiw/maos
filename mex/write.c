@@ -57,7 +57,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr){
 	writefile(&n, sizeof(uint64_t), 1, fp);
 	for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
 	    in=mxGetCell(arr, ix);
-	    if(in && mxIsSparse(in) !=issparse)
+	    if(in && !mxIsEmpty(in) && mxIsSparse(in) !=issparse)
 		error("can only save cell array of all sparse or all dense");
 	    writedata(fp, type2, in);
 	}

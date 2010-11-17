@@ -8,7 +8,7 @@ write.mexa64:write.c io.c
 mkg.o:../lib/mkg.c
 	gcc -c -std=c99 ../lib/mkg.c -fPIC -DMATLAB_MEX_FILE=1
 mkgmex.mexa64:mkgmex.c mkg.o
-	mex -largeArrayDims mkgmex.c mkg.o
+	mex  mkgmex.c mkg.o
 cp:read.mexa64 write.mexa64 
 	cp read.mexa64 write.mexa64 ~/work/matlab_routines
 crandcreate.mexa64:crandcreate.c  
@@ -20,13 +20,13 @@ crandp.mexa64:crandp.c
 clrand.mexa64:clrand.c 
 	mex clrand.c  -I../lib/ -lsupport
 mkw.mexa64:mkwmex.c 
-	mex mkwmex.c interface.c -lsupport -largeArrayDims 
+	mex mkwmex.c interface.c -lsupport  
 proj.mexa64:proj.c
 	mex proj.c
 MATHSRC=../lib/genotf.c ../lib/dmat.c ../lib/cmat.c ../lib/cmat_extra.c		\
 ../lib/loc.c ../lib/mathmisc.c ../lib/sys/misc.c ../lib/fft.c ../lib/dsp.c	\
 ../lib/csp.c ../lib/random.c ../lib/bin.c ../lib/sys/thread.c ../lib/path.c
 genotfmex.mexa64:genotfmex.c interface.c $(MATHSRC)
-	mex genotfmex.c interface.c $(MATHSRC) -largeArrayDims -lz -lmwblas -lmwlapack -lfftw3 -lm 
+	mex genotfmex.c interface.c $(MATHSRC)  -lz -lmwblas -lmwlapack -lfftw3 -lm 
 clean:
 	rm *.mexa64

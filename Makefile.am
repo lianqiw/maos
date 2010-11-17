@@ -10,7 +10,7 @@ EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs
 #be included.
 
 EXTRA_DIST += mex/Makefile mex/write.c mex/read.c mex/io.c mex/io.h
-EXTRA_DIST += scripts/readbin.pro scripts/readdata.pro
+EXTRA_DIST += scripts/readbin.pro scripts/readdata.pro scripts/readbin.m scripts/writebin.m
 
 nobase_dist_pkgdata_DATA=\
 config/maos/bin/TMT_CurDesign.bin.gz\

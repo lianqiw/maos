@@ -1322,14 +1322,19 @@ static int spelemcmp(const spelem *A, const spelem *B){
     return A->i-B->i;
 }
 /**
-   Make sure the elements are sorted correctly.
-*/
+   Make sure the elements are sorted correctly. Does not change the location of
+data. can be done without harm. */
 void Y(spsort)(X(sp) *A){
-    spelem *col=NULL;
+    if(!A || A->n==0 || A->m==0) return;
+    long nelem_max=A->nzmax/A->n*2;
+    spelem *col=malloc(nelem_max*sizeof(spelem));
     for(long i=0; i<A->n; i++){
 	long nelem=(A->p[i+1]-A->p[i]);
 	if(nelem==0) continue;
-	col=realloc(col, nelem*sizeof(spelem));
+	if(nelem>nelem_max){
+	    nelem_max=nelem;
+	    col=realloc(col, nelem_max*sizeof(spelem));
+	}
 	for(long j=0; j<nelem; j++){
 	    col[j].i=A->i[A->p[i]+j];
 	    col[j].x=A->x[A->p[i]+j];
