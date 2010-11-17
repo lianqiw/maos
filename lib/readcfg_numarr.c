@@ -24,26 +24,76 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
 {
     format2key;
     *ret=NULL;//initialize
-    /*arrays should start with [ and end with ] or empty.*/
+    /*arrays should start with [ and end with ] or empty. We allow operators * or / after ] to multiply/divide the whole array*/
     TYPE data, data2;
-    char *endptr,*startptr;
+    char *endptr,*startptr, *origptr, *startptr2;
     int nmax;//temporary max number of elements.
     int count=0;//actual number
     nmax=10;
     long irecord=getrecord(key, 1);
+    double fact=1;
+    int power=1;
     if(irecord!=-1){
-	startptr=store[irecord].data;
+	startptr=origptr=store[irecord].data;
 	if(!startptr){//empty
 	    return 0;
 	}
 	if(!(*ret=malloc(sizeof(TYPE)*nmax))){
 	    error("Failed to allocate memory for ret\n");
 	}
-
+	//process possible numbers before the array.
+	while(startptr[0]!='['){
+	    double fact1=strtod(startptr, &endptr);//get the number
+	    if(startptr==endptr){
+		error("Invalid entry to parse for numerical array: (%s)\n", origptr);
+	    }else{//valid number
+		if(power==1){
+		    fact*=fact1;
+		}else{
+		    fact/=fact1;
+		}
+		while(isspace(endptr[0])) endptr++;
+		if(endptr[0]=='/'){
+		    power=-1;
+		}else if(endptr[0]=='*'){
+		    power=1;
+		}else{
+		    error("Invalid entry to parse for numerical array: (%s)\n", origptr);
+		}
+		startptr=endptr+1;
+	    }
+	}
 	if(startptr[0]!='['){
-	    error("Invalid entry to parse for numerical array: (%s)\n", startptr);
+	    error("Invalid entry to parse for numerical array: (%s)\n", origptr);
 	}
 	startptr++;
+	endptr=strchr(startptr,']')+1;
+	while(isspace(endptr[0])) endptr++;
+	while(endptr[0]=='/' || endptr[0]=='*'){
+	    int power2=1;
+	    if(endptr[0]=='/'){
+		power2=-1;
+	    }else{
+		power2=1;
+	    }
+	    endptr++;
+	    while(isspace(endptr[0])) endptr++;
+	    startptr2=endptr;
+	    double fact2=strtod(startptr2, &endptr);
+	    if(startptr2==endptr){
+		error("Invalid entry to parse for numerical array: (%s)\n", origptr);
+	    }
+	    while(isspace(endptr[0])) endptr++;
+	    if(power2==1){
+		fact*=fact2;
+	    }else{
+		fact/=fact2;
+	    }
+	}
+	if(endptr[0]!='\0'){
+	    warning("There is garbage in the end of the string: (%s)\n", origptr);
+	}
+	
 	while(startptr[0]!=']' && startptr[0]!='\0'){
 	    data=TYPECFUN(startptr, &endptr);
 	    if(startptr==endptr){
@@ -75,7 +125,11 @@ int TYPEFUN1(TYPE **ret, const char *format,...)
 			//while(isspace(endptr[0])) endptr++;
 		    }
 		}
-		(*ret)[count]=(TYPE)data;
+		if(power==1){
+		    (*ret)[count]=(TYPE)(fact*data);
+		}else{
+		    (*ret)[count]=(TYPE)(fact/data);
+		}
 		count++;
 		if(count>=nmax){
 		    nmax*=2;
