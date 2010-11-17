@@ -404,64 +404,193 @@ int readcfg_strarr(char ***res, const char *format,...){
 	return count;
     }
 }
-#define TYPE int
-#define TYPEFUN1 readcfg_intarr
-#define TYPEFUN2 readcfg_int
-#define TYPENAME "int"
-#define TYPECFUN(A,B) strtol(A,B,10)
-#include "readcfg_numarr.c"
-#undef TYPE
-#undef TYPEFUN1
-#undef TYPEFUN2
-#undef TYPENAME
-#undef TYPECFUN
 
-#define TYPE double
-#define TYPEFUN1 readcfg_dblarr
-#define TYPEFUN2 readcfg_dbl
-#define TYPENAME "double"
-#define TYPECFUN(A,B) strtod(A,B)
-#include "readcfg_numarr.c"
-#undef TYPE
-#undef TYPEFUN1
-#undef TYPEFUN2
-#undef TYPENAME
-#undef TYPECFUN
+/**
+   Read integer array
+*/
+int readcfg_intarr(int **ret, const char *format,...){
+    format2key;
+    return readstr_numarr((void**)ret, T_INT, store[getrecord(key, 1)].data);
+}
+/**
+   Read double array
+*/
+int readcfg_dblarr(double **ret, const char *format,...){
+    format2key;
+    return readstr_numarr((void**)ret, T_DBL, store[getrecord(key, 1)].data);
+}
+/**
+   Read integer
+*/
+int readcfg_int( const char *format,...){
+    format2key;
+    return (int)readstr_num(store[getrecord(key, 1)].data, NULL);
+}
+/**
+   Read double
+*/
+double readcfg_dbl(const char *format,...){
+    format2key;
+    return readstr_num(store[getrecord(key, 1)].data, NULL);
+}
+/**
+   Read in a number from the string. Will interpret * and / operators. *endptr0 will
+   be updated to point to the next valid entry, or at separator like coma
+   (spaced are skipped).  */
+double readstr_num(const char *data, char **endptr0){
+    if(!data || strlen(data)==0){
+	error("Unable to parse (%s) for a number\n", data);
+	return 0;
+    }
+    char *endptr;
+    double res=strtod(data, &endptr);
+    if(data==endptr){
+	error("Unable to parse (%s) for a number\n", data);
+	return 0;
+    }
+    while(isspace(endptr[0])) endptr++;
+    while(endptr[0]=='/' || endptr[0]=='*'){
+	int power=1;
+	if(endptr[0]=='/'){
+	    power=-1;
+	}
+	endptr++;
+	while(isspace(endptr[0])) endptr++;
+	data=endptr;
+	double tmp=strtod(data, &endptr);
+	if(data==endptr){
+	    error("Failed to parse (%s) for a number\n", data);
+	}
+	if(power==1){
+	    res*=tmp;
+	}else{
+	    res/=tmp;
+	}
+	while(isspace(endptr[0])) endptr++;
+    }
+    if(endptr0){
+	*endptr0=endptr;
+    }
+    return res;
+}
+/**
+   Read numerical array from a string.
+*/
+int readstr_numarr(void **ret, int type, const char *data){
+    if(!data || strlen(data)==0){
+	if(*ret) free(*ret); *ret=NULL; 
+	return 0;
+    }
+    int nmax=10;
+    int size=0;//size of each number
+    switch(type){
+    case T_INT:
+	size=sizeof(int);
+	break;
+    case T_DBL:
+	size=sizeof(double);
+	break;
+    default:
+	error("Invalid type");
+    }
+    if(!(*ret=malloc(size*nmax))){
+	error("Failed to allocate memory for ret\n");
+    }
+    double *retdbl=*ret;
+    int *retint=*ret;
+    const char *startptr=data;
+    char *endptr, *startptr2;
+    double fact=1;
+    int power=1;
+    //process possible numbers before the array.
+    while(startptr[0]!='['){
+	double fact1=strtod(startptr, &endptr);//get the number
+	if(startptr==endptr){
+	    error("Invalid entry to parse for numerical array: (%s)\n", data);
+	}else{//valid number
+	    if(power==1){
+		fact*=fact1;
+	    }else{
+		fact/=fact1;
+	    }
+	    while(isspace(endptr[0])) endptr++;
+	    if(endptr[0]=='/'){
+		power=-1;
+	    }else if(endptr[0]=='*'){
+		power=1;
+	    }else{
+		error("Invalid entry to parse for numerical array: (%s)\n", data);
+	    }
+	    startptr=endptr+1;
+	}
+    }
+    if(startptr[0]!='['){
+	error("Invalid entry to parse for numerical array: (%s)\n", data);
+    }
+    startptr++;//points to the beginning of the array in[]
 
-#ifdef TEST
-int main(int argc, char*argv[]){
-    char *config_file;
-    char *file;
-    int nwfs,iwfs;
-    int *wfs;
-    int nwvl,iwvl;
-    double *wvl;
-    if(argc>1){
-	config_file=argv[1];
-    }else{
-	config_file=NULL;
+    /*process possible numbers after the array. do not use startptr here.*/
+    endptr=strchr(startptr,']')+1;
+    while(isspace(endptr[0])) endptr++;
+    while(endptr[0]=='/' || endptr[0]=='*'){
+	int power2=1;
+	if(endptr[0]=='/'){
+	    power2=-1;
+	}else{
+	    power2=1;
+	}
+	endptr++;
+	while(isspace(endptr[0])) endptr++;
+	startptr2=endptr;
+	double fact2=strtod(startptr2, &endptr);
+	if(startptr2==endptr){
+	    error("Invalid entry to parse for numerical array: (%s)\n", data);
+	}
+	while(isspace(endptr[0])) endptr++;
+	if(power2==1){
+	    fact*=fact2;
+	}else{
+	    fact/=fact2;
+	}
     }
-    fprintf(stderr, "%p=%p\n", &wfs,wfs);
-    
-    open_config(config_file,0
-    file=readcfg_str("file");
-    nwfs=readcfg_intarr("wfs", &wfs);
-    printf("file is %s\n",file);
-    printf("nwfs is %d, wfs is ",nwfs);
-    for(iwfs=0; iwfs<nwfs; iwfs++){
-	printf("%d ",wfs[iwfs]);
+    if(endptr[0]!='\0'){
+	error("There is garbage in the end of the string: (%s)\n", data);
     }
-    printf("\n");
-    
-    nwvl=readcfg_dblarr("wvl",&wvl);
-    printf("nwvl is %d\n", nwvl);
-    for(iwvl=0; iwvl<nwvl; iwvl++){
-	printf("%f ",wvl[iwvl]);
+    int count=0;
+    while(startptr[0]!=']' && startptr[0]!='\0'){
+	//parse the string for a floating point number. 
+	double res=readstr_num(startptr, &endptr);
+
+	startptr=endptr;
+	//apply the factors appear before or after []
+	if(power==1){
+	    res=fact*res;
+	}else{
+	    res=fact/res;
+	}
+	//assign the value to appropriate array. convert to int if necessary.
+	switch(type){
+	case T_INT:
+	    retint[count]=(int)res;
+	    break;
+	case T_DBL:
+	    retdbl[count]=res;
+	    break;
+	default:
+	    error("Invalid type");
+	}
+	count++;
+	if(count>=nmax){
+	    nmax*=2;
+	    *ret=realloc(*ret, size);
+	}
+	//Skip the number separators.
+	while(startptr[0]==','||startptr[0]==';'||!isgraph((int)startptr[0])){
+	    startptr++;
+	}
     }
-    printf("atm.r0=%f\n",readcfg_dbl("atm.r0"));
-    printf("deg=%ld\n",readcfg_int("deg"));
-    close_config();
-    return 0;
+  
+    *ret=realloc(*ret, size*count);
+    return count;
 }
 
-#endif

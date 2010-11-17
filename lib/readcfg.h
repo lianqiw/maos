@@ -26,6 +26,11 @@
     va_start(ap,format);			\
     vsnprintf(key,sizeof(key), format, ap);	\
     va_end(ap)
+
+enum{
+    T_INT=1,
+    T_DBL=2,
+};
 /**
    \file readcfg.h
 
@@ -55,4 +60,6 @@ int    readcfg_intarr(int **ret,const char*format,...) CHECK_ARG(2);
 */
 int    readcfg_dblarr(double **ret,const char*format,...) CHECK_ARG(2);
 int    readcfg_strarr(char ***res, const char *format,...) CHECK_ARG(2);
+int    readstr_numarr(void **ret, int type, const char *data);
+double readstr_num(const char *startptr, char **endptr);
 #endif
