@@ -1,30 +1,31 @@
-function res=readbin(fn0)
+function [res header]=readbin(fn0)
     fn=fn0;
-    if ~exist(fn,'file') 
-        %Remove suffix .gz
-        if length(fn)>2 && strcmp(fn(end-2:end),'.gz')
+    if length(fn)>6 &&strcmp(fn(end-6:end),'.bin.gz')%end with bin.gz
+        if ~exist(fn,'file')
             fn=fn(1:end-3);
-        elseif length(fn)>3 &&strcmp(fn(end-3:end),'.bin')
+        end
+    elseif length(fn)>3 &&strcmp(fn(end-3:end),'.bin') %end with bin
+        if ~exist(fn,'file')
             fn=[fn '.gz'];
-        else
-            fn=[fn '.bin'];
-            if ~exist(fn,'file')
-                fn=[fn '.gz'];
-            end
+        end
+    else %no suffix
+        fn=[fn '.bin'];
+        if ~exist(fn,'file')
+            fn=[fn '.gz'];
         end
     end
-    
-    if ~exist(fn,'file')
-        error(sprintf('file %s not found\n',fn0));
+    if ~exist(fn)
+        error(sprintf('%s not found\n', fn));
     end
+    
     if strcmp(fn(end-2:end),'.gz')
         fprintf('uncompressing %s\n',fn);
-        system(sprintf('gunzip %s',fn));
+        system(sprintf('gunzip -f %s',fn));
         fn=fn(1:end-3);
     end
     fid=fopen(fn,'rb');
-    res=readbin_do(fid);
-function res=readbin_do(fid)
+    [res header]=readbin_do(fid);
+function [res header]=readbin_do(fid, header)
     M_CSP64=25600;
     M_SP64=25601;
     M_CSP32=25606;
@@ -44,8 +45,19 @@ function res=readbin_do(fid)
     MCC_CMP=25636;
     MAT_SP=65281;
     MAT_CSP=65282;
-
+    M_HEADER=25856;
     magic=fread(fid,1,'uint32');
+    header='';
+    while magic==M_HEADER
+        nlen=fread(fid, 1, 'uint64');
+        header=[header char(fread(fid, nlen, 'char*1')')];
+        nlen2=fread(fid, 1, 'uint64');
+        magic2=fread(fid, 1, 'uint32');
+        if nlen~=nlen2 || magic2~=M_HEADER
+            error('Header verification failed\n');
+        end
+        magic=fread(fid,1,'uint32');
+    end
     nx=fread(fid,1,'uint64');
     ny=fread(fid,1,'uint64');
     if nx==0 || ny==0
@@ -56,9 +68,12 @@ function res=readbin_do(fid)
     switch magic
      case {MCC_ANY, MCC_DBL, MCC_CMP, MC_CSP, MC_SP, MC_DBL, MC_CMP, MC_INT32, MC_INT64}
       res=cell(nx,ny);
+      header2=cell(nx,ny);
       for ii=1:nx*ny
-          res{ii}=readbin_do(fid);
+          [res{ii} header2{ii}]=readbin_do(fid);
       end
+      header2{end+1}=header;
+      header=header2;
      case {M_SP64, M_CSP64}
       nz=fread(fid,1,'uint64');
       Jc=fread(fid,ny+1,'uint64');
@@ -88,7 +103,7 @@ function res=readbin_do(fid)
      case M_CMP
       tmp=fread(fid,[2*nx,ny],'double');
       res=squeeze(tmp(1:2:end,:)+1i*tmp(2:2:end,:));
-      clear tmp;
+      clear tmp; 
      otherwise
       fprintf('magic=%d\n',magic);
       error('invalid magic number.');
@@ -106,3 +121,4 @@ function res=readbin_do(fid)
         end
         res=sparse(Ir,Ic,P,nx,ny);
     end
+    

@@ -61,7 +61,9 @@ void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs,
 	    simu->status->tot=(double)(ck_1-ck_0);
 	    simu->status->scale=1;
 	    simu->status->info=S_RUNNING;
+#if defined(__linux__)
 	    scheduler_report(simu->status);
+#endif
 	    print_progress(simu);
 	}
 	free_simu(simu);

@@ -118,8 +118,8 @@ static void* calc_pistat(GENPISTAT_S *data){
 	double nwvli=1./(nwvl);
 	for(long istep=0; istep<nstep; istep++){
 	    LOCK(data->mutex_read);
-	    ccell *wvfi=ccellreaddata(fp_wvf);
-	    dmat *ztilti=dreaddata(fp_ztilt);
+	    ccell *wvfi=ccellreaddata(fp_wvf, 0);
+	    dmat *ztilti=dreaddata(fp_ztilt, 0);
 	    UNLOCK(data->mutex_read);
 	    PCCELL(wvfi,wvfout);
 	    if(istep>=phystart){
@@ -365,7 +365,7 @@ static void *convert_wvf(GENPISTAT_S *data){
     }
     for(long istep=0; istep<nstep; istep++){
 	LOCK(data->mutex_read);
-	ccell *wvfi=ccellreaddata(fp_wvf);
+	ccell *wvfi=ccellreaddata(fp_wvf, 0);
 	UNLOCK(data->mutex_read);
 	if(wvfi){
 	    for(long ic=0; ic<nsa*nwvl; ic++){

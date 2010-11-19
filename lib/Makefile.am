@@ -29,9 +29,9 @@ tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c
 	@cat $(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c >> $(srcdir)/tmp.c
 PROGS=
 if DRAW
-PROGS+=drawbin
-drawbin_SOURCES=drawbin.c
+PROGS+=../bin/drawbin
+___bin_drawbin_SOURCES=drawbin.c
 #drawbin_CFLAGS=$(OPTS)
-drawbin_LDADD=libaos.la $(LDOPTS) #$(LDEXE)
+___bin_drawbin_LDADD=libaos.la $(LDOPTS) #$(LDEXE)
 endif
 bin_PROGRAMS=$(PROGS)

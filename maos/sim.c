@@ -149,7 +149,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    if(this_time>simu->last_report_time+1){
 		//we don't print out or report too frequency.
 		simu->last_report_time=this_time;
+#if defined(__linux__)
 		scheduler_report(simu->status);
+#endif
 	    }
 	    print_progress(simu);
 	    if(simu->nthread>1 && !detached){

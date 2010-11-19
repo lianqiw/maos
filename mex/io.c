@@ -10,7 +10,14 @@
 #include <unistd.h>
 
 #include"io.h"
-
+const char *myasctime(void){
+    static char st[64];
+    time_t a;
+    time(&a);
+    ctime_r(&a, st);
+    st[strlen(st)-1]='\0';
+    return st;
+}
 static int exist(const char *fn){
     /**
        Test whether a file exists.
@@ -86,18 +93,23 @@ file_t* openfile(const char *fn_in, char *mod){
 	    error("Error fopen for %s\n",fn);
 	}
     }
+    if(mod[0]=='w'){
+	write_timestamp(fp);
+    }
     free(fn);
     return fp;
 }
-void closefile(file_t *fp){
+void zfclose(file_t *fp){
     if(fp->isgzip){
 	gzclose((voidp)fp->p);
     }else{
-	fclose((FILE*)fp->p);
+	if(fclose((FILE*)fp->p)){
+	    perror("fclose\n");
+	}
     }
     free(fp);
 }
-void writefile(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     if(fp->isgzip){
 	gzwrite((voidp)fp->p, ptr, size*nmemb);
@@ -107,7 +119,7 @@ void writefile(const void* ptr, const size_t size, const size_t nmemb, file_t *f
 	}
     }
 }
-void writefile_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp){
+void zfwrite_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp){
     dcomplex *tmp=malloc(sizeof(dcomplex)*nmemb);
     long i;
     for(i=0; i<nmemb; i++){
@@ -123,7 +135,7 @@ void writefile_complex(const double* pr, const double *pi,const size_t nmemb, fi
     }
     free(tmp);
 }
-void readfile(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     if(fp->eof) return;
     if(fp->isgzip){
@@ -168,4 +180,80 @@ int test_eof(file_t *fp){
 	ans=0;
     }
     return ans;
+}
+/**
+   Move the current position pointer, like fseek
+*/
+int zfseek(file_t *fp, long offset, int whence){
+    if(fp->isgzip){
+	int res=gzseek((voidp)fp->p,offset,whence);
+	if(res<0)
+	    return 1;
+	else
+	    return 0;
+    }else{
+	return fseek((FILE*)fp->p,offset,whence);
+    }
+}
+/**
+   Append to the file the header to the end of the file(or rather, the
+   tailer). First write magic number, then the length of the header, then the
+   header, then the length of the header again, then the magic number again. The
+   two set of strlen and header are used to identify the header from the end of
+   the file and also to verify that what we are reading are indeed header. The
+   header may be written multiple times. They will be concatenated when
+   read. The header should contain key=value entries just like the configuration
+   files. The entries should be separated by new line charactor. */
+void write_header(const char *header, file_t *fp){
+    uint32_t magic=M_HEADER;
+    uint64_t nlen=strlen(header)+1;
+    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
+    zfwrite(header, 1, nlen, fp);
+    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
+    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+}
+void write_timestamp(file_t *fp){
+    char header[128];
+    snprintf(header,128, "Created by write on %s\n",
+	     myasctime());
+    write_header(header, fp);
+}
+/**
+   Obtain the current magic number. If it is a header, read it out if output of
+header is not NULL.  The header will be appended to the output header.*/
+uint32_t read_magic(file_t *fp, char **header){
+    uint32_t magic,magic2;
+    uint64_t nlentot=0;
+    uint64_t nlen, nlen2;
+    if(header && *header){
+	nlentot=strlen(*header)+1;
+    }
+    while(1){
+	/*read the magic number.*/
+	zfread(&magic, sizeof(uint32_t), 1, fp);
+	/*If it is header, read or skip it.*/
+	if(magic==M_HEADER){
+	    zfread(&nlen, sizeof(uint64_t), 1, fp);
+	    if(nlen>0){
+		if(header){
+		    *header=realloc(*header, nlentot+nlen);
+		    if(nlentot>0){
+			(*header)[nlentot-1]='\n';
+		    }
+		    zfread(*header+nlentot, 1, nlen, fp);
+		    nlentot+=nlen;
+		}else{
+		    zfseek(fp, nlen, SEEK_CUR);
+		}
+	    }
+	    zfread(&nlen2, sizeof(uint64_t),1,fp);
+	    zfread(&magic2, sizeof(uint32_t),1,fp);
+	    if(magic!=magic2 || nlen!=nlen2){
+		error("Header verification failed\n");
+	    }
+	}else{ /*otherwise return the magic number*/
+	    return magic;
+	}
+    }/*while*/
 }

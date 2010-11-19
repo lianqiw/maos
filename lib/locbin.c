@@ -26,7 +26,7 @@
 /**
    Read in the loc_t data after magic and dimension has been read and verified.
 */
-loc_t *locreaddata2(file_t *fp, long nx, long ny){
+loc_t *locreaddata2(file_t *fp, long nx, long ny, double dx){
     if(ny!=2){
 	error("This is not a LOC file\n");
     }
@@ -36,11 +36,15 @@ loc_t *locreaddata2(file_t *fp, long nx, long ny){
     zfread(out->locx, sizeof(double), nx, fp);
     out->locy=malloc(sizeof(double)*nx);
     zfread(out->locy, sizeof(double), nx, fp);
-    if((out->locx[2]+out->locx[0]-2.*out->locx[1])<1.e-10){
-	out->dx=out->locx[1]-out->locx[0];
+    if(fabs(dx)<1e-100){
+	if((out->locx[2]+out->locx[0]-2.*out->locx[1])<1.e-10){
+	    out->dx=out->locx[1]-out->locx[0];
+	}else{
+	    out->dx=NAN;
+	    warning("Unable to determine dx from the loc file %s. Please set manually.\n", fp->fn);
+	}
     }else{
-	out->dx=NAN;
-	warning("Unable to determine dx from the loc file %s. Please set manually.\n", fp->fn);
+	out->dx=dx;
     }
     out->map=NULL;
     return out;
@@ -49,9 +53,11 @@ loc_t *locreaddata2(file_t *fp, long nx, long ny){
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().
  */
 loc_t *locreaddata(file_t *fp){
-    uint32_t magic;
-    zfread(&magic, sizeof(uint32_t), 1, fp);
-    if(magic!=0x6402){
+    char *header=NULL;
+    uint32_t magic=read_magic(fp, &header);
+    double dx=search_header_num(header,"dx");
+    free(header);
+    if(magic!=M_DBL){
 	error("This is not a LOC file\n");
     }
     uint64_t nx,ny;
@@ -61,11 +67,45 @@ loc_t *locreaddata(file_t *fp){
     if(nx==0 || ny==0){
 	out=NULL;
     }else{
-	out=locreaddata2(fp, nx, ny);
+	out=locreaddata2(fp, nx, ny, dx);
     }
     return out;
 }
+/**
+   Read a loc_t from file. dx is contained in header
+*/
+loc_t *locread(const char *format,...){
+    format2fn;
+    file_t *fp=zfopen(fn, "rb");
+    loc_t *loc=locreaddata(fp);
+    zfclose(fp);
+    return loc;
+}
+/**
+   Read an array of loc_t form file.
+ */
+loc_t ** locarrread(int *nloc, const char*format,...){
+    format2fn;
+    file_t *fp=zfopen(fn,"rb");
+    uint32_t magic=read_magic(fp, NULL);
+    if(magic!=MC_DBL && magic!=MCC_ANY){
+	error("This is not a locarr file");
+    }
+    uint64_t nx,ny;
+    zfread(&nx, sizeof(uint64_t), 1, fp);
+    zfread(&ny, sizeof(uint64_t), 1, fp);
+    *nloc=nx*ny;
+    loc_t **locarr=calloc(nx*ny, sizeof(loc_t*));
+    for(long ix=0; ix<nx*ny; ix++){
+	locarr[ix]=locreaddata(fp);
+    }
+    zfclose(fp);
+    return locarr;
+}
 void locwritedata(file_t *fp, const loc_t *loc){
+    char header[80];
+    snprintf(header,80,"dx=%.15g\n",loc->dx);
+    write_header(header,fp);
     uint32_t magic=M_DBL;
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(loc){
@@ -102,33 +142,138 @@ void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
     }
     zfclose(fp);
 }
-loc_t *locread(const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn, "rb");
-    loc_t *loc=locreaddata(fp);
-    zfclose(fp);
-    return loc;
+/**
+   Read data of a map_t.
+*/
+map_t *sqmapreaddata(file_t *fp){
+    char *header=NULL;
+    uint32_t magic=read_magic(fp, &header);
+    map_t *map=calloc(1, sizeof(map_t));
+    if(header){//there is a header. so we don't need cell array.
+	map->ox=search_header_num(header,"ox");
+	map->oy=search_header_num(header,"oy");
+	map->dx=search_header_num(header,"dx");
+	map->h=search_header_num(header,"h");
+	map->vx=search_header_num(header,"vx");
+	map->vy=search_header_num(header,"vy");
+	dmat *tmp=dreaddata(fp, magic);
+	map->p=tmp->p;
+	map->nx=tmp->nx;
+	map->ny=tmp->ny;
+
+	dfree_keepdata(tmp);
+	free(header);
+    }else{//there is no header. we require cell.
+	dcell *tmp=dcellreaddata(fp, magic); 
+	/*
+	  File should contain two cells. The first cell contains the information. 
+	  Cell 1: 5x1 vector, dx, dy, ox, oy, height.
+	  Cell 2: nxm array.
+	*/
+	warning("Please update %s to newer format with headers\n", fp->fn);
+	if(fabs(tmp->p[0]->p[0]-tmp->p[0]->p[1])>1.e-14){
+	    error("Map should be square\n");
+	}
+	map->dx=tmp->p[0]->p[0];
+	map->ox=tmp->p[0]->p[2];
+	map->oy=tmp->p[0]->p[3];
+	map->h=tmp->p[0]->p[4];
+    
+	dmat *ampg=dref(tmp->p[1]);
+	map->p=ampg->p;
+	map->nx=ampg->nx;
+	map->ny=ampg->ny;
+	dcellfree(tmp);
+	dfree_keepdata(ampg);
+    }
+    if(map->ox/map->dx*2+map->nx > 2 ||map->oy/map->dx*2+map->ny > 2){
+	warning("map_t %s is not centered.\n",fp->fn);
+    }
+    return map;
 }
-loc_t ** locarrread(int *nloc, const char*format,...){
+/**
+   Read map_t from file.
+*/
+map_t *sqmapread(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    uint32_t magic;
-    zfread(&magic, sizeof(uint32_t), 1, fp);
-    if(magic!=MC_DBL){
-	error("This is not a locarr file");
-    }
-    uint64_t nx,ny;
-    zfread(&nx, sizeof(uint64_t), 1, fp);
-    zfread(&ny, sizeof(uint64_t), 1, fp);
-    *nloc=nx*ny;
-    loc_t **locarr=calloc(nx*ny, sizeof(loc_t*));
-    for(long ix=0; ix<nx*ny; ix++){
-	locarr[ix]=locreaddata(fp);
-    }
+    map_t *map=sqmapreaddata(fp);
     zfclose(fp);
-    return locarr;
+    return map;
+}
+/**
+   Read a rectmap data from file_t
+*/
+rectmap_t *rectmapreaddata(file_t *fp){
+    rectmap_t *map=calloc(1, sizeof(map_t));
+    char *header=NULL;
+    uint32_t magic=read_magic(fp, &header);
+    if(header){//there is a header. so we don't need cell array.
+	if(magic!=M_DBL){
+	    error("Invalid format %x for rectmap_t: %s\n", magic, fp->fn);
+	}
+	map->dx=search_header_num(header,"dx");
+	map->dy=search_header_num(header,"dy");
+	map->ox=search_header_num(header,"ox");
+	map->oy=search_header_num(header,"oy");
+	map->txdeg=search_header_num(header,"txdeg");
+	map->tydeg=search_header_num(header,"tydeg");
+	map->ftel =search_header_num(header,"ftel");
+	map->fexit=search_header_num(header,"fexit");
+	map->fsurf=search_header_num(header,"fsurf");
+	dmat *tmp=dreaddata(fp, magic);
+	map->p=tmp->p;
+	map->nx=tmp->nx;
+	map->ny=tmp->ny;
+	dfree_keepdata(tmp);
+	free(header);
+    }else{
+	if(magic!=MC_DBL && magic!=MCC_ANY){
+	    error("Invalid format %x for rectmap_t: %s\n", magic, fp->fn);
+	}
+	warning("Please update %s to newer format with headers\n", fp->fn);
+	dcell *tmp=dcellreaddata(fp, magic); 
+	map->dx=tmp->p[0]->p[0];
+	map->dy=tmp->p[0]->p[1];
+	map->ox=tmp->p[0]->p[2];
+	map->oy=tmp->p[0]->p[3];
+
+	map->txdeg=tmp->p[0]->p[4];
+	map->tydeg=tmp->p[0]->p[5];
+	map->ftel =tmp->p[0]->p[6];
+	map->fexit=tmp->p[0]->p[7];
+	map->fsurf=tmp->p[0]->p[8];
+ 
+	dmat *ampg=dref(tmp->p[1]);
+	map->p=ampg->p;
+	map->nx=ampg->nx;
+	map->ny=ampg->ny;
+	dcellfree(tmp);
+	dfree_keepdata(ampg);
+    }
+    if(map->ox/map->dx*2+map->nx > 2
+       ||map->oy/map->dy*2+map->ny > 2){
+	warning("map_t %s is not centered.\n",fp->fn);
+    }
+    return map;
+}
+/**
+   Read a rectmap_t from file.
+*/
+rectmap_t *rectmapread(const char *format,...){
+    format2fn;
+    file_t *fp=zfopen(fn,"rb");
+    rectmap_t *map=rectmapreaddata(fp);
+    zfclose(fp);
+    return map;
 }
 static void sqmapwritedata(file_t *fp, const map_t *map){
+    if(map){
+	char header[1024];
+	snprintf(header,1024,"ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+		 map->ox, map->oy, map->dx, map->h, map->vx, map->vy);
+	write_header(header,fp);
+    }
     uint32_t magic=M_DBL;
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(map){
@@ -143,138 +288,104 @@ static void sqmapwritedata(file_t *fp, const map_t *map){
 	zfwrite(&nx, sizeof(uint64_t),1,fp);
     }
 }
-
-map_t *sqmapread(const char *format,...){
-    format2fn;
-    map_t *sqmap=calloc(1, sizeof(map_t));
-    dcell *tmp=dcellread("%s",fn); 
-    /*
-      File should contain two cells. The first cell contains the information. 
-      Cell 1: 5x1 vector, dx, dy, ox, oy, height.
-      Cell 2: nxm array.
-     */
-
-    if(fabs(tmp->p[0]->p[0]-tmp->p[0]->p[1])>1.e-14){
-	error("Map should be square\n");
-    }
-    sqmap->dx=tmp->p[0]->p[0];
-    sqmap->ox=tmp->p[0]->p[2];
-    sqmap->oy=tmp->p[0]->p[3];
-    sqmap->h=tmp->p[0]->p[4];
-    
-    dmat *ampg=dref(tmp->p[1]);
-    sqmap->p=ampg->p;
-    sqmap->nx=ampg->nx;
-    sqmap->ny=ampg->ny;
-    dcellfree(tmp);
-    dfree_keepdata(ampg);
-    if(sqmap->ox/sqmap->dx*2+sqmap->nx > 2
-       ||sqmap->oy/sqmap->dx*2+sqmap->ny > 2){
-	warning("Ampground %s is not centered.\n",fn);
-    }
-    return sqmap;
-}
-
-rectmap_t *rectmapread(const char *format,...){
-    format2fn;
-    rectmap_t *rectmap=calloc(1, sizeof(map_t));
-    dcell *tmp=dcellread("%s",fn); 
-    rectmap->dx=tmp->p[0]->p[0];
-    rectmap->dy=tmp->p[0]->p[1];
-    rectmap->ox=tmp->p[0]->p[2];
-    rectmap->oy=tmp->p[0]->p[3];
-
-    rectmap->txdeg=tmp->p[0]->p[4];
-    rectmap->tydeg=tmp->p[0]->p[5];
-    rectmap->ftel =tmp->p[0]->p[6];
-    rectmap->fexit=tmp->p[0]->p[7];
-    rectmap->fsurf=tmp->p[0]->p[8];
- 
-    dmat *ampg=dref(tmp->p[1]);
-    rectmap->p=ampg->p;
-    rectmap->nx=ampg->nx;
-    rectmap->ny=ampg->ny;
-    dcellfree(tmp);
-    dfree_keepdata(ampg);
-    if(rectmap->ox/rectmap->dx*2+rectmap->nx > 2
-       ||rectmap->oy/rectmap->dy*2+rectmap->ny > 2){
-	warning("Ampground %s is not centered.\n",fn);
-    }
-    return rectmap;
-}
-
 void sqmapwrite(const map_t *map, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
     sqmapwritedata(fp, map);
     zfclose(fp);
 }
-void sqmaparrwrite(map_t ** map, int nmap, 
-		   const char *format,...){
+void sqmaparrwrite(map_t ** map, int nmap, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
     uint32_t magic=MC_DBL;
-    uint64_t nx=2;
-    uint64_t ny=nmap;
+    uint64_t nx=nmap;
+    uint64_t ny=1;
     zfwrite(&magic, sizeof(uint32_t),1, fp);
     zfwrite(&nx,sizeof(uint64_t),1, fp);
     zfwrite(&ny,sizeof(uint64_t),1, fp);
-    dmat *info=dnew(5,1);
     for(int imap=0; imap<nmap; imap++){
-	info->p[0]=map[imap]->dx;
-	info->p[1]=map[imap]->dx;
-	info->p[2]=map[imap]->ox;
-	info->p[3]=map[imap]->oy;
-	info->p[4]=map[imap]->h;
-	dwritedata(fp,info);
 	sqmapwritedata(fp, map[imap]);
     }
-    dfree(info);
     zfclose(fp);
 }
 map_t **sqmaparrread(int*nlayer, const char *format,...){
     format2fn;
-    dcell *X=dcellread("%s",fn);
-    map_t **screens;
-    if(X->ny==1 && (X->nx!=2 || X->p[0]->nx*X->p[0]->ny!=5) ){
-	warning("Deprecated format\n");
-	*nlayer=X->nx;
-	screens=calloc(X->nx,sizeof(map_t*));
-        double dx=1./64.;//assume this is 1/64
-	warning("dx is assumed to be %g\n",dx);
-	for(int ilayer=0; ilayer<X->nx; ilayer++){
-	    screens[ilayer]=calloc(1, sizeof(map_t));
-	    screens[ilayer]->nx=X->p[ilayer]->nx;
-	    screens[ilayer]->ny=X->p[ilayer]->ny;
-	    screens[ilayer]->p=X->p[ilayer]->p;
-	    screens[ilayer]->dx=dx;
-	    screens[ilayer]->ox=X->p[ilayer]->nx*(-dx/2.);
-	    screens[ilayer]->oy=X->p[ilayer]->ny*(-dx/2.);
-	    dfree_keepdata(X->p[ilayer]);
-	}
-    }else if(X->nx==2){//New format. file contains 2*n
-	*nlayer=X->ny;
-    	screens=calloc(X->ny, sizeof(map_t*));
-	PDCELL(X,pX);
-	for(int ilayer=0; ilayer<X->ny; ilayer++){
-	    screens[ilayer]=calloc(1, sizeof(map_t));
-	    screens[ilayer]->nx=pX[ilayer][1]->nx;
-	    screens[ilayer]->ny=pX[ilayer][1]->ny;
-	    screens[ilayer]->p =pX[ilayer][1]->p;
-	    screens[ilayer]->dx=pX[ilayer][0]->p[0];
-	    screens[ilayer]->ox=pX[ilayer][0]->p[2];
-	    screens[ilayer]->oy=pX[ilayer][0]->p[3];
-	    screens[ilayer]->h=pX[ilayer][0]->p[4];
-	    if(fabs(pX[ilayer][0]->p[0]-pX[ilayer][0]->p[1])>1.e-12){
-		error("This map doesn't have equal sampling over x and y\n");
-	    }
-	    dfree_keepdata(X->p[ilayer]);
-	}
-    }else{
-	screens=NULL;
-	error("Invalid format\n");
+    file_t *fp=zfopen(fn,"rb");
+    int has_header=0;
+
+    uint32_t magic=read_magic(fp, NULL);//magic of the cell. 
+    if(magic!=MC_DBL && magic!=MCC_ANY){
+	error("Invalid file. magic=%x\n",magic);
     }
-    free(X->p);
-    free(X);
+    map_t **screens;
+    uint64_t nx, ny;
+    zfreadlarr(fp, 2, &nx, &ny);
+    //test the first cell.
+    char *header=NULL;
+    uint32_t magic2=read_magic(fp, &header);
+    if(magic2!=M_DBL){
+	error("Wrong data type in the file %s\n", fp->fn);
+    }
+    if(header){
+	has_header=1;
+	free(header);
+    }
+
+    zfrewind(fp);//start from the begining.
+
+    if(has_header){//there is header.
+	//read the cell header.
+	magic=read_magic(fp, NULL);
+	zfreadlarr(fp, 2, &nx, &ny);
+	assert(ny==1);
+	screens=calloc(nx, sizeof(map_t*));
+	for(int ilayer=0; ilayer<nx; ilayer++){
+	    screens[ilayer]=sqmapreaddata(fp);
+	}
+	*nlayer=nx;
+    }else{//old format.
+	dcell *X=dcellreaddata(fp,0);
+	warning("Deprecated format: %s\n", fp->fn);
+	if(X->ny==1 && (X->nx!=2 || X->p[0]->nx*X->p[0]->ny!=5) ){//oldest format.
+	    *nlayer=X->nx;
+	    screens=calloc(X->nx,sizeof(map_t*));
+	    double dx=1./64.;//assume this is 1/64
+	    warning("dx is assumed to be %g\n",dx);
+	    for(int ilayer=0; ilayer<X->nx; ilayer++){
+		screens[ilayer]=calloc(1, sizeof(map_t));
+		screens[ilayer]->nx=X->p[ilayer]->nx;
+		screens[ilayer]->ny=X->p[ilayer]->ny;
+		screens[ilayer]->p=X->p[ilayer]->p;
+		screens[ilayer]->dx=dx;
+		screens[ilayer]->ox=X->p[ilayer]->nx*(-dx/2.);
+		screens[ilayer]->oy=X->p[ilayer]->ny*(-dx/2.);
+		dfree_keepdata(X->p[ilayer]);
+	    }
+	}else if(X->nx==2){
+	    *nlayer=X->ny;
+	    screens=calloc(X->ny, sizeof(map_t*));
+	    PDCELL(X,pX);
+	    for(int ilayer=0; ilayer<X->ny; ilayer++){
+		screens[ilayer]=calloc(1, sizeof(map_t));
+		screens[ilayer]->nx=pX[ilayer][1]->nx;
+		screens[ilayer]->ny=pX[ilayer][1]->ny;
+		screens[ilayer]->p =pX[ilayer][1]->p;
+		screens[ilayer]->dx=pX[ilayer][0]->p[0];
+		screens[ilayer]->ox=pX[ilayer][0]->p[2];
+		screens[ilayer]->oy=pX[ilayer][0]->p[3];
+		screens[ilayer]->h=pX[ilayer][0]->p[4];
+		if(fabs(pX[ilayer][0]->p[0]-pX[ilayer][0]->p[1])>1.e-12){
+		    error("This map doesn't have equal sampling over x and y\n");
+		}
+		dfree_keepdata(X->p[ilayer]);
+	    }
+	}else{
+	    screens=NULL;
+	    error("Invalid format\n");
+	}
+	free(X->p);
+	free(X);
+    }//old format
+    zfclose(fp);
     return screens;
 }

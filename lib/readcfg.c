@@ -400,7 +400,11 @@ int readcfg_strarr(char ***res, const char *format,...){
 		sdata2++;
 	    }
 	}
-	*res=realloc(*res,sizeof(char*)*count);
+	if(count>0){
+	    *res=realloc(*res,sizeof(char*)*count);
+	}else{
+	    free(*res); *res=NULL;
+	}
 	return count;
     }
 }
@@ -589,8 +593,12 @@ int readstr_numarr(void **ret, int type, const char *data){
 	    startptr++;
 	}
     }
-  
-    *ret=realloc(*ret, size*count);
+    if(count>0){
+	*ret=realloc(*ret, size*count);
+    }else{
+	free(*ret);
+	*ret=NULL;
+    }
     return count;
 }
 

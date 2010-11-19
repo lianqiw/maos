@@ -20,6 +20,21 @@ or cle=read('Res_1.bin.gz');
    write(cle,'Res_1.bin'); will write the data to Res_1.bin without compression.
 \endverbatim
 
+If there is any problem in compling read.c and write.c, there are two matlab
+scripts in the scripts folder, readbin.m and writebin.m, that have most of
+functionality of read.c, write.c albeit a bit slower.
+
+The data are saved to the bin files in a moduler way. For a simple matrix (like
+double matrix or cell matrix), we first write a magic number (4 byte unsigned
+int) representing the data type, and then x and y dimension (two 8 byte unsigned
+ints), and finally the data itself (if it is cell, recursively write the data
+contained in the cell with the same method). 
+
+Each block of data may optionally be proceeded with a metadata header that
+describes the data, for example, the sampling of a loc_t grid. The surf OPD
+contains header information about the sampling, origin and height of the OPD
+array. 
+
 There will be several files created during simulation in the result folder. The
 number after underscore _ is the seed. For example, with seed 1 the following
 files are produced. Read in these files using provided mex function \c read in

@@ -27,7 +27,7 @@ Estimation. The result will be an average of them.  */
 
 CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     //We need at least a pair
-    if(!parms->cn2.pair) return NULL;
+    if(!parms->cn2.pair || parms->cn2.npair==0) return NULL;
     if(parms->cn2.npair%2==1){
 	error("parms->cn2.pair must have even number of entries\n");
     }

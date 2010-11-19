@@ -685,14 +685,14 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
     rcstyle = gtk_rc_style_new();
     rcstyle->xthickness = rcstyle->ythickness = 0;
     gtk_widget_modify_style(close_btn, rcstyle);
-    gtk_widget_set_size_request(close_btn,13,10);
+    gtk_widget_set_size_request(close_btn,14,14);
     /* create label for tab */
     label = gtk_label_new(str);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 0, 0);
     out=gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(out), label, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(out), close_btn, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
     //gtk_widget_modify_style(label, rcstyle);
     //gtk_widget_modify_style(out, rcstyle);
     gtk_rc_style_unref(rcstyle);

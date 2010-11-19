@@ -10,6 +10,7 @@
 typedef unsigned int mwIndex;
 #endif
 typedef double __complex__ dcomplex;
+#define info(A...) fprintf(stderr,A)
 #define warning(A...) {							\
 	fprintf(stderr,"\033[01;33m%-15s:%-3d\t", __FILE__, __LINE__);	\
 	fprintf(stderr,A);fprintf(stderr,"\033[00;00m");}
@@ -40,12 +41,19 @@ typedef struct file_t{
 #define MCC_DBL 0x6422
 #define MCC_CMP 0x6424
 
+#define M_HEADER 0x6500
+
 #define MAT_SP 0xFF01
 #define MAT_CSP 0xFF02
+const char *myasctime(void);
 file_t* openfile(const char *fn, char *mod);
 void closefile(file_t *fp);
 void writefile(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 void writefile_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);
 void readfile(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 int test_eof(file_t *fp);
+int zfseek(file_t *fp, long offset, int whence);
+void write_header(const char *header, file_t *fp);
+void write_timestamp(file_t *fp);
+uint32_t read_magic(file_t *fp, char **header);
 #endif

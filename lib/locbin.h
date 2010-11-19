@@ -20,7 +20,7 @@
 #define AOS_LOCBIN_H
 #include "bin.h"
 #include "loc.h"
-loc_t *locreaddata2(file_t *fp, long nx, long ny);
+loc_t *locreaddata2(file_t *fp, long nx, long ny, double dx);
 loc_t *locreaddata(file_t *fp);
 void locwritedata(file_t *fp, const loc_t *loc);
 void locwrite(const loc_t *loc, const char *format,...) CHECK_ARG(2);
@@ -29,7 +29,9 @@ void locarrwrite(loc_t ** loc, int nloc, const char *format,...) CHECK_ARG(3);
 loc_t ** locarrread(int *nloc, const char *format,...) CHECK_ARG(2);
 
 map_t *sqmapread(const char *format,...) CHECK_ARG(1);
+map_t *sqmapreaddata(file_t *fp);
 rectmap_t *rectmapread(const char *format,...) CHECK_ARG(1);
+rectmap_t *rectmapreaddata(file_t *fp);
 void sqmapwrite(const map_t *map, const char *format,...) CHECK_ARG(2);
 
 void sqmaparrwrite(map_t ** map, int nmap, const char *format,...) CHECK_ARG(3);

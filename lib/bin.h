@@ -43,6 +43,8 @@
 #define MCC_DBL  0x6422  //cell of dcell
 #define MCC_CMP  0x6424  //cell of ccell
 
+#define M_HEADER 0x6500  //header.
+
 #define USE_ZLIB_H 0
 #if USE_ZLIB_H
 #include <zlib.h> //zlib.h in ubuntu sucks
@@ -56,6 +58,7 @@ int   gzwrite(voidp gzfile, const void* buf, unsigned len);
 long  gztell(voidp gzfile);
 int   gzread(voidp gzfile, voidp buf, unsigned len);
 int   gzseek(voidp file, long offset, int whence);
+int   gzrewind(voidp file);
 int   gzflush(voidp gzfile, int flush);
 #endif
 /**
@@ -84,11 +87,19 @@ typedef struct file_t{
 */
 int zfeof(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
+void zfrewind(file_t *fp);
 file_t* zfopen(const char *fn, char *mod);
 void zfclose(file_t *fp);
 void zflush(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
+void write_header_end(const char *header,const char *format,...);
+char *read_header_end(const char *format,...);
+const char *search_header(const char *header, const char *key);
+double search_header_num(const char *header, const char *key);
+void write_header(const char *header, file_t *fp);
+void write_timestamp(file_t *fp);
+uint32_t read_magic(file_t *fp, char **header);
 /*
   convenient function to write multiple long numbers
 */

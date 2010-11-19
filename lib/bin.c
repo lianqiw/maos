@@ -30,6 +30,7 @@
 #include "bin.h"
 #include "path.h"
 #include "misc.h"
+#include "readcfg.h"
 /**
    \file bin.c Defines our custom file format .bin or zipped .bin.gz and the
    basic IO functions. All file read/write operators are through functions in
@@ -116,6 +117,14 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	if(exist(fn2)){//remove old file to avoid write over a symbolic link.
 	    remove(fn2);
 	}
+    }else if(mod[0]=='a'){//open for appending
+	if(!(check_suffix(fn2, ".bin.gz") || check_suffix(fn2, ".bin"))){
+	    if(defaultgzip){
+		strncat(fn2,".bin.gz",7);
+	    }else{
+		strncat(fn2,".bin",4);
+	    }
+	}
     }else{
 	error("Invalid mode\n");
     }
@@ -145,6 +154,9 @@ file_t* zfopen(const char *fn, char *mod){
 	if(!(fp->p=fopen(fn2,mod))){
 	    error("Error fopen for %s\n",fn2);
 	}
+    }
+    if(mod[0]=='w'){
+	write_timestamp(fp);
     }
     UNLOCK(lock);
     return fp;
@@ -239,6 +251,18 @@ int zfseek(file_t *fp, long offset, int whence){
     }
 }
 /**
+   Move the file position pointer to the beginning
+*/
+void zfrewind(file_t *fp){
+    if(fp->isgzip){
+	if(gzrewind((voidp)fp->p)){
+	    error("Failed to rewind\n");
+	}
+    }else{
+	rewind((FILE*)fp->p);
+    }
+}
+/**
    Tell whether we end of file is reached.
  */
 int zfeof(file_t *fp){
@@ -273,6 +297,168 @@ void zflush(file_t *fp){
     }else{
 	fflush(fp->p);
     }
+}
+/**
+   Obtain the current magic number. If it is a header, read it out if output of
+header is not NULL.  The header will be appended to the output header.*/
+uint32_t read_magic(file_t *fp, char **header){
+    uint32_t magic,magic2;
+    uint64_t nlentot=0;
+    uint64_t nlen, nlen2;
+    if(header && *header){
+	nlentot=strlen(*header)+1;
+    }
+    while(1){
+	/*read the magic number.*/
+	zfread(&magic, sizeof(uint32_t), 1, fp);
+	/*If it is header, read or skip it.*/
+	if(magic==M_HEADER){
+	    zfread(&nlen, sizeof(uint64_t), 1, fp);
+	    if(nlen>0){
+		if(header){
+		    *header=realloc(*header, nlentot+nlen);
+		    if(nlentot>0){
+			(*header)[nlentot-1]='\n';
+		    }
+		    zfread(*header+nlentot, 1, nlen, fp);
+		    nlentot+=nlen;
+		}else{
+		    zfseek(fp, nlen, SEEK_CUR);
+		}
+	    }
+	    zfread(&nlen2, sizeof(uint64_t),1,fp);
+	    zfread(&magic2, sizeof(uint32_t),1,fp);
+	    if(magic!=magic2 || nlen!=nlen2){
+		error("Header verification failed\n");
+	    }
+	}else{ /*otherwise return the magic number*/
+	    return magic;
+	}
+    }/*while*/
+}
+
+/**
+   Append the header to current position in the file.  First write magic number, then the
+   length of the header, then the header, then the length of the header again,
+   then the magic number again. The two set of strlen and header are used to
+   identify the header from the end of the file and also to verify that what we
+   are reading are indeed header. The header may be written multiple
+   times. They will be concatenated when read. The header should contain
+   key=value entries just like the configuration files. The entries should be
+   separated by new line charactor. */
+void write_header(const char *header, file_t *fp){
+    uint32_t magic=M_HEADER;
+    uint64_t nlen=strlen(header)+1;
+    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
+    zfwrite(header, 1, nlen, fp);
+    zfwrite(&nlen, sizeof(uint64_t), 1, fp);
+    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+}
+/**
+   Write the time stamp as header into current location in the file.
+*/
+void write_timestamp(file_t *fp){
+    char header[128];
+    snprintf(header,128, "Created by MAOS Version %s on %s in %s\n",
+	     PACKAGE_VERSION, myasctime(), myhostname());
+    write_header(header, fp);
+}
+/**
+   Append to the file the header to end of an already saved file.
+*/
+void write_header_end(const char *header,const char *format,...){
+    format2fn;
+    file_t *fp=zfopen((char*)fn, "ab");//open for append.
+    if(zfseek(fp, 0, SEEK_END)){
+	error("Failed to seek to the end of file");
+    }else{
+	write_header(header, fp);
+    }
+}
+
+/**
+   Search and return the value correspond to key. NULL if not found. Do not free the
+   returned pointer.  */
+const char *search_header(const char *header, const char *key){
+    char *val=strstr(header, key);
+    if(val){
+	char *equal=strchr(val,'=');
+	if(equal){
+	    return equal+1;
+	}else{
+	    error("= not found after key in %s\n", header);
+	    return NULL;
+	}
+    }else{
+	return NULL;
+    }
+}
+/**
+   Read a number from the header with key
+*/
+double search_header_num(const char *header, const char *key){
+    if(!header) return 0;
+    const char *val=search_header(header, key);
+    if(val){
+	return readstr_num(val, NULL);
+    }else{
+	return 0;//not found.
+    }
+}
+/**
+   Read header from the end of the file. Difference headers will be combined. Do
+not use. Seek back is very slow in big file.  */
+char *read_header_end(const char *format,...){
+    format2fn;
+    file_t *fp=zfopen((char*)fn, "rb");
+    zfseek(fp, 0, SEEK_END);//move to the end;
+    char *strout=NULL;
+    int nlenout=0;
+    uint32_t magic, magic2;
+
+    while(1){
+        if(zfseek(fp, -sizeof(uint32_t), SEEK_CUR)){//move the the end
+	    warning("Error seek to (another) header\n");
+	    break;
+	}
+	zfread(&magic, sizeof(uint32_t), 1, fp);
+	if(magic!=M_HEADER){
+	    warning("There is no more header in file %s\n",fp->fn);
+	    break;
+	}
+	//move 8 byte back to get the string length
+	zfseek(fp, -(sizeof(uint64_t)+sizeof(uint32_t)), SEEK_CUR);
+	uint64_t nlen, nlen2;
+	//after read, pointer is after the nlen.
+	zfread(&nlen, sizeof(uint64_t), 1, fp);
+	//seek to the beginning of the first header
+	zfseek(fp, -(nlen+sizeof(uint64_t)*2+sizeof(uint32_t)), SEEK_CUR);
+	zfread(&magic2, sizeof(uint32_t), 1, fp);
+	zfread(&nlen2, sizeof(uint64_t), 1, fp);
+	if(magic!=magic2 || nlen!=nlen2){
+	    warning("This is not a header\n");
+	    break;
+	}
+	if(nlen>0){
+	    //enlarge the string.
+	    info("Reading header with length %lu\n",nlen);
+	    if(nlenout>0){
+		strout[nlenout-1]='\n';//turn \0 to \n.
+	    }
+	    strout=realloc(strout, nlenout+nlen);
+	    zfread(strout+nlenout, 1, nlen, fp);
+	    strout[nlenout-1]='\0';
+	    nlenout+=nlen;
+	}
+	//now seek to before our first header, in case there is another header.
+	if(zfseek(fp, -(nlen+sizeof(uint64_t)+sizeof(uint32_t)), SEEK_CUR)){
+	    warning("This file contains only headers\n");
+	    break;
+	}
+    }
+    zfclose(fp);
+    return strout;
 }
 /**
    Write multiple long numbers into the file. To write three numbers, a, b, c,

@@ -142,18 +142,17 @@ int main(int argc, char **argv){
     //setting up parameters before asking scheduler to check for any errors.
     PARMS_T * parms=setup_parms(arg);
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
-    
-    //register signal handler
-    register_signal_handler(maos_signal_handler);
-
-    scheduler_start(scmd,arg->nthread,!arg->force);
-
 
     if(!lock_seeds(parms)){
 	warning("There are no seed to run. Exit\n");
 	maos_done(0);
 	return 1;
     }
+#if defined(__linux__)   //the scheduler only works correctly on linux now.
+    //register signal handler
+    register_signal_handler(maos_signal_handler);
+    scheduler_start(scmd,arg->nthread,!arg->force);
+
     if(!arg->force){
 	/*
 	  Ask job scheduler for permission to proceed. If no CPUs are
@@ -174,6 +173,7 @@ int main(int argc, char **argv){
 	    wait_cpu(arg->nthread);
 	}
     }
+#endif
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     free(scmd);
     free(arg->seeds);

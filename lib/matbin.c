@@ -105,9 +105,10 @@ void X(cellwrite)(const X(cell) *dc, const char* format,...){
 /**
    Function to read dense matrix into memory from file pointer. Generally used
    by library developer.  */
-X(mat) *X(readdata)(file_t *fp){
-    uint32_t magic;
-    zfread(&magic, sizeof(uint32_t),1,fp);
+X(mat) *X(readdata)(file_t *fp, uint32_t magic){
+    if(!magic){
+	magic=read_magic(fp, NULL);
+    }
     if(magic!=M_T)
 	error("This is not a X(mat) file\n");
     uint64_t nx,ny;
@@ -124,9 +125,10 @@ X(mat) *X(readdata)(file_t *fp){
 /**
    Function to read dense matrix cell array into memory from file
    pointer. Generally used by library developer.  */
-X(cell)* X(cellreaddata)(file_t *fp){
-    uint32_t magic;
-    zfread(&magic, sizeof(uint32_t), 1, fp);
+X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic){
+    if(!magic){
+	magic=read_magic(fp, NULL);
+    }
     if(magic!=MC_T)
 	error("This is is not a X(mat) cell file. want %d, get %d\n",(int)MC_T,(int)magic);
     uint64_t nx,ny;
@@ -137,7 +139,7 @@ X(cell)* X(cellreaddata)(file_t *fp){
     else{
 	out=X(cellnew)((long)nx,(long)ny);
 	for(unsigned long ix=0; ix<nx*ny; ix++){
-	    out->p[ix]=X(readdata)(fp);
+	    out->p[ix]=X(readdata)(fp, 0);
 	}
     }
     return out;
@@ -148,7 +150,7 @@ X(cell)* X(cellreaddata)(file_t *fp){
 X(mat)* X(read)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    X(mat) *out=X(readdata)(fp);
+    X(mat) *out=X(readdata)(fp, 0);
     zfeof(fp);
     zfclose(fp);
     return out;
@@ -160,7 +162,7 @@ X(mat)* X(read)(const char *format,...){
 X(cell)* X(cellread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    X(cell) *out=X(cellreaddata)(fp);
+    X(cell) *out=X(cellreaddata)(fp, 0);
     zfeof(fp);
     zfclose(fp);
     return out;
@@ -199,9 +201,10 @@ void Y(spwritedata)(file_t *fp, const X(sp) *sp){
    Function to read sparse matrix data from file pointer into memory. Used by
    library developer.
   */
-X(sp) *Y(spreaddata)(file_t *fp){
-    uint32_t magic;
-    zfread(&magic, sizeof(uint32_t),1,fp);
+X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic){
+    if(!magic){
+	magic=read_magic(fp, NULL);
+    }
     uint32_t size=0;
     if(magic==M_SPT64){
 	size=8;
@@ -299,7 +302,7 @@ void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
 X(sp)* Y(spread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    X(sp) *out=Y(spreaddata)(fp);
+    X(sp) *out=Y(spreaddata)(fp, 0);
     zfeof(fp);
     zfclose(fp);
     return out;
@@ -310,12 +313,10 @@ X(sp)* Y(spread)(const char *format,...){
  */
 Y(spcell) *Y(spcellread)(const char *format,...){
     format2fn;
-    uint32_t magic;
     file_t *fp=zfopen(fn,"rb");
-    zfread(&magic, sizeof(uint32_t), 1, fp);
+    uint32_t magic=read_magic(fp, NULL);
     if(magic!=MC_SPT)
-	error("%s is not a sparse cell file. want %d, got %u\n", fn,
-	      MC_SPT, magic);
+	error("%s is not a sparse cell file. want %d, got %u\n", fn, MC_SPT, magic);
     uint64_t nx,ny;
     zfreadlarr(fp, 2, &nx, &ny);
     Y(spcell) *out;
@@ -324,7 +325,7 @@ Y(spcell) *Y(spcellread)(const char *format,...){
     else{
 	out=Y(spcellnew)(nx,ny);
 	for(unsigned long ix=0; ix<nx*ny; ix++){
-	    out->p[ix]=Y(spreaddata)(fp);
+	    out->p[ix]=Y(spreaddata)(fp, 0);
 	}
     }
     zfeof(fp);

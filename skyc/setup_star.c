@@ -487,7 +487,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			}
 			ccell **pwvfout=stari->wvfout[ipowfs];
 			for(long istep=0; istep<nstep; istep++){
-			    ccell *wvfi=ccellreaddata(fp_wvf);
+			    ccell *wvfi=ccellreaddata(fp_wvf, 0);
 			    ccelladd(&(pwvfout[istep]), 1, wvfi, wtxi);
 			    ccellfree(wvfi);
 			}
@@ -513,7 +513,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			}
 			dmat  **pztiltout=stari->ztiltout[ipowfs]->p;
 			for(long istep=0; istep<nstep; istep++){
-			    dmat *ztilti=dreaddata(fp_ztilt);
+			    dmat *ztilti=dreaddata(fp_ztilt, 0);
 			    dadd(&(pztiltout[istep]), 1, ztilti, wtxi);//(2nsa)*nstep dmat array
 			    dfree(ztilti);
 			}

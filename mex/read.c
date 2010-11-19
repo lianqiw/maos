@@ -4,20 +4,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define MAX_FN_LEN 800
 /*compile with 
   mex read.c*/
 #include "io.h"
 #include <complex.h>
 
-static mxArray *readdata(file_t *fp){
+static mxArray *readdata(file_t *fp, mxArray **header){
     int magic;
     mxArray *out=NULL;
     uint64_t nx,ny;
     if(fp->eof) return NULL;
-    readfile(&magic, sizeof(int),1,fp);
-    readfile(&nx, sizeof(uint64_t), 1,fp);
-    readfile(&ny, sizeof(uint64_t), 1,fp);
+    char *header2=NULL;
+    magic=read_magic(fp, &header2);
+    if(header){
+	if(header2)
+	    *header=mxCreateString(header2);
+	else
+	    *header=mxCreateString("");
+    }
+    free(header2);
+
+    zfread(&nx, sizeof(uint64_t), 1,fp);
+    zfread(&ny, sizeof(uint64_t), 1,fp);
     if(fp->eof) return NULL;
     switch(magic){
     case MCC_ANY:
@@ -33,14 +41,23 @@ static mxArray *readdata(file_t *fp){
 	    mwIndex ix;
 	    if(fp->eof) return NULL;
 	    out=mxCreateCellMatrix(nx,ny);
+	    mxArray *header0=mxCreateCellMatrix(nx*ny+1,1);
 	    for(ix=0; ix<nx*ny; ix++){
-		mxArray *tmp=readdata(fp);
+		mxArray *header3=NULL;
+		mxArray *tmp=readdata(fp, &header3);
 		if(fp->eof){
 		    break;
 		}
 		if(tmp){
 		    mxSetCell(out, ix, tmp);
 		}
+		if(header3){
+		    mxSetCell(header0, ix, header3);
+		}
+	    }
+	    if(header){
+		mxSetCell(header0, nx*ny, *header);
+		*header=header0;
 	    }
 	}
 	break;
@@ -57,7 +74,7 @@ static mxArray *readdata(file_t *fp){
 	    }
 	    uint64_t nzmax;
 	    if(nx!=0 && ny!=0){
-		readfile(&nzmax,sizeof(uint64_t),1,fp);
+		zfread(&nzmax,sizeof(uint64_t),1,fp);
 	    }else{
 		nzmax=0;
 	    }
@@ -65,16 +82,16 @@ static mxArray *readdata(file_t *fp){
 	    out=mxCreateSparse(nx,ny,nzmax,mxREAL);
 	    if(nx!=0 && ny!=0){
 		if(sizeof(mwIndex)==size){
-		    readfile(mxGetJc(out), size,ny+1,fp);
-		    readfile(mxGetIr(out), size,nzmax, fp);
+		    zfread(mxGetJc(out), size,ny+1,fp);
+		    zfread(mxGetIr(out), size,nzmax, fp);
 		}else{
 		    long i;
 		    mwIndex *Jc0=mxGetJc(out);
 		    mwIndex *Ir0=mxGetIr(out);
 		    void *Jc=malloc(size*(ny+1));
 		    void *Ir=malloc(size*nzmax);
-		    readfile(Jc, size, ny+1, fp);
-		    readfile(Ir, size, nzmax, fp);
+		    zfread(Jc, size, ny+1, fp);
+		    zfread(Ir, size, nzmax, fp);
 		    warning("Converting from %zu to %zu bytes\n",size,sizeof(mwIndex));
 		    if(size==4){
 			uint32_t* Jc2=Jc;
@@ -102,7 +119,7 @@ static mxArray *readdata(file_t *fp){
 			mexErrMsgTxt("Invalid sparse format\n");
 		    }
 		}
-		readfile(mxGetPr(out), sizeof(double), nzmax, fp);
+		zfread(mxGetPr(out), sizeof(double), nzmax, fp);
 	    }
 	}
 	break;
@@ -117,7 +134,7 @@ static mxArray *readdata(file_t *fp){
 	    }
 	    uint64_t nzmax;
 	    if(nx!=0 && ny!=0){
-		readfile(&nzmax,sizeof(uint64_t),1,fp);
+		zfread(&nzmax,sizeof(uint64_t),1,fp);
 	    }else{
 		nzmax=0;
 	    }
@@ -126,15 +143,15 @@ static mxArray *readdata(file_t *fp){
 	    if(nx!=0 && ny!=0){
 		long i;
 		if(sizeof(mwIndex)==size){
-		    readfile(mxGetJc(out), size,ny+1,fp);
-		    readfile(mxGetIr(out), size,nzmax, fp);
+		    zfread(mxGetJc(out), size,ny+1,fp);
+		    zfread(mxGetIr(out), size,nzmax, fp);
 		}else{
 		    mwIndex *Jc0=mxGetJc(out);
 		    mwIndex *Ir0=mxGetIr(out);
 		    void *Jc=malloc(size*(ny+1));
 		    void *Ir=malloc(size*nzmax);
-		    readfile(Jc, size, ny+1, fp);
-		    readfile(Ir, size, nzmax, fp);
+		    zfread(Jc, size, ny+1, fp);
+		    zfread(Ir, size, nzmax, fp);
 		    if(size==4){
 			uint32_t* Jc2=Jc;
 			uint32_t* Ir2=Ir;
@@ -162,7 +179,7 @@ static mxArray *readdata(file_t *fp){
 		    }
 		}
 		dcomplex *tmp=malloc(sizeof(dcomplex)*nzmax);
-		readfile(tmp, sizeof(dcomplex), nzmax, fp);
+		zfread(tmp, sizeof(dcomplex), nzmax, fp);
 		double *Pr=mxGetPr(out);
 		double *Pi=mxGetPi(out);
 		for(i=0; i<nzmax; i++){
@@ -177,7 +194,7 @@ static mxArray *readdata(file_t *fp){
 	{
 	    out=mxCreateDoubleMatrix(nx,ny,mxREAL);
 	    if(nx!=0 && ny!=0){
-		readfile(mxGetPr(out), sizeof(double),nx*ny,fp);
+		zfread(mxGetPr(out), sizeof(double),nx*ny,fp);
 	    }
 	}
 	break;
@@ -186,7 +203,7 @@ static mxArray *readdata(file_t *fp){
 	    out=mxCreateNumericMatrix(nx,ny,mxINT64_CLASS,mxREAL);
 	    if(nx!=0 && ny!=0){
 		/*Don't use sizeof(mxINT64_CLASS), it is just an integer, not a valid C type.*/
-		readfile(mxGetPr(out), 8,nx*ny,fp);
+		zfread(mxGetPr(out), 8,nx*ny,fp);
 	    }
 	}
 	break;
@@ -194,7 +211,7 @@ static mxArray *readdata(file_t *fp){
 	{
 	    out=mxCreateNumericMatrix(nx,ny,mxINT32_CLASS,mxREAL);
 	    if(nx!=0 && ny!=0){
-		readfile(mxGetPr(out), 4,nx*ny,fp);
+		zfread(mxGetPr(out), 4,nx*ny,fp);
 	    }
 	}
 	break;
@@ -203,7 +220,7 @@ static mxArray *readdata(file_t *fp){
 	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
 		dcomplex*tmp=malloc(sizeof(dcomplex)*nx*ny);
-		readfile(tmp,sizeof(dcomplex),nx*ny,fp);
+		zfread(tmp,sizeof(dcomplex),nx*ny,fp);
 		double *Pr=mxGetPr(out);
 		double *Pi=mxGetPi(out);
 		long i;
@@ -215,23 +232,37 @@ static mxArray *readdata(file_t *fp){
 	    }
 	}
 	break;
+    case M_HEADER:
+	break;
     default:
 	fprintf(stderr,"magic=%x\n",magic);
 	warning("Unrecognized file. Please recompile the mex routines in the newest code\n");
 	out=NULL;
     }
+    if(!out){
+	out=mxCreateDoubleMatrix(0,0,mxREAL);
+    }
+
     return out;
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     file_t *fp;
-    char fn[MAX_FN_LEN];
-    if(nrhs!=1 || nlhs>1){
-	mexErrMsgTxt("Usage:var=read('filename')\n");
+    if(nrhs!=1 || nlhs>2){
+	mexErrMsgTxt("Usage:var=read('filename') or [var, header]=read('file name')\n");
     }
-    mxGetString(prhs[0],fn,MAX_FN_LEN+1);
-    fp=openfile(fn,"r");
-    plhs[0]=readdata(fp);
-    test_eof(fp);
-    closefile(fp);
+    int nlen=mxGetM(prhs[0])*mxGetN(prhs[0])+1;
+    char *fn=malloc(nlen);
+    mxArray *header=NULL;
+    mxGetString(prhs[0],fn,nlen);
+    fp=openfile(fn,"rb");
+    free(fn);
+    if(nlhs==2){
+	plhs[0]=readdata(fp, &plhs[1]);
+    }else{
+	plhs[0]=readdata(fp, NULL);
+	test_eof(fp);
+    }
+    zfclose(fp);
+    free(header);
 }
