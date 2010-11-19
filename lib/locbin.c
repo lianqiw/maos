@@ -24,41 +24,24 @@
    i/o functions for loc_t, map_t.
 */
 /**
-   Read in the loc_t data after magic and dimension has been read and verified.
-*/
-loc_t *locreaddata2(file_t *fp, long nx, long ny, double dx){
-    if(ny!=2){
-	error("This is not a LOC file\n");
-    }
-    loc_t *out=calloc(1, sizeof(loc_t));
-    out->nloc=nx;
-    out->locx=malloc(sizeof(double)*nx);
-    zfread(out->locx, sizeof(double), nx, fp);
-    out->locy=malloc(sizeof(double)*nx);
-    zfread(out->locy, sizeof(double), nx, fp);
-    if(fabs(dx)<1e-100){
-	if((out->locx[2]+out->locx[0]-2.*out->locx[1])<1.e-10){
-	    out->dx=out->locx[1]-out->locx[0];
-	}else{
-	    out->dx=NAN;
-	    warning("Unable to determine dx from the loc file %s. Please set manually.\n", fp->fn);
-	}
-    }else{
-	out->dx=dx;
-    }
-    out->map=NULL;
-    return out;
-}
-/**
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().
  */
-loc_t *locreaddata(file_t *fp){
+loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
     char *header=NULL;
-    uint32_t magic=read_magic(fp, &header);
-    double dx=search_header_num(header,"dx");
-    free(header);
+    int free_header;
+    if(!magic){
+	magic=read_magic(fp, &header);
+	free_header=1;
+    }else{
+	header=header0;
+	free_header=0;
+    }
     if(magic!=M_DBL){
-	error("This is not a LOC file\n");
+	error("magic=%x. Expect %x\n", magic, M_DBL);
+    }
+    double dx=search_header_num(header,"dx");
+    if(free_header){
+	free(header);
     }
     uint64_t nx,ny;
     zfread(&nx, sizeof(uint64_t), 1, fp);
@@ -67,7 +50,22 @@ loc_t *locreaddata(file_t *fp){
     if(nx==0 || ny==0){
 	out=NULL;
     }else{
-	out=locreaddata2(fp, nx, ny, dx);
+	out=calloc(1, sizeof(loc_t));
+	out->nloc=nx;
+	out->locx=malloc(sizeof(double)*nx);
+	zfread(out->locx, sizeof(double), nx, fp);
+	out->locy=malloc(sizeof(double)*nx);
+	zfread(out->locy, sizeof(double), nx, fp);
+	if(fabs(dx)<1e-100){//dx is not available.
+	    for(long i=0; i<out->nloc-1; i++){//we assume the rows are continuous.
+		if(out->locy[i+1]>out->locy[i]){
+		    dx=out->locy[i+1]-out->locy[i];
+		}
+	    }
+	}else{
+	    out->dx=dx;
+	}
+	out->map=NULL;
     }
     return out;
 }
@@ -77,7 +75,7 @@ loc_t *locreaddata(file_t *fp){
 loc_t *locread(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn, "rb");
-    loc_t *loc=locreaddata(fp);
+    loc_t *loc=locreaddata(fp, 0, NULL);
     zfclose(fp);
     return loc;
 }
@@ -97,7 +95,7 @@ loc_t ** locarrread(int *nloc, const char*format,...){
     *nloc=nx*ny;
     loc_t **locarr=calloc(nx*ny, sizeof(loc_t*));
     for(long ix=0; ix<nx*ny; ix++){
-	locarr[ix]=locreaddata(fp);
+	locarr[ix]=locreaddata(fp, 0, NULL);
     }
     zfclose(fp);
     return locarr;
@@ -145,9 +143,19 @@ void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
 /**
    Read data of a map_t.
 */
-map_t *sqmapreaddata(file_t *fp){
+map_t *sqmapreaddata(file_t *fp, uint32_t magic, char *header0){
     char *header=NULL;
-    uint32_t magic=read_magic(fp, &header);
+    int free_header;
+    if(!magic){
+	magic=read_magic(fp, &header);
+	free_header=1;
+    }else{
+	header=header0;
+	free_header=0;
+    }
+    if(magic!=M_DBL){
+	error("magic=%x. Expect %x\n", magic, M_DBL);
+    }
     map_t *map=calloc(1, sizeof(map_t));
     if(header){//there is a header. so we don't need cell array.
 	map->ox=search_header_num(header,"ox");
@@ -162,7 +170,9 @@ map_t *sqmapreaddata(file_t *fp){
 	map->ny=tmp->ny;
 
 	dfree_keepdata(tmp);
-	free(header);
+	if(free_header){
+	    free(header);
+	}
     }else{//there is no header. we require cell.
 	dcell *tmp=dcellreaddata(fp, magic); 
 	/*
@@ -197,7 +207,7 @@ map_t *sqmapreaddata(file_t *fp){
 map_t *sqmapread(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    map_t *map=sqmapreaddata(fp);
+    map_t *map=sqmapreaddata(fp, 0, NULL);
     zfclose(fp);
     return map;
 }
@@ -340,7 +350,7 @@ map_t **sqmaparrread(int*nlayer, const char *format,...){
 	assert(ny==1);
 	screens=calloc(nx, sizeof(map_t*));
 	for(int ilayer=0; ilayer<nx; ilayer++){
-	    screens[ilayer]=sqmapreaddata(fp);
+	    screens[ilayer]=sqmapreaddata(fp, 0, NULL);
 	}
 	*nlayer=nx;
     }else{//old format.

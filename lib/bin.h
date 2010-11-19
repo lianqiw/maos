@@ -27,18 +27,20 @@
 //The definitions here should not be changed once set.
 #define M_CSP64  0x6400  //sparse complex
 #define M_SP64   0x6401  //sparse
-#define M_CSP32  0x6406  //sparse complex 32 bit
-#define M_SP32   0x6407  //sparse 32 bit
 #define M_DBL    0x6402  //double
 #define M_INT64  0x6403  //int 64 array
 #define M_CMP    0x6404  //complex array
 #define M_INT32  0x6405  //int 32 array
+#define M_CSP32  0x6406  //sparse complex 32 bit
+#define M_SP32   0x6407  //sparse 32 bit
+
 #define MC_CSP   0x6410  //complex sparse cell
 #define MC_SP    0x6411  //sparse cell.
 #define MC_DBL   0x6412  //double cell
 #define MC_INT64 0x6413  //int64 cell
 #define MC_CMP   0x6414  //complex cell
 #define MC_INT32 0x6415  //int32 cell
+
 #define MCC_ANY  0x6421  //cell of any cell
 #define MCC_DBL  0x6422  //cell of dcell
 #define MCC_CMP  0x6424  //cell of ccell

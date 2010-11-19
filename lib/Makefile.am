@@ -10,7 +10,7 @@ blas.h matbin.h cellarr.h mkh.h aos.h chol.h mkw.h turbulence.h cmat_extra.h	\
 mat.h dmat.h cmat.h loc.h mkz.h proj.h hashlittle.h laplacian.h pcg.h muv.h	\
 draw.h fft.h genotf.h
 
-EXTRA_DIST=cell.c sp.c matbin.c mat.c readcfg_numarr.c suitesparse.c
+EXTRA_DIST=cell.c sp.c matbin.c mat.c suitesparse.c
 
 AOS_SRC=readcfg.c dmat.c cmat.c cmat_extra.c hashlittle.c dsp.c csp.c bin.c	\
 misc.c mathmisc.c random.c loc.c locbin.c cellarr.c turbulence.c path.c mkg.c	\
@@ -31,7 +31,7 @@ PROGS=
 if DRAW
 PROGS+=../bin/drawbin
 ___bin_drawbin_SOURCES=drawbin.c
-#drawbin_CFLAGS=$(OPTS)
-___bin_drawbin_LDADD=libaos.la $(LDOPTS) #$(LDEXE)
+drawbin_CFLAGS=$(OPTS)
+___bin_drawbin_LDADD=libaos.la $(LDOPTS)
 endif
 bin_PROGRAMS=$(PROGS)
