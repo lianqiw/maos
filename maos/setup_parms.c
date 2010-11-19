@@ -1692,15 +1692,20 @@ static void check_parms(const PARMS_T *parms){
 	}else{
 	    lo_found++;
 	}
-	if(parms->powfs[ipowfs].trs==1){
-	    if(parms->powfs[ipowfs].lo==1)
+	if(parms->powfs[ipowfs].trs==1){//lgs wfs
+	    if(parms->powfs[ipowfs].lo==1){
 		error("Can not be both trs and lo\n");
+	    }
 	    hi_trs++;
 	}
     }
-    if(!hi_found || (hi_trs>=hi_found && lo_found==0)){
-	error("No high order wfs found "
-	      "or trs wfs doesn't come with lo wfs\n");
+    if(!hi_found){
+	warning("There is no high order WFS\n");
+    }
+    if((hi_trs==hi_found && lo_found==0)){
+	warning("LGS wfs doesn't come with TT wfs\n");
+	warning("LGS wfs doesn't come with TT wfs\n");
+	warning("LGS wfs doesn't come with TT wfs\n");
     }
     for(i=0; i<parms->ndm; i++){
 	if(!isinf(parms->dm[i].stroke)){

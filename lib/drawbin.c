@@ -152,6 +152,7 @@ int main(int argc, char *argv[]){
     }else{
 	error("Invalid arguments\n");
     }
+     sleep(600);
     exit_success=1;
 }
 

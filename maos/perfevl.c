@@ -108,7 +108,7 @@ static void perfevl_ievl(SIM_T *simu){
 	}
 	if(parms->plot.run){
 	    drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1, 
-		       "Science Openloop OPD", "x (m)", "y (m)", "OL %d", ievl);
+		       "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
 	}
 	if(nmod==3){//evaluation piston/tip/tilt removed wve
 	    loc_calc_ptt(polep[isim],polmp[isim],
@@ -119,8 +119,7 @@ static void perfevl_ievl(SIM_T *simu){
 			aper->mod,aper->amp,iopdevl->p);
 	}
 	//evaluate time averaged open loop PSF.
-	if(parms->evl.psfmean 
-	   &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
+	if(parms->evl.psfmean &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
 	      ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
 	    //Compute on axis OL psf.
 	    dmat *opdevlcopy=NULL;
@@ -134,6 +133,15 @@ static void perfevl_ievl(SIM_T *simu){
 	    int nwvl=parms->evl.nwvl;
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
+	    }
+	    if(parms->plot.run){
+		dmat *psftemp=NULL;
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+		    ddraw("OL PSF", psftemp, NULL, "Science Openloop PSF", 
+			  "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.psfwvl[iwvl]*1e6);
+		    dfree(psftemp);
+		}
 	    }
 	    ccellfree(psf2s);
 	}
@@ -167,7 +175,7 @@ static void perfevl_ievl(SIM_T *simu){
 		}
 	    }
 	    if(parms->plot.run){
-		drawopdamp("evlTomo", aper->locs, iopdevltomo->p, aper->amp1,
+		drawopdamp("Tomo", aper->locs, iopdevltomo->p, aper->amp1,
 			   "Science Ideal MOAO Correction OPD","x (m)", "y (m)",
 			   "Tomo %d",ievl);
 	    }
@@ -180,7 +188,7 @@ static void perfevl_ievl(SIM_T *simu){
 		loc_calc_mod(pcleptomo[isim],pclmptomo[isim],
 			    aper->mod,aper->amp,iopdevltomo->p);
 	    }
-	    //Evaluate closed loop PSF time history and time average
+	    //Evaluate tomography corrected PSF time history and time average
 	    if(do_psf && parms->evl.psf[ievl] ){
 		if(parms->evl.psfpttr){
 		    if(isim==parms->sim.start && ievl==0){
@@ -199,6 +207,17 @@ static void perfevl_ievl(SIM_T *simu){
 		}
 		if(parms->evl.psfhist){
 		    cellarr_ccell(simu->evlpsftomohist[ievl], psf2s);
+		}
+		if(parms->plot.run){
+		    dmat *psftemp=NULL;
+		    for(int iwvl=0; iwvl<nwvl; iwvl++){
+			cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+			dcwlog10(psftemp);
+			double maxmin[2]={0,-12};
+			ddraw("Tomo PSF", psftemp, maxmin, "Science Tomo PSF", 
+			      "x", "y", "Tomo%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
+			dfree(psftemp);
+		    }
 		}
 		ccellfree(psf2s);
 	    }
@@ -261,7 +280,7 @@ static void perfevl_ievl(SIM_T *simu){
 	}
 	if(parms->plot.run){
 	    drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1,
-		       "Science Closeloop OPD", "x (m)", "y (m)",
+		       "Science Closed loop OPD", "x (m)", "y (m)",
 		       "CL %d",ievl);
 	}
 	if(parms->save.evlopd){
@@ -320,8 +339,19 @@ static void perfevl_ievl(SIM_T *simu){
 	    if(parms->evl.psfhist){
 		cellarr_ccell(simu->evlpsfhist[ievl], psf2s);
 	    }
+	    if(parms->plot.run){
+		dmat *psftemp=NULL;
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+		    dcwlog10(psftemp);
+		    double maxmin[2]={0,-12};
+		    ddraw("CL PSF", psftemp, maxmin, "Science Closed Loop PSF", 
+			  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
+		    dfree(psftemp);
+		}
+	    }
 	    ccellfree(psf2s);
-	}
+	}//do_psd
 #if TIMING==1
 	tk[4]+=myclockd()-ck00; ck00=myclockd(); //Time:0.586s
 #endif
@@ -443,7 +473,7 @@ static void perfevl_mean(SIM_T *simu){
 	simu->status->clerrlo=sqrt(simu->cle->p[nmod*isim+1]*1e18);
     }//if split
     
-    if(parms->dbg.noatm==0 && simu->cle->p[nmod*isim] > simu->ole->p[nmod*isim]*10){
+    if(parms->dbg.noatm==0 && simu->cle->p[nmod*isim] > simu->ole->p[nmod*isim]*100){
 	warning("The loop is diverging: OL: %g CL: %g\n",  
 	      simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
     }

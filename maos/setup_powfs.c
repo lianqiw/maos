@@ -170,7 +170,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	  normalized to sum to 1. We want it to max to 1.*/
 	ampcircle=calloc(aper->locs->nloc,sizeof(double));
 	loccircle(ampcircle,aper->locs,0,0,parms->aper.d*0.5,1);
-	loccircle(ampcircle,aper->locs,0,0,parms->aper.din*0.5,-1);
+	if(parms->aper.din>0){
+	    loccircle(ampcircle,aper->locs,0,0,parms->aper.din*0.5,-1);
+	}
 	prop_nongrid_pts(aper->locs,ampcircle,powfs[ipowfs].pts,
 			 NULL,powfs[ipowfs].amp,1,0,0,1,0,0,1);
 	

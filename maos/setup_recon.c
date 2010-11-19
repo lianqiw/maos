@@ -87,7 +87,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	  sparse. W1 is a vector. These matrices are used for weighting in DM
 	  fitting.
 	*/
-	if(parms->dbg.annular_W){
+	if(parms->dbg.annular_W && parms->aper.din>0){
 	    warning("Define the W0/W1 on annular aperture instead of circular.\n");
 	    mkw_annular(recon->ploc, 0, 0, 
 			parms->aper.din/2, parms->aper.d/2,

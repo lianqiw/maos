@@ -1087,6 +1087,9 @@ const char *err_str="Error encountered, Disconnect";
 #define CHANNEL_READ_INT(cmd)						\
     CHANNEL_READ(&cmd, sizeof(int))
 drawdata_t *drawdata=NULL;
+/*
+  readfifo should return TRUE to keep the channel inplace. Return FALSE to remove the channel.
+*/
 static gboolean readfifo(GIOChannel *source, GIOCondition cond, gpointer dumb){
     (void)dumb;
     (void)cond;
@@ -1096,7 +1099,9 @@ static gboolean readfifo(GIOChannel *source, GIOCondition cond, gpointer dumb){
     GError *err=NULL;
     int status;
     static int errcount=0;
+    info("in readfifo: wait for cmd\n");
     CHANNEL_READ_INT(cmd);
+    info("in readfifo: cmd %d read\n",cmd);
     switch (cmd){
     case FIFO_START:
 	if(drawdata){
@@ -1110,7 +1115,6 @@ static gboolean readfifo(GIOChannel *source, GIOCondition cond, gpointer dumb){
 	drawdata->shmkey=0;
 	drawdata->fig=NULL;
 	break;
- 
     case FIFO_DATA:
 	{
 	    int header[3];
@@ -1236,7 +1240,6 @@ static gboolean readfifo(GIOChannel *source, GIOCondition cond, gpointer dumb){
 	}
 	//return FALSE;//do not close the fifo. new transfer may already began.
 	break;
-
     default:
 	warning("Unknown cmd: %x\n", cmd);
 	if(errcount++>10){
@@ -1245,6 +1248,9 @@ static gboolean readfifo(GIOChannel *source, GIOCondition cond, gpointer dumb){
 	}
 	break;
     }
+    info("out fifo_read\n");
+    while (gtk_events_pending ())
+	gtk_main_iteration ();
     return TRUE;
 }
 
@@ -1294,9 +1300,9 @@ int main(int argc, char *argv[])
     if(argc!=2)
 	error("Wrong number of arguments\n");
     fifo=argv[1];
-    {
+    
 	char fnlog[PATH_MAX];
-	snprintf(fnlog, PATH_MAX,"%s/drawdaemon.log", TEMP);
+	snprintf(fnlog, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, (int)getpid());
 	if(!freopen(fnlog, "w", stdout)) {
 	    perror("freopen");
 	    warning("Error redirect stdout\n");
@@ -1307,7 +1313,7 @@ int main(int argc, char *argv[])
 	}
 	setbuf(stdout,NULL);//disable buffering.
 	setbuf(stderr,NULL);
-    }
+
 
 
     if(!window){
@@ -1361,4 +1367,5 @@ int main(int argc, char *argv[])
     gtk_rc_parse_string(rc_string_notebook);
     open_fifo(NULL);
     gtk_main();
+    remove(fnlog);
 }

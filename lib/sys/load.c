@@ -129,9 +129,9 @@ int main(int argc, char **argv){
     }else{
 	char fnlog[PATH_MAX];
 	snprintf(fnlog,PATH_MAX,"load_%s_%d.log",argv[1],(int)getpid());
-	if(!freopen("/dev/null","r",stdin)) warning("Error redirect stdin\n");
+	if(!freopen("/dev/null", "r", stdout)) warning("Error redirect stdin\n");
 	if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
-	if(!freopen(fnlog, "w", stderr)) warning("Error redirect stdout\n");
+	if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
 	setbuf(stdout,NULL);//disable buffering.
 	setbuf(stderr,NULL);
 	putenv("DISPLAY=");

@@ -119,11 +119,6 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	double thres=1;
 	genotf(&lotf[iwvl], loc, powfs[ipowfs].lotf->amp, NULL, powfs[ipowfs].pts->area,
 	       thres, wvl, dtheta, parms->atm.r0, parms->atm.l0, ncompx, ncompy, 1, 1, 1);
-
-#if DEBUG_POWFSINTS == 1
-	ddraw("genselotf",lotf[iwvl], "lltotf");
-#endif
-
     }//iwvl
     locfree(loc);
 }

@@ -1867,3 +1867,12 @@ X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat
     }
     return znew;
 }
+/**
+   Do a component wise log10 on each element of A.
+*/
+void X(cwlog10)(X(mat) *A){
+    double ratio=1./log(10);
+    for(long i=0; i<A->nx*A->ny; i++){
+	A->p[i]=Y(log)(A->p[i])*ratio;
+    }
+}

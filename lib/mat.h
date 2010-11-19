@@ -93,6 +93,6 @@ X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y);\
 X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat)*xnew);\
 X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew);\
 X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);\
-X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);
-
+X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);\
+void X(cwlog10)(X(mat) *A);
 #endif

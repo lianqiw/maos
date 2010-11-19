@@ -154,10 +154,12 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #endif
 	    }
 	    print_progress(simu);
+#if defined(__linux__)
 	    if(simu->nthread>1 && !detached){
-		info2("CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n",
-		      cpu_2, cpu_3, cpu_4, cpu_1, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);
+		fprintf(stderr, "CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n",
+			cpu_2, cpu_3, cpu_4, cpu_1, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);
 	    }
+#endif
 	}//isim
 	free_simu(simu);
     }

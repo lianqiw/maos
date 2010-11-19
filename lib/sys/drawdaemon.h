@@ -20,7 +20,7 @@
 #include "misc.h"
 #define CSIZE       512
 enum{
-    FIFO_START,
+    FIFO_START=0,
     FIFO_DATA,
     FIFO_SHM,
     FIFO_POINTS,

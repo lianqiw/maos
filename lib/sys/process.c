@@ -227,16 +227,14 @@ void daemonize(void){
 	  freopen, the file ended put being the stderr stream out put. messes up
 	  everything.
 	 */
-	if(!freopen("/dev/null","r",stdin))
-	    warning("Error redirectiont stdin\n");
+	/*It may be the following producing garbage characters.*/
+	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
 	char fn[256];
 	pid=getpid();
 	snprintf(fn,256,"run_%d.log",pid);
-	if(!freopen(fn, "w", stdout)) 
-	    warning("Error redirecting stdout\n");
+	if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
 	snprintf(fn,256,"run_%d.log",pid);
-	if(!freopen(fn, "w", stderr)) 
-	    warning("Error redictioning stderr\n");
+	if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
 	
 	mysymlink(fn, "run_recent.log");
 	//turns off file buffering
