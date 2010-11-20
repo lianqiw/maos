@@ -230,8 +230,12 @@ void imagesc(char *fig, /**<Category of the figure*/
     if(zlim){//use the limit.
 	maxmin[0]=zlim[0];
 	maxmin[1]=zlim[1];
-	maxmin[2]=0;//do not need sum.
+    }else{
+	maxmin[0]=0;
+	maxmin[1]=0;
     }
+    maxmin[2]=0;//do not need sum.
+    
     if(color){
 	pi=malloc(sizeof(int)*nx*ny);
     }else{
@@ -254,7 +258,6 @@ void imagesc(char *fig, /**<Category of the figure*/
     }
     header[1]=nx;
     header[2]=ny;
-    //info2("imagesc");getchar();
     FWRITEINT(pfifo, FIFO_START);
     FWRITEINT(pfifo, FIFO_DATA);
     FWRITE(header, sizeof(int), 3, pfifo);
