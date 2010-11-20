@@ -652,14 +652,14 @@ static int respond(int sock){
 	    int ans=0;
 	    writeint(sock,ans);
 	    char *fn=stradd(BUILDDIR, "/lib/sys/drawdaemon",NULL);
-	    warning3("Looking for drawdaemon in %s\n",fn);
+	    info2("Looking for drawdaemon in %s\n",fn);
 	    if(exist(fn)){
-		warning("Found drawdaemon in %s, run it.\n",fn);
+		info2("Found drawdaemon in %s, run it.\n",fn);
 		if(execl(fn, "drawdaemon",fifo,NULL)){
 		    warning3("Error launching drawdaemon at %s\n",fn);
 		}
 	    }else{
-		warning("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
+		warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
 		int found=!system("which drawdaemon");
 		if(found){
 		    if(execlp("drawdaemon","drawdaemon",fifo,NULL)){

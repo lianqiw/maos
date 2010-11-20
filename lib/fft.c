@@ -71,7 +71,6 @@ static void save_wisdom(){
    executed before main().
  */
 static __attribute__((constructor))void init(){
-    mymkdir("%s/.aos/",HOME);
     sprintf(fnwisdom, "%s/.aos/fftw_wisdom",HOME);
     load_wisdom();
 }

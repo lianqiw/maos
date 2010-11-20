@@ -286,19 +286,24 @@ char* scheduler_get_drawdaemon(int pid){
     int launch=0;
     static char *fifo=NULL;
     if(!fifo){
-	fifo=malloc(100);
-	snprintf(fifo,100,"%s/drawdaemon_%d.fifo",TEMP,pid);
+        fifo=malloc(100);
+        snprintf(fifo,100,"%s/drawdaemon_%d.fifo",TEMP,pid);
 	fifo=realloc(fifo,strlen(fifo)+1);
     }
-    if(exist(fifo)){//fifo already exist. test when drawdaemon exists
-	int fd=open(fifo,O_NONBLOCK|O_WRONLY);
-	if(fd==-1){
-	    warning2("Enable to open drawdaemon.");
-	    launch=1;
-	}else{
-	    close(fd);
+    if(exist(fifo)){
+        warning2("fifo already exist. test when drawdaemon exists");
+        char fnpid[PATH_MAX];
+	snprintf(fnpid, PATH_MAX, "%s/drawdaemon_%d.pid", TEMP, pid);
+	FILE *fp=fopen(fnpid, "r");
+	int fpid;
+	fscanf(fp, "%d", &fpid);
+	fclose(fp);
+	if(kill(fpid,0)){
+	  warning2("Drawdaeon has exited\n");
+	  launch=1;
 	}
     }else{
+        info2("make fifo\n");
 	if(mkfifo(fifo,0700)){
 	    warning3("Error making fifo\n");
 	}
@@ -306,6 +311,7 @@ char* scheduler_get_drawdaemon(int pid){
     }
 
     if(launch){
+        info2("Attempting to launch fifo\n");
 	int sock=scheduler_connect_self(0,0);
 	if(sock==-1){
 	    warning3("failed to connect to scheduler\n");

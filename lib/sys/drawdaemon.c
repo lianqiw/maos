@@ -474,6 +474,7 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     if(drawdata->maxmin){//draw colorbar
 	cairo_identity_matrix(cr);
 	cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
+	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_pattern_t *bar=cairo_pattern_create_linear(0,0,0,heightim);
 	cairo_pattern_add_color_stop_rgb(bar,0,0.5625,0,0);
 	cairo_pattern_add_color_stop_rgb(bar,0.1111,1,0,0);
@@ -481,14 +482,13 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	cairo_pattern_add_color_stop_rgb(bar,0.6190,0,1,1);
 	cairo_pattern_add_color_stop_rgb(bar,0.8730,0,0,1);
 	cairo_pattern_add_color_stop_rgb(bar,1,0,0,0.5);
-	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_set_source(cr,bar);
 	cairo_fill(cr);
-	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
+	cairo_pattern_destroy(bar);
+	//cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
 	cairo_set_line_width(cr,1);
 	cairo_stroke(cr);
-	cairo_pattern_destroy(bar);
 
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
 	cairo_set_line_width(cr,1);
@@ -1292,7 +1292,6 @@ static void open_fifo(GIOChannel *source){
     //should be buffered, large data can not be transfered at one time.
     g_io_channel_set_buffered(channel,TRUE);
     g_io_channel_set_close_on_unref (channel,1);
-  
 }
 int main(int argc, char *argv[])
 {
@@ -1300,22 +1299,35 @@ int main(int argc, char *argv[])
     if(argc!=2)
 	error("Wrong number of arguments\n");
     fifo=argv[1];
+    int ppid;
+    const char *fifo2=strstr(fifo,"drawdaemon");
+    if(!fifo2){
+	warning("drawdaemon not found in string\n");
+	ppid=getpid();
+	exit(1);
+    }else{
+	sscanf(fifo2, "drawdaemon_%d.fifo", &ppid);
+    }
+    {//record the drawdaemon pid.
+      char fnpid[PATH_MAX];
+      snprintf(fnpid, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
+      FILE *fp=fopen(fnpid, "w");
+      fprintf(fp, "%d", (int)getpid());
+      fclose(fp);
+    }
+    char fnlog[PATH_MAX];
+    snprintf(fnlog, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
+    if(!freopen(fnlog, "w", stdout)) {
+      perror("freopen");
+      warning("Error redirect stdout\n");
+    }
+    if(!freopen(fnlog, "w", stderr)) {
+      perror("freopen");
+      warning("Error redirect stderr\n");
+    }
+    setbuf(stdout,NULL);//disable buffering.
+    setbuf(stderr,NULL);
     
-	char fnlog[PATH_MAX];
-	snprintf(fnlog, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, (int)getpid());
-	if(!freopen(fnlog, "w", stdout)) {
-	    perror("freopen");
-	    warning("Error redirect stdout\n");
-	}
-	if(!freopen(fnlog, "w", stderr)) {
-	    perror("freopen");
-	    warning("Error redirect stderr\n");
-	}
-	setbuf(stdout,NULL);//disable buffering.
-	setbuf(stderr,NULL);
-
-
-
     if(!window){
 	GdkPixbuf *icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

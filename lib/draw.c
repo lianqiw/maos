@@ -108,12 +108,13 @@ static int fifo_open(){
 	    disable_draw=1;
 	    return -1;
 	}else{
-	    sleep(1);
+	    sleep(2);
 	    goto retry;
 	}
     }else{
-	pfifo=fopen(fifo_fn,"wb");
-	close(fd);
+	//do not use fdopen, which has NONBLOCK flag and is not what we want.
+        pfifo=fopen(fifo_fn,"wb");
+        close(fd);
 	if(!pfifo){
 	    warning("Failed to open fifo\n");
 	    return -1;
@@ -200,7 +201,10 @@ void plot_coord(char *fig,          /**<Category of the figure*/
     FWRITECMDSTR(pfifo,FIFO_XLABEL,xlabel);
     FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
     FWRITEINT(pfifo,FIFO_END);
-    fflush(pfifo);//it is important to flush it so that drawdaemon does not stuck waiting
+    if(fflush(pfifo)){
+	//it is important to flush it so that drawdaemon does not stuck waiting.
+	warning("Failed to fflush the fifo");
+    }
  done:
     UNLOCK(lock); 
 }
@@ -282,7 +286,10 @@ void imagesc(char *fig, /**<Category of the figure*/
     FWRITECMDSTR(pfifo,FIFO_XLABEL,xlabel);
     FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
     FWRITEINT(pfifo,FIFO_END);
-    fflush(pfifo);//it is important to flush it so that drawdaemon does not stuck waiting
+    if(fflush(pfifo)){
+	//it is important to flush it so that drawdaemon does not stuck waiting
+	warning("Failed to fflush the fifo");
+    }
  done:
     UNLOCK(lock);
 }
