@@ -148,11 +148,12 @@ int main(int argc, char **argv){
 	maos_done(0);
 	return 1;
     }
-#if defined(__linux__)   //the scheduler only works correctly on linux now.
+#if defined(__linux__) || defined(__APPLE__)   //the scheduler only works correctly on linux now.
     //register signal handler
     register_signal_handler(maos_signal_handler);
+    info("Signal Handler Registered\n");
     scheduler_start(scmd,arg->nthread,!arg->force);
-
+    info("Scheduler launched\n");
     if(!arg->force){
 	/*
 	  Ask job scheduler for permission to proceed. If no CPUs are

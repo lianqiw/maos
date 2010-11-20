@@ -32,17 +32,22 @@ drawdaemon_LDFLAGS=
 drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0
 endif
 if MON
+if MONN
+MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) $(OPTScommon) -DWITH_NOTIFY=1
+else
+MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon) -DWITH_NOFITY=0
+endif
 PROGS+=../../bin/monitor ../../bin/monitor_list ../../bin/monitor_table
 ______bin_monitor_SOURCES=monitor.c monitor_gui.c
-______bin_monitor_CFLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
+______bin_monitor_CFLAGS=$(MONITOR_FLAGS)
 ______bin_monitor_LDFLAGS=
 ______bin_monitor_LDADD=$(LDADD) $(MON_LIBS) 
 ______bin_monitor_list_SOURCES=monitor_gui_list.c monitor.c
-______bin_monitor_list_CFLAGS=$(MON_CFLAGS) $(AM_CFLAGS) 
+______bin_monitor_list_CFLAGS=$(MONITOR_FLAGS)
 ______bin_monitor_list_LDFLAGS=
 ______bin_monitor_list_LDADD=$(LDADD) $(MON_LIBS)
 ______bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
-______bin_monitor_table_CFLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
+______bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ______bin_monitor_table_LDFLAGS=
 ______bin_monitor_table_LDADD=$(LDADD) $(MON_LIBS)
 endif
