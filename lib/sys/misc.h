@@ -31,15 +31,16 @@ void touch(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
 void expand_filename(char **fnout, const char *fn);
 void maxmindbl(const double *restrict p, long N, 
-	       double *restrict max, double *restrict min, double *restrict sum);
+	       double *restrict max, double *restrict min);
 void maxminlong(const long *restrict p, long N,
-		long *restrict max, long *restrict min, long *restrict sum);
+		long *restrict max, long *restrict min);
 void maxmincmp(const dcomplex *restrict p, long N,
 	       double *restrict max, double *restrict min, double *restrict sum);
 void remove_file_older(const char *fndir, long sec);
 void mymkdir(const char *format,...) CHECK_ARG(1);
 int mystrcmp(const char *a, const char *b);
 char *mystrndup(const char *A, int len);
+void cloexec(int fd);
 #if USE_MEM == 1
 char *mystrdup(const char *A);
 #undef strdup

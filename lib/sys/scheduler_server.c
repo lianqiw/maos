@@ -190,10 +190,7 @@ int make_socket (uint16_t port, int retry){
 	exit (EXIT_FAILURE);
     }
     
-    int oldflag=fcntl(sock,F_GETFD,0);
-    oldflag |= FD_CLOEXEC;
-    fcntl(sock, F_SETFD, oldflag);//close on exec.
-
+    cloexec(sock);
     setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
     /* Give the socket a name. */
     name.sin_family = AF_INET;
@@ -632,11 +629,41 @@ static int respond(int sock){
 	    char *display=readstr(sock);
 	    setenv("DISPLAY",display,1);
 	    char *fifo=readstr(sock);
+	    int method=0;
+	    char *fn=stradd(BUILDDIR, "/lib/sys/drawdaemon",NULL);
+	    info2("Looking for drawdaemon in %s\n",fn);
+	    if(exist(fn)){
+		info2("Found drawdaemon in %s, run it.\n",fn);
+		method=1;
+		//
+		//  warning3("Error launching drawdaemon at %s\n",fn);
+		//}
+	    }else{
+		warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
+		int found=!system("which drawdaemon");
+		if(found){
+		    method=2;
+		    //
+		    //	warning3("Error launching drawdaemon using bash\n");
+		    //}
+		}else{
+		    warning3("Unable to find drawdaemon\n");
+		}
+	    }
+	    int ans;
+	    if(method==0){
+		ans=1;//failed
+	    }else{
+		ans=0;//succeed
+	    }
+	    writeint(sock,ans);//return signal to scheduler_get_drawdaemon
+
+	    //Now start to fork.
 	    int pid2=fork();
 	    if(pid2<0){
 		warning3("Error forking\n");
 	    }else if(pid2>0){
-		//wait the child so that it won't be a zombie
+		//wait the child so that it won't be a zoombie
 		waitpid(pid2,NULL,0);
 		break;//continue execution of the parent loop
 	    }
@@ -649,25 +676,13 @@ static int respond(int sock){
 	    }
 	    //safe child.
 	    setsid();
-	    int ans=0;
-	    writeint(sock,ans);
-	    char *fn=stradd(BUILDDIR, "/lib/sys/drawdaemon",NULL);
-	    info2("Looking for drawdaemon in %s\n",fn);
-	    if(exist(fn)){
-		info2("Found drawdaemon in %s, run it.\n",fn);
-		if(execl(fn, "drawdaemon",fifo,NULL)){
-		    warning3("Error launching drawdaemon at %s\n",fn);
-		}
+	    fclose(stdin);
+	    if(method==1){
+		if(execl(fn, "drawdaemon",fifo,NULL));
+	    }else if(method==2){
+		if(execlp("drawdaemon","drawdaemon",fifo,NULL));
 	    }else{
-		warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
-		int found=!system("which drawdaemon");
-		if(found){
-		    if(execlp("drawdaemon","drawdaemon",fifo,NULL)){
-			warning3("Error launching drawdaemon using bash\n");
-		    }
-		}else{
-		    warning3("Unable to find drawdaemon\n");
-		}
+		error("Invalid method.\n");
 	    }
 	}
 	break;
@@ -751,6 +766,7 @@ void scheduler(void){
 			perror ("accept");
 			exit (EXIT_FAILURE);
 		    }
+		    cloexec(new);//close on exec.
 		    //add fd to watched list.
 		    FD_SET (new, &active_fd_set);
 		} else {
@@ -759,7 +775,6 @@ void scheduler(void){
 		    if (respond (i) < 0){
 			shutdown(i, SHUT_RD);//don't read any more.
 			FD_CLR (i, &active_fd_set);//don't monitor any more
-			
 			if(monitor_get(i)){
 			    //warning("This is a monitor, don't close\n");
 			}else{

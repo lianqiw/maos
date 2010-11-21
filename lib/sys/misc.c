@@ -220,41 +220,35 @@ char *mystrdup(const char *A){
 /**
  Compute max, min and sum of a double vector*/
 void maxmindbl(const double *restrict p, long N, 
-	       double *restrict max, double *restrict min, double *restrict sum){
+	       double *restrict max, double *restrict min){
     if(N==0){
 	*max=0;
 	*min=0;
-	*sum=0;
 	return;
     }
-    double a,b,s;
+    double a,b;
     long i;
-    a=p[0]; b=p[0];s=0;
+    a=p[0]; b=p[0];
     for(i=1; i<N; i++){
-	s+=p[i];
 	if(p[i]>a) a=p[i];
 	if(p[i]<b) b=p[i];
     }
     if(max) *max=a;
     if(min) *min=b;
-    if(sum) *sum=s;
 }
 /**
  Compute max, min and sum of a long vector*/
 void maxminlong(const long *restrict p, long N,
-		long *restrict max, long *restrict min, long *restrict sum){
-    long a,b,s;
+		long *restrict max, long *restrict min){
+    long a,b;
     long i;
     a=p[0]; b=p[0]; 
-    s=0;
     for(i=0; i<N; i++){
-	s+=p[i];
 	if(p[i]>a) a=p[i];
 	if(p[i]<b) b=p[i];
     }
     if(max)*max=a; 
     if(min)*min=b; 
-    if(sum)*sum=s;
 }
 /**
  Compute max, min and sum of a complex vector*/
@@ -338,6 +332,16 @@ int mystrcmp(const char *a, const char *b){
 	return 1;
     }else{
 	return strncmp(a,b,lb);
+    }
+}
+/**
+   Make the fd close on exec.
+*/
+void cloexec(int fd){
+    int oldflag=fcntl(fd, F_GETFD, 0);
+    if(oldflag!=-1){
+	oldflag |= FD_CLOEXEC;
+	fcntl(fd, F_SETFD, oldflag);
     }
 }
 #if defined (__CYGWIN__)

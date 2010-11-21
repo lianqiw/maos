@@ -139,6 +139,10 @@ int main(int argc, char **argv){
 #else
     info2("without optimization!!!\n");
 #endif
+
+    scheduler_start(scmd,arg->nthread,!arg->force);
+    info("Scheduler launched\n"); 
+
     //setting up parameters before asking scheduler to check for any errors.
     PARMS_T * parms=setup_parms(arg);
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
@@ -148,12 +152,11 @@ int main(int argc, char **argv){
 	maos_done(0);
 	return 1;
     }
-#if defined(__linux__) || defined(__APPLE__)   //the scheduler only works correctly on linux now.
+
     //register signal handler
     register_signal_handler(maos_signal_handler);
     info("Signal Handler Registered\n");
-    scheduler_start(scmd,arg->nthread,!arg->force);
-    info("Scheduler launched\n");
+ 
     if(!arg->force){
 	/*
 	  Ask job scheduler for permission to proceed. If no CPUs are
@@ -174,7 +177,7 @@ int main(int argc, char **argv){
 	    wait_cpu(arg->nthread);
 	}
     }
-#endif
+
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     free(scmd);
     free(arg->seeds);

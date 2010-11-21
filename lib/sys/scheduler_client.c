@@ -84,22 +84,7 @@ int scheduler_connect_self(int block, int mode){
 	scheduler_crashed=1; 
 	return sock;
     }
-
-    int oldflag=fcntl(sock,F_GETFD,0);
-    oldflag |= FD_CLOEXEC;
-    fcntl(sock, F_SETFD, oldflag);//close on exec.
-    
-    /*long arg=fcntl(sock,F_GETFL,NULL);
-      if(arg<0) return -1;
-      nonblocking doesn't work.
-      arg|=O_NONBLOCK;
-      if(fcntl(sock,F_SETFL,arg)<0) return -1;*/
-    /*if(init_sockaddr (&servername, host, PORT)){
-	warning3("Unable to init_sockaddr.");
-	scheduler_crashed=1; 
-	close(sock);
-	return -1;
-	}*/
+    cloexec(sock);
     /* Give the socket a name. */
     servername.sin_family = AF_INET;
     servername.sin_port = htons(PORT);
@@ -107,6 +92,7 @@ int scheduler_connect_self(int block, int mode){
 
     int count=0;
     while(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
+	perror("connect");
 	if(!block){
 	    close(sock);
 	    return -1;
@@ -295,12 +281,17 @@ char* scheduler_get_drawdaemon(int pid){
         char fnpid[PATH_MAX];
 	snprintf(fnpid, PATH_MAX, "%s/drawdaemon_%d.pid", TEMP, pid);
 	FILE *fp=fopen(fnpid, "r");
-	int fpid;
-	fscanf(fp, "%d", &fpid);
-	fclose(fp);
-	if(kill(fpid,0)){
-	  warning2("Drawdaeon has exited\n");
-	  launch=1;
+	if(fp){
+	    int fpid;
+	    fscanf(fp, "%d", &fpid);
+	    fclose(fp);
+	    if(kill(fpid,0)){
+		warning2("Drawdaeon has exited\n");
+		launch=1;
+	    }
+	}else{
+	    warning2("Drawdaeon has exited\n");
+	    launch=1;
 	}
     }else{
         info2("make fifo\n");
@@ -312,9 +303,18 @@ char* scheduler_get_drawdaemon(int pid){
 
     if(launch){
         info2("Attempting to launch fifo\n");
-	int sock=scheduler_connect_self(0,0);
+	int sock;
+	for(int retry=0; retry<10; retry++){
+	    sock=scheduler_connect_self(0,0);
+	    if(sock==-1){
+		warning2("failed to connect to scheduler\n");
+		sleep(1);
+	    }else{
+		break;
+	    }
+	}
 	if(sock==-1){
-	    warning3("failed to connect to scheduler\n");
+	    warning2("failed to connect to scheduler\n");
 	    return NULL;
 	}
 	int cmd[2];

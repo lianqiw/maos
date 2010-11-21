@@ -85,6 +85,7 @@ double get_job_launchtime(int pid){
 		 "%*u %*u %*u %*u %*u %*u %*u "//stime
 		 "%*d %*d %*d %*d %*d %*d %llu "//starttime
 		 , &starttime0);
+    fclose(fp);
     if(nread<0){
 	warning("Unable to read %s, nread=%d\n", fnjob,nread);
 	return 0;

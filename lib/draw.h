@@ -40,22 +40,20 @@ extern int DRAW_ID;//number to use for drawdaemon, usually PID.
 #define drawopd(A...)
 #define drawopdamp(A...)
 #else
-void imagesc(char *fig, long nx, long ny, 
-	     const double *limit, const double *zlimit,
-	     const void *p, int type, int color,
-	     const char *title, const char *xlabel, const char *ylabel,
-	     const char *format,...) CHECK_ARG(12);
+void imagesc(char *fig, long nx, long ny, const double *limit, const double *zlimit,
+	     const void *p, const char *title, const char *xlabel, const char *ylabel,
+	     const char *format,...) CHECK_ARG(10);
 void imagesc_cmp_ri(char *fig, long nx, long ny, const double *limit, const double *zlim,
-		    const dcomplex *p, int color,
-		    const char *title, const char *xlabel, const char *ylabel, 
-		    const char *format,...) CHECK_ARG(11);
+		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel, 
+		    const char *format,...) CHECK_ARG(10);
 void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit, const double *zlim,
-		    const dcomplex *p, int color, 
-		    const char *title, const char *xlabel, const char *ylabel,
-		    const char *format,...) CHECK_ARG(11);
+		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
+		    const char *format,...) CHECK_ARG(10);
+void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const double *zlim,
+		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
+		     const char *format,...) CHECK_ARG(10);
 void plot_coord(char *fig, long npts, const double *ptsx, const double *ptsy, 
-		const long *style, const double *limit,
-		int ncir, double(*pcir)[4], 
+		const int32_t *style, const double *limit, int ncir, double(*pcir)[4], 
 		const char *title, const char *xlabel, const char *ylabel,
 		const char *format,...) CHECK_ARG(12);
 void ddraw(char *fig, const dmat *A, double *maxmin,
