@@ -630,24 +630,39 @@ static int respond(int sock){
 	    setenv("DISPLAY",display,1);
 	    char *fifo=readstr(sock);
 	    int method=0;
-	    char *fn=stradd(BUILDDIR, "/lib/sys/drawdaemon",NULL);
-	    info2("Looking for drawdaemon in %s\n",fn);
-	    if(exist(fn)){
-		info2("Found drawdaemon in %s, run it.\n",fn);
-		method=1;
-		//
-		//  warning3("Error launching drawdaemon at %s\n",fn);
-		//}
-	    }else{
-		warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
-		int found=!system("which drawdaemon");
-		if(found){
-		    method=2;
-		    //
-		    //	warning3("Error launching drawdaemon using bash\n");
-		    //}
+#if defined(__APPLE__)
+	    char cmdopen[1024];
+	    snprintf(cmdopen, 1024, "open -n -a %s/scripts/drawdaemon.app --args %s", SRCDIR, fifo);
+	    if(system(cmdopen)){
+		method=0;//failed
+	    }else{//succeed
+		info("%s succeeded", cmdopen);
+		method=3;
+	    }
+	    if(method==0){
+		snprintf(cmdopen, 1024, "open -n -a drawdaemon.app --args %s", fifo);
+		if(system(cmdopen)){
+		    method=0;//failed
 		}else{
-		    warning3("Unable to find drawdaemon\n");
+		    info("%s succeeded\n", cmdopen);
+		    method=3;
+		}
+	    }
+#endif
+	    char *fn=stradd(BUILDDIR, "/lib/sys/drawdaemon",NULL);
+	    if(method==0){
+		info2("Looking for drawdaemon in %s\n",fn);
+		if(exist(fn)){
+		    info2("Found drawdaemon in %s, run it.\n",fn);
+		    method=1;
+		}else{
+		    warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
+		    int found=!system("which drawdaemon");
+		    if(found){
+			method=2;
+		    }else{
+			warning3("Unable to find drawdaemon\n");
+		    }
 		}
 	    }
 	    int ans;
@@ -657,7 +672,9 @@ static int respond(int sock){
 		ans=0;//succeed
 	    }
 	    writeint(sock,ans);//return signal to scheduler_get_drawdaemon
-
+	    if(method==3){
+		break;//already launched.
+	    }
 	    //Now start to fork.
 	    int pid2=fork();
 	    if(pid2<0){

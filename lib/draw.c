@@ -99,13 +99,17 @@ static int fifo_open(){
     fd=open(fifo_fn,O_NONBLOCK|O_WRONLY);
     if(fd==-1){
 	perror("fifo_open");
-	if(errno==ENXIO && retry>2){
+	if(errno==ENXIO && retry>20){
 	    warning("Unable to open drawdaemon. Draw is disabled\n");
 	    disable_draw=1;
 	    return -1;
 	}else{
 	    sleep(2);
-	    goto retry;
+	    if(retry<20){
+		goto retry;
+	    }else{
+		return -1;
+	    }
 	}
     }else{
 	//do not use fdopen, which has NONBLOCK flag and is not what we want.

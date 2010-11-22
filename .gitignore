@@ -31,3 +31,5 @@ lib/tmp.c
 #misc
 *.tar*
 *~
+
+scripts/*.app

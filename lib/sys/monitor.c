@@ -53,7 +53,7 @@ static int notify_daemon=1;
 #include "process.h"
 #include "scheduler_client.h"
 #include "monitor.h"
-#include "icon-draw.h"
+#include "icon-monitor.h"
 #include "icon-finished.h"
 #include "icon-running.h"
 #include "icon-failed.h"
@@ -755,7 +755,7 @@ int main(int argc, char *argv[])
     gdk_color_parse("#0099FF",&blue);
     gdk_color_parse("#FFFFAB",&color_even);
     gdk_color_parse("#FFFFFF",&color_odd);
-    icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw, FALSE, NULL);
+    icon_main=gdk_pixbuf_new_from_inline(-1,icon_monitor, FALSE, NULL);
     icon_finished=gdk_pixbuf_new_from_inline(-1,icon_inline_finished,FALSE,NULL);
     icon_failed=gdk_pixbuf_new_from_inline(-1,icon_inline_failed,FALSE,NULL);
     icon_running=gdk_pixbuf_new_from_inline(-1,icon_inline_running,FALSE,NULL);
@@ -806,7 +806,7 @@ int main(int argc, char *argv[])
     g_signal_connect(G_OBJECT (window), "window-state-event", 
 		     G_CALLBACK (window_state_event), NULL);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 800, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), 840, 400);
     gtk_widget_show_all(window);
 
     tabs=calloc(nhost,sizeof(GtkWidget*));

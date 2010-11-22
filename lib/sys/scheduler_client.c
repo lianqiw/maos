@@ -74,39 +74,36 @@ int scheduler_connect_self(int block, int mode){
     if(scheduler_crashed) {
 	return -1;
     }
-
-    struct sockaddr_in servername;
- 
-    /* Create the socket. */
-    sock = socket (PF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
-	perror ("socket (scheduler)");
-	scheduler_crashed=1; 
-	return sock;
-    }
-    cloexec(sock);
-    /* Give the socket a name. */
-    servername.sin_family = AF_INET;
-    servername.sin_port = htons(PORT);
-    servername.sin_addr.s_addr = htonl(INADDR_ANY);
-
     int count=0;
-    while(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
-	perror("connect");
-	if(!block){
-	    close(sock);
-	    return -1;
+    struct sockaddr_in servername;
+    do{
+	/* Create the socket. */
+	sock = socket (PF_INET, SOCK_STREAM, 0);
+	if (sock < 0) {
+	    perror ("socket (scheduler)");
+	    scheduler_crashed=1; 
+	    return sock;
 	}
-	sleep(4);
-	count++;
-	if(count>1000){
+	cloexec(sock);
+	/* Give the socket a name. */
+	servername.sin_family = AF_INET;
+	servername.sin_port = htons(PORT);
+	servername.sin_addr.s_addr = htonl(INADDR_ANY);
+	if(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
+	    perror("connect");
 	    close(sock);
-	    sock=-1;
-	    error("Failed to connect to scheduer\n");
+	    if(!block){
+		return -1;
+	    }
+	    sleep(4);
+	    count++;
+	}else{
+	    scheduler_shutdown(&sock,mode);
+	    return sock;
+	    break;
 	}
-    }
-    scheduler_shutdown(&sock,mode);
-    return sock;
+    }while(count<10);
+    return -1;
 }
 static void scheduler_launch_do(void *junk){
     /**
@@ -277,7 +274,7 @@ char* scheduler_get_drawdaemon(int pid){
 	fifo=realloc(fifo,strlen(fifo)+1);
     }
     if(exist(fifo)){
-        warning2("fifo already exist. test when drawdaemon exists");
+        warning2("fifo already exist. test when drawdaemon exists\n");
         char fnpid[PATH_MAX];
 	snprintf(fnpid, PATH_MAX, "%s/drawdaemon_%d.pid", TEMP, pid);
 	FILE *fp=fopen(fnpid, "r");
@@ -286,11 +283,11 @@ char* scheduler_get_drawdaemon(int pid){
 	    fscanf(fp, "%d", &fpid);
 	    fclose(fp);
 	    if(kill(fpid,0)){
-		warning2("Drawdaeon has exited\n");
+		warning2("Drawdaemon has exited\n");
 		launch=1;
 	    }
 	}else{
-	    warning2("Drawdaeon has exited\n");
+	    warning2("Drawdaemon has exited\n");
 	    launch=1;
 	}
     }else{

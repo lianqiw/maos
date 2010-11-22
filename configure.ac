@@ -1,6 +1,6 @@
 AC_PREREQ(2.57)
 AC_INIT(maos, 0.7.4, lianqiw@gmail.com)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
@@ -94,6 +94,17 @@ case "$host_os" in
     ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
+ if ! test -e ${SRC_DIR}/scripts/drawdaemon.app ;then
+     curl -O -L -# https://github.com/downloads/lianqiw/maos/drawdaemon.app.tar.gz -# &&\
+     tar zxf drawdaemon.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
+     rm  -rf drawdaemon.app.tar.gz
+ fi
+ if ! test -e ${SRC_DIR}/scripts/monitor.app ;then
+     curl -O -L -# https://github.com/downloads/lianqiw/maos/monitor.app.tar.gz -# &&\ 
+     tar zxf monitor.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
+     rm	 -rf monitor.app.tar.gz
+ fi
+ echo "Please use the monitor downloaded to ${SRC_DIR}/scripts/monitor.app"
 ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)

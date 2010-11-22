@@ -79,7 +79,7 @@ typedef struct drawdata_t{
 }drawdata_t;
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
-static const char *fifo=NULL;
+static char *fifo=NULL;
 static GtkWidget *window=NULL;
 static GtkWidget *notebook=NULL;
 static int font_name_version=0;
@@ -689,10 +689,11 @@ static void do_zoom(drawdata_t *drawdata, int mode){
 static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
     (void)btn;
     GtkWidget *root;
+    //First find the root page
     root=gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), 
 				   gtk_notebook_get_current_page
 				   (GTK_NOTEBOOK(notebook)));
-    
+    //Find the sub page
     int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(root), 
 				    (*drawdatawrap)->page);
     gtk_notebook_remove_page(GTK_NOTEBOOK(root), ipage);
@@ -703,36 +704,51 @@ static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
 	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook),jpage);
     }
 }
-
+/**
+   Delete a figure page using button-press-event
+*/
+static void delete_page_event(GtkWidget *widget, GdkEventButton *event, drawdata_t **drawdatawrap){
+    if(event->button==1 && event->type==GDK_BUTTON_PRESS){
+	delete_page(NULL, drawdatawrap);
+    }
+}
 static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
     drawdata_t *drawdata=*drawdatawrap;
     const gchar *str=drawdata->name;
-    GtkWidget *close_btn;
     GtkWidget *label;
     GtkWidget *out;
-    GtkRcStyle *rcstyle;
+    out=gtk_hbox_new(FALSE, 0);
+#if defined(__linux__)
+    GtkWidget *close_btn;
     close_btn=gtk_button_new();
-    gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
     gtk_button_set_focus_on_click(GTK_BUTTON(close_btn), FALSE);
     gtk_container_add(GTK_CONTAINER(close_btn), 
-		      gtk_image_new_from_stock(GTK_STOCK_CLOSE,
-					       GTK_ICON_SIZE_MENU));
-    g_signal_connect(close_btn, "clicked", 
-		     G_CALLBACK(delete_page), drawdatawrap);
+		      gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU));
+    g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
     /* make button as small as possible */
+
+    GtkRcStyle *rcstyle;
+    gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
     rcstyle = gtk_rc_style_new();
     rcstyle->xthickness = rcstyle->ythickness = 0;
     gtk_widget_modify_style(close_btn, rcstyle);
     gtk_widget_set_size_request(close_btn,14,14);
+    gtk_rc_style_unref(rcstyle);
+    gtk_box_pack_end(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
+#else
+    GtkWidget *ebox=gtk_event_box_new();
+    GtkWidget *image=gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
+    gtk_container_add(GTK_CONTAINER(ebox), image);
+    g_signal_connect(ebox, "button_press_event", G_CALLBACK(delete_page_event), drawdatawrap);
+    gtk_box_pack_end(GTK_BOX(out), ebox, FALSE, FALSE, 0);
+#endif
+
     /* create label for tab */
     label = gtk_label_new(str);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 0, 0);
     gtk_label_set_width_chars(GTK_LABEL(label), 12);
-    out=gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(out), label, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
-    gtk_rc_style_unref(rcstyle);
     gtk_widget_show_all(out);
     return out;
 }
@@ -1251,6 +1267,7 @@ static int read_fifo(FILE *fp){
 		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
 		drawdatawrap[0]=drawdata;
 		gdk_threads_enter();
+		info("drawdata=%p, drawdatawrap=%p\n", drawdata, drawdatawrap);
 		addpage(drawdatawrap);
 		gdk_threads_leave();
 		drawdata=NULL;
@@ -1302,15 +1319,17 @@ static void open_fifo(void){
 
 int main(int argc, char *argv[])
 {
-    if(argc!=2)
-	error("Wrong number of arguments\n");
     if(!g_thread_supported()){
 	g_thread_init(NULL);
 	gdk_threads_init();
     }
     gtk_init(&argc, &argv);
-
-    fifo=argv[1];
+    if(argc>1){
+	fifo=argv[1];
+    }else{
+	fifo=calloc(80,sizeof(char));
+	snprintf(fifo,80,"%s/drawdaemon_%d.fifo",TEMP,(int)getppid());
+    }
     int ppid;
     const char *fifo2=strstr(fifo,"drawdaemon");
     if(!fifo2){
