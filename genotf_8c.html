@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: lib/genotf.c File Reference</title>
+<title>maos-0.7.5: lib/genotf.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -78,9 +78,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genotf_8c.html#4165951e706b75fa2a3f90d72996b2e4">genotf_wrap</a> (GENOTF_T *data)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">A wrapper to execute pttr parallel in pthreads.  <a href="#4165951e706b75fa2a3f90d72996b2e4"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static T_VALID *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genotf_8c.html#b767c269e93befe2c50dca482c91cb94">gen_pval</a> (int notfx, int notfy, <a class="el" href="structloc__t.html">loc_t</a> *loc, const double *amp, double dtheta, double wvl)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static T_VALID *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genotf_8c.html#da23445cba9b858dbc4f53d886585229">gen_pval</a> (int notfx, int notfy, <a class="el" href="structloc__t.html">loc_t</a> *loc, double dtheta, double wvl)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate pairs of overlapping points for structure function.  <a href="#b767c269e93befe2c50dca482c91cb94"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate pairs of overlapping points for structure function.  <a href="#da23445cba9b858dbc4f53d886585229"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static double *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="genotf_8c.html#c595427e1465c4c2be9168ff23aec434">genotfB</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, double wvl, double r0, double L0)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Generate the B matrix.  <a href="#c595427e1465c4c2be9168ff23aec434"></a><br></td></tr>
@@ -237,7 +237,7 @@ A wrapper to execute pttr parallel in pthreads.
 
 </div>
 </div><p>
-<a class="anchor" name="b767c269e93befe2c50dca482c91cb94"></a><!-- doxytag: member="genotf.c::gen_pval" ref="b767c269e93befe2c50dca482c91cb94" args="(int notfx, int notfy, loc_t *loc, const double *amp, double dtheta, double wvl)" -->
+<a class="anchor" name="da23445cba9b858dbc4f53d886585229"></a><!-- doxytag: member="genotf.c::gen_pval" ref="da23445cba9b858dbc4f53d886585229" args="(int notfx, int notfy, loc_t *loc, double dtheta, double wvl)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -258,12 +258,6 @@ A wrapper to execute pttr parallel in pthreads.
           <td></td>
           <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&nbsp;</td>
           <td class="paramname"> <em>loc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double *&nbsp;</td>
-          <td class="paramname"> <em>amp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -289,7 +283,8 @@ A wrapper to execute pttr parallel in pthreads.
 <p>
 Generate pairs of overlapping points for structure function. 
 <p>
-
+Changelog:<p>
+2010-11-08: removed amp. It caused wrong otf because it uses the amp of the first subaperture to build pval, but this one is not fully illuminated. 
 </div>
 </div><p>
 <a class="anchor" name="c595427e1465c4c2be9168ff23aec434"></a><!-- doxytag: member="genotf.c::genotfB" ref="c595427e1465c4c2be9168ff23aec434" args="(loc_t *loc, double wvl, double r0, double L0)" -->
@@ -464,7 +459,7 @@ ALl these apertures must share the same geometry, but may come with different am
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: RECON_T Struct Reference</title>
+<title>maos-0.7.5: RECON_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -252,9 +252,6 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRECON__T.html#fd91c2e9702af9abea6f175a40cf2a46">RFtomo</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">focus recon from reconstructed X.  <a href="#fd91c2e9702af9abea6f175a40cf2a46"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRECON__T.html#caab8c1082469216636b9506e2efee46">skipwfs</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">skip the wfs in split tomo.  <a href="#caab8c1082469216636b9506e2efee46"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structNGSMOD__T.html">NGSMOD_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRECON__T.html#9fbf97b35015b06fdd972be4bb0f31b0">ngsmod</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ngs mod in ad hoc split tomography.  <a href="#9fbf97b35015b06fdd972be4bb0f31b0"></a><br></td></tr>
@@ -288,6 +285,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRECON__T.html#19f667fc7731b5bde53fd4761496f94a">calc_invpsd</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Whether we need to compute inverve of psd.  <a href="#19f667fc7731b5bde53fd4761496f94a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structRECON__T.html#5802b75de23a854f3e00b92900cb7d31">warm_restart</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Use warm restart.  <a href="#5802b75de23a854f3e00b92900cb7d31"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains data related to wavefront reconstruction and DM fitting. 
@@ -1330,23 +1330,6 @@ focus recon from reconstructed X.
 
 </div>
 </div><p>
-<a class="anchor" name="caab8c1082469216636b9506e2efee46"></a><!-- doxytag: member="RECON_T::skipwfs" ref="caab8c1082469216636b9506e2efee46" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int* <a class="el" href="structRECON__T.html#caab8c1082469216636b9506e2efee46">RECON_T::skipwfs</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-skip the wfs in split tomo. 
-<p>
-(NGS) 
-</div>
-</div><p>
 <a class="anchor" name="9fbf97b35015b06fdd972be4bb0f31b0"></a><!-- doxytag: member="RECON_T::ngsmod" ref="9fbf97b35015b06fdd972be4bb0f31b0" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -1534,10 +1517,27 @@ Whether we need to compute inverve of psd.
 
 </div>
 </div><p>
+<a class="anchor" name="5802b75de23a854f3e00b92900cb7d31"></a><!-- doxytag: member="RECON_T::warm_restart" ref="5802b75de23a854f3e00b92900cb7d31" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structRECON__T.html#5802b75de23a854f3e00b92900cb7d31">RECON_T::warm_restart</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Use warm restart. 
+<p>
+
+</div>
+</div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:55 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

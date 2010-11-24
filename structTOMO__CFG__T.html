@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: TOMO_CFG_T Struct Reference</title>
+<title>maos-0.7.5: TOMO_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -84,30 +84,24 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#0c2f4cb89b5c8829fe24ecad0a7c203c">pos</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">over sampling factor of ploc over actuator spacing  <a href="#0c2f4cb89b5c8829fe24ecad0a7c203c"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#cc33a933f0df8b5b7bc03d1d7a7b1fe5">tik_cstr</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#4e9cdc5ecfbe16d7cb897e919f52046a">tikcr</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">tikhonov regularization.  <a href="#cc33a933f0df8b5b7bc03d1d7a7b1fe5"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#441772201383938aaa3c18dacbf222df">xloc_tight</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">reduce uncoupled points in xloc.  <a href="#441772201383938aaa3c18dacbf222df"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">tikhonov regularization.  <a href="#4e9cdc5ecfbe16d7cb897e919f52046a"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#92881e916c336aa7e5b337f4f1aab397">piston_cr</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">single point piston constraint.  <a href="#92881e916c336aa7e5b337f4f1aab397"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#0b1183e68cda2c750bc3aa9b23648685">split</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">split tomography type.  <a href="#0b1183e68cda2c750bc3aa9b23648685"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#a9d49170afccefe4bdbf0507759dab89">split_wt</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#251db726cf66e7523832f2c8bb4ff72b">ahst_wt</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0: use Wg, 1: using Wa  <a href="#a9d49170afccefe4bdbf0507759dab89"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#03b70b3b1ab7a0fb2f84b10256d0f6a6">split_Rngs_svd</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">0: use Wg, 1: using Wa  <a href="#251db726cf66e7523832f2c8bb4ff72b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#19bfc1f68d72b0ef71289fd3266afd50">ahst_idealngs</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">use svd method to calculate NGS mode in split tomography mode.  <a href="#03b70b3b1ab7a0fb2f84b10256d0f6a6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#a518c9befdd8bd0bb179ef516ff20f19">split_idealngs</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ideal correction on NGS modes.  <a href="#19bfc1f68d72b0ef71289fd3266afd50"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#43b0a419a4634ea52515e8bde87905fa">ahst_rtt</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">ideal correction on NGS modes.  <a href="#a518c9befdd8bd0bb179ef516ff20f19"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#34e9b29344aab2d74ce12502e1c2e717">split_rtt</a></td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">remote tip/tilt in high order DM fit output in split mode  <a href="#34e9b29344aab2d74ce12502e1c2e717"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">remote tip/tilt in high order DM fit output in split mode  <a href="#43b0a419a4634ea52515e8bde87905fa"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#78278efa786e9d15e8de3a3af9525101">alg</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Tomography algorithm to solve the linear equation.  <a href="#78278efa786e9d15e8de3a3af9525101"></a><br></td></tr>
@@ -217,12 +211,12 @@ over sampling factor of ploc over actuator spacing
 
 </div>
 </div><p>
-<a class="anchor" name="cc33a933f0df8b5b7bc03d1d7a7b1fe5"></a><!-- doxytag: member="TOMO_CFG_T::tik_cstr" ref="cc33a933f0df8b5b7bc03d1d7a7b1fe5" args="" -->
+<a class="anchor" name="4e9cdc5ecfbe16d7cb897e919f52046a"></a><!-- doxytag: member="TOMO_CFG_T::tikcr" ref="4e9cdc5ecfbe16d7cb897e919f52046a" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="structTOMO__CFG__T.html#cc33a933f0df8b5b7bc03d1d7a7b1fe5">TOMO_CFG_T::tik_cstr</a>          </td>
+          <td class="memname">double <a class="el" href="structTOMO__CFG__T.html#4e9cdc5ecfbe16d7cb897e919f52046a">TOMO_CFG_T::tikcr</a>          </td>
         </tr>
       </table>
 </div>
@@ -232,23 +226,6 @@ over sampling factor of ploc over actuator spacing
 tikhonov regularization. 
 <p>
 
-</div>
-</div><p>
-<a class="anchor" name="441772201383938aaa3c18dacbf222df"></a><!-- doxytag: member="TOMO_CFG_T::xloc_tight" ref="441772201383938aaa3c18dacbf222df" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#441772201383938aaa3c18dacbf222df">TOMO_CFG_T::xloc_tight</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-reduce uncoupled points in xloc. 
-<p>
-Keep False 
 </div>
 </div><p>
 <a class="anchor" name="92881e916c336aa7e5b337f4f1aab397"></a><!-- doxytag: member="TOMO_CFG_T::piston_cr" ref="92881e916c336aa7e5b337f4f1aab397" args="" -->
@@ -287,12 +264,12 @@ split tomography type.
 
 </div>
 </div><p>
-<a class="anchor" name="a9d49170afccefe4bdbf0507759dab89"></a><!-- doxytag: member="TOMO_CFG_T::split_wt" ref="a9d49170afccefe4bdbf0507759dab89" args="" -->
+<a class="anchor" name="251db726cf66e7523832f2c8bb4ff72b"></a><!-- doxytag: member="TOMO_CFG_T::ahst_wt" ref="251db726cf66e7523832f2c8bb4ff72b" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#a9d49170afccefe4bdbf0507759dab89">TOMO_CFG_T::split_wt</a>          </td>
+          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#251db726cf66e7523832f2c8bb4ff72b">TOMO_CFG_T::ahst_wt</a>          </td>
         </tr>
       </table>
 </div>
@@ -304,30 +281,12 @@ split tomography type.
 
 </div>
 </div><p>
-<a class="anchor" name="03b70b3b1ab7a0fb2f84b10256d0f6a6"></a><!-- doxytag: member="TOMO_CFG_T::split_Rngs_svd" ref="03b70b3b1ab7a0fb2f84b10256d0f6a6" args="" -->
+<a class="anchor" name="19bfc1f68d72b0ef71289fd3266afd50"></a><!-- doxytag: member="TOMO_CFG_T::ahst_idealngs" ref="19bfc1f68d72b0ef71289fd3266afd50" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#03b70b3b1ab7a0fb2f84b10256d0f6a6">TOMO_CFG_T::split_Rngs_svd</a>          </td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-use svd method to calculate NGS mode in split tomography mode. 
-<p>
-<dl compact><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>implement this </dd></dl>
-
-</div>
-</div><p>
-<a class="anchor" name="a518c9befdd8bd0bb179ef516ff20f19"></a><!-- doxytag: member="TOMO_CFG_T::split_idealngs" ref="a518c9befdd8bd0bb179ef516ff20f19" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#a518c9befdd8bd0bb179ef516ff20f19">TOMO_CFG_T::split_idealngs</a>          </td>
+          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#19bfc1f68d72b0ef71289fd3266afd50">TOMO_CFG_T::ahst_idealngs</a>          </td>
         </tr>
       </table>
 </div>
@@ -339,12 +298,12 @@ ideal correction on NGS modes.
 For skycoverage preprocessing. 
 </div>
 </div><p>
-<a class="anchor" name="34e9b29344aab2d74ce12502e1c2e717"></a><!-- doxytag: member="TOMO_CFG_T::split_rtt" ref="34e9b29344aab2d74ce12502e1c2e717" args="" -->
+<a class="anchor" name="43b0a419a4634ea52515e8bde87905fa"></a><!-- doxytag: member="TOMO_CFG_T::ahst_rtt" ref="43b0a419a4634ea52515e8bde87905fa" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#34e9b29344aab2d74ce12502e1c2e717">TOMO_CFG_T::split_rtt</a>          </td>
+          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#43b0a419a4634ea52515e8bde87905fa">TOMO_CFG_T::ahst_rtt</a>          </td>
         </tr>
       </table>
 </div>
@@ -370,7 +329,7 @@ remote tip/tilt in high order DM fit output in split mode
 <p>
 Tomography algorithm to solve the linear equation. 
 <p>
-<dl compact><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>implement BGS, MG 0: Cholesky direct solve for the large matrix. (CBS) 1: CG or PCG. </dd></dl>
+<dl compact><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>implement BGS, MG 0: Cholesky direct solve for the large matrix. (CBS) 1: CG or PCG. </dd></dl>
 
 </div>
 </div><p>
@@ -456,7 +415,7 @@ force assemble tomography matrix in CG
 <p>
 estimate wind. 
 <p>
-<dl compact><dt><b><a class="el" href="todo.html#_todo000007">Todo:</a></b></dt><dd>finish implement it. </dd></dl>
+<dl compact><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>finish implement it. </dd></dl>
 
 </div>
 </div><p>
@@ -480,7 +439,7 @@ shift opdr using wind velocity (from input if windest=0)
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2parms_8h.html">parms.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:55 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

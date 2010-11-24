@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: maos/setup_recon.c File Reference</title>
+<title>maos-0.7.5: maos/setup_recon.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -108,21 +108,15 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#630c6d5a66160c402a727df359300f20">fit_prep_lrt</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setup fitting low rank terms that are in the NULL space of DM fitting operator.  <a href="#630c6d5a66160c402a727df359300f20"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#b4a4784b2c4fff59fcdcdb3163fb1aea">free_recon_moao</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free <a class="el" href="structMOAO__T.html" title="contains MOAO related data">MOAO_T</a>.  <a href="#b4a4784b2c4fff59fcdcdb3163fb1aea"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#8300ff84b2b46910d45f4ce801252535">setup_recon_moao</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Prepare the propagation H matrix for MOAO and compute the reconstructor.  <a href="#8300ff84b2b46910d45f4ce801252535"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2">setup_recon_fit_matrix</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Assemble the DM fitting matrix.  <a href="#f7a8a7478b06b8b4f0d27784819f41c2"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#4f4abf13c9b0972de67fab348bb9f470">setup_recon_focus</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Create the reconstructor to reconstruct the residual focus error due to LGS sodium tracking error.  <a href="#4f4abf13c9b0972de67fab348bb9f470"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#2bd8394adbdb99d342f9ac9d3a0faa6f">setup_recon_mvst</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#73a310c15901ee437d44af53a66b22a6">setup_recon_mvst</a> (<a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the MVST split tomography NGS mode reconstructor.  <a href="#2bd8394adbdb99d342f9ac9d3a0faa6f"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">compute the MVST split tomography NGS mode reconstructor.  <a href="#73a310c15901ee437d44af53a66b22a6"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structRECON__T.html">RECON_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__recon_8c.html#6ec32666222d37047d7775b874969a2e">setup_recon</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Sets up the reconstruction structs including wavefront reconstructor and DM fitting operator.  <a href="#6ec32666222d37047d7775b874969a2e"></a><br></td></tr>
@@ -574,68 +568,6 @@ Setup fitting low rank terms that are in the NULL space of DM fitting operator.
 typically include piston on each DM and tip/tilt on certain DMs. Becareful with tip/tilt contraint when using CBS. 
 </div>
 </div><p>
-<a class="anchor" name="b4a4784b2c4fff59fcdcdb3163fb1aea"></a><!-- doxytag: member="setup_recon.c::free_recon_moao" ref="b4a4784b2c4fff59fcdcdb3163fb1aea" args="(RECON_T *recon, const PARMS_T *parms)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void free_recon_moao           </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>recon</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>parms</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td><code> [static]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Free <a class="el" href="structMOAO__T.html" title="contains MOAO related data">MOAO_T</a>. 
-<p>
-
-</div>
-</div><p>
-<a class="anchor" name="8300ff84b2b46910d45f4ce801252535"></a><!-- doxytag: member="setup_recon.c::setup_recon_moao" ref="8300ff84b2b46910d45f4ce801252535" args="(RECON_T *recon, const PARMS_T *parms)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void setup_recon_moao           </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>recon</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>parms</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td><code> [static]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Prepare the propagation H matrix for MOAO and compute the reconstructor. 
-<p>
-We only need a reconstructor for every different MOAO type. 
-</div>
-</div><p>
 <a class="anchor" name="f7a8a7478b06b8b4f0d27784819f41c2"></a><!-- doxytag: member="setup_recon.c::setup_recon_fit_matrix" ref="f7a8a7478b06b8b4f0d27784819f41c2" args="(RECON_T *recon, const PARMS_T *parms)" -->
 <div class="memitem">
 <div class="memproto">
@@ -706,12 +638,12 @@ Create the reconstructor to reconstruct the residual focus error due to LGS sodi
 Need to average out the focus error caused by atmosphere when applying (a low pass filter is applied to the output). 
 </div>
 </div><p>
-<a class="anchor" name="2bd8394adbdb99d342f9ac9d3a0faa6f"></a><!-- doxytag: member="setup_recon.c::setup_recon_mvst" ref="2bd8394adbdb99d342f9ac9d3a0faa6f" args="(RECON_T *recon, const PARMS_T *parms)" -->
+<a class="anchor" name="73a310c15901ee437d44af53a66b22a6"></a><!-- doxytag: member="setup_recon.c::setup_recon_mvst" ref="73a310c15901ee437d44af53a66b22a6" args="(RECON_T *recon, const PARMS_T *parms)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">static void setup_recon_mvst           </td>
+          <td class="memname">void setup_recon_mvst           </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structRECON__T.html">RECON_T</a> *&nbsp;</td>
           <td class="paramname"> <em>recon</em>, </td>
@@ -725,7 +657,7 @@ Need to average out the focus error caused by atmosphere when applying (a low pa
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td><td><code> [static]</code></td>
+          <td></td><td></td><td></td>
         </tr>
       </table>
 </div>
@@ -792,15 +724,15 @@ Sets up the reconstruction structs including wavefront reconstructor and DM fitt
 <p>
 Calls <a class="el" href="setup__recon_8c.html#764bf903a38cfc81220e42699e911884" title="assemble tomography matrix.">setup_recon_tomo_matrix()</a> and <a class="el" href="setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix.">setup_recon_fit_matrix()</a> to setup the tomography and DM fitting matrix.<p>
 AHST is handled in <a class="el" href="ahst_8c.html#55c65679c193d90bc7f5175ebb17733f" title="setup NGS modes and reconstructor using AHST for one or two DMs.">setup_ngsmod()</a>.<p>
-MVST is handled in <a class="el" href="setup__recon_8c.html#2bd8394adbdb99d342f9ac9d3a0faa6f" title="compute the MVST split tomography NGS mode reconstructor.">setup_recon_mvst()</a>.<p>
-MOAO is handled in <a class="el" href="setup__recon_8c.html#8300ff84b2b46910d45f4ce801252535" title="Prepare the propagation H matrix for MOAO and compute the reconstructor.">setup_recon_moao()</a>. 
+MVST is handled in <a class="el" href="setup__recon_8c.html#73a310c15901ee437d44af53a66b22a6" title="compute the MVST split tomography NGS mode reconstructor.">setup_recon_mvst()</a>.<p>
+MOAO is handled in <a class="el" href="moao_8c.html#c70e508023f8816854d7d4eaf0452aa6" title="Prepare the propagation H matrix for MOAO and compute the reconstructor.">setup_recon_moao()</a>. 
 <p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dynsection">
 <p><center><img src="setup__recon_8c_6ec32666222d37047d7775b874969a2e_cgraph.png" border="0" usemap="#setup__recon_8c_6ec32666222d37047d7775b874969a2e_cgraph_map" alt=""></center>
 <map name="setup__recon_8c_6ec32666222d37047d7775b874969a2e_cgraph_map">
-<area shape="rect" id="node3" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="208,5,259,35"><area shape="rect" id="node5" href="dmat_8h.html#a9c20ae37907780af63d91312d4fea38" title="creat a X(mat) reference an existing X(mat)." alt="" coords="212,59,255,88"><area shape="rect" id="node7" href="dmat_8h.html#705d6399ce6e7f7064d12f4eb131d47d" title="set values of each element in a X(mat) to val." alt="" coords="211,112,256,141"><area shape="rect" id="node9" href="fdpcg_8c.html#8af00f91380661f9d85542ac9738ba95" title="Prepare data for Tomography Fourier Domain Preconditioner." alt="" coords="183,165,284,195"><area shape="rect" id="node11" href="ahst_8c.html#55c65679c193d90bc7f5175ebb17733f" title="setup NGS modes and reconstructor using AHST for one or two DMs." alt="" coords="180,219,287,248"><area shape="rect" id="node13" href="setup__recon_8c.html#0182734530b87fcf5498aea2e8d1e5c0" title="Setup the deformable mirrors grid aloc." alt="" coords="172,272,295,301"><area shape="rect" id="node15" href="setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix." alt="" coords="157,325,309,355"><area shape="rect" id="node17" href="setup__recon_8c.html#4f4abf13c9b0972de67fab348bb9f470" title="Create the reconstructor to reconstruct the residual focus error due to LGS sodium..." alt="" coords="168,379,299,408"><area shape="rect" id="node19" href="setup__recon_8c.html#912dce9181aa58d65477058caa4d0c13" title="Setup gradient operator GX, GA on xloc, aloc." alt="" coords="165,432,301,461"><area shape="rect" id="node21" href="setup__recon_8c.html#dcd024580204a29e51a9345202d56e73" title="Setup ray tracing operator HXF,HA from xloc, aloc to aperture ploc." alt="" coords="163,485,304,515"><area shape="rect" id="node23" href="setup__recon_8c.html#8300ff84b2b46910d45f4ce801252535" title="Prepare the propagation H matrix for MOAO and compute the reconstructor." alt="" coords="168,539,299,568"><area shape="rect" id="node25" href="setup__recon_8c.html#2bd8394adbdb99d342f9ac9d3a0faa6f" title="compute the MVST split tomography NGS mode reconstructor." alt="" coords="171,592,296,621"><area shape="rect" id="node27" href="setup__recon_8c.html#928f34035de84ed317aa075e7a7ddac9" title="Setting up PLOC grid, which is a coarse sampled (similar to subaperture spacing)..." alt="" coords="172,645,295,675"><area shape="rect" id="node29" href="setup__recon_8c.html#3f6cf2f9b4c4e8dbe3cba7df6a41fa9b" title="Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance..." alt="" coords="164,699,303,728"><area shape="rect" id="node31" href="setup__recon_8c.html#764bf903a38cfc81220e42699e911884" title="assemble tomography matrix." alt="" coords="148,752,319,781"><area shape="rect" id="node33" href="setup__recon_8c.html#2ade74dd6feba7dba0a4b6f38fe134a8" title="Prepares for tomography." alt="" coords="153,805,313,835"><area shape="rect" id="node35" href="setup__recon_8c.html#caa963e8fb3e5e0201f312327e4d94e8" title="wrapps setup_recon_TTR() and setup_recon_DFR() to removal global tip/tilt and differential..." alt="" coords="168,859,299,888"><area shape="rect" id="node37" href="setup__recon_8c.html#93517d5a67108f02872fea3ca166df0a" title="Setup the tomography grids xloc which is used for Tomography." alt="" coords="172,912,295,941"></map>
+<area shape="rect" id="node3" href="dmat_8h.html#0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="212,5,265,33"><area shape="rect" id="node5" href="dmat_8h.html#a9c20ae37907780af63d91312d4fea38" title="creat a X(mat) reference an existing X(mat)." alt="" coords="216,55,261,83"><area shape="rect" id="node7" href="dmat_8h.html#705d6399ce6e7f7064d12f4eb131d47d" title="set values of each element in a X(mat) to val." alt="" coords="216,106,261,134"><area shape="rect" id="node9" href="fdpcg_8c.html#8af00f91380661f9d85542ac9738ba95" title="Prepare data for Tomography Fourier Domain Preconditioner." alt="" coords="185,157,292,185"><area shape="rect" id="node11" href="ahst_8c.html#55c65679c193d90bc7f5175ebb17733f" title="setup NGS modes and reconstructor using AHST for one or two DMs." alt="" coords="184,207,293,235"><area shape="rect" id="node13" href="setup__recon_8c.html#0182734530b87fcf5498aea2e8d1e5c0" title="Setup the deformable mirrors grid aloc." alt="" coords="176,258,301,286"><area shape="rect" id="node15" href="setup__recon_8c.html#f7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix." alt="" coords="160,309,317,337"><area shape="rect" id="node17" href="setup__recon_8c.html#4f4abf13c9b0972de67fab348bb9f470" title="Create the reconstructor to reconstruct the residual focus error due to LGS sodium..." alt="" coords="172,359,305,387"><area shape="rect" id="node19" href="setup__recon_8c.html#912dce9181aa58d65477058caa4d0c13" title="Setup gradient operator GX, GA on xloc, aloc." alt="" coords="168,410,309,438"><area shape="rect" id="node21" href="setup__recon_8c.html#dcd024580204a29e51a9345202d56e73" title="Setup ray tracing operator HXF,HA from xloc, aloc to aperture ploc." alt="" coords="165,461,312,489"><area shape="rect" id="node23" href="moao_8c.html#c70e508023f8816854d7d4eaf0452aa6" title="Prepare the propagation H matrix for MOAO and compute the reconstructor." alt="" coords="171,511,307,539"><area shape="rect" id="node25" href="setup__recon_8c.html#73a310c15901ee437d44af53a66b22a6" title="compute the MVST split tomography NGS mode reconstructor." alt="" coords="173,562,304,590"><area shape="rect" id="node27" href="setup__recon_8c.html#928f34035de84ed317aa075e7a7ddac9" title="Setting up PLOC grid, which is a coarse sampled (similar to subaperture spacing)..." alt="" coords="176,613,301,641"><area shape="rect" id="node29" href="setup__recon_8c.html#3f6cf2f9b4c4e8dbe3cba7df6a41fa9b" title="Setup the matrix of the inverse of gradient measurement noise equivalent angle covariance..." alt="" coords="168,663,309,691"><area shape="rect" id="node31" href="setup__recon_8c.html#764bf903a38cfc81220e42699e911884" title="assemble tomography matrix." alt="" coords="151,714,327,742"><area shape="rect" id="node33" href="setup__recon_8c.html#2ade74dd6feba7dba0a4b6f38fe134a8" title="Prepares for tomography." alt="" coords="156,765,321,793"><area shape="rect" id="node35" href="setup__recon_8c.html#caa963e8fb3e5e0201f312327e4d94e8" title="wrapps setup_recon_TTR() and setup_recon_DFR() to removal global tip/tilt and differential..." alt="" coords="171,815,307,843"><area shape="rect" id="node37" href="setup__recon_8c.html#93517d5a67108f02872fea3ca166df0a" title="Setup the tomography grids xloc which is used for Tomography." alt="" coords="176,866,301,894"></map>
 </div>
 
 </div>
@@ -837,7 +769,7 @@ Free the recon struct.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

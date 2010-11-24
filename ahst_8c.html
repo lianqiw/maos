@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: maos/ahst.c File Reference</title>
+<title>maos-0.7.5: maos/ahst.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -108,6 +108,12 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#23e700bf65ab8561bd8ff2f43cf0982d">ngsmod2science</a> (<a class="el" href="structdmat.html">dmat</a> *iopdevl, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, const <a class="el" href="structdcell.html">dcell</a> *M, int ievl, double gain)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert NGS mode vector to aperture grid for science directions.  <a href="#23e700bf65ab8561bd8ff2f43cf0982d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#36f0c7d4ea59dd8f46e209691e5e6d8a">remove_dm_ngsmod</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *dmerr)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">remove NGS modes from LGS DM commands if ahst_wt==1 Rngs*GA*dmerr is zero if ahst_wt==2 Doesn't perturb NGS modes in science direction.  <a href="#36f0c7d4ea59dd8f46e209691e5e6d8a"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="ahst_8c.html#ca3081102037e19a19003a2728b52073">remove_dm_tt</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *dmerr)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Removal tip/tilt on invidual DMs.  <a href="#ca3081102037e19a19003a2728b52073"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Contains functions to setup NGS modes and reconstructor using AHST for one or two DMs. 
@@ -664,8 +670,70 @@ Convert NGS mode vector to aperture grid for science directions.
 
 </div>
 </div><p>
+<a class="anchor" name="36f0c7d4ea59dd8f46e209691e5e6d8a"></a><!-- doxytag: member="ahst.c::remove_dm_ngsmod" ref="36f0c7d4ea59dd8f46e209691e5e6d8a" args="(SIM_T *simu, dcell *dmerr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void remove_dm_ngsmod           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&nbsp;</td>
+          <td class="paramname"> <em>simu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
+          <td class="paramname"> <em>dmerr</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<div class="memdoc">
+
+<p>
+remove NGS modes from LGS DM commands if ahst_wt==1 Rngs*GA*dmerr is zero if ahst_wt==2 Doesn't perturb NGS modes in science direction. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="ca3081102037e19a19003a2728b52073"></a><!-- doxytag: member="ahst.c::remove_dm_tt" ref="ca3081102037e19a19003a2728b52073" args="(SIM_T *simu, dcell *dmerr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void remove_dm_tt           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&nbsp;</td>
+          <td class="paramname"> <em>simu</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
+          <td class="paramname"> <em>dmerr</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Removal tip/tilt on invidual DMs. 
+<p>
+Be careful about the roll off near the edge. 
+</div>
+</div><p>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

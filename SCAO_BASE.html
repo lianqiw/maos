@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: Example: SCAO BASE</title>
+<title>maos-0.7.5: Example: SCAO BASE</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -79,7 +79,7 @@ include     = <span class="stringliteral">"fov_oa.conf"</span>
 include     = <span class="stringliteral">"dbg.conf"</span>
 
 <span class="preprocessor">#In single conjugate mode, we use the direct solver.</span>
-<span class="preprocessor"></span><a class="code" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">tomo</a>.alg    = 0
+<span class="preprocessor"></span><a class="code" href="recon_8c.html#1caeb1e38df41119be050faafe482d19" title="Carry out tomography.">tomo</a>.alg    = 0
 <a class="code" href="recon_8c.html#861c4d9312ead5560557940f35618e17" title="Carry out DM fit.">fit</a>.alg     = 0
 <a class="code" href="sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop.">sim</a>.cachedm = 0
 </pre></div><p>
@@ -220,8 +220,8 @@ evl.psfol   = 1   #compute OL psf in additional to CL PSF. 0: disable 1: on axis
 <span class="preprocessor">          #size. Set to 1 to compute strehl only</span>
 <span class="preprocessor"></span>evl.psfpttr = 1   #<span class="keyword">remove</span> p/t/t in psf.
 evl.psfisim = 20  #time step to start psfmean/psfhist
-evl.wvl     = [1.25e-6 1.65e-6 2.2e-6]#wavelength to evaluat PSF or strehl
-evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> psf computation. 0:
+evl.psfwvl     = [1.25e-6 1.65e-6 2.2e-6]#wavelength to evaluat PSF or strehl
+evl.psfgridsize = [] #FFT grid size <span class="keywordflow">for</span> psf computation. 0:
 <span class="preprocessor">              #automatic. equal to # of wvl. This determines the</span>
 <span class="preprocessor"></span><span class="preprocessor">              #sampling of the computed PSF.</span>
 <span class="preprocessor"></span>
@@ -234,47 +234,41 @@ evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> ps
 </pre></div><p>
 <code>"recon.conf"</code> for tomography and DM fit.<p>
 <div class="fragment"><pre class="fragment"><span class="preprocessor">#FILE recon.conf</span>
-<span class="preprocessor"></span><span class="preprocessor">#Changelog</span>
-<span class="preprocessor"></span><span class="preprocessor">#2010-08-03: set fit.lrt_tt=2. from 1</span>
 <span class="preprocessor"></span>
-
 <span class="preprocessor">#Reconstruction information.</span>
-<span class="preprocessor"></span><a class="code" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">tomo</a>.split      = 1 #1: ad hoc Split tomography. 0: integrated tomography. 2: mvst
-<a class="code" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">tomo</a>.assemble   = 0 #1: Assemble tomography matrix.  0: don<span class="stringliteral">'t assemble. 0 is</span>
+<span class="preprocessor"></span><a class="code" href="recon_8c.html#1caeb1e38df41119be050faafe482d19" title="Carry out tomography.">tomo</a>.split      = 1 #1: ad hoc Split tomography. 0: integrated tomography. 2: mvst
+<a class="code" href="recon_8c.html#1caeb1e38df41119be050faafe482d19" title="Carry out tomography.">tomo</a>.assemble   = 0 #1: Assemble tomography matrix.  0: don<span class="stringliteral">'t assemble. 0 is</span>
 <span class="stringliteral">            #fast for CG. automatically set to 1 in CBS mode</span>
 <span class="stringliteral">tomo.windest    = 0 #estimate wind velocity from tomography outputs. (testing)</span>
-<span class="stringliteral">tomo.windshift  = 0 #shift opdr using wind velocity.</span>
-<span class="stringliteral">tomo.xloc_tight = 0 #tighten reconstrction xloc to eliminate points that has zero</span>
-<span class="stringliteral">            #contribution to WFS gradients. keep at 0.</span>
-<span class="stringliteral">tomo.tik_cstr   = 1e-9#tikhonov regularization. Necessary if tomo.alg=2.</span>
-<span class="stringliteral">tomo.piston_cr  = 0 #single point piston constraint in tomography.</span>
+<span class="stringliteral">tomo.windshift  = 0 #shift opdr using wind velocity. (testing)</span>
+<span class="stringliteral">tomo.tikcr      = 0 #1e-9#tikhonov regularization. Necessary if tomo.alg=2 or piston_cr=1</span>
+<span class="stringliteral">tomo.piston_cr  = 1 #single point piston constraint in tomography.</span>
 <span class="stringliteral"></span>
-<span class="stringliteral">tomo.alg        = 1 #0: cholesky backsubstitution (CBS) on full #matrix</span>
+<span class="stringliteral">tomo.alg        = 1 #Tomography algorithm. 0: cholesky backsubstitution (CBS) on full #matrix</span>
 <span class="stringliteral">            #1: Conjugate Gradient (CG).</span>
-<span class="stringliteral">tomo.precond    = 0 #CG preconditioning. 0: no precondition. 1: Fourier Domain PCG</span>
+<span class="stringliteral">tomo.precond    = 0 #Tomography CG preconditioning. 0: no precondition. 1: Fourier Domain PCG</span>
 <span class="stringliteral">tomo.maxit      = 30 #max iterations in CG. 30 is RTC requirement. 300 for Open loop</span>
 <span class="stringliteral">tomo.minwt      = 0.01 #minimum layer weight allowed. if less than this will force to this.</span>
 <span class="stringliteral">tomo.square     = 0 #1: using square grid in tomography (xloc)</span>
 <span class="stringliteral"></span>
 <span class="stringliteral">#The following split_* options are only used in ad hoc split tomography</span>
-<span class="stringliteral">tomo.split_wt   = 1 #weighting method to remove ngs modes from lgs DM commands.</span>
-<span class="stringliteral">                    #1: use NGS gradient reconstruction weighting, 2:use</span>
-<span class="stringliteral">                    #aperture evaluation weighting, 3: identity weighting.</span>
-<span class="stringliteral">tomo.split_Rngs_svd = 0 #not implemented.</span>
-<span class="stringliteral">tomo.split_idealngs = 0 #apply ideal NGS mode correction. for skycoverage pre-simulation</span>
-<span class="stringliteral">tomo.split_rtt      = 0 #remove tip/tilt on each DM. generally not necessary.</span>
+<span class="stringliteral">tomo.ahst_wt   = 1 #weighting method to remove ngs modes from lgs DM commands.</span>
+<span class="stringliteral">                   #1: use NGS gradient reconstruction weighting, 2:use</span>
+<span class="stringliteral">                   #aperture evaluation weighting, 3: identity weighting.</span>
+<span class="stringliteral">tomo.ahst_idealngs = 0 #apply ideal NGS mode correction. for skycoverage pre-simulation</span>
+<span class="stringliteral">tomo.ahst_rtt      = 0 #remove tip/tilt on each DM. generally not necessary.</span>
 <span class="stringliteral"></span>
 <span class="stringliteral">tomo.cone   = 1 #1: using cone coordinate for tomography grid. keep at 1.</span>
 <span class="stringliteral">tomo.invpsd = 0 #use inverse PSD to do regularization instead of the bi-harmonic apprixmation.</span>
 <span class="stringliteral">tomo.guard  = 1 #rings of padding in generating reconstruction grid, not too small, not too large.</span>
 <span class="stringliteral">tomo.pos    = 2 #over sampling ratio of ploc grid over actuator grid</span>
 <span class="stringliteral"></span>
-<span class="stringliteral">fit.tik_cstr  = 1e-7 #tikhonov regularization. 1.e-9 is not enough.</span>
+<span class="stringliteral">fit.tikcr     = 1e-7 #tikhonov regularization. 1.e-9 is not enough.</span>
 <span class="stringliteral">fit.actslave  = 1 #actuators that are in NULL space of HA are slaved to active ones.</span>
 <span class="stringliteral">fit.lrt_piston= 1 #piston constraint</span>
 <span class="stringliteral">fit.lrt_tt    = 1 #Tip/tilt constraint (2 dm system only). 0: no. 2: differential</span>
-<span class="stringliteral">          #tilt on two DMs. 1: upper DM tt constraint. change to 2 on 2010-08-03 switched order on 2010-08-20.</span>
-<span class="stringliteral">fit.alg       = 1 #see tomo.alg</span>
+<span class="stringliteral">          #tilt on two DMs. 1: upper DM tt constraint.</span>
+<span class="stringliteral">fit.alg       = 1 #Fitting algorithm. see tomo.alg</span>
 <span class="stringliteral">fit.precond   = 0 #CG preconditioning. see tomo.precond</span>
 <span class="stringliteral">fit.maxit     = 4 #max iterations in CG.</span>
 <span class="stringliteral">fit.square    = 0 #use square grid on DM grid and ploc</span>
@@ -303,11 +297,13 @@ evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> ps
 <span class="stringliteral">dbg.keepshm=0  #keep screens in shm even is unused.</span>
 <span class="stringliteral">dbg.mvstlimit=0#limit MVST modes to the number if none zero</span>
 <span class="stringliteral">dbg.annular_W=0</span>
+<span class="stringliteral">dbg.tomo_maxit=[]#if not empty, will study these maxits in open loop</span>
 <span class="stringliteral">plot.setup=0 #plot aperture,powfs,recon grids, etc.</span>
 <span class="stringliteral">plot.atm=0   #plot atmosphere</span>
 <span class="stringliteral">plot.run=0   #plot wfs opd, gradients, DM opd, science opd, etc.</span>
 <span class="stringliteral">plot.opdx=0  #plot turbulence projeced to xloc.</span>
 <span class="stringliteral">#The saved files can be loaded with mex routine "read" in MATLAB.</span>
+<span class="stringliteral">save.all=0   #saves everything below except gcov. mainly for debugging</span>
 <span class="stringliteral">save.setup=0 #save the data structs prepared during setup in subfolder "setup".</span>
 <span class="stringliteral">         #They Can be loaded back in future simulation.</span>
 <span class="stringliteral">save.recon=0 #save reconstructor. big matrices.</span>
@@ -355,7 +351,7 @@ evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> ps
 <span class="stringliteral">load.mvst=0 #load mvst intermediate matrices to avoid CBS</span>
 </pre></div><p>
 Finally it overrides the tomography and DM fit algorithm to cholesky backsolve and disables cache of DM commands. </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

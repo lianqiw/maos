@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: lib/cmat.h File Reference</title>
+<title>maos-0.7.5: lib/cmat.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -282,6 +282,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#ee339b2c28b3fcf24144233e6b078002">cbspline_eval</a> (<a class="el" href="structccell.html">ccell</a> *coeff, <a class="el" href="structcmat.html">cmat</a> *x, <a class="el" href="structcmat.html">cmat</a> *y, <a class="el" href="structcmat.html">cmat</a> *xnew, <a class="el" href="structcmat.html">cmat</a> *ynew)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Evaluate 2D cubic spline at location defined 2-d arrays by xnew, ynew.  <a href="#ee339b2c28b3fcf24144233e6b078002"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#9419d4abd581ea0d68b76091c2fc2674">ccwlog10</a> (<a class="el" href="structcmat.html">cmat</a> *A)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Do a component wise log10 on each element of A.  <a href="#9419d4abd581ea0d68b76091c2fc2674"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#cdcbda2dbd5dfec8344b8bada36a0a35">ccellnew</a> (const long nx, const long ny)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">create a new block matrix.  <a href="#cdcbda2dbd5dfec8344b8bada36a0a35"></a><br></td></tr>
@@ -390,18 +393,18 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#5fc25bdbb6758549b60bc4b9c34a9bef">ccellwritedata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, const <a class="el" href="structccell.html">ccell</a> *dc)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to write cell array of dense matrix data.  <a href="#5fc25bdbb6758549b60bc4b9c34a9bef"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#e9df93488639190f0b09a837ba21fd3e">creaddata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#b577060fce34c8520b7443cdf8fe49f2">creaddata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, uint32_t magic)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to read dense matrix into memory from file pointer.  <a href="#e9df93488639190f0b09a837ba21fd3e"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#41b9a0829de990592462d11aedcb2fa5">ccellreaddata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to read dense matrix into memory from file pointer.  <a href="#b577060fce34c8520b7443cdf8fe49f2"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#34c854eb8a7f9bbebcf5724f8ff66f0a">ccellreaddata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, uint32_t magic)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to read dense matrix cell array into memory from file pointer.  <a href="#41b9a0829de990592462d11aedcb2fa5"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to read dense matrix cell array into memory from file pointer.  <a href="#34c854eb8a7f9bbebcf5724f8ff66f0a"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#c856ab97d0032304beb9cb4fe0465528">cspwritedata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, const <a class="el" href="structcsp.html">csp</a> *sp)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to write sparse matrix data into file pointed using a file pointer.  <a href="#c856ab97d0032304beb9cb4fe0465528"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#c52d1399af426794abf242869a2ec077">cspreaddata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#4852aa6dafb5082cbc3752e7108feeed">cspreaddata</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, uint32_t magic)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to read sparse matrix data from file pointer into memory.  <a href="#c52d1399af426794abf242869a2ec077"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Function to read sparse matrix data from file pointer into memory.  <a href="#4852aa6dafb5082cbc3752e7108feeed"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#9593e890699be4f48e826d9048018c04">cwrite</a> (const <a class="el" href="structcmat.html">cmat</a> *A, const char *format,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">User callable function to write dense matrix into a file.  <a href="#9593e890699be4f48e826d9048018c04"></a><br></td></tr>
@@ -2890,6 +2893,28 @@ Evaluate 2D cubic spline at location defined 2-d arrays by xnew, ynew.
 
 </div>
 </div><p>
+<a class="anchor" name="9419d4abd581ea0d68b76091c2fc2674"></a><!-- doxytag: member="cmat.h::ccwlog10" ref="9419d4abd581ea0d68b76091c2fc2674" args="(cmat *A)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ccwlog10           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structcmat.html">cmat</a> *&nbsp;</td>
+          <td class="paramname"> <em>A</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Do a component wise log10 on each element of A. 
+<p>
+
+</div>
+</div><p>
 <a class="anchor" name="cdcbda2dbd5dfec8344b8bada36a0a35"></a><!-- doxytag: member="cmat.h::ccellnew" ref="cdcbda2dbd5dfec8344b8bada36a0a35" args="(const long nx, const long ny)" -->
 <div class="memitem">
 <div class="memproto">
@@ -3993,7 +4018,7 @@ Function to write cell array of dense matrix data.
 into a file pointer Generally used by library developer 
 </div>
 </div><p>
-<a class="anchor" name="e9df93488639190f0b09a837ba21fd3e"></a><!-- doxytag: member="cmat.h::creaddata" ref="e9df93488639190f0b09a837ba21fd3e" args="(file_t *fp)" -->
+<a class="anchor" name="b577060fce34c8520b7443cdf8fe49f2"></a><!-- doxytag: member="cmat.h::creaddata" ref="b577060fce34c8520b7443cdf8fe49f2" args="(file_t *fp, uint32_t magic)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -4001,9 +4026,18 @@ into a file pointer Generally used by library developer
           <td class="memname"><a class="el" href="structcmat.html">cmat</a>* creaddata           </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structfile__t.html">file_t</a> *&nbsp;</td>
-          <td class="paramname"> <em>fp</em>          </td>
-          <td>&nbsp;)&nbsp;</td>
+          <td class="paramname"> <em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">uint32_t&nbsp;</td>
+          <td class="paramname"> <em>magic</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
         </tr>
       </table>
 </div>
@@ -4015,7 +4049,7 @@ Function to read dense matrix into memory from file pointer.
 Generally used by library developer. 
 </div>
 </div><p>
-<a class="anchor" name="41b9a0829de990592462d11aedcb2fa5"></a><!-- doxytag: member="cmat.h::ccellreaddata" ref="41b9a0829de990592462d11aedcb2fa5" args="(file_t *fp)" -->
+<a class="anchor" name="34c854eb8a7f9bbebcf5724f8ff66f0a"></a><!-- doxytag: member="cmat.h::ccellreaddata" ref="34c854eb8a7f9bbebcf5724f8ff66f0a" args="(file_t *fp, uint32_t magic)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -4023,9 +4057,18 @@ Generally used by library developer.
           <td class="memname"><a class="el" href="structccell.html">ccell</a>* ccellreaddata           </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structfile__t.html">file_t</a> *&nbsp;</td>
-          <td class="paramname"> <em>fp</em>          </td>
-          <td>&nbsp;)&nbsp;</td>
+          <td class="paramname"> <em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">uint32_t&nbsp;</td>
+          <td class="paramname"> <em>magic</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
         </tr>
       </table>
 </div>
@@ -4068,7 +4111,7 @@ Function to write sparse matrix data into file pointed using a file pointer.
 Generally used by library developer. We do not convert data during saving, but rather do the conversion during reading. 
 </div>
 </div><p>
-<a class="anchor" name="c52d1399af426794abf242869a2ec077"></a><!-- doxytag: member="cmat.h::cspreaddata" ref="c52d1399af426794abf242869a2ec077" args="(file_t *fp)" -->
+<a class="anchor" name="4852aa6dafb5082cbc3752e7108feeed"></a><!-- doxytag: member="cmat.h::cspreaddata" ref="4852aa6dafb5082cbc3752e7108feeed" args="(file_t *fp, uint32_t magic)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -4076,9 +4119,18 @@ Generally used by library developer. We do not convert data during saving, but r
           <td class="memname"><a class="el" href="structcsp.html">csp</a>* cspreaddata           </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structfile__t.html">file_t</a> *&nbsp;</td>
-          <td class="paramname"> <em>fp</em>          </td>
-          <td>&nbsp;)&nbsp;</td>
+          <td class="paramname"> <em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">uint32_t&nbsp;</td>
+          <td class="paramname"> <em>magic</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
         </tr>
       </table>
 </div>
@@ -4516,7 +4568,7 @@ be aware that the data is not 8-byte aligned. The file is truncated if already e
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:51 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

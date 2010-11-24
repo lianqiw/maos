@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: lib/path.c File Reference</title>
+<title>maos-0.7.5: lib/path.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -90,6 +90,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8c.html#25730e4c54130615ab7657ac89c39150">find_file</a> (const char *fn)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Locate a file in path and return its absolute filename.  <a href="#25730e4c54130615ab7657ac89c39150"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="path_8c.html#784b65d0a2c65638f3f35f7f9849ed29">find_config</a> (const char *name)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Find the directory that hold the configuration files.  <a href="#784b65d0a2c65638f3f35f7f9849ed29"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 This file contains function managing the searching path for files, behaves as PATH in POSIX systemsx. 
@@ -249,8 +252,30 @@ Locate a file in path and return its absolute filename.
 Will emit error if not found. 
 </div>
 </div><p>
+<a class="anchor" name="784b65d0a2c65638f3f35f7f9849ed29"></a><!-- doxytag: member="path.c::find_config" ref="784b65d0a2c65638f3f35f7f9849ed29" args="(const char *name)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* find_config           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>name</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<div class="memdoc">
+
+<p>
+Find the directory that hold the configuration files. 
+<p>
+name is "maos" for maos, "skyc" for skyc. 
+</div>
+</div><p>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

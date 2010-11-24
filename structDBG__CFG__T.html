@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: DBG_CFG_T Struct Reference</title>
+<title>maos-0.7.5: DBG_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -99,6 +99,12 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#4bb7c6a03390440a21fe4eb4d43737af">annular_W</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Define the W0/W1 on annular aperture instead of circular.  <a href="#4bb7c6a03390440a21fe4eb4d43737af"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#3a935a80a360d4908b74075b1d401dca">tomo_maxit</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">if not empty, will study these maxits in open loop  <a href="#3a935a80a360d4908b74075b1d401dca"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#f16482d62284c1722065589d65d40dcc">ntomo_maxit</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Number of elements in tomo_maxit.  <a href="#f16482d62284c1722065589d65d40dcc"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains input parameters for debugging. <hr><h2>Field Documentation</h2>
@@ -272,10 +278,44 @@ Define the W0/W1 on annular aperture instead of circular.
 
 </div>
 </div><p>
+<a class="anchor" name="3a935a80a360d4908b74075b1d401dca"></a><!-- doxytag: member="DBG_CFG_T::tomo_maxit" ref="3a935a80a360d4908b74075b1d401dca" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int* <a class="el" href="structDBG__CFG__T.html#3a935a80a360d4908b74075b1d401dca">DBG_CFG_T::tomo_maxit</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+if not empty, will study these maxits in open loop 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="f16482d62284c1722065589d65d40dcc"></a><!-- doxytag: member="DBG_CFG_T::ntomo_maxit" ref="f16482d62284c1722065589d65d40dcc" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structDBG__CFG__T.html#f16482d62284c1722065589d65d40dcc">DBG_CFG_T::ntomo_maxit</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Number of elements in tomo_maxit. 
+<p>
+
+</div>
+</div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2parms_8h.html">parms.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:55 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

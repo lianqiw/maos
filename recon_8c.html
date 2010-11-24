@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: maos/recon.c File Reference</title>
+<title>maos-0.7.5: maos/recon.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -81,39 +81,21 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#4a4842b145e88d09b903f986fe8951f2">FitL</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const double alpha)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply fit left hand side matrix in CG mode without using assembled matrix.  <a href="#4a4842b145e88d09b903f986fe8951f2"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#44159203334924b9277408e81a49a893">tomo</a> (<a class="el" href="structdcell.html">dcell</a> **opdr, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structdcell.html">dcell</a> *grad)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#1caeb1e38df41119be050faafe482d19">tomo</a> (<a class="el" href="structdcell.html">dcell</a> **opdr, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structdcell.html">dcell</a> *grad, int maxit)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Carry out tomography.  <a href="#44159203334924b9277408e81a49a893"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Carry out tomography.  <a href="#1caeb1e38df41119be050faafe482d19"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#861c4d9312ead5560557940f35618e17">fit</a> (<a class="el" href="structdcell.html">dcell</a> **adm, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structdcell.html">dcell</a> *opdr)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Carry out DM fit.  <a href="#861c4d9312ead5560557940f35618e17"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#3c8efd1ec94a9fdaae9021172da85d7a">focus_tracking</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Update LGS focus or reference vector.  <a href="#3c8efd1ec94a9fdaae9021172da85d7a"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#511ecedaadb45f492744ecb02a1d06de">remove_dm_ngsmod</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *dmerr)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">remove NGS modes from LGS DM commands if split_wt==1 Rngs*GA*dmerr is zero if split_wt==2 Doesn't perturb NGS modes in science direction.  <a href="#511ecedaadb45f492744ecb02a1d06de"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#83953e6f6306cb14c5ad00854c8df2b4">remove_dm_tt</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *dmerr)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Removal tip/tilt on invidual DMs.  <a href="#83953e6f6306cb14c5ad00854c8df2b4"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#4312f074d4f65a3b3258c6e29f22578f">windest</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Experimental routine to do wind estimation using correlation tracking of tomography outputs.  <a href="#4312f074d4f65a3b3258c6e29f22578f"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#c1922d6404880ae75380e8c876e55044">shift_ring</a> (int nap, <a class="el" href="structdmat.html">dmat</a> **ring, <a class="el" href="structdmat.html">dmat</a> *new)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">cyclic shift the dmats.  <a href="#c1922d6404880ae75380e8c876e55044"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#5a08339d5c9a918e99995b4dd016aa91">moao_FitR</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int imoao, double thetax, double thetay, double hs, const <a class="el" href="structdcell.html">dcell</a> *opdr, const <a class="el" href="structdcell.html">dcell</a> *dmcommon, <a class="el" href="structdcell.html">dcell</a> **rhsout, const double alpha)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply fit right hand side matrix in CG mode without using assembled matrix for MOAO.  <a href="#5a08339d5c9a918e99995b4dd016aa91"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#f3f1b61e90e1b7f99f0ef80960511f8b">moao_FitL</a> (<a class="el" href="structdcell.html">dcell</a> **xout, const void *A, const <a class="el" href="structdcell.html">dcell</a> *xin, const double alpha)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Apply fit left hand side matrix in CG mode without using assembled matrix.  <a href="#f3f1b61e90e1b7f99f0ef80960511f8b"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#f62a4685464fea7bdd37d04c821c3caf">moao_recon</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">mao_recon happens after the common DM fitting and its integrator output to take into account the delay in DM commands.  <a href="#f62a4685464fea7bdd37d04c821c3caf"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon_8c.html#17defa53668245c14cd494b9fab761f1">tomofit</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Calls <a class="el" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">tomo()</a> and <a class="el" href="recon_8c.html#861c4d9312ead5560557940f35618e17" title="Carry out DM fit.">fit()</a> to do the tomography and DM fit.  <a href="#17defa53668245c14cd494b9fab761f1"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Calls <a class="el" href="recon_8c.html#1caeb1e38df41119be050faafe482d19" title="Carry out tomography.">tomo()</a> and <a class="el" href="recon_8c.html#861c4d9312ead5560557940f35618e17" title="Carry out DM fit.">fit()</a> to do the tomography and DM fit.  <a href="#17defa53668245c14cd494b9fab761f1"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Wavefront reconstruction and DM fitting routines. 
@@ -291,7 +273,7 @@ Apply fit left hand side matrix in CG mode without using assembled matrix.
 Slow. don't use. Assembled matridx is faster because of multiple directions. 
 </div>
 </div><p>
-<a class="anchor" name="44159203334924b9277408e81a49a893"></a><!-- doxytag: member="recon.c::tomo" ref="44159203334924b9277408e81a49a893" args="(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell *grad)" -->
+<a class="anchor" name="1caeb1e38df41119be050faafe482d19"></a><!-- doxytag: member="recon.c::tomo" ref="1caeb1e38df41119be050faafe482d19" args="(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell *grad, int maxit)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -317,7 +299,13 @@ Slow. don't use. Assembled matridx is faster because of multiple directions.
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
-          <td class="paramname"> <em>grad</em></td><td>&nbsp;</td>
+          <td class="paramname"> <em>grad</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>maxit</em></td><td>&nbsp;</td>
         </tr>
         <tr>
           <td></td>
@@ -408,68 +396,6 @@ Update LGS focus or reference vector.
     </pre></div> 
 </div>
 </div><p>
-<a class="anchor" name="511ecedaadb45f492744ecb02a1d06de"></a><!-- doxytag: member="recon.c::remove_dm_ngsmod" ref="511ecedaadb45f492744ecb02a1d06de" args="(SIM_T *simu, dcell *dmerr)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void remove_dm_ngsmod           </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>simu</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
-          <td class="paramname"> <em>dmerr</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td><code> [inline, static]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-remove NGS modes from LGS DM commands if split_wt==1 Rngs*GA*dmerr is zero if split_wt==2 Doesn't perturb NGS modes in science direction. 
-<p>
-
-</div>
-</div><p>
-<a class="anchor" name="83953e6f6306cb14c5ad00854c8df2b4"></a><!-- doxytag: member="recon.c::remove_dm_tt" ref="83953e6f6306cb14c5ad00854c8df2b4" args="(SIM_T *simu, dcell *dmerr)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void remove_dm_tt           </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>simu</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
-          <td class="paramname"> <em>dmerr</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td><code> [inline, static]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Removal tip/tilt on invidual DMs. 
-<p>
-Be careful about the roll off near the edge. 
-</div>
-</div><p>
 <a class="anchor" name="4312f074d4f65a3b3258c6e29f22578f"></a><!-- doxytag: member="recon.c::windest" ref="4312f074d4f65a3b3258c6e29f22578f" args="(SIM_T *simu)" -->
 <div class="memitem">
 <div class="memproto">
@@ -492,193 +418,6 @@ Experimental routine to do wind estimation using correlation tracking of tomogra
 Not finished. Not verified. 
 </div>
 </div><p>
-<a class="anchor" name="c1922d6404880ae75380e8c876e55044"></a><!-- doxytag: member="recon.c::shift_ring" ref="c1922d6404880ae75380e8c876e55044" args="(int nap, dmat **ring, dmat *new)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void shift_ring           </td>
-          <td>(</td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>nap</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> **&nbsp;</td>
-          <td class="paramname"> <em>ring</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&nbsp;</td>
-          <td class="paramname"> <em>new</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td><code> [static]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-cyclic shift the dmats. 
-<p>
-
-</div>
-</div><p>
-<a class="anchor" name="5a08339d5c9a918e99995b4dd016aa91"></a><!-- doxytag: member="recon.c::moao_FitR" ref="5a08339d5c9a918e99995b4dd016aa91" args="(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao, double thetax, double thetay, double hs, const dcell *opdr, const dcell *dmcommon, dcell **rhsout, const double alpha)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void moao_FitR           </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td>
-          <td class="paramname"> <em>xout</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structRECON__T.html">RECON_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>recon</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>parms</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&nbsp;</td>
-          <td class="paramname"> <em>imoao</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&nbsp;</td>
-          <td class="paramname"> <em>thetax</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&nbsp;</td>
-          <td class="paramname"> <em>thetay</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&nbsp;</td>
-          <td class="paramname"> <em>hs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
-          <td class="paramname"> <em>opdr</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
-          <td class="paramname"> <em>dmcommon</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td>
-          <td class="paramname"> <em>rhsout</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double&nbsp;</td>
-          <td class="paramname"> <em>alpha</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td><code> [static]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Apply fit right hand side matrix in CG mode without using assembled matrix for MOAO. 
-<p>
-subtract contributions from DMs that are in common path. Be careful which time step the dmcommon is. The DM common should use the commands on the step that you are going to apply the MOAO command for. That is the integrator output after this computation. 
-</div>
-</div><p>
-<a class="anchor" name="f3f1b61e90e1b7f99f0ef80960511f8b"></a><!-- doxytag: member="recon.c::moao_FitL" ref="f3f1b61e90e1b7f99f0ef80960511f8b" args="(dcell **xout, const void *A, const dcell *xin, const double alpha)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">static void moao_FitL           </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structdcell.html">dcell</a> **&nbsp;</td>
-          <td class="paramname"> <em>xout</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *&nbsp;</td>
-          <td class="paramname"> <em>A</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structdcell.html">dcell</a> *&nbsp;</td>
-          <td class="paramname"> <em>xin</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const double&nbsp;</td>
-          <td class="paramname"> <em>alpha</em></td><td>&nbsp;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td><td><code> [static]</code></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-Apply fit left hand side matrix in CG mode without using assembled matrix. 
-<p>
-Slow. don't use. Assembled matridx is faster because of multiple directions. 
-</div>
-</div><p>
-<a class="anchor" name="f62a4685464fea7bdd37d04c821c3caf"></a><!-- doxytag: member="recon.c::moao_recon" ref="f62a4685464fea7bdd37d04c821c3caf" args="(SIM_T *simu)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void moao_recon           </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>simu</em>          </td>
-          <td>&nbsp;)&nbsp;</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>
-mao_recon happens after the common DM fitting and its integrator output to take into account the delay in DM commands. 
-<p>
-there is no close loop filtering in MOAO DM commands, but there is still a time delay of 2 cycles. 
-</div>
-</div><p>
 <a class="anchor" name="17defa53668245c14cd494b9fab761f1"></a><!-- doxytag: member="recon.c::tomofit" ref="17defa53668245c14cd494b9fab761f1" args="(SIM_T *simu)" -->
 <div class="memitem">
 <div class="memproto">
@@ -696,13 +435,13 @@ there is no close loop filtering in MOAO DM commands, but there is still a time 
 <div class="memdoc">
 
 <p>
-Calls <a class="el" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">tomo()</a> and <a class="el" href="recon_8c.html#861c4d9312ead5560557940f35618e17" title="Carry out DM fit.">fit()</a> to do the tomography and DM fit. 
+Calls <a class="el" href="recon_8c.html#1caeb1e38df41119be050faafe482d19" title="Carry out tomography.">tomo()</a> and <a class="el" href="recon_8c.html#861c4d9312ead5560557940f35618e17" title="Carry out DM fit.">fit()</a> to do the tomography and DM fit. 
 <p>
 Do error signal and split tomography. 
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

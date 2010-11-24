@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: SAVE_CFG_T Struct Reference</title>
+<title>maos-0.7.5: SAVE_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,6 +69,9 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Data Fields</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#7df62648115ba52824f4ffe8dfe8c0da">all</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">save absolutely everything.  <a href="#7df62648115ba52824f4ffe8dfe8c0da"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#6eb5125b66e8369f1478f475c55cc220">setup</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">save preparation matrices  <a href="#6eb5125b66e8369f1478f475c55cc220"></a><br></td></tr>
@@ -147,9 +150,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#fc81107952639fb2bf16950bc6ec2bc6">powfs_opd</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">derived parameter to specify which powfs to save opd  <a href="#fc81107952639fb2bf16950bc6ec2bc6"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#77c3cafec871ddaf2d3212581f565d69">wfsints</a></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#9db235d91e701fd7010e566886ddac25">powfs_ints</a></td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">derived parameter to specify which powfs to save ints  <a href="#77c3cafec871ddaf2d3212581f565d69"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">derived parameter to specify which powfs to save ints  <a href="#9db235d91e701fd7010e566886ddac25"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSAVE__CFG__T.html#7903037b1cc5e3f3d57f0511d39de605">powfs_grad</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">derived parameter to specify which powfs to save grad  <a href="#7903037b1cc5e3f3d57f0511d39de605"></a><br></td></tr>
@@ -159,6 +162,23 @@ window.onload = initDynSections;
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains input parameters for saving variables. <hr><h2>Field Documentation</h2>
+<a class="anchor" name="7df62648115ba52824f4ffe8dfe8c0da"></a><!-- doxytag: member="SAVE_CFG_T::all" ref="7df62648115ba52824f4ffe8dfe8c0da" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSAVE__CFG__T.html#7df62648115ba52824f4ffe8dfe8c0da">SAVE_CFG_T::all</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+save absolutely everything. 
+<p>
+mainly for debugging 
+</div>
+</div><p>
 <a class="anchor" name="6eb5125b66e8369f1478f475c55cc220"></a><!-- doxytag: member="SAVE_CFG_T::setup" ref="6eb5125b66e8369f1478f475c55cc220" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -601,12 +621,12 @@ derived parameter to specify which powfs to save opd
 
 </div>
 </div><p>
-<a class="anchor" name="77c3cafec871ddaf2d3212581f565d69"></a><!-- doxytag: member="SAVE_CFG_T::wfsints" ref="77c3cafec871ddaf2d3212581f565d69" args="" -->
+<a class="anchor" name="9db235d91e701fd7010e566886ddac25"></a><!-- doxytag: member="SAVE_CFG_T::powfs_ints" ref="9db235d91e701fd7010e566886ddac25" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int* <a class="el" href="structSAVE__CFG__T.html#77c3cafec871ddaf2d3212581f565d69">SAVE_CFG_T::wfsints</a>          </td>
+          <td class="memname">int* <a class="el" href="structSAVE__CFG__T.html#9db235d91e701fd7010e566886ddac25">SAVE_CFG_T::powfs_ints</a>          </td>
         </tr>
       </table>
 </div>
@@ -655,7 +675,7 @@ derived parameter to specify which powfs to save geometric grad
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2parms_8h.html">parms.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:55 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

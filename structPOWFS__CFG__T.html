@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: POWFS_CFG_T Struct Reference</title>
+<title>maos-0.7.5: POWFS_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -93,6 +93,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#e43d6c16848ec5700bac72e327e2f7a1">neasim</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NEA used in simulation.  <a href="#e43d6c16848ec5700bac72e327e2f7a1"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#97ce637f703f3f9d680e1973a092f67e">neaspeckle</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">NEA caused by speckle noise.  <a href="#97ce637f703f3f9d680e1973a092f67e"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#847860bab1665b17b5e85d502a4485e0">bkgrnd</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">background in electron per pixel per LGS frame  <a href="#847860bab1665b17b5e85d502a4485e0"></a><br></td></tr>
@@ -123,6 +126,12 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#16439197d31f292f4ed5b62a5f8ed80d">sigscale</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">scale the signal level for simulation.  <a href="#16439197d31f292f4ed5b62a5f8ed80d"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#ef4b75803d658a89a56e1c4d6ee47505">siglev</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">signal level.  <a href="#ef4b75803d658a89a56e1c4d6ee47505"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#8e093ab81df34fe758e811dde82ee0fa">wvlwts</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">weights for each wavelength.  <a href="#8e093ab81df34fe758e811dde82ee0fa"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">struct <a class="el" href="structLLT__CFG__T.html">LLT_CFG_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#13e13c12137584448baeae372526550e">llt</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">configuration for LLT  <a href="#13e13c12137584448baeae372526550e"></a><br></td></tr>
@@ -388,6 +397,23 @@ NEA used in simulation.
 -1 to use nearecon 
 </div>
 </div><p>
+<a class="anchor" name="97ce637f703f3f9d680e1973a092f67e"></a><!-- doxytag: member="POWFS_CFG_T::neaspeckle" ref="97ce637f703f3f9d680e1973a092f67e" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#97ce637f703f3f9d680e1973a092f67e">POWFS_CFG_T::neaspeckle</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+NEA caused by speckle noise. 
+<p>
+Added to matched filter estimation of NEA due to photon and detector noise in physical optics mode for reconstructor 
+</div>
+</div><p>
 <a class="anchor" name="847860bab1665b17b5e85d502a4485e0"></a><!-- doxytag: member="POWFS_CFG_T::bkgrnd" ref="847860bab1665b17b5e85d502a4485e0" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -556,6 +582,40 @@ see pixoffx
 scale the signal level for simulation. 
 <p>
 
+</div>
+</div><p>
+<a class="anchor" name="ef4b75803d658a89a56e1c4d6ee47505"></a><!-- doxytag: member="POWFS_CFG_T::siglev" ref="ef4b75803d658a89a56e1c4d6ee47505" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#ef4b75803d658a89a56e1c4d6ee47505">POWFS_CFG_T::siglev</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+signal level. 
+<p>
+will be override by wfs.siglev is specified. 
+</div>
+</div><p>
+<a class="anchor" name="8e093ab81df34fe758e811dde82ee0fa"></a><!-- doxytag: member="POWFS_CFG_T::wvlwts" ref="8e093ab81df34fe758e811dde82ee0fa" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double* <a class="el" href="structPOWFS__CFG__T.html#8e093ab81df34fe758e811dde82ee0fa">POWFS_CFG_T::wvlwts</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+weights for each wavelength. 
+<p>
+can be overriden by wfs.wvlwts. 
 </div>
 </div><p>
 <a class="anchor" name="13e13c12137584448baeae372526550e"></a><!-- doxytag: member="POWFS_CFG_T::llt" ref="13e13c12137584448baeae372526550e" args="" -->
@@ -1266,7 +1326,7 @@ index into MOAO struct.
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2parms_8h.html">parms.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:55 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

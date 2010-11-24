@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: maos/setup_powfs.c File Reference</title>
+<title>maos-0.7.5: maos/setup_powfs.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -120,7 +120,7 @@ window.onload = initDynSections;
 Setting up WFS geometry. 
 <p>
 like the subaperture location, subaperture grid points, physical optics detection transfer function, LGS elongation transfer function, etc.<p>
-<dl compact><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
+<dl compact><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
 Do not use sparse interpolation to replace ray tracing for fine sampled destination grid, especially cubic splines. The interpolation marix takes too much space. <hr><h2>Function Documentation</h2>
 <a class="anchor" name="f500bd9800a3b3f47a36b855a9f88ae9"></a><!-- doxytag: member="setup_powfs.c::free_powfs_geom" ref="f500bd9800a3b3f47a36b855a9f88ae9" args="(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)" -->
 <div class="memitem">
@@ -281,7 +281,7 @@ Use loc, not locm. locm is only used to do ray tracing.
 <p>
 Prepare the parameters for physical optics setup. 
 <p>
-<dl compact><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>Make LGS number of pixels depend on subapertue elongation in radial coordinate CCD mode. Make ncompx, ncompy dependent on number of pixels for radial ccd.</dd></dl>
+<dl compact><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>Make LGS number of pixels depend on subapertue elongation in radial coordinate CCD mode. Make ncompx, ncompy dependent on number of pixels for radial ccd.</dd></dl>
 
 </div>
 </div><p>
@@ -493,7 +493,7 @@ setup the range to sodium layer as an additional parameter.
 <p>
 Load and smooth out sodium profile. 
 <p>
-
+We preserve the sum of the sodium profile, which represents a scaling factor of the signal level. 
 </div>
 </div><p>
 <a class="anchor" name="bd59ad37c2a3372a70066e4b5cf34ac1"></a><!-- doxytag: member="setup_powfs.c::setup_powfs_etf" ref="bd59ad37c2a3372a70066e4b5cf34ac1" args="(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode, int istep)" -->
@@ -656,7 +656,7 @@ Here is the call graph for this function:</div>
 <div class="dynsection">
 <p><center><img src="maos_2setup__powfs_8c_c7b704504acb96d7fbcbdd60f15c6cf8_cgraph.png" border="0" usemap="#maos_2setup__powfs_8c_c7b704504acb96d7fbcbdd60f15c6cf8_cgraph_map" alt=""></center>
 <map name="maos_2setup__powfs_8c_c7b704504acb96d7fbcbdd60f15c6cf8_cgraph_map">
-<area shape="rect" id="node3" href="maos_2setup__powfs_8c.html#b1890fbc6facc2013338054962b1398a" title="Setting up Detector transfer function used to translate PSFs from FFTs to detector..." alt="" coords="169,5,284,35"><area shape="rect" id="node5" href="maos_2setup__powfs_8c.html#bd59ad37c2a3372a70066e4b5cf34ac1" title="Compute Elongation Transfer function." alt="" coords="169,59,284,88"><area shape="rect" id="node7" href="maos_2setup__powfs_8c.html#7bbae2bc69e06f553d55c7c2d8c68ff3" title="setup the range to sodium layer as an additional parameter." alt="" coords="161,112,292,141"><area shape="rect" id="node9" href="maos_2setup__powfs_8c.html#77b6fd986d6105964adf2c844ee9df87" title="setting up subaperture geometry." alt="" coords="160,165,293,195"><area shape="rect" id="node11" href="maos_2setup__powfs_8c.html#e92ae33f8f650cb9c7975044bd82432f" title="Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture..." alt="" coords="164,219,289,248"><area shape="rect" id="node13" href="maos_2setup__powfs_8c.html#a8ee626a374ebefb84c2d560793c4c1e" title="setting up uplink pts/amp lotf" alt="" coords="172,272,281,301"><area shape="rect" id="node15" href="maos_2setup__powfs_8c.html#a16bf88378b48f5765294689df77c22f" title="Setup the matched filter pixel processing parameters for physical optics wfs." alt="" coords="161,325,292,355"><area shape="rect" id="node17" href="maos_2setup__powfs_8c.html#2589e29c8b5c4bd05b33da3638e8ae53" title="Set up NCPA maps for each WFS." alt="" coords="163,379,291,408"><area shape="rect" id="node19" href="maos_2setup__powfs_8c.html#b1409e69dddf8131559ea35731109bda" title="Prepare the parameters for physical optics setup." alt="" coords="149,432,304,461"><area shape="rect" id="node21" href="maos_2setup__powfs_8c.html#e2eab1b8ad97f659e38afe630140834e" title="Load and smooth out sodium profile." alt="" coords="156,485,297,515"></map>
+<area shape="rect" id="node3" href="maos_2setup__powfs_8c.html#b1890fbc6facc2013338054962b1398a" title="Setting up Detector transfer function used to translate PSFs from FFTs to detector..." alt="" coords="171,5,288,33"><area shape="rect" id="node5" href="maos_2setup__powfs_8c.html#bd59ad37c2a3372a70066e4b5cf34ac1" title="Compute Elongation Transfer function." alt="" coords="171,55,288,83"><area shape="rect" id="node7" href="maos_2setup__powfs_8c.html#7bbae2bc69e06f553d55c7c2d8c68ff3" title="setup the range to sodium layer as an additional parameter." alt="" coords="161,106,297,134"><area shape="rect" id="node9" href="maos_2setup__powfs_8c.html#77b6fd986d6105964adf2c844ee9df87" title="setting up subaperture geometry." alt="" coords="161,157,297,185"><area shape="rect" id="node11" href="maos_2setup__powfs_8c.html#e92ae33f8f650cb9c7975044bd82432f" title="Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture..." alt="" coords="164,207,295,235"><area shape="rect" id="node13" href="maos_2setup__powfs_8c.html#a8ee626a374ebefb84c2d560793c4c1e" title="setting up uplink pts/amp lotf" alt="" coords="172,258,287,286"><area shape="rect" id="node15" href="maos_2setup__powfs_8c.html#a16bf88378b48f5765294689df77c22f" title="Setup the matched filter pixel processing parameters for physical optics wfs." alt="" coords="163,309,296,337"><area shape="rect" id="node17" href="maos_2setup__powfs_8c.html#2589e29c8b5c4bd05b33da3638e8ae53" title="Set up NCPA maps for each WFS." alt="" coords="164,359,295,387"><area shape="rect" id="node19" href="maos_2setup__powfs_8c.html#b1409e69dddf8131559ea35731109bda" title="Prepare the parameters for physical optics setup." alt="" coords="151,410,308,438"><area shape="rect" id="node21" href="maos_2setup__powfs_8c.html#e2eab1b8ad97f659e38afe630140834e" title="Load and smooth out sodium profile." alt="" coords="156,461,303,489"></map>
 </div>
 
 </div>
@@ -693,7 +693,7 @@ Free all parameters of powfs at the end of simulation.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

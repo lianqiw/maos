@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: WFS_CFG_T Struct Reference</title>
+<title>maos-0.7.5: WFS_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -87,6 +87,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#c6eeef5eba99a8dea64c1692bb60f5ff">powfs</a></td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">powfs type  <a href="#c6eeef5eba99a8dea64c1692bb60f5ff"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="structWFS__CFG__T.html#59a67a9d2643fedc838c2dc1ee86ef3a">skip</a></td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">skip in tomography, for split tomo (derived parameter)  <a href="#59a67a9d2643fedc838c2dc1ee86ef3a"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 contains input parmaeters for each wfs <hr><h2>Field Documentation</h2>
@@ -104,7 +107,7 @@ contains input parmaeters for each wfs <hr><h2>Field Documentation</h2>
 <p>
 Weights of signal value for each wavelength. 
 <p>
-
+if not specified in config, will use powfs.wvlwts 
 </div>
 </div><p>
 <a class="anchor" name="ebd74c669d9a3f057f4d4b4a43eda163"></a><!-- doxytag: member="WFS_CFG_T::thetax" ref="ebd74c669d9a3f057f4d4b4a43eda163" args="" -->
@@ -155,7 +158,7 @@ y direction
 <p>
 Total signal value for all wavelength. 
 <p>
-
+if not specified in config, will use powfs.siglev 
 </div>
 </div><p>
 <a class="anchor" name="83582e7e6916eee3a62304b0dae680f8"></a><!-- doxytag: member="WFS_CFG_T::siglevsim" ref="83582e7e6916eee3a62304b0dae680f8" args="" -->
@@ -192,10 +195,27 @@ powfs type
 
 </div>
 </div><p>
+<a class="anchor" name="59a67a9d2643fedc838c2dc1ee86ef3a"></a><!-- doxytag: member="WFS_CFG_T::skip" ref="59a67a9d2643fedc838c2dc1ee86ef3a" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structWFS__CFG__T.html#59a67a9d2643fedc838c2dc1ee86ef3a">WFS_CFG_T::skip</a>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+skip in tomography, for split tomo (derived parameter) 
+<p>
+
+</div>
+</div><p>
 <hr>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2parms_8h.html">parms.h</a></ul>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:55 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

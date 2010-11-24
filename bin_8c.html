@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: lib/bin.c File Reference</title>
+<title>maos-0.7.5: lib/bin.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -87,12 +87,36 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#3d718e30cd4faabe0c6b902e3ede141c">zfseek</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, long offset, int whence)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Move the current position pointer, like fseek.  <a href="#3d718e30cd4faabe0c6b902e3ede141c"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#0fb14ee86ee80eac407abb5fe9b5e289">zfrewind</a> (<a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Move the file position pointer to the beginning.  <a href="#0fb14ee86ee80eac407abb5fe9b5e289"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#fb7723b26befc0c6f2a95a7e1a516201">zfeof</a> (<a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Tell whether we end of file is reached.  <a href="#fb7723b26befc0c6f2a95a7e1a516201"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#956297097c436bc2e8eaf8789fa522ee">zflush</a> (<a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Flush the buffer.  <a href="#956297097c436bc2e8eaf8789fa522ee"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">uint32_t&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#88d45a259851e05a6a6b080f56491a48">read_magic</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, char **header)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Obtain the current magic number.  <a href="#88d45a259851e05a6a6b080f56491a48"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#fe0008162097f28d219f86669e62ed9e">write_header</a> (const char *header, <a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Append the header to current position in the file.  <a href="#fe0008162097f28d219f86669e62ed9e"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#1825ca342f947862c152e0408e923189">write_timestamp</a> (<a class="el" href="structfile__t.html">file_t</a> *fp)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write the time stamp as header into current location in the file.  <a href="#1825ca342f947862c152e0408e923189"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#557984a480062ce9f424267f528709ab">write_header_end</a> (const char *header, const char *format,...)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Append to the file the header to end of an already saved file.  <a href="#557984a480062ce9f424267f528709ab"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">const char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#df3e8d275430f33c2cd8262fac88cac8">search_header</a> (const char *header, const char *key)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Search and return the value correspond to key.  <a href="#df3e8d275430f33c2cd8262fac88cac8"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#f916b0aa443255291534c8a9222dd585">search_header_num</a> (const char *header, const char *key)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read a number from the header with key.  <a href="#f916b0aa443255291534c8a9222dd585"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#45b360a55c74e59daec61830c0e6e4f3">read_header_end</a> (const char *format,...)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read header from the end of the file.  <a href="#45b360a55c74e59daec61830c0e6e4f3"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#661981dba53025cce58eb981094679b7">zfwritelarr</a> (<a class="el" href="structfile__t.html">file_t</a> *fp, int count,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Write multiple long numbers into the file.  <a href="#661981dba53025cce58eb981094679b7"></a><br></td></tr>
@@ -344,6 +368,28 @@ Move the current position pointer, like fseek.
 
 </div>
 </div><p>
+<a class="anchor" name="0fb14ee86ee80eac407abb5fe9b5e289"></a><!-- doxytag: member="bin.c::zfrewind" ref="0fb14ee86ee80eac407abb5fe9b5e289" args="(file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void zfrewind           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structfile__t.html">file_t</a> *&nbsp;</td>
+          <td class="paramname"> <em>fp</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Move the file position pointer to the beginning. 
+<p>
+
+</div>
+</div><p>
 <a class="anchor" name="fb7723b26befc0c6f2a95a7e1a516201"></a><!-- doxytag: member="bin.c::zfeof" ref="fb7723b26befc0c6f2a95a7e1a516201" args="(file_t *fp)" -->
 <div class="memitem">
 <div class="memproto">
@@ -386,6 +432,220 @@ Tell whether we end of file is reached.
 Flush the buffer. 
 <p>
 
+</div>
+</div><p>
+<a class="anchor" name="88d45a259851e05a6a6b080f56491a48"></a><!-- doxytag: member="bin.c::read_magic" ref="88d45a259851e05a6a6b080f56491a48" args="(file_t *fp, char **header)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t read_magic           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structfile__t.html">file_t</a> *&nbsp;</td>
+          <td class="paramname"> <em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char **&nbsp;</td>
+          <td class="paramname"> <em>header</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Obtain the current magic number. 
+<p>
+If it is a header, read it out if output of header is not NULL. The header will be appended to the output header. 
+</div>
+</div><p>
+<a class="anchor" name="fe0008162097f28d219f86669e62ed9e"></a><!-- doxytag: member="bin.c::write_header" ref="fe0008162097f28d219f86669e62ed9e" args="(const char *header, file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void write_header           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structfile__t.html">file_t</a> *&nbsp;</td>
+          <td class="paramname"> <em>fp</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Append the header to current position in the file. 
+<p>
+First write magic number, then the length of the header, then the header, then the length of the header again, then the magic number again. The two set of strlen and header are used to identify the header from the end of the file and also to verify that what we are reading are indeed header. The header may be written multiple times. They will be concatenated when read. The header should contain key=value entries just like the configuration files. The entries should be separated by new line charactor. 
+</div>
+</div><p>
+<a class="anchor" name="1825ca342f947862c152e0408e923189"></a><!-- doxytag: member="bin.c::write_timestamp" ref="1825ca342f947862c152e0408e923189" args="(file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void write_timestamp           </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structfile__t.html">file_t</a> *&nbsp;</td>
+          <td class="paramname"> <em>fp</em>          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Write the time stamp as header into current location in the file. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="557984a480062ce9f424267f528709ab"></a><!-- doxytag: member="bin.c::write_header_end" ref="557984a480062ce9f424267f528709ab" args="(const char *header, const char *format,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void write_header_end           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>...</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Append to the file the header to end of an already saved file. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="df3e8d275430f33c2cd8262fac88cac8"></a><!-- doxytag: member="bin.c::search_header" ref="df3e8d275430f33c2cd8262fac88cac8" args="(const char *header, const char *key)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* search_header           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>key</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Search and return the value correspond to key. 
+<p>
+NULL if not found. Do not free the returned pointer. 
+</div>
+</div><p>
+<a class="anchor" name="f916b0aa443255291534c8a9222dd585"></a><!-- doxytag: member="bin.c::search_header_num" ref="f916b0aa443255291534c8a9222dd585" args="(const char *header, const char *key)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double search_header_num           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>key</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Read a number from the header with key. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="45b360a55c74e59daec61830c0e6e4f3"></a><!-- doxytag: member="bin.c::read_header_end" ref="45b360a55c74e59daec61830c0e6e4f3" args="(const char *format,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char* read_header_end           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>...</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Read header from the end of the file. 
+<p>
+Difference headers will be combined. Do not use. Seek back is very slow in big file. 
 </div>
 </div><p>
 <a class="anchor" name="661981dba53025cce58eb981094679b7"></a><!-- doxytag: member="bin.c::zfwritelarr" ref="661981dba53025cce58eb981094679b7" args="(file_t *fp, int count,...)" -->
@@ -950,7 +1210,7 @@ Read a 32 bit integer array of size nx*ny from file.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:51 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

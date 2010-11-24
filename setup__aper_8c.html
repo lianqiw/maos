@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: maos/setup_aper.c File Reference</title>
+<title>maos-0.7.5: maos/setup_aper.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -72,9 +72,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="structAPER__T.html">APER_T</a> *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aper_8c.html#bf63108c7633e5a353e73cd913fc9c26">setup_aper</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *const parms)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Setting up aperture cordinate grid aper_locs, and amplitude map for performance evaluation.  <a href="#bf63108c7633e5a353e73cd913fc9c26"></a><br></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aper_8c.html#ea65e60525339d2921549850d52e8464">free_aper</a> (<a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="setup__aper_8c.html#9db3ace3a5bde956884eea3f549a6fed">free_aper</a> (<a class="el" href="structAPER__T.html">APER_T</a> *aper, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free the aper structure after simulation.  <a href="#ea65e60525339d2921549850d52e8464"></a><br></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Free the aper structure after simulation.  <a href="#9db3ace3a5bde956884eea3f549a6fed"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Contains routines that setup the telescope aperture. 
@@ -102,7 +102,7 @@ Setting up aperture cordinate grid aper_locs, and amplitude map for performance 
 
 </div>
 </div><p>
-<a class="anchor" name="ea65e60525339d2921549850d52e8464"></a><!-- doxytag: member="setup_aper.c::free_aper" ref="ea65e60525339d2921549850d52e8464" args="(APER_T *aper)" -->
+<a class="anchor" name="9db3ace3a5bde956884eea3f549a6fed"></a><!-- doxytag: member="setup_aper.c::free_aper" ref="9db3ace3a5bde956884eea3f549a6fed" args="(APER_T *aper, const PARMS_T *parms)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -110,9 +110,18 @@ Setting up aperture cordinate grid aper_locs, and amplitude map for performance 
           <td class="memname">void free_aper           </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&nbsp;</td>
-          <td class="paramname"> <em>aper</em>          </td>
-          <td>&nbsp;)&nbsp;</td>
+          <td class="paramname"> <em>aper</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&nbsp;</td>
+          <td class="paramname"> <em>parms</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
         </tr>
       </table>
 </div>
@@ -125,7 +134,7 @@ Free the aper structure after simulation.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

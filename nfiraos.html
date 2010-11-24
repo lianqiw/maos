@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: Example: NFIRAOS</title>
+<title>maos-0.7.5: Example: NFIRAOS</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -78,23 +78,20 @@ window.onload = initDynSections;
 <span class="preprocessor">#Telescope Aperture Configuration.</span>
 <span class="preprocessor"></span>include     = <span class="stringliteral">"aper_tmt.conf"</span> #TMT.
 
-#Tilt surfaces. Each file contains a 2 cell array. 
-<span class="preprocessor">#The first cell contains 9 numbers, which are </span>
-<span class="preprocessor"></span><span class="preprocessor">#1-2: the sampling along x and y direction, </span>
-<span class="preprocessor"></span><span class="preprocessor">#3-4: the origin along x and y direction, </span>
-<span class="preprocessor"></span><span class="preprocessor">#5: the x tilt angle in degree wrt beam (90 is prep), </span>
-<span class="preprocessor"></span><span class="preprocessor">#6: the y tilt angle in degree wrt beam (90 is prep), </span>
-<span class="preprocessor"></span><span class="preprocessor">#7: The telescope effective focal length, </span>
-<span class="preprocessor"></span><span class="preprocessor">#8: the distance between the exit pupil and the focus, </span>
-<span class="preprocessor"></span><span class="preprocessor">#9: the distance between the M3 and the focus.</span>
-<span class="preprocessor"></span><span class="preprocessor">#The second cell contains the OPD array.</span>
+#Tilt surfaces. Each file contains a <a class="code" href="structdmat.html" title="a double matrix object contains 2-d array of double numbers">dmat</a> array with the following key in header.
+#dx,dy: the sampling along x and y direction, 
+<span class="preprocessor">#ox,oy: the origin along x and y direction, </span>
+<span class="preprocessor"></span><span class="preprocessor">#txdeg: the x tilt angle in degree wrt beam (90 is prep), </span>
+<span class="preprocessor"></span><span class="preprocessor">#tydeg: the y tilt angle in degree wrt beam (90 is prep), </span>
+<span class="preprocessor"></span><span class="preprocessor">#ftel: The telescope effective focal length, </span>
+<span class="preprocessor"></span><span class="preprocessor">#fexit: the distance between the exit pupil and the focus, </span>
+<span class="preprocessor"></span><span class="preprocessor">#fsurf: the distance between the M3 and the focus.</span>
 <span class="preprocessor"></span>tsurf       = [] #[<span class="stringliteral">"M3_PrintThrough_ZA0_AA180_YA45.bin.gz"</span>]
 
-<span class="preprocessor">#OPD surfaces. Each file contains a 2 cell array. </span>
-<span class="preprocessor"></span><span class="preprocessor">#The first cell contains 5 numbers, which are are </span>
-<span class="preprocessor"></span><span class="preprocessor">#1-2: the sampling along x and y direction, </span>
-<span class="preprocessor"></span><span class="preprocessor">#3-4: the origin along x and y direction, </span>
-<span class="preprocessor"></span><span class="preprocessor">#5: height of the surface from pupil.</span>
+<span class="preprocessor">#OPD surfaces. Each file contains a dmat array with the following key in header.</span>
+<span class="preprocessor"></span><span class="preprocessor">#dx: the sampling along x and y direction (must be the same)</span>
+<span class="preprocessor"></span><span class="preprocessor">#ox,oy: the origin along x and y direction</span>
+<span class="preprocessor"></span><span class="preprocessor">#h: height of the surface from pupil.   </span>
 <span class="preprocessor"></span><span class="preprocessor">#The second cell contains the OPD array.</span>
 <span class="preprocessor"></span>surf        = [] #surface OPD map. can be a list of file names.
 
@@ -106,7 +103,7 @@ include     = <span class="stringliteral">"dm_dual.conf"</span> #MCAO with dual 
 <span class="preprocessor"></span>include     = <span class="stringliteral">"atm_mk13n50p.conf"</span> #Mauna Kea 13N 50%.
 
 #Wavefront sensor information.
-include     = <span class="stringliteral">"wfs_multi_lgs.conf"</span>
+include     = <span class="stringliteral">"wfs_lgs_ttf_tt.conf"</span>
 
 <span class="preprocessor">#Evaluation and fitting FoV information.</span>
 <span class="preprocessor"></span>include     = <span class="stringliteral">"fov_iris.conf"</span>
@@ -199,9 +196,8 @@ dm.offset = [0 1/2]   #0: actuator is on subaperture edge. 1/2: actuator is on
 dm.iac    = [0.3 0.3] #inter-actuator-coupling coefficient.  
 
 dm.hist   = [0 0]     #output histogram of DM actuator commands.
-dm.histbin= [1e-7 1e-7] #The <a class="code" href="draw_8c.html#64bf220e2fe22080f5976cb7b451cc8e" title="bin a double matrix from nx*ny to (nx/factor)*(ny*factor)">bin</a> size <span class="keywordflow">for</span> DM histogram computation.
+dm.histbin= [1e-7 1e-7] #The bin size <span class="keywordflow">for</span> DM histogram computation.
 dm.histn  = [201 201]#Total number of bins. odd number.
-#dm.rmsslew= [0 0]     #output RMS value of slew rate (velocity)
 </pre></div><p>
 <code>"atm_mk13n50p.conf"</code> to define the turbulence profiles using the Mauna Kea 13N median seeing <div class="fragment"><pre class="fragment"><span class="preprocessor">#File atm_mk13n50p.conf</span>
 <span class="preprocessor"></span>
@@ -235,119 +231,7 @@ atmr.wt  = [0.38362 0.1615 0.0659 0.1405 0.1216 0.1269]
 <span class="preprocessor"></span>atmr.os  = [2 2 2 2 1 1] #over sampling factor of XLOC over the sampling defined by
 <span class="preprocessor">             #actuator spacing.</span>
 </pre></div><p>
-<code>"wfs_multi_lgs.conf"</code> to define the wavefront sensors. <div class="fragment"><pre class="fragment"><span class="preprocessor">#FILE wfs_multi_lgs.conf</span>
-<span class="preprocessor"></span><span class="preprocessor">#Contains 6 LGS in a pentagon at 70" diameter by default.</span>
-<span class="preprocessor"></span>
-<span class="preprocessor">#powfs is type of wfs.</span>
-<span class="preprocessor"></span>npowfs      = 3          #number of types of wfs.
-powfs.order   = [0 2 1]  # number of sa in one dimension. 0 to match ground DM order.
-powfs.dx    = [1/64 1/16 1/16] #sampling of opd in each subaperture.  NGS
-<span class="preprocessor">                     #performs pretty good with 1/16 sampling.</span>
-<span class="preprocessor"></span>powfs.hs    = [90e3 inf inf] #height of the guide star. 90e3 <span class="keywordflow">for</span> LGS. inf <span class="keywordflow">for</span> NGS.
-powfs.fnllt = [<span class="stringliteral">"llt_CL.conf"</span> <span class="stringliteral">""</span> <span class="stringliteral">""</span>] # configuration of laser launch telescope. 
-powfs.trs   = [1 0 0]    #tilt <span class="keyword">remove</span> flag. 1 <span class="keywordflow">for</span> LGS. 0 <span class="keywordflow">for</span> NGS
-powfs.dfrs  = [0 0 0]    #differential focus removal flag. 1 <span class="keywordflow">for</span> LGS. 0 <span class="keywordflow">for</span> NGS
-powfs.lo    = [0 1 1]    #low order. 1 <span class="keywordflow">for</span> T/T or T/T/F WFS. 0 <span class="keywordflow">for</span> LGS and high order NGS
-powfs.saat  = [0.6 0.1 0.1]  #threshold of relative area to turn off subaperture.
-powfs.neareconfile=[<span class="stringliteral">""</span> <span class="stringliteral">""</span> <span class="stringliteral">""</span>] #file contains NEA <span class="keywordflow">for each</span> SA. takes precedence. File name
-<span class="preprocessor">                #takes same format as piinfile. in radian unit. (takes precedance)</span>
-<span class="preprocessor"></span>powfs.nearecon= [20 0.11 0.055] # noise equivalent angle in mas <span class="keywordflow">for</span> reconstruction
-powfs.neasim  = [-1 -1 -1] # geometric only: nea in mas <span class="keywordflow">for</span> simulation. -1 to match nearecon.
-powfs.neaphy  = [0 0 0]  #1: use nea from matched <a class="code" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter</a> in geometric simulations.
-powfs.phyusenea  = [0 0 0] #1: force use specified nea_recon in reconstruction
-<span class="preprocessor">               #in physical optics mode.</span>
-<span class="preprocessor"></span>
-powfs.gtype_sim = [0 1 1] #geometric gradient <span class="keywordflow">for</span> simulation. 
-<span class="preprocessor">                          #0: gtilt (averaging gradient). </span>
-<span class="preprocessor"></span><span class="preprocessor">              #1: ztilt (best zernike tip/tilt fit)</span>
-<span class="preprocessor"></span>powfs.gtype_recon = [0 1 1] #gtype used <span class="keywordflow">for</span> reconstructor. see gtype_sim.
-#Physical optics options.
-powfs.pixtheta= [0.5/206265 -0.5 -0.5] #CCD Pixel size in radian. <span class="keywordflow">if</span> negative
-<span class="preprocessor">                   #-alpha, the size is alpha times nyquist</span>
-<span class="preprocessor"></span><span class="preprocessor">                   #sampling of the longest wavelength.</span>
-<span class="preprocessor"></span>powfs.pixblur = [0 0 0]  #bluring of pixels in unit of pixtheta
-powfs.pixpsa  = [6 8 8]  #number of pixels per subaperture or along azimuthal
-<span class="preprocessor">             #direction if radpix is nonzero. 6 is good for LGS.</span>
-<span class="preprocessor"></span>powfs.radpix  = [16 0 0] #<span class="keywordflow">if</span> non zero, radial pixel along radial direction. 
-<span class="preprocessor">                     #If negative, figure out appropriate size automatically.</span>
-<span class="preprocessor"></span>powfs.radrot  = [0 0 0]  #rotate OTF to <span class="keywordflow">do</span> radial pixel 0: like laos. 1: rotate
-<span class="preprocessor">             #OTF. 1 is good for side launch to save memory.</span>
-<span class="preprocessor"></span>powfs.ncomp   = [0 0 0]  #specify FFT grid size in WFS sensor imaging. 0: automatic.
-powfs.pixoffx = [0 0 0]  #offset of psf center from pixel vertex.
-powfs.pixoffy = [0 0 0]  #offset of psf center from pixel vertex.
-powfs.i0scale = [0 0 0] #scale sum of averaged image intensity generated <span class="keyword">using</span>
-<span class="preprocessor">            #turbulence OTF to match normalized subaperture</span>
-<span class="preprocessor"></span><span class="preprocessor">            #area. This is used to build matched filter.</span>
-<span class="preprocessor"></span>powfs.sigscale= [1 1 1] #scale factor from the wfs.siglev to wfs.siglevsim <span class="keywordflow">for</span> simulation.
-powfs.bkgrnd  = [0 0 0] #sky background in unit e/pixel/frame. at 800 Hz
-powfs.bkgrndfn= [<span class="stringliteral">""</span> <span class="stringliteral">""</span> <span class="stringliteral">""</span>]#sky background/rayleigh scatter input <span class="keywordflow">for each</span>
-<span class="preprocessor">              #subaperture in each wfs. at 800 Hz.</span>
-<span class="preprocessor"></span>powfs.bkgrndrm=[0.8 0.8 0.8]#How much of the background in bkgrndfn can be
-<span class="preprocessor">                #calibrated out. depends on variability.</span>
-<span class="preprocessor"></span>powfs.rne     = [3 5 5] #read out noise in e-
-powfs.embfac  = [2 2 2] #embeding factor of complex pupil function to generate
-<span class="preprocessor">            #subaperture image using FFT method. keep at 2 to avoid</span>
-<span class="preprocessor"></span><span class="preprocessor">            #aliasing</span>
-<span class="preprocessor"></span>powfs.psfout  = [0 0 0] #output complex psf core <span class="keywordflow">for</span> sky coverage. only valid in
-<span class="preprocessor">            #split tomography, do ideal compensation of NGS modes.</span>
-<span class="preprocessor"></span>powfs.pistatout = [0 0 0] #output tip/tilt removed averaged psf <span class="keywordflow">for</span> later
-<span class="preprocessor">              #matched filter input</span>
-<span class="preprocessor"></span>powfs.pistatstart=[0 20 20]#first time step to start outputing averaged psf.
-powfs.pistatstc = [0 1 1]#shift pistat to center <span class="keyword">using</span> fft method.
-powfs.nwvl      = [1 2 2]#number of wavelength. 1 <span class="keywordflow">for</span> LGS, 2 <span class="keywordflow">for</span> J+H NGS
-
-powfs.wvl = [0.589e-6 1.25e-6 1.65e-6 1.25e-6 1.65e-6]#concatenated list of
-<span class="preprocessor">                              #wavelength</span>
-<span class="preprocessor"></span>powfs.piinfile  = [<span class="stringliteral">""</span> <span class="stringliteral">""</span> <span class="stringliteral">""</span>]#pixel intensities input file prefix. Mainly used
-<span class="preprocessor">                #for NGS. If seed is 1, and pistatout=[0 1 1], the</span>
-<span class="preprocessor"></span><span class="preprocessor">                #program outputs pistat_seed1_wfs[678].bin.gz. Put</span>
-<span class="preprocessor"></span><span class="preprocessor">                #here powfs.piinfile=["" "pistat_see1"</span>
-<span class="preprocessor"></span><span class="preprocessor">                #"pistat_seed1"] here and set pistatout=[0 0 0] to</span>
-<span class="preprocessor"></span><span class="preprocessor">                #run physical optics NGS simulation. PSF must be centered.</span>
-<span class="preprocessor"></span>powfs.sninfile  = [<span class="stringliteral">""</span> <span class="stringliteral">""</span> <span class="stringliteral">""</span>]#speckle noise. not yet used
-powfs.phystep  = [0 -1 -1] #time step to start doing physical optics. -1 to
-<span class="preprocessor">               #disable physical optics.</span>
-<span class="preprocessor"></span>powfs.phytype  = [1 1 1] #1: matched <a class="code" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter</a>. 2:cog (not implemented yet)
-powfs.phytypesim=[-1 -1 -1]#physical optics type in simulation. -1 to match phytype
-powfs.mtchcrx  = [1 0 0] #use constraint matched <a class="code" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter</a> <span class="keywordflow">for</span> x(radial)
-powfs.mtchcry  = [1 0 0] <span class="preprocessor">#use constraint matched filter for y(azimuthal)</span>
-<span class="preprocessor"></span>powfs.mtchcpl  = [0 0 0] #use coupling between r/a measure error.
-powfs.mtchstc  = [0 1 1] #shift peak in the <span class="keywordtype">short</span> exposure image i0 to center
-<span class="preprocessor">             #using fft before building matched filter.</span>
-<span class="preprocessor"></span>powfs.mtchscl  = [0 0 0] #scale subaperture image to have the same intensity as i0.
-#misregistration described by file containing a cell array A of 2xp, where p is
-<span class="preprocessor">#1 or number of wfs belonging to this powfs. The misregistered coordinate is</span>
-<span class="preprocessor"></span><span class="preprocessor">#computed as</span>
-<span class="preprocessor"></span><span class="preprocessor">#xm{ip}=\sum_{ic}(A{1,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))</span>
-<span class="preprocessor"></span><span class="preprocessor">#ym{ip}=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))</span>
-<span class="preprocessor"></span><span class="preprocessor">#where ip is ipowfs. ic is index of column in entries of A.</span>
-<span class="preprocessor"></span>powfs.misreg   = [<span class="stringliteral">""</span> <span class="stringliteral">""</span> <span class="stringliteral">""</span>]
-<span class="preprocessor">#none common path aberrations for powfs. Each file contains 2xn cell array,</span>
-<span class="preprocessor"></span><span class="preprocessor">#where n can be 1 or number of wfs belonging to this powfs. The format of each</span>
-<span class="preprocessor"></span><span class="preprocessor">#2x1 cell is the same as for surf. used in both preparation of matched filter</span>
-<span class="preprocessor"></span><span class="preprocessor">#and simulation.</span>
-<span class="preprocessor"></span>powfs.ncpa     = [<span class="stringliteral">""</span> <span class="stringliteral">""</span> <span class="stringliteral">""</span>]
-powfs.ncpa_method=[2 2 2]#Method to correct ncpa; 0: <span class="keywordflow">do</span> nothing. 1: apply gradient
-<span class="preprocessor">                 #offset. 2: apply bias to A when computing i0, should be</span>
-<span class="preprocessor"></span><span class="preprocessor">                 #more accurate than 1. </span>
-<span class="preprocessor"></span>powfs.noisy    = [1 1 1] #noisy detector in simulation.
-powfs.dtrat    = [1 1 1] #sampling period relative to 1/<a class="code" href="sim_8c.html#b5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop.">sim</a>.dt (1/800)
-
-powfs.moao     = [-1 -1 -1] #index into moao config. -1 mean no moao.
-#nwfs=9 #Number of wfs.
-#x coordinate in arcsecond unit.
-wfs.thetax=[0 0  -33.287 -20.5725  20.5725 33.287 15 -30 15]
-<span class="preprocessor">#y coordinate in arcsecond unit.</span>
-<span class="preprocessor"></span>wfs.thetay=[0 35 10.8156 -28.3156 -28.3156 10.8156 25.9808 0 -25.9808]
-wfs.powfs =[0 0 0 0 0 0 1 2 2] #type of powfs <span class="keywordflow">for each</span> wfs.
-
-#signal level at 800 Hz <span class="keywordflow">for</span> fully illuminated subaperture. (Circle and 1/4 of a
-<span class="preprocessor">#circle for TT or TTF WFS). #Always specified at 800 Hz no matter what sim.dt or</span>
-<span class="preprocessor"></span><span class="preprocessor">#dtrat is</span>
-<span class="preprocessor"></span>wfs.siglev=[900 900 900 900 900 900 900 900 900] 
-<span class="preprocessor">#concatenated lists of wavelength weighting.</span>
-<span class="preprocessor"></span>wfs.wvlwts=[1 1 1 1 1 1 0.5 0.5 0.5 0.5 0.5 0.5] 
-</pre></div> <div class="fragment"><pre class="fragment"><span class="preprocessor">#File llt.conf</span>
+<code>"wfs_multi_lgs.conf"</code> to define the wavefront sensors. <div class="fragment"><pre class="fragment"></pre></div> <div class="fragment"><pre class="fragment"><span class="preprocessor">#File llt_CL.conf for center launch</span>
 <span class="preprocessor"></span><span class="preprocessor">#Specifying laser launch telescope and sodium layer parameters.</span>
 <span class="preprocessor"></span>
 <span class="preprocessor">#The number in () is the power that uses this llt. has to match.</span>
@@ -361,7 +245,8 @@ llt(0).fnrange=<span class="stringliteral">""</span> #additional change of sodiu
 <span class="preprocessor"></span>llt(0).fn=<span class="stringliteral">"NapMean.bin.gz"</span> #sodium profile to build LGS elongation ETF. can
 <span class="preprocessor">               #contain 2 or more columns. The first column is the</span>
 <span class="preprocessor"></span><span class="preprocessor">               #altitude, the second and the rest columns are the</span>
-<span class="preprocessor"></span><span class="preprocessor">               #strength of sodium layer that sum to 1.</span>
+<span class="preprocessor"></span><span class="preprocessor">               #strength of sodium layer that sum to the scaling</span>
+<span class="preprocessor"></span><span class="preprocessor">               #factor of signal level, normally 1.</span>
 <span class="preprocessor"></span>llt(0).smooth = 1 #2010-07-21: smooth sodium profile. newly introduced.
 llt(0).colprep= 0 #which column of the profiles to use in matched <a class="code" href="filter_8c.html#afaf3cf93da63d63bd5f43be060ffa9c" title="Does the servo filtering by calling filter_cl() or filter_ol().">filter</a>.
 llt(0).colsim = 0 #which column of the profiles to start to use in simulation.
@@ -383,7 +268,7 @@ llt(0).colsimdtrat=0 #every coldsimtrat to increment to next column during
 evl.thetay  = [0 0 8.5 0 -8.5 8.5 8.5 -8.5 -8.5]#y coordinate in arcsec
 evl.wt      = [4/9 1/9 1/9 1/9 1/9 1/36 1/36 1/36 1/36] #weighting to compute
 <span class="preprocessor">                        #field average wavefront error.</span>
-<span class="preprocessor"></span>evl.psf     = [1 1 1 1 1 1 1 1 1] #output psf <span class="keywordflow">for</span> <span class="keyword">this</span> direction <span class="keywordflow">if</span> psf is computed
+<span class="preprocessor"></span>evl.psf     = [1] #output psf <span class="keywordflow">for</span> <span class="keyword">this</span> direction <span class="keywordflow">if</span> psf is computed. 1 or nevl elements.
 evl.ht      = inf #the height of the science <span class="keywordtype">object</span>. normally infinity. can be at LGS range.
 evl.rmax    = 1   #max radial order in performance evaluation. 
 <span class="preprocessor">           #1: includes piston/tip/tilt. 2: p/t/t/focus/astigmatism</span>
@@ -399,10 +284,11 @@ evl.psfol   = 1   #compute OL psf in additional to CL PSF. 0: disable 1: on axis
 <span class="preprocessor"></span>
 evl.psfpttr = 1   #<span class="keyword">remove</span> p/t/t in wavefront OPD before computing PSF.
 evl.psfisim = 20  #time step to start psfmean/psfhist
-evl.wvl     = [1.25e-6 1.65e-6 2.2e-6]#wavelength to evaluat PSF or strehl
-evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> psf computation <span class="keywordflow">for each</span>
-<span class="preprocessor">              #wavelength. 0: automatic. This determines the</span>
-<span class="preprocessor"></span><span class="preprocessor">              #sampling of the computed PSF. length matches evl.wvl</span>
+evl.psfwvl     = [1.25e-6 1.65e-6 2.2e-6]#wavelength to evaluat PSF or strehl
+evl.psfgridsize = [] #FFT grid size <span class="keywordflow">for</span> psf computation <span class="keywordflow">for each</span>
+<span class="preprocessor">             #wavelength. 0,1,or nwvl number of elements. 0:</span>
+<span class="preprocessor"></span><span class="preprocessor">             #automatic. This determines the sampling of the computed</span>
+<span class="preprocessor"></span><span class="preprocessor">             #PSF. length matches evl.wvl</span>
 <span class="preprocessor"></span>
 <span class="preprocessor">#DM Fitting directions </span>
 <span class="preprocessor"></span><span class="preprocessor">#Circular, 30 as to better sharpen the NGS to get good sky coverage.</span>
@@ -411,47 +297,41 @@ evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> ps
 <a class="code" href="recon_8c.html#861c4d9312ead5560557940f35618e17" title="Carry out DM fit.">fit</a>.wt =   [1/2 1/12 1/24 1/12 1/24 1/12 1/24 1/12 1/24]
 </pre></div><p>
 <code>"recon.conf"</code> to define the parameters about turbulence reconstruction and DM fitting <div class="fragment"><pre class="fragment"><span class="preprocessor">#FILE recon.conf</span>
-<span class="preprocessor"></span><span class="preprocessor">#Changelog</span>
-<span class="preprocessor"></span><span class="preprocessor">#2010-08-03: set fit.lrt_tt=2. from 1</span>
 <span class="preprocessor"></span>
-
 <span class="preprocessor">#Reconstruction information.</span>
-<span class="preprocessor"></span><a class="code" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">tomo</a>.split      = 1 #1: ad hoc Split tomography. 0: integrated tomography. 2: mvst
-<a class="code" href="recon_8c.html#44159203334924b9277408e81a49a893" title="Carry out tomography.">tomo</a>.assemble   = 0 #1: Assemble tomography matrix.  0: don<span class="stringliteral">'t assemble. 0 is</span>
+<span class="preprocessor"></span><a class="code" href="recon_8c.html#1caeb1e38df41119be050faafe482d19" title="Carry out tomography.">tomo</a>.split      = 1 #1: ad hoc Split tomography. 0: integrated tomography. 2: mvst
+<a class="code" href="recon_8c.html#1caeb1e38df41119be050faafe482d19" title="Carry out tomography.">tomo</a>.assemble   = 0 #1: Assemble tomography matrix.  0: don<span class="stringliteral">'t assemble. 0 is</span>
 <span class="stringliteral">            #fast for CG. automatically set to 1 in CBS mode</span>
 <span class="stringliteral">tomo.windest    = 0 #estimate wind velocity from tomography outputs. (testing)</span>
-<span class="stringliteral">tomo.windshift  = 0 #shift opdr using wind velocity.</span>
-<span class="stringliteral">tomo.xloc_tight = 0 #tighten reconstrction xloc to eliminate points that has zero</span>
-<span class="stringliteral">            #contribution to WFS gradients. keep at 0.</span>
-<span class="stringliteral">tomo.tik_cstr   = 1e-9#tikhonov regularization. Necessary if tomo.alg=2.</span>
-<span class="stringliteral">tomo.piston_cr  = 0 #single point piston constraint in tomography.</span>
+<span class="stringliteral">tomo.windshift  = 0 #shift opdr using wind velocity. (testing)</span>
+<span class="stringliteral">tomo.tikcr      = 0 #1e-9#tikhonov regularization. Necessary if tomo.alg=2 or piston_cr=1</span>
+<span class="stringliteral">tomo.piston_cr  = 1 #single point piston constraint in tomography.</span>
 <span class="stringliteral"></span>
-<span class="stringliteral">tomo.alg        = 1 #0: cholesky backsubstitution (CBS) on full #matrix</span>
+<span class="stringliteral">tomo.alg        = 1 #Tomography algorithm. 0: cholesky backsubstitution (CBS) on full #matrix</span>
 <span class="stringliteral">            #1: Conjugate Gradient (CG).</span>
-<span class="stringliteral">tomo.precond    = 0 #CG preconditioning. 0: no precondition. 1: Fourier Domain PCG</span>
+<span class="stringliteral">tomo.precond    = 0 #Tomography CG preconditioning. 0: no precondition. 1: Fourier Domain PCG</span>
 <span class="stringliteral">tomo.maxit      = 30 #max iterations in CG. 30 is RTC requirement. 300 for Open loop</span>
 <span class="stringliteral">tomo.minwt      = 0.01 #minimum layer weight allowed. if less than this will force to this.</span>
 <span class="stringliteral">tomo.square     = 0 #1: using square grid in tomography (xloc)</span>
 <span class="stringliteral"></span>
 <span class="stringliteral">#The following split_* options are only used in ad hoc split tomography</span>
-<span class="stringliteral">tomo.split_wt   = 1 #weighting method to remove ngs modes from lgs DM commands.</span>
-<span class="stringliteral">                    #1: use NGS gradient reconstruction weighting, 2:use</span>
-<span class="stringliteral">                    #aperture evaluation weighting, 3: identity weighting.</span>
-<span class="stringliteral">tomo.split_Rngs_svd = 0 #not implemented.</span>
-<span class="stringliteral">tomo.split_idealngs = 0 #apply ideal NGS mode correction. for skycoverage pre-simulation</span>
-<span class="stringliteral">tomo.split_rtt      = 0 #remove tip/tilt on each DM. generally not necessary.</span>
+<span class="stringliteral">tomo.ahst_wt   = 1 #weighting method to remove ngs modes from lgs DM commands.</span>
+<span class="stringliteral">                   #1: use NGS gradient reconstruction weighting, 2:use</span>
+<span class="stringliteral">                   #aperture evaluation weighting, 3: identity weighting.</span>
+<span class="stringliteral">tomo.ahst_idealngs = 0 #apply ideal NGS mode correction. for skycoverage pre-simulation</span>
+<span class="stringliteral">tomo.ahst_rtt      = 0 #remove tip/tilt on each DM. generally not necessary.</span>
 <span class="stringliteral"></span>
 <span class="stringliteral">tomo.cone   = 1 #1: using cone coordinate for tomography grid. keep at 1.</span>
 <span class="stringliteral">tomo.invpsd = 0 #use inverse PSD to do regularization instead of the bi-harmonic apprixmation.</span>
 <span class="stringliteral">tomo.guard  = 1 #rings of padding in generating reconstruction grid, not too small, not too large.</span>
 <span class="stringliteral">tomo.pos    = 2 #over sampling ratio of ploc grid over actuator grid</span>
 <span class="stringliteral"></span>
-<span class="stringliteral">fit.tik_cstr  = 1e-7 #tikhonov regularization. 1.e-9 is not enough.</span>
+<span class="stringliteral">fit.tikcr     = 1e-7 #tikhonov regularization. 1.e-9 is not enough.</span>
 <span class="stringliteral">fit.actslave  = 1 #actuators that are in NULL space of HA are slaved to active ones.</span>
 <span class="stringliteral">fit.lrt_piston= 1 #piston constraint</span>
 <span class="stringliteral">fit.lrt_tt    = 1 #Tip/tilt constraint (2 dm system only). 0: no. 2: differential</span>
-<span class="stringliteral">          #tilt on two DMs. 1: upper DM tt constraint. change to 2 on 2010-08-03 switched order on 2010-08-20.</span>
-<span class="stringliteral">fit.alg       = 1 #see tomo.alg</span>
+<span class="stringliteral">          #tilt on two DMs. 1: upper DM tt constraint.</span>
+<span class="stringliteral">fit.alg       = 1 #Fitting algorithm. see tomo.alg</span>
 <span class="stringliteral">fit.precond   = 0 #CG preconditioning. see tomo.precond</span>
 <span class="stringliteral">fit.maxit     = 4 #max iterations in CG.</span>
 <span class="stringliteral">fit.square    = 0 #use square grid on DM grid and ploc</span>
@@ -479,11 +359,13 @@ evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> ps
 <span class="stringliteral">dbg.keepshm=0  #keep screens in shm even is unused.</span>
 <span class="stringliteral">dbg.mvstlimit=0#limit MVST modes to the number if none zero</span>
 <span class="stringliteral">dbg.annular_W=0</span>
+<span class="stringliteral">dbg.tomo_maxit=[]#if not empty, will study these maxits in open loop</span>
 <span class="stringliteral">plot.setup=0 #plot aperture,powfs,recon grids, etc.</span>
 <span class="stringliteral">plot.atm=0   #plot atmosphere</span>
 <span class="stringliteral">plot.run=0   #plot wfs opd, gradients, DM opd, science opd, etc.</span>
 <span class="stringliteral">plot.opdx=0  #plot turbulence projeced to xloc.</span>
 <span class="stringliteral">#The saved files can be loaded with mex routine "read" in MATLAB.</span>
+<span class="stringliteral">save.all=0   #saves everything below except gcov. mainly for debugging</span>
 <span class="stringliteral">save.setup=0 #save the data structs prepared during setup in subfolder "setup".</span>
 <span class="stringliteral">         #They Can be loaded back in future simulation.</span>
 <span class="stringliteral">save.recon=0 #save reconstructor. big matrices.</span>
@@ -530,7 +412,7 @@ evl.psfgridsize = [0 0 0] #FFT grid size <span class="keywordflow">for</span> ps
 <span class="stringliteral">load.i0=0   #load wfs pixel intensity matrices.</span>
 <span class="stringliteral">load.mvst=0 #load mvst intermediate matrices to avoid CBS</span>
 </pre></div> </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: maos/setup_parms.c File Reference</title>
+<title>maos-0.7.5: maos/setup_parms.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -69,15 +69,12 @@ window.onload = initDynSections;
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
 <tr><td colspan="2"><br><h2>Defines</h2></td></tr>
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="e4047f5ab4c815a73a7cd3b481f62308"></a><!-- doxytag: member="maos/setup_parms.c::FREE_IF_NOT_NULL" ref="e4047f5ab4c815a73a7cd3b481f62308" args="(p)" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>FREE_IF_NOT_NULL</b>(p)</td></tr>
-
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="e381522e1d10c3730b356f1ac5d2dccb"></a><!-- doxytag: member="maos/setup_parms.c::MAX_STRLEN" ref="e381522e1d10c3730b356f1ac5d2dccb" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>MAX_STRLEN</b></td></tr>
 
-<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="6b1cebc0c19b95519324e40eee466bb8"></a><!-- doxytag: member="maos/setup_parms.c::READ_INT" ref="6b1cebc0c19b95519324e40eee466bb8" args="(A)" -->
-#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>READ_INT</b>(A)</td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#6b1cebc0c19b95519324e40eee466bb8">READ_INT</a>(A)</td></tr>
 
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read in double array of n elements from the configuration files.  <a href="#6b1cebc0c19b95519324e40eee466bb8"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="f718a871315bd372063bbbeee477b396"></a><!-- doxytag: member="maos/setup_parms.c::READ_DBL" ref="f718a871315bd372063bbbeee477b396" args="(A)" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>READ_DBL</b>(A)</td></tr>
 
@@ -106,6 +103,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#985838f6490cf2e60012e8853932477b">readcfg_intarr_n</a> (int n, int **p, const char *format,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read in int array of n elements from the configuration files.  <a href="#985838f6490cf2e60012e8853932477b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#0802a38bbb9f290bae974b07c6f0ba74">readcfg_intarr_n_relax</a> (int n, int **p, const char *format,...)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read in int array of n elements from the configuration files.  <a href="#0802a38bbb9f290bae974b07c6f0ba74"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">static void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__parms_8c.html#78380466affab6eff0b8332e2add0cc9">readcfg_powfs</a> (<a class="el" href="structPARMS__T.html">PARMS_T</a> *parms)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read wfs geometry.  <a href="#78380466affab6eff0b8332e2add0cc9"></a><br></td></tr>
@@ -203,6 +203,29 @@ window.onload = initDynSections;
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 This file contains necessary routines to read parametes for WFS, DM and wavefront reconstruction. 
 <p>
+<hr><h2>Define Documentation</h2>
+<a class="anchor" name="6b1cebc0c19b95519324e40eee466bb8"></a><!-- doxytag: member="setup_parms.c::READ_INT" ref="6b1cebc0c19b95519324e40eee466bb8" args="(A)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define READ_INT          </td>
+          <td>(</td>
+          <td class="paramtype">A&nbsp;</td>
+          <td class="paramname">          </td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Read in double array of n elements from the configuration files. 
+<p>
+If not enough numbers available, will fill with zeros. 
+</div>
+</div><p>
 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="fad950a4f059f347cede7c2f97c7e0bd"></a><!-- doxytag: member="setup_parms.c::free_parms" ref="fad950a4f059f347cede7c2f97c7e0bd" args="(PARMS_T *parms)" -->
 <div class="memitem">
@@ -310,6 +333,49 @@ Read in double array of n elements from the configuration files.
 Read in int array of n elements from the configuration files. 
 <p>
 
+</div>
+</div><p>
+<a class="anchor" name="0802a38bbb9f290bae974b07c6f0ba74"></a><!-- doxytag: member="setup_parms.c::readcfg_intarr_n_relax" ref="0802a38bbb9f290bae974b07c6f0ba74" args="(int n, int **p, const char *format,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static int readcfg_intarr_n_relax           </td>
+          <td>(</td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int **&nbsp;</td>
+          <td class="paramname"> <em>p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>...</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Read in int array of n elements from the configuration files. 
+<p>
+If not enough numbers available, will fill with zeros. 
 </div>
 </div><p>
 <a class="anchor" name="78380466affab6eff0b8332e2add0cc9"></a><!-- doxytag: member="setup_parms.c::readcfg_powfs" ref="78380466affab6eff0b8332e2add0cc9" args="(PARMS_T *parms)" -->
@@ -1025,7 +1091,7 @@ parms is kept constant after returned from setup_parms.
 </div>
 </div><p>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>

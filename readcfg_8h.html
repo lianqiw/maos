@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-<title>maos-0.7.1: lib/readcfg.h File Reference</title>
+<title>maos-0.7.5: lib/readcfg.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css">
 <link href="doxygen.css" rel="stylesheet" type="text/css">
 </head><body>
@@ -72,6 +72,11 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="0258dd21e9b70280d7b8fd9de5614c76"></a><!-- doxytag: member="readcfg.h::format2key" ref="0258dd21e9b70280d7b8fd9de5614c76" args="" -->
 #define&nbsp;</td><td class="memItemRight" valign="bottom"><b>format2key</b></td></tr>
 
+<tr><td colspan="2"><br><h2>Enumerations</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">enum &nbsp;</td><td class="memItemRight" valign="bottom">{ <b>T_INT</b>, 
+<b>T_DBL</b>
+ }</td></tr>
+
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#81fe4636d1b558daf205981a228899a1">open_config</a> (const char *fn, long protect)</td></tr>
 
@@ -82,6 +87,9 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#73c95aaed91c735a3fdc93701f6d964f">readcfg_peek</a> (const char *format,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check whether a have a record of a key.  <a href="#73c95aaed91c735a3fdc93701f6d964f"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#69fb3af1ae61786069e2e13301232179">readcfg_override</a> (const char *format,...)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Check whether the record is overriden by user supplied conf files.  <a href="#69fb3af1ae61786069e2e13301232179"></a><br></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top">char *&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#36b85bb80ce8ab0ecdf6fd0762d4921d">readcfg_str</a> (const char *format,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Obtain a string value from the key.  <a href="#36b85bb80ce8ab0ecdf6fd0762d4921d"></a><br></td></tr>
@@ -100,6 +108,12 @@ window.onload = initDynSections;
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#9511bcf6918f17458ee5a33fb2463797">readcfg_strarr</a> (char ***res, const char *format,...)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Obtain a string array value from the key.  <a href="#9511bcf6918f17458ee5a33fb2463797"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#aa629b8a074f33957f53f846341d3e4b">readstr_numarr</a> (void **ret, int type, const char *data)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read numerical array from a string.  <a href="#aa629b8a074f33957f53f846341d3e4b"></a><br></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">double&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="readcfg_8h.html#449109d1dd60c4ada185c28a4f77d4a9">readstr_num</a> (const char *startptr, char **endptr)</td></tr>
+
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Read in a number from the string.  <a href="#449109d1dd60c4ada185c28a4f77d4a9"></a><br></td></tr>
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 Routines to read .conf type config files. 
@@ -194,6 +208,37 @@ End the read config process and output the effective config hash table into a fi
 
 <p>
 Check whether a have a record of a key. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="69fb3af1ae61786069e2e13301232179"></a><!-- doxytag: member="readcfg.h::readcfg_override" ref="69fb3af1ae61786069e2e13301232179" args="(const char *format,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int readcfg_override           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&nbsp;</td>
+          <td class="paramname"> <em>...</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Check whether the record is overriden by user supplied conf files. 
 <p>
 
 </div>
@@ -402,8 +447,76 @@ Obtain a string array value from the key.
 revised on 2010-10-16 to be more strict on the entry to avoid mistakes. 
 </div>
 </div><p>
+<a class="anchor" name="aa629b8a074f33957f53f846341d3e4b"></a><!-- doxytag: member="readcfg.h::readstr_numarr" ref="aa629b8a074f33957f53f846341d3e4b" args="(void **ret, int type, const char *data)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int readstr_numarr           </td>
+          <td>(</td>
+          <td class="paramtype">void **&nbsp;</td>
+          <td class="paramname"> <em>ret</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>type</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>data</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 3 13:02:52 2010 for maos-0.7.1 by&nbsp;
+<div class="memdoc">
+
+<p>
+Read numerical array from a string. 
+<p>
+
+</div>
+</div><p>
+<a class="anchor" name="449109d1dd60c4ada185c28a4f77d4a9"></a><!-- doxytag: member="readcfg.h::readstr_num" ref="449109d1dd60c4ada185c28a4f77d4a9" args="(const char *startptr, char **endptr)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double readstr_num           </td>
+          <td>(</td>
+          <td class="paramtype">const char *&nbsp;</td>
+          <td class="paramname"> <em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char **&nbsp;</td>
+          <td class="paramname"> <em>endptr0</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+Read in a number from the string. 
+<p>
+Will interpret * and / operators. *endptr0 will be updated to point to the next valid entry, or at separator like coma (spaced are skipped). 
+</div>
+</div><p>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated on Wed Nov 24 14:46:54 2010 for maos-0.7.5 by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.8 </small></address>
 </body>
