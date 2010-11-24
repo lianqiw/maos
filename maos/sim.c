@@ -146,7 +146,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    simu->status->scale=1;
 #endif
 	    int this_time=myclocki();
-	    if(this_time>simu->last_report_time+1){
+	    if(this_time>simu->last_report_time+1 || isim+1==simend){
 		//we don't print out or report too frequency.
 		simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)

@@ -70,10 +70,13 @@ typedef struct drawdata_t{
     int pending;
     int width;
     int height;
-    double zoom,offx,offy;
+    double zoom;//zoom level.
+    double offx,offy;//off set of the center of the data.
     double mxdown,mydown;
-    double scale;
+    double scale;//scale of the data to fit the display.
     double centerx, centery;
+    double limit0[4];//x,y limit of displayed region.
+
     int reconfig;
     int font_name_version;
 }drawdata_t;
@@ -341,24 +344,35 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     drawdata->centery=yoff+heightim*0.5;
     //flip upside down so that lower left is (0,0);
     cairo_scale(cr,1,-1);
-    double zoom=drawdata->zoom;
+    double zoom=drawdata->zoom;//Zoom of the image when displayed.
     if(drawdata->image){
 	cairo_save(cr);
 	cairo_rectangle(cr,0,0,widthim,heightim);
 	cairo_clip(cr);
 	cairo_scale(cr,scale*zoom,scale*zoom);
-	double ofx=(drawdata->nx/2)*(1/zoom-1)+drawdata->offx/scale;
-	double ofy=(drawdata->ny/2)*(1/zoom-1)+drawdata->offy/scale;
+	/*
+	  offx, offy are the offset in the cairo window.
+	  ofx, ofy are the actual offset in the original data to display.
+	 */
+	double ofx=(drawdata->nx*0.5)*(1/zoom-1)+drawdata->offx/scale;
+	double ofy=(drawdata->ny*0.5)*(1/zoom-1)+drawdata->offy/scale;
 	/*The x and y patterns are negated and then set as
 	  translation values in the pattern matrix.*/
 	cairo_set_source_surface(cr, image, ofx,ofy);
-	if(scale*zoom>1)//use nearest filter for up sampling to get clear images
-	    cairo_pattern_set_filter
-		(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
+	if(scale*zoom>1){//use nearest filter for up sampling to get clear images
+	    cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
+	}
 	cairo_paint(cr);
 	cairo_reset_clip(cr);
 	double xdiff=xmax-xmin; 
 	double ydiff=ymax-ymin;
+	/*
+	  xmin, xmax is the real min/max of the x axis.
+	  ofx is the offset.
+	  nx, is the number of elements along x.
+	  we can figure out xmin0, xmax0 from ofx and zoom.
+	  We can also figure out ofx, zoom, from xmin0, xmax0
+	 */
 	xmin0=xmin-(ofx/drawdata->nx)*xdiff;
 	xmax0=xmin0+xdiff/zoom;
 	ymin0=ymin-(ofy/drawdata->ny)*ydiff;
@@ -375,17 +389,18 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	cairo_set_line_width(cr,1);
 	int style=3;
 	int size=4;
-	double centerx=(xmax+xmin)/2-drawdata->offx/scale;
-	double centery=(ymax+ymin)/2-drawdata->offy/scale;
-	int ncx=widthim/2;
-	int ncy=heightim/2;
+	double centerx=(xmax+xmin)/2;
+	double centery=(ymax+ymin)/2;
+	double ncx=widthim*0.5 + drawdata->offx*zoom;
+	double ncy=heightim*0.5 + drawdata->offy*zoom;
 	//computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim
-	xmax0=(widthim-ncx)/(zoom*scale)+centerx;
-	xmin0=(0-ncx)/(zoom*scale)+centerx;
-	ymax0=(heightim-ncy)/(zoom*scale)+centery;
-	ymin0=(0-ncy)/(zoom*scale)+centery;
+	xmax0=(((widthim)*0.5)/zoom - drawdata->offx)/scale+centerx;
+	xmin0=((-widthim*0.5)/zoom - drawdata->offx)/scale+centerx;
+	ymax0=(((heightim)*0.5)/zoom - drawdata->offy)/scale+centery;
+	ymin0=((-heightim*0.5)/zoom - drawdata->offy)/scale+centery;
 
 	for(unsigned int ips=0; ips<drawdata->npts; ips++){
+	    //Mape the coordinate to the image
 	    double ix=(drawdata->ptsx[ips]-centerx)*scale*zoom+ncx;
 	    double iy=(drawdata->ptsy[ips]-centery)*scale*zoom+ncy;
 	    if(ix<0 ||ix>widthim || iy<0 || iy>heightim) continue;
@@ -472,7 +487,10 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     cairo_select_font_face(cr, font_name, font_style, font_weight);
     cairo_set_font_size(cr, font_size);
     cairo_identity_matrix(cr);
-    
+    drawdata->limit0[0]=xmin0;
+    drawdata->limit0[1]=xmax0;
+    drawdata->limit0[2]=ymin0;
+    drawdata->limit0[3]=ymax0;
     char ticval[80];
     double tic1, dtic;
     int ntic, order;
@@ -676,10 +694,10 @@ static void do_zoom(drawdata_t *drawdata, int mode){
 	drawdata->offx=0;
 	drawdata->offy=0;
     }
-    if(drawdata->zoom<0.0001)
-	drawdata->zoom=0.0001;
-    else if(drawdata->zoom>10000){
-	drawdata->zoom=10000;
+    if(drawdata->zoom<0.001)
+	drawdata->zoom=0.001;
+    else if(drawdata->zoom>1000){
+	drawdata->zoom=1000;
     }
     update_pixmap(drawdata);
 }
@@ -704,14 +722,18 @@ static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
 	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook),jpage);
     }
 }
+#if ! defined(__linux__)
 /**
    Delete a figure page using button-press-event
 */
 static void delete_page_event(GtkWidget *widget, GdkEventButton *event, drawdata_t **drawdatawrap){
+    (void)widget;
+    (void)event;
     if(event->button==1 && event->type==GDK_BUTTON_PRESS){
 	delete_page(NULL, drawdatawrap);
     }
 }
+#endif
 static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
     drawdata_t *drawdata=*drawdatawrap;
     const gchar *str=drawdata->name;
@@ -1058,6 +1080,103 @@ static void tool_zoom(GtkToolButton *button, gpointer data){
     int mode=GPOINTER_TO_INT(data);
     do_zoom(*pdrawdata,mode);
 }
+
+typedef struct {
+    GtkWidget *w;
+    double *val;
+    drawdata_t *data;
+    int i;
+}spin_t;
+
+static void limit_change(GtkSpinButton *button, gpointer data){
+    (void)button;
+    
+    spin_t *spin=data;
+    drawdata_t *drawdata=spin->data;
+    double diffx0=drawdata->limit0[1]-drawdata->limit0[0];
+    double diffy0=drawdata->limit0[3]-drawdata->limit0[2];
+    double valold=drawdata->limit0[spin->i];
+    drawdata->limit0[spin->i]=gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin->w));
+    switch(spin->i){
+    case 0:
+	drawdata->offx+=drawdata->limit0[0]-valold;//don't break;
+    case 1:
+	drawdata->zoom/=(drawdata->limit0[1]-drawdata->limit0[0])/diffx0;
+	break;
+    case 2:
+	drawdata->offy+=drawdata->limit0[2]-valold;//don't break;
+    case 3:
+	drawdata->zoom/=(drawdata->limit0[3]-drawdata->limit0[2])/diffy0;
+	break;
+    }
+    update_pixmap(drawdata);
+    spin_t *lim=spin-spin->i;
+    for(int i=0; i<4; i++){//update spin button's value.
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), drawdata->limit0[i]);
+    }
+}
+/**
+   Response to the quest to set the zaxis limit (the range of the color bar)
+*/
+static void tool_property(GtkToolButton *button, gpointer data){
+    (void)button;
+    (void)data;
+    GtkWidget *page=get_current_page();
+    drawdata_t **drawdatawrap=g_object_get_data(G_OBJECT(page),"drawdatawrap");
+    if(!drawdatawrap || 1){
+	return;
+    }
+    drawdata_t *drawdata=*drawdatawrap;
+    GtkWidget *dialog=gtk_dialog_new_with_buttons("Figure Properties", GTK_WINDOW(window), 
+						  (GtkDialogFlags)(GTK_DIALOG_MODAL
+								   |GTK_DIALOG_DESTROY_WITH_PARENT),
+						  GTK_STOCK_OK,
+						  GTK_RESPONSE_ACCEPT,
+						  GTK_STOCK_CANCEL,
+						  GTK_RESPONSE_REJECT,
+						  NULL);
+    GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    GtkWidget *table=gtk_table_new(5,4,0);
+   
+    int n=4;
+    spin_t lim[n];
+    for(int i=0; i<n; i++){
+	double val=drawdata->limit0[i];
+	double step=pow(10,floor(log10(fabs(val)))-2);
+	if(fabs(val)<1e-20){
+	    step=1;
+	}
+	lim[i].w=gtk_spin_button_new_with_range(-step*1000,step*1000,step);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), val);
+	lim[i].val=&drawdata->limit0[i];
+	g_signal_connect(lim[i].w, "value-changed", G_CALLBACK(limit_change), &lim[i]);
+	lim[i].i=i;
+	lim[i].data=drawdata;
+    }
+    gint irow=0;
+    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), lim[0].w, 1, 2, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmax"), 2, 3, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), lim[1].w, 3, 4, irow, irow+1);
+    irow++;
+    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("ymin"), 0, 1, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), lim[2].w, 1, 2, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("ymax"), 2, 3, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), lim[3].w, 3, 4, irow, irow+1);
+    irow++;
+
+    gtk_container_add(GTK_CONTAINER(content_area), table);
+    gtk_widget_show_all(table);
+    gint result=gtk_dialog_run(GTK_DIALOG(dialog));
+    
+    switch (result){
+    case GTK_RESPONSE_CANCEL://revert all the changes?
+	break;
+    default:
+	break;
+    }
+    gtk_widget_destroy(dialog);
+}
 static void tool_font_set(GtkFontButton *btn){
     const char *font_name_new=gtk_font_button_get_font_name(btn);
     PangoFontDescription *pfd
@@ -1381,8 +1500,17 @@ int main(int argc, char *argv[])
 	item=gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_OUT);
 	g_signal_connect(item,"clicked",G_CALLBACK(tool_zoom),GINT_TO_POINTER(-1));
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
 	item=gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
+	item=gtk_tool_button_new_from_stock(GTK_STOCK_PROPERTIES);
+	g_signal_connect(item,"clicked",G_CALLBACK(tool_property),NULL);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
+	item=gtk_separator_tool_item_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
 	item=gtk_tool_item_new();
 	GtkWidget *fontsel=gtk_font_button_new_with_font("sans 9");
 	gtk_container_add(GTK_CONTAINER(item),fontsel);

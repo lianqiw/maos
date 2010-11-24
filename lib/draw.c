@@ -486,10 +486,10 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp,
 	}
     }
     double limit[4];
-    limit[0]=loc->map->ox+loc->dx*(npad-1/2);
-    limit[1]=loc->map->ox+loc->dx*(nx+npad-1/2);
-    limit[2]=loc->map->oy+loc->dx*(npad-1/2);
-    limit[3]=loc->map->oy+loc->dx*(ny+npad-1/2);
+    limit[0]=loc->map->ox+loc->dx*(npad-1);
+    limit[1]=limit[0]+loc->dx*nx;
+    limit[2]=loc->map->oy+loc->dx*(npad-1);
+    limit[3]=limit[2]+loc->dx*ny;
     imagesc(fig, nx,ny,limit,NULL, opd0,  title, xlabel, ylabel,"%s",fn);
     free(opd0);
 }

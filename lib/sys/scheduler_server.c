@@ -649,7 +649,7 @@ static int respond(int sock){
 		}
 	    }
 #endif
-	    char *fn=stradd(BUILDDIR, "/lib/sys/drawdaemon",NULL);
+	    char *fn=stradd(BUILDDIR, "/bin/drawdaemon",NULL);
 	    if(method==0){
 		info2("Looking for drawdaemon in %s\n",fn);
 		if(exist(fn)){

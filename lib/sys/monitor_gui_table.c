@@ -114,7 +114,8 @@ static void create_entry(PROC_T *p){
     nrows[p->hid]++;
     gtk_table_resize(GTK_TABLE(tables[p->hid]), nrows[p->hid],ncol);
     gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_pid, 0,1,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_path, 1,2,irow,irow+1,(GtkAttachOptions)(GTK_EXPAND|GTK_FILL),(GtkAttachOptions)(GTK_EXPAND|GTK_FILL),0,0);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_path, 1,2,irow,irow+1,
+		     (GtkAttachOptions)(GTK_EXPAND|GTK_FILL),(GtkAttachOptions)(GTK_EXPAND|GTK_FILL),0,0);
     gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_errlo, 2,3,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
     gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_errhi, 3,4,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
     gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_iseed, 4,5,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
