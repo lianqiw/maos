@@ -913,10 +913,10 @@ static void addpage(drawdata_t **drawdatawrap)
     }
     if(!root){
 	root=gtk_notebook_new();
-	gtk_container_set_border_width(GTK_CONTAINER(root),0);
+	gtk_container_set_border_width(GTK_CONTAINER(root),2);
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(root),GTK_POS_RIGHT);
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(root), TRUE);
-	gtk_notebook_set_tab_vborder(GTK_NOTEBOOK(root),0);
+	gtk_notebook_set_tab_vborder(GTK_NOTEBOOK(root),2);
 	gtk_notebook_set_tab_hborder(GTK_NOTEBOOK(root),2);
 	GtkWidget *label=gtk_label_new(drawdata->fig);
 	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),root,label);
@@ -1518,9 +1518,9 @@ int main(int argc, char *argv[])
 			 G_CALLBACK(tool_font_set),NULL);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 	notebook=gtk_notebook_new();
-	gtk_container_set_border_width(GTK_CONTAINER(notebook),0);
+	gtk_container_set_border_width(GTK_CONTAINER(notebook),2);
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
-	gtk_notebook_set_tab_vborder(GTK_NOTEBOOK(notebook), 0);
+	gtk_notebook_set_tab_vborder(GTK_NOTEBOOK(notebook), 2);
 	gtk_notebook_set_tab_hborder(GTK_NOTEBOOK(notebook), 2);
 	GtkWidget *vbox=gtk_vbox_new(FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),toolbar,FALSE,FALSE,0);

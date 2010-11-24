@@ -2,7 +2,7 @@ AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 LDADD= libsys.la -lm $(LDSYS) 
 #It seems if bin_LDADD is specified. LDADD will not be used.
 ICONS=icon-optics.h icon-cancel.h icon-running.h icon-draw.h icon-finished.h	\
-icon-failed.h
+icon-failed.h icon-monitor.h
 nobase_include_HEADERS=$(ICONS) scheduler_server.h scheduler_client.h drawdaemon.h	\
 sockio.h monitor.h proc.h process.h misc.h common.h mem.h thread.h io.h sys.h	\
 shm.h private.h

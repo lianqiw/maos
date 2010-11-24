@@ -41,11 +41,11 @@
     dependent libraries of FFTW version 3 (www.fftw.org) and blas/lapack
     (http://www.netlib.org/lapack/). The code contains a local copy of the
     Cholmod (http://www.cise.ufl.edu/research/sparse/SuiteSparse/, to do
-    Cholesky factorization, copied from suite-sparse). It will be compile if
-    cholmod is not found in the system. An optimized blas library such ATLAS,
-    GOTO-BLAS, or Intel MKL is necessary to get good performance for Cholesky
-    decompositions of the tomography and/or fitting matrix. Use --enable-mkl
-    when running configure to download a redistributed copy of MKL.
+    Cholesky factorization, copied from suite-sparse).  An optimized blas
+    library such ATLAS, GOTO-BLAS, or Intel MKL is necessary to get good
+    performance for Cholesky decompositions of the tomography and/or fitting
+    matrix. Use --enable-mkl when running configure to download a redistributed
+    copy of MKL.
 
     A C99 compliant compiler is required to compile the code, such as GCC 4 or
     Intel C++ compiler. The code has been successfully compiled on GNU/Linux

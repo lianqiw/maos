@@ -15,9 +15,6 @@
     
     - (Optional) GTK+ and Cairo. For drawdaemon and monitor.
 
-    - (Optional) cholmod. If not found in the system, will compile and use the
-      shipped cholmod.
-
     \section sect-run Run the code
     \subsection sect-prep Preparing the folders and compiling
 
