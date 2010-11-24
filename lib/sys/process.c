@@ -48,6 +48,7 @@ int lock_file(const char *fnlock, long version){
     }
     count++;
     fd=open(fnlock,O_RDWR|O_CREAT,0644);
+    //cloexec(fd);//do not do this. need to carry over to forked routines
     if(fd>=0){
 	if(flock(fd,LOCK_EX|LOCK_NB)){//lock faild.
 	    long pid=0;
@@ -161,6 +162,7 @@ void single_instance_daemonize(const char *lockfolder_in,
     if(chdir("/")) warning("Error chdir\n");
     umask(0077);
     //redirect stdin/stdout.
+    if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
     if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
     if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
     setbuf(stdout,NULL);//disable buffering.
@@ -199,6 +201,9 @@ void single_instance_daemonize(const char *lockfolder_in,
     }
 }
 int detached=0;
+/**
+   Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.
+*/
 void daemonize(void){
     /* Fork off the parent process */       
     pid_t pid = fork();
@@ -211,39 +216,30 @@ void daemonize(void){
     /* Create a new SID for the child process */
     if(setsid()==-1) error("Error setsid\n");
     
-    /* fork again */
-    pid = fork();
-    if (pid < 0) {
-	exit(EXIT_FAILURE);
-    }
-    if (pid > 0) {
-	_exit(EXIT_SUCCESS);
-    }else{
-	umask(0077);
-	detached=1;/*we are in detached mode, disable certain print outs.*/
-	/*
-	  Closing stdin makes a file opened after freopen for stdout and stderr
-	  to have an fd of 2, which is the stderr fd. then after another
-	  freopen, the file ended put being the stderr stream out put. messes up
-	  everything.
-	 */
-	/*It may be the following producing garbage characters.*/
-	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
-	char fn[256];
-	pid=getpid();
-	snprintf(fn,256,"run_%d.log",pid);
-	if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
-	snprintf(fn,256,"run_%d.log",pid);
-	if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
+    umask(0077);
+    detached=1;/*we are in detached mode, disable certain print outs.*/
+    /*
+      Closing stdin makes a file opened after freopen for stdout and stderr
+      to have an fd of 2, which is the stderr fd. then after another
+      freopen, the file ended put being the stderr stream out put. messes up
+      everything.
+    */
+    /*It may be the following producing garbage characters.*/
+    if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
+    char fn[256];
+    pid=getpid();
+    snprintf(fn,256,"run_%d.log",pid);
+    if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
+    snprintf(fn,256,"run_%d.log",pid);
+    if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
 	
-	mysymlink(fn, "run_recent.log");
-	//turns off file buffering
-	setbuf(stdout, NULL);
-	setbuf(stderr, NULL);
-	snprintf(fn,256,"kill_%d",pid);
-	FILE *fp=fopen(fn,"w");
-	fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);
-	fclose(fp);
-	chmod(fn,00700);
-    }
+    mysymlink(fn, "run_recent.log");
+    //turns off file buffering
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
+    snprintf(fn,256,"kill_%d",pid);
+    FILE *fp=fopen(fn,"w");
+    fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);
+    fclose(fp);
+    chmod(fn,00700);
 }

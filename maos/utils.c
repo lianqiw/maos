@@ -289,7 +289,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][3]=000;//rgb color
     double *ptsx=calloc(npts,sizeof(double));
     double *ptsy=calloc(npts,sizeof(double));
-    long *style=calloc(npts, sizeof(long));
+    int32_t *style=calloc(npts, sizeof(int32_t));
     int nevl=parms->evl.nevl;
     int ind=0;
     for(int ievl=0; ievl<nevl; ievl++){
@@ -632,6 +632,7 @@ int lock_seeds(PARMS_T *parms){
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	snprintf(fn, 80, "Res_%d.lock",parms->sim.seeds[iseed]);
 	parms->fdlock[iseed]=lock_file(fn, 0);
+	cloexec(parms->fdlock[iseed]);
 	if(parms->fdlock[iseed]<0){
 	    warning("Another MAOS is already running with seed %d. Skip\n",
 		    parms->sim.seeds[iseed]);

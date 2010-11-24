@@ -83,7 +83,7 @@ static GtkWidget *new_label(const char *text, int width,float align){
 #define WIDTH_PID 24
 #define WIDTH_PATH 20
 #define WIDTH_ISEED 5
-#define WIDTH_TIMING 28
+#define WIDTH_TIMING 25 //28
 #define WIDTH_ERRLO 7
 #define WIDTH_ERRHI 7
 

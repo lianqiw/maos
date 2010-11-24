@@ -344,11 +344,11 @@ void X(arrfree)(X(mat) **As, int n){
    find the maximum value of a X(mat) object
 */
 double X(max)(const X(mat) *A){
-    double max,min,sum;
+    double max,min;
 #ifdef USE_COMPLEX
-    maxmincmp(A->p,A->nx*A->ny,&max,&min,&sum);
+    maxmincmp(A->p,A->nx*A->ny,&max,&min,NULL);
 #else
-    maxmindbl(A->p,A->nx*A->ny,&max,&min,&sum);
+    maxmindbl(A->p,A->nx*A->ny,&max,&min);
 #endif
     return max;
 }
@@ -357,11 +357,11 @@ double X(max)(const X(mat) *A){
    find the minimum value of a X(mat) object
 */
 double X(min)(const X(mat) *A){
-    double max,min,sum;
+    double max,min;
 #ifdef USE_COMPLEX
-    maxmincmp(A->p,A->nx*A->ny,&max,&min,&sum);
+    maxmincmp(A->p,A->nx*A->ny,&max,&min,NULL);
 #else
-    maxmindbl(A->p,A->nx*A->ny,&max,&min,&sum);
+    maxmindbl(A->p,A->nx*A->ny,&max,&min);
 #endif
     return min;
 }

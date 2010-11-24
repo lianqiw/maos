@@ -39,18 +39,18 @@
 #include "icon-draw.h"
 char *defname="Title";
 char *deffig="Figure";
-#undef USE_SHM
-#define USE_SHM 0
 typedef struct drawdata_t{
-    int shmkey;
-    int type;
-    int nx, ny;    
+    //The following are for surfaces
+    int nx, ny;   //array size
     cairo_format_t format;
-    unsigned char *p;
+    double *p0;      //original pointer of double
+    unsigned char *p;//converted pointer of char or int.
+    int gray;       //do we draw in gray scale or in colored
+    //The following are for points
     double *ptsx;//points x
     double *ptsy;//points y
     unsigned int npts;//number of points
-    long *style;
+    int32_t *style;
     unsigned int nstyle;
     double (*cir)[4];
     double *maxmin;
@@ -79,14 +79,9 @@ typedef struct drawdata_t{
 }drawdata_t;
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
-//static FILE *fp=NULL;
-//static int fd;
-static const char *fifo=NULL;
+static char *fifo=NULL;
 static GtkWidget *window=NULL;
 static GtkWidget *notebook=NULL;
-//static GtkWidget *fontsel=NULL;
-//static int callitquit=0;
-//PangoFontDescription *pfd=NULL;
 static int font_name_version=0;
 static int no_longer_listen=0;
 static char *font_name=NULL;
@@ -118,31 +113,74 @@ static const char *rc_string_notebook={
 	gtk_widget_destroy(dialog0);			\
     }
 /*
-static void pango_text(cairo_t *cr, double x, double y, double rot, int center,
-		       const char *text){
-    cairo_save(cr);
-    cairo_translate(cr, x, y);
-    cairo_set_source_rgb(cr,0,0,0);
-    if(fabs(rot)>1.e-10)
-	cairo_rotate(cr,rot);
-    PangoLayout *layout=pango_cairo_create_layout(cr);
-    pango_layout_set_font_description(layout, pfd);
-    pango_layout_set_text(layout, text, -1);
-    int width, height;
-    if(center){
-	pango_layout_get_pixel_size(layout,&width,&height);
-	warning("width=%d, height=%d\n",width,height);
-	//cairo_translate(cr,-width*0.5,-height*0.5);
-	pango_cairo_update_layout(cr, layout);
-    }
+  static void pango_text(cairo_t *cr, double x, double y, double rot, int center,
+  const char *text){
+  cairo_save(cr);
+  cairo_translate(cr, x, y);
+  cairo_set_source_rgb(cr,0,0,0);
+  if(fabs(rot)>1.e-10)
+  cairo_rotate(cr,rot);
+  PangoLayout *layout=pango_cairo_create_layout(cr);
+  pango_layout_set_font_description(layout, pfd);
+  pango_layout_set_text(layout, text, -1);
+  int width, height;
+  if(center){
+  pango_layout_get_pixel_size(layout,&width,&height);
+  warning("width=%d, height=%d\n",width,height);
+  //cairo_translate(cr,-width*0.5,-height*0.5);
+  pango_cairo_update_layout(cr, layout);
+  }
 
-    pango_cairo_show_layout(cr,layout);
-    g_object_unref(layout);
-    cairo_restore(cr);
-    }*/
+  pango_cairo_show_layout(cr,layout);
+  g_object_unref(layout);
+  cairo_restore(cr);
+  }*/
+/**
+   convert double to int
+*/
+static unsigned int crp(double x, double x0){
+    double res=1.5-4.*fabs(x-x0);
+    if(res>1) res=1.;
+    else if(res <0) res=0.;
+    return (unsigned int)(res*255.);
+}
+/**
+ convert double to char with color map*/
+static void 
+dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info){
+    double max,min;
+    if(info[0]>info[1]){
+	max=info[0]; min=info[1];
+    }else{
+	maxmindbl(p, nx*ny, &max, &min);
+	info[0]=max; info[1]=min;
+    }
+    if(color){//colored
+	int *pi=pout;
+	double scale,offset;
+	if(fabs(max-min)>1.e-4*fabs(min)){
+	    scale=1./(max-min);
+	    offset=0;
+	}else{
+	    scale=0;
+	    offset=0.5;
+	}
+	for(int i=0; i<nx*ny; i++){
+	    double x=(p[i]-min)*scale+offset;
+	    pi[i]=crp(x,0.75)<<16 | crp(x, 0.5)<<8 | crp(x, 0.25);
+	}
+    }else{//b/w
+	unsigned char *pc=pout;
+	double scale=255./(max-min);
+	for(int i=0; i<nx*ny; i++){
+	    pc[i]=(unsigned char)((p[i]-min)*scale);
+	}
+    }
+}
+
 /**
    correct floor for round off errors.
- */
+*/
 static double myfloor(double a){
     double b=floor(a);
     if(a-b>1-1.e-5){
@@ -474,6 +512,7 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     if(drawdata->maxmin){//draw colorbar
 	cairo_identity_matrix(cr);
 	cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
+	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_pattern_t *bar=cairo_pattern_create_linear(0,0,0,heightim);
 	cairo_pattern_add_color_stop_rgb(bar,0,0.5625,0,0);
 	cairo_pattern_add_color_stop_rgb(bar,0.1111,1,0,0);
@@ -481,14 +520,13 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	cairo_pattern_add_color_stop_rgb(bar,0.6190,0,1,1);
 	cairo_pattern_add_color_stop_rgb(bar,0.8730,0,0,1);
 	cairo_pattern_add_color_stop_rgb(bar,1,0,0,0.5);
-	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_set_source(cr,bar);
 	cairo_fill(cr);
+	cairo_pattern_destroy(bar);
 	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
 	cairo_set_line_width(cr,1);
 	cairo_stroke(cr);
-	cairo_pattern_destroy(bar);
 
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
 	cairo_set_line_width(cr,1);
@@ -603,13 +641,13 @@ static void drawdata_free(drawdata_t *drawdata){
 	g_object_unref(drawdata->pixmap);
 	drawdata->pixmap=NULL;
     }
-#if USE_SHM==1
-    if(drawdata->shmkey){
-	shm_detach_ro_cleanup(drawdata->shmkey);
+
+    if(drawdata->p0){
+	free(drawdata->p0);
     }
-#endif
-    if(drawdata->p)
+    if(drawdata->p){
 	free(drawdata->p);
+    }
     if(drawdata->npts>0){
 	free(drawdata->ptsx);
 	free(drawdata->ptsy);
@@ -651,10 +689,11 @@ static void do_zoom(drawdata_t *drawdata, int mode){
 static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
     (void)btn;
     GtkWidget *root;
+    //First find the root page
     root=gtk_notebook_get_nth_page(GTK_NOTEBOOK(notebook), 
 				   gtk_notebook_get_current_page
 				   (GTK_NOTEBOOK(notebook)));
-    
+    //Find the sub page
     int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(root), 
 				    (*drawdatawrap)->page);
     gtk_notebook_remove_page(GTK_NOTEBOOK(root), ipage);
@@ -665,37 +704,51 @@ static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
 	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook),jpage);
     }
 }
-
+/**
+   Delete a figure page using button-press-event
+*/
+static void delete_page_event(GtkWidget *widget, GdkEventButton *event, drawdata_t **drawdatawrap){
+    if(event->button==1 && event->type==GDK_BUTTON_PRESS){
+	delete_page(NULL, drawdatawrap);
+    }
+}
 static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
     drawdata_t *drawdata=*drawdatawrap;
     const gchar *str=drawdata->name;
-    GtkWidget *close_btn;
     GtkWidget *label;
     GtkWidget *out;
-    GtkRcStyle *rcstyle;
+    out=gtk_hbox_new(FALSE, 0);
+#if defined(__linux__)
+    GtkWidget *close_btn;
     close_btn=gtk_button_new();
-    gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
     gtk_button_set_focus_on_click(GTK_BUTTON(close_btn), FALSE);
     gtk_container_add(GTK_CONTAINER(close_btn), 
-		      gtk_image_new_from_stock(GTK_STOCK_CLOSE,
-					       GTK_ICON_SIZE_MENU));
-    g_signal_connect(close_btn, "clicked", 
-		     G_CALLBACK(delete_page), drawdatawrap);
+		      gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU));
+    g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
     /* make button as small as possible */
+
+    GtkRcStyle *rcstyle;
+    gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
     rcstyle = gtk_rc_style_new();
     rcstyle->xthickness = rcstyle->ythickness = 0;
     gtk_widget_modify_style(close_btn, rcstyle);
     gtk_widget_set_size_request(close_btn,14,14);
+    gtk_rc_style_unref(rcstyle);
+    gtk_box_pack_end(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
+#else
+    GtkWidget *ebox=gtk_event_box_new();
+    GtkWidget *image=gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU);
+    gtk_container_add(GTK_CONTAINER(ebox), image);
+    g_signal_connect(ebox, "button_press_event", G_CALLBACK(delete_page_event), drawdatawrap);
+    gtk_box_pack_end(GTK_BOX(out), ebox, FALSE, FALSE, 0);
+#endif
+
     /* create label for tab */
     label = gtk_label_new(str);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(label), 0, 0);
-    out=gtk_hbox_new(FALSE, 0);
+    gtk_label_set_width_chars(GTK_LABEL(label), 12);
     gtk_box_pack_start(GTK_BOX(out), label, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
-    //gtk_widget_modify_style(label, rcstyle);
-    //gtk_widget_modify_style(out, rcstyle);
-    gtk_rc_style_unref(rcstyle);
     gtk_widget_show_all(out);
     return out;
 }
@@ -706,7 +759,7 @@ static void do_move(drawdata_t *drawdata, double xdiff, double ydiff){
     update_pixmap(drawdata);
 }
 static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event, 
-			       drawdata_t **drawdatawrap){
+			      drawdata_t **drawdatawrap){
     (void)widget;
     drawdata_t *drawdata=*drawdatawrap;
     if(event->state & GDK_BUTTON1_MASK){
@@ -753,21 +806,21 @@ static gboolean button_press(GtkWidget *widget, GdkEventButton *event,
     return FALSE;
 }
 /*
-static gboolean button_release(GtkWidget *widget, GdkEventButton *event,
-			       drawdata_t **drawdatawrap){
-    if(event->button!=1) return FALSE;
-    drawdata_t *drawdata=*drawdatawrap;
-    (void)widget;
-    //remember that mouse counts from lower left.
-    double xdiff=event->x-drawdata->mxdown;
-    double ydiff=-(event->y-drawdata->mydown);
-    if(drawdata->mxdown>0 && drawdata->mydown>0 
-       && (fabs(xdiff)>1 || fabs(ydiff)>1)){
-	do_move(drawdata,xdiff,ydiff);
-    }
+  static gboolean button_release(GtkWidget *widget, GdkEventButton *event,
+  drawdata_t **drawdatawrap){
+  if(event->button!=1) return FALSE;
+  drawdata_t *drawdata=*drawdatawrap;
+  (void)widget;
+  //remember that mouse counts from lower left.
+  double xdiff=event->x-drawdata->mxdown;
+  double ydiff=-(event->y-drawdata->mydown);
+  if(drawdata->mxdown>0 && drawdata->mydown>0 
+  && (fabs(xdiff)>1 || fabs(ydiff)>1)){
+  do_move(drawdata,xdiff,ydiff);
+  }
   
-    return FALSE;
-    }*/
+  return FALSE;
+  }*/
 static void switch_tab(int lr, int ud){
     if(lr){
 	gtk_notebook_set_current_page
@@ -838,12 +891,13 @@ static void addpage(drawdata_t **drawdatawrap)
     }
     if(!root){
 	root=gtk_notebook_new();
+	gtk_container_set_border_width(GTK_CONTAINER(root),0);
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(root),GTK_POS_RIGHT);
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(root), TRUE);
-	gtk_notebook_set_show_border(GTK_NOTEBOOK(root), TRUE);
-	GtkWidget *button=gtk_label_new(drawdata->fig);
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),root,button);
-	gtk_container_set_border_width(GTK_CONTAINER(notebook),0);
+	gtk_notebook_set_tab_vborder(GTK_NOTEBOOK(root),0);
+	gtk_notebook_set_tab_hborder(GTK_NOTEBOOK(root),2);
+	GtkWidget *label=gtk_label_new(drawdata->fig);
+	gtk_notebook_append_page(GTK_NOTEBOOK(notebook),root,label);
     }
     GtkWidget *page=NULL;
     for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(root)); itab++){
@@ -1060,219 +1114,191 @@ static void quitdraw(){
     gtk_main_quit();
     exit(0);
 }
-const char *err_str="Error encountered, Disconnect";
-#define CHANNEL_READ(data,size)\
-    nleft=size;start=(gchar*)data;					\
-    do{									\
-	status=g_io_channel_read_chars(source, start, nleft, &nread, &err); \
-	if(err){							\
-	    fprintf(stderr,"error:%s\n",err->message);			\
-	    g_error_free(err);err=NULL;					\
-	}								\
-	nleft-=nread;start+=nread;					\
-    }while((status==G_IO_STATUS_NORMAL|| status==G_IO_STATUS_AGAIN) && nleft>0); \
-    if(status==G_IO_STATUS_EOF){					\
-	return FALSE;							\
-    }else if(status==G_IO_STATUS_ERROR || nleft<0){			\
-	fprintf(stderr,"%s, status=%d. nleft=%d\n",err_str,status,(int)nleft); \
-	return FALSE;							\
-    }
-#define CHANNEL_READ_STR(str)	\
+
+#define FILE_READ(data,size)			\
+    nleft=size;start=(gchar*)data;		\
+    do{						\
+	int nread=fread(start, 1, nleft, fp);	\
+	nleft-=nread;			\
+	start+=nread;				\
+	if(nread < nleft){			\
+	    if(feof(fp)){			\
+		info("EOF\n");			\
+		return 1;			\
+	    }else if(ferror(fp)){		\
+		info("File error\n");		\
+		return 1;			\
+	    }else{				\
+		info("Unknown error\n");	\
+	    }					\
+	}					\
+    }while(nleft>0)				
+
+#define FILE_READ_INT(cmd)			\
+    FILE_READ(&cmd, sizeof(int));
+
+#define FILE_READ_STR(str)			\
     {						\
 	int len;				\
-	CHANNEL_READ(&len, sizeof(int));	\
-	str=calloc(1, sizeof(char)*len);	\
-	CHANNEL_READ(str, len);			\
+	FILE_READ_INT(len);			\
+	str=calloc(len, sizeof(char));		\
+	FILE_READ(str,len);			\
     }
-#define CHANNEL_READ_INT(cmd)						\
-    CHANNEL_READ(&cmd, sizeof(int))
-drawdata_t *drawdata=NULL;
-/*
-  readfifo should return TRUE to keep the channel inplace. Return FALSE to remove the channel.
-*/
-static gboolean readfifo(GIOChannel *source, GIOCondition cond, gpointer dumb){
-    (void)dumb;
-    (void)cond;
+
+static int read_fifo(FILE *fp){
+    static drawdata_t *drawdata=NULL;
     int cmd=0;
     gchar *start;
-    gsize nread; int nleft;
-    GError *err=NULL;
-    int status;
+    int nleft;
     static int errcount=0;
-    info("in readfifo: wait for cmd\n");
-    CHANNEL_READ_INT(cmd);
-    info("in readfifo: cmd %d read\n",cmd);
-    switch (cmd){
-    case FIFO_START:
-	if(drawdata){
-	    warning("FIFO_START: drawdata is not empty\n");
-	}
-	drawdata=calloc(1, sizeof(drawdata_t));
-	drawdata->zoom=1;
-	drawdata->type=T_INT;
-	drawdata->name=defname;
-	drawdata->format=(cairo_format_t)0;
-	drawdata->shmkey=0;
-	drawdata->fig=NULL;
-	break;
-    case FIFO_DATA:
-	{
-	    int header[3];
-	    CHANNEL_READ(header, 3*sizeof(int));
-	    drawdata->type=header[0];
-	    drawdata->nx=header[1];
-	    drawdata->ny=header[2];
-	    int nx=drawdata->nx;
-	    int ny=drawdata->ny;
-	    int byte=drawdata->type & 0xff;
-	    drawdata->p=malloc(byte*nx*ny);
-	    CHANNEL_READ(drawdata->p, nx*ny*byte);
-	    drawdata->format=(cairo_format_t)((drawdata->type>>8) & 0xff);
-	    if(byte>4) error("Wrong type\n");
-	}
-	break;
-    case FIFO_SHM:
-	{
-#if USE_SHM==1
-	    shm_data *data;
-	    int shmkey;
-	    CHANNEL_READ_INT(shmkey);
-	    if((data=shm_getdata_ro(shmkey))){
-		if(data->type == SHM_CHAR){
-		    drawdata->format = (cairo_format_t)CAIRO_FORMAT_A8;
-		}else if(data->type == SHM_INT){
-		    drawdata->format = (cairo_format_t)CAIRO_FORMAT_RGB24;
-		}else{
-		    error("Wrong datatype: %lx\n",data->type);
-		}
-		drawdata->shmkey=shmkey;
-		drawdata->p=data->x;
-		drawdata->nx=data->m;
-		drawdata->ny=data->n;
-	    }else{
-		error("Error obtaining data\n");
+    while(1){
+	cmd=-1;
+	FILE_READ_INT(cmd);
+	switch (cmd){
+	case FIFO_START:
+	    if(drawdata){
+		warning("FIFO_START: drawdata is not empty\n");
 	    }
-#else
-	    error("Invalid\n");
-#endif
-	}
-	break;
-
-    case FIFO_POINTS:
-	CHANNEL_READ_INT(drawdata->npts);
-	drawdata->ptsx=calloc(drawdata->npts, sizeof(double));
-	drawdata->ptsy=calloc(drawdata->npts, sizeof(double));
-	CHANNEL_READ(drawdata->ptsx, sizeof(double)*drawdata->npts);
-	CHANNEL_READ(drawdata->ptsy,sizeof(double)*drawdata->npts);
-	break;
-    case FIFO_STYLE:
-	CHANNEL_READ_INT(drawdata->nstyle);
-	drawdata->style=calloc(drawdata->nstyle, sizeof(long));
-	CHANNEL_READ(drawdata->style, sizeof(long)*drawdata->nstyle);
-	break;
-    case FIFO_CIRCLE:
-	CHANNEL_READ_INT(drawdata->ncir);
-	drawdata->cir=calloc(4*drawdata->ncir, sizeof(double));
-	CHANNEL_READ(drawdata->cir,sizeof(double)*4*drawdata->ncir);
-	break;
-    case FIFO_LIMIT:
-	drawdata->limit=calloc(4, sizeof(double));
-	CHANNEL_READ(drawdata->limit, 4*sizeof(double));
-	break;
-    case FIFO_FIG:
-	CHANNEL_READ_STR(drawdata->fig);
-    	break;
-    case FIFO_NAME:
-	CHANNEL_READ_STR(drawdata->name);
-	break;
-    case FIFO_TITLE:
-	CHANNEL_READ_STR(drawdata->title);
-	break;
-    case FIFO_XLABEL:
-	CHANNEL_READ_STR(drawdata->xlabel);
-	break;
-    case FIFO_YLABEL:
-	CHANNEL_READ_STR(drawdata->ylabel);
-	break;
-    case FIFO_MAXMIN:
-	drawdata->maxmin=calloc(3, sizeof(double));
-	CHANNEL_READ(drawdata->maxmin, sizeof(double)*3);
-	break;
-    case FIFO_END:
-	{
-	    if(drawdata->p){//draw image
+	    drawdata=calloc(1, sizeof(drawdata_t));
+	    drawdata->zoom=1;
+	    drawdata->name=defname;
+	    drawdata->format=(cairo_format_t)0;
+	    drawdata->gray=0;
+	    drawdata->fig=NULL;
+	    break;
+	case FIFO_DATA:
+	    {
+		int32_t header[2];
+		FILE_READ(header, 2*sizeof(int32_t));
+		drawdata->nx=header[0];
+		drawdata->ny=header[1];
 		int nx=drawdata->nx;
 		int ny=drawdata->ny;
-		if(nx<=0 || ny<=0) error("Please call _DATA or _SHM\n");
-		int stride=cairo_format_stride_for_width
-		    (drawdata->format, nx);
-		if(!drawdata->limit){
-		    drawdata->limit=calloc(4, sizeof(double));
-		    drawdata->limit[0]=0;
-		    drawdata->limit[1]=drawdata->nx;
-		    drawdata->limit[2]=0;
-		    drawdata->limit[3]=drawdata->ny;
-		}
-		drawdata->image= cairo_image_surface_create_for_data 
-		    (drawdata->p, drawdata->format, nx, ny, stride);
+		drawdata->p0=malloc(sizeof(double)*nx*ny);
+		FILE_READ(drawdata->p0, nx*ny*sizeof(double));
 	    }
-	    if(drawdata->npts>0){
-		if(!drawdata->limit){
-		    double tmp;
-		    drawdata->limit=calloc(4, sizeof(double));
-		    maxmindbl(drawdata->ptsx, drawdata->npts,
-			      drawdata->limit+1, drawdata->limit, &tmp);
-		    maxmindbl(drawdata->ptsy, drawdata->npts,
-			      drawdata->limit+3, drawdata->limit+2, &tmp);
+	    break;
+	case FIFO_POINTS:
+	    FILE_READ_INT(drawdata->npts);
+	    drawdata->ptsx=calloc(drawdata->npts, sizeof(double));
+	    drawdata->ptsy=calloc(drawdata->npts, sizeof(double));
+	    FILE_READ(drawdata->ptsx, sizeof(double)*drawdata->npts);
+	    FILE_READ(drawdata->ptsy,sizeof(double)*drawdata->npts);
+	    break;
+	case FIFO_STYLE:
+	    FILE_READ_INT(drawdata->nstyle);
+	    drawdata->style=calloc(drawdata->nstyle, sizeof(int32_t));
+	    FILE_READ(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
+	    break;
+	case FIFO_CIRCLE:
+	    FILE_READ_INT(drawdata->ncir);
+	    drawdata->cir=calloc(4*drawdata->ncir, sizeof(double));
+	    FILE_READ(drawdata->cir,sizeof(double)*4*drawdata->ncir);
+	    break;
+	case FIFO_LIMIT:
+	    drawdata->limit=calloc(4, sizeof(double));
+	    FILE_READ(drawdata->limit, 4*sizeof(double));
+	    break;
+	case FIFO_FIG:
+	    FILE_READ_STR(drawdata->fig);
+	    break;
+	case FIFO_NAME:
+	    FILE_READ_STR(drawdata->name);
+	    break;
+	case FIFO_TITLE:
+	    FILE_READ_STR(drawdata->title);
+	    break;
+	case FIFO_XLABEL:
+	    FILE_READ_STR(drawdata->xlabel);
+	    break;
+	case FIFO_YLABEL:
+	    FILE_READ_STR(drawdata->ylabel);
+	    break;
+	case FIFO_MAXMIN:
+	    drawdata->maxmin=calloc(2, sizeof(double));
+	    FILE_READ(drawdata->maxmin, sizeof(double)*2);
+	    break;
+	case FIFO_END:
+	    {
+		if(drawdata->p0){//draw image
+		    int nx=drawdata->nx;
+		    int ny=drawdata->ny;
+		    size_t size=0;
+		    if(nx<=0 || ny<=0) error("Please call _DATA\n");
+		    if(drawdata->gray){
+			drawdata->format = (cairo_format_t)CAIRO_FORMAT_A8;
+			size=1;
+		    }else{
+			drawdata->format = (cairo_format_t)CAIRO_FORMAT_RGB24;
+			size=4;
+		    }
+		    int stride=cairo_format_stride_for_width(drawdata->format, nx);
+		    if(!drawdata->limit){
+			drawdata->limit=calloc(4, sizeof(double));
+			drawdata->limit[0]=0;
+			drawdata->limit[1]=drawdata->nx;
+			drawdata->limit[2]=0;
+			drawdata->limit[3]=drawdata->ny;
+		    }
+		    //convert data from double to int/char.
+		    if(!drawdata->maxmin){
+			drawdata->maxmin=calloc(2, sizeof(double));
+		    }
+		    drawdata->p=calloc(nx*ny, size);
+		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->maxmin);
+		    gdk_threads_enter();//do I need this?
+		    drawdata->image= cairo_image_surface_create_for_data 
+			(drawdata->p, drawdata->format, nx, ny, stride);
+		    gdk_threads_leave();
 		}
-		if(drawdata->nstyle>0 && drawdata->nstyle!=drawdata->npts){
-		    error("nstyle must equal to npts\n");
+		if(drawdata->npts>0){
+		    if(!drawdata->limit){
+			drawdata->limit=calloc(4, sizeof(double));
+			maxmindbl(drawdata->ptsx, drawdata->npts,
+				  drawdata->limit+1, drawdata->limit);
+			maxmindbl(drawdata->ptsy, drawdata->npts,
+				  drawdata->limit+3, drawdata->limit+2);
+		    }
+		    if(drawdata->nstyle>0 && drawdata->nstyle!=drawdata->npts){
+			error("nstyle must equal to npts\n");
+		    }
 		}
+		if(!drawdata->fig) drawdata->fig=deffig;
+		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
+		drawdatawrap[0]=drawdata;
+		gdk_threads_enter();
+		info("drawdata=%p, drawdatawrap=%p\n", drawdata, drawdatawrap);
+		addpage(drawdatawrap);
+		gdk_threads_leave();
+		drawdata=NULL;
 	    }
-	    if(!drawdata->fig) 
-		drawdata->fig=deffig;
-	    drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
-	    drawdatawrap[0]=drawdata;
-	    addpage(drawdatawrap);
-	    while (gtk_events_pending ())
-		gtk_main_iteration ();
-	    drawdata=NULL;
-	}
-	//return FALSE;//do not close the fifo. new transfer may already began.
-	break;
-    default:
-	warning("Unknown cmd: %x\n", cmd);
-	if(errcount++>10){
-	    no_longer_listen=1;
-	    return FALSE;
-	}
-	break;
-    }
-    info("out fifo_read\n");
-    while (gtk_events_pending ())
-	gtk_main_iteration ();
-    return TRUE;
+	    break;
+	case -1:
+	    return 1;//read failed.
+	    break;
+	default:
+	    warning("Unknown cmd: %x\n", cmd);
+	    if(errcount++>10){
+		no_longer_listen=1;
+		return 1;
+	    }
+	    break;
+	}//switch
+    }//while
 }
 
-static void open_fifo(GIOChannel *source){
-    int fd;
-    if(source){
-	fd=g_io_channel_unix_get_fd(source);
-	g_io_channel_shutdown(source, TRUE, NULL);
-	g_io_channel_unref(source);
-	//close(fd);
-	//info("last channel closed with fd %d\n",fd);
-    }
-    //NONBLOCK is necessary otherwise the program is blocked here and gui can not be updated
+static void open_fifo(void){
+    FILE *fp=NULL;
     if(no_longer_listen){
 	return;
     }
     int retrycount=0;
  retry:
-    fd=open(fifo, O_RDONLY| O_NONBLOCK);
-    if(fd==-1){
+    if(fp) fclose(fp);
+    info("Try to open fifo\n");
+    fp=fopen(fifo,"rb");
+    if(!fp){
 	perror("open");
-	warning("fd=-1");
 	if(!exist(fifo)){
 	    warning("fifo %s is removed\n",fifo);
 	    if(mkfifo(fifo,0700)){
@@ -1284,25 +1310,43 @@ static void open_fifo(GIOChannel *source){
 	    goto retry;
 	}
     }
-    //info("Channel created with fd %d\n",fd);
-    GIOChannel *channel=g_io_channel_unix_new(fd);
-    g_io_channel_set_encoding(channel, NULL, NULL);
-    g_io_add_watch_full(channel, 0,(GIOCondition) (G_IO_IN|G_IO_HUP|G_IO_ERR|G_IO_PRI|G_IO_NVAL), 
-			readfifo, channel, (GDestroyNotify)open_fifo);
-    //should be buffered, large data can not be transfered at one time.
-    g_io_channel_set_buffered(channel,TRUE);
-    g_io_channel_set_close_on_unref (channel,1);
-  
-}
+    info("Opened\n");
+    read_fifo(fp);
+    retrycount=0;
+    sleep(1);
+    goto retry;
+}    
+
 int main(int argc, char *argv[])
 {
+    if(!g_thread_supported()){
+	g_thread_init(NULL);
+	gdk_threads_init();
+    }
     gtk_init(&argc, &argv);
-    if(argc!=2)
-	error("Wrong number of arguments\n");
-    fifo=argv[1];
+    if(argc>1){
+	fifo=argv[1];
+    }else{
+	fifo=calloc(80,sizeof(char));
+	snprintf(fifo,80,"%s/drawdaemon_%d.fifo",TEMP,(int)getppid());
+    }
+    int ppid;
+    const char *fifo2=strstr(fifo,"drawdaemon");
+    if(!fifo2){
+	warning("drawdaemon not found in string\n");
+	ppid=getpid();
+    }else{
+	sscanf(fifo2, "drawdaemon_%d.fifo", &ppid);
+    }
+    {//record the drawdaemon pid. and redirect output
+	char fnpid[PATH_MAX];
+	snprintf(fnpid, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
+	FILE *fp=fopen(fnpid, "w");
+	fprintf(fp, "%d", (int)getpid());
+	fclose(fp);
     
 	char fnlog[PATH_MAX];
-	snprintf(fnlog, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, (int)getpid());
+	snprintf(fnlog, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
 	if(!freopen(fnlog, "w", stdout)) {
 	    perror("freopen");
 	    warning("Error redirect stdout\n");
@@ -1313,9 +1357,7 @@ int main(int argc, char *argv[])
 	}
 	setbuf(stdout,NULL);//disable buffering.
 	setbuf(stderr,NULL);
-
-
-
+    }
     if(!window){
 	GdkPixbuf *icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -1346,12 +1388,12 @@ int main(int argc, char *argv[])
 	gtk_container_add(GTK_CONTAINER(item),fontsel);
 	g_signal_connect(GTK_FONT_BUTTON(fontsel),"font-set", 
 			 G_CALLBACK(tool_font_set),NULL);
-
-
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 	notebook=gtk_notebook_new();
+	gtk_container_set_border_width(GTK_CONTAINER(notebook),0);
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
-	//gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), TRUE);
+	gtk_notebook_set_tab_vborder(GTK_NOTEBOOK(notebook), 0);
+	gtk_notebook_set_tab_hborder(GTK_NOTEBOOK(notebook), 2);
 	GtkWidget *vbox=gtk_vbox_new(FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),toolbar,FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),notebook,TRUE,TRUE,0);
@@ -1365,7 +1407,18 @@ int main(int argc, char *argv[])
 	tool_font_set(GTK_FONT_BUTTON(fontsel));//initialize.
     }
     gtk_rc_parse_string(rc_string_notebook);
-    open_fifo(NULL);
+    if(NULL==g_thread_create((GThreadFunc)open_fifo, NULL, FALSE, NULL)){
+	error("Thread create failed.\n");
+    }
+    gdk_threads_enter();
     gtk_main();
-    remove(fnlog);
-}
+    gdk_threads_leave();
+    {
+	char fn[PATH_MAX];
+	snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
+	remove(fn);
+	snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
+	remove(fn);
+    }
+    remove(fifo);
+}//main

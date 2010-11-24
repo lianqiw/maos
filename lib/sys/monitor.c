@@ -25,7 +25,6 @@
   1) Log the activities into a human readable file
   2) Store the activity list into file when quit and reload later
 */
-#define NOTIFY_IS_SUPPORTED 1
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,8 +43,9 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-#if NOTIFY_IS_SUPPORTED
+#if WITH_NOTIFY
 #include <libnotify/notify.h>
+static int notify_daemon=1;
 #endif
 #include "common.h"
 #include "misc.h"
@@ -53,11 +53,10 @@
 #include "process.h"
 #include "scheduler_client.h"
 #include "monitor.h"
-#include "icon-draw.h"
+#include "icon-monitor.h"
 #include "icon-finished.h"
 #include "icon-running.h"
 #include "icon-failed.h"
-static int notify_daemon=1;
 GdkPixbuf *icon_main=NULL;
 GdkPixbuf *icon_finished=NULL;
 GdkPixbuf *icon_failed=NULL;
@@ -444,7 +443,7 @@ static void add_host(void){
 }
 void notify_user(PROC_T *p){
     if(p->status.done) return;
-#if NOTIFY_IS_SUPPORTED
+#if WITH_NOTIFY
     if(!notify_daemon) return;
     if(p->status.info==p->oldinfo) return;
     static NotifyNotification *notify_urgent=NULL, *notify_normal=NULL, *notify_low=NULL;
@@ -495,7 +494,7 @@ void notify_user(PROC_T *p){
 static void quitmonitor(GtkWidget *widget, gpointer data){
     (void)widget;
     (void)data;
-#if NOTIFY_IS_SUPPORTED
+#if WITH_NOTIFY
     if(notify_daemon)
 	notify_uninit();
 #endif
@@ -744,7 +743,7 @@ int main(int argc, char *argv[])
 	gdk_threads_init();
     }
     gtk_init(&argc, &argv);
-#if NOTIFY_IS_SUPPORTED
+#if WITH_NOTIFY
     if(!notify_init("AOS Notification")){
 	notify_daemon=0;
     }
@@ -756,7 +755,7 @@ int main(int argc, char *argv[])
     gdk_color_parse("#0099FF",&blue);
     gdk_color_parse("#FFFFAB",&color_even);
     gdk_color_parse("#FFFFFF",&color_odd);
-    icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw, FALSE, NULL);
+    icon_main=gdk_pixbuf_new_from_inline(-1,icon_monitor, FALSE, NULL);
     icon_finished=gdk_pixbuf_new_from_inline(-1,icon_inline_finished,FALSE,NULL);
     icon_failed=gdk_pixbuf_new_from_inline(-1,icon_inline_failed,FALSE,NULL);
     icon_running=gdk_pixbuf_new_from_inline(-1,icon_inline_running,FALSE,NULL);
@@ -807,7 +806,7 @@ int main(int argc, char *argv[])
     g_signal_connect(G_OBJECT (window), "window-state-event", 
 		     G_CALLBACK (window_state_event), NULL);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 800, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), 840, 400);
     gtk_widget_show_all(window);
 
     tabs=calloc(nhost,sizeof(GtkWidget*));

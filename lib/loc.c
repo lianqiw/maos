@@ -139,9 +139,9 @@ void rectmapfree_do(rectmap_t *map){
    Create an vector to embed OPD into square array for FFT purpose.
 */
 int *loc_create_embed(int *nembed, const loc_t *loc){
-    double xmin,xmax,ymin,ymax,tmp;
-    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin,&tmp);
-    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin,&tmp);
+    double xmin,xmax,ymin,ymax;
+    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
+    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     const double dx_in1=1./loc->dx;
     int nx=(int)round((xmax-xmin)*dx_in1)+1;
     int ny=(int)round((ymax-ymin)*dx_in1)+1;
@@ -199,9 +199,9 @@ void loc_create_map_npad(loc_t *loc, int npad){
     loc->map->loc = loc;
     loc->map->nloc= loc->nloc;
     loc->map->npad = npad;//just record the information.
-    double xmin,xmax,ymin,ymax,tmp;
-    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin,&tmp);
-    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin,&tmp);
+    double xmin,xmax,ymin,ymax;
+    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
+    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     int map_nx, map_ny;
     //padding the map. normally don't need.
     if(npad>0){
@@ -1270,8 +1270,8 @@ loc_t *loctransform(loc_t *loc, dmat **coeff){
 */
 void loc_nxny(long *nx, long *ny, const loc_t *loc){
     double xmax, xmin, ymax, ymin;
-    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin, NULL);
-    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin, NULL);
+    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
+    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     *nx=(long)round((xmax-xmin)/loc->dx)+1;
     *ny=(long)round((ymax-ymin)/loc->dx)+1;
 }

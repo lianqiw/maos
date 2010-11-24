@@ -20,7 +20,7 @@
 #include "misc.h"
 #define CSIZE       512
 enum{
-    FIFO_START=0,
+    FIFO_START=0, //Mark the starting of data stream.
     FIFO_DATA,
     FIFO_SHM,
     FIFO_POINTS,
@@ -33,18 +33,11 @@ enum{
     FIFO_XLABEL,
     FIFO_YLABEL,
     FIFO_MAXMIN,
-    FIFO_END
+    FIFO_END=100
 };
 
 #ifndef CAIRO_FORMAT_A8
 #define CAIRO_FORMAT_RGB24 0x01
 #define CAIRO_FORMAT_A8 0x02
 #endif
-#define T_CHAR   (0x1<<16|CAIRO_FORMAT_A8<<8    | sizeof(char))
-#define T_INT    (0x2<<16|CAIRO_FORMAT_RGB24<<8 | sizeof(int))
-
-#define T_DOUBLE (0x3<<16 | sizeof(double))
-#define T_LONG   (0x4<<16 | sizeof(long))
-#define T_DCOMPLEX (0x5<<16 | sizeof(dcomplex))
-#define DEFAULT_FONT_SIZE 12
 #endif

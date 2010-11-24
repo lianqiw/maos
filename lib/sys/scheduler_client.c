@@ -74,53 +74,36 @@ int scheduler_connect_self(int block, int mode){
     if(scheduler_crashed) {
 	return -1;
     }
-
-    struct sockaddr_in servername;
- 
-    /* Create the socket. */
-    sock = socket (PF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
-	perror ("socket (scheduler)");
-	scheduler_crashed=1; 
-	return sock;
-    }
-
-    int oldflag=fcntl(sock,F_GETFD,0);
-    oldflag |= FD_CLOEXEC;
-    fcntl(sock, F_SETFD, oldflag);//close on exec.
-    
-    /*long arg=fcntl(sock,F_GETFL,NULL);
-      if(arg<0) return -1;
-      nonblocking doesn't work.
-      arg|=O_NONBLOCK;
-      if(fcntl(sock,F_SETFL,arg)<0) return -1;*/
-    /*if(init_sockaddr (&servername, host, PORT)){
-	warning3("Unable to init_sockaddr.");
-	scheduler_crashed=1; 
-	close(sock);
-	return -1;
-	}*/
-    /* Give the socket a name. */
-    servername.sin_family = AF_INET;
-    servername.sin_port = htons(PORT);
-    servername.sin_addr.s_addr = htonl(INADDR_ANY);
-
     int count=0;
-    while(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
-	if(!block){
-	    close(sock);
-	    return -1;
+    struct sockaddr_in servername;
+    do{
+	/* Create the socket. */
+	sock = socket (PF_INET, SOCK_STREAM, 0);
+	if (sock < 0) {
+	    perror ("socket (scheduler)");
+	    scheduler_crashed=1; 
+	    return sock;
 	}
-	sleep(4);
-	count++;
-	if(count>1000){
+	cloexec(sock);
+	/* Give the socket a name. */
+	servername.sin_family = AF_INET;
+	servername.sin_port = htons(PORT);
+	servername.sin_addr.s_addr = htonl(INADDR_ANY);
+	if(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
+	    perror("connect");
 	    close(sock);
-	    sock=-1;
-	    error("Failed to connect to scheduer\n");
+	    if(!block){
+		return -1;
+	    }
+	    sleep(4);
+	    count++;
+	}else{
+	    scheduler_shutdown(&sock,mode);
+	    return sock;
+	    break;
 	}
-    }
-    scheduler_shutdown(&sock,mode);
-    return sock;
+    }while(count<10);
+    return -1;
 }
 static void scheduler_launch_do(void *junk){
     /**
@@ -286,19 +269,29 @@ char* scheduler_get_drawdaemon(int pid){
     int launch=0;
     static char *fifo=NULL;
     if(!fifo){
-	fifo=malloc(100);
-	snprintf(fifo,100,"%s/drawdaemon_%d.fifo",TEMP,pid);
+        fifo=malloc(100);
+        snprintf(fifo,100,"%s/drawdaemon_%d.fifo",TEMP,pid);
 	fifo=realloc(fifo,strlen(fifo)+1);
     }
-    if(exist(fifo)){//fifo already exist. test when drawdaemon exists
-	int fd=open(fifo,O_NONBLOCK|O_WRONLY);
-	if(fd==-1){
-	    warning2("Enable to open drawdaemon.");
-	    launch=1;
+    if(exist(fifo)){
+        warning2("fifo already exist. test when drawdaemon exists\n");
+        char fnpid[PATH_MAX];
+	snprintf(fnpid, PATH_MAX, "%s/drawdaemon_%d.pid", TEMP, pid);
+	FILE *fp=fopen(fnpid, "r");
+	if(fp){
+	    int fpid;
+	    fscanf(fp, "%d", &fpid);
+	    fclose(fp);
+	    if(kill(fpid,0)){
+		warning2("Drawdaemon has exited\n");
+		launch=1;
+	    }
 	}else{
-	    close(fd);
+	    warning2("Drawdaemon has exited\n");
+	    launch=1;
 	}
     }else{
+        info2("make fifo\n");
 	if(mkfifo(fifo,0700)){
 	    warning3("Error making fifo\n");
 	}
@@ -306,9 +299,19 @@ char* scheduler_get_drawdaemon(int pid){
     }
 
     if(launch){
-	int sock=scheduler_connect_self(0,0);
+        info2("Attempting to launch fifo\n");
+	int sock;
+	for(int retry=0; retry<10; retry++){
+	    sock=scheduler_connect_self(0,0);
+	    if(sock==-1){
+		warning2("failed to connect to scheduler\n");
+		sleep(1);
+	    }else{
+		break;
+	    }
+	}
 	if(sock==-1){
-	    warning3("failed to connect to scheduler\n");
+	    warning2("failed to connect to scheduler\n");
 	    return NULL;
 	}
 	int cmd[2];

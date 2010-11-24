@@ -1,6 +1,6 @@
 AC_PREREQ(2.57)
 AC_INIT(maos, 0.7.4, lianqiw@gmail.com)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
@@ -20,10 +20,12 @@ echo host_os=$host_os
 AC_TYPE_SIZE_T  
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
 AM_CONDITIONAL(DRAW,true)
-AM_CONDITIONAL(MON,true)
+AM_CONDITIONAL(MON,true)  #for parital monitor without notify
+AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #make sure there are spaces before and after >=
 PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [],[AM_CONDITIONAL(DRAW,false)])
-PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2 libnotify >= 0.1,[],[AM_CONDITIONAL(MON,false)])
+PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[],[AM_CONDITIONAL(MON,false)])
+PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[],[AM_CONDITIONAL(MONN,false)])
 #The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
 #with their values in Makefile.in 
 #so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
@@ -31,6 +33,8 @@ AC_SUBST(DRAW_CFLAGS)
 AC_SUBST(DRAW_LIBS)
 AC_SUBST(MON_CFLAGS)
 AC_SUBST(MON_LIBS)
+AC_SUBST(MONN_LIBS)
+AC_SUBST(MONN_CFLAGS)
 #Check operating system.
 AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
@@ -90,6 +94,17 @@ case "$host_os" in
     ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
+ if ! test -e ${SRC_DIR}/scripts/drawdaemon.app ;then
+     curl -O -L -# https://github.com/downloads/lianqiw/maos/drawdaemon.app.tar.gz -# &&\
+     tar zxf drawdaemon.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
+     rm  -rf drawdaemon.app.tar.gz
+ fi
+ if ! test -e ${SRC_DIR}/scripts/monitor.app ;then
+     curl -O -L -# https://github.com/downloads/lianqiw/maos/monitor.app.tar.gz -# &&\ 
+     tar zxf monitor.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
+     rm	 -rf monitor.app.tar.gz
+ fi
+ echo "Please use the monitor downloaded to ${SRC_DIR}/scripts/monitor.app"
 ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)
