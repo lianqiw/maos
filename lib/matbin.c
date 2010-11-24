@@ -129,7 +129,7 @@ X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic){
     if(!magic){
 	magic=read_magic(fp, NULL);
     }
-    if(magic!=MC_T)
+    if(magic!=MC_T && magic!=MCC_ANY)
 	error("This is is not a X(mat) cell file. want %d, get %d\n",(int)MC_T,(int)magic);
     uint64_t nx,ny;
     zfreadlarr(fp, 2, &nx, &ny);
