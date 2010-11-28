@@ -100,7 +100,6 @@ int scheduler_connect_self(int block, int mode){
 	}else{
 	    scheduler_shutdown(&sock,mode);
 	    return sock;
-	    break;
 	}
     }while(count<10);
     return -1;

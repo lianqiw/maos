@@ -15,6 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/*
+  Implementing Monitor using GtkTable. Deprecated.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
@@ -34,9 +38,11 @@
 #include <glib/gprintf.h>
 #include "common.h"
 #include "monitor.h"
+#include "scheduler_client.h"
 
-
-
+GtkWidget **tables;
+gint *nrows;
+static int ncol=7;
 static void delete_hbox_event(GtkWidget *btn, GdkEventButton *event,PROC_T *p){
     (void)btn;
     if(event->button==1){
@@ -83,7 +89,7 @@ static GtkWidget *new_label(const char *text, int width,float align){
 #define WIDTH_PID 24
 #define WIDTH_PATH 20
 #define WIDTH_ISEED 5
-#define WIDTH_TIMING 25 //28
+#define WIDTH_TIMING 25
 #define WIDTH_ERRLO 7
 #define WIDTH_ERRHI 7
 
@@ -102,31 +108,21 @@ static void create_entry(PROC_T *p){
     p->entry_errhi=new_label("Hi (nm)",WIDTH_ERRHI,1);
     p->entry_iseed=new_entry("iSEED",WIDTH_ISEED,0.5);
     p->entry_timing=new_entry("Timing",WIDTH_TIMING,1);
-    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_pid,FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_path,TRUE,TRUE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_errlo,FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_errhi,FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_iseed,FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_timing,FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
+    //kill_button_new(p);
     change_button(p, GTK_STOCK_STOP, kill_job_event);
-    gtk_box_pack_start(GTK_BOX(p->hbox),p->btn,FALSE,FALSE,0);
-    p->vbox=gtk_vbox_new(FALSE,0);
-    if(nproc[p->hid]==1){
-	gtk_box_pack_start(GTK_BOX(p->vbox),gtk_hseparator_new(),FALSE,FALSE,0);
-    }
-    gtk_box_pack_start(GTK_BOX(p->vbox),p->hbox,FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(p->vbox),gtk_hseparator_new(),FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(pages[p->hid]),p->vbox,FALSE,FALSE,0);
-    
-    //gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),p->hid);
-    gtk_widget_show_all(p->vbox);
+    int irow=nrows[p->hid];
+    nrows[p->hid]++;
+    gtk_table_resize(GTK_TABLE(tables[p->hid]), nrows[p->hid],ncol);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_pid, 0,1,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_path, 1,2,irow,irow+1,
+		     (GtkAttachOptions)(GTK_EXPAND|GTK_FILL),(GtkAttachOptions)(GTK_EXPAND|GTK_FILL),0,0);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_errlo, 2,3,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_errhi, 3,4,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_iseed, 4,5,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_timing, 5,6,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
+    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->btn, 6,7,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
+    gtk_widget_show_all(tables[p->hid]);
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),p->hid);
 }
 static void update_prog(PROC_T *p){
     /*Update the progress bar*/
@@ -136,13 +132,13 @@ static void update_prog(PROC_T *p){
 	}
     
 	const double tkmean=p->status.scale;
-	const long tot=p->status.rest+p->status.laps;//show total time.
-	const long toth=tot/3600;
-	const long totm=(tot-toth*3600)/60;
 	const long rest=p->status.rest;
+	const long laps=p->status.laps;
 	const long resth=rest/3600;
 	const long restm=(rest-resth*3600)/60;
-	const double step=p->status.tot*tkmean;
+	const long lapsh=laps/3600;
+	const long lapsm=(laps-lapsh*3600)/60;
+	const double tot=p->status.tot*tkmean;
 	if(p->iseed_old!=p->status.iseed){
 	    char tmp[64];
 	    snprintf(tmp,64,"%d of %d",p->status.iseed+1,p->status.nseed);
@@ -153,9 +149,9 @@ static void update_prog(PROC_T *p){
 		 (double)(p->status.iseed+1)/(double)p->status.nseed);
 	}
 	char tmp[64];
-	snprintf(tmp,64, "%4.1fs %d of %d %ld:%02ld of %ld:%02ld",
-		 step,p->status.isim+1,p->status.simend,
-		 resth,restm,toth,totm);
+	snprintf(tmp,64, "%d of %d %ld:%02ld %ld:%02ld %.2fs",
+		 p->status.isim+1,p->status.simend,
+		 lapsh,lapsm,resth,restm,tot);
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),tmp);
 	snprintf(tmp,64,"%.2f",p->status.clerrlo);
 	gtk_label_set_text(GTK_LABEL(p->entry_errlo),tmp);
@@ -167,13 +163,14 @@ static void update_prog(PROC_T *p){
 }
 void remove_entry(PROC_T *iproc){
     //Delete widget;
-    if(iproc->vbox){
-	//warning3("destroy hbox\n");
-	gtk_widget_destroy(iproc->vbox);
-	iproc->vbox=NULL;
-    }else{
-	//warning("hbox is empty\n");
-    }
+    gtk_widget_destroy(iproc->entry_pid);
+    gtk_widget_destroy(iproc->entry_path);
+    gtk_widget_destroy(iproc->entry_errlo);
+    gtk_widget_destroy(iproc->entry_errhi);
+    gtk_widget_destroy(iproc->entry_iseed);
+    gtk_widget_destroy(iproc->entry_timing);
+    gtk_widget_destroy(iproc->btn);
+    nrows[iproc->hid]--;
 }
 void refresh(PROC_T *p){
     if(p->status.info==S_REMOVE){
@@ -195,10 +192,10 @@ void refresh(PROC_T *p){
 	notify_user(p);
 	break;
     case S_FINISH://Finished
+	p->frac=1;
 	p->done=1;
 	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
 	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);//progress bar color.
-	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_NORMAL,&green);//progress bar color.
 	notify_user(p);
 	break;
     case S_CRASH://Error
@@ -226,6 +223,14 @@ void refresh(PROC_T *p){
     update_prog(p);
 }
 GtkWidget *new_page(int ihost){
-    (void)ihost;
-    return NULL;
+    if(!tables){
+	tables=calloc(nhost, sizeof(GtkWidget*));
+	nrows=calloc(nhost, sizeof(gint));
+    }
+    nrows[ihost]=0;
+    tables[ihost]=gtk_table_new(nrows[ihost],ncol,0);
+    gtk_table_set_row_spacings(GTK_TABLE(tables[ihost]), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(tables[ihost]), 2);
+
+    return tables[ihost];
 }

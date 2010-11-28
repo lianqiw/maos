@@ -17,7 +17,6 @@
 */
 #ifndef __DRAWDAEMON_H
 #define __DRAWDAEMON_H
-#include "misc.h"
 #define CSIZE       512
 enum{
     FIFO_START=0, //Mark the starting of data stream.

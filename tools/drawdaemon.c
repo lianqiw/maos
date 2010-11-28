@@ -34,8 +34,8 @@
 #include <glib/gprintf.h>
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
-#include "misc.h"
 #include "proc.h"
+#include "misc.h"
 #include "icon-draw.h"
 char *defname="Title";
 char *deffig="Figure";

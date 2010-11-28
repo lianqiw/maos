@@ -39,7 +39,7 @@ int DRAW_ID=0;
 #include "draw.h"
 #include "bin.h"
 
-#include "sys/drawdaemon.h"
+#include "../tools/drawdaemon.h"
 #include "sys/scheduler_client.h"
 static FILE *pfifo=NULL;
 #define DOPPRINT 1

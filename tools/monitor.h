@@ -17,10 +17,10 @@
 */
 #ifndef AOS_MONITOR_H
 #define AOS_MONITOR_H
-#include "scheduler_client.h"
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
+#include "scheduler_server.h"
 /**
    Information for each process.
 */
