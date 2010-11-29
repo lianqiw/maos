@@ -17,6 +17,8 @@
 */
 
 #include <math.h>
+#include "common.h"
+#include "thread.h"
 #include "accphi.h"
 /*
    2010-01-02: use a=(int)b instead of a=(int)floor(b).  call to floor is slow

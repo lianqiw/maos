@@ -22,6 +22,8 @@
 //need to include complex.h before fftw3.h
 #include <fftw3.h>
 #include "common.h"
+#include "thread.h"
+#include "proc.h"
 #include "misc.h"
 #include "fft.h"
 #include "cmat.h"

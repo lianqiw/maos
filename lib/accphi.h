@@ -18,8 +18,13 @@
 
 #ifndef AOS_ACCPHI_H
 #define AOS_ACCPHI_H
+
+
+#ifndef AOS_LIB_THREAD_H
+typedef struct thread_t thread_t;
+#endif
 #include "loc.h"
-#include "common.h"
+
 /**
    Unified data structure for automatic selection of propagation.
 */

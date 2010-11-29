@@ -1,4 +1,4 @@
-AM_CFLAGS=$(OPTS) -I$(top_srcdir) 
+AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/lib/sys
 if COMP_CHOL
 AM_CFLAGS+=-I$(top_srcdir)/external/cholmod/Include
 endif

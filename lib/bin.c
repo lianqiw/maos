@@ -26,7 +26,8 @@
 #include <stdint.h>
 #include <limits.h>
 #include "common.h"
-#include "common.h"
+#include "thread.h"
+#include "proc.h"
 #include "bin.h"
 #include "path.h"
 #include "misc.h"

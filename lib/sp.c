@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include "common.h" 
+#include "thread.h"
 #include "mathmisc.h"
 #include "type.h"
 #include "dsp.h" 

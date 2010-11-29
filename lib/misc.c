@@ -21,7 +21,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-//#include <execinfo.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -31,10 +30,12 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <dirent.h>
+#include <time.h>
 #include "common.h"
+#include "thread.h"
+#include "proc.h"
 #include "misc.h"
 #include "path.h"
-#include "common.h"
 
 /**
    Obtain the hostname of current machine. The returnned string

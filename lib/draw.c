@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include "common.h"
+#include "thread.h"
 #include "misc.h"
 #include "mathmisc.h"
 int DRAW_ID=0;

@@ -22,7 +22,9 @@
 #include <unistd.h>
 #include <dirent.h>
 #include "common.h"
-#include "common.h"
+#include "thread.h"
+#include "shm.h"
+#include "proc.h"
 #include "turbulence.h"
 #include "path.h"
 #include "dmat.h"

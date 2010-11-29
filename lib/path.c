@@ -19,9 +19,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <limits.h>
-
-#include "path.h"
 #include "common.h"
+#include "proc.h"
+#include "path.h"
 #include "misc.h"
 /**
    The linked list to store path where we look for files.

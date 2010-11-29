@@ -105,12 +105,15 @@
 /**
    Information about job to launch for each thread. start and end are the two indices.
 */
-typedef struct thread_t{
+struct thread_t{
     long start;
     long end;
     long step;
     long ithread;//which thread this is.
     void *data;
-}thread_t;
+};
+#ifndef AOS_ACCPHI_H
+typedef struct thread_t thread_t;
+#endif
 void thread_prep(thread_t *info, long start, long tot, long interlaced, long nthread, void *data);
 #endif
