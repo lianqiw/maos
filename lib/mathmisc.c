@@ -120,22 +120,6 @@ double dblsum(double *p, long nx){
 }
 
 
-
-
-/**
-   Compute the factorial. Overflow LONG if n*/
-long factorial(long n){
-    if(n>20){
-	error("Overflow.");
-    }
-    long fact=1;
-    while(n>1){
-	fact*=n--;
-    }
-    return fact;
-}
-
-
 /**
    inplace inversion of square SPD matrix. A=A^-1*/
 void invsq(long n, double *restrict A){
@@ -202,3 +186,56 @@ void cvecpermi(dcomplex *restrict out, const dcomplex *restrict in, const long *
 	out[perm[i]]=in[i];
     }
 }
+/**
+ Compute max, min and sum of a double vector*/
+void maxmindbl(const double *restrict p, long N, 
+	       double *restrict max, double *restrict min){
+    if(N==0){
+	*max=0;
+	*min=0;
+	return;
+    }
+    double a,b;
+    long i;
+    a=p[0]; b=p[0];
+    for(i=1; i<N; i++){
+	if(p[i]>a) a=p[i];
+	if(p[i]<b) b=p[i];
+    }
+    if(max) *max=a;
+    if(min) *min=b;
+}
+/**
+ Compute max, min and sum of a long vector*/
+void maxminlong(const long *restrict p, long N,
+		long *restrict max, long *restrict min){
+    long a,b;
+    long i;
+    a=p[0]; b=p[0]; 
+    for(i=0; i<N; i++){
+	if(p[i]>a) a=p[i];
+	if(p[i]<b) b=p[i];
+    }
+    if(max)*max=a; 
+    if(min)*min=b; 
+}
+/**
+ Compute max, min and sum of a complex vector*/
+void maxmincmp(const dcomplex *restrict p, long N,
+	       double *restrict max, double *restrict min, double *restrict sum){
+    double a,b,s;
+    long i;
+    a=cabs(p[0]); 
+    b=cabs(p[0]);
+    s=0;
+    for(i=0; i<N; i++){
+	double tmp=cabs(p[i]);
+	s+=tmp;
+	if(tmp>a) a=tmp;
+	if(tmp<b) b=tmp;
+    }
+    if(max)*max=a; 
+    if(min)*min=b; 
+    if(sum)*sum=s;
+}
+

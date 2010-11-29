@@ -66,7 +66,6 @@
 #include "process.h"
 #include "scheduler_server.h"
 #include "shm.h"
-#include "private.h"
 char** hosts;
 int nhost;
 static int all_done=0;
@@ -671,7 +670,7 @@ static int respond(int sock){
 	    }else{
 		ans=0;//succeed
 	    }
-	    writeint(sock,ans);//return signal to scheduler_get_drawdaemon
+	    writeint(sock, ans);
 	    if(method==3){
 		break;//already launched.
 	    }

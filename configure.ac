@@ -76,7 +76,7 @@ case "$host_os" in
     AM_CONDITIONAL(LINUX, true)
     LDSYS="$LDSYS -lrt" #Real time library
     #Enable System V Interface definition (IPC,SHM)
-    OPTSextra="-g -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
+    OPTSextra="-Werror -g -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
     if test -f "$mkl_lib" ;then
        use_mkl_default="yes"
     else

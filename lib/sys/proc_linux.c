@@ -110,10 +110,10 @@ static int proc_read_status(char *fnjob,  char *exename, char *cstat,long* nthre
 	return 0;
     }
 }
+/**
+   Return the number of running jobs.
+*/
 int get_usage_running(void){
-    /**
-       Return the number of running jobs.
-    */
   
     struct dirent *dp, *dpsub;
     char fnjob[64],fnsub[64];

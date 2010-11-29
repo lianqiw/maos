@@ -33,22 +33,10 @@ void writeint(int fd, int cmd){
     if(write(fd, &cmd, sizeof(int))!=sizeof(int))
 	warning3("Write failed\n");
 }
-void fwriteint(FILE *fp, int cmd){
-    if(fwrite(&cmd, sizeof(int), 1, fp)!=1){
-	warning3("Write failed\n");
-    }
-}
 int readint(int fd){
     int cmd;
     if(read(fd, &cmd, sizeof(int))!=sizeof(int)){
 	warning3("Read failed\n");
-	cmd=-1;
-    }
-    return cmd;
-}
-int freadint(FILE *fp){
-    int cmd;
-    if(fread(&cmd, sizeof(int), 1, fp)!=1){
 	cmd=-1;
     }
     return cmd;
@@ -63,16 +51,6 @@ void writestr(int fd, const char *str){
 	writeint(fd, 0);
     }
 }
-void fwritestr(FILE *fp, const char *str){
-    if(str){
-	int len=strlen(str)+1;
-	fwriteint(fp, len);
-	if(fwrite(str, sizeof(char), len, fp)!=(size_t)len)
-	    error3("Write failed\n");
-    }else{
-	fwriteint(fp, 0);
-    }
-}
 char *readstr(int fd){
     int len;
     char *str;
@@ -84,19 +62,6 @@ char *readstr(int fd){
 	    free(str);
 	    str=NULL;
 	}
-    }else{
-	str=NULL;
-    }
-    return str;
-}
-char *freadstr(FILE *fp){
-    int len;
-    char *str;
-    len=freadint(fp);
-    if(len){
-	str=calloc(1, sizeof(char)*len);
-	if(fread(str, sizeof(char), len, fp)!=(size_t)len)
-	    error3("Read failed\n");
     }else{
 	str=NULL;
     }

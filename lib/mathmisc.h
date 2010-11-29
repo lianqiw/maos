@@ -40,4 +40,10 @@ void invsq(long n, double *restrict A);
 long *invperm(long *p, long np);
 void cvecperm(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx);
 void cvecpermi(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx);
+void maxmindbl(const double *restrict p, long N, 
+	       double *restrict max, double *restrict min);
+void maxminlong(const long *restrict p, long N,
+		long *restrict max, long *restrict min);
+void maxmincmp(const dcomplex *restrict p, long N,
+	       double *restrict max, double *restrict min, double *restrict sum);
 #endif

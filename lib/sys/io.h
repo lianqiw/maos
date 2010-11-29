@@ -21,13 +21,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void writestr(int fd, const char *str);
-char * readstr(int fd);
-void fwritestr(FILE *fp, const char *str);
-char* freadstr(FILE *fp);
-
 void writeint(int fd, int cmd);
-int readint(int fd);
-void fwriteint(FILE *fp, int cmd);
-int   freadint(FILE *fp);
+void writestr(int fd, const char *str);
+int  readint(int fd);
+char*readstr(int fd);
 #endif

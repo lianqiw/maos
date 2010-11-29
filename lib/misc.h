@@ -18,9 +18,7 @@
 
 #ifndef AOS_LIB_MISC_H
 #define AOS_LIB_MISC_H
-//#include "common.h"
-#include "sys/misc.h"
-
+#include "common.h"
 char *FF(const char *format,...) CHECK_ARG(1);
 long factorial(long n);
 char *mybasename(const char *fn);
@@ -28,5 +26,28 @@ int check_suffix(const char *fn, const char *suffix);
 void copyfile(const char *dest, const char *src);
 char *argv2str(int argc, char **argv);
 void print_file(const char *fnin);
+int myclocki(void);
+double myclockd(void);
+const char *myasctime(void);
+char *strtime(void);
+const char *myhostname(void);
+char *mygetcwd(void);
+char *myabspath(const char *path);
+void mysymlink(const char *fn, const char *fnlink);
+int exist(const char *fn);/*test file exist*/
+void touch(const char *fn);
+char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
+void expand_filename(char **fnout, const char *fn);
+
+void remove_file_older(const char *fndir, long sec);
+void mymkdir(const char *format,...) CHECK_ARG(1);
+int mystrcmp(const char *a, const char *b);
+char *mystrndup(const char *A, int len);
+void cloexec(int fd);
+#if USE_MEM == 1
+char *mystrdup(const char *A);
+#undef strdup
+#define strdup mystrdup //our strdup handles NULL correctly.
+#endif //USE_MEM=1
 #endif
 

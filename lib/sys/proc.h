@@ -17,7 +17,10 @@
 */
 #ifndef AOS_PROC_H
 #define AOS_PROC_H
-
+#if defined(__CYGWIN__)
+void GetTempPath(long, char*);
+#endif
+void init_path(void);
 int    get_usage_running(void);
 double get_usage_load(void);
 double get_usage_mem(void);

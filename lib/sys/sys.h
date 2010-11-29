@@ -17,11 +17,10 @@
 */
 #ifndef AOS_SYS_SYS_H
 #define AOS_SYS_SYS_H
-#include "common.h"
-#include "misc.h"
 #include "thread.h"
 #include "proc.h"
 #include "scheduler_client.h"
 #include "process.h"
 #include "shm.h"
+#include "mem.h"
 #endif

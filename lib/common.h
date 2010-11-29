@@ -24,24 +24,25 @@
 */
 
 #include "sys/sys.h"
-
-    
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "config.h" //not a good idea to include HAVE_CONFIG_H here
 #endif
+#include <signal.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
 #include <string.h>
 #include <alloca.h>
+#include <complex.h>
+
 #ifdef __linux__
-//includes definition of PATH_MAX
-#include <linux/limits.h>
-#endif
-#ifndef USE_DAEMON
-#define USE_DAEMON 1
-#endif
+#include <linux/limits.h> //includes definition of PATH_MAX
+#endif//__linux__
+
+typedef double __complex__ dcomplex;
+typedef double ddouble;/*just for saving.*/
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -49,7 +50,6 @@
 #ifndef EPS
 #define EPS 1.e-14
 #endif
-
 
 /**
    2010-01-03
@@ -70,14 +70,7 @@
 #define myfma(x,y,z) (x)*(y)+z
 #endif
 #define SPLIT(A,B,C) {C=ifloor(A); B=A-C;}
-/*
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>   
-#include <signal.h>
-#include <string.h>
-#include <time.h>*/
-#include "misc.h"
+
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")
 #ifndef __thread
@@ -97,7 +90,120 @@
 #define tic tk=myclockd();
 #define toc(A...) ({info(A);fprintf(stderr," takes %.6f seconds.\n",myclockd()-tk);})
 #define toc2(A...) ({fprintf(stderr,A);fprintf(stderr," takes %.6f seconds.\n",myclockd()-tk);})
-//define toc2(A) info2("%s: takes %.6f seconds.\n",  A,myclockd()-tk)
 #define toc3 myclockd()-tk
+
+#define format2fn					\
+    char fnstore[PATH_MAX]; char *fn=fnstore;		\
+    va_list ap;						\
+    va_start(ap,format);				\
+    vsnprintf(fnstore,sizeof(fnstore), format, ap);	\
+    va_end(ap);						\
+    if(strlen(fnstore)==0) fn=NULL
+
+
+#if    ( __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4) ) && !defined(MATLAB_MEX_FILE)
+#define CHECK_ARG(n) __attribute__ ((format (printf, n, n+1)))
+#else   
+#define CHECK_ARG(n)
+#endif /* __GNUC__ */
+
+#if defined(__GNUC__) && (__GNUC__ > 2) && defined(__OPTIMIZE__) 
+#define LIKELY(A)   (__builtin_expect (A,1))
+#define UNLIKELY(A) (__builtin_expect (A,0))
+#else
+#define LIKELY(A)   A
+#define UNLIKELY(A) A
+#endif /* __GNUC__ */
+
+#if    __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) && !defined(__INTEL_COMPILER)
+#define CHECK_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#define CHECK_UNUSED_RESULT
+#endif /* __GNUC__ */
+
+#if     __GNUC__ >= 4
+#define CHECK_NULL_TERMINATED __attribute__((__sentinel__))
+#else
+#define CHECK_NULL_TERMINATED
+#endif
+
+
+#if USE_MEM == 1
+void print_backtrace(int sig);
+#define PRINT_BACKTRACE print_backtrace(0);
+#else//if USE_MEM
+#define PRINT_BACKTRACE
+#endif//if USE_MEM
+#include <string.h>
+
+
+#define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
+
+
+/*
+  use () to make the statements a single statement.
+*/
+#ifndef error
+#define error(A...) ({char fline[80];					\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
+	    PRINT_BACKTRACE;						\
+	    raise(SIGTERM);})
+#define info(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
+	    fprintf(stderr, "%-20s",fline);			\
+	    fprintf(stderr, A);})
+#define warning(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
+	    fprintf(stderr,"\033[01;31m%-20s", fline);		\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
+
+#define error2(A...) ({							\
+	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
+	    fprintf(stderr, A);						\
+	    PRINT_BACKTRACE;						\
+	    raise(SIGTERM);})
+#define info2(A...) fprintf(stderr, A)
+#define warning2(A...) ({					\
+	    fprintf(stderr,"\033[00;31m");			\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m"); }) 
+
+#define error3(A...) ({char fline[80];					\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
+	    PRINT_BACKTRACE;						\
+	    raise(SIGTERM);})
+#define warning3(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+	    fprintf(stderr,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
+#define info3(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
+	    fprintf(stderr, "[%s]%-20s",myasctime(),fline);	\
+	    fprintf(stderr, A);})
+#endif
+
+#define register_signal_handler(func)	\
+    signal(SIGBUS, func);		\
+    signal(SIGILL, func);		\
+    signal(SIGSEGV,func);		\
+    signal(SIGINT, func);		\
+    signal(SIGPIPE,SIG_IGN);		\
+    signal(SIGTERM,func);		\
+    signal(SIGABRT,func);		\
+    signal(SIGQUIT,func)
+#define disable_signal_handler	\
+    signal(SIGBUS, SIG_DFL);	\
+    signal(SIGILL, SIG_DFL);	\
+    signal(SIGSEGV,SIG_DFL);	\
+    signal(SIGINT, SIG_DFL);	\
+    signal(SIGPIPE,SIG_DFL);	\
+    signal(SIGTERM,SIG_DFL);	\
+    signal(SIGABRT,SIG_DFL);	\
+    signal(SIGQUIT,SIG_DFL)
+
+
 #endif
 

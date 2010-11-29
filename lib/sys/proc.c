@@ -26,25 +26,13 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <dirent.h>
-#if defined(__APPLE__)
-#include <mach-o/dyld.h>
-#include <mach/mach_init.h>
-#include <mach/mach_host.h>
-#include <mach/mach_types.h>
-#include <mach/task_info.h>
-#include <mach/task.h>
-#include <mach/vm_statistics.h>
-#include <mach/vm_map.h>
-#elif defined(__FreeBSD__)||defined(__NetBSD__)
-#include <sys/resource.h>
-#elif defined __CYGWIN__
+#if defined __CYGWIN__
 #include <sys/cygwin.h>
 #endif
 #include "common.h"
 #include "misc.h"
 #include "proc.h"
 #include "process.h"
-#include "private.h"
 int NCPU;
 int TCK;
 const char *HOME=NULL;

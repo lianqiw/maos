@@ -22,6 +22,7 @@
 
 #include "path.h"
 #include "common.h"
+#include "misc.h"
 /**
    The linked list to store path where we look for files.
 */

@@ -23,23 +23,6 @@
 #include "cmat.h"
 #include "loc.h"
 extern int DRAW_ID;//number to use for drawdaemon, usually PID.
-#if USE_DAEMON==0
-#define plot_psf(A...)
-#define imagesc(A...)
-#define imagesc_cmp(A...)
-#define imagesc_cmp_ri(A...)
-#define imagesc_cmp_ap(A...)
-#define plot_pts(A...)
-#define ddraw(A...)
-#define cdraw(A...)
-#define cdrawabs(A...)
-#define cdrawri(A...)
-#define cdrawap(A...)
-#define drawmap(A...)
-#define drawloc(A...)
-#define drawopd(A...)
-#define drawopdamp(A...)
-#else
 void imagesc(char *fig, long nx, long ny, const double *limit, const double *zlimit,
 	     const void *p, const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(10);
@@ -86,5 +69,4 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp,
 extern int disable_draw;
 #define DRAW_GRAY   0x0
 #define DRAW_COLOR  0x1
-#endif
 #endif

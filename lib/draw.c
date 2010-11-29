@@ -28,7 +28,6 @@
 #include "misc.h"
 #include "mathmisc.h"
 int DRAW_ID=0;
-#if USE_DAEMON==1
 /*
   draw by calling gtkdraw via daemon
 */
@@ -493,4 +492,3 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp,
     imagesc(fig, nx,ny,limit,NULL, opd0,  title, xlabel, ylabel,"%s",fn);
     free(opd0);
 }
-#endif //USE_DAEMON.

@@ -20,10 +20,10 @@
 #define __SUPPORT_H
 #include <unistd.h>
 #include "blas.h"
-#include "common.h" //must be before info.h to print backtrace
+#include "common.h" 
 #include "random.h"
 #include "readcfg.h"
-#include "dmat.h"/*mat must be after rand.h*/
+#include "dmat.h"
 #include "cmat.h"
 #include "cmat_extra.h"
 #include "dsp.h"
@@ -52,4 +52,6 @@
 #include "muv.h"
 #include "fft.h"
 #include "genotf.h"
+
+#include "sys/sys.h"
 #endif

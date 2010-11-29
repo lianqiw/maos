@@ -36,6 +36,7 @@
 #include "drawdaemon.h"
 #include "proc.h"
 #include "misc.h"
+#include "mathmisc.h"
 #include "icon-draw.h"
 char *defname="Title";
 char *deffig="Figure";

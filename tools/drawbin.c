@@ -1,6 +1,4 @@
 #include "aos.h"
-
-#if USE_DAEMON==1
 /**
    draw square map.
  */
@@ -155,4 +153,3 @@ int main(int argc, char *argv[]){
     exit_success=1;
 }
 
-#endif
