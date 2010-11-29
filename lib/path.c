@@ -20,7 +20,7 @@
 #include <sys/types.h>
 #include <limits.h>
 #include "common.h"
-#include "proc.h"
+#include "process.h"
 #include "path.h"
 #include "misc.h"
 /**

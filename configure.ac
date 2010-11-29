@@ -323,7 +323,6 @@ AC_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
-		 lib/sys/Makefile 
 		 lib/Makefile
 		 tools/Makefile
 		 maos/Makefile 

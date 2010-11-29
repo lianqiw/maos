@@ -23,7 +23,7 @@
 #include <fftw3.h>
 #include "common.h"
 #include "thread.h"
-#include "proc.h"
+#include "process.h"
 #include "misc.h"
 #include "fft.h"
 #include "cmat.h"

@@ -34,7 +34,7 @@
 #include <glib/gprintf.h>
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
-#include "proc.h"
+#include "process.h"
 #include "misc.h"
 #include "mathmisc.h"
 #include "icon-draw.h"

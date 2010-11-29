@@ -27,7 +27,7 @@
 
 #include "common.h"
 
-#include "proc.h"
+#include "process.h"
 
 const char *get_job_progname(void){
     static char *progname=NULL;

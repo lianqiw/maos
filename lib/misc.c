@@ -33,7 +33,7 @@
 #include <time.h>
 #include "common.h"
 #include "thread.h"
-#include "proc.h"
+#include "process.h"
 #include "misc.h"
 #include "path.h"
 

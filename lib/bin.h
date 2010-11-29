@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <pthread.h>
 #include "common.h"
 #define IO_TIMMING 0
 //The definitions here should not be changed once set.

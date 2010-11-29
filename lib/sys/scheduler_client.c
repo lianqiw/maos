@@ -39,8 +39,8 @@
 #include <string.h>
 #include "sockio.h"
 #include "io.h"
-#include "proc.h"
 #include "process.h"
+#include "daemonize.h"
 #include "common.h"
 #include "misc.h"
 #include "scheduler_server.h"

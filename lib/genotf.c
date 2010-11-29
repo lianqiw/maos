@@ -22,7 +22,7 @@
 */
 #include "common.h"
 #include "thread.h"
-#include "process.h"
+#include "daemonize.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "mathmisc.h"

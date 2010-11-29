@@ -29,7 +29,7 @@
 #include <string.h>
 #include <signal.h>
 #include "common.h"
-#include "proc.h"
+#include "process.h"
 #include "misc.h"
 const char *get_job_progname(void){
     static char *progname=NULL;

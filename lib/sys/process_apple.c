@@ -21,9 +21,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <limits.h>
-#include <sys/types.h>
 #include <dirent.h>
+#include <sys/types.h>
 #include <sys/time.h>
+#include <sys/proc.h>
 #include <sys/sysctl.h>
 #include <mach-o/dyld.h>
 #include <mach/mach_init.h>
@@ -34,8 +35,7 @@
 #include <mach/vm_statistics.h>
 #include <mach/vm_map.h>
 #include "common.h"
-
-#include "proc.h"
+#include "process.h"
 
 const char *get_job_progname(void){
     static char *progname=NULL;

@@ -24,7 +24,7 @@
 #include "common.h"
 #include "thread.h"
 #include "shm.h"
-#include "proc.h"
+#include "process.h"
 #include "turbulence.h"
 #include "path.h"
 #include "dmat.h"
@@ -195,7 +195,7 @@ map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,
     if(use_shm){
 	int fd;
     retry:
-	//sleep so that the creation process has enough time to make an exclusive lock.
+	//sleep so that the creation daemonize.has enough time to make an exclusive lock.
 	fd=shm_open(fnshm, O_RDONLY, 00777); usleep(100);//umask'ed
 
 	if(fd<0){//unable to open. We then try to create

@@ -62,8 +62,8 @@
 #include "misc.h"
 #include "sockio.h"
 #include "io.h"
-#include "proc.h"
 #include "process.h"
+#include "daemonize.h"
 #include "scheduler_server.h"
 #include "shm.h"
 char** hosts;

@@ -49,8 +49,7 @@ static int notify_daemon=1;
 #endif
 #include "common.h"
 #include "misc.h"
-//#include "io.h"
-#include "process.h"
+#include "daemonize.h"
 #include "scheduler_client.h"
 #include "io.h"
 #include "monitor.h"

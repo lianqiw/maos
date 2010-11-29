@@ -1,5 +1,5 @@
 #if defined (__CYGWIN__)
-#include "proc.h"
+#include "process.h"
 //Largely not implemented.
 const char *get_job_progname(void){
     return "maos";

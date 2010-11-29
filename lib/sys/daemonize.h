@@ -15,29 +15,17 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_PROC_H
-#define AOS_PROC_H
-#if defined(__CYGWIN__)
-void GetTempPath(long, char*);
+/*
+  System specific routines to interact with the system to daemonize a program.
+*/
+#ifndef AOS_PROCESS_H
+#define AOS_PROCESS_H
+void single_instance_daemonize(const char *lockfolder_in, 
+			       const char *progname,long version,
+			       void(*daemon_func)(void*), 
+			       void* daemon_arg);
+int lock_file(const char *fn, long version);
+void daemonize(void);
+extern int detached;
 #endif
-void init_path(void);
-int    get_usage_running(void);
-double get_usage_load(void);
-double get_usage_mem(void);
-double get_usage_cpu(void);
 
-const char *get_job_progname(void);
-int get_job_mem(void);
-double get_job_launchtime(int pid);
-
-int get_cpu_avail(void);
-int read_usage_cpu(long *user, long *tot);
-void wait_cpu(int nthread);
-double read_self_cpu(void);
-extern int NCPU;
-extern int TCK;
-extern const char *HOME;//the user home
-extern const char *TEMP;//the temporary folder
-extern const char *USER;//the user name
-int get_ncpu(void);
-#endif

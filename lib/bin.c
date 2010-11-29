@@ -27,7 +27,7 @@
 #include <limits.h>
 #include "common.h"
 #include "thread.h"
-#include "proc.h"
+#include "process.h"
 #include "bin.h"
 #include "path.h"
 #include "misc.h"

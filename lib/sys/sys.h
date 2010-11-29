@@ -18,9 +18,9 @@
 #ifndef AOS_SYS_SYS_H
 #define AOS_SYS_SYS_H
 #include "thread.h"
-#include "proc.h"
-#include "scheduler_client.h"
 #include "process.h"
+#include "scheduler_client.h"
+#include "daemonize.h"
 #include "shm.h"
 #include "mem.h"
 #endif
