@@ -24,8 +24,8 @@ sys/scheduler_server.c sys/sockio.c sys/mem.c sys/process_apple.c sys/process.c	
 sys/process_linux.c sys/scheduler_client.c sys/shm.c sys/thread.c
 
 if DO_THRPOOL #thread pool is only possible on new systems.
-nobase_include_HEADERS+=sys/thr_pool.h
-AOS_SRC+=sys/thr_pool.c
+nobase_include_HEADERS+=sys/thread_pool.h
+AOS_SRC+=sys/thread_pool.c
 endif
 
 

@@ -637,10 +637,7 @@ int main(int argc, char** argv){
     }else{
 	nthread=2;
     }
-#if USE_PTHREAD == 2
-    if(nthread>1)
-	default_pool=thr_pool_create(1,nthread,3600,NULL);
-#endif
+    THREAD_POOL_INIT(nthread);
     test_speed(nthread);
     
     test_accuracy();

@@ -43,12 +43,11 @@ void prep_cachedm(SIM_T *simu){
     if(!simu->cachedm){
 	simu->cachedm=calloc(parms->ndm, sizeof(map_t*));
 	for(int idm=0; idm<parms->ndm; idm++){
-	    simu->cachedm[idm]=calloc(parms->dm[idm].nscale, sizeof(map_t));
-	    for(int iscale=0; iscale<parms->dm[idm].nscale; iscale++){
+	    simu->cachedm[idm]=calloc(parms->dm[idm].ncache, sizeof(map_t));
+	    for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
 		long nxout, nyout;
 		double oxout, oyout;
-		double scale=parms->dm[idm].scales[iscale];
-		double dx=parms->aper.dx*scale;
+		double dx=parms->dm[idm].dxcache[iscale];
 		create_metapupil
 		    (parms, parms->dm[idm].ht, dx,
 		     0, &nxout, &nyout, &oxout, &oyout, NULL,
@@ -64,7 +63,7 @@ void prep_cachedm(SIM_T *simu){
     }
     int count=0;
     for(int idm=0; idm<parms->ndm; idm++){
-	for(int iscale=0; iscale<parms->dm[idm].nscale; iscale++){
+	for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
 	    count++;
 	}
     }
@@ -72,7 +71,7 @@ void prep_cachedm(SIM_T *simu){
     simu->pcachedm=malloc(sizeof(int)*2*simu->cachedm_n);
     count=0;
     for(int idm=0; idm<parms->ndm; idm++){
-	for(int iscale=0; iscale<parms->dm[idm].nscale; iscale++){
+	for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
 	    simu->pcachedm[count][0]=idm;
 	    simu->pcachedm[count][1]=iscale;
 	    count++;

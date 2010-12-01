@@ -225,8 +225,10 @@ typedef struct DM_CFG_T{
     int cubic;      /**<use cubic spline. better than linear. need to specify iac*/ 
     int order;      /**<Order of the DM within telescope clear subaperture*/
     int isground;   /**<Is this DM the ground DM (derived)*/
-    int nscale;     /**<number of scale group for DM propagation cache. (derived)*/
-    double *scales; /**<the scale for each scale group. (derived)*/
+
+    int ncache;     /**<number of scale group for DM propagation cache. (derived)*/
+    double *dxcache; /**<the sampling of plane to cache dm for each scale
+			group. (derived)*/
 
     /*
      double hystalpha;//arguments for hysteris

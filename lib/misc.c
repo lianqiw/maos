@@ -335,6 +335,7 @@ char *mystrdup(const char *A){
 	int nlen=strlen(A);
 	char *B=malloc(nlen+1);
 	memcpy(B,A,nlen+1);
+	return B;
     }
 }
 #endif
@@ -427,6 +428,15 @@ void cloexec(int fd){
 	oldflag |= FD_CLOEXEC;
 	fcntl(fd, F_SETFD, oldflag);
     }
+}
+/**
+   wrap of nanosleep
+*/
+void mysleep(double sec){
+    struct timespec ts;
+    ts.tv_sec=(time_t)trunc(sec);
+    ts.tv_nsec=(long)((sec-ts.tv_sec)*1e9);
+    nanosleep(&ts, NULL);
 }
 #if defined (__CYGWIN__)
 //cpow and cexp are not defined by the system.

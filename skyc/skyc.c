@@ -116,10 +116,7 @@ int main(int argc, char **argv){
  
     free(arg);
     /*Loads the main software*/
-#if USE_PTHREAD == 2
-    if(parms->skyc.nthread>1)
-	default_pool=thr_pool_create(1,parms->skyc.nthread,3600,NULL);
-#endif
+    THREAD_POOL_INIT(parms->skyc.nthread);
     skysim(parms);
     free_parms(parms);
     skyc_done(0);

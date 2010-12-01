@@ -62,10 +62,6 @@ void maos(const PARMS_T *parms){
     free_recon(parms, recon); recon=NULL;
     free_powfs(parms, powfs); powfs=NULL;
     free_aper(aper, parms); aper=NULL;
-#if USE_PTHREAD == 2
-    if(parms->sim.nthread>1)
-	thr_pool_destroy(default_pool);
-#endif
 }
 
 /**
@@ -184,12 +180,7 @@ int main(int argc, char **argv){
     free(arg->dirout);
     free(arg->conf);
     free(arg);
-    
-#if USE_PTHREAD == 2
-    //Create thread pool.
-    if(parms->sim.nthread>1)
-	default_pool=thr_pool_create(1,parms->sim.nthread,3600,NULL);
-#endif
+    THREAD_POOL_INIT(parms->sim.nthread);
     dirsetup=stradd("setup",NULL);
     if(parms->save.setup){
 	mymkdir("%s",dirsetup);

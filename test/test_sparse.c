@@ -137,9 +137,7 @@ static void test_spmul(){
     
 }
 int main(){
-#if USE_PTHREAD == 2
-    default_pool=thr_pool_create(1,2,3600,NULL);
-#endif
+    THREAD_POOL_INIT(2);
     test_spmul();
     //test_L2();
     //test_spsum();

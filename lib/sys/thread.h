@@ -60,33 +60,34 @@
     }else{							\
 	A(B);							\
     }
-#elif USE_PTHREAD==2 //Use pthread pool. not always available
-#include "thr_pool.h"
+#define THREAD_POOL_INIT(A)  //Do nothing
+#elif USE_PTHREAD==2 //Use pthread pool. 2010-11-30: updated with new, simpler implementation
+#include "thread_pool.h"
 #define CALL(A,B,nthread)				\
     if(nthread>1){					\
 	for(int ithread=0; ithread<nthread; ithread++){	\
-	    thr_pool_queue(default_pool,		\
-			   (void*(*)(void*))A,		\
-			   (void*)B);			\
+	    thread_pool_queue((void*(*)(void*))A,	\
+			      (void*)B);		\
 	}						\
-	thr_pool_wait(default_pool);			\
+	thread_pool_wait();				\
     }else{						\
 	A(B);						\
     }
 #define CALL_EACH(A,B,nthread)				\
     if(nthread>1){					\
 	for(int ithread=0; ithread<nthread; ithread++){	\
-	    thr_pool_queue(default_pool,		\
-			   (void*(*)(void*))A,		\
-			   (void*)&(B[ithread]));	\
+	    thread_pool_queue((void*(*)(void*))A,	\
+			      (void*)&(B[ithread]));	\
 	}						\
-	thr_pool_wait(default_pool);			\
+	thread_pool_wait();				\
     }else{						\
 	A(B);						\
     }
+#define THREAD_POOL_INIT(A) thread_pool_init(A)
 #else
 #define CALL(A,B,nthread) A(B) //no threading
 #define CALL_DATAEACH(A,B,nthread) A(B)
+#define THREAD_POOL_INIT(A)  //Do nothing
 #endif
 
 #if USE_PTHREAD > 0

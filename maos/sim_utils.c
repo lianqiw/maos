@@ -789,7 +789,7 @@ void free_simu(SIM_T *simu){
     if(parms->sim.cachedm){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int iscale=0; 
-		iscale<parms->dm[idm].nscale; 
+		iscale<parms->dm[idm].ncache; 
 		iscale++){
 		free(simu->cachedm[idm][iscale].p);
 	    }

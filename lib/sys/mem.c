@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <signal.h>
 int exit_success=0;
+void (*call_freepath)(void)=NULL;
+
 #define MEM_VERBOSE 0
 #include "mem.h"
 #include "thread.h"
@@ -61,7 +63,6 @@ PNEW(mutex_mem);
 
 static void *MROOT=NULL;
 static long long memcnt=0;
-void (*call_freepath)(void)=NULL;
 
 //max depth in backtrace
 #define DT 12

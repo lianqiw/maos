@@ -16,11 +16,7 @@ int main(){
     int m=4096*2;
     dmat *spect=vonkarman_spect(m, m, dx, r0, L0);
     dwrite(spect, "spect");
-    if(nthread>1){
-#if USE_PTHREAD == 2
-	default_pool=thr_pool_create(1,nthread,3600,NULL);
-#endif
-    }
+    THREAD_POOL_INIT(nthread);
     map_t **map=genscreen_from_spect(&rstat, spect, dx, wt, nlayer, nthread);
     sqmaparrwrite(map, nlayer, "atm.bin");
 }

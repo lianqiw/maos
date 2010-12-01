@@ -105,7 +105,7 @@ void free_parms(PARMS_T *parms){
     }
     free(parms->wfs);
     for(int idm=0; idm<parms->ndm; idm++){
-	free(parms->dm[idm].scales);
+	free(parms->dm[idm].dxcache);
     }
     free(parms->dm);
     free(parms->moao);
@@ -911,13 +911,26 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning("powfs %d: there is sky background, but is using geometric wfs. background won't be effective.\n", ipowfs);
 	} 
 	if(parms->powfs[ipowfs].ncpa && parms->powfs[ipowfs].mtchstc){
-	    warning("Disabling shifting i0 to center in the presence of NCPA.\n");
+	    warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
 	    parms->powfs[ipowfs].mtchstc=0;
 	}
 	if(parms->powfs[ipowfs].ncpa && !parms->powfs[ipowfs].usephy 
 	   && parms->powfs[ipowfs].ncpa_method==2){
-	    warning("ncpa_method changed from 2 to 1 in geometric wfs mdoe\n");
+	    warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs mdoe\n", ipowfs);
 	    parms->powfs[ipowfs].ncpa_method=1;
+	}
+	{
+	    /*Adjust dx if the subaperture does not contain integer, even number of points.*/
+	    const int order  = parms->powfs[ipowfs].order;
+	    const double dxsa = parms->aper.d/(double)order;
+	    int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
+	    double dx=dxsa/nx;//adjust dx.
+	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
+		warning("powfs %d: Adjusting dx from %g to %g. "
+			"Please adjust aper.dx, powfs.dx, atm.dx to match the new value for best efficiency.\n",
+			ipowfs,parms->powfs[ipowfs].dx, dx);
+	    }
+	    parms->powfs[ipowfs].dx=dx;
 	}
     }
     /*link wfs with powfs*/
@@ -1132,17 +1145,15 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 }
 
 /**
-   Setting up DM parameters in order to do DM caching
-   during simulation. High resolution metapupils are
-   created for each DM at each magnitude level to match
-   the science field or WFS.
+   Setting up DM parameters in order to do DM caching during simulation. High
+   resolution metapupils are created for each DM at each magnitude level to
+   match the science field or WFS.
 
-   For a MCAO system like NFIRAOS, the WFS and science
-   all have 1/64 sampling. The ground DM has only 1
-   metapupil matched to the science field and WFS. The
-   upper DM has two metapupils, one for science and NGS
-   and another one to match LGS WFS in a reduce sampling
-   depending on the DM altitude and guide star range..
+   For a MCAO system like NFIRAOS, the WFS and science all have 1/64
+   sampling. The ground DM has only 1 metapupil matched to the science field and
+   WFS. The upper DM has two metapupils, one for science and NGS and another one
+   to match LGS WFS in a reduce sampling depending on the DM altitude and guide
+   star range..
 
 */
 static void setup_parms_postproc_dm(PARMS_T *parms){
@@ -1162,27 +1173,27 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	int nscalemax=parms->npowfs+1;//maximum number of possible scalings
 	double scale[nscalemax];
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    double iscl=1.-ht/parms->powfs[ipowfs].hs;
+	    double dxscl=(1.-ht/parms->powfs[ipowfs].hs)*parms->powfs[ipowfs].dx;
 	    if(idm==0){
 		parms->powfs[ipowfs].scalegroup =calloc(parms->ndm,sizeof(int));
 	    }
 	    int fnd=0;
 	    //search for existing scale
 	    for(int iscale=0; iscale<nscale; iscale++){
-		if(fabs(scale[iscale]-iscl)<1.e-10){
+		if(fabs(scale[iscale]-dxscl)<1.e-10){
 		    fnd=1;
 		    parms->powfs[ipowfs].scalegroup[idm]=iscale;
 		}
 	    }
 	    //not found, add one.
 	    if(fnd==0){
-		scale[nscale]=iscl;
+		scale[nscale]=dxscl;
 		parms->powfs[ipowfs].scalegroup[idm]=nscale;
 		nscale++;
 	    }
 	}
 	//evl;
-	double iscl=1. - ht/parms->evl.ht;
+	double dxscl=(1. - ht/parms->evl.ht)*parms->aper.dx;
 	int fnd=0;
 	for(int iscale=0; iscale<nscale; iscale++){
 	    if(fabs(scale[iscale]-1.)<1.e-10){
@@ -1192,15 +1203,15 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    
 	}
 	if(fnd==0){
-	    scale[nscale]=iscl;
+	    scale[nscale]=dxscl;
 	    parms->evl.scalegroup[idm]=nscale;
 	    nscale++;	
 	}
 	//info2("idm=%d, nscale=%d\n", idm, nscale);
-	parms->dm[idm].nscale=nscale;
-	parms->dm[idm].scales=calloc(1, nscale*sizeof(double));
+	parms->dm[idm].ncache=nscale;
+	parms->dm[idm].dxcache=calloc(1, nscale*sizeof(double));
 	for(int iscale=0; iscale<nscale; iscale++){
-	    parms->dm[idm].scales[iscale]=scale[iscale];
+	    parms->dm[idm].dxcache[iscale]=scale[iscale];
 	}
     }
 }
@@ -1386,7 +1397,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }
     //disable cache for low order systems.
     if(parms->evl.nevl<2){
-	if(parms->sim.cachedm){
+	if(parms->sim.cachedm==1){
 	    parms->sim.cachedm=0;
 	    warning("cachedm disabled for SCAO\n");
 	}
@@ -1811,7 +1822,7 @@ PARMS_T * setup_parms(ARG_T *arg){
     mysymlink(fnconf, "maos_recent.conf");
     /*
       Postprocess the parameters for integrity. The ordering of the following
-      routines are important.
+      routines are critical.
     */
     setup_parms_postproc_sim(parms);
     setup_parms_postproc_wfs(parms);
