@@ -147,7 +147,7 @@ else
    AC_DEFINE(USE_POSIX_SHM, [0], "Enable posix shared memory")
 fi 
 
-AC_CHECK_LIB([pthread],[__pthread_unwind_next],[pthread_good="yes"],[pthread_good="no"])
+AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"])
 if test  "x$win32" = "xno" ;then
     OPTSprof="-pthread"
 fi

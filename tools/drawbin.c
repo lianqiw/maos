@@ -116,7 +116,7 @@ static void draw_loc(file_t *fp, int id){
 	}
 	break;
     default:
-	error("magic=%x, nx=%lu, ny=%lu. Not implemented yet\n", magic, nx, ny);
+	error("magic=%x, nx=%llu, ny=%llu. Not implemented yet\n", magic, nx, ny);
     }
     free(name);
     free(header);
