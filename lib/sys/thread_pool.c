@@ -1,3 +1,20 @@
+/*
+  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
 /**
    \file thread_pool.c
    Contains implementation of a simple thread pool.
@@ -21,28 +38,28 @@
 typedef struct threads_t{
     pthread_t id;       /**<thread id*/
     thread_fun fun;     /**<the function to run;*/
-    void *arg;         /**<the data for the function;*/
+    void *arg;          /**<the data for the function;*/
     struct thread_pool_t *pool;/**<pointer to the pool*/
 }threads_t;
 /**
-   struct of jobs for the linked first in first out(fifo) list. (private)
+   struct of jobs for the linked first in first out (fifo) list. (private)
 */
 typedef struct jobs_t{
-    thread_fun fun;
-    void *arg;
-    struct jobs_t *next;
+    thread_fun fun;     /**<The function*/
+    void *arg;          /**<The argument*/
+    struct jobs_t *next;/**<The pointer to the next entry*/
 }jobs_t;
 /**
    The thread pool struct. (public)
 */
 struct thread_pool_t{
     pthread_mutex_t mutex; /**<the mutex.*/
-    pthread_cond_t queued; /**<there are jobs waiting.*/
+    pthread_cond_t jobwait;/**<there are jobs jobwait.*/
     pthread_cond_t idle;  /**<all threads are idle*/
-    pthread_cond_t empty; /**<all threads have exited*/
+    pthread_cond_t exited; /**<all threads have exited*/
     threads_t **threads;  /**<the pool of threads (stack)*/
-    jobs_t *jobshead;     /**<Start of the fifo list of queued jobs*/
-    jobs_t *jobstail;     /**<End of the fifo list of queued jobs*/
+    jobs_t *jobshead;     /**<Start of the fifo list of jobwait jobs*/
+    jobs_t *jobstail;     /**<End of the fifo list of jobwait jobs*/
     int icur;/**<the top of the threads stack.*/
     int nmax;/**<the maximum number of threads.*/
     int ncur;/**<the maximum number of live threads.*/
@@ -51,15 +68,18 @@ struct thread_pool_t{
 };
 
 thread_pool_t *pool=NULL;//The default pool;
+/**
+   The working function in each thread.
+*/
 static void run_thread(threads_t *thread){
     thread_pool_t *pool=thread->pool;
-    /**
+    /*
        We should keep the mutex locked so that the signal won't come when we are
-       not waiting.
+       not jobwait.
     */
     while(1){
-	/**
-	   Wait for the go signal. The mutex is release during waiting and
+	/*
+	   Wait for the go signal. The mutex is release during jobwait and
 	   locked immediately when cond is satisfied.
 	 */
 	pthread_mutex_lock(&pool->mutex);
@@ -70,7 +90,7 @@ static void run_thread(threads_t *thread){
 		pthread_cond_signal(&pool->idle);
 	    }
 	    //no more jobs to do, wait for the condition.
-	    pthread_cond_wait(&pool->queued, &pool->mutex);
+	    pthread_cond_wait(&pool->jobwait, &pool->mutex);
 
 	    pool->nidle--;//no longer idle.
 	    if(pool->nidle<0){
@@ -85,7 +105,7 @@ static void run_thread(threads_t *thread){
 	if(pool->quit){//call it quit.
 	    pool->ncur--;
 	    if(pool->ncur==0){//all thread are exited.
-		pthread_cond_signal(&pool->empty);
+		pthread_cond_signal(&pool->exited);
 	    }
 	    free(thread);
 	    pthread_mutex_unlock(&pool->mutex);
@@ -107,13 +127,13 @@ static void run_thread(threads_t *thread){
 /**
    Initialize the thread pool.
 */
-void thread_pool_init(int nthread){
+void thread_pool_create(int nthread){
     pool=calloc(1, sizeof(thread_pool_t));
     pool->threads=calloc(nthread, sizeof(threads_t*));
     pthread_mutex_init(&pool->mutex,NULL);
     pthread_cond_init(&pool->idle, NULL);
-    pthread_cond_init(&pool->queued, NULL);
-    pthread_cond_init(&pool->empty, NULL);
+    pthread_cond_init(&pool->jobwait, NULL);
+    pthread_cond_init(&pool->exited, NULL);
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED );
@@ -151,7 +171,7 @@ void  thread_pool_queue(thread_fun fun, void *arg){
 	//list is empty. need to signal the thresds.
 	pool->jobshead=job;
         pool->jobstail=job;
-	pthread_cond_broadcast(&pool->queued);
+	pthread_cond_broadcast(&pool->jobwait);
     }
     pthread_mutex_unlock(&pool->mutex);
 }
@@ -181,34 +201,11 @@ void thread_pool_wait(void){
 void thread_pool_destroy(void){
     thread_pool_wait();
     pool->quit=1;
-    pthread_cond_broadcast(&pool->queued);
+    pthread_cond_broadcast(&pool->jobwait);
     pthread_mutex_lock(&pool->mutex);
     if(pool->ncur>0){
-	pthread_cond_wait(&pool->empty, &pool->mutex);
+	pthread_cond_wait(&pool->exited, &pool->mutex);
     }
     pthread_mutex_unlock(&pool->mutex);
 }
 
-#ifdef TEST
-void* test(void *a){
-    int *b=a;
-    info2("b=%d\n",*b);
-    *b=*b+1;
-}
-int main(){
-    thread_pool_init(4);
-    int a=1;
-    void *b=&a;
-    for(int i=0; i<20; i++){
-	a=i;
-	info2("i=%d\n",i);
-	thread_pool_queue(test, b);
-	if(i%10==0){
-	    thread_pool_wait();
-	}
-    }
-    thread_pool_wait();
-    thread_pool_destroy();
-}
-
-#endif

@@ -83,7 +83,7 @@
     }else{						\
 	A(B);						\
     }
-#define THREAD_POOL_INIT(A) thread_pool_init(A)
+#define THREAD_POOL_INIT(A) thread_pool_create(A)
 #else
 #define CALL(A,B,nthread) A(B) //no threading
 #define CALL_DATAEACH(A,B,nthread) A(B)

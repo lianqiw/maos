@@ -10,7 +10,7 @@ draw.h fft.h genotf.h
 
 nobase_include_HEADERS+=sys/mem.h sys/process.h sys/scheduler_server.h		\
 sys/sockio.h sys/thread.h sys/io.h sys/daemonize.h sys/scheduler_client.h	\
-sys/shm.h sys/sys.h
+sys/shm.h sys/sys.h sys/thread_pool.h
 
 EXTRA_DIST=cell.c sp.c matbin.c mat.c suitesparse.c
 
@@ -21,13 +21,7 @@ genotf.c
 
 AOS_SRC+=sys/io.c sys/daemonize.c sys/process_bsd.c sys/process_cygwin.c	\
 sys/scheduler_server.c sys/sockio.c sys/mem.c sys/process_apple.c sys/process.c	\
-sys/process_linux.c sys/scheduler_client.c sys/shm.c sys/thread.c
-
-if DO_THRPOOL #thread pool is only possible on new systems.
-nobase_include_HEADERS+=sys/thread_pool.h
-AOS_SRC+=sys/thread_pool.c
-endif
-
+sys/process_linux.c sys/scheduler_client.c sys/shm.c sys/thread.c sys/thread_pool.c
 
 lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
