@@ -61,6 +61,7 @@
 #include "config.h"
 #include "misc.h"
 #include "sockio.h"
+#include "hashlittle.h"
 #include "io.h"
 #include "process.h"
 #include "daemonize.h"
@@ -115,7 +116,7 @@ static __attribute__((constructor))void init(){
     fnlog=strdup(fn);
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;
-    if(exist(fn)){
+    {
 	FILE *fp=fopen(fn,"r");
 	if(fp){
 	    if(fscanf(fp,"%hu",&PORT)!=1){
@@ -126,7 +127,7 @@ static __attribute__((constructor))void init(){
     }
     if(PORT==0){
 	//user dependent PORT to avoid conflict
-	PORT= (uint16_t)((uint16_t)getuid()|10000);
+	PORT= (uint16_t)((uint16_t)(hashlittle(USER,strlen(USER),0)&0x2FFF)|10000);
     }
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
     if(!exist(fn)){

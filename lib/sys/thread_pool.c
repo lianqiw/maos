@@ -39,7 +39,6 @@ typedef struct threads_t{
     pthread_t id;       /**<thread id*/
     thread_fun fun;     /**<the function to run;*/
     void *arg;          /**<the data for the function;*/
-    struct thread_pool_t *pool;/**<pointer to the pool*/
 }threads_t;
 /**
    struct of jobs for the linked first in first out (fifo) list. (private)
@@ -55,15 +54,15 @@ typedef struct jobs_t{
 struct thread_pool_t{
     pthread_mutex_t mutex; /**<the mutex.*/
     pthread_cond_t jobwait;/**<there are jobs jobwait.*/
-    pthread_cond_t idle;  /**<all threads are idle*/
+    pthread_cond_t idle;   /**<all threads are idle*/
     pthread_cond_t exited; /**<all threads have exited*/
-    threads_t **threads;  /**<the pool of threads (stack)*/
-    jobs_t *jobshead;     /**<Start of the fifo list of jobwait jobs*/
-    jobs_t *jobstail;     /**<End of the fifo list of jobwait jobs*/
-    int icur;/**<the top of the threads stack.*/
-    int nmax;/**<the maximum number of threads.*/
-    int ncur;/**<the maximum number of live threads.*/
-    int quit;/**<1: quit the threads.*/
+    threads_t **threads;   /**<the pool of threads (stack)*/
+    jobs_t *jobshead;      /**<Start of the fifo list of jobwait jobs*/
+    jobs_t *jobstail;      /**<End of the fifo list of jobwait jobs*/
+    int icur; /**<the top of the threads stack.*/
+    int nmax; /**<the maximum number of threads.*/
+    int ncur; /**<the maximum number of live threads.*/
+    int quit; /**<1: quit the threads.*/
     int nidle;/**<Number of idle threads*/
 };
 
@@ -72,7 +71,6 @@ thread_pool_t *pool=NULL;//The default pool;
    The working function in each thread.
 */
 static void run_thread(threads_t *thread){
-    thread_pool_t *pool=thread->pool;
     /*
        We should keep the mutex locked so that the signal won't come when we are
        not jobwait.
@@ -144,7 +142,6 @@ void thread_pool_create(int nthread){
     pool->jobstail=NULL;
     for(int ith=0; ith<nthread; ith++){
 	pool->threads[ith]=calloc(1, sizeof(threads_t));
-	pool->threads[ith]->pool=pool;
 	if(pthread_create(&pool->threads[ith]->id, &attr, 
 			  (thread_fun)run_thread, pool->threads[ith])){
 	    error("Can not create thread\n");

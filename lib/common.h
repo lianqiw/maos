@@ -35,7 +35,7 @@
 #include <string.h>
 #include <alloca.h>
 #include <complex.h>
-
+#include "sys/mem.h"
 #ifdef __linux__
 #include <linux/limits.h> //includes definition of PATH_MAX
 #endif//__linux__

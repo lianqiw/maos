@@ -74,9 +74,9 @@
 #define dot_do dotcmp
 #endif
 #undef PSPCELL
-#define PMAT(A,pp) T (*pp)[A->nx]=(void *)A->p
-#define PSPCELL(M,P) X(sp)* (*P)[M->nx]=(X(sp)*(*)[M->nx])M->p
-#define PXCELL(M,P) X(mat)* (*P)[M->nx]=(X(mat)*(*)[M->nx])M->p
+#define PMAT(A,pp) T (*pp)[(A)->nx]=(void *)(A)->p
+#define PSPCELL(M,P) X(sp)* (*P)[(M)->nx]=(X(sp)*(*)[(M)->nx])(M)->p
+#define PXCELL(M,P) X(mat)* (*P)[(M)->nx]=(X(mat)*(*)[(M)->nx])(M)->p
 #include "suitesparse.c"
 typedef struct spcell_thread_t {
     int i;
@@ -620,8 +620,8 @@ void Y(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x,
 	    Y(spmulvec)(y->p, A, x->p,  alpha);
 	}else{
 	    int jcol;
-	    T (* restrict Y)[y->nx]=(T(*)[y->nx])y->p;
-	    T (* restrict X)[x->nx]=(T(*)[x->nx])x->p;
+	    PMAT(y,Y);
+	    PMAT(x,X);
 	    if(ABS(alpha-1.)<EPS){
 		for(icol=0; icol<A->n; icol++){
 		    for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
@@ -708,7 +708,8 @@ T Y(spcellwdinn)(const X(cell) *y, const Y(spcell) *A, const X(cell) *x){
     if(x && y){
 	if(A){
 	    assert(x->ny==1 && y->ny==1 && A->nx==y->nx && A->ny==x->nx);
-	    X(sp) *(*Ap)[A->nx]=(X(sp) *(*)[A->nx])A->p;
+	    PSPCELL(A,Ap);
+	    //X(sp) *(*Ap)[A->nx]=(X(sp) *(*)[A->nx])A->p;
 	    for(int iy=0; iy<A->ny; iy++){
 		for(int ix=0; ix<A->nx; ix++){
 		    res+=Y(spwdinn)(y->p[ix], Ap[iy][ix], x->p[iy]);
@@ -1087,9 +1088,14 @@ Y(spcell) *Y(spcellmulspcell)(const Y(spcell) *A,
     if(!A || !B) return NULL;
     if(A->ny!=B->nx) error("mismatch\n");
     Y(spcell) *C=Y(spcellnew)(A->nx, B->ny);
+    PSPCELL(A,Ap);
+    PSPCELL(B,Bp);
+    PSPCELL(C,Cp);
+    /*
     X(sp) *(*Ap)[A->nx] = (X(sp) *(*)[A->nx]) A->p;
     X(sp) *(*Bp)[B->nx] = (X(sp) *(*)[B->nx]) B->p;
     X(sp) *(*Cp)[C->nx] = (X(sp) *(*)[C->nx]) C->p;
+    */
     for(int iy=0; iy<B->ny; iy++){
 	for(int ix=0; ix<A->nx; ix++){
 	    Cp[iy][ix]=NULL;
@@ -1171,7 +1177,7 @@ X(sp) *Y(spcat)(const X(sp) *A, const X(sp) *B, int dim){
  * Concatenate a spcell to sparse array*/
 X(sp) *Y(spcell2sp)(const Y(spcell) *A){
     //convert Y(spcell) to sparse.
-    X(sp) *(*Ap)[A->nx] = (X(sp) *(*)[A->nx])A->p;
+    PSPCELL(A,Ap);
     long nx=0,ny=0,nzmax=0;
     for(long ix=0; ix<A->nx; ix++){
 	nx+=Ap[0][ix]->m;

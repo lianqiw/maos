@@ -80,7 +80,7 @@ case "$host_os" in
     if test -f "$mkl_lib" ;then
        use_mkl_default="yes"
     else
-       use_mkl_default="no"
+       use_mkl_default="yes" #"no"
     fi
     use_static_default="no"
     if test -d /dev/shm ;then
@@ -170,7 +170,7 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 OPTIM_ICC="-O3 -xO -funroll-loops -DHAVE_SSE2=1 -wd981 -vec-report=0 -static-intel"
-OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc" 
+OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc"
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -rdynamic -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)

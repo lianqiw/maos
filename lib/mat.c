@@ -23,9 +23,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <sys/mman.h>
-
-#include "random.h"
 #include "common.h"
+#include "random.h"
 #include "misc.h"
 #include "mathmisc.h"
 #include "dsp.h"
@@ -72,10 +71,8 @@
 #endif
 #include "dmat.h"
 #include "cmat.h"
-#define PMAT(A,pp) T (*pp)[A->nx]=(void *)A->p
-#define PCELL(M,P) X(mat)* (*P)[M->nx]=(X(mat)*(*)[M->nx])M->p
-#undef PDMAT
-#undef PCMAT
+#define PMAT(A,pp) T (*pp)[(A)->nx]=(void *)(A)->p
+#define PCELL(M,P) X(mat)* (*P)[(M)->nx]=(X(mat)*(*)[(M)->nx])(M)->p
 
 
 /**
@@ -401,8 +398,8 @@ X(mat) *X(trans)(const X(mat) *A){
     if(A->nx==1 || A->ny==1){
 	memcpy(B->p, A->p, A->nx*A->ny*sizeof(T));
     }else{
-	T (*Bp)[B->nx]=(void*)B->p;
-	T (*Ap)[A->nx]=(void*)A->p;
+	PMAT(B,Bp);
+	PMAT(A,Ap);
 	for(int ix=0; ix<A->nx; ix++){
 	    for(int iy=0; iy<A->ny; iy++){
 		Bp[ix][iy]=Ap[iy][ix];
@@ -470,7 +467,7 @@ void X(show)(const X(mat) *A, const char *format, ...){
     if(!A) return;
     format2fn;
     info("show: %s",fn);
-    T (*restrict p)[A->nx]=(T (*)[A->nx])A->p;
+    PMAT(A,p);
     long colmax=10;
     long icol,i,j;
     for(icol=0; icol<ceil((double)A->ny/(double)colmax); icol++){
@@ -567,7 +564,7 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b){
 */
 T X(wdot2)(const T *a, const X(mat) *w, const T *b){
     assert(w->nx==2 && w->ny==2);
-    T (*W)[2]=(T(*)[2])w->p;
+    PMAT(w,W);
     T res;
     res=a[0]*(W[0][0]*b[0]+W[1][0]*b[1])
 	+a[1]*(W[0][1]*b[0]+W[1][1]*b[1]);
@@ -579,7 +576,7 @@ T X(wdot2)(const T *a, const X(mat) *w, const T *b){
 */
 T X(wdot3)(const T *a, const X(mat) *w, const T *b){
     assert(w->nx==3 && w->ny==3);
-    T (*W)[3]=(T(*)[3])w->p;
+    PMAT(w,W);
     T res;
     res=a[0]*(W[0][0]*b[0]+W[1][0]*b[1]+W[2][0]*b[2])
 	+a[1]*(W[0][1]*b[0]+W[1][1]*b[1]+W[2][1]*b[2])
@@ -604,7 +601,7 @@ void X(cwm)(X(mat) *B, const X(mat) *A){
 void X(mulvec)(T *restrict y, const X(mat) * restrict A,
 	       const T *restrict x, const T alpha){
     assert(y && x && A);
-    T (*restrict Ap)[A->nx]=(void*)A->p;
+    PMAT(A,Ap);
     if(ABS(alpha-1)>1.e-15){
 	for(int iy=0; iy<A->ny; iy++){
 	    T tmp=x[iy]*alpha;
@@ -730,8 +727,8 @@ X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt){
     int nmod=A->ny;
     int nsa2=A->nx;
     X(mat) *ata=X(new)(nmod, nmod);;
-    T (*ATA)[nmod]=(T(*)[nmod])ata->p; 
-    T (*Ap)[nsa2]=(T(*)[nsa2])A->p;
+    PMAT(ata,ATA);
+    PMAT(A,Ap);
     for(int imod=0; imod<nmod; imod++){
 	for(int jmod=imod; jmod<nmod; jmod++){
 	    T tmp=0;
@@ -763,8 +760,8 @@ X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt){
     int nmod=A->nx;
     int nsa2=A->ny;
     X(mat) *ata=X(new)(nmod, nmod);;
-    T (*ATA)[nmod]=(T(*)[nmod])ata->p; 
-    T (*Ap)[nmod]=(T(*)[nmod])A->p;
+    PMAT(ata,ATA);
+    PMAT(A,Ap);
     for(int imod=0; imod<nmod; imod++){
 	for(int jmod=imod; jmod<nmod; jmod++){
 	    T tmp=0;
@@ -889,7 +886,7 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
 void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r){
     double r2=r*r;
     double r2u=(r+2.5)*(r+2.5);
-    double (*As)[A->nx]=(double(*)[A->nx])A->p;
+    PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
 	double r2y=(iy-cy)*(iy-cy);
 	for(int ix=0; ix<A->nx; ix++){
@@ -1030,7 +1027,7 @@ void X(rotvec)(X(mat) *A, const double theta){
     if(A->ny!=2) error("Wrong dimension\n");
     const double ctheta=cos(theta);
     const double stheta=sin(theta);
-    T (*Ap)[A->nx]=(void*)A->p;
+    PMAT(A,Ap);
     for(int i=0; i<A->nx; i++){
 	T tmp=Ap[0][i]*ctheta-Ap[1][i]*stheta;
 	Ap[1][i]=Ap[0][i]*stheta+Ap[1][i]*ctheta;
@@ -1052,8 +1049,8 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, double theta){
     const T ctheta=cos(theta);
     const T stheta=sin(theta);
     T tmp[2][2];
-    const T (*Ap)[2]=(const T (*)[2])A->p;
-    T (*Bp)[2]=(T (*)[2])B->p;
+    PMAT(A,Ap);
+    PMAT(B,Bp);
     //first apply left R
     tmp[0][0]=ctheta*Ap[0][0]-stheta*Ap[0][1];
     tmp[1][0]=ctheta*Ap[1][0]-stheta*Ap[1][1];
@@ -1074,7 +1071,7 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, double theta){
 */
 void X(mulvec3)(T *y, const X(mat) *A, const T *x){
     assert(A->nx==3 && A->ny==3);
-    T(*Ap)[3]=(T(*)[3])A->p;
+    PMAT(A,Ap);
     //calculate y=A*x for 3.
     y[0]=Ap[0][0]*x[0]+Ap[1][0]*x[1]+Ap[2][0]*x[2];
     y[1]=Ap[0][1]*x[0]+Ap[1][1]*x[1]+Ap[2][1]*x[2];
@@ -1554,7 +1551,6 @@ void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
 	} 
     }
 }
-#endif
 
 /**
    For each entry in A, call repeatly to collect its histogram, centered at
@@ -1566,7 +1562,7 @@ void X(histfill)(dmat **out, const X(mat)* A,
     if(!*out){
 	*out=dnew(n,nn);
     }
-    double (*restrict Op)[n]=(void*)(*out)->p;
+    PDMAT(*out,Op);
     const T *restrict Ap=A->p;
     const double spacingi=1./spacing;
     const int noff=n/2;
@@ -1578,6 +1574,7 @@ void X(histfill)(dmat **out, const X(mat)* A,
 	Op[i][ind]++;
     }
 }
+#endif
 
 /**
    1D Cubic spline interpolation preparation.
