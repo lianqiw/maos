@@ -53,6 +53,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.wt);
     free(parms->evl.psf);
     free(parms->evl.psfgridsize);
+    free(parms->evl.psfsize);
 
     free(parms->fit.thetax);
     free(parms->fit.thetay);
@@ -552,6 +553,7 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_intarr_n_relax(parms->evl.nevl, &(parms->evl.psf), "evl.psf");
     parms->evl.nwvl = readcfg_dblarr(&(parms->evl.psfwvl), "evl.psfwvl");
     readcfg_intarr_n_relax(parms->evl.nwvl, &(parms->evl.psfgridsize),"evl.psfgridsize");
+    readcfg_intarr_n_relax(parms->evl.nwvl, &(parms->evl.psfsize),"evl.psfsize");
     int ievl;
     parms->evl.indoa=-1;
     for(ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -573,7 +575,6 @@ static void readcfg_evl(PARMS_T *parms){
     READ_INT(evl.psfpttr);
     READ_INT(evl.psfmean); 
     READ_INT(evl.psfhist); 
-    READ_INT(evl.psfsize);
     READ_INT(evl.tomo);
     READ_INT(evl.moao);
     for(ievl=0; ievl<parms->evl.nevl; ievl++){

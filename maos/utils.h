@@ -38,10 +38,9 @@ void rename_file(int sig);
 void maos_signal_handler(int sig);
 void wait_cpu(int nthread);
 ARG_T* parse_args(int argc, char **argv);
-ccell *strehlcomp(const dmat *iopdevl, const double *amp,
-		  const int nwvl, const double *wvl);
+cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl);
 ccell *psfcomp(const dmat *iopdevl, const double *restrict amp,
-	       int **embeds, const int *nembeds, const int psfsize,
+	       int **embeds, const int *nembeds, const int *psfsize,
 	       const int nwvl, const double *wvl);
 void embed_in(double *out, const double *in, long nin, long *embed);
 void embed_out(const double *out, double *in, long nin, long *embed);

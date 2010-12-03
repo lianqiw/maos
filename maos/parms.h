@@ -260,9 +260,7 @@ typedef struct EVL_CFG_T{
     int psfpttr;    /**<remove p/t/t from psf.*/
     int psfmean;    /**<output time averaged psf*/
     int psfisim;    /**<time step to start psfmean.*/
-    int psfsize;    /**<FFT size for outputing PSF. Becareful about FFT speed
-		       and enough padding. Determines the sampling of the
-		       generated PSF*/
+    int *psfsize;    /**<save this number of pixels of the center of the psf.*/
     int *psfgridsize;/**<grid size for FFT to generate PSF. Becareful about FFT
 		       speed and enough padding. Determines the sampling of the
 		       generated PSF. 0 or negative for automatic.*/

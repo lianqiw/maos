@@ -522,18 +522,15 @@ ARG_T * parse_args(int argc, char **argv){
 
    where A is the amplitude map.
  */
-ccell *strehlcomp(const dmat *iopdevl, const double *amp,const int nwvl, const double *wvl){
-    ccell *psf2s=ccellnew(nwvl,1);
-    for(int iwvl=0; iwvl<nwvl; iwvl++){
-	dcomplex i2pi=I*2*M_PI/wvl[iwvl];
-	dcomplex strehl=0;
-	for(int iloc=0; iloc<iopdevl->nx; iloc++){
-	    strehl+=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
-	}
-	psf2s->p[iwvl]=cnew(1,1);
-	psf2s->p[iwvl]->p[0]=strehl;
+cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl){
+    dcomplex i2pi=I*2*M_PI/wvl;
+    dcomplex strehl=0;
+    for(int iloc=0; iloc<iopdevl->nx; iloc++){
+	strehl+=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
     }
-    return psf2s;
+    cmat *psf2=cnew(1,1);
+    psf2->p[0]=strehl;
+    return psf2;
 }
 /**
    Computes PSF from OPD by doing FFT. The PSF is computed as
@@ -546,61 +543,62 @@ ccell *strehlcomp(const dmat *iopdevl, const double *amp,const int nwvl, const d
    energy.
  */
 ccell *psfcomp(const dmat *iopdevl, const double *amp,
-	       int **embeds, const int *nembeds, const int psfsize,
+	       int **embeds, const int *nembeds, const int *psfsize,
 	       const int nwvl, const double *wvl){
-    if(psfsize==1){
-	return strehlcomp(iopdevl, amp, nwvl, wvl);
-    }
+  
     ccell *psf2s=ccellnew(nwvl,1);
 
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	int nembed=nembeds[iwvl];
-	int *embed=embeds[iwvl];
-	//warning("Output PSF for direction %d\n",ievl);
-	cmat *psf2=cnew(nembed,nembed);
-	int ncomp;
-	int use1d;
-	int use1d_enable=0;
-	if(nembed<psfsize){
-	    ncomp=nembed;
-	    if(use1d_enable){
-		use1d=1;
-		cfft2partialplan(psf2, ncomp, -1);
+	if(psfsize[iwvl]==1){
+	    psf2s->p[iwvl]=strehlcomp(iopdevl, amp, wvl[iwvl]);
+	}else{
+	    int nembed=nembeds[iwvl];
+	    int *embed=embeds[iwvl];
+	    cmat *psf2=cnew(nembed,nembed);
+	    int ncomp;
+	    int use1d;
+	    int use1d_enable=0;
+	    if(nembed<psfsize[iwvl]){
+		ncomp=nembed;
+		if(use1d_enable){
+		    use1d=1;
+		    cfft2partialplan(psf2, ncomp, -1);
+		}else{
+		    use1d=0;
+		    cfft2plan(psf2, -1);
+		}
 	    }else{
+		ncomp=psfsize[iwvl];
 		use1d=0;
 		cfft2plan(psf2, -1);
 	    }
-	}else{
-	    ncomp=psfsize;
-	    use1d=0;
-	    cfft2plan(psf2, -1);
-	}
-	//PCMAT(psf2, ppsf2);
-	//double psfnorm=1./(sqrt(aper->sumamp2)*aper->nembed);//This makes sum(psf)=1;
-	double psfnorm=1; /*since sum(aper->amp)=1, this makes psf normalized by
-			    differaction limited PSF. max(psf) is strehl.*/
-	dcomplex i2pi=I*2*M_PI/wvl[iwvl];
-	psf2s->p[iwvl]=cnew(ncomp,ncomp);
-
-	czero(psf2);
-	for(int iloc=0; iloc<iopdevl->nx; iloc++){
-	    psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
 	    /*
-	    int ix=embed[iloc][0];
-	    int iy=embed[iloc][1];
-	    ppsf2[iy][ix]=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
+	      //This makes sum(psf)=1;
+	      double psfnorm=1./(sqrt(aper->sumamp2)*aper->nembed);
 	    */
-	}
-	if(use1d==1){
-	    cfft2partial(psf2,ncomp,-1);
-	}else{
-	    cfft2(psf2,-1);
-	}
-	ccpcorner2center(psf2s->p[iwvl], psf2);
+	    
+	    /*since sum(aper->amp)=1, this makes psf normalized by diffraction
+	      limited PSF. max(psf) is strehl.*/
+	    double psfnorm=1; 
+
+	    dcomplex i2pi=I*2*M_PI/wvl[iwvl];
+	    psf2s->p[iwvl]=cnew(ncomp,ncomp);
+
+	    czero(psf2);
+	    for(int iloc=0; iloc<iopdevl->nx; iloc++){
+		psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
+	    }
+	    if(use1d==1){
+		cfft2partial(psf2,ncomp,-1);
+	    }else{
+		cfft2(psf2,-1);
+	    }
+	    ccpcorner2center(psf2s->p[iwvl], psf2);
 	
-	if(fabs(psfnorm-1)>1.e-15)
-	    cscale(psf2s->p[iwvl], psfnorm);
-	cfree(psf2);
+	    if(fabs(psfnorm-1)>1.e-15)
+		cscale(psf2s->p[iwvl], psfnorm);
+	    cfree(psf2);
+	}
     }
     return psf2s;
 }
