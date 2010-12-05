@@ -107,10 +107,10 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	    cn2est->os->p[iht]=parms->atmr.os[iht];
 	}
     }else{//use linearly spaced number of layers between ground and hmax
-	int nht=parms->cn2.nhtrecon;
+	int nht=parms->cn2.nhtomo;
 	cn2est->htrecon=dnew(nht,1);
 	cn2est->os=dnew(nht,1);
-	if(nht<1) error("invalid nhtrecon");
+	if(nht<1) error("invalid nhtomo");
 	//calculate the number of over sampled layers.
 	int osc=0;
 	for(int ips=0; ips<parms->atmr.nps; ips++){

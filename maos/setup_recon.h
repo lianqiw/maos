@@ -19,8 +19,9 @@
 #ifndef SETUP_RECON_H
 #define SETUP_RECON_H
 #include "maos.h"
-RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, 
-		     APER_T *aper);
+RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
+void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
+void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
 void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms);

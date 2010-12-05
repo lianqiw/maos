@@ -279,12 +279,16 @@ char* scheduler_get_drawdaemon(int pid){
 	FILE *fp=fopen(fnpid, "r");
 	if(fp){
 	    int fpid;
-	    fscanf(fp, "%d", &fpid);
-	    fclose(fp);
-	    if(kill(fpid,0)){
-		warning2("Drawdaemon has exited\n");
+	    if(fscanf(fp, "%d", &fpid)!=1){
+		fpid=-1;//failed to read fpid.
 		launch=1;
+	    }else{
+		if(kill(fpid,0)){
+		    warning2("Drawdaemon has exited\n");
+		    launch=1;
+		}
 	    }
+	    fclose(fp);
 	}else{
 	    warning2("Drawdaemon has exited\n");
 	    launch=1;

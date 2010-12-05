@@ -630,6 +630,14 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.square);
 }
 /**
+   Read in least square reconstructor parameters*/
+static void readcfg_lsr(PARMS_T *parms){
+    READ_INT(lsr.alg);
+    READ_INT(lsr.maxit);
+    READ_INT(lsr.split);
+    READ_DBL(lsr.tikcr);
+}
+/**
    Read in simulation parameters
 */
 static void readcfg_sim(PARMS_T *parms){
@@ -680,6 +688,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.fuseint);
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
+    READ_INT(sim.recon);
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
     parms->sim.frozenflow = (parms->sim.frozenflow || parms->sim.closeloop);
 }
@@ -693,7 +702,7 @@ static void readcfg_cn2(PARMS_T *parms){
     READ_INT(cn2.reset);
     READ_INT(cn2.tomo);
     READ_INT(cn2.keepht);
-    READ_INT(cn2.nhtrecon);
+    READ_INT(cn2.nhtomo);
     READ_INT(cn2.moveht);
     READ_DBL(cn2.hmax);
     READ_DBL(cn2.saat);
@@ -963,7 +972,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
     }
     int disable_split_tomo=0;
-    if(parms->tomo.split){
+    if(parms->tomo.split || parms->lsr.split){
 	int hi_found=0;
 	int lo_found=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -976,6 +985,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(!lo_found || !hi_found){
 	    warning("There are either no high order or no low order wfs. Disable split tomo.\n");
 	    parms->tomo.split=0;
+	    parms->lsr.split=0;
 	    disable_split_tomo=1;
 	}
 	if(!hi_found){
@@ -1004,9 +1014,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
-    if(parms->tomo.split && parms->ndm==0){
+    if((parms->tomo.split||parms->lsr.split) && parms->ndm==0){
 	warning("Disable split tomography since there is no common DM\n");
 	parms->tomo.split=0;
+	parms->lsr.split=0;
     }
 }
 /**
@@ -1517,15 +1528,17 @@ static void print_parms(const PARMS_T *parms){
 	info2("layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
 	      ips,parms->atm.ht[ips],parms->atm.wt[ips],parms->atm.ws[ips]);
     }
-    info2("\033[0;32mTomography\033[0;0m: r0=%gm l0=%gm "
-	  "ZA is %g deg. %d layers.%s\n", 
-	  parms->atmr.r0, parms->atmr.l0,  
-	  parms->sim.za*180/M_PI, 
-	  parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
+    if(parms->sim.recon==0){
+	info2("\033[0;32mTomography\033[0;0m: r0=%gm l0=%gm "
+	      "ZA is %g deg. %d layers.%s\n", 
+	      parms->atmr.r0, parms->atmr.l0,  
+	      parms->sim.za*180/M_PI, 
+	      parms->atmr.nps,(parms->tomo.cone?" use cone coordinate.":""));
   
-    for(int ips=0; ips<parms->atmr.nps; ips++){
-	info2("layer %d: ht= %6.0f m, wt= %5.3f\n",
-	      ips,parms->atmr.ht[ips],parms->atmr.wt[ips]);
+	for(int ips=0; ips<parms->atmr.nps; ips++){
+	    info2("layer %d: ht= %6.0f m, wt= %5.3f\n",
+		  ips,parms->atmr.ht[ips],parms->atmr.wt[ips]);
+	}
     }
     info2("\033[0;32mThere are %d powfs\033[0;0m\n", parms->npowfs);
     for(i=0; i<parms->npowfs; i++){
@@ -1600,40 +1613,55 @@ static void print_parms(const PARMS_T *parms){
 	    info2("     Bilinear influence function.\n");
 	}
     }
-    info2("\033[0;32mTomography\033[0;0m is using ");
-    switch(parms->tomo.alg){
-    case 0:
-	info2("Cholesky back solve ");
-	break;
-    case 1:
-	info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
-	      tomo_precond[parms->tomo.precond], parms->tomo.maxit);
-	break;
-    default:
-	error("Invalid\n");
+    if(parms->sim.recon==0){
+	info2("\033[0;32mTomography\033[0;0m is using ");
+	switch(parms->tomo.alg){
+	case 0:
+	    info2("Cholesky back solve ");
+	    break;
+	case 1:
+	    info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
+		  tomo_precond[parms->tomo.precond], parms->tomo.maxit);
+	    break;
+	default:
+	    error("Invalid\n");
+	}
+	switch(parms->tomo.split){
+	case 0:
+	    info2(" integrated tomo.\n");break;
+	case 1:
+	    info2(" ad hoc split tomo.\n"); break;
+	case 2:
+	    info2(" minimum variance split tomo\n"); break;
+	default:
+	    error(" Invalid\n");
+	}
+	info2("\033[0;32mDM Fitting\033[0;0m is using ");
+	switch(parms->fit.alg){
+	case 0:
+	    info2("Cholesky back solve");
+	    break;
+	case 1:
+	    info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
+		  tomo_precond[parms->fit.precond], parms->fit.maxit);
+	    break;
+	default:
+	    error("Invalid");
+	}
+    }else{
+	info2("Using least square reconstructor with ");
+	switch(parms->lsr.alg){
+	case 0:
+	    info2("Cholesky back solve ");
+	    break;
+	case 1:
+	    info2("CG%d", parms->lsr.maxit);
+	    break;
+	default:
+	    error("Invalid\n");
+	}
     }
-    switch(parms->tomo.split){
-    case 0:
-	info2(" integrated tomo.\n");break;
-    case 1:
-	info2(" ad hoc split tomo.\n"); break;
-    case 2:
-	info2(" minimum variance split tomo\n"); break;
-    default:
-	error(" Invalid\n");
-    }
-    info2("\033[0;32mDM Fitting\033[0;0m is using ");
-    switch(parms->fit.alg){
-    case 0:
-	info2("Cholesky back solve");
-	break;
-    case 1:
-	info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
-	      tomo_precond[parms->fit.precond], parms->fit.maxit);
-	break;
-    default:
-	error("Invalid");
-    }
+    info2("\n");
     info2("\033[0;32mSimulation\033[0;0m start at step %d, end at step %d, "
 	 "with time step 1/%gs, %s loop \n", 
 	  parms->sim.start, parms->sim.end, 1./parms->sim.dt, 
@@ -1734,8 +1762,8 @@ static void check_parms(const PARMS_T *parms){
     if(parms->fit.alg<0 || parms->fit.alg>1){
 	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
     }
-    if(parms->dbg.fitonly){
-
+    if(parms->dbg.fitonly && parms->sim.recon==1){
+	error("fitonly does not work with least square reconstructor\n");
     }
 }
 /**
@@ -1803,6 +1831,7 @@ PARMS_T * setup_parms(ARG_T *arg){
     readcfg_atmr(parms);
     readcfg_tomo(parms);
     readcfg_fit(parms);
+    readcfg_lsr(parms);
     readcfg_evl(parms);
     readcfg_sim(parms);
     readcfg_cn2(parms);

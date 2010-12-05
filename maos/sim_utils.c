@@ -655,7 +655,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     int nstep=parms->sim.end-parms->sim.start;
     if(parms->save.dm){
 	save->dmerr_hi=cellarr_init(nstep, "dmerr_hi_%d.bin", seed);
-	save->dmfit_hi=cellarr_init(nstep, "dmfit_hi_%d.bin", seed);
+	if(parms->sim.recon==0){
+	    save->dmfit_hi=cellarr_init(nstep, "dmfit_hi_%d.bin", seed);
+	}
 	save->dmreal=cellarr_init(nstep, "dmreal_%d.bin", seed);
 	if(parms->sim.fuseint){
 	    save->dmint =cellarr_init(nstep, "dmint_%d.bin", seed);
@@ -688,14 +690,15 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->save.dmpttr){
 	save->dmpttr=cellarr_init(nstep, "dmpttr_%d.bin", seed);
     }
-
-    if(parms->save.opdr){
-	save->opdr=cellarr_init(nstep, "opdr_%d.bin", seed);
+    if(parms->sim.recon==0){
+	if(parms->save.opdr){
+	    save->opdr=cellarr_init(nstep, "opdr_%d.bin", seed);
+	}
+	if(parms->save.opdx){
+	    save->opdx=cellarr_init(nstep, "opdx_%d.bin", seed);
+	}
     }
-    if(parms->save.opdx){
-	save->opdx=cellarr_init(nstep, "opdx_%d.bin", seed);
-    }
-    if(parms->save.wfsopdhi || parms->save.wfsopdlo){
+    if(parms->save.wfsopd){
 	save->wfsopd=calloc(parms->nwfs, sizeof(cellarr*));
 	save->wfslltopd=calloc(parms->nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -733,7 +736,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    if(parms->save.powfs_grad[ipowfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		save->gradnf[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradnf_%d.bin", iwfs, seed);
-		if(parms->tomo.split==2 || !parms->wfs[iwfs].skip){
+		if(parms->sim.recon==0 &&(parms->tomo.split==2 || !parms->wfs[iwfs].skip)){
 		    save->gradpsol[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradpsol_%d.bin", iwfs, seed);
 		}
 	    }

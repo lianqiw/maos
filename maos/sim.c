@@ -104,7 +104,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    double ck_1=myclockd(); double cpu_1=read_self_cpu();
 	    wfsgrad(simu);
 	    double ck_2=myclockd(); double cpu_2=read_self_cpu();
-	    tomofit(simu);
+	    reconstruct(simu);
 	    double ck_3=myclockd(); double cpu_3=read_self_cpu();
 #endif
 	    filter(simu);//updates dmreal.
