@@ -295,7 +295,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	for(long ips=0; ips<nps; ips++){
 	    dmat *tmp=ddup(recon->invpsd->p[ips]);
 	    dfftshift(tmp);
-	    dscale(tmp,(double)(nx[ips]*ny[ips]));//cancel the scaling applied in invpsd routine.
+	    //cancel the scaling applied in invpsd routine.
+	    dscale(tmp,(double)(nx[ips]*ny[ips]));
 	    for(long i=0; i<nx[ips]*ny[ips]; i++){
 		invpsd[offset+i]=tmp->p[i];
 	    }
@@ -307,13 +308,14 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    cmat *psd=cnew(nx[ips],ny[ips]);
 	    cfft2plan(psd,-1);
 	    dsp *tmp=sptmulsp(recon->L2->p[ips+nps*ips], 
-				 recon->L2->p[ips+nps*ips]);
+			      recon->L2->p[ips+nps*ips]);
 	    for(long irow=tmp->p[0]; irow<tmp->p[1]; irow++){
 		psd->p[tmp->i[irow]]=tmp->x[irow];
 	    }
 	    cfft2(psd,-1);
 	    cfftshift(psd);
-	    const double eps=2.220446049250313e-16;//look for a way to obtain this automatically.
+	    //look for a way to obtain this automatically.
+	    const double eps=2.220446049250313e-16;
 	    double max;
 	    maxmincmp(psd->p,psd->nx*psd->ny,&max,NULL,NULL);
 	    max=max*sqrt(eps);
@@ -363,9 +365,9 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	info("sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai);
 	for(long ips=0; ips<nps; ips++){
 	    /*
-	      2010-05-28:
-	      The cone effect cancels with the cone coordinate. so we are like
-	      doing parallel beam propagation. Removed scaling by 1/(1-ht[ips]/hs);
+	      2010-05-28: The cone effect cancels with the cone
+	      coordinate. so we are like doing parallel beam
+	      propagation. Removed scaling by 1/(1-ht[ips]/hs);
 	    */
 	    dispx[ips]=ht[ips]*parms->wfs[iwfs].thetax;
 	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;

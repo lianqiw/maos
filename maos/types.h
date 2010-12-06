@@ -244,6 +244,7 @@ typedef struct RECON_T{
     dcell *MVModes;    /**<MVST Modes (svd'ed)*/
     spcell *GA;        /**<actuator to wfs grad.*/
     spcell *GAlo;      /**<GA of low order WFS.*/
+    spcell *GAhi;      /**<GA of high order WFS.*/
     spcell *HXF;       /**<ray tracing propagator from xloc to ploc for fitting directions.*/
     spcell *HA;        /**<ray tracing from aloc to ploc for fitting directions.*/
     dcell *TT;         /**<TT modes for LGS WFS*/
@@ -262,6 +263,8 @@ typedef struct RECON_T{
     MUV_T RL;          /**<tomography left hand side matrix*/
     MUV_T FR;          /**<DM fit right hand size matrix, solve FL*x=FR*y*/
     MUV_T FL;          /**<DM fit left hand size matrix*/
+    MUV_T LR;          /**<least square reconstructor rhs*/
+    MUV_T LL;          /**<least square reconstructor lhs. solve LL*x=LR*y*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     //For focus tracking.
     dcell *RFlgs;      /**<focus reconstruction from each LGS grad*/
@@ -269,15 +272,12 @@ typedef struct RECON_T{
     dcell *RFtomo;     /**<focus recon from reconstructed X.*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
-    int *xdim;         /**<length of each xloc layer.*/
-    int *gdim;         /**<length of gradient vector for each wfs.*/
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/
     int ndm;           /**<number of DMs;*/
     int has_ttr;       /**<whether there is any tip/tilt removed WFS*/
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
-    int calc_invpsd;   /**<Whether we need to compute inverve of psd*/
     int warm_restart;  /**<Use warm restart.*/
 }RECON_T;
 

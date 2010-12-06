@@ -149,9 +149,10 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
    actuators. If NW is non NULL, orthogonalize it with the slaving
    regularization.  When the actuators are in the NULL space of HA, we want to
    contraint their values to be close to the ones that are active. We put an
-   additional term in the fitting matrix to force this. Becaure with it when
+   additional term in the fitting matrix to force this. Be careful with it when
    using tip/tilt constraint and cholesky back solve.*/
-spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW){
+spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW,
+		    double thres, double scl){
     if(!HA) {
 	error("HA is not supplied\n");
     }
@@ -161,14 +162,23 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW){
     for(int idm=0; idm<ndm; idm++){
 	int nact=aloc[idm]->nloc;
 	for(int ifit=0; ifit<HA->ny; ifit++){
-	    sptmulmat(&actcplc->p[idm], pHA[idm][ifit], W1, 1);
+	    if(W1){
+		sptmulmat(&actcplc->p[idm], pHA[idm][ifit], W1, 1);
+	    }else{
+		dmat *tmp=spsumabs(pHA[idm][ifit], 1);
+		dadd(&actcplc->p[idm], 1, tmp, 1);
+		dfree(tmp);
+	    }
+	}
+	if(actcplc->p[idm]->nx*actcplc->p[idm]->ny!=nact){
+	    error("Invalid actcplc\n");
 	}
 	normalize_max(actcplc->p[idm]->p, nact, 1);//bring max to 1;
     }
-    double scl=1./pHA[0][0]->m;
+    dcellwrite(actcplc,"actcplc");
+    //double scl=1./pHA[0][0]->m;
     
     int nslavetot=0;
-    const double slave_thres=0.1;
     spcell *actslavec=spcellnew(ndm, ndm);//block diagonal.
     PSPCELL(actslavec, actslave);
     
@@ -178,7 +188,7 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW){
 	double *actcpl0 = actcpl-1;
 	int  nslave   = 0;
 	for(int iact=0; iact<nact; iact++){
-	    if(actcpl[iact]<slave_thres){
+	    if(actcpl[iact]<thres){
 		nslave++;
 	    }
 	}
@@ -201,7 +211,7 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW){
 	long count=0;
 	long icol=0;
 	for(int iact=0; iact<nact; iact++){
-	    if(actcpl[iact]<slave_thres){//slave actuators
+	    if(actcpl[iact]<thres){//slave actuators
 		pp[icol]=count;
 		long mapx=(long)round((locx[iact]-ox)*dx1);
 		long mapy=(long)round((locy[iact]-oy)*dx1);
@@ -289,7 +299,7 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW){
 
 	if(NW){
 	    /*Now we need to make sure NW is in the NULL
-	      space of the slaving regularization, especiall
+	      space of the slaving regularization, especially
 	      the tip/tilt constraints.*/
 	    if(NW->p[idm]){
 		dmat *H=NULL;

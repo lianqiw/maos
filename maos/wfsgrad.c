@@ -315,9 +315,9 @@ static void wfsgrad_iwfs(SIM_T *simu){
 			}
 		    }
 		}
-	    }
-	    if(save_opd){
-		cellarr_dmat(simu->save->wfslltopd[iwfs],lltopd);
+		if(save_opd){
+		    cellarr_dmat(simu->save->wfslltopd[iwfs],lltopd);
+		}
 	    }
 	    dmat *gradref=NULL;
 	    if(pistatout){
@@ -571,7 +571,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 	    dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[indwfs], -1);
 	}
 	//create pseudo open loop gradients. in split mode 1, only do for high order wfs.
-	if((parms->tomo.split==2 || !parms->wfs[iwfs].skip) && dtrat_output){
+	if((parms->sim.recon==0&&(parms->tomo.split==2 || !parms->wfs[iwfs].skip)) && dtrat_output){
 	    dcp(&simu->gradpsol->p[iwfs], *gradout);
 	    if(CL && simu->dmreal){
 		if(simu->dmpsol[ipowfs]){

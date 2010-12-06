@@ -427,11 +427,6 @@ void tomofit(SIM_T *simu){
 		drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,
 			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
 	    }
-	    for(int idm=0; simu->dmreal && idm<simu->parms->ndm; idm++){
-		drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,
-			"Actual DM Actuator Commands","x (m)", "y (m)",
-			"Real %d",idm);
-	    }
 	}
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
     
@@ -461,30 +456,13 @@ void tomofit(SIM_T *simu){
 	    }
 	}
 
-	if(parms->save.dm){
-	    cellarr_dcell(simu->save->dmerr_hi, simu->dmerr_hi);
-	    if(parms->sim.fuseint){
-		cellarr_dcell(simu->save->dmint, simu->dmint[0]);
-	    }else{
-		cellarr_dcell(simu->save->dmint_hi, simu->dmint_hi[0]);
-	    }
-	}
-
 	if(!parms->dbg.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
 	if(parms->tomo.ahst_rtt && parms->tomo.split){
 	    remove_dm_tt(simu, simu->dmerr_hi);
 	}
-	
 
-	if(parms->plot.run){
-	    for(int idm=0; idm<parms->ndm; idm++){
-		drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,
-			"DM Error Signal (Hi)","x (m)","y (m)",
-			"Err Hi %d",idm);
-	    }
-	}
     }//if high order has output
 
     if(!parms->dbg.fitonly && parms->tomo.split){
@@ -492,7 +470,7 @@ void tomofit(SIM_T *simu){
 	    info("accumulating opdrmvst\n");
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
-	//Low order
+	//Low order has output
 	if(!parms->sim.closeloop || simu->dtrat_lo==1 || (simu->isim+1)%simu->dtrat_lo==0){
 	    dcellzero(simu->Merr_lo);
 	    switch(parms->tomo.split){
@@ -518,35 +496,104 @@ void tomofit(SIM_T *simu){
 	    default:
 		error("Invalid parms->tomo.split: %d",parms->tomo.split);
 	    }
-	    if(parms->plot.run && simu->Merr_lo){
-		dcell *dmlo=NULL;
-		switch(simu->parms->tomo.split){
-		case 1:
-		    ngsmod2dm(&dmlo, recon, simu->Merr_lo, 1);
-		    break;
-		case 2:
-		    dcellmm(&dmlo, simu->recon->MVModes, simu->Merr_lo, "nn", 1);
-		    break;
-		}
-		for(int idm=0; idm<parms->ndm; idm++){
-		    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,
-			    "DM Error Signal (Lo)","x (m)","y (m)",
-			    "Err Lo %d",idm);
-		}
-		dcellfree(dmlo);
-	    }
 	}else{
 	    dcellfree(simu->Merr_lo);//don't have output.
-	}
-
-	if(parms->save.dm){
-	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
-	    if(simu->Mint_lo){
-		cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo[0]);
-	    }
 	}
     }
     if(parms->sim.mffocus){
 	focus_tracking(simu);
+    }
+}
+/**
+   least square reconstructor
+*/
+void lsr(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    if(!parms->sim.closeloop || parms->dbg.fitonly || 
+       simu->dtrat_hi==1 || (simu->isim+1)%simu->dtrat_hi==0){
+	dcell *rhs=NULL;
+	muv(&rhs, &(recon->LR), simu->gradcl, 1);
+	switch(parms->lsr.alg){
+	case 0://CBS
+	    muv_chol_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
+	    break;
+	case 1://CG
+	    pcg(&simu->dmerr_hi, (CGFUN)muv, &recon->LL, NULL, NULL, rhs,
+		recon->warm_restart, parms->lsr.maxit);
+	    break;
+	default:
+	    error("Not implemented\n");
+	}
+	dcellfree(rhs);
+	if(!parms->dbg.fitonly && parms->lsr.split==1){//ahst
+	    remove_dm_ngsmod(simu, simu->dmerr_hi);
+	}
+    }//if high order has output
+    if(!parms->dbg.fitonly && parms->tomo.split){
+	//Low order has output
+	if(!parms->sim.closeloop || simu->dtrat_lo==1 
+	   || (simu->isim+1)%simu->dtrat_lo==0){
+	    dcellzero(simu->Merr_lo);
+	    NGSMOD_T *ngsmod=recon->ngsmod;
+	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradcl,"nn",1);
+	}else{
+	    dcellfree(simu->Merr_lo);//don't have output.
+	}
+    } 
+}
+/**
+   Deformable mirror control. call tomofit() to do tomo()/fit() or lsr() to do
+   least square reconstruction. */
+void reconstruct(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    if(parms->sim.recon==0){//mv
+	tomofit(simu);//tomography and fitting.
+    }else{
+	lsr(simu);
+    }
+    if(parms->plot.run){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,
+		    "DM Error Signal (Hi)","x (m)","y (m)",
+		    "Err Hi %d",idm);
+	}
+	for(int idm=0; simu->dmreal && idm<simu->parms->ndm; idm++){
+	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,
+		    "Actual DM Actuator Commands","x (m)", "y (m)",
+		    "Real %d",idm);
+	}
+    }
+    if(parms->plot.run && simu->Merr_lo){
+	dcell *dmlo=NULL;
+	switch(simu->parms->tomo.split){
+	case 1:
+	    ngsmod2dm(&dmlo, recon, simu->Merr_lo, 1);
+	    break;
+	case 2:
+	    dcellmm(&dmlo, simu->recon->MVModes, simu->Merr_lo, "nn", 1);
+	    break;
+	}
+	for(int idm=0; idm<parms->ndm; idm++){
+	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,
+		    "DM Error Signal (Lo)","x (m)","y (m)",
+		    "Err Lo %d",idm);
+	}
+	dcellfree(dmlo);
+    }
+    if(parms->save.dm){
+	cellarr_dcell(simu->save->dmerr_hi, simu->dmerr_hi);
+	if(parms->sim.fuseint){
+	    cellarr_dcell(simu->save->dmint, simu->dmint[0]);
+	}else{
+	    cellarr_dcell(simu->save->dmint_hi, simu->dmint_hi[0]);
+	}
+	if(simu->save->Merr_lo){
+	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
+	}
+	if(simu->Mint_lo){
+	    cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo[0]);
+	}
     }
 }

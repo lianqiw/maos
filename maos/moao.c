@@ -136,7 +136,9 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    recon->moao[imoao].actslave=act_slaving(&recon->moao[imoao].aloc, 
 						    recon->moao[imoao].HA, 
 						    recon->moao[imoao].W1,
-						    recon->moao[imoao].NW);
+						    recon->moao[imoao].NW,
+						    0.1, 
+						    1./recon->ploc->nloc);
 	}
 	if(parms->save.setup){
 	    locwrite(recon->moao[imoao].aloc,"%s/moao%d_aloc",dirsetup,imoao);

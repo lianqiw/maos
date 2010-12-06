@@ -326,6 +326,15 @@ typedef struct FIT_CFG_T{
     int square;      /**<using square grid on DM and ploc.*/
 }FIT_CFG_T;
 /**
+   contains input parameters for least square reconstructor
+*/
+typedef struct LSR_CFG_T{
+    int alg;         /**<linear equation solving algorithm*/
+    int maxit;       /**<maximum number of iterations for CG.*/
+    int split;       /**<Split reconstruction. same as ahst*/
+    double tikcr;    /**<Tikhonov relgularization*/
+}LSR_CFG_T;
+/**
    contains input parameters for simulation, like loop gain, seeds, etc.
  */
 typedef struct SIM_CFG_T{
@@ -366,6 +375,7 @@ typedef struct SIM_CFG_T{
     int cachesurf;   /**<cache surface on fine sampled grid matched WFS or Science grid*/
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
+    int recon;       /**<reconstruction method. 0: minimum variance, 1: least square*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
@@ -379,7 +389,7 @@ typedef struct CN2EST_CFG_T{
     int tomo;        /**<update tomography parameters if non zero*/
     int keepht;      /**<>0: use the layer ht specified by atmr.ht. 2: also do slodar
 			directly on these layers.*/
-    int nhtrecon;    /**<number of layers to feed into reconstructor. only
+    int nhtomo;      /**<number of layers to feed into reconstructor. only
 			effective if keepht=0*/
     int moveht;      /**<1: move the ht used for reconstructor to near strongest
 			layers. only effective if keepht=0.*/
@@ -501,6 +511,7 @@ typedef struct PARMS_T{
     APER_CFG_T   aper;  /**<aperture parameters*/
     TOMO_CFG_T   tomo;  /**<tomography parameters*/
     FIT_CFG_T    fit;   /**<DM fit parameters*/
+    LSR_CFG_T    lsr;   /**<Least square reconstructor parameters*/
     EVL_CFG_T    evl;   /**<Performance evaluation parameters*/
 
     /*the following are pointers because there may be several*/

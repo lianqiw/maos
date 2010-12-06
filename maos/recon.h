@@ -36,5 +36,6 @@ void fit(dcell **adm, const PARMS_T *parms,
 		const RECON_T *recon, const dcell *opdr);
 void focus_tracking(SIM_T*simu);
 void tomofit(SIM_T *simu);
-
+void lsr(SIM_T *simu);
+void reconstruct(SIM_T *simu);
 #endif
