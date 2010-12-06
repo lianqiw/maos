@@ -231,7 +231,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
    Setup ray tracing operator from xloc to ploc for guide stars
 */
 static void 
-setup_recon_HXW(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfs;
     const int npsr=recon->npsr;
@@ -419,7 +419,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
    Crate the xloc to wfs gradient operator
 */
 static void 
-setup_recon_GX(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     const int nwfs=parms->nwfs;
     const int npsr=recon->npsr;
     spcellfree(recon->GX);
@@ -1837,8 +1837,8 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     setup_recon_xloc(recon,parms);
     //setup xloc/aloc to WFS grad
     toc("loc done");
-    setup_recon_HXW(recon,parms,powfs);
-    setup_recon_GX(recon,parms,powfs);
+    setup_recon_HXW(recon,parms);
+    setup_recon_GX(recon,parms);
     spcellfree(recon->HXW);//only keep HXWtomo for tomography
     //setup inverse noise covariance matrix.
     toc("GX GA");
@@ -2005,7 +2005,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    for(long iy=0; iy<map->ny; iy++){
 		for(long ix=0; ix<map->nx; ix++){
 		    if(pmap[iy][ix]){
-			p[pmap[iy][ix]]=2*((iy+ix)&1)-1;
+			p[pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
 		    }
 		}
 	    }
