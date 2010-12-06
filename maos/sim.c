@@ -44,8 +44,8 @@
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence
    screens. Then for every time step, it calls perfevl() to evaluate
-   performance, wfsgrad() to do wfs measurement, tomofit() to do tomography and
-   DM fit, filter() to do DM command filtering. In MOAO mode, it call calls
+   performance, wfsgrad() to do wfs measurement, reconstruct() to do tomography
+   and DM fit, filter() to do DM command filtering. In MOAO mode, it call calls
    moao_recon() for MOAO DM fitting.  \callgraph */
 
 void sim(const PARMS_T *parms,  POWFS_T *powfs, 
@@ -80,7 +80,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		//re-seed the atmosphere in case atm is loaded from shm
 		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
-#define PARALLEL 0
+#define PARALLEL 1
 #if PARALLEL == 1 //does not help in T410s. Need to test taurus
 	    pthread_t thread_perfevl, thread_wfsgrad, thread_tomofit;
 	    if(CL){
@@ -88,15 +88,15 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    }
 	    pthread_create(&thread_wfsgrad, NULL, (void*(*)(void*))wfsgrad, (void*)simu);
 	    pthread_join(thread_wfsgrad,NULL);
-	    pthread_create(&thread_tomofit, NULL, (void*(*)(void*))tomofit, (void*)simu);
+	    pthread_create(&thread_tomofit, NULL, (void*(*)(void*))reconstruct, (void*)simu);
 	    pthread_join(thread_tomofit,NULL);
 	    if(CL){
 		pthread_join(thread_perfevl,NULL);
 	    }
-
-	    double ck_1=myclockd(); double cpu_1=read_self_cpu();
-	    double ck_2=myclockd(); double cpu_2=read_self_cpu();
-	    double ck_3=myclockd(); double cpu_3=read_self_cpu();
+	    
+	    double ck_1=myclockd(); //double cpu_1=read_self_cpu();
+	    double ck_2=myclockd(); //double cpu_2=read_self_cpu();
+	    double ck_3=myclockd(); //double cpu_3=read_self_cpu();
 #else  
 	    if(CL){//before wfsgrad so we can apply ideal NGS modes
 		perfevl(simu);
@@ -154,7 +154,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #endif
 	    }
 	    print_progress(simu);
-#if defined(__linux__)
+#if defined(__linux__) && PARALLEL == 0
 	    if(simu->nthread>1 && !detached){
 		fprintf(stderr, "CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n",
 			cpu_2, cpu_3, cpu_4, cpu_1, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);

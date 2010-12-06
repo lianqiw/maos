@@ -20,7 +20,8 @@
 typedef void*(*thread_fun)(void*);
 typedef struct thread_pool_t thread_pool_t;
 void thread_pool_create(int nthread);
-void thread_pool_queue(thread_fun fun, void *arg);
-void thread_pool_wait(void);
+void thread_pool_queue(long *count, thread_fun fun, void *arg);
+void thread_pool_wait(long *count);
+void thread_pool_wait_all(void);
 void thread_pool_destroy(void);
 #endif

@@ -46,6 +46,7 @@ typedef struct threads_t{
 typedef struct jobs_t{
     thread_fun fun;     /**<The function*/
     void *arg;          /**<The argument*/
+    long *count;        /**<address of the counter.*/
     struct jobs_t *next;/**<The pointer to the next entry*/
 }jobs_t;
 /**
@@ -86,6 +87,10 @@ static void run_thread(threads_t *thread){
 	    pool->nidle++;
 	    if(pool->nidle==pool->ncur){//all threads are idle
 		pthread_cond_signal(&pool->idle);
+		/*
+		  thread_pool_wait may not obtain the lock in pool->mutex
+		  immediately after we release the lock on mutex.
+		  thread_pool_queue may obtain the lock. */
 	    }
 	    //no more jobs to do, wait for the condition.
 	    pthread_cond_wait(&pool->jobwait, &pool->mutex);
@@ -110,16 +115,22 @@ static void run_thread(threads_t *thread){
 	    break;
 	}
 	//Take the jobs out of the job queue and run it.
-	jobs_t *jobshead=pool->jobshead;
-	thread->fun=jobshead->fun;
-	thread->arg=jobshead->arg;
-	pool->jobshead=jobshead->next;
+	jobs_t *job=pool->jobshead;
+	thread->fun=job->fun;
+	thread->arg=job->arg;
+	pool->jobshead=job->next;
 	if(!pool->jobshead){//empty.
 	    pool->jobstail=NULL;
 	}
-	free(jobshead);
 	pthread_mutex_unlock(&pool->mutex);
 	thread->fun(thread->arg);//run the job.
+	pthread_mutex_lock(&pool->mutex);
+	(*job->count)--;//decrease the count.
+	if(!(*job->count)){
+	    pthread_cond_broadcast(&pool->idle);
+	}
+	pthread_mutex_unlock(&pool->mutex);
+	free(job);
     }
 }
 /**
@@ -137,11 +148,12 @@ void thread_pool_create(int nthread){
     pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED );
     pool->nidle=0;
     pool->nmax=nthread;
-    pool->ncur=nthread;
+    pool->ncur=0;
     pool->jobshead=NULL;
     pool->jobstail=NULL;
     for(int ith=0; ith<nthread; ith++){
 	pool->threads[ith]=calloc(1, sizeof(threads_t));
+	pool->ncur++;
 	if(pthread_create(&pool->threads[ith]->id, &attr, 
 			  (thread_fun)run_thread, pool->threads[ith])){
 	    error("Can not create thread\n");
@@ -149,15 +161,18 @@ void thread_pool_create(int nthread){
     }
 }
 /**
-   Queue a job.
-*/
-void  thread_pool_queue(thread_fun fun, void *arg){
+   Queue a job that belongs to group denoted by count. The argument count, will
+   be incremented by 1 when queued and decreased by 1 if job is finished. Wait
+   on it will clear when count is decreased to zero. */
+void thread_pool_queue(long *count, thread_fun fun, void *arg){
     if(!pool){
 	error("Please call thread_pool_init first\n");
     }
     pthread_mutex_lock(&pool->mutex);
     //Add the job to the tail
     jobs_t *job=malloc(sizeof(jobs_t));
+    job->count=count;
+    (*job->count)++;
     job->fun=fun;
     job->arg=arg;
     job->next=NULL;
@@ -172,22 +187,32 @@ void  thread_pool_queue(thread_fun fun, void *arg){
     }
     pthread_mutex_unlock(&pool->mutex);
 }
-
+/**
+   Wait for jobs in the count to be done.
+*/
+void thread_pool_wait(long *count){
+    pthread_mutex_lock(&pool->mutex);
+    while(*count>0){
+	pthread_cond_wait(&pool->idle, &pool->mutex);
+    }
+    pthread_mutex_unlock(&pool->mutex);
+}
 /**
    Wait for all jobs to be done.
 */
-void thread_pool_wait(void){
+void thread_pool_wait_all(void){
     /*
       We should lock mutex before compare nidle, otherwise another thread maybe
       modifying nidle, and emits pool->idle before we are ready to wait, thus
       hanging us here.
     */
     pthread_mutex_lock(&pool->mutex);
-    if(pool->jobshead || pool->nidle<pool->nmax){
+    while(pool->jobshead || pool->nidle<pool->ncur){
+       	/*
+	  thread_pool_wait may not obtain the lock in pool->mutex immediately
+	  after signal on pool->idle is emmited. thread_pool_queue may obtain
+	  the lock. So we wait in a loop.*/
 	pthread_cond_wait(&pool->idle, &pool->mutex);
-    }
-    if(pool->jobshead){
-	error("Job is not empty\n");
     }
     pthread_mutex_unlock(&pool->mutex);
 }
@@ -196,7 +221,7 @@ void thread_pool_wait(void){
    Exit all threads and free thread pool.
 */
 void thread_pool_destroy(void){
-    thread_pool_wait();
+    thread_pool_wait_all();
     pool->quit=1;
     pthread_cond_broadcast(&pool->jobwait);
     pthread_mutex_lock(&pool->mutex);
@@ -205,4 +230,3 @@ void thread_pool_destroy(void){
     }
     pthread_mutex_unlock(&pool->mutex);
 }
-

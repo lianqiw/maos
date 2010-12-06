@@ -65,21 +65,25 @@
 #include "thread_pool.h"
 #define CALL(A,B,nthread)				\
     if(nthread>1){					\
+	long thgroup=0;					\
 	for(int ithread=0; ithread<nthread; ithread++){	\
-	    thread_pool_queue((void*(*)(void*))A,	\
+	    thread_pool_queue(&thgroup,			\
+			      (void*(*)(void*))A,	\
 			      (void*)B);		\
 	}						\
-	thread_pool_wait();				\
+	thread_pool_wait(&thgroup);			\
     }else{						\
 	A(B);						\
     }
 #define CALL_EACH(A,B,nthread)				\
     if(nthread>1){					\
+	long thgroup=0;					\
 	for(int ithread=0; ithread<nthread; ithread++){	\
-	    thread_pool_queue((void*(*)(void*))A,	\
+	    thread_pool_queue(&thgroup,			\
+			      (void*(*)(void*))A,	\
 			      (void*)&(B[ithread]));	\
 	}						\
-	thread_pool_wait();				\
+	thread_pool_wait(&thgroup);			\
     }else{						\
 	A(B);						\
     }

@@ -246,7 +246,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       tar axvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
       rm -rf /tmp/${fn}
    fi
-   LAPACK="$mkl_lib ${SRC_DIR}/external/mkl${cpu}/libguide.la"
+   LAPACK="-L${SRC_DIR}/external/mkl${cpu} -lmkl -lguide"
 else
    if test -z "$LAPACK" ;then
        if test -n "$(pkg-config --libs blas lapack)" ;then
