@@ -136,7 +136,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
     
     const int nxsa=nx*nx;//Total Number of OPD points.
-    powfs[ipowfs].amp=calloc(order*order*nxsa,sizeof(double));
     count = 0;
     /*Collect all the subapertures that are within the allowed
       radius*/
@@ -162,19 +161,26 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       ray tracing from the pupil amplitude map.*/
     double *ampcircle=NULL;
     powfs[ipowfs].pts->nsa=count;
+    powfs[ipowfs].amp=calloc(order*order*nxsa,sizeof(double));
     if(aper->ampground){
 	prop_grid_pts(aper->ampground, powfs[ipowfs].pts, 
-		      powfs[ipowfs].amp, 1,0,0,1,0,0,0,1);
+		      powfs[ipowfs].amp, 1,0,0,1,0,0,0);
     }else{
 	/*don't use aper->amp here because aper->amp is
-	  normalized to sum to 1. We want it to max to 1.*/
-	ampcircle=calloc(aper->locs->nloc,sizeof(double));
-	loccircle(ampcircle,aper->locs,0,0,parms->aper.d*0.5,1);
+	  normalized to sum to 1. We want it to max to 1.
+
+	  2010-12-06: updated algorithm to that we are insensitive to
+	  parms->aper.dx
+	*/
+	long nxg=parms->aper.d/dx+10;
+	map_t *ampg=mapnew(nxg,nxg,dx,NULL);
+	mapcircle(ampg, parms->aper.d/2, 1);
 	if(parms->aper.din>0){
-	    loccircle(ampcircle,aper->locs,0,0,parms->aper.din*0.5,-1);
+	    mapcircle(ampg, parms->aper.din/2, -1);
 	}
-	prop_nongrid_pts(aper->locs,ampcircle,powfs[ipowfs].pts,
-			 NULL,powfs[ipowfs].amp,1,0,0,1,0,0,1);
+	prop_grid_pts(ampg,powfs[ipowfs].pts,
+		      powfs[ipowfs].amp,1,0,0,1,0,0,0);
+	sqmapfree(ampg);
 	
     }
     count=0;

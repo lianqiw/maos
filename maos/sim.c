@@ -94,9 +94,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		pthread_join(thread_perfevl,NULL);
 	    }
 	    
-	    double ck_1=myclockd(); //double cpu_1=read_self_cpu();
-	    double ck_2=myclockd(); //double cpu_2=read_self_cpu();
-	    double ck_3=myclockd(); //double cpu_3=read_self_cpu();
+	    double ck_1=myclockd();
+	    double ck_2=myclockd();
+	    double ck_3=myclockd();
 #else  
 	    if(CL){//before wfsgrad so we can apply ideal NGS modes
 		perfevl(simu);
@@ -111,7 +111,10 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    if(recon->moao){
 		moao_recon(simu);
 	    }
-	    double ck_4=myclockd(); double cpu_4=read_self_cpu();
+	    double ck_4=myclockd(); 
+#if PARALLEL==0
+	    double cpu_4=read_self_cpu();
+#endif
 	    if(!CL){//Only in Open loop
 		perfevl(simu);
 	    }
@@ -123,28 +126,13 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 				      +(tk_2-tk_1)*(parms->sim.nseed-iseed-1));
 	    simu->status->laps=(long)(ck_5-tk_0);
 	    simu->status->mean=(ck_5-tk_2)/(double)(isim+1-simstart);
-#if TIMING_MEAN == 1
-	    if(isim>simstart+2){
-		/*
-		  skip first three time steps that 
-		  are not representative 
-		  due to missing DM commands
-		*/
-		simu->status->wfs  +=(ck_2-ck_1);
-		simu->status->recon+=(ck_3-ck_2);
-		simu->status->cache+=(ck_4-ck_3);
-		simu->status->eval +=(ck_1-ck_0+ck_5-ck_4);
-		simu->status->tot  +=(ck_5-ck_0);
-		simu->status->scale=1./(double)(isim-simstart-2);
-	    }
-#else
 	    simu->status->wfs  =ck_2-ck_1;
 	    simu->status->recon=ck_3-ck_2;
 	    simu->status->cache=ck_4-ck_3;
 	    simu->status->eval =ck_1-ck_0+ck_5-ck_4;
 	    simu->status->tot  =ck_5-ck_0;
 	    simu->status->scale=1;
-#endif
+
 	    int this_time=myclocki();
 	    if(this_time>simu->last_report_time+1 || isim+1==simend){
 		//we don't print out or report too frequency.

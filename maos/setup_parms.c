@@ -441,12 +441,13 @@ static void readcfg_dm(PARMS_T *parms){
     int *intjunk;
     int ndm,i;
  
-    ndm=parms->ndm=readcfg_intarr(&intjunk,"dm.order");
+    ndm=parms->ndm=readcfg_intarr(&intjunk,"dm.hist");
     parms->dm=calloc(parms->ndm,sizeof(struct DM_CFG_T));
     for(int idm=0; idm<ndm; idm++){
-	parms->dm[idm].order=intjunk[idm];
+	parms->dm[idm].hist=intjunk[idm];
     }
     free(intjunk);
+    READ_DM(int,order);
     READ_DM(dbl,guard);
     READ_DM(dbl,stroke);
     READ_DM(dbl,vmisreg);
@@ -454,7 +455,7 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM(dbl,offset);
     READ_DM(dbl,histbin);
     READ_DM(int,histn);
-    READ_DM(int,hist);
+    //READ_DM(int,hist); already read.
     READ_DM(int,cubic);
     READ_DM(dbl,iac);
 }
@@ -1603,8 +1604,9 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\033[0;32mThere are %d DMs\033[0;0m\n",parms->ndm);
     for(i=0; i<parms->ndm; i++){
-	info2("DM %d: at %4gkm, actuator spacing %gm, offset %3g, with %f micron stroke.\n",
-	      i, parms->dm[i].ht/1000, parms->dm[i].dx,
+	info2("DM %d: Order %d, at %4gkm, actuator pitch %gm, offset %3g, with %f micron stroke.\n",
+	      i, parms->dm[i].order,
+	      parms->dm[i].ht/1000, parms->dm[i].dx,
 	      parms->dm[i].offset, 
 	      parms->dm[i].stroke*1e6);
 	if(parms->dm[i].cubic){

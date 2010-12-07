@@ -1276,3 +1276,24 @@ void loc_nxny(long *nx, long *ny, const loc_t *loc){
     *nx=(long)round((xmax-xmin)/loc->dx)+1;
     *ny=(long)round((ymax-ymin)/loc->dx)+1;
 }
+/**
+   create a new map_t object.
+*/
+map_t *mapnew(long nx, long ny, double dx, double *p){
+    map_t *map=calloc(1, sizeof(map_t));
+    map->nx=nx;
+    map->ny=ny;
+    map->dx=dx;
+    if(!p){
+	p=calloc(nx*ny,sizeof(double));
+    }
+    map->p=p;
+    map->ox=-map->nx/2*map->dx;
+    map->oy=-map->ny/2*map->dx;
+    return map;
+}
+void mapcircle(map_t *map, double r, double val){
+    dmat *tmp=dnew_ref(map->p, map->nx, map->ny);
+    dcircle(tmp, (0-map->ox)/map->dx, (0-map->oy)/map->dx, r/map->dx, val);
+    dfree(tmp);
+}

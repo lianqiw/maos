@@ -175,7 +175,6 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW,
 	}
 	normalize_max(actcplc->p[idm]->p, nact, 1);//bring max to 1;
     }
-    dcellwrite(actcplc,"actcplc");
     //double scl=1./pHA[0][0]->m;
     
     int nslavetot=0;

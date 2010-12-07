@@ -96,12 +96,12 @@ case "$host_os" in
  AM_CONDITIONAL(DARWIN, true)
  if ! test -e ${SRC_DIR}/scripts/drawdaemon.app ;then
      curl -O -L -# https://github.com/downloads/lianqiw/maos/drawdaemon.app.tar.gz -# &&\
-     tar zxf drawdaemon.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
+     tar -xzf drawdaemon.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
      rm  -rf drawdaemon.app.tar.gz
  fi
  if ! test -e ${SRC_DIR}/scripts/monitor.app ;then
      curl -O -L -# https://github.com/downloads/lianqiw/maos/monitor.app.tar.gz -# &&\ 
-     tar zxf monitor.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
+     tar -xzf monitor.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
      rm	 -rf monitor.app.tar.gz
  fi
  echo "Please use the monitor downloaded to ${SRC_DIR}/scripts/monitor.app"
@@ -243,7 +243,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       if test ! -d ${SRC_DIR}/external ;then
       	  mkdir -p ${SRC_DIR}/external || exit 1
       fi
-      tar axvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
+      tar -xjvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
       rm -rf /tmp/${fn}
    fi
    LAPACK="-L${SRC_DIR}/external/mkl${cpu} -lmkl -lguide"

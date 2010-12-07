@@ -207,7 +207,7 @@ void setup_surf(SIM_T*simu){
 	    }else{
 		prop_grid_stat(simu->surf[isurf], simu->aper->locs_stat, 
 			       simu->surfevl->p[ievl]->p, 
-			       1, displacex, displacey, 1, 0, 0, 0, 1);
+			       1, displacex, displacey, 1, 0, 0, 0);
 	    }
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){

@@ -38,6 +38,8 @@
    a value. The entries are maintain ed a hash table. Each entry can be
    retrieved from the key.
 */
+#define COMPATIBILITY 1
+
 static int MAX_ENTRY=1000;
 typedef struct STORE_T{
     char *key;
@@ -60,12 +62,38 @@ trim the spaces, ", ', before and after string.*/
 static void strtrim(char **str){
     if(!*str) return;
     int iend;
+    //turn non-printable characters, coma, and semicolumn, to space
+    for(char *tmp=*str; *tmp!='\0'; tmp++){
+	if(!isgraph(*tmp) || *tmp==';' || *tmp==',' || isspace((int)*tmp)){
+	    *tmp=' ';
+	}
+    }
+    //remove leading spaces.
     while((*str)[0]!='\0' && isspace((int)(*str)[0])) (*str)++;
     iend=strlen(*str)-1;
+    //remove tailing spaces.
     while(isspace((int)(*str)[iend]) && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
+    //remove duplicated spaces
+    char *tmp2=*str;
+    int issp=0;
+    for(char *tmp=*str; *tmp!='\0'; tmp++){
+	if(*tmp==' '){
+	    if(issp){//there is already a space, skip.
+		continue;
+	    }else{
+		issp=1;
+	    }
+	}else{
+	    issp=0;
+	}
+	//copy the string.
+	*tmp2=*tmp;
+	tmp2++;
+    }
+    *tmp2='\0';//properly end the string
     if((*str)[0]=='\0') *str=NULL;
 }
 /**
@@ -75,7 +103,7 @@ static char* strextract(const char *data){
     if(!data || strlen(data)<=2) return NULL;
     if((data[0]!='"' && data[0]!='\'') || 
        (data[strlen(data)-1]!='"' && data[strlen(data)-1]!='\'')){
-	error("Record is (%s). \nThis is not a string constant. "
+	error("Record is {%s}. \nThis is not a string constant. "
 	      "Strings must be embrased by \"\" or \'\'\n",data);
     }
     char *res=strdup(data+1);
@@ -97,7 +125,7 @@ static char *squeeze(char *line){
 	    comment[0]='\0';
 	/*Remove trailing linebreak and spaces*/
 	int nread=strlen(line)-1;
-	while(nread>=0 && (isspace((int)line[nread])||line[nread]==';')){
+	while(nread>=0 && line[nread]==' '){
 	    line[nread]='\0';
 	    nread--;
 	}
@@ -220,6 +248,17 @@ void open_config(const char* config_file, long protect){
 		free(embeded);
 	    }
 	}else{
+#if COMPATIBILITY == 1	    
+	    //For backward compatibility, renaming the keys. Will remove this in the future
+	    if(!strcmp(var,"atm.zadeg")){
+		warning("Please change atm.zadeg to sim.zadeg\n");
+		strcpy(var, "sim.zadeg");
+	    }
+	    if(!strcmp(var,"tomo.split_wt")){
+		warning("Please change tomo.split_wt to tomo.ahst_wt\n");
+		strcpy(var, "tomo.ahst_wt");
+	    }
+#endif
 	    store[nstore].key=entry.key=strdup(var);
 	    if(value && strlen(value)>0){
 		store[nstore].data=strdup(value);
@@ -370,17 +409,18 @@ int readcfg_strarr(char ***res, const char *format,...){
 	const char *sdata2, *sdata3, *sdata4;
 	if(sdata[0]!='[' || sdataend[0]!=']'){
 	    info("sdata[0]=%c, sdataend[0]=%c\n",sdata[0], sdataend[0]);
-	    error("key %s: Entry (%s) should start with [ and end with ]\n",key, sdata);
+	    warning2("key %s: Entry {%s} should start with [ and end with ]\n",key, sdata);
+	}else{
+	    sdata2=sdata+1;
 	}
-	sdata2=sdata+1;
 	//sdataend--;
 	//find each string.
-	while(sdata2<sdataend && (sdata2[0]==','||sdata2[0]==';'||!isgraph((int)sdata2[0]))){
+	while(sdata2<sdataend && sdata2[0]==' '){
 	    sdata2++;
 	}
 	while(sdata2<sdataend){
 	    if(sdata2[0]!='"'){
-		error("Unable to parse (%s) for str array\n", sdata);
+		error("Unable to parse {%s} for str array\n", sdata);
 	    }
 	    sdata3=sdata2+1;
 	    sdata4=strchr(sdata3,'"');
@@ -396,7 +436,7 @@ int readcfg_strarr(char ***res, const char *format,...){
 	    }
 	    count++;
 	    sdata2=sdata4+1;
-	    while(sdata2<sdataend && (sdata2[0]==','||sdata2[0]==';'||!isgraph((int)sdata2[0]))){
+	    while(sdata2<sdataend && sdata2[0]==' '){
 		sdata2++;
 	    }
 	}
@@ -438,18 +478,18 @@ double readcfg_dbl(const char *format,...){
     return readstr_num(store[getrecord(key, 1)].data, NULL);
 }
 /**
-   Read in a number from the string. Will interpret * and / operators. *endptr0 will
+   Read in a number from the value string. Will interpret * and / operators. *endptr0 will
    be updated to point to the next valid entry, or at separator like coma
    (spaced are skipped).  */
 double readstr_num(const char *data, char **endptr0){
     if(!data || strlen(data)==0){
-	error("Unable to parse (%s) for a number\n", data);
+	error("Unable to parse {%s} for a number\n", data);
 	return 0;
     }
     char *endptr;
     double res=strtod(data, &endptr);
     if(data==endptr){
-	error("Unable to parse (%s) for a number\n", data);
+	error("Unable to parse {%s} for a number\n", data);
 	return 0;
     }
     while(isspace(endptr[0])) endptr++;
@@ -463,7 +503,7 @@ double readstr_num(const char *data, char **endptr0){
 	data=endptr;
 	double tmp=strtod(data, &endptr);
 	if(data==endptr){
-	    error("Failed to parse (%s) for a number\n", data);
+	    error("Failed to parse {%s} for a number\n", data);
 	}
 	if(power==1){
 	    res*=tmp;
@@ -485,8 +525,8 @@ int readstr_numarr(void **ret, int type, const char *data){
 	if(*ret) free(*ret); *ret=NULL; 
 	return 0;
     }
-    int nmax=10;
-    int size=0;//size of each number
+    size_t nmax=10;
+    size_t size=0;//size of each number
     switch(type){
     case T_INT:
 	size=sizeof(int);
@@ -500,67 +540,71 @@ int readstr_numarr(void **ret, int type, const char *data){
     if(!(*ret=malloc(size*nmax))){
 	error("Failed to allocate memory for ret\n");
     }
-    double *retdbl=*ret;
-    int *retint=*ret;
     const char *startptr=data;
     char *endptr, *startptr2;
     double fact=1;
     int power=1;
     //process possible numbers before the array.
-    while(startptr[0]!='['){
-	double fact1=strtod(startptr, &endptr);//get the number
-	if(startptr==endptr){
-	    error("Invalid entry to parse for numerical array: (%s)\n", data);
-	}else{//valid number
-	    if(power==1){
-		fact*=fact1;
+    if(strchr(startptr,'[')){//there is indeed '['
+	while(startptr[0]!='['){
+	    double fact1=strtod(startptr, &endptr);//get the number
+	    if(startptr==endptr){
+		error("Invalid entry to parse for numerical array: {%s}\n", data);
+	    }else{//valid number
+		if(power==1){
+		    fact*=fact1;
+		}else{
+		    fact/=fact1;
+		}
+		while(isspace(endptr[0])) endptr++;
+		if(endptr[0]=='/'){
+		    power=-1;
+		}else if(endptr[0]=='*'){
+		    power=1;
+		}else{
+		    error("Invalid entry to parse for numerical array: {%s}\n", data);
+		}
+		startptr=endptr+1;
+	    }
+	}
+	if(startptr[0]!='['){
+	    error("Invalid entry to parse for numerical array: {%s}\n", data);
+	}
+	startptr++;//points to the beginning of the array in []
+	/*process possible numbers after the array. do not use startptr here.*/
+    }else{
+	warning2("Expecting array: {%s} should start with [\n", data);
+    }
+    if(strchr(startptr,']')){//there is indeed ']'
+	endptr=strchr(startptr,']')+1;
+	while(isspace(endptr[0])) endptr++;
+	while(endptr[0]=='/' || endptr[0]=='*'){
+	    int power2=1;
+	    if(endptr[0]=='/'){
+		power2=-1;
 	    }else{
-		fact/=fact1;
+		power2=1;
+	    }
+	    endptr++;
+	    while(isspace(endptr[0])) endptr++;
+	    startptr2=endptr;
+	    double fact2=strtod(startptr2, &endptr);
+	    if(startptr2==endptr){
+		error("Invalid entry to parse for numerical array: {%s}\n", data);
 	    }
 	    while(isspace(endptr[0])) endptr++;
-	    if(endptr[0]=='/'){
-		power=-1;
-	    }else if(endptr[0]=='*'){
-		power=1;
+	    if(power2==1){
+		fact*=fact2;
 	    }else{
-		error("Invalid entry to parse for numerical array: (%s)\n", data);
+		fact/=fact2;
 	    }
-	    startptr=endptr+1;
 	}
-    }
-    if(startptr[0]!='['){
-	error("Invalid entry to parse for numerical array: (%s)\n", data);
-    }
-    startptr++;//points to the beginning of the array in[]
-
-    /*process possible numbers after the array. do not use startptr here.*/
-    endptr=strchr(startptr,']')+1;
-    while(isspace(endptr[0])) endptr++;
-    while(endptr[0]=='/' || endptr[0]=='*'){
-	int power2=1;
-	if(endptr[0]=='/'){
-	    power2=-1;
-	}else{
-	    power2=1;
+	if(endptr[0]!='\0'){
+	    error("There is garbage in the end of the string: {%s}\n", data);
 	}
-	endptr++;
-	while(isspace(endptr[0])) endptr++;
-	startptr2=endptr;
-	double fact2=strtod(startptr2, &endptr);
-	if(startptr2==endptr){
-	    error("Invalid entry to parse for numerical array: (%s)\n", data);
-	}
-	while(isspace(endptr[0])) endptr++;
-	if(power2==1){
-	    fact*=fact2;
-	}else{
-	    fact/=fact2;
-	}
-    }
-    if(endptr[0]!='\0'){
-	error("There is garbage in the end of the string: (%s)\n", data);
     }
     int count=0;
+    //Read in the array
     while(startptr[0]!=']' && startptr[0]!='\0'){
 	//parse the string for a floating point number. 
 	double res=readstr_num(startptr, &endptr);
@@ -575,10 +619,10 @@ int readstr_numarr(void **ret, int type, const char *data){
 	//assign the value to appropriate array. convert to int if necessary.
 	switch(type){
 	case T_INT:
-	    retint[count]=(int)res;
+	    ((int*)(*ret))[count]=(int)res;
 	    break;
 	case T_DBL:
-	    retdbl[count]=res;
+	    ((double*)(*ret))[count]=res;
 	    break;
 	default:
 	    error("Invalid type");
@@ -586,10 +630,10 @@ int readstr_numarr(void **ret, int type, const char *data){
 	count++;
 	if(count>=nmax){
 	    nmax*=2;
-	    *ret=realloc(*ret, size);
+	    *ret=realloc(*ret, size*nmax);
 	}
 	//Skip the number separators.
-	while(startptr[0]==','||startptr[0]==';'||!isgraph((int)startptr[0])){
+	while(startptr[0]==' '){
 	    startptr++;
 	}
     }

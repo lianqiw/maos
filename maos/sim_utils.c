@@ -737,7 +737,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		save->gradcl[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		save->gradnf[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradnf_%d.bin", iwfs, seed);
 		if(parms->sim.recon==0 &&(parms->tomo.split==2 || !parms->wfs[iwfs].skip)){
-		    save->gradpsol[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradpsol_%d.bin", iwfs, seed);
+		    save->gradpsol[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradpsol_%d.bin", 
+						      iwfs, seed);
 		}
 	    }
 	}

@@ -143,7 +143,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		}else{
 		    prop_grid_pts(atm[ips], powfs[ipowfs].pts,
 				  opd->p, 1, displacex, displacey,
-				  scale, 1., 0, 0, 1);
+				  scale, 1., 0, 0);
 		}
 	    }
 	}
@@ -162,7 +162,8 @@ static void wfsgrad_iwfs(SIM_T *simu){
 	    PDCELL(simu->moao_wfs, dmwfs);
 	    if(dmwfs[iwfs][simu->moao_wfs->nx-1]){
 		info("iwfs %d: Adding MOAO correction\n", iwfs);
-		//No need to do mis registration here since the MOAO DM is attached to close to the WFS.
+		/*No need to do mis registration here since the MOAO DM is
+		  attached to close to the WFS.*/
 		if(parms->moao[imoao].cubic){
 		    prop_nongrid_pts_cubic(recon->moao[imoao].aloc, 
 					   dmwfs[iwfs][simu->moao_wfs->nx-1]->p,
@@ -276,7 +277,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 			    +parms->powfs[ipowfs].llt->oy[illt]*hl/hs;
 			prop_grid_pts(atm[ips],powfs[ipowfs].lotf->pts,
 				      lltopd->p,1,displacex,displacey,
-				      scale, 1., 0, 0, 1);
+				      scale, 1., 0, 0);
 		    }
 		}
 		if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout){
@@ -328,8 +329,7 @@ static void wfsgrad_iwfs(SIM_T *simu){
 		    //info("Using fft to shift pistat\n");
 		}
 	    }
-	    wfsints(ints,psfout,pistatout,gradref,
-		    parms,powfs,iwfs,opd,lltopd);
+	    wfsints(ints,psfout,pistatout,gradref,parms,powfs,iwfs,opd,lltopd);
 	    dfree(lltopd);
 	    if(psfout){
 		cellarr_ccell(psfoutcellarr,psfout);

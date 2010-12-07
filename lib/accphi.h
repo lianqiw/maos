@@ -62,7 +62,7 @@ void prop_grid_pts(const map_t *mapin, const pts_t *pts,
 		   double *phiout0, double alpha,
 		   double displacex, double displacey, 
 		   double scale, int wrap, 
-		   long sastart, long saend, int optim);
+		   long sastart, long saend);
 void prop_grid(const map_t *mapin, const loc_t *locout, 
 	       double *phiout, double alpha,
 	       double displacex, double displacey,
@@ -72,7 +72,7 @@ void prop_grid_stat(const map_t *mapin, const locstat_t *ostat,
 		    double *phiout0, double alpha,
 		    double displacex, double displacey,
 		    double scale, int wrap,
-		    long colstart, long colend, int optim);
+		    long colstart, long colend);
 void prop_nongrid(loc_t *locin, const double* phiin, 
 		  const loc_t *locout,const double *amp,
 		  double* phiout, double alpha,

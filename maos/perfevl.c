@@ -97,7 +97,7 @@ static void perfevl_ievl(SIM_T *simu){
 		    +parms->evl.thetay[ievl]*hl;
 		prop_grid_stat(simu->atm[ips], aper->locs_stat, 
 			       iopdevl->p, 1, displacex, displacey,
-			       scale, 1, 0, 0, 1);
+			       scale, 1, 0, 0);
 	    }
 	}
 #if TIMING==1
@@ -241,18 +241,18 @@ static void perfevl_ievl(SIM_T *simu){
 		if(simu->cachedm){
 		    int iscale=parms->evl.scalegroup[idm];
 		    prop_grid_stat(&simu->cachedm[idm][iscale], aper->locs_stat, iopdevl->p, -1, 
-				   displacex, displacey, scale, 0, 0, 0, 1);
+				   displacex, displacey, scale, 0, 0, 0);
 
 		}else{
 		    if(parms->dm[idm].cubic){
 			prop_nongrid_cubic(recon->aloc[idm], simu->dmreal->p[idm]->p,
 					   aper->locs, NULL, iopdevl->p,-1,
-					   displacex, displacey,scale,
+					   displacex, displacey, scale, 
 					   parms->dm[idm].iac,0,0);
 		    }else{
 			prop_nongrid(recon->aloc[idm], simu->dmreal->p[idm]->p,
 				     aper->locs, NULL, iopdevl->p,-1,
-				     displacex, displacey,scale,0,0);
+				     displacex, displacey, scale, 0, 0);
 		    }
 		}
 	    }
@@ -494,7 +494,7 @@ void perfevl(SIM_T *simu){
 	prop_grid_stat(simu->atm[ips], simu->aper->locs_stat, 
 		       simu->opdevlground->p,1,
 		       displacex, displacey,
-		       1., 1, 0, 0, 1);
+		       1., 1, 0, 0);
     }
     simu->perfevl_ievl=0;
     CALL(perfevl_ievl,simu,simu->nthread);//no space allowd.

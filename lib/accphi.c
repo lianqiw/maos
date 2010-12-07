@@ -36,6 +36,7 @@
   and handle them properly. */
 
 #define ONLY_FULL 0 /**<set to 1 to be compatible with other props.*/
+#define USE_OPTIM 1 /**<Use the optimized version.*/
 /**
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
@@ -61,7 +62,7 @@ void prop(thread_t *data){
 		prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout,
 			      propdata->alpha, propdata->displacex, propdata->displacey,
 			      propdata->scale, propdata->wrap, 
-			      data->start, data->end, !propdata->nooptim);
+			      data->start, data->end);
 		done=1;
 	    }
 	    if(propdata->locout){
@@ -77,7 +78,7 @@ void prop(thread_t *data){
 		prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout,
 			       propdata->alpha, propdata->displacex, propdata->displacey,
 			       propdata->scale, propdata->wrap, 
-			       data->start, data->end, !propdata->nooptim);
+			       data->start, data->end);
 		done=1;
 	    }
 	}
@@ -164,7 +165,7 @@ void prop_grid_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
     pts.dx=mapout->dx;
     pts.nx=mapout->nx;
     prop_grid_pts(mapin, &pts, mapout->p, alpha, displacex, displacey,
-		  scale, wrap, 0,0,1);
+		  scale, wrap, 0,0);
 }
 /**
    Propagate OPD defines on grid mapin to subapertures.  alpha is the scaling of
@@ -179,8 +180,7 @@ void prop_grid_pts(const map_t *mapin, /**<[in] OPD defind on a square grid*/
 		   double scale,       /**<[in] scaling of the beam diameter (cone)*/
 		   int wrap,           /**<[in] wrap input OPD or not*/
 		   long sastart,       /**<[in] The starting subaperture to trace ray*/
-		   long saend,         /**<[in] The last (exclusive) subaperture to trace ray*/
-		   int optim           /**<[in] Use the optimized procedure (for testing)*/
+		   long saend         /**<[in] The last (exclusive) subaperture to trace ray*/
 		   ){
     /*
        2010-01-02: Improved by saving x interpolations for each subaperture
@@ -190,7 +190,6 @@ void prop_grid_pts(const map_t *mapin, /**<[in] OPD defind on a square grid*/
     int isa, ipix,jpix;
     int mx,my;
     int nplocx2;
-    //const int optim = 0;//for debugging
     const int ninx   = mapin->nx;
     const int niny   = mapin->ny;
     const int nx     = pts->nx;
@@ -200,7 +199,7 @@ void prop_grid_pts(const map_t *mapin, /**<[in] OPD defind on a square grid*/
     displacex = (displacex-mapin->ox)*dx_in1;
     displacey = (displacey-mapin->oy)*dx_in1;
     if(!saend) saend=pts->nsa;
-    if(optim && fabs(dx_in2*dxout-1)<EPS){
+    if(USE_OPTIM && fabs(dx_in2*dxout-1)<EPS){
 	double dplocx, dplocy;
 	int nplocx, nplocy;
         for(isa=sastart; isa<saend; isa++){
@@ -490,8 +489,7 @@ void prop_grid_stat(const map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    double scale,       /**<[in] scaling of the beam diameter (cone)*/
 		    int wrap,           /**<[in] wrap input OPD or not*/
 		    long colstart,      /**<[in] First column to do ray tracing*/
-		    long colend,        /**<[in] Last column (exclusive) to do ray tracing*/
-		    int optim           /**<[in] Use the optimized procedure (for testing)*/
+		    long colend         /**<[in] Last column (exclusive) to do ray tracing*/
 		    ){
     double *phiout;
     double dplocx, dplocy;
@@ -514,7 +512,7 @@ void prop_grid_stat(const map_t *mapin, /**<[in] OPD defind on a square grid*/
     displacey = (displacey-mapin->oy)*dx_in1;
     const double *phiin  = mapin->p;
     const double ratio  = dxout*dx_in2;
-    if(optim){
+#if USE_OPTIM == 1
 	if(fabs(ratio-1)<EPS){
 	    /*grid size of loc_in and loc_out agree*/
 	    double bl, br, tl, tr;
@@ -694,7 +692,7 @@ void prop_grid_stat(const map_t *mapin, /**<[in] OPD defind on a square grid*/
 		}
 	    }/*end for icol*/
 	}/*fabs(dx_in2*dxout-1)<EPS*/
-    }else{
+#else
 	double dplocx0;
 	int nplocy1, nplocx1;
 
@@ -747,7 +745,7 @@ void prop_grid_stat(const map_t *mapin, /**<[in] OPD defind on a square grid*/
 		
 	    }/*for irow*/
 	}/*for icol*/
-    }/*if not optim*/
+#endif
     if(missing>0){
 	warning("%d points not covered by input screen\n", missing);
     }

@@ -186,4 +186,6 @@ void locrot(loc_t *loc, const double theta);
 loc_t *locdup(loc_t *loc);
 loc_t *loctransform(loc_t *loc, dmat **coeff);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
+map_t *mapnew(long nx, long ny, double dx, double *p);
+void mapcircle(map_t *map, double r, double val);
 #endif

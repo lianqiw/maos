@@ -85,7 +85,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->amp=calloc(aper->locs->nloc,sizeof(double));
 	if(aper->ampground){
 	    prop_grid_stat(aper->ampground, aper->locs_stat,
-			   aper->amp, 1, 0, 0, 1, 0, 0, 0, 1);
+			   aper->amp, 1, 0, 0, 1, 0, 0, 0);
 	}else{
 	    warning("Using loccircle to create a gray pixel aperture\n");
 	    loccircle(aper->amp,aper->locs,0,0,parms->aper.d*0.5,1);
