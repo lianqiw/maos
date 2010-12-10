@@ -32,11 +32,27 @@
    compute physical optics images and add to ints.  be careful that fftw inverse
    fft doesn't have 1/n^2 scaling.  this function lives inside the threading
    routine wfsgradx  */
-void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
-		const dmat *gradref,const PARMS_T *parms,
-		const POWFS_T *powfs,int iwfs,
-		const dmat *opd, const dmat *lltopd){
-    
+void wfsints(thread_t *thread_data){
+    /*void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
+	     const dmat *gradref,const PARMS_T *parms,
+	     const POWFS_T *powfs,int iwfs,
+	     const dmat *opd, const dmat *lltopd){
+    */
+    /**
+       first, unwrap the data
+     */
+    WFSINTS_T *data=thread_data->data;
+    dcell *ints=data->ints;
+    ccell *psfout=data->psfout;
+    dcell *pistatout=data->pistatout;
+    const dmat *gradref=data->gradref;
+    const PARMS_T *parms=data->parms;
+    const POWFS_T *powfs=data->powfs;
+    const int iwfs=data->iwfs;
+    const dmat *opd=data->opd;
+    const dmat *lltopd=data->lltopd;
+    const int isa_start=thread_data->start;
+    const int isa_end=thread_data->end;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int hasllt=parms->powfs[ipowfs].hasllt;
     const int nsa=powfs[ipowfs].pts->nsa;
@@ -200,7 +216,7 @@ void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
 	}
 	int rotpsfotf=(hasllt && parms->powfs[ipowfs].radrot);
 	double angle=0;
-	for(int isa=0; isa<nsa; isa++){
+	for(int isa=isa_start; isa<isa_end; isa++){
 	    if(multi_nominal){
 		if(!powfs[ipowfs].dtf[iwvl].fused){
 		    nominal=powfs[ipowfs].dtf[iwvl].nominal->p[isa+nsa*illt];
@@ -293,7 +309,7 @@ void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
 		spmulcreal(ints->p[isa]->p,si,
 			   otf->p, parms->wfs[iwfs].wvlwts[iwvl]*norm);
 	    }
-	}
+	}//isa
 	if(lotfc) cfree(lotfc);
     }//iwvl
     cfree(psf);

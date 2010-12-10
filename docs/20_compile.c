@@ -125,9 +125,10 @@ ln ~/work/aos/comp_optim/bin/maos . -s
     maos -h  #will print the help message and exit.
     \endverbatim
 
-    If maos is launched without any parameters, the baseline NFIRAOS
-    configuration nfiraos.conf will be used. The valid command line arguments
-    are as follows
+    If maos is launched without any parameters, it will use default.conf which
+    contains the baseline NFIRAOS configuration nfiraos.conf. Users can change
+    the content of default.conf to include another file to make that the default
+    option. The valid command line arguments are as follows
 
     \verbatim
 -c scao_lgs.conf   Change the baseline config from nfiraos.conf to scao_lgs.conf

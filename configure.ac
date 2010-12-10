@@ -144,20 +144,16 @@ fi
 if test "x$use_shm" = "xyes" ;then
    AC_DEFINE(USE_POSIX_SHM, [1], "Enable posix shared memory")
 else
-   AC_DEFINE(USE_POSIX_SHM, [0], "Enable posix shared memory")
+   AC_DEFINE(USE_POSIX_SHM, [0], "Disable posix shared memory")
 fi 
 
 AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"])
-if test  "x$win32" = "xno" ;then
-    OPTSprof="-pthread"
-fi
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
-    AM_CONDITIONAL(DO_THRPOOL,true)
-    AC_DEFINE(USE_PTHREAD,[2], ["Enable thread pool"])
+    AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
+    OPTSprof="-pthread"
 else
-    AM_CONDITIONAL(DO_THRPOOL,false)
-    AC_DEFINE(USE_PTHREAD,[1], ["Disable thread pool"])
+    AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
 fi
 if test "x$use_duma" = "xyes" ;then	
     AC_CHECK_LIB([duma],[malloc],[],[AC_MSG_ERROR([duma not found])])
@@ -247,6 +243,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       rm -rf /tmp/${fn}
    fi
    LAPACK="-L${SRC_DIR}/external/mkl${cpu} -lmkl -lguide"
+   AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
    if test -z "$LAPACK" ;then
        if test -n "$(pkg-config --libs blas lapack)" ;then
@@ -260,10 +257,11 @@ else
    AC_CHECK_LIB([lapack],[dposv_],[],[lapack_not_found=yes],[$LAPACK])
    if test  "x$lapack_not_found" = "xyes" ;then
        if test -n "$use_mkl_default" ;then
-           AC_MSG_ERROR(Please install blas or use --enable-mkl to down MKL from MAOS website)
+           AC_MSG_ERROR(Please install blas or use --enable-mkl to download MKL from MAOS website)
        fi
    fi
    fi
+   AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
 #Check for FFTW3 header and library.
 AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))

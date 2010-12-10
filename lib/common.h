@@ -39,13 +39,15 @@
 #ifdef __linux__
 #include <linux/limits.h> //includes definition of PATH_MAX
 #endif//__linux__
-
 typedef double __complex__ dcomplex;
 typedef double ddouble;/*just for saving.*/
-
+#ifndef restrict
+#define restrict __restrict
+#endif
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
+
 #ifndef EPS
 #define EPS 1.e-14
 #endif

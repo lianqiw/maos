@@ -45,8 +45,14 @@ typedef struct PROPDATA_T{
     //Or 
     const locstat_t *ostat;
 
-    //Displacement, scale of coordinate, and alpha of value:
-    double displacex, displacey, scale, alpha;
+    //Constant displacement
+    double displacex0, displacey0;
+    //Time step dependent displacement
+    double displacex1, displacey1;
+    //scale of coordinate
+    double scale;
+    //scale of value:
+    double alpha;
     //Options:
     int cubic; double cubic_iac; //for cubic interpolation.
     int wrap;
@@ -57,7 +63,7 @@ void prop(thread_t *data);//A unified wrapper
 void prop_grid_grid(const map_t *mapin, map_t *mapout,
 		    double alpha,
 		    double displacex, double displacey, 
-		    double scale, int wrap );
+		    double scale, int wrap);
 void prop_grid_pts(const map_t *mapin, const pts_t *pts, 
 		   double *phiout0, double alpha,
 		   double displacex, double displacey, 
@@ -81,12 +87,12 @@ void prop_nongrid(loc_t *locin, const double* phiin,
 void prop_nongrid_map(loc_t *locin, const double *phiin,
 		      map_t *mapout, double alpha,
 		      double displacex, double displacey,
-		      double scale, long start, long end, long step);
+		      double scale, long start, long end);
 void prop_nongrid_pts(loc_t *locin, const double *phiin,
 		      const pts_t *pts,const double *ampout,
 		      double *phiout, double alpha,
 		      double displacex, double displacey,
-		      double scale, long start, long end, long step);
+		      double scale, long start, long end);
 void prop_nongrid_cubic(loc_t *locin, const  double* phiin, 
 			const loc_t *locout, const double *amp,
 			double* phiout,  double alpha,
@@ -97,12 +103,12 @@ void prop_nongrid_pts_cubic(loc_t *locin, const double* phiin,
 			    double* phiout, double alpha,
 			    double displacex, double displacey,
 			    double scale, double cubic_iac, 
-			    long start, long end, long step);
+			    long start, long end);
 void prop_nongrid_map_cubic(loc_t *locin, const double* phiin, 
 			    map_t* mapout, double alpha,
 			    double displacex, double displacey,
 			    double scale, double cubic_iac, 
-			    long start, long end, long step);
+			    long start, long end);
 /*
   the following routine is used to du down sampling by doing *reverse* ray tracing.
   locin is coarse sampling, locout is fine sampling. phiin is the unknown

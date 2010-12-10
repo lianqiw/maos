@@ -92,7 +92,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 		    void *Ir=malloc(size*nzmax);
 		    zfread(Jc, size, ny+1, fp);
 		    zfread(Ir, size, nzmax, fp);
-		    warning("Converting from %zu to %zu bytes\n",size,sizeof(mwIndex));
+		    //warning("Converting from %zu to %zu bytes\n",size,sizeof(mwIndex));
 		    if(size==4){
 			uint32_t* Jc2=Jc;
 			uint32_t* Ir2=Ir;

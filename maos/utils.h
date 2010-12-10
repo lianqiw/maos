@@ -24,16 +24,9 @@ void addnoise(dmat *A, rand_t* rstat,
 	      const double bkgrnd, const double pcalib, 
 	      const double *bkgrnd2, const double pcalib2,
 	      const double rne);
-void create_metapupil(const PARMS_T *parms, double ht, double dx,
-		      double offset,long* nx, long* ny, double *ox, double *oy, 
-		      double **map,double guard, long nin, 
-		      T_TYPE type,int pad,int square);
-map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
-			       double offset,double guard,long nin, 
-			       T_TYPE type, int pad,int square);
+
 void plotloc(char *fig, const PARMS_T *parms, 
 	     loc_t *loc, double ht, char *format,...);
-void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
 void rename_file(int sig);
 void maos_signal_handler(int sig);
 void wait_cpu(int nthread);

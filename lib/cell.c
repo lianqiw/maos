@@ -132,8 +132,8 @@ void X(cellcp)(X(cell)** out0, const X(cell) *in){
 	for(int i=0; i<in->nx*in->ny; i++){
 	    X(cp)(&out->p[i], in->p[i]);
 	}
-    }else{
-	X(cellfree)(*out0);//copy a null X(cell) is same as erasing.
+    }else{//if input is empty, zero the output. do not free.
+	X(cellzero)(*out0);
     }
 }
 

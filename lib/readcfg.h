@@ -38,7 +38,7 @@ enum{
    a value. The entries are maintained a hash table. Each entry can be
    retrieved from the key.
 */
-void   open_config (const char*fn, long protect);
+void   open_config (const char*fn, const char *prefix, long protect);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);

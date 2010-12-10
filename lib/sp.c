@@ -463,9 +463,9 @@ void Y(spmulvec_thread)(T *restrict y, const X(sp) *A,
 	data.nthread=nthread;
 	thread_t mul[nthread];
 	thread_t acc[nthread];
-	thread_prep(mul, 0, A->n, 0, nthread, &data);
+	thread_prep(mul, 0, A->n, nthread, Y(spmulvec_thread_do_mul), &data);
 	CALL_EACH(Y(spmulvec_thread_do_mul), mul, nthread);
-	thread_prep(acc, 0, A->m, 0, nthread, &data);
+	thread_prep(acc, 0, A->m, nthread, Y(spmulvec_thread_do_acc), &data);
 	CALL_EACH(Y(spmulvec_thread_do_acc), acc, nthread);
 	for(int ithread=0; ithread<nthread; ithread++){
 	    free(data.ytmp[ithread]);
@@ -551,7 +551,8 @@ void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A,
 	data.alpha=alpha;
 	data.nthread=nthread;
 	thread_t mul[nthread];
-	thread_prep(mul, 0, A->n, 0, nthread, &data);//interlaced is not good.
+	//interlaced is not good.
+	thread_prep(mul, 0, A->n, nthread, Y(sptmulvec_thread_do), &data);
 	toc("prep");
 	CALL_EACH(Y(sptmulvec_thread_do), mul, nthread);
     }

@@ -29,18 +29,6 @@
 #include <search.h>
 #include <assert.h>
 #include <complex.h>
-#ifndef M_PI
-#define M_PI 3.1415926535897932384626433832795
-#endif
-#ifndef restrict
-#define restrict __restrict
-#endif
-#define AOS
-#if defined(DEBUG) && DEBUG==1
-#define DEBUG_SAVE 1
-#else
-#define DEBUG_SAVE 1
-#endif
 
 #include "../lib/aos.h"
 #include "parms.h"

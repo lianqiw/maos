@@ -30,7 +30,7 @@ static void setup_config(const ARG_S*arg){
 
        Environment variable AOS_CONFIG_PATH will be added if availab.e.
      */
-     open_config(arg->conf,0);
+    open_config(arg->conf,NULL,0);
     /*Read in any additional overriding .conf files. They should
       contain keys already existed in nfiraos.conf*/
 
@@ -46,7 +46,7 @@ static void setup_config(const ARG_S*arg){
 		inline_conf++;
 		fprintf(fptmp,"%s\n",fno);
 	    }else if(check_suffix(fno,".conf")){
-		open_config(fno,1);/*1 means protected. will not be overriden by
+		open_config(fno,NULL,1);/*1 means protected. will not be overriden by
 				     base .conf's, but can be overriden by user
 				     supplied options.*/
 	    }else{
@@ -55,7 +55,7 @@ static void setup_config(const ARG_S*arg){
 	}
 	fclose(fptmp);
 	if(inline_conf>0){
-	    open_config(fntmp,1);
+	    open_config(fntmp,NULL,1);
 	}
 	if(remove(fntmp)){
 	    perror("remove");

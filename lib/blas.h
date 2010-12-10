@@ -53,29 +53,7 @@ extern void
 zgesvd_(char* jobu, char* jobvt, int* m, int* n, dcomplex* a,
 	int* lda, double* s, dcomplex* u, int* ldu, dcomplex* vt, int* ldvt,
 	dcomplex* work, int* lwork, double *rwork, int* info );
-/*
-   The following are Intel MKL sparse blas routines for compressed storagage
-column. Tried briefly dcscmv and found that it is even slower than my simple
-implementation. dcscmv: multiply a general matrix to a vector. dcscmm: multiply
-two general matrix.
-
-Notice that we are using ilp64 instead of lp64 interface because we use long for
-index.
- */
-void mkl_dcscmv(char *transa, const long* m, const long* k, double *alpha, 
-		char *matdescra, double  *val, long* indx,  
-		long* pntrb, long* pntre, const double *x, double *beta, double *y);
-void mkl_dcscmm(char *transa, const long* m, const long* n, const long* k, double *alpha, 
-		char *matdescra, double  *val, long* indx,  
-		long* pntrb, long* pntre, double *b, long* ldb, 
-		double *beta, double *c, long* ldc);
-/*The following two appears in INTEL MKL documentation, but not in the MKL library (free version)*/
-void mkl_zcscmv(char *transa, const long* m, const long* k, dcomplex *alpha, 
-		char *matdescra, dcomplex  *val, long* indx,  
-		long* pntrb, long* pntre, const dcomplex *x, dcomplex *beta, dcomplex *y);
-void mkl_zcscmm(char *transa, const long* m, const long* n, const long* k, 
-		dcomplex *alpha, 
-		char *matdescra, dcomplex  *val, long* indx,  
-		long* pntrb, long* pntre, dcomplex *b, long* ldb, 
-		dcomplex *beta, dcomplex *c, long* ldc);
+#if USE_MKL==1
+void omp_set_num_threads(int *n);
+#endif
 #endif

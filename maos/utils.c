@@ -376,7 +376,9 @@ void maos_signal_handler(int sig){
     disable_signal_handler;
     rename_file(sig);//handles signal
     if(sig!=0){
-	info2("Caught signal %d\n",sig);
+	warning3("Caught signal %d\n",sig);
+	fflush(stderr);
+	fflush(stdout);
 	if(sig == SIGSEGV){
 	    print_backtrace(0);
 	}
@@ -496,7 +498,7 @@ ARG_T * parse_args(int argc, char **argv){
     
     if(!arg->conf){
 	/*If -c is not specifid in path, will use nfiraos.conf*/
-	arg->conf=strdup("nfiraos.conf");
+	arg->conf=strdup("default.conf");
     }
     info2("Main config file is %s\n",arg->conf);
     //Setup PATH and result directory
@@ -511,6 +513,9 @@ ARG_T * parse_args(int argc, char **argv){
     if(chdir(arg->dirout)){
 	error("Unable to chdir to %s\n", arg->dirout);
     }
+#if USE_PTHREAD == 0
+    arg->nthread=1;
+#endif
     info2("Output folder is '%s' %d threads\n",arg->dirout, arg->nthread);
 
     return arg;

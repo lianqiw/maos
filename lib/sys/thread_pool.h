@@ -17,10 +17,11 @@
 */
 #ifndef AOS_LIB_THREAD_POOL_H
 #define AOS_LIB_THREAD_POOL_H
-typedef void*(*thread_fun)(void*);
 typedef struct thread_pool_t thread_pool_t;
 void thread_pool_create(int nthread);
-void thread_pool_queue(long *count, thread_fun fun, void *arg);
+void thread_pool_queue(long *count, void *(*fun)(void*), void *arg, int urgent);
+void thread_pool_queue_many_same(long *group, thread_fun fun, void *arg, int njob, int urgent);
+void thread_pool_queue_many(long *group, thread_t *arg, int njob, int urgent);
 void thread_pool_wait(long *count);
 void thread_pool_wait_all(void);
 void thread_pool_destroy(void);

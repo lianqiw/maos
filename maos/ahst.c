@@ -375,7 +375,11 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
     return mod;
 }
 /**
-   from ngsmod to ztilt/gtilt gradients using GA*/
+   from ngsmod to ztilt/gtilt gradients using GA. this GM depends on aperture
+   sampling before somehow GA is sensitive to piston due to partial
+   illumination. GP has no gradient on piston.
+
+*/
 
 static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, 
 		       POWFS_T *powfs){
@@ -732,6 +736,7 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
 void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     if(!M) return;
     double scale=recon->ngsmod->scale;
+    //The MCC_fcp depends weakly on the aperture sampling.
     double MCC_fcp=recon->ngsmod->aper_fcp;
     loc_t **aloc=recon->aloc;
     //convert mode vector and add to dm commands

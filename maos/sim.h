@@ -18,20 +18,24 @@
 
 #ifndef AOS_SIM_H
 #define AOS_SIM_H
-void sim(const PARMS_T *parms,  POWFS_T *powfs,
-	 APER_T *aper,  RECON_T *recon);
 
+void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon);
 void wfsgrad(SIM_T *simu);
+void perfevl_ievl(thread_t *info);
 void perfevl(SIM_T *simu);
 void prep_cachedm(SIM_T *simu);
 void calc_cachedm(SIM_T *simu);
 void filter_cl(SIM_T *simu);
 void filter_ol(SIM_T *simu);
 void filter(SIM_T *simu);
+void wfsints(thread_t *thread_data);
+void wfsgrad_iwfs(thread_t *info);
+/*
 void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
 		const dmat *gradref, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs,
 		const dmat *opd, const dmat *lltopd);
+*/
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain);
 #define DEBUG_POWFSINTS 0

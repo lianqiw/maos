@@ -247,7 +247,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 				     sizeof(double)*count);
     powfs[ipowfs].saloc->nloc=count;
     powfs[ipowfs].saloc->dx=dxsa;
-    
+    powfs[ipowfs].nthread=count<parms->sim.nthread?count:parms->sim.nthread;
     powfs[ipowfs].amp=realloc(powfs[ipowfs].amp, sizeof(double)*count*nxsa);
 
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);

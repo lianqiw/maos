@@ -44,15 +44,17 @@
 void prop(thread_t *data){
     int done=0;
     PROPDATA_T *propdata=data->data;
- 
+    double displacex=propdata->displacex0+propdata->displacex1;
+    double displacey=propdata->displacey0+propdata->displacey1;
     if(propdata->mapin){
 	if(propdata->mapout){
 	    if(done) error("Invalid\n");
 	    if(data->start || data->end){
 		error("Not supported\n");
 	    }
+	    assert(data->end==0 ||data->end==1);
 	    prop_grid_grid(propdata->mapin, propdata->mapout,
-			   propdata->alpha, propdata->displacex, propdata->displacey,
+			   propdata->alpha, displacex, displacey,
 			   propdata->scale, propdata->wrap);
 	    done=1;
 	}
@@ -60,7 +62,7 @@ void prop(thread_t *data){
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
 		prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout,
-			      propdata->alpha, propdata->displacex, propdata->displacey,
+			      propdata->alpha, displacex, displacey,
 			      propdata->scale, propdata->wrap, 
 			      data->start, data->end);
 		done=1;
@@ -68,7 +70,7 @@ void prop(thread_t *data){
 	    if(propdata->locout){
 		if(done) error("Invalid\n");
 		prop_grid(propdata->mapin, propdata->locout, propdata->phiout,
-			  propdata->alpha, propdata->displacex, propdata->displacey,
+			  propdata->alpha, displacex, displacey,
 			  propdata->scale, propdata->wrap, 
 			  data->start, data->end);
 		done=1;
@@ -76,7 +78,7 @@ void prop(thread_t *data){
 	    if(propdata->ostat){
 		if(done) error("Invalid\n");
 		prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout,
-			       propdata->alpha, propdata->displacex, propdata->displacey,
+			       propdata->alpha, displacex, displacey,
 			       propdata->scale, propdata->wrap, 
 			       data->start, data->end);
 		done=1;
@@ -89,7 +91,7 @@ void prop(thread_t *data){
 		if(done) error("Invalid\n");
 		prop_nongrid_cubic(propdata->locin, propdata->phiin,
 				   propdata->locout, propdata->ampout, propdata->phiout,
-				   propdata->alpha, propdata->displacex, propdata->displacey, 
+				   propdata->alpha, displacex, displacey, 
 				   propdata->scale, propdata->cubic_iac, 
 				   data->start, data->end);
 		done=1;
@@ -98,18 +100,18 @@ void prop(thread_t *data){
 		if(done) error("Invalid\n");
 		prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
 				       propdata->mapout, 
-				       propdata->alpha, propdata->displacex, propdata->displacey, 
+				       propdata->alpha, displacex, displacey, 
 				       propdata->scale, propdata->cubic_iac, 
-				       data->start, data->end, data->step);
+				       data->start, data->end);
 		done=1;
 	    }
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
 		prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
 				       propdata->ptsout, propdata->ampout, propdata->phiout,
-				       propdata->alpha, propdata->displacex, propdata->displacey, 
+				       propdata->alpha, displacex, displacey, 
 				       propdata->scale, propdata->cubic_iac, 
-				       data->start, data->end, data->step);
+				       data->start, data->end);
 		done=1;
 	    }
 	}else{
@@ -117,7 +119,7 @@ void prop(thread_t *data){
 		if(done) error("Invalid\n");
 		prop_nongrid(propdata->locin, propdata->phiin,
 			     propdata->locout, propdata->ampout, propdata->phiout,
-			     propdata->alpha, propdata->displacex, propdata->displacey, 
+			     propdata->alpha, displacex, displacey, 
 			     propdata->scale,
 			     data->start, data->end);
 		done=1;
@@ -126,18 +128,18 @@ void prop(thread_t *data){
 		if(done) error("Invalid\n");
 		prop_nongrid_map(propdata->locin, propdata->phiin,
 				 propdata->mapout, 
-				 propdata->alpha, propdata->displacex, propdata->displacey, 
+				 propdata->alpha, displacex, displacey, 
 				 propdata->scale, 
-				 data->start, data->end, data->step);
+				 data->start, data->end);
 		done=1;
 	    }
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
 		prop_nongrid_pts(propdata->locin, propdata->phiin,
 				 propdata->ptsout, propdata->ampout, propdata->phiout,
-				 propdata->alpha, propdata->displacex, propdata->displacey, 
+				 propdata->alpha, displacex, displacey, 
 				 propdata->scale, 
-				 data->start, data->end, data->step);
+				 data->start, data->end);
 		done=1;
 	    }
 	}
@@ -165,7 +167,7 @@ void prop_grid_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
     pts.dx=mapout->dx;
     pts.nx=mapout->nx;
     prop_grid_pts(mapin, &pts, mapout->p, alpha, displacex, displacey,
-		  scale, wrap, 0,0);
+		  scale, wrap, 0, 1);
 }
 /**
    Propagate OPD defines on grid mapin to subapertures.  alpha is the scaling of
@@ -922,8 +924,7 @@ void prop_nongrid_map(loc_t *locin,     /**<[in] Coordinate of iregular source g
 		      double displacey, /**<[in] displacement of the ray */
 		      double scale,     /**<[in] wrap input OPD or not*/
 		      long start,       /**<[in] First point to do*/
-		      long end,         /**<[in] Last point to do*/
-		      long step         /**<[in] stride, do tracing every step points.*/
+		      long end          /**<[in] Last point to do*/
 		      ){
     //propagate to a square map.
     loc_create_map_npad(locin,2);//will only do once and save in locin.
@@ -954,8 +955,7 @@ void prop_nongrid_map(loc_t *locin,     /**<[in] Coordinate of iregular source g
     const int nxout=mapout->nx;
     const double *phiin0=phiin-1;
     if(!end) end=mapout->ny;
-    if(!step) step=1;
-    for(int iy=start; iy<end; iy+=step){
+    for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
 	if(nplocy<0||nplocy>=wrapy){
@@ -1011,8 +1011,7 @@ void prop_nongrid_pts(loc_t *locin,         /**<[in] Coordinate of iregular sour
 		      double displacey,     /**<[in] displacement of the ray */
 		      double scale,         /**<[in] wrap input OPD or not*/
 		      long start,           /**<[in] First point to do*/
-		      long end,             /**<[in] Last point to do*/
-		      long step             /**<[in] stride, do tracing every step points.*/
+		      long end              /**<[in] Last point to do*/
 		      ){
     //propagate to a square map.
     loc_create_map_npad(locin,1);//will only do once and save in locin.
@@ -1038,13 +1037,13 @@ void prop_nongrid_pts(loc_t *locin,         /**<[in] Coordinate of iregular sour
     long (*map)[locin->map->nx]
 	=(long(*)[locin->map->nx])(locin->map->p);
     const double *phiin0=phiin-1;
-    long iloc=-1;
     if(!end) end=pts->nsa;
-    if(!step) step=1;
-    for(int isa=start; isa<end; isa+=step){
+    for(int isa=start; isa<end; isa++){
+	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
 	for(int iy=0; iy<pts->nx; iy++){
+	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    if(nplocy<0||nplocy>=wrapy){
@@ -1172,7 +1171,7 @@ void prop_nongrid_pts_cubic(loc_t *locin, const double* phiin,
 			    double* phiout, double alpha,
 			    double displacex, double displacey,
 			    double scale,double cubic_iac, 
-			    long start, long end, long step){
+			    long start, long end){
     loc_create_map_npad(locin,2);//padding to avoid test boundary
     double dplocx, dplocy;
     int nplocx, nplocy;
@@ -1191,13 +1190,13 @@ void prop_nongrid_pts_cubic(loc_t *locin, const double* phiin,
     const int nmapx3=locin->map->nx-3;
     const int nmapy3=locin->map->ny-3;
     const double dxout=pts->dx;
-    long iloc=-1;
     if(!end) end=pts->nsa;
-    if(!step) step=1;
-    for(int isa=start; isa<end; isa+=step){
+    for(int isa=start; isa<end; isa++){
+	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
 	for(int iy=0; iy<pts->nx; iy++){
+	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    if(nplocy<1||nplocy>=nmapy3){
@@ -1246,7 +1245,7 @@ void prop_nongrid_map_cubic(loc_t *locin, const double* phiin,
 			    map_t* mapout, double alpha,
 			    double displacex, double displacey,
 			    double scale,double cubic_iac,
-			    long start, long end, long step){
+			    long start, long end){
     loc_create_map_npad(locin,2);//padding to avoid test boundary
     double dplocx, dplocy;
     int nplocx, nplocy;
@@ -1271,8 +1270,7 @@ void prop_nongrid_map_cubic(loc_t *locin, const double* phiin,
 	=(long(*)[locin->map->nx])(locin->map->p);
     const double *phiin0=phiin-1;
     if(!end) end=mapout->ny;
-    if(!step) step=1;
-    for(int iy=start; iy<end; iy+=step){
+    for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
 	if(nplocy<1||nplocy>=nmapy3){

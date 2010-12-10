@@ -20,7 +20,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #ifndef USE_PTHREAD
 #if MATLAB_MEX_FILE
 #define USE_PTHREAD 1
@@ -28,48 +27,32 @@
 #define USE_PTHREAD 0
 #endif
 #endif
-#if USE_PTHREAD
-#include <pthread.h>
+/**
+   Information about job to launch for each thread. start and end are the two indices.
+*/
+#ifndef AOS_ACCPHI_H
+typedef struct thread_t thread_t;
 #endif
-#if USE_PTHREAD==1 //Conventional pthreading
-#define CALL(A,B,nthread)				\
-    if(nthread>1){					\
-	pthread_t threads[nthread];			\
-	for(int ithread=0; ithread<nthread; ithread++){	\
-	    pthread_create(&threads[ithread], NULL,	\
-			   (void*(*)(void*))A,		\
-			   (void*)B);			\
-	}						\
-	for(int ithread=0; ithread<nthread; ithread++){	\
-	    pthread_join(threads[ithread], NULL);	\
-	}						\
-    }else{						\
-	A(B);						\
-    }
-#define CALL_EACH(A,B,nthread)					\
-    if(nthread>1){						\
-	pthread_t threads[nthread];				\
-	for(int ithread=0; ithread<nthread; ithread++){		\
-	    pthread_create(&threads[ithread], NULL,		\
-			   (void*(*)(void*))A,			\
-			   (void*)&(B[ithread]));		\
-	}							\
-	for(int ithread=0; ithread<nthread; ithread++){		\
-	    pthread_join(threads[ithread], NULL);		\
-	}							\
-    }else{							\
-	A(B);							\
-    }
-#define THREAD_POOL_INIT(A)  //Do nothing
-#elif USE_PTHREAD==2 //Use pthread pool. 2010-11-30: updated with new, simpler implementation
+typedef void *(*thread_fun)(void*);
+typedef void (*thread_wrapfun)(thread_t*);
+struct thread_t{
+    long start;
+    long end;
+    long ithread;//which thread this is.
+    thread_wrapfun fun;//the function, takes data as argument
+    void *data;//the data to pass to the function.
+};
+
+#if USE_PTHREAD //Always use thread_pool
+#include <pthread.h>
 #include "thread_pool.h"
 #define CALL(A,B,nthread)				\
     if(nthread>1){					\
 	long thgroup=0;					\
 	for(int ithread=0; ithread<nthread; ithread++){	\
 	    thread_pool_queue(&thgroup,			\
-			      (void*(*)(void*))A,	\
-			      (void*)B);		\
+			      (thread_fun)A,	\
+			      (void*)B,1);		\
 	}						\
 	thread_pool_wait(&thgroup);			\
     }else{						\
@@ -80,19 +63,43 @@
 	long thgroup=0;					\
 	for(int ithread=0; ithread<nthread; ithread++){	\
 	    thread_pool_queue(&thgroup,			\
-			      (void*(*)(void*))A,	\
-			      (void*)&(B[ithread]));	\
+			      (thread_fun)A,	\
+			      (void*)&(B[ithread]),1);	\
 	}						\
 	thread_pool_wait(&thgroup);			\
     }else{						\
 	A(B);						\
     }
+/**
+   Queue jobs to group. Do not wait
+*/
+#define QUEUE_THREAD(group,A,nthread,urgent)			\
+    if((nthread)>1){						\
+	thread_pool_queue_many(&group,A,nthread,urgent);	\
+    }else{							\
+	(A)->fun(A);						\
+    }
+/**
+   Wait for all jobs in group to finish.
+ */
+#define WAIT_THREAD(group) thread_pool_wait(&group)
 #define THREAD_POOL_INIT(A) thread_pool_create(A)
 #else
 #define CALL(A,B,nthread) A(B) //no threading
 #define CALL_DATAEACH(A,B,nthread) A(B)
+#define QUEUE_THREAD(group,A,nthread) A->fun(A)
 #define THREAD_POOL_INIT(A)  //Do nothing
 #endif
+
+/**
+   Call and wait for them to finish.
+*/
+#define CALL_THREAD(A,nthread,urgent)		\
+    {						\
+	long group=0;				\
+	QUEUE_THREAD(group,A,nthread,urgent);	\
+	WAIT_THREAD(group);			\
+    }
 
 #if USE_PTHREAD > 0
 #define LOCK(A) pthread_mutex_lock(&A)
@@ -107,18 +114,8 @@
 #define PDEINIT(A)
 #define PNEW(A)
 #endif
-/**
-   Information about job to launch for each thread. start and end are the two indices.
-*/
-struct thread_t{
-    long start;
-    long end;
-    long step;
-    long ithread;//which thread this is.
-    void *data;
-};
-#ifndef AOS_ACCPHI_H
-typedef struct thread_t thread_t;
-#endif
-void thread_prep(thread_t *info, long start, long tot, long interlaced, long nthread, void *data);
+
+
+void thread_prep(thread_t *info, long start, long tot, long nthread, 
+		 thread_wrapfun fun, void *data);
 #endif

@@ -138,6 +138,7 @@ typedef struct POWFS_T{
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/
     int ncompy;         /**<Dimension of FFT for subaperture imaging along y*/
     int nlocm;          /**<number of misregistered loc. 1 or nwfs of this powfs.*/
+    int nthread;        /**<Equal to MAX(nsa,sim.nthread)*/
 }POWFS_T;
 
 /**
@@ -319,6 +320,21 @@ typedef struct SIM_SAVE_T{
     cellarr **moao_evl;
     cellarr **moao_wfs;
 }SIM_SAVE_T;
+/*
+  data wrap for wfsints.
+*/
+typedef struct WFSINTS_T{
+    dcell *ints;
+    ccell *psfout;
+    dcell *pistatout;
+    const dmat *gradref;
+    const dmat *opd;
+    const dmat *lltopd;
+    const PARMS_T *parms;
+    const POWFS_T *powfs;
+    int iwfs;
+}WFSINTS_T;
+
 /**
    contains all the run time data struct.
 */
@@ -328,7 +344,7 @@ typedef struct SIM_T{
 			  fast ray tracing to WFS and aper*/
     int (*pcachedm)[2];/**<information about cachedm struct.*/
     PROPDATA_T *cachedm_propdata; /**<wrapped data for ray tracing from aloc to cachedm*/
-    thread_t *cachedm_prop; /**<wrapped cachedm_propdata for threading*/
+    thread_t **cachedm_prop; /**<wrapped cachedm_propdata for threading*/
     dmat *winddir;     /**<input wind direction*/
     dcell *surfwfs;    /**<additional OPD surface for each WFS.*/
     dcell *surfevl;    /**<additional OPD surcace for each evaluation field*/
@@ -422,22 +438,35 @@ typedef struct SIM_T{
     dcell *moao_evl;   /**<moao DM command for science field*/
 
     dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
+    locstat_t *ploc_stat; /**<statistics of columns in ploc*/
 
     PROPDATA_T *wfs_propdata_dm;/**<wrap of data for ray tracing from DM in wfsgrad.c*/
-    thread_t* wfs_prop_dm;  /**<wrap of wfs_propdata_dm for threaded ray tracing*/
-    locstat_t *ploc_stat; /**<statistics of columns in ploc*/
+    thread_t  **wfs_prop_dm;  /**<wrap of wfs_propdata_dm for threaded ray tracing*/
+
+    PROPDATA_T *wfs_propdata_atm;/**<wrap of data for ray tracing from ATM in wfsgrad.c*/
+    thread_t  **wfs_prop_atm;  /**<wrap of wfs_propdata_atm for threaded ray tracing*/
+
+    WFSINTS_T *wfs_intsdata;  /**<wrap of data for wfsints.c*/
+    thread_t  **wfs_ints;       /**<wrap of wfs_intsdata for threaded processing*/
+
+    PROPDATA_T *evl_propdata_atm;
+    thread_t  **evl_prop_atm;
+
+    PROPDATA_T *evl_propdata_dm;
+    thread_t  **evl_prop_dm;
+
+    thread_t  *wfs_grad; /**to call wfsgrad_iwfs in threads.*/
+    thread_t  *perf_evl; /**to call perfevl_ievl in threads.*/
 
     SIM_SAVE_T *save;
     
 #if USE_PTHREAD > 0
     pthread_mutex_t mutex_plot;    /**<mutex for plot*/
-    pthread_mutex_t mutex_wfsgrad; /**<mutex for wfsgrad*/
-    pthread_mutex_t mutex_perfevl; /**<mutex for perforance evaluation*/
     pthread_mutex_t mutex_cachedm; /**<mutex for cachedm*/
+    pthread_mutex_t mutex_wfsints; /**<mutex for wfsints*/
 #endif
     int nthread;       /**<number of threads*/
-    int wfsgrad_iwfs;  /**<counter for threaded calling*/
-    int perfevl_ievl;  /**<counter for threaded calling*/
+    int wfsints_isa;   /**<sa counter for wfsints*/
     int perfevl_iground;/**<index of the layer at ground*/
     int cachedm_i;     /**<counter for threaded calling*/
     int cachedm_n;     /**<length of pcachedm array*/
@@ -457,11 +486,5 @@ typedef struct SIM_T{
     int has_upt;       /**<whether we have uplink pointer loop.*/
     int last_report_time;/**<The time we lasted reported status to the scheduler.*/
 }SIM_T;
-//convenient constants. used in utils.c
-typedef enum T_TYPE{
-    T_PLOC=0,
-    T_ALOC,
-    T_XLOC,
-    T_ATM,
-}T_TYPE;
+
 #endif

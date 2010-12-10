@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define TIMING 0
 #include "maos.h"
 #include "sim.h"
 #include "ahst.h"
@@ -37,307 +36,172 @@
   thread may lag behind ievl=1 thread etc, causing the
   summation to be inaccurat. move it int a separate routine
   that are not threaded.
- */
+*/
+#define TIMING 0
+#if TIMING == 1
+#define TIM(A) double tk##A=myclockd()
+#else
+#define TIM(A)
+#endif
 
+#define EVL_OL_OA 0 //only evaluate On axis point in OL OPD.
 /**
    Performance evaluation for each direction in parallel mode.  */
-static void perfevl_ievl(SIM_T *simu){
-
+void perfevl_ievl(thread_t *info){
+    SIM_T *simu=info->data;
+    const int ievl=info->start;
+    assert(info->end==info->start+1);//only one evl.
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
     const RECON_T *recon=simu->recon;
     const int isim=simu->isim;
-    const int nevl=parms->evl.nevl;
     const int nmod=parms->evl.nmod;
     const int nps=parms->atm.nps;
     const int npsr=parms->atmr.nps;
     const int imoao=parms->evl.moao;
     const double dt=simu->dt;
+    const int nthread=parms->sim.nthread;
     const int do_psf=(parms->evl.psfmean || parms->evl.psfhist) && isim>=parms->evl.psfisim;
     dmat *iopdevl=dnew(aper->locs->nloc,1);
-    int ievl;
-#if TIMING==1
-    static double tk[10]={0,0,0,0,0,0,0,0,0,0};
-    static int tkcount=0;
-#endif
- repeat:
-    LOCK(simu->mutex_perfevl);
-    ievl=simu->perfevl_ievl++;
-    UNLOCK(simu->mutex_perfevl);
-    if(ievl<nevl){
-#if TIMING==1
-	double ck00=myclockd();
-#endif
-	//Setup pointers for easy usage
-	PDMAT(simu->olmp->p[ievl],polmp);//OL mode for each dir
-	PDMAT(simu->olep->p[ievl],polep);//OL error for each dir
-	PDMAT(simu->clmp->p[ievl],pclmp);
-	PDMAT(simu->clep->p[ievl],pclep);
+    TIM(0);
+    //Setup pointers for easy usage
+    PDMAT(simu->olmp->p[ievl],polmp);//OL mode for each dir
+    PDMAT(simu->olep->p[ievl],polep);//OL error for each dir
+    PDMAT(simu->clmp->p[ievl],pclmp);
+    PDMAT(simu->clep->p[ievl],pclep);
 
-	if(simu->opdevlground){
-	    memcpy(iopdevl->p,simu->opdevlground->p,
-		   aper->locs->nloc*sizeof(double));
-	}else{
-	    dzero(iopdevl);
-	}
-	//Add surfaces along science path. prepared in setup_surf.c
-	if(simu->surfevl && simu->surfevl->p[ievl]){
-	    dadd(&iopdevl, 1, simu->surfevl->p[ievl], 1);
-	}
-	//atmosphere contribution.
-	if(simu->atm){
-	    for(int ips=0; ips<nps; ips++){
-		if(ips==simu->perfevl_iground)
-		    continue;//already done.
-		double hl=simu->atm[ips]->h;
-		double scale = 1. - hl/parms->evl.ht;
-		double displacex=-simu->atm[ips]->vx*isim*dt
-		    +parms->evl.thetax[ievl]*hl;
-		double displacey=-simu->atm[ips]->vy*isim*dt
-		    +parms->evl.thetay[ievl]*hl;
-		prop_grid_stat(simu->atm[ips], aper->locs_stat, 
-			       iopdevl->p, 1, displacex, displacey,
-			       scale, 1, 0, 0);
+    if(simu->opdevlground){
+	memcpy(iopdevl->p,simu->opdevlground->p,
+	       aper->locs->nloc*sizeof(double));
+    }else{
+	dzero(iopdevl);
+    }
+    //Add surfaces along science path. prepared in setup_surf.c
+    if(simu->surfevl && simu->surfevl->p[ievl]){
+	dadd(&iopdevl, 1, simu->surfevl->p[ievl], 1);
+    }
+    //atmosphere contribution.
+    if(simu->atm){
+	for(int ips=0; ips<nps; ips++){
+	    if(ips!=simu->perfevl_iground){
+		int ind=ievl+parms->evl.nevl*ips;
+		simu->evl_propdata_atm[ind].phiout=iopdevl->p;
+		simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
+		simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
+		CALL_THREAD(simu->evl_prop_atm[ind], nthread, 1);
 	    }
 	}
-#if TIMING==1
-	tk[0]+=myclockd()-ck00; ck00=myclockd(); //Time:1.36s
+    }
+    TIM(1);
+    if(parms->save.evlopd){
+	cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
+    }
+    if(parms->plot.run){
+	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1, 
+		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
+    }
+#if EVL_OL_OA == 1
+    if(ievl==parms->evl.indoa){
 #endif
-	if(parms->save.evlopd){
-	    cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
-	}
-	if(parms->plot.run){
-	    drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1, 
-		       "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
-	}
+	//We only do on axis point wavefront error evaluation for OL.
 	if(nmod==3){//evaluation piston/tip/tilt removed wve
 	    loc_calc_ptt(polep[isim],polmp[isim],
 			 aper->locs, aper->ipcc, aper->imcc, 
 			 aper->amp, iopdevl->p);
 	}else{//more general case
 	    loc_calc_mod(polep[isim],polmp[isim],
-			aper->mod,aper->amp,iopdevl->p);
+			 aper->mod,aper->amp,iopdevl->p);
 	}
-	//evaluate time averaged open loop PSF.
-	if(parms->evl.psfmean &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
-	      ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
-	    //Compute on axis OL psf.
-	    dmat *opdevlcopy=NULL;
-	    dcp(&opdevlcopy,iopdevl);
-	    if(parms->evl.psfpttr){
-		loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
-	    }
-	    ccell *psf2s=psfcomp(opdevlcopy, aper->amp, aper->embed, aper->nembed,
-				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
-	    dfree(opdevlcopy);
-	    int nwvl=parms->evl.nwvl;
-	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
-	    }
-	    if(parms->plot.run){
-		dmat *psftemp=NULL;
-		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-		    ddraw("OL PSF", psftemp, NULL, "Science Openloop PSF", 
-			  "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.psfwvl[iwvl]*1e6);
-		    dfree(psftemp);
-		}
-	    }
-	    ccellfree(psf2s);
-	}
-	
-	if(parms->dbg.evlol)
-	    goto repeat;
-#if TIMING==1
-	tk[1]+=myclockd()-ck00; ck00=myclockd(); 
-	//Time:0.706s using dot. 0.32 after improving
+#if EVL_OL_OA == 1
+    }
 #endif
-	/*
-	  evaluate tomography performance: Apply ideal correction using
-	  tomography output directly.
-	 */
-	if(parms->evl.tomo){
-	    dmat *iopdevltomo=NULL;
-	    //evaluate tomography error
-	    PDMAT(simu->cleptomo->p[ievl],pcleptomo);
-	    PDMAT(simu->clmptomo->p[ievl],pclmptomo);
-	    dcp(&iopdevltomo, iopdevl);//make a copy
-	    if(simu->opdr){
-		for(int ipsr=0; ipsr<npsr; ipsr++){
-		    double hl=parms->atmr.ht[ipsr];
-		    double scale = 1. - hl/parms->evl.ht;
-		    double displacex=parms->evl.thetax[ievl]*hl;
-		    double displacey=parms->evl.thetay[ievl]*hl;
-		    prop_nongrid(recon->xloc[ipsr], 
-				 simu->opdr->p[ipsr]->p,
-				 aper->locs, NULL, iopdevltomo->p, -1,
-				 displacex, displacey, scale, 0, 0);
-		}
-	    }
-	    if(parms->plot.run){
-		drawopdamp("Tomo", aper->locs, iopdevltomo->p, aper->amp1,
-			   "Science Ideal MOAO Correction OPD","x (m)", "y (m)",
-			   "Tomo %d",ievl);
-	    }
-	    
-	    if(nmod==3){
-		loc_calc_ptt(pcleptomo[isim],pclmptomo[isim],
-			     aper->locs, aper->ipcc, 
-			     aper->imcc, aper->amp, iopdevltomo->p);
-	    }else{
-		loc_calc_mod(pcleptomo[isim],pclmptomo[isim],
-			    aper->mod,aper->amp,iopdevltomo->p);
-	    }
-	    //Evaluate tomography corrected PSF time history and time average
-	    if(do_psf && parms->evl.psf[ievl] ){
-		if(parms->evl.psfpttr){
-		    if(isim==parms->sim.start && ievl==0){
-			warning("Removing tip/tilt from PSF\n");
-		    }
-		    loc_remove_ptt(iopdevltomo->p,pclmp[isim], aper->locs);
-		}
-		ccell *psf2s=psfcomp(iopdevltomo, aper->amp, aper->embed, aper->nembed,
-				     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
-		int nwvl=parms->evl.nwvl;
-		if(parms->evl.psfmean){
-		    PDCELL(simu->evlpsftomomean, pevlpsftomomean);
-		    for(int iwvl=0; iwvl<nwvl; iwvl++){
-			cabs22d(&pevlpsftomomean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
-		    }
-		}
-		if(parms->evl.psfhist){
-		    cellarr_ccell(simu->evlpsftomohist[ievl], psf2s);
-		}
-		if(parms->plot.run){
-		    dmat *psftemp=NULL;
-		    for(int iwvl=0; iwvl<nwvl; iwvl++){
-			cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-			dcwlog10(psftemp);
-			double maxmin[2]={0,-12};
-			ddraw("Tomo PSF", psftemp, maxmin, "Science Tomo PSF", 
-			      "x", "y", "Tomo%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
-			dfree(psftemp);
-		    }
-		}
-		ccellfree(psf2s);
-	    }
-	    dfree(iopdevltomo);
-	}
-#if TIMING==1
-	tk[2]+=myclockd()-ck00; ck00=myclockd(); //Time:0
-#endif
-	if(parms->evl.tomo==2){
-	    info("Skip DM performance evalution\n");
-	    goto repeat;
-	}
-	//Apply dm correction. tip/tilt command is contained in DM commands
-	if(simu->dmreal){
-	    int ndm=parms->ndm;
-	    for(int idm=0; idm<ndm; idm++){
-		double ht=parms->dm[idm].ht;
-		double scale = 1. - ht/parms->evl.ht;
-		double displacex=parms->evl.thetax[ievl]*ht;
-		double displacey=parms->evl.thetay[ievl]*ht;
-		if(simu->cachedm){
-		    int iscale=parms->evl.scalegroup[idm];
-		    prop_grid_stat(&simu->cachedm[idm][iscale], aper->locs_stat, iopdevl->p, -1, 
-				   displacex, displacey, scale, 0, 0, 0);
 
-		}else{
-		    if(parms->dm[idm].cubic){
-			prop_nongrid_cubic(recon->aloc[idm], simu->dmreal->p[idm]->p,
-					   aper->locs, NULL, iopdevl->p,-1,
-					   displacex, displacey, scale, 
-					   parms->dm[idm].iac,0,0);
-		    }else{
-			prop_nongrid(recon->aloc[idm], simu->dmreal->p[idm]->p,
-				     aper->locs, NULL, iopdevl->p,-1,
-				     displacex, displacey, scale, 0, 0);
-		    }
-		}
-	    }
-#if TIMING==1
-	    tk[3]+=myclockd()-ck00; ck00=myclockd(); 
-	    //Time:3.5 if not cached, 0.34 if cached.
-#endif
-	   
+    //evaluate time averaged open loop PSF.
+    if(parms->evl.psfmean &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
+			     ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
+	//Compute on axis OL psf.
+	dmat *opdevlcopy=NULL;
+	dcp(&opdevlcopy,iopdevl);
+	if(parms->evl.psfpttr){
+	    loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
 	}
-	if(imoao>-1){
-	    PDCELL(simu->moao_evl, dmevl);
-	    if(dmevl[ievl][simu->moao_evl->nx-1]){
-		//TIC;tic;
-		//prop is faster than spmulvec
-		if(parms->moao[imoao].cubic){
-		    prop_nongrid_cubic(recon->moao[imoao].aloc,dmevl[ievl][simu->moao_evl->nx-1]->p,
-				       aper->locs, NULL, iopdevl->p, -1, 0,0,1,
-				       parms->moao[imoao].iac, 
-				       0,0);
-		}else{
-		    prop_nongrid(recon->moao[imoao].aloc,dmevl[ievl][simu->moao_evl->nx-1]->p,
-				 aper->locs, NULL, iopdevl->p, -1, 0,0,1,0,0);
-		}
+	ccell *psf2s=psfcomp(opdevlcopy, aper->amp, aper->embed, aper->nembed,
+			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+	dfree(opdevlcopy);
+	int nwvl=parms->evl.nwvl;
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
+	}
+	if(parms->plot.run){
+	    dmat *psftemp=NULL;
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+		ddraw("OL PSF", psftemp, NULL, "Science Openloop PSF", 
+		      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.psfwvl[iwvl]*1e6);
+		dfree(psftemp);
+	    }
+	}
+	ccellfree(psf2s);
+    }
+	
+    if(parms->dbg.evlol)
+	return;
+    TIM(2);
+    /*
+      evaluate tomography performance: Apply ideal correction using
+      tomography output directly.
+    */
+    if(parms->evl.tomo){
+	dmat *iopdevltomo=NULL;
+	//evaluate tomography error
+	PDMAT(simu->cleptomo->p[ievl],pcleptomo);
+	PDMAT(simu->clmptomo->p[ievl],pclmptomo);
+	dcp(&iopdevltomo, iopdevl);//make a copy
+	if(simu->opdr){
+	    for(int ipsr=0; ipsr<npsr; ipsr++){
+		double hl=parms->atmr.ht[ipsr];
+		double scale = 1. - hl/parms->evl.ht;
+		double displacex=parms->evl.thetax[ievl]*hl;
+		double displacey=parms->evl.thetay[ievl]*hl;
+		prop_nongrid(recon->xloc[ipsr], 
+			     simu->opdr->p[ipsr]->p,
+			     aper->locs, NULL, iopdevltomo->p, -1,
+			     displacex, displacey, scale, 0, 0);
 	    }
 	}
 	if(parms->plot.run){
-	    drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1,
-		       "Science Closed loop OPD", "x (m)", "y (m)",
-		       "CL %d",ievl);
+	    drawopdamp("Tomo", aper->locs, iopdevltomo->p, aper->amp1,
+		       "Science Ideal MOAO Correction OPD","x (m)", "y (m)",
+		       "Tomo %d",ievl);
 	}
-	if(parms->save.evlopd){
-	    cellarr_dmat(simu->save->evlopdcl[ievl],iopdevl);
+	    
+	if(nmod==3){
+	    loc_calc_ptt(pcleptomo[isim],pclmptomo[isim],
+			 aper->locs, aper->ipcc, 
+			 aper->imcc, aper->amp, iopdevltomo->p);
+	}else{
+	    loc_calc_mod(pcleptomo[isim],pclmptomo[isim],
+			 aper->mod,aper->amp,iopdevltomo->p);
 	}
-	//Evaluate closed loop performance.
-	if(parms->tomo.split){//for split tomography
-	    if(ievl==parms->evl.indoa || parms->dbg.clemp_all){
-		dcp(&simu->opdevl->p[ievl], iopdevl);
-	    }
-	    if(parms->ndm<=2){
-		PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
-		//compute the dot product of wavefront with NGS mode for that direction
-		if(nmod==3){
-		    calc_ngsmod_dot(pclep[isim],pclmp[isim],
-				    pcleNGSmp[isim],parms,recon,aper,
-				    iopdevl->p,ievl);
-		}else{
-		    calc_ngsmod_dot(NULL,NULL,
-				    pcleNGSmp[isim],parms,recon,aper,
-				    iopdevl->p,ievl);
-		    loc_calc_mod(pclep[isim],pclmp[isim],
-				aper->mod,aper->amp,iopdevl->p);
-		}
-	    }else{
-		error("Not implemented\n");
-	    }
-	}else{//for integrated tomography.
-	    if(nmod==3){
-		loc_calc_ptt(pclep[isim],pclmp[isim],
-			 aper->locs, aper->ipcc, aper->imcc, 
-			 aper->amp, iopdevl->p);
-	    }else{
-		loc_calc_mod(pclep[isim],pclmp[isim],
-			    aper->mod,aper->amp,iopdevl->p);
-	    }
-	}
-	//Evaluate closed loop PSF.
-	if(do_psf && parms->evl.psf[ievl]){
-	    //warning("Output PSF for direction %d\n",ievl);
+	//Evaluate tomography corrected PSF time history and time average
+	if(do_psf && parms->evl.psf[ievl] ){
 	    if(parms->evl.psfpttr){
 		if(isim==parms->sim.start && ievl==0){
 		    warning("Removing tip/tilt from PSF\n");
 		}
-		loc_remove_ptt(iopdevl->p,pclmp[isim], aper->locs);
+		loc_remove_ptt(iopdevltomo->p,pclmp[isim], aper->locs);
 	    }
-	    ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
+	    ccell *psf2s=psfcomp(iopdevltomo, aper->amp, aper->embed, aper->nembed,
 				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	    int nwvl=parms->evl.nwvl;
 	    if(parms->evl.psfmean){
-		PDCELL(simu->evlpsfmean, pevlpsfmean);
+		PDCELL(simu->evlpsftomomean, pevlpsftomomean);
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    cabs22d(&pevlpsfmean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
+		    cabs22d(&pevlpsftomomean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
 		}
 	    }
 	    if(parms->evl.psfhist){
-		cellarr_ccell(simu->evlpsfhist[ievl], psf2s);
+		cellarr_ccell(simu->evlpsftomohist[ievl], psf2s);
 	    }
 	    if(parms->plot.run){
 		dmat *psftemp=NULL;
@@ -345,26 +209,127 @@ static void perfevl_ievl(SIM_T *simu){
 		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
 		    dcwlog10(psftemp);
 		    double maxmin[2]={0,-12};
-		    ddraw("CL PSF", psftemp, maxmin, "Science Closed Loop PSF", 
-			  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
+		    ddraw("Tomo PSF", psftemp, maxmin, "Science Tomo PSF", 
+			  "x", "y", "Tomo%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
 		    dfree(psftemp);
 		}
 	    }
 	    ccellfree(psf2s);
-	}//do_psd
-#if TIMING==1
-	tk[4]+=myclockd()-ck00; ck00=myclockd(); //Time:0.586s
-#endif
-	goto repeat;
+	}
+	dfree(iopdevltomo);
     }
-    dfree(iopdevl);
+    TIM(3);
+    if(parms->evl.tomo==2){
+	info("Skip DM performance evalution\n");
+	return;
+    }
+    //Apply dm correction. tip/tilt command is contained in DM commands
+    if(simu->dmreal){
+	int ndm=parms->ndm;
+	for(int idm=0; idm<ndm; idm++){
+	    int ind=ievl+parms->evl.nevl*idm;
+	    simu->evl_propdata_dm[ind].phiout=iopdevl->p;
+	    CALL_THREAD(simu->evl_prop_dm[ind], nthread, 1);
+	}
+    }
+    TIM(4);
+    if(imoao>-1){
+	PDCELL(simu->moao_evl, dmevl);
+	if(dmevl[ievl][simu->moao_evl->nx-1]){
+	    //TIC;tic;
+	    //prop is faster than spmulvec
+	    if(parms->moao[imoao].cubic){
+		prop_nongrid_cubic(recon->moao[imoao].aloc,dmevl[ievl][simu->moao_evl->nx-1]->p,
+				   aper->locs, NULL, iopdevl->p, -1, 0,0,1,
+				   parms->moao[imoao].iac, 
+				   0,0);
+	    }else{
+		prop_nongrid(recon->moao[imoao].aloc,dmevl[ievl][simu->moao_evl->nx-1]->p,
+			     aper->locs, NULL, iopdevl->p, -1, 0,0,1,0,0);
+	    }
+	}
+    }
+    if(parms->plot.run){
+	drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1,
+		   "Science Closed loop OPD", "x (m)", "y (m)",
+		   "CL %d",ievl);
+    }
+    if(parms->save.evlopd){
+	cellarr_dmat(simu->save->evlopdcl[ievl],iopdevl);
+    }
+    //Evaluate closed loop performance.
+    if(parms->tomo.split){//for split tomography
+	if(ievl==parms->evl.indoa || parms->dbg.clemp_all){
+	    //copy the opd for later evaluation of clemp for onaxis only.
+	    dcp(&simu->opdevl->p[ievl], iopdevl);
+	}
+	if(parms->ndm<=2){
+	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
+	    //compute the dot product of wavefront with NGS mode for that direction
+	    if(nmod==3){
+		calc_ngsmod_dot(pclep[isim],pclmp[isim],
+				pcleNGSmp[isim],parms,recon,aper,
+				iopdevl->p,ievl);
+	    }else{
+		calc_ngsmod_dot(NULL,NULL,
+				pcleNGSmp[isim],parms,recon,aper,
+				iopdevl->p,ievl);
+		loc_calc_mod(pclep[isim],pclmp[isim],
+			     aper->mod,aper->amp,iopdevl->p);
+	    }
+	}else{
+	    error("Not implemented\n");
+	}
+    }else{//for integrated tomography.
+	if(nmod==3){
+	    loc_calc_ptt(pclep[isim],pclmp[isim],
+			 aper->locs, aper->ipcc, aper->imcc, 
+			 aper->amp, iopdevl->p);
+	}else{
+	    loc_calc_mod(pclep[isim],pclmp[isim],
+			 aper->mod,aper->amp,iopdevl->p);
+	}
+    }
+    //Evaluate closed loop PSF.
+    if(do_psf && parms->evl.psf[ievl]){
+	//warning("Output PSF for direction %d\n",ievl);
+	if(parms->evl.psfpttr){
+	    if(isim==parms->sim.start && ievl==0){
+		warning("Removing tip/tilt from PSF\n");
+	    }
+	    loc_remove_ptt(iopdevl->p,pclmp[isim], aper->locs);
+	}
+	ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
+			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+	int nwvl=parms->evl.nwvl;
+	if(parms->evl.psfmean){
+	    PDCELL(simu->evlpsfmean, pevlpsfmean);
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		cabs22d(&pevlpsfmean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
+	    }
+	}
+	if(parms->evl.psfhist){
+	    cellarr_ccell(simu->evlpsfhist[ievl], psf2s);
+	}
+	if(parms->plot.run){
+	    dmat *psftemp=NULL;
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+		dcwlog10(psftemp);
+		double maxmin[2]={0,-12};
+		ddraw("CL PSF", psftemp, maxmin, "Science Closed Loop PSF", 
+		      "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
+		dfree(psftemp);
+	    }
+	}
+	ccellfree(psf2s);
+    }//do_psd
+    TIM(5);
 #if TIMING==1
-    tkcount++;
-    double tkscale=1./(double)tkcount;
-    info2("Timing:%.4f %.4f %.4f %.4f %.4f\n",
-	  tk[0]*tkscale, tk[1]*tkscale, tk[2]*tkscale,
-	  tk[3]*tkscale, tk[4]*tkscale);
+    info2("Evl %d timing:ray atm %.4f evlol %.4f evltomo %.4f ray dm %.4f evlcl %.4f\n",
+	  ievl, tk1-tk0, tk2-tk1, tk3-tk2, tk4-tk3, tk5-tk4);
 #endif
+    dfree(iopdevl);
 }
 /**
    Evaluation field averaged performance.
@@ -375,19 +340,28 @@ static void perfevl_mean(SIM_T *simu){
     const int isim=simu->isim;
     const int nmod=parms->evl.nmod;
     const int nevl=parms->evl.nevl;
-
+    //Field average the OL error
     for(int imod=0; imod<nmod; imod++){
 	int ind=imod+nmod*isim;
+#if EVL_OL_OA == 1
+	simu->ole->p[ind]=simu->olep->p[parms->evl.indoa]->p[ind];
+#else
 	simu->ole->p[ind]=0;
-	simu->cle->p[ind]=0;
 	for(int ievl=0; ievl<nevl; ievl++){
 	    double wt=parms->evl.wt[ievl];
 	    simu->ole->p[ind]+=wt*simu->olep->p[ievl]->p[ind];
+	}
+#endif
+    }
+    //Field average the CL error
+    for(int imod=0; imod<nmod; imod++){
+	int ind=imod+nmod*isim;
+	simu->cle->p[ind]=0;
+	for(int ievl=0; ievl<nevl; ievl++){
+	    double wt=parms->evl.wt[ievl];
 	    simu->cle->p[ind]+=wt*simu->clep->p[ievl]->p[ind];
 	}
-	
     }
-  
   
     if(parms->evl.tomo && simu->opdr){
 	for(int imod=0; imod<nmod; imod++){
@@ -403,7 +377,7 @@ static void perfevl_mean(SIM_T *simu){
     if(parms->tomo.split){
 	if(parms->ndm<=2){
 	    /*
-	       convert cleNGSm into mode and put NGS mode WVE into clem.
+	      convert cleNGSm into mode and put NGS mode WVE into clem.
 	    */
 	    int nngsmod=recon->ngsmod->nmod;
 	    {
@@ -475,29 +449,29 @@ static void perfevl_mean(SIM_T *simu){
     
     if(parms->dbg.noatm==0 && simu->cle->p[nmod*isim] > simu->ole->p[nmod*isim]*100){
 	warning("The loop is diverging: OL: %g CL: %g\n",  
-	      simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
+		simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
     }
 }
 /**
    Evaluate performance by calling perfevl_ievl in parallel and then calls
-perfevl_mean to field average.  */
+   perfevl_mean to field average.  */
 void perfevl(SIM_T *simu){
-  
     //Cache the ground layer.
     int ips=simu->perfevl_iground;
     if(ips!=-1 && simu->atm){
 	simu->opdevlground=dnew(simu->aper->locs->nloc,1);
+	const int ievl=0;//doesn't matter for ground layer.
+	int ind=ievl+simu->parms->evl.nevl*ips;
 	const int isim=simu->isim;
 	const double dt=simu->dt;
-	double displacex=-simu->atm[ips]->vx*isim*dt;
-	double displacey=-simu->atm[ips]->vy*isim*dt;
-	prop_grid_stat(simu->atm[ips], simu->aper->locs_stat, 
-		       simu->opdevlground->p,1,
-		       displacex, displacey,
-		       1., 1, 0, 0);
+	simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
+	simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
+	simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
+	CALL_THREAD(simu->evl_prop_atm[ind], simu->nthread, 1);
     }
-    simu->perfevl_ievl=0;
-    CALL(perfevl_ievl,simu,simu->nthread);//no space allowd.
+    CALL_THREAD(simu->perf_evl, simu->parms->evl.nevl, 0);
     dfree(simu->opdevlground);simu->opdevlground=NULL;
+    TIC;tic;
     perfevl_mean(simu);
+    toc("perfevl_mean");
 }

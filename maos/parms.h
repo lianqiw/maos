@@ -554,4 +554,20 @@ typedef struct ARG_T{
 }ARG_T;
 PARMS_T* setup_parms(ARG_T *arg);
 void free_parms(PARMS_T *parms);
+//The following are here so that we don't have to include type.h or utils.h
+//convenient constants. used in utils.c
+typedef enum T_TYPE{
+    T_PLOC=0,
+    T_ALOC,
+    T_XLOC,
+    T_ATM,
+}T_TYPE;
+void create_metapupil(const PARMS_T *parms, double ht, double dx,
+		      double offset,long* nx, long* ny, double *ox, double *oy, 
+		      double **map,double guard, long nin, 
+		      T_TYPE type,int pad,int square);
+map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
+			       double offset,double guard,long nin, 
+			       T_TYPE type, int pad,int square);
+void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
 #endif

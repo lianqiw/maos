@@ -26,38 +26,35 @@
    if interlaced==0: partition the job to consecutive segments.
    if interlaced!=0:  different thread do the job interelaced.
 */
-void thread_prep(thread_t *info, long start, long tot, long interlaced, long nthread, void *data){
-    if(interlaced){
-	for(int ithread=0; ithread<nthread; ithread++){
-	    info[ithread].data=data;
-	    info[ithread].start=ithread;
+void thread_prep(thread_t *info, long start, long tot, long nthread, 
+		 thread_wrapfun fun, void *data){
+    if(tot==0 && nthread>1){
+	error("Need to specify tot\n");
+    }
+    long nt=(tot-start)/nthread;
+    long ithread;
+    for(ithread=0; ithread<nthread; ithread++){
+	info[ithread].ithread=ithread;
+	info[ithread].data=data;
+	info[ithread].fun=fun;
+	info[ithread].start=start;
+	start+=nt;
+	info[ithread].end=start;
+	if(start>=tot){
 	    info[ithread].end=tot;
-	    info[ithread].step=nthread;
-	    info[ithread].ithread=ithread;
-	}
-    }else{
-	long nt=(tot-start)/nthread;
-	long ithread;
-	for(ithread=0; ithread<nthread; ithread++){
-	    info[ithread].ithread=ithread;
-	    info[ithread].data=data;
-	    info[ithread].start=start;
-	    start+=nt;
-	    info[ithread].end=start;
-	    if(start>=tot){
-		info[ithread].end=tot;
-		ithread++;
-		break;
-	    }
-	}
-	for(;ithread<nthread;ithread++){//skip these threads.
-	    info[ithread].ithread=ithread;
-	    info[ithread].start=0;
-	    info[ithread].end=0;
-	    info[ithread].data=data;
-	}
-	if(info[nthread-1].end){
-	    info[nthread-1].end=tot;
+	    ithread++;
+	    break;
 	}
     }
+    for(;ithread<nthread;ithread++){//skip these threads.
+	info[ithread].ithread=ithread;
+	info[ithread].start=0;
+	info[ithread].end=0;
+	info[ithread].data=data;
+	info[ithread].fun=fun;
+    }
+    if(info[nthread-1].end){
+	info[nthread-1].end=tot;
+    }
 }
+

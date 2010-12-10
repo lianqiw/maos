@@ -14,7 +14,7 @@
 
     Some of the rules are:
 
-    -# Array values are embraced by []
+    -# Array values are preferred to be embraced by []
     -# string are embraced by double or single quotes ('' or "").  
     -# A line ended with \ will be concatenated with the next line. 
     -# Anything after comment string # will be ignored during reading. 

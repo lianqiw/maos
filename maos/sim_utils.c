@@ -212,6 +212,22 @@ void genscreen(SIM_T *simu){
 	warning("Creating new screen in CL mode will not work\n");
 	warning("Creating new screen in CL mode will not work\n");
     }
+    if(simu->wfs_prop_atm){
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    for(int ips=0; ips<parms->atm.nps; ips++){
+		PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
+		data->mapin=simu->atm[ips];
+	    }
+	}
+    }
+    if(simu->evl_prop_atm){
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    for(int ips=0; ips<parms->atm.nps; ips++){
+		PROPDATA_T *data=&simu->evl_propdata_atm[ievl+parms->evl.nevl*ips];
+		data->mapin=simu->atm[ips];
+	    }
+	}
+    }
 }
 
 /**
@@ -320,9 +336,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     SIM_T *simu=calloc(1, sizeof(SIM_T));
     simu->save=calloc(1, sizeof(SIM_SAVE_T));
     PINIT(simu->mutex_plot);
-    PINIT(simu->mutex_wfsgrad);
-    PINIT(simu->mutex_perfevl);
-    PINIT(simu->mutex_cachedm);
     simu->parms=parms;
     simu->powfs=powfs;
     simu->recon=recon;
@@ -334,7 +347,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	warning("Seed is 0, using time as seed: %d\n",simu->seed);
     }
     int seed=simu->seed;
+    seeding(simu);
     simu->ints=calloc(parms->nwfs,sizeof(dcell*));
+  
     simu->wfspsfout=calloc(parms->nwfs,sizeof(dcell*));
     simu->wfspsfoutcellarr=calloc(parms->nwfs,sizeof(cellarr*));
     simu->ztiltoutcellarr=calloc(parms->nwfs,sizeof(cellarr*));
@@ -350,6 +365,24 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	if(simu->gtypeII_lo->nx!=3){
 	    error("%s has wrong format. should have 3 rows\n", parms->sim.gtypeII_lo);
 	}
+    }
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	int nsa=powfs[ipowfs].pts->nsa;
+	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
+	if(parms->powfs[ipowfs].usephy){
+	    simu->sanea_sim->p[iwfs]=dnew(nsa*2,1);
+	    simu->ints[iwfs]=dcellnew(nsa,1);
+	    for(int isa=0; isa<nsa; isa++){
+		simu->ints[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax,
+					      powfs[ipowfs].pixpsay);
+	    }
+	}
+    }
+    //we initialize dmreal, so that wfs_prop_dm can reference dmreal.
+    simu->dmreal=dcellnew(parms->ndm,1);
+    for(int idm=0; idm<parms->ndm; idm++){
+	simu->dmreal->p[idm]=dnew(recon->aloc[idm]->nloc,1);
     }
     if(parms->sim.fuseint){
 	simu->dmint=calloc(parms->sim.napdm, sizeof(dcell*));
@@ -452,15 +485,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->perfevl_iground=parms->atm.iground;
     if(parms->sim.cachedm)
 	prep_cachedm(simu);
-
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	int nsa=powfs[ipowfs].pts->nsa;
-	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
-	if(parms->powfs[ipowfs].usephy){
-	    simu->sanea_sim->p[iwfs]=dnew(nsa*2,1);
-	}
-    }
+ 
+ 
     simu->dtrat_hi=1;
     simu->dtrat_lo=1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -481,12 +507,15 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}
     }
-
     //prepare data for ray tracing in wfsgrad.c
-    simu->wfs_prop_dm=calloc(parms->nwfs*parms->ndm, sizeof(thread_t));
+    simu->wfs_prop_atm=calloc(parms->nwfs*parms->atm.nps, sizeof(thread_t*));
+    simu->wfs_propdata_atm=calloc(parms->nwfs*parms->atm.nps, sizeof(PROPDATA_T));
+    simu->wfs_prop_dm=calloc(parms->nwfs*parms->ndm, sizeof(thread_t*));
     simu->wfs_propdata_dm=calloc(parms->nwfs*parms->ndm, sizeof(PROPDATA_T));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
+	const int ipowfs=parms->wfs[iwfs].powfs;
+	const int nthread=powfs[ipowfs].nthread;
+	warning2("wfs%d: nthread=%d\n", iwfs,nthread);
 	const int indwfs=parms->powfs[ipowfs].indwfs[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
 	int ilocm=-1;
@@ -494,14 +523,39 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    ilocm=(simu->powfs[ipowfs].nlocm>1)?indwfs:0;
 	    info("ilocm=%d\n",ilocm);
 	}
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    const double ht=parms->atm.ht[ips];
+	    if(ht>hs){
+		error("Layer is above guide star\n");
+	    }
+	    PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
+	    data->displacex0=ht*parms->wfs[iwfs].thetax;
+	    data->displacey0=ht*parms->wfs[iwfs].thetay;
+	    data->scale=1.-ht/hs;
+	    data->alpha=1;
+	    data->wrap=1;
+	    data->mapin=NULL;//need to update this in genscreen.
+	    data->phiout=NULL;//replace later in simulation.
+	    int tot=0;
+	    if(powfs[ipowfs].locm){//misregistration.
+		data->locout=powfs[ipowfs].locm[ilocm];
+		tot=data->locout->nloc;
+	    }else{
+		data->ptsout=powfs[ipowfs].pts;
+		tot=data->ptsout->nsa;
+	    }
+	    simu->wfs_prop_atm[iwfs+parms->nwfs*ips]=calloc(nthread, sizeof(thread_t));
+	    thread_prep(simu->wfs_prop_atm[iwfs+parms->nwfs*ips],0,tot,nthread,prop,data);
+	}
 	for(int idm=0; idm<parms->ndm; idm++){
 	    const double ht = parms->dm[idm].ht;
 	    PROPDATA_T *data=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
-	    data->displacex=ht*parms->wfs[iwfs].thetax;
-	    data->displacey=ht*parms->wfs[iwfs].thetay;
+	    int tot;
+	    data->displacex0=ht*parms->wfs[iwfs].thetax;
+	    data->displacey0=ht*parms->wfs[iwfs].thetay;
 	    data->scale=1.-ht/hs;
 	    data->alpha=-1;//remove dm contribution.
-	    data->wrap=1;
+	    data->wrap=0;
 	    if(simu->cachedm){
 		int isc=parms->powfs[ipowfs].scalegroup[idm];
 		data->mapin=&simu->cachedm[idm][isc];
@@ -509,20 +563,94 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->cubic_iac=0;//not needed
 	    }else{
 		data->locin=recon->aloc[idm];
-		data->phiin=NULL;//replace later in simulation
+		data->phiin=simu->dmreal->p[idm]->p;
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
 	    }
 	    data->phiout=NULL;//replace later in simulation
 	    if(powfs[ipowfs].locm){//misregistration.
 		data->locout=powfs[ipowfs].locm[ilocm];
+		tot=data->locout->nloc;
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
+		tot=data->ptsout->nsa;
 	    }
-	    thread_prep(&simu->wfs_prop_dm[iwfs+parms->nwfs*idm], 0, 0, 0, 1, data);
+	    simu->wfs_prop_dm[iwfs+parms->nwfs*idm]=calloc(nthread, sizeof(thread_t));
+	    thread_prep(simu->wfs_prop_dm[iwfs+parms->nwfs*idm], 0, tot, nthread, prop,data);
 	}//idm
     }//iwfs
+    simu->wfs_intsdata=calloc(parms->nwfs, sizeof(WFSINTS_T));
+    simu->wfs_ints=calloc(parms->nwfs, sizeof(thread_t*));
 
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	int nthread=powfs[ipowfs].nthread;
+	int tot=powfs[ipowfs].pts->nsa;
+	WFSINTS_T *data=simu->wfs_intsdata+iwfs;
+	data->iwfs=iwfs;
+	data->parms=parms;
+	data->powfs=powfs;
+	simu->wfs_ints[iwfs]=calloc(parms->sim.nthread, sizeof(thread_t));
+	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
+    }
+
+    simu->evl_prop_atm=calloc(parms->evl.nevl*parms->atm.nps, sizeof(thread_t*));
+    simu->evl_propdata_atm=calloc(parms->evl.nevl*parms->atm.nps, sizeof(PROPDATA_T));
+    simu->evl_prop_dm=calloc(parms->evl.nevl*parms->ndm, sizeof(thread_t*));
+    simu->evl_propdata_dm=calloc(parms->evl.nevl*parms->ndm, sizeof(PROPDATA_T));
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	const int nthread=parms->sim.nthread;
+	int tot;
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    const int ind=ievl+parms->evl.nevl*ips;
+	    PROPDATA_T *data=&simu->evl_propdata_atm[ind];
+	    const double ht=parms->atm.ht[ips];
+	    data->displacex0=ht*parms->evl.thetax[ievl];
+	    data->displacey0=ht*parms->evl.thetay[ievl];
+	    data->scale=1-ht/parms->evl.ht;
+	    data->alpha=1;
+	    data->wrap=1;
+	    data->mapin=NULL;//need to update this in genscreen.
+	    data->phiout=NULL;//replace later in simulation.
+	    data->ostat=aper->locs_stat;
+	    tot=aper->locs_stat->ncol;
+	    simu->evl_prop_atm[ind]=calloc(nthread, sizeof(thread_t));
+	    thread_prep(simu->evl_prop_atm[ind], 0, tot, nthread, prop, data);
+	}
+	for(int idm=0; idm<parms->ndm; idm++){
+	    const int ind=ievl+parms->evl.nevl*idm;
+	    PROPDATA_T *data=&simu->evl_propdata_dm[ind];
+	    const double ht=parms->dm[idm].ht;
+	    data->displacex0=ht*parms->evl.thetax[ievl];
+	    data->displacey0=ht*parms->evl.thetay[ievl];
+	    data->scale=1-ht/parms->evl.ht;
+	    data->alpha=-1;
+	    data->wrap=0;
+	    if(simu->cachedm){
+		int isc=parms->evl.scalegroup[idm];
+		data->mapin=&simu->cachedm[idm][isc];
+		data->cubic=0;//already accounted for in cachedm.
+		data->cubic_iac=0;//not needed
+		data->ostat=aper->locs_stat;
+		tot=aper->locs_stat->ncol;
+	    }else{
+		data->locin=recon->aloc[idm];
+		data->phiin=simu->dmreal->p[idm]->p;
+		data->cubic=parms->dm[idm].cubic;
+		data->cubic_iac=parms->dm[idm].iac;
+		data->locout=aper->locs;//propagate to locs if no cachedm.
+		tot=aper->locs->nloc;
+	    }
+	    data->phiout=NULL;//replace later in simulation.
+	    
+	    simu->evl_prop_dm[ind]=calloc(nthread, sizeof(thread_t));
+	    thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
+	}
+    }
+    simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
+    thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
+    simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
+    thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, perfevl_ievl, simu);
     if(parms->sim.frozenflow){
 	simu->dt=parms->sim.dt;
     }else{
@@ -771,7 +899,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->status->nthread=parms->sim.nthread;
     simu->status->timstart=myclocki();
     simu->status->info=S_RUNNING;
-    seeding(simu);
     setup_tsurf(simu);//setting up M3 tilted surf.
     setup_surf(simu);//setting up M1/M2/M3 surface OPD.
     return simu;
@@ -787,9 +914,6 @@ void free_simu(SIM_T *simu){
     free(simu->wfs_rand);
     sqmaparrfree(simu->atm, parms->atm.nps);
     PDEINIT(simu->mutex_plot);
-    PDEINIT(simu->mutex_wfsgrad);
-    PDEINIT(simu->mutex_perfevl);
-    PDEINIT(simu->mutex_cachedm);
     if(parms->sim.cachedm){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int iscale=0; 
@@ -801,11 +925,22 @@ void free_simu(SIM_T *simu){
 	}
 	free(simu->cachedm);
 	free(simu->pcachedm);
+	for(int i=0; i<simu->cachedm_n; i++){
+	    free(simu->cachedm_prop[i]);
+	}
 	free(simu->cachedm_prop);
 	free(simu->cachedm_propdata);
 	
     }
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	free(simu->wfs_prop_atm[iwfs]);
+	free(simu->wfs_prop_dm[iwfs]);
+	free(simu->wfs_ints[iwfs]);
+    }
+    free(simu->wfs_prop_atm);
     free(simu->wfs_prop_dm);
+    free(simu->wfs_ints);
+    free(simu->wfs_propdata_atm);
     free(simu->wfs_propdata_dm);
     free(simu->status);
     dcellfree(simu->gradcl);

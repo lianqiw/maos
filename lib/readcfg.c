@@ -38,8 +38,20 @@
    a value. The entries are maintain ed a hash table. Each entry can be
    retrieved from the key.
 */
+/**
+   Compatibility mode: old keys are automatically renamed to new keys.
+*/
 #define COMPATIBILITY 1
 
+#if COMPATIBILITY == 1
+#define RENAME(old,new)							\
+    if(!strcmp(var,#old)){						\
+	warning2("Deprecated: please change %s to %s.\n",#old,#new);	\
+	var=#new;/*strcpy may overflow. just reference the char*/	\
+    }
+#else
+#define RENAME(old,new) //do nothing.
+#endif
 static int MAX_ENTRY=1000;
 typedef struct STORE_T{
     char *key;
@@ -192,7 +204,10 @@ void close_config(const char *format, ...){
    a hash table. A key can be protected. If a key is not protected, newer
    entries with the same key will override a previous entry.
  */
-void open_config(const char* config_file, long protect){
+void open_config(const char* config_file, /**<The .conf file to read*/
+		 const char* prefix,      /**<if not NULL, prefix the key with this.*/
+		 long protect             /**<whether we protect the value*/
+		 ){
     if(!config_file) return;
     if(!check_suffix(config_file, ".conf")){
 	error("config file '%s' doesn't end with .conf.\n", config_file);
@@ -243,23 +258,32 @@ void open_config(const char* config_file, long protect){
 	    char *embeded=strextract(value);
 	    if(embeded){
 		print_override=0;
-		open_config(embeded,protect);
+		open_config(embeded,prefix,protect);
 		print_override=1;
 		free(embeded);
 	    }
 	}else{
 #if COMPATIBILITY == 1	    
-	    //For backward compatibility, renaming the keys. Will remove this in the future
-	    if(!strcmp(var,"atm.zadeg")){
-		warning("Please change atm.zadeg to sim.zadeg\n");
-		strcpy(var, "sim.zadeg");
-	    }
-	    if(!strcmp(var,"tomo.split_wt")){
-		warning("Please change tomo.split_wt to tomo.ahst_wt\n");
-		strcpy(var, "tomo.ahst_wt");
-	    }
+	    /*
+	      Compatibility mode: rename old key names to new key names. Will
+	      remove in the future.
+	     */
+	    RENAME(atm.zadeg, sim.zadeg);
+	    RENAME(powfs.msa, powfs.order);
+	    RENAME(fit.tik_cstr, fit.tikcr);
+	    RENAME(tomo.tik_cstr, tomo.tikcr);
+	    RENAME(tomo.split_wt, tomo.ahst_wt);
+	    RENAME(tomo.split_idealngs, tomo.ahst_idealngs);
+	    RENAME(tomo.split_rtt, tomo.ahst_rtt);
+	    RENAME(evl.wvl, evl.psfwvl);
+	    RENAME(cn2.nhtrecon, cn2.nhtomo);
 #endif
-	    store[nstore].key=entry.key=strdup(var);
+	    if(prefix){
+		entry.key=stradd(prefix,var,NULL);
+	    }else{
+		entry.key=strdup(var);
+	    }
+	    store[nstore].key=entry.key;
 	    if(value && strlen(value)>0){
 		store[nstore].data=strdup(value);
 	    }else{
@@ -330,13 +354,13 @@ static long getrecord(char *key, int mark){
 		error("This record %s is already read\n",key);
 	    }
 	    store[irecord].count++;//record read
+	    nused++;
 	}
     }else{
 	irecord=-1;
 	print_file("change.log");
 	error("Record %s not found\n",key);
     }
-    nused++;
     return irecord;
 }
 /**
@@ -406,10 +430,11 @@ int readcfg_strarr(char ***res, const char *format,...){
 	*res=calloc(maxcount,sizeof(char*));
 
 	const char *sdataend=sdata+strlen(sdata)-1;
-	const char *sdata2, *sdata3, *sdata4;
+	const char *sdata2;
 	if(sdata[0]!='[' || sdataend[0]!=']'){
 	    info("sdata[0]=%c, sdataend[0]=%c\n",sdata[0], sdataend[0]);
 	    warning2("key %s: Entry {%s} should start with [ and end with ]\n",key, sdata);
+	    sdata2=sdata;
 	}else{
 	    sdata2=sdata+1;
 	}
@@ -422,8 +447,8 @@ int readcfg_strarr(char ***res, const char *format,...){
 	    if(sdata2[0]!='"'){
 		error("Unable to parse {%s} for str array\n", sdata);
 	    }
-	    sdata3=sdata2+1;
-	    sdata4=strchr(sdata3,'"');
+	    const char *sdata3=sdata2+1;
+	    const char *sdata4=strchr(sdata3,'"');
 	    if(!sdata4) error("Unmatched ""\n");
 	    if(sdata4>sdata3){
 		if(count>=maxcount){

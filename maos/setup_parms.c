@@ -24,9 +24,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "maos.h"
+//#include "maos.h"
+#include "../lib/aos.h"
 #include "parms.h"
-#include "utils.h"
+//#include "utils.h"
 /**
    \file maos/setup_parms.c
    This file contains necessary routines to read parametes for
@@ -305,44 +306,54 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,i0scale);
     READ_POWFS(dbl,sigscale);
     READ_POWFS(int,moao);
-    int illt=0;
+
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	if(isinf(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
+	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
+	    free(parms->powfs[ipowfs].fnllt);
+	    parms->powfs[ipowfs].fnllt=NULL;
+	}
 	if(parms->powfs[ipowfs].fnllt){
 	    parms->powfs[ipowfs].hasllt=1;
-	    open_config(parms->powfs[ipowfs].fnllt,0);
+	    char prefix[60];
+	    snprintf(prefix,60,"powfs%d_",ipowfs);
+	    open_config(parms->powfs[ipowfs].fnllt,prefix,0);
 	    parms->powfs[ipowfs].llt=calloc(1, sizeof(LLT_CFG_T));
-	    parms->powfs[ipowfs].llt->d=readcfg_dbl("llt(%d).d",illt);
-	    parms->powfs[ipowfs].llt->widthp=readcfg_dbl("llt(%d).widthp",illt);
-	    parms->powfs[ipowfs].llt->fnrange=readcfg_str("llt(%d).fnrange",illt);
-	    parms->powfs[ipowfs].llt->fn=readcfg_str("llt(%d).fn",illt);
-	    parms->powfs[ipowfs].llt->smooth=readcfg_int("llt(%d).smooth",illt);
-	    parms->powfs[ipowfs].llt->colprep=readcfg_int("llt(%d).colprep",illt);
-	    parms->powfs[ipowfs].llt->colsim=readcfg_int("llt(%d).colsim",illt);
-	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("llt(%d).colsimdtrat",illt);
+	    parms->powfs[ipowfs].llt->d=readcfg_dbl("%sllt.d",prefix);
+	    parms->powfs[ipowfs].llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
+	    parms->powfs[ipowfs].llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
+	    parms->powfs[ipowfs].llt->fn=readcfg_str("%sllt.fn",prefix);
+	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix);
+	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix);
+	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
+	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
 	    
 	    parms->powfs[ipowfs].llt->n=readcfg_dblarr 
-		(&(parms->powfs[ipowfs].llt->ox),"llt(%d).ox",illt);
-	    snprintf(temp,MAX_STRLEN,"llt(%d).oy",illt);
+		(&(parms->powfs[ipowfs].llt->ox),"%sllt.ox",prefix);
+	    snprintf(temp,MAX_STRLEN,"%sllt.oy",prefix);
 	    readcfg_dblarr_n(parms->powfs[ipowfs].llt->n,
-			     &(parms->powfs[ipowfs].llt->oy),"llt(%d).oy",illt);
-	    illt++;
-	}else{
+			     &(parms->powfs[ipowfs].llt->oy),"%sllt.oy",prefix);
+
+	}else{//there is no LLT.
 	    parms->powfs[ipowfs].llt=NULL;
 	    if(!isinf(parms->powfs[ipowfs].hs)){
-		warning("powfs%d has finite hs at %g,"
-			" but no llt specified\n",
+		warning2("powfs%d has finite hs at %g but no llt specified\n",
 			ipowfs, parms->powfs[ipowfs].hs);
+	    }
+	    if(parms->powfs[ipowfs].radpix){
+		warning2("powfs%d has no LLT, disable radial coordinate.\n", ipowfs);
+		parms->powfs[ipowfs].radpix=0;
 	    }
 	}
 	if(parms->powfs[ipowfs].radrot && !parms->powfs[ipowfs].radpix){
 	    parms->powfs[ipowfs].radrot=0;
-	    warning("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
+	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
 	}
 	if(parms->powfs[ipowfs].hasllt 
 	   && !parms->powfs[ipowfs].radpix
 	   && !parms->powfs[ipowfs].mtchcpl){
 	    parms->powfs[ipowfs].mtchcpl=1;
-	    warning("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
+	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
 	}
 	if(parms->powfs[ipowfs].phytypesim==-1){
 	    parms->powfs[ipowfs].phytypesim=parms->powfs[ipowfs].phytype;
@@ -350,6 +361,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	//round phystep to be multiple of dtrat.
 	parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
 	    *parms->powfs[ipowfs].dtrat;
+
     }//ipowfs
 }
 #define READ_WFS(A,B)							\
@@ -556,17 +568,15 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_intarr_n_relax(parms->evl.nwvl, &(parms->evl.psfgridsize),"evl.psfgridsize");
     readcfg_intarr_n_relax(parms->evl.nwvl, &(parms->evl.psfsize),"evl.psfsize");
     int ievl;
-    parms->evl.indoa=-1;
+    double ramin=INFINITY;
     for(ievl=0; ievl<parms->evl.nevl; ievl++){
+	//First Convert theta to radian from arcsec.
 	parms->evl.thetax[ievl]/=206265.;
 	parms->evl.thetay[ievl]/=206265.;
-	if(fabs(parms->evl.thetax[ievl])<1.e-15 
-	   &&fabs(parms->evl.thetay[ievl])<1.e-15){
-	    if(parms->evl.indoa==-1){
-		parms->evl.indoa=ievl;
-	    }else{
-		warning("Evaluation direction %d is also on axis.\n",ievl);
-	    }
+	double ra2=pow(parms->evl.thetax[ievl], 2)+pow(parms->evl.thetay[ievl], 2);
+	if(ra2<ramin){
+	    parms->evl.indoa=ievl;
+	    ramin=ra2;
 	}
     }
     READ_DBL(evl.ht);
@@ -889,6 +899,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		error("Please specify powfs[%d].order in MOAO mode\n", ipowfs);
 	    }
 	}
+	
 	/* 
 	   Figure out pixtheta if specified to be auto (<0).
 	  -pixtheta is the ratio to nominal value.
@@ -903,8 +914,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	    double ratio=(-parms->powfs[ipowfs].pixtheta);
 	    parms->powfs[ipowfs].pixtheta=ratio*wvl/dxsa;
-	    warning2("powfs %d pixtheta set to %.1fx %g/%g: %g mas\n",
-		     ipowfs, ratio, wvl,dxsa,parms->powfs[ipowfs].pixtheta*206265000);
+	    info2("powfs %d pixtheta set to %.1fx %g/%g: %g mas\n",
+		  ipowfs, ratio, wvl,dxsa,parms->powfs[ipowfs].pixtheta*206265000);
 	}
 	if (parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom){
 	    parms->powfs[ipowfs].hasGS0=1;
@@ -1240,20 +1251,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	//find out the height to setup cone coordinate.
 	if(parms->tomo.cone){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if (parms->powfs[ipowfs].lo){
+		if (parms->powfs[ipowfs].lo){//skip low order wfs
 		    continue;
 		}
-		if(isinf(parms->powfs[ipowfs].hs)){
-		    if(parms->tomo.cone){
-			parms->tomo.cone=0;
-			info2("High order ipowfs=%d is at infinity,"
-			      " cone coordinate is invalid, changed.\n",ipowfs);
-		    }
-		}else{
-		    if(!parms->tomo.cone){
-			warning2("High order ipowfs=%d is at finite range,"
-				 "but is not using cone coordinate.\n",ipowfs);
-		    }
+		if(!isinf(parms->powfs[ipowfs].hs)){//at finite.
 		    if(!isinf(hs) && fabs(hs-parms->powfs[ipowfs].hs)>1.e-6){
 			error("Two high order POWFS with different hs found");
 		    }else{
@@ -1261,8 +1262,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 		    }
 		}
 	    }
-	}else{
-	    hs=INFINITY;
 	}
 	parms->atmr.hs=hs;
     }
@@ -1367,7 +1366,6 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
    postproc misc parameters.
 */
 static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
-    parms->sim.nthread=arg->nthread;
     //setup seeds.
     if(arg->nseed>0){
 	parms->sim.nseed=arg->nseed;
@@ -1548,16 +1546,16 @@ static void print_parms(const PARMS_T *parms){
 	      i,parms->powfs[i].order, (parms->powfs[i].llt?"L":"N"),
 	      parms->powfs[i].hs/1000,parms->powfs[i].saat*100);
 	if(parms->powfs[i].trs){
-	    info2("\033[0;31m Tip/tilt is removed.\033[0;0m");
+	    info2("\033[0;32m Tip/tilt is removed.\033[0;0m");
 	}
 	if(parms->powfs[i].dfrs){
-	    info2("\033[0;31m Diff focus is removed.\033[0;0m");
+	    info2("\033[0;32m Diff focus is removed.\033[0;0m");
 	    if(!parms->powfs[i].hasllt){
 		warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
 	    }
 	}
 	if(parms->powfs[i].pixblur>1.e-12){
-	    info2("\033[0;31m Pixel is blurred by %g.\033[0;0m", parms->powfs[i].pixblur);
+	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[i].pixblur);
 	}
 	info2("\n");
 	info2("    CCD image is %dx%d @ %gmas, %gHz, ", 
@@ -1705,7 +1703,7 @@ static void check_parms(const PARMS_T *parms){
     int i;
     for(i=0;i<parms->npowfs;i++){
 	if(fabs(parms->atm.dx-parms->powfs[i].dx)>1.e-12){
-	    warning2("Powfs %d: The grid sampling 1/%gm doesn't match "
+	    warning2("powfs %d: The grid sampling 1/%gm doesn't match "
 		     "atmosphere sampling 1/%gm\n", i,
 		    1./parms->powfs[i].dx,1./parms->atm.dx);
 	}
@@ -1774,7 +1772,7 @@ static void check_parms(const PARMS_T *parms){
  
 static void open_embeded_config(const char *type){
     char *fn=readcfg_str("%s",type);
-    open_config(fn,0);
+    open_config(fn,NULL,0);
     free(fn);
     }*/
 
@@ -1784,7 +1782,7 @@ the master configuration file. nfiraos.conf if no -c switch is specified.  Then
 it will open additional overriding .conf files supplied in the command
 line. These overiding .conf files should only contain already exited keys.*/
 static void setup_config(ARG_T*arg){
-    open_config(arg->conf,0);//main .conf file.
+    open_config(arg->conf,NULL,0);//main .conf file.
     
     if(arg->iconf<arg->argc){
 	char fntmp[PATH_MAX];
@@ -1799,7 +1797,7 @@ static void setup_config(ARG_T*arg){
 		inline_conf++;
 		fprintf(fptmp,"%s\n",fno);
 	    }else if(check_suffix(fno,".conf")){
-		open_config(fno,1);/*1 means protected. will not be overriden by
+		open_config(fno,NULL,1);/*1 means protected. will not be overriden by
 				     base .conf's, but can be overriden by user
 				     supplied options.*/
 	    }else{
@@ -1808,7 +1806,7 @@ static void setup_config(ARG_T*arg){
 	}
 	fclose(fptmp);
 	if(inline_conf>0){
-	    open_config(fntmp,1);
+	    open_config(fntmp,NULL,1);
 	}
 	if(remove(fntmp)){
 	    perror("remove");
@@ -1825,6 +1823,7 @@ static void setup_config(ARG_T*arg){
 PARMS_T * setup_parms(ARG_T *arg){
     setup_config(arg);
     PARMS_T* parms=calloc(1, sizeof(PARMS_T));
+    parms->sim.nthread=arg->nthread;
     readcfg_aper(parms);
     readcfg_atm(parms);
     readcfg_powfs(parms);
