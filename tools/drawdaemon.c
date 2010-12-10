@@ -202,6 +202,9 @@ static double myceil(double a){
     }
     return b;
 }
+/**
+   Draw some text starting at location (x,y)
+*/
 static void cairo_text_left(cairo_t *cr,double x,double y,const char *text){
     cairo_text_extents_t extents;
     cairo_text_extents (cr, text, &extents);
@@ -210,6 +213,9 @@ static void cairo_text_left(cairo_t *cr,double x,double y,const char *text){
     cairo_move_to (cr, x2, y2);
     cairo_show_text (cr, text);
 }
+/**
+   Draw some text centered at location (x,y)
+*/
 static void cairo_text_center(cairo_t *cr,double x,double y,const char *text){
     cairo_text_extents_t extents;
     cairo_text_extents (cr, text, &extents);
@@ -218,6 +224,9 @@ static void cairo_text_center(cairo_t *cr,double x,double y,const char *text){
     cairo_move_to (cr, x2, y2);
     cairo_show_text (cr, text);
 }
+/**
+   Draw some text vertically, centered at location (x,y)
+*/
 static void cairo_vltext_center(cairo_t *cr, double x, double y, 
 				const char *text){
     cairo_text_extents_t extents;
@@ -229,26 +238,42 @@ static void cairo_vltext_center(cairo_t *cr, double x, double y,
     cairo_show_text (cr, text);
     cairo_rotate(cr,M_PI/2.);
 }
+/**
+   Draw a cross from the location (x,y.
+ */
+static void cairo_text_cross(cairo_t *cr, double x, double y, double size){
+    cairo_save(cr);
+    size=size*0.5;
+    cairo_translate(cr,x,y);
+    cairo_move_to(cr,0,0);
+    cairo_line_to(cr,-size, -size);
+    cairo_move_to(cr,0,0);
+    cairo_line_to(cr,-size, size);
+    cairo_move_to(cr,0,0);
+    cairo_line_to(cr,size, -size);
+    cairo_move_to(cr,0,0);
+    cairo_line_to(cr,size, size);
+    cairo_stroke(cr);
+    cairo_restore(cr);
+}
 static void cairo_text_powindex(cairo_t *cr, double rot,
 				double x, double y, int order){
     if(order==0) return;
+    cairo_save(cr);
     char ticval[80];
-    double size=font_size*0.6;//half size of cross
+    double size=font_size*0.6;//size of cross
     snprintf(ticval,80,"10");
     cairo_text_extents_t extents;
     cairo_text_extents (cr, ticval, &extents); 
     //draw x
-    cairo_save(cr);
     cairo_translate(cr,x,y);
     if(fabs(rot)>0){
 	cairo_rotate(cr,rot);
     }
-    cairo_move_to(cr,0,0);
-    cairo_line_to(cr,size,-size);
-    cairo_move_to(cr,0,-size);
-    cairo_line_to(cr,size,0);
-    cairo_stroke(cr);
- 
+    cairo_set_line_width(cr, font_size*0.08);
+    cairo_set_line_cap(cr,CAIRO_LINE_CAP_SQUARE);
+    cairo_text_cross(cr, size*0.5, -size*0.5, size*0.9);
+
     cairo_move_to(cr,size,0);
     cairo_show_text(cr,ticval);
     //draw index
@@ -304,6 +329,7 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     //fill white background
     drawdata->font_name_version=font_name_version;
     cairo_rectangle(cr,0,0,width,height);
+    //fill the background to white.
     cairo_set_source_rgb(cr,1,1,1);
     cairo_fill(cr);
     cairo_surface_t *image=drawdata->image;
@@ -324,32 +350,36 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     double xmin0,ymin0,xmax0,ymax0;
     xmin0=xmin; ymin0=ymin; xmax0=xmax; ymax0=ymax;
     double scale;
-    if(drawdata->image){
+    if(drawdata->image){//we are drawing an image.
 	double scale1 = (double)(width-SP_XL-SP_XR)/(double)(drawdata->nx);
 	double scale2 = (double)(height-SP_YT-SP_YB)/(double)(drawdata->ny);
 	scale  = (scale1<scale2?scale1:scale2);
-	widthim=(int)(drawdata->nx*scale);
-	heightim=(int)(drawdata->ny*scale);
-    }else{
+	widthim=(int)(drawdata->nx*scale)+1;
+	heightim=(int)(drawdata->ny*scale)+1;
+    }else{//we are plotting points.
 	double scale1=(double)(width-SP_XL-SP_XR)/(xmax-xmin);
 	double scale2=(double)(height-SP_YT-SP_YB)/(ymax-ymin);
 	scale  = (scale1<scale2?scale1:scale2);
-	widthim=(int)((xmax-xmin)*scale);
-	heightim=(int)((ymax-ymin)*scale);
+	widthim=(int)((xmax-xmin)*scale+1.5);
+	heightim=(int)((ymax-ymin)*scale+1.5);
     }
     drawdata->scale=scale;
-    double xoff=((width-widthim-SP_XL-SP_XR)*0.5)+SP_XL;
-    double yoff=((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT;
-    cairo_translate(cr,xoff, heightim+yoff);
+    double xoff=round(((width-widthim-SP_XL-SP_XR)*0.5)+SP_XL);
+    double yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
     drawdata->centerx=xoff+widthim*0.5;
     drawdata->centery=yoff+heightim*0.5;
-    //flip upside down so that lower left is (0,0);
-    cairo_scale(cr,1,-1);
     double zoom=drawdata->zoom;//Zoom of the image when displayed.
+
+    //Save the state of cairo before we drawing the image/points.
+    cairo_save(cr);
+    //flip upside down so that lower left is (0,0);
+    cairo_translate(cr,xoff, heightim+yoff);
+    cairo_scale(cr,1,-1);
+    //cairo_translate(cr,xoff,yoff);
+    cairo_rectangle(cr,0,0,widthim,heightim);
+    cairo_clip(cr);
     if(drawdata->image){
 	cairo_save(cr);
-	cairo_rectangle(cr,0,0,widthim,heightim);
-	cairo_clip(cr);
 	cairo_scale(cr,scale*zoom,scale*zoom);
 	/*
 	  offx, offy are the offset in the cairo window.
@@ -383,13 +413,12 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
  
     if(drawdata->npts>0){
 	cairo_save(cr);
-	cairo_rectangle(cr,0,0,widthim,heightim);
-	cairo_clip(cr);
-	cairo_set_antialias(cr,CAIRO_ANTIALIAS_GRAY);
+	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);//GRAY
 	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);
 	cairo_set_line_width(cr,1);
 	int style=3;
-	int size=4;
+	double size=round(3*sqrt(zoom));
+	double size1=size+1;
 	double centerx=(xmax+xmin)/2;
 	double centery=(ymax+ymin)/2;
 	double ncx=widthim*0.5 + drawdata->offx*zoom;
@@ -402,12 +431,13 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 
 	for(unsigned int ips=0; ips<drawdata->npts; ips++){
 	    //Mape the coordinate to the image
-	    double ix=(drawdata->ptsx[ips]-centerx)*scale*zoom+ncx;
-	    double iy=(drawdata->ptsy[ips]-centery)*scale*zoom+ncy;
+	    double ix=round((drawdata->ptsx[ips]-centerx)*scale*zoom+ncx);
+	    double iy=round((drawdata->ptsy[ips]-centery)*scale*zoom+ncy);
 	    if(ix<0 ||ix>widthim || iy<0 || iy>heightim) continue;
 	    if(drawdata->style){
 		style=drawdata->style[ips]&0xF;
-		size=(drawdata->style[ips]&0xF0)>>4;
+		size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoom));
+		size1=size+1;
 		int color=(drawdata->style[ips]&0xFFFFFF00)>>8;
 		int r=color/100;
 		int g=(color-r*100)/10;
@@ -417,44 +447,48 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	    }
 	    switch(style){
 	    case 0:// .
-		cairo_arc(cr, ix, iy, 1, 0, 2*M_PI);
+		cairo_new_sub_path(cr);
+		cairo_arc(cr, ix-0.5, iy-0.5, 0., 0, 2*M_PI);
+		cairo_arc(cr, ix-0.5, iy-0.5, 1, 0, 2*M_PI);
 		break;
 	    case 1:// o
-		cairo_arc(cr, ix, iy, size, 0, 2*M_PI);
+		cairo_new_sub_path(cr);
+		cairo_arc(cr, ix-0.5, iy-0.5, size, 0, 2*M_PI);
 		break;
 	    case 2:// x
-		cairo_move_to(cr,ix-size,iy-size);
+		cairo_move_to(cr,ix-size1,iy-size1);
 		cairo_line_to(cr,ix+size,iy+size);
-		cairo_move_to(cr,ix+size,iy-size);
-		cairo_line_to(cr,ix-size,iy+size);
+		cairo_move_to(cr,ix+size,iy-size1);
+		cairo_line_to(cr,ix-size1,iy+size);
 		break;
 	    case 3:// +
-		cairo_move_to(cr,ix-size,iy);
-		cairo_line_to(cr,ix+size,iy);
-		cairo_move_to(cr,ix,iy-size);
+		//-1 is because flipping makes effective rounding of 0.5 differently.
+		cairo_move_to(cr,ix-size1,iy-1);
+		cairo_line_to(cr,ix+size,iy-1);
+		cairo_move_to(cr,ix,iy-size1);
 		cairo_line_to(cr,ix,iy+size);
 		break;
 	    case 4:// square []
-		cairo_move_to(cr,ix-size,iy-size);
-		cairo_line_to(cr,ix+size,iy-size);
+		cairo_move_to(cr,ix-size1,iy-size1);
+		cairo_line_to(cr,ix+size,iy-size1);
 		cairo_line_to(cr,ix+size,iy+size);
-		cairo_line_to(cr,ix-size,iy+size);
-		cairo_line_to(cr,ix-size,iy-size);
+		cairo_move_to(cr,ix+size,iy+size-1);
+		cairo_line_to(cr,ix-size1,iy+size-1);
+		cairo_move_to(cr,ix-size,iy+size-1);
+		cairo_line_to(cr,ix-size,iy-size1);
 		break;
 	    default:
 		warning("Invalid style\n");
 	    }
 	    if(drawdata->style)
-		cairo_stroke(cr);
+		cairo_stroke(cr);//stroke each point.
 	}
 	if(!drawdata->style)
-	    cairo_stroke(cr);
+	    cairo_stroke(cr);//stroke all together.
 	cairo_restore(cr);
     }
     if(drawdata->ncir>0){
 	cairo_save(cr);
-	cairo_rectangle(cr,0,0,widthim,heightim);
-	cairo_clip(cr);
 	cairo_set_line_width(cr,1);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_GRAY);
 
@@ -477,7 +511,9 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	}
 	cairo_restore(cr);
     }
+    cairo_restore(cr);
     //Now doing the border, tic, and colobar
+    //Reverted to unit matrix
     cairo_identity_matrix(cr);
     cairo_translate(cr, xoff, yoff);
     cairo_rectangle(cr, 0, 0, widthim, heightim);
@@ -983,6 +1019,7 @@ static void addpage(drawdata_t **drawdatawrap)
 	drawdata->handlerid1= g_signal_connect
 	    (drawarea, "expose-event", 
 	     G_CALLBACK (on_expose_event), drawdatawrap);
+	//handles zooming.
 	drawdata->handlerid2= g_signal_connect
 	    (drawarea, "configure-event", 
 	     G_CALLBACK (on_configure_event), drawdatawrap);
@@ -1232,7 +1269,7 @@ static void quitdraw(){
     }
     remove(fifo);
     gtk_main_quit();
-    exit(0);
+    //don't exit here.
 }
 
 #define FILE_READ(data,size)			\

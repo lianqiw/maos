@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.7.5, lianqiw@gmail.com)
+AC_INIT(maos, 0.8.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
@@ -16,7 +16,7 @@ AC_LANG([C])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
-echo host_os=$host_os
+
 AC_TYPE_SIZE_T  
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
 AM_CONDITIONAL(DRAW,true)
@@ -95,12 +95,12 @@ case "$host_os" in
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
  if ! test -e ${SRC_DIR}/scripts/drawdaemon.app ;then
-     curl -O -L -# https://github.com/downloads/lianqiw/maos/drawdaemon.app.tar.gz -# &&\
+     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/drawdaemon.app.tar.gz &&\
      tar -xzf drawdaemon.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
      rm  -rf drawdaemon.app.tar.gz
  fi
  if ! test -e ${SRC_DIR}/scripts/monitor.app ;then
-     curl -O -L -# https://github.com/downloads/lianqiw/maos/monitor.app.tar.gz -# &&\ 
+     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/monitor.app.tar.gz &&\ 
      tar -xzf monitor.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
      rm	 -rf monitor.app.tar.gz
  fi
@@ -333,8 +333,9 @@ if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
 
+AC_OUTPUT
+echo host_os=$host_os
 echo use_icc=$use_icc
-echo use_ifort=$use_ifort
 echo use_static=$use_static
 
 echo CC=$CC
@@ -343,4 +344,4 @@ echo LDEXE=$LDEXE
 echo SRC_DIR=$SRC_DIR
 echo SVN_REV=$SVN_REV
 echo BUILD_DIR=$BUILD_DIR
-AC_OUTPUT
+

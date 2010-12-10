@@ -85,7 +85,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    wfsgrad(simu);
 	    ck_1=myclockd(); cpu_1=read_self_cpu();
 
-#define PARALLEL 0
+#define PARALLEL 1
 	    if(PARALLEL == 1 && simu->nthread>1){
 		long group=0;
 		thread_pool_queue(&group, (thread_fun)reconstruct, simu, 1);
