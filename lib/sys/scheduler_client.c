@@ -273,7 +273,7 @@ char* scheduler_get_drawdaemon(int pid){
 	fifo=realloc(fifo,strlen(fifo)+1);
     }
     if(exist(fifo)){
-        warning2("fifo already exist. test when drawdaemon exists\n");
+        //warning2("fifo already exist. test when drawdaemon exists\n");
         char fnpid[PATH_MAX];
 	snprintf(fnpid, PATH_MAX, "%s/drawdaemon_%d.pid", TEMP, pid);
 	FILE *fp=fopen(fnpid, "r");
@@ -284,17 +284,17 @@ char* scheduler_get_drawdaemon(int pid){
 		launch=1;
 	    }else{
 		if(kill(fpid,0)){
-		    warning2("Drawdaemon has exited\n");
+		    //warning2("Drawdaemon has exited\n");
 		    launch=1;
 		}
 	    }
 	    fclose(fp);
 	}else{
-	    warning2("Drawdaemon has exited\n");
+	    //warning2("Drawdaemon has exited\n");
 	    launch=1;
 	}
     }else{
-        info2("make fifo\n");
+        //info2("make fifo\n");
 	if(mkfifo(fifo,0700)){
 	    warning3("Error making fifo\n");
 	}
@@ -302,7 +302,7 @@ char* scheduler_get_drawdaemon(int pid){
     }
 
     if(launch){
-        info2("Attempting to launch fifo\n");
+        //info2("Attempting to launch fifo\n");
 	int sock;
 	for(int retry=0; retry<10; retry++){
 	    sock=scheduler_connect_self(0,0);

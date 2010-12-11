@@ -34,6 +34,7 @@
 #include <glib/gprintf.h>
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
+#include "../lib/draw.h"
 #include "process.h"
 #include "misc.h"
 #include "mathmisc.h"
@@ -48,9 +49,10 @@ typedef struct drawdata_t{
     unsigned char *p;//converted pointer of char or int.
     int gray;       //do we draw in gray scale or in colored
     //The following are for points
-    double *ptsx;//points x
-    double *ptsy;//points y
-    unsigned int npts;//number of points
+    dmat *pts;      //pts;
+    int ptsmod;     //mode of pts: 0: loc, 1: curve
+    unsigned int nptsx;//number of points
+    unsigned int nptsy;//number of columns: 2 for loc, multiple for curve plotting.
     int32_t *style;
     unsigned int nstyle;
     double (*cir)[4];
@@ -71,13 +73,15 @@ typedef struct drawdata_t{
     int pending;
     int width;
     int height;
-    double zoom;//zoom level.
+    int widthim;
+    int heightim;
+    double zoomx, zoomy;//zoom level.
     double offx,offy;//off set of the center of the data.
     double mxdown,mydown;
-    double scale;//scale of the data to fit the display.
+    double scalex, scaley;//scale of the data to fit the display.
     double centerx, centery;
     double limit0[4];//x,y limit of displayed region.
-
+    int square;//make x/y scaling be the same, for image and coordinate display
     int reconfig;
     int font_name_version;
 }drawdata_t;
@@ -297,7 +301,7 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	*dtic=0;
 	*tic1=xmax;
     }else{
-	order1=(int)floor(log10(diff));
+	order1=(int)floor(log10(xmax));
 	diff/=pow(10,order1);
 	if(diff<2){
 	    order1=order1-1;
@@ -324,12 +328,13 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	*order=0;
     }
 }
+/**
+   The master routine that draws in the cairo surface.
+*/
 static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
-    //Beginning drawing using cairo.
     //fill white background
     drawdata->font_name_version=font_name_version;
     cairo_rectangle(cr,0,0,width,height);
-    //fill the background to white.
     cairo_set_source_rgb(cr,1,1,1);
     cairo_fill(cr);
     cairo_surface_t *image=drawdata->image;
@@ -350,47 +355,58 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     double xmin0,ymin0,xmax0,ymax0;
     xmin0=xmin; ymin0=ymin; xmax0=xmax; ymax0=ymax;
     double scale;
+    double xdim, ydim;//dimension of the data.
     if(drawdata->image){//we are drawing an image.
-	double scale1 = (double)(width-SP_XL-SP_XR)/(double)(drawdata->nx);
-	double scale2 = (double)(height-SP_YT-SP_YB)/(double)(drawdata->ny);
-	scale  = (scale1<scale2?scale1:scale2);
-	widthim=(int)(drawdata->nx*scale)+1;
-	heightim=(int)(drawdata->ny*scale)+1;
-    }else{//we are plotting points.
-	double scale1=(double)(width-SP_XL-SP_XR)/(xmax-xmin);
-	double scale2=(double)(height-SP_YT-SP_YB)/(ymax-ymin);
-	scale  = (scale1<scale2?scale1:scale2);
-	widthim=(int)((xmax-xmin)*scale+1.5);
-	heightim=(int)((ymax-ymin)*scale+1.5);
+	xdim=(double)drawdata->nx;
+	ydim=(double)drawdata->ny;
+    }else{
+	xdim=xmax-xmin;
+	ydim=ymax-ymin;
     }
-    drawdata->scale=scale;
+    
+    double scalex = (double)(width-SP_XL-SP_XR)/xdim;
+    double scaley = (double)(height-SP_YT-SP_YB)/ydim;
+    if(drawdata->square){
+	scale  = (scalex<scaley?scalex:scaley);
+	scalex = scaley = scale;
+    }
+    widthim=(int)(xdim*scalex);
+    heightim=(int)(ydim*scaley);
+    scalex = widthim/xdim;
+    scaley = heightim/ydim;
+    drawdata->widthim=widthim;
+    drawdata->heightim=heightim;
+    drawdata->scalex=scalex;
+    drawdata->scaley=scaley;
+    //Offset in the cairo surface to draw the image.
     double xoff=round(((width-widthim-SP_XL-SP_XR)*0.5)+SP_XL);
     double yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
+    //center of the image on the screen.
     drawdata->centerx=xoff+widthim*0.5;
     drawdata->centery=yoff+heightim*0.5;
-    double zoom=drawdata->zoom;//Zoom of the image when displayed.
-
+    double zoomx=drawdata->zoomx;//Zoom of the image when displayed.
+    double zoomy=drawdata->zoomy;
     //Save the state of cairo before we drawing the image/points.
     cairo_save(cr);
     //flip upside down so that lower left is (0,0);
     cairo_translate(cr,xoff, heightim+yoff);
     cairo_scale(cr,1,-1);
-    //cairo_translate(cr,xoff,yoff);
-    cairo_rectangle(cr,0,0,widthim,heightim);
+    //clip out an rectangular region to draw.
+    cairo_rectangle(cr,-5,-5,widthim+10,heightim+10);
     cairo_clip(cr);
     if(drawdata->image){
 	cairo_save(cr);
-	cairo_scale(cr,scale*zoom,scale*zoom);
+	cairo_scale(cr,scalex*zoomx,scaley*zoomy);
 	/*
 	  offx, offy are the offset in the cairo window.
 	  ofx, ofy are the actual offset in the original data to display.
 	 */
-	double ofx=(drawdata->nx*0.5)*(1/zoom-1)+drawdata->offx/scale;
-	double ofy=(drawdata->ny*0.5)*(1/zoom-1)+drawdata->offy/scale;
+	double ofx=(drawdata->nx*0.5)*(1/zoomx-1)+drawdata->offx/scalex;
+	double ofy=(drawdata->ny*0.5)*(1/zoomy-1)+drawdata->offy/scaley;
 	/*The x and y patterns are negated and then set as
 	  translation values in the pattern matrix.*/
 	cairo_set_source_surface(cr, image, ofx,ofy);
-	if(scale*zoom>1){//use nearest filter for up sampling to get clear images
+	if(scalex*zoomx>1){//use nearest filter for up sampling to get clear images
 	    cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
 	}
 	cairo_paint(cr);
@@ -405,86 +421,135 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	  We can also figure out ofx, zoom, from xmin0, xmax0
 	 */
 	xmin0=xmin-(ofx/drawdata->nx)*xdiff;
-	xmax0=xmin0+xdiff/zoom;
+	xmax0=xmin0+xdiff/zoomx;
 	ymin0=ymin-(ofy/drawdata->ny)*ydiff;
-	ymax0=ymin0+ydiff/zoom;
+	ymax0=ymin0+ydiff/zoomy;
 	cairo_restore(cr);
     }
  
-    if(drawdata->npts>0){
+    if(drawdata->nptsx>0){
 	cairo_save(cr);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);//GRAY
 	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);
 	cairo_set_line_width(cr,1);
 	int style=3;
-	double size=round(3*sqrt(zoom));
+	int connect=0;
+	double size=round(3*sqrt(zoomx));
 	double size1=size+1;
+	if(drawdata->nstyle==1){
+	    int ips=0;
+	    style=drawdata->style[ips]&0x7;//last three bits
+	    connect=(drawdata->style[ips]&0x8)>>3;//fourth bit.
+	    size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoomx));
+	    size1=size+1;
+	    int color=(drawdata->style[ips]&0xFFFFFF00)>>8;
+	    int r=color/100;
+	    int g=(color-r*100)/10;
+	    int b=color-r*100-g*10;
+	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+	    if(style>5) style=0;
+	    if(style==5) connect=1;//required.
+	}
 	double centerx=(xmax+xmin)/2;
 	double centery=(ymax+ymin)/2;
-	double ncx=widthim*0.5 + drawdata->offx*zoom;
-	double ncy=heightim*0.5 + drawdata->offy*zoom;
+	double ncx=widthim*0.5 + drawdata->offx*zoomx;
+	double ncy=heightim*0.5 + drawdata->offy*zoomy;
 	//computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim
-	xmax0=(((widthim)*0.5)/zoom - drawdata->offx)/scale+centerx;
-	xmin0=((-widthim*0.5)/zoom - drawdata->offx)/scale+centerx;
-	ymax0=(((heightim)*0.5)/zoom - drawdata->offy)/scale+centery;
-	ymin0=((-heightim*0.5)/zoom - drawdata->offy)/scale+centery;
-
-	for(unsigned int ips=0; ips<drawdata->npts; ips++){
-	    //Mape the coordinate to the image
-	    double ix=round((drawdata->ptsx[ips]-centerx)*scale*zoom+ncx);
-	    double iy=round((drawdata->ptsy[ips]-centery)*scale*zoom+ncy);
-	    if(ix<0 ||ix>widthim || iy<0 || iy>heightim) continue;
-	    if(drawdata->style){
-		style=drawdata->style[ips]&0xF;
-		size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoom));
+	xmax0=(((widthim)*0.5)/zoomx - drawdata->offx)/scalex+centerx;
+	xmin0=((-widthim*0.5)/zoomx - drawdata->offx)/scalex+centerx;
+	ymax0=(((heightim)*0.5)/zoomy - drawdata->offy)/scaley+centery;
+	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
+	double *ptsx=drawdata->pts->p;
+	for(unsigned int iptsy=1; iptsy<drawdata->nptsy; iptsy++){
+	    double *ptsy=ptsx+iptsy*drawdata->nptsx;
+	    if(drawdata->ptsmod==1 && drawdata->nstyle>1){
+		int ips=iptsy-1;
+		style=drawdata->style[ips]&0x7;//last three bits
+		connect=(drawdata->style[ips]&0x8)>>3;//fourth bit.
+		size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoomx));
 		size1=size+1;
 		int color=(drawdata->style[ips]&0xFFFFFF00)>>8;
 		int r=color/100;
 		int g=(color-r*100)/10;
 		int b=color-r*100-g*10;
 		cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
-		if(style>4) style=0;
+		if(style>5) style=0;
+		if(style==5) connect=1;//required.
 	    }
-	    switch(style){
-	    case 0:// .
-		cairo_new_sub_path(cr);
-		cairo_arc(cr, ix-0.5, iy-0.5, 0., 0, 2*M_PI);
-		cairo_arc(cr, ix-0.5, iy-0.5, 1, 0, 2*M_PI);
-		break;
-	    case 1:// o
-		cairo_new_sub_path(cr);
-		cairo_arc(cr, ix-0.5, iy-0.5, size, 0, 2*M_PI);
-		break;
-	    case 2:// x
-		cairo_move_to(cr,ix-size1,iy-size1);
-		cairo_line_to(cr,ix+size,iy+size);
-		cairo_move_to(cr,ix+size,iy-size1);
-		cairo_line_to(cr,ix-size1,iy+size);
-		break;
-	    case 3:// +
-		//-1 is because flipping makes effective rounding of 0.5 differently.
-		cairo_move_to(cr,ix-size1,iy-1);
-		cairo_line_to(cr,ix+size,iy-1);
-		cairo_move_to(cr,ix,iy-size1);
-		cairo_line_to(cr,ix,iy+size);
-		break;
-	    case 4:// square []
-		cairo_move_to(cr,ix-size1,iy-size1);
-		cairo_line_to(cr,ix+size,iy-size1);
-		cairo_line_to(cr,ix+size,iy+size);
-		cairo_move_to(cr,ix+size,iy+size-1);
-		cairo_line_to(cr,ix-size1,iy+size-1);
-		cairo_move_to(cr,ix-size,iy+size-1);
-		cairo_line_to(cr,ix-size,iy-size1);
-		break;
-	    default:
-		warning("Invalid style\n");
+
+	    for(unsigned int ips=0; ips<drawdata->nptsx; ips++){
+		//Mape the coordinate to the image
+		double ix=round((ptsx[ips]-centerx)*scalex*zoomx+ncx);
+		double iy=round((ptsy[ips]-centery)*scaley*zoomy+ncy);
+		//info("%.6f %.6f %.6f %.6f\n", drawdata->ptsx[ips], drawdata->ptsy[ips], ix, iy);
+		if(ix<-2 ||ix>widthim+2 || iy<-2 || iy>heightim+2) continue;
+		if(drawdata->ptsmod==0 && drawdata->nstyle>1){
+		    style=drawdata->style[ips]&0x7;//last three bits
+		    connect=(drawdata->style[ips]&0x8)>>3;//fourth bit.
+		    size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoomx));
+		    size1=size+1;
+		    int color=(drawdata->style[ips]&0xFFFFFF00)>>8;
+		    int r=color/100;
+		    int g=(color-r*100)/10;
+		    int b=color-r*100-g*10;
+		    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+		    if(style>5) style=0;
+		    if(style==5) connect=1;
+		}
+		if(connect && ips>0){
+		    cairo_line_to(cr, ix, iy);
+		}
+		switch(style){
+		case 0:// .
+		    cairo_new_sub_path(cr);
+		    cairo_arc(cr, ix-0.5, iy-0.5, 0., 0, 2*M_PI);
+		    cairo_arc(cr, ix-0.5, iy-0.5, 1, 0, 2*M_PI);
+		    cairo_move_to(cr, ix, iy);
+		    break;
+		case 1:// o
+		    cairo_new_sub_path(cr);
+		    cairo_arc(cr, ix-0.5, iy-0.5, size, 0, 2*M_PI);
+		    cairo_move_to(cr, ix, iy);
+		    break;
+		case 2:// x
+		    cairo_move_to(cr,ix-size1,iy-size1);
+		    cairo_line_to(cr,ix+size,iy+size);
+		    cairo_move_to(cr,ix+size,iy-size1);
+		    cairo_line_to(cr,ix-size1,iy+size);
+		    cairo_move_to(cr, ix, iy);
+		    break;
+		case 3:// +
+		    //-1 is because flipping makes effective rounding of 0.5 differently.
+		    cairo_move_to(cr,ix-size1,iy-1);
+		    cairo_line_to(cr,ix+size,iy-1);
+		    cairo_move_to(cr,ix,iy-size1);
+		    cairo_line_to(cr,ix,iy+size);
+		    cairo_move_to(cr, ix, iy);
+		    break;
+		case 4:// square []
+		    cairo_move_to(cr,ix-size1,iy-size1);
+		    cairo_line_to(cr,ix+size,iy-size1);
+		    cairo_line_to(cr,ix+size,iy+size);
+		    cairo_move_to(cr,ix+size,iy+size-1);
+		    cairo_line_to(cr,ix-size1,iy+size-1);
+		    cairo_move_to(cr,ix-size,iy+size-1);
+		    cairo_line_to(cr,ix-size,iy-size1);
+		    cairo_move_to(cr, ix, iy);
+		    break;
+		case 5://nothing. just connect lines
+		    break;
+		default:
+		    warning("Invalid style\n");
+		}
+		if(drawdata->nstyle>0){
+		    cairo_stroke(cr);//stroke each point because color may change.
+		}
+	    }//ipts
+
+	    if(!drawdata->style){
+		cairo_stroke(cr);//stroke all together.
 	    }
-	    if(drawdata->style)
-		cairo_stroke(cr);//stroke each point.
-	}
-	if(!drawdata->style)
-	    cairo_stroke(cr);//stroke all together.
+	}//iptsy
 	cairo_restore(cr);
     }
     if(drawdata->ncir>0){
@@ -492,8 +557,8 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	cairo_set_line_width(cr,1);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_GRAY);
 
-	double centerx=(xmax+xmin)/2-drawdata->offx/scale;
-	double centery=(ymax+ymin)/2-drawdata->offy/scale;
+	double centerx=(xmax+xmin)/2-drawdata->offx/scalex;
+	double centery=(ymax+ymin)/2-drawdata->offy/scaley;
 	int ncx=widthim/2;
 	int ncy=heightim/2;
 
@@ -502,10 +567,10 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	    int r=color/100;
 	    int g=(color-r*100)/10;
 	    int b=color-r*100-g*10;
-	    double ix=(drawdata->cir[icir][0]-centerx)*scale*zoom+ncx;
-	    double iy=(drawdata->cir[icir][1]-centery)*scale*zoom+ncy;
+	    double ix=(drawdata->cir[icir][0]-centerx)*scalex*zoomx+ncx;
+	    double iy=(drawdata->cir[icir][1]-centery)*scaley*zoomy+ncy;
 	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
-	    cairo_arc(cr,ix,iy, drawdata->cir[icir][2]*scale*zoom,
+	    cairo_arc(cr,ix,iy, drawdata->cir[icir][2]*scalex*zoomx,
 		      0,M_PI*2);
 	    cairo_stroke(cr);
 	}
@@ -528,6 +593,7 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     drawdata->limit0[1]=xmax0;
     drawdata->limit0[2]=ymin0;
     drawdata->limit0[3]=ymax0;
+    //info("limit: %.6f %.6f %.6f %.6f\n", xmin0, xmax0, ymin0, ymax0);
     char ticval[80];
     double tic1, dtic;
     int ntic, order;
@@ -628,7 +694,7 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 
 typedef struct updatetimer_t{
     int pending;
-    gpointer pdata;
+    drawdata_t *drawdata;
 }updatetimer_t;
 static void update_pixmap(drawdata_t *drawdata){
     //no more pending updates, do the updating.
@@ -644,13 +710,23 @@ static void update_pixmap(drawdata_t *drawdata){
 }
 static gboolean update_pixmap_timer(gpointer timer0){
     updatetimer_t *timer=(updatetimer_t*)timer0;
-    gpointer pdata=timer->pdata;
-    drawdata_t* drawdata=*((drawdata_t**)pdata);
+    drawdata_t *drawdata=timer->drawdata;
     if(timer->pending==drawdata->pending){
 	update_pixmap(drawdata);
     }
     free(timer);
     return FALSE;
+}
+static void delayed_update_pixmap(drawdata_t *drawdata){
+    drawdata->pending++;
+    updatetimer_t *tmp=calloc(1, sizeof(updatetimer_t));
+    tmp->pending=drawdata->pending;
+    tmp->drawdata=drawdata;
+    if(!drawdata->pixmap){
+	update_pixmap(drawdata);
+    }else{
+	g_timeout_add(100, update_pixmap_timer, tmp);
+    }
 }
 /* Create a new backing pixmap of the appropriate size and draw there.*/
 static gboolean
@@ -659,15 +735,7 @@ on_configure_event(GtkWidget *widget, GdkEventConfigure *event, gpointer pdata){
     drawdata_t* drawdata=*((drawdata_t**)pdata);
     drawdata->width=widget->allocation.width;
     drawdata->height=widget->allocation.height;
-    drawdata->pending++;
-    updatetimer_t *tmp=calloc(1, sizeof(updatetimer_t));
-    tmp->pending=drawdata->pending;
-    tmp->pdata=pdata;
-    if(!drawdata->pixmap){
-	update_pixmap(drawdata);
-    }else{
-	g_timeout_add(100, update_pixmap_timer, tmp);
-    }
+    delayed_update_pixmap(drawdata);
     return FALSE;
 }
 /* Redraw the screen from the backing pixmap */
@@ -703,9 +771,8 @@ static void drawdata_free(drawdata_t *drawdata){
     if(drawdata->p){
 	free(drawdata->p);
     }
-    if(drawdata->npts>0){
-	free(drawdata->ptsx);
-	free(drawdata->ptsy);
+    if(drawdata->nptsx>0){
+	dfree(drawdata->pts);
     }
     if(drawdata->nstyle>0){
 	free(drawdata->style);
@@ -721,20 +788,36 @@ static void drawdata_free(drawdata_t *drawdata){
     free(drawdata->limit);
     free(drawdata);
 }
-static void do_zoom(drawdata_t *drawdata, int mode){
-    if(mode==1){
-	drawdata->zoom*=1.2;
+static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
+    double old_zoomx=drawdata->zoomx;
+    double old_zoomy=drawdata->zoomy;
+    if(mode==1){//zoom in
+	drawdata->zoomx*=1.2;
+	drawdata->zoomy*=1.2;
     }else if(mode==-1){
-	drawdata->zoom*=0.8;
-    }else if(mode==0){
-	drawdata->zoom=1;
+	drawdata->zoomx/=1.2;
+	drawdata->zoomy/=1.2;
+    }else if(mode==0){//reset everything
+	drawdata->zoomx=1;
+	drawdata->zoomy=1;
 	drawdata->offx=0;
 	drawdata->offy=0;
     }
-    if(drawdata->zoom<0.001)
-	drawdata->zoom=0.001;
-    else if(drawdata->zoom>1000){
-	drawdata->zoom=1000;
+    if(drawdata->zoomx<0.001)
+	drawdata->zoomx=0.001;
+    else if(drawdata->zoomx>1000){
+	drawdata->zoomx=1000;
+    }
+    if(drawdata->zoomy<0.001)
+	drawdata->zoomy=0.001;
+    else if(drawdata->zoomy>1000){
+	drawdata->zoomy=1000;
+    }
+    if(mode){
+	double factorx=1/old_zoomx-1/drawdata->zoomx;
+	drawdata->offx-=xdiff*factorx;
+	double factory=1/old_zoomy-1/drawdata->zoomy;
+	drawdata->offy-=ydiff*factory;
     }
     update_pixmap(drawdata);
 }
@@ -812,9 +895,8 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
     return out;
 }
 static void do_move(drawdata_t *drawdata, double xdiff, double ydiff){
-    double ratio=1./(drawdata->zoom);
-    drawdata->offx+=xdiff*ratio;
-    drawdata->offy+=ydiff*ratio;
+    drawdata->offx+=xdiff/drawdata->zoomx;
+    drawdata->offy+=ydiff/drawdata->zoomy;
     update_pixmap(drawdata);
 }
 static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event, 
@@ -838,10 +920,12 @@ static gboolean scroll_event(GtkWidget *widget, GdkEventScroll *event,
 			     drawdata_t **drawdatawrap){
     (void)widget;
     drawdata_t *drawdata=*drawdatawrap;
+    double xdiff=event->x-drawdata->centerx;
+    double ydiff=-(event->y-drawdata->centery);
     if(event->direction == GDK_SCROLL_UP){
-	do_zoom(drawdata,1);
+	do_zoom(drawdata,xdiff,ydiff,1);
     }else if(event->direction == GDK_SCROLL_DOWN){
-	do_zoom(drawdata,-1);
+	do_zoom(drawdata,xdiff,ydiff,-1);
     }
     return FALSE;
 }
@@ -913,20 +997,20 @@ static gboolean key_press(GtkWidget *widget, GdkEventKey *event,
 	switch(event->keyval){
 	case GDK_plus:
 	case GDK_equal:
-	    do_zoom(*drawdatawrap,1); break;
+	    do_zoom(*drawdatawrap,0,0,1); break;
 	case GDK_minus:
-	    do_zoom(*drawdatawrap,-1);break;
+	    do_zoom(*drawdatawrap,0,0,-1);break;
 	case GDK_0:
 	case GDK_1:
-	    do_zoom(*drawdatawrap,0);break;
+	    do_zoom(*drawdatawrap,0,0,0);break;
 	case GDK_Left:
-	    do_move(*drawdatawrap,10,0);break;
-	case GDK_Right:
 	    do_move(*drawdatawrap,-10,0);break;
+	case GDK_Right:
+	    do_move(*drawdatawrap,10,0);break;
 	case GDK_Up:
-	    do_move(*drawdatawrap,0,-10);break;
-	case GDK_Down:
 	    do_move(*drawdatawrap,0,10);break;
+	case GDK_Down:
+	    do_move(*drawdatawrap,0,-10);break;
 	}
     }
     return TRUE;
@@ -975,15 +1059,16 @@ static void addpage(drawdata_t **drawdatawrap)
 	drawdata_t *drawdata_old=(*drawdata_wrapold);
 	drawdata->drawarea=drawdata_old->drawarea;
 	drawdata->page=drawdata_old->page;
-	drawdata->zoom=drawdata_old->zoom;
+	drawdata->zoomx=drawdata_old->zoomx;
+	drawdata->zoomy=drawdata_old->zoomy;
 	drawdata->offx=drawdata_old->offx;
 	drawdata->offy=drawdata_old->offy;
 	drawdata_free(*drawdata_wrapold);
 	*drawdata_wrapold=drawdata;//just replace the data
-	gtk_widget_hide(drawdata->drawarea);
-	gtk_widget_show(drawdata->drawarea);
-	//g_signal_emit_by_name(drawdata->drawarea,"configure-event");
-	//g_signal_emit_by_name(drawdata->drawarea,"expose-event");
+	//gtk_widget_hide(drawdata->drawarea);
+	//gtk_widget_show(drawdata->drawarea);
+	g_signal_emit_by_name(drawdata->drawarea,"configure-event",NULL);
+	g_signal_emit_by_name(drawdata->drawarea,"expose-event",NULL);
     }else{
 	//new tab inside the fig to contain the plot.
 	drawdata->page=page=gtk_scrolled_window_new(NULL,NULL);
@@ -1116,7 +1201,7 @@ static void tool_zoom(GtkToolButton *button, gpointer data){
     GtkWidget *page=get_current_page();
     drawdata_t **pdrawdata=g_object_get_data(G_OBJECT(page),"drawdatawrap");
     int mode=GPOINTER_TO_INT(data);
-    do_zoom(*pdrawdata,mode);
+    do_zoom(*pdrawdata,0,0,mode);
 }
 
 typedef struct {
@@ -1131,27 +1216,66 @@ static void limit_change(GtkSpinButton *button, gpointer data){
     
     spin_t *spin=data;
     drawdata_t *drawdata=spin->data;
+    double diffx=drawdata->limit[1]-drawdata->limit[0];
+    double diffy=drawdata->limit[3]-drawdata->limit[2];
     double diffx0=drawdata->limit0[1]-drawdata->limit0[0];
     double diffy0=drawdata->limit0[3]-drawdata->limit0[2];
-    double valold=drawdata->limit0[spin->i];
+    //update the values
     drawdata->limit0[spin->i]=gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin->w));
-    switch(spin->i){
-    case 0:
-	drawdata->offx+=drawdata->limit0[0]-valold;//don't break;
-    case 1:
-	drawdata->zoom/=(drawdata->limit0[1]-drawdata->limit0[0])/diffx0;
-	break;
-    case 2:
-	drawdata->offy+=drawdata->limit0[2]-valold;//don't break;
-    case 3:
-	drawdata->zoom/=(drawdata->limit0[3]-drawdata->limit0[2])/diffy0;
-	break;
+    double diffx1=drawdata->limit0[1]-drawdata->limit0[0];
+    double diffy1=drawdata->limit0[3]-drawdata->limit0[2];
+    if(diffx1 > diffx*1e-3 && diffy1 > diffy *1e-3){
+	//the new zoom
+	double xdiff=0;
+	double ydiff=0;
+	double old_zoomx=drawdata->zoomx;
+	double old_zoomy=drawdata->zoomy;
+	double ratiox=1.;
+	double ratioy=1.;
+	switch(spin->i){
+	case 0:
+	    xdiff=drawdata->widthim/2;//keep the right limit unchanged
+	    ratiox=diffx0/diffx1;
+	    break;
+	case 1:
+	    xdiff=-drawdata->widthim/2;//keep the left limit unchanged
+	    ratiox=diffx0/diffx1;
+	    break;
+	case 2:
+	    ydiff=drawdata->heightim/2;
+	    ratioy=diffy0/diffy1;
+	    break;
+	case 3:
+	    ydiff=-drawdata->heightim/2;
+	    ratioy=diffy0/diffy1;
+	    break;
+	}
+	if(drawdata->square){
+	    if(spin->i==0 || spin->i == 1){
+		ratioy=ratiox;
+	    }else{
+		ratiox=ratioy;
+	    }
+	}
+	drawdata->zoomx*=ratiox;
+	drawdata->zoomy*=ratioy;
+	if(spin->i==0 || spin->i == 1){
+	    double factor=1/old_zoomx-1/drawdata->zoomx;
+	    drawdata->offx-=xdiff*factor;
+	}else{
+	    double factor=1/old_zoomy-1/drawdata->zoomy;
+	    drawdata->offy-=ydiff*factor;
+	}
     }
-    update_pixmap(drawdata);
+    delayed_update_pixmap(drawdata);
     spin_t *lim=spin-spin->i;
     for(int i=0; i<4; i++){//update spin button's value.
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), drawdata->limit0[i]);
     }
+}
+static void checksq_toggle(GtkToggleButton *btn, drawdata_t *drawdata){
+    drawdata->square=gtk_toggle_button_get_active(btn);
+    update_pixmap(drawdata);
 }
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)
@@ -1161,7 +1285,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
     (void)data;
     GtkWidget *page=get_current_page();
     drawdata_t **drawdatawrap=g_object_get_data(G_OBJECT(page),"drawdatawrap");
-    if(!drawdatawrap || 1){
+    if(!drawdatawrap){
 	return;
     }
     drawdata_t *drawdata=*drawdatawrap;
@@ -1192,6 +1316,11 @@ static void tool_property(GtkToolButton *button, gpointer data){
 	lim[i].data=drawdata;
     }
     gint irow=0;
+    GtkWidget *checksq=gtk_check_button_new_with_label("Make image square");
+    gtk_table_attach_defaults(GTK_TABLE(table), checksq, 0, 4, irow, irow+1);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checksq), drawdata->square);
+    g_signal_connect(checksq, "toggled", G_CALLBACK(checksq_toggle), drawdata);
+    irow++;
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), lim[0].w, 1, 2, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmax"), 2, 3, irow, irow+1);
@@ -1317,13 +1446,14 @@ static int read_fifo(FILE *fp){
 		warning("FIFO_START: drawdata is not empty\n");
 	    }
 	    drawdata=calloc(1, sizeof(drawdata_t));
-	    drawdata->zoom=1;
+	    drawdata->zoomx=1;
+	    drawdata->zoomy=1;
 	    drawdata->name=defname;
 	    drawdata->format=(cairo_format_t)0;
 	    drawdata->gray=0;
 	    drawdata->fig=NULL;
 	    break;
-	case FIFO_DATA:
+	case FIFO_DATA://image data.
 	    {
 		int32_t header[2];
 		FILE_READ(header, 2*sizeof(int32_t));
@@ -1336,11 +1466,12 @@ static int read_fifo(FILE *fp){
 	    }
 	    break;
 	case FIFO_POINTS:
-	    FILE_READ_INT(drawdata->npts);
-	    drawdata->ptsx=calloc(drawdata->npts, sizeof(double));
-	    drawdata->ptsy=calloc(drawdata->npts, sizeof(double));
-	    FILE_READ(drawdata->ptsx, sizeof(double)*drawdata->npts);
-	    FILE_READ(drawdata->ptsy,sizeof(double)*drawdata->npts);
+	    FILE_READ_INT(drawdata->nptsx);
+	    drawdata->nptsy=2;
+	    drawdata->pts=dnew(drawdata->nptsx, 2);
+	    drawdata->ptsmod=0;//grid.
+	    drawdata->square=1;
+	    FILE_READ(drawdata->pts->p, sizeof(double)*drawdata->nptsx*2);
 	    break;
 	case FIFO_STYLE:
 	    FILE_READ_INT(drawdata->nstyle);
@@ -1408,16 +1539,21 @@ static int read_fifo(FILE *fp){
 			(drawdata->p, drawdata->format, nx, ny, stride);
 		    gdk_threads_leave();
 		}
-		if(drawdata->npts>0){
+		if(drawdata->nptsx>0){
 		    if(!drawdata->limit){
 			drawdata->limit=calloc(4, sizeof(double));
-			maxmindbl(drawdata->ptsx, drawdata->npts,
+			maxmindbl(drawdata->pts->p, drawdata->nptsx,
 				  drawdata->limit+1, drawdata->limit);
-			maxmindbl(drawdata->ptsy, drawdata->npts,
+			maxmindbl(drawdata->pts->p+drawdata->nptsx, 
+				  drawdata->nptsx*(drawdata->nptsy-1),
 				  drawdata->limit+3, drawdata->limit+2);
 		    }
-		    if(drawdata->nstyle>0 && drawdata->nstyle!=drawdata->npts){
-			error("nstyle must equal to npts\n");
+		    if(drawdata->nstyle>1){
+			if(drawdata->ptsmod==0 && drawdata->nstyle!=drawdata->nptsx){
+			    error("nstyle must equal to nptsx\n");
+			}else if(drawdata->ptsmod==1  && drawdata->nstyle!=drawdata->nptsy-1){
+			    error("nstyle must equal to nptsy-1\n");
+			}
 		    }
 		}
 		if(!drawdata->fig) drawdata->fig=deffig;

@@ -13,12 +13,13 @@ ___bin_record_cpu_SOURCES=record_cpu.c
 ___bin_record_CPU_CFLAGS=$(OPTScommon) $(AM_CFLAGS)
 endif
 if DRAW
-PROGS+=../bin/drawdaemon ../bin/drawbin
+PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres
 ___bin_drawdaemon_SOURCES=drawdaemon.c
 ___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
 ___bin_drawdaemon_LDFLAGS=
 ___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0
 ___bin_drawbin_SOURCES=drawbin.c
+___bin_drawres_SOURCES=drawres.c
 endif
 if MON
 if MONN  #FULL with notify

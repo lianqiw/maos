@@ -69,4 +69,21 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp,
 extern int disable_draw;
 #define DRAW_GRAY   0x0
 #define DRAW_COLOR  0x1
+enum{
+    FIFO_START=0, //Mark the starting of data stream.
+    FIFO_DATA,
+    FIFO_SHM,
+    FIFO_POINTS,
+    FIFO_STYLE,
+    FIFO_CIRCLE,
+    FIFO_LIMIT,
+    FIFO_FIG,
+    FIFO_NAME,
+    FIFO_TITLE,
+    FIFO_XLABEL,
+    FIFO_YLABEL,
+    FIFO_MAXMIN,
+    FIFO_END=100
+};
+
 #endif

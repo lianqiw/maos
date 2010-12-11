@@ -18,23 +18,6 @@
 #ifndef __DRAWDAEMON_H
 #define __DRAWDAEMON_H
 #define CSIZE       512
-enum{
-    FIFO_START=0, //Mark the starting of data stream.
-    FIFO_DATA,
-    FIFO_SHM,
-    FIFO_POINTS,
-    FIFO_STYLE,
-    FIFO_CIRCLE,
-    FIFO_LIMIT,
-    FIFO_FIG,
-    FIFO_NAME,
-    FIFO_TITLE,
-    FIFO_XLABEL,
-    FIFO_YLABEL,
-    FIFO_MAXMIN,
-    FIFO_END=100
-};
-
 #ifndef CAIRO_FORMAT_A8
 #define CAIRO_FORMAT_RGB24 0x01
 #define CAIRO_FORMAT_A8 0x02
