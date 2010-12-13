@@ -135,7 +135,16 @@ void rectmapfree_do(rectmap_t *map){
     free(map->p);
     free(map);
 }
-
+/**
+   Create a loc with nloc elements.
+*/
+loc_t *locnew(long nloc){
+    loc_t *loc=calloc(1, sizeof(loc_t));
+    loc->locx=calloc(nloc, sizeof(double));
+    loc->locy=calloc(nloc, sizeof(double));
+    loc->nloc=nloc;
+    return loc;
+}
 /**
    Create an vector to embed OPD into square array for FFT purpose.
 */

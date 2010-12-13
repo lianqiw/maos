@@ -151,36 +151,55 @@ inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
  */
-void plot_coord(char *fig,          /**<Category of the figure*/
-		long npts,          /**<Number of points to plot*/
-		const double *ptsx, /**<x coord of points*/
-		const double *ptsy, /**<y coord of points*/
-		const int32_t *style,  /**<Style of each point*/
-		const double *limit,/**<x min, xmax, ymin and ymax*/
-		int ncir,           /**<Number of circles*/
-		double (*pcir)[4],  /**<Data for the circles: x, y origin, radius, and color*/
-		const char *title,  /**<title of the plot*/
-		const char *xlabel, /**<x axis label*/
-		const char *ylabel, /**<y axis label*/
-		const char *format, /**<subcategory of the plot.*/
-		...){
+void plot_points(char *fig,          /**<Category of the figure*/
+		 long ngroup,        /**<Number of groups to plot*/
+		 loc_t **loc,        /**<Plot arrays of loc as grid*/
+		 dcell *cell,         /**<If loc ismpety, use cell to plot curves*/
+		 const int32_t *style,  /**<Style of each point*/
+		 const double *limit,/**<x min, xmax, ymin and ymax*/
+		 int ncir,           /**<Number of circles*/
+		 double (*pcir)[4],  /**<Data for the circles: x, y origin, radius, and color*/
+		 const char *title,  /**<title of the plot*/
+		 const char *xlabel, /**<x axis label*/
+		 const char *ylabel, /**<y axis label*/
+		 const char *format, /**<subcategory of the plot.*/
+		 ...){
     format2fn;
     LOCK(lock);
-    if(fifo_open()){
+    if(fifo_open()){//failed to open.
 	goto done;
     }
     //info2("pts");getchar();
     FWRITEINT(pfifo, FIFO_START);
-    if(npts>0){//there are points to plot.
-	FWRITEINT(pfifo, FIFO_POINTS);
-	FWRITEINT(pfifo, npts);
-	FWRITE(ptsx, sizeof(double), npts, pfifo);
-	FWRITE(ptsy, sizeof(double), npts, pfifo);
-	if(style){
-	    FWRITEINT(pfifo,FIFO_STYLE);
-	    FWRITEINT(pfifo,npts);
-	    FWRITE(style,sizeof(uint32_t),npts,pfifo);
+    if(loc){//there are points to plot.
+	for(int ig=0; ig<ngroup; ig++){
+	    FWRITEINT(pfifo, FIFO_POINTS);
+	    FWRITEINT(pfifo, loc[ig]->nloc);
+	    FWRITEINT(pfifo, 2);
+	    FWRITEINT(pfifo, 1);
+	    FWRITE(loc[ig]->locx, sizeof(double), loc[ig]->nloc, pfifo);
+	    FWRITE(loc[ig]->locy, sizeof(double), loc[ig]->nloc, pfifo);
 	}
+	if(cell){
+	    warning("both loc and cell are specified\n");
+	}
+    }else if(cell){
+	if(ngroup!=cell->nx*cell->ny){
+	    warning("ngroup and dimension of cell mismatch\n");
+	    ngroup=cell->nx*cell->ny;
+	}
+	for(int ig=0; ig<ngroup; ig++){
+	    FWRITEINT(pfifo, FIFO_POINTS);
+	    FWRITEINT(pfifo, cell->p[ig]->nx);
+	    FWRITEINT(pfifo, cell->p[ig]->ny);
+	    FWRITEINT(pfifo, 0);
+	    FWRITE(cell->p[ig]->p, sizeof(double),cell->p[ig]->nx*cell->p[ig]->ny, pfifo);
+	}
+    }
+    if(style){
+	FWRITEINT(pfifo,FIFO_STYLE);
+	FWRITEINT(pfifo,ngroup);
+	FWRITE(style,sizeof(uint32_t),ngroup,pfifo);
     }
     if(ncir>0){
 	FWRITEINT(pfifo, FIFO_CIRCLE);

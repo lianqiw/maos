@@ -39,8 +39,13 @@
 #include "misc.h"
 #include "mathmisc.h"
 #include "icon-draw.h"
+#include "mouse_hand.h"
+#include "mouse_white.h"
 char *defname="Title";
 char *deffig="Figure";
+double stroke_dot[2]={1,5};
+double stroke_dash[2]={10,10};
+double stroke_solid[2]={10,0};
 typedef struct drawdata_t{
     //The following are for surfaces
     int nx, ny;   //array size
@@ -49,10 +54,8 @@ typedef struct drawdata_t{
     unsigned char *p;//converted pointer of char or int.
     int gray;       //do we draw in gray scale or in colored
     //The following are for points
-    dmat *pts;      //pts;
-    int ptsmod;     //mode of pts: 0: loc, 1: curve
-    unsigned int nptsx;//number of points
-    unsigned int nptsy;//number of columns: 2 for loc, multiple for curve plotting.
+    dmat **pts;      //pts;
+    int npts;        //number of pts mat, not points.
     int32_t *style;
     unsigned int nstyle;
     double (*cir)[4];
@@ -78,12 +81,19 @@ typedef struct drawdata_t{
     double zoomx, zoomy;//zoom level.
     double offx,offy;//off set of the center of the data.
     double mxdown,mydown;
+    double mdx, mdy;
     double scalex, scaley;//scale of the data to fit the display.
     double centerx, centery;
+    double xoff, yoff;//offset of the area to draw figure.
+
     double limit0[4];//x,y limit of displayed region.
     int square;//make x/y scaling be the same, for image and coordinate display
     int reconfig;
+    int valid;//move is valid.
     int font_name_version;
+    int grid;//whether we want grid lines.
+    int ticinside;//put tick inside.
+    int cursorinside;
 }drawdata_t;
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
@@ -96,6 +106,10 @@ static char *font_name=NULL;
 static double font_size=9;
 static cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 static cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
+GdkCursor *cursors[2];
+GdkPixbuf *pix_hand;
+GdkPixbuf *pix_arrow;
+int cursor_type=0;//cursor type of the drawing area.
 //Spaces reserved for title, label, etc
 #define SP_LEG 20//space between image and legend
 #define LEN_LEG 25 //size of legend
@@ -120,29 +134,7 @@ static const char *rc_string_notebook={
 	gtk_dialog_run(GTK_DIALOG(dialog0));		\
 	gtk_widget_destroy(dialog0);			\
     }
-/*
-  static void pango_text(cairo_t *cr, double x, double y, double rot, int center,
-  const char *text){
-  cairo_save(cr);
-  cairo_translate(cr, x, y);
-  cairo_set_source_rgb(cr,0,0,0);
-  if(fabs(rot)>1.e-10)
-  cairo_rotate(cr,rot);
-  PangoLayout *layout=pango_cairo_create_layout(cr);
-  pango_layout_set_font_description(layout, pfd);
-  pango_layout_set_text(layout, text, -1);
-  int width, height;
-  if(center){
-  pango_layout_get_pixel_size(layout,&width,&height);
-  warning("width=%d, height=%d\n",width,height);
-  //cairo_translate(cr,-width*0.5,-height*0.5);
-  pango_cairo_update_layout(cr, layout);
-  }
 
-  pango_cairo_show_layout(cr,layout);
-  g_object_unref(layout);
-  cairo_restore(cr);
-  }*/
 /**
    convert double to int
 */
@@ -293,7 +285,7 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 		     double xmax, double xmin){
     double diff=xmax-xmin;
     int order1;
-    if(fabs(diff)<fabs(1.e-4*xmax)){
+    if(fabs(diff)<fabs(1.e-4*xmax)){//very small separation
 	order1=(int)floor(log10(fabs(xmax)));
 	xmax=xmax/pow(10,order1);
 	*order=order1;
@@ -301,7 +293,9 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	*dtic=0;
 	*tic1=xmax;
     }else{
-	order1=(int)floor(log10(xmax));
+	double rmax=fabs(xmax);
+	if(fabs(xmin)>rmax) rmax=fabs(xmin);
+	order1=(int)floor(log10(rmax));
 	diff/=pow(10,order1);
 	if(diff<2){
 	    order1=order1-1;
@@ -327,6 +321,25 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	*dtic=*dtic*pow(10,*order);
 	*order=0;
     }
+}
+/**
+   Create a color based on index.
+*/
+static int default_color(int ind){
+    //we only have 8 colors
+    static int *color=NULL;
+    if(!color){
+	color=calloc(8, sizeof(int));
+	color[0]=0x009;
+	color[1]=0x900;
+	color[2]=0x090;
+	color[3]=0x099;
+	color[4]=0x909;
+	color[5]=0x990;
+	color[6]=0x999;
+	color[7]=0x449;
+    }
+    return color[ind & 7];
 }
 /**
    The master routine that draws in the cairo surface.
@@ -363,8 +376,11 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	xdim=xmax-xmin;
 	ydim=ymax-ymin;
     }
-    
-    double scalex = (double)(width-SP_XL-SP_XR)/xdim;
+    double sp_xr=20;
+    if(drawdata->image){//there is a colorbar
+	sp_xr=SP_XR;
+    }
+    double scalex = (double)(width-SP_XL-sp_xr)/xdim;
     double scaley = (double)(height-SP_YT-SP_YB)/ydim;
     if(drawdata->square){
 	scale  = (scalex<scaley?scalex:scaley);
@@ -379,8 +395,10 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     drawdata->scalex=scalex;
     drawdata->scaley=scaley;
     //Offset in the cairo surface to draw the image.
-    double xoff=round(((width-widthim-SP_XL-SP_XR)*0.5)+SP_XL);
+    double xoff=round(((width-widthim-SP_XL-sp_xr)*0.5)+SP_XL);
     double yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
+    drawdata->xoff=xoff;
+    drawdata->yoff=yoff;
     //center of the image on the screen.
     drawdata->centerx=xoff+widthim*0.5;
     drawdata->centery=yoff+heightim*0.5;
@@ -392,7 +410,12 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     cairo_translate(cr,xoff, heightim+yoff);
     cairo_scale(cr,1,-1);
     //clip out an rectangular region to draw.
-    cairo_rectangle(cr,-5,-5,widthim+10,heightim+10);
+    cairo_rectangle(cr,0,0,widthim,heightim);
+
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
+    cairo_set_line_width(cr,1);
+    cairo_stroke(cr);//border
+    cairo_rectangle(cr,0,0,widthim,heightim);
     cairo_clip(cr);
     if(drawdata->image){
 	cairo_save(cr);
@@ -427,9 +450,10 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	cairo_restore(cr);
     }
  
-    if(drawdata->nptsx>0){
+    if(drawdata->npts>0){
 	cairo_save(cr);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);//GRAY
+	int color=0x009;
 	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);
 	cairo_set_line_width(cr,1);
 	int style=3;
@@ -442,11 +466,7 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	    connect=(drawdata->style[ips]&0x8)>>3;//fourth bit.
 	    size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoomx));
 	    size1=size+1;
-	    int color=(drawdata->style[ips]&0xFFFFFF00)>>8;
-	    int r=color/100;
-	    int g=(color-r*100)/10;
-	    int b=color-r*100-g*10;
-	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+	    color=(drawdata->style[ips]&0xFFFFFF00)>>8;
 	    if(style>5) style=0;
 	    if(style==5) connect=1;//required.
 	}
@@ -459,43 +479,43 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	xmin0=((-widthim*0.5)/zoomx - drawdata->offx)/scalex+centerx;
 	ymax0=(((heightim)*0.5)/zoomy - drawdata->offy)/scaley+centery;
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
-	double *ptsx=drawdata->pts->p;
-	for(unsigned int iptsy=1; iptsy<drawdata->nptsy; iptsy++){
-	    double *ptsy=ptsx+iptsy*drawdata->nptsx;
-	    if(drawdata->ptsmod==1 && drawdata->nstyle>1){
-		int ips=iptsy-1;
-		style=drawdata->style[ips]&0x7;//last three bits
-		connect=(drawdata->style[ips]&0x8)>>3;//fourth bit.
-		size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoomx));
+	for(int ipts=0; ipts<drawdata->npts; ipts++){
+	    dmat *pts=drawdata->pts[ipts];
+	    double *ptsx=NULL, *ptsy=NULL;
+	    if(pts->ny==2){
+		ptsx=pts->p;	
+		ptsy=ptsx+pts->nx;
+	    }else{
+		ptsy=pts->p;
+	    }
+	    if(drawdata->nstyle>1){
+		style=drawdata->style[ipts]&0x7;//last three bits
+		connect=(drawdata->style[ipts]&0x8)>>3;//fourth bit.
+		size=round(((drawdata->style[ipts]&0xF0)>>4) * sqrt(zoomx));
 		size1=size+1;
-		int color=(drawdata->style[ips]&0xFFFFFF00)>>8;
-		int r=color/100;
-		int g=(color-r*100)/10;
-		int b=color-r*100-g*10;
-		cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+		color=(drawdata->style[ipts]&0xFFFFFF00)>>8;
 		if(style>5) style=0;
 		if(style==5) connect=1;//required.
+	    }else if(!drawdata->square){//we are drawing curves.
+		style=5;
+		connect=1;
+		color=default_color(ipts);
 	    }
-
-	    for(unsigned int ips=0; ips<drawdata->nptsx; ips++){
+	    int r=color/100;
+	    int g=(color-r*100)/10;
+	    int b=color-r*100-g*10;
+	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+	    for(unsigned int ips=0; ips<pts->nx; ips++){
 		//Mape the coordinate to the image
-		double ix=round((ptsx[ips]-centerx)*scalex*zoomx+ncx);
-		double iy=round((ptsy[ips]-centery)*scaley*zoomy+ncy);
-		//info("%.6f %.6f %.6f %.6f\n", drawdata->ptsx[ips], drawdata->ptsy[ips], ix, iy);
-		if(ix<-2 ||ix>widthim+2 || iy<-2 || iy>heightim+2) continue;
-		if(drawdata->ptsmod==0 && drawdata->nstyle>1){
-		    style=drawdata->style[ips]&0x7;//last three bits
-		    connect=(drawdata->style[ips]&0x8)>>3;//fourth bit.
-		    size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoomx));
-		    size1=size+1;
-		    int color=(drawdata->style[ips]&0xFFFFFF00)>>8;
-		    int r=color/100;
-		    int g=(color-r*100)/10;
-		    int b=color-r*100-g*10;
-		    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
-		    if(style>5) style=0;
-		    if(style==5) connect=1;
+		double ix, iy;
+		if(ptsx){
+		    ix=round((ptsx[ips]-centerx)*scalex*zoomx+ncx);
+		}else{
+		    ix=round((ips-centerx)*scalex*zoomx+ncx);
 		}
+		iy=round((ptsy[ips]-centery)*scaley*zoomy+ncy);
+		//info("%.6f %.6f %.6f %.6f\n", drawdata->ptsx[ips], drawdata->ptsy[ips], ix, iy);
+		//if(ix<-2 ||ix>widthim+2 || iy<-2 || iy>heightim+2) continue;
 		if(connect && ips>0){
 		    cairo_line_to(cr, ix, iy);
 		}
@@ -581,11 +601,8 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     //Reverted to unit matrix
     cairo_identity_matrix(cr);
     cairo_translate(cr, xoff, yoff);
-    cairo_rectangle(cr, 0, 0, widthim, heightim);
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
     cairo_set_line_width(cr,1);
-    cairo_stroke(cr);//border
-    
     cairo_select_font_face(cr, font_name, font_style, font_weight);
     cairo_set_font_size(cr, font_size);
     cairo_identity_matrix(cr);
@@ -604,9 +621,23 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	double ticv=tic1+dtic*itic;
 	double val=ticv*pow(10,order);
 	double frac=(val-xmin0)/sep;
+	//draw the tic
 	cairo_move_to(cr,xoff+widthim*frac,yoff+heightim);
-	cairo_line_to(cr,xoff+widthim*frac,yoff+heightim+4);
+	if(drawdata->ticinside){
+	    cairo_line_to(cr,xoff+widthim*frac,yoff+heightim-5);
+	}else{
+	    cairo_line_to(cr,xoff+widthim*frac,yoff+heightim+5);
+	}
 	cairo_stroke(cr);
+	//draw the grid
+	if(drawdata->grid){
+	    cairo_set_dash(cr, stroke_dot, 2, 0);
+	    cairo_move_to(cr,xoff+widthim*frac,yoff);
+	    cairo_line_to(cr,xoff+widthim*frac,yoff+heightim);
+	    cairo_stroke(cr);
+	    cairo_set_dash(cr, stroke_solid, 2, 0);
+	}
+
 	snprintf(ticval,80,"%g",ticv);
 	cairo_text_center(cr,xoff+widthim*frac,
 			  yoff+heightim+font_size*0.6+6,ticval);
@@ -620,9 +651,23 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	double ticv=tic1+dtic*itic;
 	double val=ticv*pow(10,order);
 	double frac=(val-ymin0)/sep;
-	cairo_move_to(cr,xoff,yoff+heightim*(1-frac));
-	cairo_line_to(cr,xoff-4,yoff+heightim*(1-frac));
+	double yh=yoff+heightim*(1-frac);
+	//draw the tic
+	cairo_move_to(cr,xoff,yh);
+	if(drawdata->ticinside){
+	    cairo_line_to(cr,xoff+5,yh);
+	}else{
+	    cairo_line_to(cr,xoff-5,yh);
+	}
 	cairo_stroke(cr);
+	//draw the grid
+	if(drawdata->grid){
+	    cairo_set_dash(cr, stroke_dot, 2, 0);
+	    cairo_move_to(cr,xoff,yh);
+	    cairo_line_to(cr,xoff+widthim,yh);
+	    cairo_stroke(cr);
+	    cairo_set_dash(cr, stroke_solid, 2, 0);
+	}
 	snprintf(ticval,80,"%g",ticv);
 	cairo_vltext_center(cr,xoff-font_size*0.6-4,
 			    yoff+heightim*(1-frac),ticval);
@@ -698,13 +743,23 @@ typedef struct updatetimer_t{
 }updatetimer_t;
 static void update_pixmap(drawdata_t *drawdata){
     //no more pending updates, do the updating.
-    int width=drawdata->width;
-    int height=drawdata->height;
+    gint width=drawdata->width;
+    gint height=drawdata->height;
+    gint width2, height2;
     if(drawdata->pixmap){
-	g_object_unref(drawdata->pixmap);
+	gdk_drawable_get_size(drawdata->pixmap, &width2, &height2);
+	if(width!=width2 || height !=height2){
+	    info("Replacing pixmap\n");
+	    g_object_unref(drawdata->pixmap);
+	    drawdata->pixmap=NULL;
+	}else{
+	    info("Keep old pixmap\n");
+	}
     }
-    //Create a new server size pixmap and then draw on it.
-    drawdata->pixmap=gdk_pixmap_new(window->window, width, height, -1);
+    if(!drawdata->pixmap){
+	//Create a new server size pixmap and then draw on it.
+	drawdata->pixmap=gdk_pixmap_new(window->window, width, height, -1);
+    }
     cairo_draw(gdk_cairo_create(drawdata->pixmap), drawdata,width,height);
     gtk_widget_queue_draw(drawdata->drawarea);
 }
@@ -728,7 +783,7 @@ static void delayed_update_pixmap(drawdata_t *drawdata){
 	g_timeout_add(100, update_pixmap_timer, tmp);
     }
 }
-/* Create a new backing pixmap of the appropriate size and draw there.*/
+/* Create a new backin g pixmap of the appropriate size and draw there.*/
 static gboolean
 on_configure_event(GtkWidget *widget, GdkEventConfigure *event, gpointer pdata){
     (void)event; 
@@ -771,8 +826,11 @@ static void drawdata_free(drawdata_t *drawdata){
     if(drawdata->p){
 	free(drawdata->p);
     }
-    if(drawdata->nptsx>0){
-	dfree(drawdata->pts);
+    if(drawdata->npts>0){
+	for(int ipts=0; ipts<drawdata->npts; ipts++){	
+	    dfree(drawdata->pts[ipts]);
+	}
+	free(drawdata->pts);
     }
     if(drawdata->nstyle>0){
 	free(drawdata->style);
@@ -813,13 +871,49 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
     else if(drawdata->zoomy>1000){
 	drawdata->zoomy=1000;
     }
-    if(mode){
+    if(mode){//not zero.
 	double factorx=1/old_zoomx-1/drawdata->zoomx;
 	drawdata->offx-=xdiff*factorx;
 	double factory=1/old_zoomy-1/drawdata->zoomy;
 	drawdata->offy-=ydiff*factory;
     }
     update_pixmap(drawdata);
+}
+static void do_zoom2(drawdata_t *drawdata, double *limit0old){
+    double diffx=drawdata->limit[1]-drawdata->limit[0];
+    double diffy=drawdata->limit[3]-drawdata->limit[2];
+    double diffx0=limit0old[1]-limit0old[0];
+    double diffy0=limit0old[3]-limit0old[2];
+    double midx0=limit0old[1]+limit0old[0];
+    double midy0=limit0old[3]+limit0old[2];
+
+    double diffx1=drawdata->limit0[1]-drawdata->limit0[0];
+    double diffy1=drawdata->limit0[3]-drawdata->limit0[2];
+    double midx1=drawdata->limit0[1]+drawdata->limit0[0];
+    double midy1=drawdata->limit0[3]+drawdata->limit0[2];
+	info("diffx0=%g, diffy=%g\n", diffx0, diffy0);
+	info("diffx1=%g, diffy=%g\n", diffx1, diffy1);
+	info("offx=%g, offy=%g\n", drawdata->offx, drawdata->offy);
+
+    if(diffx1 > diffx*1e-3 && diffy1 > diffy *1e-3){//limit allowable range
+	//the new zoom
+	double ratiox=1.;
+	double ratioy=1.;
+	ratiox=diffx0/diffx1;
+	ratioy=diffy0/diffy1;
+	if(drawdata->square){//make the ratio equal.
+	    if(ratiox>ratioy){
+		ratioy=ratiox;
+	    }else{
+		ratiox=ratioy;
+	    }
+	}
+	drawdata->zoomx*=ratiox;
+	drawdata->zoomy*=ratioy;
+	drawdata->offx-=(midx1-midx0)*drawdata->widthim/(2*diffx1*drawdata->zoomx);
+	drawdata->offy-=(midy1-midy0)*drawdata->heightim/(2*diffy1*drawdata->zoomy);
+    }
+    delayed_update_pixmap(drawdata);
 }
 /**
    Delete a figure page.
@@ -903,16 +997,49 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 			      drawdata_t **drawdatawrap){
     (void)widget;
     drawdata_t *drawdata=*drawdatawrap;
-    if(event->state & GDK_BUTTON1_MASK){
+    if(event->state & GDK_BUTTON1_MASK && drawdata->valid){
 	double x, y;
 	x = event->x;
 	y = event->y;
-  
-	do_move(drawdata, 
-		x - drawdata->mxdown, 
-		drawdata->mydown - y);//notice the reverse direction on y
-	drawdata->mxdown=x;
-	drawdata->mydown=y;
+	double dx, dy;
+	drawdata->mdx = dx = x - drawdata->mxdown;
+	drawdata->mdy = dy = y - drawdata->mydown;//notice the reverse sign.
+	if(cursor_type==0){//move
+	    do_move(drawdata, dx, -dy);
+	    drawdata->mxdown=x;
+	    drawdata->mydown=y;
+	}else{//select and zoom
+	    //do not use pixmap, use window
+	    if(drawdata->pixmap){//force a refresh to remove previous rectangule
+		    gdk_draw_drawable(widget->window, 
+				      widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
+				      drawdata->pixmap,
+				      0,0,0,0,-1,-1);
+		}
+		cairo_t *cr=gdk_cairo_create(widget->window);
+		cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
+		cairo_set_source_rgba(cr,0,0,1,0.1);
+		cairo_set_line_width(cr, 1);
+		cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, dx, dy);
+		cairo_fill_preserve(cr);
+		cairo_set_source_rgba(cr, 0,0,0,1);
+		cairo_stroke(cr);
+		cairo_destroy(cr);
+	
+	}
+    }else{
+	if(event->x > drawdata->xoff && event->x < drawdata->xoff + drawdata->widthim 
+	   && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
+	    if(!drawdata->cursorinside){
+		drawdata->cursorinside=1;
+		gdk_window_set_cursor(gtk_widget_get_window(widget), cursors[cursor_type]);
+	    }
+	}else{
+	    if(drawdata->cursorinside){
+		drawdata->cursorinside=0;
+		gdk_window_set_cursor(gtk_widget_get_window(widget), NULL);
+	    }
+	}
     }
     return FALSE;
 }
@@ -929,8 +1056,7 @@ static gboolean scroll_event(GtkWidget *widget, GdkEventScroll *event,
     }
     return FALSE;
 }
-static gboolean button_press(GtkWidget *widget, GdkEventButton *event,
-			     drawdata_t **drawdatawrap){
+static gboolean button_press(GtkWidget *widget, GdkEventButton *event, drawdata_t **drawdatawrap){
     drawdata_t *drawdata=*drawdatawrap;
     //Grab focus so the keys work
     if(!GTK_WIDGET_HAS_FOCUS(widget))
@@ -943,27 +1069,42 @@ static gboolean button_press(GtkWidget *widget, GdkEventButton *event,
 		(drawdata->centerx-event->x),
 		-(drawdata->centery-event->y));//notice the reverse sign.
     }else{
-	drawdata->mxdown=event->x;
-	drawdata->mydown=event->y;
+	if(event->x > drawdata->xoff && event->x < drawdata->xoff + drawdata->widthim 
+	   && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
+	    drawdata->mxdown=event->x;
+	    drawdata->mydown=event->y;
+	    drawdata->valid=1;
+	}else{
+	    drawdata->valid=0;
+	}
     }
     return FALSE;
 }
-/*
-  static gboolean button_release(GtkWidget *widget, GdkEventButton *event,
-  drawdata_t **drawdatawrap){
-  if(event->button!=1) return FALSE;
-  drawdata_t *drawdata=*drawdatawrap;
-  (void)widget;
-  //remember that mouse counts from lower left.
-  double xdiff=event->x-drawdata->mxdown;
-  double ydiff=-(event->y-drawdata->mydown);
-  if(drawdata->mxdown>0 && drawdata->mydown>0 
-  && (fabs(xdiff)>1 || fabs(ydiff)>1)){
-  do_move(drawdata,xdiff,ydiff);
-  }
-  
-  return FALSE;
-  }*/
+static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdata_t **drawdatawrap){
+    (void) widget;
+    (void) event;
+    drawdata_t *drawdata=*drawdatawrap;
+    info("valid=%d, cursor_type=%d\n", drawdata->valid, cursor_type);
+    
+    if(drawdata->valid && cursor_type==1){
+	double xx=drawdata->mxdown;
+	if(drawdata->mdx<0) xx+=drawdata->mdx;
+	double yy=drawdata->mydown;
+	if(drawdata->mdy>0) yy+=drawdata->mdy;
+	double *limit0old=malloc(4*sizeof(double));
+	memcpy(limit0old, drawdata->limit0, sizeof(double)*4);
+	double diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
+	double diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
+	drawdata->limit0[0]+=diffx*(xx-drawdata->xoff);
+	drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(drawdata->mdx);
+	drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
+	drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(drawdata->mdy);
+	do_zoom2(drawdata, limit0old);
+	free(limit0old);
+    }
+    return FALSE;
+}
+
 static void switch_tab(int lr, int ud){
     if(lr){
 	gtk_notebook_set_current_page
@@ -1063,12 +1204,15 @@ static void addpage(drawdata_t **drawdatawrap)
 	drawdata->zoomy=drawdata_old->zoomy;
 	drawdata->offx=drawdata_old->offx;
 	drawdata->offy=drawdata_old->offy;
+	drawdata->grid=drawdata_old->grid;
+	drawdata->width=drawdata_old->width;
+	drawdata->height=drawdata_old->height;
+	drawdata->square=drawdata_old->square;
 	drawdata_free(*drawdata_wrapold);
 	*drawdata_wrapold=drawdata;//just replace the data
-	//gtk_widget_hide(drawdata->drawarea);
-	//gtk_widget_show(drawdata->drawarea);
-	g_signal_emit_by_name(drawdata->drawarea,"configure-event",NULL);
-	g_signal_emit_by_name(drawdata->drawarea,"expose-event",NULL);
+	if(drawdata->height!=0 && drawdata->width!=0){//figure is already shown. update it.
+	    update_pixmap(drawdata);
+	}//otherwise, don't have to do anything.
     }else{
 	//new tab inside the fig to contain the plot.
 	drawdata->page=page=gtk_scrolled_window_new(NULL,NULL);
@@ -1080,8 +1224,8 @@ static void addpage(drawdata_t **drawdatawrap)
 	drawdata->drawarea=drawarea=gtk_drawing_area_new();
 	gtk_widget_add_events (drawarea,GDK_BUTTON_PRESS_MASK|
 			       GDK_BUTTON_RELEASE_MASK|
+			       GDK_POINTER_MOTION_MASK|GDK_POINTER_MOTION_HINT_MASK|
 			       GDK_BUTTON1_MOTION_MASK|
-			       GDK_POINTER_MOTION_HINT_MASK|
 			       GDK_KEY_PRESS_MASK|
 			       GDK_KEY_RELEASE_MASK);
 	GTK_WIDGET_SET_FLAGS(drawarea,GTK_CAN_FOCUS);
@@ -1090,6 +1234,8 @@ static void addpage(drawdata_t **drawdatawrap)
 			 G_CALLBACK(motion_notify),drawdatawrap);
 	g_signal_connect(drawarea,"button-press-event",
 			 G_CALLBACK(button_press),drawdatawrap);
+	g_signal_connect(drawarea,"button-release-event",
+			 G_CALLBACK(button_release),drawdatawrap);
 	g_signal_connect(drawarea,"scroll-event",
 			 G_CALLBACK(scroll_event), drawdatawrap);
 	/*g_signal_connect(drawarea,"button-release-event",
@@ -1203,7 +1349,12 @@ static void tool_zoom(GtkToolButton *button, gpointer data){
     int mode=GPOINTER_TO_INT(data);
     do_zoom(*pdrawdata,0,0,mode);
 }
-
+static void tool_toggled(GtkToggleToolButton *button, gpointer data){
+    int active=gtk_toggle_tool_button_get_active(button);
+    if(active){
+	cursor_type=(GPOINTER_TO_INT(data));
+    }
+}
 typedef struct {
     GtkWidget *w;
     double *val;
@@ -1213,69 +1364,31 @@ typedef struct {
 
 static void limit_change(GtkSpinButton *button, gpointer data){
     (void)button;
-    
     spin_t *spin=data;
     drawdata_t *drawdata=spin->data;
-    double diffx=drawdata->limit[1]-drawdata->limit[0];
-    double diffy=drawdata->limit[3]-drawdata->limit[2];
-    double diffx0=drawdata->limit0[1]-drawdata->limit0[0];
-    double diffy0=drawdata->limit0[3]-drawdata->limit0[2];
+
+    double *limitold=malloc(4*sizeof(double));
+    memcpy(limitold, drawdata->limit0, sizeof(double)*4);
     //update the values
     drawdata->limit0[spin->i]=gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin->w));
-    double diffx1=drawdata->limit0[1]-drawdata->limit0[0];
-    double diffy1=drawdata->limit0[3]-drawdata->limit0[2];
-    if(diffx1 > diffx*1e-3 && diffy1 > diffy *1e-3){
-	//the new zoom
-	double xdiff=0;
-	double ydiff=0;
-	double old_zoomx=drawdata->zoomx;
-	double old_zoomy=drawdata->zoomy;
-	double ratiox=1.;
-	double ratioy=1.;
-	switch(spin->i){
-	case 0:
-	    xdiff=drawdata->widthim/2;//keep the right limit unchanged
-	    ratiox=diffx0/diffx1;
-	    break;
-	case 1:
-	    xdiff=-drawdata->widthim/2;//keep the left limit unchanged
-	    ratiox=diffx0/diffx1;
-	    break;
-	case 2:
-	    ydiff=drawdata->heightim/2;
-	    ratioy=diffy0/diffy1;
-	    break;
-	case 3:
-	    ydiff=-drawdata->heightim/2;
-	    ratioy=diffy0/diffy1;
-	    break;
-	}
-	if(drawdata->square){
-	    if(spin->i==0 || spin->i == 1){
-		ratioy=ratiox;
-	    }else{
-		ratiox=ratioy;
-	    }
-	}
-	drawdata->zoomx*=ratiox;
-	drawdata->zoomy*=ratioy;
-	if(spin->i==0 || spin->i == 1){
-	    double factor=1/old_zoomx-1/drawdata->zoomx;
-	    drawdata->offx-=xdiff*factor;
-	}else{
-	    double factor=1/old_zoomy-1/drawdata->zoomy;
-	    drawdata->offy-=ydiff*factor;
-	}
-    }
-    delayed_update_pixmap(drawdata);
+    do_zoom2(drawdata, limitold);
+    free(limitold);
     spin_t *lim=spin-spin->i;
     for(int i=0; i<4; i++){//update spin button's value.
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), drawdata->limit0[i]);
     }
 }
-static void checksq_toggle(GtkToggleButton *btn, drawdata_t *drawdata){
+static void checkbtn_toggle_square(GtkToggleButton *btn, drawdata_t *drawdata){
     drawdata->square=gtk_toggle_button_get_active(btn);
-    update_pixmap(drawdata);
+    delayed_update_pixmap(drawdata);
+}
+static void checkbtn_toggle_grid(GtkToggleButton *btn, drawdata_t *drawdata){
+    drawdata->grid=gtk_toggle_button_get_active(btn);
+    delayed_update_pixmap(drawdata);
+}
+static void checkbtn_toggle_ticinside(GtkToggleButton *btn, drawdata_t *drawdata){
+    drawdata->ticinside=gtk_toggle_button_get_active(btn);
+    delayed_update_pixmap(drawdata);
 }
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)
@@ -1290,8 +1403,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
     }
     drawdata_t *drawdata=*drawdatawrap;
     GtkWidget *dialog=gtk_dialog_new_with_buttons("Figure Properties", GTK_WINDOW(window), 
-						  (GtkDialogFlags)(GTK_DIALOG_MODAL
-								   |GTK_DIALOG_DESTROY_WITH_PARENT),
+						  (GtkDialogFlags)(GTK_DIALOG_DESTROY_WITH_PARENT),
 						  GTK_STOCK_OK,
 						  GTK_RESPONSE_ACCEPT,
 						  GTK_STOCK_CANCEL,
@@ -1315,22 +1427,36 @@ static void tool_property(GtkToolButton *button, gpointer data){
 	lim[i].i=i;
 	lim[i].data=drawdata;
     }
+    GtkWidget *checkbtn;
     gint irow=0;
-    GtkWidget *checksq=gtk_check_button_new_with_label("Make image square");
-    gtk_table_attach_defaults(GTK_TABLE(table), checksq, 0, 4, irow, irow+1);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checksq), drawdata->square);
-    g_signal_connect(checksq, "toggled", G_CALLBACK(checksq_toggle), drawdata);
+    checkbtn=gtk_check_button_new_with_label("Make image square");
+    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->square);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_square), drawdata);
+
+    irow++;
+    checkbtn=gtk_check_button_new_with_label("Enable grids");
+    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->grid);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_grid), drawdata);
+  
+    irow++;
+    checkbtn=gtk_check_button_new_with_label("Put tic inside");
+    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_ticinside), drawdata);
+
     irow++;
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), lim[0].w, 1, 2, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmax"), 2, 3, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), lim[1].w, 3, 4, irow, irow+1);
+
     irow++;
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("ymin"), 0, 1, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), lim[2].w, 1, 2, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("ymax"), 2, 3, irow, irow+1);
     gtk_table_attach_defaults(GTK_TABLE(table), lim[3].w, 3, 4, irow, irow+1);
-    irow++;
 
     gtk_container_add(GTK_CONTAINER(content_area), table);
     gtk_widget_show_all(table);
@@ -1448,6 +1574,7 @@ static int read_fifo(FILE *fp){
 	    drawdata=calloc(1, sizeof(drawdata_t));
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
+	    drawdata->square=1;//default to square.
 	    drawdata->name=defname;
 	    drawdata->format=(cairo_format_t)0;
 	    drawdata->gray=0;
@@ -1466,12 +1593,18 @@ static int read_fifo(FILE *fp){
 	    }
 	    break;
 	case FIFO_POINTS:
-	    FILE_READ_INT(drawdata->nptsx);
-	    drawdata->nptsy=2;
-	    drawdata->pts=dnew(drawdata->nptsx, 2);
-	    drawdata->ptsmod=0;//grid.
-	    drawdata->square=1;
-	    FILE_READ(drawdata->pts->p, sizeof(double)*drawdata->nptsx*2);
+	    {
+		int nptsx, nptsy;
+		int ipts=drawdata->npts;
+		drawdata->npts++;
+		FILE_READ_INT(nptsx);
+		FILE_READ_INT(nptsy);
+		FILE_READ_INT(drawdata->square);
+		drawdata->grid=1;
+		drawdata->pts=realloc(drawdata->pts, drawdata->npts*sizeof(dmat*));
+		drawdata->pts[ipts]=dnew(nptsx, nptsy);
+		FILE_READ(drawdata->pts[ipts]->p, sizeof(double)*nptsx*nptsy);
+	    }
 	    break;
 	case FIFO_STYLE:
 	    FILE_READ_INT(drawdata->nstyle);
@@ -1539,20 +1672,35 @@ static int read_fifo(FILE *fp){
 			(drawdata->p, drawdata->format, nx, ny, stride);
 		    gdk_threads_leave();
 		}
-		if(drawdata->nptsx>0){
+		if(drawdata->npts>0){
 		    if(!drawdata->limit){
 			drawdata->limit=calloc(4, sizeof(double));
-			maxmindbl(drawdata->pts->p, drawdata->nptsx,
-				  drawdata->limit+1, drawdata->limit);
-			maxmindbl(drawdata->pts->p+drawdata->nptsx, 
-				  drawdata->nptsx*(drawdata->nptsy-1),
-				  drawdata->limit+3, drawdata->limit+2);
+			double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
+			for(int ipts=0; ipts<drawdata->npts; ipts++){
+			    dmat *pts=drawdata->pts[ipts];
+			    double xmin, xmax, ymin, ymax;
+			    if(pts->ny>1){
+				maxmindbl(pts->p, pts->nx, &xmax, &xmin);
+				maxmindbl(pts->p+pts->nx, pts->nx, &ymax, &ymin);
+			    }else{
+				xmin=0; xmax=(double)(pts->nx-1);
+				maxmindbl(pts->p, pts->nx, &ymax, &ymin);
+			    }
+			    if(xmin<xmin0) xmin0=xmin;
+			    if(ymin<ymin0) ymin0=ymin;
+			    if(xmax>xmax0) xmax0=xmax;
+			    if(ymax>ymax0) ymax0=ymax;
+			}
+			drawdata->limit[0]=xmin0;
+			drawdata->limit[1]=xmax0;
+			drawdata->limit[2]=ymin0;
+			drawdata->limit[3]=ymax0;
 		    }
 		    if(drawdata->nstyle>1){
-			if(drawdata->ptsmod==0 && drawdata->nstyle!=drawdata->nptsx){
-			    error("nstyle must equal to nptsx\n");
-			}else if(drawdata->ptsmod==1  && drawdata->nstyle!=drawdata->nptsy-1){
-			    error("nstyle must equal to nptsy-1\n");
+			if(drawdata->nstyle!=drawdata->npts){
+			    warning("nstyle must equal to npts\n");
+			    drawdata->nstyle=0;//disable it.
+			    free(drawdata->style);
 			}
 		    }
 		}
@@ -1560,7 +1708,6 @@ static int read_fifo(FILE *fp){
 		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
 		drawdatawrap[0]=drawdata;
 		gdk_threads_enter();
-		info("drawdata=%p, drawdatawrap=%p\n", drawdata, drawdatawrap);
 		addpage(drawdatawrap);
 		gdk_threads_leave();
 		drawdata=NULL;
@@ -1651,10 +1798,16 @@ int main(int argc, char *argv[])
 	setbuf(stdout,NULL);//disable buffering.
 	setbuf(stderr,NULL);
     }
+    GdkDisplay *display=gdk_display_get_default();
+    GdkPixbuf *pix_hand=gdk_pixbuf_new_from_inline(-1, mouse_hand, FALSE, NULL);
+    GdkPixbuf *pix_arrow=gdk_pixbuf_new_from_inline(-1, mouse_white, FALSE, NULL);
+    cursors[0]=gdk_cursor_new_from_pixbuf(display, pix_hand, 8, 5);
+    cursors[1]=gdk_cursor_new_from_pixbuf(display, pix_arrow, 3, 0);
     if(!window){
 	GdkPixbuf *icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_icon(GTK_WINDOW(window),icon_main);
+	g_object_unref(icon_main);
 	gtk_window_set_title(GTK_WINDOW(window),"MAOS Draw");
 	GtkWidget *toolbar=gtk_toolbar_new();
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),GTK_ICON_SIZE_MENU);
@@ -1663,6 +1816,20 @@ int main(int argc, char *argv[])
 	GtkToolItem *item=gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 	g_signal_connect(item,"clicked",G_CALLBACK(tool_save),NULL);
+	item=gtk_separator_tool_item_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
+	item=gtk_radio_tool_button_new(NULL);
+	gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), gtk_image_new_from_pixbuf(pix_hand));
+	g_signal_connect(item,"toggled",G_CALLBACK(tool_toggled),GINT_TO_POINTER(0));
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
+	item=gtk_radio_tool_button_new_from_widget(GTK_RADIO_TOOL_BUTTON(item));
+	gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(item), gtk_image_new_from_pixbuf(pix_arrow));
+	g_signal_connect(item,"toggled",G_CALLBACK(tool_toggled),GINT_TO_POINTER(1));
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+	
+	
 	item=gtk_separator_tool_item_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 	item=gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_IN);

@@ -271,7 +271,7 @@ void plotloc(char *fig, const PARMS_T *parms,
 	}
 	count++;
     }
-    plot_coord(fig, loc->nloc, loc->locx, loc->locy,NULL, NULL,ncir, cir, 
+    plot_points(fig, 1, &loc, NULL ,NULL, NULL,ncir, cir, 
 	       "Coordinate","x (m)","y (m)", "%s",fn);
     free(cir);
 }
@@ -282,51 +282,51 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     int ncir=1;
     double (*cir)[4];
     cir=(double(*)[4])calloc(ncir*4,sizeof(double));
-    long npts=parms->evl.nevl + parms->nwfs + parms->fit.nfit;
     cir[0][0]=0;
     cir[0][1]=0;
     cir[0][2]=totfov/2;
     cir[0][3]=000;//rgb color
-    double *ptsx=calloc(npts,sizeof(double));
-    double *ptsy=calloc(npts,sizeof(double));
-    int32_t *style=calloc(npts, sizeof(int32_t));
-    int nevl=parms->evl.nevl;
-    int ind=0;
-    for(int ievl=0; ievl<nevl; ievl++){
-	ptsx[ind]=parms->evl.thetax[ievl]*206265;
-	ptsy[ind]=parms->evl.thetay[ievl]*206265;
-	style[ind]=(900<<8)+(4<<4)+3;
-	ind++;
+    int ngroup=2+parms->npowfs;
+    loc_t **locs=calloc(ngroup, sizeof(loc_t*));
+    int32_t *style=calloc(ngroup, sizeof(int32_t));
+
+    style[0]=(900<<8)+(4<<4)+3;
+    locs[0]=locnew(parms->evl.nevl);
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	locs[0]->locx[ievl]=parms->evl.thetax[ievl]*206265;
+	locs[0]->locy[ievl]=parms->evl.thetay[ievl]*206265;
     }
+
+    style[1]=(918<<8)+(4<<4)+3;
+    locs[1]=locnew(parms->fit.nfit);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	ptsx[ind]=parms->fit.thetax[ifit]*206265;
-	ptsy[ind]=parms->fit.thetay[ifit]*206265;
-	style[ind]=(918<<8)+(4<<4)+3;
-	ind++;
+	locs[1]->locx[ifit]=parms->fit.thetax[ifit]*206265;
+	locs[1]->locy[ifit]=parms->fit.thetay[ifit]*206265;
     }
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	ptsx[ind]=parms->wfs[iwfs].thetax*206265;
-	ptsy[ind]=parms->wfs[iwfs].thetay*206265;
-	int ipowfs=parms->wfs[iwfs].powfs;
-	if(!isinf(parms->powfs[ipowfs].hs)){
-	    style[ind]=(940<<8)+(4<<4)+2;
-	}else if(!parms->powfs[ipowfs].lo){
-	    style[ind]=(990<<8)+(4<<4)+1;
-	}else if(parms->powfs[ipowfs].order>1){
-	    style[ind]=(9<<8)+(4<<4)+4;
-	}else{
-	    style[ind]=(9<<8)+(4<<4)+1;
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	locs[ipowfs+2]=locnew(parms->powfs[ipowfs].nwfs);
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    int iwfs=parms->powfs[ipowfs].indwfs[jwfs];
+	    locs[ipowfs+2]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
+	    locs[ipowfs+2]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
-	ind++;
+	if(!isinf(parms->powfs[ipowfs].hs)){
+	    style[ipowfs+2]=(940<<8)+(4<<4)+2;
+	}else if(!parms->powfs[ipowfs].lo){
+	    style[ipowfs+2]=(990<<8)+(4<<4)+1;
+	}else if(parms->powfs[ipowfs].order>1){
+	    style[ipowfs+2]=(9<<8)+(4<<4)+4;
+	}else{
+	    style[ipowfs+2]=(9<<8)+(4<<4)+1;
+	}
     }
     double limit[4];
     limit[0]=limit[2]=-totfov/2;
     limit[1]=limit[3]=totfov/2;
-    plot_coord(fig, npts, ptsx, ptsy, style,limit,ncir,cir,
-	       "Asterism","x (arcsec)", "y (arcsec)", "%s",fn);
+    plot_points(fig, ngroup, locs, NULL, style,limit,ncir,cir,
+		"Asterism","x (arcsec)", "y (arcsec)", "%s",fn);
     free(cir);
-    free(ptsx);
-    free(ptsy);
+    locarrfree(locs, ngroup);
     free(style);
 }
 /**

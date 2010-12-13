@@ -260,10 +260,10 @@ X(mat)* X(refcols)(X(mat) *in, long icol, long ncol){
    Create a new sub matrix of nx*ny starting from(sx,sy)
 */
 X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
-    if(nx<=sx){
+    if(nx<=0){
 	nx=in->nx-sx;
     }
-    if(ny<=sy){
+    if(ny<=0){
 	ny=in->ny-sy;
     }
     X(mat)*out=X(new)(nx, ny);

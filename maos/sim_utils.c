@@ -515,7 +515,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int nthread=powfs[ipowfs].nthread;
-	warning2("wfs%d: nthread=%d\n", iwfs,nthread);
 	const int indwfs=parms->powfs[ipowfs].indwfs[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
 	int ilocm=-1;

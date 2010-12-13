@@ -106,14 +106,16 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     //r2max: Maximum distance^2 from the center to keep a subaperture
     r2max -= 2.*(0.5+offset)*(0.5+offset);
     //the lower left *grid* coordinate of the subaperture
-    powfs[ipowfs].pts =calloc(1, sizeof(pts_t));
+    powfs[ipowfs].pts=calloc(1, sizeof(pts_t));
     powfs[ipowfs].pts->origx =malloc(sizeof(double)*order*order);
     powfs[ipowfs].pts->origy =malloc(sizeof(double)*order*order);
     powfs[ipowfs].pts->area  =malloc(sizeof(double)*order*order);
     //The coordinate of the subaperture (lower left coordinate)
-    powfs[ipowfs].saloc=calloc(1,sizeof(loc_t));
+    powfs[ipowfs].saloc=locnew(order*order);
+    /*calloc(1,sizeof(loc_t));
     powfs[ipowfs].saloc->locx =malloc(sizeof(double)*order*order);
     powfs[ipowfs].saloc->locy =malloc(sizeof(double)*order*order);
+    */
     powfs[ipowfs].pts->dsa   =dxsa;
     /*Number of OPD pixels in 1 direction in each
       subaperture. Make it even to do fft.*/

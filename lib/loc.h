@@ -149,7 +149,7 @@ void locstatfree_do(locstat_t *locstat);
 #define locstatfree(A) ({locstatfree_do(A);A=NULL;})
 
 int loccenter(loc_t *loc);
-
+loc_t *locnew(long nloc);
 void loc_calc_ptt(double *out, double *coeffout, 
 		  const loc_t *loc, const double ipcc, 
 	       const dmat *imcc, const double *amp, const double *opd);
