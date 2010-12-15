@@ -74,9 +74,6 @@ typedef double ddouble;/*just for saving.*/
 
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")
-#ifndef __thread
-#define __thread
-#endif
 /**
    Functions that return realtime:
    time(): resolution is in integer second. not enough resolution.
@@ -87,7 +84,7 @@ typedef double ddouble;/*just for saving.*/
 
    Decision: use customize function myclockd() in utils.c which returns a double for second. 
 */
-#define TIC __thread double tk
+#define TIC double tk
 #define tic tk=myclockd();
 #define toc(A...) ({info(A);fprintf(stderr," takes %.6f seconds.\n",myclockd()-tk);})
 #define toc2(A...) ({fprintf(stderr,A);fprintf(stderr," takes %.6f seconds.\n",myclockd()-tk);})

@@ -58,13 +58,25 @@ struct thread_t{
     }else{						\
 	A(B);						\
     }
+#define CALL_URGENT(A,B,nthread)       			\
+    if(nthread>1){					\
+	long thgroup=0;					\
+	for(int ithread=0; ithread<nthread; ithread++){	\
+	    thread_pool_queue(&thgroup,			\
+			      (thread_fun)A,	\
+			      (void*)B,2);		\
+	}						\
+	thread_pool_wait(&thgroup);			\
+    }else{						\
+	A(B);						\
+    }
 #define CALL_EACH(A,B,nthread)				\
     if(nthread>1){					\
 	long thgroup=0;					\
 	for(int ithread=nthread-1; ithread>-1; ithread--){	\
 	    thread_pool_queue(&thgroup,			\
 			      (thread_fun)A,	\
-			      (void*)&(B[ithread]),1);	\
+			      (void*)&(B[ithread]),2);	\
 	}						\
 	thread_pool_wait(&thgroup);			\
     }else{						\
@@ -86,6 +98,7 @@ struct thread_t{
 #define THREAD_POOL_INIT(A) thread_pool_create(A)
 #else
 #define CALL(A,B,nthread) A(B) //no threading
+#define CALL_URGENT(A,B,nthread) A(B) //no threading
 #define CALL_DATAEACH(A,B,nthread) A(B)
 #define QUEUE_THREAD(group,A,nthread) A->fun(A)
 #define THREAD_POOL_INIT(A)  //Do nothing

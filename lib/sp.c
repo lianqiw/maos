@@ -825,7 +825,7 @@ static void Y(spcellmulmat_thread2)(X(cell) **C0, const Y(spcell)*A,
     info.B=B;
     info.C=C;
     info.alpha=alpha;
-    CALL(Y(spcellmulmat_thread_do),&info,nthread);
+    CALL_URGENT(Y(spcellmulmat_thread_do),&info,nthread);
     PDEINIT(info.mutex);
 }
 /**
@@ -888,7 +888,7 @@ void Y(spcellmulmat_each)(X(cell) **xout, Y(spcell) *A, X(cell) *xin,
     info.ic=0;
     info.nc=info.xout->nx;
     PINIT(info.ilock);
-    CALL(Y(spcellmulmat_each_do), &info, nthread);
+    CALL_URGENT(Y(spcellmulmat_each_do), &info, nthread);
 }
 
 /**
