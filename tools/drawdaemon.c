@@ -1799,8 +1799,8 @@ int main(int argc, char *argv[])
 	setbuf(stderr,NULL);
     }
     GdkDisplay *display=gdk_display_get_default();
-    GdkPixbuf *pix_hand=gdk_pixbuf_new_from_inline(-1, mouse_hand, FALSE, NULL);
-    GdkPixbuf *pix_arrow=gdk_pixbuf_new_from_inline(-1, mouse_white, FALSE, NULL);
+    pix_hand=gdk_pixbuf_new_from_inline(-1, mouse_hand, FALSE, NULL);
+    pix_arrow=gdk_pixbuf_new_from_inline(-1, mouse_white, FALSE, NULL);
     cursors[0]=gdk_cursor_new_from_pixbuf(display, pix_hand, 8, 5);
     cursors[1]=gdk_cursor_new_from_pixbuf(display, pix_arrow, 3, 0);
     if(!window){

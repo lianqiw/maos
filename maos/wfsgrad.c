@@ -124,7 +124,7 @@ void wfsgrad_iwfs(thread_t *info){
     if(atm){
 	for(int ips=0; ips<nps; ips++){
 	    thread_t *wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
-	    PROPDATA_T *wfs_propdata=wfs_prop->data;
+	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
 	    wfs_propdata->phiout=opd->p;
 	    wfs_propdata->displacex1=-atm[ips]->vx*dt*isim;//frozen flow.
 	    wfs_propdata->displacey1=-atm[ips]->vy*dt*isim;
@@ -135,7 +135,7 @@ void wfsgrad_iwfs(thread_t *info){
     if(CL){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    thread_t *wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
-	    PROPDATA_T *wfs_propdata=wfs_prop->data;
+	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 	    wfs_propdata->phiout=opd->p;
 	    CALL_THREAD(wfs_prop, nthread, 1);
 	}//idm
@@ -621,6 +621,7 @@ void wfsgrad(SIM_T *simu){
 	    }
 	}
     }
+    //call the task in parallel and wait for them to finish.
     CALL_THREAD(simu->wfs_grad, parms->nwfs, 0);
     if(parms->save.ngcov>0){
 	//Outputing psol gradient covariance.

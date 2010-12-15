@@ -40,7 +40,10 @@ void maos(const PARMS_T *parms){
     APER_T  * aper;
     POWFS_T * powfs;
     RECON_T * recon;
-
+#if USE_MKL==1
+    int one=1;
+    omp_set_num_threads(&one);//only allow 1 thread.
+#endif
     aper  = setup_aper(parms);
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
     powfs = setup_powfs(parms, aper);
@@ -52,10 +55,7 @@ void maos(const PARMS_T *parms){
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.
     */
-#if USE_MKL==1
-    int one=1;
-    omp_set_num_threads(&one);//only allow 1 thread.
-#endif
+
     if(parms->dbg.evlol){
 	sim_evlol(parms, powfs, aper, recon);
     }else{

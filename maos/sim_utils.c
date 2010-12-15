@@ -533,8 +533,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->scale=1.-ht/hs;
 	    data->alpha=1;
 	    data->wrap=1;
-	    data->mapin=NULL;//need to update this in genscreen.
-	    data->phiout=NULL;//replace later in simulation.
+	    data->mapin=(void*)1;//need to update this in genscreen.
+	    data->phiout=(void*)1;//replace later in simulation.
 	    int tot=0;
 	    if(powfs[ipowfs].locm){//misregistration.
 		data->locout=powfs[ipowfs].locm[ilocm];
@@ -543,6 +543,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
+	    prop_index(data);
 	    simu->wfs_prop_atm[iwfs+parms->nwfs*ips]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->wfs_prop_atm[iwfs+parms->nwfs*ips],0,tot,nthread,prop,data);
 	}
@@ -566,7 +567,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
 	    }
-	    data->phiout=NULL;//replace later in simulation
+	    data->phiout=(void*)1;//replace later in simulation
 	    if(powfs[ipowfs].locm){//misregistration.
 		data->locout=powfs[ipowfs].locm[ilocm];
 		tot=data->locout->nloc;
@@ -574,6 +575,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
 	    }
+	    prop_index(data);
 	    simu->wfs_prop_dm[iwfs+parms->nwfs*idm]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->wfs_prop_dm[iwfs+parms->nwfs*idm], 0, tot, nthread, prop,data);
 	}//idm
@@ -598,7 +600,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->evl_prop_dm=calloc(parms->evl.nevl*parms->ndm, sizeof(thread_t*));
     simu->evl_propdata_dm=calloc(parms->evl.nevl*parms->ndm, sizeof(PROPDATA_T));
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	const int nthread=parms->sim.nthread;
+	const int nthread=parms->evl.nthread;
 	int tot;
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const int ind=ievl+parms->evl.nevl*ips;
@@ -609,9 +611,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->scale=1-ht/parms->evl.ht;
 	    data->alpha=1;
 	    data->wrap=1;
-	    data->mapin=NULL;//need to update this in genscreen.
-	    data->phiout=NULL;//replace later in simulation.
+	    data->mapin=(void*)1;//need to update this in genscreen.
+	    data->phiout=(void*)1;//replace later in simulation.
 	    data->ostat=aper->locs_stat;
+	    prop_index(data);
 	    tot=aper->locs_stat->ncol;
 	    simu->evl_prop_atm[ind]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->evl_prop_atm[ind], 0, tot, nthread, prop, data);
@@ -640,8 +643,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->locout=aper->locs;//propagate to locs if no cachedm.
 		tot=aper->locs->nloc;
 	    }
-	    data->phiout=NULL;//replace later in simulation.
-	    
+	    data->phiout=(void*)1;//replace later in simulation.
+	    prop_index(data);
 	    simu->evl_prop_dm[ind]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
 	}

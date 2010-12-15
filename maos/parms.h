@@ -270,6 +270,7 @@ typedef struct EVL_CFG_T{
     int *scalegroup;/**<scale group for dm cache. havenumber of dm
 		       elements(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
+    int nthread;    /**<number of threads for evaluation parallelization*/
 }EVL_CFG_T;
 
 /**

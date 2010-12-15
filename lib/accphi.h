@@ -57,9 +57,11 @@ typedef struct PROPDATA_T{
     int cubic; double cubic_iac; //for cubic interpolation.
     int wrap;
     int nooptim;//disable optim.
+    int index;
 }PROPDATA_T;
 
 void prop(thread_t *data);//A unified wrapper
+void prop_index(PROPDATA_T *propdata);//A unified wrapper
 void prop_grid_grid(const map_t *mapin, map_t *mapout,
 		    double alpha,
 		    double displacex, double displacey, 

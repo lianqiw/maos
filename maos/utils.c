@@ -376,7 +376,11 @@ void maos_signal_handler(int sig){
     disable_signal_handler;
     rename_file(sig);//handles signal
     if(sig!=0){
-	warning3("Caught signal %d\n",sig);
+	if(sig==2){
+	    warning2("Keyboard interuppted\n");
+	}else{
+	    warning3("Caught signal %d\n",sig);
+	}
 	fflush(stderr);
 	fflush(stdout);
 	if(sig == SIGSEGV){

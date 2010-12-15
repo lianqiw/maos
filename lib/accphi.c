@@ -42,45 +42,108 @@
    different routines. Handles threading.
  */
 void prop(thread_t *data){
-    int done=0;
     PROPDATA_T *propdata=data->data;
-    double displacex=propdata->displacex0+propdata->displacex1;
-    double displacey=propdata->displacey0+propdata->displacey1;
+    const double displacex=propdata->displacex0+propdata->displacex1;
+    const double displacey=propdata->displacey0+propdata->displacey1;
+    switch(propdata->index){
+    case 0:
+	prop_grid_grid(propdata->mapin, propdata->mapout,
+		       propdata->alpha, displacex, displacey,
+		       propdata->scale, propdata->wrap);
+	break;
+    case 1:
+	prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout,
+		      propdata->alpha, displacex, displacey,
+		      propdata->scale, propdata->wrap, 
+		      data->start, data->end);
+	break;
+    case 2:
+	prop_grid(propdata->mapin, propdata->locout, propdata->phiout,
+		  propdata->alpha, displacex, displacey,
+		  propdata->scale, propdata->wrap, 
+		  data->start, data->end);
+	break;
+    case 3:
+	prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout,
+		       propdata->alpha, displacex, displacey,
+		       propdata->scale, propdata->wrap, 
+		       data->start, data->end);
+	break;
+    case 4:
+	prop_nongrid_cubic(propdata->locin, propdata->phiin,
+			   propdata->locout, propdata->ampout, propdata->phiout,
+			   propdata->alpha, displacex, displacey, 
+			   propdata->scale, propdata->cubic_iac, 
+			   data->start, data->end);
+	break;
+    case 5:
+	prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
+			       propdata->mapout, 
+			       propdata->alpha, displacex, displacey, 
+			       propdata->scale, propdata->cubic_iac, 
+			       data->start, data->end);
+	break;
+    case 6:
+	prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
+			       propdata->ptsout, propdata->ampout, propdata->phiout,
+			       propdata->alpha, displacex, displacey, 
+			       propdata->scale, propdata->cubic_iac, 
+			       data->start, data->end);
+	break;
+    case 7:
+	prop_nongrid(propdata->locin, propdata->phiin,
+		     propdata->locout, propdata->ampout, propdata->phiout,
+		     propdata->alpha, displacex, displacey, 
+		     propdata->scale,
+		     data->start, data->end);
+	break;
+    case 8:
+	prop_nongrid_map(propdata->locin, propdata->phiin,
+			 propdata->mapout, 
+			 propdata->alpha, displacex, displacey, 
+			 propdata->scale, 
+			 data->start, data->end);
+	break;
+    case 9:
+	prop_nongrid_pts(propdata->locin, propdata->phiin,
+			 propdata->ptsout, propdata->ampout, propdata->phiout,
+			 propdata->alpha, displacex, displacey, 
+			 propdata->scale, 
+			 data->start, data->end);
+	break;
+    default:
+	error("Invalid\n");
+    }
+}
+/**
+   Identify the index of this ray tracing.
+*/
+void prop_index(PROPDATA_T *propdata){
+    int done=0;
     if(propdata->mapin){
 	if(propdata->mapout){
 	    if(done) error("Invalid\n");
-	    if(data->start || data->end){
-		error("Not supported\n");
-	    }
-	    assert(data->end==0 ||data->end==1);
-	    prop_grid_grid(propdata->mapin, propdata->mapout,
-			   propdata->alpha, displacex, displacey,
-			   propdata->scale, propdata->wrap);
+	    //case 0
+	    propdata->index=0;
 	    done=1;
 	}
 	if(propdata->phiout){
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
-		prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout,
-			      propdata->alpha, displacex, displacey,
-			      propdata->scale, propdata->wrap, 
-			      data->start, data->end);
+		//case 1
+		propdata->index=1;
 		done=1;
 	    }
 	    if(propdata->locout){
 		if(done) error("Invalid\n");
-		prop_grid(propdata->mapin, propdata->locout, propdata->phiout,
-			  propdata->alpha, displacex, displacey,
-			  propdata->scale, propdata->wrap, 
-			  data->start, data->end);
+		//case 2
+		propdata->index=2;
 		done=1;
 	    }
 	    if(propdata->ostat){
 		if(done) error("Invalid\n");
-		prop_grid_stat(propdata->mapin, propdata->ostat, propdata->phiout,
-			       propdata->alpha, displacex, displacey,
-			       propdata->scale, propdata->wrap, 
-			       data->start, data->end);
+		//case 3
+		propdata->index=3;
 		done=1;
 	    }
 	}
@@ -89,62 +152,43 @@ void prop(thread_t *data){
 	if(propdata->cubic){
 	    if(propdata->locout){
 		if(done) error("Invalid\n");
-		prop_nongrid_cubic(propdata->locin, propdata->phiin,
-				   propdata->locout, propdata->ampout, propdata->phiout,
-				   propdata->alpha, displacex, displacey, 
-				   propdata->scale, propdata->cubic_iac, 
-				   data->start, data->end);
+		//case 4
+		propdata->index=4;
 		done=1;
 	    }
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		prop_nongrid_map_cubic(propdata->locin, propdata->phiin,
-				       propdata->mapout, 
-				       propdata->alpha, displacex, displacey, 
-				       propdata->scale, propdata->cubic_iac, 
-				       data->start, data->end);
+		//case 5
+		propdata->index=5;
 		done=1;
 	    }
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
-		prop_nongrid_pts_cubic(propdata->locin, propdata->phiin,
-				       propdata->ptsout, propdata->ampout, propdata->phiout,
-				       propdata->alpha, displacex, displacey, 
-				       propdata->scale, propdata->cubic_iac, 
-				       data->start, data->end);
+		//case 6
+		propdata->index=6;
 		done=1;
 	    }
 	}else{
 	    if(propdata->locout){
 		if(done) error("Invalid\n");
-		prop_nongrid(propdata->locin, propdata->phiin,
-			     propdata->locout, propdata->ampout, propdata->phiout,
-			     propdata->alpha, displacex, displacey, 
-			     propdata->scale,
-			     data->start, data->end);
+		//case 7
+		propdata->index=7;
 		done=1;
 	    }
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		prop_nongrid_map(propdata->locin, propdata->phiin,
-				 propdata->mapout, 
-				 propdata->alpha, displacex, displacey, 
-				 propdata->scale, 
-				 data->start, data->end);
+		//case 8
+		propdata->index=8;
 		done=1;
 	    }
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
-		prop_nongrid_pts(propdata->locin, propdata->phiin,
-				 propdata->ptsout, propdata->ampout, propdata->phiout,
-				 propdata->alpha, displacex, displacey, 
-				 propdata->scale, 
-				 data->start, data->end);
+		//case 9
+		propdata->index=9;
 		done=1;
 	    }
 	}
     }
-   
     if(done==0) error("Invalid\n");
 }
 /**

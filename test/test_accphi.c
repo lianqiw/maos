@@ -573,6 +573,7 @@ static void test_speed(int nthread){
     propdata->scale=scale;
     propdata->wrap=wrap;
     propdata->saend=pts->nsa;
+    prop_index(propdata);
     PINIT(propdata->mutex);
    
     read_self_cpu();

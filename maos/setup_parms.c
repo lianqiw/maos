@@ -591,7 +591,7 @@ static void readcfg_evl(PARMS_T *parms){
     for(ievl=0; ievl<parms->evl.nevl; ievl++){
 	parms->evl.npsf+=(parms->evl.psf[ievl]>0);
     }
-  
+    parms->evl.nthread=1;//parms->sim.nthread;
     parms->evl.nmod=(parms->evl.rmax+1)*(parms->evl.rmax+2)/2;
 }
 /**

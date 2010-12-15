@@ -60,7 +60,7 @@ void perfevl_ievl(thread_t *info){
     const int npsr=parms->atmr.nps;
     const int imoao=parms->evl.moao;
     const double dt=simu->dt;
-    const int nthread=parms->sim.nthread;
+    const int nthread=parms->evl.nthread;
     const int do_psf=(parms->evl.psfmean || parms->evl.psfhist) && isim>=parms->evl.psfisim;
     dmat *iopdevl=dnew(aper->locs->nloc,1);
     TIM(0);
@@ -80,8 +80,11 @@ void perfevl_ievl(thread_t *info){
     if(simu->surfevl && simu->surfevl->p[ievl]){
 	dadd(&iopdevl, 1, simu->surfevl->p[ievl], 1);
     }
+#define USE_NEW 1
+#if USE_NEW == 1
     //atmosphere contribution.
     if(simu->atm){
+	/*fix me: the ray tracing of the same part must be performed in the same thread. */
 	for(int ips=0; ips<nps; ips++){
 	    if(ips!=simu->perfevl_iground){
 		int ind=ievl+parms->evl.nevl*ips;
@@ -92,6 +95,24 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
     }
+#else
+    if(simu->atm){
+	for(int ips=0; ips<nps; ips++){
+	    if(ips==simu->perfevl_iground)
+		continue;//already done.
+	    double hl=simu->atm[ips]->h;
+	    double scale = 1. - hl/parms->evl.ht;
+	    double displacex=-simu->atm[ips]->vx*isim*dt
+		+parms->evl.thetax[ievl]*hl;
+	    double displacey=-simu->atm[ips]->vy*isim*dt
+		+parms->evl.thetay[ievl]*hl;
+	    prop_grid_stat(simu->atm[ips], aper->locs_stat, 
+			   iopdevl->p, 1, displacex, displacey,
+			       scale, 1, 0, 0);
+	}
+    }
+    
+#endif
     TIM(1);
     if(parms->save.evlopd){
 	cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
@@ -224,6 +245,7 @@ void perfevl_ievl(thread_t *info){
 	return;
     }
     //Apply dm correction. tip/tilt command is contained in DM commands
+#if USE_NEW
     if(simu->dmreal){
 	int ndm=parms->ndm;
 	for(int idm=0; idm<ndm; idm++){
@@ -232,6 +254,35 @@ void perfevl_ievl(thread_t *info){
 	    CALL_THREAD(simu->evl_prop_dm[ind], nthread, 1);
 	}
     }
+#else
+	//Apply dm correction. tip/tilt command is contained in DM commands
+	if(simu->dmreal){
+	    int ndm=parms->ndm;
+	    for(int idm=0; idm<ndm; idm++){
+		double ht=parms->dm[idm].ht;
+		double scale = 1. - ht/parms->evl.ht;
+		double displacex=parms->evl.thetax[ievl]*ht;
+		double displacey=parms->evl.thetay[ievl]*ht;
+		if(simu->cachedm){
+		    int iscale=parms->evl.scalegroup[idm];
+		    prop_grid_stat(&simu->cachedm[idm][iscale], aper->locs_stat, iopdevl->p, -1, 
+				   displacex, displacey, scale, 0, 0, 0);
+
+		}else{
+		    if(parms->dm[idm].cubic){
+			prop_nongrid_cubic(recon->aloc[idm], simu->dmreal->p[idm]->p,
+					   aper->locs, NULL, iopdevl->p,-1,
+					   displacex, displacey,scale,
+					   parms->dm[idm].iac,0,0);
+		    }else{
+			prop_nongrid(recon->aloc[idm], simu->dmreal->p[idm]->p,
+				     aper->locs, NULL, iopdevl->p,-1,
+				     displacex, displacey,scale,0,0);
+		    }
+		}
+	    }
+	}
+#endif
     TIM(4);
     if(imoao>-1){
 	PDCELL(simu->moao_evl, dmevl);
@@ -467,11 +518,11 @@ void perfevl(SIM_T *simu){
 	simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
 	simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
 	simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
-	CALL_THREAD(simu->evl_prop_atm[ind], simu->nthread, 1);
+	CALL_THREAD(simu->evl_prop_atm[ind], simu->parms->evl.nthread, 1);
     }
     CALL_THREAD(simu->perf_evl, simu->parms->evl.nevl, 0);
     dfree(simu->opdevlground);simu->opdevlground=NULL;
-    TIC;tic;
+    //TIC;tic;
     perfevl_mean(simu);
-    toc("perfevl_mean");
+    //toc("perfevl_mean");
 }

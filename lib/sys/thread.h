@@ -61,7 +61,7 @@ struct thread_t{
 #define CALL_EACH(A,B,nthread)				\
     if(nthread>1){					\
 	long thgroup=0;					\
-	for(int ithread=0; ithread<nthread; ithread++){	\
+	for(int ithread=nthread-1; ithread>-1; ithread--){	\
 	    thread_pool_queue(&thgroup,			\
 			      (thread_fun)A,	\
 			      (void*)&(B[ithread]),1);	\
@@ -95,11 +95,14 @@ struct thread_t{
    Call and wait for them to finish.
 */
 #define CALL_THREAD(A,nthread,urgent)		\
-    {						\
+    if((nthread)>1){				\
 	long group=0;				\
 	QUEUE_THREAD(group,A,nthread,urgent);	\
 	WAIT_THREAD(group);			\
+    }else{					\
+	(A)->fun(A);				\
     }
+
 
 #if USE_PTHREAD > 0
 #define LOCK(A) pthread_mutex_lock(&A)
