@@ -34,12 +34,11 @@
 
 #include "maos.h"
 #include "recon.h"
-#include "moao.h"
 #include "setup_powfs.h"
 #include "sim.h"
 #include "sim_utils.h"
 #define TIMING_MEAN 0
-
+#define PARALLEL 1
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence
@@ -57,73 +56,95 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
     }
     if(simstart>=simend) return;
     double tk_0=myclockd();
-    double ck_0, ck_1, ck_2, ck_3, ck_4, ck_5;
-    double cpu_1, cpu_2, cpu_3, cpu_4;
+    double ck_0,ck_end;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
-	double tk_1=myclockd();
+	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	if(!simu) continue;//skip.
 	if(parms->sim.frozenflow){
 	    /*Generating atmospheric screen(s) that frozen flows.*/
 	    genscreen(simu);
 	}
-	double tk_2=myclockd();
+	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
 	for(int isim=simstart; isim<simend; isim++){
-	    //sleep(5);
-	    read_self_cpu();//initialize CPU usage counter
+	    ck_0=myclockd();
 	    simu->isim=isim;
 	    simu->status->isim=isim;
 	    sim_update_etf(simu);
-	    ck_0=myclockd();
 	    if(!parms->sim.frozenflow){
 		disable_atm_shm=1;
 		genscreen(simu);
 		//re-seed the atmosphere in case atm is loaded from shm
 		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
-	    wfsgrad(simu);
-	    ck_1=myclockd(); cpu_1=read_self_cpu();
-
-#define PARALLEL 1
-	    if(PARALLEL == 1 && simu->nthread>1){
+	    if(PARALLEL == 1 && CL && simu->nthread>1){
+		/*
+		  We do everything in parallel. to make better use the
+		  CPUs. Notice that the reconstructor is working on grad from
+		  last time step so that there is no confliction in data access.
+		*/
+		read_self_cpu();//initialize CPU usage counter
 		long group=0;
-		thread_pool_queue(&group, (thread_fun)reconstruct, simu, 1);
-		if(CL){
-		    thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
-		}
-		ck_2=myclockd(); cpu_2=read_self_cpu();
+		thread_pool_queue(&group, (thread_fun)reconstruct, simu, 0);
+		thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
+		thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
 		thread_pool_wait(&group);
-		ck_3=myclockd(); cpu_3=read_self_cpu();
-	    }else{
-		if(CL){//before wfsgrad so we can apply ideal NGS modes
-		    perfevl(simu);
+		dcellcp(&simu->gradlastcl, simu->gradcl);
+		dcellcp(&simu->gradlastol, simu->gradol);
+#if defined(__linux__)
+		if(simu->nthread>1 && !detached){
+		    info2("CPU Usage: %.2f\n", read_self_cpu());
 		}
-		ck_2=myclockd(); cpu_2=read_self_cpu();
-		reconstruct(simu);
-		ck_3=myclockd(); cpu_3=read_self_cpu();
+#endif
+	    }else{//do things in series
+		double cpu_evl, cpu_wfs, cpu_recon;
+		read_self_cpu();//initialize CPU usage counter
+		if(CL){//before wfsgrad so we can apply ideal NGS modes
+		    /*
+		      We run the functions in series mode, but the function
+		      themselves are parallelized inside.
+		     */
+		    perfevl(simu);
+		    cpu_evl=read_self_cpu();
+		    wfsgrad(simu);//output grads to gradcl, gradol
+		    cpu_wfs=read_self_cpu();
+		    reconstruct(simu);//uses grads from gradlast cl, gradlast ol.
+		    cpu_recon=read_self_cpu();
+		    dcellcp(&simu->gradlastcl, simu->gradcl);
+		    dcellcp(&simu->gradlastol, simu->gradol);
+		}else{//in OL mode, 
+		    wfsgrad(simu);
+		    cpu_wfs=read_self_cpu();
+		    dcellcp(&simu->gradlastcl, simu->gradcl);
+		    dcellcp(&simu->gradlastol, simu->gradol);
+		    reconstruct(simu);
+		    cpu_recon=read_self_cpu();
+		    perfevl(simu);
+		    cpu_evl=read_self_cpu();
+		}
+#if defined(__linux__)
+		if(simu->nthread>1 && !detached){
+		    fprintf(stderr,"CPU Usage: WFS:%.2f Recon:%.2f EVAL:%.2f Mean:%.2f\n",
+			    cpu_wfs, cpu_recon, cpu_evl,
+			    (cpu_wfs+cpu_recon+cpu_evl)*0.25);
+		}
+#endif
 	    }
-	    filter(simu);//updates dmreal.
-	    if(recon->moao){
-		moao_recon(simu);
-	    }
-	    ck_4=myclockd(); cpu_4=read_self_cpu();
-	    if(!CL){//Only in Open loop
-		perfevl(simu);
-	    }
+
 	    save_simu(simu);
-	    ck_5=myclockd();
+	    ck_end=myclockd();
 	    long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
 	    long steps_rest=parms->sim.nseed*(simend-simstart)-steps_done;
-	    simu->status->rest=(long)((ck_5-tk_0-(tk_2-tk_1)*(iseed+1))/steps_done*steps_rest
-				      +(tk_2-tk_1)*(parms->sim.nseed-iseed-1));
-	    simu->status->laps=(long)(ck_5-tk_0);
-	    simu->status->mean=(ck_5-tk_2)/(double)(isim+1-simstart);
-	    simu->status->wfs  =ck_1-ck_0;
-	    simu->status->recon=ck_3-ck_2;
-	    simu->status->cache=ck_4-ck_3;
-	    simu->status->eval =ck_2-ck_1+ck_5-ck_4;
-	    simu->status->tot  =ck_5-ck_0;
+	    simu->status->rest=(long)((ck_end-tk_0-(tk_atm-tk_start)*(iseed+1))/steps_done*steps_rest
+				      +(tk_atm-tk_start)*(parms->sim.nseed-iseed-1));
+	    simu->status->laps=(long)(ck_end-tk_0);
+	    simu->status->mean=(ck_end-tk_atm)/(double)(isim+1-simstart);
+	    simu->status->tot  =ck_end-ck_0;
+	    simu->status->wfs  =simu->tk_wfs;
+	    simu->status->recon=simu->tk_recon;
+	    simu->status->cache=simu->tk_cache;
+	    simu->status->eval =simu->tk_eval;
 	    simu->status->scale=1;
 
 	    int this_time=myclocki();
@@ -135,12 +156,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #endif
 	    }
 	    print_progress(simu);
-#if defined(__linux__)
-	    if(simu->nthread>1 && !detached){
-		fprintf(stderr, "CPU Usage: WFS:%.2f Recon:%.2f CACHE:%.2f EVAL:%.2f Mean:%.2f\n",
-			cpu_1, cpu_3, cpu_4, cpu_2, (cpu_1+cpu_2+cpu_3+cpu_4)*0.25);
-	    }
-#endif
 	}//isim
 	free_simu(simu);
     }

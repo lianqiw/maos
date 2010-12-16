@@ -279,7 +279,8 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     PDSPCELL(recon->HXWtomo,HXWtomo);
     PDSPCELL(recon->HXW,HXW);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
-	if(!parms->wfs[iwfs].skip){//for tomography
+	int ipowfs=parms->wfs[iwfs].powfs;
+	if(!parms->powfs[ipowfs].skip){//for tomography
 	    for(int ips=0; ips<npsr; ips++){
 		HXWtomo[ips][iwfs]=spref(HXW[ips][iwfs]);
 	    }
@@ -451,7 +452,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	if(!parms->wfs[iwfs].skip){//for tomography
+	if(!parms->powfs[ipowfs].skip){//for tomography
 	    for(int ips=0; ips<npsr; ips++){
 		GXtomo[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
@@ -661,7 +662,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms,
 	    }
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(parms->wfs[iwfs].skip){
+		if(parms->powfs[ipowfs].skip){
 		    error("This WFS %d should be included in Tomo.\n", iwfs);
 		}
 		dcp(&recon->TT->p[iwfs+iwfs*nwfs], TT);
@@ -708,7 +709,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
 	     */
 	    for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(parms->wfs[iwfs].skip){
+		if(parms->powfs[ipowfs].skip){
 		    error("This WFS %d should be included in Tomo.\n", iwfs);
 		}
 		dcp(&recon->DF->p[iwfs*nwfs], DF);
@@ -988,10 +989,10 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	dcell *VLo=dcellnew(npsr,nwfs);
 	PDCELL(VLo, pVLo);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    if(parms->wfs[iwfs].skip){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip){
 		continue;
 	    }
-	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(parms->powfs[ipowfs].lo){
 		for(int ips=0; ips<npsr; ips++){
 		    spfull(&pULo[iwfs][ips], RRM[iwfs][ips],-1);
@@ -1968,10 +1969,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     PDSPCELL(recon->LR.M, LRM);
     PDSPCELL(recon->GA, GA);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
-	if(parms->wfs[iwfs].skip){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip){
 	    continue;
 	}
-	int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].lo){
 	    for(int idm=0; idm<ndm; idm++){
 		spfull(&pULo[iwfs][idm], LRM[iwfs][idm],-1);

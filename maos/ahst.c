@@ -400,9 +400,9 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon,
     }
     PSPCELL(recon->GA,GA);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	if(!parms->wfs[iwfs].skip)
-	    continue;
 	int ipowfs=parms->wfs[iwfs].powfs;
+	if(!parms->powfs[ipowfs].skip)
+	    continue;
 	int nsa=powfs[ipowfs].pts->nsa;
 	ZSN->p[iwfs]=dnew(nsa*2,nmod);
 	PDMAT(ZSN->p[iwfs],grad);

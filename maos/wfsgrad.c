@@ -43,7 +43,7 @@ void wfsgrad_iwfs(thread_t *info){
     assert(iwfs<parms->nwfs);
     /*
       simu->gradcl is CL grad output
-      simu->gradpsol is pseudo OL grad output.
+      simu->gradol is pseudo OL grad output.
       simu->gradacc is internal, to accumulate geometric grads.
       do not accumulate opd. accumate ints for phy, g for GS
     */
@@ -141,18 +141,17 @@ void wfsgrad_iwfs(thread_t *info){
 	}//idm
     }
     if(imoao>-1){
-	PDCELL(simu->moao_wfs, dmwfs);
-	if(dmwfs[iwfs][simu->moao_wfs->nx-1]){
+	dmat **dmwfs=simu->moao_r_wfs->p;
+	if(dmwfs[iwfs]){
 	    info("iwfs %d: Adding MOAO correction\n", iwfs);
 	    /*No need to do mis registration here since the MOAO DM is
 	      attached to close to the WFS.*/
 	    if(parms->moao[imoao].cubic){
-		prop_nongrid_pts_cubic(recon->moao[imoao].aloc, 
-				       dmwfs[iwfs][simu->moao_wfs->nx-1]->p,
+		prop_nongrid_pts_cubic(recon->moao[imoao].aloc, dmwfs[iwfs]->p,
 				       powfs[ipowfs].pts, realamp, opd->p, -1, 0, 0, 1, 
 				       parms->moao[imoao].iac, 0, 0);
 	    }else{
-		prop_nongrid_pts(recon->moao[imoao].aloc, dmwfs[iwfs][simu->moao_wfs->nx-1]->p,
+		prop_nongrid_pts(recon->moao[imoao].aloc, dmwfs[iwfs]->p,
 				 powfs[ipowfs].pts, realamp, opd->p, -1, 0, 0, 1, 
 				 0, 0);
 	    }
@@ -552,35 +551,35 @@ void wfsgrad_iwfs(thread_t *info){
 	dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[indwfs], -1);
     }
     //create pseudo open loop gradients. in split mode 1, only do for high order wfs.
-    if((parms->sim.recon==0&&(parms->tomo.split==2 || !parms->wfs[iwfs].skip)) && dtrat_output){
-	dcp(&simu->gradpsol->p[iwfs], *gradout);
+    if(dtrat_output && parms->powfs[ipowfs].psol){
+	dcp(&simu->gradol->p[iwfs], *gradout);
 	if(CL){
 	    if(simu->dmpsol[ipowfs]){
 		for(int idm=0; idm<parms->ndm; idm++){
-		    spmulmat(&simu->gradpsol->p[iwfs], GA[idm][iwfs],
+		    spmulmat(&simu->gradol->p[iwfs], GA[idm][iwfs],
 			     simu->dmpsol[ipowfs]->p[idm], 1.);
 		}
 	    }
 	}
 	if(parms->plot.run){
 	    drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts,
-		    simu->gradpsol->p[iwfs]->p,
+		    simu->gradol->p[iwfs]->p,
 		    "WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)",
 		    "x %d",  iwfs);
 	    drawopd("Gpoly",(loc_t*)powfs[ipowfs].pts,
-		    simu->gradpsol->p[iwfs]->p+nsa, 
+		    simu->gradol->p[iwfs]->p+nsa, 
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)",
 		    "y %d",  iwfs);
 	}
     }
     if(save_grad && dtrat_output){
 	cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
-	if(simu->gradpsol->p[iwfs]){
-	    cellarr_dmat(simu->save->gradpsol[iwfs], simu->gradpsol->p[iwfs]);
+	if(simu->gradol->p[iwfs]){
+	    cellarr_dmat(simu->save->gradol[iwfs], simu->gradol->p[iwfs]);
 	}
     }
     if(parms->cn2.pair && recon->cn2est->wfscov[iwfs]){
-	cn2est_embed(recon->cn2est, simu->gradpsol->p[iwfs], iwfs);
+	cn2est_embed(recon->cn2est, simu->gradol->p[iwfs], iwfs);
     }
     TIM(3);
 #if TIMING==1
@@ -592,14 +591,14 @@ void wfsgrad_iwfs(thread_t *info){
    Calls wfsgrad_iwfs() to computes WFS gradient in parallel.
 */
 void wfsgrad(SIM_T *simu){
+    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     if(parms->dbg.fitonly) return;
     //Updating dmpsol averaging.
     if(parms->sim.closeloop){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    int iwfs=parms->powfs[ipowfs].wfs[0];
-	    if(parms->tomo.split==2 || !parms->wfs[iwfs].skip){
+	    if(parms->tomo.split==2 || !parms->powfs[ipowfs].skip){
 		const int dtrat=parms->powfs[ipowfs].dtrat;
 		if(dtrat==1 || simu->isim%dtrat==0){
 		    dcellfree(simu->dmpsol[ipowfs]);
@@ -629,7 +628,7 @@ void wfsgrad(SIM_T *simu){
 	    int iwfs1=parms->save.gcov[igcov*2];
 	    int iwfs2=parms->save.gcov[igcov*2+1];
 	    info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
-	    dmm(&simu->gcov->p[igcov], simu->gradpsol->p[iwfs1], simu->gradpsol->p[iwfs2],"nt",1);
+	    dmm(&simu->gcov->p[igcov], simu->gradol->p[iwfs1], simu->gradol->p[iwfs2],"nt",1);
 	}
     }
     if(parms->cn2.pair){
@@ -646,5 +645,5 @@ void wfsgrad(SIM_T *simu){
 	    }
 	}
     }//if cn2est
+    simu->tk_wfs=myclockd()-tk_start;
 }
- 

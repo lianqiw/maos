@@ -130,7 +130,8 @@ typedef struct POWFS_CFG_T{
     int trs;        /**<tip/tilt removal flag. True for LGS, False for NGS*/
     int dfrs;       /**<differential focus removal flag. True for LGS, False for NGS*/
     int lo;         /**<whether this is a low order wfs. False for LGS, True for NGS*/
-
+    int skip;       /**<skip in high order tomography, for split tomo (derived parameter)*/
+    int psol;       /**<Compute pseudo open loop gradients (derived parameter)*/
     int *wfs;       /**<array of wfs belongs to this powfs*/
     int *indwfs;    /**<indwfs[iwfs] gives the index of the wfs in this powfs group*/
     int nwfs;       /**<number of wfs belonging to this powfs*/
@@ -191,6 +192,8 @@ typedef struct POWFS_CFG_T{
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
+
+
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -204,7 +207,6 @@ typedef struct WFS_CFG_T{
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
     int powfs;      /**<powfs type*/
-    int skip;       /**<skip in tomography, for split tomo (derived parameter)*/
 }WFS_CFG_T;
 /**
    contains input parameters for each deformable mirror.

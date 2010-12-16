@@ -1316,12 +1316,25 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
     }
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->tomo.split && parms->powfs[ipowfs].lo){
-	    parms->wfs[iwfs].skip=1;
+	    parms->powfs[ipowfs].skip=1;
 	}else{
-	    parms->wfs[iwfs].skip=0;
+	    parms->powfs[ipowfs].skip=0;
+	}
+	if(parms->sim.mffocus){//focus tracking. already need psol grads
+	    parms->powfs[ipowfs].psol=1;
+	}else{//no focus tracking
+	    if(parms->sim.recon==0){//MVST
+		//low order wfs in ahst mode does not need psol.
+		if(parms->tomo.split==1 && parms->powfs[ipowfs].skip){
+		    parms->powfs[ipowfs].psol=0;
+		}else{
+		    parms->powfs[ipowfs].psol=1;
+		}
+	    }else{
+		parms->powfs[ipowfs].psol=0;
+	    }
 	}
     }
 }

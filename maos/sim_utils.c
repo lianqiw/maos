@@ -356,7 +356,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->pistatout=calloc(parms->nwfs,sizeof(dcell*));
     simu->sanea_sim=dcellnew(parms->nwfs,1);
     simu->gradcl=dcellnew(parms->nwfs,1);//output
-    simu->gradpsol=dcellnew(parms->nwfs,1);//output
+    simu->gradol=dcellnew(parms->nwfs,1);//output
     simu->gradacc=dcellnew(parms->nwfs,1);//wfsgrad internal
     simu->nthread=parms->sim.nthread;
     if(parms->sim.servotype_lo==2){
@@ -468,18 +468,23 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
 	if(moao_wfs){
 	    if(parms->sim.closeloop){
-		simu->moao_wfs=dcellnew(3,parms->nwfs);
+		/*changed to 1 because our reconstructor is using staled grad,
+		  and wfsgrad is before moao_recon*/
+		simu->moao_wfs=dcellnew(1,parms->nwfs);
 	    }else{
 		simu->moao_wfs=dcellnew(1,parms->nwfs);
 	    }
+	    simu->moao_r_wfs=dcellnew(parms->nwfs, 1);
 	}
 	if(parms->evl.moao>-1){
 	    if(parms->sim.closeloop){
-		//we only need 2 here because perfevl is ahead of moao_recon
-		simu->moao_evl=dcellnew(2,parms->evl.nevl);
+		/*we only need 1because our reconstructor is using staled grad,
+		  perfevl is ahead of moao_recon.*/
+		simu->moao_evl=dcellnew(1,parms->evl.nevl);
 	    }else{
 		simu->moao_evl=dcellnew(1,parms->evl.nevl);
 	    }
+	    simu->moao_r_evl=dcellnew(parms->evl.nevl, 1);
 	}
     }
     simu->perfevl_iground=parms->atm.iground;
@@ -859,15 +864,15 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->save.grad){
 	save->gradcl=calloc(parms->nwfs, sizeof(cellarr*));
 	save->gradnf=calloc(parms->nwfs, sizeof(cellarr*));
-	save->gradpsol=calloc(parms->nwfs, sizeof(cellarr*));
+	save->gradol=calloc(parms->nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    if(parms->save.powfs_grad[ipowfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		save->gradnf[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradnf_%d.bin", iwfs, seed);
-		if(parms->sim.recon==0 &&(parms->tomo.split==2 || !parms->wfs[iwfs].skip)){
-		    save->gradpsol[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradpsol_%d.bin", 
+		if(parms->sim.recon==0 &&(parms->tomo.split==2 || !parms->powfs[ipowfs].skip)){
+		    save->gradol[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradol_%d.bin", 
 						      iwfs, seed);
 		}
 	    }
@@ -946,8 +951,10 @@ void free_simu(SIM_T *simu){
     free(simu->wfs_propdata_dm);
     free(simu->status);
     dcellfree(simu->gradcl);
+    dcellfree(simu->gradlastcl);
     dcellfree(simu->gradacc);
-    dcellfree(simu->gradpsol);
+    dcellfree(simu->gradol);
+    dcellfree(simu->gradlastol);
     dcellfree(simu->opdr);
     dcellfree(simu->opdrmvst);
     dcellfree(simu->opdevl);
@@ -1051,7 +1058,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->gradcl, parms->nwfs);
     cellarr_close_n(save->gradgeom, parms->nwfs);
     cellarr_close_n(save->gradnf, parms->nwfs);
-    cellarr_close_n(save->gradpsol, parms->nwfs);
+    cellarr_close_n(save->gradol, parms->nwfs);
     cellarr_close_n(save->intsny, parms->nwfs);
     cellarr_close_n(save->intsnf, parms->nwfs);
     cellarr_close_n(save->moao_evl, parms->evl.nevl);

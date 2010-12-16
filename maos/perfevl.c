@@ -285,17 +285,17 @@ void perfevl_ievl(thread_t *info){
 #endif
     TIM(4);
     if(imoao>-1){
-	PDCELL(simu->moao_evl, dmevl);
-	if(dmevl[ievl][simu->moao_evl->nx-1]){
+	dmat **dmevl=simu->moao_r_evl->p;
+	if(dmevl[ievl]){
 	    //TIC;tic;
 	    //prop is faster than spmulvec
 	    if(parms->moao[imoao].cubic){
-		prop_nongrid_cubic(recon->moao[imoao].aloc,dmevl[ievl][simu->moao_evl->nx-1]->p,
+		prop_nongrid_cubic(recon->moao[imoao].aloc,dmevl[ievl]->p,
 				   aper->locs, NULL, iopdevl->p, -1, 0,0,1,
 				   parms->moao[imoao].iac, 
 				   0,0);
 	    }else{
-		prop_nongrid(recon->moao[imoao].aloc,dmevl[ievl][simu->moao_evl->nx-1]->p,
+		prop_nongrid(recon->moao[imoao].aloc,dmevl[ievl]->p,
 			     aper->locs, NULL, iopdevl->p, -1, 0,0,1,0,0);
 	    }
 	}
@@ -507,6 +507,7 @@ static void perfevl_mean(SIM_T *simu){
    Evaluate performance by calling perfevl_ievl in parallel and then calls
    perfevl_mean to field average.  */
 void perfevl(SIM_T *simu){
+    double tk_start=myclockd();
     //Cache the ground layer.
     int ips=simu->perfevl_iground;
     if(ips!=-1 && simu->atm){
@@ -522,7 +523,6 @@ void perfevl(SIM_T *simu){
     }
     CALL_THREAD(simu->perf_evl, simu->parms->evl.nevl, 0);
     dfree(simu->opdevlground);simu->opdevlground=NULL;
-    //TIC;tic;
     perfevl_mean(simu);
-    //toc("perfevl_mean");
+    simu->tk_eval=myclockd()-tk_start;
 }

@@ -39,7 +39,7 @@
 </td></tr><tr><td>\c opdx_1          </td><td>save.opdx   </td><td>The atmosphere projected onto xloc (direct fitting)
 </td></tr><tr><td>\c wfs0_gradcl_1   </td><td>save.grad  </td><td>The wfs gradient measurement.
 </td></tr><tr><td>\c wfs0_gradnf_1   </td><td>save.grad  </td><td>The wfs noise free gradient.
-</td></tr><tr><td>\c wfs0_gradpsol_1 </td><td>save.grad  </td><td>The wfs pseudo open loop gradient
+</td></tr><tr><td>\c wfs0_gradol_1 </td><td>save.grad  </td><td>The wfs pseudo open loop gradient
 </td></tr><tr><td>\c wfs0_gradgeom_1 </td><td>save.gradgeom   </td><td>The wfs geometric gradient (in physical optics wfs simulations)
 </td></tr><tr><td>\c wfs0_intsnf_1   </td><td>save.ints   </td><td>The wfs subaperture images (noise free)
 </td></tr><tr><td>\c wfs0_intsny_1   </td><td>save.ints   </td><td>The wfs subaperture images (noisy)

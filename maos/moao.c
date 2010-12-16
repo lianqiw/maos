@@ -26,7 +26,7 @@
 */
 
 /**
-   cyclic shift the dmats.  */
+   cyclic shift the dmats.  \todo: consider replacing this with a integrator*/
 static void shift_ring(int nap, dmat **ring, dmat *new){
     dmat *keep=ring[nap-1];
     for(int iap=nap-1; iap>=0; iap--){
@@ -225,9 +225,9 @@ void moao_recon(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     dcell *dmcommon=NULL;
-    if(1){//Take OL result
+    if(1){//Take High order fitting result
 	dcellcp(&dmcommon, simu->dmfit_hi);
-    }else{//CL result
+    }else{//Take integrator output, remove NGS modes if any.
 	if(parms->sim.closeloop){
 	    if(parms->sim.fuseint){
 		dcellcp(&dmcommon, simu->dmint[0]);
@@ -236,7 +236,6 @@ void moao_recon(SIM_T *simu){
 		}
 	    }else{
 		dcellcp(&dmcommon, simu->dmint_hi[0]);
-		//addlow2dm(&dmcommon, simu,simu->Mint_lo[0], 1);
 	    }
 	}else{
 	    dcellcp(&dmcommon, simu->dmerr_hi);

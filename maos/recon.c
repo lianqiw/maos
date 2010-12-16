@@ -23,6 +23,8 @@
 #include "sim.h"
 #include "recon_utils.h"
 #include "ahst.h"
+#include "moao.h"
+
 /**
    \file recon.c
    Wavefront reconstruction and DM fitting routines
@@ -204,7 +206,7 @@ void fit(dcell **adm, const PARMS_T *parms,
 }
 /**
    Update LGS focus or reference vector.
-
+   \fixme: what if dtrat!=1
    \verbatim
        LGS: CL grads works, but not as good.
        LGS: CL grads + DM grads does not work
@@ -217,8 +219,7 @@ void fit(dcell **adm, const PARMS_T *parms,
     \endverbatim
 */
 void focus_tracking(SIM_T*simu){
-    //Updating LGS focus or reference vector.
-    //fixme: what if strat!=1
+
     if(!simu->recon->RFlgs){
 	warning("There is no LGS. No need to do focus tracking\n");
 	return;
@@ -226,8 +227,7 @@ void focus_tracking(SIM_T*simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     dcell *graduse=dcellnew(parms->nwfs,1);
-    PSPCELL(recon->GA,GA);
-    PSPCELL(recon->GXfocus,GX);
+    PDSPCELL(recon->GXfocus,GX);
     int ngs_psol=0;
     int ngs_x=0;
     int lgs_psol=0;
@@ -252,20 +252,13 @@ void focus_tracking(SIM_T*simu){
 	    gs_x=ngs_x;
 	}
 	if(gs_psol){//psol
-	    if(simu->gradpsol->p[iwfs]){
-		graduse->p[iwfs]=ddup(simu->gradpsol->p[iwfs]);
+	    if(simu->gradlastol->p[iwfs]){
+		graduse->p[iwfs]=ddup(simu->gradlastol->p[iwfs]);
 	    }else{
-		info("Forming PSOL grads for wfs %d\n",iwfs);
-		graduse->p[iwfs]=ddup(simu->gradcl->p[iwfs]);
-		if(simu->dmreal){
-		    for(int idm=0; idm<parms->ndm; idm++){
-			spmulmat(&graduse->p[iwfs],GA[idm][iwfs],
-				 simu->dmreal->p[idm],1);
-		    }
-		}
+		error("Require PSOL grads for wfs %d\n",iwfs);
 	    }
 	}else{//cl
-	    graduse->p[iwfs]=ddup(simu->gradcl->p[iwfs]);
+	    graduse->p[iwfs]=ddup(simu->gradlastcl->p[iwfs]);
 	}
 	if(gs_x){
 	    info("Subtracing tomo grad from wfs %d\n",iwfs);
@@ -346,8 +339,9 @@ static void windest(SIM_T *simu){
 void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
+    //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
     if(!parms->sim.closeloop || parms->dbg.fitonly || 
-       simu->dtrat_hi==1 || (simu->isim+1)%simu->dtrat_hi==0){
+       simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
 	if(parms->dbg.fitonly){
 	    dcellfree(simu->opdr);
 	    simu->opdr=atm2xloc(simu);
@@ -361,7 +355,8 @@ void tomofit(SIM_T *simu){
 		    error("Out of range\n");
 		}
 	    }
-	    tomo(&simu->opdr,parms,recon,simu->gradpsol,maxit);
+	    //computes simu->opdr
+	    tomo(&simu->opdr,parms,recon,simu->gradlastol,maxit);
 	}
 	if(parms->tomo.windest){
 	    info2("Estimating wind direction and speed using FFT method\n");
@@ -471,19 +466,20 @@ void tomofit(SIM_T *simu){
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
 	//Low order has output
-	if(!parms->sim.closeloop || simu->dtrat_lo==1 || (simu->isim+1)%simu->dtrat_lo==0){
+	//2010-12-16: replaces isim+1 by isim.
+	if(!parms->sim.closeloop || simu->dtrat_lo==1 || (simu->isim)%simu->dtrat_lo==0){
 	    dcellzero(simu->Merr_lo);
 	    switch(parms->tomo.split){
 	    case 1:{
 		NGSMOD_T *ngsmod=recon->ngsmod;
 		if(!parms->tomo.ahst_idealngs){//Low order NGS recon.
-		    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradcl,"nn",1);
+		    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
 		}//else: there is ideal NGS correction done in perfevl.
 	    }
 		break;
 	    case 2:{
-		dcellmm(&simu->gradpsol, recon->GXL, simu->opdrmvst, "nn",-1);
-		dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradpsol, "nn",1);
+		dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
+		dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
 		if(parms->sim.fuseint){
 		    dcelladd(&simu->Merr_lo, 1., simu->dmint[1], -1);
 		    error("This mode is not finished\n");
@@ -500,9 +496,7 @@ void tomofit(SIM_T *simu){
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
     }
-    if(parms->sim.mffocus){
-	focus_tracking(simu);
-    }
+   
 }
 /**
    least square reconstructor
@@ -510,10 +504,11 @@ void tomofit(SIM_T *simu){
 void lsr(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
+    //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
     if(!parms->sim.closeloop || parms->dbg.fitonly || 
-       simu->dtrat_hi==1 || (simu->isim+1)%simu->dtrat_hi==0){
+       simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
 	dcell *rhs=NULL;
-	muv(&rhs, &(recon->LR), simu->gradcl, 1);
+	muv(&rhs, &(recon->LR), simu->gradlastcl, 1);
 	switch(parms->lsr.alg){
 	case 0://CBS
 	    muv_chol_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
@@ -532,11 +527,11 @@ void lsr(SIM_T *simu){
     }//if high order has output
     if(!parms->dbg.fitonly && parms->tomo.split){
 	//Low order has output
-	if(!parms->sim.closeloop || simu->dtrat_lo==1 
-	   || (simu->isim+1)%simu->dtrat_lo==0){
+	//2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
+	if(!parms->sim.closeloop || simu->dtrat_lo==1 || (simu->isim)%simu->dtrat_lo==0){
 	    dcellzero(simu->Merr_lo);
 	    NGSMOD_T *ngsmod=recon->ngsmod;
-	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradcl,"nn",1);
+	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
 	}else{
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
@@ -546,12 +541,22 @@ void lsr(SIM_T *simu){
    Deformable mirror control. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
+    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
+    if(!simu->gradlastol && !simu->gradlastcl){
+	return;
+    }
     if(parms->sim.recon==0){//mv
 	tomofit(simu);//tomography and fitting.
     }else{
 	lsr(simu);
+    }
+    if(recon->moao){
+	moao_recon(simu);
+    }
+    if(parms->sim.mffocus){
+	focus_tracking(simu);
     }
     if(parms->plot.run){
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -596,4 +601,6 @@ void reconstruct(SIM_T *simu){
 	    cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo[0]);
 	}
     }
+    filter(simu);//updates dmreal.
+    simu->tk_recon=myclockd()-tk_start;
 }

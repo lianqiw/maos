@@ -314,7 +314,7 @@ typedef struct SIM_SAVE_T{
     cellarr **gradcl;
     cellarr **gradgeom;
     cellarr **gradnf;
-    cellarr **gradpsol;
+    cellarr **gradol;
     cellarr **intsny;
     cellarr **intsnf;
     cellarr **moao_evl;
@@ -352,9 +352,11 @@ typedef struct SIM_T{
     map_t **surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
 
     /*The following has a cell for each. wfs*/
-    dcell *gradcl;     /**<cl grad output.*/
-    dcell *gradpsol;   /**<WFS pseudo open loop grad output*/
+    dcell *gradcl;     /**<cl grad output at step isim.*/
+    dcell *gradol;     /**<WFS pseudo open loop grad output*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
+    dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
+    dcell *gradlastol;/**<psol grad from last time step, for reconstructor*/
 
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *opdrmvst;   /**<average of opdr for MVST*/
@@ -434,8 +436,16 @@ typedef struct SIM_T{
     rand_t *atmwd_rand;/**<random stream for wind direction*/
     rand_t *init;      /**<random stream to initialize other streams*/
     STATUS_T *status;  /**<status report to scheduler.*/
-    dcell *moao_wfs;   /**<moao DM command for wfs*/
-    dcell *moao_evl;   /**<moao DM command for science field*/
+
+    dcell *moao_wfs;   /**<moao DM command computed for wfs*/
+    dcell *moao_evl;   /**<moao DM command computed for science field*/
+    dcell *moao_r_wfs; /**<moao DM command to be applied for wfs*/
+    dcell *moao_r_evl; /**<moao DM command to be applied for evl*/
+
+    double tk_eval;     /**<time spent in perfevl in this step*/
+    double tk_recon;   /**<time spent in reconstruct in this step*/
+    double tk_cache;   /**<time spent in cachedm in this step*/
+    double tk_wfs;     /**<time spent in wfsgrad in this step*/
 
     dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
     locstat_t *ploc_stat; /**<statistics of columns in ploc*/

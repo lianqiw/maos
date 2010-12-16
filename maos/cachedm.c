@@ -107,6 +107,7 @@ void prep_cachedm(SIM_T *simu){
    segments in each combination to maximum efficiency.
 */
 void calc_cachedm(SIM_T *simu){
+    double tk_start=myclockd();
     if(simu->parms->sim.cachedm){
 	simu->cachedm_i=0;
 	if(simu->parms->sim.cachedm){
@@ -125,4 +126,5 @@ void calc_cachedm(SIM_T *simu){
 	    WAIT_THREAD(group);
 	}
     }
+    simu->tk_cache=myclockd()-tk_start;
 }

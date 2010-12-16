@@ -143,13 +143,7 @@ void filter_cl(SIM_T *simu){
   
     //copy dm computed in last cycle. This is used in next cycle (already after perfevl)
     const SIM_CFG_T *simt=&(parms->sim);
-    if(parms->sim.fuseint){
-	dcellcp(&simu->dmreal,simu->dmint[0]);
-    }else{
-	dcellcp(&simu->dmreal,simu->dmint_hi[0]);
-	addlow2dm(&simu->dmreal,simu,simu->Mint_lo[0], 1);
-    }
-    calc_cachedm(simu);
+ 
     if(parms->sim.fuseint){
 	shift_inte(simt->napdm,simt->apdm,simu->dmint);
     }else{
@@ -287,7 +281,7 @@ void filter_cl(SIM_T *simu){
 	loc_add_ptt(simu->dmint[0]->p[0]->p, totalptt, recon->aloc[0]);
 	dcellfree(ptt);
     }
-    //Uplink 
+    //Uplink. before integrator changes because wfsgrad updates upterr with current gradient.
     dcellcp(&simu->uptreal, simu->uptint[0]);
     if(simu->upterr){
 	//uplink tip/tilt mirror. use Integrator/Derivative control
@@ -298,6 +292,30 @@ void filter_cl(SIM_T *simu){
 	dcelladd(&simu->uptint[0], 1., simu->upterrlast,gain2);
         //save to use in next servo time step.
 	dcellcp(&simu->upterrlast,simu->upterr);
+    }
+
+    /*The following are moved from the beginning to the end because the
+      gradients are now from last step.*/
+    if(parms->sim.fuseint){
+	dcellcp(&simu->dmreal,simu->dmint[0]);
+    }else{
+	dcellcp(&simu->dmreal,simu->dmint_hi[0]);
+	addlow2dm(&simu->dmreal,simu,simu->Mint_lo[0], 1);
+    }
+    calc_cachedm(simu);
+  
+    //MOAO
+    if(simu->moao_wfs){
+	PDCELL(simu->moao_wfs, dmwfs);
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    dcp(&simu->moao_r_wfs->p[iwfs], dmwfs[iwfs][0]);
+	}
+    }
+    if(simu->moao_evl){
+	PDCELL(simu->moao_evl, dmevl);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    dcp(&simu->moao_r_evl->p[ievl], dmevl[ievl][0]);
+	}
     }
 }
 /**
