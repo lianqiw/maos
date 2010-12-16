@@ -213,10 +213,10 @@ void scheduler_report(STATUS_T *status){
 }
 
 
-#if !defined(__INTEL_COMPILER) && (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) //&& (!defined(DEBUG)||DEBUG==1)
+#if !defined(__INTEL_COMPILER) && (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE)
 #define PRINTBACKTRACE 1
 #else
-#define PRINTBACKTRACE 0
+#define PRINTBACKTRACE 1
 #endif
 
 void print_backtrace_symbol(void *const *buffer, int size){

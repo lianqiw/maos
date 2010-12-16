@@ -376,11 +376,22 @@ void maos_signal_handler(int sig){
     disable_signal_handler;
     rename_file(sig);//handles signal
     if(sig!=0){
-	if(sig==2){
-	    warning2("Keyboard interuppted\n");
-	}else{
-	    warning3("Caught signal %d\n",sig);
+	char *info;
+	switch(sig){
+	case SIGBUS:
+	case SIGILL:
+	case SIGSEGV:
+	case SIGABRT:
+	    info="Segmentation falt";
+	    break;
+	case SIGKILL:
+	case SIGINT: //Ctrl-C
+	case SIGTERM:
+	case SIGQUIT: //Ctrl-'\'
+	    info="Killed";
+	    break;
 	}
+	warning2("Signal %d: %s", sig, info);
 	fflush(stderr);
 	fflush(stdout);
 	if(sig == SIGSEGV){
@@ -461,8 +472,8 @@ ARG_T * parse_args(int argc, char **argv){
 		warning("illigal nthread. set to 1.\n");
 		arg->nthread=1;
 	    }else if(arg->nthread>NCPU){
-		warning("nthread is larger than number of cpus, reset to %d\n",
-			NCPU);
+		warning2("nthread=%d is larger than number of cpus, reset to %d\n",
+			arg->nthread, NCPU);
 		arg->nthread=NCPU;
 	    }
 	    break;

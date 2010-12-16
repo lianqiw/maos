@@ -52,7 +52,7 @@ struct thread_t{
 	for(int ithread=0; ithread<nthread; ithread++){	\
 	    thread_pool_queue(&thgroup,			\
 			      (thread_fun)A,	\
-			      (void*)B,1);		\
+			      (void*)B,0);		\
 	}						\
 	thread_pool_wait(&thgroup);			\
     }else{						\

@@ -91,7 +91,7 @@ void perfevl_ievl(thread_t *info){
 		simu->evl_propdata_atm[ind].phiout=iopdevl->p;
 		simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
 		simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
-		CALL_THREAD(simu->evl_prop_atm[ind], nthread, 1);
+		CALL_THREAD(simu->evl_prop_atm[ind], nthread, 0);
 	    }
 	}
     }
@@ -251,7 +251,7 @@ void perfevl_ievl(thread_t *info){
 	for(int idm=0; idm<ndm; idm++){
 	    int ind=ievl+parms->evl.nevl*idm;
 	    simu->evl_propdata_dm[ind].phiout=iopdevl->p;
-	    CALL_THREAD(simu->evl_prop_dm[ind], nthread, 1);
+	    CALL_THREAD(simu->evl_prop_dm[ind], nthread, 0);
 	}
     }
 #else
@@ -518,7 +518,7 @@ void perfevl(SIM_T *simu){
 	simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
 	simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
 	simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
-	CALL_THREAD(simu->evl_prop_atm[ind], simu->parms->evl.nthread, 1);
+	CALL_THREAD(simu->evl_prop_atm[ind], simu->parms->evl.nthread, 0);
     }
     CALL_THREAD(simu->perf_evl, simu->parms->evl.nevl, 0);
     dfree(simu->opdevlground);simu->opdevlground=NULL;

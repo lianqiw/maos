@@ -128,7 +128,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    wfs_propdata->phiout=opd->p;
 	    wfs_propdata->displacex1=-atm[ips]->vx*dt*isim;//frozen flow.
 	    wfs_propdata->displacey1=-atm[ips]->vy*dt*isim;
-	    CALL_THREAD(wfs_prop, nthread, 1);//have to wait to finish before another phase screen.
+	    CALL_THREAD(wfs_prop, nthread, 0);//have to wait to finish before another phase screen.
 	}//ips
 	//most expensive 0.10 per LGS for
     }
@@ -137,7 +137,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    thread_t *wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
 	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 	    wfs_propdata->phiout=opd->p;
-	    CALL_THREAD(wfs_prop, nthread, 1);
+	    CALL_THREAD(wfs_prop, nthread, 0);
 	}//idm
     }
     if(imoao>-1){
@@ -310,7 +310,7 @@ void wfsgrad_iwfs(thread_t *info){
 	intsdata->gradref=gradref;
 	intsdata->opd=opd;
 	intsdata->lltopd=lltopd;
-	CALL_THREAD(simu->wfs_ints[iwfs], nthread, 1);
+	CALL_THREAD(simu->wfs_ints[iwfs], nthread, 0);
 	dfree(lltopd);
 	if(psfout){
 	    cellarr_ccell(psfoutcellarr,psfout);
