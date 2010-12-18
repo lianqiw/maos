@@ -281,18 +281,6 @@ void filter_cl(SIM_T *simu){
 	loc_add_ptt(simu->dmint[0]->p[0]->p, totalptt, recon->aloc[0]);
 	dcellfree(ptt);
     }
-    //Uplink. before integrator changes because wfsgrad updates upterr with current gradient.
-    dcellcp(&simu->uptreal, simu->uptint[0]);
-    if(simu->upterr){
-	//uplink tip/tilt mirror. use Integrator/Derivative control
-	//update command for next step.
-	double gain1=simt->epupt+simt->dpupt;
-	double gain2=-simt->dpupt;
-	dcelladd(&simu->uptint[0], 1., simu->upterr,gain1);
-	dcelladd(&simu->uptint[0], 1., simu->upterrlast,gain2);
-        //save to use in next servo time step.
-	dcellcp(&simu->upterrlast,simu->upterr);
-    }
 
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/

@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS=-I m4 --install
-SUBDIRS=external/cholmod/ lib/ tools/ maos/ skyc/ 
+SUBDIRS=external/cholmod/ lib/ maos/ skyc/ tools/
 
 include $(top_srcdir)/aminclude.am
 

@@ -122,6 +122,7 @@ AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static
 
 #Common configure options.
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
+AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$enableval"],[use_mem="no"])
 AC_ARG_ENABLE(icc,   [  --enable-icc    Using intel compiler], [use_icc="$enableval"], [use_icc=$use_icc_default])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
@@ -172,36 +173,35 @@ OPT_DEBUG="-g -rdynamic -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
 AM_CONDITIONAL(USE_OPENCC,false)
 use_ifort="no"
+if test "x$use_mem" = "xyes" ;then
+    AC_DEFINE(USE_MEM,[1],["Use memory management"])
+else
+    AC_DEFINE(USE_MEM,[0],["Do not use memory management"])	
+fi
+if test "x$use_icc" = "xyes" ;then
+    OPTIM=$OPTIM_ICC
+    OPT_DEBUG="$OPT_DEBUG -wd981"
+    CC=icc
+    AC_PROG_CC([icc])
+    which icc || AC_MSG_ERROR([icc is not found in path.])
+    AM_CONDITIONAL(USE_ICC,true)	
+elif test "x$use_opencc" = "xyes" ;then
+    OPTIM=$OPTIM_OPENCC
+    CC=opencc
+    AC_PROG_CC([opencc])
+    AM_CONDITIONAL(USE_OPENCC,true)
+else
+    OPTIM=$OPTIM_GCC
+    AC_PROG_CC
+fi	
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
-    OPTScc="$OPT_DEBUG"
     AC_DEFINE(DEBUG,[1],["Debug the code"])
-    AC_DEFINE(USE_MEM,[1],["Whether use memory management or not"])
-    AC_PROG_CC
+    OPTScc="$OPT_DEBUG"
 else
     AM_CONDITIONAL(DEBUG,false)
     AC_DEFINE(DEBUG,[0],["Do not debug"])
-    AC_DEFINE(USE_MEM,[0],["Whether use memory management or not"])
-
-    if test "x$use_icc" = "xyes" ;then
-        OPTScc=" $OPTIM_ICC"
-	CC=icc
-	AC_PROG_CC([icc])
-	which icc || AC_MSG_ERROR([icc is not found in path.])
-	which ifort && use_ifort="yes"
-	AM_CONDITIONAL(USE_ICC,true)	
-	if test "x$use_opencc" = "xyes" ;then
-            AC_MSG_ERROR([Shall not specify both icc and opencc])
-	fi
-    elif test "x$use_opencc" = "xyes" ;then
-    	OPTScc="$OPTIM_OPENCC"
-	CC=opencc
-	AC_PROG_CC([opencc])
-	AM_CONDITIONAL(USE_OPENCC,true)
-    else
-	OPTScc="$OPTIM_GCC"
-	AC_PROG_CC
-    fi	
+    OPTScc="$OPTIM"
 fi
 AC_PROG_CC_STDC
 AM_PROG_CC_C_O
@@ -272,8 +272,8 @@ LDFFT="-lfftw3"
 # use the cholmod in the system even if it is available because we want to
 # customize the dependency on blas/lapack.
 
-AC_CHECK_LIB([cholmod_long],[cholmod_l_factorize], [have_chol_long="yes"], [have_chol_long="no"],[$LAPACK])
-AC_CHECK_LIB([cholmod_int],[cholmod_factorize], [have_chol_int="yes"], [have_chol_int="no"],[$LAPACK])
+AC_CHECK_LIB([cholmod_long],[cholmod_l_factorize], [have_chol_long="yes"], [have_chol_long="no"],[$LAPACK -lpthread])
+AC_CHECK_LIB([cholmod_int],[cholmod_factorize], [have_chol_int="yes"], [have_chol_int="no"],[$LAPACK -lpthread])
 if test "x$use_long" = "xyes" -a "x$have_chol_long" = "xyes" ;then
     echo "cholmod_long is installed in the system. will use it."
     LDCHOL="-lcholmod_long"
@@ -344,4 +344,4 @@ echo LDEXE=$LDEXE
 echo SRC_DIR=$SRC_DIR
 echo SVN_REV=$SVN_REV
 echo BUILD_DIR=$BUILD_DIR
-
+echo OPTS=$OPTS

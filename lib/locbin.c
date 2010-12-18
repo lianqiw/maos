@@ -86,7 +86,7 @@ loc_t ** locarrread(int *nloc, const char*format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     uint32_t magic=read_magic(fp, NULL);
-    if(magic!=MC_DBL && magic!=MCC_ANY){
+    if(!iscell(magic)){
 	error("This is not a locarr file");
     }
     uint64_t nx,ny;
@@ -129,7 +129,7 @@ void locwrite(const loc_t *loc, const char *format,...){
 void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
-    uint32_t magic=MC_DBL;
+    uint32_t magic=MCC_ANY;
     uint64_t nx=nloc;
     uint64_t ny=1;
     zfwrite(&magic, sizeof(uint32_t),1, fp);
@@ -238,7 +238,7 @@ rectmap_t *rectmapreaddata(file_t *fp){
 	dfree_keepdata(tmp);
 	free(header);
     }else{
-	if(magic!=MC_DBL && magic!=MCC_ANY){
+	if(!iscell(magic)){
 	    error("Invalid format %x for rectmap_t: %s\n", magic, fp->fn);
 	}
 	warning("Please update %s to newer format with headers\n", fp->fn);
@@ -307,7 +307,7 @@ void sqmapwrite(const map_t *map, const char *format,...){
 void sqmaparrwrite(map_t ** map, int nmap, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
-    uint32_t magic=MC_DBL;
+    uint32_t magic=MCC_ANY;
     uint64_t nx=nmap;
     uint64_t ny=1;
     zfwrite(&magic, sizeof(uint32_t),1, fp);
@@ -324,7 +324,7 @@ map_t **sqmaparrread(int*nlayer, const char *format,...){
     int has_header=0;
 
     uint32_t magic=read_magic(fp, NULL);//magic of the cell. 
-    if(magic!=MC_DBL && magic!=MCC_ANY){
+    if(!iscell(magic)){
 	error("Invalid file. magic=%x\n",magic);
     }
     map_t **screens;

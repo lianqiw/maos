@@ -359,8 +359,10 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].phytypesim=parms->powfs[ipowfs].phytype;
 	}
 	//round phystep to be multiple of dtrat.
-	parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
-	    *parms->powfs[ipowfs].dtrat;
+	if(parms->powfs[ipowfs].phystep>0){
+	    parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
+		*parms->powfs[ipowfs].dtrat;
+	}
 
     }//ipowfs
 }
@@ -591,6 +593,7 @@ static void readcfg_evl(PARMS_T *parms){
     for(ievl=0; ievl<parms->evl.nevl; ievl++){
 	parms->evl.npsf+=(parms->evl.psf[ievl]>0);
     }
+    //it is never good to parallelize the evl ray tracing because it is already so fast
     parms->evl.nthread=1;//parms->sim.nthread;
     parms->evl.nmod=(parms->evl.rmax+1)*(parms->evl.rmax+2)/2;
 }

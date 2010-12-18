@@ -271,7 +271,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.ngsalign){
 	warning2("NGS are aligned to grid spaced by %g\"\n", parms->maos.ngsgrid);
     }
-    if(1){
+    if(0){
 	char temp[80]; 
 	char *temp1;
 	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin.gz",parms->maos.r0z, parms->maos.zadeg);

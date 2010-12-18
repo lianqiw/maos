@@ -30,20 +30,15 @@
 #define X(A) c##A
 #define Y(A) c##A
 #define M_T M_CMP
-#define MC_T MC_CMP
 #define M_SPT64 M_CSP64
-#define MC_SPT MC_CSP
 #define M_SPT32 M_CSP32
-#define MC_SPT MC_CSP
 #else
 #define T double
 #define X(A) d##A
 #define Y(A) A
 #define M_T M_DBL
-#define MC_T MC_DBL
 #define M_SPT64 M_SP64
 #define M_SPT32 M_SP32
-#define MC_SPT MC_SP
 #endif
 /**
    Contains routines to write/read dense/sparse matrix into/from file.
@@ -67,7 +62,7 @@ void X(writedata)(file_t *fp, const X(mat) *A){
    Generally used by library developer
  */
 void X(cellwritedata)(file_t *fp, const X(cell) *dc){
-    uint32_t magic=MC_T;
+    uint32_t magic=MCC_ANY;
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     if(!dc){
 	uint64_t zero=0;
@@ -129,8 +124,9 @@ X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic){
     if(!magic){
 	magic=read_magic(fp, NULL);
     }
-    if(magic!=MC_T && magic!=MCC_ANY)
-	error("This is is not a X(mat) cell file. want %d, get %d\n",(int)MC_T,(int)magic);
+    if(!iscell(magic)){
+	error("This is is not a X(mat) cell file. want %d, get %d\n",(int)MCC_ANY,(int)magic);
+    }
     uint64_t nx,ny;
     zfreadlarr(fp, 2, &nx, &ny);
     X(cell) *out;
@@ -277,7 +273,7 @@ void Y(spwrite)(const X(sp) *sp, const char *format,...){
    Usage: spcellwrite(A,"A.bin.gz"); */
 void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
     format2fn;
-    uint32_t magic=MC_SPT;
+    uint32_t magic=MCC_ANY;
     file_t *fp=zfopen(fn,"wb");
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     if(spc){
@@ -315,8 +311,9 @@ Y(spcell) *Y(spcellread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
     uint32_t magic=read_magic(fp, NULL);
-    if(magic!=MC_SPT)
-	error("%s is not a sparse cell file. want %d, got %u\n", fn, MC_SPT, magic);
+    if(!iscell(magic)){
+	error("%s is not a sparse cell file. want %d, got %u\n", fn, MCC_ANY, magic);
+    }
     uint64_t nx,ny;
     zfreadlarr(fp, 2, &nx, &ny);
     Y(spcell) *out;
@@ -399,7 +396,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, const char *for
     close(fd);
     X(cell) *out=X(cellnew)(nx,ny);
     out->mmap=map;
-    mmap_header(map, MC_T, nx, ny);
+    mmap_header(map, MCC_ANY, nx, ny);
     map+=headersize;//header of cell
     for(long ix=0; ix<nx*ny; ix++){
 	mmap_header(map, M_T, nnx[ix], nny[ix]);
@@ -431,7 +428,7 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *for
     close(fd);
     X(cell) *out=X(cellnew)(nx,ny);
     out->mmap=map;
-    mmap_header(map, MC_T, nx, ny);
+    mmap_header(map, MCC_ANY, nx, ny);
     map+=headersize;//header of cell
     for(long ix=0; ix<nx*ny; ix++){
 	mmap_header(map, M_T, mx, my);

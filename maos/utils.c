@@ -391,7 +391,7 @@ void maos_signal_handler(int sig){
 	    info="Killed";
 	    break;
 	}
-	warning2("Signal %d: %s", sig, info);
+	warning2("Signal %d: %s\n", sig, info);
 	fflush(stderr);
 	fflush(stdout);
 	if(sig == SIGSEGV){

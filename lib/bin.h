@@ -25,7 +25,7 @@
 #include <pthread.h>
 #include "common.h"
 #define IO_TIMMING 0
-//The definitions here should not be changed once set.
+//The definitions here should not be changed once set for backward/foreward compatibility.
 #define M_CSP64  0x6400  //sparse complex
 #define M_SP64   0x6401  //sparse
 #define M_DBL    0x6402  //double
@@ -34,7 +34,8 @@
 #define M_INT32  0x6405  //int 32 array
 #define M_CSP32  0x6406  //sparse complex 32 bit
 #define M_SP32   0x6407  //sparse 32 bit
-
+//The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type
+/*
 #define MC_CSP   0x6410  //complex sparse cell
 #define MC_SP    0x6411  //sparse cell.
 #define MC_DBL   0x6412  //double cell
@@ -42,11 +43,13 @@
 #define MC_CMP   0x6414  //complex cell
 #define MC_INT32 0x6415  //int32 cell
 
-#define MCC_ANY  0x6421  //cell of any cell
 #define MCC_DBL  0x6422  //cell of dcell
 #define MCC_CMP  0x6424  //cell of ccell
-
+*/
+#define MCC_ANY  0x6421  //cell of any thing
 #define M_HEADER 0x6500  //header.
+
+#define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
 
 #define USE_ZLIB_H 0
 #if USE_ZLIB_H

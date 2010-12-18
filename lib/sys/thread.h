@@ -46,41 +46,28 @@ struct thread_t{
 #if USE_PTHREAD //Always use thread_pool
 #include <pthread.h>
 #include "thread_pool.h"
-#define CALL(A,B,nthread)				\
-    if(nthread>1){					\
-	long thgroup=0;					\
-	for(int ithread=0; ithread<nthread; ithread++){	\
-	    thread_pool_queue(&thgroup,			\
-			      (thread_fun)A,	\
-			      (void*)B,0);		\
-	}						\
-	thread_pool_wait(&thgroup);			\
-    }else{						\
-	A(B);						\
+#define CALL_MANY(A,B,nthread,urgent)					\
+    if(nthread>1){							\
+	long thgroup=0;							\
+	thread_pool_queue_many_same					\
+	    (&thgroup, (thread_fun)A, (void*)B, nthread, urgent);	\
+	thread_pool_wait(&thgroup);					\
+    }else{								\
+	A(B);								\
     }
-#define CALL_URGENT(A,B,nthread)       			\
-    if(nthread>1){					\
-	long thgroup=0;					\
-	for(int ithread=0; ithread<nthread; ithread++){	\
-	    thread_pool_queue(&thgroup,			\
-			      (thread_fun)A,	\
-			      (void*)B,2);		\
-	}						\
-	thread_pool_wait(&thgroup);			\
-    }else{						\
-	A(B);						\
-    }
-#define CALL_EACH(A,B,nthread)				\
-    if(nthread>1){					\
-	long thgroup=0;					\
+#define CALL(A,B,nthread) CALL_MANY(A,B,nthread,0)
+#define CALL_URGENT(A,B,nthread) CALL_MANY(A,B,nthread,2)
+#define CALL_EACH(A,B,nthread)					\
+    if(nthread>1){						\
+	long thgroup=0;						\
 	for(int ithread=nthread-1; ithread>-1; ithread--){	\
-	    thread_pool_queue(&thgroup,			\
-			      (thread_fun)A,	\
-			      (void*)&(B[ithread]),2);	\
-	}						\
-	thread_pool_wait(&thgroup);			\
-    }else{						\
-	A(B);						\
+	    thread_pool_queue(&thgroup,				\
+			      (thread_fun)A,			\
+			      (void*)&(B[ithread]),2);		\
+	}							\
+	thread_pool_wait(&thgroup);				\
+    }else{							\
+	A(B);							\
     }
 /**
    Queue jobs to group. Do not wait
@@ -93,15 +80,16 @@ struct thread_t{
     }
 /**
    Wait for all jobs in group to finish.
- */
+*/
 #define WAIT_THREAD(group) thread_pool_wait(&group)
 #define THREAD_POOL_INIT(A) thread_pool_create(A)
-#else
-#define CALL(A,B,nthread) A(B) //no threading
-#define CALL_URGENT(A,B,nthread) A(B) //no threading
+#else//no threading
+#define CALL_MANY(A,B,nthread,urgent) A(B)
+#define CALL(A,B,nthread) A(B)
+#define CALL_URGENT(A,B,nthread) A(B)
 #define CALL_DATAEACH(A,B,nthread) A(B)
 #define QUEUE_THREAD(group,A,nthread) A->fun(A)
-#define THREAD_POOL_INIT(A)  //Do nothing
+#define THREAD_POOL_INIT(A)
 #endif
 
 /**

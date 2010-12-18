@@ -82,18 +82,19 @@ static void* calc_pistat(GENPISTAT_S *data){
 	}
 	file_t *fp_wvf=zfopen(fnwvf,"rb");
 	uint32_t magic;
-	zfread(&magic, sizeof(uint32_t),1,fp_wvf);
-	if(magic!=MCC_CMP && magic !=MCC_ANY){
-	    error("expected data type: %u, got %u\n",(uint32_t)MCC_CMP,magic);
+	magic=read_magic(fp_wvf,NULL);
+	if(!iscell(magic)){
+	    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
 	}
 	long nstep,junk;
 	zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
 	zfread(&junk,sizeof(uint64_t),1,fp_wvf);
 		
 	file_t *fp_ztilt=zfopen(fnztilt,"rb");
-	zfread(&magic, sizeof(uint32_t),1,fp_ztilt);
-	if(magic!=MC_DBL && magic !=MCC_ANY){
-	    error("expected data type: %u, got %u\n",(uint32_t)MC_DBL,magic);
+	//zfread(&magic, sizeof(uint32_t),1,fp_ztilt);
+	magic=read_magic(fp_ztilt,NULL);
+	if(!iscell(magic)){
+	    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
 	} 
 	long nstep2;
 	zfread(&nstep2,sizeof(uint64_t),1,fp_ztilt);
@@ -346,9 +347,10 @@ static void *convert_wvf(GENPISTAT_S *data){
     info("processing %s\n", fnwvf);
     file_t *fp_wvf=zfopen(fnwvf,"rb");
     uint32_t magic;
-    zfread(&magic, sizeof(uint32_t),1,fp_wvf);
-    if(magic!=MCC_CMP && magic !=MCC_ANY){
-	error("expected data type: %u, got %u\n",(uint32_t)MCC_CMP,magic);
+    //zfread(&magic, sizeof(uint32_t),1,fp_wvf);
+    magic=read_magic(fp_wvf, NULL);
+    if(!iscell(magic)){
+	error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
     }
     long nstep,junk;
     zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
