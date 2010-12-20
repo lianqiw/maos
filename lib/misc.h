@@ -19,7 +19,6 @@
 #ifndef AOS_LIB_MISC_H
 #define AOS_LIB_MISC_H
 #include "common.h"
-char *FF(const char *format,...) CHECK_ARG(1);
 long factorial(long n);
 char *mybasename(const char *fn);
 int check_suffix(const char *fn, const char *suffix);

@@ -6,3 +6,4 @@
 #gtkdocize --copy
 #use glibtoolize in mac.
 autoreconf --force --install -I m4
+aclocal --force -I m4

@@ -71,6 +71,31 @@
     The compiled executable is maos in the sub-folder “bin” of the compiling
     folder. You do not have to do "make install" to run the simulations.
 
+    \subsection Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon
+
+    First, if xcode is not installed in full, make sure the following packages are installed
+    DeveloperToolsCLI.pkg
+    gcc4.2.pkg
+    MACOSX10.5.pkg
+    DevSDK.pkg
+    OpenGLSDK.pkg
+    DeveloperToolsSystemSupport
+
+    Second, download and install pkg-config from http://pkgconfig.freedesktop.org/releases/
+    
+    Third, following the instructions on page
+    http://gtk-osx.sourceforge.net/ to install gtk+ for osx. The
+    environmental variables are set by jhbuild, here we take important
+    ones and put them in our .bash_profile to avoid running jhbuild
+    each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.
+
+    export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib"
+    export PATH="$PATH:$HOME/gtk/inst/bin"
+    export C_INCLUDE_PATH="$HOME/gtk/inst/include"
+    export ACLOCAL_FLAGS="-I $HOME/gtk/inst/share/aclocal"
+    
+
     \subsection sect-monitor Using the job monitor
     
     When reasonably recent GTK+ and Cairo libraries are present in the system,

@@ -38,24 +38,6 @@
 #include "path.h"
 
 /**
-   Obtain the hostname of current machine. The returnned string
-   should not be freed.
-*/
-__thread char fnglobal[PATH_MAX];//thread local storage
-char* FF(const char *format, ...){
-    va_list ap;
-    va_start(ap, format);
-    vsnprintf(fnglobal, sizeof(fnglobal), format, ap);
-    va_end(ap);
-    if(strlen(fnglobal)==0) 
-	return NULL;
-    else
-	return fnglobal;
-}
-
-
-
-/**
    Obtain the basename of a file. The returnned string must be freed.
 */
 char *mybasename(const char *fn){

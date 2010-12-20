@@ -19,13 +19,13 @@ AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
 
 AC_TYPE_SIZE_T  
 #Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
-AM_CONDITIONAL(DRAW,true)
+AM_CONDITIONAL(DRAW,true) #for drawdaemon
 AM_CONDITIONAL(MON,true)  #for parital monitor without notify
 AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #make sure there are spaces before and after >=
-PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [],[AM_CONDITIONAL(DRAW,false)])
-PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[],[AM_CONDITIONAL(MON,false)])
-PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[],[AM_CONDITIONAL(MONN,false)])
+PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [AC_MSG_NOTICE([Will compile drawdaemon])],[AM_CONDITIONAL(DRAW,false)])
+PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[AC_MSG_NOTICE([Will compile monitor])],[AM_CONDITIONAL(MON,false)])
+PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[AC_MSG_NOTICE([Will compile monitor with libnotify])],[AM_CONDITIONAL(MONN,false)])
 #The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
 #with their values in Makefile.in 
 #so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
