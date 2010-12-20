@@ -94,17 +94,21 @@ case "$host_os" in
     ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
- if ! test -e ${SRC_DIR}/scripts/drawdaemon.app ;then
-     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/drawdaemon.app.tar.gz &&\
-     tar -xzf drawdaemon.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
-     rm  -rf drawdaemon.app.tar.gz
+ if ! test -e scripts/drawdaemon.app ;then
+     AC_MSG_NOTICE([Downloading drawdaemon.app from internet])
+     FN=drawdaemon.app_0.8.0.tar.gz 
+     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/$FN &&\
+     tar -xf $FN -C ${SRC_DIR}/scripts/ &&\
+     rm  -rf $FN
  fi
- if ! test -e ${SRC_DIR}/scripts/monitor.app ;then
-     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/monitor.app.tar.gz &&\ 
-     tar -xzf monitor.app.tar.gz -C ${SRC_DIR}/scripts/ &&\
-     rm	 -rf monitor.app.tar.gz
+ if ! test -e scripts/monitor.app ;then
+     AC_MSG_NOTICE([Downloading monitor.app from internet])
+     FN=monitor.app_0.8.0.tar.gz
+     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/$FN &&\ 
+     tar -xf $FN -C ${SRC_DIR}/scripts/ &&\
+     rm	 -rf $FN
  fi
- echo "Please use the monitor downloaded to ${SRC_DIR}/scripts/monitor.app"
+ AC_MSG_NOTICE([Please use the monitor downloaded to ${SRC_DIR}/scripts/monitor.app])
 ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)
