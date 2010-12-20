@@ -76,7 +76,7 @@ static void strtrim(char **str){
     int iend;
     //turn non-printable characters, coma, and semicolumn, to space
     for(char *tmp=*str; *tmp!='\0'; tmp++){
-	if(!isgraph(*tmp) || *tmp==';' || *tmp==',' || isspace((int)*tmp)){
+      if(!isgraph((int)*tmp) || *tmp==';' || *tmp==',' || isspace((int)*tmp)){
 	    *tmp=' ';
 	}
     }
@@ -517,14 +517,14 @@ double readstr_num(const char *data, char **endptr0){
 	error("Unable to parse {%s} for a number\n", data);
 	return 0;
     }
-    while(isspace(endptr[0])) endptr++;
+    while(isspace((int)endptr[0])) endptr++;
     while(endptr[0]=='/' || endptr[0]=='*'){
 	int power=1;
 	if(endptr[0]=='/'){
 	    power=-1;
 	}
 	endptr++;
-	while(isspace(endptr[0])) endptr++;
+	while(isspace((int)endptr[0])) endptr++;
 	data=endptr;
 	double tmp=strtod(data, &endptr);
 	if(data==endptr){
@@ -535,7 +535,7 @@ double readstr_num(const char *data, char **endptr0){
 	}else{
 	    res/=tmp;
 	}
-	while(isspace(endptr[0])) endptr++;
+	while(isspace((int)endptr[0])) endptr++;
     }
     if(endptr0){
 	*endptr0=endptr;
@@ -581,7 +581,7 @@ int readstr_numarr(void **ret, int type, const char *data){
 		}else{
 		    fact/=fact1;
 		}
-		while(isspace(endptr[0])) endptr++;
+		while(isspace((int)endptr[0])) endptr++;
 		if(endptr[0]=='/'){
 		    power=-1;
 		}else if(endptr[0]=='*'){
@@ -602,7 +602,7 @@ int readstr_numarr(void **ret, int type, const char *data){
     }
     if(strchr(startptr,']')){//there is indeed ']'
 	endptr=strchr(startptr,']')+1;
-	while(isspace(endptr[0])) endptr++;
+	while(isspace((int)endptr[0])) endptr++;
 	while(endptr[0]=='/' || endptr[0]=='*'){
 	    int power2=1;
 	    if(endptr[0]=='/'){
@@ -611,13 +611,13 @@ int readstr_numarr(void **ret, int type, const char *data){
 		power2=1;
 	    }
 	    endptr++;
-	    while(isspace(endptr[0])) endptr++;
+	    while(isspace((int)endptr[0])) endptr++;
 	    startptr2=endptr;
 	    double fact2=strtod(startptr2, &endptr);
 	    if(startptr2==endptr){
 		error("Invalid entry to parse for numerical array: {%s}\n", data);
 	    }
-	    while(isspace(endptr[0])) endptr++;
+	    while(isspace((int)endptr[0])) endptr++;
 	    if(power2==1){
 		fact*=fact2;
 	    }else{

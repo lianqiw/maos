@@ -18,10 +18,8 @@
 
 #define USE_COMPLEX /**<for complex data*/
 #include <sys/file.h>
-#include <complex.h>
-//need to include complex.h before fftw3.h
-#include <fftw3.h>
 #include "common.h"
+#include <fftw3.h>
 #include "thread.h"
 #include "process.h"
 #include "misc.h"

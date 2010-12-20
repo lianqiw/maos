@@ -28,7 +28,6 @@
 #include <string.h>
 #include <search.h>
 #include <assert.h>
-#include <complex.h>
 
 #include "../lib/aos.h"
 #include "parms.h"

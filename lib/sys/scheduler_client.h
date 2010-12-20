@@ -19,25 +19,13 @@
 #define AOS_SCHEDULER_CLIENT_H
 #define MAXMSG  512
 #include "scheduler_server.h"
-
-#if defined (__CYGWIN__)
-#define start_scheduler(A...)
-#define scheduler_start(A...)
-#define scheduler_wait(A...) 0
-#define scheduler_finish(A...)
-#define scheduler_report(A...)
-#define scheduler_get_drawdaemon(A...) NULL
-#define scheduler()
-#define print_backtrace(A...)
-#else
-/*
-#include <sys/types.h>   
-#include <sys/socket.h>
-#include <netinet/in.h>*/
 void start_scheduler(int argc, char **argv);
 int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port);
 int scheduler_connect(int ihost, int block,int mode);
 int scheduler_connect_self(int block,int mode);
+#ifdef __CYGWIN__
+#define print_backtrace(A)
+#endif
 //called by maos
 //call scheduler_start, and then scheduler_wait if waiting is 1.
 void scheduler_launch(void);
@@ -48,8 +36,6 @@ void scheduler_report(STATUS_T *status);
 //called by monitor
 int scheduler_kill_job(int ihost,int pid);
 int scheduler_remove_job(int ihost, int pid);
-
 char* scheduler_get_drawdaemon(int pid);
 void  scheduler_shutdown(int *sock, int mode);
-#endif//cygwin
 #endif

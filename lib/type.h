@@ -18,7 +18,6 @@
 
 #ifndef AOS_TYPE_H
 #define AOS_TYPE_H
-#include <complex.h>
 #include "common.h"
 #include <fftw3.h>
 #include "misc.h"

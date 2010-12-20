@@ -438,21 +438,4 @@ void mysleep(double sec){
     ts.tv_nsec=(long)((sec-ts.tv_sec)*1e9);
     nanosleep(&ts, NULL);
 }
-#if defined (__CYGWIN__)
-//cpow and cexp are not defined by the system.
-dcomplex cexp(dcomplex z){
-    double exp0=exp(creal(z));
-    return exp0*(cos(cimag(z))+I*sin(cimag(z)));
-}
-dcomplex cpow(dcomplex x, dcomplex z){
-    (void)x;
-    (void)z;
-    warning("Not implemented\n");
-    return 0;
-}
-dcomplex csqrt(dcomplex z){
-    (void)z;
-    warning("Not implemented\n");
-    return 0;
-}
-#endif
+

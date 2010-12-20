@@ -443,7 +443,7 @@ char *read_header_end(const char *format,...){
 	}
 	if(nlen>0){
 	    //enlarge the string.
-	    info("Reading header with length %lu\n",nlen);
+	    info("Reading header with length %llu\n",nlen);
 	    if(nlenout>0){
 		strout[nlenout-1]='\n';//turn \0 to \n.
 	    }

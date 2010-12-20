@@ -34,13 +34,27 @@
 #include <math.h>
 #include <string.h>
 #include <alloca.h>
+typedef double __complex__ dcomplex;
+typedef double ddouble;/*just for saving.*/
+#ifndef __CYGWIN__
 #include <complex.h>
+#else
+//CYGWIN does not have complex.h.
+#define complex __complex__
+#define _Complex_I (__extension__ 1.0iF)
+#define I _Complex_I
+double cimag(dcomplex __z);
+double creal(dcomplex __z);
+dcomplex conj(dcomplex __z);
+#define cexp(z) exp(creal(z))*(cos(cimag(z))+I*sin(cimag(z)))
+dcomplex cpow(dcomplex x, dcomplex z);
+dcomplex csqrt(dcomplex);
+dcomplex clog(dcomplex);
+#endif
 #include "sys/mem.h"
 #ifdef __linux__
 #include <linux/limits.h> //includes definition of PATH_MAX
 #endif//__linux__
-typedef double __complex__ dcomplex;
-typedef double ddouble;/*just for saving.*/
 #ifndef restrict
 #define restrict __restrict
 #endif

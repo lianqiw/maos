@@ -17,7 +17,6 @@
 */
 
 #include <math.h>
-#include <complex.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <alloca.h>

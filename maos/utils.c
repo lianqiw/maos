@@ -376,7 +376,7 @@ void maos_signal_handler(int sig){
     disable_signal_handler;
     rename_file(sig);//handles signal
     if(sig!=0){
-	char *info;
+	char *info="Unknown";
 	switch(sig){
 	case SIGBUS:
 	case SIGILL:

@@ -152,7 +152,9 @@ AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"]
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
-    OPTSprof="-pthread"
+    if test "x$win32" != "xyes" ;then
+        OPTSprof="-pthread"
+    fi
 else
     AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
 fi

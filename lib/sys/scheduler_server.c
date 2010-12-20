@@ -38,7 +38,6 @@
 
    \todo Detect hyperthreading.
  */
-#ifndef __CYGWIN__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -967,4 +966,4 @@ void monitor_send_initial(MONITOR_T *ic){
     }
     //info("Monitor_send_initial success\n");
 }
-#endif
+

@@ -16,9 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 // make a client address
-#ifndef __CYGWIN__
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
@@ -213,10 +210,10 @@ void scheduler_report(STATUS_T *status){
 }
 
 
-#if !defined(__INTEL_COMPILER) && (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE)
+#if !defined(__INTEL_COMPILER) && (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
 #define PRINTBACKTRACE 1
 #else
-#define PRINTBACKTRACE 1
+#define PRINTBACKTRACE 0
 #endif
 
 void print_backtrace_symbol(void *const *buffer, int size){
@@ -252,6 +249,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
     fprintf(stderr, " %s\n",cmdstr);
 #endif
 }
+#ifndef __CYGWIN__
 #include <execinfo.h>
 void print_backtrace(int sig){
     int size0,size1;
@@ -264,6 +262,7 @@ void print_backtrace(int sig){
     if(sig !=0)
 	raise(SIGABRT);
 }
+#endif
 char* scheduler_get_drawdaemon(int pid){
     int launch=0;
     static char *fifo=NULL;
@@ -336,4 +335,3 @@ char* scheduler_get_drawdaemon(int pid){
     }
     return fifo;
 }
-#endif
