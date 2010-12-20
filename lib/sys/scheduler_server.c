@@ -631,16 +631,19 @@ static int respond(int sock){
 	    int method=0;
 #if defined(__APPLE__)
 	    char cmdopen[1024];
-	    snprintf(cmdopen, 1024, "open -n -a %s/scripts/drawdaemon.app --args %s", SRCDIR, fifo);
+	    //Run the exe directly can pass the argumnents. --args is a new feature in 10.6 to do the samething with open
+	    snprintf(cmdopen, 1024, "%s/scripts/drawdaemon.app/Contents/MacOS/drawdaemon %s &", SRCDIR, fifo);
 	    if(system(cmdopen)){
 		method=0;//failed
+		warning("%s failed\n", cmdopen);
 	    }else{//succeed
-		info("%s succeeded", cmdopen);
+		info("%s succeeded\n", cmdopen);
 		method=3;
 	    }
 	    if(method==0){
 		snprintf(cmdopen, 1024, "open -n -a drawdaemon.app --args %s", fifo);
 		if(system(cmdopen)){
+		    warning("%s failed\n", cmdopen);
 		    method=0;//failed
 		}else{
 		    info("%s succeeded\n", cmdopen);

@@ -93,9 +93,17 @@
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib"
     export PATH="$PATH:$HOME/gtk/inst/bin"
     export C_INCLUDE_PATH="$HOME/gtk/inst/include"
-    export ACLOCAL_FLAGS="-I $HOME/gtk/inst/share/aclocal"
     
+    Now rerun configure and make. Monitor and drawdaemon should appear in bin folder now.
 
+    To make the app bundles. 
+    First, install quartz engine and ige-mac-buildler. 
+    http://sourceforge.net/apps/trac/gtk-osx/wiki/Bundle
+    jhbuild build gtk-quartz-engine
+    
+    Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin
+    And cd to scripts/bundle folder, run build.sh. .app files should appear in your desktop.
+    
     \subsection sect-monitor Using the job monitor
     
     When reasonably recent GTK+ and Cairo libraries are present in the system,
