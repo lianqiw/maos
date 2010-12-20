@@ -251,10 +251,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     if(nrhs!=1 || nlhs>2){
 	mexErrMsgTxt("Usage:var=read('filename') or [var, header]=read('file name')\n");
     }
-    int nlen=mxGetM(prhs[0])*mxGetN(prhs[0])+1;
-    char *fn=malloc(nlen);
     mxArray *header=NULL;
-    mxGetString(prhs[0],fn,nlen);
+    char *fn=mx2str(prhs[0]);
     fp=openfile(fn,"rb");
     free(fn);
     if(nlhs==2){

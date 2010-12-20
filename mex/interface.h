@@ -9,4 +9,5 @@ dmat *mx2d(const mxArray *A);
 
 dsp *mx2dsp(const mxArray *A);
 loc_t *mx2loc(const mxArray *A);
+char *mx2str(const mxArray *A);
 #endif

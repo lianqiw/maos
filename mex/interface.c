@@ -54,3 +54,8 @@ dmat *mx2d(const mxArray *A){
     dmat *out=dnew_ref(mxGetPr(A), mxGetM(A), mxGetN(A));
     return out;
 }
+char *mx2str(const mxArray *A){
+    int nlen=mxGetNumberOfElements(A)+1;
+    char *fn=malloc(nlen);
+    mxGetString(A, fn, nlen);
+}

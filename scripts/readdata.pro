@@ -1,3 +1,6 @@
+;; 2010-11-08: Initial version
+;; 2010-12-13: Contributed by Mark Chun on 2010-11-29 to make it work for cell arrays and headers
+
 function readdata,unit
 
   M_CSP64=25600
@@ -19,12 +22,33 @@ function readdata,unit
   MCC_CMP=25636
   MAT_SP=65281
   MAT_CSP=65282
+  M_HEADER=25856    ;; MC:  2010-11-29 Added M_HEADER code to handle header text
 
-  magic=ulong(1) ;silly int is only 2 byte.
-  nx=long64(1)
+  magic=ulong(1) ;silly int is only 2 byte. we need 4 byte int
+  nx=long64(1) ;we need 8 byte int.
   ny=long64(1)
-  readu,unit,magic,nx,ny
-  switch magic of
+  readu,unit,magic
+  header='' ;; MC:  2010-11-29 Added M_HEADER code to handle header text
+  while (magic EQ M_HEADER) DO BEGIN
+        nlen = ulong64(1)
+        readu, unit, nlen
+        achar = byte(1)
+        FOR i=0,nlen-1 DO BEGIN
+           readu, unit, achar
+           header = header+STRING(achar)
+        ENDFOR
+        PRINT, header
+        nlen2 = ulong64(1)
+        readu, unit, nlen2
+        magic2=1UL
+        readu, unit, magic2
+        IF ( nlen NE nlen2 OR magic NE magic2 ) THEN STOP
+        readu, unit, magic
+  endwhile           ;; MC:  2010-11-29 Added M_HEADER code to handle header text
+  readu, unit, nx,ny
+  print, magic, nx, ny
+  IF ( nx NE 0 and ny NE 0 ) THEN BEGIN
+   switch magic of
      MCC_ANY:
      MCC_DBL:
      MCC_CMP:
@@ -34,11 +58,10 @@ function readdata,unit
      MC_CMP:
      MC_INT32:
      MC_INT64: begin
-        print,nx,ny
-        out=ptrarr(nx,ny)
+        out=ptrarr(nx,ny,/ALLOCATE_HEAP)  ;; MC: Added /ALLOCATE_HEAP
         for iy=0,ny-1 do begin
            for ix=0, nx-1 do begin
-              out(ix,iy)=readdata(unit)
+              *out(ix,iy)=readdata(unit)  ;; MC: Changed this to *(out)
            end
         end
         break
@@ -69,6 +92,8 @@ function readdata,unit
         readu,unit,out
         break
      end
-  end
+   end
+  ENDIF else out = -1   ;; MC: added setting out=-1 if no match
+  
   return,out
 end
