@@ -3,7 +3,7 @@ LDADD= ../lib/libaos.la -lm $(LDOPTS)
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
 icon-finished.h icon-optics.h
 
-noinst_HEADERS=drawdaemon.h monitor.h
+noinst_HEADERS=monitor.h
 PROGS=
 if LINUX
 PROGS+=../bin/load ../bin/record_cpu

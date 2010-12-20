@@ -56,15 +56,15 @@ loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
 	zfread(out->locx, sizeof(double), nx, fp);
 	out->locy=malloc(sizeof(double)*nx);
 	zfread(out->locy, sizeof(double), nx, fp);
-	if(fabs(dx)<1e-100){//dx is not available.
+	if(fabs(dx)<1e-10){//dx is not available.
 	    for(long i=0; i<out->nloc-1; i++){//we assume the rows are continuous.
 		if(out->locy[i+1]>out->locy[i]){
 		    dx=out->locy[i+1]-out->locy[i];
+		    break;
 		}
 	    }
-	}else{
-	    out->dx=dx;
 	}
+	out->dx=dx;
 	out->map=NULL;
     }
     return out;

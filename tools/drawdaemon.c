@@ -33,7 +33,6 @@
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
 #include <gdk/gdkkeysyms.h>
-#include "drawdaemon.h"
 #include "../lib/draw.h"
 #include "process.h"
 #include "misc.h"
@@ -41,12 +40,21 @@
 #include "icon-draw.h"
 #include "mouse_hand.h"
 #include "mouse_white.h"
+
+#define CSIZE       512
+#ifndef CAIRO_FORMAT_A8
+#define CAIRO_FORMAT_RGB24 0x01
+#define CAIRO_FORMAT_A8 0x02
+#endif
+
 char *defname="Title";
 char *deffig="Figure";
 double stroke_dot[2]={1,5};
 double stroke_dash[2]={10,10};
 double stroke_solid[2]={10,0};
-typedef struct drawdata_t{
+typedef struct drawdata_t drawdata_t;
+static void do_zoom2(drawdata_t *drawdata);
+struct drawdata_t{
     //The following are for surfaces
     int nx, ny;   //array size
     cairo_format_t format;
@@ -74,10 +82,13 @@ typedef struct drawdata_t{
     GtkWidget *drawarea;
     GdkPixmap *pixmap;//in server side memory
     int pending;
-    int width;
-    int height;
-    int widthim;
-    int heightim;
+    int width;//width of the canvas
+    int height;//height of the canvas
+
+    int widthim;//width of the part of the canvas for drawing
+    int heightim;//height of the part of the canvas for drawing
+    int widthim_last, heightim_last;//width,height of last drawing canvas.
+
     double zoomx, zoomy;//zoom level.
     double offx,offy;//off set of the center of the data.
     double mxdown,mydown;
@@ -94,7 +105,7 @@ typedef struct drawdata_t{
     int grid;//whether we want grid lines.
     int ticinside;//put tick inside.
     int cursorinside;
-}drawdata_t;
+};
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
 static char *fifo=NULL;
@@ -350,7 +361,6 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     cairo_rectangle(cr,0,0,width,height);
     cairo_set_source_rgb(cr,1,1,1);
     cairo_fill(cr);
-    cairo_surface_t *image=drawdata->image;
     cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
     /*
       cairo_font_options_t *fonto= cairo_font_options_create();
@@ -394,6 +404,15 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     drawdata->heightim=heightim;
     drawdata->scalex=scalex;
     drawdata->scaley=scaley;
+    if(drawdata->widthim_last !=0 
+       && (drawdata->widthim_last!=drawdata->widthim 
+	   || drawdata->heightim_last!=drawdata->heightim)){
+	//canvas is resized, need to adjust zoom/paning
+	do_zoom2(drawdata);
+    }
+    drawdata->widthim_last=drawdata->widthim;
+    drawdata->heightim_last=drawdata->heightim;
+
     //Offset in the cairo surface to draw the image.
     double xoff=round(((width-widthim-SP_XL-sp_xr)*0.5)+SP_XL);
     double yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
@@ -428,7 +447,7 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	double ofy=(drawdata->ny*0.5)*(1/zoomy-1)+drawdata->offy/scaley;
 	/*The x and y patterns are negated and then set as
 	  translation values in the pattern matrix.*/
-	cairo_set_source_surface(cr, image, ofx,ofy);
+	cairo_set_source_surface(cr, drawdata->image, ofx,ofy);
 	if(scalex*zoomx>1){//use nearest filter for up sampling to get clear images
 	    cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
 	}
@@ -449,7 +468,6 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
 	ymax0=ymin0+ydiff/zoomy;
 	cairo_restore(cr);
     }
- 
     if(drawdata->npts>0){
 	cairo_save(cr);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);//GRAY
@@ -606,11 +624,11 @@ static void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height)
     cairo_select_font_face(cr, font_name, font_style, font_weight);
     cairo_set_font_size(cr, font_size);
     cairo_identity_matrix(cr);
+    //When there is no zoom, panning, limit0 equals to limit.
     drawdata->limit0[0]=xmin0;
     drawdata->limit0[1]=xmax0;
     drawdata->limit0[2]=ymin0;
     drawdata->limit0[3]=ymax0;
-    //info("limit: %.6f %.6f %.6f %.6f\n", xmin0, xmax0, ymin0, ymax0);
     char ticval[80];
     double tic1, dtic;
     int ntic, order;
@@ -879,21 +897,24 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
     }
     update_pixmap(drawdata);
 }
-static void do_zoom2(drawdata_t *drawdata, double *limit0old){
+/**
+   zoom to match the new limit. 
+   2010-12-20: Changed to start from unzoomed state.
+*/
+static void do_zoom2(drawdata_t *drawdata){
     double diffx=drawdata->limit[1]-drawdata->limit[0];
     double diffy=drawdata->limit[3]-drawdata->limit[2];
-    double diffx0=limit0old[1]-limit0old[0];
-    double diffy0=limit0old[3]-limit0old[2];
-    double midx0=limit0old[1]+limit0old[0];
-    double midy0=limit0old[3]+limit0old[2];
+    double diffx0,diffy0,midx0,midy0;
+    //limit0 matches limit in unzoomed state
+    diffx0=(drawdata->limit[1]-drawdata->limit[0]);
+    diffy0=(drawdata->limit[3]-drawdata->limit[2]);
+    midx0=(drawdata->limit[0]+drawdata->limit[1])*0.5;
+    midy0=(drawdata->limit[2]+drawdata->limit[3])*0.5;
 
     double diffx1=drawdata->limit0[1]-drawdata->limit0[0];
     double diffy1=drawdata->limit0[3]-drawdata->limit0[2];
-    double midx1=drawdata->limit0[1]+drawdata->limit0[0];
-    double midy1=drawdata->limit0[3]+drawdata->limit0[2];
-	info("diffx0=%g, diffy=%g\n", diffx0, diffy0);
-	info("diffx1=%g, diffy=%g\n", diffx1, diffy1);
-	info("offx=%g, offy=%g\n", drawdata->offx, drawdata->offy);
+    double midx1=(drawdata->limit0[1]+drawdata->limit0[0])*0.5;
+    double midy1=(drawdata->limit0[3]+drawdata->limit0[2])*0.5;
 
     if(diffx1 > diffx*1e-3 && diffy1 > diffy *1e-3){//limit allowable range
 	//the new zoom
@@ -908,10 +929,10 @@ static void do_zoom2(drawdata_t *drawdata, double *limit0old){
 		ratiox=ratioy;
 	    }
 	}
-	drawdata->zoomx*=ratiox;
-	drawdata->zoomy*=ratioy;
-	drawdata->offx-=(midx1-midx0)*drawdata->widthim/(2*diffx1*drawdata->zoomx);
-	drawdata->offy-=(midy1-midy0)*drawdata->heightim/(2*diffy1*drawdata->zoomy);
+	drawdata->zoomx=ratiox;
+	drawdata->zoomy=ratioy;
+	drawdata->offx=-(midx1-midx0)*drawdata->widthim/(diffx1*drawdata->zoomx);
+	drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1*drawdata->zoomy);
     }
     delayed_update_pixmap(drawdata);
 }
@@ -1091,16 +1112,13 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
 	if(drawdata->mdx<0) xx+=drawdata->mdx;
 	double yy=drawdata->mydown;
 	if(drawdata->mdy>0) yy+=drawdata->mdy;
-	double *limit0old=malloc(4*sizeof(double));
-	memcpy(limit0old, drawdata->limit0, sizeof(double)*4);
 	double diffx=(drawdata->limit0[1]-drawdata->limit0[0])/drawdata->widthim;
 	double diffy=(drawdata->limit0[3]-drawdata->limit0[2])/drawdata->heightim;
 	drawdata->limit0[0]+=diffx*(xx-drawdata->xoff);
 	drawdata->limit0[1]=drawdata->limit0[0]+diffx*fabs(drawdata->mdx);
 	drawdata->limit0[2]+=diffy*(drawdata->yoff+drawdata->heightim-yy);
 	drawdata->limit0[3]=drawdata->limit0[2]+diffy*fabs(drawdata->mdy);
-	do_zoom2(drawdata, limit0old);
-	free(limit0old);
+	do_zoom2(drawdata);
     }
     return FALSE;
 }
@@ -1366,13 +1384,9 @@ static void limit_change(GtkSpinButton *button, gpointer data){
     (void)button;
     spin_t *spin=data;
     drawdata_t *drawdata=spin->data;
-
-    double *limitold=malloc(4*sizeof(double));
-    memcpy(limitold, drawdata->limit0, sizeof(double)*4);
     //update the values
     drawdata->limit0[spin->i]=gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin->w));
-    do_zoom2(drawdata, limitold);
-    free(limitold);
+    do_zoom2(drawdata);
     spin_t *lim=spin-spin->i;
     for(int i=0; i<4; i++){//update spin button's value.
 	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), drawdata->limit0[i]);

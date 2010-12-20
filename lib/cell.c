@@ -826,3 +826,26 @@ void X(cellcwpow)(X(cell)*A, double power){
 	X(cwpow)(A->p[ib],power);
     }
 }
+/**
+   Create a new sub cell matrix of nx*ny starting from(sx,sy)
+*/
+X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny){
+    if(nx<=0){
+	nx=in->nx-sx;
+    }
+    if(ny<=0){
+	ny=in->ny-sy;
+    }
+    X(cell)*out=X(cellnew)(nx, ny);
+    if(sx+nx>in->nx || sy+ny>in->ny){
+	error("Invalid parameter range\n");
+    }
+    PCELL(in, pin);
+    PCELL(out, pout);
+    for(int iy=0; iy<ny; iy++){
+	for(int ix=0; ix<nx; ix++){
+	    pout[iy][ix]=pin[iy+sy][ix+sx];
+	}
+    }
+    return out;
+}

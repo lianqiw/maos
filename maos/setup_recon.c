@@ -266,7 +266,8 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		displace[0]=parms->wfs[iwfs].thetax*ht;
 		displace[1]=parms->wfs[iwfs].thetay*ht;
 		HXW[ips][iwfs]=mkh(recon->xloc[ips], ploc, NULL, 
-				   displace[0],displace[1],scale,0,0);
+				   displace[0],displace[1],scale,
+				   parms->tomo.cubic, parms->tomo.iac);
 		
 	    }
 	}
@@ -1136,7 +1137,8 @@ setup_recon_HXFHA(RECON_T *recon, const PARMS_T *parms){
 		displace[0]=parms->fit.thetax[ifit]*ht;
 		displace[1]=parms->fit.thetay[ifit]*ht;
 		HXF[ips][ifit]=mkh(recon->xloc[ips], recon->ploc, NULL,
-				   displace[0], displace[1], scale,0,0);
+				   displace[0], displace[1], scale,
+				   parms->tomo.cubic, parms->tomo.iac);
 	    }
 	}
 	if(parms->save.setup){

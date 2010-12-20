@@ -279,20 +279,22 @@ typedef struct EVL_CFG_T{
    contains input parameters for wavefront tomography.
  */
 typedef struct TOMO_CFG_T{
+    double tikcr;    /**<tikhonov regularization.*/
+    double minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
+    double iac;      /**<#inter-actuator-coupling in cubic influence function (testing)*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int invpsd;      /**<use inverse of PSD in tomography instead of biharmonic approx*/
     int guard;       /**<guard rings of reconstruction grid xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
-    double tikcr; /**<tikhonov regularization.*/
     int piston_cr;   /**<single point piston constraint. */
     int split;       /**<split tomography type.
 			- 0: integrated tomography
 			- 1: adhoc split tomography
 			- 2: minimum variance split tomography*/
-    int ahst_wt;    /**<0: use Wg, 1: using Wa*/
+    int ahst_wt;     /**<0: use Wg, 1: using Wa*/
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
-    int ahst_rtt;   /**<remote tip/tilt in high order DM fit output in split mode*/
+    int ahst_rtt;    /**<remote tip/tilt in high order DM fit output in split mode*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -301,12 +303,12 @@ typedef struct TOMO_CFG_T{
 			0: No preconditioner.             (CG)
 			1: Fourier Domain Preconditioner. (FDPCG)
 		     */
-    double minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
     int maxit;       /**<max iterations. Usually 30 for CG, 3 for FDPCG in
 			closed loop warm restart. x10 in open loop*/
     int assemble;    /**<force assemble tomography matrix in CG*/
     int windest;     /**<estimate wind. \todo finish implement it.*/
     int windshift;   /**<shift opdr using wind velocity (from input if windest=0)*/
+    int cubic;       /**<cubic influence function in tomography (testing)*/
 }TOMO_CFG_T;
 /**
    contains input parameters for deformable mirror fitting.

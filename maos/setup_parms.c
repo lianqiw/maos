@@ -618,6 +618,8 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.windest);
     READ_INT(tomo.windshift);
     READ_DBL(tomo.minwt);
+    READ_INT(tomo.cubic);
+    READ_DBL(tomo.iac);
 }
 
 /**

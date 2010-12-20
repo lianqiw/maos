@@ -342,7 +342,7 @@ void remove_file_older(const char *fndir, long sec){
 	}else if(S_ISREG(buf.st_mode)){
 	    if(buf.st_mtime<sec2){
 		remove(fnfull);
-		info2("Remove %s. %ld seconds old\n", fnfull, myclocki()-buf.st_mtime);
+		info2("Remove %s. %ld days old\n", fnfull, (myclocki()-buf.st_mtime)/3600/24);
 	    }
 	}
     }
