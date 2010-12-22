@@ -601,6 +601,5 @@ void reconstruct(SIM_T *simu){
 	    cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo[0]);
 	}
     }
-    filter(simu);//updates dmreal.
     simu->tk_recon=myclockd()-tk_start;
 }

@@ -28,7 +28,6 @@
    \file setup_recon.c
    Contains routines that setup the wavefront reconstructor and DM fitting.
 */
-TIC;
 /**
    Setting up PLOC grid, which is a coarse sampled (similar to subaperture
    spacing) grid that defines the circular aperture for wavefront reconstruction
@@ -254,10 +253,15 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
     }else{
+	info2("Generating HXW");TIC;tic;
 	recon->HXW=spcellnew(nwfs,npsr);
 	PDSPCELL(recon->HXW,HXW);
     	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfs[iwfs].powfs;
+	    if(parms->tomo.split!=2 && parms->powfs[ipowfs].skip){
+		//don't need HXW for low order wfs that does not participate in tomography.
+		continue;
+	    }
 	    double  hs = parms->powfs[ipowfs].hs;
 	    for(int ips=0; ips<npsr; ips++){
 		double  ht = recon->ht->p[ips];
@@ -271,6 +275,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		
 	    }
 	}
+	toc2("done");
 	if(parms->save.setup){
 	    spcellwrite(recon->HXW, "%s/HXW",dirsetup);
 	}
@@ -308,7 +313,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	}
     }else{
 	GP=spcellnew(parms->npowfs, 1);
-	info2("Generating GP with ");
+	info2("Generating GP with ");TIC;tic;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
 	    //use ploc as an intermediate plane.
@@ -336,7 +341,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		error("Invalid gtype_recon\n");
 	    }
 	}
-	info2(" done\n");
+	toc2(" done");
 	if(parms->save.setup){
 	    spcellwrite(GP,"%s/GP",dirsetup);
 	}
@@ -369,6 +374,9 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    int nloc=recon->aloc[idm]->nloc;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs = parms->wfs[iwfs].powfs;
+		if(parms->sim.skysim && parms->powfs[ipowfs].lo){
+		    continue;
+		}
 		int nsa=powfs[ipowfs].pts->nsa;
 		if(GA[idm][iwfs]->m!=nsa*2 || GA[idm][iwfs]->n!=nloc){
 		    error("Wrong saved GA\n");
@@ -376,10 +384,14 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	}
     }else{
+	info2("Generating GA");TIC;tic;
 	recon->GA= spcellnew(nwfs, ndm);
 	PDSPCELL(recon->GA,GA);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfs[iwfs].powfs;
+	    if(parms->sim.skysim && parms->powfs[ipowfs].lo){
+		continue;
+	    }
 	    double  hs = parms->powfs[ipowfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
 		double  ht = parms->dm[idm].ht;
@@ -394,10 +406,11 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		GA[idm][iwfs]=spmulsp(recon->GP->p[iwfs],H);
 		spfree(H);
 	    }//idm
-	    if(parms->save.setup){
-		spcellwrite(recon->GA, "%s/GA",dirsetup);
-	    }
 	}
+	if(parms->save.setup){
+	    spcellwrite(recon->GA, "%s/GA",dirsetup);
+	}
+    	toc2("done");
     }
     //Create GAlo that only contains GA for low order wfs
     spcellfree(recon->GAlo);
@@ -428,12 +441,14 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     recon->GX=spcellnew(nwfs, npsr);
     PDSPCELL(recon->GX,GX);
     PDSPCELL(recon->HXW,HXW);
+    info2("Generating GX");TIC;tic;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	//gradient from xloc
 	for(int ips=0; ips<npsr; ips++){
 	    GX[ips][iwfs]=spmulsp(recon->GP->p[iwfs], HXW[ips][iwfs]);
 	}//ips
     }
+    toc2("done");
     spcellfree(recon->GXhi);
     spcellfree(recon->GXlo);
     spcellfree(recon->GXtomo);
@@ -956,7 +971,6 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		
 		spcelladdI(recon->RL.M, tikcr*maxeig);
 	    }
-	    toc("done");
 	}
 	//add L2 and ZZT
 	if(parms->tomo.invpsd){
@@ -1125,6 +1139,7 @@ setup_recon_HXFHA(RECON_T *recon, const PARMS_T *parms){
 	warning("Loading saved HXF\n");
 	recon->HXF=spcellread("%s",parms->load.HXF);
     }else{
+	info2("Generating HXF");TIC;tic;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
 	recon->HXF=spcellnew(nfit, npsr);
@@ -1144,6 +1159,7 @@ setup_recon_HXFHA(RECON_T *recon, const PARMS_T *parms){
 	if(parms->save.setup){
 	    spcellwrite(recon->HXF,"%s/HXF.bin.gz",dirsetup);
 	}
+	toc2("done");
     }
     if(parms->load.HA && exist(parms->load.HA)){
 	warning("Loading saved HA\n");
@@ -1153,6 +1169,7 @@ setup_recon_HXFHA(RECON_T *recon, const PARMS_T *parms){
 	const int ndm=parms->ndm;
 	recon->HA=spcellnew(nfit, ndm);
 	PDSPCELL(recon->HA,HA);
+	info2("Generating HA");TIC;tic;
 	for(int ifit=0; ifit<nfit; ifit++){
 	    for(int idm=0; idm<ndm; idm++){
 		const double scale=1.;
@@ -1165,6 +1182,7 @@ setup_recon_HXFHA(RECON_T *recon, const PARMS_T *parms){
 				  scale,parms->dm[idm].cubic,parms->dm[idm].iac);
 	    }
 	}
+	toc2("done");
 	if(parms->save.setup){
 	    spcellwrite(recon->HA,"%s/HA",dirsetup);
 	}
@@ -1798,7 +1816,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 */
     
 void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
-    tic;
+    TIC;tic;
     if(parms->cn2.tomo){
 	/*Use cn2 estimation results for tomography. Use its ht to build
 	  reconstructor matrices.*/
@@ -1911,7 +1929,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     spcellfree(recon->GX);
     spcellfree(recon->GXhi);
     spcellfree(recon->GXtomo);//we use HXWtomo instead. faster
-    if(!parms->cn2.tomo){
+    if(!(parms->cn2.tomo && parms->tomo.split==2)){//mvst needs GXlo when updating.
 	spcellfree(recon->GXlo);
     }
     if(parms->tomo.alg!=1 || parms->tomo.assemble){

@@ -83,13 +83,27 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		  We do everything in parallel. to make better use the
 		  CPUs. Notice that the reconstructor is working on grad from
 		  last time step so that there is no confliction in data access.
+		  This parallelized mode can not be used in skycoverage
+		  presimulation case because perfevl updates dmreal before
+		  wfsgrad
 		*/
 		read_self_cpu();//initialize CPU usage counter
-		long group=0;
-		thread_pool_queue(&group, (thread_fun)reconstruct, simu, 0);
-		thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
-		thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
-		thread_pool_wait(&group);
+		if(parms->tomo.ahst_idealngs){
+		    //when we want to apply idealngs correction, wfsgrad need to wait for perfevl.
+		    long group1=0, group2=0;
+		    thread_pool_queue(&group1, (thread_fun)reconstruct, simu, 0);
+		    thread_pool_queue(&group2, (thread_fun)perfevl, simu, 0);
+		    thread_pool_wait(&group2);
+		    thread_pool_queue(&group1, (thread_fun)wfsgrad, simu, 0);
+		    thread_pool_wait(&group1);
+		}else{
+		    long group=0;
+		    thread_pool_queue(&group, (thread_fun)reconstruct, simu, 0);
+		    thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
+		    thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
+		    thread_pool_wait(&group);
+		}
+		filter(simu);//updates dmreal, so has to be after prefevl/wfsgrad is done.
 		dcellcp(&simu->gradlastcl, simu->gradcl);
 		dcellcp(&simu->gradlastol, simu->gradol);
 #if defined(__linux__)
@@ -98,19 +112,21 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		}
 #endif
 	    }else{//do things in series
-		double cpu_evl, cpu_wfs, cpu_recon;
+		double cpu_evl, cpu_wfs, cpu_recon, cpu_cachedm;
 		read_self_cpu();//initialize CPU usage counter
-		if(CL){//before wfsgrad so we can apply ideal NGS modes
+		if(CL){
 		    /*
 		      We run the functions in series mode, but the function
 		      themselves are parallelized inside.
 		     */
-		    perfevl(simu);
+		    perfevl(simu);//before wfsgrad so we can apply ideal NGS modes
 		    cpu_evl=read_self_cpu();
 		    wfsgrad(simu);//output grads to gradcl, gradol
 		    cpu_wfs=read_self_cpu();
 		    reconstruct(simu);//uses grads from gradlast cl, gradlast ol.
 		    cpu_recon=read_self_cpu();
+		    filter(simu);
+		    cpu_cachedm=read_self_cpu();
 		    dcellcp(&simu->gradlastcl, simu->gradcl);
 		    dcellcp(&simu->gradlastol, simu->gradol);
 		}else{//in OL mode, 
@@ -120,14 +136,17 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    dcellcp(&simu->gradlastol, simu->gradol);
 		    reconstruct(simu);
 		    cpu_recon=read_self_cpu();
+		    filter(simu);
+		    cpu_cachedm=read_self_cpu();
 		    perfevl(simu);
 		    cpu_evl=read_self_cpu();
 		}
 #if defined(__linux__)
 		if(simu->nthread>1 && !detached){
-		    fprintf(stderr,"CPU Usage: WFS:%.2f Recon:%.2f EVAL:%.2f Mean:%.2f\n",
-			    cpu_wfs, cpu_recon, cpu_evl,
-			    (cpu_wfs+cpu_recon+cpu_evl)*0.25);
+		    fprintf(stderr,"CPU Usage: WFS:%.2f Recon:%.2f CACHE: %.2f"
+			    " EVAL:%.2f Mean:%.2f\n",
+			    cpu_wfs, cpu_recon, cpu_evl, cpu_cachedm,
+			    (cpu_wfs+cpu_recon+cpu_evl+cpu_cachedm)*0.25);
 		}
 #endif
 	    }

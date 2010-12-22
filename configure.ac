@@ -132,12 +132,7 @@ AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_o
 AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="no"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
-if test "x$use_long" = "xyes" ;then
-   OPTScommon="$OPTScommon -DDLONG"
-   AM_CONDITIONAL(USE_LONG, true)
-else
-   AM_CONDITIONAL(USE_LONG, false)
-fi
+
 if test "x$use_static" = "xyes" ;then
    LDEXE="-all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
@@ -274,25 +269,31 @@ AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 LDFFT="-lfftw3"
 
+#Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
+if test "x$use_long" = "xyes" ;then
+   OPTScommon="$OPTScommon -DDLONG"
+   chol_suffix="long"
+   chol_fun=cholmod_l_factorize
+   AM_CONDITIONAL(USE_LONG, true)
+else
+   chol_suffix="int"
+   chol_fun=cholmod_factorize
+   AM_CONDITIONAL(USE_LONG, false)
+fi
+
+AC_CHECK_LIB([cholmod_${chol_suffix}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -lpthread])
+if test "x$have_chol" = "xyes" ;then
+    LDCHOL="-lcholmod_${chol_suffix}"
+    AM_CONDITIONAL(COMP_CHOL, false)
+else
+    LDCHOL="../external/cholmod/libcholmod_${chol_suffix}.la"
+    AM_CONDITIONAL(COMP_CHOL, true)
+fi
+
 # Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not
 # use the cholmod in the system even if it is available because we want to
 # customize the dependency on blas/lapack.
 
-AC_CHECK_LIB([cholmod_long],[cholmod_l_factorize], [have_chol_long="yes"], [have_chol_long="no"],[$LAPACK -lpthread])
-AC_CHECK_LIB([cholmod_int],[cholmod_factorize], [have_chol_int="yes"], [have_chol_int="no"],[$LAPACK -lpthread])
-if test "x$use_long" = "xyes" -a "x$have_chol_long" = "xyes" ;then
-    echo "cholmod_long is installed in the system. will use it."
-    LDCHOL="-lcholmod_long"
-    AM_CONDITIONAL(COMP_CHOL, false)
-elif test "x$use_long" = "xno" -a "x$have_chol_int" = "xyes"  ;then
-    echo "cholmod_int is installed in the system. will use it."
-    LDCHOL="-lcholmod_int"
-    AM_CONDITIONAL(COMP_CHOL, false)
-else
-    echo "cholmod is not available, will use the shipped source."
-    LDCHOL="../external/cholmod/libcholmod.la"
-    AM_CONDITIONAL(COMP_CHOL, true)
-fi
 AC_CHECK_HEADERS([unistd.h])
 #LDCHOL must be before LAPACK
 LDOPTS="$LAPACK $LDSYS"

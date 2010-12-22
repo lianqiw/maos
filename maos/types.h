@@ -442,11 +442,10 @@ typedef struct SIM_T{
     dcell *moao_r_wfs; /**<moao DM command to be applied for wfs*/
     dcell *moao_r_evl; /**<moao DM command to be applied for evl*/
 
-    double tk_eval;     /**<time spent in perfevl in this step*/
+    double tk_eval;    /**<time spent in perfevl in this step*/
     double tk_recon;   /**<time spent in reconstruct in this step*/
     double tk_cache;   /**<time spent in cachedm in this step*/
     double tk_wfs;     /**<time spent in wfsgrad in this step*/
-
     dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
     locstat_t *ploc_stat; /**<statistics of columns in ploc*/
 

@@ -238,6 +238,25 @@ int exist(const char *fn){
     struct stat buf;
     return !stat(fn, &buf);
 }
+int isdir(const char *fn){
+    /**
+       Test whether a file exists.
+    */
+    if(!fn) return 0;
+    struct stat buf;
+    stat(fn, &buf);
+    return S_ISDIR(buf.st_mode);
+}
+int isfile(const char *fn){
+    /**
+       Test whether a file exists.
+    */
+    if(!fn) return 0;
+    struct stat buf;
+    stat(fn, &buf);
+    return S_ISREG(buf.st_mode);
+}
+
 void touch(const char *fn){
     /**
        Update a file's modtime to current.

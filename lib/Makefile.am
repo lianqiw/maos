@@ -1,7 +1,5 @@
-AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/lib/sys
-if COMP_CHOL
-AM_CFLAGS+=-I$(top_srcdir)/external/cholmod/Include
-endif
+AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/lib/sys -I$(top_srcdir)/external/cholmod/Include
+
 nobase_include_HEADERS=accphi.h common.h type.h locbin.h misc.h mathmisc.h	\
 random.h sp.h dsp.h csp.h bin.h cell.h mkg.h path.h readcfg.h suitesparse.h	\
 blas.h matbin.h cellarr.h mkh.h aos.h chol.h mkw.h turbulence.h cmat_extra.h	\
@@ -26,7 +24,7 @@ sys/process_linux.c sys/scheduler_client.c sys/shm.c sys/thread.c sys/thread_poo
 lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
 libaos_la_LIBADD=$(LDCHOL) $(LDFFT)
-
+libaos_la_LDFLAGS = -avoid-version
 #The following enables the generation of documentation for cmat, ccell, csp functions.
 dmat.c:tmp.c
 tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c

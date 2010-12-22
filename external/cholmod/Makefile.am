@@ -34,10 +34,19 @@ if USE_LONG
 AM_CFLAGS+=-DDLONG
 endif
 if COMP_CHOL
-lib_LTLIBRARIES=libcholmod.la
-libcholmod_la_CFLAGS=$(AM_CFLAGS) -I$(srcdir)/Include
-libcholmod_la_SOURCES=$(CHOL_SRC)
-libcholmod_la_LIBADD=-lm
+if USE_LONG
+lib_LTLIBRARIES=libcholmod_long.la
+libcholmod_long_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/Include
+libcholmod_long_la_SOURCES= $(CHOL_SRC)
+libcholmod_long_la_LIBADD = -lm
+libcholmod_long_la_LDFLAGS= -avoid-version
+else
+lib_LTLIBRARIES=libcholmod_int.la
+libcholmod_int_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/Include
+libcholmod_int_la_SOURCES= $(CHOL_SRC)
+libcholmod_int_la_LIBADD = -lm
+libcholmod_int_la_LDFLAGS= -avoid-version
+endif
 else
 EXTRA_DIST+=$(CHOL_SRC)
 endif

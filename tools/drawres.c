@@ -53,6 +53,7 @@ int main(int argc, char *argv[]){
     DRAW_ID=getppid();
     char **path;
     int npath;
+    info("argc=%d\n", argc);
     if(argc>=2){
 	npath=argc-1;
 	path=calloc(npath, sizeof(char*));
@@ -66,32 +67,48 @@ int main(int argc, char *argv[]){
     }
     long nseed=arg->nseed;
     long *seed=arg->seeds;
-    if(arg->nseed==0){//do all seeds
-	DIR *dir=opendir(path[0]);
-	if(!dir){
-	    error("Unable to directory %s\n", path[0]);
-	}
-	long nmax=20;
-	seed=calloc(nmax, sizeof(long));
-	struct dirent *dp;
-	while((dp=readdir(dir))){
-	    if(strncmp(dp->d_name, "Res_", 4) || !check_suffix(dp->d_name, ".bin")){
+    int mpath=npath;
+    if(nseed==0){//do all seeds
+	for(int ipath=0; ipath<npath; ipath++){
+	    if(!isdir(path[ipath])){
+		path[ipath]=NULL;
+		mpath--;
 		continue;
-	    }else{
-		if(sscanf(dp->d_name, "Res_%ld.bin",&(seed[nseed]))==1){
-		    info2("Processing seed %ld, %s\n", seed[nseed], dp->d_name);
-		    nseed++;
-		    if(nseed>nmax){
-			nmax*=2;
-			seed=realloc(seed, nmax*sizeof(long));
+	    }
+	    info("Try path %s\n", path[ipath]);
+	    DIR *dir=opendir(path[ipath]);
+	    if(!dir){
+		warning("Unable to directory %s\n", path[0]);
+		path[ipath]=NULL;
+		mpath--;
+		continue;
+	    }
+	    long nmax=20;
+	    seed=calloc(nmax, sizeof(long));
+	    struct dirent *dp;
+	    while((dp=readdir(dir))){
+		if(strncmp(dp->d_name, "Res_", 4) || !check_suffix(dp->d_name, ".bin")){
+		    continue;
+		}else{
+		    if(sscanf(dp->d_name, "Res_%ld.bin",&(seed[nseed]))==1){
+			info("found seed %ld\n", seed[nseed]);
+			nseed++;
+			if(nseed>nmax){
+			    nmax*=2;
+			    seed=realloc(seed, nmax*sizeof(long));
+			}
 		    }
 		}
 	    }
+	    closedir(dir);
+	    if(nseed>0){
+		seed=realloc(seed, nseed*sizeof(long));
+		break;
+	    }else{
+		free(seed);//try the next folder.
+	    }
 	}
-    	closedir(dir);
-	seed=realloc(seed, nseed*sizeof(long));
     }
-    info2("nseed=%ld\n", nseed);
     if(nseed==0){
 	info2("Nothing to display\n");
 	return 1;
@@ -105,6 +122,9 @@ int main(int argc, char *argv[]){
     for(int iseed=0; iseed<nseed; iseed++){
 	for(int ipath=0; ipath<npath; ipath++){
 	    char fn[PATH_MAX];
+	    if(!path[ipath]){
+		continue;
+	    }
 	    snprintf(fn,PATH_MAX,"%s/Res_%ld.bin", path[ipath], seed[iseed]);
 	    dcell *res;
 	    if(exist(fn)){
@@ -122,22 +142,23 @@ int main(int argc, char *argv[]){
 		ind=2;
 		indlo=1;
 	    }
-	    int index=ipath+npath*iseed;
+	    int ii=ipath+npath*iseed;
 	    dmat *tmp;
 	    tmp=dsub(res->p[ind], 0, 1, 0, 0);
-	    reshi->p[index]=dtrans(tmp);
+	    reshi->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	    tmp=dsub(res->p[ind], indlo, 1, 0, 0);
-	    reslo->p[index]=dtrans(tmp);
+	    reslo->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 
 	    tmp=dsub(res->p[0], 0, 1, 0, 0);
-	    resolhi->p[index]=dtrans(tmp);
+	    resolhi->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	    tmp=dsub(res->p[0], 1, 1, 0, 0);
-	    resollo->p[index]=dtrans(tmp);
+	    resollo->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	}
+	info2("Found seed %ld\n", seed[nseed]);
     }
     dcellcwpow(reshi, 0.5); dcellscale(reshi, 1e9);
     dcellcwpow(reslo, 0.5); dcellscale(reslo, 1e9);

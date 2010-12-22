@@ -572,9 +572,11 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
        Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
        Pngs=Rngs*GA
      */
-    ngsmod->GM=ngsmod_g(parms,recon,powfs);
-    ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,recon->saneai);
-
+    if(parms->tomo.split==1 && !parms->sim.skysim){
+	//we disabled GA for low order wfs in skysim mode.
+	ngsmod->GM=ngsmod_g(parms,recon,powfs);
+	ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,recon->saneai);
+    }
     if(parms->tomo.ahst_wt==1){
 	//Use gradient weighting.
 	dcellmulsp(&ngsmod->Pngs, ngsmod->Rngs, recon->GAlo, 1);

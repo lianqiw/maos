@@ -23,14 +23,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-//#include "maos.h"
 #include "../lib/aos.h"
 #include "parms.h"
-//#include "utils.h"
 /**
    \file maos/setup_parms.c
    This file contains necessary routines to read parametes for
-WFS, DM and wavefront reconstruction.  */
+   WFS, DM and wavefront reconstruction.  */
 
 /**
    Free the parms struct.
@@ -861,6 +859,11 @@ static void readcfg_load(PARMS_T *parms){
  */
 static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.skysim){
+	parms->tomo.ahst_idealngs=1;
+	if(parms->tomo.ahst_wt!=3){
+	    warning("in skycoverage presimulation, ahst_wt need to be 3. Changed\n");
+	    parms->tomo.ahst_wt=3;
+	}
 	if(parms->ndm>0 && parms->tomo.split!=1){
 	    warning("Can only do skysim in split tomography mode 1. Changed\n");
 	    parms->tomo.split=1;
@@ -868,7 +871,6 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		parms->powfs[ipowfs].psfout=1;
-		//parms->powfs[ipowfs].pistatout=1;//also output pistat. need gstat as well
 	    }
 	}
     }
@@ -988,7 +990,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
-    int disable_split_tomo=0;
     if(parms->tomo.split || parms->lsr.split){
 	int hi_found=0;
 	int lo_found=0;
@@ -1003,34 +1004,16 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning("There are either no high order or no low order wfs. Disable split tomo.\n");
 	    parms->tomo.split=0;
 	    parms->lsr.split=0;
-	    disable_split_tomo=1;
+	    if(parms->sim.skysim){
+		error("There is only high or low order WFS. "
+		      "can not do skycoverage presimulation\n");
+	    }
 	}
 	if(!hi_found){
 	    warning("There is no high order WFS!!!\n");
 	}
     }
-    /*Setting up parameters for psfout.*/
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].psfout==1){
-	    if(!parms->powfs[ipowfs].lo || parms->powfs[ipowfs].trs==1) 
-		warning("Usually only output psf for lo wfs\n");
-	    if(parms->tomo.split!=1){
-		warning("Can only output psf in split tomography mode 1. Changed\n");
-		if(disable_split_tomo){
-		    error("But split tomography is not possible\n");
-		}
-		parms->tomo.split=1;
-	    }
-	    if(parms->tomo.ahst_wt==1){
-		warning("ahst_wt changed from 1 to 3 when outputing PSF for NGS.\n");
-		parms->tomo.ahst_wt=3;
-	    }
-	    if(parms->tomo.ahst_idealngs!=1){
-		warning("Can only output psf with ideal correction on NGS modes. Changed\n");
-		parms->tomo.ahst_idealngs=1;
-	    }
-	}
-    }
+   
     if((parms->tomo.split||parms->lsr.split) && parms->ndm==0){
 	warning("Disable split tomography since there is no common DM\n");
 	parms->tomo.split=0;

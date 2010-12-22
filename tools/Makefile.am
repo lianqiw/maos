@@ -14,7 +14,7 @@ ___bin_record_CPU_CFLAGS=$(OPTScommon) $(AM_CFLAGS)
 endif
 if DRAW
 PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres
-___bin_drawdaemon_SOURCES=drawdaemon.c
+___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
 ___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
 ___bin_drawdaemon_LDFLAGS=
 ___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0

@@ -100,7 +100,6 @@ TIC;
    elements allocated.
 */
 X(sp)* Y(spnew)(long nx, long ny, long nzmax){
-
     X(sp) *sp;
     sp = calloc(1, sizeof(X(sp)));
     if(nzmax>0){
@@ -121,6 +120,7 @@ X(sp)* Y(spnew)(long nx, long ny, long nzmax){
    reference a sparse object.
 */
 X(sp) *Y(spref)(X(sp) *A){
+    if(!A) return NULL;
     X(sp) *out = calloc(1, sizeof(X(sp)));
     if(!A->nref){
 	A->nref=calloc(1, sizeof(long));
@@ -135,6 +135,7 @@ X(sp) *Y(spref)(X(sp) *A){
    copy a X(sp) matrix to another.
 */
 X(sp) *Y(spdup)(const X(sp) *A){
+    if(!A) return NULL;
     long nmax=A->p[A->n];
     X(sp) *out;
     out=Y(spnew)(A->m, A->n, nmax);
