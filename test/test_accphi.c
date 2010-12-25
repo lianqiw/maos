@@ -380,7 +380,6 @@ static void test_accuracy(void){
     int wrap=0;
     int nc=1;
     double cubic=0.3;
-    int cubic_norm=1;
     int ii;
 	    
 
@@ -426,11 +425,11 @@ static void test_accuracy(void){
 
 	    tic;
 	    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-			  scale, wrap, 0,0, 1);
+			  scale, wrap, 0,0);
 	    toc("pts optim\t\t");
 	    tic;
 	    prop_grid_pts(screen, pts, phi_pts1,-1, displacex, displacey,
-			  scale, wrap, 0,0, 0);
+			  scale, wrap, 0,0);
 	    toc("pts nonoptim\t");
 	    tic;
 	    prop_grid(screen, loc, phi_loc, -1,displacex, displacey, scale, 
@@ -438,11 +437,11 @@ static void test_accuracy(void){
 	    toc("loc\t\t\t");
 	    tic;
 	    prop_grid_stat(screen, locstat, phi_stat, -1,displacex, displacey, 
-			   scale, wrap, 0,0, 1);
+			   scale, wrap, 0,0);
 	    toc("locstat optim\t");
 	    tic;
 	    prop_grid_stat(screen, locstat, phi_stat1,-1, displacex, displacey, 
-			   scale, wrap, 0,0, 0);
+			   scale, wrap, 0,0);
 	    toc("locstat nonoptim\t");
 	    tic;
 	    prop_nongrid(locin, screen->p,loc, NULL,phi_loc2loc, -1,displacex, displacey, 
@@ -456,10 +455,10 @@ static void test_accuracy(void){
 	    tic;
 	    prop_nongrid_cubic(locin,screen->p,loc,NULL,phi_cub,-1,
 			       displacex, displacey, 
-			       scale, cubic,cubic_norm,0,0);
+			       scale, cubic,0,0);
 	    toc("nongrid, cubic\t");
 	    tic;
-	    dsp *hfor=mkh(locin, loc, NULL,displacex, displacey, scale,0);
+	    dsp *hfor=mkh(locin, loc, NULL,displacex, displacey, scale,0,0);
 	    toc("mkh\t\t\t");
 	    tic;
 	    spmulvec(phi_h,hfor, screen->p, -1);
@@ -468,8 +467,7 @@ static void test_accuracy(void){
 	    
 	    dsp *hforcubic;
 	    tic;
-	    hforcubic=mkh_cubic(locin, loc, NULL, 
-				displacex, displacey, scale, cubic, cubic_norm);
+	    hforcubic=mkh(locin, loc, NULL, displacex, displacey, scale, 1, cubic);
 	    toc("mkh cubic \t\t");
 	    tic;
 	    spmulvec(phi_cubh, hforcubic,screen->p,-1);
@@ -573,34 +571,34 @@ static void test_speed(int nthread){
     propdata->scale=scale;
     propdata->wrap=wrap;
     propdata->saend=pts->nsa;
-    prop_index(propdata);
+    //prop_index(propdata);
     PINIT(propdata->mutex);
    
     read_self_cpu();
     tic;
     prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
+		  scale, wrap, 0,0);
+    
+    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+		  scale, wrap, 0,0);
 
     prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
+		  scale, wrap, 0,0);
 
     prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
+		  scale, wrap, 0,0);
 
     prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
-
-  prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
+		  scale, wrap, 0,0);
 
     prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
+		  scale, wrap, 0,0);
 
     prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
+		  scale, wrap, 0,0);
 
     prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
-		  scale, wrap, 0,0, 1);
+		  scale, wrap, 0,0);
 
     toc("prop_grid_pts");
     info2("cpu: %.2f\n", read_self_cpu());

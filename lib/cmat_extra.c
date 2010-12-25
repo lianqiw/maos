@@ -498,6 +498,69 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 #undef DO_LOOP
     }
 }
+void cembedd(cmat *restrict A, dmat *restrict B, const double theta){
+    double *restrict in=B->p;
+    long ninx=B->nx;
+    long niny=B->ny;
+    dcomplex *out=A->p;
+    const long noutx=A->nx;
+    const long nouty=A->ny;
+    memset(out, 0, sizeof(dcomplex)*noutx*nouty);
+    if(fabs(theta)<1.e-10){//no rotation.
+	const long skipx=(noutx-ninx)/2;
+	const long skipy=(nouty-niny)/2;
+	long ixstart=0, ixend=ninx;
+	long iystart=0, iyend=niny;
+	if(skipx<0){
+	    ixstart=-skipx;
+	    ixend=ninx+skipx;
+	}
+	if(skipy<0){
+	    iystart=-skipy;
+	    iyend=niny+skipy;
+	}
+	dcomplex *out2=out+skipy*noutx+skipx;
+	for(long iy=iystart; iy<iyend; iy++){
+	    dcomplex *outi=out2+iy*noutx;
+	    const double *ini=in+iy*ninx;
+	    for(long ix=ixstart; ix<ixend; ix++){
+		outi[ix]=ini[ix];
+	    }
+	}
+    }else{
+	dcomplex (*outs)[noutx]=(void*)out;
+	double (*ins)[ninx]=(void*)in;
+	const double ctheta=cos(theta);
+	const double stheta=sin(theta);
+	double x2,y2;
+	double x,y;
+	long ninx2=ninx/2;
+	long noutx2=noutx/2;
+	long niny2=niny/2;
+	long nouty2=nouty/2;
+	long ix2, iy2;
+	for(long iy=0; iy<nouty; iy++){ 
+	    y=(double)(iy-nouty2); 
+	    for(long ix=0; ix<noutx; ix++){ 
+		x=(double)(ix-noutx2); 
+		x2=x*ctheta+y*stheta+ninx2; 
+		y2=-x*stheta+y*ctheta+niny2; 
+		if(x2>0 && x2<ninx-1 && y2>0 && y2<niny-1){ 
+		    ix2=ifloor(x2); 
+		    iy2=ifloor(y2); 
+		    x2=x2-ix2; 
+		    y2=y2-iy2; 
+		    outs[iy][ix] =
+			ins[iy2][ix2]*((1.-x2)*(1.-y2))
+			+ins[iy2][ix2+1]*(x2*(1.-y2))
+			+ins[iy2+1][ix2]*((1-x2)*y2)
+			+ins[iy2+1][ix2+1]*(x2*y2); 
+		} 
+	    } 
+	} 
+    }
+}
+
 /**
    rotate (around fft center: (nx/2,ny/2)) CCW theta and embed in into A. 
 */

@@ -703,6 +703,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
     READ_INT(sim.recon);
+    READ_INT(sim.fractal);
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
     parms->sim.frozenflow = (parms->sim.frozenflow || parms->sim.closeloop);
 }
@@ -1152,6 +1153,11 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     }else{
 	parms->atm.nx=2*(int)round(0.5*parms->atm.size[0]/parms->atm.dx);
 	parms->atm.ny=2*(int)round(0.5*parms->atm.size[1]/parms->atm.dx);
+    }
+    if(parms->sim.fractal){
+	int Nmax=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;
+	parms->atm.nx=1+(1<<iceil(log2((double)Nmax)));
+	parms->atm.ny=parms->atm.nx;
     }
 }
 

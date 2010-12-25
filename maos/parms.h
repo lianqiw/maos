@@ -381,6 +381,7 @@ typedef struct SIM_CFG_T{
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
     int recon;       /**<reconstruction method. 0: minimum variance, 1: least square*/
+    int fractal;     /**<Use fractal method to generate atmosphere screen. 0: fft method. Only does kolmogorov now.*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.

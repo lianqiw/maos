@@ -74,9 +74,9 @@
 #define dot_do dotcmp
 #endif
 #undef PSPCELL
-#define PMAT(A,pp) T (*pp)[(A)->nx]=(void *)(A)->p
-#define PSPCELL(M,P) X(sp)* (*P)[(M)->nx]=(X(sp)*(*)[(M)->nx])(M)->p
-#define PXCELL(M,P) X(mat)* (*P)[(M)->nx]=(X(mat)*(*)[(M)->nx])(M)->p
+#define PMAT(A,P)    T      (*restrict P)[(A)->nx]=(void *)(A)->p
+#define PSPCELL(M,P) X(sp)* (*restrict P)[(M)->nx]=(void *)(M)->p
+#define PXCELL(M,P)  X(mat)*(*restrict P)[(M)->nx]=(void *)(M)->p
 #include "suitesparse.c"
 typedef struct spcell_thread_t {
     int i;

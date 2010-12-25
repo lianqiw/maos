@@ -52,6 +52,7 @@
 #include "muv.h"
 #include "fft.h"
 #include "genotf.h"
-
+#include "fractal.h"
+#include "stfun.h"
 #include "sys/sys.h"
 #endif

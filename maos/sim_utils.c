@@ -98,8 +98,16 @@ void genscreen(SIM_T *simu){
 	if(parms->dbg.atm==0){
 	    info2("Generating Atmospheric Screen...");
 	    tic;
-	    screens = vonkarman_screen(rstat,atm->nx,atm->ny,atm->dx,atm->r0,
-				       atm->l0,atm->wt,atm->nps,simu->nthread);
+	    if(parms->sim.fractal){
+		warning2("Genearating atmosphere using Fractal method "
+			 "(Only kolmogorov is implemented yet)\n");
+		screens = fractal_screen(rstat, atm->nx, atm->ny, atm->dx, atm->r0,
+					 atm->l0,atm->wt,atm->nps,simu->nthread);
+	    }else{
+
+		screens = vonkarman_screen(rstat,atm->nx,atm->ny,atm->dx,atm->r0,
+					   atm->l0,atm->wt,atm->nps,simu->nthread);
+	    }
 	    toc2("done");
 	}else if(parms->dbg.atm==-1){
 	    info2("Generating Biharmonic Atmospheric Screen...");

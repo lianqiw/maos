@@ -82,7 +82,7 @@ struct thread_t{
    Wait for all jobs in group to finish.
 */
 #define WAIT_THREAD(group) thread_pool_wait(&group)
-#define THREAD_POOL_INIT(A) thread_pool_create(A)
+#define THREAD_POOL_INIT(A) thread_pool_init(A)
 #else//no threading
 #define CALL_MANY(A,B,nthread,urgent) A(B)
 #define CALL(A,B,nthread) A(B)

@@ -239,3 +239,16 @@ void maxmincmp(const dcomplex *restrict p, long N,
     if(sum)*sum=s;
 }
 
+/**
+   Remove piston from p of length n
+*/
+void remove_piston(double *p, long n){
+    double piston=0;
+    for(long i=0; i<n; i++){
+	piston+=p[i];
+    }
+    piston/=-n;
+    for(long i=0; i<n; i++){
+	p[i]+=piston;
+    }
+}

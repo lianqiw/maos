@@ -11,6 +11,6 @@ int main(){
 	    cellarr_ccell(ca,psf);
 	    ccellfree(psf);
 	}
-	cellarrclose(ca);
+	cellarr_close(ca);
     }
 }

@@ -25,7 +25,8 @@
 
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
-   on x/y */
+   on x/y. Do not modify the first three elements, which has the same layout as
+   dmat */
 typedef struct map_t{
     double *p;      /**<The OPD*/
     long nx;        /**<Number of points along x*/

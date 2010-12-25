@@ -27,7 +27,7 @@ static void test_grid_proj(){
     double d_exitpupil_m3=d_exitpupil_f-d_m3_f;
     double r_exitpupil=1.546220350;
     double r_pupil=15;
-    mapin->h=d_exitpupil_m3;
+
     if(X->p[X->nx*X->ny-1]-X->p[0]-mapin->dx*X->nx*X->ny>1.e-10){
 	error("X has non even spacing\n");
     }
@@ -45,7 +45,7 @@ static void test_grid_proj(){
     double *phi2=calloc(1, sizeof(double)*loc2->nloc);
     proj_rect_grid(mapin,M_PI*0.75,M_PI*0.5,
 		   loc2,-r_exitpupil/r_pupil,r_exitpupil/r_pupil,
-		   amp,phi2,-2,d_exitpupil_f,-bx,-by);
+		   amp,phi2,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
     //drawopdamp("test_proj",loc2,phi2,amp,"phi");
     
     writedbl(phi2,loc2->nloc,1,"phi");

@@ -54,7 +54,7 @@
 #endif
 #endif
 
-#define PCELL(M,P) X(mat)* (*P)[(M)->nx]=(X(mat)*(*)[(M)->nx])(M)->p
+#define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
 
 /**
    create a new block matrix.

@@ -46,4 +46,5 @@ void maxminlong(const long *restrict p, long N,
 		long *restrict max, long *restrict min);
 void maxmincmp(const dcomplex *restrict p, long N,
 	       double *restrict max, double *restrict min, double *restrict sum);
+void remove_piston(double *p, long n);
 #endif

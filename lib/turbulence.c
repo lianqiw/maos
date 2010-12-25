@@ -32,11 +32,160 @@
 #include "loc.h"
 #include "fft.h"
 #include "hashlittle.h"
+#include "fractal.h"
+#include "mathmisc.h"
 int disable_atm_shm=0;
 /**
    \file turbulence.c
    Contains routines to generate atmospheric turbulence screens
 */
+
+
+/**
+   map the shm to map_t array.
+*/
+void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw){
+    futimes(fd, NULL);//set access, modification time to current.
+    if(rw){
+	/*apply an exclusive lock so no other process can make a shared
+		  lock thus preventing them from reading the data.*/
+	if(flock(fd, LOCK_EX)){
+	    error("Failed to apply an exclusive lock");
+	}
+	if(ftruncate(fd, totmem)){//allocate the size.
+	    perror("ftruncate");
+	    error("Failed to allocate memory.\n");
+	}
+	fchmod(fd, 00777);//make it globally writable. (not working as what I wanted)
+	if((screen[0]->p=mmap(NULL, totmem, PROT_READ|PROT_WRITE, MAP_SHARED ,fd, 0))<0){
+	    error("Unable to mmap for read/write\n");
+	}
+    }else{
+	//fd might be zero.
+	if(flock(fd, LOCK_SH)){
+	    error("Failed to apply a shared lock on shared segment.\n");
+	}
+
+	/*In the end, a shared lock is placed on the shm
+	  memory. if the screen is freed or program exited, the
+	  shared lock will be released. THis is the method I
+	  invented to tell how many process is using this shm.*/
+	//we map it in read only mode.
+	screen[0]->p=mmap(NULL, totmem, PROT_READ, MAP_SHARED, fd, 0);
+    }
+    if(screen[0]->p<0){
+	error("Unable to mmap for read/write\n");
+    }
+    //since fd might be 0. we add fd by 1 and assign to shm.
+    screen[0]->shm=fd +1 ;//use the file descriptor so we can release the lock.
+    int m=screen[0]->nx;
+    int n=screen[0]->ny;
+    for(int ilayer=1; ilayer<nlayer; ilayer++){
+	screen[ilayer]->shm = -1;
+	screen[ilayer]->p = screen[0]->p+m*n*ilayer;
+    }
+}
+
+/**
+   Allocate for memory for atmosphere. If shm is enabled and has enough shared
+   memory, will allocate memory in shm, otherwise, allocate memory in
+   heap. inshm is returned value, and could take the following values:
+
+   0: not in shm. 
+   1: existing screen is resued.
+   2: in shm and need to generate screen
+
+   dx, r0, L0, wt, are used to make the key.
+ */
+map_t **atmnew_shm(int *fd0, int *inshm, rand_t *rstat, long nx, long ny, double dx, 
+		   double r0, double L0, double *wt, int nlayer, int method){
+    map_t**screen=calloc(nlayer,sizeof(map_t*));
+    for(int ilayer=0; ilayer<nlayer; ilayer++){
+	screen[ilayer]=mapnew(nx, ny, dx, (void*)1);//give it 1 temporarily.
+    }
+#if USE_POSIX_SHM == 1
+    int use_shm=0;
+    char fnshm[NAME_MAX];
+    uint32_t key;
+    long totmem;
+    if(disable_atm_shm){
+	use_shm=0;
+	shm_free_unused("",0);
+    }else{
+	key=hashlittle(rstat, sizeof(rand_t), 0);//contains seed
+	key=hashlittle(&nx, sizeof(long), key);
+	key=hashlittle(&ny, sizeof(long), key);
+	key=hashlittle(&dx, sizeof(double), key);
+	key=hashlittle(&r0, sizeof(double), key);
+	key=hashlittle(&L0, sizeof(double), key);
+	key=hashlittle(wt, sizeof(double)*nlayer, key);
+	key=hashlittle(&method, sizeof(int), key);
+	key=hashlittle(&nlayer, sizeof(int), key);
+	snprintf(fnshm,NAME_MAX,"/maos_atm_%ud_%d_%ldx%ld_%g",key,nlayer,nx,ny,dx);
+	long already_exist = shm_free_unused(fnshm, 0);
+	totmem=(nx*ny*nlayer+1)*sizeof(double);//+1 for sanity check.
+	long shm_avail=shm_get_avail();
+	if(!already_exist && shm_avail<totmem*1.1){
+	    warning2("Need %ld MiB, only %ld MiB available", totmem/1024/1024, shm_avail/1024/1024);
+	    warning2("Fall back to non-shared atm");
+	    use_shm=0;
+	}else{
+	    use_shm=1;
+	}
+    }
+    if(use_shm){
+	int fd;
+	*inshm=1;
+    retry:
+	//sleep so that the creation daemonize.has enough time to make an exclusive lock.
+	fd=shm_open(fnshm, O_RDONLY, 00777); usleep(100);//umask'ed
+
+	if(fd<0){//unable to open. We then try to create
+	    fd=shm_open(fnshm, O_RDWR|O_CREAT|O_EXCL, 00777);
+	    if(fd<0){//some other process created it in the mean time
+		fd=shm_open(fnshm, O_RDONLY, 00777); usleep(100);
+		if(fd<0){
+		    error("Unable to open shared segment for read.\n");
+		}else{
+		    if(flock(fd, LOCK_SH)){//wait to make a shared lock
+			error("Failed to apply a lock on shared segment.\n");
+		    }	
+		}
+	    }else{
+		*inshm=2;
+		info2("\nCreating %s ...",fnshm);
+		map_shm(screen, totmem, nlayer, fd, 1);
+		screen[0]->p[nx*ny*nlayer]=0;//say the data is not valid.
+		*fd0=fd;
+		return screen;
+	    }
+	}else{
+	    info2("\nReusing %s ...",fnshm);
+	}
+	*fd0=fd;
+	map_shm(screen, totmem, nlayer, fd, 0);
+	if(fabs(screen[0]->p[nx*ny*nlayer])<1.e-15){//test validity of data.
+	    warning2("Data in shm %s is invalid, free and redo it.\n", fnshm);
+	    flock(fd, LOCK_UN);//release lock.
+	    close(fd);//close descriptor.
+	    if(munmap(screen[0]->p, totmem)){//unmap.
+		error("munmap failed\n");
+	    }
+	    shm_unlink(fnshm);//destroy the map.
+	    goto retry;
+	}
+    }else{
+#endif
+	for(int ilayer=0; ilayer<nlayer; ilayer++){
+	    screen[ilayer]->p=malloc(nx*ny*sizeof(double));
+	    screen[ilayer]->shm=0;
+	}
+	*inshm=0;
+#if USE_POSIX_SHM == 1
+    }
+#endif
+    return screen;
+}
 /**
    Create a vonkarman spectrum. This is the square root of PSD. Good for
    rectangular screen. piston is in (0,0)
@@ -87,6 +236,8 @@ typedef struct GENSCREEN_T{
     dmat *spect;
     map_t **screen;
     double *wt;
+    double r0;
+    double L0;
     int nlayer;
     int ilayer;
     pthread_mutex_t mutex_ilayer;
@@ -142,8 +293,8 @@ static void *genscreen_do(GENSCREEN_T *data){
 /**
    Generates multiple screens from spectrum.
 */
-map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,
-			       double* wt, int nlayer, int nthread){
+map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, double L0,
+			     double* wt, int nlayer, int nthread){
   
     GENSCREEN_T screendata;
     memset(&screendata, 0, sizeof(screendata));
@@ -154,139 +305,24 @@ map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,
     screendata.ilayer=0;
     PINIT(screendata.mutex_ilayer);
     spect->p[0]=0;//zero out piston.
-    long m=spect->nx;
-    long n=spect->ny;
-    map_t** screen;
-
-    screen=calloc(nlayer,sizeof(map_t*));
-    screendata.screen=screen; 
-    for(int ilayer=0; ilayer<nlayer; ilayer++){
-	screen[ilayer]=calloc(1, sizeof(map_t));
-	screen[ilayer]->nx=m;
-	screen[ilayer]->ny=n;
-	screen[ilayer]->ox=-m*dx/2;
-	screen[ilayer]->oy=-n*dx/2;
-	screen[ilayer]->dx=dx;
-    }
-#if USE_POSIX_SHM == 1
-    int use_shm=0;
-    char fnshm[NAME_MAX];
-    uint32_t key;
-    long totmem;
-    if(disable_atm_shm){
-	use_shm=0;
-	shm_free_unused("",0);
-    }else{
-	key=hashlittle(rstat, sizeof(rand_t), 0);//contains seed
-	key=hashlittle(spect->p, m*n*sizeof(double), key);
-	key=hashlittle(wt, nlayer*sizeof(double), key);
-	snprintf(fnshm,NAME_MAX,"/maos_atm_%ud_%d_%ld_%g",key,nlayer,m,dx);
-	long already_exist = shm_free_unused(fnshm, 0);
-	totmem=(m*n*nlayer+1)*sizeof(double);//+1 for sanity check.
-	long shm_avail=shm_get_avail();
-	if(!already_exist && shm_avail<totmem*1.1){
-	    warning2("Need %ld MiB, only %ld MiB available", totmem/1024/1024, shm_avail/1024/1024);
-	    warning2("Fall back to non-shared atm");
-	    use_shm=0;
-	}else{
-	    use_shm=1;
-	}
-    }
-    if(use_shm){
-	int fd;
-    retry:
-	//sleep so that the creation daemonize.has enough time to make an exclusive lock.
-	fd=shm_open(fnshm, O_RDONLY, 00777); usleep(100);//umask'ed
-
-	if(fd<0){//unable to open. We then try to create
-	    fd=shm_open(fnshm, O_RDWR|O_CREAT|O_EXCL, 00777);
-	    if(fd<0){//some other process created it in the mean time
-		fd=shm_open(fnshm, O_RDONLY, 00777); usleep(100);
-		if(fd<0){
-		    error("Unable to open shared segment for read.\n");
-		}else{
-		    if(flock(fd, LOCK_SH)){//wait to make a shared lock
-			error("Failed to apply a lock on shared segment.\n");
-		    }	
-		}
-	    }else{
-		info2("\nCreating %s ...",fnshm);
-		/*apply an exclusive lock so no other process can make a shared
-		  lock thus preventing them from reading the data.*/
-		if(flock(fd, LOCK_EX)){
-		    error("Failed to apply an exclusive lock");
-		}
-		if(ftruncate(fd, totmem)){//allocate the size.
-		    perror("ftruncate");
-		    error("Failed to allocate memory. check kernel.shmmax in /etc/sysctl.conf");
-		}
-		fchmod(fd, 00777);//make it globally writable. (not working as what I wanted)
-		if((screen[0]->p=mmap(NULL, totmem, PROT_READ|PROT_WRITE, MAP_SHARED ,fd, 0))<0){
-		    error("Unable to mmap for read/write\n");
-		}
-		screen[0]->shm=fd;//use the file descriptor so we can release the lock.
-		for(int ilayer=1; ilayer<nlayer; ilayer++){
-		    screen[ilayer]->shm = -1;
-		    screen[ilayer]->p   = screen[0]->p+m*n*ilayer;
-		}
-		screen[0]->p[m*n*nlayer]=0;//say the data is not valid.
-		CALL(genscreen_do, &screendata, nthread);
-		screen[0]->p[m*n*nlayer]=1;//say the data is valid.
-		if(munmap(screen[0]->p, totmem)){//unmap read/write. remap as read only later
-		    error("munmap failed\n");
-		}
-		flock(fd, LOCK_UN);//release exclusive lock.
-		if(close(fd)){//close file descriptor
-		    warning("Error closing %d\n",fd);
-		}
-		//Reopen as read only and do shared lock.
-		if((fd=shm_open(fnshm, O_RDONLY, 00777))<0){
-		    error("Failed to open shared segment.\n");
-		}
-	    }
-	}else{
-	    info2("\nReusing %s ...",fnshm);
-	}
-	//fd might be zero.
-	futimes(fd, NULL);//set access, modification time to current.
-	if(flock(fd, LOCK_SH)){
-	    error("Failed to apply a shared lock on shared segment.\n");
-	}
-	//we map it in read only mode.
-	screen[0]->p=mmap(NULL, totmem, PROT_READ, MAP_SHARED, fd, 0);
-	if(fabs(screen[0]->p[m*n*nlayer])<1.e-15){
-	    warning2("Data in shm %s is invalid, free and redo it.\n", fnshm);
-	    flock(fd, LOCK_UN);//release lock.
-	    close(fd);//close descriptor.
-	    if(munmap(screen[0]->p, totmem)){//unmap.
+    long nx=spect->nx;
+    long ny=spect->ny;
+    int inshm=-1;
+    long totmem=(nx*ny*nlayer+1)*sizeof(double);//+1 for sanity check.
+    int fd;
+    map_t **screen=screendata.screen=atmnew_shm(&fd, &inshm, rstat, nx, ny, 
+						dx, r0, L0, wt, nlayer, 1);
+    if(inshm != 1){
+	CALL(genscreen_do, &screendata, nthread);
+	if(inshm == 2){//need to remap to r/o mode.
+	    screen[0]->p[nx*ny*nlayer]=1;//say the data is valid.
+	    if(munmap(screen[0]->p, totmem)){//unmap read/write. remap as read only later
 		error("munmap failed\n");
 	    }
-	    shm_unlink(fnshm);//destroy the map.
-	    goto retry;
+	    //the exclusive lock will be converted to shared lock automatically.
+	    map_shm(screen, totmem, nlayer, fd, 0);
 	}
-	if(screen[0]->p<0){
-	    error("Unable to mmap for read/write\n");
-	}								
-	//since fd might be 0. we add fd by 1 and assign to shm.
-	screen[0]->shm=fd+1;//save file descriptor of shared mem for easy munmap later and close fd
-	for(int ilayer=1; ilayer<nlayer; ilayer++){
-	    screen[ilayer]->shm = -1;//say this is a part of the shared mem
-	    screen[ilayer]->p = screen[0]->p+m*n*ilayer;
-	}  
-	/*In the end, a shared lock is placed on the shm
-	  memory. if the screen is freed or program exited, the
-	  shared lock will be released. THis is the method I
-	  invented to tell how many process is using this shm.*/
-    }else{
-#endif
-	for(int ilayer=0; ilayer<nlayer; ilayer++){
-	    screen[ilayer]->p=malloc(m*n*sizeof(double));
-	    screen[ilayer]->shm=0;
-	}
-	CALL(genscreen_do, &screendata, nthread);
-#if USE_POSIX_SHM == 1
     }
-#endif
     return screen;
 }
 /**
@@ -310,7 +346,7 @@ map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx,
 	toc2("done");
 	dwrite(spect,"%s",fnspect);
     }
-    map_t **screen=genscreen_from_spect(rstat,spect,dx,wt,nlayer,nthread);
+    map_t **screen=genscreen_from_spect(rstat,spect,dx,r0,L0,wt,nlayer,nthread);
     dfree(spect);
     return(screen);
 }
@@ -366,7 +402,60 @@ map_t** biharmonic_screen(rand_t *rstat, int m, int n, double dx,
     spect=biharmonic_spect(m,n,dx,r0,L0);
     toc2("done");
 
-    map_t **screen=genscreen_from_spect(rstat,spect,dx,wt,nlayer, nthread);
+    map_t **screen=genscreen_from_spect(rstat,spect,dx,r0,L0,wt,nlayer, nthread);
     dfree(spect);
     return(screen);
+}
+static void fractal_screen_do(GENSCREEN_T *data){
+    rand_t *rstat=data->rstat;
+    map_t** screen=data->screen;
+    const double *wt=data->wt;
+    long nx=screen[0]->nx;
+    long ny=screen[0]->ny;
+ repeat:
+    LOCK(data->mutex_ilayer);
+    int ilayer=data->ilayer;
+    data->ilayer++;
+    if(ilayer>=data->nlayer){
+	UNLOCK(data->mutex_ilayer);
+	return;
+    }
+    for(long i=0; i<nx*ny; i++){
+	screen[ilayer]->p[i]=randn(rstat);
+    }
+    UNLOCK(data->mutex_ilayer);
+    double r0i=data->r0*pow(wt[ilayer], -3./5.);
+    info("r0i=%g\n", r0i);
+    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i);
+    remove_piston(screen[ilayer]->p, nx*ny);
+    goto repeat;
+}
+map_t **fractal_screen(rand_t *rstat, long nx, long ny, double dx, double r0,
+		       double L0, double* wt, int nlayer, int nthread){
+    GENSCREEN_T screendata;
+    memset(&screendata, 0, sizeof(screendata));
+    screendata.rstat=rstat;
+    screendata.wt=wt;
+    screendata.nlayer=nlayer;
+    screendata.ilayer=0;
+    screendata.r0=r0;
+    screendata.L0=L0;
+    PINIT(screendata.mutex_ilayer);
+    int inshm=-1;
+    long totmem=(nx*ny*nlayer+1)*sizeof(double);
+    int fd;
+    map_t **screen=screendata.screen=atmnew_shm(&fd, &inshm, rstat, nx, ny, 
+						dx, r0, L0, wt, nlayer, 1);
+    if(inshm != 1){
+	CALL(fractal_screen_do,&screendata, nthread);
+	if(inshm == 2){
+	    screen[0]->p[nx*ny*nlayer]=1;//say the data is valid.
+	    if(munmap(screen[0]->p, totmem)){//unmap read/write. remap as read only later
+		error("munmap failed\n");
+	    }
+	    //the exclusive lock will be converted to shared lock automatically.
+	    map_shm(screen, totmem, nlayer, fd, 0);
+	}
+    }
+    return screen;
 }

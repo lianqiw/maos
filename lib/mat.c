@@ -71,8 +71,8 @@
 #endif
 #include "dmat.h"
 #include "cmat.h"
-#define PMAT(A,pp) T (*pp)[(A)->nx]=(void *)(A)->p
-#define PCELL(M,P) X(mat)* (*P)[(M)->nx]=(X(mat)*(*)[(M)->nx])(M)->p
+#define PMAT(A,pp) T (*restrict pp)[(A)->nx]=(void *)(A)->p
+#define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
 
 
 /**

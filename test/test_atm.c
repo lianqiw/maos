@@ -17,6 +17,6 @@ int main(){
     dmat *spect=vonkarman_spect(m, m, dx, r0, L0);
     dwrite(spect, "spect");
     THREAD_POOL_INIT(nthread);
-    map_t **map=genscreen_from_spect(&rstat, spect, dx, wt, nlayer, nthread);
+    map_t **map=genscreen_from_spect(&rstat, spect, r0,L0,dx, wt, nlayer, nthread);
     sqmaparrwrite(map, nlayer, "atm.bin");
 }

@@ -142,11 +142,11 @@ typedef struct cspcell{
 
 #define PDMAT(M,P)   double (*restrict P)[(M)->nx]=(double(*)[(M)->nx])(M)->p
 #define PCMAT(M,P) dcomplex (*restrict P)[(M)->nx]=(dcomplex(*)[(M)->nx])(M)->p
-#define PDCELL(M,P)   dmat* (*P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
-#define PCCELL(M,P)   cmat* (*P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
-#define PSPCELL(M,P)   dsp* (*P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
-#define PDSPCELL(M,P)   dsp* (*P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
-#define PCSPCELL(M,P)  csp* (*P)[(M)->nx]=(csp*(*)[(M)->nx])(M)->p
+#define PDCELL(M,P)   dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
+#define PCCELL(M,P)   cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
+#define PSPCELL(M,P)   dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
+#define PDSPCELL(M,P)  dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
+#define PCSPCELL(M,P)  csp* (*restrict P)[(M)->nx]=(csp*(*)[(M)->nx])(M)->p
 
 #define dfree(A) ({dfree_do(A,0);A=NULL;})
 #define cfree(A) ({cfree_do(A,0);A=NULL;})

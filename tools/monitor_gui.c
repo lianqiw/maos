@@ -36,6 +36,13 @@
 #include "common.h"
 #include "monitor.h"
 
+#define WIDTH_PID 24
+#define WIDTH_PATH 20
+#define WIDTH_ISEED 5
+#define WIDTH_TIMING 28
+#define WIDTH_ERRLO 7
+#define WIDTH_ERRHI 7
+
 
 
 static void delete_hbox_event(GtkWidget *btn, GdkEventButton *event,PROC_T *p){
@@ -80,13 +87,6 @@ static GtkWidget *new_label(const char *text, int width,float align){
     gtk_misc_set_alignment(GTK_MISC(prog),align,0.5);
     return prog;
 }
-
-#define WIDTH_PID 24
-#define WIDTH_PATH 20
-#define WIDTH_ISEED 5
-#define WIDTH_TIMING 25 //28
-#define WIDTH_ERRLO 7
-#define WIDTH_ERRHI 7
 
 static void create_entry(PROC_T *p){
     p->hbox=gtk_hbox_new(FALSE,0);

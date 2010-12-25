@@ -191,8 +191,8 @@ static csp *fdpcg_prop(long nps, const long *os, long nxg, double dx,
     }
     long nxg2=nxg/2;
     csp *propt=cspnew(nxtot,nxg*nxg,nxg*nxg*nps);
-    long *pp=propt->p;
-    long *pi=propt->i;
+    spint *pp=propt->p;
+    spint *pi=propt->i;
     dcomplex *px=propt->x;
     long count=0;
     dcomplex cf=2*M_PI*I;

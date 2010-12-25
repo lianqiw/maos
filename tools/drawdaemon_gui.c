@@ -462,29 +462,29 @@ static gboolean button_press(GtkWidget *widget, GdkEventButton *event, drawdata_
     if(!GTK_WIDGET_HAS_FOCUS(widget))
 	gtk_widget_grab_focus(widget);
 
-    if(event->type==GDK_2BUTTON_PRESS && event->button==1){
-	//double click brings the part of the image to center.
-	do_move(drawdata,
-		(drawdata->centerx-event->x),
-		-(drawdata->centery-event->y));//notice the reverse sign.
+    /*if(event->type==GDK_2BUTTON_PRESS && event->button==1){
+    //double click brings the part of the image to center.
+    do_move(drawdata,
+    (drawdata->centerx-event->x),
+    -(drawdata->centery-event->y));//notice the reverse sign.
+    }else{*/
+    if(event->x > drawdata->xoff && event->x < drawdata->xoff + drawdata->widthim 
+       && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
+	drawdata->mxdown=event->x;
+	drawdata->mydown=event->y;
+	drawdata->valid=1;
     }else{
-	if(event->x > drawdata->xoff && event->x < drawdata->xoff + drawdata->widthim 
-	   && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
-	    drawdata->mxdown=event->x;
-	    drawdata->mydown=event->y;
-	    drawdata->valid=1;
-	}else{
-	    drawdata->valid=0;
-	}
+	drawdata->valid=0;
     }
+    //}
     return FALSE;
 }
 
 
 static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdata_t **drawdatawrap){
     (void) widget;
-    (void) event;
     drawdata_t *drawdata=*drawdatawrap;
+    if(!drawdata->valid) return FALSE;
     double x, y;
     x = event->x;
     y = event->y;
@@ -492,7 +492,7 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
 	double dx = x - drawdata->mxdown;
 	double dy = y - drawdata->mydown;
 	do_move(drawdata, dx, -dy);
-    }else if(drawdata->valid && cursor_type==1){//select and zoom.
+    }else if(cursor_type==1){//select and zoom.
 	double xx = drawdata->mxdown;
 	double dx = x - drawdata->mxdown;
 	double dy = y - drawdata->mydown;

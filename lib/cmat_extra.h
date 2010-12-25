@@ -43,6 +43,7 @@ void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
 	       const int nopdx, const int nopdy, 
 		const double wvl, const double theta);
 void cembed(cmat *restrict A, const cmat *restrict B, const double theta,CEMBED flag);
+void cembedd(cmat *restrict A, dmat *restrict B, const double theta);
 void cembedscaleout(cmat *restrict A, const cmat * in, 
 		    double xoutscale,double youtscale,
 		    const double theta, CEMBED flag);
