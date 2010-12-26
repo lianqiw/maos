@@ -135,23 +135,26 @@ int main(int argc, char *argv[]){
 	    }
 	    int ind=0;
 	    int indlo=0;
+	    int indhi=0;
 	    if(res->p[3]){//split tomography.
 		ind=3;
 		indlo=2;
+		indhi=0;
 	    }else{
 		ind=2;
-		indlo=1;
+		indlo=1;//tt
+		indhi=2;//pttr
 	    }
 	    int ii=ipath+npath*iseed;
 	    dmat *tmp;
-	    tmp=dsub(res->p[ind], 0, 1, 0, 0);
+	    tmp=dsub(res->p[ind], indhi, 1, 0, 0);
 	    reshi->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	    tmp=dsub(res->p[ind], indlo, 1, 0, 0);
 	    reslo->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 
-	    tmp=dsub(res->p[0], 0, 1, 0, 0);
+	    tmp=dsub(res->p[0], 2, 1, 0, 0);
 	    resolhi->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	    tmp=dsub(res->p[0], 1, 1, 0, 0);
