@@ -45,7 +45,7 @@ void ptsfree_do(pts_t *pts){
 	    free(pts->origx);
 	    free(pts->origy);
 	}
-	if(pts->map && pts->map->loc==(loc_t*)pts){
+	if(pts->map){
 	    free(pts->map->p);
 	    free(pts->map);
 	}
@@ -55,23 +55,25 @@ void ptsfree_do(pts_t *pts){
 	free(pts);
     }
 }
-/**
-   Free locstat_t data
-*/
-void locstatfree_do(locstat_t *locstat){
-    free(locstat->cols);
-    free(locstat);
-}
+
 /**
    Free the MAP in loc_t
 */
 void loc_free_map(loc_t *loc){
-    if(loc->map && loc->map->loc==loc){
+    if(loc->map){
 	free(loc->map->p);
-	loc->map->p=NULL;
-	loc->map->loc=NULL;
 	free(loc->map);
 	loc->map=NULL;
+    }
+}
+/**
+   Free the stat in loc_t
+*/
+void loc_free_stat(loc_t *loc){
+    if(loc->stat){
+	free(loc->stat->cols);
+	free(loc->stat);
+	loc->stat=NULL;
     }
 }
 /**
@@ -83,6 +85,7 @@ void locfree_do(loc_t *loc){
 	free(loc->locx);
 	free(loc->locy);
 	loc_free_map(loc);
+
     }
     free(loc);
 }
@@ -192,23 +195,18 @@ PNEW(maplock);
 void loc_create_map_npad(loc_t *loc, int npad){
     LOCK(maplock);
     if(loc->map){
-	if(loc->map->loc==loc)//already have a map that is valid.
-	    if(loc->map->nloc!=loc->nloc ||loc->map->npad<npad){
-		loc_free_map(loc);
-	    }else{
-		UNLOCK(maplock);
-		return;
-	    }
-	else
-	    loc->map=NULL;
+	if(loc->map->npad<npad){
+	    loc_free_map(loc);
+	}else{
+	    UNLOCK(maplock);
+	    return;
+	}
     }
     if(loc->nloc==0){
 	UNLOCK(maplock);
 	return;
     }
     loc->map = calloc(1,sizeof(locmap_t));
-    loc->map->loc = loc;
-    loc->map->nloc= loc->nloc;
     loc->map->npad = npad;//just record the information.
     double xmin,xmax,ymin,ymax;
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
@@ -773,8 +771,9 @@ void pts_ztilt(double *out, const pts_t *pts, const dcell *imcc,
 /**
    Gather information about the starting of each column in loc.
  */
-locstat_t *mklocstat(const loc_t *loc){
+void loc_create_stat_do(loc_t *loc){
     locstat_t *locstat=calloc(1, sizeof(locstat_t));
+    loc->stat=locstat;
     const double *locx=loc->locx;
     const double *locy=loc->locy;
     int nloc=loc->nloc;
@@ -782,13 +781,18 @@ locstat_t *mklocstat(const loc_t *loc){
     int ncolmax=(int)round((locy[nloc-1]-locy[0])/dx)+2;
     locstat->cols=malloc(ncolmax*sizeof(locstatcol_t));
     int colcount=0;
+    //do first column separately.
     int iloc=0;
     locstat->cols[colcount].pos=iloc;
     locstat->cols[colcount].xstart=locx[iloc];
     locstat->cols[colcount].ystart=locy[iloc];
+    locstat->ymin=locstat->cols[colcount].ystart;
+    locstat->xmin=locstat->cols[colcount].xstart;
+    double xmax=locstat->cols[colcount].xstart;
+
     colcount++;
     for(iloc=1; iloc<loc->nloc; iloc++){
-	if(fabs(locy[iloc]-locy[iloc-1])>1.e-12 
+	if(fabs(locy[iloc]-locy[iloc-1])>1.e-12 //a new column starts
 	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1.e-12){
 	    if(colcount>=ncolmax){
 		ncolmax*=2;
@@ -796,7 +800,13 @@ locstat_t *mklocstat(const loc_t *loc){
 	    }
 	    locstat->cols[colcount].pos=iloc;
 	    locstat->cols[colcount].xstart=locx[iloc];
-	    locstat->cols[colcount].ystart=locy[iloc];	    
+	    locstat->cols[colcount].ystart=locy[iloc];
+	    if(xmax < locx[iloc-1]){
+		xmax = locx[iloc-1];
+	    }
+	    if(locstat->xmin>locstat->cols[colcount].xstart){
+		locstat->xmin=locstat->cols[colcount].xstart;
+	    }
 	    colcount++;
 	}
     }
@@ -804,8 +814,11 @@ locstat_t *mklocstat(const loc_t *loc){
     locstat->cols[colcount].pos=loc->nloc;
     locstat->cols[colcount].xstart=locx[loc->nloc-1];
     locstat->cols[colcount].ystart=locy[loc->nloc-1];
+    if(xmax < locx[loc->nloc-1]){
+	xmax = locx[loc->nloc-1];
+    }
+    locstat->nrow=(long)round((xmax-locstat->xmin)/dx)+1;
     locstat->cols=realloc(locstat->cols,(locstat->ncol+1)*sizeof(locstatcol_t));
-    return locstat;
 }
 /**
    Create a gray pixel circular map in phi using coordinates defined in loc, center
@@ -895,6 +908,8 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
    Remove uncoupled points in loc. debugged on 2009-12-20. Not used often. using
    a spcell, to compute the coupling which is modified accordingly.  */
 void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
+    loc_free_map(loc);
+    loc_free_stat(loc);
     int nloc=loc->nloc;
     int32_t *skip=calloc(nloc,sizeof(int32_t));
     dmat *sum=NULL;
@@ -909,7 +924,8 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
 	error("Mismatch\n");
     }
     if(cont){//make sure loc is continuous.
-	locstat_t *locstat=mklocstat(loc);
+	loc_create_stat(loc);
+	locstat_t *locstat=loc->stat;
 	int ncol=locstat->ncol;
 	for(int icol=0; icol<ncol; icol++){
 	    int pstart=locstat->cols[icol].pos;
@@ -929,7 +945,7 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
 		}
 	    }
 	}
-	locstatfree(locstat);
+	loc_free_stat(loc);
     }else{
 	for(int iloc=0; iloc<nloc; iloc++){
 	    if(sum->p[iloc]<1.e-200){
@@ -988,13 +1004,15 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
    matrix, which is modified accordingly.  */
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     loc_free_map(loc);//remove the internal map before touchlong loc.
+    loc_free_stat(loc);
     int nloc=loc->nloc;
     if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
 	error("Mismatch dimension\n");
     int32_t *skip=calloc(nloc,sizeof(int32_t));
     dmat* sum=spsumabs(sp,3-dim);
     if(cont){//make sure loc is continuous.
-	locstat_t *locstat=mklocstat(loc);
+	loc_create_stat(loc);
+	locstat_t *locstat=loc->stat;
 	int ncol=locstat->ncol;
 	for(int icol=0; icol<ncol; icol++){
 	    int pstart=locstat->cols[icol].pos;
@@ -1014,7 +1032,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 		}
 	    }
 	}
-	locstatfree(locstat);
+	loc_free_stat(loc);
     }else{
 	for(int iloc=0; iloc<nloc; iloc++){
 	    if(sum->p[iloc]<1.e-200){
@@ -1302,6 +1320,9 @@ map_t *mapnew(long nx, long ny, double dx, double *p){
     map->oy=-map->ny/2*map->dx;
     return map;
 }
+/**
+   Create a circular aperture on map_t.
+*/
 void mapcircle(map_t *map, double r, double val){
     dmat *tmp=dnew_ref(map->p, map->nx, map->ny);
     dcircle(tmp, (0-map->ox)/map->dx, (0-map->oy)/map->dx, r/map->dx, val);

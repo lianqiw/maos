@@ -205,7 +205,7 @@ void setup_surf(SIM_T*simu){
 		prop_grid(simu->surf[isurf], locevl, simu->surfevl->p[ievl]->p, 
 			  1, displacex, displacey, 1, 0, 0, 0);
 	    }else{
-		prop_grid_stat(simu->surf[isurf], simu->aper->locs_stat, 
+		prop_grid_stat(simu->surf[isurf], simu->aper->locs->stat, 
 			       simu->surfevl->p[ievl]->p, 
 			       1, displacex, displacey, 1, 0, 0, 0);
 	    }

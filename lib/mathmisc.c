@@ -252,3 +252,13 @@ void remove_piston(double *p, long n){
 	p[i]+=piston;
     }
 }
+/**
+   Find the next number that is power of 2.
+*/
+long nextpow2(long n){
+    n--;
+    for(long i=1; i<sizeof(long)*8; i<<=1){
+	n = n | (n >> i);
+    }
+    return n+1;
+}

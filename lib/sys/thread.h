@@ -119,7 +119,16 @@ struct thread_t{
 #define PNEW(A)
 #endif
 
-
+#if defined(X86) || defined(X86_64)
+#define ASSIGN_INCREMENT(dest, src, step)		\
+    __asm__ __volatile__ ("lock; xaddl %0,%1"		\
+			  : "=r" (dest), "=m" (src)	\
+			  : "0" (step), "m" (src))
+#else
+#define ASSIGN_INCREMENT(dest, src, step)	\
+    dest = assign_increment(&src, step)
+#endif
 void thread_prep(thread_t *info, long start, long tot, long nthread, 
 		 thread_wrapfun fun, void *data);
+int assign_increment(int *src, int step);
 #endif

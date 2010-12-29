@@ -24,4 +24,5 @@
 */
 #include "sp.h"
 AOS_SP_DEF(AOS_DMAT,AOS_SPARSE,double)
+
 #endif

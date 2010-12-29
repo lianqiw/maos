@@ -623,7 +623,7 @@ ccell *psfcomp(const dmat *iopdevl, const double *amp,
     return psf2s;
 }
 /**
-   Simple embed and accumulation
+   Simple embed and accumulation. 
  */
 void embed_in(double *out, const double *in, long nin, long *embed){
     for(long i=0; i<nin; i++){
@@ -638,7 +638,22 @@ void embed_out(const double *out, double *in, long nin, long *embed){
 	in[i]+=out[embed[i]];
     }
 }
-
+/**
+   Simple embed and accumulation. 
+ */
+void embedc_in(dcomplex *out, const double *in, long nin, long *embed){
+    for(long i=0; i<nin; i++){
+	out[embed[i]]+=in[i];
+    }
+}
+/**
+   Simple embed and accumulation
+ */
+void embedc_out(const dcomplex *out, double *in, long nin, long *embed){
+    for(long i=0; i<nin; i++){
+	in[i]+=creal(out[embed[i]]);
+    }
+}
 /**
    Try to lock file for each seed. If file is already locked by other process,
    will not run that seed tox not step over other process's feet.

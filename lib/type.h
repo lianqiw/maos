@@ -140,32 +140,113 @@ typedef struct cspcell{
     long ny;    /**< number of columns */
 }cspcell;
 
-#define PDMAT(M,P)   double (*restrict P)[(M)->nx]=(double(*)[(M)->nx])(M)->p
-#define PCMAT(M,P) dcomplex (*restrict P)[(M)->nx]=(dcomplex(*)[(M)->nx])(M)->p
-#define PDCELL(M,P)   dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
-#define PCCELL(M,P)   cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
-#define PSPCELL(M,P)   dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
-#define PDSPCELL(M,P)  dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
-#define PCSPCELL(M,P)  csp* (*restrict P)[(M)->nx]=(csp*(*)[(M)->nx])(M)->p
 
-#define dfree(A) ({dfree_do(A,0);A=NULL;})
-#define cfree(A) ({cfree_do(A,0);A=NULL;})
+/**
+   OPD or Amplitude map defined on square/rectangular grids. with equal spacing
+   on x/y. Do not modify the first three elements, which has the same layout as
+   dmat */
+typedef struct map_t{
+    double *p;      /**<The OPD*/
+    long nx;        /**<Number of points along x*/
+    long ny;        /**<Number of points along y*/
+    double ox;      /**<Origin in x*/
+    double oy;      /**<Origin in y*/
+    double dx;      /**<Sampling along x and y*/
+    double h;       /**<Heigh conjugation of this surface*/
+    double vx;      /**Wind velocity. Useful for atmospheric grid*/
+    double vy;      /**Wind velocity. Useful for atmospheric grid*/
+    long shm;       /**Records the length of the memory mmaped of positive. -1 means it is part of shared shm.*/
+} map_t;
 
-#define spfree(A)      {spfree_do(A); A=NULL;}
-#define spcellfree(A)  {spcellfree_do(A); A=NULL;}
-#define cspfree(A)     {cspfree_do(A); A=NULL;}
-#define cspcellfree(A) {cspcellfree_do(A); A=NULL;}
+/**
+   Map with different x/y sampling.
+*/
+typedef struct rectmap_t{
+    double *p;      /**<The OPD*/
+    long nx;        /**<Number of points along x*/
+    long ny;        /**<Number of points along y*/
+    double ox;      /**<Origin in x*/
+    double oy;      /**<Origin in y*/
+    double dx;      /**<Sampling along x (first dimension)*/
+    double dy;      /**<Sampling along y (second dimension)*/
+    double txdeg;   /**<the x tilt angle in degree wrt beam (90 is prep), */
+    double tydeg;   /**<the y tilt angle in degree wrt beam (90 is prep), */
+    double ftel;    /**<Effective focal length of the telescope*/
+    double fexit;   /**<The distance between the exit pupil and the focus*/
+    double fsurf;   /**<The distance between the tilted surface (M3) and the focus*/
+}rectmap_t;
 
-#define dcp2(A,B)  memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny);
-#define dcellfree(A) ({dcellfree_do(A);A=NULL;})
-#define ccellfree(A) ({ccellfree_do(A);A=NULL;})
-#define dcellfreearr(A,n) ({for(int in=0; in<n; in++){dcellfree(A[in]);};free(A);})
+/**
+   map of locs
+*/
+typedef struct locmap_t{
+    long *p;       /**<The map, of size nx*ny*/
+    double ox;     /**<Origin of the map along x*/
+    double oy;     /**<Origin of the map along y*/
+    int nx;        /**<Number of points along x*/
+    int ny;        /**<Number of points along y*/
+    int npad;      /**<Padding along the boundary. just for checking. no need in computation.*/
+}locmap_t;
 
-#define cabs2(A) (pow(creal(A),2)+pow(cimag(A),2))
+/**
+   Struct for loc like plocs, xloc, aloc etc.
+*/
+typedef struct loc_t{
+    double *locx;  /**< x coordinates of each point*/
+    double *locy;  /**< y coordinates of each point*/
+    long   nloc;   /**< number of points*/
+    double dx;     /**< Sampling*/
+    locmap_t *map; /**< point to the map used for identifying neihboring points.*/
+    struct locstat_t *stat;/**<points to column statistics*/
+}loc_t;
+
+/**
+   Store starting x,y for each col
+*/
+typedef struct locstatcol_t{
+    double xstart; /**<starting x of this column*/
+    double ystart; /**<starting y of this column*/
+    long   pos;    /**<starting index of this column*/
+}locstatcol_t;
+
+/**
+   Stores array of locstatcol_t
+*/
+typedef struct locstat_t{
+    locstatcol_t *cols; /**<Information about each column*/
+    double dx;          /**<Sampling of the grid*/
+    double xmin;        /**<Minimum x*/
+    double ymin;        /**<Minimum y*/
+    long   ncol;        /**<Number of consecutive columns found*/
+    long   nrow;        /**<Maximum number of rows*/
+}locstat_t;
+/**
+   low left point of each subaperture.
+   
+   don't change the leading 5 elements. so that pts_t can be
+   cast to loc_t
+
+   2009-12-08: Bug found: I set the origx, origy to the lower
+   left point in the subaperture instead of the true
+   edge. This is good for raytracing. But I used it as the
+   saloc orig for mkg, which is really wrong.  use
+   powfs->saloc as the orig of subapertures. PTS just for ray
+   tracing.
+*/
+typedef struct pts_t{
+    double *origx; /**<The x origin of each subaperture*/
+    double *origy; /**<The y origin of each subaperture*/
+    long nsa;      /**<number of subapertures.*/
+    double dsa;    /**<side length of subaperture*/
+    locmap_t *map; /**<treat pts_t as loc_t and compute the MAP*/
+    double *area;  /**<subaperture area, sum(amp^2)*/
+    double dx;     /**<sampling of points in each subaperture*/
+    int nx;        /**<number of col and row of points per subaperture*/
+}pts_t;
 
 #define AOS_CMAT(A) c##A
 #define AOS_CSPARSE(A) c##A
-
 #define AOS_DMAT(A) d##A
 #define AOS_SPARSE(A) A
+
 #endif

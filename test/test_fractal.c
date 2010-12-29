@@ -163,33 +163,31 @@ static void test_atm(){
     int seed=4;
     double r0=0.2;
     double dx=1./64;
-    long N=1024;
+    long N=4096;
     long nx=N;
     long ny=N;
-    long nframe=1000;
+    long nframe=10;
     seed_rand(&rstat, seed);
     {
 	map_t *atm=mapnew(nx+1, ny+1, dx, NULL);
-	stfun_data data;
-	stfun_init(&data, nx, ny, NULL);
+	stfun_t *data=stfun_init(nx, ny, NULL);
 	for(long i=0; i<nframe; i++){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
 	    fractal(atm->p, nx+1, ny+1, dx, r0);
-	    stfun_push(&data, (dmat*)atm);
+	    stfun_push(data, (dmat*)atm);
 	    if(i%100==0){
 		info("%ld of %ld\n", i, nframe);
 		ddraw("fractal", (dmat*)atm, NULL, "Atmosphere","x","y","%ld",i);
 	    }
 	}
-	dmat *st=stfun_finalize(&data);
+	dmat *st=stfun_finalize(data);
 	dwrite(st, "stfun_fractal.bin");
 	ddraw("fractal", st, NULL, "Atmosphere","x","y","stfun");
     }
     {
-	stfun_data data;
-	stfun_init(&data, nx, ny, NULL);
+	stfun_t *data=stfun_init(nx, ny, NULL);
 	dmat *spect=vonkarman_spect(nx, ny, dx, r0, 100);
 	cmat *atm=cnew(nx, ny);
 	cfft2plan(atm, -1);
@@ -205,14 +203,14 @@ static void test_atm(){
 		atmr->p[i]=creal(atm->p[i]);
 		atmi->p[i]=cimag(atm->p[i]);
 	    }
-	    stfun_push(&data, atmr);
-	    stfun_push(&data, atmi);
+	    stfun_push(data, atmr);
+	    stfun_push(data, atmi);
 	    if(ii%100==0){
 		info("%ld of %ld\n", ii, nframe);
 		ddraw("fft", atmr, NULL, "Atmosphere","x","y","%ld",ii);
 	    }
 	}
-	dmat *st=stfun_finalize(&data);
+	dmat *st=stfun_finalize(data);
 	dwrite(st, "stfun_fft.bin");
 	ddraw("fft", st, NULL, "Atmosphere","x","y","stfun");
     }

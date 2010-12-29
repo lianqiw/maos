@@ -20,6 +20,16 @@
 #define AOS_SP_H
 #include "random.h"
 #include "type.h"
+
+#define spfree(A)      {spfree_do(A); A=NULL;}
+#define spcellfree(A)  {spcellfree_do(A); A=NULL;}
+#define PSPCELL(M,P)   dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
+#define PDSPCELL(M,P)  dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
+
+#define cspfree(A)     {cspfree_do(A); A=NULL;}
+#define cspcellfree(A) {cspcellfree_do(A); A=NULL;}
+#define PCSPCELL(M,P)  csp* (*restrict P)[(M)->nx]=(csp*(*)[(M)->nx])(M)->p
+
 #define AOS_SP_DEF(X,Y,T) \
 X(sp)* Y(spnew)(long nx, long ny, long nzmax) CHECK_UNUSED_RESULT;\
 X(sp) *Y(spref)(X(sp) *A) CHECK_UNUSED_RESULT;\

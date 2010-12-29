@@ -73,14 +73,19 @@ void TomoL(dcell **xout, const void *A,
     dcellfree(xx2);
 
     dcellfree(gg2);
-    if(recon->L2){
+    switch(recon->cxx){
+    case 0:
 	apply_L2(xout, recon->L2, xin, alpha, recon->nthread);
-    }else{
-	apply_invpsd(xout, recon->RL.extra, xin, alpha);
+	break;
+    case 1:
+	apply_invpsd(xout, recon->invpsd, xin, alpha);
+	break;
+    case 2:
+	apply_fractal(xout, recon->fractal, xin, alpha);
+	break;
     }
     if(recon->ZZT){//single point piston constraint
-	sptcellmulmat_thread(xout, recon->ZZT, xin, alpha,
-			     recon->nthread);
+	sptcellmulmat_thread(xout, recon->ZZT, xin, alpha, recon->nthread);
     }
     /*Tikhonov regularization is not added because it is not necessary in CG
       mode.*/

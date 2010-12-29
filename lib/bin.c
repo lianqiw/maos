@@ -494,7 +494,7 @@ void zfreadlarr(file_t *fp, int count, ...){
    dimension. Finally write the data itself.
  */
 void do_write(const void *fpn,     /**<[in] The file pointer*/
-	      const int isfile,    /**<[in] Is this a filename or already opened file*/
+	      const int isfn,    /**<[in] Is this a filename or already opened file*/
 	      const size_t size,   /**<[in] Size of each element*/
 	      const uint32_t magic,/**<[in] The magic number. see bin.h*/ 
 	      const void *p,       /**<[in] The data of the array*/
@@ -502,7 +502,7 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 	      const uint64_t ny    /**<[in] Number of columns. 1 for vector*/
 	      ){
     file_t *fp;
-    if(isfile){
+    if(isfn){
 	fp=zfopen((char*)fpn, "wb");
     }else{
 	fp=(file_t*) fpn;
@@ -515,7 +515,7 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 	uint64_t zero=0;
 	zfwritelarr(fp, 2, &zero, &zero);
     }
-    if(isfile) zfclose(fp);
+    if(isfn) zfclose(fp);
 }
 /**
    Read an 1-d or 2-d array from the file. First a magic number is read from the
@@ -523,7 +523,7 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
    dimension and actual data are read and output to pnx, pny, p
  */
 void do_read(const void *fpn,      /**<[in]  The file pointer*/
-	     const int isfile,     /**<[in]  Is this a filename or already opened file*/
+	     const int isfn,     /**<[in]  Is this a filename or already opened file*/
 	     const size_t size,    /**<[in]  Size of each element*/
 	     const uint32_t magic, /**<[in] The magic number wanted*/
 	     void **p,             /**<[out] The address of the pointer of the array*/
@@ -531,7 +531,7 @@ void do_read(const void *fpn,      /**<[in]  The file pointer*/
 	     uint64_t *pny         /**<[out] Return number of columns*/
 	     ){
     file_t *fp;
-    if(isfile){
+    if(isfn){
 	fp=zfopen((char*)fpn, "rb");
     }else{
 	fp=(file_t*) fpn;
@@ -549,7 +549,7 @@ void do_read(const void *fpn,      /**<[in]  The file pointer*/
 	*p=malloc(size*(*pnx)*(*pny));
 	zfread(*p, size, (*pnx)*(*pny),fp);
     }
-    if(isfile) zfclose(fp);
+    if(isfn) zfclose(fp);
 }
 /**
    Write a double array of size nx*ny to file.

@@ -125,7 +125,7 @@ static void test_loc_reduce_spcell(void){
     spcell *G04=spcelltrans(G0t);
     spcellwrite(G04,"G05.bin.gz");
     locarrwrite(xloc,nloc,"xloc5");
-    }*/
+    }
 static void test_zernike(){
     loc_t *loc=locread("loc_circle.bin");
     dmat *mod=loc_zernike(loc,1,10);
@@ -133,10 +133,17 @@ static void test_zernike(){
     dwrite(mod,"mod");
     dgramschmidt(mod,NULL);
     dwrite(mod,"mod_norm");
-}
+    }
+static void test_embed(){
+    loc_t *loc=mkcirloc(10, 1./64);
+    locwrite(loc, "loccir");
+    dmat *opd=dnew(645,645);
+    dembed_locstat(&opd, loc, NULL);
+    dwrite(opd, "locopd");
+    }*/
 int main(){
-    test_zernike();
     /*  
+    test_zernike();
     test_loc_reduce_spcell();
     test_sqlocrot();
 	test_w1();
@@ -144,5 +151,9 @@ int main(){
     test_wcir();
     test_int_reg();
     test_int_rand();
+    test_embed();
     */
+    for(long i=1; i<1000;i++){
+	info("i=%ld, %ld\n", i, nextpow2(i));
+    }
 }

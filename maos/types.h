@@ -33,8 +33,6 @@
 typedef struct APER_T{
     loc_t *locs;         /**<PLOCS in laos. the fine sampled grid on aperture
 		         for peformance evaluation.*/
-    locstat_t *locs_stat;/**<record the starting location of each column in
-			    locs, used to accelerate accphi*/
     double *amp;         /**<amplitude map defined on locs, if exists. sum to 1. for
 			    performance evaluation*/
     double *amp1;        /**<amplitude map defined o locs, maximum is 1.*/
@@ -165,6 +163,7 @@ typedef struct NGSMOD_T{
    contains data for Fourier Domain Preconditioner.
  */
 typedef struct FDPCG_T{
+    loc_t **xloc;  /**<record recon->xloc*/
     csp *Minv;     /**<inverse of fourier domain preconditioner matrix M.*/
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
     long *perm;    /**<Permutation vector to get block diagonal matrix*/
@@ -173,7 +172,9 @@ typedef struct FDPCG_T{
     cmat *xhat2;   /**<Intermediate matrices*/
     ccell *xhati;  /**<Intermediate matrices*/
     ccell *xhat2i; /**<Intermediate matrices*/
+    long **xembed; /**<index to embed nonsquare opd on xloc to square map.*/
     double *scale; /**<Scaling factor for each layer*/
+    int square;    /**<Whether xloc is square*/
 }FDPCG_T;
 
 /**
@@ -190,13 +191,25 @@ typedef struct MOAO_T{
     dmat *aimcc;      /**<used for tip/tilt removal from DM commands.*/
 }MOAO_T;
 /**
-   A convenient wrap of the data to embed into MUV_T
+   A convenient wrap of the data to embed into MUV_T for applying invpsd to opds defined on xloc.
 */
 typedef struct INVPSD_T{
-    dcell *invpsd;    /**<points to recon->invpsd*/
-    ccell *fftxopd;   /**<points to recon->fftxopd.*/
-    long **xembed;    /**<points to recon->xloc_embed*/
+    dcell  *invpsd;    /**<inverse of the turbulence PSF*/
+    ccell  *fftxopd;   /**<temporary array to apply inverse PSD in Fourier domain.*/
+    loc_t **xloc;      /**<points to recon->xloc*/
+    int     square;    /**<whether opd is on square xloc or not.*/
 }INVPSD_T;
+/**
+   A convenient wrap of the data to embed into MUV_T for applying fractal
+   regularization to opds defined on xloc.
+ */
+typedef struct FRACTAL_T{
+    dcell  *xopd;      /**<A square array to embed x on xloc into for fractal */
+    loc_t **xloc;      /**<points to recon->xloc*/
+    const double *wt;  /**<weight of each layer*/
+    double  r0;        /**<The Fried parameter*/
+    double  l0;        /**<The outer scale*/
+}FRACTAL_T;
 typedef struct CN2EST_T CN2EST_T;
 /**
    contains data related to wavefront reconstruction and DM fitting.  */
@@ -215,7 +228,6 @@ typedef struct RECON_T{
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
     long *xloc_nx;     /**<size of xmap used to build xloc*/
     long *xloc_ny;     /**<size of xmap used to build xloc*/
-    long **xloc_embed; /**<index array to embed opd on xloc to square array of xloc_nx*xloc_ny*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
 
     loc_t **aloc;      /**<actuator grid*/
@@ -228,9 +240,8 @@ typedef struct RECON_T{
     dmat *fitwt;       /**<fit weighting in each direction.*/
     spcell *L2;        /**<Laplacian square regularization.*/
     spcell *L2save;    /**<save old L2 to update the tomography matrix.*/
-    dcell *invpsd;     /**<inverse of atm PSD, to apply Cxx^-1 in Fourier space.*/
-    ccell *fftxopd;    /**<temporary storage array to apply invpsd*/
-
+    INVPSD_T *invpsd;  /**<data to apply inverse of psf to opd on xloc*/
+    FRACTAL_T *fractal;/**<data to apply fractal regularization on opd on xloc*/
     FDPCG_T *fdpcg;    /**<fdpcg preconditioner data.*/
     spcell *GP;        /**<Gradient operator from HXW. GX=GP*H.*/
     spcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
@@ -280,6 +291,7 @@ typedef struct RECON_T{
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
     int warm_restart;  /**<Use warm restart.*/
+    int cxx;           /**<records parms->tomo.cxx*/
 }RECON_T;
 
 /**

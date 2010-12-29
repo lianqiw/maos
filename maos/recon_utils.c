@@ -34,41 +34,57 @@ void apply_L2(dcell **xout, spcell *L2, const dcell *xin,
     dcellfree(xx);
 }
 /**
-   Apply turbulence invpsd to x in Fourier space, scaled by alpha.
+   Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout.
 */
 void apply_invpsd(dcell **xout, INVPSD_T *extra,
-		  //long **xembed, dcell *invpsd, ccell *fftxopd, 
 		  const dcell *xin, double alpha){
-    long **xembed=extra->xembed;
     dcell *invpsd=extra->invpsd;
     ccell *fftxopd=extra->fftxopd;
-    static int icall=0;
-    icall++;
+
     for(int ips=0; ips<xin->nx*xin->ny; ips++){
 	dmat *xini;
 	long nx=fftxopd->p[ips]->nx;
 	long ny=fftxopd->p[ips]->ny;
-	if(xembed){
-	    xini=dnew(nx, ny);
-	    embed_in(xini->p, xin->p[ips]->p, xin->p[ips]->nx, xembed[ips]);
-	}else{
+	if(extra->square){
 	    xini=dref_reshape(xin->p[ips], nx, ny);
+	}else{
+	    xini=dnew(nx, ny);
+	    dembed_locstat(&xini, 0, extra->xloc[ips], xin->p[ips]->p, alpha, 0);
+	    //embed_in(xini->p, xin->p[ips]->p, xin->p[ips]->nx, xembed[ips]);
 	}
 	ccpd(&fftxopd->p[ips], xini);
 	dfree(xini);
 	cfft2(fftxopd->p[ips],-1);
 	ccwmd(fftxopd->p[ips], invpsd->p[ips], 1);
 	cfft2(fftxopd->p[ips],1);
-	dmat *xouti=NULL;
-	if(xembed){
-	    creal2d(&xouti,1,fftxopd->p[ips],alpha);
-	    embed_out(xouti->p, (*xout)->p[ips]->p, 
-		      (*xout)->p[ips]->nx, xembed[ips]);
-	}else{
+	if(extra->square){
+	    dmat *xouti=NULL;
 	    xouti=dref_reshape((*xout)->p[ips], nx, ny);
 	    creal2d(&xouti,1,fftxopd->p[ips],alpha);
+	    dfree(xouti);
+	}else{
+	    cembed_locstat(&fftxopd->p[ips], 1, extra->xloc[ips], (*xout)->p[ips]->p, 1, 1);
+	    /*creal2d(&xouti,1,fftxopd->p[ips],alpha);
+	      embed_out(xouti->p, (*xout)->p[ips]->p, 
+	      (*xout)->p[ips]->nx, xembed[ips]);*/
 	}
-	dfree(xouti);
+    }
+}
+/**
+   Apply fractal regularization to x, scaled by alpha.
+   \todo parallelize it.
+*/
+void apply_fractal(dcell **xout, FRACTAL_T *extra,
+		   const dcell *xin, double alpha){
+    for(int ips=0; ips<xin->nx*xin->ny; ips++){
+	dzero(extra->xopd->p[ips]);
+	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);
+	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, alpha, 0);
+	fractal_inv(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
+		    extra->xloc[ips]->dx, r0i);
+	fractal_inv_trans(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
+			  extra->xloc[ips]->dx, r0i);
+	dembed_locstat(&extra->xopd->p[ips], 1, extra->xloc[ips], (*xout)->p[ips]->p, 1, 1);
     }
 }
 /**

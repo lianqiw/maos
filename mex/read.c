@@ -4,10 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/*compile with 
-  mex read.c*/
-#include "io.h"
 #include <complex.h>
+
+#include "io.h"
 
 static mxArray *readdata(file_t *fp, mxArray **header){
     int magic;
@@ -92,7 +91,6 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 		    void *Ir=malloc(size*nzmax);
 		    zfread(Jc, size, ny+1, fp);
 		    zfread(Ir, size, nzmax, fp);
-		    //warning("Converting from %zu to %zu bytes\n",size,sizeof(mwIndex));
 		    if(size==4){
 			uint32_t* Jc2=Jc;
 			uint32_t* Ir2=Ir;
@@ -127,9 +125,9 @@ static mxArray *readdata(file_t *fp, mxArray **header){
     case M_CSP32:/*complex sparse*/
 	{
 	    size_t size;
-	    if(magic==M_SP32){
+	    if(magic==M_CSP32){
 		size=4;
-	    }else if(magic==M_SP64){
+	    }else if(magic==M_CSP64){
 		size=8;
 	    }
 	    uint64_t nzmax;
@@ -175,6 +173,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 			free(Jc);
 			free(Ir);
 		    }else{
+			info("size=%lu\n", size);
 			mexErrMsgTxt("Invalid sparse format\n");
 		    }
 		}
@@ -245,13 +244,18 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 
     return out;
 }
+static char *mx2str(const mxArray *A){
+    int nlen=mxGetNumberOfElements(A)+1;
+    char *fn=malloc(nlen);
+    mxGetString(A, fn, nlen);
+    return fn;
+}
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     file_t *fp;
     if(nrhs!=1 || nlhs>2){
 	mexErrMsgTxt("Usage:var=read('filename') or [var, header]=read('file name')\n");
     }
-    mxArray *header=NULL;
     char *fn=mx2str(prhs[0]);
     fp=openfile(fn,"rb");
     free(fn);
@@ -262,5 +266,4 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	test_eof(fp);
     }
     zfclose(fp);
-    free(header);
 }

@@ -62,9 +62,13 @@ else
 fi
 case "$host_cpu" in 
     *86)
-        cpu="32";;
+        cpu="32"
+	AC_DEFINE(X86, [1], "I386 Machine")
+	;;
     *64)
-        cpu="64";;
+        cpu="64"
+	AC_DEFINE(X86_64, [1], "X86_64 Machine")
+	;;
     *)
         AC_MSG_ERROR([Unrecognized host_cpu])
 esac

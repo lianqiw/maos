@@ -24,4 +24,5 @@
 */
 #include "sp.h"
 AOS_SP_DEF(AOS_CMAT,AOS_CSPARSE,dcomplex)
+
 #endif

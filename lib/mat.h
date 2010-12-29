@@ -21,6 +21,22 @@
 #include "random.h"
 #include "type.h"
 void dembed(dmat *restrict A, dmat *restrict B, const double theta);
+#define PDMAT(M,P)   double (*restrict P)[(M)->nx]=(double(*)[(M)->nx])(M)->p
+#define PDCELL(M,P)   dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
+#define dfree(A) ({dfree_do(A,0);A=NULL;})
+#define dcp2(A,B)  memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
+#define dcellfree(A) ({dcellfree_do(A);A=NULL;})
+#define dcellfreearr(A,n) ({for(int in=0; in<n; in++){dcellfree(A[in]);};free(A);})
+#define dzero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
+
+#define AOS_CMAT(A) c##A
+#define AOS_CSPARSE(A) c##A
+#define PCMAT(M,P) dcomplex (*restrict P)[(M)->nx]=(dcomplex(*)[(M)->nx])(M)->p
+#define PCCELL(M,P)   cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
+#define cfree(A) ({cfree_do(A,0);A=NULL;})
+#define ccellfree(A) ({ccellfree_do(A);A=NULL;})
+#define cabs2(A) (pow(creal(A),2)+pow(cimag(A),2))
+#define czero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 
 #define AOS_MAT_DEF(X,Y,T)\
 X(mat) *X(new_ref)(T *p, long nx, long ny) CHECK_UNUSED_RESULT;\
@@ -39,7 +55,6 @@ X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(cp)(X(mat) **out0, const X(mat) *in);\
 X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(set)(X(mat) *A, const T val);\
-void X(zero)(X(mat) *out);\
 double X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 double X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 double X(norm2)(const X(mat) *in) CHECK_UNUSED_RESULT;\
@@ -94,5 +109,6 @@ X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat)*xnew);\
 X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew);\
 X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);\
 X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);\
-void X(cwlog10)(X(mat) *A);
+void X(cwlog10)(X(mat) *A);\
+void X(embed_locstat)(X(mat) **out, double alpha, loc_t *loc, double *oin, double beta, int reverse);
 #endif

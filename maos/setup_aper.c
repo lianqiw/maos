@@ -64,10 +64,11 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }else{
 	if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6){
 	    //LOCSTAT records the starting of each row to speed up accphi
-	    aper->locs_stat=calloc(1, sizeof(locstat_t));
+	    locstat_t *locstat=calloc(1, sizeof(locstat_t));
 	    info2("Using amplitude map to generate aper grid\n");
-	    aper->locs=mkcirloc_amp(&(aper->amp), aper->locs_stat,
-		     aper->ampground, d, dx,parms->aper.cropamp);
+	    aper->locs=mkcirloc_amp(&(aper->amp), locstat, aper->ampground, 
+				    d, dx,parms->aper.cropamp);
+	    aper->locs->stat=locstat;
 	}else{
 	    map_t *pmap=create_metapupil_wrap(parms,0,dx,0,0,0,T_PLOC,0,0);
 	    aper->locs=sqmap2loc(pmap);
@@ -78,13 +79,11 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    locwrite(aper->locs, "%s/aper_locs.bin.gz",dirsetup);
 	}
     }
-    if(!aper->locs_stat){
-	aper->locs_stat=mklocstat(aper->locs);
-    }
+    loc_create_stat(aper->locs);
     if(!aper->amp){
 	aper->amp=calloc(aper->locs->nloc,sizeof(double));
 	if(aper->ampground){
-	    prop_grid_stat(aper->ampground, aper->locs_stat,
+	    prop_grid_stat(aper->ampground, aper->locs->stat,
 			   aper->amp, 1, 0, 0, 1, 0, 0, 0);
 	}else{
 	    warning("Using loccircle to create a gray pixel aperture\n");
@@ -146,10 +145,6 @@ APER_T * setup_aper(const PARMS_T *const parms){
 void free_aper(APER_T *aper, const PARMS_T *parms){
     //aper->ampground is freed on setup_recon
     locfree(aper->locs);
-    if(aper->locs_stat){
-	free(aper->locs_stat->cols);
-	free(aper->locs_stat);
-    }
     free(aper->amp);
     if(aper->amp1)
 	free(aper->amp1);

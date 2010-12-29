@@ -37,6 +37,8 @@ ccell *psfcomp(const dmat *iopdevl, const double *restrict amp,
 	       const int nwvl, const double *wvl);
 void embed_in(double *out, const double *in, long nin, long *embed);
 void embed_out(const double *out, double *in, long nin, long *embed);
+void embedc_in(dcomplex *out, const double *in, long nin, long *embed);
+void embedc_out(const dcomplex *out, double *in, long nin, long *embed);
 int lock_seeds(PARMS_T *parms);
 double calc_aniso(double r0, int nht, double *ht, double *wt);
 double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2);

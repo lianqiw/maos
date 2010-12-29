@@ -184,18 +184,17 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	recon->xloc=calloc(npsr, sizeof(loc_t *));
 	recon->xloc_nx=calloc(npsr, sizeof(long));
 	recon->xloc_ny=calloc(npsr, sizeof(long));
-	if(parms->tomo.invpsd && !parms->tomo.square){
-	    recon->xloc_embed=calloc(npsr, sizeof(long*));
-	}
 
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
 	    const double dxr=recon->dx->p[ips];
 	    const double guard=parms->tomo.guard*dxr;
 	    long nin=0;
-	    if(parms->tomo.square && parms->tomo.precond==1){
-		nin=(long)pow(2,ceil(log2(parms->aper.d/recon->dx->p[0]*2)))
+	    if(parms->tomo.precond==1){//FDPCG prefers power of 2 dimensions.
+		nin=nextpow2((long)round(parms->aper.d/recon->dx->p[0]*2.))
 		    *recon->os->p[ips]/recon->os->p[0];
+		//nin=(long)pow(2,ceil(log2(parms->aper.d/recon->dx->p[0]*2)))
+		//*recon->os->p[ips]/recon->os->p[0];
 		warning("layer %d xloc is set to %ld for FDPCG\n",ips,nin);
 	    }
 	    map_t *map=create_metapupil_wrap
@@ -204,9 +203,6 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 		 "with sampling of %.2f m\n",ips,
 		 map->nx,map->ny,dxr);
 	    recon->xloc[ips]=sqmap2loc(map);
-	    if(parms->tomo.invpsd && !parms->tomo.square){
-		recon->xloc_embed[ips]=sqmap2embed(map);
-	    }
 	    recon->xloc_nx[ips]=map->nx;
 	    recon->xloc_ny[ips]=map->ny;
 	    free(map->p);free(map);
@@ -758,12 +754,28 @@ setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms,
     //Keep TT, PTT, used in uplink pointing.
 }
 /**
+   Frees recon->invpsd or recon->fractal
+*/
+static void free_cxx(RECON_T *recon){
+    if(recon->invpsd){
+	dcellfree(recon->invpsd->invpsd);
+	ccellfree(recon->invpsd->fftxopd);
+	free(recon->invpsd);
+	recon->invpsd=NULL;
+    }
+    if(recon->fractal){
+	dcellfree(recon->fractal->xopd);
+	free(recon->fractal);
+	recon->fractal=NULL;
+    }
+}
+/**
    Prepares for tomography
  */
 void
 setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     //Free existing struct if already exist. 
-    dcellfree(recon->invpsd);
+    free_cxx(recon);
     if(parms->tomo.assemble){
 	//We need the old copy of L2 when we update the turbulence profile.
 	spcellfree(recon->L2save);
@@ -775,39 +787,18 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     /*When layers get a weight less than 1%, we put it at 1% to avoid
       regularization unstability issues.*/
     dclip(recon->wt, 0.01, 1);
-    /*
-      for(int ips=0; ips<recon->npsr; ips++){
-      if(recon->wt->p[ips]<0.01){
-      recon->wt->p[ips]=0.01;
-      }
-      }*/
     //normalize the weights to sum to 1.
     normalize(recon->wt->p, recon->npsr, 1);
     const int npsr=recon->npsr;
-    if(parms->load.L2){
-	if(parms->tomo.invpsd){
-	    recon->invpsd=dcellread("%s",parms->load.L2);
-	    if(recon->invpsd->nx!=npsr || recon->invpsd->ny!=1){
-		error("Wrong format of loaded invpsd\n");
-	    }
-	}
-	if(!parms->tomo.invpsd){
-	    recon->L2=spcellread("%s",parms->load.L2);
+    recon->cxx=parms->tomo.cxx;
+    switch(parms->tomo.cxx){
+    case 0:
+	if(parms->load.cxx){
+	    recon->L2=spcellread("%s",parms->load.cxx);
 	    if(recon->L2->nx!=npsr || recon->L2->ny!=npsr){
 		error("Wrong format of loaded L2\n");
 	    }
-	}
-    }else{
-	if(parms->tomo.invpsd){/*use inverse psd (not very good)*/
-	    recon->invpsd=dcellnew(npsr,1);
-	    for(int ips=0; ips<npsr; ips++){
-		recon->invpsd->p[ips]=vonkarman_invpsd
-		    (recon->xloc_nx[ips], recon->xloc_ny[ips],
-		     recon->xloc[ips]->dx, 
-		     recon->r0*pow(recon->wt->p[ips],-3./5.),
-		     recon->l0);
-	    }
-	}else{/*use biharmonic approximation*/
+	}else{
 	    recon->L2=spcellnew(npsr,npsr);
 	    for(int ips=0; ips<npsr; ips++){
 		if(parms->tomo.square){//periodic bc
@@ -827,16 +818,58 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 			 recon->wt->p[ips]);
 		}
 	    }
-	}
-	if(parms->save.setup){
-	    if(recon->invpsd){
-		dcellwrite(recon->invpsd, "%s/invpsd",dirsetup);
-	    }else{
+	    if(parms->save.setup){
 		spcellwrite(recon->L2, "%s/L2",dirsetup);
 	    }
 	}
-	
+	break;
+    case 1:{
+	recon->invpsd=calloc(1, sizeof(INVPSD_T));
+	if(parms->load.cxx){
+	    recon->invpsd->invpsd=dcellread("%s",parms->load.cxx);
+	    if(recon->invpsd->invpsd->nx!=npsr || recon->invpsd->invpsd->ny!=1){
+		error("Wrong format of loaded invpsd\n");
+	    }
+	}else{
+	    dcell* invpsd=recon->invpsd->invpsd=dcellnew(npsr,1);
+	    for(int ips=0; ips<npsr; ips++){
+		invpsd->p[ips]=vonkarman_invpsd
+		    (recon->xloc_nx[ips], recon->xloc_ny[ips],
+		     recon->xloc[ips]->dx, 
+		     recon->r0*pow(recon->wt->p[ips],-3./5.),
+		     recon->l0);
+	    }
+	    if(parms->save.setup){
+		dcellwrite(invpsd, "%s/invpsd",dirsetup);
+	    }
+	}
+	ccell* fftxopd=recon->invpsd->fftxopd=ccellnew(recon->npsr, 1);
+	for(int ips=0; ips<recon->npsr; ips++){
+	    fftxopd->p[ips]=cnew(recon->xloc_nx[ips], recon->xloc_ny[ips]);
+	    cfft2plan(fftxopd->p[ips],-1);
+	    cfft2plan(fftxopd->p[ips],1);
+	}
+	recon->invpsd->xloc = recon->xloc;
+	recon->invpsd->square = parms->tomo.square;
     }
+	break;
+    case 2:{
+	recon->fractal=calloc(1, sizeof(FRACTAL_T));
+	recon->fractal->xloc=recon->xloc;
+	recon->fractal->r0=parms->atmr.r0;
+	recon->fractal->l0=parms->atmr.l0;
+	recon->fractal->wt=parms->atmr.wt;
+	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
+	for(int ips=0; ips<npsr; ips++){
+	    int nn=nextpow2(MAX(recon->xloc_nx[ips], recon->xloc_ny[ips]))+1;
+	    xopd->p[ips]=dnew(nn,nn);
+	}
+    }
+	break;
+    default:
+	error("tomo.cxx=%d is invalid\n", parms->tomo.cxx);
+    }
+   
     if(parms->tomo.piston_cr){
 	/*when add constraint, make sure the order of
 	  magnitude are at the same range.*/
@@ -867,16 +900,6 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	}
 	if(parms->save.setup){
 	    spcellwrite(recon->ZZT, "%s/ZZT",dirsetup);
-	}
-    }
-    if(parms->tomo.invpsd){
-	ccellfree(recon->fftxopd);
-	recon->fftxopd=ccellnew(recon->npsr,1);
-	for(int ips=0; ips<recon->npsr; ips++){
-	    recon->fftxopd->p[ips]=cnew(recon->xloc_nx[ips],
-					recon->xloc_ny[ips]);
-	    cfft2plan(recon->fftxopd->p[ips],-1);
-	    cfft2plan(recon->fftxopd->p[ips],1);
 	}
     }
 }
@@ -962,7 +985,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}else{
 	    /*Apply tikholnov regularization.*/
-	    if(fabs(parms->tomo.tikcr)>1.e-15){	    
+	    if(fabs(parms->tomo.tikcr)>1.e-15){
 		//Estimated from the Formula
 		double maxeig=pow(recon->neamhi * recon->xloc[0]->dx, -2);
 		double tikcr=parms->tomo.tikcr;
@@ -973,19 +996,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	//add L2 and ZZT
-	if(parms->tomo.invpsd){
-	    if(parms->tomo.alg!=1){
-		error("Can not use invpsd in non-CG mode.\n");
-	    }else{
-		INVPSD_T *tmp= calloc(1, sizeof(INVPSD_T));
-		tmp->invpsd  = recon->invpsd;
-		tmp->fftxopd = recon->fftxopd;
-		tmp->xembed  = 0;
-		recon->RL.extra = tmp;
-		recon->RL.exfun = (CGFUN)apply_invpsd;
-	    }
-	}else{
-	    for(int ips=0; ips<npsr; ips++){
+	switch(parms->tomo.cxx){
+	case 0://Add L2'*L2 to RL.M
+	     for(int ips=0; ips<npsr; ips++){
 		dsp* tmp=sptmulsp(recon->L2->p[ips+npsr*ips], 
 				  recon->L2->p[ips+npsr*ips]);
 		if(!tmp){
@@ -994,7 +1007,16 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		spadd(&RLM[ips][ips], tmp);
 		spfree(tmp);
 	    }
+	    break;
+	case 1://Need to apply invpsd separately
+	    recon->RL.extra = recon->invpsd;
+	    recon->RL.exfun = (CGFUN)apply_invpsd;
+	    break;
+	case 2://Need to apply fractal separately
+	    recon->RL.extra = recon->fractal;
+	    recon->RL.exfun = (CGFUN)apply_fractal;
 	}
+
 	//Symmetricize, remove values below 1e-15*max and sort RLM (optional).
 	//spcellsym(recon->RL.M);
 
@@ -1096,19 +1118,8 @@ void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms){
     if(parms->tomo.alg==1&&!parms->tomo.assemble){//no need to do anything
 	return;
     }
-    if(parms->tomo.invpsd){
-	if(parms->tomo.alg!=1){
-	    error("Can not use invpsd in non-CG mode.\n");
-	}else{
-	    INVPSD_T *tmp= calloc(1, sizeof(INVPSD_T));
-	    tmp->invpsd  = recon->invpsd;
-	    tmp->fftxopd = recon->fftxopd;
-	    tmp->xembed  = 0;
-	    recon->RL.extra = tmp;
-	    recon->RL.exfun = (CGFUN)apply_invpsd;
-	}
-    }else{
-	//Need to adjust RLM with the new L2.
+    switch(parms->tomo.cxx){
+    case 0:{ //Need to adjust RLM with the new L2.
 	if(!recon->L2save){
 	    error("We need the L2save to update the tomography matrix\n");
 	}
@@ -1128,6 +1139,15 @@ void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms){
 	    spfree(LL);
 	    spfree(LLold);
 	}
+    }
+	break;
+    case 1://Need to apply invpsd separately
+	recon->RL.extra = recon->invpsd;
+	recon->RL.exfun = (CGFUN)apply_invpsd;
+	break;
+    case 2://Need to apply fractal separately
+	recon->RL.extra = recon->fractal;
+	recon->RL.exfun = (CGFUN)apply_fractal;
     }
 }
 /**
@@ -2083,8 +2103,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->GXL);
     spcellfree(recon->L2);
     spcellfree(recon->L2save);
-    dcellfree(recon->invpsd);
-    ccellfree(recon->fftxopd);
+    free_cxx(recon);
     dcellfree(recon->TT);
     dcellfree(recon->PTT);
     dcellfree(recon->DF);
@@ -2123,11 +2142,6 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     free(recon->xloc_ny);
     free(recon->aloc_nx);
     free(recon->aloc_ny);
-    if(recon->xloc_embed){
-	for(int i=0; i<recon->npsr; i++){
-	    free(recon->xloc_embed[i]);
-	}
-    }
     dcellfree(recon->aimcc);
     muv_free(&recon->RR);
     muv_free(&recon->RL);

@@ -366,7 +366,8 @@ static void test_accuracy(void){
     pts->nx=32;
     loc_t *loc=pts2loc(pts);
     
-    locstat_t *locstat=mklocstat(loc); 
+    loc_create_stat(loc);
+    locstat_t *locstat=loc->stat;
     locwrite((loc_t*)pts,"accphi_pts");
     locwrite(loc,"accphi_loc");
     double *phi_pts, *phi_loc, *phi_stat, *phi_pts1, *phi_stat1;
@@ -522,7 +523,6 @@ static void test_accuracy(void){
     free(screen->p);
     free(screens);
     locfree(locin);
-    locstatfree(locstat);
 }
 /*
   matched grip, non wrap, test ok.

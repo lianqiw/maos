@@ -58,4 +58,5 @@ char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=malloc(nlen);
     mxGetString(A, fn, nlen);
+    return fn;
 }

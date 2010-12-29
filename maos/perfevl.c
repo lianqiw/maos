@@ -106,7 +106,7 @@ void perfevl_ievl(thread_t *info){
 		+parms->evl.thetax[ievl]*hl;
 	    double displacey=-simu->atm[ips]->vy*isim*dt
 		+parms->evl.thetay[ievl]*hl;
-	    prop_grid_stat(simu->atm[ips], aper->locs_stat, 
+	    prop_grid_stat(simu->atm[ips], aper->locs->stat, 
 			   iopdevl->p, 1, displacex, displacey,
 			       scale, 1, 0, 0);
 	}
@@ -265,7 +265,7 @@ void perfevl_ievl(thread_t *info){
 		double displacey=parms->evl.thetay[ievl]*ht;
 		if(simu->cachedm){
 		    int iscale=parms->evl.scalegroup[idm];
-		    prop_grid_stat(&simu->cachedm[idm][iscale], aper->locs_stat, iopdevl->p, -1, 
+		    prop_grid_stat(&simu->cachedm[idm][iscale], aper->locs->stat, iopdevl->p, -1, 
 				   displacex, displacey, scale, 0, 0, 0);
 
 		}else{

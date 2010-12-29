@@ -34,6 +34,7 @@
 #include "cmat_extra.h"
 #include "fft.h"
 #include "matbin.h"
+#include "loc.h"
 #if MAT_VERBOSE == 1
 #define matinfo(A...) {fprintf(stderr, A);}
 #else
@@ -417,15 +418,6 @@ void X(set)(X(mat) *A, const T val){
 	for(long i=0; i<A->nx*A->ny; i++){
 	    A->p[i]=val;
 	}
-    }
-}
-
-/**
-   initialize all numbers in a X(mat) object to 0
-*/
-void X(zero)(X(mat) *out){
-    if(out){
-	memset(out->p, 0, sizeof(T)*out->nx*out->ny);
     }
 }
 
@@ -1871,5 +1863,76 @@ void X(cwlog10)(X(mat) *A){
     double ratio=1./log(10);
     for(long i=0; i<A->nx*A->ny; i++){
 	A->p[i]=Y(log)(A->p[i])*ratio;
+    }
+}
+/**
+   Embeding an OPD defined on loc to another array. *out is dmat or cmat depends
+   on iscomplex. Do the embeding using locstat to have best speed.
+   reverse = 0 : from oin to out: out=out*alpha+in*beta
+   reverse = 1 : from out to oin: in=in*beta+out*alpha
+*/
+void X(embed_locstat)(X(mat) **restrict out, double alpha,
+		      loc_t *restrict loc, 
+		      double *restrict oin, double beta, int reverse){
+    loc_create_stat(loc);
+    locstat_t *restrict locstat=loc->stat;
+    if(!*out){
+	if(reverse == 0){
+	    *out=X(new)(locstat->nrow, locstat->ncol);
+	}else{
+	    error("For reverse embedding the array needs to be non-empty\n");
+	}
+    }else{
+	if((*out)->nx < locstat->nrow || (*out)->ny < locstat->ncol){
+	    error("Preallocated array %ldx%ld is too small, we need %ldx%ld\n",
+		  (*out)->nx, (*out)->ny, locstat->nrow, locstat->ncol);
+	}
+    }
+    PMAT(*out, p);
+    double dx1=1./locstat->dx;
+    long xoff0=((*out)->nx - locstat->nrow +1)/2;
+    long yoff0=((*out)->ny - locstat->ncol +1)/2;
+
+    for(long icol=0; icol<locstat->ncol; icol++){
+	long xoff=(long)round((locstat->cols[icol].xstart-locstat->xmin)*dx1);
+	long yoff=(long)round((locstat->cols[icol].ystart-locstat->ymin)*dx1);
+	long pos1=locstat->cols[icol].pos;
+	long pos2=locstat->cols[icol+1].pos;
+	T *restrict dest=&p[yoff+yoff0][xoff+xoff0];
+	if(!reverse){
+	    if(oin){
+		const double *restrict oin2=oin+pos1;
+		if(fabs(alpha)>EPS){
+		    for(long ix=0; ix<pos2-pos1; ix++){
+			dest[ix]=dest[ix]*alpha+oin2[ix]*beta;
+		    }
+		}else{
+		    for(long ix=0; ix<pos2-pos1; ix++){
+			dest[ix]=oin2[ix]*beta;
+		    }
+		}
+	    }else{
+		if(fabs(alpha)>EPS){
+		    for(long ix=0; ix<pos2-pos1; ix++){
+			dest[ix]=dest[ix]*alpha+beta;
+		    }
+		}else{
+		    for(long ix=0; ix<pos2-pos1; ix++){
+			dest[ix]=beta;
+		    }
+		}
+	    }
+	}else{
+	    double *restrict oin2=oin+pos1;
+	    if(fabs(beta)>EPS){
+		for(long ix=0; ix<pos2-pos1; ix++){
+		    oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);
+		}
+	    }else{
+		for(long ix=0; ix<pos2-pos1; ix++){
+		    oin2[ix]=alpha*REAL(dest[ix]);
+		}
+	    }
+	}
     }
 }

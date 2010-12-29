@@ -32,7 +32,8 @@
 
 #include "maos.h"
 #include "fdpcg.h"
-#define PRE_PERMUT 1
+#define PRE_PERMUT 1 /*1: apply permutation to the inverse of the sparse matrix.
+		       0: apply permutation to the vectors.*/
 
 /**
    Create aperture selection function that selects the gradients for valid
@@ -247,6 +248,7 @@ csp *fdpcg_prop(long nps, const long *os, long nxg, double dx, double *dispx, do
     cspfree(propt);
     return propf;
 }
+
 /**
   Prepare data for Tomography Fourier Domain Preconditioner
 */
@@ -276,7 +278,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
     //Subaperture selection operator
     csp *sel=fdpcg_saselect(nx[0],ny[0],xloc[0]->dx, 
-				saloc, powfs[hipowfs].pts->area);
+			    saloc, powfs[hipowfs].pts->area);
     if(parms->save.setup){
 	cspwrite(sel,"%s/fdpcg_sel.bin.gz",dirsetup);
     }
@@ -290,28 +292,25 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     //Concatenate invpsd;
     dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
     long offset=0;
-    if(parms->tomo.invpsd){
-	//forward matrix uses inverse PSD. we use here also.
-	for(long ips=0; ips<nps; ips++){
-	    dmat *tmp=ddup(recon->invpsd->p[ips]);
-	    dfftshift(tmp);
-	    //cancel the scaling applied in invpsd routine.
-	    dscale(tmp,(double)(nx[ips]*ny[ips]));
-	    for(long i=0; i<nx[ips]*ny[ips]; i++){
-		invpsd[offset+i]=tmp->p[i];
-	    }
-	    offset+=nx[ips]*ny[ips];
-	    dfree(tmp);
-	}
-    }else{//forward matrix uses biharmonic approx. We use here also.
+    switch(parms->tomo.cxx){
+    case 0://forward matrix uses biharmonic approx. We use here also.
 	for(long ips=0; ips<nps; ips++){
 	    cmat *psd=cnew(nx[ips],ny[ips]);
 	    cfft2plan(psd,-1);
-	    dsp *tmp=sptmulsp(recon->L2->p[ips+nps*ips], 
-			      recon->L2->p[ips+nps*ips]);
-	    for(long irow=tmp->p[0]; irow<tmp->p[1]; irow++){
+	    dsp *L2;
+	    if(parms->tomo.square){
+		L2=spref(recon->L2->p[ips+nps*ips]);
+	    }else{//L2 is for non square xloc. need to build L2 for square xloc.
+		L2=mklaplacian_map(recon->xloc_nx[ips], recon->xloc_ny[ips],
+				   recon->xloc[ips]->dx, recon->r0,
+				   recon->wt->p[ips]);
+	    }
+	    dsp *tmp=sptmulsp(L2, L2);
+	    spfree(L2);
+	    for(long irow=tmp->p[0]; irow<tmp->p[1]; irow++){//first column of tmp to psf.
 		psd->p[tmp->i[irow]]=tmp->x[irow];
 	    }
+	    spfree(tmp);
 	    cfft2(psd,-1);
 	    cfftshift(psd);
 	    //look for a way to obtain this automatically.
@@ -325,6 +324,22 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    offset+=nx[ips]*ny[ips];
 	    cfree(psd);
 	}
+	break;
+    case 1:
+    case 2:
+	//forward matrix uses inverse PSD or fractal. we use PSF here.
+	for(long ips=0; ips<nps; ips++){
+	    dmat *tmp=ddup(recon->invpsd->invpsd->p[ips]);
+	    dfftshift(tmp);
+	    //cancel the scaling applied in invpsd routine.
+	    dscale(tmp,(double)(nx[ips]*ny[ips]));
+	    for(long i=0; i<nx[ips]*ny[ips]; i++){
+		invpsd[offset+i]=tmp->p[i];
+	    }
+	    offset+=nx[ips]*ny[ips];
+	    dfree(tmp);
+	}
+	break;
     }
 
     //make it sparse diagonal operator
@@ -418,7 +433,6 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cspfree(Mhat);
 #if PRE_PERMUT == 1
     csp *Minvp=cspinvbdiag(Mhatp,bs);
-    cspfree(Mhatp);
     csp *Minv=cspperm(Minvp,1,perm, perm);//revert permutation
     cspfree(Minvp);
     free(perm);
@@ -433,10 +447,14 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	cinv_inplace(fdpcg->Mbinv->p[ib]);
     }
 #endif
+    cspfree(Mhatp);
+
     fdpcg->xhat=cnew(nxtot,1);
     fdpcg->xhat2=cnew(nxtot,1);
-    fdpcg->xhati=ccellnew(nps,1);
+    fdpcg->xhati=ccellnew(nps,1);//references the data in xhat.
     fdpcg->xhat2i=ccellnew(nps,1);
+    fdpcg->xloc=recon->xloc;
+    fdpcg->square=parms->tomo.square;
     fdpcg->scale=calloc(nps,sizeof(double));
     offset=0;
     for(int ips=0; ips<nps; ips++){
@@ -459,23 +477,30 @@ typedef struct thread_info{
     const dcell *xin;
     dcell *xout;
 }thread_info;
+
 /**
    Copy x vector and do FFT on each layer
 */
-static void fdpcg_fft(void *p){
-    thread_info *info=p;
+static void fdpcg_fft(void *data){
+    thread_info *info=data;
     int ips;
     FDPCG_T *fdpcg=info->fdpcg;
     int nps=fdpcg->xhati->nx;
     ccell *xhati=fdpcg->xhati;
     const dcell *xin=info->xin;
  repeat:
-    LOCK(info->lock);
-    ips=info->ips++;
-    UNLOCK(info->lock);
+    ASSIGN_INCREMENT(ips, info->ips, 1);
     if(ips<nps){
-	for(long i=0; i<xhati->p[ips]->nx*xhati->p[ips]->ny; i++){
-	    xhati->p[ips]->p[i]=xin->p[ips]->p[i];
+	if(fdpcg->square){
+	    for(long i=0; i<xhati->p[ips]->nx*xhati->p[ips]->ny; i++){
+		xhati->p[ips]->p[i]=xin->p[ips]->p[i];
+	    }
+	}else{
+	    //czero takes 0.000074
+	    //cembed_locstat takes 0.000037
+	    //embedc_in takes 0.000062
+	    czero(xhati->p[ips]);
+	    cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc[ips],  xin->p[ips]->p, 1, 0);
 	}
 	//Apply FFT. first fftshift is not necessary.
 	//cfftshift(xhati->p[ips]);//enable this needs enable the one in fdpcg_ifft.
@@ -485,6 +510,7 @@ static void fdpcg_fft(void *p){
 	goto repeat;
     }
 }
+
 /**
    Multiply each block in pthreads
  */
@@ -497,16 +523,15 @@ static void fdpcg_mulblock(void *p){
     cmat *xhat=fdpcg->xhat;
     cmat *xhat2=fdpcg->xhat2;
  repeat:
-    LOCK(info->lock);
-    ib=info->ib++;
-    UNLOCK(info->lock);
+    ASSIGN_INCREMENT(ib, info->ib, 1);
     if(ib<nb){
 	cmulvec(xhat->p+ib*bs, fdpcg->Mbinv->p[ib], xhat2->p+ib*bs,1);
 	goto repeat;
     }
 }
+
 /**
-   Inverse FFT for each block.
+   Inverse FFT for each block. Put result in xout, replace content, do not accumulate.
  */
 static void fdpcg_ifft(void *p){
     thread_info *info=p;
@@ -515,22 +540,22 @@ static void fdpcg_ifft(void *p){
     int nps=fdpcg->xhati->nx;
     ccell *xhat2i=fdpcg->xhat2i;
     dcell *xout=info->xout;
-    const dcell *xin=info->xin;
+    //const dcell *xin=info->xin;
  repeat:
-    LOCK(info->lock);
-    ips=info->ips++;
-    UNLOCK(info->lock);
+    ASSIGN_INCREMENT(ips, info->ips, 1);
     if(ips<nps){
 	cfftshift(xhat2i->p[ips]);
 	cfft2s(xhat2i->p[ips],1);
 	//cfftshift(xhat2i->p[ips]);//enable this needs enable the one in fdpcg_fft.
-	if(!xout->p[ips]){
-	    xout->p[ips]=dnew(xin->p[ips]->nx,xin->p[ips]->ny);
+	if(fdpcg->square){
+	    for(long i=0; i<xhat2i->p[ips]->nx*xhat2i->p[ips]->ny; i++){
+		xout->p[ips]->p[i]=creal(xhat2i->p[ips]->p[i]);
+	    }
+	}else{
+	    dzero(xout->p[ips]);
+	    cembed_locstat(&xhat2i->p[ips], 1, fdpcg->xloc[ips], xout->p[ips]->p, 0, 1);
+	    //embedc_out(xhat2i->p[ips]->p, xout->p[ips]->p, xout->p[ips]->nx, fdpcg->xembed[ips]);
 	}
-	dmat *xhat2ii=dref_reshape(xout->p[ips],xhat2i->p[ips]->nx,xhat2i->p[ips]->ny);
-	//creal2d(&xhat2ii,0,xhat2i->p[ips],fdpcg->scale[ips]);
-	creal2d(&xhat2ii,0,xhat2i->p[ips],1);
-	dfree(xhat2ii);
 	goto repeat;
     }
 }
@@ -556,16 +581,15 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     info.fdpcg=recon->fdpcg;
     info.xin=xin;
     if(!*xout){
-	*xout=dcellnew(xin->nx, xin->ny);
+	*xout=dcellnew2(xin);
     }
     info.xout=*xout;
     //apply forward FFT
     CALL(fdpcg_fft,&info,recon->nthread);
-
-    if(recon->fdpcg->Minv){
+    if(recon->fdpcg->Minv){//use sparse matrix
 	czero(xhat2);
 	cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
-    }else{
+    }else{//permute vectors and apply block diagonal matrix
 	//permute xhat and put into xhat2
 	cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
 	czero(xhat);
@@ -576,7 +600,16 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     info.ips=0;
     //Apply inverse FFT
     CALL(fdpcg_ifft,&info,recon->nthread);
+    /*{
+	static int isim=-1; isim++;
+	
+	dcellwrite(*xout, "xout_%d", isim);
+	dcellwrite(xin, "xin_%d", isim);
+	ccellwrite(fdpcg->xhati, "xhati_%d", isim);
+	ccellwrite(fdpcg->xhat2i, "xhat2i_%d", isim);
+	}*/
 }
+
 /**
    Free fdpcg related data structs.
  */

@@ -284,7 +284,7 @@ typedef struct TOMO_CFG_T{
     double iac;      /**<#inter-actuator-coupling in cubic influence function (testing)*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
-    int invpsd;      /**<use inverse of PSD in tomography instead of biharmonic approx*/
+    int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
     int guard;       /**<guard rings of reconstruction grid xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
     int piston_cr;   /**<single point piston constraint. */
@@ -448,7 +448,7 @@ typedef struct LOAD_CFG_T{
     char *aloc;      /**<load DM aloc from*/
     char *xloc;      /**<load xloc for recon from*/
     char *ploc;      /**<load ploc for recon from*/
-    char *L2;        /**<load laplacian from to do Cxx^-1 in tomo.*/
+    char *cxx;       /**<load laplacian from to do Cxx^-1 in tomo.*/
     char *HXF;       /**<load HXF from.*/
     char *HXW;       /**<load HXW from.*/
     char *HA;        /**<load HA from.*/

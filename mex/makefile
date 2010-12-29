@@ -2,10 +2,10 @@ BUILD=${HOME}/work/aos/comp/optim
 #all:read.mexa64 write.mexa64 mkgmex.mexa64  proj.mexa64 cp genotfmex.mexa64
 all:read.mexa64 write.mexa64 cp
 rand=crandcreate.mexa64 crandn.mexa64 crandp.mexa64 clrand.mexa64 mkw.mexa64
-read.mexa64:read.c  io.c
-	mex -largeArrayDims read.c io.c -lz
-write.mexa64:write.c io.c
-	mex -largeArrayDims write.c io.c -lz
+read.mexa64:read.c  io.c interface.c
+	mex -largeArrayDims read.c io.c interface.c -lz
+write.mexa64:write.c io.c interface.c
+	mex -largeArrayDims write.c io.c interface.c -lz
 mkg.o:../lib/mkg.c
 	gcc -c -std=c99 ../lib/mkg.c -fPIC -DMATLAB_MEX_FILE=1
 mkgmex.mexa64:mkgmex.c mkg.o

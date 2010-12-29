@@ -34,7 +34,7 @@ void muv(dcell **xout, const MUV_T *A, const dcell *xin, const double alpha){
     dcellmm(xout,A->U, tmp, "nn", alpha);
     dcellfree(tmp);
     if(A->extra){
-	(*A->exfun)(xout, A->extra, xin, alpha);
+	A->exfun(xout, A->extra, xin, alpha);
     }
 }
 

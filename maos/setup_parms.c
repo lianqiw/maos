@@ -601,7 +601,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.pos);
     READ_INT(tomo.cone);
     READ_INT(tomo.square);
-    READ_INT(tomo.invpsd);
+    READ_INT(tomo.cxx);
     READ_INT(tomo.guard);
     READ_DBL(tomo.tikcr);
     READ_INT(tomo.piston_cr);
@@ -842,7 +842,7 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.aloc);
     READ_STR(load.xloc);
     READ_STR(load.ploc);
-    READ_STR(load.L2);
+    READ_STR(load.cxx);
     READ_STR(load.HXF);
     READ_STR(load.HXW);
     READ_STR(load.HA);
@@ -1295,8 +1295,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
     }
     if(parms->tomo.precond==1 && parms->tomo.square!=1){
-	warning("FDPCG requires square XLOC. changed\n");
-	parms->tomo.square=1;
+	warning("FDPCG prefers square XLOC.\n");
     }
     if(parms->tomo.windest && parms->tomo.square!=1){
 	warning("Wind estimation requires square XLOC. changed\n");

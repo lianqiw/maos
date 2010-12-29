@@ -21,6 +21,10 @@
 
 #include "common.h"
 #include "blas.h"
+#undef	MAX
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#undef	MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
 void normalize(double *p, long nloc, double norm);
 void normalize_max(double *p, long nloc, double max);
 double dotdbl(const double *restrict p1, const double *restrict p2, 
@@ -47,4 +51,5 @@ void maxminlong(const long *restrict p, long N,
 void maxmincmp(const dcomplex *restrict p, long N,
 	       double *restrict max, double *restrict min, double *restrict sum);
 void remove_piston(double *p, long n);
+long nextpow2(long n);
 #endif

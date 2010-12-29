@@ -196,8 +196,14 @@ map_t *sqmapreaddata(file_t *fp, uint32_t magic, char *header0){
 	dcellfree(tmp);
 	dfree_keepdata(ampg);
     }
-    if(map->ox/map->dx*2+map->nx > 2 ||map->oy/map->dx*2+map->ny > 2){
-	warning("map_t %s is not centered.\n",fp->fn);
+    if(fabs(map->dx)<EPS){
+	map->dx=1;
+	map->ox=(-map->nx/2)*map->dx;
+	map->oy=(-map->ny/2)*map->dx;
+    }else{
+	if(map->ox/map->dx*2+map->nx > 2 ||map->oy/map->dx*2+map->ny > 2){
+	    warning("map_t %s is not centered.\n",fp->fn);
+	}
     }
     return map;
 }

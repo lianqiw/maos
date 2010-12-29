@@ -20,7 +20,8 @@ struct stfun_t{
 /**
    Initialize the stfun data.
 */
-void stfun_init(stfun_t *A, long nx, long ny, double *amp){
+stfun_t *stfun_init(long nx, long ny, double *amp){
+    stfun_t *A=calloc(1, sizeof(struct stfun_t));
     A->count=0;
     A->hat0=cnew(nx*2, ny*2);
     A->hat1=cnew(nx*2, ny*2);
@@ -43,6 +44,7 @@ void stfun_init(stfun_t *A, long nx, long ny, double *amp){
     cembedd(A->hat0,damp,0);
     A->amp=damp;
     cfft2(A->hat0, -1);
+    return A;
 }
 void stfun_push(stfun_t *A, dmat *opd){
     A->count++;
@@ -94,5 +96,6 @@ dmat *stfun_finalize(stfun_t *A){
     cfree(A->hat2);
     cfree(A->hattot);
     dfree(A->amp);
+    free(A);
     return st;
 }

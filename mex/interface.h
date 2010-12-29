@@ -1,7 +1,9 @@
 #ifdef MATLAB_MEX_FILE
 #include <mex.h>
-#include "../lib/type.h"
-#include "../lib/loc.h"
+typedef struct dmat dmat;
+typedef struct cmat cmat;
+typedef struct dsp dsp;
+typedef struct loc_t loc_t;
 mxArray *d2mx(const dmat*A);
 mxArray *c2mx(const cmat *A);
 mxArray *dsp2mx(const dsp *A);
