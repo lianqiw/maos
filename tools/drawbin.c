@@ -94,7 +94,7 @@ static void draw_loc(file_t *fp, int id){
 	if(loc->nloc>100000){//if too many points, we draw it.
 	    drawloc("loc",loc,fp->fn,"x","y","%s",fp->fn);
 	}else{//we plot individual points.
-	    plot_points("loc",1, &loc, NULL, NULL,NULL,0,NULL,name,"x","y","%s:%d",name,id);
+	    plot_points("loc",1, &loc, NULL, NULL,NULL,0,NULL,NULL,name,"x","y","%s:%d",name,id);
 	}
 	locfree(loc);
     }

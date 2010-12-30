@@ -237,6 +237,61 @@ void apply_limit(drawdata_t *drawdata){
 	drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1*drawdata->zoomy);
     }
 }
+#define PARSE_STYLE(stylein)					\
+    {								\
+	style=stylein & 0x7;					\
+	connectpts=(stylein&0x8)>>3;				\
+	color=(stylein&0xFFFFFF00)>>8;				\
+	size=round(((stylein&0xF0)>>4) * sqrt(zoomx));		\
+	if(style>5) style=0;					\
+	if(style==0) connectpts=1;				\
+    }
+static void inline
+draw_point(cairo_t *cr, double ix, double iy, long style, double size){
+    double size1=size+1;
+    switch(style){
+    case 0://nothing. just connect lines
+	break;
+    case 1:// o
+	cairo_new_sub_path(cr);
+	cairo_arc(cr, ix-0.5, iy-0.5, size, 0, 2*M_PI);
+	cairo_move_to(cr, ix, iy);
+	break;
+    case 2:// x
+	cairo_move_to(cr,ix-size1,iy-size1);
+	cairo_line_to(cr,ix+size,iy+size);
+	cairo_move_to(cr,ix+size,iy-size1);
+	cairo_line_to(cr,ix-size1,iy+size);
+	cairo_move_to(cr, ix, iy);
+	break;
+    case 3:// +
+	//-1 is because flipping makes effective rounding of 0.5 differently.
+	cairo_move_to(cr,ix-size1,iy-1);
+	cairo_line_to(cr,ix+size,iy-1);
+	cairo_move_to(cr,ix,iy-size1);
+	cairo_line_to(cr,ix,iy+size);
+	cairo_move_to(cr, ix, iy);
+	break;
+    case 4:// square []
+	cairo_move_to(cr,ix-size1,iy-size1);
+	cairo_line_to(cr,ix+size,iy-size1);
+	cairo_line_to(cr,ix+size,iy+size);
+	cairo_move_to(cr,ix+size,iy+size-1);
+	cairo_line_to(cr,ix-size1,iy+size-1);
+	cairo_move_to(cr,ix-size,iy+size-1);
+	cairo_line_to(cr,ix-size,iy-size1);
+	cairo_move_to(cr, ix, iy);
+	break;
+    case 5:// .
+	cairo_new_sub_path(cr);
+	cairo_arc(cr, ix-0.5, iy-0.5, 0., 0, 2*M_PI);
+	cairo_arc(cr, ix-0.5, iy-0.5, 1, 0, 2*M_PI);
+	cairo_move_to(cr, ix, iy);
+	break;
+    default:
+	warning("Invalid style\n");
+    }
+}
 /**
    The master routine that draws in the cairo surface.
 */
@@ -313,6 +368,14 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     drawdata->centery=yoff+heightim*0.5;
     double zoomx=drawdata->zoomx;//Zoom of the image when displayed.
     double zoomy=drawdata->zoomy;
+    cairo_select_font_face(cr, font_name, font_style, font_weight);
+    cairo_set_font_size(cr, font_size);
+    double linewidth=round(font_size*0.08);
+    double ticlength=font_size*0.5;
+    double ticskip=drawdata->ticinside?5:ticlength;
+    double gridskip=drawdata->ticinside?ticlength:0;
+    if(linewidth<1) linewidth=1;
+    cairo_set_line_width(cr,linewidth);
     //Save the state of cairo before we drawing the image/points.
     cairo_save(cr);
     //flip upside down so that lower left is (0,0);
@@ -322,7 +385,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     cairo_rectangle(cr,0,0,widthim,heightim);
 
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
-    cairo_set_line_width(cr,1);
+ 
     cairo_stroke(cr);//border
     cairo_rectangle(cr,0,0,widthim,heightim);
     cairo_clip(cr);
@@ -358,12 +421,12 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymax0=ymin0+ydiff/zoomy;
 	cairo_restore(cr);
     }
+    int styles[drawdata->npts];//save the styles for legend
     if(drawdata->npts>0){
 	cairo_save(cr);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);//GRAY
 	int color=0x009;
 	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);
-	cairo_set_line_width(cr,1);
 	int style;
 	int connectpts;
 	if(drawdata->square){//we are plotting points.
@@ -374,16 +437,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    connectpts=1;
 	}
 	double size=round(3*sqrt(zoomx));
-	double size1=size+1;
 	if(drawdata->nstyle==1){
-	    int ips=0;
-	    style=drawdata->style[ips]&0x7;//last three bits
-	    connectpts=(drawdata->style[ips]&0x8)>>3;//fourth bit.
-	    size=round(((drawdata->style[ips]&0xF0)>>4) * sqrt(zoomx));
-	    size1=size+1;
-	    color=(drawdata->style[ips]&0xFFFFFF00)>>8;
-	    if(style>5) style=0;
-	    if(style==0) connectpts=1;//required.
+	    PARSE_STYLE(drawdata->style[0]);
 	}
 	double centerx=(xmax+xmin)/2;
 	double centery=(ymax+ymin)/2;
@@ -404,16 +459,12 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		ptsy=pts->p;
 	    }
 	    if(drawdata->nstyle>1){
-		style=drawdata->style[ipts]&0x7;//last three bits
-		connectpts=(drawdata->style[ipts]&0x8)>>3;//fourth bit.
-		size=round(((drawdata->style[ipts]&0xF0)>>4) * sqrt(zoomx));
-		size1=size+1;
-		color=(drawdata->style[ipts]&0xFFFFFF00)>>8;
-		if(style>5) style=0;
-		if(style==0) connectpts=1;//required.
+		PARSE_STYLE(drawdata->style[ipts]);
 	    }else if(drawdata->nstyle==0){
 		color=default_color(ipts);
 	    }
+	    //save the styles for legend
+	    styles[ipts]=style | connectpts<<3 |color << 8 |(int)(size/sqrt(zoomx))<<4;
 	    int r=color/100;
 	    int g=(color-r*100)/10;
 	    int b=color-r*100-g*10;
@@ -451,48 +502,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		    if(connectpts && ips>0){
 			cairo_line_to(cr, ix, iy);
 		    }
-		    switch(style){
-		    case 0://nothing. just connect lines
-			break;
-		    case 1:// o
-			cairo_new_sub_path(cr);
-			cairo_arc(cr, ix-0.5, iy-0.5, size, 0, 2*M_PI);
-			cairo_move_to(cr, ix, iy);
-			break;
-		    case 2:// x
-			cairo_move_to(cr,ix-size1,iy-size1);
-			cairo_line_to(cr,ix+size,iy+size);
-			cairo_move_to(cr,ix+size,iy-size1);
-			cairo_line_to(cr,ix-size1,iy+size);
-			cairo_move_to(cr, ix, iy);
-			break;
-		    case 3:// +
-			//-1 is because flipping makes effective rounding of 0.5 differently.
-			cairo_move_to(cr,ix-size1,iy-1);
-			cairo_line_to(cr,ix+size,iy-1);
-			cairo_move_to(cr,ix,iy-size1);
-			cairo_line_to(cr,ix,iy+size);
-			cairo_move_to(cr, ix, iy);
-			break;
-		    case 4:// square []
-			cairo_move_to(cr,ix-size1,iy-size1);
-			cairo_line_to(cr,ix+size,iy-size1);
-			cairo_line_to(cr,ix+size,iy+size);
-			cairo_move_to(cr,ix+size,iy+size-1);
-			cairo_line_to(cr,ix-size1,iy+size-1);
-			cairo_move_to(cr,ix-size,iy+size-1);
-			cairo_line_to(cr,ix-size,iy-size1);
-			cairo_move_to(cr, ix, iy);
-			break;
-		    case 5:// .
-			cairo_new_sub_path(cr);
-			cairo_arc(cr, ix-0.5, iy-0.5, 0., 0, 2*M_PI);
-			cairo_arc(cr, ix-0.5, iy-0.5, 1, 0, 2*M_PI);
-			cairo_move_to(cr, ix, iy);
-			break;
-		    default:
-			warning("Invalid style\n");
-		    }
+		    draw_point(cr, ix, iy, style, size);
 		    if(drawdata->nstyle>0){
 			cairo_stroke(cr);//stroke each point because color may change.
 		    }
@@ -504,9 +514,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	}//iptsy
 	cairo_restore(cr);
     }
+
     if(drawdata->ncir>0){
 	cairo_save(cr);
-	cairo_set_line_width(cr,1);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_GRAY);
 
 	double centerx=(xmax+xmin)/2-drawdata->offx/scalex;
@@ -530,14 +540,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     cairo_restore(cr);
     //Now doing the border, tic, and colobar
-    //Reverted to unit matrix
-    cairo_identity_matrix(cr);
-    cairo_translate(cr, xoff, yoff);
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
-    cairo_set_line_width(cr,1);
-    cairo_select_font_face(cr, font_name, font_style, font_weight);
-    cairo_set_font_size(cr, font_size);
-    cairo_identity_matrix(cr);
     //When there is no zoom, panning, limit0 equals to limit.
     drawdata->limit0[0]=xmin0;
     drawdata->limit0[1]=xmax0;
@@ -560,25 +563,26 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double frac=(val-xmin0)/sep;
 	//draw the tic
 	cairo_move_to(cr,xoff+widthim*frac,yoff+heightim);
-	if(drawdata->ticinside){
-	    cairo_line_to(cr,xoff+widthim*frac,yoff+heightim-5);
-	}else{
-	    cairo_line_to(cr,xoff+widthim*frac,yoff+heightim+5);
-	}
-	cairo_stroke(cr);
-	//draw the grid
-	if(drawdata->grid){
-	    cairo_set_dash(cr, stroke_dot, 2, 0);
-	    cairo_move_to(cr,xoff+widthim*frac,yoff);
-	    cairo_line_to(cr,xoff+widthim*frac,yoff+heightim);
+	if(fabs(frac)>0.01 && fabs(frac)<0.99){
+	    if(drawdata->ticinside){
+		cairo_line_to(cr,xoff+widthim*frac,yoff+heightim-ticlength);
+	    }else{
+		cairo_line_to(cr,xoff+widthim*frac,yoff+heightim+ticlength);
+	    }
 	    cairo_stroke(cr);
-	    cairo_set_dash(cr, stroke_solid, 2, 0);
+	    //draw the grid
+	    if(drawdata->grid){
+		cairo_save(cr);
+		cairo_set_dash(cr, stroke_dot, 2, 0);
+		cairo_move_to(cr,xoff+widthim*frac,yoff);
+		cairo_line_to(cr,xoff+widthim*frac,yoff+heightim);
+		cairo_stroke(cr);
+		cairo_restore(cr);
+	    }
 	}
-
 	snprintf(ticval,80,"%g",ticv);
 	cairo_text_center(cr,xoff+widthim*frac,
-			  yoff+heightim+font_size*0.6+6,ticval);
-	//pango_text(cr,xoff+widthim*frac,yoff+heightim+12,0,1,ticval);
+			  yoff+heightim+font_size*0.6+ticskip+1,ticval);
     }
     cairo_text_powindex(cr,0, xoff+widthim-font_size*2,
 			yoff+heightim+6+font_size*2.2,order);
@@ -590,30 +594,33 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double frac=(val-ymin0)/sep;
 	double yh=yoff+heightim*(1-frac);
 	//draw the tic
-	cairo_move_to(cr,xoff,yh);
-	if(drawdata->ticinside){
-	    cairo_line_to(cr,xoff+5,yh);
-	}else{
-	    cairo_line_to(cr,xoff-5,yh);
-	}
-	cairo_stroke(cr);
-	//draw the grid
-	if(drawdata->grid){
-	    cairo_set_dash(cr, stroke_dot, 2, 0);
+	if(fabs(frac)>0.01 && fabs(frac)<0.99){
 	    cairo_move_to(cr,xoff,yh);
-	    cairo_line_to(cr,xoff+widthim,yh);
+	    if(drawdata->ticinside){
+		cairo_line_to(cr,xoff+ticlength,yh);
+	    }else{
+		cairo_line_to(cr,xoff-ticlength,yh);
+	    }
 	    cairo_stroke(cr);
-	    cairo_set_dash(cr, stroke_solid, 2, 0);
+	    //draw the grid
+	    if(drawdata->grid){
+		cairo_save(cr);
+		cairo_set_dash(cr, stroke_dot, 2, gridskip);
+		cairo_move_to(cr,xoff,yh);
+		cairo_line_to(cr,xoff+widthim,yh);
+		cairo_stroke(cr);
+		cairo_restore(cr);
+	    }
 	}
 	snprintf(ticval,80,"%g",ticv);
-	cairo_vltext_center(cr,xoff-font_size*0.6-4,
+	cairo_vltext_center(cr,xoff-font_size*0.6-ticskip+1,
 			    yoff+heightim*(1-frac),ticval);
     }
     cairo_text_powindex(cr,-M_PI/2,xoff-font_size*1.6,
 			yoff+font_size*1.8,order);
 
     if(drawdata->maxmin){//draw colorbar
-	cairo_identity_matrix(cr);
+	cairo_save(cr);
 	cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
 	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_pattern_t *bar=cairo_pattern_create_linear(0,0,0,heightim);
@@ -628,11 +635,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_pattern_destroy(bar);
 	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
-	cairo_set_line_width(cr,1);
 	cairo_stroke(cr);
 
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
-	cairo_set_line_width(cr,1);
 	calc_tic(&tic1,&dtic,&ntic,&order,
 		 drawdata->maxmin[0],drawdata->maxmin[1]);
 	sep=drawdata->maxmin[0]-drawdata->maxmin[1];
@@ -657,8 +662,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    cairo_text_left(cr,LEN_LEG+4,heightim*(1-frac), ticval);
 	}
 	cairo_text_powindex(cr,0,LEN_LEG/2,-font_size*0.4-2,order);
+	cairo_restore(cr);
     }
-    cairo_identity_matrix(cr);
     if(drawdata->title){
 	cairo_text_center(cr,xoff+widthim/2,yoff-font_size*0.5-4,drawdata->title);
     }
@@ -669,6 +674,68 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     if(drawdata->ylabel){
 	cairo_vltext_center(cr,xoff-font_size*1.8-6, 
 			    yoff+heightim/2, drawdata->ylabel);
+    }
+    if(drawdata->legend && drawdata->npts){
+	int style, color, connectpts;
+	double size;
+	cairo_save(cr);
+	cairo_identity_matrix(cr);
+	//draw legend
+	char **legend=drawdata->legend;
+	const int ng=drawdata->npts;
+	cairo_text_extents_t extents;
+	double linelen=50;//length of line in legend.
+	double maxlen=0;//maximum legend length.
+	double tall=0;
+	double leglen=0;
+	for(int ig=0; ig<ng; ig++){
+	    cairo_text_extents(cr, legend[ig], &extents);
+	    maxlen=MAX(maxlen, extents.width);
+	    tall=MAX(tall, extents.height);
+	    PARSE_STYLE(styles[ig]);
+	    if(connectpts){
+		leglen=MAX(leglen, linelen);
+	    }else{
+		leglen=MAX(leglen, size*2);
+		tall=MAX(tall, size*2);
+	    }
+	}
+	const double legmarin=2;
+	const double legmarout=5;
+	const double linehead=2;
+	double legwidth=maxlen+leglen+2*legmarin+linehead*2;
+	cairo_translate(cr, xoff+widthim - legwidth - legmarout, yoff + legmarout);
+	if(drawdata->legendbox){
+	    cairo_save(cr);
+	    cairo_rectangle(cr, 0, 0, legwidth, tall*ng+legmarin*2);
+	    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0,1.0);
+	    cairo_fill_preserve(cr);
+	    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
+	    cairo_stroke(cr);
+	    cairo_restore(cr);
+	}
+	cairo_translate(cr, legmarin+linehead, legmarin);
+	for(int ig=0; ig<ng; ig++){
+	    PARSE_STYLE(styles[ig]);
+	    int r=color/100;
+	    int g=(color-r*100)/10;
+	    int b=color-r*100-g*10;
+	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+	    double ix=leglen*0.5;
+	    double iy=tall*0.5;
+	    draw_point(cr, ix, iy, style, size);
+	    cairo_stroke(cr);
+	    if(connectpts){
+		cairo_move_to(cr, 0, tall*0.5);
+		cairo_line_to(cr, leglen, tall*0.5);
+		cairo_stroke(cr);
+	    }
+	    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
+	    cairo_move_to(cr, leglen+linehead, tall*0.8);
+	    cairo_show_text(cr, legend[ig]);
+	    cairo_translate(cr, 0, tall);
+	}
+	cairo_restore(cr);
     }
     cairo_destroy(cr);
 }

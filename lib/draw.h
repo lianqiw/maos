@@ -36,9 +36,9 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...) CHECK_ARG(10);
 void plot_points(char *fig, long ngroup, loc_t **loc, dcell *cell,
-		const int32_t *style, const double *limit, int ncir, double(*pcir)[4], 
-		const char *title, const char *xlabel, const char *ylabel,
-		const char *format,...) CHECK_ARG(12);
+		 const int32_t *style, const double *limit, int ncir, double(*pcir)[4], 
+		 char **legend, const char *title, const char *xlabel, const char *ylabel,
+		 const char *format,...) CHECK_ARG(13);
 void ddraw(char *fig, const dmat *A, double *maxmin,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...) CHECK_ARG(7);
@@ -83,6 +83,7 @@ enum{
     FIFO_XLABEL,
     FIFO_YLABEL,
     FIFO_MAXMIN,
+    FIFO_LEGEND,//legend
     FIFO_END=100
 };
 

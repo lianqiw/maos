@@ -12,7 +12,7 @@ pthread_mutex_t mutex_drawdata=PTHREAD_MUTEX_INITIALIZER;
     nleft=size;start=(gchar*)data;		\
     do{						\
 	int nread=fread(start, 1, nleft, fp);	\
-	nleft-=nread;			\
+	nleft-=nread;				\
 	start+=nread;				\
 	if(nread < nleft){			\
 	    if(feof(fp)){			\
@@ -50,7 +50,7 @@ static unsigned int crp(double x, double x0){
 }
 
 /**
- convert double to char with color map*/
+   convert double to char with color map*/
 static void 
 dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info){
     double max,min;
@@ -108,6 +108,8 @@ static int read_fifo(FILE *fp){
 	    drawdata->name=defname;
 	    drawdata->format=(cairo_format_t)0;
 	    drawdata->gray=0;
+	    drawdata->ticinside=1;
+	    drawdata->legendbox=1;
 	    drawdata->fig=NULL;
 	    break;
 	case FIFO_DATA://image data.
@@ -168,6 +170,12 @@ static int read_fifo(FILE *fp){
 	case FIFO_MAXMIN:
 	    drawdata->maxmin=calloc(2, sizeof(double));
 	    FILE_READ(drawdata->maxmin, sizeof(double)*2);
+	    break;
+	case FIFO_LEGEND:
+	    drawdata->legend=calloc(drawdata->npts, sizeof(char*));
+	    for(int i=0; i<drawdata->npts; i++){
+		FILE_READ_STR(drawdata->legend[i]);
+	    }
 	    break;
 	case FIFO_END:
 	    {

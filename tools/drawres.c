@@ -168,14 +168,22 @@ int main(int argc, char *argv[]){
     dcellcwpow(resolhi, 0.5); dcellscale(resolhi, 1e9);
     dcellcwpow(resollo, 0.5); dcellscale(resollo, 1e9);
     if(npath==1){
-	plot_points("Res", nseed, NULL, reshi, NULL, NULL, 0, NULL, 
+	char *legs[nseed];
+	for(int iseed=0; iseed<nseed; iseed++){
+	    legs[iseed]=malloc(50*sizeof(char));
+	    snprintf(legs[iseed], 50, "Seed %ld", seed[iseed]);
+	}
+	plot_points("Res", nseed, NULL, reshi, NULL, NULL, 0, NULL, legs,
 		    "High order wavefront Error", "Steps","Error (nm)", "High");
-	plot_points("Res", nseed, NULL, reslo, NULL, NULL, 0, NULL,
+	plot_points("Res", nseed, NULL, reslo, NULL, NULL, 0, NULL,legs,
 		    "Low order wavefront Error", "Steps","Error (nm)", "Low");
-	plot_points("ResOL", nseed, NULL, resolhi, NULL, NULL, 0, NULL, 
+	plot_points("ResOL", nseed, NULL, resolhi, NULL, NULL, 0, NULL, legs,
 		    "High order open loop wavefront Error", "Steps","Error (nm)", "High");
-	plot_points("ResOL", nseed, NULL, resollo, NULL, NULL, 0, NULL, 
+	plot_points("ResOL", nseed, NULL, resollo, NULL, NULL, 0, NULL, legs,
 		    "Low order open loop wavefront Error", "Steps","Error (nm)", "Low");
+	for(int iseed=0; iseed<nseed; iseed++){
+	    free(legs[iseed]);
+	}
     }else{
 	for(int iseed=0; iseed<nseed; iseed++){
 	    if(skip[iseed]) continue;
@@ -183,13 +191,13 @@ int main(int argc, char *argv[]){
 	    dcell *reslo_i=dcellsub(reslo, 0,0,iseed, 1);
 	    dcell *resolhi_i=dcellsub(resolhi, 0,0,iseed, 1);
 	    dcell *resollo_i=dcellsub(resollo, 0,0,iseed, 1);
-	    plot_points("Res", npath, NULL, reshi_i, NULL, NULL, 0, NULL, 
+	    plot_points("Res", npath, NULL, reshi_i, NULL, NULL, 0, NULL, path,
 			"High order wavefront Error", "Steps","Error (nm)", "High_%ld",seed[iseed]);
-	    plot_points("Res", npath, NULL, reslo_i, NULL, NULL, 0, NULL,
+	    plot_points("Res", npath, NULL, reslo_i, NULL, NULL, 0, NULL, path,
 			"Low order wavefront Error", "Steps","Error (nm)", "Low_%ld",seed[iseed]);
-	    plot_points("ResOL", npath, NULL, resolhi_i, NULL, NULL, 0, NULL, 
+	    plot_points("ResOL", npath, NULL, resolhi_i, NULL, NULL, 0, NULL, path,
 			"High order open loop wavefront Error", "Steps","Error (nm)", "High_%ld",seed[iseed]);
-	    plot_points("ResOL", npath, NULL, resollo_i, NULL, NULL, 0, NULL, 
+	    plot_points("ResOL", npath, NULL, resollo_i, NULL, NULL, 0, NULL, path,
 			"Low order open loop wavefront Error", "Steps","Error (nm)", "Low_%ld",seed[iseed]);
 	    dcellfree(reshi_i);dcellfree(reslo_i);dcellfree(resolhi_i);dcellfree(resollo_i);
 	}

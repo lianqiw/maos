@@ -12,6 +12,7 @@ static int iwindow=0;
 static GtkWidget *curwindow=NULL;
 static GtkWidget *curtopnb=NULL;
 static GtkWidget *topmenu=NULL;
+static void *drawdata_dialog=NULL;
 int font_name_version=0;
 char *font_name=NULL;
 double font_size=9;
@@ -262,6 +263,12 @@ static void drawdata_free(drawdata_t *drawdata){
     if(drawdata->title) free(drawdata->title);
     if(drawdata->xlabel) free(drawdata->xlabel);
     if(drawdata->ylabel) free(drawdata->ylabel);
+    if(drawdata->legend){
+	for(int i=0; i<drawdata->npts; i++){
+	    free(drawdata->legend[i]);
+	}
+	free(drawdata->legend);
+    }
     free(drawdata->limit);
     free(drawdata);
     pthread_mutex_lock(&mutex_drawdata);
@@ -804,17 +811,14 @@ static void limit_change(GtkSpinButton *button, gpointer data){
     drawdata->limit_changed=1;
     delayed_update_pixmap(drawdata);
 }
-static void checkbtn_toggle_square(GtkToggleButton *btn, drawdata_t *drawdata){
-    drawdata->square=gtk_toggle_button_get_active(btn);
-    delayed_update_pixmap(drawdata);
+static void checkbtn_toggle(GtkToggleButton *btn, gint *key){
+    *key=gtk_toggle_button_get_active(btn);
+    delayed_update_pixmap(drawdata_dialog);
 }
-static void checkbtn_toggle_grid(GtkToggleButton *btn, drawdata_t *drawdata){
-    drawdata->grid=gtk_toggle_button_get_active(btn);
-    delayed_update_pixmap(drawdata);
-}
-static void checkbtn_toggle_ticinside(GtkToggleButton *btn, drawdata_t *drawdata){
-    drawdata->ticinside=gtk_toggle_button_get_active(btn);
-    delayed_update_pixmap(drawdata);
+static void entry_changed(GtkEditable *entry, char **key){
+    free(*key);
+    *key=gtk_editable_get_chars(entry, 0, -1);
+    delayed_update_pixmap(drawdata_dialog);
 }
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)
@@ -826,23 +830,24 @@ static void tool_property(GtkToolButton *button, gpointer data){
     if(!drawdata){
 	return;
     }
+    drawdata_dialog=drawdata;
     GtkWidget *dialog=gtk_dialog_new_with_buttons("Figure Properties", 
 						  GTK_WINDOW(curwindow), 
 						  (GtkDialogFlags)(GTK_DIALOG_DESTROY_WITH_PARENT),
 						  GTK_STOCK_OK,
 						  GTK_RESPONSE_ACCEPT,
-						  GTK_STOCK_CANCEL,
-						  GTK_RESPONSE_REJECT,
 						  NULL);
     GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-    GtkWidget *table=gtk_table_new(5,4,0);
+    GtkWidget *table=gtk_table_new(10,4,0);
    
     int n=4;
     spin_t lim[n];
+    double val[2];
+    val[0]=(drawdata->limit0[0]+drawdata->limit0[1])/2;
+    val[1]=(drawdata->limit0[2]+drawdata->limit0[3])/2;
     for(int i=0; i<n; i++){
-	double val=drawdata->limit0[i];
-	double step=pow(10,floor(log10(fabs(val)))-2);
-	if(fabs(val)<1e-20){
+	double step=pow(10,floor(log10(fabs(val[i/2])))-2);
+	if(fabs(val[i/2])<1e-10){
 	    step=1;
 	}
 	if(i<2){
@@ -850,7 +855,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
 	}else{
 	    lim[i].w=gtk_spin_button_new_with_range(drawdata->limit[2],drawdata->limit[3],step);
 	}
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), val);
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), drawdata->limit0[i]);
 	lim[i].val=&drawdata->limit0[i];
 	g_signal_connect(lim[i].w, "value-changed", G_CALLBACK(limit_change), &lim[i]);
 	lim[i].i=i;
@@ -862,19 +867,48 @@ static void tool_property(GtkToolButton *button, gpointer data){
     checkbtn=gtk_check_button_new_with_label("Make image square");
     gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->square);
-    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_square), drawdata);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->square);
 
     irow++;
     checkbtn=gtk_check_button_new_with_label("Enable grids");
     gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->grid);
-    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_grid), drawdata);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->grid);
   
     irow++;
     checkbtn=gtk_check_button_new_with_label("Put tic inside");
     gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
-    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle_ticinside), drawdata);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->ticinside);
+
+    irow++;
+    checkbtn=gtk_check_button_new_with_label("Draw box around legend");
+    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
+    gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendbox);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
+
+    GtkWidget *entry;
+    irow++;
+    entry=gtk_entry_new();
+    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("Title"), 0, 1, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 4, irow, irow+1);
+    gtk_entry_set_text(GTK_ENTRY(entry), drawdata->title);
+    g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->title);
+
+    irow++;
+    entry=gtk_entry_new();
+    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("X label"), 0, 1, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 4, irow, irow+1);
+    gtk_entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
+    g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->xlabel);
+
+    irow++;
+    entry=gtk_entry_new();
+    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("Y label"), 0, 1, irow, irow+1);
+    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 4, irow, irow+1);
+    gtk_entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);
+    g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->ylabel);
 
     irow++;
     gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1);
@@ -890,14 +924,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
 
     gtk_container_add(GTK_CONTAINER(content_area), table);
     gtk_widget_show_all(table);
-    gint result=gtk_dialog_run(GTK_DIALOG(dialog));
-    
-    switch (result){
-    case GTK_RESPONSE_CANCEL://revert all the changes?
-	break;
-    default:
-	break;
-    }
+    gtk_dialog_run(GTK_DIALOG(dialog));
     drawdata->spin=NULL;
     gtk_widget_destroy(dialog);
 }

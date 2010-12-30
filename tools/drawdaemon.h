@@ -49,6 +49,7 @@ struct drawdata_t{
     char *title;
     char *xlabel;
     char *ylabel;
+    char **legend;
     double *limit;//x,y,limit
     cairo_surface_t *image;
     char *fig;
@@ -79,6 +80,7 @@ struct drawdata_t{
     int ticinside;//put tick inside.
     int cursorinside;
     int limit_changed;//limit has changed.
+    int legendbox;
     int drawn;//whether we have been drawn. 
     spin_t *spin;//used on the dialog to change limits.
 };

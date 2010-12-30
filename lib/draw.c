@@ -46,25 +46,25 @@ static FILE *pfifo=NULL;
 #define info(A...)
 #endif
 #undef FWRITE
-#define FWRITE(ptr,size,nmemb,pfifo)				\
-    if(fifo_write(ptr,size,nmemb,pfifo)){				\
-	goto done;						\
+#define FWRITE(ptr,size,nmemb,pfifo)		\
+    if(fifo_write(ptr,size,nmemb,pfifo)){	\
+	goto done;				\
     }
 #define FWRITEINT(pfifo,cmd) {int tmp=cmd; if(fifo_write(&tmp,sizeof(int),1,pfifo)){goto done;}}
-#define FWRITESTR(pfifo,arg)						\
-    if(arg && strlen(arg)>0){						\
-	int slen=strlen(arg)+1;						\
-	FWRITEINT(pfifo,slen);						\
-	if(fifo_write(arg,sizeof(char),slen,pfifo)){			\
-	    goto done;							\
-	}								\
-    }else{								\
-	FWRITEINT(pfifo,0);						\
+#define FWRITESTR(pfifo,arg)				\
+    if(arg && strlen(arg)>0){				\
+	int slen=strlen(arg)+1;				\
+	FWRITEINT(pfifo,slen);				\
+	if(fifo_write(arg,sizeof(char),slen,pfifo)){	\
+	    goto done;					\
+	}						\
+    }else{						\
+	FWRITEINT(pfifo,0);				\
     }
-#define FWRITECMDSTR(pfifo,cmd,arg)				\
-    if(arg&&strlen(arg)>0){					\
-	FWRITEINT(pfifo, cmd); FWRITESTR(pfifo,arg);			\
-    }								\
+#define FWRITECMDSTR(pfifo,cmd,arg)			\
+    if(arg&&strlen(arg)>0){				\
+	FWRITEINT(pfifo, cmd); FWRITESTR(pfifo,arg);	\
+    }							\
 
 PNEW(lock);
 int disable_draw=0; //if 1, draw will be disabled 
@@ -123,7 +123,7 @@ static int fifo_open(){
 }
 /**
    Write data to the fifo. Handle exceptions.
- */
+*/
 inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
 			     size_t size,     /**<Size of each element*/
 			     size_t nmemb,    /**<Number of elements*/
@@ -150,15 +150,16 @@ inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
 }
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
- */
+*/
 void plot_points(char *fig,          /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
-		 dcell *cell,         /**<If loc ismpety, use cell to plot curves*/
+		 dcell *cell,        /**<If loc ismpety, use cell to plot curves*/
 		 const int32_t *style,  /**<Style of each point*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 int ncir,           /**<Number of circles*/
 		 double (*pcir)[4],  /**<Data for the circles: x, y origin, radius, and color*/
+		 char **legend,/**<ngroup number of char**/
 		 const char *title,  /**<title of the plot*/
 		 const char *xlabel, /**<x axis label*/
 		 const char *ylabel, /**<y axis label*/
@@ -213,6 +214,12 @@ void plot_points(char *fig,          /**<Category of the figure*/
     if(format){
 	FWRITECMDSTR(pfifo,FIFO_NAME,fn);
     }
+    if(legend){
+	FWRITEINT(pfifo, FIFO_LEGEND);
+	for(int ig=0; ig<ngroup; ig++){
+	    FWRITESTR(pfifo, legend[ig]);
+	}
+    }
     FWRITECMDSTR(pfifo,FIFO_FIG,fig);
     FWRITECMDSTR(pfifo,FIFO_TITLE,title);
     FWRITECMDSTR(pfifo,FIFO_XLABEL,xlabel);
@@ -227,7 +234,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
 }
 /**
    Draw an image.
- */
+*/
 void imagesc(char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
 	     long ny,   /**<the image is of size nx*ny*/
@@ -317,11 +324,11 @@ void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit,const doubl
 	}
     }
     imagesc(fig, nx, ny, limit, zlim, pr, title, xlabel, ylabel,
-	       "%s abs",fn);
+	    "%s abs",fn);
     free(pr);
     if(!isreal){
 	imagesc(fig, nx,  ny, limit, zlim, pi,title, xlabel, ylabel,
-		   "%s phi",fn);
+		"%s phi",fn);
     }
     free(pi);
 }
@@ -329,8 +336,8 @@ void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit,const doubl
    Draw the OPD of abs of complex p defined on nx*ny grid. see imagesc()
 */
 void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const double *zlim,
-		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
-		    const char *format,...){
+		     const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
+		     const char *format,...){
     if(disable_draw) return;
     format2fn;
     double *pr;
@@ -339,22 +346,22 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
 	pr[i]=cabs(p[i]);
     }
     imagesc(fig, nx, ny, limit, zlim, pr, title, xlabel, ylabel,
-	       "%s abs",fn);
+	    "%s abs",fn);
     free(pr);
 }
 #include "dmat.h"
 #include "cmat.h"
 #include "loc.h"
 /*
-   The following routines applies the imagesc_* functions onto
-   dmat,cmat,loc,sqmap,etc, data types. 
+  The following routines applies the imagesc_* functions onto
+  dmat,cmat,loc,sqmap,etc, data types. 
    
-   The first argument is the type of the plot. Plots with the
-   same types are grouped into a single tab.
+  The first argument is the type of the plot. Plots with the
+  same types are grouped into a single tab.
    
-   The last argument is the title of the plot. Plots with the
-   same type and title as existing plots will replace the already
-   existing plots.
+  The last argument is the title of the plot. Plots with the
+  same type and title as existing plots will replace the already
+  existing plots.
 */
 /**
    Mapping the floating point numbers onto screen with scaling similar to matlab
