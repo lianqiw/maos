@@ -13,6 +13,7 @@ static GtkWidget *curwindow=NULL;
 static GtkWidget *curtopnb=NULL;
 static GtkWidget *topmenu=NULL;
 static void *drawdata_dialog=NULL;
+PangoFontDescription *desc=NULL;
 int font_name_version=0;
 char *font_name=NULL;
 double font_size=9;
@@ -94,16 +95,12 @@ static gboolean drag_failed(GtkWidget *widget, GdkDragContext *drag_context,
     info("Drag failed on %p\n", widget);
     return FALSE;
     }*/
-static void topnb_page_added(GtkNotebook *topnb, GtkWidget *child, guint n, GtkWidget *toolbar){
-    (void)topnb;
+
+static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, GtkWidget *toolbar){
     (void)child;
     (void)n;
-    gtk_widget_set_sensitive(toolbar, TRUE);
-}
-static void topnb_page_removed(GtkNotebook *topnb, GtkWidget *child, guint n, GtkWidget *toolbar){
-    (void)child;
-    (void)n;
-    if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb))==0){
+    int npage=gtk_notebook_get_n_pages(topnb);
+    if(npage==0){
 	if(g_slist_length(windows)>1){
 	    GtkWidget *window=gtk_widget_get_parent
 		(gtk_widget_get_parent(GTK_WIDGET(topnb)));
@@ -111,7 +108,10 @@ static void topnb_page_removed(GtkNotebook *topnb, GtkWidget *child, guint n, Gt
 	}else{
 	    gtk_widget_set_sensitive(toolbar, FALSE);
 	}
+    }else{
+	gtk_widget_set_sensitive(toolbar, TRUE);
     }
+    gtk_notebook_set_show_tabs(topnb, npage!=1);
 }
 static void topnb_detach(GtkMenuItem *menu){
     (void)menu;
@@ -129,6 +129,12 @@ static void topnb_detach(GtkMenuItem *menu){
     gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), page, TRUE);
     g_object_unref(page);
     g_object_unref(label);
+}
+static void subnb_page_changed(GtkNotebook *subnb, GtkWidget *child, guint n){
+    (void)child;
+    (void)n;
+    int npage=gtk_notebook_get_n_pages(subnb);
+    gtk_notebook_set_show_tabs(subnb, npage!=1);
 }
 static gboolean tab_button_cb(GtkWidget *widget, GdkEventButton *event, GtkWidget *page){
     /*
@@ -615,6 +621,8 @@ void addpage(drawdata_t **drawdatawrap)
 #endif
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(root),GTK_POS_RIGHT);
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(root), TRUE);
+	g_signal_connect(root, "page-added", G_CALLBACK(subnb_page_changed), NULL);
+	g_signal_connect(root, "page-removed", G_CALLBACK(subnb_page_changed), NULL);
 	GtkWidget *label=gtk_label_new(drawdata->fig);
 	GtkWidget *eventbox=gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER(eventbox), label);
@@ -932,6 +940,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
 
 static void tool_font_set(GtkFontButton *btn){
     const char *font_name_new=gtk_font_button_get_font_name(btn);
+    desc = pango_font_description_from_string(font_name_new);
     PangoFontDescription *pfd
 	=pango_font_description_from_string(font_name_new);
     font_name_version++;//tell every expose event to update the figure.
@@ -975,7 +984,7 @@ static void close_window(GtkObject *object){
     windows = g_slist_remove(windows, object);
     GtkWidget *topnb=get_topnb(GTK_WIDGET(object));
     GtkWidget *toolbar=get_toolbar(GTK_WIDGET(object));
-    g_signal_handlers_disconnect_by_func(topnb, topnb_page_added, toolbar);
+    g_signal_handlers_disconnect_by_func(topnb, topnb_page_changed, toolbar);
     int npages=gtk_notebook_get_n_pages(GTK_NOTEBOOK(topnb));
     for(int ipage=0; ipage<npages; ipage++){
 	GtkWidget *page=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb),ipage);
@@ -1027,7 +1036,7 @@ GtkWidget *create_window(void){
     g_object_unref(icon_main);
     
     char title[80];
-    snprintf(title,80,"MAOS Draw %d(%d)", fifopid, iwindow);
+    snprintf(title,80,"MAOS Drawdaemon %d (%d)", fifopid, iwindow);
     gtk_window_set_title(GTK_WINDOW(window), title);
 
     GtkWidget *toolbar=gtk_toolbar_new();
@@ -1085,8 +1094,8 @@ GtkWidget *create_window(void){
     gtk_notebook_set_group(GTK_NOTEBOOK(topnb), "toplevel");
 #endif
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(topnb), TRUE);
-    g_signal_connect(GTK_NOTEBOOK(topnb), "page-added", G_CALLBACK(topnb_page_added), toolbar);
-    g_signal_connect(GTK_NOTEBOOK(topnb), "page-removed", G_CALLBACK(topnb_page_removed), toolbar);
+    g_signal_connect(GTK_NOTEBOOK(topnb), "page-added", G_CALLBACK(topnb_page_changed), toolbar);
+    g_signal_connect(GTK_NOTEBOOK(topnb), "page-removed", G_CALLBACK(topnb_page_changed), toolbar);
     GtkWidget *vbox=gtk_vbox_new(FALSE,0);
     gtk_box_pack_start(GTK_BOX(vbox),toolbar,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(vbox),topnb,TRUE,TRUE,0);

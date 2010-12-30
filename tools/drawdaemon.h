@@ -103,7 +103,7 @@ extern double SP_XL;//space on x, left
 extern double SP_XR;//space on x, right
 extern double SP_YT;//space on y, top
 extern double SP_YB;//space on y, buttom
-
+extern PangoFontDescription *desc;
 
 //from drawdaemon_draw
 void round_limit(double *xmin, double *xmax);

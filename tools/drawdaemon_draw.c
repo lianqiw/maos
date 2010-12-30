@@ -6,7 +6,6 @@ const double stroke_dot[2]={1,5};
 const double stroke_dash[2]={10,10};
 const double stroke_solid[2]={10,0};
 
-
 double SP_XL;//space reserved for ylabel
 double SP_YT;//space reserved for title
 double SP_YB;//space reserved for xlabel
@@ -33,63 +32,37 @@ static double myceil(double a){
     return b;
 }
 /**
-   Draw some text starting at location (x,y)
+   Drawing text.
 */
-static void cairo_text_left(cairo_t *cr,double x,double y,const char *text){
-    cairo_text_extents_t extents;
-    cairo_text_extents (cr, text, &extents);
-    double x2 = x - (extents.x_bearing);
-    double y2 = y - (extents.height/2 + extents.y_bearing);
-    cairo_move_to (cr, x2, y2);
-    cairo_show_text (cr, text);
-}
-/**
-   Draw some text centered at location (x,y)
-*/
-static void cairo_text_center(cairo_t *cr,double x,double y,const char *text){
-    cairo_text_extents_t extents;
-    cairo_text_extents (cr, text, &extents);
-    double x2 = (x-(extents.width/2 + extents.x_bearing));
-    double y2 = (y-(extents.height/2 + extents.y_bearing));
-    cairo_move_to (cr, x2, y2);
-    cairo_show_text (cr, text);
-}
-/**
-   Draw some text vertically, centered at location (x,y)
-*/
-static void cairo_vltext_center(cairo_t *cr, double x, double y, 
-				const char *text){
-    cairo_text_extents_t extents;
-    cairo_text_extents (cr, text, &extents);
-    double x2 = (x-(extents.height/2 + extents.y_bearing));
-    double y2 = (y+(extents.width/2 + extents.x_bearing));
-    cairo_move_to (cr, x2, y2);
-    cairo_rotate(cr,-M_PI/2.);
-    cairo_show_text (cr, text);
-    cairo_rotate(cr,M_PI/2.);
-}
-/**
-   Draw a cross from the location (x,y.
- */
-static void cairo_text_cross(cairo_t *cr, double x, double y, double size){
+static void pango_text(cairo_t *cr, PangoLayout *layout, double x, double y, 
+		       const char *text, int center, int vertical){
     cairo_save(cr);
-    size=size*0.5;
-    cairo_translate(cr,x,y);
-    cairo_move_to(cr,0,0);
-    cairo_line_to(cr,-size, -size);
-    cairo_move_to(cr,0,0);
-    cairo_line_to(cr,-size, size);
-    cairo_move_to(cr,0,0);
-    cairo_line_to(cr,size, -size);
-    cairo_move_to(cr,0,0);
-    cairo_line_to(cr,size, size);
-    cairo_stroke(cr);
+    pango_layout_set_markup(layout, text, -1);
+    if(center){
+	int width, height;
+	pango_layout_get_size(layout, &width, &height);
+	if(vertical){
+	    cairo_move_to(cr, x-height*0.5/PANGO_SCALE, y+width*0.5/PANGO_SCALE);
+	}else{
+	    cairo_move_to(cr, x-width*0.5/PANGO_SCALE, y-height*0.5/PANGO_SCALE);
+	}
+    }else{
+	cairo_move_to(cr, x, y);
+    }
+    if(vertical){
+	cairo_rotate(cr, -M_PI/2);
+    }
+    pango_cairo_update_layout(cr, layout);
+    pango_cairo_show_layout(cr, layout);
     cairo_restore(cr);
 }
-static void cairo_text_powindex(cairo_t *cr, double rot,
-				double x, double y, int order){
+
+static void pango_text_powindex(cairo_t *cr, PangoLayout *layout, double x, double y, int order, int vertical){
     if(order==0) return;
-    cairo_save(cr);
+    char powindex[40];
+    snprintf(powindex, 40,"10<sup>%d</sup>", order);
+    pango_text(cr, layout, x, y, powindex, 0, vertical);
+	/*cairo_save(cr);
     char ticval[80];
     double size=font_size*0.6;//size of cross
     snprintf(ticval,80,"10");
@@ -111,7 +84,7 @@ static void cairo_text_powindex(cairo_t *cr, double rot,
     snprintf(ticval,80,"%d",order);
     cairo_set_font_size(cr, font_size*0.8);
     cairo_show_text(cr,ticval);
-    cairo_restore(cr);
+    cairo_restore(cr);*/
 }
 
 
@@ -298,6 +271,8 @@ draw_point(cairo_t *cr, double ix, double iy, long style, double size){
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     //fill white background
     drawdata->font_name_version=font_name_version;
+    PangoLayout *layout=pango_cairo_create_layout(cr);
+    pango_layout_set_font_description(layout, desc);
     cairo_rectangle(cr,0,0,width,height);
     cairo_set_source_rgb(cr,1,1,1);
     cairo_fill(cr);
@@ -331,9 +306,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     double scalex = (double)(width-SP_XL-sp_xr)/xdim;
     double scaley = (double)(height-SP_YT-SP_YB)/ydim;
-    //info("width=%d, height=%d\n", width, height);
-    //info("xmax=%g, xmin=%g, xdim=%g, scalex=%g, scaley=%g\n", xmax, xmin, xdim, scalex, scaley);
-
+  
     if(drawdata->square){
 	double scale  = (scalex<scaley?scalex:scaley);
 	scalex = scaley = scale;
@@ -581,11 +554,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	}
 	snprintf(ticval,80,"%g",ticv);
-	cairo_text_center(cr,xoff+widthim*frac,
-			  yoff+heightim+font_size*0.6+ticskip+1,ticval);
+	pango_text(cr, layout, xoff+widthim*frac, yoff+heightim+font_size*0.6+ticskip+1,ticval, 1, 0);
     }
-    cairo_text_powindex(cr,0, xoff+widthim-font_size*2,
-			yoff+heightim+6+font_size*2.2,order);
+    pango_text_powindex(cr, layout,xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2,order, 0);
     calc_tic(&tic1,&dtic,&ntic,&order,ymax0,ymin0);
     sep=ymax0-ymin0;
     for(int itic=0; itic<ntic; itic++){
@@ -613,11 +584,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	}
 	snprintf(ticval,80,"%g",ticv);
-	cairo_vltext_center(cr,xoff-font_size*0.6-ticskip+1,
-			    yoff+heightim*(1-frac),ticval);
+	pango_text(cr,layout,xoff-font_size*0.6-ticskip+1, yoff+heightim*(1-frac),ticval,1,1);
     }
-    cairo_text_powindex(cr,-M_PI/2,xoff-font_size*1.6,
-			yoff+font_size*1.8,order);
+    pango_text_powindex(cr,layout,xoff-font_size*2.8, yoff+font_size*1.8,order, 1);
 
     if(drawdata->maxmin){//draw colorbar
 	cairo_save(cr);
@@ -659,21 +628,19 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    cairo_line_to(cr,LEN_LEG-4,heightim*(1-frac));
 	    cairo_stroke(cr);
 	    snprintf(ticval,80,"%g",ticv);
-	    cairo_text_left(cr,LEN_LEG+4,heightim*(1-frac), ticval);
+	    pango_text(cr,layout,LEN_LEG+4,heightim*(1-frac), ticval,0,0);
 	}
-	cairo_text_powindex(cr,0,LEN_LEG/2,-font_size*0.4-2,order);
+	pango_text_powindex(cr,layout,LEN_LEG/2,-font_size*1.4-2,order,0);
 	cairo_restore(cr);
     }
     if(drawdata->title){
-	cairo_text_center(cr,xoff+widthim/2,yoff-font_size*0.5-4,drawdata->title);
+	pango_text(cr,layout,xoff+widthim/2,yoff-font_size*0.5-4,drawdata->title,1,0);
     }
     if(drawdata->xlabel){
-	cairo_text_center(cr,xoff+widthim/2,yoff+heightim+8+font_size*1.8,
-			  drawdata->xlabel);
+	pango_text(cr,layout,xoff+widthim/2,yoff+heightim+8+font_size*1.8, drawdata->xlabel,1,0);
     }
     if(drawdata->ylabel){
-	cairo_vltext_center(cr,xoff-font_size*1.8-6, 
-			    yoff+heightim/2, drawdata->ylabel);
+	pango_text(cr,layout,xoff-font_size*1.8-6,yoff+heightim/2, drawdata->ylabel,1,1);
     }
     if(drawdata->legend && drawdata->npts){
 	int style, color, connectpts;
@@ -684,7 +651,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	char **legend=drawdata->legend;
 	const int ng=drawdata->npts;
 	cairo_text_extents_t extents;
-	double linelen=50;//length of line in legend.
+	double linelen=30;//length of line in legend.
 	double maxlen=0;//maximum legend length.
 	double tall=0;
 	double leglen=0;
@@ -700,9 +667,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		tall=MAX(tall, size*2);
 	    }
 	}
-	const double legmarin=2;
+	const double legmarin=3;
 	const double legmarout=5;
-	const double linehead=2;
+	const double linehead=3;
 	double legwidth=maxlen+leglen+2*legmarin+linehead*2;
 	cairo_translate(cr, xoff+widthim - legwidth - legmarout, yoff + legmarout);
 	if(drawdata->legendbox){
@@ -737,5 +704,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	}
 	cairo_restore(cr);
     }
+    g_object_unref(layout);
     cairo_destroy(cr);
 }
