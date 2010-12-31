@@ -190,7 +190,8 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    const double dxr=recon->dx->p[ips];
 	    const double guard=parms->tomo.guard*dxr;
 	    long nin=0;
-	    if(parms->tomo.precond==1){//FDPCG prefers power of 2 dimensions.
+	    if(parms->tomo.precond==1 || parms->tomo.square==2){
+		//FDPCG prefers power of 2 dimensions.
 		nin=nextpow2((long)round(parms->aper.d/recon->dx->p[0]*2.))
 		    *recon->os->p[ips]/recon->os->p[0];
 		//nin=(long)pow(2,ceil(log2(parms->aper.d/recon->dx->p[0]*2)))
