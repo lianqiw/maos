@@ -18,43 +18,33 @@
 #define FRACTAL fractal
 #define INVERSE 0
 #define TRANSPOSE 0
-#define F(r) coeff*pow(r, power)/*<Compute structure function of separation
-				     r, and Fried parameter of r0.*/
 #include "fractal_do.c"
 #undef FRACTAL
 #undef INVERSE
 #undef TRANSPOSE
-#undef F
 
 #define FRACTAL fractal_inv
 #define INVERSE 1
 #define TRANSPOSE 0
-#define F(r) coeff*pow(r, power)/*<Compute structure function of separation
-				     r, and Fried parameter of r0.*/
 #include "fractal_do.c"
 #undef FRACTAL
 #undef INVERSE
 #undef TRANSPOSE
-#undef F
 
 #define FRACTAL fractal_trans
 #define INVERSE 0
 #define TRANSPOSE 1
-#define F(r) coeff*pow(r, power)/*<Compute structure function of separation
-				     r, and Fried parameter of r0.*/
 #include "fractal_do.c"
 #undef FRACTAL
 #undef INVERSE
 #undef TRANSPOSE
-#undef F
+
 
 #define FRACTAL fractal_inv_trans
 #define INVERSE 1
 #define TRANSPOSE 1
-#define F(r) coeff*pow(r, power)/*<Compute structure function of separation
-				     r, and Fried parameter of r0.*/
 #include "fractal_do.c"
 #undef FRACTAL
 #undef INVERSE
 #undef TRANSPOSE
-#undef F
+

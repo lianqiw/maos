@@ -71,7 +71,6 @@ void TomoL(dcell **xout, const void *A,
     spcellmulmat_each(&xx2, recon->GP, gg2, alpha, 1, recon->nthread);
     sptcellmulmat_thread(xout, recon->HXWtomo, xx2, 1, recon->nthread);
     dcellfree(xx2);
-
     dcellfree(gg2);
     switch(recon->cxx){
     case 0:

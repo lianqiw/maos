@@ -67,7 +67,6 @@ void maos(const PARMS_T *parms){
     free_powfs(parms, powfs); powfs=NULL;
     free_aper(aper, parms); aper=NULL;
 }
-
 /**
    This is the standard entrance routine to the program.  It first calls
    setup_parms() to setup the simulation parameters and check for possible
@@ -117,7 +116,6 @@ int main(int argc, char **argv){
     char *scmd=argv2str(argc,argv);
     strcpy(argv[0],fn);
     free(fn);
-
     ARG_T* arg=parse_args(argc,argv);
     /*In detach mode send to background and disable drawing*/
     if(arg->detach){

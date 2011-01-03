@@ -83,6 +83,10 @@ struct drawdata_t{
     int legendbox;
     int drawn;//whether we have been drawn. 
     spin_t *spin;//used on the dialog to change limits.
+
+    int cumu;//plot cumulative mean.
+    int cumuquad;//make cumulative quadrature
+    char *cumustr;//plot cumulative mean from this time step if cumu!=0
 };
 extern char *font_name;
 extern double font_size;

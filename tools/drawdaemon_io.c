@@ -211,6 +211,8 @@ static int read_fifo(FILE *fp){
 		    gdk_threads_leave();
 		}
 		if(drawdata->npts>0){
+		    drawdata->cumustr=calloc(4,sizeof(char));
+		    snprintf(drawdata->cumustr, 4, "50");
 		    if(!drawdata->limit){
 			drawdata->limit=calloc(4, sizeof(double));
 			double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;

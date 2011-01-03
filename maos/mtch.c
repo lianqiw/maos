@@ -142,13 +142,13 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     for(int ii0=0; ii0<ni0; ii0++){
 	int iwfs=parms->powfs[ipowfs].wfs[ii0];
 
-	double neaspeckle=parms->powfs[ipowfs].neaspeckle;
+	double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
 	if(neaspeckle>parms->powfs[ipowfs].pixtheta){
 	    error("parms->powfs[%d].neaspeckle=%g is bigger than pixel size\n",
 		  ipowfs, neaspeckle);
 	}
 	if(neaspeckle>0){
-	    info2("wfs%d: Adding speckle noise of %.2f mas\n", iwfs, neaspeckle*206265000);
+	    warning2("wfs%d: Adding speckle noise of %.2f mas\n", iwfs, neaspeckle*206265000);
 	}
 	double neaspeckle2=pow(neaspeckle,2);
 

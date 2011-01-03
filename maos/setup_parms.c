@@ -1278,6 +1278,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
     }
+    if(parms->tomo.alg == 0 && parms->tomo.cxx !=0){
+	error("Cholesky only works with L2 cxx.\n");
+	parms->tomo.cxx=0;
+    }
     if(parms->tomo.split == 1 && !parms->sim.closeloop){
 	warning("ahst split tomography does not have good NGS correction in open loop\n");
     }

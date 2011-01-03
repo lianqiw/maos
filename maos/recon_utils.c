@@ -42,19 +42,18 @@ void apply_invpsd(dcell **xout, INVPSD_T *extra,
     ccell *fftxopd=extra->fftxopd;
 
     for(int ips=0; ips<xin->nx*xin->ny; ips++){
-	dmat *xini;
 	long nx=fftxopd->p[ips]->nx;
 	long ny=fftxopd->p[ips]->ny;
 	if(extra->square){
-	    xini=dref_reshape(xin->p[ips], nx, ny);
+	    dmat *xini=dref_reshape(xin->p[ips], nx, ny);
+	    ccpd(&fftxopd->p[ips], xini);
+	    dfree(xini);
 	}else{
-	    xini=dnew(nx, ny);
-	    dembed_locstat(&xini, 0, extra->xloc[ips], xin->p[ips]->p, alpha, 0);
-	    //embed_in(xini->p, xin->p[ips]->p, xin->p[ips]->nx, xembed[ips]);
+	    czero(fftxopd->p[ips]);
+	    cembed_locstat(&fftxopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, alpha, 0);
 	}
-	ccpd(&fftxopd->p[ips], xini);
-	dfree(xini);
 	cfft2(fftxopd->p[ips],-1);
+	//cwrite(fftxopd->p[ips],"fftxopd_%d",ips);
 	ccwmd(fftxopd->p[ips], invpsd->p[ips], 1);
 	cfft2(fftxopd->p[ips],1);
 	if(extra->square){
@@ -64,9 +63,6 @@ void apply_invpsd(dcell **xout, INVPSD_T *extra,
 	    dfree(xouti);
 	}else{
 	    cembed_locstat(&fftxopd->p[ips], 1, extra->xloc[ips], (*xout)->p[ips]->p, 1, 1);
-	    /*creal2d(&xouti,1,fftxopd->p[ips],alpha);
-	      embed_out(xouti->p, (*xout)->p[ips]->p, 
-	      (*xout)->p[ips]->nx, xembed[ips]);*/
 	}
     }
 }
@@ -74,8 +70,7 @@ void apply_invpsd(dcell **xout, INVPSD_T *extra,
    Apply fractal regularization to x, scaled by alpha.
    \todo parallelize it.
 */
-void apply_fractal(dcell **xout, FRACTAL_T *extra,
-		   const dcell *xin, double alpha){
+void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alpha){
     for(int ips=0; ips<xin->nx*xin->ny; ips++){
 	dzero(extra->xopd->p[ips]);
 	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);

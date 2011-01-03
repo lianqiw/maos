@@ -14,23 +14,25 @@
 #define FORWARD 0
 #endif
 //derived parameter: FORWARD: direction, 1: forward, 0: backward
+#define F(r) coeff*pow(r, power)/*<Compute structure function of separation
+				     r, and Fried parameter of r0.*/
 
 void FRACTAL(double *p0, long nx, long ny, double dx, double r0){
     if(((nx-1) & (nx-2)) != 0  || ((ny-1) & (ny-2)) !=0 || nx != ny){
 	error("nx=%ld, ny=%ld: they need to be 1+power of 2, and equal\n", nx, ny);
     }
-    double power=5./3.;
-    double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
+    const double power=5./3.;
+    const double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
+    const double sqrt2=sqrt(2.);
+    const double sqrt2i=1./sqrt2;
+    const long nx1=nx-1;
+    const long ny1=ny-1;
+    const double D=(nx1)*dx;
+    const double fsqrt2d=F(sqrt2*D);
+    const double fd=F(D);
+    const double sigma2=0.5*fsqrt2d;
+    const double c0=sigma2;
     double (*p)[nx]=(void*)p0;
-    double sqrt2=sqrt(2.);
-    double sqrt2i=1./sqrt2;
-    long nx1=nx-1;
-    long ny1=ny-1;
-    double D=(nx1)*dx;
-    double sigma2=0.5*F(sqrt2*D);//changed from sqrt(2) to sqrt(5);
-    double c0=sigma2;
-    double fsqrt2d=F(sqrt2*D);
-    double fd=F(D);
 
 #if FORWARD == 1
     {
@@ -44,6 +46,7 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0){
 	double b=1./sqrt(fd-0.5*fsqrt2d);
 	double c=2./sqrt(fsqrt2d);
 #endif
+	assert(a>=0 && b>=0 && b>=0);
 	double *p1=&p[0][0];
 	double *p2=&p[0][nx1];
 	double *p3=&p[ny1][nx1];
@@ -194,6 +197,7 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0){
 	double b=1./sqrt(fd-0.5*fsqrt2d);
 	double c=2./sqrt(fsqrt2d);
 #endif
+	assert(a>0 && b>0 && b>0);
 	double *p1=&p[0][0];
 	double *p2=&p[0][nx1];
 	double *p3=&p[ny1][nx1];

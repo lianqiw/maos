@@ -6,7 +6,7 @@
 #include "fft.h"
 
 /**
-   Data struct for structure function computation.
+   Data struct for structure function computation from digital data.
 */
 struct stfun_t{
     long count;
@@ -97,5 +97,23 @@ dmat *stfun_finalize(stfun_t *A){
     cfree(A->hattot);
     dfree(A->amp);
     free(A);
+    return st;
+}
+/**
+   Generate the structure function of the phase of kolmogorov spectrum if wvl is not zero.
+*/
+dmat* stfun_kolmogorov(loc_t *loc, double r0){
+    long nloc=loc->nloc;
+    double *locx=loc->locx;
+    double *locy=loc->locy;
+    dmat *st=dnew(nloc,nloc);
+    PDMAT(st,B);
+    double coeff=6.88*pow(r0,-5./3.)*pow(0.5e-6/(2.*M_PI),2);
+    for(int i=0; i<nloc; i++){
+	for(int j=i; j<nloc; j++){
+	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
+	    B[j][i]=B[i][j]=coeff*pow(rdiff2,5./6.);
+	}
+    }
     return st;
 }

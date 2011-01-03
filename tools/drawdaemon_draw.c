@@ -62,29 +62,6 @@ static void pango_text_powindex(cairo_t *cr, PangoLayout *layout, double x, doub
     char powindex[40];
     snprintf(powindex, 40,"10<sup>%d</sup>", order);
     pango_text(cr, layout, x, y, powindex, 0, vertical);
-	/*cairo_save(cr);
-    char ticval[80];
-    double size=font_size*0.6;//size of cross
-    snprintf(ticval,80,"10");
-    cairo_text_extents_t extents;
-    cairo_text_extents (cr, ticval, &extents); 
-    //draw x
-    cairo_translate(cr,x,y);
-    if(fabs(rot)>0){
-	cairo_rotate(cr,rot);
-    }
-    cairo_set_line_width(cr, font_size*0.08);
-    cairo_set_line_cap(cr,CAIRO_LINE_CAP_SQUARE);
-    cairo_text_cross(cr, size*0.5, -size*0.5, size*0.9);
-
-    cairo_move_to(cr,size,0);
-    cairo_show_text(cr,ticval);
-    //draw index
-    cairo_move_to(cr,size+extents.width+3,-extents.height*2/3);
-    snprintf(ticval,80,"%d",order);
-    cairo_set_font_size(cr, font_size*0.8);
-    cairo_show_text(cr,ticval);
-    cairo_restore(cr);*/
 }
 
 
@@ -222,6 +199,9 @@ void apply_limit(drawdata_t *drawdata){
 static void inline
 draw_point(cairo_t *cr, double ix, double iy, long style, double size){
     double size1=size+1;
+    //It is important to round ix, iy to have right symbols.
+    ix=round(ix);
+    iy=round(iy);
     switch(style){
     case 0://nothing. just connect lines
 	break;
@@ -422,6 +402,10 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	xmin0=((-widthim*0.5)/zoomx - drawdata->offx)/scalex+centerx;
 	ymax0=(((heightim)*0.5)/zoomy - drawdata->offy)/scaley+centery;
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
+	int icumu=0;
+	if(drawdata->cumu){
+	    icumu=(int)strtol(drawdata->cumustr, NULL, 10);
+	}
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 	    dmat *pts=drawdata->pts[ipts];
 	    double *ptsx=NULL, *ptsy=NULL;
@@ -442,39 +426,69 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    int g=(color-r*100)/10;
 	    int b=color-r*100-g*10;
 	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
-	    if(connectpts && style==5){
-		unsigned int ips=0;
-		double ix, iy;
+	    int ips0=0;
+	    if(drawdata->cumu && icumu<pts->nx){
+		ips0=icumu;
+	    }
+	    if(connectpts){//plot curves.
+		double ix, iy, y, y_cumu=0;
+		unsigned int ips=ips0;
+		//Draw first point
 		if(ptsx){//don't do round here.
 		    ix=((ptsx[ips]-centerx)*scalex*zoomx+ncx);
 		}else{
 		    ix=((ips-centerx)*scalex*zoomx+ncx);
 		}
 		iy=((ptsy[ips]-centery)*scaley*zoomy+ncy);
+		if(drawdata->cumuquad){
+		    y_cumu+=ptsy[ips]*ptsy[ips];
+		}else{
+		    y_cumu+=ptsy[ips];
+		}
 		cairo_move_to(cr, ix, iy);
-		for(ips=1; ips<pts->nx; ips++){
+		//connect additional points.
+		for(ips++; ips<pts->nx; ips++){
 		    if(ptsx){//don't do round here.
 			ix=((ptsx[ips]-centerx)*scalex*zoomx+ncx);
 		    }else{
 			ix=((ips-centerx)*scalex*zoomx+ncx);
 		    }
-		    iy=((ptsy[ips]-centery)*scaley*zoomy+ncy);
+		    y=ptsy[ips];
+		    if(drawdata->cumu){
+			if(drawdata->cumuquad){
+			    y_cumu+=y*y;
+			    y=sqrt(y_cumu/(ips-ips0+1));
+			}else{
+			    y_cumu+=y;
+			    y=y_cumu/(ips-ips0+1);
+			}
+		    }
+		    iy=((y-centery)*scaley*zoomy+ncy);
+	
 		    cairo_line_to(cr, ix, iy);
 		}
 		cairo_stroke(cr);
-	    }else{
-		double ix, iy;
-		for(unsigned int ips=0; ips<pts->nx; ips++){
-		    //Mape the coordinate to the image
+	    }
+	    if(!(connectpts && style==5)){//plot points.
+		double ix, iy, y,y_cumu=0;
+		for(unsigned int ips=ips0; ips<pts->nx; ips++){
+		    //Map the coordinate to the image
 		    if(ptsx){//don't do round here.
 			ix=((ptsx[ips]-centerx)*scalex*zoomx+ncx);
 		    }else{
 			ix=((ips-centerx)*scalex*zoomx+ncx);
 		    }
-		    iy=((ptsy[ips]-centery)*scaley*zoomy+ncy);
-		    if(connectpts && ips>0){
-			cairo_line_to(cr, ix, iy);
+		    y=ptsy[ips];
+		    if(drawdata->cumu){
+			if(drawdata->cumuquad){
+			    y_cumu+=y*y;
+			    y=sqrt(y_cumu/(ips-ips0+1));
+			}else{
+			    y_cumu+=y;
+			    y=y_cumu/(ips-ips0+1);
+			}
 		    }
+		    iy=((y-centery)*scaley*zoomy+ncy);
 		    draw_point(cr, ix, iy, style, size);
 		    if(drawdata->nstyle>0){
 			cairo_stroke(cr);//stroke each point because color may change.

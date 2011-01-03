@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
     DRAW_ID=getppid();
     char **path;
     int npath;
-    info("argc=%d\n", argc);
+    //info("argc=%d\n", argc);
     if(argc>=2){
 	npath=argc-1;
 	path=calloc(npath, sizeof(char*));
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
 		mpath--;
 		continue;
 	    }
-	    info("Try path %s\n", path[ipath]);
+	    //info("Try path %s\n", path[ipath]);
 	    DIR *dir=opendir(path[ipath]);
 	    if(!dir){
 		warning("Unable to directory %s\n", path[0]);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
 		    continue;
 		}else{
 		    if(sscanf(dp->d_name, "Res_%ld.bin",&(seed[nseed]))==1){
-			info("found seed %ld\n", seed[nseed]);
+			//info2("found seed %ld\n", seed[nseed]);
 			nseed++;
 			if(nseed>nmax){
 			    nmax*=2;
@@ -131,8 +131,10 @@ int main(int argc, char *argv[]){
 		res=dcellread("%s",fn);
 	    }else{
 		skip[iseed]=1;
+		info2("Skip seed %ld\n", seed[iseed]);
 		break;
 	    }
+	    info2("Process %s\n", path[ipath]);
 	    int ind=0;
 	    int indlo=0;
 	    int indhi=0;
@@ -161,7 +163,7 @@ int main(int argc, char *argv[]){
 	    resollo->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	}
-	info2("Found seed %ld\n", seed[nseed]);
+	info2("Found seed %ld\n", seed[iseed]);
     }
     dcellcwpow(reshi, 0.5); dcellscale(reshi, 1e9);
     dcellcwpow(reslo, 0.5); dcellscale(reslo, 1e9);

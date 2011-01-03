@@ -23,7 +23,9 @@ static int cursor_type=0;//cursor type of the drawing area.
 /*
   Routines in this file are about the GUI.
 */
-
+GtkAttachOptions attach_fill=(GtkAttachOptions)(GTK_EXPAND|GTK_SHRINK|GTK_FILL);
+GtkAttachOptions attach_fixed=(GtkAttachOptions)0;
+  
 GdkCursor *cursors[2];
 GdkPixbuf *pix_hand=NULL;
 GdkPixbuf *pix_arrow=NULL;
@@ -84,17 +86,6 @@ static GtkWidget *get_toolbar(GtkWidget *window){
     g_list_free(list);
     return toolbar;
 }
-/*
-static void drag_end(GtkWidget *widget, GdkDragContext *drag_context, gpointer data){
-    info("Drag end on %p\n", widget);
-}
-
-static gboolean drag_failed(GtkWidget *widget, GdkDragContext *drag_context, 
-			    GtkDragResult result,
-			    gpointer data){
-    info("Drag failed on %p\n", widget);
-    return FALSE;
-    }*/
 
 static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, GtkWidget *toolbar){
     (void)child;
@@ -275,6 +266,7 @@ static void drawdata_free(drawdata_t *drawdata){
 	}
 	free(drawdata->legend);
     }
+    free(drawdata->cumustr);//free a NULL pointer is not illegal
     free(drawdata->limit);
     free(drawdata);
     pthread_mutex_lock(&mutex_drawdata);
@@ -658,14 +650,19 @@ void addpage(drawdata_t **drawdatawrap)
 	drawdata_t *drawdata_old=(*drawdata_wrapold);
 	drawdata->drawarea=drawdata_old->drawarea;
 	drawdata->page=drawdata_old->page;
+	drawdata->grid=drawdata_old->grid;
+	drawdata->square=drawdata_old->square;
+	//we preserve the limit instead of off, zoom in case we are drawing curves
+	memcpy(drawdata->limit0,drawdata_old->limit0,sizeof(double)*4);
+	drawdata->limit_changed=1;
+	/*
 	drawdata->zoomx=drawdata_old->zoomx;
 	drawdata->zoomy=drawdata_old->zoomy;
 	drawdata->offx=drawdata_old->offx;
-	drawdata->offy=drawdata_old->offy;
-	drawdata->grid=drawdata_old->grid;
+	drawdata->offy=drawdata_old->offy;*/
 	drawdata->width=drawdata_old->width;
 	drawdata->height=drawdata_old->height;
-	drawdata->square=drawdata_old->square;
+	
 	drawdata_free(*drawdata_wrapold);
 	*drawdata_wrapold=drawdata;//just replace the data
 	if(get_current_page()==drawdata){//we are the current page. need to update pixmap
@@ -809,7 +806,6 @@ static void tool_toggled(GtkToggleToolButton *button, gpointer data){
     }
 }
 
-
 static void limit_change(GtkSpinButton *button, gpointer data){
     (void)button;
     spin_t *spin=data;
@@ -846,8 +842,10 @@ static void tool_property(GtkToolButton *button, gpointer data){
 						  GTK_RESPONSE_ACCEPT,
 						  NULL);
     GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-    GtkWidget *table=gtk_table_new(10,4,0);
-   
+    GtkWidget *vbox=gtk_vbox_new(FALSE,0);
+    GtkWidget *table, *hbox;
+    GtkWidget *checkbtn, *entry;
+    gint irow;
     int n=4;
     spin_t lim[n];
     double val[2];
@@ -870,68 +868,83 @@ static void tool_property(GtkToolButton *button, gpointer data){
 	lim[i].data=drawdata;
     }
     drawdata->spin=lim;
-    GtkWidget *checkbtn;
-    gint irow=0;
+
     checkbtn=gtk_check_button_new_with_label("Make image square");
-    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->square);
     g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->square);
+    gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->square);
 
-    irow++;
     checkbtn=gtk_check_button_new_with_label("Enable grids");
-    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->grid);
     g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->grid);
+    gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->grid);
   
-    irow++;
     checkbtn=gtk_check_button_new_with_label("Put tic inside");
-    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
     g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->ticinside);
+    gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
 
-    irow++;
     checkbtn=gtk_check_button_new_with_label("Draw box around legend");
-    gtk_table_attach_defaults(GTK_TABLE(table), checkbtn, 0, 4, irow, irow+1);
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
+    gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
     gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendbox);
-    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
-
-    GtkWidget *entry;
-    irow++;
+    
+    hbox=gtk_hbox_new(FALSE,0);
+    checkbtn=gtk_check_button_new_with_label("Plot cumulative average (");
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumu);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumu);
+    gtk_widget_set_sensitive(checkbtn, (drawdata->npts>0));
+    gtk_box_pack_start(GTK_BOX(hbox), checkbtn,FALSE,FALSE,0);
+    checkbtn=gtk_check_button_new_with_label("quadrature ");
+    g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumuquad);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumuquad);
+    gtk_box_pack_start(GTK_BOX(hbox), checkbtn,FALSE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(") from"),FALSE,FALSE,0);
     entry=gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("Title"), 0, 1, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 4, irow, irow+1);
+    gtk_entry_set_text(GTK_ENTRY(entry),drawdata->cumustr);
+    g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->cumustr);
+    gtk_box_pack_start(GTK_BOX(hbox), entry,TRUE,TRUE,0);
+        gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
+    
+    table=gtk_table_new(3,2,0);
+    irow=0;
+    entry=gtk_entry_new();
+    gtk_table_attach(GTK_TABLE(table), gtk_label_new("Title"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->title);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->title);
 
     irow++;
     entry=gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("X label"), 0, 1, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 4, irow, irow+1);
+    gtk_table_attach(GTK_TABLE(table), gtk_label_new("X label"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->xlabel);
 
     irow++;
     entry=gtk_entry_new();
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("Y label"), 0, 1, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), entry, 1, 4, irow, irow+1);
+    gtk_table_attach(GTK_TABLE(table), gtk_label_new("Y label"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->ylabel);
+    gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
+    table=gtk_table_new(4,4,0);
+    irow=0;
+    gtk_table_attach(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), lim[0].w, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), gtk_label_new("xmax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), lim[1].w, 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
 
     irow++;
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), lim[0].w, 1, 2, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("xmax"), 2, 3, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), lim[1].w, 3, 4, irow, irow+1);
+    gtk_table_attach(GTK_TABLE(table), gtk_label_new("ymin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), lim[2].w, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), gtk_label_new("ymax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), lim[3].w, 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
+    gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
 
-    irow++;
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("ymin"), 0, 1, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), lim[2].w, 1, 2, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), gtk_label_new("ymax"), 2, 3, irow, irow+1);
-    gtk_table_attach_defaults(GTK_TABLE(table), lim[3].w, 3, 4, irow, irow+1);
-
-    gtk_container_add(GTK_CONTAINER(content_area), table);
-    gtk_widget_show_all(table);
+    gtk_container_add(GTK_CONTAINER(content_area), vbox);
+    gtk_widget_show_all(vbox);
     gtk_dialog_run(GTK_DIALOG(dialog));
     drawdata->spin=NULL;
     gtk_widget_destroy(dialog);

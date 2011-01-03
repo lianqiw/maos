@@ -186,21 +186,20 @@ map_t **atmnew_shm(int *fd0, int *inshm, rand_t *rstat, long nx, long ny, double
 #endif
     return screen;
 }
-/**
-   Create a vonkarman spectrum. This is the square root of PSD. Good for
-   rectangular screen. piston is in (0,0)
-*/
-dmat *vonkarman_spect(int nx, int ny, double dx, double r0, double L0){
-    if(nx & 1 || ny & 1){
-	error("Screen is odd size.");
-    }
 
-    const double power=-11./12.;
+/**
+   Create a vonkarman PSD, optionally raised to pow of power.  piston is in (0,0)
+*/
+dmat *vonkarman_psd(int nx, int ny, double dx, double r0, double L0, double power0){
+    if(nx & 1 || ny & 1){
+	warning("Screen is odd size.");
+    }
+    const double power=(-11./6.)*power0;
     const double dfx=1./(nx*dx);
     const double dfy=1./(ny*dx);
     const double dfx2=dfx*dfx;
     const double L02=pow(L0,-2);
-    const double scrnstr=sqrt(0.0229)*pow(r0,-5./6.)*(0.5e-6)/(2.*M_PI)*sqrt(dfx*dfy);
+    const double scrnstr=pow(0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2)*(dfx*dfy), power0);
     const int nx2=nx/2;
     const int ny2=ny/2;
     dmat *spect=dnew(nx,ny);
@@ -216,21 +215,9 @@ dmat *vonkarman_spect(int nx, int ny, double dx, double r0, double L0){
 	    spect1[j] = pow(r2x+r2y+L02,power)*scrnstr;
 	}
     }
-    //spect->p[0]=0;//piston is in corner
     return spect;
 }
 
-/**
-   inverse of PSD. zero frequency in lower left corner.
-*/
-dmat *vonkarman_invpsd(int nx, int ny, double dx, double r0, double L0){
-    dmat *psd=vonkarman_spect(nx, ny, dx, r0, L0);
-    double scale=pow((double)(nx*ny),-2);
-    for(long i=0; i<psd->nx*psd->ny; i++){
-	psd->p[i]=pow(psd->p[i],-2)*scale;
-    }
-    return psd;
-}
 typedef struct GENSCREEN_T{
     rand_t *rstat;
     dmat *spect;
@@ -342,7 +329,7 @@ map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx,
 	info2("\nGenerating spect...");
 	TIC;
 	tic;
-	spect=vonkarman_spect(m,n,dx,r0,L0);
+	spect=vonkarman_psd(m,n,dx,r0,L0,0.5);
 	toc2("done");
 	dwrite(spect,"%s",fnspect);
     }
@@ -355,18 +342,18 @@ map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx,
    Create a vonkarman spectrum. This is the square root of PSD. Good for
    rectangular screen. piston is in (0,0)
 */
-static dmat *biharmonic_spect(int nx, int ny, double dx, double r0, double L0){
+dmat *biharmonic_psd(int nx, int ny, double dx, double r0, double L0, double power0){
   
     if(nx & 1 || ny & 1){
-	error("Screen is odd size.");
+	warning("Screen is odd size.");
     }
 
-    const double power=-1.;
+    const double power=-2.*power0;
     const double dfx=1./(nx*dx);
     const double dfy=1./(ny*dx);
     const double dfx2=dfx*dfx;
     const double L02=pow(L0,-2);
-    const double scrnstr=sqrt(0.0229)*pow(r0,-5./6.)*(0.5e-6)/(2.*M_PI)*sqrt(dfx*dfy);
+    const double scrnstr=pow(0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2)*(dfx*dfy),power0);
     const int nx2=nx/2;
     const int ny2=ny/2;
     dmat *spect=dnew(nx,ny);
@@ -382,7 +369,6 @@ static dmat *biharmonic_spect(int nx, int ny, double dx, double r0, double L0){
 	    spect1[j] = pow(r2x+r2y+L02,power)*scrnstr;
 	}
     }
-    //spect->p[0]=0;//piston is in corner
     return spect;
 }
 /**
@@ -399,7 +385,7 @@ map_t** biharmonic_screen(rand_t *rstat, int m, int n, double dx,
     info2("\nGenerating spect...");
     TIC;
     tic;
-    spect=biharmonic_spect(m,n,dx,r0,L0);
+    spect=biharmonic_psd(m,n,dx,r0,L0,0.5);
     toc2("done");
 
     map_t **screen=genscreen_from_spect(rstat,spect,dx,r0,L0,wt,nlayer, nthread);

@@ -102,7 +102,7 @@ static void test_cov(){//not good
 	}
     }
 }
-static void test_corner(){//ok
+static void test_corner(){/*Compute the covariance of 4 corner points*/
     rand_t rstat;
     int seed=4;
     double r0=0.2;
@@ -126,7 +126,7 @@ static void test_corner(){//ok
     dscale(cov, 1./nframe);
     dwrite(cov,"cov.bin");
 }
-static void test_part(){
+static void test_part(){/**Compute the covariance of 4 points with various separation.*/
     rand_t rstat;
     int seed=4;
     double r0=0.2;
@@ -158,7 +158,7 @@ static void test_part(){
     dwrite(cov,"cov.bin");
 }
 
-static void test_atm(){
+static void test_stfun(){
     rand_t rstat;
     int seed=4;
     double r0=0.2;
@@ -188,7 +188,7 @@ static void test_atm(){
     }
     {
 	stfun_t *data=stfun_init(nx, ny, NULL);
-	dmat *spect=vonkarman_spect(nx, ny, dx, r0, 100);
+	dmat *spect=vonkarman_psd(nx, ny, dx, r0, 100,0.5);
 	cmat *atm=cnew(nx, ny);
 	cfft2plan(atm, -1);
 	dmat *atmr=dnew(atm->nx, atm->ny);
@@ -216,8 +216,163 @@ static void test_atm(){
     }
 	
 }
+
+static void test_psd(){
+    rand_t rstat;
+    int seed=4;
+    double r0=0.2;
+    double dx=1./64;
+    long N=1024;
+    long nx=N;
+    long ny=N;
+    long ratio=1;
+    long xskip=nx*(ratio-1)/2;
+    long yskip=ny*(ratio-1)/2;
+    long nframe=512;
+    seed_rand(&rstat, seed);
+    if(1){
+	map_t *atm=mapnew(nx+1, ny+1, dx, NULL);
+	cmat *hat=cnew(nx*ratio, ny*ratio);
+	cfft2plan(hat, -1);
+	dmat *hattot=dnew(nx*ratio, ny*ratio);
+	PCMAT(hat, phat);
+	PDMAT(atm, patm);
+
+	for(long i=0; i<nframe; i++){
+	    info("%ld of %ld\n", i, nframe);
+	    for(long j=0; j<(nx+1)*(ny+1); j++){
+		atm->p[j]=randn(&rstat);
+	    }
+	    fractal(atm->p, nx+1, ny+1, dx, r0);
+	    czero(hat);
+	    for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
+		    phat[iy+yskip][ix+xskip]=patm[iy][ix];
+		}
+	    }
+	    cfftshift(hat);
+	    cifft2(hat, -1);
+	    cabs22d(&hattot, 1, hat, 1);
+	}
+	dscale(hattot, 1./nframe);
+	dfftshift(hattot);
+	dwrite(hattot, "PSD_fractal");
+    }
+    {
+	dmat *spect=vonkarman_psd(nx, ny, dx, r0, 100,0.5);
+	dwrite(spect, "spect");
+	cmat *hat=cnew(nx*ratio, ny*ratio);
+	cfft2plan(hat, -1);
+	dmat *hattot=dnew(nx*ratio, ny*ratio);
+	cmat *atm=cnew(nx, ny);
+	cfft2plan(atm, -1);
+	dmat *atmr=dnew(atm->nx, atm->ny);
+	dmat *atmi=dnew(atm->nx, atm->ny);
+	PCMAT(hat, phat);
+	PDMAT(atmr, patmr);
+	PDMAT(atmi, patmi);
+	for(long ii=0; ii<nframe; ii+=2){
+	    info("%ld of %ld\n", ii, nframe);
+	    for(long i=0; i<atm->nx*atm->ny; i++){
+		atm->p[i]=(randn(&rstat)+I*randn(&rstat))*spect->p[i];
+	    }
+	    cfft2(atm, -1);
+	    for(long i=0; i<atm->nx*atm->ny; i++){
+		atmr->p[i]=creal(atm->p[i]);
+		atmi->p[i]=cimag(atm->p[i]);
+	    }
+	    czero(hat);
+	    for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
+		    phat[iy+yskip][ix+xskip]=patmr[iy][ix];
+		}
+	    }
+	    cfftshift(hat);
+	    cifft2(hat, -1);
+	    cabs22d(&hattot, 1, hat, 1);
+	    czero(hat);
+	    for(long iy=0; iy<ny; iy++){
+		for(long ix=0; ix<nx; ix++){
+		    phat[iy+yskip][ix+xskip]=patmi[iy][ix];
+		}
+	    }
+	    cfftshift(hat);
+	    cifft2(hat, -1);
+	    cabs22d(&hattot, 1, hat, 1);
+	}
+	dscale(hattot, 1./nframe);
+	dfftshift(hattot);
+	dwrite(hattot, "PSD_fft");
+    }
+}
+/*
+  Compute cxx on atm to compare against L2, invpsd, fractal.
+*/
+static void test_cxx(){
+    rand_t rstat;
+    int seed=4;
+    double r0=0.2;
+    double dx=1./4;
+    long N=16;
+    long nx=N;
+    long ny=N;
+    long nframe=40960;
+    seed_rand(&rstat, seed);
+    {
+	dmat *cxx=dnew(N*N,N*N);
+	map_t *atm=mapnew(nx+1, ny+1, dx, NULL);
+	for(long i=0; i<nframe; i++){
+	    info("%ld of %ld\n", i, nframe);
+	    for(long j=0; j<(nx+1)*(ny+1); j++){
+		atm->p[j]=randn(&rstat);
+	    }
+	    fractal(atm->p, nx+1, ny+1, dx, r0);
+	    dmat *sec=dsub((dmat*)atm, 0, nx, 0, ny);
+	    dmat *atmvec=dnew_ref(sec->p, nx*ny, 1);
+	    dmm(&cxx, atmvec,atmvec,"nt",1);
+	    dfree(atmvec);
+	    dfree(sec);
+	}
+	dscale(cxx, 1./nframe);
+	dwrite(cxx, "cxx_fractal");
+	dfree(cxx);
+	sqmapfree(atm);
+    }
+    {
+	dmat *cxx=dnew(N*N,N*N);
+	dmat *spect=vonkarman_psd(nx, ny, dx, r0, 100,0.5);
+	spect->p[0]=spect->p[1];
+	cmat *atm=cnew(nx, ny);
+	cfft2plan(atm, -1);
+	dmat *atmr=dnew(nx*ny,1);
+	dmat *atmi=dnew(nx*ny,1);
+	for(long ii=0; ii<nframe; ii+=2){
+	    info("%ld of %ld\n", ii, nframe);
+	    for(long i=0; i<atm->nx*atm->ny; i++){
+		atm->p[i]=(randn(&rstat)+I*randn(&rstat))*spect->p[i];
+	    }
+	    cfft2(atm, -1);
+	    for(long i=0; i<atm->nx*atm->ny; i++){
+		atmr->p[i]=creal(atm->p[i]);
+		atmi->p[i]=cimag(atm->p[i]);
+	    }
+	    dmm(&cxx, atmr,atmr,"nt",1);
+	    dmm(&cxx, atmi,atmi,"nt",1);
+	}
+	dscale(cxx, 1./nframe);
+	dwrite(cxx, "cxx_fft");
+	dfree(cxx);
+	dfree(atmr);
+	dfree(atmi);
+	cfree(atm);
+    }
+    loc_t *loc=mksqloc_auto(16,16,1./4);
+    locwrite(loc,"loc");
+    dmat *B=stfun_kolmogorov(loc, r0);
+    dwrite(B, "B_theory");
+}
 int main(){
-    int ind=4;
+    int ind=6;
     switch(ind){
     case 0:
 	test_accuracy();
@@ -232,6 +387,12 @@ int main(){
 	test_part();
 	break;
     case 4:
-	test_atm();
+	test_stfun();
+	break;
+    case 5:
+	test_psd();
+	break;
+    case 6:
+	test_cxx();
     }
 }
