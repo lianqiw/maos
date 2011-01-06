@@ -39,14 +39,19 @@ typedef struct ATM_CFG_T{
     double *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     double *ws;   /**<wind speed of each layer*/
     double *wddeg;/**<wind direction of each layer*/
-    double*size;  /**<size of atm in meter, [0 0]: automatic*/
-    char *fn;     /**<file to load atm if not NULL*/
+    double *size; /**<size of atm in meter, [0 0]: automatic*/
+    long *overx;  /**<maximum pixel distance in x direction the beam can be without wrapping*/
+    long *overy;  /**<maximum pixel distance in y direction the beam can be without wrapping*/
     int nps;      /**<number of phase screens*/
     int wdrand;   /**<randomize wind direction*/
     int iground;  /**<index into the ground layer*/
     int *ipsr;    /**<corresponding reconstruction layer*/
     int nx;       /**<turbulence screen size alog x*/
     int ny;       /**<turbulence screen size along y*/
+    int fractal;  /**<1: Use fractal method to generate atmosphere screen.*/
+    int evolve;   /**<evolve the atm in additional to frozen flow. developed for
+		      fractal since it does not wrap.*/
+    int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
 }ATM_CFG_T;
 /**
    contains input parameters for the atmospheric reconstruction.  */
@@ -282,6 +287,7 @@ typedef struct TOMO_CFG_T{
     double tikcr;    /**<tikhonov regularization.*/
     double minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
     double iac;      /**<#inter-actuator-coupling in cubic influence function (testing)*/
+    double cxxscale; /**<scale the Cxx^-1 term.*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
@@ -349,7 +355,6 @@ typedef struct SIM_CFG_T{
     int end;         /**<time step to stop simulation. exclusive*/
     int *seeds;      /**<simulation seeds*/
     int nseed;       /**<How many simulation seed*/
-    int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int nthread;     /**<Number of threads to run the simulation*/
     int closeloop;   /**<closed loop or open loop*/
     char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
@@ -381,7 +386,6 @@ typedef struct SIM_CFG_T{
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
     int recon;       /**<reconstruction method. 0: minimum variance, 1: least square*/
-    int fractal;     /**<Use fractal method to generate atmosphere screen. 0: fft method. Only does kolmogorov now.*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
@@ -410,6 +414,7 @@ typedef struct PLOT_CFG_T{
     int atm;         /**<Plot the generated atmosphere*/
     int run;         /**<Plot information during simulation*/
     int opdx;        /**<Plot turbulence projected onto xloc.*/
+    int all;         /**<Enables setup, atm, run*/
 }PLOT_CFG_T;
 /**
    contains input parameters for debugging.

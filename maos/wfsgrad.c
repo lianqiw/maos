@@ -534,14 +534,12 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     if(parms->plot.run){
-	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,powfs[ipowfs].amp,
+	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,powfs[ipowfs].amp,NULL,
 		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
-	drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, 
-		simu->gradcl->p[iwfs]->p, 
+	drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
 		"WFS Closeloop Gradients (x)","x (m)", "y (m)",
 		"x %d",  iwfs);
-	drawopd("Gcly",(loc_t*)powfs[ipowfs].pts,
-		simu->gradcl->p[iwfs]->p+nsa, 
+	drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+nsa, NULL,
 		"WFS Closeloop Gradients (y)","x (m)", "y (m)",
 		"y %d",  iwfs);
     }
@@ -562,12 +560,10 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
 	if(parms->plot.run){
-	    drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts,
-		    simu->gradol->p[iwfs]->p,
+	    drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts, simu->gradol->p[iwfs]->p,NULL,
 		    "WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)",
 		    "x %d",  iwfs);
-	    drawopd("Gpoly",(loc_t*)powfs[ipowfs].pts,
-		    simu->gradol->p[iwfs]->p+nsa, 
+	    drawopd("Gpoly",(loc_t*)powfs[ipowfs].pts, simu->gradol->p[iwfs]->p+nsa, NULL,
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)",
 		    "y %d",  iwfs);
 	}

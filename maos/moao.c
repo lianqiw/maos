@@ -277,9 +277,9 @@ void moao_recon(SIM_T *simu){
 		}
 		shift_ring(simu->moao_wfs->nx, dmwfs[iwfs], dmmoao->p[0]);
 		if(parms->plot.run){
-		    drawopd("MOAO WFS RHS", recon->ploc, rhsout->p[0]->p, 
+		    drawopd("MOAO WFS RHS", recon->ploc, rhsout->p[0]->p, NULL,
 			    "MOAO for WFS","x (m)", "y(m)", "Wfs rhs %d", iwfs);
-		    drawopd("MOAO WFS", recon->moao[imoao].aloc, dmmoao->p[0]->p,
+		    drawopd("MOAO WFS", recon->moao[imoao].aloc, dmmoao->p[0]->p,NULL,
 			    "MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 		}
 	
@@ -325,9 +325,9 @@ void moao_recon(SIM_T *simu){
 	    }
 	    shift_ring(simu->moao_evl->nx, dmevl[ievl], dmmoao->p[0]);
 	    if(parms->plot.run){
-		drawopd("MOAO EVL RHS", recon->ploc, rhsout->p[0]->p, 
+		drawopd("MOAO EVL RHS", recon->ploc, rhsout->p[0]->p, NULL,
 			"MOAO for WFS","x (m)", "y(m)", "Evl %d", ievl);
-		drawopd("MOAO EVL", recon->moao[imoao].aloc, dmevl[ievl][0]->p,
+		drawopd("MOAO EVL", recon->moao[imoao].aloc, dmevl[ievl][0]->p,NULL,
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){

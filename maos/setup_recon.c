@@ -770,6 +770,7 @@ static void free_cxx(RECON_T *recon){
 	recon->fractal=NULL;
     }
 }
+/*
 static void test_cxx(RECON_T *recon, const PARMS_T *parms){
     long npsr=recon->npsr;
     recon->L2=spcellnew(npsr,npsr);
@@ -856,7 +857,7 @@ static void test_cxx(RECON_T *recon, const PARMS_T *parms){
     dcellwrite(xout2, "xout2");
     dcellwrite(xout3, "xout3");
     exit(1);
-}
+    }*/
 /**
    Prepares for tomography
  */
@@ -907,6 +908,9 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 			 recon->wt->p[ips]);
 		}
 	    }
+	    if(fabs(parms->tomo.cxxscale-1)>EPS){
+		spcellscale(recon->L2, parms->tomo.cxxscale);
+	    }
 	    if(parms->save.setup){
 		spcellwrite(recon->L2, "%s/L2",dirsetup);
 	    }
@@ -928,7 +932,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 		    (nx, ny, recon->xloc[ips]->dx, 
 		     recon->r0*pow(recon->wt->p[ips],-3./5.),
 		     recon->l0,-1);
-		dscale(invpsd->p[ips], pow((double)(nx*ny),-2));
+		dscale(invpsd->p[ips], pow((double)(nx*ny),-2)*parms->tomo.cxxscale);
 	    }
 	    if(parms->save.setup){
 		dcellwrite(invpsd, "%s/invpsd",dirsetup);
@@ -950,6 +954,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->fractal->r0=parms->atmr.r0;
 	recon->fractal->l0=parms->atmr.l0;
 	recon->fractal->wt=parms->atmr.wt;
+	recon->fractal->scale=parms->tomo.cxxscale;
 	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
 	for(int ips=0; ips<npsr; ips++){
 	    int nn=nextpow2(MAX(recon->xloc_nx[ips], recon->xloc_ny[ips]))+1;
@@ -1862,7 +1867,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	  be fed to the tomography */
 	recon->cn2est=cn2est_prepare(parms,powfs);
     }
-    recon->warm_restart = parms->sim.frozenflow && !parms->dbg.ntomo_maxit;
+    recon->warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
     //number of deformable mirrors
     recon->ndm = parms->ndm;
     if(recon->warm_restart){

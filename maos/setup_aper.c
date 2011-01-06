@@ -100,7 +100,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }
     normalize(aper->amp, aper->locs->nloc, 1);
     if(parms->plot.setup){
-	drawopd("amp",aper->locs,aper->amp1,"Aperture Amplitude Map",
+	drawopd("amp",aper->locs,aper->amp1,NULL,"Aperture Amplitude Map",
 		"x (m)","y (m)","aper");
     }
     aper->mcc=loc_mcc_ptt(aper->locs, aper->amp);

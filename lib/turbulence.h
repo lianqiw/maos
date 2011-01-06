@@ -36,6 +36,7 @@ map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx,
 			 double r0, double L0, double* wt, int nlayer, int nthread);
 map_t** biharmonic_screen(rand_t *rstat, int m, int n, double dx, 
 			  double r0, double L0, double* wt, int nlayer, int nthread);
-map_t **fractal_screen(rand_t *rstat, long nx, long ny, double dx, double r0,
+map_t **fractal_screen(rand_t *rstat, int nx, int ny, double dx, double r0,
 		       double L0, double* wt, int nlayer, int nthread);
+dmat *vkcov(long nx, double dx, double r0, double L0);
 #endif

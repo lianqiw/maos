@@ -23,51 +23,54 @@
 #define CAIRO_FORMAT_A8 0x02
 #endif
 typedef struct drawdata_t drawdata_t;
-typedef struct {
-    GtkWidget *w;
-    double *val;
-    drawdata_t *data;
-    int i;
-}spin_t;
 
 struct drawdata_t{
-    //The following are for surfaces
-    int nx, ny;   //array size
-    cairo_format_t format;
+    //First, input data from draw.c
+    //Draw images.
+    cairo_surface_t *image;
     double *p0;      //original pointer of double
     unsigned char *p;//converted pointer of char or int.
-    int gray;       //do we draw in gray scale or in colored
-    //The following are for points
+    //Draw points
     dmat **pts;      //pts;
     int npts;        //number of pts mat, not points.
     int32_t *style;
     unsigned int nstyle;
+    //draw circles
     double (*cir)[4];
-    double *maxmin;
     unsigned int ncir;
+    //limit
+    double *limit;//x,y,limit
+    double *zlim;
+    //The following are for surfaces
+    int nx, ny;   //array size
+    cairo_format_t format;
+
+    int gray;       //do we draw in gray scale or in colored
+
     char *name;
     char *title;
     char *xlabel;
     char *ylabel;
     char **legend;
-    double *limit;//x,y,limit
-    cairo_surface_t *image;
     char *fig;
+
+
     GtkWidget *page;
     GtkWidget *drawarea;
     GdkPixmap *pixmap;//server side memory.
-    int pending;
+    GtkWidget **spins;//used on the dialog to change limits.
+
+    int pending;//drawing is pending.
     int width;//width of the canvas
     int height;//height of the canvas
 
     int widthim;//width of the part of the canvas for drawing
     int heightim;//height of the part of the canvas for drawing
     int widthim_last, heightim_last;//width,height of last drawing canvas.
-
+    
     double zoomx, zoomy;//zoom level.
     double offx,offy;//off set of the center of the data.
-    double mxdown,mydown;
-    double mdx, mdy;
+    double mxdown,mydown;//mouse pointer down.
     double scalex, scaley;//scale of the data to fit the display.
     double centerx, centery;
     double xoff, yoff;//offset of the area to draw figure.
@@ -82,11 +85,9 @@ struct drawdata_t{
     int limit_changed;//limit has changed.
     int legendbox;
     int drawn;//whether we have been drawn. 
-    spin_t *spin;//used on the dialog to change limits.
-
     int cumu;//plot cumulative mean.
     int cumuquad;//make cumulative quadrature
-    char *cumustr;//plot cumulative mean from this time step if cumu!=0
+    double icumu;//plot cumulative mean from this time step if cumu!=0
 };
 extern char *font_name;
 extern double font_size;
@@ -117,5 +118,6 @@ void apply_limit(drawdata_t *drawdata);
 GtkWidget* create_window(void);
 void addpage(drawdata_t **drawdatawrap);
 //from drawdaemon_io
-void open_fifo(void);
+void open_fifo(void *);
+void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info);
 #endif

@@ -8,45 +8,42 @@
    TRANPOSE: transpose the operation or not. 
    F(r): The structure function
 */
+//derived parameter: FORWARD: direction, 1: forward, 0: backward
 #if (INVERSE==0 && TRANSPOSE ==0) || (INVERSE == 1 && TRANSPOSE == 1)
 #define FORWARD 1
 #else
 #define FORWARD 0
 #endif
-//derived parameter: FORWARD: direction, 1: forward, 0: backward
-#define F(r) coeff*pow(r, power)/*<Compute structure function of separation
-				     r, and Fried parameter of r0.*/
 
-void FRACTAL(double *p0, long nx, long ny, double dx, double r0){
+
+void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0){
     if(((nx-1) & (nx-2)) != 0  || ((ny-1) & (ny-2)) !=0 || nx != ny){
 	error("nx=%ld, ny=%ld: they need to be 1+power of 2, and equal\n", nx, ny);
     }
-    const double power=5./3.;
-    const double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
-    const double sqrt2=sqrt(2.);
-    const double sqrt2i=1./sqrt2;
+    LOCK(mutex_cov);
+    dmat *cov=vkcov_calc(r0, L0, dx, nx);
+    UNLOCK(mutex_cov);
+    PDMAT(cov, pcov);
     const long nx1=nx-1;
     const long ny1=ny-1;
-    const double D=(nx1)*dx;
-    const double fsqrt2d=F(sqrt2*D);
-    const double fd=F(D);
-    const double sigma2=0.5*fsqrt2d;
-    const double c0=sigma2;
+    const long norder=cov->ny-2;
+    const double c0=pcov[0][0];
     double (*p)[nx]=(void*)p0;
-
 #if FORWARD == 1
     {
 	//First generate four outmost values.
+	double c1=pcov[norder+1][0];
+	double c2=pcov[norder+1][1];
 #if INVERSE == 0
-	double a=sqrt(4*sigma2-fd-0.5*fsqrt2d);
-	double b=sqrt(fd-0.5*fsqrt2d);
-	double c=sqrt(fsqrt2d);
+	double a=sqrt(c0+2*c1+c2);
+	double b=sqrt(c0-2*c1+c2);
+	double c=sqrt(2*(c0-c2));
 #else //INVERSE
-	double a=1./sqrt(4*sigma2-fd-0.5*fsqrt2d);
-	double b=1./sqrt(fd-0.5*fsqrt2d);
-	double c=2./sqrt(fsqrt2d);
+	double a=1./sqrt(c0+2*c1+c2);
+	double b=1./sqrt(c0-2*c1+c2);
+	double c=2./sqrt(2*(c0-c2));
 #endif
-	assert(a>=0 && b>=0 && b>=0);
+	assert(c0+2*c1+c2>=0 && c0-2*c1+c2>=0 && c0-c2>=0);
 	double *p1=&p[0][0];
 	double *p2=&p[0][nx1];
 	double *p3=&p[ny1][nx1];
@@ -86,17 +83,17 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0){
 #endif
 #endif
 #if FORWARD == 1 //Define LOOP to avoid wrong indentation
-#define LOOP long step=nx1; step>1; step>>=1
+#define LOOP long order=norder; order>0; order--
 #else
-#define LOOP long step=2; step<nx; step<<=1
+#define LOOP long order=1; order<=norder; order++
 #endif
     for(LOOP){
 #undef LOOP
-	double r=step*dx;
-	double c1=sigma2-F(r*0.5)*0.5;
-	double c2=sigma2-F(r*sqrt2i)*0.5;
-	double c3=sigma2-F(r)*0.5;
-	double c4=sigma2-F(r*sqrt2)*0.5;
+	long step=1<<order;
+	double c1=pcov[order][0];
+	double c2=pcov[order][1];
+	double c3=pcov[order+1][0];
+	double c4=pcov[order+1][1];
 	//for case 1: square case
 	double qua1=c2/(c0+2*c3+c4);
 	double qua0=sqrt(c0-4.*c2*qua1);
@@ -188,14 +185,16 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0){
 #if FORWARD == 0
     {
 	//generate four outmost values. 
+	double c1=pcov[norder+1][0];
+	double c2=pcov[norder+1][1];
 #if INVERSE == 0
-	double a=sqrt(4*sigma2-fd-0.5*fsqrt2d);
-	double b=sqrt(fd-0.5*fsqrt2d);
-	double c=sqrt(fsqrt2d);
-#else
-	double a=1./sqrt(4*sigma2-fd-0.5*fsqrt2d);
-	double b=1./sqrt(fd-0.5*fsqrt2d);
-	double c=2./sqrt(fsqrt2d);
+	double a=sqrt(c0+2*c1+c2);
+	double b=sqrt(c0-2*c1+c2);
+	double c=sqrt(2*(c0-c2));
+#else //INVERSE
+	double a=1./sqrt(c0+2*c1+c2);
+	double b=1./sqrt(c0-2*c1+c2);
+	double c=2./sqrt(2*(c0-c2));
 #endif
 	assert(a>0 && b>0 && b>0);
 	double *p1=&p[0][0];

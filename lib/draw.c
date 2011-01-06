@@ -239,7 +239,7 @@ void imagesc(char *fig, /**<Category of the figure*/
 	     long nx,   /**<the image is of size nx*ny*/
 	     long ny,   /**<the image is of size nx*ny*/
 	     const double *limit, /**<x min, xmax, ymin and ymax*/
-	     const double *zlim,/**<max, min, the data*/
+	     const double *zlim,/**< min,max, the data*/
 	     const void *p, /**<The image*/
 	     const char *title,  /**<title of the plot*/
 	     const char *xlabel, /**<x axis label*/
@@ -259,7 +259,7 @@ void imagesc(char *fig, /**<Category of the figure*/
     FWRITE(header, sizeof(int32_t), 2, pfifo);
     FWRITE(p, sizeof(double), nx*ny, pfifo);
     if(zlim){
-	FWRITEINT(pfifo,FIFO_MAXMIN);
+	FWRITEINT(pfifo,FIFO_ZLIM);
 	FWRITE(zlim,sizeof(double),2,pfifo);
     }
     if(limit){//xmin,xmax,ymin,ymax
@@ -368,69 +368,63 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
    imagesc.  . see imagesc()
 */
 
-void ddraw(char *fig, const dmat *A, double *maxmin,
+void ddraw(char *fig, const dmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
-    imagesc(fig,A->nx,A->ny,NULL,maxmin,A->p,title, xlabel, ylabel,"%s",fn);
+    imagesc(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
 }
 
 /**
    Mapping the absolution value of complex array. see imagesc()
 */
-void cdrawabs(char *fig, const cmat *A, 
+void cdrawabs(char *fig, const cmat *A, double *xylim, double *zlim,
 	      const char *title, const char *xlabel, const char *ylabel,
 	      const char *format,...){
   
     format2fn;
-    imagesc_cmp_abs(fig,A->nx,A->ny,NULL,NULL,A->p,title,xlabel,ylabel,"%s abs",fn);
+    imagesc_cmp_abs(fig,A->nx,A->ny,xylim,zlim,A->p,title,xlabel,ylabel,"%s abs",fn);
 }
 
 /**
    Mapping the real/imaginary part of complex array. see imagesc()
 */
-void cdrawri(char *fig, const cmat *A, 
+void cdrawri(char *fig, const cmat *A, double *xylim, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     
     format2fn;
-    (void)fig;
-    (void)A;
-    imagesc_cmp_ri(fig,A->nx,A->ny,NULL,NULL,A->p,title, xlabel, ylabel,"%s",fn);
+    imagesc_cmp_ri(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
 }
 
 /**
    Mapping the absolute and phase of complex array. see imagesc()
 */
-void cdraw(char *fig, const cmat *A, 
+void cdraw(char *fig, const cmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
 	   const char *format,...){
     format2fn;
-    (void)fig;
-    (void)A;
-    imagesc_cmp_ap(fig,A->nx,A->ny,NULL,NULL,A->p,title, xlabel, ylabel,"%s",fn);
+    imagesc_cmp_ap(fig,A->nx,A->ny,xylim,zlim,A->p,title, xlabel, ylabel,"%s",fn);
 }
 
 /**
    like ddraw, acting on sqmap object. see imagesc()
 */
-void drawmap(char *fig, const map_t *map, 
+void drawmap(char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...){
     format2fn;
-    (void)fig;
-    (void)map;
     double limit[4];
     limit[0]=map->ox-map->dx/2;
     limit[1]=map->ox+(map->nx-0.5)*map->dx;
     limit[2]=map->oy-map->dx/2;
     limit[3]=map->oy+(map->ny-0.5)*map->dx;
-    imagesc(fig, map->nx, map->ny, limit, NULL, map->p,  title, xlabel, ylabel,"%s",fn);
+    imagesc(fig, map->nx, map->ny, limit, zlim, map->p,  title, xlabel, ylabel,"%s",fn);
 }
 /**
    Plot the loc on the screen. see imagesc()
 */
-void drawloc(char *fig, loc_t *loc,
+void drawloc(char *fig, loc_t *loc, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
     format2fn;
@@ -450,14 +444,14 @@ void drawloc(char *fig, loc_t *loc,
     limit[1]=limit[0]+loc->dx*nx;
     limit[2]=loc->map->oy+loc->dx*(npad-1/2);
     limit[3]=limit[2]+loc->dx*ny;
-    imagesc(fig, nx, ny,limit,NULL,opd0,  title, xlabel, ylabel,"%s",fn);
+    imagesc(fig, nx, ny,limit,zlim,opd0,  title, xlabel, ylabel,"%s",fn);
     free(opd0);
 }
 
 /**
    Plot the opd using coordinate loc. see imagesc()
 */
-void drawopd(char *fig, loc_t *loc, const double *opd, 
+void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...){
 
@@ -474,6 +468,8 @@ void drawopd(char *fig, loc_t *loc, const double *opd,
 	    int ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
 	    if(ii){
 		opd0[ix+iy*nx]=opd[ii-1];
+	    }else{
+		opd0[ix+iy*nx]=NAN;
 	    }
 	}
     }
@@ -482,13 +478,13 @@ void drawopd(char *fig, loc_t *loc, const double *opd,
     limit[1]=loc->map->ox+loc->dx*(nx+npad-1/2);
     limit[2]=loc->map->oy+loc->dx*(npad-1/2);
     limit[3]=loc->map->oy+loc->dx*(ny+npad-1/2);
-    imagesc(fig,nx,ny, limit,NULL,opd0,  title, xlabel, ylabel,"%s",fn);
+    imagesc(fig,nx,ny, limit,zlim,opd0,  title, xlabel, ylabel,"%s",fn);
     free(opd0);
 }
 /**
    Plot opd*amp with coordinate loc. see imagesc()
 */
-void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, 
+void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...){
     format2fn;
@@ -505,7 +501,13 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp,
 	    int ii=loc->map->p[(ix+npad)+(iy+npad)*nxm];
 	    if(ii){
 		ii--;
-		opd0[ix+iy*nx]=opd[ii]*amp[ii];
+		if(fabs(amp[ii])<EPS){
+		    opd0[ix+iy*nx]=NAN;
+		}else{
+		    opd0[ix+iy*nx]=opd[ii]*amp[ii];
+		}
+	    }else{
+		opd0[ix+iy*nx]=NAN;
 	    }
 	}
     }
@@ -514,6 +516,6 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp,
     limit[1]=limit[0]+loc->dx*nx;
     limit[2]=loc->map->oy+loc->dx*(npad-1);
     limit[3]=limit[2]+loc->dx*ny;
-    imagesc(fig, nx,ny,limit,NULL, opd0,  title, xlabel, ylabel,"%s",fn);
+    imagesc(fig, nx,ny,limit,zlim, opd0,  title, xlabel, ylabel,"%s",fn);
     free(opd0);
 }

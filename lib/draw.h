@@ -39,31 +39,31 @@ void plot_points(char *fig, long ngroup, loc_t **loc, dcell *cell,
 		 const int32_t *style, const double *limit, int ncir, double(*pcir)[4], 
 		 char **legend, const char *title, const char *xlabel, const char *ylabel,
 		 const char *format,...) CHECK_ARG(13);
-void ddraw(char *fig, const dmat *A, double *maxmin,
+void ddraw(char *fig, const dmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
-	   const char *format,...) CHECK_ARG(7);
-void cdraw(char *fig, const cmat *A, 
+	   const char *format,...) CHECK_ARG(8);
+void cdraw(char *fig, const cmat *A, double *xylim, double *zlim,
 	   const char *title, const char *xlabel, const char *ylabel,
-	   const char*format,...) CHECK_ARG(6);
-void cdrawabs(char *fig, const cmat *A, 
+	   const char*format,...) CHECK_ARG(8);
+void cdrawabs(char *fig, const cmat *A, double *xylim, double *zlim,
 	      const char *title, const char *xlabel, const char *ylabel,
-	      const char *format,...) CHECK_ARG(6);
-void cdrawri(char *fig, const cmat *A, 
+	      const char *format,...) CHECK_ARG(8);
+void cdrawri(char *fig, const cmat *A, double *xylim, double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
-	     const char*format,...) CHECK_ARG(6);
+	     const char*format,...) CHECK_ARG(8);
 
-void drawmap(char *fig, const map_t *map, 
+void drawmap(char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
-	     const char *format,...) CHECK_ARG(6);
-void drawloc(char *fig, loc_t *loc, 
-	     const char *title, const char *xlabel, const char *ylabel,
-	     const char* format,...) CHECK_ARG(6);
-void drawopd(char *fig, loc_t *loc, const double *opd, 
+	     const char *format,...) CHECK_ARG(7);
+void drawloc(char *fig, loc_t *loc,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,
 	     const char* format,...) CHECK_ARG(7);
-void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, 
+void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
+	     const char *title, const char *xlabel, const char *ylabel, 
+	     const char* format,...) CHECK_ARG(8);
+void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
-		const char* format,...) CHECK_ARG(8);
+		const char* format,...) CHECK_ARG(9);
 
 //set to one to disable drawing.
 extern int disable_draw;
@@ -82,7 +82,7 @@ enum{
     FIFO_TITLE,
     FIFO_XLABEL,
     FIFO_YLABEL,
-    FIFO_MAXMIN,
+    FIFO_ZLIM,
     FIFO_LEGEND,//legend
     FIFO_END=100
 };

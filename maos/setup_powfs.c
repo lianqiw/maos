@@ -254,7 +254,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     if(parms->plot.setup){
-	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp,
+	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp,NULL,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
     }
     if(parms->powfs[ipowfs].misreg){

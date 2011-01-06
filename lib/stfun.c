@@ -100,7 +100,7 @@ dmat *stfun_finalize(stfun_t *A){
     return st;
 }
 /**
-   Generate the structure function of the phase of kolmogorov spectrum if wvl is not zero.
+   Generate the structure function of the phase of kolmogorov spectrum 
 */
 dmat* stfun_kolmogorov(loc_t *loc, double r0){
     long nloc=loc->nloc;

@@ -31,7 +31,8 @@
    Just do open loop error evalution. Usually not used.
    \callgraph
 */
-
+//static double opdzlim[2]={-3e-5,3e-5};
+static double *opdzlim=NULL;
 void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs, 
 	       APER_T *aper,  RECON_T *recon){
     int simend=parms->sim.end;
@@ -70,124 +71,247 @@ void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs,
     }
     maos_done(0);
 }
+static map_t **genscreen_do(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const ATM_CFG_T *atm=&parms->atm;
+    const int nthread=simu->nthread;
+    
+    map_t **screens;
+    TIC;
+    if(simu->atmfun){
+	info2("Generating Atmospheric Screen...");
+	tic;
+	screens = simu->atmfun(simu->atm_rand, atm->nx, atm->ny, atm->dx, atm->r0,
+			       atm->l0,atm->wt,atm->nps,nthread);
+	toc2("done");
+    }else{
+	info2("Generating Testing Atmosphere Screen\n");
+	/*
+	  create screens on two layers that produce pure
+	  tip/tilt for LGS to debug split tomography test
+	  pass in open loop mode for both Z and G tilt for
+	  NGS.
+	      
+	  The residual error is pure fit error if
+	  layer 5 is at dm layer. otherwise the error is a
+	  little larger.
+	*/
+	int nx=atm->nx;
+	int ny=atm->ny;
+	screens=calloc(atm->nps,sizeof(map_t*));
+	double hs=90000;
+	double dx=atm->dx;
+	for(int is=0; is<atm->nps; is++){
+	    screens[is]=calloc(1, sizeof(map_t));
+	    screens[is]->p=calloc(nx*ny,sizeof(double));
+	    screens[is]->nx=nx;
+	    screens[is]->ny=ny;
+	    screens[is]->dx=dx;
+	    screens[is]->ox=-nx/2*dx;
+	    screens[is]->oy=-ny/2*dx;
+	    screens[is]->h=atm->ht[is];
+	}
+	double scale=-pow(1.-screens[5]->h/hs,-2);
+	double strength=1./20626500.;
+	info("strength=%g, scale=%g\n",strength,scale);
+	switch(parms->dbg.atm){
+	case 1:{
+	    for(int iy=0; iy<ny; iy++){
+		double *p0=screens[0]->p+iy*nx;
+		for(int ix=0; ix<nx; ix++){
+		    double x=(ix-nx/2)*dx;
+		    p0[ix]=x*strength;
+		}
+	    }
+	}
+	    break;
+	case 2:{
+	    for(int iy=0; iy<ny; iy++){
+		double *p0=screens[0]->p+iy*nx;
+		double *p1=screens[5]->p+iy*nx;
+		double y=(iy-ny/2)*dx;
+		double yy=y*y;
+		for(int ix=0; ix<nx; ix++){
+		    double x=(ix-nx/2)*dx;
+		    double xx=x*x;
+		    //double xy=x*y;
+		    //p0[ix]=(iy-nx/2)*dx*strength;
+		    //p0[ix]=(x*0.2+y*0.1+xx*0.3-yy*0.7+xy*0.3)*strength;
+		    p0[ix]=(xx+yy)*strength;
+		    p1[ix]=scale*(p0[ix]);
+		}
+	    }
+	}
+	    break;
+	default:
+	    error("Invalid\n");
+	}
+    }
+    for(int i=0; i<atm->nps; i++){
+	screens[i]->h=atm->ht[i];
+	double angle=simu->winddir->p[i];
+	screens[i]->vx=cos(angle)*atm->ws[i];
+	screens[i]->vy=sin(angle)*atm->ws[i];
+    }
+    return screens;
+}
+/**
+blending two atmospehre atm and atm2 according to wind direction.  Does not work
+ well for blendings near the corner.
+ */
+/*
+static void blend_screen(map_t *atm1, map_t *atm2, double angle, long ox, long oy){
+    const long nx=atm1->nx;
+    double ca=cos(angle);
+    double sa=sin(angle);
+    double rx=(double)(atm1->nx-ox)/fabs(ca);
+    double ry=(double)(atm1->ny-oy)/fabs(sa);
+    double rr=rx<ry?rx:ry;//distance of the center of two screens.
+    atm2->ox=atm1->ox+rr*cos(angle)*atm1->dx;
+    atm2->oy=atm1->oy+rr*sin(angle)*atm1->dx;
+
+    //positive size of overlapping area.
+    long ovx=atm1->nx-(long)round(rr*fabs(ca));
+    long ovy=atm1->ny-(long)round(rr*fabs(sa));
+    //start point of overlapping region in the two arrays.
+    long offx=nx-ovx;
+    long offy=(atm1->ny-ovy)*nx;
+    int wtx=0,wty=0;
+    if(ca<0) wtx=1;
+    if(sa<0) wty=1;
+    double *p1=atm1->p+(1-wty)*offy+(1-wtx)*offx;
+    double *p2=atm2->p+wty*offy+wtx*offx;
+    double (*pp1)[nx]=(void*)p1;
+    double (*pp2)[nx]=(void*)p2;
+    for(long iy=0; iy<ovy; iy++){
+	double wty1=fabs((double)wty-(double)iy/(double)(ovy-1));
+	for(long ix=0; ix<ovx; ix++){
+	    double wtx1=fabs((double)wtx-(double)ix/(double)(ovx-1));
+	    double wt1=wty1*wtx1;
+	    pp1[iy][ix]=(1-wt1)*pp1[iy][ix]+wt1*pp2[iy][ix];
+	    pp2[iy][ix]=pp1[iy][ix];
+	}
+    }
+    }*/
+/**
+   overlay atm2 with atm2 according to wind direction angle and required
+   overlapping region of at least overx*overy.
+*/
+static void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy){
+    const long nx=atm1->nx;
+    const long ny=atm1->ny;
+    int ca=0;
+    if(atm1->vx>EPS){
+	ca=-1;//reverse sign of vx
+    }else if(atm1->vx<-EPS){
+	ca=1;
+    }
+    int sa=0;
+    if(atm1->vy>EPS){
+	sa=-1;//reverse sign of vy
+    }else if(atm1->vy<-EPS){
+	sa=1;
+    }
+    long rr;
+    long offx=nx-overx;
+    long offy=(ny-overy)*nx;
+    if(ca==0){//along y.
+	rr=ny-overy;//distance between the origins.
+	atm2->oy=atm1->oy + rr*sa*atm1->dx;
+	atm2->ox=atm1->ox;
+	double wty=sa<0?1:0;
+	double *p1=atm1->p+(1-(long)wty)*offy;
+	double *p2=atm2->p+(long)wty*offy;
+	double (*pp1)[nx]=(void*)p1;
+	double (*pp2)[nx]=(void*)p2;
+	double overyd=(double)overy;
+	for(long iy=0; iy<overy; iy++){
+	    double wt1=fabs(wty-(double)(iy+1)/overyd);
+	    for(long ix=0; ix<nx; ix++){
+		pp1[iy][ix]=(1-wt1)*pp1[iy][ix]+wt1*pp2[iy][ix];
+		pp2[iy][ix]=pp1[iy][ix];
+	    }
+	}
+    }else if(sa==0){
+	rr=nx-overx;//distance between the origins.
+	atm2->ox=atm1->ox + rr*ca*atm1->dx;
+	atm2->oy=atm1->oy;
+	double wtx=ca<0?1:0;
+	double *p1=atm1->p+(1-(long)wtx)*offx;
+	double *p2=atm2->p+(long)wtx*offx;
+	double (*pp1)[nx]=(void*)p1;
+	double (*pp2)[nx]=(void*)p2;
+	double wts[overx];
+	double overxd=(double)overx;
+	for(long ix=0; ix<overx; ix++){
+	    wts[ix]=fabs(wtx-(double)(ix+1)/overxd);
+	}
+	for(long iy=0; iy<ny; iy++){
+	    for(long ix=0; ix<overx; ix++){
+		pp1[iy][ix]=(1-wts[ix])*pp1[iy][ix]+wts[ix]*pp2[iy][ix];
+		pp2[iy][ix]=pp1[iy][ix];
+	    }
+	}
+    }else{
+	error("We do not support this wind direction: ca=%d, sa=%d\n", ca, sa);
+    }
+}
+static void map_crop(map_t *atm, long overx, long overy){
+  /*offset the atm to start from the corner and crop the screen to
+    keep only the part that actually participates in ray tracing.*/
+    
+    double dx=atm->dx;
+    long nx=atm->nx;
+    long ny=atm->ny;
+    long nxnew, nynew;
+    double ox, oy;
+    if(fabs(atm->vx)<EPS){//along y
+	atm->vx=0;
+	nxnew=overx;
+	nynew=atm->ny;
+	ox=-overx/2*dx;
+	if(atm->vy<0){
+	    oy=-overy/2*dx;
+	}else{
+	    oy=(overy/2-ny)*dx;
+	}
+    }else{
+	atm->vy=0;
+	nxnew=atm->nx;
+	nynew=overy;
+	oy=-overy/2*dx;
+	if(atm->vx<0){
+	    ox=-overx/2*dx;
+	}else{
+	    ox=(overx/2-nx)*dx;
+	}
+    }
+    dmat *tmp=dsub((dmat*)atm, 0, nxnew, 0, nynew);
+    atm->p=tmp->p;
+    atm->nx=tmp->nx;
+    atm->ny=tmp->ny;
+    atm->ox=ox;
+    atm->oy=oy;
+    dfree_keepdata(tmp);
+}
 /**
    wrap of the generic vonkarman_genscreen to generate turbulence screens. Wind
    velocities are set for each screen.  \callgraph */
 void genscreen(SIM_T *simu){ 
-    rand_t *rstat=simu->atm_rand;
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&(simu->parms->atm);
     if(simu->atm){
 	sqmaparrfree(simu->atm, parms->atm.nps);
+	dfree(simu->winddir);
     }
     if(simu->parms->dbg.noatm){
 	warning("dbg.noatm flag is on. will not generate atmoshere\n");
 	return;
     }
-  
-    map_t **screens=NULL;
-    if(simu->parms->load.atm){
-	const char *fn=simu->parms->load.atm;
-	info2("loading atm from %s\n",fn);
-	int nlayer;
-	screens = sqmaparrread(&nlayer,"%s",fn);
-	if(nlayer!=atm->nps)
-	    error("Mismatch\n");
-    }else{
-	TIC;
-	if(parms->dbg.atm==0){
-	    info2("Generating Atmospheric Screen...");
-	    tic;
-	    if(parms->sim.fractal){
-		warning2("Genearating atmosphere using Fractal method "
-			 "(Only kolmogorov is implemented yet)\n");
-		screens = fractal_screen(rstat, atm->nx, atm->ny, atm->dx, atm->r0,
-					 atm->l0,atm->wt,atm->nps,simu->nthread);
-	    }else{
-
-		screens = vonkarman_screen(rstat,atm->nx,atm->ny,atm->dx,atm->r0,
-					   atm->l0,atm->wt,atm->nps,simu->nthread);
-	    }
-	    toc2("done");
-	}else if(parms->dbg.atm==-1){
-	    info2("Generating Biharmonic Atmospheric Screen...");
-	    tic;
-	    screens = biharmonic_screen(rstat,atm->nx,atm->ny,atm->dx,atm->r0,
-					atm->l0,atm->wt,atm->nps,simu->nthread);
-	    toc2("done");
-	}else{
-	    info2("Generating Testing Atmosphere Screen\n");
-	    /*
-	      create screens on two layers that produce pure
-	      tip/tilt for LGS to debug split tomography test
-	      pass in open loop mode for both Z and G tilt for
-	      NGS.
-	      
-	      The residual error is pure fit error if
-	      layer 5 is at dm layer. otherwise the error is a
-	      little larger.
-	    */
-	    int nx=atm->nx;
-	    int ny=atm->ny;
-	    screens=calloc(atm->nps,sizeof(map_t*));
-	    double hs=90000;
-	    double dx=atm->dx;
-	    for(int is=0; is<atm->nps; is++){
-		screens[is]=calloc(1, sizeof(map_t));
-		screens[is]->p=calloc(nx*ny,sizeof(double));
-		screens[is]->nx=nx;
-		screens[is]->ny=ny;
-		screens[is]->dx=dx;
-		screens[is]->ox=-nx/2*dx;
-		screens[is]->oy=-ny/2*dx;
-		screens[is]->h=atm->ht[is];
-	    }
-	    double scale=-pow(1.-screens[5]->h/hs,-2);
-	    double strength=1./20626500.;
-	    info("strength=%g, scale=%g\n",strength,scale);
-	    switch(parms->dbg.atm){
-	    case 1:{
-		for(int iy=0; iy<ny; iy++){
-		    double *p0=screens[0]->p+iy*nx;
-		    for(int ix=0; ix<nx; ix++){
-			double x=(ix-nx/2)*dx;
-			p0[ix]=x*strength;
-		    }
-		}
-	    }
-		break;
-	    case 2:{
-		for(int iy=0; iy<ny; iy++){
-		    double *p0=screens[0]->p+iy*nx;
-		    double *p1=screens[5]->p+iy*nx;
-		    double y=(iy-ny/2)*dx;
-		    double yy=y*y;
-		    for(int ix=0; ix<nx; ix++){
-			double x=(ix-nx/2)*dx;
-			double xx=x*x;
-			//double xy=x*y;
-			//p0[ix]=(iy-nx/2)*dx*strength;
-			//p0[ix]=(x*0.2+y*0.1+xx*0.3-yy*0.7+xy*0.3)*strength;
-			p0[ix]=(xx+yy)*strength;
-			p1[ix]=scale*(p0[ix]);
-		    }
-		}
-	    }
-		break;
-	    default:
-		error("Invalid\n");
-	    }
-	}
-	if(simu->parms->save.atm){
-	    sqmaparrwrite(screens,atm->nps,"atm_%d.bin",simu->seed);
-	}
-    }
-    int i;
-    info2("Wind dir:");
+    info2("Wind dir:");//initialize wind direction one time only for each seed in frozen flow mode.
     simu->winddir=dnew(atm->nps,1);
     int wdnz=0;
-    for(i=0; i<atm->nps; i++){
-	screens[i]->h=atm->ht[i];
+    for(int i=0; i<atm->nps; i++){
 	double angle;
 	if(atm->wdrand){
 	    if(fabs(atm->wddeg[i])>EPS){
@@ -197,25 +321,66 @@ void genscreen(SIM_T *simu){
 	}else{
 	    angle=atm->wddeg[i]*M_PI/180;
 	}
+	if(atm->evolve){
+	    angle=round(angle*2/M_PI)*(M_PI/2);
+	}
 	simu->winddir->p[i]=angle;
 	info2(" %5.1f", angle*180/M_PI);
-	screens[i]->vx=cos(angle)*atm->ws[i];
-	screens[i]->vy=sin(angle)*atm->ws[i];
     }
     info2(" deg\n");
+    if(atm->evolve){
+	warning("evolving screen requries direction to align along x/y.\n");
+    }
     if(wdnz){
 	error("wdrand is specified, but wddeg are not all zero. \n"
 	      "possible confliction of intension!\n");
     }
-    simu->atm=screens;
-    info2("After genscreen:\t%.2f MiB\n",get_job_mem()/1024.);
+    if(simu->parms->load.atm){
+	const char *fn=simu->parms->load.atm;
+	info2("loading atm from %s\n",fn);
+	int nlayer;
+	simu->atm = sqmaparrread(&nlayer,"%s",fn);
+	if(nlayer!=atm->nps)
+	    error("Mismatch\n");
+    }else{
+	simu->atm=genscreen_do(simu);
+	if(simu->parms->save.atm){
+	    sqmaparrwrite(simu->atm,atm->nps,"atm_%d.bin",simu->seed);
+	}
+    }
     if(parms->plot.atm && simu->atm){
 	for(int ips=0; ips<atm->nps; ips++){
-	    drawmap("atm", simu->atm[ips],
+	    drawmap("atm", simu->atm[ips],opdzlim,
 		    "Atmosphere OPD","x (m)","y (m)","layer%d",ips);
 	}
     }
-    if(!parms->sim.frozenflow && parms->sim.closeloop){
+    if(parms->atm.evolve){
+	simu->atm2=genscreen_do(simu);
+	for(int ips=0; ips<atm->nps; ips++){
+	    long overx=parms->atm.overx[ips];
+	    long overy=parms->atm.overy[ips];
+	    map_crop(simu->atm[ips], overx, overy);
+	    map_crop(simu->atm2[ips], overx, overy);
+	    //blend with the new screen.
+	    blend_screen_side(simu->atm[ips], simu->atm2[ips],
+			      parms->atm.overx[ips],
+			      parms->atm.overy[ips]);
+	}
+
+        if(parms->plot.atm && simu->atm){
+	    for(int ips=0; ips<atm->nps; ips++){
+		drawmap("atm1", simu->atm[ips],opdzlim,
+			"Atmosphere OPD 1","x (m)","y (m)","layer%d",ips);
+	    }
+	    for(int ips=0; ips<atm->nps; ips++){
+		drawmap("atm2", simu->atm2[ips],opdzlim,
+			    "Atmosphere OPD 2","x (m)","y (m)","layer%d",ips);
+	    }
+	}
+    }
+    info2("After genscreen:\t%.2f MiB\n",get_job_mem()/1024.);
+
+    if(!parms->atm.frozenflow && parms->sim.closeloop){
 	warning("Creating new screen in CL mode will not work\n");
 	warning("Creating new screen in CL mode will not work\n");
 	warning("Creating new screen in CL mode will not work\n");
@@ -237,7 +402,86 @@ void genscreen(SIM_T *simu){
 	}
     }
 }
-
+/**
+   Evolve the turbulence screen when the ray goes near the edge by generating an
+new screen and blend into the old screen.  */
+void evolve_screen(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const ATM_CFG_T *atm=&parms->atm;
+    const long isim=simu->isim;
+    const double dt=parms->sim.dt;
+    const int nps=parms->atm.nps;
+    for(int ips=0; ips<nps; ips++){
+	//center of beam
+	double dx=simu->atm[ips]->dx;
+	int do_evolve=0;
+	if(fabs(simu->atm[ips]->vx)<EPS){//along y
+	    long ny=simu->atm[ips]->ny;
+	    long ry=(parms->atm.overy[ips]>>1);
+	    double ay=-simu->atm[ips]->vy*isim*dt;
+	    if(simu->atm[ips]->vy<0){
+		if(ay>simu->atm[ips]->oy+(ny-ry)*dx){
+		    do_evolve=1;
+		}
+	    }else{
+		if(ay<simu->atm[ips]->oy+ry*dx){
+		    do_evolve=1;
+		}
+	    }
+	}else{//along x.
+	    long nx=simu->atm[ips]->nx;
+	    long rx=parms->atm.overx[ips]>>1;
+	    double ax=-simu->atm[ips]->vx*isim*dt;
+	    if(simu->atm[ips]->vx<0){
+		if(ax>simu->atm[ips]->ox+(nx-rx)*dx){
+		    do_evolve=1;
+		}
+	    }else{
+		if(ax<simu->atm[ips]->ox+rx*dx){
+		    do_evolve=1;
+		}
+	    }
+	}
+	if(do_evolve){
+	    //need to evolve screen.
+	    long overx=parms->atm.overx[ips];
+	    long overy=parms->atm.overy[ips];
+	    info("Evolving screen %d\n", ips);
+	    sqmapfree(simu->atm[ips]);
+	    simu->atm[ips]=simu->atm2[ips];
+	    map_t **screen=simu->atmfun(simu->atm_rand, atm->nx, atm->ny, 
+					atm->dx, atm->r0,
+					atm->l0, &atm->wt[ips], 1, 1);	
+	    simu->atm2[ips]=screen[0]; 
+	    simu->atm2[ips]->vx=simu->atm[ips]->vx;
+	    simu->atm2[ips]->vy=simu->atm[ips]->vy;
+	    simu->atm2[ips]->h=simu->atm[ips]->h;
+	    free(screen);
+	    map_crop(simu->atm2[ips], overx, overy);
+	    blend_screen_side(simu->atm[ips], simu->atm2[ips], 
+			      parms->atm.overx[ips],
+			      parms->atm.overy[ips]);
+	    if(simu->wfs_prop_atm){
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
+			data->mapin=simu->atm[ips];
+		}
+	    }
+	    if(simu->evl_prop_atm){
+		for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		    PROPDATA_T *data=&simu->evl_propdata_atm[ievl+parms->evl.nevl*ips];
+		    data->mapin=simu->atm[ips];
+		}
+	    }
+	    if(parms->plot.atm){
+		drawmap("atm1", simu->atm[ips],opdzlim,
+			"Atmosphere OPD 1","x (m)","y (m)","layer%d_%d",ips,simu->isim);
+		drawmap("atm2", simu->atm2[ips],opdzlim,
+			"Atmosphere OPD 2","x (m)","y (m)","layer%d_%d",ips,simu->isim);
+	    }
+	}
+    }
+}
 /**
    Propagate the atmosphere to closest xloc. skip wavefront sensing and
    reconstruction.
@@ -344,6 +588,21 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     SIM_T *simu=calloc(1, sizeof(SIM_T));
     simu->save=calloc(1, sizeof(SIM_SAVE_T));
     PINIT(simu->mutex_plot);
+    if(parms->dbg.atm==0){
+	if(parms->atm.fractal){
+	    simu->atmfun=fractal_screen;
+	    warning2("Genearating atmosphere using Fractal method "
+		     "(Only kolmogorov is implemented yet)\n");
+	    
+	}else{
+	    simu->atmfun=vonkarman_screen;
+	}
+    }else if(parms->dbg.atm==-1){
+	info2("Generating Biharmonic Atmospheric Screen...");
+	simu->atmfun=biharmonic_screen;
+    }else{
+	simu->atmfun=NULL;
+    }
     simu->parms=parms;
     simu->powfs=powfs;
     simu->recon=recon;
@@ -666,7 +925,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
     thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, perfevl_ievl, simu);
-    if(parms->sim.frozenflow){
+    if(parms->atm.frozenflow){
 	simu->dt=parms->sim.dt;
     }else{
 	simu->dt=0;
@@ -1074,8 +1333,8 @@ void free_simu(SIM_T *simu){
 
     dcellfree(simu->surfevl);
     dcellfree(simu->surfwfs);
-    dfree(simu->winddir);
     dfree(simu->windest);
+    dfree(simu->winddir);
     spcellfree(simu->windshift);
     {
 	//release the lock and close the file.
@@ -1215,12 +1474,12 @@ void print_progress(const SIM_T *simu){
  */
 void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     char fn[PATH_MAX];
-    int zadeg=(int)round(parms->sim.za*180/M_PI);
+    double zadeg=parms->sim.za*180/M_PI;
     snprintf(fn,PATH_MAX,"%s/maos.conf",dirskysim);
     FILE *fp=fopen(fn,"w");
     fprintf(fp,"maos.r0z=%g\n",parms->atm.r0z);
     fprintf(fp,"maos.dt=%g\n",parms->sim.dt);
-    fprintf(fp,"maos.zadeg=%d\n",zadeg);
+    fprintf(fp,"maos.zadeg=%g\n",zadeg);
     if(parms->ndm==2){
 	fprintf(fp,"maos.hc=%g\n",parms->dm[1].ht);
     }else{
@@ -1333,8 +1592,8 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"maos.fnmideal=\"RescleNGSm\"\n");
     fprintf(fp,"maos.fnmidealp=\"RescleNGSmp\"\n");
     fprintf(fp,"maos.evlindoa=%d\n",parms->evl.indoa);
-    fprintf(fp,"maos.fnmcc=\"MCC_za%d.bin.gz\"\n",zadeg);
-    fprintf(fp,"maos.fnmcc_oa=\"MCC_OA_za%d.bin.gz\"\n",zadeg);
+    fprintf(fp,"maos.fnmcc=\"MCC_za%g.bin.gz\"\n",zadeg);
+    fprintf(fp,"maos.fnmcc_oa=\"MCC_OA_za%g.bin.gz\"\n",zadeg);
     
     fprintf(fp,"maos.seeds=[");
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
@@ -1343,7 +1602,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"]\n");
 
     fprintf(fp,"include=\"skyc.conf\"\n");
-    fprintf(fp,"include=\"skyc_za%d.conf\"\n",zadeg);
+    fprintf(fp,"include=\"skyc_za%g.conf\"\n",zadeg);
     fprintf(fp,"maos.wddeg=[");
     for(int ips=0; ips<parms->atm.nps; ips++){
 	fprintf(fp, "%.2f ", parms->atm.wddeg[ips]);
@@ -1358,6 +1617,6 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 		 "%s/powfs%d_amp.bin.gz",dirskysim,jpowfs);
 	locwrite(powfs[jpowfs].saloc,"%s/powfs%d_saloc.bin.gz",dirskysim,jpowfs);
     }
-    dwrite(recon->ngsmod->MCC,"%s/MCC_za%d.bin.gz", dirskysim,zadeg);
-    dwrite(recon->ngsmod->MCC_OA,"%s/MCC_OA_za%d.bin.gz", dirskysim,zadeg);
+    dwrite(recon->ngsmod->MCC,"%s/MCC_za%g.bin.gz", dirskysim,zadeg);
+    dwrite(recon->ngsmod->MCC_OA,"%s/MCC_OA_za%g.bin.gz", dirskysim,zadeg);
 }

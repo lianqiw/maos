@@ -33,7 +33,7 @@ static void draw_map(file_t *fp, int id){
 	}
     }else{
 	map_t *data=sqmapreaddata(fp, magic, header);
-	drawmap("map", data, name, "x", "y", "%s:%d", name, id);
+	drawmap("map", data, NULL, name,"x", "y", "%s:%d", name, id);
 	sqmapfree(data);
     }
     free(header);
@@ -66,7 +66,7 @@ static void draw_opd(file_t *fp1, file_t *fp2, int id){
 	if(loc->nloc!=opd->nx){
 	    error("we expect matching loc_t and a double vector.\n");
 	}
-	drawopd("opd", loc, opd->p, name,"x","y","%s:%d",name,id);
+	drawopd("opd", loc, opd->p, NULL, name,"x","y","%s:%d",name,id);
 	dfree(opd);
 	locfree(loc);
     }
@@ -92,7 +92,7 @@ static void draw_loc(file_t *fp, int id){
     }else{
 	loc_t *loc=locreaddata(fp, magic, header);
 	if(loc->nloc>100000){//if too many points, we draw it.
-	    drawloc("loc",loc,fp->fn,"x","y","%s",fp->fn);
+	    drawloc("loc",loc,NULL,fp->fn,"x","y","%s",fp->fn);
 	}else{//we plot individual points.
 	    plot_points("loc",1, &loc, NULL, NULL,NULL,0,NULL,NULL,name,"x","y","%s:%d",name,id);
 	}

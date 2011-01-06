@@ -19,6 +19,7 @@ config/maos/bin/NapMean.bin.gz\
 config/maos/aper_tmt.conf\
 config/maos/atm_mk13n25p.conf\
 config/maos/atm_mk13n50p.conf\
+config/maos/atm_mk13n75p.conf\
 config/maos/atm_scao.conf\
 config/maos/atm_srd.conf\
 config/maos/dbg.conf\
@@ -44,6 +45,7 @@ config/maos/skyc_20.conf\
 config/maos/wfs_lgs_tt.conf\
 config/maos/wfs_lgs_ttf_tt.conf\
 config/maos/wfs_ngs.conf\
+config/maos/default.conf\
 config/skyc/maos.conf\
 config/skyc/skyc.conf\
 config/skyc/skyc_za0.conf\

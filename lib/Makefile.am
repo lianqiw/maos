@@ -8,7 +8,7 @@ draw.h fft.h genotf.h fractal.h stfun.h
 
 nobase_include_HEADERS+=sys/mem.h sys/process.h sys/scheduler_server.h		\
 sys/sockio.h sys/thread.h sys/io.h sys/daemonize.h sys/scheduler_client.h	\
-sys/shm.h sys/sys.h sys/thread_pool.h
+sys/shm.h sys/sys.h sys/thread_pool.h nr/nr.h
 
 EXTRA_DIST=cell.c sp.c matbin.c mat.c suitesparse.c fractal_do.c
 
@@ -21,9 +21,12 @@ AOS_SRC+=sys/io.c sys/daemonize.c sys/process_bsd.c sys/process_cygwin.c	\
 sys/scheduler_server.c sys/sockio.c sys/mem.c sys/process_apple.c sys/process.c	\
 sys/process_linux.c sys/scheduler_client.c sys/shm.c sys/thread.c sys/thread_pool.c
 
+AOS_SRC+=nr/beschb.c  nr/bessik.c  nr/chebev.c 
+
+
 lib_LTLIBRARIES=libaos.la
 libaos_la_SOURCES=$(AOS_SRC)
-libaos_la_LIBADD=$(LDCHOL) $(LDFFT)
+libaos_la_LIBADD=$(LDCHOL) $(LDFFT) 
 libaos_la_LDFLAGS = -avoid-version
 #The following enables the generation of documentation for cmat, ccell, csp functions.
 dmat.c:tmp.c

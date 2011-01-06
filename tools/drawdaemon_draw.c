@@ -73,7 +73,7 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     if(fabs(xmin)>rmax) rmax=fabs(xmin);
     int order1=(int)floor(log10(rmax));
 
-    if(fabs(diff)<fabs(1.e-4*xmax)){//very small separation
+    if(fabs(diff)<fabs(1.e-4*rmax)){//very small separation
 	xmax=xmax/pow(10,order1);
 	*order=order1;
 	*ntic=2;
@@ -81,8 +81,8 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	*tic1=xmax;
     }else{
 	diff/=pow(10,order1);
-	if(diff<2){
-	    order1=order1-1;
+	while(diff<2){
+	    order1-=1;
 	    diff=diff*10;
 	}
 	double spacing=0;
@@ -300,13 +300,23 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     drawdata->scalex=scalex;
     drawdata->scaley=scaley;
     drawdata->drawn=1;
-    if(drawdata->limit_changed
+    if(drawdata->limit_changed == 1
        || (drawdata->widthim_last !=0 
 	   && (drawdata->widthim_last!=drawdata->widthim 
 	       || drawdata->heightim_last!=drawdata->heightim))){
 	//canvas is resized, need to adjust zoom/paning
 	apply_limit(drawdata);
 	drawdata->limit_changed=0;
+    }
+    if(drawdata->limit_changed == 2 && drawdata->p){//zlim changed.
+	int nx=drawdata->nx;
+	int ny=drawdata->ny;
+	int stride=cairo_format_stride_for_width(drawdata->format, nx);
+
+	dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
+	cairo_surface_destroy(drawdata->image);
+	drawdata->image= cairo_image_surface_create_for_data 
+	    (drawdata->p, drawdata->format, nx, ny, stride);
     }
     drawdata->widthim_last=drawdata->widthim;
     drawdata->heightim_last=drawdata->heightim;
@@ -402,10 +412,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	xmin0=((-widthim*0.5)/zoomx - drawdata->offx)/scalex+centerx;
 	ymax0=(((heightim)*0.5)/zoomy - drawdata->offy)/scaley+centery;
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
-	int icumu=0;
-	if(drawdata->cumu){
-	    icumu=(int)strtol(drawdata->cumustr, NULL, 10);
-	}
+	int icumu=(int)drawdata->icumu;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 	    dmat *pts=drawdata->pts[ipts];
 	    double *ptsx=NULL, *ptsy=NULL;
@@ -533,9 +540,14 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     drawdata->limit0[1]=xmax0;
     drawdata->limit0[2]=ymin0;
     drawdata->limit0[3]=ymax0;
-    if(drawdata->spin){//dialog is running, update its values
+    if(drawdata->spins){//dialog is running, update its values
 	for(int i=0; i<4; i++){//update spin button's value.
-	    gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spin[i].w), drawdata->limit0[i]);
+	    gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->limit0[i]);
+	}
+	if(drawdata->zlim){
+	    for(int i=5; i<6; i++){//update spin button's value.
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(drawdata->spins[i]), drawdata->zlim[i-4]);
+	    }
 	}
     }
     char ticval[80];
@@ -602,7 +614,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     pango_text_powindex(cr,layout,xoff-font_size*2.8, yoff+font_size*1.8,order, 1);
 
-    if(drawdata->maxmin){//draw colorbar
+    if(drawdata->zlim){//draw colorbar
 	cairo_save(cr);
 	cairo_translate(cr, xoff+widthim+SP_LEG, yoff);
 	cairo_rectangle(cr, 0, 0, LEN_LEG,heightim);
@@ -622,15 +634,15 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
 	calc_tic(&tic1,&dtic,&ntic,&order,
-		 drawdata->maxmin[0],drawdata->maxmin[1]);
-	sep=drawdata->maxmin[0]-drawdata->maxmin[1];
+		 drawdata->zlim[1],drawdata->zlim[0]);
+	sep=drawdata->zlim[1]-drawdata->zlim[0];
 
 	for(int itic=0; itic<ntic; itic++){
 	    double ticv=tic1+dtic*itic;
 	    double val=ticv*pow(10,order);
 	    double frac;
-	    if(sep>1.e-10*fabs(drawdata->maxmin[0])){
-		frac=(val-drawdata->maxmin[1])/sep;
+	    if(sep>1.e-10*fabs(drawdata->zlim[1])){
+		frac=(val-drawdata->zlim[0])/sep;
 	    }else{
 		if(itic==0) frac=0;
 		else if(itic==1) frac=1;

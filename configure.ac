@@ -60,19 +60,25 @@ else
    echo "Intel Compiler is not found."
    use_icc_default="no"
 fi
+
 case "$host_cpu" in 
     *86)
         cpu="32"
 	AC_DEFINE(X86, [1], "I386 Machine")
+	objcopy_output=elf32-i386
+	objcopy_arch=i386
 	;;
     *64)
         cpu="64"
 	AC_DEFINE(X86_64, [1], "X86_64 Machine")
+	objcopy_output=elf64-x86-64
+	objcopy_arch=i386:x86-64
 	;;
     *)
         AC_MSG_ERROR([Unrecognized host_cpu])
 esac
-
+AC_SUBST(objcopy_output)
+AC_SUBST(objcopy_arch)
 mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
 win32=no
 case "$host_os" in
@@ -140,9 +146,12 @@ AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma
 if test "x$use_static" = "xyes" ;then
    LDEXE="-all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
+   AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
+   (cd ${SRC_DIR} && tar zcf ${BUILD_DIR}/config.tar.gz config/)
 else
    LDEXE=""
    AM_CONDITIONAL(USE_STATIC, false)
+   AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
 if test "x$use_shm" = "xyes" ;then
@@ -311,6 +320,7 @@ AC_SUBST(LDFFT)
 AC_SUBST(LAPACK)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
+AC_SUBST(BUILD_DIR)
 LIBS="" #somehow LIBS contain -fftw3
 AC_SUBST(LIBS)
 #Doxygen Features

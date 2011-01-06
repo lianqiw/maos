@@ -12,7 +12,7 @@ static int iwindow=0;
 static GtkWidget *curwindow=NULL;
 static GtkWidget *curtopnb=NULL;
 static GtkWidget *topmenu=NULL;
-static void *drawdata_dialog=NULL;
+static drawdata_t *drawdata_dialog=NULL;
 PangoFontDescription *desc=NULL;
 int font_name_version=0;
 char *font_name=NULL;
@@ -102,7 +102,7 @@ static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, Gt
     }else{
 	gtk_widget_set_sensitive(toolbar, TRUE);
     }
-    gtk_notebook_set_show_tabs(topnb, npage!=1);
+    //gtk_notebook_set_show_tabs(topnb, npage!=1);
 }
 static void topnb_detach(GtkMenuItem *menu){
     (void)menu;
@@ -121,12 +121,13 @@ static void topnb_detach(GtkMenuItem *menu){
     g_object_unref(page);
     g_object_unref(label);
 }
+/*
 static void subnb_page_changed(GtkNotebook *subnb, GtkWidget *child, guint n){
     (void)child;
     (void)n;
     int npage=gtk_notebook_get_n_pages(subnb);
     gtk_notebook_set_show_tabs(subnb, npage!=1);
-}
+    }*/
 static gboolean tab_button_cb(GtkWidget *widget, GdkEventButton *event, GtkWidget *page){
     /*
       widget is the event box that is the page label. page is the page in the notebook.
@@ -170,8 +171,7 @@ static void update_pixmap(drawdata_t *drawdata){
     cairo_draw(gdk_cairo_create(drawdata->pixmap), drawdata,width,height);
     gtk_widget_queue_draw(drawdata->drawarea);
 }
-static gboolean update_pixmap_timer(gpointer timer0){
-    updatetimer_t *timer=(updatetimer_t*)timer0;
+static gboolean update_pixmap_timer(updatetimer_t * timer){
     drawdata_t *drawdata=timer->drawdata;
     if(timer->pending==drawdata->pending){
 	update_pixmap(drawdata);
@@ -187,7 +187,7 @@ static void delayed_update_pixmap(drawdata_t *drawdata){
     if(!drawdata->pixmap){
 	update_pixmap(drawdata);
     }else{
-	g_timeout_add(100, update_pixmap_timer, tmp);
+	g_timeout_add(100, (GSourceFunc)update_pixmap_timer, tmp);
     }
 }
 
@@ -229,20 +229,12 @@ on_expose_event(GtkWidget *widget,
     }
     return FALSE;
 }
+static void drawdata_free_input(drawdata_t *drawdata){
+    //Only free the input received via fifo from draw.c
+    if(drawdata->image) cairo_surface_destroy(drawdata->image);
 
-static void drawdata_free(drawdata_t *drawdata){
-    cairo_surface_destroy(drawdata->image);
-    if(drawdata->pixmap){
-	g_object_unref(drawdata->pixmap);
-	drawdata->pixmap=NULL;
-    }
-
-    if(drawdata->p0){
-	free(drawdata->p0);
-    }
-    if(drawdata->p){
-	free(drawdata->p);
-    }
+    free(drawdata->p0);
+    free(drawdata->p);
     if(drawdata->npts>0){
 	for(int ipts=0; ipts<drawdata->npts; ipts++){	
 	    dfree(drawdata->pts[ipts]);
@@ -266,8 +258,14 @@ static void drawdata_free(drawdata_t *drawdata){
 	}
 	free(drawdata->legend);
     }
-    free(drawdata->cumustr);//free a NULL pointer is not illegal
     free(drawdata->limit);
+}
+static void drawdata_free(drawdata_t *drawdata){
+    if(drawdata->pixmap){
+	g_object_unref(drawdata->pixmap);
+	drawdata->pixmap=NULL;
+    }
+    drawdata_free_input(drawdata);
     free(drawdata);
     pthread_mutex_lock(&mutex_drawdata);
     ndrawdata--;
@@ -613,8 +611,8 @@ void addpage(drawdata_t **drawdatawrap)
 #endif
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(root),GTK_POS_RIGHT);
 	gtk_notebook_set_scrollable(GTK_NOTEBOOK(root), TRUE);
-	g_signal_connect(root, "page-added", G_CALLBACK(subnb_page_changed), NULL);
-	g_signal_connect(root, "page-removed", G_CALLBACK(subnb_page_changed), NULL);
+	/*g_signal_connect(root, "page-added", G_CALLBACK(subnb_page_changed), NULL);
+	  g_signal_connect(root, "page-removed", G_CALLBACK(subnb_page_changed), NULL);*/
 	GtkWidget *label=gtk_label_new(drawdata->fig);
 	GtkWidget *eventbox=gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER(eventbox), label);
@@ -645,28 +643,45 @@ void addpage(drawdata_t **drawdatawrap)
     if(page){
 	/*
 	  we use drawdatawrap so that we don't have to modify the data on the g_object.
-	 */
+	*/
 	drawdata_t **drawdata_wrapold=g_object_get_data(G_OBJECT(page),"drawdatawrap");
 	drawdata_t *drawdata_old=(*drawdata_wrapold);
-	drawdata->drawarea=drawdata_old->drawarea;
-	drawdata->page=drawdata_old->page;
-	drawdata->grid=drawdata_old->grid;
-	drawdata->square=drawdata_old->square;
+	/*Instead of freeing drawdata, we replace its content with newdata. this
+	  makes dialog continue to work.*/
+	drawdata_free_input(drawdata_old);
+	drawdata_old->image=drawdata->image;
+	drawdata_old->p=drawdata->p;
+	drawdata_old->p0=drawdata->p0;
+	drawdata_old->pts=drawdata->pts;
+	drawdata_old->npts=drawdata->npts;
+	drawdata_old->nstyle=drawdata->nstyle;
+	drawdata_old->style=drawdata->style;
+	drawdata_old->ncir=drawdata->ncir;
+	drawdata_old->cir=drawdata->cir;
+	drawdata_old->fig=drawdata->fig;
+	drawdata_old->name=drawdata->name;
+	drawdata_old->title=drawdata->title;
+	drawdata_old->xlabel=drawdata->xlabel;
+	drawdata_old->ylabel=drawdata->ylabel;
+	drawdata_old->legend=drawdata->legend;
+	drawdata_old->limit=drawdata->limit;
+	drawdata_old->zlim=drawdata->zlim;
+	drawdata_old->format=drawdata->format;
+	drawdata_old->gray=drawdata->gray;
+
 	//we preserve the limit instead of off, zoom in case we are drawing curves
-	memcpy(drawdata->limit0,drawdata_old->limit0,sizeof(double)*4);
-	drawdata->limit_changed=1;
-	/*
-	drawdata->zoomx=drawdata_old->zoomx;
-	drawdata->zoomy=drawdata_old->zoomy;
-	drawdata->offx=drawdata_old->offx;
-	drawdata->offy=drawdata_old->offy;*/
-	drawdata->width=drawdata_old->width;
-	drawdata->height=drawdata_old->height;
-	
-	drawdata_free(*drawdata_wrapold);
-	*drawdata_wrapold=drawdata;//just replace the data
-	if(get_current_page()==drawdata){//we are the current page. need to update pixmap
-	    update_pixmap(drawdata);
+	if(drawdata_old->npts){
+	    drawdata_old->limit_changed=1;
+	}
+	{
+	    free(drawdata);
+	    pthread_mutex_lock(&mutex_drawdata);
+	    ndrawdata--;
+	    info("drawdata deleted, ndrawdata=%d\n", ndrawdata);
+	    pthread_mutex_unlock(&mutex_drawdata);
+	}
+	if(get_current_page()==drawdata_old){//we are the current page. need to update pixmap
+	    update_pixmap(drawdata_old);
 	}//otherwise, don't have to do anything.
     }else{
 	//new tab inside the fig to contain the plot.
@@ -763,7 +778,7 @@ static void tool_save(GtkToolButton *button){
     }
 
     if(strcmp(suffix,".eps")==0){
-#ifdef CAIRO_HAS_PS_SURFACE
+#if CAIRO_HAS_PS_SURFACE == 1
 	width=72*8;
 	height=(drawdata)->height*72*8/(drawdata)->width;//same aspect ratio as widget
 	surface=cairo_ps_surface_create(filename, width,height);
@@ -777,6 +792,21 @@ static void tool_save(GtkToolButton *button){
 	height=(drawdata)->height;
 	surface=cairo_image_surface_create
 	    ((cairo_format_t)CAIRO_FORMAT_RGB24,width,height);
+    }else if(strcmp(suffix, ".svg")==0){
+#if CAIRO_HAS_SVG_SURFACE == 1
+	width=(drawdata)->width;//same size as the widget.
+	height=(drawdata)->height;
+	surface=cairo_svg_surface_create(filename, width,height);
+	cairo_draw(cairo_create(surface), drawdata,width,height);
+	cairo_surface_show_page (surface);
+	do_move(drawdata, 100, 0);
+	cairo_draw(cairo_create(surface), drawdata,width,height);
+	cairo_surface_show_page (surface);
+	do_move(drawdata, 0, 100);
+#else
+	error_msg("svg surface is unavailable");
+	goto retry;
+#endif
     }else{
 	error_msg("%s has unknown suffix\n",filename);
 	goto retry;
@@ -806,14 +836,16 @@ static void tool_toggled(GtkToggleToolButton *button, gpointer data){
     }
 }
 
-static void limit_change(GtkSpinButton *button, gpointer data){
-    (void)button;
-    spin_t *spin=data;
-    drawdata_t *drawdata=spin->data;
-    //update the values
-    drawdata->limit0[spin->i]=gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin->w));
-    drawdata->limit_changed=1;
-    delayed_update_pixmap(drawdata);
+static void limit_change(GtkSpinButton *spin, gdouble *val){
+    *val=gtk_spin_button_get_value(spin);
+    drawdata_dialog->limit_changed=1;
+    delayed_update_pixmap(drawdata_dialog);
+}
+
+static void limit_change2(GtkSpinButton *spin, gdouble *val){
+    *val=gtk_spin_button_get_value(spin);
+    drawdata_dialog->limit_changed=2;
+    delayed_update_pixmap(drawdata_dialog);
 }
 static void checkbtn_toggle(GtkToggleButton *btn, gint *key){
     *key=gtk_toggle_button_get_active(btn);
@@ -822,6 +854,10 @@ static void checkbtn_toggle(GtkToggleButton *btn, gint *key){
 static void entry_changed(GtkEditable *entry, char **key){
     free(*key);
     *key=gtk_editable_get_chars(entry, 0, -1);
+    delayed_update_pixmap(drawdata_dialog);
+}
+static void spin_changed(GtkSpinButton *spin, gdouble *val){
+    *val=gtk_spin_button_get_value(spin);
     delayed_update_pixmap(drawdata_dialog);
 }
 /**
@@ -844,30 +880,37 @@ static void tool_property(GtkToolButton *button, gpointer data){
     GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     GtkWidget *vbox=gtk_vbox_new(FALSE,0);
     GtkWidget *table, *hbox;
-    GtkWidget *checkbtn, *entry;
+    GtkWidget *checkbtn, *entry,*spin;
     gint irow;
-    int n=4;
-    spin_t lim[n];
-    double val[2];
-    val[0]=(drawdata->limit0[0]+drawdata->limit0[1])/2;
-    val[1]=(drawdata->limit0[2]+drawdata->limit0[3])/2;
-    for(int i=0; i<n; i++){
-	double step=pow(10,floor(log10(fabs(val[i/2])))-2);
-	if(fabs(val[i/2])<1e-10){
-	    step=1;
-	}
-	if(i<2){
-	    lim[i].w=gtk_spin_button_new_with_range(drawdata->limit[0],drawdata->limit[1],step);
-	}else{
-	    lim[i].w=gtk_spin_button_new_with_range(drawdata->limit[2],drawdata->limit[3],step);
-	}
-	gtk_spin_button_set_value(GTK_SPIN_BUTTON(lim[i].w), drawdata->limit0[i]);
-	lim[i].val=&drawdata->limit0[i];
-	g_signal_connect(lim[i].w, "value-changed", G_CALLBACK(limit_change), &lim[i]);
-	lim[i].i=i;
-	lim[i].data=drawdata;
+    int n;
+    GtkWidget *spins[6];
+    double diff[3];
+    diff[0]=(drawdata->limit[1]-drawdata->limit[0]);
+    diff[1]=(drawdata->limit[3]-drawdata->limit[2]);
+    if(drawdata->zlim){
+	diff[2]=(drawdata->zlim[1]-drawdata->zlim[0]);
+	n=6;
+    }else{
+	n=4;
     }
-    drawdata->spin=lim;
+    for(int i=0; i<n; i++){
+	//divide the separation to 100 steps.
+	if(diff[i/2]<EPS){
+	    diff[i/2]=1;
+	}
+	double step=pow(10,floor(log10(fabs(diff[i/2])))-2);
+	spins[i]=gtk_spin_button_new_with_range(-1000*step, 1000*step, step);
+	double *val;
+	if(i<4){
+	    val=&drawdata->limit0[i];
+	    g_signal_connect(spins[i], "value-changed", G_CALLBACK(limit_change), val);
+	}else{
+	    val=&drawdata->zlim[i-4];
+	    g_signal_connect(spins[i], "value-changed", G_CALLBACK(limit_change2), val);
+	}
+	gtk_spin_button_set_value(GTK_SPIN_BUTTON(spins[i]), *val);
+    }
+    drawdata->spins=spins;
 
     checkbtn=gtk_check_button_new_with_label("Make image square");
     g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->square);
@@ -901,11 +944,11 @@ static void tool_property(GtkToolButton *button, gpointer data){
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->cumuquad);
     gtk_box_pack_start(GTK_BOX(hbox), checkbtn,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new(") from"),FALSE,FALSE,0);
-    entry=gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(entry),drawdata->cumustr);
-    g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->cumustr);
-    gtk_box_pack_start(GTK_BOX(hbox), entry,TRUE,TRUE,0);
-        gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
+    spin=gtk_spin_button_new_with_range(drawdata->limit[0], drawdata->limit[1], 1);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin), drawdata->icumu);
+    g_signal_connect(spin, "value-changed", G_CALLBACK(spin_changed), &drawdata->icumu);
+    gtk_box_pack_start(GTK_BOX(hbox), spin,TRUE,TRUE,0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
     
     table=gtk_table_new(3,2,0);
     irow=0;
@@ -932,21 +975,28 @@ static void tool_property(GtkToolButton *button, gpointer data){
     table=gtk_table_new(4,4,0);
     irow=0;
     gtk_table_attach(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), lim[0].w, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), spins[0], 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
     gtk_table_attach(GTK_TABLE(table), gtk_label_new("xmax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), lim[1].w, 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), spins[1], 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
 
     irow++;
     gtk_table_attach(GTK_TABLE(table), gtk_label_new("ymin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), lim[2].w, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), spins[2], 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
     gtk_table_attach(GTK_TABLE(table), gtk_label_new("ymax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), lim[3].w, 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
+    gtk_table_attach(GTK_TABLE(table), spins[3], 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
     gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
-
+    if(n>4){
+	irow++;
+	gtk_table_attach(GTK_TABLE(table), gtk_label_new("zmin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
+	gtk_table_attach(GTK_TABLE(table), spins[4], 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+	gtk_table_attach(GTK_TABLE(table), gtk_label_new("zmax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
+	gtk_table_attach(GTK_TABLE(table), spins[5], 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
+	gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
+    }
     gtk_container_add(GTK_CONTAINER(content_area), vbox);
     gtk_widget_show_all(vbox);
     gtk_dialog_run(GTK_DIALOG(dialog));
-    drawdata->spin=NULL;
+    drawdata->spins=NULL;
     gtk_widget_destroy(dialog);
 }
 

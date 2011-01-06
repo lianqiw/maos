@@ -40,7 +40,8 @@ void free_parms(PARMS_T *parms){
     free(parms->atm.size);
     free(parms->atm.wddeg);
     free(parms->atm.ipsr);
-
+    free(parms->atm.overx);
+    free(parms->atm.overy);
     free(parms->atmr.ht);
     free(parms->atmr.os);
     free(parms->atmr.wt);
@@ -508,6 +509,9 @@ static void readcfg_atm(PARMS_T *parms){
     READ_DBL(atm.l0);
     READ_DBL(atm.dx);
     READ_INT(atm.wdrand);
+    READ_INT(atm.fractal);
+    READ_INT(atm.evolve);
+    READ_INT(atm.frozenflow);
     readcfg_dblarr_n(2, &(parms->atm.size),"atm.size");
     parms->atm.nps=readcfg_dblarr(&(parms->atm.ht),"atm.ht");
     readcfg_dblarr_n(parms->atm.nps,&(parms->atm.wt),"atm.wt");
@@ -602,6 +606,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.cone);
     READ_INT(tomo.square);
     READ_INT(tomo.cxx);
+    READ_DBL(tomo.cxxscale);
     READ_INT(tomo.guard);
     READ_DBL(tomo.tikcr);
     READ_INT(tomo.piston_cr);
@@ -696,16 +701,13 @@ static void readcfg_sim(PARMS_T *parms){
 	error("Must supply parms->sim.gtypeII_lo when sim.servotype_lo=%d\n",
 	      parms->sim.servotype_lo);
     }
-    READ_INT(sim.frozenflow);
     READ_INT(sim.cachedm);
     READ_INT(sim.cachesurf);
     READ_INT(sim.fuseint);
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
     READ_INT(sim.recon);
-    READ_INT(sim.fractal);
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
-    parms->sim.frozenflow = (parms->sim.frozenflow || parms->sim.closeloop);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -734,6 +736,12 @@ static void readcfg_plot(PARMS_T *parms){
     READ_INT(plot.atm);
     READ_INT(plot.run);
     READ_INT(plot.opdx);
+    READ_INT(plot.all);
+    if(parms->plot.all){
+	parms->plot.setup=1;
+	parms->plot.atm=1;
+	parms->plot.run=1;
+    }
 }
 /**
    Read in debugging parameters
@@ -879,7 +887,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	warning("dbg.tomo_maxit is set. Will run in open loop mode\n repeat the simulations"
 		" with different values of tomo.maxit.\n");
 	parms->sim.closeloop=0;
-	parms->sim.frozenflow=1;
+	parms->atm.frozenflow=1;
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    parms->atm.ws[ips]=0;//set windspeed to zero.
 	}
@@ -1084,7 +1092,18 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     if(parms->atm.iground==-1){
 	warning("There is no ground layer\n");
     }
-
+    parms->atm.frozenflow = (parms->atm.frozenflow || parms->sim.closeloop);
+    if(parms->atm.fractal && !parms->atm.evolve && parms->atm.frozenflow){
+	warning("atm.fractal requires atm.evolve=1, changed\n");
+	parms->atm.evolve=1;
+    }
+    if((!parms->atm.frozenflow || parms->dbg.atm>0) && parms->atm.evolve){
+	warning("Disable atm.evolve since there is no frozenflow or in debug atm mode.\n");
+	parms->atm.evolve=0;//disable evolve in open loop mode.
+    }
+    if(parms->atm.evolve){
+	disable_atm_shm=1;//can not share screen.
+    }
 }
 /**
    Scaling necessary values for non-zero zenith angle (za).
@@ -1139,25 +1158,36 @@ static void setup_parms_postproc_za(PARMS_T *parms){
    setup_parms_postproc_za.
 */
 static void setup_parms_postproc_atm_size(PARMS_T *parms){
+    const int nps=parms->atm.nps;
+    int Nmax=0;
+    long nxout[nps],nyout[nps];
+    for(int ips=0; ips<nps; ips++){
+	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,0.5,
+			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,T_ATM,0,1);
+	if(nxout[ips]>Nmax) Nmax=nxout[ips];
+	if(nyout[ips]>Nmax) Nmax=nyout[ips];
+    }
     if(fabs(parms->atm.size[0])<EPS ||fabs(parms->atm.size[1])<EPS){
-	int Nmax=0;
-	long nxout,nyout;
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,0.5,
-			     &nxout,&nyout,NULL,NULL,NULL,parms->atm.dx*3,0,T_ATM,0,1);
-	    if(nxout>Nmax) Nmax=nxout;
-	    if(nyout>Nmax) Nmax=nyout;
-	}
-	parms->atm.nx=1<<iceil(log2((double)Nmax));
+	parms->atm.nx=nextpow2(Nmax);
 	parms->atm.ny=parms->atm.nx;
     }else{
 	parms->atm.nx=2*(int)round(0.5*parms->atm.size[0]/parms->atm.dx);
 	parms->atm.ny=2*(int)round(0.5*parms->atm.size[1]/parms->atm.dx);
     }
-    if(parms->sim.fractal){
-	int Nmax=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;
-	parms->atm.nx=1+(1<<iceil(log2((double)Nmax)));
+    if(parms->atm.fractal){//must be square and 1+power of 2
+	int nn=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;
+	parms->atm.nx=1+nextpow2(nn);
 	parms->atm.ny=parms->atm.nx;
+    }
+    //record the size of the atmosphere.
+    parms->atm.size[0]=parms->atm.nx*parms->atm.dx;
+    parms->atm.size[1]=parms->atm.ny*parms->atm.dx;
+    //for screen evolving.
+    parms->atm.overx = calloc(parms->atm.nps, sizeof(long));
+    parms->atm.overy = calloc(parms->atm.nps, sizeof(long));
+    for(int ips=0; ips<parms->atm.nps; ips++){
+	parms->atm.overx[ips] = nxout[ips];
+	parms->atm.overy[ips] = nyout[ips];
     }
 }
 
@@ -1795,7 +1825,7 @@ static void setup_config(ARG_T*arg){
     
     if(arg->iconf<arg->argc){
 	char fntmp[PATH_MAX];
-	snprintf(fntmp,PATH_MAX,"/tmp/maos_%ld.conf",(long)getpid());
+	snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
 	FILE *fptmp=fopen(fntmp,"w");
 	int inline_conf=0;
 	for(int iconf=arg->iconf; iconf<arg->argc; iconf++){

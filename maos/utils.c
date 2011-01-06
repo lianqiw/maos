@@ -427,6 +427,14 @@ static void print_usage(void){
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
 	  );
 }
+  
+#if USE_STATIC
+static __attribute__((destructor)) void deinit(){
+    char tmp[PATH_MAX];
+    snprintf(tmp, PATH_MAX, "rm -rf %s/config-%ld/", TEMP, (long)getpid());
+    system(tmp);
+}
+#endif
 /**
    Parse command line arguments argc, argv
  */
@@ -516,8 +524,39 @@ ARG_T * parse_args(int argc, char **argv){
 	arg->conf=strdup("default.conf");
     }
     info2("Main config file is %s\n",arg->conf);
-    //Setup PATH and result directory
+    //Setup PATH and result directory so that the config_path is in the back of path
     char *config_path=find_config("maos");
+#if USE_STATIC
+    if(!exist(config_path)){
+	//We are binding the config files in the executable, extract and use it.
+	char *start=&_binary____config_tar_gz_start;
+	char *end=&_binary____config_tar_gz_end;
+	long len=end-start;
+	assert(len>0);
+	char fn[PATH_MAX];
+	mymkdir("%s/config-%d", TEMP, (int)getpid());
+	snprintf(fn, PATH_MAX, "%s/config-%d/config.tar.gz", TEMP, (int)getpid());
+	FILE *fp=fopen(fn, "w");
+	if(fp){
+	    fwrite(start, 1, end-start, fp);
+	    fclose(fp);
+	    snprintf(fn, PATH_MAX, "cd %s/config-%d/ && tar xf config.tar.gz", TEMP, (int)getpid());
+	    if(system(fn)<0){
+		perror("system");
+		warning("Unable to execute %s\n", fn);
+	    }else{
+		snprintf(fn, PATH_MAX, "%s/config-%d/config", TEMP, (int)getpid());
+		config_path=stradd(fn,"/maos",NULL);
+	    }
+	}else{
+	    warning("Unable to open %s\n", fn);
+	}
+    }
+#endif
+    if(!config_path || !exist(config_path)){
+	error("Unable to find usable configuration file\n");
+    }
+    info2("Using config files found in %s\n", config_path);
     char *bin_path=stradd(config_path, "/bin", NULL);
     addpath(config_path);
     addpath(bin_path);

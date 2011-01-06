@@ -411,12 +411,12 @@ static void fractal_screen_do(GENSCREEN_T *data){
     }
     UNLOCK(data->mutex_ilayer);
     double r0i=data->r0*pow(wt[ilayer], -3./5.);
-    info("r0i=%g\n", r0i);
-    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i);
+    //info("r0i=%g\n", r0i);
+    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->L0);
     remove_piston(screen[ilayer]->p, nx*ny);
     goto repeat;
 }
-map_t **fractal_screen(rand_t *rstat, long nx, long ny, double dx, double r0,
+map_t **fractal_screen(rand_t *rstat, int nx, int ny, double dx, double r0,
 		       double L0, double* wt, int nlayer, int nthread){
     GENSCREEN_T screendata;
     memset(&screendata, 0, sizeof(screendata));
@@ -444,4 +444,29 @@ map_t **fractal_screen(rand_t *rstat, long nx, long ny, double dx, double r0,
 	}
     }
     return screen;
+}
+
+/**
+   Generate the structure function of the phase of von karman spectrum 
+*/
+#include "nr/nr.h"
+dmat *vkcov(long nx, double dx, double r0, double L0){
+    double vkcoeff=tgamma(11./6)/(pow(2, 5./6.) * pow(M_PI, 8./3.)) * pow(24./5*tgamma(6./5.), 5./6.)
+	*pow(2*M_PI/0.5e-6, -2);
+    //for cov(0)
+    double vkcoeff0=tgamma(11./6)*tgamma(5./6.)/ ( 2* pow(M_PI, 8./3.)) *pow(24./5*tgamma(6./5.), 5./6.)
+	*pow(2*M_PI/0.5e-6, -2);
+    
+    dmat *cov=dnew(nx, 1);
+    const double f0=1./L0;
+    const double r0f0p=pow(r0*f0, -5./3.);
+    double ri, rk, rip, rkp;
+    double r2pif0;
+    cov->p[0]=vkcoeff0*r0f0p;
+    for(long i=1; i<nx; i++){
+	r2pif0=(i*dx)*2*M_PI*f0;
+	bessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
+	cov->p[i]=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
+    }
+    return cov;
 }

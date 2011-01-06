@@ -51,14 +51,13 @@ static unsigned int crp(double x, double x0){
 
 /**
    convert double to char with color map*/
-static void 
-dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info){
+void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info){
     double max,min;
-    if(info[0]>info[1]){
-	max=info[0]; min=info[1];
+    if(info[1]>info[0]){
+	min=info[0]; max=info[1];
     }else{
 	maxmindbl(p, nx*ny, &max, &min);
-	info[0]=max; info[1]=min;
+	info[0]=min; info[1]=max;
     }
     if(color){//colored
 	int *pi=pout;
@@ -71,8 +70,12 @@ dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, doub
 	    offset=0.5;
 	}
 	for(int i=0; i<nx*ny; i++){
-	    double x=(p[i]-min)*scale+offset;
-	    pi[i]=crp(x,0.75)<<16 | crp(x, 0.5)<<8 | crp(x, 0.25);
+	    if(isnan(p[i])){
+		pi[i]=0;
+	    }else{
+		double x=(p[i]-min)*scale+offset;
+		pi[i]=255<<24 | crp(x,0.75)<<16 | crp(x, 0.5)<<8 | crp(x, 0.25);
+	    }
 	}
     }else{//b/w
 	unsigned char *pc=pout;
@@ -167,9 +170,9 @@ static int read_fifo(FILE *fp){
 	case FIFO_YLABEL:
 	    FILE_READ_STR(drawdata->ylabel);
 	    break;
-	case FIFO_MAXMIN:
-	    drawdata->maxmin=calloc(2, sizeof(double));
-	    FILE_READ(drawdata->maxmin, sizeof(double)*2);
+	case FIFO_ZLIM:
+	    drawdata->zlim=calloc(2, sizeof(double));
+	    FILE_READ(drawdata->zlim, sizeof(double)*2);
 	    break;
 	case FIFO_LEGEND:
 	    drawdata->legend=calloc(drawdata->npts, sizeof(char*));
@@ -188,7 +191,7 @@ static int read_fifo(FILE *fp){
 			drawdata->format = (cairo_format_t)CAIRO_FORMAT_A8;
 			size=1;
 		    }else{
-			drawdata->format = (cairo_format_t)CAIRO_FORMAT_RGB24;
+			drawdata->format = (cairo_format_t)CAIRO_FORMAT_ARGB32;
 			size=4;
 		    }
 		    int stride=cairo_format_stride_for_width(drawdata->format, nx);
@@ -200,19 +203,19 @@ static int read_fifo(FILE *fp){
 			drawdata->limit[3]=drawdata->ny;
 		    }
 		    //convert data from double to int/char.
-		    if(!drawdata->maxmin){
-			drawdata->maxmin=calloc(2, sizeof(double));
+		    if(!drawdata->zlim){
+			drawdata->zlim=calloc(2, sizeof(double));
 		    }
 		    drawdata->p=calloc(nx*ny, size);
-		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->maxmin);
+		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
 		    gdk_threads_enter();//do I need this?
 		    drawdata->image= cairo_image_surface_create_for_data 
 			(drawdata->p, drawdata->format, nx, ny, stride);
 		    gdk_threads_leave();
 		}
 		if(drawdata->npts>0){
-		    drawdata->cumustr=calloc(4,sizeof(char));
-		    snprintf(drawdata->cumustr, 4, "50");
+		    drawdata->icumu=50;
+		    drawdata->cumuquad=1;
 		    if(!drawdata->limit){
 			drawdata->limit=calloc(4, sizeof(double));
 			double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
@@ -269,7 +272,8 @@ static int read_fifo(FILE *fp){
     }//while
 }
 
-void open_fifo(void){
+void open_fifo(void* nothing){
+    (void) nothing;
     FILE *fp=NULL;
     if(no_longer_listen){
 	return;

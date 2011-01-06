@@ -61,7 +61,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	if(!simu) continue;//skip.
-	if(parms->sim.frozenflow){
+	if(parms->atm.frozenflow){
 	    /*Generating atmospheric screen(s) that frozen flows.*/
 	    genscreen(simu);
 	}
@@ -72,7 +72,11 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    simu->isim=isim;
 	    simu->status->isim=isim;
 	    sim_update_etf(simu);
-	    if(!parms->sim.frozenflow){
+	    if(parms->atm.frozenflow){
+		if(parms->atm.evolve){
+		    evolve_screen(simu);
+		}
+	    }else{
 		disable_atm_shm=1;
 		genscreen(simu);
 		//re-seed the atmosphere in case atm is loaded from shm

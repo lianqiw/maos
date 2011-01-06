@@ -43,7 +43,8 @@
 #else
 #define TIM(A)
 #endif
-
+//static double opdzlim[2]={-2e-5,2e-5};
+static double *opdzlim=NULL;
 #define EVL_OL_OA 0 //only evaluate On axis point in OL OPD.
 /**
    Performance evaluation for each direction in parallel mode.  */
@@ -118,7 +119,7 @@ void perfevl_ievl(thread_t *info){
 	cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
     }
     if(parms->plot.run){
-	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1, 
+	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1, opdzlim,
 		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
     }
 #if EVL_OL_OA == 1
@@ -157,7 +158,7 @@ void perfevl_ievl(thread_t *info){
 	    dmat *psftemp=NULL;
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-		ddraw("OL PSF", psftemp, NULL, "Science Openloop PSF", 
+		ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
 		      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.psfwvl[iwvl]*1e6);
 		dfree(psftemp);
 	    }
@@ -191,7 +192,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
 	if(parms->plot.run){
-	    drawopdamp("Tomo", aper->locs, iopdevltomo->p, aper->amp1,
+	    drawopdamp("Tomo", aper->locs, iopdevltomo->p, aper->amp1,opdzlim,
 		       "Science Ideal MOAO Correction OPD","x (m)", "y (m)",
 		       "Tomo %d",ievl);
 	}
@@ -229,8 +230,8 @@ void perfevl_ievl(thread_t *info){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
 		    dcwlog10(psftemp);
-		    double maxmin[2]={0,-12};
-		    ddraw("Tomo PSF", psftemp, maxmin, "Science Tomo PSF", 
+		    double xylim[4]={-12,12,-12,12};
+		    ddraw("Tomo PSF", psftemp, xylim, NULL, "Science Tomo PSF", 
 			  "x", "y", "Tomo%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
 		    dfree(psftemp);
 		}
@@ -301,7 +302,7 @@ void perfevl_ievl(thread_t *info){
 	}
     }
     if(parms->plot.run){
-	drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1,
+	drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1,NULL,
 		   "Science Closed loop OPD", "x (m)", "y (m)",
 		   "CL %d",ievl);
     }
@@ -367,8 +368,9 @@ void perfevl_ievl(thread_t *info){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
 		dcwlog10(psftemp);
-		double maxmin[2]={0,-12};
-		ddraw("CL PSF", psftemp, maxmin, "Science Closed Loop PSF", 
+		double xylim[4]={-12,12,-12,12};
+		ddraw("CL PSF", psftemp, xylim, opdzlim, 
+		      "Science Closed Loop PSF", 
 		      "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
 		dfree(psftemp);
 	    }

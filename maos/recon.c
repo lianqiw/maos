@@ -405,7 +405,7 @@ void tomofit(SIM_T *simu){
 	    }
 	    if(parms->plot.opdx){ //draw opdx
 		for(int i=0; i<opdx->nx; i++){
-		    drawopd("Recon", recon->xloc[i], opdx->p[i]->p, 
+		    drawopd("Recon", recon->xloc[i], opdx->p[i]->p, NULL,
 			    "Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
 		}
 	    }
@@ -419,11 +419,11 @@ void tomofit(SIM_T *simu){
 	//Ploting.
 	if(parms->plot.run){
 	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
-		drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, 
+		drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, NULL,
 			"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
 	    }
 	    for(int i=0; simu->dmfit_hi && i<simu->dmfit_hi->nx; i++){
-		drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,
+		drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,NULL,
 			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
 	    }
 	}
@@ -564,12 +564,12 @@ void reconstruct(SIM_T *simu){
     }
     if(parms->plot.run){
 	for(int idm=0; idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,
+	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
 		    "DM Error Signal (Hi)","x (m)","y (m)",
 		    "Err Hi %d",idm);
 	}
 	for(int idm=0; simu->dmreal && idm<simu->parms->ndm; idm++){
-	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,
+	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
 		    "Actual DM Actuator Commands","x (m)", "y (m)",
 		    "Real %d",idm);
 	}
@@ -585,7 +585,7 @@ void reconstruct(SIM_T *simu){
 	    break;
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,
+	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,NULL,
 		    "DM Error Signal (Lo)","x (m)","y (m)",
 		    "Err Lo %d",idm);
 	}

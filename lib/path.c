@@ -18,6 +18,8 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
+
 #include <limits.h>
 #include "common.h"
 #include "process.h"
@@ -38,7 +40,6 @@ typedef struct PATH_T{
    This file contains function managing the searching path for files, behaves as
    PATH in POSIX systemsx */
 static PATH_T *PATH=NULL;//privately maintained path to locate config files.
-
 /**
    Add a directory to path.
 */
@@ -155,40 +156,24 @@ char *find_config(const char *name){
 	if(config_path) free(config_path);
 	config_path=stradd(SRCDIR,"/config/",name,NULL);
     }
- 
+
     if(!exist(config_path)){
-	info("Configuration files not found in %s\n", config_path);
+	//info("Configuration files not found in %s\n", config_path);
 	free(config_path);
 	char *cwd=mygetcwd();
 	config_path=stradd(cwd,"/config/",name,NULL);
 	free(cwd);
     }
-
     if(!exist(config_path)){
 	free(config_path);
-	info("Configuration files not found in %s\n", config_path);
+	//info("Configuration files not found in %s\n", config_path);
 	config_path=stradd(HOME,"/.aos/config-",PACKAGE_VERSION,"/",name,NULL);
     }
+ 
     if(!exist(config_path)){
-	info("Configuration files not found in %s\n", config_path);
-#ifdef __CYGWIN__
-	error("Please download the configuration files from github.com/lianqiw/maos/downloads and extract to current folder.\n");
-#else
-	warning("Unable to determine the path to the configuration files.\n");
-	warning("Will download a copy from the website and put in %ss/.aos/config\n",HOME);
-	char cmd[400];
-	char FN[80];
-	snprintf(FN,40,"config-%s.tar.bz2", PACKAGE_VERSION);
-	snprintf(cmd,400,"wget %s/%s -O %s/%s && tar axvf %s/%s -C %s/.aos/ && rm -rf %s/%s",
-		 BASEURL,FN,TEMP,FN,TEMP,FN,HOME,TEMP,FN);
-	if(system(cmd)){
-	    error("Unable to download the configuration files from the internet "
-		  "and extract to %s/.aos/config", HOME);
-	}
-#endif
-    }
-    if(!exist(config_path)){
-	error("Unable to determine the path to the configuration files.\n");
+	free(config_path);
+	config_path=NULL;
+	//warning2("Unable to determine the path to the configuration files.\n");
     }
     return config_path;
 }

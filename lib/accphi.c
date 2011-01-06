@@ -226,7 +226,7 @@ void prop_grid_pts(const map_t *mapin, /**<[in] OPD defind on a square grid*/
 		   double scale,       /**<[in] scaling of the beam diameter (cone)*/
 		   int wrap,           /**<[in] wrap input OPD or not*/
 		   long sastart,       /**<[in] The starting subaperture to trace ray*/
-		   long saend         /**<[in] The last (exclusive) subaperture to trace ray*/
+		   long saend          /**<[in] The last (exclusive) subaperture to trace ray*/
 		   ){
     /*
        2010-01-02: Improved by saving x interpolations for each subaperture

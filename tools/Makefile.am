@@ -1,9 +1,9 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir) -I $(top_srcdir)/lib/ -I $(top_srcdir)/lib/sys
 LDADD= ../lib/libaos.la -lm $(LDOPTS)
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
-icon-finished.h icon-optics.h
+icon-finished.h icon-optics.h mouse_black.h  mouse_hand.h  mouse_white.h
 
-noinst_HEADERS=monitor.h
+noinst_HEADERS=monitor.h drawdaemon.h $(ICONS)
 PROGS=
 if LINUX
 PROGS+=../bin/load ../bin/record_cpu

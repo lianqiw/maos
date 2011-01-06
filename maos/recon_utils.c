@@ -74,11 +74,12 @@ void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alph
     for(int ips=0; ips<xin->nx*xin->ny; ips++){
 	dzero(extra->xopd->p[ips]);
 	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);
-	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, alpha, 0);
+	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, 
+		       alpha*extra->scale, 0);
 	fractal_inv(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
-		    extra->xloc[ips]->dx, r0i);
+		    extra->xloc[ips]->dx, r0i, extra->l0);
 	fractal_inv_trans(extra->xopd->p[ips]->p, extra->xopd->p[ips]->nx, extra->xopd->p[ips]->ny, 
-			  extra->xloc[ips]->dx, r0i);
+			  extra->xloc[ips]->dx, r0i, extra->l0);
 	dembed_locstat(&extra->xopd->p[ips], 1, extra->xloc[ips], (*xout)->p[ips]->p, 1, 1);
     }
 }

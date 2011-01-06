@@ -17,6 +17,7 @@
 */
 
 #include <math.h>
+#include <stdint.h>
 #include "mathmisc.h"
 #include "blas.h"
 /**
@@ -197,8 +198,9 @@ void maxmindbl(const double *restrict p, long N,
     }
     double a,b;
     long i;
-    a=p[0]; b=p[0];
-    for(i=1; i<N; i++){
+    a=-INFINITY;
+    b=INFINITY;
+    for(i=0; i<N; i++){
 	if(p[i]>a) a=p[i];
 	if(p[i]<b) b=p[i];
     }
@@ -211,7 +213,8 @@ void maxminlong(const long *restrict p, long N,
 		long *restrict max, long *restrict min){
     long a,b;
     long i;
-    a=p[0]; b=p[0]; 
+    a=INTMAX_MIN;
+    b=INTMAX_MAX;
     for(i=0; i<N; i++){
 	if(p[i]>a) a=p[i];
 	if(p[i]<b) b=p[i];

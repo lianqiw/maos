@@ -20,6 +20,10 @@
 #define __AOS_UTILS_H
 #include "maos.h"
 #include <signal.h>
+#if USE_STATIC
+extern char _binary____config_tar_gz_start;
+extern char _binary____config_tar_gz_end;
+#endif
 void addnoise(dmat *A, rand_t* rstat, 
 	      const double bkgrnd, const double pcalib, 
 	      const double *bkgrnd2, const double pcalib2,

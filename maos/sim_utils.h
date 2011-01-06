@@ -29,6 +29,7 @@ void save_simu(const SIM_T *simu);
 void print_progress(const SIM_T *simu);
 void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms);
 void genscreen(SIM_T *simu);
+void evolve_screen(SIM_T *simu);
 void dcell_mean_and_save(dcell *A, double scale, const char *format, ...);
 void dmat_mean_and_save(dmat *A, double scale, const char *format, ...);
 #endif

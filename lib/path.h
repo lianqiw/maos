@@ -18,7 +18,6 @@
 
 #ifndef AOS_LIB_PATH_H
 #define AOS_LIB_PATH_H
-
 void addpath(const char*path);
 void rmpath(const char *path);
 void printpath(void);
