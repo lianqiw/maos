@@ -23,12 +23,15 @@ AM_CONDITIONAL(DRAW,true) #for drawdaemon
 AM_CONDITIONAL(MON,true)  #for parital monitor without notify
 AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #make sure there are spaces before and after >=
-PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [AC_MSG_NOTICE([Will compile drawdaemon])],[AM_CONDITIONAL(DRAW,false)])
-PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[AC_MSG_NOTICE([Will compile monitor])],[AM_CONDITIONAL(MON,false)])
-PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[AC_MSG_NOTICE([Will compile monitor with libnotify])],[AM_CONDITIONAL(MONN,false)])
+PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [comp_draw="yes"],[comp_draw="no"])
+PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[comp_mon="yes"], [comp_mon="no"])
+PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[comp_monn="yes"],[comp_monn="no"])
 #The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
 #with their values in Makefile.in 
 #so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
+AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
+AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
+AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
 AC_SUBST(DRAW_CFLAGS)
 AC_SUBST(DRAW_LIBS)
 AC_SUBST(MON_CFLAGS)
@@ -81,16 +84,18 @@ AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
 mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
 win32=no
+mkl_avail="no"
 case "$host_os" in
 *linux*)
     AM_CONDITIONAL(LINUX, true)
     LDSYS="$LDSYS -lrt" #Real time library
     #Enable System V Interface definition (IPC,SHM)
     OPTSextra="-Werror -g -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
+    mkl_avail="yes"
     if test -f "$mkl_lib" ;then
        use_mkl_default="yes"
     else
-       use_mkl_default="yes" #"no"
+       use_mkl_default="no"
     fi
     use_static_default="no"
     if test -d /dev/shm ;then
@@ -104,14 +109,14 @@ case "$host_os" in
     ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
- if ! test -e scripts/drawdaemon.app ;then
+ if test comp_draw = "no" -a ! -e scripts/drawdaemon.app ;then
      AC_MSG_NOTICE([Downloading drawdaemon.app from internet])
      FN=drawdaemon.app_0.8.0.tar.gz 
      curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/$FN &&\
      tar -xf $FN -C ${SRC_DIR}/scripts/ &&\
      rm  -rf $FN
  fi
- if ! test -e scripts/monitor.app ;then
+ if test comp_mon = "no" -a ! -e scripts/monitor.app ;then
      AC_MSG_NOTICE([Downloading monitor.app from internet])
      FN=monitor.app_0.8.0.tar.gz
      curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/$FN &&\ 
@@ -245,6 +250,29 @@ fi
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
+
+if test "x$use_mkl" = "xno" ;then
+#Check for LAPACK library in the system
+   if test -z "$LAPACK" ;then
+       if test -n "$(pkg-config --libs blas lapack)" ;then
+           LAPACK=$(pkg-config --libs blas lapack)
+       else
+           LAPACK="-lblas -llapack"
+       fi
+   
+       echo LAPACK=$LAPACK
+       AC_CHECK_LIB([blas],  [dgemm_],[],[has_lapack=no],[$LAPACK])
+       AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
+       if test  "x$has_lapack" = "xno" ;then
+           if test "x$mkl_avail" = "xyes"; then
+       	       use_mkl="yes"
+	       AC_MSG_NOTICE([blas/lapack is not found. Download and use mkl])
+           else
+               AC_MSG_ERROR([Please install blas and lapack])
+	   fi
+       fi
+   fi
+fi
 if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
       echo The MKL library is not available at "$mkl_lib"
@@ -261,22 +289,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    LAPACK="-L${SRC_DIR}/external/mkl${cpu} -lmkl -lguide"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
-   if test -z "$LAPACK" ;then
-       if test -n "$(pkg-config --libs blas lapack)" ;then
-           LAPACK=$(pkg-config --libs blas lapack)
-       else
-           LAPACK="-lblas -llapack"
-       fi
-   
-   echo LAPACK=$LAPACK
-   AC_CHECK_LIB([blas],  [dgemm_],[],[lapack_not_found=yes],[$LAPACK])
-   AC_CHECK_LIB([lapack],[dposv_],[],[lapack_not_found=yes],[$LAPACK])
-   if test  "x$lapack_not_found" = "xyes" ;then
-       if test -n "$use_mkl_default" ;then
-           AC_MSG_ERROR(Please install blas or use --enable-mkl to download MKL from MAOS website)
-       fi
-   fi
-   fi
+ 
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
 #Check for FFTW3 header and library.
@@ -360,7 +373,9 @@ AC_OUTPUT
 echo host_os=$host_os
 echo use_icc=$use_icc
 echo use_static=$use_static
-
+echo Compile Drawdaemon=$comp_draw
+echo Compile Monitor=$comp_mon
+echo Compile Monitor with Libnotify=$comp_monn
 echo CC=$CC
 echo LIBS=$LIBS
 echo LDEXE=$LDEXE

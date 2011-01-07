@@ -1,5 +1,5 @@
 /*
-  Copyright 2009, 2010 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  Copyright 2009, 2010, 2011 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
   
   This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
 
@@ -398,7 +398,7 @@ void maos_signal_handler(int sig){
 	    print_backtrace(0);
 	}
 	scheduler_finish(1);
-	exit(sig);
+	_Exit(sig);//don't call clean up functions.
     }
 }
 /**
