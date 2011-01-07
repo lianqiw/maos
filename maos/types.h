@@ -210,6 +210,7 @@ typedef struct FRACTAL_T{
     double  r0;        /**<The Fried parameter*/
     double  l0;        /**<The outer scale*/
     double  scale;     /**<An additional scaling factor*/
+    long   ninit;      /**<The initial size to do with covariance matrix. 2 is minimum*/
 }FRACTAL_T;
 typedef struct CN2EST_T CN2EST_T;
 /**
@@ -352,8 +353,7 @@ typedef struct WFSINTS_T{
    contains all the run time data struct.
 */
 typedef struct SIM_T{
-    map_t **(*atmfun)(rand_t *rstat, int m, int n, double dx, 
-		      double r0, double L0, double* wt, int nlayer, int nthread);
+    map_t **(*atmfun)(ATM_ARGS);
     map_t **atm;       /**<fine sampled simulation turbulence screens*/
     map_t **atm2;      /**<another fine sampled simulation turbulence screen for evolving.*/
     map_t **cachedm;   /**<grid cache dm actuator to a finer sampled screen. for

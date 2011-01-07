@@ -189,6 +189,8 @@ AM_CONDITIONAL(USE_OPENCC,false)
 use_ifort="no"
 if test "x$use_mem" = "xyes" ;then
     AC_DEFINE(USE_MEM,[1],["Use memory management"])
+    use_icc="no" #disable icc.
+    debug="yes"
 else
     AC_DEFINE(USE_MEM,[0],["Do not use memory management"])	
 fi

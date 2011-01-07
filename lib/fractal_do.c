@@ -1,6 +1,7 @@
 #ifndef FRACTAL
 #error "do not use fractal_do.c along."
 #endif
+
 /**
    Define the following:
    FRACTAL: function name
@@ -8,6 +9,7 @@
    TRANPOSE: transpose the operation or not. 
    F(r): The structure function
 */
+
 //derived parameter: FORWARD: direction, 1: forward, 0: backward
 #if (INVERSE==0 && TRANSPOSE ==0) || (INVERSE == 1 && TRANSPOSE == 1)
 #define FORWARD 1
@@ -16,48 +18,56 @@
 #endif
 
 
-void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0){
-    if(((nx-1) & (nx-2)) != 0  || ((ny-1) & (ny-2)) !=0 || nx != ny){
-	error("nx=%ld, ny=%ld: they need to be 1+power of 2, and equal\n", nx, ny);
-    }
+void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0, long ninit){
+    assert(nx==ny);
     LOCK(mutex_cov);
-    dmat *cov=vkcov_calc(r0, L0, dx, nx);
+    long step0=(nx-1)/(ninit-1);
+#ifndef NDEBUG
+    if(ninit<1 || (ninit-1)*step0!=(nx-1) || (step0 & (step0-1)) !=0){
+	info("nx=%ld, ninit=%ld, step0=%ld\n", nx, ninit, step0);
+    }
+#endif
+    assert(ninit>1);
+    assert((ninit-1)*step0==(nx-1));//must evenly divide.
+    assert((step0 & (step0-1)) ==0);//step0 must be power of 2.
+    vkcov_t *node=vkcov_calc(r0, L0, dx, nx, ninit);
+    dmat *cov=node->cov;
     UNLOCK(mutex_cov);
     PDMAT(cov, pcov);
     const long nx1=nx-1;
     const long ny1=ny-1;
-    const long norder=cov->ny-2;
+    const long norder=mylog2(step0);
     const double c0=pcov[0][0];
     double (*p)[nx]=(void*)p0;
 #if FORWARD == 1
     {
-	//First generate four outmost values.
-	double c1=pcov[norder+1][0];
-	double c2=pcov[norder+1][1];
-#if INVERSE == 0
-	double a=sqrt(c0+2*c1+c2);
-	double b=sqrt(c0-2*c1+c2);
-	double c=sqrt(2*(c0-c2));
-#else //INVERSE
-	double a=1./sqrt(c0+2*c1+c2);
-	double b=1./sqrt(c0-2*c1+c2);
-	double c=2./sqrt(2*(c0-c2));
+	dmat *pi=dnew(ninit,ninit);
+	PDMAT(pi, ppi);
+	for(long iy=0; iy<ninit ;iy++){
+	    for(long ix=0; ix<ninit; ix++){
+		ppi[iy][ix]=p[iy*step0][ix*step0];
+	    }
+	}
+	//reshape pi;
+	pi->nx=ninit*ninit;
+	pi->ny=1;
+	dmat *qi=dnew(ninit*ninit,1);
+#if INVERSE ==0
+	dmm(&qi, node->K, pi, "nn", 1);
+#else
+	dmm(&qi, node->KI, pi, "tn", 1);
 #endif
-	assert(c0+2*c1+c2>=0 && c0-2*c1+c2>=0 && c0-c2>=0);
-	double *p1=&p[0][0];
-	double *p2=&p[0][nx1];
-	double *p3=&p[ny1][nx1];
-	double *p4=&p[ny1][0];
-
-	double q1=0.5*(a**p1-b**p2-c**p3      );
-	double q2=0.5*(a**p1+b**p2      -c**p4);
-	double q3=0.5*(a**p1-b**p2+c**p3      );
-	double q4=0.5*(a**p1+b**p2      +c**p4);
-
-	*p1=q1;
-	*p2=q2;
-	*p3=q3;
-	*p4=q4;
+	//reshape to square.
+	qi->nx=ninit;
+	qi->ny=ninit;
+	PDMAT(qi, pqi);
+	for(long iy=0; iy<ninit ;iy++){
+	    for(long ix=0; ix<ninit; ix++){
+		p[iy*step0][ix*step0]=pqi[iy][ix];
+	    }
+	}
+	dfree(pi);
+	dfree(qi);
     }
 #endif
 #if TRANSPOSE == 0
@@ -89,7 +99,7 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0){
 #endif
     for(LOOP){
 #undef LOOP
-	long step=1<<order;
+	long step=1<<order;//step of the parent grid.
 	double c1=pcov[order][0];
 	double c2=pcov[order][1];
 	double c3=pcov[order+1][0];
@@ -184,32 +194,33 @@ void FRACTAL(double *p0, long nx, long ny, double dx, double r0, double L0){
     }
 #if FORWARD == 0
     {
-	//generate four outmost values. 
-	double c1=pcov[norder+1][0];
-	double c2=pcov[norder+1][1];
-#if INVERSE == 0
-	double a=sqrt(c0+2*c1+c2);
-	double b=sqrt(c0-2*c1+c2);
-	double c=sqrt(2*(c0-c2));
-#else //INVERSE
-	double a=1./sqrt(c0+2*c1+c2);
-	double b=1./sqrt(c0-2*c1+c2);
-	double c=2./sqrt(2*(c0-c2));
+	dmat *pi=dnew(ninit,ninit);
+	PDMAT(pi, ppi);
+	for(long iy=0; iy<ninit ;iy++){
+	    for(long ix=0; ix<ninit; ix++){
+		ppi[iy][ix]=p[iy*step0][ix*step0];
+	    }
+	}
+	//reshape pi;
+	pi->nx=ninit*ninit;
+	pi->ny=1;
+	dmat *qi=dnew(ninit*ninit,1);
+#if INVERSE ==0
+	dmm(&qi, node->K, pi, "tn", 1);
+#else
+	dmm(&qi, node->KI, pi, "nn", 1);
 #endif
-	assert(a>0 && b>0 && b>0);
-	double *p1=&p[0][0];
-	double *p2=&p[0][nx1];
-	double *p3=&p[ny1][nx1];
-	double *p4=&p[ny1][0];
-
-	double q1=0.5*( a**p1+a**p2+a**p3+a**p4);
-	double q2=0.5*(-b**p1+b**p2-b**p3+b**p4);
-	double q3=0.5*(-c**p1      +c**p3      );
-	double q4=0.5*(      -c**p2      +c**p4);
-	*p1=q1;
-	*p2=q2;
-	*p3=q3;
-	*p4=q4;
+	//reshape to square.
+	qi->nx=ninit;
+	qi->ny=ninit;
+	PDMAT(qi, pqi);
+	for(long iy=0; iy<ninit ;iy++){
+	    for(long ix=0; ix<ninit; ix++){
+		p[iy*step0][ix*step0]=pqi[iy][ix];
+	    }
+	}
+	dfree(pi);
+	dfree(qi);
     }
 #endif
 #undef QUA

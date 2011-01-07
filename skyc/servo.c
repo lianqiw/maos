@@ -363,7 +363,7 @@ dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtlgs, int dtrat){
 */
 dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     double df=1./(N*dt);
-    dmat *f=dlinspace(df,(N-1)*df,N);
+    dmat *f=dlinspace(df,df,N);
     dmat *psdx=dnew_ref(psdin->p,          psdin->nx,1);
     dmat *psdy=dnew_ref(psdin->p+psdin->nx,psdin->nx,1);
     dmat *psd2=dinterp1log(psdx,psdy,f);

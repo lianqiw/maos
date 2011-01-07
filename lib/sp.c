@@ -1542,6 +1542,7 @@ X(sp) *Y(spinvbdiag)(const X(sp) *A, long bs){
 	}
     }
     B->p[A->n]=nb*bs*bs;
+    X(free)(bk);
     return B;
 }
 /**

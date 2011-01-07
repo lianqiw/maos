@@ -269,7 +269,7 @@ int main(){
     dcomplex *invpsd=calloc(256*256*6, sizeof(dcomplex));
     long offset=0;
     for(long ips=0; ips<nps; ips++){
-	dmat *tmp=vonkarman_psd(256,256,0.25*(1-ht[ips]/hs), r0*pow(wt[ips],-3./5.),30,-1);
+	dmat *tmp=turbpsd(256,256,0.25*(1-ht[ips]/hs), r0*pow(wt[ips],-3./5.),30,-1);
 	dfftshift(tmp);
 	dscale(tmp,256*256);
 	for(int i=0; i<256*256; i++){

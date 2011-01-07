@@ -512,6 +512,7 @@ static void readcfg_atm(PARMS_T *parms){
     READ_INT(atm.fractal);
     READ_INT(atm.evolve);
     READ_INT(atm.frozenflow);
+    READ_INT(atm.ninit);
     readcfg_dblarr_n(2, &(parms->atm.size),"atm.size");
     parms->atm.nps=readcfg_dblarr(&(parms->atm.ht),"atm.ht");
     readcfg_dblarr_n(parms->atm.nps,&(parms->atm.wt),"atm.wt");
@@ -623,6 +624,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_DBL(tomo.minwt);
     READ_INT(tomo.cubic);
     READ_DBL(tomo.iac);
+    READ_INT(tomo.ninit);
 }
 
 /**

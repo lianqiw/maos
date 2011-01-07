@@ -82,7 +82,7 @@ static map_t **genscreen_do(SIM_T *simu){
 	info2("Generating Atmospheric Screen...");
 	tic;
 	screens = simu->atmfun(simu->atm_rand, atm->nx, atm->ny, atm->dx, atm->r0,
-			       atm->l0,atm->wt,atm->nps,nthread);
+			       atm->l0,atm->wt,atm->nps,atm->ninit,nthread);
 	toc2("done");
     }else{
 	info2("Generating Testing Atmosphere Screen\n");
@@ -156,43 +156,43 @@ static map_t **genscreen_do(SIM_T *simu){
     return screens;
 }
 /**
-blending two atmospehre atm and atm2 according to wind direction.  Does not work
- well for blendings near the corner.
- */
+   blending two atmospehre atm and atm2 according to wind direction.  Does not work
+   well for blendings near the corner.
+*/
 /*
-static void blend_screen(map_t *atm1, map_t *atm2, double angle, long ox, long oy){
-    const long nx=atm1->nx;
-    double ca=cos(angle);
-    double sa=sin(angle);
-    double rx=(double)(atm1->nx-ox)/fabs(ca);
-    double ry=(double)(atm1->ny-oy)/fabs(sa);
-    double rr=rx<ry?rx:ry;//distance of the center of two screens.
-    atm2->ox=atm1->ox+rr*cos(angle)*atm1->dx;
-    atm2->oy=atm1->oy+rr*sin(angle)*atm1->dx;
+  static void blend_screen(map_t *atm1, map_t *atm2, double angle, long ox, long oy){
+  const long nx=atm1->nx;
+  double ca=cos(angle);
+  double sa=sin(angle);
+  double rx=(double)(atm1->nx-ox)/fabs(ca);
+  double ry=(double)(atm1->ny-oy)/fabs(sa);
+  double rr=rx<ry?rx:ry;//distance of the center of two screens.
+  atm2->ox=atm1->ox+rr*cos(angle)*atm1->dx;
+  atm2->oy=atm1->oy+rr*sin(angle)*atm1->dx;
 
-    //positive size of overlapping area.
-    long ovx=atm1->nx-(long)round(rr*fabs(ca));
-    long ovy=atm1->ny-(long)round(rr*fabs(sa));
-    //start point of overlapping region in the two arrays.
-    long offx=nx-ovx;
-    long offy=(atm1->ny-ovy)*nx;
-    int wtx=0,wty=0;
-    if(ca<0) wtx=1;
-    if(sa<0) wty=1;
-    double *p1=atm1->p+(1-wty)*offy+(1-wtx)*offx;
-    double *p2=atm2->p+wty*offy+wtx*offx;
-    double (*pp1)[nx]=(void*)p1;
-    double (*pp2)[nx]=(void*)p2;
-    for(long iy=0; iy<ovy; iy++){
-	double wty1=fabs((double)wty-(double)iy/(double)(ovy-1));
-	for(long ix=0; ix<ovx; ix++){
-	    double wtx1=fabs((double)wtx-(double)ix/(double)(ovx-1));
-	    double wt1=wty1*wtx1;
-	    pp1[iy][ix]=(1-wt1)*pp1[iy][ix]+wt1*pp2[iy][ix];
-	    pp2[iy][ix]=pp1[iy][ix];
-	}
-    }
-    }*/
+  //positive size of overlapping area.
+  long ovx=atm1->nx-(long)round(rr*fabs(ca));
+  long ovy=atm1->ny-(long)round(rr*fabs(sa));
+  //start point of overlapping region in the two arrays.
+  long offx=nx-ovx;
+  long offy=(atm1->ny-ovy)*nx;
+  int wtx=0,wty=0;
+  if(ca<0) wtx=1;
+  if(sa<0) wty=1;
+  double *p1=atm1->p+(1-wty)*offy+(1-wtx)*offx;
+  double *p2=atm2->p+wty*offy+wtx*offx;
+  double (*pp1)[nx]=(void*)p1;
+  double (*pp2)[nx]=(void*)p2;
+  for(long iy=0; iy<ovy; iy++){
+  double wty1=fabs((double)wty-(double)iy/(double)(ovy-1));
+  for(long ix=0; ix<ovx; ix++){
+  double wtx1=fabs((double)wtx-(double)ix/(double)(ovx-1));
+  double wt1=wty1*wtx1;
+  pp1[iy][ix]=(1-wt1)*pp1[iy][ix]+wt1*pp2[iy][ix];
+  pp2[iy][ix]=pp1[iy][ix];
+  }
+  }
+  }*/
 /**
    overlay atm2 with atm2 according to wind direction angle and required
    overlapping region of at least overx*overy.
@@ -257,8 +257,8 @@ static void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy){
     }
 }
 static void map_crop(map_t *atm, long overx, long overy){
-  /*offset the atm to start from the corner and crop the screen to
-    keep only the part that actually participates in ray tracing.*/
+    /*offset the atm to start from the corner and crop the screen to
+      keep only the part that actually participates in ray tracing.*/
     
     double dx=atm->dx;
     long nx=atm->nx;
@@ -287,6 +287,7 @@ static void map_crop(map_t *atm, long overx, long overy){
 	}
     }
     dmat *tmp=dsub((dmat*)atm, 0, nxnew, 0, nynew);
+    free(atm->p);
     atm->p=tmp->p;
     atm->nx=tmp->nx;
     atm->ny=tmp->ny;
@@ -303,6 +304,9 @@ void genscreen(SIM_T *simu){
     if(simu->atm){
 	sqmaparrfree(simu->atm, parms->atm.nps);
 	dfree(simu->winddir);
+        if(simu->atm2){
+	    sqmaparrfree(simu->atm2, parms->atm.nps);
+	}
     }
     if(simu->parms->dbg.noatm){
 	warning("dbg.noatm flag is on. will not generate atmoshere\n");
@@ -374,7 +378,7 @@ void genscreen(SIM_T *simu){
 	    }
 	    for(int ips=0; ips<atm->nps; ips++){
 		drawmap("atm2", simu->atm2[ips],opdzlim,
-			    "Atmosphere OPD 2","x (m)","y (m)","layer%d",ips);
+			"Atmosphere OPD 2","x (m)","y (m)","layer%d",ips);
 	    }
 	}
     }
@@ -404,7 +408,7 @@ void genscreen(SIM_T *simu){
 }
 /**
    Evolve the turbulence screen when the ray goes near the edge by generating an
-new screen and blend into the old screen.  */
+   new screen and blend into the old screen.  */
 void evolve_screen(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
@@ -451,7 +455,7 @@ void evolve_screen(SIM_T *simu){
 	    simu->atm[ips]=simu->atm2[ips];
 	    map_t **screen=simu->atmfun(simu->atm_rand, atm->nx, atm->ny, 
 					atm->dx, atm->r0,
-					atm->l0, &atm->wt[ips], 1, 1);	
+					atm->l0, &atm->wt[ips], 1, 2, 1);	
 	    simu->atm2[ips]=screen[0]; 
 	    simu->atm2[ips]->vx=simu->atm[ips]->vx;
 	    simu->atm2[ips]->vy=simu->atm[ips]->vy;
@@ -463,8 +467,8 @@ void evolve_screen(SIM_T *simu){
 			      parms->atm.overy[ips]);
 	    if(simu->wfs_prop_atm){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
-			data->mapin=simu->atm[ips];
+		    PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
+		    data->mapin=simu->atm[ips];
 		}
 	    }
 	    if(simu->evl_prop_atm){
@@ -530,33 +534,6 @@ void sim_update_etf(SIM_T *simu){
 
 
 /**
-   Scale a dcell array and save to file.
-*/
-void dcell_mean_and_save(dcell *A, double scale, const char *format, ...){
-    format2fn;
-    dcell *tmp=NULL;
-    if(scale<1.e-14){
-	error("scale=%g\n",scale);
-    }
-    dcelladd(&tmp, 0, A, scale);
-    dcellwrite(tmp,"%s",fn);
-    dcellfree(tmp);
-}
-
-/**
-   Scale a dcell array and save to file.
-*/
-void dmat_mean_and_save(dmat *A, double scale, const char *format, ...){
-    format2fn;
-    dmat *tmp=NULL;
-    if(scale<1.e-14){
-	error("scale=%g\n",scale);
-    }
-    dadd(&tmp, 0, A, scale);
-    dwrite(tmp,"%s",fn);
-    dfree(tmp);
-}
-/**
    use random number dirived from input seed to seed other stream.  necessary to
    have independant streams for different wfs in threading routines to avoid
    race condition and have consitent result */
@@ -577,7 +554,7 @@ void seeding(SIM_T *simu){
 /**
    Initialize simu (of type SIM_T) and various simulation data structs. Called
    for every seed.
- */
+*/
 SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, 
 		 APER_T *aper,RECON_T *recon, int iseed){
     if(parms->fdlock[iseed]<0){
@@ -591,9 +568,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->dbg.atm==0){
 	if(parms->atm.fractal){
 	    simu->atmfun=fractal_screen;
-	    warning2("Genearating atmosphere using Fractal method "
-		     "(Only kolmogorov is implemented yet)\n");
-	    
 	}else{
 	    simu->atmfun=vonkarman_screen;
 	}
@@ -1140,7 +1114,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		save->gradnf[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradnf_%d.bin", iwfs, seed);
 		if(parms->sim.recon==0 &&(parms->tomo.split==2 || !parms->powfs[ipowfs].skip)){
 		    save->gradol[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradol_%d.bin", 
-						      iwfs, seed);
+						    iwfs, seed);
 		}
 	    }
 	}
@@ -1179,14 +1153,16 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 }
 /**
    Release memory of simu (of type SIM_T) and close files.
- */
+*/
 void free_simu(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     free(simu->init);
     free(simu->atm_rand);
     free(simu->atmwd_rand);
     free(simu->wfs_rand);
+    info("Freeing atm\n");
     sqmaparrfree(simu->atm, parms->atm.nps);
+    sqmaparrfree(simu->atm2, parms->atm.nps);
     PDEINIT(simu->mutex_plot);
     if(parms->sim.cachedm){
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -1207,15 +1183,36 @@ void free_simu(SIM_T *simu){
 	
     }
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	free(simu->wfs_prop_atm[iwfs]);
-	free(simu->wfs_prop_dm[iwfs]);
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    free(simu->wfs_prop_atm[iwfs+parms->nwfs*ips]);
+	}
+	for(int idm=0; idm<parms->ndm; idm++){
+	    free(simu->wfs_prop_dm[iwfs+parms->nwfs*idm]);
+	}
 	free(simu->wfs_ints[iwfs]);
+    }
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    int ind=ievl+parms->evl.nevl*ips;
+	    free(simu->evl_prop_atm[ind]);
+	}
+	for(int idm=0; idm<parms->ndm; idm++){
+	    int ind=ievl+parms->evl.nevl*idm;
+	    free(simu->evl_prop_dm[ind]);
+	}
     }
     free(simu->wfs_prop_atm);
     free(simu->wfs_prop_dm);
     free(simu->wfs_ints);
     free(simu->wfs_propdata_atm);
     free(simu->wfs_propdata_dm);
+    free(simu->wfs_intsdata);
+    free(simu->evl_prop_atm);
+    free(simu->evl_propdata_atm);
+    free(simu->evl_prop_dm);
+    free(simu->evl_propdata_dm);
+    free(simu->wfs_grad);
+    free(simu->perf_evl);
     free(simu->status);
     dcellfree(simu->gradcl);
     dcellfree(simu->gradlastcl);
@@ -1347,7 +1344,7 @@ void free_simu(SIM_T *simu){
     free(simu);
 }
 /**
-  Save telemetry data during simulation every 50 time steps.
+   Save telemetry data during simulation every 50 time steps.
 */
 void save_simu(const SIM_T *simu){
     const PARMS_T *parms=simu->parms;
@@ -1359,22 +1356,22 @@ void save_simu(const SIM_T *simu){
 	    if(parms->evl.tomo!=2){
 		scale=1./(double)(simu->isim-parms->evl.psfisim+1);
 		if(simu->evlpsfmean){
-		    dcell_mean_and_save(simu->evlpsfmean, scale,
-					"evlpsfcl_%d.bin",seed);
+		    dcellswrite(simu->evlpsfmean, scale,
+				"evlpsfcl_%d.bin",seed);
 		}
 		scale=1./(double)(simu->isim-parms->sim.start+1);
 		if(parms->evl.psfol==2){
 		    scale=scale/parms->evl.npsf;
 		}
 		if(parms->evl.psfol && simu->evlpsfolmean){
-		    dcell_mean_and_save(simu->evlpsfolmean,scale,
-					"evlpsfol_%d.bin",seed);
+		    dcellswrite(simu->evlpsfolmean,scale,
+				"evlpsfol_%d.bin",seed);
 		}
 	    }
 	    if(parms->evl.tomo && simu->evlpsfmean){
 		scale=1./(double)(simu->isim-parms->evl.psfisim+1);
-		dcell_mean_and_save(simu->evlpsftomomean, scale,
-				    "evlpsftomo_%d.bin",seed);
+		dcellswrite(simu->evlpsftomomean, scale,
+			    "evlpsftomo_%d.bin",seed);
 	    }
 	}
 	
@@ -1417,15 +1414,15 @@ void save_simu(const SIM_T *simu){
     if(parms->save.ngcov>0 && ((simu->isim+1-parms->sim.start) % parms->save.gcovp) == 0){
 	double scale=1./(double)(simu->isim-parms->sim.start+1);
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-	    dmat_mean_and_save(simu->gcov->p[igcov], scale, "gcov_wfs%d_%d_%d_%d.bin",
-			       parms->save.gcov[igcov*2], parms->save.gcov[igcov*2+1],
-			       simu->isim+1, seed);
+	    dswrite(simu->gcov->p[igcov], scale, "gcov_wfs%d_%d_%d_%d.bin",
+		    parms->save.gcov[igcov*2], parms->save.gcov[igcov*2+1],
+		    simu->isim+1, seed);
 	}
     }
 }
 /**
    Print out wavefront error information and timing at each time step.
- */
+*/
 void print_progress(const SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const STATUS_T *status=simu->status;
@@ -1471,7 +1468,7 @@ void print_progress(const SIM_T *simu){
 }
 /**
    Output parameters necessary to run postproc using skyc/skyc.c
- */
+*/
 void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     char fn[PATH_MAX];
     double zadeg=parms->sim.za*180/M_PI;

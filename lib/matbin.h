@@ -37,5 +37,7 @@ X(sp)* Y(spread)(const char *format,...) CHECK_ARG(1);\
 Y(spcell) *Y(spcellread)(const char *format,...) CHECK_ARG(1);\
 X(mat) *X(new_mmap)(long nx, long ny, const char *format,...) CHECK_ARG(3);\
 X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx,long *nny,const char *format,...) CHECK_ARG(5);\
-X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my,const char *format, ...) CHECK_ARG(5);
+X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my,const char *format, ...) CHECK_ARG(5);\
+void X(cellswrite)(X(cell) *A, double scale, const char *format, ...) CHECK_ARG(3); \
+void X(swrite)(X(mat) *A, double scale, const char *format, ...) CHECK_ARG(3);
 #endif

@@ -24,19 +24,17 @@
 #include "type.h"
 extern int disable_atm_shm;
 extern int genscreen_keep_unused;
-dmat *vonkarman_psd(int nx, int ny, double dx, double r0, double L0, double power0);
-dmat *biharmonic_psd(int nx, int ny, double dx, double r0, double L0, double power0);
-
 void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw);
 map_t **atmnew_shm(int *fd, int *inshm, rand_t *rstat, long nx, long ny, double dx, 
 		   double r0, double L0, double *wt, int nlayer, int method);
 map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, double L0,
 			     double* wt, int nlayer, int nthread);
-map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx, 
-			 double r0, double L0, double* wt, int nlayer, int nthread);
-map_t** biharmonic_screen(rand_t *rstat, int m, int n, double dx, 
-			  double r0, double L0, double* wt, int nlayer, int nthread);
-map_t **fractal_screen(rand_t *rstat, int nx, int ny, double dx, double r0,
-		       double L0, double* wt, int nlayer, int nthread);
-dmat *vkcov(long nx, double dx, double r0, double L0);
+#define ATM_ARGS rand_t *rstat, long nx, long ny, double dx, double r0, double L0, double* wt, long nlayer, long ninit, long nthread
+map_t** vonkarman_screen(ATM_ARGS);
+map_t** biharmonic_screen(ATM_ARGS);
+map_t **fractal_screen(ATM_ARGS);
+dmat* turbcov(dmat *r, double rmax, double r0, double L0);
+dmat *turbpsd_full(long nx, long ny, double dx, double r0, double L0, double slope, double power);
+#define turbpsd(nx, ny, dx, r0, L0, power) turbpsd_full(nx, ny, dx, r0, L0, -11./6., power);
+
 #endif

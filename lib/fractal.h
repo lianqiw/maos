@@ -2,8 +2,10 @@
 #define AOS_LIB_FRACTAL_H
 #include "random.h"
 #include "loc.h"
-void fractal(double *p0, long nx, long ny, double dx, double r0, double L0);
-void fractal_inv(double *p0, long nx, long ny, double dx, double r0, double L0);
-void fractal_trans(double *p0, long nx, long ny, double dx, double r0, double L0);
-void fractal_inv_trans(double *p0, long nx, long ny, double dx, double r0, double L0);
+#define ARGS double *p0, long nx, long ny, double dx, double r0, double L0, long ninit
+void fractal(ARGS);
+void fractal_inv(ARGS);
+void fractal_trans(ARGS);
+void fractal_inv_trans(ARGS);
+void fractal_vkcov_free(void);
 #endif

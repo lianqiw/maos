@@ -109,7 +109,7 @@ int myhostid(const char *host){
 }
 //Initialize hosts and associate an id number
 static __attribute__((constructor))void init(){
-    init_path();//the constructor in proc.c may not have been called.
+    init_path();//the constructor in process.c may not have been called.
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
     fnlog=strdup(fn);

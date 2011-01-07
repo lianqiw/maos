@@ -440,3 +440,32 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *for
     }
     return out;
 }
+
+
+/**
+   Scale a dcell array and save to file.
+*/
+void X(cellswrite)(X(cell) *A, double scale, const char *format, ...){
+    format2fn;
+    X(cell) *tmp=NULL;
+    if(scale<1.e-14){
+	error("scale=%g\n",scale);
+    }
+    X(celladd)(&tmp, 0, A, scale);
+    X(cellwrite)(tmp,"%s",fn);
+    X(cellfree)(tmp);
+}
+
+/**
+   Scale a dcell array and save to file.
+*/
+void X(swrite)(X(mat) *A, double scale, const char *format, ...){
+    format2fn;
+    X(mat) *tmp=NULL;
+    if(scale<1.e-14){
+	error("scale=%g\n",scale);
+    }
+    X(add)(&tmp, 0, A, scale);
+    X(write)(tmp,"%s",fn);
+    X(free)(tmp);
+}

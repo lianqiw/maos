@@ -458,8 +458,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     fdpcg->scale=calloc(nps,sizeof(double));
     offset=0;
     for(int ips=0; ips<nps; ips++){
-	fdpcg->xhati->p[ips]=cnew_data(fdpcg->xhat->p+offset,nx[ips],ny[ips]);
-	fdpcg->xhat2i->p[ips]=cnew_data(fdpcg->xhat2->p+offset,nx[ips],ny[ips]);
+	fdpcg->xhati->p[ips]=cnew_ref(fdpcg->xhat->p+offset,nx[ips],ny[ips]);
+	fdpcg->xhat2i->p[ips]=cnew_ref(fdpcg->xhat2->p+offset,nx[ips],ny[ips]);
 	cfft2plan(fdpcg->xhati->p[ips],-1);
 	cfft2plan(fdpcg->xhat2i->p[ips],1);
 	fdpcg->scale[ips]=1./(double)(nx[ips]*ny[ips]);
@@ -619,13 +619,6 @@ void fdpcg_free(FDPCG_T *fdpcg){
     if(fdpcg->Mbinv){
 	free(fdpcg->perm);
 	ccellfree(fdpcg->Mbinv);
-    }
-    
-    for(int ips=0; ips<fdpcg->xhati->nx; ips++){
-	/*The pointers are owned by xhat, we set to NULL so
-	  ccellfree won't try to free the memory*/
-	fdpcg->xhat2i->p[ips]->p=NULL;
-	fdpcg->xhati->p[ips]->p=NULL;
     }
     ccellfree(fdpcg->xhati);
     ccellfree(fdpcg->xhat2i);

@@ -265,3 +265,11 @@ long nextpow2(long n){
     }
     return n+1;
 }
+unsigned long mylog2(unsigned long n){//find m so that pow(2,m)==n.
+    assert((n & (n-1))==0);
+    unsigned long m=-1;
+    for(;n;n>>=1){
+	m++;
+    }
+    return m;
+}

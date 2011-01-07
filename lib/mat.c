@@ -232,7 +232,7 @@ X(mat) *X(ref)(X(mat) *in){
 /**
    create an new X(mat) reference another with different shape.
 */
-X(mat) *X(ref_reshape)(X(mat) *in, int nx, int ny){
+X(mat) *X(ref_reshape)(X(mat) *in, long nx, long ny){
     X(mat) *out=X(ref)(in);
     if(in->nx*in->ny!=nx*ny){
 	error("Must not change number of elements\n");
@@ -826,7 +826,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     X(mat) *C=NULL;
     X(cp)(&C,A);
     X(add)(&C,1,B,-1);
-    T d=X(norm2)(C)*2/(X(norm2)(C)+X(norm2)(B));
+    T d=sqrt(X(norm2)(C)*2/(X(norm2)(C)+X(norm2)(B)));
     return isnan(d)?0:d;
 }
 
@@ -1389,11 +1389,10 @@ X(mat)* X(logspace)(double emin, double emax, long n){
 /**
    Create linearly spaced vector.
 */
-X(mat)* X(linspace)(double min, double max, long n){
+X(mat)* X(linspace)(double min, double dx, long n){
     X(mat)* out=X(new)(n,1);
-    double sep=(max-min)/(n-1);
     for(long i=0; i<n; i++){
-	out->p[i]=min+sep*i;
+	out->p[i]=min+dx*i;
     }
     return out;
 }

@@ -81,11 +81,11 @@ void loc_free_stat(loc_t *loc){
  */
 void locfree_do(loc_t *loc){
     if(!loc) return;
+    loc_free_stat(loc);
+    loc_free_map(loc);
     if(loc->locx){
 	free(loc->locx);
 	free(loc->locy);
-	loc_free_map(loc);
-
     }
     free(loc);
 }

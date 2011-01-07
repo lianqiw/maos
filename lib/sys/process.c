@@ -80,7 +80,7 @@ static __attribute__((constructor))void init(){
 }
 static __attribute__((destructor)) void deinit(){
     //don't free HOME, USER
-    free((char*)TEMP);
+    free((char*)TEMP);TEMP=NULL;
 }
 double get_usage_cpu(void){
     static double lasttime=0;

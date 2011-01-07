@@ -349,7 +349,7 @@ static void test_accuracy(void){
     int nlayer=1;
     double wt[1]={1};
     map_t **screens;
-    screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,1);
+    screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1);
     map_t *screen=screens[0];
     sqmapwrite(screen,"accphi_screen");
     //loc for the map
@@ -541,7 +541,7 @@ static void test_speed(int nthread){
     int nlayer=1;
     double wt[1]={1};
     map_t **screens;
-    screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,1);
+    screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1);
     info("\n");
     map_t *screen=screens[0];
     double dsa=0.1;

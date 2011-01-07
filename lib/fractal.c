@@ -1,107 +1,126 @@
 #include "fractal.h"
+#include "mathmisc.h"
 #include "nr/nr.h"
 #include "sys/thread.h"
+#include "turbulence.h"
 /**
    \file fractal.c
 
    Implementation of the fractal operation for atmospheric turbulence screen
    generation and reconstruction.
 
+   This method does not produce right covariance statistics in interpolation
+   because points that are not directly computed from one another. This renders
+   the fractal screens to have lower high frequency components than FFT based screens.
+
 */
 
-/*
-  Initialize some constants.
-*/
-static double vkcoeff;
-static double vkcoeff0;
-static void __attribute__((constructor)) init(void){
-    vkcoeff=tgamma(11./6)/(pow(2, 5./6.) * pow(M_PI, 8./3.)) * pow(24./5*tgamma(6./5.), 5./6.)
-	*pow(2*M_PI/0.5e-6, -2);
-    //for cov(0)
-    vkcoeff0=tgamma(11./6)*tgamma(5./6.)/ ( 2* pow(M_PI, 8./3.)) *pow(24./5*tgamma(6./5.), 5./6.)
-	*pow(2*M_PI/0.5e-6, -2);
-}
-/**
-   Compute Von Karman covariance function at separations computed from the grid
-   size nx and sampling dx, with Fried parameter of r0, and outerscale of L0.  
-
-   Return matrix:
-   The first row is cov(i*dx) where i=0, 1, 2, 3, 4 ... n
-   The second row is cov(i*sqrt(2)*dx) where i=0, 1, 2, 3, 4 ... n
-   
-*/
 typedef struct vkcov_t{
     double r0;
     double L0;
     double dx;
     long n;
+    long ninit;
     dmat *cov;
+    dmat *C;//the covariance matrix.
+    dmat *K;//initial matrix for generating atmosphere.
+    dmat *KI;//inverse of K.
     struct vkcov_t *next;
 }vkcov_t;
 vkcov_t *head=NULL;
 PNEW(mutex_cov);
-static dmat *vkcov_get(double r0, double L0, double dx, long n){
+static vkcov_t *vkcov_get(double r0, double L0, double dx, long n, long ninit){
     for(vkcov_t *p=head; p; p=p->next){
 	if(fabs(p->r0-r0)<EPS && (fabs(p->L0-L0)<EPS || (isinf(p->L0) && isinf(L0)))
-	   && fabs(p->dx-dx)<EPS && p->n == n){
-	    //info("found saved vkcov with r0=%g, L0=%g, dx=%g, n=%ld\n", r0, L0, dx, n);
-	    return p->cov;
+	   && fabs(p->dx-dx)<EPS && p->n == n && p->ninit==ninit){
+	    return p;
 	}
     }
-    info("not found saved vkcov with r0=%g, L0=%g, dx=%g, n=%ld\n",
-	 r0, L0, dx, n);
+    info2("compute vkcov with r0=%g, L0=%g, dx=%g, n=%ld, ninit=%ld\n",
+	 r0, L0, dx, n, ninit);
     return NULL;
 }
-static dmat* vkcov_calc(double r0, double L0, double dx, long n){
+void fractal_vkcov_free(){
+    for(vkcov_t *p=head; p; p=head){ 
+	head=p->next;
+	dfree(p->cov);
+	dfree(p->C);
+	dfree(p->K);
+	dfree(p->KI);
+	free(p);
+    }
+}
+static __attribute__((destructor)) void deinit(){
+    fractal_vkcov_free();
+}
+/**
+   Compute Von Karman covariance function at separations computed from the grid
+   size nx and sampling dx, with Fried parameter of r0, and outerscale of L0.  
+   ninit is the initial side size of the atm array to start with.
+*/
+static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
     if(L0>9000) L0=INFINITY;//L0 bigger than 9000 is treated as infinity.
-    dmat *cov=vkcov_get(r0, L0, dx, n);
-    if(cov) return cov;
-    vkcov_t *node=calloc(1, sizeof(vkcov_t));
+    vkcov_t *node=vkcov_get(r0, L0, dx, n, ninit);
+    if(node) return node;
+    node=calloc(1, sizeof(vkcov_t));
     node->r0=r0;
     node->L0=L0;
     node->dx=dx;
     node->n=n;
+    node->ninit=ninit;
     long nroot=(long)round(log2((double)n-1));
-    node->cov=cov=dnew(2, nroot+2);
     node->next=head;
     if(r0>=L0){
 	error("Illegal parameter: r0=%g, L0=%g\n", r0, L0);
     }
     head=node;
-    PDMAT(cov, pcov);
-    const double sqrt2=sqrt(2);
-    if(isinf(L0)){//kolmogorov, compute from structure function
-	const double power=5./3.;
-	double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
-	double D=(n-1)*dx;
-	double sigma2=0.5*coeff*pow(sqrt2*D, power);
-	pcov[0][0]=pcov[0][1]=sigma2;
-	for(long i=0; i<=nroot; i++){
-	    long j=1<<i;
-	    pcov[i+1][0]=sigma2-0.5*coeff*pow(j*dx, power);
-	    pcov[i+1][1]=sigma2-0.5*coeff*pow(j*dx*sqrt2, power);
-	}
-    }else{//compute from Eq 12,16 in Roldolphe Conan's 2008 Paper.
-	const double f0=1./L0;
-	const double r0f0p=pow(r0*f0, -5./3.);
-	double ri, rk, rip, rkp;
-	double r2pif0;
-	pcov[0][0]=pcov[0][1]=vkcoeff0*r0f0p;
-	for(long i=0; i<=nroot; i++){
-	    long j=1<<i;
-	    r2pif0=(j*dx)*2*M_PI*f0;
-	    bessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
-	    pcov[i+1][0]=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
-	
-	    r2pif0=(j*dx*sqrt2)*2*M_PI*f0;
-	    bessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
-	    pcov[i+1][1]=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
-	}
-	if(nroot>0 && pcov[1][0]>pcov[0][0]){//when L0 is too big, some round of error happens
-	    pcov[0][0]=pcov[1][0];
+    dmat *dr=dnew(2, nroot+2);
+    PDMAT(dr, r);
+    double sqrt2=sqrt(2);
+    r[0][0]=0;
+    r[0][1]=0;
+    for(long i=0; i<=nroot; i++){
+	long j=1<<i;
+	r[i+1][0]=j*dx;
+	r[i+1][1]=j*dx*sqrt2;
+    }
+    double D=(n-1)*dx;
+    node->cov=turbcov(dr, D*sqrt(2), r0, L0);
+    dfree(dr);
+    dmat *rc0=dnew(ninit*ninit, ninit*ninit);
+    PDMAT(rc0, rc);
+    double dx2=dx*(n-1)/(ninit-1);
+    for(long j=0; j<ninit; j++){
+	double y=dx2*j;
+	for(long i=0; i<ninit; i++){
+	    double x=dx2*i;
+	    long k=i+j*ninit;
+	    for(long j2=0; j2<ninit; j2++){
+		double y2=dx2*j2;
+		for(long i2=0; i2<ninit; i2++){
+		    double x2=dx2*i2;
+		    long k2=i2+j2*ninit;
+		    rc[k][k2]=sqrt((x-x2)*(x-x2)+(y-y2)*(y-y2));
+		}
+	    }
 	}
     }
-    return cov;
+    node->C=turbcov(rc0, D*sqrt(2), r0, L0);
+    dfree(rc0);
+    dmat *u=NULL, *s=NULL, *v=NULL;
+    dsvd(&s, &u, &v, node->C);
+    dcwpow(s, 1./2.);
+    node->K=ddup(u);
+    dmuldiag(node->K, s);
+
+    dcwpow(s, -1);
+    dmuldiag(u, s);
+    node->KI=dtrans(u);
+    dfree(u);
+    dfree(v);
+    dfree(s);
+    //we have: K*K'==C
+    return node;
 }
 
 /**

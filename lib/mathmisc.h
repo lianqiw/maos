@@ -52,4 +52,5 @@ void maxmincmp(const dcomplex *restrict p, long N,
 	       double *restrict max, double *restrict min, double *restrict sum);
 void remove_piston(double *p, long n);
 long nextpow2(long n);
+unsigned long mylog2(unsigned long n);
 #endif

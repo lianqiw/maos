@@ -34,50 +34,50 @@
 #include "hashlittle.h"
 #include "fractal.h"
 #include "mathmisc.h"
+#include "nr/nr.h"
+
 int disable_atm_shm=0;
 /**
-   \file turbulence.c
-   Contains routines to generate atmospheric turbulence screens
-*/
+ *  \file turbulence.c
+ *  Contains routines to generate atmospheric turbulence screens
+ */
 
 
 /**
-   map the shm to map_t array.
-*/
+ *  map the shm to map_t array.
+ */
 void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw){
-    futimes(fd, NULL);//set access, modification time to current.
-    if(rw){
-	/*apply an exclusive lock so no other process can make a shared
-		  lock thus preventing them from reading the data.*/
-	if(flock(fd, LOCK_EX)){
-	    error("Failed to apply an exclusive lock");
-	}
-	if(ftruncate(fd, totmem)){//allocate the size.
-	    perror("ftruncate");
-	    error("Failed to allocate memory.\n");
-	}
-	fchmod(fd, 00777);//make it globally writable. (not working as what I wanted)
-	if((screen[0]->p=mmap(NULL, totmem, PROT_READ|PROT_WRITE, MAP_SHARED ,fd, 0))<0){
-	    error("Unable to mmap for read/write\n");
-	}
-    }else{
-	//fd might be zero.
-	if(flock(fd, LOCK_SH)){
-	    error("Failed to apply a shared lock on shared segment.\n");
-	}
+    
+    /*
+      set access, modification time to current. This information is used to
+      detect unused screens
+    */
 
-	/*In the end, a shared lock is placed on the shm
-	  memory. if the screen is freed or program exited, the
-	  shared lock will be released. THis is the method I
-	  invented to tell how many process is using this shm.*/
-	//we map it in read only mode.
-	screen[0]->p=mmap(NULL, totmem, PROT_READ, MAP_SHARED, fd, 0);
+    futimes(fd, NULL);
+    int prot = rw ? PROT_READ|PROT_WRITE : PROT_READ;
+    int op = rw ? LOCK_EX : LOCK_SH;
+    
+    /*
+      In rw mode, apply an exclusive lock so no other process can use it.
+      In ro mode, apply an shared lock.
+    */
+    if(flock(fd, op)){
+	error("Failed to lock file\n");
     }
-    if(screen[0]->p<0){
-	error("Unable to mmap for read/write\n");
+    /*
+      Allocate memory by calling ftruncate in rw mode.
+    */
+    if(rw && ftruncate(fd, totmem)){
+	error("Failed to allocate memory\n");
     }
-    //since fd might be 0. we add fd by 1 and assign to shm.
-    screen[0]->shm=fd +1 ;//use the file descriptor so we can release the lock.
+    if((screen[0]->p=mmap(NULL, totmem, prot, MAP_SHARED ,fd, 0))<0){
+	error("Unable to mmap\n");
+    }
+    /*
+      since fd might be 0. we add fd by 1 and assign to shm. This will later be
+      used to close the fd and release the lock.
+    */
+    screen[0]->shm=fd +1;
     int m=screen[0]->nx;
     int n=screen[0]->ny;
     for(int ilayer=1; ilayer<nlayer; ilayer++){
@@ -87,15 +87,15 @@ void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw){
 }
 
 /**
-   Allocate for memory for atmosphere. If shm is enabled and has enough shared
-   memory, will allocate memory in shm, otherwise, allocate memory in
-   heap. inshm is returned value, and could take the following values:
-
-   0: not in shm. 
-   1: existing screen is resued.
-   2: in shm and need to generate screen
-
-   dx, r0, L0, wt, are used to make the key.
+ *  Allocate for memory for atmosphere. If shm is enabled and has enough shared
+ *  memory, will allocate memory in shm, otherwise, allocate memory in
+ *  heap. inshm is returned value, and could take the following values:
+ *
+ * 0: not in shm. 
+ * 1: existing screen is resued.
+ * 2: in shm and need to generate screen
+ *
+ * dx, r0, L0, wt, are used to make the key.
  */
 map_t **atmnew_shm(int *fd0, int *inshm, rand_t *rstat, long nx, long ny, double dx, 
 		   double r0, double L0, double *wt, int nlayer, int method){
@@ -187,37 +187,6 @@ map_t **atmnew_shm(int *fd0, int *inshm, rand_t *rstat, long nx, long ny, double
     return screen;
 }
 
-/**
-   Create a vonkarman PSD, optionally raised to pow of power.  piston is in (0,0)
-*/
-dmat *vonkarman_psd(int nx, int ny, double dx, double r0, double L0, double power0){
-    if(nx & 1 || ny & 1){
-	warning("Screen is odd size.");
-    }
-    const double power=(-11./6.)*power0;
-    const double dfx=1./(nx*dx);
-    const double dfy=1./(ny*dx);
-    const double dfx2=dfx*dfx;
-    const double L02=pow(L0,-2);
-    const double scrnstr=pow(0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2)*(dfx*dfy), power0);
-    const int nx2=nx/2;
-    const int ny2=ny/2;
-    dmat *spect=dnew(nx,ny);
-    for(int i=0;i<ny;i++){
-	double r2y=pow((i<ny2?i:i-ny)*dfy,2);// to avoid fft shifting.
-	double *spect1=spect->p+i*nx;
-	for(int j=0;j<nx2;j++){
-	    double r2x=j*j*dfx2;
-	    spect1[j] = pow(r2x+r2y+L02,power)*scrnstr;
-	}
-	for(int j=nx2;j<nx;j++){
-	    double r2x=(j-nx)*(j-nx)*dfx2;
-	    spect1[j] = pow(r2x+r2y+L02,power)*scrnstr;
-	}
-    }
-    return spect;
-}
-
 typedef struct GENSCREEN_T{
     rand_t *rstat;
     dmat *spect;
@@ -225,12 +194,13 @@ typedef struct GENSCREEN_T{
     double *wt;
     double r0;
     double L0;
-    int nlayer;
-    int ilayer;
+    long nlayer;
+    long ilayer;
+    long ninit;
     pthread_mutex_t mutex_ilayer;
 }GENSCREEN_T;
 /**
-   Generate turbulence screens.
+ *   Generate turbulence screens.
  */
 static void *genscreen_do(GENSCREEN_T *data){
     const dmat *spect=data->spect;
@@ -278,11 +248,11 @@ static void *genscreen_do(GENSCREEN_T *data){
 }
 
 /**
-   Generates multiple screens from spectrum.
-*/
+ * Generates multiple screens from spectrum.
+ */
 map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, double L0,
 			     double* wt, int nlayer, int nthread){
-  
+    
     GENSCREEN_T screendata;
     memset(&screendata, 0, sizeof(screendata));
     screendata.rstat=rstat;
@@ -313,23 +283,22 @@ map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, do
     return screen;
 }
 /**
-   Generate vonkarman screens from turbulence statistics.
-*/
-map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx, 
-			   double r0, double L0, double* wt, int nlayer, int nthread){
-   
+ *   Generate vonkarman screens from turbulence statistics.
+ */
+map_t** vonkarman_screen(ATM_ARGS){
+    (void)ninit;
     char fnspect[PATH_MAX];
     dmat *spect;
     mymkdir("%s/.aos/spect/",HOME);
-    snprintf(fnspect,PATH_MAX,"%s/.aos/spect/spect_%dx%d_dx1_%g_r0%g_L0%g.bin",
-	     HOME,m,n,1./dx,r0,L0);
+    snprintf(fnspect,PATH_MAX,"%s/.aos/spect/spect_%ldx%ld_dx1_%g_r0%g_L0%g.bin",
+	     HOME,nx,ny,1./dx,r0,L0);
     if(exist(fnspect)){
 	spect=({char fn[PATH_MAX];strcpy(fn,fnspect);dread("%s",fn);});
     }else{
 	info2("\nGenerating spect...");
 	TIC;
 	tic;
-	spect=vonkarman_psd(m,n,dx,r0,L0,0.5);
+	spect=turbpsd(nx,ny,dx,r0,L0,0.5);
 	toc2("done");
 	dwrite(spect,"%s",fnspect);
     }
@@ -339,56 +308,22 @@ map_t** vonkarman_screen(rand_t *rstat, int m, int n, double dx,
 }
 
 /**
-   Create a vonkarman spectrum. This is the square root of PSD. Good for
-   rectangular screen. piston is in (0,0)
-*/
-dmat *biharmonic_psd(int nx, int ny, double dx, double r0, double L0, double power0){
-  
-    if(nx & 1 || ny & 1){
-	warning("Screen is odd size.");
-    }
-
-    const double power=-2.*power0;
-    const double dfx=1./(nx*dx);
-    const double dfy=1./(ny*dx);
-    const double dfx2=dfx*dfx;
-    const double L02=pow(L0,-2);
-    const double scrnstr=pow(0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2)*(dfx*dfy),power0);
-    const int nx2=nx/2;
-    const int ny2=ny/2;
-    dmat *spect=dnew(nx,ny);
-    for(int i=0;i<ny;i++){
-	double r2y=pow((i<ny2?i:i-ny)*dfy,2);// to avoid fft shifting.
-	double *spect1=spect->p+i*nx;
-	for(int j=0;j<nx2;j++){
-	    double r2x=j*j*dfx2;
-	    spect1[j] = pow(r2x+r2y+L02,power)*scrnstr;
-	}
-	for(int j=nx2;j<nx;j++){
-	    double r2x=(j-nx)*(j-nx)*dfx2;
-	    spect1[j] = pow(r2x+r2y+L02,power)*scrnstr;
-	}
-    }
-    return spect;
-}
-/**
-   Generate screens from PSD with power of 12/3 instead of 11/3.
-*/
-map_t** biharmonic_screen(rand_t *rstat, int m, int n, double dx, 
-			    double r0, double L0, double* wt, int nlayer, int nthread){
+ *  Generate screens from PSD with power of 12/3 instead of 11/3.
+ */
+map_t** biharmonic_screen(ATM_ARGS){
+    (void)ninit;
     /**
        Generate vonkarman screen.
     */
-
     dmat *spect;
-   
+  
     info2("\nGenerating spect...");
     TIC;
     tic;
-    spect=biharmonic_psd(m,n,dx,r0,L0,0.5);
+    spect=turbpsd_full(nx,ny,dx,r0,L0,-2,0.5);
     toc2("done");
 
-    map_t **screen=genscreen_from_spect(rstat,spect,dx,r0,L0,wt,nlayer, nthread);
+    map_t **screen=genscreen_from_spect(rstat,spect,dx,r0,L0,wt,nlayer,nthread);
     dfree(spect);
     return(screen);
 }
@@ -412,12 +347,16 @@ static void fractal_screen_do(GENSCREEN_T *data){
     UNLOCK(data->mutex_ilayer);
     double r0i=data->r0*pow(wt[ilayer], -3./5.);
     //info("r0i=%g\n", r0i);
-    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->L0);
+    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->L0, data->ninit);
     remove_piston(screen[ilayer]->p, nx*ny);
     goto repeat;
 }
-map_t **fractal_screen(rand_t *rstat, int nx, int ny, double dx, double r0,
-		       double L0, double* wt, int nlayer, int nthread){
+
+/**
+ * Generate Fractal screens. Not good statistics.
+ */
+
+map_t **fractal_screen(ATM_ARGS){
     GENSCREEN_T screendata;
     memset(&screendata, 0, sizeof(screendata));
     screendata.rstat=rstat;
@@ -426,6 +365,7 @@ map_t **fractal_screen(rand_t *rstat, int nx, int ny, double dx, double r0,
     screendata.ilayer=0;
     screendata.r0=r0;
     screendata.L0=L0;
+    screendata.ninit=ninit;
     PINIT(screendata.mutex_ilayer);
     int inshm=-1;
     long totmem=(nx*ny*nlayer+1)*sizeof(double);
@@ -447,26 +387,82 @@ map_t **fractal_screen(rand_t *rstat, int nx, int ny, double dx, double r0,
 }
 
 /**
-   Generate the structure function of the phase of von karman spectrum 
-*/
-#include "nr/nr.h"
-dmat *vkcov(long nx, double dx, double r0, double L0){
-    double vkcoeff=tgamma(11./6)/(pow(2, 5./6.) * pow(M_PI, 8./3.)) * pow(24./5*tgamma(6./5.), 5./6.)
-	*pow(2*M_PI/0.5e-6, -2);
-    //for cov(0)
-    double vkcoeff0=tgamma(11./6)*tgamma(5./6.)/ ( 2* pow(M_PI, 8./3.)) *pow(24./5*tgamma(6./5.), 5./6.)
-	*pow(2*M_PI/0.5e-6, -2);
-    
-    dmat *cov=dnew(nx, 1);
-    const double f0=1./L0;
-    const double r0f0p=pow(r0*f0, -5./3.);
-    double ri, rk, rip, rkp;
-    double r2pif0;
-    cov->p[0]=vkcoeff0*r0f0p;
-    for(long i=1; i<nx; i++){
-	r2pif0=(i*dx)*2*M_PI*f0;
-	bessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
-	cov->p[i]=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
+ *  Compute the covariance for separation of r, and put the values in cov. In
+ *  kolmogorov spectrum, the variance are defined as half of the structure
+ *  function between two points separated by rmax.
+ */
+
+dmat* turbcov(dmat *r, double rmax, double r0, double L0){
+    double tg1=tgamma(11./6) * pow(24./5 * tgamma(6./5.), 5./6.)
+	* pow(2 * M_PI/0.5e-6, -2) / pow(M_PI, 8./3.);
+    double vkcoeff  = tg1 / pow(2, 5./6.);    
+    double vkcoeff0 = tg1 * tgamma(5./6.) / 2 ;//for variance
+    dmat *cov=dnew(r->nx, r->ny);
+    long n=r->nx*r->ny;
+    if(isinf(L0)){//kolmogorov.
+	const double power=5./3.;
+	double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
+	double sigma2=0.5*coeff*pow(rmax, power);
+	for(long i=0; i<n; i++){
+	    cov->p[i]=sigma2-0.5*coeff*pow(r->p[i], power);
+	}
+    }else{//von karman.
+	const double f0=1./L0;
+	const double r0f0p=pow(r0*f0, -5./3.);
+	double ri, rk, rip, rkp;
+	double r2pif0;	
+	for(long i=0; i<n; i++){
+	    if(fabs(r->p[i])<EPS){
+		cov->p[i]=vkcoeff0*r0f0p;
+	    }else{
+		r2pif0=r->p[i]*2*M_PI*f0;
+		bessik(r2pif0, 5./6., &ri, &rk, &rip, &rkp);
+		cov->p[i]=vkcoeff*r0f0p*pow(r2pif0, 5./6.)*rk;
+	    }
+	}
     }
     return cov;
 }
+
+/**
+ * Compute the turbulence spectrum at size nx*ny, with spacing dx. Notice that
+ * the zero frequency component is in the corner psd->p[0].
+ */
+
+dmat *turbpsd_full(long nx,      /**<The size*/
+		   long ny,      /**<The size*/
+		   double dx,    /**<The sampling of spatial coordinate.*/
+		   double r0,    /**<The Fried parameter*/
+		   double L0,    /**<The outer scale*/
+		   double slope, /**<should be -11/6 for von karman or kolmogorov
+				    screens, or -2 for biharmonic screen (just
+				    testing only).*/
+		   double power  /**< optionally do a power of psd.*/
+		   ){
+    if(nx & 1 || ny & 1){
+	warning("Screen is odd size.");
+    }
+    slope*=power;
+    const double dfx=1./(nx*dx);
+    const double dfy=1./(ny*dx);
+    const double dfx2=dfx*dfx;
+    const double L02=pow(L0,-2);
+    const double scrnstr=pow(0.0229*pow(r0,-5./3.)*pow((0.5e-6)/(2.*M_PI),2)*(dfx*dfy),power);
+    const int nx2=nx/2;
+    const int ny2=ny/2;
+    dmat *psd=dnew(nx,ny);
+    for(int i=0;i<ny;i++){
+	double r2y=pow((i<ny2?i:i-ny)*dfy,2);// to avoid fft shifting.
+	double *psd1=psd->p+i*nx;
+	for(int j=0;j<nx2;j++){
+	    double r2x=j*j*dfx2;
+	    psd1[j] = pow(r2x+r2y+L02,slope)*scrnstr;
+	}
+	for(int j=nx2;j<nx;j++){
+	    double r2x=(j-nx)*(j-nx)*dfx2;
+	    psd1[j] = pow(r2x+r2y+L02,slope)*scrnstr;
+	}
+    }
+    return psd;
+}
+

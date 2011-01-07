@@ -46,7 +46,7 @@ void X(free_keepdata)(X(mat) *A);\
 void X(free_do)(X(mat) *A, int keepdata);\
 void X(resize)(X(mat) *A, long nx, long ny);\
 X(mat) *X(ref)(X(mat) *in) CHECK_UNUSED_RESULT;\
-X(mat) *X(ref_reshape)(X(mat) *in, int nx, int ny) CHECK_UNUSED_RESULT;\
+X(mat) *X(ref_reshape)(X(mat) *in, long nx, long ny) CHECK_UNUSED_RESULT;\
 X(mat) *X(refcols)(X(mat) *in, long icol, long ncol) CHECK_UNUSED_RESULT;\
 X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny) CHECK_UNUSED_RESULT;\
 X(mat) *X(cat)(const X(mat) *in1, const X(mat) *in2, int dim) CHECK_UNUSED_RESULT;\
@@ -100,7 +100,7 @@ void X(addI)(X(mat) *A, T val);\
 void X(tikcr)(X(mat) *A, T thres);\
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha);\
 X(mat)* X(logspace)(double emin, double emax, long n) CHECK_UNUSED_RESULT;\
-X(mat)* X(linspace)(double emin, double emax, long n) CHECK_UNUSED_RESULT;\
+X(mat)* X(linspace)(double min, double dx, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1)(dmat *xin, dmat *yin, dmat *xnew) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1log)(dmat *xin, dmat *yin, dmat *xnew) CHECK_UNUSED_RESULT;\
 void X(histfill)(dmat **out, const X(mat)* A, double center, double spacing, int n);\

@@ -45,7 +45,6 @@
 
 static int psock;
 static int scheduler_crashed;
-static char *path_save=NULL;
 void scheduler_shutdown(int *sock, int mode){
    if(mode>0){//tell the server to shutdown read or write
 	int cmd[2];
@@ -121,6 +120,7 @@ static void scheduler_launch_do(void *junk){
     }
 }
 static void scheduler_report_path(char *path){
+    static char *path_save=NULL;
     if(path){
 	if(path_save) free(path_save);
 	path_save=strdup(path);

@@ -36,7 +36,7 @@ stfun_t *stfun_init(long nx, long ny, double *amp){
 
     dmat *damp;
     if(amp){
-	damp=dnew_data(amp,nx,ny);
+	damp=dnew_ref(amp,nx,ny);
     }else{
 	damp=dnew(nx, ny);
 	dset(damp, 1);

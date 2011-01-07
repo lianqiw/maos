@@ -52,6 +52,7 @@ typedef struct ATM_CFG_T{
     int evolve;   /**<evolve the atm in additional to frozen flow. developed for
 		      fractal since it does not wrap.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
+    int ninit;    /**<Initial size of the screen in fractal method. >=2*/
 }ATM_CFG_T;
 /**
    contains input parameters for the atmospheric reconstruction.  */
@@ -315,6 +316,7 @@ typedef struct TOMO_CFG_T{
     int windest;     /**<estimate wind. \todo finish implement it.*/
     int windshift;   /**<shift opdr using wind velocity (from input if windest=0)*/
     int cubic;       /**<cubic influence function in tomography (testing)*/
+    int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
 }TOMO_CFG_T;
 /**
    contains input parameters for deformable mirror fitting.

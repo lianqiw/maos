@@ -27,7 +27,8 @@ void (*call_freepath)(void)=NULL;
 #include "thread.h"
 #if USE_MEM == 1
 #include "scheduler_client.h"
-
+#include "../path.h"
+#include "../fractal.h"
 #include <math.h>
 #include <search.h>
 #include <string.h>
@@ -86,9 +87,9 @@ static __attribute__((constructor)) void init(){
     warning2("Memory management is in use\n");
 }
 static __attribute__((destructor)) void deinit(){
-    if(call_freepath){
-	call_freepath();
-    }
+    thread_pool_destroy();
+    fractal_vkcov_free();
+    freepath();
     if(exit_success){
 	if(MROOT){
 	    warning("%lld allocated memory not freed!!!\n",memcnt);

@@ -770,94 +770,6 @@ static void free_cxx(RECON_T *recon){
 	recon->fractal=NULL;
     }
 }
-/*
-static void test_cxx(RECON_T *recon, const PARMS_T *parms){
-    long npsr=recon->npsr;
-    recon->L2=spcellnew(npsr,npsr);
-    for(int ips=0; ips<npsr; ips++){
-	if(parms->tomo.square){//periodic bc
-	    if(ips==0){
-		info2("Laplacian reg. is using perodic bc\n");
-	    }
-	    recon->L2->p[ips+npsr*ips]=mklaplacian_map
-		(recon->xloc_nx[ips], recon->xloc_ny[ips],
-		 recon->xloc[ips]->dx, recon->r0,
-		 recon->wt->p[ips]);
-	}else{//reflecive bc
-	    if(ips==0){
-		info2("Laplacian reg. is using reflective bc\n");
-	    }
-	    recon->L2->p[ips+npsr*ips]=mklaplacian_loc
-		(recon->xloc[ips], recon->r0, 
-		 recon->wt->p[ips]);
-	}
-	if(parms->save.setup){
-	    spcellwrite(recon->L2, "%s/L2", dirsetup);
-	}
-    }
-    recon->invpsd=calloc(1, sizeof(INVPSD_T));
-    if(parms->load.cxx){
-	recon->invpsd->invpsd=dcellread("%s",parms->load.cxx);
-	if(recon->invpsd->invpsd->nx!=npsr || recon->invpsd->invpsd->ny!=1){
-	    error("Wrong format of loaded invpsd\n");
-	}
-    }else{
-	dcell* invpsd=recon->invpsd->invpsd=dcellnew(npsr,1);
-	for(int ips=0; ips<npsr; ips++){
-	    long nx=recon->xloc_nx[ips];
-	    long ny=recon->xloc_ny[ips];
-	    invpsd->p[ips]=biharmonic_psd
-		(nx, ny, recon->xloc[ips]->dx, 
-		 recon->r0*pow(recon->wt->p[ips],-3./5.),
-		 recon->l0,-1);
-	    dscale(invpsd->p[ips], pow((double)(nx*ny),-2));
-	}
-	if(parms->save.setup){
-	    dcellwrite(invpsd, "%s/invpsd",dirsetup);
-	}
-    }
-    ccell* fftxopd=recon->invpsd->fftxopd=ccellnew(recon->npsr, 1);
-    for(int ips=0; ips<recon->npsr; ips++){
-	fftxopd->p[ips]=cnew(recon->xloc_nx[ips], recon->xloc_ny[ips]);
-	cfft2plan(fftxopd->p[ips],-1);
-	cfft2plan(fftxopd->p[ips],1);
-    }
-    recon->invpsd->xloc = recon->xloc;
-    recon->invpsd->square = parms->tomo.square;
-
-    recon->fractal=calloc(1, sizeof(FRACTAL_T));
-    recon->fractal->xloc=recon->xloc;
-    recon->fractal->r0=parms->atmr.r0;
-    recon->fractal->l0=parms->atmr.l0;
-    recon->fractal->wt=parms->atmr.wt;
-    dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
-    for(int ips=0; ips<npsr; ips++){
-	int nn=nextpow2(MAX(recon->xloc_nx[ips], recon->xloc_ny[ips]))+1;
-	xopd->p[ips]=dnew(nn,nn);
-    }
-
-    dcell *xin = dcellnew(npsr, 1);
-    rand_t rstat;
-    seed_rand(&rstat, 1);
-    for(int ips=0; ips<npsr; ips++){
-	loc_t *xloc=recon->xloc[ips];
-	xin->p[ips]=dnew(xloc->nloc,1);
-	drandu(xin->p[ips],1,&rstat);
-    }
-    dcellwrite(xin, "xin");
-    dcell *xout1=dcellnew2(xin);
-    dcell *xout2=dcellnew2(xin);
-    dcell *xout3=dcellnew2(xin);
-    double alpha=1;
-    apply_L2(&xout1, recon->L2, xin, alpha, recon->nthread);
-    apply_invpsd(&xout2, recon->invpsd, xin, alpha);
-    apply_fractal(&xout3, recon->fractal, xin, alpha);
-
-    dcellwrite(xout1, "xout1");
-    dcellwrite(xout2, "xout2");
-    dcellwrite(xout3, "xout3");
-    exit(1);
-    }*/
 /**
    Prepares for tomography
  */
@@ -928,10 +840,9 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    for(int ips=0; ips<npsr; ips++){
 		long nx=recon->xloc_nx[ips];
 		long ny=recon->xloc_ny[ips];
-		invpsd->p[ips]=vonkarman_psd
-		    (nx, ny, recon->xloc[ips]->dx, 
-		     recon->r0*pow(recon->wt->p[ips],-3./5.),
-		     recon->l0,-1);
+		double r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
+		invpsd->p[ips]=turbpsd(nx, ny, recon->xloc[ips]->dx, r0i,
+					recon->l0,-1);
 		dscale(invpsd->p[ips], pow((double)(nx*ny),-2)*parms->tomo.cxxscale);
 	    }
 	    if(parms->save.setup){
@@ -955,6 +866,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->fractal->l0=parms->atmr.l0;
 	recon->fractal->wt=parms->atmr.wt;
 	recon->fractal->scale=parms->tomo.cxxscale;
+	recon->fractal->ninit=parms->tomo.ninit;
 	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
 	for(int ips=0; ips<npsr; ips++){
 	    int nn=nextpow2(MAX(recon->xloc_nx[ips], recon->xloc_ny[ips]))+1;

@@ -1,5 +1,6 @@
 #include "../lib/aos.h"
 double L0=INFINITY;
+long ninit=2;
 static void test_accuracy(){
     rand_t rstat;
     int seed=4;
@@ -19,15 +20,15 @@ static void test_accuracy(){
     }
     sqmapwrite(atm, "atm_rand.bin");
     sqmapwrite(atm2, "atm2_rand.bin");
-    fractal(atm->p, nx, ny, dx, r0,L0);
+    fractal(atm->p, nx, ny, dx, r0,L0,ninit);
     sqmapwrite(atm, "atm_frac.bin");
-    fractal_inv(atm->p, nx, ny, dx, r0,L0);
+    fractal_inv(atm->p, nx, ny, dx, r0,L0,ninit);
     sqmapwrite(atm, "atm_frac_inv.bin");
 
    
-    fractal_trans(atm2->p, nx, ny, dx, r0,L0);
+    fractal_trans(atm2->p, nx, ny, dx, r0,L0,ninit);
     sqmapwrite(atm2, "atm2_frac_trans.bin");
-    fractal_inv_trans(atm2->p, nx, ny, dx, r0,L0);
+    fractal_inv_trans(atm2->p, nx, ny, dx, r0,L0,ninit);
     sqmapwrite(atm2, "atm2_frac_inv_trans.bin");
     
     /*
@@ -83,7 +84,7 @@ static void test_cov(){//not good
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
-	fractal(atm->p, nx, ny, dx, r0,L0);
+	fractal(atm->p, nx, ny, dx, r0,L0,ninit);
 	//sqmapwrite(atm, "atm_%ld.bin", i);
 	cembedd(atmhat, (dmat*)atm, 0);
 	cfft2(atmhat, -1);
@@ -114,14 +115,14 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
     long nframe=1000000;
     seed_rand(&rstat, seed);
     map_t *atm=mapnew(nx, ny, dx, NULL);
-    dmat *vec=dnew_data(atm->p, N*N, 1);
+    dmat *vec=dnew_ref(atm->p, N*N, 1);
     dmat *cov=NULL;
     for(long i=0; i<nframe; i++){
 	info("%ld of %ld\n", i, nframe);
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
-	fractal(atm->p, nx, ny, dx, r0,L0);
+	fractal(atm->p, nx, ny, dx, r0,L0,ninit);
 	dmm(&cov, vec, vec, "nt", 1);
     }
     dscale(cov, 1./nframe);
@@ -148,7 +149,7 @@ static void test_part(){/**Compute the covariance of 4 points with various separ
 	for(long j=0; j<nx*ny; j++){
 	    atm->p[j]=randn(&rstat);
 	}
-	fractal(atm->p, nx, ny, dx, r0,L0);
+	fractal(atm->p, nx, ny, dx, r0,L0,ninit);
 	vec->p[0]=pp[ofy+0][ofx+0];
 	vec->p[1]=pp[ofy+0][ofx+1];
 	vec->p[2]=pp[ofy+1][ofx+0];
@@ -163,15 +164,18 @@ static void test_stfun(){
     rand_t rstat;
     int seed=4;
     double r0=0.2;
-    double dx=1./4;
-    long N=64;
+    double dx=1./16;
+    long N=32;
     long nx=N;
     long ny=N;
-    long nframe=50000;
+    long nframe=500;
     seed_rand(&rstat, seed);
     if(L0<9000){
-    dmat *covvk=vkcov(N, dx, r0, L0);
-    dwrite(covvk, "cov_vk");
+	dmat *rr=dlinspace(0, N*dx, N);
+	dmat *covvk=turbcov(rr, sqrt(2)*N*dx, r0, L0);
+	dwrite(covvk, "cov_vk");
+	dfree(rr);
+	dfree(covvk);
     }
     //    return;
     {
@@ -182,10 +186,11 @@ static void test_stfun(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
-	    fractal(atm->p, nx+1, ny+1, dx, r0,L0);
+	    fractal(atm->p, nx+1, ny+1, dx, r0,L0,ninit);
 	    stfun_push(data, (dmat*)atm);
 	    cellarr_dmat(save,(dmat*)atm);
-	    info("%ld of %ld\n", i, nframe);
+	    if(i%100==0)
+		info("%ld of %ld\n", i, nframe);
 	}
 	cellarr_close(save);
 	dmat *st=stfun_finalize(data);
@@ -195,7 +200,7 @@ static void test_stfun(){
     //exit(0);
     {
 	stfun_t *data=stfun_init(nx, ny, NULL);
-	dmat *spect=vonkarman_psd(nx, ny, dx, r0, 100,0.5);
+	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
 	cmat *atm=cnew(nx, ny);
 	cfft2plan(atm, -1);
 	dmat *atmr=dnew(atm->nx, atm->ny);
@@ -212,7 +217,8 @@ static void test_stfun(){
 	    }
 	    stfun_push(data, atmr);
 	    stfun_push(data, atmi);
-	    info("%ld of %ld\n", ii, nframe);
+	    if(ii%100==0)
+		info("%ld of %ld\n", ii, nframe);
 	}
 	dmat *st=stfun_finalize(data);
 	dwrite(st, "stfun_fft.bin");
@@ -247,7 +253,7 @@ static void test_psd(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
-	    fractal(atm->p, nx+1, ny+1, dx, r0,L0);
+	    fractal(atm->p, nx+1, ny+1, dx, r0,L0,ninit);
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
 		for(long ix=0; ix<nx; ix++){
@@ -263,7 +269,7 @@ static void test_psd(){
 	dwrite(hattot, "PSD_fractal");
     }
     {
-	dmat *spect=vonkarman_psd(nx, ny, dx, r0, 100,0.5);
+	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
 	dwrite(spect, "spect");
 	cmat *hat=cnew(nx*ratio, ny*ratio);
 	cfft2plan(hat, -1);
@@ -330,7 +336,7 @@ static void test_cxx(){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);
 	    }
-	    fractal(atm->p, nx+1, ny+1, dx, r0, L0);
+	    fractal(atm->p, nx+1, ny+1, dx, r0, L0, ninit);
 	    dmat *sec=dsub((dmat*)atm, 0, nx, 0, ny);
 	    dmat *atmvec=dnew_ref(sec->p, nx*ny, 1);
 	    dmm(&cxx, atmvec,atmvec,"nt",1);
@@ -344,7 +350,7 @@ static void test_cxx(){
     }
     {
 	dmat *cxx=dnew(N*N,N*N);
-	dmat *spect=vonkarman_psd(nx, ny, dx, r0, 100,0.5);
+	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);
 	spect->p[0]=spect->p[1];
 	cmat *atm=cnew(nx, ny);
 	cfft2plan(atm, -1);
@@ -376,7 +382,7 @@ static void test_cxx(){
     dwrite(B, "B_theory");
 }
 int main(){
-    int ind=4;
+    int ind=0;
     switch(ind){
     case 0:
 	test_accuracy();
