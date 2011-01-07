@@ -57,15 +57,12 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
 	info[nthread-1].end=tot;
     }
 }
-static pthread_spinlock_t atomic_lock;
-static __attribute__((constructor))void init(){
-    pthread_spin_init(&atomic_lock, 0);
-}
+static pthread_mutex_t atomic_lock=PTHREAD_MUTEX_INITIALIZER;
 int assign_increment(int *src, int step){
     int result;
-    pthread_spin_lock(&atomic_lock);
+    pthread_mutex_lock(&atomic_lock);
     result=*src;
     *src+=step;
-    pthread_spin_unlock(&atomic_lock);
+    pthread_mutex_unlock(&atomic_lock);
     return result;
 }

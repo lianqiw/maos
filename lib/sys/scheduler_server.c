@@ -629,7 +629,7 @@ static int respond(int sock){
 	    setenv("DISPLAY",display,1);
 	    char *fifo=readstr(sock);
 	    int method=0;
-#if defined(__APPLE__)
+#if defined(__APPLE__) && 0
 	    char cmdopen[1024];
 	    //Run the exe directly can pass the argumnents. --args is a new feature in 10.6 to do the samething with open
 	    snprintf(cmdopen, 1024, "%s/scripts/drawdaemon.app/Contents/MacOS/drawdaemon %s &", SRCDIR, fifo);

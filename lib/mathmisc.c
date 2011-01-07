@@ -201,8 +201,8 @@ void maxmindbl(const double *restrict p, long N,
     a=-INFINITY;
     b=INFINITY;
     for(i=0; i<N; i++){
-	if(p[i]>a) a=p[i];
-	if(p[i]<b) b=p[i];
+	if(!isnan(p[i]) && p[i]>a) a=p[i];
+	if(!isnan(p[i]) && p[i]<b) b=p[i];
     }
     if(max) *max=a;
     if(min) *min=b;

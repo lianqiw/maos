@@ -45,7 +45,8 @@
   thread is caught in a mutex locked environment (like malloc/free), there will
   be a deadlock.
 
-  2010-12-25: spin lock is twice as fast as mutex lock. Good for short term locks.
+  2010-12-25: spin lock is twice as fast as mutex lock. Good for short term locks. 
+  2011-01-07: spin lock is not available in MAC. reverted back to pthread.
 */
 
 #include <stdlib.h>
@@ -72,7 +73,7 @@ typedef struct jobs_t{
  */
 struct thread_pool_t{
     pthread_mutex_t mutex; /**<the mutex.*/
-    pthread_spinlock_t spin; /**<the mutex.*/
+    pthread_mutex_t mutex2;/**<the mutex for jobpool.*/
     pthread_cond_t jobwait;/**<there are jobs jobwait.*/
     pthread_cond_t idle;   /**<all threads are idle*/
     pthread_cond_t exited; /**<all threads have exited*/
@@ -108,10 +109,10 @@ static inline void do_job(void) {
 	  their job to finish*/
 	pthread_cond_broadcast(&pool.jobdone);
     }
-    pthread_spin_lock(&pool.spin);
+    pthread_mutex_lock(&pool.mutex2);
     job->next=pool.jobspool;
     pool.jobspool=job;
-    pthread_spin_unlock(&pool.spin);
+    pthread_mutex_unlock(&pool.mutex2);
 }
 
 /**
@@ -168,7 +169,7 @@ static void thread_new(){//the caller is responsible to lock mutex.
 void thread_pool_init(int nthread){
     memset(&pool, 0, sizeof(thread_pool_t));
     pthread_mutex_init(&pool.mutex,NULL);
-    pthread_spin_init(&pool.spin, 0);
+    pthread_mutex_init(&pool.mutex2, 0);
     pthread_cond_init(&pool.idle, NULL);
     pthread_cond_init(&pool.jobwait, NULL);
     pthread_cond_init(&pool.jobdone, NULL);
@@ -197,10 +198,10 @@ void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
     //Add the job to the head if urgent>0, otherwise to the tail.
     jobs_t *job;
     if(pool.jobspool){//take it from the pool.
-	pthread_spin_lock(&pool.spin);
+	pthread_mutex_lock(&pool.mutex2);
 	job=pool.jobspool;
 	pool.jobspool=pool.jobspool->next;
-	pthread_spin_unlock(&pool.spin);
+	pthread_mutex_unlock(&pool.mutex2);
     }else{
 	job=malloc(sizeof(jobs_t));
     }
@@ -241,7 +242,7 @@ void thread_pool_queue_many_same(long *group, thread_fun fun, void *arg, int njo
     */
     jobs_t *head=NULL;
     jobs_t *tail=NULL;
-    pthread_spin_lock(&pool.spin);
+    pthread_mutex_lock(&pool.mutex2);
     for(int ijob=0; ijob<njob; ijob++){
 	jobs_t *job;
 	if(pool.jobspool){
@@ -260,7 +261,7 @@ void thread_pool_queue_many_same(long *group, thread_fun fun, void *arg, int njo
 	job->next=head;
 	head=job;
     }
-    pthread_spin_unlock(&pool.spin);
+    pthread_mutex_unlock(&pool.mutex2);
     //Add the job to queue
     pthread_mutex_lock(&pool.mutex);
     (*group)+=njob;
@@ -292,7 +293,7 @@ void thread_pool_queue_many(long *group, thread_t *arg, int njob, int urgent){
     */
     jobs_t *head=NULL;
     jobs_t *tail=NULL;
-    pthread_spin_lock(&pool.spin);
+    pthread_mutex_lock(&pool.mutex2);
     for(int ijob=0; ijob<njob; ijob++){
 	jobs_t *job;
 	if(pool.jobspool){
@@ -311,7 +312,7 @@ void thread_pool_queue_many(long *group, thread_t *arg, int njob, int urgent){
 	job->next=head;
 	head=job;
     }
-    pthread_spin_unlock(&pool.spin);
+    pthread_mutex_unlock(&pool.mutex2);
     //Add the job to queue
     pthread_mutex_lock(&pool.mutex);
     (*group)+=njob;
@@ -388,12 +389,12 @@ void thread_pool_destroy(void){
 	pthread_cond_wait(&pool.exited, &pool.mutex);
     }
     pthread_mutex_unlock(&pool.mutex);
-    pthread_spin_lock(&pool.spin);
+    pthread_mutex_lock(&pool.mutex2);
     for(jobs_t *job=pool.jobspool; job; job=pool.jobspool){
 	pool.jobspool=job->next;
 	free(job);
     }
-    pthread_spin_unlock(&pool.spin);
+    pthread_mutex_unlock(&pool.mutex2);
 }
 static __attribute__((destructor)) void deinit(){
     thread_pool_destroy();

@@ -71,12 +71,7 @@ int main(int argc, char *argv[])
 	setbuf(stderr,NULL);
     }
     create_window();
-    THREAD_POOL_INIT(NCPU);
-    {
-	long group=0;
-	thread_pool_queue(&group, (thread_fun)open_fifo, NULL, 0);
-    }
-
+    g_thread_create((GThreadFunc)open_fifo, NULL, 0, NULL);
     gdk_threads_enter();
     gtk_main();
     gdk_threads_leave();

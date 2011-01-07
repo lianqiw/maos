@@ -84,6 +84,7 @@ AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
 mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
 win32=no
+use_mkl="no"
 mkl_avail="no"
 case "$host_os" in
 *linux*)
@@ -251,7 +252,7 @@ fi
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
 
-if test "x$use_mkl" = "xno" ;then
+if test ! "x$use_mkl" = "xyes" ;then
 #Check for LAPACK library in the system
    if test -z "$LAPACK" ;then
        if test -n "$(pkg-config --libs blas lapack)" ;then
@@ -259,7 +260,8 @@ if test "x$use_mkl" = "xno" ;then
        else
            LAPACK="-lblas -llapack"
        fi
-   
+   fi
+
        echo LAPACK=$LAPACK
        AC_CHECK_LIB([blas],  [dgemm_],[],[has_lapack=no],[$LAPACK])
        AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
@@ -271,7 +273,6 @@ if test "x$use_mkl" = "xno" ;then
                AC_MSG_ERROR([Please install blas and lapack])
 	   fi
        fi
-   fi
 fi
 if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
@@ -289,7 +290,6 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    LAPACK="-L${SRC_DIR}/external/mkl${cpu} -lmkl -lguide"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
- 
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
 #Check for FFTW3 header and library.
@@ -383,3 +383,4 @@ echo SRC_DIR=$SRC_DIR
 echo SVN_REV=$SVN_REV
 echo BUILD_DIR=$BUILD_DIR
 echo OPTS=$OPTS
+echo LAPACK=$LAPACK

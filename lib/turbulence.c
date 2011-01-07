@@ -42,7 +42,7 @@ int disable_atm_shm=0;
  *  Contains routines to generate atmospheric turbulence screens
  */
 
-
+#if USE_POSIX_SHM == 1
 /**
  *  map the shm to map_t array.
  */
@@ -85,7 +85,7 @@ void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw){
 	screen[ilayer]->p = screen[0]->p+m*n*ilayer;
     }
 }
-
+#endif
 /**
  *  Allocate for memory for atmosphere. If shm is enabled and has enough shared
  *  memory, will allocate memory in shm, otherwise, allocate memory in
@@ -271,6 +271,7 @@ map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, do
 						dx, r0, L0, wt, nlayer, 1);
     if(inshm != 1){
 	CALL(genscreen_do, &screendata, nthread);
+#if USE_POSIX_SHM==1
 	if(inshm == 2){//need to remap to r/o mode.
 	    screen[0]->p[nx*ny*nlayer]=1;//say the data is valid.
 	    if(munmap(screen[0]->p, totmem)){//unmap read/write. remap as read only later
@@ -279,6 +280,7 @@ map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, do
 	    //the exclusive lock will be converted to shared lock automatically.
 	    map_shm(screen, totmem, nlayer, fd, 0);
 	}
+#endif
     }
     return screen;
 }
@@ -374,6 +376,7 @@ map_t **fractal_screen(ATM_ARGS){
 						dx, r0, L0, wt, nlayer, 1);
     if(inshm != 1){
 	CALL(fractal_screen_do,&screendata, nthread);
+#if USE_POSIX_SHM == 1
 	if(inshm == 2){
 	    screen[0]->p[nx*ny*nlayer]=1;//say the data is valid.
 	    if(munmap(screen[0]->p, totmem)){//unmap read/write. remap as read only later
@@ -382,6 +385,7 @@ map_t **fractal_screen(ATM_ARGS){
 	    //the exclusive lock will be converted to shared lock automatically.
 	    map_shm(screen, totmem, nlayer, fd, 0);
 	}
+#endif
     }
     return screen;
 }
