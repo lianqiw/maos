@@ -68,42 +68,7 @@ static void setup_config(const ARG_S*arg){
 #define READ_INT(A) parms->A = readcfg_int(#A) //read a key with int value.
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) //read a key with double value
 #define READ_STR(A) parms->A = readcfg_str(#A) //read a key with string value.
-static int readcfg_dblarr_n(int n, double **p, const char*format,...){
-    /**
-       Read in double array of n elements.
-     */
-    format2key;
-    int m=readcfg_dblarr(p,"%s",key);
-    if(m!=n){
-	error("Wrong # of elements for 'key' %s.\n"
-	      "Required %d, got %d\n",key,n,m);
-    }
-    return 0;
-}
-static int readcfg_intarr_n(int n,int **p, const char*format,...){
-    /**
-       Read in int array of n elements.
-     */
-    format2key;
-    int m=readcfg_intarr(p,"%s",key);
-    if(m!=n){
-	error("Wrong # of elements for 'key' %s.\n"
-	      "Required %d, got %d\n",key,n,m);
-    }
-    return 0;
-}
-static int readcfg_strarr_n(int n,char ***p, const char*format,...){
-    /**
-       Read in int array of n elements.
-     */
-    format2key;
-    int m=readcfg_strarr(p,"%s",key);
-    if(m!=n){
-	error("Wrong # of elements for 'key' %s.\n"
-	      "Required %d, got %d\n",key,n,m);
-    }
-    return 0;
-}
+
 static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.dbg);
     READ_INT(skyc.dbgsky);
@@ -126,12 +91,12 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.bspstrehl);
     READ_INT(skyc.maxaster);
     READ_INT(skyc.maxstar);
-    readcfg_intarr_n(parms->skyc.npowfs,&parms->skyc.nwfsmax,"skyc.nwfsmax");
-    readcfg_dblarr_n(parms->skyc.npowfs,&parms->skyc.pixratio,"skyc.pixratio");
-    readcfg_dblarr_n(parms->skyc.npowfs,&parms->skyc.pixblur,"skyc.pixblur");
-    readcfg_intarr_n(parms->skyc.npowfs,&parms->skyc.pixpsa,"skyc.pixpsa");
-    readcfg_dblarr_n(parms->skyc.npowfs,&parms->skyc.pixoffx,"skyc.pixoffx");
-    readcfg_dblarr_n(parms->skyc.npowfs,&parms->skyc.pixoffy,"skyc.pixoffy");
+    readcfg_intarr_n(&parms->skyc.nwfsmax,parms->skyc.npowfs,"skyc.nwfsmax");
+    readcfg_dblarr_n(&parms->skyc.pixratio,parms->skyc.npowfs,"skyc.pixratio");
+    readcfg_dblarr_n(&parms->skyc.pixblur, parms->skyc.npowfs,"skyc.pixblur");
+    readcfg_intarr_n(&parms->skyc.pixpsa,  parms->skyc.npowfs,"skyc.pixpsa");
+    readcfg_dblarr_n(&parms->skyc.pixoffx, parms->skyc.npowfs,"skyc.pixoffx");
+    readcfg_dblarr_n(&parms->skyc.pixoffy, parms->skyc.npowfs,"skyc.pixoffy");
     READ_INT(skyc.limitnstep);
     READ_DBL(skyc.intgain);
     READ_DBL(skyc.rne);
@@ -140,7 +105,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.mtchcr);
     READ_INT(skyc.mtch);
     parms->skyc.nwvl=readcfg_dblarr(&parms->skyc.qe,"skyc.qe");
-    readcfg_dblarr_n(parms->skyc.nwvl, &parms->skyc.telthruput, "skyc.telthruput");
+    readcfg_dblarr_n(&parms->skyc.telthruput, parms->skyc.nwvl, "skyc.telthruput");
     parms->skyc.ndtrat=readcfg_intarr(&parms->skyc.dtrats,"skyc.dtrats");
     parms->skyc.nseed=readcfg_intarr(&parms->skyc.seeds, "skyc.seeds");
     READ_INT(skyc.servo);
@@ -174,16 +139,16 @@ static void setup_parms_maos(PARMS_S *parms){
 
     parms->maos.nwvl=readcfg_dblarr(&parms->maos.wvl, "maos.wvl");
     READ_INT(maos.npowfs);
-    readcfg_intarr_n(parms->maos.npowfs,&parms->maos.msa,"maos.msa");
-    readcfg_intarr_n(parms->maos.npowfs,&parms->maos.nsa,"maos.nsa");
+    readcfg_intarr_n(&parms->maos.msa,parms->maos.npowfs,"maos.msa");
+    readcfg_intarr_n(&parms->maos.nsa,parms->maos.npowfs,"maos.nsa");
 
-    readcfg_intarr_n(parms->maos.npowfs,&parms->maos.ncomp,"maos.ncomp");
-    readcfg_intarr_n(parms->maos.npowfs,&parms->maos.embfac,"maos.embfac");
-    readcfg_dblarr_n(parms->maos.npowfs,&parms->maos.dxsa,"maos.dxsa");
+    readcfg_intarr_n(&parms->maos.ncomp,parms->maos.npowfs,"maos.ncomp");
+    readcfg_intarr_n(&parms->maos.embfac,parms->maos.npowfs,"maos.embfac");
+    readcfg_dblarr_n(&parms->maos.dxsa,parms->maos.npowfs,"maos.dxsa");
 
-    readcfg_strarr_n(parms->maos.npowfs, &parms->maos.fnwfsloc, "maos.fnwfsloc");
-    readcfg_strarr_n(parms->maos.npowfs, &parms->maos.fnwfsamp, "maos.fnwfsamp");
-    readcfg_strarr_n(parms->maos.npowfs, &parms->maos.fnsaloc, "maos.fnsaloc");
+    readcfg_strarr_n(&parms->maos.fnwfsloc,parms->maos.npowfs, "maos.fnwfsloc");
+    readcfg_strarr_n(&parms->maos.fnwfsamp,parms->maos.npowfs, "maos.fnwfsamp");
+    readcfg_strarr_n(&parms->maos.fnsaloc, parms->maos.npowfs,"maos.fnsaloc");
     char *temp, *temp1;
     temp=readcfg_str("maos.fnmcc"); temp1=find_file(temp);
     parms->maos.mcc=dread("%s",temp1); free(temp); free(temp1);

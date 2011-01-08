@@ -377,6 +377,31 @@ int readcfg_peek(const char *format,...){
     }
 }
 /**
+   Check the size of an array input
+*/
+int readcfg_peak_n(const char *format, ...){
+    format2key;
+    long irecord=getrecord(key, 0);
+    const char *sdata=store[irecord].data;
+    const char *startptr=strchr(sdata,'[');
+    const char *endptr=strchr(sdata,']');
+    const char *quote=strchr(startptr,'"');
+    int count=0;
+    if(quote && quote<endptr){//this is string array
+	char **ret=NULL;
+	count=readstr_strarr(&ret, sdata);
+	for(int i=0; i<count; i++){
+	    free(ret[i]);
+	}
+	free(ret);
+    }else{//this is numerical array
+	double *ret;
+	count=readstr_numarr((void**)&ret, 0, T_DBL, sdata);
+	free(ret);
+    }
+    return count;
+}
+/**
    Check whether the record is overriden by user supplied conf files.
 */
 int readcfg_override(const char *format,...){
@@ -409,12 +434,8 @@ char *readcfg_str(const char *format,...){
     }
     return data;
 }
-/**
-   Obtain a string array value from the key. revised on 2010-10-16 to be more
-   strict on the entry to avoid mistakes.
- */
 int readcfg_strarr(char ***res, const char *format,...){
-    //Read str array.
+   //Read str array.
     format2key;
     *res=NULL;//initialize
     long irecord=getrecord(key, 1);
@@ -426,52 +447,59 @@ int readcfg_strarr(char ***res, const char *format,...){
 	if(!sdata){//record is empty.
 	    return 0;
 	}
-	int count=0, maxcount=5;
-	*res=calloc(maxcount,sizeof(char*));
+	return readstr_strarr(res, sdata);
+    }
+}
+/**
+   Obtain a string array value from the key. revised on 2010-10-16 to be more
+   strict on the entry to avoid mistakes.
+ */
+int readstr_strarr(char ***res, const char *sdata){
+    int count=0, maxcount=5;
+    *res=calloc(maxcount,sizeof(char*));
 
-	const char *sdataend=sdata+strlen(sdata)-1;
-	const char *sdata2;
-	if(sdata[0]!='[' || sdataend[0]!=']'){
-	    info("sdata[0]=%c, sdataend[0]=%c\n",sdata[0], sdataend[0]);
-	    warning2("key %s: Entry {%s} should start with [ and end with ]\n",key, sdata);
-	    sdata2=sdata;
-	}else{
-	    sdata2=sdata+1;
+    const char *sdataend=sdata+strlen(sdata)-1;
+    const char *sdata2;
+    if(sdata[0]!='[' || sdataend[0]!=']'){
+	info("sdata[0]=%c, sdataend[0]=%c\n",sdata[0], sdataend[0]);
+	warning2("Entry {%s} should start with [ and end with ]\n", sdata);
+	sdata2=sdata;
+    }else{
+	sdata2=sdata+1;
+    }
+    //sdataend--;
+    //find each string.
+    while(sdata2<sdataend && sdata2[0]==' '){
+	sdata2++;
+    }
+    while(sdata2<sdataend){
+	if(sdata2[0]!='"'){
+	    error("Unable to parse {%s} for str array\n", sdata);
 	}
-	//sdataend--;
-	//find each string.
+	const char *sdata3=sdata2+1;
+	const char *sdata4=strchr(sdata3,'"');
+	if(!sdata4) error("Unmatched ""\n");
+	if(sdata4>sdata3){
+	    if(count>=maxcount){
+		maxcount*=2;
+		*res=realloc(*res,sizeof(char*)*maxcount);
+	    }
+	    (*res)[count]=mystrndup(sdata3, sdata4-sdata3);
+	}else{
+	    (*res)[count]=NULL;
+	}
+	count++;
+	sdata2=sdata4+1;
 	while(sdata2<sdataend && sdata2[0]==' '){
 	    sdata2++;
 	}
-	while(sdata2<sdataend){
-	    if(sdata2[0]!='"'){
-		error("Unable to parse {%s} for str array\n", sdata);
-	    }
-	    const char *sdata3=sdata2+1;
-	    const char *sdata4=strchr(sdata3,'"');
-	    if(!sdata4) error("Unmatched ""\n");
-	    if(sdata4>sdata3){
-		if(count>=maxcount){
-		    maxcount*=2;
-		    *res=realloc(*res,sizeof(char*)*maxcount);
-		}
-		(*res)[count]=mystrndup(sdata3, sdata4-sdata3);
-	    }else{
-		(*res)[count]=NULL;
-	    }
-	    count++;
-	    sdata2=sdata4+1;
-	    while(sdata2<sdataend && sdata2[0]==' '){
-		sdata2++;
-	    }
-	}
-	if(count>0){
-	    *res=realloc(*res,sizeof(char*)*count);
-	}else{
-	    free(*res); *res=NULL;
-	}
-	return count;
     }
+    if(count>0){
+	*res=realloc(*res,sizeof(char*)*count);
+    }else{
+	free(*res); *res=NULL;
+    }
+    return count;
 }
 
 /**
@@ -479,14 +507,73 @@ int readcfg_strarr(char ***res, const char *format,...){
 */
 int readcfg_intarr(int **ret, const char *format,...){
     format2key;
-    return readstr_numarr((void**)ret, T_INT, store[getrecord(key, 1)].data);
+    return readstr_numarr((void**)ret, 0, T_INT, store[getrecord(key, 1)].data);
 }
+
 /**
    Read double array
 */
 int readcfg_dblarr(double **ret, const char *format,...){
     format2key;
-    return readstr_numarr((void**)ret, T_DBL, store[getrecord(key, 1)].data);
+    return readstr_numarr((void**)ret, 0,T_DBL, store[getrecord(key, 1)].data);
+}
+/**
+   Read integer array of len elements
+*/
+void readcfg_strarr_n(char ***ret, int len, const char *format,...){
+    format2key;
+    int len2;
+    if(len!=(len2=readstr_strarr((char***)ret, store[getrecord(key, 1)].data))){
+	error("%s: Need %d, got %d integers\n", key, len, len2);
+    }
+}
+/**
+   Read integer array of len elements
+*/
+void readcfg_intarr_n(int **ret, int len, const char *format,...){
+    format2key;
+    int len2;
+    if(len!=(len2=readstr_numarr((void**)ret, len, T_INT, store[getrecord(key, 1)].data))){
+	error("%s: Need %d, got %d integers\n", key, len, len2);
+    }
+}
+/**
+   Read integer array of maximum of len elements
+*/
+void readcfg_intarr_nmax(int **ret, int len, const char *format,...){
+    format2key;
+    int len2=readstr_numarr((void**)ret, len, T_INT, store[getrecord(key, 1)].data);
+    if(len2==1){
+	for(int i=1; i<len; i++){
+	    (*ret)[i]=(*ret)[0];
+	}
+    }else if(len2!=0 && len2!=len){
+	error("%s: Require %d numbers, but got %d\n", key, len, len2);
+    }
+}
+/**
+   Read double array of len elements
+*/
+void readcfg_dblarr_n(double **ret, int len, const char *format,...){
+    format2key;
+    int len2;
+    if(len!=(len2=readstr_numarr((void**)ret, len, T_DBL, store[getrecord(key, 1)].data))){
+	error("%s: Need %d, got %d double\n", key, len, len2);
+    }
+}
+/**
+   Read double array of len elements
+*/
+void readcfg_dblarr_nmax(double **ret, int len, const char *format,...){
+    format2key;
+    int len2=readstr_numarr((void**)ret, len, T_DBL, store[getrecord(key, 1)].data);
+    if(len2==1){
+	for(int i=1; i<len; i++){
+	    (*ret)[i]=(*ret)[0];
+	}
+    }else if(len2!=0 && len2!=len){
+	error("%s: Require %d numbers, but got %d\n", key, len, len2);
+    }
 }
 /**
    Read integer
@@ -543,11 +630,10 @@ double readstr_num(const char *data, char **endptr0){
     return res;
 }
 /**
-   Read numerical array from a string.
+   Read numerical array from a string. if len is nonzero, *ret should be already allocated.
 */
-int readstr_numarr(void **ret, int type, const char *data){
+int readstr_numarr(void **ret, int len, int type, const char *data){
     if(!data || strlen(data)==0){
-	if(*ret) free(*ret); *ret=NULL; 
 	return 0;
     }
     size_t nmax=10;
@@ -562,8 +648,17 @@ int readstr_numarr(void **ret, int type, const char *data){
     default:
 	error("Invalid type");
     }
-    if(!(*ret=malloc(size*nmax))){
-	error("Failed to allocate memory for ret\n");
+    if(len==0){
+	if(!(*ret=malloc(size*nmax))){
+	    error("Failed to allocate memory for ret\n");
+	}
+    }else{
+	nmax=len;
+	if(*ret){
+	    memset(*ret, 0, size*len);
+	}else{
+	    *ret=calloc(size, len);
+	}
     }
     const char *startptr=data;
     char *endptr, *startptr2;
@@ -631,6 +726,14 @@ int readstr_numarr(void **ret, int type, const char *data){
     int count=0;
     //Read in the array
     while(startptr[0]!=']' && startptr[0]!='\0'){
+	if(count>=nmax){
+	    if(len){
+		error("We want %d numbers, but more are supplied\n", len);
+	    }else{
+		nmax*=2;
+		*ret=realloc(*ret, size*nmax);
+	    }
+	}
 	//parse the string for a floating point number. 
 	double res=readstr_num(startptr, &endptr);
 
@@ -653,20 +756,18 @@ int readstr_numarr(void **ret, int type, const char *data){
 	    error("Invalid type");
 	}
 	count++;
-	if(count>=nmax){
-	    nmax*=2;
-	    *ret=realloc(*ret, size*nmax);
-	}
 	//Skip the number separators.
 	while(startptr[0]==' '){
 	    startptr++;
 	}
     }
-    if(count>0){
-	*ret=realloc(*ret, size*count);
-    }else{
-	free(*ret);
-	*ret=NULL;
+    if(!len){
+	if(count>0){
+	    *ret=realloc(*ret, size*count);
+	}else{
+	    free(*ret);
+	    *ret=NULL;
+	}
     }
     return count;
 }

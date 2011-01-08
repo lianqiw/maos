@@ -42,24 +42,24 @@ void   open_config (const char*fn, const char *prefix, long protect);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
+int    readcfg_peak_n(const char *format, ...) CHECK_ARG(1);
 int    readcfg_override(const char *format,...) CHECK_ARG(1);
+
 char*  readcfg_str (const char*format,...) CHECK_ARG(1);
-/**
-   Read an int number from config hash table*/
-int    readcfg_int (const char*format,...) CHECK_ARG(1);
-/**
-   Read a double number from config hash table
-*/
-double readcfg_dbl (const char*format,...) CHECK_ARG(1);
-/**
-   Read an int array from config hash table
-*/
-int    readcfg_intarr(int **ret,const char*format,...) CHECK_ARG(2);
-/**
-   Read a double array from config hash table
-*/
-int    readcfg_dblarr(double **ret,const char*format,...) CHECK_ARG(2);
 int    readcfg_strarr(char ***res, const char *format,...) CHECK_ARG(2);
-int    readstr_numarr(void **ret, int type, const char *data);
+int    readstr_strarr(char ***res, const char *sdata);
+void   readcfg_strarr_n(char ***ret, int len, const char *format,...) CHECK_ARG(3);
+int    readcfg_int (const char*format,...) CHECK_ARG(1);
+double readcfg_dbl (const char*format,...) CHECK_ARG(1);
+
+int    readcfg_intarr(int **ret,   const char *format,...) CHECK_ARG(2);
+int    readcfg_dblarr(double **ret,const char *format,...) CHECK_ARG(2);
+
+void   readcfg_dblarr_n(double **ret, int len, const char *format,...) CHECK_ARG(3);
+void   readcfg_intarr_n(   int **ret, int len, const char *format,...) CHECK_ARG(3);
+
+void   readcfg_dblarr_nmax(double **ret, int len, const char *format,...) CHECK_ARG(3);
+void   readcfg_intarr_nmax(   int **ret, int len, const char *format,...) CHECK_ARG(3);
+int    readstr_numarr(void **ret, int len, int type, const char *data);
 double readstr_num(const char *startptr, char **endptr);
 #endif

@@ -120,103 +120,32 @@ void free_parms(PARMS_T *parms){
 }
 
 #define MAX_STRLEN 80
-
-/**
-   Read in double array of n elements from the configuration files
-*/
-static int readcfg_dblarr_n(int n, double **p, const char*format,...){
-    format2key;
-    int m=readcfg_dblarr(p,"%s",key);
-    if(m!=n){
-	error("Wrong # of elements for 'key' %s.\n"
-	      "Required %d, got %d\n",format,n,m);
-    }
-    return 0;
-}
-
-/**
-   Read in int array of n elements from the configuration files
-*/
-static int readcfg_intarr_n(int n,int **p, const char*format,...){
-    format2key;
-    int m=readcfg_intarr(p,"%s",key);
-    if(m!=n){
-	error("Wrong # of elements for 'key' %s.\n"
-	      "Required %d, got %d\n",format,n,m);
-    }
-    return 0;
-    }
-/**
-   Read in int array of n elements from the configuration files. If not enough
-numbers available, will fill with zeros.  */
-static int readcfg_intarr_n_relax(int n,int **p, const char*format,...){
-    format2key;
-    int m=readcfg_intarr(p,"%s",key);
-    if(m==0){
-	*p=calloc(n, sizeof(int));//initialize to zeros.
-    }else if(m==1 && m<n){
-	*p=realloc(*p, n*sizeof(int));
-	for(int ii=1; ii<n; ii++){
-	    (*p)[ii]=(*p)[0];
-	}
-    }else if(m!=n){
-	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
-    }
-    return 0;
-}
-/**
-   Read in double array of n elements from the configuration files. If not enough
-numbers available, will fill with zeros.  */
-/*static int readcfg_dblarr_n_relax(int n, double **p, const char*format,...){
-    format2key;
-    int m=readcfg_dblarr(p,"%s",key);
-    if(m==0){
-	*p=calloc(m, sizeof(double));
-    }else if(m==1){
-	*p=realloc(*p, n*sizeof(double));
-	for(int ii=1; ii<n; ii++){
-	    (*p)[ii]=(*p)[0];
-	}
-    }else if(m!=n){
-	error("Wrong # of elements for 'key' %s.\n Required %d, got %d\n",format,n,m);
-    }
-    return 0;
-}
-*/
 #define READ_INT(A) parms->A = readcfg_int(#A) //read a key with int value.
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) //read a key with double value
 #define READ_STR(A) parms->A = readcfg_str(#A) //read a key with string value.
 
 
 #define READ_POWFS(A,B)						\
-    if((i=readcfg_##A##arr(&A##junk,"powfs."#B))!=npowfs){	\
-	error("Wrong # of elements for 'powfs.%s': Get %d, "	\
-	      "need %d\n",#B,i,npowfs);				\
-    };								\
+    readcfg_##A##arr_n((void*)(&A##tmp), npowfs, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
-	parms->powfs[i].B = A##junk[i];/*doesn't need ## in B*/ \
+	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								\
-    free(A##junk);					
+
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
    it is used to represent the types of WFS.
 */
 static void readcfg_powfs(PARMS_T *parms){
-    double *dbljunk;
-    int *intjunk;
-    char **strjunk;
-    int npowfs,i;
-    char temp[MAX_STRLEN];
-    parms->npowfs=readcfg_intarr(&intjunk,"powfs.order");
+    int     npowfs,i;
+    parms->npowfs=npowfs=readcfg_peak_n("powfs.order");
     parms->powfs=calloc(parms->npowfs,sizeof(POWFS_CFG_T));
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	parms->powfs[ipowfs].order=intjunk[ipowfs];
-    }
-    free(intjunk);
-    npowfs=parms->npowfs;
+    int    *inttmp=NULL;
+    double *dbltmp=NULL;
+    char  **strtmp=NULL;
+    READ_POWFS(int,order);
     READ_POWFS(int,nwvl);
     double *wvllist=NULL;
-    int nwvllist=readcfg_dblarr(&wvllist,"powfs.wvl");
+    int nwvllist=readcfg_dblarr(&wvllist, "powfs.wvl");
     double *wvlwts=NULL;
     int nwvlwts=readcfg_dblarr(&wvlwts, "powfs.wvlwts");
     double *siglev=NULL;
@@ -326,11 +255,8 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
 	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
 	    
-	    parms->powfs[ipowfs].llt->n=readcfg_dblarr 
-		(&(parms->powfs[ipowfs].llt->ox),"%sllt.ox",prefix);
-	    snprintf(temp,MAX_STRLEN,"%sllt.oy",prefix);
-	    readcfg_dblarr_n(parms->powfs[ipowfs].llt->n,
-			     &(parms->powfs[ipowfs].llt->oy),"%sllt.oy",prefix);
+	    parms->powfs[ipowfs].llt->n=readcfg_dblarr(&(parms->powfs[ipowfs].llt->ox),"%sllt.ox",prefix);
+	    readcfg_dblarr_n(&(parms->powfs[ipowfs].llt->oy),parms->powfs[ipowfs].llt->n,"%sllt.oy",prefix);
 
 	}else{//there is no LLT.
 	    parms->powfs[ipowfs].llt=NULL;
@@ -363,30 +289,26 @@ static void readcfg_powfs(PARMS_T *parms){
 	}
 
     }//ipowfs
+    free(inttmp);
+    free(dbltmp);
+    free(strtmp);
 }
 #define READ_WFS(A,B)							\
-    if((i=readcfg_##A##arr(&A##junk,"wfs."#B))!=parms->nwfs){		\
-	error("Wrong # of input for 'wfs.%s': "				\
-	      "Get %d, need %d\n",#B,i,parms->nwfs);			\
-    };									\
-    for(i=0; i<parms->nwfs; i++){					\
-	parms->wfs[i].B = A##junk[i];/*doesn't need ## in B*/		\
+    readcfg_##A##arr_n((void*)(&A##tmp),nwfs,"wfs."#B);			\
+    for(i=0; i<nwfs; i++){						\
+	parms->wfs[i].B = A##tmp[i];/*doesn't need ## in B*/		\
     }									\
-    free(A##junk);
 
 /**
    Read in parameters of wfs, including GS direction, signal level, wvlwts, etc.
 */
 static void readcfg_wfs(PARMS_T *parms){
-    double *dbljunk;
-    int *intjunk;
     int i;
-    parms->nwfs=readcfg_dblarr(&dbljunk, "wfs.thetax");
+    int nwfs=parms->nwfs=readcfg_peak_n("wfs.thetax");
     parms->wfs=calloc(parms->nwfs,sizeof(struct WFS_CFG_T));
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	parms->wfs[iwfs].thetax=dbljunk[iwfs];
-    }
-    free(dbljunk);
+    double *dbltmp=NULL;
+    int    *inttmp=NULL;
+    READ_WFS(dbl,thetax);
     READ_WFS(dbl,thetay);
     for(i=0; i<parms->nwfs; i++){
 	parms->wfs[i].thetax/=206265.;
@@ -434,31 +356,24 @@ static void readcfg_wfs(PARMS_T *parms){
     if(count!=nwvlwts){
 	error("Supplied %d wvlwts but need %d for all wfs.\n",nwvlwts,count);
     }
+    free(dbltmp);
+    free(inttmp);
 }
 #define READ_DM(A,B)					     \
-    if((i=readcfg_##A##arr(&A##junk,"dm."#B))!=ndm){		     \
-	error("Wrong number of elements for 'dm.%s': "	     \
-	      "Get %d, need %d\n",#B,i,ndm);		     \
-    };							     \
+    readcfg_##A##arr_n((void*)(&A##tmp),ndm,"dm."#B);	     \
     for(i=0; i<ndm; i++){				     \
-	parms->dm[i].B = A##junk[i];/*doesn't need ## in B*/ \
+	parms->dm[i].B = A##tmp[i];			     \
     }							     \
-    free(A##junk);
 
 /**
    Read in deformable mirror parameters.
 */
 static void readcfg_dm(PARMS_T *parms){
-    double *dbljunk;
-    int *intjunk;
     int ndm,i;
- 
-    ndm=parms->ndm=readcfg_intarr(&intjunk,"dm.hist");
+    ndm=parms->ndm=readcfg_peak_n("dm.order");
     parms->dm=calloc(parms->ndm,sizeof(struct DM_CFG_T));
-    for(int idm=0; idm<ndm; idm++){
-	parms->dm[idm].hist=intjunk[idm];
-    }
-    free(intjunk);
+    int* inttmp=NULL;
+    double *dbltmp=NULL;
     READ_DM(int,order);
     READ_DM(dbl,guard);
     READ_DM(dbl,stroke);
@@ -467,38 +382,35 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM(dbl,offset);
     READ_DM(dbl,histbin);
     READ_DM(int,histn);
-    //READ_DM(int,hist); already read.
+    READ_DM(int,hist); 
     READ_DM(int,cubic);
     READ_DM(dbl,iac);
+    free(inttmp);
+    free(dbltmp);
 }
-#define READ_MOAO(A,B)						     \
-    if((i=readcfg_##A##arr(&A##junk,"moao."#B))!=nmoao){	     \
-	error("Wrong number of elements for 'moao.%s': "	     \
-	      "Get %d, need %d\n",#B,i,nmoao);			     \
-    };								     \
-    for(i=0; i<nmoao; i++){					     \
-	parms->moao[i].B = A##junk[i];/*doesn't need ## in B*/	     \
-    }								     \
-    free(A##junk);
+#define READ_MOAO(A,B)					      \
+    readcfg_##A##arr_n((void*)(&A##tmp),nmoao,"moao."#B);     \
+    for(i=0; i<nmoao; i++){				      \
+	parms->moao[i].B = A##tmp[i];			      \
+    }							      \
 
 /**
    Read in MOAO parameters.
 */
 static void readcfg_moao(PARMS_T *parms){
     int nmoao,i;
-    double *dbljunk;
-    int *intjunk;
-    nmoao=parms->nmoao=readcfg_intarr(&intjunk, "moao.order");
+    nmoao=parms->nmoao=readcfg_peak_n("moao.order");
     parms->moao=calloc(nmoao, sizeof(MOAO_CFG_T));
-    for(int imoao=0; imoao<nmoao; imoao++){
-	parms->moao[imoao].order=intjunk[imoao];
-    }
-    free(intjunk);
+    int *inttmp=NULL;
+    double *dbltmp=NULL;
+    READ_MOAO(int,order);
     READ_MOAO(int,cubic);
     READ_MOAO(dbl,iac);
     READ_MOAO(dbl,stroke);
     READ_MOAO(int,actslave);
     READ_MOAO(int,lrt_ptt);
+    free(inttmp);
+    free(dbltmp);
 }
 /**
    Read in atmosphere parameters.
@@ -513,11 +425,11 @@ static void readcfg_atm(PARMS_T *parms){
     READ_INT(atm.evolve);
     READ_INT(atm.frozenflow);
     READ_INT(atm.ninit);
-    readcfg_dblarr_n(2, &(parms->atm.size),"atm.size");
+    readcfg_dblarr_n(&(parms->atm.size),2,"atm.size");
     parms->atm.nps=readcfg_dblarr(&(parms->atm.ht),"atm.ht");
-    readcfg_dblarr_n(parms->atm.nps,&(parms->atm.wt),"atm.wt");
-    readcfg_dblarr_n(parms->atm.nps,&(parms->atm.ws),"atm.ws");
-    readcfg_dblarr_n(parms->atm.nps,&(parms->atm.wddeg),"atm.wddeg");
+    readcfg_dblarr_n(&(parms->atm.wt),parms->atm.nps,"atm.wt");
+    readcfg_dblarr_n(&(parms->atm.ws),parms->atm.nps,"atm.ws");
+    readcfg_dblarr_n(&(parms->atm.wddeg),parms->atm.nps,"atm.wddeg");
     for(int ih=0; ih<parms->atm.nps; ih++){
 	if(fabs(parms->atm.wddeg[ih])>1){
 	    warning("wddeg is not zero. Disable wdrand\n");
@@ -540,8 +452,8 @@ static void readcfg_atmr(PARMS_T *parms){
 	parms->atmr.l0=parms->atm.l0;
     }
     parms->atmr.nps=readcfg_dblarr(&(parms->atmr.ht),"atmr.ht");
-    readcfg_dblarr_n(parms->atmr.nps, &(parms->atmr.wt),"atmr.wt");
-    readcfg_intarr_n(parms->atmr.nps, &(parms->atmr.os),"atmr.os");
+    readcfg_dblarr_n(&(parms->atmr.wt), parms->atmr.nps, "atmr.wt");
+    readcfg_intarr_n(&(parms->atmr.os), parms->atmr.nps, "atmr.os");
 }
 
 /**
@@ -563,14 +475,13 @@ static void readcfg_aper(PARMS_T *parms){
    Read in performance evaluation science point parameters.
 */
 static void readcfg_evl(PARMS_T *parms){
- 
     parms->evl.nevl=readcfg_dblarr((double**)(void*)&(parms->evl.thetax),"evl.thetax");
-    readcfg_dblarr_n(parms->evl.nevl, (double**)(void*)&(parms->evl.thetay),"evl.thetay");
-    readcfg_dblarr_n(parms->evl.nevl, &(parms->evl.wt), "evl.wt");
-    readcfg_intarr_n_relax(parms->evl.nevl, &(parms->evl.psf), "evl.psf");
+    readcfg_dblarr_n(&(parms->evl.thetay),parms->evl.nevl, "evl.thetay");
+    readcfg_dblarr_n(&(parms->evl.wt),parms->evl.nevl, "evl.wt");
+    readcfg_intarr_nmax(&(parms->evl.psf), parms->evl.nevl, "evl.psf");
     parms->evl.nwvl = readcfg_dblarr(&(parms->evl.psfwvl), "evl.psfwvl");
-    readcfg_intarr_n_relax(parms->evl.nwvl, &(parms->evl.psfgridsize),"evl.psfgridsize");
-    readcfg_intarr_n_relax(parms->evl.nwvl, &(parms->evl.psfsize),"evl.psfsize");
+    readcfg_intarr_nmax(&(parms->evl.psfgridsize), parms->evl.nwvl, "evl.psfgridsize");
+    readcfg_intarr_nmax(&(parms->evl.psfsize), parms->evl.nwvl, "evl.psfsize");
     int ievl;
     double ramin=INFINITY;
     for(ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -632,10 +543,8 @@ static void readcfg_tomo(PARMS_T *parms){
 static void readcfg_fit(PARMS_T *parms){
  
     parms->fit.nfit=readcfg_dblarr((double**)(void*)&(parms->fit.thetax), "fit.thetax");
-    readcfg_dblarr_n(parms->fit.nfit,
-		     (double**)(void*)&(parms->fit.thetay), "fit.thetay");
-    readcfg_dblarr_n(parms->fit.nfit,
-		     (double**)(void*)&(parms->fit.wt), "fit.wt");
+    readcfg_dblarr_n(&(parms->fit.thetay), parms->fit.nfit, "fit.thetay");
+    readcfg_dblarr_n(&(parms->fit.wt), parms->fit.nfit, "fit.wt");
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	parms->fit.thetax[ifit]/=206265;
 	parms->fit.thetay[ifit]/=206265;
