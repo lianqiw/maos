@@ -87,11 +87,16 @@ X(cell) *X(cellnew2)(const X(cell) *A){
 void X(cellfree_do)(X(cell) *dc){
     if(!dc) return;
     if(dc->p){
+#ifndef USE_COMPLEX
+	dcell_free_plan(dc);
+#endif
 	for(int ix=0; ix<dc->nx*dc->ny; ix++){
 	    X(free)(dc->p[ix]);
 	}
 	if(dc->mmap){
-	    munmap(dc->mmap, sizeof(long)*2+sizeof(uint32_t));
+	    mmap_unref(dc->mmap);
+	}else{
+	    free(dc->header);
 	}
 	free(dc->p);
     }
@@ -608,7 +613,7 @@ X(cell)* X(2cellref)(const X(mat) *A, int*dims, int ndim){
     long kr=0;
     X(cell) *B=X(cellnew)(ndim,1);
     for(long ix=0; ix<ndim; ix++){
-	B->p[ix]=X(new_ref)(A->p+kr,dims[ix],1);//refrence the data. 
+	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);//refrence the data. 
 	kr+=dims[ix];
     }
     return B;

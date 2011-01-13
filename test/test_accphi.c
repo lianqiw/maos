@@ -351,7 +351,7 @@ static void test_accuracy(void){
     map_t **screens;
     screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1);
     map_t *screen=screens[0];
-    sqmapwrite(screen,"accphi_screen");
+    mapwrite(screen,"accphi_screen");
     //loc for the map
     loc_t *locin=mksqloc(m,n,dx,screen->ox,screen->oy);
 

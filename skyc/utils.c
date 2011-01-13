@@ -185,8 +185,8 @@ void skyc_signal_handler(int sig){
    dmat is the frequency nu, and the second column is PSD*/
 static dmat *add_psd_nomatch(dmat *psd1,dmat *psd2){
     dmat *nu1=dsub(psd1,0,psd1->nx,0,1);
-    dmat *psd2x=dnew_ref(psd2->p, psd2->nx, 1);
-    dmat *psd2y=dnew_ref(psd2->p+psd2->nx,psd2->nx,1);
+    dmat *psd2x=dnew_ref(psd2->nx, 1, psd2->p);
+    dmat *psd2y=dnew_ref(psd2->nx,1,psd2->p+psd2->nx);
     dmat *psd2new=dinterp1log(psd2x,psd2y,nu1);
     dfree(psd2x); dfree(psd2y);
     dmat *psd=dnew(nu1->nx,2);

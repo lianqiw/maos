@@ -68,10 +68,13 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
 map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
 				double offset,double guard, long nin,
 				T_TYPE type, int pad,int square){
-    map_t * amp=calloc(sizeof(map_t),1);
-    create_metapupil(parms,ht,dx,offset,&(amp->nx),&(amp->ny),
-		     &(amp->ox),&(amp->oy),&(amp->p),guard, nin, type,pad,square);
-    amp->dx=dx;
+    long nx, ny;
+    double ox, oy, *p;
+    create_metapupil(parms,ht,dx,offset,&(nx),&(ny),
+		     &(ox),&(oy),&(p),guard, nin, type,pad,square);
+    map_t *amp=mapnew(nx, ny, dx, p);
+    amp->ox=ox;
+    amp->oy=oy;
     amp->h=ht;
     return amp;
 }
@@ -389,6 +392,8 @@ void maos_signal_handler(int sig){
 	case SIGTERM:
 	case SIGQUIT: //Ctrl-'\'
 	    info="Killed";
+	case SIGUSR1://user defined
+	    info="User exited";
 	    break;
 	}
 	warning2("Signal %d: %s\n", sig, info);

@@ -20,10 +20,9 @@
 
    Change log: 
 
-   2010-01-17: Removed communicate between
-   scheduler. This is complicated and not reliable. It is up
-   to the monitor to connect all the servers to get status
-   information.
+   2010-01-17: Removed communicate between schedulers on different
+   machines. This is complicated and not reliable. It is up to the monitor to
+   connect all the servers to get status information.
    
    2010-07-26: Split scheduler to scheduler_server and scheduler_client.
 
@@ -84,7 +83,7 @@ int hid=0;
 static int scheduler_sock;
 static double usage_cpu;
 fd_set active_fd_set;
-
+static void scheduler(void);
 static RUN_T* running_add(int pid,int sock);
 static RUN_T *running_get(int pid);
 static RUN_T *running_get_wait(void);
@@ -107,6 +106,42 @@ int myhostid(const char *host){
     }
     return i;
 }
+
+/*
+  This function is already in a new process. We first try to find the executable
+  scheduler, which is much smaller than MAOS. If success, will run it. Next we
+  try to exec ourself with scheduler as argv[0] to avoid accidental killing of
+  scheduler by pkill maos.  If all these failed, we will run scheduler() as a
+  function.
+
+ */
+static void scheduler_launch_do(void *junk){
+    (void)junk;
+    if(setenv("MAOS_START_SCHEDULER","YES",1)){
+	error("Unable to setenv\n");
+    }
+    char *fn_scheduler=stradd(BUILDDIR, "/bin/scheduler", NULL);
+    const char *prog=get_job_progname();
+    if(exist(fn_scheduler)){
+	execl(fn_scheduler,"scheduler", NULL);
+    }else if(exist(prog)){
+	//this will rename the exe to scheduler. avoids accidental killing by pkill maos.
+	//execve replace the environment, so we don't use it.
+	execl(prog,"scheduler", NULL);
+    }else{//fall back. this won't have the right argv set.
+	warning("(%s) does not exist\n", prog);
+	scheduler();
+    }
+}
+
+static void scheduler_launch(void){
+    char lockpath[PATH_MAX];
+    snprintf(lockpath,PATH_MAX,"%s",TEMP);
+    //launch scheduler if it is not already running.
+    single_instance_daemonize(lockpath,"scheduler", scheduler_version,
+			      (void(*)(void*))scheduler_launch_do,NULL);
+}
+
 //Initialize hosts and associate an id number
 static __attribute__((constructor))void init(){
     init_path();//the constructor in process.c may not have been called.
@@ -173,7 +208,17 @@ static __attribute__((constructor))void init(){
 	    warning3("Unable to determine proper hostname. Monitor disabled\n");
 	}
     }
+    {
+	const char *start=getenv("MAOS_START_SCHEDULER");
+	if(start && !strcmp(start, "YES")){//we need to launch scheduler.
+	    info("Launch the scheduler\n");
+	    scheduler();//this never exits.
+	}
+    }
+    //we always try to launch the scheduler.
+    scheduler_launch();
 }
+
 
 /**
    make a server port and bind to localhost on all addresses
@@ -206,7 +251,7 @@ int make_socket (uint16_t port, int retry){
 	    error("Failed to bind to port %d\n",port);
 	}
     }
-    info3("binded to port %hd at sock %d\n",port,sock);
+    info("binded to port %hd at sock %d\n",port,sock);
     return sock;
 }
 /**
@@ -738,11 +783,14 @@ static void scheduler_crash_handler(int sig){
 	}
 	close(scheduler_sock);
 	usleep(100);
-	exit(sig);
+	_Exit(sig);//don't call clean up functions
     }
 }
-void scheduler(void){
+static void scheduler(void){
     register_signal_handler(scheduler_crash_handler);
+    if(unsetenv("MAOS_START_SCHEDULER")){//important.
+	error("Unable to unsetenv\n");
+    }
     fd_set read_fd_set;
     int i;
     struct sockaddr_in clientname;
@@ -970,3 +1018,9 @@ void monitor_send_initial(MONITOR_T *ic){
     //info("Monitor_send_initial success\n");
 }
 
+#ifdef SCHEDULER
+int main(){
+    //we should not enter here. the constructor runs scheduler and won't return.
+    scheduler();
+}
+#endif

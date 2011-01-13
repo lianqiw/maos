@@ -35,179 +35,54 @@
 #include "fractal.h"
 #include "mathmisc.h"
 #include "nr/nr.h"
-
+#include "locbin.h"
+#include "misc.h"
+#include "cellarr.h"
+#include "sys/daemonize.h"
 int disable_atm_shm=0;
 /**
  *  \file turbulence.c
  *  Contains routines to generate atmospheric turbulence screens
  */
+enum{
+    T_VONKARMAN=0,
+    T_FRACTAL,
+    T_BIHARMONIC
+};
 
-#if USE_POSIX_SHM == 1
 /**
- *  map the shm to map_t array.
+ * hash the data to get a unique file name
  */
-void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw){
-    
-    /*
-      set access, modification time to current. This information is used to
-      detect unused screens
-    */
-
-    futimes(fd, NULL);
-    int prot = rw ? PROT_READ|PROT_WRITE : PROT_READ;
-    int op = rw ? LOCK_EX : LOCK_SH;
-    
-    /*
-      In rw mode, apply an exclusive lock so no other process can use it.
-      In ro mode, apply an shared lock.
-    */
-    if(flock(fd, op)){
-	error("Failed to lock file\n");
-    }
-    /*
-      Allocate memory by calling ftruncate in rw mode.
-    */
-    if(rw && ftruncate(fd, totmem)){
-	error("Failed to allocate memory\n");
-    }
-    if((screen[0]->p=mmap(NULL, totmem, prot, MAP_SHARED ,fd, 0))<0){
-	error("Unable to mmap\n");
-    }
-    /*
-      since fd might be 0. we add fd by 1 and assign to shm. This will later be
-      used to close the fd and release the lock.
-    */
-    screen[0]->shm=fd +1;
-    int m=screen[0]->nx;
-    int n=screen[0]->ny;
-    for(int ilayer=1; ilayer<nlayer; ilayer++){
-	screen[ilayer]->shm = -1;
-	screen[ilayer]->p = screen[0]->p+m*n*ilayer;
-    }
-}
-#endif
-/**
- *  Allocate for memory for atmosphere. If shm is enabled and has enough shared
- *  memory, will allocate memory in shm, otherwise, allocate memory in
- *  heap. inshm is returned value, and could take the following values:
- *
- * 0: not in shm. 
- * 1: existing screen is resued.
- * 2: in shm and need to generate screen
- *
- * dx, r0, L0, wt, are used to make the key.
- */
-map_t **atmnew_shm(int *fd0, int *inshm, rand_t *rstat, long nx, long ny, double dx, 
-		   double r0, double L0, double *wt, int nlayer, int method){
-    map_t**screen=calloc(nlayer,sizeof(map_t*));
-    for(int ilayer=0; ilayer<nlayer; ilayer++){
-	screen[ilayer]=mapnew(nx, ny, dx, (void*)1);//give it 1 temporarily.
-    }
-#if USE_POSIX_SHM == 1
-    int use_shm=0;
-    char fnshm[NAME_MAX];
+static char *fnatm(GENSCREEN_T *data){
     uint32_t key;
-    long totmem;
-    if(disable_atm_shm){
-	use_shm=0;
-	shm_free_unused("",0);
-    }else{
-	key=hashlittle(rstat, sizeof(rand_t), 0);//contains seed
-	key=hashlittle(&nx, sizeof(long), key);
-	key=hashlittle(&ny, sizeof(long), key);
-	key=hashlittle(&dx, sizeof(double), key);
-	key=hashlittle(&r0, sizeof(double), key);
-	key=hashlittle(&L0, sizeof(double), key);
-	key=hashlittle(wt, sizeof(double)*nlayer, key);
-	key=hashlittle(&method, sizeof(int), key);
-	key=hashlittle(&nlayer, sizeof(int), key);
-	snprintf(fnshm,NAME_MAX,"/maos_atm_%ud_%d_%ldx%ld_%g",key,nlayer,nx,ny,dx);
-	long already_exist = shm_free_unused(fnshm, 0);
-	totmem=(nx*ny*nlayer+1)*sizeof(double);//+1 for sanity check.
-	long shm_avail=shm_get_avail();
-	if(!already_exist && shm_avail<totmem*1.1){
-	    warning2("Need %ld MiB, only %ld MiB available", totmem/1024/1024, shm_avail/1024/1024);
-	    warning2("Fall back to non-shared atm");
-	    use_shm=0;
-	}else{
-	    use_shm=1;
-	}
-    }
-    if(use_shm){
-	int fd;
-	*inshm=1;
-    retry:
-	//sleep so that the creation daemonize.has enough time to make an exclusive lock.
-	fd=shm_open(fnshm, O_RDONLY, 00777); usleep(100);//umask'ed
+    key=hashlittle(data->rstat, sizeof(rand_t), 0);//contains seed
+    key=hashlittle(data->wt, sizeof(double)*data->nlayer, key);
+    key=hashlittle(&data->dx, sizeof(double), key);
+    key=hashlittle(&data->r0, sizeof(double), key);
+    key=hashlittle(&data->l0, sizeof(double), key);
+    key=hashlittle(&data->nx, sizeof(long), key);
+    key=hashlittle(&data->ny, sizeof(long), key);
+    key=hashlittle(&data->nlayer, sizeof(long), key);
+    key=hashlittle(&data->ninit, sizeof(long), key);
 
-	if(fd<0){//unable to open. We then try to create
-	    fd=shm_open(fnshm, O_RDWR|O_CREAT|O_EXCL, 00777);
-	    if(fd<0){//some other process created it in the mean time
-		fd=shm_open(fnshm, O_RDONLY, 00777); usleep(100);
-		if(fd<0){
-		    error("Unable to open shared segment for read.\n");
-		}else{
-		    if(flock(fd, LOCK_SH)){//wait to make a shared lock
-			error("Failed to apply a lock on shared segment.\n");
-		    }	
-		}
-	    }else{
-		*inshm=2;
-		info2("\nCreating %s ...",fnshm);
-		map_shm(screen, totmem, nlayer, fd, 1);
-		screen[0]->p[nx*ny*nlayer]=0;//say the data is not valid.
-		*fd0=fd;
-		return screen;
-	    }
-	}else{
-	    info2("\nReusing %s ...",fnshm);
-	}
-	*fd0=fd;
-	map_shm(screen, totmem, nlayer, fd, 0);
-	if(fabs(screen[0]->p[nx*ny*nlayer])<1.e-15){//test validity of data.
-	    warning2("Data in shm %s is invalid, free and redo it.\n", fnshm);
-	    flock(fd, LOCK_UN);//release lock.
-	    close(fd);//close descriptor.
-	    if(munmap(screen[0]->p, totmem)){//unmap.
-		error("munmap failed\n");
-	    }
-	    shm_unlink(fnshm);//destroy the map.
-	    goto retry;
-	}
-    }else{
-#endif
-	for(int ilayer=0; ilayer<nlayer; ilayer++){
-	    screen[ilayer]->p=malloc(nx*ny*sizeof(double));
-	    screen[ilayer]->shm=0;
-	}
-	*inshm=0;
-#if USE_POSIX_SHM == 1
-    }
-#endif
-    return screen;
+    char fnshm[NAME_MAX];
+    snprintf(fnshm,PATH_MAX,"%s/.aos/atm", HOME);
+    if(!exist(fnshm)) mymkdir("%s", fnshm);
+    remove_file_older(fnshm, 30*24*3600);
+    char *types[]={"vonkarman","fractal","biharmonic"};
+    snprintf(fnshm,PATH_MAX,"%s/.aos/atm/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
+	     HOME,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
+    return strdup(fnshm);
 }
-
-typedef struct GENSCREEN_T{
-    rand_t *rstat;
-    dmat *spect;
-    map_t **screen;
-    double *wt;
-    double r0;
-    double L0;
-    long nlayer;
-    long ilayer;
-    long ninit;
-    pthread_mutex_t mutex_ilayer;
-}GENSCREEN_T;
 /**
- *   Generate turbulence screens.
+ *   Generate turbulence screens all in memory
  */
-static void *genscreen_do(GENSCREEN_T *data){
+static void spect_screen_do(GENSCREEN_T *data){
     const dmat *spect=data->spect;
     rand_t *rstat=data->rstat;
     
-    const long m=spect->nx;
-    const long n=spect->ny;
+    const long m=data->nx;
+    const long n=data->ny;
     const long nlayer=data->nlayer;
     map_t** screen=data->screen;
     const double *wt=data->wt;
@@ -220,7 +95,7 @@ static void *genscreen_do(GENSCREEN_T *data){
     if(ilayer>=nlayer){
 	UNLOCK(data->mutex_ilayer);
 	cfree(cspect);
-	return NULL;
+	return ;
     }
     /*We generate random numbers inside mutex lock to make
       sure the random sequence is repeatable.*/
@@ -246,88 +121,160 @@ static void *genscreen_do(GENSCREEN_T *data){
     }
     goto repeat;
 }
-
+/**
+ * Geneate the screens sequentially and appends to file. Handles large screens well
+ * without using the full storage.
+ */
+static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
+    rand_t *rstat = data->rstat;
+    dmat *spect   = data->spect;
+    double* wt    = data->wt;
+    int nlayer    = data->nlayer;
+    dcell *dc     = dcellnew(2,1);
+    long nx = data->nx;
+    long ny = data->ny;
+    double dx=data->dx;
+    dc->p[0] = dnew(nx, ny);
+    dc->p[1] = dnew(nx, ny);
+    dcell_fft2plan(dc, -1, data->nthread);
+    double *restrict p1=dc->p[0]->p;
+    double *restrict p2=dc->p[1]->p;
+    char header[1024];
+    double ox=-nx/2*dx;
+    double oy=-ny/2*dx;
+    snprintf(header, 1024, "ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+	     ox, oy, dx, 0., 0., 0.);
+    dc->p[0]->header=strdup(header);
+    dc->p[1]->header=strdup(header);
+    for(int ilayer=0; ilayer<nlayer; ilayer+=2){
+	double tk1=myclockd();
+	for(long i=0; i<nx*ny; i++){
+	    p1[i]=randn(rstat)*spect->p[i];
+	    p2[i]=randn(rstat)*spect->p[i];
+	}
+	double tk2=myclockd();
+	dcell_fft2(dc, -1);
+	dscale(dc->p[0], sqrt(wt[ilayer]));
+	double tk3=myclockd();
+	cellarr_dmat(fc, dc->p[0]);
+	if(ilayer+1<nlayer){
+	    dscale(dc->p[1], sqrt(wt[ilayer+1]));
+	    cellarr_dmat(fc, dc->p[1]);
+	}
+	double tk4=myclockd();
+	info("%d: Randn: %.2f FFT: %.2f Save: %.2f\n", ilayer, tk2-tk1, tk3-tk2, tk4-tk3);
+    }
+    dcellfree(dc);
+}
 /**
  * Generates multiple screens from spectrum.
  */
-map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, double L0,
-			     double* wt, int nlayer, int nthread){
-    
-    GENSCREEN_T screendata;
-    memset(&screendata, 0, sizeof(screendata));
-    screendata.rstat=rstat;
-    screendata.spect=spect;
-    screendata.wt=wt;
-    screendata.nlayer=nlayer;
-    screendata.ilayer=0;
-    PINIT(screendata.mutex_ilayer);
+static map_t** create_screen(GENSCREEN_T *data, 
+			     void (*funsave)(cellarr *fc, GENSCREEN_T *data),
+			     void (*funmem)(GENSCREEN_T *data)){
+    dmat *spect=data->spect;
+    map_t **screen;
+    long nlayer=data->nlayer;
     spect->p[0]=0;//zero out piston.
-    long nx=spect->nx;
-    long ny=spect->ny;
-    int inshm=-1;
-    long totmem=(nx*ny*nlayer+1)*sizeof(double);//+1 for sanity check.
-    int fd;
-    map_t **screen=screendata.screen=atmnew_shm(&fd, &inshm, rstat, nx, ny, 
-						dx, r0, L0, wt, nlayer, 1);
-    if(inshm != 1){
-	CALL(genscreen_do, &screendata, nthread);
-#if USE_POSIX_SHM==1
-	if(inshm == 2){//need to remap to r/o mode.
-	    screen[0]->p[nx*ny*nlayer]=1;//say the data is valid.
-	    if(munmap(screen[0]->p, totmem)){//unmap read/write. remap as read only later
-		error("munmap failed\n");
+    if(data->share){//shared with file
+	char *fnshm=fnatm(data);
+	char fnlock[PATH_MAX]; 
+	snprintf(fnlock, PATH_MAX, "%s.lock", fnshm);
+	dcell *in=NULL;
+	while(!in){
+	    if(!exist(fnlock)){//when fnlock exists, the data in fnshm is not good.
+		info("Trying to read %s\n", fnshm);
+		in=dcellread_mmap(fnshm);
+	    }else{
+		info("Will not read since %s exists\n", fnlock);
 	    }
-	    //the exclusive lock will be converted to shared lock automatically.
-	    map_shm(screen, totmem, nlayer, fd, 0);
+	    if(!in){
+		info("Trying to create %s\n", fnshm);
+		int fd=lock_file(fnlock, 0);//non blocking.
+		if(fd>=0){//succeed to lock file. Another process is running.
+		    cellarr *fc = cellarr_init(nlayer, "%s", fnshm); 
+		    funsave(fc, data);
+		    cellarr_close(fc);
+		    remove(fnlock);
+		    close(fd);
+		}else{//some other process is working on the data.
+		    //wait for the lock to release.
+		    fd=open(fnlock, O_RDONLY);
+		    //this lock will block.
+		    if(fd>-1){
+			flock(fd, LOCK_EX);
+			flock(fd, LOCK_UN);
+		    }
+		    remove(fnlock);
+		}
+	    }
 	}
-#endif
+	int nlayer2;
+	screen=dcell2map(&nlayer2, in);
+	assert(nlayer==nlayer2);
+	dcellfree(in);
+	free(fnshm);
+    }else{
+  	screen=calloc(nlayer,sizeof(map_t*));
+	long nx = data->nx;
+	long ny = data->ny;
+	double dx = data->dx;
+	for(int ilayer=0; ilayer<nlayer; ilayer++){
+	    screen[ilayer]=mapnew(nx, ny, dx, NULL);
+	}
+	data->screen=screen;
+	PINIT(data->mutex_ilayer);
+	CALL(funmem, data, data->nthread);
     }
     return screen;
 }
 /**
  *   Generate vonkarman screens from turbulence statistics.
  */
-map_t** vonkarman_screen(ATM_ARGS){
-    (void)ninit;
+map_t** vonkarman_screen(GENSCREEN_T *data){
+    data->method=T_VONKARMAN;
     char fnspect[PATH_MAX];
-    dmat *spect;
     mymkdir("%s/.aos/spect/",HOME);
     snprintf(fnspect,PATH_MAX,"%s/.aos/spect/spect_%ldx%ld_dx1_%g_r0%g_L0%g.bin",
-	     HOME,nx,ny,1./dx,r0,L0);
+	     HOME,data->nx,data->ny,1./data->dx,data->r0,data->l0);
     if(exist(fnspect)){
-	spect=({char fn[PATH_MAX];strcpy(fn,fnspect);dread("%s",fn);});
+	data->spect=dread("%s", fnspect);
     }else{
-	info2("\nGenerating spect...");
-	TIC;
-	tic;
-	spect=turbpsd(nx,ny,dx,r0,L0,0.5);
-	toc2("done");
-	dwrite(spect,"%s",fnspect);
+	info2("\nGenerating spect..."); TIC; tic;
+	data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,0.5); toc2("done");
+	dwrite(data->spect,"%s",fnspect);
     }
-    map_t **screen=genscreen_from_spect(rstat,spect,dx,r0,L0,wt,nlayer,nthread);
-    dfree(spect);
+    map_t **screen=create_screen(data, spect_screen_save, spect_screen_do);
+    dfree(data->spect);
     return(screen);
 }
 
 /**
  *  Generate screens from PSD with power of 12/3 instead of 11/3.
  */
-map_t** biharmonic_screen(ATM_ARGS){
-    (void)ninit;
-    /**
-       Generate vonkarman screen.
-    */
-    dmat *spect;
-  
-    info2("\nGenerating spect...");
-    TIC;
-    tic;
-    spect=turbpsd_full(nx,ny,dx,r0,L0,-2,0.5);
-    toc2("done");
-
-    map_t **screen=genscreen_from_spect(rstat,spect,dx,r0,L0,wt,nlayer,nthread);
-    dfree(spect);
+map_t** biharmonic_screen(GENSCREEN_T *data){
+    data->method=T_BIHARMONIC;
+    info2("\nGenerating spect..."); TIC; tic;
+    data->spect=turbpsd_full(data->nx,data->ny,data->dx,data->r0,data->l0,-2,0.5); toc2("done");
+    map_t **screen=create_screen(data, spect_screen_save, spect_screen_do);
+    dfree(data->spect);
     return(screen);
+}
+/**
+ * Generate one screen at a time and save to file
+ */
+static void fractal_screen_save(cellarr *fc, GENSCREEN_T *data){
+    long nx=data->nx;
+    long ny=data->ny;
+    dmat *dm = dnew(data->nx, data->ny);
+    for(int ilayer=0; ilayer<data->nlayer; ilayer++){
+	drandn(dm, 1, data->rstat);
+	double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
+	fractal(dm->p, nx, ny, data->dx, r0i, data->l0, data->ninit);
+	remove_piston(dm->p, nx*ny);
+	cellarr_dmat(fc, dm);
+    }
+    dfree(dm);
 }
 static void fractal_screen_do(GENSCREEN_T *data){
     rand_t *rstat=data->rstat;
@@ -343,13 +290,11 @@ static void fractal_screen_do(GENSCREEN_T *data){
 	UNLOCK(data->mutex_ilayer);
 	return;
     }
-    for(long i=0; i<nx*ny; i++){
-	screen[ilayer]->p[i]=randn(rstat);
-    }
+    drandn((dmat*)screen[ilayer], 1, rstat);
     UNLOCK(data->mutex_ilayer);
     double r0i=data->r0*pow(wt[ilayer], -3./5.);
     //info("r0i=%g\n", r0i);
-    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->L0, data->ninit);
+    fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
     remove_piston(screen[ilayer]->p, nx*ny);
     goto repeat;
 }
@@ -358,36 +303,9 @@ static void fractal_screen_do(GENSCREEN_T *data){
  * Generate Fractal screens. Not good statistics.
  */
 
-map_t **fractal_screen(ATM_ARGS){
-    GENSCREEN_T screendata;
-    memset(&screendata, 0, sizeof(screendata));
-    screendata.rstat=rstat;
-    screendata.wt=wt;
-    screendata.nlayer=nlayer;
-    screendata.ilayer=0;
-    screendata.r0=r0;
-    screendata.L0=L0;
-    screendata.ninit=ninit;
-    PINIT(screendata.mutex_ilayer);
-    int inshm=-1;
-    long totmem=(nx*ny*nlayer+1)*sizeof(double);
-    int fd;
-    map_t **screen=screendata.screen=atmnew_shm(&fd, &inshm, rstat, nx, ny, 
-						dx, r0, L0, wt, nlayer, 1);
-    if(inshm != 1){
-	CALL(fractal_screen_do,&screendata, nthread);
-#if USE_POSIX_SHM == 1
-	if(inshm == 2){
-	    screen[0]->p[nx*ny*nlayer]=1;//say the data is valid.
-	    if(munmap(screen[0]->p, totmem)){//unmap read/write. remap as read only later
-		error("munmap failed\n");
-	    }
-	    //the exclusive lock will be converted to shared lock automatically.
-	    map_shm(screen, totmem, nlayer, fd, 0);
-	}
-#endif
-    }
-    return screen;
+map_t **fractal_screen(GENSCREEN_T *data){
+    data->method=T_FRACTAL;
+    return create_screen(data, fractal_screen_save, fractal_screen_do);
 }
 
 /**

@@ -27,10 +27,6 @@ char *dirstart;
    for signal to proceed, and then starts skysim to do sky coverage.
  */
 int main(int argc, char **argv){
-    if(mystrcmp(argv[0], "scheduler")==0){//launch the scheduler.
-	scheduler();
-	exit(0);
-    }
     dirstart=mygetcwd();
     //Strip out PATH information from the command line.
     char*fn=mybasename(argv[0]);

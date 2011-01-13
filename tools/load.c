@@ -39,11 +39,6 @@ static void kill_matlab(int sig){
     exit(EXIT_FAILURE);
 }
 int main(int argc, char **argv){
-    if(mystrcmp(argv[0], "scheduler")==0){//launch the scheduler.
-	scheduler();
-	exit(0);
-    }
-
     if(argc!=2){
 	error("Usage:load script.m or load script\n");
     }

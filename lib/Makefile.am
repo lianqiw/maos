@@ -17,10 +17,11 @@ misc.c mathmisc.c random.c loc.c locbin.c cellarr.c turbulence.c path.c mkg.c	\
 mkh.c mkz.c mkw.c accphi.c proj.c chol.c laplacian.c pcg.c muv.c draw.c fft.c	\
 genotf.c fractal.c stfun.c
 
-AOS_SRC+=sys/io.c sys/daemonize.c sys/process_bsd.c sys/process_cygwin.c	\
+SYS_SRC=sys/io.c sys/daemonize.c sys/process_bsd.c sys/process_cygwin.c	\
 sys/scheduler_server.c sys/sockio.c sys/mem.c sys/process_apple.c sys/process.c	\
 sys/process_linux.c sys/scheduler_client.c sys/shm.c sys/thread.c sys/thread_pool.c
 
+AOS_SRC+=$(SYS_SRC) 
 AOS_SRC+=nr/beschb.c  nr/bessik.c  nr/chebev.c 
 
 
@@ -33,3 +34,9 @@ dmat.c:tmp.c
 tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c
 	@echo "#define USE_COMPLEX" > $(srcdir)/tmp.c
 	@cat $(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c >> $(srcdir)/tmp.c
+
+#we compile a scheduler, which takes less memory than maos.
+bin_PROGRAMS=../bin/scheduler
+___bin_scheduler_SOURCES=$(SYS_SRC) misc.c hashlittle.c path.c
+___bin_scheduler_CFLAGS=$(AM_CFLAGS) -DSCHEDULER
+___bin_scheduler_LDFLAGS=-lrt -lpthread

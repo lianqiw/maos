@@ -103,29 +103,17 @@ void locarrfree_do(loc_t **loc, int nloc){
 /**
    Free map_t data
 */
-void sqmapfree_do(map_t *map){
-    if (!map) return;
-    if(map->shm){
-#if USE_POSIX_SHM
-	shm_unmap(map->p, map->shm-1);
-#else
-	error("Fatal Error. Should never happen\n");
-#endif
-	free(map);
-    }else{
-	free(map->p);
-	map->p=NULL;
-	free(map);
-    }
+void mapfree_do(map_t *map){
+    dfree_do((dmat*)map, 0);
 }
 
 /**
    Free map_t array
  */
-void sqmaparrfree_do(map_t **map, int nmap){
+void maparrfree_do(map_t **map, int nmap){
     if(!map) return;
     for(int imap=0; imap<nmap; imap++){
-	sqmapfree(map[imap]);
+	mapfree(map[imap]);
     }
     free(map);
 }
@@ -134,9 +122,7 @@ void sqmaparrfree_do(map_t **map, int nmap){
    Free rectmap_t data
 */
 void rectmapfree_do(rectmap_t *map){
-    if (!map) return;
-    free(map->p);
-    free(map);
+    dfree_do((dmat*)map, 0);
 }
 /**
    Create a loc with nloc elements.
@@ -241,24 +227,21 @@ void loc_create_map_npad(loc_t *loc, int npad){
 }
 
 /**
-   convert a sqmap to a loc object. only positive numbers are
-   converted.
-*/
-loc_t* sqmap2loc(map_t *amp){
-    return map2loc(amp->dx,amp->nx,amp->ny,amp->ox,amp->oy,amp->p);
-}
-/**
    Create an index array can put embed opd defined in loc from map2loc into
    a square array of size nx*ny
 */
-long *sqmap2embed(map_t *amp){
-    return map2embed(amp->nx,amp->ny,amp->p);
+long *map2embed(map_t *amp){
+    return d2embed((dmat*)amp);
 }
 /**
    Convert a map to a loc that collects all positive entries. */
-loc_t* map2loc(double dx, long nx, long ny, 
-	       double ox, double oy, double *map){
-    double (*map0)[nx]=(double(*)[nx]) map;
+loc_t* map2loc(map_t *map){
+    const double dx=map->dx;
+    const double ox=map->ox;
+    const double oy=map->oy;
+    const long nx=map->nx;
+    const long ny=map->ny;
+    PDMAT((dmat*)map,map0);
     long ix,iy;
     loc_t *loc=calloc(1,sizeof(loc_t));;
     loc->locx=malloc(sizeof(double)*nx*ny);
@@ -282,13 +265,16 @@ loc_t* map2loc(double dx, long nx, long ny,
     return loc;
 }
 /**
-   Create an index array that can be used to embed opd defined in loc from
-   map2loc into a square array of size nx*ny */
-long *map2embed(long nx, long ny, double *map){
-    long *embed=malloc(sizeof(long)*nx*ny);
+   map is a square array of values of 0, or nonzero. 0 means that point is
+   missing. the returned vector of long integers can be used to embed an
+   irregular OPD into the square array of map->nx*map->ny. The OPDs only goes to
+   locations where the value is nonzero.  
+*/
+long *d2embed(dmat *map){
+    long *embed=malloc(sizeof(long)*map->nx*map->ny);
     long count=0;
-    for(long i=0; i<nx*ny; i++){
-	if(map[i]>0){
+    for(long i=0; i<map->nx*map->ny; i++){
+	if(map->p[i]>0){
 	    embed[count]=i;
 	    count++;
 	}
@@ -325,7 +311,7 @@ loc_t *mk1dloc(double x0, double dx, long nx){
 }
 /**
    Create a loc array that covers the map_t. Notice that it is different from
-   sqmap2loc which only covers valid (value>0) regions.
+   map2loc which only covers valid (value>0) regions.
  */
 loc_t *mksqloc_map(map_t*map){
     return mksqloc(map->nx, map->ny, map->dx, map->ox, map->oy);
@@ -1308,23 +1294,17 @@ void loc_nxny(long *nx, long *ny, const loc_t *loc){
    create a new map_t object.
 */
 map_t *mapnew(long nx, long ny, double dx, double *p){
-    map_t *map=calloc(1, sizeof(map_t));
-    map->nx=nx;
-    map->ny=ny;
+    map_t *map=realloc(dnew_data(nx, ny, p),sizeof(map_t));
     map->dx=dx;
-    if(!p){
-	p=calloc(nx*ny,sizeof(double));
-    }
-    map->p=p;
     map->ox=-map->nx/2*map->dx;
     map->oy=-map->ny/2*map->dx;
+    map->vx=0;
+    map->vy=0;
     return map;
 }
 /**
    Create a circular aperture on map_t.
 */
 void mapcircle(map_t *map, double r, double val){
-    dmat *tmp=dnew_ref(map->p, map->nx, map->ny);
-    dcircle(tmp, (0-map->ox)/map->dx, (0-map->oy)/map->dx, r/map->dx, val);
-    dfree(tmp);
+    dcircle((dmat*)map, (0-map->ox)/map->dx, (0-map->oy)/map->dx, r/map->dx, val);
 }

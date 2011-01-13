@@ -39,7 +39,7 @@ extern char *dirskysim;
 #define ROT_OTF 0
 //ROT_OTF==0: Rotate PSF to radial/azimuthal coordinate in LGS, Radial CCD Mode (Preferred).
 //ROT_OTF==1: Rotate OTF.
-#define maos_done(A) ({scheduler_finish(A);maos_signal_handler(A);})
+#define EXIT raise(SIGUSR1)
 void maos(const PARMS_T *parms);
 #endif
 

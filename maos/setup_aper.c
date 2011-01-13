@@ -38,7 +38,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 
     tic;
     if(parms->aper.fnamp){
-	aper->ampground=sqmapread("%s",parms->aper.fnamp);
+	aper->ampground=mapread("%s",parms->aper.fnamp);
 	if(fabs(aper->ampground->h)>1.e-14){
 	    warning("ampground is not on ground, this is not tested\n");
 	}
@@ -46,11 +46,15 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    warning("Pupil is rotated by %g deg\n",parms->aper.rotdeg);
 	    const long nx=aper->ampground->nx;
 	    const long ny=aper->ampground->ny;
-	    dmat *A=dnew_ref(aper->ampground->p, nx, ny);
 	    double *p2=calloc(nx*ny, sizeof(double));
-	    dmat *B=dnew_ref(p2,nx,ny);
-	    dembed(B,A,parms->aper.rotdeg/180.*M_PI);
-	    dfree(A);dfree(B);
+	    dmat *B=dnew_ref(nx,ny,p2);
+	    dembed(B,(dmat*)aper->ampground,parms->aper.rotdeg/180.*M_PI);
+	    dfree(B);//won't free p2.
+	    if(aper->ampground->nref[0]>1){
+		aper->ampground->nref[0]--;
+		aper->ampground->nref=calloc(1, sizeof(long));
+		aper->ampground->nref[0]=1;
+	    }
 	    free(aper->ampground->p);
 	    aper->ampground->p=p2;
 	}
@@ -71,8 +75,8 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    aper->locs->stat=locstat;
 	}else{
 	    map_t *pmap=create_metapupil_wrap(parms,0,dx,0,0,0,T_PLOC,0,0);
-	    aper->locs=sqmap2loc(pmap);
-	    sqmapfree(pmap);
+	    aper->locs=map2loc(pmap);
+	    mapfree(pmap);
 	    warning("No amplitude map defined or matched to aperture dx.\n");
 	}  
 	if(parms->save.setup){

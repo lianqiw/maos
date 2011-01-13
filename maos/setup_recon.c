@@ -50,10 +50,10 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	map_t *pmap=create_metapupil_wrap 
 	    (parms,0,dxr,0,0,0,T_PLOC,0,parms->fit.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
-	recon->ploc=sqmap2loc(pmap);//convert map_t to loc_t
+	recon->ploc=map2loc(pmap);//convert map_t to loc_t
 	recon->ploc_nx=pmap->nx;
 	recon->ploc_ny=pmap->ny;
-	sqmapfree(pmap);//free it.
+	mapfree(pmap);//free it.
 	if(parms->save.setup){
 	    locwrite(recon->ploc, "%s/ploc",dirsetup);
 	}
@@ -140,7 +140,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dx,offset,guard,0,T_ALOC,0,parms->fit.square);
 	
-	    recon->aloc[idm]=sqmap2loc(map);
+	    recon->aloc[idm]=map2loc(map);
 	    recon->aloc_nx[idm]=map->nx;
 	    recon->aloc_ny[idm]=map->ny;
 	    free(map->p);
@@ -203,7 +203,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    info2("layer %d: xloc map is %ldx%ld, "
 		 "with sampling of %.2f m\n",ips,
 		 map->nx,map->ny,dxr);
-	    recon->xloc[ips]=sqmap2loc(map);
+	    recon->xloc[ips]=map2loc(map);
 	    recon->xloc_nx[ips]=map->nx;
 	    recon->xloc_ny[ips]=map->ny;
 	    free(map->p);free(map);
@@ -1953,7 +1953,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     /*
        The following arrys are not used after preparation is done.
      */
-    sqmapfree(aper->ampground);
+    mapfree(aper->ampground);
     spcellfree(recon->GX);
     spcellfree(recon->GXhi);
     spcellfree(recon->GXtomo);//we use HXWtomo instead. faster

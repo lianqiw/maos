@@ -148,7 +148,7 @@ void chol_solve(dmat **x, spchol *A, const dmat *y){
     }
     free(y2);
     if(!*x){
-	*x=dnew_data(x2->x,x2->nrow,x2->ncol);//takes over the owner of x2->x.
+	*x=dnew_data(x2->nrow,x2->ncol, x2->x);//takes over the owner of x2->x.
     }else{
 	if((*x)->nx!=x2->nrow || (*x)->ny!=x2->ncol){
 	    error("Matrix mismatch\n");

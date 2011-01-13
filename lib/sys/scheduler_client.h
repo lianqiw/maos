@@ -27,8 +27,6 @@ int scheduler_connect_self(int block,int mode);
 #define print_backtrace(A)
 #endif
 //called by maos
-//call scheduler_start, and then scheduler_wait if waiting is 1.
-void scheduler_launch(void);
 int scheduler_start(char *path, int nthread, int waiting);
 int scheduler_wait(void);
 void scheduler_finish(int status);

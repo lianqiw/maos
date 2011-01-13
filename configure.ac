@@ -295,7 +295,14 @@ fi
 #Check for FFTW3 header and library.
 AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
-LDFFT="-lfftw3"
+AC_CHECK_LIB([fftw3_threads], [fftw_init_threads],[has_fftw_threads="yes"],[has_fftw_threads="no"])
+if test "x$has_fftw_threads" = "xyes" ;then
+    LDFFT="-lfftw3_threads -lfftw3"
+    AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
+else
+    LDFFT="-lfftw3"
+    AC_DEFINE(USE_FFTW_THREADS, [0], "We do not have FFTW3 threads")
+fi
 
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
 if test "x$use_long" = "xyes" ;then

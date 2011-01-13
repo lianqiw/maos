@@ -438,7 +438,7 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	pres_ngs[1][idtrat]=res_ngs;//error due to signal
 	pres_ngs[2][idtrat]=res_ngsn;//error due to noise propagation.
 
-	dmat *g_tt=dnew_ref(pgain[0],3,1);
+	dmat *g_tt=dnew_ref(3,1,pgain[0]);
 	aster->res_ws->p[idtrat]=servo_typeII_residual(g_tt, parms->skyc.psd_ws, 
 						       1./(parms->maos.dt*dtrat),
 						       parms->maos.dt);

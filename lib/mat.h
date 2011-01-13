@@ -23,7 +23,7 @@
 void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define PDMAT(M,P)   double (*restrict P)[(M)->nx]=(double(*)[(M)->nx])(M)->p
 #define PDCELL(M,P)   dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
-#define dfree(A) ({dfree_do(A,0);A=NULL;})
+#define dfree(A) ({dfree_do((A),0);(A)=NULL;})
 #define dcp2(A,B)  memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
 #define dcellfree(A) ({dcellfree_do(A);A=NULL;})
 #define dcellfreearr(A,n) ({for(int in=0; in<n; in++){dcellfree(A[in]);};free(A);})
@@ -39,8 +39,8 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define czero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 
 #define AOS_MAT_DEF(X,Y,T)\
-X(mat) *X(new_ref)(T *p, long nx, long ny) CHECK_UNUSED_RESULT;\
-X(mat) *X(new_data)(T *p, long nx, long ny) CHECK_UNUSED_RESULT;\
+X(mat) *X(new_ref)(long nx, long ny, T *p) CHECK_UNUSED_RESULT; \
+X(mat) *X(new_data)(long nx, long ny, T *p) CHECK_UNUSED_RESULT; \
 X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;\
 void X(free_keepdata)(X(mat) *A);\
 void X(free_do)(X(mat) *A, int keepdata);\

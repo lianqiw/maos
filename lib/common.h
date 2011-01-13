@@ -205,16 +205,19 @@ void print_backtrace(int sig);
     signal(SIGPIPE,SIG_IGN);		\
     signal(SIGTERM,func);		\
     signal(SIGABRT,func);		\
+    signal(SIGUSR1,func);		\
     signal(SIGQUIT,func)
+
 #define disable_signal_handler	\
-    signal(SIGBUS, SIG_DFL);	\
-    signal(SIGILL, SIG_DFL);	\
-    signal(SIGSEGV,SIG_DFL);	\
-    signal(SIGINT, SIG_DFL);	\
-    signal(SIGPIPE,SIG_DFL);	\
-    signal(SIGTERM,SIG_DFL);	\
-    signal(SIGABRT,SIG_DFL);	\
-    signal(SIGQUIT,SIG_DFL)
+    signal(SIGBUS, SIG_IGN);	\
+    signal(SIGILL, SIG_IGN);	\
+    signal(SIGSEGV,SIG_IGN);	\
+    signal(SIGINT, SIG_IGN);	\
+    signal(SIGPIPE,SIG_IGN);	\
+    signal(SIGTERM,SIG_IGN);	\
+    signal(SIGABRT,SIG_IGN);	\
+    signal(SIGUSR1,SIG_IGN);	\
+    signal(SIGQUIT,SIG_IGN)
 
 
 #endif

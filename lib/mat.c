@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include "common.h"
 #include "random.h"
@@ -47,6 +48,7 @@
 #define Y(A) A
 #define Z(A) d##A##_
 #define T double
+#define M_T M_DBL
 #define REAL(A) (A)
 #define ABS(A) fabs(A)
 #define SQRT(A) sqrt(A)
@@ -60,6 +62,7 @@
 #define Y(A) c##A
 #define Z(A) z##A##_ //blas/lapack convention
 #define T dcomplex
+#define M_T M_CMP
 #define REAL(A) creal(A)
 #define ABS(A) cabs(A)
 #define SQRT(A) csqrt(A)
@@ -83,31 +86,24 @@
    X(new_do) so that changing data structure is straight
    forward.
 */
-static inline X(mat) *X(new_do)(T *p, long nx, long ny, int ref){
+static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     if(nx==0 || ny==0) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
     out->nx=nx;
     out->ny=ny;
-    
-    if(p){
-	if(ref){
-	    /*reference the data. so free this X(mat) won't delete the
-	      memory. Used when data is shared from elsewhere*/
-	    out->type=MT_REF;
-	}else{
-	    out->type=MT_NORMAL;
+    if(ref){//the data does not belong to us.
+	if(!p && nx*ny!=0){
+	    error("When ref is 1, p must not be NULL.\n");
 	}
 	out->p=p;
     }else{
-	if(ref){
-	    error("Trying to reference a NULL pointer\n");
+	if(!p){
+	    p=calloc((nx*ny), sizeof(T));
 	}
-	out->p=calloc((nx*ny), sizeof(T));
-	if(!out->p) error("Allocation failed\n");
-	out->type=MT_NORMAL;
+	out->p=p;
+	out->nref=calloc(1, sizeof(T));
+	out->nref[0]=1;
     }
-    out->nref=calloc(1, sizeof(T));
-    out->nref[0]=1;
     return out;
 }
 /**
@@ -115,23 +111,23 @@ static inline X(mat) *X(new_do)(T *p, long nx, long ny, int ref){
    vector.  free the X(mat) object won't free the existing
    vector.
 */
-X(mat) *X(new_ref)(T *p, long nx, long ny){
-    return X(new_do)(p,nx,ny,1);
+X(mat) *X(new_ref)(long nx, long ny, T *p){
+    return X(new_do)(nx,ny,p,1);
 }
 
 /**
    Creat a X(mat) object with already allocated memory
    chunk. the memory is freed when the memory is freed.
 */
-X(mat) *X(new_data)(T *p, long nx, long ny){
-    return X(new_do)(p,nx,ny,0);
+X(mat) *X(new_data)(long nx, long ny, T *p){
+    return X(new_do)(nx,ny,p,0);
 }
 
 /**
    Create a new T matrix object. initialized all to zero.
 */
 X(mat) *X(new)(long nx, long ny){
-    return X(new_do)(NULL,nx,ny,0);
+    return X(new_do)(nx,ny,NULL,0);
 }
 
 /**
@@ -145,35 +141,27 @@ void X(free_keepdata)(X(mat) *A){
 */
 void X(free_do)(X(mat) *A, int keepdata){
     if(!A) return;
-    if(A->nref[0]==1){
-	free(A->nref);
-	if(!keepdata && A->p){
-	    switch(A->type){
-	    case MT_NORMAL:
-		free(A->p); 
+    if(A->nref){
+	if(A->nref[0]==1){
 #ifdef USE_COMPLEX
-		cfree_plan(A);
+	    cfree_plan(A);
 #endif
-		break;
-	    case MT_MMAP:
-		{
-#ifdef USE_COMPLEX
-		cfree_plan(A);
-#endif
-		long headersize=sizeof(long)*2+sizeof(uint32_t);
-		munmap(((char*)A->p)-headersize, headersize+A->nx*A->ny*sizeof(T));
+	    if(!keepdata && A->p){
+		if(A->mmap){//data is mmap'ed.
+		    mmap_unref(A->mmap);
+		}else{
+		    free(A->p);
+		    free(A->header);
+		}
 	    }
-		break;
-	    case MT_REF://reference from a nother vector. don't free.
-		break;
-	    default:
-		warning("Wrong format: p=%p. type=%ld\n", A->p, A->type);
-	    }
+	    free(A->nref);
+	}else if(A->nref[0]>1){
+	    A->nref[0]--;
+	}else{
+	    error("The ref is less than 1. unlikely!!!:%ld\n",A->nref[0]);
 	}
-    }else if(A->nref[0]>1){
-	A->nref[0]--;
     }else{
-	error("The ref is less than 1. unlikely!!!:%ld\n",A->nref[0]);
+	free(A->header);
     }
     free(A);
 }
@@ -248,9 +236,6 @@ X(mat) *X(ref_reshape)(X(mat) *in, long nx, long ny){
 */
 X(mat)* X(refcols)(X(mat) *in, long icol, long ncol){
     X(mat) *out=calloc(1, sizeof(X(mat)));
-    out->type=MT_REF;
-    out->nref=in->nref;
-    out->nref[0]++;
     out->nx=in->nx;
     out->ny=ncol;
     out->p=in->p+icol*out->nx;

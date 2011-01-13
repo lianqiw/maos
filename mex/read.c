@@ -9,19 +9,20 @@
 #include "io.h"
 
 static mxArray *readdata(file_t *fp, mxArray **header){
-    int magic;
+    uint32_t magic;
     mxArray *out=NULL;
     uint64_t nx,ny;
     if(fp->eof) return NULL;
     char *header2=NULL;
     magic=read_magic(fp, &header2);
+
     if(header){
 	if(header2)
 	    *header=mxCreateString(header2);
 	else
 	    *header=mxCreateString("");
     }
-    free(header2);
+    free(header2); header2=NULL;
 
     zfread(&nx, sizeof(uint64_t), 1,fp);
     zfread(&ny, sizeof(uint64_t), 1,fp);

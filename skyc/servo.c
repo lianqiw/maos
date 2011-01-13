@@ -84,8 +84,8 @@ dmat* servo_typeII_optim(double *ress, double *resn, const dmat *psdin,
       computed. But we need to captuer the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
      */
-    dmat *psdx=dnew_ref(psdin->p,          psdin->nx,1);
-    dmat *psdy=dnew_ref(psdin->p+psdin->nx,psdin->nx,1);
+    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
      
     //Compute error in un-corretable part of the PSD
     dmat *nu2=dlogspace(log10(fs/2),3,1000);//Frequencies that no correction can be made.
@@ -226,8 +226,8 @@ cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt){
 */
 double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt){
     dmat *nu=dlogspace(-3,3,1000);//Should go beyond Nyquist freq. Hrej=1 for nu>fs/2.
-    dmat *psdx=dnew_ref(psdin->p,          psdin->nx,1);
-    dmat *psdy=dnew_ref(psdin->p+psdin->nx,psdin->nx,1);  
+    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);  
     dmat *psd=dinterp1log(psdx,psdy,nu);
     dcomplex pi2i=2*M_PI*I;
     double Ts=1./fs;
@@ -364,8 +364,8 @@ dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtlgs, int dtrat){
 dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     double df=1./(N*dt);
     dmat *f=dlinspace(df,df,N);
-    dmat *psdx=dnew_ref(psdin->p,          psdin->nx,1);
-    dmat *psdy=dnew_ref(psdin->p+psdin->nx,psdin->nx,1);
+    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
     dmat *psd2=dinterp1log(psdx,psdy,f);
     dfree(f);
     double sqdf=sqrt(df);

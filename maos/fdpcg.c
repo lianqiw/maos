@@ -458,8 +458,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     fdpcg->scale=calloc(nps,sizeof(double));
     offset=0;
     for(int ips=0; ips<nps; ips++){
-	fdpcg->xhati->p[ips]=cnew_ref(fdpcg->xhat->p+offset,nx[ips],ny[ips]);
-	fdpcg->xhat2i->p[ips]=cnew_ref(fdpcg->xhat2->p+offset,nx[ips],ny[ips]);
+	fdpcg->xhati->p[ips]=cnew_ref(nx[ips],ny[ips],fdpcg->xhat->p+offset);
+	fdpcg->xhat2i->p[ips]=cnew_ref(nx[ips],ny[ips],fdpcg->xhat2->p+offset);
 	cfft2plan(fdpcg->xhati->p[ips],-1);
 	cfft2plan(fdpcg->xhat2i->p[ips],1);
 	fdpcg->scale[ips]=1./(double)(nx[ips]*ny[ips]);

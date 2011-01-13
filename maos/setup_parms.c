@@ -25,6 +25,10 @@
 #include <fcntl.h>
 #include "../lib/aos.h"
 #include "parms.h"
+/*
+  Don't include maos.h or types.h, so that we don't have to recompile
+  setup_parms.c when these files change.
+ */
 /**
    \file maos/setup_parms.c
    This file contains necessary routines to read parametes for
@@ -425,6 +429,7 @@ static void readcfg_atm(PARMS_T *parms){
     READ_INT(atm.evolve);
     READ_INT(atm.frozenflow);
     READ_INT(atm.ninit);
+    READ_INT(atm.share);
     readcfg_dblarr_n(&(parms->atm.size),2,"atm.size");
     parms->atm.nps=readcfg_dblarr(&(parms->atm.ht),"atm.ht");
     readcfg_dblarr_n(&(parms->atm.wt),parms->atm.nps,"atm.wt");
@@ -1012,8 +1017,8 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	warning("Disable atm.evolve since there is no frozenflow or in debug atm mode.\n");
 	parms->atm.evolve=0;//disable evolve in open loop mode.
     }
-    if(parms->atm.evolve){
-	disable_atm_shm=1;//can not share screen.
+    if(parms->atm.evolve || !parms->atm.share){
+	disable_atm_shm=1;//do not share screen.
     }
 }
 /**
@@ -1332,6 +1337,10 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	info2(" %d", parms->sim.seeds[i]);
     }
     info2("\n");
+    if(parms->sim.nseed<1){
+	info2("Seed is empty. Nothing to be done. Will exit\n");
+	raise(SIGUSR1);
+    }
     if(parms->save.gcovp<10){
 	warning("parms->save.gcovp=%d is too small. You will fill your disk!\n",
 		parms->save.gcovp);

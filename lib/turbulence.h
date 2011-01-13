@@ -22,17 +22,33 @@
 #include "loc.h"
 #include "random.h"
 #include "type.h"
+typedef struct GENSCREEN_T{
+    rand_t *rstat;   /**<The random stream*/
+    double *wt;      /**<The layer weights*/
+    double r0;       /**<The Fried Parameter*/
+    double l0;       /**<The outerscale*/
+    double dx;       /**<The sampling*/
+    long nx;         /**<Number of pixels along x*/
+    long ny;         /**<Number of pixels along y*/
+    long nlayer;     /**<The number of layers*/
+    long ninit;      /**<In Fractal method, the size of initial screen*/
+    long share;      /**<Use file backend for sharing of atmosphere*/
+    long nthread;    /**<Number of threads to use*/
+    //The following are private data. do not set when call.
+    map_t **screen;  /**<The destination screen pointer*/
+    dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
+    long ilayer;     /**<Current layer*/
+    long method;     /**<The method*/
+    pthread_mutex_t mutex_ilayer;/**<Mutex lock*/
+}GENSCREEN_T;
+
 extern int disable_atm_shm;
 extern int genscreen_keep_unused;
 void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw);
-map_t **atmnew_shm(int *fd, int *inshm, rand_t *rstat, long nx, long ny, double dx, 
-		   double r0, double L0, double *wt, int nlayer, int method);
-map_t** genscreen_from_spect(rand_t *rstat, dmat *spect, double dx,double r0, double L0,
-			     double* wt, int nlayer, int nthread);
-#define ATM_ARGS rand_t *rstat, long nx, long ny, double dx, double r0, double L0, double* wt, long nlayer, long ninit, long nthread
-map_t** vonkarman_screen(ATM_ARGS);
-map_t** biharmonic_screen(ATM_ARGS);
-map_t **fractal_screen(ATM_ARGS);
+map_t** genscreen_from_spect(GENSCREEN_T *data);
+map_t** vonkarman_screen(GENSCREEN_T *data);
+map_t** biharmonic_screen(GENSCREEN_T *data);
+map_t **fractal_screen(GENSCREEN_T *data);
 dmat* turbcov(dmat *r, double rmax, double r0, double L0);
 dmat *turbpsd_full(long nx, long ny, double dx, double r0, double L0, double slope, double power);
 #define turbpsd(nx, ny, dx, r0, L0, power) turbpsd_full(nx, ny, dx, r0, L0, -11./6., power);

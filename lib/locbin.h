@@ -27,12 +27,17 @@ loc_t *locread(const char *format,...) CHECK_ARG(1);
 void locarrwrite(loc_t ** loc, int nloc, const char *format,...) CHECK_ARG(3);
 loc_t ** locarrread(int *nloc, const char *format,...) CHECK_ARG(2);
 
-map_t *sqmapread(const char *format,...) CHECK_ARG(1);
-map_t *sqmapreaddata(file_t *fp, uint32_t magic, char *header);
+map_t *mapread(const char *format,...) CHECK_ARG(1);
+map_t *mapreaddata(file_t *fp, uint32_t magic, char *header);
 rectmap_t *rectmapread(const char *format,...) CHECK_ARG(1);
-rectmap_t *rectmapreaddata(file_t *fp);
-void sqmapwrite(const map_t *map, const char *format,...) CHECK_ARG(2);
+rectmap_t **rectmaparrread(int *nlayer, const char *format, ...);
+void mapwrite(map_t *map, const char *format,...) CHECK_ARG(2);
+void maparrwrite(map_t ** map, int nmap, const char *format,...) CHECK_ARG(3);
+map_t **maparrread(int*nlayer, const char *format,...) CHECK_ARG(2);
 
-void sqmaparrwrite(map_t ** map, int nmap, const char *format,...) CHECK_ARG(3);
-map_t **sqmaparrread(int*nlayer, const char *format,...) CHECK_ARG(2);
+map_t* d2map(dmat *in);
+map_t**dcell2map(int *nlayer, dcell *in);
+rectmap_t* d2rectmap(dmat *in);
+rectmap_t **dcell2rectmap(int *nlayer, dcell *in);
+
 #endif

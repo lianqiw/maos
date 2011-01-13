@@ -23,7 +23,6 @@
 #include <sys/types.h>
 #include <math.h>
 #include "maos.h"
-#include <fftw3.h>//after maos.h which defines complex
 TIC;
 #include "setup_powfs.h"
 #include "mtch.h"
@@ -182,7 +181,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 	prop_grid_pts(ampg,powfs[ipowfs].pts,
 		      powfs[ipowfs].amp,1,0,0,1,0,0,0);
-	sqmapfree(ampg);
+	mapfree(ampg);
 	
     }
     count=0;
@@ -540,7 +539,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(fn_ncpa){//Always make nwfs NCPA's
 	char *fn=find_file(fn_ncpa);
 	int nncpa_in;
-	map_t **ncpa=sqmaparrread(&nncpa_in, "%s",fn);
+	map_t **ncpa=maparrread(&nncpa_in, "%s",fn);
 	free(fn);
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	if(nncpa_in != 1 && nncpa_in != nwfs){
@@ -594,7 +593,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		locfree(locwfs);
 	    }
 	}//iwfs;
-	sqmaparrfree(ncpa,nncpa_in);
+	maparrfree(ncpa,nncpa_in);
 	if(parms->powfs[ipowfs].ncpa_method<0 || parms->powfs[ipowfs].ncpa_method>2){
 	    error("Invalid ncpa_method=%d\n", parms->powfs[ipowfs].ncpa_method);
 	}

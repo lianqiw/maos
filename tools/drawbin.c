@@ -23,7 +23,7 @@ static void draw_map(file_t *fp, int id){
     char *header=NULL;
     uint32_t magic=read_magic(fp, &header);
     uint64_t nx,ny;
-    char *name=mybasename(fp->fn);
+    char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
     suf[0]='\0';
     if(iscell(magic)){
@@ -32,9 +32,12 @@ static void draw_map(file_t *fp, int id){
 	    draw_map(fp, ii);
 	}
     }else{
-	map_t *data=sqmapreaddata(fp, magic, header);
+	dmat *in=dreaddata(fp, magic);
+	in->header=header; header=NULL;
+	map_t *data=d2map(in);
 	drawmap("map", data, NULL, name,"x", "y", "%s:%d", name, id);
-	sqmapfree(data);
+	mapfree(data);
+	dfree(in);
     }
     free(header);
     free(name);
@@ -45,7 +48,7 @@ static void draw_map(file_t *fp, int id){
 static void draw_opd(file_t *fp1, file_t *fp2, int id){
     uint32_t magic1, magic2;
     uint64_t nx1,ny1,nx2,ny2;
-    char *name=mybasename(fp2->fn);
+    char *name=mybasename(zfname(fp2));
     char *suf=strstr(name, ".bin");
     suf[0]='\0';
     char *header1=NULL, *header2=NULL;
@@ -81,7 +84,7 @@ static void draw_loc(file_t *fp, int id){
     char *header=NULL;
     uint32_t magic=read_magic(fp, &header);
     uint64_t nx,ny;
-    char *name=mybasename(fp->fn);
+    char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
     suf[0]='\0';
     if(iscell(magic)){
@@ -92,7 +95,7 @@ static void draw_loc(file_t *fp, int id){
     }else{
 	loc_t *loc=locreaddata(fp, magic, header);
 	if(loc->nloc>100000){//if too many points, we draw it.
-	    drawloc("loc",loc,NULL,fp->fn,"x","y","%s",fp->fn);
+	    drawloc("loc",loc,NULL,zfname(fp),"x","y","%s",zfname(fp));
 	}else{//we plot individual points.
 	    plot_points("loc",1, &loc, NULL, NULL,NULL,0,NULL,NULL,name,"x","y","%s:%d",name,id);
 	}
@@ -111,10 +114,6 @@ static void usage(){
    The main.
 */
 int main(int argc, char *argv[]){
-    if(mystrcmp(argv[0], "scheduler")==0){//launch the scheduler.
-	scheduler();
-	exit(0);
-    }
     if(argc<2){
 	usage();
 	return 0;
@@ -122,7 +121,6 @@ int main(int argc, char *argv[]){
     //use the parent pid so same bash session has the same drawdaemon.
     DRAW_ID=getppid();
     //launch scheduler if it is not already running.
-    scheduler_launch();
     if(!strcmp(argv[1],"loc")){//draw coordinate grid
 	if(argc!=3){
 	    error("Invalid number of input\n");

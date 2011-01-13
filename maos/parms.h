@@ -53,6 +53,7 @@ typedef struct ATM_CFG_T{
 		      fractal since it does not wrap.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
+    int share;    /**<0: disable sharing of atmosphere using file backend*/
 }ATM_CFG_T;
 /**
    contains input parameters for the atmospheric reconstruction.  */

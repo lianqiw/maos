@@ -256,7 +256,12 @@ int isfile(const char *fn){
     stat(fn, &buf);
     return S_ISREG(buf.st_mode);
 }
-
+off_t flen(const char *fn){
+    if(!fn) return 0;
+    struct stat buf;
+    stat(fn, &buf);
+    return buf.st_size;
+}
 void touch(const char *fn){
     /**
        Update a file's modtime to current.

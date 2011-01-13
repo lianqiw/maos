@@ -142,14 +142,14 @@ static void test_dcellcat(int argc, char**argv){
 }
 static void test_save(void){//passed
     //info("page size is %ld\n",sysconf(_SC_PAGE_SIZE));
-    dmat *a=dnew_mmap(20,20,"a");
+    dmat *a=dnew_mmap(20,20,NULL,"a");
     rand_t rstat;
     seed_rand(&rstat,1);
     drandn(a,1,&rstat);
     dwrite(a,"a2.bin");
     long nnx[6]={2,3,4,5,6,0};
     long nny[6]={3,4,2,5,6,3};
-    dcell *b=dcellnew_mmap(2,3, nnx, nny, "ac.bin");
+    dcell *b=dcellnew_mmap(2,3, nnx, nny, NULL,"ac.bin");
     for(int ix=0; ix<b->nx*b->ny; ix++){
 	drandn(b->p[ix], 1, &rstat);
     }

@@ -19,7 +19,6 @@
 #ifndef AOS_TYPE_H
 #define AOS_TYPE_H
 #include "common.h"
-#include <fftw3.h>
 #include "misc.h"
 #if defined(DLONG)
 typedef long spint; //we use 32 bit in sparse index.
@@ -29,18 +28,7 @@ typedef int spint;
 /**
    \file lib/type.h Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.  */
-enum{
-    MT_NORMAL=0,
-    MT_REF,
-    MT_MMAP
-};
-/**
-   An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
- */
-typedef struct PLAN1D_T{
-    int ncomp;         /**< For a NxN array, only convert center ncomp*ncomp to Fourier space. */
-    fftw_plan plan[3]; /**< Array of plans for 1-d FFT */
-}PLAN1D_T;
+
 
 /*
   Separate definition of struct with typedef. Put definition of struct in a
@@ -54,8 +42,9 @@ typedef struct dmat{
     double *p;  /**< the pointer to allocated memory. */
     long nx;    /**< number of rows */
     long ny;    /**< number of columns */
+    char *header;/**<Optionally contain a header*/
     long *nref; /**< reference count */
-    long type;  /**< specify whether this is allocated or in shared memory. */
+    struct mmap_t *mmap;/**< not NULL if mmaped. unmap the mmaped memory*/
 }dmat;
 
 /**
@@ -65,10 +54,10 @@ typedef struct cmat{
     dcomplex *p; /**< the pointer to allocated memory. */
     long nx;     /**< number of rows */
     long ny;     /**< number of columns */
+    char *header;/**<Optionally contain a header*/
     long *nref;  /**< reference count */
-    long type;   /**< specify whether this is allocated or in shared memory. */
-    fftw_plan  plan[3];  /**< Stores array of FFT plans for forward and backward FFT. */
-    PLAN1D_T *plan1d[3];/**< Stores array of 1-D FFT plans. See PLAN1D_T */
+    struct mmap_t *mmap;/**< not NULL if mmaped. unmap the mmaped memory*/
+    struct fft_t *fft;
 }cmat;
 
 /**
@@ -78,7 +67,8 @@ typedef struct ccell{
     cmat **p;   /**< Contains an array of pointers to cmat. */
     long nx;    /**< number of rows */
     long ny;    /**< number of columns */
-    void *mmap; /**< not NULL if mmaped. unmap the mmaped memory*/
+    char *header;/**<Optionally contain a header*/
+    struct mmap_t *mmap; /**<not NULL if mmaped. use unmap the mmaped memory*/
 }ccell;
 /**
    an 2-d block matrix of dmat.
@@ -87,7 +77,9 @@ typedef struct dcell{
     dmat **p;   /**< Contains an array of pointers to dmat. */
     long nx;    /**< number of rows */
     long ny;    /**< number of columns */
-    void *mmap; /**< not NULL if mmaped. unmap the mmaped memory*/
+    char *header;/**<Optionally contain a header*/
+    struct mmap_t *mmap; /**< not NULL if mmaped. unmap the mmaped memory*/
+    struct fft_t *fft; /**<Use a pair of dmat to do FFT in split storage.*/
 }dcell;
 
 typedef enum CEMBED{
@@ -143,19 +135,25 @@ typedef struct cspcell{
 
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
-   on x/y. Do not modify the first three elements, which has the same layout as
-   dmat */
+   on x/y. The first 5 elements are all from dmat. Do not change them.
+*/
 typedef struct map_t{
-    double *p;      /**<The OPD*/
-    long nx;        /**<Number of points along x*/
-    long ny;        /**<Number of points along y*/
+    //The OPD, takes the same form of dmat so can be casted.
+    double *p;  /**< the pointer to allocated memory. */
+    long nx;    /**< number of rows */
+    long ny;    /**< number of columns */
+    char *header;/**<Optionally contain a header*/
+    long *nref; /**< reference count */
+    struct mmap_t *mmap;/**< not NULL if mmaped. unmap the mmaped memory*/
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x and y*/
     double h;       /**<Heigh conjugation of this surface*/
     double vx;      /**Wind velocity. Useful for atmospheric grid*/
     double vy;      /**Wind velocity. Useful for atmospheric grid*/
-    long shm;       /**Records the length of the memory mmaped of positive. -1 means it is part of shared shm.*/
+#if USE_POSIX_SHM == 1
+    //long shm;       /**Records the length of the memory mmaped of positive. -1 means it is part of shared shm.*/
+#endif
 } map_t;
 
 /**
@@ -165,6 +163,9 @@ typedef struct rectmap_t{
     double *p;      /**<The OPD*/
     long nx;        /**<Number of points along x*/
     long ny;        /**<Number of points along y*/
+    char *header;/**<Optionally contain a header*/
+    long *nref; /**< reference count */
+    long type;  /**< specify whether this is allocated or in shared memory. */
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
     double dx;      /**<Sampling along x (first dimension)*/

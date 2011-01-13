@@ -100,25 +100,7 @@ int scheduler_connect_self(int block, int mode){
     }while(count<10);
     return -1;
 }
-static void scheduler_launch_do(void *junk){
-    /**
-       This function is already in a new process.
-     */
-    (void)junk;
-    const char *prog=get_job_progname();
-    char prog2[PATH_MAX];
-    snprintf(prog2, PATH_MAX,"%s/scheduler",TEMP);
-    if(exist(prog)){
-	//this will rename the exe to scheduler. avoids accidental killing
-	int a;
-	a=unlink(prog2);
-	a=symlink(prog,prog2);
-	if(a<0) warning("unable to link");
-	execl(prog2,"scheduler",NULL);
-    }else{//fall back
-	scheduler();
-    }
-}
+
 static void scheduler_report_path(char *path){
     static char *path_save=NULL;
     if(path){
@@ -135,17 +117,9 @@ static void scheduler_report_path(char *path){
     swriteintarr(&psock, cmd, 2);
     swritestr(&psock,path_save);
 }
-//launch the scheduler if not running
-void scheduler_launch(void){
-    char lockpath[PATH_MAX];
-    snprintf(lockpath,PATH_MAX,"%s",TEMP);
-    //launch scheduler if it is not already running.
-    single_instance_daemonize(lockpath,"scheduler", scheduler_version,
-			      (void(*)(void*))scheduler_launch_do,NULL);
-}
+
 // called by mcao to wait for available cpu.
 int scheduler_start(char *path, int nthread, int waiting){
-    scheduler_launch();
     psock=scheduler_connect_self(1,0);
     if(psock==-1){
 	warning3("Failed to connect to scheduler\n");

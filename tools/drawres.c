@@ -61,10 +61,6 @@ static ARG_T * parse_args(int argc, char **argv){
    The main.
 */
 int main(int argc, char *argv[]){
-    if(mystrcmp(argv[0], "scheduler")==0){//launch the scheduler.
-	scheduler();
-	exit(0);
-    }
     ARG_T *arg=parse_args(argc, argv);
     //use the parent pid so same bash session has the same drawdaemon.
     DRAW_ID=getppid();

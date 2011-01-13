@@ -41,9 +41,9 @@
 void prep_cachedm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(!simu->cachedm){
-	simu->cachedm=calloc(parms->ndm, sizeof(map_t*));
+	simu->cachedm=calloc(parms->ndm, sizeof(map_t**));
 	for(int idm=0; idm<parms->ndm; idm++){
-	    simu->cachedm[idm]=calloc(parms->dm[idm].ncache, sizeof(map_t));
+	    simu->cachedm[idm]=calloc(parms->dm[idm].ncache, sizeof(map_t*));
 	    for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
 		long nxout, nyout;
 		double oxout, oyout;
@@ -52,12 +52,9 @@ void prep_cachedm(SIM_T *simu){
 		    (parms, parms->dm[idm].ht, dx,
 		     0, &nxout, &nyout, &oxout, &oyout, NULL,
 		     2, 0, T_ALOC,0,0);
-		simu->cachedm[idm][iscale].ox=oxout;
-		simu->cachedm[idm][iscale].oy=oyout;
-		simu->cachedm[idm][iscale].nx=nxout;
-		simu->cachedm[idm][iscale].ny=nyout;
-		simu->cachedm[idm][iscale].dx=dx;
-		simu->cachedm[idm][iscale].p=calloc(nxout*nyout,sizeof(double));
+		simu->cachedm[idm][iscale]=mapnew(nxout, nyout, dx, NULL);
+		simu->cachedm[idm][iscale]->ox=oxout;
+		simu->cachedm[idm][iscale]->oy=oyout;
 	    }
 	}
     }
@@ -87,7 +84,7 @@ void prep_cachedm(SIM_T *simu){
 	simu->cachedm_prop[ic]=calloc(parms->sim.nthread, sizeof(thread_t));
 	cpropdata[ic].locin=simu->recon->aloc[idm];
 	cpropdata[ic].phiin=simu->dmreal->p[idm]->p;
-	cpropdata[ic].mapout=&simu->cachedm[idm][iscale];
+	cpropdata[ic].mapout=simu->cachedm[idm][iscale];
 	cpropdata[ic].alpha=1;
 	cpropdata[ic].displacex0=0;
 	cpropdata[ic].displacey0=0;
@@ -116,10 +113,7 @@ void calc_cachedm(SIM_T *simu){
 	    for(int ic=0; ic<simu->cachedm_n; ic++){
 		int idm=simu->pcachedm[ic][0];
 		int iscale=simu->pcachedm[ic][1];
-		memset(simu->cachedm[idm][iscale].p,0, 
-		       sizeof(double) 
-		       *simu->cachedm[idm][iscale].nx 
-		       *simu->cachedm[idm][iscale].ny);
+		dzero((dmat*)simu->cachedm[idm][iscale]);
 		//do the multi-threaded ray tracing
 		QUEUE_THREAD(group,simu->cachedm_prop[ic], simu->nthread, 1);
 	    }

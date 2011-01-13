@@ -40,8 +40,8 @@ typedef struct file_t{
 #define MCC_ANY  0x6421
 #define MCC_DBL 0x6422
 #define MCC_CMP 0x6424
-
 #define M_HEADER 0x6500
+#define M_SKIP   0x6600
 
 #define MAT_SP 0xFF01
 #define MAT_CSP 0xFF02
@@ -56,4 +56,5 @@ int zfseek(file_t *fp, long offset, int whence);
 void write_header(const char *header, file_t *fp);
 void write_timestamp(file_t *fp);
 uint32_t read_magic(file_t *fp, char **header);
+void write_magic(uint32_t magic, file_t *fp);
 #endif

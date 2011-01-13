@@ -149,10 +149,11 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	    fp->eof=1;
 	}
     }else{
-	if(fread(ptr, size, nmemb, (FILE*)fp->p)!=nmemb){
+	size_t nmemb2;
+	if((nmemb2=fread(ptr, size, nmemb, (FILE*)fp->p))!=nmemb){
 	    fp->eof=1;
 	    if(feof((FILE*)fp->p)){
-		warning("End of File encountered!\n");
+		warning("End of File encountered!. Want %lu, get %lu\n", nmemb, nmemb2);
 	    }else{
 		warning("Read failed. Unknown error.\n");
 	    }
@@ -196,6 +197,14 @@ int zfseek(file_t *fp, long offset, int whence){
     }
 }
 /**
+   Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
+*/
+void write_magic(uint32_t magic, file_t *fp){
+    uint32_t magic2=M_SKIP;
+    zfwrite(&magic2, sizeof(uint32_t), 1, fp);
+    zfwrite(&magic,  sizeof(uint32_t), 1, fp);
+}
+/**
    Append to the file the header to the end of the file(or rather, the
    tailer). First write magic number, then the length of the header, then the
    header, then the length of the header again, then the magic number again. The
@@ -205,13 +214,21 @@ int zfseek(file_t *fp, long offset, int whence){
    read. The header should contain key=value entries just like the configuration
    files. The entries should be separated by new line charactor. */
 void write_header(const char *header, file_t *fp){
+    if(!header) return;
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(header)+1;
+    //make header 8 byte alignment.
+    char *header2=strdup(header);
+    if(nlen % 8 != 0){
+	nlen=(nlen/8+1)*8;
+	header2=realloc(header2, nlen);
+    }
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     zfwrite(&nlen, sizeof(uint64_t), 1, fp);
-    zfwrite(header, 1, nlen, fp);
+    zfwrite(header2, 1, nlen, fp);
     zfwrite(&nlen, sizeof(uint64_t), 1, fp);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
+    free(header2);
 }
 void write_timestamp(file_t *fp){
     char header[128];
@@ -224,25 +241,26 @@ void write_timestamp(file_t *fp){
 header is not NULL.  The header will be appended to the output header.*/
 uint32_t read_magic(file_t *fp, char **header){
     uint32_t magic,magic2;
-    uint64_t nlentot=0;
     uint64_t nlen, nlen2;
-    if(header && *header){
-	nlentot=strlen(*header)+1;
-    }
     while(1){
 	/*read the magic number.*/
 	zfread(&magic, sizeof(uint32_t), 1, fp);
 	/*If it is header, read or skip it.*/
-	if(magic==M_HEADER){
+	if(magic==M_SKIP){
+	    continue;
+	}else if(magic==M_HEADER){
 	    zfread(&nlen, sizeof(uint64_t), 1, fp);
 	    if(nlen>0){
 		if(header){
-		    *header=realloc(*header, nlentot+nlen);
-		    if(nlentot>0){
-			(*header)[nlentot-1]='\n';
+		    char header2[nlen];
+		    zfread(header2, 1, nlen, fp);
+		    header2[nlen-1]='\0'; //make sure it is NULL terminated.
+		    if(*header){
+			*header=realloc(*header, ((*header)?strlen(*header):0)+strlen(header2)+1);
+			strncat(*header, header2, nlen);
+		    }else{
+			*header=strdup(header2);
 		    }
-		    zfread(*header+nlentot, 1, nlen, fp);
-		    nlentot+=nlen;
 		}else{
 		    zfseek(fp, nlen, SEEK_CUR);
 		}

@@ -15,10 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#include <sys/file.h>
 #include "cellarr.h"
 #include "dmat.h"
 #include "cmat.h"
+#include "bin.h"
 /**
    \file cellarr.c
    
@@ -35,9 +36,8 @@ cellarr* cellarr_init(int tot,const char*format,...){
     out->fp=zfopen(fn,"wb");
     out->cur=0;
     out->tot=tot;
-    uint32_t magic=MCC_ANY;
     uint64_t totx=out->tot,toty=1;
-    zfwrite(&magic, sizeof(uint32_t),1,out->fp);
+    write_magic(MCC_ANY, out->fp);
     zfwrite(&totx,sizeof(uint64_t),1,out->fp);
     zfwrite(&toty,sizeof(uint64_t),1,out->fp);
     return out;
@@ -88,7 +88,7 @@ void cellarr_close(cellarr *ca){
     if(ca->cur !=ca->tot){
 	warning2("cellarr %s is initialized with %ld elements, "
 		 "but %ld elements are written\n",
-		 ca->fp->fn,ca->tot,ca->cur);
+		 zfname(ca->fp),ca->tot,ca->cur);
 	uint64_t totx=ca->cur;
 	if(!zfseek(ca->fp,sizeof(uint32_t),SEEK_SET)){//fseek succeed
 	    zfwrite(&totx,sizeof(uint64_t),1,ca->fp);

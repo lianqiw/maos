@@ -21,7 +21,6 @@
 #if USE_PTHREAD > 0
 #include <pthread.h>
 #endif
-#include <fftw3.h>
 /**
    \file maos/types.h
    A few run time structs
@@ -353,10 +352,11 @@ typedef struct WFSINTS_T{
    contains all the run time data struct.
 */
 typedef struct SIM_T{
-    map_t **(*atmfun)(ATM_ARGS);
+    map_t **(*atmfun)(GENSCREEN_T*);
+    GENSCREEN_T *genscreen;
     map_t **atm;       /**<fine sampled simulation turbulence screens*/
     map_t **atm2;      /**<another fine sampled simulation turbulence screen for evolving.*/
-    map_t **cachedm;   /**<grid cache dm actuator to a finer sampled screen. for
+    map_t ***cachedm;   /**<grid cache dm actuator to a finer sampled screen. for
 			  fast ray tracing to WFS and aper*/
     int (*pcachedm)[2];/**<information about cachedm struct.*/
     PROPDATA_T *cachedm_propdata; /**<wrapped data for ray tracing from aloc to cachedm*/

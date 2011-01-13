@@ -354,7 +354,7 @@ void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const doub
 #include "loc.h"
 /*
   The following routines applies the imagesc_* functions onto
-  dmat,cmat,loc,sqmap,etc, data types. 
+  dmat,cmat,loc,map,etc, data types. 
    
   The first argument is the type of the plot. Plots with the
   same types are grouped into a single tab.
@@ -408,7 +408,7 @@ void cdraw(char *fig, const cmat *A, double *xylim, double *zlim,
 }
 
 /**
-   like ddraw, acting on sqmap object. see imagesc()
+   like ddraw, acting on map object. see imagesc()
 */
 void drawmap(char *fig, const map_t *map,  double *zlim,
 	     const char *title, const char *xlabel, const char *ylabel,

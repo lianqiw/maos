@@ -62,7 +62,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	if(header && !mxIsCell(header)){
 	    write_header2(fp, header);/*header for the cell.*/
 	}
-	zfwrite(&magic, sizeof(uint32_t), 1, fp);
+	write_magic(magic, fp);
 	zfwrite(&m, sizeof(uint64_t), 1, fp);
 	zfwrite(&n, sizeof(uint64_t), 1, fp);
 	for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
@@ -85,7 +85,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    }else{
 		magic=M_SP64;
 	    }
-	    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+	    write_magic(magic, fp);
 	    zfwrite(&m, sizeof(uint64_t), 1, fp);
 	    zfwrite(&n, sizeof(uint64_t), 1, fp);
 	    if(m!=0 && n!=0){
@@ -102,7 +102,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    }else{
 		magic=M_CSP64;
 	    }
-	    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+	    write_magic(magic, fp);
 	    zfwrite(&m, sizeof(uint64_t), 1, fp);
 	    zfwrite(&n, sizeof(uint64_t), 1, fp);
 	    if(m!=0 && n!=0){
@@ -115,7 +115,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    }
 	}else if(type == M_DBL || ((arr)&& mxIsDouble(arr))){
 	    magic=M_DBL;
-	    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+	    write_magic(magic, fp);
 	    zfwrite(&m, sizeof(uint64_t), 1, fp);
 	    zfwrite(&n, sizeof(uint64_t), 1, fp);
 	    if(m!=0 && n!=0){
@@ -123,7 +123,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    }  
 	}else if(type == M_CMP || ((arr)&& mxIsDouble(arr))){
 	    magic=M_CMP;
-	    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+	    write_magic(magic, fp);
 	    zfwrite(&m, sizeof(uint64_t), 1, fp);
 	    zfwrite(&n, sizeof(uint64_t), 1, fp);
 	    if(m!=0 && n!=0){

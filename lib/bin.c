@@ -19,6 +19,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -56,12 +57,37 @@
   I write to give a compression level of 2, the speed for RLM is about doubled.
   The size is not about 56,775,376, not bad.
 
-  Notice that the stored data by 64 machines using type long
-  can not be read by 32 bit due to different byte
-  length. Modified the routine to first 64 bit read/write.
-  nx,ny, are uint64_t for 64 and 32 bit machines
-  magic is uint32_t always to be backward compatible.
+  Notice that the stored data by 64 machines using type long can not be read by
+  32 bit due to different byte length. Modified the routine to first 64 bit
+  read/write.  nx,ny, are uint64_t for 64 and 32 bit machines magic is uint32_t
+  always to be backward compatible.
+
 */
+/**
+   contains information about opened files.
+*/
+struct file_t{
+    void *p;
+    int isgzip;
+#if USE_PTHREAD > 0
+    pthread_mutex_t lock;
+#endif
+    char *fn;
+#if IO_TIMMING == 1
+    struct timeval tv1;
+#endif
+};
+/**
+   Describes the information about mmaped data. Don't unmap a segment of mmaped
+   memory, which causes the whole page to be unmapped. Instead, reference count
+   the mmaped file and unmap the segment when the nref dropes to 1.
+ */
+struct mmap_t{
+    void *p;  /**<points to the beginning of mmaped memory for this type of data.*/
+    long n;   /**<length of mmaped memory.*/
+    long nref;/**<Number of reference.*/
+    int fd;   /**<file descriptor. close it if not -1.*/
+};
 
 /**
    Process the input file name and return file names that can be open to
@@ -86,21 +112,20 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 		//ended with bin.gz
 		fn2[strlen(fn2)-3]='\0';
 		if(!(fnr=search_file(fn2))){
-		    error("Neither %s nor %s exist\n", fn,fn2);
+		    return NULL;
 		}
 	    }else if(check_suffix(fn2, ".bin")){
 		//ended with .bin
 		strncat(fn2, ".gz", 3);
 		if(!(fnr=search_file(fn2))){
-		    error("Neither %s nor %s exist\n", fn,fn2);
+		    return NULL;
 		}
 	    }else{//no recognized suffix
 		strncat(fn2, ".bin", 4);
 		if(!(fnr=search_file(fn2))){
 		    strncat(fn2,".gz",3);
 		    if(!(fnr=search_file(fn2))){
-			error("Neither %s, %s.bin, nor %s.bin.gz exist\n",
-			      fn,fn,fn);
+			return NULL;
 		    }
 		}
 	    }
@@ -115,8 +140,10 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 		strncat(fn2,".bin",4);
 	    }
 	}
-	if(exist(fn2)){//remove old file to avoid write over a symbolic link.
-	    remove(fn2);
+	if(exist(fn2) && !isfile(fn2)){//remove old file to avoid write over a symbolic link.
+	    if(remove(fn2)){
+		error("Failed to remove %s\n", fn2);
+	    }
 	}
     }else if(mod[0]=='a'){//open for appending
 	if(!(check_suffix(fn2, ".bin.gz") || check_suffix(fn2, ".bin"))){
@@ -141,19 +168,22 @@ file_t* zfopen(const char *fn, char *mod){
     file_t* fp=calloc(1, sizeof(file_t));
     PINIT(fp->lock);
     fp->fn=procfn(fn,mod,1);
+    if(!fp->fn){
+	error("%s does not exist for read\n", fn);
+    }
     const char* fn2=fp->fn;
 #if IO_TIMMING == 1
     gettimeofday(&(fp->tv1), NULL);
 #endif
     if(check_suffix(fn2, ".gz")){
 	fp->isgzip=1;
-	if(!(fp->p=gzopen(fn2,mod))){
-	    error("Error gzopen for %s\n",fn2);
+	if(!(fp->p=gzopen(fp->fn,mod))){
+	    error("Error gzdopen for %s\n",fn2);
 	}
     }else{ 
 	fp->isgzip=0;
-	if(!(fp->p=fopen(fn2,mod))){
-	    error("Error fopen for %s\n",fn2);
+	if(!(fp->p=fopen(fp->fn,mod))){
+	    error("Error fdopen for %s\n",fn2);
 	}
     }
     if(mod[0]=='w'){
@@ -162,6 +192,14 @@ file_t* zfopen(const char *fn, char *mod){
     UNLOCK(lock);
     return fp;
 }
+
+/**
+ * Return the underlining filename
+ */
+const char *zfname(file_t *fp){
+    return fp->fn;
+}
+
 /**
    Close the file.
  */
@@ -301,28 +339,32 @@ void zflush(file_t *fp){
 }
 /**
    Obtain the current magic number. If it is a header, read it out if output of
-header is not NULL.  The header will be appended to the output header.*/
+   header is not NULL.  The header will be appended to the output header.
+
+   In file, the header is located before the data magic.
+*/
 uint32_t read_magic(file_t *fp, char **header){
     uint32_t magic,magic2;
-    uint64_t nlentot=0;
     uint64_t nlen, nlen2;
-    if(header && *header){
-	nlentot=strlen(*header)+1;
-    }
     while(1){
 	/*read the magic number.*/
 	zfread(&magic, sizeof(uint32_t), 1, fp);
 	/*If it is header, read or skip it.*/
-	if(magic==M_HEADER){
+	if(magic==M_SKIP){
+	    continue;
+	}else if(magic==M_HEADER){
 	    zfread(&nlen, sizeof(uint64_t), 1, fp);
 	    if(nlen>0){
 		if(header){
-		    *header=realloc(*header, nlentot+nlen);
-		    if(nlentot>0){
-			(*header)[nlentot-1]='\n';
+		    char header2[nlen];
+		    zfread(header2, 1, nlen, fp);
+		    header2[nlen-1]='\0'; //make sure it is NULL terminated.
+		    if(*header){
+			*header=realloc(*header, ((*header)?strlen(*header):0)+strlen(header2)+1);
+			strncat(*header, header2, nlen);
+		    }else{
+			*header=strdup(header2);
 		    }
-		    zfread(*header+nlentot, 1, nlen, fp);
-		    nlentot+=nlen;
 		}else{
 		    zfseek(fp, nlen, SEEK_CUR);
 		}
@@ -339,6 +381,14 @@ uint32_t read_magic(file_t *fp, char **header){
 }
 
 /**
+   Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
+*/
+void write_magic(uint32_t magic, file_t *fp){
+    uint32_t magic2=M_SKIP;
+    zfwrite(&magic2, sizeof(uint32_t), 1, fp);
+    zfwrite(&magic,  sizeof(uint32_t), 1, fp);
+}
+/**
    Append the header to current position in the file.  First write magic number, then the
    length of the header, then the header, then the length of the header again,
    then the magic number again. The two set of strlen and header are used to
@@ -346,15 +396,41 @@ uint32_t read_magic(file_t *fp, char **header){
    are reading are indeed header. The header may be written multiple
    times. They will be concatenated when read. The header should contain
    key=value entries just like the configuration files. The entries should be
-   separated by new line charactor. */
+   separated by new line charactor. 
+ */
+/*
+ * Don't need to write M_SKIP here because we have a pair of magic
+ */
 void write_header(const char *header, file_t *fp){
+    if(!header) return;
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(header)+1;
+    //make header 8 byte alignment.
+    char *header2=strdup(header);
+    if(nlen % 8 != 0){
+	nlen=(nlen/8+1)*8;
+	header2=realloc(header2, nlen);
+    }
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     zfwrite(&nlen, sizeof(uint64_t), 1, fp);
-    zfwrite(header, 1, nlen, fp);
+    zfwrite(header2, 1, nlen, fp);
     zfwrite(&nlen, sizeof(uint64_t), 1, fp);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
+    free(header2);
+}
+/**
+ * Get the length of string in header, rounded to multiple of 8.
+ */
+uint64_t bytes_header(const char *header){
+    if(header){
+	uint64_t len=strlen(header)+1;
+	if(len%8 != 0){
+	    len=(len/8+1)*8;
+	}
+	return len+24;
+    }else{
+	return 0;
+    }
 }
 /**
    Write the time stamp as header into current location in the file.
@@ -365,23 +441,11 @@ void write_timestamp(file_t *fp){
 	     PACKAGE_VERSION, myasctime(), myhostname());
     write_header(header, fp);
 }
-/**
-   Append to the file the header to end of an already saved file.
-*/
-void write_header_end(const char *header,const char *format,...){
-    format2fn;
-    file_t *fp=zfopen((char*)fn, "ab");//open for append.
-    if(zfseek(fp, 0, SEEK_END)){
-	error("Failed to seek to the end of file");
-    }else{
-	write_header(header, fp);
-    }
-}
 
 /**
    Search and return the value correspond to key. NULL if not found. Do not free the
    returned pointer.  */
-const char *search_header(const char *header, const char *key){
+char *search_header(const char *header, const char *key){
     char *val=strstr(header, key);
     if(val){
 	char *equal=strchr(val,'=');
@@ -400,66 +464,12 @@ const char *search_header(const char *header, const char *key){
 */
 double search_header_num(const char *header, const char *key){
     if(!header) return 0;
-    const char *val=search_header(header, key);
+    char *val=search_header(header, key);
     if(val){
 	return readstr_num(val, NULL);
     }else{
 	return 0;//not found.
     }
-}
-/**
-   Read header from the end of the file. Difference headers will be combined. Do
-not use. Seek back is very slow in big file.  */
-char *read_header_end(const char *format,...){
-    format2fn;
-    file_t *fp=zfopen((char*)fn, "rb");
-    zfseek(fp, 0, SEEK_END);//move to the end;
-    char *strout=NULL;
-    int nlenout=0;
-    uint32_t magic, magic2;
-
-    while(1){
-        if(zfseek(fp, -sizeof(uint32_t), SEEK_CUR)){//move the the end
-	    warning("Error seek to (another) header\n");
-	    break;
-	}
-	zfread(&magic, sizeof(uint32_t), 1, fp);
-	if(magic!=M_HEADER){
-	    warning("There is no more header in file %s\n",fp->fn);
-	    break;
-	}
-	//move 8 byte back to get the string length
-	zfseek(fp, -(sizeof(uint64_t)+sizeof(uint32_t)), SEEK_CUR);
-	uint64_t nlen, nlen2;
-	//after read, pointer is after the nlen.
-	zfread(&nlen, sizeof(uint64_t), 1, fp);
-	//seek to the beginning of the first header
-	zfseek(fp, -(nlen+sizeof(uint64_t)*2+sizeof(uint32_t)), SEEK_CUR);
-	zfread(&magic2, sizeof(uint32_t), 1, fp);
-	zfread(&nlen2, sizeof(uint64_t), 1, fp);
-	if(magic!=magic2 || nlen!=nlen2){
-	    warning("This is not a header\n");
-	    break;
-	}
-	if(nlen>0){
-	    //enlarge the string.
-	    info("Reading header with length %lu\n",(unsigned long)nlen);
-	    if(nlenout>0){
-		strout[nlenout-1]='\n';//turn \0 to \n.
-	    }
-	    strout=realloc(strout, nlenout+nlen);
-	    zfread(strout+nlenout, 1, nlen, fp);
-	    strout[nlenout-1]='\0';
-	    nlenout+=nlen;
-	}
-	//now seek to before our first header, in case there is another header.
-	if(zfseek(fp, -(nlen+sizeof(uint64_t)+sizeof(uint32_t)), SEEK_CUR)){
-	    warning("This file contains only headers\n");
-	    break;
-	}
-    }
-    zfclose(fp);
-    return strout;
 }
 /**
    Write multiple long numbers into the file. To write three numbers, a, b, c,
@@ -507,7 +517,8 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
     }else{
 	fp=(file_t*) fpn;
     }
-    zfwrite(&magic, sizeof(uint32_t),1,fp);
+    //Write a dummy magic so that our header is multiple of 8 bytes long.
+    write_magic(magic, fp);
     if(p && nx>0 && ny>0){
 	zfwritelarr(fp, 2, &nx, &ny);
 	zfwrite(p, size, nx*ny,fp);
@@ -517,40 +528,7 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
     }
     if(isfn) zfclose(fp);
 }
-/**
-   Read an 1-d or 2-d array from the file. First a magic number is read from the
-   file and compared with magicin. If mismatch, operation will fail. Then the
-   dimension and actual data are read and output to pnx, pny, p
- */
-void do_read(const void *fpn,      /**<[in]  The file pointer*/
-	     const int isfn,     /**<[in]  Is this a filename or already opened file*/
-	     const size_t size,    /**<[in]  Size of each element*/
-	     const uint32_t magic, /**<[in] The magic number wanted*/
-	     void **p,             /**<[out] The address of the pointer of the array*/
-	     uint64_t *pnx,        /**<[out] Return number of rows*/
-	     uint64_t *pny         /**<[out] Return number of columns*/
-	     ){
-    file_t *fp;
-    if(isfn){
-	fp=zfopen((char*)fpn, "rb");
-    }else{
-	fp=(file_t*) fpn;
-    }
-    uint32_t magic2;
-    zfread(&magic2, sizeof(uint32_t),1,fp);
-    if(magic2!=magic){
-	error("File is wrong format. magic is %x, wanted %x\n",magic2, magic);
-    }
-    zfreadlarr(fp, 2, pnx, pny);
-    if(*pnx==0 || *pny==0){
-	*p=NULL;
-    }else{
-	if(*p) warning("*p should be null\n");
-	*p=malloc(size*(*pnx)*(*pny));
-	zfread(*p, size, (*pnx)*(*pny),fp);
-    }
-    if(isfn) zfclose(fp);
-}
+
 /**
    Write a double array of size nx*ny to file.
 */
@@ -579,46 +557,38 @@ void writeint32(const int32_t *p, long nx, long ny, const char *format,...){
     format2fn;
     do_write(fn, 1, sizeof(int32_t), M_INT32, p, (uint64_t)nx, (uint64_t)ny);
 }
-/**
-   Read a double array of size nx*ny from file
-*/
-void readdbl(double **p, long *nx, long *ny, const char *format,...){
-    format2fn;
-    uint64_t nx2,ny2;
-    do_read(fn, 1, sizeof(double), M_DBL, (void**)p, &nx2, &ny2);
-    *nx=nx2;
-    *ny=ny2;
-    if(*nx!=nx2 || *ny!=ny2){
-	warning("Data overflow\n");
-    }
-}
 
 /**
-   Read a 64 bit integer array of size nx*ny from file.
-*/
-void readint64(int64_t **p, long *nx, long *ny, 
-		 const char *format,...){
-    format2fn;
-    uint64_t nx2,ny2;
-    do_read(fn, 1, sizeof(uint64_t), M_INT64, (void**)p, &nx2, &ny2);
-    *nx=nx2;
-    *ny=ny2;
-    if(*nx!=nx2 || *ny!=ny2){
-	warning("Data overflow\n");
+ * Unreference the mmaped memory. When the reference drops to zero, unmap it.
+ */
+void mmap_unref(struct mmap_t *in){
+    if(in->nref>1){
+	in->nref--;
+	//info("%p: nref decreased to %ld\n", in->p, in->nref);
+    }else{
+	//info("%p: nref is 1, unmap\n", in->p);
+	munmap(in->p, in->n);
+	if(in->fd!=-1){
+	    close(in->fd);
+	}
+	free(in);
     }
 }
-
 /**
-   Read a 32 bit integer array of size nx*ny from file.
+   Create a mmap_t object.
 */
-void readint32(int32_t **p, long *nx, long *ny, 
-		 const char *format,...){
-    format2fn;
-    uint64_t nx2,ny2;
-    do_read(fn, 1,  sizeof(uint32_t), M_INT32, (void**)p, &nx2, &ny2);
-    *nx=nx2;
-    *ny=ny2;
-    if(*nx!=nx2 || *ny!=ny2){
-	warning("Data overflow\n");
-    }
+struct mmap_t *mmap_new(int fd, void *p, long n){
+    struct mmap_t *out=calloc(1, sizeof(struct mmap_t));
+    out->p=p;
+    out->n=n;
+    out->nref=1;
+    out->fd=fd;
+    return out;
+}
+/**
+   Add a reference to a mmap_t.
+ */
+mmap_t*mmap_ref(mmap_t *in){
+    in->nref++;
+    return in;
 }

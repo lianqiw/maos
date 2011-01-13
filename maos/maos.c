@@ -109,10 +109,6 @@ void maos(const PARMS_T *parms){
 */
 int main(int argc, char **argv){
     char*fn=mybasename(argv[0]);
-    if(!mystrcmp(fn, "scheduler")){//launch the scheduler.
-	scheduler();
-	exit(0);
-    }
     char *scmd=argv2str(argc,argv);
     strcpy(argv[0],fn);
     free(fn);
@@ -139,7 +135,6 @@ int main(int argc, char **argv){
 #endif
     //Launch the scheduler and report about our process
     scheduler_start(scmd,arg->nthread,!arg->force);
-    info("Scheduler launched\n"); 
 
     //setting up parameters before asking scheduler to check for any errors.
     PARMS_T * parms=setup_parms(arg);
@@ -147,7 +142,7 @@ int main(int argc, char **argv){
   
     if(!lock_seeds(parms)){
 	warning("There are no seed to run. Exit\n");
-	maos_done(0);
+	raise(SIGUSR1);
 	return 1;
     }
 
@@ -197,10 +192,11 @@ int main(int argc, char **argv){
 
     /*Loads the main software*/
     maos(parms);
-    maos_done(0);
     free_parms(parms);
     free(dirsetup);
     free(dirskysim);
+    rename_file(0);
+    scheduler_finish(0);
     info2("Job finished at %s\t%.2f MiB\n",myasctime(),get_job_mem()/1024.);
     exit_success=1;//tell mem.c to print non-freed memory in debug mode.
     return 0;

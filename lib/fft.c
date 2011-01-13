@@ -33,7 +33,18 @@ PNEW(mutex_fftw);
    \file fft.c
    Routines to do FFT on cmat.
 */
+/**
+   An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
+ */
+typedef struct PLAN1D_T{
+    int ncomp;         /**< For a NxN array, only convert center ncomp*ncomp to Fourier space. */
+    fftw_plan plan[3]; /**< Array of plans for 1-d FFT */
+}PLAN1D_T;
 
+typedef struct fft_t{
+    fftw_plan plan[3];
+    PLAN1D_T *plan1d[3];
+}fft_t;
 static char fnwisdom[64];
 /**
    load FFT wisdom from file.
@@ -71,6 +82,9 @@ static void save_wisdom(){
    executed before main().
  */
 static __attribute__((constructor))void init(){
+#if USE_FFTW_THREADS == 1
+    fftw_init_threads();
+#endif
     sprintf(fnwisdom, "%s/.aos/fftw_wisdom",HOME);
     load_wisdom();
 }
@@ -79,20 +93,23 @@ static __attribute__((constructor))void init(){
  */
 static __attribute__((destructor))void deinit(){
     save_wisdom();
+#if USE_FFTW_THREADS == 1
+    fftw_cleanup_threads();
+#endif
 }
 /**
    Create FFTW plans for 2d FFT transforms. This operation destroyes the data in
    the array. So do it before filling in data.
  */
 void cfft2plan(cmat *A, int dir){
-    assert(abs(dir)==1);
-    assert(A && A->p && !A->plan[dir+1]);
+    assert(abs(dir)==1 && A && A->p);
+    if(!A->fft) A->fft=calloc(1, sizeof(fft_t));
     LOCK_FFT;
     //!!fft uses row major mode. so need to reverse order
     if(A->nx==1 || A->ny==1){
-	A->plan[dir+1]=fftw_plan_dft_1d(A->ny*A->nx, A->p, A->p, dir, FFTW_FLAGS);
+	A->fft->plan[dir+1]=fftw_plan_dft_1d(A->ny*A->nx, A->p, A->p, dir, FFTW_FLAGS);
     }else{
-	A->plan[dir+1]=fftw_plan_dft_2d(A->ny, A->nx, A->p, A->p, dir, FFTW_FLAGS);
+	A->fft->plan[dir+1]=fftw_plan_dft_2d(A->ny, A->nx, A->p, A->p, dir, FFTW_FLAGS);
     }
     UNLOCK_FFT;  
 }
@@ -102,10 +119,10 @@ void cfft2plan(cmat *A, int dir){
 */
 void cfft2partialplan(cmat *A, int ncomp, int dir){
     assert(abs(dir)==1);
-
+    if(!A->fft)  A->fft=calloc(1, sizeof(fft_t));
     const int nx=A->nx;
     const int ny=A->ny;
-    PLAN1D_T *plan1d=A->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
+    PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
     //along columns for all columns.
     plan1d->plan[0]=fftw_plan_many_dft(1, &nx, ny,
@@ -128,22 +145,22 @@ void cfft2partialplan(cmat *A, int ncomp, int dir){
 /**
    Free FFTW plans.
 */
-void cfree_plan(cmat *A){
+void fft_free_plan(fft_t *fft){
+    if(!fft) return;
     for(int idir=-1; idir<2; idir+=2){
-	if(A->plan1d[idir+1]){
-	    LOCK_FFT;
-	    fftw_destroy_plan(A->plan1d[idir+1]->plan[0]);
-	    fftw_destroy_plan(A->plan1d[idir+1]->plan[1]);
-	    fftw_destroy_plan(A->plan1d[idir+1]->plan[2]);
-	    free(A->plan1d[idir+1]);
-	    UNLOCK_FFT;
+	LOCK_FFT;
+	if(fft->plan1d[idir+1]){
+	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[0]);
+	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[1]);
+	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[2]);
+	    free(fft->plan1d[idir+1]);
 	}
-	if(A->plan[idir+1]){
-	    LOCK_FFT;
-	    fftw_destroy_plan(A->plan[idir+1]);
-	    UNLOCK_FFT;
+	if(fft->plan[idir+1]){
+	    fftw_destroy_plan(fft->plan[idir+1]);
 	}
+	UNLOCK_FFT;
     }
+    free(fft);
 }
 /**
    Do 2d FFT transforms.
@@ -151,11 +168,10 @@ void cfree_plan(cmat *A){
 void cfft2(cmat *A, int dir){
     assert(abs(dir)==1); assert(A && A->p);
     //do 2d FFT on A.
-
     dir++;
     //can not do planning here because planning will override the data.
-    if(!A->plan[dir]) error("Please run cfft2plan first\n");
-    fftw_execute(A->plan[dir]);
+    if(!A->fft || !A->fft->plan[dir]) error("Please run cfft2plan first\n");
+    fftw_execute(A->fft->plan[dir]);
 }
 
 /**
@@ -183,8 +199,8 @@ void cfft2s(cmat *A, int dir){//symmetrical cfft2.
 void cfft2partial(cmat *A, int ncomp, int dir){
     assert(abs(dir)==1);
     assert(A && A->p);
-
-    PLAN1D_T *plan1d=A->plan1d[dir+1];
+    if(!A->fft) error("Please run cfft2partialplan first\n");
+    PLAN1D_T *plan1d=A->fft->plan1d[dir+1];
     if(!plan1d) error("Please run cfft2partialplan first\n");
     if(ncomp!=plan1d->ncomp) error("Plan and fft mismatch\n");
     for(int i=0; i<3; i++){
@@ -208,3 +224,48 @@ cmat *cffttreat(cmat *A){
     return B;
 }
 
+/**
+ * Create a fftw plan based on a 2 element dmat cell array that contains
+ * real/imaginary parts respectively
+ */
+void dcell_fft2plan(dcell *dc, int dir, int nthreads){
+    assert(abs(dir)==1);
+    if(dc->nx*dc->ny!=2){
+	error("dcell of two elements is required\n");
+    }
+    long nx=dc->p[0]->nx;
+    long ny=dc->p[0]->ny;
+    if(dc->p[1]->nx!=nx || dc->p[1]->ny!=ny){
+	error("The two elements in dcell must be of the same size\n");
+    }
+    fftw_iodim dims[2]={{nx,1,1},{ny,nx,nx}};
+    fftw_iodim howmany_dims={1,1,1};
+    double *restrict p1=dc->p[0]->p;
+    double *restrict p2=dc->p[1]->p;
+    //Use FFTW_ESTIMATE since the size may be large, and measuring takes too long.
+    if(!dc->fft) dc->fft=calloc(1, sizeof(fft_t));
+    if(!dc->fft->plan[dir+1]){
+	LOCK_FFT;
+	if(nthreads<1) nthreads=1;
+	if(nthreads>1){
+	    info("Creating fft plan with %d threads ...", nthreads);
+	}
+	fftw_plan_with_nthreads(nthreads);
+	dc->fft->plan[dir+1]=fftw_plan_guru_split_dft(2, dims, 1, &howmany_dims, p1, p2, p1, p2, 
+						     FFTW_ESTIMATE);
+	fftw_plan_with_nthreads(1);
+	info("done\n");
+	UNLOCK_FFT;
+    }
+}
+
+/**
+ * Free the plan in dcell
+ */
+void dcell_fft2(dcell *dc, int dir){
+    assert(abs(dir)==1);
+    if(!dc->fft){
+	error("Please run dcell_fft2plan first\n");
+    }
+    fftw_execute(dc->fft->plan[dir+1]);
+}

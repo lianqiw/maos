@@ -174,7 +174,7 @@ void setup_surf(SIM_T*simu){
 	if(!parms->surf[isurf]) continue;
 	char *fn=find_file(parms->surf[isurf]);
 	info("Loading surface OPD from %s\n", fn);
-	simu->surf[isurf]=sqmapread("%s",fn); free(fn);
+	simu->surf[isurf]=mapread("%s",fn); free(fn);
     }
     if(!parms->sim.cachesurf){
 	return;
@@ -246,6 +246,6 @@ void setup_surf(SIM_T*simu){
 	locfree(locevl);
     }
     if(parms->sim.cachesurf){
-	sqmaparrfree(simu->surf, parms->nsurf);
+	maparrfree(simu->surf, parms->nsurf);
     }
 }

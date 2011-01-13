@@ -38,7 +38,7 @@ void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs,
     int simend=parms->sim.end;
     int simstart=parms->sim.start;
     if(simstart>=simend){
-	maos_done(0);
+	raise(SIGUSR1);
 	return;
     }
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
@@ -69,20 +69,34 @@ void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs,
 	}
 	free_simu(simu);
     }
-    maos_done(0);
+    raise(SIGUSR1);    
 }
 static map_t **genscreen_do(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
     const int nthread=simu->nthread;
-    
-    map_t **screens;
     TIC;
-    if(simu->atmfun){
+    map_t **screens;
+    if(parms->dbg.atm == 0 || parms->dbg.atm == -1){
+	GENSCREEN_T *gs=simu->genscreen;
+	if(!gs){
+	    simu->genscreen=calloc(1, sizeof(GENSCREEN_T));//the data for generating screens.
+	    gs=simu->genscreen;
+	    gs->rstat  = simu->atm_rand;
+	    gs->wt     = atm->wt;
+	    gs->r0     = atm->r0;
+	    gs->l0     = atm->l0;
+	    gs->dx     = atm->dx;
+	    gs->nx     = atm->nx;
+	    gs->ny     = atm->ny;
+	    gs->nlayer = atm->nps;
+	    gs->ninit  = atm->ninit;
+	    gs->share  = atm->share;
+	    gs->nthread= nthread;
+	}
 	info2("Generating Atmospheric Screen...");
 	tic;
-	screens = simu->atmfun(simu->atm_rand, atm->nx, atm->ny, atm->dx, atm->r0,
-			       atm->l0,atm->wt,atm->nps,atm->ninit,nthread);
+	screens = simu->atmfun(gs);
 	toc2("done");
     }else{
 	info2("Generating Testing Atmosphere Screen\n");
@@ -102,13 +116,7 @@ static map_t **genscreen_do(SIM_T *simu){
 	double hs=90000;
 	double dx=atm->dx;
 	for(int is=0; is<atm->nps; is++){
-	    screens[is]=calloc(1, sizeof(map_t));
-	    screens[is]->p=calloc(nx*ny,sizeof(double));
-	    screens[is]->nx=nx;
-	    screens[is]->ny=ny;
-	    screens[is]->dx=dx;
-	    screens[is]->ox=-nx/2*dx;
-	    screens[is]->oy=-ny/2*dx;
+	    screens[is]=mapnew(nx, ny, dx, NULL);
 	    screens[is]->h=atm->ht[is];
 	}
 	double scale=-pow(1.-screens[5]->h/hs,-2);
@@ -302,10 +310,10 @@ void genscreen(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&(simu->parms->atm);
     if(simu->atm){
-	sqmaparrfree(simu->atm, parms->atm.nps);
+	maparrfree(simu->atm, parms->atm.nps); simu->atm=NULL;
 	dfree(simu->winddir);
         if(simu->atm2){
-	    sqmaparrfree(simu->atm2, parms->atm.nps);
+	    maparrfree(simu->atm2, parms->atm.nps);
 	}
     }
     if(simu->parms->dbg.noatm){
@@ -343,13 +351,13 @@ void genscreen(SIM_T *simu){
 	const char *fn=simu->parms->load.atm;
 	info2("loading atm from %s\n",fn);
 	int nlayer;
-	simu->atm = sqmaparrread(&nlayer,"%s",fn);
+	simu->atm = maparrread(&nlayer,"%s",fn);
 	if(nlayer!=atm->nps)
 	    error("Mismatch\n");
     }else{
 	simu->atm=genscreen_do(simu);
 	if(simu->parms->save.atm){
-	    sqmaparrwrite(simu->atm,atm->nps,"atm_%d.bin",simu->seed);
+	    maparrwrite(simu->atm,atm->nps,"atm_%d.bin",simu->seed);
 	}
     }
     if(parms->plot.atm && simu->atm){
@@ -411,7 +419,6 @@ void genscreen(SIM_T *simu){
    new screen and blend into the old screen.  */
 void evolve_screen(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    const ATM_CFG_T *atm=&parms->atm;
     const long isim=simu->isim;
     const double dt=parms->sim.dt;
     const int nps=parms->atm.nps;
@@ -451,11 +458,9 @@ void evolve_screen(SIM_T *simu){
 	    long overx=parms->atm.overx[ips];
 	    long overy=parms->atm.overy[ips];
 	    info("Evolving screen %d\n", ips);
-	    sqmapfree(simu->atm[ips]);
+	    mapfree(simu->atm[ips]);
 	    simu->atm[ips]=simu->atm2[ips];
-	    map_t **screen=simu->atmfun(simu->atm_rand, atm->nx, atm->ny, 
-					atm->dx, atm->r0,
-					atm->l0, &atm->wt[ips], 1, 2, 1);	
+	    map_t **screen=simu->atmfun(simu->genscreen);	
 	    simu->atm2[ips]=screen[0]; 
 	    simu->atm2[ips]->vx=simu->atm[ips]->vx;
 	    simu->atm2[ips]->vy=simu->atm[ips]->vy;
@@ -544,7 +549,7 @@ void seeding(SIM_T *simu){
     simu->atmwd_rand=calloc(1, sizeof(rand_t));
     seed_rand(simu->init,simu->seed);
     seed_rand(simu->atm_rand,   lrand(simu->init));
-    seed_rand(simu->atmwd_rand, lrand(simu->init));
+    seed_rand(simu->atmwd_rand, lrand(simu->init)+simu->parms->atm.wdrand);
     const PARMS_T *parms=simu->parms;
     simu->wfs_rand=calloc(parms->nwfs, sizeof(rand_t));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -804,7 +809,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->wrap=0;
 	    if(simu->cachedm){
 		int isc=parms->powfs[ipowfs].scalegroup[idm];
-		data->mapin=&simu->cachedm[idm][isc];
+		data->mapin=simu->cachedm[idm][isc];
 		data->cubic=0;//already accounted for in cachedm.
 		data->cubic_iac=0;//not needed
 	    }else{
@@ -876,7 +881,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->wrap=0;
 	    if(simu->cachedm){
 		int isc=parms->evl.scalegroup[idm];
-		data->mapin=&simu->cachedm[idm][isc];
+		data->mapin=simu->cachedm[idm][isc];
 		data->cubic=0;//already accounted for in cachedm.
 		data->cubic_iac=0;//not needed
 		data->ostat=aper->locs->stat;
@@ -918,13 +923,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[ievl]=nmod;
 	    nny[ievl]=nsim;
 	}
-	simu->olep=dcellnew_mmap(nevl,1,nnx,nny,"Resolep_%d.bin",seed);
-	simu->clep=dcellnew_mmap(nevl,1,nnx,nny,"Resclep_%d.bin",seed);
-	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,"Resolmp_%d.bin",seed);
-	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,"Resclmp_%d.bin",seed);
+	simu->olep=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resolep_%d.bin",seed);
+	simu->clep=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resclep_%d.bin",seed);
+	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resolmp_%d.bin",seed);
+	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resclmp_%d.bin",seed);
 	if(parms->evl.tomo){
-	    simu->cleptomo=dcellnew_mmap(nevl,1,nnx,nny,"Rescleptomo_%d.bin",seed); 
-	    simu->clmptomo=dcellnew_mmap(nevl,1,nnx,nny,"Resclmptomo_%d.bin",seed);  
+	    simu->cleptomo=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Rescleptomo_%d.bin",seed); 
+	    simu->clmptomo=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resclmptomo_%d.bin",seed);  
 	}
 	if(parms->tomo.split && parms->ndm<=2){
 	    long nnx_split[nevl];
@@ -933,11 +938,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		nnx_3[ievl]=3;
 		nnx_split[ievl]=recon->ngsmod->nmod;
 	    }
-	    simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, "Resclemp_%d.bin",seed);
-	    simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,"RescleNGSm_%d.bin",seed);
-	    simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,"RescleNGSmp_%d.bin",seed);
+	    simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, NULL,"Resclemp_%d.bin",seed);
+	    simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescleNGSm_%d.bin",seed);
+	    simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,"RescleNGSmp_%d.bin",seed);
 	    if(parms->tomo.split==1 && !parms->sim.fuseint){
-		simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,"RescorrNGSm_%d.bin",seed);
+		simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescorrNGSm_%d.bin",seed);
 	    }
 	    if(parms->sim.skysim){
 		char fnold[PATH_MAX];
@@ -966,7 +971,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[3]=0; 
 	    nny[3]=0;
 	}
-	simu->res     = dcellnew_mmap(4,1,nnx,nny,"Res_%d.bin",seed);
+	simu->res     = dcellnew_mmap(4,1,nnx,nny,NULL,"Res_%d.bin",seed);
 	simu->ole     = dref(simu->res->p[0]);
 	simu->cletomo = dref(simu->res->p[1]);
 	simu->cle     = dref(simu->res->p[2]);
@@ -985,8 +990,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		nny[iwfs]=0;
 	    }
 	}
-	simu->upterrs = dcellnew_mmap(parms->nwfs, 1, nnx, nny, "Resupterr_%d.bin", seed);
-	simu->uptcmds = dcellnew_mmap(parms->nwfs, 1, nnx, nny, "Resuptcmd_%d.bin", seed);
+	simu->upterrs = dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL,"Resupterr_%d.bin", seed);
+	simu->uptcmds = dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL,"Resuptcmd_%d.bin", seed);
 
     }
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -1160,16 +1165,17 @@ void free_simu(SIM_T *simu){
     free(simu->atm_rand);
     free(simu->atmwd_rand);
     free(simu->wfs_rand);
+    free(simu->genscreen);
     info("Freeing atm\n");
-    sqmaparrfree(simu->atm, parms->atm.nps);
-    sqmaparrfree(simu->atm2, parms->atm.nps);
+    maparrfree(simu->atm, parms->atm.nps);
+    maparrfree(simu->atm2, parms->atm.nps);
     PDEINIT(simu->mutex_plot);
     if(parms->sim.cachedm){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int iscale=0; 
 		iscale<parms->dm[idm].ncache; 
 		iscale++){
-		free(simu->cachedm[idm][iscale].p);
+		mapfree(simu->cachedm[idm][iscale]);
 	    }
 	    free(simu->cachedm[idm]);
 	}

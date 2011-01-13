@@ -18,18 +18,18 @@ static void test_accuracy(){
     for(long i=0; i<nx*ny; i++){
 	atm2->p[i]=randn(&rstat);
     }
-    sqmapwrite(atm, "atm_rand.bin");
-    sqmapwrite(atm2, "atm2_rand.bin");
+    mapwrite(atm, "atm_rand.bin");
+    mapwrite(atm2, "atm2_rand.bin");
     fractal(atm->p, nx, ny, dx, r0,L0,ninit);
-    sqmapwrite(atm, "atm_frac.bin");
+    mapwrite(atm, "atm_frac.bin");
     fractal_inv(atm->p, nx, ny, dx, r0,L0,ninit);
-    sqmapwrite(atm, "atm_frac_inv.bin");
+    mapwrite(atm, "atm_frac_inv.bin");
 
    
     fractal_trans(atm2->p, nx, ny, dx, r0,L0,ninit);
-    sqmapwrite(atm2, "atm2_frac_trans.bin");
+    mapwrite(atm2, "atm2_frac_trans.bin");
     fractal_inv_trans(atm2->p, nx, ny, dx, r0,L0,ninit);
-    sqmapwrite(atm2, "atm2_frac_inv_trans.bin");
+    mapwrite(atm2, "atm2_frac_inv_trans.bin");
     
     /*
       atm2 is u, atm is v, now comparing u'Av against v'A'u. they should be the same.
@@ -85,7 +85,7 @@ static void test_cov(){//not good
 	    atm->p[j]=randn(&rstat);
 	}
 	fractal(atm->p, nx, ny, dx, r0,L0,ninit);
-	//sqmapwrite(atm, "atm_%ld.bin", i);
+	//mapwrite(atm, "atm_%ld.bin", i);
 	cembedd(atmhat, (dmat*)atm, 0);
 	cfft2(atmhat, -1);
 	cabs22d(&atmhattot, 1, atmhat, 1);
@@ -115,7 +115,7 @@ static void test_corner(){/*Compute the covariance of 4 corner points*/
     long nframe=1000000;
     seed_rand(&rstat, seed);
     map_t *atm=mapnew(nx, ny, dx, NULL);
-    dmat *vec=dnew_ref(atm->p, N*N, 1);
+    dmat *vec=dref_reshape((dmat*)atm, N*N, 1);
     dmat *cov=NULL;
     for(long i=0; i<nframe; i++){
 	info("%ld of %ld\n", i, nframe);
@@ -338,7 +338,7 @@ static void test_cxx(){
 	    }
 	    fractal(atm->p, nx+1, ny+1, dx, r0, L0, ninit);
 	    dmat *sec=dsub((dmat*)atm, 0, nx, 0, ny);
-	    dmat *atmvec=dnew_ref(sec->p, nx*ny, 1);
+	    dmat *atmvec=dref_reshape(sec, nx*ny, 1);
 	    dmm(&cxx, atmvec,atmvec,"nt",1);
 	    dfree(atmvec);
 	    dfree(sec);
@@ -346,7 +346,7 @@ static void test_cxx(){
 	dscale(cxx, 1./nframe);
 	dwrite(cxx, "cxx_fractal");
 	dfree(cxx);
-	sqmapfree(atm);
+	mapfree(atm);
     }
     {
 	dmat *cxx=dnew(N*N,N*N);

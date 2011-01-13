@@ -374,15 +374,15 @@ void skysim(const PARMS_S *parms){
 	    }
 	    int seed_maos=simu->seed_maos;
 	    int seed_skyc=simu->seed_skyc;
-	    simu->res   =dnew_mmap(5,nsky, "Res%d_%d", seed_maos, seed_skyc);
-	    simu->res_oa=dnew_mmap(5,nsky, "Res%d_%d_oa", seed_maos, seed_skyc);
-	    simu->res_ol=dnew_mmap(3,nsky, "Res%d_%d_ol", seed_maos, seed_skyc);
-	    simu->fss   =dnew_mmap(nsky,1, "Res%d_%d_fss", seed_maos, seed_skyc);
-	    simu->demote=dnew_mmap(nsky,1, "Res%d_%d_demote", seed_maos, seed_skyc);
+	    simu->res   =dnew_mmap(5,nsky,NULL, "Res%d_%d", seed_maos, seed_skyc);
+	    simu->res_oa=dnew_mmap(5,nsky,NULL, "Res%d_%d_oa", seed_maos, seed_skyc);
+	    simu->res_ol=dnew_mmap(3,nsky,NULL, "Res%d_%d_ol", seed_maos, seed_skyc);
+	    simu->fss   =dnew_mmap(nsky,1,NULL, "Res%d_%d_fss", seed_maos, seed_skyc);
+	    simu->demote=dnew_mmap(nsky,1,NULL, "Res%d_%d_demote", seed_maos, seed_skyc);
 	    simu->sel   =dcellnewsame_mmap(nsky, 1, 2+parms->maos.nwvl, parms->skyc.nwfstot,
-					   "Res%d_%d_sel", seed_maos, seed_skyc);
+					   NULL,"Res%d_%d_sel", seed_maos, seed_skyc);
 	    simu->mres  =dcellnewsame_mmap(nsky, 1, parms->maos.nmod, parms->maos.nstep,
-					   "Res%d_%d_mres",  seed_maos, seed_skyc);
+					   NULL,"Res%d_%d_mres",  seed_maos, seed_skyc);
 	    dset(simu->res, simu->rmsol->p[0]);
 	    dset(simu->res_oa, simu->rmsol->p[0]);
 	    simu->isky_start=parms->skyc.start;

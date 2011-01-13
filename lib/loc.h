@@ -28,17 +28,15 @@ int *loc_create_embed(int *nembed, const loc_t *loc);
 void loc_create_map_npad(loc_t *loc, int npad);
 void loc_create_map(loc_t *loc);
 
-loc_t * map2loc(double dx, long nx, long ny, 
-		double ox, double oy, double *map);
-long *map2embed(long nx, long ny, double *map);
-loc_t * sqmap2loc(map_t *amp);
-long* sqmap2embed(map_t *amp);
+long *d2embed(dmat *map);
+loc_t * map2loc(map_t *amp);
+long* map2embed(map_t *amp);
 void rectmapfree_do(rectmap_t *map);
 #define rectmapfree(A) ({rectmapfree_do(A);A=NULL;})
-void sqmapfree_do(map_t *map);
-#define sqmapfree(A) ({sqmapfree_do(A);A=NULL;})
-void sqmaparrfree_do(map_t **map, int nmap);
-#define sqmaparrfree(A,B) ({sqmaparrfree_do(A,B);A=NULL;})
+void mapfree_do(map_t *map);
+#define mapfree(A) ({mapfree_do(A);A=NULL;})
+void maparrfree_do(map_t **map, int nmap);
+#define maparrfree(A,B) ({maparrfree_do(A,B);A=NULL;})
 void loc_free_map(loc_t *loc);
 
 void locfree_do(loc_t *loc);
