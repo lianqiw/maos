@@ -389,7 +389,7 @@ int readcfg_peak_n(const char *format, ...){
     int count=0;
     if(quote && quote<endptr){//this is string array
 	char **ret=NULL;
-	count=readstr_strarr(&ret, sdata);
+	count=readstr_strarr(&ret, 0, sdata);
 	for(int i=0; i<count; i++){
 	    free(ret[i]);
 	}
@@ -447,17 +447,22 @@ int readcfg_strarr(char ***res, const char *format,...){
 	if(!sdata){//record is empty.
 	    return 0;
 	}
-	return readstr_strarr(res, sdata);
+	return readstr_strarr(res, 0, sdata);
     }
 }
 /**
    Obtain a string array value from the key. revised on 2010-10-16 to be more
    strict on the entry to avoid mistakes.
  */
-int readstr_strarr(char ***res, const char *sdata){
-    int count=0, maxcount=5;
-    *res=calloc(maxcount,sizeof(char*));
-
+int readstr_strarr(char ***res, int len, const char *sdata){
+    int count=0;
+    int maxcount=5;
+    if(len && *res){
+	memset(*res, 0, sizeof(char*)*len);
+    }else{
+	if(len) maxcount=len;
+	*res=calloc(maxcount,sizeof(char*));
+    }
     const char *sdataend=sdata+strlen(sdata)-1;
     const char *sdata2;
     if(sdata[0]!='[' || sdataend[0]!=']'){
@@ -480,7 +485,7 @@ int readstr_strarr(char ***res, const char *sdata){
 	const char *sdata4=strchr(sdata3,'"');
 	if(!sdata4) error("Unmatched ""\n");
 	if(sdata4>sdata3){
-	    if(count>=maxcount){
+	    if(!len && count>=maxcount){
 		maxcount*=2;
 		*res=realloc(*res,sizeof(char*)*maxcount);
 	    }
@@ -494,10 +499,12 @@ int readstr_strarr(char ***res, const char *sdata){
 	    sdata2++;
 	}
     }
-    if(count>0){
-	*res=realloc(*res,sizeof(char*)*count);
-    }else{
-	free(*res); *res=NULL;
+    if(!len){
+	if(count>0){
+	    *res=realloc(*res,sizeof(char*)*count);
+	}else{
+	    free(*res); *res=NULL;
+	}
     }
     return count;
 }
@@ -523,7 +530,7 @@ int readcfg_dblarr(double **ret, const char *format,...){
 void readcfg_strarr_n(char ***ret, int len, const char *format,...){
     format2key;
     int len2;
-    if(len!=(len2=readstr_strarr((char***)ret, store[getrecord(key, 1)].data))){
+    if(len!=(len2=readstr_strarr((char***)ret, len, store[getrecord(key, 1)].data))){
 	error("%s: Need %d, got %d integers\n", key, len, len2);
     }
 }
