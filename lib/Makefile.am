@@ -39,4 +39,4 @@ tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c
 bin_PROGRAMS=../bin/scheduler
 ___bin_scheduler_SOURCES=$(SYS_SRC) misc.c hashlittle.c path.c
 ___bin_scheduler_CFLAGS=$(AM_CFLAGS) -DSCHEDULER
-___bin_scheduler_LDFLAGS=-lrt -lpthread
+___bin_scheduler_LDFLAGS=$(LDSYS)
