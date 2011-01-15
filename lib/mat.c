@@ -265,7 +265,17 @@ X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny){
     }
     return out;
 }
-
+/**
+ * Check for Nan in elements
+ */
+int X(isnan)(const X(mat)*A){
+    for(long i=0; i<A->nx*A->ny; i++){
+	if(isnan(A->p[i])){
+	    return 1;
+	}
+    }
+    return 0;
+}
 /**
    concatenate two matrixes into 1 along dimension "dim"
 */
@@ -794,6 +804,12 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
     X(mm) (&cc, AtW, A, "nn", 1);
     //Compute inv of cc
     //X(invspd_inplace)(cc);
+    if(X(isnan(cc))){
+	X(write)(cc,"cc_isnan");
+	X(write)(A,"A_isnan");
+	X(write)(wt,"wt_isnan");
+	Y(spwrite)(Wsp, "Wsp_isnan");
+    }
     X(svd_pow)(cc,-1);//invert the matrix using SVD. safe with small eigen values.
     X(mat) *out=NULL;
     //Compute (A'*W*A)*A'*W
@@ -1246,6 +1262,7 @@ void X(svd)(dmat **Sdiag, X(mat) **U, X(mat) **VT, const X(mat) *A){
 #endif
     free(work1);
     if(info){
+	X(write)(A,"A_svd_failed");
 	if(info<0){
 	    error("The %d-th argument has an illegal value\n",info);
 	}else{

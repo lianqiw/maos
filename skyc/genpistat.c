@@ -389,7 +389,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     double patfov=parms->skyc.patfov;
     double ngsgrid=parms->maos.ngsgrid;
     long ng=ceil(patfov/2/ngsgrid);
-    info("Genpistat\n");
+    info("Genpistat..");
     GENPISTAT_S *data=calloc(1, sizeof(GENPISTAT_S));
     data->parms=parms;
     data->powfs=powfs;
@@ -424,13 +424,14 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     data->icase=0;
     data->cases=realloc(data->cases, sizeof(long)*4*data->ncase);
     CALL(calc_pistat, data, parms->skyc.nthread);
+    info2("done\n");
     //convert wvf of a+bi to log(a+bi) for interpolation.
-    data->icase=0;
+    /*
     data->unwrap=dcellnew(parms->maos.npowfs,1);
     for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	long ncomp=parms->maos.ncomp[ipowfs];
 	data->unwrap->p[ipowfs]=gen_unwrap(ncomp/2,ncomp/2);
-    }
+	}*/
     /*  
 	//test phase unwrap.
 	{
@@ -454,8 +455,10 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 	cwrite(phi,"phi");
 	dwrite(opd,"opd");
 	//	exit(0);
-	}*/
+	}
+    data->icase=0;
     CALL(convert_wvf, data, parms->skyc.nthread);
+    */
     dcellfree(data->unwrap);
     free(data->cases);
     free(data);
@@ -487,8 +490,6 @@ void prep_bspstrehl(SIM_S *simu){
 	    ynew->p[ix+iy*xnew->nx]=(iy-ngnew)*0.1;
 	}
     }
-    dwrite(xnew,"xnew");
-    dwrite(ynew,"ynew");
     for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	long msa=parms->maos.msa[ipowfs];
 	long nsa=parms->maos.nsa[ipowfs];

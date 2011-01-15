@@ -49,6 +49,7 @@ X(mat) *X(ref)(X(mat) *in) CHECK_UNUSED_RESULT;\
 X(mat) *X(ref_reshape)(X(mat) *in, long nx, long ny) CHECK_UNUSED_RESULT;\
 X(mat) *X(refcols)(X(mat) *in, long icol, long ncol) CHECK_UNUSED_RESULT;\
 X(mat) *X(sub)(const X(mat) *in, long sx, long nx, long sy, long ny) CHECK_UNUSED_RESULT;\
+int X(isnan)(const X(mat)*A);\
 X(mat) *X(cat)(const X(mat) *in1, const X(mat) *in2, int dim) CHECK_UNUSED_RESULT;\
 void X(arrfree)(X(mat) **As, int n);\
 X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;\

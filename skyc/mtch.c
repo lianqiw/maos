@@ -145,7 +145,6 @@ void mtch(dcell **mtche, dmat **sanea,
 	(*sanea)->p[isa+nsa]=sqrt(nea2->p[3]);
 	dfree(nea2);
     }
-  
     dfree(wt);
     dfree(i0g);
     dfree(i0m);

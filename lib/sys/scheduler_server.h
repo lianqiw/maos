@@ -147,5 +147,5 @@ extern uint16_t PORT;
 extern int nhost;
 extern char** hosts;
 extern int hid;
-#define scheduler_version 0x19
+#define scheduler_version 0x21
 #endif
