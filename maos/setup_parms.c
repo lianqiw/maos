@@ -134,7 +134,7 @@ void free_parms(PARMS_T *parms){
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								\
-
+    info(#A"%p\n", A##tmp);
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
    it is used to represent the types of WFS.

@@ -373,7 +373,8 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 			      drawdata_t **drawdatawrap){
     (void)widget;
     drawdata_t *drawdata=*drawdatawrap;
-    if(event->state & GDK_BUTTON1_MASK && drawdata->valid){//move with left cursor
+    if(((event->state & GDK_BUTTON1_MASK) || (event->state & GDK_BUTTON3_MASK))
+       && drawdata->valid){//move with left cursor
 	double x, y;
 	x = event->x;
 	y = event->y;
@@ -381,7 +382,8 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	dx = x - drawdata->mxdown;
 	dy = y - drawdata->mydown;
 
-	if(cursor_type==0){//move
+	if(((event->state & GDK_BUTTON1_MASK) && cursor_type==0)
+	   ||((event->state & GDK_BUTTON3_MASK) && cursor_type==1)){//move
 	    do_move(drawdata, dx, -dy);//notice the reverse sign.
 	    drawdata->mxdown=x;
 	    drawdata->mydown=y;
@@ -481,13 +483,7 @@ static gboolean button_press(GtkWidget *widget, GdkEventButton *event, drawdata_
     //Grab focus so the keys work
     if(!GTK_WIDGET_HAS_FOCUS(widget))
 	gtk_widget_grab_focus(widget);
-
-    /*if(event->type==GDK_2BUTTON_PRESS && event->button==1){
-    //double click brings the part of the image to center.
-    do_move(drawdata,
-    (drawdata->centerx-event->x),
-    -(drawdata->centery-event->y));//notice the reverse sign.
-    }else{*/
+    
     if(event->x > drawdata->xoff && event->x < drawdata->xoff + drawdata->widthim 
        && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
 	drawdata->mxdown=event->x;
@@ -508,11 +504,12 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
     double x, y;
     x = event->x;
     y = event->y;
-    if(cursor_type==0 && event->button==1){//move only on left button
+    if((cursor_type==0 && event->button==1)
+       ||(cursor_type==1 && event->button==3)){//move only on left button
 	double dx = x - drawdata->mxdown;
 	double dy = y - drawdata->mydown;
 	do_move(drawdata, dx, -dy);
-    }else if(cursor_type==1){//select and zoom.
+    }else{//select and zoom.
 	double xx = drawdata->mxdown;
 	double dx = x - drawdata->mxdown;
 	double dy = y - drawdata->mydown;
