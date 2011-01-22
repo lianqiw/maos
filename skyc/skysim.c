@@ -60,7 +60,9 @@
    MATLAB starts with a guess using QC model for NEA when regenerating pistat
    maos starts with loaded pistat. This is 1 difference.
    The gains are not sensitive to which PSD is loaded, or whether PSD is scaled or not.
-*/
+
+   2011-01-17: Do not parallelize across different star fields, that takes too
+   much memory/bandwidth to load PSF.  We parallelize across asterism and dtrats instead. */
 
 #include "skyc.h"
 #include "parms.h"
@@ -91,7 +93,15 @@ static dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
     rmsol->p[1]=rmstt/mideal->ny;
     return rmsol;
 }
-
+/*
+typedef struct SIM1_T{
+    PARMS_S *parms;
+    STAR_S *star;
+    ASTER_S *aster;
+    int iaster;
+    int naster;
+    int seed;
+    }*/
 /**
    The actual work horse that does the physical optics time domain simulation.
    */
@@ -110,7 +120,7 @@ static void skysim_isky(SIM_S *simu){
     PDMAT(simu->res, pres);
     PDMAT(simu->res_oa, pres_oa);
     PDMAT(simu->res_ol, pres_ol);
-    while(LOCK(simu->mutex_isky),isky=simu->isky++,UNLOCK(simu->mutex_isky),isky<simu->isky_end){
+    while(isky=assign_increment(&simu->isky, 1), isky<simu->isky_end){
 	double tk_1=myclockd();
 	//Setup star parameters.
 	STAR_S *star=setup_star(&nstar, simu,stars->p[isky],seed_maos);
@@ -124,7 +134,19 @@ static void skysim_isky(SIM_S *simu){
 	    info2("Field %d, Aster is empty. skip\n", isky);
 	    continue;
 	}
-	TIC;tic;
+	/*
+	   We first estimate do the matched filter, reconstructor, and servo
+	   loop optimization to determine the approximate wavefront error. Only
+	   a few combinations are kept for each star field for further time
+	   domain simulations.
+	 */
+	/*SIM1_T data;
+	data.parms=parms;
+	data.star=star;
+	data.aster=aster;
+	data.iaster=0;
+	data.naster=naster;
+	data.seed=seed_skyc;*/
 	for(int iaster=0; iaster<naster; iaster++){
 	    //Parallelizing over aster gives same random stream.
 	    seed_rand(&aster[iaster].rand, seed_skyc+iaster+40);
@@ -137,16 +159,16 @@ static void skysim_isky(SIM_S *simu){
 	    //Optimize servo gains.
 	    setup_aster_servo(simu, &aster[iaster], parms);
 	}
-	if(parms->skyc.verbose){
-	    toc2("Estimation");
-	}
+	double tk_2=myclockd();
 	//Select asters that have good performance.
 	setup_aster_select(pres_ol[isky],aster, naster, star, 
 			   simu->rmsol->p[0]/9,parms); 
 	//Read in physical optics data (wvf)
 	nstep=setup_star_read_wvf(star,nstar,parms,seed_maos);
-	//Physical Optics Simulations.
-
+	double tk_3=myclockd();
+	/*
+	  Now begin time domain Physical Optics Simulations.
+	 */
 	double skymini=INFINITY;
 	int selaster=0;
 	int seldtrat=0;
@@ -260,11 +282,11 @@ static void skysim_isky(SIM_S *simu){
 	}
 	free_aster(aster, naster, parms);
 	free_star(star, nstar, parms);
-	double tk_2=myclockd();
+	double tk_4=myclockd();
 	LOCK(simu->mutex_save);
 	simu->status->isim=isky;
-	simu->status->tot=tk_2-tk_1;//per step
-	simu->status->laps=tk_2-simu->tk_0;
+	simu->status->tot=tk_4-tk_1;//per step
+	simu->status->laps=tk_4-simu->tk_0;
 	int nsky_seed=simu->isky_end-simu->isky_start;
 	int nseed_tot=parms->maos.nseed*parms->skyc.nseed;
 	int nsky_left=simu->isky_end-simu->isky-1+nsky_seed*(nseed_tot-simu->iseed-1);
@@ -280,10 +302,12 @@ static void skysim_isky(SIM_S *simu){
 	long laps_m=simu->status->laps/60-laps_h*60;
 	long rest_h=simu->status->rest/3600;
 	long rest_m=simu->status->rest/60-rest_h*60;
-	info2("Field %d, %2d stars, %5.1f Hz: Final Tot: %6.2f nm NGS: %6.2f nm TT: %6.2f nm"
-	      "Tot %ld:%2ld. Used %ld:%2ld, Left %ld:%2ld\n",
-	      isky, nstar, simu->fss->p[isky],
+	info2("Field %d, %2d stars, %2d aster, %5.1f Hz: Final %6.2f %6.2f %6.2f nm"
+	      " Est %3.0fs Load %3.0fs Phy %3.0fs "
+	      "Tot %ld:%2ld Used %ld:%2ld Left %ld:%2ld\n",
+	      isky, nstar, naster, simu->fss->p[isky],
 	      sqrt(pres[isky][0])*1e9, sqrt(pres[isky][1])*1e9, sqrt(pres[isky][2])*1e9,
+	      tk_2-tk_1, tk_3-tk_2, tk_4-tk_3,
 	      totm, tots, laps_h, laps_m, rest_h, rest_m);
     }//while
 }
@@ -306,7 +330,7 @@ void skysim(const PARMS_S *parms){
     simu->parms=parms;
     setup_powfs(simu->powfs, parms);
     genpistat(parms, simu->powfs); 
-    PINIT(simu->mutex_isky);
+ 
     PINIT(simu->mutex_save);
     simu->tk_0=myclockd();
     for(int iseed_maos=0; iseed_maos<parms->maos.nseed; iseed_maos++){
@@ -344,16 +368,36 @@ void skysim(const PARMS_S *parms){
 	}
 	simu->psd_ngs_ws=add_psd(simu->psd_ngs, simu->psd_ws);
 	simu->psd_tt_ws=add_psd(simu->psd_tt, simu->psd_ws);
+	{
+	    //Precompute gains for different levels of noise.
+	    dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2.
+	    simu->gain_tt =calloc(parms->skyc.ndtrat, sizeof(dcell*));
+	    simu->gain_ps =calloc(parms->skyc.ndtrat, sizeof(dcell*));
+	    simu->gain_ngs=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+	    dwrite(sigma2, "gain_x");
+	    TIC;tic;
+	    for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		long dtrat=parms->skyc.dtrats[idtrat];
+		simu->gain_tt[idtrat]=servo_typeII_optim(simu->psd_tt_ws, dtrat,
+							 parms->maos.dt,sigma2);
+		simu->gain_ps[idtrat]=servo_typeII_optim(simu->psd_ps, dtrat,
+							 parms->maos.dt,sigma2);
+		simu->gain_ngs[idtrat]=servo_typeII_optim(simu->psd_ngs_ws, dtrat, 
+							  parms->maos.dt,sigma2);
+		dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
+		dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
+		dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
+	    }
+	    toc("servo_typeII_optim");
+	    simu->gain_x=dref(sigma2);
+	    dfree(sigma2);
+	}
 	for(int iseed_skyc=0; iseed_skyc<parms->skyc.nseed; iseed_skyc++){
 	    simu->status->iseed=iseed_skyc+iseed_maos*parms->skyc.nseed;
 	    simu->seed_skyc=parms->skyc.seeds[iseed_skyc];
 	    seed_rand(&simu->rand, simu->seed_skyc+parms->maos.zadeg);
-	  
-
 	    info2("Open loop error: NGS: %.2f TT: %.2f nm\n", 
 		  sqrt(simu->rmsol->p[0])*1e9, sqrt(simu->rmsol->p[1])*1e9);
-	   
-
 	    //generate star fields.
 	    if(parms->skyc.stars){
 		info2("Loading stars from %s\n",parms->skyc.stars);
@@ -425,6 +469,14 @@ void skysim(const PARMS_S *parms){
 	}
 	free(simu->bspstrehl);
 	dfree(simu->bspstrehlxy);
+	for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+	    dcellfree(simu->gain_ps[idtrat]);
+	    dcellfree(simu->gain_tt[idtrat]);
+	    dcellfree(simu->gain_ngs[idtrat]);
+	}
+	free(simu->gain_ps);
+	free(simu->gain_tt);
+	free(simu->gain_ngs);
     }//iseed_maos
     free(simu->status);
     free_powfs(simu->powfs,parms);

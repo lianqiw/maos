@@ -20,8 +20,7 @@
 #define SKYC_SERVO_H
 #include "skyc.h"
 #include "types.h"
-dmat* servo_typeII_optim(double *ress, double *resn, const dmat *psdin,
-			 double fs, double lgsdt, double sigman);
+dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt,const dmat* sigman);
 double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt);
 void servo_typeII_filter(SERVO_S *st, dmat *merr, double dtngs, const dmat *gain);
 void servo_typeI_filter(SERVO_S *st, dmat *merr, double gain);

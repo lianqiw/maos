@@ -172,6 +172,10 @@ typedef struct SIM_S{
     dmat *psd_tt;      /**<PSD of Tip/tilt modes*/
     dmat *psd_ps;      /**<PSD of plate scale modes*/
     dmat *psd_ws;      /**<PSD of windshake*/
+    dmat *gain_x;      /**<The sampled sigma in m2*/
+    dcell **gain_ngs;  /**<TypeII gain and result of different sigman and different dtrat*/
+    dcell **gain_ps;   /**<TypeII gain and result of different sigman and different dtrat*/
+    dcell **gain_tt;   /**<TypeII gain and result of different sigman and different dtrat*/
     dcell ***bspstrehl;/**<Coeffiecients of bicubic spline fit of Strehl on the grid.*/
     dmat *bspstrehlxy; /**<Coordinate of the grid.*/
     int isky;          /**<current star field being evaluated*/
@@ -179,7 +183,6 @@ typedef struct SIM_S{
     int isky_end;      /**<last star field to evalaute (exclusive)*/
     double tk_0;       /**<initial star time*/
 #if USE_PTHREAD > 0
-    pthread_mutex_t mutex_isky;/**<mutex for isky*/
     pthread_mutex_t mutex_save;/**<mutex for save*/
 #endif
 }SIM_S;
