@@ -369,7 +369,9 @@ void X(swrite)(X(mat) *A, double scale, const char *format, ...){
 }
 
 /**
-   Open a file for write with mmmap.
+   Open a file for write with mmmap. We don't provide a access control here for
+   generic usage of the function. Lock on a special dummy file for access
+   control.
  */
 static int mmap_open(char *fn, int rw){
     char *fn2=procfn(fn,rw?"w":"r",0);
@@ -379,35 +381,20 @@ static int mmap_open(char *fn, int rw){
     }
     int fd;
     if(rw){
-	fd=open(fn2, O_RDWR|O_CREAT|O_EXCL, 0600);
+	fd=open(fn2, O_RDWR|O_CREAT, 0600);
     }else{
 	fd=open(fn2, O_RDONLY);
     }
     if(fd==-1){
-	//perror("open");
-	//info("Open %s in rw=%d mode failed\n", fn2, rw);
+	perror("open");
 	if(rw){
 	    error("Unable to create file %s\n", fn2);
 	}else{//in read only mode.
 	    return fd;
 	}
-    }else{
-	//info("Open %s in rw=%d mode succeed\n", fn2, rw);
     }
+ 
     free(fn2);
-    int count=0;
-    int count_max=100;
-    int flag=rw?LOCK_EX:LOCK_SH;
-    //info2("Locking ...");
-    while(flock(fd, flag) && count<count_max){
-	warning("Failed to apply lock %d, sleep 10 s and retry. %d\n", flag, count);
-	sleep(10);
-	count++;
-    }
-    //info2("locked\n");
-    if(count==count_max){
-	error("Failed to obtain lock\n");
-    }
     return fd;
 }
 /**

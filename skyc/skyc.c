@@ -115,10 +115,12 @@ int main(int argc, char **argv){
     THREAD_POOL_INIT(parms->skyc.nthread);
     skysim(parms);
     free_parms(parms);
-    skyc_done(0);
     free(cwd);
     free(dirsetup);
     free(dirstart);
+    rename_file(0);
+    scheduler_finish(0);
+    exit_success=1;
     info2("End:\t%.2f MiB\n",get_job_mem()/1024.);
     info2("Simulation finished at %s in %s.\n",myasctime(),myhostname());
     return 0;

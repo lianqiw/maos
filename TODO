@@ -1,6 +1,4 @@
-2010-10-10:
-switch from posix shared memory to unix V shared memory.
-
+Migrate to openmp instead of using hand tuned pthreads in a branch. Test performance.
 
 A list of TODOs
 *) Do a zernike decomposition of atmosphere, corrected atmosphere, DM commands, etc Test the generated atmosphere

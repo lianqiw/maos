@@ -129,7 +129,7 @@ ARG_S *parse_args(int argc, char **argv){
 /**
    Rename the log files when simulation exits.
  */
-static void rename_file(int sig){
+void rename_file(int sig){
     char fnnew[256];
     char fnold[256];
     char suffix[16];
@@ -176,7 +176,7 @@ void skyc_signal_handler(int sig){
 	    print_backtrace(0);
 	}
 	scheduler_finish(1);
-	exit(sig);
+	_Exit(sig);
     }
 }
 

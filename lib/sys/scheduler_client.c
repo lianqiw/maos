@@ -300,7 +300,9 @@ char* scheduler_get_drawdaemon(int pid){
 	    warning("There is no DISPLAY\n");
 	    return NULL;
 	}
+	const char *xauth=getenv("XAUTHORITY");
 	swritestr(&sock,display);
+	swritestr(&sock,xauth);
 	swritestr(&sock,fifo);
 	if(sread(&sock,cmd,sizeof(int))) return NULL;
 	if(sock!=-1) close(sock);

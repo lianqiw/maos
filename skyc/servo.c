@@ -30,7 +30,7 @@
    Written: 2010-06-11
 
    Tested OK: 2010-06-11
- */
+*/
 static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
 			       const dmat *nu, /**<[out] frequency grid*/
 			       const cmat *Hol /**<[in] open loop transfer function defined on nu*/
@@ -69,7 +69,93 @@ static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
     *fcross=fc;
     return phi+M_PI;
 }
+typedef struct SERVOII_T{
+    cmat *Hol;
+    cmat *Hsys;
+    cmat *Hwfs;
+    dmat *nu;
+    cmat *s;
+    dmat *psd;
+    double sigman;
+    //Output.
+    double rms_sig;
+    double rms_n;
+    double gain_n;
+    double g;
+    double a;
+    double T;
+}SERVOII_T;
+static double servoii_calc(SERVOII_T *data, double g0){
+    cmat *Hol=data->Hol;
+    cmat *Hsys=data->Hsys;
+    cmat *Hwfs=data->Hwfs;
+    dmat *nu=data->nu;
+    cmat *s=data->s;
+    dmat *psd=data->psd;
+    double sigman=data->sigman;
+    double margin, fcross;    
+    cadd(&Hol, 0, Hsys, g0);
+    margin=servo_phi_margin(&fcross, nu, Hol);
+    double phineed=M_PI/4-margin;//want to ensure PI/4 margin
+    double a=(1-sin(phineed))/(1+sin(phineed));
+    double f0=fcross*sqrt(a);
+    double T=1./(2.*M_PI*f0);
+    double g=sqrt(a);
 
+    double rms_sig=0, sum_n=0, sum_1=0;
+    for(long i=0; i<s->nx; i++){
+	dcomplex Hlead=(1+T*s->p[i])/(1+a*T*s->p[i]);
+	dcomplex Holt=Hol->p[i]*Hlead*g;
+	dcomplex Hrej=1./(1.+Holt);
+	dcomplex Hcl=Holt*Hrej;
+	dcomplex Hn=Hcl/Hwfs->p[i];
+	//fixme: cabs(Hrej)*cabs(Hrej) or cabs(Href*Href)?
+	rms_sig+=psd->p[i]*creal(Hrej*conj(Hrej))*nu->p[i];
+	sum_n+=pow(cabs(Hn),2)*nu->p[i];
+	sum_1+=nu->p[i];
+    }
+	
+    double dlognu=(log(nu->p[nu->nx-1])-log(nu->p[0]))/(nu->nx-1);
+    rms_sig*=dlognu;
+    sum_n*=dlognu;
+    sum_1*=dlognu;
+    double gain_n=(sum_n/sum_1);
+    data->gain_n=gain_n;
+    if(gain_n>1) gain_n*=100;//don't want gain_n>1.
+    double rms_n=gain_n*sigman;
+    double rms_tot=rms_sig+rms_n;
+    data->rms_sig=rms_sig;
+    data->rms_n=rms_n;
+    data->g=g;
+    data->a=a;
+    data->T=T;
+    return rms_tot;
+}
+typedef double(*golden_section_fun)(void *param, double x);
+static double golden_section_search(golden_section_fun f, SERVOII_T *param, 
+				    double x1, double x4, double tau){
+    /**
+       Ordering: x1, x2, x3, x4
+     */
+    static double resphi= 0.381966011250105;//2-0.5*(1+sqrt(5));
+    double x2=(x4-x1)*resphi+x1;
+    double f2=f(param, x2);
+    double x3, f3;
+    //stop searching.
+    while(fabs(x4-x1) > tau * (fabs(x1)+fabs(x4))){
+	x3=(x4-x2)*resphi+x2;
+	f3=f(param, x3);
+	if(f3<f2){
+	    x1=x2;
+	    x2=x3;
+	    f2=f3;
+	}else{
+	    x4=x1;
+	    x1=x3;
+	}	    
+    }
+    return 0.5*(x4+x1);
+}
 /**
    Optimize the type II servo gains by balancing errors due to noise and
    signal propagation.
@@ -77,25 +163,34 @@ static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
    Written: 2010-06-11
 
    Tested OK: 2010-06-11
+
+   2011-01-17: The optimization process is quite slow, but the result is only
+   dependent on the sigman and fs. psdin does not change during the
+   simulation. I will build a lookup table using various sigman and interpolate
+   to get ress, resn, and gain.
+   
+   sigman is a dmat array of all wanted sigman.
+   Returns a cellarray of a dmat of [g0, a, T, res_n, res_sig]
 */
-dmat* servo_typeII_optim(double *ress, double *resn, const dmat *psdin,
-			 double fs, double lgsdt, double sigman){
+dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dmat* sigman){
     /*The upper end must be nyquist freq so that noise transfer can be
       computed. But we need to captuer the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
-     */
+    */
     dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
     dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
-     
+    double fs=1./(lgsdt*dtrat);
     //Compute error in un-corretable part of the PSD
     dmat *nu2=dlogspace(log10(fs/2),3,1000);//Frequencies that no correction can be made.
     dmat *psd2=dinterp1log(psdx,psdy,nu2);
-  
+    
     double rms2_sig=psd_intelog(nu2->p, psd2->p, nu2->nx);
     dfree(nu2); dfree(psd2);
 
     dmat *nu=dlogspace(-3,log10(fs/2),1000);
     dmat *psd=dinterp1log(psdx,psdy,nu);
+    dfree(psdx);
+    dfree(psdy);
     cmat *s=cnew(nu->nx, 1);
     dcomplex pi2i=2*M_PI*I;
     double Ts=1./fs;
@@ -112,80 +207,47 @@ dmat* servo_typeII_optim(double *ress, double *resn, const dmat *psdin,
 	Hint=1./expsTs;
 	Hsys->p[i]=Hwfs->p[i]*Hlag*Hint*Hdac*Hmir*Hint;
     }
-    double g0_min;
-    if(fs<100){
-	g0_min=0.01;
-    }else{
-	g0_min=0.01;
-    }
-    double g0=g0_min;
+    double g0_min=0.01;
+    double g0_max;
+  
     cmat *Hol=cnew(nu->nx,1);
-    double margin, fcross;
-    double rms_tot_save=INFINITY, rms_sig_save=0, rms_n_save=0;
-    double g0_save=0, a_save=0, T_save=0;
-
-    while(1){
-	//Open loop transfer function without phase lead
-	cadd(&Hol, 0, Hsys, g0);
-	margin=servo_phi_margin(&fcross, nu, Hol);
-	double phineed=M_PI/4-margin;//want to ensure PI/4 margin
-	double a=(1-sin(phineed))/(1+sin(phineed));
-	double f0=fcross*sqrt(a);
-	double T=1./(2.*M_PI*f0);
-	double g=sqrt(a);
-
-	double rms_sig=0, sum_n=0, sum_1=0;
-	for(long i=0; i<s->nx; i++){
-	    dcomplex Hlead=(1+T*s->p[i])/(1+a*T*s->p[i]);
-	    dcomplex Holt=Hol->p[i]*Hlead*g;
-	    dcomplex Hrej=1./(1.+Holt);
-	    dcomplex Hcl=Holt*Hrej;
-	    dcomplex Hn=Hcl/Hwfs->p[i];
-	    //fixme: cabs(Hrej)*cabs(Hrej) or cabs(Href*Href)?
-	    rms_sig+=psd->p[i]*creal(Hrej*conj(Hrej))*nu->p[i];
-	    sum_n+=pow(cabs(Hn),2)*nu->p[i];
-	    sum_1+=nu->p[i];
-	}
-	
-	double dlognu=(log(nu->p[nu->nx-1])-log(nu->p[0]))/(nu->nx-1);
-	rms_sig*=dlognu;
-	sum_n*=dlognu;
-	sum_1*=dlognu;
-	double gain_n=(sum_n/sum_1);
-	double rms_n=gain_n*sigman;
-	double rms_tot=rms_sig+rms_n;
-	if(rms_tot<rms_tot_save && gain_n<=1){
-	    g0_save=g0*g;//g is an additional factor.
-	    a_save=a;
-	    T_save=T;
-	    g0=g0+0.01;
-	    rms_tot_save=rms_tot;
-	    rms_sig_save=rms_sig;
-	    rms_n_save=rms_n;
-	}else{
+    dcell *gm=dcellnew(sigman->nx, sigman->ny);
+    SERVOII_T data;
+    data.Hol=Hol;
+    data.Hwfs=Hwfs;
+    data.Hsys=Hsys;
+    data.nu=nu;
+    data.s=s;
+    data.psd=psd;
+    for(g0_max=0.1; ; g0_max+=0.1){
+	servoii_calc(&data, g0_max);
+	if(data.gain_n>2){
 	    break;
 	}
     }
-
+    for(long ins=0; ins<sigman->nx*sigman->ny; ins++){
+	data.sigman=sigman->p[ins];
+	double g0=golden_section_search((golden_section_fun)servoii_calc, &data, 
+					g0_min, g0_max, 1e-6);
+	servoii_calc(&data, g0);
+	gm->p[ins]=dnew(5,1);
+	gm->p[ins]->p[0]=g0*data.g;
+	gm->p[ins]->p[1]=data.a;
+	gm->p[ins]->p[2]=data.T;
+	gm->p[ins]->p[3]=data.rms_sig+rms2_sig;
+	gm->p[ins]->p[4]=data.rms_n;
+    }//for in.
     dfree(nu);
-    dfree(psdx);
-    dfree(psdy);
     dfree(psd);
     cfree(Hsys);
     cfree(Hwfs);
     cfree(Hol);
     cfree(s);
-    dmat *gm=dnew(3,1);
-    gm->p[0]=g0_save;
-    gm->p[1]=a_save;
-    gm->p[2]=T_save;
-    *resn=rms_n_save;
-    *ress=rms_sig_save+rms2_sig;
     return gm;
 }
 /**
    Compute adaptive optics open loop transfer function of the type II servo with lead filter.
- */
+*/
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt){
     dmat *nu=dlogspace(-3,3,1000);
 
@@ -261,7 +323,7 @@ double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, dou
 }
 /**
    Simple integrator filter.
- */
+*/
 void servo_typeI_filter(SERVO_S *st, dmat *merr, double gain){
     if(!st->initialized){
 	st->initialized=1;
@@ -326,7 +388,7 @@ void servo_typeII_filter(SERVO_S *st, dmat *merr, double dtngs, const dmat *gain
 }
 /**
    test type II filter with ideal measurement to make sure it is implemented correctly.
- */
+*/
 dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtlgs, int dtrat){
     int nmod=mideal->nx;
     PDMAT(mideal,pmideal);
@@ -386,7 +448,7 @@ dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
 }
 /**
    Free SERVO_S struct
- */
+*/
 void servo_free(SERVO_S *st){
     dfree(st->mlead);
     dfree(st->merrlast);
@@ -396,7 +458,7 @@ void servo_free(SERVO_S *st){
 }
 /**
    Integrated a PSF that defines on logrithmically spaced grid nu.
- */
+*/
 double psd_intelog(double *nu, double *psd, long n){
     double dlognu=(log(nu[n-1])-log(nu[0]))/(n-1);
     if((log(nu[1])-log(nu[0])-dlognu)>1.e-4){
@@ -423,19 +485,22 @@ double psd_intelog2(dmat *psdin){
 }
 /**
    standalone routine that does servo filtering.
- */
+*/
 #ifdef TEST
 int main(int argc, char **argv){
     if(argc<6){
-	info2("Usage: %s psd.bin fs dt sigma gainout.bin\n", argv[0]);
+	info2("Usage: %s psd.bin dtrat dt sigma gainout.bin\n", argv[0]);
 	exit(1);
     }
     dmat *psd=dread("%s",argv[1]);
-    double fs=strtod(argv[2],NULL);
+    long dtrat=strtol(argv[2],NULL,10);
     double dt=strtod(argv[3],NULL);
     double sigma=strtod(argv[4],NULL);//m^2
-    double res,resn;
-    dmat *gain=servo_typeII_optim(&res,&resn,psd,fs,dt,sigma);
-    dwrite(gain,"%s",argv[5]);
+    dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma;
+    dcell *gain=servo_typeII_optim(psd,dtrat,dt,sigma2);
+    dwrite(gain->p[0],"%s",argv[5]);
+    dfree(sigma2);
+    dcellfree(gain);
+    dfree(psd);
 }
 #endif

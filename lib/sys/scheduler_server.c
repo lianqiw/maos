@@ -672,6 +672,8 @@ static int respond(int sock){
 	{
 	    char *display=readstr(sock);
 	    setenv("DISPLAY",display,1);
+	    char *xauth=readstr(sock);
+	    setenv("XAUTHORITY",xauth,1);
 	    char *fifo=readstr(sock);
 	    int method=0;
 #if defined(__APPLE__) && 0

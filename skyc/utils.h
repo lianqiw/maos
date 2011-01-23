@@ -20,6 +20,7 @@
 #include "skyc.h"
 ARG_S *parse_args(int argc, char **argv);
 void prep_result_folder(ARG_S *arg);
+void rename_file(int sig);
 void skyc_signal_handler(int sig);
 dmat *add_psd(dmat *psd1, dmat *psd2);
 #endif

@@ -137,7 +137,7 @@ int get_usage_running(void){
 	if(proc_read_status(fnjob,  exename, &cstat,&nthread)){
 	    continue;
 	}
-	if(strcmp(exename,"(maos)") && strcmp(exename,"(MATLAB)")){
+	if(strcmp(exename,"(maos)") && strcmp(exename,"(skyc)") && strcmp(exename,"(MATLAB)")){
 	    continue;//we only count maos or MATLAB.
 	}
 	if(cstat!='R' && nthread==1){

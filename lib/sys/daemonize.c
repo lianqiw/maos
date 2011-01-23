@@ -70,9 +70,9 @@ int lock_file(const char *fnlock, long version){
 		    long version_old=0;
 		    if(version>0 && (fscanf(fp,"%ld",&version_old)==EOF || version_old < version)){
 			info("Killing old executive\n");
-			if(kill(pid,SIGTERM) || (sleep(2) && kill(pid,0))){
+			if(kill(pid,SIGTERM) && (sleep(2) && kill(pid,0))){
 			    warning3("Failled to kill the old executive, send KILL signal\n");
-			    if(kill(pid,SIGKILL) || (sleep(2) && kill(pid,0))){
+			    if(kill(pid,SIGKILL) && (sleep(2) && kill(pid,0))){
 				warning3("Stilled failled to kill the old executive\n");
 				return -pid;
 			    }
