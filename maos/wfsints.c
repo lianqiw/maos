@@ -86,7 +86,7 @@ void wfsints(thread_t *thread_data){
     int illt=0;
     if(hasllt){
 	//has llt
-	const int indwfs=parms->powfs[ipowfs].indwfs[iwfs];
+	const int indwfs=parms->powfs[ipowfs].wfsind[iwfs];
 	illt=parms->powfs[ipowfs].llt->i[indwfs];
     }
     cmat *fftpsfout=NULL;
@@ -112,7 +112,7 @@ void wfsints(thread_t *thread_data){
 
     int ilocm=0;
     if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
-	ilocm=parms->powfs[ipowfs].indwfs[iwfs];
+	ilocm=parms->powfs[ipowfs].wfsind[iwfs];
     }
     double *realamp;
     if(powfs[ipowfs].locm){

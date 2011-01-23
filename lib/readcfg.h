@@ -42,7 +42,7 @@ void   open_config (const char*fn, const char *prefix, long protect);
 void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
-int    readcfg_peak_n(const char *format, ...) CHECK_ARG(1);
+int    readcfg_peek_n(const char *format, ...) CHECK_ARG(1);
 int    readcfg_override(const char *format,...) CHECK_ARG(1);
 
 char*  readcfg_str (const char*format,...) CHECK_ARG(1);

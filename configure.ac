@@ -45,9 +45,7 @@ AM_CONDITIONAL(DARWIN, false)
 AM_CONDITIONAL(WIN,    false)
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd $srcdir && pwd)
-SVN_REV=$(svnversion -n $SRC_DIR)
 BUILD_DIR=$(pwd)
-AC_DEFINE_UNQUOTED(SVN_REV, ["$SVN_REV"], ["Define SVN revision number"])
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
@@ -82,7 +80,15 @@ case "$host_cpu" in
 esac
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
-mkl_lib="${SRC_DIR}/external/mkl${cpu}/libmkl.la"
+
+#mklname=libmkls
+#mklextra=
+#mkldep=
+mklname=mkl
+mklextra=_redistributed
+mkldep="-lguide"
+
+mkl_lib="${SRC_DIR}/external/${mklname}${cpu}/libmkl.la"
 win32=no
 use_mkl="no"
 mkl_avail="no"
@@ -186,7 +192,9 @@ if test x$use_oprof = "xyes" ;then
 fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
-OPTIM_ICC="-O3 -xO -funroll-loops -DHAVE_SSE2=1 -wd981 -vec-report=0 -static-intel"
+#-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
+COMMON_ICC="-wd981 -wd1292 -vec-report=0 -diag-disable remark"
+OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc"
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -rdynamic -ggdb -O0 -DDEBUG_TRACE"
@@ -201,12 +209,29 @@ else
     AC_DEFINE(USE_MEM,[0],["Do not use memory management"])	
 fi
 if test "x$use_icc" = "xyes" ;then
-    OPTIM=$OPTIM_ICC
-    OPT_DEBUG="$OPT_DEBUG -wd981"
+    OPTIM="$OPTIM_ICC $COMMON_ICC"
+    OPT_DEBUG="$OPT_DEBUG $COMMON_ICC"
     CC=icc
     AC_PROG_CC([icc])
     which icc || AC_MSG_ERROR([icc is not found in path.])
     AM_CONDITIONAL(USE_ICC,true)	
+    #Test ICC version
+    CC_VERSION=$($CC -dumpversion)
+    if test -n "$CC_VERSION" ;then
+	major=${CC_VERSION%%.*}
+	minor=${CC_VERSION%.*}
+	minor="${minor#4.}"
+	if test $major -ge 12 ;then
+	    OPTIM="$OPTIM -axSSE4.2"
+#	    OPTIM="$OPTIM"
+        elif test $major -ge 11 ;then
+	    OPTIM="$OPTIM -axSSE4.2"
+        elif test $major -ge 10 ;then
+	    OPTIM="$OPTIM -axS"
+	else
+	    echo "icc version is old"
+	fi
+    fi
 elif test "x$use_opencc" = "xyes" ;then
     OPTIM=$OPTIM_OPENCC
     CC=opencc
@@ -215,6 +240,23 @@ elif test "x$use_opencc" = "xyes" ;then
 else
     OPTIM=$OPTIM_GCC
     AC_PROG_CC
+
+    #Test GCC version
+    CC_VERSION=$($CC -dumpversion)
+    if test -n $CC_VERSION ;then
+	major=${CC_VERSION%%.*}
+	minor=${CC_VERSION%.*}
+	minor="${minor#4.}"
+	echo major=$major minor=$minor
+	if test $major -lt 4 ;then
+	    AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
+	fi
+	if test $major -ge 4 -a $minor -ge 2;then
+	    echo "Enabling -mtune=native"
+	    OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
+	    OPTIM="$OPTIM -ftree-vectorize " #introduced in GCC 4
+	fi
+    fi
 fi	
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
@@ -229,25 +271,6 @@ AC_PROG_CC_STDC
 AM_PROG_CC_C_O
 AC_PROG_CC_C99 #enable C99.
 
-
-if test "x$use_icc" = "xno" ;then
-    #Test GCC version
-    GCC_VERSION=$($CC -dumpversion)
-    if test -n $GCC_VERSION ;then
-	major=${GCC_VERSION%%.*}
-	minor=${GCC_VERSION%.*}
-	minor="${minor#4.}"
-	echo major=$major minor=$minor
-	if test $major -lt 4 ;then
-	    AC_MSG_ERROR([At least version 4 is required when compiling with gcc.])
-	fi
-	if test $major -ge 4 -a $minor -ge 2 ;then
-	    echo "Enabling -mtune=native"
-	    OPTScc="$OPTScc -mtune=native" #introduced in GCC 4.2
-	    OPTScc="$OPTScc -ftree-vectorize " #introduced in GCC 4
-	fi
-    fi
-fi
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
@@ -261,8 +284,7 @@ if test ! "x$use_mkl" = "xyes" ;then
            LAPACK="-lblas -llapack"
        fi
    fi
-
-       echo LAPACK=$LAPACK
+       echo Trying LAPACK=$LAPACK
        AC_CHECK_LIB([blas],  [dgemm_],[],[has_lapack=no],[$LAPACK])
        AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
        if test  "x$has_lapack" = "xno" ;then
@@ -279,7 +301,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       echo The MKL library is not available at "$mkl_lib"
       echo Will download one form the website. 
       echo This library is only for non-commerical use only.
-      fn=mkl${cpu}_redistributed.tar.bz2
+      fn=${mklname}${cpu}${mklextra}.tar.bz2
       wget --no-check-certificate ${BASEURL}/${fn}  -O /tmp/${fn}  || exit 1
       if test ! -d ${SRC_DIR}/external ;then
       	  mkdir -p ${SRC_DIR}/external || exit 1
@@ -287,7 +309,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       tar -xjvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
       rm -rf /tmp/${fn}
    fi
-   LAPACK="-L${SRC_DIR}/external/mkl${cpu} -lmkl -lguide"
+   LAPACK="-L${SRC_DIR}/external/${mklname}${cpu} -lmkl ${mkldep}"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
@@ -387,7 +409,8 @@ echo CC=$CC
 echo LIBS=$LIBS
 echo LDEXE=$LDEXE
 echo SRC_DIR=$SRC_DIR
-echo SVN_REV=$SVN_REV
 echo BUILD_DIR=$BUILD_DIR
 echo OPTS=$OPTS
+echo LDOPTS=$LDOPTS
 echo LAPACK=$LAPACK
+echo LDCHOL=$LDCHOL

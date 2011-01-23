@@ -558,7 +558,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ilocm=0;
 	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
-		ilocm=parms->powfs[ipowfs].indwfs[iwfs];
+		ilocm=parms->powfs[ipowfs].wfsind[iwfs];
 	    }
 	    int incpa_in=incpa_mul*iwfs;
 	    info2("iwfs=%d, incpa_in=%d\n", iwfs, incpa_in);

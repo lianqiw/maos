@@ -379,7 +379,7 @@ int readcfg_peek(const char *format,...){
 /**
    Check the size of an array input
 */
-int readcfg_peak_n(const char *format, ...){
+int readcfg_peek_n(const char *format, ...){
     format2key;
     long irecord=getrecord(key, 0);
     const char *sdata=store[irecord].data;

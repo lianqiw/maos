@@ -98,7 +98,7 @@ void setup_tsurf(SIM_T *simu){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int ilocm=0;
 	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
-		ilocm=parms->powfs[ipowfs].indwfs[iwfs];
+		ilocm=parms->powfs[ipowfs].wfsind[iwfs];
 	    }
 	    double hs=parms->powfs[ipowfs].hs;
 	    loc_t *locwfs, *locwfsin;
@@ -214,7 +214,7 @@ void setup_surf(SIM_T*simu){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int ilocm=0;
 	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
-		ilocm=parms->powfs[ipowfs].indwfs[iwfs];
+		ilocm=parms->powfs[ipowfs].wfsind[iwfs];
 	    }
 	    double hs=parms->powfs[ipowfs].hs;
 	    const double scale=1.-hl/hs;

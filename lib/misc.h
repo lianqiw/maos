@@ -33,9 +33,10 @@ const char *myhostname(void);
 char *mygetcwd(void);
 char *myabspath(const char *path);
 void mysymlink(const char *fn, const char *fnlink);
-int exist(const char *fn);/*test file exist*/
+int exist(const char *fn);
 int isdir(const char *fn);
 int isfile(const char *fn);
+int islink(const char*fn);
 off_t flen(const char *fn);
 void touch(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;

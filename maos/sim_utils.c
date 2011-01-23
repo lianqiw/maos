@@ -766,7 +766,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int nthread=powfs[ipowfs].nthread;
-	const int indwfs=parms->powfs[ipowfs].indwfs[iwfs];
+	const int indwfs=parms->powfs[ipowfs].wfsind[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
 	int ilocm=-1;
 	if(simu->powfs[ipowfs].locm){
@@ -1508,8 +1508,8 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 	    }
 	    double sepmean=0;
 	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs-1; indwfs++){
-		int iwfs=parms->powfs[ipowfs].indwfs[indwfs];
-		int iwfs2=parms->powfs[ipowfs].indwfs[indwfs+1];
+		int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		int iwfs2=parms->powfs[ipowfs].wfs[indwfs+1];
 		if(fabs(parms->wfs[iwfs].thetax-parms->wfs[iwfs2].thetax)<1.e-10){
 		    double sep=parms->wfs[iwfs2].thetay-parms->wfs[iwfs].thetay;
 		    if(fabs(sepmean)<1e-20){

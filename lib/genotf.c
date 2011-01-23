@@ -31,8 +31,8 @@
 /**
 private data struct to mark valid pairs of points.  */
 typedef struct T_VALID{
-    int n;
-    int (*loc)[2];
+    long n;
+    long (*loc)[2];
 }T_VALID;
 /**
  Wrap the data to genotf to have multi-thread capability.*/
@@ -98,12 +98,12 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
     MW  = malloc(sizeof(double)*nloc*3);
     MCCT= malloc(sizeof(double)*nloc*3);
     Mtmp= malloc(sizeof(double)*nloc*3);
-    for(int iloc=0; iloc<nloc; iloc++){
+    for(long iloc=0; iloc<nloc; iloc++){
 	M[iloc]=1;
     }
     memcpy(M+nloc, locx, nloc*sizeof(double));
     memcpy(M+nloc*2, locy, nloc*sizeof(double));
-    for(int iloc=0; iloc<nloc; iloc++){
+    for(long iloc=0; iloc<nloc; iloc++){
 	MW[iloc]=amp[iloc];
 	MW[iloc+nloc]=amp[iloc]*locx[iloc];
 	MW[iloc+nloc*2]=amp[iloc]*locy[iloc];
@@ -124,11 +124,11 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
 	   (double*)B, &nloc,
 	   &dpzero, 
 	   (double*)Mtmp, &nmod);
-    for(int iloc=0; iloc<nloc; iloc++){
+    for(long iloc=0; iloc<nloc; iloc++){
 	double tmp1=Mtmp[iloc][0];
 	double tmp2=Mtmp[iloc][1];
 	double tmp3=Mtmp[iloc][2];
-	for(int im=0; im<nloc; im++){
+	for(long im=0; im<nloc; im++){
 	    BP[iloc][im]=B[iloc][im]+
 		(MCCT[im][0]*tmp1+MCCT[im][1]*tmp2+MCCT[im][2]*tmp3);
 	}
@@ -143,7 +143,7 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
 	   (double*)Mtmp, &nmod);
 
     //double *restrict BPD=malloc(sizeof(double)*nloc);
-    for(int iloc=0; iloc<nloc; iloc++){
+    for(long iloc=0; iloc<nloc; iloc++){
 	double tmp1=MCCT[iloc][0];
 	double tmp2=MCCT[iloc][1];
 	double tmp3=MCCT[iloc][2];
@@ -151,7 +151,7 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
 		      +tmp1*Mtmp[iloc][0]
 		      +tmp2*Mtmp[iloc][1]
 		      +tmp3*Mtmp[iloc][2]);*/
-	for(int jloc=0; jloc<nloc; jloc++){
+	for(long jloc=0; jloc<nloc; jloc++){
 	    double tmp=BP[iloc][jloc]+tmp1*Mtmp[jloc][0]
 		+tmp2*Mtmp[jloc][1]+tmp3*Mtmp[jloc][2];
 	    BP[iloc][jloc]=exp(-2.*tmp);
@@ -167,10 +167,10 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
 /**
    Generate OTF from the B or tip/tilted removed B matrix.
 */
-static void genotf_do(cmat **otf, int pttr, long notfx, long notfy, 
+static void genotf_do(cmat **otf, long pttr, long notfx, long notfy, 
 		      loc_t *loc, const double *amp, const double *opdbias, double wvl,
 		      const double* B,  const T_VALID *pval){
-    int nloc=loc->nloc;
+    long nloc=loc->nloc;
     double (*BP)[nloc];
     if(pttr){//remove p/t/t from the B matrix
 	BP=(void*)pttr_B(B,loc,amp);
@@ -185,13 +185,13 @@ static void genotf_do(cmat **otf, int pttr, long notfx, long notfy,
  
 
     double *restrict BPD=malloc(sizeof(double)*nloc);
-    for(int iloc=0; iloc<nloc; iloc++){
+    for(long iloc=0; iloc<nloc; iloc++){
 	BPD[iloc]=pow(BP[iloc][iloc],-0.5);
     }
 
     double otfnorm;
     otfnorm=0;
-    for(int iloc=0; iloc<nloc; iloc++){
+    for(long iloc=0; iloc<nloc; iloc++){
 	otfnorm+=amp[iloc]*amp[iloc];
     }
 
@@ -199,14 +199,14 @@ static void genotf_do(cmat **otf, int pttr, long notfx, long notfy,
     struct T_VALID (*qval)[notfx]=(struct T_VALID (*)[notfx])pval;
     if(opdbias){
 	dcomplex wvk=2.*M_PI/wvl*I;
-	for(int jm=0; jm<notfy; jm++){
-	    for(int im=0; im<notfx; im++){
-		int (*jloc)[2]=qval[jm][im].loc;
+	for(long jm=0; jm<notfy; jm++){
+	    for(long im=0; im<notfx; im++){
+		long (*jloc)[2]=qval[jm][im].loc;
 		dcomplex tmp1,tmp2;
 		register dcomplex tmp=0.;
-		for(int iloc=0; iloc<qval[jm][im].n; iloc++){
-		    int iloc1=jloc[iloc][0];//iloc1 is continuous.
-		    int iloc2=jloc[iloc][1];//iloc2 is not continuous.
+		for(long iloc=0; iloc<qval[jm][im].n; iloc++){
+		    long iloc1=jloc[iloc][0];//iloc1 is continuous.
+		    long iloc2=jloc[iloc][1];//iloc2 is not continuous.
 		    tmp1=amp[iloc1]*cexp(wvk*opdbias[iloc1])*BPD[iloc1]*BP[iloc1][iloc2];
 		    tmp2=amp[iloc2]*cexp(-wvk*opdbias[iloc2])*BPD[iloc2];
 		    tmp+=tmp1*tmp2;
@@ -215,14 +215,14 @@ static void genotf_do(cmat **otf, int pttr, long notfx, long notfy,
 	    }
 	}
     }else{
-	for(int jm=0; jm<notfy; jm++){
-	    for(int im=0; im<notfx; im++){
-		int (*jloc)[2]=qval[jm][im].loc;
+	for(long jm=0; jm<notfy; jm++){
+	    for(long im=0; im<notfx; im++){
+		long (*jloc)[2]=qval[jm][im].loc;
 		double tmp1,tmp2;
 		register double tmp=0.;
-		for(int iloc=0; iloc<qval[jm][im].n; iloc++){
-		    int iloc1=jloc[iloc][0];//iloc1 is continuous.
-		    int iloc2=jloc[iloc][1];//iloc2 is not continuous.
+		for(long iloc=0; iloc<qval[jm][im].n; iloc++){
+		    long iloc1=jloc[iloc][0];//iloc1 is continuous.
+		    long iloc2=jloc[iloc][1];//iloc2 is not continuous.
 		    tmp1=amp[iloc1]*BPD[iloc1]*BP[iloc1][iloc2];
 		    tmp2=amp[iloc2]*BPD[iloc2];
 		    tmp+=tmp1*tmp2;
@@ -252,7 +252,7 @@ static void *genotf_wrap(GENOTF_T *data){
     const double thres=data->thres;
     const cmat *otffull=data->otffull;
     const double *amp=data->amp;
-    const int pttr=data->pttr;
+    const long pttr=data->pttr;
     double *B=data->B;
     const T_VALID *pval=data->pval;
     while(LOCK(data->mutex_isa),isa=data->isa++,UNLOCK(data->mutex_isa),isa<nsa){
@@ -280,36 +280,39 @@ static void *genotf_wrap(GENOTF_T *data){
    2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
    first subaperture to build pval, but this one is not fully illuminated. 
  */
-static T_VALID *gen_pval(int notfx, int notfy, loc_t *loc,
+static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
 			 double dtheta, double wvl){
     double dux=1./(dtheta*notfx);
     double duy=1./(dtheta*notfy);
-    int nloc=loc->nloc;
+    long nloc=loc->nloc;
     double *locx=loc->locx;
     double *locy=loc->locy;
-    const int pvaltot=notfx*notfy*nloc*2;
-    int (*pval0)[2]=malloc(sizeof(int)*pvaltot);
+    const long pvaltot=notfx*notfy*nloc*2;
+    long (*pval0)[2]=malloc(sizeof(long)*pvaltot);
+    if(!pval0){
+	error("malloc for %ld failed\n", pvaltot);
+    }
     T_VALID *pval=malloc(sizeof(T_VALID)*notfx*notfy);
     T_VALID (*restrict qval)[notfx]=(T_VALID (*)[notfx])(pval);
-    int count=0,count2;
+    long count=0,count2;
     loc_create_map(loc);
     locmap_t *map=loc->map;
-    int notfx2=notfx/2;
-    int notfy2=notfy/2;
+    long notfx2=notfx/2;
+    long notfy2=notfy/2;
     double duxwvl=dux*wvl;
     double duywvl=duy*wvl;
     double dx1=1./loc->dx;
     long (*mapp)[map->nx]=(long(*)[map->nx])map->p;
-    for(int jm=0; jm<notfy; jm++){
-	int jm2=(jm-notfy2);//peak in the center
-	//int jm2=jm<notfy2?jm:jm-notfy;//peak in the corner
-	for(int im=0; im<notfx; im++){
-	    int im2=(im-notfx2);
-	    //int im2=im<notfx2?im:im-notfx;
+    for(long jm=0; jm<notfy; jm++){
+	long jm2=(jm-notfy2);//peak in the center
+	//long jm2=jm<notfy2?jm:jm-notfy;//peak in the corner
+	for(long im=0; im<notfx; im++){
+	    long im2=(im-notfx2);
+	    //long im2=im<notfx2?im:im-notfx;
 	    count2=count;
-	    for(int iloc=0; iloc<loc->nloc; iloc++){
-		int iy=(int)round((locy[iloc]+jm2*duywvl-map->oy)*dx1);
-		int ix=(int)round((locx[iloc]+im2*duxwvl-map->ox)*dx1);
+	    for(long iloc=0; iloc<loc->nloc; iloc++){
+		long iy=(long)round((locy[iloc]+jm2*duywvl-map->oy)*dx1);
+		long ix=(int)round((locx[iloc]+im2*duxwvl-map->ox)*dx1);
 		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
 		    long iloc2=mapp[iy][ix];
 		    if(iloc2--){
@@ -338,8 +341,8 @@ static double* genotfB(loc_t *loc, double wvl, double r0, double L0){
     double *locy=loc->locy;
     double(*B)[nloc]=(double(*)[nloc])malloc(sizeof(double)*nloc*nloc);
     const double coeff=6.88*pow(0.5e-6/wvl,2)*pow(r0,-5./3.)*0.25;
-    for(int i=0; i<nloc; i++){
-	for(int j=i; j<nloc; j++){
+    for(long i=0; i<nloc; i++){
+	for(long j=i; j<nloc; j++){
 	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
 	    B[j][i]=B[i][j]=coeff*pow(rdiff2,5./6.);
 	}
@@ -375,10 +378,10 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     double *B=genotfB(loc, wvl, r0, l0);
     cmat *otffull=NULL;
     const long nloc=loc->nloc;
-    int isafull=-1;
+    long isafull=-1;
     if(!opdbias && nsa>1){
 	double maxarea=0;
-	for(int isa=0; isa<nsa; isa++){
+	for(long isa=0; isa<nsa; isa++){
 	    if(area[isa]>maxarea){
 		maxarea=area[isa];
 		isafull=isa;

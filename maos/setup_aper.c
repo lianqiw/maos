@@ -139,6 +139,9 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    aper->nembed[iwvl]=parms->evl.psfgridsize[iwvl];
 	    aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs);
+	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > aper->nembed[iwvl]){
+		parms->evl.psfsize[iwvl] = aper->nembed[iwvl];
+	    }
 	}
     }
     toc2("setup_aper");

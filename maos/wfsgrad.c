@@ -65,7 +65,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int imoao=parms->powfs[ipowfs].moao;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int pixpsa=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->nx;
-    const int indwfs=parms->powfs[ipowfs].indwfs[iwfs];
+    const int indwfs=parms->powfs[ipowfs].wfsind[iwfs];
     const double hs=parms->powfs[ipowfs].hs;
     const int npix=pixpsa*nsa;
     const int dtrat=parms->powfs[ipowfs].dtrat;
@@ -463,14 +463,21 @@ void wfsgrad_iwfs(thread_t *info){
 	}
 	dfree(gradnf);
 	if(parms->powfs[ipowfs].llt){
-	    if(!recon->PTT || !recon->PTT->p[iwfs+iwfs*nwfs]){
-		warning("powfs %d has llt, but TT removal is empty\n", 
-			ipowfs);
+	    if(!recon->PTT){
+		error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
+	    }
+	    dmat *PTT=NULL;
+	    if(parms->sim.recon==2){
+		PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
+	    }else{
+		PTT=recon->PTT->p[iwfs+iwfs*nwfs];
+	    }
+	    if(!PTT){
+		error("powfs %d has llt, but TT removal is empty\n", ipowfs);
 	    }
 	    /*Compute LGS Uplink error*/
 	    dzero(simu->upterr->p[iwfs]);
-	    dmm(&simu->upterr->p[iwfs], recon->PTT->p[iwfs+iwfs*nwfs], 
-		simu->gradcl->p[iwfs], "nn", 1);
+	    dmm(&simu->upterr->p[iwfs], PTT, simu->gradcl->p[iwfs], "nn", 1);
 	    //copy upterr to output.
 	    PDMAT(simu->upterrs->p[iwfs], pupterrs);
 	    pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];

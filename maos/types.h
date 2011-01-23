@@ -269,7 +269,8 @@ typedef struct RECON_T{
     dcell *NW;         /**<null modes for DM fit.*/
     spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
-    spcell *saneai;    /**<inverse of sanea^2 in radian^-2*/
+    spcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
+    spcell *saneaip;   /**<saneai for each powfs (sim.recon==2)*/
     dmat *neam;        /**<subaperture averaged nea for each wfs*/
     double neamhi;     /**<average of neam for high order wfs.*/
     MUV_T RR;          /**<tomography right hand side matrix, solve RL*x=RR*y*/

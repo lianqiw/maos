@@ -508,11 +508,29 @@ void tomofit(SIM_T *simu){
 void lsr(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
+    const int do_hi=(!parms->sim.closeloop || parms->dbg.fitonly || 
+		     simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0);
+    const int do_low=parms->tomo.split && (!parms->sim.closeloop || simu->dtrat_lo==1
+					   || (simu->isim)%simu->dtrat_lo==0);
+    dcell *graduse=NULL;
+    if(do_hi || do_low){
+	if(parms->sim.recon==2){
+	    graduse=dcellnew(parms->npowfs, 1);
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		double scale=1./parms->powfs[ipowfs].nwfs;
+		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		    dadd(&graduse->p[ipowfs], 1, simu->gradlastcl->p[iwfs], scale);
+		}
+	    }
+	}else{
+	    graduse=simu->gradlastcl;
+	}
+    }
     //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
-    if(!parms->sim.closeloop || parms->dbg.fitonly || 
-       simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
+    if(do_hi){
 	dcell *rhs=NULL;
-	muv(&rhs, &(recon->LR), simu->gradlastcl, 1);
+	muv(&rhs, &(recon->LR), graduse, 1);
 	switch(parms->lsr.alg){
 	case 0://CBS
 	    muv_chol_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
@@ -529,17 +547,20 @@ void lsr(SIM_T *simu){
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
     }//if high order has output
-    if(!parms->dbg.fitonly && parms->tomo.split){
+    if(parms->tomo.split){
 	//Low order has output
 	//2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
-	if(!parms->sim.closeloop || simu->dtrat_lo==1 || (simu->isim)%simu->dtrat_lo==0){
+	if(do_low){
 	    dcellzero(simu->Merr_lo);
 	    NGSMOD_T *ngsmod=recon->ngsmod;
-	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
+	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,graduse,"nn",1);
 	}else{
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
     } 
+    if(graduse != simu->gradlastcl){
+	dcellfree(graduse);
+    }
 }
 /**
    Deformable mirror control. call tomofit() to do tomo()/fit() or lsr() to do
@@ -551,10 +572,14 @@ void reconstruct(SIM_T *simu){
     if(!simu->gradlastol && !simu->gradlastcl){
 	return;
     }
-    if(parms->sim.recon==0){//mv
+    switch(parms->sim.recon){//mv
+    case 0:
 	tomofit(simu);//tomography and fitting.
-    }else{
+	break;
+    case 1:
+    case 2:
 	lsr(simu);
+	break;
     }
     if(recon->moao){
 	moao_recon(simu);

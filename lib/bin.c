@@ -140,7 +140,7 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 		strncat(fn2,".bin",4);
 	    }
 	}
-	if(exist(fn2) && !isfile(fn2)){//remove old file to avoid write over a symbolic link.
+	if(islink(fn2)){//remove old file to avoid write over a symbolic link.
 	    if(remove(fn2)){
 		error("Failed to remove %s\n", fn2);
 	    }

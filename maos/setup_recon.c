@@ -375,14 +375,19 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		    continue;
 		}
 		int nsa=powfs[ipowfs].pts->nsa;
-		if(GA[idm][iwfs]->m!=nsa*2 || GA[idm][iwfs]->n!=nloc){
+		int ind=parms->sim.recon==2?ipowfs:iwfs;
+		if(GA[idm][ind]->m!=nsa*2 || GA[idm][ind]->n!=nloc){
 		    error("Wrong saved GA\n");
 		}
 	    }
 	}
     }else{
 	info2("Generating GA");TIC;tic;
-	recon->GA= spcellnew(nwfs, ndm);
+	if(parms->sim.recon==2){
+	    recon->GA= spcellnew(parms->npowfs, ndm);
+	}else{
+	    recon->GA= spcellnew(nwfs, ndm);
+	}
 	PDSPCELL(recon->GA,GA);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfs[iwfs].powfs;
@@ -391,16 +396,22 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	    double  hs = parms->powfs[ipowfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
+		int ind=parms->sim.recon==2?ipowfs:iwfs;
+		if(GA[idm][ind]){
+		    continue;
+		}
 		double  ht = parms->dm[idm].ht;
 		double  scale=1. - ht/hs;
-		double  displace[2];
-		displace[0]=parms->wfs[iwfs].thetax*ht;
-		displace[1]=parms->wfs[iwfs].thetay*ht;
+		double  displace[2]={0,0};
+		if(parms->sim.recon!=2){
+		    displace[0]=parms->wfs[iwfs].thetax*ht;
+		    displace[1]=parms->wfs[iwfs].thetay*ht;
+		}
 		dsp *H=mkh(recon->aloc[idm], ploc, NULL, 
 			   displace[0],displace[1],scale,
 			   parms->dm[idm].cubic,parms->dm[idm].iac);
-		
-		GA[idm][iwfs]=spmulsp(recon->GP->p[iwfs],H);
+
+		GA[idm][ind]=spmulsp(recon->GP->p[iwfs],H);
 		spfree(H);
 	    }//idm
 	}
@@ -419,10 +430,13 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int ind=(parms->sim.recon==2)?ipowfs:iwfs;
+	    if(GAlo[idm][ind] || GAhi[idm][ind]) //GLAO mode
+		continue;
 	    if(parms->powfs[ipowfs].lo){//for low order wfs
-		GAlo[idm][iwfs]=spref(GA[idm][iwfs]);
+		GAlo[idm][ind]=spref(GA[idm][ind]);
 	    }else{
-		GAhi[idm][iwfs]=spref(GA[idm][iwfs]);		
+		GAhi[idm][ind]=spref(GA[idm][ind]);		
 	    }
 	}
     }
@@ -514,7 +528,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		if(nmtch==1){
 		    indsanea=0;
 		}else if(nmtch==parms->powfs[ipowfs].nwfs){
-		    indsanea=parms->powfs[ipowfs].indwfs[iwfs];
+		    indsanea=parms->powfs[ipowfs].wfsind[iwfs];
 		}else{
 		    error("invalid\n");
 		}
@@ -550,7 +564,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		if(nmtch==1){
 		    indsanea=0;
 		}else if(nmtch==parms->powfs[ipowfs].nwfs){
-		    indsanea=parms->powfs[ipowfs].indwfs[iwfs];
+		    indsanea=parms->powfs[ipowfs].wfsind[iwfs];
 		}else{
 		    error("invalid\n");
 		}
@@ -639,6 +653,19 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
     }
     recon->neamhi=sqrt(neamhi/counthi);
     info2("\n");
+
+    if(parms->sim.recon==2){//Take the first saneai of each powfs.
+	recon->saneaip=spcellnew(parms->npowfs, parms->npowfs);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    dsp *neai=NULL;
+	    for(int ind=0; ind<parms->powfs[ipowfs].nwfs; ind++){
+		int iwfs=parms->powfs[ipowfs].wfs[ind];
+		spadd(&neai, recon->saneai->p[iwfs*(1+nwfs)]);
+	    }
+	    spscale(neai, 1./parms->powfs[ipowfs].nwfs);
+	    recon->saneaip->p[ipowfs*(1+parms->npowfs)]=neai;
+	}
+    }
     if(parms->save.setup){
 	spcellwrite(recon->saneai,"%s/saneai",dirsetup);
     }
@@ -655,12 +682,15 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms,
 	dcellfree(recon->TT);
 	dcellfree(recon->PTT);
     }
-    int nwfs=parms->nwfs;
-    recon->TT=dcellnew(nwfs,nwfs);
+    int nind=parms->sim.recon==2?parms->npowfs:parms->nwfs;
+    recon->TT=dcellnew(nind,nind);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].trs){
 	    info2("powfs %d has tip/tilt removed in tomography\n", ipowfs);
+	    if(parms->powfs[ipowfs].skip){
+		error("This POWFS %d should be included in Tomo.\n", ipowfs);
+	    }
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    dmat *TT=dnew(nsa*2,2);
 	    double *TTx=TT->p;
@@ -673,17 +703,19 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms,
 		TTx[isa]=0;
 		TTy[isa]=1;
 	    }
-	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-		if(parms->powfs[ipowfs].skip){
-		    error("This WFS %d should be included in Tomo.\n", iwfs);
+	    if(parms->sim.recon==2){
+		recon->TT->p[ipowfs*(parms->npowfs+1)]=ddup(TT);
+	    }else{
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
+		    recon->TT->p[iwfs*(1+parms->nwfs)]=ddup(TT);
 		}
-		dcp(&recon->TT->p[iwfs+iwfs*nwfs], TT);
 	    }
 	    dfree(TT);
 	}
     }
-    recon->PTT=dcellpinv(recon->TT,NULL,recon->saneai);
+    const spcell *saneai=parms->sim.recon==2?recon->saneaip:recon->saneai;
+    recon->PTT=dcellpinv(recon->TT,NULL,saneai);
     if(parms->save.setup){
 	dcellwrite(recon->TT, "%s/TT",dirsetup);
 	dcellwrite(recon->PTT, "%s/PTT",dirsetup);
@@ -750,7 +782,8 @@ setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms,
     }else{
 	recon->TTF=dcellref(recon->TT);
     }
-    recon->PTTF=dcellpinv(recon->TTF, NULL,recon->saneai);
+    const spcell *saneai=parms->sim.recon==2?recon->saneaip:recon->saneai;
+    recon->PTTF=dcellpinv(recon->TTF, NULL, saneai);
     dcellfree(recon->DF);
     //Keep TT, PTT, used in uplink pointing.
 }
@@ -1796,13 +1829,15 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    break;
 	}
     }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].nwfs<=1) continue;
-	if(parms->powfs[ipowfs].dfrs){
-	    recon->has_dfr=1;
-	    break;
-	}
-    }   
+    if(parms->sim.recon!=2){
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(parms->powfs[ipowfs].nwfs<=1) continue;
+	    if(parms->powfs[ipowfs].dfrs){
+		recon->has_dfr=1;
+		break;
+	    }
+	}   
+    }
     //setup DM actuator grid
     setup_recon_aloc(recon,parms);
     //setup pupil coarse grid
@@ -1814,10 +1849,16 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     //setup LGS tip/tilt/diff focus removal
     setup_recon_TTFR(recon,parms,powfs);
 
-    if(parms->sim.recon==0){
+    switch(parms->sim.recon){
+    case 0:
 	setup_recon_mvr(recon, parms, powfs, aper);
-    }else{
+	break;
+    case 1:
+    case 2:
 	setup_recon_lsr(recon, parms, powfs, aper);
+	break;
+    default:
+	error("sim.recon=%d is not recognized\n", parms->sim.recon);
     }
     if(parms->sim.recon!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
 	//We already assembled tomo matrix. don't need these matric any more.
@@ -1982,7 +2023,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	//all wfs in integrated mode.
 	GAlsr=recon->GA;
     }
-    const spcell *saneai=recon->saneai;
+    const spcell *saneai=parms->sim.recon==2?recon->saneaip:recon->saneai;
     spcell *GAlsrT=spcelltrans(GAlsr);
     info2("Building recon->LR\n");
     recon->LR.M=spcellmulspcell(GAlsrT, saneai, 1);
@@ -2010,22 +2051,24 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfs;
     //Low rank terms for low order wfs. Only in Integrated tomography.
-    dcell *ULo=dcellnew(ndm,nwfs);
+    int nind=parms->sim.recon==2?parms->npowfs:parms->nwfs;
+    dcell *ULo=dcellnew(ndm,nind);
     PDCELL(ULo, pULo);
-    dcell *VLo=dcellnew(ndm,nwfs);
+    dcell *VLo=dcellnew(ndm,nind);
     PDCELL(VLo, pVLo);
     PDSPCELL(recon->LR.M, LRM);
     PDSPCELL(recon->GA, GA);
+
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip){
+	if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
 	    continue;
 	}
-	if(parms->powfs[ipowfs].lo){
-	    for(int idm=0; idm<ndm; idm++){
-		spfull(&pULo[iwfs][idm], LRM[iwfs][idm],-1);
-		sptfull(&pVLo[iwfs][idm], GA[idm][iwfs],1);
-	    }
+	int ind=(parms->sim.recon==2)?ipowfs:iwfs;
+	for(int idm=0; idm<ndm; idm++){
+	    if(pULo[ind][idm] || pVLo[ind][idm]) continue;
+	    spfull(&pULo[ind][idm], LRM[ind][idm],-1);
+	    sptfull(&pVLo[ind][idm], GA[idm][ind],1);
 	}
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
@@ -2043,11 +2086,11 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    loc_create_map(recon->aloc[idm]);
 	    const long nloc=recon->aloc[idm]->nloc;
 	    NW->p[idm]=dnew(nloc, ndm*nmod);
-	    //notice offset of 1 because map start count at 1
-	    double *p=NW->p[idm]->p+nmod*idm*nloc-1;
+	    double *p=NW->p[idm]->p+nmod*idm*nloc;
 	    for(long iloc=0; iloc<nloc; iloc++){
 		p[iloc]=1;//piston mode
 	    }
+	    //notice offset of 1 because map start count at 1
 	    p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
 	    locmap_t *map=recon->aloc[idm]->map;
 	    long (*pmap)[map->nx]=(long(*)[map->nx])map->p;

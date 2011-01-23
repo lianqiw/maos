@@ -38,7 +38,7 @@
 #include "sim.h"
 #include "sim_utils.h"
 #define TIMING_MEAN 0
-#define PARALLEL 1
+#define PARALLEL 0
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence

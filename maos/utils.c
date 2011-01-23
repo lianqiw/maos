@@ -309,7 +309,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	locs[ipowfs+2]=locnew(parms->powfs[ipowfs].nwfs);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-	    int iwfs=parms->powfs[ipowfs].indwfs[jwfs];
+	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
 	    locs[ipowfs+2]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
 	    locs[ipowfs+2]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
@@ -596,6 +596,29 @@ cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl){
     psf2->p[0]=strehl;
     return psf2;
 }
+typedef struct PSFCOMP_T{
+    ccell *psf2s;//output psf.
+    const dmat *iopdevl;
+    const double *amp;
+    int **embeds;
+    const int *nembeds;
+    const int *psfsize;
+    const int nwvl;
+    const double *wvl;
+}PSFCOMP_T;
+/**
+   Call psfcomp_iwvl in parallel to compute PSF in each wvl.
+*/
+ccell *psfcomp(const dmat *iopdevl, const double *amp,
+	       int **embeds, const int *nembeds, const int *psfsize,
+	       const int nwvl, const double *wvl){
+    ccell *psf2s=ccellnew(nwvl, 1);
+    PSFCOMP_T data={psf2s, iopdevl, amp, embeds, nembeds, psfsize, nwvl, wvl};
+    thread_t dopsf[nwvl];
+    thread_prep(dopsf, 0, nwvl, nwvl, (thread_wrapfun)psfcomp_iwvl, &data);
+    CALL_THREAD(dopsf, nwvl, 0);
+    return psf2s;
+}
 /**
    Computes PSF from OPD by doing FFT. The PSF is computed as
 
@@ -606,65 +629,62 @@ cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl){
    computed PSF is the Strehl. Keep this in mind when you compute enclosed
    energy.
  */
-ccell *psfcomp(const dmat *iopdevl, const double *amp,
-	       int **embeds, const int *nembeds, const int *psfsize,
-	       const int nwvl, const double *wvl){
-  
-    ccell *psf2s=ccellnew(nwvl,1);
-
-    for(int iwvl=0; iwvl<nwvl; iwvl++){
+void psfcomp_iwvl(thread_t *thdata){
+    PSFCOMP_T *data=thdata->data;
+    ccell *psf2s=data->psf2s;
+    const dmat *iopdevl=data->iopdevl;
+    const double *amp=data->amp;
+    int **embeds=data->embeds;
+    const int *nembeds=data->nembeds;
+    const int *psfsize=data->psfsize;
+    const int nwvl=data->nwvl;
+    const double *wvl=data->wvl;
+    
+    for(int iwvl=thdata->start; iwvl<thdata->end; iwvl++){
 	if(psfsize[iwvl]==1){
 	    psf2s->p[iwvl]=strehlcomp(iopdevl, amp, wvl[iwvl]);
 	}else{
 	    int nembed=nembeds[iwvl];
 	    int *embed=embeds[iwvl];
 	    cmat *psf2=cnew(nembed,nembed);
-	    int ncomp;
 	    int use1d;
-	    int use1d_enable=0;
-	    if(nembed<psfsize[iwvl]){
-		ncomp=nembed;
-		if(use1d_enable){
-		    use1d=1;
-		    cfft2partialplan(psf2, ncomp, -1);
-		}else{
-		    use1d=0;
-		    cfft2plan(psf2, -1);
-		}
+	    int use1d_enable=1;
+	    if(psfsize[iwvl]<nembed && use1d_enable){//Want smaller PSF.
+		use1d=1;
+		cfft2partialplan(psf2, psfsize[iwvl], -1);
 	    }else{
-		ncomp=psfsize[iwvl];
 		use1d=0;
 		cfft2plan(psf2, -1);
 	    }
+	 
 	    /*
-	      //This makes sum(psf)=1;
+	      //The following makes sum(psf)=1;
 	      double psfnorm=1./(sqrt(aper->sumamp2)*aper->nembed);
 	    */
 	    
-	    /*since sum(aper->amp)=1, this makes psf normalized by diffraction
-	      limited PSF. max(psf) is strehl.*/
+	    /*
+	      since sum(aper->amp)=1, this makes psf normalized by diffraction
+	      limited PSF. max(psf) is strehl.
+	    */
 	    double psfnorm=1; 
-
 	    dcomplex i2pi=I*2*M_PI/wvl[iwvl];
-	    psf2s->p[iwvl]=cnew(ncomp,ncomp);
-
-	    czero(psf2);
 	    for(int iloc=0; iloc<iopdevl->nx; iloc++){
 		psf2->p[embed[iloc]]=amp[iloc]*cexp(i2pi*iopdevl->p[iloc]);
 	    }
 	    if(use1d==1){
-		cfft2partial(psf2,ncomp,-1);
+		cfft2partial(psf2, psfsize[iwvl], -1);
+		psf2s->p[iwvl]=cnew(psfsize[iwvl], psfsize[iwvl]);
+		ccpcorner2center(psf2s->p[iwvl], psf2);
 	    }else{
 		cfft2(psf2,-1);
+		cfftshift(psf2);
+		psf2s->p[iwvl]=cref(psf2);
 	    }
-	    ccpcorner2center(psf2s->p[iwvl], psf2);
-	
-	    if(fabs(psfnorm-1)>1.e-15)
+	    if(fabs(psfnorm-1)>1.e-15) 
 		cscale(psf2s->p[iwvl], psfnorm);
 	    cfree(psf2);
 	}
     }
-    return psf2s;
 }
 /**
    Simple embed and accumulation. 

@@ -92,7 +92,7 @@ void free_parms(PARMS_T *parms){
 	    free(parms->powfs[ipowfs].llt);
 	}
 	free(parms->powfs[ipowfs].wfs);
-	free(parms->powfs[ipowfs].indwfs);
+	free(parms->powfs[ipowfs].wfsind);
 	free(parms->powfs[ipowfs].scalegroup);
 	free(parms->powfs[ipowfs].fnllt);
 	free(parms->powfs[ipowfs].piinfile);
@@ -133,15 +133,15 @@ void free_parms(PARMS_T *parms){
     readcfg_##A##arr_n((void*)(&A##tmp), npowfs, "powfs."#B);	\
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
-    }								\
-    info(#A"%p\n", A##tmp);
+    }								
+
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
    it is used to represent the types of WFS.
 */
 static void readcfg_powfs(PARMS_T *parms){
     int     npowfs,i;
-    parms->npowfs=npowfs=readcfg_peak_n("powfs.order");
+    parms->npowfs=npowfs=readcfg_peek_n("powfs.order");
     parms->powfs=calloc(parms->npowfs,sizeof(POWFS_CFG_T));
     int    *inttmp=NULL;
     double *dbltmp=NULL;
@@ -308,7 +308,7 @@ static void readcfg_powfs(PARMS_T *parms){
 */
 static void readcfg_wfs(PARMS_T *parms){
     int i;
-    int nwfs=parms->nwfs=readcfg_peak_n("wfs.thetax");
+    int nwfs=parms->nwfs=readcfg_peek_n("wfs.thetax");
     parms->wfs=calloc(parms->nwfs,sizeof(struct WFS_CFG_T));
     double *dbltmp=NULL;
     int    *inttmp=NULL;
@@ -374,7 +374,7 @@ static void readcfg_wfs(PARMS_T *parms){
 */
 static void readcfg_dm(PARMS_T *parms){
     int ndm,i;
-    ndm=parms->ndm=readcfg_peak_n("dm.order");
+    ndm=parms->ndm=readcfg_peek_n("dm.order");
     parms->dm=calloc(parms->ndm,sizeof(struct DM_CFG_T));
     int* inttmp=NULL;
     double *dbltmp=NULL;
@@ -403,7 +403,7 @@ static void readcfg_dm(PARMS_T *parms){
 */
 static void readcfg_moao(PARMS_T *parms){
     int nmoao,i;
-    nmoao=parms->nmoao=readcfg_peak_n("moao.order");
+    nmoao=parms->nmoao=readcfg_peek_n("moao.order");
     parms->moao=calloc(nmoao, sizeof(MOAO_CFG_T));
     int *inttmp=NULL;
     double *dbltmp=NULL;
@@ -546,13 +546,13 @@ static void readcfg_tomo(PARMS_T *parms){
 /**
    Read in DM fit parameters. MOAO is specified elsewhere in readcfg_moao() */
 static void readcfg_fit(PARMS_T *parms){
- 
-    parms->fit.nfit=readcfg_dblarr((double**)(void*)&(parms->fit.thetax), "fit.thetax");
+    parms->fit.nfit=readcfg_peek_n("fit.thetax");
+    readcfg_dblarr_n(&(parms->fit.thetax), parms->fit.nfit, "fit.thetax");
     readcfg_dblarr_n(&(parms->fit.thetay), parms->fit.nfit, "fit.thetay");
     readcfg_dblarr_n(&(parms->fit.wt), parms->fit.nfit, "fit.wt");
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	parms->fit.thetax[ifit]/=206265;
-	parms->fit.thetay[ifit]/=206265;
+	parms->fit.thetax[ifit]/=206265.;
+	parms->fit.thetay[ifit]/=206265.;
     }
 
     READ_DBL(fit.tikcr);
@@ -623,6 +623,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
     READ_INT(sim.recon);
+    READ_DBL(sim.fov);
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
 }
 /**
@@ -889,16 +890,16 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     /*link wfs with powfs*/
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	parms->powfs[ipowfs].wfs=calloc(parms->nwfs, sizeof(int));
-	parms->powfs[ipowfs].indwfs=calloc(parms->nwfs, sizeof(int));
+	parms->powfs[ipowfs].wfsind=calloc(parms->nwfs, sizeof(int));
 	int count=0;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int kpowfs=parms->wfs[iwfs].powfs;
 	    if(kpowfs==ipowfs){
 		parms->powfs[ipowfs].wfs[count]=iwfs;
-		parms->powfs[ipowfs].indwfs[iwfs]=count;
+		parms->powfs[ipowfs].wfsind[iwfs]=count;
 		count++;
 	    }else{
-		parms->powfs[ipowfs].indwfs[iwfs]=-1;//not belong
+		parms->powfs[ipowfs].wfsind[iwfs]=-1;//not belong
 	    }
 	}
 	parms->powfs[ipowfs].nwfs=count;
@@ -1645,8 +1646,7 @@ static void print_parms(const PARMS_T *parms){
 	}
     }
     if(parms->plot.setup){
-	double totfov=120;//total fov
-	plotdir("FoV",parms,totfov,"fov");//plot wfs/evaluation direction
+	plotdir("FoV",parms,parms->sim.fov,"fov");//plot wfs/evaluation direction
     }
 }
 /**
@@ -1722,8 +1722,8 @@ static void check_parms(const PARMS_T *parms){
     if(parms->fit.alg<0 || parms->fit.alg>1){
 	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
     }
-    if(parms->dbg.fitonly && parms->sim.recon==1){
-	error("fitonly does not work with least square reconstructor\n");
+    if(parms->dbg.fitonly && parms->sim.recon!=0){
+	error("fitonly only works in sim.recon=0 mode\n");
     }
 }
 /**
@@ -1742,7 +1742,7 @@ it will open additional overriding .conf files supplied in the command
 line. These overiding .conf files should only contain already exited keys.*/
 static void setup_config(ARG_T*arg){
     open_config(arg->conf,NULL,0);//main .conf file.
-    
+    //Parse additional parameters.
     if(arg->iconf<arg->argc){
 	char fntmp[PATH_MAX];
 	snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
@@ -1771,8 +1771,6 @@ static void setup_config(ARG_T*arg){
 	    perror("remove");
 	    warning("Unable to remove file %s\n",fntmp);
 	}
-    }else{
-	info2("No override file is used\n");
     }
 }
 /**

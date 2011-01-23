@@ -397,10 +397,10 @@ static int mmap_open(char *fn, int rw){
     free(fn2);
     int count=0;
     int count_max=100;
-    int mlock=rw?LOCK_EX:LOCK_SH;
+    int flag=rw?LOCK_EX:LOCK_SH;
     //info2("Locking ...");
-    while(flock(fd, mlock) && count<count_max){
-	warning("Failed to apply lock %d, sleep 10 s and retry. %d\n", mlock, count);
+    while(flock(fd, flag) && count<count_max){
+	warning("Failed to apply lock %d, sleep 10 s and retry. %d\n", flag, count);
 	sleep(10);
 	count++;
     }

@@ -140,7 +140,7 @@ typedef struct POWFS_CFG_T{
     int skip;       /**<skip in high order tomography, for split tomo (derived parameter)*/
     int psol;       /**<Compute pseudo open loop gradients (derived parameter)*/
     int *wfs;       /**<array of wfs belongs to this powfs*/
-    int *indwfs;    /**<indwfs[iwfs] gives the index of the wfs in this powfs group*/
+    int *wfsind;    /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
     int nwfs;       /**<number of wfs belonging to this powfs*/
     int neaphy;     /**<use nea from physical optical precomputation in geometric simulations.*/
     int phyusenea;  /**<force using supplied noise equivalent angle in physical
@@ -374,6 +374,7 @@ typedef struct SIM_CFG_T{
     double dpupt;    /**<derivative tracking for uplink pointer. keep 0 to disable*/
     double epfocus;  /**<error gain for LGS focus tracking with zoom optics*/
     double lpfocus;  /**<parameter for low pass filter of LGS focus tracking with offset*/
+    double fov;      /**<The diameter of total fov in arcsec*/
     int napdm;       /**<number of entries in apdm*/
     int napngs;      /**<number of entries in apngs*/
     int napupt;      /**<number of entries in apupt*/

@@ -384,12 +384,11 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
 static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, 
 		       POWFS_T *powfs){
     NGSMOD_T *ngsmod=recon->ngsmod;
-    //double R=parms->aper.d/2;
-    //double R2=R*R;
     int ndm=parms->ndm;
     loc_t **aloc=recon->aloc;
     int nmod=ngsmod->nmod;
-    dcell *ZSN=dcellnew(parms->nwfs,1);
+    int nind=(parms->sim.recon==2)?parms->npowfs:parms->nwfs;
+    dcell *ZSN=dcellnew(nind,1);
     //NGS mode vector
     dcell *M=dcellnew(1,1);
     M->p[0]=dnew(nmod,1);
@@ -403,9 +402,12 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon,
 	int ipowfs=parms->wfs[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip)
 	    continue;
+	int ind=(parms->sim.recon==2)?ipowfs:iwfs;
+
 	int nsa=powfs[ipowfs].pts->nsa;
-	ZSN->p[iwfs]=dnew(nsa*2,nmod);
-	PDMAT(ZSN->p[iwfs],grad);
+	if(ZSN->p[ind]) continue;
+	ZSN->p[ind]=dnew(nsa*2,nmod);
+	PDMAT(ZSN->p[ind],grad);
 	dmat *grad2=calloc(1, sizeof(dmat));
 	grad2->nx=nsa*2; 
 	grad2->ny=1;
@@ -419,7 +421,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon,
 	    ngsmod2dm(&dmt,recon,M,1.);
 	    dzero(grad2);
 	    for(int idm=0; idm<parms->ndm; idm++){
-		spmulmat(&grad2,GA[idm][iwfs],dmt->p[idm],1);
+		spmulmat(&grad2,GA[idm][ind],dmt->p[idm],1);
 	    }
 	}
 	free(grad2);
@@ -563,19 +565,18 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     if(parms->save.setup){
 	dwrite(recon->ngsmod->MCC, "%s/ahst_MCC", dirsetup);
     }
-    //if(parms->tomo.split!=1){
-    //	return;
-    //}
+  
     ngsmod->Mdm=ngsmod_m(parms,recon);
     /*
        W is recon->saneai;
        Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
        Pngs=Rngs*GA
      */
+    spcell *saneai=parms->sim.recon==2?recon->saneaip:recon->saneai;
     if(parms->tomo.split==1 && !parms->sim.skysim){
 	//we disabled GA for low order wfs in skysim mode.
 	ngsmod->GM=ngsmod_g(parms,recon,powfs);
-	ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,recon->saneai);
+	ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,saneai);
     }
     if(parms->tomo.ahst_wt==1){
 	//Use gradient weighting.
@@ -587,7 +588,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 		dcell *GaM=NULL;
 		Matt->p[idm]=loc2mat(recon->aloc[idm],0);
 		spcellmulmat(&GaM, recon->GAlo, Matt, 1);
-		dcell *tmp=dcellpinv(GaM, NULL,recon->saneai);
+		dcell *tmp=dcellpinv(GaM, NULL,saneai);
 		dcell *tmp2=NULL;
 		dcellmulsp(&tmp2,tmp,recon->GAlo, 1);
 		ngsmod->Ptt->p[idm]=dref(tmp2->p[idm]);

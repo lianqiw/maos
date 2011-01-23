@@ -87,10 +87,10 @@ void copyfile(const char *dest, const char *src){
 }
 
 
+/**
+   Check the suffix of a file.
+*/
 int check_suffix(const char *fn, const char *suffix){
-    /**
-       Check the suffix of a file.
-    */
     if(!fn || !suffix) return 0;
     int lfn=strlen(fn);
     int lsu=strlen(suffix);
@@ -230,38 +230,50 @@ void mysymlink(const char *fn, const char *fnlink){
 	warning("Unable to make symlink %s->%s\n",fnlink,fn);
     }
 }
+/**
+   Test whether a file exists.
+*/
 int exist(const char *fn){
-    /**
-       Test whether a file exists.
-    */
     if(!fn) return 0;
     struct stat buf;
     return !stat(fn, &buf);
 }
+
+/**
+   Test whether fn is directory
+*/
 int isdir(const char *fn){
-    /**
-       Test whether a file exists.
-    */
     if(!fn) return 0;
     struct stat buf;
-    stat(fn, &buf);
-    return S_ISDIR(buf.st_mode);
+    return !stat(fn, &buf) && S_ISDIR(buf.st_mode);
 }
+
+/**
+   Test whether fn is ordinary file
+*/
 int isfile(const char *fn){
-    /**
-       Test whether a file exists.
-    */
     if(!fn) return 0;
     struct stat buf;
-    stat(fn, &buf);
-    return S_ISREG(buf.st_mode);
+    return !stat(fn, &buf) && S_ISREG(buf.st_mode);
 }
+
+/**
+   Test whether fn is a symbolic link
+*/
+int islink(const char *fn){
+    if(!fn) return 0;
+    struct stat buf;
+    return !stat(fn, &buf) && S_ISLNK(buf.st_mode);
+}
+/**
+ * Compute length of file in Bytes
+ */
 off_t flen(const char *fn){
     if(!fn) return 0;
     struct stat buf;
-    stat(fn, &buf);
-    return buf.st_size;
+    return stat(fn, &buf)?0:buf.st_size;
 }
+
 void touch(const char *fn){
     /**
        Update a file's modtime to current.

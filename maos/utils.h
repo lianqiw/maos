@@ -39,6 +39,7 @@ cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl);
 ccell *psfcomp(const dmat *iopdevl, const double *restrict amp,
 	       int **embeds, const int *nembeds, const int *psfsize,
 	       const int nwvl, const double *wvl);
+void psfcomp_iwvl(thread_t *tdata);
 void embed_in(double *out, const double *in, long nin, long *embed);
 void embed_out(const double *out, double *in, long nin, long *embed);
 void embedc_in(dcomplex *out, const double *in, long nin, long *embed);

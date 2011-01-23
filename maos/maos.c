@@ -120,19 +120,14 @@ int main(int argc, char **argv){
 	daemonize();
 	fprintf(stderr, "%s\n", scmd);
     }
-    info2("MAOS Version %s. ", PACKAGE_VERSION);
-#ifdef SVN_REV
-    if(strlen(SVN_REV)>1 && strcmp(SVN_REV,"exported")){
-	info2("Revision %s. ", SVN_REV);
-    }
-#endif
-    info2("Launched at %s in %s.\n",myasctime(),myhostname());
-    info2("Compiled on %s %s by %s ", __DATE__, __TIME__, __VERSION__);
+    info2("MAOS Version %s. Compiled on %s %s by %s", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__);
 #ifdef __OPTIMIZE__
     info2("with optimization.\n");
 #else
-    info2("without optimization!!!\n");
+    info2("without optimization\n");
 #endif
+    info2("Launched at %s in %s.\n",myasctime(),myhostname());
+
     //Launch the scheduler and report about our process
     scheduler_start(scmd,arg->nthread,!arg->force);
 

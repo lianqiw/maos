@@ -65,7 +65,7 @@ static char *fnatm(GENSCREEN_T *data){
     key=hashlittle(&data->nlayer, sizeof(long), key);
     key=hashlittle(&data->ninit, sizeof(long), key);
 
-    char fnshm[NAME_MAX];
+    char fnshm[PATH_MAX];
     snprintf(fnshm,PATH_MAX,"%s/.aos/atm", HOME);
     if(!exist(fnshm)) mymkdir("%s", fnshm);
     remove_file_older(fnshm, 30*24*3600);
@@ -183,10 +183,10 @@ static map_t** create_screen(GENSCREEN_T *data,
 	dcell *in=NULL;
 	while(!in){
 	    if(!exist(fnlock)){//when fnlock exists, the data in fnshm is not good.
-		info("Trying to read %s\n", fnshm);
+		info2("Trying to read %s\n", fnshm);
 		in=dcellread_mmap(fnshm);
 	    }else{
-		info("Will not read since %s exists\n", fnlock);
+		info2("Will not read since %s exists\n", fnlock);
 	    }
 	    if(!in){
 		info("Trying to create %s\n", fnshm);
