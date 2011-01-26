@@ -389,6 +389,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    recon->GA= spcellnew(nwfs, ndm);
 	}
 	PDSPCELL(recon->GA,GA);
+	int lastipowfs=-1;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfs[iwfs].powfs;
 	    if(parms->sim.skysim && parms->powfs[ipowfs].lo){
@@ -397,7 +398,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    double  hs = parms->powfs[ipowfs].hs;
 	    for(int idm=0; idm<ndm; idm++){
 		int ind=parms->sim.recon==2?ipowfs:iwfs;
-		if(GA[idm][ind]){
+		if(parms->sim.recon==2 && lastipowfs == ipowfs){
 		    continue;
 		}
 		double  ht = parms->dm[idm].ht;
@@ -414,6 +415,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		GA[idm][ind]=spmulsp(recon->GP->p[iwfs],H);
 		spfree(H);
 	    }//idm
+	    lastipowfs=ipowfs;
 	}
 	if(parms->save.setup){
 	    spcellwrite(recon->GA, "%s/GA",dirsetup);
@@ -428,16 +430,18 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     PDSPCELL(recon->GAhi,GAhi);
     PDSPCELL(recon->GA,GA);
     for(int idm=0; idm<ndm; idm++){
+	int lastipowfs=-1;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int ind=(parms->sim.recon==2)?ipowfs:iwfs;
-	    if(GAlo[idm][ind] || GAhi[idm][ind]) //GLAO mode
+	    if(parms->sim.recon==2 && ipowfs == lastipowfs)
 		continue;
 	    if(parms->powfs[ipowfs].lo){//for low order wfs
 		GAlo[idm][ind]=spref(GA[idm][ind]);
 	    }else{
 		GAhi[idm][ind]=spref(GA[idm][ind]);		
 	    }
+	    lastipowfs=ipowfs;
 	}
     }
 }
@@ -2059,17 +2063,20 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     PDSPCELL(recon->LR.M, LRM);
     PDSPCELL(recon->GA, GA);
 
+    int lastipowfs=-1;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
 	    continue;
 	}
 	int ind=(parms->sim.recon==2)?ipowfs:iwfs;
+	if(parms->sim.recon==2 && ipowfs == lastipowfs) 
+	    continue;
 	for(int idm=0; idm<ndm; idm++){
-	    if(pULo[ind][idm] || pVLo[ind][idm]) continue;
 	    spfull(&pULo[ind][idm], LRM[ind][idm],-1);
 	    sptfull(&pVLo[ind][idm], GA[idm][ind],1);
 	}
+	lastipowfs=ipowfs;
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
     dcell *GPTTDF=NULL;
@@ -2113,6 +2120,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	tmp=recon->LL.V;
 	recon->LL.V=dcellcat(tmp, NW, 2);
 	dcellfree(tmp);
+	dcellfree(NW);
     }
     //Remove empty cells.
     dcelldropempty(&recon->LR.U,2);

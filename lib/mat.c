@@ -213,6 +213,9 @@ X(mat) *X(ref)(X(mat) *in){
 	error("Allocation failed\n");
     }
     memcpy(out,in,sizeof(X(mat)));
+#ifdef USE_COMPLEX
+    out->fft=NULL;
+#endif
     out->nref[0]++;
     return out;
 }

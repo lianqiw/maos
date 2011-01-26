@@ -132,9 +132,7 @@ void wait_cpu(int nthread){
     char fnlock[64];
     snprintf(fnlock,64,"%s/aos.lock", getenv("HOME"));
     int fd;
-    while((fd=lock_file(fnlock,-1))<0){
-	sleep(1);
-    }
+    fd=lock_file(fnlock,1,-1);
     while(get_cpu_avail()<nthread-1){
 	sleep(5);
     }

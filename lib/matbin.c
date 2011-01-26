@@ -110,7 +110,7 @@ X(mat) *X(readdata)(file_t *fp, uint32_t magic){
 	magic=read_magic(fp, &header);
     }
     if(magic!=M_T)
-	error("This is not a X(mat) file\n");
+	error("%s is not a X(mat) file. magic=%x\n", zfname(fp), magic);
     uint64_t nx,ny;
     zfreadlarr(fp, 2, &nx, &ny);
     X(mat) *out;

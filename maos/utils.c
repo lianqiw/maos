@@ -648,7 +648,7 @@ void psfcomp_iwvl(thread_t *thdata){
 	    int *embed=embeds[iwvl];
 	    cmat *psf2=cnew(nembed,nembed);
 	    int use1d;
-	    int use1d_enable=1;
+	    int use1d_enable=0;
 	    if(psfsize[iwvl]<nembed && use1d_enable){//Want smaller PSF.
 		use1d=1;
 		cfft2partialplan(psf2, psfsize[iwvl], -1);
@@ -728,12 +728,12 @@ int lock_seeds(PARMS_T *parms){
     parms->fdlock=calloc(parms->sim.nseed, sizeof(int));
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	snprintf(fn, 80, "Res_%d.lock",parms->sim.seeds[iseed]);
-	parms->fdlock[iseed]=lock_file(fn, 0);
-	cloexec(parms->fdlock[iseed]);
+	parms->fdlock[iseed]=lock_file(fn, 0, 0);
 	if(parms->fdlock[iseed]<0){
 	    warning("Another MAOS is already running with seed %d. Skip\n",
 		    parms->sim.seeds[iseed]);
 	}else{
+	    cloexec(parms->fdlock[iseed]);
 	    to_run++;
 	}
     }
