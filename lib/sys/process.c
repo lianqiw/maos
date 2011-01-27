@@ -34,6 +34,7 @@
 #include "process.h"
 #include "daemonize.h"
 int NCPU;
+int NCPU2;
 int TCK;
 const char *HOME=NULL;
 const char *TEMP=NULL;
@@ -75,6 +76,7 @@ void init_path(void){
 }
 static __attribute__((constructor))void init(){
     NCPU= get_ncpu();
+    NCPU2=sysconf( _SC_NPROCESSORS_ONLN );
     TCK = sysconf(_SC_CLK_TCK);
     init_path();
 }

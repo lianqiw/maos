@@ -40,7 +40,6 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "cell.h"
-#include "cmat_extra.h"
 #include "suitesparse.h"
 #include "bin.h"
 #include "misc.h"

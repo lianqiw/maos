@@ -34,7 +34,8 @@ int get_cpu_avail(void);
 int read_usage_cpu(long *user, long *tot);
 void wait_cpu(int nthread);
 double read_self_cpu(void);
-extern int NCPU;
+extern int NCPU;  /**<True number of cores*/
+extern int NCPU2; /**<Number of hyper threads. may be larger than NCPU*/
 extern int TCK;
 extern const char *HOME;//the user home
 extern const char *TEMP;//the temporary folder

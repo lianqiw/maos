@@ -19,7 +19,6 @@
 #include "stfun.h"
 #include "dmat.h"
 #include "cmat.h"
-#include "cmat_extra.h"
 #include "fft.h"
 
 /**

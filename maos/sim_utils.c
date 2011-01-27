@@ -642,27 +642,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
     simu->uptint=calloc(parms->sim.napupt, sizeof(dcell*));
     if(parms->evl.psfmean){
-	long nnx[nevl][nwvl];
-	long nnx2[nwvl];
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    for(int ievl=0; ievl<nevl; ievl++){
-		nnx[ievl][iwvl]=parms->evl.psfsize[iwvl];
-	    }
-	    nnx2[iwvl]=parms->evl.psfsize[iwvl];
-	}
-	char header[100];
-	long count = parms->sim.end-parms->evl.psfisim;
-	snprintf(header, 100, "count=%15ld", count);
-	simu->evlpsfmean=dcellnew_mmap(nwvl, nevl, (long*)nnx, (long*)nnx, header, NULL,NULL, "evlpsfcl_%d.bin",seed);
+	simu->evlpsfmean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
+	simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
 	if(parms->evl.tomo){
-	    simu->evlpsftomomean=dcellnew_mmap(nwvl, nevl, (long*)nnx, (long*)nnx, header, NULL,NULL, "evlpsftomo_%d.bin",seed);
+	    simu->evlpsftomomean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
 	}
-	count=parms->sim.end-parms->sim.start;
-	if(parms->evl.psfol==2){
-	    count*=parms->evl.npsf;
-	}
-	snprintf(header, 100, "count=%15ld", count);
-	simu->evlpsfolmean=dcellnew_mmap(nwvl, 1, nnx2, nnx2, header, NULL,NULL, "evlpsfol_%d.bin",seed);
     }
     simu->opdevl=dcellnew(parms->evl.nevl,1);
     if(parms->evl.psfhist){
@@ -1372,12 +1356,11 @@ void save_simu(const SIM_T *simu){
     const int isim=simu->isim;
     const int seed=simu->seed;
     if((isim % 50 ==0) || isim+1==parms->sim.end){
-	/*
 	if(parms->evl.psfmean && simu->isim>=parms->evl.psfisim){
-	double scale;
+	    double scale;
 	    if(parms->evl.tomo!=2){
 		scale=1./(double)(simu->isim-parms->evl.psfisim+1);
-		dcellscale(simu->evlpsfmean, scal
+		dcellscale(simu->evlpsfmean, scale);
 		if(simu->evlpsfmean){
 		    dcellswrite(simu->evlpsfmean, scale,
 				"evlpsfcl_%d.bin",seed);
@@ -1397,7 +1380,7 @@ void save_simu(const SIM_T *simu){
 			    "evlpsftomo_%d.bin",seed);
 	    }
 	}
-	*/
+	
 	dcell *sanea=NULL;
 	dcellcp(&sanea, simu->sanea_sim);
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){

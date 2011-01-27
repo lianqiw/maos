@@ -339,15 +339,7 @@ typedef struct FIT_CFG_T{
     int maxit;       /**<max iterations. Usually 4 for CG*/
     int square;      /**<using square grid on DM and ploc.*/
 }FIT_CFG_T;
-/**
-   contains input parameters for least square reconstructor
-*/
-typedef struct LSR_CFG_T{
-    int alg;         /**<linear equation solving algorithm*/
-    int maxit;       /**<maximum number of iterations for CG.*/
-    int split;       /**<Split reconstruction. same as ahst*/
-    double tikcr;    /**<Tikhonov relgularization*/
-}LSR_CFG_T;
+
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
  */
@@ -526,7 +518,6 @@ typedef struct PARMS_T{
     APER_CFG_T   aper;  /**<aperture parameters*/
     TOMO_CFG_T   tomo;  /**<tomography parameters*/
     FIT_CFG_T    fit;   /**<DM fit parameters*/
-    LSR_CFG_T    lsr;   /**<Least square reconstructor parameters*/
     EVL_CFG_T    evl;   /**<Performance evaluation parameters*/
 
     /*the following are pointers because there may be several*/

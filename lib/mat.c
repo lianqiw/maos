@@ -32,7 +32,6 @@
 #include "csp.h"
 #include "dmat.h"
 #include "cmat.h"
-#include "cmat_extra.h"
 #include "fft.h"
 #include "matbin.h"
 #include "loc.h"
@@ -150,8 +149,8 @@ void X(free_do)(X(mat) *A, int keepdata){
 		long count=search_header_num(A->header, "count");
 		if(count>0){
 		    info("count=%ld, scaling the data\n", count);
+		    X(scale)(A, 1./count);
 		}
-		X(scale)(A, 1./count);
 	    }
 	    if(!keepdata && A->p){
 		if(A->mmap){//data is mmap'ed.
@@ -1499,13 +1498,11 @@ X(mat)* X(interp1log)(dmat *xin, dmat *yin, dmat *xnew){
 */
 void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
     
-    T *restrict in=B->p;
-    long ninx=B->nx;
-    long niny=B->ny;
-    T *out=A->p;
+    const long ninx=B->nx;
+    const long niny=B->ny;
     const long noutx=A->nx;
     const long nouty=A->ny;
-    memset(out, 0, sizeof(T)*noutx*nouty);
+    memset(A->p, 0, sizeof(T)*noutx*nouty);
     if(fabs(theta)<1.e-10){//no rotation.
 	const long skipx=(noutx-ninx)/2;
 	const long skipy=(nouty-niny)/2;
@@ -1519,17 +1516,16 @@ void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
 	    iystart=-skipy;
 	    iyend=niny+skipy;
 	}
-	T *out2=out+skipy*noutx+skipx;
+	PMAT(A, pA);
+	PMAT(B, pB);
 	for(long iy=iystart; iy<iyend; iy++){
-	    T *outi=out2+iy*noutx;
-	    const T *ini=in+iy*ninx;
-	    memcpy(outi+ixstart,ini+ixstart,
-		   sizeof(T)*(ixend-ixstart));
+	    T *outi=&pA[skipy+iy][skipx+ixstart];
+	    T *ini =&pB[iy][ixstart];
+	    memcpy(outi, ini, sizeof(T)*(ixend-ixstart));
 	}
     }else{
-	
-	T (*outs)[noutx]=(T(*)[noutx])out;
-	T (*ins)[ninx]=(T(*)[ninx])in;
+	PMAT(A, outs);
+	PMAT(B, ins);
 	const double ctheta=cos(theta);
 	const double stheta=sin(theta);
 	double x2,y2;

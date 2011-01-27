@@ -531,19 +531,19 @@ void lsr(SIM_T *simu){
     if(do_hi){
 	dcell *rhs=NULL;
 	muv(&rhs, &(recon->LR), graduse, 1);
-	switch(parms->lsr.alg){
+	switch(parms->tomo.alg){
 	case 0://CBS
 	    muv_chol_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
 	    break;
 	case 1://CG
 	    pcg(&simu->dmerr_hi, (CGFUN)muv, &recon->LL, NULL, NULL, rhs,
-		recon->warm_restart, parms->lsr.maxit);
+		recon->warm_restart, parms->tomo.maxit);
 	    break;
 	default:
 	    error("Not implemented\n");
 	}
 	dcellfree(rhs);
-	if(!parms->dbg.fitonly && parms->lsr.split==1){//ahst
+	if(!parms->dbg.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
     }//if high order has output

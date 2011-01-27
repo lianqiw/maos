@@ -2015,11 +2015,13 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
    The reconstructor is simply the pseudo inverse of GA matrix:
    \f[\hat{x}=(G_a^TC_g^{-1}G_a)^{-1}G_a^TC_g^{-1}\f]
 
-   This is very close to RR except replacing GX with GA
+   This is very close to RR except replacing GX with GA.
+
+   We use the tomogrpahy parameters for lsr, since lsr is simply "tomography" onto DM directly.
  */
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     spcell *GAlsr;
-    if(parms->lsr.split){
+    if(parms->tomo.split){
 	//high order wfs only in split mode.
 	GAlsr=recon->GAhi;
 	setup_ngsmod(parms,recon,aper,powfs);
@@ -2042,10 +2044,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     info2("Building recon->LL\n");
     recon->LL.M=spcellmulspcell(recon->LR.M, GAlsr, 1);
     double maxeig=pow(recon->neamhi * recon->aloc[0]->dx, -2);
-    if(fabs(parms->lsr.tikcr)>EPS){
-	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
+    if(fabs(parms->tomo.tikcr)>EPS){
+	info2("Adding tikhonov constraint of %g to LLM\n", parms->tomo.tikcr);
 	info2("The maximum eigen value is estimated to be around %g\n", maxeig);
-	spcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
+	spcelladdI(recon->LL.M, parms->tomo.tikcr*maxeig);
     }
     //actuator slaving. important
     spcell *actslave=act_slaving(recon->aloc, recon->GAhi, NULL, NULL,0.5,
@@ -2135,7 +2137,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellwrite(recon->LL.U,"%s/LLU",dirsetup);
 	dcellwrite(recon->LL.V,"%s/LLV",dirsetup); 
     }
-    if(parms->lsr.alg==0){
+    if(parms->tomo.alg==0){
 	muv_chol_prep(&recon->LL);
 	spcellfree(recon->LL.M);
 	dcellfree(recon->LL.U);

@@ -28,7 +28,6 @@
 PNEW(mutex_fftw);
 #define LOCK_FFT LOCK(mutex_fftw)
 #define UNLOCK_FFT UNLOCK(mutex_fftw)
-#define FFTW_FLAGS FFTW_MEASURE
 /**
    \file fft.c
    Routines to do FFT on cmat.
@@ -110,6 +109,12 @@ static __attribute__((destructor))void deinit(){
 void cfft2plan(cmat *A, int dir){
     assert(abs(dir)==1 && A && A->p);
     if(!A->fft) A->fft=calloc(1, sizeof(fft_t));
+    int FFTW_FLAGS;
+    if(A->nx<1024){
+	FFTW_FLAGS=FFTW_MEASURE;
+    }else{
+	FFTW_FLAGS=FFTW_ESTIMATE;
+    }
     LOCK_FFT;
     //!!fft uses row major mode. so need to reverse order
     if(A->nx==1 || A->ny==1){
@@ -128,6 +133,12 @@ void cfft2partialplan(cmat *A, int ncomp, int dir){
     if(!A->fft)  A->fft=calloc(1, sizeof(fft_t));
     const int nx=A->nx;
     const int ny=A->ny;
+    int FFTW_FLAGS;
+    if(A->nx<1024){
+	FFTW_FLAGS=FFTW_MEASURE;
+    }else{
+	FFTW_FLAGS=FFTW_ESTIMATE;
+    }
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
     //along columns for all columns.

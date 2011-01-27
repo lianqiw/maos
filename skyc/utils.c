@@ -81,9 +81,9 @@ ARG_S *parse_args(int argc, char **argv){
 	    if(arg->nthread<=0){
 		warning("illigal nthread. set to 0.\n");
 		arg->nthread=1;
-	    }else if(arg->nthread>NCPU){
-		warning("nthread is larger than number of cpus, reset to %d\n",NCPU);
-		arg->nthread=NCPU;
+	    }else if(arg->nthread>NCPU2){
+		warning("nthread is larger than number of cpus, reset to %d\n",NCPU2);
+		arg->nthread=NCPU2;
 	    }
 	    break;
 	case 'c':

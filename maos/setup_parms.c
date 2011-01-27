@@ -480,7 +480,8 @@ static void readcfg_aper(PARMS_T *parms){
    Read in performance evaluation science point parameters.
 */
 static void readcfg_evl(PARMS_T *parms){
-    parms->evl.nevl=readcfg_dblarr((double**)(void*)&(parms->evl.thetax),"evl.thetax");
+    parms->evl.nevl=readcfg_peek_n("evl.thetax");
+    readcfg_dblarr_n(&(parms->evl.thetax),parms->evl.nevl, "evl.thetax");
     readcfg_dblarr_n(&(parms->evl.thetay),parms->evl.nevl, "evl.thetay");
     readcfg_dblarr_n(&(parms->evl.wt),parms->evl.nevl, "evl.wt");
     normalize(parms->evl.wt, parms->evl.nevl, 1);
@@ -565,14 +566,7 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.maxit);
     READ_INT(fit.square);
 }
-/**
-   Read in least square reconstructor parameters*/
-static void readcfg_lsr(PARMS_T *parms){
-    READ_INT(lsr.alg);
-    READ_INT(lsr.maxit);
-    READ_INT(lsr.split);
-    READ_DBL(lsr.tikcr);
-}
+
 /**
    Read in simulation parameters
 */
@@ -917,7 +911,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
-    if(parms->tomo.split || parms->lsr.split){
+    if(parms->tomo.split){
 	int hi_found=0;
 	int lo_found=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -930,7 +924,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(!lo_found || !hi_found){
 	    warning("There are either no high order or no low order wfs. Disable split tomo.\n");
 	    parms->tomo.split=0;
-	    parms->lsr.split=0;
 	    if(parms->sim.skysim){
 		error("There is only high or low order WFS. "
 		      "can not do skycoverage presimulation\n");
@@ -941,10 +934,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
     }
    
-    if((parms->tomo.split||parms->lsr.split) && parms->ndm==0){
+    if((parms->tomo.split) && parms->ndm==0){
 	warning("Disable split tomography since there is no common DM\n");
 	parms->tomo.split=0;
-	parms->lsr.split=0;
     }
 }
 /**
@@ -1612,12 +1604,12 @@ static void print_parms(const PARMS_T *parms){
 	}
     }else{
 	info2("Using least square reconstructor with ");
-	switch(parms->lsr.alg){
+	switch(parms->tomo.alg){
 	case 0:
 	    info2("Cholesky back solve ");
 	    break;
 	case 1:
-	    info2("CG%d", parms->lsr.maxit);
+	    info2("CG%d", parms->tomo.maxit);
 	    break;
 	default:
 	    error("Invalid\n");
@@ -1791,7 +1783,6 @@ PARMS_T * setup_parms(ARG_T *arg){
     readcfg_atmr(parms);
     readcfg_tomo(parms);
     readcfg_fit(parms);
-    readcfg_lsr(parms);
     readcfg_evl(parms);
     readcfg_sim(parms);
     readcfg_cn2(parms);

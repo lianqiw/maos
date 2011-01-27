@@ -27,4 +27,7 @@
 AOS_MAT_DEF(AOS_DMAT,AOS_SPARSE,double)
 AOS_CELL_DEF(AOS_DMAT,AOS_SPARSE,double)
 AOS_MATBIN_DEF(AOS_DMAT,AOS_SPARSE,double)
+
+//The following are only for dmat.
+dmat *denc(dmat *A, dmat *dvec, int type);
 #endif

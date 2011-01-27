@@ -27,4 +27,48 @@
 AOS_MAT_DEF(AOS_CMAT,AOS_SPARSE,dcomplex)
 AOS_CELL_DEF(AOS_CMAT,AOS_CSPARSE,dcomplex)
 AOS_MATBIN_DEF(AOS_CMAT,AOS_CSPARSE,dcomplex)
+//The following are only useful for cmat
+double cmaxabs(const cmat *A);
+double cminabs(const cmat *A);
+double csumabs(const cmat *A);
+
+void ccwm3(cmat *restrict A, const cmat *restrict B, const cmat *restrict C);
+void ccwm2(cmat *restrict A, const cmat *restrict B, const double alpha);
+void ccwmcol(cmat *restrict A, const cmat *restrict B);
+void ccwm3col(cmat *restrict A,const cmat *restrict W,const cmat *restrict B);
+void ccwmrow(cmat *restrict A, const cmat *restrict B);
+void ccwmcol2(cmat *restrict A, 
+	     const dcomplex *restrict B1, const double wt1,
+	     const dcomplex *restrict B2, const double wt2);
+void ccwmrow2(cmat *restrict A, 
+	     const dcomplex *restrict B1, const double wt1,
+	     const dcomplex *restrict B2, const double wt2);
+void ccwmc(cmat *restrict A, const cmat *restrict B, const double alpha);
+void ccwmd(cmat *restrict A, const dmat *restrict B, const double alpha);
+void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
+	       const int nopdx, const int nopdy, 
+		const double wvl, const double theta);
+void cembed(cmat *restrict A, const cmat *restrict B, const double theta,CEMBED flag);
+void cembedd(cmat *restrict A, dmat *restrict B, const double theta);
+void cembedscaleout(cmat *restrict A, const cmat * in, 
+		    double xoutscale,double youtscale,
+		    const double theta, CEMBED flag);
+void ccpcorner(cmat *A, const cmat *restrict B, CEMBED flag);
+void cabstoreal(cmat *A);
+void cabs2toreal(cmat *A);
+void ccpd(cmat**restrict A, const dmat *restrict B);
+void creal2d(dmat**restrict A0, double alpha,const cmat *restrict B, double beta);
+void cabs22d(dmat**restrict A0, double alpha,const cmat *restrict B, double beta);
+void ccp(cmat**restrict A0, const cmat *restrict B);
+void cscale(cmat *A, dcomplex alpha);
+void ctilt(cmat *otf, double sx, double sy, int pinct);
+void ccogreal(double *grad,const cmat *i0,double offsetx,
+	      double offsety,double thres, double bkgrnd);
+void ccogabs(double *grad,const cmat *i0,double offsetx,
+	      double offsety,double thres, double bkgrnd);
+void cinv_inplace(cmat*A);
+void cinvspd_inplace(cmat *A);
+void cmulvec(dcomplex *restrict y, const cmat * restrict A,
+	     const dcomplex *restrict x, const dcomplex alpha);
+
 #endif

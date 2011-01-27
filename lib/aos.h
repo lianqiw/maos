@@ -25,7 +25,6 @@
 #include "readcfg.h"
 #include "dmat.h"
 #include "cmat.h"
-#include "cmat_extra.h"
 #include "dsp.h"
 #include "csp.h"
 #include "path.h"

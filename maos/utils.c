@@ -484,10 +484,10 @@ ARG_T * parse_args(int argc, char **argv){
 	    if(arg->nthread<=0){
 		warning("illigal nthread. set to 1.\n");
 		arg->nthread=1;
-	    }else if(arg->nthread>NCPU){
+	    }else if(arg->nthread>NCPU2){//We allow up to NCPU2, not NCPU
 		warning2("nthread=%d is larger than number of cpus, reset to %d\n",
-			arg->nthread, NCPU);
-		arg->nthread=NCPU;
+			arg->nthread, NCPU2);
+		arg->nthread=NCPU2;
 	    }
 	    break;
 	case 'c':
@@ -673,12 +673,15 @@ void psfcomp_iwvl(thread_t *thdata){
 	    }
 	    if(use1d==1){
 		cfft2partial(psf2, psfsize[iwvl], -1);
-		psf2s->p[iwvl]=cnew(psfsize[iwvl], psfsize[iwvl]);
-		ccpcorner2center(psf2s->p[iwvl], psf2);
 	    }else{
 		cfft2(psf2,-1);
+	    }
+	    if(psfsize[iwvl]==nembed){//just reference
 		cfftshift(psf2);
 		psf2s->p[iwvl]=cref(psf2);
+	    }else{//create a new array, smaller.
+		psf2s->p[iwvl]=cnew(psfsize[iwvl], psfsize[iwvl]);
+		ccpcorner2center(psf2s->p[iwvl], psf2);
 	    }
 	    if(fabs(psfnorm-1)>1.e-15) 
 		cscale(psf2s->p[iwvl], psfnorm);

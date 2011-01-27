@@ -94,8 +94,8 @@ void X(cellfree_do)(X(cell) *dc){
 	    long count=search_header_num(dc->header, "count");
 	    if(count>0){
 		info("count=%ld, scaling the data\n", count);
+		X(cellscale)(dc, 1./count);
 	    }
-	    X(cellscale)(dc, 1./count);
 	}
 	for(int ix=0; ix<dc->nx*dc->ny; ix++){
 	    X(free)(dc->p[ix]);

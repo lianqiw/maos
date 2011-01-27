@@ -401,6 +401,10 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
     const int nwvl=parms->maos.nwvl;
     long nstep;
     TIC;tic;
+    char fnlock[PATH_MAX];
+    snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
+    //Obtain exclusive lock before proceeding so that no two process will read concurrently.
+    int fd=lock_file(fnlock, 1, 0);
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
@@ -544,6 +548,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
     if(parms->skyc.verbose){
 	toc2("Reading PSF");
     }
+    close(fd);
     return nstep;
 }
 /**
