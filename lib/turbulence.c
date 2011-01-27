@@ -182,29 +182,26 @@ static map_t** create_screen(GENSCREEN_T *data,
 	snprintf(fnlock, PATH_MAX, "%s.lock", fnshm);
 	dcell *in=NULL;
 	while(!in){
-	    if(!exist(fnlock)){//when fnlock exists, the data in fnshm is not good.
+	    if(exist(fnlock)){
+		//when fnlock exists, the data in fnshm is not good.
+		info2("Will not read since %s exists\n", fnlock);
+	    }else{
 		info2("Trying to read %s\n", fnshm);
 		in=dcellread_mmap(fnshm);
-	    }else{
-		info2("Will not read since %s exists\n", fnlock);
 	    }
 	    if(!in){
 		info("Trying to create %s\n", fnshm);
-		int fd=lock_file(fnlock, 0);//non blocking.
-		if(fd>=0){//succeed to lock file. Another process is running.
+		int fd=lock_file(fnlock, 0, 0);//non blocking exclusive lock.
+		if(fd>=0){//succeed to lock file.
 		    cellarr *fc = cellarr_init(nlayer, "%s", fnshm); 
 		    funsave(fc, data);
 		    cellarr_close(fc);
 		    remove(fnlock);
 		    close(fd);
 		}else{//some other process is working on the data.
-		    //wait for the lock to release.
-		    fd=open(fnlock, O_RDONLY);
-		    //this lock will block.
-		    if(fd>-1){
-			flock(fd, LOCK_EX);
-			flock(fd, LOCK_UN);
-		    }
+		    //wait for the lock to release. The following lock will block.
+		    fd=lock_file(fnlock, 1, 0);
+		    close(fd);
 		    remove(fnlock);
 		}
 	    }

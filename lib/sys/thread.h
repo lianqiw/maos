@@ -118,17 +118,25 @@ struct thread_t{
 #define PDEINIT(A)
 #define PNEW(A)
 #endif
-
-#if defined(X86) || defined(X86_64)
-#define ASSIGN_INCREMENT(dest, src, step)		\
-    __asm__ __volatile__ ("lock; xaddl %0,%1"		\
-			  : "=r" (dest), "=m" (src)	\
-			  : "0" (step), "m" (src))
-#else
-#define ASSIGN_INCREMENT(dest, src, step)	\
-    dest = assign_increment(&src, step)
-#endif
 void thread_prep(thread_t *info, long start, long tot, long nthread, 
 		 thread_wrapfun fun, void *data);
-int assign_increment(int *src, int step);
+#if defined(X86) || defined(X86_64)
+int inline lockadd(int *src, int step){
+    int dest;
+    __asm__ __volatile__ ("lock; xaddl %0,%1"		\
+			  : "=r" (dest), "=m" (*src)	\
+			  : "0" (step), "m" (*src));
+    return dest;
+}
+#else
+int inline lockadd(int *src, int step){
+    static pthread_mutex_t atomic_lock=PTHREAD_MUTEX_INITIALIZER;
+    int result;
+    pthread_mutex_lock(&atomic_lock);
+    result=*src;
+    *src+=step;
+    pthread_mutex_unlock(&atomic_lock);
+    return result;
+}
+#endif
 #endif

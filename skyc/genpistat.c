@@ -28,11 +28,10 @@
 #include "genpistat.h"
 
 typedef struct GENPISTAT_S{
-    long ncase;
+    int ncase;
     long(*cases)[4];
-    long icase;
+    int icase;
 #if USE_PTHREAD > 0
-    pthread_mutex_t mutex_icase;
     pthread_mutex_t mutex_read;//don't let them read in the same time.
 #endif
     const PARMS_S *parms;
@@ -41,158 +40,159 @@ typedef struct GENPISTAT_S{
     dcell *unwrap;//matrix that does unwraping.
 }GENPISTAT_S;
 
-static void* calc_pistat(GENPISTAT_S *data){
+static void calc_pistat(GENPISTAT_S *data){
     const PARMS_S *parms=data->parms;
     POWFS_S *powfs=data->powfs;
     long icase=0;
- retry:
-    LOCK(data->mutex_icase);
-    icase=data->icase++;
-    UNLOCK(data->mutex_icase);
-    if(icase>=data->ncase) return NULL;
-    double thetax=data->ngsgrid*data->cases[icase][0];
-    double thetay=data->ngsgrid*data->cases[icase][1];
-    long ipowfs=data->cases[icase][2];
-    long ncomp=parms->maos.ncomp[ipowfs];
-    long seed=data->cases[icase][3];
-    long msa=parms->maos.msa[ipowfs];//in 1-d
-    const long phystart=parms->skyc.phystart;
-    char fnwvf[PATH_MAX],fnztilt[PATH_MAX], fnpistat[PATH_MAX], fngstat[PATH_MAX];
-    snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g.bin",
-	     dirstart,seed, msa, thetax, thetay);
-    snprintf(fnztilt,PATH_MAX,"%s/ztiltout/ztiltout_seed%ld_sa%ld_x%g_y%g.bin",
-	     dirstart,seed, msa, thetax, thetay);
-    snprintf(fnpistat,PATH_MAX,"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g.bin.gz",
-	     dirstart,seed, msa, thetax, thetay);
-    snprintf(fngstat,PATH_MAX,"%s/pistat/gstat_seed%ld_sa%ld_x%g_y%g.bin.gz",
-	     dirstart,seed, msa, thetax, thetay);
-    if(!exist(fnwvf)){
-	goto retry;
-    }
-    if(exist(fnpistat) && exist(fngstat)){
-	//warning("%s already exist, skip\n", fnpistat);
-    }else{
-	dmat *mapply=dnew(2,1);
-	char dirstat[PATH_MAX];
-	snprintf(dirstat, PATH_MAX, "%s/pistat", dirstart);
-	mymkdir(dirstat,0700);
-	TIC;tic;
-	if(!exist(fnztilt)){
-	    error("%s exist, but %s doesn't exist\n", fnwvf, fnztilt);
+    char fnlock[PATH_MAX];
+    snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
+    //Obtain exclusive lock before proceeding.
+    int fd=lock_file(fnlock, 1, 0);
+    while((icase=lockadd(&data->icase, 1))<data->ncase){
+	double thetax=data->ngsgrid*data->cases[icase][0];
+	double thetay=data->ngsgrid*data->cases[icase][1];
+	long ipowfs=data->cases[icase][2];
+	long ncomp=parms->maos.ncomp[ipowfs];
+	long seed=data->cases[icase][3];
+	long msa=parms->maos.msa[ipowfs];//in 1-d
+	const long phystart=parms->skyc.phystart;
+	char fnwvf[PATH_MAX],fnztilt[PATH_MAX], fnpistat[PATH_MAX], fngstat[PATH_MAX];
+	snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g.bin",
+		 dirstart,seed, msa, thetax, thetay);
+	snprintf(fnztilt,PATH_MAX,"%s/ztiltout/ztiltout_seed%ld_sa%ld_x%g_y%g.bin",
+		 dirstart,seed, msa, thetax, thetay);
+	snprintf(fnpistat,PATH_MAX,"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g.bin.gz",
+		 dirstart,seed, msa, thetax, thetay);
+	snprintf(fngstat,PATH_MAX,"%s/pistat/gstat_seed%ld_sa%ld_x%g_y%g.bin.gz",
+		 dirstart,seed, msa, thetax, thetay);
+	if(!exist(fnwvf)){
+	    continue;
 	}
-	file_t *fp_wvf=zfopen(fnwvf,"rb");
-	uint32_t magic;
-	magic=read_magic(fp_wvf,NULL);
-	if(!iscell(magic)){
-	    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
-	}
-	long nstep,junk;
-	zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
-	zfread(&junk,sizeof(uint64_t),1,fp_wvf);
-		
-	file_t *fp_ztilt=zfopen(fnztilt,"rb");
-	//zfread(&magic, sizeof(uint32_t),1,fp_ztilt);
-	magic=read_magic(fp_ztilt,NULL);
-	if(!iscell(magic)){
-	    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
-	} 
-	long nstep2;
-	zfread(&nstep2,sizeof(uint64_t),1,fp_ztilt);
-	zfread(&junk,sizeof(uint64_t),1,fp_ztilt);
-		
-	if(nstep!=nstep2){
-	    error("length of wvfout doesn't equal to length of ztiltout\n");
-	}
-	const int nsa=msa*msa;
-	const int nwvl=parms->maos.nwvl;
-	dcell *pistat=dcellnew(nsa, nwvl);//pixel intensity mean(I)
-	dmat *gstat=dnew(nsa*2, nstep);//original gradient at each time step.
-	cmat *wvf=cnew(ncomp,ncomp);
-	cmat *wvfc=cnew(ncomp/2,ncomp/2);
-	cfft2plan(wvf,-1);
-	PDCELL(pistat, ppistat);
-	PDMAT(gstat, pgstat);
-	cmat *otf=cnew(ncomp,ncomp);
-	cfft2plan(otf,1);
-	cfft2plan(otf,-1);
-	dmat *psf=NULL;
-	double nwvli=1./(nwvl);
-	for(long istep=0; istep<nstep; istep++){
-	    LOCK(data->mutex_read);
-	    ccell *wvfi=ccellreaddata(fp_wvf, 0);
-	    dmat *ztilti=dreaddata(fp_ztilt, 0);
-	    UNLOCK(data->mutex_read);
-	    PCCELL(wvfi,wvfout);
-	    if(istep>=phystart){
-		for(long iwvl=0; iwvl<nwvl; iwvl++){
-		    double wvl=parms->maos.wvl[iwvl];
-		    for(long isa=0; isa<nsa; isa++){
-			mapply->p[0]=-ztilti->p[isa];
-			mapply->p[1]=-ztilti->p[isa+nsa];
-			ccp(&wvfc, wvfout[iwvl][isa]);
-			ngsmod2wvf(wvfc, wvl, mapply,powfs->cloc[isa],
-				   powfs->fpc[isa], 
-				   thetax, thetay, parms);
-			cembed(wvf,wvfc,0,C_FULL);
-			cfft2(wvf,-1);
-			cabs22d(&ppistat[iwvl][isa],1, wvf, 1);
-		    }
-		}
-		for(long iwvl=0; iwvl<nwvl; iwvl++){//don't apply ztilt.
-		    for(long isa=0; isa<nsa; isa++){
-			double grad[2]={0,0};
-			ccp(&wvfc, wvfout[iwvl][isa]);
-			cembed(wvf,wvfc,0,C_FULL);
-			cfft2(wvf,-1);
-			dzero(psf);
-			cabs22d(&psf, 1, wvf, 1);
-			//Compute gradients.
-			dfftshift(psf);//shift peak to center.
-			double pmax=dmax(psf);
-			dcog(grad,psf,0.5, 0.5, 0.1*pmax, 0.1*pmax);
-			pgstat[istep][isa]+=grad[0]*parms->skyc.pixtheta[ipowfs]*nwvli;
-			pgstat[istep][isa+nsa]+=grad[1]*parms->skyc.pixtheta[ipowfs]*nwvli;
-			dfree(psf);
-		    }
-		}
+	if(exist(fnpistat) && exist(fngstat)){
+	    //warning("%s already exist, skip\n", fnpistat);
+	}else{
+	    dmat *mapply=dnew(2,1);
+	    char dirstat[PATH_MAX];
+	    snprintf(dirstat, PATH_MAX, "%s/pistat", dirstart);
+	    mymkdir(dirstat,0700);
+	    TIC;tic;
+	    if(!exist(fnztilt)){
+		error("%s exist, but %s doesn't exist\n", fnwvf, fnztilt);
 	    }
-	    ccellfree(wvfi);
-	    dfree(ztilti);  
-	}//for istep
-	zfeof(fp_wvf);
-	zfeof(fp_ztilt);
-	zfclose(fp_ztilt);
-	zfclose(fp_wvf);
-	cfree(wvf);
-	cfree(wvfc);
-	double pgrad[2];
+	    file_t *fp_wvf=zfopen(fnwvf,"rb");
+	    uint32_t magic;
+	    magic=read_magic(fp_wvf,NULL);
+	    if(!iscell(magic)){
+		error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
+	    }
+	    long nstep,junk;
+	    zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
+	    zfread(&junk,sizeof(uint64_t),1,fp_wvf);
+		
+	    file_t *fp_ztilt=zfopen(fnztilt,"rb");
+	    //zfread(&magic, sizeof(uint32_t),1,fp_ztilt);
+	    magic=read_magic(fp_ztilt,NULL);
+	    if(!iscell(magic)){
+		error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
+	    } 
+	    long nstep2;
+	    zfread(&nstep2,sizeof(uint64_t),1,fp_ztilt);
+	    zfread(&junk,sizeof(uint64_t),1,fp_ztilt);
+		
+	    if(nstep!=nstep2){
+		error("length of wvfout doesn't equal to length of ztiltout\n");
+	    }
+	    const int nsa=msa*msa;
+	    const int nwvl=parms->maos.nwvl;
+	    dcell *pistat=dcellnew(nsa, nwvl);//pixel intensity mean(I)
+	    dmat *gstat=dnew(nsa*2, nstep);//original gradient at each time step.
+	    cmat *wvf=cnew(ncomp,ncomp);
+	    cmat *wvfc=cnew(ncomp/2,ncomp/2);
+	    cfft2plan(wvf,-1);
+	    PDCELL(pistat, ppistat);
+	    PDMAT(gstat, pgstat);
+	    cmat *otf=cnew(ncomp,ncomp);
+	    cfft2plan(otf,1);
+	    cfft2plan(otf,-1);
+	    dmat *psf=NULL;
+	    double nwvli=1./(nwvl);
+	    for(long istep=0; istep<nstep; istep++){
+		LOCK(data->mutex_read);
+		ccell *wvfi=ccellreaddata(fp_wvf, 0);
+		dmat *ztilti=dreaddata(fp_ztilt, 0);
+		UNLOCK(data->mutex_read);
+		PCCELL(wvfi,wvfout);
+		if(istep>=phystart){
+		    for(long iwvl=0; iwvl<nwvl; iwvl++){
+			double wvl=parms->maos.wvl[iwvl];
+			for(long isa=0; isa<nsa; isa++){
+			    mapply->p[0]=-ztilti->p[isa];
+			    mapply->p[1]=-ztilti->p[isa+nsa];
+			    ccp(&wvfc, wvfout[iwvl][isa]);
+			    ngsmod2wvf(wvfc, wvl, mapply,powfs->cloc[isa],
+				       powfs->fpc[isa], 
+				       thetax, thetay, parms);
+			    cembed(wvf,wvfc,0,C_FULL);
+			    cfft2(wvf,-1);
+			    cabs22d(&ppistat[iwvl][isa],1, wvf, 1);
+			}
+		    }
+		    for(long iwvl=0; iwvl<nwvl; iwvl++){//don't apply ztilt.
+			for(long isa=0; isa<nsa; isa++){
+			    double grad[2]={0,0};
+			    ccp(&wvfc, wvfout[iwvl][isa]);
+			    cembed(wvf,wvfc,0,C_FULL);
+			    cfft2(wvf,-1);
+			    dzero(psf);
+			    cabs22d(&psf, 1, wvf, 1);
+			    //Compute gradients.
+			    dfftshift(psf);//shift peak to center.
+			    double pmax=dmax(psf);
+			    dcog(grad,psf,0.5, 0.5, 0.1*pmax, 0.1*pmax);
+			    pgstat[istep][isa]+=grad[0]*parms->skyc.pixtheta[ipowfs]*nwvli;
+			    pgstat[istep][isa+nsa]+=grad[1]*parms->skyc.pixtheta[ipowfs]*nwvli;
+			    dfree(psf);
+			}
+		    }
+		}
+		ccellfree(wvfi);
+		dfree(ztilti);  
+	    }//for istep
+	    zfeof(fp_wvf);
+	    zfeof(fp_ztilt);
+	    zfclose(fp_ztilt);
+	    zfclose(fp_wvf);
+	    cfree(wvf);
+	    cfree(wvfc);
+	    double pgrad[2];
 
-	//Shift PSF so that the images are centered on FFT center.
-	for(int i=0; i<nwvl*nsa; i++){
-	    psf=pistat->p[i];
-	    dfftshift(psf);//shift peak to center.
-	    double pmax=dmax(psf);
-	    dcog(pgrad,psf,0.5,0.5,0.1*pmax,0.1*pmax);
-	    dfftshift(psf); //Shift peak to corner.
-	    ccpd(&otf, psf);
-	    cfft2(otf,-1);
-	    ctilt(otf,-pgrad[0],-pgrad[1],0);
-	    cifft2(otf,1);
-	    creal2d(&psf,0,otf,1);
-	}
-	/*
-	  Saved pistat should have peak on the corner
-	 */
-	cfree(otf);
-	dcellscale(pistat, 1./(nstep-phystart));
-	dcellwrite(pistat, "%s",fnpistat);
-	dwrite(gstat, "%s",fngstat);
-	dcellfree(pistat);
-	dfree(gstat);
-	dfree(mapply);
-	toc2("Processing %s:", fnwvf);
-    }//if exist
-    goto retry;
+	    //Shift PSF so that the images are centered on FFT center.
+	    for(int i=0; i<nwvl*nsa; i++){
+		psf=pistat->p[i];
+		dfftshift(psf);//shift peak to center.
+		double pmax=dmax(psf);
+		dcog(pgrad,psf,0.5,0.5,0.1*pmax,0.1*pmax);
+		dfftshift(psf); //Shift peak to corner.
+		ccpd(&otf, psf);
+		cfft2(otf,-1);
+		ctilt(otf,-pgrad[0],-pgrad[1],0);
+		cifft2(otf,1);
+		creal2d(&psf,0,otf,1);
+	    }
+	    /*
+	      Saved pistat should have peak on the corner
+	    */
+	    cfree(otf);
+	    dcellscale(pistat, 1./(nstep-phystart));
+	    dcellwrite(pistat, "%s",fnpistat);
+	    dwrite(gstat, "%s",fngstat);
+	    dcellfree(pistat);
+	    dfree(gstat);
+	    dfree(mapply);
+	    toc2("Processing %s:", fnwvf);
+	}//if exist
+    }
+    close(fd);
 }
 
 static dmat* gen_unwrap(long nx, long ny){
@@ -288,103 +288,6 @@ static dmat* gen_unwrap(long nx, long ny){
     return out;
 }
 
-static void do_unwrap(cmat *phi, cmat *wvf, dmat *unwrap, dmat *diff, dmat *phirecon){
-    /*
-      Do the actual unwrapping. We do not check the
-      dimension.s The Caller must make sure the matrices
-      agree
-     */
-    int npsf=wvf->nx;
-    PCMAT(wvf, pwvf);
-    PDMAT(diff,pdiff);
-    //TIC;tic;
-    for(int ix=1; ix<npsf; ix++){
-	pdiff[0][ix]=carg(pwvf[0][ix]*conj(pwvf[0][ix-1]));
-	pdiff[ix][npsf]=carg(pwvf[ix][0]*conj(pwvf[ix-1][0]));
-	for(int iy=1; iy<npsf; iy++){
-	    pdiff[iy][ix]=carg(pwvf[iy][ix]*conj(pwvf[iy][ix-1]));
-	    pdiff[iy][ix+npsf]=carg(pwvf[iy][ix]*conj(pwvf[iy-1][ix]));
-	}
-    }
-    //toc("assemble");tic;
-    dzero(phirecon);
-    //dwrite(diff,"diff");
-    dmulvec(phirecon->p, unwrap, diff->p, 1);
-    //toc("mul");tic;
-    //assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx);
-    for(int ix=0; ix<npsf*npsf; ix++){
-	phi->p[ix]=phirecon->p[ix]*I+log(cabs(wvf->p[ix]));//real part saves amplitude.
-    }
-    //toc("assign");
-}
-
-static void *convert_wvf(GENPISTAT_S *data){
-    const PARMS_S *parms=data->parms;
-    //POWFS_S *powfs=data->powfs;
-    long icase=0;
-    return NULL;
- retry:
-    LOCK(data->mutex_icase);
-    icase=data->icase++;
-    UNLOCK(data->mutex_icase);
-    if(icase>=data->ncase) return NULL;
-    TIC;tic;
-    double thetax=data->ngsgrid*data->cases[icase][0];
-    double thetay=data->ngsgrid*data->cases[icase][1];
-    long ipowfs=data->cases[icase][2];
-    long ncomp=parms->maos.ncomp[ipowfs];
-    long seed=data->cases[icase][3];
-    long msa=parms->maos.msa[ipowfs];//in 1-d
-    char fnwvf[PATH_MAX],fnphase[PATH_MAX];
-    mymkdir("%s/phase",dirstart);
-    snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g.bin",
-	     dirstart,seed, msa, thetax, thetay);
-    snprintf(fnphase,PATH_MAX,"%s/phase/phase_seed%ld_sa%ld_x%g_y%g.bin",
-	     dirstart,seed, msa, thetax, thetay);
-    if(!exist(fnwvf) || exist(fnphase)){
-	goto retry;
-    }
-    info("processing %s\n", fnwvf);
-    file_t *fp_wvf=zfopen(fnwvf,"rb");
-    uint32_t magic;
-    //zfread(&magic, sizeof(uint32_t),1,fp_wvf);
-    magic=read_magic(fp_wvf, NULL);
-    if(!iscell(magic)){
-	error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
-    }
-    long nstep,junk;
-    zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
-    zfread(&junk,sizeof(uint64_t),1,fp_wvf);
-    cellarr *phase=cellarr_init(nstep,"%s",fnphase);
-    const int nsa=msa*msa;
-    const int nwvl=parms->maos.nwvl;
-    ccell *phi=ccellnew(nsa,nwvl);
-    const long npsf=ncomp/2;
-    dmat *phirecon=dnew(npsf,npsf);
-    dmat *diff=dnew(npsf*2,npsf);
-    for(long ic=0; ic<nsa*nwvl; ic++){
-	phi->p[ic]=cnew(npsf,npsf);
-    }
-    for(long istep=0; istep<nstep; istep++){
-	LOCK(data->mutex_read);
-	ccell *wvfi=ccellreaddata(fp_wvf, 0);
-	UNLOCK(data->mutex_read);
-	if(wvfi){
-	    for(long ic=0; ic<nsa*nwvl; ic++){
-		do_unwrap(phi->p[ic], wvfi->p[ic], data->unwrap->p[ipowfs], diff, phirecon);
-	    }
-	}
-	cellarr_ccell(phase,phi);
-	ccellfree(wvfi);
-    }
-    ccellfree(phi);
-    dfree(diff);
-    dfree(phirecon);
-    toc2("Processing %s:", fnphase);
-    //  exit(0);
-    //(void)phase;(void)ncomp;(void)powfs;
-    goto retry;
-}
 void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     double patfov=parms->skyc.patfov;
     double ngsgrid=parms->maos.ngsgrid;
@@ -396,7 +299,6 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     data->ncase=parms->maos.nseed*(2*ng+1)*(2*ng+1)*parms->maos.npowfs;
     data->cases=calloc(4*data->ncase,sizeof(long));
     data->ngsgrid=ngsgrid;
-    PINIT(data->mutex_icase);
     long count=0;
     for(int iseed=0; iseed<parms->maos.nseed; iseed++){
 	int seed=parms->maos.seeds[iseed];//loop over seed
@@ -411,7 +313,6 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 		    data->cases[count][3]=seed;
 		    count++;
 		    if(count>data->ncase){
-			warning("Initial guess of %ld is too low: %ld\n",data->ncase,count);
 			data->ncase=data->ncase*2;
 			data->cases=realloc(data->cases,sizeof(long)*data->ncase*4);
 		    }
@@ -425,40 +326,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     data->cases=realloc(data->cases, sizeof(long)*4*data->ncase);
     CALL(calc_pistat, data, parms->skyc.nthread);
     info2("done\n");
-    //convert wvf of a+bi to log(a+bi) for interpolation.
-    /*
-    data->unwrap=dcellnew(parms->maos.npowfs,1);
-    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
-	long ncomp=parms->maos.ncomp[ipowfs];
-	data->unwrap->p[ipowfs]=gen_unwrap(ncomp/2,ncomp/2);
-	}*/
-    /*  
-	//test phase unwrap.
-	{
-	rand_t rstat;
-	seed_rand(&rstat,1);
-	double wt=1;
-	const int npsf=16;
-	double pi2l=M_PI/2.2e-6;
-	MAP_S **screen=vonkarman_screen(&rstat, 16, 16, 1/2., .2, 30, &wt, 1, 1);
-	cmat *wvf=cnew(16,16);
-	dmat *opd=dnew(16,16);
-	for(int ix=0; ix<16*16; ix++){
-	    opd->p[ix]=screen[0]->p[ix]*pi2l*2.;
-	    wvf->p[ix]=cexp(opd->p[ix]*I);
-	}
-	cmat *phi=cnew(16,16);
-	dmat *diff=dnew(npsf*2,npsf);
-	dmat *phirecon=dnew(npsf,npsf);
-	do_unwrap(phi,wvf,data->unwrap->p[0],diff,phirecon);
-	cwrite(wvf,"wvf");
-	cwrite(phi,"phi");
-	dwrite(opd,"opd");
-	//	exit(0);
-	}
-    data->icase=0;
-    CALL(convert_wvf, data, parms->skyc.nthread);
-    */
+  
     dcellfree(data->unwrap);
     free(data->cases);
     free(data);

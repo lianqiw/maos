@@ -73,6 +73,7 @@ struct file_t{
     pthread_mutex_t lock;
 #endif
     char *fn;
+    int fd;//For locking.
 #if IO_TIMMING == 1
     struct timeval tv1;
 #endif
@@ -175,14 +176,33 @@ file_t* zfopen(const char *fn, char *mod){
 #if IO_TIMMING == 1
     gettimeofday(&(fp->tv1), NULL);
 #endif
+    /*Now open the file to get a fd number that we can use to lock on the
+      file.*/
+    switch(mod[0]){
+    case 'r'://read only
+	fp->fd=open(fn2, O_RDONLY);
+	break;
+    case 'w'://write
+    case 'a':
+	fp->fd=open(fn2, O_RDWR | O_CREAT, 0600);
+	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
+	    error("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	}
+	break;
+    default:
+	error("Unknown mod=%s\n", mod);
+    }
+    if(fp->fd==-1){
+	error("Unable to open file %s\n", fn2);
+    }
     if(check_suffix(fn2, ".gz")){
 	fp->isgzip=1;
-	if(!(fp->p=gzopen(fp->fn,mod))){
+	if(!(fp->p=gzdopen(fp->fd,mod))){
 	    error("Error gzdopen for %s\n",fn2);
 	}
     }else{ 
 	fp->isgzip=0;
-	if(!(fp->p=fopen(fp->fn,mod))){
+	if(!(fp->p=fdopen(fp->fd,mod))){
 	    error("Error fdopen for %s\n",fn2);
 	}
     }

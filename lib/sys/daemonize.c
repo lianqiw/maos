@@ -35,10 +35,15 @@
 #include "common.h"
 #include "misc.h"
 #include "daemonize.h"
-int lock_file(const char *fnlock, long version){
-    /**Open and maintain lock of file fn.
-       return negative number if failed.
-    */
+
+/**
+   Open and maintain lock of file fn.
+   return negative number if failed.
+*/
+int lock_file(const char *fnlock, /**<The filename to lock on*/
+	      long block,         /**<block on weighting. set to 0 for no waiting.*/
+	      long version        /**<The version of the software that locks the file, primarily for managing scheduler*/
+	      ){
     int fd;
     int count=0;
  retry:
@@ -50,7 +55,13 @@ int lock_file(const char *fnlock, long version){
     fd=open(fnlock,O_RDWR|O_CREAT,0644);
     //cloexec(fd);//do not do this. need to carry over to forked routines
     if(fd>=0){
-	if(flock(fd,LOCK_EX|LOCK_NB)){//lock faild.
+	int op=LOCK_EX;
+	if(!block) op |= LOCK_NB;
+	if(flock(fd, op)){//lock faild.
+	    if(block){//In block mode, we should never fail.
+		perror("flock");
+		error("Lock failed\n");
+	    }
 	    long pid=0;
 	    FILE *fp=fdopen(fd,"r");
 	    if(fscanf(fp,"%ld",&pid)==EOF){
@@ -129,7 +140,7 @@ void single_instance_daemonize(const char *lockfolder_in,
     free(fnlog0);
     free(fnlock0);
 
-    fd=lock_file(fnlock,version);
+    fd=lock_file(fnlock,0,version);
     if(fd<0){//lock failed. daemon already running. no need to start the daemon.
 	if(daemon_func){
 	    return;
