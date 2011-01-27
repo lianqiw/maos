@@ -450,16 +450,15 @@ X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
    data is not 8-byte aligned. The file is truncated if already exists. We only
    add headers to individual dmat/cmat in the file, not in the cell.
  */
-X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *headers[],
+X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *header1, char **header2,
 			 const char *format, ...){
     if(!nx || !ny) return NULL;
     format2fn;
-    const char *headerc="ready=0";
     int fd=mmap_open(fn, 1);
     long metasize=3*8;
-    long msize=metasize+bytes_header(headerc);
+    long msize=metasize+bytes_header(header1);
     for(long ix=0; ix<nx*ny; ix++){
-	msize+=metasize+nnx[ix]*nny[ix]*sizeof(T)+bytes_header(headers?headers[ix]:NULL);
+	msize+=metasize+nnx[ix]*nny[ix]*sizeof(T)+bytes_header(header2?header2[ix]:NULL);
     }
     if(ftruncate(fd, msize)){
 	error("Error truncating file\n");
@@ -471,12 +470,12 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *headers[]
     char *map0=map;
     //memset(map, 0, msize);
     char *header0;
-    mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, headerc);
+    mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header1);
     X(cell) *out=X(cellnew)(nx,ny);
     out->mmap=mmap_new(fd, map0, msize);
     out->header=header0;
     for(long ix=0; ix<nx*ny; ix++){
-	mmap_header_rw(&map, &header0, M_T, nnx[ix], nny[ix], headers?headers[ix]:NULL);
+	mmap_header_rw(&map, &header0, M_T, nnx[ix], nny[ix], header2?header2[ix]:NULL);
 	out->p[ix]=X(new_data)(nnx[ix], nny[ix], (T*)map);
 	map+=nnx[ix]*nny[ix]*sizeof(T);
 	if(out->p[ix]) {
@@ -498,8 +497,7 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, char *header,
     int fd=mmap_open(fn, 1);
     long metasize=3*8;
     long msize=metasize;
-    const char *headerc="ready=0";
-    msize=metasize+bytes_header(headerc)+nx*ny*(metasize+mx*my*sizeof(T)+bytes_header(header));
+    msize=metasize+bytes_header(header)+nx*ny*(metasize+mx*my*sizeof(T));
     if(ftruncate(fd, msize)){
 	error("Error truncating file\n");
     }
@@ -511,11 +509,11 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, char *header,
     //memset(map, 0, msize);
     X(cell) *out=X(cellnew)(nx,ny);
     char *header0;
-    mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, headerc);
+    mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header);
     out->mmap=mmap_new(fd, map0, msize);
     out->header=header0;
     for(long ix=0; ix<nx*ny; ix++){
-	mmap_header_rw(&map, &header0, M_T, mx, my, header);
+	mmap_header_rw(&map, &header0, M_T, mx, my, NULL);
 	out->p[ix]=X(new_data)(mx, my, (T*)map);
 	map+=mx*my*sizeof(T);
 	if(out->p[ix]){

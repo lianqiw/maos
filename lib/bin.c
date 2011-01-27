@@ -446,6 +446,7 @@ void write_timestamp(file_t *fp){
    Search and return the value correspond to key. NULL if not found. Do not free the
    returned pointer.  */
 char *search_header(const char *header, const char *key){
+    if(!header) return NULL;
     char *val=strstr(header, key);
     if(val){
 	char *equal=strchr(val,'=');

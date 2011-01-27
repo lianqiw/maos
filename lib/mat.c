@@ -146,6 +146,13 @@ void X(free_do)(X(mat) *A, int keepdata){
 #ifdef USE_COMPLEX
 	    cfree_plan(A);
 #endif
+	    if(A->header){
+		long count=search_header_num(A->header, "count");
+		if(count>0){
+		    info("count=%ld, scaling the data\n", count);
+		}
+		X(scale)(A, 1./count);
+	    }
 	    if(!keepdata && A->p){
 		if(A->mmap){//data is mmap'ed.
 		    mmap_unref(A->mmap);
@@ -510,8 +517,14 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	}
 	X(mat) *B=*B0;
 	assert(A->nx==B->nx && A->ny == B->ny);
-	for(int i=0; i<A->nx*A->ny; i++){
-	    B->p[i]=B->p[i]*bc+A->p[i]*ac;
+	if(fabs(ac)>0){
+	    for(int i=0; i<A->nx*A->ny; i++){
+		B->p[i]=B->p[i]*bc+A->p[i]*ac;
+	    }
+	}else{//just assign
+	    for(int i=0; i<A->nx*A->ny; i++){
+		B->p[i]=A->p[i]*ac;
+	    }
 	}
     }
 }

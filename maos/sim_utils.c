@@ -566,7 +566,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	warning("Another MAOS is already running. Skip seed %d\n", parms->sim.seeds[iseed]);
 	return NULL;
     }
-   
+    const int nsim=parms->sim.end;
+    const int nevl=parms->evl.nevl;
+    const int nwvl=parms->evl.nwvl;
+    const int nmod=parms->evl.nmod;
+ 
     SIM_T *simu=calloc(1, sizeof(SIM_T));
     simu->save=calloc(1, sizeof(SIM_SAVE_T));
     PINIT(simu->mutex_plot);
@@ -638,15 +642,30 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
     simu->uptint=calloc(parms->sim.napupt, sizeof(dcell*));
     if(parms->evl.psfmean){
-	simu->evlpsfmean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
-	simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
-	if(parms->evl.tomo){
-	    simu->evlpsftomomean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
+	long nnx[nevl][nwvl];
+	long nnx2[nwvl];
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    for(int ievl=0; ievl<nevl; ievl++){
+		nnx[ievl][iwvl]=parms->evl.psfsize[iwvl];
+	    }
+	    nnx2[iwvl]=parms->evl.psfsize[iwvl];
 	}
+	char header[100];
+	long count = parms->sim.end-parms->evl.psfisim;
+	snprintf(header, 100, "count=%15ld", count);
+	simu->evlpsfmean=dcellnew_mmap(nwvl, nevl, (long*)nnx, (long*)nnx, header, NULL,NULL, "evlpsfcl_%d.bin",seed);
+	if(parms->evl.tomo){
+	    simu->evlpsftomomean=dcellnew_mmap(nwvl, nevl, (long*)nnx, (long*)nnx, header, NULL,NULL, "evlpsftomo_%d.bin",seed);
+	}
+	count=parms->sim.end-parms->sim.start;
+	if(parms->evl.psfol==2){
+	    count*=parms->evl.npsf;
+	}
+	snprintf(header, 100, "count=%15ld", count);
+	simu->evlpsfolmean=dcellnew_mmap(nwvl, 1, nnx2, nnx2, header, NULL,NULL, "evlpsfol_%d.bin",seed);
     }
     simu->opdevl=dcellnew(parms->evl.nevl,1);
     if(parms->evl.psfhist){
-	const int nevl=parms->evl.nevl;
 	simu->evlpsfhist=calloc(nevl, sizeof(cellarr*));
 	for(int ievl=0; ievl<nevl; ievl++){
 	    if(!parms->evl.psf[ievl]) continue;
@@ -668,7 +687,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
 			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	dfree(iopdevl);
-	int nwvl=parms->evl.nwvl;
 	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
@@ -912,10 +930,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->dtlo=simu->dtrat_lo*simu->dt;
     simu->dthi=simu->dtrat_hi*simu->dt;
     //evaluation.
-    int nsim=parms->sim.end;
-    const int nevl=parms->evl.nevl;
-    const int nmod=parms->evl.nmod;
-    
+   
     {//USE MMAP for data that need to save at every time step
 	long nnx[nevl];
 	long nny[nevl];
@@ -923,13 +938,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[ievl]=nmod;
 	    nny[ievl]=nsim;
 	}
-	simu->olep=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resolep_%d.bin",seed);
-	simu->clep=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resclep_%d.bin",seed);
-	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resolmp_%d.bin",seed);
-	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resclmp_%d.bin",seed);
+	simu->olep=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolep_%d.bin",seed);
+	simu->clep=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclep_%d.bin",seed);
+	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolmp_%d.bin",seed);
+	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclmp_%d.bin",seed);
 	if(parms->evl.tomo){
-	    simu->cleptomo=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Rescleptomo_%d.bin",seed); 
-	    simu->clmptomo=dcellnew_mmap(nevl,1,nnx,nny,NULL,"Resclmptomo_%d.bin",seed);  
+	    simu->cleptomo=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Rescleptomo_%d.bin",seed); 
+	    simu->clmptomo=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclmptomo_%d.bin",seed);  
 	}
 	if(parms->tomo.split && parms->ndm<=2){
 	    long nnx_split[nevl];
@@ -938,9 +953,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		nnx_3[ievl]=3;
 		nnx_split[ievl]=recon->ngsmod->nmod;
 	    }
-	    simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, NULL,"Resclemp_%d.bin",seed);
+	    simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, NULL,NULL,"Resclemp_%d.bin",seed);
 	    simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescleNGSm_%d.bin",seed);
-	    simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,"RescleNGSmp_%d.bin",seed);
+	    simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,NULL,"RescleNGSmp_%d.bin",seed);
 	    if(parms->tomo.split==1 && !parms->sim.fuseint){
 		simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescorrNGSm_%d.bin",seed);
 	    }
@@ -971,7 +986,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[3]=0; 
 	    nny[3]=0;
 	}
-	simu->res     = dcellnew_mmap(4,1,nnx,nny,NULL,"Res_%d.bin",seed);
+	simu->res     = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
 	simu->ole     = dref(simu->res->p[0]);
 	simu->cletomo = dref(simu->res->p[1]);
 	simu->cle     = dref(simu->res->p[2]);
@@ -990,8 +1005,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		nny[iwfs]=0;
 	    }
 	}
-	simu->upterrs = dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL,"Resupterr_%d.bin", seed);
-	simu->uptcmds = dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL,"Resuptcmd_%d.bin", seed);
+	simu->upterrs = dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL,NULL,"Resupterr_%d.bin", seed);
+	simu->uptcmds = dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL,NULL,"Resuptcmd_%d.bin", seed);
 
     }
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -1357,10 +1372,12 @@ void save_simu(const SIM_T *simu){
     const int isim=simu->isim;
     const int seed=simu->seed;
     if((isim % 50 ==0) || isim+1==parms->sim.end){
-	double scale;
+	/*
 	if(parms->evl.psfmean && simu->isim>=parms->evl.psfisim){
+	double scale;
 	    if(parms->evl.tomo!=2){
 		scale=1./(double)(simu->isim-parms->evl.psfisim+1);
+		dcellscale(simu->evlpsfmean, scal
 		if(simu->evlpsfmean){
 		    dcellswrite(simu->evlpsfmean, scale,
 				"evlpsfcl_%d.bin",seed);
@@ -1380,7 +1397,7 @@ void save_simu(const SIM_T *simu){
 			    "evlpsftomo_%d.bin",seed);
 	    }
 	}
-	
+	*/
 	dcell *sanea=NULL;
 	dcellcp(&sanea, simu->sanea_sim);
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){

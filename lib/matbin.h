@@ -39,8 +39,8 @@ Y(spcell) *Y(spcellread)(const char *format,...) CHECK_ARG(1);\
 void X(cellswrite)(X(cell) *A, double scale, const char *format, ...) CHECK_ARG(3); \
 void X(swrite)(X(mat) *A, double scale, const char *format, ...) CHECK_ARG(3);\
 X(mat) *X(new_mmap)(long nx, long ny, char *header, const char *format,...) CHECK_ARG(4); \
-X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx,long *nny, char *headers[], const char *format,...) CHECK_ARG(6); \
-X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my, char *header, const char *format, ...) CHECK_ARG(6);\
+X(cell)* X(cellnew_mmap)(long nx,long ny,long *nnx,long *nny, char *header1,char**header2,const char *format,...) CHECK_ARG(7); \
+X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my, char *header, const char *format,...) CHECK_ARG(6); \
 X(mat*) X(read_mmap)(const char *format, ...);\
 X(cell*) X(cellread_mmap)(const char *format, ...);
 #endif

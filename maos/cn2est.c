@@ -226,7 +226,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     }//iwfspair
     free(pmask2);
     //stores estimated weight of layers during simulation and output to file finally.
-    cn2est->wt=dcellnew_mmap(nwfspair, 1, nhtsx, nhtsy, NULL,"Res_Cn2_wt");
+    cn2est->wt=dcellnew_mmap(nwfspair, 1, nhtsx, nhtsy, NULL, NULL, "Res_Cn2_wt");
     //stores estimated r0 during simulation
     cn2est->r0=dnew_mmap(nwfspair,1,NULL,"Res_Cn2_r0");
     dcellwrite(cn2est->ht, "Res_Cn2_ht");

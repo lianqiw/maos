@@ -263,7 +263,7 @@ void filter_cl(SIM_T *simu){
 		    nny[idm]=simu->dmint[0]->p[idm]->nx*simu->dmint[0]->p[idm]->ny;
 		}
 		simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, 
-					   NULL,"dmhist_%d.bin",simu->seed);
+					   NULL, NULL,"dmhist_%d.bin",simu->seed);
 	    }
 	    for(int idm=0; idm<parms->ndm; idm++){
 		dhistfill(&simu->dmhist->p[idm], simu->dmint[0]->p[idm],0,
