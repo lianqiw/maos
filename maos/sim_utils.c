@@ -1359,25 +1359,21 @@ void save_simu(const SIM_T *simu){
 	if(parms->evl.psfmean && simu->isim>=parms->evl.psfisim){
 	    double scale;
 	    if(parms->evl.tomo!=2){
-		scale=1./(double)(simu->isim-parms->evl.psfisim+1);
-		dcellscale(simu->evlpsfmean, scale);
+		scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 		if(simu->evlpsfmean){
-		    dcellswrite(simu->evlpsfmean, scale,
-				"evlpsfcl_%d.bin",seed);
+		    dcellswrite(simu->evlpsfmean, scale, "evlpsfcl_%d.bin",seed);
 		}
-		scale=1./(double)(simu->isim-parms->sim.start+1);
+		scale=1./(double)(simu->isim+1-parms->sim.start);
 		if(parms->evl.psfol==2){
 		    scale=scale/parms->evl.npsf;
 		}
 		if(parms->evl.psfol && simu->evlpsfolmean){
-		    dcellswrite(simu->evlpsfolmean,scale,
-				"evlpsfol_%d.bin",seed);
+		    dcellswrite(simu->evlpsfolmean,scale, "evlpsfol_%d.bin",seed);
 		}
 	    }
 	    if(parms->evl.tomo && simu->evlpsfmean){
-		scale=1./(double)(simu->isim-parms->evl.psfisim+1);
-		dcellswrite(simu->evlpsftomomean, scale,
-			    "evlpsftomo_%d.bin",seed);
+		scale=1./(double)(simu->isim+1-parms->evl.psfisim);
+		dcellswrite(simu->evlpsftomomean, scale, "evlpsftomo_%d.bin",seed);
 	    }
 	}
 	

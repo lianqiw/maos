@@ -167,7 +167,9 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
     dcellfree(dc);
 }
 /**
- * Generates multiple screens from spectrum.
+ * Generates multiple screens from spectrum. Note that if data->share=1, the
+ * atmosphere will be different from data->share=0 due to different algorithms
+ * used.
  */
 static map_t** create_screen(GENSCREEN_T *data, 
 			     void (*funsave)(cellarr *fc, GENSCREEN_T *data),

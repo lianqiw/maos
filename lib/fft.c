@@ -84,13 +84,18 @@ static void save_wisdom(){
 #endif
 
 /**
-   executed before main().
+   executed before main(). FFTW website says "We should also mention one other
+   restriction: if you save wisdom from a program using the multi-threaded FFTW,
+   that wisdom cannot be used by a program using only the single-threaded FFTW
+   (i.e. not calling fftw_init_threads)." So here we use different names.
  */
 static __attribute__((constructor))void init(){
 #if USE_FFTW_THREADS == 1
     fftw_init_threads();
+    sprintf(fnwisdom, "%s/.aos/fftw_wisdom_thread",HOME);
+#else
+    sprintf(fnwisdom, "%s/.aos/fftw_wisdom_serial",HOME);
 #endif
-    sprintf(fnwisdom, "%s/.aos/fftw_wisdom",HOME);
     load_wisdom();
 }
 /**
