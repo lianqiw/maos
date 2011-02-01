@@ -237,7 +237,91 @@ void print_backtrace(int sig){
 	raise(SIGABRT);
 }
 #endif
-char* scheduler_get_drawdaemon(int pid){
+/**
+   Fork and launch drawdaemon.
+*/
+int scheduler_launch_drawdaemon(char *fifo){
+    int method=0;
+#if defined(__APPLE__) && 0
+    char cmdopen[1024];
+    //Run the exe directly can pass the argumnents. --args is a new feature in 10.6 to do the samething with open
+    snprintf(cmdopen, 1024, "%s/scripts/drawdaemon.app/Contents/MacOS/drawdaemon %s &", SRCDIR, fifo);
+    if(system(cmdopen)){
+	method=0;//failed
+	warning("%s failed\n", cmdopen);
+    }else{//succeed
+	info("%s succeeded\n", cmdopen);
+	method=3;
+    }
+    if(method==0){
+	snprintf(cmdopen, 1024, "open -n -a drawdaemon.app --args %s", fifo);
+	if(system(cmdopen)){
+	    warning("%s failed\n", cmdopen);
+	    method=0;//failed
+	}else{
+	    info("%s succeeded\n", cmdopen);
+	    method=3;
+	}
+    }
+#endif
+    char *fn=stradd(BUILDDIR, "/bin/drawdaemon",NULL);
+    if(method==0){
+	info2("Looking for drawdaemon in %s\n",fn);
+	if(exist(fn)){
+	    info2("Found drawdaemon in %s, run it.\n",fn);
+	    method=1;
+	}else{
+	    warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
+	    int found=!system("which drawdaemon");
+	    if(found){
+		method=2;
+	    }else{
+		warning3("Unable to find drawdaemon\n");
+	    }
+	}
+    }
+    int ans;
+    if(method==0){
+	ans=1;//failed
+    }else{
+	ans=0;//succeed
+    }
+    if(method==3){
+	return ans;
+    }
+    //Now start to fork.
+    int pid2=fork();
+    if(pid2<0){
+	warning3("Error forking\n");
+    }else if(pid2>0){
+	//wait the child so that it won't be a zoombie
+	waitpid(pid2,NULL,0);
+	return ans;
+    }
+    pid2=fork();
+    if(pid2<0){
+	warning3("Error forking\n");
+	_exit(EXIT_FAILURE);
+    }else if(pid2>0){
+	_exit(EXIT_SUCCESS);//waited by parent.
+    }
+    //safe child.
+    setsid();
+    fclose(stdin);
+    if(method==1){
+	if(execl(fn, "drawdaemon",fifo,NULL));
+    }else if(method==2){
+	if(execlp("drawdaemon","drawdaemon",fifo,NULL));
+    }else{
+	error("Invalid method.\n");
+    }
+    return ans;
+}
+/**
+   Get the drawdaemon.  if direct=1, do not go through the scheduler_server
+(useful for drawres, drawbin), otherwise, go through the scheduler_server(
+useful for MAOS because forking a big program is expensive) */
+char* scheduler_get_drawdaemon(int pid, int direct){
     int launch=0;
     static char *fifo=NULL;
     if(!fifo){
@@ -275,38 +359,42 @@ char* scheduler_get_drawdaemon(int pid){
     }
 
     if(launch){
-        //info2("Attempting to launch fifo\n");
-	int sock;
-	for(int retry=0; retry<10; retry++){
-	    sock=scheduler_connect_self(0,0);
+	if(direct){
+	    scheduler_launch_drawdaemon(fifo);
+	}else{
+	    //info2("Attempting to launch fifo\n");
+	    int sock;
+	    for(int retry=0; retry<10; retry++){
+		sock=scheduler_connect_self(0,0);
+		if(sock==-1){
+		    warning2("failed to connect to scheduler\n");
+		    sleep(1);
+		}else{
+		    break;
+		}
+	    }
 	    if(sock==-1){
 		warning2("failed to connect to scheduler\n");
-		sleep(1);
-	    }else{
-		break;
+		return NULL;
 	    }
+	    int cmd[2];
+	    cmd[0]=CMD_DRAW;
+	    cmd[1]=pid;
+	    swrite(&sock,cmd,sizeof(int)*2);
+	    //make sure the drawdaemon appears in our DISPLAY.
+	    const char *display=getenv("DISPLAY");
+	    if(strlen(display)==0){
+		warning("There is no DISPLAY\n");
+		return NULL;
+	    }
+	    const char *xauth=getenv("XAUTHORITY");
+	    swritestr(&sock,display);
+	    swritestr(&sock,xauth);
+	    swritestr(&sock,fifo);
+	    if(sread(&sock,cmd,sizeof(int))) return NULL;
+	    if(sock!=-1) close(sock);
+	    if(cmd[0]==-1) return NULL;//failed
 	}
-	if(sock==-1){
-	    warning2("failed to connect to scheduler\n");
-	    return NULL;
-	}
-	int cmd[2];
-	cmd[0]=CMD_DRAW;
-	cmd[1]=pid;
-	swrite(&sock,cmd,sizeof(int)*2);
-	//make sure the drawdaemon appears in our DISPLAY.
-	const char *display=getenv("DISPLAY");
-	if(strlen(display)==0){
-	    warning("There is no DISPLAY\n");
-	    return NULL;
-	}
-	const char *xauth=getenv("XAUTHORITY");
-	swritestr(&sock,display);
-	swritestr(&sock,xauth);
-	swritestr(&sock,fifo);
-	if(sread(&sock,cmd,sizeof(int))) return NULL;
-	if(sock!=-1) close(sock);
-	if(cmd[0]==-1) return NULL;//failed
 	sleep(1);//wait for drawdaemon to start.
     }
     return fifo;

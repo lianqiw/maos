@@ -217,7 +217,7 @@ void write_header(const char *header, file_t *fp){
     if(!header) return;
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(header)+1;
-    //make header 8 byte alignment.
+    /*make header 8 byte alignment.*/
     char *header2=strdup(header);
     if(nlen % 8 != 0){
 	nlen=(nlen/8+1)*8;
@@ -254,7 +254,7 @@ uint32_t read_magic(file_t *fp, char **header){
 		if(header){
 		    char header2[nlen];
 		    zfread(header2, 1, nlen, fp);
-		    header2[nlen-1]='\0'; //make sure it is NULL terminated.
+		    header2[nlen-1]='\0'; /*make sure it is NULL terminated.*/
 		    if(*header){
 			*header=realloc(*header, ((*header)?strlen(*header):0)+strlen(header2)+1);
 			strncat(*header, header2, nlen);

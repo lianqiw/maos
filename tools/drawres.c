@@ -64,6 +64,7 @@ int main(int argc, char *argv[]){
     ARG_T *arg=parse_args(argc, argv);
     //use the parent pid so same bash session has the same drawdaemon.
     DRAW_ID=getppid();
+    DRAW_DIRECT=1;
     char **path;
     int npath;
     //info("argc=%d\n", argc);

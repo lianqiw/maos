@@ -64,6 +64,7 @@
 #include "process.h"
 #include "daemonize.h"
 #include "scheduler_server.h"
+#include "scheduler_client.h"
 #include "shm.h"
 char** hosts;
 int nhost;
@@ -675,81 +676,8 @@ static int respond(int sock){
 	    char *xauth=readstr(sock);
 	    setenv("XAUTHORITY",xauth,1);
 	    char *fifo=readstr(sock);
-	    int method=0;
-#if defined(__APPLE__) && 0
-	    char cmdopen[1024];
-	    //Run the exe directly can pass the argumnents. --args is a new feature in 10.6 to do the samething with open
-	    snprintf(cmdopen, 1024, "%s/scripts/drawdaemon.app/Contents/MacOS/drawdaemon %s &", SRCDIR, fifo);
-	    if(system(cmdopen)){
-		method=0;//failed
-		warning("%s failed\n", cmdopen);
-	    }else{//succeed
-		info("%s succeeded\n", cmdopen);
-		method=3;
-	    }
-	    if(method==0){
-		snprintf(cmdopen, 1024, "open -n -a drawdaemon.app --args %s", fifo);
-		if(system(cmdopen)){
-		    warning("%s failed\n", cmdopen);
-		    method=0;//failed
-		}else{
-		    info("%s succeeded\n", cmdopen);
-		    method=3;
-		}
-	    }
-#endif
-	    char *fn=stradd(BUILDDIR, "/bin/drawdaemon",NULL);
-	    if(method==0){
-		info2("Looking for drawdaemon in %s\n",fn);
-		if(exist(fn)){
-		    info2("Found drawdaemon in %s, run it.\n",fn);
-		    method=1;
-		}else{
-		    warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
-		    int found=!system("which drawdaemon");
-		    if(found){
-			method=2;
-		    }else{
-			warning3("Unable to find drawdaemon\n");
-		    }
-		}
-	    }
-	    int ans;
-	    if(method==0){
-		ans=1;//failed
-	    }else{
-		ans=0;//succeed
-	    }
+	    int ans=scheduler_launch_drawdaemon(fifo);
 	    writeint(sock, ans);
-	    if(method==3){
-		break;//already launched.
-	    }
-	    //Now start to fork.
-	    int pid2=fork();
-	    if(pid2<0){
-		warning3("Error forking\n");
-	    }else if(pid2>0){
-		//wait the child so that it won't be a zoombie
-		waitpid(pid2,NULL,0);
-		break;//continue execution of the parent loop
-	    }
-	    pid2=fork();
-	    if(pid2<0){
-		warning3("Error forking\n");
-		_exit(EXIT_FAILURE);
-	    }else if(pid2>0){
-		_exit(EXIT_SUCCESS);//waited by parent.
-	    }
-	    //safe child.
-	    setsid();
-	    fclose(stdin);
-	    if(method==1){
-		if(execl(fn, "drawdaemon",fifo,NULL));
-	    }else if(method==2){
-		if(execlp("drawdaemon","drawdaemon",fifo,NULL));
-	    }else{
-		error("Invalid method.\n");
-	    }
 	}
 	break;
     case CMD_SHUTWR:

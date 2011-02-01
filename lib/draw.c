@@ -29,6 +29,7 @@
 #include "misc.h"
 #include "mathmisc.h"
 int DRAW_ID=0;
+int DRAW_DIRECT=0; //set to 1 to launch drawdaemon directly without going through scheduler.
 /*
   draw by calling gtkdraw via daemon
 */
@@ -87,7 +88,7 @@ static int fifo_open(){
 
  retry:
     //do not free the returned string.
-    fifo_fn=scheduler_get_drawdaemon(DRAW_ID);
+    fifo_fn=scheduler_get_drawdaemon(DRAW_ID, DRAW_DIRECT);
     if(!fifo_fn){
 	warning("Unable to find and launch drawdaemon\n"); 
 	disable_draw=1;

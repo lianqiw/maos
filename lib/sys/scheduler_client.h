@@ -34,6 +34,7 @@ void scheduler_report(STATUS_T *status);
 //called by monitor
 int scheduler_kill_job(int ihost,int pid);
 int scheduler_remove_job(int ihost, int pid);
-char* scheduler_get_drawdaemon(int pid);
+int scheduler_launch_drawdaemon(char *fifo);
+char* scheduler_get_drawdaemon(int pid, int direct);
 void  scheduler_shutdown(int *sock, int mode);
 #endif

@@ -120,6 +120,7 @@ int main(int argc, char *argv[]){
     }
     //use the parent pid so same bash session has the same drawdaemon.
     DRAW_ID=getppid();
+    DRAW_DIRECT=1;
     //launch scheduler if it is not already running.
     if(!strcmp(argv[1],"loc")){//draw coordinate grid
 	if(argc!=3){
