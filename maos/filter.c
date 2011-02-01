@@ -43,23 +43,6 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 }
 
 /**
-   prepare the integrator by shifting commands. similar to laos.
-   inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
-*/
-static void shift_inte(int nap, double *ap, dcell **inte){
-    dcell *tmp=NULL;
-    dcell *keepjunk=inte[nap-1];
-    for(int iap=nap-1; iap>=0; iap--){
-	dcelladd(&tmp,1,inte[iap],ap[iap]);
-	if(iap>0){
-	    inte[iap]=inte[iap-1];//shifting
-	}else{
-	    inte[iap]=tmp;//new command.
-	}
-    }
-    dcellfree(keepjunk);
-}
-/**
    Do type II servo filtering, except the last integrator.
 */
 static void typeII_filter(TYPEII_T *MtypeII, dmat *gain, double dtngs, dcell *Merr){

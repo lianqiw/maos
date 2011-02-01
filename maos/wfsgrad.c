@@ -276,6 +276,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    ttx=simu->uptreal->p[iwfs]->p[0];
 		    tty=simu->uptreal->p[iwfs]->p[1];
 		}
+		info("wfs %d: ttx=%g, tty=%g\n", iwfs, ttx, tty);
 		//copy uptreal to output
 		PDMAT(simu->uptcmds->p[iwfs], puptcmds);
 		puptcmds[isim][0]=ttx;
@@ -625,19 +626,24 @@ void wfsgrad(SIM_T *simu){
     }
     //call the task in parallel and wait for them to finish.
     CALL_THREAD(simu->wfs_grad, parms->nwfs, 0);
-    /*Uplink pointing servo. Moved to here from filter.c because of
-      synchronization issue. dcellcp before integrator changes because wfsgrad updates
-      upterr with current gradient.*/
+    /*
+      Uplink pointing servo. Moved to here from filter.c because of
+      synchronization issue. dcellcp before integrator changes because wfsgrad
+      updates upterr with current gradient.
+    */
     dcellcp(&simu->uptreal, simu->uptint[0]);
     if(simu->upterr){
 	//uplink tip/tilt mirror. use Integrator/Derivative control
 	//update command for next step.
+	shift_inte(parms->sim.napupt, parms->sim.apupt, simu->uptint);
 	double gain1=parms->sim.epupt+parms->sim.dpupt;
 	double gain2=-parms->sim.dpupt;
 	dcelladd(&simu->uptint[0], 1., simu->upterr,gain1);
-	dcelladd(&simu->uptint[0], 1., simu->upterrlast,gain2);
-        //save to use in next servo time step.
-	dcellcp(&simu->upterrlast,simu->upterr);
+	if(fabs(gain2)>EPS){
+	    dcelladd(&simu->uptint[0], 1., simu->upterrlast,gain2);
+	    //save to use in next servo time step.
+	    dcellcp(&simu->upterrlast,simu->upterr);
+	}
     }
 
     if(parms->save.ngcov>0){

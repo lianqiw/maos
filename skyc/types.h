@@ -50,7 +50,7 @@ typedef struct POWFS_S{
 typedef struct PISTAT_S{
     dcell *psf;        /**<short exposure PSF*/
     dmat *grad;        /**<gradient in the averaged short exposure PSF*/
-    dcell *gnea;       /**<variance of grad, to be added to sanea in servo optimization.*/
+    dcell *gnea;       /**<variance of grad due to uncorrected atmosphere, to be added to sanea in servo optimization.*/
     dcell *i0;         /**<normalized pixel intensity, doesn't contain siglev*/
     dcell *gx;         /**<gradient of i0*/
     dcell *gy;         /**<gradient of i0*/

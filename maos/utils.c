@@ -766,3 +766,21 @@ double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, doubl
     }
     return 0.3144*r0*pow(wh,-3./5.);
 }
+
+/**
+   prepare the integrator by shifting commands. similar to laos.
+   inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
+*/
+void shift_inte(int nap, double *ap, dcell **inte){
+    dcell *tmp=NULL;
+    dcell *keepjunk=inte[nap-1];
+    for(int iap=nap-1; iap>=0; iap--){
+	dcelladd(&tmp,1,inte[iap],ap[iap]);
+	if(iap>0){
+	    inte[iap]=inte[iap-1];//shifting
+	}else{
+	    inte[iap]=tmp;//new command.
+	}
+    }
+    dcellfree(keepjunk);
+}

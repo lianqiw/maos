@@ -274,8 +274,9 @@ static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
 		dscale(mean_grad, 1./count);
 		dscale(mean_gradsq, 1./count);
 		dcwpow(mean_grad, 2);
+		//variance=<gg>-<g><g>
 		dadd(&pistat->gnea->p[idtrat], 1, mean_gradsq, 1);
-		dadd(&pistat->gnea->p[idtrat], 1, mean_grad, -1);//variance
+		dadd(&pistat->gnea->p[idtrat], 1, mean_grad, -1);
 		dfree(grad);
 		dfree(mean_grad);
 		dfree(mean_gradsq);

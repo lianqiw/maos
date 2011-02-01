@@ -256,13 +256,17 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[host]), usage_mem[host]);
 		if(usage_cpu[host]>=0.8){
 		    gtk_widget_modify_bg(prog_cpu[host],GTK_STATE_SELECTED,&red);
+		    gtk_widget_modify_bg(prog_cpu[host],GTK_STATE_PRELIGHT,&red);//somehow the XFCE engines only respect PRELIGHT
 		}else{
 		    gtk_widget_modify_bg(prog_cpu[host],GTK_STATE_SELECTED,&blue);
+		    gtk_widget_modify_bg(prog_cpu[host],GTK_STATE_PRELIGHT,&blue);
 		}
 		if(usage_mem[host]>=0.8){
 		    gtk_widget_modify_bg(prog_mem[host],GTK_STATE_SELECTED,&red);
+		    gtk_widget_modify_bg(prog_mem[host],GTK_STATE_PRELIGHT,&red);
 		}else{
 		    gtk_widget_modify_bg(prog_mem[host],GTK_STATE_SELECTED,&blue);
+		    gtk_widget_modify_bg(prog_mem[host],GTK_STATE_PRELIGHT,&blue);
 		}
 	    }
 	}

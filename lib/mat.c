@@ -462,7 +462,7 @@ void X(randn)(X(mat) *A, const T sigma, rand_t *rstat){
 void X(show)(const X(mat) *A, const char *format, ...){
     if(!A) return;
     format2fn;
-    info("show: %s",fn);
+    info2("Displaying content of %s:\n",fn);
     PMAT(A,p);
     long colmax=10;
     long icol,i,j;
@@ -515,11 +515,12 @@ T X(sum)(const X(mat) *A){
 void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
     if(A){
 	if(!*B0){
-	    *B0=X(new)(A->nx, A->ny); bc=0;
+	    *B0=X(new)(A->nx, A->ny); 
+	    bc=0;//no bother to accumulate.
 	}
 	X(mat) *B=*B0;
 	assert(A->nx==B->nx && A->ny == B->ny);
-	if(fabs(ac)>0){
+	if(fabs(bc)>EPS){
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=B->p[i]*bc+A->p[i]*ac;
 	    }

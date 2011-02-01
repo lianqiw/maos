@@ -47,4 +47,6 @@ void embedc_out(const dcomplex *out, double *in, long nin, long *embed);
 int lock_seeds(PARMS_T *parms);
 double calc_aniso(double r0, int nht, double *ht, double *wt);
 double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2);
+
+void shift_inte(int nap, double *ap, dcell **inte);
 #endif
