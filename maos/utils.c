@@ -366,6 +366,19 @@ void rename_file(int sig){
     snprintf(fnnew,256,"run_%d.%s", pid,suffix);
     rename(fnold,fnnew);
     mysymlink(fnnew, "run_recent.log");
+
+    if(curparms && sig!=0){
+	char fn[80];
+	const PARMS_T *parms=curparms;
+	for(int iseed=curiseed; iseed<parms->sim.nseed; iseed++){
+	    if(parms->fdlock[iseed]>=0){
+		close(parms->fdlock[iseed]);
+		int seed=parms->sim.seeds[iseed];
+		snprintf(fn, 80, "Res_%d.lock",seed);
+		(void) remove(fn);
+	    }
+	}
+    }
 }
 /**
    Handles signals. We don't want to exit the simulation when SIGPIPE happens
@@ -637,7 +650,6 @@ void psfcomp_iwvl(thread_t *thdata){
     int **embeds=data->embeds;
     const int *nembeds=data->nembeds;
     const int *psfsize=data->psfsize;
-    const int nwvl=data->nwvl;
     const double *wvl=data->wvl;
     
     for(int iwvl=thdata->start; iwvl<thdata->end; iwvl++){
@@ -730,6 +742,11 @@ int lock_seeds(PARMS_T *parms){
     int to_run=0;
     parms->fdlock=calloc(parms->sim.nseed, sizeof(int));
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
+	snprintf(fn, 80, "Res_%d.done",parms->sim.seeds[iseed]);
+	if(exist(fn)){
+	    warning2("%s exist. Will not run maos.\n", fn);
+	    continue;
+	}
 	snprintf(fn, 80, "Res_%d.lock",parms->sim.seeds[iseed]);
 	parms->fdlock[iseed]=lock_file(fn, 0, 0);
 	if(parms->fdlock[iseed]<0){

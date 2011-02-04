@@ -276,7 +276,6 @@ void wfsgrad_iwfs(thread_t *info){
 		    ttx=simu->uptreal->p[iwfs]->p[0];
 		    tty=simu->uptreal->p[iwfs]->p[1];
 		}
-		info("wfs %d: ttx=%g, tty=%g\n", iwfs, ttx, tty);
 		//copy uptreal to output
 		PDMAT(simu->uptcmds->p[iwfs], puptcmds);
 		puptcmds[isim][0]=ttx;

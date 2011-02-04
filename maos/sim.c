@@ -58,6 +58,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
     double tk_0=myclockd();
     double ck_0,ck_end;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
+	curiseed=iseed;
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	if(!simu) continue;//skip.

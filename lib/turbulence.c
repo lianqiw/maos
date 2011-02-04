@@ -74,58 +74,26 @@ static char *fnatm(GENSCREEN_T *data){
 	     HOME,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
     return strdup(fnshm);
 }
-/**
- *   Generate turbulence screens all in memory
- */
-static void spect_screen_do(GENSCREEN_T *data){
-    const dmat *spect=data->spect;
-    rand_t *rstat=data->rstat;
-    
-    const long m=data->nx;
-    const long n=data->ny;
-    const long nlayer=data->nlayer;
-    map_t** screen=data->screen;
-    const double *wt=data->wt;
-    cmat* cspect=cnew(m,n);
-    cfft2plan(cspect,-1);
- repeat:
-    LOCK(data->mutex_ilayer);
-    int ilayer=data->ilayer;
-    data->ilayer+=2;//generate 2 layers at a time.
-    if(ilayer>=nlayer){
-	UNLOCK(data->mutex_ilayer);
-	cfree(cspect);
-	return ;
-    }
-    /*We generate random numbers inside mutex lock to make
-      sure the random sequence is repeatable.*/
-    
-    for(long i=0; i<m*n; i++){
-	cspect->p[i]=(randn(rstat)+I*randn(rstat))*spect->p[i];
-    }
-    UNLOCK(data->mutex_ilayer);
-    cfft2(cspect,-1); 	
-    double wt1=sqrt(wt[ilayer]);
-    double *p=screen[ilayer]->p;
 
-    for(long i=0; i<m*n; i++){
-	p[i]=creal(cspect->p[i])*wt1;
-    }
-    
-    if(ilayer+1<nlayer){
-	double *q=screen[ilayer+1]->p;
-	double wt2=sqrt(wt[ilayer+1]);
-	for(long i=0; i<m*n; i++){
-	    q[i]=cimag(cspect->p[i])*wt2;
-	}
-    }
-    goto repeat;
-}
 /**
- * Geneate the screens sequentially and appends to file. Handles large screens well
- * without using the full storage.
+ * Geneate the screens sequentially and appends to file if fc is not
+ * NULL. Handles large screens well without using the full storage.
  */
 static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
+    if(!data->spect){
+	info2("Generating spect..."); TIC; tic;
+	switch(data->method){
+	case T_VONKARMAN:
+	    data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,0.5);
+	    break;
+	case T_BIHARMONIC:
+	    data->spect=turbpsd_full(data->nx,data->ny,data->dx,data->r0,data->l0,-2,0.5); 
+	    break;
+	case T_FRACTAL:
+	    break;
+	}
+	toc2("done");
+    }
     rand_t *rstat = data->rstat;
     dmat *spect   = data->spect;
     double* wt    = data->wt;
@@ -149,22 +117,37 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
     for(int ilayer=0; ilayer<nlayer; ilayer+=2){
 	double tk1=myclockd();
 	for(long i=0; i<nx*ny; i++){
-	    p1[i]=randn(rstat)*spect->p[i];
-	    p2[i]=randn(rstat)*spect->p[i];
+	    p1[i]=randn(rstat)*spect->p[i];//real
+	    p2[i]=randn(rstat)*spect->p[i];//imag
 	}
 	double tk2=myclockd();
 	dcell_fft2(dc, -1);
 	dscale(dc->p[0], sqrt(wt[ilayer]));
-	double tk3=myclockd();
-	cellarr_dmat(fc, dc->p[0]);
 	if(ilayer+1<nlayer){
 	    dscale(dc->p[1], sqrt(wt[ilayer+1]));
-	    cellarr_dmat(fc, dc->p[1]);
+	}
+	double tk3=myclockd();
+	if(fc){//save to file.
+	    cellarr_dmat(fc, dc->p[0]);
+	    if(ilayer+1<nlayer){
+		cellarr_dmat(fc, dc->p[1]);
+	    }
+	}else{
+	    dcp((dmat**)&data->screen[ilayer], dc->p[0]);
+	    if(ilayer+1<nlayer){
+		dcp((dmat**)&data->screen[ilayer+1], dc->p[1]);
+	    }
 	}
 	double tk4=myclockd();
 	info("%d: Randn: %.2f FFT: %.2f Save: %.2f\n", ilayer, tk2-tk1, tk3-tk2, tk4-tk3);
     }
     dcellfree(dc);
+}
+/**
+ *   Generate turbulence screens all in memory
+ */
+static void spect_screen_do(GENSCREEN_T *data){
+    spect_screen_save(NULL, data);
 }
 /**
  * Generates multiple screens from spectrum. Note that if data->share=1, the
@@ -174,10 +157,8 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 static map_t** create_screen(GENSCREEN_T *data, 
 			     void (*funsave)(cellarr *fc, GENSCREEN_T *data),
 			     void (*funmem)(GENSCREEN_T *data)){
-    dmat *spect=data->spect;
     map_t **screen;
     long nlayer=data->nlayer;
-    spect->p[0]=0;//zero out piston.
     if(data->share){//shared with file
 	char *fnshm=fnatm(data);
 	char fnlock[PATH_MAX]; 
@@ -222,8 +203,7 @@ static map_t** create_screen(GENSCREEN_T *data,
 	    screen[ilayer]=mapnew(nx, ny, dx, NULL);
 	}
 	data->screen=screen;
-	PINIT(data->mutex_ilayer);
-	CALL(funmem, data, data->nthread);
+	funmem(data);
     }
     return screen;
 }
@@ -232,19 +212,7 @@ static map_t** create_screen(GENSCREEN_T *data,
  */
 map_t** vonkarman_screen(GENSCREEN_T *data){
     data->method=T_VONKARMAN;
-    char fnspect[PATH_MAX];
-    mymkdir("%s/.aos/spect/",HOME);
-    snprintf(fnspect,PATH_MAX,"%s/.aos/spect/spect_%ldx%ld_dx1_%g_r0%g_L0%g.bin",
-	     HOME,data->nx,data->ny,1./data->dx,data->r0,data->l0);
-    if(exist(fnspect)){
-	data->spect=dread("%s", fnspect);
-    }else{
-	info2("\nGenerating spect..."); TIC; tic;
-	data->spect=turbpsd(data->nx,data->ny,data->dx,data->r0,data->l0,0.5); toc2("done");
-	dwrite(data->spect,"%s",fnspect);
-    }
     map_t **screen=create_screen(data, spect_screen_save, spect_screen_do);
-    dfree(data->spect);
     return(screen);
 }
 
@@ -253,10 +221,7 @@ map_t** vonkarman_screen(GENSCREEN_T *data){
  */
 map_t** biharmonic_screen(GENSCREEN_T *data){
     data->method=T_BIHARMONIC;
-    info2("\nGenerating spect..."); TIC; tic;
-    data->spect=turbpsd_full(data->nx,data->ny,data->dx,data->r0,data->l0,-2,0.5); toc2("done");
     map_t **screen=create_screen(data, spect_screen_save, spect_screen_do);
-    dfree(data->spect);
     return(screen);
 }
 /**
@@ -275,7 +240,7 @@ static void fractal_screen_save(cellarr *fc, GENSCREEN_T *data){
     }
     dfree(dm);
 }
-static void fractal_screen_do(GENSCREEN_T *data){
+static void fractal_screen_thread(GENSCREEN_T *data){
     rand_t *rstat=data->rstat;
     map_t** screen=data->screen;
     const double *wt=data->wt;
@@ -296,6 +261,10 @@ static void fractal_screen_do(GENSCREEN_T *data){
     fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
     remove_piston(screen[ilayer]->p, nx*ny);
     goto repeat;
+}
+static void fractal_screen_do(GENSCREEN_T *data){
+    PINIT(data->mutex_ilayer);
+    CALL(fractal_screen_thread, data, data->nthread);
 }
 
 /**

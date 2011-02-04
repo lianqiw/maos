@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.8.0, lianqiw@gmail.com)
+AC_INIT(maos, 0.8.1, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=http://github.com/downloads/lianqiw/maos
@@ -318,9 +318,14 @@ fi
 AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 AC_CHECK_LIB([fftw3_threads], [fftw_init_threads],[has_fftw_threads="yes"],[has_fftw_threads="no"])
+AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"])
 if test "x$has_fftw_threads" = "xyes" ;then
     LDFFT="-lfftw3_threads -lfftw3"
-    AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
+    if test "x$has_fftw_omp" = "xyes" ;then
+        AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp")
+    else
+        AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
+    fi
 else
     LDFFT="-lfftw3"
     AC_DEFINE(USE_FFTW_THREADS, [0], "We do not have FFTW3 threads")

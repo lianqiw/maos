@@ -273,12 +273,24 @@ off_t flen(const char *fn){
     struct stat buf;
     return stat(fn, &buf)?0:buf.st_size;
 }
-
+/**
+   Return the modification time of the file
+ */
+time_t fmtime(const char *fn){
+    struct stat buf;
+    if(!fn || stat(fn, &buf)) return 0;
+    return buf.st_ctime;
+}
 void touch(const char *fn){
     /**
        Update a file's modtime to current.
     */
-    utimes(fn, NULL);
+    if(utimes(fn, NULL)){
+	if(errno==ENOENT){
+	    FILE *fp=fopen(fn, "w");
+	    fclose(fp);
+	}
+    }
 }
 
 /**

@@ -111,8 +111,8 @@ int main(int argc, char **argv){
     info2("Simulation started at %s in %s.\n",myasctime(),myhostname());
  
     free(arg);
-    /*Loads the main software*/
     THREAD_POOL_INIT(parms->skyc.nthread);
+    /*Loads the main software*/
     skysim(parms);
     free_parms(parms);
     free(cwd);

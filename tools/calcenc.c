@@ -9,7 +9,8 @@ static void calcenc_do(file_t *fpin,   /**<Input file pointer*/
 		       file_t *fpout,  /**<Output file pointer*/
 		       uint32_t magic, /**<The magic number if already read*/
 		       dmat *restrict dvec,     /**<Vector of the diameter*/
-		       int type        /**<Type of encloded energy: 0: square, 1: circle*/
+		       int type,        /**<Type of encloded energy: 0: square, 1: circle*/
+		       int nthread     /**<Number of threads*/
 		       ){
     dmat *psf=dreaddata(fpin, magic);
     int free_dvec=0;
@@ -17,17 +18,17 @@ static void calcenc_do(file_t *fpin,   /**<Input file pointer*/
 	free_dvec=1;
 	dvec=dlinspace(0, 1, psf->nx);
     }
-    dmat *enc=denc(psf, dvec, type);
+    dmat *enc=denc(psf, dvec, type, nthread);
     dwritedata(fpout, enc);
     dfree(psf);
     dfree(enc);
     if(free_dvec) dfree(dvec);
 }
-static void calcenc(const char *fn, dmat *dvec, int type){
+static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
     char fnout[PATH_MAX];
     char *suffix=strstr(fn, ".bin");
     if(!suffix) error("%s has wrong suffix\n", suffix);
-    snprintf(fnout, suffix-fn+1, fn);
+    memcpy(fnout, fn, suffix-fn+1);
     fnout[suffix-fn]='\0';
     switch(type){
     case -1:
@@ -45,9 +46,15 @@ static void calcenc(const char *fn, dmat *dvec, int type){
     default:
 	error("Not implemented\n");
     }
+    if(exist(fnout)){
+	if(fmtime(fn)<fmtime(fnout)){
+	    info2("%s: skip\n", fn);
+	    return;
+	}
+    }
     file_t *fp=zfopen(fn, "r");
     file_t *fpout=zfopen(fnout, "w");
-    info("%s --> %s\n", fn, fnout);
+    info2("%s --> %s\n", fn, fnout);
     uint32_t magic=read_magic(fp, NULL);
     long nx, ny;
     if(iscell(magic)){
@@ -55,11 +62,11 @@ static void calcenc(const char *fn, dmat *dvec, int type){
 	zfreadlarr(fp, 2, &nx, &ny);
 	zfwritelarr(fpout, 2, &nx, &ny);
 	for(long i=0; i<nx*ny; i++){
-	    info("%ld of %ld\n", i, nx*ny);
-	    calcenc_do(fp, fpout, 0, dvec, type);
+	    info2("%ld of %ld\n", i, nx*ny);
+	    calcenc_do(fp, fpout, 0, dvec, type, nthread);
 	}
     }else{
-	calcenc_do(fp, fpout, magic, dvec, type);
+	calcenc_do(fp, fpout, magic, dvec, type, nthread);
     }
     zfclose(fp);
     zfclose(fpout);
@@ -82,9 +89,9 @@ int main(int argc, char *argv[]){
     if(argc==1){
 	usage();
     }
-    double dmax=0;
+    double rmax=0;
     double dstep=1;
-    int nthread=0;
+    int nthread=sysconf( _SC_NPROCESSORS_ONLN );
     int ipos=0;
     int type=0;//default is square
     static struct option long_options[]={
@@ -105,7 +112,7 @@ int main(int argc, char *argv[]){
 	    nthread=strtol(optarg, NULL, 10);
 	    break;
 	case 'd':
-	    dmax=strtod(optarg, NULL);
+	    rmax=strtod(optarg, NULL);
 	    break;
 	case 's':
 	    dstep=strtod(optarg, NULL);
@@ -117,17 +124,17 @@ int main(int argc, char *argv[]){
 	    usage();
 	    break;
 	default:
-	    error("");
+	    error("Invalid option.\n");
 	}
     }
     ipos=optind;
     dmat *dvec=NULL;
-    if(dmax>0){
-	dvec=dlinspace(0, dstep, (long)ceil(dmax/dstep));
+    if(rmax>0){
+	dvec=dlinspace(0, dstep, (long)ceil(rmax/dstep));
     }
-    info("ipos=%d, argv[ipos]=%s\n", ipos, argv[ipos]);
+    THREAD_POOL_INIT(nthread); ;
     for(; ipos<argc; ipos++){
-	calcenc(argv[ipos], dvec, type);
+	calcenc(argv[ipos], dvec, type, nthread);
     }
     dfree(dvec);
 }

@@ -41,5 +41,7 @@ extern char *dirskysim;
 //ROT_OTF==1: Rotate OTF.
 #define EXIT raise(SIGUSR1)
 void maos(const PARMS_T *parms);
+extern const PARMS_T *curparms;
+extern int curiseed;
 #endif
 

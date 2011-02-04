@@ -29,7 +29,8 @@
    \file maos.c
    Contains main() and the entry into simulation maos()
 */
-
+const PARMS_T *curparms=NULL;
+int curiseed=0;
 /**
    This is the routine that calls various functions to do the simulation. maos()
    calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
@@ -132,18 +133,19 @@ int main(int argc, char **argv){
     scheduler_start(scmd,arg->nthread,!arg->force);
 
     //setting up parameters before asking scheduler to check for any errors.
-    PARMS_T * parms=setup_parms(arg);
+    PARMS_T *parms=setup_parms(arg); 
+    curparms = parms;
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
   
     if(!lock_seeds(parms)){
 	warning("There are no seed to run. Exit\n");
-	raise(SIGUSR1);
+	maos_signal_handler(SIGUSR1);
 	return 1;
     }
 
     //register signal handler
     register_signal_handler(maos_signal_handler);
-    info("Signal Handler Registered\n");
+    info2("Signal Handler Registered\n");
  
     if(!arg->force){
 	/*
@@ -190,9 +192,9 @@ int main(int argc, char **argv){
     free_parms(parms);
     free(dirsetup);
     free(dirskysim);
+    info2("Job finished at %s\t%.2f MiB\n",myasctime(),get_job_mem()/1024.);
     rename_file(0);
     scheduler_finish(0);
-    info2("Job finished at %s\t%.2f MiB\n",myasctime(),get_job_mem()/1024.);
     exit_success=1;//tell mem.c to print non-freed memory in debug mode.
     return 0;
 }

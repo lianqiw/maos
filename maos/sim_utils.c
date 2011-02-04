@@ -94,7 +94,7 @@ static map_t **genscreen_do(SIM_T *simu){
 	    gs->share  = atm->share;
 	    gs->nthread= nthread;
 	}
-	info2("Generating Atmospheric Screen...");
+	info2("Generating Atmospheric Screen...\n");
 	tic;
 	screens = simu->atmfun(gs);
 	toc2("done");
@@ -549,7 +549,8 @@ void seeding(SIM_T *simu){
     simu->atmwd_rand=calloc(1, sizeof(rand_t));
     seed_rand(simu->init,simu->seed);
     seed_rand(simu->atm_rand,   lrand(simu->init));
-    seed_rand(simu->atmwd_rand, lrand(simu->init)+simu->parms->atm.wdrand);
+    //2011-02-02: changed to wdrand-1 so that when wdrand=1, we reproduce old directions.
+    seed_rand(simu->atmwd_rand, lrand(simu->init)+(simu->parms->atm.wdrand-1));
     const PARMS_T *parms=simu->parms;
     simu->wfs_rand=calloc(parms->nwfs, sizeof(rand_t));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -643,9 +644,19 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->uptint=calloc(parms->sim.napupt, sizeof(dcell*));
     if(parms->evl.psfmean){
 	simu->evlpsfmean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
+	char header[800];
+	header[0]='\0';
+	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+	    char headeri[80];
+	    snprintf(headeri, 80, "sum[iwvl]=%.15g\n",aper->sumamp2*aper->nembed[iwvl]*aper->nembed[iwvl]); 
+	    strncat(header, headeri, 800-strlen(header)-2);
+	}
+	simu->evlpsfmean->header=strdup(header);
 	simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
+	simu->evlpsfolmean->header=strdup(header);
 	if(parms->evl.tomo){
 	    simu->evlpsftomomean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
+	    simu->evlpsftomomean->header=strdup(header);
 	}
     }
     simu->opdevl=dcellnew(parms->evl.nevl,1);
@@ -667,7 +678,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
     if(parms->evl.psfmean || parms->evl.psfhist){
 	//compute diffraction limited PSF.
-	dmat *iopdevl=dnew(simu->aper->locs->nloc,1);
+	dmat *iopdevl=dnew(aper->locs->nloc,1);
 	ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
 			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	dfree(iopdevl);
@@ -1164,8 +1175,8 @@ void free_simu(SIM_T *simu){
     free(simu->atm_rand);
     free(simu->atmwd_rand);
     free(simu->wfs_rand);
+    dfree(simu->genscreen->spect);
     free(simu->genscreen);
-    info("Freeing atm\n");
     maparrfree(simu->atm, parms->atm.nps);
     maparrfree(simu->atm2, parms->atm.nps);
     PDEINIT(simu->mutex_plot);
@@ -1342,8 +1353,10 @@ void free_simu(SIM_T *simu){
 	//release the lock and close the file.
 	close(parms->fdlock[simu->iseed]);
 	char fn[80];
+	char fnnew[80];
 	snprintf(fn, 80, "Res_%d.lock",simu->seed);
-	(void)remove(fn);
+	snprintf(fnnew, 80, "Res_%d.done",simu->seed);
+	(void)rename(fn, fnnew);
     }
     free(simu->save);
     free(simu);

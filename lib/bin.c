@@ -188,8 +188,9 @@ file_t* zfopen(const char *fn, char *mod){
 	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
 	    error("Trying to write to a file that is already opened for writing: %s\n", fn2);
 	}else{
-	    if(mod[0]=='w')//Need to manually truncate the file.
-		ftruncate(fp->fd, 0);
+	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){//Need to manually truncate the file.
+		warning2("Truncating %s failed\n", fn2);
+	    }
 	}
 	break;
     default:

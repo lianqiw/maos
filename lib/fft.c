@@ -267,17 +267,16 @@ void dcell_fft2plan(dcell *dc, int dir, int nthreads){
     //Use FFTW_ESTIMATE since the size may be large, and measuring takes too long.
     if(!dc->fft) dc->fft=calloc(1, sizeof(fft_t));
     if(!dc->fft->plan[dir+1]){
+	TIC;tic;
 	LOCK_FFT;
 	if(nthreads<1) nthreads=1;
-	if(nthreads>1){
-	    info("Creating fft plan with %d threads ...", nthreads);
-	}
+	info2("Creating fft plan with %d threads ...", nthreads);
 	FFTW_THREADS(nthreads);
-	dc->fft->plan[dir+1]=fftw_plan_guru_split_dft(2, dims, 1, &howmany_dims, p1, p2, p1, p2, 
-						     FFTW_ESTIMATE);
+	dc->fft->plan[dir+1]=fftw_plan_guru_split_dft
+	    (2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);
 	FFTW_THREADS(1);
-	info("done\n");
 	UNLOCK_FFT;
+	toc2("done");
     }
 }
 

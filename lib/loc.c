@@ -155,7 +155,6 @@ int *loc_create_embed(int *nembed, const loc_t *loc){
 	}
 	mapn=*nembed;
     }
-    info2("Science PSF is using grid size of %d\n",mapn);
     xmin-=(mapn-nx)/2*loc->dx;
     ymin-=(mapn-ny)/2*loc->dx;
     int *embed=calloc(loc->nloc, sizeof(int));

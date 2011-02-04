@@ -3,6 +3,99 @@
 */
 
 
+static dmat* gen_unwrap(long nx, long ny){
+    //Create phase unwrap operator
+    char fn[PATH_MAX];
+    snprintf(fn,PATH_MAX,"%s/.aos/unwrap_%ld_%ld.bin",HOME,nx,ny);
+    //if(exist(fn)){
+    //	cmat *out=cread(fn);
+    //	return out;
+    //}
+    dsp *Ht=spnew(nx*ny,nx*ny*2, nx*ny*2*2);//forward
+    long count=0;
+    spint *pp=Ht->p;
+    spint *pi=Ht->i;
+    double *px=Ht->x;
+    long col=0;
+    for(long iy=0; iy<ny; iy++){
+	long offx=iy*nx;
+	//X difference
+	for(long ix=0; ix<nx; ix++){
+	    pp[col]=count;
+	    if(ix==0 && iy==0){
+		px[count]=1;//piston constraint.
+		pi[count]=0;
+		count++;
+	    }
+	    col++;
+	    if(ix>0){
+		pi[count]=ix-1+offx;
+		px[count]=-1;
+		count++;
+		
+		pi[count]=ix+offx;
+		px[count]=1;
+		count++;
+		/*}else{
+		pi[count]=ix+1+offx;
+		px[count]=1;
+		count++;
+		
+		pi[count]=ix+offx;
+		px[count]=-1;
+		count++;*/
+	    }
+	}
+	//Y difference
+	for(long ix=0; ix<nx; ix++){
+	    pp[col]=count;
+	    col++;
+	    if(iy>0){
+		pi[count]=ix+offx-nx;
+		px[count]=-1;
+		count++;
+		
+		pi[count]=ix+offx;
+		px[count]=1;
+		count++;
+		/*}else{
+		pi[count]=ix+offx+nx;
+		px[count]=1;
+		count++;
+		
+		pi[count]=ix+offx;
+		px[count]=-1;
+		count++;*/
+	    }
+	    
+	}
+    }
+    pp[col]=count;
+    
+    info("col=%ld,count=%ld\n",col,count);
+    spsetnzmax(Ht,count);
+    //spwrite(Ht,"Ht");
+    dsp *H=sptrans(Ht);
+    //spwrite(H,"H");
+    dsp *HtH=spmulsp(Ht,H);
+    dmat *cHtH=NULL;
+    spfull(&cHtH,HtH,1);
+    //dwrite(cHtH,"cHtH");
+    //caddI(cHtH,1e-9);
+    dmat *IcHtH=dinv(cHtH);
+    //dwrite(IcHtH,"IcHtH");
+    dmat *out=NULL;
+    dmulsp(&out, IcHtH, Ht, 1);
+    //dwrite(out,"HI");
+    dfree(IcHtH);
+    dfree(cHtH);
+    spfree(HtH);
+    spfree(H);
+    spfree(Ht);
+    dwrite(out,"%s",fn);
+    return out;
+}
+
 static void do_unwrap(cmat *phi, cmat *wvf, dmat *unwrap, dmat *diff, dmat *phirecon){
     /*
       Do the actual unwrapping. We do not check the

@@ -38,6 +38,7 @@ int isdir(const char *fn);
 int isfile(const char *fn);
 int islink(const char*fn);
 off_t flen(const char *fn);
+time_t fmtime(const char *fn);
 void touch(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
 void expand_filename(char **fnout, const char *fn);

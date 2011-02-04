@@ -116,15 +116,19 @@ static inline void do_job(void) {
 }
 
 /**
- *   The working function in each thread.
+ *   The working function in each thread which never quits unless pool is being
+ *   destroyed. The master thread does not run this routine. The whole function
+ *   is guarded by mutex. The mutex is only released upon 1) cond_wait, 2)
+ *   do_job, 3) exit.
  */
 static void run_thread(){
+    pthread_mutex_lock(&pool.mutex);
+    pool.ncur++;
     while(!pool.quit){
 	/*
 	  Wait for the go signal. The mutex is release during jobwait and
 	  locked immediately when cond is satisfied.
 	*/
-	pthread_mutex_lock(&pool.mutex);
 	if(!pool.jobshead){
 	    //this thread is idle. add to the idle count
 	    pool.nidle++;
@@ -132,12 +136,14 @@ static void run_thread(){
 	    if(pool.nidle+1==pool.ncur){//all threads are idle
 		pthread_cond_signal(&pool.idle);
 	    }
+	    if(pool.ncur>pool.nmax){
+		break;
+	    }
 	    //no more jobs to do, wait for the condition.
 	    pthread_cond_wait(&pool.jobwait, &pool.mutex);
 	    pool.nidle--;//no longer idle.
 	    //jobshead should be not empty now.
 	    if(!pool.jobshead){//some other task already did the job.
-		pthread_mutex_unlock(&pool.mutex);
 		continue;
 	    }
 	}
@@ -145,7 +151,6 @@ static void run_thread(){
 	while(pool.jobshead){
 	    do_job();
 	}
-	pthread_mutex_unlock(&pool.mutex);
     }
     pool.ncur--;
     if(pool.ncur==1){//all thread are exited except the master thread.
@@ -153,39 +158,46 @@ static void run_thread(){
     }
     pthread_mutex_unlock(&pool.mutex);
 }
-/**
- *  Create a new thread
- */
-static void thread_new(){//the caller is responsible to lock mutex.
-    pthread_t thread;//we don't need the thread information.
-    if(pthread_create(&thread, &pool.attr, (thread_fun)run_thread, NULL)){
-	error("Can not create thread\n");
-    }
-    pool.ncur++;
-}
+
 /**
  *   Initialize the thread pool.
  */
 void thread_pool_init(int nthread){
-    memset(&pool, 0, sizeof(thread_pool_t));
-    pthread_mutex_init(&pool.mutex,NULL);
-    pthread_mutex_init(&pool.mutex2, 0);
-    pthread_cond_init(&pool.idle, NULL);
-    pthread_cond_init(&pool.jobwait, NULL);
-    pthread_cond_init(&pool.jobdone, NULL);
-    pthread_cond_init(&pool.exited, NULL);
-    pthread_attr_init(&pool.attr);
-    pthread_attr_setdetachstate(&pool.attr,PTHREAD_CREATE_DETACHED);
-    pool.nidle=0;
-    pool.nmax=nthread;
-    pool.jobspool=NULL;
-    pool.jobshead=NULL;
-    pool.jobstail=NULL;
-    pool.ncur=1;//counting the master thread.
+    static int inited=0;
+    if(!inited){
+	inited=1;
+	memset(&pool, 0, sizeof(thread_pool_t));
+	pthread_mutex_init(&pool.mutex,NULL);
+	pthread_mutex_init(&pool.mutex2, 0);
+	pthread_cond_init(&pool.idle, NULL);
+	pthread_cond_init(&pool.jobwait, NULL);
+	pthread_cond_init(&pool.jobdone, NULL);
+	pthread_cond_init(&pool.exited, NULL);
+	pthread_attr_init(&pool.attr);
+	pthread_attr_setdetachstate(&pool.attr,PTHREAD_CREATE_DETACHED);
+	pool.nidle=0;
+	pool.jobspool=NULL;
+	pool.jobshead=NULL;
+	pool.jobstail=NULL;
+	pool.ncur=1;//counting the master thread.
+	pool.nmax=1;
+    }
+    int nthread_max=sysconf( _SC_NPROCESSORS_ONLN );
+    if(nthread<=0) nthread=nthread_max;
+    if(nthread>nthread_max) nthread=nthread_max;
     pthread_mutex_lock(&pool.mutex);
-    for(int ith=0; ith<nthread-1; ith++){
-	//launch nthread-1 threads because the master thread is another thread.
-	thread_new();
+    int nmax=pool.nmax;
+    pool.nmax=nthread;
+    if(nmax<nthread){//need to launch more threads.
+	pthread_t thread;//we don't need the thread information.
+	for(int ith=0; ith<nthread-nmax; ith++){
+	    if(pthread_create(&thread, &pool.attr, (thread_fun)run_thread, NULL)){
+		error("Can not create thread\n");
+	    }
+	}
+    }else if(nmax>nthread){
+	//need to quit some threads.
+	pthread_cond_broadcast(&pool.jobwait);//wake up all threads.
     }
     pthread_mutex_unlock(&pool.mutex);
 }
@@ -366,7 +378,6 @@ void thread_pool_wait_all(void){
 	do_job();
     }
     if(pool.nidle+1<pool.ncur){//some job is still doing the last bit.
-	info("nidle=%d, ncur=%d\n", pool.nidle, pool.ncur);
        	/*
 	  thread_pool_wait may not obtain the lock in pool.mutex immediately
 	  after signal on pool.idle is emmited. thread_pool_queue may obtain
@@ -395,7 +406,20 @@ void thread_pool_destroy(void){
 	free(job);
     }
     pthread_mutex_unlock(&pool.mutex2);
+    pthread_mutex_destroy(&pool.mutex);
+    pthread_mutex_destroy(&pool.mutex2);
+    pthread_cond_destroy(&pool.idle);
+    pthread_cond_destroy(&pool.jobwait);
+    pthread_cond_destroy(&pool.jobdone);
+    pthread_cond_destroy(&pool.exited);
+    pthread_attr_destroy(&pool.attr);
 }
 static __attribute__((destructor)) void deinit(){
     thread_pool_destroy();
 }
+
+//static __attribute__((constructor)) void init(){
+/**
+   It does not work to initialize the thread pool in the beginning because it is before main and ?
+*/
+//}
