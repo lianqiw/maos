@@ -432,10 +432,8 @@ static void add_host_thread(void){
 	if(nhostup==nhost){//all host is up
 	    pthread_cond_wait(&pcond, &pmutex);
 	}else{//sleep 5 seconds before retry.
-	    struct timeval tvtime;
 	    struct timespec abstime;
-	    gettimeofday(&tvtime, NULL);
-	    abstime.tv_sec=tvtime.tv_sec+5;
+	    abstime.tv_sec=myclockd()+5;
 	    abstime.tv_nsec=0;
 	    pthread_cond_timedwait(&pcond, &pmutex, &abstime);
 	}

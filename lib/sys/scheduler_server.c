@@ -234,7 +234,7 @@ void socket_tcp_keepalive(int sock){
 #ifdef __linux__
        && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
-       && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepidle, sizeof(int))
+       && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int))
 #endif
        ){
     }else{
