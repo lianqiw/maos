@@ -51,6 +51,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h> //SOL_TCP
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
@@ -220,7 +221,20 @@ static __attribute__((constructor))void init(){
     scheduler_launch();
 }
 
-
+void socket_tcp_keepalive(int sock){
+    int keeplive=1;
+    int keepidle =1;//second before try to probe
+    int keepintvl=1;//wait this seconds before repeat
+    int keepcnt  =2;//repeat before declare dead
+    if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
+       && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
+       && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
+       && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepidle, sizeof(int))
+       ){
+    }else{
+	warning("Keepalive failed\n");
+    }
+}
 /**
    make a server port and bind to localhost on all addresses
 */
@@ -229,7 +243,7 @@ int make_socket (uint16_t port, int retry){
     struct sockaddr_in name;
     
     /* Create the socket. */
-    sock = socket (PF_INET, SOCK_STREAM, 0);
+    sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock < 0){
 	perror ("socket");
 	exit (EXIT_FAILURE);
@@ -237,6 +251,7 @@ int make_socket (uint16_t port, int retry){
     
     cloexec(sock);
     setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
+    socket_tcp_keepalive(sock);
     /* Give the socket a name. */
     name.sin_family = AF_INET;
     name.sin_port = htons(port);
@@ -532,17 +547,9 @@ static int respond(int sock){
 	    sleep(1);
 	    int pid=irun->pid;
 	    if(kill(pid,0)){
-		//warning3("Pid %d crashed.\n",pid);
 		running_update(pid,S_CRASH);
-	    }else{
-		//warning3("Pid %d closed socket but is still running\n",pid);
 	    }
 	}
-	//warning("sock %d closed by far end\n",sock);
-	/*
-	if(!irun){
-	    monitor_remove(sock);//may be a monitor.
-	    }*/
 	return -1;//socket closed.
     }
     int pid=cmd[1];

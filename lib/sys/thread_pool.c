@@ -167,12 +167,12 @@ void thread_pool_init(int nthread){
     if(!inited){
 	inited=1;
 	memset(&pool, 0, sizeof(thread_pool_t));
-	pthread_mutex_init(&pool.mutex,NULL);
-	pthread_mutex_init(&pool.mutex2, 0);
-	pthread_cond_init(&pool.idle, NULL);
+	pthread_mutex_init(&pool.mutex,  NULL);
+	pthread_mutex_init(&pool.mutex2, NULL);
+	pthread_cond_init(&pool.idle,    NULL);
 	pthread_cond_init(&pool.jobwait, NULL);
 	pthread_cond_init(&pool.jobdone, NULL);
-	pthread_cond_init(&pool.exited, NULL);
+	pthread_cond_init(&pool.exited,  NULL);
 	pthread_attr_init(&pool.attr);
 	pthread_attr_setdetachstate(&pool.attr,PTHREAD_CREATE_DETACHED);
 	pool.nidle=0;

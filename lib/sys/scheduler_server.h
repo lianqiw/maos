@@ -112,7 +112,7 @@ void monitor_send_initial(MONITOR_T *ic);
 void monitor_send_load(void);
 void print_backtrace(int sig);
 void print_backtrace_symbol(void *const *buffer, int size);
-
+void socket_tcp_keepalive(int sock);
 enum{
     CMD_START=1,
     CMD_FINISH,

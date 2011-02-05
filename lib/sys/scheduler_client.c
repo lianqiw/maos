@@ -81,6 +81,7 @@ int scheduler_connect_self(int block, int mode){
 	    return sock;
 	}
 	cloexec(sock);
+	socket_tcp_keepalive(sock);
 	/* Give the socket a name. */
 	servername.sin_family = AF_INET;
 	servername.sin_port = htons(PORT);
