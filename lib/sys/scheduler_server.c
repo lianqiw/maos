@@ -52,9 +52,9 @@
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <netinet/tcp.h> //SOL_TCP
+#include <netinet/in.h>
 #include <sys/file.h>
 #include <sys/stat.h>
-#include <netinet/in.h>
 #include <limits.h>
 #include <string.h>
 #include "config.h"
@@ -220,16 +220,22 @@ static __attribute__((constructor))void init(){
     //we always try to launch the scheduler.
     scheduler_launch();
 }
-
+/**
+   \todo Find keepalive options in mac.
+*/
 void socket_tcp_keepalive(int sock){
     int keeplive=1;
+#ifdef __linux__
     int keepidle =1;//second before try to probe
     int keepintvl=1;//wait this seconds before repeat
     int keepcnt  =2;//repeat before declare dead
+#endif
     if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
+#ifdef __linux__
        && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepidle, sizeof(int))
+#endif
        ){
     }else{
 	warning("Keepalive failed\n");

@@ -34,6 +34,7 @@
 #include <math.h>
 #include <string.h>
 #include <alloca.h>
+#include <time.h>
 typedef double __complex__ dcomplex;
 typedef double ddouble;/*just for saving.*/
 #ifndef __CYGWIN__
