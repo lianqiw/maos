@@ -87,9 +87,6 @@ X(cell) *X(cellnew2)(const X(cell) *A){
 void X(cellfree_do)(X(cell) *dc){
     if(!dc) return;
     if(dc->p){
-#ifndef USE_COMPLEX
-	dcell_free_plan(dc);
-#endif
 	if(dc->header){
 	    long count=search_header_num(dc->header, "count");
 	    if(count>0){

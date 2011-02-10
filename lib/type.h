@@ -82,7 +82,6 @@ typedef struct dcell{
     long ny;    /**< number of columns */
     char *header;/**<Optionally contain a header*/
     struct mmap_t *mmap; /**< not NULL if mmaped. unmap the mmaped memory*/
-    struct fft_t *fft; /**<Use a pair of dmat to do FFT in split storage.*/
 }dcell;
 
 typedef enum CEMBED{
@@ -247,6 +246,18 @@ typedef struct pts_t{
     double dx;     /**<sampling of points in each subaperture*/
     int nx;        /**<number of col and row of points per subaperture*/
 }pts_t;
+
+/**
+   Cell of anything
+*/
+typedef struct cell{
+    dmat **p;   /**< Contains an array of pointers to dmat. */
+    long nx;    /**< number of rows */
+    long ny;    /**< number of columns */
+    char *header;/**<Optionally contain a header*/
+    struct mmap_t *mmap; /**< not NULL if mmaped. unmap the mmaped memory*/
+    struct fft_t *fft; /**<Use a pair of dmat to do FFT in split storage.*/
+}cell;
 
 #define AOS_CMAT(A) c##A
 #define AOS_CSPARSE(A) c##A

@@ -104,7 +104,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
     double dx=data->dx;
     dc->p[0] = dnew(nx, ny);
     dc->p[1] = dnew(nx, ny);
-    dcell_fft2plan(dc, -1, data->nthread);
+    fft_t *fft=dcell_fft2plan(dc, -1, data->nthread);
     double *restrict p1=dc->p[0]->p;
     double *restrict p2=dc->p[1]->p;
     char header[1024];
@@ -121,7 +121,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	    p2[i]=randn(rstat)*spect->p[i];//imag
 	}
 	double tk2=myclockd();
-	dcell_fft2(dc, -1);
+	fft2(fft, -1);
 	dscale(dc->p[0], sqrt(wt[ilayer]));
 	if(ilayer+1<nlayer){
 	    dscale(dc->p[1], sqrt(wt[ilayer+1]));
@@ -142,6 +142,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	info("%d: Randn: %.2f FFT: %.2f Save: %.2f\n", ilayer, tk2-tk1, tk3-tk2, tk4-tk3);
     }
     dcellfree(dc);
+    fft_free_plan(fft);
 }
 /**
  *   Generate turbulence screens all in memory

@@ -40,10 +40,10 @@ typedef struct PLAN1D_T{
     fftw_plan plan[3]; /**< Array of plans for 1-d FFT */
 }PLAN1D_T;
 
-typedef struct fft_t{
+struct fft_t{
     fftw_plan plan[3];
     PLAN1D_T *plan1d[3];
-}fft_t;
+};
 static char fnwisdom[64];
 /**
    load FFT wisdom from file.
@@ -250,7 +250,7 @@ cmat *cffttreat(cmat *A){
  * Create a fftw plan based on a 2 element dmat cell array that contains
  * real/imaginary parts respectively
  */
-void dcell_fft2plan(dcell *dc, int dir, int nthreads){
+fft_t* dcell_fft2plan(dcell *dc, int dir, int nthreads){
     assert(abs(dir)==1);
     if(dc->nx*dc->ny!=2){
 	error("dcell of two elements is required\n");
@@ -265,28 +265,26 @@ void dcell_fft2plan(dcell *dc, int dir, int nthreads){
     double *restrict p1=dc->p[0]->p;
     double *restrict p2=dc->p[1]->p;
     //Use FFTW_ESTIMATE since the size may be large, and measuring takes too long.
-    if(!dc->fft) dc->fft=calloc(1, sizeof(fft_t));
-    if(!dc->fft->plan[dir+1]){
+    fft_t *fft=calloc(1, sizeof(fft_t));
+    if(!fft->plan[dir+1]){
 	TIC;tic;
 	LOCK_FFT;
 	if(nthreads<1) nthreads=1;
 	info2("Creating fft plan with %d threads ...", nthreads);
 	FFTW_THREADS(nthreads);
-	dc->fft->plan[dir+1]=fftw_plan_guru_split_dft
+	fft->plan[dir+1]=fftw_plan_guru_split_dft
 	    (2, dims, 1, &howmany_dims, p1, p2, p1, p2, FFTW_ESTIMATE);
 	FFTW_THREADS(1);
 	UNLOCK_FFT;
 	toc2("done");
     }
+    return fft;
 }
 
 /**
  * Free the plan in dcell
  */
-void dcell_fft2(dcell *dc, int dir){
-    assert(abs(dir)==1);
-    if(!dc->fft){
-	error("Please run dcell_fft2plan first\n");
-    }
-    fftw_execute(dc->fft->plan[dir+1]);
+void fft2(fft_t *fft, int dir){
+    assert(fft && abs(dir)==1);
+    fftw_execute(fft->plan[dir+1]);
 }

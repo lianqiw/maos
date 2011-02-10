@@ -18,6 +18,8 @@
 #ifndef AOS_LIB_FFT_H
 #define AOS_LIB_FFT_H
 #include "type.h"
+typedef struct fft_t fft_t;
+void fft2(fft_t *fft, int dir);
 void cfft2plan(cmat *A, int dir);
 void cfft2(cmat *A, int dir);
 void cifft2(cmat *A, int dir);
@@ -27,7 +29,5 @@ void cfft2partial(cmat *A, int ncomp, int dir);
 void fft_free_plan(struct fft_t *fft);
 #define cfree_plan(A) if(A) fft_free_plan(A->fft)
 cmat *cffttreat(cmat *A);
-void dcell_fft2plan(dcell *dc, int dir, int nthreads);
-void dcell_fft2(dcell *dc, int dir);
-#define dcell_free_plan(A) if(A) fft_free_plan(A->fft)
+fft_t* dcell_fft2plan(dcell *dc, int dir, int nthreads);
 #endif
