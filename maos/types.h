@@ -232,6 +232,7 @@ typedef struct RECON_T{
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
 
     loc_t **aloc;      /**<actuator grid*/
+    loc_t **alocm;     /**<misregistered actuator grid for ray tracing*/
     long *aloc_nx;     /**<size of amap used to build aloc*/
     long *aloc_ny;     /**<size of amap used to build aloc*/
 
@@ -364,7 +365,8 @@ typedef struct SIM_T{
     thread_t **cachedm_prop; /**<wrapped cachedm_propdata for threading*/
     dmat *winddir;     /**<input wind direction*/
     dcell *surfwfs;    /**<additional OPD surface for each WFS.*/
-    dcell *surfevl;    /**<additional OPD surcace for each evaluation field*/
+    dcell *surfevl;    /**<additional OPD surface for each evaluation field*/
+    dcell *surfopdx;   /**<additional OPD surface projected onto xloc for fitonly*/
     rectmap_t **tsurf; /**<input tilted M3 surface*/
     map_t **surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
 

@@ -23,6 +23,7 @@
    Contains functions for double sparse dsp
 */
 #include "sp.h"
+#include "spbin.h"
 AOS_SP_DEF(AOS_DMAT,AOS_SPARSE,double)
-
+AOS_SPBIN_DEF(AOS_DMAT,AOS_SPARSE,double)
 #endif

@@ -174,10 +174,11 @@ typedef struct POWFS_CFG_T{
     int mtchscl;    /**<scale subaperture image to have the same intensity as i0. Keep false.*/
     int hasGS0;     /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */
-    char* misreg;   /**misregistration from DM to WFS, described by file
-		       containing a cell array A of 2xp, where p is #1 or number
-		       of wfs belonging to this powfs. The misregistered
-		       coordinate is computed as
+    char* misreg;   /**misregistration of the WFS, described by file containing
+		       a cell array A of 2xp, where p is #1 or number of wfs
+		       belonging to this powfs. The misregistered coordinate is
+		       computed as
+
 		       xm(ip)=\sum_{ic}(A{1,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
 		       ym(ip)=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
 		       where ip is ipowfs. ic is index of column in entries of
@@ -238,7 +239,14 @@ typedef struct DM_CFG_T{
     int ncache;     /**<number of scale group for DM propagation cache. (derived)*/
     double *dxcache; /**<the sampling of plane to cache dm for each scale
 			group. (derived)*/
+    char* misreg;   /**misregistration of the DM with respect to the pupil,
+		       described by file containing a cell array A of 2x1.  The
+		       misregistered coordinate is computed as
 
+		       xm(ip)=\sum_{ic}(A{1,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
+		       ym(ip)=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
+		       where ip is ipowfs. ic is index of column in entries of
+		       A.*/
     /*
      double hystalpha;//arguments for hysteris
       double hystbeta;

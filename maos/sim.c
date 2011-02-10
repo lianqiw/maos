@@ -184,3 +184,44 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	free_simu(simu);
     }
 }
+/**
+   Just do open loop error evalution. Usually not used.
+   \callgraph
+*/
+
+void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs, 
+	       APER_T *aper,  RECON_T *recon){
+    int simend=parms->sim.end;
+    int simstart=parms->sim.start;
+    if(simstart>=simend){
+	raise(SIGUSR1);
+	return;
+    }
+    for(int iseed=0; iseed<parms->sim.nseed; iseed++){
+	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
+	if(!simu) continue;//skip
+	genscreen(simu);
+	simu->dt=parms->sim.dt;
+	double tk_1=myclockd();
+	for(int isim=simstart; isim<simend; isim++){
+	    double ck_0=myclockd();
+	    simu->isim=isim;
+	    simu->status->isim=isim;
+	    perfevl(simu);
+	    double ck_1=myclockd();
+	    simu->status->mean=(ck_1-tk_1)/(double)(isim-simstart+1);
+	    simu->status->rest=simu->status->mean*(double)(simend-isim-1);
+	    simu->status->laps=(ck_1-tk_1);
+	    simu->status->eval=(double)(ck_1-ck_0);
+	    simu->status->tot=(double)(ck_1-ck_0);
+	    simu->status->scale=1;
+	    simu->status->info=S_RUNNING;
+#if defined(__linux__)
+	    scheduler_report(simu->status);
+#endif
+	    print_progress(simu);
+	}
+	free_simu(simu);
+    }
+    raise(SIGUSR1);    
+}

@@ -19,7 +19,6 @@
 #include "maos.h"
 #ifndef AOS_SIM_UTILS_H
 #define AOS_SIM_UTILS_H
-void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon);
 dcell *atm2xloc(const SIM_T *simu);
 void sim_update_etf(SIM_T *simu);
 void seeding(SIM_T *simu);

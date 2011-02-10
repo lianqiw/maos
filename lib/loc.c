@@ -845,6 +845,14 @@ void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
     }
 }
 /**
+   Create a gray pixel annular map in phi using coordinates defined in loc,
+center defined using cx, cy, radius of r, and value of val
+ */
+void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,double val){
+    loccircle(phi,loc,cx,cy,r,val);
+    loccircle(phi,loc,cx,cy,rin,-val);
+}
+/**
  Create a gray pixel elliptical map in phi using coordinates defined in loc,
 center defined using cx, cy, radii of rx, ry, and value of val */
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
@@ -1073,8 +1081,7 @@ static dmat *genRnm(dmat *locr, int ir, int im){
     const long nloc=locr->nx;
     dmat *Rnm=dnew(nloc,1);
     for(int s=0; s<=(ir-im)/2; s++){
-	double coeff=pow(-1,s)*(double)factorial(ir-s)
-	    /(double)(factorial(s)*factorial((ir+im)/2-s)*factorial((ir-im)/2-s));
+	double coeff=pow(-1,s)*factorial(ir-s)/factorial(s)/factorial((ir+im)/2-s)/factorial((ir-im)/2-s);
 	int power=ir-2*s;
 	if(power==0){
 	    for(long iloc=0; iloc<nloc; iloc++){

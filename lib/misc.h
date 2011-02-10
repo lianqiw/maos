@@ -19,7 +19,7 @@
 #ifndef AOS_LIB_MISC_H
 #define AOS_LIB_MISC_H
 #include "common.h"
-long factorial(long n);
+double factorial(long n);
 char *mybasename(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
 void copyfile(const char *dest, const char *src);

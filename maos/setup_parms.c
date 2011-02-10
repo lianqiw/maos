@@ -378,6 +378,7 @@ static void readcfg_dm(PARMS_T *parms){
     parms->dm=calloc(parms->ndm,sizeof(struct DM_CFG_T));
     int* inttmp=NULL;
     double *dbltmp=NULL;
+    char **strtmp=NULL;
     READ_DM(int,order);
     READ_DM(dbl,guard);
     READ_DM(dbl,stroke);
@@ -389,6 +390,8 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM(int,hist); 
     READ_DM(int,cubic);
     READ_DM(dbl,iac);
+    READ_DM(str,misreg);
+    free(strtmp);
     free(inttmp);
     free(dbltmp);
 }

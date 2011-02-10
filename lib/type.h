@@ -27,7 +27,10 @@ typedef int spint;
 #endif
 /**
    \file lib/type.h Defines the math data types like dmat, cmat, dcell, ccell,
-   dsp, csp data types.  */
+   dsp, csp data types.
+
+   Don't use ulong for dimensions because subtracting a bigger ulong from a
+   smaller ulong overflows.  */
 
 
 /*
@@ -190,7 +193,7 @@ typedef struct locmap_t{
 }locmap_t;
 
 /**
-   Struct for loc like plocs, xloc, aloc etc.
+   Struct for coordinates like plocs, xloc, aloc etc.
 */
 typedef struct loc_t{
     double *locx;  /**< x coordinates of each point*/

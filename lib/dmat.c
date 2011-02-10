@@ -17,10 +17,10 @@
 */
 
 #undef USE_COMPLEX
+#include "thread.h"
 #include "mat.c"
 #include "cell.c"
 #include "matbin.c"
-#include "thread.h"
 /*
   This file contains routines that are only useful for dmat (not cmat).
 */

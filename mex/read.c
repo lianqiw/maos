@@ -41,6 +41,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    mwIndex ix;
 	    if(fp->eof) return NULL;
 	    out=mxCreateCellMatrix(nx,ny);
+	    info("%p: Reading cell of %ldx%ld\n", fp->p, nx, ny);
 	    mxArray *header0=mxCreateCellMatrix(nx*ny+1,1);
 	    for(ix=0; ix<nx*ny; ix++){
 		mxArray *header3=NULL;

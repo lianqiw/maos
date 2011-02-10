@@ -63,6 +63,7 @@ void perfevl_ievl(thread_t *info){
     const double dt=simu->dt;
     const int nthread=parms->evl.nthread;
     const int do_psf=(parms->evl.psfmean || parms->evl.psfhist) && isim>=parms->evl.psfisim;
+    const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
     dmat *iopdevl=dnew(aper->locs->nloc,1);
     TIM(0);
     //Setup pointers for easy usage
@@ -81,8 +82,7 @@ void perfevl_ievl(thread_t *info){
     if(simu->surfevl && simu->surfevl->p[ievl]){
 	dadd(&iopdevl, 1, simu->surfevl->p[ievl], 1);
     }
-#define USE_NEW 1
-#if USE_NEW == 1
+
     //atmosphere contribution.
     if(simu->atm){
 	/*fix me: the ray tracing of the same part must be performed in the same thread. */
@@ -96,26 +96,9 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
     }
-#else
-    if(simu->atm){
-	for(int ips=0; ips<nps; ips++){
-	    if(ips==simu->perfevl_iground)
-		continue;//already done.
-	    double hl=simu->atm[ips]->h;
-	    double scale = 1. - hl/parms->evl.ht;
-	    double displacex=-simu->atm[ips]->vx*isim*dt
-		+parms->evl.thetax[ievl]*hl;
-	    double displacey=-simu->atm[ips]->vy*isim*dt
-		+parms->evl.thetay[ievl]*hl;
-	    prop_grid_stat(simu->atm[ips], aper->locs->stat, 
-			   iopdevl->p, 1, displacex, displacey,
-			       scale, 1, 0, 0);
-	}
-    }
-    
-#endif
+
     TIM(1);
-    if(parms->save.evlopd){
+    if(save_evlopd){
 	cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
     }
     if(parms->plot.run){
@@ -246,7 +229,7 @@ void perfevl_ievl(thread_t *info){
 	return;
     }
     //Apply dm correction. tip/tilt command is contained in DM commands
-#if USE_NEW
+
     if(simu->dmreal){
 	int ndm=parms->ndm;
 	for(int idm=0; idm<ndm; idm++){
@@ -255,35 +238,7 @@ void perfevl_ievl(thread_t *info){
 	    CALL_THREAD(simu->evl_prop_dm[ind], nthread, 0);
 	}
     }
-#else
-	//Apply dm correction. tip/tilt command is contained in DM commands
-	if(simu->dmreal){
-	    int ndm=parms->ndm;
-	    for(int idm=0; idm<ndm; idm++){
-		double ht=parms->dm[idm].ht;
-		double scale = 1. - ht/parms->evl.ht;
-		double displacex=parms->evl.thetax[ievl]*ht;
-		double displacey=parms->evl.thetay[ievl]*ht;
-		if(simu->cachedm){
-		    int iscale=parms->evl.scalegroup[idm];
-		    prop_grid_stat(&simu->cachedm[idm][iscale], aper->locs->stat, iopdevl->p, -1, 
-				   displacex, displacey, scale, 0, 0, 0);
 
-		}else{
-		    if(parms->dm[idm].cubic){
-			prop_nongrid_cubic(recon->aloc[idm], simu->dmreal->p[idm]->p,
-					   aper->locs, NULL, iopdevl->p,-1,
-					   displacex, displacey,scale,
-					   parms->dm[idm].iac,0,0);
-		    }else{
-			prop_nongrid(recon->aloc[idm], simu->dmreal->p[idm]->p,
-				     aper->locs, NULL, iopdevl->p,-1,
-				     displacex, displacey,scale,0,0);
-		    }
-		}
-	    }
-	}
-#endif
     TIM(4);
     if(imoao>-1){
 	dmat **dmevl=simu->moao_r_evl->p;
@@ -306,7 +261,7 @@ void perfevl_ievl(thread_t *info){
 		   "Science Closed loop OPD", "x (m)", "y (m)",
 		   "CL %d",ievl);
     }
-    if(parms->save.evlopd){
+    if(save_evlopd){
 	cellarr_dmat(simu->save->evlopdcl[ievl],iopdevl);
     }
     //Evaluate closed loop performance.
@@ -406,6 +361,8 @@ static void perfevl_mean(SIM_T *simu){
 	}
 #endif
     }
+    if(parms->dbg.evlol)
+	return;
     //Field average the CL error
     for(int imod=0; imod<nmod; imod++){
 	int ind=imod+nmod*isim;

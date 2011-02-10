@@ -73,6 +73,7 @@ void loc_create_stat_do(loc_t *loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t *loc);
 void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val);
+void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,double val);
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val);
 void loc_reduce_spcell(loc_t *loc, spcell *sp, int dim, int cont);

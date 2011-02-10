@@ -23,6 +23,7 @@
    Contains functions for complex sparse csp
 */
 #include "sp.h"
+#include "spbin.h"
 AOS_SP_DEF(AOS_CMAT,AOS_CSPARSE,dcomplex)
-
+AOS_SPBIN_DEF(AOS_CMAT,AOS_CSPARSE,dcomplex)
 #endif

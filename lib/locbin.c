@@ -205,9 +205,49 @@ map_t **dcell2map(int *nlayer, dcell *in){
  */
 map_t *mapread(const char *format, ...){
     format2fn;
-    dmat *in=dread("%s", fn);
-    map_t *map=d2map(in);
-    dfree(in);
+    file_t *fp=zfopen(fn,"rb");
+    char *header=NULL;
+    uint32_t magic=read_magic(fp, &header);
+    map_t *map=NULL;
+    if(magic==M_DBL){
+	dmat *in=dreaddata(fp, magic);
+	if(in){
+	    in->header=header;
+	}else{
+	    free(header);
+	}
+	map=d2map(in);
+	dfree(in);
+    }else if(iscell(magic)){//old format.
+	dcell *in=dcellreaddata(fp, magic);
+	if(in){
+	    in->header=header;
+	}else{
+	    free(header);
+	}
+
+	if(fabs(in->p[0]->p[0]-in->p[0]->p[1])>1.e-14){
+	    error("Map should be square\n");
+	}
+	map=calloc(1, sizeof(map_t));
+	map->dx=in->p[0]->p[0];
+	map->ox=in->p[0]->p[2];
+	map->oy=in->p[0]->p[3];
+	map->h=in->p[0]->p[4];
+    
+	dmat *ampg=dref(in->p[1]);
+	map->p=ampg->p;
+	map->nx=ampg->nx;
+	map->ny=ampg->ny;
+	dcellfree(in);
+	dfree_keepdata(ampg);
+	if(map->ox/map->dx*2+map->nx > 2
+	   ||map->oy/map->dx*2+map->ny > 2){
+	    warning("Ampground %s is not centered.\n",fn);
+	}
+    }else{
+	error("Invalid format. magic=%u\n", magic);
+    }
     return map;
 }
 

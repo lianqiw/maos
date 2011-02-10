@@ -133,7 +133,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(dxonedge){//do we want to put a point on edge.
 	dxoffset=0;
     }else{
-	dxoffset=dx/2;
+	dxoffset=dx*0.5;
     }
     
     const int nxsa=nx*nx;//Total Number of OPD points.
@@ -160,29 +160,19 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
     /*Calculate the amplitude for each subaperture OPD point by
       ray tracing from the pupil amplitude map.*/
-    double *ampcircle=NULL;
     powfs[ipowfs].pts->nsa=count;
     powfs[ipowfs].amp=calloc(order*order*nxsa,sizeof(double));
     if(aper->ampground){
 	prop_grid_pts(aper->ampground, powfs[ipowfs].pts, 
 		      powfs[ipowfs].amp, 1,0,0,1,0,0,0);
     }else{
-	/*don't use aper->amp here because aper->amp is
-	  normalized to sum to 1. We want it to max to 1.
-
-	  2010-12-06: updated algorithm to that we are insensitive to
-	  parms->aper.dx
+	/*
+	  No amplitude map is supplied, we simply create an annular using aper.d and aper.din
+	  2011-02-08: use loccircle to directly create an amplitude map on powfs.loc.
 	*/
-	long nxg=parms->aper.d/dx+10;
-	map_t *ampg=mapnew(nxg,nxg,dx,NULL);
-	mapcircle(ampg, parms->aper.d/2, 1);
-	if(parms->aper.din>0){
-	    mapcircle(ampg, parms->aper.din/2, -1);
-	}
-	prop_grid_pts(ampg,powfs[ipowfs].pts,
-		      powfs[ipowfs].amp,1,0,0,1,0,0,0);
-	mapfree(ampg);
-	
+	loc_t *loc=pts2loc(powfs[ipowfs].pts);
+	locannular(powfs[ipowfs].amp, loc, 0, 0, parms->aper.d*0.5, parms->aper.din*0.5, 1);
+	locfree(loc);
     }
     count=0;
     double maxarea=0;
@@ -257,13 +247,13 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
     }
     if(parms->powfs[ipowfs].misreg){
-	/*Create misregistered coordinate and amplitude map to do
-	  physical optics wavefront sensing. the un-misregistered
-	  coordinate and amplitude map is still used to do the
-	  reconstructor because the RTC is not aware of the
-	  misregistration.
-	 */
-	warning("Creating misregistration between DM and WFS.\n");
+	/*Create misregistered coordinate and amplitude map to do physical
+	  optics wavefront sensing. the un-misregistered coordinate and
+	  amplitude map is still used to do the reconstructor because the RTC is
+	  not aware of the misregistration. The misregistered coordinates are
+	  only used for raytracing that is what happens in reality that we are
+	  not aware of. */
+	warning("Creating misregistration for WFS.\n");
 	dcell *misreg=dcellread("%s",parms->powfs[ipowfs].misreg); 
 	if(misreg->nx!=2)
 	    error("%s is in wrong format\n",parms->powfs[ipowfs].misreg);
@@ -289,8 +279,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		prop_grid(aper->ampground, powfs[ipowfs].locm[ilocm], 
 			  powfs[ipowfs].ampm[ilocm], 1,0,0,1,0,0,0);
 	    }else{
-		prop_nongrid(aper->locs,ampcircle,powfs[ipowfs].locm[ilocm],
-			     NULL,powfs[ipowfs].ampm[ilocm],1,0,0,1,0,0);
+		locannular(powfs[ipowfs].amp, powfs[ipowfs].locm[ilocm] , 
+			   0, 0, parms->aper.d*0.5, parms->aper.din*0.5, 1);
 	    }
 	    if(parms->save.setup){
 		locwrite(powfs[ipowfs].locm[ilocm],"%s/powfs%d_locm%d.bin.gz",
@@ -312,9 +302,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	writedbl((double*)powfs[ipowfs].amp,
 		 powfs[ipowfs].loc->nloc,1, "%s/powfs%d_amp.bin.gz",
 		 dirsetup,ipowfs);
-    }
-    if(ampcircle){
-	free(ampcircle);
     }
 }
 /**
@@ -714,8 +701,8 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     const int pixpsax=powfs[ipowfs].pixpsax;
     const int pixpsay=powfs[ipowfs].pixpsay;
     const double embfac=parms->powfs[ipowfs].embfac;
-    const double pxo=-(pixpsax/2-0.5+parms->powfs[ipowfs].pixoffx)*pixtheta;
-    const double pyo=-(pixpsay/2-0.5+parms->powfs[ipowfs].pixoffy)*pixtheta;
+    const double pxo=-(pixpsax*0.5-0.5+parms->powfs[ipowfs].pixoffx)*pixtheta;
+    const double pyo=-(pixpsay*0.5-0.5+parms->powfs[ipowfs].pixoffy)*pixtheta;
     int ndtf;
     int nllt;
     int multi_dtf=0;
@@ -1071,7 +1058,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		  fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)/dhp1));
 	}
 	dhp1=dhp1*cos(parms->sim.za);
-	if((sodium->ny-1-colskip)<0){
+	if(sodium->ny-1<colskip){
 	    error("Invalid configuration. colprep or colsim is too big\n");
 	}
 	colstart=colskip+istep%(sodium->ny-1-colskip);
@@ -1233,8 +1220,8 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     lpts->origy=calloc(1, sizeof(double));
     lpts->area=calloc(1, sizeof(double));
 
-    double oy=lpts->origx[0]=-dxsa/2+dx/2;
-    double ox=lpts->origy[0]=-dxsa/2+dx/2;
+    double oy=lpts->origx[0]=(dx-dxsa)*0.5;
+    double ox=lpts->origy[0]=(dx-dxsa)*0.5;
     lpts->area[0]=1;
     //fixme: when LLT is larger than dsa, need to change this.
     powfs[ipowfs].lotf->amp 
@@ -1338,7 +1325,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
 		intstat->sepsf[jwfs]=dcellread("%s_wfs%d",parms->powfs[ipowfs].piinfile,iwfs);
 		double pmax=dmax(intstat->sepsf[jwfs]->p[0]);
-		if(intstat->sepsf[jwfs]->p[0]->p[0]>pmax/2){
+		if(intstat->sepsf[jwfs]->p[0]->p[0]>pmax*0.5){
 		    error("wfs %d:  psf must have peak at center, not corner.\n", iwfs);
 		}
 		if(intstat->sepsf[jwfs]->nx!=nsa){
@@ -1379,6 +1366,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	    }
 	    
 	    char fnotf[PATH_MAX];
+	    char fnlock[PATH_MAX];
 	    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/",HOME);
 	    if(!exist(fnotf)) 
 		mymkdir("%s",fnotf);
@@ -1387,48 +1375,32 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	    }else{
 		intstat->notf=1;
 	    }
-	    intstat->otf=calloc(intstat->notf, sizeof(ccell*));
-	    int calc_otf=0;
-	    for(int iotf=0; iotf<intstat->notf; iotf++){
-		snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
-			 "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d_v1.bin.gz",
-			 HOME, fnprefix,
-			 parms->aper.d,parms->aper.din, 
-			 parms->atm.r0, parms->atm.l0, 
-			 powfs[ipowfs].pts->dsa,nsa,
-			 1./powfs[ipowfs].pts->dx, 
-			 parms->powfs[ipowfs].nwvl,
-			 parms->powfs[ipowfs].wvl[0]*1.e6,
-			 parms->powfs[ipowfs].embfac,npsfx,npsfy, iotf);
-		if(exist(fnotf)){
-		    info2("Loading otf from %s\n",fnotf);
-		    intstat->otf[iotf]=ccellread("%s",fnotf);
-		    touch(fnotf);
-		}else{
-		    calc_otf=1;
-		    break;
-		}
+	    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
+		     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
+		     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2.bin.gz",
+		     HOME, fnprefix,
+		     parms->aper.d,parms->aper.din, 
+		     parms->atm.r0, parms->atm.l0, 
+		     powfs[ipowfs].pts->dsa,nsa,
+		     1./powfs[ipowfs].pts->dx, 
+		     parms->powfs[ipowfs].nwvl,
+		     parms->powfs[ipowfs].wvl[0]*1.e6,
+		     parms->powfs[ipowfs].embfac,npsfx,npsfy);
+	    snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
+	    int fd=lock_file(fnlock, 1, 0);//blocking exclusive lock
+	    if(fd<0){
+		error("Failed to lock file\n");
 	    }
-	    if(calc_otf){
-		info2("Not found:%s\nGenerating seotf...",fnotf);tic;
+	    if(exist(fnotf)){
+		long nx, ny;
+		intstat->otf=ccellreadarr(&nx, &ny, fnotf);
+		intstat->notf=nx*ny;
+		touch(fnotf);
+	    }else{
+		info2("Generating seotf %s...", fnotf);tic;
 		genseotf(parms,powfs,ipowfs);
 		toc2("done");
-		for(int iotf=0; iotf<intstat->notf; iotf++){
-		    snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
-			     "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			     "nwvl%d_%g_embfac%d_%dx%d_SEOTF_%d_v1.bin.gz",
-			     HOME, fnprefix,
-			     parms->aper.d,parms->aper.din, 
-			     parms->atm.r0, parms->atm.l0, 
-			     powfs[ipowfs].pts->dsa,nsa,
-			     1./powfs[ipowfs].pts->dx, 
-			     parms->powfs[ipowfs].nwvl,
-			     parms->powfs[ipowfs].wvl[0]*1.e6,
-			     parms->powfs[ipowfs].embfac,npsfx,npsfy, iotf);
-		    info2("saving otf to %s\n", fnotf);
-		    ccellwrite(intstat->otf[iotf], "%s",fnotf);
-		}
+		ccellwritearr(intstat->otf, intstat->notf, 1, "%s", fnotf);
 	    }
 	 
 	    if(parms->powfs[ipowfs].hasllt){
@@ -1447,10 +1419,23 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			 parms->powfs[ipowfs].embfac,npsfx,npsfy);
 		if(exist(fnlotf)){
 		    intstat->lotf=ccellread("%s",fnlotf);
-		    touch (fnlotf);
+		    touch(fnlotf);
 		}else{
-		    genselotf(parms,powfs,ipowfs);
-		    ccellwrite(intstat->lotf, "%s",fnlotf);
+		    char fnllock[PATH_MAX];
+		    snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
+		    int fd2=lock_file(fnllock, 1, 0);//blocking exclusive lock
+		    if(fd2<0){
+			error("Failed to lock_file\n");
+		    }
+		    if(!exist(fnlotf)){
+			genselotf(parms,powfs,ipowfs);
+			ccellwrite(intstat->lotf, "%s",fnlotf);
+		    }else{
+			intstat->lotf=ccellread("%s",fnlotf);
+			touch(fnlotf);
+		    }
+		    close(fd2);
+		    remove(fnllock);
 		}
 	    }
 	    free(fnprefix);

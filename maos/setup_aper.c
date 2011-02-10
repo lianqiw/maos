@@ -90,11 +90,8 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    prop_grid_stat(aper->ampground, aper->locs->stat,
 			   aper->amp, 1, 0, 0, 1, 0, 0, 0);
 	}else{
-	    warning("Using loccircle to create a gray pixel aperture\n");
-	    loccircle(aper->amp,aper->locs,0,0,parms->aper.d*0.5,1);
-	    if(parms->aper.din>0){
-		loccircle(aper->amp,aper->locs,0,0,parms->aper.din*0.5,-1);
-	    }
+	    warning("Using locannular to create a gray pixel aperture\n");
+	    locannular(aper->amp,aper->locs,0,0,parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
     //normalize amp to sum to 1.

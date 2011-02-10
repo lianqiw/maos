@@ -25,22 +25,14 @@
 #include "matbin.h"
 #include "dmat.h"
 #include "cmat.h"
-#include "dsp.h"
-#include "csp.h"
 #ifdef USE_COMPLEX
 #define T dcomplex
 #define X(A) c##A
-#define Y(A) c##A
 #define M_T M_CMP
-#define M_SPT64 M_CSP64
-#define M_SPT32 M_CSP32
 #else
 #define T double
 #define X(A) d##A
-#define Y(A) A
 #define M_T M_DBL
-#define M_SPT64 M_SP64
-#define M_SPT32 M_SP32
 #endif
 /**
    Contains routines to write/read dense/sparse matrix into/from file.
@@ -64,7 +56,7 @@ void X(writedata)(file_t *fp, const X(mat) *A){
 /**
    Function to write cell array of dense matrix data. into a file pointer
    Generally used by library developer
- */
+*/
 void X(cellwritedata)(file_t *fp, const X(cell) *dc){
     if(dc) write_header(dc->header, fp);
     write_magic(MCC_ANY, fp);
@@ -85,7 +77,7 @@ void X(cellwritedata)(file_t *fp, const X(cell) *dc){
 /**
    User callable function to write dense matrix into a file. Usage:
    dwrite(A,"A") for double matrix.
-  */
+*/
 void X(write)(const X(mat) *A, const char* format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
@@ -163,8 +155,10 @@ X(mat)* X(read)(const char *format,...){
 }
 /**
    User callable function to read cell array of dense matrix into memory from
-   file. Usage: A=dcellread("A.bin.gz"); for a double dcell.
- */
+   file.
+
+   Usage: A=dcellread("A.bin.gz"); for a double dcell.
+*/
 X(cell)* X(cellread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
@@ -174,172 +168,45 @@ X(cell)* X(cellread)(const char *format,...){
     return out;
 }
 /**
-   Function to write sparse matrix data into file pointed using a file
-   pointer. Generally used by library developer.  We do not convert data during
-   saving, but rather do the conversion during reading.
+   User callable function to read array of cell array of dense matrix from file. 
 
- */
-void Y(spwritedata)(file_t *fp, const X(sp) *sp){
-    uint32_t magic;
-    if(sizeof(spint)==4)
-	magic=M_SPT32;
-    else if(sizeof(spint)==8)
-	magic=M_SPT64;
-    else
-	error("Invalid");
-    Y(spsort)((X(sp)*)sp);//sort the matrix to have the right order
-    zfwrite(&magic, sizeof(uint32_t),1,fp);
-    if(sp){
-	uint64_t m,n,nzmax;
-	m=sp->m;
-	n=sp->n;
-	nzmax=sp->p[n];//don't use sp->nzmax, which maybe larger than actual
-	zfwritelarr(fp, 3, &m, &n, &nzmax);
-	zfwrite(sp->p, sizeof(spint), n+1, fp);
-	zfwrite(sp->i, sizeof(spint), nzmax, fp);
-	zfwrite(sp->x ,sizeof(T),nzmax,fp);  
-    }else{
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
-    }
-}
-/**
-   Function to read sparse matrix data from file pointer into memory. Used by
-   library developer.
-  */
-X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic){
-    if(!magic){
-	magic=read_magic(fp, NULL);
-    }
-    uint32_t size=0;
-    if(magic==M_SPT64){
-	size=8;
-    }else if(magic==M_SPT32){
-	size=4;
-    }else{
-	error("This is not a valid sparse matrix file\n");
-    }
-    uint64_t m,n,nzmax;
-    zfreadlarr(fp, 2, &m, &n);
-    X(sp) *out;
-    if(m==0 || n==0){
-	out=NULL;
-    }else{
-	zfread(&nzmax,sizeof(uint64_t),1,fp);
-	out=Y(spnew)(m,n,nzmax);
-	if(sizeof(spint)==size){//data match.
-	    zfread(out->p, sizeof(spint), n+1, fp);
-	    zfread(out->i, sizeof(spint), nzmax, fp);
-	}else if(size==8){//convert uint64_t to uint32_t
-	    assert(sizeof(spint)==4);
-	    uint64_t *p=malloc(sizeof(uint64_t)*(n+1));
-	    uint64_t *i=malloc(sizeof(uint64_t)*nzmax);
-	    zfread(p, sizeof(uint64_t), n+1, fp);
-	    zfread(i, sizeof(uint64_t), nzmax, fp);
-	    for(unsigned long j=0; j<n+1; j++){
-		out->p[j]=(spint)p[j];
-	    }
-	    for(unsigned long j=0; j<nzmax; j++){
-		out->i[j]=(spint)i[j];
-	    }
-	    free(p);
-	    free(i);
-	}else if(size==4){//convert uint32_t to uint64_t
-	    assert(sizeof(spint)==8);
-	    uint32_t *p=malloc(sizeof(uint32_t)*(n+1));
-	    uint32_t *i=malloc(sizeof(uint32_t)*nzmax);
-	    zfread(p, sizeof(uint32_t), n+1, fp);
-	    zfread(i, sizeof(uint32_t), nzmax, fp);
-	    for(unsigned long j=0; j<n+1; j++){
-		out->p[j]=(spint)p[j];
-	    }
-	    for(unsigned long j=0; j<nzmax; j++){
-		out->i[j]=(spint)i[j];
-	    }
-	    free(p);
-	    free(i);
-	}
-	zfread(out->x, sizeof(T),nzmax, fp);
-    }
-    return out;
-}
-
-/**
-   User callable function to write sparse matrix into file. 
-
-   Usage: spwrite(A,"A.bin.gz");
+   Usage: A=dcellreadarr(&nx, &ny, filename);
 */
-void Y(spwrite)(const X(sp) *sp, const char *format,...){
+X(cell) **X(cellreadarr)(long *nxout, long *nyout, const char *format,...){
     format2fn;
-    //write the sparse matrix to file to later load from matlab
-    file_t *fp=zfopen(fn,"wb");
-    Y(spwritedata)(fp, sp);
-    //don't worry about the warning of 0x401ee45 in valgrind. That is the IO 
-    zfclose(fp);
-}
-/**
-   User callable function to write cell array of sparse matrix into file. 
-
-   Usage: spcellwrite(A,"A.bin.gz"); */
-void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
-    format2fn;
-    uint32_t magic=MCC_ANY;
-    file_t *fp=zfopen(fn,"wb");
-    zfwrite(&magic, sizeof(uint32_t), 1, fp);
-    if(spc){
-	uint64_t nx=spc->nx;
-	uint64_t ny=spc->ny;
-	zfwritelarr(fp, 2, &nx, &ny);
-	for(unsigned long iy=0; iy<spc->ny; iy++){
-	    for(unsigned long ix=0; ix<spc->nx; ix++){
-		Y(spwritedata)(fp, spc->p[ix+iy*spc->nx]);
-	    }
-	}
-    }else{
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
-    }
-    zfclose(fp);
-}
-/**
-   User callable function to read sparse metrix from file. 
-
-   Usage: A=spread("A.bin.gz");*/
-X(sp)* Y(spread)(const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"rb");
-    X(sp) *out=Y(spreaddata)(fp, 0);
-    zfeof(fp);
-    zfclose(fp);
-    return out;
-}
-/**
-   User callable function to read cell array of sparse matrix
-   from file. Usage: A=spcellread("A.bin.gz");
- */
-Y(spcell) *Y(spcellread)(const char *format,...){
-    format2fn;
-    file_t *fp=zfopen(fn,"rb");
+    file_t *fp=zfopen(fn, "rb");
     uint32_t magic=read_magic(fp, NULL);
     if(!iscell(magic)){
-	error("%s is not a sparse cell file. want %d, got %u\n", fn, MCC_ANY, magic);
+	error("This is is not a cell file. want %d, get %d\n",(int)MCC_ANY,(int)magic);
     }
-    uint64_t nx,ny;
-    zfreadlarr(fp, 2, &nx, &ny);
-    Y(spcell) *out;
-    if(nx==0 || ny==0)
-	out=NULL;
-    else{
-	out=Y(spcellnew)(nx,ny);
-	for(unsigned long ix=0; ix<nx*ny; ix++){
-	    out->p[ix]=Y(spreaddata)(fp, 0);
-	}
+    uint64_t nx, ny;
+    zfreadlarr(fp, 2, &nx, &ny); 
+    X(cell) **out=calloc(nx*ny, sizeof(X(cell)*));
+    for(long ic=0; ic<nx*ny; ic++){
+	out[ic]=X(cellreaddata)(fp, 0);
     }
-    zfeof(fp);
-    zfclose(fp);
+    *nxout=nx;
+    *nyout=ny;
     return out;
 }
+/**
+   User callable function to write array of cell array of dense matrix to file. 
 
+   Usage: dcellwritearr(A, nx, ny, filename);
+*/
+void X(cellwritearr)(X(cell)**A, long nxin, long nyin, const char *format, ...){
+    format2fn;
+    file_t *fp=zfopen(fn,"wb");
+    write_magic(MCC_ANY, fp);
+    uint64_t nx, ny;
+    nx=nxin;
+    ny=nyin;
+    zfwritelarr(fp, 2, &nx, &ny);
+    for(long ic=0; ic<nxin*nyin; ic++){
+	X(cellwritedata)(fp, A[ic]);
+    }
+    zfclose(fp);
+}
 /**
    Scale a dcell array and save to file.
 */
@@ -372,7 +239,7 @@ void X(swrite)(X(mat) *A, double scale, const char *format, ...){
    Open a file for write with mmmap. We don't provide a access control here for
    generic usage of the function. Lock on a special dummy file for access
    control.
- */
+*/
 static int mmap_open(char *fn, int rw){
     char *fn2=procfn(fn,rw?"w":"r",0);
     if(!fn2) return -1;
@@ -382,6 +249,9 @@ static int mmap_open(char *fn, int rw){
     int fd;
     if(rw){
 	fd=open(fn2, O_RDWR|O_CREAT, 0600);
+	if(fd!=-1 && ftruncate(fd, 0)){//truncate the file.
+	    error("Unable to ftruncate file to 0 size\n");
+	}
     }else{
 	fd=open(fn2, O_RDONLY);
     }
@@ -399,7 +269,7 @@ static int mmap_open(char *fn, int rw){
 }
 /**
    Initialize the header in the mmaped file.
- */
+*/
 static inline void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header){
     char *p=*p0;
     //Always have a header to align the data.
@@ -449,7 +319,7 @@ X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
    Create a new X(cell) matrix cell object, mmapped from file. be aware that the
    data is not 8-byte aligned. The file is truncated if already exists. We only
    add headers to individual dmat/cmat in the file, not in the cell.
- */
+*/
 X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *header1, char **header2,
 			 const char *format, ...){
     if(!nx || !ny) return NULL;
@@ -575,7 +445,7 @@ static X(mat*) X(readdata_mmap)(char **map){
 }
 /**
    Map the file to memory in read only, shared mode.
- */
+*/
 X(mat*) X(read_mmap)(const char *format, ...){
     format2fn;
     int fd=mmap_open(fn, 0);
@@ -594,7 +464,7 @@ X(mat*) X(read_mmap)(const char *format, ...){
 }
 
 /**
-  Map the file to memory in read only, shared mode.
+   Map the file to memory in read only, shared mode.
 */
 X(cell*) X(cellread_mmap)(const char *format, ...){
     format2fn;

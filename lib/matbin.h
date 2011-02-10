@@ -24,18 +24,14 @@
 #define AOS_MATBIN_DEF(X,Y,T)\
 void X(writedata)(file_t *fp, const X(mat) *A);	\
 void X(cellwritedata)(file_t *fp, const X(cell) *dc);\
-X(mat) *X(readdata)(file_t *fp, uint32_t magic);	\
-X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic);	\
-void Y(spwritedata)(file_t *fp, const X(sp) *sp);\
-X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic);		     \
+X(mat) *X(readdata)(file_t *fp, uint32_t magic); \
+X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic); \
 void X(write)(const X(mat) *A, const char *format,...) CHECK_ARG(2); \
 void X(cellwrite)(const X(cell) *dc, const char *format,...) CHECK_ARG(2); \
 X(mat)* X(read)(const char *format,...) CHECK_ARG(1);\
 X(cell)* X(cellread)(const char *format,...) CHECK_ARG(1);\
-void Y(spwrite)(const X(sp) *sp, const char *format,...) CHECK_ARG(2); \
-void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...) CHECK_ARG(2);\
-X(sp)* Y(spread)(const char *format,...) CHECK_ARG(1);\
-Y(spcell) *Y(spcellread)(const char *format,...) CHECK_ARG(1);\
+X(cell)**X(cellreadarr)(long *nxout, long *nyout, const char *format,...) CHECK_ARG(3); \
+void X(cellwritearr)(X(cell)**A,long nxin, long nyin, const char *format,...) CHECK_ARG(4); \
 void X(cellswrite)(X(cell) *A, double scale, const char *format, ...) CHECK_ARG(3); \
 void X(swrite)(X(mat) *A, double scale, const char *format, ...) CHECK_ARG(3);\
 X(mat) *X(new_mmap)(long nx, long ny, char *header, const char *format,...) CHECK_ARG(4); \
@@ -43,4 +39,5 @@ X(cell)* X(cellnew_mmap)(long nx,long ny,long *nnx,long *nny, char *header1,char
 X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my, char *header, const char *format,...) CHECK_ARG(6); \
 X(mat*) X(read_mmap)(const char *format, ...);\
 X(cell*) X(cellread_mmap)(const char *format, ...);
+
 #endif

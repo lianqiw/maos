@@ -395,7 +395,7 @@ static void add_host_thread(void){
 		int sock=scheduler_connect(ihost,0,0);
 		if(sock==-1){
 		    hsock[ihost]=0;
-		    warning2("Unable to connect to %s\n",hosts[ihost]);
+		    //warning2("Unable to connect to %s\n",hosts[ihost]);
 		}else{
 		    int cmd[2];
 		    cmd[0]=CMD_MONITOR;

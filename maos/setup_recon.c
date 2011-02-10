@@ -131,7 +131,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aloc=calloc(ndm, sizeof(loc_t*));
 	recon->aloc_nx=calloc(ndm, sizeof(long));
 	recon->aloc_ny=calloc(ndm, sizeof(long));
-	for(int idm=0; idm<parms->ndm; idm++){
+	for(int idm=0; idm<ndm; idm++){
 	    double ht=parms->dm[idm].ht;
 	    double dx=parms->dm[idm].dx;
 	    double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
@@ -153,8 +153,27 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
 	}
     }
+    recon->alocm=calloc(ndm, sizeof(loc_t*));
+    for(int idm=0; idm<ndm; idm++){
+	if(parms->dm[idm].misreg){
+	    warning("Creating misregistration for DM.\n");
+	    dcell *misreg=dcellread("%s",parms->dm[idm].misreg); 
+	    PDCELL(misreg, pmisreg);
+	    if(misreg->nx!=2 || misreg->ny!=1)
+		error("%s is in wrong format\n",parms->dm[idm].misreg);
+	    recon->alocm[idm]=loctransform(recon->aloc[idm],pmisreg[0]);
+	    if(parms->plot.setup){
+		plotloc("FoV", parms, recon->alocm[idm], parms->dm[idm].ht, "alocm%d", idm);
+	    }
+	}else{
+	    recon->alocm[idm]=recon->aloc[idm];
+	}
+    }
+    if(parms->save.setup){
+	locarrwrite(recon->alocm,parms->ndm,"%s/alocm",dirsetup);
+    }
     recon->aimcc=dcellnew(ndm,1);
-    for(int idm=0; idm<parms->ndm; idm++){
+    for(int idm=0; idm<ndm; idm++){
 	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc[idm], NULL);
 	dinvspd_inplace(recon->aimcc->p[idm]);
     }
@@ -2197,8 +2216,15 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     int ndm = parms->ndm;
    
     locarrfree(recon->xloc, npsr); recon->xloc=NULL;
-    locarrfree(recon->aloc, ndm); recon->aloc=NULL;
     locfree(recon->ploc); recon->ploc=NULL;
+    for(int idm=0; idm<ndm; idm++){
+	if(recon->alocm[idm]!=recon->aloc[idm])
+	    locfree(recon->alocm[idm]);
+	locfree(recon->alocm[idm]);
+    }
+    free(recon->alocm);
+    free(recon->aloc);
+
     free(recon->xloc_nx); 
     free(recon->xloc_ny);
     free(recon->aloc_nx);

@@ -2,15 +2,15 @@ AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/lib/sys -I$(top_srcdir)/extern
 
 nobase_include_HEADERS=accphi.h common.h type.h locbin.h misc.h mathmisc.h	\
 random.h sp.h dsp.h csp.h bin.h cell.h mkg.h path.h readcfg.h suitesparse.h	\
-blas.h matbin.h cellarr.h mkh.h aos.h chol.h mkw.h turbulence.h mat.h dmat.h	\
-cmat.h loc.h mkz.h proj.h hashlittle.h laplacian.h pcg.h muv.h draw.h fft.h	\
-genotf.h fractal.h stfun.h
+blas.h matbin.h spbin.h cellarr.h mkh.h aos.h chol.h mkw.h turbulence.h mat.h	\
+dmat.h cmat.h loc.h mkz.h proj.h hashlittle.h laplacian.h pcg.h muv.h draw.h	\
+fft.h genotf.h fractal.h stfun.h
 
 nobase_include_HEADERS+=sys/mem.h sys/process.h sys/scheduler_server.h		\
 sys/sockio.h sys/thread.h sys/io.h sys/daemonize.h sys/scheduler_client.h	\
 sys/shm.h sys/sys.h sys/thread_pool.h nr/nr.h
 
-EXTRA_DIST=cell.c sp.c matbin.c mat.c suitesparse.c fractal_do.c
+EXTRA_DIST=cell.c sp.c matbin.c spbin.c mat.c suitesparse.c fractal_do.c
 
 AOS_SRC=readcfg.c dmat.c cmat.c hashlittle.c dsp.c csp.c bin.c	\
 misc.c mathmisc.c random.c loc.c locbin.c cellarr.c turbulence.c path.c mkg.c	\
@@ -31,9 +31,9 @@ libaos_la_LIBADD=$(LDCHOL) $(LDFFT)
 libaos_la_LDFLAGS = -avoid-version
 #The following enables the generation of documentation for cmat, ccell, csp functions.
 dmat.c:tmp.c
-tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c
+tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/spbin.c $(srcdir)/sp.c
 	@echo "#define USE_COMPLEX" > $(srcdir)/tmp.c
-	@cat $(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/sp.c >> $(srcdir)/tmp.c
+	@cat $(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/spbin.c $(srcdir)/sp.c >> $(srcdir)/tmp.c
 
 #we compile a scheduler, which takes less memory than maos.
 bin_PROGRAMS=../bin/scheduler

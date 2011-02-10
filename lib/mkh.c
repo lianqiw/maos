@@ -177,18 +177,6 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	    count++;
 	}
 #endif
-	/*if(renorm && bp[iloc]<count){
-	    double sumwt=0;
-	    for(int ic=bp[iloc]; ic<count; ic++){
-		sumwt+=bx[ic];
-	    }
-	    if(fabs(sumwt)>EPS && fabs(sumwt-1.)>EPS){
-		sumwt=1./sumwt;
-		for(int ic=bp[iloc]; ic<count; ic++){
-		    bx[ic]*=sumwt;
-		}	
-	    }
-	    }*/
     }
     bp[locout->nloc]=count;
     spclean(hback);
@@ -290,9 +278,9 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 }
 #undef ONLY_FULL
 /**
-   Create a matrix to bin from xin to xout using bilinear interpolation. xin and
+   Create a matrix to bin from coordinate xin to xout using bilinear interpolation. xin and
    xout should be 1-d arrays of coordinates. We require the coordinates to order
-   incrementally monotonically.
+   incrementally monotonically, but do not require them to be evenly spaced.
  */
 dsp *mkhbin1d(dmat *xin, dmat *xout){
     if(xin->ny!=1 || xout->ny!=1){
@@ -327,3 +315,4 @@ dsp *mkhbin1d(dmat *xin, dmat *xout){
     hbin->p[xin->nx]=count;
     return hbin;
 }
+

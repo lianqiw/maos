@@ -27,50 +27,9 @@
    \file maos/sim_utils.c
    Contains a few support functions for simulation.
 */
-/**
-   Just do open loop error evalution. Usually not used.
-   \callgraph
-*/
 //static double opdzlim[2]={-3e-5,3e-5};
 static double *opdzlim=NULL;
-void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs, 
-	       APER_T *aper,  RECON_T *recon){
-    int simend=parms->sim.end;
-    int simstart=parms->sim.start;
-    if(simstart>=simend){
-	raise(SIGUSR1);
-	return;
-    }
-    for(int iseed=0; iseed<parms->sim.nseed; iseed++){
-	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
-	if(!simu) continue;//skip
-	genscreen(simu);
-	simu->dt=parms->sim.dt;
-	double tk_1=myclockd();
-	for(int isim=simstart; isim<simend; isim++){
-	    double ck_0=myclockd();
-	    simu->isim=isim;
-	    simu->status->isim=isim;
-	    perfevl(simu);
-	    double ck_1=myclockd();
-	    
-	    simu->status->rest=((ck_1-tk_1)*(double)(simend-isim-1)
-				/(double)(isim-simstart+1));
-	    simu->status->laps=(ck_1-tk_1);
-	    
-	    simu->status->eval=(double)(ck_1-ck_0);
-	    simu->status->tot=(double)(ck_1-ck_0);
-	    simu->status->scale=1;
-	    simu->status->info=S_RUNNING;
-#if defined(__linux__)
-	    scheduler_report(simu->status);
-#endif
-	    print_progress(simu);
-	}
-	free_simu(simu);
-    }
-    raise(SIGUSR1);    
-}
+
 static map_t **genscreen_do(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const ATM_CFG_T *atm=&parms->atm;
@@ -498,17 +457,20 @@ void evolve_screen(SIM_T *simu){
 dcell *atm2xloc(const SIM_T *simu){
     const RECON_T *recon=simu->recon;
     const PARMS_T *parms=simu->parms;
-    if(!simu->atm)
-	return NULL;
     dcell *opdx=dcellnew(recon->npsr,1);
     int isim=simu->isim;
-    for(int ips=0; ips<parms->atm.nps; ips++){
-	double disx=-simu->atm[ips]->vx*isim*simu->dt;
-	double disy=-simu->atm[ips]->vy*isim*simu->dt;
-	int ipsr=parms->atm.ipsr[ips];
-	opdx->p[ipsr]=dnew(recon->xloc[ipsr]->nloc,1);
-	prop_grid(simu->atm[ips],recon->xloc[ipsr],opdx->p[ipsr]->p,
-		  1,disx,disy,1,1,0,0);
+    if(simu->atm){
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    double disx=-simu->atm[ips]->vx*isim*simu->dt;
+	    double disy=-simu->atm[ips]->vy*isim*simu->dt;
+	    int ipsr=parms->atm.ipsr[ips];
+	    opdx->p[ipsr]=dnew(recon->xloc[ipsr]->nloc,1);
+	    prop_grid(simu->atm[ips],recon->xloc[ipsr],opdx->p[ipsr]->p,
+		      1,disx,disy,1,1,0,0);
+	}
+    }
+    if(simu->surfopdx){
+	dcelladd(&opdx, 1, simu->surfopdx, 1);
     }
     return opdx;
 }
@@ -826,7 +788,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->cubic=0;//already accounted for in cachedm.
 		data->cubic_iac=0;//not needed
 	    }else{
-		data->locin=recon->aloc[idm];
+		data->locin=recon->alocm[idm];
 		data->phiin=simu->dmreal->p[idm]->p;
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
@@ -900,7 +862,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->ostat=aper->locs->stat;
 		tot=aper->locs->stat->ncol;
 	    }else{
-		data->locin=recon->aloc[idm];
+		data->locin=recon->alocm[idm];
 		data->phiin=simu->dmreal->p[idm]->p;
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
@@ -1149,8 +1111,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	save->evlopdol=calloc(parms->evl.nevl, sizeof(cellarr*));
 	save->evlopdcl=calloc(parms->evl.nevl, sizeof(cellarr*));
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    save->evlopdol[ievl]=cellarr_init(nstep, "evl%d_opdol_%d.bin",ievl,seed);
-	    save->evlopdcl[ievl]=cellarr_init(nstep, "evl%d_opdcl_%d.bin",ievl,seed);
+	    save->evlopdol[ievl]=cellarr_init(nstep/parms->save.evlopd, 
+					      "evl%d_opdol_%d.bin",ievl,seed);
+	    save->evlopdcl[ievl]=cellarr_init(nstep/parms->save.evlopd,
+					      "evl%d_opdcl_%d.bin",ievl,seed);
 	}
     }
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
@@ -1175,8 +1139,10 @@ void free_simu(SIM_T *simu){
     free(simu->atm_rand);
     free(simu->atmwd_rand);
     free(simu->wfs_rand);
-    dfree(simu->genscreen->spect);
-    free(simu->genscreen);
+    if(simu->genscreen){
+	dfree(simu->genscreen->spect);
+	free(simu->genscreen);
+    }
     maparrfree(simu->atm, parms->atm.nps);
     maparrfree(simu->atm2, parms->atm.nps);
     PDEINIT(simu->mutex_plot);
@@ -1450,36 +1416,45 @@ void print_progress(const SIM_T *simu){
     const long lapsm=(laps-lapsh*3600)/60;
     const int isim=simu->isim;
     const int nmod=parms->evl.nmod;
-  
     
-    
-    fprintf(stderr,"\033[00;32mStep %3d: OL: %6.1f %6.1f %6.1f nm; CL %6.1f %6.1f %6.1f nm;",
-	    isim,
-	    mysqrt(simu->ole->p[isim*nmod])*1e9,
-	    mysqrt(simu->ole->p[1+isim*nmod])*1e9,
-	    mysqrt(simu->ole->p[2+isim*nmod])*1e9,
-	    mysqrt(simu->cle->p[isim*nmod])*1e9,
-	    mysqrt(simu->cle->p[1+isim*nmod])*1e9,
-	    mysqrt(simu->cle->p[2+isim*nmod])*1e9);
-    if(parms->tomo.split){
-	fprintf(stderr," Split %6.1f %6.1f %6.1f nm;",
-		mysqrt(simu->clem->p[isim*3])*1e9,
-		mysqrt(simu->clem->p[1+isim*3])*1e9,
-		mysqrt(simu->clem->p[2+isim*3])*1e9);
-    }
-    if(parms->evl.tomo){
-	fprintf(stderr," TOMO %6.1f nm %6.1f nm;",
-		mysqrt(simu->cletomo->p[isim*nmod])*1e9,
-		mysqrt(simu->cletomo->p[2+isim*nmod])*1e9);
-    }
-    fprintf(stderr,"\033[00;00m\n");
+    if(parms->dbg.evlol){
+	fprintf(stderr,"\033[00;32mStep %3d: OL: %6.1f %6.1f %6.1f nm;\033[00;00m\n",
+		isim,
+		mysqrt(simu->ole->p[isim*nmod])*1e9,
+		mysqrt(simu->ole->p[1+isim*nmod])*1e9,
+		mysqrt(simu->ole->p[2+isim*nmod])*1e9);
 
-    fprintf(stderr,"Timing: WFS:%5.2f Recon:%5.2f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
-	    " Used %ld:%02ld, Left %ld:%02ld\n",
-	    status->wfs*tkmean, status->recon*tkmean, 
-	    status->cache*tkmean, status->eval*tkmean, 
-	    status->tot*tkmean, status->mean*tkmean,
-	    lapsh,lapsm,resth,restm);
+	fprintf(stderr,"Timing: Tot:%5.2f Mean:%5.2f. Used %ld:%02ld, Left %ld:%02ld\n",
+		status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
+    }else{    
+	fprintf(stderr,"\033[00;32mStep %3d: OL: %6.1f %6.1f %6.1f nm; CL %6.1f %6.1f %6.1f nm;",
+		isim,
+		mysqrt(simu->ole->p[isim*nmod])*1e9,
+		mysqrt(simu->ole->p[1+isim*nmod])*1e9,
+		mysqrt(simu->ole->p[2+isim*nmod])*1e9,
+		mysqrt(simu->cle->p[isim*nmod])*1e9,
+		mysqrt(simu->cle->p[1+isim*nmod])*1e9,
+		mysqrt(simu->cle->p[2+isim*nmod])*1e9);
+	if(parms->tomo.split){
+	    fprintf(stderr," Split %6.1f %6.1f %6.1f nm;",
+		    mysqrt(simu->clem->p[isim*3])*1e9,
+		    mysqrt(simu->clem->p[1+isim*3])*1e9,
+		    mysqrt(simu->clem->p[2+isim*3])*1e9);
+	}
+	if(parms->evl.tomo){
+	    fprintf(stderr," TOMO %6.1f nm %6.1f nm;",
+		    mysqrt(simu->cletomo->p[isim*nmod])*1e9,
+		    mysqrt(simu->cletomo->p[2+isim*nmod])*1e9);
+	}
+	fprintf(stderr,"\033[00;00m\n");
+    
+	fprintf(stderr,"Timing: WFS:%5.2f Recon:%5.2f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
+		" Used %ld:%02ld, Left %ld:%02ld\n",
+		status->wfs*tkmean, status->recon*tkmean, 
+		status->cache*tkmean, status->eval*tkmean, 
+		status->tot*tkmean, status->mean*tkmean,
+		lapsh,lapsm,resth,restm);
+    }
 }
 /**
    Output parameters necessary to run postproc using skyc/skyc.c

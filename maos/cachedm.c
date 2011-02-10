@@ -82,7 +82,7 @@ void prep_cachedm(SIM_T *simu){
 	int idm=simu->pcachedm[ic][0];
 	int iscale=simu->pcachedm[ic][1];
 	simu->cachedm_prop[ic]=calloc(parms->sim.nthread, sizeof(thread_t));
-	cpropdata[ic].locin=simu->recon->aloc[idm];
+	cpropdata[ic].locin=simu->recon->alocm[idm];
 	cpropdata[ic].phiin=simu->dmreal->p[idm]->p;
 	cpropdata[ic].mapout=simu->cachedm[idm][iscale];
 	cpropdata[ic].alpha=1;

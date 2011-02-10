@@ -16,6 +16,17 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define USE_COMPLEX
-#include "sp.c"
-#include "spbin.c"
+#ifndef AOS_SPBIN_H
+#define AOS_SPBIN_H
+#include "bin.h"
+#include "type.h"
+
+#define AOS_SPBIN_DEF(X,Y,T)\
+void Y(spwritedata)(file_t *fp, const X(sp) *sp);\
+X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic);		     \
+void Y(spwrite)(const X(sp) *sp, const char *format,...) CHECK_ARG(2); \
+void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...) CHECK_ARG(2);\
+X(sp)* Y(spread)(const char *format,...) CHECK_ARG(1);\
+Y(spcell) *Y(spcellread)(const char *format,...) CHECK_ARG(1);
+#endif
+

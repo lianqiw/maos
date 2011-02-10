@@ -169,6 +169,9 @@ void setup_surf(SIM_T*simu){
     if(!simu->surfevl){
 	simu->surfevl=dcellnew(parms->evl.nevl,1);
     }
+    if(!simu->surfopdx && parms->dbg.fitonly){
+	simu->surfopdx=dcellnew(parms->atmr.nps, 1);
+    }
     simu->surf=calloc(parms->nsurf, sizeof(map_t*));
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	if(!parms->surf[isurf]) continue;
@@ -240,6 +243,35 @@ void setup_surf(SIM_T*simu){
 	    if(do_rot){
 		locfree(locwfs);
 	    }
+	}
+	if(parms->dbg.fitonly){
+	    double distmin=INFINITY;
+	    int jpsr=-1;
+	    //Select the layer that is closed to the surface.
+	    for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
+		double dist=fabs(parms->atmr.ht[ipsr]-hl);
+		if(dist < distmin){
+		    jpsr=ipsr;
+		    distmin=dist;
+		}
+	    }
+	    loc_t *xloc;
+	    if(do_rot){
+		xloc = locdup(simu->recon->xloc[jpsr]);
+		locrot(xloc, rot);
+	    }else{
+		xloc = simu->recon->xloc[jpsr];
+	    }
+	    loc_t *surfloc=mksqloc_map(simu->surf[isurf]);
+	    dsp *H=mkhb(xloc, surfloc, NULL, 0, 0, 1, 0, 0);
+	    double scale=pow(simu->surf[isurf]->dx/xloc->dx,2);
+	    if(!simu->surfopdx->p[jpsr]){
+		simu->surfopdx->p[jpsr]=dnew(xloc->nloc, 1);
+	    }
+	    spmulvec(simu->surfopdx->p[jpsr]->p, H, simu->surf[isurf]->p, scale);
+	    if(do_rot) locfree(xloc);
+	    locfree(surfloc);
+	    dwrite(simu->surfopdx->p[jpsr], "surfopdx_%d", jpsr);
 	}
     }
     if(do_rot){

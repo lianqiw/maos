@@ -18,3 +18,4 @@
 
 #undef USE_COMPLEX
 #include "sp.c"
+#include "spbin.c"
