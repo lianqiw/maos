@@ -46,18 +46,15 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    warning("Pupil is rotated by %g deg\n",parms->aper.rotdeg);
 	    const long nx=aper->ampground->nx;
 	    const long ny=aper->ampground->ny;
-	    double *p2=calloc(nx*ny, sizeof(double));
-	    dmat *B=dnew_ref(nx,ny,p2);
-	    dembed(B,(dmat*)aper->ampground,parms->aper.rotdeg/180.*M_PI);
-	    dfree(B);//won't free p2.
-	    if(aper->ampground->nref[0]>1){
-		aper->ampground->nref[0]--;
-		aper->ampground->nref=calloc(1, sizeof(long));
-		aper->ampground->nref[0]=1;
-	    }
-	    free(aper->ampground->p);
-	    aper->ampground->p=p2;
+	    dmat *B=dnew_data(nx, ny, aper->ampground->p);
+	    aper->ampground->p=calloc(nx*ny, sizeof(double));
+	    dembed((dmat*)aper->ampground,B,parms->aper.rotdeg/180.*M_PI);
+	    dfree(B);
 	}
+	info("aper.misreg is (%g, %g)\n", parms->aper.misreg[0], parms->aper.misreg[1]);
+	aper->ampground->ox+=parms->aper.misreg[0];
+	aper->ampground->oy+=parms->aper.misreg[1];
+	info("ampground orig is (%g, %g)\n", aper->ampground->ox, aper->ampground->oy);
     }
  
     if(parms->load.locs){
@@ -66,7 +63,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
     }else{
-	if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6){
+	if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6 && !parms->evl.ismisreg){
 	    //LOCSTAT records the starting of each row to speed up accphi
 	    locstat_t *locstat=calloc(1, sizeof(locstat_t));
 	    info2("Using amplitude map to generate aper grid\n");
@@ -83,6 +80,12 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    locwrite(aper->locs, "%s/aper_locs.bin.gz",dirsetup);
 	}
     }
+    if(parms->evl.ismisreg){
+	for(long iloc=0; iloc<aper->locs->nloc; iloc++){
+	    aper->locs->locx[iloc]+=parms->evl.misreg[0];
+	    aper->locs->locy[iloc]+=parms->evl.misreg[1];
+	}
+    }
     loc_create_stat(aper->locs);
     if(!aper->amp){
 	aper->amp=calloc(aper->locs->nloc,sizeof(double));
@@ -91,7 +94,9 @@ APER_T * setup_aper(const PARMS_T *const parms){
 			   aper->amp, 1, 0, 0, 1, 0, 0, 0);
 	}else{
 	    warning("Using locannular to create a gray pixel aperture\n");
-	    locannular(aper->amp,aper->locs,0,0,parms->aper.d*0.5,parms->aper.din*0.5,1);
+	    locannular(aper->amp,aper->locs,
+		       parms->aper.misreg[0],parms->aper.misreg[1],
+		       parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
     //normalize amp to sum to 1.

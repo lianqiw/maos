@@ -37,8 +37,8 @@ typedef struct APER_T{
     double *amp1;        /**<amplitude map defined o locs, maximum is 1.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
-    dmat *mcc;           /**<piston/tip/tilt mode cross-coupling.*/
-    dmat *imcc;          /**<inverse of mode cross coupling for evaluations.*/
+    dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
+    dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
     double ipcc;         /**<piston term in imcc.*/
     double sumamp2;      /**<sum of amplitude squared*/
     int **embed;         /**<Embedding index for PSF computing, one per wvl*/
@@ -70,13 +70,14 @@ typedef struct ETF_T{
 /**
    contains the data associated with a LLT uplink path.
  */
-typedef struct LOTF_T{
+typedef struct LLT_T{
     loc_t *loc;          /**<The grid that defines the LLT pupil*/
     pts_t *pts;          /**<The LLT lower left grid point location*/
-    double *amp;         /**<The amplitude defined on loc*/
+    dmat  *amp;          /**<The amplitude defined on loc*/
     dcell *mcc;          /**<modal cross coupling matrix*/
     dcell *imcc;         /**<inverse of imcc*/
-}LOTF_T;
+    dcell *ncpa;         /**<The LLT surface error*/
+}LLT_T;
 /**
    contains the intensity statistics assiciated with a certain powfs for
 physical optics wfs. */
@@ -101,10 +102,15 @@ typedef struct INTSTAT_T{
    contains the data associated with a certain type of WFS. not
 necessarily physical optics WFS.x */
 typedef struct POWFS_T{
+    //Parameters about subapertures.
     loc_t *saloc;       /**<lower left corner of the subaperture*/
     pts_t *pts;         /**<records lower left-most point of each sa in a regular grid*/
+    dmat *saa;          /**<Subaperture area*/
     loc_t *loc;         /**<explicit pts in a regular grid.*/
     loc_t **locm;       /**<mis-registered loc, if any.*/
+    pts_t **ptsm;       /**<mis-registered pts, if pure shift*/
+    dcell *saam;        /**<mis-registered saa, if any*/
+
     dcell *ncpa;        /**<NCPA OPDs to add to WFS OPD during simulation.*/
     dcell *ncpa_grad;   /**<NCPA grads to subtract from measurement. */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
@@ -112,18 +118,17 @@ typedef struct POWFS_T{
     ETF_T *etfprep;     /**<ETF for computing short exposure matched filter.*/
     ETF_T *etfsim;      /**<ETF for simulation.*/
     dmat *focus;        /**<additional focus error. (llt->fnrange)*/
-    LOTF_T *lotf;       /**<uplink aperture*/
-    dcell *mcc;         /**<P/T/T cross coupling matrix with amplitude weighting.*/
-    dcell *imcc;        /**<inverse of mcc.*/
+    LLT_T *llt;         /**<uplink aperture*/
+    //dcell *mcc;         /**<P/T/T cross coupling matrix with amplitude weighting.*/
+    dcell **imcc;        /**<inverse of mcc.*/
     dcell *srot;        /**<subaperture rotation wrt LLT*/
     dcell *srsa;        /**<subaperture distance wrt LLT*/
     dmat *srsamax;      /**<max of srsa for each llt.*/
     dcell *sprint;      /**<which subapertures to print sanea*/
     INTSTAT_T *intstat; /**<matched filter i0 and its derivative.*/
-    dsp *GS0;           /**<gtilt (average gradient)*/
-    dsp *ZS0;           /**<ztilt (zernike best fit tip/tilt)*/
-    double *amp;        /**<amplitude map, max at 1.*/
-    double **ampm;      /**<amplitude map on misregistered grid, locm. used for simulation*/
+    spcell *GS0;        /**<gtilt (average gradient) on ampm*/
+    dmat *amp;          /**<amplitude map, max at 1.*/
+    dcell *ampm;        /**<real amplitude map on misregistered grid, locm. used for gradient computing*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/
@@ -135,7 +140,11 @@ typedef struct POWFS_T{
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/
     int ncompy;         /**<Dimension of FFT for subaperture imaging along y*/
     int nlocm;          /**<number of misregistered loc. 1 or nwfs of this powfs.*/
+    int nimcc;          /**<number of imcc*/
     int nthread;        /**<Equal to MAX(nsa,sim.nthread)*/
+    //The following are a few convenient pointers.
+    double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
+    double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
 }POWFS_T;
 
 /**

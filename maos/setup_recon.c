@@ -161,7 +161,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    PDCELL(misreg, pmisreg);
 	    if(misreg->nx!=2 || misreg->ny!=1)
 		error("%s is in wrong format\n",parms->dm[idm].misreg);
-	    recon->alocm[idm]=loctransform(recon->aloc[idm],pmisreg[0]);
+	    recon->alocm[idm]=loctransform(recon->aloc[idm],NULL,pmisreg[0]);
 	    if(parms->plot.setup){
 		plotloc("FoV", parms, recon->alocm[idm], parms->dm[idm].ht, "alocm%d", idm);
 	    }
@@ -313,7 +313,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
    Setup gradient operator from ploc to wavefront sensors.
  */
 static void
-setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfs;
     spcell *GP=NULL;
@@ -332,13 +332,31 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	info2("Generating GP with ");TIC;tic;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
-	    //use ploc as an intermediate plane.
+	    /*use ploc as an intermediate plane.  Amplitude must use assumed amp
+	      (non-misregistered)*/
+	    dmat *amp=NULL;
+	    if(parms->aper.ismisreg){
+		amp=dnew(powfs[ipowfs].loc->nloc, 1);
+		if(aper->ampground){
+		    prop_grid_pts(aper->ampground, powfs[ipowfs].pts, amp->p, 1,
+				  parms->aper.misreg[0], parms->aper.misreg[1], 1,0,0,0);
+		}else{
+		    locannular(amp->p, powfs[ipowfs].loc, 0,0,
+			       parms->aper.d*0.5, parms->aper.din*0.5, 1);
+		}
+		if(parms->plot.setup){
+		    drawopd("amp recon", powfs[ipowfs].loc, amp->p, NULL,
+			    "WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
+		}
+	    }else{
+		amp=dref(powfs[ipowfs].amp);
+	    }
 	    switch(parms->powfs[ipowfs].gtype_recon){
 	    case 0:{ /*Create averaging gradient operator (gtilt) from PLOC,
 		       using fine sampled powfs.loc as intermediate plane*/
 		double displace[2]={0,0};
 		info2(" Gploc");
-		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].loc,powfs[ipowfs].amp,
+		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].loc,amp->p,
 				  powfs[ipowfs].saloc,1,1,displace,1);
 		if(parms->save.setup){
 		    spwrite(GP->p[ipowfs], "%s/powfs%d_GP", dirsetup, ipowfs);
@@ -346,16 +364,21 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }
 		break;
 	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
-		       powfs.loc as intermediate plane*/
+		       powfs.loc as intermediate plane.*/
+		double displace[2]={0,0};
+		dsp* ZS0=mkz(powfs[ipowfs].loc,amp->p,
+			     (loc_t*)powfs[ipowfs].pts, 1,1,displace);
 		info2(" Zploc");
-		dsp *H=mkh(ploc,powfs[ipowfs].loc,powfs[ipowfs].amp, 0,0,1,0,0);
-		GP->p[ipowfs]=spmulsp(powfs[ipowfs].ZS0,H);
+		dsp *H=mkh(ploc,powfs[ipowfs].loc,powfs[ipowfs].amp->p, 0,0,1,0,0);
+		GP->p[ipowfs]=spmulsp(ZS0,H);
 		spfree(H);
+		spfree(ZS0);
 	    }
 		break;
 	    default:
 		error("Invalid gtype_recon\n");
 	    }
+	    dfree(amp);
 	}
 	toc2(" done");
 	if(parms->save.setup){
@@ -626,7 +649,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 	    //scale neaisq by area^2 if diffraction limited
 	    //only implementing seeing limited here.
 	    double (*neaip)[nsa]=(double(*)[nsa])neai->p;
-	    double *area=powfs[ipowfs].pts->area;
+	    double *area=powfs[ipowfs].saa->p;
 	    for(int i=0; i<nsa; i++){
 		neaip[0][i]=neaip[1][i]=neaisq*(area[i]);
 	    }
@@ -652,7 +675,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 	double nea2_sum=0;
 	int count=0;
 	for(int isa=0; isa<nsa; isa++){
-	    if(powfs[ipowfs].pts->area[isa]>area_thres){
+	    if(powfs[ipowfs].saa->p[isa]>area_thres){
 		nea2_sum+=1./(sanea->p[isa])+1./(sanea->p[isa+nsa]);
 		count++;
 	    }
@@ -1569,12 +1592,14 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
 	dmat *opd=dnew(powfs[ipowfs].loc->nloc,1);
 	loc_add_focus(opd->p, powfs[ipowfs].loc, 1);
 	const int nsa=powfs[ipowfs].pts->nsa;
-	Gfocus->p[iwfs]=dnew(nsa*2,1);
+	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    	Gfocus->p[iwfs]=dnew(nsa*2,1);
 	if(parms->powfs[ipowfs].gtype_recon==1){
 	    pts_ztilt(Gfocus->p[iwfs]->p, powfs[ipowfs].pts,
-		      powfs[ipowfs].imcc, powfs[ipowfs].amp, opd->p);
+		      powfs[ipowfs].nimcc>1?powfs[ipowfs].imcc[wfsind]:powfs[ipowfs].imcc[0], 
+		      powfs[ipowfs].realamp[wfsind], opd->p);
 	}else{
-	    spmulmat(&Gfocus->p[iwfs], powfs[ipowfs].GS0, opd, 1);
+	    spmulmat(&Gfocus->p[iwfs], adpind(powfs[ipowfs].GS0,wfsind), opd, 1);
 	}
 	dfree(opd);
     }
@@ -1865,7 +1890,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     setup_recon_aloc(recon,parms);
     //setup pupil coarse grid
     setup_recon_ploc(recon,parms);
-    setup_recon_GP(recon,parms,powfs);
+    setup_recon_GP(recon,parms,powfs,aper);
     setup_recon_GA(recon,parms,powfs);
     //assemble noise equiva angle inverse from powfs information
     setup_recon_saneai(recon,parms,powfs);
@@ -2000,13 +2025,8 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
  
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(powfs[ipowfs].ZS0){
-	    //ZS0 is used in setup_recon. not in simulation, too large a matrix.
-	    spfree(powfs[ipowfs].ZS0);
-	    powfs[ipowfs].ZS0=NULL;
-	}
 	if(!parms->powfs[ipowfs].hasGS0 && powfs[ipowfs].GS0){
-	    spfree(powfs[ipowfs].GS0);
+	    spcellfree(powfs[ipowfs].GS0);
 	    powfs[ipowfs].GS0=NULL;
 	}
     }

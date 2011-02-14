@@ -48,6 +48,7 @@
 #define Z(A) d##A##_
 #define T double
 #define M_T M_DBL
+#define M_TT M_DMAT
 #define REAL(A) (A)
 #define ABS(A) fabs(A)
 #define SQRT(A) sqrt(A)
@@ -62,6 +63,7 @@
 #define Z(A) z##A##_ //blas/lapack convention
 #define T dcomplex
 #define M_T M_CMP
+#define M_TT M_CMAT
 #define REAL(A) creal(A)
 #define ABS(A) cabs(A)
 #define SQRT(A) csqrt(A)
@@ -77,7 +79,11 @@
 #define PMAT(A,pp) T (*restrict pp)[(A)->nx]=(void *)(A)->p
 #define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
 
-
+vtbl X(mat_vtbl)={M_TT,
+		  (vtbl_write)X(write),
+		  (vtbl_writedata)X(writedata),
+		  (vtbl_read)X(read),
+		  (vtbl_readdata)X(readdata)};
 /**
    Work horse function that creats the matrix object. if p is
    NULL, memory is allocated. Allocation for X(mat) objects
@@ -88,6 +94,7 @@
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     if(nx==0 || ny==0) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
+    out->vtbl=&X(mat_vtbl);
     out->nx=nx;
     out->ny=ny;
     if(ref){//the data does not belong to us.
@@ -174,7 +181,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 
 /**
    Resize a matrix by adding or removing columns or rows. Data is kept
-   whever possible. Not used as of 2010-09-07.
+   whever possible.
 */
 void X(resize)(X(mat) *A, long nx, long ny){
     if(A->nref[0]>1){
@@ -182,16 +189,9 @@ void X(resize)(X(mat) *A, long nx, long ny){
     }
     if(nx==0 || ny==0){
 	warning("resizing to (%ld, %ld). Free the vector.\n", nx,ny);
-	if(A->p) free(A->p);
-	A->p=NULL;
-	A->nx=nx;
-	A->ny=ny;
+	X(free)(A);
     }
-    if(A->nx>nx || A->ny>ny){
-	warning("Resize from (%ld,%ld) to (%ld,%ld)\n",
-		A->nx,A->ny,nx,ny);
-    }
-    if(A->nx==nx){
+    if(A->nx==nx || A->ny==1){
 	A->p=realloc(A->p, sizeof(T)*nx*ny);
 	if(nx*ny>A->nx*A->ny){
 	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
@@ -207,6 +207,8 @@ void X(resize)(X(mat) *A, long nx, long ny){
 	free(A->p);
 	A->p=p;
     }
+    A->nx=nx;
+    A->ny=ny;
 }
 
 /**

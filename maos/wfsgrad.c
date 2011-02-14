@@ -65,7 +65,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int imoao=parms->powfs[ipowfs].moao;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int pixpsa=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->nx;
-    const int indwfs=parms->powfs[ipowfs].wfsind[iwfs];
+    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     const double hs=parms->powfs[ipowfs].hs;
     const int npix=pixpsa*nsa;
     const int dtrat=parms->powfs[ipowfs].dtrat;
@@ -105,19 +105,9 @@ void wfsgrad_iwfs(thread_t *info){
     */
     if(powfs[ipowfs].ncpa){
 	//info2("Adding NCPA to wfs %d\n",iwfs);
-	dadd(&opd, 1, powfs[ipowfs].ncpa->p[indwfs], 1);
+	dadd(&opd, 1, powfs[ipowfs].ncpa->p[wfsind], 1);
     }
-    int ilocm=-1;
-    if(powfs[ipowfs].locm){
-	ilocm=(powfs[ipowfs].nlocm>1)?indwfs:0;
-	info("ilocm=%d\n",ilocm);
-    }
-    double *realamp;
-    if(powfs[ipowfs].locm){
-	realamp=powfs[ipowfs].ampm[ilocm];
-    }else{
-	realamp=powfs[ipowfs].amp;
-    }
+    double *realamp=powfs[ipowfs].realamp[wfsind];
     /*
       Now begin ray tracing.
     */
@@ -168,7 +158,7 @@ void wfsgrad_iwfs(thread_t *info){
 	if(ny==1){
 	    iy=0;
 	}else if(ny==parms->powfs[ipowfs].nwfs){
-	    iy=indwfs;
+	    iy=wfsind;
 	}else{
 	    error("powfs[%d].focus wrong format\n",ipowfs);
 	}
@@ -204,10 +194,10 @@ void wfsgrad_iwfs(thread_t *info){
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    //compute ztilt.
 	    pts_ztilt((*gradacc)->p,powfs[ipowfs].pts,
-		      powfs[ipowfs].imcc,realamp,
-		      opd->p);
+		      powfs[ipowfs].nimcc>1?powfs[ipowfs].imcc[wfsind]:powfs[ipowfs].imcc[0],
+		      realamp, opd->p);
 	}else{//G tilt
-	    spmulmat(gradacc,powfs[ipowfs].GS0,opd,1);
+	    spmulmat(gradacc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
 	}
     }
 
@@ -232,10 +222,15 @@ void wfsgrad_iwfs(thread_t *info){
     TIM(1);
     if(ints || psfout || pistatout){
 	dmat *lltopd=NULL;
-	if(powfs[ipowfs].lotf){
-	    lltopd=dnew(powfs[ipowfs].lotf->pts->nx,
-			powfs[ipowfs].lotf->pts->nx);
-	    const int illt=parms->powfs[ipowfs].llt->i[indwfs];
+	if(powfs[ipowfs].llt){
+	    if(powfs[ipowfs].llt->ncpa){
+		int iotf=powfs[ipowfs].llt->ncpa->nx==1?0:wfsind;
+		lltopd=ddup(powfs[ipowfs].llt->ncpa->p[iotf]);
+	    }else{
+		lltopd=dnew(powfs[ipowfs].llt->pts->nx,
+			    powfs[ipowfs].llt->pts->nx);
+	    }
+	    const int illt=parms->powfs[ipowfs].llt->i[wfsind];
 	    if(atm){//LLT OPD
 		for(int ips=0; ips<nps; ips++){
 		    const double hl=atm[ips]->h;
@@ -249,25 +244,25 @@ void wfsgrad_iwfs(thread_t *info){
 		    const double displacey=-atm[ips]->vy*isim*dt
 			+parms->wfs[iwfs].thetay*hl
 			+parms->powfs[ipowfs].llt->oy[illt]*hl/hs;
-		    prop_grid_pts(atm[ips],powfs[ipowfs].lotf->pts,
+		    prop_grid_pts(atm[ips],powfs[ipowfs].llt->pts,
 				  lltopd->p,1,displacex,displacey,
 				  scale, 1., 0, 0);
 		}
 	    }
 	    if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout){
 		const int nx=lltopd->nx;
-		const double dx=powfs[ipowfs].lotf->pts->dx;
-		const double ox=-nx*dx/2.;
-		const double oy=-nx*dx/2.;
+		const double dx=powfs[ipowfs].llt->pts->dx;
+		const double ox=powfs[ipowfs].llt->pts->origx[0];
+		const double oy=powfs[ipowfs].llt->pts->origy[0];
 		double ttx;
 		double tty;
 		if(pistatout||parms->sim.uptideal){
 		    warning("Remove tip/tilt in uplink ideally\n");
 		    //remove tip/tilt completely
 		    dmat *lltg=dnew(2,1);
-		    pts_ztilt(lltg->p,powfs[ipowfs].lotf->pts,
-			      powfs[ipowfs].lotf->imcc,
-			      powfs[ipowfs].lotf->amp,
+		    pts_ztilt(lltg->p,powfs[ipowfs].llt->pts,
+			      powfs[ipowfs].llt->imcc,
+			      powfs[ipowfs].llt->amp->p,
 			      lltopd->p);
 		    ttx=-lltg->p[0];
 		    tty=-lltg->p[1];
@@ -281,7 +276,7 @@ void wfsgrad_iwfs(thread_t *info){
 		puptcmds[isim][0]=ttx;
 		puptcmds[isim][1]=tty;
 		double vty=0;
-		double (*pp)[nx]=(double(*)[nx])lltopd->p;
+		PDMAT(lltopd, pp);
 		for(int iy=0; iy<lltopd->ny; iy++){
 		    vty=(oy+iy*dx)*tty;
 		    for(int ix=0; ix<nx; ix++){
@@ -333,8 +328,8 @@ void wfsgrad_iwfs(thread_t *info){
 		mtche=powfs[ipowfs].intstat->mtche->p;
 		i0sum=powfs[ipowfs].intstat->i0sum->p;
 	    }else{
-		mtche=powfs[ipowfs].intstat->mtche->p+nsa*indwfs;
-		i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*indwfs;
+		mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
+		i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
 	    }
 	}
 	double pixtheta=parms->powfs[ipowfs].pixtheta;
@@ -345,13 +340,13 @@ void wfsgrad_iwfs(thread_t *info){
 	    if(powfs[ipowfs].bkgrnd->ny==1){
 		bkgrnd2=powfs[ipowfs].bkgrnd->p;
 	    }else{
-		bkgrnd2=powfs[ipowfs].bkgrnd->p+nsa*indwfs;
+		bkgrnd2=powfs[ipowfs].bkgrnd->p+nsa*wfsind;
 	    }
 	}
 	    
 	double *srot=NULL;
 	if(powfs[ipowfs].srot){
-	    const int illt=parms->powfs[ipowfs].llt->i[indwfs];
+	    const int illt=parms->powfs[ipowfs].llt->i[wfsind];
 	    //this is in r/a coordinate, get angles
 	    srot=powfs[ipowfs].srot->p[illt]->p;
 	}
@@ -501,7 +496,7 @@ void wfsgrad_iwfs(thread_t *info){
 		if(powfs[ipowfs].intstat->sanea->nx==1){
 		    sanea=powfs[ipowfs].intstat->sanea->p[0];
 		}else{
-		    sanea=powfs[ipowfs].intstat->sanea->p[indwfs];
+		    sanea=powfs[ipowfs].intstat->sanea->p[wfsind];
 		}
 		double *gn=sanea->p;//rad^2;
 		for(int isa=0; isa<nsa*2; isa++){
@@ -517,7 +512,8 @@ void wfsgrad_iwfs(thread_t *info){
 		    //info("Adding noise %g mas to geom grads\n", nea*206265000);
 		    double *ggx=(*gradout)->p;
 		    double *ggy=(*gradout)->p+nsa;
-		    double *area=simu->powfs[ipowfs].pts->area;
+		    int ilocm=simu->powfs[ipowfs].nlocm>1?wfsind:0;
+		    double *area=simu->powfs[ipowfs].realsaa[wfsind];
 		    for(int isa=0; isa<nsa; isa++){
 			//scale nea by sqrt(1/area). (seeing limited)
 			//scale nea by 1/area if diffraction limited (NGS)
@@ -541,7 +537,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     if(parms->plot.run){
-	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,powfs[ipowfs].amp,NULL,
+	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
 		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
 	drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
 		"WFS Closeloop Gradients (x)","x (m)", "y (m)",
@@ -553,7 +549,7 @@ void wfsgrad_iwfs(thread_t *info){
     dfree(opd);
     if(dtrat_output && powfs[ipowfs].ncpa_grad){
 	warning("Applying ncpa_grad to gradout\n");
-	dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[indwfs], -1);
+	dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[wfsind], -1);
     }
     //create pseudo open loop gradients. in split mode 1, only do for high order wfs.
     if(dtrat_output && parms->powfs[ipowfs].psol){

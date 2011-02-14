@@ -57,7 +57,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     //mask is a mask for valid subapertures that have enough area
     int *mask=calloc(nx*nx,sizeof(int));
     for(int isa=0; isa<powfs[ipowfs].saloc->nloc; isa++){
-	if(powfs[ipowfs].pts->area[isa]>parms->cn2.saat){
+	if(powfs[ipowfs].saa->p[isa]>parms->cn2.saat){
 	    mask[cn2est->embed[isa]]=1;//use this subaperture
 	}
     }

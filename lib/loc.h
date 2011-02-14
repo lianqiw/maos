@@ -47,7 +47,8 @@ void locarrfree_do(loc_t **loc, int nloc);
 #define locarrfree(A,B) ({locarrfree_do(A,B);A=NULL;})
 
 int loccenter(loc_t *loc);
-loc_t *locnew(long nloc);
+loc_t *locnew(long nloc, double dx);
+pts_t *ptsnew(long nsa, double dsa, long nx, double dx);
 void loc_calc_ptt(double *out, double *coeffout, 
 		  const loc_t *loc, const double ipcc, 
 	       const dmat *imcc, const double *amp, const double *opd);
@@ -85,8 +86,18 @@ dmat *loc2mat(loc_t *loc,int piston);
 loc_t *pts2loc(pts_t *pts);
 void locrot(loc_t *loc, const double theta);
 loc_t *locdup(loc_t *loc);
-loc_t *loctransform(loc_t *loc, dmat **coeff);
+loc_t *loctransform(loc_t *loc, int *isshift, dmat **coeff);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double *p);
 void mapcircle(map_t *map, double r, double val);
+inline void locresize(loc_t *loc, long nloc){
+    loc_free_map(loc);
+    loc_free_stat(loc);
+    loc->locx=realloc(loc->locx, sizeof(double)*nloc);
+    loc->locy=realloc(loc->locy, sizeof(double)*nloc);
+    loc->nloc=nloc;
+}
+inline void ptsresize(pts_t *pts, long nsa){
+    locresize((loc_t*)pts, nsa);
+}
 #endif

@@ -79,6 +79,9 @@ typedef struct APER_CFG_T{
     double rotdeg;/**<pupil rotation in degree*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
+    double *misreg;/**<misregistration of the pupil along x and y. Shifts the
+			amplitude map and atmosphere.*/
+    int ismisreg; /**<true if misreg contains nonzero numbers*/
 }APER_CFG_T;
 /**
    contains input parameters for laser launch telescope
@@ -88,6 +91,7 @@ typedef struct LLT_CFG_T{
     double widthp; /**<Gaussian beam width percentage of d*/
     char *fnrange; /**<File contains range to sodium layer*/
     char *fn;      /**<File contains sodium profile*/
+    char *fnsurf;  /**<Surface OPD error*/
     double *ox;    /**<location x of LLT center wrt telescope aperture center*/
     double *oy;    /**<see ox.*/
     int *i;        /**<Index into llt for this iwfs.*/
@@ -262,6 +266,8 @@ typedef struct EVL_CFG_T{
     double *wt;     /**<weight of each direction*/
     double *psfwvl; /**<wavelength for PSF and strehl computation*/
     double ht;
+    double *misreg; /**<Misregistration wrt to nominal pupil.*/
+    int ismisreg;   /**<Science evl is misregistered*/
     int nwvl;       /**<Number of wavelength*/
     int *psf;       /**<1: participant in psf evaluation.*/
     int npsf;       /**<how many directions we compute psf for*/

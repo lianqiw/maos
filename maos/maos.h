@@ -43,5 +43,6 @@ extern char *dirskysim;
 void maos(const PARMS_T *parms);
 extern const PARMS_T *curparms;
 extern int curiseed;
+#define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #endif
 

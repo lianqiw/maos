@@ -294,20 +294,20 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     int32_t *style=calloc(ngroup, sizeof(int32_t));
 
     style[0]=(900<<8)+(4<<4)+3;
-    locs[0]=locnew(parms->evl.nevl);
+    locs[0]=locnew(parms->evl.nevl, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	locs[0]->locx[ievl]=parms->evl.thetax[ievl]*206265;
 	locs[0]->locy[ievl]=parms->evl.thetay[ievl]*206265;
     }
 
     style[1]=(918<<8)+(4<<4)+3;
-    locs[1]=locnew(parms->fit.nfit);
+    locs[1]=locnew(parms->fit.nfit, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	locs[1]->locx[ifit]=parms->fit.thetax[ifit]*206265;
 	locs[1]->locy[ifit]=parms->fit.thetay[ifit]*206265;
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	locs[ipowfs+2]=locnew(parms->powfs[ipowfs].nwfs);
+	locs[ipowfs+2]=locnew(parms->powfs[ipowfs].nwfs, 0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
 	    locs[ipowfs+2]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;

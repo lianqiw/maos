@@ -267,7 +267,7 @@ static void *genotf_wrap(GENOTF_T *data){
 	}
 	if(otffull && area[isa]>thres){
 	    ccp(&otf[isa],otffull);//just copy the full array
-	}else{ 
+	}else if(area[isa]>0){ 
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp+isa*nxsa,opdbiasi,wvl,B,pval);
 	}
     }

@@ -54,12 +54,14 @@ void wfsints(thread_t *thread_data){
     const int isa_start=thread_data->start;
     const int isa_end=thread_data->end;
     const int ipowfs=parms->wfs[iwfs].powfs;
+    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     const int hasllt=parms->powfs[ipowfs].hasllt;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int nx=powfs[ipowfs].pts->nx;
     const int ncompx=powfs[ipowfs].ncompx;//necessary size to build detector image.
     const int ncompy=powfs[ipowfs].ncompy;
-    const int npsf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;
+    const int npsf=nx*parms->powfs[ipowfs].embfac;
+
     const int nwvl=parms->powfs[ipowfs].nwvl;
 
     cmat *psflarge=NULL;
@@ -109,18 +111,8 @@ void wfsints(thread_t *thread_data){
 	    gy=gradref->p+nsa;
 	}
     }
-
-    int ilocm=0;
-    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
-	ilocm=parms->powfs[ipowfs].wfsind[iwfs];
-    }
-    double *realamp;
-    if(powfs[ipowfs].locm){
-	realamp=powfs[ipowfs].ampm[ilocm];
-    }else{
-	realamp=powfs[ipowfs].amp;
-    }
-
+    double *realamp=powfs[ipowfs].realamp[wfsind];
+    
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
@@ -129,18 +121,25 @@ void wfsints(thread_t *thread_data){
 	cmat *lotfc=NULL;
 	//const double lltxc=parms->powfs[ipowfs].llt[iwfs].ox;
 	if(lltopd){
-	    lotfc=cnew(npsf,npsf);
+	    const int nlx=powfs[ipowfs].llt->pts->nx;
+	    const int nlpsf=nlx*parms->powfs[ipowfs].embfac;
+
+	    lotfc=cnew(nlpsf,nlpsf);
 	    cfft2plan(lotfc,-1);
 	    cfft2plan(lotfc,1);
 	    //build otf. use same config as subaperture
-	    cembed_wvf(lotfc,lltopd->p,powfs[ipowfs].lotf->amp,nx,nx,wvl,0);
+	    cembed_wvf(lotfc,lltopd->p,powfs[ipowfs].llt->amp->p,nlx,nlx,wvl,0);
 	    cfft2(lotfc,-1);
 	    cabs2toreal(lotfc);
-	    cfft2(lotfc,1);//lotfc has peak npsf*npsf in corner.
+	    cfft2(lotfc,1);//lotfc has peak nlpsf*nlpsf in corner.
 	    //lotfc need to be scaled by 1/(npsf*npsf).
-	    // another 1/(npsf*npsf) to cancel out this FFT pair later.
-	    //cscale(lotfc,1./(double)((long)npsf*npsf*npsf*npsf));
-	    cscale(lotfc,1./(double)((long)npsf*npsf));//max of 1
+	    cscale(lotfc,1./(double)((long)nlpsf*nlpsf));//max of 1
+	    if(npsf != nlpsf){
+		cmat *tmp=cnew(npsf, npsf);
+		ccpcorner(tmp, lotfc, C_FULL);
+		cfree(lotfc);
+		lotfc=tmp;
+	    }
 	}
 #if ROT_OTF == 1
 	double xscale=(double)npsf/(double)ncompx;

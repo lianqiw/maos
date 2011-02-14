@@ -41,7 +41,6 @@ void free_parms(PARMS_T *parms){
     free(parms->atm.ht);
     free(parms->atm.wt);
     free(parms->atm.ws);
-    free(parms->atm.size);
     free(parms->atm.wddeg);
     free(parms->atm.ipsr);
     free(parms->atm.overx);
@@ -49,6 +48,7 @@ void free_parms(PARMS_T *parms){
     free(parms->atmr.ht);
     free(parms->atmr.os);
     free(parms->atmr.wt);
+    free(parms->atm.size);
 
     free(parms->evl.thetax);
     free(parms->evl.thetay);
@@ -57,6 +57,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.psf);
     free(parms->evl.psfgridsize);
     free(parms->evl.psfsize);
+    free(parms->evl.misreg);
 
     free(parms->fit.thetax);
     free(parms->fit.thetay);
@@ -86,6 +87,7 @@ void free_parms(PARMS_T *parms){
 	if(parms->powfs[ipowfs].llt){
 	    free(parms->powfs[ipowfs].llt->fnrange);
 	    free(parms->powfs[ipowfs].llt->fn);
+	    free(parms->powfs[ipowfs].llt->fnsurf);
 	    free(parms->powfs[ipowfs].llt->i);
 	    free(parms->powfs[ipowfs].llt->ox);
 	    free(parms->powfs[ipowfs].llt->oy);
@@ -115,6 +117,7 @@ void free_parms(PARMS_T *parms){
     free(parms->moao);
     free(parms->evl.scalegroup);
     free(parms->aper.fnamp);
+    free(parms->aper.misreg);
     free(parms->save.powfs_opd);
     free(parms->save.powfs_ints);
     free(parms->save.powfs_grad);
@@ -254,6 +257,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
 	    parms->powfs[ipowfs].llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
 	    parms->powfs[ipowfs].llt->fn=readcfg_str("%sllt.fn",prefix);
+	    parms->powfs[ipowfs].llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
 	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix);
 	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix);
 	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
@@ -477,6 +481,10 @@ static void readcfg_aper(PARMS_T *parms){
     READ_DBL(aper.rotdeg);
     READ_INT(aper.cropamp);
     READ_STR(aper.fnamp);
+    readcfg_dblarr_n(&parms->aper.misreg, 2, "aper.misreg");
+    if(fabs(parms->aper.misreg[0])>EPS || fabs(parms->aper.misreg[1])>EPS){
+	parms->aper.ismisreg=1;
+    }
 }
 
 /**
@@ -487,6 +495,10 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_dblarr_n(&(parms->evl.thetax),parms->evl.nevl, "evl.thetax");
     readcfg_dblarr_n(&(parms->evl.thetay),parms->evl.nevl, "evl.thetay");
     readcfg_dblarr_n(&(parms->evl.wt),parms->evl.nevl, "evl.wt");
+    readcfg_dblarr_n(&(parms->evl.misreg),2, "evl.misreg");
+    if(fabs(parms->evl.misreg[0])>EPS || fabs(parms->evl.misreg[1])>EPS){
+	parms->evl.ismisreg=1;
+    }
     normalize(parms->evl.wt, parms->evl.nevl, 1);
     readcfg_intarr_nmax(&(parms->evl.psf), parms->evl.nevl, "evl.psf");
     parms->evl.nwvl = readcfg_dblarr(&(parms->evl.psfwvl), "evl.psfwvl");
@@ -583,6 +595,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.lpfocus);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
+
     parms->sim.napdm=readcfg_dblarr(&parms->sim.apdm,"sim.apdm");
     parms->sim.napngs=readcfg_dblarr(&parms->sim.apngs,"sim.apngs");
     parms->sim.napupt=readcfg_dblarr(&parms->sim.apupt,"sim.apupt");

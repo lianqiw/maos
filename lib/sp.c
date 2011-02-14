@@ -51,6 +51,7 @@
 #define ZI(A) mkl_d##A
 #define Y(A) A
 #define T double
+#define M_TT M_DSP
 #define REAL(A) (A)
 #define ABS(A) fabs(A)
 #define RANDU(A) randu(A)
@@ -64,6 +65,7 @@
 #define ZI(A) mkl_z##A
 #define Y(A) c##A
 #define T dcomplex
+#define M_TT M_CSP
 #define REAL(A) creal(A)
 #define ABS(A) cabs(A)
 #define RANDU(A) (randu(A)+I*randu(A))
@@ -93,7 +95,11 @@ typedef struct spcell_thread_t {
 }spcell_thread_t;
 
 TIC;
-
+vtbl X(sp_vtbl)={M_TT,
+		 (vtbl_write)Y(spwrite),
+		 (vtbl_writedata)Y(spwritedata),
+		 (vtbl_read)Y(spread),
+		 (vtbl_readdata)Y(spreaddata)};
 /**
    Create a nx*ny X(sp) matrix with memory for nmax max
    elements allocated.
@@ -101,6 +107,7 @@ TIC;
 X(sp)* Y(spnew)(long nx, long ny, long nzmax){
     X(sp) *sp;
     sp = calloc(1, sizeof(X(sp)));
+    sp->vtbl=&X(sp_vtbl);
     if(nzmax>0){
 	sp->p=malloc((ny+1)*sizeof(spint));
 	sp->i=malloc(nzmax*sizeof(spint));

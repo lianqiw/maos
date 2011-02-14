@@ -119,6 +119,9 @@ static map_t **genscreen_do(SIM_T *simu){
 	double angle=simu->winddir->p[i];
 	screens[i]->vx=cos(angle)*atm->ws[i];
 	screens[i]->vy=sin(angle)*atm->ws[i];
+	//misregistration
+	screens[i]->ox-=parms->aper.misreg[0];
+	screens[i]->oy-=parms->aper.misreg[1];
     }
     return screens;
 }
@@ -746,7 +749,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	int ilocm=-1;
 	if(simu->powfs[ipowfs].locm){
 	    ilocm=(simu->powfs[ipowfs].nlocm>1)?indwfs:0;
-	    info("ilocm=%d\n",ilocm);
 	}
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const double ht=parms->atm.ht[ips];
@@ -763,8 +765,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->phiout=(void*)1;//replace later in simulation.
 	    int tot=0;
 	    if(powfs[ipowfs].locm){//misregistration.
-		data->locout=powfs[ipowfs].locm[ilocm];
-		tot=data->locout->nloc;
+		if(powfs[ipowfs].ptsm[ilocm]){//pure shift, so we use offset of ptsm
+		    data->ptsout=powfs[ipowfs].ptsm[ilocm];
+		    tot=data->ptsout->nsa;
+		}else{
+		    data->locout=powfs[ipowfs].locm[ilocm];
+		    tot=data->locout->nloc;
+		}
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
@@ -795,8 +802,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	    data->phiout=(void*)1;//replace later in simulation
 	    if(powfs[ipowfs].locm){//misregistration.
-		data->locout=powfs[ipowfs].locm[ilocm];
-		tot=data->locout->nloc;
+		if(powfs[ipowfs].ptsm[ilocm]){//pure shift, so we use offset of ptsm
+		    data->ptsout=powfs[ipowfs].ptsm[ilocm];
+		    tot=data->ptsout->nsa;
+		}else{
+		    data->locout=powfs[ipowfs].locm[ilocm];
+		    tot=data->locout->nloc;
+		}
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
@@ -921,13 +933,15 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		char fnnew[PATH_MAX];
 		snprintf(fnnew, PATH_MAX, "%s/RescleNGSm_%d.bin",dirskysim,seed);
 		snprintf(fnold, PATH_MAX, "RescleNGSm_%d.bin", seed);
+		if(exist(fnnew)) remove(fnnew);
 		if(link(fnold, fnnew)){
-		    error("Error link\n");
+		    warning("Error link\n");
 		}
 		snprintf(fnnew, PATH_MAX, "%s/RescleNGSmp_%d.bin",dirskysim,seed);
 		snprintf(fnold, PATH_MAX, "RescleNGSmp_%d.bin", seed);
+		if(exist(fnnew)) remove(fnnew);
 		if(link(fnold, fnnew)){
-		    error("Error link\n");
+		    warning("Error link\n");
 		}
 	    }
 	}
@@ -1060,7 +1074,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		continue;
 	    }
 	    save->wfsopd[iwfs]=cellarr_init(nstep, "wfs%d_opd_%d.bin", iwfs, seed);
-	    if(powfs[ipowfs].lotf){
+	    if(powfs[ipowfs].llt){
 		save->wfslltopd[iwfs]=cellarr_init(nstep, "wfs%d_lltopd_%d.bin", iwfs, seed);
 	    }
 	}
@@ -1600,8 +1614,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
 	int jpowfs=powfs_ngs[ipowfs];
 	locwrite(powfs[jpowfs].loc,"%s/powfs%d_loc.bin.gz",dirskysim,jpowfs);
-	writedbl(powfs[jpowfs].amp,powfs[jpowfs].loc->nloc,1,
-		 "%s/powfs%d_amp.bin.gz",dirskysim,jpowfs);
+	dwrite(powfs[jpowfs].amp, "%s/powfs%d_amp.bin.gz",dirskysim,jpowfs);
 	locwrite(powfs[jpowfs].saloc,"%s/powfs%d_saloc.bin.gz",dirskysim,jpowfs);
     }
     dwrite(recon->ngsmod->MCC,"%s/MCC_za%g.bin.gz", dirskysim,zadeg);

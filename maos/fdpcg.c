@@ -278,7 +278,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
     //Subaperture selection operator
     csp *sel=fdpcg_saselect(nx[0],ny[0],xloc[0]->dx, 
-			    saloc, powfs[hipowfs].pts->area);
+			    saloc, powfs[hipowfs].saa->p);
     if(parms->save.setup){
 	cspwrite(sel,"%s/fdpcg_sel.bin.gz",dirsetup);
     }

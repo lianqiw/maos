@@ -49,9 +49,6 @@ void ptsfree_do(pts_t *pts){
 	    free(pts->map->p);
 	    free(pts->map);
 	}
-	if(pts->area){
-	    free(pts->area);
-	}
 	free(pts);
     }
 }
@@ -127,12 +124,25 @@ void rectmapfree_do(rectmap_t *map){
 /**
    Create a loc with nloc elements.
 */
-loc_t *locnew(long nloc){
+loc_t *locnew(long nloc,double dx){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=calloc(nloc, sizeof(double));
     loc->locy=calloc(nloc, sizeof(double));
     loc->nloc=nloc;
+    loc->dx=dx;
     return loc;
+}
+/**
+   Create a pts with nsa, dsa, nx, dx
+*/
+pts_t *ptsnew(long nsa, double dsa, long nx, double dx){
+    pts_t *pts=calloc(1, sizeof(pts_t));
+    pts->origx=calloc(nsa, sizeof(double));
+    pts->origy=calloc(nsa, sizeof(double));
+    pts->dsa=dsa;
+    pts->nx=nx;
+    pts->dx=dx;
+    return pts;
 }
 /**
    Create an vector to embed OPD into square array for FFT purpose.
@@ -422,8 +432,7 @@ loc_t* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
     loc_t *loc=calloc(1, sizeof(loc_t));
     double *restrict ampp = ampin->p;
     int count,colcount,count0;
-    double rmax2=(dcir/dx/2.+1*1.414);
-    rmax2*=rmax2;
+    double rmax2=pow(dcir/dx/2.+1*1.414, 2);
 
     if(ampin->nx*dx<dcir || ampin->ny*dx<dcir){
 	error("maximum diameter is %g m, amplitude is %g mx%g m, "
@@ -446,13 +455,13 @@ loc_t* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
     if(cstat){
 	cstat->cols=calloc(ncolstat, sizeof(locstatcol_t));
     }
-    int offsety=ampin->ny/2;
-    int offsetx=ampin->nx/2;
+    int offsetx=ampin->ox/dx;
+    int offsety=ampin->oy/dx;
     /*scan through the input maps*/
     for(int iy=0; iy<ampin->ny; iy++){
-	int jy=iy-offsety;
+	double ry=iy+offsety;
 	int imin, imax, iminnotfound;
-	double xmax2=rmax2-jy*jy;//max limit of x coord
+	double xmax2=rmax2-ry*ry;//max limit of x coord
 	count0=count;//starting number of this column
 
 	imin=INT_MAX;
@@ -472,13 +481,13 @@ loc_t* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
 	for(int ix=imin;ix<imax+1;ix++){
 	    /*use amp only will create locs with holes it. the method
 	      using stat to do accphi will be in trouble*/
-	    int jx=ix-offsetx;
-	    if(!cropamp || jx*jx<xmax2){
-		loc->locx[count]=jx*dx;
-		loc->locy[count]=jy*dx;
+	    double rx=ix+offsetx;
+	    if(rx*rx<xmax2){
+		loc->locx[count]=rx*dx;
+		loc->locy[count]=ry*dx;
 		(*ampout)[count]=ampp[ix+offset2];
 		count++;
-	    }else{
+	    }else if(cropamp){
 		ampp[ix+offset2]=0;/*zero out the amplitude map*/
 	    }
 	}
@@ -1198,14 +1207,11 @@ dmat *loc2mat(loc_t *loc,int piston){
    left point in each subaperture. 
 */
 loc_t *pts2loc(pts_t *pts){
-    loc_t*loc = calloc(1, sizeof(loc_t));
     long nsa  = pts->nsa;
     long nx   = pts->nx;
     long nxsa = nx*nx;
-    loc->locx = malloc(sizeof(double)*nsa*nxsa);
-    loc->locy = malloc(sizeof(double)*nsa*nxsa);
-    loc->nloc = nsa*nxsa;
-    double dx = loc->dx = pts->dx;
+    double dx = pts->dx;
+    loc_t *loc = locnew(nsa*nxsa, dx);
     for(int isa=0; isa<nsa; isa++){
 	const double origx = pts->origx[isa];
 	const double origy = pts->origy[isa];
@@ -1256,8 +1262,7 @@ loc_t *locdup(loc_t *loc){
    xm{ip}=\{sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic)))
    ym{ip}=\{sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic)))
 */
-loc_t *loctransform(loc_t *loc, dmat **coeff){
-
+loc_t *loctransform(loc_t *loc, int *isshift, dmat **coeff){
     if(coeff[0]->nx!=3 || coeff[1]->nx!=3){
 	error("Coeff is in wrong format\n");
     }
@@ -1273,15 +1278,59 @@ loc_t *loctransform(loc_t *loc, dmat **coeff){
     const double *restrict y=loc->locy;
     double *restrict xm=locm->locx;
     double *restrict ym=locm->locy;
-
-    for(long iloc=0; iloc<loc->nloc; iloc++){
-	for(long ic=0; ic<coeff[0]->ny; ic++){
-	    xm[iloc]+=cx[ic][0]*pow(x[iloc],cx[ic][1])*pow(y[iloc],cx[ic][2]);
-	}
-	for(long ic=0; ic<coeff[1]->ny; ic++){
-	    ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
+    //Test whether the transform is pure shift.
+    int keepx=0, keepy=0;
+    int shift=1;
+    double shiftx=0, shifty=0;
+    for(int ic=0; shift && ic<coeff[0]->ny; ic++){
+	if(fabs(cx[ic][0]-1)<EPS && fabs(cx[ic][1]-1)<EPS && fabs(cx[ic][2])<EPS){
+	    if(keepx==0){
+		keepx=1;
+	    }else{//we only want 1 such column.
+		warning("keepx is already 1\n");
+		shift=0;
+	    }
+	}else if(fabs(cx[ic][1])<EPS && fabs(cx[ic][2])<EPS){
+	    shiftx+=cx[ic][0];
+	}else{//something we don't recognize. not pure shift.
+	    warning("something we don't recognize\n");
+	    shift=0;
 	}
     }
+    if(keepx!=1) shift=0;
+    for(int ic=0; shift && ic<coeff[1]->ny; ic++){
+	if(fabs(cy[ic][0]-1)<EPS && fabs(cy[ic][1])<EPS && fabs(cy[ic][2]-1)<EPS){
+	    if(keepy==0){
+		keepy=1;
+	    }else{//we only want 1 such column.
+		warning("keepy is already 1\n");
+		shift=0;
+	    }
+	}else if(fabs(cy[ic][1])<EPS && fabs(cy[ic][2])<EPS){
+	    shifty+=cy[ic][0];
+	}else{//something we don't recognize. not pure shift.
+	    warning("something we don't recognize\n");
+	    shift=0;
+	}
+    }
+    if(keepy!=1) shift=0;
+    if(shift){
+	info("The transform is pure shift by %g along x, %g along y\n", shiftx, shifty);
+	for(long iloc=0; iloc<loc->nloc; iloc++){
+	    xm[iloc]=x[iloc]+shiftx;
+	    ym[iloc]=y[iloc]+shifty;
+	}
+    }else{
+	for(long iloc=0; iloc<loc->nloc; iloc++){
+	    for(long ic=0; ic<coeff[0]->ny; ic++){
+		xm[iloc]+=cx[ic][0]*pow(x[iloc],cx[ic][1])*pow(y[iloc],cx[ic][2]);
+	    }
+	    for(long ic=0; ic<coeff[1]->ny; ic++){
+		ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
+	    }
+	}
+    }
+    if(isshift) *isshift=shift;
     return locm;
 }
 

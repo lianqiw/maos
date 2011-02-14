@@ -26,9 +26,9 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define dfree(A) ({dfree_do((A),0);(A)=NULL;})
 #define dcp2(A,B)  memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
 #define dcellfree(A) ({dcellfree_do(A);A=NULL;})
-#define dcellfreearr(A,n) ({for(int in=0; in<n; in++){dcellfree(A[in]);};free(A);})
+#define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);})
 #define dzero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
-
+#define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
 #define AOS_CMAT(A) c##A
 #define AOS_CSPARSE(A) c##A
 #define PCMAT(M,P) dcomplex (*restrict P)[(M)->nx]=(dcomplex(*)[(M)->nx])(M)->p
@@ -37,6 +37,7 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define ccellfree(A) ({ccellfree_do(A);A=NULL;})
 #define cabs2(A) (pow(creal(A),2)+pow(cimag(A),2))
 #define czero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
+#define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
 
 #define AOS_MAT_DEF(X,Y,T)\
 X(mat) *X(new_ref)(long nx, long ny, T *p) CHECK_UNUSED_RESULT; \

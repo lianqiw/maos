@@ -24,6 +24,6 @@
 */
 #include "sp.h"
 #include "spbin.h"
-AOS_SP_DEF(AOS_CMAT,AOS_CSPARSE,dcomplex)
-AOS_SPBIN_DEF(AOS_CMAT,AOS_CSPARSE,dcomplex)
+AOS_SP_DEF(AOS_CMAT,AOS_CSP,dcomplex)
+AOS_SPBIN_DEF(AOS_CMAT,AOS_CSP,dcomplex)
 #endif

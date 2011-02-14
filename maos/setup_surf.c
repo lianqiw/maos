@@ -96,16 +96,13 @@ void setup_tsurf(SIM_T *simu){
 
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int ilocm=0;
-	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
-		ilocm=parms->powfs[ipowfs].wfsind[iwfs];
-	    }
 	    double hs=parms->powfs[ipowfs].hs;
 	    loc_t *locwfs, *locwfsin;
 	    if(!simu->surfwfs->p[iwfs]){
 		simu->surfwfs->p[iwfs]=dnew(simu->powfs[ipowfs].npts,1);
 	    }
 	    if(powfs[ipowfs].locm){
+		int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
 		locwfsin=powfs[ipowfs].locm[ilocm];
 	    }else{
 		locwfsin=powfs[ipowfs].loc;
@@ -178,6 +175,8 @@ void setup_surf(SIM_T*simu){
 	char *fn=find_file(parms->surf[isurf]);
 	info("Loading surface OPD from %s\n", fn);
 	simu->surf[isurf]=mapread("%s",fn); free(fn);
+	simu->surf[isurf]->ox+=parms->aper.misreg[0];
+	simu->surf[isurf]->oy+=parms->aper.misreg[1];
     }
     if(!parms->sim.cachesurf){
 	return;
@@ -215,10 +214,6 @@ void setup_surf(SIM_T*simu){
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int ilocm=0;
-	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
-		ilocm=parms->powfs[ipowfs].wfsind[iwfs];
-	    }
 	    double hs=parms->powfs[ipowfs].hs;
 	    const double scale=1.-hl/hs;
 	    const double displacex=parms->wfs[iwfs].thetax*hl;
@@ -228,6 +223,7 @@ void setup_surf(SIM_T*simu){
 	    }
 	    loc_t *locwfs, *locwfsin;
 	    if(powfs[ipowfs].locm){
+		int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
 		locwfsin=powfs[ipowfs].locm[ilocm];
 	    }else{
 		locwfsin=powfs[ipowfs].loc;

@@ -27,7 +27,7 @@
    able to take into account outerscale yet.
 
    \todo find ways to factor in outerscale effect (use von karman spectrum
-instead of kolmogorov) */
+   instead of kolmogorov) */
 
 #include "maos.h"
 #include "genseotf.h"
@@ -40,7 +40,7 @@ instead of kolmogorov) */
 /**
    Master routine that generates short exposure OTF by calling genotf() in the
    library with p/t/t removal set.
- */
+*/
 void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     //create a grid representing the aperture.
     loc_t *loc=mksqloc(powfs[ipowfs].pts->nx,
@@ -59,8 +59,12 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     int notf=1;
     int has_ncpa=0;
     if(parms->powfs[ipowfs].ncpa && parms->powfs[ipowfs].ncpa_method==2){
-	has_ncpa=1;
 	notf=parms->powfs[ipowfs].nwfs;
+	has_ncpa=1;
+    }else if(powfs[ipowfs].locm){
+	notf=MAX(notf,powfs[ipowfs].nlocm);
+    }else{
+	notf=1;
     }
     powfs[ipowfs].intstat->notf=notf;
     powfs[ipowfs].intstat->otf=calloc(notf, sizeof(ccell*));
@@ -71,23 +75,13 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	double dtheta=wvl/(dxsa*embfac);
-	if(has_ncpa){
-	    info2("There is NCPA bias for powfs %d\n", ipowfs);
-	    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-		info2("Generating otf for wfs %d of this powfs\n",iwfs);
-		double *opdbias=powfs[ipowfs].ncpa->p[iwfs]->p;
-		double thres=1;
-		genotf(powfs[ipowfs].intstat->otf[iwfs]->p+iwvl*nsa,
-		       loc, powfs[ipowfs].amp, opdbias, powfs[ipowfs].pts->area, 
-		       thres,wvl,dtheta,parms->atm.r0, parms->atm.l0, 
-		       ncompx, ncompy, nsa,1,parms->sim.nthread);
-	    }//iwfs
-	}else{
-	    info2("There is no NCPA bias for powfs %d\n", ipowfs);
-	    double thres=1-1e-10;
-	    double *opdbias=NULL;
-	    genotf(powfs[ipowfs].intstat->otf[0]->p+iwvl*nsa,
-		   loc, powfs[ipowfs].amp, opdbias, powfs[ipowfs].pts->area, 
+	for(int iotf=0; iotf<notf; iotf++){
+	    double *opdbias=has_ncpa?powfs[ipowfs].ncpa->p[iotf]->p:NULL;
+	    double thres=opdbias?1:1-1e-10;
+	    info2("There is %s bias for powfs %d\n", opdbias?"NCPA":"no", ipowfs);
+	    genotf(powfs[ipowfs].intstat->otf[iotf]->p+iwvl*nsa,
+		   loc, powfs[ipowfs].realamp[iotf], opdbias, 
+		   powfs[ipowfs].realsaa[iotf],
 		   thres,wvl,dtheta,parms->atm.r0, parms->atm.l0, 
 		   ncompx, ncompy, nsa, 1, parms->sim.nthread);
 	}
@@ -96,20 +90,22 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 }
 /**
    Creating short exposure OTF caused by turbulence within LLT uplink aperture
-   */
+*/
 void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
-    loc_t *loc=mksqloc(powfs[ipowfs].lotf->pts->nx,
-		       powfs[ipowfs].lotf->pts->nx,
-		       powfs[ipowfs].lotf->pts->dx,
-		       0,0);
-    
-    int ncompx=powfs[ipowfs].lotf->pts->nx*parms->powfs[ipowfs].embfac;
+    loc_t *loc=pts2loc(powfs[ipowfs].llt->pts);
+    int ncompx=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
     int ncompy=ncompx;
     const int nwvl=parms->powfs[ipowfs].nwvl;
-    cmat **lotf=NULL;
-    powfs[ipowfs].intstat->lotf=ccellnew(nwvl,1);
-    lotf=powfs[ipowfs].intstat->lotf->p;
+
+    int nlotf=1;
+    dcell *ncpa=NULL;
+    if(parms->powfs[ipowfs].llt->fnsurf){
+	ncpa=dcellread(parms->powfs[ipowfs].llt->fnsurf);
+	nlotf=ncpa->nx*ncpa->ny;
+    }
+    powfs[ipowfs].intstat->lotf=ccellnew(nwvl,nlotf);
+    PCCELL(powfs[ipowfs].intstat->lotf, lotf);
     if(nwvl!=1){
 	warning("LGS has multi-color!\n");
     }
@@ -117,8 +113,13 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	double dtheta=powfs[ipowfs].dtheta->p[iwvl];
 	double thres=1;
-	genotf(&lotf[iwvl], loc, powfs[ipowfs].lotf->amp, NULL, powfs[ipowfs].pts->area,
-	       thres, wvl, dtheta, parms->atm.r0, parms->atm.l0, ncompx, ncompy, 1, 1, 1);
+	double one=1;
+	for(int ilotf=0; ilotf<nlotf; ilotf++){
+	    genotf(&lotf[ilotf][iwvl], loc, 
+		   powfs[ipowfs].llt->amp->p, ncpa?ncpa->p[ilotf]->p:NULL,
+		   &one,
+		   thres, wvl, dtheta, parms->atm.r0, parms->atm.l0, ncompx, ncompy, 1, 1, 1);
+	}
     }//iwvl
     locfree(loc);
 }
@@ -133,18 +134,23 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	nllt=parms->powfs[ipowfs].llt->n;
     else
 	nllt=0;
-    cmat **lotf=NULL;
+    int nlotf=0;
     if(nllt>0){
-	lotf=powfs[ipowfs].intstat->lotf->p;
+	nlotf=powfs[ipowfs].intstat->lotf->ny;
     }
-    powfs[ipowfs].intstat->nsepsf=powfs[ipowfs].intstat->notf;
+    int notf=powfs[ipowfs].intstat->notf;
+    powfs[ipowfs].intstat->nsepsf=notf>nlotf?notf:nlotf;
+    assert(powfs[ipowfs].intstat->nsepsf==1 
+	   || powfs[ipowfs].intstat->nsepsf==parms->powfs[ipowfs].nwfs);
     powfs[ipowfs].intstat->sepsf=calloc(powfs[ipowfs].intstat->nsepsf, sizeof(dcell*));
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
-	int iotf=isepsf;
+	int iotf=notf>1?isepsf:0;
+	int ilotf=nlotf>1?isepsf:0;
+	cmat **lotf=nlotf>0?powfs[ipowfs].intstat->lotf->p+ilotf*nwvl:NULL;
 	PCCELL(powfs[ipowfs].intstat->otf[iotf],otf);
 	powfs[ipowfs].intstat->sepsf[isepsf]=dcellnew(nsa,nwvl);
 	dmat *(*psepsf)[nsa]=(void*)powfs[ipowfs].intstat->sepsf[isepsf]->p;
-	const double *area=powfs[ipowfs].pts->area;
+	const double *area=powfs[ipowfs].realsaa[isepsf];
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    const int notfx=otf[iwvl][0]->nx;
 	    const int notfy=otf[iwvl][0]->ny;
@@ -153,9 +159,17 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    
 	    for(int isa=0; isa<nsa; isa++){
 		double norm=area[isa]/((double)(notfx*notfy));
-		ccp(&sepsf,otf[iwvl][isa]);
+		ccp(&sepsf,otf[iwvl][isa]);//peak in center
 		if(nllt>0){//has laser launch
-		    ccwm(sepsf,lotf[iwvl]);
+		    if(sepsf->nx == lotf[iwvl]->nx){
+			ccwm(sepsf,lotf[iwvl]);
+		    }else{
+			assert(sepsf->nx < lotf[iwvl]->nx);
+			cmat *tmp=cnew(sepsf->nx, sepsf->ny);
+			cembed(tmp, lotf[iwvl], 0,C_FULL);
+			ccwm(sepsf, tmp);
+			cfree(tmp);
+		    }
 		}
 		cfftshift(sepsf); //peak now in corner.
 		cfft2(sepsf,1);   //turn to psf. FFT 1th
@@ -193,7 +207,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
        1) multiple LLT
        2) different signal level or wvlwts
        3) powfs[ipowfs].bkgrnd contains rayleigh scatter bkgrnd for each wfs in this powfs.
-     */
+    */
     int ni0;
     if(nllt<=1){ 
 	ni0=powfs[ipowfs].intstat->nsepsf;
@@ -254,7 +268,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     */
     const int pixpsax=powfs[ipowfs].pixpsax;
     const int pixpsay=powfs[ipowfs].pixpsay;
-    const double *area=powfs[ipowfs].pts->area;
   
     for(int ii0=0; ii0<ni0; ii0++){
 	for(int isa=0; isa<nsa; isa++){
@@ -331,6 +344,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	double angleg=0;//angle to derivative of i0 to r/a from x/y
 	double anglegoff=0;
 	for(int ii0=0; ii0<ni0; ii0++){
+	    const double *area=powfs[ipowfs].realsaa[ii0];
 	    int isepsf=ii0*isepsf_multiplier;
 	    int idtf=ii0*idtf_multiplier;
 	    int irot=ii0*irot_multiplier;
