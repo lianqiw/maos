@@ -381,8 +381,7 @@ static dcell *ngsmod_m(const PARMS_T *parms, RECON_T *recon){
 
 */
 
-static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, 
-		       POWFS_T *powfs){
+static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     NGSMOD_T *ngsmod=recon->ngsmod;
     int ndm=parms->ndm;
     loc_t **aloc=recon->aloc;

@@ -295,7 +295,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 		//same key found
 		long istore=(long)(entryfind->data);
 		if(store[istore].protect && !protect){
-		    info2("%s is protected, has {%s}, will not override by {%s}\n",
+		    info2("%s={%s} is protected. Will not be overriden by {%s}\n",
 			  (char*)entry.key, (char*)store[istore].data,
 			  (char*)store[nstore].data);
 		    free(store[nstore].key);

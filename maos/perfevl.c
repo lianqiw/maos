@@ -73,8 +73,7 @@ void perfevl_ievl(thread_t *info){
     PDMAT(simu->clep->p[ievl],pclep);
 
     if(simu->opdevlground){
-	memcpy(iopdevl->p,simu->opdevlground->p,
-	       aper->locs->nloc*sizeof(double));
+	memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
     }else{
 	dzero(iopdevl);
     }
@@ -166,8 +165,8 @@ void perfevl_ievl(thread_t *info){
 	    for(int ipsr=0; ipsr<npsr; ipsr++){
 		double hl=parms->atmr.ht[ipsr];
 		double scale = 1. - hl/parms->evl.ht;
-		double displacex=parms->evl.thetax[ievl]*hl;
-		double displacey=parms->evl.thetay[ievl]*hl;
+		double displacex=parms->evl.thetax[ievl]*hl+parms->evl.misreg[0];
+		double displacey=parms->evl.thetay[ievl]*hl+parms->evl.misreg[1];
 		prop_nongrid(recon->xloc[ipsr], 
 			     simu->opdr->p[ipsr]->p,
 			     aper->locs, NULL, iopdevltomo->p, -1,
@@ -243,8 +242,9 @@ void perfevl_ievl(thread_t *info){
     if(imoao>-1){
 	dmat **dmevl=simu->moao_r_evl->p;
 	if(dmevl[ievl]){
-	    //TIC;tic;
-	    //prop is faster than spmulvec
+	    /**
+	       prop is faster than spmulvec. \fixme check definition of misreg
+	     */
 	    if(parms->moao[imoao].cubic){
 		prop_nongrid_cubic(recon->moao[imoao].aloc,dmevl[ievl]->p,
 				   aper->locs, NULL, iopdevl->p, -1, 0,0,1,

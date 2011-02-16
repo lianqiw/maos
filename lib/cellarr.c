@@ -89,10 +89,6 @@ void cellarr_close(cellarr *ca){
 	warning2("cellarr %s is initialized with %ld elements, "
 		 "but %ld elements are written\n",
 		 zfname(ca->fp),ca->tot,ca->cur);
-	uint64_t totx=ca->cur;
-	if(!zfseek(ca->fp,sizeof(uint32_t),SEEK_SET)){//fseek succeed
-	    zfwrite(&totx,sizeof(uint64_t),1,ca->fp);
-	}//fseek does not work for gzipped files.
     }
     zfclose(ca->fp);
     free(ca);

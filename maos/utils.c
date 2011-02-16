@@ -435,14 +435,15 @@ static void print_usage(void){
 "\n"
 "Options: \n"
 "-h, --help        to print out this message\n"
+"-p, --pause       paulse simulation in the end of every time step\n"
 "-d, --detach      to detach from terminal and run in background\n"
 "-f, --force       force starting simulation without scheduler\n"
-"-n N, --nthread=N Use N threads, default is 1\n"
-"-s N, --seed=N    Use seed N instead of the numbers specified in .conf files\n"
-"-o DIR, --output=DIR\n"
-"                  output the results to DIR.\n"
-"-c FILE.conf, --conf=FILE.conf\n"
+"-n, --nthread=N   Use N threads, default is 1\n"
+"-s, --seed=N      Use seed N instead of the numbers specified in .conf files\n"
+"-o, --output=DIR  output the results to DIR.\n"
+"-c, --conf=FILE.conf\n"
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
+"-P, --path=dir    Add dir to the internal PATH\n"
 	  );
 }
   
@@ -467,12 +468,13 @@ ARG_T * parse_args(int argc, char **argv){
 	{"nthread",1,0,'n'},
 	{"conf",1,0,'c'},
 	{"seed",1,0,'s'},
-	{"path",1,0,'p'},
+	{"pause",1,0,'p'},
+	{"path",1,0,'P'},
 	{NULL,0,0,0}
     };
     while(1){
 	int option_index = 0;
-	int c = getopt_long(argc, argv, "hdfo:n:c:s:p:",
+	int c = getopt_long(argc, argv, "hdfo:n:c:s:pP:",
                         long_options, &option_index);
 	if(c==-1) break;
 	switch(c){
@@ -516,9 +518,13 @@ ARG_T * parse_args(int argc, char **argv){
 	    //info2("Command line supplied seed %d\n",arg->seeds[arg->nseed-1]);
 	}
 	    break;
-	case 'p':{
+	case 'p':
+	    arg->pause=1;
+	    break;
+	case 'P':{
 	    addpath(optarg);
 	}
+	    break;
 	case '?':
 	    warning("Unregonized option. exit.\n");exit(1);
 	    break;
@@ -526,6 +532,10 @@ ARG_T * parse_args(int argc, char **argv){
 	    printf("?? getopt returned 0%o ??\n", c);exit(1);
 	    break;
 	}
+    }
+    if(arg->pause && arg->detach){
+	warning("-p and -d are both specified, disable -d\n");
+	arg->detach=0;
     }
     if(!arg->detach){//foreground task will start immediately.
 	arg->force=1;
@@ -743,7 +753,7 @@ int lock_seeds(PARMS_T *parms){
     parms->fdlock=calloc(parms->sim.nseed, sizeof(int));
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
 	snprintf(fn, 80, "Res_%d.done",parms->sim.seeds[iseed]);
-	if(exist(fn)){
+	if(exist(fn) && !parms->force){
 	    warning2("%s exist. Will not run maos.\n", fn);
 	    continue;
 	}

@@ -53,8 +53,10 @@ void prep_cachedm(SIM_T *simu){
 		     0, &nxout, &nyout, &oxout, &oyout, NULL,
 		     2, 0, T_ALOC,0,0);
 		simu->cachedm[idm][iscale]=mapnew(nxout, nyout, dx, NULL);
-		simu->cachedm[idm][iscale]->ox=oxout;
-		simu->cachedm[idm][iscale]->oy=oyout;
+		simu->cachedm[idm][iscale]->ox=oxout
+		    +(simu->recon->alocm[idm]->locx[0]-simu->recon->aloc[idm]->locx[0]);
+		simu->cachedm[idm][iscale]->oy=oyout
+		    +(simu->recon->alocm[idm]->locy[0]-simu->recon->aloc[idm]->locy[0]);
 	    }
 	}
     }

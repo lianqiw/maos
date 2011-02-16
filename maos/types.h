@@ -104,32 +104,37 @@ necessarily physical optics WFS.x */
 typedef struct POWFS_T{
     //Parameters about subapertures.
     loc_t *saloc;       /**<lower left corner of the subaperture*/
-    pts_t *pts;         /**<records lower left-most point of each sa in a regular grid*/
+    pts_t *pts;         /**<records lower left-most point of each sa in a regular grid.*/
     dmat *saa;          /**<Subaperture area*/
-    loc_t *loc;         /**<explicit pts in a regular grid.*/
+    loc_t *loc;         /**<concatenated points for all subapertures.*/
     loc_t **locm;       /**<mis-registered loc, if any.*/
-    pts_t **ptsm;       /**<mis-registered pts, if pure shift*/
     dcell *saam;        /**<mis-registered saa, if any*/
-
+    dmat *amp;          /**<amplitude map, max at 1.*/
+    dcell *ampm;        /**<real amplitude map on misregistered grid, locm. used for gradient computing*/
+    double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
+    double (*misreg)[2];/**<pure misregistration taken from parms->powfs[ipowfs].misreg*/
+    //NCPA
     dcell *ncpa;        /**<NCPA OPDs to add to WFS OPD during simulation.*/
     dcell *ncpa_grad;   /**<NCPA grads to subtract from measurement. */
+    //Physical optics
     DTF_T *dtf;         /**<array of dtf for each wvl*/
+    //LGS Physical Optics
     dmat *sodium;       /**<Loaded and downsampled sodium profile from the file.*/
     ETF_T *etfprep;     /**<ETF for computing short exposure matched filter.*/
     ETF_T *etfsim;      /**<ETF for simulation.*/
     dmat *focus;        /**<additional focus error. (llt->fnrange)*/
     LLT_T *llt;         /**<uplink aperture*/
-    //dcell *mcc;         /**<P/T/T cross coupling matrix with amplitude weighting.*/
     dcell **imcc;        /**<inverse of mcc.*/
     dcell *srot;        /**<subaperture rotation wrt LLT*/
     dcell *srsa;        /**<subaperture distance wrt LLT*/
     dmat *srsamax;      /**<max of srsa for each llt.*/
+    //Geometric gradient
+    spcell *GS0;        /**<gtilt (average gradient) on ampm*/
+    dcell *neasim;      /**<NEA in radian, at dtrat, to be used in simulation
+			   for geometric wfs model.*/
+    //Matched filter
     dcell *sprint;      /**<which subapertures to print sanea*/
     INTSTAT_T *intstat; /**<matched filter i0 and its derivative.*/
-    spcell *GS0;        /**<gtilt (average gradient) on ampm*/
-    dmat *amp;          /**<amplitude map, max at 1.*/
-    dcell *ampm;        /**<real amplitude map on misregistered grid, locm. used for gradient computing*/
-    double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/
     int nwfs;           /**<number of wfs belonging to this wfs*/
@@ -145,7 +150,8 @@ typedef struct POWFS_T{
     //The following are a few convenient pointers.
     double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
     double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
-}POWFS_T;
+}
+POWFS_T;
 
 /**
    NGS mode and reconstructors in ad hoc split tomography. Only useful with 1 or 2 DMs.
@@ -333,6 +339,7 @@ typedef struct SIM_SAVE_T{
     cellarr **evlopdol;
 
     cellarr **wfsopd;
+    cellarr **wfsopdol;
     cellarr **wfslltopd;
     //gradients
     cellarr **gradcl;

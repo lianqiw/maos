@@ -94,6 +94,7 @@ typedef struct LLT_CFG_T{
     char *fnsurf;  /**<Surface OPD error*/
     double *ox;    /**<location x of LLT center wrt telescope aperture center*/
     double *oy;    /**<see ox.*/
+    double *misreg;
     int *i;        /**<Index into llt for this iwfs.*/
     int smooth;    /**<smooth the sodium profile or not*/
     int n;         /**<number of launch telescopes in this powfs*/
@@ -117,6 +118,8 @@ typedef struct POWFS_CFG_T{
 			   radian. _wfs# is added when reading file.*/
     double nearecon;/**<NEA used in reconstruction*/
     double neasim;  /**<NEA used in simulation. -1 to use nearecon*/
+    char*  neasimfile;/**<read NEA used in simulation from file. Defined at
+			 sim.dt sampling rate, in radian. neasim must be -1*/
     double neaspeckle;/**<NEA caused by speckle noise. Added to matched filter
 			  estimation of NEA due to photon and detector noise in
 			  physical optics mode for reconstructor*/
@@ -204,7 +207,8 @@ typedef struct POWFS_CFG_T{
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
-
+    int dl;         /**<is diffraction limited. derived from comparing pixtheta
+		       with diffraction limited image size.*/
 
 }POWFS_CFG_T;
 /**
@@ -556,6 +560,8 @@ typedef struct PARMS_T{
     char **tsurf;    /**<Tilted surfaces, surface, not OPD*/
     int ntsurf;      /**<Number of tilted surfaces*/
     int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
+    int pause;       /**<Pause at the end of every time step*/
+    int force;       /**<For start, bypassing scheduler*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.
@@ -567,6 +573,7 @@ typedef struct ARG_T{
     int iconf;       /**<derived parameter marking the starting of .conf arguments*/
     int argc;        /**<argument count*/
     int nseed;       /**<Number of seeds*/
+    int pause;       /**<pause at the end of every time step*/
     int *seeds;      /**<Array of seeds*/
     char **argv;     /**<Array of arguments*/
     char *dirout;    /**<Result output directory*/

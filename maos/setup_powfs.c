@@ -31,14 +31,20 @@ TIC;
 #define MOVES(p,i,j) p[i]=p[j]
 #define MOVED(p,n,i,j) memcpy(p+n*i, p+n*j, sizeof(double)*n)
 #define MOVEPTS(pts,count,isa)			\
-    MOVES(pts->origx, count,isa);		\
-    MOVES(pts->origy, count,isa)
+    if(pts){\
+	MOVES(pts->origx, count,isa);		\
+	MOVES(pts->origy, count,isa);		\
+    }
 #define MOVELOC(loc,count,isa)			\
-    MOVES(loc->locx,count,isa);			\
-    MOVES(loc->locy,count,isa)
+    if(loc){					\
+	MOVES(loc->locx,count,isa);		\
+	MOVES(loc->locy,count,isa);		\
+    }
 #define MOVEDLOC(loc,nxsa,count,isa)		\
-    MOVED(loc->locx,nxsa,count,isa);		\
-    MOVED(loc->locy,nxsa,count,isa)
+    if(loc){					\
+	MOVED(loc->locx,nxsa,count,isa);	\
+	MOVED(loc->locy,nxsa,count,isa);	\
+    }
 
 /**
    \file maos/setup_powfs.c
@@ -66,18 +72,45 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
     locfree(powfs[ipowfs].saloc);
     locfree(powfs[ipowfs].loc);
     dfree(powfs[ipowfs].amp);
-    if(parms->powfs[ipowfs].misreg){
+    if(powfs[ipowfs].nlocm){
 	for(int ilocm=0; ilocm<powfs[ipowfs].nlocm; ilocm++){
 	    locfree(powfs[ipowfs].locm[ilocm]);
-	    ptsfree(powfs[ipowfs].ptsm[ilocm]);
 	}
 	free(powfs[ipowfs].locm);powfs[ipowfs].locm=NULL;
-	free(powfs[ipowfs].ptsm);powfs[ipowfs].ptsm=NULL;
 	dcellfree(powfs[ipowfs].ampm);
 	dcellfree(powfs[ipowfs].saam);
     }
     free(powfs[ipowfs].realamp);
     free(powfs[ipowfs].realsaa);
+}
+/**
+   Convert amplitude map of subapertures to normalized subaperture area. Used only in setup_powfs_geom*/
+static dmat *wfsamp2saa(dmat *wfsamp, long nxsa){
+    double areanormfactor=1./(double)nxsa;
+    long nsa=wfsamp->nx/nxsa;
+    dmat* saa=dnew(nsa, 1);
+    for(int isa=0; isa<nsa; isa++){
+	double *amp=wfsamp->p+isa*nxsa;
+	double area=0;
+	for(int iamp=0; iamp<nxsa; iamp++){
+	    area+=amp[iamp]*amp[iamp];
+	}
+	saa->p[isa]=area*areanormfactor;
+    }
+    return saa;
+}
+/**
+   Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). locn is always non-misregistered loc.
+*/
+static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx, double misregy, double D, double Din){
+    dmat *amp=dnew(loc->nloc, 1);
+    if(ampground){
+	prop_grid(ampground, loc, amp->p, 1, misregx, misregy,1,0,0,0);
+    }else{
+	locannular(amp->p, loc, -misregx, -misregy, D*0.5, D*0.5, 1);
+    }
+    locannularmask(amp->p, locn, 0,0, D*0.5, Din*0.5);
+    return amp;
 }
 /**
    setting up subaperture geometry.
@@ -174,37 +207,12 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     powfs[ipowfs].pts->nsa=count;
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     powfs[ipowfs].amp=dnew(order*order*nxsa,1);
-    if(aper->ampground){//ampground is already rotated.
-	prop_grid_pts(aper->ampground, powfs[ipowfs].pts, powfs[ipowfs].amp->p, 1,0,0,1,0,0,0);
-	if(parms->aper.ismisreg){
-	    double rr2max=pow(parms->aper.d*0.5,2);
-	    double rr2min=pow(parms->aper.din*0.5,2);
-	    for(long iloc=0; iloc<powfs[ipowfs].loc->nloc; iloc++){
-		double r2=pow(powfs[ipowfs].loc->locx[iloc],2)+pow(powfs[ipowfs].loc->locy[iloc],2);
-		if(r2<rr2min || r2>rr2max){
-		    powfs[ipowfs].amp->p[iloc]=0;
-		}
-	    }
-	}
-    }else{
-	/*
-	  No amplitude map is supplied, we simply create an annular using aper.d and aper.din
-	  2011-02-08: use loccircle to directly create an amplitude map on powfs.loc.
-	*/
-	locannular(powfs[ipowfs].amp->p, powfs[ipowfs].loc, 
-		   parms->aper.misreg[0], parms->aper.misreg[1], 
-		   parms->aper.d*0.5, parms->aper.din*0.5, 1);
-    }
-    double areanormfactor=1./(double)(nxsa);
-    powfs[ipowfs].saa=dnew(powfs[ipowfs].pts->nsa, 1);
-    for(int isa=0; isa<count; isa++){
-	double *amp=powfs[ipowfs].amp->p+isa*nxsa;
-	double area=0;
-	for(int iamp=0; iamp<nxsa; iamp++){
-	    area+=amp[iamp]*amp[iamp];
-	}
-	powfs[ipowfs].saa->p[isa]=area*areanormfactor;
-    }
+    //The assumed amp.
+    powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
+			       0,0, parms->aper.d, parms->aper.din);
+    powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
+    
+    powfs[ipowfs].misreg=calloc(2*parms->powfs[ipowfs].nwfs, sizeof(double));
     if(parms->powfs[ipowfs].misreg){
 	/*Create misregistered coordinate and amplitude map to do physical
 	  optics wavefront sensing. the un-misregistered coordinate and
@@ -226,7 +234,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 	powfs[ipowfs].nlocm=nlocm;
 	powfs[ipowfs].locm=calloc(nlocm, sizeof(loc_t*));
-	powfs[ipowfs].ptsm=calloc(nlocm, sizeof(pts_t*));
+	dcellfree(powfs[ipowfs].saam);
+	dcellfree(powfs[ipowfs].ampm);
 	powfs[ipowfs].saam=dcellnew(nlocm, 1);
 	powfs[ipowfs].ampm=dcellnew(nlocm, 1);
 	PDCELL(misreg,pmisreg);
@@ -234,40 +243,37 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    /*Transforms loc using misregistration
 	      information. The do ray tracing to determine the
 	      misregistered ampltidue map*/
-	    int isshift=0;
-	    powfs[ipowfs].locm[ilocm]=loctransform(powfs[ipowfs].loc, &isshift, pmisreg[ilocm]);
-	    if(isshift){
-		powfs[ipowfs].ptsm[ilocm]=realloc(loctransform((loc_t*)powfs[ipowfs].pts,
-							       NULL, pmisreg[ilocm]), sizeof(pts_t));
-		powfs[ipowfs].ptsm[ilocm]->dx=powfs[ipowfs].pts->dx;
-		powfs[ipowfs].ptsm[ilocm]->nx=powfs[ipowfs].pts->nx;
-	    }
+	    double *shiftxy=NULL;
+	    powfs[ipowfs].locm[ilocm]=loctransform(powfs[ipowfs].loc, &shiftxy, pmisreg[ilocm]);//may return NUL;
+	    powfs[ipowfs].misreg[ilocm][0]=shiftxy[0];
+	    powfs[ipowfs].misreg[ilocm][1]=shiftxy[1];
 	    powfs[ipowfs].saam->p[ilocm]=dnew(powfs[ipowfs].pts->nsa, 1);
-	    powfs[ipowfs].ampm->p[ilocm]=dnew(powfs[ipowfs].locm[ilocm]->nloc, 1);
-	    if(aper->ampground){
-		prop_grid(aper->ampground, powfs[ipowfs].locm[ilocm], 
-			  powfs[ipowfs].ampm->p[ilocm]->p, 1,0,0,1,0,0,0);
-	    }else{
-		locannular(powfs[ipowfs].ampm->p[ilocm]->p, powfs[ipowfs].locm[ilocm] , 
-			   parms->aper.misreg[0], parms->aper.misreg[0], parms->aper.d*0.5, parms->aper.din*0.5, 1);
-	    }
-
-	    for(int isa=0; isa<powfs[ipowfs].ptsm[ilocm]->nsa; isa++){
-		double *amp=powfs[ipowfs].ampm->p[ilocm]->p+isa*nxsa;
-		double area=0;
-		for(int iamp=0; iamp<nxsa; iamp++){
-		    area+=amp[iamp]*amp[iamp];
-		}
-		powfs[ipowfs].saam->p[ilocm]->p[isa]=area*areanormfactor;
-	    }
-	    if(parms->save.setup){
-		locwrite(powfs[ipowfs].locm[ilocm],"%s/powfs%d_locm%d",
-			 dirsetup,ipowfs,ilocm);
+	    powfs[ipowfs].ampm->p[ilocm]=dnew(powfs[ipowfs].loc->nloc, 1);
+	    loc_t *loc=powfs[ipowfs].locm[ilocm]?powfs[ipowfs].locm[ilocm]:powfs[ipowfs].loc;
+	    powfs[ipowfs].ampm->p[ilocm]=mkwfsamp(loc, powfs[ipowfs].loc, aper->ampground, 
+						  shiftxy[0]-parms->aper.misreg[0], 
+						  shiftxy[1]-parms->aper.misreg[1],
+						  parms->aper.d, parms->aper.din);
+	    powfs[ipowfs].saam->p[ilocm]=wfsamp2saa(powfs[ipowfs].ampm->p[ilocm], nxsa);
+	    
+	    if(parms->save.setup && powfs[ipowfs].locm[ilocm]){
+		locwrite(powfs[ipowfs].locm[ilocm],"%s/powfs%d_locm%d", dirsetup,ipowfs,ilocm);
 	    }
 	}
-    }
-  
- 
+        for(int ilocm=nlocm; nlocm==1 && ilocm<parms->powfs[ipowfs].nwfs; ilocm++){
+	    powfs[ipowfs].misreg[ilocm][0]=powfs[ipowfs].misreg[0][0];
+	    powfs[ipowfs].misreg[ilocm][1]=powfs[ipowfs].misreg[0][1];
+	}
+    }else if(parms->aper.ismisreg){//do not need powfs[ipowfs].locm.
+	powfs[ipowfs].nlocm=1;
+	powfs[ipowfs].locm=calloc(1, sizeof(loc_t*));
+	powfs[ipowfs].ampm=dcellnew(1,1);
+	powfs[ipowfs].saam=dcellnew(1,1);
+	powfs[ipowfs].ampm->p[0]=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
+					  -parms->aper.misreg[0], -parms->aper.misreg[1], 
+					  parms->aper.d, parms->aper.din);
+	powfs[ipowfs].saam->p[0]=wfsamp2saa(powfs[ipowfs].ampm->p[0], nxsa);
+    }//if misreg
     count=0;
     /*Go over all the subapertures, calculate the normalized
       subaperture illumination area and remove all that are below
@@ -300,7 +306,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		MOVEDLOC(powfs[ipowfs].loc, nxsa, count, isa);
 		MOVED(powfs[ipowfs].amp->p, nxsa, count, isa);
 		for(int ilocm=0; ilocm<nlocm; ilocm++){
-		    MOVEPTS(powfs[ipowfs].ptsm[ilocm], count, isa);
 		    MOVES(powfs[ipowfs].saam->p[ilocm]->p, count, isa);
 		    MOVEDLOC(powfs[ipowfs].locm[ilocm], nxsa, count, isa);
 		    MOVED(powfs[ipowfs].ampm->p[ilocm]->p,nxsa, count, isa);
@@ -338,7 +343,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     dresize(powfs[ipowfs].saa, count, 1);
     dresize(powfs[ipowfs].amp, count*nxsa, 1);
     for(int ilocm=0; ilocm<nlocm; ilocm++){
-	ptsresize(powfs[ipowfs].ptsm[ilocm], count);
 	locresize(powfs[ipowfs].locm[ilocm], count*nxsa);
 	dresize(powfs[ipowfs].ampm->p[ilocm], count*nxsa, 1);
 	dresize(powfs[ipowfs].saam->p[ilocm], count, 1);
@@ -362,8 +366,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
 	for(int ilocm=0; ilocm<nlocm; ilocm++){
-	    drawopd("ampm", powfs[ipowfs].loc, 
-		    powfs[ipowfs].ampm->p[ilocm]->p,NULL,
+	    drawopd("ampm", powfs[ipowfs].loc, powfs[ipowfs].ampm->p[ilocm]->p,NULL,
 		    "WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
 	}
     }
@@ -376,6 +379,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	dwrite(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);
 	if(nlocm){
 	    dcellwrite(powfs[ipowfs].saam,"%s/powfs%d_saam", dirsetup,ipowfs);
+	    dcellwrite(powfs[ipowfs].ampm,"%s/powfs%d_ampm", dirsetup,ipowfs);
 	}
     }
 }
@@ -423,6 +427,55 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    dcell *mcc=pts_mcc_ptt(powfs[ipowfs].pts, powfs[ipowfs].realamp[imcc]);
 	    powfs[ipowfs].imcc[imcc]=dcellinvspd_each(mcc);
 	    dcellfree(mcc);
+	}
+    }
+    if(!parms->powfs[ipowfs].neaphy){
+	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
+	    const long nsa=powfs[ipowfs].pts->nsa;
+	    dmat *nea=NULL;
+	    if(parms->powfs[ipowfs].neasimfile){
+		if(parms->powfs[ipowfs].neasim!=-1){
+		    error("neasimfile and neasim can not both be supplied\n");
+		}
+		nea=dread("%s_wfs%d",parms->powfs[ipowfs].neasimfile,iwfs);//rad
+		if(nea->nx!=powfs[ipowfs].pts->nsa*2 || nea->ny!=1){
+		    error("wfs %d: NEA read from %s_wfs%d has incorrect format. We want %ldx1 array.\n",
+			  iwfs, parms->powfs[ipowfs].neasimfile, iwfs,powfs[ipowfs].pts->nsa*2);
+		}
+	    }else{
+		nea=dnew(nsa*2, 1);
+		if(parms->powfs[ipowfs].neasim<0){
+		    dset(nea, parms->powfs[ipowfs].nearecon);
+		}else{
+		    dset(nea, parms->powfs[ipowfs].neasim);
+		}
+		dscale(nea, 1./206265000);//convert from mas to rad.
+	    }
+	    //Sanity check
+	    double neamax=dmax(nea);
+	    if(neamax>0){
+		if(neamax<parms->powfs[ipowfs].pixtheta*1e-5){
+		    warning("wfs %d: NEA read from file is too small. Unit error?\n",iwfs);
+		}else if(neamax>parms->powfs[ipowfs].pixtheta){
+		    warning("wfs %d: NEA read from file is too big. Unit error?\n",iwfs);
+		}
+	    }
+	    //Scale by dtrat
+	    dscale(nea, 1./sqrt(parms->powfs[ipowfs].dtrat));
+	    //Scale by normalized subaperture area.
+	    double *saa=powfs[ipowfs].realsaa[jwfs];
+	    const int dl=parms->powfs[ipowfs].dl; //diffraction limited.
+	    info("wfs %d: dl=%d\n", iwfs, dl);
+	    for(long isa=0; isa<nsa; isa++){
+		//scale nea by sqrt(1/area). (seeing limited)
+		//scale nea by 1/area if diffraction limited (NGS)
+		double scale=dl?(1./saa[isa]):(1./sqrt(saa[isa]));
+		nea->p[isa]*=scale;
+		nea->p[isa+nsa]*=scale;
+	    }
+	    powfs[ipowfs].neasim->p[jwfs]=nea;
 	}
     }
     if(parms->save.setup){
@@ -1139,11 +1192,6 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	      mode==0?"preparation":"simulation");
 	//points to the effective sodium profile.
 	double* pp=sodium->p+nhp*(1+colstart);
-	/*if(fabs(pp[0])>1.e-15 || fabs(pp[nhp-1])>1.e-15){
-	  warning("Changed sodium profile both ends to zero.\n");
-	  pp[0]=0;
-	  pp[nhp-1]=0;
-	  }*/
 	//the sum of pp determines the scaling of the pixel intensity.
 	double i0scale=dblsum(pp, nhp);
 	if(fabs(i0scale-1)>0.01){
@@ -1573,6 +1621,20 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
     dcellfree(intstat->gy);
     dcellfree(intstat->saneara);
     dcellfree(intstat->saneaxy);
+    if(parms->powfs[ipowfs].neaphy){
+	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    dmat *sanea=NULL;
+	    if(powfs[ipowfs].intstat->sanea->nx==1){
+		sanea=powfs[ipowfs].intstat->sanea->p[0];
+	    }else{
+		sanea=powfs[ipowfs].intstat->sanea->p[jwfs];
+	    }
+	    dmat *nea=ddup(sanea);
+	    dcwpow(nea, 0.5);//convert from radian^2 to radian. no need to do dtrat scaling.
+	    powfs[ipowfs].neasim->p[jwfs]=nea;
+	}
+    }
     //Remove OTFs that are older than 30 days.
     char *dirotf=stradd(HOME, "/.aos/otfc", NULL);
     remove_file_older(dirotf, 30*24*3600);
@@ -1635,6 +1697,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	free_powfs_geom(powfs, parms, ipowfs);
 	free_powfs_dtf(powfs, parms, ipowfs);
 	spcellfree(powfs[ipowfs].GS0);
+	dcellfree(powfs[ipowfs].neasim);
 	if(powfs[ipowfs].intstat){
 	    dcellfree(powfs[ipowfs].intstat->mtche);
 	    dcellfree(powfs[ipowfs].intstat->sanea);

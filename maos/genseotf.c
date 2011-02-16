@@ -61,7 +61,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(parms->powfs[ipowfs].ncpa && parms->powfs[ipowfs].ncpa_method==2){
 	notf=parms->powfs[ipowfs].nwfs;
 	has_ncpa=1;
-    }else if(powfs[ipowfs].locm){
+    }else if(powfs[ipowfs].nlocm){
 	notf=MAX(notf,powfs[ipowfs].nlocm);
     }else{
 	notf=1;

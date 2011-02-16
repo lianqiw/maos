@@ -75,6 +75,7 @@ void loc_create_stat_do(loc_t *loc);
 void loc_free_stat(loc_t *loc);
 void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val);
 void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,double val);
+void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin);
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val);
 void loc_reduce_spcell(loc_t *loc, spcell *sp, int dim, int cont);
@@ -86,11 +87,13 @@ dmat *loc2mat(loc_t *loc,int piston);
 loc_t *pts2loc(pts_t *pts);
 void locrot(loc_t *loc, const double theta);
 loc_t *locdup(loc_t *loc);
-loc_t *loctransform(loc_t *loc, int *isshift, dmat **coeff);
+loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff);
+loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double *p);
 void mapcircle(map_t *map, double r, double val);
 inline void locresize(loc_t *loc, long nloc){
+    if(!loc) return;
     loc_free_map(loc);
     loc_free_stat(loc);
     loc->locx=realloc(loc->locx, sizeof(double)*nloc);

@@ -334,29 +334,13 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
 	    /*use ploc as an intermediate plane.  Amplitude must use assumed amp
 	      (non-misregistered)*/
-	    dmat *amp=NULL;
-	    if(parms->aper.ismisreg){
-		amp=dnew(powfs[ipowfs].loc->nloc, 1);
-		if(aper->ampground){
-		    prop_grid_pts(aper->ampground, powfs[ipowfs].pts, amp->p, 1,
-				  parms->aper.misreg[0], parms->aper.misreg[1], 1,0,0,0);
-		}else{
-		    locannular(amp->p, powfs[ipowfs].loc, 0,0,
-			       parms->aper.d*0.5, parms->aper.din*0.5, 1);
-		}
-		if(parms->plot.setup){
-		    drawopd("amp recon", powfs[ipowfs].loc, amp->p, NULL,
-			    "WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
-		}
-	    }else{
-		amp=dref(powfs[ipowfs].amp);
-	    }
+	    
 	    switch(parms->powfs[ipowfs].gtype_recon){
 	    case 0:{ /*Create averaging gradient operator (gtilt) from PLOC,
 		       using fine sampled powfs.loc as intermediate plane*/
 		double displace[2]={0,0};
 		info2(" Gploc");
-		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].loc,amp->p,
+		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].loc,powfs[ipowfs].amp->p,
 				  powfs[ipowfs].saloc,1,1,displace,1);
 		if(parms->save.setup){
 		    spwrite(GP->p[ipowfs], "%s/powfs%d_GP", dirsetup, ipowfs);
@@ -366,7 +350,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
 		       powfs.loc as intermediate plane.*/
 		double displace[2]={0,0};
-		dsp* ZS0=mkz(powfs[ipowfs].loc,amp->p,
+		dsp* ZS0=mkz(powfs[ipowfs].loc,powfs[ipowfs].amp->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,displace);
 		info2(" Zploc");
 		dsp *H=mkh(ploc,powfs[ipowfs].loc,powfs[ipowfs].amp->p, 0,0,1,0,0);
@@ -378,7 +362,6 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 	    default:
 		error("Invalid gtype_recon\n");
 	    }
-	    dfree(amp);
 	}
 	toc2(" done");
 	if(parms->save.setup){

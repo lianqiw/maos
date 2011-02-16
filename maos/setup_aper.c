@@ -33,9 +33,6 @@ TIC;
 performance evaluation. */
 APER_T * setup_aper(const PARMS_T *const parms){
     APER_T *aper = calloc(1, sizeof(APER_T));
-    double d=parms->aper.d;
-    double dx=parms->aper.dx;
-
     tic;
     if(parms->aper.fnamp){
 	aper->ampground=mapread("%s",parms->aper.fnamp);
@@ -51,10 +48,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    dembed((dmat*)aper->ampground,B,parms->aper.rotdeg/180.*M_PI);
 	    dfree(B);
 	}
-	info("aper.misreg is (%g, %g)\n", parms->aper.misreg[0], parms->aper.misreg[1]);
-	aper->ampground->ox+=parms->aper.misreg[0];
-	aper->ampground->oy+=parms->aper.misreg[1];
-	info("ampground orig is (%g, %g)\n", aper->ampground->ox, aper->ampground->oy);
+
     }
  
     if(parms->load.locs){
@@ -63,43 +57,45 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
     }else{
-	if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6 && !parms->evl.ismisreg){
-	    //LOCSTAT records the starting of each row to speed up accphi
-	    locstat_t *locstat=calloc(1, sizeof(locstat_t));
-	    info2("Using amplitude map to generate aper grid\n");
-	    aper->locs=mkcirloc_amp(&(aper->amp), locstat, aper->ampground, 
-				    d, dx,parms->aper.cropamp);
-	    aper->locs->stat=locstat;
-	}else{
-	    map_t *pmap=create_metapupil_wrap(parms,0,dx,0,0,0,T_PLOC,0,0);
-	    aper->locs=map2loc(pmap);
-	    mapfree(pmap);
-	    warning("No amplitude map defined or matched to aperture dx.\n");
-	}  
+	/*
+	  Commented out on 2011-02-14
+	  if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6 && !parms->evl.ismisreg){
+	  //LOCSTAT records the starting of each row to speed up accphi
+	  locstat_t *locstat=calloc(1, sizeof(locstat_t));
+	  info2("Using amplitude map to generate aper grid\n");
+	  aper->locs=mkcirloc_amp(&(aper->amp), locstat, aper->ampground, 
+	  d, dx,parms->aper.cropamp);
+	  aper->locs->stat=locstat;
+	  }else{
+	
+	  map_t *pmap=create_metapupil_wrap(parms,0,dx,0,0,0,T_PLOC,0,0);
+	  aper->locs=map2loc(pmap);
+	  mapfree(pmap);
+	  warning("No amplitude map defined or matched to aperture dx.\n");
+	  }  */
+	//We choose to make circular map so that it acts as pupil stop in case of misregistration.
+	aper->locs=mkcirloc(parms->aper.d, parms->aper.dx);
 	if(parms->save.setup){
 	    locwrite(aper->locs, "%s/aper_locs.bin.gz",dirsetup);
-	}
-    }
-    if(parms->evl.ismisreg){
-	for(long iloc=0; iloc<aper->locs->nloc; iloc++){
-	    aper->locs->locx[iloc]+=parms->evl.misreg[0];
-	    aper->locs->locy[iloc]+=parms->evl.misreg[1];
 	}
     }
     loc_create_stat(aper->locs);
     if(!aper->amp){
 	aper->amp=calloc(aper->locs->nloc,sizeof(double));
 	if(aper->ampground){
-	    prop_grid_stat(aper->ampground, aper->locs->stat,
-			   aper->amp, 1, 0, 0, 1, 0, 0, 0);
+	    prop_grid_stat(aper->ampground, aper->locs->stat, aper->amp, 1,
+			   parms->evl.misreg[0]-parms->aper.misreg[0],
+			   parms->evl.misreg[1]-parms->aper.misreg[1],
+			   1, 0, 0, 0);
 	}else{
 	    warning("Using locannular to create a gray pixel aperture\n");
-	    locannular(aper->amp,aper->locs,
-		       parms->aper.misreg[0],parms->aper.misreg[1],
+	    locannular(aper->amp, aper->locs,
+		       parms->aper.misreg[0]-parms->evl.misreg[0],
+		       parms->aper.misreg[1]-parms->evl.misreg[1],
 		       parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
-    //normalize amp to sum to 1.
+    //normalize amp to sum to 1. used later to plot.
     if(parms->plot.setup ||parms->plot.run){
 	aper->amp1=malloc(sizeof(double)*aper->locs->nloc);
 	memcpy(aper->amp1, aper->amp, sizeof(double)*aper->locs->nloc);
@@ -154,7 +150,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 /**
    Free the aper structure after simulation*/
 void free_aper(APER_T *aper, const PARMS_T *parms){
-    //aper->ampground is freed on setup_recon
+    /*aper->ampground is freed on setup_recon*/
     locfree(aper->locs);
     free(aper->amp);
     if(aper->amp1)

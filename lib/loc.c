@@ -862,6 +862,20 @@ void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,d
     loccircle(phi,loc,cx,cy,rin,-val);
 }
 /**
+   Create a hard annular mask in phi.
+*/
+void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin){
+    //apply the hard pupil mask of aper.d, using loc. not locm
+    double rr2max=r*r;
+    double rr2min=rin*rin;
+    for(long iloc=0; iloc<loc->nloc; iloc++){
+	double r2=pow(loc->locx[iloc],2)+pow(loc->locy[iloc],2);
+	if(r2<rr2min || r2>rr2max){
+	    phi[iloc]=0;
+	}
+    }
+}
+/**
  Create a gray pixel elliptical map in phi using coordinates defined in loc,
 center defined using cx, cy, radii of rx, ry, and value of val */
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
@@ -1261,28 +1275,25 @@ loc_t *locdup(loc_t *loc){
    Transform coordinate. loc contains x,y; locm contains xm, ym.
    xm{ip}=\{sum}_{ic}(coeff[0](1,ic)*pow(x,coeff[0](2,ic))*pow(y,coeff[0](3,ic)))
    ym{ip}=\{sum}_{ic}(coeff[1](1,ic)*pow(x,coeff[1](2,ic))*pow(y,coeff[1](3,ic)))
-*/
-loc_t *loctransform(loc_t *loc, int *isshift, dmat **coeff){
+
+   if shiftxy is set: the pure shift is taken out of transform and not
+   added. shiftxy is set to a 2-vector for [shiftx, shifty]. If the transform is
+   only pure shift, NULL is returned.
+ */
+loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
     if(coeff[0]->nx!=3 || coeff[1]->nx!=3){
 	error("Coeff is in wrong format\n");
     }
     PDMAT(coeff[0],cx);
     PDMAT(coeff[1],cy);
 
-    loc_t *locm=calloc(1, sizeof(loc_t));
-    locm->nloc=loc->nloc;
-    locm->dx=loc->dx;
-    locm->locx=calloc(locm->nloc, sizeof(double));
-    locm->locy=calloc(locm->nloc, sizeof(double));
     const double *restrict x=loc->locx;
     const double *restrict y=loc->locy;
-    double *restrict xm=locm->locx;
-    double *restrict ym=locm->locy;
     //Test whether the transform is pure shift.
     int keepx=0, keepy=0;
     int shift=1;
     double shiftx=0, shifty=0;
-    for(int ic=0; shift && ic<coeff[0]->ny; ic++){
+    for(int ic=0; ic<coeff[0]->ny; ic++){
 	if(fabs(cx[ic][0]-1)<EPS && fabs(cx[ic][1]-1)<EPS && fabs(cx[ic][2])<EPS){
 	    if(keepx==0){
 		keepx=1;
@@ -1292,13 +1303,14 @@ loc_t *loctransform(loc_t *loc, int *isshift, dmat **coeff){
 	    }
 	}else if(fabs(cx[ic][1])<EPS && fabs(cx[ic][2])<EPS){
 	    shiftx+=cx[ic][0];
+	    if(shiftxy) cx[ic][0]=0;//remove the transform.
 	}else{//something we don't recognize. not pure shift.
 	    warning("something we don't recognize\n");
 	    shift=0;
 	}
     }
     if(keepx!=1) shift=0;
-    for(int ic=0; shift && ic<coeff[1]->ny; ic++){
+    for(int ic=0; ic<coeff[1]->ny; ic++){
 	if(fabs(cy[ic][0]-1)<EPS && fabs(cy[ic][1])<EPS && fabs(cy[ic][2]-1)<EPS){
 	    if(keepy==0){
 		keepy=1;
@@ -1308,19 +1320,26 @@ loc_t *loctransform(loc_t *loc, int *isshift, dmat **coeff){
 	    }
 	}else if(fabs(cy[ic][1])<EPS && fabs(cy[ic][2])<EPS){
 	    shifty+=cy[ic][0];
+	    if(shiftxy) cy[ic][0]=0;//remove from the transform.
 	}else{//something we don't recognize. not pure shift.
 	    warning("something we don't recognize\n");
 	    shift=0;
 	}
     }
     if(keepy!=1) shift=0;
-    if(shift){
+    if(shiftxy){
+	*shiftxy=calloc(2, sizeof(double));
+	(*shiftxy)[0]=shiftx;
+	(*shiftxy)[1]=shifty;
+    }
+    if(shift && shiftxy){//pure shift, and shiftxy is set.
 	info("The transform is pure shift by %g along x, %g along y\n", shiftx, shifty);
-	for(long iloc=0; iloc<loc->nloc; iloc++){
-	    xm[iloc]=x[iloc]+shiftx;
-	    ym[iloc]=y[iloc]+shifty;
-	}
+	return NULL;
     }else{
+	loc_t *locm=locnew(loc->nloc, loc->dx);
+	double *restrict xm=locm->locx;
+	double *restrict ym=locm->locy;
+
 	for(long iloc=0; iloc<loc->nloc; iloc++){
 	    for(long ic=0; ic<coeff[0]->ny; ic++){
 		xm[iloc]+=cx[ic][0]*pow(x[iloc],cx[ic][1])*pow(y[iloc],cx[ic][2]);
@@ -1329,11 +1348,20 @@ loc_t *loctransform(loc_t *loc, int *isshift, dmat **coeff){
 		ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
 	    }
 	}
+	return locm;
     }
-    if(isshift) *isshift=shift;
-    return locm;
 }
-
+/**
+   Shift a loc coordinate
+*/
+loc_t *locshift(const loc_t *loc, double sx, double sy){
+    loc_t *loc2=locnew(loc->nloc, loc->dx);
+    for(long iloc=0; iloc<loc->nloc; iloc++){
+	loc2->locx[iloc]=loc->locx[iloc]+sx;
+	loc2->locy[iloc]=loc->locy[iloc]+sy;
+    }
+    return loc2;
+}
 /**
    Compute the size of a map that is used to build loc or can fully contain loc
    (embed)

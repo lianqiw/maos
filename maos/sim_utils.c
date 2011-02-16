@@ -120,8 +120,8 @@ static map_t **genscreen_do(SIM_T *simu){
 	screens[i]->vx=cos(angle)*atm->ws[i];
 	screens[i]->vy=sin(angle)*atm->ws[i];
 	//misregistration
-	screens[i]->ox-=parms->aper.misreg[0];
-	screens[i]->oy-=parms->aper.misreg[1];
+	screens[i]->ox+=parms->aper.misreg[0];
+	screens[i]->oy+=parms->aper.misreg[1];
     }
     return screens;
 }
@@ -586,12 +586,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
+	simu->sanea_sim->p[iwfs]=dnew(nsa*2,1);
 	if(parms->powfs[ipowfs].usephy){
-	    simu->sanea_sim->p[iwfs]=dnew(nsa*2,1);
 	    simu->ints[iwfs]=dcellnew(nsa,1);
 	    for(int isa=0; isa<nsa; isa++){
-		simu->ints[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax,
-					      powfs[ipowfs].pixpsay);
+		simu->ints[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 	    }
 	}
     }
@@ -744,34 +743,27 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int nthread=powfs[ipowfs].nthread;
-	const int indwfs=parms->powfs[ipowfs].wfsind[iwfs];
+	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
-	int ilocm=-1;
-	if(simu->powfs[ipowfs].locm){
-	    ilocm=(simu->powfs[ipowfs].nlocm>1)?indwfs:0;
-	}
+	const int ilocm=(simu->powfs[ipowfs].nlocm>1)?wfsind:0;
+
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    const double ht=parms->atm.ht[ips];
 	    if(ht>hs){
 		error("Layer is above guide star\n");
 	    }
 	    PROPDATA_T *data=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
-	    data->displacex0=ht*parms->wfs[iwfs].thetax;
-	    data->displacey0=ht*parms->wfs[iwfs].thetay;
+	    data->displacex0=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
+	    data->displacey0=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
 	    data->scale=1.-ht/hs;
 	    data->alpha=1;
 	    data->wrap=1;
 	    data->mapin=(void*)1;//need to update this in genscreen.
 	    data->phiout=(void*)1;//replace later in simulation.
 	    int tot=0;
-	    if(powfs[ipowfs].locm){//misregistration.
-		if(powfs[ipowfs].ptsm[ilocm]){//pure shift, so we use offset of ptsm
-		    data->ptsout=powfs[ipowfs].ptsm[ilocm];
-		    tot=data->ptsout->nsa;
-		}else{
-		    data->locout=powfs[ipowfs].locm[ilocm];
-		    tot=data->locout->nloc;
-		}
+	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){//misregistration.
+		data->locout=powfs[ipowfs].locm[ilocm];
+		tot=data->locout->nloc;
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
@@ -784,8 +776,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    const double ht = parms->dm[idm].ht;
 	    PROPDATA_T *data=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 	    int tot;
-	    data->displacex0=ht*parms->wfs[iwfs].thetax;
-	    data->displacey0=ht*parms->wfs[iwfs].thetay;
+	    data->displacex0=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
+	    data->displacey0=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
 	    data->scale=1.-ht/hs;
 	    data->alpha=-1;//remove dm contribution.
 	    data->wrap=0;
@@ -801,14 +793,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->cubic_iac=parms->dm[idm].iac;
 	    }
 	    data->phiout=(void*)1;//replace later in simulation
-	    if(powfs[ipowfs].locm){//misregistration.
-		if(powfs[ipowfs].ptsm[ilocm]){//pure shift, so we use offset of ptsm
-		    data->ptsout=powfs[ipowfs].ptsm[ilocm];
-		    tot=data->ptsout->nsa;
-		}else{
-		    data->locout=powfs[ipowfs].locm[ilocm];
-		    tot=data->locout->nloc;
-		}
+	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){//misregistration.
+		data->locout=powfs[ipowfs].locm[ilocm];
+		tot=data->locout->nloc;
 	    }else{
 		data->ptsout=powfs[ipowfs].pts;
 		tot=data->ptsout->nsa;
@@ -844,8 +831,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    const int ind=ievl+parms->evl.nevl*ips;
 	    PROPDATA_T *data=&simu->evl_propdata_atm[ind];
 	    const double ht=parms->atm.ht[ips];
-	    data->displacex0=ht*parms->evl.thetax[ievl];
-	    data->displacey0=ht*parms->evl.thetay[ievl];
+	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
+	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
 	    data->scale=1-ht/parms->evl.ht;
 	    data->alpha=1;
 	    data->wrap=1;
@@ -861,8 +848,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    const int ind=ievl+parms->evl.nevl*idm;
 	    PROPDATA_T *data=&simu->evl_propdata_dm[ind];
 	    const double ht=parms->dm[idm].ht;
-	    data->displacex0=ht*parms->evl.thetax[ievl];
-	    data->displacey0=ht*parms->evl.thetay[ievl];
+	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
+	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
 	    data->scale=1-ht/parms->evl.ht;
 	    data->alpha=-1;
 	    data->wrap=0;
@@ -1067,6 +1054,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
     if(parms->save.wfsopd){
 	save->wfsopd=calloc(parms->nwfs, sizeof(cellarr*));
+	save->wfsopdol=calloc(parms->nwfs, sizeof(cellarr*));
 	save->wfslltopd=calloc(parms->nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -1074,6 +1062,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		continue;
 	    }
 	    save->wfsopd[iwfs]=cellarr_init(nstep, "wfs%d_opd_%d.bin", iwfs, seed);
+	    save->wfsopdol[iwfs]=cellarr_init(nstep, "wfs%d_opdol_%d.bin", iwfs, seed);
 	    if(powfs[ipowfs].llt){
 		save->wfslltopd[iwfs]=cellarr_init(nstep, "wfs%d_lltopd_%d.bin", iwfs, seed);
 	    }
@@ -1314,6 +1303,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->evlopdcl, parms->evl.nevl);
     cellarr_close_n(save->evlopdol, parms->evl.nevl);
     cellarr_close_n(save->wfsopd, parms->nwfs);
+    cellarr_close_n(save->wfsopdol, parms->nwfs);
     cellarr_close_n(save->wfslltopd, parms->nwfs);
     cellarr_close_n(save->gradcl, parms->nwfs);
     cellarr_close_n(save->gradgeom, parms->nwfs);

@@ -122,6 +122,9 @@ void wfsgrad_iwfs(thread_t *info){
 	}//ips
 	//most expensive 0.10 per LGS for
     }
+    if(save_opd){
+	cellarr_dmat(simu->save->wfsopdol[iwfs], opd);
+    }
     if(CL){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    thread_t *wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
@@ -237,13 +240,12 @@ void wfsgrad_iwfs(thread_t *info){
 		    const double scale=1.-hl/hs;
 		    /*
 		      Bug fixed: 2009-01-05: multiply ox,oy to hl/hs.
+		      Bug fixed: 2011-02-14: -ox/hs instead of ox/hs.
 		    */
-		    const double displacex=-atm[ips]->vx*isim*dt
-			+parms->wfs[iwfs].thetax*hl
-			+parms->powfs[ipowfs].llt->ox[illt]*hl/hs;
-		    const double displacey=-atm[ips]->vy*isim*dt
-			+parms->wfs[iwfs].thetay*hl
-			+parms->powfs[ipowfs].llt->oy[illt]*hl/hs;
+		    const double thetax=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
+		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
+		    const double displacex=-atm[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg[0];
+		    const double displacey=-atm[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg[1];
 		    prop_grid_pts(atm[ips],powfs[ipowfs].llt->pts,
 				  lltopd->p,1,displacex,displacey,
 				  scale, 1., 0, 0);
@@ -490,39 +492,21 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	    if(parms->powfs[ipowfs].usephy){
 		info2("Will not add noise at acquisition proccess for physical optics\n");
-	    }else if(parms->powfs[ipowfs].neaphy){
-		double *gg=(*gradout)->p;
-		dmat *sanea=NULL;
-		if(powfs[ipowfs].intstat->sanea->nx==1){
-		    sanea=powfs[ipowfs].intstat->sanea->p[0];
-		}else{
-		    sanea=powfs[ipowfs].intstat->sanea->p[wfsind];
-		}
-		double *gn=sanea->p;//rad^2;
-		for(int isa=0; isa<nsa*2; isa++){
-		    gg[isa]+=sqrt(gn[isa])*randn(&simu->wfs_rand[iwfs]);
-		}
 	    }else{
-		double neause=parms->powfs[ipowfs].neasim;
-		if(neause<0){
-		    neause=parms->powfs[ipowfs].nearecon;
-		}
-		double nea=neause/206265000./sqrt(dtrat);
-		if(nea>1.e-20){
-		    //info("Adding noise %g mas to geom grads\n", nea*206265000);
-		    double *ggx=(*gradout)->p;
-		    double *ggy=(*gradout)->p+nsa;
-		    int ilocm=simu->powfs[ipowfs].nlocm>1?wfsind:0;
-		    double *area=simu->powfs[ipowfs].realsaa[wfsind];
-		    for(int isa=0; isa<nsa; isa++){
-			//scale nea by sqrt(1/area). (seeing limited)
-			//scale nea by 1/area if diffraction limited (NGS)
-			double neasc=nea*sqrt(1./area[isa]);
-			ggx[isa]+=neasc*randn(&simu->wfs_rand[iwfs]);
-			ggy[isa]+=neasc*randn(&simu->wfs_rand[iwfs]);
-		    }
-		}else{
-		    warning("powfs is noisy, but nea is 0");
+		const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
+		const double *neax=nea->p;
+		const double *neay=nea->p+nsa;
+		double *ggx=(*gradout)->p;
+		double *ggy=(*gradout)->p+nsa;
+		for(int isa=0; isa<nsa; isa++){
+		    double neasc=nea->p[isa];
+		    //Preserve the random sequence.
+		    double noisex=neax[isa]*randn(&simu->wfs_rand[iwfs]);
+		    double noisey=neay[isa]*randn(&simu->wfs_rand[iwfs]);
+		    ggx[isa]+=noisex;
+		    ggy[isa]+=noisey;
+		    simu->sanea_sim->p[iwfs]->p[isa]+=noisex*noisex;
+		    simu->sanea_sim->p[iwfs]->p[isa+nsa]+=noisey*noisey;
 		}
 	    }
 	}

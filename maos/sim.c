@@ -180,6 +180,10 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #endif
 	    }
 	    print_progress(simu);
+	    if(parms->pause){
+		info2("Press any key to continue.\n");
+		while(getchar()!=0x0d);
+	    }
 	}//isim
 	free_simu(simu);
     }
@@ -220,6 +224,7 @@ void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs,
 	    scheduler_report(simu->status);
 #endif
 	    print_progress(simu);
+	    if(parms->pause) mypause();
 	}
 	free_simu(simu);
     }

@@ -49,6 +49,7 @@ int mystrcmp(const char *a, const char *b);
 char *mystrndup(const char *A, int len);
 void cloexec(int fd);
 void mysleep(double sec);
+void mypause(void);
 #if USE_MEM == 1
 char *mystrdup(const char *A);
 #undef strdup

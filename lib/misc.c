@@ -469,3 +469,11 @@ void mysleep(double sec){
     nanosleep(&ts, NULL);
 }
 
+/**
+   Pause
+*/
+void mypause(void){
+    info2("Press ENTER key to continue.\n");
+    int ans;
+    while((ans=getchar())!='\n');
+}

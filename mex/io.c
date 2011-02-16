@@ -268,7 +268,7 @@ uint32_t read_magic(file_t *fp, char **header){
 	    zfread(&nlen2, sizeof(uint64_t),1,fp);
 	    zfread(&magic2, sizeof(uint32_t),1,fp);
 	    if(magic!=magic2 || nlen!=nlen2){
-		error("Header verification failed\n");
+		error("Header verification failed: %u<>%u, %lu<>%lu\n", magic, magic2, nlen, nlen2);
 	    }
 	}else{ /*otherwise return the magic number*/
 	    return magic;

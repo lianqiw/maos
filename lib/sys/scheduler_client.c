@@ -361,9 +361,12 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 
     if(launch){
 	if(direct){
+	    //launch directly, used by drawres, drawbin where overhead is small.
 	    scheduler_launch_drawdaemon(fifo);
 	}else{
-	    //info2("Attempting to launch fifo\n");
+	    /*launch indirectly through drawdaemon by maos. Slow to launch
+	      directly because maos is using a lot of memory and forking it
+	      takes time*/
 	    int sock;
 	    for(int retry=0; retry<10; retry++){
 		sock=scheduler_connect_self(0,0);

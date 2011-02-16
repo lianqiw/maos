@@ -91,6 +91,7 @@ void free_parms(PARMS_T *parms){
 	    free(parms->powfs[ipowfs].llt->i);
 	    free(parms->powfs[ipowfs].llt->ox);
 	    free(parms->powfs[ipowfs].llt->oy);
+	    free(parms->powfs[ipowfs].llt->misreg);
 	    free(parms->powfs[ipowfs].llt);
 	}
 	free(parms->powfs[ipowfs].wfs);
@@ -100,6 +101,7 @@ void free_parms(PARMS_T *parms){
 	free(parms->powfs[ipowfs].piinfile);
 	free(parms->powfs[ipowfs].sninfile);
 	free(parms->powfs[ipowfs].neareconfile);
+	free(parms->powfs[ipowfs].neasimfile);
 	free(parms->powfs[ipowfs].bkgrndfn);
 	free(parms->powfs[ipowfs].misreg);
 	free(parms->powfs[ipowfs].ncpa);
@@ -196,6 +198,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,saat);
     READ_POWFS(int,neaphy);
     READ_POWFS(str,neareconfile);
+    READ_POWFS(str,neasimfile);
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,neasim);
     READ_POWFS(dbl,neaspeckle);
@@ -262,7 +265,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix);
 	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
 	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
-	    
+	    readcfg_dblarr_n(&parms->powfs[ipowfs].llt->misreg,2,"%sllt.misreg",prefix);
 	    parms->powfs[ipowfs].llt->n=readcfg_dblarr(&(parms->powfs[ipowfs].llt->ox),"%sllt.ox",prefix);
 	    readcfg_dblarr_n(&(parms->powfs[ipowfs].llt->oy),parms->powfs[ipowfs].llt->n,"%sllt.oy",prefix);
 
@@ -847,19 +850,23 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	   Figure out pixtheta if specified to be auto (<0).
 	  -pixtheta is the ratio to nominal value.
 	*/
+	const double dxsa 
+	    = parms->aper.d/(double)parms->powfs[ipowfs].order;
+	double wvl=0;
+	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
+	    if(parms->powfs[ipowfs].wvl[iwvl]>wvl)
+		wvl=parms->powfs[ipowfs].wvl[iwvl];
+	}
 	if(parms->powfs[ipowfs].pixtheta<0){
-	    const double dxsa 
-		= parms->aper.d/(double)parms->powfs[ipowfs].order;
-	    double wvl=0;
-	    for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-		if(parms->powfs[ipowfs].wvl[iwvl]>wvl)
-		    wvl=parms->powfs[ipowfs].wvl[iwvl];
-	    }
+	    parms->powfs[ipowfs].dl=1;//mark as diffraction limited.
 	    double ratio=(-parms->powfs[ipowfs].pixtheta);
 	    parms->powfs[ipowfs].pixtheta=ratio*wvl/dxsa;
 	    info2("powfs %d pixtheta set to %.1fx %g/%g: %g mas\n",
 		  ipowfs, ratio, wvl,dxsa,parms->powfs[ipowfs].pixtheta*206265000);
+	}else if(parms->powfs[ipowfs].pixtheta<wvl/dxsa*1.22){
+	    parms->powfs[ipowfs].dl=1;//mark as diffraction limited.
 	}
+	
 	if (parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom){
 	    parms->powfs[ipowfs].hasGS0=1;
 	}else{
@@ -886,8 +893,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	{
 	    /*Adjust dx if the subaperture does not contain integer, even number of points.*/
-	    const int order  = parms->powfs[ipowfs].order;
-	    const double dxsa = parms->aper.d/(double)order;
 	    int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
 	    double dx=dxsa/nx;//adjust dx.
 	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
@@ -1337,6 +1342,8 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	parms->sim.seeds=realloc(parms->sim.seeds, arg->nseed*sizeof(int));
 	memcpy(parms->sim.seeds, arg->seeds, sizeof(int)*arg->nseed);
     }
+    parms->pause=arg->pause;
+    parms->force=arg->force;
     info2("There are %d simulation seeds supplied by ",parms->sim.nseed);
     if(arg->nseed>0){
 	info2("command line:");

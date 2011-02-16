@@ -96,12 +96,14 @@ void setup_tsurf(SIM_T *simu){
 
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	    double hs=parms->powfs[ipowfs].hs;
 	    loc_t *locwfs, *locwfsin;
 	    if(!simu->surfwfs->p[iwfs]){
 		simu->surfwfs->p[iwfs]=dnew(simu->powfs[ipowfs].npts,1);
 	    }
-	    if(powfs[ipowfs].locm){
+	    if(powfs[ipowfs].nlocm){
+		error("We don't handle this case yet. Think carefully when to apply shift.\n");
 		int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
 		locwfsin=powfs[ipowfs].locm[ilocm];
 	    }else{
@@ -214,10 +216,11 @@ void setup_surf(SIM_T*simu){
 	}
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
+	    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	    double hs=parms->powfs[ipowfs].hs;
 	    const double scale=1.-hl/hs;
-	    const double displacex=parms->wfs[iwfs].thetax*hl;
-	    const double displacey=parms->wfs[iwfs].thetay*hl;
+	    const double displacex=parms->wfs[iwfs].thetax*hl+powfs[ipowfs].misreg[wfsind][0];
+	    const double displacey=parms->wfs[iwfs].thetay*hl+powfs[ipowfs].misreg[wfsind][1];
 	    if(!simu->surfwfs->p[iwfs]){
 		simu->surfwfs->p[iwfs]=dnew(simu->powfs[ipowfs].npts,1);
 	    }

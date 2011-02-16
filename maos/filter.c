@@ -264,8 +264,9 @@ void filter_cl(SIM_T *simu){
 	//Add tip/tilt back to the ground DM only.
 	loc_add_ptt(simu->dmint[0]->p[0]->p, totalptt, recon->aloc[0]);
 	dcellfree(ptt);
+    }else if(parms->save.dmpttr){
+	cellarr_dcell(simu->save->dmpttr, NULL);
     }
-
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
     if(parms->sim.fuseint){

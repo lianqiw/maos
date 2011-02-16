@@ -344,8 +344,7 @@ void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
-    if(!parms->sim.closeloop || parms->dbg.fitonly || 
-       simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
+    if(!parms->sim.closeloop || parms->dbg.fitonly || simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
 	if(parms->dbg.fitonly){
 	    dcellfree(simu->opdr);
 	    simu->opdr=atm2xloc(simu);
@@ -390,43 +389,7 @@ void tomofit(SIM_T *simu){
 	}
 
 	fit(&simu->dmfit_hi,parms,recon,simu->opdr);
-	if(parms->save.opdr){
-	    cellarr_dcell(simu->save->opdr, simu->opdr);
-	}
-	if(parms->save.opdx || parms->plot.opdx){
-	    dcell *opdx;
-	    if(parms->dbg.fitonly){
-		opdx=simu->opdr;
-	    }else{
-		opdx=atm2xloc(simu);
-	    }
-	    if(parms->save.opdx){
-		cellarr_dcell(simu->save->opdx, opdx);
-	    }
-	    if(parms->plot.opdx){ //draw opdx
-		for(int i=0; i<opdx->nx; i++){
-		    drawopd("Recon", recon->xloc[i], opdx->p[i]->p, NULL,
-			    "Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
-		}
-	    }
-	    if(!parms->dbg.fitonly){
-		dcellfree(opdx);
-	    }
-	}
-	if(parms->save.dm){
-	    cellarr_dcell(simu->save->dmfit_hi, simu->dmfit_hi);
-	}
-	//Ploting.
-	if(parms->plot.run){
-	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
-		drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, NULL,
-			"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
-	    }
-	    for(int i=0; simu->dmfit_hi && i<simu->dmfit_hi->nx; i++){
-		drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,NULL,
-			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
-	    }
-	}
+
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
     
 	/*
@@ -569,25 +532,34 @@ void reconstruct(SIM_T *simu){
     double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    if(!simu->gradlastol && !simu->gradlastcl){
-	return;
-    }
-    switch(parms->sim.recon){//mv
-    case 0:
-	tomofit(simu);//tomography and fitting.
-	break;
-    case 1:
-    case 2:
-	lsr(simu);
-	break;
-    }
-    if(recon->moao){
-	moao_recon(simu);
-    }
-    if(parms->sim.mffocus){
-	focus_tracking(simu);
+    if(simu->gradlastol || simu->gradlastcl){
+	switch(parms->sim.recon){//mv
+	case 0:
+	    tomofit(simu);//tomography and fitting.
+	    break;
+	case 1:
+	case 2:
+	    lsr(simu);
+	    break;
+	}
+	if(recon->moao){
+	    moao_recon(simu);
+	}
+	if(parms->sim.mffocus){
+	    focus_tracking(simu);
+	}
     }
     if(parms->plot.run){
+	if(parms->sim.recon==0){
+	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
+		drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, NULL,
+			"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
+	    }
+	    for(int i=0; simu->dmfit_hi && i<simu->dmfit_hi->nx; i++){
+		drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,NULL,
+			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
+	    }
+	}
 	for(int idm=0; idm<parms->ndm; idm++){
 	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
 		    "DM Error Signal (Hi)","x (m)","y (m)",
@@ -615,6 +587,34 @@ void reconstruct(SIM_T *simu){
 		    "Err Lo %d",idm);
 	}
 	dcellfree(dmlo);
+    }
+    if(parms->sim.recon==0){
+	if(parms->save.opdr){
+	    cellarr_dcell(simu->save->opdr, simu->opdr);
+	}
+	if(parms->save.dm){
+	    cellarr_dcell(simu->save->dmfit_hi, simu->dmfit_hi);
+	}
+	if(parms->save.opdx || parms->plot.opdx){
+	    dcell *opdx;
+	    if(parms->dbg.fitonly){
+		opdx=simu->opdr;
+	    }else{
+		opdx=atm2xloc(simu);
+	    }
+	    if(parms->save.opdx){
+		cellarr_dcell(simu->save->opdx, opdx);
+	    }
+	    if(parms->plot.opdx){ //draw opdx
+		for(int i=0; i<opdx->nx; i++){
+		    drawopd("Recon", recon->xloc[i], opdx->p[i]->p, NULL,
+			    "Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
+		}
+	    }
+	    if(!parms->dbg.fitonly){
+		dcellfree(opdx);
+	    }
+	}
     }
     if(parms->save.dm){
 	cellarr_dcell(simu->save->dmerr_hi, simu->dmerr_hi);
