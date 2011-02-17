@@ -211,10 +211,10 @@ void maxmindbl(const double *restrict p, long N,
  Compute max, min and sum of a long vector*/
 void maxminlong(const long *restrict p, long N,
 		long *restrict max, long *restrict min){
-    long a,b;
-    long i;
-    a=INTMAX_MIN;
-    b=INTMAX_MAX;
+    if(!p) return;
+    long a=p[0];
+    long b=p[0];
+    long i=0;
     for(i=0; i<N; i++){
 	if(p[i]>a) a=p[i];
 	if(p[i]<b) b=p[i];
