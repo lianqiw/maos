@@ -1377,9 +1377,13 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(parms->save.setup){
 	locwrite(llt->loc, "%s/powfs%d_llt_loc",dirsetup,ipowfs);
 	dwrite(llt->amp, "%s/powfs%d_llt_amp", dirsetup,ipowfs);
+	dcellwrite(llt->imcc, "%s/powfs%d_llt_imcc",dirsetup,ipowfs);
+	if(llt->ncpa){
+	    dcellwrite(llt->ncpa, "%s/powfs%d_llt_ncpa", dirsetup, ipowfs);
+	}
 	dcellwrite(powfs[ipowfs].srot, "%s/powfs%d_srot",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].srsa, "%s/powfs%d_srsa",dirsetup,ipowfs);
-	dcellwrite(llt->imcc, "%s/powfs%d_llt_imcc",dirsetup,ipowfs);
+
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    if(powfs[ipowfs].etfprep[iwvl].p1){
 		ccellwrite(powfs[ipowfs].etfprep[iwvl].p1, 
@@ -1526,11 +1530,11 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			key=dhash(ncpa->p[ilotf], key);
 		    }
 		}
-		snprintf(fnprefix,80,"%ud",key);
+		snprintf(fnprefix,80,"SELOTF_%0x",key);
 		char fnlotf[PATH_MAX];
 		snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_"
 			 "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
-			 "nwvl%d_%g_embfac%d_SELOTF_v1.bin.gz", 
+			 "nwvl%d_%g_embfac%d_v2.bin.gz", 
 			 HOME, fnprefix,
 			 parms->atm.r0, parms->atm.l0, 
 			 powfs[ipowfs].llt->pts->dsa,

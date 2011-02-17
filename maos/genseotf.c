@@ -99,9 +99,8 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
 
     int nlotf=1;
-    dcell *ncpa=NULL;
-    if(parms->powfs[ipowfs].llt->fnsurf){
-	ncpa=dcellread(parms->powfs[ipowfs].llt->fnsurf);
+    dcell *ncpa=powfs[ipowfs].llt->ncpa;
+    if(ncpa){
 	nlotf=ncpa->nx*ncpa->ny;
     }
     powfs[ipowfs].intstat->lotf=ccellnew(nwvl,nlotf);
@@ -109,16 +108,16 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(nwvl!=1){
 	warning("LGS has multi-color!\n");
     }
+    long nx=powfs[ipowfs].llt->amp->nx;
+    long ny=powfs[ipowfs].llt->amp->ny;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	double dtheta=powfs[ipowfs].dtheta->p[iwvl];
 	double thres=1;
 	double one=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
-	    genotf(&lotf[ilotf][iwvl], loc, 
-		   powfs[ipowfs].llt->amp->p, ncpa?ncpa->p[ilotf]->p:NULL,
-		   &one,
-		   thres, wvl, dtheta, parms->atm.r0, parms->atm.l0, ncompx, ncompy, 1, 1, 1);
+	    genotf(&lotf[ilotf][iwvl], loc, powfs[ipowfs].llt->amp->p, ncpa?ncpa->p[ilotf]->p:NULL, 
+		   &one, thres, wvl, dtheta, parms->atm.r0, parms->atm.l0, ncompx, ncompy, 1, 1, 1);
 	}
     }//iwvl
     locfree(loc);
