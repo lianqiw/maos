@@ -108,8 +108,6 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(nwvl!=1){
 	warning("LGS has multi-color!\n");
     }
-    long nx=powfs[ipowfs].llt->amp->nx;
-    long ny=powfs[ipowfs].llt->amp->ny;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	double dtheta=powfs[ipowfs].dtheta->p[iwvl];

@@ -101,7 +101,7 @@ void perfevl_ievl(thread_t *info){
 	cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
     }
     if(parms->plot.run){
-	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1, opdzlim,
+	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
 		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
     }
 #if EVL_OL_OA == 1
@@ -111,10 +111,10 @@ void perfevl_ievl(thread_t *info){
 	if(nmod==3){//evaluation piston/tip/tilt removed wve
 	    loc_calc_ptt(polep[isim],polmp[isim],
 			 aper->locs, aper->ipcc, aper->imcc, 
-			 aper->amp, iopdevl->p);
+			 aper->amp->p, iopdevl->p);
 	}else{//more general case
 	    loc_calc_mod(polep[isim],polmp[isim],
-			 aper->mod,aper->amp,iopdevl->p);
+			 aper->mod,aper->amp->p,iopdevl->p);
 	}
 #if EVL_OL_OA == 1
     }
@@ -129,7 +129,7 @@ void perfevl_ievl(thread_t *info){
 	if(parms->evl.psfpttr){
 	    loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
 	}
-	ccell *psf2s=psfcomp(opdevlcopy, aper->amp, aper->embed, aper->nembed,
+	ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
 			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	dfree(opdevlcopy);
 	int nwvl=parms->evl.nwvl;
@@ -174,7 +174,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
 	if(parms->plot.run){
-	    drawopdamp("Tomo", aper->locs, iopdevltomo->p, aper->amp1,opdzlim,
+	    drawopdamp("Tomo", aper->locs, iopdevltomo->p, aper->amp1->p,opdzlim,
 		       "Science Ideal MOAO Correction OPD","x (m)", "y (m)",
 		       "Tomo %d",ievl);
 	}
@@ -182,10 +182,10 @@ void perfevl_ievl(thread_t *info){
 	if(nmod==3){
 	    loc_calc_ptt(pcleptomo[isim],pclmptomo[isim],
 			 aper->locs, aper->ipcc, 
-			 aper->imcc, aper->amp, iopdevltomo->p);
+			 aper->imcc, aper->amp->p, iopdevltomo->p);
 	}else{
 	    loc_calc_mod(pcleptomo[isim],pclmptomo[isim],
-			 aper->mod,aper->amp,iopdevltomo->p);
+			 aper->mod,aper->amp->p,iopdevltomo->p);
 	}
 	//Evaluate tomography corrected PSF time history and time average
 	if(do_psf && parms->evl.psf[ievl] ){
@@ -195,7 +195,7 @@ void perfevl_ievl(thread_t *info){
 		}
 		loc_remove_ptt(iopdevltomo->p,pclmp[isim], aper->locs);
 	    }
-	    ccell *psf2s=psfcomp(iopdevltomo, aper->amp, aper->embed, aper->nembed,
+	    ccell *psf2s=psfcomp(iopdevltomo, aper->amp->p, aper->embed, aper->nembed,
 				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	    int nwvl=parms->evl.nwvl;
 	    if(parms->evl.psfmean){
@@ -257,7 +257,7 @@ void perfevl_ievl(thread_t *info){
 	}
     }
     if(parms->plot.run){
-	drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1,NULL,
+	drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1->p,NULL,
 		   "Science Closed loop OPD", "x (m)", "y (m)",
 		   "CL %d",ievl);
     }
@@ -282,7 +282,7 @@ void perfevl_ievl(thread_t *info){
 				pcleNGSmp[isim],parms,recon,aper,
 				iopdevl->p,ievl);
 		loc_calc_mod(pclep[isim],pclmp[isim],
-			     aper->mod,aper->amp,iopdevl->p);
+			     aper->mod,aper->amp->p,iopdevl->p);
 	    }
 	}else{
 	    error("Not implemented\n");
@@ -291,10 +291,10 @@ void perfevl_ievl(thread_t *info){
 	if(nmod==3){
 	    loc_calc_ptt(pclep[isim],pclmp[isim],
 			 aper->locs, aper->ipcc, aper->imcc, 
-			 aper->amp, iopdevl->p);
+			 aper->amp->p, iopdevl->p);
 	}else{
 	    loc_calc_mod(pclep[isim],pclmp[isim],
-			 aper->mod,aper->amp,iopdevl->p);
+			 aper->mod,aper->amp->p,iopdevl->p);
 	}
     }
     //Evaluate closed loop PSF.
@@ -306,7 +306,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	    loc_remove_ptt(iopdevl->p,pclmp[isim], aper->locs);
 	}
-	ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
+	ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
 			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	int nwvl=parms->evl.nwvl;
 	if(parms->evl.psfmean){
@@ -441,7 +441,7 @@ static void perfevl_mean(SIM_T *simu){
 		    continue;
 		ngsmod2science(simu->opdevl->p[ievl],parms,simu->recon,aper,Mngs,ievl,-1);
 		double pttr[3]={0,0,0};
-		loc_calc_ptt(pttr,NULL,aper->locs,aper->ipcc,aper->imcc,aper->amp,
+		loc_calc_ptt(pttr,NULL,aper->locs,aper->ipcc,aper->imcc,aper->amp->p,
 			     simu->opdevl->p[ievl]->p);
 		simu->clemp->p[ievl]->p[isim*3]=pttr[0];//LGS mode
 		simu->clemp->p[ievl]->p[isim*3+1]=tt;//TT mode

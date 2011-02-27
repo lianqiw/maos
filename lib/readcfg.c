@@ -78,7 +78,9 @@ static void strtrim(char **str){
     for(char *tmp=*str; *tmp!='\0'; tmp++){
       if(!isgraph((int)*tmp) || *tmp==';' || *tmp==',' || isspace((int)*tmp)){
 	    *tmp=' ';
-	}
+      }else if(*tmp=='\''){//replace single quote to double quote.
+	  *tmp='"';
+      }
     }
     //remove leading spaces.
     while((*str)[0]!='\0' && isspace((int)(*str)[0])) (*str)++;
@@ -115,12 +117,14 @@ static char* strextract(const char *data){
     if(!data || strlen(data)<=2) return NULL;
     if((data[0]!='"' && data[0]!='\'') || 
        (data[strlen(data)-1]!='"' && data[strlen(data)-1]!='\'')){
-	error("Record is {%s}. \nThis is not a string constant. "
-	      "Strings must be embrased by \"\" or \'\'\n",data);
+	warning("Record is {%s}. \nThis is not a string constant. "
+		"Strings should be embrased by \"\" or \'\'\n",data);
+	return strdup(data);
+    }else{
+	char *res=strdup(data+1);
+	res[strlen(res)-1]='\0';
+	return res;
     }
-    char *res=strdup(data+1);
-    res[strlen(res)-1]='\0';
-    return res;
 }
 /**
    Remove comment (after #), leading spaces, and trailing line break and spaces from a
@@ -137,7 +141,7 @@ static char *squeeze(char *line){
 	    comment[0]='\0';
 	/*Remove trailing linebreak and spaces*/
 	int nread=strlen(line)-1;
-	while(nread>=0 && line[nread]==' '){
+	while(nread>=0 && isspace((int)line[nread])){
 	    line[nread]='\0';
 	    nread--;
 	}
@@ -145,15 +149,6 @@ static char *squeeze(char *line){
 	sline=line;
 	while(isspace((int)sline[0])) sline++;
 	if(sline[0]=='\0')  sline=NULL;
-	//Convert single quote ' to double quotes" if any
-	if(sline){
-	    const int nx=strlen(sline);
-	    for(int ix=0; ix<nx; ix++){
-		if(sline[ix]=='\''){
-		    sline[ix]='"';
-		}
-	    }
-	}
     }
     return sline;
 }
@@ -234,8 +229,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     char line[MAXLN];
     while (fgets(line, MAXLN, fd)){
 	sline=squeeze(line);
-	//lines ended with \ will continue on next line
-	if(!sline || sline[0]=='\0')
+	if(!sline || sline[0]=='\0')//skip empty lines.
 	    continue;
 	if(sline){
 	    if((strlen(sline)+strlen(ssline))>=MAXLN){
@@ -243,8 +237,9 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    }
 	    strcat(ssline, sline);
 	}
+	//lines ended with \ will continue on next line
 	if(ssline[strlen(ssline)-1]=='\\'){
-	    ssline[strlen(ssline)-1]=' ';
+	    ssline[strlen(ssline)-1]='\0';
 	    continue;
 	}
 	var=strtok(ssline, "=");

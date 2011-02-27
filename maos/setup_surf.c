@@ -96,7 +96,6 @@ void setup_tsurf(SIM_T *simu){
 
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	    double hs=parms->powfs[ipowfs].hs;
 	    loc_t *locwfs, *locwfsin;
 	    if(!simu->surfwfs->p[iwfs]){

@@ -31,10 +31,10 @@
  */
 typedef struct APER_T{
     loc_t *locs;         /**<PLOCS in laos. the fine sampled grid on aperture
-		         for peformance evaluation.*/
-    double *amp;         /**<amplitude map defined on locs, if exists. sum to 1. for
+			    for peformance evaluation.*/
+    dmat *amp;           /**<amplitude map defined on locs, if exists. sum to 1. for
 			    performance evaluation*/
-    double *amp1;        /**<amplitude map defined o locs, maximum is 1.*/
+    dmat *amp1;          /**<amplitude map defined o locs, maximum is 1. use for plotting.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/

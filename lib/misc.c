@@ -384,14 +384,9 @@ void remove_file_older(const char *fndir, long sec){
     long sec2=myclocki()-sec;
     while((dp=readdir(dir))){
 	snprintf(fnfull,PATH_MAX,"%s/%s",fndir,dp->d_name);
-	if(stat(fnfull,&buf)){
-	    perror("stat");
-	    warning("Unable to stat %s\n",fnfull);
-	}else if(S_ISREG(buf.st_mode)){
-	    if(buf.st_mtime<sec2){
-		remove(fnfull);
-		info2("Remove %s. %ld days old\n", fnfull, (myclocki()-buf.st_mtime)/3600/24);
-	    }
+	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && buf.st_mtime<sec2){
+	    remove(fnfull);
+	    info2("Remove %s. %ld days old\n", fnfull, (myclocki()-buf.st_mtime)/3600/24);
 	}
     }
     closedir(dir);

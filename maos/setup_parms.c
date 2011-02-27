@@ -119,6 +119,7 @@ void free_parms(PARMS_T *parms){
     free(parms->moao);
     free(parms->evl.scalegroup);
     free(parms->aper.fnamp);
+    free(parms->aper.pupmask);
     free(parms->aper.misreg);
     free(parms->save.powfs_opd);
     free(parms->save.powfs_ints);
@@ -234,6 +235,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,mtchcpl);
     READ_POWFS(int,mtchstc);
     READ_POWFS(int,mtchscl);
+    READ_POWFS(int,mtchadp);
     READ_POWFS(int,phystep);
     READ_POWFS(int,noisy);
     READ_POWFS(str,misreg);
@@ -484,6 +486,7 @@ static void readcfg_aper(PARMS_T *parms){
     READ_DBL(aper.rotdeg);
     READ_INT(aper.cropamp);
     READ_STR(aper.fnamp);
+    READ_STR(aper.pupmask);
     readcfg_dblarr_n(&parms->aper.misreg, 2, "aper.misreg");
     if(fabs(parms->aper.misreg[0])>EPS || fabs(parms->aper.misreg[1])>EPS){
 	parms->aper.ismisreg=1;
@@ -856,6 +859,13 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
 	    if(parms->powfs[ipowfs].wvl[iwvl]>wvl)
 		wvl=parms->powfs[ipowfs].wvl[iwvl];
+	}
+	/*should supply in arcsec. Was supplied in radian pre 2011-02-17. So we
+	  test magnitude and then apply conversion*/
+	if(parms->powfs[ipowfs].pixtheta>1e-4){
+	    parms->powfs[ipowfs].pixtheta/=206265.;//convert form arcsec to radian.
+	}else if(parms->powfs[ipowfs].pixtheta>0){
+	    warning2("ipowfs %d:pixtheta should be supplied in unit of arcsec.\n", ipowfs);
 	}
 	if(parms->powfs[ipowfs].pixtheta<0){
 	    parms->powfs[ipowfs].dl=1;//mark as diffraction limited.
@@ -1302,17 +1312,17 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 static void setup_parms_postproc_siglev(PARMS_T *parms){
     double sigscale=parms->sim.dt*800;
     if(fabs(sigscale-1.)>EPS){
-	info("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
+	info2("sim.dt is 1/%g, need to scale siglev.\n",1/parms->sim.dt);
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    double siglev=parms->wfs[iwfs].siglev;
 	    parms->wfs[iwfs].siglev=siglev*sigscale;
-	    info("wfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
+	    info2("wfs%d: siglev scaled from %g to %g\n", iwfs,siglev,parms->wfs[iwfs].siglev);
 	} 
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    double bkgrnd=parms->powfs[ipowfs].bkgrnd;
 	    if(fabs(bkgrnd)>1.e-50){
 		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
-		info("powfs%d: siglev scaled from %g to %g\n", 
+		info2("powfs%d: bkgrnd scaled from %g to %g\n", 
 		     ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
 	    }
 	}

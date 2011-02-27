@@ -28,6 +28,24 @@ double SP_YT;//space reserved for title
 double SP_YB;//space reserved for xlabel
 double SP_XR;//space reserved for legend
 
+int default_color_table[]={0x0000FF,
+			   0xFF0000,
+			   0x00FF00,
+			   0x009999,
+			   0x00FFFF,
+			   0x9900CC,
+			   0xFFCC00,
+			   0xFF00FF,
+			   0x000000,
+			   0x666666,
+};
+#define default_color(i) default_color_table[i%11]
+#define set_color(cr,color)				   \
+    cairo_set_source_rgba(cr,				   \
+			  ((color>>16)&0xFF)/255.,	   \
+			  ((color>>8)&0xFF)/255.,	   \
+			  ((color)&0xFF)/255.,1)
+
 /**
    correct floor for round off errors.
 */
@@ -148,28 +166,8 @@ void round_limit(double *xmin, double *xmax){
 	}
     }
 }
-
 /**
-   Create a color based on index.
-*/
-static int default_color(int ind){
-    //we only have 8 colors
-    static int *color=NULL;
-    if(!color){
-	color=calloc(8, sizeof(int));
-	color[0]=0x009;
-	color[1]=0x900;
-	color[2]=0x090;
-	color[3]=0x099;
-	color[4]=0x909;
-	color[5]=0x990;
-	color[6]=0x999;
-	color[7]=0x449;
-    }
-    return color[ind & 7];
-}
-/**
-   convert new limit to zoom and off
+   convert new limit to zoom and off using updated limit0.
 */
 void apply_limit(drawdata_t *drawdata){
     //limit0 matches limit in unzoomed state
@@ -183,7 +181,7 @@ void apply_limit(drawdata_t *drawdata){
     double midx1=(drawdata->limit0[1]+drawdata->limit0[0])*0.5;
     double midy1=(drawdata->limit0[3]+drawdata->limit0[2])*0.5;
 
-    if(diffx1 > diffx0*1e-3 && diffy1 > diffy0 *1e-3){//limit allowable range
+    if(diffx1 > diffx0*1e-5 && diffy1 > diffy0 *1e-5){//limit allowable range
 	//the new zoom
 	double ratiox=diffx0/diffx1;
 	double ratioy=diffy0/diffy1;
@@ -204,6 +202,16 @@ void apply_limit(drawdata_t *drawdata){
 	drawdata->offy=-(midy1-midy0)*drawdata->heightim/(diffy1*drawdata->zoomy);
     }
 }
+/*
+  Definition of style: (bits count from lowest end0
+  bits 1-3:the point style.
+  bit  4: whether points are connected.
+  bits 5-8: size 
+  bits 9-32:color
+  
+  The color follows RGB representation: (Since 2011-02-18)
+  bits 32-25: Red. bits 24-17: Green. bits 16-9: Blue.
+ */
 #define PARSE_STYLE(stylein)					\
     {								\
 	style=stylein & 0x7;					\
@@ -405,7 +413,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     if(drawdata->npts>0){
 	cairo_save(cr);
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);//GRAY
-	int color=0x009;
+	int color=0x0000FF;
 	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);
 	int style;
 	int connectpts;
@@ -446,10 +454,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	    //save the styles for legend
 	    styles[ipts]=style | connectpts<<3 |color << 8 |(int)(size/sqrt(zoomx))<<4;
-	    int r=color/100;
-	    int g=(color-r*100)/10;
-	    int b=color-r*100-g*10;
-	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+	    set_color(cr, color);
 	    int ips0=0;
 	    if(drawdata->cumu && icumu<pts->nx){
 		ips0=icumu;
@@ -537,14 +542,10 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 
 	for(unsigned int icir=0; icir<drawdata->ncir; icir++){
 	    int color=(int)drawdata->cir[icir][3];
-	    int r=color/100;
-	    int g=(color-r*100)/10;
-	    int b=color-r*100-g*10;
+	    set_color(cr, color);
 	    double ix=(drawdata->cir[icir][0]-centerx)*scalex*zoomx+ncx;
 	    double iy=(drawdata->cir[icir][1]-centery)*scaley*zoomy+ncy;
-	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
-	    cairo_arc(cr,ix,iy, drawdata->cir[icir][2]*scalex*zoomx,
-		      0,M_PI*2);
+	    cairo_arc(cr,ix,iy, drawdata->cir[icir][2]*scalex*zoomx, 0,M_PI*2);
 	    cairo_stroke(cr);
 	}
 	cairo_restore(cr);
@@ -694,14 +695,15 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	char **legend=drawdata->legend;
 	const int ng=drawdata->npts;
 	cairo_text_extents_t extents;
-	double linelen=30;//length of line in legend.
+	const double linelen=30;//length of line in legend if exist.
 	double maxlen=0;//maximum legend length.
 	double tall=0;
-	double leglen=0;
+	double leglen=0;//length of legend symbol
+	//first figure out the size required of longest legend entry.
 	for(int ig=0; ig<ng; ig++){
 	    cairo_text_extents(cr, legend[ig], &extents);
-	    maxlen=MAX(maxlen, extents.width);
-	    tall=MAX(tall, extents.height);
+	    maxlen=MAX(maxlen, extents.width+1);//length of text.
+	    tall=MAX(tall, extents.height+1);//tall of text.
 	    PARSE_STYLE(styles[ig]);
 	    if(connectpts){
 		leglen=MAX(leglen, linelen);
@@ -710,9 +712,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		tall=MAX(tall, size*2);
 	    }
 	}
-	const double legmarin=3;
-	const double legmarout=5;
-	const double linehead=3;
+	const double legmarin=3;//margin inside of box
+	const double legmarout=5;//margin outside of box
+	const double linehead=3;//space before and after symbol
 	double legwidth=maxlen+leglen+2*legmarin+linehead*2;
 	cairo_translate(cr, xoff+widthim - legwidth - legmarout, yoff + legmarout);
 	if(drawdata->legendbox){
@@ -727,10 +729,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_translate(cr, legmarin+linehead, legmarin);
 	for(int ig=0; ig<ng; ig++){
 	    PARSE_STYLE(styles[ig]);
-	    int r=color/100;
-	    int g=(color-r*100)/10;
-	    int b=color-r*100-g*10;
-	    cairo_set_source_rgba(cr,r*0.11,g*0.11,b*0.11,1.0);
+	    set_color(cr, color);
 	    double ix=leglen*0.5;
 	    double iy=tall*0.5;
 	    draw_point(cr, ix, iy, style, size);

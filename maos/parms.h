@@ -82,6 +82,7 @@ typedef struct APER_CFG_T{
     double *misreg;/**<misregistration of the pupil along x and y. Shifts the
 			amplitude map and atmosphere.*/
     int ismisreg; /**<true if misreg contains nonzero numbers*/
+    char *pupmask;/**<The pupil cold stop*/
 }APER_CFG_T;
 /**
    contains input parameters for laser launch telescope
@@ -132,7 +133,7 @@ typedef struct POWFS_CFG_T{
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
     double dx;      /**<sampling of opd points in each subaperture. usually
 		       matches atmosphere sampling for LGS. may be coraser for NGS.*/
-    double pixtheta;/**<size of pixel pitch along x or y in radian*/
+    double pixtheta;/**<size of pixel pitch along x or y in radian.*/
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
     double sigscale;/**<scale the signal level for simulation.*/
@@ -176,9 +177,12 @@ typedef struct POWFS_CFG_T{
 		       simulation.(derived parameter)*/
     double mtchcrx; /**<if >0 use constrained mtch for x for this amount of pixels*/
     double mtchcry; /**<if >0 use constrained mtch for y for this amount of pixels*/
-    int mtchcpl;    /**<use coupling between r/a measure error*/
+    int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
     int mtchstc;    /**<shift peak in the time averaged short exposure PSF to center using fft.*/
     int mtchscl;    /**<scale subaperture image to have the same intensity as i0. Keep false.*/
+    int mtchadp;    /**<Using adaptive matched filter. When the number of pixels
+		       in the image brighter than half maximum is more than this
+		       value, use constraint. introduced on 2011-02-21.*/
     int hasGS0;     /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */
     char* misreg;   /**misregistration of the WFS, described by file containing

@@ -259,7 +259,7 @@ void plotloc(char *fig, const PARMS_T *parms,
 	cir[count][0]=ht*parms->evl.thetax[ievl];
 	cir[count][1]=ht*parms->evl.thetay[ievl];
 	cir[count][2]=parms->aper.d*0.5;
-	cir[count][3]=900;//rgb color
+	cir[count][3]=0xFF0000;//rgb color
 	count++;
     }
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -268,9 +268,9 @@ void plotloc(char *fig, const PARMS_T *parms,
 	cir[count][1]=parms->wfs[iwfs].thetay*ht;
 	cir[count][2]=parms->aper.d*0.5*(1.-ht/hs);
 	if(isinf(hs)){
-	    cir[count][3]=290;//rgb color
+	    cir[count][3]=0x44FF00;//rgb color
 	}else{
-	    cir[count][3]=992;
+	    cir[count][3]=0xFFFF33;//rgb color
 	}
 	count++;
     }
@@ -288,19 +288,19 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][0]=0;
     cir[0][1]=0;
     cir[0][2]=totfov/2;
-    cir[0][3]=000;//rgb color
+    cir[0][3]=0x000000;//rgb color
     int ngroup=2+parms->npowfs;
     loc_t **locs=calloc(ngroup, sizeof(loc_t*));
     int32_t *style=calloc(ngroup, sizeof(int32_t));
 
-    style[0]=(900<<8)+(4<<4)+3;
+    style[0]=(0xFF0000<<8)+(4<<4)+3;
     locs[0]=locnew(parms->evl.nevl, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	locs[0]->locx[ievl]=parms->evl.thetax[ievl]*206265;
 	locs[0]->locy[ievl]=parms->evl.thetay[ievl]*206265;
     }
 
-    style[1]=(918<<8)+(4<<4)+3;
+    style[1]=(0xFF22DD<<8)+(4<<4)+3;
     locs[1]=locnew(parms->fit.nfit, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	locs[1]->locx[ifit]=parms->fit.thetax[ifit]*206265;
@@ -314,13 +314,13 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
 	    locs[ipowfs+2]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
 	if(!isinf(parms->powfs[ipowfs].hs)){
-	    style[ipowfs+2]=(940<<8)+(4<<4)+2;
+	    style[ipowfs+2]=(0xFF8800<<8)+(4<<4)+2;
 	}else if(!parms->powfs[ipowfs].lo){
-	    style[ipowfs+2]=(990<<8)+(4<<4)+1;
+	    style[ipowfs+2]=(0xFFFF00<<8)+(4<<4)+1;
 	}else if(parms->powfs[ipowfs].order>1){
-	    style[ipowfs+2]=(9<<8)+(4<<4)+4;
+	    style[ipowfs+2]=(0x0000FF<<8)+(4<<4)+4;
 	}else{
-	    style[ipowfs+2]=(9<<8)+(4<<4)+1;
+	    style[ipowfs+2]=(0x0000FF<<8)+(4<<4)+1;
 	}
     }
     double limit[4];
@@ -451,7 +451,7 @@ static void print_usage(void){
 static __attribute__((destructor)) void deinit(){
     char tmp[PATH_MAX];
     snprintf(tmp, PATH_MAX, "rm -rf %s/config-%ld/", TEMP, (long)getpid());
-    system(tmp);
+    if(system(tmp)){}
 }
 #endif
 /**

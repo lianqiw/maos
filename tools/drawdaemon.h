@@ -105,6 +105,7 @@ struct drawdata_t{
     int cumu;//plot cumulative mean.
     int cumuquad;//make cumulative quadrature
     double icumu;//plot cumulative mean from this time step if cumu!=0
+    int cumulast;//=0: we are drawing cumu the first time.
 };
 extern char *font_name;
 extern double font_size;

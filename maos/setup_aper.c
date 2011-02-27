@@ -56,7 +56,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	if(!exist(fn)) error("%s doesn't exist\n",fn);
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
-    }else{
+    }else{//locs act as a pupil mask. no points outside will be evaluated.
 	/*
 	  Commented out on 2011-02-14
 	  if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6 && !parms->evl.ismisreg){
@@ -81,31 +81,41 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }
     loc_create_stat(aper->locs);
     if(!aper->amp){
-	aper->amp=calloc(aper->locs->nloc,sizeof(double));
+	aper->amp=dnew(aper->locs->nloc, 1);
 	if(aper->ampground){
-	    prop_grid_stat(aper->ampground, aper->locs->stat, aper->amp, 1,
+	    prop_grid_stat(aper->ampground, aper->locs->stat, aper->amp->p, 1,
 			   parms->evl.misreg[0]-parms->aper.misreg[0],
 			   parms->evl.misreg[1]-parms->aper.misreg[1],
 			   1, 0, 0, 0);
 	}else{
 	    warning("Using locannular to create a gray pixel aperture\n");
-	    locannular(aper->amp, aper->locs,
+	    locannular(aper->amp->p, aper->locs,
 		       parms->aper.misreg[0]-parms->evl.misreg[0],
 		       parms->aper.misreg[1]-parms->evl.misreg[1],
 		       parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
-    //normalize amp to sum to 1. used later to plot.
-    if(parms->plot.setup ||parms->plot.run){
-	aper->amp1=malloc(sizeof(double)*aper->locs->nloc);
-	memcpy(aper->amp1, aper->amp, sizeof(double)*aper->locs->nloc);
+    if(parms->aper.pupmask){
+	map_t *mask=mapread("%s",parms->aper.pupmask);
+	dmat *ampmask=dnew(aper->locs->nloc, 1);
+	prop_grid_stat(mask, aper->locs->stat, ampmask->p, 1, 0, 0, 1, 0, 0, 0);
+	dcwm(aper->amp, ampmask);
+	dfree(ampmask);
+	mapfree(mask);
+    }else{//apply an annular mask
+	locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
     }
-    normalize(aper->amp, aper->locs->nloc, 1);
+    //Set the amp for plotting.
+    if(parms->plot.setup ||parms->plot.run){
+	aper->amp1=ddup(aper->amp);
+    }
+    //normalize amp to sum to 1.
+    normalize(aper->amp->p, aper->locs->nloc, 1);
     if(parms->plot.setup){
-	drawopd("amp",aper->locs,aper->amp1,NULL,"Aperture Amplitude Map",
+	drawopd("amp",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
 		"x (m)","y (m)","aper");
     }
-    aper->mcc=loc_mcc_ptt(aper->locs, aper->amp);
+    aper->mcc=loc_mcc_ptt(aper->locs, aper->amp->p);
     aper->ipcc=1./aper->mcc->p[0];//piston inverse. should be 1 since amp is normlaized.
     aper->imcc=dinvspd(aper->mcc);//pttr inverse
     //piston term correction in focus mode
@@ -115,19 +125,19 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	if(parms->save.setup){
 	    dwrite(aper->mod,"%s/aper_mode.bin.gz",dirsetup);
 	}
-	dgramschmidt(aper->mod, aper->amp);
+	dgramschmidt(aper->mod, aper->amp->p);
 	if(parms->save.setup){
 	    dwrite(aper->mod,"%s/aper_mode_gramschmidt.bin.gz",dirsetup);
 	}
     }
     if(parms->save.setup){
-	writedbl(aper->amp, aper->locs->nloc, 1,"%s/aper_amp.bin.gz",dirsetup);
-	dwrite(aper->mcc,"%s/aper_mcc.bin.gz",dirsetup);
+	dwrite(aper->amp, "%s/aper_amp.bin.gz",dirsetup);
+	dwrite(aper->mcc, "%s/aper_mcc.bin.gz",dirsetup);
     }
     aper->sumamp2=0;
     if(aper->amp){
 	for(long iloc=0; iloc<aper->locs->nloc; iloc++){
-	    aper->sumamp2+=pow(aper->amp[iloc],2);
+	    aper->sumamp2+=pow(aper->amp->p[iloc],2);
 	}
     }
     if(parms->evl.psfmean || parms->evl.psfhist){
@@ -152,9 +162,8 @@ APER_T * setup_aper(const PARMS_T *const parms){
 void free_aper(APER_T *aper, const PARMS_T *parms){
     /*aper->ampground is freed on setup_recon*/
     locfree(aper->locs);
-    free(aper->amp);
-    if(aper->amp1)
-	free(aper->amp1);
+    dfree(aper->amp);
+    dfree(aper->amp1);
     dfree(aper->imcc);
     dfree(aper->mcc);
     dfree(aper->mod);

@@ -36,7 +36,7 @@ void imagesc_cmp_ap(char *fig, long nx, long ny, const double *limit, const doub
 void imagesc_cmp_abs(char *fig, long nx, long ny, const double *limit,const double *zlim,
 		    const dcomplex *p, const char *title, const char *xlabel, const char *ylabel,
 		     const char *format,...) CHECK_ARG(10);
-void plot_points(char *fig, long ngroup, loc_t **loc, dcell *cell,
+void plot_points(char *fig, long ngroup, loc_t **loc, dcell *dc,
 		 const int32_t *style, const double *limit, int ncir, double(*pcir)[4], 
 		 char **legend, const char *title, const char *xlabel, const char *ylabel,
 		 const char *format,...) CHECK_ARG(13);

@@ -132,7 +132,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}
     }
     const int i0n=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
-
+    const int mtchadp=parms->powfs[ipowfs].mtchadp;
     dmat *i0m=dnew(2,nmod);
     dmat *i0g=dnew(i0n,nmod);
     PDMAT(i0g, pi0g);
@@ -173,12 +173,23 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    pi0m[mtchcry+1][1]=-shift*kp;
 	}
 	double i0summax=0;
+	int crdisable=0;//adaptively disable mtched filter based in FWHM.
+	int ncrdisable=0;
 	for(int isa=0; isa<nsa; isa++){
 	    i0sum[ii0][isa]=dsum(i0s[ii0][isa]);
 	    if(i0sum[ii0][isa]>i0summax){
 		i0summax=i0sum[ii0][isa];
 	    }
-	
+	    if(mtchadp){
+		long fwhm=dfwhm(i0s[ii0][isa]);
+		if(fwhm>4){
+		    crdisable=0;
+		}else{
+		    crdisable=1;
+		    ncrdisable++;
+		}
+	    }
+	    
 	    double* bkgrnd2=NULL;
 	    if(powfs[ipowfs].bkgrnd && powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]){
 		bkgrnd2= powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]->p; 
@@ -191,7 +202,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		//notice that the bkgrnd is already scaled by sim.dt and dtrat properly.
 		adddbl(pi0g[2], 1, bkgrnd2, i0n, bkgrndfn_res);
 	    }
-	    if(mtchcrx){
+	    if(mtchcrx && !crdisable){
 		/*
 		  constrained matched filter. compute separately for each wfs.
 		*/
@@ -205,7 +216,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    adddbl(pi0g[mtchcrx+1],1,bkgrnd2,i0n,  bkgrndfn_res);
 		}
 	    }
-	    if(mtchcry){
+	    if(mtchcry && !crdisable){
 		mki0shy(pi0g[mtchcry],pi0g[mtchcry+1],i0s[ii0][isa],kp);
 		if(sub_i0){
 		    adddbl(pi0g[mtchcry],1,i0s[ii0][isa]->p, i0n, -kp);
@@ -227,11 +238,20 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    wt->p[i]=1./(rne*rne+bkgrnd+i0s[ii0][isa]->p[i]);
 		}
 	    }
+	    if(crdisable){
+		/*temporarily mark matrix is only 3 col, which effectively
+		  disables constraint*/
+		i0g->ny=3;
+		i0m->ny=3;
+	    }
 	    dmat *tmp=dpinv(i0g, wt, NULL);
-	    
-
 	    dmm(&mtche[ii0][isa],i0m, tmp, "nn", 1);
 	    dfree(tmp);
+	    if(crdisable){
+		//Put old values back.
+		i0g->ny=nmod;
+		i0m->ny=nmod;
+	    }
 	    for(int i=0; i<i0n; i++){//noise weighting.
 		wt->p[i]=1./wt->p[i];
 	    }
@@ -258,6 +278,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	if(i0summax<siglev*0.8 || i0summax>siglev){
 	    warning("powfs %d: i0 sum to maximum of %g, wfs %d has siglev of %g\n",
 		    ipowfs, i0summax, iwfs, siglev);
+	}
+	if(mtchadp){
+	    info2("powfs %d: mtched filter contraint are disabled for %d subaps out of %d.\n",
+		  ipowfs, ncrdisable, nsa);
 	}
     }//ii0
     info2("powfs %d: matched filter sanea:\n",ipowfs);

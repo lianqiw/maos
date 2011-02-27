@@ -446,15 +446,15 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
 	drawdata->offx=0;
 	drawdata->offy=0;
     }
-    if(drawdata->zoomx<0.001)
-	drawdata->zoomx=0.001;
-    else if(drawdata->zoomx>1000){
-	drawdata->zoomx=1000;
+    if(drawdata->zoomx<0.1)
+	drawdata->zoomx=0.1;
+    else if(drawdata->zoomx>100000){
+	drawdata->zoomx=100000;
     }
-    if(drawdata->zoomy<0.001)
-	drawdata->zoomy=0.001;
-    else if(drawdata->zoomy>1000){
-	drawdata->zoomy=1000;
+    if(drawdata->zoomy<0.1)
+	drawdata->zoomy=0.1;
+    else if(drawdata->zoomy>100000){
+	drawdata->zoomy=100000;
     }
     if(mode){//not zero.
 	double factorx=1/old_zoomx-1/drawdata->zoomx;

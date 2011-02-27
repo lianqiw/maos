@@ -499,7 +499,6 @@ void wfsgrad_iwfs(thread_t *info){
 		double *ggx=(*gradout)->p;
 		double *ggy=(*gradout)->p+nsa;
 		for(int isa=0; isa<nsa; isa++){
-		    double neasc=nea->p[isa];
 		    //Preserve the random sequence.
 		    double noisex=neax[isa]*randn(&simu->wfs_rand[iwfs]);
 		    double noisey=neay[isa]*randn(&simu->wfs_rand[iwfs]);

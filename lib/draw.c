@@ -155,7 +155,7 @@ inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
 void plot_points(char *fig,          /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
-		 dcell *cell,        /**<If loc ismpety, use cell to plot curves*/
+		 dcell *dc,        /**<If loc ismpety, use cell to plot curves*/
 		 const int32_t *style,  /**<Style of each point*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 int ncir,           /**<Number of circles*/
@@ -182,20 +182,20 @@ void plot_points(char *fig,          /**<Category of the figure*/
 	    FWRITE(loc[ig]->locx, sizeof(double), loc[ig]->nloc, pfifo);
 	    FWRITE(loc[ig]->locy, sizeof(double), loc[ig]->nloc, pfifo);
 	}
-	if(cell){
-	    warning("both loc and cell are specified\n");
+	if(dc){
+	    warning("both loc and dc are specified\n");
 	}
-    }else if(cell){
-	if(ngroup!=cell->nx*cell->ny){
-	    warning("ngroup and dimension of cell mismatch\n");
-	    ngroup=cell->nx*cell->ny;
+    }else if(dc){
+	if(ngroup!=dc->nx*dc->ny){
+	    warning("ngroup and dimension of dc mismatch\n");
+	    ngroup=dc->nx*dc->ny;
 	}
 	for(int ig=0; ig<ngroup; ig++){
 	    FWRITEINT(pfifo, FIFO_POINTS);
-	    FWRITEINT(pfifo, cell->p[ig]->nx);
-	    FWRITEINT(pfifo, cell->p[ig]->ny);
+	    FWRITEINT(pfifo, dc->p[ig]->nx);
+	    FWRITEINT(pfifo, dc->p[ig]->ny);
 	    FWRITEINT(pfifo, 0);
-	    FWRITE(cell->p[ig]->p, sizeof(double),cell->p[ig]->nx*cell->p[ig]->ny, pfifo);
+	    FWRITE(dc->p[ig]->p, sizeof(double),dc->p[ig]->nx*dc->p[ig]->ny, pfifo);
 	}
     }
     if(style){

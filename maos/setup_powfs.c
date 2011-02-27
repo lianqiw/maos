@@ -109,7 +109,8 @@ static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx,
     }else{
 	locannular(amp->p, loc, -misregx, -misregy, D*0.5, D*0.5, 1);
     }
-    locannularmask(amp->p, locn, 0,0, D*0.5, Din*0.5);
+    //Don't apply the mask any more. We limited available subapertures using r2min, r2max (2011-02-23)
+    //locannularmask(amp->p, locn, 0,0, D*0.5, Din*0.5);
     return amp;
 }
 /**
@@ -132,7 +133,7 @@ static void
 setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms, 
 		 APER_T *aper, int ipowfs){
     free_powfs_geom(powfs, parms, ipowfs);
-    double r2max,offset,dxoffset;
+    double offset,dxoffset;
     int count;
  
     //order of the system. 60 for TMT
@@ -148,7 +149,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
     //The threashold for normalized area (by areafulli) to keep subaperture.
     const double thresarea=parms->powfs[ipowfs].saat;
-    r2max = (order/2+1)*(order/2+1);
     //Offset of the coordinate of the center most subaperture from the center.
     if(order & 1){//odd
 	offset = -0.5;
@@ -156,7 +156,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	offset = 0.0;
     }
     //r2max: Maximum distance^2 from the center to keep a subaperture
-    r2max -= 2.*(0.5+offset)*(0.5+offset);
+    double r2max=pow(order/2+0.5, 2);
+    double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2-0.5,2):-1;
     //the lower left *grid* coordinate of the subaperture
     
     //The coordinate of the subaperture (lower left coordinate)
@@ -182,14 +183,12 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     
     const int nxsa=nx*nx;//Total Number of OPD points.
     count = 0;
-    /*Collect all the subapertures that are within the allowed
-      radius*/
+    /*Collect all the subapertures that are within the allowed radius*/
     for(int j=-order/2; j<=(order-1)/2; j++){
 	for(int i=-order/2; i<=(order-1)/2; i++){
-	    /*subaperture center is at 
-	      (i+1/2+offset, j+1/2+offset)*dxsa*/
-	    if((i*i+j*j+(i+j)*(1+iceil(2.*offset)))
-	       <r2max){
+	    /*subaperture distance from the center*/
+	    double r2=pow(i+0.5+offset, 2)+pow(j+0.5+offset, 2);
+	    if(r2 <= r2max && r2 >=r2min){
 		powfs[ipowfs].pts->origx[count]=
 		    ((double)i+offset)*dxsa+dxoffset;
 		powfs[ipowfs].pts->origy[count]=
@@ -457,9 +456,9 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    double neamax=dmax(nea);
 	    if(neamax>0){
 		if(neamax<parms->powfs[ipowfs].pixtheta*1e-5){
-		    warning("wfs %d: NEA read from file is too small. Unit error?\n",iwfs);
+		    warning("wfs %d: NEA=%g mas, read from file is too small. Unit error?\n",iwfs, neamax*206265000);
 		}else if(neamax>parms->powfs[ipowfs].pixtheta){
-		    warning("wfs %d: NEA read from file is too big. Unit error?\n",iwfs);
+		    warning("wfs %d: NEA=%g mas, read from file is too big. Unit error?\n",iwfs, neamax*206265000);
 		}
 	    }
 	    //Scale by dtrat
@@ -467,7 +466,6 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    //Scale by normalized subaperture area.
 	    double *saa=powfs[ipowfs].realsaa[jwfs];
 	    const int dl=parms->powfs[ipowfs].dl; //diffraction limited.
-	    info("wfs %d: dl=%d\n", iwfs, dl);
 	    for(long isa=0; isa<nsa; isa++){
 		//scale nea by sqrt(1/area). (seeing limited)
 		//scale nea by 1/area if diffraction limited (NGS)
@@ -1365,7 +1363,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     llt->imcc =dcellinvspd_each(llt->mcc);
     if(parms->powfs[ipowfs].llt->fnsurf){
 	int nlotf;
-	map_t **ncpa=maparrread(&nlotf, parms->powfs[ipowfs].llt->fnsurf);
+	map_t **ncpa=maparrread(&nlotf, "%s",parms->powfs[ipowfs].llt->fnsurf);
 	assert(nlotf==1 || nlotf==parms->powfs[ipowfs].nwfs);
 	llt->ncpa=dcellnew(nlotf, 1);
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
@@ -1507,7 +1505,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		if(exist(fnotf)){
 		    long nx, ny;
 		    info2("Reading WFS OTF from %s\n", fnotf);
-		    intstat->otf=ccellreadarr(&nx, &ny, fnotf);
+		    intstat->otf=ccellreadarr(&nx, &ny, "%s",fnotf);
 		    intstat->notf=nx*ny;
 		    touch(fnotf);
 		}else{
@@ -1581,16 +1579,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			cifft2(psfhat, 1);
 			cfftshift(psfhat);
 			creal2d(&psf, 0, psfhat, 1);
-			double hm=0.5*dmax(psf);
-			int fwhm=0;
-			for(long ix=0; ix<nlpsf*nlpsf; ix++){
-			    if(psf->p[ix]>=hm){
-				fwhm++;
-			    }
-			}
 			dwrite(psf, "lpsf_%d_%d", iwvl, illt);
 			info2("illt %d, iwvl %d has FWHM of %g\"\n",
-			      illt, iwvl, sqrt(4.*(double)fwhm/M_PI)*dpsf);
+			      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
 		    }
 		}
 		cfree(psfhat);

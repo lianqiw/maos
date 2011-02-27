@@ -1952,3 +1952,17 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 	}
     }
 }
+/**
+   Calculate number of pixels having values larger than or equal to half of
+maximum. Useful to compute fwhm. */
+long X(fwhm)(X(mat) *A){
+    if(!A) return 0;
+    double hm=0.5*X(max)(A);
+    long fwhm=0;
+    for(long ix=0; ix<A->nx*A->ny; ix++){
+	if(ABS(A->p[ix])>=hm){
+	    fwhm++;
+	}
+    }
+    return fwhm;
+}

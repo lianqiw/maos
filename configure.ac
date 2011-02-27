@@ -171,7 +171,7 @@ if test "x$use_shm" = "xyes" ;then
 else
    AC_DEFINE(USE_POSIX_SHM, [0], "Disable posix shared memory")
 fi 
-
+AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([zlib is not found])])
 AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"])
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then

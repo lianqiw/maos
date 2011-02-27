@@ -643,7 +643,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->evl.psfmean || parms->evl.psfhist){
 	//compute diffraction limited PSF.
 	dmat *iopdevl=dnew(aper->locs->nloc,1);
-	ccell *psf2s=psfcomp(iopdevl, aper->amp, aper->embed, aper->nembed,
+	ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
 			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	dfree(iopdevl);
 	dcell *evlpsfdl=dcellnew(nwvl,1);

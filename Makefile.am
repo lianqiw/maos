@@ -30,10 +30,7 @@ config/maos/dm_triple.conf\
 config/maos/fov_iris.conf\
 config/maos/fov_oa.conf\
 config/maos/fov_pmos.conf\
-config/maos/keck_lgs.conf\
 config/maos/llt_CL.conf\
-config/maos/mcao_ngs.conf\
-config/maos/nfiraos45.conf\
 config/maos/nfiraos.conf\
 config/maos/recon.conf\
 config/maos/scao_base.conf\

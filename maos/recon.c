@@ -560,7 +560,7 @@ void reconstruct(SIM_T *simu){
 			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
 	    }
 	}
-	for(int idm=0; idm<parms->ndm; idm++){
+	for(int idm=0; simu->dmerr_hi && idm<parms->ndm; idm++){
 	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
 		    "DM Error Signal (Hi)","x (m)","y (m)",
 		    "Err Hi %d",idm);
@@ -581,7 +581,7 @@ void reconstruct(SIM_T *simu){
 	    dcellmm(&dmlo, simu->recon->MVModes, simu->Merr_lo, "nn", 1);
 	    break;
 	}
-	for(int idm=0; idm<parms->ndm; idm++){
+	for(int idm=0; dmlo && idm<parms->ndm; idm++){
 	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,NULL,
 		    "DM Error Signal (Lo)","x (m)","y (m)",
 		    "Err Lo %d",idm);
