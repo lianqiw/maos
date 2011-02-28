@@ -654,7 +654,15 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dcellwrite(evlpsfdl, "evlpsfdl_%d.bin",seed);
 	dcellfree(evlpsfdl);
     }
-
+    int wfspsfmean=0;
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	if(parms->wfs[iwfs].psfmean){
+	    wfspsfmean=1; break;
+	}
+    }
+    if(wfspsfmean){
+       simu->wfspsfmean=dcellnew(parms->evl.nwvl, parms->nwfs);
+    }
     simu->has_upt=0;//flag for uplink tip/tilt control
     if(parms->sim.epfocus>1.e-15){
 	if(parms->sim.lpfocus<1.e-15){
@@ -833,7 +841,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    const double ht=parms->atm.ht[ips];
 	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
 	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
-	    data->scale=1-ht/parms->evl.ht;
+	    data->scale=1-ht/parms->evl.ht[ievl];
 	    data->alpha=1;
 	    data->wrap=1;
 	    data->mapin=(void*)1;//need to update this in genscreen.
@@ -850,11 +858,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    const double ht=parms->dm[idm].ht;
 	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
 	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
-	    data->scale=1-ht/parms->evl.ht;
+	    data->scale=1-ht/parms->evl.ht[ievl];
 	    data->alpha=-1;
 	    data->wrap=0;
 	    if(simu->cachedm){
-		int isc=parms->evl.scalegroup[idm];
+		int isc=parms->evl.scalegroup[idm+ievl*parms->ndm];
 		data->mapin=simu->cachedm[idm][isc];
 		data->cubic=0;//already accounted for in cachedm.
 		data->cubic_iac=0;//not needed
@@ -973,7 +981,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	long ncompy=powfs[ipowfs].ncompy;
 	if(parms->powfs[ipowfs].psfout){
 	    const int nsa=powfs[ipowfs].pts->nsa;
-	    //assert(parms->powfs[ipowfs].dtrat==1);
+	    //The PSFs here are PSFs of each subaperture.
 	    simu->wfspsfout[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
 	    for(long ipsf=0; ipsf<simu->wfspsfout[iwfs]->nx*simu->wfspsfout[iwfs]->ny; ipsf++){
 		simu->wfspsfout[iwfs]->p[ipsf]=cnew(ncompx/2,ncompy/2);
@@ -1199,6 +1207,7 @@ void free_simu(SIM_T *simu){
     free(simu->wfs_grad);
     free(simu->perf_evl);
     free(simu->status);
+    dcellfree(simu->wfspsfmean);
     dcellfree(simu->gradcl);
     dcellfree(simu->gradlastcl);
     dcellfree(simu->gradacc);
@@ -1359,7 +1368,10 @@ void save_simu(const SIM_T *simu){
 		dcellswrite(simu->evlpsftomomean, scale, "evlpsftomo_%d.bin",seed);
 	    }
 	}
-	
+	if(simu->wfspsfmean && simu->isim>=parms->evl.psfisim){
+	    double scalewfs=1./(double)(simu->isim+1-parms->evl.psfisim);
+	    dcellswrite(simu->wfspsfmean, scalewfs, "wfspsfmean_%d.bin", seed);
+	}
 	dcell *sanea=NULL;
 	dcellcp(&sanea, simu->sanea_sim);
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){

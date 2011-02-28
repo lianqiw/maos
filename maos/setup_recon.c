@@ -1579,7 +1579,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
     	Gfocus->p[iwfs]=dnew(nsa*2,1);
 	if(parms->powfs[ipowfs].gtype_recon==1){
 	    pts_ztilt(Gfocus->p[iwfs]->p, powfs[ipowfs].pts,
-		      powfs[ipowfs].nimcc>1?powfs[ipowfs].imcc[wfsind]:powfs[ipowfs].imcc[0], 
+		      powfs[ipowfs].saimcc[powfs[ipowfs].nimcc>1?wfsind:0], 
 		      powfs[ipowfs].realamp[wfsind], opd->p);
 	}else{
 	    spmulmat(&Gfocus->p[iwfs], adpind(powfs[ipowfs].GS0,wfsind), opd, 1);

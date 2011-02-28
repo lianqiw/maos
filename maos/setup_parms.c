@@ -309,8 +309,13 @@ static void readcfg_powfs(PARMS_T *parms){
 #define READ_WFS(A,B)							\
     readcfg_##A##arr_n((void*)(&A##tmp),nwfs,"wfs."#B);			\
     for(i=0; i<nwfs; i++){						\
-	parms->wfs[i].B = A##tmp[i];/*doesn't need ## in B*/		\
-    }									\
+	parms->wfs[i].B = A##tmp[i];					\
+    }									
+#define READ_WFS_RELAX(A,B)						\
+    readcfg_##A##arr_nmax((void*)(&A##tmp),nwfs,"wfs."#B);		\
+    for(i=0; i<nwfs; i++){						\
+	parms->wfs[i].B = A##tmp[i];					\
+    }									
 
 /**
    Read in parameters of wfs, including GS direction, signal level, wvlwts, etc.
@@ -321,6 +326,7 @@ static void readcfg_wfs(PARMS_T *parms){
     parms->wfs=calloc(parms->nwfs,sizeof(struct WFS_CFG_T));
     double *dbltmp=NULL;
     int    *inttmp=NULL;
+    READ_WFS_RELAX(int,psfmean);
     READ_WFS(dbl,thetax);
     READ_WFS(dbl,thetay);
     for(i=0; i<parms->nwfs; i++){
@@ -501,6 +507,7 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_dblarr_n(&(parms->evl.thetax),parms->evl.nevl, "evl.thetax");
     readcfg_dblarr_n(&(parms->evl.thetay),parms->evl.nevl, "evl.thetay");
     readcfg_dblarr_n(&(parms->evl.wt),parms->evl.nevl, "evl.wt");
+    readcfg_dblarr_nmax(&(parms->evl.ht), parms->evl.nevl, "evl.ht");
     readcfg_dblarr_n(&(parms->evl.misreg),2, "evl.misreg");
     if(fabs(parms->evl.misreg[0])>EPS || fabs(parms->evl.misreg[1])>EPS){
 	parms->evl.ismisreg=1;
@@ -522,7 +529,6 @@ static void readcfg_evl(PARMS_T *parms){
 	    ramin=ra2;
 	}
     }
-    READ_DBL(evl.ht);
     READ_INT(evl.rmax);
     READ_INT(evl.psfol);
     READ_INT(evl.psfisim);
@@ -1131,6 +1137,19 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 	parms->atm.overy[ips] = nyout[ips];
     }
 }
+/*
+  Find entry  that equals to val in array of length n. Append if not exist yet.
+ */
+static int arrind(double *arr, int *n, double val){
+    for(long i=0; i<(*n); i++){
+	if(fabs(arr[i]-val)<EPS){
+	    return i;
+	}
+    }
+    arr[*n]=val;
+    (*n)++;
+    return (*n)-1;
+}
 
 /**
    Setting up DM parameters in order to do DM caching during simulation. High
@@ -1145,57 +1164,36 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 
 */
 static void setup_parms_postproc_dm(PARMS_T *parms){
-    for(int idm=0; idm<parms->ndm; idm++){
+    int ndm=parms->ndm;
+    for(int idm=0; idm<ndm; idm++){
 	parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
     }
     /*
       Setup the parameters used to do DM caching on a finer grid.
      */
-    parms->evl.scalegroup=calloc(parms->ndm, sizeof(int));
-    for(int idm=0; idm<parms->ndm; idm++){
+    parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int));
+    for(int idm=0; idm<ndm; idm++){
 	double ht=parms->dm[idm].ht;
 	if(fabs(ht)<1.e-10){
 	    parms->dm[idm].isground=1;
 	}
 	int nscale=0;
-	int nscalemax=parms->npowfs+1;//maximum number of possible scalings
+	int nscalemax=parms->npowfs+parms->evl.nevl;//maximum number of possible scalings
 	double scale[nscalemax];
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    double dxscl=(1.-ht/parms->powfs[ipowfs].hs)*parms->powfs[ipowfs].dx;
 	    if(idm==0){
-		parms->powfs[ipowfs].scalegroup =calloc(parms->ndm,sizeof(int));
+		parms->powfs[ipowfs].scalegroup=calloc(ndm,sizeof(int));
 	    }
-	    int fnd=0;
-	    //search for existing scale
-	    for(int iscale=0; iscale<nscale; iscale++){
-		if(fabs(scale[iscale]-dxscl)<1.e-10){
-		    fnd=1;
-		    parms->powfs[ipowfs].scalegroup[idm]=iscale;
-		}
-	    }
-	    //not found, add one.
-	    if(fnd==0){
-		scale[nscale]=dxscl;
-		parms->powfs[ipowfs].scalegroup[idm]=nscale;
-		nscale++;
-	    }
+	    parms->powfs[ipowfs].scalegroup[idm]=arrind(scale, &nscale, dxscl);
 	}
 	//evl;
-	double dxscl=(1. - ht/parms->evl.ht)*parms->aper.dx;
-	int fnd=0;
-	for(int iscale=0; iscale<nscale; iscale++){
-	    if(fabs(scale[iscale]-1.)<1.e-10){
-		fnd=1;
-		parms->evl.scalegroup[idm]=iscale;
-	    }
-	    
+
+	for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
+	    double dxscl=(1. - ht/parms->evl.ht[ievl])*parms->aper.dx;
+	    parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
 	}
-	if(fnd==0){
-	    scale[nscale]=dxscl;
-	    parms->evl.scalegroup[idm]=nscale;
-	    nscale++;	
-	}
-	//info2("idm=%d, nscale=%d\n", idm, nscale);
+	info2("idm=%d, nscale=%d\n", idm, nscale);
 	parms->dm[idm].ncache=nscale;
 	parms->dm[idm].dxcache=calloc(1, nscale*sizeof(double));
 	for(int iscale=0; iscale<nscale; iscale++){

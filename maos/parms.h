@@ -226,6 +226,7 @@ typedef struct WFS_CFG_T{
     double siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
+    int psfmean;    /**<1: Calculate time average of PSF.*/
     int powfs;      /**<powfs type*/
 }WFS_CFG_T;
 /**
@@ -273,7 +274,7 @@ typedef struct EVL_CFG_T{
     double *thetay; /**<y Coordinate of evaluation directions*/
     double *wt;     /**<weight of each direction*/
     double *psfwvl; /**<wavelength for PSF and strehl computation*/
-    double ht;
+    double *ht;     /**<height of each science object*/
     double *misreg; /**<Misregistration wrt to nominal pupil.*/
     int ismisreg;   /**<Science evl is misregistered*/
     int nwvl;       /**<Number of wavelength*/
@@ -298,7 +299,7 @@ typedef struct EVL_CFG_T{
     int nevl;       /**<Number of evaluation directions. (derived)*/
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
-    int *scalegroup;/**<scale group for dm cache. havenumber of dm
+    int *scalegroup;/**<scale group for dm cache. havenumber of nevl*dm
 		       elements(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
     int nthread;    /**<number of threads for evaluation parallelization*/

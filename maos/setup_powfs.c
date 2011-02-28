@@ -82,6 +82,16 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
     }
     free(powfs[ipowfs].realamp);
     free(powfs[ipowfs].realsaa);
+    dfree(powfs[ipowfs].sumamp);
+    dfree(powfs[ipowfs].sumamp2);
+    
+    if(powfs[ipowfs].embed){
+	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
+	    free(powfs[ipowfs].embed[iwvl]);
+	}
+	free(powfs[ipowfs].embed);
+	free(powfs[ipowfs].nembed);
+    }
 }
 /**
    Convert amplitude map of subapertures to normalized subaperture area. Used only in setup_powfs_geom*/
@@ -201,8 +211,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    }
 	}
     }
-    /*Calculate the amplitude for each subaperture OPD point by
-      ray tracing from the pupil amplitude map.*/
+    /*Calculate the amplitude for each subaperture OPD point by ray tracing from
+      the pupil amplitude map.*/
     powfs[ipowfs].pts->nsa=count;
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     powfs[ipowfs].amp=dnew(order*order*nxsa,1);
@@ -239,9 +249,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].ampm=dcellnew(nlocm, 1);
 	PDCELL(misreg,pmisreg);
 	for(int ilocm=0; ilocm<nlocm; ilocm++){
-	    /*Transforms loc using misregistration
-	      information. The do ray tracing to determine the
-	      misregistered ampltidue map*/
+	    /*Transforms loc using misregistration information. The do ray
+	      tracing to determine the misregistered ampltidue map*/
 	    double *shiftxy=NULL;
 	    powfs[ipowfs].locm[ilocm]=loctransform(powfs[ipowfs].loc, &shiftxy, pmisreg[ilocm]);//may return NUL;
 	    powfs[ipowfs].misreg[ilocm][0]=shiftxy[0];
@@ -348,6 +357,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }	
     powfs[ipowfs].realamp=calloc(parms->powfs[ipowfs].nwfs, sizeof(double*));
     powfs[ipowfs].realsaa=calloc(parms->powfs[ipowfs].nwfs, sizeof(double*));
+    powfs[ipowfs].sumamp=dnew(parms->powfs[ipowfs].nwfs, 1);
+    powfs[ipowfs].sumamp2=dnew(parms->powfs[ipowfs].nwfs, 1);
     for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
 	double *realamp, *realsaa;
 	if(powfs[ipowfs].locm){
@@ -358,8 +369,49 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    realamp=powfs[ipowfs].amp->p;
 	    realsaa=powfs[ipowfs].saa->p;
 	}
+	double sumamp2=0;
+	double sumamp=0;
+	for(long i=0; i<powfs[ipowfs].loc->nloc; i++){
+	    sumamp2+=realamp[i]*realamp[i];
+	    sumamp+=realamp[i];
+	}
+	powfs[ipowfs].sumamp2->p[iwfs]=sumamp2;
+	powfs[ipowfs].sumamp->p[iwfs]=sumamp;
 	powfs[ipowfs].realamp[iwfs]=realamp;
 	powfs[ipowfs].realsaa[iwfs]=realsaa;
+    }
+    int psfmean=0;
+    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
+	int jwfs=parms->powfs[ipowfs].wfs[iwfs];
+	if(parms->wfs[jwfs].psfmean){
+	    psfmean=1;
+	    break;
+	}
+    }
+    powfs[ipowfs].nimcc=MAX(1,powfs[ipowfs].nlocm);
+    if(psfmean){
+	const int nwvl=parms->evl.nwvl;
+	powfs[ipowfs].nembed=calloc(nwvl, sizeof(int));
+	powfs[ipowfs].embed=calloc(nwvl, sizeof(int*));
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    powfs[ipowfs].nembed[iwvl]=parms->evl.psfgridsize[iwvl];
+	    powfs[ipowfs].embed[iwvl]=loc_create_embed(&(powfs[ipowfs].nembed[iwvl]), powfs[ipowfs].loc);
+	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > powfs[ipowfs].nembed[iwvl]){
+		parms->evl.psfsize[iwvl] = powfs[ipowfs].nembed[iwvl];
+	    }
+	    info2("POWFS %d: iwvl %d: PSF is using grid size of %d. The PSF will sum to %.15g\n",
+		  ipowfs, iwvl, powfs[ipowfs].nembed[iwvl], 
+		  powfs[ipowfs].sumamp2->p[0]/pow(powfs[ipowfs].sumamp->p[0],2)
+		  *powfs[ipowfs].nembed[iwvl]*powfs[ipowfs].nembed[iwvl]);
+	}
+	int nimcc=powfs[ipowfs].nimcc;
+	powfs[ipowfs].mcc=dcellnew(nimcc, 1);
+	powfs[ipowfs].ipcc=dnew(nimcc, 1);
+	for(int imcc=0; imcc<nimcc; imcc++){
+	    powfs[ipowfs].mcc->p[imcc]=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].realamp[imcc]);
+	    powfs[ipowfs].ipcc->p[imcc]=1./powfs[ipowfs].mcc->p[imcc]->p[0];
+	}
+	powfs[ipowfs].imcc=dcellinvspd_each(powfs[ipowfs].mcc);
     }
     if(parms->plot.setup){
 	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
@@ -419,15 +471,16 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	//setting up zernike best fit (ztilt) inv(M'*W*M). good for NGS.
 	if(parms->powfs[ipowfs].order>4) 
 	    warning("Ztilt for high order wfs is not good");
-	int nimcc=powfs[ipowfs].nimcc=MAX(1,powfs[ipowfs].nlocm);
-	dcellfreearr(powfs[ipowfs].imcc, nimcc);
-	powfs[ipowfs].imcc=calloc(nimcc, sizeof(dcell*));
+	int nimcc=powfs[ipowfs].nimcc;
+	dcellfreearr(powfs[ipowfs].saimcc, nimcc);
+	powfs[ipowfs].saimcc=calloc(nimcc, sizeof(dcell*));
 	for(int imcc=0; imcc<nimcc; imcc++){
 	    dcell *mcc=pts_mcc_ptt(powfs[ipowfs].pts, powfs[ipowfs].realamp[imcc]);
-	    powfs[ipowfs].imcc[imcc]=dcellinvspd_each(mcc);
+	    powfs[ipowfs].saimcc[imcc]=dcellinvspd_each(mcc);
 	    dcellfree(mcc);
 	}
     }
+ 
     if(!parms->powfs[ipowfs].neaphy){
 	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -476,10 +529,8 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    powfs[ipowfs].neasim->p[jwfs]=nea;
 	}
     }
-    if(parms->save.setup){
-	dcellwritearr(powfs[ipowfs].imcc,powfs[ipowfs].nimcc,1,"%s/powfs%d_imcc", dirsetup,ipowfs);
-	if(powfs[ipowfs].GS0)
-	    spcellwrite(powfs[ipowfs].GS0,"%s/powfs%d_GS0",dirsetup,ipowfs);
+    if(parms->save.setup && powfs[ipowfs].GS0){
+	spcellwrite(powfs[ipowfs].GS0,"%s/powfs%d_GS0",dirsetup,ipowfs);
     }
 }
 /**
@@ -726,7 +777,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		powfs[ipowfs].ncpa_grad->p[iwfs]=dnew(nsa*2,1);
 		if(parms->powfs[ipowfs].gtype_sim==1){
 		    pts_ztilt(powfs[ipowfs].ncpa_grad->p[iwfs]->p, powfs[ipowfs].pts,
-			      powfs[ipowfs].nimcc>1?powfs[ipowfs].imcc[iwfs]:powfs[ipowfs].imcc[0], 
+			      powfs[ipowfs].nimcc>1?powfs[ipowfs].saimcc[iwfs]:powfs[ipowfs].saimcc[0], 
 			      realamp, powfs[ipowfs].ncpa->p[iwfs]->p);
 		}else{
 		    spmulmat(&powfs[ipowfs].ncpa_grad->p[iwfs],adpind(powfs[ipowfs].GS0, iwfs),
@@ -1707,7 +1758,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    dcellfree(powfs[ipowfs].sprint);
 	}
 
-	dcellfreearr(powfs[ipowfs].imcc, powfs[ipowfs].nimcc);
+	dcellfreearr(powfs[ipowfs].saimcc, powfs[ipowfs].nimcc);
 	if(powfs[ipowfs].llt){
 	    ptsfree(powfs[ipowfs].llt->pts);
 	    free(powfs[ipowfs].llt->amp);

@@ -183,7 +183,34 @@ void wfsgrad_iwfs(thread_t *info){
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
     }
-
+    /*
+      calculate and save full aperture PSF is requested. The wavelength are
+      evl.psfwvl, but powfs.wvl since our purpose is to compare with science PSF.
+     */
+    if(parms->wfs[iwfs].psfmean && isim>=parms->evl.psfisim){
+	dmat *opdcopy=NULL;
+	if(parms->evl.psfpttr){
+	    opdcopy=ddup(opd);
+	    double ptt[3]={0,0,0};
+	    int indmcc=powfs[ipowfs].nlocm>1?wfsind:0;
+	    loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, powfs[ipowfs].ipcc->p[indmcc],
+			 powfs[ipowfs].imcc->p[indmcc], powfs[ipowfs].amp->p, opdcopy->p);
+	    loc_remove_ptt(opdcopy->p, ptt, powfs[ipowfs].loc);
+	}else{
+	    opdcopy=dref(opd);
+	}
+	ccell *psf2s=psfcomp(opdcopy, powfs[ipowfs].realamp[wfsind], 
+			     powfs[ipowfs].embed, powfs[ipowfs].nembed, 
+			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+	dfree(opdcopy);
+	int nwvl=parms->evl.nwvl;
+	PDCELL(simu->wfspsfmean, wfspsfmean);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    cabs22d(&wfspsfmean[iwfs][iwvl], 1,
+		    psf2s->p[iwvl], pow(powfs[ipowfs].sumamp->p[wfsind], -2));
+	}
+	ccellfree(psf2s);
+    }
     /*
       Now begin Physical Optics Intensity calculations
     */
@@ -197,7 +224,7 @@ void wfsgrad_iwfs(thread_t *info){
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    //compute ztilt.
 	    pts_ztilt((*gradacc)->p,powfs[ipowfs].pts,
-		      powfs[ipowfs].nimcc>1?powfs[ipowfs].imcc[wfsind]:powfs[ipowfs].imcc[0],
+		      powfs[ipowfs].saimcc[powfs[ipowfs].nimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{//G tilt
 	    spmulmat(gradacc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);

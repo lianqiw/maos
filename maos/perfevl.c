@@ -164,7 +164,7 @@ void perfevl_ievl(thread_t *info){
 	if(simu->opdr){
 	    for(int ipsr=0; ipsr<npsr; ipsr++){
 		double hl=parms->atmr.ht[ipsr];
-		double scale = 1. - hl/parms->evl.ht;
+		double scale = 1. - hl/parms->evl.ht[ievl];
 		double displacex=parms->evl.thetax[ievl]*hl+parms->evl.misreg[0];
 		double displacey=parms->evl.thetay[ievl]*hl+parms->evl.misreg[1];
 		prop_nongrid(recon->xloc[ipsr], 

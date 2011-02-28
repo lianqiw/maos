@@ -123,8 +123,8 @@ typedef struct POWFS_T{
     ETF_T *etfprep;     /**<ETF for computing short exposure matched filter.*/
     ETF_T *etfsim;      /**<ETF for simulation.*/
     dmat *focus;        /**<additional focus error. (llt->fnrange)*/
-    LLT_T *llt;         /**<uplink aperture*/
-    dcell **imcc;        /**<inverse of mcc.*/
+    LLT_T *llt;         /**<uplink aperture parameters*/
+    dcell **saimcc;     /**<inverse of p/t/t model cross coupling matrix for each subaps to compute ztilt.*/
     dcell *srot;        /**<subaperture rotation wrt LLT*/
     dcell *srsa;        /**<subaperture distance wrt LLT*/
     dmat *srsamax;      /**<max of srsa for each llt.*/
@@ -145,11 +145,19 @@ typedef struct POWFS_T{
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/
     int ncompy;         /**<Dimension of FFT for subaperture imaging along y*/
     int nlocm;          /**<number of misregistered loc. 1 or nwfs of this powfs.*/
-    int nimcc;          /**<number of imcc*/
+    int nimcc;         /**<number of saimcc*/
     int nthread;        /**<Equal to MAX(nsa,sim.nthread)*/
     //The following are a few convenient pointers.
     double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
     double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
+    //For PSF computation on location of WFS. 
+    int **embed;         /**<Embedding index for PSF computing, one per wvl*/
+    int *nembed;         /**<dimension of embed.*/
+    dmat *sumamp;        /**<sum of realamp*/
+    dmat *sumamp2;       /**<sum of realamp.^2*/
+    dcell *mcc;          /**<p/t/t model cross coupling matrix for entire pupil*/
+    dcell *imcc;         /**<inverse of p/t/t model cross coupling matrix for entire pupil*/
+    dmat *ipcc;          /**<inverse of piston model cross coupling matrix for entire pupil*/
 }
 POWFS_T;
 
@@ -463,7 +471,7 @@ typedef struct SIM_T{
     dcell *evlpsftomomean;/**<science field psf time average with direct correction from tomography*/
     cellarr **evlpsfhist;   /**<to save time history of science field psf*/
     cellarr**evlpsftomohist;/**<to save time history of science field psf with direct correction from tomography*/
-
+    dcell *wfspsfmean; /**<To save time average of wfs psf of the full aperture. (for PSF recon)*/
     /* We maintain separate random streams for each purpose, derived from the
        same seed, so that multi-threading will produce same result */
     rand_t *wfs_rand;  /**<random stream for each wfs.*/
