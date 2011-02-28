@@ -490,7 +490,6 @@ static void readcfg_aper(PARMS_T *parms){
     }
     READ_DBL(aper.dx);
     READ_DBL(aper.rotdeg);
-    READ_INT(aper.cropamp);
     READ_STR(aper.fnamp);
     READ_STR(aper.pupmask);
     readcfg_dblarr_n(&parms->aper.misreg, 2, "aper.misreg");
@@ -640,6 +639,7 @@ static void readcfg_sim(PARMS_T *parms){
 	error("Must supply parms->sim.gtypeII_lo when sim.servotype_lo=%d\n",
 	      parms->sim.servotype_lo);
     }
+    READ_STR(sim.wspsd);
     READ_INT(sim.cachedm);
     READ_INT(sim.cachesurf);
     READ_INT(sim.fuseint);

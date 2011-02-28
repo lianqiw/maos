@@ -125,44 +125,7 @@ static map_t **genscreen_do(SIM_T *simu){
     }
     return screens;
 }
-/**
-   blending two atmospehre atm and atm2 according to wind direction.  Does not work
-   well for blendings near the corner.
-*/
-/*
-  static void blend_screen(map_t *atm1, map_t *atm2, double angle, long ox, long oy){
-  const long nx=atm1->nx;
-  double ca=cos(angle);
-  double sa=sin(angle);
-  double rx=(double)(atm1->nx-ox)/fabs(ca);
-  double ry=(double)(atm1->ny-oy)/fabs(sa);
-  double rr=rx<ry?rx:ry;//distance of the center of two screens.
-  atm2->ox=atm1->ox+rr*cos(angle)*atm1->dx;
-  atm2->oy=atm1->oy+rr*sin(angle)*atm1->dx;
 
-  //positive size of overlapping area.
-  long ovx=atm1->nx-(long)round(rr*fabs(ca));
-  long ovy=atm1->ny-(long)round(rr*fabs(sa));
-  //start point of overlapping region in the two arrays.
-  long offx=nx-ovx;
-  long offy=(atm1->ny-ovy)*nx;
-  int wtx=0,wty=0;
-  if(ca<0) wtx=1;
-  if(sa<0) wty=1;
-  double *p1=atm1->p+(1-wty)*offy+(1-wtx)*offx;
-  double *p2=atm2->p+wty*offy+wtx*offx;
-  double (*pp1)[nx]=(void*)p1;
-  double (*pp2)[nx]=(void*)p2;
-  for(long iy=0; iy<ovy; iy++){
-  double wty1=fabs((double)wty-(double)iy/(double)(ovy-1));
-  for(long ix=0; ix<ovx; ix++){
-  double wtx1=fabs((double)wtx-(double)ix/(double)(ovx-1));
-  double wt1=wty1*wtx1;
-  pp1[iy][ix]=(1-wt1)*pp1[iy][ix]+wt1*pp2[iy][ix];
-  pp2[iy][ix]=pp1[iy][ix];
-  }
-  }
-  }*/
 /**
    overlay atm2 with atm2 according to wind direction angle and required
    overlapping region of at least overx*overy.
@@ -512,6 +475,7 @@ void seeding(SIM_T *simu){
     simu->init=calloc(1, sizeof(rand_t));
     simu->atm_rand=calloc(1, sizeof(rand_t));
     simu->atmwd_rand=calloc(1, sizeof(rand_t));
+    simu->telws_rand=calloc(1, sizeof(rand_t));
     seed_rand(simu->init,simu->seed);
     seed_rand(simu->atm_rand,   lrand(simu->init));
     //2011-02-02: changed to wdrand-1 so that when wdrand=1, we reproduce old directions.
@@ -521,6 +485,7 @@ void seeding(SIM_T *simu){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	seed_rand(&simu->wfs_rand[iwfs],lrand(simu->init));
     }
+    seed_rand(simu->telws_rand, lrand(simu->init));
 }
 /**
    Initialize simu (of type SIM_T) and various simulation data structs. Called
@@ -606,6 +571,50 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->Mint_lo=calloc(parms->sim.napdm, sizeof(dcell*));
     }
     simu->uptint=calloc(parms->sim.napupt, sizeof(dcell*));
+    
+    if(parms->sim.wspsd){
+	/*
+	  Telescope wind shake added to TT input.
+	*/
+	dmat *psdin=dread(parms->sim.wspsd);
+	if(psdin->ny!=2){
+	    error("psd should have two columns\n");
+	}
+	dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
+	dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
+	long nstep=nextpow2(parms->sim.end);//do not subtract sim.start so we can repeat a sim
+	double df=1./(parms->sim.dt*nstep);
+	dmat *fs=dlinspace(0, df, nstep);
+	dmat *psd;
+	long psdlen=psdin->nx;
+	if(fabs(psdf->p[0]*psdf->p[2]-pow(psdf->p[1],2))<EPS){//log spaced
+	    psd=dinterp1log(psdf, psdval, fs);
+	}else if(fabs(psdf->p[0]+psdf->p[2]-psdf->p[1]*2.)<EPS){//linear spaced
+	    psd=dinterp1(psdf, psdval, fs);
+	}else{
+	    error("Frequency in PSD must be log or linearly spaced\n");
+	}
+	psd->p[0]=0;//disable pistion.
+	cmat *wshat=cnew(nstep, 1);
+	cfft2plan(wshat, -1);
+	for(long i=0; i<nstep; i++){
+	    wshat->p[i]=sqrt(psd->p[i]*df)*(randn(simu->telws_rand)+I*randn(simu->telws_rand));
+	}
+	cfft2(wshat, -1);
+	creal2d(&simu->telws, 0, wshat, 1);
+	//dresize(simu->telws, parms->sim.end, 1);
+	cfree(wshat);
+	dfree(psdin);
+	dfree(psdf);
+	dfree(psdval);
+	dfree(psd);
+	dfree(fs);
+	dwrite(simu->telws, "telws");
+    }
+    /*
+       Evaluation
+    */
+
     if(parms->evl.psfmean){
 	simu->evlpsfmean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
 	char header[800];
@@ -743,7 +752,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}
     }
-    //prepare data for ray tracing in wfsgrad.c
+    /*
+      prepare data for ray tracing in wfsgrad.c
+    */
     simu->wfs_prop_atm=calloc(parms->nwfs*parms->atm.nps, sizeof(thread_t*));
     simu->wfs_propdata_atm=calloc(parms->nwfs*parms->atm.nps, sizeof(PROPDATA_T));
     simu->wfs_prop_dm=calloc(parms->nwfs*parms->ndm, sizeof(thread_t*));
@@ -1150,6 +1161,7 @@ void free_simu(SIM_T *simu){
     free(simu->atm_rand);
     free(simu->atmwd_rand);
     free(simu->wfs_rand);
+    free(simu->telws_rand);
     if(simu->genscreen){
 	dfree(simu->genscreen->spect);
 	free(simu->genscreen);

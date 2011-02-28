@@ -393,7 +393,9 @@ typedef struct SIM_T{
     dcell *surfopdx;   /**<additional OPD surface projected onto xloc for fitonly*/
     rectmap_t **tsurf; /**<input tilted M3 surface*/
     map_t **surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
-
+    dmat  *telws;      /**<Telescope wind shake time series, along ground layer wind direction*/
+    double telwsx;     /**<cos(ws_theta)*/
+    double telwsy;     /**<sin(ws_theta)*/
     /*The following has a cell for each. wfs*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
     dcell *gradol;     /**<WFS pseudo open loop grad output*/
@@ -477,6 +479,7 @@ typedef struct SIM_T{
     rand_t *wfs_rand;  /**<random stream for each wfs.*/
     rand_t *atm_rand;  /**<random stream for atmosphere turbulence generation*/
     rand_t *atmwd_rand;/**<random stream for wind direction*/
+    rand_t *telws_rand;/**<random stream for wind shake*/
     rand_t *init;      /**<random stream to initialize other streams*/
     STATUS_T *status;  /**<status report to scheduler.*/
 

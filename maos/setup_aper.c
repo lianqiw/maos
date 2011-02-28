@@ -57,22 +57,6 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
     }else{//locs act as a pupil mask. no points outside will be evaluated.
-	/*
-	  Commented out on 2011-02-14
-	  if(aper->ampground && fabs(aper->ampground->dx-dx)<1.e-6 && !parms->evl.ismisreg){
-	  //LOCSTAT records the starting of each row to speed up accphi
-	  locstat_t *locstat=calloc(1, sizeof(locstat_t));
-	  info2("Using amplitude map to generate aper grid\n");
-	  aper->locs=mkcirloc_amp(&(aper->amp), locstat, aper->ampground, 
-	  d, dx,parms->aper.cropamp);
-	  aper->locs->stat=locstat;
-	  }else{
-	
-	  map_t *pmap=create_metapupil_wrap(parms,0,dx,0,0,0,T_PLOC,0,0);
-	  aper->locs=map2loc(pmap);
-	  mapfree(pmap);
-	  warning("No amplitude map defined or matched to aperture dx.\n");
-	  }  */
 	//We choose to make circular map so that it acts as pupil stop in case of misregistration.
 	aper->locs=mkcirloc(parms->aper.d, parms->aper.dx);
 	if(parms->save.setup){

@@ -177,20 +177,20 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
       computed. But we need to captuer the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
     */
-    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
-    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
+    dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
     double fs=1./(lgsdt*dtrat);
     //Compute error in un-corretable part of the PSD
     dmat *nu2=dlogspace(log10(fs/2),3,1000);//Frequencies that no correction can be made.
-    dmat *psd2=dinterp1log(psdx,psdy,nu2);
+    dmat *psd2=dinterp1log(psdf,psdval,nu2);
     
     double rms2_sig=psd_intelog(nu2->p, psd2->p, nu2->nx);
     dfree(nu2); dfree(psd2);
 
     dmat *nu=dlogspace(-3,log10(fs/2),1000);
-    dmat *psd=dinterp1log(psdx,psdy,nu);
-    dfree(psdx);
-    dfree(psdy);
+    dmat *psd=dinterp1log(psdf,psdval,nu);
+    dfree(psdf);
+    dfree(psdval);
     cmat *s=cnew(nu->nx, 1);
     dcomplex pi2i=2*M_PI*I;
     double Ts=1./fs;
@@ -288,9 +288,9 @@ cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt){
 */
 double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt){
     dmat *nu=dlogspace(-3,3,1000);//Should go beyond Nyquist freq. Hrej=1 for nu>fs/2.
-    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
-    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);  
-    dmat *psd=dinterp1log(psdx,psdy,nu);
+    dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);  
+    dmat *psd=dinterp1log(psdf,psdval,nu);
     dcomplex pi2i=2*M_PI*I;
     double Ts=1./fs;
 
@@ -315,8 +315,8 @@ double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, dou
     }
     double dlognu=(log(nu->p[nu->nx-1])-log(nu->p[0]))/(nu->nx-1);
     rms_sig*=dlognu;
-    dfree(psdx);
-    dfree(psdy);
+    dfree(psdf);
+    dfree(psdval);
     dfree(nu);
     dfree(psd);
     return rms_sig;
@@ -426,13 +426,13 @@ dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtlgs, int dtrat){
 dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     double df=1./(N*dt);
     dmat *f=dlinspace(df,df,N);
-    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
-    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
-    dmat *psd2=dinterp1log(psdx,psdy,f);
+    dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
+    dmat *psd2=dinterp1log(psdf,psdval,f);
     dfree(f);
     double sqdf=sqrt(df);
-    dfree(psdx);
-    dfree(psdy);
+    dfree(psdf);
+    dfree(psdval);
     cmat *psdc=cnew(N,1);
     cfft2plan(psdc, -1);
     for(long i=0; i<psd2->nx; i++){

@@ -76,6 +76,12 @@ void perfevl_ievl(thread_t *info){
 	memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
     }else{
 	dzero(iopdevl);
+	if(simu->telws){//Wind shake
+	    double tmp=simu->telws->p[isim];
+	    double angle=simu->winddir->p[0];
+	    double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+	    loc_add_ptt(iopdevl->p, ptt, aper->locs);
+	}
     }
     //Add surfaces along science path. prepared in setup_surf.c
     if(simu->surfevl && simu->surfevl->p[ievl]){
@@ -95,7 +101,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
     }
-
+  
     TIM(1);
     if(save_evlopd){
 	cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
@@ -479,6 +485,12 @@ void perfevl(SIM_T *simu){
 	simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
 	simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
 	CALL_THREAD(simu->evl_prop_atm[ind], simu->parms->evl.nthread, 0);
+	if(simu->telws){//Wind shake
+	    double tmp=simu->telws->p[isim];
+	    double angle=simu->winddir->p[0];
+	    double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+	    loc_add_ptt(simu->opdevlground->p, ptt, simu->aper->locs);
+	}
     }
     CALL_THREAD(simu->perf_evl, simu->parms->evl.nevl, 0);
     dfree(simu->opdevlground);simu->opdevlground=NULL;

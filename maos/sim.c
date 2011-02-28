@@ -80,7 +80,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    }else{
 		disable_atm_shm=1;
 		genscreen(simu);
-		//re-seed the atmosphere in case atm is loaded from shm
+		//re-seed the atmosphere in case atm is loaded from shm/file
 		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
 	    if(PARALLEL == 1 && NCPU >2 && CL && simu->nthread>1){

@@ -16,6 +16,7 @@ nobase_dist_pkgdata_DATA=\
 config/maos/bin/TMT_CurDesign.bin.gz\
 config/maos/bin/KECK.bin.gz\
 config/maos/bin/NapMean.bin.gz\
+config/maos/bin/PSD_TMT_WindShake20mas_rad2.bin.gz\
 config/maos/aper_tmt.conf\
 config/maos/atm_mk13n25p.conf\
 config/maos/atm_mk13n50p.conf\
@@ -53,6 +54,6 @@ config/skyc/skyc_za55.conf\
 config/skyc/skyc_za60.conf\
 config/skyc/PSD_NGS.bin.gz\
 config/skyc/PSD_PS.bin.gz\
-config/skyc/PSD_TMT_WindShake20mas.bin.gz\
+config/skyc/PSD_TMT_WindShake20mas_m2.bin.gz\
 config/skyc/PSD_TT.bin.gz\
 config/skyc/besancon/JH_5sqdeg_lat90_lon200_besancon.bin.gz

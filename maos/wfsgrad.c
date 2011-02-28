@@ -122,6 +122,12 @@ void wfsgrad_iwfs(thread_t *info){
 	}//ips
 	//most expensive 0.10 per LGS for
     }
+    if(simu->telws){//Wind shake
+	double tmp=simu->telws->p[isim];
+	double angle=simu->winddir->p[0];
+	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
+    }
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopdol[iwfs], opd);
     }

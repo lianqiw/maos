@@ -74,7 +74,6 @@ typedef struct ATMR_CFG_T{
 typedef struct APER_CFG_T{
     double d;     /**<Telescope aperture diameter*/
     double din;   /**<Telescope inner blocking diameter*/
-    int cropamp;  /**<1: if amplitude are nonzero outside of d, zero it.*/
     double dx;    /**<sampling of aperture evaluation grid aper_locs*/
     double rotdeg;/**<pupil rotation in degree*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
@@ -376,6 +375,8 @@ typedef struct SIM_CFG_T{
     int nthread;     /**<Number of threads to run the simulation*/
     int closeloop;   /**<closed loop or open loop*/
     char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
+    char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
+		     freq in Hz, Second column is PSD in rad^2/Hz.*/
     //control
     double *apdm;    /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
