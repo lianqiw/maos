@@ -554,7 +554,7 @@ ARG_T * parse_args(int argc, char **argv){
     info2("Main config file is %s\n",arg->conf);
     //Setup PATH and result directory so that the config_path is in the back of path
     char *config_path=find_config("maos");
-#if USE_STATIC
+#if USE_STATIC && 0
     if(!exist(config_path)){
 	//We are binding the config files in the executable, extract and use it.
 	char *start=&_binary____config_tar_gz_start;

@@ -159,7 +159,7 @@ if test "x$use_static" = "xyes" ;then
    LDEXE="-all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
    AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
-   (cd ${SRC_DIR} && tar zcf ${BUILD_DIR}/config.tar.gz config/)
+   #(cd ${SRC_DIR} && tar zcf ${BUILD_DIR}/config.tar.gz config/)
 else
    LDEXE=""
    AM_CONDITIONAL(USE_STATIC, false)

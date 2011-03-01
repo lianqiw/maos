@@ -585,7 +585,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	long nstep=nextpow2(parms->sim.end);//do not subtract sim.start so we can repeat a sim
 	double df=1./(parms->sim.dt*nstep);
 	dmat *fs=dlinspace(0, df, nstep);
-	dmat *psd;
+	dmat *psd=NULL;
 
 	if(fabs(psdf->p[0]*psdf->p[2]-pow(psdf->p[1],2))<EPS){//log spaced
 	    psd=dinterp1log(psdf, psdval, fs);

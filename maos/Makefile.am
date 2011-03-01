@@ -17,8 +17,8 @@ ___bin_maos_SOURCES=maos.h maos.c parms.h setup_parms.c types.h utils.h utils.c	
 	 cn2est.h
 ___bin_maos_LDADD=../lib/libaos.la $(LDOPTS)
 
-if USE_STATIC
-config.o:../config.tar.gz
-	objcopy --input binary --output $(objcopy_output) --binary-architecture $(objcopy_arch) ../config.tar.gz config.o
-___bin_maos_LDADD+=config.o
-endif
+#if USE_STATIC
+#config.o:../config.tar.gz
+#	objcopy --input binary --output $(objcopy_output) --binary-architecture $(objcopy_arch) ../config.tar.gz config.o
+#___bin_maos_LDADD+=config.o
+#endif

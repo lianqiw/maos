@@ -287,7 +287,7 @@ static double try_r_value (double r){
 /**
    Initialize the data to do norm distribution.
  */
-static __attribute__((constructor)) void initalize(){
+static __attribute__((constructor)) void initialize(){
     double  a, b, aa, bb, r;
     double  q;
     double RANGE_R=1./RANGE;
