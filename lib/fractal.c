@@ -67,9 +67,10 @@ void fractal_vkcov_free(){
 	free(p);
     }
 }
-static __attribute__((destructor)) void deinit(){
-    fractal_vkcov_free();
+static __attribute__((constructor)) void init(){
+    register_deinit(fractal_vkcov_free, NULL);
 }
+
 /**
    Compute Von Karman covariance function at separations computed from the grid
    size nx and sampling dx, with Fried parameter of r0, and outerscale of L0.  

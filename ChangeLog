@@ -1,3 +1,8 @@
+2011-02-28 Version 0.8.2
+	Implemented telescope wind jitter
+2011-02-27 Version 0.8.1
+	Implemented different height for each evaluation direction.
+	Implemented pupil, wfs, dm,  misregistration, etc.
 2010-11-09 Version 0.7.2
 	Found a bug in genseotf and fixed.
 	The sum of the input sodium profile now scales the signal level

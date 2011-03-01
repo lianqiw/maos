@@ -54,6 +54,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.thetay);
     free(parms->evl.psfwvl);
     free(parms->evl.wt);
+    free(parms->evl.ht);
     free(parms->evl.psf);
     free(parms->evl.psfgridsize);
     free(parms->evl.psfsize);

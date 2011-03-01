@@ -87,6 +87,7 @@ struct thread_pool_t{
     int ncur; /**<the maximum number of live threads, excluding the master thread.*/
     int quit; /**<1: quit the threads.*/
     int nidle;/**<Number of idle threads, excluding the master thread.*/
+    int inited;/**<Whether the thread pool has been inited*/
 };
 static thread_pool_t pool;//The default pool;
 
@@ -110,6 +111,7 @@ static inline void do_job(void) {
 	pthread_cond_broadcast(&pool.jobdone);
     }
     pthread_mutex_lock(&pool.mutex2);
+    //return job to the pool.
     job->next=pool.jobspool;
     pool.jobspool=job;
     pthread_mutex_unlock(&pool.mutex2);
@@ -167,6 +169,7 @@ void thread_pool_init(int nthread){
     if(!inited){
 	inited=1;
 	memset(&pool, 0, sizeof(thread_pool_t));
+	pool.inited=1;
 	pthread_mutex_init(&pool.mutex,  NULL);
 	pthread_mutex_init(&pool.mutex2, NULL);
 	pthread_cond_init(&pool.idle,    NULL);
@@ -391,6 +394,7 @@ void thread_pool_wait_all(void){
  *   Exit all threads and free thread pool.
  */
 void thread_pool_destroy(void){
+    if(!pool.inited) return;
     thread_pool_wait_all();//let all jobs finish.
     //tell all jobs to quit.
     pool.quit=1;
@@ -413,13 +417,16 @@ void thread_pool_destroy(void){
     pthread_cond_destroy(&pool.jobdone);
     pthread_cond_destroy(&pool.exited);
     pthread_attr_destroy(&pool.attr);
+    pool.inited=0;
 }
 static __attribute__((destructor)) void deinit(){
     thread_pool_destroy();
 }
 
-//static __attribute__((constructor)) void init(){
+static __attribute__((constructor)) void init(){
+    register_deinit(thread_pool_destroy,NULL);//register to mem.c
+}
 /**
    It does not work to initialize the thread pool in the beginning because it is before main and ?
 */
-//}
+

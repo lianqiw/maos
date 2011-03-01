@@ -120,7 +120,7 @@ static void skysim_isky(SIM_S *simu){
     PDMAT(simu->res, pres);
     PDMAT(simu->res_oa, pres_oa);
     PDMAT(simu->res_ol, pres_ol);
-    while((isky=lockadd(&simu->isky, 1))<simu->isky_end){
+    while(LOCKADD(isky, simu->isky, 1)<simu->isky_end){
 	double tk_1=myclockd();
 	//Setup star parameters.
 	STAR_S *star=setup_star(&nstar, simu,stars->p[isky],seed_maos);

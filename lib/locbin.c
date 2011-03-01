@@ -56,7 +56,7 @@ loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
 	zfread(out->locx, sizeof(double), nx, fp);
 	out->locy=malloc(sizeof(double)*nx);
 	zfread(out->locy, sizeof(double), nx, fp);
-	if(fabs(dx)<1e-10){//dx is not available.
+	if(isnan(dx)){//dx is not available.
 	    for(long i=0; i<out->nloc-1; i++){//we assume the rows are continuous.
 		if(out->locy[i+1]>out->locy[i]){
 		    dx=out->locy[i+1]-out->locy[i];
@@ -176,15 +176,15 @@ void maparrwrite(map_t ** map, int nmap, const char *format,...){
 map_t* d2map(dmat *in){
     map_t *map=realloc(dref(in), sizeof(map_t));
     char *header=in->header;
-    if(!in->header){
-	error("this dmat has no header\n");
-    }
     map->ox=search_header_num(header,"ox");
     map->oy=search_header_num(header,"oy");
     map->dx=search_header_num(header,"dx");
-    map->h=search_header_num(header,"h");
+    map->h =search_header_num(header,"h");
     map->vx=search_header_num(header,"vx");
     map->vy=search_header_num(header,"vy");
+    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
+	error("header is needed to convert dmat to map_t\n");
+    }
     return map;
 }
 
@@ -248,6 +248,7 @@ map_t *mapread(const char *format, ...){
     }else{
 	error("Invalid format. magic=%u\n", magic);
     }
+    zfclose(fp);
     return map;
 }
 
@@ -282,6 +283,9 @@ rectmap_t* d2rectmap(dmat *in){
     map->ftel=search_header_num(header,"ftel");
     map->fexit=search_header_num(header,"fexit");
     map->fsurf=search_header_num(header,"fsurf");
+    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
+	error("header is needed to convert dmat to map_t\n");
+    }
     return map;
 }
 

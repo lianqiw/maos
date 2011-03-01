@@ -143,8 +143,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    recon->aloc[idm]=map2loc(map);
 	    recon->aloc_nx[idm]=map->nx;
 	    recon->aloc_ny[idm]=map->ny;
-	    free(map->p);
-	    free(map);
+	    mapfree(map);
 	    if(parms->plot.setup){
 		plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
 	    }
@@ -225,7 +224,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    recon->xloc[ips]=map2loc(map);
 	    recon->xloc_nx[ips]=map->nx;
 	    recon->xloc_ny[ips]=map->ny;
-	    free(map->p);free(map);
+	    mapfree(map);
 	 
 	    if(parms->plot.setup){
 		plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);

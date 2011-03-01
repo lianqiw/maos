@@ -88,9 +88,9 @@ void X(cellfree_do)(X(cell) *dc){
     if(!dc) return;
     if(dc->p){
 	if(dc->header){
-	    long count=search_header_num(dc->header, "count");
-	    if(count>0){
-		info("count=%ld, scaling the data\n", count);
+	    double count=search_header_num(dc->header, "count");
+	    if(!isnan(count) && count>0){
+		info("count=%g, scaling the data\n", count);
 		X(cellscale)(dc, 1./count);
 	    }
 	}

@@ -45,6 +45,7 @@ void  FREE(void *p);
 
 void mem_usage(void);
 size_t memsize(void *p);//return allocated size
+void register_deinit(void (*fun)(void), void *data);
 #else
 #undef malloc
 #undef calloc
@@ -52,6 +53,7 @@ size_t memsize(void *p);//return allocated size
 #undef free
 #define memsize(A) 0
 #define mem_usage(A)
+#define register_deinit(A,B)
 #endif
 extern int exit_success;
 extern void (*call_freepath)(void);

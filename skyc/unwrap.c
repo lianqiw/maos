@@ -132,7 +132,7 @@ static void convert_wvf(GENPISTAT_S *data){
     long icase=0;
     //Do not run this function.
     return;
-    while((icase=lockadd(&data->icase, 1))<data->ncase){
+    while((LOCKADD(icase,data->icase, 1))<data->ncase){
     TIC;tic;
     double thetax=data->ngsgrid*data->cases[icase][0];
     double thetay=data->ngsgrid*data->cases[icase][1];

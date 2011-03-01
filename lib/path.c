@@ -85,19 +85,14 @@ void printpath(void){
    Empty the path
 */
 void freepath(void){
-    PATH_T *ib;
-    for(PATH_T *ia=PATH;ia;ia=ib){
-	ib=ia->next;
+    for(PATH_T *ia=PATH;ia;ia=PATH){
+	PATH=ia->next;
 	free(ia->path);
 	free(ia);
     }
-    PATH=NULL;
 }
-/**
-   Free the path at exit.
- */
-static __attribute__((destructor)) void deinit(){
-    freepath();
+static __attribute__((constructor)) void init(){
+    register_deinit(freepath,NULL);
 }
 /**
    Try to find a file in path and return its absolute filename of exist, NULL

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
+#include <ctype.h> //isspace
 #include "common.h"
 #include "thread.h"
 #include "process.h"
@@ -473,12 +474,12 @@ char *search_header(const char *header, const char *key){
     if(!header) return NULL;
     char *val=strstr(header, key);
     if(val){
-	char *equal=strchr(val,'=');
-	if(equal){
-	    return equal+1;
-	}else{
-	    error("= not found after key in %s\n", header);
+	char *tmp=val+strlen(key);
+	while(isspace((int)tmp[0])) tmp++;//skip space.
+	if(tmp[0]!='='){
 	    return NULL;
+	}else{
+	    return tmp+1;
 	}
     }else{
 	return NULL;
@@ -493,7 +494,7 @@ double search_header_num(const char *header, const char *key){
     if(val){
 	return readstr_num(val, NULL);
     }else{
-	return 0;//not found.
+	return NAN;//not found.
     }
 }
 /**

@@ -102,14 +102,14 @@ int scheduler_connect_self(int block, int mode){
     return -1;
 }
 
+static char *path_save=NULL;
 static void scheduler_report_path(char *path){
-    static char *path_save=NULL;
     if(path){
 	if(path_save) free(path_save);
 	path_save=strdup(path);
     }else{
 	if(!path_save){
-	    path_save="unknown";
+	    path_save=strdup("unknown");
 	}
     }
     int cmd[2];
@@ -118,7 +118,12 @@ static void scheduler_report_path(char *path){
     swriteintarr(&psock, cmd, 2);
     swritestr(&psock,path_save);
 }
-
+void scheduler_deinit(void){
+    free(path_save);
+}
+static __attribute__((constructor)) void init(){
+    register_deinit(scheduler_deinit, NULL);
+}
 // called by mcao to wait for available cpu.
 int scheduler_start(char *path, int nthread, int waiting){
     psock=scheduler_connect_self(1,0);

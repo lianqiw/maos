@@ -153,9 +153,9 @@ void X(free_do)(X(mat) *A, int keepdata){
 	    cfree_plan(A);
 #endif
 	    if(A->header){
-		long count=search_header_num(A->header, "count");
+		double count=search_header_num(A->header, "count");
 		if(count>0){
-		    info("count=%ld, scaling the data\n", count);
+		    info("count=%g, scaling the data\n", count);
 		    X(scale)(A, 1./count);
 		}
 	    }

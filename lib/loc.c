@@ -1374,6 +1374,17 @@ void loc_nxny(long *nx, long *ny, const loc_t *loc){
     *ny=(long)round((ymax-ymin)/loc->dx)+1;
 }
 /**
+   Resize a loc_t by shrinking.
+*/
+void locresize(loc_t *loc, long nloc){
+    if(!loc) return;
+    loc_free_map(loc);
+    loc_free_stat(loc);
+    loc->locx=realloc(loc->locx, sizeof(double)*nloc);
+    loc->locy=realloc(loc->locy, sizeof(double)*nloc);
+    loc->nloc=nloc;
+}
+/**
    create a new map_t object.
 */
 map_t *mapnew(long nx, long ny, double dx, double *p){

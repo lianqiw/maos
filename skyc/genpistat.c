@@ -43,12 +43,12 @@ typedef struct GENPISTAT_S{
 static void calc_pistat(GENPISTAT_S *data){
     const PARMS_S *parms=data->parms;
     POWFS_S *powfs=data->powfs;
-    long icase=0;
+    int icase=0;
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
     //Obtain exclusive lock before proceeding.
     int fd=lock_file(fnlock, 1, 0);
-    while((icase=lockadd(&data->icase, 1))<data->ncase){
+    while(LOCKADD(icase, data->icase, 1)<data->ncase){
 	double thetax=data->ngsgrid*data->cases[icase][0];
 	double thetay=data->ngsgrid*data->cases[icase][1];
 	long ipowfs=data->cases[icase][2];

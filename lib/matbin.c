@@ -187,6 +187,8 @@ X(cell) **X(cellreadarr)(long *nxout, long *nyout, const char *format,...){
     }
     *nxout=nx;
     *nyout=ny;
+    zfeof(fp);
+    zfclose(fp);
     return out;
 }
 /**

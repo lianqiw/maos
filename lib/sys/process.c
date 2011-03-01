@@ -72,18 +72,17 @@ void init_path(void){
 	TEMP=stradd(temp,"/","maos-",USER,NULL);
 	mymkdir("%s",TEMP);
 	mymkdir("%s/.aos/",HOME);
+	register_deinit(NULL,(void*)TEMP);
     }
 }
+
 static __attribute__((constructor))void init(){
     NCPU= get_ncpu();
     NCPU2=sysconf( _SC_NPROCESSORS_ONLN );
     TCK = sysconf(_SC_CLK_TCK);
     init_path();
 }
-static __attribute__((destructor)) void deinit(){
-    //don't free HOME, USER
-    free((char*)TEMP);TEMP=NULL;
-}
+
 double get_usage_cpu(void){
     static double lasttime=0;
     double thistime=myclockd();

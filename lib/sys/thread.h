@@ -121,22 +121,13 @@ struct thread_t{
 void thread_prep(thread_t *info, long start, long tot, long nthread, 
 		 thread_wrapfun fun, void *data);
 #if defined(X86) || defined(X86_64)
-int inline lockadd(int *src, int step){
-    int dest;
-    __asm__ __volatile__ ("lock; xaddl %0,%1"		\
-			  : "=r" (dest), "=m" (*src)	\
-			  : "0" (step), "m" (*src));
-    return dest;
-}
+#define LOCKADD(dest,src,step)\
+    (({__asm__ __volatile__ ("lock; xaddl %0,%1"	\
+			   : "=r" (dest), "=m" (src)	\
+			    : "0" (step), "m" (src));}),dest)
+
 #else
-int inline lockadd(int *src, int step){
-    static pthread_mutex_t atomic_lock=PTHREAD_MUTEX_INITIALIZER;
-    int result;
-    pthread_mutex_lock(&atomic_lock);
-    result=*src;
-    *src+=step;
-    pthread_mutex_unlock(&atomic_lock);
-    return result;
-}
+#define LOCKADD(dest,src,step) (dest=lockadd(&src,step),dest)
+int lockadd(int *src, int step);
 #endif
 #endif

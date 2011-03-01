@@ -488,7 +488,7 @@ static void fdpcg_fft(void *data){
     int nps=fdpcg->xhati->nx;
     ccell *xhati=fdpcg->xhati;
     const dcell *xin=info->xin;
-    while((ips=lockadd(&info->ips, 1))<nps){
+    while(LOCKADD(ips, info->ips, 1)<nps){
 	if(fdpcg->square){
 	    for(long i=0; i<xhati->p[ips]->nx*xhati->p[ips]->ny; i++){
 		xhati->p[ips]->p[i]=xin->p[ips]->p[i];
@@ -519,7 +519,7 @@ static void fdpcg_mulblock(void *p){
     long nb=fdpcg->nxtot/bs;
     cmat *xhat=fdpcg->xhat;
     cmat *xhat2=fdpcg->xhat2;
-    while((ib=lockadd(&info->ib, 1)) < nb){
+    while(LOCKADD(ib, info->ib, 1) < nb){
 	cmulvec(xhat->p+ib*bs, fdpcg->Mbinv->p[ib], xhat2->p+ib*bs,1);
     }
 }
@@ -535,7 +535,7 @@ static void fdpcg_ifft(void *p){
     ccell *xhat2i=fdpcg->xhat2i;
     dcell *xout=info->xout;
     //const dcell *xin=info->xin;
-    while((ips=lockadd(&info->ips, 1))<nps){
+    while(LOCKADD(ips, info->ips, 1)<nps){
 	cfftshift(xhat2i->p[ips]);
 	cfft2s(xhat2i->p[ips],1);
 	//cfftshift(xhat2i->p[ips]);//enable this needs enable the one in fdpcg_fft.

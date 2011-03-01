@@ -92,15 +92,6 @@ loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double *p);
 void mapcircle(map_t *map, double r, double val);
-inline void locresize(loc_t *loc, long nloc){
-    if(!loc) return;
-    loc_free_map(loc);
-    loc_free_stat(loc);
-    loc->locx=realloc(loc->locx, sizeof(double)*nloc);
-    loc->locy=realloc(loc->locy, sizeof(double)*nloc);
-    loc->nloc=nloc;
-}
-inline void ptsresize(pts_t *pts, long nsa){
-    locresize((loc_t*)pts, nsa);
-}
+void locresize(loc_t *loc, long nloc);
+#define ptsresize(pts, nsa) locresize((loc_t*)pts, nsa)
 #endif

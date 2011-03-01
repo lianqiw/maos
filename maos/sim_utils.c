@@ -576,7 +576,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	/*
 	  Telescope wind shake added to TT input.
 	*/
-	dmat *psdin=dread(parms->sim.wspsd);
+	dmat *psdin=dread("%s",parms->sim.wspsd);
 	if(psdin->ny!=2){
 	    error("psd should have two columns\n");
 	}
@@ -586,7 +586,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	double df=1./(parms->sim.dt*nstep);
 	dmat *fs=dlinspace(0, df, nstep);
 	dmat *psd;
-	long psdlen=psdin->nx;
+
 	if(fabs(psdf->p[0]*psdf->p[2]-pow(psdf->p[1],2))<EPS){//log spaced
 	    psd=dinterp1log(psdf, psdval, fs);
 	}else if(fabs(psdf->p[0]+psdf->p[2]-psdf->p[1]*2.)<EPS){//linear spaced

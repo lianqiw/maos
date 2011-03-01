@@ -84,7 +84,7 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
     free(powfs[ipowfs].realsaa);
     dfree(powfs[ipowfs].sumamp);
     dfree(powfs[ipowfs].sumamp2);
-    
+    free(powfs[ipowfs].misreg);
     if(powfs[ipowfs].embed){
 	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
 	    free(powfs[ipowfs].embed[iwvl]);
@@ -92,6 +92,11 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
 	free(powfs[ipowfs].embed);
 	free(powfs[ipowfs].nembed);
     }
+    dcellfree(powfs[ipowfs].saam);
+    dcellfree(powfs[ipowfs].ampm);
+    dcellfree(powfs[ipowfs].imcc);
+    dcellfree(powfs[ipowfs].mcc);
+    dfree(powfs[ipowfs].ipcc);
 }
 /**
    Convert amplitude map of subapertures to normalized subaperture area. Used only in setup_powfs_geom*/
@@ -215,7 +220,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       the pupil amplitude map.*/
     powfs[ipowfs].pts->nsa=count;
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
-    powfs[ipowfs].amp=dnew(order*order*nxsa,1);
     //The assumed amp.
     powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
 			       0,0, parms->aper.d, parms->aper.din);
@@ -243,8 +247,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 	powfs[ipowfs].nlocm=nlocm;
 	powfs[ipowfs].locm=calloc(nlocm, sizeof(loc_t*));
-	dcellfree(powfs[ipowfs].saam);
-	dcellfree(powfs[ipowfs].ampm);
 	powfs[ipowfs].saam=dcellnew(nlocm, 1);
 	powfs[ipowfs].ampm=dcellnew(nlocm, 1);
 	PDCELL(misreg,pmisreg);
@@ -1761,7 +1763,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	dcellfreearr(powfs[ipowfs].saimcc, powfs[ipowfs].nimcc);
 	if(powfs[ipowfs].llt){
 	    ptsfree(powfs[ipowfs].llt->pts);
-	    free(powfs[ipowfs].llt->amp);
+	    dfree(powfs[ipowfs].llt->amp);
 	    locfree(powfs[ipowfs].llt->loc);
 	    dcellfree(powfs[ipowfs].llt->mcc);
 	    dcellfree(powfs[ipowfs].llt->imcc);

@@ -78,18 +78,38 @@ static void print_usage(const void *key, VISIT value, int level){
     const T_MEMKEY* key2=*((const T_MEMKEY**)key);
     (void) level;
     if(value>1){
-	fprintf(stderr,"%p: size %8zu KiB", key2->p, 
-		(key2->size)/1024);
+	fprintf(stderr,"%p: size %8zu B", key2->p, (key2->size));
 	print_backtrace_symbol(key2->func, key2->nfunc-2);
     }
+}
+typedef struct T_DEINIT{//contains either fun or data that need to be freed.
+    void (*fun)(void);
+    void *data;
+    struct T_DEINIT *next;
+}T_DEINIT;
+T_DEINIT *DEINIT=NULL;
+
+void register_deinit(void (*fun)(void), void *data){
+    T_DEINIT *node=calloc(1, sizeof(T_DEINIT));
+    node->fun=fun;
+    node->data=data;
+    node->next=DEINIT;
+    DEINIT=node;
+    info("%p registered\n", fun);
 }
 static __attribute__((constructor)) void init(){
     warning2("Memory management is in use\n");
 }
+/**
+   Register routines to be called with mem.c is unloading (deinit).
+ */
 static __attribute__((destructor)) void deinit(){
-    thread_pool_destroy();
-    fractal_vkcov_free();
-    freepath();
+    for(T_DEINIT *p1=DEINIT;p1;p1=DEINIT){
+	DEINIT=p1->next;
+	if(p1->fun) p1->fun();
+	if(p1->data) FREE(p1->data);
+	FREE(p1);
+    }
     if(exit_success){
 	if(MROOT){
 	    warning("%lld allocated memory not freed!!!\n",memcnt);
@@ -227,22 +247,5 @@ size_t memsize(void *p){
 	}
     }
     return tot;
-}
-#endif
-
-
-#ifdef TEST
-#include <signal.h>
-int main(){
-    int N=1024;
-    double *a,*b,*c;
-    signal(SIGSEGV, print_backtrace);
-    a=MALLOC(sizeof(double)*N);
-    b=MALLOC(sizeof(double)*N);
-    b=REALLOC(b,sizeof(double)*N/2);
-    c=CALLOC(N, sizeof(double));
-    FREE(a);
-    FREE(b);
-    FREE(c);
 }
 #endif
