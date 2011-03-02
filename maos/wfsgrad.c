@@ -195,7 +195,7 @@ void wfsgrad_iwfs(thread_t *info){
      */
     if(parms->wfs[iwfs].psfmean && isim>=parms->evl.psfisim){
 	dmat *opdcopy=NULL;
-	if(parms->evl.psfpttr){
+	if(parms->powfs[ipowfs].trs){
 	    opdcopy=ddup(opd);
 	    double ptt[3]={0,0,0};
 	    int indmcc=powfs[ipowfs].nlocm>1?wfsind:0;

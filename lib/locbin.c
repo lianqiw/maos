@@ -185,6 +185,9 @@ map_t* d2map(dmat *in){
     if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
 	error("header is needed to convert dmat to map_t\n");
     }
+    if(isnan(map->h)) map->h=0;
+    if(isnan(map->vx)) map->vx=0;
+    if(isnan(map->vy)) map->vy=0;
     return map;
 }
 
@@ -283,7 +286,7 @@ rectmap_t* d2rectmap(dmat *in){
     map->ftel=search_header_num(header,"ftel");
     map->fexit=search_header_num(header,"fexit");
     map->fsurf=search_header_num(header,"fsurf");
-    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
+    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx) || isnan(map->fsurf)){
 	error("header is needed to convert dmat to map_t\n");
     }
     return map;
