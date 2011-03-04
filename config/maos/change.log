@@ -15,3 +15,4 @@ evl.wvl       ==> evl.psfwvl
 wfs.siglev    ==> powfs.siglev or wfs.siglev
 wfs.wvlwts    ==> powfs.wvlwts or wfs.wvlwts
 cn2.nhtrecon  ==> cn2.nhtomo
+powfs.bkgrndrm==>powfs.bkgrndfnc

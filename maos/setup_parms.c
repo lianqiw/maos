@@ -59,6 +59,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.psfgridsize);
     free(parms->evl.psfsize);
     free(parms->evl.misreg);
+    free(parms->evl.psfpttr);
 
     free(parms->fit.thetax);
     free(parms->fit.thetay);
@@ -205,8 +206,9 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,neasim);
     READ_POWFS(dbl,neaspeckle);
     READ_POWFS(dbl,bkgrnd);
+    READ_POWFS(dbl,bkgrndc);
     READ_POWFS(str,bkgrndfn);
-    READ_POWFS(dbl,bkgrndrm);
+    READ_POWFS(dbl,bkgrndfnc);
     READ_POWFS(dbl,pixblur);
     READ_POWFS(dbl,rne);
     READ_POWFS(dbl,dx);
@@ -532,7 +534,7 @@ static void readcfg_evl(PARMS_T *parms){
     READ_INT(evl.rmax);
     READ_INT(evl.psfol);
     READ_INT(evl.psfisim);
-    READ_INT(evl.psfpttr);
+    readcfg_intarr_nmax(&parms->evl.psfpttr, parms->evl.nevl, "evl.psfpttr");
     READ_INT(evl.psfmean); 
     READ_INT(evl.psfhist); 
     READ_INT(evl.tomo);
@@ -1261,6 +1263,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     }
     if(!parms->tomo.split && !parms->sim.fuseint){
 	parms->sim.fuseint=1;//integrated tomo. only 1 integrator.
+    }
+    if(parms->sim.closeloop && parms->evl.tomo){
+	warning("Evaluating tomography performance is best done in open loop\n");
     }
     if(parms->tomo.split && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");

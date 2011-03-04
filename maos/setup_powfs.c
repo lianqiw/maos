@@ -679,10 +679,10 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     powfs[ipowfs].ncompy=ncompy;
 
     if(parms->powfs[ipowfs].bkgrndfn){
-	if(parms->powfs[ipowfs].bkgrndrm>2 || parms->powfs[ipowfs].bkgrndrm<0){
-	    error("parms->powfs[%d].bkgrndrm has illegal value of %g. "
+	if(parms->powfs[ipowfs].bkgrndfnc>2 || parms->powfs[ipowfs].bkgrndfnc<0){
+	    error("parms->powfs[%d].bkgrndfnc has illegal value of %g. "
 		  "should be between [0,2]",
-		  ipowfs, parms->powfs[ipowfs].bkgrndrm);
+		  ipowfs, parms->powfs[ipowfs].bkgrndfnc);
 	}
 	char *fn=find_file(parms->powfs[ipowfs].bkgrndfn);
 	info2("Loading sky background/rayleigh backscatter from %s\n",fn);

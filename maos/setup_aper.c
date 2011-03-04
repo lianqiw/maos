@@ -81,6 +81,13 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }
     if(parms->aper.pupmask){
 	map_t *mask=mapread("%s",parms->aper.pupmask);
+	if(fabs(parms->aper.rotdeg)>1.e-12){
+	    warning("Pupil mask is rotated by %g deg\n",parms->aper.rotdeg);
+	    dmat *B=dnew_data(mask->nx, mask->ny, mask->p);
+	    mask->p=calloc(mask->nx*mask->ny, sizeof(double));
+	    dembed((dmat*)mask, B, parms->aper.rotdeg/180.*M_PI);
+	    dfree(B);
+	}
 	dmat *ampmask=dnew(aper->locs->nloc, 1);
 	prop_grid_stat(mask, aper->locs->stat, ampmask->p, 1, 0, 0, 1, 0, 0, 0);
 	dcwm(aper->amp, ampmask);

@@ -83,7 +83,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		//re-seed the atmosphere in case atm is loaded from shm/file
 		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
-	    if(PARALLEL == 1 && NCPU >2 && CL && simu->nthread>1){
+	    if(PARALLEL == 1 && NCPU >2 && CL && simu->nthread>1 && !parms->evl.tomo){
 		/*
 		  We do everything in parallel. to make better use the
 		  CPUs. Notice that the reconstructor is working on grad from

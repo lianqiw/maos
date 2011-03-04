@@ -38,7 +38,7 @@ double dblsum(double *p, long nx);
 #define sinc(x) (fabs(x)<1.e-5?1:sin(M_PI*x)/(M_PI*x))
 
 void adddbl(double *restrict out, double alpha, 
-	    const double *in, int N, double beta);
+	    const double *in, int N, double beta, double gamma);
 void invsq(long n, double *restrict A);
 #define mysqrt(A) (A<0?-sqrt(-A):sqrt(A))
 long *invperm(long *p, long np);

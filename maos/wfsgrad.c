@@ -403,7 +403,7 @@ void wfsgrad_iwfs(thread_t *info){
 	for(int isa=0; isa<nsa; isa++){
 	    /*
 	      TODO: Do something to remove negative pixels. shift image
-	      or mask out. This is important when bkgrndrm is greater
+	      or mask out. This is important when bkgrndfnc is greater
 	      than 1.
 	    */
 	    double pmax;
@@ -422,16 +422,11 @@ void wfsgrad_iwfs(thread_t *info){
 		error("Invalid");
 	    }
 	    if(noisy){//add noise
-		double *bkgrnd2i;
-		double bkgrnd2irm=0;
-		if(bkgrnd2 && bkgrnd2[isa]){
-		    bkgrnd2i=bkgrnd2[isa]->p;
-		    bkgrnd2irm=parms->powfs[ipowfs].bkgrndrm;
-		}else{
-		    bkgrnd2i=NULL;
-		}
-		addnoise(ints->p[isa], &simu->wfs_rand[iwfs],bkgrnd,1.,
-			 bkgrnd2i, bkgrnd2irm, rne);
+		double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
+		
+		addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
+			 bkgrnd,parms->powfs[ipowfs].bkgrndc,
+			 bkgrnd2i, parms->powfs[ipowfs].bkgrndfnc, rne);
 		gny[0]=0; gny[1]=0;
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:

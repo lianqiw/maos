@@ -124,9 +124,9 @@ void mtch(dcell **mtche, dmat **sanea,
 
 	dzero(i0g);
 	//kp is here to ensure good conditioning
-	adddbl(pi0g[0], 1, gx->p[isa]->p, npixtot, 1);
-	adddbl(pi0g[1], 1, gy->p[isa]->p, npixtot, 1);
-	adddbl(pi0g[2], 1, i0->p[isa]->p, npixtot, kp);
+	adddbl(pi0g[0], 1, gx->p[isa]->p, npixtot, 1, 0);
+	adddbl(pi0g[1], 1, gy->p[isa]->p, npixtot, 1, 0);
+	adddbl(pi0g[2], 1, i0->p[isa]->p, npixtot, kp, 0);
 	if(cr){
 	    mki0shx(pi0g[3], pi0g[4], i0->p[isa], kp);
 	    mki0shy(pi0g[5], pi0g[6], i0->p[isa], kp);

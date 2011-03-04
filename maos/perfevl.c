@@ -132,7 +132,7 @@ void perfevl_ievl(thread_t *info){
 	//Compute on axis OL psf.
 	dmat *opdevlcopy=NULL;
 	dcp(&opdevlcopy,iopdevl);
-	if(parms->evl.psfpttr){
+	if(parms->evl.psfpttr[ievl]){
 	    loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
 	}
 	ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
@@ -195,7 +195,7 @@ void perfevl_ievl(thread_t *info){
 	}
 	//Evaluate tomography corrected PSF time history and time average
 	if(do_psf && parms->evl.psf[ievl] ){
-	    if(parms->evl.psfpttr){
+	    if(parms->evl.psfpttr[ievl]){
 		if(isim==parms->sim.start && ievl==0){
 		    warning("Removing tip/tilt from PSF\n");
 		}
@@ -306,7 +306,7 @@ void perfevl_ievl(thread_t *info){
     //Evaluate closed loop PSF.
     if(do_psf && parms->evl.psf[ievl]){
 	//warning("Output PSF for direction %d\n",ievl);
-	if(parms->evl.psfpttr){
+	if(parms->evl.psfpttr[ievl]){
 	    if(isim==parms->sim.start && ievl==0){
 		warning("Removing tip/tilt from PSF\n");
 	    }

@@ -124,10 +124,12 @@ typedef struct POWFS_CFG_T{
 			  estimation of NEA due to photon and detector noise in
 			  physical optics mode for reconstructor*/
     double bkgrnd;  /**<background in electron per pixel per LGS frame*/
+    double bkgrndc;/**<How much of the background in bkgrnd can be calibrated
+		      out. depends on variability.*/
     char *bkgrndfn; /**<file contains sky background/rayleigh scatter input for
 		     each subaperture in each wfs. */
-    double bkgrndrm;/**<How much of the background in bkgrndfn can be calibrated
-			    out. depends on variability.*/
+    double bkgrndfnc;/**<How much of the background in bkgrndfn can be
+		      calibrated out. depends on variability.*/
     double rne;     /**<read out noise in electron per pixel per frame*/
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
     double dx;      /**<sampling of opd points in each subaperture. usually
@@ -288,13 +290,15 @@ typedef struct EVL_CFG_T{
     int nmod;       /**<Number of modes. derived from rmax. (nmax+1)*(nmax+2)/2*/
 
     int psfhist;    /**<output history of the psf (a lot of storage)*/
-    int psfpttr;    /**<remove p/t/t from psf.*/
+    int *psfpttr;   /**<remove p/t/t from psf. 1 number for each evl.*/
     int psfmean;    /**<output time averaged psf*/
     int psfisim;    /**<time step to start psfmean.*/
-    int *psfsize;    /**<save this number of pixels of the center of the psf.*/
+    int *psfsize;    /**<save this number of pixels of the center of the psf. 1
+			number for each wvl.*/
     int *psfgridsize;/**<grid size for FFT to generate PSF. Becareful about FFT
 		       speed and enough padding. Determines the sampling of the
-		       generated PSF. 0 or negative for automatic.*/
+		       generated PSF. 0 or negative for automatic. 1 number for
+		       each wvl.*/
     int nevl;       /**<Number of evaluation directions. (derived)*/
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
