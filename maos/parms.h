@@ -511,11 +511,14 @@ typedef struct SAVE_CFG_T{
     int evlopd;      /**<save science OPD for each time step*/
 
 
-    //for WFS. 1: both, 2: high order only, 3: lo only
-    int wfsopd;      /**<save WFS OPD:*/
-    int ints;        /**<save WFS subaperture image*/
-    int grad;        /**<save WFS gradients*/
-    int gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
+    /*for WFS. Converted from scalar or vector input.
+      Scalar input: 1: both, 2: high order only, 3: lo only
+      Vector input: Equal to the number of WFS.
+    */
+    int *wfsopd;      /**<save WFS OPD:*/
+    int *ints;        /**<save WFS subaperture image*/
+    int *grad;        /**<save WFS gradients*/
+    int *gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
     
     //The following are derived from above.
     int wfsopdhi;    /**<save high order WFS OPD(derived)*/
@@ -530,12 +533,6 @@ typedef struct SAVE_CFG_T{
     int gcovp;       /**<output cumulative gradient covariance average every gcovp step*/
     int ngcov;       /**<number of pairs of gradient covariance to compute*/
     int *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
-    //The following are derived parameters for powfs from grad, ints, wfsopd
-    int* powfs_opd;  /**<derived parameter to specify which powfs to save opd*/
-    int* powfs_ints; /**<derived parameter to specify which powfs to save ints*/
-    int* powfs_grad; /**<derived parameter to specify which powfs to save grad*/
-    int* powfs_gradgeom;/**<derived parameter to specify which powfs to save geometric grad*/
-
 }SAVE_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.

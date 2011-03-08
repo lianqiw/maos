@@ -1077,7 +1077,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	save->wfslltopd=calloc(parms->nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(!parms->save.powfs_opd[ipowfs]){
+	    if(!parms->save.wfsopd[iwfs]){
 		continue;
 	    }
 	    save->wfsopd[iwfs]=cellarr_init(nstep, "wfs%d_opd_%d.bin", iwfs, seed);
@@ -1095,7 +1095,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    int phystep=parms->powfs[ipowfs].phystep;
 	    int nstep2=(parms->sim.end-phystep)/dtrat;
-	    if(parms->save.powfs_ints[ipowfs]){
+	    if(parms->save.ints[iwfs] && phystep>=0 && phystep<parms->sim.end){
 		save->intsny[iwfs]=cellarr_init(nstep2, "wfs%d_intsny_%d.bin", iwfs, seed);
 		save->intsnf[iwfs]=cellarr_init(nstep2, "wfs%d_intsnf_%d.bin", iwfs, seed);
 	    }
@@ -1108,7 +1108,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int dtrat=parms->powfs[ipowfs].dtrat;
-	    if(parms->save.powfs_grad[ipowfs]){
+	    if(parms->save.grad[iwfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		save->gradnf[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradnf_%d.bin", iwfs, seed);
 		if(parms->sim.recon==0 &&(parms->tomo.split==2 || !parms->powfs[ipowfs].skip)){
@@ -1123,7 +1123,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int dtrat=parms->powfs[ipowfs].dtrat;
-	    if(parms->save.powfs_gradgeom[ipowfs]){
+	    if(parms->save.gradgeom[iwfs]){
 		save->gradgeom[iwfs]=cellarr_init(nstep/dtrat, "wfs%d_gradgeom_%d.bin", iwfs, seed);
 	    }
 	}

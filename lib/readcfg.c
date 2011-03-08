@@ -380,6 +380,8 @@ int readcfg_peek_n(const char *format, ...){
     const char *sdata=store[irecord].data;
     const char *startptr=strchr(sdata,'[');
     const char *endptr=strchr(sdata,']');
+    if(!startptr) startptr=sdata;
+    if(!endptr) endptr=startptr+strlen(sdata)-1;
     const char *quote=strchr(startptr,'"');
     int count=0;
     if(quote && quote<endptr){//this is string array

@@ -123,10 +123,10 @@ void free_parms(PARMS_T *parms){
     free(parms->aper.fnamp);
     free(parms->aper.pupmask);
     free(parms->aper.misreg);
-    free(parms->save.powfs_opd);
-    free(parms->save.powfs_ints);
-    free(parms->save.powfs_grad);
-    free(parms->save.powfs_gradgeom);
+    free(parms->save.ints);
+    free(parms->save.wfsopd);
+    free(parms->save.grad);
+    free(parms->save.gradgeom);
     free(parms->fdlock);
     free(parms);
 }
@@ -707,30 +707,41 @@ static void readcfg_dbg(PARMS_T *parms){
 #endif
 }
 /**
-   Split the option to high and low order numbers.
+   Parse the Input of scalar or vector to vector of nwfs.
  */
-static void wfs_hi_lo(int *hi, int *lo, int tot){
-    switch(tot){
-    case 0:
-	*hi=0;
-	*lo=0;
-	break;
-    case 1:
-	*hi=1;
-	*lo=1;
-	break;
-    case 2:
-	*hi=1;
-	*lo=0;
-	break;
-    case 3:
-	*hi=0;
-	*lo=1;
-	break;
-    default:
-	error("Invalid");
+static int *wfs_save_parse(int count, int *input, PARMS_T *parms){
+    int *out=calloc(parms->nwfs, sizeof(int));
+    if(count==1){
+	int flags[2]={0,0};
+	switch(input[0]){
+	case 0:
+	    break;
+	case 1:
+	    flags[0]=1;//hi
+	    flags[1]=1;//lo
+	    break;
+	case 2:
+	    flags[0]=1;//hi
+	    break;
+	case 3:
+	    flags[1]=1;//lo
+	    break;
+	default:
+	    error("Invalid entry: %d\n", input[0]);
+	}
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int ind=(parms->powfs[ipowfs].lo)?1:0;
+	    out[iwfs]=flags[ind];
+	}
+    }else if(count==parms->nwfs){
+	memcpy(out, input, sizeof(int)*count);
+    }else{
+	error("Invalid entry: count=%d, nwfs=%d\n", count, parms->nwfs);
     }
+    return out;
 }
+
 /**
    Specify which variables to save
 */
@@ -747,38 +758,44 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.evlopd);//Science OPD
     READ_INT(save.dm);//save DM commands
     READ_INT(save.dmpttr);
-    READ_INT(save.ints);
-    READ_INT(save.wfsopd);
-    READ_INT(save.grad);
-    READ_INT(save.gradgeom);
-
+    int *tmp=NULL;
+    int count;
+    count=readcfg_intarr(&tmp, "save.ints");
+    parms->save.ints=wfs_save_parse(count, tmp, parms);
+    count=readcfg_intarr(&tmp, "save.wfsopd");
+    parms->save.wfsopd=wfs_save_parse(count, tmp, parms);
+    count=readcfg_intarr(&tmp, "save.grad");
+    parms->save.grad=wfs_save_parse(count, tmp, parms);
+    count=readcfg_intarr(&tmp, "save.gradgeom");
+    parms->save.gradgeom=wfs_save_parse(count, tmp, parms);
+    free(tmp);
+  
     if(parms->save.all){//enables everything
 	warning("Enabling saving everything.\n");
+	//The following 3 are for setup.
 	parms->save.setup=1;
 	parms->save.recon=1;
 	parms->save.mvst=1;
+	/*The following are run time information that are not enabled by
+	  save.run because they take a lot of space*/
 	parms->save.atm=1;
-	parms->save.run=1;
 	parms->save.opdr=1;
 	parms->save.opdx=1;
 	parms->save.evlopd=1;
-	parms->save.dm=1;
 	parms->save.dmpttr=1;
-	parms->save.ints=1;
-	parms->save.wfsopd=1;
-	parms->save.grad=1;
-	parms->save.gradgeom=1;
+	
+	parms->save.run=1;//see following
     }
 
     if(parms->save.run){
 	parms->save.dm=1;
-	parms->save.grad=1;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    parms->save.ints[iwfs]=1;
+	    parms->save.wfsopd[iwfs]=1;
+	    parms->save.grad[iwfs]=1;
+	    parms->save.gradgeom[iwfs]=1;
+	}
     }
-
-    wfs_hi_lo(&parms->save.intshi, &parms->save.intslo, parms->save.ints);
-    wfs_hi_lo(&parms->save.wfsopdhi, &parms->save.wfsopdlo, parms->save.wfsopd);
-    wfs_hi_lo(&parms->save.gradhi, &parms->save.gradlo, parms->save.grad);
-    wfs_hi_lo(&parms->save.gradgeomhi, &parms->save.gradgeomlo, parms->save.gradgeom);
     parms->save.ngcov=readcfg_intarr(&parms->save.gcov,"save.gcov")/2;
     READ_INT(save.gcovp);
 }
@@ -808,7 +825,7 @@ static void readcfg_load(PARMS_T *parms){
 }
 /**
    Process simulation parameters to find incompatibility.
- */
+*/
 static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.skysim){
 	parms->tomo.ahst_idealngs=1;
@@ -860,7 +877,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	
 	/* 
 	   Figure out pixtheta if specified to be auto (<0).
-	  -pixtheta is the ratio to nominal value.
+	   -pixtheta is the ratio to nominal value.
 	*/
 	const double dxsa 
 	    = parms->aper.d/(double)parms->powfs[ipowfs].order;
@@ -988,7 +1005,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
   
     /*
       Drop weak turbulence layers in simulation.
-     */
+    */
     int jps=0;
     for(int ips=0; ips<parms->atm.nps; ips++){
 	if(parms->atm.wt[ips]>1.e-3){
@@ -1023,7 +1040,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
  
     /*
       Find ground turbulence layer. The ray tracing can be shared.
-     */
+    */
     parms->atm.iground=-1;
     for(int ips=0; ips<parms->atm.nps; ips++){
 	if(fabs(parms->atm.ht[ips])<1.e-10){
@@ -1142,7 +1159,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 }
 /*
   Find entry  that equals to val in array of length n. Append if not exist yet.
- */
+*/
 static int arrind(double *arr, int *n, double val){
     for(long i=0; i<(*n); i++){
 	if(fabs(arr[i]-val)<EPS){
@@ -1173,7 +1190,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     }
     /*
       Setup the parameters used to do DM caching on a finer grid.
-     */
+    */
     parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int));
     for(int idm=0; idm<ndm; idm++){
 	double ht=parms->dm[idm].ht;
@@ -1205,11 +1222,11 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     }
 }
 
-    /**
-       Setting up the cone coordinate for MCAO LGS
-       simulation. First find out the guide star conjugate. Only 1
-       altitude is allowed.
-    */
+/**
+   Setting up the cone coordinate for MCAO LGS
+   simulation. First find out the guide star conjugate. Only 1
+   altitude is allowed.
+*/
 static void setup_parms_postproc_recon(PARMS_T *parms){    
     {
 	double hs=INFINITY;
@@ -1311,7 +1328,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 }
 
 /**
-  The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
+   The siglev is always specified in 800 Hz. If sim.dt is not 1/800, rescale the siglev.
 */
 static void setup_parms_postproc_siglev(PARMS_T *parms){
     double sigscale=parms->sim.dt*800;
@@ -1327,7 +1344,7 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 	    if(fabs(bkgrnd)>1.e-50){
 		parms->powfs[ipowfs].bkgrnd=bkgrnd*sigscale;
 		info2("powfs%d: bkgrnd scaled from %g to %g\n", 
-		     ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
+		      ipowfs,bkgrnd,parms->powfs[ipowfs].bkgrnd);
 	    }
 	}
     }
@@ -1342,7 +1359,7 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 	parms->wfs[iwfs].siglevsim=siglev*sigscale;
 	if(fabs(sigscale-1)>1.e-12){
 	    warning("wfs%d: siglev in simulation scaled from %g to %g\n", 
-		 iwfs,siglev,parms->wfs[iwfs].siglevsim);
+		    iwfs,siglev,parms->wfs[iwfs].siglevsim);
 	}
     }
 }
@@ -1426,37 +1443,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	parms->evl.psfisim=0;
     }
 }
-/**
-   postproc parameters for save.
- */
-static void setup_parms_postproc_save(PARMS_T *parms){
-    const int npowfs=parms->npowfs;
-    parms->save.powfs_opd  = calloc(npowfs, sizeof(int));
-    parms->save.powfs_ints = calloc(npowfs, sizeof(int));
-    parms->save.powfs_grad = calloc(npowfs, sizeof(int));
-    parms->save.powfs_gradgeom = calloc(npowfs, sizeof(int));
-    for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].lo){//low order wfs
-	    if(parms->save.wfsopdlo)
-		parms->save.powfs_opd[ipowfs]=1;
-	    if(parms->save.intslo && parms->powfs[ipowfs].usephy)
-		parms->save.powfs_ints[ipowfs]=1;
-	    if(parms->save.gradlo)
-		parms->save.powfs_grad[ipowfs]=1;
-	    if(parms->save.gradgeomlo)
-		parms->save.powfs_gradgeom[ipowfs]=1;
-	}else{//high order wfs
-	    if(parms->save.wfsopdhi)
-		parms->save.powfs_opd[ipowfs]=1;
-	    if(parms->save.intshi && parms->powfs[ipowfs].usephy)
-		parms->save.powfs_ints[ipowfs]=1;
-	    if(parms->save.gradhi)
-		parms->save.powfs_grad[ipowfs]=1;
-	    if(parms->save.gradgeomhi)
-		parms->save.powfs_gradgeom[ipowfs]=1;
-	}
-    }
-}
+
 /**
    Selectively print out parameters for easy diagnose of possible mistakes.
 */
@@ -1551,7 +1538,7 @@ static void print_parms(const PARMS_T *parms){
 	info2("    CCD image is %dx%d @ %gmas, %gHz, ", 
 	      (parms->powfs[i].radpix?parms->powfs[i].radpix:parms->powfs[i].pixpsa), 
 	      parms->powfs[i].pixpsa, parms->powfs[i].pixtheta*206265000,
-	     1./parms->sim.dt/parms->powfs[i].dtrat);
+	      1./parms->sim.dt/parms->powfs[i].dtrat);
 	info2("wvl: [");
 	for(int iwvl=0; iwvl<parms->powfs[i].nwvl; iwvl++){
 	    info2(" %g",parms->powfs[i].wvl[iwvl]);
@@ -1584,8 +1571,8 @@ static void print_parms(const PARMS_T *parms){
     info2("\033[0;32mThere are %d wfs\033[0;0m\n", parms->nwfs);
     for(i=0; i<parms->nwfs; i++){
 	info2("wfs %d: type is %d, at (%7.2f, %7.2f) arcsec\n",
-	     i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
-	     parms->wfs[i].thetay*206265);
+	      i,parms->wfs[i].powfs,parms->wfs[i].thetax*206265,
+	      parms->wfs[i].thetay*206265);
 	if(fabs(parms->wfs[i].thetax)>1 || fabs(parms->wfs[i].thetay)>1){
 	    error("wfs thetax or thetay is too large\n");
 	}
@@ -1654,14 +1641,14 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\n");
     info2("\033[0;32mSimulation\033[0;0m start at step %d, end at step %d, "
-	 "with time step 1/%gs, %s loop \n", 
+	  "with time step 1/%gs, %s loop \n", 
 	  parms->sim.start, parms->sim.end, 1./parms->sim.dt, 
 	  closeloop[parms->sim.closeloop]);
     info2("\033[0;32mThere are %d fit directions\033[0;0m\n", parms->fit.nfit);
     for(i=0; i<parms->fit.nfit; i++){
 	info2("Fit %d: Fit  wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-	     i,parms->fit.wt[i],parms->fit.thetax[i]*206265, 
-	     parms->fit.thetay[i]*206265);
+	      i,parms->fit.wt[i],parms->fit.thetax[i]*206265, 
+	      parms->fit.thetay[i]*206265);
 	if(fabs(parms->fit.thetax[i])>1 || fabs(parms->fit.thetay[i])>1){
 	    error("fit thetax or thetay is too large\n");
 	}
@@ -1669,8 +1656,8 @@ static void print_parms(const PARMS_T *parms){
     info2("\033[0;32mThere are %d evaluation directions\033[0;0m\n", parms->evl.nevl);
     for(i=0; i<parms->evl.nevl; i++){
 	info2("Evl %d: Eval wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
-	     i,parms->evl.wt[i],parms->evl.thetax[i]*206265, 
-	     parms->evl.thetay[i]*206265);
+	      i,parms->evl.wt[i],parms->evl.thetax[i]*206265, 
+	      parms->evl.thetay[i]*206265);
 	if(fabs(parms->evl.thetax[i])>1 || fabs(parms->evl.thetay[i])>1){
 	    error("evl thetax or thetay is too large\n");
 	}
@@ -1694,7 +1681,7 @@ static void check_parms(const PARMS_T *parms){
 	if(fabs(parms->atm.dx-parms->powfs[i].dx)>1.e-12){
 	    warning2("powfs %d: The grid sampling 1/%gm doesn't match "
 		     "atmosphere sampling 1/%gm\n", i,
-		    1./parms->powfs[i].dx,1./parms->atm.dx);
+		     1./parms->powfs[i].dx,1./parms->atm.dx);
 	}
     }
     int hi_found=0;
@@ -1759,17 +1746,17 @@ static void check_parms(const PARMS_T *parms){
 /**
    Load embeded configuration files specified by config=file.conf
  
-static void open_embeded_config(const char *type){
-    char *fn=readcfg_str("%s",type);
-    open_config(fn,NULL,0);
-    free(fn);
-    }*/
+   static void open_embeded_config(const char *type){
+   char *fn=readcfg_str("%s",type);
+   open_config(fn,NULL,0);
+   free(fn);
+   }*/
 
 /**
    Read in .conf configurations files specified by command line.  First it opens
-the master configuration file. nfiraos.conf if no -c switch is specified.  Then
-it will open additional overriding .conf files supplied in the command
-line. These overiding .conf files should only contain already exited keys.*/
+   the master configuration file. nfiraos.conf if no -c switch is specified.  Then
+   it will open additional overriding .conf files supplied in the command
+   line. These overiding .conf files should only contain already exited keys.*/
 static void setup_config(ARG_T*arg){
     open_config(arg->conf,NULL,0);//main .conf file.
     //Parse additional parameters.
@@ -1787,8 +1774,8 @@ static void setup_config(ARG_T*arg){
 		fprintf(fptmp,"%s\n",fno);
 	    }else if(check_suffix(fno,".conf")){
 		open_config(fno,NULL,1);/*1 means protected. will not be overriden by
-				     base .conf's, but can be overriden by user
-				     supplied options.*/
+					  base .conf's, but can be overriden by user
+					  supplied options.*/
 	    }else{
 		error("Invalid command line option: %s\n",fno);
 	    }
@@ -1843,7 +1830,6 @@ PARMS_T * setup_parms(ARG_T *arg){
     */
     setup_parms_postproc_sim(parms);
     setup_parms_postproc_wfs(parms);
-    setup_parms_postproc_save(parms);
     setup_parms_postproc_atm(parms);
     setup_parms_postproc_za(parms);
     setup_parms_postproc_atm_size(parms);

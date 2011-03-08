@@ -69,10 +69,10 @@ void wfsgrad_iwfs(thread_t *info){
     const double hs=parms->powfs[ipowfs].hs;
     const int npix=pixpsa*nsa;
     const int dtrat=parms->powfs[ipowfs].dtrat;
-    const int save_gradgeom=parms->save.powfs_gradgeom[ipowfs];
-    const int save_grad=parms->save.powfs_grad[ipowfs];
-    const int save_opd =parms->save.powfs_opd[ipowfs];
-    const int save_ints=parms->save.powfs_ints[ipowfs];
+    const int save_gradgeom=parms->save.gradgeom[iwfs];
+    const int save_grad=parms->save.grad[iwfs];
+    const int save_opd =parms->save.wfsopd[iwfs];
+    const int save_ints=parms->save.ints[iwfs];
     const int noisy=parms->powfs[ipowfs].noisy;
     const int nthread=powfs[ipowfs].nthread;
     //The following depends on isim
