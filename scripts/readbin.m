@@ -46,7 +46,11 @@ function [res header]=readbin_do(fid, header)
     MAT_SP=65281;
     MAT_CSP=65282;
     M_HEADER=25856;
+    M_SKIP=26112;
     magic=fread(fid,1,'uint32');
+    if magic==M_SKIP
+        magic=fread(fid,1,'uint32');
+    end
     header='';
     while magic==M_HEADER
         nlen=fread(fid, 1, 'uint64');
@@ -57,6 +61,9 @@ function [res header]=readbin_do(fid, header)
             error('Header verification failed\n');
         end
         magic=fread(fid,1,'uint32');
+        if magic==M_SKIP
+            magic=fread(fid,1,'uint32');
+        end
     end
     nx=fread(fid,1,'uint64');
     ny=fread(fid,1,'uint64');
