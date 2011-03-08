@@ -106,8 +106,8 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 
 	double thxnorm=thetax/ngsgrid;
 	double thynorm=thetay/ngsgrid;
-	double thxl=floor(thxnorm);
-	double thyl=floor(thynorm);
+	long thxl=(long)floor(thxnorm);
+	long thyl=(long)floor(thynorm);
 	double wtx=thxnorm-thxl;
 	double wty=thynorm-thyl;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -416,8 +416,8 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 
 	double thxnorm=thetax/ngsgrid;
 	double thynorm=thetay/ngsgrid;
-	double thxl=floor(thxnorm);
-	double thyl=floor(thynorm);
+	long thxl=(long)floor(thxnorm);//Used to be double, but -0 appears.
+	long thyl=(long)floor(thynorm);
 	double wtx=thxnorm-thxl;
 	double wty=thynorm-thyl;
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -450,20 +450,19 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g.bin",
 			     dirstart,seed,msa,thx,thy);
 		    if(!exist(fnwvf[iy][ix])){
-			//warning("%s doesnot exist\n",fnwvf[iy][ix]);
+			warning("%s doesnot exist\n",fnwvf[iy][ix]);
 			fnwvf[iy][ix]=NULL;
 			fnztilt[iy][ix]=NULL;
 		    }else{
 			if(!exist(fnztilt[iy][ix])){
 			    error("%s exist, but %s does not\n", fnwvf[iy][ix],fnztilt[iy][ix]);
 			}
-		   
 			wtsum+=wtxi;
 		    }
 		}
 	    }
 	    if(wtsum<0.01){
-		error("PSF is not available for (%g,%g)\n",thetax,thetay);
+		error("PSF is not available for (%g,%g). wtsum=%g\n",thetax,thetay, wtsum);
 	    }
 	    //Now do the actual reading
 	    for(int ix=0; ix<2; ix++){
@@ -577,7 +576,7 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
 		size++;
 	    }
 	}
-	if(size>5){
+	if(size>6){
 	    free_pistat(star[istar].pistat, parms->skyc.npowfs, parms);
 	    warning("star %d doesn't have sharpen cores. size=%d\n",istar,size);
 	}else{

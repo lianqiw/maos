@@ -52,8 +52,8 @@ config/skyc/skyc_za30.conf\
 config/skyc/skyc_za45.conf\
 config/skyc/skyc_za55.conf\
 config/skyc/skyc_za60.conf\
-config/skyc/PSD_NGS.bin.gz\
-config/skyc/PSD_PS.bin.gz\
-config/skyc/PSD_TMT_WindShake20mas_m2.bin.gz\
-config/skyc/PSD_TT.bin.gz\
+config/skyc/PSD/PSD_NGS.bin.gz\
+config/skyc/PSD/PSD_PS.bin.gz\
+config/skyc/PSD/PSD_TMT_WindShake20mas_m2.bin.gz\
+config/skyc/PSD/PSD_TT.bin.gz\
 config/skyc/besancon/JH_5sqdeg_lat90_lon200_besancon.bin.gz
