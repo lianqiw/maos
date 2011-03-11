@@ -177,7 +177,7 @@ static map_t** create_screen(GENSCREEN_T *data,
 		info("Trying to create %s\n", fnshm);
 		int fd=lock_file(fnlock, 0, 0);//non blocking exclusive lock.
 		if(fd>=0){//succeed to lock file.
-		    cellarr *fc = cellarr_init(nlayer, "%s", fnshm); 
+		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fnshm); 
 		    funsave(fc, data);
 		    cellarr_close(fc);
 		    remove(fnlock);

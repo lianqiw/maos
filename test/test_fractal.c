@@ -181,7 +181,7 @@ static void test_stfun(){
     {
 	map_t *atm=mapnew(nx+1, ny+1, dx, NULL);
 	stfun_t *data=stfun_init(nx, ny, NULL);
-	cellarr *save=cellarr_init(nframe, "fractal_atm.bin");
+	cellarr *save=cellarr_init(nframe, 1, "fractal_atm.bin");
 	for(long i=0; i<nframe; i++){
 	    for(long j=0; j<(nx+1)*(ny+1); j++){
 		atm->p[j]=randn(&rstat);

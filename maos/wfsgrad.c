@@ -242,8 +242,8 @@ void wfsgrad_iwfs(thread_t *info){
     cellarr *ztiltoutcellarr=NULL;
     if(parms->powfs[ipowfs].psfout){
 	psfout=simu->wfspsfout[iwfs];
-	psfoutcellarr=simu->wfspsfoutcellarr[iwfs];
-	ztiltoutcellarr=simu->ztiltoutcellarr[iwfs];
+	psfoutcellarr=simu->save->wfspsfout[iwfs];
+	ztiltoutcellarr=simu->save->ztiltout[iwfs];
     }
     dcell *pistatout=NULL;
     if(parms->powfs[ipowfs].pistatout

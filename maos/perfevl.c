@@ -211,7 +211,7 @@ void perfevl_ievl(thread_t *info){
 		}
 	    }
 	    if(parms->evl.psfhist){
-		cellarr_ccell(simu->evlpsftomohist[ievl], psf2s);
+		cellarr_ccell(simu->save->evlpsftomohist[ievl], psf2s);
 	    }
 	    if(parms->plot.run){
 		dmat *psftemp=NULL;
@@ -322,7 +322,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
 	if(parms->evl.psfhist){
-	    cellarr_ccell(simu->evlpsfhist[ievl], psf2s);
+	    cellarr_ccell(simu->save->evlpsfhist[ievl], psf2s);
 	}
 	if(parms->plot.run){
 	    dmat *psftemp=NULL;

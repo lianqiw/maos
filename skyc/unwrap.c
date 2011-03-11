@@ -160,7 +160,7 @@ static void convert_wvf(GENPISTAT_S *data){
     long nstep,junk;
     zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
     zfread(&junk,sizeof(uint64_t),1,fp_wvf);
-    cellarr *phase=cellarr_init(nstep,"%s",fnphase);
+    cellarr *phase=cellarr_init(nstep,1,"%s",fnphase);
     const int nsa=msa*msa;
     const int nwvl=parms->maos.nwvl;
     ccell *phi=ccellnew(nsa,nwvl);

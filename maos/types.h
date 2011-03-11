@@ -329,7 +329,17 @@ typedef struct TYPEII_T{
     dcell *firstint;   /**<First integrator output*/
 }TYPEII_T;
 typedef struct SIM_SAVE_T{
-   /*cellarr to save telemetry data.*/
+    /*cellarrs to save telemetry data.*/
+    cellarr** wfspsfout; /**<special file to save wfs psf history*/
+    cellarr** ztiltout;  /**<special file to save zernike wfs tilt history*/
+    //Evaluation directions PSF.
+    cellarr*  evlpsfolmean;  /**<science field psf OL time average*/
+    cellarr** evlpsfmean;    /**<science field psf CL time average*/
+    cellarr** evlpsftomomean;/**<science field psf Tomo time average*/
+    cellarr** evlpsfhist;    /**<to save time history of science field psf*/
+    cellarr** evlpsftomohist;/**<to save time history of science field psf with
+				direct correction from tomography*/
+
     //Deformable mirror.
     cellarr *dmerr_hi;
     cellarr *dmint_hi;
@@ -416,8 +426,6 @@ typedef struct SIM_T{
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell **ints;      /**<WFS subaperture images.*/
     ccell **wfspsfout; /**<output WFS PSF history.*/
-    cellarr **wfspsfoutcellarr; /**<special file to save wfs psf history*/
-    cellarr **ztiltoutcellarr;  /**<special file to save zernike wfs tilt history*/
 
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *sanea_sim;  /**<accumulate effective sanea during simulation.*/
@@ -468,12 +476,10 @@ typedef struct SIM_T{
     dcell *focuslpf;   /**<focus tracking low pass filter*/
     dcell *focusint;   /**<focus tracking integrator*/
     
-    dcell *evlpsfmean; /**<science field psf time average*/
-    dcell *evlpsfolmean;/**<science field OL PSF time averging*/
-    dcell *evlpsftomomean;/**<science field psf time average with direct correction from tomography*/
-    cellarr **evlpsfhist;   /**<to save time history of science field psf*/
-    cellarr**evlpsftomohist;/**<to save time history of science field psf with direct correction from tomography*/
-    dcell *wfspsfmean; /**<To save time average of wfs psf of the full aperture. (for PSF recon)*/
+    dcell* evlpsfmean;    /**<science field psf time average*/
+    dcell* evlpsfolmean;  /**<science field OL PSF time averging*/
+    dcell* evlpsftomomean;/**<science field psf time average with direct correction from tomography*/
+    dcell* wfspsfmean;    /**<To save time average of wfs psf of the full aperture. (for PSF recon)*/
     /* We maintain separate random streams for each purpose, derived from the
        same seed, so that multi-threading will produce same result */
     rand_t *wfs_rand;  /**<random stream for each wfs.*/
