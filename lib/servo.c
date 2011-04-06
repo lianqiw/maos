@@ -16,13 +16,12 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "skyc.h"
-#include "types.h"
 #include "servo.h"
 /**
    \file servo.c
    Routines for servo optimization, filtering, etc.
 */
+
 /**
    With given open loop transfer function, compute its cross over frequency and
    phase margin.
@@ -174,7 +173,7 @@ static double golden_section_search(golden_section_fun f, SERVOII_T *param,
 */
 dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dmat* sigman){
     /*The upper end must be nyquist freq so that noise transfer can be
-      computed. But we need to captuer the turbulence PSD beyond nyquist freq,
+      computed. But we need to capture the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
     */
     dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
@@ -324,7 +323,7 @@ double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, dou
 /**
    Simple integrator filter.
 */
-void servo_typeI_filter(SERVO_S *st, dmat *merr, double gain){
+void servo_typeI_filter(SERVO_T *st, dmat *merr, double gain){
     if(!st->initialized){
 	st->initialized=1;
 	st->mlead=dnew(merr->nx,1);
@@ -337,7 +336,7 @@ void servo_typeI_filter(SERVO_S *st, dmat *merr, double gain){
 /**
    Apply type II servo filter on measurement error and output integrator.  gain
    must be 3x1 or 3x5.  */
-void servo_typeII_filter(SERVO_S *st, dmat *merr, double dtngs, const dmat *gain){
+void servo_typeII_filter(SERVO_T *st, dmat *merr, double dtngs, const dmat *gain){
 
     if(!merr) return;
     PDMAT(gain,pgain);
@@ -396,7 +395,7 @@ dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtlgs, int dtrat){
     dmat *mreal=NULL;
     dmat *mres=dnew(nmod,mideal->ny);
     dmat *meas=NULL;
-    SERVO_S *st2t=calloc(1, sizeof(SERVO_S));
+    SERVO_T *st2t=calloc(1, sizeof(SERVO_T));
     PDMAT(mres,pmres);
     for(int istep=0; istep<mideal->ny; istep++){
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
@@ -447,9 +446,9 @@ dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     return psd2;
 }
 /**
-   Free SERVO_S struct
+   Free SERVO_T struct
 */
-void servo_free(SERVO_S *st){
+void servo_free(SERVO_T *st){
     dfree(st->mlead);
     dfree(st->merrlast);
     dfree(st->mintfirst);
@@ -483,24 +482,3 @@ double psd_intelog2(dmat *psdin){
     double *psd=nu+n;
     return psd_intelog(nu, psd, n);
 }
-/**
-   standalone routine that does servo filtering.
-*/
-#ifdef TEST
-int main(int argc, char **argv){
-    if(argc<6){
-	info2("Usage: %s psd.bin dtrat dt sigma gainout.bin\n", argv[0]);
-	exit(1);
-    }
-    dmat *psd=dread("%s",argv[1]);
-    long dtrat=strtol(argv[2],NULL,10);
-    double dt=strtod(argv[3],NULL);
-    double sigma=strtod(argv[4],NULL);//m^2
-    dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma;
-    dcell *gain=servo_typeII_optim(psd,dtrat,dt,sigma2);
-    dwrite(gain->p[0],"%s",argv[5]);
-    dfree(sigma2);
-    dcellfree(gain);
-    dfree(psd);
-}
-#endif

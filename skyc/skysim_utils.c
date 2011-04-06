@@ -19,7 +19,6 @@
 #include "parms.h"
 #include "types.h"
 #include "skysim_utils.h"
-#include "servo.h"
 /**
    \file skyc/skysim_utils.c
    Utilities for skysim.c
@@ -166,7 +165,7 @@ dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs, con
     dcell **mtche=calloc(aster->nwfs, sizeof(dcell*));
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
-    SERVO_S *st2t=calloc(1, sizeof(SERVO_S));
+    SERVO_T *st2t=calloc(1, sizeof(SERVO_T));
     double ngsol=simu->rmsol->p[0];
     //dcell *neasim=dcellnew(aster->nwfs,1);//Confirmed that neasim is close to estimated.
     const double dtngs=parms->maos.dt*dtrat;

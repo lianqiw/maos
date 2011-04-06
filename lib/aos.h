@@ -54,4 +54,5 @@
 #include "fractal.h"
 #include "stfun.h"
 #include "sys/sys.h"
+#include "servo.h"
 #endif

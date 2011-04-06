@@ -18,15 +18,28 @@
 
 #ifndef SKYC_SERVO_H
 #define SKYC_SERVO_H
-#include "skyc.h"
-#include "types.h"
+#include "misc.h"
+#include "dmat.h"
+#include "cmat.h"
+#include "fft.h"
+#include "loc.h"
+/**
+   Struct for servo filtering
+*/
+typedef struct SERVO_T{
+    dmat *mlead;       /**<lead filter temporary storage*/
+    dmat *merrlast;    /**<recorded errro signal from last step*/
+    dmat *mintfirst;   /**<first integrator*/
+    dmat *mint;        /**<second integrator*/
+    int initialized;   /**<is this data initialized*/
+}SERVO_T;
 dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt,const dmat* sigman);
 double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt);
-void servo_typeII_filter(SERVO_S *st, dmat *merr, double dtngs, const dmat *gain);
-void servo_typeI_filter(SERVO_S *st, dmat *merr, double gain);
+void servo_typeII_filter(SERVO_T *st, dmat *merr, double dtngs, const dmat *gain);
+void servo_typeI_filter(SERVO_T *st, dmat *merr, double gain);
 dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat);
 dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtngs, int dtrat);
-void servo_free(SERVO_S *st);
+void servo_free(SERVO_T *st);
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt);
 double psd_intelog(double *nu, double *psd, long n);
 double psd_intelog2(dmat *psdin);

@@ -320,11 +320,12 @@ AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
 AC_CHECK_LIB([fftw3_threads], [fftw_init_threads],[has_fftw_threads="yes"],[has_fftw_threads="no"])
 AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"])
 if test "x$has_fftw_threads" = "xyes" ;then
-    LDFFT="-lfftw3_threads -lfftw3"
     if test "x$has_fftw_omp" = "xyes" ;then
-        AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp")
+        AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp, conflict.")
+	LDFFT="-lfftw3" 
     else
         AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
+        LDFFT="-lfftw3_threads -lfftw3"
     fi
 else
     LDFFT="-lfftw3"

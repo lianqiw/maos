@@ -75,7 +75,6 @@
 #include "genstars.h"
 #include "genpistat.h"
 #include "setup_star.h"
-#include "servo.h"
 #include "utils.h"
 #define VERBOSE 2
 
@@ -244,11 +243,11 @@ static void skysim_isky(SIM_S *simu){
 		selaster=iaster;
 		skymini=mini;
 		//Field Averaged Performance.
-		pres[isky][1]=pmini->p[0];
-		pres[isky][2]=pmini->p[1];
-		pres[isky][3]=asteri->res_ws->p[mdtrat];
-		pres[isky][4]=parms->skyc.resfocus->p[mdtrat];
-		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];
+		pres[isky][1]=pmini->p[0];//NGS Mode error
+		pres[isky][2]=pmini->p[1];//Tip/tilt Error.
+		pres[isky][3]=asteri->res_ws->p[mdtrat];//Residual wind shake error
+		pres[isky][4]=parms->skyc.resfocus->p[mdtrat];//Residual focus tracking error.
+		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];//Total
 		//On axis performance.
 		pres_oa[isky][1]=pmini->p[2];
 		pres_oa[isky][2]=pmini->p[3];

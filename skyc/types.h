@@ -78,16 +78,6 @@ typedef struct WFS_S{
 			  star_t, then updated.*/
     int pistatref;     /**<pixel intensities reference flag*/
 }WFS_S;
-/**
-   Struct for servo filtering
-*/
-typedef struct SERVO_S{
-    dmat *mlead;       /**<lead filter temporary storage*/
-    dmat *merrlast;    /**<recorded errro signal from last step*/
-    dmat *mintfirst;   /**<first integrator*/
-    dmat *mint;        /**<second integrator*/
-    int initialized;   /**<is this data initialized*/
-}SERVO_S;
 
 /**
    Data for each available star.

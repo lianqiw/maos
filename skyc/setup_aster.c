@@ -21,7 +21,6 @@
 #include "photon.h"
 #include "skysim_utils.h"
 #include "mtch.h"
-#include "servo.h"
 #include "utils.h"
 #include "setup_star.h"
 /**
