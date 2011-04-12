@@ -81,22 +81,20 @@ int main(int argc, char *argv[]){
     }
     long nseed=arg->nseed;
     long *seed=arg->seeds;
-    int mpath=npath;
     if(nseed==0){//do all seeds
+	int jpath=0, mpath=0;
 	for(int ipath=0; ipath<npath; ipath++){
 	    if(!isdir(path[ipath])){
-		path[ipath]=NULL;
-		mpath--;
 		continue;
 	    }
 	    //info("Try path %s\n", path[ipath]);
 	    DIR *dir=opendir(path[ipath]);
 	    if(!dir){
-		warning("Unable to directory %s\n", path[0]);
-		path[ipath]=NULL;
-		mpath--;
+		warning("Unable to read directory %s\n", path[0]);
 		continue;
 	    }
+
+
 	    long nmax=20;
 	    seed=calloc(nmax, sizeof(long));
 	    struct dirent *dp;
@@ -117,37 +115,55 @@ int main(int argc, char *argv[]){
 	    closedir(dir);
 	    if(nseed>0){
 		seed=realloc(seed, nseed*sizeof(long));
-		break;
 	    }else{
 		free(seed);//try the next folder.
 	    }
+	    //record the path as valid
+	    path[jpath]=path[ipath];
+	    info("%d: %s\n", jpath, path[jpath]);
+	    jpath++; mpath++;
 	}
+	npath=mpath;
     }
     if(nseed==0){
 	info2("Nothing to display\n");
 	return 1;
     }
+    int jseed=0, mseed=0;
+    for(int iseed=0; iseed<nseed; iseed++){
+	int ipath;
+	for(ipath=0; ipath<npath; ipath++){
+	    char fn[PATH_MAX];
+	    if(!path[ipath]){
+		warning("path is NULL\n");
+		break;
+	    }
+	    snprintf(fn,PATH_MAX,"%s/Res_%ld.bin", path[ipath], seed[iseed]);
+	    if(!exist(fn)){
+		break;
+	    }
+	}
+	if(ipath==npath){
+	    seed[jseed]=seed[iseed];
+	    jseed++;
+	    mseed++;
+	}
+    }
+    nseed=mseed;
     dcell *resolhi=dcellnew(npath,nseed);
     dcell *resollo=dcellnew(npath,nseed);
     dcell *reshi=dcellnew(npath,nseed);
     dcell *reslo=dcellnew(npath,nseed);
-    int skip[nseed];
-    memset(skip, 0, sizeof(int)*nseed);
+    dcell *reshim=dcellnew(npath,1);
+    dcell *reslom=dcellnew(npath,1);
+    dcell *resolhim=dcellnew(npath,1);
+    dcell *resollom=dcellnew(npath,1);
     for(int iseed=0; iseed<nseed; iseed++){
 	for(int ipath=0; ipath<npath; ipath++){
 	    char fn[PATH_MAX];
-	    if(!path[ipath]){
-		continue;
-	    }
 	    snprintf(fn,PATH_MAX,"%s/Res_%ld.bin", path[ipath], seed[iseed]);
 	    dcell *res;
-	    if(exist(fn)){
-		res=dcellread("%s",fn);
-	    }else{
-		skip[iseed]=1;
-		info2("Skip seed %ld\n", seed[iseed]);
-		break;
-	    }
+	    res=dcellread("%s",fn);
 	    info2("Process %s\n", path[ipath]);
 	    int ind=0;
 	    int indlo=0;
@@ -176,6 +192,12 @@ int main(int argc, char *argv[]){
 	    tmp=dsub(res->p[0], 1, 1, 0, 0);
 	    resollo->p[ii]=dtrans(tmp);
 	    dfree(tmp);
+
+	    dadd(&reshim->p[ipath], 1, reshi->p[ii], 1);
+	    dadd(&reslom->p[ipath], 1, reslo->p[ii], 1);
+	    dadd(&resolhim->p[ipath], 1, resolhi->p[ii], 1);
+	    dadd(&resollom->p[ipath], 1, resollo->p[ii], 1);
+	    
 	}
 	info2("Found seed %ld\n", seed[iseed]);
     }
@@ -183,6 +205,16 @@ int main(int argc, char *argv[]){
     dcellcwpow(reslo, 0.5); dcellscale(reslo, 1e9);
     dcellcwpow(resolhi, 0.5); dcellscale(resolhi, 1e9);
     dcellcwpow(resollo, 0.5); dcellscale(resollo, 1e9);
+    dcellscale(reshim, 1./nseed);
+    dcellscale(reslom, 1./nseed);
+    dcellscale(resolhim, 1./nseed);
+    dcellscale(resollom, 1./nseed);
+    dcellcwpow(reshim, 0.5); dcellscale(reshim, 1e9);
+    dcellcwpow(reslom, 0.5); dcellscale(reslom, 1e9);
+    dcellcwpow(resolhim, 0.5); dcellscale(resolhim, 1e9);
+    dcellcwpow(resollom, 0.5); dcellscale(resollom, 1e9);
+
+
     if(npath==1){
 	char *legs[nseed];
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -202,20 +234,29 @@ int main(int argc, char *argv[]){
 	}
     }else{
 	for(int iseed=0; iseed<nseed; iseed++){
-	    if(skip[iseed]) continue;
 	    dcell *reshi_i=dcellsub(reshi, 0,0,iseed, 1);
 	    dcell *reslo_i=dcellsub(reslo, 0,0,iseed, 1);
 	    dcell *resolhi_i=dcellsub(resolhi, 0,0,iseed, 1);
 	    dcell *resollo_i=dcellsub(resollo, 0,0,iseed, 1);
-	    plot_points("Res", npath, NULL, reshi_i, NULL, NULL, 0, NULL, path,
+	
+	    plot_points("Reshi", npath, NULL, reshi_i, NULL, NULL, 0, NULL, path,
 			"High order wavefront Error", "Steps","Error (nm)", "High_%ld",seed[iseed]);
-	    plot_points("Res", npath, NULL, reslo_i, NULL, NULL, 0, NULL, path,
+	    plot_points("Reslo", npath, NULL, reslo_i, NULL, NULL, 0, NULL, path,
 			"Low order wavefront Error", "Steps","Error (nm)", "Low_%ld",seed[iseed]);
-	    plot_points("ResOL", npath, NULL, resolhi_i, NULL, NULL, 0, NULL, path,
+	    plot_points("ResOLhi", npath, NULL, resolhi_i, NULL, NULL, 0, NULL, path,
 			"High order open loop wavefront Error", "Steps","Error (nm)", "High_%ld",seed[iseed]);
-	    plot_points("ResOL", npath, NULL, resollo_i, NULL, NULL, 0, NULL, path,
+	    plot_points("ResOLlo", npath, NULL, resollo_i, NULL, NULL, 0, NULL, path,
 			"Low order open loop wavefront Error", "Steps","Error (nm)", "Low_%ld",seed[iseed]);
 	    dcellfree(reshi_i);dcellfree(reslo_i);dcellfree(resolhi_i);dcellfree(resollo_i);
 	}
+
+	plot_points("Reshi", npath, NULL, reshim, NULL, NULL, 0, NULL, path,
+		    "High order wavefront Error", "Steps","Error (nm)", "High");
+	plot_points("Reslo", npath, NULL, reslom, NULL, NULL, 0, NULL, path,
+		    "Low order wavefront Error", "Steps","Error (nm)", "Low");
+	plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, 0, NULL, path,
+		    "High order open loop wavefront Error", "Steps","Error (nm)", "High");
+	plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, 0, NULL, path,
+		    "Low order open loop wavefront Error", "Steps","Error (nm)", "Low");
     }
 }

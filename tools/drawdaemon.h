@@ -93,6 +93,7 @@ struct drawdata_t{
     double xoff, yoff;//offset of the area to draw figure.
     
     double limit0[4];//x,y limit of displayed region.
+    double limitsave[4];//save limit.
     int square;//make x/y scaling be the same, for image and coordinate display
     int valid;//move is valid.
     int font_name_version;

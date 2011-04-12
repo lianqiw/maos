@@ -41,6 +41,7 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
     double r2=pow(parms->skyc.patfov/206265./2.,2);
     double keepout=pow(parms->skyc.keepout/206265,2);
     int jstar=0;
+    assert(nwvl+2==coord->nx);
     for(int istar=0; istar<nstar; istar++){
 	if(parms->skyc.ngsalign){
 	    star[jstar].thetax=round(pc[istar][0]/ngsgrid)*ngsgrid;
@@ -358,7 +359,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 }
 /**
    Compute Modal to gradient operator using average gradients. Similar to Z tilt
-since the mode is low order
+   since the mode is low order
  */
 static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int nstar){
     const long npowfs=parms->maos.npowfs;

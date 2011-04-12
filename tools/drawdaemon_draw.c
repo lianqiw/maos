@@ -290,6 +290,60 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
       cairo_set_font_options(cr, fonto);
       cairo_font_options_destroy(fonto);
     */
+    if(drawdata->cumulast!=drawdata->cumu){//need to update max/minimum.
+	if(!drawdata->cumulast){
+	    memcpy(drawdata->limitsave, drawdata->limit, 4*sizeof(double));
+	}
+	drawdata->limit_changed=0;
+	drawdata->offx=0;
+	drawdata->offy=0;
+	drawdata->zoomx=1;
+	drawdata->zoomy=1;
+	if(drawdata->cumu){
+	    if(drawdata->npts>0){
+		int icumu=(int)drawdata->icumu;
+		double ymin=INFINITY, ymax=-INFINITY;
+		for(int ipts=0; ipts<drawdata->npts; ipts++){
+		    dmat *pts=drawdata->pts[ipts];
+		    double *ptsx=NULL, *ptsy=NULL;
+		    if(pts->ny==2){
+			ptsx=pts->p;	
+			ptsy=ptsx+pts->nx;
+		    }else{
+			ptsy=pts->p;
+		    }
+		    int ips0=0;
+		    if(icumu<pts->nx){
+			ips0=icumu;
+		    }
+		    double y_cumu=0,y;
+		  
+		    if(drawdata->cumuquad){
+			for(int ips=ips0; ips<pts->nx; ips++){
+			    y_cumu+=ptsy[ips]*ptsy[ips];
+			    y=sqrt(y_cumu/(ips-ips0+1));
+			    if(y>ymax) ymax=y;
+			    if(y<ymin) ymin=y;
+			}
+		    }else{
+			if(drawdata->cumuquad){
+			    for(int ips=ips0; ips<pts->nx; ips++){
+				y_cumu+=ptsy[ips];
+				y=y_cumu/(ips-ips0+1);
+				if(y>ymax) ymax=y;
+				if(y<ymin) ymin=y;
+			    }
+			}
+		    }
+		}
+		drawdata->limit[0]=icumu;
+		drawdata->limit[2]=ymin;
+		drawdata->limit[3]=ymax;
+	    }
+	}else{
+	    memcpy(drawdata->limit, drawdata->limitsave, 4*sizeof(double));
+	}
+    }
     int widthim, heightim;
     double xmin=drawdata->limit[0];
     double xmax=drawdata->limit[1];
@@ -470,9 +524,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		}
 		iy=((ptsy[ips]-centery)*scaley*zoomy+ncy);
 		if(drawdata->cumuquad){
-		    y_cumu+=ptsy[ips]*ptsy[ips];
+		    y_cumu=ptsy[ips]*ptsy[ips];
 		}else{
-		    y_cumu+=ptsy[ips];
+		    y_cumu=ptsy[ips];
 		}
 		cairo_move_to(cr, ix, iy);
 		//connect additional points.
@@ -748,4 +802,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     g_object_unref(layout);
     cairo_destroy(cr);
+ 
+    drawdata->cumulast=drawdata->cumu;
 }
