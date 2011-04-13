@@ -451,17 +451,23 @@ void notify_user(PROC_T *p){
     if(p->status.info==p->oldinfo) return;
     static NotifyNotification *notify_urgent=NULL, *notify_normal=NULL, *notify_low=NULL;
     if (!notify_urgent){
+#if NOTIFY_CHECK_VERSION(0,7,0) //newer versions doesnot have _new_with_status_icon
+	notify_low=notify_notification_new("Low", NULL, NULL);
+	notify_normal=notify_notification_new("Low", NULL, NULL);
+	notify_urgent=notify_notification_new("Low", NULL, NULL);
+#else
 	notify_low=notify_notification_new_with_status_icon ("Low",NULL,NULL,status_icon);
+	notify_normal=notify_notification_new_with_status_icon ("Normal",NULL,NULL,status_icon);
+	notify_urgent=notify_notification_new_with_status_icon ("Urgent",NULL,"error",status_icon);
+#endif
 	notify_notification_set_icon_from_pixbuf(notify_low,icon_main);
 	notify_notification_set_timeout(notify_low,NOTIFY_EXPIRES_DEFAULT);
 	notify_notification_set_urgency(notify_low,NOTIFY_URGENCY_LOW);
 
-	notify_normal=notify_notification_new_with_status_icon ("Normal",NULL,NULL,status_icon);
 	notify_notification_set_icon_from_pixbuf(notify_normal,icon_main);
 	notify_notification_set_timeout(notify_normal,NOTIFY_EXPIRES_DEFAULT);
 	notify_notification_set_urgency(notify_normal,NOTIFY_URGENCY_NORMAL);
 
-	notify_urgent=notify_notification_new_with_status_icon ("Urgent",NULL,"error",status_icon);
 	notify_notification_set_timeout(notify_urgent,NOTIFY_EXPIRES_NEVER);
 	notify_notification_set_urgency(notify_urgent,NOTIFY_URGENCY_CRITICAL);
 

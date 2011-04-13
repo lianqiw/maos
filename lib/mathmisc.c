@@ -138,30 +138,30 @@ void invsq(long n, double *restrict A){
 }
 
 /**
-   add two double vectors: out=out*alpha+in*beta+gamma
+   add two double vectors: out=out*alpha+in*beta+theta
 */
 void adddbl(double *restrict out, double alpha, 
-	    const double *in, int N, double beta, double gamma){
+	    const double *in, int N, double beta, double theta){
 
     if (fabs(alpha)<1.e-60){
 	memset(out,0,sizeof(double)*N);
 	if(in){
 	    for(int i=0; i<N; i++){
-		out[i]=in[i]*beta+gamma;
+		out[i]=in[i]*beta+theta;
 	    }
 	}else{
 	    for(int i=0; i<N; i++){
-		out[i]=gamma;
+		out[i]=theta;
 	    }
 	}
     }else{
 	if(in){
 	    for(int i=0; i<N; i++){
-		out[i]=out[i]*alpha+in[i]*beta+gamma;
+		out[i]=out[i]*alpha+in[i]*beta+theta;
 	    }
 	}else{
 	    for(int i=0; i<N; i++){
-		out[i]=out[i]*alpha+gamma;
+		out[i]=out[i]*alpha+theta;
 	    }
 	}
     }

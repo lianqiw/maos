@@ -39,13 +39,12 @@ static void test_grid_proj(){
     //direction of guide star
     //loc_t *loc2=mksqloc2(2000,2000,1./64.);
     loc_t* loc2=locread("aper_locs.bin.gz");
-    long nx,ny;
-    double *amp=NULL;
-    readdbl(&amp,&nx,&ny,"aper_amp.bin.gz");
+    
+    dmat *amp=dread("aper_amp.bin.gz");
     double *phi2=calloc(1, sizeof(double)*loc2->nloc);
     proj_rect_grid(mapin,M_PI*0.75,M_PI*0.5,
 		   loc2,-r_exitpupil/r_pupil,r_exitpupil/r_pupil,
-		   amp,phi2,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
+		   amp->p,phi2,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
     //drawopdamp("test_proj",loc2,phi2,amp,"phi");
     
     writedbl(phi2,loc2->nloc,1,"phi");

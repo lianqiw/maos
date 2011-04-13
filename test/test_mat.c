@@ -149,7 +149,7 @@ static void test_save(void){//passed
     dwrite(a,"a2.bin");
     long nnx[6]={2,3,4,5,6,0};
     long nny[6]={3,4,2,5,6,3};
-    dcell *b=dcellnew_mmap(2,3, nnx, nny, NULL,"ac.bin");
+    dcell *b=dcellnew_mmap(2,3, nnx, nny, NULL,NULL,"ac.bin");
     for(int ix=0; ix<b->nx*b->ny; ix++){
 	drandn(b->p[ix], 1, &rstat);
     }

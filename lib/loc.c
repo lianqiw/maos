@@ -1305,7 +1305,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 	    shiftx+=cx[ic][0];
 	    if(shiftxy) cx[ic][0]=0;//remove the transform.
 	}else{//something we don't recognize. not pure shift.
-	    warning("something we don't recognize\n");
+	    //warning("something we don't recognize\n");
 	    shift=0;
 	}
     }
