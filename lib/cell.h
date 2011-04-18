@@ -53,7 +53,7 @@ void X(celltikcr)(X(cell) *A, double thres);\
 X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const Y(spcell) *Wsp);\
 void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, double alpha);\
 void X(celladdI)(X(cell) *A, double a);\
-void X(cellsvd_pow)(X(cell) *A, double power);\
+void X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres); \
 void X(cellcwpow)(X(cell)*A, double power);\
 X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);
 #endif

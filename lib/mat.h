@@ -96,8 +96,9 @@ int X(clip)(X(mat) *A, double min, double max);\
 void X(gramschmidt)(X(mat) *Mod, double *amp);	\
 void X(muldiag)(X(mat) *A, X(mat) *s);\
 void X(cwpow)(X(mat) *A, double power);\
-void X(svd)(dmat **Sdiag, X(mat) **U, X(mat) **VT, const X(mat) *A);\
-void X(svd_pow)(X(mat) *A, double power);\
+void X(svd)(X(mat) **U, dmat **Sdiag, X(mat) **VT, const X(mat) *A);\
+void X(evd)(X(mat) **U, dmat **Sdiag, const X(mat) *A);  \
+void X(svd_pow)(X(mat) *A, double power, int issym, double thres);\
 void X(addI)(X(mat) *A, T val);\
 void X(tikcr)(X(mat) *A, T thres);\
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha);\

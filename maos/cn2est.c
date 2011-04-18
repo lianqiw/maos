@@ -560,8 +560,8 @@ void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
     recon->r0=cn2est->r0m;
     recon->l0=cn2est->l0;
     setup_recon_tomo_prep(recon, parms);//redo L2, invpsd
-    if(parms->tomo.alg==0 || parms->tomo.split==2){
-	muv_chol_prep(&(recon->RL));
+    if(parms->tomo.alg==0 || parms->tomo.alg==2 || parms->tomo.split==2){
+	muv_direct_prep(&(recon->RL), parms->tomo.alg==2);
 	if(parms->tomo.split==2){
 	    setup_recon_mvst(recon,parms);
 	}

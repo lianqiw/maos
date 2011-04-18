@@ -126,7 +126,7 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
     node->C=turbcov(rc0, D*sqrt(2), r0, L0);
     dfree(rc0);
     dmat *u=NULL, *s=NULL, *v=NULL;
-    dsvd(&s, &u, &v, node->C);
+    dsvd(&u, &s, &v, node->C);
     dcwpow(s, 1./2.);
     node->K=ddup(u);
     dmuldiag(node->K, s);

@@ -1190,6 +1190,7 @@ void free_simu(SIM_T *simu){
     free(simu->atmwd_rand);
     free(simu->wfs_rand);
     free(simu->telws_rand);
+    dfree(simu->telws);
     if(simu->genscreen){
 	dfree(simu->genscreen->spect);
 	free(simu->genscreen);
@@ -1275,6 +1276,7 @@ void free_simu(SIM_T *simu){
 	dcellfree(simu->MtypeII_lo->lead);
 	dcellfree(simu->MtypeII_lo->firstint);
 	dcellfree(simu->MtypeII_lo->errlast);
+	free(simu->MtypeII_lo);
     }
     dcellfree(simu->upterr);
     dcellfree(simu->upterrlast);

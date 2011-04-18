@@ -122,7 +122,7 @@ static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx,
     if(ampground){
 	prop_grid(ampground, loc, amp->p, 1, misregx, misregy,1,0,0,0);
     }else{
-	locannular(amp->p, loc, -misregx, -misregy, D*0.5, D*0.5, 1);
+	locannular(amp->p, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
     }
     //Don't apply the mask any more. We limited available subapertures using r2min, r2max (2011-02-23)
     //locannularmask(amp->p, locn, 0,0, D*0.5, Din*0.5);
@@ -265,10 +265,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 						  shiftxy[1]-parms->aper.misreg[1],
 						  parms->aper.d, parms->aper.din);
 	    powfs[ipowfs].saam->p[ilocm]=wfsamp2saa(powfs[ipowfs].ampm->p[ilocm], nxsa);
-	    
-	    if(parms->save.setup && powfs[ipowfs].locm[ilocm]){
-		locwrite(powfs[ipowfs].locm[ilocm],"%s/powfs%d_locm%d", dirsetup,ipowfs,ilocm);
-	    }
 	}
         for(int ilocm=nlocm; nlocm==1 && ilocm<parms->powfs[ipowfs].nwfs; ilocm++){
 	    powfs[ipowfs].misreg[ilocm][0]=powfs[ipowfs].misreg[0][0];
@@ -433,6 +429,11 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	if(nlocm){
 	    dcellwrite(powfs[ipowfs].saam,"%s/powfs%d_saam", dirsetup,ipowfs);
 	    dcellwrite(powfs[ipowfs].ampm,"%s/powfs%d_ampm", dirsetup,ipowfs);
+	}
+	if(parms->powfs[ipowfs].misreg){
+	    for(int ilocm=0; ilocm<powfs[ipowfs].nlocm; ilocm++){
+		locwrite(powfs[ipowfs].locm[ilocm],"%s/powfs%d_locm%d", dirsetup,ipowfs,ilocm);
+	    }
 	}
     }
 }
@@ -1632,7 +1633,6 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			cifft2(psfhat, 1);
 			cfftshift(psfhat);
 			creal2d(&psf, 0, psfhat, 1);
-			dwrite(psf, "lpsf_%d_%d", iwvl, illt);
 			info2("illt %d, iwvl %d has FWHM of %g\"\n",
 			      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
 		    }

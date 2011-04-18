@@ -95,7 +95,6 @@ void register_deinit(void (*fun)(void), void *data){
     node->data=data;
     node->next=DEINIT;
     DEINIT=node;
-    info("%p registered\n", fun);
 }
 static __attribute__((constructor)) void init(){
     warning2("Memory management is in use\n");

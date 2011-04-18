@@ -316,6 +316,7 @@ typedef struct TOMO_CFG_T{
     double minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
     double iac;      /**<#inter-actuator-coupling in cubic influence function (testing)*/
     double cxxscale; /**<scale the Cxx^-1 term.*/
+    double svdthres; /**<Threshold in SVD inversion*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
@@ -353,6 +354,7 @@ typedef struct FIT_CFG_T{
     double *thetay;  /**<y Coordinate of DM fitting directions. */
     double *wt;      /**<weight of each direction*/
     double tikcr; /**<tikhonov regularization*/
+    double svdthres; /**<Threshold in SVD inversion*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
     int nfit;        /**<Number of DM fit directions */
     int lrt_piston;  /**<Piston constraint low rank term in fit coefficient matrix*/

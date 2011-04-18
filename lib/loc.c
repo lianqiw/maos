@@ -1293,7 +1293,12 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
     int keepx=0, keepy=0;
     int shift=1;
     double shiftx=0, shifty=0;
+    int nonint=0;
     for(int ic=0; ic<coeff[0]->ny; ic++){
+	if(fabs(cx[ic][1]-(int)cx[ic][1])>EPS || fabs(cx[ic][2]-(int)cx[ic][2])>EPS){
+	    warning("There are non-integer powers\n");
+	    nonint=1;
+	}
 	if(fabs(cx[ic][0]-1)<EPS && fabs(cx[ic][1]-1)<EPS && fabs(cx[ic][2])<EPS){
 	    if(keepx==0){
 		keepx=1;
@@ -1311,6 +1316,10 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
     }
     if(keepx!=1) shift=0;
     for(int ic=0; ic<coeff[1]->ny; ic++){
+	if(fabs(cy[ic][1]-(int)cy[ic][1])>EPS || fabs(cy[ic][2]-(int)cy[ic][2])>EPS){
+	    warning("There are non-integer powers\n");
+	    nonint=1;
+	}
 	if(fabs(cy[ic][0]-1)<EPS && fabs(cy[ic][1])<EPS && fabs(cy[ic][2]-1)<EPS){
 	    if(keepy==0){
 		keepy=1;
@@ -1322,7 +1331,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 	    shifty+=cy[ic][0];
 	    if(shiftxy) cy[ic][0]=0;//remove from the transform.
 	}else{//something we don't recognize. not pure shift.
-	    warning("something we don't recognize\n");
+	    //warning("something we don't recognize\n");
 	    shift=0;
 	}
     }
@@ -1340,12 +1349,40 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 	double *restrict xm=locm->locx;
 	double *restrict ym=locm->locy;
 
+	int np=0;
+	for(int ic=0; ic<coeff[0]->ny; ic++){
+	    if(cx[ic][1]>np) np=(int)cx[ic][1];
+	    if(cx[ic][2]>np) np=(int)cx[ic][2];
+	}
+	for(int ic=0; ic<coeff[1]->ny; ic++){
+	    if(cy[ic][1]>np) np=(int)cy[ic][1];
+	    if(cy[ic][2]>np) np=(int)cy[ic][2];
+	}
+	np++;
 	for(long iloc=0; iloc<loc->nloc; iloc++){
-	    for(long ic=0; ic<coeff[0]->ny; ic++){
-		xm[iloc]+=cx[ic][0]*pow(x[iloc],cx[ic][1])*pow(y[iloc],cx[ic][2]);
-	    }
-	    for(long ic=0; ic<coeff[1]->ny; ic++){
-		ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
+	    if(nonint){
+		for(long ic=0; ic<coeff[0]->ny; ic++){
+		    xm[iloc]+=cx[ic][0]*pow(x[iloc],cx[ic][1])*pow(y[iloc],cx[ic][2]);
+		}
+		
+		for(long ic=0; ic<coeff[1]->ny; ic++){
+		    ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
+		}
+	    }else{//faster method for integer powers (>10x speed up).
+		double xp[np], yp[np];
+		xp[0]=1; yp[0]=1;
+		for(long ip=1; ip<np; ip++){
+		    xp[ip]=xp[ip-1]*x[iloc];
+		    yp[ip]=yp[ip-1]*y[iloc];
+		}
+
+		for(long ic=0; ic<coeff[0]->ny; ic++){
+		    xm[iloc]+=cx[ic][0]*xp[(int)cx[ic][1]]*yp[(int)cx[ic][2]];
+		}
+
+		for(long ic=0; ic<coeff[1]->ny; ic++){
+		    ym[iloc]+=cy[ic][0]*xp[(int)cy[ic][1]]*yp[(int)cy[ic][2]];
+		}
 	    }
 	}
 	return locm;

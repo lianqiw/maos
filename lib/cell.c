@@ -820,9 +820,9 @@ void X(celladdI)(X(cell) *A, double a){
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
 */
-void X(cellsvd_pow)(X(cell) *A, double power){
+void X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres){
     X(mat) *Ac=X(cell2m)(A);
-    X(svd_pow)(Ac, power);
+    X(svd_pow)(Ac, power, issym, thres);
     X(2cell)(&A, Ac, NULL);
     X(free)(Ac);
 }

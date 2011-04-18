@@ -263,6 +263,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	      Compatibility mode: rename old key names to new key names. Will
 	      remove in the future.
 	     */
+	    RENAME(atm.wsdeg, atm.wddeg);
 	    RENAME(atm.zadeg, sim.zadeg);
 	    RENAME(powfs.msa, powfs.order);
 	    RENAME(fit.tik_cstr, fit.tikcr);
@@ -732,7 +733,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
     while(startptr[0]!=']' && startptr[0]!='\0'){
 	if(count>=nmax){
 	    if(len){
-		error("We want %d numbers, but more are supplied\n", len);
+		error("We want %d numbers, but more are supplied: {%s}\n", len, data);
 	    }else{
 		nmax*=2;
 		*ret=realloc(*ret, size*nmax);

@@ -121,7 +121,7 @@ void FitL(dcell **xout, const void *A,
 
 /**
    Carry out tomography. (Precondition) CG with pcg() and Cholesky
-   Backsubtitution with muv_chol_solve() is implemented.
+   Backsubtitution with muv_direct_solve() is implemented.
 */
 void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell *grad, int maxit){
     dcell *rhs=NULL;
@@ -132,7 +132,7 @@ void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell 
     }
     switch(parms->tomo.alg){
     case 0:
-	muv_chol_solve_cell(opdr,&(recon->RL), rhs);
+	muv_direct_solve_cell(opdr,&(recon->RL), rhs);
 	break;
     case 1:{
 	PREFUN pfun;
@@ -165,6 +165,9 @@ void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell 
 	    recon->warm_restart, maxit);
     }
 	break;
+    case 2:
+	muv_direct_solve_cell(opdr,&(recon->RL), rhs);
+	break;
     default:
 	error("Not implemented: alg=%d\n",parms->tomo.alg);
     }
@@ -180,7 +183,7 @@ void fit(dcell **adm, const PARMS_T *parms,
     muv(&rhs, &(recon->FR), opdr, 1);
     switch(parms->fit.alg){
     case 0:
-	muv_chol_solve_cell(adm,&(recon->FL),rhs);
+	muv_direct_solve_cell(adm,&(recon->FL),rhs);
 	break;
     case 1:{
 	PREFUN pfun;
@@ -203,6 +206,9 @@ void fit(dcell **adm, const PARMS_T *parms,
 	    recon->warm_restart, parms->fit.maxit);
 	break;
     }
+    case 2:
+	muv_direct_solve_cell(adm,&(recon->FL),rhs);
+	break;
     default:
 	error("Not implemented: alg=%d\n",parms->fit.alg);
     }
@@ -496,11 +502,14 @@ void lsr(SIM_T *simu){
 	muv(&rhs, &(recon->LR), graduse, 1);
 	switch(parms->tomo.alg){
 	case 0://CBS
-	    muv_chol_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
+	    muv_direct_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
 	    break;
 	case 1://CG
 	    pcg(&simu->dmerr_hi, (CGFUN)muv, &recon->LL, NULL, NULL, rhs,
 		recon->warm_restart, parms->tomo.maxit);
+	    break;
+	case 2://SVD inversion
+	    muv_direct_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
 	    break;
 	default:
 	    error("Not implemented\n");

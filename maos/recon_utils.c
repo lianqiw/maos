@@ -173,7 +173,7 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW,
     dcell *actcplc=dcellnew(ndm, 1);
     for(int idm=0; idm<ndm; idm++){
 	int nact=aloc[idm]->nloc;
-	for(int ifit=0; ifit<HA->ny; ifit++){
+	for(int ifit=0; ifit<HA->nx; ifit++){
 	    if(W1){
 		sptmulmat(&actcplc->p[idm], pHA[idm][ifit], W1, 1);
 	    }else{

@@ -451,10 +451,16 @@ void notify_user(PROC_T *p){
     if(p->status.info==p->oldinfo) return;
     static NotifyNotification *notify_urgent=NULL, *notify_normal=NULL, *notify_low=NULL;
     if (!notify_urgent){
+#if defined(NOTIFY_CHECK_VERSION) 
 #if NOTIFY_CHECK_VERSION(0,7,0) //newer versions doesnot have _new_with_status_icon
 	notify_low=notify_notification_new("Low", NULL, NULL);
 	notify_normal=notify_notification_new("Low", NULL, NULL);
 	notify_urgent=notify_notification_new("Low", NULL, NULL);
+#else
+	notify_low=notify_notification_new_with_status_icon ("Low",NULL,NULL,status_icon);
+	notify_normal=notify_notification_new_with_status_icon ("Normal",NULL,NULL,status_icon);
+	notify_urgent=notify_notification_new_with_status_icon ("Urgent",NULL,"error",status_icon);
+#endif
 #else
 	notify_low=notify_notification_new_with_status_icon ("Low",NULL,NULL,status_icon);
 	notify_normal=notify_notification_new_with_status_icon ("Normal",NULL,NULL,status_icon);

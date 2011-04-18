@@ -106,7 +106,6 @@ static dsp* chol_sp(spchol *A, int keep){
 */
 spchol* chol_factorize(dsp *A_in){
     if(!A_in) return NULL;
-    TIC;tic;
     spchol *out=calloc(1, sizeof(spchol));
     out->c=calloc(1, sizeof(cholmod_common));
     MOD(start)(out->c);
@@ -128,7 +127,6 @@ spchol* chol_factorize(dsp *A_in){
     if(!out->L) error("Analyze failed\n");
     MOD(factorize)(A,out->L, out->c);
     free(A);
-    toc2("done.");
     return out;
 }
 /**

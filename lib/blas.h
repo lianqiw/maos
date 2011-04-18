@@ -53,6 +53,14 @@ extern void
 zgesvd_(char* jobu, char* jobvt, int* m, int* n, dcomplex* a,
 	int* lda, double* s, dcomplex* u, int* ldu, dcomplex* vt, int* ldvt,
 	dcomplex* work, int* lwork, double *rwork, int* info );
+
+void dsyev_(char *jobz, char *uplo, int *n, double *a,
+	    int *lda, double *w, double *work, int *lwork,
+	    int *info);
+void zheev_(char *jobz, char *uplo, int *n, dcomplex *a,
+	    int *lda, double *w, dcomplex *work, int *lwork, double *rwork,
+	    int *info);
+
 #if USE_MKL==1
 void omp_set_num_threads(int *n);
 #endif

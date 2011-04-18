@@ -128,6 +128,7 @@ void cfft2plan(cmat *A, int dir){
 	A->fft->plan[dir+1]=fftw_plan_dft_2d(A->ny, A->nx, A->p, A->p, dir, FFTW_FLAGS);
     }
     UNLOCK_FFT;  
+    //info("Plan %p created\n", A->fft->plan[dir+1]);
 }
 
 /**
@@ -163,6 +164,7 @@ void cfft2partialplan(cmat *A, int ncomp, int dir){
 				 dir,FFTW_FLAGS);
     UNLOCK_FFT; 
     plan1d->ncomp=ncomp;
+    //info("Plan %p created\n", A->fft->plan1d[dir+1]);
 }
 /**
    Free FFTW plans.
@@ -175,10 +177,13 @@ void fft_free_plan(fft_t *fft){
 	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[0]);
 	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[1]);
 	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[2]);
+	    //info("Plan %p destroyed\n", fft->plan1d[idir+1]);
 	    free(fft->plan1d[idir+1]);
 	}
 	if(fft->plan[idir+1]){
 	    fftw_destroy_plan(fft->plan[idir+1]);
+	    //info("Plan %p destroyed\n", fft->plan[idir+1]);
+
 	}
 	UNLOCK_FFT;
     }

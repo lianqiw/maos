@@ -651,7 +651,7 @@ ccell *psfcomp(const dmat *iopdevl, const double *amp,
    in the differaction limited PSF. In other words, the peak value in the
    computed PSF is the Strehl. Keep this in mind when you compute enclosed
    energy.
- */
+*/
 void psfcomp_iwvl(thread_t *thdata){
     PSFCOMP_T *data=thdata->data;
     ccell *psf2s=data->psf2s;
@@ -705,8 +705,9 @@ void psfcomp_iwvl(thread_t *thdata){
 		psf2s->p[iwvl]=cnew(psfsize[iwvl], psfsize[iwvl]);
 		ccpcorner2center(psf2s->p[iwvl], psf2);
 	    }
-	    if(fabs(psfnorm-1)>1.e-15) 
+	    if(fabs(psfnorm-1)>1.e-15) {
 		cscale(psf2s->p[iwvl], psfnorm);
+	    }
 	    cfree(psf2);
 	}
     }

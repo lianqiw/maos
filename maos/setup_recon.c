@@ -1154,11 +1154,14 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	spcellfree(GXtomoT);
     }
     info2("After assemble matrix:\t%.2f MiB\n",get_job_mem()/1024.);
-    if(parms->tomo.alg==0 || parms->tomo.split==2){
+    if(parms->tomo.alg==0 || parms->tomo.alg==2 || parms->tomo.split==2){
 	//We need cholesky decomposition in CBS or MVST method.
-	muv_chol_prep(&(recon->RL));
+	muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
 	if(parms->save.setup && parms->save.recon){
-	    chol_save(recon->RL.C,"%s/RLC",dirsetup);
+	    if(recon->RL.C)
+		chol_save(recon->RL.C,"%s/RLC",dirsetup);
+	    else
+		dwrite(recon->RL.MI,"%s/RLMI", dirsetup);
 	}
 	info2("After cholesky on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
@@ -1525,14 +1528,17 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     info2("After assemble matrix:\t%.2f MiB\n",get_job_mem()/1024.);
-    if(parms->fit.alg==0  || parms->tomo.split==2){
+    if(parms->fit.alg==0 || parms->fit.alg==2  || parms->tomo.split==2){
 	if(fabs(parms->fit.tikcr)<1.e-14){
 	    warning("tickcr=%g is too small or not applied\n", 
 		    parms->fit.tikcr);
 	}
-	muv_chol_prep(&(recon->FL));
+	muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
 	if(parms->save.setup && parms->save.recon){
-	    chol_save(recon->FL.C,"%s/FLC",dirsetup);
+	    if(recon->FL.C)
+		chol_save(recon->FL.C,"%s/FLC",dirsetup);
+	    else
+		dwrite(recon->FL.MI, "%s/FLMI", dirsetup);
 	}
 	info2("After cholesky on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
@@ -1694,7 +1700,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
       2010-03-10: Bug found and fixed: The MVST with CBS-CBS method gives worst
       performance than integrated tomography. The probelm is in PUm
       computing. I mistakenly called chol_solve, while I should have
-      called muv_chol_solve. The former doesn ot apply the low rank
+      called muv_direct_solve. The former doesn ot apply the low rank
       terms.
     */
     if(parms->tomo.split!=2){
@@ -1710,21 +1716,21 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	FU=dcellread("mvst_FU");
     }else{
 	dcell *GXLT=dcelltrans(recon->GXL);
-	muv_chol_solve_cell(&U, &recon->RL, GXLT);
+	muv_direct_solve_cell(&U, &recon->RL, GXLT);
 	dcellfree(GXLT);
 	dcell *rhs=NULL;
 	muv(&rhs, &recon->FR, U, 1);
-	muv_chol_solve_cell(&FU, &recon->FL, rhs);
+	muv_direct_solve_cell(&FU, &recon->FL, rhs);
 	dcellfree(rhs);
 	if(parms->save.mvst || parms->save.setup){
 	    dcellwrite(U, "%s/mvst_U", dirsetup);
 	    dcellwrite(FU, "%s/mvst_FU", dirsetup);
 	}
 	if(parms->tomo.alg!=0){
-	    muv_chol_free(&recon->RL);
+	    muv_direct_free(&recon->RL);
 	}
 	if(parms->fit.alg!=0){
-	    muv_chol_free(&recon->FL);
+	    muv_direct_free(&recon->FL);
 	}
     }
     
@@ -1750,7 +1756,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcell *QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,recon->fitwt);
 	dmat *QwQ=dcell2m(QwQc);
 	dmat *QSdiag=NULL, *QU=NULL, *QVt=NULL;
-	dsvd(&QSdiag, &QU, &QVt, QwQ);
+	dsvd(&QU, &QSdiag, &QVt, QwQ);
 	if(parms->save.setup) dwrite(QSdiag,"%s/mvst_QSdiag",dirsetup);
 	dcwpow(QSdiag, -1./2.);
 	dmuldiag(QU,QSdiag);//U*sigma^-1/2
@@ -2108,8 +2114,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     dcellfree(GPTTDF);
     dcellfree(ULo);
     dcellfree(VLo);
-    {
-	//Create piston and check board modes that are in NULL space of GA.
+    if(parms->tomo.alg!=2){
+	info2("Create piston and check board modes that are in NULL space of GA.\n");
 	dcell *NW=dcellnew(ndm,1);
 	int nmod=2;//two modes.
 	for(int idm=0; idm<ndm; idm++){
@@ -2158,8 +2164,14 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellwrite(recon->LL.U,"%s/LLU",dirsetup);
 	dcellwrite(recon->LL.V,"%s/LLV",dirsetup); 
     }
-    if(parms->tomo.alg==0){
-	muv_chol_prep(&recon->LL);
+    if(parms->tomo.alg==0 || parms->tomo.alg==2){
+	muv_direct_prep(&recon->LL, (parms->tomo.alg==2)*parms->tomo.svdthres);
+	if(parms->save.setup && parms->save.recon){
+	    if(recon->LL.C)
+		chol_save(recon->LL.C, "%s/LLC", dirsetup);
+	    else
+		dwrite(recon->LL.MI, "%s/LLMI", dirsetup);
+	}
 	spcellfree(recon->LL.M);
 	dcellfree(recon->LL.U);
 	dcellfree(recon->LL.V);

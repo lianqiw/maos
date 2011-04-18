@@ -38,44 +38,67 @@ void muv(dcell **xout, const MUV_T *A, const dcell *xin, const double alpha){
     }
 }
 
-
 /**
    Apply cholesky backsubstitution solve to xin to get xout. Create xout is not
    exist already. The cholesky factors are prepared in setup_recon.c and stored
    in ((MUV_T*)A)->C */
 
-void muv_chol_solve(dmat **xout, const MUV_T *A, const dmat *xin){
+void muv_direct_solve(dmat **xout, const MUV_T *A, const dmat *xin){
     dzero(*xout);
-    chol_solve(xout,A->C,xin);
+    if(A->MI){
+	dmm(xout, A->MI, xin, "nn", 1);
+    }else{
+	chol_solve(xout,A->C,xin);
+    }
     dmat *tmp=NULL;
     dmm(&tmp,A->Vp,xin,"tn",-1);
     dmm(xout,A->Up,tmp,"nn",1);
     dfree(tmp);
 }
 /**
-   convert the data from dcell to dmat and apply muv_chol_solve() */
-void muv_chol_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin){
-    dmat *xin2=dcell2m(xin);
-    dmat *xout2=NULL;
-    muv_chol_solve(&xout2, A, xin2);
-    dfree(xin2);
-    d2cell(xout,xout2,xin);//xin is the reference for dimensions. copy data into xout.
-    dfree(xout2);
+   convert the data from dcell to dmat and apply muv_direct_solve() */
+void muv_direct_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin){
+    if(xin->nx*xin->ny==1){//there is only one cell.
+	if(!*xout) *xout=dcellnew(1,1);
+	muv_direct_solve(&((*xout)->p[0]), A, xin->p[0]);
+    }else{
+	dmat *xin2=dcell2m(xin);
+	dmat *xout2=NULL;
+	muv_direct_solve(&xout2, A, xin2);
+	dfree(xin2);
+	d2cell(xout,xout2,xin);//xin is the reference for dimensions. copy data into xout.
+	dfree(xout2);
+    }
 }
 /**
-  Cholesky factorization on the sparse matrix and its low rank terms.  */
-void muv_chol_prep(MUV_T *A){ 
+  Cholesky factorization (svd=0) or svd (svd>0) on the sparse matrix and its low
+  rank terms.  if svd is less than 1, it is also used as the threshold in SVD
+  inversion.*/
+void muv_direct_prep(MUV_T *A, double svd){ 
     if(!A->M) error("M has to be none NULL\n");
-    info("muv_chol_prep:");
-    muv_chol_free(A);
+    info2("muv_direct_prep: (svd=%g)", svd);    
+    TIC;tic;
+    muv_direct_free(A);
     dsp *muvM=spcell2sp(A->M);
-    A->C=chol_factorize(muvM);
+    if(svd>0){
+	spfull(&A->MI, muvM, 1);
+	if(svd<1){
+	    dsvd_pow(A->MI, -1, 1, svd);
+	}else{
+	    dsvd_pow(A->MI, -1, 1, 2e-4);
+	}
+    }else{
+	A->C=chol_factorize(muvM);
+    }
     spfree(muvM);
     if(A->U){
 	dmat *U=dcell2m(A->U);
 	A->Up=NULL;
-	chol_solve(&(A->Up),A->C,U);
-
+	if(A->MI){
+	    dmm(&A->Up, A->MI, U, "nn", 1);
+	}else{
+	    chol_solve(&(A->Up),A->C,U);
+	}
 	dfree(U);
 	dmat *V=dcell2m(A->V);
 	dmat *UpV=NULL;//UpV=I-Up'*V
@@ -88,20 +111,29 @@ void muv_chol_prep(MUV_T *A){
 	dmm(&VI,V,UpV,"nn",-1);
 	dfree(UpV);
 	dfree(V);
-	chol_solve(&(A->Vp),A->C,VI);
+	if(A->MI){
+	    dmm(&A->Vp, A->MI, VI, "nn", 1);
+	}else{
+	    chol_solve(&(A->Vp),A->C,VI);
+	}
 	dfree(VI);
     }
+    toc2("done.");
 }
+
 /**
    Free cholesky decompositions.
  */
-void muv_chol_free(MUV_T *A){
+void muv_direct_free(MUV_T *A){
     if(A->C){
 	chol_free(A->C);
-	dfree(A->Up);
-	dfree(A->Vp);
 	A->C=NULL;
     }
+    if(A->MI){
+	dfree(A->MI); A->MI=NULL;
+    }
+    dfree(A->Up);
+    dfree(A->Vp);
 }
 /**
    Free MUV_T struct
@@ -113,5 +145,5 @@ void muv_free(MUV_T *A){
     if(A->extra){
 	free(A->extra);//a struct contains pointers.
     }
-    muv_chol_free(A);
+    muv_direct_free(A);
 }

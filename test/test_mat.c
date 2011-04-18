@@ -224,7 +224,39 @@ static void test_spline_2d(void){
     dcellwrite(coeff,"coeff");
     exit(0);
 }
+static void test_svd(void){
+    spcell *a=spcellread("LLM");
+    dmat *A=NULL;
+    spfull(&A, a->p[0], 1);
+    if(0){
+    dmat *U, *S, *VT, *U2, *S2, *VT2;
+    TIC;
+    tic;
+    dsvd(&U, &S, &VT, A);
+    toc("dsvd");
+    tic;
+    devd(&U2, &S2, A);
+    toc("devd");
+    dwrite(U,"U.bin");
+    dwrite(S, "S.bin");
+    dwrite(VT,"VT.bin");
+    dwrite(U2,"U2.bin");
+    dwrite(S2,"S2.bin");
+    }else{
+	dwrite(A,"A.bin");
+	tic;
+	dsvd_pow(A, -1, 1, 1e-15);
+	toc("dsvd_pow");
+	dwrite(A,"AI.bin");
+	tic;
+	dsvd_pow(A, -1, 0, 1e-15);
+	toc("dsvd_pow svd");
+	dwrite(A,"A2.bin");
+    }
+    exit(0);
+}
 int main(int argc, char **argv){
+    test_svd();
     test_spline_2d();
     test_spline();
     test_dpinv();

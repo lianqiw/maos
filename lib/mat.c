@@ -173,7 +173,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 	}else{
 	    error("The ref is less than 1. unlikely!!!:%ld\n",A->nref[0]);
 	}
-    }else{
+    }else{//data does not belong to us.
 	free(A->header);
     }
     free(A);
@@ -221,9 +221,9 @@ X(mat) *X(ref)(X(mat) *in){
 	error("Allocation failed\n");
     }
     memcpy(out,in,sizeof(X(mat)));
-#ifdef USE_COMPLEX
+    /*#ifdef USE_COMPLEX
     out->fft=NULL;
-#endif
+    #endif*/
     out->nref[0]++;
     return out;
 }
@@ -828,7 +828,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
 	X(write)(wt,"wt_isnan");
 	Y(spwrite)(Wsp, "Wsp_isnan");
     }
-    X(svd_pow)(cc,-1);//invert the matrix using SVD. safe with small eigen values.
+    X(svd_pow)(cc,-1,1,EPS);//invert the matrix using SVD. safe with small eigen values.
     X(mat) *out=NULL;
     //Compute (A'*W*A)*A'*W
     X(mm) (&out, cc, AtW, "nn", 1);
@@ -1246,17 +1246,17 @@ void X(cwpow)(X(mat)*A, double power){
 }
 
 /**
-   SVD of a general matrix. 
+   Compute SVD of a general matrix A. 
    A=U*diag(S)*V';
    diag(S) is returned.
 */
-void X(svd)(dmat **Sdiag, X(mat) **U, X(mat) **VT, const X(mat) *A){
+void X(svd)(X(mat) **U, dmat **Sdiag, X(mat) **VT, const X(mat) *A){
     char jobuv='S';
     int M=(int)A->nx;
     int N=(int)A->ny;
-    if((Sdiag&&*Sdiag)||(U&&*U)||(VT&&*VT)){
+    /*if((Sdiag&&*Sdiag)||(U&&*U)||(VT&&*VT)){
 	warning("Sdiag,U,VT should all be NULL. discard their value\n");
-    }
+	}*/
     X(mat) *tmp=X(dup)(A);
     int nsvd=M<N?M:N;
     dmat *s=dnew(nsvd,1);
@@ -1266,6 +1266,7 @@ void X(svd)(dmat **Sdiag, X(mat) **U, X(mat) **VT, const X(mat) *A){
     T work0[1];
     int info=0;
 #ifdef USE_COMPLEX
+    warning("Not tested\n");
     double *rwork=malloc(nsvd*5*sizeof(double));
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
 #else
@@ -1297,25 +1298,82 @@ void X(svd)(dmat **Sdiag, X(mat) **U, X(mat) **VT, const X(mat) *A){
 }
 
 /**
-   computes pow(A,power) using svd
+   Compute the eigen values and, optionally, eigen vectors of a real symmetric
+matrix. Notice that here Sdiag is in ascending order, which is different from
+X(svd).  */
+void X(evd)(X(mat) **U, dmat **Sdiag,const X(mat) *A){
+    assert(A->nx==A->ny && A->nx>0);
+    *Sdiag=dnew(A->nx,1);
+    char jobz=U?'V':'N';
+    char uplo='U';
+    int lda=A->nx;
+    T worksize[1];
+    int lwork=-1;
+    int info;
+    X(mat) *atmp=X(dup)(A);
+#ifdef USE_COMPLEX
+    double *rwork=malloc((3*A->nx-2)*sizeof(double));
+    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, worksize, &lwork,rwork, &info);
+    lwork=(int)worksize[0];
+    T *work=malloc(sizeof(double)*lwork);
+    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork,rwork, &info);
+    free(rwork);
+#else
+    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, worksize, &lwork, &info);
+    T *work=malloc(sizeof(double)*worksize[0]);
+    lwork=(int)worksize[0];
+    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork, &info);
+#endif
+    if(info){
+	X(write)(A,"A_evd_failed");
+	if(info<0)
+	    error("The %dth argument had an illegal value\n", -info);
+	else
+	    error("The %dth number of elements did not converge to zero\n", info);
+    }
+    if(U) *U=atmp; else X(free)(atmp);
+    free(work);
+}
+
+/**
+   computes pow(A,power) in place using svd or evd. if issym==1, use evd, otherwise use svd
 */
-void X(svd_pow)(X(mat) *A, double power){
+void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
+    int use_evd=0;
     if(A->nx!=A->ny){
-	warning("dsvd_pow is only good for square arrays.\n");
+	warning("dpow is only good for square arrays.\n");
+    }else if(issym){
+	use_evd=1;
     }
     dmat *Sdiag=NULL;
     X(mat) *U=NULL;
     X(mat) *VT=NULL;
-    
-    X(svd)(&Sdiag, &U, &VT, A);
-    //eigen values below the threshold will not be used. the first is always the biggest.
-    double thres=fabs(Sdiag->p[0])*EPS;
+    double maxeig;
+    if(use_evd){
+	X(evd)(&U, &Sdiag, A);
+	//eigen values below the threshold will not be used. the last is the biggest.
+	maxeig=fabs(Sdiag->p[Sdiag->nx-1]);
+	VT=X(trans)(U);
+    }else{
+	X(svd)(&U, &Sdiag, &VT, A);
+	//eigen values below the threshold will not be used. the first is the biggest.
+	maxeig=fabs(Sdiag->p[0]);
+    }
+    thres*=maxeig;
+    long skipped=0;
+    double mineig=INFINITY;
     for(long i=0; i<Sdiag->nx; i++){
 	if(fabs(Sdiag->p[i])>thres){//only do with 
 	    Sdiag->p[i]=pow(Sdiag->p[i],power);
 	}else{
+	    if(fabs(Sdiag->p[i])<mineig) 
+		mineig=fabs(Sdiag->p[i]);
 	    Sdiag->p[i]=0;
+	    skipped++;
 	}
+    }
+    if(skipped){
+	info2("%ld of %ld eigen values are skipped. Min/max eigen values are %g / %g\n", skipped, Sdiag->nx, mineig, maxeig);
     }
     for(long iy=0; iy <VT->ny; iy++){
 	T *p=VT->p+iy*VT->nx;
@@ -1325,6 +1383,7 @@ void X(svd_pow)(X(mat) *A, double power){
     }
     X(zero)(A);
     X(mm)(&A,U,VT,"nn",1);
+    
     X(free)(U);
     X(free)(VT);
     dfree(Sdiag);
@@ -1348,7 +1407,7 @@ void X(addI)(X(mat) *A, T val){
 */
 void X(tikcr)(X(mat) *A, T thres){
     dmat *S=NULL;
-    X(svd)(&S,NULL,NULL,A);
+    X(svd)(NULL,&S,NULL,A);
     T val=S->p[0]*thres;
     dfree(S);
     X(addI)(A,val);

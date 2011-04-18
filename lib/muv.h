@@ -32,20 +32,20 @@ typedef struct MUV_T{
     spcell *M;     /**<block sparse matrix*/
     dcell  *U;     /**<low rank terms U*/
     dcell  *V;     /**<low rank terms V*/
-    spchol *C;     //Cholesky factor.
-    dsp   *Cs;       //Converted cholesky factor.
-    long  *Cp;    //permutation vector for Cs.
+    spchol *C;     /**<Cholesky factor.*/
+    dsp   *Cs;     /**<Converted cholesky factor.*/
+    long  *Cp;     /**<permutation vector for Cs.*/
     dmat  *Up;
     dmat  *Vp;
-
-    CGFUN exfun;     /**<Optionally attach an extra function that applies extra data*/
-    void *extra;     /**<Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute*/
+    dmat  *MI;     /**<Inverse of M via svd*/
+    CGFUN exfun;   /**<Optionally attach an extra function that applies extra data*/
+    void *extra;   /**<Data used by fun to apply: (*exfun)(y,extra,x,alpha) to compute*/
 }MUV_T;
 
 void muv(dcell **xout, const MUV_T *A, const dcell *xin, const double alpha);
-void muv_chol_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin);
-void muv_chol_solve(dmat **xout, const MUV_T *A, const dmat *xin);
-void muv_chol_prep(MUV_T *muv);
-void muv_chol_free(MUV_T *muv);
+void muv_direct_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin);
+void muv_direct_solve(dmat **xout, const MUV_T *A, const dmat *xin);
+void muv_direct_prep(MUV_T *muv, double svd);
+void muv_direct_free(MUV_T *muv);
 void muv_free(MUV_T *A);
 #endif

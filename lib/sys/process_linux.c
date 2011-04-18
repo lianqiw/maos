@@ -40,6 +40,7 @@ const char *get_job_progname(void){
 	if(nprog>0){
 	    path[nprog]='\0';
 	    progname=strdup(path);
+	    register_deinit(NULL,progname);
 	}	
     }
     return progname;

@@ -69,6 +69,8 @@ void free_parms(PARMS_T *parms){
     free(parms->sim.apngs);
     free(parms->sim.apupt);
     free(parms->sim.seeds);
+    free(parms->sim.gtypeII_lo);
+    free(parms->sim.wspsd);
 
     free(parms->cn2.pair);
     free(parms->save.gcov);
@@ -557,6 +559,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_DBL(tomo.cxxscale);
     READ_INT(tomo.guard);
     READ_DBL(tomo.tikcr);
+    READ_DBL(tomo.svdthres);
     READ_INT(tomo.piston_cr);
     READ_INT(tomo.split);
     READ_INT(tomo.ahst_wt);
@@ -587,6 +590,7 @@ static void readcfg_fit(PARMS_T *parms){
     }
 
     READ_DBL(fit.tikcr);
+    READ_DBL(fit.svdthres);
     READ_INT(fit.actslave);
     READ_INT(fit.lrt_piston);
     READ_INT(fit.lrt_tt);
@@ -609,7 +613,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.lpfocus);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
-
+    
     parms->sim.napdm=readcfg_dblarr(&parms->sim.apdm,"sim.apdm");
     parms->sim.napngs=readcfg_dblarr(&parms->sim.apngs,"sim.apngs");
     parms->sim.napupt=readcfg_dblarr(&parms->sim.apupt,"sim.apupt");
@@ -761,14 +765,13 @@ static void readcfg_save(PARMS_T *parms){
     int *tmp=NULL;
     int count;
     count=readcfg_intarr(&tmp, "save.ints");
-    parms->save.ints=wfs_save_parse(count, tmp, parms);
+    parms->save.ints=wfs_save_parse(count, tmp, parms);free(tmp);
     count=readcfg_intarr(&tmp, "save.wfsopd");
-    parms->save.wfsopd=wfs_save_parse(count, tmp, parms);
+    parms->save.wfsopd=wfs_save_parse(count, tmp, parms);free(tmp);
     count=readcfg_intarr(&tmp, "save.grad");
-    parms->save.grad=wfs_save_parse(count, tmp, parms);
+    parms->save.grad=wfs_save_parse(count, tmp, parms);free(tmp);
     count=readcfg_intarr(&tmp, "save.gradgeom");
-    parms->save.gradgeom=wfs_save_parse(count, tmp, parms);
-    free(tmp);
+    parms->save.gradgeom=wfs_save_parse(count, tmp, parms); free(tmp);
   
     if(parms->save.all){//enables everything
 	warning("Enabling saving everything.\n");
@@ -1601,6 +1604,9 @@ static void print_parms(const PARMS_T *parms){
 	    info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
 		  tomo_precond[parms->tomo.precond], parms->tomo.maxit);
 	    break;
+	case 2:
+	    info2("SVD direct solve ");
+	    break;
 	default:
 	    error("Invalid\n");
 	}
@@ -1623,6 +1629,9 @@ static void print_parms(const PARMS_T *parms){
 	    info2("CG, with %s preconditioner, \033[0;32m%d\033[0;0m iterations, ",
 		  tomo_precond[parms->fit.precond], parms->fit.maxit);
 	    break;
+	case 2:
+	    info2("SVD direct solve ");
+	    break;
 	default:
 	    error("Invalid");
 	}
@@ -1634,6 +1643,9 @@ static void print_parms(const PARMS_T *parms){
 	    break;
 	case 1:
 	    info2("CG%d", parms->tomo.maxit);
+	    break;
+	case 2:
+	    info2("SVD direct solve ");
 	    break;
 	default:
 	    error("Invalid\n");
@@ -1733,10 +1745,10 @@ static void check_parms(const PARMS_T *parms){
 	}
     }
  
-    if(parms->tomo.alg<0 || parms->tomo.alg>1){
+    if(parms->tomo.alg<0 || parms->tomo.alg>2){
 	error("parms->tomo.alg=%d is invalid\n", parms->tomo.alg);
     }
-    if(parms->fit.alg<0 || parms->fit.alg>1){
+    if(parms->fit.alg<0 || parms->fit.alg>2){
 	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
     }
     if(parms->dbg.fitonly && parms->sim.recon!=0){
