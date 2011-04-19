@@ -828,7 +828,7 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
 	X(write)(wt,"wt_isnan");
 	Y(spwrite)(Wsp, "Wsp_isnan");
     }
-    X(svd_pow)(cc,-1,1,EPS);//invert the matrix using SVD. safe with small eigen values.
+    X(svd_pow)(cc,-1,0,1e-14);//invert the matrix using SVD. safe with small eigen values.
     X(mat) *out=NULL;
     //Compute (A'*W*A)*A'*W
     X(mm) (&out, cc, AtW, "nn", 1);

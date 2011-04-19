@@ -161,7 +161,7 @@ static void skysim_isky(SIM_S *simu){
 	double tk_2=myclockd();
 	//Select asters that have good performance.
 	setup_aster_select(pres_ol[isky],aster, naster, star, 
-			   simu->rmsol->p[0]/9,parms); 
+			   simu->rmsol->p[0]*0.5,parms); 
 	//Read in physical optics data (wvf)
 	nstep=setup_star_read_wvf(star,nstar,parms,seed_maos);
 	double tk_3=myclockd();
@@ -345,6 +345,8 @@ void skysim(const PARMS_S *parms){
 	simu->psd_ngs=ddup(parms->skyc.psd_ngs);
 	simu->psd_ps=ddup(parms->skyc.psd_ps);
 	simu->psd_tt=ddup(parms->skyc.psd_tt);
+	double rms_ws=psd_intelog2(simu->psd_ws);
+	simu->rmsol->p[1]+=rms_ws;//add wind shake to open loop error.
 	prep_bspstrehl(simu);
 	//renormalize PSD
 	if(parms->skyc.psd_scale){
@@ -367,6 +369,7 @@ void skysim(const PARMS_S *parms){
 	}
 	simu->psd_ngs_ws=add_psd(simu->psd_ngs, simu->psd_ws);
 	simu->psd_tt_ws=add_psd(simu->psd_tt, simu->psd_ws);
+
 	{
 	    //Precompute gains for different levels of noise.
 	    dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2.
