@@ -131,6 +131,7 @@ static int read_fifo(FILE *fp){
 	    drawdata->ticinside=1;
 	    drawdata->legendbox=1;
 	    drawdata->fig=NULL;
+	    drawdata->cumulast=-1;//mark as unknown.
 	    break;
 	case FIFO_DATA://image data.
 	    {
@@ -233,31 +234,6 @@ static int read_fifo(FILE *fp){
 		if(drawdata->npts>0){
 		    drawdata->icumu=50;
 		    drawdata->cumuquad=1;
-		    if(!drawdata->limit){
-			drawdata->limit=calloc(4, sizeof(double));
-			double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
-			for(int ipts=0; ipts<drawdata->npts; ipts++){
-			    dmat *pts=drawdata->pts[ipts];
-			    double xmin, xmax, ymin, ymax;
-			    if(pts->ny>1){
-				maxmindbl(pts->p, pts->nx, &xmax, &xmin);
-				maxmindbl(pts->p+pts->nx, pts->nx, &ymax, &ymin);
-			    }else{
-				xmin=0; xmax=(double)(pts->nx-1);
-				maxmindbl(pts->p, pts->nx, &ymax, &ymin);
-			    }
-			    if(xmin<xmin0) xmin0=xmin;
-			    if(ymin<ymin0) ymin0=ymin;
-			    if(xmax>xmax0) xmax0=xmax;
-			    if(ymax>ymax0) ymax0=ymax;
-			}
-			drawdata->limit[0]=xmin0;
-			drawdata->limit[1]=xmax0;
-			drawdata->limit[2]=ymin0;
-			drawdata->limit[3]=ymax0;
-			round_limit(drawdata->limit, drawdata->limit+1);
-			round_limit(drawdata->limit+2, drawdata->limit+3);
-		    }
 		    if(drawdata->nstyle>1){
 			if(drawdata->nstyle!=drawdata->npts){
 			    warning("nstyle must equal to npts\n");
