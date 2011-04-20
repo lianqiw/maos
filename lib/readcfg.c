@@ -117,8 +117,8 @@ static char* strextract(const char *data){
     if(!data || strlen(data)<=2) return NULL;
     if((data[0]!='"' && data[0]!='\'') || 
        (data[strlen(data)-1]!='"' && data[strlen(data)-1]!='\'')){
-	warning("Record is {%s}. \nThis is not a string constant. "
-		"Strings should be embrased by \"\" or \'\'\n",data);
+	//warning("Record is {%s}. \nThis is not a string constant. "
+	//"Strings should be embrased by \"\" or \'\'\n",data);
 	return strdup(data);
     }else{
 	char *res=strdup(data+1);
