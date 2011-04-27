@@ -56,7 +56,9 @@ struct drawdata_t{
     double (*cir)[4];
     unsigned int ncir;
     //limit
-    double *limit;//x,y,limit
+    double *limit_data;//x,y,limit of data. might be suplied by user.
+    double *limit_cumu;//x,y,limit of cumulatively averaged data.
+    double *limit;//points to either limit_data or limit_cumu
     double *zlim;
     //The following are for surfaces
     int nx, ny;   //array size
@@ -93,7 +95,7 @@ struct drawdata_t{
     double xoff, yoff;//offset of the area to draw figure.
     
     double limit0[4];//x,y limit of displayed region.
-    double limitsave[4];//save limit.
+
     int square;//make x/y scaling be the same, for image and coordinate display
     int valid;//move is valid.
     int font_name_version;

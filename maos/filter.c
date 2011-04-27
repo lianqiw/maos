@@ -325,4 +325,12 @@ void filter(SIM_T *simu){
 	    cellarr_dcell(simu->save->dmreal, simu->dmreal);
 	}
     }
+    if(simu->parms->plot.run){
+	//Moved from recon.c to here.
+	for(int idm=0; simu->dmreal && idm<simu->parms->ndm; idm++){
+	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
+		    "Actual DM Actuator Commands","x (m)", "y (m)",
+		    "Real %d",idm);
+	}
+    }
 }

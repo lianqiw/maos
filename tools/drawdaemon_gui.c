@@ -678,7 +678,7 @@ void addpage(drawdata_t **drawdatawrap)
 	drawdata_old->xlabel=drawdata->xlabel;
 	drawdata_old->ylabel=drawdata->ylabel;
 	drawdata_old->legend=drawdata->legend;
-	drawdata_old->limit=drawdata->limit;
+	drawdata_old->limit_data=drawdata->limit_data;
 	drawdata_old->zlim=drawdata->zlim;
 	drawdata_old->format=drawdata->format;
 	drawdata_old->gray=drawdata->gray;

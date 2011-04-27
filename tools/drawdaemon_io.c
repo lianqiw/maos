@@ -170,8 +170,8 @@ static int read_fifo(FILE *fp){
 	    FILE_READ(drawdata->cir,sizeof(double)*4*drawdata->ncir);
 	    break;
 	case FIFO_LIMIT:
-	    drawdata->limit=calloc(4, sizeof(double));
-	    FILE_READ(drawdata->limit, 4*sizeof(double));
+	    drawdata->limit_data=calloc(4, sizeof(double));
+	    FILE_READ(drawdata->limit_data, 4*sizeof(double));
 	    break;
 	case FIFO_FIG:
 	    FILE_READ_STR(drawdata->fig);
@@ -213,12 +213,12 @@ static int read_fifo(FILE *fp){
 			size=4;
 		    }
 		    int stride=cairo_format_stride_for_width(drawdata->format, nx);
-		    if(!drawdata->limit){
-			drawdata->limit=calloc(4, sizeof(double));
-			drawdata->limit[0]=0;
-			drawdata->limit[1]=drawdata->nx;
-			drawdata->limit[2]=0;
-			drawdata->limit[3]=drawdata->ny;
+		    if(!drawdata->limit_data){
+			drawdata->limit_data=calloc(4, sizeof(double));
+			drawdata->limit_data[0]=0;
+			drawdata->limit_data[1]=drawdata->nx;
+			drawdata->limit_data[2]=0;
+			drawdata->limit_data[3]=drawdata->ny;
 		    }
 		    //convert data from double to int/char.
 		    if(!drawdata->zlim){

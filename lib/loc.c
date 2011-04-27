@@ -160,8 +160,10 @@ int *loc_create_embed(int *nembed, const loc_t *loc){
 	mapn=(int)exp2(ceil(log2(nxy)));
 	*nembed=mapn;
     }else{
-	if(*nembed<nxy){
-	    error("Supplied nembed %d is not valid, need at least %d\n",*nembed,nxy);
+	if(*nembed<nxy/2){
+	    error("Supplied nembed %d is too small, need at least %d\n",*nembed,nxy);
+	}else if(*nembed<nxy){
+	    warning("Supplied nembed %d is too small, need at least %d\n",*nembed,nxy);
 	}
 	mapn=*nembed;
     }

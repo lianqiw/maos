@@ -353,7 +353,8 @@ typedef struct FIT_CFG_T{
     double *thetax;  /**<x Coordinate of DM fitting directions. */
     double *thetay;  /**<y Coordinate of DM fitting directions. */
     double *wt;      /**<weight of each direction*/
-    double tikcr; /**<tikhonov regularization*/
+    double *ht;      /**<height of each direction*/
+    double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
     int nfit;        /**<Number of DM fit directions */
@@ -563,7 +564,6 @@ typedef struct PARMS_T{
     int nwfs;        /**<Number of wfs*/
     int ndm;         /**<Number of DMs*/
     int nmoao;       /**<Number of different MOAO type*/
-    int nhs;         /**<Number of atmospheric layers*/
     char **surf;     /**<OPD surfaces*/
     int nsurf;       /**<Number of OPD surfaces*/
     char **tsurf;    /**<Tilted surfaces, surface, not OPD*/

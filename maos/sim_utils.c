@@ -56,7 +56,7 @@ static map_t **genscreen_do(SIM_T *simu){
 	info2("Generating Atmospheric Screen...\n");
 	tic;
 	screens = simu->atmfun(gs);
-	toc2("done");
+	toc2("Atmosphere ");
     }else{
 	info2("Generating Testing Atmosphere Screen\n");
 	/*
@@ -418,19 +418,26 @@ void evolve_screen(SIM_T *simu){
 }
 /**
    Propagate the atmosphere to closest xloc. skip wavefront sensing and
-   reconstruction.
-*/
+   reconstruction. 
+
+   2011-04-26: opdx was incorrectly computed when atm.ht and atmr.ht does not
+   match in number. Fixed. Do not do scaling even if fit.ht is less.
+
+  */
 dcell *atm2xloc(const SIM_T *simu){
     const RECON_T *recon=simu->recon;
     const PARMS_T *parms=simu->parms;
     dcell *opdx=dcellnew(recon->npsr,1);
-    int isim=simu->isim;
+    //in close loop mode, opdr is from last time step.
+    int isim=parms->sim.closeloop?simu->isim-1:simu->isim;
     if(simu->atm){
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    double disx=-simu->atm[ips]->vx*isim*simu->dt;
 	    double disy=-simu->atm[ips]->vy*isim*simu->dt;
 	    int ipsr=parms->atm.ipsr[ips];
-	    opdx->p[ipsr]=dnew(recon->xloc[ipsr]->nloc,1);
+	    if(!opdx->p[ipsr]){
+		opdx->p[ipsr]=dnew(recon->xloc[ipsr]->nloc,1);
+	    }
 	    prop_grid(simu->atm[ips],recon->xloc[ipsr],opdx->p[ipsr]->p,
 		      1,disx,disy,1,1,0,0);
 	}
@@ -616,7 +623,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     */
 
     if(parms->evl.psfmean){
-
 	char header[800];
 	header[0]='\0';
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
@@ -632,25 +638,37 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    if(nstep > nframe*parms->evl.psfmean) nframe++;
 	}
 	if(parms->evl.tomo){
+	    char strht[24];
 	    simu->evlpsftomomean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
 	    simu->evlpsftomomean->header=strdup(header);
 	    save->evlpsftomomean=calloc(parms->evl.nevl, sizeof(cellarr*));
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if(!isinf(parms->evl.ht[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		}else{
+		    strht[0]='\0';
+		}
 		save->evlpsftomomean[ievl]=cellarr_init(parms->evl.nwvl, nframe, 
-							"evlpsftomo_%d_x%g_y%g.bin", seed, 
+							"evlpsftomo_%d_x%g_y%g%s.bin", seed, 
 							parms->evl.thetax[ievl]*206265,
-							parms->evl.thetay[ievl]*206265);
+							parms->evl.thetay[ievl]*206265, strht);
 	    }
 	}
 	if(parms->evl.tomo!=2){
+	    char strht[24];
 	    simu->evlpsfmean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
 	    simu->evlpsfmean->header=strdup(header);
 	    save->evlpsfmean=calloc(parms->evl.nevl, sizeof(cellarr*));
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if(!isinf(parms->evl.ht[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		}else{
+		    strht[0]='\0';
+		}
 		save->evlpsfmean[ievl]=cellarr_init(parms->evl.nwvl,nframe, 
-						    "evlpsfcl_%d_x%g_y%g.bin", seed, 
+						    "evlpsfcl_%d_x%g_y%g%s.bin", seed,
 						    parms->evl.thetax[ievl]*206265,
-						    parms->evl.thetay[ievl]*206265);
+						    parms->evl.thetay[ievl]*206265, strht);
 	    }
 	}
 	if(parms->evl.psfol){
@@ -662,19 +680,25 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->opdevl=dcellnew(parms->evl.nevl,1);
     if(parms->evl.psfhist){
 	save->evlpsfhist=calloc(nevl, sizeof(cellarr*));
+	char strht[24];
 	for(int ievl=0; ievl<nevl; ievl++){
 	    if(!parms->evl.psf[ievl]) continue;
+	    if(!isinf(parms->evl.ht[ievl])){
+		snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+	    }else{
+		strht[0]='\0';
+	    }
 	    if(parms->evl.tomo!=2){//only evaluate tomography result.
 		save->evlpsfhist[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim, 1,
-						    "evlpsfhist_%d_x%g_y%g.bin", seed,
+						    "evlpsfhist_%d_x%g_y%g%s.bin", seed,
 						    parms->evl.thetax[ievl]*206265,
-						    parms->evl.thetay[ievl]*206265);
+						    parms->evl.thetay[ievl]*206265,strht);
 	    }
 	    if(parms->evl.tomo){
 		save->evlpsftomohist[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim, 1,
-							"evlpsftomohist_%d_x%g_y%g.bin",seed,
+							"evlpsftomohist_%d_x%g_y%g%s.bin",seed,
 							parms->evl.thetax[ievl]*206265,
-							parms->evl.thetay[ievl]*206265);
+							parms->evl.thetay[ievl]*206265,strht);
 	    }
 	}
     }
@@ -988,7 +1012,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    nnx[1]=0;
 	    nny[1]=0;
 	}
-	if(!parms->tomo.split){
+	if(!parms->tomo.split || parms->ndm>2){
 	    nnx[3]=0; 
 	    nny[3]=0;
 	}
@@ -1388,7 +1412,7 @@ void save_simu(const SIM_T *simu){
     if(parms->evl.psfmean 
        && (parms->sim.end==isim+1
 	   ||(parms->evl.psfmean>1 && isim-parms->evl.psfisim+1-parms->evl.psfmean>=0 && (isim-parms->evl.psfisim+1-parms->evl.psfmean) % parms->evl.psfmean==0))){
-	info("Output PSF\n");
+	info2("Output PSF\n");
 	if(simu->evlpsfmean){
 	    dcell *psfmean=NULL;
 	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
@@ -1427,26 +1451,6 @@ void save_simu(const SIM_T *simu){
 	}
     }
     if((isim % 50 ==0) || isim+1==parms->sim.end){
-	/*if(parms->evl.psfmean && simu->isim>=parms->evl.psfisim){
-	    double scale;
-	    if(parms->evl.tomo!=2){
-		scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-		if(simu->evlpsfmean){
-		    dcellswrite(simu->evlpsfmean, scale, "evlpsfcl_%d.bin",seed);
-		}
-		scale=1./(double)(simu->isim+1-parms->sim.start);
-		if(parms->evl.psfol==2){
-		    scale=scale/parms->evl.npsf;
-		}
-		if(parms->evl.psfol && simu->evlpsfolmean){
-		    dcellswrite(simu->evlpsfolmean,scale, "evlpsfol_%d.bin",seed);
-		}
-	    }
-	    if(parms->evl.tomo && simu->evlpsfmean){
-		scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-		dcellswrite(simu->evlpsftomomean, scale, "evlpsftomo_%d.bin",seed);
-	    }
-	    }*/
 	if(simu->wfspsfmean && simu->isim>=parms->evl.psfisim){
 	    double scalewfs=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    dcellswrite(simu->wfspsfmean, scalewfs, "wfspsfmean_%d.bin", seed);
@@ -1530,7 +1534,7 @@ void print_progress(const SIM_T *simu){
 		mysqrt(simu->cle->p[isim*nmod])*1e9,
 		mysqrt(simu->cle->p[1+isim*nmod])*1e9,
 		mysqrt(simu->cle->p[2+isim*nmod])*1e9);
-	if(parms->tomo.split){
+	if(parms->tomo.split && parms->ndm<=2){
 	    fprintf(stderr," Split %6.1f %6.1f %6.1f nm;",
 		    mysqrt(simu->clem->p[isim*3])*1e9,
 		    mysqrt(simu->clem->p[1+isim*3])*1e9,

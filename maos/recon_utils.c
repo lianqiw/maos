@@ -204,7 +204,7 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW,
 	    }
 	}
 	nslavetot+=nslave;
-	info("dm %d: there are %d slave actuators\n", idm, nslave);
+	info2("dm %d: there are %d slave actuators\n", idm, nslave);
 	if(nslave==0) {
 	    continue;
 	}

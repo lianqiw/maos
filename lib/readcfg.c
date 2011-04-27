@@ -52,6 +52,7 @@
 #else
 #define RENAME(old,new) //do nothing.
 #endif
+
 static int MAX_ENTRY=1000;
 typedef struct STORE_T{
     char *key;
@@ -287,6 +288,11 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    }
 	    store[nstore].protect=protect;
 	    entry.data=(void*)nstore;//record entry.
+	    if(store[nstore].data && !strcmp(store[nstore].data, "ignore")){
+		store[nstore].count=1;//Mark it as already consumed.
+	    }else{
+		store[nstore].count=0;
+	    }
 	    if((entryfind=hsearch(entry,FIND))){
 		//same key found
 		long istore=(long)(entryfind->data);
@@ -312,6 +318,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 		    //copy pointer of new value.
 		    store[istore].data=store[nstore].data;
 		    store[istore].protect=store[nstore].protect;
+		    store[istore].count=store[nstore].count;
 		    //free key.
 		    free(store[nstore].key);
 		}
@@ -698,7 +705,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	startptr++;//points to the beginning of the array in []
 	/*process possible numbers after the array. do not use startptr here.*/
     }else{
-	warning2("Expecting array: {%s} should start with [\n", data);
+	//warning2("Expecting array: {%s} should start with [\n", data);
     }
     if(strchr(startptr,']')){//there is indeed ']'
 	endptr=strchr(startptr,']')+1;

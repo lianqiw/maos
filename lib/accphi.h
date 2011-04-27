@@ -112,13 +112,18 @@ void prop_nongrid_map_cubic(loc_t *locin, const double* phiin,
 			    double scale, double cubic_iac, 
 			    long start, long end);
 /*
-  the following routine is used to du down sampling by doing *reverse* ray tracing.
-  locin is coarse sampling, locout is fine sampling. phiin is the unknown
+  the following routine is used to du down sampling by doing binning ray tracing.
+  locout is coarse sampling, locint is fine sampling.
+  phiin->phiout.
 */
-void prop_nongrid_reverse(loc_t *locin, double* phiin, 
-			  const loc_t *locout,
-			  const double *ampout, 
-			  const double* phiout, double alpha,
-			  double displacex, double displacey,
-			  double scale);
+void prop_nongrid_bin(const loc_t *locin,
+		      const double* phiin,
+		      loc_t *locout,       
+		      const double *ampout,
+		      double* phiout,      
+		      double alpha,
+		      double displacex,
+		      double displacey,
+		      double scale);
+    
 #endif

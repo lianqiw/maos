@@ -864,7 +864,6 @@ free_powfs_dtf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 */
 static void 
 setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
-    tic;
     //wvl independent parameters
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nsa=powfs[ipowfs].pts->nsa;
@@ -989,7 +988,6 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	}
 
     }//iwvl
-    toc("dtf");
 }
 /**
    setup the range to sodium layer as an additional parameter.

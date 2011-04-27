@@ -78,7 +78,7 @@ void perfevl_ievl(thread_t *info){
 	dzero(iopdevl);
 	if(simu->telws){//Wind shake
 	    double tmp=simu->telws->p[isim];
-	    double angle=simu->winddir->p[0];
+	    double angle=simu->winddir?simu->winddir->p[0]:0;
 	    double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 	    loc_add_ptt(iopdevl->p, ptt, aper->locs);
 	}
@@ -271,7 +271,7 @@ void perfevl_ievl(thread_t *info){
 	cellarr_dmat(simu->save->evlopdcl[ievl],iopdevl);
     }
     //Evaluate closed loop performance.
-    if(parms->tomo.split){//for split tomography
+    if(parms->tomo.split && parms->ndm<=2){//for split tomography
 	if(ievl==parms->evl.indoa || parms->dbg.clemp_all){
 	    //copy the opd for later evaluation of clemp for onaxis only.
 	    dcp(&simu->opdevl->p[ievl], iopdevl);
@@ -390,7 +390,7 @@ static void perfevl_mean(SIM_T *simu){
 	}
     }
     const RECON_T *recon=simu->recon;
-    if(parms->tomo.split){
+    if(parms->tomo.split && parms->ndm <=2){
 	if(parms->ndm<=2){
 	    /*
 	      convert cleNGSm into mode and put NGS mode WVE into clem.

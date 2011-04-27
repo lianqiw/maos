@@ -23,12 +23,14 @@ function readdata,unit
   MAT_SP=65281
   MAT_CSP=65282
   M_HEADER=25856    ;; MC:  2010-11-29 Added M_HEADER code to handle header text
-
+  M_SKIP=26112   ;; M_SKIP is padding in magic to make 4 byte int aligned in 8 byte.
   magic=ulong(1) ;silly int is only 2 byte. we need 4 byte int
   nx=long64(1) ;we need 8 byte int.
   ny=long64(1)
   readu,unit,magic
   header='' ;; MC:  2010-11-29 Added M_HEADER code to handle header text
+  if magic EQ M_SKIP THEN readu,unit,magic
+  
   while (magic EQ M_HEADER) DO BEGIN
         nlen = ulong64(1)
         readu, unit, nlen
@@ -44,9 +46,10 @@ function readdata,unit
         readu, unit, magic2
         IF ( nlen NE nlen2 OR magic NE magic2 ) THEN STOP
         readu, unit, magic
+        if magic EQ M_SKIP THEN readu,unit,magic
   endwhile           ;; MC:  2010-11-29 Added M_HEADER code to handle header text
   readu, unit, nx,ny
-  print, magic, nx, ny
+  ;;print, magic, nx, ny
   IF ( nx NE 0 and ny NE 0 ) THEN BEGIN
    switch magic of
      MCC_ANY:
@@ -91,6 +94,10 @@ function readdata,unit
         out=dcomplexarr(nx,ny)
         readu,unit,out
         break
+     end
+     ELSE:begin
+        print,'Invalid header'
+        return,-1
      end
    end
   ENDIF else out = -1   ;; MC: added setting out=-1 if no match

@@ -1372,9 +1372,6 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
 	    skipped++;
 	}
     }
-    if(skipped){
-	info2("%ld of %ld eigen values are skipped. Min/max eigen values are %g / %g\n", skipped, Sdiag->nx, mineig, maxeig);
-    }
     for(long iy=0; iy <VT->ny; iy++){
 	T *p=VT->p+iy*VT->nx;
 	for (long ix=0; ix<VT->nx; ix++){

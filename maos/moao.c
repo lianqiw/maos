@@ -215,7 +215,7 @@ moao_FitL(dcell **xout, const void *A,
     spcellmulmat(xout, moao->actslave, xin, alpha);
 }
 /**
-   mao_recon happens after the common DM fitting and its integrator output
+   moao_recon happens after the common DM fitting and its integrator output
    to take into account the delay in DM commands. there is no close loop
    filtering in MOAO DM commands, but there is still a time delay of 2
    cycles.

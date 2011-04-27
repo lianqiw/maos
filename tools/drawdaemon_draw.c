@@ -290,7 +290,12 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
       cairo_set_font_options(cr, fonto);
       cairo_font_options_destroy(fonto);
     */
-    if(drawdata->cumulast!=drawdata->cumu || !drawdata->limit){//need to update max/minimum.
+    if(drawdata->cumu){
+	drawdata->limit=drawdata->limit_cumu;
+    }else{
+	drawdata->limit=drawdata->limit_data;
+    }
+    if(!drawdata->limit){//need to update max/minimum.
 	if(drawdata->cumulast!=drawdata->cumu){
 	    drawdata->limit_changed=0;
 	    drawdata->offx=0;
@@ -298,8 +303,12 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
 	}
-	if(!drawdata->limit){
-	    drawdata->limit=calloc(4, sizeof(double));
+	if(drawdata->cumu){
+	    drawdata->limit_cumu=calloc(4, sizeof(double));
+	    drawdata->limit=drawdata->limit_cumu;
+	}else{
+	    drawdata->limit_data=calloc(4, sizeof(double));
+	    drawdata->limit=drawdata->limit_data;
 	}
 
 	double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
@@ -353,7 +362,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	drawdata->limit[3]=ymax0;
 	round_limit(drawdata->limit, drawdata->limit+1);
 	round_limit(drawdata->limit+2, drawdata->limit+3);
-
     }
     int widthim, heightim;
     double xmin=drawdata->limit[0];

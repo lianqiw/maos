@@ -139,7 +139,8 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	    }
 	}
 	double tk4=myclockd();
-	info("%d: Randn: %.2f FFT: %.2f Save: %.2f\n", ilayer, tk2-tk1, tk3-tk2, tk4-tk3);
+	info2("Layer %d: Randn: %.2f FFT: %.2f Save: %.2f seconds.\n", 
+	      ilayer, tk2-tk1, tk3-tk2, tk4-tk3);
     }
     dcellfree(dc);
     fft_free_plan(fft);
@@ -170,11 +171,11 @@ static map_t** create_screen(GENSCREEN_T *data,
 		//when fnlock exists, the data in fnshm is not good.
 		info2("Will not read since %s exists\n", fnlock);
 	    }else{
-		info2("Trying to read %s\n", fnshm);
 		in=dcellread_mmap(fnshm);
+		if(in) info2("Rreading %s\n", fnshm);
 	    }
 	    if(!in){
-		info("Trying to create %s\n", fnshm);
+		info("Creating %s\n", fnshm);
 		int fd=lock_file(fnlock, 0, 0);//non blocking exclusive lock.
 		if(fd>=0){//succeed to lock file.
 		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fnshm); 

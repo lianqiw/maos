@@ -124,7 +124,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
     if(simu->telws){//Wind shake
 	double tmp=simu->telws->p[isim];
-	double angle=simu->winddir->p[0];
+	double angle=simu->winddir?simu->winddir->p[0]:0;
 	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
 	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
     }

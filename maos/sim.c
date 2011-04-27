@@ -62,6 +62,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	if(!simu) continue;//skip.
+	recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    /*Generating atmospheric screen(s) that frozen flows.*/
 	    genscreen(simu);

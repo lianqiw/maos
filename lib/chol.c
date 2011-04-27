@@ -124,7 +124,29 @@ spchol* chol_factorize(dsp *A_in){
     info2("analyzing...");
     out->L=MOD(analyze)(A,out->c);
     info2("factoring...");
-    if(!out->L) error("Analyze failed\n");
+    if(!out->L) {
+	info("\nCholmod error:");
+	switch(out->c->status){
+	case CHOLMOD_OK:
+	    info2("Success\n");break;
+	case CHOLMOD_NOT_INSTALLED:
+	    info2("Method not installed\n"); break;
+	case CHOLMOD_OUT_OF_MEMORY:
+	    info2("Out of memory\n");break;
+	case CHOLMOD_TOO_LARGE:
+	    info2("Integer overflow occured\n"); break;
+	case CHOLMOD_INVALID:
+	    info2("Invalid input\n"); break;
+	case CHOLMOD_NOT_POSDEF:
+	    info2("Warning: Matrix not positive definite\n"); break;
+	case CHOLMOD_DSMALL:
+	    info2("Warning: D for LDL' or diag(L) for LL' has tiny absolute value\n"); break;
+	default:
+	    info2("Unknown error\n");
+	}
+	warning("Common->status=%d\n", out->c->status);
+	error("Analyze failed\n");
+    }
     MOD(factorize)(A,out->L, out->c);
     free(A);
     return out;

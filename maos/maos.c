@@ -139,13 +139,13 @@ int main(int argc, char **argv){
   
     if(!lock_seeds(parms)){
 	warning("There are no seed to run. Exit\n");
+	scheduler_finish(0);
 	maos_signal_handler(SIGUSR1);
 	return 1;
     }
 
     //register signal handler
     register_signal_handler(maos_signal_handler);
-    info2("Signal Handler Registered\n");
  
     if(!arg->force){
 	/*

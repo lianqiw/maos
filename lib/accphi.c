@@ -806,7 +806,7 @@ void prop_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
 	       double alpha,       /**<[in] scaling of OPD*/
 	       double displacex,   /**<[in] displacement of the ray */
 	       double displacey,   /**<[in] displacement of the ray */
-	       double scale,       /**<[in] wrap input OPD or not*/
+	       double scale,       /**<[in] scaling of the beam diameter (cone)*/
 	       int wrap,           /**<[in] wrap input OPD or not*/
 	       long start,         /**<[in] First point to do*/
 	       long end            /**<[in] Last point to do*/
@@ -881,7 +881,7 @@ void prop_nongrid(loc_t *locin,        /**<[in] Coordinate of iregular source gr
 		  double alpha,        /**<[in] scaling of OPD*/
 		  double displacex,    /**<[in] displacement of the ray */
 		  double displacey,    /**<[in] displacement of the ray */
-		  double scale,        /**<[in] wrap input OPD or not*/
+		  double scale,        /**<[in] scaling of the beam diameter (cone)*/
 		  long start,          /**<[in] First point to do*/
 		  long end             /**<[in] Last point to do*/
 		  ){
@@ -890,7 +890,7 @@ void prop_nongrid(loc_t *locin,        /**<[in] Coordinate of iregular source gr
     int nplocx, nplocy, nplocx1, nplocy1;
     long iloc;
     int missing=0;
- 
+    assert(scale>0);
     const int wrapx1 = locin->map->nx;
     const int wrapy1 = locin->map->ny;
     const int wrapx = wrapx1-1;
@@ -966,7 +966,7 @@ void prop_nongrid_map(loc_t *locin,     /**<[in] Coordinate of iregular source g
 		      double alpha,     /**<[in] scaling of OPD*/
 		      double displacex, /**<[in] displacement of the ray */
 		      double displacey, /**<[in] displacement of the ray */
-		      double scale,     /**<[in] wrap input OPD or not*/
+		      double scale,     /**<[in] scaling of the beam diameter (cone)*/
 		      long start,       /**<[in] First point to do*/
 		      long end          /**<[in] Last point to do*/
 		      ){
@@ -1053,7 +1053,7 @@ void prop_nongrid_pts(loc_t *locin,         /**<[in] Coordinate of iregular sour
 		      double alpha,         /**<[in] scaling of OPD*/
 		      double displacex,     /**<[in] displacement of the ray */
 		      double displacey,     /**<[in] displacement of the ray */
-		      double scale,         /**<[in] wrap input OPD or not*/
+		      double scale,         /**<[in] scaling of the beam diameter (cone)*/
 		      long start,           /**<[in] First point to do*/
 		      long end              /**<[in] Last point to do*/
 		      ){
@@ -1147,7 +1147,7 @@ void prop_nongrid_cubic(loc_t *locin, const double* phiin,
 			const loc_t *locout, const double *ampout,
 			double* phiout, double alpha,
 			double displacex, double displacey,
-			double scale,
+			double scale, 
 			double cubic_iac,
 			long start, long end){
     loc_create_map_npad(locin,2);//padding to avoid test boundary
@@ -1354,57 +1354,65 @@ void prop_nongrid_map_cubic(loc_t *locin, const double* phiin,
 }
 
 /**
-  the following routine is used to do down sampling by doing *reverse* ray
-  tracing.  locin is coarse sampling, locout is fine sampling. phiin is the
-  destination OPD. The weightings are obtained by interpolating from locin to
-  locout, but the OPD are reversed computed */
-void prop_nongrid_reverse(loc_t *locin,       
-			  double* phiin,      
-			  const loc_t *locout,
-			  const double *ampout,
-			  const double* phiout,
-			  double alpha,
-			  double displacex,
-			  double displacey,
-			  double scale){
-    if(locin->dx<locout->dx) {
+  the following routine is used to do down sampling by doing binning ray tracing
+  using reverse interplation.  locout is coarse sampling, locin is fine
+  sampling. phiout is the destination OPD. The weightings are obtained by
+  interpolating from locout to locin, but the OPD are reversed computed. Simply
+  replace prop_nongrid by prop_nongrid_reverse without changing arguments,
+  except removing start, end, will do the same ray tracing using reverse
+  interpolation (binning). ampout is not used.
+
+  2011-04-27: Revised usage of alpha, displacex/y so that the result agrees with
+  prop_nongrid when used in the same situation. Report missing does not make
+  sense here since locin is usually bigger than locout.
+  */
+void prop_nongrid_bin(const loc_t *locin,
+		      const double* phiin,
+		      loc_t *locout, 
+		      const double *ampout,
+		      double* phiout, 
+		      double alpha, 
+		      double displacex,
+		      double displacey,
+		      double scale){
+    if(locout->dx<locin->dx) {
 	error("This routine is designed for down sampling.\n");
     }
-    loc_create_map_npad(locin,1);//will only do once and save in locin.
+    (void) ampout;
+    loc_create_map_npad(locout,1);//will only do once and save in locout.
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
     long iloc;
-    int missing=0;
-    const int wrapx1 = locin->map->nx;
-    const int wrapy1 = locin->map->ny;
+    const int wrapx1 = locout->map->nx;
+    const int wrapy1 = locout->map->ny;
     const int wrapx = wrapx1-1;
     const int wrapy = wrapy1-1;
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
-    const double *px=locout->locx;
-    const double *py=locout->locy;
-
+    const double dx_out1 = 1./locout->dx;
+    //notice inverse of scale.
+    const double dx_out2 = (1./scale)*dx_out1;
+    //notice negative sign in displacex/y.
+    displacex = (-displacex/scale-locout->map->ox)*dx_out1;
+    displacey = (-displacey/scale-locout->map->oy)*dx_out1;
+    const double *px=locin->locx;
+    const double *py=locin->locy;
+    //Scale alpha to cancel out scaling
+    alpha *= pow(locin->dx/locout->dx/scale,2);
 #if ONLY_FULL==1
     long iphi1,iphi2,iphi3,iphi4;
 #else
     long iphi;
 #endif
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->nx])(locin->map->p);
+    long (*map)[locout->map->nx]
+	=(long(*)[locout->map->nx])(locout->map->p);
     //-1 because we count from 1 in the map.
-    double *phiin0=phiin-1;
-    for(iloc=0; iloc<locout->nloc; iloc++){
-	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;//skip points that has zero amplitude
-	dplocy=myfma(py[iloc],dx_in2,displacey);
-	dplocx=myfma(px[iloc],dx_in2,displacex);
+    double *phiout0=phiout-1;
+    for(iloc=0; iloc<locin->nloc; iloc++){
+	dplocy=myfma(py[iloc],dx_out2,displacey);
+	dplocx=myfma(px[iloc],dx_out2,displacex);
 
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
 	if(nplocx<0||nplocx>=wrapx||nplocy<0||nplocy>=wrapy){
-	    missing++;
 	    continue;
 	}else{
 	    nplocx1=nplocx+1;
@@ -1417,26 +1425,20 @@ void prop_nongrid_reverse(loc_t *locin,
 	iphi3=map[nplocy1][nplocx];
 	iphi4=map[nplocy1][nplocx1];
 	if(iphi1 && iphi2 && iphi3 && iphi4){
-	    phiin0[iphi1]+=alpha*(phiout[iloc]*(1.-dplocx)*(1.-dplocy));
-	    phiin0[iphi2]+=alpha*(phiout[iloc]*(dplocx)*(1.-dplocy));
-	    phiin0[iphi3]+=alpha*(phiout[iloc]*(1.-dplocx)*(dplocy));
-	    phiin0[iphi4]+=alpha*(phiout[iloc]*(dplocx)*(dplocy));
-	}else{
-	    //if(!ampout || fabs(ampout[iloc])>EPS)
-	    missing++;
+	    phiout0[iphi1]+=alpha*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
+	    phiout0[iphi2]+=alpha*(phiin[iloc]*(dplocx)*(1.-dplocy));
+	    phiout0[iphi3]+=alpha*(phiin[iloc]*(1.-dplocx)*(dplocy));
+	    phiout0[iphi4]+=alpha*(phiin[iloc]*(dplocx)*(dplocy));
 	}
 #else	
 	if((iphi=map[nplocy][nplocx])) 
-	    phiin0[iphi]+=alpha*(phiout[iloc]*(1.-dplocx)*(1.-dplocy));
+	    phiout0[iphi]+=alpha*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
 	if((iphi=map[nplocy][nplocx1]))
-	    phiin0[iphi]+=alpha*(phiout[iloc]*(dplocx)*(1.-dplocy));
+	    phiout0[iphi]+=alpha*(phiin[iloc]*(dplocx)*(1.-dplocy));
 	if((iphi=map[nplocy1][nplocx]))
-	    phiin0[iphi]+=alpha*(phiout[iloc]*(1.-dplocx)*(dplocy));
+	    phiout0[iphi]+=alpha*(phiin[iloc]*(1.-dplocx)*(dplocy));
 	if((iphi=map[nplocy1][nplocx1]))
-	    phiin0[iphi]+=alpha*(phiout[iloc]*(dplocx)*(dplocy));
+	    phiout0[iphi]+=alpha*(phiin[iloc]*(dplocx)*(dplocy));
 #endif
-    }
-    if(missing>0){
-	warning("%d points not covered by input screen\n", missing);
     }
 }

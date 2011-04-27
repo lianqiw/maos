@@ -76,7 +76,7 @@ void muv_direct_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin){
   inversion.*/
 void muv_direct_prep(MUV_T *A, double svd){ 
     if(!A->M) error("M has to be none NULL\n");
-    info2("muv_direct_prep: (svd=%g)", svd);    
+    info2("muv_direct_prep: (%s) ", svd?"svd":"chol");
     TIC;tic;
     muv_direct_free(A);
     dsp *muvM=spcell2sp(A->M);

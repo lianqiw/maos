@@ -97,7 +97,46 @@ void FitR(dcell **xout, const void *A,
 	  const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     dcell *xp=NULL;
-    spcellmulmat(&xp, recon->HXF, xin, 1.);
+    if(!xin){//xin is empty. We will trace rays from atmosphere directly
+	const PARMS_T *parms=recon->parms;
+	SIM_T *simu=recon->simu;
+	int isim=parms->sim.closeloop?simu->isim-1:simu->isim;
+	const int nfit=parms->fit.nfit;
+	xp=dcellnew(nfit,1);
+	for(int ifit=0; ifit<nfit; ifit++){
+	    double hs=parms->fit.ht[ifit];
+	    xp->p[ifit]=dnew(recon->ploc->nloc,1);
+	    for(int ips=0; ips<parms->atm.nps; ips++){
+		const double ht = parms->atm.ht[ips];
+		double scale=1-ht/hs;
+		double displace[2];
+		displace[0]=parms->fit.thetax[ifit]*ht-simu->atm[ips]->vx*isim*simu->dt;
+		displace[1]=parms->fit.thetay[ifit]*ht-simu->atm[ips]->vy*isim*simu->dt;
+		prop_grid(simu->atm[ips], recon->ploc, xp->p[ifit]->p, 
+			  alpha, displace[0], displace[1], scale, 1, 0, 0);
+	    }
+	}
+    }else if(recon->HXF){
+	spcellmulmat(&xp, recon->HXF, xin, 1.);
+    }else{//Do the ray tracing directly.
+	const PARMS_T *parms=recon->parms;
+	const int nfit=parms->fit.nfit;
+	const int npsr=recon->npsr;
+	xp=dcellnew(nfit,1);
+	for(int ifit=0; ifit<nfit; ifit++){
+	    double hs=parms->fit.ht[ifit];
+	    xp->p[ifit]=dnew(recon->ploc->nloc,1);
+	    for(int ips=0; ips<npsr; ips++){
+		const double ht = recon->ht->p[ips];
+		double scale=1-ht/hs;
+		double displace[2];
+		displace[0]=parms->fit.thetax[ifit]*ht;
+		displace[1]=parms->fit.thetay[ifit]*ht;
+		prop_nongrid(recon->xloc[ips], xin->p[ips]->p, recon->ploc, NULL, 
+			 xp->p[ifit]->p, alpha, displace[0], displace[1], scale, 0, 0);
+	    }
+	}
+    }
     applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
     sptcellmulmat(xout, recon->HA, xp, alpha);
     dcellfree(xp);
@@ -180,7 +219,11 @@ void fit(dcell **adm, const PARMS_T *parms,
 	 const RECON_T *recon, const dcell *opdr){
     if(parms->ndm==0) return;
     dcell *rhs=NULL;
-    muv(&rhs, &(recon->FR), opdr, 1);
+    if(recon->FR.M){
+	muv(&rhs, &(recon->FR), opdr, 1);
+    }else{
+	FitR(&rhs, recon, opdr, 1);
+    }
     switch(parms->fit.alg){
     case 0:
 	muv_direct_solve_cell(adm,&(recon->FL),rhs);
@@ -353,7 +396,7 @@ void tomofit(SIM_T *simu){
     if(!parms->sim.closeloop || parms->dbg.fitonly || simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
 	if(parms->dbg.fitonly){
 	    dcellfree(simu->opdr);
-	    simu->opdr=atm2xloc(simu);
+	    //simu->opdr=atm2xloc(simu);
 	}else{
 	    int maxit=parms->tomo.maxit;
 	    if(parms->dbg.ntomo_maxit){
@@ -435,7 +478,6 @@ void tomofit(SIM_T *simu){
 
     if(!parms->dbg.fitonly && parms->tomo.split){
 	if(parms->tomo.split==2){
-	    info("accumulating opdrmvst\n");
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
 	//Low order has output
@@ -459,7 +501,7 @@ void tomofit(SIM_T *simu){
 		}else{//form error signal
 		    dcelladd(&simu->Merr_lo, 1., simu->Mint_lo[1], -1);
 		}
-		dcellzero(simu->opdrmvst);info("zero opdrmvst\n");
+		dcellzero(simu->opdrmvst);
 	    }
 		break;
 	    default:
@@ -573,11 +615,6 @@ void reconstruct(SIM_T *simu){
 	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
 		    "DM Error Signal (Hi)","x (m)","y (m)",
 		    "Err Hi %d",idm);
-	}
-	for(int idm=0; simu->dmreal && idm<simu->parms->ndm; idm++){
-	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
-		    "Actual DM Actuator Commands","x (m)", "y (m)",
-		    "Real %d",idm);
 	}
     }
     if(parms->plot.run && simu->Merr_lo){

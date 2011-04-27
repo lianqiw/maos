@@ -584,6 +584,7 @@ static void readcfg_fit(PARMS_T *parms){
     readcfg_dblarr_n(&(parms->fit.thetax), parms->fit.nfit, "fit.thetax");
     readcfg_dblarr_n(&(parms->fit.thetay), parms->fit.nfit, "fit.thetay");
     readcfg_dblarr_n(&(parms->fit.wt), parms->fit.nfit, "fit.wt");
+    readcfg_dblarr_nmax(&(parms->fit.ht), parms->fit.nfit, "fit.ht");
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	parms->fit.thetax[ifit]/=206265.;
 	parms->fit.thetay[ifit]/=206265.;
@@ -1036,13 +1037,26 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atm.wddeg=realloc(parms->atm.wddeg, sizeof(double)*jps);
     }
     normalize(parms->atm.wt, parms->atm.nps, 1);
+    if(parms->dbg.fitonly){//If fit only, we using atm for atmr.
+	warning("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
+	int nps=parms->atm.nps;
+	parms->atmr.ht=realloc(parms->atmr.ht, sizeof(double)*nps);
+	parms->atmr.wt=realloc(parms->atmr.wt, sizeof(double)*nps);
+	memcpy(parms->atmr.ht, parms->atm.ht, sizeof(double)*nps);
+	memcpy(parms->atmr.wt, parms->atm.wt, sizeof(double)*nps);
+	parms->atmr.os=realloc(parms->atmr.os, sizeof(int)*nps);
+	for(int ips=parms->atmr.nps; ips<nps; ips++){
+	    parms->atmr.os[ips]=parms->atmr.os[parms->atmr.nps-1];
+	}
+	parms->atmr.nps=nps;
+    }
     /*
       We don't drop weak turbulence layers in reconstruction. Instead, we make
       it as least parms->tomo.minwt in setup_recon_tomo_prep
     */
  
     /*
-      Find ground turbulence layer. The ray tracing can be shared.
+      Find ground turbulence layer. The ray tracing can be shared between different directions.
     */
     parms->atm.iground=-1;
     for(int ips=0; ips<parms->atm.nps; ips++){
@@ -1100,15 +1114,15 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	double cosz=cos(parms->sim.za);
 	double secz=1./cosz;
 	for(int ips=0; ips<parms->atm.nps; ips++){
-	    parms->atm.ht[ips] *= secz;
+	    parms->atm.ht[ips] *= secz;//scale atmospheric height
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(!isinf(parms->powfs[ipowfs].hs)){
-		parms->powfs[ipowfs].hs *= secz;
+		parms->powfs[ipowfs].hs *= secz;//scale GS height.
 		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
 		    double siglev=parms->wfs[iwfs].siglev;
-		    parms->wfs[iwfs].siglev=siglev*cosz;
+		    parms->wfs[iwfs].siglev=siglev*cosz;//scale signal level.
 		    info("iwfs%d: siglev scaled from %g to %g\n", 
 			 iwfs,siglev,parms->wfs[iwfs].siglev);
 		    warning("Need to update to account for the transmittance\n");
@@ -1117,7 +1131,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	}
 	warning("Scaling reconstruction height to zenith angle %gdeg\n",parms->sim.za*180./M_PI);
 	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    parms->atmr.ht[ips] *= secz;
+	    parms->atmr.ht[ips] *= secz;//scale reconstructed atmospheric height.
 	}
 	parms->cn2.hmax*=secz;
     }
@@ -1216,7 +1230,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    double dxscl=(1. - ht/parms->evl.ht[ievl])*parms->aper.dx;
 	    parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
 	}
-	info2("idm=%d, nscale=%d\n", idm, nscale);
+	//info2("idm=%d, nscale=%d\n", idm, nscale);
 	parms->dm[idm].ncache=nscale;
 	parms->dm[idm].dxcache=calloc(1, nscale*sizeof(double));
 	for(int iscale=0; iscale<nscale; iscale++){
@@ -1498,7 +1512,7 @@ static void print_parms(const PARMS_T *parms){
 	info2(", generalized is %.2f\"", theta2z*206265);
     }
     info2("\n");
-    info2("There are %d layers, sampled %dx%d at 1/%gm, ZA is %g deg, wind dir is%s randomized.\n",
+    info2("There are %d layers, sampled %dx%d at 1/%gm. ZA is %g deg. wind dir is%s randomized.\n",
 	  parms->atm.nps, parms->atm.nx, parms->atm.ny,  1./parms->atm.dx,  
 	  parms->sim.za*180/M_PI, (parms->atm.wdrand?"":" not"));
     if(parms->atm.nps>1 && theta0z*206265>4){
