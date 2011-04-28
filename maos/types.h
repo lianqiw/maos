@@ -252,6 +252,7 @@ typedef struct RECON_T{
     long ploc_ny;      /**<size of pmap used to build ploc*/
 
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
+    map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/
     long *xloc_nx;     /**<size of xmap used to build xloc*/
     long *xloc_ny;     /**<size of xmap used to build xloc*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/

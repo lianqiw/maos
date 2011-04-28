@@ -154,7 +154,7 @@ void perfevl_ievl(thread_t *info){
 	ccellfree(psf2s);
     }
 	
-    if(parms->dbg.evlol)
+    if(parms->sim.evlol)
 	return;
     TIM(2);
     /*
@@ -367,7 +367,7 @@ static void perfevl_mean(SIM_T *simu){
 	}
 #endif
     }
-    if(parms->dbg.evlol)
+    if(parms->sim.evlol)
 	return;
     //Field average the CL error
     for(int imod=0; imod<nmod; imod++){
@@ -463,7 +463,7 @@ static void perfevl_mean(SIM_T *simu){
 	simu->status->clerrlo=sqrt(simu->cle->p[nmod*isim+1]*1e18);
     }//if split
     
-    if(parms->dbg.noatm==0 && simu->cle->p[nmod*isim] > simu->ole->p[nmod*isim]*100){
+    if(parms->sim.noatm==0 && simu->cle->p[nmod*isim] > simu->ole->p[nmod*isim]*100){
 	warning("The loop is diverging: OL: %g CL: %g\n",  
 		simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
     }

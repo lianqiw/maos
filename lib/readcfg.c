@@ -274,6 +274,10 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(tomo.split_rtt, tomo.ahst_rtt);
 	    RENAME(evl.wvl, evl.psfwvl);
 	    RENAME(cn2.nhtrecon, cn2.nhtomo);
+	    //Added on 2011-04-28
+	    RENAME(dbg.noatm, sim.noatm);
+	    RENAME(dbg.fitonly, sim.noatm);
+	    RENAME(dbg.evlol, sim.evlol);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);

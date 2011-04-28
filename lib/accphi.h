@@ -76,11 +76,24 @@ void prop_grid(const map_t *mapin, const loc_t *locout,
 	       double displacex, double displacey,
 	       double scale, int wrap,
 	       long start, long end);
+/**
+   Propagate OPD defines on grid mapin to locstat_t that stores the starting
+   point of each column.  alpha is the scaling of data. displacex, displacy is
+   the displacement of the center of the beam on the input grid.  scale is the
+   cone effect.*/
 void prop_grid_stat(const map_t *mapin, const locstat_t *ostat, 
 		    double *phiout0, double alpha,
 		    double displacex, double displacey,
 		    double scale, int wrap,
 		    long colstart, long colend);
+/**
+   Do the reverse propagation of prop_grid_stat. If prop_grid_stat does y+=H*x;
+This just does x+=H'*y; */
+void prop_grid_stat_transpose(map_t *mapin, const locstat_t *ostat, 
+			      const double *phiout0, double alpha,
+			      double displacex, double displacey,
+			      double scale, int wrap,
+			      long colstart, long colend);
 void prop_nongrid(loc_t *locin, const double* phiin, 
 		  const loc_t *locout,const double *amp,
 		  double* phiout, double alpha,

@@ -1185,6 +1185,10 @@ X(sp) *Y(spcat)(const X(sp) *A, const X(sp) *B, int dim){
  * Concatenate a spcell to sparse array*/
 X(sp) *Y(spcell2sp)(const Y(spcell) *A){
     //convert Y(spcell) to sparse.
+    if(A->nx*A->ny==1){//There is a single cell
+	info("There is only 1 cell, return a reference\n");
+	return Y(spref)(A->p[0]);
+    }
     PSPCELL(A,Ap);
     long nx=0,ny=0,nzmax=0;
     for(long ix=0; ix<A->nx; ix++){

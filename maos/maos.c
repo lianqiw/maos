@@ -57,7 +57,7 @@ void maos(const PARMS_T *parms){
     omp_set_num_threads(&one);//only allow 1 thread.
 #endif
 
-    if(parms->dbg.evlol){
+    if(parms->sim.evlol){
 	sim_evlol(parms, powfs, aper, recon);
     }else{
 	sim(parms, powfs, aper, recon);

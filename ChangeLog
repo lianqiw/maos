@@ -1,6 +1,8 @@
 2011-04-27 Version 0.8.5
 	Improved DM fitting only operation by making xloc sampled at atm.dx
 	Introduced fit.ht, for science objects at any height.
+	Moved from dbg to sim the following keys: evlol, fitonly, noatm
+	Improved tomography by using ray tracing with square grid.
 2011-03-08 Version 0.8.3
 	Many minor changes. ease telemetry saving.
 2011-02-28 Version 0.8.2

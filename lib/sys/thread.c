@@ -33,6 +33,7 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
     }
     long nt=(tot-start)/nthread;
     long ithread;
+    if(nt<=0) nt=1;//added on 2011-04-28;
     for(ithread=0; ithread<nthread; ithread++){
 	info[ithread].ithread=ithread;
 	info[ithread].data=data;

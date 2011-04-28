@@ -80,14 +80,14 @@ void muv_direct_prep(MUV_T *A, double svd){
     TIC;tic;
     muv_direct_free(A);
     dsp *muvM=spcell2sp(A->M);
-    if(svd>0){
+    if(svd>0){//Do SVD
 	spfull(&A->MI, muvM, 1);
-	if(svd<1){
+	if(svd<1){//use svd as threashold
 	    dsvd_pow(A->MI, -1, 1, svd);
-	}else{
+	}else{//use a threshold good for lsr.
 	    dsvd_pow(A->MI, -1, 1, 2e-4);
 	}
-    }else{
+    }else{//Do Cholesky decomposition.
 	A->C=chol_factorize(muvM);
     }
     spfree(muvM);

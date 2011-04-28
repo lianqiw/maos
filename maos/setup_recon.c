@@ -58,6 +58,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	    locwrite(recon->ploc, "%s/ploc",dirsetup);
 	}
     }
+    loc_create_stat(recon->ploc);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].lo){//this is a low order wfs
@@ -200,15 +201,16 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	}
     }else{
 	recon->xloc=calloc(npsr, sizeof(loc_t *));
+	if(parms->tomo.square) recon->xmap=calloc(npsr, sizeof(map_t *));
 	recon->xloc_nx=calloc(npsr, sizeof(long));
 	recon->xloc_ny=calloc(npsr, sizeof(long));
-	info2("Tomography grid:\n");
+	info2("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
-	    double dxr=(parms->dbg.fitonly)?parms->atm.dx:recon->dx->p[ips];
+	    double dxr=(parms->sim.fitonly)?parms->atm.dx:recon->dx->p[ips];
 	    const double guard=parms->tomo.guard*dxr;
 	    long nin=0;
-	    if(!parms->dbg.fitonly && (parms->tomo.precond==1 || parms->tomo.square==2)){
+	    if(!parms->sim.fitonly && (parms->tomo.precond==1 || parms->tomo.square==2)){
 		//FFT in FDPCG prefers power of 2 dimensions.
 		nin=nextpow2((long)round(parms->aper.d/recon->dx->p[0]*2.))
 		    *recon->os->p[ips]/recon->os->p[0];
@@ -221,8 +223,14 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    recon->xloc[ips]=map2loc(map);
 	    recon->xloc_nx[ips]=map->nx;
 	    recon->xloc_ny[ips]=map->ny;
-	    mapfree(map);
-	 
+	    if(parms->tomo.square){
+		recon->xmap[ips]=map;
+		//Free the data and nref so we are assign pointers to it.
+		free(recon->xmap[ips]->p);
+		free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
+	    }else{
+		mapfree(map);
+	    }
 	    if(parms->plot.setup){
 		plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);
 	    }
@@ -519,7 +527,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 		GXhi[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
 	}
-	if(!parms->dbg.fitonly && parms->sim.mffocus && parms->sim.closeloop){
+	if(!parms->sim.fitonly && parms->sim.mffocus && parms->sim.closeloop){
 	    //for focus tracking.
 	    for(int ips=0; ips<npsr; ips++){
 		GXfocus[ips][iwfs]=spref(GX[ips][iwfs]);
@@ -679,7 +687,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
     recon->neamhi=sqrt(neamhi/counthi);
     info2("\n");
 
-    if(parms->sim.recon==2){//Take the first saneai of each powfs.
+    if(parms->sim.recon==2){
+	/*Average the NEA for all wfs in each powfs group, as we are averaging
+	  the measurements*/
 	recon->saneaip=spcellnew(parms->npowfs, parms->npowfs);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    dsp *neai=NULL;
@@ -1175,6 +1185,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
     }
     if(parms->tomo.assemble){
 	spcellfree(recon->GP);
+    }
+    if(parms->tomo.assemble || parms->tomo.square){
 	spcellfree(recon->HXWtomo);
     }
     info2("After assemble tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
@@ -1972,7 +1984,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     setup_recon_xloc(recon,parms);
     //setup xloc/aloc to WFS grad
     toc2("Generating xloc");
-    if(!parms->dbg.fitonly){
+    if(!parms->sim.fitonly){
 	setup_recon_HXW(recon,parms);
 	setup_recon_GX(recon,parms);
 	spcellfree(recon->HXW);//only keep HXWtomo for tomography
@@ -1988,7 +2000,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    toc2("Generating tomography matrix");
 	}
     }
-    if(!parms->dbg.fitonly){//In this case, xloc has high sampling. We avoid HXF.
+    if(!parms->sim.fitonly){//In this case, xloc has high sampling. We avoid HXF.
 	setup_recon_HXF(recon,parms);
     }
     setup_recon_HA(recon,parms);
@@ -2015,7 +2027,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    setup_recon_mvst(recon,parms);
 	}
     }
-    if(!parms->dbg.fitonly && parms->tomo.precond==1){
+    if(!parms->sim.fitonly && parms->tomo.precond==1){
 	recon->fdpcg=fdpcg_prepare(parms, recon, powfs);
 	toc2("Preparing fdpcg");
     }
@@ -2248,6 +2260,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     int ndm = parms->ndm;
    
     locarrfree(recon->xloc, npsr); recon->xloc=NULL;
+    maparrfree(recon->xmap, npsr); recon->xmap=NULL;
     locfree(recon->ploc); recon->ploc=NULL;
     for(int idm=0; idm<ndm; idm++){
 	if(recon->alocm[idm]!=recon->aloc[idm])

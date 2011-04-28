@@ -37,11 +37,19 @@ void apply_L2(dcell **xout, spcell *L2, const dcell *xin,
    Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout.
 */
 void apply_invpsd(dcell **xout, INVPSD_T *extra,
-		  const dcell *xin, double alpha){
+		  const dcell *xin, double alpha, int jps){
     dcell *invpsd=extra->invpsd;
     ccell *fftxopd=extra->fftxopd;
-
-    for(int ips=0; ips<xin->nx*xin->ny; ips++){
+    int ips1, ips2;
+    if(jps<0){//do all cells
+	ips1=0; 
+	ips2=xin->nx*xin->ny;
+    }else{//do the specified cell
+	ips1=jps;
+	ips2=jps+1;
+    }
+    for(int ips=ips1; ips<ips2; ips++){
+	//for(int ips=0; ips<xin->nx*xin->ny; ips++){
 	long nx=fftxopd->p[ips]->nx;
 	long ny=fftxopd->p[ips]->ny;
 	if(extra->square){
@@ -70,8 +78,17 @@ void apply_invpsd(dcell **xout, INVPSD_T *extra,
    Apply fractal regularization to x, scaled by alpha.
    \todo parallelize it.
 */
-void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alpha){
-    for(int ips=0; ips<xin->nx*xin->ny; ips++){
+void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alpha, int jps){
+    int ips1, ips2;
+    if(jps<0){//do all cells
+	ips1=0; 
+	ips2=xin->nx*xin->ny;
+    }else{//do the specified cell
+	ips1=jps;
+	ips2=jps+1;
+    }
+    for(int ips=ips1; ips<ips2; ips++){
+	//for(int ips=0; ips<xin->nx*xin->ny; ips++){
 	dzero(extra->xopd->p[ips]);
 	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);
 	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, 

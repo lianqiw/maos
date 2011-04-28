@@ -65,13 +65,15 @@ static char *fnatm(GENSCREEN_T *data){
     key=hashlittle(&data->nlayer, sizeof(long), key);
     key=hashlittle(&data->ninit, sizeof(long), key);
 
+    char dirshm[PATH_MAX];
+    snprintf(dirshm,PATH_MAX,"%s/.aos/atm", HOME);
+    if(!exist(dirshm)) mymkdir("%s", dirshm);
     char fnshm[PATH_MAX];
-    snprintf(fnshm,PATH_MAX,"%s/.aos/atm", HOME);
-    if(!exist(fnshm)) mymkdir("%s", fnshm);
-    remove_file_older(fnshm, 30*24*3600);
     char *types[]={"vonkarman","fractal","biharmonic"};
-    snprintf(fnshm,PATH_MAX,"%s/.aos/atm/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
-	     HOME,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
+    snprintf(fnshm,PATH_MAX,"%s/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
+	     dirshm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
+    if(exist(fnshm)) touch(fnshm);
+    remove_file_older(dirshm, 30*24*3600);
     return strdup(fnshm);
 }
 
