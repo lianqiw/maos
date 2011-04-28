@@ -21,8 +21,8 @@
 #include "maos.h"
 
 void apply_L2(dcell **xout, spcell *L2, const dcell *xin, double alpha, int nthread);
-void apply_invpsd(dcell **xout, INVPSD_T *extra, const dcell *xin, double alpha);
-void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alpha);
+void apply_invpsd(dcell **xout, INVPSD_T *extra, const dcell *xin, double alpha, int jps);
+void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alpha, int jps);
 void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF);
 void applyW(dcell *xin, const dsp *W0, const dmat *W1, const double *wt);
 dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, 

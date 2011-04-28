@@ -656,6 +656,9 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.recon);
     READ_DBL(sim.fov);
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
+    READ_INT(sim.evlol);
+    READ_INT(sim.noatm);
+    READ_INT(sim.fitonly);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -697,12 +700,9 @@ static void readcfg_plot(PARMS_T *parms){
 static void readcfg_dbg(PARMS_T *parms){
   
     READ_INT(dbg.psol);
-    READ_INT(dbg.evlol);
-    READ_INT(dbg.noatm);
     READ_INT(dbg.clemp_all);
     READ_INT(dbg.wamethod);
     READ_INT(dbg.atm);
-    READ_INT(dbg.fitonly);
     READ_INT(dbg.keepshm);
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
@@ -710,6 +710,7 @@ static void readcfg_dbg(PARMS_T *parms){
 #if USE_POSIX_SHM
     shm_keep_unused=parms->dbg.keepshm;
 #endif
+    READ_INT(dbg.tomo_hxw);
 }
 /**
    Parse the Input of scalar or vector to vector of nwfs.
@@ -1037,7 +1038,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atm.wddeg=realloc(parms->atm.wddeg, sizeof(double)*jps);
     }
     normalize(parms->atm.wt, parms->atm.nps, 1);
-    if(parms->dbg.fitonly){//If fit only, we using atm for atmr.
+    if(parms->sim.fitonly){//If fit only, we using atm for atmr.
 	warning("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 	int nps=parms->atm.nps;
 	parms->atmr.ht=realloc(parms->atmr.ht, sizeof(double)*nps);
@@ -1317,7 +1318,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->tomo.windest && parms->tomo.windshift==0){
 	warning("Windest=1 but windshift=0\n");
     }
-    if(parms->sim.mffocus && (!parms->sim.closeloop || parms->dbg.fitonly)){
+    if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.fitonly)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
     }
@@ -1765,7 +1766,7 @@ static void check_parms(const PARMS_T *parms){
     if(parms->fit.alg<0 || parms->fit.alg>2){
 	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
     }
-    if(parms->dbg.fitonly && parms->sim.recon!=0){
+    if(parms->sim.fitonly && parms->sim.recon!=0){
 	error("fitonly only works in sim.recon=0 mode\n");
     }
 }

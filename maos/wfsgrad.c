@@ -604,7 +604,7 @@ void wfsgrad(SIM_T *simu){
     double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    if(parms->dbg.fitonly) return;
+    if(parms->sim.fitonly) return;
     //Updating dmpsol averaging.
     if(parms->sim.closeloop){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

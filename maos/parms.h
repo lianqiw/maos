@@ -413,6 +413,10 @@ typedef struct SIM_CFG_T{
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
     int recon;       /**<reconstruction method. 0: minimum variance, 1: least square*/
+    int evlol;       /**<evaluate open loop error only*/
+    int noatm;       /**<disable atmosphere*/
+    int fitonly;     /**<do DM fitting only, by replacing opdr with opdx. see above*/
+
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
@@ -448,17 +452,15 @@ typedef struct PLOT_CFG_T{
  */
 typedef struct DBG_CFG_T{
     int psol;        /**<test add dm command offseted by 1 frame in the future to psol grad*/
-    int evlol;       /**<evaluate open loop error only*/
-    int noatm;       /**<disable atmosphere*/
     int clemp_all;   /**<output NGS mode error evaluation for each direction*/
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
     int atm;         /**<test special atmosphere*/
-    int fitonly;     /**<do DM fitting only, by replacing opdr with opdx. see above*/
     int keepshm;     /**<keep the atmospehre in the shared memory.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
     int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
     int ntomo_maxit; /**<Number of elements in tomo_maxit*/
+    int tomo_hxw;    /**<1: Force use hxw always instead of ray tracing from xloc to ploc.*/
 }DBG_CFG_T;
 /**
    contains input parameters for each MOAO type.

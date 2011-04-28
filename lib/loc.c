@@ -790,7 +790,7 @@ void loc_create_stat_do(loc_t *loc){
     for(iloc=1; iloc<loc->nloc; iloc++){
 	if(fabs(locy[iloc]-locy[iloc-1])>1.e-12 //a new column starts
 	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1.e-12){
-	    if(colcount>=ncolmax){
+	    if(colcount>=ncolmax){//expand the memory.
 		ncolmax*=2;
 		locstat->cols=realloc(locstat->cols, ncolmax*sizeof(locstatcol_t));
 	    }

@@ -241,8 +241,8 @@ void genscreen(SIM_T *simu){
 	    maparrfree(simu->atm2, parms->atm.nps);
 	}
     }
-    if(simu->parms->dbg.noatm){
-	warning("dbg.noatm flag is on. will not generate atmoshere\n");
+    if(simu->parms->sim.noatm){
+	warning("sim.noatm flag is on. will not generate atmoshere\n");
 	return;
     }
     info2("Wind dir:");//initialize wind direction one time only for each seed in frozen flow mode.
@@ -1516,7 +1516,7 @@ void print_progress(const SIM_T *simu){
     const int isim=simu->isim;
     const int nmod=parms->evl.nmod;
     
-    if(parms->dbg.evlol){
+    if(parms->sim.evlol){
 	fprintf(stderr,"\033[00;32mStep %3d: OL: %6.1f %6.1f %6.1f nm;\033[00;00m\n",
 		isim,
 		mysqrt(simu->ole->p[isim*nmod])*1e9,

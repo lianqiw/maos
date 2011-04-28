@@ -30,60 +30,224 @@
    Wavefront reconstruction and DM fitting routines
 */
 
+typedef struct Tomo_T{
+    const RECON_T *recon;
+    const double alpha;
+    const dcell *xin;//input
+    dcell *gg;//intermediate gradient
+    dcell *xout;//output
+}Tomo_T;
+
+/**
+   Speed up TomoL by gathering the first part of operations (GP*HXW) belonging
+   to each WFS to facilitate threading. 
+
+   gg  = GP * HXW * xin
+*/
+#define USE_PROP 1
+static void Tomo_prop(thread_t *info){
+    Tomo_T *data=info->data;
+    const RECON_T *recon=data->recon;
+    const PARMS_T *parms=recon->parms;
+    PSPCELL(recon->HXWtomo,HXW);
+    const int nps=recon->HXWtomo->ny;
+    for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	int ipowfs = parms->wfs[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip) continue;
+	dmat *xx=dnew(recon->ploc->nloc, 1);
+	const double hs=parms->powfs[ipowfs].hs;
+	for(int ips=0; ips<nps; ips++){
+	    if(parms->tomo.square && !parms->dbg.tomo_hxw){
+		//Do the ray tracing instead of using HXW.
+		double ht=recon->ht->p[ips];
+		double displace[2];
+		displace[0]=parms->wfs[iwfs].thetax*ht;
+		displace[1]=parms->wfs[iwfs].thetay*ht;
+		double scale=1. - ht/hs;
+		prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
+			       displace[0],displace[1], scale, 0, 0, 0);
+	    }else{
+		spmulmat(&xx, HXW[ips][iwfs], data->xin->p[ips], 1);
+	    }
+	}
+	//Apply the gradient operation
+	spmulmat(&data->gg->p[iwfs], recon->GP->p[iwfs], xx, 1);
+	dfree(xx);
+	/*
+	  For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms.
+	*/
+    }
+}
+
+/**
+   Speed up TomoL by gathering the second part of operations (GP') belonging to
+   each WFS to facilitate threading. 
+   
+   gg = GP' * NEAI * gg;
+*/
+static void Tomo_nea(thread_t *info){
+    Tomo_T *data=info->data;
+    const RECON_T *recon=data->recon;
+    PSPCELL(recon->saneai, NEAI);
+    for(int iwfs=info->start; iwfs<info->end; iwfs++){
+	dmat *gg2=NULL;
+	//Apply the gradient operation
+	spmulmat(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 1);
+	dfree(data->gg->p[iwfs]); //We reuse gg.
+	sptmulmat(&data->gg->p[iwfs], recon->GP->p[iwfs], gg2, data->alpha);
+	dfree(gg2);
+    }
+}
+/**
+   Speed up TomoL by gathering the third part of operations (GP') belonging to
+   each WFS to facilitate threading. gg->xout.
+
+   xout = Cxx^-1 * xin + HXW * gg;
+*/
+static void Tomo_iprop(thread_t *info){
+    Tomo_T *data=info->data;
+    const RECON_T *recon=data->recon;
+    const PARMS_T *parms=recon->parms;
+    const int nps=recon->HXWtomo->ny;
+    PSPCELL(recon->HXWtomo,HXW);
+    //for(int ips=0; ips<recon->HXWtomo->ny; ips++){
+    for(int ips=info->start; ips<info->end; ips++){
+	if(parms->tomo.square && !parms->dbg.tomo_hxw){
+	    //Do the ray tracing instead of using HXW.
+	    if(!data->xout->p[ips]){
+		data->xout->p[ips]=dnew(recon->xloc[ips]->nloc, 1);
+	    }
+	    recon->xmap[ips]->p=data->xout->p[ips]->p;
+	    double ht=recon->ht->p[ips];
+	    for(int iwfs=0; iwfs<recon->HXWtomo->nx; iwfs++){
+		if(!data->gg->p[iwfs]) continue;
+		int ipowfs = parms->wfs[iwfs].powfs;
+		const double hs=parms->powfs[ipowfs].hs;
+		double displace[2];
+		displace[0]=parms->wfs[iwfs].thetax*ht;
+		displace[1]=parms->wfs[iwfs].thetay*ht;
+		double scale=1. - ht/hs;
+		prop_grid_stat_transpose(recon->xmap[ips], recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
+					 displace[0],displace[1], scale, 0, 0, 0);
+	    }
+	}else{
+	    for(int iwfs=0; iwfs<recon->HXWtomo->nx; iwfs++){
+		sptmulmat(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], 1);
+	    }
+	}
+	if(data->xin){//data->xin is empty when called from TomoR
+	    switch(recon->cxx){
+	    case 0:{//L2
+		dmat *xx=NULL;
+		spmulmat(&xx, recon->L2->p[ips+ips*nps], data->xin->p[ips], 1);
+		sptmulmat(&data->xout->p[ips], recon->L2->p[ips+ips*nps], xx, data->alpha);
+		dfree(xx);
+	    }
+		break;
+	    case 1:
+		apply_invpsd(&data->xout, recon->invpsd, data->xin, data->alpha, ips);
+		break;
+	    case 2:
+		apply_fractal(&data->xout, recon->fractal, data->xin, data->alpha, ips);
+		break;
+	    }
+	}
+    }
+}
 
 /**
    Apply tomography right hand operator without using assembled matrix. Fast and
-   saves memory.  */
+   saves memory.  The operation is the same as the Tomo_nea and Tomo_iprop in
+   TomoL, so merge the implemenations.
+
+   xout=HXW'*GP'*NEAI*(1-TTF*PTTF)*gin.
+*/
 void TomoR(dcell **xout, const void *A, 
 	   const dcell *gin, const double alpha){
     
     const RECON_T *recon=(const RECON_T *)A;
-    dcell *g2=NULL;
-    dcellcp(&g2, gin);
-    TTFR(g2, recon->TTF, recon->PTTF);
+    dcell *gg=NULL;
+    dcellcp(&gg, gin);//copy to gg so we don't touch the input.
+    TTFR(gg, recon->TTF, recon->PTTF);
+#define USE_NEW 0
+#if USE_NEW
+    if(!*xout){
+	*xout=dcellnew(recon->npsr, 1);
+    }
+    Tomo_T data={recon, alpha, NULL, gg, *xout};
+    thread_t info_iwfs2[recon->nthread];
+    thread_prep(info_iwfs2, 0, gg->nx, recon->nthread, Tomo_nea, &data);
+    thread_t info_ips[recon->nthread];
+    thread_prep(info_ips, 0, recon->npsr, recon->nthread, Tomo_iprop, &data);
+    
+    CALL_THREAD(info_iwfs2, recon->nthread, 1);
+    CALL_THREAD(info_ips, recon->nthread, 1);
+#else
     dcell *g3=NULL;
-    spcellmulmat_thread(&g3,recon->saneai, g2, 1,recon->nthread);
-    dcell *xx2=NULL;
-    spcellmulmat_each(&xx2, recon->GP, g3, alpha, 1, recon->nthread);
-    sptcellmulmat_thread(xout, recon->HXWtomo, xx2, 1, recon->nthread);
+    spcellmulmat_thread(&g3,recon->saneai, gg, 1,recon->nthread);
+    dfree(gg);
+    spcellmulmat_each(&gg, recon->GP, g3, alpha, 1, recon->nthread);
+    sptcellmulmat_thread(xout, recon->HXWtomo, gg, 1, recon->nthread);
     dcellfree(xx2);
-    dcellfree(g2);
     dcellfree(g3);
+#endif
+    dcellfree(gg);
 }
+
 
 /**
    Apply tomography left hand side operator without using assembled matrix. Fast
-   and saves memory. Only useful in CG. Accumulates to xout; */
+   and saves memory. Only useful in CG. Accumulates to xout;
+
+   Some timing information: 
+   Generated in T410s with Intel Core i5 520 M @ 2.4 GHz (1 T is 1 thread, 2 T is 2 thread)
+   and Poweredge with dual Xeon X5355 2.66Ghz (1 P is 1 thread, 8 P is 8 thread)
+   Time  1 T  2 T  1 P  8 P
+   HXW:  7.8  5.4  7.7  5.0
+   GP:   4.3  2.6  3.6  1.4
+   TTFR: 0.3  0.3  0.4  0.6
+   neai: 0.5  0.3  0.5  0.4
+   GP':  3.2  2.1  3.4  1.0
+   HXW': 5.5  4.7  7.4  4.9
+   cxx:  3.2  2.5  3.5  2.7
+*/
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha){
-
     const RECON_T *recon=(const RECON_T *)A;
-    dcell *gg=NULL;
-    dcell *xx=NULL;
-    spcellmulmat_thread(&xx, recon->HXWtomo, xin, 1., recon->nthread);
-    spcellmulmat_each(&gg, recon->GP, xx, 1., 0, recon->nthread);
-    dcellfree(xx);
-    TTFR(gg, recon->TTF, recon->PTTF);
-    dcell *gg2=NULL;
-    spcellmulmat_thread(&gg2, recon->saneai, gg,1,recon->nthread);
-    dcellfree(gg);
-    dcell *xx2=NULL;
-    spcellmulmat_each(&xx2, recon->GP, gg2, alpha, 1, recon->nthread);
-    sptcellmulmat_thread(xout, recon->HXWtomo, xx2, 1, recon->nthread);
-    dcellfree(xx2);
-    dcellfree(gg2);
-    switch(recon->cxx){
-    case 0:
-	apply_L2(xout, recon->L2, xin, alpha, recon->nthread);
-	break;
-    case 1:
-	apply_invpsd(xout, recon->invpsd, xin, alpha);
-	break;
-    case 2:
-	apply_fractal(xout, recon->fractal, xin, alpha);
-	break;
+    const PARMS_T *parms=recon->parms;
+    assert(xin->ny==1);//modify the code for ny>1 case.
+    dcell *gg=dcellnew(parms->nwfs, 1);
+    const int nps=recon->npsr;
+    if(!*xout){
+	*xout=dcellnew(recon->npsr, 1);
     }
-    if(recon->ZZT){//single point piston constraint
+    Tomo_T data={recon, alpha, xin, gg, *xout};
+
+    if(parms->tomo.square){//do ray tracing instead of HXW.
+	for(int ips=0; ips<nps; ips++){
+	    recon->xmap[ips]->p=xin->p[ips]->p; //replace the vector.
+	}
+    }
+    thread_t info_iwfs1[recon->nthread];
+    thread_prep(info_iwfs1, 0, gg->nx, recon->nthread, Tomo_prop, &data);
+    thread_t info_iwfs2[recon->nthread];
+    thread_prep(info_iwfs2, 0, gg->nx, recon->nthread, Tomo_nea, &data);
+    thread_t info_ips[recon->nthread];
+    thread_prep(info_ips, 0, nps, recon->nthread, Tomo_iprop, &data);
+    CALL_THREAD(info_iwfs1, recon->nthread, 1);
+    //Remove global Tip/Tilt, differential focus. Need all wfs gradients.
+    TTFR(gg, recon->TTF, recon->PTTF);
+    CALL_THREAD(info_iwfs2, recon->nthread, 1);
+    CALL_THREAD(info_ips, recon->nthread, 1);
+   
+    /*      square=1  square=0 (1 thread on T410s)
+	    iwfs1: takes 6 ms 13 ms
+	    iwfs2: takes 4 ms 4 ms
+	    ips:   takes 6 ms 9 ms
+    */
+    dcellfree(gg);
+    
+    if(recon->ZZT){//single point piston constraint. fast if any
 	sptcellmulmat_thread(xout, recon->ZZT, xin, alpha, recon->nthread);
     }
     /*Tikhonov regularization is not added because it is not necessary in CG
@@ -92,7 +256,7 @@ void TomoL(dcell **xout, const void *A,
 /**
    Apply fit right hand side matrix in CG mode without using assembled matrix.
    Slow. don't use. Assembled matrix is faster because of multiple directions.
-   */
+*/
 void FitR(dcell **xout, const void *A, 
 	  const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
@@ -133,7 +297,7 @@ void FitR(dcell **xout, const void *A,
 		displace[0]=parms->fit.thetax[ifit]*ht;
 		displace[1]=parms->fit.thetay[ifit]*ht;
 		prop_nongrid(recon->xloc[ips], xin->p[ips]->p, recon->ploc, NULL, 
-			 xp->p[ifit]->p, alpha, displace[0], displace[1], scale, 0, 0);
+			     xp->p[ifit]->p, alpha, displace[0], displace[1], scale, 0, 0);
 	    }
 	}
     }
@@ -207,6 +371,10 @@ void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell 
     case 2:
 	muv_direct_solve_cell(opdr,&(recon->RL), rhs);
 	break;
+    case 3: {//Block Gaussian Seidel
+	
+    }
+	break;
     default:
 	error("Not implemented: alg=%d\n",parms->tomo.alg);
     }
@@ -261,15 +429,15 @@ void fit(dcell **adm, const PARMS_T *parms,
    Update LGS focus or reference vector.
    \fixme: what if dtrat!=1
    \verbatim
-       LGS: CL grads works, but not as good.
-       LGS: CL grads + DM grads does not work
-       LGS: CL grads + DM grads - Xhat grad is the choice.
+   LGS: CL grads works, but not as good.
+   LGS: CL grads + DM grads does not work
+   LGS: CL grads + DM grads - Xhat grad is the choice.
 
-       mffocus is 0: no focus tracking.
-       mffocus is 1: use CL grads + DM grads - Xhat grad for LGS and NGS
-       mffocus is 2: use CL grads + DM grads - Xhat grad for LGS; 
-       CL grads for NGS.
-    \endverbatim
+   mffocus is 0: no focus tracking.
+   mffocus is 1: use CL grads + DM grads - Xhat grad for LGS and NGS
+   mffocus is 2: use CL grads + DM grads - Xhat grad for LGS; 
+   CL grads for NGS.
+   \endverbatim
 */
 void focus_tracking(SIM_T*simu){
 
@@ -347,7 +515,7 @@ void focus_tracking(SIM_T*simu){
 
 /**
    Experimental routine to do wind estimation using correlation tracking of
-tomography outputs. Not finished. Not verified.  */
+   tomography outputs. Not finished. Not verified.  */
 static void windest(SIM_T *simu){
     long nps=simu->opdr->nx;
     if(!simu->opdrhat){
@@ -393,8 +561,8 @@ void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
-    if(!parms->sim.closeloop || parms->dbg.fitonly || simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
-	if(parms->dbg.fitonly){
+    if(!parms->sim.closeloop || parms->sim.fitonly || simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
+	if(parms->sim.fitonly){
 	    dcellfree(simu->opdr);
 	    //simu->opdr=atm2xloc(simu);
 	}else{
@@ -467,7 +635,7 @@ void tomofit(SIM_T *simu){
 	    }
 	}
 
-	if(!parms->dbg.fitonly && parms->tomo.split==1){//ahst
+	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
 	if(parms->tomo.ahst_rtt && parms->tomo.split){
@@ -476,7 +644,7 @@ void tomofit(SIM_T *simu){
 
     }//if high order has output
 
-    if(!parms->dbg.fitonly && parms->tomo.split){
+    if(!parms->sim.fitonly && parms->tomo.split){
 	if(parms->tomo.split==2){
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
@@ -519,7 +687,7 @@ void tomofit(SIM_T *simu){
 void lsr(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    const int do_hi=(!parms->sim.closeloop || parms->dbg.fitonly || 
+    const int do_hi=(!parms->sim.closeloop || parms->sim.fitonly || 
 		     simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0);
     const int do_low=parms->tomo.split && (!parms->sim.closeloop || simu->dtrat_lo==1
 					   || (simu->isim)%simu->dtrat_lo==0);
@@ -557,7 +725,7 @@ void lsr(SIM_T *simu){
 	    error("Not implemented\n");
 	}
 	dcellfree(rhs);
-	if(!parms->dbg.fitonly && parms->tomo.split==1){//ahst
+	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
     }//if high order has output
@@ -643,7 +811,7 @@ void reconstruct(SIM_T *simu){
 	}
 	if(parms->save.opdx || parms->plot.opdx){
 	    dcell *opdx;
-	    if(parms->dbg.fitonly){
+	    if(parms->sim.fitonly){
 		opdx=simu->opdr;
 	    }else{
 		opdx=atm2xloc(simu);
@@ -657,7 +825,7 @@ void reconstruct(SIM_T *simu){
 			    "Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
 		}
 	    }
-	    if(!parms->dbg.fitonly){
+	    if(!parms->sim.fitonly){
 		dcellfree(opdx);
 	    }
 	}
