@@ -121,9 +121,7 @@ spchol* chol_factorize(dsp *A_in){
 	  out->c.supernodal=CHOLMOD_SIMPLICIAL;//force simplicial only.
 	*/
     }
-    info2("analyzing...");
     out->L=MOD(analyze)(A,out->c);
-    info2("factoring...");
     if(!out->L) {
 	info("\nCholmod error:");
 	switch(out->c->status){

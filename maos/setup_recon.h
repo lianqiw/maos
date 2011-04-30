@@ -24,7 +24,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
 void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
 void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms);
+void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms);
 void free_recon(const PARMS_T *parms, RECON_T *recon);
 void test_recon_GX(RECON_T *recon, const PARMS_T *parms, 
 		   const POWFS_T *powfs);

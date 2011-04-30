@@ -235,7 +235,7 @@ static void X(celldim)(const X(cell) *A, long *nx, long *ny,
 }
 
 /**
-   reduce nx*ny cell matrix to 1*ny if dim=1 and nx*11 if dim=2
+   reduce nx*ny cell matrix to 1*ny if dim=1 and nx*1 if dim=2
 */
 X(cell) *X(cellreduce)(const X(cell)*A, int dim){
     if(!A) return NULL;
@@ -466,6 +466,7 @@ void X(celladd)(X(cell) **B0, double bc, const X(cell) *A,const double ac){
    Compute the inner produce of two dcell.
 */
 T X(cellinn)(const X(cell)*A, const X(cell)*B){
+    if(!A || !B) return 0; 
     if(A->nx!=B->nx || A->ny!=1 || B->ny!=1) error("mismatch\n");
     T out=0;
     for(int i=0; i<A->nx; i++){
@@ -576,6 +577,10 @@ X(cell)* X(cellinvspd_each)(X(cell) *A){
    Convert a block matrix to a matrix.
 */
 X(mat) *X(cell2m)(const X(cell) *A){
+    if(A->nx*A->ny==1){
+	info("Single block, return a reference\n");
+	return X(ref)(A->p[0]);
+    }
     X(mat) *(*Ap)[A->nx] = (X(mat) *(*)[A->nx])A->p;
     long nx,ny,*nxs,*nys;
     X(celldim)(A,&nx,&ny,&nxs,&nys);

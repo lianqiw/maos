@@ -145,10 +145,10 @@ static void Tomo_iprop(thread_t *info){
 	    }
 		break;
 	    case 1:
-		apply_invpsd(&data->xout, recon->invpsd, data->xin, data->alpha, ips);
+		apply_invpsd(&data->xout, recon->invpsd, data->xin, data->alpha, ips, ips);
 		break;
 	    case 2:
-		apply_fractal(&data->xout, recon->fractal, data->xin, data->alpha, ips);
+		apply_fractal(&data->xout, recon->fractal, data->xin, data->alpha, ips, ips);
 		break;
 	    }
 	}
@@ -169,8 +169,7 @@ void TomoR(dcell **xout, const void *A,
     dcell *gg=NULL;
     dcellcp(&gg, gin);//copy to gg so we don't touch the input.
     TTFR(gg, recon->TTF, recon->PTTF);
-#define USE_NEW 0
-#if USE_NEW
+
     if(!*xout){
 	*xout=dcellnew(recon->npsr, 1);
     }
@@ -182,14 +181,6 @@ void TomoR(dcell **xout, const void *A,
     
     CALL_THREAD(info_iwfs2, recon->nthread, 1);
     CALL_THREAD(info_ips, recon->nthread, 1);
-#else
-    dcell *g3=NULL;
-    spcellmulmat_thread(&g3,recon->saneai, gg, 1,recon->nthread);
-    dcellfree(gg);
-    spcellmulmat_each(&gg, recon->GP, g3, alpha, 1, recon->nthread);
-    sptcellmulmat_thread(xout, recon->HXWtomo, gg, 1, recon->nthread);
-    dcellfree(g3);
-#endif
     dcellfree(gg);
 }
 
@@ -321,109 +312,7 @@ void FitL(dcell **xout, const void *A,
     dcellfree(xp);
 }
 
-/**
-   Carry out tomography. (Precondition) CG with pcg() and Cholesky
-   Backsubtitution with muv_direct_solve() is implemented.
-*/
-void tomo(dcell **opdr, const PARMS_T *parms, const RECON_T *recon, const dcell *grad, int maxit){
-    dcell *rhs=NULL;
-    if(parms->tomo.assemble){
-	muv(&rhs, &(recon->RR), grad, 1);
-    }else{
-	TomoR(&rhs, recon, grad, 1);
-    }
-    switch(parms->tomo.alg){
-    case 0:
-	muv_direct_solve_cell(opdr,&(recon->RL), rhs);
-	break;
-    case 1:{
-	PREFUN pfun;
-	const void *pdata;
-	CGFUN cgfun;
-	const void *cgdata;
-	switch(parms->tomo.precond){
-	case 0: /*This is no preconditioner*/
-	    pfun=NULL;
-	    pdata=NULL;
-	    break;
-	case 1: /*Fourier Domain preconditioner*/
-	    pfun=fdpcg_precond;
-	    pdata=(void*)recon;
-	    break;
-	default:
-	    pfun=NULL;
-	    pdata=NULL;
-	    error("Invalid tomo.precond\n");
-	}
 
-	if(parms->tomo.assemble){
-	    cgfun=(CGFUN)muv;
-	    cgdata=&(recon->RL);
-	}else{
-	    cgfun=TomoL;
-	    cgdata=recon;
-	}
-	pcg(opdr, cgfun, cgdata, pfun, pdata, rhs, 
-	    recon->warm_restart, maxit);
-    }
-	break;
-    case 2:
-	muv_direct_solve_cell(opdr,&(recon->RL), rhs);
-	break;
-    case 3: {//Block Gaussian Seidel
-	
-    }
-	break;
-    default:
-	error("Not implemented: alg=%d\n",parms->tomo.alg);
-    }
-    dcellfree(rhs);
-}
-/**
-   Carry out DM fit. Un-Precondition CG and Cholesky Backsubtitution is
-   implemented.  */
-void fit(dcell **adm, const PARMS_T *parms, 
-	 const RECON_T *recon, const dcell *opdr){
-    if(parms->ndm==0) return;
-    dcell *rhs=NULL;
-    if(recon->FR.M){
-	muv(&rhs, &(recon->FR), opdr, 1);
-    }else{
-	FitR(&rhs, recon, opdr, 1);
-    }
-    switch(parms->fit.alg){
-    case 0:
-	muv_direct_solve_cell(adm,&(recon->FL),rhs);
-	break;
-    case 1:{
-	PREFUN pfun;
-	const void *pdata;
-	CGFUN cgfun;
-	const void *cgdata;
-	switch(parms->fit.precond){
-	case 0:
-	    pfun=NULL;
-	    pdata=NULL;
-	    break;
-	default:
-	    pfun=NULL;
-	    pdata=NULL;
-	    error("Invalid fit.precond\n");
-	}
-	cgfun=(CGFUN)muv;
-	cgdata=&(recon->FL);
-	pcg(adm, cgfun, cgdata, pfun, pdata, rhs, 
-	    recon->warm_restart, parms->fit.maxit);
-	break;
-    }
-    case 2:
-	muv_direct_solve_cell(adm,&(recon->FL),rhs);
-	break;
-    default:
-	error("Not implemented: alg=%d\n",parms->fit.alg);
-    }
-    dcellfree(rhs);
-}
 /**
    Update LGS focus or reference vector.
    \fixme: what if dtrat!=1
@@ -558,7 +447,7 @@ static void windest(SIM_T *simu){
    split tomography.  */
 void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    const RECON_T *recon=simu->recon;
+    RECON_T *recon=simu->recon;
     //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
     if(!parms->sim.closeloop || parms->sim.fitonly || simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
 	if(parms->sim.fitonly){
@@ -569,13 +458,18 @@ void tomofit(SIM_T *simu){
 	    if(parms->dbg.ntomo_maxit){
 		if(simu->isim<parms->dbg.ntomo_maxit){
 		    maxit=parms->dbg.tomo_maxit[simu->isim];
+		    recon->RL.maxit=maxit;//update maxit information
 		    info2("Running tomo.maxit=%d\n",maxit);
 		}else{
 		    error("Out of range\n");
 		}
 	    }
 	    //computes simu->opdr
-	    tomo(&simu->opdr,parms,recon,simu->gradlastol,maxit);
+	    dcell *rhs=NULL;
+	    muv(&rhs, &recon->RR, simu->gradlastol, 1);
+	    muv_solve(&simu->opdr, &recon->RL, rhs);
+	    dcellfree(rhs);
+	    //tomo(&simu->opdr,parms,recon,simu->gradlastol,maxit);
 	}
 	if(parms->tomo.windest){
 	    info2("Estimating wind direction and speed using FFT method\n");
@@ -603,8 +497,13 @@ void tomofit(SIM_T *simu){
 		dfree(tmp);
 	    }
 	}
-
-	fit(&simu->dmfit_hi,parms,recon,simu->opdr);
+	if(parms->ndm>0){//Do DM fitting
+	    dcell *rhs=NULL;
+	    muv(&rhs, &recon->FR, simu->opdr, 1);
+	    muv_solve(&simu->dmfit_hi, &recon->FL, rhs);
+	    dcellfree(rhs);
+	    //fit(&simu->dmfit_hi,parms,recon,simu->opdr);
+	}
 
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
     
@@ -709,20 +608,24 @@ void lsr(SIM_T *simu){
     if(do_hi){
 	dcell *rhs=NULL;
 	muv(&rhs, &(recon->LR), graduse, 1);
+	muv_solve(&simu->dmerr_hi,&(recon->LL), rhs);
+	/*
 	switch(parms->tomo.alg){
 	case 0://CBS
-	    muv_direct_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
+	case 2://SVD
+	    if(parms->tomo.bgs){
+		muv_bgs(&simu->dmerr_hi,&(recon->LL), rhs, recon->warm_restart, parms->tomo.maxit, recon->nthread);
+	    }else{
+		muv_direct_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
+	    }
 	    break;
 	case 1://CG
-	    pcg(&simu->dmerr_hi, (CGFUN)muv, &recon->LL, NULL, NULL, rhs,
+	    pcg(&simu->dmerr_hi, muv, &recon->LL, NULL, NULL, rhs,
 		recon->warm_restart, parms->tomo.maxit);
-	    break;
-	case 2://SVD inversion
-	    muv_direct_solve_cell(&simu->dmerr_hi, &recon->LL, rhs);
 	    break;
 	default:
 	    error("Not implemented\n");
-	}
+	    }*/
 	dcellfree(rhs);
 	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);

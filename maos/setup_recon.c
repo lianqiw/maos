@@ -1086,11 +1086,11 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    break;
 	case 1://Need to apply invpsd separately
 	    recon->RL.extra = recon->invpsd;
-	    recon->RL.exfun = (CGFUN)apply_invpsd;
+	    recon->RL.exfun = apply_invpsd;
 	    break;
 	case 2://Need to apply fractal separately
 	    recon->RL.extra = recon->fractal;
-	    recon->RL.exfun = (CGFUN)apply_fractal;
+	    recon->RL.exfun = apply_fractal;
 	}
 
 	//Symmetricize, remove values below 1e-15*max and sort RLM (optional).
@@ -1160,23 +1160,35 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 	spcellfree(GXtomoT);
     }
-    if(parms->tomo.alg==0 || parms->tomo.alg==2 || parms->tomo.split==2){
+    if(parms->tomo.alg==0 || parms->tomo.alg==2){
 	//We need cholesky decomposition in CBS or MVST method.
-	muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
-	if(parms->save.setup && parms->save.recon){
-	    if(recon->RL.C)
-		chol_save(recon->RL.C,"%s/RLC",dirsetup);
-	    else
-		dwrite(recon->RL.MI,"%s/RLMI", dirsetup);
+	if(!parms->tomo.bgs){//Full Matrix
+	    muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
+	    if(parms->save.setup && parms->save.recon){
+		if(recon->RL.C)
+		    chol_save(recon->RL.C,"%s/RLC",dirsetup);
+		else
+		    dwrite(recon->RL.MI,"%s/RLMI", dirsetup);
+	    }
+	}else{//BGS
+	    muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
+	    if(parms->save.setup && parms->save.recon){
+		for(int ib=0; ib<recon->RL.nb; ib++){
+		    if(recon->RL.CB)
+			chol_save(recon->RL.CB[ib],"%s/RLCB_%d",dirsetup, ib);
+		    else
+			dwrite(recon->RL.MI,"%s/RLMIB_%d", dirsetup, ib);
+		}
+	    }
 	}
-	info2("After cholesky on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
     if(parms->tomo.assemble && !parms->cn2.tomo){
 	//Don't free PTT. Used in forming LGS uplink err
 	if(parms->tomo.piston_cr)
 	    spcellfree(recon->ZZT);
     }
-    if((!parms->tomo.assemble || parms->tomo.alg==0) && !parms->cn2.tomo){
+    if((!parms->tomo.assemble || parms->tomo.alg!=1) && !parms->cn2.tomo && !parms->tomo.bgs){
 	//We just need cholesky factors.
 	info2("Freeing RL.M,U,V\n");
 	spcellfree(recon->RL.M);
@@ -1194,12 +1206,13 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 /**
    Update assembled tomography matrix with new L2.
  */
-void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms){
+void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
+    setup_recon_tomo_prep(recon, parms); //redo L2, invpsd
     if(parms->tomo.alg==1&&!parms->tomo.assemble){//no need to do anything
 	return;
     }
-    switch(parms->tomo.cxx){
-    case 0:{ //Need to adjust RLM with the new L2.
+    if(parms->tomo.cxx==0){
+	//Need to adjust RLM with the new L2.
 	if(!recon->L2save){
 	    error("We need the L2save to update the tomography matrix\n");
 	}
@@ -1209,7 +1222,7 @@ void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms){
 	    dsp* LL=sptmulsp(recon->L2->p[ips+npsr*ips], 
 			     recon->L2->p[ips+npsr*ips]);
 	    dsp *LLold=sptmulsp(recon->L2save->p[ips+npsr*ips], 
-			     recon->L2save->p[ips+npsr*ips]);
+				recon->L2save->p[ips+npsr*ips]);
 	    if(!LL){
 		error("L2 is empty!!\n");
 	    }
@@ -1220,14 +1233,19 @@ void setup_recon_tomo_matrix_update(RECON_T *recon, const PARMS_T *parms){
 	    spfree(LLold);
 	}
     }
-	break;
-    case 1://Need to apply invpsd separately
-	recon->RL.extra = recon->invpsd;
-	recon->RL.exfun = (CGFUN)apply_invpsd;
-	break;
-    case 2://Need to apply fractal separately
-	recon->RL.extra = recon->fractal;
-	recon->RL.exfun = (CGFUN)apply_fractal;
+
+    if(parms->tomo.alg==0 || parms->tomo.alg==2){
+	//We need cholesky decomposition in CBS or MVST method.
+	if(!parms->tomo.bgs){//Full Matrix
+	    muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
+	}else{//BGS
+	    muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
+	}
+	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    }
+
+    if(parms->tomo.split==2){
+	setup_recon_mvst(recon,parms);
     }
 }
 /**
@@ -1549,26 +1567,37 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dcellwrite(recon->FL.V,"%s/FLV.bin.gz",dirsetup);
 	}
     }
-    if(parms->fit.alg==0 || parms->fit.alg==2  || parms->tomo.split==2){
+    if(parms->fit.alg==0 || parms->fit.alg==2){
 	if(fabs(parms->fit.tikcr)<1.e-14){
 	    warning("tickcr=%g is too small or not applied\n", 
 		    parms->fit.tikcr);
 	}
-	muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
-	if(parms->save.setup && parms->save.recon){
-	    if(recon->FL.C)
-		chol_save(recon->FL.C,"%s/FLC",dirsetup);
-	    else
-		dwrite(recon->FL.MI, "%s/FLMI", dirsetup);
+	if(!parms->fit.bgs){
+	    muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
+	    if(parms->save.setup && parms->save.recon){
+		if(recon->FL.C)
+		    chol_save(recon->FL.C,"%s/FLC",dirsetup);
+		else
+		    dwrite(recon->FL.MI, "%s/FLMI", dirsetup);
+	    }	
+	    info2("Freeing FL.M,U,V\n");
+	    spcellfree(recon->FL.M);
+	    dcellfree(recon->FL.U);
+	    dcellfree(recon->FL.V);
+	}else{//BGS
+	    muv_direct_diag_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
+	    if(parms->save.setup && parms->save.recon){
+		for(int ib=0; ib<recon->FL.nb; ib++){
+		    if(recon->FL.CB)
+			chol_save(recon->FL.CB[ib],"%s/FLCB_%d",dirsetup, ib);
+		    else
+			dwrite(recon->FL.MI,"%s/FLMIB_%d", dirsetup, ib);
+		}
+	    }
 	}
-	info2("After cholesky on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
-    if(parms->fit.alg==0){//CBS
-	info2("Freeing FL.M,U,V\n");
-	spcellfree(recon->FL.M);
-	dcellfree(recon->FL.U);
-	dcellfree(recon->FL.V);
-    }
+  
     info2("After assemble fit matrix:\t%.2f MiB\n",get_job_mem()/1024.);
 }
 /**
@@ -1726,6 +1755,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     if(parms->tomo.split!=2){
 	return;
     }
+ 
     dcellfree(recon->GXL);
     spcellfull(&recon->GXL, recon->GXlo, 1);
 
@@ -1735,6 +1765,18 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	U=dcellread("mvst_U");
 	FU=dcellread("mvst_FU");
     }else{
+	//Prepare CBS if not already done
+	int tomo_free_direct=0;
+	if(!recon->RL.C && !recon->RL.MI){
+	    muv_direct_prep(&(recon->RL), 0);
+	    tomo_free_direct=1;
+	}
+	int fit_free_direct=0;
+	if(!recon->FL.C && !recon->FL.MI){
+	    muv_direct_prep(&(recon->FL), 0);
+	    fit_free_direct=1;
+	}
+
 	dcell *GXLT=dcelltrans(recon->GXL);
 	muv_direct_solve_cell(&U, &recon->RL, GXLT);
 	dcellfree(GXLT);
@@ -1746,14 +1788,14 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    dcellwrite(U, "%s/mvst_U", dirsetup);
 	    dcellwrite(FU, "%s/mvst_FU", dirsetup);
 	}
-	if(parms->tomo.alg!=0){
+    
+	if(tomo_free_direct){
 	    muv_direct_free(&recon->RL);
 	}
-	if(parms->fit.alg!=0){
+	if(fit_free_direct){
 	    muv_direct_free(&recon->FL);
 	}
     }
-    
     dcell *Uw=NULL;
     dcell *FUw=NULL;
     
@@ -1999,6 +2041,29 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    setup_recon_tomo_matrix(recon,parms);
 	    toc2("Generating tomography matrix");
 	}
+	//Fall back function method if .M is NULL
+	recon->RL.Mfun=TomoL;
+	recon->RL.Mdata=recon;
+	recon->RR.Mfun=TomoR;
+	recon->RR.Mdata=recon;
+	if(parms->tomo.alg==1){//CG
+	    switch(parms->tomo.precond){
+	    case 0://no preconditioner
+		recon->RL.pfun=NULL;
+		recon->RL.pdata=NULL;
+		break;
+	    case 1:
+		recon->RL.pfun=fdpcg_precond;
+		recon->RL.pdata=(void*)recon;
+		break;
+	    default:
+		error("Invalid tomo.precond");
+	    }
+	}
+	recon->RL.alg = parms->tomo.alg;
+	recon->RL.bgs = parms->tomo.bgs;
+	recon->RL.warm  = recon->warm_restart;
+	recon->RL.maxit = parms->tomo.maxit;
     }
     if(!parms->sim.fitonly){//In this case, xloc has high sampling. We avoid HXF.
 	setup_recon_HXF(recon,parms);
@@ -2007,6 +2072,15 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     //always assemble fit matrix, faster if many directions
     setup_recon_fit_matrix(recon,parms);
     toc2("Generating fit matrix");
+    //Fall back function method if FL.M is NULL
+    recon->FL.Mfun  = FitL;
+    recon->FL.Mdata = recon;
+    recon->FR.Mfun  = FitR;
+    recon->FR.Mdata = recon;
+    recon->FL.alg = parms->fit.alg;
+    recon->FL.bgs = parms->fit.bgs;
+    recon->FL.warm  = recon->warm_restart;
+    recon->FL.maxit = parms->tomo.maxit;
     //moao
     setup_recon_moao(recon,parms);
     toc2("Preparing moao");
@@ -2023,7 +2097,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 		error("Not implemented");
 	    }
 	}
-	if(parms->tomo.split==2){
+	if(!parms->sim.fitonly && parms->tomo.split==2){//Need to be after fit
 	    setup_recon_mvst(recon,parms);
 	}
     }
@@ -2181,6 +2255,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellfree(tmp);
 	dcellfree(NW);
     }
+    recon->LL.alg = parms->tomo.alg;
+    recon->LL.bgs = parms->tomo.bgs;
+    recon->LL.warm = recon->warm_restart;
+    recon->LL.maxit = parms->tomo.maxit;
     //Remove empty cells.
     dcelldropempty(&recon->LR.U,2);
     dcelldropempty(&recon->LR.V,2);
@@ -2195,16 +2273,28 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellwrite(recon->LL.V,"%s/LLV",dirsetup); 
     }
     if(parms->tomo.alg==0 || parms->tomo.alg==2){
-	muv_direct_prep(&recon->LL, (parms->tomo.alg==2)*parms->tomo.svdthres);
-	if(parms->save.setup && parms->save.recon){
-	    if(recon->LL.C)
-		chol_save(recon->LL.C, "%s/LLC", dirsetup);
-	    else
-		dwrite(recon->LL.MI, "%s/LLMI", dirsetup);
+	if(!parms->tomo.bgs){
+	    muv_direct_prep(&recon->LL, (parms->tomo.alg==2)*parms->tomo.svdthres);
+	    if(parms->save.setup && parms->save.recon){
+		if(recon->LL.C)
+		    chol_save(recon->LL.C, "%s/LLC", dirsetup);
+		else
+		    dwrite(recon->LL.MI, "%s/LLMI", dirsetup);
+	    }
+	    spcellfree(recon->LL.M);
+	    dcellfree(recon->LL.U);
+	    dcellfree(recon->LL.V);	
+	}else{
+	    muv_direct_diag_prep(&(recon->LL), (parms->tomo.alg==2)*parms->tomo.svdthres);
+	    if(parms->save.setup && parms->save.recon){
+		for(int ib=0; ib<recon->LL.nb; ib++){
+		    if(recon->LL.CB)
+			chol_save(recon->LL.CB[ib],"%s/LLCB_%d",dirsetup, ib);
+		    else
+			dwrite(recon->LL.MI,"%s/LLMIB_%d", dirsetup, ib);
+		}
+	    }
 	}
-	spcellfree(recon->LL.M);
-	dcellfree(recon->LL.U);
-	dcellfree(recon->LL.V);
     }
 }
 /**
@@ -2239,6 +2329,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     spcellfree(recon->HXF); 
     spcellfree(recon->HXW);
     spcellfree(recon->HXWtomo);
+    spcellfree(recon->HA); 
     spfree(recon->W0); 
     dfree(recon->W1); 
     dcellfree(recon->NW);

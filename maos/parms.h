@@ -333,7 +333,9 @@ typedef struct TOMO_CFG_T{
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
+			2: SVD or EVD: Eigen value decompsition
 		     */
+    int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int precond;     /**<Tomography preconditioner.
 			0: No preconditioner.             (CG)
 			1: Fourier Domain Preconditioner. (FDPCG)
@@ -363,7 +365,9 @@ typedef struct FIT_CFG_T{
     int alg;         /**<Fitting algorithm to solve the linear equation.
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
+			2: SVD or EVD: Eigen value decompsition
 		     */
+    int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int precond;     /**<Preconditioner. Not available.*/
     int maxit;       /**<max iterations. Usually 4 for CG*/
     int square;      /**<using square grid on DM and ploc.*/

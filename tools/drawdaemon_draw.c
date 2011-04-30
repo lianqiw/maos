@@ -270,6 +270,77 @@ draw_point(cairo_t *cr, double ix, double iy, long style, double size){
 	warning("Invalid style\n");
     }
 }
+void update_limit(drawdata_t *drawdata){
+    //need to update max/minimum.
+    if(drawdata->cumulast!=drawdata->cumu){
+	drawdata->limit_changed=0;
+	drawdata->offx=0;
+	drawdata->offy=0;
+	drawdata->zoomx=1;
+	drawdata->zoomy=1;
+    }
+    if(drawdata->cumu){
+	drawdata->limit_cumu=calloc(4, sizeof(double));
+	drawdata->limit=drawdata->limit_cumu;
+    }else{
+	drawdata->limit_data=calloc(4, sizeof(double));
+	drawdata->limit=drawdata->limit_data;
+    }
+
+    double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
+    for(int ipts=0; ipts<drawdata->npts; ipts++){
+	dmat *pts=drawdata->pts[ipts];
+	double xmin, xmax, ymin=INFINITY, ymax=-INFINITY;
+	double *ptsy=NULL;
+	if(pts->ny>1){//x is supplied
+	    maxmindbl(pts->p, pts->nx, &xmax, &xmin);
+	    ptsy=pts->p+pts->nx;
+	}else{//x is index
+	    xmin=0; xmax=(double)(pts->nx-1);
+	    ptsy=pts->p;
+	}
+	if(drawdata->cumu){
+	    int icumu=drawdata->icumu;
+	    int ips0=0;
+	    if(icumu<pts->nx){
+		ips0=icumu;
+	    }
+	    double y_cumu=0,y;
+		  
+	    if(drawdata->cumuquad){
+		for(int ips=ips0; ips<pts->nx; ips++){
+		    y_cumu+=ptsy[ips]*ptsy[ips];
+		    y=sqrt(y_cumu/(ips-ips0+1));
+		    if(y>ymax) ymax=y;
+		    if(y<ymin) ymin=y;
+		}
+	    }else{
+		if(drawdata->cumuquad){
+		    for(int ips=ips0; ips<pts->nx; ips++){
+			y_cumu+=ptsy[ips];
+			y=y_cumu/(ips-ips0+1);
+			if(y>ymax) ymax=y;
+			if(y<ymin) ymin=y;
+		    }
+		}
+	    } 
+	}else{
+	    maxmindbl(ptsy, pts->nx, &ymax, &ymin);
+	}
+	if(xmin<xmin0) xmin0=xmin;
+	if(xmax>xmax0) xmax0=xmax;
+	if(ymin<ymin0) ymin0=ymin;
+	if(ymax>ymax0) ymax0=ymax;
+    }
+    round_limit(&xmin0, &xmax0);
+    round_limit(&ymin0, &ymax0);
+    drawdata->limit[0]=xmin0;
+    drawdata->limit[1]=xmax0;
+    drawdata->limit[2]=ymin0;
+    drawdata->limit[3]=ymax0;
+    info("Updating limit to %g %g %g %g\n", xmin0, xmax0, ymin0, ymax0);
+}
+
 /**
    The master routine that draws in the cairo surface.
 */
@@ -291,83 +362,24 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
       cairo_font_options_destroy(fonto);
     */
     if(drawdata->cumu){
-	drawdata->limit=drawdata->limit_cumu;
+	if(drawdata->icumulast==drawdata->icumu){
+	    drawdata->limit=drawdata->limit_cumu;
+	}else{
+	    free(drawdata->limit_cumu);
+	    drawdata->limit_cumu=NULL;
+	}
     }else{
 	drawdata->limit=drawdata->limit_data;
     }
-    if(!drawdata->limit){//need to update max/minimum.
-	if(drawdata->cumulast!=drawdata->cumu){
-	    drawdata->limit_changed=0;
-	    drawdata->offx=0;
-	    drawdata->offy=0;
-	    drawdata->zoomx=1;
-	    drawdata->zoomy=1;
-	}
-	if(drawdata->cumu){
-	    drawdata->limit_cumu=calloc(4, sizeof(double));
-	    drawdata->limit=drawdata->limit_cumu;
-	}else{
-	    drawdata->limit_data=calloc(4, sizeof(double));
-	    drawdata->limit=drawdata->limit_data;
-	}
-
-	double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
-	for(int ipts=0; ipts<drawdata->npts; ipts++){
-	    dmat *pts=drawdata->pts[ipts];
-	    double xmin, xmax, ymin=INFINITY, ymax=-INFINITY;
-	    double *ptsy=NULL;
-	    if(pts->ny>1){//x is supplied
-		maxmindbl(pts->p, pts->nx, &xmax, &xmin);
-		ptsy=pts->p+pts->nx;
-	    }else{//x is index
-		xmin=0; xmax=(double)(pts->nx-1);
-		ptsy=pts->p;
-	    }
-	    if(drawdata->cumu){
-		int icumu=drawdata->icumu;
-		int ips0=0;
-		if(icumu<pts->nx){
-		    ips0=icumu;
-		}
-		double y_cumu=0,y;
-		  
-		if(drawdata->cumuquad){
-		    for(int ips=ips0; ips<pts->nx; ips++){
-			y_cumu+=ptsy[ips]*ptsy[ips];
-			y=sqrt(y_cumu/(ips-ips0+1));
-			if(y>ymax) ymax=y;
-			if(y<ymin) ymin=y;
-		    }
-		}else{
-		    if(drawdata->cumuquad){
-			for(int ips=ips0; ips<pts->nx; ips++){
-			    y_cumu+=ptsy[ips];
-			    y=y_cumu/(ips-ips0+1);
-			    if(y>ymax) ymax=y;
-			    if(y<ymin) ymin=y;
-			}
-		    }
-		} 
-	    }else{
-		maxmindbl(ptsy, pts->nx, &ymax, &ymin);
-	    }
-	    if(xmin<xmin0) xmin0=xmin;
-	    if(xmax>xmax0) xmax0=xmax;
-	    if(ymin<ymin0) ymin0=ymin;
-	    if(ymax>ymax0) ymax0=ymax;
-	}
-	drawdata->limit[0]=xmin0;
-	drawdata->limit[1]=xmax0;
-	drawdata->limit[2]=ymin0;
-	drawdata->limit[3]=ymax0;
-	round_limit(drawdata->limit, drawdata->limit+1);
-	round_limit(drawdata->limit+2, drawdata->limit+3);
+    if(!drawdata->limit){
+	update_limit(drawdata);
     }
     int widthim, heightim;
     double xmin=drawdata->limit[0];
     double xmax=drawdata->limit[1];
     double ymin=drawdata->limit[2];
     double ymax=drawdata->limit[3];
+    info("limits are %g %g %g %g\n", xmin, xmax, ymin, ymax);
     double xmin0,ymin0,xmax0,ymax0;
     xmin0=xmin; ymin0=ymin; xmax0=xmax; ymax0=ymax;
     double xdim, ydim;//dimension of the data.
@@ -510,7 +522,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	xmin0=((-widthim*0.5)/zoomx - drawdata->offx)/scalex+centerx;
 	ymax0=(((heightim)*0.5)/zoomy - drawdata->offy)/scaley+centery;
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
-	int icumu=(int)drawdata->icumu;
+	int icumu=drawdata->icumu;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 	    dmat *pts=drawdata->pts[ipts];
 	    double *ptsx=NULL, *ptsy=NULL;
@@ -821,6 +833,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     g_object_unref(layout);
     cairo_destroy(cr);
- 
+    drawdata->icumulast=drawdata->icumu;
     drawdata->cumulast=drawdata->cumu;
 }

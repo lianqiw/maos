@@ -566,6 +566,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.ahst_idealngs);
     READ_INT(tomo.ahst_rtt);
     READ_INT(tomo.alg);
+    READ_INT(tomo.bgs);
     READ_INT(tomo.precond);
     READ_INT(tomo.maxit);
     READ_INT(tomo.assemble);
@@ -596,6 +597,7 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.lrt_piston);
     READ_INT(fit.lrt_tt);
     READ_INT(fit.alg);
+    READ_INT(fit.bgs);
     READ_INT(fit.precond);
     READ_INT(fit.maxit);
     READ_INT(fit.square);
@@ -1285,8 +1287,8 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
     }
-    if(parms->tomo.alg == 0 && parms->tomo.cxx !=0){
-	error("Cholesky only works with L2 cxx.\n");
+    if((parms->tomo.bgs || parms->tomo.alg != 0) && parms->tomo.cxx !=0){
+	error("Only CG work with non L2 cxx.\n");
 	parms->tomo.cxx=0;
     }
     if(parms->tomo.split == 1 && !parms->sim.closeloop){
@@ -1428,8 +1430,14 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	error("parms->fit.lrt_tt=%d is invalid\n", parms->fit.lrt_tt);
     }
     /*load.tomo==1 loads tomography matrix saved by LAOS for debugging purpose.*/
-    if(parms->load.tomo || parms->tomo.alg!=1){
+    if(parms->load.tomo || parms->tomo.alg!=1 || parms->tomo.bgs){
 	parms->tomo.assemble=1;
+    }
+    if(parms->tomo.bgs && parms->tomo.precond){
+	error("Please implement the preconditioner for each block for BGS.\n");
+    }
+    if(parms->fit.bgs && parms->fit.precond){
+	error("Please implement the preconditioner for each block for BGS.\n");
     }
     //disable cache for low order systems.
     if(parms->evl.nevl<2){
@@ -1611,6 +1619,9 @@ static void print_parms(const PARMS_T *parms){
     }
     if(parms->sim.recon==0){
 	info2("\033[0;32mTomography\033[0;0m is using ");
+	if(parms->tomo.bgs){
+	    info2("Block Gauss Seidel with ");
+	}
 	switch(parms->tomo.alg){
 	case 0:
 	    info2("Cholesky back solve ");
@@ -1621,6 +1632,9 @@ static void print_parms(const PARMS_T *parms){
 	    break;
 	case 2:
 	    info2("SVD direct solve ");
+	    break;
+	case 3:
+	    info2("Block Gauss Seidel ");
 	    break;
 	default:
 	    error("Invalid\n");
@@ -1636,6 +1650,9 @@ static void print_parms(const PARMS_T *parms){
 	    error(" Invalid\n");
 	}
 	info2("\033[0;32mDM Fitting\033[0;0m is using ");
+	if(parms->fit.bgs){
+	    info2("Block Gauss Seidel with ");
+	}
 	switch(parms->fit.alg){
 	case 0:
 	    info2("Cholesky back solve");
@@ -1647,11 +1664,17 @@ static void print_parms(const PARMS_T *parms){
 	case 2:
 	    info2("SVD direct solve ");
 	    break;
+	case 3:
+	    info2("Block Gauss Seidel ");
+	    break;
 	default:
 	    error("Invalid");
 	}
     }else{
 	info2("Using least square reconstructor with ");
+	if(parms->tomo.bgs){
+	    info2("Block Gauss Seidel with ");
+	}
 	switch(parms->tomo.alg){
 	case 0:
 	    info2("Cholesky back solve ");

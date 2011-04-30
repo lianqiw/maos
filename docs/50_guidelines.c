@@ -47,4 +47,6 @@
    - Do not include system headers in header files unless necessary. include
    thoese headers in .c file. 
 
+   - Avoid function casting. It will hide data type check and hide bugs.
+
  */

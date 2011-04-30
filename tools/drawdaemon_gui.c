@@ -275,7 +275,6 @@ static void drawdata_free_input(drawdata_t *drawdata){
 	}
 	free(drawdata->legend);
     }
-    free(drawdata->limit);
 }
 static void drawdata_free(drawdata_t *drawdata){
     if(drawdata->pixmap){
@@ -661,7 +660,7 @@ void addpage(drawdata_t **drawdatawrap)
 	drawdata_t **drawdata_wrapold=g_object_get_data(G_OBJECT(page),"drawdatawrap");
 	drawdata_t *drawdata_old=(*drawdata_wrapold);
 	/*Instead of freeing drawdata, we replace its content with newdata. this
-	  makes dialog continue to work.*/
+	  makes dialog continue to work. Do not replace generated data.*/
 	drawdata_free_input(drawdata_old);
 	drawdata_old->image=drawdata->image;
 	drawdata_old->p=drawdata->p;
@@ -678,11 +677,14 @@ void addpage(drawdata_t **drawdatawrap)
 	drawdata_old->xlabel=drawdata->xlabel;
 	drawdata_old->ylabel=drawdata->ylabel;
 	drawdata_old->legend=drawdata->legend;
-	drawdata_old->limit_data=drawdata->limit_data;
+	if(drawdata->limit_data){
+	    if(!drawdata_old->limit_data)
+		drawdata_old->limit_data=calloc(4, sizeof(double));
+	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
+	}
 	drawdata_old->zlim=drawdata->zlim;
 	drawdata_old->format=drawdata->format;
 	drawdata_old->gray=drawdata->gray;
-
 	//we preserve the limit instead of off, zoom in case we are drawing curves
 	if(drawdata_old->npts){
 	    drawdata_old->limit_changed=1;

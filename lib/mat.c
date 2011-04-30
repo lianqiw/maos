@@ -221,9 +221,6 @@ X(mat) *X(ref)(X(mat) *in){
 	error("Allocation failed\n");
     }
     memcpy(out,in,sizeof(X(mat)));
-    /*#ifdef USE_COMPLEX
-    out->fft=NULL;
-    #endif*/
     out->nref[0]++;
     return out;
 }
@@ -539,6 +536,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 */
 
 T X(inn)(const X(mat)*A, const X(mat) *B){
+    if(!A || !B) return 0;
     assert(A->nx==B->nx && A->ny==1 && B->ny==1);
     T out=0;
     for(int i=0; i<A->nx; i++){

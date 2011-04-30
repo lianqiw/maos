@@ -26,7 +26,7 @@
 /**
    Apply Laplacian2 to xin and accumulates to xout.
 */
-void apply_L2(dcell **xout, spcell *L2, const dcell *xin, 
+void apply_L2(dcell **xout, const spcell *L2, const dcell *xin, 
 	      double alpha, int nthread){
     dcell *xx=NULL;
     spcellmulmat_thread(&xx, L2, xin, 1.,nthread);
@@ -35,18 +35,21 @@ void apply_L2(dcell **xout, spcell *L2, const dcell *xin,
 }
 /**
    Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout.
+   do nothing if xb != yb, since we apply to diagonal only.
+   if xb==-1, do all blocks. 
 */
-void apply_invpsd(dcell **xout, INVPSD_T *extra,
-		  const dcell *xin, double alpha, int jps){
+void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
+    if(xb!=yb) return;
+    const INVPSD_T *extra=A;
     dcell *invpsd=extra->invpsd;
     ccell *fftxopd=extra->fftxopd;
     int ips1, ips2;
-    if(jps<0){//do all cells
+    if(xb<0){//do all cells
 	ips1=0; 
 	ips2=xin->nx*xin->ny;
     }else{//do the specified cell
-	ips1=jps;
-	ips2=jps+1;
+	ips1=xb;
+	ips2=xb+1;
     }
     for(int ips=ips1; ips<ips2; ips++){
 	//for(int ips=0; ips<xin->nx*xin->ny; ips++){
@@ -74,18 +77,22 @@ void apply_invpsd(dcell **xout, INVPSD_T *extra,
 	}
     }
 }
+
 /**
    Apply fractal regularization to x, scaled by alpha.
-   \todo parallelize it.
+   do nothing if xb != yb, since we apply to diagonal only.
+   if xb==-1, do all blocks. 
 */
-void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alpha, int jps){
+void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
+    if(xb!=yb) return;
+    const FRACTAL_T *extra=A;
     int ips1, ips2;
-    if(jps<0){//do all cells
+    if(xb<0){//do all cells
 	ips1=0; 
 	ips2=xin->nx*xin->ny;
     }else{//do the specified cell
-	ips1=jps;
-	ips2=jps+1;
+	ips1=xb;
+	ips2=xb+1;
     }
     for(int ips=ips1; ips<ips2; ips++){
 	//for(int ips=0; ips<xin->nx*xin->ny; ips++){
@@ -100,9 +107,10 @@ void apply_fractal(dcell **xout, FRACTAL_T *extra, const dcell *xin, double alph
 	dembed_locstat(&extra->xopd->p[ips], 1, extra->xloc[ips], (*xout)->p[ips]->p, 1, 1);
     }
 }
+
 /**
    Removing Tip/Tilt/Focus from LGS grads. TTF is the Tip/tilt/focus modes, and
-PTTF is the pseudo inverse of it, weighted by subaperture noise.  */
+   PTTF is the pseudo inverse of it, weighted by subaperture noise.  */
 void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF){
     if(!TTF || !PTTF){
 	return;
@@ -114,7 +122,7 @@ void TTFR(dcell* x, const dcell *TTF, const dcell *PTTF){
 }
 /**
    Apply weighting W0/W1 to a vector. W0*x-W1*(W1'*x)
- */
+*/
 static void applyWeach(dmat *xin, const dsp *W0, const dmat *W1, const double wt){
     if(!W0 || !W1) {
 	warning("W0 or W1 is NULL\n");
@@ -271,13 +279,13 @@ spcell *act_slaving(loc_t **aloc, spcell *HA, dmat *W1, dcell *NW,
 		    }
 		   
 		    /*
-		    if(actcpl[iact]<0.1 && actcpl[iact]>0){
-			double scale=-0.001*log(actcpl[iact]);
-			if(scale>0.01){
-			    scale=0.01;
-			}
-			px[count]=scl*(1+scale);
-			}*/
+		      if(actcpl[iact]<0.1 && actcpl[iact]>0){
+		      double scale=-0.001*log(actcpl[iact]);
+		      if(scale>0.01){
+		      scale=0.01;
+		      }
+		      px[count]=scl*(1+scale);
+		      }*/
 		    count++;
 		}else{
 		    error("This is an isolated actuator\n");
