@@ -845,7 +845,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    thread_prep(simu->wfs_prop_atm[iwfs+parms->nwfs*ips],0,tot,nthread,prop,data);
 	}
 	for(int idm=0; idm<parms->ndm; idm++){
-	    const double ht = parms->dm[idm].ht;
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	    PROPDATA_T *data=&simu->wfs_propdata_dm[iwfs+parms->nwfs*idm];
 	    int tot;
 	    data->displacex0=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
@@ -919,7 +919,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	for(int idm=0; idm<parms->ndm; idm++){
 	    const int ind=ievl+parms->evl.nevl*idm;
 	    PROPDATA_T *data=&simu->evl_propdata_dm[ind];
-	    const double ht=parms->dm[idm].ht;
+	    const double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
 	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
 	    data->scale=1-ht/parms->evl.ht[ievl];
@@ -957,6 +957,48 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
     simu->dtlo=simu->dtrat_lo*simu->dt;
     simu->dthi=simu->dtrat_hi*simu->dt;
+    {//Setup hysterisis
+	int anyhyst=0;
+	simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(parms->dm[idm].hyst){
+		simu->hyst[idm]=calloc(1, sizeof(HYST_T));
+		simu->hyst[idm]->coeff=dread(parms->dm[idm].hyst);
+		int nhmod=simu->hyst[idm]->coeff->ny;
+		if(simu->hyst[idm]->coeff->nx!=3 || nhmod<1){
+		    error("DM hystereis file %s has wrong format. Expect 3 rows\n",parms->dm[idm].hyst);
+		}
+		int naloc=recon->aloc[idm]->nloc;
+		simu->hyst[idm]->xlast=dnew(naloc,1);
+		simu->hyst[idm]->ylast=dnew(nhmod,naloc);
+		simu->hyst[idm]->dxlast=dnew(naloc,1);
+		simu->hyst[idm]->x0=dnew(naloc,1);
+		simu->hyst[idm]->y0=dnew(nhmod,naloc);
+		anyhyst=1;
+	    }
+	}
+	if(!anyhyst){
+	    free(simu->hyst); simu->hyst=NULL;
+	}
+	if(0){//Test
+	    dcell *dmreal=dcellnew(parms->ndm, 1);
+	    for(int idm=0; idm<parms->ndm; idm++){
+		dmreal->p[idm]=dnew(recon->aloc[idm]->nloc, 1);
+	    }
+	    rand_t rstat;
+	    seed_rand(&rstat, 1);
+	    for(int isim=0; isim<100; isim++){
+		for(int idm=0; idm<parms->ndm; idm++){
+		    drandn(dmreal->p[idm], sin((double)isim/50*M_PI)*1e-6, &rstat);
+		    //dset(dmreal->p[idm], sin((double)isim/50*M_PI)*1e-6);
+		}
+		dcellwrite(dmreal,"dmrealin_%d", isim);
+		hysterisis(simu->hyst, dmreal);
+		dcellwrite(dmreal,"dmrealout_%d", isim);
+	    }	        
+	    exit(0);
+	    }
+    }
     //evaluation.
    
     {//USE MMAP for data that need to save at every time step
@@ -1259,6 +1301,18 @@ void free_simu(SIM_T *simu){
 	    free(simu->evl_prop_dm[ind]);
 	}
     }
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(simu->hyst[idm]){
+	    dfree(simu->hyst[idm]->coeff);
+	    dfree(simu->hyst[idm]->xlast);
+	    dfree(simu->hyst[idm]->ylast);
+	    dfree(simu->hyst[idm]->dxlast);
+	    dfree(simu->hyst[idm]->x0);
+	    dfree(simu->hyst[idm]->y0);
+	}
+	free(simu->hyst[idm]);
+    }
+    free(simu->hyst);
     free(simu->wfs_prop_atm);
     free(simu->wfs_prop_dm);
     free(simu->wfs_ints);

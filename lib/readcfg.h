@@ -49,6 +49,7 @@ char*  readcfg_str (const char*format,...) CHECK_ARG(1);
 int    readcfg_strarr(char ***res, const char *format,...) CHECK_ARG(2);
 int    readstr_strarr(char ***res, int len, const char *sdata);
 void   readcfg_strarr_n(char ***ret, int len, const char *format,...) CHECK_ARG(3);
+void   readcfg_strarr_nmax(char ***ret, int len, const char *format,...) CHECK_ARG(3);
 int    readcfg_int (const char*format,...) CHECK_ARG(1);
 double readcfg_dbl (const char*format,...) CHECK_ARG(1);
 

@@ -534,13 +534,27 @@ int readcfg_dblarr(double **ret, const char *format,...){
     return readstr_numarr((void**)ret, 0,T_DBL, store[getrecord(key, 1)].data);
 }
 /**
-   Read integer array of len elements
+   Read string array of len elements
 */
 void readcfg_strarr_n(char ***ret, int len, const char *format,...){
     format2key;
     int len2;
     if(len!=(len2=readstr_strarr((char***)ret, len, store[getrecord(key, 1)].data))){
-	error("%s: Need %d, got %d integers\n", key, len, len2);
+	error("%s: Require %d elements, but got %d\n", key, len, len2);
+    }
+}
+/**
+   Read str array of upto len elements
+*/
+void readcfg_strarr_nmax(char ***ret, int len, const char *format,...){
+    format2key;
+    int len2=readstr_strarr((char***)ret, len, store[getrecord(key, 1)].data);
+    if(len2==1){
+	for(int i=1; i<len; i++){
+	    (*ret)[i]=(*ret)[0]?strdup((*ret)[0]):NULL;
+	}
+    }else if(len2!=0 && len2!=len){
+	error("%s: Require %d elements, but got %d\n", key, len, len2);
     }
 }
 /**

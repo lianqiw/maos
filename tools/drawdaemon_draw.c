@@ -300,7 +300,7 @@ void update_limit(drawdata_t *drawdata){
 	    ptsy=pts->p;
 	}
 	if(drawdata->cumu){
-	    int icumu=drawdata->icumu;
+	    int icumu=(int)drawdata->icumu;
 	    int ips0=0;
 	    if(icumu<pts->nx){
 		ips0=icumu;
@@ -362,11 +362,11 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
       cairo_font_options_destroy(fonto);
     */
     if(drawdata->cumu){
-	if(drawdata->icumulast==drawdata->icumu){
+	if((int)drawdata->icumulast==(int)drawdata->icumu){
 	    drawdata->limit=drawdata->limit_cumu;
 	}else{
 	    free(drawdata->limit_cumu);
-	    drawdata->limit_cumu=NULL;
+	    drawdata->limit=drawdata->limit_cumu=NULL;
 	}
     }else{
 	drawdata->limit=drawdata->limit_data;
@@ -522,7 +522,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	xmin0=((-widthim*0.5)/zoomx - drawdata->offx)/scalex+centerx;
 	ymax0=(((heightim)*0.5)/zoomy - drawdata->offy)/scaley+centery;
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
-	int icumu=drawdata->icumu;
+	int icumu=(int)drawdata->icumu;
+	info("icumu=%d\n", icumu);
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 	    dmat *pts=drawdata->pts[ipts];
 	    double *ptsx=NULL, *ptsy=NULL;

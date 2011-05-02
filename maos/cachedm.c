@@ -49,7 +49,7 @@ void prep_cachedm(SIM_T *simu){
 		double oxout, oyout;
 		double dx=parms->dm[idm].dxcache[iscale];
 		create_metapupil
-		    (parms, parms->dm[idm].ht, dx,
+		    (parms, parms->dm[idm].ht+parms->dm[idm].vmisreg, dx,
 		     0, &nxout, &nyout, &oxout, &oyout, NULL,
 		     2, 0, T_ALOC,0,0);
 		simu->cachedm[idm][iscale]=mapnew(nxout, nyout, dx, NULL);

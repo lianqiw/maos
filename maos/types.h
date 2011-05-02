@@ -235,6 +235,7 @@ typedef struct FRACTAL_T{
     long   ninit;      /**<The initial size to do with covariance matrix. 2 is minimum*/
 }FRACTAL_T;
 typedef struct CN2EST_T CN2EST_T;
+
 /**
    contains data related to wavefront reconstruction and DM fitting.  */
 typedef struct RECON_T{
@@ -386,7 +387,17 @@ typedef struct WFSINTS_T{
     const POWFS_T *powfs;
     int iwfs;
 }WFSINTS_T;
-
+/**
+   contains data related to DM hysterisis modeling for all the common DMs (not
+MOAO). let input be x, and output of each mode be y.  */
+typedef struct{
+    dmat *coeff;      /**<contains data from parms->dm.hyst*/
+    dmat *xlast;      /**<Record x from last time step*/
+    dmat *ylast;      /**<Record y from last time step*/
+    dmat *dxlast;     /**<Change of x*/
+    dmat *x0;         /**<Initial x (before dx changes sign)*/
+    dmat *y0;         /**<Initial y*/
+}HYST_T;
 /**
    contains all the run time data struct.
 */
@@ -523,7 +534,7 @@ typedef struct SIM_T{
     thread_t  *perf_evl; /**to call perfevl_ievl in threads.*/
 
     SIM_SAVE_T *save;
-    
+    HYST_T    **hyst;
 #if USE_PTHREAD > 0
     pthread_mutex_t mutex_plot;    /**<mutex for plot*/
     pthread_mutex_t mutex_cachedm; /**<mutex for cachedm*/

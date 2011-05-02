@@ -253,7 +253,7 @@ typedef struct DM_CFG_T{
     int ncache;     /**<number of scale group for DM propagation cache. (derived)*/
     double *dxcache; /**<the sampling of plane to cache dm for each scale
 			group. (derived)*/
-    char* misreg;   /**misregistration of the DM with respect to the pupil,
+    char* misreg;   /**<misregistration of the DM with respect to the pupil,
 		       described by file containing a cell array A of 2x1.  The
 		       misregistered coordinate is computed as
 
@@ -261,12 +261,11 @@ typedef struct DM_CFG_T{
 		       ym(ip)=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
 		       where ip is ipowfs. ic is index of column in entries of
 		       A.*/
-    /*
-     double hystalpha;//arguments for hysteris
-      double hystbeta;
-      double hystweight;
-      int hyst;//hysterisis
-   */
+    char *hyst;     /**<File containing a matrix that describes the
+		       hysterisis. The matrix should have 3 rows, and multiple
+		       columns. Each column describe the parameters for a mode,
+		       and the rows are: 1) weight 2) alpha, 3) beta. See
+		       "Hysteresis Modeling and Simulation" by Luc Gilles*/
 }DM_CFG_T;
 /**
    contarins input parameters all evaluation directions.  */

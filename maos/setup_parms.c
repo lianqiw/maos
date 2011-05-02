@@ -118,6 +118,8 @@ void free_parms(PARMS_T *parms){
     free(parms->wfs);
     for(int idm=0; idm<parms->ndm; idm++){
 	free(parms->dm[idm].dxcache);
+	free(parms->dm[idm].misreg);
+	free(parms->dm[idm].hyst);
     }
     free(parms->dm);
     free(parms->moao);
@@ -387,7 +389,13 @@ static void readcfg_wfs(PARMS_T *parms){
     readcfg_##A##arr_n((void*)(&A##tmp),ndm,"dm."#B);	     \
     for(i=0; i<ndm; i++){				     \
 	parms->dm[i].B = A##tmp[i];			     \
-    }							     \
+    }							     
+
+#define READ_DM_RELAX(A,B) \
+    readcfg_##A##arr_nmax((void*)(&A##tmp),ndm,"dm."#B);     \
+    for(i=0; i<ndm; i++){				     \
+	parms->dm[i].B = A##tmp[i];			     \
+    }							     
 
 /**
    Read in deformable mirror parameters.
@@ -400,17 +408,18 @@ static void readcfg_dm(PARMS_T *parms){
     double *dbltmp=NULL;
     char **strtmp=NULL;
     READ_DM(int,order);
-    READ_DM(dbl,guard);
-    READ_DM(dbl,stroke);
-    READ_DM(dbl,vmisreg);
     READ_DM(dbl,ht);
     READ_DM(dbl,offset);
-    READ_DM(dbl,histbin);
-    READ_DM(int,histn);
-    READ_DM(int,hist); 
-    READ_DM(int,cubic);
-    READ_DM(dbl,iac);
-    READ_DM(str,misreg);
+    READ_DM_RELAX(dbl,guard);
+    READ_DM_RELAX(dbl,stroke);
+    READ_DM_RELAX(dbl,vmisreg);
+    READ_DM_RELAX(dbl,histbin);
+    READ_DM_RELAX(int,histn);
+    READ_DM_RELAX(int,hist); 
+    READ_DM_RELAX(int,cubic);
+    READ_DM_RELAX(dbl,iac);
+    READ_DM_RELAX(str,misreg);
+    READ_DM_RELAX(str,hyst);
     free(strtmp);
     free(inttmp);
     free(dbltmp);
@@ -1213,7 +1222,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     */
     parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int));
     for(int idm=0; idm<ndm; idm++){
-	double ht=parms->dm[idm].ht;
+	double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	if(fabs(ht)<1.e-10){
 	    parms->dm[idm].isground=1;
 	}
@@ -1287,7 +1296,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
     }
-    if((parms->tomo.bgs || parms->tomo.alg != 0) && parms->tomo.cxx !=0){
+    if((parms->tomo.bgs || parms->tomo.alg != 1) && parms->tomo.cxx !=0){
 	error("Only CG work with non L2 cxx.\n");
 	parms->tomo.cxx=0;
     }
