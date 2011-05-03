@@ -276,7 +276,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(cn2.nhtrecon, cn2.nhtomo);
 	    //Added on 2011-04-28
 	    RENAME(dbg.noatm, sim.noatm);
-	    RENAME(dbg.fitonly, sim.noatm);
+	    RENAME(dbg.fitonly, sim.fitonly);
 	    RENAME(dbg.evlol, sim.evlol);
 #endif
 	    if(prefix){

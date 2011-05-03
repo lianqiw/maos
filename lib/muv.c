@@ -36,9 +36,9 @@
    Apply the sparse plug low rand compuation to xin with scaling of alpha:
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
 void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
-    if(!xin) return;
     const MUV_T *A = B;
     if(A->M){
+	if(!xin) return;
 	spcellmulmat(xout, A->M, xin, alpha);
 	dcell *tmp=NULL;
 	dcellmm(&tmp,A->V, xin, "tn", -1.);
@@ -243,6 +243,7 @@ void muv_direct_solve(dmat **xout, const MUV_T *A, const dmat *xin){
    exist already.  */
 
 void muv_direct_diag_solve(dmat **xout, const MUV_T *A, const dmat *xin, int ib){
+    if(!xin) return;
     dzero(*xout);
     if(A->MIB){
 	dmm(xout, A->MIB->p[ib], xin, "nn", 1);
@@ -259,6 +260,7 @@ void muv_direct_diag_solve(dmat **xout, const MUV_T *A, const dmat *xin, int ib)
 /**
    convert the data from dcell to dmat and apply muv_direct_solve() */
 void muv_direct_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin){
+    if(!xin) return;
     if(xin->nx*xin->ny==1){//there is only one cell.
 	if(!*xout) *xout=dcellnew(1,1);
 	muv_direct_solve(&((*xout)->p[0]), A, xin->p[0]);

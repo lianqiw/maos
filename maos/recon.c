@@ -272,7 +272,7 @@ void FitR(dcell **xout, const void *A,
 	}
     }else if(recon->HXF){
 	spcellmulmat(&xp, recon->HXF, xin, 1.);
-    }else{//Do the ray tracing directly.
+    }else{//Do the ray tracing from xloc to ploc
 	const PARMS_T *parms=recon->parms;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
@@ -502,7 +502,6 @@ void tomofit(SIM_T *simu){
 	    muv(&rhs, &recon->FR, simu->opdr, 1);
 	    muv_solve(&simu->dmfit_hi, &recon->FL, rhs);
 	    dcellfree(rhs);
-	    //fit(&simu->dmfit_hi,parms,recon,simu->opdr);
 	}
 
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
@@ -540,7 +539,7 @@ void tomofit(SIM_T *simu){
 	    remove_dm_tt(simu, simu->dmerr_hi);
 	}
 
-    }//if high order has output
+    }//if high order WFS has output
 
     if(!parms->sim.fitonly && parms->tomo.split){
 	if(parms->tomo.split==2){

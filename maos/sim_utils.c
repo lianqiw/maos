@@ -1301,18 +1301,20 @@ void free_simu(SIM_T *simu){
 	    free(simu->evl_prop_dm[ind]);
 	}
     }
-    for(int idm=0; idm<parms->ndm; idm++){
-	if(simu->hyst[idm]){
-	    dfree(simu->hyst[idm]->coeff);
-	    dfree(simu->hyst[idm]->xlast);
-	    dfree(simu->hyst[idm]->ylast);
-	    dfree(simu->hyst[idm]->dxlast);
-	    dfree(simu->hyst[idm]->x0);
-	    dfree(simu->hyst[idm]->y0);
+    if(simu->hyst){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(simu->hyst[idm]){
+		dfree(simu->hyst[idm]->coeff);
+		dfree(simu->hyst[idm]->xlast);
+		dfree(simu->hyst[idm]->ylast);
+		dfree(simu->hyst[idm]->dxlast);
+		dfree(simu->hyst[idm]->x0);
+		dfree(simu->hyst[idm]->y0);
+	    }
+	    free(simu->hyst[idm]);
 	}
-	free(simu->hyst[idm]);
+	free(simu->hyst);
     }
-    free(simu->hyst);
     free(simu->wfs_prop_atm);
     free(simu->wfs_prop_dm);
     free(simu->wfs_ints);

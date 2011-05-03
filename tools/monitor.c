@@ -174,7 +174,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
     gsize nread;
     int cmd[3];
     if(cond&G_IO_HUP || cond&G_IO_ERR || cond&G_IO_NVAL){
-	warning2("Lost connection to %s\n", hosts[host_from_sock(sock)]);
+	//warning2("Lost connection to %s\n", hosts[host_from_sock(sock)]);
 	return FALSE;
     }
     GIOStatus status;
