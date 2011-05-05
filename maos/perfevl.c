@@ -153,7 +153,6 @@ void perfevl_ievl(thread_t *info){
 	}
 	ccellfree(psf2s);
     }
-	
     if(parms->sim.evlol)
 	return;
     TIM(2);
@@ -230,7 +229,7 @@ void perfevl_ievl(thread_t *info){
     }
     TIM(3);
     if(parms->evl.tomo==2){
-	info("Skip DM performance evalution\n");
+	//info("Skip DM performance evalution\n");
 	return;
     }
     //Apply dm correction. tip/tilt command is contained in DM commands
@@ -337,7 +336,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
 	ccellfree(psf2s);
-    }//do_psd
+    }//do_psf
     TIM(5);
 #if TIMING==1
     info2("Evl %d timing:ray atm %.4f evlol %.4f evltomo %.4f ray dm %.4f evlcl %.4f\n",
@@ -369,16 +368,7 @@ static void perfevl_mean(SIM_T *simu){
     }
     if(parms->sim.evlol)
 	return;
-    //Field average the CL error
-    for(int imod=0; imod<nmod; imod++){
-	int ind=imod+nmod*isim;
-	simu->cle->p[ind]=0;
-	for(int ievl=0; ievl<nevl; ievl++){
-	    double wt=parms->evl.wt[ievl];
-	    simu->cle->p[ind]+=wt*simu->clep->p[ievl]->p[ind];
-	}
-    }
-  
+
     if(parms->evl.tomo && simu->opdr){
 	for(int imod=0; imod<nmod; imod++){
 	    int ind=imod+nmod*isim;
@@ -389,6 +379,18 @@ static void perfevl_mean(SIM_T *simu){
 	    }
 	}
     }
+    if(parms->evl.tomo==2) 
+	return;
+    //Field average the CL error
+    for(int imod=0; imod<nmod; imod++){
+	int ind=imod+nmod*isim;
+	simu->cle->p[ind]=0;
+	for(int ievl=0; ievl<nevl; ievl++){
+	    double wt=parms->evl.wt[ievl];
+	    simu->cle->p[ind]+=wt*simu->clep->p[ievl]->p[ind];
+	}
+    }
+  
     const RECON_T *recon=simu->recon;
     if(parms->tomo.split && parms->ndm <=2){
 	if(parms->ndm<=2){

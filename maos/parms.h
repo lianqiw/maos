@@ -464,6 +464,7 @@ typedef struct DBG_CFG_T{
     int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
     int ntomo_maxit; /**<Number of elements in tomo_maxit*/
     int tomo_hxw;    /**<1: Force use hxw always instead of ray tracing from xloc to ploc.*/
+    int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
 }DBG_CFG_T;
 /**
    contains input parameters for each MOAO type.

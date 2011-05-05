@@ -54,6 +54,7 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
 	info[ithread].data=data;
 	info[ithread].fun=fun;
     }
+    //Make sure we terminate at the right place.
     if(info[nthread-1].end){
 	info[nthread-1].end=tot;
     }

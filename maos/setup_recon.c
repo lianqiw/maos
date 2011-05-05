@@ -95,7 +95,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	    
 	}else{
 	    mkw_circular(recon->ploc,0,0,parms->aper.d/2.,
-			  &(recon->W0), &(recon->W1));
+			 &(recon->W0), &(recon->W1));
 	}
 	if(parms->save.setup){
 	    spwrite(recon->W0, "%s/W0",dirsetup);
@@ -311,11 +311,11 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		HXWtomo[ips][iwfs]=spref(HXW[ips][iwfs]);
 	    }
 	} 
-     }
+    }
 }
 /**
    Setup gradient operator from ploc to wavefront sensors.
- */
+*/
 static void
 setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     loc_t *ploc=recon->ploc;
@@ -539,7 +539,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
    Setup the matrix of the inverse of gradient measurement noise equivalent
    angle covariance matrix. For physical optics wfs, the NEA is computed using
    matched filter output. For geometric optics, the NEA is from input.
- */
+*/
 static void
 setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, 
 		   const POWFS_T *powfs){
@@ -573,8 +573,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		    double nea2y=nea->p[isa+nsa];
 		    if(nea1x<0.5*nea2x || nea1x>2*nea2x || nea1y<0.5*nea2y || nea1y>2*nea2y){
 			warning2("iwfs %d, isa %d : Phy nea: %g %g mas. Provided nea: %g %g mas.\n",
-			      iwfs,isa,nea1x*206265000, nea1y*206265000, 
-			      nea2x*206265000, nea2y*206265000);
+				 iwfs,isa,nea1x*206265000, nea1y*206265000, 
+				 nea2x*206265000, nea2y*206265000);
 		    }
 		}
 	    }
@@ -711,7 +711,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 
 static void
 setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, 
-		       const POWFS_T *powfs){
+		const POWFS_T *powfs){
     if(!recon->has_ttr) return;
     if(recon->TT){
 	dcellfree(recon->TT);
@@ -786,7 +786,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
 	    memcpy(DF->p+nsa, powfs[ipowfs].saloc->locy, sizeof(double)*nsa);
 	    /**
 	       postive focus on first wfs. negative focus on diagnonal wfs.
-	     */
+	    */
 	    for(int jwfs=1; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
 		if(parms->powfs[ipowfs].skip){
@@ -840,7 +840,7 @@ static void free_cxx(RECON_T *recon){
 }
 /**
    Prepares for tomography
- */
+*/
 void
 setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     //Free existing struct if already exist. 
@@ -910,7 +910,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 		long ny=recon->xloc_ny[ips];
 		double r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
 		invpsd->p[ips]=turbpsd(nx, ny, recon->xloc[ips]->dx, r0i,
-					recon->l0,-1);
+				       recon->l0,-1);
 		dscale(invpsd->p[ips], pow((double)(nx*ny),-2)*parms->tomo.cxxscale);
 	    }
 	    if(parms->save.setup){
@@ -1038,7 +1038,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	  Reconstruction Right hand side matrix. In split tomography mode, low
 	  order NGS are skipped. recon->GXtomo contains GXs that only
 	  participate in tomography.
-	 */
+	*/
 	spcell *GXtomoT=spcelltrans(recon->GXtomo);
 	recon->RR.M=spcellmulspcell(GXtomoT, saneai, 1);
 	PDSPCELL(recon->RR.M, RRM);
@@ -1074,7 +1074,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	//add L2 and ZZT
 	switch(parms->tomo.cxx){
 	case 0://Add L2'*L2 to RL.M
-	     for(int ips=0; ips<npsr; ips++){
+	    for(int ips=0; ips<npsr; ips++){
 		dsp* tmp=sptmulsp(recon->L2->p[ips+npsr*ips], 
 				  recon->L2->p[ips+npsr*ips]);
 		if(!tmp){
@@ -1148,7 +1148,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	info2("Tomography # of Low rank terms: %ld in RHS, %ld in LHS\n", 
-	     nlr,nll);
+	      nlr,nll);
 	if(parms->save.setup && parms->save.recon){
 	    spcellwrite(recon->RR.M,"%s/RRM",dirsetup);
 	    dcellwrite(recon->RR.U,"%s/RRU",dirsetup);
@@ -1205,7 +1205,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 }
 /**
    Update assembled tomography matrix with new L2.
- */
+*/
 void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
     setup_recon_tomo_prep(recon, parms); //redo L2, invpsd
     if(parms->tomo.alg==1&&!parms->tomo.assemble){//no need to do anything
@@ -1513,7 +1513,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }else{
 	fit_prep_lrt(recon,parms);
 	if(parms->fit.actslave){
-	    recon->actslave=act_slaving(recon->aloc, recon->HA, recon->W1, recon->NW,0.1, 1./recon->ploc->nloc);
+	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->NW,0.1, 1./recon->ploc->nloc);
 	    if(parms->save.setup){
 		spcellwrite(recon->actslave,"%s/actslave.bin.gz",dirsetup);
 		dcellwrite(recon->NW,"%s/NW2.bin.gz",dirsetup);
@@ -1560,7 +1560,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 	//spcellsym(recon->FL.M);
 	info2("DM Fit # of Low rank terms: %ld in RHS, %ld in LHS\n",
-	     recon->FR.U->p[0]->ny, recon->FL.U->p[0]->ny);
+	      recon->FR.U->p[0]->ny, recon->FL.U->p[0]->ny);
 	if(parms->save.setup && parms->save.recon){
 	    spcellwrite(recon->FL.M,"%s/FLM.bin.gz",dirsetup);
 	    dcellwrite(recon->FL.U,"%s/FLU.bin.gz",dirsetup);
@@ -1666,7 +1666,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
     /*
       Compute focus constructor from LGS grads. A
       constructor for each LGS.
-     */
+    */
     dcell *RFlgs=recon->RFlgs=dcellnew(parms->nwfs, 1);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
@@ -1812,7 +1812,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	/*
 	  Change FUw*Minv -> FUw*(U*sigma^-1/2) * (U*sigma^1/2)'*Minv
 	  columes of FUw*(U*sigma^-1/2) are the eigen vectors.
-	 */
+	*/
 	dcell *Q=NULL;//the NGS modes in ploc.
 	spcellmulmat(&Q, recon->HA, FUw, 1);
 	dcell *QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,recon->fitwt);
@@ -1902,7 +1902,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 }
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
-or least square reconstructor by calling setup_recon_lsr() */
+   or least square reconstructor by calling setup_recon_lsr() */
 RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     RECON_T * recon = calloc(1, sizeof(RECON_T));
     recon->parms=parms;//save a pointer.
@@ -1972,7 +1972,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
    reconstructor and DM fitting operator \callgraph
    
    Calls setup_recon_tomo_matrix() 
-     and setup_recon_fit_matrix() to setup the tomography and DM
+   and setup_recon_fit_matrix() to setup the tomography and DM
    fitting matrix. 
  
    AHST is handled in setup_ngsmod().
@@ -2064,6 +2064,8 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	recon->RL.bgs = parms->tomo.bgs;
 	recon->RL.warm  = recon->warm_restart;
 	recon->RL.maxit = parms->tomo.maxit;
+	recon->RL.nthread = parms->sim.nthread;
+	recon->RR.nthread = parms->sim.nthread;
     }
     if(!parms->sim.fitonly){//In this case, xloc has high sampling. We avoid HXF.
 	setup_recon_HXF(recon,parms);
@@ -2080,7 +2082,9 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     recon->FL.alg = parms->fit.alg;
     recon->FL.bgs = parms->fit.bgs;
     recon->FL.warm  = recon->warm_restart;
-    recon->FL.maxit = parms->tomo.maxit;
+    recon->FL.maxit = parms->fit.maxit;
+    recon->FL.nthread = parms->sim.nthread;
+    recon->FR.nthread = parms->sim.nthread;
     //moao
     setup_recon_moao(recon,parms);
     toc2("Preparing moao");
@@ -2127,8 +2131,8 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellfree(recon->ngsmod->Mdm);
     }
     /*
-       The following arrys are not used after preparation is done.
-     */
+      The following arrys are not used after preparation is done.
+    */
     mapfree(aper->ampground);
     spcellfree(recon->GX);
     spcellfree(recon->GXhi);
@@ -2149,7 +2153,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
    This is very close to RR except replacing GX with GA.
 
    We use the tomogrpahy parameters for lsr, since lsr is simply "tomography" onto DM directly.
- */
+*/
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     spcell *GAlsr;
     if(parms->tomo.split){
@@ -2181,9 +2185,9 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	spcelladdI(recon->LL.M, parms->tomo.tikcr*maxeig);
     }
     //actuator slaving. important
-    spcell *actslave=act_slaving(recon->aloc, recon->GAhi, NULL, NULL,0.5,
-				 sqrt(maxeig));
-    spcellwrite(actslave,"actslave");
+    spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NULL,0.5,
+			     sqrt(maxeig));
+    //spcellwrite(actslave,"actslave");
     spcelladd(&recon->LL.M, actslave);
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfs;
@@ -2259,6 +2263,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     recon->LL.bgs = parms->tomo.bgs;
     recon->LL.warm = recon->warm_restart;
     recon->LL.maxit = parms->tomo.maxit;
+    recon->LL.nthread = parms->sim.nthread;
+    recon->LR.nthread = parms->sim.nthread;
     //Remove empty cells.
     dcelldropempty(&recon->LR.U,2);
     dcelldropempty(&recon->LR.V,2);
@@ -2384,7 +2390,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
   some tips.
   1) UV balance need to be done carefully. The scaling must be a single number
   2) When add regularizations, the number has to be in the same order as the matrix.
-     This is supper important!!!
+  This is supper important!!!
   3) single point piston constraint in Tomography is not implemented correctly.
 
   2009-11-22

@@ -268,7 +268,7 @@ static void fractal_screen_thread(GENSCREEN_T *data){
 }
 static void fractal_screen_do(GENSCREEN_T *data){
     PINIT(data->mutex_ilayer);
-    CALL(fractal_screen_thread, data, data->nthread);
+    CALL(fractal_screen_thread, data, data->nthread,1);
 }
 
 /**

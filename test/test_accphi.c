@@ -628,28 +628,28 @@ static void test_speed(int nthread){
     info2("cpu: %.2f\n", read_self_cpu());
     tic;
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
 
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
 
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
     
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
 
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
 
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
 
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
     
     propdata->isa=0;
-    CALL(prop_grid_pts_wrap2, propdata, nthread);
+    CALL(prop_grid_pts_wrap2, propdata, nthread, 0);
     toc("prop_grid_pts_wrap");
     info2("cpu: %.2f\n", read_self_cpu());
 }

@@ -963,7 +963,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	for(int idm=0; idm<parms->ndm; idm++){
 	    if(parms->dm[idm].hyst){
 		simu->hyst[idm]=calloc(1, sizeof(HYST_T));
-		simu->hyst[idm]->coeff=dread(parms->dm[idm].hyst);
+		simu->hyst[idm]->coeff=dread("%s",parms->dm[idm].hyst);
 		int nhmod=simu->hyst[idm]->coeff->ny;
 		if(simu->hyst[idm]->coeff->nx!=3 || nhmod<1){
 		    error("DM hystereis file %s has wrong format. Expect 3 rows\n",parms->dm[idm].hyst);

@@ -64,6 +64,7 @@ typedef struct MUV_T{
     int bgs;       /**<Whether use BGS (Block Gauss Seidel) method, and how many iterations*/
     int warm;      /**<Whether use warm restart*/
     int maxit;     /**<How many iterations*/
+    int nthread;   /**<Do the operations with nthread threads*/
 }MUV_T;
 
 void muv(dcell **xout, const void *A, const dcell *xin, const double alpha);

@@ -412,7 +412,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     data.isafull=isafull;
     data.otffull=otffull;
 
-    CALL(genotf_wrap, &data, nthread);
+    CALL(genotf_wrap, &data, nthread, 1);
     cfree(otffull);
     free(B);
     free(pval[0].loc);

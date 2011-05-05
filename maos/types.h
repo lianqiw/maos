@@ -516,19 +516,17 @@ typedef struct SIM_T{
     locstat_t *ploc_stat; /**<statistics of columns in ploc*/
 
     PROPDATA_T *wfs_propdata_dm;/**<wrap of data for ray tracing from DM in wfsgrad.c*/
-    thread_t  **wfs_prop_dm;  /**<wrap of wfs_propdata_dm for threaded ray tracing*/
-
     PROPDATA_T *wfs_propdata_atm;/**<wrap of data for ray tracing from ATM in wfsgrad.c*/
+    PROPDATA_T *evl_propdata_atm;
+    PROPDATA_T *evl_propdata_dm;
+
+    thread_t  **wfs_prop_dm;  /**<wrap of wfs_propdata_dm for threaded ray tracing*/
     thread_t  **wfs_prop_atm;  /**<wrap of wfs_propdata_atm for threaded ray tracing*/
+    thread_t  **evl_prop_atm;
+    thread_t  **evl_prop_dm;
 
     WFSINTS_T *wfs_intsdata;  /**<wrap of data for wfsints.c*/
     thread_t  **wfs_ints;       /**<wrap of wfs_intsdata for threaded processing*/
-
-    PROPDATA_T *evl_propdata_atm;
-    thread_t  **evl_prop_atm;
-
-    PROPDATA_T *evl_propdata_dm;
-    thread_t  **evl_prop_dm;
 
     thread_t  *wfs_grad; /**to call wfsgrad_iwfs in threads.*/
     thread_t  *perf_evl; /**to call perfevl_ievl in threads.*/
@@ -543,7 +541,6 @@ typedef struct SIM_T{
     int nthread;       /**<number of threads*/
     int wfsints_isa;   /**<sa counter for wfsints*/
     int perfevl_iground;/**<index of the layer at ground*/
-    int cachedm_i;     /**<counter for threaded calling*/
     int cachedm_n;     /**<length of pcachedm array*/
     int dtrat_hi;      /**<ratio of sampling period over clock of high order wfs*/
     int dtrat_lo;      /**<dtrat of the lower order loop.*/

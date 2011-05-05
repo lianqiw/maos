@@ -118,21 +118,21 @@ static void test_spmul(){
     toc("sptmul");
     dwrite(x,"x");
     tic;
-    sptmulvec_thread(x->p, A, y->p, 1, 1);
+    sptmulvec_thread(x->p, A, y->p, 1);
     toc("sptmul_thread 1");
     tic;
-    sptmulvec_thread(x->p, A, y->p, 1, 2);
+    sptmulvec_thread(x->p, A, y->p, 1);
     toc("sptmul_thread 2");
     dwrite(x,"x2");
     dzero(x);
     tic;
-    sptmulvec_thread(x->p, A, y->p, 1, 3);
+    sptmulvec_thread(x->p, A, y->p, 1);
     toc("sptmul_thread 3");
     tic;
-    sptmulvec_thread(x->p, A, y->p, 1, 4);
+    sptmulvec_thread(x->p, A, y->p, 1);
     toc("sptmul_thread 4");
     tic;
-    sptmulvec_thread(x->p, A, y->p, 1, 5);
+    sptmulvec_thread(x->p, A, y->p, 1);
     toc("sptmul_thread 5");
     
 }

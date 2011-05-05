@@ -576,7 +576,7 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     }
     info.xout=*xout;
     //apply forward FFT
-    CALL(fdpcg_fft,&info,recon->nthread);
+    CALL(fdpcg_fft,&info,recon->nthread,1);
     if(recon->fdpcg->Minv){//use sparse matrix
 	czero(xhat2);
 	cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
@@ -584,13 +584,13 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
 	//permute xhat and put into xhat2
 	cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
 	czero(xhat);
-	CALL(fdpcg_mulblock,&info,recon->nthread);
+	CALL(fdpcg_mulblock,&info,recon->nthread,1);
 	//permute back to have natural order.
 	cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
     }
     info.ips=0;
     //Apply inverse FFT
-    CALL(fdpcg_ifft,&info,recon->nthread);
+    CALL(fdpcg_ifft,&info,recon->nthread,1);
     /*{
 	static int isim=-1; isim++;
 	

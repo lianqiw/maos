@@ -443,7 +443,7 @@ void skysim(const PARMS_S *parms){
 		continue;//nothing to do.
 	    }
 	    simu->isky=simu->isky_start;
-	    CALL(skysim_isky, simu, parms->skyc.nthread);//isky iteration.
+	    CALL(skysim_isky, simu, parms->skyc.nthread,0);//isky iteration.
 	    dcellfree(simu->stars);
 	    dfree(simu->res);
 	    dfree(simu->res_oa);

@@ -18,12 +18,12 @@
 
 #include "mkw.h"
 #include "mathmisc.h"
-int nres=50;
+
 /**
    \file mkw.c
    Contains functions that computes the bilinear weighting function W0, W1
 */
-
+#define nres 50
 /**
    compute the W0, W1 for bilinear influence function.
    The normalization is very important. We need to have sum(amp)==1;

@@ -108,19 +108,16 @@ void prep_cachedm(SIM_T *simu){
 void calc_cachedm(SIM_T *simu){
     double tk_start=myclockd();
     if(simu->parms->sim.cachedm){
-	simu->cachedm_i=0;
-	if(simu->parms->sim.cachedm){
-	    long group=0;
-	    //zero out the data.
-	    for(int ic=0; ic<simu->cachedm_n; ic++){
-		int idm=simu->pcachedm[ic][0];
-		int iscale=simu->pcachedm[ic][1];
-		dzero((dmat*)simu->cachedm[idm][iscale]);
-		//do the multi-threaded ray tracing
-		QUEUE_THREAD(group,simu->cachedm_prop[ic], simu->nthread, 1);
-	    }
-	    WAIT_THREAD(group);
+	long group=0;
+	//zero out the data.
+	for(int ic=0; ic<simu->cachedm_n; ic++){
+	    int idm=simu->pcachedm[ic][0];
+	    int iscale=simu->pcachedm[ic][1];
+	    dzero((dmat*)simu->cachedm[idm][iscale]);
+	    //do the multi-threaded ray tracing
+	    QUEUE_THREAD(group,simu->cachedm_prop[ic], simu->nthread, 1);
 	}
+	WAIT_THREAD(group);
     }
     simu->tk_cache=myclockd()-tk_start;
 }

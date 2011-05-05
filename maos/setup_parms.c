@@ -722,6 +722,7 @@ static void readcfg_dbg(PARMS_T *parms){
     shm_keep_unused=parms->dbg.keepshm;
 #endif
     READ_INT(dbg.tomo_hxw);
+    READ_INT(dbg.parallel);
 }
 /**
    Parse the Input of scalar or vector to vector of nwfs.
@@ -1476,6 +1477,10 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     if(!parms->sim.closeloop){
 	warning2("psfisim is set from %d to 0 in openloop mode\n", parms->evl.psfisim);
 	parms->evl.psfisim=0;
+    }
+    if(NCPU==1 || parms->sim.closeloop==0 || parms->evl.tomo || parms->sim.nthread==1){
+	//disable parallelizing the big loop.
+	parms->dbg.parallel=0;
     }
 }
 

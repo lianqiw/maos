@@ -79,20 +79,6 @@
 #define PSPCELL(M,P) X(sp)* (*restrict P)[(M)->nx]=(void *)(M)->p
 #define PXCELL(M,P)  X(mat)*(*restrict P)[(M)->nx]=(void *)(M)->p
 #include "suitesparse.c"
-typedef struct spcell_thread_t {
-    int i;
-    int nx;
-    int ntot;
-    int nz;
-    int trans;
-#if USE_PTHREAD > 0
-    pthread_mutex_t mutex;
-#endif
-    const Y(spcell) *A;
-    const X(cell) *B;
-    X(cell) *C;
-    T alpha;
-}spcell_thread_t;
 
 TIC;
 vtbl X(sp_vtbl)={M_TT,
@@ -242,7 +228,6 @@ void Y(spfree_do)(X(sp) *sp){
 	}
     }else{
 	sp->nref[0]--;
-	//warning("data is retained. nref=%ld\n",sp->nref[0]);
     }
     free(sp);
 }
@@ -435,50 +420,31 @@ static void Y(spmulvec_thread_do_acc)(thread_t *info){
     }
 }
 /**
-   Multiply a sparse with a vector using multithread. Speed up is not signicant because need to allocate new memory.
-*/
+   Multiply a sparse with a vector using multithread. Speed up is not signicant
+because need to allocate new memory.  */
 void Y(spmulvec_thread)(T *restrict y, const X(sp) *A, 
 			const T * restrict x, T alpha, int nthread){
     if(!A || !x) return; 	
     assert(y);
-    if(nthread<=1){
-	/* 
-	   When I did the timing, calling spmulvec is twice as slow as calling
-	   spmulvec directly from the calling routine. I don't understand.
-	*/
-	long icol, ix;
-	if(ABS(alpha-1.)<EPS){
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[A->i[ix]]+=A->x[ix]*x[icol];
-		}
-	    }
-	}else{
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[A->i[ix]]+=alpha*A->x[ix]*x[icol];
-		}
-	    }
-	}
-    }else{
-	sp_thread_t data;
-	data.A=A;
-	data.y=y;
-	data.x=x;
-	data.alpha=alpha;
-	data.ytmp=calloc(nthread,sizeof(T*));
-	data.nthread=nthread;
-	thread_t mul[nthread];
-	thread_t acc[nthread];
-	thread_prep(mul, 0, A->n, nthread, Y(spmulvec_thread_do_mul), &data);
-	CALL_EACH(Y(spmulvec_thread_do_mul), mul, nthread);
-	thread_prep(acc, 0, A->m, nthread, Y(spmulvec_thread_do_acc), &data);
-	CALL_EACH(Y(spmulvec_thread_do_acc), acc, nthread);
-	for(int ithread=0; ithread<nthread; ithread++){
-	    free(data.ytmp[ithread]);
-	}
-	free(data.ytmp);
+  
+    sp_thread_t data;
+    data.A=A;
+    data.y=y;
+    data.x=x;
+    data.alpha=alpha;
+    data.ytmp=calloc(nthread,sizeof(T*));
+    data.nthread=nthread;
+    thread_t mul[nthread];
+    thread_t acc[nthread];
+    thread_prep(mul, 0, A->n, nthread, Y(spmulvec_thread_do_mul), &data);
+    CALL_THREAD(mul, nthread, 1);
+    thread_prep(acc, 0, A->m, nthread, Y(spmulvec_thread_do_acc), &data);
+    CALL_THREAD(acc, nthread, 1);
+    for(int ithread=0; ithread<nthread; ithread++){
+	free(data.ytmp[ithread]);
     }
+    free(data.ytmp);
+   
 }
 /**
  * sparse matrix multiply with a vector*/
@@ -531,38 +497,18 @@ static void Y(sptmulvec_thread_do)(thread_t *info){
 /**
  * Threaded version of sptmulvec*/
 void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A, 
-			 const T * restrict x,const T alpha, int nthread){
-    tic;
+			 const T * restrict x,const T alpha){
     if(!A || !x) return;
     assert(y);
-    if(nthread<=1){
-	long icol, ix;
-	if(ABS(alpha-1.)<EPS){
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[icol]+=CONJ(A->x[ix])*x[A->i[ix]];
-		}
-	    }
-	}else{
-	    for(icol=0; icol<A->n; icol++){
-		for(ix=A->p[icol]; ix<A->p[icol+1]; ix++){
-		    y[icol]+=alpha*CONJ(A->x[ix])*x[A->i[ix]];
-		}
-	    }
-	}
-    }else{
-	sp_thread_t data;
-	data.A=A;
-	data.y=y;
-	data.x=x;
-	data.alpha=alpha;
-	data.nthread=nthread;
-	thread_t mul[nthread];
-	//interlaced is not good.
-	thread_prep(mul, 0, A->n, nthread, Y(sptmulvec_thread_do), &data);
-	toc("prep");
-	CALL_EACH(Y(sptmulvec_thread_do), mul, nthread);
-    }
+    sp_thread_t data;
+    data.A=A;
+    data.y=y;
+    data.x=x;
+    data.alpha=alpha;
+    thread_t mul[A->n];
+    thread_prep(mul, 0, A->n, A->n, Y(sptmulvec_thread_do), &data);
+    CALL_THREAD(mul, A->n, 1);
+  
 }
 /**
  * Multiply transpose of a sparse matrix with a vector*/
@@ -776,25 +722,29 @@ void Y(spcellmulmat)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T al
 void Y(sptcellmulmat)(X(cell) **C, const Y(spcell)*A, const X(cell)*B, const T alpha){
     return Y(spcellmulmat2)(C,A,B,alpha,1);
 }
+typedef struct{
+    int nx;
+    int nz;
+    int trans;
+    const Y(spcell) *A;
+    const X(cell) *B;
+    X(cell) *C;
+    T alpha;
+}spcell_thread_t;
 
-static void Y(spcellmulmat_thread_do)(spcell_thread_t *info){
-    const Y(spcell) *A=info->A;
-    const X(cell) *B=info->B;
-    X(cell) *C=info->C;
-    const T alpha=info->alpha;
-    const int nx=info->nx;
-    const int nz=info->nz;
-    const int trans=info->trans;
-    int ic;
- repeat:
-    LOCK(info->mutex);
-    ic=info->i++;
-    UNLOCK(info->mutex);
-    if(ic<info->ntot){
+static void Y(spcellmulmat_thread_do)(thread_t *info){
+    spcell_thread_t *data=info->data;
+    const Y(spcell) *A=data->A;
+    const X(cell) *B=data->B;
+    X(cell) *C=data->C;
+    const T alpha=data->alpha;
+    const int nx=data->nx;
+    const int nz=data->nz;
+    const int trans=data->trans;
+    for(int ic=info->start; ic<info->end; ic++){
 	int iy=ic/nx;
 	int ix=ic-nx*iy;
 	SPCELLMULMAT_DO;
-	goto repeat;
     }
 }
 /**
@@ -802,7 +752,7 @@ static void Y(spcellmulmat_thread_do)(spcell_thread_t *info){
  */
 static void Y(spcellmulmat_thread2)(X(cell) **C0, const Y(spcell)*A, 
 				    const X(cell)*B, const T alpha, 
-				    const int trans, const int nthread){
+				    const int trans){
     //C=C+A*B*alpha
     if(!A || !B) return;
     int nx,ny,nz;
@@ -821,43 +771,35 @@ static void Y(spcellmulmat_thread2)(X(cell) **C0, const Y(spcell)*A,
     }
     X(cell) *C=*C0;
     if(C->nx!=nx || C->ny!=ny) error("Mismatch\n");
-    spcell_thread_t info;
-    info.i=0;
-    info.nx=nx;
-    info.ntot=nx*ny;
-    info.nz=nz;
-    info.trans=trans;
-    PINIT(info.mutex);
-    info.A=A;
-    info.B=B;
-    info.C=C;
-    info.alpha=alpha;
-    CALL_URGENT(Y(spcellmulmat_thread_do),&info,nthread);
-    PDEINIT(info.mutex);
+    int ntot=nx*ny;
+    spcell_thread_t data;
+    data.nx=nx;
+    data.nz=nz;
+    data.trans=trans;
+    data.A=A;
+    data.B=B;
+    data.C=C;
+    data.alpha=alpha;
+    thread_t mul[ntot];
+    thread_prep(mul, 0, ntot, ntot, Y(spcellmulmat_thread_do), &data);
+    CALL_THREAD(mul,ntot, 1);
 }
 /**
  * threaded version of Y(spcellmulmat)*/
 void Y(spcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, 
-			    const X(cell)*B, const T alpha, 
-			    const int nthread){
-    Y(spcellmulmat_thread2)(C,A,B,alpha,0,nthread);
+			    const X(cell)*B, const T alpha){
+    Y(spcellmulmat_thread2)(C,A,B,alpha,0);
 }
 /**
  * threaded version of Y(sptcellmulmat*/
 void Y(sptcellmulmat_thread)(X(cell) **C, const Y(spcell)*A, 
-			     const X(cell)*B, const T alpha, 
-			     const int nthread){
-    Y(spcellmulmat_thread2)(C,A,B,alpha,1,nthread);
+			     const X(cell)*B, const T alpha){
+    Y(spcellmulmat_thread2)(C,A,B,alpha,1);
 }
 /**
    Data for use in spcellmulmat_each
  */
 typedef struct{
-    int ic;
-#if USE_PTHREAD > 0
-    pthread_mutex_t ilock;
-#endif
-    int nc;
     X(cell) *xout;
     Y(spcell) *A;
     X(cell) *xin; 
@@ -867,13 +809,15 @@ typedef struct{
 /**
    Multiply each cell in spcell with each cell in dcell.
 */
-static void Y(spcellmulmat_each_do)(EACH_T *info){
-    int ic;
-    while(LOCK(info->ilock),ic=info->ic++,UNLOCK(info->ilock),ic<info->nc){
-	if(info->trans){
-	    Y(sptmulmat)(&info->xout->p[ic], info->A->p[ic], info->xin->p[ic], info->alpha);
-	}else{
-	    Y(spmulmat)(&info->xout->p[ic], info->A->p[ic], info->xin->p[ic], info->alpha);
+static void Y(spcellmulmat_each_do)(thread_t *info){
+    EACH_T *data=info->data;
+    if(data->trans){
+	for(int ic=info->start; ic<info->end; ic++){
+	    Y(sptmulmat)(&data->xout->p[ic], data->A->p[ic], data->xin->p[ic], data->alpha);
+	}
+    }else{
+	for(int ic=info->start; ic<info->end; ic++){
+	    Y(spmulmat)(&data->xout->p[ic], data->A->p[ic], data->xin->p[ic], data->alpha);
 	}
     }
 }
@@ -881,21 +825,21 @@ static void Y(spcellmulmat_each_do)(EACH_T *info){
    Threaded multiply each cell in spcell with each cell in dcell.
 */
 void Y(spcellmulmat_each)(X(cell) **xout, Y(spcell) *A, X(cell) *xin, 
-			  T alpha, int trans, int nthread){
+			  T alpha, int trans){
     if(!*xout){
 	*xout=X(cellnew)(xin->nx, xin->ny);
     }
     assert(xin->ny==1);
-    EACH_T info;
-    info.xout=*xout;
-    info.A=A;
-    info.xin=xin;
-    info.alpha=alpha;
-    info.trans=trans;
-    info.ic=0;
-    info.nc=info.xout->nx;
-    PINIT(info.ilock);
-    CALL_URGENT(Y(spcellmulmat_each_do), &info, nthread);
+    EACH_T data;
+    data.xout=*xout;
+    data.A=A;
+    data.xin=xin;
+    data.alpha=alpha;
+    data.trans=trans;
+    int tot=data.xout->nx;
+    thread_t info[tot];
+    thread_prep(info, 0, tot, tot, Y(spcellmulmat_each_do), &data);
+    CALL_THREAD(info,tot,1);
 }
 
 /**

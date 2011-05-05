@@ -38,7 +38,6 @@
 #include "sim.h"
 #include "sim_utils.h"
 #define TIMING_MEAN 0
-#define PARALLEL 0
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence
@@ -84,9 +83,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		//re-seed the atmosphere in case atm is loaded from shm/file
 		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
-	    if(PARALLEL == 1 && NCPU >2 && CL && simu->nthread>1 && !parms->evl.tomo){
+	    if(parms->dbg.parallel){
 		/*
-		  We do everything in parallel. to make better use the
+		  We do the big loop in parallel to make better use the
 		  CPUs. Notice that the reconstructor is working on grad from
 		  last time step so that there is no confliction in data access.
 		  This parallelized mode can not be used in skycoverage
@@ -117,14 +116,10 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    info2("CPU Usage: %.2f\n", read_self_cpu());
 		}
 #endif
-	    }else{//do things in series
+	    }else{//do the big loop in serial mode.
 		double cpu_evl, cpu_wfs, cpu_recon, cpu_cachedm;
 		read_self_cpu();//initialize CPU usage counter
 		if(CL){
-		    /*
-		      We run the functions in series mode, but the function
-		      themselves are parallelized inside.
-		     */
 		    perfevl(simu);//before wfsgrad so we can apply ideal NGS modes
 		    cpu_evl=read_self_cpu();
 		    wfsgrad(simu);//output grads to gradcl, gradol
@@ -174,7 +169,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 
 	    int this_time=myclocki();
 	    if(this_time>simu->last_report_time+1 || isim+1==simend){
-		//we don't print out or report too frequency.
+		//we don't print out or report too frequenctly.
 		simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)
 		scheduler_report(simu->status);

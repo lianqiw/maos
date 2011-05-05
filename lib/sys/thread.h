@@ -42,39 +42,35 @@ struct thread_t{
     thread_wrapfun fun;//the function, takes data as argument
     void *data;//the data to pass to the function.
 };
+/*
+  For all the following calls, if urgent is 1, the job is queued in the front, otherwise in the end.
 
+  CALL(fun,arg,nthread,urgent) executes "nthread" instances of fun with argument arg. 
+
+  The following use thread_t to manage the index
+  QUEUE_THREAD(group, A, nthread, urgent) will queue arrays of thread_t (A) 
+  CALL_THREAD(A, nthread, urgent) calls QUEUE_THREAD and waits for all to finish.
+  
+*/
 #if USE_PTHREAD //Always use thread_pool
 #include <pthread.h>
 #include "thread_pool.h"
-#define CALL_MANY(A,B,nthread,urgent)					\
+#define CALL(fun,arg,nthread,urgent)					\
     if(nthread>1){							\
 	long thgroup=0;							\
-	thread_pool_queue_many_same					\
-	    (&thgroup, (thread_fun)A, (void*)B, nthread, urgent);	\
+	thread_pool_queue_many						\
+	    (&thgroup, (thread_fun)fun, (void*)arg, nthread, urgent);	\
 	thread_pool_wait(&thgroup);					\
     }else{								\
-	A(B);								\
+	fun(arg);							\
     }
-#define CALL(A,B,nthread) CALL_MANY(A,B,nthread,0)
-#define CALL_URGENT(A,B,nthread) CALL_MANY(A,B,nthread,2)
-#define CALL_EACH(A,B,nthread)					\
-    if(nthread>1){						\
-	long thgroup=0;						\
-	for(int ithread=nthread-1; ithread>-1; ithread--){	\
-	    thread_pool_queue(&thgroup,				\
-			      (thread_fun)A,			\
-			      (void*)&(B[ithread]),2);		\
-	}							\
-	thread_pool_wait(&thgroup);				\
-    }else{							\
-	A(B);							\
-    }
+
 /**
    Queue jobs to group. Do not wait
 */
 #define QUEUE_THREAD(group,A,nthread,urgent)			\
     if((nthread)>1){						\
-	thread_pool_queue_many(&group,A,nthread,urgent);	\
+	thread_pool_queue_many(&group,NULL,A,nthread,urgent);	\
     }else{							\
 	(A)->fun(A);						\
     }
@@ -84,11 +80,8 @@ struct thread_t{
 #define WAIT_THREAD(group) thread_pool_wait(&group)
 #define THREAD_POOL_INIT(A) thread_pool_init(A)
 #else//no threading
-#define CALL_MANY(A,B,nthread,urgent) A(B)
-#define CALL(A,B,nthread) A(B)
-#define CALL_URGENT(A,B,nthread) A(B)
-#define CALL_DATAEACH(A,B,nthread) A(B)
-#define QUEUE_THREAD(group,A,nthread) A->fun(A)
+#define CALL(A,B,nthread,urgent) A(B)
+#define QUEUE_THREAD(group,A,nthread,urgent) A->fun(A)
 #define THREAD_POOL_INIT(A)
 #endif
 
@@ -118,6 +111,7 @@ struct thread_t{
 #define PDEINIT(A)
 #define PNEW(A)
 #endif
+
 void thread_prep(thread_t *info, long start, long tot, long nthread, 
 		 thread_wrapfun fun, void *data);
 #if defined(X86) || defined(X86_64)
@@ -130,4 +124,7 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
 #define LOCKADD(dest,src,step) (dest=lockadd(&src,step),dest)
 int lockadd(int *src, int step);
 #endif
+
+#define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)
+#define SPIN_UNLOCK(i) __sync_lock_release(&i)
 #endif

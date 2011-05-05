@@ -20,21 +20,6 @@
 #define AOS_RECON_H
 #include "maos.h"
 
-void TomoR(dcell **xout, const void *A, 
-	   const dcell *xin, const double alpha);
-void TomoL(dcell **xout, const void *A, 
-	   const dcell *xin, const double alpha);
-
-void FitL(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha);
-void FitR(dcell **xout, const void *A, 
-	  const dcell *xin, const double alpha);
-
-void tomo(dcell **opdr, const PARMS_T *parms, 
-	  const RECON_T *recon, const dcell *grad, int maxit);
-void fit(dcell **adm, const PARMS_T *parms, 
-		const RECON_T *recon, const dcell *opdr);
-void focus_tracking(SIM_T*simu);
 void tomofit(SIM_T *simu);
 void lsr(SIM_T *simu);
 void reconstruct(SIM_T *simu);

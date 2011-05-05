@@ -31,12 +31,6 @@ void filter(SIM_T *simu);
 void hysterisis(HYST_T **hyst, dcell *dmreal);
 void wfsints(thread_t *thread_data);
 void wfsgrad_iwfs(thread_t *info);
-/*
-void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
-		const dmat *gradref, const PARMS_T *parms, 
-		const POWFS_T *powfs, int iwfs,
-		const dmat *opd, const dmat *lltopd);
-*/
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain);
 #define DEBUG_POWFSINTS 0

@@ -44,6 +44,8 @@ ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDFLAGS=
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif
-PROGS+=../bin/servo_optim
-___bin_servo_optim_SOURCES=servo_optim.c
+PROGS+=../bin/servo_optim ../bin/slaving
 bin_PROGRAMS=$(PROGS)
+___bin_servo_optim_SOURCES=servo_optim.c
+___bin_slaving_SOURCES=slaving.c
+

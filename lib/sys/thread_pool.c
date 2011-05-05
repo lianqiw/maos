@@ -58,6 +58,20 @@
 #include "thread.h"
 #include "thread_pool.h"
 #include "process.h"
+#define USE_SPIN_LOCK 1
+#if USE_SPIN_LOCK == 1
+#define LOCK_T int
+#define LOCK_DO(A) SPIN_LOCK(A)
+#define LOCK_UN(A) SPIN_UNLOCK(A)
+#define LOCK_INIT(A) A=0
+#define LOCK_DESTROY(A)
+#else
+#define LOCK_T pthread_mutex_t
+#define LOCK_DO(A) pthread_mutex_lock(&A)
+#define LOCK_UN(A) pthread_mutex_unlock(&A)
+#define LOCK_INIT(A) pthread_mutex_init(&A, NULL)
+#define LOCK_DESTROY(A) pthread_mutex_destroy(&A)
+#endif
 /**
  * struct of jobs for the linked first in first out (fifo) list.
  */
@@ -73,7 +87,7 @@ typedef struct jobs_t{
  */
 struct thread_pool_t{
     pthread_mutex_t mutex; /**<the mutex.*/
-    pthread_mutex_t mutex2;/**<the mutex for jobpool.*/
+    LOCK_T mutex_pool;         /**<the mutex for jobpool.*/
     pthread_cond_t jobwait;/**<there are jobs jobwait.*/
     pthread_cond_t idle;   /**<all threads are idle*/
     pthread_cond_t exited; /**<all threads have exited*/
@@ -98,25 +112,36 @@ static thread_pool_t pool;//The default pool;
  * finished.
  */
 static inline void do_job(void) {
-    jobs_t *job;
-    job=pool.jobshead;
+    //Take the job out of the todo list
+    jobs_t *job=pool.jobshead;
     pool.jobshead=job->next;
     pthread_mutex_unlock(&pool.mutex);
-    job->fun(job->arg); //run the job
+    //run the job
+    job->fun(job->arg); 
     pthread_mutex_lock(&pool.mutex);
-    (*job->count)--;//decrease the count.
+    //decrease the counter.
+    (*job->count)--;
     if(!(*job->count)){
 	/*job is done. need broadcast since multiple threads may be waiting for
 	  their job to finish*/
 	pthread_cond_broadcast(&pool.jobdone);
     }
-    pthread_mutex_lock(&pool.mutex2);
     //return job to the pool.
+    LOCK_DO(pool.mutex_pool);
     job->next=pool.jobspool;
     pool.jobspool=job;
-    pthread_mutex_unlock(&pool.mutex2);
+    LOCK_UN(pool.mutex_pool);
 }
-
+/**
+   In the middle of an active thread, we can use do_urgent_job() periodically to
+check for and switch to more urgent jobs.  */
+void thread_pool_do_urgent_job(void){
+    pthread_mutex_lock(&pool.mutex);
+    while(pool.jobshead && pool.jobshead->urgent){
+	do_job();
+    }
+    pthread_mutex_unlock(&pool.mutex);
+}
 /**
  *   The working function in each thread which never quits unless pool is being
  *   destroyed. The master thread does not run this routine. The whole function
@@ -171,7 +196,7 @@ void thread_pool_init(int nthread){
 	memset(&pool, 0, sizeof(thread_pool_t));
 	pool.inited=1;
 	pthread_mutex_init(&pool.mutex,  NULL);
-	pthread_mutex_init(&pool.mutex2, NULL);
+	LOCK_INIT(pool.mutex_pool);
 	pthread_cond_init(&pool.idle,    NULL);
 	pthread_cond_init(&pool.jobwait, NULL);
 	pthread_cond_init(&pool.jobdone, NULL);
@@ -213,20 +238,20 @@ void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
     //Add the job to the head if urgent>0, otherwise to the tail.
     jobs_t *job;
     if(pool.jobspool){//take it from the pool.
-	pthread_mutex_lock(&pool.mutex2);
+	LOCK_DO(pool.mutex_pool);
 	job=pool.jobspool;
 	pool.jobspool=pool.jobspool->next;
-	pthread_mutex_unlock(&pool.mutex2);
+	LOCK_UN(pool.mutex_pool);
     }else{
 	job=malloc(sizeof(jobs_t));
     }
     job->fun=fun;
     job->arg=arg;
-    job->count=group;
+    job->count=group;   
+    (*job->count)++;
     job->urgent=urgent;
     job->next=NULL;
     pthread_mutex_lock(&pool.mutex);
-    (*job->count)++;
     if(pool.jobshead){//list is not empty
 	if(urgent){
 	    //add to head
@@ -249,37 +274,52 @@ void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
     pthread_mutex_unlock(&pool.mutex);
 }
 /**
- *   Queue njob jobs with same arguments.
+ *   Queue njob jobs. If fun is NULL, arg is thread_t array otherwise, arg is argument to fun directly.
  */
-void thread_pool_queue_many_same(long *group, thread_fun fun, void *arg, int njob, int urgent){
+void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, int urgent){
     /*
-      First create a list of all the jobs without acquiring lock.
+      First create a temporary list of all the jobs without acquiring lock.
     */
     jobs_t *head=NULL;
     jobs_t *tail=NULL;
-    pthread_mutex_lock(&pool.mutex2);
+    int njob2=0;
     for(int ijob=0; ijob<njob; ijob++){
-	jobs_t *job;
+	jobs_t *job=NULL;
+	LOCK_DO(pool.mutex_pool);
 	if(pool.jobspool){
 	    job=pool.jobspool;
 	    pool.jobspool=pool.jobspool->next;
-	}else{
+	}
+	LOCK_UN(pool.mutex_pool);
+	if(!job){
 	    job=malloc(sizeof(jobs_t));
 	}
-	if(!ijob){
-	    tail=job;
+	if(fun){
+	    job->fun=fun;
+	    job->arg=arg;
+	}else{
+	    thread_t *arg2=arg;
+	    job->fun=(thread_fun)(arg2[ijob].fun);
+	    job->arg=arg2+ijob;
+	    if(((thread_t*)job->arg)->end==((thread_t*)job->arg)->start){
+		//empty job. don't queue it.
+		LOCK_DO(pool.mutex_pool);
+		job->next=pool.jobspool;
+		pool.jobspool=job;
+		LOCK_UN(pool.mutex_pool);
+		continue;
+	    }
 	}
-	job->fun=fun;
-	job->arg=arg;
+	if(!tail) tail=job;
 	job->count=group;
 	job->urgent=urgent;
 	job->next=head;
 	head=job;
+	njob2++;
     }
-    pthread_mutex_unlock(&pool.mutex2);
-    //Add the job to queue
+    //Add the temporary list of jobs to the todo queue
     pthread_mutex_lock(&pool.mutex);
-    (*group)+=njob;
+    *group+=njob2;//Need to be inside the lock.
     if(pool.jobshead){//list is not empty
 	if(urgent){//add to head
 	    tail->next=pool.jobshead;
@@ -293,59 +333,8 @@ void thread_pool_queue_many_same(long *group, thread_fun fun, void *arg, int njo
 	pool.jobshead=head;
 	pool.jobstail=tail;
     }
-    pthread_mutex_unlock(&pool.mutex);
     if(pool.nidle){
 	pthread_cond_broadcast(&pool.jobwait);//wake up all idle threads.
-	pthread_cond_broadcast(&pool.jobdone);//wake up the thread that is waiting for jobdone.
-    }
-}
-/**
- *   Queue njob jobs with arguments array.
- */
-void thread_pool_queue_many(long *group, thread_t *arg, int njob, int urgent){
-    /*
-      First create a list of all the jobs without acquiring lock.
-    */
-    jobs_t *head=NULL;
-    jobs_t *tail=NULL;
-    pthread_mutex_lock(&pool.mutex2);
-    for(int ijob=0; ijob<njob; ijob++){
-	jobs_t *job;
-	if(pool.jobspool){
-	    job=pool.jobspool;
-	    pool.jobspool=pool.jobspool->next;
-	}else{
-	    job=malloc(sizeof(jobs_t));
-	}
-	if(!ijob){//first.
-	    tail=job;
-	}
-	job->fun=(thread_fun)arg[ijob].fun;
-	job->arg=arg+ijob;
-	job->count=group;
-	job->urgent=urgent;
-	job->next=head;
-	head=job;
-    }
-    pthread_mutex_unlock(&pool.mutex2);
-    //Add the job to queue
-    pthread_mutex_lock(&pool.mutex);
-    (*group)+=njob;
-    if(pool.jobshead){//list is not empty
-	if(urgent){//add to head
-	    tail->next=pool.jobshead;
-	    pool.jobshead=head;
-	}else{//add to tail.
-	    pool.jobstail->next=head;
-	    pool.jobstail=tail;
-	}
-    }else{
-	//list is empty. need to signal the thresds.
-	pool.jobshead=head;
-	pool.jobstail=tail;
-    }
-    if(pool.nidle){
-	pthread_cond_broadcast(&pool.jobwait);//wake up all threads.
 	pthread_cond_broadcast(&pool.jobdone);//wake up the thread that is waiting for jobdone.
     }
     pthread_mutex_unlock(&pool.mutex);
@@ -404,14 +393,14 @@ void thread_pool_destroy(void){
 	pthread_cond_wait(&pool.exited, &pool.mutex);
     }
     pthread_mutex_unlock(&pool.mutex);
-    pthread_mutex_lock(&pool.mutex2);
+    LOCK_DO(pool.mutex_pool);
     for(jobs_t *job=pool.jobspool; job; job=pool.jobspool){
 	pool.jobspool=job->next;
 	free(job);
     }
-    pthread_mutex_unlock(&pool.mutex2);
+    LOCK_UN(pool.mutex_pool);
     pthread_mutex_destroy(&pool.mutex);
-    pthread_mutex_destroy(&pool.mutex2);
+    LOCK_DESTROY(pool.mutex_pool);
     pthread_cond_destroy(&pool.idle);
     pthread_cond_destroy(&pool.jobwait);
     pthread_cond_destroy(&pool.jobdone);

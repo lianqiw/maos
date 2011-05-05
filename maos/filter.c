@@ -27,6 +27,7 @@
    Apply hysterisis. Input dmreal is command to the DM and output dmreal is the
    actual position the DM goes to.  */
 void hysterisis(HYST_T **hyst, dcell *dmreal){
+    if(!hyst) return;
     assert(dmreal->ny==1);
     for(int idm=0; idm<dmreal->nx; idm++){
 	if(!hyst[idm]) continue;
@@ -35,7 +36,7 @@ void hysterisis(HYST_T **hyst, dcell *dmreal){
 	double *restrict dxlast=hyst[idm]->dxlast->p;
 	double *restrict x0=hyst[idm]->x0->p;
 	PDMAT(hyst[idm]->ylast, ylast);
-	PDMAT(hyst[idm]->y0, y0);
+	PDMAT(hyst[idm]->y0, yy0);
 	PDMAT(hyst[idm]->coeff, coeff);
 	int nmod=hyst[idm]->coeff->ny;
 	int naloc=dmreal->p[idm]->nx;
@@ -46,14 +47,14 @@ void hysterisis(HYST_T **hyst, dcell *dmreal){
 		    //Changes in moving direction, change the initial condition
 		    x0[ia]=xlast[ia];
 		    for(int imod=0; imod<nmod; imod++){
-			y0[ia][imod]=ylast[ia][imod];
+			yy0[ia][imod]=ylast[ia][imod];
 		    }
 		}
 		double alphasc=dx>0?1:-1;//To revert the sign of alpha when dx<0
 		for(int imod=0; imod<nmod; imod++){
 		    const double alpha=alphasc*coeff[imod][1];
 		    const double alphabeta=alpha*coeff[imod][2];
-		    ylast[ia][imod]=x[ia]-alphabeta+(y0[ia][imod]-x0[ia]+alphabeta)*exp(-(x[ia]-x0[ia])/alpha);
+		    ylast[ia][imod]=x[ia]-alphabeta+(yy0[ia][imod]-x0[ia]+alphabeta)*exp(-(x[ia]-x0[ia])/alpha);
 		}
 		xlast[ia]=x[ia];
 		dxlast[ia]=dx;

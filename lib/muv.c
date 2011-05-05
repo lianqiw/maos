@@ -39,11 +39,17 @@ void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
     const MUV_T *A = B;
     if(A->M){
 	if(!xin) return;
-	spcellmulmat(xout, A->M, xin, alpha);
-	dcell *tmp=NULL;
-	dcellmm(&tmp,A->V, xin, "tn", -1.);
-	dcellmm(xout,A->U, tmp, "nn", alpha);
-	dcellfree(tmp);
+	if(A->nthread>1){
+	    spcellmulmat_thread(xout, A->M, xin, alpha);
+	}else{
+	    spcellmulmat(xout, A->M, xin, alpha);
+	}
+	if(A->U && A->V){
+	    dcell *tmp=NULL;
+	    dcellmm(&tmp,A->V, xin, "tn", -1.);
+	    dcellmm(xout,A->U, tmp, "nn", alpha);
+	    dcellfree(tmp);
+	}
 	if(A->extra){
 	    A->exfun(xout, A->extra, xin, alpha, -1, -1);
 	}

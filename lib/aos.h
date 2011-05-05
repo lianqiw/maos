@@ -55,4 +55,5 @@
 #include "stfun.h"
 #include "sys/sys.h"
 #include "servo.h"
+#include "slaving.h"
 #endif
