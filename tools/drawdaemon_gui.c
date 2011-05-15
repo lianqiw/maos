@@ -682,6 +682,7 @@ void addpage(drawdata_t **drawdatawrap)
 		drawdata_old->limit_data=calloc(4, sizeof(double));
 	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
 	}
+	free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 	drawdata_old->zlim=drawdata->zlim;
 	drawdata_old->format=drawdata->format;
 	drawdata_old->gray=drawdata->gray;

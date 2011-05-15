@@ -212,7 +212,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,bkgrnd);
     READ_POWFS(dbl,bkgrndc);
     READ_POWFS(str,bkgrndfn);
-    READ_POWFS(dbl,bkgrndfnc);
+    READ_POWFS(str,bkgrndfnc);
     READ_POWFS(dbl,pixblur);
     READ_POWFS(dbl,rne);
     READ_POWFS(dbl,dx);
@@ -1082,8 +1082,8 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	if(parms->atm.ht[ips]<0){
 	    warning("Layer %d height %g is below ground\n",ips,parms->atm.ht[ips]);
 	}
-	if(parms->atm.ht[ips]>0 && parms->atm.ht[ips]<100){
-	    error("Layer %d height %g is too close to the ground\n",ips,parms->atm.ht[ips]);
+	if(parms->atm.ht[ips]>0 && parms->atm.ht[ips]<20){
+	    warning("Layer %d height %g is too close to the ground\n",ips,parms->atm.ht[ips]);
 	}
     }
     if(parms->atm.iground==-1){

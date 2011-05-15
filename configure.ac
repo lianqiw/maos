@@ -135,7 +135,7 @@ case "$host_os" in
 *bsd*)
  AM_CONDITIONAL(BSD, true)
 ;;
-*cygwin*)
+*cygwin*|*mingw*)
  AM_CONDITIONAL(WIN, true)
  LAPACK="-lblas -llapack -lgfortran"
  win32=yes

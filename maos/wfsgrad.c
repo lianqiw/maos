@@ -371,11 +371,19 @@ void wfsgrad_iwfs(thread_t *info){
 	    
 	//Rayleigh scattering (bkgrnd)
 	dmat **bkgrnd2=NULL;
+	dmat **bkgrnd2c=NULL;
 	if(powfs[ipowfs].bkgrnd){
 	    if(powfs[ipowfs].bkgrnd->ny==1){
 		bkgrnd2=powfs[ipowfs].bkgrnd->p;
 	    }else{
 		bkgrnd2=powfs[ipowfs].bkgrnd->p+nsa*wfsind;
+	    }
+	}
+	if(powfs[ipowfs].bkgrndc){
+	    if(powfs[ipowfs].bkgrndc->ny==1){
+		bkgrnd2c=powfs[ipowfs].bkgrndc->p;
+	    }else{
+		bkgrnd2c=powfs[ipowfs].bkgrndc->p+nsa*wfsind;
 	    }
 	}
 	    
@@ -423,10 +431,10 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	    if(noisy){//add noise
 		double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
-		
+		double *bkgrnd2ic=(bkgrnd2c && bkgrnd2c[isa])?bkgrnd2c[isa]->p:NULL;
 		addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
 			 bkgrnd,parms->powfs[ipowfs].bkgrndc,
-			 bkgrnd2i, parms->powfs[ipowfs].bkgrndfnc, rne);
+			 bkgrnd2i, bkgrnd2ic, rne);
 		gny[0]=0; gny[1]=0;
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:

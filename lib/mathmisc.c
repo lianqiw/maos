@@ -143,7 +143,7 @@ void invsq(long n, double *restrict A){
 void adddbl(double *restrict out, double alpha, 
 	    const double *in, int N, double beta, double theta){
 
-    if (fabs(alpha)<1.e-60){
+    if (fabs(alpha)<EPS){
 	memset(out,0,sizeof(double)*N);
 	if(in){
 	    for(int i=0; i<N; i++){

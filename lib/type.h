@@ -22,9 +22,9 @@
 #include "misc.h"
 #include "bin.h"
 #if defined(DLONG)
-typedef long spint; //we use 32 bit in sparse index.
+typedef long spint; //This is 64 bit in AMD64 and 32 bit in i386
 #else
-typedef int spint;
+typedef int spint;  //This is always 32 bit.
 #endif
 /**
    \file lib/type.h Defines the math data types like dmat, cmat, dcell, ccell,

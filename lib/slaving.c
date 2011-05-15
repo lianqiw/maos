@@ -31,6 +31,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
     for(int idm=0; idm<ndm; idm++){
 	int nact=aloc[idm]->nloc;
 	for(int ifit=0; ifit<HA->nx; ifit++){
+	    if(!pHA[idm][ifit]) continue;
 	    if(W1){
 		sptmulmat(&actcplc->p[idm], pHA[idm][ifit], W1, 1);
 	    }else{

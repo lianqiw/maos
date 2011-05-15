@@ -28,6 +28,7 @@ char *dirstart;
  */
 int main(int argc, char **argv){
     dirstart=mygetcwd();
+    char *scmd=argv2str(argc, argv);
     //Strip out PATH information from the command line.
     char*fn=mybasename(argv[0]);
     strcpy(argv[0],fn);
@@ -64,28 +65,6 @@ int main(int argc, char **argv){
       will block until ones are available.  if arg->force==1, will run
       immediately.
     */
-    char *cwd=mygetcwd();
-    int slen=strlen(cwd)+2;
-    for(int iarg=0; iarg<argc; iarg++){
-	slen+=1+strlen(argv[iarg]);
-    }
-    char scmd[slen];
-#ifndef __CYGWIN__
-    if(!mystrcmp(cwd,HOME)){
-	strcpy(scmd,"~");
-	strcat(scmd,cwd+strlen(HOME));
-    }else{
-	strcpy(scmd,cwd);
-    }
-#else
-    strcpy(scmd,cwd);
-#endif
-    strcat(scmd,"/");
-    for(int iarg=0; iarg<argc; iarg++){
-	strcat(scmd,argv[iarg]);
-	strcat(scmd," ");
-    }
-    if(strlen(scmd)>slen-1) error("Overflow\n");
     scheduler_start(scmd,arg->nthread,!arg->force);
     //setting up parameters before asking scheduler to check for any errors.
     dirsetup=stradd("setup",NULL);
@@ -111,11 +90,11 @@ int main(int argc, char **argv){
     info2("Simulation started at %s in %s.\n",myasctime(),myhostname());
  
     free(arg);
+    free(scmd);
     THREAD_POOL_INIT(parms->skyc.nthread);
     /*Loads the main software*/
     skysim(parms);
     free_parms(parms);
-    free(cwd);
     free(dirsetup);
     free(dirstart);
     rename_file(0);

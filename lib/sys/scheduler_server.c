@@ -221,8 +221,10 @@ static __attribute__((constructor))void init(){
     scheduler_launch();
 }
 /**
-   \todo Find keepalive options in mac.
-*/
+   When the keepalive flag is on, the socket will receive notice when the
+   connection to remote socket is disrupted.
+
+  \todo Find keepalive options in mac.  */
 void socket_tcp_keepalive(int sock){
     int keeplive=1;
 #ifdef __linux__
@@ -632,6 +634,7 @@ static int respond(int sock){
 	    if(pid>=0x8){//check monitor version.
 		tmp->load=1;
 	    }
+	    info("Monitor is connected at sock %d.\n", sock);
 	}
 	break;
     case CMD_KILL://called by mnitor.

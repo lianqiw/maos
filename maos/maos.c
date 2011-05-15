@@ -115,8 +115,6 @@ void maos(const PARMS_T *parms){
    \callgraph
 */
 int main(int argc, char **argv){
-    int a=0;
-    __sync_val_compare_and_swap(&a, 0, 1);
     char*fn=mybasename(argv[0]);
     char *scmd=argv2str(argc,argv);
     strcpy(argv[0],fn);

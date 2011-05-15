@@ -137,6 +137,7 @@ typedef struct POWFS_T{
     INTSTAT_T *intstat; /**<matched filter i0 and its derivative.*/
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
     dcell *bkgrnd;      /**<wfs background image. from parms->powfs[ipowfs].bkgrndfn.*/
+    dcell *bkgrndc;     /**<wfs background image calibration. from parms->powfs[ipowfs].bkgrndfnc.*/
     int nwfs;           /**<number of wfs belonging to this wfs*/
     int npts;           /**<number of total opd points in all subaps*/
     int namp;           /**<number of amplitude maps*/

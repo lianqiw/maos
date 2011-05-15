@@ -44,21 +44,25 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
 	      rand_t* rstat,   /**<The random stream*/
 	      const double bkgrnd,  /**<background in PDEs per pixel per frame*/
 	      const double pcalib,  /**<Fraction of bkgrnd that is calibrated out*/
-	      const double *bkgrnd2,/**<background in PDEs of each pixel per frame.*/
-	      const double pcalib2, /**<Fraction of bkgrnd taht is calibrated out*/
+	      const double *bkgrnd2, /**<background in PDEs of each pixel per frame.*/
+	      const double *bkgrnd2c,/**<calibration bkgrnd2*/
 	      const double rne      /**<Read out noise per pixel per read*/
 	      ){
  
     if(bkgrnd2){
 	for(int ix=0; ix<A->nx*A->ny; ix++){
-	    A->p[ix]=randp(rstat,A->p[ix]+bkgrnd+bkgrnd2[ix])
-		-bkgrnd*pcalib-bkgrnd2[ix]*pcalib2
-		+rne*randn(rstat);
+	    A->p[ix]=randp(rstat,A->p[ix]+bkgrnd+bkgrnd2[ix]) +rne*randn(rstat)
+		-bkgrnd*pcalib ;
 	}
     }else{
 	for(int ix=0; ix<A->nx*A->ny; ix++){
 	    A->p[ix]=randp(rstat,A->p[ix]+bkgrnd)
 			   -bkgrnd*pcalib+rne*randn(rstat);
+	}
+    }
+    if(bkgrnd2c){
+	for(int ix=0; ix<A->nx*A->ny; ix++){
+	    A->p[ix]-=bkgrnd2c[ix];
 	}
     }
 }

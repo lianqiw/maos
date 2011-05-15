@@ -128,7 +128,7 @@ typedef struct POWFS_CFG_T{
 		      out. depends on variability.*/
     char *bkgrndfn; /**<file contains sky background/rayleigh scatter input for
 		     each subaperture in each wfs. */
-    double bkgrndfnc;/**<How much of the background in bkgrndfn can be
+    char *bkgrndfnc;/**<How much of the background in bkgrndfn can be
 		      calibrated out. depends on variability.*/
     double rne;     /**<read out noise in electron per pixel per frame*/
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/

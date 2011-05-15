@@ -680,24 +680,43 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     powfs[ipowfs].ncompy=ncompy;
 
     if(parms->powfs[ipowfs].bkgrndfn){
-	if(parms->powfs[ipowfs].bkgrndfnc>2 || parms->powfs[ipowfs].bkgrndfnc<0){
-	    error("parms->powfs[%d].bkgrndfnc has illegal value of %g. "
-		  "should be between [0,2]",
-		  ipowfs, parms->powfs[ipowfs].bkgrndfnc);
-	}
 	char *fn=find_file(parms->powfs[ipowfs].bkgrndfn);
 	info2("Loading sky background/rayleigh backscatter from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrnd);
 	powfs[ipowfs].bkgrnd=dcellread("%s",fn);
 	free(fn);
+    }
+    if(parms->powfs[ipowfs].bkgrndfnc){
+	char *fn=find_file(parms->powfs[ipowfs].bkgrndfnc);
+	info2("Loading sky background/rayleigh backscatter correction from %s\n",fn);
+	dcellfree(powfs[ipowfs].bkgrndc);
+	powfs[ipowfs].bkgrndc=dcellread("%s",fn);
+	free(fn);
+    }
+    if(parms->powfs[ipowfs].bkgrndfn || parms->powfs[ipowfs].bkgrndfnc){
 	double bkscale = parms->sim.dt*800*parms->powfs[ipowfs].dtrat;
 	if(fabs(bkscale-1)>1.e-20){
 	    dcellscale(powfs[ipowfs].bkgrnd, bkscale);
-	    warning("powfs %d: Scaling bkgrndfn by %g", ipowfs, bkscale);
+	    dcellscale(powfs[ipowfs].bkgrndc, bkscale);
+	    warning("powfs %d: Scaling bkgrnd by %g", ipowfs, bkscale);
 	}
-	if(powfs[ipowfs].bkgrnd->nx!=powfs[ipowfs].pts->nsa){
-	    error("powfs %d: number of rows in bkgrndfn must be %ld, but is %ld\n",
-		  ipowfs, powfs[ipowfs].pts->nsa, powfs[ipowfs].bkgrnd->nx);
+	if(parms->powfs[ipowfs].bkgrndfn && 
+	   (powfs[ipowfs].bkgrnd->nx!=powfs[ipowfs].pts->nsa
+	    ||(powfs[ipowfs].bkgrnd->ny!=1
+	       && powfs[ipowfs].bkgrnd->ny!=parms->powfs[ipowfs].nwfs))){
+	    error("powfs%d: bkgrnd is of dimension %ld x %ld, "
+		  "but should be %ld x 1 or %d\n",
+		  ipowfs, powfs[ipowfs].bkgrnd->nx, powfs[ipowfs].bkgrnd->ny,
+		  powfs[ipowfs].pts->nsa, parms->powfs[ipowfs].nwfs);
+	}
+	if(parms->powfs[ipowfs].bkgrndfnc && 
+	   (powfs[ipowfs].bkgrndc->nx!=powfs[ipowfs].pts->nsa
+	    ||(powfs[ipowfs].bkgrndc->ny!=1
+	       && powfs[ipowfs].bkgrndc->ny!=parms->powfs[ipowfs].nwfs))){
+	    error("powfs%d: bkgrndc is of dimension %ld x %ld, "
+		  "but should be %ld x 1 or %d\n",
+		  ipowfs, powfs[ipowfs].bkgrndc->nx, powfs[ipowfs].bkgrndc->ny,
+		  powfs[ipowfs].pts->nsa, parms->powfs[ipowfs].nwfs);
 	}
     }
 }

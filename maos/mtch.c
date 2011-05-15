@@ -64,7 +64,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     const double pixtheta=parms->powfs[ipowfs].pixtheta;
     const double kp=1./pixtheta;
     const double rne=parms->powfs[ipowfs].rne;
-    const double bkgrndfn_res=(1.-parms->powfs[ipowfs].bkgrndfnc);
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
     const double bkgrnd_res=bkgrnd*(1.-parms->powfs[ipowfs].bkgrndc);
     const int sub_i0=1;//doesn't make any difference.
@@ -192,17 +191,19 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }
 	    
 	    double* bkgrnd2=NULL;
+	    double* bkgrnd2c=NULL;
 	    if(powfs[ipowfs].bkgrnd && powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]){
 		bkgrnd2= powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]->p; 
 	    }
-	    dzero(i0g);//don't forget to zero out
-	    adddbl(pi0g[0], 1,gxs[ii0][isa]->p, i0n, 1, 0);
-	    adddbl(pi0g[1], 1,gys[ii0][isa]->p, i0n, 1, 0);
-	    adddbl(pi0g[2], 1,i0s[ii0][isa]->p, i0n, kp, bkgrnd_res);
-	    if(powfs[ipowfs].bkgrnd && powfs[ipowfs].bkgrnd->p[ii0*nsa+isa]){
-		//notice that the bkgrnd is already scaled by sim.dt and dtrat properly.
-		adddbl(pi0g[2], 1, bkgrnd2, i0n, bkgrndfn_res, 0);
+	    if(powfs[ipowfs].bkgrndc && powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]){
+		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]->p; 
 	    }
+	    dzero(i0g);//don't forget to zero out
+	    adddbl(pi0g[0], 1, gxs[ii0][isa]->p, i0n, 1, 0);
+	    adddbl(pi0g[1], 1, gys[ii0][isa]->p, i0n, 1, 0);
+	    adddbl(pi0g[2], 1, i0s[ii0][isa]->p, i0n, kp, bkgrnd_res);
+	    adddbl(pi0g[2], 1, bkgrnd2, i0n, 1, bkgrnd_res);
+	    adddbl(pi0g[2], 1, bkgrnd2c, i0n, -1, 0);//subtract calibration
 	    if(mtchcrx && !crdisable){
 		/*
 		  constrained matched filter. compute separately for each wfs.
@@ -212,8 +213,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    adddbl(pi0g[mtchcrx],1,i0s[ii0][isa]->p, i0n, -kp, 0);
 		    adddbl(pi0g[mtchcrx+1],1,i0s[ii0][isa]->p, i0n, -kp,0);
 		}
-		adddbl(pi0g[mtchcrx], 1, bkgrnd2,i0n, bkgrndfn_res, bkgrnd_res);
-		adddbl(pi0g[mtchcrx+1],1,bkgrnd2,i0n,  bkgrndfn_res,bkgrnd_res);
+		adddbl(pi0g[mtchcrx],   1, bkgrnd2,  i0n,  1, bkgrnd_res);
+		adddbl(pi0g[mtchcrx],   1, bkgrnd2c, i0n, -1, 0);
+		adddbl(pi0g[mtchcrx+1], 1, bkgrnd2,  i0n,  1,bkgrnd_res);
+		adddbl(pi0g[mtchcrx+1], 1, bkgrnd2c, i0n, -1, 0);
 	    }
 	    if(mtchcry && !crdisable){
 		mki0shy(pi0g[mtchcry],pi0g[mtchcry+1],i0s[ii0][isa],kp);
@@ -221,8 +224,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		    adddbl(pi0g[mtchcry],1,i0s[ii0][isa]->p, i0n, -kp,0);
 		    adddbl(pi0g[mtchcry+1],1,i0s[ii0][isa]->p,i0n, -kp,0);
 		}
-		adddbl(pi0g[mtchcry], 1, bkgrnd2, i0n, bkgrndfn_res, bkgrnd_res);
-		adddbl(pi0g[mtchcry+1],1, bkgrnd2,i0n,  bkgrndfn_res, bkgrnd_res);
+		adddbl(pi0g[mtchcry],  1, bkgrnd2,  i0n,  1, bkgrnd_res);
+		adddbl(pi0g[mtchcry],  1, bkgrnd2c, i0n, -1, 0);
+		adddbl(pi0g[mtchcry+1],1, bkgrnd2,  i0n,  1, bkgrnd_res);
+		adddbl(pi0g[mtchcry+1],1, bkgrnd2c ,i0n, -1, 0);
 	    }
 	  
 	    if(bkgrnd2){

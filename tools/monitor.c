@@ -303,6 +303,7 @@ int scheduler_connect(int ihost, int block, int mode){
     int sock;
  
     if(scheduler_crashed) {
+	info2("scheduled crashed");
 	return -1;
     }
 
@@ -317,9 +318,18 @@ int scheduler_connect(int ihost, int block, int mode){
 	return sock;
     }
 
-    int oldflag=fcntl(sock,F_GETFD,0);
-    oldflag |= FD_CLOEXEC;
-    fcntl(sock, F_SETFD, oldflag);//close on exec.
+    int flag=fcntl(sock,F_GETFD,0);
+    if(flag == -1) {
+	warning("flag==-1\n");
+	flag=0;
+    }
+    flag |= FD_CLOEXEC; //close on exec.
+    if(!block) {
+	info2("Set non blocking\n");
+	flag |= O_NONBLOCK;//Set nonblocking
+    }
+    //fcntl(sock, F_SETFD, flag);
+   
     
     if(init_sockaddr (&servername, host, PORT)){
 	warning3("Unable to init_sockaddr.");
@@ -328,7 +338,9 @@ int scheduler_connect(int ihost, int block, int mode){
 	return -1;
     }
     int count=0;
+    fcntl(sock, F_SETFD, O_NONBLOCK);
     while(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
+	perror("connect");
 	if(!block){
 	    close(sock);
 	    return -1;
@@ -340,6 +352,12 @@ int scheduler_connect(int ihost, int block, int mode){
 	    sock=-1;
 	    error("Failed to connect to scheduer\n");
 	}
+    }
+    info2("returns");
+    if(!block){
+	int flag2=fcntl(sock,F_GETFD,0);
+	flag2 ^= O_NONBLOCK;//Set blocking
+	fcntl(sock, F_SETFD, flag2);
     }
     scheduler_shutdown(&sock,mode);
     return sock;
@@ -392,16 +410,19 @@ static void add_host_thread(void){
     while(!quitall){
 	for(int ihost=0; ihost<nhost; ihost++){
 	    if(!hsock[ihost]){
+		info("Connecting to %s ... ", hosts[ihost]);
 		int sock=scheduler_connect(ihost,0,0);
 		if(sock==-1){
 		    hsock[ihost]=0;
-		    //warning2("Unable to connect to %s\n",hosts[ihost]);
+		    warning2("failed\n");
 		}else{
+		    info2("connected ...");
 		    int cmd[2];
 		    cmd[0]=CMD_MONITOR;
 		    cmd[1]=scheduler_version;
 		    if(write(sock,cmd,sizeof(int)*2)!=sizeof(int)*2){
 			hsock[ihost]=0;
+			warning2("write failed.\n");
 		    }else{
 			//2010-07-03:we don't write. to detect remote close.
 			shutdown(sock,SHUT_WR);
@@ -419,6 +440,7 @@ static void add_host_thread(void){
 			g_io_channel_unref(channel);
 			gdk_threads_leave();
 			hsock[ihost]=sock;
+			info2("write succeed.\n");
 		    }
 		}
 		gdk_threads_enter();
