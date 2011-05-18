@@ -361,6 +361,8 @@ void filter_ol(SIM_T *simu){
    Does the servo filtering by calling filter_cl() or filter_ol()
  */
 void filter(SIM_T *simu){
+    if(simu->parms->sim.evlol) return;
+
     if(simu->parms->sim.closeloop){
 	if(simu->parms->save.dm){
 	    cellarr_dcell(simu->save->dmreal, simu->dmreal);

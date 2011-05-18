@@ -428,7 +428,12 @@ static void readcfg_dm(PARMS_T *parms){
     readcfg_##A##arr_n((void*)(&A##tmp),nmoao,"moao."#B);     \
     for(i=0; i<nmoao; i++){				      \
 	parms->moao[i].B = A##tmp[i];			      \
-    }							      \
+    }							      
+#define READ_MOAO_RELAX(A,B)				      \
+    readcfg_##A##arr_nmax((void*)(&A##tmp),nmoao,"moao."#B);  \
+    for(i=0; i<nmoao; i++){				      \
+	parms->moao[i].B = A##tmp[i];			      \
+    }							      
 
 /**
    Read in MOAO parameters.
@@ -440,11 +445,11 @@ static void readcfg_moao(PARMS_T *parms){
     int *inttmp=NULL;
     double *dbltmp=NULL;
     READ_MOAO(int,order);
-    READ_MOAO(int,cubic);
-    READ_MOAO(dbl,iac);
-    READ_MOAO(dbl,stroke);
-    READ_MOAO(int,actslave);
-    READ_MOAO(int,lrt_ptt);
+    READ_MOAO_RELAX(int,cubic);
+    READ_MOAO_RELAX(dbl,iac);
+    READ_MOAO_RELAX(dbl,stroke);
+    READ_MOAO_RELAX(int,actslave);
+    READ_MOAO_RELAX(int,lrt_ptt);
     free(inttmp);
     free(dbltmp);
 }

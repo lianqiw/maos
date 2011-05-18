@@ -19,6 +19,7 @@
 #include "maos.h"
 #include "sim.h"
 #include "ahst.h"
+#include "sim_utils.h"
 /**
    \file perfevl.c Peformance evaluation on science FoV. Notice that the science
    FoV can be different from the DM fitting FoV, which is tuned to better
@@ -153,8 +154,7 @@ void perfevl_ievl(thread_t *info){
 	}
 	ccellfree(psf2s);
     }
-    if(parms->sim.evlol)
-	return;
+    if(parms->sim.evlol) goto end;
     TIM(2);
     /*
       evaluate tomography performance: Apply ideal correction using
@@ -230,7 +230,7 @@ void perfevl_ievl(thread_t *info){
     TIM(3);
     if(parms->evl.tomo==2){
 	//info("Skip DM performance evalution\n");
-	return;
+	goto end;
     }
     //Apply dm correction. tip/tilt command is contained in DM commands
 
@@ -338,6 +338,7 @@ void perfevl_ievl(thread_t *info){
 	ccellfree(psf2s);
     }//do_psf
     TIM(5);
+ end:
 #if TIMING==1
     info2("Evl %d timing:ray atm %.4f evlol %.4f evltomo %.4f ray dm %.4f evlcl %.4f\n",
 	  ievl, tk1-tk0, tk2-tk1, tk3-tk2, tk4-tk3, tk5-tk4);
@@ -498,4 +499,5 @@ void perfevl(SIM_T *simu){
     dfree(simu->opdevlground);simu->opdevlground=NULL;
     perfevl_mean(simu);
     simu->tk_eval=myclockd()-tk_start;
+    save_simu(simu);
 }

@@ -609,10 +609,10 @@ void wfsgrad_iwfs(thread_t *info){
    Calls wfsgrad_iwfs() to computes WFS gradient in parallel.
 */
 void wfsgrad(SIM_T *simu){
-    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
+    if(parms->sim.fitonly || parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
-    if(parms->sim.fitonly) return;
+    double tk_start=myclockd();
     //Updating dmpsol averaging.
     if(parms->sim.closeloop){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

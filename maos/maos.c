@@ -62,12 +62,7 @@ void maos(const PARMS_T *parms){
     int one=1;
     omp_set_num_threads(&one);//only allow 1 thread.
 #endif
-
-    if(parms->sim.evlol){
-	sim_evlol(parms, powfs, aper, recon);
-    }else{
-	sim(parms, powfs, aper, recon);
-    }
+    sim(parms, powfs, aper, recon);
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/
     free_recon(parms, recon); recon=NULL;

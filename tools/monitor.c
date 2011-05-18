@@ -324,12 +324,7 @@ int scheduler_connect(int ihost, int block, int mode){
 	flag=0;
     }
     flag |= FD_CLOEXEC; //close on exec.
-    if(!block) {
-	info2("Set non blocking\n");
-	flag |= O_NONBLOCK;//Set nonblocking
-    }
-    //fcntl(sock, F_SETFD, flag);
-   
+    fcntl(sock, F_SETFD, flag);
     
     if(init_sockaddr (&servername, host, PORT)){
 	warning3("Unable to init_sockaddr.");
@@ -352,12 +347,6 @@ int scheduler_connect(int ihost, int block, int mode){
 	    sock=-1;
 	    error("Failed to connect to scheduer\n");
 	}
-    }
-    info2("returns");
-    if(!block){
-	int flag2=fcntl(sock,F_GETFD,0);
-	flag2 ^= O_NONBLOCK;//Set blocking
-	fcntl(sock, F_SETFD, flag2);
     }
     scheduler_shutdown(&sock,mode);
     return sock;
@@ -397,9 +386,10 @@ int scheduler_remove_job(int host, int pid){
 
 /**
    This thread lives in a separate thread, so need to use gdk_thread_enter
-   before calls gtk functions.
+   before calls gtk functions. Spawned for each host.
 */
-static void add_host_thread(void){
+static void add_host_thread(void *value){
+    int ihost = GPOINTER_TO_INT(value);
     /*From GTK Manual: g_io_channel_get_flags (): Gets the current flags for a
       GIOChannel, including read-only flags such as G_IO_FLAG_IS_READABLE.  The
       values of the flags G_IO_FLAG_IS_READABLE and G_IO_FLAG_IS_WRITEABLE are
@@ -408,50 +398,44 @@ static void add_host_thread(void){
       UNIX shutdown() function), the user should immediately call
       g_io_channel_get_flags() to update the internal values of these flags.*/
     while(!quitall){
-	for(int ihost=0; ihost<nhost; ihost++){
-	    if(!hsock[ihost]){
-		info("Connecting to %s ... ", hosts[ihost]);
-		int sock=scheduler_connect(ihost,0,0);
-		if(sock==-1){
+	if(!hsock[ihost]){
+	    int sock=scheduler_connect(ihost,1,0);
+	    if(sock==-1){
+		hsock[ihost]=0;
+	    }else{
+		int cmd[2];
+		cmd[0]=CMD_MONITOR;
+		cmd[1]=scheduler_version;
+		if(write(sock,cmd,sizeof(int)*2)!=sizeof(int)*2){
 		    hsock[ihost]=0;
-		    warning2("failed\n");
 		}else{
-		    info2("connected ...");
-		    int cmd[2];
-		    cmd[0]=CMD_MONITOR;
-		    cmd[1]=scheduler_version;
-		    if(write(sock,cmd,sizeof(int)*2)!=sizeof(int)*2){
-			hsock[ihost]=0;
-			warning2("write failed.\n");
-		    }else{
-			//2010-07-03:we don't write. to detect remote close.
-			shutdown(sock,SHUT_WR);
-			gdk_threads_enter();
-			GIOChannel *channel=g_io_channel_unix_new(sock);
-			g_io_channel_set_encoding(channel,NULL,NULL);
-			//must not be buffered
-			g_io_channel_set_buffered(channel,FALSE);
-			g_io_channel_set_close_on_unref (channel,1);
-			g_io_add_watch_full
-			    (channel,0, (GIOCondition)
-			     (G_IO_IN|G_IO_HUP|G_IO_ERR|G_IO_PRI|G_IO_NVAL), 
-			     respond,GINT_TO_POINTER(sock),channel_removed);
+		    //2010-07-03:we don't write. to detect remote close.
+		    shutdown(sock,SHUT_WR);
+		    gdk_threads_enter();
+		    GIOChannel *channel=g_io_channel_unix_new(sock);
+		    g_io_channel_set_encoding(channel,NULL,NULL);
+		    //must not be buffered
+		    g_io_channel_set_buffered(channel,FALSE);
+		    g_io_channel_set_close_on_unref (channel,1);
+		    g_io_add_watch_full
+			(channel,0, (GIOCondition)
+			 (G_IO_IN|G_IO_HUP|G_IO_ERR|G_IO_PRI|G_IO_NVAL), 
+			 respond,GINT_TO_POINTER(sock),channel_removed);
 		    
-			g_io_channel_unref(channel);
-			gdk_threads_leave();
-			hsock[ihost]=sock;
-			info2("write succeed.\n");
-		    }
+		    g_io_channel_unref(channel);
+		    gdk_threads_leave();
+		    hsock[ihost]=sock;
 		}
+	    }
+	    if(hsock[ihost]){
 		gdk_threads_enter();
-		if(hsock[ihost]){
-		    host_up(ihost);
-		}
+		host_up(ihost);
 		gdk_threads_leave();
 	    }
 	}
+	
 	pthread_mutex_lock(&pmutex);
-	if(nhostup==nhost){//all host is up
+	if(hsock[ihost]){//host is up. sleep
 	    pthread_cond_wait(&pcond, &pmutex);
 	}else{//sleep 5 seconds before retry.
 	    struct timespec abstime;
@@ -464,7 +448,7 @@ static void add_host_thread(void){
 }
 static void add_host_wakeup(void){
     //Wakeup add_host_thread
-    pthread_cond_signal(&pcond);
+    pthread_cond_broadcast(&pcond);
 }
 void notify_user(PROC_T *p){
     if(p->status.done) return;
@@ -854,7 +838,9 @@ int main(int argc, char *argv[])
     usage_mem=calloc(nhost,sizeof(double));
     prog_cpu=calloc(nhost, sizeof(GtkWidget *));
     prog_mem=calloc(nhost, sizeof(GtkWidget *));
-   
+
+    pthread_mutex_init(&pmutex, NULL);
+    pthread_cond_init(&pcond, NULL);
     for(int ihost=0; ihost<nhost; ihost++){
 	char tit[40];
 	snprintf(tit,40,"%s(0)",hosts[ihost]);
@@ -899,12 +885,13 @@ int main(int argc, char *argv[])
 	update_title(ihost);
 	gtk_widget_show_all(tabs[ihost]);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
+
+	if(NULL==g_thread_create((GThreadFunc)add_host_thread, GINT_TO_POINTER(ihost), FALSE, NULL)){
+	    error("Thread creation failed.\n");
+	}
     }
-    pthread_mutex_init(&pmutex, NULL);
-    pthread_cond_init(&pcond, NULL);
-    if(NULL==g_thread_create((GThreadFunc)add_host_thread, NULL, FALSE, NULL)){
-	warning("Thread creation failed.\n");
-    }
+
+   
     gdk_threads_enter();
     gtk_main();
     gdk_threads_leave();

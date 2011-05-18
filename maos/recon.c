@@ -218,9 +218,10 @@ void lsr(SIM_T *simu){
    Deformable mirror control. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
-    double tk_start=myclockd();
     const PARMS_T *parms=simu->parms;
+    if(parms->sim.evlol) return;
     const RECON_T *recon=simu->recon;
+    double tk_start=myclockd();
     if(simu->gradlastol || simu->gradlastcl){
 	switch(parms->sim.recon){//mv
 	case 0:

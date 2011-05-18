@@ -18,7 +18,6 @@
 
 #ifndef AOS_SIM_H
 #define AOS_SIM_H
-void sim_evlol(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon);
 void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon);
 void wfsgrad(SIM_T *simu);
 void perfevl_ievl(thread_t *info);
