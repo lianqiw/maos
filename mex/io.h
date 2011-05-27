@@ -25,15 +25,15 @@ typedef struct file_t{
 }file_t;
 #define M_CSP64 0x6400
 #define M_SP64  0x6401
-#define M_CSP32  0x6406
-#define M_SP32   0x6407
-#define M_DBL 0x6402
+#define M_DBL   0x6402
 #define M_INT64 0x6403
-#define M_CMP 0x6404
+#define M_CMP   0x6404
 #define M_INT32 0x6405
-#define MC_CSP 0x6410
-#define MC_SP  0x6411
-#define MC_DBL 0x6412
+#define M_CSP32 0x6406
+#define M_SP32  0x6407
+#define MC_CSP  0x6410
+#define MC_SP   0x6411
+#define MC_DBL  0x6412
 #define MC_INT64 0x6413
 #define MC_CMP 0x6414
 #define MC_INT32 0x6415

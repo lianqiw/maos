@@ -558,32 +558,105 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 /**
    Write a double array of size nx*ny to file.
 */
-void writedbl(const double *p,long nx, long ny, const char*format,...){
+void writedbl(const double *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(double), M_DBL, p, (uint64_t)nx, (uint64_t)ny);
+    do_write(fn, 1, sizeof(double), M_DBL, p, nx, ny);
 }
 /**
    Write a double complex array of size nx*ny to file.
 */
 void writecmp(const dcomplex *p, long nx,long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(dcomplex), M_CMP, p, (uint64_t)nx, (uint64_t)ny);
+    do_write(fn, 1, sizeof(dcomplex), M_CMP, p, nx, ny);
 }
 /**
-   Write a 64 bit integer array of size nx*ny to file.
-*/
-void writeint64(const int64_t *p, long nx, long ny, const char *format,...){
+   Write a int array of size nx*ny to file.
+ */
+void writeint(const int *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(int64_t), M_INT64, p, (uint64_t)nx, (uint64_t)ny);
+    do_write(fn, 1, sizeof(int), M_INT32, p, nx, ny);
 }
 /**
-   Write a 32 bit integer array of size nx*ny to file.
-*/
-void writeint32(const int32_t *p, long nx, long ny, const char *format,...){
+   Write a long array of size nx*ny to file.
+ */
+void writelong(const long *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(int32_t), M_INT32, p, (uint64_t)nx, (uint64_t)ny);
+    do_write(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, p, nx, ny);
 }
-
+/**
+   Write spint array of size nx*ny to file. 
+ */
+void writespint(const spint *p, long nx, long ny, const char *format,...){
+    format2fn;
+    do_write(fn, 1, sizeof(spint), M_SPINT, p, nx, ny);
+}
+void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
+    uint32_t size=0;
+    switch(magic){
+    case M_INT64:
+	size=8;
+	break;
+    case M_INT32:
+	size=4;
+	break;
+    case M_DBL://saved by matlab.
+	size=-8;
+	break;
+    default:
+	error("This is not a valid sparse spint file. magic=%x\n", magic);
+    }
+    if(sizeof(spint)==size){//Matched int.
+	zfread(out, sizeof(spint), len, fp);
+    }else{
+	size=abs(size);
+	void *p=malloc(size*len);
+	zfread(p, size, len, fp);
+	switch(magic){
+	case M_INT64:{
+	    uint64_t *p2=p;
+	    for(unsigned long j=0; j<len; j++){
+		out[j]=(spint)p2[j];
+	    }
+	}
+	    break;
+	case M_INT32:{
+	    uint32_t *p2=p;
+	    for(unsigned long j=0; j<len; j++){
+		out[j]=(spint)p2[j];
+	    }
+	}
+	    break;
+	case M_DBL:{
+	    double *p2=p;
+	    for(unsigned long j=0; j<len; j++){
+		out[j]=(spint)p2[j];
+	    }
+	}
+	    break;
+	}
+    }
+}
+/**
+   Read spint array of size nx*ny from file. Optionally convert from other formats.
+ */
+spint *readspint(long* nx, long* ny, const char *format, ...){
+    format2fn;
+    file_t *fp=zfopen(fn, "rb");
+    uint32_t magic=read_magic(fp, NULL);
+    uint64_t nx2, ny2;
+    zfreadlarr(fp, 2, &nx2, &ny2);
+    spint *out=NULL;
+    if(nx!=0 && ny!=0){
+	*nx=(long)nx2;
+	*ny=(long)ny2;
+	out=malloc(nx2*ny2*sizeof(spint));
+	readspintdata(fp, magic, out, nx2*ny2);
+    }else{
+	*nx=0;
+	*ny=0;
+    }
+    return out;
+}
 /**
  * Unreference the mmaped memory. When the reference drops to zero, unmap it.
  */

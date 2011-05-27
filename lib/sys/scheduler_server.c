@@ -693,7 +693,7 @@ static int respond(int sock){
 	    setenv("XAUTHORITY",xauth,1);
 	    char *fifo=readstr(sock);
 	    int ans=scheduler_launch_drawdaemon(fifo);
-	    writeint(sock, ans);
+	    writeintsock(sock, ans);
 	}
 	break;
     case CMD_SHUTWR:

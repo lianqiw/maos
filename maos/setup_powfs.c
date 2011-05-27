@@ -1490,6 +1490,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
     if(powfs[ipowfs].intstat){
 	dcellfree(powfs[ipowfs].intstat->mtche);
 	dcellfree(powfs[ipowfs].intstat->sanea);
+	dcellfree(powfs[ipowfs].intstat->saneaxy);
 	dcellfree(powfs[ipowfs].intstat->saneaixy);
 	dfree(powfs[ipowfs].intstat->i0sum);
 	free(powfs[ipowfs].intstat);
@@ -1684,8 +1685,6 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
     dcellfree(intstat->i0);
     dcellfree(intstat->gx);
     dcellfree(intstat->gy);
-    dcellfree(intstat->saneara);
-    dcellfree(intstat->saneaxy);
     if(parms->powfs[ipowfs].neaphy){
 	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -1766,6 +1765,9 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	if(powfs[ipowfs].intstat){
 	    dcellfree(powfs[ipowfs].intstat->mtche);
 	    dcellfree(powfs[ipowfs].intstat->sanea);
+	    dcellfree(powfs[ipowfs].intstat->saneara);
+	    dcellfree(powfs[ipowfs].intstat->saneaxyl);
+	    dcellfree(powfs[ipowfs].intstat->saneaxy);
 	    dcellfree(powfs[ipowfs].intstat->saneaixy);
 	    dfree(powfs[ipowfs].intstat->i0sum);
 	    free(powfs[ipowfs].intstat);

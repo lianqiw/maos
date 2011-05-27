@@ -64,18 +64,20 @@ typedef struct MUV_T{
     int bgs;       /**<Whether use BGS (Block Gauss Seidel) method, and how many iterations*/
     int warm;      /**<Whether use warm restart*/
     int maxit;     /**<How many iterations*/
-    int nthread;   /**<Do the operations with nthread threads*/
 }MUV_T;
 
 void muv(dcell **xout, const void *A, const dcell *xin, const double alpha);
+void muv_t(dcell **xout, const void *A, const dcell *xin, const double alpha);
+void muv_sp(dcell **xout, const void *B, const spcell *xin, const double alpha);
 void muv_ib(dcell **xout, const void *A, const dcell *xin, const double alpha);
-void muv_direct_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin);
-void muv_direct_solve(dmat **xout, const MUV_T *A, const dmat *xin);
+void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin);
+void muv_direct_solve(dmat **xout, const MUV_T *A, dmat *xin);
 void muv_direct_prep(MUV_T *muv, double svd);
 void muv_direct_free(MUV_T *muv);
-void muv_direct_diag_solve(dmat **xout, const MUV_T *A, const dmat *xin, int ib);
+void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib);
 void muv_bgs_solve(dcell **px, const MUV_T *A, const dcell *b);
-void muv_solve(dcell **px, const MUV_T *A, const dcell *b);
+void muv_solve(dcell **px, const MUV_T *L, const MUV_T *R, dcell *b);
+void* muv_direct_spsolve(const MUV_T *A, const dsp *xin);
 void muv_direct_diag_prep(MUV_T *muv, double svd);
 void muv_direct_diag_free(MUV_T *muv);
 void muv_free(MUV_T *A);

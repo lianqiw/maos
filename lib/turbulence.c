@@ -174,7 +174,7 @@ static map_t** create_screen(GENSCREEN_T *data,
 		info2("Will not read since %s exists\n", fnlock);
 	    }else{
 		in=dcellread_mmap(fnshm);
-		if(in) info2("Rreading %s\n", fnshm);
+		if(in) info2("Reading %s\n", fnshm);
 	    }
 	    if(!in){
 		info("Creating %s\n", fnshm);

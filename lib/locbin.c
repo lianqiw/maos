@@ -56,10 +56,11 @@ loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
 	zfread(out->locx, sizeof(double), nx, fp);
 	out->locy=malloc(sizeof(double)*nx);
 	zfread(out->locy, sizeof(double), nx, fp);
-	if(isnan(dx)){//dx is not available.
+	if(fabs(dx)<EPS || isnan(dx)){//dx is not available.
 	    for(long i=0; i<out->nloc-1; i++){//we assume the rows are continuous.
 		if(out->locy[i+1]>out->locy[i]){
 		    dx=out->locy[i+1]-out->locy[i];
+		    info("Guessing: dx=%g\n", dx);
 		    break;
 		}
 	    }

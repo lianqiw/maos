@@ -56,6 +56,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.wt);
     free(parms->evl.ht);
     free(parms->evl.psf);
+    free(parms->evl.psfr);
     free(parms->evl.psfgridsize);
     free(parms->evl.psfsize);
     free(parms->evl.misreg);
@@ -133,6 +134,13 @@ void free_parms(PARMS_T *parms){
     free(parms->save.gradgeom);
     free(parms->fdlock);
     free(parms);
+}
+static inline int sum_intarr(int n, int *a){
+    int sum=0;
+    for(int i=0; i<n; i++){
+	sum+=(a[n]==0);
+    }
+    return sum;
 }
 
 #define MAX_STRLEN 80
@@ -532,6 +540,7 @@ static void readcfg_evl(PARMS_T *parms){
     }
     normalize(parms->evl.wt, parms->evl.nevl, 1);
     readcfg_intarr_nmax(&(parms->evl.psf), parms->evl.nevl, "evl.psf");
+    readcfg_intarr_nmax(&(parms->evl.psfr), parms->evl.nevl, "evl.psfr");
     parms->evl.nwvl = readcfg_dblarr(&(parms->evl.psfwvl), "evl.psfwvl");
     readcfg_intarr_nmax(&(parms->evl.psfgridsize), parms->evl.nwvl, "evl.psfgridsize");
     readcfg_intarr_nmax(&(parms->evl.psfsize), parms->evl.nwvl, "evl.psfsize");
@@ -640,6 +649,11 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.apdm[1]=0;
 	parms->sim.napdm=2;
     }
+    if(parms->sim.napngs==1){
+	parms->sim.apngs==realloc(parms->sim.apngs, sizeof(double)*2);
+	parms->sim.apngs[1]=0;
+	parms->sim.napngs=2;
+    }
     if(fabs(dblsum(parms->sim.apdm, parms->sim.napdm)-1)>1.e-10){
 	error("sum(sim.apdm)=%g. Should be 1.\n", 
 	      dblsum(parms->sim.apdm, parms->sim.napdm));
@@ -675,6 +689,8 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.evlol);
     READ_INT(sim.noatm);
     READ_INT(sim.fitonly);
+    READ_INT(sim.psfr);
+    READ_INT(sim.ecnn);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -728,6 +744,7 @@ static void readcfg_dbg(PARMS_T *parms){
 #endif
     READ_INT(dbg.tomo_hxw);
     READ_INT(dbg.parallel);
+    READ_INT(dbg.splitlrt);
 }
 /**
    Parse the Input of scalar or vector to vector of nwfs.
@@ -875,6 +892,26 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	}
 	parms->sim.end=parms->dbg.ntomo_maxit;
     }
+    if(parms->sim.psfr){
+	if(parms->sim.fitonly){
+	    error("Cannot do psf reconstruction telemetry and fitonly in the same time.\n");
+	}
+	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psfr);
+	if(fnd==0){
+	    error("sim.psfr is specified, but evl.psfr are all zero\n");
+	}else{
+	    info2("Output PSF reconstruction telemetry for %d directions\n", fnd);
+	}
+    }
+    if(parms->sim.fitonly){
+	if(parms->sim.recon!=0){
+	    error("fitonly only works in sim.recon=0 mode\n");
+	}
+	if(parms->tomo.split){
+	    warning("fitonly only works in integrated tomo mode\n");
+	    parms->tomo.split=0;
+	}
+    }
 }
 /**
    postproc various WFS parameters based on other input information
@@ -959,6 +996,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 			ipowfs,parms->powfs[ipowfs].dx, dx);
 	    }
 	    parms->powfs[ipowfs].dx=dx;
+	}
+	if(!parms->sim.closeloop && parms->powfs[ipowfs].dtrat!=1){
+	    warning("powfs %d: in open loop mode, only dtrat=1 is supported. Changed\n", ipowfs);
+	    parms->powfs[ipowfs].dtrat=1;
 	}
     }
     /*link wfs with powfs*/
@@ -1105,6 +1146,18 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     }
     if(parms->atm.evolve || !parms->atm.share){
 	disable_atm_shm=1;//do not share screen.
+    }
+    if(parms->dbg.atm==0){
+	if(parms->atm.fractal){
+	    parms->atm.fun=fractal_screen;
+	}else{
+	    parms->atm.fun=vonkarman_screen;
+	}
+    }else if(parms->dbg.atm==-1){
+	info2("Generating Biharmonic Atmospheric Screen...");
+	parms->atm.fun=biharmonic_screen;
+    }else{
+	parms->atm.fun=NULL;
     }
 }
 /**
@@ -1345,7 +1398,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    parms->powfs[ipowfs].skip=0;
 	}
-	if(parms->sim.mffocus){//focus tracking. already need psol grads
+	if(parms->sim.mffocus || parms->save.ngcov>0 
+	   || (parms->cn2.pair&&!parms->powfs[ipowfs].lo)){
+	    //focus tracking or cn2 estimation, or save gradient covariance. 
 	    parms->powfs[ipowfs].psol=1;
 	}else{//no focus tracking
 	    if(parms->sim.recon==0){//MVST
@@ -1358,6 +1413,20 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    }else{
 		parms->powfs[ipowfs].psol=0;
 	    }
+	}
+    }
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(parms->dm[idm].hist){
+	    parms->sim.dmttcast=1;
+	}
+	if(!isinf(parms->dm[idm].stroke)){
+	    parms->sim.dmclip=1;
+	}
+    }
+    if(parms->save.dmpttr || parms->sim.dmclip || parms->sim.dmttcast){
+	parms->sim.dmttcast=1;
+	if(!parms->sim.fuseint){
+	    error("Sorry, clipping only works in fuseint=1 mode\n");
 	}
     }
 }
@@ -1486,6 +1555,14 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     if(NCPU==1 || parms->sim.closeloop==0 || parms->evl.tomo || parms->sim.nthread==1){
 	//disable parallelizing the big loop.
 	parms->dbg.parallel=0;
+    }
+    if(parms->evl.psfmean || parms->evl.psfhist){
+	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psf);
+	if(fnd==0){
+	    error("Required to output PSF, but evl.psf are all zero\n");
+	}else{
+	    info2("Output PSF for %d directions\n", fnd);
+	}
     }
 }
 
@@ -1807,9 +1884,6 @@ static void check_parms(const PARMS_T *parms){
     }
     if(parms->fit.alg<0 || parms->fit.alg>2){
 	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
-    }
-    if(parms->sim.fitonly && parms->sim.recon!=0){
-	error("fitonly only works in sim.recon=0 mode\n");
     }
 }
 /**

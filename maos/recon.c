@@ -24,43 +24,53 @@
 #include "recon_utils.h"
 #include "ahst.h"
 #include "moao.h"
-
+#include "cn2est.h"
+#include "save.h"
 /**
-   \file recon.c
-   Wavefront reconstruction and DM fitting routines
-*/
+   \file recon.c Wavefront reconstruction and DM fitting routines. 
+
+   Since these are related to reconstruction, we don't have access to dmreal,
+   which is the *actual* location of DM actuators, and only available in
+   simulation. dmint should be used for dm actuator commands.*/
 
 /**
    Calls tomo() and fit() to do the tomography and DM fit. Do error signal and
-   split tomography.  */
+   split tomography.  
+   In closedloop mode, the gradients are from time step isim-1.
+*/
 void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
-    if(!parms->sim.closeloop || parms->sim.fitonly || simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0){
+    int isim=simu->reconisim;
+    int high_output=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
+  
+    dcell *dmpsol[2];//Hi and Lo
+    if(parms->sim.fuseint){
+	dmpsol[0]=dmpsol[1]=simu->dmint[parms->dbg.psol?0:1];
+    }else{
+	dmpsol[0]=simu->dmint_hi[parms->dbg.psol?0:1];
+	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];
+    }
+    if(high_output){
 	if(parms->sim.fitonly){
 	    dcellfree(simu->opdr);
 	    //simu->opdr=atm2xloc(simu);
 	}else{
 	    int maxit=parms->tomo.maxit;
 	    if(parms->dbg.ntomo_maxit){
-		if(simu->isim<parms->dbg.ntomo_maxit){
-		    maxit=parms->dbg.tomo_maxit[simu->isim];
+		if(isim<parms->dbg.ntomo_maxit){
+		    maxit=parms->dbg.tomo_maxit[isim];
 		    recon->RL.maxit=maxit;//update maxit information
 		    info2("Running tomo.maxit=%d\n",maxit);
 		}else{
 		    error("Out of range\n");
 		}
 	    }
-	    dcell *rhs=NULL;
-	    muv(&rhs, &recon->RR, simu->gradlastol, 1);
-	    muv_solve(&simu->opdr, &recon->RL, rhs);
-	    dcellfree(rhs);
+	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
 	}
 	if(parms->tomo.windest){
 	    info2("Estimating wind direction and speed using FFT method\n");
-	    windest(simu);
-	    //Update wind, and interpolation matrix.
+	    windest(simu); //Update wind, and interpolation matrix.
 	}
 	if(parms->tomo.windshift){
 	    int factor=parms->tomo.windshift;
@@ -84,39 +94,16 @@ void tomofit(SIM_T *simu){
 	    }
 	}
 	if(parms->ndm>0){//Do DM fitting
-	    dcell *rhs=NULL;
-	    muv(&rhs, &recon->FR, simu->opdr, 1);
-	    muv_solve(&simu->dmfit_hi, &recon->FL, rhs);
-	    dcellfree(rhs);
+	    muv_solve(&simu->dmfit_hi, &recon->FL, &recon->FR, simu->opdr);
 	}
 
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
     
 	/*
-	  Forming LGS error signal.
-	  2010-01-07: changed dmreal_hi to dmreal to comply with
-	  the block diagram. This is before NGS mode removal
-	  keep dmfit for warm restart. 
+	  Form error signal. Make sure what is subtracted here is what is added
+	  to gradcl to form gramol.
 	*/
- 
-	if(parms->sim.fuseint){
-	    if(parms->dbg.psol){
-		warning("Using dm for next step to form err signal\n");
-		dcelladd(&simu->dmerr_hi, 1., simu->dmint[0], -1);
-	    }else{
-		dcelladd(&simu->dmerr_hi, 1., simu->dmint[1], -1);
-	    }
-	}else{
-	    /**
-	       2010-07-23: Moved remove_dm_ngsmod to after forming error signal. 
-	    */
-	    if(parms->dbg.psol){
-		warning("Using dm for next step to form err signal\n");
-		dcelladd(&simu->dmerr_hi, 1., simu->dmint_hi[0], -1);
-	    }else{
-		dcelladd(&simu->dmerr_hi, 1., simu->dmint_hi[1], -1);
-	    }
-	}
+	dcelladd(&simu->dmerr_hi, 1, dmpsol[0], -1);
 
 	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
@@ -125,15 +112,15 @@ void tomofit(SIM_T *simu){
 	    remove_dm_tt(simu, simu->dmerr_hi);
 	}
 
-    }//if high order WFS has output
-
+    }else{//if high order WFS has output
+	dcellfree(simu->dmerr_hi);
+    }
     if(!parms->sim.fitonly && parms->tomo.split){
 	if(parms->tomo.split==2){
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
 	//Low order has output
-	//2010-12-16: replaces isim+1 by isim.
-	if(!parms->sim.closeloop || simu->dtrat_lo==1 || (simu->isim)%simu->dtrat_lo==0){
+	if(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0){
 	    dcellzero(simu->Merr_lo);
 	    switch(parms->tomo.split){
 	    case 1:{
@@ -146,23 +133,22 @@ void tomofit(SIM_T *simu){
 	    case 2:{
 		dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
 		dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
-		if(parms->sim.fuseint){
-		    dcelladd(&simu->Merr_lo, 1., simu->dmint[1], -1);
-		    error("This mode is not finished\n");
-		}else{//form error signal
-		    dcelladd(&simu->Merr_lo, 1., simu->Mint_lo[1], -1);
-		}
-		dcellzero(simu->opdrmvst);
+		dcelladd(&simu->Merr_lo, 1., dmpsol[1], -1);
+		dcellzero(simu->opdrmvst);//reset accumulation.
 	    }
 		break;
 	    default:
 		error("Invalid parms->tomo.split: %d",parms->tomo.split);
 	    }
+	    if(parms->sim.psfr)
+		dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
 	}else{
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
     }
-   
+    if(high_output && parms->sim.psfr && isim>=parms->evl.psfisim && dmpsol[0]){
+	psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
+    }
 }
 /**
    least square reconstructor
@@ -170,10 +156,9 @@ void tomofit(SIM_T *simu){
 void lsr(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    const int do_hi=(!parms->sim.closeloop || parms->sim.fitonly || 
-		     simu->dtrat_hi==1 || (simu->isim)%simu->dtrat_hi==0);
-    const int do_low=parms->tomo.split && (!parms->sim.closeloop || simu->dtrat_lo==1
-					   || (simu->isim)%simu->dtrat_lo==0);
+    const int isim=simu->reconisim;
+    const int do_hi=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
+    const int do_low=parms->tomo.split && (!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
     dcell *graduse=NULL;
     if(do_hi || do_low){
 	if(parms->sim.recon==2){//GLAO
@@ -189,29 +174,61 @@ void lsr(SIM_T *simu){
 	    graduse=simu->gradlastcl;
 	}
     }
-    //2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
+    if(parms->sim.psfr) error("Not implemented yet\n");
     if(do_hi){
-	dcell *rhs=NULL;
-	muv(&rhs, &(recon->LR), graduse, 1);
-	muv_solve(&simu->dmerr_hi,&(recon->LL), rhs);
-	dcellfree(rhs);
+	muv_solve(&simu->dmerr_hi,&(recon->LL), &(recon->LR), graduse);
 	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
-    }//if high order has output
+    }else{//if high order has output
+	dcellfree(simu->dmerr_hi);
+    }
     if(parms->tomo.split){
 	//Low order has output
-	//2010-12-16: replaced isim+1 by isim since recon is delayed from wfsgrad by 1 frame.
 	if(do_low){
 	    dcellzero(simu->Merr_lo);
 	    NGSMOD_T *ngsmod=recon->ngsmod;
 	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,graduse,"nn",1);
+	    if(parms->sim.psfr)
+		dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
 	}else{
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
     } 
+    if(do_hi && parms->sim.psfr && isim>=parms->evl.psfisim){
+	psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);	
+    }
     if(graduse != simu->gradlastcl){
 	dcellfree(graduse);
+    }
+}
+/**
+   Compute pseudo open loop gradients for WFS that need. Only in close loop. In
+   open loop, gradlastol is simply a reference to gradlastcl. Must add the full
+   DM command to both LGS and NGS WFS grads in MV Inte or MVST mode. For dtrat>1
+   cases, we copy over cl to ol in a end of multi-step integration, and add to
+   the accumulated DM commands scaled by 1/dtrat. Tested works
+ */
+static void calc_gradol(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const POWFS_T *powfs=simu->powfs;
+    RECON_T *recon=simu->recon;
+  
+    dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
+    PSPCELL(recon->GA, GA);
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(!parms->powfs[ipowfs].psol) continue;
+	dcelladd(&simu->dmpsol[ipowfs], 1, dmpsol, 1./parms->powfs[ipowfs].dtrat);  
+	if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){//Has output.
+	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
+		for(int idm=0; idm<parms->ndm && simu->dmpsol[ipowfs]; idm++){
+		    spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], simu->dmpsol[ipowfs]->p[idm], 1);
+		}
+	    }
+	    dcellzero(simu->dmpsol[ipowfs]);//reset accumulation.
+	}
     }
 }
 /**
@@ -220,10 +237,20 @@ void lsr(SIM_T *simu){
 void reconstruct(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol) return;
-    const RECON_T *recon=simu->recon;
+    RECON_T *recon=simu->recon;
     double tk_start=myclockd();
-    if(simu->gradlastol || simu->gradlastcl){
-	switch(parms->sim.recon){//mv
+    if(simu->gradlastcl){
+	if(parms->sim.closeloop){
+	    calc_gradol(simu);
+	}else if(!simu->gradlastol){
+	    simu->gradlastol=dcellref(simu->gradlastcl);
+	}
+	save_gradol(simu);
+	if(parms->cn2.pair){
+	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
+	}//if cn2est
+
+	switch(parms->sim.recon){
 	case 0:
 	    tomofit(simu);//tomography and fitting.
 	    break;
@@ -239,81 +266,6 @@ void reconstruct(SIM_T *simu){
 	    focus_tracking(simu);
 	}
     }
-    if(parms->plot.run){
-	if(parms->sim.recon==0){
-	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
-		drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, NULL,
-			"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
-	    }
-	    for(int i=0; simu->dmfit_hi && i<simu->dmfit_hi->nx; i++){
-		drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,NULL,
-			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
-	    }
-	}
-	for(int idm=0; simu->dmerr_hi && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
-		    "DM Error Signal (Hi)","x (m)","y (m)",
-		    "Err Hi %d",idm);
-	}
-    }
-    if(parms->plot.run && simu->Merr_lo){
-	dcell *dmlo=NULL;
-	switch(simu->parms->tomo.split){
-	case 1:
-	    ngsmod2dm(&dmlo, recon, simu->Merr_lo, 1);
-	    break;
-	case 2:
-	    dcellmm(&dmlo, simu->recon->MVModes, simu->Merr_lo, "nn", 1);
-	    break;
-	}
-	for(int idm=0; dmlo && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,NULL,
-		    "DM Error Signal (Lo)","x (m)","y (m)",
-		    "Err Lo %d",idm);
-	}
-	dcellfree(dmlo);
-    }
-    if(parms->sim.recon==0){
-	if(parms->save.opdr){
-	    cellarr_dcell(simu->save->opdr, simu->opdr);
-	}
-	if(parms->save.dm){
-	    cellarr_dcell(simu->save->dmfit_hi, simu->dmfit_hi);
-	}
-	if(parms->save.opdx || parms->plot.opdx){
-	    dcell *opdx;
-	    if(parms->sim.fitonly){
-		opdx=simu->opdr;
-	    }else{
-		opdx=atm2xloc(simu);
-	    }
-	    if(parms->save.opdx){
-		cellarr_dcell(simu->save->opdx, opdx);
-	    }
-	    if(parms->plot.opdx){ //draw opdx
-		for(int i=0; i<opdx->nx; i++){
-		    drawopd("Recon", recon->xloc[i], opdx->p[i]->p, NULL,
-			    "Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
-		}
-	    }
-	    if(!parms->sim.fitonly){
-		dcellfree(opdx);
-	    }
-	}
-    }
-    if(parms->save.dm){
-	cellarr_dcell(simu->save->dmerr_hi, simu->dmerr_hi);
-	if(parms->sim.fuseint){
-	    cellarr_dcell(simu->save->dmint, simu->dmint[0]);
-	}else{
-	    cellarr_dcell(simu->save->dmint_hi, simu->dmint_hi[0]);
-	}
-	if(simu->save->Merr_lo){
-	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
-	}
-	if(simu->Mint_lo){
-	    cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo[0]);
-	}
-    }
+    save_recon(simu);
     simu->tk_recon=myclockd()-tk_start;
 }

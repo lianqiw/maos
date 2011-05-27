@@ -38,6 +38,11 @@
 #define M_SPT64 M_SP64
 #define M_SPT32 M_SP32
 #endif
+#ifdef DLONG
+#define M_SPT M_SPT64
+#else
+#define M_SPT M_SPT32
+#endif
 /**
    Function to write sparse matrix data into file pointed using a file
    pointer. Generally used by library developer.  We do not convert data during
@@ -45,16 +50,10 @@
 
  */
 void Y(spwritedata)(file_t *fp, const X(sp) *sp){
-    uint32_t magic;
-    if(sizeof(spint)==4)
-	magic=M_SPT32;
-    else if(sizeof(spint)==8)
-	magic=M_SPT64;
-    else
-	error("Invalid");
+    uint32_t magic=M_SPT;
     Y(spsort)((X(sp)*)sp);//sort the matrix to have the right order
     zfwrite(&magic, sizeof(uint32_t),1,fp);
-    if(sp){
+    if(sp && sp->nzmax){
 	uint64_t m,n,nzmax;
 	m=sp->m;
 	n=sp->n;
@@ -76,55 +75,28 @@ X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic){
     if(!magic){
 	magic=read_magic(fp, NULL);
     }
-    uint32_t size=0;
-    if(magic==M_SPT64){
-	size=8;
-    }else if(magic==M_SPT32){
-	size=4;
-    }else{
-	error("This is not a valid sparse matrix file\n");
-    }
     uint64_t m,n,nzmax;
     zfreadlarr(fp, 2, &m, &n);
-    X(sp) *out;
-    if(m==0 || n==0){
-	out=NULL;
-    }else{
-	zfread(&nzmax,sizeof(uint64_t),1,fp);
-	out=Y(spnew)(m,n,nzmax);
-	if(sizeof(spint)==size){//data match.
-	    zfread(out->p, sizeof(spint), n+1, fp);
-	    zfread(out->i, sizeof(spint), nzmax, fp);
-	}else if(size==8){//convert uint64_t to uint32_t
-	    assert(sizeof(spint)==4);
-	    uint64_t *p=malloc(sizeof(uint64_t)*(n+1));
-	    uint64_t *i=malloc(sizeof(uint64_t)*nzmax);
-	    zfread(p, sizeof(uint64_t), n+1, fp);
-	    zfread(i, sizeof(uint64_t), nzmax, fp);
-	    for(unsigned long j=0; j<n+1; j++){
-		out->p[j]=(spint)p[j];
-	    }
-	    for(unsigned long j=0; j<nzmax; j++){
-		out->i[j]=(spint)i[j];
-	    }
-	    free(p);
-	    free(i);
-	}else if(size==4){//convert uint32_t to uint64_t
-	    assert(sizeof(spint)==8);
-	    uint32_t *p=malloc(sizeof(uint32_t)*(n+1));
-	    uint32_t *i=malloc(sizeof(uint32_t)*nzmax);
-	    zfread(p, sizeof(uint32_t), n+1, fp);
-	    zfread(i, sizeof(uint32_t), nzmax, fp);
-	    for(unsigned long j=0; j<n+1; j++){
-		out->p[j]=(spint)p[j];
-	    }
-	    for(unsigned long j=0; j<nzmax; j++){
-		out->i[j]=(spint)i[j];
-	    }
-	    free(p);
-	    free(i);
+    X(sp) *out=NULL;
+    if(m!=0 && n!=0){
+	uint32_t magic2=0;
+	switch(magic){
+	case M_SPT64:
+	    magic2=M_INT64;
+	    break;
+	case M_SPT32:
+	    magic2=M_INT32;
+	    break;
+	default:
+	    error("This is not a valid sparse matrix file. magic=%x\n", magic);
 	}
-	zfread(out->x, sizeof(T),nzmax, fp);
+	zfread(&nzmax,sizeof(uint64_t),1,fp);
+	if(nzmax!=0){
+	    out=Y(spnew)(m,n,nzmax);
+	    readspintdata(fp, magic2, out->p, n+1);
+	    readspintdata(fp, magic2, out->i, nzmax);
+	    zfread(out->x, sizeof(T), nzmax, fp);
+	}
     }
     return out;
 }

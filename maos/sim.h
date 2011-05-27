@@ -27,7 +27,7 @@ void calc_cachedm(SIM_T *simu);
 void filter_cl(SIM_T *simu);
 void filter_ol(SIM_T *simu);
 void filter(SIM_T *simu);
-void hysterisis(HYST_T **hyst, dcell *dmreal);
+void hysterisis(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd);
 void wfsints(thread_t *thread_data);
 void wfsgrad_iwfs(thread_t *info);
 void addlow2dm(dcell **dmval, const SIM_T *simu, 

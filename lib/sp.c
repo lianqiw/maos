@@ -270,8 +270,11 @@ void Y(spdisp)(const X(sp) *sp){
     }
 }
 /**
- * Check a X(sp) array for wrong orders*/
-void Y(spcheck)(const X(sp) *sp){
+ * Check a X(sp) array for wrong orders. Return 1 if is lower triangle, 2 if
+ * upper triangle, and 3 if diagonal.*/
+int Y(spcheck)(const X(sp) *sp){
+    int not_lower=0;
+    int not_upper=0;
     if(sp){
 	long ic,ir;
 	long imax;
@@ -286,6 +289,8 @@ void Y(spcheck)(const X(sp) *sp){
 		}else{
 		    warning("Wrong order at column %ld",ic);
 		}
+		if(sp->i[ir]<ic) not_lower=1;
+		if(sp->i[ir]>ic) not_upper=1;
 	    }
 	    if(imax>=sp->m){
 		error("imax=%ld exceeds column size at column %ld\n",imax,ic);
@@ -295,6 +300,7 @@ void Y(spcheck)(const X(sp) *sp){
 	    warning("real nzmax is %ld, allocated is %ld\n",(long)sp->p[sp->n],sp->nzmax);
 	}
     }
+    return (not_lower?0:1) | (not_upper?0:2);
 }
 /**
  * inplace scale X(sp) matrix elements.*/
@@ -1135,34 +1141,51 @@ X(sp) *Y(spcell2sp)(const Y(spcell) *A){
     }
     PSPCELL(A,Ap);
     long nx=0,ny=0,nzmax=0;
+    long nnx[A->nx];
+    long nny[A->ny];
     for(long ix=0; ix<A->nx; ix++){
-	nx+=Ap[0][ix]->m;
+	for(long iy=0; iy<A->ny; iy++){
+	    if(Ap[iy][ix]) {
+		nnx[ix]=Ap[iy][ix]->m;
+		nx+=Ap[iy][ix]->m;
+		break;
+	    }
+	}
     }
     for(long iy=0; iy<A->ny; iy++){
-	ny+=Ap[iy][0]->n;
+	for(long ix=0; ix<A->nx; ix++){
+	    if(Ap[iy][ix]) {
+		nny[iy]=Ap[iy][ix]->n;;
+		ny+=Ap[iy][ix]->n;
+		break;
+	    }
+	}
     }
     for(long i=0; i<A->nx*A->ny; i++){
-	nzmax+=A->p[i]->p[A->p[i]->n];
-	//nzmax+=A->p[i]->nzmax;
+	if(A->p[i]){
+	    nzmax+=A->p[i]->p[A->p[i]->n];
+	}
     }
     X(sp) *out=Y(spnew)(nx,ny,nzmax);
     long count=0;
     long jcol=0;
     for(long iy=0; iy<A->ny; iy++){
-	for(long icol=0; icol<Ap[iy][0]->n; icol++){
+	for(long icol=0; icol<nny[iy]; icol++){
 	    out->p[jcol+icol]=count;
 	    long kr=0;
 	    for(long ix=0; ix<A->nx; ix++){
-		for(long ir=Ap[iy][ix]->p[icol]; 
-		    ir<Ap[iy][ix]->p[icol+1]; ir++){
-		    out->x[count]=Ap[iy][ix]->x[ir];
-		    out->i[count]=Ap[iy][ix]->i[ir]+kr;
-		    count++;
+		if(Ap[iy][ix]){
+		    for(long ir=Ap[iy][ix]->p[icol]; 
+			ir<Ap[iy][ix]->p[icol+1]; ir++){
+			out->x[count]=Ap[iy][ix]->x[ir];
+			out->i[count]=Ap[iy][ix]->i[ir]+kr;
+			count++;
+		    }
 		}
-		kr+=Ap[iy][ix]->m;
+		kr+=nnx[ix];
 	    }
 	}
-	jcol+=Ap[iy][0]->n;
+	jcol+=nny[iy];
     }
     out->p[ny]=count;
     if(count>nzmax){

@@ -35,8 +35,21 @@
 #include <string.h>
 #include <alloca.h>
 #include <time.h>
+
 typedef double __complex__ dcomplex;
 typedef double ddouble;/*just for saving.*/
+#if defined(DLONG) && !defined(X86_64)
+#undef DLONG
+#endif
+
+#if defined(DLONG)
+typedef long spint; //Only optionally activated in AMD64.
+#define M_SPINT M_INT64
+#else
+typedef int spint;  //This is always 32 bit.
+#define M_SPINT M_INT32
+#endif
+
 #ifndef __CYGWIN__
 #include <complex.h>
 #else

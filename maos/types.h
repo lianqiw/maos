@@ -90,10 +90,12 @@ typedef struct INTSTAT_T{
     dcell *gy;          /**<gradient of i0 along y*/
     dmat *i0sum;        /**<sum of i0*/
     dcell *mtche;       /**<mtched filter opeator too apply to gradients*/
+    dcell *saneara;     /**<computed sanea along ra (rad^2) (only for radian coord ccd)*/
+    dcell *sanea;       /**<SANEA of matched filter output discarding
+			   coupling. ra or xy (rad^2). Just for saving.*/
     dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
     dcell *saneaixy;    /**<computed sanea inverse along xy (rad^-2)*/
-    dcell *saneara;     /**<computed sanea along ra (rad^2) for radian coord ccd*/
-    dcell *sanea;       /**<SANEA of matched filter output. ra or xy (rad^2).*/
+    dcell *saneaxyl;    /**<decomposition of saneaxy: L*L'=saneaxy.*/
     int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
     int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/
@@ -284,6 +286,7 @@ typedef struct RECON_T{
     dcell *GXL;        /**<dense GX for low order WFS in MV split tomography.*/
     dcell *MVRngs;     /**<NGS recon for MV split tomography*/
     dcell *MVModes;    /**<MVST Modes (svd'ed)*/
+    dcell *MVGM;       /**<NGS WFS gradient operator from MVST Modes.*/
     spcell *GA;        /**<actuator to wfs grad.*/
     spcell *GAlo;      /**<GA of low order WFS.*/
     spcell *GAhi;      /**<GA of high order WFS.*/
@@ -298,8 +301,11 @@ typedef struct RECON_T{
     dcell *NW;         /**<null modes for DM fit.*/
     spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
+    spcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
+    spcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/
     spcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
-    spcell *saneaip;   /**<saneai for each powfs (sim.recon==2)*/
+    spcell *saneaip;   /**<averaged saneai for each powfs (sim.recon==2)*/
+    dcell *ecnn;       /**<covairance of Hx*(E*Cnn*E^t)*Hx^t: noise propagation to science.*/
     dmat *neam;        /**<subaperture averaged nea for each wfs*/
     double neamhi;     /**<average of neam for high order wfs.*/
     MUV_T RR;          /**<tomography right hand side matrix, solve RL*x=RR*y*/
@@ -347,14 +353,12 @@ typedef struct SIM_SAVE_T{
 
     //Deformable mirror.
     cellarr *dmerr_hi;
-    cellarr *dmint_hi;
     cellarr *dmfit_hi;
-    cellarr *dmint;
     cellarr *dmpttr;
     cellarr *dmreal;
+    cellarr *dmcmd;
     //Low order modes
     cellarr *Merr_lo;
-    cellarr *Mint_lo;
     cellarr *opdr;
     cellarr *opdx;
     //science
@@ -403,59 +407,52 @@ typedef struct{
    contains all the run time data struct.
 */
 typedef struct SIM_T{
-    map_t **(*atmfun)(GENSCREEN_T*);
+    /*A few data structs generated in beginning of simulation*/
+    /* random stream. We maintain separate random streams for each purpose,
+       derived from the same seed, so that multi-threading will produce same
+       result */
+    rand_t *wfs_rand;  /**<random stream for each wfs.*/
+    rand_t *atm_rand;  /**<random stream for atmosphere turbulence generation*/
+    rand_t *atmwd_rand;/**<random stream for wind direction*/
+    rand_t *telws_rand;/**<random stream for wind shake*/
+    rand_t *init;      /**<random stream to initialize other streams*/
+
+    /*Atmosphere*/
     GENSCREEN_T *genscreen;
     map_t **atm;       /**<fine sampled simulation turbulence screens*/
     map_t **atm2;      /**<another fine sampled simulation turbulence screen for evolving.*/
-    map_t ***cachedm;   /**<grid cache dm actuator to a finer sampled screen. for
+    map_t ***cachedm;  /**<grid cache dm actuator to a finer sampled screen. for
 			  fast ray tracing to WFS and aper*/
     int (*pcachedm)[2];/**<information about cachedm struct.*/
-    PROPDATA_T *cachedm_propdata; /**<wrapped data for ray tracing from aloc to cachedm*/
-    thread_t **cachedm_prop; /**<wrapped cachedm_propdata for threading*/
     dmat *winddir;     /**<input wind direction*/
+    
+    /*Optional surface errors in M1, M2, or M3*/
+    rectmap_t **tsurf; /**<input tilted M3 surface read from parms->tsurf*/
+    map_t **surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
     dcell *surfwfs;    /**<additional OPD surface for each WFS.*/
     dcell *surfevl;    /**<additional OPD surface for each evaluation field*/
     dcell *surfopdx;   /**<additional OPD surface projected onto xloc for fitonly*/
-    rectmap_t **tsurf; /**<input tilted M3 surface*/
-    map_t **surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
+
+    /*Telescope windshake time series and direction.*/
     dmat  *telws;      /**<Telescope wind shake time series, along ground layer wind direction*/
     double telwsx;     /**<cos(ws_theta)*/
     double telwsy;     /**<sin(ws_theta)*/
-    /*The following has a cell for each. wfs*/
-    dcell *gradcl;     /**<cl grad output at step isim.*/
-    dcell *gradol;     /**<WFS pseudo open loop grad output*/
-    dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
-    dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
-    dcell *gradlastol;/**<psol grad from last time step, for reconstructor*/
 
-    dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
-    dcell *opdrmvst;   /**<average of opdr for MVST*/
-    dcell *opdevl;     /**<evaluation opd for selected directions.*/
-    dmat  *opdevlground;/**<evaluation opd for ground layer turbulence to save ray tracing.*/
-    
-    ccell *opdrhat;    /**<For wind estimation (testing)*/
-    ccell *opdrhatlast;/**<for wind estimation.(testing)*/
-    dmat *windest;     /**<estimated wind velocity.(testing)*/
-    spcell *windshift; /**<operator to do wind shift on opdr*/
-
-    dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
+    /*WFS data for each time step. Each has a cell for each wfs*/
     dcell **ints;      /**<WFS subaperture images.*/
     ccell **wfspsfout; /**<output WFS PSF history.*/
-
+    dcell *wfspsfmean; /**<To save time average of wfs psf of the full aperture. (for PSF recon)*/
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
+    dcell *gradcl;     /**<cl grad output at step isim.*/
     dcell *sanea_sim;  /**<accumulate effective sanea during simulation.*/
+    dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
+    dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
+    dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
 
-    /*save results to file using mmap*/
-    dcell *clep;       /**<CL error per direction.*/
-    dcell *clmp;       /**<CL mode coefficient per direction.*/
-    dcell *cleptomo;   /**<CL error for tomography compensation perdirection.*/
-    dcell *clmptomo;   /**<CL mode coefficient for tomography compensation.*/
-    dcell *olep;       /**<OL error per direction.*/
-    dcell *olmp;       /**<OL mode coefficient per direction.*/
-    dmat *ole;         /**<field averaged OL error*/
-    dmat *cle;         /**<field averaged CL error*/
-    dmat *cletomo;     /**<field averaged tomography error*/
-    
+    /*Tomography*/
+    dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
+    dcell *opdrmvst;   /**<average of opdr for MVST*/
+
     /*Only on split tomography*/
     dmat *clem;        /**<lgs/ngs mod error in split tomography*/
     dcell *clemp;      /**<lgs/ngs mod error per direction. only on-axis is computed.*/
@@ -466,9 +463,15 @@ typedef struct SIM_T{
     dmat *gtypeII_lo;  /**<gain for type II array.*/
 
     /*DM commands.*/
-    dcell *dmreal;     /**<real dm command*/
+    dcell *dmcmd;      /**<This is the final command send to DM.*/
+    dcell *dmcmdlast;  /**<The final command for last time step.*/
+    dcell *dmreal;     /**<This is the actual position of DM actuators after
+			  receiving command dmcmd. Should only be used in
+			  system, not in reconstruction since it is unknown.*/
+    dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
     dcell **dmint;     /**<dm integrator. (used of fuseint==1)*/
+    HYST_T**hyst;      /**<Hysterisis computation stat*/
 
     /*High order*/
     dcell *dmfit_hi;   /**<direct high order fit output*/
@@ -477,6 +480,7 @@ typedef struct SIM_T{
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
+    dcell *Merr_lo_keep;/**<Keep Merr_lo for PSF recon.*/
     dcell **Mint_lo;   /**<NGS integrator (only used if fuseint==0)*/
     TYPEII_T *MtypeII_lo;  /**<intermediate results for type II/lead filter*/  
     
@@ -488,57 +492,68 @@ typedef struct SIM_T{
     dcell *upterrs;    /**<mmaped file to store upterr history*/
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
+    /*focus tracking loop*/
     dcell *focuslpf;   /**<focus tracking low pass filter*/
     dcell *focusint;   /**<focus tracking integrator*/
-    
-    dcell* evlpsfmean;    /**<science field psf time average*/
-    dcell* evlpsfolmean;  /**<science field OL PSF time averging*/
-    dcell* evlpsftomomean;/**<science field psf time average with direct correction from tomography*/
-    dcell* wfspsfmean;    /**<To save time average of wfs psf of the full aperture. (for PSF recon)*/
-    /* We maintain separate random streams for each purpose, derived from the
-       same seed, so that multi-threading will produce same result */
-    rand_t *wfs_rand;  /**<random stream for each wfs.*/
-    rand_t *atm_rand;  /**<random stream for atmosphere turbulence generation*/
-    rand_t *atmwd_rand;/**<random stream for wind direction*/
-    rand_t *telws_rand;/**<random stream for wind shake*/
-    rand_t *init;      /**<random stream to initialize other streams*/
-    STATUS_T *status;  /**<status report to scheduler.*/
 
+    /*science evaluation*/
+    dcell *opdevl;        /**<evaluation opd for selected directions.*/
+    dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
+    dcell *evlpsfmean;    /**<science field psf time average*/
+    dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
+    dcell *evlpsftomomean;/**<science field psf time average with direct correction from tomography*/
+
+    /*Optinal telemetry saving for PSF reconstruction.*/
+    dcell *ecov;       /**<covariance of Hx*x-Ha*a for science directions.*/
+    dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
+    /*save performance results to file using mmap*/
+    dcell *clep;       /**<CL error per direction.*/
+    dcell *clmp;       /**<CL mode coefficient per direction.*/
+    dcell *cleptomo;   /**<CL error for tomography compensation perdirection.*/
+    dcell *clmptomo;   /**<CL mode coefficient for tomography compensation.*/
+    dcell *olep;       /**<OL error per direction.*/
+    dcell *olmp;       /**<OL mode coefficient per direction.*/
+    dmat *ole;         /**<field averaged OL error*/
+    dmat *cle;         /**<field averaged CL error*/
+    dmat *cletomo;     /**<field averaged tomography error*/
+
+    /*MOAO*/
     dcell *moao_wfs;   /**<moao DM command computed for wfs*/
     dcell *moao_evl;   /**<moao DM command computed for science field*/
-    dcell *moao_r_wfs; /**<moao DM command to be applied for wfs*/
-    dcell *moao_r_evl; /**<moao DM command to be applied for evl*/
 
     double tk_eval;    /**<time spent in perfevl in this step*/
     double tk_recon;   /**<time spent in reconstruct in this step*/
     double tk_cache;   /**<time spent in cachedm in this step*/
     double tk_wfs;     /**<time spent in wfsgrad in this step*/
-    dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
-    locstat_t *ploc_stat; /**<statistics of columns in ploc*/
 
-    PROPDATA_T *wfs_propdata_dm;/**<wrap of data for ray tracing from DM in wfsgrad.c*/
-    PROPDATA_T *wfs_propdata_atm;/**<wrap of data for ray tracing from ATM in wfsgrad.c*/
+    /*A few data wraps for multi-threading*/
+    PROPDATA_T *cachedm_propdata; /**<wrapped data for ray tracing from aloc to cachedm*/
+    PROPDATA_T *wfs_propdata_dm;  /**<wrap of data for ray tracing from DM in wfsgrad.c*/
+    PROPDATA_T *wfs_propdata_atm; /**<wrap of data for ray tracing from ATM in wfsgrad.c*/
     PROPDATA_T *evl_propdata_atm;
     PROPDATA_T *evl_propdata_dm;
-
-    thread_t  **wfs_prop_dm;  /**<wrap of wfs_propdata_dm for threaded ray tracing*/
+    thread_t **cachedm_prop;   /**<wrapped cachedm_propdata for threading*/
+    thread_t  **wfs_prop_dm;   /**<wrap of wfs_propdata_dm for threaded ray tracing*/
     thread_t  **wfs_prop_atm;  /**<wrap of wfs_propdata_atm for threaded ray tracing*/
     thread_t  **evl_prop_atm;
     thread_t  **evl_prop_dm;
 
     WFSINTS_T *wfs_intsdata;  /**<wrap of data for wfsints.c*/
-    thread_t  **wfs_ints;       /**<wrap of wfs_intsdata for threaded processing*/
+    thread_t  **wfs_ints;     /**<wrap of wfs_intsdata for threaded processing*/
 
     thread_t  *wfs_grad; /**to call wfsgrad_iwfs in threads.*/
     thread_t  *perf_evl; /**to call perfevl_ievl in threads.*/
 
-    SIM_SAVE_T *save;
-    HYST_T    **hyst;
-#if USE_PTHREAD > 0
-    pthread_mutex_t mutex_plot;    /**<mutex for plot*/
-    pthread_mutex_t mutex_cachedm; /**<mutex for cachedm*/
-    pthread_mutex_t mutex_wfsints; /**<mutex for wfsints*/
-#endif
+    SIM_SAVE_T *save;  /**<Telemetry output*/
+    STATUS_T *status;  /**<status report to scheduler.*/
+
+    /**For testing*/
+    ccell *opdrhat;    /**<For wind estimation (testing)*/
+    ccell *opdrhatlast;/**<for wind estimation.(testing)*/
+    dmat *windest;     /**<estimated wind velocity.(testing)*/
+    spcell *windshift; /**<operator to do wind shift on opdr(testing)*/
+
+    /*A few indicators*/
     int nthread;       /**<number of threads*/
     int wfsints_isa;   /**<sa counter for wfsints*/
     int perfevl_iground;/**<index of the layer at ground*/
@@ -548,7 +563,8 @@ typedef struct SIM_T{
     int seed;          /**<current running seed.*/
     int iseed;         /**<index of current running seed.*/
     int isim;          /**<record current simulations step.*/
-    //maintain pointer of other structs for use in thread functions.
+    int reconisim;     /**<The time step for the gradlast data struct. =isim for OL, =isim-1 for CL*/
+    /*maintain pointer of other structs for use in thread functions.*/
     const PARMS_T *parms; /**<pointer to parms*/
     const APER_T *aper;/**<pointer to aper*/
     RECON_T *recon;    /**<pointer to recon*/

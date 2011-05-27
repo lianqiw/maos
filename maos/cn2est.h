@@ -74,4 +74,5 @@ void cn2est_free(CN2EST_T *cn2est);
 void cn2est_embed(CN2EST_T *cn2est, dmat *grad, int iwfs);
 void cn2est_moveht(RECON_T *recon);
 void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms);
+void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol, int isim);
 #endif

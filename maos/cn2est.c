@@ -72,8 +72,6 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	}
     }
-    //writeint32(mask, nx, nx, "mask");
-    //writeint32((int*)pmask2, nx, nx, "mask2");
     free(mask);
     //2-d arrays to store x y gradient  and x y "curvature"
     cn2est->gxs=dcellnew(parms->nwfs, 1);//stores gradient in 2-d map
@@ -560,6 +558,28 @@ void cn2est_updatetomo(RECON_T *recon, const PARMS_T *parms){
     recon->r0=cn2est->r0m;
     recon->l0=cn2est->l0;
     setup_recon_tomo_update(recon, parms);
+}
+/**
+   Wrapper of Cn2 Estimation operations in recon.c
+*/
+void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol, int isim){
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	if(recon->cn2est->wfscov[iwfs]){
+	    cn2est_embed(recon->cn2est, gradol->p[iwfs], iwfs);
+	}
+    }
+    CN2EST_T *cn2est=recon->cn2est;
+    cn2est_cov(cn2est);//convert gradients to cross covariance.
+    if((isim+1-parms->sim.start)%parms->cn2.step == 0){
+	dcellswrite(cn2est->cc, 1./cn2est->nstep, "cc_%d",isim+1);
+	cn2est_est(cn2est, parms);//do the CN2 estimation
+	if(parms->cn2.moveht){
+	    cn2est_moveht(recon);
+	}
+	if(parms->cn2.tomo){
+	    cn2est_updatetomo(recon,parms);//notice, cannot be parallel with tomofit().
+	}
+    }
 }
 /**
    Free all the data.

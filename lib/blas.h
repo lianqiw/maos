@@ -43,7 +43,8 @@ void zposv_(const char*,const int*,const int*, dcomplex*,const int*,
 void dger_ (int*,int*,double*,double*,int*,double*,int*,double*,int*);
 void dgesv_(int*,int*,double*,int*,int*,double*,int*,int*);
 void zgesv_(int*,int*,dcomplex*,int*,int*,dcomplex*,int*,int*);
-
+void dpotrf_(int *, int *, double *, int *, int *);
+void zpotrf_(int *, int *, dcomplex *, int *, int *);
 /* DGESVD prototype */
 extern void 
 dgesvd_(char* jobu, char* jobvt, int* m, int* n, double* a,

@@ -41,7 +41,7 @@ void Y(spsetnzmax)(X(sp) *sp, long nzmax);\
 void Y(spfree_do)(X(sp) *sp);\
 void Y(sparrfree)(X(sp) **sparr, int n);\
 void Y(spdisp)(const X(sp) *sp);\
-void Y(spcheck)(const X(sp) *sp);\
+int Y(spcheck)(const X(sp) *sp);\
 void Y(spscale)(X(sp) *A, const T beta);\
 void Y(spcellscale)(Y(spcell) *A, const T beta);\
 X(sp)* Y(spnewdiag)(long N, T *vec, T alpha) CHECK_UNUSED_RESULT;\

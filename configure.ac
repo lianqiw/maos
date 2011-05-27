@@ -333,7 +333,7 @@ else
 fi
 
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
-if test "x$use_long" = "xyes" ;then
+if test "x$use_long" = "xyes" -a cpu = "64" ;then
    OPTScommon="$OPTScommon -DDLONG"
    chol_suffix="long"
    chol_fun=cholmod_l_factorize

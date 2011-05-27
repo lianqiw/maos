@@ -929,7 +929,7 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
     loc_free_map(loc);
     loc_free_stat(loc);
     int nloc=loc->nloc;
-    int32_t *skip=calloc(nloc,sizeof(int32_t));
+    int *skip=calloc(nloc,sizeof(int));
     dmat *sum=NULL;
     for(int isp=0; isp<spc->nx*spc->ny; isp++){
 	if(spc->p[isp]){
@@ -971,7 +971,6 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
 	    }
 	}
     }
-    //writeint32(skip,nloc,1,"skip");
     int count=0;
     for(int iloc=0; iloc<nloc; iloc++){
 	loc->locx[count]=loc->locx[iloc];
@@ -1026,7 +1025,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     int nloc=loc->nloc;
     if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
 	error("Mismatch dimension\n");
-    int32_t *skip=calloc(nloc,sizeof(int32_t));
+    int *skip=calloc(nloc,sizeof(int));
     dmat* sum=spsumabs(sp,3-dim);
     if(cont){//make sure loc is continuous.
 	loc_create_stat(loc);
@@ -1058,7 +1057,6 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 	    }
 	}
     }
-    writeint32(skip,nloc,1,"skip");
     int count=0;
     for(int iloc=0; iloc<nloc; iloc++){
 	loc->locx[count]=loc->locx[iloc];

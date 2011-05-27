@@ -153,6 +153,7 @@ static void host_down(int host, int info){
     gtk_widget_show_all(cmdconnect[host]);
     gtk_widget_set_sensitive(cmdconnect[host],1);
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[host]), 0);
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[host]), 0);
 }
 
 static void channel_removed(gpointer data){
@@ -335,7 +336,6 @@ int scheduler_connect(int ihost, int block, int mode){
     int count=0;
     fcntl(sock, F_SETFD, O_NONBLOCK);
     while(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
-	perror("connect");
 	if(!block){
 	    close(sock);
 	    return -1;
@@ -791,7 +791,11 @@ int main(int argc, char *argv[])
     GtkStyle *style=gtk_widget_get_style(window);
     bg=gdk_color_copy(&style->bg[GTK_STATE_NORMAL]);
     gtk_window_set_icon(GTK_WINDOW(window),icon_main);
+#if GTK_MAJOR_VERSION<=2 && GTK_MINOR_VERSION <20 
     GtkWidget *toolbar=gtk_hbox_new(FALSE,0);
+#else
+    GtkWidget *toolbar=gtk_vbox_new(FALSE,0);
+#endif
     GtkWidget *tool_clear_crashed=gtk_button_new_with_label("Clear crashed");
     GtkWidget *tool_clear_finished=gtk_button_new_with_label("Clear finished");
     GtkWidget *im=gtk_image_new_from_stock(GTK_STOCK_NO,GTK_ICON_SIZE_MENU);
@@ -802,20 +806,21 @@ int main(int argc, char *argv[])
     g_signal_connect(tool_clear_crashed, "clicked", G_CALLBACK(clear_jobs_crashed),NULL);
     g_signal_connect(tool_clear_finished,"clicked", G_CALLBACK(clear_jobs_finished),NULL);
    
-    gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_crashed, FALSE,FALSE,0);
-    gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_finished,FALSE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_crashed, TRUE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_finished,TRUE,FALSE,0);
 
     notebook=gtk_notebook_new();
     gtk_widget_show(notebook);
-    gtk_notebook_set_scrollable((GtkNotebook*)notebook, TRUE);
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
+    gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook),GTK_POS_LEFT);
     GtkWidget *vbox=gtk_vbox_new(FALSE,0);
     gtk_widget_show_all(toolbar);
     gtk_container_add(GTK_CONTAINER(window), vbox);
-#if GTK_MAJOR_VERSION<=2 && GTK_MINOR_VERSION <20
+#if GTK_MAJOR_VERSION<=2 && GTK_MINOR_VERSION <20 
     gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
 #else
     //Newer GTK_NOTEBOOK has action widgets.
-    gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toolbar, GTK_PACK_END);
+    gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toolbar, GTK_PACK_START);
 #endif
     gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE,TRUE,0);
     g_signal_connect(window, "delete_event", G_CALLBACK (delete_window), NULL);
@@ -850,9 +855,9 @@ int main(int argc, char *argv[])
 	GtkWidget *hbox0=gtk_hbox_new(FALSE,0);
 	prog_cpu[ihost]=monitor_new_progress(1,16);
 	prog_mem[ihost]=monitor_new_progress(1,16);
-	gtk_box_pack_start(GTK_BOX(hbox0),prog_cpu[ihost], TRUE, TRUE, 1);
-	gtk_box_pack_start(GTK_BOX(hbox0),prog_mem[ihost], TRUE, TRUE, 1);
-	gtk_box_pack_start(GTK_BOX(hbox0),titles[ihost], TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox0),prog_cpu[ihost], FALSE, FALSE, 1);
+	gtk_box_pack_start(GTK_BOX(hbox0),prog_mem[ihost], FALSE, FALSE, 1);
+	gtk_box_pack_start(GTK_BOX(hbox0),titles[ihost], FALSE, TRUE, 0);
 	gtk_widget_show_all(hbox0);
 	GtkWidget *eventbox=gtk_event_box_new();
 	gtk_container_add(GTK_CONTAINER(eventbox),hbox0);

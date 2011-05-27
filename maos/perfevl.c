@@ -245,7 +245,7 @@ void perfevl_ievl(thread_t *info){
 
     TIM(4);
     if(imoao>-1){
-	dmat **dmevl=simu->moao_r_evl->p;
+	dmat **dmevl=simu->moao_evl->p;
 	if(dmevl[ievl]){
 	    /**
 	       prop is faster than spmulvec. \fixme check definition of misreg

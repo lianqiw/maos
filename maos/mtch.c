@@ -83,20 +83,28 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     powfs[ipowfs].intstat->mtche=dcellnew(nsa,ni0);
     powfs[ipowfs].intstat->sanea=dcellnew(ni0,1);
-    powfs[ipowfs].intstat->saneara=dcellnew(nsa,ni0);
+    if(parms->powfs[ipowfs].radpix){
+	powfs[ipowfs].intstat->saneara=dcellnew(nsa,ni0);
+    }
     powfs[ipowfs].intstat->saneaxy=dcellnew(nsa,ni0);
+    powfs[ipowfs].intstat->saneaxyl=dcellnew(nsa,ni0);
     powfs[ipowfs].intstat->saneaixy=dcellnew(nsa,ni0);
     powfs[ipowfs].intstat->i0sum=dnew(nsa,ni0);
     PDCELL(powfs[ipowfs].intstat->i0,i0s);
     PDCELL(powfs[ipowfs].intstat->gx,gxs);
     PDCELL(powfs[ipowfs].intstat->gy,gys);
     PDMAT(powfs[ipowfs].intstat->i0sum,i0sum);
+    PDCELL(powfs[ipowfs].intstat->mtche,mtche);
+    PDCELL(powfs[ipowfs].intstat->saneaxy, saneaxy);
+    PDCELL(powfs[ipowfs].intstat->saneaxyl, saneaxyl);
+    PDCELL(powfs[ipowfs].intstat->saneaixy, saneaixy);
+    /*
     dmat *(*mtche)[nsa]=
 	(dmat*(*)[nsa])powfs[ipowfs].intstat->mtche->p;
     dmat *(*saneaxy)[nsa]
 	=(void*)powfs[ipowfs].intstat->saneaxy->p;
     dmat *(*saneaixy)[nsa]
-	=(void*)powfs[ipowfs].intstat->saneaixy->p;
+    =(void*)powfs[ipowfs].intstat->saneaixy->p;*/
     dmat *(*saneara)[nsa]=NULL;
     if(parms->powfs[ipowfs].radpix){
 	saneara=(void*)powfs[ipowfs].intstat->saneara->p;
@@ -275,6 +283,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		saneaxy[ii0][isa]=nea2;
 	    }
 	    saneaixy[ii0][isa]=dinvspd(saneaxy[ii0][isa]);
+	    saneaxyl[ii0][isa]=dchol(saneaxy[ii0][isa]);
 	}//isa 
 	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
 	if(i0summax<siglev*0.8 || i0summax>siglev){
@@ -337,6 +346,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		   "%s/powfs%d_saneara",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->saneaxy,
 		   "%s/powfs%d_saneaxy",dirsetup,ipowfs);
+	dcellwrite(powfs[ipowfs].intstat->saneaxyl,
+		   "%s/powfs%d_saneaxyl",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->saneaixy,
 		   "%s/powfs%d_saneaixy",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->sanea,

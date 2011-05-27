@@ -721,6 +721,31 @@ X(mat)* X(inv)(const X(mat) *A){
     X(inv_inplace)(out);
     return out;
 }
+/**
+   Compute the cholesky decomposition of a symmetric semi-definit dense matrix.
+*/
+X(mat)* X(chol)(const X(mat) *A){
+    if(!A) return NULL;
+    if(A->nx!=A->ny) error("dchol requires square matrix\n");
+    X(mat) *B = X(dup)(A);
+    int uplo='L', n=B->nx, info;
+    Z(potrf)(&uplo, &n, B->p, &n, &info);
+    if(info){
+	if(info<0){
+	    error("The %d-th parameter has an illegal value\n", -info);
+	}else{
+	    error("The leading minor of order %d is not posite denifite\n", info);
+	}
+    }else{//Zero out the upper diagonal. For some reason they are not zero.
+	PDMAT(B, Bp);
+	for(long iy=0; iy<A->ny; iy++){
+	    for(long ix=0; ix<iy; ix++){
+		Bp[iy][ix]=0;
+	    }
+	}
+    }
+    return B;
+}
 
 /**
    compute (A'*W*A); where diag(W)=wt
@@ -1409,7 +1434,7 @@ void X(tikcr)(X(mat) *A, T thres){
 }
 
 /**
-   y=y+alpha*OP(x)*OP(A);
+   y=y+alpha*x*A;
    implemented by transposing x,y index in sptmulmat implementation
    TESTED OK.
 */

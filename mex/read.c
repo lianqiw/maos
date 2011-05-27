@@ -80,8 +80,9 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    }
 	    if(fp->eof) return NULL;
 	    out=mxCreateSparse(nx,ny,nzmax,mxREAL);
-	    if(nx!=0 && ny!=0){
-		if(sizeof(mwIndex)==size){
+	    if(nx!=0 && ny!=0 && nzmax!=0){
+		if(sizeof(mwIndex)==size){/*Match*/
+		    warning("Matching %ld byte\n", size);
 		    zfread(mxGetJc(out), size,ny+1,fp);
 		    zfread(mxGetIr(out), size,nzmax, fp);
 		}else{
@@ -93,6 +94,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 		    zfread(Jc, size, ny+1, fp);
 		    zfread(Ir, size, nzmax, fp);
 		    if(size==4){
+			warning("Converting 4 byte to 8 byte\n");
 			uint32_t* Jc2=Jc;
 			uint32_t* Ir2=Ir;
 			for(i=0; i<ny+1; i++){
@@ -104,6 +106,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 			free(Jc);
 			free(Ir);
 		    }else if(size==8){
+			warning("Converting 8 byte to 4 byte\n");
 			uint64_t* Jc2=Jc;
 			uint64_t* Ir2=Ir;
 			for(i=0; i<ny+1; i++){

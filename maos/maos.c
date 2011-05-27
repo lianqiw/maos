@@ -110,7 +110,8 @@ void maos(const PARMS_T *parms){
    \callgraph
 */
 int main(int argc, char **argv){
-    char*fn=mybasename(argv[0]);
+    char *fn=mybasename(argv[0]);
+    strcpy(argv[0], fn);
     char *scmd=argv2str(argc,argv);
     strcpy(argv[0],fn);
     free(fn);
@@ -179,7 +180,7 @@ int main(int argc, char **argv){
     dirsetup=stradd("setup",NULL);
     if(parms->save.setup){
 	mymkdir("%s",dirsetup);
-	addpath(dirsetup);
+	//addpath(dirsetup);
     }
     if(parms->sim.skysim){
 	dirskysim=stradd("skysim",NULL);

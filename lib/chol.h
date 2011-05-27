@@ -26,12 +26,14 @@
 
 typedef struct spchol spchol;
 spchol* chol_factorize(dsp *A_in);
-void chol_solve(dmat **x, spchol *A, const dmat *y);
+void chol_solve(dmat **x, spchol *A, dmat *y);
+dsp *chol_spsolve(spchol *A, const dsp *y);
 void chol_free_do(spchol *A);
 #define chol_free(A) ({chol_free_do(A);A=NULL;})
 void chol_save(spchol *A, const char *format,...) CHECK_ARG(2);
-void chol_convert(dsp **Cs, long **Cp, spchol *A, int keep);
-void chol_solve_lower(dmat **x, dsp *A, long *p, const dmat *y);
-void chol_solve_upper(dmat **x, dsp *A, long *perm, const dmat *y);
+spchol *chol_read(const char *format, ...) CHECK_ARG(1);
+void chol_convert(spchol *A, int keep);
+void chol_solve_lower(dmat **x, spchol *C, dmat *y);
+void chol_solve_upper(dmat **x, spchol *C, dmat *y);
 #define M_CHOL 0x6501
 #endif

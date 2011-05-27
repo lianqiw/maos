@@ -77,6 +77,7 @@ void X(invspd_inplace)(X(mat) *A);\
 X(mat)* X(invspd)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(inv_inplace)(X(mat)*A);\
 X(mat)* X(inv)(const X(mat) *A) CHECK_UNUSED_RESULT;\
+X(mat) *X(chol)(const X(mat) *A) CHECK_UNUSED_RESULT; \
 X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT;\
 X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT;\
 X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT;\

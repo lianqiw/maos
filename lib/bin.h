@@ -97,9 +97,11 @@ void do_write(const void *fpn, const int isfile, const size_t size, const uint32
 	      const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writecmp(const dcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void writeint64(const int64_t *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
-void writeint32(const int32_t *p, long nx, long ny, const char *format,...) CHECK_ARG(4);
-
+void writeint(const int *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
+void writelong(const long *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
+void writespint(const spint *p, long nx, long ny, const char *format,...) CHECK_ARG(4);
+void readspintdata(file_t *fp, uint32_t magic, spint *out, long len);
+spint *readspint(long* nx, long* ny, const char *format, ...) CHECK_ARG(3);
 void mmap_unref(struct mmap_t *in);
 struct mmap_t *mmap_new(int fd, void *p, long n);
 mmap_t*mmap_ref(mmap_t *in);

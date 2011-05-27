@@ -17,7 +17,8 @@
 */
 
 #include "recon_utils.h"
-
+#include "ahst.h"
+#include "sim.h"
 /**
    \file recon_utils.c
    Reusable utilities for wavefront reconstruction and DM fitting.
@@ -373,15 +374,19 @@ void TomoL(dcell **xout, const void *A,
     thread_t info_ips[recon->nthread];
     thread_prep(info_ips, 0, nps, recon->nthread, Tomo_iprop, &data);
     CALL_THREAD(info_iwfs1, recon->nthread, 1);
-    //Remove global Tip/Tilt, differential focus. Need all wfs gradients.
-    TTFR(gg, recon->TTF, recon->PTTF);
+    if(!parms->tomo.split || parms->dbg.splitlrt){
+	/*Remove global Tip/Tilt, differential focus only in integrated
+	  tomography to limit noise propagation.*/
+	TTFR(gg, recon->TTF, recon->PTTF);
+    }
     CALL_THREAD(info_iwfs2, recon->nthread, 1);
     CALL_THREAD(info_ips, recon->nthread, 1);
    
-    /*      square=1  square=0 (1 thread on T410s)
-	    iwfs1: takes 6 ms 13 ms
-	    iwfs2: takes 4 ms 4 ms
-	    ips:   takes 6 ms 9 ms
+    /* 
+       square=1  square=0 (1 thread on T410s)
+       iwfs1: takes 6 ms 13 ms
+       iwfs2: takes 4 ms 4 ms
+       ips:   takes 6 ms 9 ms
     */
     dcellfree(gg);
     
@@ -590,3 +595,116 @@ void windest(SIM_T *simu){
     }
 }
 
+/**
+   Convert block of 2x2 neas to sparse matrix.
+ */
+dsp *nea2sp(dmat **nea, long nsa){
+    dsp *sanea=spnew(nsa*2, nsa*2, 4*nsa);
+    spint *pp=sanea->p;
+    spint *pi=sanea->i;
+    double *px=sanea->x;
+    long count=0;
+    for(long isa=0; isa<nsa; isa++){
+	//Cxx
+	pp[isa]=count;
+	pi[count]=isa;
+	px[count]=nea[isa]->p[0];
+	count++;
+	//Cyx
+	pi[count]=isa+nsa;
+	px[count]=nea[isa]->p[1];
+	count++;
+    }
+    for(long isa=0; isa<nsa; isa++){
+	//Cxy
+	pp[isa+nsa]=count;
+	pi[count]=isa;
+	px[count]=nea[isa]->p[2];
+	count++;
+	//Cyy
+	pi[count]=isa+nsa;
+	px[count]=nea[isa]->p[3];
+	count++;
+    }
+    pp[nsa*2]=count;
+    return sanea;
+}
+
+/**
+   Compute and save PSF reconstruction telemetry.  For pseudo open loop
+   estimations, like high order loop, we add opdr to, and subtract dmpsol from
+   the OPD.  For closed loop estimations, like ahst low order or lsr, we add
+   dmerr_lo, and dmerr_hi to the OPD.*/
+void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *dmerr_lo){
+    const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
+    /*
+      
+      Do we do PSFR on evl directions, or separate directions?
+
+    */
+    /*
+      The tomography estimates, opdr is pseudo open loop
+      estimates. We need to subtract the constribution of the
+      added DM command to form closed loop estimates. 
+    */
+    dcell *dmadd=NULL;
+
+    if(parms->tomo.split==1){
+	/*
+	  We will remove NGS modes from dmlast which is in NULL
+	  modes of tomography reconstructor (is this 100% true)?
+	  SHould we remove NGS modes from final OPD, xx,
+	  instead?*/
+	dcell *tmp = dcelldup(dmpsol);//The DM command used for high order.
+	remove_dm_ngsmod(simu, tmp);//remove NGS modes as we do in ahst.
+	dcelladd(&dmadd, 1, tmp, -1);
+	dcellfree(tmp);
+    }else{
+	dcelladd(&dmadd, 1, dmpsol, -1);
+    }
+    if(dmerr_hi){/*high order closed loop estimates. (lsr)*/
+	dcelladd(&dmadd, 1, dmerr_hi, 1);
+    }
+    if(dmerr_lo){/*In AHST, dmerr_lo is CL Estimation.*/
+	addlow2dm(&dmadd, simu, dmerr_lo, 1);
+    }
+    dmat *xx = dnew(recon->ploc->nloc, 1);
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	double hs = parms->evl.ht[ievl];
+	if(parms->evl.psfr[ievl]){
+	    dzero(xx);
+	    if(opdr){
+		const int npsr=recon->npsr;
+		/*First compute residual opd: Hx*x-Ha*a*/
+		for(int ips=0; ips<npsr; ips++){
+		    const double ht = recon->ht->p[ips];
+		    double scale=1-ht/hs;
+		    double dispx=parms->evl.thetax[ievl]*ht;
+		    double dispy=parms->evl.thetay[ievl]*ht;
+		    if(parms->tomo.square){//square xloc
+			recon->xmap[ips]->p=opdr->p[ips]->p;
+			prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
+				       dispx, dispy, scale, 0, 0, 0);
+		    }else{
+			prop_nongrid(recon->xloc[ips], opdr->p[ips]->p, recon->ploc, NULL,
+				     xx->p, 1, dispx, dispy, scale, 0, 0);
+		    }
+		}
+	    }
+	    if(dmadd){
+		for(int idm=0; idm<parms->ndm; idm++){
+		    const double ht = parms->dm[idm].ht;
+		    double scale=1-ht/hs;
+		    double dispx=parms->evl.thetax[ievl]*ht;
+		    double dispy=parms->evl.thetay[ievl]*ht;
+		    prop_nongrid(recon->aloc[idm], dmadd->p[idm]->p, recon->ploc, NULL,
+				 xx->p, 1, dispx, dispy, scale, 0, 0);
+		}
+	    }
+	    dmm(&simu->ecov->p[ievl], xx, xx, "nt", 1);
+	}//if psfr[ievl]
+    }//ievl
+    dfree(xx);
+    dcellfree(dmadd);
+}

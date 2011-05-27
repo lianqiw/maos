@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void writeint(int fd, int cmd);
+void writeintsock(int fd, int cmd);
 void writestr(int fd, const char *str);
 int  readint(int fd);
 char*readstr(int fd);

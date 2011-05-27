@@ -39,4 +39,7 @@ void FitL(dcell **xout, const void *A,
 	  const dcell *xin, const double alpha);
 void FitR(dcell **xout, const void *A, 
 	  const dcell *xin, const double alpha);
+
+dsp *nea2sp(dmat **nea, long nsa);
+void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *dmerr_lo);
 #endif

@@ -258,7 +258,7 @@ int main(){
 
     long nperm;
     long *perm=fdpcg_perm(&nperm,xlocs,nps,saloc);//tested ok.
-    writeint64(perm, nperm,1,"perm");
+    writelong(perm, nperm,1,"perm");
     cmat *gx, *gy;
     fdpcg_g(&gx,&gy,256,256,xloc->dx,saloc->dx);//tested ok.
     cwrite(gx,"gx");

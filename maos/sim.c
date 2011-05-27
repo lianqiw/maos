@@ -38,6 +38,10 @@
 #include "sim.h"
 #include "sim_utils.h"
 #define TIMING_MEAN 0
+#define SHIFT_GRAD							\
+    dcellcp(&simu->gradlastcl, simu->gradcl);				\
+    dcellcp(&simu->dmcmdlast, simu->dmcmd);				\
+    simu->reconisim = simu->isim
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence
@@ -92,24 +96,16 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		  wfsgrad
 		*/
 		read_self_cpu();//initialize CPU usage counter
-		if(parms->tomo.ahst_idealngs){
-		    //when we want to apply idealngs correction, wfsgrad need to wait for perfevl.
-		    long group1=0, group2=0;
-		    thread_pool_queue(&group1, (thread_fun)reconstruct, simu, 0);
-		    thread_pool_queue(&group2, (thread_fun)perfevl, simu, 0);
-		    thread_pool_wait(&group2);
-		    thread_pool_queue(&group1, (thread_fun)wfsgrad, simu, 0);
-		    thread_pool_wait(&group1);
-		}else{
-		    long group=0;
-		    thread_pool_queue(&group, (thread_fun)reconstruct, simu, 0);
-		    thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
-		    thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
+		//when we want to apply idealngs correction, wfsgrad need to wait for perfevl.
+		long group=0;
+		thread_pool_queue(&group, (thread_fun)reconstruct, simu, 0);
+		thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
+		if(parms->tomo.ahst_idealngs)//Need to wait until perfevl is done to start wfsgrad.
 		    thread_pool_wait(&group);
-		}
+		thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
+		thread_pool_wait(&group);
+		SHIFT_GRAD;//before filter.
 		filter(simu);//updates dmreal, so has to be after prefevl/wfsgrad is done.
-		dcellcp(&simu->gradlastcl, simu->gradcl);
-		dcellcp(&simu->gradlastol, simu->gradol);
 #if defined(__linux__)
 		if(simu->nthread>1 && !detached){
 		    info2("CPU Usage: %.2f\n", read_self_cpu());
@@ -125,15 +121,13 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    cpu_wfs=read_self_cpu();
 		    reconstruct(simu);//uses grads from gradlast cl, gradlast ol.
 		    cpu_recon=read_self_cpu();
+		    SHIFT_GRAD;
 		    filter(simu);
 		    cpu_cachedm=read_self_cpu();
-		    dcellcp(&simu->gradlastcl, simu->gradcl);
-		    dcellcp(&simu->gradlastol, simu->gradol);
 		}else{//in OL mode, 
 		    wfsgrad(simu);
 		    cpu_wfs=read_self_cpu();
-		    dcellcp(&simu->gradlastcl, simu->gradcl);
-		    dcellcp(&simu->gradlastol, simu->gradol);
+		    SHIFT_GRAD;
 		    reconstruct(simu);
 		    cpu_recon=read_self_cpu();
 		    filter(simu);

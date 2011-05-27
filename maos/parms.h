@@ -42,6 +42,7 @@ typedef struct ATM_CFG_T{
     double *size; /**<size of atm in meter, [0 0]: automatic*/
     long *overx;  /**<maximum pixel distance in x direction the beam can be without wrapping*/
     long *overy;  /**<maximum pixel distance in y direction the beam can be without wrapping*/
+    map_t **(*fun)(GENSCREEN_T*); /**<Points to the function used to generated atmosphere. (derived)*/
     int nps;      /**<number of phase screens*/
     int wdrand;   /**<randomize wind direction*/
     int iground;  /**<index into the ground layer*/
@@ -278,7 +279,8 @@ typedef struct EVL_CFG_T{
     double *misreg; /**<Misregistration wrt to nominal pupil.*/
     int ismisreg;   /**<Science evl is misregistered*/
     int nwvl;       /**<Number of wavelength*/
-    int *psf;       /**<1: participant in psf evaluation.*/
+    int *psf;       /**<1: participate in psf evaluation.*/
+    int *psfr;      /**<1: participate in psf reconstruction telemetry*/
     int npsf;       /**<how many directions we compute psf for*/
     int psfol;      /**<compute Open loop PSF.
 		       - 1: on axis only.
@@ -419,7 +421,11 @@ typedef struct SIM_CFG_T{
     int evlol;       /**<evaluate open loop error only*/
     int noatm;       /**<disable atmosphere*/
     int fitonly;     /**<do DM fitting only, by replacing opdr with opdx. see above*/
-
+    int psfr;        /**<do PSF reconstruction telemetry*/
+    int ecnn;        /**<Calculate WF covariance due to WFS noise cov Cnn.*/
+    int dmttcast;    /**<cast tip/tilt from DM commands to study saturation or
+			histogram and then add back*/
+    int dmclip;      /**<Need to clip actuators*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
@@ -465,6 +471,7 @@ typedef struct DBG_CFG_T{
     int ntomo_maxit; /**<Number of elements in tomo_maxit*/
     int tomo_hxw;    /**<1: Force use hxw always instead of ray tracing from xloc to ploc.*/
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
+    int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
 }DBG_CFG_T;
 /**
    contains input parameters for each MOAO type.

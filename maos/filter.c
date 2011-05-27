@@ -24,14 +24,15 @@
    Collection of functions for servo filtering of DM commands and uplink pointing loop.
 */
 /**
-   Apply hysterisis. Input dmreal is command to the DM and output dmreal is the
+   Apply hysterisis. Input dmcmd is command to the DM and output dmreal is the
    actual position the DM goes to.  */
-void hysterisis(HYST_T **hyst, dcell *dmreal){
+void hysterisis(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
     if(!hyst) return;
-    assert(dmreal->ny==1);
-    for(int idm=0; idm<dmreal->nx; idm++){
+    assert(dmcmd->ny==1);
+    for(int idm=0; idm<dmcmd->nx; idm++){
 	if(!hyst[idm]) continue;
-	double *restrict x=dmreal->p[idm]->p;
+	double *restrict x=dmcmd->p[idm]->p;
+	double *restrict xout=dmreal->p[idm]->p;
 	double *restrict xlast=hyst[idm]->xlast->p;
 	double *restrict dxlast=hyst[idm]->dxlast->p;
 	double *restrict x0=hyst[idm]->x0->p;
@@ -39,7 +40,7 @@ void hysterisis(HYST_T **hyst, dcell *dmreal){
 	PDMAT(hyst[idm]->y0, yy0);
 	PDMAT(hyst[idm]->coeff, coeff);
 	int nmod=hyst[idm]->coeff->ny;
-	int naloc=dmreal->p[idm]->nx;
+	int naloc=dmcmd->p[idm]->nx;
 	for(int ia=0; ia<naloc; ia++){
 	    double dx=x[ia]-xlast[ia];
 	    if(fabs(dx)>1e-14){//There is change in command
@@ -64,7 +65,7 @@ void hysterisis(HYST_T **hyst, dcell *dmreal){
 	    for(int imod=0; imod<nmod; imod++){
 		y+=ylast[ia][imod]*coeff[imod][0];
 	    }
-	    x[ia]=y;
+	    xout[ia]=y;
 	}
     }
 }
@@ -143,6 +144,68 @@ static void typeII_filter(TYPEII_T *MtypeII, dmat *gain, double dtngs, dcell *Me
     //first integrator
     dcelladd(&MtypeII->firstint, 1, MtypeII->lead, 1);
 }
+static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
+    const PARMS_T *parms=simu->parms;
+    if(parms->sim.dmttcast && dmint){
+	/*
+	  Here we are simulation a Tip/Tilt Mirror by
+	  casting global tip/tilt out from DM commands, do
+	  the saturation and histogram analysis. 
+	  
+	  We then add back the tip/tilt to the DM to
+	  simulate the DM tip/tilt stage, or in another
+	  word, to save a ray tracing from the tip/tilt
+	  mirror.
+	*/
+	int ndm=parms->ndm;
+	dcell *ptt=dcellnew(ndm,1);
+	const RECON_T *recon=simu->recon;
+	for(int idm=0; idm<ndm; idm++){
+	    ptt->p[idm]=dnew(3,1);
+	    double *ptt1=ptt->p[idm]->p;
+	    loc_calc_ptt(NULL,ptt1, recon->aloc[idm],0,
+			 recon->aimcc->p[idm],NULL,
+			 dmint->p[idm]->p);
+	    loc_remove_ptt(dmint->p[idm]->p, 
+			   ptt1,recon->aloc[idm]);
+	}
+        /*
+	  clip integrator. This both limits the output and
+	  feeds back the clip since we are acting on the integrator directly.
+	*/
+	if(parms->sim.dmclip){
+	    for(int idm=0; idm<parms->ndm; idm++){
+		int nclip=dclip(dmint->p[idm], 
+				-parms->dm[idm].stroke,
+				parms->dm[idm].stroke);
+		if(nclip>0){
+		    info("DM %d: %d actuators clipped\n", idm, nclip);
+		}
+	    }
+	}
+	if(simu->dmhist){
+	    for(int idm=0; idm<parms->ndm; idm++){
+		if(simu->dmhist->p[idm]){
+		    dhistfill(&simu->dmhist->p[idm], dmint->p[idm],0,
+			      parms->dm[idm].histbin, parms->dm[idm].histn);
+		}
+	    }
+	}
+	if(parms->save.dmpttr){//2 cycle delay.
+	    cellarr_dcell(simu->save->dmpttr, dmint);
+	}
+	double totalptt[3]={0,0,0};
+	for(int idm=0; idm<ndm; idm++){
+	    totalptt[1]+=ptt->p[idm]->p[1];
+	    totalptt[2]+=ptt->p[idm]->p[2];
+	}
+	//Add tip/tilt back to the ground DM only.
+	loc_add_ptt(dmint->p[0]->p, totalptt, recon->aloc[0]);
+	dcellfree(ptt);
+    }else if(parms->save.dmpttr){
+	cellarr_dcell(simu->save->dmpttr, NULL);
+    }
+}
 /**
    Update DM command for next cycle using info from last cycle (two cycle delay)
 in closed loop mode */
@@ -167,17 +230,19 @@ void filter_cl(SIM_T *simu){
       a(n)=0.5*(a(n-1)+a(n-2))+ep*e(n-2);
     */
     const PARMS_T *parms=simu->parms;
-    if(!parms->sim.closeloop) error("Invalid call\n");
+    assert(parms->sim.closeloop);
   
     //copy dm computed in last cycle. This is used in next cycle (already after perfevl)
     const SIM_CFG_T *simt=&(parms->sim);
- 
+    if(!simu->dmerr_hi && !(parms->tomo.split && simu->Merr_lo)){
+	return;
+    }
     if(parms->sim.fuseint){
 	shift_inte(simt->napdm,simt->apdm,simu->dmint);
     }else{
 	shift_inte(simt->napdm,simt->apdm,simu->dmint_hi);
 	if(parms->tomo.split){
-	    shift_inte(simt->napngs,simt->apngs,simu->Mint_lo);
+		shift_inte(simt->napngs,simt->apngs,simu->Mint_lo);
 	}
     }
     //High order.
@@ -221,162 +286,67 @@ void filter_cl(SIM_T *simu){
 	    error("Not implemented yet");
 	}
     }
-    static int initialized=0;
-    static int cast_tt=0;
-    static int do_clip=0;
-    static int do_hist=0;
-    if(!initialized){
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(parms->dm[idm].hist){
-		do_hist=1;
-	    }
-	    if(!isinf(parms->dm[idm].stroke)){
-		do_clip=1;
-	    }
-	}
-	if(parms->save.dmpttr){
-	    do_clip=1;
-	}
-	cast_tt=do_hist||do_clip;
-	initialized=1;
+    if(parms->sim.dmttcast){
+	cast_tt_do(simu, simu->dmint[0]);
     }
-    if(cast_tt){
-	if(!parms->sim.fuseint){
-	    error("Sorry, clipping only works in fuseint=1 mode\n");
-	}
-    }
-    if(cast_tt && simu->dmint[0]){
-	/*
-	  Here we are simulation a Tip/Tilt Mirror by
-	  casting global tip/tilt out from DM commands, do
-	  the saturation and histogram analysis. 
-	  
-	  We then add back the tip/tilt to the DM to
-	  simulate the DM tip/tilt stage, or in another
-	  word, to save a ray tracing from the tip/tilt
-	  mirror.
-	 */
-	int ndm=parms->ndm;
-	dcell *ptt=dcellnew(ndm,1);
-	const RECON_T *recon=simu->recon;
-	for(int idm=0; idm<ndm; idm++){
-	    ptt->p[idm]=dnew(3,1);
-	    double *ptt1=ptt->p[idm]->p;
-	    loc_calc_ptt(NULL,ptt1, recon->aloc[idm],0,
-			 recon->aimcc->p[idm],NULL,
-			 simu->dmint[0]->p[idm]->p);
-	    loc_remove_ptt(simu->dmint[0]->p[idm]->p, 
-			   ptt1,recon->aloc[idm]);
-	}
-        /*
-	  clip integrator. This both limits the output and
-	  feeds back the clip since we are acting on the integrator directly.
-	*/
-	if(do_clip){
-	    for(int idm=0; idm<parms->ndm; idm++){
-		int nclip=dclip(simu->dmint[0]->p[idm], 
-				-parms->dm[idm].stroke,
-				parms->dm[idm].stroke);
-		if(nclip>0){
-		    info("DM %d: %d actuators clipped\n", idm, nclip);
-		}
-	    }
-	}
-	if(do_hist){
-	    if(!simu->dmhist){
-		long nnx[parms->ndm];
-		long nny[parms->ndm];
-		for(int idm=0; idm<parms->ndm; idm++){
-		    nnx[idm]=parms->dm[idm].histn;
-		    nny[idm]=simu->dmint[0]->p[idm]->nx*simu->dmint[0]->p[idm]->ny;
-		}
-		simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, 
-					   NULL, NULL,"dmhist_%d.bin",simu->seed);
-	    }
-	    for(int idm=0; idm<parms->ndm; idm++){
-		dhistfill(&simu->dmhist->p[idm], simu->dmint[0]->p[idm],0,
-			  parms->dm[idm].histbin, parms->dm[idm].histn);
-	    }
-	}
-	if(parms->save.dmpttr){//2 cycle delay.
-	    cellarr_dcell(simu->save->dmpttr, simu->dmint[0]);
-	}
-	double totalptt[3]={0,0,0};
-	for(int idm=0; idm<ndm; idm++){
-	    totalptt[1]+=ptt->p[idm]->p[1];
-	    totalptt[2]+=ptt->p[idm]->p[2];
-	}
-	//Add tip/tilt back to the ground DM only.
-	loc_add_ptt(simu->dmint[0]->p[0]->p, totalptt, recon->aloc[0]);
-	dcellfree(ptt);
-    }else if(parms->save.dmpttr){
-	cellarr_dcell(simu->save->dmpttr, NULL);
+    if(parms->save.dm){
+	cellarr_dcell(simu->save->dmreal, simu->dmreal);
+	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
     }
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
     if(parms->sim.fuseint){
-	dcellcp(&simu->dmreal,simu->dmint[0]);
+	dcellcp(&simu->dmcmd,simu->dmint[0]);
     }else{
-	dcellcp(&simu->dmreal,simu->dmint_hi[0]);
-	addlow2dm(&simu->dmreal,simu,simu->Mint_lo[0], 1);
-    }
+	dcellcp(&simu->dmcmd,simu->dmint_hi[0]);
+	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo[0], 1);
+    }   
     //hysterisis.
-    hysterisis(simu->hyst, simu->dmreal);
-    calc_cachedm(simu);
-  
-    //MOAO
-    if(simu->moao_wfs){
-	PDCELL(simu->moao_wfs, dmwfs);
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    dcp(&simu->moao_r_wfs->p[iwfs], dmwfs[iwfs][0]);
-	}
-    }
-    if(simu->moao_evl){
-	PDCELL(simu->moao_evl, dmevl);
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    dcp(&simu->moao_r_evl->p[ievl], dmevl[ievl][0]);
-	}
+    if(simu->hyst){
+	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
     }
 }
 /**
    filter DM commands in open loop mode by simply copy the output
  */
 void filter_ol(SIM_T *simu){
-    if(!simu->parms->sim.closeloop){
-	if(simu->dmerr_hi){
-	    dcellcp(&simu->dmreal, simu->dmerr_hi);
-	}else{
-	    dcellzero(simu->dmreal);
-	}
-	if(simu->Merr_lo){
-	    addlow2dm(&simu->dmreal, simu, simu->Merr_lo,1);
-	}
+    assert(!simu->parms->sim.closeloop);
+    if(simu->dmerr_hi){
+	dcellcp(&simu->dmcmd, simu->dmerr_hi);
     }else{
-	error("Invalid\n");
+	dcellzero(simu->dmcmd);
     }
-
-    calc_cachedm(simu);
+    if(simu->Merr_lo){
+	addlow2dm(&simu->dmcmd, simu, simu->Merr_lo,1);
+    }
+    if(simu->parms->sim.dmttcast){
+	cast_tt_do(simu, simu->dmcmd);
+    }
+    //hysterisis.
+    if(simu->hyst){
+	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
+    }
+    if(simu->parms->save.dm){
+	cellarr_dcell(simu->save->dmreal, simu->dmreal);
+	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
+    }
 }
 /**
    Does the servo filtering by calling filter_cl() or filter_ol()
  */
 void filter(SIM_T *simu){
-    if(simu->parms->sim.evlol) return;
-
-    if(simu->parms->sim.closeloop){
-	if(simu->parms->save.dm){
-	    cellarr_dcell(simu->save->dmreal, simu->dmreal);
-	}
+    const PARMS_T *parms=simu->parms;
+    if(parms->sim.evlol) return;
+    if(parms->sim.closeloop){
 	filter_cl(simu);
     }else{
 	filter_ol(simu);
-	if(simu->parms->save.dm){
-	    cellarr_dcell(simu->save->dmreal, simu->dmreal);
-	}
     }
-    if(simu->parms->plot.run){
+    calc_cachedm(simu);
+  
+    if(parms->plot.run){
 	//Moved from recon.c to here.
-	for(int idm=0; simu->dmreal && idm<simu->parms->ndm; idm++){
+	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
 	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
 		    "Actual DM Actuator Commands","x (m)", "y (m)",
 		    "Real %d",idm);

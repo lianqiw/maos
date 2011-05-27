@@ -38,21 +38,19 @@ int main(int argc, char* argv[]){
     dmat *x=NULL, *x2=NULL, *x3=NULL;
     dsp *S1=NULL;
     long *perm=NULL;
-    chol_convert(&S1, &perm, R1, 1);
-    dsp *S2=sptrans(S1);
-
+    chol_convert(R1, 1);
     tic;
     chol_solve(&x, R1, y);
     toc("cholmod");tic;
     chol_solve(&x, R1, y);
     toc("cholmod");tic;
-    chol_solve_upper(&x3, S2, perm, y);
+    chol_solve_upper(&x3, R1, y);
     toc("upper");tic;
-    chol_solve_upper(&x3, S2, perm, y);
+    chol_solve_upper(&x3, R1, y);
     toc("upper");tic;
-    chol_solve_lower(&x2, S1, perm,y);
+    chol_solve_lower(&x2, R1,y);
     toc("lower");tic;
-    chol_solve_lower(&x2, S1, perm,y);
+    chol_solve_lower(&x2, R1,y);
     toc("lower");tic;
     chol_solve(&x, R1, y);
     toc("cholmod");tic;

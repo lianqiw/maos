@@ -18,7 +18,6 @@
 
 #include "maos.h"
 #include "sim.h"
-#include "cn2est.h"
 #include "sim_utils.h"
 /**
    \file wfsgrad.c
@@ -43,7 +42,6 @@ void wfsgrad_iwfs(thread_t *info){
     assert(iwfs<parms->nwfs);
     /*
       simu->gradcl is CL grad output
-      simu->gradol is pseudo OL grad output.
       simu->gradacc is internal, to accumulate geometric grads.
       do not accumulate opd. accumate ints for phy, g for GS
     */
@@ -58,7 +56,6 @@ void wfsgrad_iwfs(thread_t *info){
     const int nwfs=parms->nwfs;
     const int nps=parms->atm.nps;
     const double dt=simu->dt;
-    const dsp *(*GA)[nwfs] = (const dsp *(*)[nwfs]) recon->GA->p;
     TIM(0);
     //The following are truly constants for this powfs
     const int ipowfs=parms->wfs[iwfs].powfs;
@@ -76,23 +73,15 @@ void wfsgrad_iwfs(thread_t *info){
     const int noisy=parms->powfs[ipowfs].noisy;
     const int nthread=powfs[ipowfs].nthread;
     //The following depends on isim
-    const int dtrat_reset=(!CL||dtrat==1||isim%dtrat==0);
-    const int dtrat_output=(!CL||dtrat==1||(isim+1)%dtrat==0);
-    const int do_phy=(parms->powfs[ipowfs].usephy&&isim>=parms->powfs[ipowfs].phystep);
+    //const int dtrat_reset=(isim%dtrat==0);
+    const int dtrat_output=((isim+1)%dtrat==0);
+    const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
     const int do_geom=!do_phy || save_gradgeom;
 
-    dmat **gradacc=NULL;
+    dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
-    dcell *ints=NULL;
-
-    if(do_geom){ //output to gradacc
-	gradacc=&simu->gradacc->p[iwfs];
-	if(!*gradacc)
-	    *gradacc=dnew(nsa*2,1);
-	else if(dtrat_reset)
-	    dzero(*gradacc);
-    }
-    dmat *opd=dnew(npix,1);
+    dcell *ints=simu->ints[iwfs];
+    dmat  *opd=dnew(npix,1);
     /*
       Add surface
     */
@@ -140,7 +129,7 @@ void wfsgrad_iwfs(thread_t *info){
 	}//idm
     }
     if(imoao>-1){
-	dmat **dmwfs=simu->moao_r_wfs->p;
+	dmat **dmwfs=simu->moao_wfs->p;
 	if(dmwfs[iwfs]){
 	    info("iwfs %d: Adding MOAO correction\n", iwfs);
 	    /*No need to do mis registration here since the MOAO DM is
@@ -220,12 +209,7 @@ void wfsgrad_iwfs(thread_t *info){
     /*
       Now begin Physical Optics Intensity calculations
     */
-    if(do_phy){ //initialize ints is not already initlialized
-	if(dtrat_reset){
-	    dcellzero(simu->ints[iwfs]);
-	}
-	ints=simu->ints[iwfs];
-    }
+  
     if(do_geom){
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    //compute ztilt.
@@ -256,7 +240,7 @@ void wfsgrad_iwfs(thread_t *info){
 	pistatout=simu->pistatout[iwfs];
     }
     TIM(1);
-    if(ints || psfout || pistatout){
+    if(do_phy || psfout || pistatout){
 	dmat *lltopd=NULL;
 	if(powfs[ipowfs].llt){
 	    if(powfs[ipowfs].llt->ncpa){
@@ -488,7 +472,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	};//isa
 
-	if(save_ints && ints){
+	if(save_ints && do_phy){
 	    cellarr_dcell(simu->save->intsny[iwfs], ints);
 	}
 	if(save_grad && noisy){
@@ -546,59 +530,44 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
     }
-    if(dtrat_output && save_gradgeom){
-	dmat *gradtmp=NULL;
-	dcp(&gradtmp,*gradacc);
-	if(dtrat!=1){
-	    dscale(gradtmp,1./dtrat);
-	}
-	cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);//noise free.
-    }
-
+   
     if(parms->plot.run){
 	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
 		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
-	drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
-		"WFS Closeloop Gradients (x)","x (m)", "y (m)",
-		"x %d",  iwfs);
-	drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+nsa, NULL,
-		"WFS Closeloop Gradients (y)","x (m)", "y (m)",
-		"y %d",  iwfs);
     }
     dfree(opd);
-    if(dtrat_output && powfs[ipowfs].ncpa_grad){
-	warning("Applying ncpa_grad to gradout\n");
-	dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[wfsind], -1);
-    }
-    //create pseudo open loop gradients. in split mode 1, only do for high order wfs.
-    if(dtrat_output && parms->powfs[ipowfs].psol){
-	dcp(&simu->gradol->p[iwfs], *gradout);
-	if(CL){
-	    if(simu->dmpsol[ipowfs]){
-		for(int idm=0; idm<parms->ndm; idm++){
-		    spmulmat(&simu->gradol->p[iwfs], GA[idm][iwfs],
-			     simu->dmpsol[ipowfs]->p[idm], 1.);
-		}
+    if(dtrat_output){
+	if(powfs[ipowfs].ncpa_grad){
+	    warning("Applying ncpa_grad to gradout\n");
+	    dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[wfsind], -1);
+	}
+	if(save_grad){
+	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
+	}
+	if(save_gradgeom){
+	    dmat *gradtmp=NULL;
+	    dcp(&gradtmp,*gradacc);
+	    if(dtrat!=1){
+		dscale(gradtmp,1./dtrat);
 	    }
+	    cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);//noise free.
 	}
 	if(parms->plot.run){
-	    drawopd("Gpolx",(loc_t*)powfs[ipowfs].pts, simu->gradol->p[iwfs]->p,NULL,
-		    "WFS Pseudo Openloop Gradients (x)","x (m)", "y (m)",
+	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
+		    "WFS Closeloop Gradients (x)","x (m)", "y (m)",
 		    "x %d",  iwfs);
-	    drawopd("Gpoly",(loc_t*)powfs[ipowfs].pts, simu->gradol->p[iwfs]->p+nsa, NULL,
-		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)",
+	    drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+nsa, NULL,
+		    "WFS Closeloop Gradients (y)","x (m)", "y (m)",
 		    "y %d",  iwfs);
 	}
-    }
-    if(save_grad && dtrat_output){
-	cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
-	if(simu->gradol->p[iwfs]){
-	    cellarr_dmat(simu->save->gradol[iwfs], simu->gradol->p[iwfs]);
+	if(do_geom){
+	    dzero(*gradacc);
+	}
+	if(do_phy){
+	    dcellzero(simu->ints[iwfs]);
 	}
     }
-    if(parms->cn2.pair && recon->cn2est->wfscov[iwfs]){
-	cn2est_embed(recon->cn2est, simu->gradol->p[iwfs], iwfs);
-    }
+    
     TIM(3);
 #if TIMING==1
     info("wfs %d grad timing: ray %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2);
@@ -613,31 +582,7 @@ void wfsgrad(SIM_T *simu){
     if(parms->sim.fitonly || parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
     double tk_start=myclockd();
-    //Updating dmpsol averaging.
-    if(parms->sim.closeloop){
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(parms->tomo.split==2 || !parms->powfs[ipowfs].skip){
-		const int dtrat=parms->powfs[ipowfs].dtrat;
-		if(dtrat==1 || simu->isim%dtrat==0){
-		    dcellfree(simu->dmpsol[ipowfs]);
-		    //info("Freeing dmpsol for powfs %d\n", ipowfs);
-		}
-		dcell *dmpsol;
-		if(parms->dbg.psol){
-		    if(parms->sim.fuseint){
-			dmpsol=simu->dmint[0];
-		    }else{
-			dmpsol=simu->dmint_hi[0];
-		    }
-		    //warning("Using dmreal next step for psol\n");
-		}else{//add DM command for the same time step.
-		    dmpsol=simu->dmreal;
-		}
-		//info("Accumulating dmpsol for powfs %d\n", ipowfs);
-		dcelladd(&simu->dmpsol[ipowfs], 1, dmpsol, 1./parms->powfs[ipowfs].dtrat);
-	    }
-	}
-    }
+   
     //call the task in parallel and wait for them to finish.
     CALL_THREAD(simu->wfs_grad, parms->nwfs, 0);
     /*
@@ -659,29 +604,5 @@ void wfsgrad(SIM_T *simu){
 	    dcellcp(&simu->upterrlast,simu->upterr);
 	}
     }
-
-    if(parms->save.ngcov>0){
-	//Outputing psol gradient covariance.
-	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-	    int iwfs1=parms->save.gcov[igcov*2];
-	    int iwfs2=parms->save.gcov[igcov*2+1];
-	    info("Computing covariance between wfs %d and %d\n",iwfs1,iwfs2);
-	    dmm(&simu->gcov->p[igcov], simu->gradol->p[iwfs1], simu->gradol->p[iwfs2],"nt",1);
-	}
-    }
-    if(parms->cn2.pair){
-	CN2EST_T *cn2est=recon->cn2est;
-	cn2est_cov(cn2est);//convert gradients to cross covariance.
-	if((simu->isim+1-parms->sim.start)%parms->cn2.step == 0){
-	    dcellswrite(cn2est->cc, 1./cn2est->nstep, "cc_%d",simu->isim+1);
-	    cn2est_est(cn2est, parms);//do the CN2 estimation
-	    if(parms->cn2.moveht){
-		cn2est_moveht(recon);
-	    }
-	    if(parms->cn2.tomo){
-		cn2est_updatetomo(recon,parms);
-	    }
-	}
-    }//if cn2est
     simu->tk_wfs=myclockd()-tk_start;
 }

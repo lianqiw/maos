@@ -29,7 +29,7 @@
 #include "misc.h"
 #include "io.h"
 
-void writeint(int fd, int cmd){
+void writeintsock(int fd, int cmd){
     if(write(fd, &cmd, sizeof(int))!=sizeof(int))
 	warning3("Write failed\n");
 }
@@ -44,11 +44,11 @@ int readint(int fd){
 void writestr(int fd, const char *str){
     if(str){
 	int len=strlen(str)+1;
-	writeint(fd, len);
+	writeintsock(fd, len);
 	if(write(fd, str, len)!=len)
 	    warning3("Write failed\n");
     }else{
-	writeint(fd, 0);
+	writeintsock(fd, 0);
     }
 }
 char *readstr(int fd){

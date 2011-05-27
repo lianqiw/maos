@@ -25,8 +25,8 @@
    Routings to setup moao and carry out moao DM fitting.
 */
 
-/**
-   cyclic shift the dmats.  \todo: consider replacing this with a integrator*/
+/*
+   cyclic shift the dmats.  \todo: consider replacing this with a integrator
 static void shift_ring(int nap, dmat **ring, dmat *new){
     dmat *keep=ring[nap-1];
     for(int iap=nap-1; iap>=0; iap--){
@@ -38,7 +38,7 @@ static void shift_ring(int nap, dmat **ring, dmat *new){
     }
     dfree(keep);
 }
-
+*/
 /**
    Free MOAO_T
  */
@@ -111,8 +111,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc, NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
 	recon->moao[imoao].HA=spcellnew(1,1);
-	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc, recon->ploc, 
-					NULL, 0, 0, 1, 
+	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc, recon->ploc, NULL, 0, 0, 1, 
 					parms->moao[imoao].cubic,parms->moao[imoao].iac); 
 	if(parms->moao[imoao].lrt_ptt){
 	    recon->moao[imoao].NW=dcellnew(1,1);
@@ -164,17 +163,22 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 	  double thetax, double thetay, double hs, 
 	  const dcell *opdr, const dcell *dmcommon, dcell **rhsout, const double alpha){
   
-    //loc_t *maloc=recon->moao[imoao].aloc;
     dcell *xp=dcellnew(1,1);
     xp->p[0]=dnew(recon->ploc->nloc,1);
     
     for(int ipsr=0; ipsr<recon->npsr; ipsr++){
 	const double ht = parms->atmr.ht[ipsr];
 	double scale=1.-ht/hs;
-	prop_nongrid(recon->xloc[ipsr], opdr->p[ipsr]->p,
-		     recon->ploc, NULL, xp->p[0]->p, 1, 
-		     thetax*ht, thetay*ht, scale, 
-		     0, 0);
+	if(parms->tomo.square){
+	    recon->xmap[ipsr]->p=opdr->p[ipsr]->p;
+	    prop_grid_stat(recon->xmap[ipsr], recon->ploc->stat, 
+			   xp->p[0]->p, 1, 
+			   thetax*ht, thetay*ht,scale, 0, 0, 0);
+	}else{
+	    prop_nongrid(recon->xloc[ipsr], opdr->p[ipsr]->p,
+			 recon->ploc, NULL, xp->p[0]->p, 1, 
+			 thetax*ht, thetay*ht, scale, 0, 0);
+	}
     }
     for(int idm=0; idm<recon->ndm; idm++){
 	const double ht = parms->dm[idm].ht;
@@ -242,63 +246,59 @@ void moao_recon(SIM_T *simu){
 	}
     }
     dcell *rhs=NULL;
-    if(simu->moao_wfs){
-	PDCELL(simu->moao_wfs, dmwfs);
+    if(simu->moao_wfs){//There is MOAO DM for WFS
+	dcell *dmmoao=dcellnew(1,1);
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int imoao=parms->powfs[ipowfs].moao;
 	    dcell *rhsout=NULL;
-	    if(imoao>-1){
-		double hs=parms->powfs[ipowfs].hs;
-		dcell *dmmoao=dcellnew(1,1);
-		if(recon->warm_restart){
-		    dmmoao->p[0]=ddup(dmwfs[iwfs][0]);
+	    if(imoao<0) continue;
+	    double hs=parms->powfs[ipowfs].hs;
+	    dmmoao->p[0]=simu->moao_wfs->p[iwfs];
+	    if(!recon->warm_restart){
+		dcellzero(dmmoao);
+	    }
+	    dcellzero(rhs);
+	    moao_FitR(&rhs, recon, parms,  imoao, 
+		      parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
+		      hs, simu->opdr, dmcommon, &rhsout, 1);
+	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs, 
+		recon->warm_restart, parms->fit.maxit);
+	    /*if(parms->tomo.split){//remove the tip/tilt form MEMS DM
+	      double ptt[3]={0,0,0};
+	      loc_t *aloc=recon->moao[imoao].aloc;
+	      dmat *aimcc=recon->moao[imoao].aimcc;
+	      loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
+	      loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
+	      }*/
+	    if(!isinf(parms->moao[imoao].stroke)){
+		int nclip=dclip(dmmoao->p[0], 
+				-parms->moao[imoao].stroke,
+				parms->moao[imoao].stroke);
+		if(nclip>0){
+		    info("wfs %d: %d actuators clipped\n", iwfs, nclip);
 		}
-		dcellzero(rhs);
-		moao_FitR(&rhs, recon, parms,  imoao, 
-			  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
-			  hs, simu->opdr, dmcommon, &rhsout, 1);
-		pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs, 
-		    recon->warm_restart, parms->fit.maxit);
-		/*if(parms->tomo.split){//remove the tip/tilt form MEMS DM
-		    double ptt[3]={0,0,0};
-		    loc_t *aloc=recon->moao[imoao].aloc;
-		    dmat *aimcc=recon->moao[imoao].aimcc;
-		    loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
-		    loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
-		    }*/
-		if(!isinf(parms->moao[imoao].stroke)){
-		    int nclip=dclip(dmmoao->p[0], 
-				    -parms->moao[imoao].stroke,
-				    parms->moao[imoao].stroke);
-		    if(nclip>0){
-			info("wfs %d: %d actuators clipped\n", iwfs, nclip);
-		    }
-		}
-		shift_ring(simu->moao_wfs->nx, dmwfs[iwfs], dmmoao->p[0]);
-		if(parms->plot.run){
-		    drawopd("MOAO WFS RHS", recon->ploc, rhsout->p[0]->p, NULL,
-			    "MOAO for WFS","x (m)", "y(m)", "Wfs rhs %d", iwfs);
-		    drawopd("MOAO WFS", recon->moao[imoao].aloc, dmmoao->p[0]->p,NULL,
-			    "MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
-		}
-	
-		if(parms->save.dm){
-		    cellarr_dmat(simu->save->moao_wfs[iwfs], dmmoao->p[0]);
-		}
-		dcellfree(rhsout);
-		dcellfree(dmmoao);
-	    }//if imoao
+	    }
+	    if(parms->plot.run){
+		drawopd("MOAO WFS RHS", recon->ploc, rhsout->p[0]->p, NULL,
+			"MOAO for WFS","x (m)", "y(m)", "Wfs rhs %d", iwfs);
+		drawopd("MOAO WFS", recon->moao[imoao].aloc, dmmoao->p[0]->p,NULL,
+			"MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
+	    }
+	    if(parms->save.dm){
+		cellarr_dmat(simu->save->moao_wfs[iwfs], dmmoao->p[0]);
+	    }
+	    dcellfree(rhsout);
 	}//if wfs
-
+	free(dmmoao);//Don't do dcellfree.
     }
-    if(simu->moao_evl){
-	PDCELL(simu->moao_evl, dmevl);
+    if(simu->moao_evl){//There is MOAO DM for Science
 	int imoao=parms->evl.moao;
+	dcell *dmmoao=dcellnew(1,1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    dcell *dmmoao=dcellnew(1,1);
-	    if(recon->warm_restart){
-		dmmoao->p[0]=ddup(dmevl[ievl][0]);//warm restart.
+	    dmmoao->p[0]=simu->moao_evl->p[ievl];
+	    if(!recon->warm_restart){
+		dcellzero(dmmoao);
 	    }
 	    dcell *rhsout=NULL;
 	    dcellzero(rhs);
@@ -323,19 +323,18 @@ void moao_recon(SIM_T *simu){
 		    info("evl %d: %d actuators clipped\n", ievl, nclip);
 		}
 	    }
-	    shift_ring(simu->moao_evl->nx, dmevl[ievl], dmmoao->p[0]);
 	    if(parms->plot.run){
 		drawopd("MOAO EVL RHS", recon->ploc, rhsout->p[0]->p, NULL,
 			"MOAO for WFS","x (m)", "y(m)", "Evl %d", ievl);
-		drawopd("MOAO EVL", recon->moao[imoao].aloc, dmevl[ievl][0]->p,NULL,
+		drawopd("MOAO EVL", recon->moao[imoao].aloc, dmmoao->p[0]->p,NULL,
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){
 		cellarr_dmat(simu->save->moao_evl[ievl], dmmoao->p[0]);
 	    }	 
-	    dcellfree(dmmoao);
 	    dcellfree(rhsout);
 	}//ievl
+	free(dmmoao);//don't do dcellfree
     }
     dcellfree(dmcommon);
     dcellfree(rhs);

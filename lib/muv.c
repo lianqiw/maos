@@ -30,16 +30,18 @@
    This can also be used to solve linear equations using muv_solve() or muv_bgs_solve().
    
 */
-
+/*
+  First, forward operations. 
+*/
 
 /**
-   Apply the sparse plug low rand compuation to xin with scaling of alpha:
+   Apply the sparse plus low rank compuation to xin with scaling of alpha:
    \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.  */
 void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
     const MUV_T *A = B;
     if(A->M){
 	if(!xin) return;
-	if(A->nthread>1){
+	if(xin->ny>1){
 	    spcellmulmat_thread(xout, A->M, xin, alpha);
 	}else{
 	    spcellmulmat(xout, A->M, xin, alpha);
@@ -55,6 +57,54 @@ void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
 	}
     }else{
 	A->Mfun(xout, A->Mdata, xin, alpha);
+    }
+}
+/**
+   Apply the transpose of operation muv(); Apply the sparse plug low rand
+   compuation to xin with scaling of alpha: \f$xout=(A.M-A.V*A.U')*xin*alpha\f$;
+   U,V are low rank.  */
+void muv_t(dcell **xout, const void *B, const dcell *xin, const double alpha){
+    const MUV_T *A = B;
+    if(A->M){
+	if(!xin) return;
+	if(xin->ny>1){
+	    sptcellmulmat_thread(xout, A->M, xin, alpha);
+	}else{
+	    sptcellmulmat(xout, A->M, xin, alpha);
+	}
+	if(A->U && A->V){
+	    dcell *tmp=NULL;
+	    dcellmm(&tmp,A->U, xin, "tn", -1.);
+	    dcellmm(xout,A->V, tmp, "nn", alpha);
+	    dcellfree(tmp);
+	}
+	if(A->extra){
+	    error("Need to implement this\n");
+	    A->exfun(xout, A->extra, xin, alpha, -1, -1);
+	}
+    }else{
+	error("Need to implement this\n");
+	A->Mfun(xout, A->Mdata, xin, alpha);
+    }
+}
+/**
+   Apply the sparse plus low rank computation to xin with scaling of alpha to
+   sparse cell array. \f$xout=(A.M-A.U*A.V')*xin*alpha\f$; U,V are low rank.
+ */
+void muv_sp(dcell **xout, const void *B, const spcell *xin, const double alpha){
+    const MUV_T *A=B;
+    if(!A->M) error("Not implemented\n");
+    if(!xin) return;
+    spcell *xout2=spcellmulspcell(A->M, xin, 1);
+    spcellfull(xout, xout2, alpha);
+    spcellfree(xout2);
+    if(A->U && A->V){
+	dcell *tmp=NULL;
+	dcell *VT=dcelltrans(A->V);
+	dcellmulsp(&tmp, VT, xin, -1); 
+	dcellfree(VT);
+	dcellmm(xout, A->U, tmp, "nn", alpha);
+	dcellfree(tmp);
     }
 }
 /*
@@ -98,6 +148,9 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     }
 }
 
+/*
+  A few routines to do Cholesky deocomposition or SVD.
+*/
 /**
    Prepare the low rank terms:
    Up=M^{-1}*U, 
@@ -225,58 +278,98 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
     }
     toc2("done.");
 }
-
+/*
+  A few routines to apply CBS or SVD solver.
+*/
 /**
-   Apply cholesky backsubstitution solve to xin to get xout. Create xout is not
-   exist already.  */
+   Apply CBS or SVD multiply to xin to get xout. Create xout is not exist
+   already.  xout = A^-1 * xin; xin and xout can be the same for in place operation.*/
 
-void muv_direct_solve(dmat **xout, const MUV_T *A, const dmat *xin){
-    dzero(*xout);
+void muv_direct_solve(dmat **xout, const MUV_T *A, dmat *xin){
+    dmat *dotpt=NULL;
+    if(A->Up && A->Vp){
+	dmm(&dotpt,A->Vp,xin,"tn",-1);
+    }
     if(A->MI){
-	dmm(xout, A->MI, xin, "nn", 1);
+	if(*xout==xin){
+	    dmat *tmp=NULL;
+	    dmm(&tmp, A->MI, xin, "nn", 1);
+	    dcp(xout, tmp);
+	    dfree(tmp);
+	}else{
+	    dzero(*xout);
+	    dmm(xout, A->MI, xin, "nn", 1);
+	}
     }else{
 	chol_solve(xout,A->C,xin);
     }
-    if(A->Up && A->Vp){
-	dmat *tmp=NULL;
-	dmm(&tmp,A->Vp,xin,"tn",-1);
-	dmm(xout,A->Up,tmp,"nn",1);
-	dfree(tmp);
+    if(dotpt){
+	dmm(xout, A->Up, dotpt, "nn", 1);
+	dfree(dotpt);
     }
+}
+/**
+   Apply CBS or SVD multiply to square sparse matrix. xout = A^-1 * xin *
+   (A^-1)^T. The output is dmat if using SVD, and dsp if using CBS.
+ */
+void* muv_direct_spsolve(const MUV_T *A, const dsp *xin){
+    void *xout=NULL;
+    if(A->MI){
+	dmat *x1=NULL;
+	dmulsp(&x1, A->MI, xin, 1);
+	dmm((dmat**) &xout, x1, A->MI, "nt", 1);
+	dfree(x1);
+    }else{
+	dsp *x1=chol_spsolve(A->C, xin);
+	dsp *x1t=sptrans(x1); 
+	spfree(x1);
+	dsp *x2=chol_spsolve(A->C, x1t);
+	spfree(x1t);
+	xout=sptrans(x2); 
+	spfree(x2);
+    }
+    return xout;
 }
 /**
    Apply cholesky backsubstitution solve to xin to get xout. Create xout is not
-   exist already.  */
+   exist already.  xin and xout can be the same for in place operation. */
 
-void muv_direct_diag_solve(dmat **xout, const MUV_T *A, const dmat *xin, int ib){
+void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib){
     if(!xin) return;
-    dzero(*xout);
+    dmat *dotpt=NULL;
+    if(A->UpB && A->VpB){
+	dmm(&dotpt,A->VpB->p[ib],xin,"tn",-1);
+    }
     if(A->MIB){
-	dmm(xout, A->MIB->p[ib], xin, "nn", 1);
+	if(*xout==xin){
+	    dmat *tmp=NULL;
+	    dmm(&tmp, A->MIB->p[ib], xin, "nn", 1);
+	    dcp(xout, tmp);
+	    dfree(tmp);
+	}else{
+	    dzero(*xout);
+	    dmm(xout, A->MIB->p[ib], xin, "nn", 1);
+	}
     }else{
 	chol_solve(xout,A->CB[ib],xin);
     }
-    if(A->UpB && A->VpB){
-	dmat *tmp=NULL;
-	dmm(&tmp,A->VpB->p[ib],xin,"tn",-1);
-	dmm(xout,A->UpB->p[ib],tmp,"nn",1);
-	dfree(tmp);
+    if(dotpt){
+	dmm(xout,A->UpB->p[ib],dotpt,"nn",1);
+	dfree(dotpt);
     }
 }
 /**
-   convert the data from dcell to dmat and apply muv_direct_solve() */
-void muv_direct_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin){
+   convert the data from dcell to dmat and apply muv_direct_solve() . May be done in place.*/
+void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin){
     if(!xin) return;
     if(xin->nx*xin->ny==1){//there is only one cell.
 	if(!*xout) *xout=dcellnew(1,1);
 	muv_direct_solve(&((*xout)->p[0]), A, xin->p[0]);
     }else{
 	dmat *xin2=dcell2m(xin);
-	dmat *xout2=NULL;
-	muv_direct_solve(&xout2, A, xin2);
+	muv_direct_solve(&xin2, A, xin2);//in place solve.
+	d2cell(xout,xin2,xin);//xin is the reference for dimensions. copy data into xout.
 	dfree(xin2);
-	d2cell(xout,xout2,xin);//xin is the reference for dimensions. copy data into xout.
-	dfree(xout2);
     }
 }
 /**
@@ -284,7 +377,7 @@ void muv_direct_solve_cell(dcell **xout, const MUV_T *A, const dcell *xin){
    assembled. We use routines from muv. to do the computation.  */
 void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
 		   const MUV_T *A,/**<[in] Contain info about the The left hand side matrix A*/
-		   const dcell *b/**<[in] The right hand side vector to solve*/ 
+		   const dcell *b /**<[in] The right hand side vector to solve*/ 
 		   ){
     if(!b) return;
     int nb=b->nx;
@@ -333,25 +426,32 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
     dcellfree(c0);
 }
 /**
-   solve A*x=b using algorithms depend on algorithm
+   solve x=A^-1*B*b using algorithms depend on algorithm, wrapper.
 */
 void muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
-	       const MUV_T *A,/**<[in] Contain info about the The left hand side matrix A*/
-	       const dcell *b/**<[in] The right hand side vector to solve*/ 
+	       const MUV_T *L,/**<[in] Contain info about the left hand side matrix A*/
+	       const MUV_T *R,/**<[in] Contain info about the right hand side matrix B*/
+	       dcell *b       /**<[in] The right hand side vector to solve*/ 
 	       ){
-    if(A->bgs){
-	muv_bgs_solve(px, A, b);
+    dcell *rhs=NULL;
+    if(R){
+	muv(&rhs, R, b, 1);
     }else{
-	switch(A->alg){
+	rhs=b; 
+    }
+    if(L->bgs){
+	muv_bgs_solve(px, L, rhs);
+    }else{
+	switch(L->alg){
 	case 0://CBS
 	case 2://SVD
-	    muv_direct_solve_cell(px, A, b);
+	    muv_direct_solve_cell(px, L, rhs);
 	    break;
 	case 1://CG
-	    pcg(px, A->M?muv:A->Mfun, A->M?A:A->Mdata, A->pfun, A->pdata, b, A->warm, A->maxit);
+	    pcg(px, L->M?muv:L->Mfun, L->M?L:L->Mdata, L->pfun, L->pdata, rhs, L->warm, L->maxit);
 	    break;
 	default:
-	    error("Invalid alg=%d\n", A->alg);
+	    error("Invalid alg=%d\n", L->alg);
 	}
     }
 }

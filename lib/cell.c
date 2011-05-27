@@ -578,7 +578,6 @@ X(cell)* X(cellinvspd_each)(X(cell) *A){
 */
 X(mat) *X(cell2m)(const X(cell) *A){
     if(A->nx*A->ny==1){
-	info("Single block, return a reference\n");
 	return X(ref)(A->p[0]);
     }
     X(mat) *(*Ap)[A->nx] = (X(mat) *(*)[A->nx])A->p;
