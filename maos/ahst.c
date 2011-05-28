@@ -26,9 +26,10 @@
 #include "ahst.h"
 
 /**
-   \file maos/ahst.c
-   Contains functions to setup NGS modes and reconstructor using AHST for one or two DMs.
-*/
+   \file maos/ahst.c Contains functions to setup NGS modes and reconstructor
+   using AHST for one or two DMs.  Use parms->wfsr instead of parms->wfs for wfs
+   information, which hands GLAO mode correctly.
+   */
 
 TIC;
 /**
@@ -384,8 +385,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     int ndm=parms->ndm;
     loc_t **aloc=recon->aloc;
     int nmod=ngsmod->nmod;
-    int nind=(parms->sim.recon==2)?parms->npowfs:parms->nwfs;
-    dcell *ZSN=dcellnew(nind,1);
+    dcell *ZSN=dcellnew(parms->nwfsr,1);
     //NGS mode vector
     dcell *M=dcellnew(1,1);
     M->p[0]=dnew(nmod,1);
@@ -395,16 +395,15 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
     }
     PSPCELL(recon->GA,GA);
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip)
 	    continue;
-	int ind=(parms->sim.recon==2)?ipowfs:iwfs;
 
 	int nsa=powfs[ipowfs].pts->nsa;
-	if(ZSN->p[ind]) continue;
-	ZSN->p[ind]=dnew(nsa*2,nmod);
-	PDMAT(ZSN->p[ind],grad);
+	if(ZSN->p[iwfs]) continue;
+	ZSN->p[iwfs]=dnew(nsa*2,nmod);
+	PDMAT(ZSN->p[iwfs],grad);
 	dmat *grad2=calloc(1, sizeof(dmat));
 	grad2->nx=nsa*2; 
 	grad2->ny=1;
@@ -418,7 +417,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	    ngsmod2dm(&dmt,recon,M,1.);
 	    dzero(grad2);
 	    for(int idm=0; idm<parms->ndm; idm++){
-		spmulmat(&grad2,GA[idm][ind],dmt->p[idm],1);
+		spmulmat(&grad2,GA[idm][iwfs],dmt->p[idm],1);
 	    }
 	}
 	free(grad2);
@@ -568,7 +567,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
        Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
        Pngs=Rngs*GA
      */
-    spcell *saneai=parms->sim.recon==2?recon->saneaip:recon->saneai;
+    spcell *saneai=recon->saneai;
     if(parms->tomo.split==1 && !parms->sim.skysim){
 	//we disabled GA for low order wfs in skysim mode.
 	ngsmod->GM=ngsmod_g(parms,recon,powfs);

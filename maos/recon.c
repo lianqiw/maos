@@ -42,8 +42,8 @@ void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
-    int high_output=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
-  
+    int hi_output=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
+    int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
     dcell *dmpsol[2];//Hi and Lo
     if(parms->sim.fuseint){
 	dmpsol[0]=dmpsol[1]=simu->dmint[parms->dbg.psol?0:1];
@@ -51,7 +51,7 @@ void tomofit(SIM_T *simu){
 	dmpsol[0]=simu->dmint_hi[parms->dbg.psol?0:1];
 	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];
     }
-    if(high_output){
+    if(hi_output){
 	if(parms->sim.fitonly){
 	    dcellfree(simu->opdr);
 	    //simu->opdr=atm2xloc(simu);
@@ -120,7 +120,7 @@ void tomofit(SIM_T *simu){
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
 	//Low order has output
-	if(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0){
+	if(lo_output){
 	    dcellzero(simu->Merr_lo);
 	    switch(parms->tomo.split){
 	    case 1:{
@@ -146,7 +146,7 @@ void tomofit(SIM_T *simu){
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
     }
-    if(high_output && parms->sim.psfr && isim>=parms->evl.psfisim && dmpsol[0]){
+    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim && dmpsol[0]){
 	psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
     }
 }
@@ -157,50 +157,33 @@ void lsr(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;
-    const int do_hi=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
-    const int do_low=parms->tomo.split && (!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
-    dcell *graduse=NULL;
-    if(do_hi || do_low){
-	if(parms->sim.recon==2){//GLAO
-	    graduse=dcellnew(parms->npowfs, 1);
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		double scale=1./parms->powfs[ipowfs].nwfs;
-		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
-		    dadd(&graduse->p[ipowfs], 1, simu->gradlastcl->p[iwfs], scale);
-		}
-	    }
-	}else{
-	    graduse=simu->gradlastcl;
-	}
-    }
-    if(parms->sim.psfr) error("Not implemented yet\n");
-    if(do_hi){
-	muv_solve(&simu->dmerr_hi,&(recon->LL), &(recon->LR), graduse);
+    const int hi_output=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
+    const int lo_output=parms->tomo.split && (!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
+   
+    if(parms->sim.psfr) warning("Not tested yet\n");
+    if(hi_output){
+	muv_solve(&simu->dmerr_hi,&(recon->LL), &(recon->LR), simu->gradlastcl);
 	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
-    }else{//if high order has output
+    }else{//if high order does not has output
 	dcellfree(simu->dmerr_hi);
     }
-    if(parms->tomo.split){
-	//Low order has output
-	if(do_low){
+    if(parms->tomo.split){ //Split tomography
+	if(lo_output){//Low order has output
 	    dcellzero(simu->Merr_lo);
 	    NGSMOD_T *ngsmod=recon->ngsmod;
-	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,graduse,"nn",1);
+	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
 	    if(parms->sim.psfr)
 		dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
 	}else{
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
     } 
-    if(do_hi && parms->sim.psfr && isim>=parms->evl.psfisim){
+    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
 	psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);	
     }
-    if(graduse != simu->gradlastcl){
-	dcellfree(graduse);
-    }
+   
 }
 /**
    Compute pseudo open loop gradients for WFS that need. Only in close loop. In
@@ -218,10 +201,11 @@ static void calc_gradol(SIM_T *simu){
     PSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].psol) continue;
-	dcelladd(&simu->dmpsol[ipowfs], 1, dmpsol, 1./parms->powfs[ipowfs].dtrat);  
+	dcelladd(&simu->dmpsol[ipowfs], 1, dmpsol, 1./parms->powfs[ipowfs].dtrat);
 	if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){//Has output.
-	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+	    int nindwfs=parms->sim.glao?1:parms->powfs[ipowfs].nwfs;
+	    for(int indwfs=0; indwfs<nindwfs; indwfs++){
+		int iwfs=parms->sim.glao?ipowfs:parms->powfs[ipowfs].wfs[indwfs];
 		dcp(&simu->gradlastol->p[iwfs], simu->gradlastcl->p[iwfs]);
 		for(int idm=0; idm<parms->ndm && simu->dmpsol[ipowfs]; idm++){
 		    spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], simu->dmpsol[ipowfs]->p[idm], 1);

@@ -484,7 +484,7 @@ void wfsgrad_iwfs(thread_t *info){
 		error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
 	    }
 	    dmat *PTT=NULL;
-	    if(parms->sim.recon==2){
+	    if(parms->sim.glao){
 		PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
 	    }else{
 		PTT=recon->PTT->p[iwfs+iwfs*nwfs];
@@ -494,7 +494,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	    /*Compute LGS Uplink error*/
 	    dzero(simu->upterr->p[iwfs]);
-	    dmm(&simu->upterr->p[iwfs], PTT, simu->gradcl->p[iwfs], "nn", 1);
+	    dmm(&simu->upterr->p[iwfs], PTT, *gradout, "nn", 1);
 	    //copy upterr to output.
 	    PDMAT(simu->upterrs->p[iwfs], pupterrs);
 	    pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];

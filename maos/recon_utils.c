@@ -200,7 +200,7 @@ static void Tomo_prop(thread_t *info){
     PSPCELL(recon->HXWtomo,HXW);
     const int nps=recon->HXWtomo->ny;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
-	int ipowfs = parms->wfs[iwfs].powfs;
+	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
 	dmat *xx=dnew(recon->ploc->nloc, 1);
 	const double hs=parms->powfs[ipowfs].hs;
@@ -209,8 +209,8 @@ static void Tomo_prop(thread_t *info){
 		//Do the ray tracing instead of using HXW.
 		double ht=recon->ht->p[ips];
 		double displace[2];
-		displace[0]=parms->wfs[iwfs].thetax*ht;
-		displace[1]=parms->wfs[iwfs].thetay*ht;
+		displace[0]=parms->wfsr[iwfs].thetax*ht;
+		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		double scale=1. - ht/hs;
 		prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
 			       displace[0],displace[1], scale, 0, 0, 0);
@@ -269,11 +269,11 @@ static void Tomo_iprop(thread_t *info){
 	    double ht=recon->ht->p[ips];
 	    for(int iwfs=0; iwfs<recon->HXWtomo->nx; iwfs++){
 		if(!data->gg->p[iwfs]) continue;
-		int ipowfs = parms->wfs[iwfs].powfs;
+		int ipowfs = parms->wfsr[iwfs].powfs;
 		const double hs=parms->powfs[ipowfs].hs;
 		double displace[2];
-		displace[0]=parms->wfs[iwfs].thetax*ht;
-		displace[1]=parms->wfs[iwfs].thetay*ht;
+		displace[0]=parms->wfsr[iwfs].thetax*ht;
+		displace[1]=parms->wfsr[iwfs].thetay*ht;
 		double scale=1. - ht/hs;
 		prop_grid_stat_transpose(recon->xmap[ips], recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
 					 displace[0],displace[1], scale, 0, 0, 0);
@@ -355,7 +355,7 @@ void TomoL(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     assert(xin->ny==1);//modify the code for ny>1 case.
-    dcell *gg=dcellnew(parms->nwfs, 1);
+    dcell *gg=dcellnew(parms->nwfsr, 1);
     const int nps=recon->npsr;
     if(!*xout){
 	*xout=dcellnew(recon->npsr, 1);
@@ -708,3 +708,31 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
     dfree(xx);
     dcellfree(dmadd);
 }
+
+/**
+   Shift gradient when new gradients are ready (in the end of parallel section
+   in sim in CL or wfsgrad in OL). Do not execute in parallel with other
+   routines. In GLAO mode, also averaged gradients from the same type of powfs.
+*/
+void shift_grad(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    if(parms->sim.glao){
+	if(simu->gradlastcl){
+	    dcellzero(simu->gradlastcl);
+	}else{
+	    simu->gradlastcl=dcellnew(parms->nwfsr, 1);
+	}
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    const double scale=1./parms->powfs[ipowfs].nwfs;
+	    for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		dadd(&simu->gradlastcl->p[ipowfs], 1., simu->gradcl->p[iwfs], scale);
+	    }
+	}
+    }else{
+	dcellcp(&simu->gradlastcl, simu->gradcl); 
+    }
+    dcellcp(&simu->dmcmdlast, simu->dmcmd); 
+    simu->reconisim = simu->isim;
+}
+

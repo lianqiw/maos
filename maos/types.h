@@ -304,7 +304,6 @@ typedef struct RECON_T{
     spcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
     spcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/
     spcell *saneai;    /**<inverse of sanea^2 in radian^-2 for each wfs*/
-    spcell *saneaip;   /**<averaged saneai for each powfs (sim.recon==2)*/
     dcell *ecnn;       /**<covairance of Hx*(E*Cnn*E^t)*Hx^t: noise propagation to science.*/
     dmat *neam;        /**<subaperture averaged nea for each wfs*/
     double neamhi;     /**<average of neam for high order wfs.*/

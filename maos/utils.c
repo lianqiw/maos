@@ -463,7 +463,7 @@ static __attribute__((destructor)) void deinit(){
  */
 ARG_T * parse_args(int argc, char **argv){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
-    arg->nthread=1;//default is 1 thread.
+    arg->nthread=NCPU2;//Use all cpus by default.
     static struct option long_options[]={
 	{"help",0,0,'h'},
 	{"detach",0,0,'d'},

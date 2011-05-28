@@ -34,14 +34,11 @@
 
 #include "maos.h"
 #include "recon.h"
+#include "recon_utils.h"
 #include "setup_powfs.h"
 #include "sim.h"
 #include "sim_utils.h"
 #define TIMING_MEAN 0
-#define SHIFT_GRAD							\
-    dcellcp(&simu->gradlastcl, simu->gradcl);				\
-    dcellcp(&simu->dmcmdlast, simu->dmcmd);				\
-    simu->reconisim = simu->isim
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence
@@ -104,7 +101,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    thread_pool_wait(&group);
 		thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
 		thread_pool_wait(&group);
-		SHIFT_GRAD;//before filter.
+		shift_grad(simu);//before filter()
 		filter(simu);//updates dmreal, so has to be after prefevl/wfsgrad is done.
 #if defined(__linux__)
 		if(simu->nthread>1 && !detached){
@@ -121,13 +118,13 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    cpu_wfs=read_self_cpu();
 		    reconstruct(simu);//uses grads from gradlast cl, gradlast ol.
 		    cpu_recon=read_self_cpu();
-		    SHIFT_GRAD;
+		    shift_grad(simu);
 		    filter(simu);
 		    cpu_cachedm=read_self_cpu();
 		}else{//in OL mode, 
 		    wfsgrad(simu);
 		    cpu_wfs=read_self_cpu();
-		    SHIFT_GRAD;
+		    shift_grad(simu);
 		    reconstruct(simu);
 		    cpu_recon=read_self_cpu();
 		    filter(simu);

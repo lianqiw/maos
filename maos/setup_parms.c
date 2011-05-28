@@ -113,6 +113,9 @@ void free_parms(PARMS_T *parms){
 	
     }
     free(parms->powfs);
+    if(parms->wfs!=parms->wfsr){
+	free(parms->wfsr);
+    }
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	free(parms->wfs[iwfs].wvlwts);
     }
@@ -684,6 +687,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
     READ_INT(sim.recon);
+    READ_INT(sim.glao);
     READ_DBL(sim.fov);
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
     READ_INT(sim.evlol);
@@ -912,6 +916,13 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    parms->tomo.split=0;
 	}
     }
+    if(parms->sim.glao && parms->ndm!=1){
+	error("GLAO only works with 1 dm\n");
+    }
+    if(parms->sim.recon==1 && parms->tomo.split==2){
+	info2("MVST does not work with least square reconstructor. Changed to AHST");
+	parms->tomo.split=1;
+    }
 }
 /**
    postproc various WFS parameters based on other input information
@@ -1058,6 +1069,20 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	warning("Disable split tomography since there is no common DM\n");
 	parms->tomo.split=0;
     }
+
+    if(parms->sim.glao){
+	parms->wfsr=calloc(parms->npowfs, sizeof(WFS_CFG_T));
+	parms->nwfsr=parms->npowfs;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    parms->wfsr[ipowfs].thetax=0;
+	    parms->wfsr[ipowfs].thetay=0;
+	    parms->wfsr[ipowfs].powfs=ipowfs;
+	}
+    }else{//Use same information as wfs.
+	parms->wfsr = parms->wfs;
+	parms->nwfsr= parms->nwfs;
+    }
+
 }
 /**
    postproc atmosphere parameters.
@@ -1108,6 +1133,25 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	    parms->atmr.os[ips]=parms->atmr.os[parms->atmr.nps-1];
 	}
 	parms->atmr.nps=nps;
+    }
+    if(parms->sim.glao && parms->sim.recon==0){
+	/*GLAO mode. reconstruct only a single layer near the DM. Using only 1 fitting direction on axis.*/
+	warning2("In GLAO Mode, use 1 tomography grid near the ground dm and 1 on axis fitting direction\n");
+	parms->atmr.ht=realloc(parms->atmr.ht, sizeof(double));
+	parms->atmr.wt=realloc(parms->atmr.wt, sizeof(double));
+	parms->atmr.os=realloc(parms->atmr.os, sizeof(double));
+	parms->atmr.ht[0]=parms->dm[0].ht;
+	parms->atmr.wt[0]=1;
+	parms->atmr.nps=1;
+	
+	parms->fit.nfit=1;
+	parms->fit.thetax=realloc(parms->fit.thetax, sizeof(double));
+	parms->fit.thetay=realloc(parms->fit.thetay, sizeof(double));
+	parms->fit.wt=realloc(parms->fit.wt, sizeof(double));
+	parms->fit.ht=realloc(parms->fit.ht, sizeof(double));
+	parms->fit.thetax[0]=0;
+	parms->fit.thetay[0]=0;
+	parms->fit.wt[0]=1;
     }
     /*
       We don't drop weak turbulence layers in reconstruction. Instead, we make
@@ -1403,7 +1447,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    //focus tracking or cn2 estimation, or save gradient covariance. 
 	    parms->powfs[ipowfs].psol=1;
 	}else{//no focus tracking
-	    if(parms->sim.recon==0){//MVST
+	    if(parms->sim.recon==0){//MV
 		//low order wfs in ahst mode does not need psol.
 		if(parms->tomo.split==1 && parms->powfs[ipowfs].skip){
 		    parms->powfs[ipowfs].psol=0;
@@ -1766,8 +1810,8 @@ static void print_parms(const PARMS_T *parms){
 	default:
 	    error("Invalid");
 	}
-    }else{
-	info2("Using least square reconstructor with ");
+    }else if(parms->sim.recon==1){
+	info2("\033[0;32mLeast square reconstructor\033[0;0m is using ");
 	if(parms->tomo.bgs){
 	    info2("Block Gauss Seidel with ");
 	}
@@ -1784,6 +1828,8 @@ static void print_parms(const PARMS_T *parms){
 	default:
 	    error("Invalid\n");
 	}
+    }else{
+	error("parms->sim.recon=%d is illegal\n", parms->sim.recon);
     }
     info2("\n");
     info2("\033[0;32mSimulation\033[0;0m start at step %d, end at step %d, "

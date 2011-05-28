@@ -472,7 +472,6 @@ void sim_update_etf(SIM_T *simu){
     }
 }
 
-
 /**
    use random number dirived from input seed to seed other stream.  necessary to
    have independant streams for different wfs in threading routines to avoid
@@ -535,7 +534,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
       loop. They are used for testing*/
     if(parms->sim.closeloop){
-	simu->gradlastol=dcellnew(parms->nwfs, 1);
+	simu->gradlastol=dcellnew(parms->nwfsr, 1);
     }
     simu->gradacc=dcellnew(parms->nwfs,1);//wfsgrad internal
     simu->nthread=parms->sim.nthread;

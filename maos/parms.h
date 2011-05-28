@@ -418,6 +418,7 @@ typedef struct SIM_CFG_T{
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
     int recon;       /**<reconstruction method. 0: minimum variance, 1: least square*/
+    int glao;        /**<reconstruction in GLAO mode: average WFS measurements*/
     int evlol;       /**<evaluate open loop error only*/
     int noatm;       /**<disable atmosphere*/
     int fitonly;     /**<do DM fitting only, by replacing opdr with opdx. see above*/
@@ -564,6 +565,8 @@ typedef struct PARMS_T{
     /*the following are pointers because there may be several*/
     POWFS_CFG_T *powfs; /**<Array of wfs type*/
     WFS_CFG_T   *wfs;   /**<Array of wfs*/
+    WFS_CFG_T   *wfsr;  /**<Array of wfs used in reconstruction. Has only 1 wfs
+			   per powfs in glao mode, otherwise same as wfs.*/
     DM_CFG_T    *dm;    /**<Array of DM*/
     MOAO_CFG_T  *moao;  /**<Array of MOAO*/
 
@@ -575,6 +578,7 @@ typedef struct PARMS_T{
     SAVE_CFG_T   save;  /**<Specify what to save to file for debugging*/
     int npowfs;      /**<Number of wfs types*/
     int nwfs;        /**<Number of wfs*/
+    int nwfsr;       /**<Number of wfsr*/
     int ndm;         /**<Number of DMs*/
     int nmoao;       /**<Number of different MOAO type*/
     char **surf;     /**<OPD surfaces*/
