@@ -60,7 +60,8 @@
 #include "process.h"
 #define USE_SPIN_LOCK 1
 #if USE_SPIN_LOCK == 1
-#define LOCK_T int
+//Important to be volatile, otherwise lockes up in Sandy Bridge CPUs
+#define LOCK_T volatile int 
 #define LOCK_DO(A) SPIN_LOCK(A)
 #define LOCK_UN(A) SPIN_UNLOCK(A)
 #define LOCK_INIT(A) A=0

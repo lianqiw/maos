@@ -580,7 +580,6 @@ void wfsgrad_iwfs(thread_t *info){
 void wfsgrad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.fitonly || parms->sim.evlol) return;
-    RECON_T *recon=simu->recon;
     double tk_start=myclockd();
    
     //call the task in parallel and wait for them to finish.

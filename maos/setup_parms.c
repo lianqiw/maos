@@ -653,7 +653,7 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.napdm=2;
     }
     if(parms->sim.napngs==1){
-	parms->sim.apngs==realloc(parms->sim.apngs, sizeof(double)*2);
+	parms->sim.apngs=realloc(parms->sim.apngs, sizeof(double)*2);
 	parms->sim.apngs[1]=0;
 	parms->sim.napngs=2;
     }

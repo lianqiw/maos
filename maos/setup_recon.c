@@ -413,7 +413,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	info2("Generating GA");TIC;tic;
 	recon->GA= spcellnew(nwfs, ndm);
 	PDSPCELL(recon->GA,GA);
-	int lastipowfs=-1;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
 	    if(parms->sim.skysim && parms->powfs[ipowfs].lo){
@@ -435,7 +434,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		GA[idm][iwfs]=spmulsp(recon->GP->p[iwfs],H);
 		spfree(H);
 	    }//idm
-	    lastipowfs=ipowfs;
 	}
 	if(parms->save.setup){
 	    spcellwrite(recon->GA, "%s/GA",dirsetup);
@@ -450,7 +448,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     PDSPCELL(recon->GAhi,GAhi);
     PDSPCELL(recon->GA,GA);
     for(int idm=0; idm<ndm; idm++){
-	int lastipowfs=-1;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].lo){//for low order wfs
@@ -458,7 +455,6 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    }else{
 		GAhi[idm][iwfs]=spref(GA[idm][iwfs]);		
 	    }
-	    lastipowfs=ipowfs;
 	}
     }
 }
@@ -2215,7 +2211,6 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     PDSPCELL(recon->LR.M, LRM);
     PDSPCELL(recon->GA, GA);
 
-    int lastipowfs=-1;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip || !parms->powfs[ipowfs].lo){
@@ -2225,7 +2220,6 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    spfull(&pULo[iwfs][idm], LRM[iwfs][idm],-1);
 	    sptfull(&pVLo[iwfs][idm], GA[idm][iwfs],1);
 	}
-	lastipowfs=ipowfs;
     }
     recon->LL.U=dcellcat(recon->LR.U, ULo, 2);
     dcell *GPTTDF=NULL;

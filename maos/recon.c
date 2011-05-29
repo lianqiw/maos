@@ -194,9 +194,7 @@ void lsr(SIM_T *simu){
  */
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    const POWFS_T *powfs=simu->powfs;
     RECON_T *recon=simu->recon;
-  
     dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
     PSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
