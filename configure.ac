@@ -49,7 +49,7 @@ BUILD_DIR=$(pwd)
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
-OPTScommon=" -Wshadow  -Wall " #-all-static will produce a static exe.
+OPTScommon=" -Wshadow -Wall -Werror -g " #-all-static will produce a static exe.
 LDSYS="-lz -lm"
 OPTSextra=""
 use_shm="no"
@@ -68,12 +68,14 @@ case "$host_cpu" in
 	AC_DEFINE(X86, [1], "I386 Machine")
 	objcopy_output=elf32-i386
 	objcopy_arch=i386
+	echo "CPU is 32 bit"
 	;;
     *64)
         cpu="64"
 	AC_DEFINE(X86_64, [1], "X86_64 Machine")
 	objcopy_output=elf64-x86-64
 	objcopy_arch=i386:x86-64
+	echo "CPU is 64 bit"
 	;;
     *)
         AC_MSG_ERROR([Unrecognized host_cpu])
@@ -81,69 +83,63 @@ esac
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
 
-#mklname=libmkls
-#mklextra=
-#mkldep=
-mklname=mkl
 mklextra=_redistributed
-mkldep="-lguide"
 
-mkl_lib="${SRC_DIR}/external/${mklname}${cpu}/libmkl.la"
 win32=no
 use_mkl="no"
+try_mkl="no"
 mkl_avail="no"
 case "$host_os" in
 *linux*)
-    AM_CONDITIONAL(LINUX, true)
-    LDSYS="$LDSYS -lrt" #Real time library
-    #Enable System V Interface definition (IPC,SHM)
-    OPTSextra="-Werror -g -D_XOPEN_SOURCE=600 -D_BSD_SOURCE"
-    mkl_avail="yes"
-    if test -f "$mkl_lib" ;then
-       use_mkl_default="yes"
-    else
-       use_mkl_default="no"
-    fi
-    use_static_default="no"
-    if test -d /dev/shm ;then
-       use_shm_default="yes"
-    else
-       use_shm_default="no"
-    fi
-    #We only have MKL redistributable for linux
-    AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
-    AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
-    ;;
+ AM_CONDITIONAL(LINUX, true)
+ LDSYS="$LDSYS -lrt" #real time library.
+ OPTSextra="-D_BSD_SOURCE" #-D_XOPEN_SOURCE=600 
+ try_mkl="yes"
+ use_static_default="no"
+ wget="wget --no-check-certificate"
+ wgetoutput="-O"
+ mkldep="-lguide"
+ mklname=mkl${cpu}
+ ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
- if test comp_draw = "no" -a ! -e scripts/drawdaemon.app ;then
-     AC_MSG_NOTICE([Downloading drawdaemon.app from internet])
-     FN=drawdaemon.app_0.8.0.tar.gz 
-     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/$FN &&\
-     tar -xf $FN -C ${SRC_DIR}/scripts/ &&\
-     rm  -rf $FN
- fi
- if test comp_mon = "no" -a ! -e scripts/monitor.app ;then
-     AC_MSG_NOTICE([Downloading monitor.app from internet])
-     FN=monitor.app_0.8.0.tar.gz
-     curl -O -L --progress-bar https://github.com/downloads/lianqiw/maos/$FN &&\ 
-     tar -xf $FN -C ${SRC_DIR}/scripts/ &&\
-     rm	 -rf $FN
- fi
- AC_MSG_NOTICE([Please use the monitor downloaded to ${SRC_DIR}/scripts/monitor.app])
-;;
+ try_mkl="yes"
+ use_static_default="no"
+ wget="curl -L --progress-bar"
+ wgetoutput="--output"
+ mkldep="-liomp5"
+ mklname=mklfat
+ ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)
-;;
+ ;;
 *cygwin*|*mingw*)
  AM_CONDITIONAL(WIN, true)
  LAPACK="-lblas -llapack -lgfortran"
  win32=yes
  use_static_default=yes #blas/lapack are linked statically, but others are still dynamic. ship those
-;;
+ ;;
 *)
 AC_MSG_ERROR([Unrecognized OS])
 esac
+mkl_lib="${SRC_DIR}/external/${mklname}/libmkl.la"
+if test "$try_mkl" = "yes" ;then
+    #Enable System V Interface definition (IPC,SHM)
+    mkl_avail="yes" #available for download.
+    if test -f "$mkl_lib" ;then
+       use_mkl_default="yes"
+    else
+       use_mkl_default="no"
+    fi
+    if test -d /dev/shm ;then
+       use_shm_default="yes"
+    else
+       use_shm_default="no"
+    fi
+    #We only have MKL redistributable for linux and MAC.
+    AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
+    AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
+fi
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 
 #Common configure options.
@@ -301,15 +297,15 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
       echo The MKL library is not available at "$mkl_lib"
       echo Will download one form the website. 
       echo This library is only for non-commerical use only.
-      fn=${mklname}${cpu}${mklextra}.tar.bz2
-      wget --no-check-certificate ${BASEURL}/${fn}  -O /tmp/${fn}  || exit 1
+      fn=${mklname}${mklextra}.tar.bz2
+      $wget ${BASEURL}/${fn}  $wgetoutput /tmp/${fn}  || exit 1
       if test ! -d ${SRC_DIR}/external ;then
       	  mkdir -p ${SRC_DIR}/external || exit 1
       fi
       tar -xjvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
       rm -rf /tmp/${fn}
    fi
-   LAPACK="-L${SRC_DIR}/external/${mklname}${cpu} -lmkl ${mkldep}"
+   LAPACK="-L${SRC_DIR}/external/${mklname} -lmkl ${mkldep}"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
