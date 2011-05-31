@@ -129,7 +129,7 @@ int main(int argc, char **argv){
 	if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
 	setbuf(stdout,NULL);//disable buffering.
 	setbuf(stderr,NULL);
-	putenv("DISPLAY=");
+	unsetenv("DISPLAY");
 	execlp("matlab","matlab","-nojvm","-nodesktop","-nosplash","-r",argv[1],NULL);
     }
 }

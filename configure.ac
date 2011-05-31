@@ -93,7 +93,7 @@ case "$host_os" in
 *linux*)
  AM_CONDITIONAL(LINUX, true)
  LDSYS="$LDSYS -lrt" #real time library.
- OPTSextra="-D_BSD_SOURCE" #-D_XOPEN_SOURCE=600 
+ OPTSextra="-D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
  try_mkl="yes"
  use_static_default="no"
  wget="wget --no-check-certificate"
