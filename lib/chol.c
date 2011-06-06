@@ -30,6 +30,7 @@
 #define MOD(A) cholmod_##A
 #define ITYPE CHOLMOD_INT
 #endif
+#define CHOL_SIMPLE 0
 struct spchol{
     cholmod_factor *L;
     cholmod_common *c;
@@ -100,16 +101,17 @@ spchol* chol_factorize(dsp *A_in){
     MOD(start)(out->c);
     cholmod_sparse *A=sp2chol(A_in);
     out->c->status=CHOLMOD_OK;
-    out->c->final_super=0;//we want a simple result
-    {
-	//Try AMD ordering only. SLOW
-	/*
-	  out->c.nmethods=1;
-	  out->c.method[0].ordering=CHOLMOD_AMD;
-	  out->c.postorder=1;
-	  out->c.supernodal=CHOLMOD_SIMPLICIAL;//force simplicial only.
-	*/
-    }
+    out->c->final_super=0;//we want a simplicity result.
+    out->c->final_ll=1;   //Leave in LL instead of LDL format.
+    out->c->final_asis=!CHOL_SIMPLE; //do the conversion as shown above.
+    //Try AMD ordering only. SLOW
+    /*
+      out->c.nmethods=1;
+      out->c.method[0].ordering=CHOLMOD_AMD;
+      out->c.postorder=1;
+      out->c.supernodal=CHOLMOD_SIMPLICIAL;//force simplicial only.
+    */
+    
     out->L=MOD(analyze)(A,out->c);
     if(!out->L) {
 	info("\nCholmod error:");
@@ -135,13 +137,43 @@ spchol* chol_factorize(dsp *A_in){
 	error("Analyze failed\n");
     }
     MOD(factorize)(A,out->L, out->c);
+#ifdef CHOL_SIMPLE    
+    if(!out->c->final_asis){
+	//Our solver is much slower than the simplicity solver, or the supernodal solver.
+	warning2("Converted to our format.");
+	cholmod_factor *L=out->L;
+	out->Cp=L->Perm; L->Perm=NULL;
+	dsp *C=out->Cl=spnew(L->n, L->n, 0);
+	C->p=L->p;L->p=NULL;
+	C->i=L->i;L->i=NULL;
+	C->x=L->x;L->x=NULL;
+	C->nzmax=L->nzmax;
+	MOD(free_factor)(&out->L, out->c);
+	MOD(finish)(out->c);
+	free(out->c);
+	out->c=NULL;
+	out->L=NULL;
+#endif	
+
+	/*
+	spwrite(C,"L_C");
+
+	writespint(L->Perm, L->n, 1, "L_Perm");
+	writespint(L->p, L->n+1, 1, "L_p");
+	writespint(L->i, L->nzmax, 1, "L_i");
+	writedbl(L->x, L->nzmax, 1, "L_x");
+	writespint(L->nz, L->n+1, 1, "L_nz");
+	writespint(L->next, L->n+2,1, "L_next");
+	writespint(L->prev, L->n+2,1, "L_prev");
+	exit(0);*/
+    }
     free(A);
     return out;
 }
 
 /**
    Convert the internal data type cholesky factor into the lower left diagonal
-   and permutation vector.  The internal data A->L is freed is keep is 0.
+   and permutation vector.  The internal data A->L is freed if keep is 0.
 
    This routine works only if the factor is using simplicity factor. not
    supernodal. so, in chol_factorize, we have set c.final_super=0, so that the
@@ -149,9 +181,17 @@ spchol* chol_factorize(dsp *A_in){
  */
 void chol_convert(spchol *A, int keep){
     if(!A || !A->L) return;
-    cholmod_factor *L;
+    cholmod_factor *L=A->L;
     A->Cp=malloc(sizeof(spint)*A->L->n);
     memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
+#define USE_NEW_METHOD 0
+#if USE_NEW_METHOD == 1
+    if(keep){
+	A->Cl=spnew(L->n, L->n, 0);
+    }else{
+	A->Cl=spnew(L->n, L->n, 0);
+    }
+#else
     if(keep){
 	L=MOD(copy_factor)(A->L, A->c);
     }else{
@@ -167,6 +207,7 @@ void chol_convert(spchol *A, int keep){
 	A->c=NULL;
 	A->L=NULL;
     }
+#endif
 }
 /**
    Save cholesky factor and permutation vector to file.*/

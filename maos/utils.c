@@ -420,7 +420,7 @@ void maos_signal_handler(int sig){
 	    print_backtrace(0);
 	}
 	scheduler_finish(1);
-	_Exit(sig);//don't call clean up functions.
+	_Exit(sig);//don't call clean up functions, but does flush files.
     }
 }
 /**

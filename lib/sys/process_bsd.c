@@ -40,7 +40,7 @@ const char *get_job_progname(void){
 	char buf[PATH_MAX];
 	size_t cb = sizeof(buf);
 	sysctl(mib, 4, buf, &cb, NULL, 0);
-	progname=strdup(buf);
+	progname=strdup0(buf);
     }
     return progname;
 }

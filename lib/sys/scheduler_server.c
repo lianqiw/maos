@@ -149,7 +149,7 @@ static __attribute__((constructor))void init(){
     init_path();//the constructor in process.c may not have been called.
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
-    fnlog=strdup(fn);
+    fnlog=strdup0(fn);
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;
     {
@@ -174,6 +174,7 @@ static __attribute__((constructor))void init(){
 	hosts=malloc(nhost*sizeof(char*));
 	hosts[0]=calloc(60,sizeof(char));
 	gethostname(hosts[0],60);
+	register_deinit(NULL,hosts[0]);
     }else{
 	nhost=64;
 	hosts=malloc(nhost*sizeof(char*));
@@ -182,7 +183,7 @@ static __attribute__((constructor))void init(){
 	if(fp){
 	    char line[64];
 	    while(fscanf(fp,"%s\n",line)==1){
-		hosts[ihost]=strdup(line);
+		hosts[ihost]=strdup0(line);
 		ihost++;
 		if(ihost>=nhost){
 		    nhost*=2;
@@ -196,14 +197,15 @@ static __attribute__((constructor))void init(){
 	    error("failed to open file %s\n",fn);
 	}
     }
- 
+    register_deinit(NULL,hosts);
+
     char host[60];
     if(gethostname(host,60)) warning3("Unable to get hostname\n");
     hid=myhostid(host);
     if(hid==-1){
 	warning3("This host [%s] is not listed in ~/.aos/hosts\n",host);
 	//Not running in office machines.
-	hosts[0]=strdup(host);//use local machine
+	hosts[0]=strdup0(host);//use local machine
 	nhost=1;
 	hid=myhostid(host);
 	if(hid==-1){
@@ -657,8 +659,7 @@ static int respond(int sock){
 	break;
     case CMD_TRACE:
 	{
-	    int buflen=200;
-	    char out[buflen];
+	    char out[BACKTRACE_CMD_LEN];
 	    char *buf=readstr(sock);
 	    FILE *fpcmd=popen(buf,"r");
 	    if(!fpcmd){

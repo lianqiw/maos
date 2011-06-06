@@ -65,6 +65,7 @@ void free_parms(PARMS_T *parms){
     free(parms->fit.thetax);
     free(parms->fit.thetay);
     free(parms->fit.wt);
+    free(parms->fit.ht);
 
     free(parms->sim.apdm);
     free(parms->sim.apngs);

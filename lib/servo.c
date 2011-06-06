@@ -131,11 +131,12 @@ static double servoii_calc(SERVOII_T *data, double g0){
     return rms_tot;
 }
 typedef double(*golden_section_fun)(void *param, double x);
+
+/**
+   Root finding using golden section search.  Ordering: x1, x2, x3, x4
+*/
 static double golden_section_search(golden_section_fun f, SERVOII_T *param, 
 				    double x1, double x4, double tau){
-    /**
-       Ordering: x1, x2, x3, x4
-     */
     static double resphi= 0.381966011250105;//2-0.5*(1+sqrt(5));
     double x2=(x4-x1)*resphi+x1;
     double f2=f(param, x2);
@@ -206,8 +207,6 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
 	Hint=1./expsTs;
 	Hsys->p[i]=Hwfs->p[i]*Hlag*Hint*Hdac*Hmir*Hint;
     }
-    double g0_min=0.01;
-    double g0_max;
   
     cmat *Hol=cnew(nu->nx,1);
     dcell *gm=dcellnew(sigman->nx, sigman->ny);
@@ -218,9 +217,11 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
     data.nu=nu;
     data.s=s;
     data.psd=psd;
-    for(g0_max=0.1; ; g0_max+=0.1){
+    double g0_min=0.001;
+    double g0_max;
+    for(g0_max=g0_min; ; g0_max+=0.1){
 	servoii_calc(&data, g0_max);
-	if(data.gain_n>2){
+	if(data.gain_n>2){//don't magnify noise by twice.
 	    break;
 	}
     }

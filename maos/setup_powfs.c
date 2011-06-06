@@ -793,12 +793,10 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    info2("Calculating gradient offset due to NCPA\n");
 	    dcellfree(powfs[ipowfs].ncpa_grad);
 	    powfs[ipowfs].ncpa_grad=dcellnew(nwfs,1);
-	    int nsa=powfs[ipowfs].pts->nsa;
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		double *realamp=powfs[ipowfs].realamp[iwfs];
-		powfs[ipowfs].ncpa_grad->p[iwfs]=dnew(nsa*2,1);
 		if(parms->powfs[ipowfs].gtype_sim==1){
-		    pts_ztilt(powfs[ipowfs].ncpa_grad->p[iwfs]->p, powfs[ipowfs].pts,
+		    pts_ztilt(&powfs[ipowfs].ncpa_grad->p[iwfs], powfs[ipowfs].pts,
 			      powfs[ipowfs].nimcc>1?powfs[ipowfs].saimcc[iwfs]:powfs[ipowfs].saimcc[0], 
 			      realamp, powfs[ipowfs].ncpa->p[iwfs]->p);
 		}else{

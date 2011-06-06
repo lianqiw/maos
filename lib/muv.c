@@ -424,6 +424,8 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
 	}
     }
     dcellfree(c0);
+    dcellfree(c0b);
+    dcellfree(x0b);
 }
 /**
    solve x=A^-1*B*b using algorithms depend on algorithm, wrapper.
@@ -454,6 +456,7 @@ void muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm res
 	    error("Invalid alg=%d\n", L->alg);
 	}
     }
+    dcellfree(rhs);
 }
 
 /**

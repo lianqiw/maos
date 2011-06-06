@@ -18,6 +18,10 @@
 #include "drawdaemon.h"
 /*
   Routines in this file are about drawing in the cairo surface.
+
+  2011-06-02: New idea to improve the effiency of drawdaemon:
+  1) Only draw once, to a cached surface with no zoom, or displacement.
+  2) Draw the cached surface to the real surface with zoom or displacement when user requests.
 */
 const double stroke_dot[2]={1,5};
 const double stroke_dash[2]={10,10};
@@ -346,6 +350,7 @@ void update_limit(drawdata_t *drawdata){
 */
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     //fill white background
+    info2("start cairo_draw\n");TIC;tic;
     drawdata->font_name_version=font_name_version;
     PangoLayout *layout=pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, desc);
@@ -836,4 +841,5 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     cairo_destroy(cr);
     drawdata->icumulast=drawdata->icumu;
     drawdata->cumulast=drawdata->cumu;
+    toc("done");
 }

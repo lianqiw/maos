@@ -38,12 +38,12 @@ int curiseed=0;
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
 void maos(const PARMS_T *parms){    
-#if DEBUG == 1 || USE_MEM == 1
+    /*#if DEBUG == 1 || USE_MEM == 1
     {
 	int one=1;
 	omp_set_num_threads(&one);//only allow 1 thread.
     }
-#endif
+    #endif*/
     APER_T  * aper;
     POWFS_T * powfs;
     RECON_T * recon;

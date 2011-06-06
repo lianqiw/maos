@@ -92,15 +92,7 @@ static dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
     rmsol->p[1]=rmstt/mideal->ny;
     return rmsol;
 }
-/*
-typedef struct SIM1_T{
-    PARMS_S *parms;
-    STAR_S *star;
-    ASTER_S *aster;
-    int iaster;
-    int naster;
-    int seed;
-    }*/
+
 /**
    The actual work horse that does the physical optics time domain simulation.
    */
@@ -139,13 +131,7 @@ static void skysim_isky(SIM_S *simu){
 	   a few combinations are kept for each star field for further time
 	   domain simulations.
 	 */
-	/*SIM1_T data;
-	data.parms=parms;
-	data.star=star;
-	data.aster=aster;
-	data.iaster=0;
-	data.naster=naster;
-	data.seed=seed_skyc;*/
+
 	for(int iaster=0; iaster<naster; iaster++){
 	    //Parallelizing over aster gives same random stream.
 	    seed_rand(&aster[iaster].rand, seed_skyc+iaster+40);
@@ -370,9 +356,10 @@ void skysim(const PARMS_S *parms){
 	simu->psd_ngs_ws=add_psd(simu->psd_ngs, simu->psd_ws);
 	simu->psd_tt_ws=add_psd(simu->psd_tt, simu->psd_ws);
 
-	{
-	    //Precompute gains for different levels of noise.
-	    dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2.
+	if(parms->skyc.interpg){
+	    info2("Precompute gains for different levels of noise.\n");
+	    //dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2.
+	    dmat *sigma2=dlogspace(-18,-10,400);//in m2, logspace.
 	    simu->gain_tt =calloc(parms->skyc.ndtrat, sizeof(dcell*));
 	    simu->gain_ps =calloc(parms->skyc.ndtrat, sizeof(dcell*));
 	    simu->gain_ngs=calloc(parms->skyc.ndtrat, sizeof(dcell*));
@@ -471,14 +458,16 @@ void skysim(const PARMS_S *parms){
 	}
 	free(simu->bspstrehl);
 	dfree(simu->bspstrehlxy);
-	for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-	    dcellfree(simu->gain_ps[idtrat]);
-	    dcellfree(simu->gain_tt[idtrat]);
-	    dcellfree(simu->gain_ngs[idtrat]);
+	if(parms->skyc.interpg){
+	    for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		dcellfree(simu->gain_ps[idtrat]);
+		dcellfree(simu->gain_tt[idtrat]);
+		dcellfree(simu->gain_ngs[idtrat]);
+	    }
+	    free(simu->gain_ps);
+	    free(simu->gain_tt);
+	    free(simu->gain_ngs);
 	}
-	free(simu->gain_ps);
-	free(simu->gain_tt);
-	free(simu->gain_ngs);
     }//iseed_maos
     free(simu->status);
     free_powfs(simu->powfs,parms);

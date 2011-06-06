@@ -73,6 +73,7 @@ typedef struct SKYC_S{
     int dbg;         /**<save intermediate information for debugging.*/
     int dbgsky;      /**<only run this sky frame if not -1*/
     int dbgaster;    /**<only run this asterism if not -1*/
+    int interpg;     /**<Interpolate gain based in dtrat and signan*/
     int save;        /**<save information for latter running in MAOS.*/
     int maxstar;     /**<maximum number of (brightest) stars for each star field.*/
     int maxaster;    /**<Maximum number of best asterism for final processing.*/

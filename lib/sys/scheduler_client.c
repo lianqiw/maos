@@ -197,21 +197,21 @@ void scheduler_report(STATUS_T *status){
 #endif
 
 void print_backtrace_symbol(void *const *buffer, int size){
-    char cmdstr[200];
+    char cmdstr[BACKTRACE_CMD_LEN];
     char add[24];
     const char *progname=get_job_progname();//don't free pointer.
     if(!progname){
 	error("Unable to get progname\n");
     }
 #if PRINTBACKTRACE == 1 
-    snprintf(cmdstr,200,"addr2line -e %s",progname);
+    snprintf(cmdstr,BACKTRACE_CMD_LEN,"addr2line -f -e %s",progname);
 #else
-    snprintf(cmdstr,200,"%s: ",progname);
+    snprintf(cmdstr,BACKTRACE_CMD_LEN,"%s: ",progname);
 #endif
     int it;
     for(it=size-1; it>-1; it--){
 	snprintf(add,24," %p",buffer[it]);
-	strcat(cmdstr,add);
+	strncat(cmdstr,add,BACKTRACE_CMD_LEN-strlen(cmdstr)-1);
     }
 #if PRINTBACKTRACE == 1 
     if(psock==-1)

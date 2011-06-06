@@ -139,8 +139,8 @@ dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
        - 1: poisson and read out noise. 
        - 2: only poisson noise.   
 */
-dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs, const PARMS_S *parms, 
-		 int idtrat, int noisy, int demotettf){
+dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs, 
+		 const PARMS_S *parms, int idtrat, int noisy, int demotettf){
     int dtrat=parms->skyc.dtrats[idtrat];
     const int nmod=simu->mideal->nx;
     PDMAT(simu->mideal,pmideal);
@@ -167,7 +167,6 @@ dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs, con
     ccell *otf=ccellnew(aster->nwfs,1);
     SERVO_T *st2t=calloc(1, sizeof(SERVO_T));
     double ngsol=simu->rmsol->p[0];
-    //dcell *neasim=dcellnew(aster->nwfs,1);//Confirmed that neasim is close to estimated.
     const double dtngs=parms->maos.dt*dtrat;
     const long nwvl=parms->maos.nwvl;
     dmat *pgm;
@@ -180,9 +179,6 @@ dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs, con
     }else{
 	pgm=aster->pgm->p[idtrat];
     }
-    //if(parms->skyc.dbg && parms->skyc.phystart<aster->nstep){
-    //	mymkdir("%s/ints",dirsetup);
-    //}
     for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
 	const long ncomp=parms->maos.ncomp[ipowfs];

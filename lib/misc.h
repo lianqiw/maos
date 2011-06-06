@@ -50,10 +50,13 @@ char *mystrndup(const char *A, int len);
 void cloexec(int fd);
 void mysleep(double sec);
 void mypause(void);
+/*strdup for static pointers or in constructor should be using this strdup0 to
+  avoid reporting of unfreed mem.*/
+extern char* (*strdup0)(const char *);
 #if USE_MEM == 1
 char *mystrdup(const char *A);
 #undef strdup
-#define strdup mystrdup //our strdup handles NULL correctly.
+#define strdup mystrdup //our strdup handles NULL correctly, and talk to mem.c
 #endif //USE_MEM=1
 #endif
 

@@ -44,7 +44,7 @@ const char *get_job_progname(void){
 	uint32_t size=sizeof(path);
 	if(_NSGetExecutablePath(path,&size)==0){
 	    if(realpath(path,path2)){
-		progname=strdup(path2);
+		progname=strdup0(path2);
 	    }
 	}
     }

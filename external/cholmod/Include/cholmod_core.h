@@ -1525,10 +1525,12 @@ typedef struct cholmod_factor_struct
     void *i ;		/* i [0..nzmax-1], the row indices */
     void *x ;		/* x [0..nzmax-1], the numerical values */
     void *z ;
-    void *nz ;		/* nz [0..ncol-1], the # of nonzeros in each column.
-			 * i [p [j] ... p [j]+nz[j]-1] contains the row indices,
-			 * and the numerical values are in the same locatins
-			 * in x. The value of i [p [k]] is always k. */
+    void *nz ;		/* nz [0..ncol-1], the # of nonzeros in each column. i
+			 * [p [j] ... p [j]+nz[j]-1] contains the row indices,
+			 * and the numerical values are in the same locatins in
+			 * x. The value of i [p [k]] is always k. In packed
+			 * form, nz[j] equals to p[j+1]-p[j], but in unpacked
+			 * form, may be smaller.*/
 
     void *next ;	/* size ncol+2. next [j] is the next column in i/x */
     void *prev ;	/* size ncol+2. prev [j] is the prior column in i/x.

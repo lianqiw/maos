@@ -53,7 +53,7 @@ ARG_S *parse_args(int argc, char **argv){
 	{"path",1,0,'p'},
 	{NULL,0,0,0}
     };
-    arg->nthread=1;
+    arg->nthread=NCPU2;
     while(1){
 	int option_index = 0;
 	int c = getopt_long(argc, argv, "hdfo:n:c:p:",

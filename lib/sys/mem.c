@@ -41,13 +41,10 @@ void (*call_freepath)(void)=NULL;
   function called by twalk is the addess of the tree node, which points to the
   key. so **key is required.
 
-  don't use fdopen to open the pipes! it will block the routine. 
-  use read/write instead
-
-  read/write is very good.  when one process finish writing, they other will read
-  the same thing. even binary data can be handled.
-
-*/
+  We use the backtrace to see the chain of calling when memory is
+  allocated. This is better than using BASEFILE, __LINE__ which does not tell
+  where the call from eventually from ans is not useful.
+  */
 
 
 #include "misc.h"
@@ -66,7 +63,7 @@ static void *MROOT=NULL;
 static long long memcnt=0;
 
 //max depth in backtrace
-#define DT 12
+#define DT 16
 typedef struct T_MEMKEY{
     void *p;
     void *func[DT];

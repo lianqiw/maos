@@ -58,7 +58,7 @@ dmat *loc_mcc_ptt(const loc_t *loc, const double *amp);
 dcell *pts_mcc_ptt(const pts_t *pts, const double *amp);
 void loc_remove_ptt(double *opd, const double *ptt, const loc_t *loc);
 void loc_add_ptt(double *opd, const double *ptt, const loc_t *loc);
-void pts_ztilt(double *out, const pts_t *pts, const dcell *imcc,
+void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 	       const double *amp, const double *opd);
 loc_t *mk1dloc_vec(double *x, long nx);
 loc_t *mk1dloc(double x0, double dx, long nx);

@@ -1719,11 +1719,9 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	dmat *opd=dnew(powfs[ipowfs].loc->nloc,1);
 	loc_add_focus(opd->p, powfs[ipowfs].loc, 1);
-	const int nsa=powfs[ipowfs].pts->nsa;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-    	Gfocus->p[iwfs]=dnew(nsa*2,1);
 	if(parms->powfs[ipowfs].gtype_recon==1){
-	    pts_ztilt(Gfocus->p[iwfs]->p, powfs[ipowfs].pts,
+	    pts_ztilt(&Gfocus->p[iwfs], powfs[ipowfs].pts,
 		      powfs[ipowfs].saimcc[powfs[ipowfs].nimcc>1?wfsind:0], 
 		      powfs[ipowfs].realamp[wfsind], opd->p);
 	}else{
@@ -2145,9 +2143,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     /*
       The following arrys are not used after preparation is done.
     */
- 
-    mapfree(aper->ampground);
-    spcellfree(recon->GX);
+     spcellfree(recon->GX);
     spcellfree(recon->GXhi);
     spcellfree(recon->GXtomo);//we use HXWtomo instead. faster
     if(!(parms->cn2.tomo && parms->tomo.split==2)){//mvst needs GXlo when updating.
@@ -2197,10 +2193,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	spcelladdI(recon->LL.M, parms->tomo.tikcr*maxeig);
     }
     //actuator slaving. important
-    spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NULL,0.5,
-			     sqrt(maxeig));
+    spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NULL,0.5, sqrt(maxeig));
     //spcellwrite(actslave,"actslave");
     spcelladd(&recon->LL.M, actslave);
+    spcellfree(actslave);
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
     //Low rank terms for low order wfs. Only in Integrated tomography.
@@ -2389,6 +2385,10 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     if(parms->fit.alg==1){
 	muv_direct_free(&recon->FL);
     }
+    /*
+      The following arrys are not used after preparation is done.
+    */
+    mapfree(aper->ampground);
     return recon;
 }
 /**

@@ -353,6 +353,7 @@ char *mystrndup(const char *A, int len){
     B[len]='\0';
     return B;
 }
+
 #if USE_MEM == 1
 #undef strdup
 /**
@@ -369,6 +370,7 @@ char *mystrdup(const char *A){
     }
 }
 #endif
+char* (*strdup0)(const char *)=strdup;
 
 void remove_file_older(const char *fndir, long sec){
     /**

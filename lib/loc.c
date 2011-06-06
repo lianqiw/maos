@@ -726,11 +726,12 @@ void loc_add_ptt(double *opd, const double *ptt, const loc_t *loc){
 /**
    Compute zernike best fit for all subapertures. add result to out.  returns
    radians not zernike modes of tip/tilt. Used in wfsgrad */
-void pts_ztilt(double *out, const pts_t *pts, const dcell *imcc,
+void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 	       const double *amp, const double *opd){
     const int nsa=pts->nsa;
     assert(imcc->nx==nsa && imcc->ny==1);
-    double (*res)[nsa]=(double(*)[nsa])out;
+    if(!*out) *out=dnew(nsa*2,1);
+    double *res=(*out)->p;
     for(int isa=0; isa<nsa; isa++){
 	const double origy=pts->origy[isa];
 	const double origx=pts->origx[isa];
@@ -760,8 +761,8 @@ void pts_ztilt(double *out, const pts_t *pts, const dcell *imcc,
 	/*
 	  2010-07-19: Was =, modified to += to conform to the convention.
 	 */
-	res[0][isa]+=outp[1];
-	res[1][isa]+=outp[2];
+	res[isa]+=outp[1];
+	res[isa+nsa]+=outp[2];
     }
 }
 /**

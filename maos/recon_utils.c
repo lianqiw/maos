@@ -464,6 +464,9 @@ void FitL(dcell **xout, const void *A,
     dcellmm(&xp,recon->NW, xin, "tn", 1);
     dcellmm(xout,recon->NW, xp, "nn", alpha);
     dcellfree(xp);
+    if(recon->actslave){
+	spcellmulmat(xout, recon->actslave, xin, alpha);
+    }
 }
 
 

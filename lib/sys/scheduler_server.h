@@ -148,4 +148,5 @@ extern int nhost;
 extern char** hosts;
 extern int hid;
 #define scheduler_version 0x21
+#define BACKTRACE_CMD_LEN 200
 #endif

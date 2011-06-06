@@ -1,4 +1,4 @@
-Migrate to openmp instead of using hand tuned pthreads in a branch. Test performance.
+When multiply sparse with many columns of vectors, it is good to transpose the vector before multiply to have better memory performance. Same applies to CBS solve.
 
 A list of TODOs
 *) Do a zernike decomposition of atmosphere, corrected atmosphere, DM commands, etc Test the generated atmosphere
@@ -7,3 +7,5 @@ A list of TODOs
 *) Instead of using independent routine drawdaemon, consider using plugin like library like matlab. dynamically load the library if need to draw plots.
 *) Implement split tomography for single conjugate mode?
 
+Not do do:
+*) Migrate to openmp instead of using hand tuned pthreads in a branch. Test performance. Not good to do pooling.

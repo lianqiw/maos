@@ -39,8 +39,7 @@ const char *get_job_progname(void){
 	int nprog=readlink("/proc/self/exe",path,PATH_MAX);
 	if(nprog>0){
 	    path[nprog]='\0';
-	    progname=strdup(path);
-	    register_deinit(NULL,progname);
+	    progname=strdup0(path);
 	}	
     }
     return progname;

@@ -814,12 +814,6 @@ static void tool_save(GtkToolButton *button){
 	width=(drawdata)->width;//same size as the widget.
 	height=(drawdata)->height;
 	surface=cairo_svg_surface_create(filename, width,height);
-	cairo_draw(cairo_create(surface), drawdata,width,height);
-	cairo_surface_show_page (surface);
-	do_move(drawdata, 100, 0);
-	cairo_draw(cairo_create(surface), drawdata,width,height);
-	cairo_surface_show_page (surface);
-	do_move(drawdata, 0, 100);
 #else
 	error_msg("svg surface is unavailable");
 	goto retry;

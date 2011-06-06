@@ -374,8 +374,8 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 static void interp_gain(double out[5], const dcell *gain, const dmat *gainx,
 			double sigma2){
     const long nx=gainx->nx;
-    const double xsep=(gainx->p[nx-1]-gainx->p[0])/(nx-1);
-    const double xx=(sigma2-gainx->p[0])/xsep;
+    const double xsep=(log(gainx->p[nx-1])-log(gainx->p[0]))/(nx-1);
+    const double xx=(log(sigma2)-log(gainx->p[0]))/xsep;
     if(xx<0){//too small.
 	memcpy(out, gain->p[0]->p, sizeof(double)*5);
     }else if(xx>nx-1){//too big
@@ -418,22 +418,39 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	PDMAT(aster->gain->p[idtrat], pgain);
 	if(parms->skyc.gsplit){
 	    double pg_tt[5];
-	    interp_gain(pg_tt, simu->gain_tt[idtrat], simu->gain_x, sigma_tt);
 	    double pg_ps[5];
-	    interp_gain(pg_ps, simu->gain_ps[idtrat], simu->gain_x, sigma_ps);
-	    
+	    if(parms->skyc.interpg){
+		interp_gain(pg_tt, simu->gain_tt[idtrat], simu->gain_x, sigma_tt);
+		interp_gain(pg_ps, simu->gain_ps[idtrat], simu->gain_x, sigma_ps);
+	    }else{
+		dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma_tt;
+		dcell *pg_tt2=servo_typeII_optim(simu->psd_tt_ws, dtrat, parms->maos.dt, sigma2);
+		sigma2->p[0]=sigma_ps;
+		dcell *pg_ps2=servo_typeII_optim(simu->psd_ps,    dtrat, parms->maos.dt, sigma2);
+		dfree(sigma2);
+		memcpy(pg_tt, pg_tt2->p[0]->p, 5*sizeof(double));
+		memcpy(pg_ps, pg_ps2->p[0]->p, 5*sizeof(double));
+		dcellfree(pg_tt2);
+		dcellfree(pg_ps2);
+	    }
 	    res_ngs  = pg_tt[3] + pg_ps[3];
 	    res_ngsn = pg_tt[4] + pg_ps[4];
 	    for(int imod=0; imod<nmod; imod++){
-		if(imod<2){
-		    memcpy(pgain[imod], pg_tt, sizeof(double)*3);
-		}else{
-		    memcpy(pgain[imod], pg_ps, sizeof(double)*3);
-		}
+		memcpy(pgain[imod], imod<2?pg_tt:pg_ps, sizeof(double)*3);
+		/*for(int i=0; i<3; i++){
+		    pgain[imod][i]=round(pgain[imod][i]*1000)/1000;
+		    }*/
 	    }
 	}else{
 	    double pg_ngs[5];
-	    interp_gain(pg_ngs, simu->gain_ngs[idtrat], simu->gain_x, sigma_ngs);
+	    if(parms->skyc.interpg){
+		interp_gain(pg_ngs, simu->gain_ngs[idtrat], simu->gain_x, sigma_ngs);
+	    }else{
+		dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma_ngs;
+		dcell *pg_ngs2=servo_typeII_optim(simu->psd_ngs_ws, dtrat, parms->maos.dt, sigma2);
+		memcpy(pg_ngs, pg_ngs2->p[0]->p, 5*sizeof(double));
+		dcellfree(pg_ngs2);
+	    }
 	    res_ngs=pg_ngs[3];
 	    res_ngsn=pg_ngs[4];
 	    for(int imod=0; imod<nmod; imod++){
@@ -455,9 +472,9 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	dfree(g_tt);
     }
     if(parms->skyc.dbg){
-	dcellwrite(aster->gain,"%s/aster_gain",dirsetup);
-	dwrite(aster->res_ws,"%s/aster_res_ws",dirsetup);
-	dwrite(aster->res_ngs,"%s/aster_res_ngs",dirsetup);
+	dcellwrite(aster->gain,"%s/aster%d_gain",dirsetup,aster->iaster);
+	dwrite(aster->res_ws,"%s/aster%d_res_ws",dirsetup,aster->iaster);
+	dwrite(aster->res_ngs,"%s/aster%d_res_ngs",dirsetup,aster->iaster);
     }
 }
 /**

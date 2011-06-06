@@ -213,7 +213,7 @@ void wfsgrad_iwfs(thread_t *info){
     if(do_geom){
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    //compute ztilt.
-	    pts_ztilt((*gradacc)->p,powfs[ipowfs].pts,
+	    pts_ztilt(gradacc,powfs[ipowfs].pts,
 		      powfs[ipowfs].saimcc[powfs[ipowfs].nimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{//G tilt
@@ -279,7 +279,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    warning("Remove tip/tilt in uplink ideally\n");
 		    //remove tip/tilt completely
 		    dmat *lltg=dnew(2,1);
-		    pts_ztilt(lltg->p,powfs[ipowfs].llt->pts,
+		    pts_ztilt(&lltg,powfs[ipowfs].llt->pts,
 			      powfs[ipowfs].llt->imcc,
 			      powfs[ipowfs].llt->amp->p,
 			      lltopd->p);
