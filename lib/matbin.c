@@ -50,7 +50,6 @@ void X(writedata)(file_t *fp, const X(mat) *A){
 	ny=(uint64_t)A->ny;
 	write_header(A->header, fp);
     }
-    //We always write the header to have the data aligned to 16 bytes.
     do_write(fp, 0, sizeof(T), M_T, p, nx, ny);
 }
 /**

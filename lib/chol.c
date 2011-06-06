@@ -101,9 +101,11 @@ spchol* chol_factorize(dsp *A_in){
     MOD(start)(out->c);
     cholmod_sparse *A=sp2chol(A_in);
     out->c->status=CHOLMOD_OK;
+#if CHOL_SIMPLE == 1
     out->c->final_super=0;//we want a simplicity result.
     out->c->final_ll=1;   //Leave in LL instead of LDL format.
-    out->c->final_asis=!CHOL_SIMPLE; //do the conversion as shown above.
+    out->c->final_asis=0; //do the conversion as shown above.
+#endif
     //Try AMD ordering only. SLOW
     /*
       out->c.nmethods=1;
@@ -213,17 +215,51 @@ void chol_convert(spchol *A, int keep){
    Save cholesky factor and permutation vector to file.*/
 void chol_save(spchol *A, const char *format,...){
     format2fn;
-    if(!A->Cl && !A->Cu){
-	chol_convert(A, 1);
+    dsp *C=A->Cl?A->Cl:A->Cu;
+    if(C){//Save our easy to use format.
+      spwrite(C,"%s_C.bin",fn);
+      writespint(A->Cp, C->m, 1, "%s_P",fn);
+    }else{//Save native cholmod format.
+      cholmod_factor *L=A->L;
+      char header[1024];
+      snprintf(header,1024,
+	       "n=%ld\n"
+	       "minor=%ld\n"
+	       "nzmax=%ld\n"
+	       "nsuper=%ld\n"
+	       "ssize=%ld\n"
+	       "xsize=%ld\n"
+	       "maxcsize=%ld\n"
+	       "maxesize=%ld\n"
+	       "ordering=%d\n"
+	       "is_ll=%d\n"
+	       "is_super=%d\n"
+	       "is_monotonic=%d\n"
+	       "itype=%d\n"
+	       "xtype=%d\n"
+	       "dtype=%d\n"
+	       ,L->n, L->minor,L->nzmax,L->nsuper,L->ssize,L->xsize,L->maxcsize,L->maxesize,
+	       L->ordering,L->is_ll,L->is_super,L->is_monotonic,L->itype,L->xtype,L->dtype);
+      file_t *fp=zfopen(fn,"wb");
+      write_header(header,fp);
+      write_magic(M_CHOL, fp);
+      do_write(fp, 0, sizeof(spint), M_SPINT, L->Perm, L->n, 1);
+      do_write(fp, 0, sizeof(spint), M_SPINT, L->ColCount, L->n, 1);
+      if(L->is_super==0){//Simplicity
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->p, L->n+1, 1);
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->i, L->nzmax, 1);
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->nz, L->n, 1);
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->next, L->n+2, 1);
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->prev, L->n+2, 1);
+	do_write(fp, 0, sizeof(double),M_DBL, L->x, L->nzmax, 1);
+      }else{
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->super, L->nsuper+1, 1);
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->pi, L->nsuper+1, 1);
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->px, L->nsuper+1, 1);
+	do_write(fp, 0, sizeof(spint), M_SPINT, L->s, L->ssize, 1);
+	do_write(fp, 0, sizeof(double),M_DBL, L->x, L->xsize, 1);
+      }
     }
-    dsp *C;
-    if(A->Cl){
-	C=A->Cl;
-    }else{
-	C=A->Cu;
-    }
-    spwrite(C,"%s_C.bin",fn);
-    writespint(A->Cp, C->m, 1, "%s_P",fn);
 }
 
 /**
@@ -232,19 +268,81 @@ void chol_save(spchol *A, const char *format,...){
 spchol *chol_read(const char *format, ...){
     format2fn;
     spchol *A=calloc(1, sizeof(spchol));
-    dsp *C=spread("%s_C",fn);
-    int type=spcheck(C);
-    if(type & 1){
+    char *fn2=procfn(fn, "rb", 1);
+    if(fn2){//Native cholmod format exists. Read it.
+      free(fn2);
+      file_t *fp=zfopen(fn, "rb");
+      char *header=NULL;
+      uint32_t magic=read_magic(fp, &header);
+      if(magic!=M_CHOL|| !header){
+	error("File %s does not contain a cholmod_facotr\n", fn);
+      }
+#define READ_SIZE_T(A) L->A=(size_t)search_header_num(header,#A)
+#define READ_INT(A) L->A=(int)search_header_num(header,#A)
+      cholmod_factor *L=A->L=calloc(1, sizeof(cholmod_factor));
+      READ_SIZE_T(n);
+      READ_SIZE_T(minor);
+      READ_SIZE_T(nzmax);
+      READ_SIZE_T(nsuper);
+      READ_SIZE_T(ssize);
+      READ_SIZE_T(xsize);
+      READ_SIZE_T(maxcsize);
+      READ_SIZE_T(maxesize);
+      READ_INT(ordering);
+      READ_INT(is_ll);
+      READ_INT(is_super);
+      READ_INT(is_monotonic);
+      READ_INT(itype);
+      READ_INT(xtype);
+      READ_INT(dtype);
+#undef READ_SIZE_T
+#undef READ_INT
+      long nx, ny;
+      uint32_t magic2;
+#define READSPINT(A,N) L->A=readspint(&nx, &ny, 0, (void*)fp);		\
+      if((N)!=nx*ny) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny);
+#define READDBL(A,N) magic2=read_magic(fp, NULL); \
+      if(magic2!=M_DBL) error("Invalid magic: wanted %u, got %u\n", M_DBL, magic2); \
+      zfreadlarr(fp, 2, &nx, &ny);\
+      if(nx*ny!=N) error("%s has wrong length: wanted %ld, got %ld\n", #A, (long)(N), nx*ny);\
+      L->A=malloc(sizeof(double)*nx*ny);\
+      zfread(L->A, sizeof(double), nx*ny, fp);
+
+      READSPINT(Perm, L->n);
+      READSPINT(ColCount, L->n);
+      if(L->is_super==0){//Simplicity
+	info("Reading supernodal cholmod_factor\n");
+	READSPINT(p, L->n+1);
+	READSPINT(i, L->nzmax);
+	READSPINT(nz, L->n);
+	READSPINT(next, L->n+2);
+	READSPINT(prev, L->n+2);
+	READDBL(x, L->nzmax);
+      }else{
+	info("Reading supernodal cholmod_factor\n");
+	READSPINT(super, L->nsuper+1);
+	READSPINT(pi, L->nsuper+1);
+	READSPINT(px, L->nsuper+1);
+	READSPINT(s, L->ssize);
+	READDBL(x, L->xsize);
+      }
+#undef READSPINT
+#undef READDDBL
+    }else{//Read converted _C and _P files
+      dsp *C=spread("%s_C",fn);
+      int type=spcheck(C);
+      if(type & 1){
 	A->Cl=C;
-    }else if(type & 2){
+      }else if(type & 2){
 	A->Cu=C;
-    }else{
+      }else{
 	error("File %s_C is not upper or lower\n", fn);
-    }
-    long nx, ny;
-    A->Cp=readspint(&nx, &ny, "%s_P", fn);
-    if(nx*ny!=C->m){
+      }
+      long nx, ny;
+      A->Cp=readspint(&nx, &ny, 1, "%s_P", fn);
+      if(nx*ny!=C->m){
 	error("%s_P does not match %s_C", fn, fn);
+      }
     }
     return A;
 }

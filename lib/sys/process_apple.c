@@ -36,7 +36,7 @@
 #include <mach/vm_map.h>
 #include "common.h"
 #include "process.h"
-
+#include "misc.h"
 const char *get_job_progname(void){
     static char *progname=NULL;
     if(!progname){

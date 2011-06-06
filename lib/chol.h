@@ -35,5 +35,4 @@ spchol *chol_read(const char *format, ...) CHECK_ARG(1);
 void chol_convert(spchol *A, int keep);
 void chol_solve_lower(dmat **x, spchol *C, dmat *y);
 void chol_solve_upper(dmat **x, spchol *C, dmat *y);
-#define M_CHOL 0x6501
 #endif

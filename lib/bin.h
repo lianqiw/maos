@@ -34,6 +34,7 @@
 #define M_INT32  0x6405  //int 32 array
 #define M_CSP32  0x6406  //sparse complex 32 bit
 #define M_SP32   0x6407  //sparse 32 bit
+#define M_CHOL   0x6408  //cholesky factor in native cholmod format.
 //The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type
 #define MCC_ANY  0x6421  //cell of any thing
 #define M_HEADER 0x6500  //header.
@@ -101,7 +102,7 @@ void writeint(const int *p, long nx, long ny, const char*format,...) CHECK_ARG(4
 void writelong(const long *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
 void writespint(const spint *p, long nx, long ny, const char *format,...) CHECK_ARG(4);
 void readspintdata(file_t *fp, uint32_t magic, spint *out, long len);
-spint *readspint(long* nx, long* ny, const char *format, ...) CHECK_ARG(3);
+spint *readspint(long* nx, long* ny, int isfn, char *format, ...);//Maybe fp or fn(format)
 void mmap_unref(struct mmap_t *in);
 struct mmap_t *mmap_new(int fd, void *p, long n);
 mmap_t*mmap_ref(mmap_t *in);

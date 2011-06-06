@@ -639,9 +639,14 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
 /**
    Read spint array of size nx*ny from file. Optionally convert from other formats.
  */
-spint *readspint(long* nx, long* ny, const char *format, ...){
-    format2fn;
-    file_t *fp=zfopen(fn, "rb");
+spint *readspint(long* nx, long* ny, int isfn, char *format, ...){
+  file_t *fp;
+    if(isfn){
+      format2fn;
+      fp=zfopen(fn, "rb");
+    }else{
+      fp=(file_t*)format;
+    }
     uint32_t magic=read_magic(fp, NULL);
     uint64_t nx2, ny2;
     zfreadlarr(fp, 2, &nx2, &ny2);
@@ -654,6 +659,9 @@ spint *readspint(long* nx, long* ny, const char *format, ...){
     }else{
 	*nx=0;
 	*ny=0;
+    }
+    if(isfn){
+      zfclose(fp);
     }
     return out;
 }
