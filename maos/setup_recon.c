@@ -74,12 +74,12 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     }
     //create the weighting W for bilinear influence function. See [Ellerbroek 2002]
     if(parms->load.W){
-	if(!(exist("W0.bin.gz")&&exist("W1.bin.gz"))){
+	if(!(zfexist("W0")&&zfexist("W1"))){
 	    error("W0 or W1 not exist\n");
 	}
 	warning("Loading W0, W1");
-	recon->W0=spread("W0.bin.gz");
-	recon->W1=dread("W1.bin.gz");
+	recon->W0=spread("W0");
+	recon->W1=dread("W1");
     }else{
 	/*
 	  Compute W0,W1 weighting matrix that can be used to compute piston
@@ -392,7 +392,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     spcellfree(recon->GA);
     if(parms->load.GA){
 	warning2("Loading saved GA\n");
-	recon->GA=spcellread("GA.bin.gz");
+	recon->GA=spcellread("GA");
 	if(recon->GA->nx!=nwfs || recon->GA->ny!=ndm)
 	    error("Wrong saved GA\n");
 	PDSPCELL(recon->GA,GA);
@@ -998,6 +998,12 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	recon->RL.M=spcellread("RLM");
 	recon->RL.U=dcellread("RLU");
 	recon->RL.V=dcellread("RLV");
+	if(parms->tomo.alg==0 && zfexist("RLC")){
+	    recon->RL.C=chol_read("RLC");
+	}
+	if(parms->tomo.alg==2 && zfexist("RLMI")){
+	    recon->RL.MI=dread("RLMI");
+	}
     }else{
 	info2("Building recon->RR\n");
 	PDSPCELL(recon->GX,GX);
@@ -1119,7 +1125,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 	info2("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", 
 	      nlr,nll);
-	if(parms->save.setup && parms->save.recon){
+	if(parms->save.recon){
 	    spcellwrite(recon->RR.M,"%s/RRM",dirsetup);
 	    dcellwrite(recon->RR.U,"%s/RRU",dirsetup);
 	    dcellwrite(recon->RR.V,"%s/RRV",dirsetup);
@@ -1130,27 +1136,33 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 	spcellfree(GXtomoT);
     }
-    if(parms->tomo.alg==0 || parms->tomo.alg==2 ){
+    if((parms->tomo.alg==0 || parms->tomo.alg==2) && parms->tomo.bgs ){
 	/* We need cholesky decomposition in CBS or MVST method. */
-	if(parms->tomo.bgs){//BGS
-	    muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
-	}else{
-	    muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);  
+	muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
+    }
+    if(((parms->tomo.alg==0 || parms->tomo.alg==2) && !parms->tomo.bgs)
+       ||(parms->sim.ecnn || (parms->tomo.split==2 && !parms->load.mvst)) && !recon->RL.C && !recon->RL.MI){
+	if(parms->load.tomo){
+	    if(parms->tomo.alg==0 && zfexist("RLC")){
+		recon->RL.C=chol_read("RLC");
+	    }
+	    if(parms->tomo.alg==2 && zfexist("RLMI")){
+		recon->RL.MI=dread("RLMI");
+	    }
+	}
+	if(!recon->RL.C && !recon->RL.MI){
+	    muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
 	}
 	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
-    if((parms->sim.ecnn || (parms->tomo.split==2 && !parms->load.mvst)) && !recon->RL.C && !recon->RL.MI){
-	/* We need cholesky decomposition in order to compute noise propagation or MVST.*/
-	muv_direct_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
-    }
     if(parms->save.recon){
        	if(recon->RL.C)
-	    chol_save(recon->RL.C,"%s/RLC",dirsetup);
+	    chol_save(recon->RL.C,"%s/RLC.bin",dirsetup);
 	if(recon->RL.MI)
 	    dwrite(recon->RL.MI,"%s/RLMI", dirsetup);
 	if(recon->RL.CB){
 	    for(int ib=0; ib<recon->RL.nb; ib++){
-		chol_save(recon->RL.CB[ib],"%s/RLCB_%d",dirsetup, ib);
+		chol_save(recon->RL.CB[ib],"%s/RLCB_%d.bin",dirsetup, ib);
 	    }
 	}
 	if(recon->RL.MIB){
@@ -1337,7 +1349,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
 static void
 setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
     //Greate HXF and HA matrix;
-    if(parms->load.HXF && exist(parms->load.HXF)){
+    if(parms->load.HXF && zfexist(parms->load.HXF)){
 	warning("Loading saved HXF\n");
 	recon->HXF=spcellread("%s",parms->load.HXF);
     }else{
@@ -1360,7 +1372,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	if(parms->save.setup){
-	    spcellwrite(recon->HXF,"%s/HXF.bin.gz",dirsetup);
+	    spcellwrite(recon->HXF,"%s/HXF",dirsetup);
 	}
 	toc2(" ");
     }
@@ -1369,7 +1381,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
 static void
 setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
-    if(parms->load.HA && exist(parms->load.HA)){
+    if(parms->load.HA && zfexist(parms->load.HA)){
 	warning("Loading saved HA\n");
 	recon->HA=spcellread("%s",parms->load.HA);
     }else{
@@ -1474,7 +1486,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     }
   
     if(parms->save.setup){
-	dcellwrite(recon->NW,"%s/NW.bin.gz",dirsetup);
+	dcellwrite(recon->NW,"%s/NW",dirsetup);
     }
 }
 
@@ -1503,14 +1515,13 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     //Assemble Fit matrix.
     int npsr=recon->npsr;
     if(parms->load.fit){
-	if(!(exist("FRM.bin.gz") && 
-	     exist("FRU.bin.gz") && exist("FRV.bin.gz"))){
-	    error("FRM, FRU, FRV (.bin.gz) not all exist\n");
+	if(!(zfexist("FRM") && zfexist("FRU") && zfexist("FRV"))){
+	    error("FRM, FRU, FRV (.bin or .bin.gz) not all exist\n");
 	}
 	warning("Loading saved recon->FR\n");
-	recon->FR.M=spcellread("FRM.bin.gz");
-	recon->FR.U=dcellread("FRU.bin.gz");
-	recon->FR.V=dcellread("FRV.bin.gz");
+	recon->FR.M=spcellread("FRM");
+	recon->FR.U=dcellread("FRU");
+	recon->FR.V=dcellread("FRV");
     }else{
 	if(recon->HXF){
 	    info2("Building recon->FR\n");
@@ -1543,9 +1554,9 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 			      sqrt(recon->fitwt->p[ifit]));
 		}
 	    }
-	    if(parms->save.setup && parms->save.recon){
-		spcellwrite(recon->FR.M,"%s/FRM.bin.gz",dirsetup);
-		dcellwrite(recon->FR.V,"%s/FRV.bin.gz",dirsetup);
+	    if(parms->save.recon){
+		spcellwrite(recon->FR.M,"%s/FRM",dirsetup);
+		dcellwrite(recon->FR.V,"%s/FRV",dirsetup);
 	    }
 	}else{
 	    info("Avoid building recon->FR.M\n");
@@ -1567,8 +1578,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 			  sqrt(recon->fitwt->p[ifit]));
 	    }
 	}
-	if(parms->save.setup && parms->save.recon){
-	    dcellwrite(recon->FR.U,"%s/FRU.bin.gz",dirsetup);
+	if(parms->save.recon){
+	    dcellwrite(recon->FR.U,"%s/FRU",dirsetup);
 	}
     }
 
@@ -1586,21 +1597,20 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }
 
     if(parms->load.fit){
-	if(!(exist("FLM.bin.gz") && 
-	     exist("FLU.bin.gz") && exist("FLV.bin.gz"))){
-	    error("FLM, FLU, FLV (.bin.gz) not all exist\n");
+	if(!(zfexist("FLM") && zfexist("FLU") && zfexist("FLV"))){
+	    error("FLM, FLU, FLV (.bin or .bin.gz) not all exist\n");
 	}
 	warning("Loading saved recon->FL\n");
-	recon->FL.M=spcellread("FLM.bin.gz");
-	recon->FL.U=dcellread("FLU.bin.gz");
-	recon->FL.V=dcellread("FLV.bin.gz");
+	recon->FL.M=spcellread("FLM");
+	recon->FL.U=dcellread("FLU");
+	recon->FL.V=dcellread("FLV");
     }else{
 	fit_prep_lrt(recon,parms);
 	if(parms->fit.actslave){
 	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->NW,0.1, 1./recon->ploc->nloc);
 	    if(parms->save.setup){
-		spcellwrite(recon->actslave,"%s/actslave.bin.gz",dirsetup);
-		dcellwrite(recon->NW,"%s/NW2.bin.gz",dirsetup);
+		spcellwrite(recon->actslave,"%s/actslave",dirsetup);
+		dcellwrite(recon->NW,"%s/NW2",dirsetup);
 	    }
 	}
 	info2("Building recon->FL\n");
@@ -1645,35 +1655,26 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	//spcellsym(recon->FL.M);
 	info2("DM Fit number of Low rank terms: %ld in RHS, %ld in LHS\n",
 	      recon->FR.U->p[0]->ny, recon->FL.U->p[0]->ny);
-	if(parms->save.setup && parms->save.recon){
-	    spcellwrite(recon->FL.M,"%s/FLM.bin.gz",dirsetup);
-	    dcellwrite(recon->FL.U,"%s/FLU.bin.gz",dirsetup);
-	    dcellwrite(recon->FL.V,"%s/FLV.bin.gz",dirsetup);
+	if(parms->save.recon){
+	    spcellwrite(recon->FL.M,"%s/FLM.bin",dirsetup);
+	    dcellwrite(recon->FL.U,"%s/FLU",dirsetup);
+	    dcellwrite(recon->FL.V,"%s/FLV",dirsetup);
 	}
     }
-    if(parms->fit.alg==0 || parms->fit.alg==2){
+    if((parms->fit.alg==0 || parms->fit.alg==2) && parms->fit.bgs){
+	muv_direct_diag_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
+    }
+    if(((parms->fit.alg==0 || parms->fit.alg==2) && !parms->fit.bgs)
+       ||((parms->tomo.split==2 && !parms->load.mvst) && !recon->FL.C && !recon->RL.MI)){
 	if(fabs(parms->fit.tikcr)<1.e-14){
-	    warning("tickcr=%g is too small or not applied\n", 
-		    parms->fit.tikcr);
+	    warning("tickcr=%g is too small or not applied, chol may fail.\n", parms->fit.tikcr);
 	}
-	if(parms->fit.bgs){//BGS
-	    muv_direct_diag_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
-	}else{
-	    muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
-	    info2("Freeing FL.M,U,V\n");
-	    spcellfree(recon->FL.M);
-	    dcellfree(recon->FL.U);
-	    dcellfree(recon->FL.V);
-	}
-	
-	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
-    }
-    if((parms->tomo.split==2 && !parms->load.mvst) && !recon->FL.C && !recon->RL.MI){
 	muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
+	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
     if(parms->save.recon){
        	if(recon->FL.C)
-	    chol_save(recon->FL.C,"%s/FLC",dirsetup);
+	    chol_save(recon->FL.C,"%s/FLC.bin",dirsetup);
 	if(recon->FL.MI)
 	    dwrite(recon->FL.MI,"%s/FLMI", dirsetup);
 	if(recon->FL.Up)
@@ -1682,7 +1683,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    dwrite(recon->FL.Vp, "%s/FLVp", dirsetup);
 	if(recon->FL.CB){
 	    for(int ib=0; ib<recon->FL.nb; ib++){
-		chol_save(recon->FL.CB[ib],"%s/FLCB_%d",dirsetup, ib);
+		chol_save(recon->FL.CB[ib],"%s/FLCB_%d.bin",dirsetup, ib);
 	    }
 	}
 	if(recon->FL.MIB){
@@ -1773,9 +1774,9 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
     }
   
     if(parms->save.setup){
-	dcellwrite(Gfocus,"%s/Gfocus.bin.gz",dirsetup);
-	dcellwrite(RFngs,"%s/RFngs.bin.gz",dirsetup);
-	dcellwrite(RFlgs,"%s/RFlgs.bin.gz",dirsetup);
+	dcellwrite(Gfocus,"%s/Gfocus",dirsetup);
+	dcellwrite(RFngs,"%s/RFngs",dirsetup);
+	dcellwrite(RFlgs,"%s/RFlgs",dirsetup);
     }
     dcellfree(Gfocus);
 }
@@ -2270,7 +2271,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     dcelldropempty(&recon->LR.V,2);
     dcelldropempty(&recon->LL.U,2);
     dcelldropempty(&recon->LL.V,2);
-    if(parms->save.setup && parms->save.recon){
+    if(parms->save.recon){
 	spcellwrite(recon->LR.M,"%s/LRM",dirsetup);
 	dcellwrite(recon->LR.U,"%s/LRU",dirsetup);
 	dcellwrite(recon->LR.V,"%s/LRV",dirsetup);
@@ -2281,23 +2282,23 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     if(parms->tomo.alg==0 || parms->tomo.alg==2){
 	if(!parms->tomo.bgs){
 	    muv_direct_prep(&recon->LL, (parms->tomo.alg==2)*parms->tomo.svdthres);
-	    if(parms->save.setup && parms->save.recon){
+	    if(parms->save.recon){
 		if(recon->LL.C)
-		    chol_save(recon->LL.C, "%s/LLC", dirsetup);
+		    chol_save(recon->LL.C, "%s/LLC.bin", dirsetup);
 		else
-		    dwrite(recon->LL.MI, "%s/LLMI", dirsetup);
+		    dwrite(recon->LL.MI, "%s/LLMI.bin", dirsetup);
 	    }
 	    spcellfree(recon->LL.M);
 	    dcellfree(recon->LL.U);
 	    dcellfree(recon->LL.V);	
 	}else{
 	    muv_direct_diag_prep(&(recon->LL), (parms->tomo.alg==2)*parms->tomo.svdthres);
-	    if(parms->save.setup && parms->save.recon){
+	    if(parms->save.recon){
 		for(int ib=0; ib<recon->LL.nb; ib++){
 		    if(recon->LL.CB)
-			chol_save(recon->LL.CB[ib],"%s/LLCB_%d",dirsetup, ib);
+			chol_save(recon->LL.CB[ib],"%s/LLCB_%d.bin",dirsetup, ib);
 		    else
-			dwrite(recon->LL.MI,"%s/LLMIB_%d", dirsetup, ib);
+			dwrite(recon->LL.MI,"%s/LLMIB_%d.bin", dirsetup, ib);
 		}
 	    }
 	    //Don't free M, U, V
@@ -2373,11 +2374,17 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     spcellfree(recon->saneal);
     dfree(recon->neam); 
     if(!(parms->tomo.assemble && parms->tomo.alg==1) && !parms->cn2.tomo && !parms->tomo.bgs){
-	//We just need cholesky factors.
+	//We no longer need RL.M,U,V
 	info2("Freeing RL.M,U,V\n");
 	spcellfree(recon->RL.M);
 	dcellfree(recon->RL.U);
 	dcellfree(recon->RL.V);
+    }
+    if(parms->fit.alg!=1 && !parms->fit.bgs){
+	info2("Freeing FL.M,U,V\n");
+	spcellfree(recon->FL.M);
+	dcellfree(recon->FL.U);
+	dcellfree(recon->FL.V);
     }
     if(parms->tomo.alg==1){
 	muv_direct_free(&recon->RL);

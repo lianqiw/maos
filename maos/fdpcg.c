@@ -280,14 +280,14 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     csp *sel=fdpcg_saselect(nx[0],ny[0],xloc[0]->dx, 
 			    saloc, powfs[hipowfs].saa->p);
     if(parms->save.setup){
-	cspwrite(sel,"%s/fdpcg_sel.bin.gz",dirsetup);
+	cspwrite(sel,"%s/fdpcg_sel",dirsetup);
     }
     //Gradient operator.
     cmat *gx, *gy;
     fdpcg_g(&gx,&gy,nx[0],ny[0],xloc[0]->dx,saloc->dx);//tested ok.
     if(parms->save.setup){
-	cwrite(gx,"%s/fdpcg_gx.bin.gz",dirsetup);
-	cwrite(gy,"%s/fdpcg_gy.bin.gz",dirsetup);
+	cwrite(gx,"%s/fdpcg_gx",dirsetup);
+	cwrite(gy,"%s/fdpcg_gy",dirsetup);
     }
     //Concatenate invpsd;
     dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
@@ -346,7 +346,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     csp *Mhat=cspnewdiag(nxtot,invpsd,1);
     free(invpsd);
     if(parms->save.setup){
-	cspwrite(Mhat,"%s/fdpcg_invpsd.bin.gz",dirsetup);
+	cspwrite(Mhat,"%s/fdpcg_invpsd",dirsetup);
     }
 
     csp *Mmid=NULL;
@@ -389,7 +389,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	}
 	csp *propx=fdpcg_prop(nps,os,nx[0],xloc[0]->dx,dispx,dispy);
 	if(parms->save.setup){
-	    cspwrite(propx,"%s/fdpcg_prop_wfs%d.bin.gz",dirsetup,iwfs);
+	    cspwrite(propx,"%s/fdpcg_prop_wfs%d",dirsetup,iwfs);
 	}
 	//need to test this in spatial domain.
 	cspscale(propx,1./neai);//prop is not real for off axis wfs.

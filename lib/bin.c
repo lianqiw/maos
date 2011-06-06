@@ -107,58 +107,57 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	fn2=malloc(strlen(fn)+16);
 	strcpy(fn2,fn);
     }
-    if(mod[0]=='r'){
+    //If there is no recognized suffix, add .bin in the end.
+    if(!check_suffix(fn2,".bin") && !check_suffix(fn2, ".bin.gz")){
+	strncat(fn2, ".bin", 4);
+    }
+    if(mod[0]=='r' || mod[0]=='a'){
 	char *fnr=NULL;
-	if(!(fnr=search_file(fn2))){
-	    if(check_suffix(fn2, ".bin.gz")){
-		//ended with bin.gz
-		fn2[strlen(fn2)-3]='\0';
-		if(!(fnr=search_file(fn2))){
-		    return NULL;
-		}
-	    }else if(check_suffix(fn2, ".bin")){
-		//ended with .bin
+	if(!(fnr=search_file(fn2))){//If does not exist.
+	    if(check_suffix(fn2, ".bin")){
+		//ended with .bin, change to .bin.gz
 		strncat(fn2, ".gz", 3);
 		if(!(fnr=search_file(fn2))){
 		    return NULL;
 		}
-	    }else{//no recognized suffix
-		strncat(fn2, ".bin", 4);
+	    }else{
+		//ended with bin.gz, change to .bin
+		fn2[strlen(fn2)-3]='\0';
 		if(!(fnr=search_file(fn2))){
-		    strncat(fn2,".gz",3);
-		    if(!(fnr=search_file(fn2))){
-			return NULL;
-		    }
+		    return NULL;
 		}
 	    }
+	}else{
+	    free(fn2);
+	    fn2=fnr;
 	}
-	free(fn2);
-	fn2=fnr;
     }else if (mod[0]=='w'){//for write, no suffix. we append .bin or .bin.gz
-	if(!(check_suffix(fn2, ".bin.gz") || check_suffix(fn2, ".bin"))){
-	    if(defaultgzip){
-		strncat(fn2,".bin.gz",7);
-	    }else{
-		strncat(fn2,".bin",4);
-	    }
-	}
 	if(islink(fn2)){//remove old file to avoid write over a symbolic link.
 	    if(remove(fn2)){
 		error("Failed to remove %s\n", fn2);
-	    }
-	}
-    }else if(mod[0]=='a'){//open for appending
-	if(!(check_suffix(fn2, ".bin.gz") || check_suffix(fn2, ".bin"))){
-	    if(defaultgzip){
-		strncat(fn2,".bin.gz",7);
-	    }else{
-		strncat(fn2,".bin",4);
 	    }
 	}
     }else{
 	error("Invalid mode\n");
     }
     return fn2;
+}
+int zfexist(const char *format, ...){
+    format2fn;
+    char *fn2=procfn(fn, "rb", 0);
+    int ans=0;
+    if(fn2){ 
+	ans=1;
+	free(fn2);
+    }
+    return ans;
+}
+void zftouch(const char *format, ...){
+    format2fn;
+    char *fn2=procfn(fn, "rb", 0);
+    if(utimes(fn, NULL)){
+	perror("zftouch failed");
+    }
 }
 PNEW(lock);
 /**
@@ -200,15 +199,15 @@ file_t* zfopen(const char *fn, char *mod){
     if(fp->fd==-1){
 	error("Unable to open file %s\n", fn2);
     }
-    if(check_suffix(fn2, ".gz")){
-	fp->isgzip=1;
-	if(!(fp->p=gzdopen(fp->fd,mod))){
-	    error("Error gzdopen for %s\n",fn2);
-	}
-    }else{ 
+    if(check_suffix(fn2, ".bin") && mod[0]=='w'){
 	fp->isgzip=0;
 	if(!(fp->p=fdopen(fp->fd,mod))){
 	    error("Error fdopen for %s\n",fn2);
+	}
+    }else{ 
+	fp->isgzip=1;
+	if(!(fp->p=gzdopen(fp->fd,mod))){
+	    error("Error gzdopen for %s\n",fn2);
 	}
     }
     if(mod[0]=='w'){
@@ -469,28 +468,33 @@ void write_timestamp(file_t *fp){
 
 /**
    Search and return the value correspond to key. NULL if not found. Do not free the
-   returned pointer.  */
-char *search_header(const char *header, const char *key){
+   returned pointer. The key must be preceeded by space (isspace), and succeeded by = sign. */
+const char *search_header(const char *header, const char *key){
     if(!header) return NULL;
-    char *val=strstr(header, key);
-    if(val){
-	char *tmp=val+strlen(key);
-	while(isspace((int)tmp[0])) tmp++;//skip space.
-	if(tmp[0]!='='){
-	    return NULL;
-	}else{
-	    return tmp+1;
+    const char *ans=NULL;
+    const char *val=header;
+    while(val[0]!='\0' && (val=strstr(val, key))){
+	if(val>header){
+	    if(!isspace(val[-1])){
+		val=val+strlen(key);
+		continue;//Invalid
+	    }
 	}
-    }else{
-	return NULL;
+	val=val+strlen(key);
+	while(val[0]==' ') val++;
+	if(val[0] == '='){
+	    ans=val+1;
+	    break;
+	}
     }
+    return ans;
 }
 /**
    Read a number from the header with key
 */
 double search_header_num(const char *header, const char *key){
     if(!header) return 0;
-    char *val=search_header(header, key);
+    const char *val=search_header(header, key);
     if(val){
 	return readstr_num(val, NULL);
     }else{
@@ -639,14 +643,7 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
 /**
    Read spint array of size nx*ny from file. Optionally convert from other formats.
  */
-spint *readspint(long* nx, long* ny, int isfn, char *format, ...){
-  file_t *fp;
-    if(isfn){
-      format2fn;
-      fp=zfopen(fn, "rb");
-    }else{
-      fp=(file_t*)format;
-    }
+spint *readspint(file_t *fp, long* nx, long* ny){
     uint32_t magic=read_magic(fp, NULL);
     uint64_t nx2, ny2;
     zfreadlarr(fp, 2, &nx2, &ny2);
@@ -659,9 +656,6 @@ spint *readspint(long* nx, long* ny, int isfn, char *format, ...){
     }else{
 	*nx=0;
 	*ny=0;
-    }
-    if(isfn){
-      zfclose(fp);
     }
     return out;
 }

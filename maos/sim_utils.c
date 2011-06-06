@@ -1739,27 +1739,27 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     
     fprintf(fp,"maos.fnwfsloc=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"\"powfs%d_loc.bin.gz\"," ,powfs_ngs[ipowfs]);
+	fprintf(fp,"\"powfs%d_loc\"," ,powfs_ngs[ipowfs]);
     }
     fprintf(fp,"]\n");
     
     fprintf(fp,"maos.fnwfsamp=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"\"powfs%d_amp.bin.gz\"," ,powfs_ngs[ipowfs]);
+	fprintf(fp,"\"powfs%d_amp\"," ,powfs_ngs[ipowfs]);
     }
     fprintf(fp,"]\n");
     
     fprintf(fp,"maos.fnsaloc=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	fprintf(fp,"\"powfs%d_saloc.bin.gz\"," ,powfs_ngs[ipowfs]);
+	fprintf(fp,"\"powfs%d_saloc\"," ,powfs_ngs[ipowfs]);
     }
     fprintf(fp,"]\n");
     
     fprintf(fp,"maos.fnmideal=\"RescleNGSm\"\n");
     fprintf(fp,"maos.fnmidealp=\"RescleNGSmp\"\n");
     fprintf(fp,"maos.evlindoa=%d\n",parms->evl.indoa);
-    fprintf(fp,"maos.fnmcc=\"MCC_za%g.bin.gz\"\n",zadeg);
-    fprintf(fp,"maos.fnmcc_oa=\"MCC_OA_za%g.bin.gz\"\n",zadeg);
+    fprintf(fp,"maos.fnmcc=\"MCC_za%g\"\n",zadeg);
+    fprintf(fp,"maos.fnmcc_oa=\"MCC_OA_za%g\"\n",zadeg);
     
     fprintf(fp,"maos.seeds=[");
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
@@ -1778,10 +1778,10 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fclose(fp);
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
 	int jpowfs=powfs_ngs[ipowfs];
-	locwrite(powfs[jpowfs].loc,"%s/powfs%d_loc.bin.gz",dirskysim,jpowfs);
-	dwrite(powfs[jpowfs].amp, "%s/powfs%d_amp.bin.gz",dirskysim,jpowfs);
-	locwrite(powfs[jpowfs].saloc,"%s/powfs%d_saloc.bin.gz",dirskysim,jpowfs);
+	locwrite(powfs[jpowfs].loc,"%s/powfs%d_loc",dirskysim,jpowfs);
+	dwrite(powfs[jpowfs].amp, "%s/powfs%d_amp",dirskysim,jpowfs);
+	locwrite(powfs[jpowfs].saloc,"%s/powfs%d_saloc",dirskysim,jpowfs);
     }
-    dwrite(recon->ngsmod->MCC,"%s/MCC_za%g.bin.gz", dirskysim,zadeg);
-    dwrite(recon->ngsmod->MCC_OA,"%s/MCC_OA_za%g.bin.gz", dirskysim,zadeg);
+    dwrite(recon->ngsmod->MCC,"%s/MCC_za%g", dirskysim,zadeg);
+    dwrite(recon->ngsmod->MCC_OA,"%s/MCC_OA_za%g", dirskysim,zadeg);
 }

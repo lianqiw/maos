@@ -1558,7 +1558,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	
 		snprintf(fnotf,PATH_MAX,"%s/.aos/otfc/%s_D%g_%g_"
 			 "r0_%g_L0%g_dsa%g_nsa%ld_dx1_%g_"
-			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2.bin.gz",
+			 "nwvl%d_%g_embfac%d_%dx%d_SEOTF_v2",
 			 HOME, fnprefix,
 			 parms->aper.d,parms->aper.din, 
 			 parms->atm.r0, parms->atm.l0, 
@@ -1572,12 +1572,12 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		if(fd<0){
 		    error("Failed to lock file\n");
 		}
-		if(exist(fnotf)){
+		if(zfexist(fnotf)){
 		    long nx, ny;
 		    info2("Reading WFS OTF from %s\n", fnotf);
 		    intstat->otf=ccellreadarr(&nx, &ny, "%s",fnotf);
 		    intstat->notf=nx*ny;
-		    touch(fnotf);
+		    zftouch(fnotf);
 		}else{
 		    info2("Generating WFS OTF for %s...", fnotf);tic;
 		    genseotf(parms,powfs,ipowfs);
@@ -1602,7 +1602,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		char fnlotf[PATH_MAX];
 		snprintf(fnlotf,PATH_MAX,"%s/.aos/otfc/%s_"
 			 "r0_%g_L0%g_lltd%g_dx1_%g_W%g_"
-			 "nwvl%d_%g_embfac%d_v2.bin.gz", 
+			 "nwvl%d_%g_embfac%d_v2", 
 			 HOME, fnprefix,
 			 parms->atm.r0, parms->atm.l0, 
 			 powfs[ipowfs].llt->pts->dsa,
@@ -1611,9 +1611,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			 parms->powfs[ipowfs].nwvl,
 			 parms->powfs[ipowfs].wvl[0]*1.e6,
 			 parms->powfs[ipowfs].embfac);
-		if(exist(fnlotf)){
+		if(zfexist(fnlotf)){
 		    intstat->lotf=ccellread("%s",fnlotf);
-		    touch(fnlotf);
+		    zftouch(fnlotf);
 		}else{
 		    char fnllock[PATH_MAX];
 		    snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
@@ -1621,9 +1621,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		    if(fd2<0){
 			error("Failed to lock_file\n");
 		    }
-		    if(exist(fnlotf)){
+		    if(zfexist(fnlotf)){
 			intstat->lotf=ccellread("%s",fnlotf);
-			touch(fnlotf);
+			zftouch(fnlotf);
 			info2("Reading WFS LLT OTF from %s\n", fnlotf);
 		    }else{
 			genselotf(parms,powfs,ipowfs);

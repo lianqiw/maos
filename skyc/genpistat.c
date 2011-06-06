@@ -57,18 +57,18 @@ static void calc_pistat(GENPISTAT_S *data){
 	long msa=parms->maos.msa[ipowfs];//in 1-d
 	const long phystart=parms->skyc.phystart;
 	char fnwvf[PATH_MAX],fnztilt[PATH_MAX], fnpistat[PATH_MAX], fngstat[PATH_MAX];
-	snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g.bin",
+	snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	snprintf(fnztilt,PATH_MAX,"%s/ztiltout/ztiltout_seed%ld_sa%ld_x%g_y%g.bin",
+	snprintf(fnztilt,PATH_MAX,"%s/ztiltout/ztiltout_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	snprintf(fnpistat,PATH_MAX,"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g.bin.gz",
+	snprintf(fnpistat,PATH_MAX,"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	snprintf(fngstat,PATH_MAX,"%s/pistat/gstat_seed%ld_sa%ld_x%g_y%g.bin.gz",
+	snprintf(fngstat,PATH_MAX,"%s/pistat/gstat_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	if(!exist(fnwvf)){
+	if(!zfexist(fnwvf)){
 	    continue;
 	}
-	if(exist(fnpistat) && exist(fngstat)){
+	if(zfexist(fnpistat) && zfexist(fngstat)){
 	    //warning("%s already exist, skip\n", fnpistat);
 	}else{
 	    dmat *mapply=dnew(2,1);
@@ -76,7 +76,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    snprintf(dirstat, PATH_MAX, "%s/pistat", dirstart);
 	    mymkdir(dirstat,0700);
 	    TIC;tic;
-	    if(!exist(fnztilt)){
+	    if(!zfexist(fnztilt)){
 		error("%s exist, but %s doesn't exist\n", fnwvf, fnztilt);
 	    }
 	    file_t *fp_wvf=zfopen(fnwvf,"rb");
@@ -279,10 +279,10 @@ void prep_bspstrehl(SIM_S *simu){
 		double thetax = gx * ngsgrid;
 		char fnpistat[PATH_MAX];
 		snprintf(fnpistat,PATH_MAX,
-			 "%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g.bin.gz",
+			 "%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
 			 dirstart, seed, msa, thetax, thetay);
-
-		if(exist(fnpistat)){
+		
+		if(zfexist(fnpistat)){
 		    dcell *tmp=dcellread("%s",fnpistat);
 		    for(long ic=0; ic<nsa*nwvl; ic++){
 			//peak is in the corner

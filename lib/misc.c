@@ -281,17 +281,17 @@ time_t fmtime(const char *fn){
     if(!fn || stat(fn, &buf)) return 0;
     return buf.st_ctime;
 }
-void touch(const char *fn){
-    /**
-       Update a file's modtime to current.
-    */
+/**
+   Update a file's modtime to current.
+*/
+/*void touch(const char *fn){
     if(utimes(fn, NULL)){
 	if(errno==ENOENT){
 	    FILE *fp=fopen(fn, "w");
 	    fclose(fp);
 	}
     }
-}
+    }*/
 
 /**
    Concatenate many strings. Argument list must end with NULL.

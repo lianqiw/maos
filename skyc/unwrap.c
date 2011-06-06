@@ -159,11 +159,11 @@ static void convert_wvf(GENPISTAT_S *data){
     long msa=parms->maos.msa[ipowfs];//in 1-d
     char fnwvf[PATH_MAX],fnphase[PATH_MAX];
     mymkdir("%s/phase",dirstart);
-    snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g.bin",
+    snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g",
 	     dirstart,seed, msa, thetax, thetay);
-    snprintf(fnphase,PATH_MAX,"%s/phase/phase_seed%ld_sa%ld_x%g_y%g.bin",
+    snprintf(fnphase,PATH_MAX,"%s/phase/phase_seed%ld_sa%ld_x%g_y%g",
 	     dirstart,seed, msa, thetax, thetay);
-    if(!exist(fnwvf) || exist(fnphase)){
+    if(!zfexist(fnwvf) || zfexist(fnphase)){
 	continue;
     }
     info("processing %s\n", fnwvf);

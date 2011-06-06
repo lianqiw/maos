@@ -72,7 +72,7 @@ static char *fnatm(GENSCREEN_T *data){
     char *types[]={"vonkarman","fractal","biharmonic"};
     snprintf(fnshm,PATH_MAX,"%s/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
 	     dirshm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
-    if(exist(fnshm)) touch(fnshm);
+    if(zfexist(fnshm)) zftouch(fnshm);
     remove_file_older(dirshm, 30*24*3600);
     return strdup(fnshm);
 }

@@ -447,8 +447,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	cfree(seotfk);
     }//iwvl
 #if SAVE_OTF==1
-    ccellwrite(saveotf,"powfs%d_saveotf.bin.gz",ipowfs);
-    ccellwrite(savepsf,"powfs%d_savepsf.bin.gz",ipowfs);
-    ccellwrite(saveotfetf,"powfs%d_saveotfetf.bin.gz",ipowfs);
+    ccellwrite(saveotf,"powfs%d_saveotf",ipowfs);
+    ccellwrite(savepsf,"powfs%d_savepsf",ipowfs);
+    ccellwrite(saveotfetf,"powfs%d_saveotfetf",ipowfs);
 #endif
 }

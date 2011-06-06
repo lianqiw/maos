@@ -28,8 +28,12 @@ EXTRA_DIST=\
 ./Modify/gpl.txt\
 ./Modify/License.txt
 
-#remove _DNPARTITION is METIS is installed 
+#remove _DNPARTITION if METIS is installed 
+if DEBUG
+AM_CFLAGS=-g -DUSE_MEM=0 -DHAVE_SSE2=1 -DNPARTITION 
+else
 AM_CFLAGS=-DNDEBUG=1 -O3 -DUSE_MEM=0 -DHAVE_SSE2=1 -DNPARTITION 
+endif
 if USE_LONG
 AM_CFLAGS+=-DDLONG
 endif

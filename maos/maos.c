@@ -178,7 +178,7 @@ int main(int argc, char **argv){
     free(arg);
     THREAD_POOL_INIT(parms->sim.nthread);
     dirsetup=stradd("setup",NULL);
-    if(parms->save.setup){
+    if(parms->save.setup || parms->save.recon){
 	mymkdir("%s",dirsetup);
 	//addpath(dirsetup);
     }

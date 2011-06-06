@@ -127,9 +127,9 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 			continue;
 		    }
 		    char fn[PATH_MAX];
-		    snprintf(fn,PATH_MAX,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin.gz",
+		    snprintf(fn,PATH_MAX,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g",
 			     dirstart, seed,msa,thx,thy);
-		    if(!exist(fn)){
+		    if(!zfexist(fn)){
 			//warning("%s doesn't exist\n",fn);
 		    }else{
 			dcell *avgpsfi=dcellread("%s",fn);
@@ -137,7 +137,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 			dcellfree(avgpsfi);
 			wtsum+=wtxi;
 			
-			snprintf(fn,PATH_MAX,"%s/pistat/gstat_seed%d_sa%d_x%g_y%g.bin.gz",
+			snprintf(fn,PATH_MAX,"%s/pistat/gstat_seed%d_sa%d_x%g_y%g",
 				 dirstart, seed, msa, thx, thy);
 			dmat *gradi=dread("%s",fn);
 			dadd(&grad, 1, gradi, wtxi);
@@ -445,17 +445,17 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			continue;
 		    }
 		    fnwvf[iy][ix]=alloca(PATH_MAX*sizeof(char));
-		    snprintf(fnwvf[iy][ix],PATH_MAX,"%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g.bin",
+		    snprintf(fnwvf[iy][ix],PATH_MAX,"%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g",
 			     dirstart,seed,msa,thx,thy);
 		    fnztilt[iy][ix]=alloca(PATH_MAX*sizeof(char));
-		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g.bin",
+		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
 			     dirstart,seed,msa,thx,thy);
-		    if(!exist(fnwvf[iy][ix])){
+		    if(!zfexist(fnwvf[iy][ix])){
 			warning("%s doesnot exist\n",fnwvf[iy][ix]);
 			fnwvf[iy][ix]=NULL;
 			fnztilt[iy][ix]=NULL;
 		    }else{
-			if(!exist(fnztilt[iy][ix])){
+			if(!zfexist(fnztilt[iy][ix])){
 			    error("%s exist, but %s does not\n", fnwvf[iy][ix],fnztilt[iy][ix]);
 			}
 			wtsum+=wtxi;

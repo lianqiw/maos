@@ -53,14 +53,14 @@ APER_T * setup_aper(const PARMS_T *const parms){
  
     if(parms->load.locs){
 	char *fn=parms->load.locs;
-	if(!exist(fn)) error("%s doesn't exist\n",fn);
+	if(!zfexist(fn)) error("%s doesn't exist\n",fn);
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
     }else{//locs act as a pupil mask. no points outside will be evaluated.
 	//We choose to make circular map so that it acts as pupil stop in case of misregistration.
 	aper->locs=mkcirloc(parms->aper.d, parms->aper.dx);
 	if(parms->save.setup){
-	    locwrite(aper->locs, "%s/aper_locs.bin.gz",dirsetup);
+	    locwrite(aper->locs, "%s/aper_locs",dirsetup);
 	}
     }
     loc_create_stat(aper->locs);
@@ -114,16 +114,16 @@ APER_T * setup_aper(const PARMS_T *const parms){
     if(parms->evl.rmax!=1){
 	aper->mod=loc_zernike(aper->locs, parms->aper.d/2, parms->evl.rmax);
 	if(parms->save.setup){
-	    dwrite(aper->mod,"%s/aper_mode.bin.gz",dirsetup);
+	    dwrite(aper->mod,"%s/aper_mode",dirsetup);
 	}
 	dgramschmidt(aper->mod, aper->amp->p);
 	if(parms->save.setup){
-	    dwrite(aper->mod,"%s/aper_mode_gramschmidt.bin.gz",dirsetup);
+	    dwrite(aper->mod,"%s/aper_mode_gramschmidt",dirsetup);
 	}
     }
     if(parms->save.setup){
-	dwrite(aper->amp, "%s/aper_amp.bin.gz",dirsetup);
-	dwrite(aper->mcc, "%s/aper_mcc.bin.gz",dirsetup);
+	dwrite(aper->amp, "%s/aper_amp",dirsetup);
+	dwrite(aper->mcc, "%s/aper_mcc",dirsetup);
     }
     aper->sumamp2=0;
     if(aper->amp){
