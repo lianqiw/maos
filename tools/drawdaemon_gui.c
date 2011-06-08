@@ -772,8 +772,12 @@ static void tool_save(GtkToolButton *button){
 	gtk_file_chooser_set_current_folder
 	    (GTK_FILE_CHOOSER(dialog), folder);
     }else{
+	char curpath[PATH_MAX];
+	if(!getcwd(curpath, PATH_MAX)){
+	    strcpy(curpath, HOME);
+	}
 	gtk_file_chooser_set_current_folder
-	    (GTK_FILE_CHOOSER(dialog), HOME);
+	    (GTK_FILE_CHOOSER(dialog), curpath);
     }
 
     if(gtk_dialog_run(GTK_DIALOG(dialog))==GTK_RESPONSE_ACCEPT){

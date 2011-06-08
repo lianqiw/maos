@@ -742,6 +742,9 @@ static void readcfg_plot(PARMS_T *parms){
 	parms->plot.atm=1;
 	parms->plot.run=1;
     }
+    if(parms->plot.setup || parms->plot.atm || parms->plot.run || parms->plot.opdx || parms->plot.all){
+	draw_helper();
+    }
 }
 /**
    Read in debugging parameters

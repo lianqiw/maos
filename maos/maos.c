@@ -123,6 +123,7 @@ int main(int argc, char **argv){
 	daemonize();
 	fprintf(stderr, "%s\n", scmd);
     }
+    
     info2("MAOS Version %s. Compiled on %s %s by %s ", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__);
 #ifdef __OPTIMIZE__
     info2("with optimization.\n");
@@ -136,6 +137,7 @@ int main(int argc, char **argv){
 
     //setting up parameters before asking scheduler to check for any errors.
     PARMS_T *parms=setup_parms(arg); 
+ 
     curparms = parms;
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
   

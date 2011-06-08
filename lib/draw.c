@@ -28,14 +28,17 @@
 #include "thread.h"
 #include "misc.h"
 #include "mathmisc.h"
+#include "io.h"
 int DRAW_ID=0;
 int DRAW_DIRECT=0; //set to 1 to launch drawdaemon directly without going through scheduler.
-/*
-  draw by calling gtkdraw via daemon
-*/
+int disable_draw=0; //if 1, draw will be disabled 
+PNEW(lock);
+int write_helper=0;
+int read_helper=0;
+
 /**
    \file draw.c
-   Contains functions for data visualization
+   Contains functions for data visualization.   draw by calling gtkdraw via daemon
 */
 #include "draw.h"
 #include "bin.h"
@@ -65,17 +68,49 @@ static FILE *pfifo=NULL;
 #define FWRITECMDSTR(pfifo,cmd,arg)			\
     if(arg&&strlen(arg)>0){				\
 	FWRITEINT(pfifo, cmd); FWRITESTR(pfifo,arg);	\
-    }							\
-
-PNEW(lock);
-int disable_draw=0; //if 1, draw will be disabled 
+    }							
+/**
+   A helper routine that forks in the early stage to launch drawdaemon.
+*/
+void draw_helper(void){
+    int fd[2];
+    int fd2[2];
+    if(pipe(fd) || pipe(fd2)){
+	warning("Create pipe failed. Return.\n");
+	return;
+    }
+    pid_t pid=fork();
+    if(pid<0){
+	warning("Fork failed. Return.\n");
+	return;
+    }
+    if(pid){//Parent
+	close(fd[0]);
+	write_helper=fd[1];
+	close(fd2[1]);
+	read_helper=fd2[0];
+	return;
+    }else{//Child
+	close(fd[1]);
+	int read_parent=fd[0];
+	close(fd2[0]);
+	int write_parent=fd2[1];
+	int cmd;
+	while(read(read_parent, &cmd, sizeof(int))==sizeof(int)){
+	    char *fifo_fn=scheduler_get_drawdaemon(cmd, 1);
+	    writestr(write_parent, fifo_fn);
+	}
+	_exit(0);
+    }
+}
 /**
    Open a fifo (created by the drawdaemon) and start writing to it.
 */
 static int fifo_open(){
     int fd;
     int retry=0;
-    char *fifo_fn;
+    char *fifo_fn=NULL;
+    int free_fifo_fn=0;
     if(disable_draw){
 	return -1;
     }
@@ -88,7 +123,21 @@ static int fifo_open(){
 
  retry:
     //do not free the returned string.
-    fifo_fn=scheduler_get_drawdaemon(DRAW_ID, DRAW_DIRECT);
+    if(write_helper && read_helper){
+	info2("Helper is running, launch drawdaemon through it\n");
+	if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
+	    fifo_fn=readstr(read_helper);
+	    free_fifo_fn=1;
+	}else{
+	    read_helper=0;
+	    draw_helper();
+	    goto retry;
+	}
+    }
+    if(!fifo_fn){
+	fifo_fn=scheduler_get_drawdaemon(DRAW_ID, DRAW_DIRECT);
+	free_fifo_fn=0;
+    }
     if(!fifo_fn){
 	warning("Unable to find and launch drawdaemon\n"); 
 	disable_draw=1;
@@ -96,18 +145,19 @@ static int fifo_open(){
     }
     retry++;
     fd=open(fifo_fn,O_NONBLOCK|O_WRONLY);
+    int ans=0;
     if(fd==-1){
 	perror("fifo_open");
 	if(errno==ENXIO && retry>20){
 	    warning("Unable to open drawdaemon. Draw is disabled\n");
 	    disable_draw=1;
-	    return -1;
+	    ans=-1;
 	}else{
 	    sleep(2);
 	    if(retry<20){
 		goto retry;
 	    }else{
-		return -1;
+		ans=-1;
 	    }
 	}
     }else{
@@ -116,11 +166,15 @@ static int fifo_open(){
         close(fd);
 	if(!pfifo){
 	    warning("Failed to open fifo\n");
-	    return -1;
+	    ans=-1;
 	}else{
-	    return 0;
+	    ans=0;
 	}
     }
+    if(free_fifo_fn){
+	free(fifo_fn);
+    }
+    return ans;
 }
 /**
    Write data to the fifo. Handle exceptions.

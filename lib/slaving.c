@@ -237,7 +237,6 @@ void act_stuck(loc_t **aloc,
 	}
 	for(int ifit=0; ifit<HA->nx; ifit++){
 	    spint *pp=pHA[idm][ifit]->p;
-	    spint *pi=pHA[idm][ifit]->i;
 	    double *px=pHA[idm][ifit]->x;
 	    for(int jact=0; jact<stuck->p[idm]->nx; jact++){
 		int iact=stuck->p[idm]->p[jact];

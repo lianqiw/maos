@@ -24,6 +24,7 @@
 #include "loc.h"
 extern int DRAW_ID;//number to use for drawdaemon, usually PID.
 extern int DRAW_DIRECT;
+void draw_helper(void);
 void imagesc(char *fig, long nx, long ny, const double *limit, const double *zlimit,
 	     const void *p, const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(10);
