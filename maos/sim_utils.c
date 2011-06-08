@@ -1126,8 +1126,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    save->dmfit_hi=cellarr_init(nstep, 1, "dmfit_hi_%d.bin", seed);
 	}
 	int nskip=parms->sim.closeloop?1:0;
-	save->dmreal = cellarr_init(nstep-nskip, 1, "dmreal_%d.bin", seed);
-	save->dmcmd  = cellarr_init(nstep-nskip, 1, "dmcmd_%d.bin", seed);
+	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
+	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
 	if(parms->tomo.split){
 	    save->Merr_lo=cellarr_init(nstep, 1, "Merr_lo_%d.bin", seed);
 	}

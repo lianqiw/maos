@@ -177,6 +177,26 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc[idm], NULL);
 	dinvspd_inplace(recon->aimcc->p[idm]);
     }
+    //Dealing with stuck/floating actuators.
+    int anyfloat=0, anystuck=0;
+    for(int idm=0; idm<ndm; idm++){
+	if(parms->dm[idm].actstuck) anystuck=1;
+	if(parms->dm[idm].actfloat) anyfloat=1;
+    }
+    if(anystuck){
+	recon->actstuck=icellnew(parms->ndm, 1);
+	for(int idm=0; idm<ndm; idm++){
+	    if(!parms->dm[idm].actstuck) continue;
+	    recon->actstuck->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actstuck);
+	}
+    }
+    if(anyfloat){
+	recon->actfloat=icellnew(parms->ndm, 1);
+	for(int idm=0; idm<ndm; idm++){
+	    if(!parms->dm[idm].actfloat) continue;
+	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actfloat);
+	}
+    }
 }
 /**
    Setup the tomography grids xloc which is used for Tomography.
@@ -431,7 +451,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 			   displace[0],displace[1],scale,
 			   parms->dm[idm].cubic,parms->dm[idm].iac);
 
-		GA[idm][iwfs]=spmulsp(recon->GP->p[iwfs],H);
+		GA[idm][iwfs]=spmulsp(recon->GP->p[iwfs], H);
 		spfree(H);
 	    }//idm
 	}
@@ -439,6 +459,20 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	    spcellwrite(recon->GA, "%s/GA",dirsetup);
 	}
     	toc2(" ");
+    }
+    if(recon->actstuck){
+	warning2("Apply stuck actuators to GA\n");
+	act_stuck(recon->aloc, recon->GA, recon->actstuck);
+    	if(parms->save.setup){
+	    spcellwrite(recon->GA,"%s/GA_stuck",dirsetup);
+	}
+    }
+    if(recon->actfloat){
+	warning2("Apply float actuators to GA\n");
+	act_float(recon->aloc, &recon->GA, recon->actfloat);
+	if(parms->save.setup){
+	    spcellwrite(recon->GA,"%s/GA_float",dirsetup);
+	}
     }
     //Create GAlo that only contains GA for low order wfs
     spcellfree(recon->GAlo);
@@ -1123,8 +1157,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		if(RLU[i][0]) nll+=RLU[i][0]->ny;
 	    }
 	}
-	info2("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", 
-	      nlr,nll);
+	info2("Tomography number of Low rank terms: %ld in RHS, %ld in LHS\n", nlr,nll);
 	if(parms->save.recon){
 	    spcellwrite(recon->RR.M,"%s/RRM",dirsetup);
 	    dcellwrite(recon->RR.U,"%s/RRU",dirsetup);
@@ -1141,7 +1174,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 	muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
     }
     if(((parms->tomo.alg==0 || parms->tomo.alg==2) && !parms->tomo.bgs)
-       ||(parms->sim.ecnn || (parms->tomo.split==2 && !parms->load.mvst)) && !recon->RL.C && !recon->RL.MI){
+       ||((parms->sim.ecnn || (parms->tomo.split==2 && !parms->load.mvst)) && !recon->RL.C && !recon->RL.MI)){
 	if(parms->load.tomo){
 	    if(parms->tomo.alg==0 && zfexist("RLC")){
 		recon->RL.C=chol_read("RLC");
@@ -1348,7 +1381,6 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
    Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
 static void
 setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
-    //Greate HXF and HA matrix;
     if(parms->load.HXF && zfexist(parms->load.HXF)){
 	warning("Loading saved HXF\n");
 	recon->HXF=spcellread("%s",parms->load.HXF);
@@ -1406,6 +1438,20 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	toc2(" ");
 	if(parms->save.setup){
 	    spcellwrite(recon->HA,"%s/HA",dirsetup);
+	}
+    }
+    if(recon->actstuck){
+	warning2("Apply stuck actuators to HA\n");
+	act_stuck(recon->aloc, recon->HA, recon->actstuck);
+    	if(parms->save.setup){
+	    spcellwrite(recon->HA,"%s/HA_stuck",dirsetup);
+	}
+    }
+    if(recon->actfloat){
+	warning2("Apply float actuators to HA\n");
+	act_float(recon->aloc, &recon->HA, recon->actfloat);
+	if(parms->save.setup){
+	    spcellwrite(recon->HA,"%s/HA_float",dirsetup);
 	}
     }
 }
@@ -1607,7 +1653,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }else{
 	fit_prep_lrt(recon,parms);
 	if(parms->fit.actslave){
-	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->NW,0.1, 1./recon->ploc->nloc);
+	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->NW, recon->actstuck, recon->actfloat, 0.1, 1./recon->ploc->nloc);
 	    if(parms->save.setup){
 		spcellwrite(recon->actslave,"%s/actslave",dirsetup);
 		dcellwrite(recon->NW,"%s/NW2",dirsetup);
@@ -2194,7 +2240,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	spcelladdI(recon->LL.M, parms->tomo.tikcr*maxeig);
     }
     //actuator slaving. important
-    spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NULL,0.5, sqrt(maxeig));
+    spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NULL, recon->actstuck, recon->actfloat, 0.5, sqrt(maxeig));
     //spcellwrite(actslave,"actslave");
     spcelladd(&recon->LL.M, actslave);
     spcellfree(actslave);
@@ -2461,7 +2507,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     }
     free(recon->alocm);
     free(recon->aloc);
-
+    icellfree(recon->actstuck);
+    icellfree(recon->actfloat);
     free(recon->xloc_nx); 
     free(recon->xloc_ny);
     free(recon->aloc_nx);

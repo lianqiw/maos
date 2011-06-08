@@ -267,6 +267,9 @@ spchol *chol_read(const char *format, ...){
     file_t *fp=zfopen(fn, "rb");
     char *header=NULL;
     uint32_t magic=read_magic(fp, &header);
+    if(!iscell(magic)){
+	error("%s does not contain cell array\n", fn);
+    }
     long ncx, ncy;
     zfreadlarr(fp, 2, &ncx, &ncy);
     if(ncx*ncy==2){//Contains Cl(Cu) and Perm

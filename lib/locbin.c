@@ -184,7 +184,7 @@ map_t* d2map(dmat *in){
     map->vx=search_header_num(header,"vx");
     map->vy=search_header_num(header,"vy");
     if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
-	error("header is needed to convert dmat to map_t\n");
+	error("Valid header is needed to convert dmat to map_t\n");
     }
     if(isnan(map->h)) map->h=0;
     if(isnan(map->vx)) map->vx=0;

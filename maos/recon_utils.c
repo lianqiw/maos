@@ -739,3 +739,29 @@ void shift_grad(SIM_T *simu){
     simu->reconisim = simu->isim;
 }
 
+/**
+   Parse the input dead actuator location to actuator indices based on aloc.
+*/
+imat* act_coord2ind(loc_t *aloc,       /**<[in] Aloc*/
+		    const char *fndead /**<[in] File containing dead actuators*/
+		    ){
+    dmat *dead=dread("%s", fndead);
+    if(dead->ny!=2){
+	error("%s must contain 2 columns of data\n", fndead);
+    }
+    loc_create_map_npad(aloc,1);
+    long (*map)[aloc->map->nx]=(void*)aloc->map->p;
+    double ox=aloc->map->ox;
+    double oy=aloc->map->oy;
+    double dx1=1./aloc->dx;
+    PDMAT(dead, ps);
+    imat *out=inew(dead->nx, 1);
+    for(long jact=0; jact<dead->nx; jact++){
+	long mapx=(long)round((ps[0][jact]-ox)*dx1);
+	long mapy=(long)round((ps[1][jact]-oy)*dx1);
+	long iact=map[mapy][mapx]-1;
+	out->p[jact]=iact;
+    }
+    dfree(dead);
+    return out;
+}

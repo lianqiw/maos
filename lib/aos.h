@@ -56,4 +56,5 @@
 #include "sys/sys.h"
 #include "servo.h"
 #include "slaving.h"
+#include "imat.h"
 #endif

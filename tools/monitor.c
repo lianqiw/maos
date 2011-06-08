@@ -138,13 +138,13 @@ static void host_up(int host){
     pthread_mutex_unlock(&pmutex);
     gtk_widget_set_sensitive(cmdconnect[host],0);
     gtk_widget_hide(cmdconnect[host]);
+    proc_remove_all(host);//remove all entries.
 }
 static void host_down(int host, int info){
     pthread_mutex_lock(&pmutex);
     nhostup--;
     pthread_mutex_unlock(&pmutex);
     add_host_wakeup();
-    proc_remove_all(host);//remove all entries.
     static const char *infotext[]={"Connection is lost. Click to reconnect.",
 				   "Scheduler version is too old",
 				   "Scheduler verison is too new, plase update monitor"};

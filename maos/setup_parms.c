@@ -125,8 +125,14 @@ void free_parms(PARMS_T *parms){
 	free(parms->dm[idm].dxcache);
 	free(parms->dm[idm].misreg);
 	free(parms->dm[idm].hyst);
+	free(parms->dm[idm].actstuck);
+	free(parms->dm[idm].actfloat);
     }
     free(parms->dm);
+    for(int imoao=0; imoao<parms->nmoao; imoao++){
+	free(parms->moao[imoao].actstuck);
+	free(parms->moao[imoao].actfloat);
+    }
     free(parms->moao);
     free(parms->evl.scalegroup);
     free(parms->aper.fnamp);
@@ -432,6 +438,8 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM_RELAX(dbl,iac);
     READ_DM_RELAX(str,misreg);
     READ_DM_RELAX(str,hyst);
+    READ_DM_RELAX(str,actfloat);
+    READ_DM_RELAX(str,actstuck);
     free(strtmp);
     free(inttmp);
     free(dbltmp);
@@ -456,14 +464,18 @@ static void readcfg_moao(PARMS_T *parms){
     parms->moao=calloc(nmoao, sizeof(MOAO_CFG_T));
     int *inttmp=NULL;
     double *dbltmp=NULL;
+    char **strtmp=NULL;
     READ_MOAO(int,order);
     READ_MOAO_RELAX(int,cubic);
     READ_MOAO_RELAX(dbl,iac);
     READ_MOAO_RELAX(dbl,stroke);
     READ_MOAO_RELAX(int,actslave);
     READ_MOAO_RELAX(int,lrt_ptt);
+    READ_MOAO_RELAX(str,actstuck);
+    READ_MOAO_RELAX(str,actfloat);
     free(inttmp);
     free(dbltmp);
+    free(strtmp);
 }
 /**
    Read in atmosphere parameters.

@@ -404,8 +404,8 @@ int readcfg_peek_n(const char *format, ...){
 	}
 	free(ret);
     }else{//this is numerical array
-	double *ret;
-	count=readstr_numarr((void**)&ret, 0, T_DBL, sdata);
+	void *ret;
+	count=readstr_numarr(&ret, 0, T_DBL, sdata);
 	free(ret);
     }
     return count;

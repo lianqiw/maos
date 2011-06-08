@@ -25,23 +25,9 @@
    Routings to setup moao and carry out moao DM fitting.
 */
 
-/*
-   cyclic shift the dmats.  \todo: consider replacing this with a integrator
-static void shift_ring(int nap, dmat **ring, dmat *new){
-    dmat *keep=ring[nap-1];
-    for(int iap=nap-1; iap>=0; iap--){
-	if(!iap){
-	    ring[iap]=dref(new);
-	}else{
-	    ring[iap]=ring[iap-1];
-	}
-    }
-    dfree(keep);
-}
-*/
 /**
    Free MOAO_T
- */
+*/
 void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
     if(!recon->moao) return;
     for(int imoao=0; imoao<parms->nmoao; imoao++){
@@ -52,6 +38,8 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	spcellfree(recon->moao[imoao].actslave);
 	spfree(recon->moao[imoao].W0);
 	dfree(recon->moao[imoao].W1);
+	icellfree(recon->moao[imoao].actstuck);
+	icellfree(recon->moao[imoao].actfloat);
     }
     free(recon->moao);
     recon->moao=NULL;
@@ -113,6 +101,17 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].HA=spcellnew(1,1);
 	recon->moao[imoao].HA->p[0]=mkh(recon->moao[imoao].aloc, recon->ploc, NULL, 0, 0, 1, 
 					parms->moao[imoao].cubic,parms->moao[imoao].iac); 
+	if(parms->moao[imoao].actstuck){
+	    recon->moao[imoao].actstuck=icellnew(1,1);
+	    recon->moao[imoao].actstuck->p[0]=act_coord2ind(recon->moao[imoao].aloc, parms->moao[imoao].actstuck);
+	    act_stuck(&recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
+	}
+	if(parms->moao[imoao].actfloat){
+	    recon->moao[imoao].actfloat=icellnew(1,1);
+	    recon->moao[imoao].actfloat->p[0]=act_coord2ind(recon->moao[imoao].aloc, parms->moao[imoao].actfloat);
+	    act_float(&recon->moao[imoao].aloc, &recon->moao[imoao].HA, recon->moao[imoao].actfloat);
+	}
+
 	if(parms->moao[imoao].lrt_ptt){
 	    recon->moao[imoao].NW=dcellnew(1,1);
 	    long nloc=recon->moao[imoao].aloc->nloc;
@@ -133,11 +132,13 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].W1=dref(recon->W1);
 	if(parms->moao[imoao].actslave){
 	    recon->moao[imoao].actslave=slaving(&recon->moao[imoao].aloc, 
-						    recon->moao[imoao].HA, 
-						    recon->moao[imoao].W1,
-						    recon->moao[imoao].NW,
-						    0.1, 
-						    1./recon->ploc->nloc);
+						recon->moao[imoao].HA, 
+						recon->moao[imoao].W1,
+						recon->moao[imoao].NW,
+						recon->moao[imoao].actstuck,
+						recon->moao[imoao].actfloat,
+						0.1, 
+						1./recon->ploc->nloc);
 	}
 	if(parms->save.setup){
 	    locwrite(recon->moao[imoao].aloc,"%s/moao%d_aloc",dirsetup,imoao);
@@ -309,12 +310,12 @@ void moao_recon(SIM_T *simu){
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		recon->warm_restart, parms->fit.maxit);
 	    /*if(parms->tomo.split){//remove the tip/tilt form MEMS DM
-		double ptt[3]={0,0,0};
-		loc_t *aloc=recon->moao[imoao].aloc;
-		dmat *aimcc=recon->moao[imoao].aimcc;
-		loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
-		loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
-		}*/
+	      double ptt[3]={0,0,0};
+	      loc_t *aloc=recon->moao[imoao].aloc;
+	      dmat *aimcc=recon->moao[imoao].aimcc;
+	      loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
+	      loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
+	      }*/
 	    if(!isinf(parms->moao[imoao].stroke)){
 		int nclip=dclip(dmmoao->p[0],
 				-parms->moao[imoao].stroke,

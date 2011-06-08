@@ -214,6 +214,8 @@ typedef struct MOAO_T{
     dsp *W0;          /**<Weighting matrix on PLOC. same as recon->W0*/
     spcell *actslave; /**<Slaving operator for actuators not illuminated*/
     dmat *aimcc;      /**<used for tip/tilt removal from DM commands.*/
+    icell *actstuck;  /**<stuck actuators*/
+    icell *actfloat;  /**<floating actuators*/
 }MOAO_T;
 /**
    A convenient wrap of the data to embed into MUV_T for applying invpsd to opds defined on xloc.
@@ -265,6 +267,8 @@ typedef struct RECON_T{
     loc_t **alocm;     /**<misregistered actuator grid for ray tracing*/
     long *aloc_nx;     /**<size of amap used to build aloc*/
     long *aloc_ny;     /**<size of amap used to build aloc*/
+    icell *actfloat;   /**<floating actuators*/
+    icell *actstuck;   /**<stuck actuators*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp  *W0;          /**<ploc weighting for circle of diam aper.d*/

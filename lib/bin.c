@@ -155,9 +155,10 @@ int zfexist(const char *format, ...){
 void zftouch(const char *format, ...){
     format2fn;
     char *fn2=procfn(fn, "rb", 0);
-    if(utimes(fn, NULL)){
+    if(utimes(fn2, NULL)){
 	perror("zftouch failed");
     }
+    free(fn2);
 }
 PNEW(lock);
 /**
@@ -475,7 +476,7 @@ const char *search_header(const char *header, const char *key){
     const char *val=header;
     while(val[0]!='\0' && (val=strstr(val, key))){
 	if(val>header){
-	    if(!isspace(val[-1])){
+	    if(!isspace(val[-1]) && val[-1]!=';' && val[-1] !=','){
 		val=val+strlen(key);
 		continue;//Invalid
 	    }

@@ -231,7 +231,10 @@ void filter_cl(SIM_T *simu){
     */
     const PARMS_T *parms=simu->parms;
     assert(parms->sim.closeloop);
-  
+    if(parms->save.dm){
+	cellarr_dcell(simu->save->dmreal, simu->dmreal);
+	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
+    }
     //copy dm computed in last cycle. This is used in next cycle (already after perfevl)
     const SIM_CFG_T *simt=&(parms->sim);
     if(!simu->dmerr_hi && !(parms->tomo.split && simu->Merr_lo)){
@@ -289,10 +292,7 @@ void filter_cl(SIM_T *simu){
     if(parms->sim.dmttcast){
 	cast_tt_do(simu, simu->dmint[0]);
     }
-    if(parms->save.dm){
-	cellarr_dcell(simu->save->dmreal, simu->dmreal);
-	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
-    }
+ 
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
     if(parms->sim.fuseint){

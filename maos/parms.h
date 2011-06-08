@@ -250,9 +250,11 @@ typedef struct DM_CFG_T{
     int cubic;      /**<use cubic spline. better than linear. need to specify iac*/ 
     int order;      /**<Order of the DM within telescope clear subaperture*/
     int isground;   /**<Is this DM the ground DM (derived)*/
+    char *actfloat; /**<file containing floating actuators. nx2 coordinate*/
+    char *actstuck; /**<file containing stuck actuators. nx2 coordinate.*/
 
-    int ncache;     /**<number of scale group for DM propagation cache. (derived)*/
-    double *dxcache; /**<the sampling of plane to cache dm for each scale
+    int ncache;
+    double *dxcache;/**<the sampling of plane to cache dm for each scale
 			group. (derived)*/
     char* misreg;   /**<misregistration of the DM with respect to the pupil,
 		       described by file containing a cell array A of 2x1.  The
@@ -484,6 +486,8 @@ typedef struct MOAO_CFG_T{
     double stroke;   /**<Stroke of the MOAO DM*/
     int actslave;    /**<Do we do actuator slaving*/
     int lrt_ptt;     /**<Piston/tip/tilt constraint*/
+    char *actfloat;  /**<file containing floating actuators. nx2 coordinate*/
+    char *actstuck;  /**<file containing stuck actuators. nx2 coordinate.*/
 }MOAO_CFG_T;
 /**
    contains input parameters for reusing of saved variables.
