@@ -42,7 +42,6 @@ typedef struct GENSCREEN_T{
     pthread_mutex_t mutex_ilayer;/**<Mutex lock*/
 }GENSCREEN_T;
 
-extern int disable_atm_shm;
 extern int genscreen_keep_unused;
 void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw);
 map_t** genscreen_from_spect(GENSCREEN_T *data);

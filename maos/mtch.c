@@ -286,7 +286,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    saneaxyl[ii0][isa]=dchol(saneaxy[ii0][isa]);
 	}//isa 
 	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
-	if(i0summax<siglev*0.8 || i0summax>siglev){
+	if(i0summax<siglev*0.1 || i0summax>siglev){
 	    warning("powfs %d: i0 sum to maximum of %g, wfs %d has siglev of %g\n",
 		    ipowfs, i0summax, iwfs, siglev);
 	}

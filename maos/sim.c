@@ -78,7 +78,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    evolve_screen(simu);
 		}
 	    }else{
-		disable_atm_shm=1;
 		genscreen(simu);
 		//re-seed the atmosphere in case atm is loaded from shm/file
 		seed_rand(simu->atm_rand, lrand(simu->init));

@@ -221,13 +221,13 @@ int main(int argc, char *argv[]){
 	    legs[iseed]=malloc(50*sizeof(char));
 	    snprintf(legs[iseed], 50, "Seed %ld", seed[iseed]);
 	}
-	plot_points("Res", nseed, NULL, reshi, NULL, NULL, 0, NULL, legs,
+	plot_points("Reshi", nseed, NULL, reshi, NULL, NULL, 0, NULL, legs,
 		    "High order wavefront Error", "Steps","Error (nm)", "High");
-	plot_points("Res", nseed, NULL, reslo, NULL, NULL, 0, NULL,legs,
+	plot_points("Reslo", nseed, NULL, reslo, NULL, NULL, 0, NULL,legs,
 		    "Low order wavefront Error", "Steps","Error (nm)", "Low");
-	plot_points("ResOL", nseed, NULL, resolhi, NULL, NULL, 0, NULL, legs,
+	plot_points("ResOLhi", nseed, NULL, resolhi, NULL, NULL, 0, NULL, legs,
 		    "High order open loop wavefront Error", "Steps","Error (nm)", "High");
-	plot_points("ResOL", nseed, NULL, resollo, NULL, NULL, 0, NULL, legs,
+	plot_points("ResOLlo", nseed, NULL, resollo, NULL, NULL, 0, NULL, legs,
 		    "Low order open loop wavefront Error", "Steps","Error (nm)", "Low");
 	for(int iseed=0; iseed<nseed; iseed++){
 	    free(legs[iseed]);
@@ -251,12 +251,12 @@ int main(int argc, char *argv[]){
 	}
 
 	plot_points("Reshi", npath, NULL, reshim, NULL, NULL, 0, NULL, path,
-		    "High order wavefront Error", "Steps","Error (nm)", "High");
+		    "High order wavefront Error", "Steps","Error (nm)", "High_mean");
 	plot_points("Reslo", npath, NULL, reslom, NULL, NULL, 0, NULL, path,
-		    "Low order wavefront Error", "Steps","Error (nm)", "Low");
+		    "Low order wavefront Error", "Steps","Error (nm)", "Low_mean");
 	plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, 0, NULL, path,
-		    "High order open loop wavefront Error", "Steps","Error (nm)", "High");
+		    "High order open loop wavefront Error", "Steps","Error (nm)", "High_mean");
 	plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, 0, NULL, path,
-		    "Low order open loop wavefront Error", "Steps","Error (nm)", "Low");
+		    "Low order open loop wavefront Error", "Steps","Error (nm)", "Low_mean");
     }
 }

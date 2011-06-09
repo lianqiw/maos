@@ -74,7 +74,6 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     } 
     /*If there is no recognized suffix, add .bin in the end.*/
     if(!check_suffix(fn2,".bin") && !check_suffix(fn2, ".bin.gz")){
-	warning("File %s has wrong suffix. Append .bin\n", fn2);
 	strncat(fn2, ".bin", 4);
     }
     if(mod[0]=='r' || mod[0]=='a'){
@@ -109,7 +108,7 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 file_t* openfile(const char *fn_in, char *mod){
     char *fn=procfn(fn_in, mod, 1);
     file_t* fp=calloc(1, sizeof(file_t));
-    if(!strcmp(fn+strlen(fn)-4,".bin") && mod[0]=='w'){
+    if(check_suffix(fn, ".bin") && mod[0]=='w'){
 	fp->isgzip=0;
 	if(!(fp->p=fopen(fn,mod))){
 	    error("Error fopen for %s\n",fn);

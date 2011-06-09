@@ -29,6 +29,7 @@ config/maos/dm_none.conf\
 config/maos/dm_single.conf\
 config/maos/dm_triple.conf\
 config/maos/fov_iris.conf\
+config/maos/fov_wirc.conf\
 config/maos/fov_oa.conf\
 config/maos/fov_pmos.conf\
 config/maos/llt_CL.conf\

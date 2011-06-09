@@ -510,9 +510,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    if(save_grad){//save noise free gradient.
 		cellarr_dmat(simu->save->gradnf[iwfs], *gradout);
 	    }
-	    if(parms->powfs[ipowfs].usephy){
-		info2("Will not add noise at acquisition proccess for physical optics\n");
-	    }else{
+	    if(!parms->powfs[ipowfs].usephy){
 		const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
 		const double *neax=nea->p;
 		const double *neay=nea->p+nsa;
@@ -527,6 +525,8 @@ void wfsgrad_iwfs(thread_t *info){
 		    simu->sanea_sim->p[iwfs]->p[isa]+=noisex*noisex;
 		    simu->sanea_sim->p[iwfs]->p[isa+nsa]+=noisey*noisey;
 		}
+	    }else if(isim==0){
+		info2("Will not add noise at acquisition proccess for physical optics\n");
 	    }
 	}
     }

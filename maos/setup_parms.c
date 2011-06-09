@@ -1204,9 +1204,6 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	warning("Disable atm.evolve since there is no frozenflow or in debug atm mode.\n");
 	parms->atm.evolve=0;//disable evolve in open loop mode.
     }
-    if(parms->atm.evolve || !parms->atm.share){
-	disable_atm_shm=1;//do not share screen.
-    }
     if(parms->dbg.atm==0){
 	if(parms->atm.fractal){
 	    parms->atm.fun=fractal_screen;

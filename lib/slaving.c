@@ -79,9 +79,11 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	}
   	double *actcpl= actcplc->p[idm]->p;
 	double *actcpl0 = actcpl-1;
-	int  nslave   = nstuck;
+	int  nslave   = 0;
 	for(int iact=0; iact<nact; iact++){
 	    if(actcpl[iact]<thres){
+		nslave++;
+	    }else if(stuck[iact]){
 		nslave++;
 	    }
 	}

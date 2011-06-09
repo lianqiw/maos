@@ -630,8 +630,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     if(parms->powfs[ipowfs].ncomp){
 	ncompx=parms->powfs[ipowfs].ncomp;
 	ncompy=parms->powfs[ipowfs].ncomp;
-	warning("powfs %d: ncomp is specified "
-		"in input file to %dx%d\n",
+	warning2("powfs %d: ncomp is specified in input file to %dx%d\n",
 		ipowfs,ncompx,ncompy);
     }else{
 	/*

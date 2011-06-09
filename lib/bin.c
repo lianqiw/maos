@@ -127,10 +127,9 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 		    return NULL;
 		}
 	    }
-	}else{
-	    free(fn2);
-	    fn2=fnr;
 	}
+	free(fn2);
+	fn2=fnr;
     }else if (mod[0]=='w'){//for write, no suffix. we append .bin or .bin.gz
 	if(islink(fn2)){//remove old file to avoid write over a symbolic link.
 	    if(remove(fn2)){

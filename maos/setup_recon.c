@@ -238,7 +238,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dxr,0,guard,nin,T_XLOC,0,parms->tomo.square);
-	    info2("layer %d: xloc map is %4ld x %4ld, sampling is %g m\n",
+	    info2("layer %d: xloc map is %3ld x %3ld, sampling is %.3f m\n",
 		  ips, map->nx,map->ny,dxr);
 	    recon->xloc[ips]=map2loc(map);
 	    recon->xloc_nx[ips]=map->nx;
@@ -2430,13 +2430,11 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     dfree(recon->neam); 
     if(!(parms->tomo.assemble && parms->tomo.alg==1) && !parms->cn2.tomo && !parms->tomo.bgs){
 	//We no longer need RL.M,U,V
-	info2("Freeing RL.M,U,V\n");
 	spcellfree(recon->RL.M);
 	dcellfree(recon->RL.U);
 	dcellfree(recon->RL.V);
     }
     if(parms->fit.alg!=1 && !parms->fit.bgs){
-	info2("Freeing FL.M,U,V\n");
 	spcellfree(recon->FL.M);
 	dcellfree(recon->FL.U);
 	dcellfree(recon->FL.V);

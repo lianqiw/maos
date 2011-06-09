@@ -39,7 +39,7 @@
 #include "misc.h"
 #include "cellarr.h"
 #include "sys/daemonize.h"
-int disable_atm_shm=0;
+
 /**
  *  \file turbulence.c
  *  Contains routines to generate atmospheric turbulence screens
@@ -141,8 +141,8 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	    }
 	}
 	double tk4=myclockd();
-	info2("Layer %d: Randn: %.2f FFT: %.2f Save: %.2f seconds.\n", 
-	      ilayer, tk2-tk1, tk3-tk2, tk4-tk3);
+	info2("Layer %d: Randn: %.2f FFT: %.2f %s: %.2f seconds.\n", 
+	      ilayer, tk2-tk1, tk3-tk2, fc?"Save":"Copy",tk4-tk3);
     }
     dcellfree(dc);
     fft_free_plan(fft);

@@ -614,48 +614,28 @@ void loc_calc_ptt(double *rmsout, double *coeffout,
     double tot=0;
     double coeff[3]={0,0,0};
     if(amp){
-	if(rmsout){
-	    for(long iloc=0; iloc<nloc; iloc++){
-		const double junk=opd[iloc]*amp[iloc];
-		coeff[0]+=junk;
-		coeff[1]+=junk*locx[iloc];
-		coeff[2]+=junk*locy[iloc];
-		tot+=junk*opd[iloc];
-	    }
-	}else{
-	    for(long iloc=0; iloc<nloc; iloc++){
-		const double junk=opd[iloc]*amp[iloc];
-		coeff[0]+=junk;
-		coeff[1]+=junk*locx[iloc];
-		coeff[2]+=junk*locy[iloc];
-		//tot+=junk*opd[iloc];
-	    }
+	for(long iloc=0; iloc<nloc; iloc++){
+	    const double junk=opd[iloc]*amp[iloc];
+	    coeff[0]+=junk;
+	    coeff[1]+=junk*locx[iloc];
+	    coeff[2]+=junk*locy[iloc];
+	    tot+=junk*opd[iloc];
 	}
     }else{
-	if(rmsout){
-	    for(long iloc=0; iloc<nloc; iloc++){
-		const double junk=opd[iloc];
-		coeff[0]+=junk;
-		coeff[1]+=junk*locx[iloc];
-		coeff[2]+=junk*locy[iloc];
-		tot+=junk*opd[iloc];
-	    }
-	}else{
-	    for(long iloc=0; iloc<nloc; iloc++){
-		const double junk=opd[iloc];
-		coeff[0]+=junk;
-		coeff[1]+=junk*locx[iloc];
-		coeff[2]+=junk*locy[iloc];
-		//tot+=junk*opd[iloc];
-	    }
+	for(long iloc=0; iloc<nloc; iloc++){
+	    const double junk=opd[iloc];
+	    coeff[0]+=junk;
+	    coeff[1]+=junk*locx[iloc];
+	    coeff[2]+=junk*locy[iloc];
+	    tot+=junk*opd[iloc];
 	}
     }
     if(coeffout){
 	dmulvec3(coeffout, imcc, coeff);
     }
     if(rmsout){
-	double pis=ipcc*coeff[0]*coeff[0];
-	double ptt=dwdot3(coeff, imcc, coeff);
+	double pis=ipcc*coeff[0]*coeff[0];//piston mode variance
+	double ptt=dwdot3(coeff, imcc, coeff);//p/t/t mode variance.
 	rmsout[0]=tot-pis;//PR
 	rmsout[1]=ptt-pis;//TT
 	rmsout[2]=tot-ptt;//PTTR

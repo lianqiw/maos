@@ -519,6 +519,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     fclose(fp);
     snprintf(fnconf,PATH_MAX,"%s/skyres.txt",path);
     fp=fopen(fnconf,"w");
+    fprintf(fp, "TotAll\tNGS\tTT\n");
     fprintf(fp, "%g\t%g\t%g\n",
 	    sqrt(ipres[0])*1e9, sqrt(ipres[1])*1e9, sqrt(ipres[2])*1e9);
     fclose(fp);

@@ -632,7 +632,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	/*
 	  Telescope wind shake added to TT input.
 	*/
-	dmat *psdin=dread("%s",parms->sim.wspsd);
+	dmat *psdin=dread("%s", parms->sim.wspsd);
+	info("Loading windshake PSD from file %s\n", parms->sim.wspsd);
 	if(psdin->ny!=2){
 	    error("psd should have two columns\n");
 	}
@@ -658,7 +659,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
 	cfft2(wshat, -1);
 	creal2d(&simu->telws, 0, wshat, 1);
-	//dresize(simu->telws, parms->sim.end, 1);
 	cfree(wshat);
 	dfree(psdin);
 	dfree(psdf);
