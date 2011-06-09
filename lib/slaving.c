@@ -24,6 +24,9 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
     if(!HA) {
 	error("HA is not supplied\n");
     }
+    if(scl<EPS){
+	error("scl=%g is too small\n", scl);
+    }
     PSPCELL(HA,pHA);
     int ndm=HA->ny;
     dcell *actcplc=dcellnew(ndm, 1);
@@ -132,6 +135,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		if(!near_exist){
 		    error("This is an isolated actuator\n");
 		}
+		/*10x bigger constraint make the slaving work more strictly for floating actuators.*/
 		pi[count]=iact;
 		px[count]=scl;
 		/*
@@ -189,11 +193,13 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	    }//if
 	}//for iact
 	free(stuck);
+	free(floated);
 	pp[icol]=count;
 	assert(icol==nslave);
 	spsetnzmax(slavet, count);
 
 	dsp *slave=sptrans(slavet);
+	spwrite(slave, "slave_%d", idm);
 	actslave[idm][idm]=spmulsp(slavet, slave);
 
 	if(NW){
@@ -210,6 +216,19 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		dfree(H);
 		dfree(Hinv);
 		dfree(mod);
+		if(nfloat || nstuck){//Remove corresponding rows in NW
+		    PDMAT(NW->p[idm], pNW);
+		    for(int iy=0; iy<NW->p[idm]->ny; iy++){
+			for(int jact=0; jact<nstuck; jact++){
+			    int iact=actstuck->p[idm]->p[jact];
+			    pNW[iy][iact]=0;
+			}
+			for(int jact=0; jact<nfloat; jact++){
+			    int iact=actfloat->p[idm]->p[jact];
+			    pNW[iy][iact]=0;
+			}
+		    }
+		}
 	    }
 	}
 	spfree(slave);

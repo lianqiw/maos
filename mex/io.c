@@ -25,7 +25,42 @@ static int exist(const char *fn){
     struct stat buf;
     return !stat(fn, &buf);
 }
-
+/**
+   Compare two strings upto the length of b. if length of a is less than b,
+   return false. 1 means not equal.
+ */
+static int mystrcmp(const char *a, const char *b){
+    if(!a || !b) return 1;
+    int la=strlen(a);
+    int lb=strlen(b);
+    if(la==0 || lb==0 || la<lb){
+	return 1;
+    }else{
+	return strncmp(a,b,lb);
+    }
+}
+/**
+   Check the suffix of a file.
+*/
+static int check_suffix(const char *fn, const char *suffix){
+    if(!fn || !suffix) return 0;
+    int lfn=strlen(fn);
+    int lsu=strlen(suffix);
+    if(lfn < lsu) return 0;
+    if(mystrcmp(fn+lfn-lsu,suffix)){
+	return 0;
+    }else{
+	return 1;
+    }
+}
+/**
+   Test whether fn is a symbolic link
+*/
+static int islink(const char *fn){
+    if(!fn) return 0;
+    struct stat buf;
+    return !stat(fn, &buf) && S_ISLNK(buf.st_mode);
+}
 static char* procfn(const char *fn, const char *mod,const int gzip){
     char *fn2;
     if(fn[0]=='~'){
@@ -36,42 +71,34 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     }else{
 	fn2=malloc(strlen(fn)+16);
 	strcpy(fn2,fn);
+    } 
+    /*If there is no recognized suffix, add .bin in the end.*/
+    if(!check_suffix(fn2,".bin") && !check_suffix(fn2, ".bin.gz")){
+	warning("File %s has wrong suffix. Append .bin\n", fn2);
+	strncat(fn2, ".bin", 4);
     }
-    if(mod[0]=='r'){
-	if(!exist(fn2)){
-	    if(strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7)){
-		/*ended with bin.gz*/
-		fn2[strlen(fn2)-3]='\0';
-		if(!exist(fn2)){
-		    error("Neither %s nor %s exist\n", fn,fn2);
-		}
-	    }else if(strlen(fn2)>=4&&!strncmp(fn2+strlen(fn2)-4,".bin",4)){
-		/*ended with .bin*/
+    if(mod[0]=='r' || mod[0]=='a'){
+	if(!exist(fn2)){/*If does not exist.*/
+	    if(check_suffix(fn2, ".bin")){
+		/*ended with .bin, change to .bin.gz*/
 		strncat(fn2, ".gz", 3);
 		if(!exist(fn2)){
-		    error("Neither %s nor %s exist\n", fn,fn2);
+		    return NULL;
 		}
-	    }else{/*no recognized suffix*/
-		strncat(fn2, ".bin", 4);
+	    }else{
+		/*ended with bin.gz, change to .bin*/
+		fn2[strlen(fn2)-3]='\0';
 		if(!exist(fn2)){
-		    strncat(fn2,".gz",3);
-		    if(!exist(fn2)){
-			error("Neither %s, %s.bin, nor %s.bin.gz exist\n",
-			      fn,fn,fn);
-		    }
+		    return NULL;
 		}
 	    }
 	}
-    }else if (mod[0]=='w'){/*for write, no suffix. we append .bin.gz*/
-	if(!((strlen(fn2)>=7&&!strncmp(fn2+strlen(fn2)-7,".bin.gz",7))
-	     || (strlen(fn2)>=4&&!strncmp(fn2+strlen(fn2)-4,".bin",4)))){
-	    if(gzip)
-		strncat(fn2,".bin.gz",7);
-	    else
-		strncat(fn2,".bin",4);
-	}
-	if(exist(fn2)){/*remove old file to avoid write over a symbolic link.*/
-	    remove(fn2);
+    }else if (mod[0]=='w'){
+	if(islink(fn2)){
+	    /*remove old file to avoid write over a symbolic link.*/
+	    if(remove(fn2)){
+		error("Failed to remove %s\n", fn2);
+	    }
 	}
     }else{
 	error("Invalid mode\n");
@@ -82,15 +109,15 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 file_t* openfile(const char *fn_in, char *mod){
     char *fn=procfn(fn_in, mod, 1);
     file_t* fp=calloc(1, sizeof(file_t));
-    if(!strcmp(fn+strlen(fn)-3,".gz")){
-	fp->isgzip=1;
-	if(!(fp->p=gzopen(fn,mod))){
-	    error("Error gzopen for %s\n",fn);
-	}
-    }else{ 
+    if(!strcmp(fn+strlen(fn)-4,".bin") && mod[0]=='w'){
 	fp->isgzip=0;
 	if(!(fp->p=fopen(fn,mod))){
 	    error("Error fopen for %s\n",fn);
+	}
+    }else{ 
+	fp->isgzip=1;
+	if(!(fp->p=gzopen(fn,mod))){
+	    error("Error gzopen for %s\n",fn);
 	}
     }
     if(mod[0]=='w'){

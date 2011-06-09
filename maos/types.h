@@ -302,7 +302,7 @@ typedef struct RECON_T{
     dcell *TTF;        /**<Concatenation of TT and DF*/
     dcell *PTTF;       /**<pinv of TTF*/
     spcell *ZZT;       /**<single point piston constraint in tomography.*/
-    dcell *NW;         /**<null modes for DM fit.*/
+    dcell *fitNW;      /**<null modes for DM fit.*/
     spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
     spcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/

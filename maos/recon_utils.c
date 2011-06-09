@@ -461,8 +461,8 @@ void FitL(dcell **xout, const void *A,
     applyW(xp, recon->W0, recon->W1, recon->fitwt->p);
     sptcellmulmat_thread(xout, recon->HA, xp, alpha);
     dcellfree(xp);xp=NULL;
-    dcellmm(&xp,recon->NW, xin, "tn", 1);
-    dcellmm(xout,recon->NW, xp, "nn", alpha);
+    dcellmm(&xp,recon->fitNW, xin, "tn", 1);
+    dcellmm(xout,recon->fitNW, xp, "nn", alpha);
     dcellfree(xp);
     if(recon->actslave){
 	spcellmulmat(xout, recon->actslave, xin, alpha);

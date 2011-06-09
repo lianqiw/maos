@@ -1463,7 +1463,7 @@ static void
 fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     const int ndm=parms->ndm;
     if(ndm>=3) warning("Low rank terms for 3 or more dms are not tested\n");
-    recon->NW=dcellnew(ndm,1);
+    recon->fitNW=dcellnew(ndm,1);
     double scl=recon->fitscl;
     if(fabs(scl)<1.e-15){
 	error("recon->fitscl is too small\n");
@@ -1480,14 +1480,14 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     if(nnw==0) return;
     for(int idm=0; idm<ndm; idm++){
 	int nloc=recon->aloc[idm]->nloc;
-	recon->NW->p[idm]=dnew(nloc, nnw);
+	recon->fitNW->p[idm]=dnew(nloc, nnw);
     }
     int inw=0;//current column
     if(parms->fit.lrt_piston){
 	info2("Adding piston cr to fit matrix\n");
 	for(int idm=0; idm<ndm; idm++){
 	    int nloc=recon->aloc[idm]->nloc;
-	    double *p=recon->NW->p[idm]->p+(inw+idm)*nloc;
+	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
 	    for(int iloc=0; iloc<nloc; iloc++){
 		p[iloc]=scl;
 	    }
@@ -1501,7 +1501,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	    factor=scl*2./parms->aper.d;
 	    for(int idm=1; idm<ndm; idm++){
 		int nloc=recon->aloc[idm]->nloc;
-		double *p=recon->NW->p[idm]->p+(inw+(idm-1)*2)*nloc;
+		double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
 		double *p2x=p;
 		double *p2y=p+nloc;
 		for(int iloc=0; iloc<nloc; iloc++){
@@ -1516,7 +1516,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	    }
 	    for(int idm=0; idm<ndm; idm++){
 		int nloc=recon->aloc[idm]->nloc;
-		double *p=recon->NW->p[idm]->p+inw*nloc;
+		double *p=recon->fitNW->p[idm]->p+inw*nloc;
 		if(idm==0) factor=scl*2/parms->aper.d;
 		else if(idm==1) factor=-scl*2./parms->aper.d;
 		double *p2x=p;
@@ -1532,7 +1532,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
     }
   
     if(parms->save.setup){
-	dcellwrite(recon->NW,"%s/NW",dirsetup);
+	dcellwrite(recon->fitNW,"%s/fitNW",dirsetup);
     }
 }
 
@@ -1653,10 +1653,10 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }else{
 	fit_prep_lrt(recon,parms);
 	if(parms->fit.actslave){
-	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->NW, recon->actstuck, recon->actfloat, 0.1, 1./recon->ploc->nloc);
+	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->fitNW, recon->actstuck, recon->actfloat, 0.1, 1./recon->ploc->nloc);
 	    if(parms->save.setup){
 		spcellwrite(recon->actslave,"%s/actslave",dirsetup);
-		dcellwrite(recon->NW,"%s/NW2",dirsetup);
+		dcellwrite(recon->fitNW,"%s/fitNW2",dirsetup);
 	    }
 	}
 	info2("Building recon->FL\n");
@@ -1689,9 +1689,9 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 
 	{//Low rank terms.
-	    recon->FL.U=dcellcat_each(recon->FR.U, recon->NW, 2);
+	    recon->FL.U=dcellcat_each(recon->FR.U, recon->fitNW, 2);
 	    dcell *tmp=NULL;//negative NW.
-	    dcelladd(&tmp, 1, recon->NW, -1);
+	    dcelladd(&tmp, 1, recon->fitNW, -1);
 	    recon->FL.V=dcellcat_each(recon->FR.U, tmp, 2);
 	    dcellfree(tmp);
 	}
@@ -1713,7 +1713,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     if(((parms->fit.alg==0 || parms->fit.alg==2) && !parms->fit.bgs)
        ||((parms->tomo.split==2 && !parms->load.mvst) && !recon->FL.C && !recon->RL.MI)){
 	if(fabs(parms->fit.tikcr)<1.e-14){
-	    warning("tickcr=%g is too small or not applied, chol may fail.\n", parms->fit.tikcr);
+	    warning("tickcr=%g is too small, chol may fail.\n", parms->fit.tikcr);
 	}
 	muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
 	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
@@ -2167,7 +2167,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	toc2("Preparing fdpcg");
     }
     //The following have been used in fit matrix.
-    dcellfree(recon->NW);
+    dcellfree(recon->fitNW);
     spcellfree(recon->actslave);
     if(recon->FR.M){
 	spfree(recon->W0); 
@@ -2212,6 +2212,9 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 */
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     spcell *GAlsr;
+    const int ndm=parms->ndm;
+    const int nwfs=parms->nwfsr;
+
     if(parms->tomo.split){
 	//high order wfs only in split mode.
 	GAlsr=recon->GAhi;
@@ -2239,13 +2242,44 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	info2("The maximum eigen value is estimated to be around %g\n", maxeig);
 	spcelladdI(recon->LL.M, parms->tomo.tikcr*maxeig);
     }
+    dcell *NW=NULL;
+    if(parms->tomo.alg!=2){//Not SVD, need low rank terms for piston/checkboard constraint.
+	NW=dcellnew(ndm,1);
+	int nmod=2;//two modes.
+	for(int idm=0; idm<ndm; idm++){
+	    loc_create_map(recon->aloc[idm]);
+	    const long nloc=recon->aloc[idm]->nloc;
+	    NW->p[idm]=dnew(nloc, ndm*nmod);
+	    double *p=NW->p[idm]->p+nmod*idm*nloc;
+	    for(long iloc=0; iloc<nloc; iloc++){
+		p[iloc]=1;//piston mode
+	    }
+	    //notice offset of 1 because map start count at 1
+	    p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
+	    locmap_t *map=recon->aloc[idm]->map;
+	    long (*pmap)[map->nx]=(long(*)[map->nx])map->p;
+	    for(long iy=0; iy<map->ny; iy++){
+		for(long ix=0; ix<map->nx; ix++){
+		    if(pmap[iy][ix]){
+			p[pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
+		    }
+		}
+	    }
+	}
+	//scale it to match the magnitude of LL.M
+	dcellscale(NW, sqrt(maxeig));
+	if(parms->save.setup){
+	    dcellwrite(NW, "%s/lsrNW",dirsetup);
+	}
+    }
     //actuator slaving. important
-    spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NULL, recon->actstuck, recon->actfloat, 0.5, sqrt(maxeig));
+    spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NW, recon->actstuck, recon->actfloat, 0.5, sqrt(maxeig));
+    if(parms->save.setup && NW){
+	dcellwrite(NW, "%s/lsrNW2",dirsetup);
+    }
     //spcellwrite(actslave,"actslave");
     spcelladd(&recon->LL.M, actslave);
     spcellfree(actslave);
-    const int ndm=parms->ndm;
-    const int nwfs=parms->nwfsr;
     //Low rank terms for low order wfs. Only in Integrated tomography.
     dcell *ULo=dcellnew(ndm,nwfs);
     PDCELL(ULo, pULo);
@@ -2271,33 +2305,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     dcellfree(GPTTDF);
     dcellfree(ULo);
     dcellfree(VLo);
-    if(parms->tomo.alg!=2){
+    if(NW){
 	info2("Create piston and check board modes that are in NULL space of GA.\n");
-	dcell *NW=dcellnew(ndm,1);
-	int nmod=2;//two modes.
-	for(int idm=0; idm<ndm; idm++){
-	    loc_create_map(recon->aloc[idm]);
-	    const long nloc=recon->aloc[idm]->nloc;
-	    NW->p[idm]=dnew(nloc, ndm*nmod);
-	    double *p=NW->p[idm]->p+nmod*idm*nloc;
-	    for(long iloc=0; iloc<nloc; iloc++){
-		p[iloc]=1;//piston mode
-	    }
-	    //notice offset of 1 because map start count at 1
-	    p=NW->p[idm]->p+(1+nmod*idm)*nloc-1;
-	    locmap_t *map=recon->aloc[idm]->map;
-	    long (*pmap)[map->nx]=(long(*)[map->nx])map->p;
-	    for(long iy=0; iy<map->ny; iy++){
-		for(long ix=0; ix<map->nx; ix++){
-		    if(pmap[iy][ix]){
-			p[pmap[iy][ix]]=(double)2*((iy+ix)&1)-1;
-		    }
-		}
-	    }
-	}
-	//scale it to match the magnitude of LL.M
-	dcellscale(NW, sqrt(maxeig));
-	dcellwrite(NW, "NW");
 	//add to low rank terms.
 	dcell *tmp=recon->LL.U;
 	recon->LL.U=dcellcat(tmp, NW, 2);
@@ -2479,7 +2488,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     spcellfree(recon->HA); 
     spfree(recon->W0); 
     dfree(recon->W1); 
-    dcellfree(recon->NW);
+    dcellfree(recon->fitNW);
     dfree(recon->fitwt);
     if(recon->ngsmod){
 	dcellfree(recon->ngsmod->GM);
