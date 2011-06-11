@@ -185,6 +185,7 @@ static void update_pixmap(drawdata_t *drawdata){
 	//Create a new server size pixmap and then draw on it.
 	drawdata->pixmap=gdk_pixmap_new(curwindow->window, width, height, -1);
     }
+    //cairo_t is destroyed in draw
     cairo_draw(gdk_cairo_create(drawdata->pixmap), drawdata,width,height);
     gtk_widget_queue_draw(drawdata->drawarea);
 }
@@ -280,6 +281,10 @@ static void drawdata_free(drawdata_t *drawdata){
     if(drawdata->pixmap){
 	g_object_unref(drawdata->pixmap);
 	drawdata->pixmap=NULL;
+    }
+    if(drawdata->cacheplot){
+	cairo_surface_destroy(drawdata->cacheplot);
+	drawdata->cacheplot=NULL;
     }
     drawdata_free_input(drawdata);
     free(drawdata);
@@ -686,6 +691,7 @@ void addpage(drawdata_t **drawdatawrap)
 	drawdata_old->zlim=drawdata->zlim;
 	drawdata_old->format=drawdata->format;
 	drawdata_old->gray=drawdata->gray;
+	drawdata_old->drawn=0;//need redraw.
 	//we preserve the limit instead of off, zoom in case we are drawing curves
 	if(drawdata_old->npts){
 	    drawdata_old->limit_changed=1;
@@ -826,7 +832,6 @@ static void tool_save(GtkToolButton *button){
 	error_msg("%s has unknown suffix\n",filename);
 	goto retry;
     }
-    
     cairo_draw(cairo_create(surface), drawdata,width,height);
     if(strcmp(suffix,".png")==0){
 	cairo_surface_write_to_png(surface,filename);

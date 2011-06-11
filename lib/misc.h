@@ -41,6 +41,7 @@ off_t flen(const char *fn);
 time_t fmtime(const char *fn);
 //void touch(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
+char *strnadd(int argc, char **argv, const char *delim);
 void expand_filename(char **fnout, const char *fn);
 
 void remove_file_older(const char *fndir, long sec);

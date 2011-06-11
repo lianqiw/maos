@@ -92,6 +92,7 @@ loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double *p);
 void mapcircle(map_t *map, double r, double val);
+void map_d_din(map_t *map, double *d, double *din);
 void locresize(loc_t *loc, long nloc);
 #define ptsresize(pts, nsa) locresize((loc_t*)pts, nsa)
 #endif

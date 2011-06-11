@@ -78,7 +78,7 @@ struct drawdata_t{
     GtkWidget *drawarea;
     GdkPixmap *pixmap;//server side memory.
     GtkWidget **spins;//used on the dialog to change limits.
-
+    cairo_surface_t *cacheplot;//cache the plot results so that we don't have to redraw during just panning.
     int pending;//drawing is pending.
     int width;//width of the canvas
     int height;//height of the canvas

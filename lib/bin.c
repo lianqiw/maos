@@ -117,16 +117,10 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	    if(check_suffix(fn2, ".bin")){
 		//ended with .bin, change to .bin.gz
 		strncat(fn2, ".gz", 3);
-		if(!(fnr=search_file(fn2))){
-		    return NULL;
-		}
 	    }else{
 		//ended with bin.gz, change to .bin
-		fn2[strlen(fn2)-3]='\0';
-		if(!(fnr=search_file(fn2))){
-		    return NULL;
-		}
 	    }
+	    fnr=search_file(fn2);
 	}
 	free(fn2);
 	fn2=fnr;
@@ -171,6 +165,7 @@ file_t* zfopen(const char *fn, char *mod){
     fp->fn=procfn(fn,mod,1);
     if(!fp->fn){
 	error("%s does not exist for read\n", fn);
+	_exit(1);
     }
     const char* fn2=fp->fn;
 #if IO_TIMMING == 1
@@ -198,6 +193,7 @@ file_t* zfopen(const char *fn, char *mod){
     }
     if(fp->fd==-1){
 	error("Unable to open file %s\n", fn2);
+	_exit(1);
     }
     if(check_suffix(fn2, ".bin") && mod[0]=='w'){
 	fp->isgzip=0;

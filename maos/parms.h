@@ -600,14 +600,10 @@ typedef struct ARG_T{
     int detach;      /**<Detach from the command line and run in background*/
     int force;       /**<For start, bypassing scheduler*/
     int nthread;     /**<Number of threads*/
-    int iconf;       /**<derived parameter marking the starting of .conf arguments*/
-    int argc;        /**<argument count*/
-    int nseed;       /**<Number of seeds*/
     int pause;       /**<pause at the end of every time step*/
-    int *seeds;      /**<Array of seeds*/
-    char **argv;     /**<Array of arguments*/
     char *dirout;    /**<Result output directory*/
-    char *conf;      /**master .conf file. nfiraos.conf by default. -c to change*/
+    char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
+    char *confcmd;   /**<Additional configuration options supplied in command line.*/
 }ARG_T;
 PARMS_T* setup_parms(ARG_T *arg);
 void free_parms(PARMS_T *parms);

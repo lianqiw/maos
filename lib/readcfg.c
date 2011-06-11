@@ -115,16 +115,22 @@ static void strtrim(char **str){
    remove "" or '' around a string from config file. Error if quotes are not
 found.  */
 static char* strextract(const char *data){
-    if(!data || strlen(data)<=2) return NULL;
-    if((data[0]!='"' && data[0]!='\'') || 
-       (data[strlen(data)-1]!='"' && data[strlen(data)-1]!='\'')){
-	//warning("Record is {%s}. \nThis is not a string constant. "
-	//"Strings should be embrased by \"\" or \'\'\n",data);
-	return strdup(data);
+    if(!data || !strlen(data)) return NULL;
+    if(data[0]=='"' || data[0] =='\''){
+	if(data[strlen(data)-1]!=data[0]){
+	    error("Record is {%s}, quotes must come in pair\n", data);
+	    return NULL;
+	}else{
+	    char *res=strdup(data+1);
+	    res[strlen(res)-1]='\0';
+	    if(res[0]=='\0'){
+		free(res);
+		res=NULL;
+	    }
+	    return res;
+	}
     }else{
-	char *res=strdup(data+1);
-	res[strlen(res)-1]='\0';
-	return res;
+	return strdup(data);
     }
 }
 /**
@@ -241,6 +247,19 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	//lines ended with \ will continue on next line
 	if(ssline[strlen(ssline)-1]=='\\'){
 	    ssline[strlen(ssline)-1]='\0';
+	    continue;
+	}
+	if(!index(ssline, '=')){
+	    if(check_suffix(ssline, ".conf")){
+		char *embeded=strextract(ssline);
+		if(embeded){
+		    open_config(embeded, prefix, protect);
+		    free(embeded);
+		}
+	    }else{
+		error("Input (%s) is not valid\n", ssline);
+	    }
+	    ssline[0]='\0';
 	    continue;
 	}
 	var=strtok(ssline, "=");

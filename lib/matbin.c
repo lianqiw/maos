@@ -256,13 +256,10 @@ static int mmap_open(char *fn, int rw){
     }else{
 	fd=open(fn2, O_RDONLY);
     }
-    if(fd==-1){
+    /*in read only mode, allow -1 to indicate failed. In write mode, fail.*/
+    if(fd==-1 && rw){
 	perror("open");
-	if(rw){
-	    error("Unable to create file %s\n", fn2);
-	}else{//in read only mode.
-	    return fd;
-	}
+	error("Unable to create file %s\n", fn2);
     }
  
     free(fn2);

@@ -174,9 +174,12 @@ int main(int argc, char **argv){
 
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     free(scmd);
-    free(arg->seeds);
     free(arg->dirout);
     free(arg->conf);
+    if(arg->confcmd){
+	remove(arg->confcmd);
+	free(arg->confcmd);
+    }
     free(arg);
     THREAD_POOL_INIT(parms->sim.nthread);
     dirsetup=stradd("setup",NULL);

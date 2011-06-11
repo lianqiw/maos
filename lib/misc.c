@@ -321,7 +321,22 @@ char *stradd(const char* a, ...){
     va_end(ap);
     return out;
 }
-
+/**
+   Concatenate many strings, like stradd, but arguments are an array of char*
+*/
+char *strnadd(int argc, char **argv, const char* delim){
+    int slen=1;
+    for(int iarg=0; iarg<argc; iarg++){
+	slen+=strlen(delim)+strlen(argv[iarg]);
+    }
+    char *scmd=calloc(slen, sizeof(char));
+    for(int iarg=0; iarg<argc; iarg++){
+	strcat(scmd,argv[iarg]);
+	strcat(scmd,delim);
+    }
+    if(strlen(scmd)>slen-1) error("Overflow\n");
+    return scmd;
+}
 /**
    translate a filename into absolute file name that starts with /
 */

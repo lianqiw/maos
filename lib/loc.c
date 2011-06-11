@@ -1422,3 +1422,25 @@ map_t *mapnew(long nx, long ny, double dx, double *p){
 void mapcircle(map_t *map, double r, double val){
     dcircle((dmat*)map, (0-map->ox)/map->dx, (0-map->oy)/map->dx, r/map->dx, val);
 }
+/**
+   Find the inner and outer diameter of an amplitude map contained in map_t.
+*/
+void map_d_din(map_t *map, double *d, double *din){
+    PDMAT(map, p);
+    double oy=map->oy/map->dx;
+    double ox=map->ox/map->dx;
+    double r2min=INFINITY, r2max=0;
+    for(long iy=0; iy<map->ny; iy++){
+	double y=iy+oy;
+	for(long ix=0; ix<map->nx; ix++){
+	    if(p[iy][ix]>EPS){
+		double x=ix+ox;
+		double r2=x*x+y*y;
+		if(r2>r2max) r2max=r2;
+		if(r2<r2min) r2min=r2;
+	    }
+	}
+    }
+    *d=sqrt(r2max)*2*map->dx;
+    *din=sqrt(r2min)*2*map->dx;
+}

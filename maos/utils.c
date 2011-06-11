@@ -30,6 +30,8 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 #include <getopt.h>
+#include <ctype.h>
+
 #include "maos.h"
 char *dirsetup=NULL;
 char *dirskysim=NULL;
@@ -459,6 +461,27 @@ static __attribute__((destructor)) void deinit(){
 }
 #endif
 /**
+   Extract a string constant from the command line, and output the position where the string terminates.*/
+static char *cmd_string(char *input, char **end2){
+    char *end;
+    while(isspace(input[0]) || input[0]==';') input++;
+    if(input[0]=='\'' || input[0]== '"'){
+	end=index(input+1, input[0]);//find matching quote.
+	input[0]=' ';
+	input++;
+	if(!end){
+	    error("String does not end\n");
+	}
+    }else{
+	end=index(input, ';');
+    }
+    end[0]='\0';
+    char *out=strdup(input);
+    end[0]=' ';
+    *end2=end;
+    return out;
+}
+/**
    Parse command line arguments argc, argv
  */
 ARG_T * parse_args(int argc, char **argv){
@@ -476,67 +499,184 @@ ARG_T * parse_args(int argc, char **argv){
 	{"path",1,0,'P'},
 	{NULL,0,0,0}
     };
-    while(1){
-	int option_index = 0;
-	int c = getopt_long(argc, argv, "hdfo:n:c:s:pP:",
-                        long_options, &option_index);
-	if(c==-1) break;
-	switch(c){
-	case 'h':
-	    print_usage();
-	    exit(0);
-	    break;
-	case 'd':
-	    arg->detach=1;
-	    break;
-	case 'f':
-	    arg->force=1; 
-	    break;
-	case 'o':
-	    if(arg->dirout){
-		error("Duplicate argument for dirout\n");
-	    }
-	    arg->dirout=strdup(optarg);
-	    break;
-	case 'n':
-	    arg->nthread=strtol(optarg,NULL,10);
-	    if(arg->nthread<=0){
-		warning("illigal nthread. set to 1.\n");
-		arg->nthread=1;
-	    }else if(arg->nthread>NCPU2){//We allow up to NCPU2, not NCPU
-		warning2("nthread=%d is larger than number of cpus, reset to %d\n",
-			arg->nthread, NCPU2);
-		arg->nthread=NCPU2;
-	    }
-	    break;
-	case 'c':
-	    if(arg->conf){
-		error("Multiple -c switches found\n");
-	    }
-	    arg->conf=strdup(optarg);
-	    break;
-	case 's':{
-	    arg->nseed++;
-	    arg->seeds=realloc(arg->seeds, sizeof(int)*arg->nseed);
-	    arg->seeds[arg->nseed-1]=strtol(optarg,NULL,10);
-	    //info2("Command line supplied seed %d\n",arg->seeds[arg->nseed-1]);
+    const char *short_options="hdfo:n:c:s:pP:";
+ 
+    /*Roll out my own argument parsing mechanism that are more relaxed wrt how
+      arguments are supplied.*/
+    char *cmds=strnadd(argc-1, argv+1, ";");
+    char *cmds_end=cmds+strlen(cmds);
+    char *start=cmds;
+    int nseed=0; int *seeds=NULL;
+    while(start<cmds_end){
+	if(isspace(start[0]) || start[0]==';'){
+	    start[0]=' ';
+	    start++;
+	    continue;
 	}
-	    break;
-	case 'p':
-	    arg->pause=1;
-	    break;
-	case 'P':{
-	    addpath(optarg);
-	}
-	    break;
-	case '?':
-	    warning("Unregonized option. exit.\n");exit(1);
-	    break;
-	default:
-	    printf("?? getopt returned 0%o ??\n", c);exit(1);
-	    break;
+	if(start[0]=='-'){
+	    char *start0=start;
+	    char key='0';
+	    char *value;
+	    start++;
+	    if(start[0]=='-'){//long option, replace with short ones.
+		start++;
+		for(int i=0; (long_options[i].name); i++){
+		    if(!mystrcmp(start, long_options[i].name)){
+			key=long_options[i].val;
+			start+=strlen(long_options[i].name);
+			while(isspace(start[0]) || start[0]==';'){
+			    start[0]=' ';
+			    start++;
+			}
+			if(start[0]=='=') {
+			    start[0]=' ';
+			    start++;
+			}
+			break;
+		    }
+		}
+	    }else{
+		key=start[0];
+		start++;
+	    }
+	    char *key2=index(short_options, key);
+	    if(key=='0' || !key2){
+		continue;//not what we wanted.
+	    }
+	    if(key2[1]==':'){//has options.
+		value=start;
+		while(value[0]==';' || isspace(value[0])){
+		    value[0]=' ';
+		    value++;
+		}
+	    }else{
+		value=NULL;
+	    }
+	    switch(key){
+	    case 'h':
+		print_usage();
+		exit(0);
+		break;
+	    case 'd':
+		arg->detach=1;
+		break;
+	    case 'f':
+		arg->force=1; 
+		break;
+	    case 'o':
+		if(arg->dirout){
+		    warning("Multiple -o switches found\n");
+		    free(arg->dirout);
+		}
+		arg->dirout=cmd_string(value, &start);
+		break;
+	    case 'n':
+		arg->nthread=strtol(value, &start, 10);
+		if(arg->nthread<=0){
+		    warning("illigal nthread: %d. set to 1.\n", arg->nthread);
+		    arg->nthread=1;
+		}else if(arg->nthread>NCPU2){//We allow up to NCPU2, not NCPU
+		    warning2("nthread=%d is larger than number of cpus, reset to %d\n",
+			     arg->nthread, NCPU2);
+		    arg->nthread=NCPU2;
+		}
+		break;
+	    case 'c':
+		if(arg->conf){
+		    warning("Multiple -c switches found\n");
+		    free(arg->conf);
+		}
+		arg->conf=cmd_string(value, &start);
+		break;
+	    case 's':{
+		nseed++;
+		seeds=realloc(seeds, sizeof(int)*nseed);
+		seeds[nseed-1]=strtol(value, &start, 10);
+	    }
+		break;
+	    case 'p':
+		arg->pause=1;
+		break;
+	    case 'P':{
+		char *fnpath=cmd_string(value, &start);
+		addpath(fnpath);
+		free(fnpath);
+	    }
+		break;
+	    case '?'://This is not likely.
+		warning("Unregonized option. exit.\n");exit(1);
+		break;
+	    default:
+		printf("?? getopt returned 0%o ??\n", key);exit(1);
+		break;
+	    }
+	    //Empty the string that we already parsed.
+	    memset(start0, ' ',start-start0);
+	}else if(start[0]=='='){//equal sign found
+	    //create a \n before the key.
+	    int skipspace=1;
+	    for(char *start2=start-1; start2>=cmds; start2--){
+		if(isspace(*start2) || *start2==';'){
+		    if(!skipspace){
+			*start2='\n';
+			break;
+		    }
+		}else{
+		    skipspace=0;
+		}
+	    }
+	    start++;
+	}else if(!mystrcmp(start, ".conf")){ //.conf found.
+	    //create a \n before the key.
+	    for(char *start2=start-1; start2>=cmds; start2--){
+		if(isspace(*start2) || *start2==';'){
+		    *start2='\n'; 
+		    break;
+		}
+	    }
+	    start+=5;
+	    start[0]='\n';
+	    start++;
+	}else if(start[0]=='['){//make sure we don't split brackets.
+	    char *bend=index(start+1, ']');
+	    char *bnextstart=index(start+1, '[');
+	    if(bend && (!bnextstart || bend<bnextstart)){//There is a closing bracket
+		for(; start<bend+1; start++){
+		    if(start[0]==';') start[0]=' ';
+		}
+	    }else{
+		error("Bracked is not closed\n");
+		start++;
+	    }
+	}else if(start[0]=='\'' || start[0]=='"'){//make sure we don't split strings.
+	    char *quoteend=index(start, start[0]);
+	    if(quoteend){
+		start=quoteend+1;
+	    }else{
+		warning("Quote is not closed\n");
+		start++;
+	    }
+	}else{
+	    start++;
 	}
     }
+    
+    char fntmp[PATH_MAX];
+    snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
+    FILE *fptmp=fopen(fntmp,"w");
+    fputs(cmds, fptmp);
+    free(cmds); cmds=NULL;
+    if(nseed){
+	fprintf(fptmp, "\nsim.seeds=[");
+	for(int iseed=0; iseed<nseed; iseed++){
+	    fprintf(fptmp, "%d ", seeds[iseed]);
+	}
+	fprintf(fptmp, "]\n");
+	free(seeds); seeds=NULL;
+    }
+    fclose(fptmp);
+    arg->confcmd=strdup(fntmp);
+    
     if(arg->pause && arg->detach){
 	warning("-p and -d are both specified, disable -d\n");
 	arg->detach=0;
@@ -544,9 +684,7 @@ ARG_T * parse_args(int argc, char **argv){
     if(!arg->detach){//foreground task will start immediately.
 	arg->force=1;
     }
-    arg->iconf=optind;
-    arg->argc=argc;
-    arg->argv=argv;
+
     if(!arg->dirout){
 	arg->dirout=strtime();
     }
@@ -596,14 +734,13 @@ ARG_T * parse_args(int argc, char **argv){
     free(config_path);
     addpath(".");
     mymkdir("%s",arg->dirout);
-    if(chdir(arg->dirout)){
-	error("Unable to chdir to %s\n", arg->dirout);
-    }
 #if USE_PTHREAD == 0
     arg->nthread=1;
 #endif
     info2("Output folder is '%s' %d threads\n",arg->dirout, arg->nthread);
-
+    if(chdir(arg->dirout)){
+	error("Unable to chdir to %s\n", arg->dirout);
+    }
     return arg;
 }
 /**
@@ -765,7 +902,7 @@ int lock_seeds(PARMS_T *parms){
 	snprintf(fn, 80, "Res_%d.lock",parms->sim.seeds[iseed]);
 	parms->fdlock[iseed]=lock_file(fn, 0, 0);
 	if(parms->fdlock[iseed]<0){
-	    warning("Another MAOS is already running with seed %d. Skip\n",
+	    warning2("MAOS is already running with seed %d. Skip\n",
 		    parms->sim.seeds[iseed]);
 	}else{
 	    cloexec(parms->fdlock[iseed]);

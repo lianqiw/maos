@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctype.h>
 #include "../lib/aos.h"
 #include "parms.h"
 /*
@@ -1018,7 +1019,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
 	    double dx=dxsa/nx;//adjust dx.
 	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
-		warning("powfs %d: Adjusting dx from %g to %g. "
+		warning("powfs %d: Adjusting dx from %g to %g. \n"
 			"Please adjust aper.dx, powfs.dx, atm.dx to match the new value for best efficiency.\n",
 			ipowfs,parms->powfs[ipowfs].dx, dx);
 	    }
@@ -1528,20 +1529,9 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
    postproc misc parameters.
 */
 static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
-    //setup seeds.
-    if(arg->nseed>0){
-	parms->sim.nseed=arg->nseed;
-	parms->sim.seeds=realloc(parms->sim.seeds, arg->nseed*sizeof(int));
-	memcpy(parms->sim.seeds, arg->seeds, sizeof(int)*arg->nseed);
-    }
     parms->pause=arg->pause;
     parms->force=arg->force;
-    info2("There are %d simulation seeds supplied by ",parms->sim.nseed);
-    if(arg->nseed>0){
-	info2("command line:");
-    }else{
-	info2("conf files:");
-    }
+    info2("There are %d simulation seeds: ",parms->sim.nseed);
     for(int i=0; i<parms->sim.nseed; i++){
 	info2(" %d", parms->sim.seeds[i]);
     }
@@ -1560,7 +1550,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     
     /*Fitting tip/tilt constraint is only intended for multi DM*/
     if(parms->ndm<2 && parms->fit.lrt_tt){
-	warning("for single dm, lrt_tt must be zero. changed\n");
 	parms->fit.lrt_tt=0;
     }
     if(parms->ndm>2 && parms->fit.lrt_tt==2){
@@ -1945,59 +1934,15 @@ static void check_parms(const PARMS_T *parms){
 	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
     }
 }
-/**
-   Load embeded configuration files specified by config=file.conf
- 
-   static void open_embeded_config(const char *type){
-   char *fn=readcfg_str("%s",type);
-   open_config(fn,NULL,0);
-   free(fn);
-   }*/
 
-/**
-   Read in .conf configurations files specified by command line.  First it opens
-   the master configuration file. nfiraos.conf if no -c switch is specified.  Then
-   it will open additional overriding .conf files supplied in the command
-   line. These overiding .conf files should only contain already exited keys.*/
-static void setup_config(ARG_T*arg){
-    open_config(arg->conf,NULL,0);//main .conf file.
-    //Parse additional parameters.
-    if(arg->iconf<arg->argc){
-	char fntmp[PATH_MAX];
-	snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
-	FILE *fptmp=fopen(fntmp,"w");
-	int inline_conf=0;
-	for(int iconf=arg->iconf; iconf<arg->argc; iconf++){
-	    char *fno=arg->argv[iconf];
-	    if(strlen(fno)==0){
-		continue;
-	    }else if(index(fno,'=')){
-		inline_conf++;
-		fprintf(fptmp,"%s\n",fno);
-	    }else if(check_suffix(fno,".conf")){
-		open_config(fno,NULL,1);/*1 means protected. will not be overriden by
-					  base .conf's, but can be overriden by user
-					  supplied options.*/
-	    }else{
-		error("Invalid command line option: %s\n",fno);
-	    }
-	}
-	fclose(fptmp);
-	if(inline_conf>0){
-	    open_config(fntmp,NULL,1);
-	}
-	if(remove(fntmp)){
-	    perror("remove");
-	    warning("Unable to remove file %s\n",fntmp);
-	}
-    }
-}
 /**
    This routine calles other routines in this file to setup the parms parameter
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
 PARMS_T * setup_parms(ARG_T *arg){
-    setup_config(arg);
+    open_config(arg->conf,NULL,0);//main .conf file.
+    open_config(arg->confcmd, NULL, 1);
+    
     PARMS_T* parms=calloc(1, sizeof(PARMS_T));
     parms->sim.nthread=arg->nthread;
     readcfg_aper(parms);
