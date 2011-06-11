@@ -79,21 +79,6 @@
 #define VERBOSE 2
 
 /**
-   Compute Open loop NGS mode wavefront error from mode vectors.  */
-static dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
-    double rms=0, rmstt=0;
-    PDMAT(mideal, pmideal);
-    for(long istep=0; istep<mideal->ny; istep++){
-	rms+=dwdot(pmideal[istep], parms->maos.mcc, pmideal[istep]);
-	rmstt+=dwdot2(pmideal[istep],parms->maos.mcc_tt,pmideal[istep]);
-    }
-    dmat *rmsol=dnew(2,1);
-    rmsol->p[0]=rms/mideal->ny;
-    rmsol->p[1]=rmstt/mideal->ny;
-    return rmsol;
-}
-
-/**
    The actual work horse that does the physical optics time domain simulation.
    */
 static void skysim_isky(SIM_S *simu){
@@ -179,7 +164,7 @@ static void skysim_isky(SIM_S *simu){
 	    //Copy wvf from star to aster
 	    setup_aster_wvf(asteri, star, parms);
 	    //Regenerate PSD for this combination only.
-	    setup_aster_regenpsf(simu->mideal, asteri,powfs,parms);
+	    setup_aster_regenpsf(simu->midealws, asteri,powfs,parms);
 	    //Redo matched filter.
 	    setup_aster_redomtch(asteri, powfs, parms);
 	    //Compute the reconstructor, nea, sigman
@@ -194,11 +179,13 @@ static void skysim_isky(SIM_S *simu){
 	    int demote=-1;
 	    for(int idtrat=aster->idtratmin; idtrat<=aster->idtratmax; idtrat++){
 		//focus and windshake residual;
-		double resadd=asteri->res_ws->p[idtrat] + parms->skyc.resfocus->p[idtrat];
+		double resadd=parms->skyc.addws?0:asteri->res_ws->p[idtrat] 
+		    + parms->skyc.resfocus->p[idtrat];
 		dmat *ires=NULL;
 		dmat *imres=NULL;
 		for(int do_demote=0; do_demote<do_demote_end; do_demote++){
-		    ires=skysim_phy(&imres,simu, asteri, powfs, parms, idtrat, noisy, do_demote);
+		    ires=skysim_phy(&imres, simu->midealws, simu->midealws_oa, simu->rmsol->p[0], 
+				    asteri, powfs, parms, idtrat, noisy, do_demote);
 		    if(ires){
 			if(parms->skyc.verbose){
 			    if(do_demote){
@@ -231,14 +218,14 @@ static void skysim_isky(SIM_S *simu){
 		//Field Averaged Performance.
 		pres[isky][1]=pmini->p[0];//NGS Mode error
 		pres[isky][2]=pmini->p[1];//Tip/tilt Error.
-		pres[isky][3]=asteri->res_ws->p[mdtrat];//Residual wind shake error
+		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];//Residual wind shake error
 		pres[isky][4]=parms->skyc.resfocus->p[mdtrat];//Residual focus tracking error.
 		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];//Total
 		//On axis performance.
 		pres_oa[isky][1]=pmini->p[2];
 		pres_oa[isky][2]=pmini->p[3];
-		pres_oa[isky][3]=asteri->res_ws->p[mdtrat];
-		pres_oa[isky][4]=parms->skyc.resfocus->p[mdtrat];
+		pres_oa[isky][3]=pres[isky][3];
+		pres_oa[isky][4]=pres[isky][4];
 		pres_oa[isky][0]=pres_oa[isky][1]+pres_oa[isky][3]+pres_oa[isky][4];
 		seldtrat = mdtrat;
 		simu->fss->p[isky]=parms->skyc.fss[mdtrat];
@@ -399,6 +386,29 @@ void skysim(const PARMS_S *parms){
 				     parms->maos.wvl, &simu->rand);
 	    }
 	    dcellwrite(simu->stars, "Res%d_%d_stars",simu->seed_maos,simu->seed_skyc);
+	    if(parms->skyc.addws){
+		dwrite(simu->mideal, "mideal");
+		int nx=simu->mideal->nx;
+		int ny=simu->mideal->ny;
+		simu->midealws=dnew(nx, ny);
+		simu->midealws_oa=dnew(nx, ny);
+		//Add ws to mideal. After genstars so we don't purturb it.
+		//telws is in m. need to convert to rad since mdieal is in this unit.
+		dmat *telws=psd2time(simu->psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
+		dscale(telws, 4./parms->maos.D);
+		PDMAT(simu->mideal, pm1); PDMAT(simu->mideal_oa, pm2);
+		PDMAT(simu->midealws, pw1); PDMAT(simu->midealws_oa, pw2);
+		for(long i=0; i<simu->mideal->ny; i++){
+		    pw1[i][0]=pm1[i][0]+telws->p[i];
+		    pw2[i][0]=pm2[i][0]+telws->p[i];
+		}
+		dwrite(telws, "telws");
+		dwrite(simu->midealws, "midealws");
+		dfree(telws);
+	    }else{
+		simu->midealws=dref(simu->mideal);
+		simu->midealws_oa=dref(simu->mideal_oa);
+	    }
 	    int nsky=simu->stars->nx*simu->stars->ny;
 	    if(nsky > parms->skyc.nsky){
 		warning("nsky is reduced from %d to %d\n", 
@@ -438,6 +448,8 @@ void skysim(const PARMS_S *parms){
 	    dcellfree(simu->mres);
 	    dcellfree(simu->sel);
 	    dfree(simu->fss);
+	    dfree(simu->midealws);
+	    dfree(simu->midealws_oa);
 	    simu->iseed++;
 	}//iseed_skyc
 	dfree(simu->mideal);

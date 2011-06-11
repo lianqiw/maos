@@ -23,6 +23,22 @@
    \file skyc/skysim_utils.c
    Utilities for skysim.c
 */
+
+/**
+   Compute Open loop NGS mode wavefront error from mode vectors.  */
+dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
+    double rms=0, rmstt=0;
+    PDMAT(mideal, pmideal);
+    for(long istep=0; istep<mideal->ny; istep++){
+	rms+=dwdot(pmideal[istep], parms->maos.mcc, pmideal[istep]);
+	rmstt+=dwdot2(pmideal[istep],parms->maos.mcc_tt,pmideal[istep]);
+    }
+    dmat *rmsol=dnew(2,1);
+    rmsol->p[0]=rms/mideal->ny;
+    rmsol->p[1]=rmstt/mideal->ny;
+    return rmsol;
+}
+
 /**
    add photon and read out noise.  pcaclib part of bkgrnd is calibrated out.
    set to 1 usually.  */
@@ -139,12 +155,13 @@ dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
        - 1: poisson and read out noise. 
        - 2: only poisson noise.   
 */
-dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs, 
+dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol, 
+		 ASTER_S *aster, POWFS_S *powfs, 
 		 const PARMS_S *parms, int idtrat, int noisy, int demotettf){
     int dtrat=parms->skyc.dtrats[idtrat];
-    const int nmod=simu->mideal->nx;
-    PDMAT(simu->mideal,pmideal);
-    PDMAT(simu->mideal_oa, pmideal_oa);
+    const int nmod=mideal->nx;
+    PDMAT(mideal,pmideal);
+    PDMAT(mideal_oa, pmideal_oa);
     dmat *res=dnew(6,1);/*Results. 1-2: NGS and TT modes., 
 			  3-4:On axis NGS and TT modes,
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
@@ -166,7 +183,6 @@ dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs,
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
     SERVO_T *st2t=calloc(1, sizeof(SERVO_T));
-    double ngsol=simu->rmsol->p[0];
     const double dtngs=parms->maos.dt*dtrat;
     const long nwvl=parms->maos.nwvl;
     dmat *pgm;
@@ -348,11 +364,6 @@ dmat *skysim_phy(dmat **mresout,SIM_S *simu, ASTER_S *aster, POWFS_S *powfs,
 		
 		    }//isa
 		    itsa+=nsa*2;
-		    //if(parms->skyc.dbg){
-		    //		dcellwrite(ints[iwfs],"%s/ints/ints_aster%d_iwfs%d_istep%d",
-		    //		   dirsetup,aster->iaster,iwfs,istep);
-		    //}
-
 		}//iwfs
 		dzero(merrm);
 		dmm(&merrm, pgm, grad, "nn", 1);
@@ -508,7 +519,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
 	error("Fill this out please\n");
     }
     fprintf(fp,"sim.servotype_lo=2\n");//type II
-    fprintf(fp, "sim.gtypeII_lo=\"gain.bin.gz\"\n");
+    fprintf(fp, "sim.gtypeII_lo=\"gain.bin\"\n");
     if(parms->maos.wddeg){
 	fprintf(fp, "atm.wddeg=[");
 	for(int ips=0; ips<parms->maos.nwddeg; ips++){

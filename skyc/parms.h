@@ -135,6 +135,7 @@ typedef struct SKYC_S{
     double  na_beta; /**<sodium PSD parameter. PSD is 10^beta*nu^alpha*/
     dmat *resfocus;  /**<residual focus error at each sampling frequency.*/
     char *stars;     /**<file name of not NULL to load stars from*/
+    int addws;       /**<add wind shake time series to simulation*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

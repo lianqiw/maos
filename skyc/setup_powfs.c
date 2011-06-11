@@ -80,9 +80,9 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    locfree(loc_psf);
 	    if(parms->skyc.dbg){
 		cwrite(powfs[ipowfs].dtf[iwvl].nominal,
-		       "%s/powfs%d_dtf%d_nominal.bin.gz",dirsetup,ipowfs,iwvl);
+		       "%s/powfs%d_dtf%d_nominal",dirsetup,ipowfs,iwvl);
 		spwrite(powfs[ipowfs].dtf[iwvl].si,
-			"%s/powfs%d_dtf%d_si.bin.gz",dirsetup,ipowfs,iwvl);
+			"%s/powfs%d_dtf%d_si",dirsetup,ipowfs,iwvl);
 	    }
 	    powfs[ipowfs].dtf[iwvl].U=cnew(ncomp,1);
 	    dcomplex *U=powfs[ipowfs].dtf[iwvl].U->p;
@@ -146,7 +146,7 @@ static void setup_powfs_coarseloc(POWFS_S *powfs, const PARMS_S *parms){
 	    double oy=powfs[ipowfs].saloc->locy[isa]+dx*0.5;
 	    powfs[ipowfs].cloc[isa]=mksqloc(ptspsa,ptspsa,dx,ox,oy);
 	    if(parms->skyc.dbg){
-		locwrite(powfs[ipowfs].cloc[isa],"%s/powfs%ld_cloc%ld.bin.gz",
+		locwrite(powfs[ipowfs].cloc[isa],"%s/powfs%ld_cloc%ld",
 			 dirsetup, ipowfs, isa);
 	    }
 	    double fpc=0;

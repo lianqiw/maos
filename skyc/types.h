@@ -135,6 +135,8 @@ typedef struct SIM_S{
     dcell *stars;      /**<randomly generated star fields.*/
     dmat *mideal;      /**<ideal NGS modes*/
     dmat *mideal_oa;   /**<ideal NGS modes on axis (dot product only)*/
+    dmat *midealws;    /**<ideal NGS modes + wind shake time series*/
+    dmat *midealws_oa; /**<ideal NGS modes on axis + wind shake time series*/
     dmat *rmsol;       /**<open loop error*/
     STATUS_T *status;  /**<to report status to the scheduler*/
     STAR_S *star;      /**<STAR_S*/
@@ -142,7 +144,7 @@ typedef struct SIM_S{
     int seed_maos;     /**<Current MAOS seed to read in PSF*/
     int seed_skyc;     /**<Current skyc seed to generate stars and pixel noise*/
     int nstep;         /**<Number of steps*/
-    rand_t rand;  /**<Random stream*/
+    rand_t rand;       /**<Random stream*/
     dmat *res;         /**<residual error. 5*nsky. 
 			  - Total
 			  - NGS mode

@@ -124,6 +124,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.na_beta);
 
     READ_STR(skyc.stars);
+    READ_INT(skyc.addws);
 }
 /**
    Setup infromation output from maos run.
@@ -240,27 +241,27 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(1){
 	char temp[80]; 
 	char *temp1;
-	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin.gz",parms->maos.r0z, parms->maos.zadeg);
+	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	temp1=find_file(temp); parms->skyc.psd_ngs=dread("%s",temp1); 
 	info2("Loading PSD of NGS modes from %s\n", temp1);free(temp1);
 
-	snprintf(temp,80, "PSD/PSD_TT_r0z_%.4f_za%g.bin.gz",parms->maos.r0z, parms->maos.zadeg);
+	snprintf(temp,80, "PSD/PSD_TT_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	temp1=find_file(temp); parms->skyc.psd_tt=dread("%s",temp1); 
 	info2("Loading PSD of TT modes from %s\n", temp1);free(temp1);
 
-	snprintf(temp,80, "PSD/PSD_PS_r0z_%.4f_za%g.bin.gz",parms->maos.r0z, parms->maos.zadeg);
+	snprintf(temp,80, "PSD/PSD_PS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	temp1=find_file(temp); parms->skyc.psd_ps=dread("%s",temp1); 
 	info2("Loading PSD of PS modes from %s\n", temp1);free(temp1);
     }else{
 	char temp[80]; 
 	char *temp1;
-	snprintf(temp,80, "PSD/PSD_NGS.bin.gz");
+	snprintf(temp,80, "PSD/PSD_NGS.bin");
 	temp1=find_file(temp); parms->skyc.psd_ngs=dread("%s",temp1); 
 	info2("Loading PSD of NGS modes from %s\n", temp1);free(temp1);
-	snprintf(temp,80, "PSD/PSD_TT.bin.gz");
+	snprintf(temp,80, "PSD/PSD_TT.bin");
 	temp1=find_file(temp); parms->skyc.psd_tt=dread("%s",temp1); 
 	info2("Loading PSD of TT modes from %s\n", temp1);free(temp1);
-	snprintf(temp,80, "PSD/PSD_PS.bin.gz");
+	snprintf(temp,80, "PSD/PSD_PS.bin");
 	temp1=find_file(temp); parms->skyc.psd_ps=dread("%s",temp1); 
 	info2("Loading PSD of PS modes from %s\n", temp1);free(temp1);
     }

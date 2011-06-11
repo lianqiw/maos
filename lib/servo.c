@@ -17,6 +17,8 @@
 */
 
 #include "servo.h"
+#include "mathmisc.h"
+
 /**
    \file servo.c
    Routines for servo optimization, filtering, etc.
@@ -482,4 +484,47 @@ double psd_intelog2(dmat *psdin){
     long n=psdin->nx;
     double *psd=nu+n;
     return psd_intelog(nu, psd, n);
+}
+
+
+/**
+   Convert PSD into time series.*/
+dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
+    if(psdin->ny!=2){
+	error("psd should have two columns\n");
+    }
+    dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
+    dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
+    long nstep=nextpow2(nstepin);
+    double df=1./(dt*nstep);
+    dmat *fs=dlinspace(0, df, nstep);
+    dmat *psd=NULL;
+    double var=psd_intelog2(psdin);
+    info("Input psd has variance of %g m^2\n",var*1e18);
+    if(fabs(psdx->p[0]*psdx->p[2]-pow(psdx->p[1],2))<EPS){//log spaced
+	psd=dinterp1log(psdx, psdy, fs);
+    }else if(fabs(psdx->p[0]+psdx->p[2]-psdx->p[1]*2.)<EPS){//linear spaced
+	psd=dinterp1(psdx, psdy, fs);
+    }else{
+	error("Frequency in PSD must be log or linearly spaced\n");
+    }
+    psd->p[0]=0;//disable pistion.
+    cmat *wshat=cnew(nstep, 1);
+    cfft2plan(wshat, -1);
+    for(long i=0; i<nstep; i++){
+	wshat->p[i]=sqrt(psd->p[i]*df)*(randn(rstat)+I*randn(rstat));
+    }
+    cfft2(wshat, -1);
+    dmat *out=NULL;
+    creal2d(&out, 0, wshat, 1);
+    cfree(wshat);
+    dfree(psdx);
+    dfree(psdy);
+    dfree(psd);
+    dfree(fs);
+    dresize(out, nstepin, 1);
+    double var2=dinn(out,out)/out->nx;
+    info("Time series has variance of %g m^2\n",var2*1e18);
+    dscale(out, sqrt(var/var2));
+    return out;
 }

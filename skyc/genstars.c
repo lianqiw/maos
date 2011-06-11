@@ -53,7 +53,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
     char temp[80];
     double cat_fov;//catalogue fov
     if(nwvl==2 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10){
-	snprintf(temp,80,"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin.gz", lat, lon);
+	snprintf(temp,80,"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
 	cat_fov=5.0;//5 arc-degree squared.
     }else{
 	error("We only have stars for J+H band. Please fill this part\n");

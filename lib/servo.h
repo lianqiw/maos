@@ -43,4 +43,5 @@ void servo_free(SERVO_T *st);
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt);
 double psd_intelog(double *nu, double *psd, long n);
 double psd_intelog2(dmat *psdin);
+dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstep);
 #endif

@@ -629,48 +629,14 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
     if(parms->sim.wspsd){
-	/*
-	  Telescope wind shake added to TT input.
-	*/
+	/* Telescope wind shake added to TT input. */
 	dmat *psdin=dread("%s", parms->sim.wspsd);
 	info("Loading windshake PSD from file %s\n", parms->sim.wspsd);
-	if(psdin->ny!=2){
-	    error("psd should have two columns\n");
-	}
-	dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
-	dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
-	long nstep=nextpow2(parms->sim.end);//do not subtract sim.start so we can repeat a sim
-	double df=1./(parms->sim.dt*nstep);
-	dmat *fs=dlinspace(0, df, nstep);
-	dmat *psd=NULL;
-
-	if(fabs(psdf->p[0]*psdf->p[2]-pow(psdf->p[1],2))<EPS){//log spaced
-	    psd=dinterp1log(psdf, psdval, fs);
-	}else if(fabs(psdf->p[0]+psdf->p[2]-psdf->p[1]*2.)<EPS){//linear spaced
-	    psd=dinterp1(psdf, psdval, fs);
-	}else{
-	    error("Frequency in PSD must be log or linearly spaced\n");
-	}
-	psd->p[0]=0;//disable pistion.
-	cmat *wshat=cnew(nstep, 1);
-	cfft2plan(wshat, -1);
-	for(long i=0; i<nstep; i++){
-	    wshat->p[i]=sqrt(psd->p[i]*df)*(randn(simu->telws_rand)+I*randn(simu->telws_rand));
-	}
-	cfft2(wshat, -1);
-	creal2d(&simu->telws, 0, wshat, 1);
-	cfree(wshat);
+	simu->telws = psd2time(psdin, simu->telws_rand, parms->sim.dt, parms->sim.end);
 	dfree(psdin);
-	dfree(psdf);
-	dfree(psdval);
-	dfree(psd);
-	dfree(fs);
-	dwrite(simu->telws, "telws");
+	dwrite(simu->telws, "telws_%d", seed);
     }
-    /*
-       Evaluation
-    */
-
+    /* Evaluation */
     if(parms->evl.psfmean){
 	char header[800];
 	header[0]='\0';
