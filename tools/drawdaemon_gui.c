@@ -24,6 +24,8 @@
 
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
+#define MAX_ZOOM 1000
+#define MIN_ZOOM 0.1
 static GSList *windows=NULL;
 static int iwindow=0;
 static GtkWidget *curwindow=NULL;
@@ -370,6 +372,8 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
 static void do_move(drawdata_t *drawdata, double xdiff, double ydiff){
     drawdata->offx+=xdiff/drawdata->zoomx;
     drawdata->offy+=ydiff/drawdata->zoomy;
+    info2("offx=%g, offy=%g, zoomx=%g, zoomy=%g\n", 
+	  drawdata->offx, drawdata->offy, drawdata->zoomx, drawdata->zoomy);
     update_pixmap(drawdata);//no need delay since motion notify already did it.
 }
 
@@ -436,6 +440,7 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 
 
 static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
+
     double old_zoomx=drawdata->zoomx;
     double old_zoomy=drawdata->zoomy;
     if(mode==1){//zoom in
@@ -450,15 +455,15 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
 	drawdata->offx=0;
 	drawdata->offy=0;
     }
-    if(drawdata->zoomx<0.1)
-	drawdata->zoomx=0.1;
-    else if(drawdata->zoomx>100000){
-	drawdata->zoomx=100000;
+    if(drawdata->zoomx<MIN_ZOOM)
+	drawdata->zoomx=MIN_ZOOM;
+    else if(drawdata->zoomx>MAX_ZOOM){
+	drawdata->zoomx=MAX_ZOOM;
     }
-    if(drawdata->zoomy<0.1)
-	drawdata->zoomy=0.1;
-    else if(drawdata->zoomy>100000){
-	drawdata->zoomy=100000;
+    if(drawdata->zoomy<MIN_ZOOM)
+	drawdata->zoomy=MIN_ZOOM;
+    else if(drawdata->zoomy>MAX_ZOOM){
+	drawdata->zoomy=MAX_ZOOM;
     }
     if(mode){//not zero.
 	double factorx=1/old_zoomx-1/drawdata->zoomx;
@@ -834,7 +839,7 @@ static void tool_save(GtkToolButton *button){
     }
     cairo_draw(cairo_create(surface), drawdata,width,height);
     if(strcmp(suffix,".png")==0){
-	cairo_surface_write_to_png(surface,filename);
+	cairo_surface_write_to_png(surface, filename);
     } 
     cairo_surface_finish(surface);
     cairo_surface_destroy(surface);

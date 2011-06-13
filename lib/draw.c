@@ -109,72 +109,64 @@ void draw_helper(void){
 static int fifo_open(){
     int fd;
     int retry=0;
-    char *fifo_fn=NULL;
+    static char *fifo_fn=NULL;
     int free_fifo_fn=0;
     if(disable_draw){
 	return -1;
     }
-    if(pfifo){
-	return 0;
+    if(pfifo){ 
+	//return 0;
+	fclose(pfifo); pfifo=NULL;
     }
+retry:
+    if(fifo_fn){//fifo_fn is already set. drawdaemon has already started.
+	fd=open(fifo_fn,O_NONBLOCK|O_WRONLY);
+	if(fd!=-1){//open succeed.
+	    pfifo=fopen(fifo_fn,"wb");
+	    close(fd);
+	    if(pfifo){
+		return 0;
+	    }
+	}
+    }
+    sleep(1);
+    retry++;
+    if(retry>20){
+	disable_draw=1;
+	return -1;
+    }
+    free(fifo_fn); fifo_fn=NULL;
     if(!DRAW_ID){
 	DRAW_ID=getpid();
     }
-
- retry:
-    //do not free the returned string.
+    //Open failed. drawdaemon has closed.
+  
     if(write_helper && read_helper){
 	info2("Helper is running, launch drawdaemon through it\n");
 	if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
 	    fifo_fn=readstr(read_helper);
 	    free_fifo_fn=1;
-	}else{
-	    read_helper=0;
+	}else{//helper has exited, launch it again
 	    draw_helper();
-	    goto retry;
+	    if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
+		fifo_fn=readstr(read_helper);
+		free_fifo_fn=1;
+	    }else{//still failed.
+		write_helper=0;
+		read_helper=0;
+	    }
 	}
     }
-    if(!fifo_fn){
-	fifo_fn=scheduler_get_drawdaemon(DRAW_ID, DRAW_DIRECT);
-	free_fifo_fn=0;
+
+    if(!fifo_fn){//above method failed.
+	fifo_fn=strdup(scheduler_get_drawdaemon(DRAW_ID, DRAW_DIRECT));
     }
     if(!fifo_fn){
 	warning("Unable to find and launch drawdaemon\n"); 
 	disable_draw=1;
 	return -1;
     }
-    retry++;
-    fd=open(fifo_fn,O_NONBLOCK|O_WRONLY);
-    int ans=0;
-    if(fd==-1){
-	perror("fifo_open");
-	if(errno==ENXIO && retry>20){
-	    warning("Unable to open drawdaemon. Draw is disabled\n");
-	    disable_draw=1;
-	    ans=-1;
-	}else{
-	    sleep(2);
-	    if(retry<20){
-		goto retry;
-	    }else{
-		ans=-1;
-	    }
-	}
-    }else{
-	//do not use fdopen, which has NONBLOCK flag and is not what we want.
-        pfifo=fopen(fifo_fn,"wb");
-        close(fd);
-	if(!pfifo){
-	    warning("Failed to open fifo\n");
-	    ans=-1;
-	}else{
-	    ans=0;
-	}
-    }
-    if(free_fifo_fn){
-	free(fifo_fn);
-    }
-    return ans;
+    goto retry;
 }
 /**
    Write data to the fifo. Handle exceptions.
@@ -209,7 +201,7 @@ inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
 void plot_points(char *fig,          /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
-		 dcell *dc,        /**<If loc ismpety, use cell to plot curves*/
+		 dcell *dc,          /**<If loc ismpety, use cell to plot curves*/
 		 const int32_t *style,  /**<Style of each point*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 int ncir,           /**<Number of circles*/
@@ -223,6 +215,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
     format2fn;
     LOCK(lock);
     if(fifo_open()){//failed to open.
+	warning("Failed to open\n");
 	goto done;
     }
     //info2("pts");getchar();

@@ -27,6 +27,7 @@ static void usage(){
    Plot MAOS Results
 */
 typedef struct ARG_T{
+    int iarg;
     int nseed;
     long *seeds;
 }ARG_T;
@@ -52,9 +53,10 @@ static ARG_T * parse_args(int argc, char **argv){
 	    arg->seeds=realloc(arg->seeds, sizeof(long)*arg->nseed);
 	    arg->seeds[arg->nseed-1]=strtol(optarg,NULL,10);
 	}
-	break;
+	    break;
 	}
     }
+    arg->iarg=optind;
     return arg;
 }
 /**
@@ -67,12 +69,12 @@ int main(int argc, char *argv[]){
     DRAW_DIRECT=1;//launch drawdaemon directly, without going through server.
     char **path;
     int npath;
-    //info("argc=%d\n", argc);
-    if(argc>=2){
-	npath=argc-1;
+
+    if(arg->iarg<argc){
+	npath=argc-arg->iarg;
 	path=calloc(npath, sizeof(char*));
 	for(int ipath=0; ipath<npath; ipath++){
-	    path[ipath]=argv[ipath+1];
+	    path[ipath]=argv[ipath+arg->iarg];
 	}
     }else{
 	npath=1;
@@ -81,20 +83,19 @@ int main(int argc, char *argv[]){
     }
     long nseed=arg->nseed;
     long *seed=arg->seeds;
-    if(nseed==0){//do all seeds
-	int jpath=0, mpath=0;
-	for(int ipath=0; ipath<npath; ipath++){
-	    if(!isdir(path[ipath])){
-		continue;
-	    }
-	    //info("Try path %s\n", path[ipath]);
-	    DIR *dir=opendir(path[ipath]);
-	    if(!dir){
-		warning("Unable to read directory %s\n", path[0]);
-		continue;
-	    }
-
-
+    //Find all valid path and seeds.
+    int jpath=0, mpath=0;
+    for(int ipath=0; ipath<npath; ipath++){
+	if(!isdir(path[ipath])){
+	    continue;
+	}
+	//info("Try path %s\n", path[ipath]);
+	DIR *dir=opendir(path[ipath]);
+	if(!dir){
+	    warning("Unable to read directory %s\n", path[0]);
+	    continue;
+	}
+	if(!nseed){//find available seeds
 	    long nmax=20;
 	    seed=calloc(nmax, sizeof(long));
 	    struct dirent *dp;
@@ -118,18 +119,19 @@ int main(int argc, char *argv[]){
 	    }else{
 		free(seed);//try the next folder.
 	    }
-	    //record the path as valid
-	    path[jpath]=path[ipath];
-	    info("%d: %s\n", jpath, path[jpath]);
-	    jpath++; mpath++;
 	}
-	npath=mpath;
+	//record the path as valid
+	path[jpath]=path[ipath];
+	info2("Found path: %s\n", path[jpath]);
+	jpath++; mpath++;
     }
-    if(nseed==0){
+    npath=mpath;
+    if(npath==0){
 	info2("Nothing to display\n");
 	return 1;
     }
     int jseed=0, mseed=0;
+    //Find seeds that are available in all folders.
     for(int iseed=0; iseed<nseed; iseed++){
 	int ipath;
 	for(ipath=0; ipath<npath; ipath++){
@@ -150,6 +152,16 @@ int main(int argc, char *argv[]){
 	}
     }
     nseed=mseed;
+    if(nseed==0){
+	info2("Nothing to display\n");
+	return 1;
+    }else{
+	info2("Found seed:");
+	for(int i=0; i<nseed; i++){
+	    info2("%ld ", seed[i]);
+	}
+	info2("\n");
+    }
     dcell *resolhi=dcellnew(npath,nseed);
     dcell *resollo=dcellnew(npath,nseed);
     dcell *reshi=dcellnew(npath,nseed);
@@ -164,7 +176,6 @@ int main(int argc, char *argv[]){
 	    snprintf(fn,PATH_MAX,"%s/Res_%ld.bin", path[ipath], seed[iseed]);
 	    dcell *res;
 	    res=dcellread("%s",fn);
-	    info2("Process %s\n", path[ipath]);
 	    int ind=0;
 	    int indlo=0;
 	    int indhi=0;
@@ -199,7 +210,6 @@ int main(int argc, char *argv[]){
 	    dadd(&resollom->p[ipath], 1, resollo->p[ii], 1);
 	    
 	}
-	info2("Found seed %ld\n", seed[iseed]);
     }
     dcellcwpow(reshi, 0.5); dcellscale(reshi, 1e9);
     dcellcwpow(reslo, 0.5); dcellscale(reslo, 1e9);

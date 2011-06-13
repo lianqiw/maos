@@ -51,6 +51,7 @@ struct drawdata_t{
     dmat **pts;      //pts;
     int npts;        //number of pts mat, not points.
     int32_t *style;
+    int *style_pts;    //save pts style for legend
     unsigned int nstyle;
     //draw circles
     double (*cir)[4];
@@ -88,12 +89,13 @@ struct drawdata_t{
     int widthim_last, heightim_last;//width,height of last drawing canvas.
     
     double zoomx, zoomy;//zoom level.
+    double zoomxlast, zoomylast;//last zoom level.
     double offx,offy;//off set of the center of the data.
     double mxdown,mydown;//mouse pointer down.
     double scalex, scaley;//scale of the data to fit the display.
     double centerx, centery;
     double xoff, yoff;//offset of the area to draw figure.
-    
+    int ncxoff, ncyoff;//offset of ncx, ncy
     double limit0[4];//x,y limit of displayed region.
 
     int square;//make x/y scaling be the same, for image and coordinate display

@@ -384,7 +384,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     double xmax=drawdata->limit[1];
     double ymin=drawdata->limit[2];
     double ymax=drawdata->limit[3];
-    info("limits are %g %g %g %g\n", xmin, xmax, ymin, ymax);
+
     double xmin0,ymin0,xmax0,ymax0;
     xmin0=xmin; ymin0=ymin; xmax0=xmax; ymax0=ymax;
     double xdim, ydim;//dimension of the data.
@@ -414,7 +414,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     drawdata->heightim=heightim;
     drawdata->scalex=scalex;
     drawdata->scaley=scaley;
-    drawdata->drawn=1;
     if(drawdata->limit_changed == 1
        || (drawdata->widthim_last !=0 
 	   && (drawdata->widthim_last!=drawdata->widthim 
@@ -439,7 +438,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     //Offset in the cairo surface to draw the image.
     double xoff=round(((width-widthim-SP_XL-sp_xr)*0.5)+SP_XL);
     double yoff=round(((height-heightim-SP_YT-SP_YB)*0.5)+SP_YT);
-    drawdata->xoff=xoff;
+    drawdata->xoff=xoff;//save for the GUI to use.
     drawdata->yoff=yoff;
     //center of the image on the screen.
     drawdata->centerx=xoff+widthim*0.5;
@@ -461,21 +460,16 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     cairo_scale(cr,1,-1);
     //clip out an rectangular region to draw.
     cairo_rectangle(cr,0,0,widthim,heightim);
-
-    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
- 
-    cairo_stroke(cr);//border
-    cairo_rectangle(cr,0,0,widthim,heightim);
     cairo_clip(cr);
     if(drawdata->image){
 	cairo_save(cr);
-	cairo_scale(cr,scalex*zoomx,scaley*zoomy);
+	cairo_scale(cr, scalex*zoomx, scaley*zoomy);
 	/*
 	  offx, offy are the offset in the cairo window.
 	  ofx, ofy are the actual offset in the original data to display.
 	 */
-	double ofx=(drawdata->nx*0.5)*(1/zoomx-1)+drawdata->offx/scalex;
-	double ofy=(drawdata->ny*0.5)*(1/zoomy-1)+drawdata->offy/scaley;
+	double ofx=(drawdata->nx*0.5)*(1./zoomx-1.)+drawdata->offx/scalex;
+	double ofy=(drawdata->ny*0.5)*(1./zoomy-1.)+drawdata->offy/scaley;
 	/*The x and y patterns are negated and then set as
 	  translation values in the pattern matrix.*/
 	cairo_set_source_surface(cr, drawdata->image, ofx,ofy);
@@ -499,40 +493,84 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymax0=ymin0+ydiff/zoomy;
 	cairo_restore(cr);
     }
-    int styles[drawdata->npts];//save the styles for legend
     if(drawdata->npts>0){
+	cairo_save(cr);
 	double centerx=(xmax+xmin)/2;
 	double centery=(ymax+ymin)/2;
 	double ncx=widthim*0.5 + drawdata->offx*zoomx;
 	double ncy=heightim*0.5 + drawdata->offy*zoomy;
-#define DRAW_NEW 0
+	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
+	cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
+#define DRAW_NEW 1
 #if DRAW_NEW == 1
-	ncx=0;
-	ncy=0;
-	int offx_save=drawdata->offx;
-	int offy_save=drawdata->offy;
-	drawdata->offx=0;
-	drawdata->offy=0;
-	cairo_t *cr2=cr;
-	int new_width=(int)round((drawdata->limit[1]-drawdata->limit[0])*scalex*zoomx);
-	int new_height=(int)round((drawdata->limit[3]-drawdata->limit[2])*scaley*zoomy);
-	int do_plot=1;
+	int new_width0=(int)round(widthim*zoomx);
+	int new_height0=(int)round(heightim*zoomy);
+	int new_height=new_height0;
+	int new_width=new_width0;
+	//Don't use too much buffer. Over flow memory.
+#define ZOOM_MAX 10
+	if(zoomx>ZOOM_MAX){
+	    new_width=widthim*ZOOM_MAX;
+	}else{
+	    drawdata->ncxoff=0;
+	}
+	if(zoomy>ZOOM_MAX){
+	    new_height=heightim*ZOOM_MAX;
+	}else{
+	    drawdata->ncyoff=0;
+	}
+
+	int new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx*zoomx+ drawdata->ncxoff);
+	int new_offy=(int)round((heightim-new_height)*0.5+drawdata->offy*zoomy+drawdata->ncyoff);
+	if(drawdata->cacheplot && (cairo_image_surface_get_width(drawdata->cacheplot)!=new_width ||
+				   cairo_image_surface_get_height(drawdata->cacheplot)!=new_height)){
+	    cairo_surface_destroy(drawdata->cacheplot);
+	    drawdata->cacheplot=NULL;
+	}
+
+	int redraw=0;
 	if(!drawdata->cacheplot){
 	    drawdata->cacheplot=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, new_width, new_height);
-	}else if(cairo_image_surface_get_width(drawdata->cacheplot)!=new_width ||
-		 cairo_image_surface_get_height(drawdata->cacheplot)!=new_height){
-	    cairo_surface_destroy(drawdata->cacheplot);
-	    drawdata->cacheplot=cairo_image_surface_create(CAIRO_FORMAT_ARGB32, new_width, new_height);
-	}else{
-	    do_plot=0;
+	    redraw=1;
 	}
-	if(do_plot){
-	cr=cairo_create(drawdata->cacheplot);
+	if(fabs(drawdata->zoomx-drawdata->zoomxlast)>EPS||fabs(drawdata->zoomy-drawdata->zoomylast)>EPS
+	   ||!drawdata->drawn){
+	    redraw=1;
+	}
+	if(new_width <= new_width0 && (new_offx>0 || -new_offx>(new_width-widthim))){
+	    drawdata->ncxoff=(int)( - drawdata->offx*zoomx);
+	    new_offx=(int)round((widthim-new_width)*0.5+drawdata->offx*zoomx+ drawdata->ncxoff);
+	    redraw=1;
+	}
+	if(new_height<=new_height0 && (new_offy>0 || -new_offy>(new_height-heightim))){
+	    drawdata->ncyoff=(int)( - drawdata->offy*zoomy);
+	    new_offy=(int)round((heightim-new_height)*0.5+drawdata->offy*zoomy+drawdata->ncyoff);
+	    redraw=1;
+	}
+	//center of plot. Important.
+	ncx=new_width/2 - drawdata->ncxoff;
+	ncy=new_height/2 - drawdata->ncyoff;
+
+	if(redraw){
+	    cairo_t *cr2=cr;
+	    cr=cairo_create(drawdata->cacheplot);
+	    //Blank it first.
+	    cairo_set_source_rgba(cr, 1.,1.,1.,1.);
+	    cairo_rectangle(cr, 0, 0, new_width, new_height);
+	    cairo_fill(cr);
+	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
+	    cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
+	    cairo_set_line_width(cr,linewidth);
+	    cairo_rectangle(cr, 0, 0, new_width, new_height);
+	    cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 0.1);
+	    cairo_fill(cr);
+
 #endif
-	cairo_save(cr);
-	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);//GRAY
+	if(!drawdata->style_pts){
+	    drawdata->style_pts=calloc(drawdata->npts, sizeof(int));//save the styles for legend
+	}
 	int color=0x0000FF;
-	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);
+	cairo_set_source_rgba(cr,0.2,0.0,1.0,1.0);//Blue
 	int style;
 	int connectpts;
 	if(drawdata->square){//we are plotting points.
@@ -550,7 +588,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	//computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim
 
 	int icumu=(int)drawdata->icumu;
-	info("icumu=%d\n", icumu);
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
 	    dmat *pts=drawdata->pts[ipts];
 	    double *ptsx=NULL, *ptsy=NULL;
@@ -566,7 +603,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		color=default_color(ipts);
 	    }
 	    //save the styles for legend
-	    styles[ipts]=style | connectpts<<3 |color << 8 |(int)(size/sqrt(zoomx))<<4;
+	    drawdata->style_pts[ipts]=style | connectpts<<3 |color << 8 |(int)(size/sqrt(zoomx))<<4;
 	    set_color(cr, color);
 	    int ips0=0;
 	    if(drawdata->cumu && icumu<pts->nx){
@@ -641,22 +678,22 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_stroke(cr);//stroke all together.
 	    }
 	}//iptsy
-#if DRAW_NEW == 1	
+#if DRAW_NEW == 1
 	cairo_destroy(cr);
-	}
 	cr=cr2;
-	drawdata->offx=offx_save;
-	drawdata->offy=offy_save;
-	cairo_set_source_surface(cr, drawdata->cacheplot, offx_save, offy_save);
+	}
+	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
+	cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
+	cairo_set_source_surface(cr, drawdata->cacheplot, new_offx, new_offy);
 	cairo_paint(cr);
 #endif
-	cairo_restore(cr);
 
 	xmax0=(((widthim)*0.5)/zoomx - drawdata->offx)/scalex+centerx;
 	xmin0=((-widthim*0.5)/zoomx - drawdata->offx)/scalex+centerx;
 	ymax0=(((heightim)*0.5)/zoomy - drawdata->offy)/scaley+centery;
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
 
+	cairo_restore(cr);
     }
 
     if(drawdata->ncir>0){
@@ -679,8 +716,11 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_restore(cr);
     }
     cairo_restore(cr);
-    //Now doing the border, tic, and colobar
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
+    //the border
+    cairo_rectangle(cr,xoff,yoff,widthim,heightim);
+    cairo_stroke(cr);//border
+    //Now doing the tic, and colobar
     //When there is no zoom, panning, limit0 equals to limit.
     drawdata->limit0[0]=xmin0;
     drawdata->limit0[1]=xmax0;
@@ -832,7 +872,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    cairo_text_extents(cr, legend[ig], &extents);
 	    maxlen=MAX(maxlen, extents.width+1);//length of text.
 	    tall=MAX(tall, extents.height+1);//tall of text.
-	    PARSE_STYLE(styles[ig]);
+	    PARSE_STYLE(drawdata->style_pts[ig]);
 	    if(connectpts){
 		leglen=MAX(leglen, linelen);
 	    }else{
@@ -856,7 +896,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	}
 	cairo_translate(cr, legmarin+linehead, legmarin);
 	for(int ig=0; ig<ng; ig++){
-	    PARSE_STYLE(styles[ig]);
+	    PARSE_STYLE(drawdata->style_pts[ig]);
 	    set_color(cr, color);
 	    double ix=leglen*0.5;
 	    double iy=tall*0.5;
@@ -869,7 +909,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
 	    cairo_move_to(cr, leglen+linehead, tall*0.8);
-	    cairo_show_text(cr, legend[ig]);
+	    //cairo_show_text(cr, legend[ig]);
+	    pango_text(cr, layout, leglen+linehead, -tall*0.2, legend[ig], 0, 0);
 	    cairo_translate(cr, 0, tall);
 	}
 	cairo_restore(cr);
@@ -878,5 +919,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     cairo_destroy(cr);
     drawdata->icumulast=drawdata->icumu;
     drawdata->cumulast=drawdata->cumu;
+    drawdata->zoomxlast=drawdata->zoomx;
+    drawdata->zoomylast=drawdata->zoomy;
+    drawdata->drawn=1;
     toc("done");
 }

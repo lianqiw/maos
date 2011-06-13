@@ -120,7 +120,7 @@ static int read_fifo(FILE *fp){
 	    drawdata=calloc(1, sizeof(drawdata_t));
 	    pthread_mutex_lock(&mutex_drawdata);
 	    ndrawdata++;
-	    info("drawdata created, ndrawdata=%d\n", ndrawdata);
+	    warning("drawdata created, ndrawdata=%d\n", ndrawdata);
 	    pthread_mutex_unlock(&mutex_drawdata);
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
@@ -273,8 +273,7 @@ void open_fifo(void* nothing){
     }
     int retrycount=0;
  retry:
-    if(fp) fclose(fp);
-    info("Try to open fifo\n");
+    info("Try to open fifo\n\n\n\n");
     fp=fopen(fifo,"rb");
     if(!fp){
 	perror("open");
@@ -291,10 +290,8 @@ void open_fifo(void* nothing){
     }
     info("Opened\n");
     read_fifo(fp);
+    fclose(fp);
+    fp=NULL;
     retrycount=0;
-    sleep(1);
     goto retry;
 }    
-
-
-
