@@ -589,9 +589,17 @@ ARG_T * parse_args(int argc, char **argv){
 		arg->conf=cmd_string(value, &start);
 		break;
 	    case 's':{
-		nseed++;
-		seeds=realloc(seeds, sizeof(int)*nseed);
-		seeds[nseed-1]=strtol(value, &start, 10);
+		int seed=strtol(value, &start, 10);
+		int iseed;
+		//find duplicated seeds.
+		for(iseed=0; iseed<nseed; iseed++){
+		    if(seeds[iseed]==seed) break;
+		}
+		if(iseed==nseed){
+		    nseed++;
+		    seeds=realloc(seeds, sizeof(int)*nseed);
+		    seeds[nseed-1]=seed;
+		}
 	    }
 		break;
 	    case 'p':

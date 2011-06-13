@@ -1330,21 +1330,21 @@ void X(evd)(X(mat) **U, dmat **Sdiag,const X(mat) *A){
     char jobz=U?'V':'N';
     char uplo='U';
     int lda=A->nx;
-    T worksize[1];
+    T worksize;
     int lwork=-1;
     int info;
     X(mat) *atmp=X(dup)(A);
 #ifdef USE_COMPLEX
     double *rwork=malloc((3*A->nx-2)*sizeof(double));
-    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, worksize, &lwork,rwork, &info);
-    lwork=(int)worksize[0];
+    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, &worksize, &lwork,rwork, &info);
+    lwork=(int)worksize;
     T *work=malloc(sizeof(double)*lwork);
     Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork,rwork, &info);
     free(rwork);
 #else
-    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, worksize, &lwork, &info);
-    T *work=malloc(sizeof(double)*worksize[0]);
-    lwork=(int)worksize[0];
+    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, &worksize, &lwork, &info);
+    lwork=(int)worksize;
+    T *work=malloc(sizeof(double)*lwork);
     Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork, &info);
 #endif
     if(info){

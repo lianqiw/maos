@@ -51,6 +51,8 @@
 #include "common.h"
 #include "monitor.h"
 #include "misc.h"
+
+
 static GtkListStore **lists=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
     GtkListStore *list=lists[p->hid];
@@ -227,6 +229,7 @@ GtkWidget *new_page(int ihost){
     if(!lists){
 	lists=calloc(nhost,sizeof(GtkListStore*));
     }
+
     lists[ihost]=gtk_list_store_new(COL_TOT,
 				    G_TYPE_STRING,//DATE
 				    G_TYPE_STRING,//PID

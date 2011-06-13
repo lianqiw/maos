@@ -2461,6 +2461,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->wt);
     dfree(recon->dx);
     dcellfree(recon->MVRngs);
+    dcellfree(recon->MVGM);
+    dcellfree(recon->MVModes);
     dcellfree(recon->xmcc);
     spcellfree(recon->GX);
     spcellfree(recon->GP);

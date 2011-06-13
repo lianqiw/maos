@@ -38,12 +38,7 @@ int curiseed=0;
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
 void maos(const PARMS_T *parms){    
-    /*#if DEBUG == 1 || USE_MEM == 1
-    {
-	int one=1;
-	omp_set_num_threads(&one);//only allow 1 thread.
-    }
-    #endif*/
+
     APER_T  * aper;
     POWFS_T * powfs;
     RECON_T * recon;
@@ -60,7 +55,7 @@ void maos(const PARMS_T *parms){
     */
 #if USE_MKL==1
     int one=1;
-    omp_set_num_threads(&one);//only allow 1 thread.
+    omp_set_num_threads(&one);//only allow 1 thread after svd/chol is done.
 #endif
     sim(parms, powfs, aper, recon);
     /*Free all allocated memory in setup_* functions. So that we
@@ -136,8 +131,14 @@ int main(int argc, char **argv){
     scheduler_start(scmd,arg->nthread,!arg->force);
 
     //setting up parameters before asking scheduler to check for any errors.
-    PARMS_T *parms=setup_parms(arg); 
- 
+    PARMS_T *parms=setup_parms(arg);
+#if USE_MKL==1
+    if(arg->nthread==1){
+	int one=1;
+	//only allow 1 thread to make debug easy.
+	omp_set_num_threads(&one);
+    }
+#endif
     curparms = parms;
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
   

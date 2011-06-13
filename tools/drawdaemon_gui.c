@@ -151,7 +151,6 @@ static gboolean tab_button_cb(GtkWidget *widget, GdkEventButton *event, GtkWidge
     /*
       widget is the event box that is the page label. page is the page in the notebook.
      */
-    info("button press\n");
     GtkWidget *topnb=gtk_widget_get_parent(page);
     int n=gtk_notebook_page_num(GTK_NOTEBOOK(topnb), page);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(topnb), n);
@@ -176,11 +175,8 @@ static void update_pixmap(drawdata_t *drawdata){
     if(drawdata->pixmap){
 	gdk_drawable_get_size(drawdata->pixmap, &width2, &height2);
 	if(width!=width2 || height !=height2){
-	    info("Replacing pixmap\n");
 	    g_object_unref(drawdata->pixmap);
 	    drawdata->pixmap=NULL;
-	}else{
-	    info("Keep old pixmap\n");
 	}
     }
     if(!drawdata->pixmap){
@@ -220,8 +216,6 @@ on_configure_event(GtkWidget *widget, GdkEventConfigure *event, gpointer pdata){
     (void)event; 
     (void)widget;
     drawdata_t* drawdata=*((drawdata_t**)pdata);
-    //info("configure event :%dx%d. event:%dx%d\n", 
-    //drawdata->width, drawdata->height, event->width, event->height);
     if(event->width>1 && event->height>1){
 	drawdata->width=event->width;
 	drawdata->height=event->height;
@@ -238,7 +232,6 @@ on_expose_event(GtkWidget *widget,
     if(drawdata->font_name_version != font_name_version || !drawdata->drawn){
 	update_pixmap(drawdata);
     }
-    //info("expose event\n");
     if(drawdata->pixmap){
 	gdk_draw_drawable(widget->window, 
 			  widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
@@ -292,7 +285,6 @@ static void drawdata_free(drawdata_t *drawdata){
     free(drawdata);
     pthread_mutex_lock(&mutex_drawdata);
     ndrawdata--;
-    info("drawdata deleted, ndrawdata=%d\n", ndrawdata);
     pthread_mutex_unlock(&mutex_drawdata);
 }
 
@@ -372,8 +364,6 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
 static void do_move(drawdata_t *drawdata, double xdiff, double ydiff){
     drawdata->offx+=xdiff/drawdata->zoomx;
     drawdata->offy+=ydiff/drawdata->zoomy;
-    info2("offx=%g, offy=%g, zoomx=%g, zoomy=%g\n", 
-	  drawdata->offx, drawdata->offy, drawdata->zoomx, drawdata->zoomy);
     update_pixmap(drawdata);//no need delay since motion notify already did it.
 }
 
@@ -705,7 +695,6 @@ void addpage(drawdata_t **drawdatawrap)
 	    free(drawdata);
 	    pthread_mutex_lock(&mutex_drawdata);
 	    ndrawdata--;
-	    info("drawdata deleted, ndrawdata=%d\n", ndrawdata);
 	    pthread_mutex_unlock(&mutex_drawdata);
 	}
 	if(get_current_page()==drawdata_old){//we are the current page. need to update pixmap

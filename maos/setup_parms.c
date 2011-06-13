@@ -527,8 +527,20 @@ static void readcfg_atmr(PARMS_T *parms){
    Read in aperture definitions.
 */
 static void readcfg_aper(PARMS_T *parms){
-    READ_DBL(aper.d);
-    READ_DBL(aper.din);
+    double *dtmp;
+    //aper.d may contain one for [d] or two numbers for [d din]
+    int nd=readcfg_dblarr(&dtmp, "aper.d");
+    switch(nd){
+    case 2:
+	parms->aper.din=dtmp[1];//don't break here.
+    case 1:
+	parms->aper.d=dtmp[0];
+	break;
+    default:
+	error("aper.d contains %d elements. But only 1 or 2 elements expected.\n", nd);
+    }
+    free(dtmp);
+
     if(parms->aper.d <= parms->aper.din){
 	error("Inner dimeter: %g, Outer Diameter: %g. Illegal\n", parms->aper.din, parms->aper.d);
     }

@@ -17,7 +17,6 @@ config/maos/bin/TMT_CurDesign.bin.gz\
 config/maos/bin/KECK.bin.gz\
 config/maos/bin/NapMean.bin.gz\
 config/maos/bin/PSD_TMT_WindShake20mas_rad2.bin.gz\
-config/maos/aper_tmt.conf\
 config/maos/atm_mk13n25p.conf\
 config/maos/atm_mk13n50p.conf\
 config/maos/atm_mk13n75p.conf\

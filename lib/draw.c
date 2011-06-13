@@ -126,8 +126,14 @@ retry:
 	    close(fd);
 	    if(pfifo){
 		return 0;
+	    }else{
+		warning("fopen failed\n");
 	    }
+	}else{
+	    warning("open failed\n");
 	}
+    }else{
+	warning("fifo is empty\n");
     }
     sleep(1);
     retry++;

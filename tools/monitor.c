@@ -94,9 +94,9 @@ static int scheduler_crashed;
 static const gchar *rc_string_treeview = 
     {
 	"style \"solidTreeLines\"{                       \n" 
-	" GtkTreeView::allow-rules       = 1             \n"
-	" GtkTreeView::grid-line-pattern = \"\255\1\"    \n" 
+	//" GtkTreeView::grid-line-pattern=\"\111\111\"\n"
 	" GtkTreeView::grid-line-width   = 1             \n"
+	" GtkTreeView::allow-rules       = 1             \n"
 	" GtkTreeView::odd-row-color     = \"#EFEFFF\"   \n"
 	" GtkTreeView::even-row-color    = \"#FFFFFF\"   \n"
 	" GtkTreeView::horizontal-separator = 0          \n"
@@ -770,6 +770,7 @@ int main(int argc, char *argv[])
 	notify_daemon=0;
     }
 #endif
+
     gdk_color_parse("#EE0000",&red);
     gdk_color_parse("#00CC00",&green);
     gdk_color_parse("#FFFF33",&yellow);

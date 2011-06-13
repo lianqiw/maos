@@ -341,6 +341,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	dscale(powfs[ipowfs].saa, areafulli);
 	dcellscale(powfs[ipowfs].saam, areafulli);
     }
+    if(count==0){
+	error("powfs %d: there are no subapertures above threshold.\n", ipowfs);
+    }
     powfs[ipowfs].npts = count*nxsa;
     powfs[ipowfs].nthread=count<parms->sim.nthread?count:parms->sim.nthread;
     ptsresize(powfs[ipowfs].pts, count);
@@ -673,7 +676,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		ncompx=ncompy=128;
 	    }
 	}
-	info2("ipowfs %d: ncompx=%d, ncompy=%d\n", ipowfs,ncompx,ncompy);
+	info2("powfs %d: ncompx=%d, ncompy=%d\n", ipowfs,ncompx,ncompy);
     }//ncomp
     powfs[ipowfs].ncompx=ncompx;
     powfs[ipowfs].ncompy=ncompy;
@@ -1011,7 +1014,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(!parms->powfs[ipowfs].hasllt || !parms->powfs[ipowfs].llt->fnrange) return;
     char *fnrange=find_file(parms->powfs[ipowfs].llt->fnrange);
-    warning("ipowfs %d: loading sodium range from %s\n", ipowfs, fnrange);
+    warning("powfs %d: loading sodium range from %s\n", ipowfs, fnrange);
     if(powfs[ipowfs].focus) dfree(powfs[ipowfs].focus);
     powfs[ipowfs].focus=dread("%s",fnrange);
     free(fnrange);

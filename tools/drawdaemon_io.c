@@ -17,13 +17,17 @@
 */
 #include "drawdaemon.h"
 /*
-  Routines in this file handles I/O
-*/
+  Routines in this file handles I/O.
+
+  Todo: fread does not block when there are no more data available, and simply
+  return EOF. Consider changing to read, which blocks when no data available.
+ */
 
 char *defname="Title";
 char *deffig="Figure";
 static int no_longer_listen=0;
 int ndrawdata=0;
+int count=0;
 pthread_mutex_t mutex_drawdata=PTHREAD_MUTEX_INITIALIZER;
 #define FILE_READ(data,size)			\
     nleft=size;start=(gchar*)data;		\
@@ -31,16 +35,23 @@ pthread_mutex_t mutex_drawdata=PTHREAD_MUTEX_INITIALIZER;
 	int nread=fread(start, 1, nleft, fp);	\
 	nleft-=nread;				\
 	start+=nread;				\
-	if(nread < nleft){			\
+	if(nread < nleft){/*read failed*/	\
 	    if(feof(fp)){			\
 		info("EOF\n");			\
-		return 1;			\
+		clearerr(fp);			\
+		count++;			\
+		if(count>10){			\
+		    return 1;			\
+		}				\
+		sleep(1);			\
 	    }else if(ferror(fp)){		\
 		info("File error\n");		\
 		return 1;			\
 	    }else{				\
 		info("Unknown error\n");	\
 	    }					\
+	}else{					\
+	    count=0;				\
 	}					\
     }while(nleft>0)				
 

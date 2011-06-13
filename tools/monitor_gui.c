@@ -43,8 +43,6 @@
 #define WIDTH_ERRLO 7
 #define WIDTH_ERRHI 7
 
-
-
 static void delete_hbox_event(GtkWidget *btn, GdkEventButton *event,PROC_T *p){
     (void)btn;
     if(event->button==1){

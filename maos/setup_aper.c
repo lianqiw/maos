@@ -39,6 +39,18 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->ampground=mapread("%s",parms->aper.fnamp);
 	if(fabs(aper->ampground->h)>1.e-14){
 	    warning("ampground is not on ground, this is not tested\n");
+	}else{
+	    double amp_d, amp_din;
+	    map_d_din(aper->ampground, &amp_d, &amp_din);
+	    if(fabs(parms->aper.d - amp_d) > (parms->aper.d + amp_d) * 0.005 ||
+	       fabs(parms->aper.din - amp_din) > (parms->aper.din+parms->aper.din) * 0.005){
+		warning("\n\n\nAmplitude map is supplied, but does not match aperture diameter.\n"
+			"The amplitude map has inner and outer diameter of %g and %g\n"
+			"But the aperture has inner and outer diameter of %g and %g\n"
+			"Will not use the amplitude map.\n\n\n"
+			, amp_din, amp_d, parms->aper.din, parms->aper.d);
+		mapfree(aper->ampground);
+	    }
 	}
 	if(fabs(parms->aper.rotdeg)>1.e-12){
 	    warning("Pupil is rotated by %g deg\n",parms->aper.rotdeg);
@@ -49,7 +61,6 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    dembed((dmat*)aper->ampground,B,parms->aper.rotdeg/180.*M_PI);
 	    dfree(B);
 	}
-
     }
  
     if(parms->load.locs){
@@ -67,22 +78,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     loc_create_stat(aper->locs);
     if(!aper->amp){
 	aper->amp=dnew(aper->locs->nloc, 1);
-	int amp_good=0; 
 	if(aper->ampground){
-	    double amp_d, amp_din;
-	    map_d_din(aper->ampground, &amp_d, &amp_din);
-	    if(fabs(parms->aper.d - amp_d) < (parms->aper.d + amp_d) * 0.005 &&
-	       fabs(parms->aper.din - amp_din) < (parms->aper.din+parms->aper.din) * 0.005){
-		amp_good=1;
-	    }else{
-		warning("\n\n\nAmplitude map is supplied, but does not match aperture diameter.\n"
-			"The amplitude map has inner and outer diameter of %g and %g\n"
-			"But the aperture has inner and outer diameter of %g and %g\n"
-			"Will not use the amplitude map.\n\n\n"
-		      , amp_din, amp_d, parms->aper.din, parms->aper.d);
-	    }
-	}
-	if(amp_good){
 	    prop_grid_stat(aper->ampground, aper->locs->stat, aper->amp->p, 1,
 			   parms->evl.misreg[0]-parms->aper.misreg[0],
 			   parms->evl.misreg[1]-parms->aper.misreg[1],
