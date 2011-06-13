@@ -554,17 +554,13 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	if(redraw){
 	    cairo_t *cr2=cr;
 	    cr=cairo_create(drawdata->cacheplot);
+	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
+	    cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
+	    cairo_set_line_width(cr,linewidth);
 	    //Blank it first.
 	    cairo_set_source_rgba(cr, 1.,1.,1.,1.);
 	    cairo_rectangle(cr, 0, 0, new_width, new_height);
 	    cairo_fill(cr);
-	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
-	    cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
-	    cairo_set_line_width(cr,linewidth);
-	    cairo_rectangle(cr, 0, 0, new_width, new_height);
-	    cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 0.1);
-	    cairo_fill(cr);
-
 #endif
 	if(!drawdata->style_pts){
 	    drawdata->style_pts=calloc(drawdata->npts, sizeof(int));//save the styles for legend
