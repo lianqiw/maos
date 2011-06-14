@@ -153,7 +153,9 @@ static int read_fifo(FILE *fp){
 		int nx=drawdata->nx;
 		int ny=drawdata->ny;
 		drawdata->p0=malloc(sizeof(double)*nx*ny);
-		FILE_READ(drawdata->p0, nx*ny*sizeof(double));
+		if(nx*ny>0){
+		    FILE_READ(drawdata->p0, nx*ny*sizeof(double));
+		}
 	    }
 	    break;
 	case FIFO_POINTS:
@@ -167,7 +169,9 @@ static int read_fifo(FILE *fp){
 		drawdata->grid=1;
 		drawdata->pts=realloc(drawdata->pts, drawdata->npts*sizeof(dmat*));
 		drawdata->pts[ipts]=dnew(nptsx, nptsy);
-		FILE_READ(drawdata->pts[ipts]->p, sizeof(double)*nptsx*nptsy);
+		if(nptsx*nptsy>0){
+		    FILE_READ(drawdata->pts[ipts]->p, sizeof(double)*nptsx*nptsy);
+		}
 	    }
 	    break;
 	case FIFO_STYLE:

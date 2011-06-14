@@ -69,6 +69,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
 	for(int isim=simstart; isim<simend; isim++){
+	    double cpu_evl, cpu_wfs, cpu_recon, cpu_cachedm, cpu_all;
 	    ck_0=myclockd();
 	    simu->isim=isim;
 	    simu->status->isim=isim;
@@ -102,13 +103,8 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		thread_pool_wait(&group);
 		shift_grad(simu);//before filter()
 		filter(simu);//updates dmreal, so has to be after prefevl/wfsgrad is done.
-#if defined(__linux__)
-		if(simu->nthread>1 && !detached){
-		    info2("CPU Usage: %.2f\n", read_self_cpu());
-		}
-#endif
+		cpu_all=read_self_cpu();
 	    }else{//do the big loop in serial mode.
-		double cpu_evl, cpu_wfs, cpu_recon, cpu_cachedm;
 		read_self_cpu();//initialize CPU usage counter
 		if(CL){
 		    perfevl(simu);//before wfsgrad so we can apply ideal NGS modes
@@ -131,14 +127,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    perfevl(simu);
 		    cpu_evl=read_self_cpu();
 		}
-#if defined(__linux__)
-		if(simu->nthread>1 && !detached){
-		    fprintf(stderr,"CPU Usage: WFS:%.2f Recon:%.2f CACHE: %.2f"
-			    " EVAL:%.2f Mean:%.2f\n",
-			    cpu_wfs, cpu_recon, cpu_evl, cpu_cachedm,
-			    (cpu_wfs+cpu_recon+cpu_evl+cpu_cachedm)*0.25);
-		}
-#endif
 	    }
 	    ck_end=myclockd();
 	    long steps_done=iseed*(simend-simstart)+(isim+1-simstart);
@@ -161,8 +149,17 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #if defined(__linux__) || defined(__APPLE__)
 		scheduler_report(simu->status);
 #endif
+		print_progress(simu);
+#if defined(__linux__)
+		if(parms->dbg.parallel){
+		    info2("CPU Usage: %.2f\n", cpu_all);
+		}else{
+		    info2("CPU Usage: WFS:%.2f Recon:%.2f CACHE: %.2f EVAL:%.2f Mean:%.2f\n",
+			  cpu_wfs, cpu_recon, cpu_evl, cpu_cachedm,
+			  (cpu_wfs+cpu_recon+cpu_evl+cpu_cachedm)*0.25);
+		}
+#endif
 	    }
-	    print_progress(simu);
 	    if(parms->pause){//does not work.
 		info2("Press Enter to continue.\n");
 		while(getchar()!=0x0a);

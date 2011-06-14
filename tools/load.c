@@ -15,6 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+/**
+   This routine is a matlab script helper. It launches matlab scripts and
+   supervise it. The job is controlled by scheduler.
+ */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>

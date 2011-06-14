@@ -389,7 +389,7 @@ void X(cp)(X(mat) **out0, const X(mat) *in){
 	X(mat) *out=*out0;
 	memcpy(out->p, in->p, in->nx*in->ny*sizeof(T));
     }else{
-	X(free)(*out0); *out0=NULL;
+	X(zero)(*out0);
     }
 }
 

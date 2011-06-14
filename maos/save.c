@@ -1,3 +1,20 @@
+/*
+  Copyright 2009, 2010, 2011 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
 /**
  \file save.c Collects routines that does save and plotting to clean
  up recon.c, wfsgrad.c and perfevl.c etc.  */
@@ -38,18 +55,24 @@ void save_recon(SIM_T *simu){
     if(parms->plot.run){
 	if(parms->sim.recon==0){
 	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
-		drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, NULL,
-			"Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
+		if(simu->opdr->p[i]){
+		    drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, NULL,
+			    "Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
+		}
 	    }
 	    for(int i=0; simu->dmfit_hi && i<simu->dmfit_hi->nx; i++){
-		drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,NULL,
-			"DM Fitting Output","x (m)", "y (m)","Fit %d",i);
+		if(simu->dmfit_hi->p[i]){
+		    drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,NULL,
+			    "DM Fitting Output","x (m)", "y (m)","Fit %d",i);
+		}
 	    }
 	}
 	for(int idm=0; simu->dmerr_hi && idm<parms->ndm; idm++){
-	    drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
-		    "DM Error Signal (Hi)","x (m)","y (m)",
-		    "Err Hi %d",idm);
+	    if(simu->dmerr_hi->p[idm]){
+		drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
+			"DM Error Signal (Hi)","x (m)","y (m)",
+			"Err Hi %d",idm);
+	    }
 	}
     }
     if(parms->plot.run && simu->Merr_lo){
@@ -88,8 +111,10 @@ void save_recon(SIM_T *simu){
 	    }
 	    if(parms->plot.opdx){ //draw opdx
 		for(int i=0; i<opdx->nx; i++){
-		    drawopd("Recon", recon->xloc[i], opdx->p[i]->p, NULL,
-			    "Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
+		    if(opdx->p[i]){
+			drawopd("Recon", recon->xloc[i], opdx->p[i]->p, NULL,
+				"Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
+		    }
 		}
 	    }
 	    if(!parms->sim.fitonly){

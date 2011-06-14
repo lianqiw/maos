@@ -231,7 +231,6 @@ static void inline
 draw_point(cairo_t *cr, double ix, double iy, long style, double size){
     double size1=size+1;
     //It is important to round ix, iy to have right symbols.
-    info("ix=%g, iy=%g, round(ix)=%g, round(iy)=%g\n", ix, iy, round(ix), round(iy));
     ix=(ix);
     iy=(iy); 
     switch(style){
@@ -388,6 +387,9 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     if(!drawdata->limit){
 	update_limit(drawdata);
+    }
+    if(drawdata->cumulast!=drawdata->cumu || drawdata->cumuquadlast != drawdata->cumuquad){
+	drawdata->drawn=0;
     }
     int widthim, heightim;
     double xmin=drawdata->limit[0];
@@ -559,7 +561,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	//center of plot. Important.
 	ncx=(double)new_width*0.5 - drawdata->ncxoff;
 	ncy=(double)new_height*0.5 - drawdata->ncyoff;
-	info("new_offx=%d, new_offy=%d\n", new_offx, new_offy);
 	if(redraw){
 	    cairo_t *cr2=cr;
 	    cr=cairo_create(drawdata->cacheplot);
@@ -593,14 +594,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	//computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim
 	int icumu=(int)drawdata->icumu;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
-	    dmat *pts=drawdata->pts[ipts];
-	    double *ptsx=NULL, *ptsy=NULL;
-	    if(pts->ny==2){
-		ptsx=pts->p;	
-		ptsy=ptsx+pts->nx;
-	    }else{
-		ptsy=pts->p;
-	    }
 	    if(drawdata->nstyle>1){
 		PARSE_STYLE(drawdata->style[ipts]);
 	    }else if(drawdata->nstyle==0){
@@ -609,6 +602,16 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    //save the styles for legend
 	    drawdata->style_pts[ipts]=style | connectpts<<3 |color << 8 |(int)(size/sqrt(zoomx))<<4;
 	    set_color(cr, color);
+
+	    dmat *pts=drawdata->pts[ipts];
+	    if(!pts || pts->nx==0 || pts->ny==0) continue;
+	    double *ptsx=NULL, *ptsy=NULL;
+	    if(pts->ny==2){
+		ptsx=pts->p;	
+		ptsy=ptsx+pts->nx;
+	    }else{
+		ptsy=pts->p;
+	    }
 	    int ips0=0;
 	    if(drawdata->cumu && icumu<pts->nx){
 		ips0=icumu;
@@ -752,7 +755,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double ticv=(tic1+dtic*itic);
 	double val=ticv*pow(10,order);
 	double frac=(val-xmin0)/sep;
-	double xpos=xoff+widthim*frac;info("xpos=%g, round(xpos)=%g\n", xpos-xoff, round(xpos-xoff));
+	double xpos=xoff+widthim*frac;
 	//draw the tic
 	cairo_move_to(cr,xpos,yoff+heightim);
 	if(fabs(frac)>0.01 && fabs(frac)<0.99){
@@ -782,7 +785,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double ticv=(tic1+dtic*itic);
 	double val=ticv*pow(10,order);
 	double frac=(val-ymin0)/sep;
-	double ypos=yoff+heightim*(1-frac);info("ypos=%g, round(ypos)=%g\n", ypos-yoff, round(ypos-yoff));
+	double ypos=yoff+heightim*(1-frac);
 	//draw the tic
 	if(fabs(frac)>0.01 && fabs(frac)<0.99){
 	    cairo_move_to(cr,xoff,ypos);
@@ -926,6 +929,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     cairo_destroy(cr);
     drawdata->icumulast=drawdata->icumu;
     drawdata->cumulast=drawdata->cumu;
+    drawdata->cumuquadlast=drawdata->cumuquad;
     drawdata->zoomxlast=drawdata->zoomx;
     drawdata->zoomylast=drawdata->zoomy;
     drawdata->drawn=1;

@@ -288,8 +288,9 @@ int init_sockaddr (struct sockaddr_in *name,
     }
 }
 /**
-   To open a port and connect to scheduler
-*/
+   To open a port and connect to scheduler. This requires host name lookup and
+   can not be compiled statically, so do not put it in scheduler_client.c
+ */
 int scheduler_connect(int ihost, int block, int mode){
     /*
       mode=0: read/write

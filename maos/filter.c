@@ -275,7 +275,7 @@ void filter_cl(SIM_T *simu){
 	}
 	    break;
 	case 2:{ //type II with lead filter
-	    info("LoWFS DM output\n");
+	    //info("LoWFS DM output\n");
 	    typeII_filter(simu->MtypeII_lo, simu->gtypeII_lo, simu->dtlo, simu->Merr_lo);
 	    //second integrator, merged to LGS integrator.
 	    if(parms->sim.fuseint){

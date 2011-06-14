@@ -216,6 +216,8 @@ void maxmindbl(const double *restrict p, long N,
 	if(!isnan(p[i]) && p[i]>a) a=p[i];
 	if(!isnan(p[i]) && p[i]<b) b=p[i];
     }
+    if(isinf(a)) a=0;
+    if(isinf(b)) b=0;
     if(max) *max=a;
     if(min) *min=b;
 }

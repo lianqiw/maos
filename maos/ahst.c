@@ -732,7 +732,8 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
    \todo switch to use mode vectors
 */
 void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
-    if(!M) return;
+    if(!M || !M->p[0]) return;
+    assert(M->nx==1 && M->ny==1);
     double scale=recon->ngsmod->scale;
     //The MCC_fcp depends weakly on the aperture sampling.
     double MCC_fcp=recon->ngsmod->aper_fcp;
@@ -741,14 +742,15 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     const int ndm=recon->ndm;
     if(!*dmc){
 	*dmc=dcellnew(ndm,1);
-	for(int idm=0; idm<ndm; idm++){
+    }
+    for(int idm=0; idm<ndm; idm++){
+	if(!(*dmc)->p[idm]){
 	    (*dmc)->p[idm]=dnew(recon->aloc[idm]->nloc, 1);
 	}
     }
 
     if(ndm>2) error("Error Usage\n");
     //first dm
-    assert(M->nx==1 && M->ny==1);
     double *pm=M->p[0]->p;
     if(ndm==1){
 	if(M->p[0]->nx!=2) error("Invalid mode\n");

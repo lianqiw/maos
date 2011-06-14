@@ -126,14 +126,8 @@ retry:
 	    close(fd);
 	    if(pfifo){
 		return 0;
-	    }else{
-		warning("fopen failed\n");
 	    }
-	}else{
-	    warning("open failed\n");
 	}
-    }else{
-	warning("fifo is empty\n");
     }
     sleep(1);
     retry++;
@@ -183,7 +177,7 @@ inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
 			     FILE *fp         /**<Pointer to the File*/
 			     ){
  retry:
-    if(fwrite(ptr,size,nmemb,fp)!=nmemb){
+    if(nmemb && fwrite(ptr,size,nmemb,fp)!=nmemb){
 	perror("fifo_write");
 	if(errno==EAGAIN || errno==EWOULDBLOCK){
 	    sleep(1);

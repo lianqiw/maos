@@ -109,6 +109,7 @@ struct drawdata_t{
     int drawn;//whether we have been drawn. 
     int cumu;//plot cumulative mean.
     int cumuquad;//make cumulative quadrature
+    int cumuquadlast;
     //icumu has to be double because it is used by the GtkSpin
     double icumu;//plot cumulative mean from this time step if cumu!=0
     double icumulast;//plot cumulative mean from this time step if cumu!=0
