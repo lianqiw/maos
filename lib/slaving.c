@@ -526,7 +526,6 @@ spcell* act_float_interp(loc_t **aloc, icell *actfloat){
 		long mapx=(long)round((locx[iact]-ox)*dx1);
 		long mapy=(long)round((locy[iact]-oy)*dx1);
 		int count2=count;
-		double *px0=px+count;//record starting position
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
 			if((idx!=0 && idy!=0) || (idx==0 && idy==0)){

@@ -69,7 +69,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
 	for(int isim=simstart; isim<simend; isim++){
-	    double cpu_evl, cpu_wfs, cpu_recon, cpu_cachedm, cpu_all;
+	    double cpu_evl=0, cpu_wfs=0, cpu_recon=0, cpu_cachedm=0, cpu_all=0;
 	    ck_0=myclockd();
 	    simu->isim=isim;
 	    simu->status->isim=isim;
