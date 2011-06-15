@@ -1543,17 +1543,52 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     parms->pause=arg->pause;
     parms->force=arg->force;
-    info2("There are %d simulation seeds: ",parms->sim.nseed);
+    {
+	//Remove seeds that are already done.
+	char fn[80];
+	int iseed=0; 
+	int jseed=0;
+	parms->fdlock=calloc(parms->sim.nseed, sizeof(int));
+	for(iseed=0; iseed<parms->sim.nseed; iseed++){
+	    snprintf(fn, 80, "Res_%d.done",parms->sim.seeds[iseed]);
+	    if(exist(fn) && !parms->force){
+		parms->fdlock[iseed]=-1;
+		warning2("Skip seed %d because %s exist.\n", parms->sim.seeds[iseed], fn);
+	    }else{
+	    	snprintf(fn, 80, "Res_%d.lock",parms->sim.seeds[iseed]);
+		parms->fdlock[iseed]=lock_file(fn, 0, 0);
+		if(parms->fdlock[iseed]<0){
+		    warning2("Skip seed %d because it is already running.\n",
+			     parms->sim.seeds[iseed]);
+		}else{
+		    cloexec(parms->fdlock[iseed]);
+		    if(jseed!=iseed){
+			parms->sim.seeds[jseed]=parms->sim.seeds[iseed];
+			parms->fdlock[jseed]=parms->fdlock[iseed];
+		    }
+		    jseed++;
+		}
+	    }
+	}
+	if(jseed!=parms->sim.nseed){
+	    info2("Skip %d seeds.\n", parms->sim.nseed - jseed);
+	}
+	parms->sim.nseed=jseed;
+	if(parms->sim.nseed<1){
+	    warning("There are no seed to run. Exit\n");
+	    scheduler_finish(0);
+	    raise(SIGUSR1);
+	    _exit(1);
+	}
+    }
+    info2("There are %d valid simulation seeds: ",parms->sim.nseed);
     for(int i=0; i<parms->sim.nseed; i++){
 	info2(" %d", parms->sim.seeds[i]);
     }
     info2("\n");
-    if(parms->sim.nseed<1){
-	info2("Seed is empty. Nothing to be done. Will exit\n");
-	raise(SIGUSR1);
-    }
-    if(parms->save.gcovp<10){
-	warning("parms->save.gcovp=%d is too small. You will fill your disk!\n",
+  
+    if(parms->save.ngcov>0 && parms->save.gcovp<10){
+	warning("parms->save.gcovp=%d is too small. It may fill your disk!\n",
 		parms->save.gcovp);
     }
     if(parms->save.gcovp>parms->sim.end){

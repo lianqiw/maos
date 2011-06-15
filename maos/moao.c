@@ -104,12 +104,12 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	if(parms->moao[imoao].actstuck){
 	    recon->moao[imoao].actstuck=icellnew(1,1);
 	    recon->moao[imoao].actstuck->p[0]=act_coord2ind(recon->moao[imoao].aloc, parms->moao[imoao].actstuck);
-	    act_stuck(&recon->moao[imoao].aloc, recon->moao[imoao].HA, recon->moao[imoao].actstuck);
+	    act_stuck(&recon->moao[imoao].aloc, recon->moao[imoao].HA, NULL, recon->moao[imoao].actstuck);
 	}
 	if(parms->moao[imoao].actfloat){
 	    recon->moao[imoao].actfloat=icellnew(1,1);
 	    recon->moao[imoao].actfloat->p[0]=act_coord2ind(recon->moao[imoao].aloc, parms->moao[imoao].actfloat);
-	    act_float(&recon->moao[imoao].aloc, &recon->moao[imoao].HA, recon->moao[imoao].actfloat);
+	    act_float(&recon->moao[imoao].aloc, &recon->moao[imoao].HA, NULL, recon->moao[imoao].actfloat);
 	}
 
 	if(parms->moao[imoao].lrt_ptt){

@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <utime.h>
 #include <fcntl.h>           /* For O_* constants */
 #include <limits.h>
@@ -389,7 +390,7 @@ char* (*strdup0)(const char *)=strdup;
 
 void remove_file_older(const char *fndir, long sec){
     /**
-       Remove files that are older than sec seconds in folder fndir.
+       Remove files that are older than sec seconds in folder fndir. If sec==0, remove everything.
      */
     DIR *dir=opendir(fndir);
     if(!dir){
@@ -401,7 +402,7 @@ void remove_file_older(const char *fndir, long sec){
     long sec2=myclocki()-sec;
     while((dp=readdir(dir))){
 	snprintf(fnfull,PATH_MAX,"%s/%s",fndir,dp->d_name);
-	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && buf.st_mtime<sec2){
+	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && (buf.st_mtime<=sec2 || sec==0)){
 	    remove(fnfull);
 	    info2("Remove %s. %ld days old\n", fnfull, (myclocki()-buf.st_mtime)/3600/24);
 	}
@@ -488,4 +489,16 @@ void mypause(void){
     info2("Press ENTER key to continue.\n");
     int ans;
     while((ans=getchar())!='\n');
+}
+/**
+   Return available  space of mounted file system in bytes.
+*/
+long available(const char *path){
+    struct statvfs buf;
+    if(statvfs(path, &buf)){
+	perror("statvfs");
+	return 0;
+    }else{
+	return (long)buf.f_bsize * (long)buf.f_bavail;
+    }
 }

@@ -183,7 +183,9 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
     return Wa;
 }
 /**
-   compute NGS mode removal from LGS commands using aperture weighting.*/
+   compute NGS mode removal Pngs from LGS commands using aperture weighting. Pngs=(MCC)^-1 (Hm'*W*Ha)
+
+*/
 static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon, 
 		     APER_T *aper, int use_ploc){
 
@@ -249,19 +251,21 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 	    double hc = parms->dm[idm].ht;
 	    double displacex=thetax*hc;
 	    double displacey=thetay*hc;
-	    if(!parms->dm[idm].isground || !HatGround){
+	    if(parms->dm[idm].isground && HatGround){
+		info("Reusing HatGround\n");
+		Hat->p[idm]=spref(HatGround);
+	    }else{
 		//from DM to ploc (plocs) science beam
 		Hat->p[idm]=mkhb(recon->aloc[idm], loc, NULL, displacex,displacey,1.,0,0);
 		if(parms->dm[idm].isground){
 		    HatGround=spref(Hat->p[idm]);
 		}
-	    }else{
-		Hat->p[idm]=spref(HatGround);
 	    }
 	}
 	spcellmulmat(&HatWHmt,Hat,modc,wt[ievl]);
 	spcellfree(Hat);
     }
+    spfree(HatGround);
     dcell *IMCC=dcellnew(1,1);
     IMCC->p[0]=dref(ngsmod->IMCC);
     dcell *Pngs=NULL;
@@ -275,7 +279,9 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     return Pngs;
 }
 /**
-   compute NGS mode removal from LGS commands using aperture weighting.*/
+   compute tip/tilt mode removal from each DM commands using aperture
+   weighting. Ptt=(MCC_TT)^-1 *(Hmtt * W * Ha)
+*/
 static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon, 
 			    APER_T *aper, int use_ploc){
     NGSMOD_T *ngsmod=recon->ngsmod;
@@ -561,7 +567,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	dwrite(recon->ngsmod->MCC, "%s/ahst_MCC", dirsetup);
     }
   
-    ngsmod->Mdm=ngsmod_m(parms,recon);
+    ngsmod->Modes=ngsmod_m(parms,recon);
     /*
        W is recon->saneai;
        Rngs=(M'*G'*W*G*M)^-1*M'*G'*W
@@ -598,23 +604,20 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	if(parms->dbg.wamethod==0){
 	    info("Wa using DM mode\n");
 	    tic;
-	    
 	    ngsmod->Wa=ngsmod_Wa(parms,recon,aper,0);
-	    {
-		/*
-		  Add tikhonov regularization. H is from aloc to some other loc. 
-		  the eigen value of H'*amp*H is about 4/aloc->nloc.
-		 */
-		int nact=0;
-		for(int idm=0; idm<parms->ndm; idm++){
-		    nact+=recon->aloc[idm]->nloc;
-		}
-		double maxeig=4./nact;
-		spcelladdI(ngsmod->Wa, 1e-9*maxeig);
+	    /*
+	      Add tikhonov regularization. H is from aloc to some other loc. 
+	      the eigen value of H'*amp*H is about 4/aloc->nloc.
+	    */
+	    int nact=0;
+	    for(int idm=0; idm<parms->ndm; idm++){
+		nact+=recon->aloc[idm]->nloc;
 	    }
-	    //spcelltikcr(ngsmod->Wa, 1e-9);//Always do this. Wa is not SPD.
+	    double maxeig=4./nact;
+	    spcelladdI(ngsmod->Wa, 1e-9*maxeig);
+	    
 	    toc("Wa");
-	    ngsmod->Pngs=dcellpinv(ngsmod->Mdm, NULL,ngsmod->Wa);
+	    ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL,ngsmod->Wa);
 	    toc("Pngs");
 	    if(parms->tomo.ahst_rtt){
 		ngsmod->Ptt=dcellnew(parms->ndm,1);
@@ -636,7 +639,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    }
 	}
     }else if(parms->tomo.ahst_wt==3){//Identity weighting.
-	ngsmod->Pngs=dcellpinv(ngsmod->Mdm, NULL,NULL);
+	ngsmod->Pngs=dcellpinv(ngsmod->Modes, NULL,NULL);
 	if(parms->tomo.ahst_rtt){
 	    ngsmod->Ptt=dcellnew(parms->ndm,1);
 	    for(int idm=0; idm<ndm; idm++){
@@ -648,15 +651,28 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }else{
 	error("Invalid parms->tomo.ahst_wt=%d\n", parms->tomo.ahst_wt);
     }
+    if(recon->actstuck){
+	warning2("Apply stuck actuators to Pngs, Ptt\n");
+	act_stuck(recon->aloc, NULL, recon->ngsmod->Pngs, recon->actstuck);
+	act_stuck(recon->aloc, NULL, recon->ngsmod->Ptt, recon->actstuck);
+	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actstuck);
+    }
+    if(recon->actfloat){
+	warning2("Apply float actuators to Pngs, Ptt\n");
+	act_float(recon->aloc, NULL, recon->ngsmod->Pngs, recon->actfloat);
+	act_float(recon->aloc, NULL, recon->ngsmod->Ptt, recon->actfloat);
+	act_zero(recon->aloc, recon->ngsmod->Modes, recon->actfloat);
+    }
     if(parms->save.setup){
 	//ahst stands for ad hoc split tomography
     	dcellwrite(recon->ngsmod->GM,  "%s/ahst_GM",  dirsetup);
 	dcellwrite(recon->ngsmod->Rngs,"%s/ahst_Rngs",dirsetup);
 	dcellwrite(recon->ngsmod->Pngs,"%s/ahst_Pngs",dirsetup);
 	dcellwrite(recon->ngsmod->Ptt, "%s/ahst_Ptt", dirsetup);
-	dcellwrite(recon->ngsmod->Mdm, "%s/ahst_Mdm", dirsetup);
+	dcellwrite(recon->ngsmod->Modes, "%s/ahst_Modes", dirsetup);
 	spcellwrite(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
     }
+  
 }
 /**
    used in performance evaluation on science opds. accumulate to out*/

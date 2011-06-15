@@ -893,32 +893,7 @@ void embedc_out(const dcomplex *out, double *in, long nin, long *embed){
 	in[i]+=creal(out[embed[i]]);
     }
 }
-/**
-   Try to lock file for each seed. If file is already locked by other process,
-   will not run that seed tox not step over other process's feet.
-*/
-int lock_seeds(PARMS_T *parms){
-    char fn[80];
-    int to_run=0;
-    parms->fdlock=calloc(parms->sim.nseed, sizeof(int));
-    for(int iseed=0; iseed<parms->sim.nseed; iseed++){
-	snprintf(fn, 80, "Res_%d.done",parms->sim.seeds[iseed]);
-	if(exist(fn) && !parms->force){
-	    warning2("%s exist. Will not run maos.\n", fn);
-	    continue;
-	}
-	snprintf(fn, 80, "Res_%d.lock",parms->sim.seeds[iseed]);
-	parms->fdlock[iseed]=lock_file(fn, 0, 0);
-	if(parms->fdlock[iseed]<0){
-	    warning2("MAOS is already running with seed %d. Skip\n",
-		    parms->sim.seeds[iseed]);
-	}else{
-	    cloexec(parms->fdlock[iseed]);
-	    to_run++;
-	}
-    }
-    return to_run;
-}
+
 /**
    Estimate anisoplanatic angle theta0 from Fried parameter r0, layer height and
    weights.  */

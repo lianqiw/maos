@@ -196,8 +196,9 @@ void refresh(PROC_T *p){
     case S_FINISH://Finished
 	p->done=1;
 	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
-	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);//progress bar color.
-	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_NORMAL,&green);//progress bar color.
+	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);//progress bar color.(filled bkgrnd)
+	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&green);//progress bar color.(empty bkgrnd)
+	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Finished");
 	notify_user(p);
 	break;
     case S_CRASH://Error

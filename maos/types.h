@@ -179,7 +179,7 @@ typedef struct NGSMOD_T{
     dcell *GM;      /**<ngsmod vector to gradient operator*/
     dcell *Rngs;    /**<NGS reconstructor from NGS grad to NGS mod vec. pinv of GM*/
     dcell *Pngs;    /**<Project DM command to NGS modes */
-    dcell *Mdm;     /**<DM vector for the modes*/
+    dcell *Modes;   /**<DM vector for the modes*/
     dcell *Ptt;     /**<Invidual DM tip/tilt removal.*/
     spcell *Wa;     /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
@@ -304,6 +304,7 @@ typedef struct RECON_T{
     spcell *ZZT;       /**<single point piston constraint in tomography.*/
     dcell *fitNW;      /**<null modes for DM fit.*/
     spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
+    spcell *actinterp; /**<Interpolation operator for floating actuators. Slaving does not work well in CG. */
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
     spcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
     spcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/

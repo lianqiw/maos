@@ -815,9 +815,6 @@ static void scheduler(void){
 		check_jobs();
 	    }
 	    monitor_send_load();
-#if USE_POSIX_SHM == 1	    
-	    shm_free_unused(NULL,3600);//free shm that are more than 1 hour.
-#endif
 	    lasttime3=thistime;
 	}
 	lasttime=thistime;

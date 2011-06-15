@@ -196,6 +196,10 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    if(!parms->dm[idm].actfloat) continue;
 	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actfloat);
 	}
+	recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
+	if(parms->save.setup){
+	    spcellwrite(recon->actinterp, "%s/actinterp", dirsetup);
+	}
     }
 }
 /**
@@ -462,14 +466,14 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     }
     if(recon->actstuck){
 	warning2("Apply stuck actuators to GA\n");
-	act_stuck(recon->aloc, recon->GA, recon->actstuck);
+	act_stuck(recon->aloc, recon->GA, NULL, recon->actstuck);
     	if(parms->save.setup){
 	    spcellwrite(recon->GA,"%s/GA_stuck",dirsetup);
 	}
     }
     if(recon->actfloat){
 	warning2("Apply float actuators to GA\n");
-	act_float(recon->aloc, &recon->GA, recon->actfloat);
+	act_float(recon->aloc, &recon->GA, NULL, recon->actfloat);
 	if(parms->save.setup){
 	    spcellwrite(recon->GA,"%s/GA_float",dirsetup);
 	}
@@ -1442,14 +1446,14 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
     }
     if(recon->actstuck){
 	warning2("Apply stuck actuators to HA\n");
-	act_stuck(recon->aloc, recon->HA, recon->actstuck);
+	act_stuck(recon->aloc, recon->HA, NULL, recon->actstuck);
     	if(parms->save.setup){
 	    spcellwrite(recon->HA,"%s/HA_stuck",dirsetup);
 	}
     }
     if(recon->actfloat){
 	warning2("Apply float actuators to HA\n");
-	act_float(recon->aloc, &recon->HA, recon->actfloat);
+	act_float(recon->aloc, &recon->HA, NULL, recon->actfloat);
 	if(parms->save.setup){
 	    spcellwrite(recon->HA,"%s/HA_float",dirsetup);
 	}
@@ -2183,10 +2187,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    powfs[ipowfs].GS0=NULL;
 	}
     }
-    //Free memory that will not be used anymore in simulation
-    if(recon->ngsmod && recon->ngsmod->Mdm) {
-	dcellfree(recon->ngsmod->Mdm);
-    }
+
     /*
       The following arrys are not used after preparation is done.
     */
@@ -2494,7 +2495,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	dcellfree(recon->ngsmod->GM);
 	dcellfree(recon->ngsmod->Rngs);
 	dcellfree(recon->ngsmod->Pngs);
-	dcellfree(recon->ngsmod->Mdm);
+	dcellfree(recon->ngsmod->Modes);
 	dfree(recon->ngsmod->MCC);
 	dfree(recon->ngsmod->MCC_OA);
 	dfree(recon->ngsmod->IMCC);

@@ -78,7 +78,7 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
     case 0:
 	break;//nothing to do.
     case 1:
-	ngsmod2dm(dmval, simu->recon, low_val, gain);
+	dcellmm(dmval, simu->recon->ngsmod->Modes, low_val, "nn", gain);
 	break;
     case 2:
 	dcellmm(dmval, simu->recon->MVModes, low_val, "nn", gain);
@@ -230,6 +230,7 @@ void filter_cl(SIM_T *simu){
       a(n)=0.5*(a(n-1)+a(n-2))+ep*e(n-2);
     */
     const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
     assert(parms->sim.closeloop);
     if(parms->save.dm){
 	cellarr_dcell(simu->save->dmreal, simu->dmreal);
@@ -305,11 +306,21 @@ void filter_cl(SIM_T *simu){
     if(simu->hyst){
 	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
     }
+    if(recon->actstuck){
+	act_stuck_cmd(recon->aloc, simu->dmreal, recon->actstuck);
+    }
+    if(recon->actinterp){
+	dcell *tmp=NULL;
+	spcellmulmat(&tmp, recon->actinterp, simu->dmreal, 1);
+	dcellcp(&simu->dmreal, tmp);
+	dcellfree(tmp);
+    }
 }
 /**
    filter DM commands in open loop mode by simply copy the output
  */
 void filter_ol(SIM_T *simu){
+    RECON_T *recon=simu->recon;
     assert(!simu->parms->sim.closeloop);
     if(simu->dmerr_hi){
 	dcellcp(&simu->dmcmd, simu->dmerr_hi);
@@ -325,6 +336,15 @@ void filter_ol(SIM_T *simu){
     //hysterisis.
     if(simu->hyst){
 	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
+    }
+    if(recon->actstuck){
+	act_stuck_cmd(recon->aloc, simu->dmreal, recon->actstuck);
+    }
+    if(recon->actinterp){
+	dcell *tmp=NULL;
+	spcellmulmat(&tmp, recon->actinterp, simu->dmreal, 1);
+	dcellcp(&simu->dmreal, tmp);
+	dcellfree(tmp);
     }
     if(simu->parms->save.dm){
 	cellarr_dcell(simu->save->dmreal, simu->dmreal);

@@ -110,11 +110,8 @@ int main(int argc, char **argv){
     char *scmd=argv2str(argc,argv);
     strcpy(argv[0],fn);
     free(fn);
-    ARG_T* arg=parse_args(argc,argv);
-    /*In detach mode send to background and disable drawing*/
+    ARG_T* arg=parse_args(argc,argv);//does chdir
     if(arg->detach){
-	//disable_draw=1;//disable drawing.
-	//info2("Sending to background\n");
 	daemonize();
 	fprintf(stderr, "%s\n", scmd);
     }
@@ -132,6 +129,7 @@ int main(int argc, char **argv){
 
     //setting up parameters before asking scheduler to check for any errors.
     PARMS_T *parms=setup_parms(arg);
+    
 #if USE_MKL==1
     if(arg->nthread==1){
 	int one=1;
@@ -139,16 +137,10 @@ int main(int argc, char **argv){
 	omp_set_num_threads(&one);
     }
 #endif
+
     curparms = parms;
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
-  
-    if(!lock_seeds(parms)){
-	warning("There are no seed to run. Exit\n");
-	scheduler_finish(0);
-	maos_signal_handler(SIGUSR1);
-	return 1;
-    }
-
+    
     //register signal handler
     register_signal_handler(maos_signal_handler);
  

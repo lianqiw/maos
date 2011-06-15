@@ -34,7 +34,6 @@ void plotloc(char *fig, const PARMS_T *parms,
 	     loc_t *loc, double ht, char *format,...);
 void rename_file(int sig);
 void maos_signal_handler(int sig);
-void wait_cpu(int nthread);
 ARG_T* parse_args(int argc, char **argv);
 cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl);
 ccell *psfcomp(const dmat *iopdevl, const double *restrict amp,
@@ -45,7 +44,6 @@ void embed_in(double *out, const double *in, long nin, long *embed);
 void embed_out(const double *out, double *in, long nin, long *embed);
 void embedc_in(dcomplex *out, const double *in, long nin, long *embed);
 void embedc_out(const dcomplex *out, double *in, long nin, long *embed);
-int lock_seeds(PARMS_T *parms);
 double calc_aniso(double r0, int nht, double *ht, double *wt);
 double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2);
 

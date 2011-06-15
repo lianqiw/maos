@@ -57,10 +57,10 @@ void shm_unmap(void *p, int fd){
 	info2("Unmapping shared memory of size %ld.\n", (long)buf.st_size);
     }
 }
+/**
+   Unlink shared segments that are mmaped more than sec ago.
+*/
 void shm_free_older(long sec){
-    /**
-       Unlink shared segments that are mmaped more than sec ago.
-    */
     remove_file_older("/dev/shm",sec);  
 }
 
@@ -111,14 +111,12 @@ int shm_free_unused(char *fnshm, int timeout){
     return already_exist;
 }
 
-long shm_get_avail(void){
-    /**
-       returns available shm in bytes.
-     */
 
-    struct statvfs buf;
-    statvfs("/dev/shm", &buf);
-    return (long)buf.f_bsize * (long)buf.f_bavail;
+/**
+   returns available shm in bytes.
+*/
+long shm_get_avail(void){
+    return available("/dev/shm");
 }
 
 #endif
