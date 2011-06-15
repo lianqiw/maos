@@ -92,7 +92,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.bspstrehl);
     READ_INT(skyc.maxaster);
     READ_INT(skyc.maxstar);
-    readcfg_intarr_n(&parms->skyc.nwfsmax,parms->skyc.npowfs,"skyc.nwfsmax");
+    readcfg_intarr_n(&parms->skyc.nwfsmax, parms->skyc.npowfs,"skyc.nwfsmax");
     readcfg_dblarr_n(&parms->skyc.pixratio,parms->skyc.npowfs,"skyc.pixratio");
     readcfg_dblarr_n(&parms->skyc.pixblur, parms->skyc.npowfs,"skyc.pixblur");
     readcfg_intarr_n(&parms->skyc.pixpsa,  parms->skyc.npowfs,"skyc.pixpsa");
@@ -103,6 +103,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.rne);
     READ_INT(skyc.noisefull);
     READ_DBL(skyc.imperrnm);
+    READ_DBL(skyc.imperrnmb);
     READ_INT(skyc.mtchcr);
     READ_INT(skyc.mtch);
     parms->skyc.nwvl=readcfg_dblarr(&parms->skyc.qe,"skyc.qe");
@@ -114,9 +115,9 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.evlstart);
     READ_INT(skyc.phystart);
     READ_INT(skyc.gradnea);
-    char *temp, *temp1;
-    temp=readcfg_str("skyc.psd_ws"); temp1=find_file(temp);
-    parms->skyc.psd_ws=dread("%s",temp1); free(temp); free(temp1);
+    char *temp;
+    temp=readcfg_str("skyc.psd_ws"); 
+    parms->skyc.psd_ws=dread("%s",temp); free(temp);
  
     READ_DBL(skyc.zc_f);
     READ_DBL(skyc.zc_zeta);
@@ -151,13 +152,13 @@ static void setup_parms_maos(PARMS_S *parms){
     readcfg_strarr_n(&parms->maos.fnwfsloc,parms->maos.npowfs, "maos.fnwfsloc");
     readcfg_strarr_n(&parms->maos.fnwfsamp,parms->maos.npowfs, "maos.fnwfsamp");
     readcfg_strarr_n(&parms->maos.fnsaloc, parms->maos.npowfs,"maos.fnsaloc");
-    char *temp, *temp1;
-    temp=readcfg_str("maos.fnmcc"); temp1=find_file(temp);
-    parms->maos.mcc=dread("%s",temp1); free(temp); free(temp1);
+    char *temp;
+    temp=readcfg_str("maos.fnmcc"); 
+    parms->maos.mcc=dread("%s",temp); free(temp);
     parms->maos.mcc_tt=dsub(parms->maos.mcc,0,2,0,2);
 
-    temp=readcfg_str("maos.fnmcc_oa"); temp1=find_file(temp);
-    parms->maos.mcc_oa=dread("%s",temp1); free(temp); free(temp1);
+    temp=readcfg_str("maos.fnmcc_oa"); 
+    parms->maos.mcc_oa=dread("%s",temp); free(temp); 
     parms->maos.mcc_oa_tt=dsub(parms->maos.mcc_oa, 0, 2, 0, 2);
     parms->maos.mcc_oa_tt2=dsub(parms->maos.mcc_oa,0, 2, 0, 5);
     
@@ -240,30 +241,26 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }
     if(1){
 	char temp[80]; 
-	char *temp1;
 	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
-	temp1=find_file(temp); parms->skyc.psd_ngs=dread("%s",temp1); 
-	info2("Loading PSD of NGS modes from %s\n", temp1);free(temp1);
-
+	parms->skyc.psd_ngs=dread("%s",temp); 
+	info2("Loading PSD of NGS modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_TT_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
-	temp1=find_file(temp); parms->skyc.psd_tt=dread("%s",temp1); 
-	info2("Loading PSD of TT modes from %s\n", temp1);free(temp1);
-
+	parms->skyc.psd_tt=dread("%s",temp); 
+	info2("Loading PSD of TT modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_PS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
-	temp1=find_file(temp); parms->skyc.psd_ps=dread("%s",temp1); 
-	info2("Loading PSD of PS modes from %s\n", temp1);free(temp1);
+	parms->skyc.psd_ps=dread("%s",temp); 
+	info2("Loading PSD of PS modes from %s\n", temp);
     }else{
 	char temp[80]; 
-	char *temp1;
 	snprintf(temp,80, "PSD/PSD_NGS.bin");
-	temp1=find_file(temp); parms->skyc.psd_ngs=dread("%s",temp1); 
-	info2("Loading PSD of NGS modes from %s\n", temp1);free(temp1);
+	parms->skyc.psd_ngs=dread("%s",temp); 
+	info2("Loading PSD of NGS modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_TT.bin");
-	temp1=find_file(temp); parms->skyc.psd_tt=dread("%s",temp1); 
-	info2("Loading PSD of TT modes from %s\n", temp1);free(temp1);
+	parms->skyc.psd_tt=dread("%s",temp); 
+	info2("Loading PSD of TT modes from %s\n", temp);
 	snprintf(temp,80, "PSD/PSD_PS.bin");
-	temp1=find_file(temp); parms->skyc.psd_ps=dread("%s",temp1); 
-	info2("Loading PSD of PS modes from %s\n", temp1);free(temp1);
+	parms->skyc.psd_ps=dread("%s",temp); 
+	info2("Loading PSD of PS modes from %s\n", temp);
     }
     char fnconf[PATH_MAX];
     snprintf(fnconf, PATH_MAX, "skyc_%ld.conf", (long)getpid());

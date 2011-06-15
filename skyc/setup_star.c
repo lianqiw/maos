@@ -196,14 +196,18 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
     const long npowfs=parms->maos.npowfs;
     const long nwvl=parms->maos.nwvl;
+    const double r2=pow(parms->skyc.patfov/206265./2.,2);
     PDMAT(parms->skyc.rnefs,rnefs);
     for(int istar=0; istar<nstar; istar++){
 	star[istar].siglev=dnew(nwvl,npowfs);
 	star[istar].bkgrnd=dnew(npowfs,1);
 	star[istar].siglevtot=dnew(npowfs,1);
+	//Normalized angular distance
+	double th2=(pow(star[istar].thetax,2)+pow(star[istar].thetay,2))/r2;
+	//Field dependent error: nm^2=nma^2+nmb^2*theta_norm^2;
+	double imperrnm=sqrt(pow(parms->skyc.imperrnm,2)+th2*pow(parms->skyc.imperrnmb,2));
 	for(long ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    int iscircle=parms->maos.nsa[ipowfs]<=4?1:0;
-
 	    photon_flux(&star[istar].siglev->p[nwvl*ipowfs], 
 			&star[istar].siglevtot->p[ipowfs],
 			&star[istar].bkgrnd->p[ipowfs],
@@ -215,7 +219,7 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 			parms->skyc.pixtheta[ipowfs],
 			parms->maos.dt, parms->maos.za, 
 			NULL,
-			parms->skyc.imperrnm,
+			imperrnm,
 			parms->skyc.telthruput,
 			parms->skyc.qe,
 			rnefs[ipowfs][parms->skyc.ndtrat-1]);

@@ -94,8 +94,11 @@ typedef struct SKYC_S{
     double lat;      /**<Galactic latitude*/
     double lon;      /**<Galactic longitude.*/
     double catscl;   /**<Scale the catlog star count*/
-    double patfov;   /**<Patrol FoV in arcsec*/
-    double imperrnm; /**<Implementation error in nm*/
+    double patfov;   /**<Patrol FoV in arcsec (diameter)*/
+    double imperrnm; /**<Implementation error in nm in the center.*/
+    double imperrnmb;/**<Implementation error slopt in nm:
+			imperrnm(theta)=sqrt(imperrnm^2+imperrnmb^2*theta^2). The
+			location in fov, theta, is normalized by patfov/2*/
     /** The following are vectors for each powfs; */
     int *nwfsmax;    /**<maximum # of wfs for each powfs*/
     int  nwfstot;    /**<Sum of nwfsmax*/

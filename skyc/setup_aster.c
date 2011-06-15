@@ -510,16 +510,20 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
 	}
 	pimin[iaster][0]=mini;
 	pimin[iaster][1]=iaster;
+	double thres=mini*4;//This is variance.
+	double thres2=mini*4;
+	if(thres>maxerror) thres=maxerror;
+	if(thres2>maxerror) thres2=maxerror;
 	//Find upper and minimum good dtrats.
 	for(int idtrat=aster[iaster].mdtrat; idtrat<ndtrat; idtrat++){
-	    if(pres[iaster][idtrat]<mini*2){
+	    if(pres[iaster][idtrat]<thres){
 		aster[iaster].idtratmax=idtrat;
 	    }else{
 		break;
 	    }
 	}
 	for(int idtrat=aster[iaster].mdtrat; idtrat>=0; idtrat--){
-	    if(pres[iaster][idtrat]<mini*4){
+	    if(pres[iaster][idtrat]<thres2){
 		aster[iaster].idtratmin=idtrat;
 	    }else{
 		break;
