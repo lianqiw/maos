@@ -35,72 +35,35 @@ static void print_usage(void){
 	  "-o DIR, --output=DIR\n"
 	  "                  output the results to DIR.\n"
 	  "-c FILE.conf, --conf=FILE.conf\n"
-	  "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
+	  "                  Use FILE.conf as the baseline config instead of maos.conf\n"
 	  );
+    exit(0);
 }
 /**
    Parse command line arguments argc, argv
  */
 ARG_S *parse_args(int argc, char **argv){
     ARG_S *arg=calloc(1, sizeof(ARG_S));
-    static struct option long_options[]={
-	{"help",0,0,'h'},
-	{"detach",0,0,'d'},
-	{"force",0,0,'f'},
-	{"output",1,0,'o'},
-	{"nthread",1,0,'n'},
-	{"conf",1,0,'c'},
-	{"path",1,0,'p'},
-	{NULL,0,0,0}
+    ARGOPT_T options[]={
+	{"help", 'h', T_INT, 2, print_usage, NULL},
+	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
+	{"force",  'f',T_INT, 0, &arg->force, NULL},
+	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
+	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
+	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
+	{"path",   'P',T_STR, 3, addpath, NULL},
+	{NULL, 0,0,0, NULL, NULL}
     };
-    arg->nthread=NCPU2;
-    while(1){
-	int option_index = 0;
-	int c = getopt_long(argc, argv, "hdfo:n:c:p:",
-			    long_options, &option_index);
-	if(c==-1) break;
-	switch(c){
-	case 'h':
-	    print_usage();
-	    exit(0);
-	    break;
-	case 'd':
-	    arg->detach=1;
-	    break;
-	case 'f':
-	    arg->force=1; 
-	    break;
-	case 'o':
-	    if(arg->dirout){
-		error("Duplicate argument for dirout\n");
-	    }
-	    arg->dirout=strdup(optarg);
-	    break;
-	case 'n':
-	    arg->nthread=strtol(optarg,NULL,10);
-	    if(arg->nthread<=0){
-		warning("illigal nthread. set to 0.\n");
-		arg->nthread=1;
-	    }else if(arg->nthread>NCPU2){
-		warning("nthread is larger than number of cpus, reset to %d\n",NCPU2);
-		arg->nthread=NCPU2;
-	    }
-	    break;
-	case 'c':
-	    arg->conf=strdup(optarg);
-	    info2("Main config file changed to %s\n",arg->conf);
-	    break;
-	case 'p':{
-	    addpath(optarg);
-	}
-	case '?':
-	    warning("Unregonized option. exit.\n");exit(1);
-	    break;
-	default:
-	    printf("?? getopt returned 0%o ??\n", c);exit(1);
-	    break;
-	}
+    char *cmds=parse_argopt(argc, argv, options);
+    if(arg->nthread>NCPU2 || arg->nthread<=0){
+	arg->nthread=NCPU2;
     }
+    char fntmp[PATH_MAX];
+    snprintf(fntmp,PATH_MAX,"%s/skyc_%ld.conf",TEMP,(long)getpid());
+    FILE *fptmp=fopen(fntmp,"w");
+    fputs(cmds, fptmp);
+    free(cmds); cmds=NULL;
+
     if(!arg->detach){//foreground task will start immediately.
 	arg->force=1;
     }
@@ -111,7 +74,7 @@ ARG_S *parse_args(int argc, char **argv){
 	arg->dirout=strtime();
     }
     if(!arg->conf){
-	/*If -c is not specifid in path, will use nfiraos.conf*/
+	/*If -c is not specifid in path, will use maos.conf*/
 	arg->conf=strdup("maos.conf");
     }
     //Setup PATH and result directory

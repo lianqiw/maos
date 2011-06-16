@@ -39,7 +39,6 @@ int isfile(const char *fn);
 int islink(const char*fn);
 off_t flen(const char *fn);
 time_t fmtime(const char *fn);
-//void touch(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
 char *strnadd(int argc, char **argv, const char *delim);
 void expand_filename(char **fnout, const char *fn);
@@ -60,5 +59,18 @@ char *mystrdup(const char *A);
 #undef strdup
 #define strdup mystrdup //our strdup handles NULL correctly, and talk to mem.c
 #endif //USE_MEM=1
-#endif
 
+typedef struct ARGOPT_T{
+    char *name; /**<The long name*/
+    char key;   /**<The short name*/
+    int type;   /**<The type of result expected*/
+    int opt;    /**<0: the key does not need value, like -d. 
+		   1:The key needs value, like -s 1.
+		   2:The key does not need value, and the supplied val is a function pointer.
+		   3:The key needs value, and the supplied val is a function pointer.
+		*/
+    void *val;  /**<The the address to put the return result.*/
+    int *nval;  /**<If val is array, this is the counter.*/
+}ARGOPT_T;
+char *parse_argopt(int argc, char **argv, ARGOPT_T *options);
+#endif

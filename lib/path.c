@@ -40,6 +40,7 @@ typedef struct PATH_T{
    This file contains function managing the searching path for files, behaves as
    PATH in POSIX systemsx */
 static PATH_T *PATH=NULL;//privately maintained path to locate config files.
+
 /**
    Add a directory to path.
 */
@@ -50,6 +51,7 @@ void addpath(const char*path){
     node->next=PATH;
     PATH=node;
 }
+
 /**
    Remove a directory from path.
  */

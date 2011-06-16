@@ -30,7 +30,6 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 #include <getopt.h>
-#include <ctype.h>
 
 #include "maos.h"
 char *dirsetup=NULL;
@@ -441,7 +440,6 @@ static void print_usage(void){
 "\n"
 "Options: \n"
 "-h, --help        to print out this message\n"
-"-p, --pause       paulse simulation in the end of every time step\n"
 "-d, --detach      to detach from terminal and run in background\n"
 "-f, --force       force starting simulation without scheduler\n"
 "-n, --nthread=N   Use N threads, default is 1\n"
@@ -449,8 +447,10 @@ static void print_usage(void){
 "-o, --output=DIR  output the results to DIR.\n"
 "-c, --conf=FILE.conf\n"
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
-"-P, --path=dir    Add dir to the internal PATH\n"
+"-p, --path=dir    Add dir to the internal PATH\n"
+"-P, --pause       paulse simulation in the end of every time step\n"
 	  );
+    exit(0);
 }
   
 #if USE_STATIC
@@ -460,220 +460,35 @@ static __attribute__((destructor)) void deinit(){
     if(system(tmp)){}
 }
 #endif
-/**
-   Extract a string constant from the command line, and output the position where the string terminates.*/
-static char *cmd_string(char *input, char **end2){
-    char *end;
-    while(isspace(input[0]) || input[0]==';') input++;
-    if(input[0]=='\'' || input[0]== '"'){
-	end=index(input+1, input[0]);//find matching quote.
-	input[0]=' ';
-	input++;
-	if(!end){
-	    error("String does not end\n");
-	}
-    }else{
-	end=index(input, ';');
-    }
-    end[0]='\0';
-    char *out=strdup(input);
-    end[0]=' ';
-    *end2=end;
-    return out;
-}
+
 /**
    Parse command line arguments argc, argv
  */
 ARG_T * parse_args(int argc, char **argv){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
-    arg->nthread=NCPU2;//Use all cpus by default.
-    static struct option long_options[]={
-	{"help",0,0,'h'},
-	{"detach",0,0,'d'},
-	{"force",0,0,'f'},
-	{"output",1,0,'o'},
-	{"nthread",1,0,'n'},
-	{"conf",1,0,'c'},
-	{"seed",1,0,'s'},
-	{"pause",1,0,'p'},
-	{"path",1,0,'P'},
-	{NULL,0,0,0}
+    int *seeds=NULL; int nseed=0;
+    ARGOPT_T options[]={
+	{"help",   'h',T_INT, 2, print_usage, NULL},
+	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
+	{"force",  'f',T_INT, 0, &arg->force, NULL},
+	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
+	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
+	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
+	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
+	{"path",   'p',T_STR, 3, addpath, NULL},
+	{"pause",  'P',T_INT, 0, &arg->pause, NULL},
+	{NULL, 0,0,0, NULL, NULL}
     };
-    const char *short_options="hdfo:n:c:s:pP:";
- 
-    /*Roll out my own argument parsing mechanism that are more relaxed wrt how
-      arguments are supplied.*/
-    char *cmds=strnadd(argc-1, argv+1, ";");
-    char *cmds_end=cmds+strlen(cmds);
-    char *start=cmds;
-    int nseed=0; int *seeds=NULL;
-    while(start<cmds_end){
-	if(isspace(start[0]) || start[0]==';'){
-	    start[0]=' ';
-	    start++;
-	    continue;
-	}
-	if(start[0]=='-'){
-	    char *start0=start;
-	    char key='0';
-	    char *value;
-	    start++;
-	    if(start[0]=='-'){//long option, replace with short ones.
-		start++;
-		for(int i=0; (long_options[i].name); i++){
-		    if(!mystrcmp(start, long_options[i].name)){
-			key=long_options[i].val;
-			start+=strlen(long_options[i].name);
-			while(isspace(start[0]) || start[0]==';'){
-			    start[0]=' ';
-			    start++;
-			}
-			if(start[0]=='=') {
-			    start[0]=' ';
-			    start++;
-			}
-			break;
-		    }
-		}
-	    }else{
-		key=start[0];
-		start++;
-	    }
-	    char *key2=index(short_options, key);
-	    if(key=='0' || !key2){
-		continue;//not what we wanted.
-	    }
-	    if(key2[1]==':'){//has options.
-		value=start;
-		while(value[0]==';' || isspace(value[0])){
-		    value[0]=' ';
-		    value++;
-		}
-	    }else{
-		value=NULL;
-	    }
-	    switch(key){
-	    case 'h':
-		print_usage();
-		exit(0);
-		break;
-	    case 'd':
-		arg->detach=1;
-		break;
-	    case 'f':
-		arg->force=1; 
-		break;
-	    case 'o':
-		if(arg->dirout){
-		    warning("Multiple -o switches found\n");
-		    free(arg->dirout);
-		}
-		arg->dirout=cmd_string(value, &start);
-		break;
-	    case 'n':
-		arg->nthread=strtol(value, &start, 10);
-		if(arg->nthread<=0){
-		    warning("illigal nthread: %d. set to 1.\n", arg->nthread);
-		    arg->nthread=1;
-		}else if(arg->nthread>NCPU2){//We allow up to NCPU2, not NCPU
-		    warning2("nthread=%d is larger than number of cpus, reset to %d\n",
-			     arg->nthread, NCPU2);
-		    arg->nthread=NCPU2;
-		}
-		break;
-	    case 'c':
-		if(arg->conf){
-		    warning("Multiple -c switches found\n");
-		    free(arg->conf);
-		}
-		arg->conf=cmd_string(value, &start);
-		break;
-	    case 's':{
-		int seed=strtol(value, &start, 10);
-		int iseed;
-		//find duplicated seeds.
-		for(iseed=0; iseed<nseed; iseed++){
-		    if(seeds[iseed]==seed) break;
-		}
-		if(iseed==nseed){
-		    nseed++;
-		    seeds=realloc(seeds, sizeof(int)*nseed);
-		    seeds[nseed-1]=seed;
-		}
-	    }
-		break;
-	    case 'p':
-		arg->pause=1;
-		break;
-	    case 'P':{
-		char *fnpath=cmd_string(value, &start);
-		addpath(fnpath);
-		free(fnpath);
-	    }
-		break;
-	    case '?'://This is not likely.
-		warning("Unregonized option. exit.\n");exit(1);
-		break;
-	    default:
-		printf("?? getopt returned 0%o ??\n", key);exit(1);
-		break;
-	    }
-	    //Empty the string that we already parsed.
-	    memset(start0, ' ',start-start0);
-	}else if(start[0]=='='){//equal sign found
-	    //create a \n before the key.
-	    int skipspace=1;
-	    for(char *start2=start-1; start2>=cmds; start2--){
-		if(isspace(*start2) || *start2==';'){
-		    if(!skipspace){
-			*start2='\n';
-			break;
-		    }
-		}else{
-		    skipspace=0;
-		}
-	    }
-	    start++;
-	}else if(!mystrcmp(start, ".conf")){ //.conf found.
-	    //create a \n before the key.
-	    for(char *start2=start-1; start2>=cmds; start2--){
-		if(isspace(*start2) || *start2==';'){
-		    *start2='\n'; 
-		    break;
-		}
-	    }
-	    start+=5;
-	    start[0]='\n';
-	    start++;
-	}else if(start[0]=='['){//make sure we don't split brackets.
-	    char *bend=index(start+1, ']');
-	    char *bnextstart=index(start+1, '[');
-	    if(bend && (!bnextstart || bend<bnextstart)){//There is a closing bracket
-		for(; start<bend+1; start++){
-		    if(start[0]==';') start[0]=' ';
-		}
-	    }else{
-		error("Bracked is not closed\n");
-		start++;
-	    }
-	}else if(start[0]=='\'' || start[0]=='"'){//make sure we don't split strings.
-	    char *quoteend=index(start, start[0]);
-	    if(quoteend){
-		start=quoteend+1;
-	    }else{
-		warning("Quote is not closed\n");
-		start++;
-	    }
-	}else{
-	    start++;
-	}
+    char *cmds=parse_argopt(argc, argv, options);
+    if(arg->nthread>NCPU2 || arg->nthread<=0){
+	arg->nthread=NCPU2;
     }
-    
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
     FILE *fptmp=fopen(fntmp,"w");
     fputs(cmds, fptmp);
     free(cmds); cmds=NULL;
+
     if(nseed){
 	fprintf(fptmp, "\nsim.seeds=[");
 	for(int iseed=0; iseed<nseed; iseed++){

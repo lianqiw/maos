@@ -27,10 +27,6 @@
     vsnprintf(key,sizeof(key), format, ap);	\
     va_end(ap)
 
-enum{
-    T_INT=1,
-    T_DBL=2,
-};
 /**
    \file readcfg.h
 

@@ -32,6 +32,8 @@
 #include <stdarg.h>
 #include <dirent.h>
 #include <time.h>
+#include <ctype.h>
+
 #include "common.h"
 #include "thread.h"
 #include "process.h"
@@ -501,4 +503,203 @@ long available(const char *path){
     }else{
 	return (long)buf.f_bsize * (long)buf.f_bavail;
     }
+}
+/**
+   Extract a string constant from the command line, and output the position where the string terminates.*/
+static char *cmd_string(char *input, char **end2){
+    char *end;
+    while(isspace(input[0]) || input[0]==';') input++;
+    if(input[0]=='\'' || input[0]== '"'){
+	end=index(input+1, input[0]);//find matching quote.
+	input[0]=' ';
+	input++;
+	if(!end){
+	    error("String does not end\n");
+	}
+    }else{
+	end=index(input, ';');
+    }
+    end[0]='\0';
+    char *out=strdup(input);
+    end[0]=' ';
+    *end2=end;
+    return out;
+}
+/**
+   Parse command line arguments. Returns whatever is not yet parsed. Need to free the returned string.
+*/
+char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
+    
+    /*Roll out my own argument parsing mechanism that are more relaxed wrt how
+      arguments are supplied.*/
+    char *cmds=strnadd(argc-1, argv+1, ";");
+    char *cmds_end=cmds+strlen(cmds);
+    char *start=cmds;
+    while(start<cmds_end){
+	if(isspace(start[0]) || start[0]==';'){
+	    start[0]=' ';
+	    start++;
+	    continue;
+	}
+	if(start[0]=='-'){
+	    char *start0=start;
+	    char key='0';
+	    char *value;
+	    int iopt=-1;
+	    start++;
+	    if(start[0]=='-'){//long option, replace with short ones.
+		start++;
+		for(int i=0; (options[i].name); i++){
+		    if(!mystrcmp(start, options[i].name)){
+			key=options[i].key;
+			start+=strlen(options[i].name);
+			while(isspace(start[0]) || start[0]==';'){
+			    start[0]=' ';
+			    start++;
+			}
+			if(start[0]=='=') {
+			    start[0]=' ';
+			    start++;
+			}
+			iopt=i;
+			break;
+		    }
+		}
+	    }else{
+		key=start[0];
+		start++;
+		for(int i=0; (options[i].name); i++){
+		    if(key==options[i].key){
+			iopt=i;
+			break;
+		    }
+		}
+	    }
+	    if(iopt==-1){
+		continue;//what don't want this key.
+	    }
+	    if((options[iopt].opt & 1) == 1){
+		value=start;
+		while(value[0]==';' || isspace(value[0])){
+		    value[0]=' ';
+		    value++;
+		}
+	    }else{
+		value=NULL;
+	    }
+	    int isfun=((options[iopt].opt&2)==2);
+	    switch(options[iopt].type){
+	    case 0://no result needed
+		break;
+	    case T_INT:{
+		int val=value?strtol(value, &start, 10):1;
+		if(isfun){//Is function
+		    void (*tmp)(int)=options[iopt].val;
+		    tmp(val);
+		}else{
+		    int *tmp=options[iopt].val;
+		    *tmp=val;
+		}
+	    }
+		break;
+	    case T_DBL:{
+		double val=value?strtod(value, &start):1;
+		if(isfun){//Is function
+		    void (*tmp)(double)=options[iopt].val;
+		    tmp(val);
+		}else{
+		    double *tmp=options[iopt].val;
+		    *tmp=val;
+		}
+	    }
+		break;
+	    case T_STR:{
+		char *val=value?cmd_string(value, &start):"Unkown";
+		if(isfun){
+		    void (*tmp)(char*)=options[iopt].val;
+		    tmp(val); free(val);
+		}else{
+		    char **tmp=options[iopt].val;
+		    free(*tmp); *tmp=val;
+		}
+	    }
+		break;
+	    case T_INTARR:{
+		if(isfun) error("Not implemented yet\n");
+		int val=strtol(value, &start, 10);
+		int **tmp=options[iopt].val;
+		int *nval=options[iopt].nval;
+		int i;
+		for(i=0; i<*nval; i++){
+		    if((*tmp)[i]==val) break;
+		}
+		if(i==*nval){
+		    (*nval)++;
+		    *tmp=realloc(*tmp, *nval*sizeof(int));
+		    (*tmp)[(*nval)-1]=val;
+		}
+	    }
+		break;
+	    case T_DBLARR:{
+		if(isfun) error("Not implemented yet\n");
+		double val=strtod(value, &start);
+		int **tmp=options[iopt].val;
+		int *nval=options[iopt].nval;
+		(*nval)++;
+		*tmp=realloc(*tmp, *nval*sizeof(double));
+		(*tmp)[(*nval)-1]=val;
+	    }
+		break;
+	    }//switch
+	    //Empty the string that we already parsed.
+	    memset(start0, ' ',start-start0);
+	}else if(start[0]=='='){//equal sign found
+	    //create a \n before the key.
+	    int skipspace=1;
+	    for(char *start2=start-1; start2>=cmds; start2--){
+		if(isspace(*start2) || *start2==';'){
+		    if(!skipspace){
+			*start2='\n';
+			break;
+		    }
+		}else{
+		    skipspace=0;
+		}
+	    }
+	    start++;
+	}else if(!mystrcmp(start, ".conf")){ //.conf found.
+	    //create a \n before the key.
+	    for(char *start2=start-1; start2>=cmds; start2--){
+		if(isspace(*start2) || *start2==';'){
+		    *start2='\n'; 
+		    break;
+		}
+	    }
+	    start+=5;
+	    start[0]='\n';
+	    start++;
+	}else if(start[0]=='['){//make sure we don't split brackets.
+	    char *bend=index(start+1, ']');
+	    char *bnextstart=index(start+1, '[');
+	    if(bend && (!bnextstart || bend<bnextstart)){//There is a closing bracket
+		for(; start<bend+1; start++){
+		    if(start[0]==';') start[0]=' ';
+		}
+	    }else{
+		error("Bracked is not closed\n");
+		start++;
+	    }
+	}else if(start[0]=='\'' || start[0]=='"'){//make sure we don't split strings.
+	    char *quoteend=index(start, start[0]);
+	    if(quoteend){
+		start=quoteend+1;
+	    }else{
+		warning("Quote is not closed\n");
+		start++;
+	    }
+	}else{
+	    start++;
+	}
+    }
+    return cmds;
 }

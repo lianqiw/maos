@@ -35,6 +35,13 @@
 #include <string.h>
 #include <alloca.h>
 #include <time.h>
+enum{
+    T_INT=1,
+    T_DBL=2,
+    T_STR=3,
+    T_INTARR=11,
+    T_DBLARR=12,
+};
 
 typedef double __complex__ dcomplex;
 typedef double ddouble;/*just for saving.*/
