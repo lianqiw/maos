@@ -842,37 +842,44 @@ static void tool_zoom(GtkToolButton *button, gpointer data){
     drawdata_t *drawdata=get_current_page();
     int mode=GPOINTER_TO_INT(data);
     do_zoom(drawdata,0,0,mode);
+    drawdata->drawn=0;
 }
 static void tool_toggled(GtkToggleToolButton *button, gpointer data){
     int active=gtk_toggle_tool_button_get_active(button);
     if(active){
 	cursor_type=(GPOINTER_TO_INT(data));
     }
+    drawdata_dialog->drawn=0;
 }
 
 static void limit_change(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
     drawdata_dialog->limit_changed=1;
     delayed_update_pixmap(drawdata_dialog);
+    drawdata_dialog->drawn=0;
 }
 
 static void limit_change2(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
     drawdata_dialog->limit_changed=2;
     delayed_update_pixmap(drawdata_dialog);
+    drawdata_dialog->drawn=0;
 }
 static void checkbtn_toggle(GtkToggleButton *btn, gint *key){
     *key=gtk_toggle_button_get_active(btn);
     delayed_update_pixmap(drawdata_dialog);
+    drawdata_dialog->drawn=0;
 }
 static void entry_changed(GtkEditable *entry, char **key){
     free(*key);
     *key=gtk_editable_get_chars(entry, 0, -1);
     delayed_update_pixmap(drawdata_dialog);
+    drawdata_dialog->drawn=0;
 }
 static void spin_changed(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
     delayed_update_pixmap(drawdata_dialog);
+    drawdata_dialog->drawn=0;
 }
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)

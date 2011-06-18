@@ -55,7 +55,7 @@ void wfsints(thread_t *thread_data){
     const int isa_end=thread_data->end;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-    const int hasllt=parms->powfs[ipowfs].hasllt;
+    const int hasllt=(parms->powfs[ipowfs].llt!=NULL);
     const int nsa=powfs[ipowfs].pts->nsa;
     const int nx=powfs[ipowfs].pts->nx;
     const int ncompx=powfs[ipowfs].ncompx;//necessary size to build detector image.

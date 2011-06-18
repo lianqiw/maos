@@ -555,7 +555,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     const int radpix=parms->powfs[ipowfs].radpix;
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nsa=powfs[ipowfs].pts->nsa;
-    if(parms->powfs[ipowfs].hasllt){
+    if(parms->powfs[ipowfs].llt){
 	const int nllt=parms->powfs[ipowfs].llt->n;
 	double rsa2, rsa2max=0;
 	dcellfree(powfs[ipowfs].srot);
@@ -902,7 +902,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     int ndtf;
     int nllt;
     int multi_dtf=0;
-    if(parms->powfs[ipowfs].hasllt&&!parms->powfs[ipowfs].radrot
+    if(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot
        &&parms->powfs[ipowfs].radpix){
 	/*When we have llt, there is elongation, radial pix but
 	  not use rotating psf/otf Need to create nominal/si for
@@ -1012,7 +1012,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
    setup the range to sodium layer as an additional parameter.
 */
 static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
-    if(!parms->powfs[ipowfs].hasllt || !parms->powfs[ipowfs].llt->fnrange) return;
+    if(!parms->powfs[ipowfs].llt || !parms->powfs[ipowfs].llt->fnrange) return;
     char *fnrange=find_file(parms->powfs[ipowfs].llt->fnrange);
     warning("powfs %d: loading sodium range from %s\n", ipowfs, fnrange);
     if(powfs[ipowfs].focus) dfree(powfs[ipowfs].focus);
@@ -1091,7 +1091,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
    - mode=1: for simulation.
 */
 void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode, int istep){
-    if(!parms->powfs[ipowfs].hasllt) return;
+    if(!parms->powfs[ipowfs].llt) return;
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nsa=powfs[ipowfs].pts->nsa;
     const int nllt=parms->powfs[ipowfs].llt->n;
@@ -1388,7 +1388,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 */
 static void 
 setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
-    if(!parms->powfs[ipowfs].hasllt) return;
+    if(!parms->powfs[ipowfs].llt) return;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     LLT_T *llt=powfs[ipowfs].llt=calloc(1, sizeof(LLT_T));
     pts_t *lpts=llt->pts=calloc(1, sizeof(pts_t));
@@ -1589,7 +1589,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		close(fd);
 		remove(fnlock);
 	    }
-	    if(parms->powfs[ipowfs].hasllt){
+	    if(parms->powfs[ipowfs].llt){
 		char fnprefix[80];
 		uint32_t key=0;
 		key=dhash(powfs[ipowfs].llt->amp, key);
@@ -1729,7 +1729,7 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 	    //We have physical optics. setup necessary struct
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);
 	    setup_powfs_dtf(powfs,parms,ipowfs);
-	    if(parms->powfs[ipowfs].hasllt){
+	    if(parms->powfs[ipowfs].llt){
 		//prepare Laser launch telescope.
 		setup_powfs_sodium(powfs,parms,ipowfs);//read sodium profile and smooth it
 		setup_powfs_etf(powfs,parms,ipowfs,0,0);//etf for prep
@@ -1737,7 +1737,7 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 		setup_powfs_llt(powfs,parms,ipowfs);
 	    }
 	}
-	if(parms->powfs[ipowfs].hasllt){
+	if(parms->powfs[ipowfs].llt){
 	    //If there is LLT, setup the extra focus term if needed.
 	    setup_powfs_focus(powfs,parms,ipowfs);
 	}
@@ -1772,7 +1772,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    dfree(powfs[ipowfs].intstat->i0sum);
 	    free(powfs[ipowfs].intstat);
 	}
-	if(parms->powfs[ipowfs].hasllt){
+	if(parms->powfs[ipowfs].llt){
 	    dcellfree(powfs[ipowfs].srot);
 	    dcellfree(powfs[ipowfs].srsa);
 	    dfree(powfs[ipowfs].srsamax);

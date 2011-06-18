@@ -279,7 +279,6 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].fnllt=NULL;
 	}
 	if(parms->powfs[ipowfs].fnllt){
-	    parms->powfs[ipowfs].hasllt=1;
 	    char prefix[60];
 	    snprintf(prefix,60,"powfs%d_",ipowfs);
 	    open_config(parms->powfs[ipowfs].fnllt,prefix,0);
@@ -312,9 +311,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].radrot=0;
 	    warning2("powfs%d does not have polar ccd. radrot should be zero. changed\n",ipowfs);
 	}
-	if(parms->powfs[ipowfs].hasllt 
-	   && !parms->powfs[ipowfs].radpix
-	   && !parms->powfs[ipowfs].mtchcpl){
+	if(parms->powfs[ipowfs].llt && !parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].mtchcpl){
 	    parms->powfs[ipowfs].mtchcpl=1;
 	    warning2("powfs%d has llt, but no polar ccd or mtchrot=1, we need mtchcpl to be 1. changed\n",ipowfs);
 	}
@@ -963,7 +960,6 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
    -# necessary adjustments if outputing WFS PSF.
 */
 static void setup_parms_postproc_wfs(PARMS_T *parms){
-  
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	/*Figure out order of High order WFS if not specified.*/
 	if(parms->powfs[ipowfs].order==0){
@@ -1073,12 +1069,21 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     if(parms->tomo.split){
 	int hi_found=0;
+	int hi_hastt=0;
 	int lo_found=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(parms->powfs[ipowfs].lo){
-		lo_found=1;
-	    }else{
-		hi_found=1;
+	    if(parms->powfs[ipowfs].nwfs>0){
+		if(parms->powfs[ipowfs].lo){
+		    lo_found=1;
+		    if(parms->powfs[ipowfs].trs==1){
+			error("Low order wfs should not be tilt removed\n");
+		    }
+		}else{
+		    hi_found=1;
+		    if(parms->powfs[ipowfs].trs!=1){
+			hi_hastt=1;
+		    }
+		}
 	    }
 	}
 	if(!lo_found || !hi_found){
@@ -1091,6 +1096,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	if(!hi_found){
 	    warning("There is no high order WFS!!!\n");
+	}
+	if(!lo_found && !hi_hastt){
+	    warning("There is no WFS controlling tip/tilt.\n");
 	}
     }
    
@@ -1742,7 +1750,7 @@ static void print_parms(const PARMS_T *parms){
 	}
 	if(parms->powfs[i].dfrs){
 	    info2("\033[0;32m Diff focus is removed.\033[0;0m");
-	    if(!parms->powfs[i].hasllt){
+	    if(!parms->powfs[i].llt){
 		warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
 	    }
 	}
@@ -1929,12 +1937,12 @@ static void check_parms(const PARMS_T *parms){
     int lo_found=0;
     int hi_trs=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].hasllt){
+	if(parms->powfs[ipowfs].llt){
 	    if(isinf(parms->powfs[ipowfs].hs)){
 		warning("powfs with llt should have finite hs\n");
 	    }
 	    if(parms->powfs[ipowfs].trs==0){
-		warning("powfs with llt should have trs=1\n");
+		warning("powfs with llt should have trs=1. Will disable uplink ray tracing, but keep ETF.\n");
 	    }
 	}else{
 	    if(!isinf(parms->powfs[ipowfs].hs)){
@@ -1944,26 +1952,8 @@ static void check_parms(const PARMS_T *parms){
 		warning("powfs without llt should have trs=0\n");
 	    }
 	}
-	if(parms->powfs[ipowfs].lo==0){
-	    hi_found++;
-	}else{
-	    lo_found++;
-	}
-	if(parms->powfs[ipowfs].trs==1){//lgs wfs
-	    if(parms->powfs[ipowfs].lo==1){
-		error("Can not be both trs and lo\n");
-	    }
-	    hi_trs++;
-	}
     }
-    if(!hi_found){
-	warning("There is no high order WFS\n");
-    }
-    if((hi_trs==hi_found && lo_found==0)){
-	warning("LGS wfs doesn't come with TT wfs\n");
-	warning("LGS wfs doesn't come with TT wfs\n");
-	warning("LGS wfs doesn't come with TT wfs\n");
-    }
+
     for(i=0; i<parms->ndm; i++){
 	if(!isinf(parms->dm[i].stroke)){
 	    double strokemicron=parms->dm[i].stroke*1e6;

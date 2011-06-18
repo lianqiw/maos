@@ -594,7 +594,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    case T_INT:{
 		int val=value?strtol(value, &start, 10):1;
 		if(isfun){//Is function
-		    void (*tmp)(int)=options[iopt].val;
+		    void (*tmp)(int)=(void (*)(int))options[iopt].val;
 		    tmp(val);
 		}else{
 		    int *tmp=options[iopt].val;
@@ -605,7 +605,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    case T_DBL:{
 		double val=value?strtod(value, &start):1;
 		if(isfun){//Is function
-		    void (*tmp)(double)=options[iopt].val;
+		    void (*tmp)(double)=(void (*)(double))options[iopt].val;
 		    tmp(val);
 		}else{
 		    double *tmp=options[iopt].val;
@@ -616,7 +616,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    case T_STR:{
 		char *val=value?cmd_string(value, &start):"Unkown";
 		if(isfun){
-		    void (*tmp)(char*)=options[iopt].val;
+		    void (*tmp)(char*)=(void (*)(char*))options[iopt].val;
 		    tmp(val); free(val);
 		}else{
 		    char **tmp=options[iopt].val;

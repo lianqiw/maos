@@ -56,7 +56,7 @@ void save_recon(SIM_T *simu){
 	if(parms->sim.recon==0){
 	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
 		if(simu->opdr->p[i]){
-		    drawopd("Recon", recon->xloc[i], simu->opdr->p[i]->p, NULL,
+		    drawopd("opdr", recon->xloc[i], simu->opdr->p[i]->p, NULL,
 			    "Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
 		}
 	    }
@@ -112,7 +112,7 @@ void save_recon(SIM_T *simu){
 	    if(parms->plot.opdx){ //draw opdx
 		for(int i=0; i<opdx->nx; i++){
 		    if(opdx->p[i]){
-			drawopd("Recon", recon->xloc[i], opdx->p[i]->p, NULL,
+			drawopd("opdx", recon->xloc[i], opdx->p[i]->p, NULL,
 				"Atmosphere Projected to XLOC","x (m)","y (m)","opdx %d",i);
 		    }
 		}

@@ -461,7 +461,7 @@ void sim_update_etf(SIM_T *simu){
 	    if((parms->powfs[ipowfs].usephy
 		||parms->powfs[ipowfs].psfout
 		||parms->powfs[ipowfs].pistatout) 
-	       && parms->powfs[ipowfs].hasllt
+	       && parms->powfs[ipowfs].llt
 	       && parms->powfs[ipowfs].llt->colsimdtrat>0
 	       && isim %parms->powfs[ipowfs].llt->colsimdtrat == 0){
 		warning("powfs %d: Updating ETF\n",ipowfs);

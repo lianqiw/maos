@@ -509,7 +509,7 @@ void focus_tracking(SIM_T*simu){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int gs_psol, gs_x;
-	if(parms->powfs[ipowfs].hasllt){//LGS
+	if(parms->powfs[ipowfs].llt){//LGS
 	    gs_psol=lgs_psol;
 	    gs_x=lgs_x;
 	}else{//NGS
@@ -541,7 +541,7 @@ void focus_tracking(SIM_T*simu){
     info("NGSfocus is %g\n", NGSfocus->p[0]->p[0]);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	if(!parms->powfs[ipowfs].hasllt) 
+	if(!parms->powfs[ipowfs].llt) 
 	    continue;
 	dmat *LGSfocus=NULL;
 	dmm (&LGSfocus,recon->RFlgs->p[iwfs],graduse->p[iwfs],"nn",1);

@@ -127,7 +127,7 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int nwvl=parms->powfs[ipowfs].nwvl;
     int nsa=powfs[ipowfs].pts->nsa;
     int nllt;
-    if(parms->powfs[ipowfs].hasllt)
+    if(parms->powfs[ipowfs].llt)
 	nllt=parms->powfs[ipowfs].llt->n;
     else
 	nllt=0;

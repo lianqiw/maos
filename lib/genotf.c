@@ -142,15 +142,10 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
 	   &dpzero, 
 	   (double*)Mtmp, &nmod);
 
-    //double *restrict BPD=malloc(sizeof(double)*nloc);
     for(long iloc=0; iloc<nloc; iloc++){
 	double tmp1=MCCT[iloc][0];
 	double tmp2=MCCT[iloc][1];
 	double tmp3=MCCT[iloc][2];
-	/*BPD[iloc]=exp(BP[iloc][iloc]
-		      +tmp1*Mtmp[iloc][0]
-		      +tmp2*Mtmp[iloc][1]
-		      +tmp3*Mtmp[iloc][2]);*/
 	for(long jloc=0; jloc<nloc; jloc++){
 	    double tmp=BP[iloc][jloc]+tmp1*Mtmp[jloc][0]
 		+tmp2*Mtmp[jloc][1]+tmp3*Mtmp[jloc][2];

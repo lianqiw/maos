@@ -1752,7 +1752,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
     int ilgs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(parms->powfs[ipowfs].hasllt){
+	if(parms->powfs[ipowfs].llt){
 	    if(ilgs==-1){
 		ilgs=ipowfs;
 	    }else{
@@ -1810,7 +1810,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
     dcell *RFlgs=recon->RFlgs=dcellnew(parms->nwfsr, 1);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	if(!parms->powfs[ipowfs].hasllt)
+	if(!parms->powfs[ipowfs].llt)
 	    continue;
 	dmat *GMtmp=NULL;
 	dmat *GMGtmp=NULL;

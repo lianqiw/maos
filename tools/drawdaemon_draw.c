@@ -433,6 +433,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	//canvas is resized, need to adjust zoom/paning
 	apply_limit(drawdata);
 	drawdata->limit_changed=0;
+	drawdata->drawn=0;
     }
     if(drawdata->limit_changed == 2 && drawdata->p){//zlim changed.
 	int nx=drawdata->nx;

@@ -167,7 +167,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    focus+=focusadd;
 	}
     }
-    if(parms->powfs[ipowfs].hasllt && simu->focusint && simu->focusint->p[iwfs]){
+    if(parms->powfs[ipowfs].llt && simu->focusint && simu->focusint->p[iwfs]){
 	info("WFS %d: Adding focus adjust to %g\n", 
 	     iwfs, simu->focusint->p[iwfs]->p[0]);
 	focus+=simu->focusint->p[iwfs]->p[0];
@@ -242,7 +242,7 @@ void wfsgrad_iwfs(thread_t *info){
     TIM(1);
     if(do_phy || psfout || pistatout){
 	dmat *lltopd=NULL;
-	if(powfs[ipowfs].llt){
+	if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	    if(powfs[ipowfs].llt->ncpa){
 		int iotf=powfs[ipowfs].llt->ncpa->nx==1?0:wfsind;
 		lltopd=ddup(powfs[ipowfs].llt->ncpa->p[iotf]);
@@ -479,7 +479,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    cellarr_dmat(simu->save->gradnf[iwfs], gradnf);
 	}
 	dfree(gradnf);
-	if(parms->powfs[ipowfs].llt){
+	if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	    if(!recon->PTT){
 		error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
 	    }

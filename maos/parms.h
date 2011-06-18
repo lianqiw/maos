@@ -143,7 +143,6 @@ typedef struct POWFS_CFG_T{
     double *wvlwts; /**<weights for each wavelength. can be overriden by wfs.wvlwts.*/
     struct LLT_CFG_T *llt;/**<configuration for LLT*/
     char* fnllt;    /**<filename of LLT configuration. empty means no llt.*/
-    int hasllt;     /**<whether having llt.  True for LGS, False for NGS*/
     int trs;        /**<tip/tilt removal flag. True for LGS, False for NGS*/
     int dfrs;       /**<differential focus removal flag. True for LGS, False for NGS*/
     int lo;         /**<whether this is a low order wfs. False for LGS, True for NGS*/
