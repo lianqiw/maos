@@ -98,13 +98,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     PDCELL(powfs[ipowfs].intstat->saneaxy, saneaxy);
     PDCELL(powfs[ipowfs].intstat->saneaxyl, saneaxyl);
     PDCELL(powfs[ipowfs].intstat->saneaixy, saneaixy);
-    /*
-    dmat *(*mtche)[nsa]=
-	(dmat*(*)[nsa])powfs[ipowfs].intstat->mtche->p;
-    dmat *(*saneaxy)[nsa]
-	=(void*)powfs[ipowfs].intstat->saneaxy->p;
-    dmat *(*saneaixy)[nsa]
-    =(void*)powfs[ipowfs].intstat->saneaixy->p;*/
+
     dmat *(*saneara)[nsa]=NULL;
     if(parms->powfs[ipowfs].radpix){
 	saneara=(void*)powfs[ipowfs].intstat->saneara->p;
@@ -346,10 +340,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		   "%s/powfs%d_saneara",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->saneaxy,
 		   "%s/powfs%d_saneaxy",dirsetup,ipowfs);
-	dcellwrite(powfs[ipowfs].intstat->saneaxyl,
-		   "%s/powfs%d_saneaxyl",dirsetup,ipowfs);
-	dcellwrite(powfs[ipowfs].intstat->saneaixy,
-		   "%s/powfs%d_saneaixy",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->sanea,
 		   "%s/powfs%d_sanea",dirsetup,ipowfs);
     }

@@ -588,6 +588,7 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_intarr_nmax(&parms->evl.psfpttr, parms->evl.nevl, "evl.psfpttr");
     READ_INT(evl.psfmean); 
     READ_INT(evl.psfhist); 
+    READ_INT(evl.opdcov);//Science OPD covariance.
     READ_INT(evl.tomo);
     READ_INT(evl.moao);
     for(ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -776,41 +777,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.parallel);
     READ_INT(dbg.splitlrt);
 }
-/**
-   Parse the Input of scalar or vector to vector of nwfs.
- */
-static int *wfs_save_parse(int count, int *input, PARMS_T *parms){
-    int *out=calloc(parms->nwfs, sizeof(int));
-    if(count==1){
-	int flags[2]={0,0};
-	switch(input[0]){
-	case 0:
-	    break;
-	case 1:
-	    flags[0]=1;//hi
-	    flags[1]=1;//lo
-	    break;
-	case 2:
-	    flags[0]=1;//hi
-	    break;
-	case 3:
-	    flags[1]=1;//lo
-	    break;
-	default:
-	    error("Invalid entry: %d\n", input[0]);
-	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int ind=(parms->powfs[ipowfs].lo)?1:0;
-	    out[iwfs]=flags[ind];
-	}
-    }else if(count==parms->nwfs){
-	memcpy(out, input, sizeof(int)*count);
-    }else{
-	error("Invalid entry: count=%d, nwfs=%d\n", count, parms->nwfs);
-    }
-    return out;
-}
 
 /**
    Specify which variables to save
@@ -828,16 +794,10 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.evlopd);//Science OPD
     READ_INT(save.dm);//save DM commands
     READ_INT(save.dmpttr);
-    int *tmp=NULL;
-    int count;
-    count=readcfg_intarr(&tmp, "save.ints");
-    parms->save.ints=wfs_save_parse(count, tmp, parms);free(tmp);
-    count=readcfg_intarr(&tmp, "save.wfsopd");
-    parms->save.wfsopd=wfs_save_parse(count, tmp, parms);free(tmp);
-    count=readcfg_intarr(&tmp, "save.grad");
-    parms->save.grad=wfs_save_parse(count, tmp, parms);free(tmp);
-    count=readcfg_intarr(&tmp, "save.gradgeom");
-    parms->save.gradgeom=wfs_save_parse(count, tmp, parms); free(tmp);
+    readcfg_intarr_nmax(&parms->save.ints, parms->nwfs, "save.ints");
+    readcfg_intarr_nmax(&parms->save.wfsopd, parms->nwfs, "save.wfsopd");
+    readcfg_intarr_nmax(&parms->save.grad, parms->nwfs, "save.grad");
+    readcfg_intarr_nmax(&parms->save.gradgeom, parms->nwfs, "save.gradgeom");
   
     if(parms->save.all){//enables everything
 	warning("Enabling saving everything.\n");
@@ -1650,8 +1610,11 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }
 
     if(!parms->sim.closeloop){
-	warning2("psfisim is set from %d to 0 in openloop mode\n", parms->evl.psfisim);
-	parms->evl.psfisim=0;
+	warning2("psfisim is set from %d to %d in openloop mode\n", parms->evl.psfisim, parms->sim.start);
+	parms->evl.psfisim=parms->sim.start;
+    }
+    if(parms->evl.psfisim<parms->sim.start){
+	parms->evl.psfisim=parms->sim.start;
     }
     if(NCPU==1 || parms->sim.closeloop==0 || parms->evl.tomo || parms->sim.nthread==1){
 	//disable parallelizing the big loop.
@@ -1933,9 +1896,6 @@ static void check_parms(const PARMS_T *parms){
 		     1./parms->powfs[i].dx,1./parms->atm.dx);
 	}
     }
-    int hi_found=0;
-    int lo_found=0;
-    int hi_trs=0;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].llt){
 	    if(isinf(parms->powfs[ipowfs].hs)){

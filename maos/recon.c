@@ -227,7 +227,7 @@ void reconstruct(SIM_T *simu){
 	}else if(!simu->gradlastol){
 	    simu->gradlastol=dcellref(simu->gradlastcl);
 	}
-	save_gradol(simu);
+	save_gradol(simu);//must be here since gradol is only calculated in this file.
 	if(parms->cn2.pair){
 	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
 	}//if cn2est

@@ -107,6 +107,9 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 /*stripped down version of io.c*/
 file_t* openfile(const char *fn_in, char *mod){
     char *fn=procfn(fn_in, mod, 1);
+    if(!fn){
+	error("%s does not exist\n", fn_in);
+    }
     file_t* fp=calloc(1, sizeof(file_t));
     if(check_suffix(fn, ".bin") && mod[0]=='w'){
 	fp->isgzip=0;

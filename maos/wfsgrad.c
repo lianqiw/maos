@@ -331,212 +331,217 @@ void wfsgrad_iwfs(thread_t *info){
 	}
     }
     TIM(2);
-    if(dtrat_output && do_phy){
-	/*
-	  In Physical optics mode, finish integration and
-	  output gradients to grad.
-	*/
-	//matched filter
-	//index into matched filter.
-	//most useful for multillt
-	dmat **mtche=NULL;
-	double *i0sum=NULL;
-
-	if(parms->powfs[ipowfs].phytypesim==1){
-	    if(powfs[ipowfs].intstat->mtche->ny==1){
-		mtche=powfs[ipowfs].intstat->mtche->p;
-		i0sum=powfs[ipowfs].intstat->i0sum->p;
-	    }else{
-		mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
-		i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
-	    }
-	}
-	double pixtheta=parms->powfs[ipowfs].pixtheta;
-	    
-	//Rayleigh scattering (bkgrnd)
-	dmat **bkgrnd2=NULL;
-	dmat **bkgrnd2c=NULL;
-	if(powfs[ipowfs].bkgrnd){
-	    if(powfs[ipowfs].bkgrnd->ny==1){
-		bkgrnd2=powfs[ipowfs].bkgrnd->p;
-	    }else{
-		bkgrnd2=powfs[ipowfs].bkgrnd->p+nsa*wfsind;
-	    }
-	}
-	if(powfs[ipowfs].bkgrndc){
-	    if(powfs[ipowfs].bkgrndc->ny==1){
-		bkgrnd2c=powfs[ipowfs].bkgrndc->p;
-	    }else{
-		bkgrnd2c=powfs[ipowfs].bkgrndc->p+nsa*wfsind;
-	    }
-	}
-	    
-	double *srot=NULL;
-	if(powfs[ipowfs].srot){
-	    const int illt=parms->powfs[ipowfs].llt->i[wfsind];
-	    //this is in r/a coordinate, get angles
-	    srot=powfs[ipowfs].srot->p[illt]->p;
-	}
-	//output directly to simu->gradcl. replace
-	double gnf[2]={0,0};
-	double gny[2]={0,0};
-	const double rne=parms->powfs[ipowfs].rne;
-	const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
-	const double siglev=parms->wfs[iwfs].siglevsim;//don't multiply to dtrat.
-	dmat *gradnf=dnew(nsa*2,1);//save noise free gradients.
-	double *pgradx=(*gradout)->p;
-	double *pgrady=pgradx+nsa;
-	double *pgradnfx=gradnf->p;
-	double *pgradnfy=pgradnfx+nsa;
-	dcellscale(ints, siglev);
-	if(save_ints){
-	    cellarr_dcell(simu->save->intsnf[iwfs], ints);
-	}
-	for(int isa=0; isa<nsa; isa++){
-	    /*
-	      TODO: Do something to remove negative pixels. shift image
-	      or mask out. This is important when bkgrndfnc is greater
-	      than 1.
-	    */
-	    double pmax;
-	    gnf[0]=0; gnf[1]=0;
-	    switch(parms->powfs[ipowfs].phytypesim){
-	    case 1:
-		dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
-		break;
-	    case 2:
-		pmax=dmax(ints->p[isa]);
-		dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
-		gnf[0]*=pixtheta;
-		gnf[1]*=pixtheta;
-		break;
-	    default:
-		error("Invalid");
-	    }
-	    if(noisy){//add noise
-		double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
-		double *bkgrnd2ic=(bkgrnd2c && bkgrnd2c[isa])?bkgrnd2c[isa]->p:NULL;
-		addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
-			 bkgrnd,parms->powfs[ipowfs].bkgrndc,
-			 bkgrnd2i, bkgrnd2ic, rne);
-		gny[0]=0; gny[1]=0;
-		switch(parms->powfs[ipowfs].phytypesim){
-		case 1:
-		    dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
-		    if(parms->powfs[ipowfs].mtchscl){
-			double scale=i0sum[isa]/dsum(ints->p[isa]);
-			//info("scale wfs %d, isa %d by %g\n",iwfs,isa,scale);
-			gny[0]*=scale;
-			gny[1]*=scale;
-		    }
-		    break;
-		case 2:
-		    pmax=dmax(ints->p[isa]);
-		    dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
-		    gny[0]*=pixtheta;
-		    gny[1]*=pixtheta;
-		    break;
-		default:
-		    error("Invalid");
-		}
-		simu->sanea_sim->p[iwfs]->p[isa]+=pow(gny[0]-gnf[0],2);
-		simu->sanea_sim->p[iwfs]->p[isa+nsa]+=pow(gny[1]-gnf[1],2);
-	    }else{
-		gny[0]=gnf[0];
-		gny[1]=gnf[1];
-	    }
-	    if(parms->powfs[ipowfs].radpix){
-		/*
-		  rotate gradients from ra to xy 
-		  coordinate rotates cw by theta from ra to xy.
-		  therefore vector rotates ccw by theta.
-		  use standard R(theta)=[cos -sin; sin cos]
-		  |xnew|                 |x|
-		  |ynew|   =  R(theta) * |y|
-		*/
-		double theta;
-		theta=srot[isa]; 
-		    
-		const double sth=sin(theta);
-		const double cth=cos(theta);
-		pgradnfx[isa]=gnf[0]*cth-gnf[1]*sth;
-		pgradnfy[isa]=gnf[0]*sth+gnf[1]*cth;
-		pgradx[isa]=gny[0]*cth-gny[1]*sth;
-		pgrady[isa]=gny[0]*sth+gny[1]*cth;
-	    }else{
-		//already xy
-		pgradnfx[isa]=gnf[0];
-		pgradnfy[isa]=gnf[1];
-		pgradx[isa]=gny[0];
-		pgrady[isa]=gny[1];
-	    }
-	};//isa
-
-	if(save_ints && do_phy){
-	    cellarr_dcell(simu->save->intsny[iwfs], ints);
-	}
-	if(save_grad && noisy){
-	    cellarr_dmat(simu->save->gradnf[iwfs], gradnf);
-	}
-	dfree(gradnf);
-	if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
-	    if(!recon->PTT){
-		error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
-	    }
-	    dmat *PTT=NULL;
-	    if(parms->sim.glao){
-		PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
-	    }else{
-		PTT=recon->PTT->p[iwfs+iwfs*nwfs];
-	    }
-	    if(!PTT){
-		error("powfs %d has llt, but TT removal is empty\n", ipowfs);
-	    }
-	    /*Compute LGS Uplink error*/
-	    dzero(simu->upterr->p[iwfs]);
-	    dmm(&simu->upterr->p[iwfs], PTT, *gradout, "nn", 1);
-	    //copy upterr to output.
-	    PDMAT(simu->upterrs->p[iwfs], pupterrs);
-	    pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
-	    pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
-	
-	}
-    }else if (dtrat_output && !do_phy){
-	//geomtric optics accumulation mode. scale and copy results to output.
-	dcp(gradout,*gradacc);
-	if(dtrat!=1)
-	    dscale(*gradout,1./dtrat);//average
-	if(noisy){
-	    if(save_grad){//save noise free gradient.
-		cellarr_dmat(simu->save->gradnf[iwfs], *gradout);
-	    }
-	    if(!parms->powfs[ipowfs].usephy){
-		const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
-		const double *neax=nea->p;
-		const double *neay=nea->p+nsa;
-		double *ggx=(*gradout)->p;
-		double *ggy=(*gradout)->p+nsa;
-		for(int isa=0; isa<nsa; isa++){
-		    //Preserve the random sequence.
-		    double noisex=neax[isa]*randn(&simu->wfs_rand[iwfs]);
-		    double noisey=neay[isa]*randn(&simu->wfs_rand[iwfs]);
-		    ggx[isa]+=noisex;
-		    ggy[isa]+=noisey;
-		    simu->sanea_sim->p[iwfs]->p[isa]+=noisex*noisex;
-		    simu->sanea_sim->p[iwfs]->p[isa+nsa]+=noisey*noisey;
-		}
-	    }else if(isim==0){
-		info2("Will not add noise at acquisition proccess for physical optics\n");
-	    }
-	}
-    }
-   
+ 
     if(parms->plot.run){
 	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
 		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
     }
     dfree(opd);
+
     if(dtrat_output){
+	if(do_phy){
+	    /*
+	      In Physical optics mode, finish integration and output gradients to
+	      grad.
+	    */
+	    dmat **mtche=NULL;
+	    double *i0sum=NULL;
+
+	    if(parms->powfs[ipowfs].phytypesim==1){
+		if(powfs[ipowfs].intstat->mtche->ny==1){
+		    mtche=powfs[ipowfs].intstat->mtche->p;
+		    i0sum=powfs[ipowfs].intstat->i0sum->p;
+		}else{
+		    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
+		    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
+		}
+	    }
+	    double pixtheta=parms->powfs[ipowfs].pixtheta;
+	    
+	    //Rayleigh scattering (bkgrnd)
+	    dmat **bkgrnd2=NULL;
+	    dmat **bkgrnd2c=NULL;
+	    if(powfs[ipowfs].bkgrnd){
+		if(powfs[ipowfs].bkgrnd->ny==1){
+		    bkgrnd2=powfs[ipowfs].bkgrnd->p;
+		}else{
+		    bkgrnd2=powfs[ipowfs].bkgrnd->p+nsa*wfsind;
+		}
+	    }
+	    if(powfs[ipowfs].bkgrndc){
+		if(powfs[ipowfs].bkgrndc->ny==1){
+		    bkgrnd2c=powfs[ipowfs].bkgrndc->p;
+		}else{
+		    bkgrnd2c=powfs[ipowfs].bkgrndc->p+nsa*wfsind;
+		}
+	    }
+	    
+	    double *srot=NULL;
+	    if(powfs[ipowfs].srot){
+		const int illt=parms->powfs[ipowfs].llt->i[wfsind];
+		//this is in r/a coordinate, get angles
+		srot=powfs[ipowfs].srot->p[illt]->p;
+	    }
+	    //output directly to simu->gradcl. replace
+	    double gnf[2]={0,0};
+	    double gny[2]={0,0};
+	    const double rne=parms->powfs[ipowfs].rne;
+	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
+	    const double siglev=parms->wfs[iwfs].siglevsim;//don't multiply to dtrat.
+	    dmat *gradnf=dnew(nsa*2,1);//save noise free gradients.
+	    double *pgradx=(*gradout)->p;
+	    double *pgrady=pgradx+nsa;
+	    double *pgradnfx=gradnf->p;
+	    double *pgradnfy=pgradnfx+nsa;
+	    dcellscale(ints, siglev);
+	    if(save_ints){
+		cellarr_dcell(simu->save->intsnf[iwfs], ints);
+	    }
+	    for(int isa=0; isa<nsa; isa++){
+		/*
+		  TODO: Do something to remove negative pixels. shift image
+		  or mask out. This is important when bkgrndfnc is greater
+		  than 1.
+		*/
+		double pmax;
+		gnf[0]=0; gnf[1]=0;
+		switch(parms->powfs[ipowfs].phytypesim){
+		case 1:
+		    dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
+		    break;
+		case 2:
+		    pmax=dmax(ints->p[isa]);
+		    dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
+		    gnf[0]*=pixtheta;
+		    gnf[1]*=pixtheta;
+		    break;
+		default:
+		    error("Invalid");
+		}
+		if(noisy){//add noise
+		    double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
+		    double *bkgrnd2ic=(bkgrnd2c && bkgrnd2c[isa])?bkgrnd2c[isa]->p:NULL;
+		    addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
+			     bkgrnd,parms->powfs[ipowfs].bkgrndc,
+			     bkgrnd2i, bkgrnd2ic, rne);
+		    gny[0]=0; gny[1]=0;
+		    switch(parms->powfs[ipowfs].phytypesim){
+		    case 1:
+			dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
+			if(parms->powfs[ipowfs].mtchscl){
+			    double scale=i0sum[isa]/dsum(ints->p[isa]);
+			    //info("scale wfs %d, isa %d by %g\n",iwfs,isa,scale);
+			    gny[0]*=scale;
+			    gny[1]*=scale;
+			}
+			break;
+		    case 2:
+			pmax=dmax(ints->p[isa]);
+			dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
+			gny[0]*=pixtheta;
+			gny[1]*=pixtheta;
+			break;
+		    default:
+			error("Invalid");
+		    }
+		    double errx=gny[0]-gnf[0];
+		    double erry=gny[1]-gnf[1];
+		    simu->sanea_sim[iwfs]->p[isa]->p[0]+=errx*errx;
+		    simu->sanea_sim[iwfs]->p[isa]->p[1]+=errx*erry;
+		    simu->sanea_sim[iwfs]->p[isa]->p[2]+=errx*erry;
+		    simu->sanea_sim[iwfs]->p[isa]->p[3]+=erry*erry;
+		}else{
+		    gny[0]=gnf[0];
+		    gny[1]=gnf[1];
+		}
+		if(parms->powfs[ipowfs].radpix){
+		    /*
+		      rotate gradients from ra to xy 
+		      coordinate rotates cw by theta from ra to xy.
+		      therefore vector rotates ccw by theta.
+		      use standard R(theta)=[cos -sin; sin cos]
+		      |xnew|                 |x|
+		      |ynew|   =  R(theta) * |y|
+		    */
+		    double theta;
+		    theta=srot[isa]; 
+		    
+		    const double sth=sin(theta);
+		    const double cth=cos(theta);
+		    pgradnfx[isa]=gnf[0]*cth-gnf[1]*sth;
+		    pgradnfy[isa]=gnf[0]*sth+gnf[1]*cth;
+		    pgradx[isa]=gny[0]*cth-gny[1]*sth;
+		    pgrady[isa]=gny[0]*sth+gny[1]*cth;
+		}else{
+		    //already xy
+		    pgradnfx[isa]=gnf[0];
+		    pgradnfy[isa]=gnf[1];
+		    pgradx[isa]=gny[0];
+		    pgrady[isa]=gny[1];
+		}
+	    };//isa
+
+	    if(save_ints){
+		cellarr_dcell(simu->save->intsny[iwfs], ints);
+	    }
+	    if(save_grad && noisy){
+		cellarr_dmat(simu->save->gradnf[iwfs], gradnf);
+	    }
+	    dfree(gradnf);
+	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
+		if(!recon->PTT){
+		    error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
+		}
+		dmat *PTT=NULL;
+		if(parms->sim.glao){
+		    PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
+		}else{
+		    PTT=recon->PTT->p[iwfs+iwfs*nwfs];
+		}
+		if(!PTT){
+		    error("powfs %d has llt, but TT removal is empty\n", ipowfs);
+		}
+		/*Compute LGS Uplink error*/
+		dzero(simu->upterr->p[iwfs]);
+		dmm(&simu->upterr->p[iwfs], PTT, *gradout, "nn", 1);
+		//copy upterr to output.
+		PDMAT(simu->upterrs->p[iwfs], pupterrs);
+		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
+		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
+	
+	    }
+	}else{
+	    //geomtric optics accumulation mode. scale and copy results to output.
+	    dcp(gradout,*gradacc);
+	    if(dtrat!=1)
+		dscale(*gradout,1./dtrat);//average
+	    if(noisy){
+		if(save_grad){//save noise free gradient.
+		    cellarr_dmat(simu->save->gradnf[iwfs], *gradout);
+		}
+		if(!parms->powfs[ipowfs].usephy){
+		    const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
+		    const double *neax=nea->p;
+		    const double *neay=nea->p+nsa;
+		    double *ggx=(*gradout)->p;
+		    double *ggy=(*gradout)->p+nsa;
+		    for(int isa=0; isa<nsa; isa++){
+			//Preserve the random sequence.
+			double errx=neax[isa]*randn(&simu->wfs_rand[iwfs]);
+			double erry=neay[isa]*randn(&simu->wfs_rand[iwfs]);
+			ggx[isa]+=errx;
+			ggy[isa]+=erry;
+			simu->sanea_sim[iwfs]->p[isa]->p[0]+=errx*errx;
+			simu->sanea_sim[iwfs]->p[isa]->p[1]+=errx*erry;
+			simu->sanea_sim[iwfs]->p[isa]->p[2]+=errx*erry;
+			simu->sanea_sim[iwfs]->p[isa]->p[3]+=erry*erry;
+		    }
+		}else if(isim==0){
+		    info2("Will not add noise at acquisition proccess for physical optics\n");
+		}
+	    }
+	}
+  
 	if(powfs[ipowfs].ncpa_grad){
 	    warning("Applying ncpa_grad to gradout\n");
 	    dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[wfsind], -1);

@@ -294,6 +294,9 @@ typedef struct EVL_CFG_T{
     int psfhist;    /**<output history of the psf (a lot of storage)*/
     int *psfpttr;   /**<remove p/t/t from psf. 1 number for each evl.*/
     int psfmean;    /**<output time averaged psf*/
+    int opdcov;     /**<save covairance of science OPD ,every this time step,
+		       for directions where evl.psf is 1*/
+
     int psfisim;    /**<time step to start psfmean.*/
     int *psfsize;    /**<save this number of pixels of the center of the psf. 1
 			number for each wvl.*/
@@ -530,7 +533,6 @@ typedef struct SAVE_CFG_T{
     int dm;          /**<save computed DM actuator commands for each time step*/
     int evlopd;      /**<save science OPD for each time step*/
 
-
     /*for WFS. Converted from scalar or vector input.
       Scalar input: 1: both, 2: high order only, 3: lo only
       Vector input: Equal to the number of WFS.
@@ -539,7 +541,6 @@ typedef struct SAVE_CFG_T{
     int *ints;        /**<save WFS subaperture image*/
     int *grad;        /**<save WFS gradients*/
     int *gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
-    
     //The following are derived from above.
     int wfsopdhi;    /**<save high order WFS OPD(derived)*/
     int wfsopdlo;    /**<save low order WFS OPD(derived)*/

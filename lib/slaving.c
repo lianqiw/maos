@@ -230,7 +230,6 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	spsetnzmax(slavet, count);
 
 	dsp *slave=sptrans(slavet);
-	spwrite(slave, "slave_%d", idm);
 	actslave[idm][idm]=spmulsp(slavet, slave);
 
 	if(NW){

@@ -139,6 +139,7 @@ char *find_file(const char *fn){
 maos, "skyc" for skyc.  */
 char *find_config(const char *name){
     const char *aos_config_path=getenv("AOS_CONFIG_PATH");
+    char *cwd=mygetcwd();
     char *config_path=NULL;
     if(aos_config_path){
 	config_path=stradd(aos_config_path,"/",name,NULL);
@@ -152,9 +153,7 @@ char *find_config(const char *name){
     if(!exist(config_path)){
 	//info("Configuration files not found in %s\n", config_path);
 	free(config_path);
-	char *cwd=mygetcwd();
 	config_path=stradd(cwd,"/config/",name,NULL);
-	free(cwd);
     }
     if(!exist(config_path)){
 	free(config_path);
@@ -165,7 +164,11 @@ char *find_config(const char *name){
     if(!exist(config_path)){
 	free(config_path);
 	config_path=NULL;
-	//warning2("Unable to determine the path to the configuration files.\n");
+	warning2("Unable to determine the path to the configuration files.\n");
+	warning2("Tried %s/config/%s\n", SRCDIR, name);
+	warning2("Tried %s/config/%s\n", cwd, name);
+	warning2("Tried %s/.aos/config-%s/%s\n", HOME, PACKAGE_VERSION, name);
     }
+    free(cwd);
     return config_path;
 }

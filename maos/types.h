@@ -381,6 +381,8 @@ typedef struct SIM_SAVE_T{
     cellarr **intsnf;
     cellarr **moao_evl;
     cellarr **moao_wfs;
+    //covariances
+    dcell *evlopdcov;
 }SIM_SAVE_T;
 /*
   data wrap for wfsints.
@@ -448,7 +450,7 @@ typedef struct SIM_T{
     dcell *wfspsfmean; /**<To save time average of wfs psf of the full aperture. (for PSF recon)*/
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
-    dcell *sanea_sim;  /**<accumulate effective sanea during simulation.*/
+    dcell **sanea_sim;  /**<accumulate effective sanea during simulation.*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/

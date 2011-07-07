@@ -198,7 +198,7 @@ void perfevl_ievl(thread_t *info){
 		if(isim==parms->sim.start && ievl==0){
 		    warning("Removing tip/tilt from PSF\n");
 		}
-		loc_remove_ptt(iopdevltomo->p,pclmp[isim], aper->locs);
+		loc_remove_ptt(iopdevltomo->p,pclmptomo[isim], aper->locs);
 	    }
 	    ccell *psf2s=psfcomp(iopdevltomo, aper->amp->p, aper->embed, aper->nembed,
 				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
@@ -269,6 +269,7 @@ void perfevl_ievl(thread_t *info){
     if(save_evlopd){
 	cellarr_dmat(simu->save->evlopdcl[ievl],iopdevl);
     }
+
     //Evaluate closed loop performance.
     if(parms->tomo.split && parms->ndm<=2){//for split tomography
 	if(ievl==parms->evl.indoa || parms->dbg.clemp_all){
@@ -302,41 +303,55 @@ void perfevl_ievl(thread_t *info){
 			 aper->mod,aper->amp->p,iopdevl->p);
 	}
     }
-    //Evaluate closed loop PSF.
-    if(do_psf && parms->evl.psf[ievl]){
-	//warning("Output PSF for direction %d\n",ievl);
+    if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim
+       && (parms->evl.opdcov || do_psf)){
+	/* the OPD after this time will be tilt removed. Don't use for
+	   performance evaluation. */
+
 	if(parms->evl.psfpttr[ievl]){
-	    if(isim==parms->sim.start && ievl==0){
-		warning("Removing tip/tilt from PSF\n");
+	    if(isim==parms->evl.psfisim && ievl==0){
+		warning("Removing piston/tip/tilt from PSF.\n");
 	    }
-	    loc_remove_ptt(iopdevl->p,pclmp[isim], aper->locs);
-	}
-	ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
-			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
-	int nwvl=parms->evl.nwvl;
-	if(parms->evl.psfmean){
-	    PDCELL(simu->evlpsfmean, pevlpsfmean);
-	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cabs22d(&pevlpsfmean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
+	    loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
+	}else{//Remove piston only.
+	    if(isim==parms->evl.psfisim && ievl==0){
+		warning("Removing piston from PSF.\n");
 	    }
+	    double ptt[3]={pclmp[isim][0], 0, 0};
+	    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
 	}
-	if(parms->evl.psfhist){
-	    cellarr_ccell(simu->save->evlpsfhist[ievl], psf2s);
-	}
-	if(parms->plot.run){
-	    dmat *psftemp=NULL;
-	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-		dcwlog10(psftemp);
-		double xylim[4]={-12,12,-12,12};
-		ddraw("CL PSF", psftemp, xylim, opdzlim, 
-		      "Science Closed Loop PSF", 
-		      "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
-		dfree(psftemp);
+	
+	if(parms->evl.opdcov){
+	    dmm(&simu->save->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
+	}//opdcov
+	if(do_psf){//Evaluate closed loop PSF.
+	    ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
+				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+	    int nwvl=parms->evl.nwvl;
+	    if(parms->evl.psfmean){
+		PDCELL(simu->evlpsfmean, pevlpsfmean);
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cabs22d(&pevlpsfmean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
+		}
 	    }
-	}
-	ccellfree(psf2s);
-    }//do_psf
+	    if(parms->evl.psfhist){
+		cellarr_ccell(simu->save->evlpsfhist[ievl], psf2s);
+	    }
+	    if(parms->plot.run){
+		dmat *psftemp=NULL;
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+		    dcwlog10(psftemp);
+		    double xylim[4]={-12,12,-12,12};
+		    ddraw("CL PSF", psftemp, xylim, opdzlim, 
+			  "Science Closed Loop PSF", 
+			  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
+		    dfree(psftemp);
+		}
+	    }
+	    ccellfree(psf2s);
+	}//do_psf
+    }
     TIM(5);
  end:
 #if TIMING==1
