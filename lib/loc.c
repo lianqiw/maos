@@ -157,12 +157,12 @@ int *loc_create_embed(int *nembed, const loc_t *loc){
     int nxy=(nx>ny?nx:ny)*2;//minimum size
     int mapn;
     if(*nembed<=0){
-	mapn=(int)exp2(ceil(log2(nxy)));
+	mapn=nextpow2(nxy);
 	*nembed=mapn;
     }else{
-	if(*nembed<nxy/2){
+	if(*nembed<nxy){
 	    error("Supplied nembed %d is too small, need at least %d\n",*nembed,nxy);
-	}else if(*nembed<nxy){
+	}else if(*nembed<nxy*2){
 	    warning("Supplied nembed %d is too small, need at least %d\n",*nembed,nxy);
 	}
 	mapn=*nembed;

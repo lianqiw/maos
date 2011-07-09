@@ -28,6 +28,7 @@
 #include "mathmisc.h"
 #include "loc.h"
 #include "genotf.h"
+#include "sys/process.h"
 /**
 private data struct to mark valid pairs of points.  */
 typedef struct T_VALID{
@@ -50,39 +51,35 @@ typedef struct GENOTF_T{
     double wvl;  /**<The wavelength. only needef if opdbias is not null*/
     long ncompx; /**<Size of OTF*/
     long ncompy; /**<Size of OTF*/
-    long nsa;   /**<Number of (sub)apertures*/
-    long pttr;  /**<Remove piston/tip/tilt*/
-
-    double *B;
+    long nsa;    /**<Number of (sub)apertures*/
+    long pttr;   /**<Remove piston/tip/tilt*/
+    const dmat *B;
     const T_VALID *pval;
     long isafull;
     const cmat *otffull;
 }GENOTF_T;
 /**
-   Remove tip/tilt from the B matrix
+   Remove tip/tilt from the covariance matrix.
 */
-static double* pttr_B(const double *B0,   /**<The B matrix. */
-		      loc_t *loc,  /**<The aperture grid*/
-		      const double *amp /**<The amplitude map*/
+static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
+		    loc_t *loc,       /**<The aperture grid*/
+		    const double *amp /**<The amplitude map*/
 		   ){
     double *locx=loc->locx;
     double *locy=loc->locy;
     int nloc=loc->nloc;
-    double (*B)[nloc]=(double(*)[nloc]) B0;
+
+    dmat *B2=dnew(nloc, nloc);
+    PDMAT(B2, BP);
+    PDMAT(B0, B);
   
     char transn='N';
     char transt='T';
     int nmod=3;
     double *mod[3];
-    dmat *mcc=dnew(3,3);
-    double (*cc)[3]=(double(*)[3])mcc->p;
-    double (*restrict BP)[nloc]=malloc(sizeof(double)*nloc*nloc);
-    
-    double *restrict M, * restrict MW;
-    double (*restrict MCCT)[3],(*restrict Mtmp)[3];
-    double dpone=1;
-    double dpnone=-1;
-    double dpzero=0;
+    dmat *mcc=dnew(3,3);//modal cross coupling matrix.
+    PDMAT(mcc, cc);
+ 
     mod[0]=NULL;
     mod[1]=locx;
     mod[2]=locy;
@@ -94,142 +91,115 @@ static double* pttr_B(const double *B0,   /**<The B matrix. */
 	}
     }
     dinvspd_inplace(mcc);
-    M   = malloc(sizeof(double)*nloc*3);
-    MW  = malloc(sizeof(double)*nloc*3);
-    MCCT= malloc(sizeof(double)*nloc*3);
-    Mtmp= malloc(sizeof(double)*nloc*3);
+    dmat *M   =dnew(nloc, 3);//The tip/tilt modal matrix
+    dmat *MW  =dnew(nloc, 3);//M*W
+    dmat *MCC =dnew(3, nloc);//M*inv(M'*W*M)
+    dmat *Mtmp=dnew(3, nloc);//B'*MW;
+ 
     for(long iloc=0; iloc<nloc; iloc++){
-	M[iloc]=1;
+	M->p[iloc]=1;
     }
-    memcpy(M+nloc, locx, nloc*sizeof(double));
-    memcpy(M+nloc*2, locy, nloc*sizeof(double));
+    memcpy(M->p+nloc, locx, nloc*sizeof(double));
+    memcpy(M->p+nloc*2, locy, nloc*sizeof(double));
     for(long iloc=0; iloc<nloc; iloc++){
-	MW[iloc]=amp[iloc];
-	MW[iloc+nloc]=amp[iloc]*locx[iloc];
-	MW[iloc+nloc*2]=amp[iloc]*locy[iloc];
+	MW->p[iloc]=amp[iloc];
+	MW->p[iloc+nloc]=amp[iloc]*locx[iloc];
+	MW->p[iloc+nloc*2]=amp[iloc]*locy[iloc];
     }
-    /* MCCT = - cci'*M' */
-    dgemm_(&transt, &transt, 
-	   &nmod, &nloc, &nmod, 
-	   &dpnone, 
-	   (double*)cc,&nmod,
-	   M, &nloc, 
-	   &dpzero,
-	   (double*)MCCT,&nmod);
-    /* Mtmp = MW'*B */
-    dgemm_(&transt, &transn,
-	   &nmod, &nloc, &nloc,
-	   &dpone, 
-	   MW, &nloc,
-	   (double*)B, &nloc,
-	   &dpzero, 
-	   (double*)Mtmp, &nmod);
+    /* MCC = - cci' *M' */
+    dmm(&MCC, mcc, M,  "tt", -1);
+    PDMAT(MCC, pMCC);
+    /* Mtmp =  MW' * B  */
+    dmm(&Mtmp, MW, B0, "tn", 1);
+    /*Remove tip/tilt from left side*/
+    PDMAT(Mtmp, pMtmp);
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=Mtmp[iloc][0];
-	double tmp2=Mtmp[iloc][1];
-	double tmp3=Mtmp[iloc][2];
-	for(long im=0; im<nloc; im++){
-	    BP[iloc][im]=B[iloc][im]+
-		(MCCT[im][0]*tmp1+MCCT[im][1]*tmp2+MCCT[im][2]*tmp3);
+	double tmp1=pMtmp[iloc][0];
+	double tmp2=pMtmp[iloc][1];
+	double tmp3=pMtmp[iloc][2];
+	for(long jloc=0; jloc<nloc; jloc++){
+	    BP[iloc][jloc]=B[iloc][jloc]+
+		(pMCC[jloc][0]*tmp1
+		 +pMCC[jloc][1]*tmp2
+		 +pMCC[jloc][2]*tmp3);
 	}
     }
-    /* Mtmp = MW'*BP' */
-    dgemm_(&transt, &transt,
-	   &nmod, &nloc, &nloc,
-	   &dpone, 
-	   MW, &nloc,
-	   (double*)BP, &nloc,
-	   &dpzero, 
-	   (double*)Mtmp, &nmod);
-
+    /* Mtmp = MW' * BP' */
+    dzero(Mtmp);
+    dmm(&Mtmp, MW, B2, "tt", 1);
+    /*Remove tip/tilt from right side*/
     for(long iloc=0; iloc<nloc; iloc++){
-	double tmp1=MCCT[iloc][0];
-	double tmp2=MCCT[iloc][1];
-	double tmp3=MCCT[iloc][2];
+	double tmp1=pMCC[iloc][0];
+	double tmp2=pMCC[iloc][1];
+	double tmp3=pMCC[iloc][2];
 	for(long jloc=0; jloc<nloc; jloc++){
-	    double tmp=BP[iloc][jloc]+tmp1*Mtmp[jloc][0]
-		+tmp2*Mtmp[jloc][1]+tmp3*Mtmp[jloc][2];
-	    BP[iloc][jloc]=exp(-2.*tmp);
+	    BP[iloc][jloc]+=
+		tmp1*pMtmp[jloc][0]
+		+tmp2*pMtmp[jloc][1]
+		+tmp3*pMtmp[jloc][2];
 	}
     }
     dfree(mcc);
-    free(M);
-    free(MW);
-    free(MCCT);
-    free(Mtmp);
-    return (double*)BP;
+    dfree(M);
+    dfree(MW);
+    dfree(MCC);
+    dfree(Mtmp);
+    return B2;
 }
 /**
    Generate OTF from the B or tip/tilted removed B matrix.
 */
 static void genotf_do(cmat **otf, long pttr, long notfx, long notfy, 
 		      loc_t *loc, const double *amp, const double *opdbias, double wvl,
-		      const double* B,  const T_VALID *pval){
+		      const dmat* B,  const T_VALID *pval){
     long nloc=loc->nloc;
-    double (*BP)[nloc];
+    dmat *B2;
     if(pttr){//remove p/t/t from the B matrix
-	BP=(void*)pttr_B(B,loc,amp);
+	B2=pttr_B(B,loc,amp);
     }else{
-	BP=(void*)B;
+	B2=ddup(B);//duplicate since we need to modify it.
     }
+    PDMAT(B2, BP);
     if(!*otf){
 	*otf=cnew(notfx,notfy);
     }
- 
     PCMAT(*otf,OTF);
- 
-
+    /*Do the exponential.*/
+    double k2=pow(2*M_PI/wvl,2);
     double *restrict BPD=malloc(sizeof(double)*nloc);
     for(long iloc=0; iloc<nloc; iloc++){
-	BPD[iloc]=pow(BP[iloc][iloc],-0.5);
+	for(long jloc=0; jloc<nloc; jloc++){
+	    BP[iloc][jloc]=exp(k2*BP[iloc][jloc]);
+	}
+	BPD[iloc]=pow(BP[iloc][iloc], -0.5);
     }
-
-    double otfnorm;
-    otfnorm=0;
+    double otfnorm=0;
     for(long iloc=0; iloc<nloc; iloc++){
 	otfnorm+=amp[iloc]*amp[iloc];
     }
 
     otfnorm=1./otfnorm;
     struct T_VALID (*qval)[notfx]=(struct T_VALID (*)[notfx])pval;
-    if(opdbias){
-	dcomplex wvk=2.*M_PI/wvl*I;
-	for(long jm=0; jm<notfy; jm++){
-	    for(long im=0; im<notfx; im++){
-		long (*jloc)[2]=qval[jm][im].loc;
-		dcomplex tmp1,tmp2;
-		register dcomplex tmp=0.;
-		for(long iloc=0; iloc<qval[jm][im].n; iloc++){
-		    long iloc1=jloc[iloc][0];//iloc1 is continuous.
-		    long iloc2=jloc[iloc][1];//iloc2 is not continuous.
-		    tmp1=amp[iloc1]*cexp(wvk*opdbias[iloc1])*BPD[iloc1]*BP[iloc1][iloc2];
-		    tmp2=amp[iloc2]*cexp(-wvk*opdbias[iloc2])*BPD[iloc2];
-		    tmp+=tmp1*tmp2;
-		}
-		OTF[jm][im]=tmp*otfnorm;
+
+    dcomplex wvk=2.*M_PI/wvl*I;
+    for(long jm=0; jm<notfy; jm++){
+	for(long im=0; im<notfx; im++){
+	    long (*jloc)[2]=qval[jm][im].loc;
+	    double tmp1,tmp2; dcomplex tmp3;
+	    register dcomplex tmp=0.;
+	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
+		long iloc1=jloc[iloc][0];//iloc1 is continuous.
+		long iloc2=jloc[iloc][1];//iloc2 is not continuous.
+		tmp1=amp[iloc1]*BPD[iloc1]*BP[iloc1][iloc2];
+		tmp2=amp[iloc2]*BPD[iloc2];
+		tmp3=opdbias?cexp(wvk*(opdbias[iloc1]-opdbias[iloc2])):1;
+		tmp+=tmp1*tmp2*tmp3;
 	    }
-	}
-    }else{
-	for(long jm=0; jm<notfy; jm++){
-	    for(long im=0; im<notfx; im++){
-		long (*jloc)[2]=qval[jm][im].loc;
-		double tmp1,tmp2;
-		register double tmp=0.;
-		for(long iloc=0; iloc<qval[jm][im].n; iloc++){
-		    long iloc1=jloc[iloc][0];//iloc1 is continuous.
-		    long iloc2=jloc[iloc][1];//iloc2 is not continuous.
-		    tmp1=amp[iloc1]*BPD[iloc1]*BP[iloc1][iloc2];
-		    tmp2=amp[iloc2]*BPD[iloc2];
-		    tmp+=tmp1*tmp2;
-		}
-		OTF[jm][im]=tmp*otfnorm;
-	    }
+	    OTF[jm][im]=tmp*otfnorm;
 	}
     }
     free(BPD);
-    if((void*)BP!=(void*)B){
-	free(BP);
-    }
+    dfree(B2);
 }
 /**
    A wrapper to execute pttr parallel in pthreads
@@ -248,7 +218,7 @@ static void *genotf_wrap(GENOTF_T *data){
     const cmat *otffull=data->otffull;
     const double *amp=data->amp;
     const long pttr=data->pttr;
-    double *B=data->B;
+    const dmat *B=data->B;
     const T_VALID *pval=data->pval;
     while(LOCK(data->mutex_isa),isa=data->isa++,UNLOCK(data->mutex_isa),isa<nsa){
 	if(!detached){
@@ -260,22 +230,21 @@ static void *genotf_wrap(GENOTF_T *data){
 	}else{
 	    opdbiasi=NULL;
 	}
-	if(otffull && area[isa]>thres){
+	if(otffull && (!area || area[isa]>thres)){
 	    ccp(&otf[isa],otffull);//just copy the full array
-	}else if(area[isa]>0){ 
+	}else if(!area || area[isa]>0){ 
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp+isa*nxsa,opdbiasi,wvl,B,pval);
 	}
     }
     return NULL;
 }
 /**
-   Generate pairs of overlapping points for structure function. 
-   Changelog:
+   Generate pairs of overlapping points for structure function.  
 
    2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
    first subaperture to build pval, but this one is not fully illuminated. 
  */
-static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
+static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, 
 			 double dtheta, double wvl){
     double dux=1./(dtheta*notfx);
     double duy=1./(dtheta*notfy);
@@ -322,27 +291,28 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
 	}
     }
     loc_free_map(loc);
-    //pval0=realloc(pval0, sizeof(int)*count*2);
-    //can not realloc. will change position.
+    //pval0=realloc(pval0, sizeof(int)*count*2); //do not realloc. will change position.
     return pval;
 }
 /**
-   Generate the B matrix.
-*/
-static double* genotfB(loc_t *loc, double wvl, double r0, double L0){
+   Generate the turbulence covariance matrix B with B(i,j)=-0.5*D(x_i, x_j). We
+   are neglecting the DC part since the OTF only depends on the structure
+   function.  */
+static dmat* genotfB(loc_t *loc, double r0, double L0){
     (void)L0;
     long nloc=loc->nloc;
     double *locx=loc->locx;
     double *locy=loc->locy;
-    double(*B)[nloc]=(double(*)[nloc])malloc(sizeof(double)*nloc*nloc);
-    const double coeff=6.88*pow(0.5e-6/wvl,2)*pow(r0,-5./3.)*0.25;
+    dmat *B0=dnew(nloc, nloc);
+    PDMAT(B0, B);
+    const double coeff=6.88*pow(2*M_PI/0.5e-6,-2)*pow(r0,-5./3.)*(-0.5);
     for(long i=0; i<nloc; i++){
 	for(long j=i; j<nloc; j++){
 	    double rdiff2=pow(locx[i]-locx[j],2)+pow(locy[i]-locy[j],2);
 	    B[j][i]=B[i][j]=coeff*pow(rdiff2,5./6.);
 	}
     }
-    return (double*)B;
+    return B0;
 }
 /**
    Generate OTFs for multiple (sub)apertures. ALl these apertures must share the
@@ -352,25 +322,24 @@ static double* genotfB(loc_t *loc, double wvl, double r0, double L0){
    build OTF for a static map.*/
 void genotf(cmat **otf,    /**<The otf array for output*/
 	    loc_t *loc,    /**<the aperture grid (same for all apertures)*/
-	    const double *amp,   /**<The amplitude map of all the (sub)apertures*/
-	    const double *opdbias,  /**<The static OPD bias. */
-	    const double *area, /**<normalized area of the (sub)apertures*/
+	    const double *amp,    /**<The amplitude map of all the (sub)apertures*/
+	    const double *opdbias,/**<The static OPD bias (complex part of amp). */
+	    const double *area,   /**<normalized area of the (sub)apertures*/
 	    double thres,  /**<The threshold to consider a (sub)aperture as full*/
 	    double wvl,    /**<The wavelength. only needef if opdbias is not null*/
 	    double dtheta, /**<Sampling of PSF.*/
+	    const dmat *cov,/**<The covariance. If not supplied use r0 for kolmogorov spectrum.*/
 	    double r0,     /**<Fried parameter*/
 	    double l0,     /**<Outer scale*/
-	    long ncompx,    /**<Size of OTF*/
-	    long ncompy,    /**<Size of OTF*/
-	    long nsa,       /**<Number of (sub)apertures*/
-	    long pttr,      /**<Remove piston/tip/tilt*/
-	    long nthread    /**<Number of threads*/
+	    long ncompx,   /**<Size of OTF*/
+	    long ncompy,   /**<Size of OTF*/
+	    long nsa,      /**<Number of (sub)apertures*/
+	    long pttr      /**<Remove piston/tip/tilt*/
 	     ){
-   /*creating pairs of points that both exist with given separation for
-      computing structure function*/
+    /*creating pairs of points that both exist with given separation*/
     T_VALID *pval=gen_pval(ncompx, ncompy, loc, dtheta, wvl);//returns T_VALID array.
     /* Generate the B matrix. */
-    double *B=genotfB(loc, wvl, r0, l0);
+    dmat *B=cov?(dmat*)cov:genotfB(loc, r0, l0);
     cmat *otffull=NULL;
     const long nloc=loc->nloc;
     long isafull=-1;
@@ -407,9 +376,9 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     data.isafull=isafull;
     data.otffull=otffull;
 
-    CALL(genotf_wrap, &data, nthread, 1);
+    CALL(genotf_wrap, &data, NCPU, 1);
     cfree(otffull);
-    free(B);
+    if(!cov) dfree(B);
     free(pval[0].loc);
     free(pval);
 }

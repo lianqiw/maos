@@ -89,6 +89,7 @@ void X(fftshift)(X(mat) *A);\
 void X(cpcorner2center)(X(mat) *A, const X(mat)*B);\
 void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy);\
 void X(rotvec)(X(mat) *A, const double theta);\
+void X(rotvect)(X(mat) *A, const double theta);\
 void X(rotvecnn)(X(mat) **B0, const X(mat) *A, double theta);\
 void X(mulvec3)(T *y, const X(mat) *A, const T *x);\
 void X(cog)(double *grad,const X(mat) *i0,double offsetx, double offsety, double thres, double bkgrnd);\

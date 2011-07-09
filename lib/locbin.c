@@ -177,14 +177,20 @@ void maparrwrite(map_t ** map, int nmap, const char *format,...){
 map_t* d2map(dmat *in){
     map_t *map=realloc(dref(in), sizeof(map_t));
     char *header=in->header;
-    map->ox=search_header_num(header,"ox");
-    map->oy=search_header_num(header,"oy");
-    map->dx=search_header_num(header,"dx");
-    map->h =search_header_num(header,"h");
-    map->vx=search_header_num(header,"vx");
-    map->vy=search_header_num(header,"vy");
+    if(header){
+	map->ox=search_header_num(header,"ox");
+	map->oy=search_header_num(header,"oy");
+	map->dx=search_header_num(header,"dx");
+	map->h =search_header_num(header,"h");
+	map->vx=search_header_num(header,"vx");
+	map->vy=search_header_num(header,"vy");
+    }
     if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
-	error("Valid header is needed to convert dmat to map_t\n");
+	warning("Valid header is needed to convert dmat to map_t\n");
+	map->dx=1;
+	map->ox=map->nx/2*map->dx;
+	map->oy=map->ny/2*map->dx;
+	map->h=map->vx=map->vy=0;
     }
     if(isnan(map->h)) map->h=0;
     if(isnan(map->vx)) map->vx=0;

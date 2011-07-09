@@ -74,6 +74,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     const int nsa=powfs[ipowfs].pts->nsa;
     if(powfs[ipowfs].intstat->mtche){
 	warning("powfs %d: matched filter already exists. free them\n",ipowfs);
+	dcellfree(powfs[ipowfs].intstat->mtchera);
 	dcellfree(powfs[ipowfs].intstat->mtche);
 	dcellfree(powfs[ipowfs].intstat->sanea);
 	dcellfree(powfs[ipowfs].intstat->saneara);
@@ -81,6 +82,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	dcellfree(powfs[ipowfs].intstat->saneaixy);
 	dfree(powfs[ipowfs].intstat->i0sum);
     }
+    powfs[ipowfs].intstat->mtchera=dcellnew(nsa,ni0);
     powfs[ipowfs].intstat->mtche=dcellnew(nsa,ni0);
     powfs[ipowfs].intstat->sanea=dcellnew(ni0,1);
     if(parms->powfs[ipowfs].radpix){
@@ -94,6 +96,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     PDCELL(powfs[ipowfs].intstat->gx,gxs);
     PDCELL(powfs[ipowfs].intstat->gy,gys);
     PDMAT(powfs[ipowfs].intstat->i0sum,i0sum);
+    PDCELL(powfs[ipowfs].intstat->mtchera,mtchera);
     PDCELL(powfs[ipowfs].intstat->mtche,mtche);
     PDCELL(powfs[ipowfs].intstat->saneaxy, saneaxy);
     PDCELL(powfs[ipowfs].intstat->saneaxyl, saneaxyl);
@@ -249,7 +252,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		i0m->ny=3;
 	    }
 	    dmat *tmp=dpinv(i0g, wt, NULL);
-	    dmm(&mtche[ii0][isa],i0m, tmp, "nn", 1);
+	    dmm(&mtchera[ii0][isa],i0m, tmp, "nn", 1);
 	    dfree(tmp);
 	    if(crdisable){
 		//Put old values back.
@@ -259,7 +262,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    for(int i=0; i<i0n; i++){//noise weighting.
 		wt->p[i]=1./wt->p[i];
 	    }
-	    dmat *nea2=dtmcc(mtche[ii0][isa], wt);
+	    dmat *nea2=dtmcc(mtchera[ii0][isa], wt);
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
 	    if(parms->powfs[ipowfs].mtchcpl==0){
@@ -273,8 +276,11 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		saneara[ii0][isa]=nea2;
 		double theta=srot[isa]; 
 		drotvecnn(&saneaxy[ii0][isa], saneara[ii0][isa], theta);
+		mtche[ii0][isa]=ddup(mtchera[ii0][isa]);
+		drotvect(mtche[ii0][isa], theta);
 	    }else{
 		saneaxy[ii0][isa]=nea2;
+		mtche[ii0][isa]=dref(mtchera[ii0][isa]);
 	    }
 	    saneaixy[ii0][isa]=dinvspd(saneaxy[ii0][isa]);
 	    saneaxyl[ii0][isa]=dchol(saneaxy[ii0][isa]);
@@ -334,8 +340,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}//ii0
     }
     if(parms->save.setup){
+	dcellwrite(powfs[ipowfs].intstat->mtchera,
+		   "%s/powfs%d_mtchera",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->mtche,
-		   "%s/powfs%d_mtche",dirsetup,ipowfs);
+		   "%s/powfs%d_mtchexy",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->saneara,
 		   "%s/powfs%d_saneara",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->saneaxy,
@@ -343,6 +351,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	dcellwrite(powfs[ipowfs].intstat->sanea,
 		   "%s/powfs%d_sanea",dirsetup,ipowfs);
     }
+  
     dfree(i0m);
     dfree(i0g);
     dfree(i0x1); dfree(i0x2); dfree(i0y1); dfree(i0y2);

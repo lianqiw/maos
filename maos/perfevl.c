@@ -271,7 +271,7 @@ void perfevl_ievl(thread_t *info){
     }
 
     //Evaluate closed loop performance.
-    if(parms->tomo.split && parms->ndm<=2){//for split tomography
+    if(parms->tomo.split){//for split tomography
 	if(ievl==parms->evl.indoa || parms->dbg.clemp_all){
 	    //copy the opd for later evaluation of clemp for onaxis only.
 	    dcp(&simu->opdevl->p[ievl], iopdevl);
@@ -317,10 +317,10 @@ void perfevl_ievl(thread_t *info){
 	    if(isim==parms->evl.psfisim && ievl==0){
 		warning("Removing piston from PSF.\n");
 	    }
-	    double ptt[3]={pclmp[isim][0], 0, 0};
+	    double piston=pclmp[isim][0];
+	    double ptt[3]={piston, 0, 0};//put pclmp[isim][0] here does not work.
 	    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
 	}
-	
 	if(parms->evl.opdcov){
 	    dmm(&simu->save->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
 	}//opdcov

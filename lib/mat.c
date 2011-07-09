@@ -1053,7 +1053,7 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
 }
 
 /**
-   rotate the vectors CCW.
+   rotate the column vectors CCW.
    same as rotate coordinate theta CW.
    A(:,1) is x, A(:,2) is y.
 */
@@ -1066,6 +1066,23 @@ void X(rotvec)(X(mat) *A, const double theta){
 	T tmp=Ap[0][i]*ctheta-Ap[1][i]*stheta;
 	Ap[1][i]=Ap[0][i]*stheta+Ap[1][i]*ctheta;
 	Ap[0][i]=tmp;
+    }
+}
+
+/**
+   rotate the row vectors CCW.
+   same as rotate coordinate theta CW.
+   A(:,1) is x, A(:,2) is y.
+*/
+void X(rotvect)(X(mat) *A, const double theta){
+    if(A->nx!=2) error("Wrong dimension\n");
+    const double ctheta=cos(theta);
+    const double stheta=sin(theta);
+    PMAT(A,Ap);
+    for(int i=0; i<A->ny; i++){
+	T tmp=Ap[i][0]*ctheta-Ap[i][1]*stheta;
+	Ap[i][1]=Ap[i][0]*stheta+Ap[i][1]*ctheta;
+	Ap[i][0]=tmp;
     }
 }
 

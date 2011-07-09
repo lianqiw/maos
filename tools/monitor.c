@@ -346,7 +346,7 @@ int scheduler_connect(int ihost, int block, int mode){
 	if(count>1000){
 	    close(sock);
 	    sock=-1;
-	    error("Failed to connect to scheduer\n");
+	    warning("Failed to connect to scheduer after 1000 trials.\n");
 	}
     }
     scheduler_shutdown(&sock,mode);
@@ -400,7 +400,7 @@ static void add_host_thread(void *value){
       g_io_channel_get_flags() to update the internal values of these flags.*/
     while(!quitall){
 	if(!hsock[ihost]){
-	    int sock=scheduler_connect(ihost,1,0);
+	    int sock=scheduler_connect(ihost,0,0);
 	    if(sock==-1){
 		hsock[ihost]=0;
 	    }else{

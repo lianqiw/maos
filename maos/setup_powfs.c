@@ -1489,6 +1489,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
     long nsa=powfs[ipowfs].pts->nsa;
     if(powfs[ipowfs].intstat){
 	dcellfree(powfs[ipowfs].intstat->mtche);
+	dcellfree(powfs[ipowfs].intstat->mtchera);
 	dcellfree(powfs[ipowfs].intstat->sanea);
 	dcellfree(powfs[ipowfs].intstat->saneaxy);
 	dcellfree(powfs[ipowfs].intstat->saneaixy);
@@ -1764,6 +1765,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	dcellfree(powfs[ipowfs].neasim);
 	if(powfs[ipowfs].intstat){
 	    dcellfree(powfs[ipowfs].intstat->mtche);
+	    dcellfree(powfs[ipowfs].intstat->mtchera);
 	    dcellfree(powfs[ipowfs].intstat->sanea);
 	    dcellfree(powfs[ipowfs].intstat->saneara);
 	    dcellfree(powfs[ipowfs].intstat->saneaxyl);

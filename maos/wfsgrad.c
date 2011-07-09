@@ -341,12 +341,12 @@ void wfsgrad_iwfs(thread_t *info){
     if(dtrat_output){
 	if(do_phy){
 	    /*
-	      In Physical optics mode, finish integration and output gradients to
-	      grad.
+	      In Physical optics mode, do integration and compute gradients. The
+	      matched filter are for x/y directions even if radpix=1.
 	    */
 	    dmat **mtche=NULL;
 	    double *i0sum=NULL;
-
+	    
 	    if(parms->powfs[ipowfs].phytypesim==1){
 		if(powfs[ipowfs].intstat->mtche->ny==1){
 		    mtche=powfs[ipowfs].intstat->mtche->p;
@@ -383,16 +383,15 @@ void wfsgrad_iwfs(thread_t *info){
 		srot=powfs[ipowfs].srot->p[illt]->p;
 	    }
 	    //output directly to simu->gradcl. replace
-	    double gnf[2]={0,0};
-	    double gny[2]={0,0};
 	    const double rne=parms->powfs[ipowfs].rne;
 	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 	    const double siglev=parms->wfs[iwfs].siglevsim;//don't multiply to dtrat.
-	    dmat *gradnf=dnew(nsa*2,1);//save noise free gradients.
 	    double *pgradx=(*gradout)->p;
 	    double *pgrady=pgradx+nsa;
-	    double *pgradnfx=gradnf->p;
-	    double *pgradnfy=pgradnfx+nsa;
+	    dmat *gradnf=NULL;
+	    if(save_grad){
+		gradnf=dnew(nsa*2,1);//save noise free gradients.
+	    }
 	    dcellscale(ints, siglev);
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsnf[iwfs], ints);
@@ -403,17 +402,18 @@ void wfsgrad_iwfs(thread_t *info){
 		  or mask out. This is important when bkgrndfnc is greater
 		  than 1.
 		*/
-		double pmax;
-		gnf[0]=0; gnf[1]=0;
+		double gnf[2]={0,0};
+		double gny[2]={0,0};
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:
 		    dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
 		    break;
-		case 2:
-		    pmax=dmax(ints->p[isa]);
+		case 2:{
+		    double pmax=dmax(ints->p[isa]);
 		    dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
 		    gnf[0]*=pixtheta;
 		    gnf[1]*=pixtheta;
+		}
 		    break;
 		default:
 		    error("Invalid");
@@ -424,7 +424,6 @@ void wfsgrad_iwfs(thread_t *info){
 		    addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
 			     bkgrnd,parms->powfs[ipowfs].bkgrndc,
 			     bkgrnd2i, bkgrnd2ic, rne);
-		    gny[0]=0; gny[1]=0;
 		    switch(parms->powfs[ipowfs].phytypesim){
 		    case 1:
 			dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
@@ -435,11 +434,12 @@ void wfsgrad_iwfs(thread_t *info){
 			    gny[1]*=scale;
 			}
 			break;
-		    case 2:
-			pmax=dmax(ints->p[isa]);
+		    case 2:{
+			double pmax=dmax(ints->p[isa]);
 			dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
 			gny[0]*=pixtheta;
 			gny[1]*=pixtheta;
+		    }
 			break;
 		    default:
 			error("Invalid");
@@ -454,31 +454,12 @@ void wfsgrad_iwfs(thread_t *info){
 		    gny[0]=gnf[0];
 		    gny[1]=gnf[1];
 		}
-		if(parms->powfs[ipowfs].radpix){
-		    /*
-		      rotate gradients from ra to xy 
-		      coordinate rotates cw by theta from ra to xy.
-		      therefore vector rotates ccw by theta.
-		      use standard R(theta)=[cos -sin; sin cos]
-		      |xnew|                 |x|
-		      |ynew|   =  R(theta) * |y|
-		    */
-		    double theta;
-		    theta=srot[isa]; 
-		    
-		    const double sth=sin(theta);
-		    const double cth=cos(theta);
-		    pgradnfx[isa]=gnf[0]*cth-gnf[1]*sth;
-		    pgradnfy[isa]=gnf[0]*sth+gnf[1]*cth;
-		    pgradx[isa]=gny[0]*cth-gny[1]*sth;
-		    pgrady[isa]=gny[0]*sth+gny[1]*cth;
-		}else{
-		    //already xy
-		    pgradnfx[isa]=gnf[0];
-		    pgradnfy[isa]=gnf[1];
-		    pgradx[isa]=gny[0];
-		    pgrady[isa]=gny[1];
+		if(save_grad){
+		    gradnf->p[isa]=gnf[0];
+		    gradnf->p[isa+nsa]=gnf[1];
 		}
+		pgradx[isa]=gny[0];
+		pgrady[isa]=gny[1];
 	    };//isa
 
 	    if(save_ints){
@@ -486,8 +467,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	    if(save_grad && noisy){
 		cellarr_dmat(simu->save->gradnf[iwfs], gradnf);
+		dfree(gradnf);
 	    }
-	    dfree(gradnf);
 	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		if(!recon->PTT){
 		    error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
@@ -508,7 +489,6 @@ void wfsgrad_iwfs(thread_t *info){
 		PDMAT(simu->upterrs->p[iwfs], pupterrs);
 		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
 		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
-	
 	    }
 	}else{
 	    //geomtric optics accumulation mode. scale and copy results to output.

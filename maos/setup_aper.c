@@ -109,9 +109,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
     }
     //Set the amp for plotting.
-    if(parms->plot.setup ||parms->plot.run){
-	aper->amp1=ddup(aper->amp);
-    }
+    aper->amp1=ddup(aper->amp);
     //normalize amp to sum to 1.
     normalize(aper->amp->p, aper->locs->nloc, 1);
     if(parms->plot.setup){
