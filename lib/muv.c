@@ -317,7 +317,7 @@ void* muv_direct_spsolve(const MUV_T *A, const dsp *xin){
     if(A->MI){
 	dmat *x1=NULL;
 	dmulsp(&x1, A->MI, xin, 1);
-	dmm((dmat**) &xout, x1, A->MI, "nt", 1);
+	dmm((void*)&xout, x1, A->MI, "nt", 1);
 	dfree(x1);
     }else{
 	dsp *x1=chol_spsolve(A->C, xin);

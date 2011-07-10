@@ -49,7 +49,8 @@ BUILD_DIR=$(pwd)
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
-OPTScommon=" -Wshadow -Wall -Werror -g " #-all-static will produce a static exe.
+#Specifying both -O3 and -g in mac produces internal error in gcc 4.2
+OPTScommon=" -Wshadow -Wall -Werror " #-all-static will produce a static exe.
 LDSYS="-lz -lm"
 OPTSextra=""
 use_shm="no"
@@ -93,7 +94,7 @@ case "$host_os" in
 *linux*)
  AM_CONDITIONAL(LINUX, true)
  LDSYS="$LDSYS -lrt" #real time library.
- OPTSextra="-D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+ OPTSextra="-D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L -g"
  try_mkl="yes"
  use_static_default="no"
  wget="wget --no-check-certificate"

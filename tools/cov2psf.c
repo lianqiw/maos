@@ -34,10 +34,10 @@ int main(int argc, char *argv[]){
 	P_PTTR,
 	P_WVL
     };
-    loc_t *loc=locread(argv[P_LOC]);
+    loc_t *loc=locread("%s",argv[P_LOC]);
     dmat *amp=NULL;
-    if(strcmp(argv[P_AMP],"NULL")) amp=dread(argv[P_AMP]);
-    dmat *cov=dread(argv[P_COV]);
+    if(strcmp(argv[P_AMP],"NULL")) amp=dread("%s",argv[P_AMP]);
+    dmat *cov=dread("%s",argv[P_COV]);
     long ncomp=strtol(argv[P_NCOMP], NULL, 10);
     long pttr=strtol(argv[P_PTTR], NULL, 10);
     cmat *otf=otf=cnew(ncomp, ncomp);

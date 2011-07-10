@@ -73,9 +73,6 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
     PDMAT(B2, BP);
     PDMAT(B0, B);
   
-    char transn='N';
-    char transt='T';
-    int nmod=3;
     double *mod[3];
     dmat *mcc=dnew(3,3);//modal cross coupling matrix.
     PDMAT(mcc, cc);
