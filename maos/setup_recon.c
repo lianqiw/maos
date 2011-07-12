@@ -2137,11 +2137,12 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     //always assemble fit matrix, faster if many directions
     setup_recon_fit_matrix(recon,parms);
     toc2("Generating fit matrix");
+    //Fall back function method if FR.M is NULL (!HXF<-fitonly)
+    recon->FR.Mfun  = FitR;
+    recon->FR.Mdata = recon;
     //Fall back function method if FL.M is NULL
     recon->FL.Mfun  = FitL;
     recon->FL.Mdata = recon;
-    recon->FR.Mfun  = FitR;
-    recon->FR.Mdata = recon;
     recon->FL.alg = parms->fit.alg;
     recon->FL.bgs = parms->fit.bgs;
     recon->FL.warm  = recon->warm_restart;
@@ -2173,7 +2174,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     //The following have been used in fit matrix.
     dcellfree(recon->fitNW);
     spcellfree(recon->actslave);
-    if(recon->FR.M){
+    if(recon->FR.M && !parms->sim.wfsalias && !parms->sim.wfsideal){
 	spfree(recon->W0); 
 	dfree(recon->W1); 
 	spcellfree(recon->HA); 

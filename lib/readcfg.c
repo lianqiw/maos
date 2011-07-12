@@ -365,6 +365,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     free(fn);
 #undef MAXLN
 }
+static const char *curkey;
 /**
    Get the record number of a key.
  */
@@ -373,6 +374,7 @@ static long getrecord(char *key, int mark){
     ENTRY entry, *entryfind;
     strtrim(&key);
     entry.key=key;
+    curkey=key;
     if((entryfind=hsearch(entry,FIND))){
 	irecord=(long)entryfind->data;
 	if(mark){
@@ -494,8 +496,7 @@ int readstr_strarr(char ***res, int len, const char *sdata){
     const char *sdataend=sdata+strlen(sdata)-1;
     const char *sdata2;
     if(sdata[0]!='[' || sdataend[0]!=']'){
-	info("sdata[0]=%c, sdataend[0]=%c\n",sdata[0], sdataend[0]);
-	warning2("Entry {%s} should start with [ and end with ]\n", sdata);
+	warning2("%s: Entry {%s} should start with [ and end with ]\n", curkey, sdata);
 	sdata2=sdata;
     }else{
 	sdata2=sdata+1;
@@ -507,11 +508,11 @@ int readstr_strarr(char ***res, int len, const char *sdata){
     }
     while(sdata2<sdataend){
 	if(sdata2[0]!='"'){
-	    error("Unable to parse {%s} for str array\n", sdata);
+	    error("%s: Unable to parse {%s} for str array\n", curkey, sdata);
 	}
 	const char *sdata3=sdata2+1;
 	const char *sdata4=strchr(sdata3,'"');
-	if(!sdata4) error("Unmatched ""\n");
+	if(!sdata4) error("%s: Unmatched \"\n", curkey);
 	if(sdata4>sdata3){
 	    if(!len && count>=maxcount){
 		maxcount*=2;
@@ -644,13 +645,13 @@ double readcfg_dbl(const char *format,...){
    (spaced are skipped).  */
 double readstr_num(const char *data, char **endptr0){
     if(!data || strlen(data)==0){
-	error("Unable to parse {%s} for a number\n", data);
+	error("%s: Unable to parse {%s} for a number\n", curkey, data);
 	return 0;
     }
     char *endptr;
     double res=strtod(data, &endptr);
     if(data==endptr){
-	error("Unable to parse {%s} for a number\n", data);
+	error("%s: Unable to parse {%s} for a number\n", curkey, data);
 	return 0;
     }
     while(isspace((int)endptr[0])) endptr++;
@@ -664,7 +665,7 @@ double readstr_num(const char *data, char **endptr0){
 	data=endptr;
 	double tmp=strtod(data, &endptr);
 	if(data==endptr){
-	    error("Failed to parse {%s} for a number\n", data);
+	    error("%s: Failed to parse {%s} for a number\n", curkey, data);
 	}
 	if(power==1){
 	    res*=tmp;
@@ -718,7 +719,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	while(startptr[0]!='['){
 	    double fact1=strtod(startptr, &endptr);//get the number
 	    if(startptr==endptr){
-		error("Invalid entry to parse for numerical array: {%s}\n", data);
+		error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
 	    }else{//valid number
 		if(power==1){
 		    fact*=fact1;
@@ -731,13 +732,13 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 		}else if(endptr[0]=='*'){
 		    power=1;
 		}else{
-		    error("Invalid entry to parse for numerical array: {%s}\n", data);
+		    error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
 		}
 		startptr=endptr+1;
 	    }
 	}
 	if(startptr[0]!='['){
-	    error("Invalid entry to parse for numerical array: {%s}\n", data);
+	    error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
 	}
 	startptr++;//points to the beginning of the array in []
 	/*process possible numbers after the array. do not use startptr here.*/
@@ -759,7 +760,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	    startptr2=endptr;
 	    double fact2=strtod(startptr2, &endptr);
 	    if(startptr2==endptr){
-		error("Invalid entry to parse for numerical array: {%s}\n", data);
+		error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
 	    }
 	    while(isspace((int)endptr[0])) endptr++;
 	    if(power2==1){
@@ -769,7 +770,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	    }
 	}
 	if(endptr[0]!='\0'){
-	    error("There is garbage in the end of the string: {%s}\n", data);
+	    error("%s: There is garbage in the end of the string: {%s}\n", curkey, data);
 	}
     }
     int count=0;
@@ -777,7 +778,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
     while(startptr[0]!=']' && startptr[0]!='\0'){
 	if(count>=nmax){
 	    if(len){
-		error("We want %d numbers, but more are supplied: {%s}\n", len, data);
+		error("%s: Needs %d numbers, but more are supplied: {%s}\n", curkey, len, data);
 	    }else{
 		nmax*=2;
 		*ret=realloc(*ret, size*nmax);

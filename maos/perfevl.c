@@ -73,24 +73,20 @@ void perfevl_ievl(thread_t *info){
     PDMAT(simu->clmp->p[ievl],pclmp);
     PDMAT(simu->clep->p[ievl],pclep);
 
-    if(simu->opdevlground){
-	memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
-    }else{
-	dzero(iopdevl);
-	if(simu->telws){//Wind shake
-	    double tmp=simu->telws->p[isim];
-	    double angle=simu->winddir?simu->winddir->p[0]:0;
-	    double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-	    loc_add_ptt(iopdevl->p, ptt, aper->locs);
-	}
-    }
-    //Add surfaces along science path. prepared in setup_surf.c
-    if(simu->surfevl && simu->surfevl->p[ievl]){
-	dadd(&iopdevl, 1, simu->surfevl->p[ievl], 1);
-    }
-
     //atmosphere contribution.
-    if(simu->atm){
+    if(simu->atm && !parms->sim.wfsalias){
+	if(simu->opdevlground){
+	    memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
+	}else{
+	    dzero(iopdevl);
+	    if(simu->telws){//Wind shake
+		double tmp=simu->telws->p[isim];
+		double angle=simu->winddir?simu->winddir->p[0]:0;
+		double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+		loc_add_ptt(iopdevl->p, ptt, aper->locs);
+	    }
+	}
+	
 	/*fix me: the ray tracing of the same part must be performed in the same thread. */
 	for(int ips=0; ips<nps; ips++){
 	    if(ips!=simu->perfevl_iground){
@@ -102,7 +98,11 @@ void perfevl_ievl(thread_t *info){
 	    }
 	}
     }
-  
+    //Add surfaces along science path. prepared in setup_surf.c
+    if(simu->surfevl && simu->surfevl->p[ievl]){
+	dadd(&iopdevl, 1, simu->surfevl->p[ievl], 1);
+    }
+
     TIM(1);
     if(save_evlopd){
 	cellarr_dmat(simu->save->evlopdol[ievl],iopdevl);
@@ -481,7 +481,7 @@ static void perfevl_mean(SIM_T *simu){
 	simu->status->clerrlo=sqrt(simu->cle->p[nmod*isim+1]*1e18);
     }//if split
     
-    if(parms->sim.noatm==0 && simu->cle->p[nmod*isim] > simu->ole->p[nmod*isim]*100){
+    if(parms->sim.noatm==0 && simu->cle->p[nmod*isim] > MAX(simu->ole->p[nmod*isim]*100, 1e-13)){
 	warning("The loop is diverging: OL: %g CL: %g\n",  
 		simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
     }

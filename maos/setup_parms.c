@@ -719,6 +719,8 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.fitonly);
     READ_INT(sim.psfr);
     READ_INT(sim.ecnn);
+    READ_INT(sim.wfsalias);
+    READ_INT(sim.wfsideal);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -908,6 +910,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.recon==1 && parms->tomo.split==2){
 	info2("MVST does not work with least square reconstructor. Changed to AHST");
 	parms->tomo.split=1;
+    }
+    if(parms->sim.wfsalias && parms->sim.wfsideal){
+	error("sim.wfsalias conflicts with sim.wfsideal. Do not enable both.\n");
     }
 }
 /**

@@ -428,9 +428,13 @@ typedef struct SIM_CFG_T{
     int fitonly;     /**<do DM fitting only, by replacing opdr with opdx. see above*/
     int psfr;        /**<do PSF reconstruction telemetry*/
     int ecnn;        /**<Calculate WF covariance due to WFS noise cov Cnn.*/
-    int dmttcast;    /**<cast tip/tilt from DM commands to study saturation or
+    int wfsalias;    /**<Study the wfs aliasing effect by projecting turbulence
+			onto the NULL space of DM.*/
+    int wfsideal;    /**<Generates ideal WFS by removing aliasing effect.*/
+    /* A few derived parameters*/
+    int dmttcast;    /**<derived: cast tip/tilt from DM commands to study saturation or
 			histogram and then add back*/
-    int dmclip;      /**<Need to clip actuators*/
+    int dmclip;      /**<drived: Need to clip actuators*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.

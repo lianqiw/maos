@@ -31,8 +31,8 @@
 #endif
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
-physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
-physical optics mode.  */
+   physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
+   physical optics mode.  */
 
 void wfsgrad_iwfs(thread_t *info){
     SIM_T *simu=info->data;
@@ -82,34 +82,74 @@ void wfsgrad_iwfs(thread_t *info){
     dmat **gradout=&simu->gradcl->p[iwfs];
     dcell *ints=simu->ints[iwfs];
     dmat  *opd=dnew(npix,1);
-    /*
-      Add surface
-    */
+
+    /* Add surface error*/
     if(simu->surfwfs && simu->surfwfs->p[iwfs]){
 	dadd(&opd,1, simu->surfwfs->p[iwfs],1);
     }
-    /*
-      Add NCPA to WFS as needed. Todo: merge surfwfs
-      with ncpa. be careful about ncpa calibration.
-    */
+
+    /* Add NCPA to WFS as needed. Todo: merge surfwfs with ncpa. be careful about
+       ncpa calibration. */
     if(powfs[ipowfs].ncpa){
 	//info2("Adding NCPA to wfs %d\n",iwfs);
 	dadd(&opd, 1, powfs[ipowfs].ncpa->p[wfsind], 1);
     }
     double *realamp=powfs[ipowfs].realamp[wfsind];
-    /*
-      Now begin ray tracing.
-    */
-    if(atm){
+
+    /* Now begin ray tracing. */
+    if(parms->sim.wfsideal){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	    double dispx=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
+	    double dispy=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
+	    double scale=1.-ht/hs;
+	    double alpha=1;
+	    double wrap=0;
+	    if(parms->dm[idm].cubic){
+		prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
+				   powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+				   alpha, dispx, dispy, scale, parms->dm[idm].iac, 
+				   0, 0);
+	    }else{
+		prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
+			     powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+			     alpha, dispx, dispy, scale, 
+			     0, 0);
+	    }
+	}
+    }else if(atm){
 	for(int ips=0; ips<nps; ips++){
 	    thread_t *wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
 	    PROPDATA_T *wfs_propdata=&simu->wfs_propdata_atm[iwfs+parms->nwfs*ips];
 	    wfs_propdata->phiout=opd->p;
-	    wfs_propdata->displacex1=-atm[ips]->vx*dt*isim;//frozen flow.
+	    wfs_propdata->displacex1=-atm[ips]->vx*dt*isim;
 	    wfs_propdata->displacey1=-atm[ips]->vy*dt*isim;
-	    CALL_THREAD(wfs_prop, nthread, 0);//have to wait to finish before another phase screen.
+	    /* have to wait to finish before another phase screen. */
+	    CALL_THREAD(wfs_prop, nthread, 0);
 	}//ips
-	//most expensive 0.10 per LGS for
+	/* most expensive 0.10 per LGS for*/
+	if(parms->sim.wfsalias){
+	    /* Remove subspace of atm projected onto range of DM.*/
+	    for(int idm=0; idm<parms->ndm; idm++){
+		const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
+		double dispx=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
+		double dispy=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
+		double scale=1.-ht/hs;
+		double alpha=-1;
+		double wrap=0;
+		if(parms->dm[idm].cubic){
+		    prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
+				       powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+				       alpha, dispx, dispy, scale, parms->dm[idm].iac, 
+				       0, 0);
+		}else{
+		    prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
+				 powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+				 alpha, dispx, dispy, scale, 
+				 0, 0);
+		}
+	    }
+	}
     }
     if(simu->telws){//Wind shake
 	double tmp=simu->telws->p[isim];
@@ -132,8 +172,8 @@ void wfsgrad_iwfs(thread_t *info){
 	dmat **dmwfs=simu->moao_wfs->p;
 	if(dmwfs[iwfs]){
 	    info("iwfs %d: Adding MOAO correction\n", iwfs);
-	    /*No need to do mis registration here since the MOAO DM is
-	      attached to close to the WFS.*/
+	    /* No need to do mis registration here since the MOAO DM is attached
+	       to close to the WFS.*/
 	    if(parms->moao[imoao].cubic){
 		prop_nongrid_pts_cubic(recon->moao[imoao].aloc, dmwfs[iwfs]->p,
 				       powfs[ipowfs].pts, realamp, opd->p, -1, 0, 0, 1, 
@@ -145,9 +185,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
     }
-    /*
-      Add defocus to OPD if needed.
-    */
+    /* Add defocus to OPD if needed. */
     double focus=0;
     if(powfs[ipowfs].focus){
 	int iy=0;
@@ -178,10 +216,9 @@ void wfsgrad_iwfs(thread_t *info){
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
     }
-    /*
-      calculate and save full aperture PSF is requested. The wavelength are
-      evl.psfwvl, but powfs.wvl since our purpose is to compare with science PSF.
-     */
+    /* calculate and save full aperture PSF is requested. The wavelength are
+       evl.psfwvl, but powfs.wvl since our purpose is to compare with science
+       PSF. */
     if(parms->wfs[iwfs].psfmean && isim>=parms->evl.psfisim){
 	dmat *opdcopy=NULL;
 	if(parms->powfs[ipowfs].trs){
@@ -206,10 +243,8 @@ void wfsgrad_iwfs(thread_t *info){
 	}
 	ccellfree(psf2s);
     }
-    /*
-      Now begin Physical Optics Intensity calculations
-    */
-  
+
+    /* Now begin Physical Optics Intensity calculations */
     if(do_geom){
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    //compute ztilt.
@@ -232,7 +267,6 @@ void wfsgrad_iwfs(thread_t *info){
     dcell *pistatout=NULL;
     if(parms->powfs[ipowfs].pistatout
        &&isim>=parms->powfs[ipowfs].pistatstart){
-	//assert(parms->powfs[ipowfs].dtrat==1);
 	if(!simu->pistatout[iwfs]){
 	    simu->pistatout[iwfs]
 		=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
@@ -277,7 +311,7 @@ void wfsgrad_iwfs(thread_t *info){
 		double tty;
 		if(pistatout||parms->sim.uptideal){
 		    warning("Remove tip/tilt in uplink ideally\n");
-		    //remove tip/tilt completely
+		    /* remove tip/tilt completely */
 		    dmat *lltg=dnew(2,1);
 		    pts_ztilt(&lltg,powfs[ipowfs].llt->pts,
 			      powfs[ipowfs].llt->imcc,
@@ -290,7 +324,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    ttx=simu->uptreal->p[iwfs]->p[0];
 		    tty=simu->uptreal->p[iwfs]->p[1];
 		}
-		//copy uptreal to output
+		/* copy uptreal to output */
 		PDMAT(simu->uptcmds->p[iwfs], puptcmds);
 		puptcmds[isim][0]=ttx;
 		puptcmds[isim][1]=tty;
@@ -311,9 +345,6 @@ void wfsgrad_iwfs(thread_t *info){
 	if(pistatout){
 	    if(!parms->powfs[ipowfs].pistatstc && do_geom){
 		gradref=*gradacc;
-		//info("Using ztilt to shift pistat\n");
-	    }else{
-		//info("Using fft to shift pistat\n");
 	    }
 	}
 	WFSINTS_T *intsdata=simu->wfs_intsdata+iwfs;
@@ -340,10 +371,9 @@ void wfsgrad_iwfs(thread_t *info){
 
     if(dtrat_output){
 	if(do_phy){
-	    /*
-	      In Physical optics mode, do integration and compute gradients. The
-	      matched filter are for x/y directions even if radpix=1.
-	    */
+	    /* In Physical optics mode, do integration and compute
+	       gradients. The matched filter are for x/y directions even if
+	       radpix=1. */
 	    dmat **mtche=NULL;
 	    double *i0sum=NULL;
 	    
@@ -397,11 +427,9 @@ void wfsgrad_iwfs(thread_t *info){
 		cellarr_dcell(simu->save->intsnf[iwfs], ints);
 	    }
 	    for(int isa=0; isa<nsa; isa++){
-		/*
-		  TODO: Do something to remove negative pixels. shift image
-		  or mask out. This is important when bkgrndfnc is greater
-		  than 1.
-		*/
+		/* TODO: Do something to remove negative pixels. shift image or
+		   mask out. This is important when bkgrndfnc is greater than
+		   1. */
 		double gnf[2]={0,0};
 		double gny[2]={0,0};
 		switch(parms->powfs[ipowfs].phytypesim){
@@ -429,7 +457,6 @@ void wfsgrad_iwfs(thread_t *info){
 			dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
 			if(parms->powfs[ipowfs].mtchscl){
 			    double scale=i0sum[isa]/dsum(ints->p[isa]);
-			    //info("scale wfs %d, isa %d by %g\n",iwfs,isa,scale);
 			    gny[0]*=scale;
 			    gny[1]*=scale;
 			}
@@ -482,16 +509,17 @@ void wfsgrad_iwfs(thread_t *info){
 		if(!PTT){
 		    error("powfs %d has llt, but TT removal is empty\n", ipowfs);
 		}
-		/*Compute LGS Uplink error*/
+		/* Compute LGS Uplink error. */
 		dzero(simu->upterr->p[iwfs]);
 		dmm(&simu->upterr->p[iwfs], PTT, *gradout, "nn", 1);
-		//copy upterr to output.
+		/* copy upterr to output. */
 		PDMAT(simu->upterrs->p[iwfs], pupterrs);
 		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
 		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
 	    }
 	}else{
-	    //geomtric optics accumulation mode. scale and copy results to output.
+	    /* geomtric optics accumulation mode. scale and copy results to
+	       output. */
 	    dcp(gradout,*gradacc);
 	    if(dtrat!=1)
 		dscale(*gradout,1./dtrat);//average
@@ -564,20 +592,24 @@ void wfsgrad_iwfs(thread_t *info){
 */
 void wfsgrad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
     if(parms->sim.fitonly || parms->sim.evlol) return;
     double tk_start=myclockd();
-   
-    //call the task in parallel and wait for them to finish.
+    if(parms->sim.wfsalias || parms->sim.wfsideal){
+	/* teporarily disable FR.M so that Mfun is used.*/
+	spcell *FRM=recon->FR.M; recon->FR.M=NULL; 
+	muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
+	recon->FR.M=FRM;/*set FR.M back*/
+    }
+    /* call the task in parallel and wait for them to finish. */
     CALL_THREAD(simu->wfs_grad, parms->nwfs, 0);
-    /*
-      Uplink pointing servo. Moved to here from filter.c because of
-      synchronization issue. dcellcp before integrator changes because wfsgrad
-      updates upterr with current gradient.
-    */
+    /* Uplink pointing servo. Moved to here from filter.c because of
+       synchronization issue. dcellcp before integrator changes because wfsgrad
+       updates upterr with current gradient. */
     dcellcp(&simu->uptreal, simu->uptint[0]);
     if(simu->upterr){
-	//uplink tip/tilt mirror. use Integrator/Derivative control
-	//update command for next step.
+	/* uplink tip/tilt mirror. use Integrator/Derivative control
+	   update command for next step.*/
 	shift_inte(parms->sim.napupt, parms->sim.apupt, simu->uptint);
 	double gain1=parms->sim.epupt+parms->sim.dpupt;
 	double gain2=-parms->sim.dpupt;

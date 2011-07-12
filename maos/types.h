@@ -475,6 +475,8 @@ typedef struct SIM_T{
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
+    dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
+			  onto DM space directly.*/
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
     dcell **dmint;     /**<dm integrator. (used of fuseint==1)*/
