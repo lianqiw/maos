@@ -639,7 +639,6 @@ static void wfsgrad_save(SIM_T *simu){
 */
 void wfsgrad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    RECON_T *recon=simu->recon;
     if(parms->sim.fitonly || parms->sim.evlol) return;
     double tk_start=myclockd();
   
