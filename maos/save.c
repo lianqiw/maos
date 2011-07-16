@@ -21,6 +21,7 @@
 #include "save.h"
 #include "ahst.h"
 #include "sim_utils.h"
+#include "sim.h"
 void save_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
@@ -126,6 +127,32 @@ void save_recon(SIM_T *simu){
 	cellarr_dcell(simu->save->dmerr_hi, simu->dmerr_hi);
 	if(simu->save->Merr_lo){
 	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
+	}
+    }
+    const int seed=simu->seed;
+    if(parms->save.ngcov>0 && CHECK_SAVE(parms->sim.start, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->save.gcovp)){
+	double scale=1./(double)(simu->reconisim-parms->sim.start+1);
+	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
+	    dswrite(simu->gcov->p[igcov], scale, "gcov_%d_wfs%d_%d_%d.bin", seed,
+		    parms->save.gcov[igcov*2], parms->save.gcov[igcov*2+1],
+		    simu->reconisim+1);
+	}
+    }
+    if(parms->sim.psfr && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->sim.psfr)){
+	info2("Output PSF Recon Telemetry\n");
+	char strht[24];
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    if(!simu->ecov->p[ievl]) continue;
+	    if(!isinf(parms->evl.ht[ievl])){
+		snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+	    }else{
+		strht[0]='\0';
+	    }
+	    long nstep=simu->reconisim+1-parms->evl.psfisim;
+	    double scale=1./nstep;
+	    dswrite(simu->ecov->p[ievl], scale, "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
+		    parms->evl.thetax[ievl]*206265,
+		    parms->evl.thetay[ievl]*206265, strht, nstep);
 	}
     }
 }

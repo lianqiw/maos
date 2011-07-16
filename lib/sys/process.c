@@ -34,7 +34,7 @@
 #include "process.h"
 #include "daemonize.h"
 int NCPU;
-int NCPU2;
+int NCPU2;//NCPU2=2*NCPU when hyperthreading is enabled.
 int TCK;
 const char *HOME=NULL;
 const char *TEMP=NULL;
@@ -106,6 +106,7 @@ double get_usage_cpu(void){
     lasttime=thistime;
     user1=user2;
     tot1=tot2;
+    cent=cent*NCPU2/NCPU;//discount hyperthreading.
     return cent;
 }
 int get_cpu_avail(void){

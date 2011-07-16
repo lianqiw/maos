@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+#include <time.h>
 #include"io.h"
 const char *myasctime(void){
     static char st[64];
@@ -105,7 +105,7 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     return fn2;
 }
 /*stripped down version of io.c*/
-file_t* openfile(const char *fn_in, char *mod){
+file_t* zfopen(const char *fn_in, char *mod){
     char *fn=procfn(fn_in, mod, 1);
     if(!fn){
 	error("%s does not exist\n", fn_in);

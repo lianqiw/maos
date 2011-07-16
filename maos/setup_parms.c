@@ -721,6 +721,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.ecnn);
     READ_INT(sim.wfsalias);
     READ_INT(sim.wfsideal);
+    READ_INT(sim.evlideal);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -778,6 +779,9 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.tomo_hxw);
     READ_INT(dbg.parallel);
     READ_INT(dbg.splitlrt);
+    READ_INT(dbg.ecovxx);
+    READ_INT(dbg.force);
+    READ_INT(dbg.usegwr);
 }
 
 /**
@@ -885,22 +889,24 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	parms->sim.end=parms->dbg.ntomo_maxit;
     }
     if(parms->sim.psfr){
-	if(parms->sim.fitonly){
+	/*if(parms->sim.fitonly){
 	    error("Cannot do psf reconstruction telemetry and fitonly in the same time.\n");
-	}
+	    }*/
 	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psfr);
 	if(fnd==0){
 	    error("sim.psfr is specified, but evl.psfr are all zero\n");
 	}else{
 	    info2("Output PSF reconstruction telemetry for %d directions\n", fnd);
 	}
+	parms->evl.psfmean=1;//Saves psfmean for verification.
     }
     if(parms->sim.fitonly){
 	if(parms->sim.recon!=0){
-	    error("fitonly only works in sim.recon=0 mode\n");
+	    warning("fitonly only works in sim.recon=0 mode. changed\n");
+	    parms->sim.recon=0;
 	}
 	if(parms->tomo.split){
-	    warning("fitonly only works in integrated tomo mode\n");
+	    warning("fitonly only works in integrated tomo mode. changed\n");
 	    parms->tomo.split=0;
 	}
     }
@@ -1261,7 +1267,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     long nxout[nps],nyout[nps];
     for(int ips=0; ips<nps; ips++){
 	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,0.5,
-			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,T_ATM,0,1);
+			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,1);
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
 	if(nyout[ips]>Nmax) Nmax=nyout[ips];
     }
@@ -1524,7 +1530,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	parms->fdlock=calloc(parms->sim.nseed, sizeof(int));
 	for(iseed=0; iseed<parms->sim.nseed; iseed++){
 	    snprintf(fn, 80, "Res_%d.done",parms->sim.seeds[iseed]);
-	    if(exist(fn) && !parms->force){
+	    if(exist(fn) && !parms->force && !parms->dbg.force){
 		parms->fdlock[iseed]=-1;
 		warning2("Skip seed %d because %s exist.\n", parms->sim.seeds[iseed], fn);
 	    }else{

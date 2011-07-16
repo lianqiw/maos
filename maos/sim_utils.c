@@ -1089,18 +1089,40 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
     if(parms->sim.psfr){
 	simu->ecov=dcellnew(parms->evl.nevl, 1);
+	if(parms->dbg.ecovxx){//temporary.
+	    warning("Saving history of ecov_xx\n");
+	    save->ecovxx=calloc(nevl, sizeof(cellarr *));
+	    char strht[24];
+	    for(int ievl=0; ievl<nevl; ievl++){
+		if(!parms->evl.psf[ievl]) continue;
+		if(!isinf(parms->evl.ht[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		}else{
+		    strht[0]='\0';
+		}
+	    
+		save->ecovxx[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim-(parms->sim.closeloop?1:0), 1,
+						"ecovxx_%d_x%g_y%g%s.bin", seed,
+						parms->evl.thetax[ievl]*206265,
+						parms->evl.thetay[ievl]*206265,strht);
+	    }
+	}
     }
     int nstep=parms->sim.end-parms->sim.start;
     if(parms->save.dm){
-	save->dmerr_hi=cellarr_init(nstep, 1,"dmerr_hi_%d.bin", seed);
+	int nrstep=nstep-(parms->sim.closeloop?1:0);
+	save->dmerr_hi=cellarr_init(nrstep, 1,"dmerr_hi_%d.bin", seed);
 	if(parms->sim.recon==0){
-	    save->dmfit_hi=cellarr_init(nstep, 1, "dmfit_hi_%d.bin", seed);
+	    save->dmfit_hi=cellarr_init(nrstep, 1, "dmfit_hi_%d.bin", seed);
 	}
-	
+	if(parms->tomo.split){
+	    save->Merr_lo=cellarr_init(nrstep, 1, "Merr_lo_%d.bin", seed);
+	}	
 	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
 	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
-	if(parms->tomo.split){
-	    save->Merr_lo=cellarr_init(nstep, 1, "Merr_lo_%d.bin", seed);
+	if(parms->sim.wfsalias || parms->sim.wfsideal || parms->sim.evlideal){
+	save->dmproj = cellarr_init(nstep, 1, "dmproj_%d.bin", seed);
+
 	}
 	if(simu->moao_wfs){
 	    save->moao_wfs=calloc(parms->nwfs, sizeof(cellarr*));
@@ -1160,7 +1182,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}
     }
-    if(parms->save.grad){
+    if(parms->save.grad && !parms->sim.fitonly){
 	save->gradcl=calloc(parms->nwfs, sizeof(cellarr*));
 	save->gradnf=calloc(parms->nwfs, sizeof(cellarr*));
 	save->gradol=calloc(parms->nwfs, sizeof(cellarr*));
@@ -1178,7 +1200,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}
     }
-    if(parms->save.gradgeom){
+    if(parms->save.gradgeom && !parms->sim.fitonly){
 	save->gradgeom=calloc(parms->nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -1303,6 +1325,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->opdrmvst);
     dcellfree(simu->opdevl);
     dcellfree(simu->dmreal);
+    dcellfree(simu->dmproj);
     dcellfreearr(simu->dmpsol, parms->npowfs);
     dcellfree(simu->dmcmd);
     dcellfree(simu->dmcmdlast);
@@ -1391,12 +1414,14 @@ void free_simu(SIM_T *simu){
     //cellarr_close(save->dmint);
     cellarr_close(save->dmpttr);
     cellarr_close(save->dmreal);
+    cellarr_close(save->dmproj);
     cellarr_close(save->Merr_lo);
     //cellarr_close(save->Mint_lo);
     cellarr_close(save->opdr);
     cellarr_close(save->opdx);
     cellarr_close_n(save->evlopdcl, parms->evl.nevl);
     cellarr_close_n(save->evlopdol, parms->evl.nevl);
+    cellarr_close_n(save->ecovxx, parms->evl.nevl);
     cellarr_close_n(save->wfsopd, parms->nwfs);
     cellarr_close_n(save->wfsopdol, parms->nwfs);
     cellarr_close_n(save->wfslltopd, parms->nwfs);
@@ -1426,145 +1451,7 @@ void free_simu(SIM_T *simu){
     free(simu->save);
     free(simu);
 }
-/**
-   Check whether we are at the time step to save.
-*/
-static inline int save_check(int start, int end, int now, int every){
-    int steps=now+1-start;
-    return (every>1 && steps >0 && steps % every == 0) || now+1==end;
-}
-/**
-   Save telemetry data during simulation every 50 time steps.
-*/
-void save_simu(const SIM_T *simu){
-    const PARMS_T *parms=simu->parms;
-    const int isim=simu->isim;
-    const int seed=simu->seed;
-    if(parms->evl.psfmean && save_check(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
-	info2("Output PSF\n");
-	if(simu->evlpsfmean){
-	    dcell *psfmean=NULL;
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-	    dcelladd(&psfmean, 0, simu->evlpsfmean, scale);
-	    PDCELL(psfmean, pcl);
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    cellarr_dmat(simu->save->evlpsfmean[ievl], pcl[ievl][iwvl]);
-		}
-	    }
-	    dcellfree(psfmean);
-	}
-	if(simu->evlpsftomomean){
-	    dcell *psfmean=NULL;
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-	    dcelladd(&psfmean, 0, simu->evlpsftomomean, scale);
-	    PDCELL(psfmean, ptomo);
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    cellarr_dmat(simu->save->evlpsftomomean[ievl], ptomo[ievl][iwvl]);
-		}
-	    }
-	    dcellfree(psfmean);
-	}
-	if(simu->evlpsfolmean){
-	    dcell *psfmean=NULL;
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-	    if(parms->evl.psfol==2){
-		scale=scale/parms->evl.npsf;
-	    }
-	    dcelladd(&psfmean, 0, simu->evlpsfolmean, scale);
-	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		cellarr_dmat(simu->save->evlpsfolmean, psfmean->p[iwvl]);
-	    }
-	    dcellfree(psfmean);
-	}
-    }
-    if((isim % 50 ==0) || isim+1==parms->sim.end){
-	if(simu->wfspsfmean && simu->isim>=parms->evl.psfisim){
-	    double scalewfs=1./(double)(simu->isim+1-parms->evl.psfisim);
-	    dcellswrite(simu->wfspsfmean, scalewfs, "wfspsfmean_%d.bin", seed);
-	}
-	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
-	    if(!simu->sanea_sim[iwfs]) continue;
-	    dcell *sanea=NULL;
-	    dcellcp(&sanea, simu->sanea_sim[iwfs]);
-	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
-	    const int dtrat=parms->powfs[ipowfs].dtrat;
-	    if(sanea && simu->isim >=simu->parms->powfs[ipowfs].phystep){
-		int nstep=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
-		dcellscale(sanea,1./nstep);
-	    }
-	    dcellwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
-	    dcellfree(sanea);
-	}
-	if(simu->pistatout){
-	    for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
-		const int ipowfs=simu->parms->wfs[iwfs].powfs;
-		if(simu->pistatout[iwfs]){
-		    int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
-		    dcell* tmp=NULL;
-		    dcelladd(&tmp,0,simu->pistatout[iwfs],1./(double)nstep);
-		    if(parms->sim.skysim){//need peak in corner
-			for(long ic=0; ic<tmp->nx*tmp->ny; ic++){
-			    dfftshift(tmp->p[ic]);
-			}
-			dcellwrite(tmp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
-				   dirskysim,simu->seed,
-				   parms->powfs[ipowfs].order,
-				   parms->wfs[iwfs].thetax*206265,
-				   parms->wfs[iwfs].thetay*206265);
-		    }else{//need peak in center
-			dcellwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
-		    }
-		    dcellfree(tmp);
-		}
-	    }
-	}
-    }
 
-    if(parms->evl.opdcov && save_check(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdcov)){
-	char strht[24];
-	long nstep=isim+1-parms->evl.psfisim;
-	double scale=1./nstep;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(simu->save->evlopdcov->p[ievl]){
-		if(!isinf(parms->evl.ht[ievl])){
-		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
-		}else{
-		    strht[0]='\0';
-		}
-		dswrite(simu->save->evlopdcov->p[ievl], scale, "evlopdcov_%d_x%g_y%g%s_%ld.bin", seed, 
-			parms->evl.thetax[ievl]*206265,
-			parms->evl.thetay[ievl]*206265, strht, nstep);
-	    }
-	}
-    }
-    if(parms->save.ngcov>0 && save_check(parms->sim.start, parms->sim.end-1, simu->reconisim, parms->save.gcovp)){
-	double scale=1./(double)(simu->reconisim-parms->sim.start+1);
-	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
-	    dswrite(simu->gcov->p[igcov], scale, "gcov_%d_wfs%d_%d_%d.bin", seed,
-		    parms->save.gcov[igcov*2], parms->save.gcov[igcov*2+1],
-		    simu->reconisim+1);
-	}
-    }
-    if(parms->sim.psfr && save_check(parms->evl.psfisim, parms->sim.end-1, simu->reconisim, parms->sim.psfr)){
-	info2("Output PSF Recon Telemetry\n");
-	char strht[24];
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!simu->ecov->p[ievl]) continue;
-	    if(!isinf(parms->evl.ht[ievl])){
-		snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
-	    }else{
-		strht[0]='\0';
-	    }
-	    long nstep=simu->reconisim+1-parms->evl.psfisim;
-	    double scale=1./nstep;
-	    dswrite(simu->ecov->p[ievl], scale, "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
-		    parms->evl.thetax[ievl]*206265,
-		    parms->evl.thetay[ievl]*206265, strht, nstep);
-	}
-    }
-}
 /**
    Print out wavefront error information and timing at each time step.
 */

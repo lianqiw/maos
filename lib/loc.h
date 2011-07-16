@@ -78,6 +78,7 @@ void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,d
 void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin);
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val);
+void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout);
 void loc_reduce_spcell(loc_t *loc, spcell *sp, int dim, int cont);
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont);
 

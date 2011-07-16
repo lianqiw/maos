@@ -383,7 +383,7 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double thet
     return loc;
 }
 /**
-   Create rough circular grid, within diameter of dcir. Not used often.
+   Create rough circular grid, within diameter of dcir. Use create_metapupil_wrap instead.
  */
 loc_t *mkcirloc(double dcir, double dx){
     double rmax2,xmax2;
@@ -392,7 +392,7 @@ loc_t *mkcirloc(double dcir, double dx){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=malloc(sizeof(double)*N*N);
     loc->locy=malloc(sizeof(double)*N*N);
-    rmax2=(dcir/dx/2.+1*1.414);
+    rmax2=(dcir/dx/2.+0.5);//Changed from 1*1.414 to 0.5 on 2011-07-13 to make plocs just big enough.
     rmax2*=rmax2;
     count=0;
    
@@ -822,17 +822,17 @@ void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
 	    phi[iloc]+=val;
 	else if(r2r<r2u){
 	    long tot=0;
-	    for(int jres=0; jres<10; jres++){
+	    for(int jres=0; jres<nres; jres++){
 		iiy=y+(jres-cres)*dxres;
 		double rr2y=(iiy-cy)*(iiy-cy);
 		for(int ires=0; ires<nres; ires++){
 		    iix=x+(ires-cres)*dxres;
 		    double rr2r=(iix-cx)*(iix-cx)+rr2y;
-		    if(rr2r<r2)
+		    if(rr2r<=r2)
 			tot++;
 		}
 	    }
-	    phi[iloc]+=tot*res2*val;
+	    phi[iloc]+=(double)tot*res2*val;
 	}
     }
 }
@@ -851,11 +851,12 @@ void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,d
 */
 void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin){
     //apply the hard pupil mask of aper.d, using loc. not locm
-    double rr2max=r*r;
-    double rr2min=rin*rin;
+    /* 2011-07-13: changed from r^2 to (r+0.5*dx)^2*/
+    double rr2max=pow(r+0.5*loc->dx,2);
+    double rr2min=MIN(rin*rin, pow(rin-0.5*loc->dx,2));
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	double r2=pow(loc->locx[iloc],2)+pow(loc->locy[iloc],2);
-	if(r2<rr2min || r2>=rr2max){
+	if(r2<rr2min || r2>rr2max){
 	    phi[iloc]=0;
 	}
     }
@@ -904,15 +905,74 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
 	}
     }
 }
-
 /**
-   Remove uncoupled points in loc. debugged on 2009-12-20. Not used often. using
+   Remove points in loc that have zero value in amp and modify amp in the same
+   time. Keep each row continuous if cont==1. Return in skipout the index of
+   skipped points if skipout is not NULL.  */
+
+void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
+    int redo_stat=loc->stat?1:0;
+    loc_free_map(loc);//remove the internal map before touchlong loc.
+    loc_free_stat(loc);
+    int nloc=loc->nloc; 
+    int *skip=calloc(nloc,sizeof(int));
+    if(cont){//make sure loc is continuous.
+	loc_create_stat(loc);
+	locstat_t *locstat=loc->stat;
+	int ncol=locstat->ncol;
+	for(int icol=0; icol<ncol; icol++){
+	    int pstart=locstat->cols[icol].pos;
+	    int pend=locstat->cols[icol+1].pos;
+	    for(int pos=pstart; pos<pend; pos++){
+		if(amp->p[pos]<EPS){
+		    skip[pos]=1;
+		}else{
+		    break;
+		}
+	    }
+	    for(int pos=pend-1; pos>pstart-1; pos--){
+		if(amp->p[pos]<EPS){
+		    skip[pos]=1;
+		}else{
+		    break;
+		}
+	    }
+	}
+	loc_free_stat(loc);
+    }else{
+	for(int iloc=0; iloc<nloc; iloc++){
+	    if(amp->p[iloc]<EPS){
+		skip[iloc]=1;
+	    }
+	}
+    }
+    int count=0;
+    for(int iloc=0; iloc<nloc; iloc++){
+	loc->locx[count]=loc->locx[iloc];
+	loc->locy[count]=loc->locy[iloc];
+	amp->p[count]=amp->p[iloc];
+	if(!skip[iloc]) count++;
+    }
+    loc->locx=realloc(loc->locx,sizeof(double)*count);
+    loc->locy=realloc(loc->locy,sizeof(double)*count);
+    loc->nloc=count;
+    dresize(amp, count, 1);
+    if(redo_stat){
+	loc_create_stat(loc);
+    }
+    if(skipout){
+	*skipout=skip;
+    }else{
+	free(skip);
+    }
+}
+/**
+   Remove uncoupled points in loc and modify spc in the same time. debugged on 2009-12-20. Not used often. using
    a spcell, to compute the coupling which is modified accordingly.  */
 void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
     loc_free_map(loc);
     loc_free_stat(loc);
     int nloc=loc->nloc;
-    int *skip=calloc(nloc,sizeof(int));
     dmat *sum=NULL;
     for(int isp=0; isp<spc->nx*spc->ny; isp++){
 	if(spc->p[isp]){
@@ -924,45 +984,10 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
     if(!sum || sum->nx*sum->ny!=loc->nloc){
 	error("Mismatch\n");
     }
-    if(cont){//make sure loc is continuous.
-	loc_create_stat(loc);
-	locstat_t *locstat=loc->stat;
-	int ncol=locstat->ncol;
-	for(int icol=0; icol<ncol; icol++){
-	    int pstart=locstat->cols[icol].pos;
-	    int pend=locstat->cols[icol+1].pos;
-	    for(int pos=pstart; pos<pend; pos++){
-		if(sum->p[pos]<1.e-200){
-		    skip[pos]=1;
-		}else{
-		    break;
-		}
-	    }
-	    for(int pos=pend-1; pos>pstart-1; pos--){
-		if(sum->p[pos]<1.e-200){
-		    skip[pos]=1;
-		}else{
-		    break;
-		}
-	    }
-	}
-	loc_free_stat(loc);
-    }else{
-	for(int iloc=0; iloc<nloc; iloc++){
-	    if(sum->p[iloc]<1.e-200){
-		skip[iloc]=1;
-	    }
-	}
-    }
-    int count=0;
-    for(int iloc=0; iloc<nloc; iloc++){
-	loc->locx[count]=loc->locx[iloc];
-	loc->locy[count]=loc->locy[iloc];
-	if(!skip[iloc]) count++;
-    }
-    loc->locx=realloc(loc->locx,sizeof(double)*count);
-    loc->locy=realloc(loc->locy,sizeof(double)*count);
-    loc->nloc=count;
+    int *skip;
+    loc_reduce(loc, sum, cont, &skip);
+    dfree(sum);
+    int count;
     if(dim==1){//opd(loc)=sp*opd(locin);
 	count=0;
 	int *map=calloc(nloc,sizeof(int));
@@ -996,11 +1021,10 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
 	}
     }
     free(skip);
-    dfree(sum);
 }
 
 /**
-   Remove uncoupled points in loc. debugged on 2009-12-20.  use single sparse
+   Remove uncoupled points in loc and modify sp in the same time. debugged on 2009-12-20.  use single sparse
    matrix, which is modified accordingly.  */
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     loc_free_map(loc);//remove the internal map before touchlong loc.
@@ -1008,49 +1032,12 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     int nloc=loc->nloc;
     if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
 	error("Mismatch dimension\n");
-    int *skip=calloc(nloc,sizeof(int));
     dmat* sum=spsumabs(sp,3-dim);
-    if(cont){//make sure loc is continuous.
-	loc_create_stat(loc);
-	locstat_t *locstat=loc->stat;
-	int ncol=locstat->ncol;
-	for(int icol=0; icol<ncol; icol++){
-	    int pstart=locstat->cols[icol].pos;
-	    int pend=locstat->cols[icol+1].pos;
-	    for(int pos=pstart; pos<pend; pos++){
-		if(sum->p[pos]<1.e-200){
-		    skip[pos]=1;
-		}else{
-		    break;
-		}
-	    }
-	    for(int pos=pend-1; pos>pstart-1; pos--){
-		if(sum->p[pos]<1.e-200){
-		    skip[pos]=1;
-		}else{
-		    break;
-		}
-	    }
-	}
-	loc_free_stat(loc);
-    }else{
-	for(int iloc=0; iloc<nloc; iloc++){
-	    if(sum->p[iloc]<1.e-200){
-		skip[iloc]=1;
-	    }
-	}
-    }
+    int *skip;
+    loc_reduce(loc, sum, cont, &skip);
+    dfree(sum);
     int count=0;
-    for(int iloc=0; iloc<nloc; iloc++){
-	loc->locx[count]=loc->locx[iloc];
-	loc->locy[count]=loc->locy[iloc];
-	if(!skip[iloc]) count++;
-    }
-    loc->locx=realloc(loc->locx,sizeof(double)*count);
-    loc->locy=realloc(loc->locy,sizeof(double)*count);
-    loc->nloc=count;
     if(dim==1){//opd(loc)=sp*opd(locin);
-	count=0;
 	int *map=calloc(nloc,sizeof(int));
 	for(int iloc=0; iloc<nloc; iloc++){
 	    map[iloc]=count;
@@ -1062,7 +1049,6 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 	}
 	free(map);
     }else if(dim==2){
-	count=0;
 	for(int iloc=0; iloc<nloc; iloc++){
 	    if(!skip[iloc]){
 		sp->p[count]=sp->p[iloc];
@@ -1074,7 +1060,6 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
 	sp->p=realloc(sp->p,sizeof(long)*(count+1));
     }
     free(skip);
-    dfree(sum);
 }
 
 /**

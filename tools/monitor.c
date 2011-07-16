@@ -271,7 +271,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
     return TRUE;
 }
 
-int init_sockaddr (struct sockaddr_in *name,
+static int init_sockaddr (struct sockaddr_in *name,
                     const char *hostname, uint16_t port){
     struct hostent *hostinfo;
     
@@ -452,7 +452,7 @@ static void add_host_wakeup(void){
     pthread_cond_broadcast(&pcond);
 }
 void notify_user(PROC_T *p){
-    if(p->status.done) return;
+    if(p->status.done || p->status.info==S_START) return;
 #if WITH_NOTIFY
     if(!notify_daemon) return;
     if(p->status.info==p->oldinfo) return;

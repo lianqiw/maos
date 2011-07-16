@@ -68,12 +68,10 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	if(!zfexist(fn)) error("%s doesn't exist\n",fn);
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
-    }else{//locs act as a pupil mask. no points outside will be evaluated.
-	//We choose to make circular map so that it acts as pupil stop in case of misregistration.
-	aper->locs=mkcirloc(parms->aper.d, parms->aper.dx);
-	if(parms->save.setup){
-	    locwrite(aper->locs, "%s/aper_locs",dirsetup);
-	}
+    }else{/* locs act as a pupil mask. no points outside will be evaluated. */
+	map_t *smap=create_metapupil_wrap(parms,0,parms->aper.dx,0,0,0,0,0);
+	aper->locs=map2loc(smap);
+	mapfree(smap);
     }
     loc_create_stat(aper->locs);
     if(!aper->amp){
@@ -91,6 +89,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 		       parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
+    loc_reduce(aper->locs, aper->amp, 1, NULL);
     if(parms->aper.pupmask){
 	map_t *mask=mapread("%s",parms->aper.pupmask);
 	if(fabs(parms->aper.rotdeg)>1.e-12){
@@ -132,6 +131,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	}
     }
     if(parms->save.setup){
+	locwrite(aper->locs, "%s/aper_locs",dirsetup);
 	dwrite(aper->amp, "%s/aper_amp",dirsetup);
 	dwrite(aper->mcc, "%s/aper_mcc",dirsetup);
     }

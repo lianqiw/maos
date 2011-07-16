@@ -45,11 +45,13 @@ void tomofit(SIM_T *simu){
     int hi_output=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
     int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
     dcell *dmpsol[2];//Hi and Lo
+    /* Question: Why not use simu->dmpsol?
+     */
     if(parms->sim.fuseint){
 	dmpsol[0]=dmpsol[1]=simu->dmint[parms->dbg.psol?0:1];
     }else{
 	dmpsol[0]=simu->dmint_hi[parms->dbg.psol?0:1];
-	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];
+	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];//This can not be simu->dmpsol[lopowfs].
     }
     if(hi_output){
 	if(parms->sim.fitonly){
@@ -146,8 +148,12 @@ void tomofit(SIM_T *simu){
 	    dcellfree(simu->Merr_lo);//don't have output.
 	}
     }
-    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim && dmpsol[0]){
-	psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
+    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
+	if(!simu->opdr){//opdr is not available. in sim.fitonly=1 mode.
+	    psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);
+	}else{
+	    psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
+	}
     }
 }
 /**
@@ -157,13 +163,12 @@ void lsr(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;
-    const int hi_output=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
+    const int hi_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_hi==0);
     const int lo_output=parms->tomo.split && (!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
    
-    if(parms->sim.psfr) warning("Not tested yet\n");
     if(hi_output){
 	muv_solve(&simu->dmerr_hi,&(recon->LL), &(recon->LR), simu->gradlastcl);
-	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
+	if(parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
     }else{//if high order does not has output
@@ -222,12 +227,14 @@ void reconstruct(SIM_T *simu){
     RECON_T *recon=simu->recon;
     double tk_start=myclockd();
     if(simu->gradlastcl){
-	if(parms->sim.closeloop){
-	    calc_gradol(simu);
-	}else if(!simu->gradlastol){
-	    simu->gradlastol=dcellref(simu->gradlastcl);
+	if(!parms->sim.fitonly && !parms->sim.evlol){
+	    if(parms->sim.closeloop){
+		calc_gradol(simu);
+	    }else if(!simu->gradlastol){
+		simu->gradlastol=dcellref(simu->gradlastcl);
+	    }
+	    save_gradol(simu);//must be here since gradol is only calculated in this file.
 	}
-	save_gradol(simu);//must be here since gradol is only calculated in this file.
 	if(parms->cn2.pair){
 	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
 	}//if cn2est
@@ -247,7 +254,7 @@ void reconstruct(SIM_T *simu){
 	if(parms->sim.mffocus){
 	    focus_tracking(simu);
 	}
+	save_recon(simu);//Moved to inside.
     }
-    save_recon(simu);
     simu->tk_recon=myclockd()-tk_start;
 }

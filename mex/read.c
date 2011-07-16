@@ -82,7 +82,6 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    out=mxCreateSparse(nx,ny,nzmax,mxREAL);
 	    if(nx!=0 && ny!=0 && nzmax!=0){
 		if(sizeof(mwIndex)==size){/*Match*/
-		    warning("Matching %ld byte\n", size);
 		    zfread(mxGetJc(out), size,ny+1,fp);
 		    zfread(mxGetIr(out), size,nzmax, fp);
 		}else{
@@ -94,7 +93,6 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 		    zfread(Jc, size, ny+1, fp);
 		    zfread(Ir, size, nzmax, fp);
 		    if(size==4){
-			warning("Converting 4 byte to 8 byte\n");
 			uint32_t* Jc2=Jc;
 			uint32_t* Ir2=Ir;
 			for(i=0; i<ny+1; i++){
@@ -106,7 +104,6 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 			free(Jc);
 			free(Ir);
 		    }else if(size==8){
-			warning("Converting 8 byte to 4 byte\n");
 			uint64_t* Jc2=Jc;
 			uint64_t* Ir2=Ir;
 			for(i=0; i<ny+1; i++){
@@ -261,7 +258,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	mexErrMsgTxt("Usage:var=read('filename') or [var, header]=read('file name')\n");
     }
     char *fn=mx2str(prhs[0]);
-    fp=openfile(fn,"rb");
+    fp=zfopen(fn,"rb");
     free(fn);
     if(nlhs==2){
 	plhs[0]=readdata(fp, &plhs[1]);

@@ -330,26 +330,25 @@ else
 fi
 
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
-if test "x$use_long" = "xyes" -a cpu = "64" ;then
+if test "x$use_long" = "xyes" -a "x$cpu" = "x64" ;then
    OPTScommon="$OPTScommon -DDLONG"
-   chol_suffix="long"
+   SUFFIX="long"
    chol_fun=cholmod_l_factorize
    AM_CONDITIONAL(USE_LONG, true)
 else
-   chol_suffix="int"
+   SUFFIX="int"
    chol_fun=cholmod_factorize
    AM_CONDITIONAL(USE_LONG, false)
 fi
 
-AC_CHECK_LIB([cholmod_${chol_suffix}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -lpthread])
+AC_CHECK_LIB([cholmod_${SUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -lpthread])
 if test "x$have_chol" = "xyes" ;then
-    LDCHOL="-lcholmod_${chol_suffix}"
+    LDCHOL="-lcholmod_${SUFFIX}"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
-    LDCHOL="../external/cholmod/libcholmod_${chol_suffix}.la"
+    LDCHOL="../external/cholmod/libcholmod_${SUFFIX}.la"
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
-
 # Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not
 # use the cholmod in the system even if it is available because we want to
 # customize the dependency on blas/lapack.
@@ -358,6 +357,8 @@ AC_CHECK_HEADERS([unistd.h])
 #LDCHOL must be before LAPACK
 LDOPTS="$LAPACK $LDSYS"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
+LDAOS="../lib/libaos_${SUFFIX}.la ${LDOPTS}"
+AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)
 AC_SUBST(LDEXE)

@@ -151,7 +151,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     int nlen=mxGetM(prhs[ifn])*mxGetN(prhs[ifn])+1;
     char *fn=malloc(nlen);
     mxGetString(prhs[ifn],fn,nlen);
-    fp=openfile(fn,"wb");
+    fp=zfopen(fn,"wb");
     free(fn);
     writedata(fp, 0, prhs[0], header);
     zfclose(fp);

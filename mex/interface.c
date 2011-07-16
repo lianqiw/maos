@@ -8,8 +8,8 @@ mxArray *dsp2mx(const dsp*A){
 }
 dsp *mx2dsp(const mxArray *A){
     dsp *out=calloc(1, sizeof(dsp));
-    out->p=(long*)mxGetJc(A);
-    out->i=(long*)mxGetIr(A);
+    out->p=mxGetJc(A);
+    out->i=mxGetIr(A);
     out->x=mxGetPr(A);
     if(mxGetPi(A)){
 	mexErrMsgTxt("A is complex");
@@ -51,7 +51,7 @@ dmat *mx2d(const mxArray *A){
     if(mxGetIr(A)){
 	mexErrMsgTxt("A is dsp");
     }
-    dmat *out=dnew_ref(mxGetPr(A), mxGetM(A), mxGetN(A));
+    dmat *out=dnew_ref( mxGetM(A), mxGetN(A), mxGetPr(A));
     return out;
 }
 char *mx2str(const mxArray *A){

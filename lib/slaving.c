@@ -69,6 +69,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		    sptmulmat(&actcplc->p[idm], ha, W1, 1);
 		}else{
 		    dmat *tmp=spsumabs(ha, 1);
+		    tmp->nx=tmp->ny; tmp->ny=1;
 		    dadd(&actcplc->p[idm], 1, tmp, 1);
 		    dfree(tmp);
 		}

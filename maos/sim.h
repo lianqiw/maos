@@ -32,5 +32,6 @@ void wfsints(thread_t *thread_data);
 void wfsgrad_iwfs(thread_t *info);
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain);
+#define CHECK_SAVE(start,end,now,every) ((now)+1>(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
 #define DEBUG_POWFSINTS 0
 #endif

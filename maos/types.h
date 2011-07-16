@@ -280,6 +280,7 @@ typedef struct RECON_T{
     INVPSD_T *invpsd;  /**<data to apply inverse of psf to opd on xloc*/
     FRACTAL_T *fractal;/**<data to apply fractal regularization on opd on xloc*/
     FDPCG_T *fdpcg;    /**<fdpcg preconditioner data.*/
+    spcell *GWR;       /**<gradient of wfs for recon: gtilt or ztilt (on amp) depending on gtype_recon.*/
     spcell *GP;        /**<Gradient operator from HXW. GX=GP*H.*/
     spcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
     spcell *HXWtomo;   /**<Like GXtomo*/
@@ -355,13 +356,14 @@ typedef struct SIM_SAVE_T{
     cellarr** evlpsfhist;    /**<to save time history of science field psf*/
     cellarr** evlpsftomohist;/**<to save time history of science field psf with
 				direct correction from tomography*/
-
+    cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
     //Deformable mirror.
     cellarr *dmerr_hi;
     cellarr *dmfit_hi;
     cellarr *dmpttr;
     cellarr *dmreal;
     cellarr *dmcmd;
+    cellarr *dmproj;
     //Low order modes
     cellarr *Merr_lo;
     cellarr *opdr;

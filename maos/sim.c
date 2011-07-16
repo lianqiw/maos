@@ -83,6 +83,15 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		//re-seed the atmosphere in case atm is loaded from shm/file
 		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
+	    if(parms->sim.wfsalias || parms->sim.wfsideal || parms->sim.evlideal){
+		/* teporarily disable FR.M so that Mfun is used.*/
+		spcell *FRM=recon->FR.M; recon->FR.M=NULL; 
+		muv_solve(&simu->dmproj, &recon->FL, &recon->FR, NULL);
+		recon->FR.M=FRM;/*set FR.M back*/
+		if(parms->save.dm){
+		    cellarr_dcell(simu->save->dmproj, simu->dmproj);
+		}
+	    }
 	    if(parms->dbg.parallel){
 		/*
 		  We do the big loop in parallel to make better use the

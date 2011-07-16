@@ -74,19 +74,31 @@ void perfevl_ievl(thread_t *info){
     PDMAT(simu->clep->p[ievl],pclep);
 
     //atmosphere contribution.
-    if(simu->atm && !parms->sim.wfsalias){
+    if(parms->sim.evlideal){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	    double dispx=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
+	    double dispy=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
+	    double scale=1.;
+	    double alpha=1.;
+	    if(parms->dm[idm].cubic){
+		prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
+				   aper->locs, aper->amp->p, iopdevl->p, 
+				   alpha, dispx, dispy, scale, parms->dm[idm].iac, 
+				   0, 0);
+	    }else{
+		prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
+			     aper->locs, aper->amp->p, iopdevl->p,
+			     alpha, dispx, dispy, scale, 
+			     0, 0);
+	    }
+	}
+    }else if(simu->atm && !parms->sim.wfsalias){
 	if(simu->opdevlground){
 	    memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
 	}else{
 	    dzero(iopdevl);
-	    if(simu->telws){//Wind shake
-		double tmp=simu->telws->p[isim];
-		double angle=simu->winddir?simu->winddir->p[0]:0;
-		double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-		loc_add_ptt(iopdevl->p, ptt, aper->locs);
-	    }
 	}
-	
 	/*fix me: the ray tracing of the same part must be performed in the same thread. */
 	for(int ips=0; ips<nps; ips++){
 	    if(ips!=simu->perfevl_iground){
@@ -97,6 +109,12 @@ void perfevl_ievl(thread_t *info){
 		CALL_THREAD(simu->evl_prop_atm[ind], nthread, 0);
 	    }
 	}
+    }
+    if(simu->telws){//Wind shake
+	double tmp=simu->telws->p[isim];
+	double angle=simu->winddir?simu->winddir->p[0]:0;
+	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+	loc_add_ptt(iopdevl->p, ptt, aper->locs);
     }
     //Add surfaces along science path. prepared in setup_surf.c
     if(simu->surfevl && simu->surfevl->p[ievl]){
@@ -303,28 +321,22 @@ void perfevl_ievl(thread_t *info){
 			 aper->mod,aper->amp->p,iopdevl->p);
 	}
     }
-    if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim
-       && (parms->evl.opdcov || do_psf)){
-	/* the OPD after this time will be tilt removed. Don't use for
-	   performance evaluation. */
-
-	if(parms->evl.psfpttr[ievl]){
-	    if(isim==parms->evl.psfisim && ievl==0){
-		warning("Removing piston/tip/tilt from PSF.\n");
-	    }
-	    loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
-	}else{//Remove piston only.
-	    if(isim==parms->evl.psfisim && ievl==0){
-		warning("Removing piston from PSF.\n");
-	    }
-	    double piston=pclmp[isim][0];
-	    double ptt[3]={piston, 0, 0};//put pclmp[isim][0] here does not work.
-	    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
-	}
+    if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim){
+	/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
 	if(parms->evl.opdcov){
 	    dmm(&simu->save->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
 	}//opdcov
-	if(do_psf){//Evaluate closed loop PSF.
+	if(do_psf){//Evaluate closed loop PSF.	
+	    /* the OPD after this time will be tilt removed. Don't use for
+	   performance evaluation. */
+	    
+	    if(parms->evl.psfpttr[ievl]){
+		if(isim==parms->evl.psfisim && ievl==0){
+		    warning("Removing piston/tip/tilt from PSF.\n");
+		}
+		loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
+	    }
+	    
 	    ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
 				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
 	    int nwvl=parms->evl.nwvl;
@@ -487,32 +499,91 @@ static void perfevl_mean(SIM_T *simu){
     }
 }
 /**
+   Save telemetry
+*/
+static void perfevl_save(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const int isim=simu->isim;
+    const int seed=simu->seed;
+    if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
+	info2("Output PSF\n");
+	if(simu->evlpsfmean){
+	    dcell *psfmean=NULL;
+	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
+	    dcelladd(&psfmean, 0, simu->evlpsfmean, scale);
+	    PDCELL(psfmean, pcl);
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		    cellarr_dmat(simu->save->evlpsfmean[ievl], pcl[ievl][iwvl]);
+		}
+	    }
+	    dcellfree(psfmean);
+	}
+	if(simu->evlpsftomomean){
+	    dcell *psfmean=NULL;
+	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
+	    dcelladd(&psfmean, 0, simu->evlpsftomomean, scale);
+	    PDCELL(psfmean, ptomo);
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		    cellarr_dmat(simu->save->evlpsftomomean[ievl], ptomo[ievl][iwvl]);
+		}
+	    }
+	    dcellfree(psfmean);
+	}
+	if(simu->evlpsfolmean){
+	    dcell *psfmean=NULL;
+	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
+	    if(parms->evl.psfol==2){
+		scale=scale/parms->evl.npsf;
+	    }
+	    dcelladd(&psfmean, 0, simu->evlpsfolmean, scale);
+	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		cellarr_dmat(simu->save->evlpsfolmean, psfmean->p[iwvl]);
+	    }
+	    dcellfree(psfmean);
+	}
+    }
+    if(parms->evl.opdcov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdcov)){
+	char strht[24];
+	long nstep=isim+1-parms->evl.psfisim;
+	double scale=1./nstep;
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    if(simu->save->evlopdcov->p[ievl]){
+		if(!isinf(parms->evl.ht[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		}else{
+		    strht[0]='\0';
+		}
+		dswrite(simu->save->evlopdcov->p[ievl], scale, "evlopdcov_%d_x%g_y%g%s_%ld.bin", seed, 
+			parms->evl.thetax[ievl]*206265,
+			parms->evl.thetay[ievl]*206265, strht, nstep);
+	    }
+	}
+    }
+}
+/**
    Evaluate performance by calling perfevl_ievl in parallel and then calls
    perfevl_mean to field average.  */
 void perfevl(SIM_T *simu){
     double tk_start=myclockd();
     //Cache the ground layer.
     int ips=simu->perfevl_iground;
-    if(ips!=-1 && simu->atm){
+    const PARMS_T *parms=simu->parms;
+    if(ips!=-1 && simu->atm && !parms->sim.evlideal){
 	simu->opdevlground=dnew(simu->aper->locs->nloc,1);
 	const int ievl=0;//doesn't matter for ground layer.
-	int ind=ievl+simu->parms->evl.nevl*ips;
+	int ind=ievl+parms->evl.nevl*ips;
 	const int isim=simu->isim;
 	const double dt=simu->dt;
 	simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
 	simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
 	simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
-	CALL_THREAD(simu->evl_prop_atm[ind], simu->parms->evl.nthread, 0);
-	if(simu->telws){//Wind shake
-	    double tmp=simu->telws->p[isim];
-	    double angle=simu->winddir->p[0];
-	    double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-	    loc_add_ptt(simu->opdevlground->p, ptt, simu->aper->locs);
-	}
+	CALL_THREAD(simu->evl_prop_atm[ind], parms->evl.nthread, 0);
     }
-    CALL_THREAD(simu->perf_evl, simu->parms->evl.nevl, 0);
+    CALL_THREAD(simu->perf_evl, parms->evl.nevl, 0);
     dfree(simu->opdevlground);simu->opdevlground=NULL;
     perfevl_mean(simu);
+    perfevl_save(simu);
     simu->tk_eval=myclockd()-tk_start;
-    save_simu(simu);
 }

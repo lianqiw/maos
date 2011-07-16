@@ -1,7 +1,6 @@
 #include <mex.h>
 #include <math.h>
 #include "interface.h"
-#include "../lib/mkw.h"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     enum{//input
@@ -18,7 +17,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mexErrMsgTxt("Invalid number of arguments");
     loc_t *loc=mx2loc(prhs[P_LOC]);
     double R=mxGetScalar(prhs[P_R]);
-    sparse *W0;
+    dsp *W0;
     dmat *W1;
     mkw_circular(loc,0,0,R,&W0,&W1);
     plhs[PL_W0]=dsp2mx(W0);

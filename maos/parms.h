@@ -51,7 +51,7 @@ typedef struct ATM_CFG_T{
     int ny;       /**<turbulence screen size along y*/
     int fractal;  /**<1: Use fractal method to generate atmosphere screen.*/
     int evolve;   /**<evolve the atm in additional to frozen flow. developed for
-		      fractal since it does not wrap.*/
+		     fractal since it does not wrap.*/
     int frozenflow;  /**<frozen flow. automatic if closeloop=1*/
     int ninit;    /**<Initial size of the screen in fractal method. >=2*/
     int share;    /**<0: disable sharing of atmosphere using file backend*/
@@ -80,7 +80,7 @@ typedef struct APER_CFG_T{
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
     double *misreg;/**<misregistration of the pupil along x and y. Shifts the
-			amplitude map and atmosphere.*/
+		      amplitude map and atmosphere.*/
     int ismisreg; /**<true if misreg contains nonzero numbers*/
     char *pupmask;/**<The pupil cold stop*/
 }APER_CFG_T;
@@ -122,15 +122,15 @@ typedef struct POWFS_CFG_T{
     char*  neasimfile;/**<read NEA used in simulation from file. Defined at
 			 sim.dt sampling rate, in radian. neasim must be -1*/
     double neaspeckle;/**<NEA caused by speckle noise. Added to matched filter
-			  estimation of NEA due to photon and detector noise in
-			  physical optics mode for reconstructor*/
+			 estimation of NEA due to photon and detector noise in
+			 physical optics mode for reconstructor*/
     double bkgrnd;  /**<background in electron per pixel per LGS frame*/
     double bkgrndc;/**<How much of the background in bkgrnd can be calibrated
 		      out. depends on variability.*/
     char *bkgrndfn; /**<file contains sky background/rayleigh scatter input for
-		     each subaperture in each wfs. */
+		       each subaperture in each wfs. */
     char *bkgrndfnc;/**<How much of the background in bkgrndfn can be
-		      calibrated out. depends on variability.*/
+		       calibrated out. depends on variability.*/
     double rne;     /**<read out noise in electron per pixel per frame*/
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
     double dx;      /**<sampling of opd points in each subaperture. usually
@@ -218,7 +218,7 @@ typedef struct POWFS_CFG_T{
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
- */
+*/
 typedef struct WFS_CFG_T{
     double *wvlwts; /**<Weights of signal value for each wavelength. if not
 		       specified in config, will use powfs.wvlwts*/
@@ -232,7 +232,7 @@ typedef struct WFS_CFG_T{
 }WFS_CFG_T;
 /**
    contains input parameters for each deformable mirror.
- */
+*/
 typedef struct DM_CFG_T{
     double guard;   /**<extra DM actuator rings outside of aper.d*/
     double stroke;  /**<Stroke of DM. OPD goes to \f$\pm\f$ stroke$*/
@@ -254,7 +254,7 @@ typedef struct DM_CFG_T{
 
     int ncache;
     double *dxcache;/**<the sampling of plane to cache dm for each scale
-			group. (derived)*/
+		       group. (derived)*/
     char* misreg;   /**<misregistration of the DM with respect to the pupil,
 		       described by file containing a cell array A of 2x1.  The
 		       misregistered coordinate is computed as
@@ -301,9 +301,9 @@ typedef struct EVL_CFG_T{
     int *psfsize;    /**<save this number of pixels of the center of the psf. 1
 			number for each wvl.*/
     int *psfgridsize;/**<grid size for FFT to generate PSF. Becareful about FFT
-		       speed and enough padding. Determines the sampling of the
-		       generated PSF. 0 or negative for automatic. 1 number for
-		       each wvl.*/
+			speed and enough padding. Determines the sampling of the
+			generated PSF. 0 or negative for automatic. 1 number for
+			each wvl.*/
     int nevl;       /**<Number of evaluation directions. (derived)*/
     int tomo;       /**<evaluate tomography performance.*/
     int indoa;      /**<index of the on axis evluation point.*/
@@ -315,7 +315,7 @@ typedef struct EVL_CFG_T{
 
 /**
    contains input parameters for wavefront tomography.
- */
+*/
 typedef struct TOMO_CFG_T{
     double tikcr;    /**<tikhonov regularization.*/
     double minwt;    /**<minimum layer weight allowed. if less than this will force to this.*/
@@ -355,7 +355,7 @@ typedef struct TOMO_CFG_T{
 }TOMO_CFG_T;
 /**
    contains input parameters for deformable mirror fitting.
- */
+*/
 typedef struct FIT_CFG_T{
     double *thetax;  /**<x Coordinate of DM fitting directions. */
     double *thetay;  /**<y Coordinate of DM fitting directions. */
@@ -380,7 +380,7 @@ typedef struct FIT_CFG_T{
 
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
- */
+*/
 typedef struct SIM_CFG_T{
     double dt;       /**<sampling period. 1/800*/
     double za;       /**<zenith angle in radian*/
@@ -392,7 +392,7 @@ typedef struct SIM_CFG_T{
     int closeloop;   /**<closed loop or open loop*/
     char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
-		     freq in Hz, Second column is PSD in rad^2/Hz.*/
+			freq in Hz, Second column is PSD in rad^2/Hz.*/
     //control
     double *apdm;    /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
@@ -430,7 +430,8 @@ typedef struct SIM_CFG_T{
     int ecnn;        /**<Calculate WF covariance due to WFS noise cov Cnn.*/
     int wfsalias;    /**<Study the wfs aliasing effect by projecting turbulence
 			onto the NULL space of DM.*/
-    int wfsideal;    /**<Generates ideal WFS by removing aliasing effect.*/
+    int wfsideal;    /**<Generates ideal WFS by sensing turbulence with DM range.*/
+    int evlideal;    /**<Evaluate performance within DM range.*/
     /* A few derived parameters*/
     int dmttcast;    /**<derived: cast tip/tilt from DM commands to study saturation or
 			histogram and then add back*/
@@ -438,7 +439,7 @@ typedef struct SIM_CFG_T{
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
- */
+*/
 typedef struct CN2EST_CFG_T{
     int *pair;       /**<If non empty, paris of WFS to use for cn2
 			estimation. Empty: disable cn2 estimation*/
@@ -467,7 +468,7 @@ typedef struct PLOT_CFG_T{
 }PLOT_CFG_T;
 /**
    contains input parameters for debugging.
- */
+*/
 typedef struct DBG_CFG_T{
     int psol;        /**<test add dm command offseted by 1 frame in the future to psol grad*/
     int clemp_all;   /**<output NGS mode error evaluation for each direction*/
@@ -481,10 +482,13 @@ typedef struct DBG_CFG_T{
     int tomo_hxw;    /**<1: Force use hxw always instead of ray tracing from xloc to ploc.*/
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
     int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
+    int ecovxx;      /**<save the xx used to calculate ecov in psfr.*/
+    int force;       /**<Force run even if Res_${seed}.done exists*/
+    int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
 }DBG_CFG_T;
 /**
    contains input parameters for each MOAO type.
- */
+*/
 typedef struct MOAO_CFG_T{
     int order;       /**<Order of this MOAO*/
     int cubic;       /**<Whether use cubic influence function*/
@@ -497,7 +501,7 @@ typedef struct MOAO_CFG_T{
 }MOAO_CFG_T;
 /**
    contains input parameters for reusing of saved variables.
- */
+*/
 typedef struct LOAD_CFG_T{
     char *atm;       /**<load atmosphere from. Contains cell array of square matrix*/
     char *locs;      /**<load aper_locs from*/
@@ -561,7 +565,7 @@ typedef struct SAVE_CFG_T{
 }SAVE_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.
- */
+*/
 typedef struct PARMS_T{
     ATM_CFG_T    atm;   /**<atmospheric parameters*/
     ATMR_CFG_T   atmr;  /**<information about reconstructed atm*/
@@ -621,10 +625,9 @@ typedef enum T_TYPE{
 }T_TYPE;
 void create_metapupil(const PARMS_T *parms, double ht, double dx,
 		      double offset,long* nx, long* ny, double *ox, double *oy, 
-		      double **map,double guard, long nin, 
-		      T_TYPE type,int pad,int square);
+		      double **map,double guard, long nin, int pad,int square);
 map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
-			       double offset,double guard,long nin, 
-			       T_TYPE type, int pad,int square);
+			     double offset,double guard,long nin, 
+			     int pad,int square);
 void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
 #endif

@@ -641,24 +641,16 @@ dsp *nea2sp(dmat **nea, long nsa){
 void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *dmerr_lo){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    /*
-      
-      Do we do PSFR on evl directions, or separate directions?
-
-    */
-    /*
-      The tomography estimates, opdr is pseudo open loop
-      estimates. We need to subtract the constribution of the
-      added DM command to form closed loop estimates. 
+    /* The tomography estimates, opdr is pseudo open loop estimates. We need to
+      subtract the constribution of the added DM command to form closed loop
+      estimates.
     */
     dcell *dmadd=NULL;
 
     if(parms->tomo.split==1){
-	/*
-	  We will remove NGS modes from dmlast which is in NULL
-	  modes of tomography reconstructor (is this 100% true)?
-	  SHould we remove NGS modes from final OPD, xx,
-	  instead?*/
+	/* We will remove NGS modes from dmlast which is in NULL modes of
+	  tomography reconstructor (is this 100% true)?  SHould we remove NGS
+	  modes from final OPD, xx, instead?*/
 	dcell *tmp = dcelldup(dmpsol);//The DM command used for high order.
 	remove_dm_ngsmod(simu, tmp);//remove NGS modes as we do in ahst.
 	dcelladd(&dmadd, 1, tmp, -1);
@@ -698,14 +690,22 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 	    if(dmadd){
 		for(int idm=0; idm<parms->ndm; idm++){
 		    const double ht = parms->dm[idm].ht;
-		    double scale=1-ht/hs;
+		    double scale=1.-ht/hs;
 		    double dispx=parms->evl.thetax[ievl]*ht;
 		    double dispy=parms->evl.thetay[ievl]*ht;
-		    prop_nongrid(recon->aloc[idm], dmadd->p[idm]->p, recon->ploc, NULL,
-				 xx->p, 1, dispx, dispy, scale, 0, 0);
+		    if(parms->dm[idm].cubic){
+			prop_nongrid_cubic(recon->aloc[idm], dmadd->p[idm]->p, recon->ploc, NULL,
+				     xx->p, 1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
+		    }else{
+			prop_nongrid(recon->aloc[idm], dmadd->p[idm]->p, recon->ploc, NULL,
+				     xx->p, 1, dispx, dispy, scale, 0, 0);
+		    }
 		}
 	    }
 	    dmm(&simu->ecov->p[ievl], xx, xx, "nt", 1);
+	    if(parms->dbg.ecovxx){
+		cellarr_dmat(simu->save->ecovxx[ievl], xx);
+	    }
 	}//if psfr[ievl]
     }//ievl
     dfree(xx);
@@ -720,6 +720,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 void shift_grad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.glao){
+	/* Every the gradients in GLAO mode. */
 	if(simu->gradlastcl){
 	    dcellzero(simu->gradlastcl);
 	}else{

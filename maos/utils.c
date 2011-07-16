@@ -71,12 +71,12 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
    Calls create_metapupil is simplified interface by returning a map_t object.
  */
 map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
-				double offset,double guard, long nin,
-				T_TYPE type, int pad,int square){
+			      double offset,double guard, long nin,
+			      int pad,int square){
     long nx, ny;
     double ox, oy, *p;
     create_metapupil(parms,ht,dx,offset,&(nx),&(ny),
-		     &(ox),&(oy),&(p),guard, nin, type,pad,square);
+		     &(ox),&(oy),&(p),guard, nin,pad,square);
     map_t *amp=mapnew(nx, ny, dx, p);
     amp->ox=ox;
     amp->oy=oy;
@@ -97,7 +97,7 @@ map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
 void create_metapupil(const PARMS_T *parms, double ht,double dx,
 		      double offset, long* nxout, long* nyout,
 		      double *oxout, double *oyout, double**map, 
-		      double guard, long nin, T_TYPE type,int pad,int square){
+		      double guard, long nin, int pad,int square){
     double R=parms->aper.d/2;
     double maxx=0,maxy=0;
     double sx,sy;//temporary variables
@@ -106,34 +106,12 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     int use_wfs_lo=1;
     int use_evl=1;
     int use_fit=1;
-    const char *typestr[]={
-	"PLOC","ALOC","XLOC","ATM"
-    };
-    if(parms->tomo.alg==0 && parms->tomo.split==1){
-	switch(type){
-	case T_PLOC:
-	    break;
-	case T_ALOC:
-	    break;
-	case T_XLOC:
-	    /*use_evl=0;
-	    use_fit=1;
-	    if(parms->tomo.split==1){
-		use_wfs_lo=0;
-		}*/
-	    break;
-	case T_ATM:
-	    break;
-	default:
-	    warning("Unknown type\n");
-	}
-    }
+   
     //find minimum map size to cover all the beams
     for(i=0; i<parms->nwfs; i++){
 	int ipowfs=parms->wfs[i].powfs;
 	if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
 	   ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
-	    warning("Skip wfs %d when making grid for type %s\n",i,typestr[type]);
 	    continue;
 	}
 	sx=fabs(parms->wfs[i].thetax*ht)
@@ -150,8 +128,6 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	    if(sx>maxx) maxx=sx;
 	    if(sy>maxy) maxy=sy;
 	}
-    }else{
-	warning("Skip evl when making grid for type %s\n", typestr[type]);
     }
     if(use_fit){
 	for(i=0; i<parms->fit.nfit; i++){
@@ -160,8 +136,6 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	    if(sx>maxx) maxx=sx;
 	    if(sy>maxy) maxy=sy;
 	}
-    }else{
-	warning("Skip fit when making grid for type %s\n", typestr[type]);
     }
     //normalized grid size +3 is extra guard band
     maxx=ceil(maxx/dx)+2;
@@ -212,7 +186,6 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	    int ipowfs=parms->wfs[i].powfs;
 	    if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
 	       ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
-		//warning("Skip wfs %d when making grid for type %s\n",i,typestr[type]);
 		continue;
 	    }
 	    sx=ox+(parms->wfs[i].thetax*ht)/dx;
@@ -228,8 +201,6 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 		double RR=Rn+Rg;
 		dcircle_symbolic(dmap,sx,sy,RR);
 	    }
-	}else{
-	    warning("Skip evl when making grid for type %s\n", typestr[type]);
 	}
 	if(use_fit){
 	    for(i=0; i<parms->fit.nfit; i++){
@@ -238,8 +209,6 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 		double RR=Rn+Rg;
 		dcircle_symbolic(dmap,sx,sy,RR);
 	    }
-	}else{
-	    warning("Skip fit when making grid for type %s\n", typestr[type]);
 	}
 
 	for(i=0; i<nx*ny; i++){

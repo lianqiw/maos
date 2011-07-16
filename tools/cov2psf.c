@@ -22,7 +22,7 @@
 #include "../lib/aos.h"
 int main(int argc, char *argv[]){
     if(argc<7){
-	info("Usage: %s loc.bin amp.bin cov.bin D ncomp pttr wvl1 wvl2 ...", argv[0]);
+	info("Usage: %s loc.bin amp.bin cov.bin ncomp pttr wvl1 wvl2 ...\n", argv[0]);
 	exit(0);
     }
     enum{
@@ -36,7 +36,12 @@ int main(int argc, char *argv[]){
     };
     loc_t *loc=locread("%s",argv[P_LOC]);
     dmat *amp=NULL;
-    if(strcmp(argv[P_AMP],"NULL")) amp=dread("%s",argv[P_AMP]);
+    if(strcmp(argv[P_AMP],"NULL")) {
+	amp=dread("%s",argv[P_AMP]);
+    }else{
+	amp=dnew(loc->nloc,1);
+	dset(amp,1);
+    }
     dmat *cov=dread("%s",argv[P_COV]);
     long ncomp=strtol(argv[P_NCOMP], NULL, 10);
     long pttr=strtol(argv[P_PTTR], NULL, 10);
@@ -46,7 +51,7 @@ int main(int argc, char *argv[]){
     for(int iwvl=0; iwvl<argc-P_WVL; iwvl++){
 	double wvl=strtod(argv[iwvl+P_WVL], NULL);
 	double dtheta=wvl/(ncomp*loc->dx);
-	genotf(&otf, loc, amp?amp->p:NULL, NULL, NULL, 0, wvl, dtheta, cov, 0, 0, ncomp, ncomp, 1, pttr);
+	genotf(&otf, loc, amp->p, NULL, NULL, 0, wvl, dtheta, cov, 0, 0, ncomp, ncomp, 1, pttr);
 	cwrite(otf, "%s_otf_%g.bin", argv[P_COV], wvl);
 	cfftshift(otf);
 	cifft2(otf, 1);
