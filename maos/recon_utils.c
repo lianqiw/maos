@@ -664,7 +664,10 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
     if(dmerr_lo){/*In AHST, dmerr_lo is CL Estimation.*/
 	addlow2dm(&dmadd, simu, dmerr_lo, 1);
     }
-    dmat *xx = dnew(recon->ploc->nloc, 1);
+    /* Changed from ploc to plocs on July 18, 2011. Plos is too low sampled. Make
+      sure the sampling of plocs is not too big. */
+    loc_t *locs=simu->aper->locs;
+    dmat *xx = dnew(locs->nloc, 1);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	double hs = parms->evl.ht[ievl];
 	if(parms->evl.psfr[ievl]){
@@ -679,10 +682,10 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 		    double dispy=parms->evl.thetay[ievl]*ht;
 		    if(parms->tomo.square){//square xloc
 			recon->xmap[ips]->p=opdr->p[ips]->p;
-			prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
+			prop_grid_stat(recon->xmap[ips], locs->stat, xx->p, 1, 
 				       dispx, dispy, scale, 0, 0, 0);
 		    }else{
-			prop_nongrid(recon->xloc[ips], opdr->p[ips]->p, recon->ploc, NULL,
+			prop_nongrid(recon->xloc[ips], opdr->p[ips]->p, locs, NULL,
 				     xx->p, 1, dispx, dispy, scale, 0, 0);
 		    }
 		}
@@ -694,10 +697,10 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 		    double dispx=parms->evl.thetax[ievl]*ht;
 		    double dispy=parms->evl.thetay[ievl]*ht;
 		    if(parms->dm[idm].cubic){
-			prop_nongrid_cubic(recon->aloc[idm], dmadd->p[idm]->p, recon->ploc, NULL,
+			prop_nongrid_cubic(recon->aloc[idm], dmadd->p[idm]->p, locs, NULL,
 				     xx->p, 1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
 		    }else{
-			prop_nongrid(recon->aloc[idm], dmadd->p[idm]->p, recon->ploc, NULL,
+			prop_nongrid(recon->aloc[idm], dmadd->p[idm]->p, locs, NULL,
 				     xx->p, 1, dispx, dispy, scale, 0, 0);
 		    }
 		}

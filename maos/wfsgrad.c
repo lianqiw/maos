@@ -215,7 +215,7 @@ void wfsgrad_iwfs(thread_t *info){
 	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
     }
     /* calculate and save full aperture PSF is requested. The wavelength are
-       evl.psfwvl, but powfs.wvl since our purpose is to compare with science
+       evl.wvl, but powfs.wvl since our purpose is to compare with science
        PSF. */
     if(parms->wfs[iwfs].psfmean && isim>=parms->evl.psfisim){
 	dmat *opdcopy=NULL;
@@ -231,7 +231,7 @@ void wfsgrad_iwfs(thread_t *info){
 	}
 	ccell *psf2s=psfcomp(opdcopy, powfs[ipowfs].realamp[wfsind], 
 			     powfs[ipowfs].embed, powfs[ipowfs].nembed, 
-			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
 	dfree(opdcopy);
 	int nwvl=parms->evl.nwvl;
 	PDCELL(simu->wfspsfmean, wfspsfmean);

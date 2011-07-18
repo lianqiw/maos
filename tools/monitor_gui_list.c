@@ -51,8 +51,7 @@
 #include "common.h"
 #include "monitor.h"
 #include "misc.h"
-
-
+#include "gtkcellrendererprogressnew.h" //modify appearance of progress
 static GtkListStore **lists=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
     GtkListStore *list=lists[p->hid];
@@ -87,9 +86,14 @@ static void list_modify_status(PROC_T *p, const char *status){
 static void list_update_progress(PROC_T *p){
     if(p->status.nseed==0) return;
     GtkListStore *list=lists[p->hid];
-    p->frac=(double)(p->status.rest+p->status.laps);
-    if(fabs(p->frac)>1.e-10){
-	p->frac=(double)p->status.laps/p->frac;
+    double tot=(double)(p->status.rest+p->status.laps);
+    if(fabs(tot)>1.e-10){
+	p->frac=(double)p->status.laps/tot;
+	if(!(p->frac<1 && p->frac>0)){
+	    info("frac=%g, laps=%ld, tot=%g\n", p->frac, p->status.laps, tot);
+	}
+    }else{
+	p->frac=0;
     }
     GtkTreeIter iter;
     list_get_iter(p, &iter);
@@ -101,14 +105,14 @@ static void list_update_progress(PROC_T *p){
     const long restm=(rest-resth*3600)/60;
     const long lapsh=laps/3600;
     const long lapsm=(laps-lapsh*3600)/60;
-    const double tot=p->status.tot*tkmean;
+    tot=p->status.tot*tkmean;
     if(p->status.iseed!=p->iseed_old-1){
 	char tmp[64];
 	snprintf(tmp,64,"%d/%d",p->status.iseed+1,p->status.nseed);
 	gtk_list_store_set(list, &iter, 
 			   COL_SEED, tmp, 
 			   COL_SEEDP,
-			   100*(double)(p->status.iseed+1)/(double)p->status.nseed,
+			   100*(double)(p->status.iseed+1.)/(double)p->status.nseed,
 			   -1);
 	p->iseed_old=p->status.iseed+1;
     }
@@ -192,7 +196,7 @@ void refresh(PROC_T *p){
 	list_update_progress(p);
 	//list_modify_status(p, "Finished");
 	list_modify_icon(p, icon_finished);
-	list_modify_color(p,"#00ff00");
+	list_modify_color(p,"#00DD00");
 	//gtk_widget_modify_base(p->prog3,GTK_STATE_NORMAL,&green);
 	notify_user(p);
 	break;
@@ -200,19 +204,19 @@ void refresh(PROC_T *p){
 	p->done=1;
 	list_modify_status(p, "Error");
 	list_modify_icon(p,icon_failed);
-	list_modify_color(p,"#ff0000");
+	list_modify_color(p,"#CC0000");
 	notify_user(p);
 	break;
     case S_TOKILL://kill command sent
 	list_modify_status(p, "Kill command sent");
 	list_modify_icon(p,icon_failed);
-	list_modify_color(p,"#ffff00");
+	list_modify_color(p,"#CCCC00");
 	break;
     case S_KILLED:
 	p->done=1;
 	list_modify_status(p, "Killed");
 	list_modify_icon(p,icon_failed);
-	list_modify_color(p,"#ff0000");
+	list_modify_color(p,"#CC0000");
 	notify_user(p);
 	break;
     default:
@@ -322,7 +326,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_set_title(col,"ErrHi");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
 	
-    render=gtk_cell_renderer_progress_new();
+    render=gtk_cell_renderer_progressnew_new();
     g_object_set(G_OBJECT(render), "ypad", 0, NULL);
     col=gtk_tree_view_column_new();
     gtk_tree_view_column_set_spacing(col, spacing);
@@ -330,11 +334,11 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_SEED);
     gtk_tree_view_column_add_attribute(col,render,"value",COL_SEEDP);
-    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
+    gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
     gtk_tree_view_column_set_title(col,"Seed");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
-    render=gtk_cell_renderer_progress_new();
+   
+    render=gtk_cell_renderer_progressnew_new();
     g_object_set(G_OBJECT(render), "ypad", 0, NULL);
     gtk_cell_renderer_set_fixed_size(render,30,5);
     col=gtk_tree_view_column_new();
@@ -343,7 +347,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_STEP);
     gtk_tree_view_column_add_attribute(col,render,"value",COL_STEPP);
-    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
+    gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
     gtk_tree_view_column_set_title(col,"Progress");
     gtk_tree_view_column_set_min_width(col,80);
     gtk_tree_view_column_set_max_width(col,80);
@@ -358,7 +362,8 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_TIMING);
     //gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR);
-    gtk_tree_view_column_set_title(col,"Step");
+    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
+    gtk_tree_view_column_set_title(col,"Time");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
 
     render=gtk_cell_renderer_text_new();
@@ -369,6 +374,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_REST);
     //gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR);
+    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
     gtk_tree_view_column_set_title(col,"Left");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
   
@@ -380,6 +386,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_LAPS);
     //gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR);
+    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
     gtk_tree_view_column_set_title(col,"Used");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
 
@@ -395,6 +402,7 @@ GtkWidget *new_page(int ihost){
     //gtk_tree_view_column_set_clickable(col,TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
     g_signal_connect(col, "clicked",G_CALLBACK(action_clicked),NULL);
+
 
     return view;
 }

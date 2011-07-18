@@ -84,7 +84,6 @@ GdkColor white;
 GdkColor *bg;
 GdkColor color_even;
 GdkColor color_odd;
-static int scheduler_crashed;
 
 /**
    The number line pattern determines how dash is drawn for gtktreeview. the
@@ -272,7 +271,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
 }
 
 static int init_sockaddr (struct sockaddr_in *name,
-                    const char *hostname, uint16_t port){
+			  const char *hostname, uint16_t port){
     struct hostent *hostinfo;
     
     name->sin_family = AF_INET;
@@ -283,8 +282,14 @@ static int init_sockaddr (struct sockaddr_in *name,
 	fprintf (stderr, "Unknown host %s.\n", hostname);
 	return -1;
     }else{
-	name->sin_addr = *(struct in_addr *) hostinfo->h_addr;
-	return 0;
+	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
+	if(addr){
+	    name->sin_addr = *addr;
+	    return 0;
+	}else{
+	    warning("h_addr_list is NULL for host %s\n", hostname);
+	    return -1;
+	}
     }
 }
 /**
@@ -304,11 +309,6 @@ int scheduler_connect(int ihost, int block, int mode){
     host=hosts[ihost];
     int sock;
  
-    if(scheduler_crashed) {
-	info2("scheduled crashed");
-	return -1;
-    }
-
     struct sockaddr_in servername;
  
     /* Create the socket. */
@@ -316,7 +316,6 @@ int scheduler_connect(int ihost, int block, int mode){
     socket_tcp_keepalive(sock);
     if (sock < 0) {
 	perror ("socket (scheduler)");
-	scheduler_crashed=1; 
 	return sock;
     }
 
@@ -329,8 +328,7 @@ int scheduler_connect(int ihost, int block, int mode){
     fcntl(sock, F_SETFD, flag);
     
     if(init_sockaddr (&servername, host, PORT)){
-	warning3("Unable to init_sockaddr.");
-	scheduler_crashed=1; 
+	warning3("Unable to init_sockaddr.\n");
 	close(sock);
 	return -1;
     }
@@ -783,8 +781,10 @@ int main(int argc, char *argv[])
     icon_finished=gdk_pixbuf_new_from_inline(-1,icon_inline_finished,FALSE,NULL);
     icon_failed=gdk_pixbuf_new_from_inline(-1,icon_inline_failed,FALSE,NULL);
     icon_running=gdk_pixbuf_new_from_inline(-1,icon_inline_running,FALSE,NULL);
-    
- 
+    /*GtkWidget *image_finished=gtk_image_new_from_stock(GTK_STOCK_APPLY, GTK_ICON_SIZE_MENU);
+    gtk_widget_show(image_finished);
+    icon_finished=gtk_image_get_pixbuf(GTK_IMAGE(image_finished));
+    */
     gtk_rc_parse_string(rc_string_treeview);
     gtk_rc_parse_string(rc_string_progress);
     create_status_icon();

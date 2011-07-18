@@ -275,7 +275,7 @@ typedef struct EVL_CFG_T{
     double *thetax; /**<x Coordinate of evaluation directions*/
     double *thetay; /**<y Coordinate of evaluation directions*/
     double *wt;     /**<weight of each direction*/
-    double *psfwvl; /**<wavelength for PSF and strehl computation*/
+    double *wvl; /**<wavelength for PSF and strehl computation*/
     double *ht;     /**<height of each science object*/
     double *misreg; /**<Misregistration wrt to nominal pupil.*/
     int ismisreg;   /**<Science evl is misregistered*/

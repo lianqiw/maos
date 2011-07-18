@@ -155,7 +155,7 @@ void perfevl_ievl(thread_t *info){
 	    loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
 	}
 	ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
-			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
 	dfree(opdevlcopy);
 	int nwvl=parms->evl.nwvl;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -166,7 +166,7 @@ void perfevl_ievl(thread_t *info){
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
 		cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
 		ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
-		      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.psfwvl[iwvl]*1e6);
+		      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl[iwvl]*1e6);
 		dfree(psftemp);
 	    }
 	}
@@ -219,7 +219,7 @@ void perfevl_ievl(thread_t *info){
 		loc_remove_ptt(iopdevltomo->p,pclmptomo[isim], aper->locs);
 	    }
 	    ccell *psf2s=psfcomp(iopdevltomo, aper->amp->p, aper->embed, aper->nembed,
-				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
 	    int nwvl=parms->evl.nwvl;
 	    if(parms->evl.psfmean){
 		PDCELL(simu->evlpsftomomean, pevlpsftomomean);
@@ -237,7 +237,7 @@ void perfevl_ievl(thread_t *info){
 		    dcwlog10(psftemp);
 		    double xylim[4]={-12,12,-12,12};
 		    ddraw("Tomo PSF", psftemp, xylim, NULL, "Science Tomo PSF", 
-			  "x", "y", "Tomo%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
+			  "x", "y", "Tomo%2d PSF %.2f", ievl, parms->evl.wvl[iwvl]*1e6);
 		    dfree(psftemp);
 		}
 	    }
@@ -338,7 +338,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	    
 	    ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
-				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
 	    int nwvl=parms->evl.nwvl;
 	    if(parms->evl.psfmean){
 		PDCELL(simu->evlpsfmean, pevlpsfmean);
@@ -357,7 +357,7 @@ void perfevl_ievl(thread_t *info){
 		    double xylim[4]={-12,12,-12,12};
 		    ddraw("CL PSF", psftemp, xylim, opdzlim, 
 			  "Science Closed Loop PSF", 
-			  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.psfwvl[iwvl]*1e6);
+			  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl[iwvl]*1e6);
 		    dfree(psftemp);
 		}
 	    }

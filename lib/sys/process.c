@@ -36,6 +36,7 @@
 int NCPU;
 int NCPU2;//NCPU2=2*NCPU when hyperthreading is enabled.
 int TCK;
+long NMEM=0;//Total memory in byte.
 const char *HOME=NULL;
 const char *TEMP=NULL;
 const char *USER=NULL;
@@ -80,6 +81,13 @@ static __attribute__((constructor))void init(){
     NCPU= get_ncpu();
     NCPU2=sysconf( _SC_NPROCESSORS_ONLN );
     TCK = sysconf(_SC_CLK_TCK);
+#if defined(__linux__)
+    FILE *fp=fopen("/proc/meminfo","r");
+    fscanf(fp, "%*s %ld %*s", &NMEM); NMEM=NMEM*1024; 
+    fclose(fp);
+#else
+    NMEM=0;//do not know.
+#endif
     init_path();
 }
 

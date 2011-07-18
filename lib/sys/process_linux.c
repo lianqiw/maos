@@ -211,7 +211,7 @@ double get_usage_mem(void){
     long membuf;
     long memcache;
     fp=fopen("/proc/meminfo","r");
-    if(fscanf(fp, "%*s %ld %*s",&memtot)!=1 ||
+    if(fscanf(fp, "%*s %ld %*s", &memtot)!=1 ||
        fscanf(fp, "%*s %ld %*s", &memfree)!=1 ||
        fscanf(fp, "%*s %ld %*s", &membuf)!=1 ||
        fscanf(fp, "%*s %ld %*s", &memcache)!=1){

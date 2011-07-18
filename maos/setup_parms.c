@@ -53,7 +53,7 @@ void free_parms(PARMS_T *parms){
 
     free(parms->evl.thetax);
     free(parms->evl.thetay);
-    free(parms->evl.psfwvl);
+    free(parms->evl.wvl);
     free(parms->evl.wt);
     free(parms->evl.ht);
     free(parms->evl.psf);
@@ -567,7 +567,7 @@ static void readcfg_evl(PARMS_T *parms){
     normalize(parms->evl.wt, parms->evl.nevl, 1);
     readcfg_intarr_nmax(&(parms->evl.psf), parms->evl.nevl, "evl.psf");
     readcfg_intarr_nmax(&(parms->evl.psfr), parms->evl.nevl, "evl.psfr");
-    parms->evl.nwvl = readcfg_dblarr(&(parms->evl.psfwvl), "evl.psfwvl");
+    parms->evl.nwvl = readcfg_dblarr(&(parms->evl.wvl), "evl.wvl");
     readcfg_intarr_nmax(&(parms->evl.psfgridsize), parms->evl.nwvl, "evl.psfgridsize");
     readcfg_intarr_nmax(&(parms->evl.psfsize), parms->evl.nwvl, "evl.psfsize");
     int ievl;
@@ -887,18 +887,6 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    parms->atm.ws[ips]=0;//set windspeed to zero.
 	}
 	parms->sim.end=parms->dbg.ntomo_maxit;
-    }
-    if(parms->sim.psfr){
-	/*if(parms->sim.fitonly){
-	    error("Cannot do psf reconstruction telemetry and fitonly in the same time.\n");
-	    }*/
-	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psfr);
-	if(fnd==0){
-	    error("sim.psfr is specified, but evl.psfr are all zero\n");
-	}else{
-	    info2("Output PSF reconstruction telemetry for %d directions\n", fnd);
-	}
-	parms->evl.psfmean=1;//Saves psfmean for verification.
     }
     if(parms->sim.fitonly){
 	if(parms->sim.recon!=0){
@@ -1476,6 +1464,20 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->sim.dmttcast=1;
 	if(!parms->sim.fuseint){
 	    error("Sorry, clipping only works in fuseint=1 mode\n");
+	}
+    }
+    if(parms->sim.psfr){
+	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psfr);
+	if(fnd==0){
+	    error("sim.psfr is specified, but evl.psfr are all zero\n");
+	}else{
+	    info2("Output PSF reconstruction telemetry for %d directions\n", fnd);
+	}
+	parms->evl.psfmean=1;//Saves psfmean for verification.
+	//required memory to hold memory.
+	long covmem=(long)round(pow(parms->aper.d/parms->aper.dx,4))*8*fnd;
+	if(covmem>MAX(NMEM, 4000000000) && parms->aper.dx > parms->atmr.dx*0.25+EPS){//4G or actual
+	    error("parms->aper.dx=%g is probably too large to save ecxx. Recommend parms->aper.dx=%g\n", parms->aper.dx, parms->atmr.dx*0.25);
 	}
     }
 }

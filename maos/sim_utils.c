@@ -647,7 +647,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	header[0]='\0';
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 	    char headeri[80];
-	    snprintf(headeri, 80, "sum[iwvl]=%.15g\n",
+	    snprintf(headeri, 80, "wvl=%g\nPSF sampling is %.15g radian\nPSF will sum to %.15g\n",
+		     parms->evl.wvl[iwvl],
+		     parms->evl.wvl[iwvl]/(aper->nembed[iwvl]*parms->aper.dx),
 		     aper->sumamp2*aper->nembed[iwvl]*aper->nembed[iwvl]); 
 	    strncat(header, headeri, 800-strlen(header)-2);
 	}
@@ -726,7 +728,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	//compute diffraction limited PSF.
 	dmat *iopdevl=dnew(aper->locs->nloc,1);
 	ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
-			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.psfwvl);
+			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
 	dfree(iopdevl);
 	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){

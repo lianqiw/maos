@@ -291,7 +291,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(tomo.split_wt, tomo.ahst_wt);
 	    RENAME(tomo.split_idealngs, tomo.ahst_idealngs);
 	    RENAME(tomo.split_rtt, tomo.ahst_rtt);
-	    RENAME(evl.wvl, evl.psfwvl);
+	    RENAME(evl.psfwvl, evl.wvl);
 	    RENAME(cn2.nhtrecon, cn2.nhtomo);
 	    //Added on 2011-04-28
 	    RENAME(dbg.noatm, sim.noatm);

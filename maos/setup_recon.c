@@ -1047,7 +1047,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
    For details see http://www.opticsinfobase.org/abstract.cfm?URI=josaa-19-9-1803
 
 */
-void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
+void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
     //if not cg or forced, build explicitly the tomography matrix.
     int npsr=recon->npsr;
     int nwfs=parms->nwfsr;
@@ -1294,7 +1294,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		    const double scale=1.-ht/hs;
 		    const double dispx=parms->evl.thetax[ievl]*ht;
 		    const double dispy=parms->evl.thetay[ievl]*ht;
-		    dsp *HXT=mkhb(recon->xloc[ips], recon->ploc, NULL,
+		    dsp *HXT=mkhb(recon->xloc[ips], aper->locs, NULL,
 				 dispx, dispy, scale, 0, 0);
 		    spfull(&hxt->p[ips], HXT, 1); spfree(HXT);
 		}
@@ -1339,7 +1339,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		}
 		/*Build HX for science directions that need ecov.*/
 	    
-		dmat *x1=dnew(recon->ploc->nloc, t1->ny);
+		dmat *x1=dnew(aper->locs->nloc, t1->ny);
 		PDMAT(t1, pt1);
 		PDMAT(x1, px1);
 		int ind=0;
@@ -1350,7 +1350,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms){
 		    const double dispx=parms->evl.thetax[ievl]*ht;
 		    const double dispy=parms->evl.thetay[ievl]*ht;
 		    for(int icol=0; icol<t1->ny; icol++){
-			prop_nongrid(recon->xloc[ips], &pt1[icol][ind], recon->ploc, NULL,
+			prop_nongrid(recon->xloc[ips], &pt1[icol][ind], aper->locs, NULL,
 				     px1[icol], 1, dispx, dispy, scale, 0, 0);
 		    }
 		    ind+=recon->xloc[ips]->nloc;
@@ -2143,7 +2143,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	if(parms->tomo.assemble || parms->tomo.split==2 || parms->sim.psfr){
 	    /*assemble the matrix only if not using CG CG apply the
 	      individual matrices on fly to speed up and save memory. */
-	    setup_recon_tomo_matrix(recon,parms);
+	    setup_recon_tomo_matrix(recon,parms,aper);
 	    toc2("Generating tomography matrix");
 	}
 	//Fall back function method if .M is NULL
