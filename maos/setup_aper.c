@@ -89,7 +89,6 @@ APER_T * setup_aper(const PARMS_T *const parms){
 		       parms->aper.d*0.5,parms->aper.din*0.5,1);
 	}
     }
-    loc_reduce(aper->locs, aper->amp, 1, NULL);
     if(parms->aper.pupmask){
 	map_t *mask=mapread("%s",parms->aper.pupmask);
 	if(fabs(parms->aper.rotdeg)>1.e-12){
@@ -107,6 +106,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }else{//apply an annular mask
 	locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
     }
+    loc_reduce(aper->locs, aper->amp, 1, NULL);
     //Set the amp for plotting.
     aper->amp1=ddup(aper->amp);
     //normalize amp to sum to 1.

@@ -18,26 +18,7 @@ AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
 
 AC_TYPE_SIZE_T  
-#Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
-AM_CONDITIONAL(DRAW,true) #for drawdaemon
-AM_CONDITIONAL(MON,true)  #for parital monitor without notify
-AM_CONDITIONAL(MONN,true) #for full monitor with notify
-#make sure there are spaces before and after >=
-PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [comp_draw="yes"],[comp_draw="no"])
-PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[comp_mon="yes"], [comp_mon="no"])
-PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[comp_monn="yes"],[comp_monn="no"])
-#The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
-#with their values in Makefile.in 
-#so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
-AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
-AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
-AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
-AC_SUBST(DRAW_CFLAGS)
-AC_SUBST(DRAW_LIBS)
-AC_SUBST(MON_CFLAGS)
-AC_SUBST(MON_LIBS)
-AC_SUBST(MONN_LIBS)
-AC_SUBST(MONN_CFLAGS)
+
 #Check operating system.
 AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
@@ -50,7 +31,10 @@ AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
-OPTScommon=" -Wshadow -Wall -Werror " #-all-static will produce a static exe.
+OPTScommon=" -Wshadow -Wall " #-all-static will produce a static exe.
+if test "${USER}" = "lianqiw" ;then
+   OPTScommon="$OPTScommon -Werror"
+fi
 LDSYS="-lz -lm"
 OPTSextra=""
 use_shm="no"
@@ -62,7 +46,20 @@ else
    echo "Intel Compiler is not found."
    use_icc_default="no"
 fi
-
+case "$host_os" in  #compile 32 exe in 64 bit.
+   *linux*)
+   AC_ARG_ENABLE(32,   [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
+   if test "$use_32" = "yes" ;then
+      CFLAGS="$CFLAGS -m32"
+      CHOST="i686-pc-linux-gnu"
+      CDEFINE="__i386__"
+      HOST="i686-linux"
+      BUILD="i686-linux"
+      use_icc_default="no"
+      host_cpu=i386
+   fi
+   ;;
+esac
 case "$host_cpu" in 
     *86)
         cpu="32"
@@ -101,6 +98,7 @@ case "$host_os" in
  wgetoutput="-O"
  mkldep="-lguide"
  mklname=mkl${cpu}
+ system="linux"
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
@@ -110,19 +108,23 @@ case "$host_os" in
  wgetoutput="--output"
  mkldep="-liomp5"
  mklname=mklfat
+ system="darwin"
  ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)
+ system="bsd"
  ;;
 *cygwin*|*mingw*)
  AM_CONDITIONAL(WIN, true)
  LAPACK="-lblas -llapack -lgfortran"
  win32=yes
  use_static_default=yes #blas/lapack are linked statically, but others are still dynamic. ship those
+ system="win"
  ;;
 *)
 AC_MSG_ERROR([Unrecognized OS])
 esac
+
 mkl_lib="${SRC_DIR}/external/${mklname}/libmkl.la"
 if test "$try_mkl" = "yes" ;then
     #Enable System V Interface definition (IPC,SHM)
@@ -220,7 +222,6 @@ if test "x$use_icc" = "xyes" ;then
 	minor="${minor#4.}"
 	if test $major -ge 12 ;then
 	    OPTIM="$OPTIM -axSSE4.2"
-#	    OPTIM="$OPTIM"
         elif test $major -ge 11 ;then
 	    OPTIM="$OPTIM -axSSE4.2"
         elif test $major -ge 10 ;then
@@ -271,7 +272,18 @@ AC_PROG_CC_C99 #enable C99.
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
-
+function download(){
+   echo The $1 library is not available in the system
+   echo Will download one from the website.
+   echo This library is only for non-commercial use.
+   fn=$2
+   $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} || exit 1
+   if test ! -d ${SRC_DIR}/external ;then
+      mkdir -p ${SRC_DIR}/external || exit 1
+   fi
+   tar -xjvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
+   rm -rf /tmp/${fn}
+}
 if test ! "x$use_mkl" = "xyes" ;then
 #Check for LAPACK library in the system
    if test -z "$LAPACK" ;then
@@ -295,16 +307,7 @@ if test ! "x$use_mkl" = "xyes" ;then
 fi
 if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
-      echo The MKL library is not available at "$mkl_lib"
-      echo Will download one form the website. 
-      echo This library is only for non-commerical use only.
-      fn=${mklname}${mklextra}.tar.bz2
-      $wget ${BASEURL}/${fn}  $wgetoutput /tmp/${fn}  || exit 1
-      if test ! -d ${SRC_DIR}/external ;then
-      	  mkdir -p ${SRC_DIR}/external || exit 1
-      fi
-      tar -xjvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
-      rm -rf /tmp/${fn}
+      download MKL ${mklname}${mklextra}.tar.bz2
    fi
    LAPACK="-L${SRC_DIR}/external/${mklname} -lmkl ${mkldep}"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
@@ -312,22 +315,56 @@ else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
 #Check for FFTW3 header and library.
-AC_CHECK_HEADERS([fftw3.h],[],AC_MSG_ERROR([Please install fftw3 library]))
-AC_CHECK_LIB([fftw3], [fftw_execute],[],[AC_MSG_ERROR(Please install fftw3)])
-AC_CHECK_LIB([fftw3_threads], [fftw_init_threads],[has_fftw_threads="yes"],[has_fftw_threads="no"])
-AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"])
+has_fftw='yes'
+AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
+AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'])
+if test "$has_fftw" = "no" ;then #fftw does not exist in system.
+   if test "$system" = "linux" ;then
+      if test ! -d ${SRC_DIR}/external/fftw${cpu};then 
+         download FFTW fftw${cpu}.tar.bz2
+      fi
+      LDFFT="-L${SRC_DIR}/external/fftw${cpu}"
+      OPTScommon="$OPTScommon -I${SRC_DIR}/external/fftw${cpu}"
+   else
+      AC_MSG_ERROR([Please install fftw library])
+   fi
+else
+   LDFFT=""
+fi
+AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
+AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
 if test "x$has_fftw_threads" = "xyes" ;then
     if test "x$has_fftw_omp" = "xyes" ;then
         AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp, conflict.")
-	LDFFT="-lfftw3" 
+	LDFFT="$LDFFT -lfftw3" 
     else
         AC_DEFINE(USE_FFTW_THREADS, [1], "We have FFTW3 threads support")
-        LDFFT="-lfftw3_threads -lfftw3"
+        LDFFT="$LDFFT -lfftw3_threads -lfftw3"
     fi
 else
-    LDFFT="-lfftw3"
+    LDFFT="$LDFFT -lfftw3"
     AC_DEFINE(USE_FFTW_THREADS, [0], "We do not have FFTW3 threads")
 fi
+#Check availability of gtk and libnotify. If available, we will build drawdaemon and the monitor.
+AM_CONDITIONAL(DRAW,true) #for drawdaemon
+AM_CONDITIONAL(MON,true)  #for parital monitor without notify
+AM_CONDITIONAL(MONN,true) #for full monitor with notify
+#make sure there are spaces before and after >=
+PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [comp_draw="yes"],[comp_draw="no"])
+PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[comp_mon="yes"], [comp_mon="no"])
+PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[comp_monn="yes"],[comp_monn="no"])
+#The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
+#with their values in Makefile.in 
+#so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
+AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
+AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
+AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
+AC_SUBST(DRAW_CFLAGS)
+AC_SUBST(DRAW_LIBS)
+AC_SUBST(MON_CFLAGS)
+AC_SUBST(MON_LIBS)
+AC_SUBST(MONN_LIBS)
+AC_SUBST(MONN_CFLAGS)
 
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
 if test "x$use_long" = "xyes" -a "x$cpu" = "x64" ;then
@@ -410,6 +447,7 @@ echo Compile Drawdaemon=$comp_draw
 echo Compile Monitor=$comp_mon
 echo Compile Monitor with Libnotify=$comp_monn
 echo CC=$CC
+echo CFLAGS=$CFLAGS
 echo LIBS=$LIBS
 echo LDEXE=$LDEXE
 echo SRC_DIR=$SRC_DIR
@@ -418,3 +456,4 @@ echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
 echo LAPACK=$LAPACK
 echo LDCHOL=$LDCHOL
+echo LDFFT=$LDFFT

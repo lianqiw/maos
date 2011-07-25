@@ -30,15 +30,19 @@
 /**
    Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell
  */
-cellarr* cellarr_init(uint64_t nx, uint64_t ny,const char*format,...){
+cellarr* cellarr_init(long nx, long ny,const char*format,...){
     format2fn;
+    if(nx<0) nx=0;
+    if(ny<0) ny=0;
     cellarr *out=calloc(1, sizeof(cellarr));
     out->fp=zfopen(fn,"wb");
     out->cur=0;
     out->tot=nx*ny;
     write_magic(MCC_ANY, out->fp);
-    zfwrite(&nx,sizeof(uint64_t),1,out->fp);
-    zfwrite(&ny,sizeof(uint64_t),1,out->fp);
+    uint64_t nx2=nx;
+    uint64_t ny2=ny;
+    zfwrite(&nx2,sizeof(uint64_t),1,out->fp);
+    zfwrite(&ny2,sizeof(uint64_t),1,out->fp);
     return out;
 }
 

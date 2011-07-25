@@ -92,6 +92,8 @@ vtbl X(sp_vtbl)={M_TT,
 */
 X(sp)* Y(spnew)(long nx, long ny, long nzmax){
     X(sp) *sp;
+    if(nx<0) nx=0;
+    if(ny<0) ny=0;
     sp = calloc(1, sizeof(X(sp)));
     sp->vtbl=&X(sp_vtbl);
     if(nzmax>0){

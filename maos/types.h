@@ -352,10 +352,7 @@ typedef struct SIM_SAVE_T{
     //Evaluation directions PSF.
     cellarr*  evlpsfolmean;  /**<science field psf OL time average*/
     cellarr** evlpsfmean;    /**<science field psf CL time average*/
-    cellarr** evlpsftomomean;/**<science field psf Tomo time average*/
     cellarr** evlpsfhist;    /**<to save time history of science field psf*/
-    cellarr** evlpsftomohist;/**<to save time history of science field psf with
-				direct correction from tomography*/
     cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
     //Deformable mirror.
     cellarr *dmerr_hi;
@@ -461,7 +458,8 @@ typedef struct SIM_T{
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
     dcell *opdrmvst;   /**<average of opdr for MVST*/
-
+    dcell *opdx;       /**<Ray tracing from atmosphere to xloc directly. Fixme:
+			  do layer by layer fitting instead?*/
     /*Only on split tomography*/
     dmat *clem;        /**<lgs/ngs mod error in split tomography*/
     dcell *clemp;      /**<lgs/ngs mod error per direction. only on-axis is computed.*/
@@ -512,7 +510,6 @@ typedef struct SIM_T{
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
     dcell *evlpsfmean;    /**<science field psf time average*/
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
-    dcell *evlpsftomomean;/**<science field psf time average with direct correction from tomography*/
 
     /*Optinal telemetry saving for PSF reconstruction.*/
     dcell *ecov;       /**<covariance of Hx*x-Ha*a for science directions.*/
@@ -520,13 +517,10 @@ typedef struct SIM_T{
     /*save performance results to file using mmap*/
     dcell *clep;       /**<CL error per direction.*/
     dcell *clmp;       /**<CL mode coefficient per direction.*/
-    dcell *cleptomo;   /**<CL error for tomography compensation perdirection.*/
-    dcell *clmptomo;   /**<CL mode coefficient for tomography compensation.*/
     dcell *olep;       /**<OL error per direction.*/
     dcell *olmp;       /**<OL mode coefficient per direction.*/
     dmat *ole;         /**<field averaged OL error*/
     dmat *cle;         /**<field averaged CL error*/
-    dmat *cletomo;     /**<field averaged tomography error*/
 
     /*MOAO*/
     dcell *moao_wfs;   /**<moao DM command computed for wfs*/

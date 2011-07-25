@@ -90,12 +90,14 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	if(parms->dbg.annular_W && parms->aper.din>0){
 	    warning("Define the W0/W1 on annular aperture instead of circular.\n");
 	    mkw_annular(recon->ploc, 0, 0, 
-			parms->aper.din/2, parms->aper.d/2,
+			parms->aper.din/2, parms->aper.d/2+parms->aper.dx,
 			&(recon->W0), &(recon->W1));
+	    warning("Testing\n");
 	    
 	}else{
-	    mkw_circular(recon->ploc,0,0,parms->aper.d/2.,
+	    mkw_circular(recon->ploc,0,0,parms->aper.d/2.+parms->aper.dx,
 			 &(recon->W0), &(recon->W1));
+	    warning("Testing\n");
 	}
 	if(parms->save.setup){
 	    spwrite(recon->W0, "%s/W0",dirsetup);
@@ -231,10 +233,10 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	info2("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
-	    double dxr=(parms->sim.fitonly)?parms->atm.dx:recon->dx->p[ips];
+	    double dxr=(parms->sim.idealfit)?parms->atm.dx:recon->dx->p[ips];
 	    const double guard=parms->tomo.guard*dxr;
 	    long nin=0;
-	    if(!parms->sim.fitonly && (parms->tomo.precond==1 || parms->tomo.square==2)){
+	    if(!parms->sim.idealfit && (parms->tomo.precond==1 || parms->tomo.square==2)){
 		//FFT in FDPCG prefers power of 2 dimensions.
 		nin=nextpow2((long)round(parms->aper.d/recon->dx->p[0]*2.))
 		    *recon->os->p[ips]/recon->os->p[0];
@@ -582,7 +584,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 		GXhi[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
 	}
-	if(!parms->sim.fitonly && parms->sim.mffocus && parms->sim.closeloop){
+	if(!parms->sim.idealfit && parms->sim.mffocus && parms->sim.closeloop){
 	    //for focus tracking.
 	    for(int ips=0; ips<npsr; ips++){
 		GXfocus[ips][iwfs]=spref(GX[ips][iwfs]);
@@ -1690,6 +1692,9 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     }else{
 	fit_prep_lrt(recon,parms);
 	if(parms->fit.actslave){
+	    /*
+	      2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found that slaving is causing mis-measurement of a few edge actuators. First try to remove W1. Or lower the weight. Revert back.
+	     */
 	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->fitNW, recon->actstuck, recon->actfloat, 0.1, 1./recon->ploc->nloc);
 	    if(parms->save.setup){
 		spcellwrite(recon->actslave,"%s/actslave",dirsetup);
@@ -2131,7 +2136,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     setup_recon_xloc(recon,parms);
     //setup xloc/aloc to WFS grad
     toc2("Generating xloc");
-    if(!parms->sim.fitonly){
+    if(!parms->sim.idealfit){
 	setup_recon_HXW(recon,parms);
 	setup_recon_GX(recon,parms);
 	spcellfree(recon->HXW);//only keep HXWtomo for tomography
@@ -2170,14 +2175,14 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	recon->RL.warm  = recon->warm_restart;
 	recon->RL.maxit = parms->tomo.maxit;
     }
-    if(!parms->sim.fitonly){//In this case, xloc has high sampling. We avoid HXF.
+    if(!parms->sim.idealfit){//In this case, xloc has high sampling. We avoid HXF.
 	setup_recon_HXF(recon,parms);
     }
     setup_recon_HA(recon,parms);
     //always assemble fit matrix, faster if many directions
     setup_recon_fit_matrix(recon,parms);
     toc2("Generating fit matrix");
-    //Fall back function method if FR.M is NULL (!HXF<-fitonly)
+    //Fall back function method if FR.M is NULL (!HXF<-idealfit)
     recon->FR.Mfun  = FitR;
     recon->FR.Mdata = recon;
     //Fall back function method if FL.M is NULL
@@ -2203,18 +2208,18 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 		error("Not implemented");
 	    }
 	}
-	if(!parms->sim.fitonly && parms->tomo.split==2){//Need to be after fit
+	if(!parms->sim.idealfit && parms->tomo.split==2){//Need to be after fit
 	    setup_recon_mvst(recon,parms);
 	}
     }
-    if(!parms->sim.fitonly && parms->tomo.precond==1){
+    if(!parms->sim.idealfit && parms->tomo.precond==1){
 	recon->fdpcg=fdpcg_prepare(parms, recon, powfs);
 	toc2("Preparing fdpcg");
     }
     //The following have been used in fit matrix.
     dcellfree(recon->fitNW);
     spcellfree(recon->actslave);
-    if(recon->FR.M && !parms->sim.wfsalias && !parms->sim.wfsideal){
+    if(recon->FR.M && !parms->sim.wfsalias && !parms->sim.idealwfs){
 	spfree(recon->W0); 
 	dfree(recon->W1); 
 	spcellfree(recon->HA); 
@@ -2461,7 +2466,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     case 1:
     case 2:
 	setup_recon_lsr(recon, parms, powfs, aper);
-	if(parms->sim.wfsalias || parms->sim.wfsideal){
+	if(parms->sim.wfsalias || parms->sim.idealwfs){
 	    setup_recon_mvr(recon, parms, powfs, aper);
 	}
 	break;

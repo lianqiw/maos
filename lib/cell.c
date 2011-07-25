@@ -59,8 +59,10 @@
 /**
    create a new block matrix.
 */
-X(cell) *X(cellnew)(const long nx, const long ny){
+X(cell) *X(cellnew)(long nx, long ny){
     X(cell) *dc;
+    if(nx<0) nx=0;
+    if(ny<0) ny=0;
     dc=calloc(1, sizeof(X(cell)));
     dc->nx=nx;
     dc->ny=ny;

@@ -716,12 +716,13 @@ static void readcfg_sim(PARMS_T *parms){
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
     READ_INT(sim.evlol);
     READ_INT(sim.noatm);
-    READ_INT(sim.fitonly);
+    READ_INT(sim.idealfit);
+    READ_INT(sim.idealtomo);
     READ_INT(sim.psfr);
     READ_INT(sim.ecnn);
     READ_INT(sim.wfsalias);
-    READ_INT(sim.wfsideal);
-    READ_INT(sim.evlideal);
+    READ_INT(sim.idealwfs);
+    READ_INT(sim.idealevl);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -780,6 +781,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.parallel);
     READ_INT(dbg.splitlrt);
     READ_INT(dbg.ecovxx);
+    READ_INT(dbg.useopdr);
     READ_INT(dbg.force);
     READ_INT(dbg.usegwr);
 }
@@ -888,13 +890,13 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	}
 	parms->sim.end=parms->dbg.ntomo_maxit;
     }
-    if(parms->sim.fitonly){
+    if(parms->sim.idealfit){
 	if(parms->sim.recon!=0){
-	    warning("fitonly only works in sim.recon=0 mode. changed\n");
+	    warning("idealfit only works in sim.recon=0 mode. changed\n");
 	    parms->sim.recon=0;
 	}
 	if(parms->tomo.split){
-	    warning("fitonly only works in integrated tomo mode. changed\n");
+	    warning("idealfit only works in integrated tomo mode. changed\n");
 	    parms->tomo.split=0;
 	}
     }
@@ -905,8 +907,22 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	info2("MVST does not work with least square reconstructor. Changed to AHST");
 	parms->tomo.split=1;
     }
-    if(parms->sim.wfsalias && parms->sim.wfsideal){
-	error("sim.wfsalias conflicts with sim.wfsideal. Do not enable both.\n");
+    if(parms->sim.wfsalias && parms->sim.idealwfs){
+	error("sim.wfsalias conflicts with sim.idealwfs. Do not enable both.\n");
+    }
+    if(parms->sim.idealtomo){
+	if(parms->sim.wfsalias){
+	    error("wfsalias and idealtomo conflicts\n");
+	}
+	if(parms->sim.idealfit){
+	    error("idealfit and idealtomo conflicts\n");
+	}
+	if(parms->sim.idealwfs){
+	    error("idealwfs and idealtomo conflicts\n");
+	}
+	if(parms->sim.idealevl){
+	    error("idealevl and idealtomo conflicts\n");
+	}
     }
 }
 /**
@@ -1117,7 +1133,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atm.wddeg=realloc(parms->atm.wddeg, sizeof(double)*jps);
     }
     normalize(parms->atm.wt, parms->atm.nps, 1);
-    if(parms->sim.fitonly){//If fit only, we using atm for atmr.
+    if(parms->sim.idealfit){//If fit only, we using atm for atmr.
 	warning("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 	int nps=parms->atm.nps;
 	parms->atmr.ht=realloc(parms->atmr.ht, sizeof(double)*nps);
@@ -1425,7 +1441,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->tomo.windest && parms->tomo.windshift==0){
 	warning("Windest=1 but windshift=0\n");
     }
-    if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.fitonly)){
+    if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
     }

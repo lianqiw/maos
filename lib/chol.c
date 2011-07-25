@@ -217,14 +217,14 @@ void chol_save(spchol *A, const char *format,...){
 	cholmod_factor *L=A->L;
 	char header[1024];
 	snprintf(header,1024,
-		 "n=%ld\n"
-		 "minor=%ld\n"
-		 "nzmax=%ld\n"
-		 "nsuper=%ld\n"
-		 "ssize=%ld\n"
-		 "xsize=%ld\n"
-		 "maxcsize=%ld\n"
-		 "maxesize=%ld\n"
+		 "n=%zd\n"
+		 "minor=%zd\n"
+		 "nzmax=%zd\n"
+		 "nsuper=%zd\n"
+		 "ssize=%zd\n"
+		 "xsize=%zd\n"
+		 "maxcsize=%zd\n"
+		 "maxesize=%zd\n"
 		 "ordering=%d\n"
 		 "is_ll=%d\n"
 		 "is_super=%d\n"

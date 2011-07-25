@@ -101,11 +101,9 @@ void save_recon(SIM_T *simu){
 	    cellarr_dcell(simu->save->dmfit_hi, simu->dmfit_hi);
 	}
 	if(parms->save.opdx || parms->plot.opdx){
-	    dcell *opdx;
-	    if(parms->sim.fitonly){
-		opdx=simu->opdr;
-	    }else{
-		opdx=atm2xloc(simu);
+	    dcell *opdx=simu->opdx;
+	    if(!opdx){
+		atm2xloc(&opdx, simu);
 	    }
 	    if(parms->save.opdx){
 		cellarr_dcell(simu->save->opdx, opdx);
@@ -118,7 +116,7 @@ void save_recon(SIM_T *simu){
 		    }
 		}
 	    }
-	    if(!parms->sim.fitonly){
+	    if(!parms->sim.idealfit){
 		dcellfree(opdx);
 	    }
 	}
@@ -140,19 +138,23 @@ void save_recon(SIM_T *simu){
     }
     if(parms->sim.psfr && CHECK_SAVE(parms->evl.psfisim, parms->sim.end-(parms->sim.closeloop?1:0), simu->reconisim, parms->sim.psfr)){
 	info2("Output PSF Recon Telemetry\n");
-	char strht[24];
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!simu->ecov->p[ievl]) continue;
-	    if(!isinf(parms->evl.ht[ievl])){
-		snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
-	    }else{
-		strht[0]='\0';
+	long nstep=simu->reconisim+1-parms->evl.psfisim;
+	double scale=1./nstep;
+	if(!parms->dbg.useopdr || parms->sim.idealfit){
+	    dcellswrite(simu->ecov, scale, "ecov_%d_%ld", seed, nstep);
+	}else{//deprecated
+	    char strht[24];
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if(!simu->ecov->p[ievl]) continue;
+		if(!isinf(parms->evl.ht[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		}else{
+		    strht[0]='\0';
+		}
+		dswrite(simu->ecov->p[ievl], scale, "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
+			parms->evl.thetax[ievl]*206265,
+			parms->evl.thetay[ievl]*206265, strht, nstep);
 	    }
-	    long nstep=simu->reconisim+1-parms->evl.psfisim;
-	    double scale=1./nstep;
-	    dswrite(simu->ecov->p[ievl], scale, "ecov_%d_x%g_y%g%s_%ld.bin", seed, 
-		    parms->evl.thetax[ievl]*206265,
-		    parms->evl.thetay[ievl]*206265, strht, nstep);
 	}
     }
 }

@@ -17,3 +17,6 @@ wfs.wvlwts    ==> powfs.wvlwts or wfs.wvlwts
 cn2.nhtrecon  ==> cn2.nhtomo
 powfs.bkgrndrm==>powfs.bkgrndfnc
 aper.din      ==> merged to aper.d 
+sim.fitonly   ==> sim.idealfit
+sim.wfsideal  ==> sim.idealwfs
+sim.evlideal  ==> sim.idealevl

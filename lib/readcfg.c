@@ -297,6 +297,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(dbg.noatm, sim.noatm);
 	    RENAME(dbg.fitonly, sim.fitonly);
 	    RENAME(dbg.evlol, sim.evlol);
+	    RENAME(sim.fitonly, sim.idealfit);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);

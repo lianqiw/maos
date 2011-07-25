@@ -42,7 +42,7 @@ void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
-    int hi_output=(!parms->sim.closeloop || parms->sim.fitonly || (isim+1)%simu->dtrat_hi==0);
+    int hi_output=(!parms->sim.closeloop || parms->sim.idealfit || (isim+1)%simu->dtrat_hi==0);
     int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
     dcell *dmpsol[2];//Hi and Lo
     /* Question: Why not use simu->dmpsol?
@@ -54,10 +54,12 @@ void tomofit(SIM_T *simu){
 	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];//This can not be simu->dmpsol[lopowfs].
     }
     if(hi_output){
-	if(parms->sim.fitonly){
+	if(parms->sim.idealfit){
 	    dcellfree(simu->opdr);
-	    //simu->opdr=atm2xloc(simu);
+	}else if(parms->sim.idealtomo){
+	    atm2xloc(&simu->opdr, simu);
 	}else{
+	    //do tomography.
 	    int maxit=parms->tomo.maxit;
 	    if(parms->dbg.ntomo_maxit){
 		if(isim<parms->dbg.ntomo_maxit){
@@ -69,30 +71,31 @@ void tomofit(SIM_T *simu){
 		}
 	    }
 	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
-	}
-	if(parms->tomo.windest){
-	    info2("Estimating wind direction and speed using FFT method\n");
-	    windest(simu); //Update wind, and interpolation matrix.
-	}
-	if(parms->tomo.windshift){
-	    int factor=parms->tomo.windshift;
-	    if(!simu->windshift){
-		simu->windshift=spcellnew(recon->npsr, 1);
-		for(int ips=0; ips<recon->npsr; ips++){
-		    double dispx=simu->dt*simu->atm[ips]->vx*factor;//2 is two cycle delay.
-		    double dispy=simu->dt*simu->atm[ips]->vy*factor;
-		    info("ips=%d: dispx=%g, dispy=%g\n", ips, dispx, dispy);
-		    simu->windshift->p[ips]=mkhb(recon->xloc[ips], recon->xloc[ips], NULL,
-						 dispx,dispy,1,0,0);
-		}
-		spcellwrite(simu->windshift,"windshift");
+	
+	    if(parms->tomo.windest){
+		info2("Estimating wind direction and speed using FFT method\n");
+		windest(simu); //Update wind, and interpolation matrix.
 	    }
-	    info2("Using wind information to shift opdr by %d v*dt.\n", factor);
-	    for(int ips=0; ips<recon->npsr; ips++){
-		dmat *tmp=simu->opdr->p[ips];
-		simu->opdr->p[ips]=NULL;
-		spmulmat(&simu->opdr->p[ips], simu->windshift->p[ips], tmp, 1);
-		dfree(tmp);
+	    if(parms->tomo.windshift){
+		int factor=parms->tomo.windshift;
+		if(!simu->windshift){
+		    simu->windshift=spcellnew(recon->npsr, 1);
+		    for(int ips=0; ips<recon->npsr; ips++){
+			double dispx=simu->dt*simu->atm[ips]->vx*factor;//2 is two cycle delay.
+			double dispy=simu->dt*simu->atm[ips]->vy*factor;
+			info("ips=%d: dispx=%g, dispy=%g\n", ips, dispx, dispy);
+			simu->windshift->p[ips]=mkhb(recon->xloc[ips], recon->xloc[ips], NULL,
+						     dispx,dispy,1,0,0);
+		    }
+		    spcellwrite(simu->windshift,"windshift");
+		}
+		info2("Using wind information to shift opdr by %d v*dt.\n", factor);
+		for(int ips=0; ips<recon->npsr; ips++){
+		    dmat *tmp=simu->opdr->p[ips];
+		    simu->opdr->p[ips]=NULL;
+		    spmulmat(&simu->opdr->p[ips], simu->windshift->p[ips], tmp, 1);
+		    dfree(tmp);
+		}
 	    }
 	}
 	if(parms->ndm>0){//Do DM fitting
@@ -107,7 +110,7 @@ void tomofit(SIM_T *simu){
 	*/
 	dcelladd(&simu->dmerr_hi, 1, dmpsol[0], -1);
 
-	if(!parms->sim.fitonly && parms->tomo.split==1){//ahst
+	if(!parms->sim.idealfit && parms->tomo.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
 	if(parms->tomo.ahst_rtt && parms->tomo.split){
@@ -117,7 +120,7 @@ void tomofit(SIM_T *simu){
     }else{//if high order WFS has output
 	dcellfree(simu->dmerr_hi);
     }
-    if(!parms->sim.fitonly && parms->tomo.split){
+    if(!parms->sim.idealfit && parms->tomo.split){
 	if(parms->tomo.split==2){
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
@@ -149,7 +152,12 @@ void tomofit(SIM_T *simu){
 	}
     }
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	if(!simu->opdr){//opdr is not available. in sim.fitonly=1 mode.
+	/*
+	   Since the DM fitting error is in the othorgonal of DM vector
+	   space. The residuals estimated here have to be in DM space only. Do
+	   not use opdr which covers more than DM space.
+	 */
+	if(!simu->opdr || !parms->dbg.useopdr){//opdr is not available. in sim.idealfit=1 mode.
 	    psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);
 	}else{
 	    psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
@@ -227,7 +235,7 @@ void reconstruct(SIM_T *simu){
     RECON_T *recon=simu->recon;
     double tk_start=myclockd();
     if(simu->gradlastcl){
-	if(!parms->sim.fitonly && !parms->sim.evlol){
+	if(!parms->sim.idealfit && !parms->sim.evlol){
 	    if(parms->sim.closeloop){
 		calc_gradol(simu);
 	    }else if(!simu->gradlastol){

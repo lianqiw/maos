@@ -203,13 +203,12 @@ static __attribute__((constructor))void init(){
     if(gethostname(host,60)) warning3("Unable to get hostname\n");
     hid=myhostid(host);
     if(hid==-1){
-	warning3("This host [%s] is not listed in ~/.aos/hosts\n",host);
 	//Not running in office machines.
 	hosts[0]=strdup0(host);//use local machine
 	nhost=1;
 	hid=myhostid(host);
 	if(hid==-1){
-	    warning3("Unable to determine proper hostname. Monitor disabled\n");
+	    warning3("Unable to determine proper hostname. Monitor may not work\n");
 	}
     }
     {

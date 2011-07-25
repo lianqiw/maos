@@ -425,13 +425,16 @@ typedef struct SIM_CFG_T{
     int glao;        /**<reconstruction in GLAO mode: average WFS measurements*/
     int evlol;       /**<evaluate open loop error only*/
     int noatm;       /**<disable atmosphere*/
-    int fitonly;     /**<do DM fitting only, by replacing opdr with opdx. see above*/
+    int idealfit;    /**<do ideal DM fitting from atmosphere directly.*/
+    int idealtomo;   /**<ideal tomography without wfs (directly propagate from
+			turbulence). conflicts with idealfit. combine with
+			evl.tomo to evaluate its performance.*/
     int psfr;        /**<do PSF reconstruction telemetry*/
     int ecnn;        /**<Calculate WF covariance due to WFS noise cov Cnn.*/
     int wfsalias;    /**<Study the wfs aliasing effect by projecting turbulence
 			onto the NULL space of DM.*/
-    int wfsideal;    /**<Generates ideal WFS by sensing turbulence with DM range.*/
-    int evlideal;    /**<Evaluate performance within DM range.*/
+    int idealwfs;    /**<Generates ideal WFS by sensing turbulence with DM range.*/
+    int idealevl;    /**<Evaluate performance within DM range.*/
     /* A few derived parameters*/
     int dmttcast;    /**<derived: cast tip/tilt from DM commands to study saturation or
 			histogram and then add back*/
@@ -483,6 +486,7 @@ typedef struct DBG_CFG_T{
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
     int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
     int ecovxx;      /**<save the xx used to calculate ecov in psfr.*/
+    int useopdr;     /**<use opdr in psf reconstruction*/
     int force;       /**<Force run even if Res_${seed}.done exists*/
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
 }DBG_CFG_T;

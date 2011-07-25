@@ -92,7 +92,7 @@ vtbl X(mat_vtbl)={M_TT,
    forward.
 */
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
-    if(nx==0 || ny==0) return NULL;
+    if(nx<=0 || ny<=0) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
     out->vtbl=&X(mat_vtbl);
     out->nx=nx;

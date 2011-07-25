@@ -83,7 +83,11 @@ static __attribute__((constructor))void init(){
     TCK = sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
     FILE *fp=fopen("/proc/meminfo","r");
-    fscanf(fp, "%*s %ld %*s", &NMEM); NMEM=NMEM*1024; 
+    if(fscanf(fp, "%*s %ld %*s", &NMEM)==1){
+	NMEM=NMEM*1024; 
+    }else{
+	NMEM=0;
+    }
     fclose(fp);
 #else
     NMEM=0;//do not know.

@@ -29,6 +29,33 @@
 #else
 #define TIM(A)
 #endif
+
+static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha){
+    const PARMS_T *parms=simu->parms;
+    POWFS_T *powfs=simu->powfs;
+    RECON_T *recon=simu->recon;
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    const double hs=parms->powfs[ipowfs].hs;
+    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+   
+    for(int idm=0; idm<parms->ndm; idm++){
+	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	double dispx=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
+	double dispy=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
+	double scale=1.-ht/hs;
+	if(parms->dm[idm].cubic){
+	    prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
+			       powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+			       alpha, dispx, dispy, scale, parms->dm[idm].iac, 
+			       0, 0);
+	}else{
+	    prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
+			 powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+			 alpha, dispx, dispy, scale, 
+			 0, 0);
+	}
+    }
+}
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
@@ -97,25 +124,8 @@ void wfsgrad_iwfs(thread_t *info){
     double *realamp=powfs[ipowfs].realamp[wfsind];
 
     /* Now begin ray tracing. */
-    if(parms->sim.wfsideal){
-	for(int idm=0; idm<parms->ndm; idm++){
-	    const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	    double dispx=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
-	    double dispy=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
-	    double scale=1.-ht/hs;
-	    double alpha=1;
-	    if(parms->dm[idm].cubic){
-		prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
-				   powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
-				   alpha, dispx, dispy, scale, parms->dm[idm].iac, 
-				   0, 0);
-	    }else{
-		prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
-			     powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
-			     alpha, dispx, dispy, scale, 
-			     0, 0);
-	    }
-	}
+    if(parms->sim.idealwfs){
+	wfs_ideal_correction(simu, opd, iwfs, 1);
     }else if(atm){
 	for(int ips=0; ips<nps; ips++){
 	    thread_t *wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
@@ -129,24 +139,7 @@ void wfsgrad_iwfs(thread_t *info){
 	/* most expensive 0.10 per LGS for*/
 	if(parms->sim.wfsalias){
 	    /* Remove subspace of atm projected onto range of DM.*/
-	    for(int idm=0; idm<parms->ndm; idm++){
-		const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
-		double dispx=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
-		double dispy=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
-		double scale=1.-ht/hs;
-		double alpha=-1;
-		if(parms->dm[idm].cubic){
-		    prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
-				       powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
-				       alpha, dispx, dispy, scale, parms->dm[idm].iac, 
-				       0, 0);
-		}else{
-		    prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
-				 powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
-				 alpha, dispx, dispy, scale, 
-				 0, 0);
-		}
-	    }
+	    wfs_ideal_correction(simu, opd, iwfs,-1);
 	}
     }
     if(simu->telws){//Wind shake
@@ -639,7 +632,7 @@ static void wfsgrad_save(SIM_T *simu){
 */
 void wfsgrad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.fitonly || parms->sim.evlol) return;
+    if(parms->sim.idealfit || parms->sim.evlol) return;
     double tk_start=myclockd();
   
     /* call the task in parallel and wait for them to finish. */

@@ -167,7 +167,7 @@ void setup_surf(SIM_T*simu){
     if(!simu->surfevl){
 	simu->surfevl=dcellnew(parms->evl.nevl,1);
     }
-    if(!simu->surfopdx && parms->sim.fitonly){
+    if(!simu->surfopdx && parms->sim.idealfit){
 	simu->surfopdx=dcellnew(parms->atmr.nps, 1);
     }
     simu->surf=calloc(parms->nsurf, sizeof(map_t*));
@@ -242,7 +242,7 @@ void setup_surf(SIM_T*simu){
 		locfree(locwfs);
 	    }
 	}
-	if(parms->sim.fitonly){
+	if(parms->sim.idealfit){
 	    double distmin=INFINITY;
 	    int jpsr=-1;
 	    //Select the layer that is closed to the surface.

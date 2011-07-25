@@ -122,6 +122,7 @@ int main(int argc, char **argv){
 #else
     info2("without optimization\n");
 #endif
+    info2("Source: %s\n", SRCDIR);
     info2("Launched at %s in %s.\n",myasctime(),myhostname());
 
     //Launch the scheduler and report about our process
@@ -178,7 +179,6 @@ int main(int argc, char **argv){
     dirsetup=stradd("setup",NULL);
     if(parms->save.setup || parms->save.recon){
 	mymkdir("%s",dirsetup);
-	//addpath(dirsetup);
     }
     if(parms->sim.skysim){
 	dirskysim=stradd("skysim",NULL);

@@ -28,7 +28,7 @@ typedef struct cellarr{
     long cur;       /**<Current element*/
     long tot;       /**<Total number of elements*/
 }cellarr;
-cellarr* cellarr_init(uint64_t nx, uint64_t ny,const char*format,...) CHECK_ARG(3);
+cellarr* cellarr_init(long nx, long ny,const char*format,...) CHECK_ARG(3);
 void cellarr_dcell(cellarr *ca, const dcell *A);
 void cellarr_ccell(cellarr *ca, const ccell *A);
 void cellarr_dmat(cellarr *ca, const dmat *A);

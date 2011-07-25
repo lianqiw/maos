@@ -22,7 +22,7 @@ m4/ltsugar.m4
 *#
 #Ignore files that are not distributed.
 external/mkl*
-
+external/fft*
 #Ignore files that are produced by `make`
 lib/tmp.c
 *.o
