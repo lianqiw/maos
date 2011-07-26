@@ -394,7 +394,6 @@ AC_CHECK_HEADERS([unistd.h])
 #LDCHOL must be before LAPACK
 LDOPTS="$LAPACK $LDSYS"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
-LDAOS="../lib/libaos_${SUFFIX}.la ${LDOPTS}"
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)

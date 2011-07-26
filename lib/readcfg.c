@@ -219,7 +219,8 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     char *var=NULL, *value=NULL;
     ENTRY entry;
     ENTRY *entryfind=NULL;
-    int recordcount=0;
+    int countnew=0;
+    int countold=0;
     if(!store){
 	hcreate(MAX_ENTRY);
 	store=calloc(MAX_ENTRY,sizeof(STORE_T));
@@ -348,10 +349,11 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 		}
 		store[nstore].key=NULL;
 		store[nstore].data=NULL;
+		countold++;
 	    }else{
 		//new key
 		entryfind=hsearch(entry,ENTER);
-		recordcount++;
+		countnew++;
 		nstore++;
 		if(nstore>MAX_ENTRY-2){
 		    MAX_ENTRY*=2;
@@ -362,7 +364,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	ssline[0]='\0';
     }
     fclose(fd);
-    info2("loaded %3d new records from %s\n",recordcount,fn);
+    info2("loaded %3d (%3d new) records from %s\n",countnew+countold,countnew,fn);
     free(fn);
 #undef MAXLN
 }

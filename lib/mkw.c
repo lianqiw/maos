@@ -461,26 +461,30 @@ void mkw_annular(loc_t *loc, /**<[in] grid coordinate */
 		 dsp **W0,   /**<[out] sparse W0*/
 		 dmat **W1   /**<[out] dense  W1*/
 		 ){
-    dsp *W0o = NULL;
-    dmat *W1o= NULL;
-    dsp *W0i = NULL;
-    dmat *W1i= NULL;
-    mkw_circular(loc, cx, cy, cri, &W0i, &W1i);//inner
-    mkw_circular(loc, cx, cy, cro, &W0o, &W1o);//outer
+    if(cri<loc->dx){//filled aperture
+	mkw_circular(loc, cx, cy, cro, W0, W1);
+    }else{
+	dsp *W0o = NULL;
+	dmat *W1o= NULL;
+	dsp *W0i = NULL;
+	dmat *W1i= NULL;
+	mkw_circular(loc, cx, cy, cri, &W0i, &W1i);//inner
+	mkw_circular(loc, cx, cy, cro, &W0o, &W1o);//outer
 
-    //Calculate the factor applied in mkw_circular
-    double idx=1./loc->dx;
-    double sco=1/(M_PI*pow(cro*idx, 2));
-    double sci=1/(M_PI*pow(cri*idx, 2));
+	//Calculate the factor applied in mkw_circular
+	double idx=1./loc->dx;
+	double sco=1/(M_PI*pow(cro*idx, 2));
+	double sci=1/(M_PI*pow(cri*idx, 2));
 
-    *W1 = W1o;
-    dadd(W1, 1./sco, W1i, -1/sci);//cancel the factor applied in mkw_circular
-    double sc=1./dsum(*W1);
-    dscale(*W1, sc);
-    //cancel the factor applied in mkw_circular and apply the new factor
-    *W0 = spadd2(W0o, W0i, sc/sco, -sc/sci);
+	*W1 = W1o;
+	dadd(W1, 1./sco, W1i, -1/sci);//cancel the factor applied in mkw_circular
+	double sc=1./dsum(*W1);
+	dscale(*W1, sc);
+	//cancel the factor applied in mkw_circular and apply the new factor
+	*W0 = spadd2(W0o, W0i, sc/sco, -sc/sci);
 
-    spfree(W0o);
-    spfree(W0i);
-    dfree(W1i);
+	spfree(W0o);
+	spfree(W0i);
+	dfree(W1i);
+    }
 }

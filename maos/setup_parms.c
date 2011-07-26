@@ -149,7 +149,7 @@ void free_parms(PARMS_T *parms){
 static inline int sum_intarr(int n, int *a){
     int sum=0;
     for(int i=0; i<n; i++){
-	sum+=(a[n]==0);
+	sum+=(a[n]!=0);
     }
     return sum;
 }

@@ -1,4 +1,5 @@
 AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/lib/sys -I$(top_srcdir)/external/cholmod/Include
+#if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS=accphi.h common.h type.h locbin.h misc.h mathmisc.h	\
 random.h sp.h dsp.h csp.h bin.h cell.h mkg.h path.h readcfg.h suitesparse.h	\

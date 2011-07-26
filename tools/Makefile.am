@@ -1,5 +1,9 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir) -I $(top_srcdir)/lib/ -I $(top_srcdir)/lib/sys
-LDADD= $(LDAOS)
+if USE_LONG
+LDADD=../lib/libaos_long.la $(LDOPTS)
+else
+LDADD=../lib/libaos_int.la $(LDOPTS)
+endif
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
 icon-finished.h icon-optics.h mouse_black.h  mouse_hand.h  mouse_white.h
 
