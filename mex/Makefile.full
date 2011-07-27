@@ -5,7 +5,7 @@
 
 BUILD=${HOME}/work/aos/comp/optim
 rand=crandcreate.mexa64 crandn.mexa64 crandp.mexa64 clrand.mexa64 mkw.mexa64
-all:read.mexa64 write.mexa64 mkgmex.mexa64 proj.mexa64 cp genotfmex.mexa64 $(rand)
+all:read.mexa64 write.mexa64 mkgmex.mexa64 proj.mexa64 cp genotfmex.mexa64 svdmex.mexa64 $(rand)
 #all:read.mexa64 write.mexa64 cp
 
 read.mexa64:read.c  io.c
@@ -34,5 +34,7 @@ proj.mexa64:proj.c
 	mex proj.c interface.c $(AOS)
 genotfmex.mexa64:genotfmex.c interface.c 
 	mex  genotfmex.c interface.c $(AOS)
+svdmex.mexa64:svdmex.c interface.c
+	mex svdmex.c interface.c $(AOS)  
 clean:
 	rm *.mexa64 *.o

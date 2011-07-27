@@ -53,4 +53,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }else{
 	plhs[PL_OTF]=c2mx(otf->p[0]);
     }
+    dfree(cov);
+    ccellfree(otf);
 }

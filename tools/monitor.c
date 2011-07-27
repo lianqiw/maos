@@ -859,6 +859,10 @@ int main(int argc, char *argv[])
 	prog_mem[ihost]=monitor_new_progress(1,16);
 	gtk_box_pack_start(GTK_BOX(hbox0),prog_cpu[ihost], FALSE, FALSE, 1);
 	gtk_box_pack_start(GTK_BOX(hbox0),prog_mem[ihost], FALSE, FALSE, 1);
+	gtk_widget_modify_bg(prog_cpu[ihost],GTK_STATE_SELECTED,&blue);
+	gtk_widget_modify_bg(prog_cpu[ihost],GTK_STATE_PRELIGHT,&blue);
+	gtk_widget_modify_bg(prog_mem[ihost],GTK_STATE_SELECTED,&blue);
+	gtk_widget_modify_bg(prog_mem[ihost],GTK_STATE_PRELIGHT,&blue);
 	gtk_box_pack_start(GTK_BOX(hbox0),titles[ihost], FALSE, TRUE, 0);
 	gtk_widget_show_all(hbox0);
 	GtkWidget *eventbox=gtk_event_box_new();

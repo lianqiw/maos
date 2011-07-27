@@ -129,7 +129,7 @@ int get_cpu_avail(void){
     double load=get_usage_load();
     double cent=get_usage_cpu();
     int nrunning=get_usage_running();
-    info("load=%g, vent=%g, nrun=%d, ncpu=%d\n", load, cent, nrunning, NCPU);
+    info("load=%g, cent=%g, nrun=%d, ncpu=%d\n", load, cent, nrunning, NCPU);
     if(load>NCPU+1){//don't want to put too much load on the machine.
 	return 0;
     }

@@ -756,8 +756,7 @@ static void scheduler(void){
     timeout.tv_usec=0;
     struct timeval *timeout2;
     timeout2=&timeout;
-    static int lasttime=0;
-    static int lasttime3;
+    static int lasttime3=0;
     while (1){
 	/* Block until input arrives on one or more active
 	   sockets. */
@@ -801,22 +800,19 @@ static void scheduler(void){
 	timeout.tv_sec=1;
 	timeout.tv_usec=0;
 	timeout2=&timeout;
-	int thistime=myclocki();
-
-	if(thistime>=(lasttime+1)){
-	    usage_cpu=get_usage_cpu();
-	}
 	if(!all_done){
 	    process_queue();
 	}
+	//Report CPU usage every 3 seconds.
+	int thistime=myclocki();
 	if(thistime>=(lasttime3+3)){
 	    if(nrun>0){
 		check_jobs();
 	    }
+	    usage_cpu=get_usage_cpu();
 	    monitor_send_load();
 	    lasttime3=thistime;
 	}
-	lasttime=thistime;
     }
 }
 
