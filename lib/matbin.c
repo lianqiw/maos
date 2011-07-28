@@ -18,22 +18,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-
 #include <fcntl.h>
 #include <unistd.h>
 #include "type.h"
 #include "matbin.h"
 #include "dmat.h"
 #include "cmat.h"
-#ifdef USE_COMPLEX
-#define T dcomplex
-#define X(A) c##A
-#define M_T M_CMP
-#else
-#define T double
-#define X(A) d##A
-#define M_T M_DBL
-#endif
+#include "defs.h"
 /**
    Contains routines to write/read dense/sparse matrix into/from file.
 */
@@ -75,7 +66,7 @@ void X(cellwritedata)(file_t *fp, const X(cell) *dc){
 }
 /**
    User callable function to write dense matrix into a file. Usage:
-   dwrite(A,"A") for double matrix.
+   X(write)(A,"A") for double matrix.
 */
 void X(write)(const X(mat) *A, const char* format,...){
     format2fn;

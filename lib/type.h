@@ -36,9 +36,13 @@
   user */
 typedef enum{
     M_DMAT=1,
+    M_SMAT,
     M_CMAT,
+    M_ZMAT,
     M_DSP,
+    M_SSP,
     M_CSP,
+    M_ZSP,
     M_CELL,
 }M_TYPE;
 typedef void (*vtbl_write)(void *A, const char *format, ...);
@@ -78,6 +82,13 @@ typedef struct dmat{
     MAT(double)
     long *nref; /**< reference count */
 }dmat;
+/**
+   a single matrix object contains 2-d array of double numbers
+*/
+typedef struct smat{
+    MAT(float)
+    long *nref; /**< reference count */
+}smat;
 
 /**
    a double complex matrix object contains 2-d arrays of
@@ -89,17 +100,38 @@ typedef struct cmat{
 }cmat;
 
 /**
+   a single precision complex matrix object contains 2-d arrays of float complex
+   numbers. */
+typedef struct zmat{
+    MAT(scomplex)
+    long *nref;  /**< reference count */
+    struct fft_t *fft;
+}zmat;
+
+/**
    an 2-d block matrix of cmat.
  */
 typedef struct ccell{
     MAT(cmat*)
 }ccell;
 /**
+   an 2-d block matrix of zmat.
+ */
+typedef struct zcell{
+    MAT(zmat*)
+}zcell;
+/**
    an 2-d block matrix of dmat.
  */
 typedef struct dcell{
     MAT(dmat*)
 }dcell;
+/**
+   an 2-d block matrix of smat.
+ */
+typedef struct scell{
+    MAT(smat*)
+}scell;
 
 typedef enum CEMBED{
     C_FULL,
@@ -108,37 +140,33 @@ typedef enum CEMBED{
     C_ABS,
     C_LITERAL
 }CEMBED;
+#define SPMAT(T)\
+    vtbl *vtbl;           /**<The virtual function table*/		\
+    T *restrict x ;       /**< numerical values, size nzmax */		\
+    long m ;	          /**< number of rows */			\
+    long n ;	          /**< number of columns */			\
+    char *header;         /**<header*/					\
+    long nzmax ;          /**< maximum number of entries */		\
+    spint *restrict p ;   /**< column pointers (size n+1) or col indices (size \
+			     nzmax) when nz!=-1 */			\
+    spint *restrict i ;   /**< row indices, size nzmax */		\
+    long nz ;             /**< number of entries in triplet matrix, -1 for compressed-col */ \
+    long *nref;           /**< reference counting like dmat */
+
 /**
    a sparse array of double numbers stored in
    compressed column format, i.e. MATLAB format */
 typedef struct dsp{
-    vtbl *vtbl;           /**<The virtual function table*/
-    double *restrict x ;  /**< numerical values, size nzmax */
-    long m ;	          /**< number of rows */
-    long n ;	          /**< number of columns */
-    char *header;         /**<header*/
-    long nzmax ;          /**< maximum number of entries */
-    spint *restrict p ;   /**< column pointers (size n+1) or col indlces (size nzmax) when nz!=-1 */
-    spint *restrict i ;   /**< row indices, size nzmax */
-    long nz ;             /**< number of entries in triplet matrix, -1 for compressed-col */
-    long *nref;           /**< reference counting like dmat */
+    SPMAT(double)
 }dsp;
 
 /**
    a sparse array of double complex numbers stored in
    compressed column format */
 typedef struct csp{
-    vtbl *vtbl; /**<The virtual function table*/
-    dcomplex *x;/**< numerical values, size nzmax */
-    long m ;	/**< number of rows */
-    long n ;	/**< number of columns */
-    char *header;/**<header*/
-    long nzmax ;/**< maximum number of entries */
-    spint *p ;   /**< column pointers (size n+1) or col indlces (size nzmax) */
-    spint *i ;   /**< row indices, size nzmax */
-    long nz ;   /**< # of entries in triplet matrix, -1 for compressed-col */
-    long *nref; /**< reference counting like cmat*/
+    SPMAT(dcomplex)
 }csp;
+
 
 /**
    an 2-d array of sparse.
@@ -153,7 +181,6 @@ typedef struct spcell{
 typedef struct cspcell{
     MAT(csp*)
 }cspcell;
-
 
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
@@ -260,8 +287,7 @@ typedef struct cell{
 }cell;
 
 #define AOS_CMAT(A) c##A
-#define AOS_CSP(A) c##A
+#define AOS_CSP(A)  c##A
 #define AOS_DMAT(A) d##A
-#define AOS_DSP(A) A
-
+#define AOS_DSP(A)  A
 #endif

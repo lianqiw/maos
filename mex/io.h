@@ -31,6 +31,7 @@ typedef struct file_t{
 #define M_INT32 0x6405
 #define M_CSP32 0x6406
 #define M_SP32  0x6407
+#define M_FLT   0x6408
 #define MC_CSP  0x6410
 #define MC_SP   0x6411
 #define MC_DBL  0x6412

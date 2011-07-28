@@ -24,7 +24,6 @@
 #include <math.h>
 #include <sys/mman.h>
 
-
 #include "common.h"
 #include "random.h"
 #include "misc.h"
@@ -33,28 +32,8 @@
 #include "matbin.h"
 #include "dsp.h"
 #include "csp.h"
-#ifndef MAT_TYPE
-#define MAT_TYPE
-#ifndef USE_COMPLEX
-#define X(A) d##A
-#define T double
-#define REAL(A) (A)
-#define ABS(A) fabs(A)
-#define RANDU(A) randu(A)
-#define RANDN(A) randn(A)
-#define PRINT(A) printf("%10.3e",A);
-#else
-#define X(A) c##A
-#define T dcomplex
-#define REAL(A) creal(A)
-#define ABS(A) cabs(A)
-#define RANDU(A) (randu(A)+I*randu(A))
-#define RANDN(A) (randn(A)+I*randn(A))
-#define PRINT(A) printf("(%10.3e %10.3eI)",creal(A),cimag(A));
-#endif
-#endif
+#include "defs.h"
 
-#define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
 
 /**
    create a new block matrix.

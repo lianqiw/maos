@@ -24,6 +24,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <sys/mman.h>
+
 #include "common.h"
 #include "random.h"
 #include "misc.h"
@@ -35,49 +36,9 @@
 #include "fft.h"
 #include "matbin.h"
 #include "loc.h"
-#if MAT_VERBOSE == 1
-#define matinfo(A...) {fprintf(stderr, A);}
-#else
-#define matinfo(A...)
-#endif
-#ifndef MAT_TYPE
-#define MAT_TYPE
-#ifndef USE_COMPLEX
-#define X(A) d##A
-#define Y(A) A
-#define Z(A) d##A##_
-#define T double
-#define M_T M_DBL
-#define M_TT M_DMAT
-#define REAL(A) (A)
-#define ABS(A) fabs(A)
-#define SQRT(A) sqrt(A)
-#define RANDU(A) randu(A)
-#define RANDN(A) randn(A)
-#define PRINT(A) printf("%10.3e",A);
-#define CONJ(x) (x)
-#define dot_do dotdbl
-#else
-#define X(A) c##A
-#define Y(A) c##A
-#define Z(A) z##A##_ //blas/lapack convention
-#define T dcomplex
-#define M_T M_CMP
-#define M_TT M_CMAT
-#define REAL(A) creal(A)
-#define ABS(A) cabs(A)
-#define SQRT(A) csqrt(A)
-#define RANDU(A) (randu(A)+I*randu(A))
-#define RANDN(A) (randn(A)+I*randn(A))
-#define PRINT(A) printf("(%10.3e %10.3eI)",creal(A),cimag(A));
-#define CONJ(x) conj(x)
-#define dot_do dotcmp
-#endif
-#endif
 #include "dmat.h"
 #include "cmat.h"
-#define PMAT(A,pp) T (*restrict pp)[(A)->nx]=(void *)(A)->p
-#define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
+#include "defs.h"//Defines T, X, etc
 
 vtbl X(mat_vtbl)={M_TT,
 		  (vtbl_write)X(write),

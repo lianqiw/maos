@@ -198,6 +198,13 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    }
 	}
 	break;
+    case M_FLT:/*float array*/
+	{
+	    out=mxCreateNumericMatrix(nx,ny,mxSINGLE_CLASS,mxREAL);
+	    if(nx!=0 && ny!=0){
+		zfread(mxGetPr(out), sizeof(float),nx*ny,fp);
+	    }
+	}break;
     case M_INT64:/*long array*/
 	{
 	    out=mxCreateNumericMatrix(nx,ny,mxINT64_CLASS,mxREAL);

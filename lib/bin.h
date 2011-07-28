@@ -34,6 +34,7 @@
 #define M_INT32  0x6405  //int 32 array
 #define M_CSP32  0x6406  //sparse complex 32 bit
 #define M_SP32   0x6407  //sparse 32 bit
+#define M_FLT    0x6408  //single precision float.
 //The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type
 #define MCC_ANY  0x6421  //cell of any thing
 #define M_HEADER 0x6500  //header.
