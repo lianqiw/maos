@@ -162,8 +162,6 @@ int *loc_create_embed(int *nembed, const loc_t *loc){
     }else{
 	if(*nembed<nxy){
 	    error("Supplied nembed %d is too small, need at least %d\n",*nembed,nxy);
-	}else if(*nembed<nxy*2){
-	    warning("Supplied nembed %d is too small, need at least %d\n",*nembed,nxy);
 	}
 	mapn=*nembed;
     }

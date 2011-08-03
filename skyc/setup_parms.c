@@ -23,48 +23,7 @@
 #undef calloc
 #undef free
 #undef realloc
-static void setup_config(const ARG_S*arg){
-    /**
-       This routine setups the internally mained list of PATHS in
-       which all the configurations files are looked for.
 
-       Environment variable AOS_CONFIG_PATH will be added if availab.e.
-     */
-    open_config(arg->conf,NULL,0);
-    /*Read in any additional overriding .conf files. They should
-      contain keys already existed in nfiraos.conf*/
-
-    if(arg->iconf<arg->argc){
-	char fntmp[PATH_MAX];
-	snprintf(fntmp,PATH_MAX,"/tmp/skyc_%ld.conf",(long)getpid());
-	FILE *fptmp=fopen(fntmp,"w");
-	int inline_conf=0;
-	for(int iconf=arg->iconf; iconf<arg->argc; iconf++){
-	    char *fno=arg->argv[iconf];
-	    //info("Embed (%s)\n",fno);
-	    if(index(fno,'=')){
-		inline_conf++;
-		fprintf(fptmp,"%s\n",fno);
-	    }else if(check_suffix(fno,".conf")){
-		open_config(fno,NULL,1);/*1 means protected. will not be overriden by
-				     base .conf's, but can be overriden by user
-				     supplied options.*/
-	    }else{
-		error("Invalid command line option: %s\n",fno);
-	    }
-	}
-	fclose(fptmp);
-	if(inline_conf>0){
-	    open_config(fntmp,NULL,1);
-	}
-	if(remove(fntmp)){
-	    perror("remove");
-	    warning("Unable to remove file %s\n",fntmp);
-	}
-    }else{
-	warning2("No override file is used\n");
-    }
-}
 #define READ_INT(A) parms->A = readcfg_int(#A) //read a key with int value.
 #define READ_DBL(A) parms->A = readcfg_dbl(#A) //read a key with double value
 #define READ_STR(A) parms->A = readcfg_str(#A) //read a key with string value.
@@ -175,7 +134,8 @@ static void setup_parms_maos(PARMS_S *parms){
     }
 }
 PARMS_S *setup_parms(const ARG_S *arg){
-    setup_config(arg);
+    open_config(arg->conf,NULL,0);
+    open_config(arg->confcmd,NULL,1);
    
     PARMS_S *parms=calloc(1, sizeof(PARMS_S));
     parms->skyc.nthread=arg->nthread;

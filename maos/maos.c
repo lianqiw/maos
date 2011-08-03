@@ -107,9 +107,8 @@ void maos(const PARMS_T *parms){
 int main(int argc, char **argv){
     char *fn=mybasename(argv[0]);
     strcpy(argv[0], fn);
-    char *scmd=argv2str(argc,argv);
-    strcpy(argv[0],fn);
     free(fn);
+    char *scmd=argv2str(argc,argv);
     ARG_T* arg=parse_args(argc,argv);//does chdir
     if(arg->detach){
 	daemonize();

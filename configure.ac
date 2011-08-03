@@ -437,9 +437,9 @@ fi
 if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
-if test -d ${srcdir}/cuda ;then
-AC_CONFIG_FILES([cuda/Makefile])
-fi
+#if test -d ${srcdir}/cuda ;then
+#AC_CONFIG_FILES([cuda/Makefile])
+#fi
 AC_OUTPUT
 echo host_os=$host_os
 echo use_icc=$use_icc

@@ -911,17 +911,11 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    recon->L2=spcellnew(npsr,npsr);
 	    for(int ips=0; ips<npsr; ips++){
 		if(parms->tomo.square){//periodic bc
-		    if(ips==0){
-			info2("Laplacian reg. is using perodic bc\n");
-		    }
 		    recon->L2->p[ips+npsr*ips]=mklaplacian_map
 			(recon->xloc_nx[ips], recon->xloc_ny[ips],
 			 recon->xloc[ips]->dx, recon->r0,
 			 recon->wt->p[ips]);
 		}else{//reflecive bc
-		    if(ips==0){
-			info2("Laplacian reg. is using reflective bc\n");
-		    }
 		    recon->L2->p[ips+npsr*ips]=mklaplacian_loc
 			(recon->xloc[ips], recon->r0, 
 			 recon->wt->p[ips]);

@@ -1571,24 +1571,29 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			 parms->powfs[ipowfs].wvl[0]*1.e6,
 			 parms->powfs[ipowfs].embfac,npsfx,npsfy);
 		snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
-		int fd=lock_file(fnlock, 1, 0);//blocking exclusive lock
-		if(fd<0){
-		    error("Failed to lock file\n");
-		}
-		if(zfexist(fnotf)){
+	    retry:
+		if(exist(fnlock) || !zfexist(fnotf)){//need to create data
+		    int fd=lock_file(fnlock, 0, 0);//nonblocking exclusive lock
+		    if(fd>=0){//succeed
+			info2("Generating WFS OTF for %s...", fnotf);tic;
+			genseotf(parms,powfs,ipowfs);
+			toc2("done");
+			ccellwritearr(intstat->otf, intstat->notf, 1, "%s", fnotf);
+			close(fd);
+			remove(fnlock);
+		    }else{
+			fd=lock_file(fnlock,1,0);//blocking exclusive lock
+			close(fd);
+			remove(fnlock);
+			goto retry;
+		    }
+		}else{
 		    long nx, ny;
 		    info2("Reading WFS OTF from %s\n", fnotf);
 		    intstat->otf=ccellreadarr(&nx, &ny, "%s",fnotf);
 		    intstat->notf=nx*ny;
 		    zftouch(fnotf);
-		}else{
-		    info2("Generating WFS OTF for %s...", fnotf);tic;
-		    genseotf(parms,powfs,ipowfs);
-		    toc2("done");
-		    ccellwritearr(intstat->otf, intstat->notf, 1, "%s", fnotf);
 		}
-		close(fd);
-		remove(fnlock);
 	    }
 	    if(parms->powfs[ipowfs].llt){
 		char fnprefix[80];
@@ -1614,27 +1619,29 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			 parms->powfs[ipowfs].nwvl,
 			 parms->powfs[ipowfs].wvl[0]*1.e6,
 			 parms->powfs[ipowfs].embfac);
-		if(zfexist(fnlotf)){
+		char fnllock[PATH_MAX];
+		snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
+	    retry2:
+		if(exist(fnllock) || !zfexist(fnlotf)){//need to create data
+		    int fd2=lock_file(fnllock, 0, 0);//nonblocking exclusive lock
+		    if(fd2>=0){//succeed
+			info2("Generating WFS LLT OTF for %s\n", fnlotf);
+			genselotf(parms,powfs,ipowfs);
+			ccellwrite(intstat->lotf, "%s",fnlotf);
+			close(fd2);
+			remove(fnllock);
+		    }else{
+			fd2=lock_file(fnllock, 1, 0);//blocking, exclusive
+			close(fd2);
+			remove(fnllock);
+			goto retry2;
+		    }
 		    intstat->lotf=ccellread("%s",fnlotf);
 		    zftouch(fnlotf);
 		}else{
-		    char fnllock[PATH_MAX];
-		    snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
-		    int fd2=lock_file(fnllock, 1, 0);//blocking exclusive lock
-		    if(fd2<0){
-			error("Failed to lock_file\n");
-		    }
-		    if(zfexist(fnlotf)){
-			intstat->lotf=ccellread("%s",fnlotf);
-			zftouch(fnlotf);
-			info2("Reading WFS LLT OTF from %s\n", fnlotf);
-		    }else{
-			genselotf(parms,powfs,ipowfs);
-			ccellwrite(intstat->lotf, "%s",fnlotf);
-			info2("Generating WFS LLT OTF for %s\n", fnlotf);
-		    }
-		    close(fd2);
-		    remove(fnllock);
+		    intstat->lotf=ccellread("%s",fnlotf);
+		    zftouch(fnlotf);
+		    info2("Reading WFS LLT OTF from %s\n", fnlotf);
 		}
 		int nwvl=intstat->lotf->nx;
 		PCCELL(intstat->lotf, lotf);

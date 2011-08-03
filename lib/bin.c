@@ -263,8 +263,10 @@ void zfwrite(const void* ptr, const size_t size,
 	gzwrite((voidp)fp->p, ptr, size*nmemb);
     }else{
 	size_t ct=fwrite(ptr, size, nmemb, (FILE*)fp->p);
-	if(ct!=nmemb)
-	    error_write;
+	if(ct!=nmemb){
+	    perror("fwrite");
+	    error("write to %s failed\n", fp->fn);
+	}
     }
     UNLOCK(fp->lock);
 }

@@ -62,19 +62,16 @@ ARG_S *parse_args(int argc, char **argv){
     snprintf(fntmp,PATH_MAX,"%s/skyc_%ld.conf",TEMP,(long)getpid());
     FILE *fptmp=fopen(fntmp,"w");
     fputs(cmds, fptmp);
+    fclose(fptmp);
     free(cmds); cmds=NULL;
-
+    arg->confcmd=strdup(fntmp);
     if(!arg->detach){//foreground task will start immediately.
 	arg->force=1;
     }
-    arg->iconf=optind;
-    arg->argc=argc;
-    arg->argv=argv;
     if(!arg->dirout){
 	arg->dirout=strtime();
     }
-    if(!arg->conf){
-	/*If -c is not specifid in path, will use maos.conf*/
+    if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
 	arg->conf=strdup("maos.conf");
     }
     //Setup PATH and result directory

@@ -28,17 +28,16 @@ char *dirstart;
  */
 int main(int argc, char **argv){
     dirstart=mygetcwd();
-    char *scmd=argv2str(argc, argv);
-    //Strip out PATH information from the command line.
     char*fn=mybasename(argv[0]);
     strcpy(argv[0],fn);
     free(fn);
-    
+    char *scmd=argv2str(argc, argv);
     ARG_S* arg=parse_args(argc,argv);
     /*In detach mode send to background and disable drawing*/
     if(arg->detach){
 	disable_draw=1;//disable drawing.
 	daemonize();
+	fprintf(stderr, "%s\n", scmd);
     }
     info2("Output folder is '%s' %d threads\n",arg->dirout, arg->nthread);
 
@@ -88,9 +87,14 @@ int main(int argc, char **argv){
 	}
     }
     info2("Simulation started at %s in %s.\n",myasctime(),myhostname());
- 
-    free(arg);
     free(scmd);
+    free(arg->dirout);
+    free(arg->conf);
+    if(arg->confcmd){
+	remove(arg->confcmd);
+	free(arg->confcmd);
+    }
+    free(arg);
     THREAD_POOL_INIT(parms->skyc.nthread);
     /*Loads the main software*/
     skysim(parms);

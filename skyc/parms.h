@@ -154,13 +154,9 @@ typedef struct ARG_S{
     int detach;      /**<Detach from the command line and run in background*/
     int force;       /**<For start, bypassing scheduler*/
     int nthread;     /**<Number of threads*/
-    int iconf;       /**<derived parameter marking the starting of .conf arguments*/
-    int argc;        /**<argument count*/
-    int nseed;       /**<Number of seeds*/
-    int *seeds;      /**<Array of seeds*/
-    char **argv;     /**<Array of arguments*/
     char *dirout;    /**<Result output directory*/
     char *conf;      /**master .conf file. nfiraos.conf by default. -c to change*/
+    char *confcmd;
 }ARG_S;
 
 PARMS_S *setup_parms(const ARG_S *arg);

@@ -457,7 +457,6 @@ ARG_T * parse_args(int argc, char **argv){
     FILE *fptmp=fopen(fntmp,"w");
     fputs(cmds, fptmp);
     free(cmds); cmds=NULL;
-
     if(nseed){
 	fprintf(fptmp, "\nsim.seeds=[");
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -481,8 +480,7 @@ ARG_T * parse_args(int argc, char **argv){
 	arg->dirout=strtime();
     }
     
-    if(!arg->conf){
-	/*If -c is not specifid in path, will use nfiraos.conf*/
+    if(!arg->conf){ /*If -c is not specifid in path, will use default.conf*/
 	arg->conf=strdup("default.conf");
     }
     info2("Main config file is %s\n",arg->conf);

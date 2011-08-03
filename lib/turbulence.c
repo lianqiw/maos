@@ -183,7 +183,7 @@ static map_t** create_screen(GENSCREEN_T *data,
 		if(in) info2("Reading %s\n", fnshm);
 	    }
 	    if(!in){
-		info("Creating %s\n", fnshm);
+		info2("Creating %s\n", fnshm);
 		int fd=lock_file(fnlock, 0, 0);//non blocking exclusive lock.
 		if(fd>=0){//succeed to lock file.
 		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fnshm); 
