@@ -147,31 +147,31 @@ pts_t *ptsnew(long nsa, double dsa, long nx, double dx){
 /**
    Create an vector to embed OPD into square array for FFT purpose.
 */
-int *loc_create_embed(int *nembed, const loc_t *loc){
+long *loc_create_embed(long *nembed, const loc_t *loc){
     double xmin,xmax,ymin,ymax;
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     const double dx_in1=1./loc->dx;
-    int nx=(int)round((xmax-xmin)*dx_in1)+1;
-    int ny=(int)round((ymax-ymin)*dx_in1)+1;
-    int nxy=(nx>ny?nx:ny)*2;//minimum size
-    int mapn;
+    long nx=(long)round((xmax-xmin)*dx_in1)+1;
+    long ny=(long)round((ymax-ymin)*dx_in1)+1;
+    long nxy=(nx>ny?nx:ny)*2;//minimum size
+    long mapn;
     if(*nembed<=0){
 	mapn=nextpow2(nxy);
 	*nembed=mapn;
     }else{
 	if(*nembed<nxy){
-	    error("Supplied nembed %d is too small, need at least %d\n",*nembed,nxy);
+	    error("Supplied nembed %ld is too small, need at least %ld\n",*nembed, nxy);
 	}
 	mapn=*nembed;
     }
     xmin-=(mapn-nx)/2*loc->dx;
     ymin-=(mapn-ny)/2*loc->dx;
-    int *embed=calloc(loc->nloc, sizeof(int));
+    long *embed=calloc(loc->nloc, sizeof(long));
     
     for(int iloc=0; iloc<loc->nloc; iloc++){
-	int ix=(int)round((loc->locx[iloc]-xmin)*dx_in1);
-	int iy=(int)round((loc->locy[iloc]-ymin)*dx_in1);
+	long ix=(long)round((loc->locx[iloc]-xmin)*dx_in1);
+	long iy=(long)round((loc->locy[iloc]-ymin)*dx_in1);
 	embed[iloc]=ix+iy*mapn;
     }
     return embed;
@@ -1392,11 +1392,25 @@ void locresize(loc_t *loc, long nloc){
 */
 map_t *mapnew(long nx, long ny, double dx, double *p){
     map_t *map=realloc(dnew_data(nx, ny, p),sizeof(map_t));
+    map->h=0;
     map->dx=dx;
     map->ox=-map->nx/2*map->dx;
     map->oy=-map->ny/2*map->dx;
     map->vx=0;
     map->vy=0;
+    return map;
+}
+/**
+   ceate a new map_t object from existing one. P is left empty.
+ */
+map_t *mapnew2(map_t* A){
+    map_t *map=realloc(dnew_data(A->nx, A->ny, NULL),sizeof(map_t));
+    map->h=A->h;
+    map->dx=A->dx;
+    map->ox=A->ox;
+    map->oy=A->oy;
+    map->vx=A->vx;
+    map->vy=A->vy;
     return map;
 }
 /**

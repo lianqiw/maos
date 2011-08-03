@@ -115,7 +115,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 #endif
 	    if(A->header){
 		double count=search_header_num(A->header, "count");
-		if(count>0){
+		if(!isnan(count) && count>0){
 		    info("count=%g, scaling the data\n", count);
 		    X(scale)(A, 1./count);
 		}
@@ -830,6 +830,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
     X(cp)(&C,A);
     X(add)(&C,1,B,-1);
     T d=sqrt(X(norm2)(C)*2/(X(norm2)(C)+X(norm2)(B)));
+    X(free)(C);
     return isnan(d)?0:d;
 }
 

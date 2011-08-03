@@ -143,15 +143,15 @@ APER_T * setup_aper(const PARMS_T *const parms){
     }
     if(parms->evl.psfmean || parms->evl.psfhist){
 	const int nwvl=parms->evl.nwvl;
-	aper->nembed=calloc(nwvl, sizeof(int));
-	aper->embed=calloc(nwvl, sizeof(int*));
+	aper->nembed=calloc(nwvl, sizeof(long));
+	aper->embed=calloc(nwvl, sizeof(long*));
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    aper->nembed[iwvl]=parms->evl.psfgridsize[iwvl];
 	    aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs);
 	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > aper->nembed[iwvl]){
 		parms->evl.psfsize[iwvl] = aper->nembed[iwvl];
 	    }
-	    info2("iwvl %d: Science PSF is using grid size of %d. The PSF will sum to %.15g\n",
+	    info2("iwvl %d: Science PSF is using grid size of %ld. The PSF will sum to %.15g\n",
 		  iwvl, aper->nembed[iwvl], aper->sumamp2*aper->nembed[iwvl]*aper->nembed[iwvl]);
 	}
     }

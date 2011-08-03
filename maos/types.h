@@ -41,8 +41,8 @@ typedef struct APER_T{
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
     double ipcc;         /**<piston term in imcc.*/
     double sumamp2;      /**<sum of amplitude squared*/
-    int **embed;         /**<Embedding index for PSF computing, one per wvl*/
-    int *nembed;         /**<dimension of embed.*/
+    long **embed;         /**<Embedding index for PSF computing, one per wvl*/
+    long *nembed;         /**<dimension of embed.*/
     double fcp;          /**<piston correction in focus term.*/
 }APER_T;
 /**
@@ -155,8 +155,8 @@ typedef struct POWFS_T{
     double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
     double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
     //For PSF computation on location of WFS. 
-    int **embed;         /**<Embedding index for PSF computing, one per wvl*/
-    int *nembed;         /**<dimension of embed.*/
+    long **embed;         /**<Embedding index for PSF computing, one per wvl*/
+    long *nembed;         /**<dimension of embed.*/
     dmat *sumamp;        /**<sum of realamp*/
     dmat *sumamp2;       /**<sum of realamp.^2*/
     dcell *mcc;          /**<p/t/t model cross coupling matrix for entire pupil*/
@@ -173,8 +173,8 @@ typedef struct NGSMOD_T{
     double ht;      /**<height of upper DM.*/
     double scale;   /**<(1-ht/hs)^-2*/
     double aper_fcp;/**<piston term in focus in plocs.*/
+    dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
-    dmat *MCC_OA;   /**<cross coupling of the modes for on axis direction only.*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
     dmat *IMCC;     /**<inv of MCC.*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/
@@ -265,9 +265,9 @@ typedef struct RECON_T{
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
 
     loc_t **aloc;      /**<actuator grid*/
+    map_t **amap;      /**<square grid of actuators*/
+    long **aembed;      /**<index to embed phi on aloc to square geometry of aloc_nx*aloc_ny.*/
     loc_t **alocm;     /**<misregistered actuator grid for ray tracing*/
-    long *aloc_nx;     /**<size of amap used to build aloc*/
-    long *aloc_ny;     /**<size of amap used to build aloc*/
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
 
@@ -475,6 +475,7 @@ typedef struct SIM_T{
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
+    map_t **dmrealsq;   /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
@@ -506,7 +507,6 @@ typedef struct SIM_T{
     dcell *focusint;   /**<focus tracking integrator*/
 
     /*science evaluation*/
-    dcell *opdevl;        /**<evaluation opd for selected directions.*/
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
     dcell *evlpsfmean;    /**<science field psf time average*/
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/

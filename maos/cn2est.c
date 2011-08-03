@@ -373,7 +373,7 @@ void cn2est_embed(CN2EST_T *cn2est, dmat *grad, int iwfs){
     if(!grad){
 	error("wfs %d: PSOL grads is required to do cn2 estimation\n", iwfs);
     }
-    int *embed=cn2est->embed;
+    long *embed=cn2est->embed;
     const int nsa=grad->nx>>1;
     //Embed gradients in a 2-d array
     for(int isa=0; isa<nsa; isa++){

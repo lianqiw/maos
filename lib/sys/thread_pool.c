@@ -144,6 +144,19 @@ void thread_pool_do_urgent_job(void){
     pthread_mutex_unlock(&pool.mutex);
 }
 /**
+   In the middle of an thread that waits an event, we can use do_job_once() to
+   do other jobs while waiting*/
+int thread_pool_do_job_once(void){
+    int ans=1;
+    pthread_mutex_lock(&pool.mutex);
+    if(pool.jobshead){
+	do_job();
+	ans=0;
+    }
+    pthread_mutex_unlock(&pool.mutex);
+    return ans;
+}
+/**
  *   The working function in each thread which never quits unless pool is being
  *   destroyed. The master thread does not run this routine. The whole function
  *   is guarded by mutex. The mutex is only released upon 1) cond_wait, 2)

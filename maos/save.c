@@ -146,8 +146,8 @@ void save_recon(SIM_T *simu){
 	    char strht[24];
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!simu->ecov->p[ievl]) continue;
-		if(!isinf(parms->evl.ht[ievl])){
-		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		if(!isinf(parms->evl.hs[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 		}else{
 		    strht[0]='\0';
 		}

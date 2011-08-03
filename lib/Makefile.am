@@ -11,7 +11,8 @@ nobase_include_HEADERS+=sys/mem.h sys/process.h sys/scheduler_server.h		\
 sys/sockio.h sys/thread.h sys/io.h sys/daemonize.h sys/scheduler_client.h	\
 sys/shm.h sys/sys.h sys/thread_pool.h nr/nr.h
 
-EXTRA_DIST=cell.c sp.c matbin.c spbin.c mat.c suitesparse.c fractal_do.c prop_grid_stat.c
+EXTRA_DIST=cell.c sp.c matbin.c spbin.c mat.c suitesparse.c fractal_do.c	\
+prop_grid_stat.c prop_grid_pts.c
 
 AOS_SRC=readcfg.c dmat.c cmat.c hashlittle.c dsp.c csp.c bin.c	\
 misc.c mathmisc.c random.c loc.c locbin.c cellarr.c turbulence.c path.c mkg.c	\

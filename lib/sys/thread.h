@@ -79,12 +79,13 @@ struct thread_t{
 */
 #define WAIT_THREAD(group) thread_pool_wait(&group)
 #define THREAD_POOL_INIT(A) thread_pool_init(A)
+#define THREAD_RUN_ONCE thread_pool_do_job_once()
 #else//no threading
 #define CALL(A,B,nthread,urgent) A(B)
 #define QUEUE_THREAD(group,A,nthread,urgent) A->fun(A)
 #define THREAD_POOL_INIT(A)
+#define THREAD_RUN_ONCE 1
 #endif
-
 /**
    Call and wait for them to finish.
 */

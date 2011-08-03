@@ -38,6 +38,9 @@
 #include "setup_powfs.h"
 #include "sim.h"
 #include "sim_utils.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 #define TIMING_MEAN 0
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
@@ -65,6 +68,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
+#if USE_CUDA
+	    gpu_atm2gpu(simu->atm, parms->atm.nps);//takes 0.4s for NFIRAOS.
+#endif	    
 	}
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;

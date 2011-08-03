@@ -47,18 +47,20 @@ void prop(thread_t *data){
     const double displacey=propdata->displacey0+propdata->displacey1;
     switch(propdata->index){
     case 0:
-	prop_grid_grid(propdata->mapin, propdata->mapout,
+	prop_grid_map(propdata->mapin, propdata->mapout,
 		       propdata->alpha, displacex, displacey,
 		       propdata->scale, propdata->wrap);
 	break;
     case 1:
-	prop_grid_pts(propdata->mapin, propdata->ptsout, propdata->phiout,
+	prop_grid_pts(propdata->mapin, propdata->ptsout, 
+		      propdata->ampout, propdata->phiout,
 		      propdata->alpha, displacex, displacey,
 		      propdata->scale, propdata->wrap, 
 		      data->start, data->end);
 	break;
     case 2:
-	prop_grid(propdata->mapin, propdata->locout, propdata->phiout,
+	prop_grid(propdata->mapin, propdata->locout, 
+		  propdata->ampout, propdata->phiout,
 		  propdata->alpha, displacex, displacey,
 		  propdata->scale, propdata->wrap, 
 		  data->start, data->end);
@@ -111,6 +113,29 @@ void prop(thread_t *data){
 			 propdata->scale, 
 			 data->start, data->end);
 	break;
+    case 10:
+	prop_grid_map_cubic(propdata->mapin, propdata->mapout,
+			    propdata->alpha, displacex, displacey,
+			    propdata->scale, propdata->cubic_iac,
+			    data->start, data->end);
+	break;
+    case 11:
+	prop_grid_pts_cubic(propdata->mapin, propdata->ptsout, 
+			    propdata->ampout, propdata->phiout,
+			    propdata->alpha, displacex, displacey,
+			    propdata->scale, propdata->cubic_iac, 
+			    data->start, data->end);
+	break;
+    case 12:
+	prop_grid_cubic(propdata->mapin, propdata->locout, 
+			propdata->ampout, propdata->phiout,
+			propdata->alpha, displacex, displacey,
+			propdata->scale, propdata->cubic_iac, 
+			data->start, data->end);
+	break;
+    case 13:
+	error("Invalid\n");
+	break;
     default:
 	error("Invalid\n");
     }
@@ -121,30 +146,59 @@ void prop(thread_t *data){
 void prop_index(PROPDATA_T *propdata){
     int done=0;
     if(propdata->mapin){
-	if(propdata->mapout){
-	    if(done) error("Invalid\n");
-	    //case 0
-	    propdata->index=0;
-	    done=1;
-	}
-	if(propdata->phiout){
-	    if(propdata->ptsout){
+	if(propdata->cubic){
+	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		//case 1
-		propdata->index=1;
+		//case 10
+		propdata->index=10;
 		done=1;
 	    }
-	    if(propdata->locout){
+	    if(propdata->phiout){
+		if(propdata->ptsout){
+		    if(done) error("Invalid\n");
+		    //case 11
+		    propdata->index=11;
+		    done=1;
+		}
+		if(propdata->locout){
+		    if(done) error("Invalid\n");
+		    //case 12
+		    propdata->index=12;
+		    done=1;
+		}
+		if(propdata->ostat){
+		    error("Invalid\n");
+		    //case 13
+		    propdata->index=13;
+		    done=1;
+		}
+	    }
+	}else{
+	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		//case 2
-		propdata->index=2;
+		//case 0
+		propdata->index=0;
 		done=1;
 	    }
-	    if(propdata->ostat){
-		if(done) error("Invalid\n");
-		//case 3
-		propdata->index=3;
-		done=1;
+	    if(propdata->phiout){
+		if(propdata->ptsout){
+		    if(done) error("Invalid\n");
+		    //case 1
+		    propdata->index=1;
+		    done=1;
+		}
+		if(propdata->locout){
+		    if(done) error("Invalid\n");
+		    //case 2
+		    propdata->index=2;
+		    done=1;
+		}
+		if(propdata->ostat){
+		    if(done) error("Invalid\n");
+		    //case 3
+		    propdata->index=3;
+		    done=1;
+		}
 	    }
 	}
     }
@@ -191,16 +245,154 @@ void prop_index(PROPDATA_T *propdata){
     }
     if(done==0) error("Invalid\n");
 }
+
+#define PREPIN_NONGRID(npad, nskip)			\
+    /*padding to avoid test boundary*/			\
+    loc_create_map_npad(locin, npad);			\
+    const double dx_in1 = 1./locin->dx;			\
+    const double dx_in2 = scale*dx_in1;			\
+    displacex = (displacex-locin->map->ox)*dx_in1;	\
+    displacey = (displacey-locin->map->oy)*dx_in1;	\
+    long (*map)[locin->map->nx]=(void*)(locin->map->p);	\
+    const int nxmax=locin->map->nx-nskip;		\
+    const int nymax=locin->map->ny-nskip;		\
+    /*-1 because we count from 1 in the map.*/		\
+    const double *phiin0=phiin-1;			\
+    assert(scale>0);
+
+#define PREPIN_GRID(nskip)				\
+    const double dx_in1 = 1./mapin->dx;			\
+    const double dx_in2 = scale*dx_in1;			\
+    displacex = (displacex-mapin->ox)*dx_in1;		\
+    displacey = (displacey-mapin->oy)*dx_in1;		\
+    const int nxmax  = mapin->nx-nskip;			\
+    const int nymax  = mapin->ny-nskip;			\
+    double (*phiin)[mapin->nx]=(void*)(mapin->p);	\
+    assert(scale>0);
+
+#define PREPOUT_LOC				\
+    if(!locout) error("locout is NULL!");	\
+    const double *px=locout->locx;		\
+    const double *py=locout->locy;		\
+    if(!end) end=locout->nloc;			
+
+#define PREPOUT_PTS				\
+    const double dxout=pts->dx;			\
+    if(!end) end=pts->nsa;
+
+#define PREPOUT_MAP				\
+    const double dxout=mapout->dx;		\
+    const double ox=mapout->ox;			\
+    const double oy=mapout->oy;			\
+    double *phiout=mapout->p;			\
+    const int nxout=mapout->nx;			\
+    if(!end) end=mapout->ny;
+
+#if ONLY_FULL == 1
+#define RUNTIME_LINEAR				\
+    double dplocx, dplocy;			\
+    int nplocx, nplocy, nplocx1, nplocy1;	\
+    int missing=0;				\
+    long iphi1,iphi2,iphi3,iphi4;			
+#else
+#define RUNTIME_LINEAR				\
+    double dplocx, dplocy;			\
+    int nplocx, nplocy, nplocx1, nplocy1;	\
+    int missing=0;				\
+    long iphi=0;					
+#endif
+
+#define MAKE_CUBIC_PARAM					\
+    double fx[4],fy[4];						\
+    const double cubicn=1./(1.+2.*cubic_iac);			\
+    const double c0=1.*cubicn;					\
+    const double c1=(4.*cubic_iac-2.5)*cubicn;			\
+    const double c2=(1.5-3.*cubic_iac)*cubicn;			\
+    const double c3=(2.*cubic_iac-0.5)*cubicn;			\
+    const double c4=(0.5-cubic_iac)*cubicn; 
+
+#define WARN_MISSING\
+ if(missing>0) warning("%d points not covered by input screen\n", missing)
+
+#if ONLY_FULL == 1 
+#define LINEAR_ADD_NONGRID						\
+    iphi1=map[nplocy][nplocx];						\
+    iphi2=map[nplocy][nplocx1];						\
+    iphi3=map[nplocy1][nplocx];						\
+    iphi4=map[nplocy1][nplocx1];					\
+    if(iphi1 && iphi2 && iphi3 && iphi4){				\
+	phiout[iloc]+=alpha*(phiin0[iphi1]*(1.-dplocx)*(1.-dplocy));	\
+	phiout[iloc]+=alpha*(phiin0[iphi2]*(dplocx)*(1.-dplocy));	\
+	phiout[iloc]+=alpha*(phiin0[iphi3]*(1.-dplocx)*(dplocy));	\
+	phiout[iloc]+=alpha*(phiin0[iphi4]*(dplocx)*(dplocy));		\
+    }
+#else
+#define LINEAR_ADD_NONGRID						\
+    if((iphi=map[nplocy][nplocx]))					\
+	phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(1.-dplocy));	\
+    if((iphi=map[nplocy][nplocx1]))					\
+	phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(1.-dplocy));	\
+    if((iphi=map[nplocy1][nplocx]))					\
+	phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(dplocy));	\
+    if((iphi=map[nplocy1][nplocx1]))					\
+	phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(dplocy));
+#endif
+
+#define RUNTIME_CUBIC					\
+    register double dplocx, dplocy, dplocx0, dplocy0;	\
+    int nplocx, nplocy;					\
+    int missing=0;					\
+    MAKE_CUBIC_PARAM;					
+
+#define CUBIC_ADD_GRID						\
+    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);			\
+    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);			\
+    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);			\
+    fx[3]=dplocx*dplocx*(c3+c4*dplocx);				\
+								\
+    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);			\
+    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);			\
+    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);			\
+    fy[3]=dplocy*dplocy*(c3+c4*dplocy);				\
+    register double sum=0;					\
+    for(int ky=-1; ky<3; ky++){					\
+	for(int kx=-1; kx<3; kx++){				\
+	    sum+=fx[kx+1]*fy[ky+1]*phiin[ky+nplocy][kx+nplocx];	\
+	}							\
+    }								\
+    phiout[iloc]+=sum*alpha;
+
+#define CUBIC_ADD_NONGRID				\
+    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);		\
+    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);		\
+    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);		\
+    fx[3]=dplocx*dplocx*(c3+c4*dplocx);			\
+							\
+    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);		\
+    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);		\
+    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);		\
+    fy[3]=dplocy*dplocy*(c3+c4*dplocy);			\
+							\
+    for(int jy=-1; jy<3; jy++){				\
+	for(int jx=-1; jx<3; jx++){			\
+	    long iphi=map[jy+nplocy][jx+nplocx];	\
+	    if(iphi){					\
+		phiout[iloc]+=alpha*fx[jx+1]		\
+		    *fy[jy+1]*phiin0[iphi];		\
+	    }						\
+	}						\
+    }
+
+
+
+
 /**
    Propagate OPD defines on grid mapin to grid mapout.  alpha is the scaling of
    data. displacex, displacy is the displacement of the center of the beam on
    the input grid. scale is the cone effect.*/
-void prop_grid_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
-		    map_t *mapout,      /**<[in,out] OPD defind on a square grid*/
-		    double alpha,       /**<[in] scaling of OPD*/
-		    double displacex,   /**<[in] displacement of the ray */
-		    double displacey,   /**<[in] displacement of the ray*/
-		    double scale,       /**<[in] scaling of the beam diameter (cone)*/
+void prop_grid_map(ARGIN_GRID,
+		    ARGOUT_MAP,
+		    ARG_PROP,
 		    int wrap            /**<[in] wrap input OPD or not*/
 		    ){
     //A convenient function. Not optimized
@@ -210,317 +402,10 @@ void prop_grid_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
     pts.origy=&mapout->oy;
     pts.dx=mapout->dx;
     pts.nx=mapout->nx;
-    prop_grid_pts(mapin, &pts, mapout->p, alpha, displacex, displacey,
+    prop_grid_pts(mapin, &pts, NULL, mapout->p, alpha, displacex, displacey,
 		  scale, wrap, 0, 1);
 }
-/**
-   Propagate OPD defines on grid mapin to subapertures.  alpha is the scaling of
-   data. displacex, displacy is the displacement of the center of the beam on
-   the input grid.  scale is the cone effect.*/
-void prop_grid_pts(const map_t *mapin, /**<[in] OPD defind on a square grid*/
-		   const pts_t *pts,   /**<[in] defining each subaperture*/
-		   double *phiout0,    /**<[in,out] OPDs for each subaperture*/
-		   double alpha,       /**<[in] scaling of OPD*/
-		   double displacex,   /**<[in] displacement of the beam */
-		   double displacey,   /**<[in] displacement of the beam */
-		   double scale,       /**<[in] scaling of the beam diameter (cone)*/
-		   int wrap,           /**<[in] wrap input OPD or not*/
-		   long sastart,       /**<[in] The starting subaperture to trace ray*/
-		   long saend          /**<[in] The last (exclusive) subaperture to trace ray*/
-		   ){
-    /*
-       2010-01-02: Improved by saving x interpolations for each subaperture
-       during non-matched case. original function renamed to prop_grid_pts_old
-       time cut by almost 3 fold for each LGS WFS.  0.40s->0.16s
-     */
-    int isa, ipix,jpix;
-    int mx,my;
-    int nplocx2;
-    const int ninx   = mapin->nx;
-    const int niny   = mapin->ny;
-    const int nx     = pts->nx;
-    const double dx_in1 = 1/mapin->dx;
-    const double dxout  = pts->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-mapin->ox)*dx_in1;
-    displacey = (displacey-mapin->oy)*dx_in1;
-    if(!saend) saend=pts->nsa;
-    if(USE_OPTIM && fabs(dx_in2*dxout-1)<EPS){
-	double dplocx, dplocy;
-	int nplocx, nplocy;
-        for(isa=sastart; isa<saend; isa++){
-	    double (*phiout)[nx]=(double(*)[nx])(phiout0+nx*nx*isa);
-	    double (*phiin)[ninx]=(double(*)[ninx])(mapin->p);
-	    const double origx=pts->origx[isa];
-	    const double origy=pts->origy[isa];
-	    double w11,w10,w01,w00;
-	    
-	    dplocy = myfma(origy,dx_in2,displacey);
-	    dplocx = myfma(origx,dx_in2,displacex);
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(!wrap){
-		int sx, sy;
-		if(nplocy<0){
-		    sy=-nplocy;
-		}else
-		    sy=0;
-		if(nplocx<0){
-		    sx=-nplocx;
-		}else
-		    sx=0;
-		
-		my=niny-nplocy-1;//remaining possible points.
-		if(my>nx){
-		    my=nx;
-		}
-		if(my<=sy){
-		    continue;
-		}
-		mx=ninx-nplocx-1;
-		if(mx>nx){
-		    mx=nx;
-		}
-		if(mx<=sx){
-		    continue;
-		}
-
-		if((dplocx)<EPS && (dplocy)<EPS){
-		    /*aligned perfectly.*/
-		    for(jpix=sy; jpix<my; jpix++){
-			//nplocy2=nplocy+jpix;
-			double *restrict phiin2=phiin[nplocy+jpix];
-			double *restrict phiout2=phiout[jpix];
-			for(ipix=sx; ipix<mx; ipix++){
-			    phiout2[ipix]+=alpha*phiin2[nplocx+ipix];
-			}
-		    }
-		}else{	
-		    w11=dplocx*dplocy;
-		    w10=(1.-dplocx)*dplocy;
-		    w01=dplocx*(1.-dplocy);
-		    w00=(1.-dplocx)*(1.-dplocy);	
-		    for(jpix=sy; jpix<my; jpix++){
-			//nplocy2=nplocy+jpix;
-			double *restrict phiin2=phiin[nplocy+jpix];
-			double *restrict phiin3=phiin[nplocy+jpix+1];
-			double *restrict phiout2=phiout[jpix];
-			for(ipix=sx; ipix<mx; ipix++){
-			    phiout2[ipix]+=
-				alpha*(+phiin2[nplocx+ipix]*w00
-				       +phiin2[nplocx+ipix+1]*w01
-				       +phiin3[nplocx+ipix]*w10
-				       +phiin3[nplocx+ipix+1]*w11);
-			}
-		    }
-		}
-	    }else{//wraping
-		double *phiin_1, *phiin_2;
-
-		if(ninx < nx || niny < nx){
-		    error("Input map is too small. wraps more than once\n");
-		}
-		w11=dplocx*dplocy;
-		w10=(1.-dplocx)*dplocy;
-		w01=dplocx*(1.-dplocy);
-		w00=(1.-dplocx)*(1.-dplocy);
-
-		nplocy-=niny*(nplocy/niny);
-		if(nplocy<0)
-		    nplocy+=niny;
-		nplocx-=ninx*(nplocx/ninx);
-		if(nplocx<0)
-		    nplocx+=ninx;
-		my=niny-nplocy-1;//remaining possible points.
-		mx=ninx-nplocx-1;
-		if(my>nx) my=nx;
-		if(mx>nx) mx=nx;
-
-		for(jpix=0; jpix<nx; jpix++){
-		    if(jpix<my){
-			phiin_1=phiin[nplocy];
-			phiin_2=phiin[nplocy+1];
-		    }else if(jpix==my){
-			phiin_1=phiin[nplocy];
-			phiin_2=phiin[nplocy+1-niny];
-		    }else{
-			phiin_1=phiin[nplocy-niny];
-			phiin_2=phiin[nplocy+1-niny];
-		    }
-		    nplocx2=nplocx;
-		    for(ipix=0; ipix<mx; ipix++){
-			phiout[jpix][ipix]+=alpha*
-			    (phiin_1[nplocx2]*w00
-			     +phiin_1[nplocx2+1]*w01
-			     +phiin_2[nplocx2]*w10
-			     +phiin_2[nplocx2+1]*w11);
-			nplocx2++;
-		    }
-		    if(mx<nx){
-			ipix=mx;
-			phiout[jpix][ipix]+=alpha*
-			    (phiin_1[nplocx2]*w00
-			     +phiin_1[nplocx2+1-ninx]*w01
-			     +phiin_2[nplocx2]*w10
-			     +phiin_2[nplocx2+1-ninx]*w11);
-			nplocx2++;
-
-			nplocx2-=ninx;
-			for(ipix=mx+1; ipix<nx; ipix++){
-			    phiout[jpix][ipix]+=alpha*
-				(phiin_1[nplocx2]*w00
-				 +phiin_1[nplocx2+1]*w01
-				 +phiin_2[nplocx2]*w10
-				 +phiin_2[nplocx2+1]*w11);
-			    nplocx2++;
-			}
-		    }
-		    nplocy++;
-		}
-	    }	    
-	}
-    }else{ /*different spacing. or non optim*/
-	double dplocx, dplocy;
-	double ratio;
-	const double (*phiin)[ninx]=(const double(*)[ninx])(mapin->p);
-	int nplocx, nplocy;
-	ratio = dxout*dx_in2;
-	for(isa=sastart; isa<saend; isa++){
-	    double (*phiout)[nx]=(double(*)[nx])(phiout0+nx*nx*isa);
-	    const double origx=pts->origx[isa];
-	    const double origy=pts->origy[isa];
-	    double dplocx0, dplocy0;
-	    dplocy0 = myfma(origy,dx_in2,displacey);
-	    dplocx0 = myfma(origx,dx_in2,displacex);
-	    if(!wrap){
-		int sx, sy;
-		if(dplocx0<0){
-		    sx=iceil(-dplocx0/ratio);
-		}else
-		    sx=0;
-		if(dplocy0<0){
-		    sy=iceil(-dplocy0/ratio);
-		}else
-		    sy=0;
-
-		my=iceil((niny-1-dplocy0)/ratio);
-		if(my>nx){
-		    my=nx;
-		}
-		mx=iceil((ninx-1-dplocx0)/ratio);
-		if(mx>nx){
-		    mx=nx;
-		}
-		
-		int nplocxs[mx];
-		double dplocxs[mx];
-
-		dplocy0  = myfma(origy+(double)sy*dxout,dx_in2,displacey);
-		dplocx0  = myfma(origx+(double)sx*dxout,dx_in2,displacex);
-		
-		for(ipix=sx; ipix<mx; ipix++){
-		    SPLIT(dplocx0,dplocx,nplocx);
-		    nplocxs[ipix]=nplocx;
-		    dplocxs[ipix]=dplocx;
-		    dplocx0+=ratio;
-		}
-
-		for(jpix = sy; jpix < my; jpix++){
-		    SPLIT(dplocy0,dplocy,nplocy);
-		    const double dplocy1=1.-dplocy;
-		    const double *phiin2=phiin[nplocy];
-		    const double *phiin3=phiin[nplocy+1];
-		    double *phiout2=phiout[jpix];
-		    for(ipix=sx; ipix<mx; ipix++){
-			nplocx=nplocxs[ipix];
-			dplocx=dplocxs[ipix];
-			phiout2[ipix]+=alpha*
-			    (+(phiin2[nplocx]
-			       +(phiin2[nplocx+1]-phiin2[nplocx])*dplocx)
-			     *dplocy1
-			     +(phiin3[nplocx]
-			       +(phiin3[nplocx+1]-phiin3[nplocx])*dplocx)
-			     *dplocy);
-		    }
-		    dplocy0+=ratio;
-		}
-	    }else{
-		const double *phiin_1, *phiin_2;
-		double dplocy1;
-		int mx0;
-		if(ninx < nx*ratio || niny < nx*ratio){
-		    info("nx=%d, ratio=%g, ninx=%d\n",nx,ratio,ninx);
-		    error("Input map is too small. wraps more than once\n");
-		}
-		dplocy0-=niny*ifloor(dplocy0/niny);
-		dplocx0-=ninx*ifloor(dplocx0/ninx);
-		mx0=iceil((ninx-1.-dplocx0)/ratio);
-		if(mx0>nx) mx0=nx;
-		if(mx0<0) mx0=0;
-		
-		int nplocxs[nx];
-		int nplocxs2[nx];
-		double dplocxs[nx];
-		mx=mx0;
-		for(ipix=0; ipix<mx; ipix++){
-		    SPLIT(dplocx0,dplocx,nplocx);
-		    nplocxs[ipix]=nplocx;
-		    nplocxs2[ipix]=nplocx+1;
-		    dplocxs[ipix]=dplocx;
-		    dplocx0+=ratio;
-		}
-		if(mx<nx){
-		    while(dplocx0<ninx && mx<nx){//falls on the edge
-			SPLIT(dplocx0,dplocx,nplocx);
-			nplocxs[mx]=nplocx;
-			nplocxs2[mx]=0;
-			dplocxs[mx]=dplocx;
-			dplocx0+=ratio;
-			mx++;
-		    }
-		    dplocx0-=ninx;
-		    for(ipix=mx; ipix<nx; ipix++){
-			SPLIT(dplocx0,dplocx,nplocx);
-			nplocxs[ipix]=nplocx;
-			nplocxs2[ipix]=nplocx+1;
-			dplocxs[ipix]=dplocx;
-			dplocx0+=ratio;
-		    }
-		}
-		for(jpix=0; jpix<nx; jpix++){
-		    mx=mx0;
-		    SPLIT(dplocy0,dplocy,nplocy);
-		    dplocy1=1.-dplocy;
-		    if(nplocy<niny-1){
-			phiin_1=phiin[nplocy];
-			phiin_2=phiin[nplocy+1];
-		    }else if(nplocy==niny-1){
-			phiin_1=phiin[nplocy];
-			phiin_2=phiin[0];
-		    }else{
-			phiin_1=phiin[nplocy-niny];
-			phiin_2=phiin[nplocy+1-niny];
-		    }
-		    double *phiout2=phiout[jpix];
-		    for(ipix=0; ipix<nx; ipix++){
-			nplocx=nplocxs[ipix];
-			nplocx2=nplocxs2[ipix];
-			dplocx=dplocxs[ipix];
-			phiout2[ipix]+=alpha*
-			    (+(phiin_1[nplocx]
-			       +(phiin_1[nplocx2]-phiin_1[nplocx])*dplocx)
-			     *dplocy1
-			     +(phiin_2[nplocx]
-			       +(phiin_2[nplocx2]-phiin_2[nplocx])*dplocx)
-			     *dplocy);
-			
-		    }
-		    dplocy0+=ratio;
-		}
-	    }/*wrap*/
-	}/*end isa*/
-    }
-}
+#include "prop_grid_pts.c"
 #define TRANSPOSE 0
 #include "prop_grid_stat.c"
 #undef  TRANSPOSE
@@ -532,56 +417,40 @@ void prop_grid_pts(const map_t *mapin, /**<[in] OPD defind on a square grid*/
    Propagate OPD defines on grid mapin to coordinate locout.  alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
    beam on the input grid.  scale is the cone effect.*/
-void prop_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
-	       const loc_t *locout,/**<[in] coordinate of irregular destination grid*/
-	       double *phiout,     /**<[in,out] OPD defined on locout*/
-	       double alpha,       /**<[in] scaling of OPD*/
-	       double displacex,   /**<[in] displacement of the ray */
-	       double displacey,   /**<[in] displacement of the ray */
-	       double scale,       /**<[in] scaling of the beam diameter (cone)*/
+void prop_grid(ARGIN_GRID,
+	       ARGOUT_LOC,
+	       ARG_PROP,
 	       int wrap,           /**<[in] wrap input OPD or not*/
 	       long start,         /**<[in] First point to do*/
 	       long end            /**<[in] Last point to do*/
 	       ){
-    double dplocx, dplocy;
-    int nplocx, nplocy, nplocx1, nplocy1;
-    int iloc;
-    int missing=0;
-    if(!locout) error("locout is NULL!");
-    if(end==0){
-	end=locout->nloc;
-    }
-    const int wrapx1 = mapin->nx;
-    const int wrapy1 = mapin->ny;
-    const int wrapx=wrapx1-1;
-    const int wrapy=wrapy1-1;
-    const double dx_in1 = 1./mapin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-mapin->ox)*dx_in1;
-    displacey = (displacey-mapin->oy)*dx_in1;
-    const double *px=locout->locx;
-    const double *py=locout->locy;
+    PREPIN_GRID(1);
+    PREPOUT_LOC;
+    RUNTIME_LINEAR;
+    (void)iphi;
+    const int nx = mapin->nx;
+    const int ny = mapin->ny;
 
-    
-    double (*phiin)[wrapx1]=(double(*)[wrapx1])(mapin->p);
-    for(iloc=start; iloc<end; iloc++){
-	dplocy=myfma(py[iloc],dx_in2,displacey);
+    for(long iloc=start; iloc<end; iloc++){
+	if(ampout && fabs(ampout[iloc])<EPS)
+	    continue;//skip points that has zero amplitude
 	dplocx=myfma(px[iloc],dx_in2,displacex);
+	dplocy=myfma(py[iloc],dx_in2,displacey);
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocx<0||nplocx>=wrapx||nplocy<0||nplocy>=wrapy){
+	if(nplocx<0||nplocx>=nxmax||nplocy<0||nplocy>=nymax){
 	    if(wrap){
 		while(nplocx<0)
-		    nplocx+=wrapx1;
-		while(nplocx>wrapx)
-		    nplocx-=wrapx1;
+		    nplocx+=nx;
+		while(nplocx>nxmax)
+		    nplocx-=nx;
 		while(nplocy<0)
-		    nplocy+=wrapy1;
-		while(nplocy>wrapy)
-		    nplocy-=wrapy1;
+		    nplocy+=ny;
+		while(nplocy>nymax)
+		    nplocy-=ny;
 		
-		nplocx1=(nplocx==wrapx?0:nplocx+1);
-		nplocy1=(nplocy==wrapy?0:nplocy+1);
+		nplocx1=(nplocx==nxmax?0:nplocx+1);
+		nplocy1=(nplocy==nymax?0:nplocy+1);
 	    }else{
 		missing++;
 		continue;
@@ -596,55 +465,24 @@ void prop_grid(const map_t *mapin, /**<[in] OPD defind on a square grid*/
 	     +(phiin[nplocy1][nplocx]*(1.-dplocx)
 	       +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
     }
-    if(missing>0){
-	warning("%d points not covered by input screen\n", missing);
-    }
+    WARN_MISSING;
 }
+
 /**
    Propagate OPD defines on coordinate locin to coordinate locout.  This is the
    <em>slowest</em>. alpha is the scaling of data. displacex, displacy is the
    displacement of the center of the beam on the input grid.  scale is the cone
    effect. See prop_grid() for definition of other parameters.*/
-void prop_nongrid(loc_t *locin,        /**<[in] Coordinate of iregular source grid*/
-		  const double* phiin, /**<[in] Input OPD defined in locin*/
-		  const loc_t *locout, /**<[in] Coordinate of irregular output grid*/
-		  const double *ampout,/**<[in] Amplitude defined on locout. skip point of amp is 0*/
-		  double* phiout,      /**<[in,out] Output OPD defined in locout*/
-		  double alpha,        /**<[in] scaling of OPD*/
-		  double displacex,    /**<[in] displacement of the ray */
-		  double displacey,    /**<[in] displacement of the ray */
-		  double scale,        /**<[in] scaling of the beam diameter (cone)*/
+void prop_nongrid(ARGIN_NONGRID,
+		  ARGOUT_LOC,
+		  ARG_PROP,
 		  long start,          /**<[in] First point to do*/
 		  long end             /**<[in] Last point to do*/
 		  ){
-    loc_create_map_npad(locin,1);
-    double dplocx, dplocy;
-    int nplocx, nplocy, nplocx1, nplocy1;
-    long iloc;
-    int missing=0;
-    assert(scale>0);
-    const int wrapx1 = locin->map->nx;
-    const int wrapy1 = locin->map->ny;
-    const int wrapx = wrapx1-1;
-    const int wrapy = wrapy1-1;
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
-    const double *px=locout->locx;
-    const double *py=locout->locy;
-
-#if ONLY_FULL==1
-    long iphi1,iphi2,iphi3,iphi4;
-#else
-    long iphi;
-#endif
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->nx])(locin->map->p);
-    //-1 because we count from 1 in the map.
-    const double *phiin0=phiin-1;
-    if(!end) end=locout->nloc;
-    for(iloc=start; iloc<end; iloc++){
+    PREPIN_NONGRID(1,2);
+    PREPOUT_LOC;
+    RUNTIME_LINEAR;
+    for(long iloc=start; iloc<end; iloc++){
 	if(ampout && fabs(ampout[iloc])<EPS)
 	    continue;//skip points that has zero amplitude
 	dplocy=myfma(py[iloc],dx_in2,displacey);
@@ -652,168 +490,67 @@ void prop_nongrid(loc_t *locin,        /**<[in] Coordinate of iregular source gr
 
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocx<0||nplocx>=wrapx||nplocy<0||nplocy>=wrapy){
+	if(nplocx<0||nplocx>nxmax||nplocy<0||nplocy>nymax){
 	    missing++;
 	    continue;
 	}else{
 	    nplocx1=nplocx+1;
 	    nplocy1=nplocy+1;
 	}
-
-#if ONLY_FULL == 1 //only proceed if all four points exist.
-	iphi1=map[nplocy][nplocx];
-	iphi2=map[nplocy][nplocx1];
-	iphi3=map[nplocy1][nplocx];
-	iphi4=map[nplocy1][nplocx1];
-	if(iphi1 && iphi2 && iphi3 && iphi4){
-	    phiout[iloc]+=alpha*(phiin0[iphi1]*(1.-dplocx)*(1.-dplocy));
-	    phiout[iloc]+=alpha*(phiin0[iphi2]*(dplocx)*(1.-dplocy));
-	    phiout[iloc]+=alpha*(phiin0[iphi3]*(1.-dplocx)*(dplocy));
-	    phiout[iloc]+=alpha*(phiin0[iphi4]*(dplocx)*(dplocy));
-	}else{
-	    missing++;
-	}
-#else	
-	if((iphi=map[nplocy][nplocx]))
-	    phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(1.-dplocy));
-	if((iphi=map[nplocy][nplocx1]))
-	    phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(1.-dplocy));
-	if((iphi=map[nplocy1][nplocx]))
-	    phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(dplocy));
-	if((iphi=map[nplocy1][nplocx1]))
-	    phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(dplocy));
-#endif
+	LINEAR_ADD_NONGRID;
     }
-    if(missing>0){
-	warning("%d points not covered by input screen\n", missing);
-    }
+    WARN_MISSING;
 }
 /**
    Propagate OPD defines on coordinate locin to grid mapout. alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
    beam on the input grid.  scale is the cone effect. */
-void prop_nongrid_map(loc_t *locin,     /**<[in] Coordinate of iregular source grid*/
-		      const double *phiin,/**<[in] Input OPD defined in locin*/
-		      map_t *mapout,    /**<[in,out] Output OPD defined in a square grid*/
-		      double alpha,     /**<[in] scaling of OPD*/
-		      double displacex, /**<[in] displacement of the ray */
-		      double displacey, /**<[in] displacement of the ray */
-		      double scale,     /**<[in] scaling of the beam diameter (cone)*/
+void prop_nongrid_map(ARGIN_NONGRID,
+		      ARGOUT_MAP,
+		      ARG_PROP,
 		      long start,       /**<[in] First point to do*/
 		      long end          /**<[in] Last point to do*/
 		      ){
-    //propagate to a square map.
-    loc_create_map_npad(locin,2);//will only do once and save in locin.
-
-    double dplocx, dplocy;
-    int nplocx, nplocy, nplocx1, nplocy1;
-    long iloc;
-
-    const int wrapx1 = locin->map->nx;
-    const int wrapy1 = locin->map->ny;
-    const int wrapx = wrapx1-1;
-    const int wrapy = wrapy1-1;
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
-    const double dxout=mapout->dx;
-    const double ox=mapout->ox;
-    const double oy=mapout->oy;
-    double *phiout=mapout->p;
-#if ONLY_FULL==1
-    long iphi1,iphi2,iphi3,iphi4;
-#else
-    long iphi;
-#endif
-    //-1 because we count from 1 in the map.
-    long (*map)[locin->map->nx]=(long(*)[locin->map->nx])(locin->map->p);
-    const int nxout=mapout->nx;
-    const double *phiin0=phiin-1;
-    if(!end) end=mapout->ny;
+    PREPIN_NONGRID(1,2);//Do we need 2 in first?
+    PREPOUT_MAP;
+    RUNTIME_LINEAR ;
     for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<0||nplocy>=wrapy){
+	if(nplocy<0||nplocy>nymax){
+	    missing++;
 	    continue;
 	}else{
 	    nplocy1=nplocy+1;
 	}
 	for(int ix=0; ix<nxout; ix++){
-	    iloc=ix+iy*nxout;
+	    int iloc=ix+iy*nxout;
 	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 	    SPLIT(dplocx,dplocx,nplocx);
-	    if(nplocx<0||nplocx>=wrapx){
+	    if(nplocx<0||nplocx>nxmax){
+		missing++;
 		continue;
-	    }else{
-		nplocx1=nplocx+1;
 	    }
-
-#if ONLY_FULL == 1 //only proceed if all four points exist.
-	    iphi1=map[nplocy][nplocx];
-	    iphi2=map[nplocy][nplocx1];
-	    iphi3=map[nplocy1][nplocx];
-	    iphi4=map[nplocy1][nplocx1];
-	    if(iphi1 && iphi2 && iphi3 && iphi4){
-		phiout[iloc]+=alpha*(phiin0[iphi1]*(1.-dplocx)*(1.-dplocy));
-		phiout[iloc]+=alpha*(phiin0[iphi2]*(dplocx)*(1.-dplocy));
-		phiout[iloc]+=alpha*(phiin0[iphi3]*(1.-dplocx)*(dplocy));
-		phiout[iloc]+=alpha*(phiin0[iphi4]*(dplocx)*(dplocy));
-	    }
-#else	
-	    if((iphi=map[nplocy][nplocx])) 
-		phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(1.-dplocy));
-	    if((iphi=map[nplocy][nplocx1]))
-		phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(1.-dplocy));
-	    if((iphi=map[nplocy1][nplocx]))
-		phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(dplocy));
-	    if((iphi=map[nplocy1][nplocx1]))
-		phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(dplocy));
-#endif
+	    nplocx1=nplocx+1;
+	    LINEAR_ADD_NONGRID;
 	}
     }
+    WARN_MISSING;
 }
 /**
    Propagate OPD defines on coordinate locin to subapertures pts. alpha is the
    scaling of data. displacex, displacy is the displacement of the center of the
    beam on the input grid.  scale is the cone effect. See prop_groid().*/
-void prop_nongrid_pts(loc_t *locin,         /**<[in] Coordinate of iregular source grid*/
-		      const double *phiin,  /**<[in] Input OPD defined in locin*/
-		      const pts_t *pts,     /**<[in] defining each subaperture*/
-		      const double *ampout, /**<[in] Amplitude of subaps. skip point of amp is 0*/
-		      double *phiout,       /**<[in,out] OPD for subaps*/
-		      double alpha,         /**<[in] scaling of OPD*/
-		      double displacex,     /**<[in] displacement of the ray */
-		      double displacey,     /**<[in] displacement of the ray */
-		      double scale,         /**<[in] scaling of the beam diameter (cone)*/
+void prop_nongrid_pts(ARGIN_NONGRID,
+		      ARGOUT_PTS,
+		      ARG_PROP,
 		      long start,           /**<[in] First point to do*/
 		      long end              /**<[in] Last point to do*/
 		      ){
-    //propagate to a square map.
-    loc_create_map_npad(locin,1);//will only do once and save in locin.
-
-    double dplocx, dplocy;
-    int nplocx, nplocy, nplocx1, nplocy1;
-
-    const int wrapx1 = locin->map->nx;
-    const int wrapy1 = locin->map->ny;
-    const int wrapx = wrapx1-1;
-    const int wrapy = wrapy1-1;
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
-    const double dxout=pts->dx;
-#if ONLY_FULL==1
-    long iphi1,iphi2,iphi3,iphi4;
-#else
-    long iphi;
-#endif
-    //-1 because we count from 1 in the map.
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->nx])(locin->map->p);
-    const double *phiin0=phiin-1;
-    if(!end) end=pts->nsa;
+    PREPIN_NONGRID(1,2);
+    PREPOUT_PTS;
+    RUNTIME_LINEAR;
+ 
     for(int isa=start; isa<end; isa++){
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
@@ -822,89 +559,150 @@ void prop_nongrid_pts(loc_t *locin,         /**<[in] Coordinate of iregular sour
 	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy<0||nplocy>=wrapy){
+	    if(nplocy<0||nplocy>nymax){
 		continue;
-	    }else{
-		nplocy1=nplocy+1;
 	    }
+	    nplocy1=nplocy+1;
 	    for(int ix=0; ix<pts->nx; ix++){
 		iloc++;
 		if(ampout && fabs(ampout[iloc])<EPS)
 		    continue;//skip points that has zero amplitude
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		SPLIT(dplocx,dplocx,nplocx);
-		if(nplocx<0||nplocx>=wrapx){
+		if(nplocx<0||nplocx>nxmax){
+		    missing++;
 		    continue;
-		}else{
-		    nplocx1=nplocx+1;
 		}
-
-#if ONLY_FULL == 1 //only proceed if all four points exist.
-		iphi1=map[nplocy][nplocx];
-		iphi2=map[nplocy][nplocx1];
-		iphi3=map[nplocy1][nplocx];
-		iphi4=map[nplocy1][nplocx1];
-		if(iphi1 && iphi2 && iphi3 && iphi4){
-		    phiout[iloc]+=alpha*(phiin0[iphi1]*(1.-dplocx)*(1.-dplocy));
-		    phiout[iloc]+=alpha*(phiin0[iphi2]*(dplocx)*(1.-dplocy));
-		    phiout[iloc]+=alpha*(phiin0[iphi3]*(1.-dplocx)*(dplocy));
-		    phiout[iloc]+=alpha*(phiin0[iphi4]*(dplocx)*(dplocy));
-		}
-#else	
-		if((iphi=map[nplocy][nplocx]))
-		    phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(1.-dplocy));
-		if((iphi=map[nplocy][nplocx1]))
-		    phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(1.-dplocy));
-		if((iphi=map[nplocy1][nplocx]))
-		    phiout[iloc]+=alpha*(phiin0[iphi]*(1.-dplocx)*(dplocy));
-		if((iphi=map[nplocy1][nplocx1]))
-		    phiout[iloc]+=alpha*(phiin0[iphi]*(dplocx)*(dplocy));
-#endif
+		nplocx1=nplocx+1;
+		LINEAR_ADD_NONGRID;
 	    }    
 	}
     }
+    WARN_MISSING;
 }
-#define MAKE_CUBIC_PARAM					\
-    double fx[4],fy[4];						\
-    const double cubicn=1./(1.+2.*cubic_iac);			\
-    const double c0=1.*cubicn;					\
-    const double c1=(4.*cubic_iac-2.5)*cubicn;			\
-    const double c2=(1.5-3.*cubic_iac)*cubicn;			\
-    const double c3=(2.*cubic_iac-0.5)*cubicn;			\
-    const double c4=(0.5-cubic_iac)*cubicn /**<For cubic interpolation.*/
+
+
+/**
+   Propagate OPD defines on grid mapin to coordinate locout with cubic influence
+   functions.  alpha is the scaling of data. displacex, displacy is the
+   displacement of the center of the beam on the input grid.  scale is the cone
+   effect. The input grid must cover the output loc completely (we aim for best
+   efficiency).*/
+void prop_grid_cubic(ARGIN_GRID,
+		     ARGOUT_LOC,
+		     ARG_PROP,
+		     double cubic_iac,   /**<[in] inter-actuator-coupling for cubic*/
+		     long start,         /**<[in] First point to do*/
+		     long end            /**<[in] Last point to do*/
+		     ){
+    PREPIN_GRID(3);
+    PREPOUT_LOC;
+    RUNTIME_CUBIC;
+
+    for(long iloc=start; iloc<end; iloc++){
+	dplocx=myfma(px[iloc],dx_in2,displacex);
+	dplocy=myfma(py[iloc],dx_in2,displacey);
+	SPLIT(dplocx,dplocx,nplocx);
+	SPLIT(dplocy,dplocy,nplocy);
+	if(nplocx<1||nplocx>nxmax||nplocy<1||nplocy>nymax){
+	    missing++;
+	    continue;
+	}
+	dplocy0=1.-dplocy;
+	dplocx0=1.-dplocx;
+	CUBIC_ADD_GRID;
+    }
+    WARN_MISSING;
+}
+/**
+   Propagate OPD defines on grid mapin to coordinate locout with cubic influence
+   functions.  alpha is the scaling of data. displacex, displacy is the
+   displacement of the center of the beam on the input grid.  scale is the cone
+   effect. The input grid must cover the output loc completely (we aim for best
+   efficiency).*/
+void prop_grid_pts_cubic(ARGIN_GRID,
+			 ARGOUT_PTS,
+			 ARG_PROP,
+			 double cubic_iac,   /**<[in] inter-actuator-coupling for cubic*/
+			 long start,         /**<[in] First point to do*/
+			 long end            /**<[in] Last point to do*/
+			 ){
+    PREPIN_GRID(3);
+    PREPOUT_PTS;
+    RUNTIME_CUBIC;
+    for(int isa=start; isa<end; isa++){
+	const long iloc0=isa*pts->nx*pts->nx;
+	const double ox=pts->origx[isa];
+	const double oy=pts->origy[isa];
+	for(int iy=0; iy<pts->nx; iy++){
+	    long iloc=iloc0+iy*pts->nx-1;
+	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocy<1||nplocy>nymax){
+		continue;
+	    }
+	    dplocy0=1.-dplocy;
+	    for(int ix=0; ix<pts->nx; ix++){
+		iloc++;
+		if(ampout && fabs(ampout[iloc])<EPS)
+		    continue;//skip points that has zero amplitude
+		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		SPLIT(dplocx,dplocx,nplocx);
+		if(nplocx<1||nplocx>nxmax){
+		    continue;
+		}
+		dplocx0=1.-dplocx;
+		CUBIC_ADD_GRID;
+	    }
+	}
+    }
+    WARN_MISSING;
+}
+/**
+   like prop_grid_map() but with cubic influence functions. cubic_iac is the
+inter-actuator-coupling. */
+void prop_grid_map_cubic(ARGIN_GRID,
+			 ARGOUT_MAP,
+			 ARG_PROP,
+			 double cubic_iac,
+			 long start, long end){
+    PREPIN_GRID(3);
+    PREPOUT_MAP;
+    RUNTIME_CUBIC;
+    for(int iy=start; iy<end; iy++){
+	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+	SPLIT(dplocy,dplocy,nplocy);
+	if(nplocy<1||nplocy>=nymax){
+	    continue;
+	}
+	dplocy0=1.-dplocy;
+	for(int ix=0; ix<nxout; ix++){
+	    int iloc=ix+iy*nxout;
+	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+	    SPLIT(dplocx,dplocx,nplocx);
+	    if(nplocx<1||nplocx>nxmax){
+		continue;
+	    }
+	    dplocx0=1.-dplocx;
+	    CUBIC_ADD_GRID;
+	}
+    }
+    WARN_MISSING;
+}
 /**
    like prop_nongrid() but with cubic influence functions. cubic_iac is the
-   inter-actuator coupling.*/
-void prop_nongrid_cubic(loc_t *locin, const double* phiin, 
-			const loc_t *locout, const double *ampout,
-			double* phiout, double alpha,
-			double displacex, double displacey,
-			double scale, 
+   inter-actuator coupling. Consider embed the input into a map_t and call
+   prop_grid_cubic instead. That one is must faster.*/
+void prop_nongrid_cubic(ARGIN_NONGRID,
+			ARGOUT_LOC,
+			ARG_PROP,
 			double cubic_iac,
 			long start, long end){
-    loc_create_map_npad(locin,2);//padding to avoid test boundary
-    double dplocx, dplocy;
-    int nplocx, nplocy;
-    int ix,iy;
-    long iloc;
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
-    const double *px=locout->locx;
-    const double *py=locout->locy;
+    PREPIN_NONGRID(2,3);
+    PREPOUT_LOC;
+    RUNTIME_CUBIC;
 
-    //-1 because we count from 1 in the map.
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->nx])(locin->map->p);
-    const double *phiin0=phiin-1;
-    //cubic
-    MAKE_CUBIC_PARAM;
-    double dplocx0, dplocy0;
-    const int nmapx3=locin->map->nx-3;
-    const int nmapy3=locin->map->ny-3;
-    if(!end) end=locout->nloc;
-    for(iloc=start; iloc<end; iloc++){
+    for(long iloc=start; iloc<end; iloc++){
 	if(ampout && fabs(ampout[iloc])<EPS)
 	    continue;//skip points that has zero amplitude
 	dplocy=myfma(py[iloc],dx_in2,displacey);
@@ -912,61 +710,27 @@ void prop_nongrid_cubic(loc_t *locin, const double* phiin,
 
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1 || nplocy>nmapy3 || nplocx<1 || nplocx>nmapx3){
+	if(nplocy<1 || nplocy>nymax || nplocx<1 || nplocx>nxmax){
+	    missing++;
 	    continue;
 	}
 	dplocy0=1.-dplocy;
 	dplocx0=1.-dplocx;
-	    
-	fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);
-	fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);
-	fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);
-	fx[3]=dplocx*dplocx*(c3+c4*dplocx);
-	    
-	fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);
-	fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);
-	fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);
-	fy[3]=dplocy*dplocy*(c3+c4*dplocy);
-
-	for(iy=nplocy-1; iy<nplocy+3; iy++){
-	    for(ix=nplocx-1; ix<nplocx+3; ix++){
-		long iphi=map[iy][ix];
-		if(iphi){
-		    phiout[iloc]+=alpha*fx[ix-nplocx+1]
-			*fy[iy-nplocy+1]*phiin0[iphi];
-		}
-	    }
-	}
+	CUBIC_ADD_NONGRID;
     }
+    WARN_MISSING;
 }
 /**
    like prop_nongrid_pts() but with cubic influence functions. cubic_iac is the
 inter-actuator-coupling.  */
-void prop_nongrid_pts_cubic(loc_t *locin, const double* phiin, 
-			    const pts_t *pts, const double *ampout, 
-			    double* phiout, double alpha,
-			    double displacex, double displacey,
-			    double scale,double cubic_iac, 
+void prop_nongrid_pts_cubic(ARGIN_NONGRID,
+			    ARGOUT_PTS,
+			    ARG_PROP,
+			    double cubic_iac, 
 			    long start, long end){
-    loc_create_map_npad(locin,2);//padding to avoid test boundary
-    double dplocx, dplocy;
-    int nplocx, nplocy;
-
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
-    //-1 because we count from 1 in the map.
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->nx])(locin->map->p);
-    const double *phiin0=phiin-1;
-    //cubic
-    MAKE_CUBIC_PARAM;
-    double dplocx0, dplocy0;
-    const int nmapx3=locin->map->nx-3;
-    const int nmapy3=locin->map->ny-3;
-    const double dxout=pts->dx;
-    if(!end) end=pts->nsa;
+    PREPIN_NONGRID(2,3);
+    PREPOUT_PTS;
+    RUNTIME_CUBIC;
     for(int isa=start; isa<end; isa++){
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
@@ -975,114 +739,56 @@ void prop_nongrid_pts_cubic(loc_t *locin, const double* phiin,
 	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy<1||nplocy>=nmapy3){
+	    if(nplocy<1||nplocy>nymax){
 		continue;
 	    }
+	    dplocy0=1.-dplocy;
 	    for(int ix=0; ix<pts->nx; ix++){
 		iloc++;
 		if(ampout && fabs(ampout[iloc])<EPS)
 		    continue;//skip points that has zero amplitude
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		SPLIT(dplocx,dplocx,nplocx);
-		if(nplocx<1||nplocx>=nmapx3){
+		if(nplocx<1||nplocx>nxmax){
 		    continue;
 		}
-		
-		dplocy0=1.-dplocy;
 		dplocx0=1.-dplocx;
-	    
-		fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);
-		fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);
-		fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);
-		fx[3]=dplocx*dplocx*(c3+c4*dplocx);
-	    
-		fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);
-		fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);
-		fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);
-		fy[3]=dplocy*dplocy*(c3+c4*dplocy);
-	
-		for(int jy=nplocy-1; jy<nplocy+3; jy++){
-		    for(int jx=nplocx-1; jx<nplocx+3; jx++){
-			long iphi=map[jy][jx];
-			if(iphi){
-			    phiout[iloc]+=alpha*fx[jx-nplocx+1]
-				*fy[jy-nplocy+1]*phiin0[iphi];
-			}
-		    }
-		}
+		CUBIC_ADD_NONGRID;
 	    }
 	}
     }
+    WARN_MISSING;
 }
 /**
    like prop_nongrid_map() but with cubic influence functions. cubic_iac is the
 inter-actuator-coupling. */
-void prop_nongrid_map_cubic(loc_t *locin, const double* phiin, 
-			    map_t* mapout, double alpha,
-			    double displacex, double displacey,
-			    double scale,double cubic_iac,
+void prop_nongrid_map_cubic(ARGIN_NONGRID,
+			    ARGOUT_MAP,
+			    ARG_PROP,
+			    double cubic_iac,
 			    long start, long end){
-    loc_create_map_npad(locin,2);//padding to avoid test boundary
-    double dplocx, dplocy;
-    int nplocx, nplocy;
-    long iloc;
-    const double dx_in1 = 1./locin->dx;
-    const double dx_in2 = scale*dx_in1;
-    displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
-
-    const double dxout=mapout->dx;
-    const double ox=mapout->ox;
-    const double oy=mapout->oy;
-    double *phiout=mapout->p;
-    //cubic
-    MAKE_CUBIC_PARAM;
-    double dplocx0, dplocy0;
-    const int nmapx3=locin->map->nx-3;
-    const int nmapy3=locin->map->ny-3;
-    const int nxout=mapout->nx;
-    //-1 because we count from 1 in the map.
-    long (*map)[locin->map->nx]
-	=(long(*)[locin->map->nx])(locin->map->p);
-    const double *phiin0=phiin-1;
-    if(!end) end=mapout->ny;
+    PREPIN_NONGRID(2,3);
+    PREPOUT_MAP;
+    RUNTIME_CUBIC;
     for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1||nplocy>=nmapy3){
+	if(nplocy<1||nplocy>=nymax){
 	    continue;
 	}
+	dplocy0=1.-dplocy;
 	for(int ix=0; ix<nxout; ix++){
-	    iloc=ix+iy*nxout;
+	    int iloc=ix+iy*nxout;
 	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 	    SPLIT(dplocx,dplocx,nplocx);
-	    if(nplocx<1||nplocx>=nmapx3){
+	    if(nplocx<1||nplocx>nxmax){
 		continue;
 	    }
-	    dplocy0=1.-dplocy;
 	    dplocx0=1.-dplocx;
-	    
-	    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);
-	    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);
-	    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);
-	    fx[3]=dplocx*dplocx*(c3+c4*dplocx);
-	    
-	    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);
-	    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);
-	    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);
-	    fy[3]=dplocy*dplocy*(c3+c4*dplocy);
-
-	    for(int jy=nplocy-1; jy<nplocy+3; jy++){
-		for(int jx=nplocx-1; jx<nplocx+3; jx++){
-		    long iphi=map[jy][jx];
-		    if(iphi){
-			phiout[iloc]+=alpha*fx[jx-nplocx+1]
-			    *fy[jy-nplocy+1]*phiin0[iphi];
-		    }
-		}
-	    }
+	    CUBIC_ADD_NONGRID;
 	}
     }
+    WARN_MISSING;
 }
 
 /**
@@ -1102,11 +808,8 @@ void prop_nongrid_bin(const loc_t *locin,
 		      const double* phiin,
 		      loc_t *locout, 
 		      const double *ampout,
-		      double* phiout, 
-		      double alpha, 
-		      double displacex,
-		      double displacey,
-		      double scale){
+		      double* phiout,
+		      ARG_PROP){
     if(locout->dx<locin->dx) {
 	error("This routine is designed for down sampling.\n");
     }
@@ -1114,11 +817,10 @@ void prop_nongrid_bin(const loc_t *locin,
     loc_create_map_npad(locout,1);//will only do once and save in locout.
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
-    long iloc;
     const int wrapx1 = locout->map->nx;
     const int wrapy1 = locout->map->ny;
-    const int wrapx = wrapx1-1;
-    const int wrapy = wrapy1-1;
+    const int nxmax = wrapx1-1;
+    const int nymax = wrapy1-1;
     const double dx_out1 = 1./locout->dx;
     //notice inverse of scale.
     const double dx_out2 = (1./scale)*dx_out1;
@@ -1138,13 +840,13 @@ void prop_nongrid_bin(const loc_t *locin,
 	=(long(*)[locout->map->nx])(locout->map->p);
     //-1 because we count from 1 in the map.
     double *phiout0=phiout-1;
-    for(iloc=0; iloc<locin->nloc; iloc++){
+    for(long iloc=0; iloc<locin->nloc; iloc++){
 	dplocy=myfma(py[iloc],dx_out2,displacey);
 	dplocx=myfma(px[iloc],dx_out2,displacex);
 
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocx<0||nplocx>=wrapx||nplocy<0||nplocy>=wrapy){
+	if(nplocx<0||nplocx>nxmax||nplocy<0||nplocy>nymax){
 	    continue;
 	}else{
 	    nplocx1=nplocx+1;

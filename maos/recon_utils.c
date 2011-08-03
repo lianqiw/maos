@@ -420,7 +420,7 @@ void FitR(dcell **xout, const void *A,
 		double displace[2];
 		displace[0]=parms->fit.thetax[ifit]*ht-simu->atm[ips]->vx*isim*simu->dt;
 		displace[1]=parms->fit.thetay[ifit]*ht-simu->atm[ips]->vy*isim*simu->dt;
-		prop_grid(simu->atm[ips], recon->ploc, xp->p[ifit]->p, 
+		prop_grid(simu->atm[ips], recon->ploc, NULL, xp->p[ifit]->p, 
 			  alpha, displace[0], displace[1], scale, 1, 0, 0);
 	    }
 	}
@@ -665,13 +665,15 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
     if(dmerr_lo){/*In AHST, dmerr_lo is CL Estimation.*/
 	addlow2dm(&dmadd, simu, dmerr_lo, 1);
     }
-    if(opdr && parms->dbg.useopdr){//The original formulation using Hx*x-Ha*a.
-	/* Changed from ploc to plocs on July 18, 2011. Plos is too low sampled. Make
-	   sure the sampling of plocs is not too big. */
+    if(opdr && parms->dbg.useopdr){
+	/* The original formulation using Hx*x-Ha*a.  Changed from ploc to plocs
+	   on July 18, 2011. Plos is too low sampled. Make sure the sampling of
+	   plocs is not too big.  Deprecated. Use dm space instead.
+	*/
 	loc_t *locs=simu->aper->locs;
 	dmat *xx = dnew(locs->nloc, 1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    double hs = parms->evl.ht[ievl];
+	    double hs = parms->evl.hs[ievl];
 	    if(parms->evl.psfr[ievl]){
 		dzero(xx);
 		if(opdr){

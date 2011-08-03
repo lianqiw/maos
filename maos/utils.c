@@ -554,8 +554,8 @@ typedef struct PSFCOMP_T{
     ccell *psf2s;//output psf.
     const dmat *iopdevl;
     const double *amp;
-    int **embeds;
-    const int *nembeds;
+    long **embeds;
+    const long *nembeds;
     const int *psfsize;
     const int nwvl;
     const double *wvl;
@@ -564,7 +564,7 @@ typedef struct PSFCOMP_T{
    Call psfcomp_iwvl in parallel to compute PSF in each wvl.
 */
 ccell *psfcomp(const dmat *iopdevl, const double *amp,
-	       int **embeds, const int *nembeds, const int *psfsize,
+	       long **embeds, const long *nembeds, const int *psfsize,
 	       const int nwvl, const double *wvl){
     ccell *psf2s=ccellnew(nwvl, 1);
     PSFCOMP_T data={psf2s, iopdevl, amp, embeds, nembeds, psfsize, nwvl, wvl};
@@ -588,8 +588,8 @@ void psfcomp_iwvl(thread_t *thdata){
     ccell *psf2s=data->psf2s;
     const dmat *iopdevl=data->iopdevl;
     const double *amp=data->amp;
-    int **embeds=data->embeds;
-    const int *nembeds=data->nembeds;
+    long **embeds=data->embeds;
+    const long *nembeds=data->nembeds;
     const int *psfsize=data->psfsize;
     const double *wvl=data->wvl;
     
@@ -597,8 +597,8 @@ void psfcomp_iwvl(thread_t *thdata){
 	if(psfsize[iwvl]==1){
 	    psf2s->p[iwvl]=strehlcomp(iopdevl, amp, wvl[iwvl]);
 	}else{
-	    int nembed=nembeds[iwvl];
-	    int *embed=embeds[iwvl];
+	    long nembed=nembeds[iwvl];
+	    long *embed=embeds[iwvl];
 	    cmat *psf2=cnew(nembed,nembed);
 	    int use1d;
 	    int use1d_enable=0;
@@ -660,7 +660,7 @@ void embed_out(const double *out, double *in, long nin, long *embed){
     }
 }
 /**
-   Simple embed and accumulation. 
+   Simple embed and accumulation.  for complex output
  */
 void embedc_in(dcomplex *out, const double *in, long nin, long *embed){
     for(long i=0; i<nin; i++){
@@ -668,7 +668,7 @@ void embedc_in(dcomplex *out, const double *in, long nin, long *embed){
     }
 }
 /**
-   Simple embed and accumulation
+   Simple embed and accumulation. for real output.
  */
 void embedc_out(const dcomplex *out, double *in, long nin, long *embed){
     for(long i=0; i<nin; i++){

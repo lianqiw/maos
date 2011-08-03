@@ -299,6 +299,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(dbg.fitonly, sim.fitonly);
 	    RENAME(dbg.evlol, sim.evlol);
 	    RENAME(sim.fitonly, sim.idealfit);
+	    RENAME(evl.ht, evl.hs);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);

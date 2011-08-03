@@ -23,6 +23,9 @@
 #include "sim_utils.h"
 #include "setup_surf.h"
 #include "setup_powfs.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file maos/sim_utils.c
    Contains a few support functions for simulation.
@@ -281,10 +284,11 @@ void genscreen(SIM_T *simu){
 	    error("Mismatch\n");
     }else{
 	simu->atm=genscreen_do(simu);
-	if(simu->parms->save.atm){
-	    maparrwrite(simu->atm,atm->nps,"atm_%d.bin",simu->seed);
-	}
     }
+    if(simu->parms->save.atm){
+	maparrwrite(simu->atm,atm->nps,"atm_%d.bin",simu->seed);
+    }
+    
     if(parms->plot.atm && simu->atm){
 	for(int ips=0; ips<atm->nps; ips++){
 	    drawmap("atm", simu->atm[ips],opdzlim,
@@ -444,7 +448,7 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 	    double disx=-simu->atm[ips]->vx*isim*simu->dt;
 	    double disy=-simu->atm[ips]->vy*isim*simu->dt;
 	    int ipsr=parms->atm.ipsr[ips];
-	    prop_grid(simu->atm[ips],recon->xloc[ipsr],(*opdx)->p[ipsr]->p,
+	    prop_grid(simu->atm[ips],recon->xloc[ipsr],NULL,(*opdx)->p[ipsr]->p,
 		      1,disx,disy,1,1,0,0);
 	}
     }
@@ -598,6 +602,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     //we initialize dmreal, so that wfs_prop_dm can reference dmreal.
     simu->dmreal=dcellnew(parms->ndm,1);
     simu->dmcmd=dcellnew(parms->ndm,1);
+    simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
     for(int idm=0; idm<parms->ndm; idm++){
 	simu->dmcmd->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	if(simu->hyst){
@@ -605,7 +610,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}else{
 	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
 	}
+	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
     }
+#if USE_CUDA
+    gpu_dm2gpu(simu->dmrealsq, parms->ndm, parms->dm);
+#endif
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
     if(parms->sim.fuseint){
 	simu->dmint=calloc(parms->sim.napdm, sizeof(dcell*));
@@ -671,8 +680,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->evlpsfmean->header=strdup(header);
 	save->evlpsfmean=calloc(parms->evl.nevl, sizeof(cellarr*));
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!isinf(parms->evl.ht[ievl])){
-		snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+	    if(!isinf(parms->evl.hs[ievl])){
+		snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 	    }else{
 		strht[0]='\0';
 	    }
@@ -688,14 +697,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframe, "evlpsfol_%d.bin", seed);
 	}
     }
-    simu->opdevl=dcellnew(parms->evl.nevl,1);
     if(parms->evl.psfhist){
 	save->evlpsfhist=calloc(nevl, sizeof(cellarr*));
 	char strht[24];
 	for(int ievl=0; ievl<nevl; ievl++){
 	    if(!parms->evl.psf[ievl]) continue;
-	    if(!isinf(parms->evl.ht[ievl])){
-		snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+	    if(!isinf(parms->evl.hs[ievl])){
+		snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 	    }else{
 		strht[0]='\0';
 	    }
@@ -852,8 +860,12 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->cubic=0;//already accounted for in cachedm.
 		data->cubic_iac=0;//not needed
 	    }else{
-		data->locin=recon->alocm[idm];
-		data->phiin=simu->dmreal->p[idm]->p;
+		if(simu->dmrealsq){
+		    data->mapin=simu->dmrealsq[idm];
+		}else{
+		    data->locin=recon->alocm[idm];
+		    data->phiin=simu->dmreal->p[idm]->p;
+		}
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
 	    }
@@ -898,7 +910,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    const double ht=parms->atm.ht[ips];
 	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
 	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
-	    data->scale=1-ht/parms->evl.ht[ievl];
+	    data->scale=1-ht/parms->evl.hs[ievl];
 	    data->alpha=1;
 	    data->wrap=1;
 	    data->mapin=(void*)1;//need to update this in genscreen.
@@ -915,7 +927,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    const double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
 	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
-	    data->scale=1-ht/parms->evl.ht[ievl];
+	    data->scale=1-ht/parms->evl.hs[ievl];
 	    data->alpha=-1;
 	    data->wrap=0;
 	    if(simu->cachedm){
@@ -926,8 +938,12 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->ostat=aper->locs->stat;
 		tot=aper->locs->stat->ncol;
 	    }else{
-		data->locin=recon->alocm[idm];
-		data->phiin=simu->dmreal->p[idm]->p;
+		if(simu->dmrealsq){
+		    data->mapin=simu->dmrealsq[idm];
+		}else{
+		    data->locin=recon->alocm[idm];
+		    data->phiin=simu->dmreal->p[idm]->p;
+		}
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
 		data->locout=aper->locs;//propagate to locs if no cachedm.
@@ -942,7 +958,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
     thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
+#if USE_CUDA
+    thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
+#else
     thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, perfevl_ievl, simu);
+#endif
     if(parms->atm.frozenflow){
 	simu->dt=parms->sim.dt;
     }else{
@@ -1076,8 +1096,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		char strht[24];
 		for(int ievl=0; ievl<nevl; ievl++){
 		    if(!parms->evl.psf[ievl]) continue;
-		    if(!isinf(parms->evl.ht[ievl])){
-			snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		    if(!isinf(parms->evl.hs[ievl])){
+			snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 		    }else{
 			strht[0]='\0';
 		    }
@@ -1304,8 +1324,8 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->gradlastol);
     dcellfree(simu->opdr);
     dcellfree(simu->opdrmvst);
-    dcellfree(simu->opdevl);
     dcellfree(simu->dmreal);
+    maparrfree(simu->dmrealsq, parms->ndm);
     dcellfree(simu->dmproj);
     dcellfreearr(simu->dmpsol, parms->npowfs);
     dcellfree(simu->dmcmd);
@@ -1382,14 +1402,11 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->ztiltout, parms->nwfs);
 
     cellarr_close(save->dmerr_hi);
-    //cellarr_close(save->dmint_hi);
     cellarr_close(save->dmfit_hi);
-    //cellarr_close(save->dmint);
     cellarr_close(save->dmpttr);
     cellarr_close(save->dmreal);
     cellarr_close(save->dmproj);
     cellarr_close(save->Merr_lo);
-    //cellarr_close(save->Mint_lo);
     cellarr_close(save->opdr);
     cellarr_close(save->opdx);
     cellarr_close_n(save->evlopdcl, parms->evl.nevl);
@@ -1623,5 +1640,5 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 	locwrite(powfs[jpowfs].saloc,"%s/powfs%d_saloc",dirskysim,jpowfs);
     }
     dwrite(recon->ngsmod->MCC,"%s/MCC_za%g", dirskysim,zadeg);
-    dwrite(recon->ngsmod->MCC_OA,"%s/MCC_OA_za%g", dirskysim,zadeg);
+    dwrite(recon->ngsmod->MCCP->p[parms->evl.indoa],"%s/MCC_OA_za%g", dirskysim,zadeg);
 }

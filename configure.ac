@@ -153,7 +153,7 @@ AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_o
 AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
-
+AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="no"])
 if test "x$use_static" = "xyes" ;then
    LDEXE="-all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
@@ -437,9 +437,15 @@ fi
 if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
-#if test -d ${srcdir}/cuda ;then
-#AC_CONFIG_FILES([cuda/Makefile])
-#fi
+if test "$use_cuda" = "yes" ;then
+AC_CONFIG_FILES([cuda/Makefile])
+AM_CONDITIONAL(USE_CUDA, true)
+AC_DEFINE(USE_CUDA, [1], "Has Cuda")
+echo Enabling CUDA
+else
+AM_CONDITIONAL(USE_CUDA, false)
+AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
+fi
 AC_OUTPUT
 echo host_os=$host_os
 echo use_icc=$use_icc
@@ -458,3 +464,5 @@ echo LDOPTS=$LDOPTS
 echo LAPACK=$LAPACK
 echo LDCHOL=$LDCHOL
 echo LDFFT=$LDFFT
+echo DRAW_CFLAGS=$DRAW_CFLAGS
+echo DRAW_LIBS=$DRAW_LIBS

@@ -275,8 +275,8 @@ typedef struct EVL_CFG_T{
     double *thetax; /**<x Coordinate of evaluation directions*/
     double *thetay; /**<y Coordinate of evaluation directions*/
     double *wt;     /**<weight of each direction*/
-    double *wvl; /**<wavelength for PSF and strehl computation*/
-    double *ht;     /**<height of each science object*/
+    double *wvl;    /**<wavelength for PSF and strehl computation*/
+    double *hs;     /**<height of each science object*/
     double *misreg; /**<Misregistration wrt to nominal pupil.*/
     int ismisreg;   /**<Science evl is misregistered*/
     int nwvl;       /**<Number of wavelength*/
@@ -474,7 +474,6 @@ typedef struct PLOT_CFG_T{
 */
 typedef struct DBG_CFG_T{
     int psol;        /**<test add dm command offseted by 1 frame in the future to psol grad*/
-    int clemp_all;   /**<output NGS mode error evaluation for each direction*/
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
     int atm;         /**<test special atmosphere*/
     int keepshm;     /**<keep the atmospehre in the shared memory.*/

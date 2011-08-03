@@ -19,6 +19,9 @@
 #include "maos.h"
 #include "sim.h"
 #include "ahst.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file filter.c
    Collection of functions for servo filtering of DM commands and uplink pointing loop.
@@ -362,10 +365,22 @@ void filter(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
+    
+    /* Embed DM commands to a square array for fast ray tracing */
+    for(int idm=0; idm<parms->ndm; idm++){
+	long *embed=simu->recon->aembed[idm];
+	double *pout=simu->dmrealsq[idm]->p;
+	double *pin=simu->dmreal->p[idm]->p;
+	for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
+	    pout[embed[i]]=pin[i];
+	}
+    }
+#if USE_CUDA
+    gpu_dm2gpu(simu->dmrealsq, parms->ndm,NULL);
+#endif
     calc_cachedm(simu);
   
-    if(parms->plot.run){
-	//Moved from recon.c to here.
+    if(parms->plot.run){ //Moved from recon.c to here.
 	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
 	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
 		    "Actual DM Actuator Commands","x (m)", "y (m)",

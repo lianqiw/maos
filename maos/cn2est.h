@@ -39,8 +39,8 @@ typedef struct CN2PAIR_T{
 struct CN2EST_T{
     int ipowfs;      /**<Which powfs to use.*/
     int *wfscov;     /**<Whether this wfs participates in covariance computation.*/
-    int nembed;      /**<size of array to embed the LGS gradients into*/
-    int *embed;      /**<pointers to embed*/
+    long nembed;      /**<size of array to embed the LGS gradients into*/
+    long *embed;      /**<pointers to embed*/
     dcell *gxs;      /**<gradient x*/
     dcell *gys;      /**<gradient y*/
     dcell *cxs;      /**<curvature x*/

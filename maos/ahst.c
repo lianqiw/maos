@@ -51,7 +51,7 @@ static int ngsmod_nmod(int ndm){
    MCC=(M'*Ha'*W*Ha*M) where M is ngsmod on DM, Ha is propagator from DM to
    science. W is weighting in science.
 */
-static dmat* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, const double *wt){
+static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, const double *wt){
 
     NGSMOD_T *ngsmod=recon->ngsmod;
     double *x, *y;
@@ -64,11 +64,12 @@ static dmat* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, cons
     nloc=plocs->nloc;
     amp=aper->amp->p;
     
-    dmat *mcc=NULL;
+    dcell *mcc=NULL;
     if(parms->ndm==1){
 	//Single conjugate. low order WFS only controls Tip/tilt
-	mcc=dnew(2,2);
-	PDMAT(mcc,MCC);
+	mcc=dcellnew(1,1);
+	mcc->p[0]=dnew(2,2);
+	PDMAT(mcc->p[0],MCC);
 	PDMAT(aper->mcc,aMCC);
 	//not yet available in ngsmod
 	MCC[0][0]=aMCC[1][1];
@@ -76,16 +77,17 @@ static dmat* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, cons
 	MCC[1][0]=MCC[0][1]=aMCC[1][2];
     }else if(parms->ndm==2){
 	double *mod[5];
-	mcc=dnew(5,5);
-	PDMAT(mcc,MCC);
-	//not yet available in ngsmod
+	mcc=dcellnew(parms->evl.nevl, 1);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    mcc->p[ievl]=dnew(5,5);
+	    PDMAT(mcc->p[ievl],MCC);
+	    PDMAT(aper->mcc,aMCC);
+	    MCC[0][0]=aMCC[1][1];
+	    MCC[1][1]=aMCC[2][2];
+	    MCC[1][0]=MCC[0][1]=aMCC[1][2];
+	}
 	mod[0]=x;
 	mod[1]=y;
-	PDMAT(aper->mcc,aMCC);
-	MCC[0][0]=aMCC[1][1];
-	MCC[1][1]=aMCC[2][2];
-	MCC[1][0]=MCC[0][1]=aMCC[1][2];
-
 	mod[2]=malloc(nloc*sizeof(double));
 	mod[3]=malloc(nloc*sizeof(double));
 	mod[4]=malloc(nloc*sizeof(double));
@@ -97,6 +99,7 @@ static dmat* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, cons
 	const double scale1=1.-scale;
 
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    PDMAT(mcc->p[ievl],MCC);
 	    if(fabs(wt[ievl])<1.e-12) continue;
 	    double thetax=parms->evl.thetax[ievl];
 	    double thetay=parms->evl.thetay[ievl];
@@ -117,9 +120,10 @@ static dmat* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, cons
 		for(int imod=jmod; imod<5; imod++){
 		    if(imod<2&&jmod<2) continue;
 		    double tmp=dotdbl(mod[imod],mod[jmod],amp,nloc);
-		    MCC[imod][jmod]+=wt[ievl]*tmp;
-		    if(imod!=jmod)
+		    MCC[imod][jmod]=tmp;
+		    if(imod!=jmod){
 			MCC[jmod][imod]=MCC[imod][jmod];
+		    }
 		}
 	    }
 	}
@@ -550,11 +554,15 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	ngsmod->ht=0;
     }
     ngsmod->scale=pow(1.-ngsmod->ht/ngsmod->hs,-2);
-    ngsmod->MCC=ngsmod_mcc(parms,recon,aper, parms->evl.wt);
-    double *wt_delta=calloc(parms->evl.nevl, sizeof(double));
-    wt_delta[parms->evl.indoa]=1;
-    ngsmod->MCC_OA=ngsmod_mcc(parms,recon,aper, wt_delta);//on axis point.
-    free(wt_delta);
+    ngsmod->MCCP=ngsmod_mcc(parms,recon,aper, parms->evl.wt);
+    if(ngsmod->MCCP->nx==1){
+	ngsmod->MCC=dref(ngsmod->MCCP->p[0]);
+    }else{
+	ngsmod->MCC=NULL;
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    dadd(&ngsmod->MCC, 1, ngsmod->MCCP->p[ievl], parms->evl.wt[ievl]);
+	}
+    }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     PDMAT(ngsmod->MCC,MCC);
     ngsmod->IMCC_TT=dnew(2,2);

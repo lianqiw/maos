@@ -1,6 +1,9 @@
 ACLOCAL_AMFLAGS=-I m4 --install
-SUBDIRS=external/cholmod/ lib/ maos/ skyc/ tools/
-
+SUBDIRS=external/cholmod/ lib/
+if USE_CUDA
+SUBDIRS+=cuda
+endif
+SUBDIRS+= maos/ skyc/ tools/
 include $(top_srcdir)/aminclude.am
 
 EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs

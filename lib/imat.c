@@ -26,7 +26,7 @@ imat* inew(long nx, long ny){
     imat *A=calloc(1, sizeof(imat));
     A->nx=nx;
     A->ny=ny;
-    A->p=calloc(nx*ny, sizeof(int));
+    A->p=calloc(nx*ny, sizeof(long));
     return A;
 }
 

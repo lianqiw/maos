@@ -15,10 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include "maos.h"
 #include "sim.h"
 #include "sim_utils.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file wfsgrad.c
    contains functions that computes WFS gradients in geometric or physical optics mode.
@@ -29,7 +31,7 @@
 #else
 #define TIM(A)
 #endif
-
+#if USE_CUDA == 0
 static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
@@ -56,6 +58,7 @@ static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha)
 	}
     }
 }
+#endif
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
@@ -104,25 +107,37 @@ void wfsgrad_iwfs(thread_t *info){
     const int dtrat_output=((isim+1)%dtrat==0);
     const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
     const int do_geom=!do_phy || save_gradgeom;
-
+    const double *realamp=powfs[ipowfs].realamp[wfsind];
     dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
     dcell *ints=simu->ints[iwfs];
     dmat  *opd=dnew(npix,1);
+
+    if(simu->telws){//Wind shake
+	double tmp=simu->telws->p[isim];
+	double angle=simu->winddir?simu->winddir->p[0]:0;
+	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
+	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
+    }
 
     /* Add surface error*/
     if(simu->surfwfs && simu->surfwfs->p[iwfs]){
 	dadd(&opd,1, simu->surfwfs->p[iwfs],1);
     }
 
-    /* Add NCPA to WFS as needed. Todo: merge surfwfs with ncpa. be careful about
-       ncpa calibration. */
+    /* Add NCPA to WFS as needed. Todo: merge surfwfs with ncpa. be careful
+       about ncpa calibration. */
     if(powfs[ipowfs].ncpa){
-	//info2("Adding NCPA to wfs %d\n",iwfs);
 	dadd(&opd, 1, powfs[ipowfs].ncpa->p[wfsind], 1);
     }
-    double *realamp=powfs[ipowfs].realamp[wfsind];
 
+
+#if USE_CUDA
+    if(parms->sim.idealwfs||parms->sim.wfsalias){error("Please Implement.\n");}
+    //dmat *opd2=ddup(opd);
+    gpu_wfs_t gpuinfo={opd, iwfs, isim, parms, powfs, 1.f, CL?-1.f:0.f};
+    CALL(gpu_wfs, &gpuinfo, 1, 1);//Call the job with 1 thread.
+#else
     /* Now begin ray tracing. */
     if(parms->sim.idealwfs){
 	wfs_ideal_correction(simu, opd, iwfs, 1);
@@ -142,15 +157,10 @@ void wfsgrad_iwfs(thread_t *info){
 	    wfs_ideal_correction(simu, opd, iwfs,-1);
 	}
     }
-    if(simu->telws){//Wind shake
-	double tmp=simu->telws->p[isim];
-	double angle=simu->winddir?simu->winddir->p[0]:0;
-	double ptt[3]={0, tmp*cos(angle), tmp*sin(angle)};
-	loc_add_ptt(opd->p, ptt, powfs[ipowfs].loc);
-    }
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopdol[iwfs], opd);
     }
+ 
     if(CL){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    thread_t *wfs_prop=simu->wfs_prop_dm[iwfs+parms->nwfs*idm];
@@ -159,6 +169,16 @@ void wfsgrad_iwfs(thread_t *info){
 	    CALL_THREAD(wfs_prop, nthread, 0);
 	}//idm
     }
+    /*
+    double diff=ddiff(opd, opd2);
+    if(diff>1e-2){
+	dwrite(opd2, "opdg_wfs%d_isim%d", iwfs, isim);
+	dwrite(opd, "opd_wfs%d_isim%d", iwfs, isim);
+	error("isim=%d. iwfs=%d: Diff is too big.\n", isim, iwfs);
+    }
+    dfree(opd2);*/
+#endif
+
     if(imoao>-1){
 	dmat **dmwfs=simu->moao_wfs->p;
 	if(dmwfs[iwfs]){
@@ -288,7 +308,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
 		    const double displacex=-atm[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg[0];
 		    const double displacey=-atm[ips]->vy*isim*dt+thetay*hl+parms->powfs[ipowfs].llt->misreg[1];
-		    prop_grid_pts(atm[ips],powfs[ipowfs].llt->pts,
+		    prop_grid_pts(atm[ips],powfs[ipowfs].llt->pts,NULL,
 				  lltopd->p,1,displacex,displacey,
 				  scale, 1., 0, 0);
 		}

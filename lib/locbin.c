@@ -192,6 +192,9 @@ map_t* d2map(dmat *in){
 	map->oy=map->ny/2*map->dx;
 	map->h=map->vx=map->vy=0;
     }
+    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
+	warning("The map has no valid ox, oy and dx\n");
+    }
     if(isnan(map->h)) map->h=0;
     if(isnan(map->vx)) map->vx=0;
     if(isnan(map->vy)) map->vy=0;
@@ -205,7 +208,15 @@ map_t **dcell2map(int *nlayer, dcell *in){
     *nlayer=in->nx*in->ny;
     map_t **map=calloc(in->nx*in->ny, sizeof(map_t*));
     for(long i=0; i<in->nx*in->ny; i++){
+	int rem=0;
+	if(!in->p[i]->header){
+	    in->p[i]->header=in->header;
+	    rem=1;
+	}
 	map[i]=d2map(in->p[i]);
+	if(rem){
+	    in->p[i]->header=NULL;
+	}
     }
     return map;
 }

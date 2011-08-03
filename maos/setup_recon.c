@@ -114,38 +114,60 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     if(recon->aloc){
 	locarrfree(recon->aloc, ndm); recon->aloc=NULL;
     }
+    recon->amap=calloc(ndm, sizeof(map_t*));
+    recon->aembed=calloc(ndm, sizeof(long*));
     if(parms->load.aloc){
 	char *fn=parms->load.aloc;
 	warning("Loading aloc from %s\n",fn);
 	int naloc;
 	recon->aloc=locarrread(&naloc,"%s",fn);
 	if(naloc!=ndm) error("Invalid saved aloc");
-	recon->aloc_nx=calloc(ndm, sizeof(long));
-	recon->aloc_ny=calloc(ndm, sizeof(long));
+	long nx,ny;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    loc_nxny(&recon->aloc_nx[idm], &recon->aloc_ny[idm], recon->aloc[idm]);
+	    loc_nxny(&nx, &ny, recon->aloc[idm]);
+	    recon->amap[idm]=mapnew(nx,ny,recon->aloc[idm]->dx,(double*)1);
+	    recon->amap[idm]->p=NULL;
 	}
     }else{
 	recon->aloc=calloc(ndm, sizeof(loc_t*));
-	recon->aloc_nx=calloc(ndm, sizeof(long));
-	recon->aloc_ny=calloc(ndm, sizeof(long));
+	int nxmax=0, nymax=0;
 	for(int idm=0; idm<ndm; idm++){
 	    double ht=parms->dm[idm].ht;
 	    double dx=parms->dm[idm].dx;
 	    double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
 	    const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
-
+	    
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dx,offset,guard,0,0,parms->fit.square);
-	
+	    nxmax=MAX(nxmax, map->nx);
+	    nymax=MAX(nymax, map->ny);
 	    recon->aloc[idm]=map2loc(map);
-	    recon->aloc_nx[idm]=map->nx;
-	    recon->aloc_ny[idm]=map->ny;
+#if USE_CUDA==0 //don't care size of map.
+	    recon->amap[idm]=map;
+	    recon->aembed[idm]=map2embed(map);
+	    free(map->p); map->p=NULL; 
+#else
 	    mapfree(map);
+#endif
 	    if(parms->plot.setup){
 		plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
 	    }
 	}//idm
+#if USE_CUDA
+	for(int idm=0; idm<ndm; idm++){
+	    double ht=parms->dm[idm].ht;
+	    double dx=parms->dm[idm].dx;
+	    double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
+	    const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
+	    
+	    map_t *map=create_metapupil_wrap
+		(parms,ht,dx,offset,guard,MAX(nxmax,nymax),0,parms->fit.square);
+	    recon->amap[idm]=map;
+	    recon->aembed[idm]=map2embed(map);
+	    info("Dm %d: map is %ld x %ld\n", idm, map->nx, map->ny);
+	    free(map->p);map->p=NULL;
+	}
+#endif
         if(parms->save.setup){
 	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
 	}
@@ -1279,7 +1301,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!parms->evl.psfr[ievl]) continue;
 		dcell *hxt=dcellnew(recon->npsr, 1);
-		double hs=parms->evl.ht[ievl];
+		double hs=parms->evl.hs[ievl];
 		for(int ips=0; ips<recon->npsr; ips++){
 		    const double ht=recon->ht->p[ips];
 		    const double scale=1.-ht/hs;
@@ -1323,8 +1345,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 		if(!parms->evl.psfr[ievl]) continue;
 		tic;
 		char strht[24];
-		if(!isinf(parms->evl.ht[ievl])){
-		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		if(!isinf(parms->evl.hs[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 		}else{
 		    strht[0]='\0';
 		}
@@ -1334,7 +1356,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 		PDMAT(t1, pt1);
 		PDMAT(x1, px1);
 		int ind=0;
-		double hs=parms->evl.ht[ievl];
+		double hs=parms->evl.hs[ievl];
 		for(int ips=0; ips<recon->npsr; ips++){
 		    const double ht=recon->ht->p[ips];
 		    const double scale=1.-ht/hs;
@@ -2540,7 +2562,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	dcellfree(recon->ngsmod->Pngs);
 	dcellfree(recon->ngsmod->Modes);
 	dfree(recon->ngsmod->MCC);
-	dfree(recon->ngsmod->MCC_OA);
+	dcellfree(recon->ngsmod->MCCP);
 	dfree(recon->ngsmod->IMCC);
 	dfree(recon->ngsmod->IMCC_TT);
 	dcellfree(recon->ngsmod->Ptt);
@@ -2557,15 +2579,16 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	if(recon->alocm[idm]!=recon->aloc[idm])
 	    locfree(recon->alocm[idm]);
 	locfree(recon->alocm[idm]);
+	free(recon->aembed[idm]);
     }
+    maparrfree(recon->amap, parms->ndm);
+    free(recon->aembed);
     free(recon->alocm);
     free(recon->aloc);
     icellfree(recon->actstuck);
     icellfree(recon->actfloat);
     free(recon->xloc_nx); 
     free(recon->xloc_ny);
-    free(recon->aloc_nx);
-    free(recon->aloc_ny);
     dcellfree(recon->aimcc);//used in filter.c
     muv_free(&recon->RR);
     muv_free(&recon->RL);

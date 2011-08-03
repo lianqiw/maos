@@ -55,7 +55,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.thetay);
     free(parms->evl.wvl);
     free(parms->evl.wt);
-    free(parms->evl.ht);
+    free(parms->evl.hs);
     free(parms->evl.psf);
     free(parms->evl.psfr);
     free(parms->evl.psfgridsize);
@@ -559,7 +559,7 @@ static void readcfg_evl(PARMS_T *parms){
     readcfg_dblarr_n(&(parms->evl.thetax),parms->evl.nevl, "evl.thetax");
     readcfg_dblarr_n(&(parms->evl.thetay),parms->evl.nevl, "evl.thetay");
     readcfg_dblarr_n(&(parms->evl.wt),parms->evl.nevl, "evl.wt");
-    readcfg_dblarr_nmax(&(parms->evl.ht), parms->evl.nevl, "evl.ht");
+    readcfg_dblarr_nmax(&(parms->evl.hs), parms->evl.nevl, "evl.hs");
     readcfg_dblarr_n(&(parms->evl.misreg),2, "evl.misreg");
     if(fabs(parms->evl.misreg[0])>EPS || fabs(parms->evl.misreg[1])>EPS){
 	parms->evl.ismisreg=1;
@@ -767,7 +767,6 @@ static void readcfg_plot(PARMS_T *parms){
 static void readcfg_dbg(PARMS_T *parms){
   
     READ_INT(dbg.psol);
-    READ_INT(dbg.clemp_all);
     READ_INT(dbg.wamethod);
     READ_INT(dbg.atm);
     READ_INT(dbg.keepshm);
@@ -1351,7 +1350,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	//evl;
 
 	for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
-	    double dxscl=(1. - ht/parms->evl.ht[ievl])*parms->aper.dx;
+	    double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->aper.dx;
 	    parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
 	}
 	//info2("idm=%d, nscale=%d\n", idm, nscale);
@@ -1620,6 +1619,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    warning("cachedm disabled for SCAO\n");
 	}
     }
+#if USE_CUDA
+    parms->sim.cachedm=0; //Done in CUDA.
+#endif
     //Assign each turbulence layer to a corresponding reconstructon layer
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
     for(int ips=0; ips<parms->atm.nps; ips++){

@@ -73,7 +73,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     const int nsa=powfs[ipowfs].pts->nsa;
     if(powfs[ipowfs].intstat->mtche){
-	warning("powfs %d: matched filter already exists. free them\n",ipowfs);
+	warning("Matched filter already exists. free them\n");
 	dcellfree(powfs[ipowfs].intstat->mtchera);
 	dcellfree(powfs[ipowfs].intstat->mtche);
 	dcellfree(powfs[ipowfs].intstat->sanea);
@@ -287,15 +287,15 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}//isa 
 	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
 	if(i0summax<siglev*0.1 || i0summax>siglev){
-	    warning("powfs %d: i0 sum to maximum of %g, wfs %d has siglev of %g\n",
-		    ipowfs, i0summax, iwfs, siglev);
+	    warning("i0 sum to maximum of %g, wfs %d has siglev of %g\n",
+		    i0summax, iwfs, siglev);
 	}
 	if(mtchadp){
-	    info2("powfs %d: mtched filter contraint are disabled for %d subaps out of %d.\n",
-		  ipowfs, ncrdisable, nsa);
+	    info2("Mtched filter contraint are disabled for %d subaps out of %d.\n",
+		  ncrdisable, nsa);
 	}
     }//ii0
-    info2("powfs %d: matched filter sanea:\n",ipowfs);
+    info2("Matched filter sanea:\n");
     if(powfs[ipowfs].sprint){
 	if(parms->powfs[ipowfs].llt->n!=ni0){
 	    warning("nllt!=ni0\n");

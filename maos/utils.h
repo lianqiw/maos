@@ -37,7 +37,7 @@ void maos_signal_handler(int sig);
 ARG_T* parse_args(int argc, char **argv);
 cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl);
 ccell *psfcomp(const dmat *iopdevl, const double *restrict amp,
-	       int **embeds, const int *nembeds, const int *psfsize,
+	       long **embeds, const long *nembeds, const int *psfsize,
 	       const int nwvl, const double *wvl);
 void psfcomp_iwvl(thread_t *tdata);
 void embed_in(double *out, const double *in, long nin, long *embed);

@@ -24,7 +24,7 @@
 #include "dsp.h"
 
 
-int *loc_create_embed(int *nembed, const loc_t *loc);
+long *loc_create_embed(long *nembed, const loc_t *loc);
 void loc_create_map_npad(loc_t *loc, int npad);
 void loc_create_map(loc_t *loc);
 
@@ -92,6 +92,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
 map_t *mapnew(long nx, long ny, double dx, double *p);
+map_t *mapnew2(map_t *A);
 void mapcircle(map_t *map, double r, double val);
 void map_d_din(map_t *map, double *d, double *din);
 void locresize(loc_t *loc, long nloc);

@@ -62,20 +62,53 @@ typedef struct PROPDATA_T{
 
 void prop(thread_t *data);//A unified wrapper
 void prop_index(PROPDATA_T *propdata);//A unified wrapper
-void prop_grid_grid(const map_t *mapin, map_t *mapout,
-		    double alpha,
-		    double displacex, double displacey, 
-		    double scale, int wrap);
-void prop_grid_pts(const map_t *mapin, const pts_t *pts, 
-		   double *phiout0, double alpha,
-		   double displacex, double displacey, 
-		   double scale, int wrap, 
-		   long sastart, long saend);
-void prop_grid(const map_t *mapin, const loc_t *locout, 
-	       double *phiout, double alpha,
-	       double displacex, double displacey,
-	       double scale, int wrap,
-	       long start, long end);
+
+#define ARGIN_GRID						\
+    const map_t *mapin /**<[in] OPD defind on a square grid*/
+
+#define ARGIN_NONGRID							\
+    loc_t *locin,     /**<[in] Coordinate of iregular source grid*/	\
+	const double *phiin/**<[in] Input OPD defined in locin*/
+
+#define ARGOUT_LOC							\
+    const loc_t *locout, /**<[in] Coordinate of irregular output grid*/	\
+	const double *ampout,/**<[in] Amplitude defined on locout. skip point of amp is 0*/ \
+	double* phiout      /**<[in,out] Output OPD defined in locout*/
+#define ARGOUT_PTS							\
+    const pts_t *pts,   /**<[in] coordinate of destination grid*/	\
+	const double *ampout,/**<[in] Amplitude defined on locout. skip point of amp is 0*/ \
+	double *phiout     /**<[in,out] OPD defined on locout*/
+
+#define ARGOUT_MAP\
+    map_t *mapout    /**<[in,out] Output OPD defined in a square grid*/
+
+#define ARGOUT_STAT							\
+    const locstat_t *ostat,/*<[in] statics of columns in a loc_t*/	\
+	double *phiout /**<[in, out] Output OPD defined on ostat*/
+
+#define ARG_PROP					\
+    double alpha,     /**<[in] scaling of OPD*/				\
+	double displacex, /**<[in] displacement of the ray */		\
+	double displacey, /**<[in] displacement of the ray */		\
+	double scale     /**<[in] scaling of the beam diameter (cone)*/
+
+void prop_grid_map(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, int wrap);
+void prop_grid_pts(ARGIN_GRID, ARGOUT_PTS, ARG_PROP,int wrap, long sastart, long saend);
+void prop_grid(ARGIN_GRID, ARGOUT_LOC,ARG_PROP,int wrap, long start, long end);
+
+void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, long start, long end);
+void prop_nongrid_map(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP, long start, long end);
+void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP, long start, long end);
+/*
+  A few cubic propagations.
+ */
+void prop_grid_cubic(ARGIN_GRID, ARGOUT_LOC, ARG_PROP, double cubic_iac, long start, long end);
+void prop_grid_pts_cubic(ARGIN_GRID, ARGOUT_PTS, ARG_PROP,double cubic_iac, long start, long end);
+void prop_grid_map_cubic(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, double cubic_iac, long start, long end);
+void prop_nongrid_cubic(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, double cubic_iac, long start, long end);
+void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP,double cubic_iac, long start, long end);
+void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP, double cubic_iac, long start, long end);
+
 /**
    Propagate OPD defines on grid mapin to locstat_t that stores the starting
    point of each column.  alpha is the scaling of data. displacex, displacy is
@@ -94,36 +127,6 @@ void prop_grid_stat_transpose(map_t *mapin, const locstat_t *ostat,
 			      double displacex, double displacey,
 			      double scale, int wrap,
 			      long colstart, long colend);
-void prop_nongrid(loc_t *locin, const double* phiin, 
-		  const loc_t *locout,const double *amp,
-		  double* phiout, double alpha,
-		  double displacex, double displacey,
-		  double scale, long start, long end);
-void prop_nongrid_map(loc_t *locin, const double *phiin,
-		      map_t *mapout, double alpha,
-		      double displacex, double displacey,
-		      double scale, long start, long end);
-void prop_nongrid_pts(loc_t *locin, const double *phiin,
-		      const pts_t *pts,const double *ampout,
-		      double *phiout, double alpha,
-		      double displacex, double displacey,
-		      double scale, long start, long end);
-void prop_nongrid_cubic(loc_t *locin, const  double* phiin, 
-			const loc_t *locout, const double *amp,
-			double* phiout,  double alpha,
-			double displacex, double displacey,
-			double scale, double cubic_iac, long start, long end);
-void prop_nongrid_pts_cubic(loc_t *locin, const double* phiin, 
-			    const pts_t *pts, const double *ampout, 
-			    double* phiout, double alpha,
-			    double displacex, double displacey,
-			    double scale, double cubic_iac, 
-			    long start, long end);
-void prop_nongrid_map_cubic(loc_t *locin, const double* phiin, 
-			    map_t* mapout, double alpha,
-			    double displacex, double displacey,
-			    double scale, double cubic_iac, 
-			    long start, long end);
 /*
   the following routine is used to du down sampling by doing binning ray tracing.
   locout is coarse sampling, locint is fine sampling.
@@ -131,12 +134,8 @@ void prop_nongrid_map_cubic(loc_t *locin, const double* phiin,
 */
 void prop_nongrid_bin(const loc_t *locin,
 		      const double* phiin,
-		      loc_t *locout,       
+		      loc_t *locout, 
 		      const double *ampout,
-		      double* phiout,      
-		      double alpha,
-		      double displacex,
-		      double displacey,
-		      double scale);
-    
+		      double* phiout,
+		      ARG_PROP);
 #endif

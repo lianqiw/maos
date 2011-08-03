@@ -78,7 +78,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	for(int iotf=0; iotf<notf; iotf++){
 	    double *opdbias=has_ncpa?powfs[ipowfs].ncpa->p[iotf]->p:NULL;
 	    double thres=opdbias?1:1-1e-10;
-	    info2("There is %s bias for powfs %d\n", opdbias?"NCPA":"no", ipowfs);
+	    info2("There is %s bias\n", opdbias?"NCPA":"no");
 	    genotf(powfs[ipowfs].intstat->otf[iotf]->p+iwvl*nsa,
 		   loc, powfs[ipowfs].realamp[iotf], opdbias, 
 		   powfs[ipowfs].realsaa[iotf],
@@ -246,7 +246,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
 	ni0=parms->powfs[ipowfs].nwfs;
     }
-    info2("powfs %d: number of i0 for matched filter is %d\n",ipowfs,ni0);
+    info2("number of i0 for matched filter is %d\n",ni0);
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("Number of i0 must be either 1 or %d, but is %d\n",
 	      parms->powfs[ipowfs].nwfs,ni0);
@@ -349,7 +349,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    int iwfs=parms->powfs[ipowfs].wfs[ii0];
 	    double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
-	    info2("powfs %d: iwvl=%d, iwfs=%d, wvlsig=%g\n",ipowfs,iwvl,iwfs,wvlsig);
+	    info2("iwvl=%d, iwfs=%d, wvlsig=%g\n",iwvl,iwfs,wvlsig);
 	    dmat *(*psepsf)[nsa]=(void*)powfs[ipowfs].intstat->sepsf[isepsf]->p;
 	    double pgrad[2];
 	    cmat **nominals=NULL;

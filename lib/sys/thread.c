@@ -60,7 +60,7 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
     }
 }
 /**
-   return value of src and add step to it atomically.
+   return initial value of src and add step to it atomically.
 */
 int lockadd(int *src, int step){
     static pthread_mutex_t atomic_lock=PTHREAD_MUTEX_INITIALIZER;

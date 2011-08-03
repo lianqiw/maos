@@ -205,7 +205,7 @@ void setup_surf(SIM_T*simu){
 	    double displacey=parms->evl.thetay[ievl]*hl;
 	    
 	    if(do_rot){
-		prop_grid(simu->surf[isurf], locevl, simu->surfevl->p[ievl]->p, 
+		prop_grid(simu->surf[isurf], locevl, NULL, simu->surfevl->p[ievl]->p, 
 			  1, displacex, displacey, 1, 0, 0, 0);
 	    }else{
 		prop_grid_stat(simu->surf[isurf], simu->aper->locs->stat, 
@@ -236,7 +236,7 @@ void setup_surf(SIM_T*simu){
 	    }else{
 		locwfs=locwfsin;
 	    }
-	    prop_grid(simu->surf[isurf], locwfs, simu->surfwfs->p[iwfs]->p, 
+	    prop_grid(simu->surf[isurf], locwfs, NULL, simu->surfwfs->p[iwfs]->p, 
 		      1, displacex, displacey, scale, 1., 0, 0); 
 	    if(do_rot){
 		locfree(locwfs);

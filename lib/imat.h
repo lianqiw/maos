@@ -20,7 +20,7 @@
 typedef struct imat{
     long nx;
     long ny;
-    int *p;
+    long *p;
 }imat;
 
 typedef struct icell{

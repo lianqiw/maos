@@ -46,12 +46,11 @@
 #endif
 //static double opdzlim[2]={-2e-5,2e-5};
 static double *opdzlim=NULL;
-#define EVL_OL_OA 0 //only evaluate On axis point in OL OPD.
 static void perfevl_ideal_correction(SIM_T *simu, dmat *iopdevl, int ievl, double alpha){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     const APER_T *aper=simu->aper;
-    const double hs = parms->evl.ht[ievl];
+    const double hs = parms->evl.hs[ievl];
   
     for(int idm=0; idm<parms->ndm; idm++){
 	const double ht = parms->dm[idm].ht+parms->dm[idm].vmisreg;
@@ -136,21 +135,14 @@ void perfevl_ievl(thread_t *info){
 	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
 		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
     }
-#if EVL_OL_OA == 1
-    if(ievl==parms->evl.indoa){
-#endif
-	//We only do on axis point wavefront error evaluation for OL.
-	if(nmod==3){//evaluation piston/tip/tilt removed wve
-	    loc_calc_ptt(polep[isim],polmp[isim],
-			 aper->locs, aper->ipcc, aper->imcc, 
-			 aper->amp->p, iopdevl->p);
-	}else{//more general case
-	    loc_calc_mod(polep[isim],polmp[isim],
-			 aper->mod,aper->amp->p,iopdevl->p);
-	}
-#if EVL_OL_OA == 1
+    if(nmod==3){//evaluation piston/tip/tilt removed wve
+	loc_calc_ptt(polep[isim],polmp[isim],
+		     aper->locs, aper->ipcc, aper->imcc, 
+		     aper->amp->p, iopdevl->p);
+    }else{//more general case
+	loc_calc_mod(polep[isim],polmp[isim],
+		     aper->mod,aper->amp->p,iopdevl->p);
     }
-#endif
 
     //evaluate time averaged open loop PSF.
     if(parms->evl.psfmean &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
@@ -186,11 +178,10 @@ void perfevl_ievl(thread_t *info){
 	  evaluate tomography performance: Apply ideal correction using
 	  tomography output directly.
 	*/
-	
 	if(simu->opdr){
 	    for(int ipsr=0; ipsr<npsr; ipsr++){
 		double hl=parms->atmr.ht[ipsr];
-		double scale = 1. - hl/parms->evl.ht[ievl];
+		double scale = 1. - hl/parms->evl.hs[ievl];
 		double displacex=parms->evl.thetax[ievl]*hl+parms->evl.misreg[0];
 		double displacey=parms->evl.thetay[ievl]*hl+parms->evl.misreg[1];
 		prop_nongrid(recon->xloc[ipsr], 
@@ -240,10 +231,6 @@ void perfevl_ievl(thread_t *info){
 
     //Evaluate closed loop performance.
     if(parms->tomo.split){//for split tomography
-	if(ievl==parms->evl.indoa || parms->dbg.clemp_all){
-	    //copy the opd for later evaluation of clemp for onaxis only.
-	    dcp(&simu->opdevl->p[ievl], iopdevl);
-	}
 	if(parms->ndm<=2){
 	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
 	    //compute the dot product of wavefront with NGS mode for that direction
@@ -251,7 +238,7 @@ void perfevl_ievl(thread_t *info){
 		calc_ngsmod_dot(pclep[isim],pclmp[isim],
 				pcleNGSmp[isim],parms,recon,aper,
 				iopdevl->p,ievl);
-	    }else{
+	    }else{//since more modes are wanted. don't use ngsmod split.
 		calc_ngsmod_dot(NULL,NULL,
 				pcleNGSmp[isim],parms,recon,aper,
 				iopdevl->p,ievl);
@@ -334,15 +321,11 @@ static void perfevl_mean(SIM_T *simu){
     //Field average the OL error
     for(int imod=0; imod<nmod; imod++){
 	int ind=imod+nmod*isim;
-#if EVL_OL_OA == 1
-	simu->ole->p[ind]=simu->olep->p[parms->evl.indoa]->p[ind];
-#else
 	simu->ole->p[ind]=0;
 	for(int ievl=0; ievl<nevl; ievl++){
 	    double wt=parms->evl.wt[ievl];
 	    simu->ole->p[ind]+=wt*simu->olep->p[ievl]->p[ind];
 	}
-#endif
     }
     if(parms->sim.evlol)
 	return;
@@ -358,18 +341,15 @@ static void perfevl_mean(SIM_T *simu){
     }
   
     const RECON_T *recon=simu->recon;
-    if(parms->tomo.split && parms->ndm <=2){
+    if(parms->tomo.split){
 	if(parms->ndm<=2){
-	    /*
-	      convert cleNGSm into mode and put NGS mode WVE into clem.
-	    */
+	    /* convert cleNGSm into mode and put NGS mode WVE into clem. */
 	    int nngsmod=recon->ngsmod->nmod;
-	    {
-		if(simu->corrNGSm && simu->Mint_lo[0] && isim<parms->sim.end-1){
-		    double *pcorrNGSm=simu->corrNGSm->p+(isim+1)*nngsmod;
-		    for(int imod=0; imod<nngsmod; imod++){
-			pcorrNGSm[imod]=simu->Mint_lo[0]->p[0]->p[imod];
-		    }
+	    
+	    if(simu->corrNGSm && simu->Mint_lo[0] && isim<parms->sim.end-1){
+		double *pcorrNGSm=simu->corrNGSm->p+(isim+1)*nngsmod;
+		for(int imod=0; imod<nngsmod; imod++){
+		    pcorrNGSm[imod]=simu->Mint_lo[0]->p[0]->p[imod];
 		}
 	    }
 	    double *pcleNGSm=simu->cleNGSm->p+isim*nngsmod;
@@ -394,10 +374,8 @@ static void perfevl_mean(SIM_T *simu){
 	    dcell *Mngs=dcellnew(1,1);
 	    Mngs->p[0]=dnew_ref(nngsmod,1,pcleNGSm);//ref the data
 	    if(simu->parms->tomo.ahst_idealngs){
-		/*
-		  apply ideal ngs modes immediately to dmreal.
-		  Don't forget to updated DM Cache.
-		*/
+		/* apply ideal ngs modes immediately to dmreal.  Don't forget to
+		  updated DM Cache. */
 		ngsmod2dm(&simu->dmreal,simu->recon, Mngs, 1.);
 		calc_cachedm(simu);
 		tot-=ngs; ngs=0; tt=0;
@@ -408,19 +386,27 @@ static void perfevl_mean(SIM_T *simu){
 	    simu->status->clerrlo=sqrt(ngs)*1e9;
 	    simu->status->clerrhi=sqrt(tot-ngs)*1e9;
 
-	    const APER_T *aper=simu->aper;
-	    //compute on axis error spliting to tip/tilt and high order.
+	    /*compute error spliting to tip/tilt and high order for any
+	      direction.*/
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!parms->dbg.clemp_all && ievl!=parms->evl.indoa)
-		    continue;
-		ngsmod2science(simu->opdevl->p[ievl],parms,simu->recon,aper,Mngs,ievl,-1);
-		double pttr[3]={0,0,0};
-		loc_calc_ptt(pttr,NULL,aper->locs,aper->ipcc,aper->imcc,aper->amp->p,
-			     simu->opdevl->p[ievl]->p);
-		simu->clemp->p[ievl]->p[isim*3]=pttr[0];//LGS mode
+		/*New calculation. Notice that the calculations are for
+		  (phi-Hm*m)'*W*(phi-Hm*m) where m is cleNGSm, phi is opdevl
+		  and W is aperture weighting. The calculation is equivalent
+		  to phi'*W*phi-2*phi'*W*(Hm*m)+(Hm*m)'*W*(Hm*m).
+		  phi'*W*phi is the clep phi'*W*Hm is the same as
+		  pcleNGSmp'; (Hm*m)'*W*(Hm*m) = m'*(Hm'*W*Hm)*m. (Hm'*W*Hm)
+		  is simply MCCp.
+		*/
+		double *pcleNGSmp=simu->cleNGSmp->p[ievl]->p+isim*nngsmod;
+		double sum=0;
+		for(int imod=0; imod<nngsmod; imod++){
+		    sum+=pcleNGSmp[imod]*pcleNGSm[imod];
+		}
+		double sum2=dwdot(pcleNGSm, recon->ngsmod->MCCP->p[ievl], pcleNGSm);
+		double tot2=simu->clep->p[ievl]->p[isim*nmod]-2.*sum+sum2;
+		simu->clemp->p[ievl]->p[isim*3]=tot2;//LGS mode
 		simu->clemp->p[ievl]->p[isim*3+1]=tt;//TT mode
-		simu->clemp->p[ievl]->p[isim*3+2]=simu->clep->p[ievl]->p[nmod*isim]-pttr[0];//PR-LGS
-		dfree(simu->opdevl->p[ievl]);
+		simu->clemp->p[ievl]->p[isim*3+2]=simu->clep->p[ievl]->p[nmod*isim]-tot2;//PR-LGS
 	    }
 	    dcellfree(Mngs);//data is kept
 	}else{
@@ -476,8 +462,8 @@ static void perfevl_save(SIM_T *simu){
 	double scale=1./nstep;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(simu->save->evlopdcov->p[ievl]){
-		if(!isinf(parms->evl.ht[ievl])){
-		    snprintf(strht, 24, "_%g", parms->evl.ht[ievl]);
+		if(!isinf(parms->evl.hs[ievl])){
+		    snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 		}else{
 		    strht[0]='\0';
 		}
@@ -494,8 +480,9 @@ static void perfevl_save(SIM_T *simu){
 void perfevl(SIM_T *simu){
     double tk_start=myclockd();
     //Cache the ground layer.
-    int ips=simu->perfevl_iground;
     const PARMS_T *parms=simu->parms;
+#if USE_CUDA == 0
+    int ips=simu->perfevl_iground;
     if(ips!=-1 && simu->atm && !parms->sim.idealevl){
 	simu->opdevlground=dnew(simu->aper->locs->nloc,1);
 	const int ievl=0;//doesn't matter for ground layer.
@@ -507,8 +494,11 @@ void perfevl(SIM_T *simu){
 	simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
 	CALL_THREAD(simu->evl_prop_atm[ind], parms->evl.nthread, 0);
     }
+#endif
     CALL_THREAD(simu->perf_evl, parms->evl.nevl, 0);
+#if USE_CUDA == 0
     dfree(simu->opdevlground);simu->opdevlground=NULL;
+#endif
     perfevl_mean(simu);
     perfevl_save(simu);
     simu->tk_eval=myclockd()-tk_start;

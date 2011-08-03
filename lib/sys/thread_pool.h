@@ -25,4 +25,5 @@ void thread_pool_wait(long *count);
 void thread_pool_wait_all(void);
 void thread_pool_destroy(void);
 void thread_pool_do_urgent_job(void);
+int thread_pool_do_job_once(void);
 #endif
