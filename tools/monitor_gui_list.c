@@ -89,9 +89,6 @@ static void list_update_progress(PROC_T *p){
     double tot=(double)(p->status.rest+p->status.laps);
     if(fabs(tot)>1.e-10){
 	p->frac=(double)p->status.laps/tot;
-	if(!(p->frac<1 && p->frac>0)){
-	    info("frac=%g, laps=%ld, tot=%g\n", p->frac, p->status.laps, tot);
-	}
     }else{
 	p->frac=0;
     }

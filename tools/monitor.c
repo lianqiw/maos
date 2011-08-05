@@ -89,7 +89,17 @@ GdkColor color_odd;
    The number line pattern determines how dash is drawn for gtktreeview. the
    first number is the length of the line, and second number of the length
    of blank after the line.
-*/
+
+   properties belonging to certain widget that are descendent of GtkWidget, need
+to specify the classname before the key like GtkTreeView::allow-rules */
+static const gchar *rc_string_widget =
+    {
+	"style \"widget\" {               \n"
+	"xthickness   = 0                \n"
+	"ythickness   = 0                \n"
+     	"}\n"
+	"class \"GtkWidget\" style \"widget\" \n"
+    };
 static const gchar *rc_string_treeview = 
     {
 	"style \"solidTreeLines\"{                       \n" 
@@ -105,15 +115,28 @@ static const gchar *rc_string_treeview =
     };
 static const gchar *rc_string_progress = 
     {
-	"style \"progressbar\" {                       \n"
-	"fg[SELECTED] = \"red\"                            \n"
-	"bg[SELECTED] = \"yellow\"                         \n"
-	"base[SELECTED] = \"green\"                        \n"
-	"text[SELECTED] = \"purple\"                       \n"
-	"}\n                                           \n"
-	"class \"GtkCellRenderer\" style \"progressbar\" \n"
+	"style \"progressbar\" {                          \n"
+	"fg[SELECTED] = \"red\"                           \n"
+	"bg[SELECTED] = \"yellow\"                        \n"
+	"base[SELECTED] = \"green\"                       \n"
+	"text[SELECTED] = \"purple\"                      \n"
+	"}\n                                              \n"
+	"class \"GtkCellRenderer\" style \"progressbar\"  \n"
     };
 
+static const gchar *rc_string_entry =
+    {
+	"style \"entry\" {               \n"
+	"base[NORMAL] = \"white\"        \n"
+	"bg[SELECTED] = \"#0099FF\"         \n"
+	"xthickness   = 0                \n"
+	"ythickness   = 0                \n"
+	"GtkEntry::inner-border    = {1,1,1,1}     \n"
+	"GtkEntry::progress-border = {0,0,0,0}     \n"
+	"GtkEntry::has-frame       = 0 \n"
+	"}\n"
+	"class \"GtkEntry\" style \"entry\" \n"
+    };
 PROC_T **pproc;
 int *nproc;
 static int nhostup=0;
@@ -241,7 +264,8 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
 	    double last_mem=usage_mem[host];
 	    usage_cpu[host]=(double)((pid>>16) & 0xFFFF)/100.;
 	    usage_mem[host]=(double)(pid & 0xFFFF)/100.;
-
+	    usage_cpu[host]=MAX(MIN(1,usage_cpu[host]),0);
+	    usage_mem[host]=MAX(MIN(1,usage_mem[host]),0);
 	    if(GTK_WIDGET_VISIBLE(window)){
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[host]), usage_cpu[host]);
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[host]), usage_mem[host]);
@@ -723,25 +747,17 @@ static void clear_jobs_crashed(GtkWidget *btn){
 GtkWidget *monitor_new_entry_progress(void){
     GtkWidget *prog=gtk_entry_new();
     gtk_entry_set_editable(GTK_ENTRY(prog),FALSE);
-    gtk_entry_set_has_frame(GTK_ENTRY(prog),FALSE);
     gtk_entry_set_width_chars(GTK_ENTRY(prog),12);
-    static GtkBorder border={1,1,1,1};
-    gtk_entry_set_inner_border(GTK_ENTRY(prog),&border);
 #if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 18
     gtk_widget_set_can_focus(prog,FALSE);
 #else
     g_object_set(prog,"can-focus",FALSE,NULL);
 #endif
+    
     gtk_widget_modify_base(prog,GTK_STATE_NORMAL, &white);
     gtk_widget_modify_bg(prog,GTK_STATE_SELECTED, &blue);
 
-    GtkRcStyle *style=gtk_widget_get_modifier_style(prog);
-    if(!style){
-	style=gtk_rc_style_new();
-    }
-    style->xthickness=0;//use the names specified in gtkrc.
-    style->ythickness=0;
-    gtk_widget_modify_style(prog, style);
+  
     gtk_entry_set_alignment(GTK_ENTRY(prog),0.5);
     return prog;
 }
@@ -787,6 +803,7 @@ int main(int argc, char *argv[])
     */
     gtk_rc_parse_string(rc_string_treeview);
     gtk_rc_parse_string(rc_string_progress);
+    gtk_rc_parse_string(rc_string_entry);
     create_status_icon();
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window),"MAOS Monitor");
