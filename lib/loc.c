@@ -716,7 +716,7 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 	const double dx=pts->dx;
 	const double *ampi=amp+pts->nx*pts->nx*isa;
 	const double *opdi=opd+pts->nx*pts->nx*isa;
-	assert(imcc->p[isa]->nx==3 && imcc->p[isa]->nx==3);
+	assert(imcc->p[isa]->nx==3 && imcc->p[isa]->ny==3);
         double coeff[3]={0,0,0};
 	double a0=0,a1=0,a2=0;
 	for(int iy=0; iy<pts->nx; iy++){

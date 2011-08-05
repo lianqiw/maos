@@ -45,7 +45,6 @@
 #include "proj.h"
 #include "chol.h"
 #include "hashlittle.h"
-#include "common.h"
 #include "laplacian.h"
 #include "pcg.h"
 #include "muv.h"

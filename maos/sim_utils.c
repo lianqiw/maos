@@ -501,6 +501,9 @@ void seeding(SIM_T *simu){
 	seed_rand(&simu->wfs_rand[iwfs],lrand(simu->init));
     }
     seed_rand(simu->telws_rand, lrand(simu->init));
+#if USE_CUDA
+    gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
+#endif
 }
 /**
    Initialize simu (of type SIM_T) and various simulation data structs. Called
@@ -956,11 +959,12 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
     simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
-    thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
 #if USE_CUDA
+    thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, gpu_wfsgrad, simu);
     thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
 #else
+    thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
     thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, perfevl_ievl, simu);
 #endif
     if(parms->atm.frozenflow){

@@ -41,7 +41,6 @@ int curiseed=0;
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
 void maos(const PARMS_T *parms){    
-
     APER_T  * aper;
     POWFS_T * powfs;
     RECON_T * recon;
@@ -53,10 +52,8 @@ void maos(const PARMS_T *parms){
     recon = setup_recon(parms, powfs, aper);
     info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
 #if USE_CUDA
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	gpu_saloc2gpu(parms->npowfs, ipowfs, parms->powfs[ipowfs].nwfs, powfs[ipowfs].loc);
-    }
-    gpu_plocs2gpu(aper->locs, aper->amp);
+    gpu_wfsgrad_init(parms, powfs);
+    gpu_perfevl_init(parms, aper);
 #endif
     /*
       Before entering real simulation, make sure to delete all variables that

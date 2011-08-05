@@ -99,6 +99,7 @@ void zfreadlarr(file_t* fp,int count, ...);
 void do_write(const void *fpn, const int isfile, const size_t size, const uint32_t magic, 
 	      const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
+void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writecmp(const dcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeint(const int *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
 void writelong(const long *p, long nx, long ny, const char*format,...) CHECK_ARG(4);

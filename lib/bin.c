@@ -565,6 +565,13 @@ void writedbl(const double *p, long nx, long ny, const char*format,...){
     do_write(fn, 1, sizeof(double), M_DBL, p, nx, ny);
 }
 /**
+   Write a double array of size nx*ny to file.
+*/
+void writeflt(const float *p, long nx, long ny, const char*format,...){
+    format2fn;
+    do_write(fn, 1, sizeof(float), M_FLT, p, nx, ny);
+}
+/**
    Write a double complex array of size nx*ny to file.
 */
 void writecmp(const dcomplex *p, long nx,long ny, const char*format,...){

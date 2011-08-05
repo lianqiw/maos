@@ -123,8 +123,8 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
 
 #else
 #define LOCKADD(dest,src,step) (dest=lockadd(&src,step),dest)
-int lockadd(int *src, int step);
 #endif
+int lockadd(int *src, int step);
 
 #define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)
 #define SPIN_UNLOCK(i) __sync_lock_release(&i)

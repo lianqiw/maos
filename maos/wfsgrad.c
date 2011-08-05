@@ -31,7 +31,7 @@
 #else
 #define TIM(A)
 #endif
-#if USE_CUDA == 0
+
 static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
@@ -58,7 +58,7 @@ static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha)
 	}
     }
 }
-#endif
+
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
@@ -131,13 +131,6 @@ void wfsgrad_iwfs(thread_t *info){
 	dadd(&opd, 1, powfs[ipowfs].ncpa->p[wfsind], 1);
     }
 
-
-#if USE_CUDA
-    if(parms->sim.idealwfs||parms->sim.wfsalias){error("Please Implement.\n");}
-    //dmat *opd2=ddup(opd);
-    gpu_wfs_t gpuinfo={opd, iwfs, isim, parms, powfs, 1.f, CL?-1.f:0.f};
-    CALL(gpu_wfs, &gpuinfo, 1, 1);//Call the job with 1 thread.
-#else
     /* Now begin ray tracing. */
     if(parms->sim.idealwfs){
 	wfs_ideal_correction(simu, opd, iwfs, 1);
@@ -169,16 +162,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    CALL_THREAD(wfs_prop, nthread, 0);
 	}//idm
     }
-    /*
-    double diff=ddiff(opd, opd2);
-    if(diff>1e-2){
-	dwrite(opd2, "opdg_wfs%d_isim%d", iwfs, isim);
-	dwrite(opd, "opd_wfs%d_isim%d", iwfs, isim);
-	error("isim=%d. iwfs=%d: Diff is too big.\n", isim, iwfs);
-    }
-    dfree(opd2);*/
-#endif
-
+ 
     if(imoao>-1){
 	dmat **dmwfs=simu->moao_wfs->p;
 	if(dmwfs[iwfs]){
@@ -255,8 +239,8 @@ void wfsgrad_iwfs(thread_t *info){
 	ccellfree(psf2s);
     }
 
-    /* Now begin Physical Optics Intensity calculations */
     if(do_geom){
+	/* Now Geometric Optics gradient calculations */
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    //compute ztilt.
 	    pts_ztilt(gradacc,powfs[ipowfs].pts,
@@ -285,6 +269,7 @@ void wfsgrad_iwfs(thread_t *info){
 	pistatout=simu->pistatout[iwfs];
     }
     TIM(1);
+    /* Now begin Physical Optics Intensity calculations */
     if(do_phy || psfout || pistatout){
 	dmat *lltopd=NULL;
 	if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){

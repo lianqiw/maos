@@ -19,7 +19,7 @@ else
 ___bin_maos_LDADD=../lib/libaos_int.la $(LDOPTS)
 endif
 if USE_CUDA
-___bin_maos_LDADD+=../cuda/libgpu.a -L/opt/cuda/lib64/ -lcudart
+___bin_maos_LDADD+=../cuda/libgpu.a -L/opt/cuda/lib64/ -lcudart -lcurand -lcusparse
 endif
 #if USE_STATIC
 #config.o:../config.tar.gz

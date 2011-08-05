@@ -17,9 +17,10 @@ typedef struct{
 void gpu_info(void);
 void gpu_atm2gpu(map_t **atm, int nps);
 void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg);
-void gpu_saloc2gpu(int npowfs, int ipowfs, int nwfs, loc_t *loc);
-void gpu_plocs2gpu(loc_t *plocs, dmat *amp);
-void gpu_print_cc(char *msg);
-void gpu_wfs(gpu_wfs_t *info);
+void gpu_wfsgrad_init(const PARMS_T *parms, POWFS_T *powfs);
+void gpu_wfsgrad_seeding(const PARMS_T *parms, POWFS_T *powfs, rand_t *rstat);
+void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper);
+void gpu_wfsgrad(thread_t *info);
 void gpu_perfevl(thread_t *info);
+
 #endif
