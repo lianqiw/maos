@@ -10,6 +10,7 @@
 typedef unsigned int mwIndex;
 #endif
 typedef double __complex__ dcomplex;
+typedef float __complex__ fcomplex;
 #define info(A...) fprintf(stderr,A)
 #define warning(A...) {							\
 	fprintf(stderr,"\033[01;33m%-15s:%-3d\t", __FILE__, __LINE__);	\
@@ -32,6 +33,7 @@ typedef struct file_t{
 #define M_CSP32 0x6406
 #define M_SP32  0x6407
 #define M_FLT   0x6408
+#define M_FCMP  0x6409
 #define MC_CSP  0x6410
 #define MC_SP   0x6411
 #define MC_DBL  0x6412

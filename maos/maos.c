@@ -69,6 +69,9 @@ void maos(const PARMS_T *parms){
     free_recon(parms, recon); recon=NULL;
     free_powfs(parms, powfs); powfs=NULL;
     free_aper(aper, parms); aper=NULL;
+#if USE_CUDA
+    gpu_cleanup();
+#endif
 }
 /**
    This is the standard entrance routine to the program.  It first calls

@@ -24,6 +24,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     (void)parms;
     gpu_plocs2gpu(aper->locs, aper->amp);
 }
+
 /**
    Performance evaluation. Designed to replace perfevl_ievl in maos/perfevl.c
  */
@@ -50,10 +51,10 @@ void gpu_perfevl(thread_t *info){
     PDMAT(simu->clep->p[ievl],pclep);
 
     float *iopdevl; 
-    /* iopdevl must be in device memory. 6 times slower if in host memory.*/
-    cudaCalloc(iopdevl, aper->locs->nloc*sizeof(float));
     cudaStream_t stream;
     STREAM_NEW(stream);
+    /* iopdevl must be in device memory. 6 times slower if in host memory.*/
+    cudaCalloc(iopdevl, aper->locs->nloc*sizeof(float), stream);
 
     if(parms->sim.idealevl){
 	error("Please finished by: \n"
@@ -63,6 +64,7 @@ void gpu_perfevl(thread_t *info){
 	gpu_atm2loc(iopdevl, cuplocs, nloc, parms->evl.hs[ievl], thetax, thetay, 
 		parms->evl.misreg[0], parms->evl.misreg[1], isim*dt, 1, stream);
     }
+
     CUDA_SYNC_STREAM;
     if(simu->telws){//Wind shake
 	TO_IMPLEMENT;
@@ -78,11 +80,11 @@ void gpu_perfevl(thread_t *info){
     }
     if(nmod==3){
 	gpu_calc_ptt(polep[isim], polmp[isim], aper->ipcc, aper->imcc,
-		 cuplocs, nloc, iopdevl, cupamp, stream);
+		     cuplocs, nloc, iopdevl, cupamp, stream);
     }else{
 	TO_IMPLEMENT;
     }
-  
+
     if(parms->evl.psfmean &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
 			     ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
 	TO_IMPLEMENT;
@@ -108,7 +110,7 @@ void gpu_perfevl(thread_t *info){
     }
     if(parms->tomo.split){
 	if(parms->ndm<=2){
-	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
+	        PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
 	    if(nmod==3){
 		gpu_calc_ngsmod(pclep[isim], pclmp[isim], pcleNGSmp[isim],recon->ngsmod->nmod,
 				recon->ngsmod->aper_fcp, recon->ngsmod->ht,
@@ -136,6 +138,7 @@ void gpu_perfevl(thread_t *info){
 	TO_IMPLEMENT;
     }
  end:
+    CUDA_SYNC_STREAM;
     STREAM_DONE(stream);
     cudaFree(iopdevl);
 }

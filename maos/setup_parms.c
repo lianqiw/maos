@@ -349,7 +349,6 @@ static void readcfg_wfs(PARMS_T *parms){
     parms->wfs=calloc(parms->nwfs,sizeof(struct WFS_CFG_T));
     double *dbltmp=NULL;
     int    *inttmp=NULL;
-    READ_WFS_RELAX(int,psfmean);
     READ_WFS(dbl,thetax);
     READ_WFS(dbl,thetay);
     for(i=0; i<parms->nwfs; i++){

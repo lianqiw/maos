@@ -731,15 +731,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dcellwrite(evlpsfdl, "evlpsfdl_%d.bin",seed);
 	dcellfree(evlpsfdl);
     }
-    int wfspsfmean=0;
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	if(parms->wfs[iwfs].psfmean){
-	    wfspsfmean=1; break;
-	}
-    }
-    if(wfspsfmean){
-       simu->wfspsfmean=dcellnew(parms->evl.nwvl, parms->nwfs);
-    }
+  
     simu->has_upt=0;//flag for uplink tip/tilt control
     if(parms->sim.epfocus>1.e-15){
 	if(parms->sim.lpfocus<1.e-15){

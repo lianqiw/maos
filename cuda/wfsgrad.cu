@@ -7,180 +7,20 @@ extern "C"
 }
 #include "curand_kernel.h"
 #include "cusparse.h"
-typedef curandState_t curandStat;
-static int      cunpowfs;
-static culoc_t *cuwfsloc=NULL;
-static float  **cuwfsamp=NULL;
-static cusp_t **cuGS0=NULL;
-static float  **cugradacc=NULL;
-static curandStat **custat=NULL;
-static int     *custatb=NULL;//allocated block
-static int     *custatt=NULL;//allocated thread
-static float  **cunea=NULL;//the noise equivalent angles for each grad.
-static cusparseHandle_t *cusphandle=NULL;
-static cusparseMatDescr_t cuspdesc;
-#define RAND_BLOCK 16
-#define RAND_THREAD 32
-typedef struct{
-    float (*orig)[2];
-    float dx;
-    int nsa;
-    int nx;
-    float (***imcc)[3];
-}cupts_t;
-cupts_t *cupts;
+#include "cufft.h"
+#include "wfs.h"
+
+#define ctoc(A) //CUDA_SYNC_STREAM; toc(A)
+
+cusparseMatDescr_t cuspdesc;
+cuwloc_t *cupowfs=NULL;
+cuwfs_t *cuwfs=NULL;
+
 /*
-  Save POWFS loc to GPU.
-*/
-static void gpu_wfsloc2gpu(int npowfs, int ipowfs, loc_t *loc){
-    DO(cudaThreadSynchronize());
-    if(!cuwfsloc){
-	cuwfsloc=(culoc_t*)calloc(npowfs, sizeof(culoc_t));
-	cunpowfs=npowfs;
-    }else if(cunpowfs!=npowfs){
-	error("npowfs mismatch\n");
-    }
-    if(cuwfsloc[ipowfs].loc){
-	error("Already initialized\n");
-    }
-    
-    cuwfsloc[ipowfs].nloc=loc->nloc;
-    cuwfsloc[ipowfs].dx=loc->dx;
-    gpu_loc2dev(&cuwfsloc[ipowfs].loc, loc);
-}
-
-/**
-   save GS0 to gpu. Multiple the GS0 directly with opd is extremely slow (not
-   progressing) using cuspmul or cusparseScsrmv. 
-   After fixing -DLONG
-   cusparseScsrmv takes 0.008 seconds for a 60x60 WFS.
-   cusptmul takes 0.038 seconds.
-*/
-static void gpu_GS02gpu(int npowfs, int ipowfs, spcell *GS0){
-    if(!cuGS0){
-	cuGS0=(cusp_t**)calloc(npowfs, sizeof(cusp_t*));
-    }
-    if(cuGS0[ipowfs]) error("GS0 is already copied for powfs %d\n", ipowfs);
-    if(!GS0 || !GS0->p) return;
-    cudaMallocHost(&cuGS0[ipowfs], (GS0->nx*GS0->ny)*sizeof(cusp_t));
-    for(int i=0; i<GS0->nx*GS0->ny; i++){
-	dsp *t=sptrans(GS0->p[i]);
-	sp2gpu(&cuGS0[ipowfs][i], t);
-	spfree(t);
-    }
-}
-/**
-   Initialize other arrays
-*/
-void gpu_wfsgrad_init(const PARMS_T *parms, POWFS_T *powfs){
-    if(cusphandle) error("Already initialized");
-    cudaCallocHost(cusphandle, parms->nwfs * sizeof(cusparseHandle_t));
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	DO(cusparseCreate(&cusphandle[iwfs]));
-    }
-    DO(cusparseCreateMatDescr(&cuspdesc));
-    cusparseSetMatType(cuspdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
-    cusparseSetMatIndexBase(cuspdesc, CUSPARSE_INDEX_BASE_ZERO);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	gpu_wfsloc2gpu(parms->npowfs, ipowfs, powfs[ipowfs].loc);
-	gpu_GS02gpu(parms->npowfs, ipowfs, powfs[ipowfs].GS0);
-    }
-    if(!cupts){
-	cupts=(cupts_t*)calloc(parms->npowfs, sizeof(cupts_t));
-    }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	pts_t *pts=powfs[ipowfs].pts;
-	cupts[ipowfs].nx=pts->nx;
-	cupts[ipowfs].nsa=pts->nsa;
-	cupts[ipowfs].dx=pts->dx;
-	gpu_loc2dev(&cupts[ipowfs].orig, (loc_t*)pts);
-	int nsa=pts->nsa;
-	int mwfs=powfs[ipowfs].nimcc>1 ? parms->powfs[ipowfs].nwfs : 1;
-	if(parms->powfs[ipowfs].gtype_recon==1 ||parms->powfs[ipowfs].gtype_sim==1){
-	    cupts[ipowfs].imcc=(float(***)[3])malloc(mwfs*sizeof(void*));
-	    for(int jwfs=0; jwfs<mwfs; jwfs++){
-		cudaMallocHost(&cupts[ipowfs].imcc[jwfs], nsa*sizeof(void*));
-		for(int isa=0; isa<nsa; isa++){
-		    double *src=powfs[ipowfs].saimcc[jwfs]->p[isa]->p;
-		    cupts[ipowfs].imcc[jwfs][isa]=NULL;
-		    gpu_dbl2dev((float**)&(cupts[ipowfs].imcc[jwfs][isa]),src, 3*3);
-		    cudaDeviceSynchronize();
-		}
-	    }
-	}
-    }
-    //Do not use cudaMallocHost here
-    cugradacc=(float**)calloc(parms->nwfs, sizeof(float*));
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	cudaCalloc(cugradacc[iwfs], powfs[ipowfs].pts->nsa*2*sizeof(float));
-    }
-    //Do not use cudaMallocHost here
-    if(!cunea){
-	cunea=(float**)calloc(parms->nwfs, sizeof(float*));
-    }
-
-    //NEA
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	if(!powfs[ipowfs].neasim) continue;
-	dmat *nea=powfs[ipowfs].neasim->p[wfsind];
-	if(!nea) continue;
-	gpu_dbl2dev(&cunea[iwfs], nea->p, nea->nx*nea->ny);
-    }
-    if(!cuwfsamp){
-	cudaMallocHost(&cuwfsamp, parms->nwfs*sizeof(float*));
-    }
-    //Amp
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	if(powfs[ipowfs].locm || wfsind==0){
-	    cuwfsamp[iwfs]=NULL;
-	    gpu_dbl2dev(&cuwfsamp[iwfs], powfs[ipowfs].realamp[wfsind], powfs[ipowfs].loc->nloc);
-	}else{
-	    cuwfsamp[iwfs]=cuwfsamp[parms->powfs[ipowfs].wfs[0]];
-	    if(cuwfsamp[iwfs]==0){
-		error("Why?");
-	    }
-	}
-    }
-
-}
-__global__ static void setup_rand(curandStat *rstat, int seed){
-    int id=threadIdx.x + blockIdx.x * blockDim.x;
-    curand_init(seed, id, 0, &rstat[id]);
-}
-/**
-   Seed the random number genrator
+  Notice that both blocks and threads are partitioning isa
  */
-void gpu_wfsgrad_seeding(const PARMS_T *parms, POWFS_T *powfs, rand_t *rstat){
-    custat=(curandStat**)calloc(parms->nwfs, sizeof(curandStat*));
-    custatb=(int*)calloc(parms->nwfs, sizeof(int));
-    custatt=(int*)calloc(parms->nwfs, sizeof(int));
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int seed=lrand(rstat);//don't put this after continue.
-	int ipowfs=parms->wfs[iwfs].powfs;
-	if(!parms->powfs[ipowfs].noisy) continue;
-	int nsa=powfs[ipowfs].pts->nsa*2;
-	if(nsa<RAND_THREAD){
-	    custatt[iwfs]=nsa;
-	    custatb[iwfs]=1;
-	}else if(nsa<RAND_THREAD*RAND_BLOCK){
-	    custatt[iwfs]=RAND_THREAD;
-	    custatb[iwfs]=nsa/RAND_THREAD+(nsa%RAND_THREAD)?1:0;
-	}else{
-	    custatt[iwfs]=RAND_THREAD;
-	    custatb[iwfs]=RAND_BLOCK;
-	}
-	cudaMalloc(&custat[iwfs], (custatt[iwfs]*custatb[iwfs])*sizeof(curandStat));
-	setup_rand<<<custatb[iwfs], custatt[iwfs]>>>(custat[iwfs], seed);
-    }
-    cudaDeviceSynchronize();
-}
-
-__global__ static void add_geom_noise(float *restrict g, const float *restrict nea, int ng, curandStat *restrict rstat){
+__global__ static void add_geom_noise_do(float *restrict g, const float *restrict nea, 
+				      int ng, curandStat *restrict rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
     const int nstep=blockDim.x * gridDim.x;
     curandStat lstat=rstat[id];
@@ -193,10 +33,11 @@ __global__ static void add_geom_noise(float *restrict g, const float *restrict n
 /**
    Compute ztilt
 */
-__global__ static void cuztilt(float *restrict g, float *restrict opd, 
-			       const int nsa, const float dx, const int nx, float (**imcc)[3],
-			       const float (*orig)[2], const float*restrict amp, float alpha){
+__global__ void cuztilt(float *restrict g, float *restrict opd, 
+			const int nsa, const float dx, const int nx, float (**imcc)[3],
+			const float (*orig)[2], const float*restrict amp, float alpha){
     __shared__ float a0,a1,a2;
+    __syncthreads();
     if(threadIdx.x==0 && threadIdx.y==0){
 	a0=0.f;
 	a1=0.f;
@@ -230,7 +71,123 @@ __global__ static void cuztilt(float *restrict g, float *restrict opd,
 	g[isa+nsa]+=alpha*(A[0][2]*a0+A[1][2]*a1+A[2][2]*a2);
     }
 }
+/**
+   Apply matched filter. \todo this implementation relies on shared variable. It is probably causing competition.
+*/
+__global__ static void mtche_do(float *restrict grad, float (*restrict *restrict mtches)[2], const float *restrict ints, int pixpsa, int nsa){
+    __shared__ float g[2];//shared by threads in the same block (with the same isa).
+    int isa=blockIdx.x;
+    ints+=isa*pixpsa;
+    const float (*const restrict mtche)[2]=mtches[isa];
+    __syncthreads();
+    if(threadIdx.x==0){
+	g[0]=g[1]=0.f;
+    }
+    float gp[2]={0.f,0.f};
+    for (int ipix=threadIdx.x; ipix<pixpsa; ipix+=blockDim.x){
+	gp[0]+=mtche[ipix][0]*ints[ipix];
+	gp[1]+=mtche[ipix][1]*ints[ipix];
+    }
+    if(fabsf(gp[0])>1e-5 || fabsf(gp[1])>1e-5){
+	printf("gp=%g %g. g=%g %g\n", gp[0], gp[1], g[0], g[1]);
+    }
+    atomicAdd(&g[0], gp[0]);
+    atomicAdd(&g[1], gp[1]);
+    __syncthreads();
+    if(fabsf(g[0])>1e-5 || fabsf(g[1])>1e-5){
+	if(threadIdx.x==0){
+	    printf("isa=%d id=%d g=%g %g\n", isa, threadIdx.x, g[0], g[1]);
+	}
+	printf("id=%d gp=%g %g.\n", threadIdx.x, gp[0], gp[1]);
+    }
+    __syncthreads();
+    if(threadIdx.x==0){
+	grad[isa]=g[0];
+	grad[isa+nsa]=g[1];
+    }
+}
 
+/**
+   Poisson random generator.
+*/
+__device__ static float curandp(curandStat *rstat, float xm){
+    float g, t, xmu;
+    int x=0, xu;
+    if(xm>200){
+	x=(int)round(xm+curand_normal(rstat)*sqrt(xm));
+    }else{
+	while(xm>0){
+	    xmu = xm > 12.f ? 12.f : xm;
+	    xm -= xmu;
+	    g   = __expf(-xmu);
+	    xu  = -1;
+	    t   = 1.f;
+	    while(t>g){
+		xu++;
+		t *= curand_uniform(rstat);
+	    }
+	    x += xu;
+	}
+    }
+    return x;
+}
+/**
+   Add noise to pix images.
+*/
+__global__ static void addnoise_do(float *restrict ints0, int nsa, int pixpsa, float bkgrnd, float pcalib, 
+				   float *const restrict *restrict bkgrnd2s, float *const restrict *restrict bkgrnd2cs,
+				   float rne, curandStat *rstat){
+    const int id=threadIdx.x + blockIdx.x * blockDim.x;
+    const int nstep=blockDim.x * gridDim.x;
+    curandStat lstat=rstat[id];
+    for(int isa=id; isa<nsa; isa+=nstep){
+	float *restrict ints=ints0+isa*pixpsa;
+	const float *restrict bkgrnd2=bkgrnd2s?bkgrnd2s[isa]:NULL;
+	const float *restrict bkgrnd2c=bkgrnd2cs?bkgrnd2cs[isa]:NULL;
+	for(int ipix=0; ipix<pixpsa; ipix++){
+	    if(bkgrnd2){
+		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd+bkgrnd2[ipix])+rne*curand_normal(&lstat)-bkgrnd*pcalib;
+	    }else{
+		ints[ipix]=curandp(&lstat, ints[ipix]+bkgrnd)+rne*curand_normal(&lstat)-bkgrnd*pcalib;
+	    }
+	    if(bkgrnd2c){
+		ints[ipix]-=bkgrnd2c[ipix];
+	    }
+	}
+    }
+    rstat[id]=lstat;
+}
+/**
+   Collect the noise we actually applied.
+ */
+__global__ static void collect_noise_do(float *restrict neareal, const float *restrict gnf, const float *restrict gny, int nsa){
+    for(int isa=threadIdx.x+blockIdx.x*blockDim.x; isa<nsa; isa+=blockDim.x*gridDim.x){
+        float dx=gny[isa]-gnf[isa];
+	float dy=gny[isa+nsa]-gnf[isa+nsa];
+	float *restrict nea=neareal+isa*4;
+	nea[0]+=dx*dx;
+	nea[1]+=dx*dy;
+	nea[2]+=dx*dy;
+	nea[3]+=dy*dy;
+    }
+}
+void gpu_wfsgrad2(thread_t *info){
+{
+    int n=64;
+    fcomplex *in;
+    fcomplex *out;
+    cudaMalloc(&in, n*n*sizeof(fcomplex));
+    cudaMalloc(&out, n*n*sizeof(fcomplex));
+    cudaMemset(in, 0, n*n*sizeof(fcomplex));
+    cufftHandle plan;
+    int ans;
+    ans=cufftPlan2d(&plan, n, n, CUFFT_C2C);
+    if(ans) warning("plan failed: %d\n", ans);
+    ans=cufftExecC2C(plan, in, in, CUFFT_FORWARD);
+    if(ans) error("exec failed: %d\n", ans);
+
+}
+}
 /**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
    data back to CPU.
@@ -243,6 +200,7 @@ void gpu_wfsgrad(thread_t *info){
     assert(info->end==info->start+1);//only 1 WFS.
     assert(iwfs<parms->nwfs);
     const POWFS_T *powfs=simu->powfs;
+    const RECON_T *recon=simu->recon;
     //output
     const int CL=parms->sim.closeloop;
     const int isim=simu->isim;
@@ -250,40 +208,36 @@ void gpu_wfsgrad(thread_t *info){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int imoao=parms->powfs[ipowfs].moao;
     const int nsa=powfs[ipowfs].pts->nsa;
-    const int pixpsa=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->nx;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-    const double hs=parms->powfs[ipowfs].hs;
-    const int npix=pixpsa*nsa;
+    const float hs=parms->powfs[ipowfs].hs;
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const int save_gradgeom=parms->save.gradgeom[iwfs];
     const int save_grad=parms->save.grad[iwfs];
-    const int save_opd =parms->save.wfsopd[iwfs];
     const int save_ints=parms->save.ints[iwfs];
     const int noisy=parms->powfs[ipowfs].noisy;
-    const int nthread=powfs[ipowfs].nthread;
     //The following depends on isim
     const int dtrat_output=((isim+1)%dtrat==0);
     const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
     const int do_geom=!do_phy || save_gradgeom;
-    const double *realamp=powfs[ipowfs].realamp[wfsind];
     const float thetax=parms->wfs[iwfs].thetax;
     const float thetay=parms->wfs[iwfs].thetay;
     const float mispx=powfs[ipowfs].misreg[wfsind][0];
     const float mispy=powfs[ipowfs].misreg[wfsind][1];
     const float dtisim=parms->sim.dt*isim;
-    const float (*loc)[2]=cuwfsloc[ipowfs].loc;
-    const int nloc=cuwfsloc[ipowfs].nloc;
-    const int jwfs=powfs[ipowfs].nlocm>1?wfsind:0;
+    const float (*loc)[2]=cupowfs[ipowfs].loc;
+    const int nloc=cupowfs[ipowfs].nloc;
     //Out to host for now. \todo : keep grad in device when do reconstruction on device.
-    dmat *gradout=simu->gradcl->p[iwfs];
-    float *phiout;
-    float *gradacc=cugradacc[iwfs];
-    cudaCalloc(phiout, nloc*sizeof(float));
+    //cudaStream_t stream=cuwfs[iwfs].stream;
     cudaStream_t stream;
     STREAM_NEW(stream);
+    cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream);
+    dmat *gradout=simu->gradcl->p[iwfs];
+    float *phiout;
+    float *gradacc=cuwfs[iwfs].gradacc;
+    cudaCalloc(phiout, nloc*sizeof(float), stream);
 
     if(simu->surfwfs && simu->surfwfs->p[iwfs] || powfs[ipowfs].ncpa){
-    //copy to GPU and copy to phiout.
+	//copy to GPU and copy to phiout.
 	TO_IMPLEMENT;
     }
     if(parms->sim.idealwfs){
@@ -298,7 +252,7 @@ void gpu_wfsgrad(thread_t *info){
 	gpu_dm2loc(phiout, loc, nloc, hs, thetax, thetay, mispx, mispy, -1, stream);
     }
     CUDA_SYNC_STREAM;
-    //toc2("accphi");tic;
+
     if(imoao>-1){
 	TO_IMPLEMENT;
     }
@@ -312,62 +266,140 @@ void gpu_wfsgrad(thread_t *info){
     if(parms->powfs[ipowfs].llt && simu->focusint && simu->focusint->p[iwfs]){
 	TO_IMPLEMENT;
     }
-    if(parms->wfs[iwfs].psfmean && isim>=parms->evl.psfisim){
-	TO_IMPLEMENT;
-    }
-
     if(do_geom){
 	if(parms->powfs[ipowfs].gtype_sim==1){
-	    dim3 nth(16,16);
-	    cuztilt<<<nsa, nth, 0, stream>>>(gradacc, phiout, cupts[ipowfs].nsa, cupts[ipowfs].dx, 
-					   cupts[ipowfs].nx, cupts[ipowfs].imcc[jwfs],
-					   cupts[ipowfs].orig, cuwfsamp[iwfs], 1.f/(float)dtrat);
+	    cuztilt<<<nsa, dim3(16,16), 0, stream>>>(gradacc, phiout, cupowfs[ipowfs].nsa, 
+					     cupowfs[ipowfs].dx, 
+					     cupowfs[ipowfs].nxsa, cuwfs[iwfs].imcc,
+					     cupowfs[ipowfs].saorig, cuwfs[iwfs].amp, 
+					     1.f/(float)dtrat);
 	}else{
-	    const int iGS0=powfs[ipowfs].GS0->nx==1?0:wfsind;
+	    cusp_t *GS0=cuwfs[iwfs].GS0;
 #if MYSPARSE==1
 	    cusptmul(gradacc, &cuGS0[ipowfs][iGS0], phiout, 1.f/(float)dtrat, stream);
 #else
-	    cusparseSetKernelStream(cusphandle[iwfs], stream);
-	    int status=cusparseScsrmv(cusphandle[iwfs], 
-			      CUSPARSE_OPERATION_NON_TRANSPOSE, 
-			      cuGS0[ipowfs][iGS0].ny,
-			      cuGS0[ipowfs][iGS0].nx,
-			      1.f,
-			      cuspdesc,
-			      cuGS0[ipowfs][iGS0].x,
-			      cuGS0[ipowfs][iGS0].p,
-			      cuGS0[ipowfs][iGS0].i,
-			      phiout, 
-			      1.f/(float)dtrat,
-			      gradacc);
+	    int status=cusparseScsrmv(cuwfs[iwfs].sphandle, CUSPARSE_OPERATION_NON_TRANSPOSE, 
+				      GS0->ny, GS0->nx, 1.f/(float)dtrat, cuspdesc,
+				      GS0->x, GS0->p, GS0->i, phiout, 1.f,
+				      gradacc);
 	    if(status!=0){
 		error("cusparseScsrmv failed with status %d\n", status);
 	    }
 #endif
 	}
-    }
+    }   
     CUDA_SYNC_STREAM;
-    //toc2("grad");tic;
+    if(do_phy || parms->powfs[ipowfs].psfout || (parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart)){//physical optics
+	wfsints(simu, phiout, iwfs, isim, stream);
+    }//do phy
+    CUDA_SYNC_STREAM;
+    ctoc("grad");
     if(dtrat_output){
 	if(do_phy){
-	    TO_IMPLEMENT;
+	    //signal level was already multiplied in ints.
+	    float *restrict const ints=cuwfs[iwfs].ints;
+	    float *gradnf, *gradny=NULL;
+	    const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
+	    cudaMalloc(&gradnf, 2*nsa*sizeof(float));
+	    switch(parms->powfs[ipowfs].phytypesim){
+	    case 1:
+		//use 32 instead of pixpsa here. using pixpsa causes random error in g. is this due to lack of ECC?
+		mtche_do<<<nsa, 32,0,stream>>>(gradnf, cuwfs[iwfs].mtche, ints, pixpsa, nsa);
+		break;
+	    default:
+		TO_IMPLEMENT;
+	    }
+	    CUDA_SYNC_STREAM;
+	    ctoc("mtche");tic;
+	    if(noisy){
+		float rne=parms->powfs[ipowfs].rne;
+		float bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
+		addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
+		    (ints, nsa, pixpsa, bkgrnd, parms->powfs[ipowfs].bkgrndc,
+		     cuwfs[iwfs].bkgrnd2, cuwfs[iwfs].bkgrnd2c, 
+		     rne, cuwfs[iwfs].custat);
+		ctoc("noise");tic;
+		DO(cudaMalloc(&gradny, 2*nsa*sizeof(float)));
+		switch(parms->powfs[ipowfs].phytypesim){
+		case 1:
+		    mtche_do<<<nsa, 16, 0, stream>>>(gradny, cuwfs[iwfs].mtche, ints, pixpsa, nsa);
+		    break;
+		default:
+		    TO_IMPLEMENT;
+		}
+		collect_noise_do<<<MAX(nsa/256,1), MIN(256, nsa), 0, stream>>>(cuwfs[iwfs].neareal, gradnf, gradny, nsa);
+		CUDA_SYNC_STREAM;
+	    }
+	    gpu_dev2dbl(&gradout->p, gradny?gradny:gradnf, nsa*2, stream);
+	    CUDA_SYNC_STREAM;
+	    
+	    if(save_ints){
+		dmat *intstmp=dnew(pixpsa, nsa);
+		gpu_dev2dbl(&intstmp->p, ints, pixpsa*nsa, stream);
+		cellarr_dmat(simu->save->intsnf[iwfs], intstmp);
+		dfree(intstmp);
+	    }
+	    if(save_grad && noisy){
+		dmat *gradnftmp=dnew(nsa*2,1);
+		gpu_dev2dbl(&(gradnftmp->p), gradnf, nsa*2, stream);
+		cellarr_dmat(simu->save->gradnf[iwfs], gradnftmp);
+		dfree(gradnftmp);
+	    }
+	    CUDA_SYNC_STREAM;
+	    if(gradny) cudaFree(gradny);
+	    cudaFree(gradnf);
+	    cudaMemsetAsync(ints, 0, nsa*pixpsa*sizeof(float), stream);
+	    ctoc("mtche");
+	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
+		if(!recon->PTT){
+		    error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
+		}
+		dmat *PTT=NULL;
+		if(parms->sim.glao){
+		    PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
+		}else{
+		    PTT=recon->PTT->p[iwfs+iwfs*parms->nwfs];
+		}
+		if(!PTT){
+		    error("powfs %d has llt, but TT removal is empty\n", ipowfs);
+		}
+		/* Compute LGS Uplink error. */
+		dzero(simu->upterr->p[iwfs]);
+		dmm(&simu->upterr->p[iwfs], PTT, gradout, "nn", 1);
+		/* copy upterr to output. */
+		PDMAT(simu->upterrs->p[iwfs], pupterrs);
+		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
+		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
+	    }
 	}else{
 	    if(noisy){
-		add_geom_noise<<<custatb[iwfs], custatt[iwfs], 0, stream>>>(gradacc, cunea[iwfs], nsa*2, custat[iwfs]);
+		add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
+		    (gradacc, cuwfs[iwfs].neasim, nsa*2,cuwfs[iwfs].custat);
 		CUDA_SYNC_STREAM;
-		//toc2("noise");
+		ctoc("noise");
 	    }
-	    gpu_dev2dbl(&gradout->p, gradacc, nsa*2);
-	    //toc2("dev2dbl");
-	    cudaMemset(gradacc, 0, nsa*2*sizeof(float));
-	    //toc2("zero");
+	    gpu_dev2dbl(&gradout->p, gradacc, nsa*2, stream);
+	    ctoc("dev2dbl");
+	    cudaMemsetAsync(gradacc, 0, nsa*2*sizeof(float), stream);
+	    ctoc("zero");
 	}
-	if(save_grad || save_gradgeom){
-	    TO_IMPLEMENT;
+	if(powfs[ipowfs].ncpa_grad){
+	    warning("Applying ncpa_grad to gradout\n");
+	    dadd(&gradout, 1., powfs[ipowfs].ncpa_grad->p[wfsind], -1.);
+	}
+	if(save_grad){
+	    cellarr_dmat(simu->save->gradcl[iwfs], gradout);
+	}
+	if(save_gradgeom){
+	    dmat *gradtmp=dnew(nsa*2,1);
+	    gpu_dev2dbl(&gradtmp->p, gradacc, nsa*2, stream);
+	    if(dtrat!=1) dscale(gradtmp, 1./dtrat);
+	    cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);//noise free.
+	    dfree(gradtmp);
 	}
     }
-    //toc2("done");
+    CUDA_SYNC_STREAM;
+    ctoc("done");
     STREAM_DONE(stream);
     cudaFree(phiout);
-    //toc2("final");
 }

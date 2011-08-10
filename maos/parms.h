@@ -227,7 +227,6 @@ typedef struct WFS_CFG_T{
     double siglev;  /**<Total signal value for all wavelength. if not specified
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
-    int psfmean;    /**<1: Calculate time average of PSF.*/
     int powfs;      /**<powfs type*/
 }WFS_CFG_T;
 /**

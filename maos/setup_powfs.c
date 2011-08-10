@@ -85,18 +85,8 @@ free_powfs_geom(POWFS_T *powfs,  const PARMS_T *parms, int ipowfs){
     dfree(powfs[ipowfs].sumamp);
     dfree(powfs[ipowfs].sumamp2);
     free(powfs[ipowfs].misreg);
-    if(powfs[ipowfs].embed){
-	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-	    free(powfs[ipowfs].embed[iwvl]);
-	}
-	free(powfs[ipowfs].embed);
-	free(powfs[ipowfs].nembed);
-    }
     dcellfree(powfs[ipowfs].saam);
     dcellfree(powfs[ipowfs].ampm);
-    dcellfree(powfs[ipowfs].imcc);
-    dcellfree(powfs[ipowfs].mcc);
-    dfree(powfs[ipowfs].ipcc);
 }
 /**
    Convert amplitude map of subapertures to normalized subaperture area. Used only in setup_powfs_geom*/
@@ -380,39 +370,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].realamp[iwfs]=realamp;
 	powfs[ipowfs].realsaa[iwfs]=realsaa;
     }
-    int psfmean=0;
-    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-	int jwfs=parms->powfs[ipowfs].wfs[iwfs];
-	if(parms->wfs[jwfs].psfmean){
-	    psfmean=1;
-	    break;
-	}
-    }
-    powfs[ipowfs].nimcc=MAX(1,powfs[ipowfs].nlocm);
-    if(psfmean){
-	const int nwvl=parms->evl.nwvl;
-	powfs[ipowfs].nembed=calloc(nwvl, sizeof(long));
-	powfs[ipowfs].embed=calloc(nwvl, sizeof(long*));
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    powfs[ipowfs].nembed[iwvl]=parms->evl.psfgridsize[iwvl];
-	    powfs[ipowfs].embed[iwvl]=loc_create_embed(&(powfs[ipowfs].nembed[iwvl]), powfs[ipowfs].loc);
-	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > powfs[ipowfs].nembed[iwvl]){
-		parms->evl.psfsize[iwvl] = powfs[ipowfs].nembed[iwvl];
-	    }
-	    info2("iwvl %d: PSF is using grid size of %ld. The PSF will sum to %.15g\n",
-		  iwvl, powfs[ipowfs].nembed[iwvl], 
-		  powfs[ipowfs].sumamp2->p[0]/pow(powfs[ipowfs].sumamp->p[0],2)
-		  *powfs[ipowfs].nembed[iwvl]*powfs[ipowfs].nembed[iwvl]);
-	}
-	int nimcc=powfs[ipowfs].nimcc;
-	powfs[ipowfs].mcc=dcellnew(nimcc, 1);
-	powfs[ipowfs].ipcc=dnew(nimcc, 1);
-	for(int imcc=0; imcc<nimcc; imcc++){
-	    powfs[ipowfs].mcc->p[imcc]=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].realamp[imcc]);
-	    powfs[ipowfs].ipcc->p[imcc]=1./powfs[ipowfs].mcc->p[imcc]->p[0];
-	}
-	powfs[ipowfs].imcc=dcellinvspd_each(powfs[ipowfs].mcc);
-    }
+   
     if(parms->plot.setup){
 	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
@@ -476,10 +434,11 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	//setting up zernike best fit (ztilt) inv(M'*W*M). good for NGS.
 	if(parms->powfs[ipowfs].order>4) 
 	    warning("Ztilt for high order wfs is not good");
-	int nimcc=powfs[ipowfs].nimcc;
-	dcellfreearr(powfs[ipowfs].saimcc, nimcc);
-	powfs[ipowfs].saimcc=calloc(nimcc, sizeof(dcell*));
-	for(int imcc=0; imcc<nimcc; imcc++){
+	powfs[ipowfs].nsaimcc=MAX(1,powfs[ipowfs].nlocm);
+	int nsaimcc=powfs[ipowfs].nsaimcc;
+	dcellfreearr(powfs[ipowfs].saimcc, nsaimcc);
+	powfs[ipowfs].saimcc=calloc(nsaimcc, sizeof(dcell*));
+	for(int imcc=0; imcc<nsaimcc; imcc++){
 	    dcell *mcc=pts_mcc_ptt(powfs[ipowfs].pts, powfs[ipowfs].realamp[imcc]);
 	    powfs[ipowfs].saimcc[imcc]=dcellinvspd_each(mcc);
 	    dcellfree(mcc);
@@ -797,7 +756,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		double *realamp=powfs[ipowfs].realamp[iwfs];
 		if(parms->powfs[ipowfs].gtype_sim==1){
 		    pts_ztilt(&powfs[ipowfs].ncpa_grad->p[iwfs], powfs[ipowfs].pts,
-			      powfs[ipowfs].nimcc>1?powfs[ipowfs].saimcc[iwfs]:powfs[ipowfs].saimcc[0], 
+			      powfs[ipowfs].nsaimcc>1?powfs[ipowfs].saimcc[iwfs]:powfs[ipowfs].saimcc[0], 
 			      realamp, powfs[ipowfs].ncpa->p[iwfs]->p);
 		}else{
 		    spmulmat(&powfs[ipowfs].ncpa_grad->p[iwfs],adpind(powfs[ipowfs].GS0, iwfs),
@@ -1786,7 +1745,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    dcellfree(powfs[ipowfs].sprint);
 	}
 
-	dcellfreearr(powfs[ipowfs].saimcc, powfs[ipowfs].nimcc);
+	dcellfreearr(powfs[ipowfs].saimcc, powfs[ipowfs].nsaimcc);
 	if(powfs[ipowfs].llt){
 	    ptsfree(powfs[ipowfs].llt->pts);
 	    dfree(powfs[ipowfs].llt->amp);

@@ -35,6 +35,7 @@
 #define M_CSP32  0x6406  //sparse complex 32 bit
 #define M_SP32   0x6407  //sparse 32 bit
 #define M_FLT    0x6408  //single precision float.
+#define M_FCMP   0x6409  //single precision complex
 //The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type
 #define MCC_ANY  0x6421  //cell of any thing
 #define M_HEADER 0x6500  //header.
@@ -101,6 +102,7 @@ void do_write(const void *fpn, const int isfile, const size_t size, const uint32
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writecmp(const dcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
+void writefcmp(const fcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeint(const int *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
 void writelong(const long *p, long nx, long ny, const char*format,...) CHECK_ARG(4);
 void writespint(const spint *p, long nx, long ny, const char *format,...) CHECK_ARG(4);

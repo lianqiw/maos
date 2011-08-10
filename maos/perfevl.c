@@ -107,7 +107,7 @@ void perfevl_ievl(thread_t *info){
 	}
 	/*fix me: the ray tracing of the same part must be performed in the same thread. */
 	for(int ips=0; ips<nps; ips++){
-	    if(ips!=simu->perfevl_iground){
+	    if(ips!=simu->perfevl_iground || !simu->opdevlground){
 		int ind=ievl+parms->evl.nevl*ips;
 		simu->evl_propdata_atm[ind].phiout=iopdevl->p;
 		simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;

@@ -130,16 +130,18 @@ void wfsints(thread_t *thread_data){
 	    //build otf. use same config as subaperture
 	    cembed_wvf(lotfc,lltopd->p,powfs[ipowfs].llt->amp->p,nlx,nlx,wvl,0);
 	    cfft2(lotfc,-1);
-	    cabs2toreal(lotfc);
-	    cfft2(lotfc,1);//lotfc has peak nlpsf*nlpsf in corner.
-	    //lotfc need to be scaled by 1/(npsf*npsf).
-	    cscale(lotfc,1./(double)((long)nlpsf*nlpsf));//max of 1
-	    if(npsf != nlpsf){
+	    if(npsf != nlpsf){//moved to before the second fft on 2011-08-07
 		cmat *tmp=cnew(npsf, npsf);
+		cfft2plan(tmp, 1);
 		ccpcorner(tmp, lotfc, C_FULL);
 		cfree(lotfc);
 		lotfc=tmp;
 	    }
+	    cabs2toreal(lotfc);
+	    cfft2(lotfc,1);//lotfc has peak nlpsf*nlpsf in corner.
+	    //lotfc need to be scaled by 1/(npsf*npsf).
+	    cscale(lotfc,1./(double)((long)nlpsf*nlpsf));//max of 1
+
 	}
 #if ROT_OTF == 1
 	double xscale=(double)npsf/(double)ncompx;
@@ -255,7 +257,7 @@ void wfsints(thread_t *thread_data){
 		*/
 	    }
 	    cabs2toreal(psf);//peak in corner
-#if ROT_OTF == 1
+#if ROT_OTF == 1//deprecated
 	    cfft2(psf,-1);
 #elif ROT_OTF == 0
 	    if(lltopd || ppistatout){
@@ -271,7 +273,7 @@ void wfsints(thread_t *thread_data){
 		if(gradref){
 		    ctilt(psftmp,-gx[isa]*dtheta1,-gy[isa]*dtheta1,0);
 		}
-		cfft2(psftmp,1);
+		cfft2(psftmp,1);//back to psf.
 		cfftshift(psftmp);
 		cabstoreal(psftmp);//take abs. peak at center.
 		if(!gradref){
@@ -292,7 +294,7 @@ void wfsints(thread_t *thread_data){
 		    cfft2(psf,1);
 		}
 		cfftshift(psf);//peak in center
-		cembed(otf,psf,-angle,C_REAL);
+		cembed(otf,psf,-angle,C_REAL);//notice otf and psf may have different size
 		cfftshift(otf);//peak in corner
 		cfft2(otf,-1);//turn to OTF. peak in corner
 #endif

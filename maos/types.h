@@ -149,19 +149,13 @@ typedef struct POWFS_T{
     int ncompx;         /**<Dimension of FFT for subaperture imaging along x*/
     int ncompy;         /**<Dimension of FFT for subaperture imaging along y*/
     int nlocm;          /**<number of misregistered loc. 1 or nwfs of this powfs.*/
-    int nimcc;         /**<number of saimcc*/
+    int nsaimcc;         /**<number of saimcc*/
     int nthread;        /**<Equal to MAX(nsa,sim.nthread)*/
     //The following are a few convenient pointers.
     double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
     double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
-    //For PSF computation on location of WFS. 
-    long **embed;         /**<Embedding index for PSF computing, one per wvl*/
-    long *nembed;         /**<dimension of embed.*/
     dmat *sumamp;        /**<sum of realamp*/
     dmat *sumamp2;       /**<sum of realamp.^2*/
-    dcell *mcc;          /**<p/t/t model cross coupling matrix for entire pupil*/
-    dcell *imcc;         /**<inverse of p/t/t model cross coupling matrix for entire pupil*/
-    dmat *ipcc;          /**<inverse of piston model cross coupling matrix for entire pupil*/
 }
 POWFS_T;
 

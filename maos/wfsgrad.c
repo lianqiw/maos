@@ -211,40 +211,13 @@ void wfsgrad_iwfs(thread_t *info){
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
     }
-    /* calculate and save full aperture PSF is requested. The wavelength are
-       evl.wvl, but powfs.wvl since our purpose is to compare with science
-       PSF. */
-    if(parms->wfs[iwfs].psfmean && isim>=parms->evl.psfisim){
-	dmat *opdcopy=NULL;
-	if(parms->powfs[ipowfs].trs){
-	    opdcopy=ddup(opd);
-	    double ptt[3]={0,0,0};
-	    int indmcc=powfs[ipowfs].nlocm>1?wfsind:0;
-	    loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, powfs[ipowfs].ipcc->p[indmcc],
-			 powfs[ipowfs].imcc->p[indmcc], powfs[ipowfs].amp->p, opdcopy->p);
-	    loc_remove_ptt(opdcopy->p, ptt, powfs[ipowfs].loc);
-	}else{
-	    opdcopy=dref(opd);
-	}
-	ccell *psf2s=psfcomp(opdcopy, powfs[ipowfs].realamp[wfsind], 
-			     powfs[ipowfs].embed, powfs[ipowfs].nembed, 
-			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
-	dfree(opdcopy);
-	int nwvl=parms->evl.nwvl;
-	PDCELL(simu->wfspsfmean, wfspsfmean);
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cabs22d(&wfspsfmean[iwfs][iwvl], 1,
-		    psf2s->p[iwvl], pow(powfs[ipowfs].sumamp->p[wfsind], -2));
-	}
-	ccellfree(psf2s);
-    }
 
     if(do_geom){
 	/* Now Geometric Optics gradient calculations */
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    //compute ztilt.
 	    pts_ztilt(gradacc,powfs[ipowfs].pts,
-		      powfs[ipowfs].saimcc[powfs[ipowfs].nimcc>1?wfsind:0], 
+		      powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{//G tilt
 	    spmulmat(gradacc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
@@ -298,8 +271,7 @@ void wfsgrad_iwfs(thread_t *info){
 				  scale, 1., 0, 0);
 		}
 	    }
-	    if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout){
-		const int nx=lltopd->nx;
+	    if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout||parms->sim.uptideal){
 		const double dx=powfs[ipowfs].llt->pts->dx;
 		const double ox=powfs[ipowfs].llt->pts->origx[0];
 		const double oy=powfs[ipowfs].llt->pts->origy[0];
@@ -324,11 +296,11 @@ void wfsgrad_iwfs(thread_t *info){
 		PDMAT(simu->uptcmds->p[iwfs], puptcmds);
 		puptcmds[isim][0]=ttx;
 		puptcmds[isim][1]=tty;
-		double vty=0;
+		/* add tip/tilt to opd */
 		PDMAT(lltopd, pp);
 		for(int iy=0; iy<lltopd->ny; iy++){
-		    vty=(oy+iy*dx)*tty;
-		    for(int ix=0; ix<nx; ix++){
+		    double vty=(oy+iy*dx)*tty;
+		    for(int ix=0; ix<lltopd->nx; ix++){
 			pp[iy][ix]+=vty+(ox+ix*dx)*ttx;
 		    }
 		}
@@ -338,10 +310,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
 	dmat *gradref=NULL;
-	if(pistatout){
-	    if(!parms->powfs[ipowfs].pistatstc && do_geom){
-		gradref=*gradacc;
-	    }
+	if(pistatout && !parms->powfs[ipowfs].pistatstc && do_geom){
+	    gradref=*gradacc;
 	}
 	WFSINTS_T *intsdata=simu->wfs_intsdata+iwfs;
 	intsdata->ints=ints;
@@ -402,12 +372,6 @@ void wfsgrad_iwfs(thread_t *info){
 		}
 	    }
 	    
-	    double *srot=NULL;
-	    if(powfs[ipowfs].srot){
-		const int illt=parms->powfs[ipowfs].llt->i[wfsind];
-		//this is in r/a coordinate, get angles
-		srot=powfs[ipowfs].srot->p[illt]->p;
-	    }
 	    //output directly to simu->gradcl. replace
 	    const double rne=parms->powfs[ipowfs].rne;
 	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
@@ -555,11 +519,9 @@ void wfsgrad_iwfs(thread_t *info){
 	}
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
-	    dcp(&gradtmp,*gradacc);
-	    if(dtrat!=1){
-		dscale(gradtmp,1./dtrat);
-	    }
+	    dadd(&gradtmp, 1, *gradacc, 1./dtrat);
 	    cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);//noise free.
+	    dfree(gradtmp);
 	}
 	if(parms->plot.run){
 	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,

@@ -30,6 +30,50 @@ extern "C"
    will conflict between different threads.
 
    3) For layered 2D texture., must use cudaMalloc3DArray with cudaArrayLayered
+
+   4) Be careful when use cudaMallocHost followed with cudaMemset, and test of
+   memory. the cudaMemset is asynchronousx for small dimension, which creates
+   disaster if you test the memory immediately after memset. Call
+   cudaDeviceSynchronize() after everycall to cudaMemset unless you are not
+   using the memory immediately. 
+
+   5) cuda-gdb shows internal error and can not catch error if source is too long.
+   
+   6) Don't take the & of a variable and put into kernel. the variable is on host stack.
+
+   7) FFT keeps failing the first time in each time it is called, even for a
+   simple FFT. The reason is that (quote rom CUDA 4.0 Readiness Tech Brief
+   "
+   IMPORTANT: The CUFFT library is not yet thread-safe and therefore cannot safely
+   access the same device context from multiple host threads concurrently. This
+   restriction will be removed in a future release of the CUDA Toolkit.
+   "
+   8) CUBLAS is indeed thread-safe.
+
+   9) A butterfly effect: Enabling gpu_perfevl caused cufft to fail. Reason
+   narrowed down to cudaCallocHost in gpu_calc_ptt. Change to
+   cudaCalloc. Problem disappear.
+   
+   10) Matched filter mtche_do failes randomly when I set blockDim to pixpsa and
+   run all wfs in parallel. Doing ok if set it to 32. Whe it fails, the value in
+   the shared memory g[2] is bizarre. I suspect it is caused by memory or
+   computing error. The error cannot be detected due to lack of ECC.
+   
+   11) Important: During kernel calling, never set blockDim to more than
+   256. bizarre errors may happen. For example, FFT randomly error out.
+
+   12) Always sync the stream before using the kernel output in host code.
+   
+   Look for the following in debugging
+
+   1) For pointers, where are they located. host or device. In host heap or stack?
+
+   2) Synchronize device before and after problemetic area to isolate the cause.
+
+   3) During kernel calling, never set blockDim to more than 256. bizarre errors
+   may happen. For example, FFT randomly error out.
+   
+
 */
 
 #define ATM_TEXTURE 1 //Use texture for ATM. Same speed as not after make p in device memory.
@@ -64,17 +108,16 @@ static float *cc=NULL;
 */
 void gpu_atm2gpu(map_t **atm, int nps){
     TIC;tic
-    cudaThreadSynchronize();
 #if ATM_TEXTURE
-    map2gpu(atm, nps, &cuatm, 1);
+    gpu_map2dev(atm, nps, &cuatm, 1);
     texRefatm.addressMode[0] = cudaAddressModeWrap;
     texRefatm.addressMode[1] = cudaAddressModeWrap;
     texRefatm.filterMode     = cudaFilterModeLinear;
     texRefatm.normalized     = true; 
     cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
-     DO(cudaBindTextureToArray(texRefatm, cuatm.ca, channelDesc));
+    DO(cudaBindTextureToArray(texRefatm, cuatm.ca, channelDesc));
 #else
-    map2gpu(atm, nps, &cuatm, 2);
+    gpu_map2dev(atm, nps, &cuatm, 2);
 #endif
     toc2("atm to gpu");//0.4 second.
 }
@@ -82,9 +125,8 @@ void gpu_atm2gpu(map_t **atm, int nps){
   Copy DM commands to GPU.
 */
 void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
-    DO(cudaThreadSynchronize());
 #if DM_TEXTURE
-    map2gpu(dmreal, ndm, &cudm, 1);
+    gpu_map2dev(dmreal, ndm, &cudm, 1);
     texRefdm.addressMode[0] = cudaAddressModeClamp;
     texRefdm.addressMode[1] = cudaAddressModeClamp;
     texRefdm.filterMode     = cudaFilterModePoint;
@@ -92,7 +134,7 @@ void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
     cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
     DO(cudaBindTextureToArray(texRefdm, cudm.ca, channelDesc));
 #else
-    map2gpu(dmreal, ndm, &cudm, 2);
+    gpu_map2dev(dmreal, ndm, &cudm, 2);
 #endif
     if(dmcfg && !cudm.cubic){
 	cudm.cubic=new int[ndm];
@@ -102,6 +144,7 @@ void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
 	    cudm.iac[idm]=dmcfg[idm].iac;
 	}
     }
+    CUDA_SYNC_DEVICE;
 }
 
 #define KARG_COMMON const float (*restrict loc)[2], const int nloc, const float dx, const float dy, const float dispx, const float dispy, const float alpha
@@ -193,7 +236,7 @@ __global__ static void prop_linear(float *restrict out, const float *restrict in
 	int ix=floorf(x);
 	int iy=floorf(y);
 	x=x-ix; y=y-iy;
-	if(x>=0 && x<nx-1 && y>=0 && y<ny-1){
+	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
 	    out[i]+=(in[iy*nx+ix]*(1-x)+in[iy*nx+ix+1]*x)*(1-y)
 		+(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y;
 	}

@@ -579,6 +579,13 @@ void writecmp(const dcomplex *p, long nx,long ny, const char*format,...){
     do_write(fn, 1, sizeof(dcomplex), M_CMP, p, nx, ny);
 }
 /**
+   Write a float complex array of size nx*ny to file.
+*/
+void writefcmp(const fcomplex *p, long nx,long ny, const char*format,...){
+    format2fn;
+    do_write(fn, 1, sizeof(fcomplex), M_FCMP, p, nx, ny);
+}
+/**
    Write a int array of size nx*ny to file.
  */
 void writeint(const int *p, long nx, long ny, const char*format,...){

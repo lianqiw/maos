@@ -44,7 +44,7 @@ enum{
 };
 
 typedef double __complex__ dcomplex;
-typedef float  __complex__ scomplex;
+typedef float  __complex__ fcomplex;
 typedef double ddouble;/*just for saving.*/
 #if defined(DLONG) && !defined(X86_64)
 #undef DLONG

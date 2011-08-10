@@ -239,6 +239,23 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    }
 	}
 	break;
+    case M_FCMP:/*float complex array*/
+	{
+	    out=mxCreateNumericMatrix(nx,ny,mxSINGLE_CLASS,mxCOMPLEX);
+	    if(nx!=0 && ny!=0){
+		fcomplex*tmp=malloc(sizeof(fcomplex)*nx*ny);
+		zfread(tmp,sizeof(fcomplex),nx*ny,fp);
+		float *Pr=(float*)mxGetPr(out);
+		float *Pi=(float*)mxGetPi(out);
+		long i;
+		for(i=0; i<nx*ny; i++){
+		    Pr[i]=crealf(tmp[i]);
+		    Pi[i]=cimagf(tmp[i]);
+		}
+		free(tmp);
+	    }
+	}
+	break;
     case M_HEADER:
 	break;
     default:

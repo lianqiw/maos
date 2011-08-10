@@ -103,7 +103,7 @@ typedef struct cmat{
    a single precision complex matrix object contains 2-d arrays of float complex
    numbers. */
 typedef struct zmat{
-    MAT(scomplex)
+    MAT(fcomplex)
     long *nref;  /**< reference count */
     struct fft_t *fft;
 }zmat;
