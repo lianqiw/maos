@@ -18,9 +18,9 @@
 #include "maos.h"
 #include "sim.h"
 #include "sim_utils.h"
-#if USE_CUDA
+/*#if USE_CUDA
 #include "../cuda/gpu.h"
-#endif
+#endif*/
 /**
    \file wfsgrad.c
    contains functions that computes WFS gradients in geometric or physical optics mode.

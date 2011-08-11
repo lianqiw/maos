@@ -26,6 +26,7 @@
 #include <ctype.h>
 #include "../lib/aos.h"
 #include "parms.h"
+extern int use_cuda;
 /*
   Don't include maos.h or types.h, so that we don't have to recompile
   setup_parms.c when these files change.
@@ -1618,9 +1619,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    warning("cachedm disabled for SCAO\n");
 	}
     }
-#if USE_CUDA
-    parms->sim.cachedm=0; //Done in CUDA.
-#endif
+    if(use_cuda){
+	parms->sim.cachedm=0; //Done in CUDA.
+    }
     //Assign each turbulence layer to a corresponding reconstructon layer
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
     for(int ips=0; ips<parms->atm.nps; ips++){

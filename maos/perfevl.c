@@ -481,24 +481,24 @@ void perfevl(SIM_T *simu){
     double tk_start=myclockd();
     //Cache the ground layer.
     const PARMS_T *parms=simu->parms;
-#if USE_CUDA == 0
-    int ips=simu->perfevl_iground;
-    if(ips!=-1 && simu->atm && !parms->sim.idealevl){
-	simu->opdevlground=dnew(simu->aper->locs->nloc,1);
-	const int ievl=0;//doesn't matter for ground layer.
-	int ind=ievl+parms->evl.nevl*ips;
-	const int isim=simu->isim;
-	const double dt=simu->dt;
-	simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
-	simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
-	simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
-	CALL_THREAD(simu->evl_prop_atm[ind], parms->evl.nthread, 0);
+    if(!use_cuda){
+	int ips=simu->perfevl_iground;
+	if(ips!=-1 && simu->atm && !parms->sim.idealevl){
+	    simu->opdevlground=dnew(simu->aper->locs->nloc,1);
+	    const int ievl=0;//doesn't matter for ground layer.
+	    int ind=ievl+parms->evl.nevl*ips;
+	    const int isim=simu->isim;
+	    const double dt=simu->dt;
+	    simu->evl_propdata_atm[ind].phiout=simu->opdevlground->p;
+	    simu->evl_propdata_atm[ind].displacex1=-simu->atm[ips]->vx*isim*dt;
+	    simu->evl_propdata_atm[ind].displacey1=-simu->atm[ips]->vy*isim*dt;
+	    CALL_THREAD(simu->evl_prop_atm[ind], parms->evl.nthread, 0);
+	}
     }
-#endif
     CALL_THREAD(simu->perf_evl, parms->evl.nevl, 0);
-#if USE_CUDA == 0
-    dfree(simu->opdevlground);simu->opdevlground=NULL;
-#endif
+    if(!use_cuda){
+	dfree(simu->opdevlground);simu->opdevlground=NULL;
+    }
     perfevl_mean(simu);
     perfevl_save(simu);
     simu->tk_eval=myclockd()-tk_start;

@@ -26,7 +26,63 @@ void gpu_info(){
 	 prop.warpSize);
 }
 
-
+/**
+   Initialize GPU. Return 1 if success.
+ */
+int gpu_init(int igpu){
+    if(igpu<0) return 0;
+    if(igpu==INT_MAX){//automatic
+	int ngpu=0;
+	DO(cudaGetDeviceCount(&ngpu));
+	switch(ngpu){
+	case 0:
+	    warning2("No GPU is available for computing\n");
+	    igpu=-1;
+	    break;
+	case 1:{//1 device. check whethere it is emulation.
+	    cudaDeviceProp prop;
+	    cudaGetDeviceProperties(&prop, 0);
+	    if(prop.major==9999){
+		warning("The only device is in emulation mode. Won't use it\n");
+		igpu=-1;
+	    }else{
+		igpu=0;
+	    }
+	}
+	    break;
+	default:{//There are multiple devices.
+	    cudaDeviceProp prop;
+	    prop.canMapHostMemory=1;
+	    prop.major=2;
+	    int ans=cudaChooseDevice(&igpu, &prop);
+	    if(ans==cudaErrorInvalidValue){
+		warning("cudaChooseDevice Failed. Will not use GPU computing.\n");
+		igpu=-1;
+	    }
+	}
+	    break;
+	}
+    }
+    if(igpu>-1){
+	int ans=cudaSetDevice(igpu);
+	switch(ans){
+	case cudaSuccess:
+	    return 1;
+	    break;
+	case cudaErrorInvalidDevice:
+	    error2("Invalid GPU device %d\n", igpu);
+	    _exit(1);
+	    break;
+	case cudaErrorSetOnActiveProcess:
+	    warning2("Error set on active process\n");
+	    break;
+	default:
+	    error2("Unknown error\n");
+	    _exit(1);
+	}
+    }
+    return 0;
+}
 /**
    Clean up device.
 */
@@ -515,3 +571,4 @@ void gpu_writeint(int *p, int nx, int ny, const char *format, ...){
     writeint(tmp,nx,ny,"%s",fn);
     free(tmp);
 }
+ 

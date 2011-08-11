@@ -15,6 +15,7 @@ typedef struct{
 }gpu_wfs_t;
 
 void gpu_info(void);
+int gpu_init(int igpu);
 void gpu_cleanup(void);
 void gpu_atm2gpu(map_t **atm, int nps);
 void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg);

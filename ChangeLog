@@ -1,3 +1,5 @@
+2011-08-10 Version 0.9.0
+	Implemented GPU computing. 10x speed up.
 2011-04-27 Version 0.8.5
 	Improved DM fitting only operation by making xloc sampled at atm.dx
 	Introduced fit.ht, for science objects at any height.

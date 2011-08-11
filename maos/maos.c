@@ -34,6 +34,7 @@
 */
 const PARMS_T *curparms=NULL;
 int curiseed=0;
+int use_cuda=0;
 /**
    This is the routine that calls various functions to do the simulation. maos()
    calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
@@ -52,8 +53,10 @@ void maos(const PARMS_T *parms){
     recon = setup_recon(parms, powfs, aper);
     info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
 #if USE_CUDA
-    gpu_wfsgrad_init(parms, powfs);
-    gpu_perfevl_init(parms, aper);
+    if(use_cuda){
+	gpu_wfsgrad_init(parms, powfs);
+	gpu_perfevl_init(parms, aper);
+    }
 #endif
     /*
       Before entering real simulation, make sure to delete all variables that
@@ -70,7 +73,9 @@ void maos(const PARMS_T *parms){
     free_powfs(parms, powfs); powfs=NULL;
     free_aper(aper, parms); aper=NULL;
 #if USE_CUDA
-    gpu_cleanup();
+    if(use_cuda){
+	gpu_cleanup();
+    }
 #endif
 }
 /**

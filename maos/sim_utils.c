@@ -502,7 +502,9 @@ void seeding(SIM_T *simu){
     }
     seed_rand(simu->telws_rand, lrand(simu->init));
 #if USE_CUDA
-    gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
+    if(use_cuda){
+	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
+    }
 #endif
 }
 /**
@@ -616,7 +618,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
     }
 #if USE_CUDA
-    gpu_dm2gpu(simu->dmrealsq, parms->ndm, parms->dm);
+    if(use_cuda){
+	gpu_dm2gpu(simu->dmrealsq, parms->ndm, parms->dm);
+    }
 #endif
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
     if(parms->sim.fuseint){
@@ -953,11 +957,15 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
 #if USE_CUDA
-    thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, gpu_wfsgrad, simu);
-    thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
-#else
-    thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
-    thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, perfevl_ievl, simu);
+    if(use_cuda){
+	thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, gpu_wfsgrad, simu);
+	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
+    }else{
+#endif
+	thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
+	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, perfevl_ievl, simu);
+#if USE_CUDA
+    }
 #endif
     if(parms->atm.frozenflow){
 	simu->dt=parms->sim.dt;

@@ -611,6 +611,7 @@ typedef struct ARG_T{
     int force;       /**<For start, bypassing scheduler*/
     int nthread;     /**<Number of threads*/
     int pause;       /**<pause at the end of every time step*/
+    int gpu;         /**<Index of GPU to use. -1 to disable*/
     char *dirout;    /**<Result output directory*/
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/

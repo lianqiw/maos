@@ -69,8 +69,10 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 #if USE_CUDA
-	    gpu_atm2gpu(simu->atm, parms->atm.nps);//takes 0.4s for NFIRAOS.
-#endif	    
+	    if(use_cuda){
+		gpu_atm2gpu(simu->atm, parms->atm.nps);//takes 0.4s for NFIRAOS.
+	    }
+#endif
 	}
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;

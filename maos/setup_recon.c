@@ -142,32 +142,32 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    nxmax=MAX(nxmax, map->nx);
 	    nymax=MAX(nymax, map->ny);
 	    recon->aloc[idm]=map2loc(map);
-#if USE_CUDA==0 //don't care size of map.
-	    recon->amap[idm]=map;
-	    recon->aembed[idm]=map2embed(map);
-	    free(map->p); map->p=NULL; 
-#else
-	    mapfree(map);
-#endif
+	    if(!use_cuda){
+		recon->amap[idm]=map;
+		recon->aembed[idm]=map2embed(map);
+		free(map->p); map->p=NULL; 
+	    }else{
+		mapfree(map);
+	    }
 	    if(parms->plot.setup){
 		plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
 	    }
 	}//idm
-#if USE_CUDA
-	for(int idm=0; idm<ndm; idm++){
-	    double ht=parms->dm[idm].ht;
-	    double dx=parms->dm[idm].dx;
-	    double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
-	    const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
+	if(use_cuda){/*This may not be necessary if do not use texture. Consider have ploc/aloc grid square.*/
+	    for(int idm=0; idm<ndm; idm++){
+		double ht=parms->dm[idm].ht;
+		double dx=parms->dm[idm].dx;
+		double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
+		const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
 	    
-	    map_t *map=create_metapupil_wrap
-		(parms,ht,dx,offset,guard,MAX(nxmax,nymax),0,parms->fit.square);
-	    recon->amap[idm]=map;
-	    recon->aembed[idm]=map2embed(map);
-	    info("Dm %d: map is %ld x %ld\n", idm, map->nx, map->ny);
-	    free(map->p);map->p=NULL;
+		map_t *map=create_metapupil_wrap
+		    (parms,ht,dx,offset,guard,MAX(nxmax,nymax),0,parms->fit.square);
+		recon->amap[idm]=map;
+		recon->aembed[idm]=map2embed(map);
+		info("Dm %d: map is %ld x %ld\n", idm, map->nx, map->ny);
+		free(map->p);map->p=NULL;
+	    }
 	}
-#endif
         if(parms->save.setup){
 	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
 	}

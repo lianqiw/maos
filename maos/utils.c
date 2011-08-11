@@ -30,8 +30,11 @@
 #include <fcntl.h>           /* For O_* constants */
 #include <errno.h>
 #include <getopt.h>
-
 #include "maos.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
+
 char *dirsetup=NULL;
 char *dirskysim=NULL;
 /**
@@ -418,6 +421,7 @@ static void print_usage(void){
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
 "-p, --path=dir    Add dir to the internal PATH\n"
 "-P, --pause       paulse simulation in the end of every time step\n"
+"-g, --gpu=N       Use the N'th gpu. 0 for the first. -1 to disable. default: automatic"
 	  );
     exit(0);
 }
@@ -436,12 +440,14 @@ static __attribute__((destructor)) void deinit(){
 ARG_T * parse_args(int argc, char **argv){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
     int *seeds=NULL; int nseed=0;
+    arg->gpu=INT_MAX;
     ARGOPT_T options[]={
 	{"help",   'h',T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
 	{"force",  'f',T_INT, 0, &arg->force, NULL},
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
+	{"gpu",    'g',T_INT, 1, &arg->gpu, NULL},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
 	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},
@@ -483,6 +489,11 @@ ARG_T * parse_args(int argc, char **argv){
     if(!arg->conf){ /*If -c is not specifid in path, will use default.conf*/
 	arg->conf=strdup("default.conf");
     }
+#if USE_CUDA 
+    use_cuda=gpu_init(arg->gpu);
+#else
+    use_cuda=0;
+#endif
     info2("Main config file is %s\n",arg->conf);
     //Setup PATH and result directory so that the config_path is in the back of path
     char *config_path=find_config("maos");
