@@ -616,6 +616,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
 	}
 	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
+	if(parms->fit.square){
+	    free(simu->dmrealsq[idm]->p);
+	    free(simu->dmrealsq[idm]->nref);simu->dmrealsq[idm]->nref=NULL;
+	    simu->dmrealsq[idm]->p=simu->dmreal->p[idm]->p;
+	}
     }
 #if USE_CUDA
     if(use_cuda){
@@ -957,7 +962,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
 #if USE_CUDA
-    if(use_cuda){
+    if(use_cuda && 0){
 	thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, gpu_wfsgrad, simu);
 	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
     }else{

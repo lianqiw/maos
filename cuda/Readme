@@ -1,0 +1,68 @@
+   Lesson: 
+
+   1) Do not declare file scope variables of __device__. Do not work.  
+
+   2) When call cudaBindTextureToArray in multi-threaded algorithms, the binding
+   will conflict between different threads.
+
+   3) For layered 2D texture., must use cudaMalloc3DArray with cudaArrayLayered
+
+   4) Be careful when use cudaMallocHost followed with cudaMemset, and test of
+   memory. the cudaMemset is asynchronousx for small dimension, which creates
+   disaster if you test the memory immediately after memset. Call
+   cudaDeviceSynchronize() after everycall to cudaMemset unless you are not
+   using the memory immediately. 
+
+   5) cuda-gdb shows internal error and can not catch error if source is too
+   long and compiled with -g -G.
+   
+   6) Don't take the & of a variable and put into kernel. the variable is on host stack.
+
+   7) FFT keeps failing the first time in each time it is called, even for a
+   simple FFT. The reason is that (quote rom CUDA 4.0 Readiness Tech Brief
+   "
+   IMPORTANT: The CUFFT library is not yet thread-safe and therefore cannot safely
+   access the same device context from multiple host threads concurrently. This
+   restriction will be removed in a future release of the CUDA Toolkit.
+   "
+   8) CUBLAS is indeed thread-safe.
+
+   9) A butterfly effect: Enabling gpu_perfevl caused cufft to fail. Reason
+   narrowed down to cudaCallocHost in gpu_calc_ptt. Change to
+   cudaCalloc. Problem disappear.
+   
+   10) Matched filter mtche_do failes randomly when I set blockDim to pixpsa and
+   run all wfs in parallel. Doing ok if set it to 32. Whe it fails, the value in
+   the shared memory g[2] is bizarre. I suspect it is caused by memory or
+   computing error. The error cannot be detected due to lack of ECC.
+   
+   11) Important: During kernel calling, never set blockDim to more than
+   256. bizarre errors may happen. For example, FFT randomly error out.
+
+   12) Always sync the stream before using the kernel output in host code.
+   
+   
+   13) in thread_pool.c do_job_once(). If check for urgent, maos with cuda uses
+   0.45s each step. without check, 0.36s.
+
+
+   Look for the following in debugging
+
+   1) For pointers, where are they located. host or device. In host heap or stack?
+
+   2) Synchronize device before and after problemetic area to isolate the cause.
+
+   3) During kernel calling, never set blockDim to more than 256. bizarre errors
+   may happen. For example, FFT randomly error out.
+   
+   
+
+   ToDO
+   
+   1) For multiple GPU. Send atm and dm to all GPU. During wfsinit, send data to
+   all gpu.  Create a function to switch gpu when entering perfevl or wfsgrad
+   and run the job in gpu's alternatively.
+
+
+   NOTE:
+   Pointers allocated by cudaMallocHost has to be freed with cudaFreeHost, not cudaFree.

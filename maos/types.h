@@ -249,13 +249,10 @@ typedef struct RECON_T{
     dmat *dx;          /**<sampling in meter of the layers*/
 
     loc_t *ploc;       /**<reconstructed pupil*/
-    long ploc_nx;      /**<Size of pmap used to build ploc*/
-    long ploc_ny;      /**<size of pmap used to build ploc*/
+    map_t *pmap;       /**<square grid of ploc.*/
 
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
     map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/
-    long *xloc_nx;     /**<size of xmap used to build xloc*/
-    long *xloc_ny;     /**<size of xmap used to build xloc*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
 
     loc_t **aloc;      /**<actuator grid*/
@@ -295,6 +292,7 @@ typedef struct RECON_T{
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
     dcell *DF;         /**<Differential focus modes for LGS wfs*/
+    dcell *PDF;        /**<pinv of DF. to use in RTC.*/
     dcell *TTF;        /**<Concatenation of TT and DF*/
     dcell *PTTF;       /**<pinv of TTF*/
     spcell *ZZT;       /**<single point piston constraint in tomography.*/

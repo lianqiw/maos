@@ -1621,6 +1621,8 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }
     if(use_cuda){
 	parms->sim.cachedm=0; //Done in CUDA.
+	parms->tomo.square=1;
+	parms->fit.square=1;
     }
     //Assign each turbulence layer to a corresponding reconstructon layer
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));

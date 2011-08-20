@@ -49,15 +49,15 @@ void maos(const PARMS_T *parms){
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
     powfs = setup_powfs(parms, aper);
     info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
-    
-    recon = setup_recon(parms, powfs, aper);
-    info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
 #if USE_CUDA
     if(use_cuda){
 	gpu_wfsgrad_init(parms, powfs);
 	gpu_perfevl_init(parms, aper);
     }
-#endif
+#endif    
+    recon = setup_recon(parms, powfs, aper);
+    info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
+
     /*
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.

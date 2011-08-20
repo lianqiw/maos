@@ -26,6 +26,9 @@
 #include "moao.h"
 #include "cn2est.h"
 #include "save.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file recon.c Wavefront reconstruction and DM fitting routines. 
 
@@ -70,8 +73,10 @@ void tomofit(SIM_T *simu){
 		    error("Out of range\n");
 		}
 	    }
-	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
-	
+	    if(!use_cuda || parms->ndm==0){
+		muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
+	    }
+	    /*
 	    if(parms->tomo.windest){
 		info2("Estimating wind direction and speed using FFT method\n");
 		windest(simu); //Update wind, and interpolation matrix.
@@ -96,10 +101,18 @@ void tomofit(SIM_T *simu){
 		    spmulmat(&simu->opdr->p[ips], simu->windshift->p[ips], tmp, 1);
 		    dfree(tmp);
 		}
-	    }
+		}*/
 	}
-	if(parms->ndm>0){//Do DM fitting
-	    muv_solve(&simu->dmfit_hi, &recon->FL, &recon->FR, simu->opdr);
+	if(parms->ndm>0){
+#if USE_CUDA
+	    if(use_cuda){
+		gpu_tomofit(simu);
+	    }else{
+#endif
+		muv_solve(&simu->dmfit_hi, &recon->FL, &recon->FR, simu->opdr);
+#if USE_CUDA
+	    }
+#endif
 	}
 
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart

@@ -24,6 +24,9 @@
 #include "cn2est.h"
 #include "recon_utils.h"
 #include "moao.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file setup_recon.c Contains routines that setup the wavefront reconstructor
    and DM fitting.  Use parms->wfsr instead of parms->wfs for wfs information,
@@ -41,7 +44,9 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	char *fn=parms->load.ploc;
 	warning("Loading ploc from %s\n",fn);
 	recon->ploc=locread("%s",fn);
-	loc_nxny(&recon->ploc_nx, &recon->ploc_ny, recon->ploc);
+	recon->pmap=loc2map(recon->ploc);
+	free(recon->pmap->p);
+	recon->pmap->p=NULL;
     }else{ 
 	/*
 	  Create a circular PLOC with telescope diameter by calling
@@ -51,9 +56,8 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	    (parms,0,dxr,0,0,0,0,parms->fit.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);//convert map_t to loc_t
-	recon->ploc_nx=pmap->nx;
-	recon->ploc_ny=pmap->ny;
-	mapfree(pmap);//free it.
+	recon->pmap = pmap;
+	free(pmap->p); pmap->p=NULL;
 	if(parms->save.setup){
 	    locwrite(recon->ploc, "%s/ploc",dirsetup);
 	}
@@ -122,15 +126,14 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	int naloc;
 	recon->aloc=locarrread(&naloc,"%s",fn);
 	if(naloc!=ndm) error("Invalid saved aloc");
-	long nx,ny;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    loc_nxny(&nx, &ny, recon->aloc[idm]);
-	    recon->amap[idm]=mapnew(nx,ny,recon->aloc[idm]->dx,(double*)1);
-	    recon->amap[idm]->p=NULL;
+	    recon->amap[idm]=loc2map(recon->aloc[idm]);
+	    recon->aembed[idm]=map2embed(recon->amap[idm]);
+	    free(recon->amap[idm]->p); recon->amap[idm]->p=NULL;
 	}
     }else{
 	recon->aloc=calloc(ndm, sizeof(loc_t*));
-	int nxmax=0, nymax=0;
+	//int nxmax=0, nymax=0;
 	for(int idm=0; idm<ndm; idm++){
 	    double ht=parms->dm[idm].ht;
 	    double dx=parms->dm[idm].dx;
@@ -139,37 +142,21 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dx,offset,guard,0,0,parms->fit.square);
-	    nxmax=MAX(nxmax, map->nx);
-	    nymax=MAX(nymax, map->ny);
+	    info("Dm %d: map is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
-	    if(!use_cuda){
-		recon->amap[idm]=map;
-		recon->aembed[idm]=map2embed(map);
-		free(map->p); map->p=NULL; 
-	    }else{
-		mapfree(map);
-	    }
-	    if(parms->plot.setup){
-		plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
-	    }
+	    recon->amap[idm]=map;
+	    recon->aembed[idm]=map2embed(map);
+	    free(map->p); map->p=NULL; 
+	    free(recon->amap[idm]->nref);recon->amap[idm]->nref=NULL;
 	}//idm
-	if(use_cuda){/*This may not be necessary if do not use texture. Consider have ploc/aloc grid square.*/
-	    for(int idm=0; idm<ndm; idm++){
-		double ht=parms->dm[idm].ht;
-		double dx=parms->dm[idm].dx;
-		double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
-		const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
-	    
-		map_t *map=create_metapupil_wrap
-		    (parms,ht,dx,offset,guard,MAX(nxmax,nymax),0,parms->fit.square);
-		recon->amap[idm]=map;
-		recon->aembed[idm]=map2embed(map);
-		info("Dm %d: map is %ld x %ld\n", idm, map->nx, map->ny);
-		free(map->p);map->p=NULL;
-	    }
-	}
         if(parms->save.setup){
 	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
+	}
+    }
+    if(parms->plot.setup){
+	for(int idm=0; idm<ndm; idm++){
+	    double ht=parms->dm[idm].ht;
+	    plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
 	}
     }
     recon->alocm=calloc(ndm, sizeof(loc_t*));
@@ -230,6 +217,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     if(recon->xloc){
 	locarrfree(recon->xloc, npsr); recon->xloc=NULL;
     }
+    recon->xmap=calloc(npsr, sizeof(map_t*));
     if(parms->load.xloc){
 	char *fn=parms->load.xloc;
 	warning("Loading xloc from %s\n",fn);
@@ -237,16 +225,13 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	recon->xloc=locarrread(&nxloc,"%s",fn);
 	if(nxloc!=npsr) 
 	    error("Invalid saved file. npsr=%d, nxloc=%d\n",npsr,nxloc);
-	recon->xloc_nx=calloc(npsr, sizeof(long));
-	recon->xloc_ny=calloc(npsr, sizeof(long));
 	for(int ips=0; ips<npsr; ips++){
-	    loc_nxny(&recon->xloc_nx[ips], &recon->xloc_ny[ips], recon->xloc[ips]);
+	    recon->xmap[ips]=loc2map(recon->xloc[ips]);
+	    free(recon->xmap[ips]->p); recon->xmap[ips]->p=NULL;
+	    free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
 	}
     }else{
 	recon->xloc=calloc(npsr, sizeof(loc_t *));
-	if(parms->tomo.square) recon->xmap=calloc(npsr, sizeof(map_t *));
-	recon->xloc_nx=calloc(npsr, sizeof(long));
-	recon->xloc_ny=calloc(npsr, sizeof(long));
 	info2("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
@@ -257,29 +242,25 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 		//FFT in FDPCG prefers power of 2 dimensions.
 		nin=nextpow2((long)round(parms->aper.d/recon->dx->p[0]*2.))
 		    *recon->os->p[ips]/recon->os->p[0];
-		//warning("layer %d xloc is set to %ld for FDPCG\n",ips,nin);
 	    }
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dxr,0,guard,nin,0,parms->tomo.square);
 	    info2("layer %d: xloc map is %3ld x %3ld, sampling is %.3f m\n",
 		  ips, map->nx,map->ny,dxr);
 	    recon->xloc[ips]=map2loc(map);
-	    recon->xloc_nx[ips]=map->nx;
-	    recon->xloc_ny[ips]=map->ny;
-	    if(parms->tomo.square){
-		recon->xmap[ips]=map;
-		//Free the data and nref so we are assign pointers to it.
-		free(recon->xmap[ips]->p);
-		free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
-	    }else{
-		mapfree(map);
-	    }
-	    if(parms->plot.setup){
-		plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);
-	    }
+	    recon->xmap[ips]=map;
+	    //Free the data and nref so we are assign pointers to it.
+	    free(recon->xmap[ips]->p);recon->xmap[ips]->p=NULL;
+	    free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
 	}
 	if(parms->save.setup){
 	    locarrwrite(recon->xloc, recon->npsr, "%s/xloc",dirsetup);
+	}
+    }
+    if(parms->plot.setup){
+	for(int ips=0; ips<npsr; ips++){
+	    const double ht=recon->ht->p[ips];
+	    plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);
 	}
     }
     
@@ -630,6 +611,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 	int nsa=powfs[ipowfs].pts->nsa;
 	if(parms->powfs[ipowfs].neareconfile){//taks precedance
 	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);//rad
+	    /* sanity check */
 	    if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].neaphy){
 		//sanity check on provided nea.
 		const int nmtch=powfs[ipowfs].intstat->mtche->ny;
@@ -758,6 +740,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 	spcellwrite(recon->saneal,"%s/saneal",dirsetup);
 	spcellwrite(recon->saneai,"%s/saneai",dirsetup);
     }
+   
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(powfs[ipowfs].intstat){
 	    dcellfree(powfs[ipowfs].intstat->sanea);
@@ -830,6 +813,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
     if(!recon->has_dfr) return;
     if(recon->DF){ 
 	dcellfree(recon->DF);
+	dcellfree(recon->PDF);
     }
     int nwfs=parms->nwfsr;
     recon->DF=dcellnew(nwfs,nwfs);
@@ -843,7 +827,7 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
 	    }
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    dmat* DF=dnew(nsa*2,1);
-	 
+	    //saloc is lower left corner of subaperture. don't have to be the center.
 	    memcpy(DF->p, powfs[ipowfs].saloc->locx, sizeof(double)*nsa);
 	    memcpy(DF->p+nsa, powfs[ipowfs].saloc->locy, sizeof(double)*nsa);
 	    /**
@@ -860,8 +844,10 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
 	    dfree(DF);
 	}
     }
+    recon->PDF=dcellpinv(recon->DF, NULL, recon->saneai);
     if(parms->save.setup){
 	dcellwrite(recon->DF, "%s/DF",dirsetup);
+	dcellwrite(recon->PDF, "%s/PDF",dirsetup);
     }
 }
 /**
@@ -880,7 +866,11 @@ setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms,
 	recon->TTF=dcellref(recon->TT);
     }
     recon->PTTF=dcellpinv(recon->TTF, NULL, recon->saneai);
-    dcellfree(recon->DF);
+    if(parms->save.setup){
+	dcellwrite(recon->TTF, "%s/TTF",dirsetup);
+	dcellwrite(recon->PTTF, "%s/PTTF",dirsetup);
+    }
+    //dcellfree(recon->DF);//don't free DF to use in PDF.
     //Keep TT, PTT, used in uplink pointing.
 }
 /**
@@ -934,7 +924,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    for(int ips=0; ips<npsr; ips++){
 		if(parms->tomo.square){//periodic bc
 		    recon->L2->p[ips+npsr*ips]=mklaplacian_map
-			(recon->xloc_nx[ips], recon->xloc_ny[ips],
+			(recon->xmap[ips]->nx, recon->xmap[ips]->nx,
 			 recon->xloc[ips]->dx, recon->r0,
 			 recon->wt->p[ips]);
 		}else{//reflecive bc
@@ -961,8 +951,8 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	}else{
 	    dcell* invpsd=recon->invpsd->invpsd=dcellnew(npsr,1);
 	    for(int ips=0; ips<npsr; ips++){
-		long nx=recon->xloc_nx[ips];
-		long ny=recon->xloc_ny[ips];
+		long nx=recon->xmap[ips]->nx;
+		long ny=recon->xmap[ips]->ny;
 		double r0i=recon->r0*pow(recon->wt->p[ips],-3./5.);
 		invpsd->p[ips]=turbpsd(nx, ny, recon->xloc[ips]->dx, r0i,
 				       recon->l0,-1);
@@ -974,7 +964,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	}
 	ccell* fftxopd=recon->invpsd->fftxopd=ccellnew(recon->npsr, 1);
 	for(int ips=0; ips<recon->npsr; ips++){
-	    fftxopd->p[ips]=cnew(recon->xloc_nx[ips], recon->xloc_ny[ips]);
+	    fftxopd->p[ips]=cnew(recon->xmap[ips]->nx, recon->xmap[ips]->ny);
 	    cfft2plan(fftxopd->p[ips],-1);
 	    cfft2plan(fftxopd->p[ips],1);
 	}
@@ -992,7 +982,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->fractal->ninit=parms->tomo.ninit;
 	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
 	for(int ips=0; ips<npsr; ips++){
-	    int nn=nextpow2(MAX(recon->xloc_nx[ips], recon->xloc_ny[ips]))+1;
+	    int nn=nextpow2(MAX(recon->xmap[ips]->nx, recon->xmap[ips]->ny))+1;
 	    xopd->p[ips]=dnew(nn,nn);
 	}
     }
@@ -1702,7 +1692,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	recon->FL.V=dcellread("FLV");
     }else{
 	fit_prep_lrt(recon,parms);
-	if(parms->fit.actslave){
+	if(parms->fit.actslave && parms->fit.alg!=1){
 	    /*
 	      2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found that slaving is causing mis-measurement of a few edge actuators. First try to remove W1. Or lower the weight. Revert back.
 	     */
@@ -2147,7 +2137,8 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     setup_recon_xloc(recon,parms);
     //setup xloc/aloc to WFS grad
     toc2("Generating xloc");
-    if(!parms->sim.idealfit){
+    if(!parms->sim.idealfit &&
+       !(parms->sim.recon==1 && (parms->sim.wfsalias || parms->sim.idealwfs))){
 	setup_recon_HXW(recon,parms);
 	setup_recon_GX(recon,parms);
 	spcellfree(recon->HXW);//only keep HXWtomo for tomography
@@ -2186,7 +2177,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	recon->RL.warm  = recon->warm_restart;
 	recon->RL.maxit = parms->tomo.maxit;
     }
-    if(!parms->sim.idealfit){//In this case, xloc has high sampling. We avoid HXF.
+    if(!parms->sim.idealfit){//In idealfit, xloc has high sampling. We avoid HXF.
 	setup_recon_HXF(recon,parms);
     }
     setup_recon_HA(recon,parms);
@@ -2248,7 +2239,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     /*
       The following arrys are not used after preparation is done.
     */
-     spcellfree(recon->GX);
+    spcellfree(recon->GX);
     spcellfree(recon->GXhi);
     spcellfree(recon->GXtomo);//we use HXWtomo instead. faster
     if(!(parms->cn2.tomo && parms->tomo.split==2)){//mvst needs GXlo when updating.
@@ -2330,7 +2321,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    dcellwrite(NW, "%s/lsrNW",dirsetup);
 	}
     }
-    if(parms->fit.actslave){
+    if(parms->fit.actslave && parms->tomo.alg!=1){
 	//actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14.
 	spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NW, recon->actstuck, recon->actfloat, 0.1, sqrt(maxeig));
 	if(parms->save.setup){
@@ -2477,9 +2468,9 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     case 1:
     case 2:
 	setup_recon_lsr(recon, parms, powfs, aper);
-	if(parms->sim.wfsalias || parms->sim.idealwfs){
+	/*if(parms->sim.wfsalias || parms->sim.idealwfs){
 	    setup_recon_mvr(recon, parms, powfs, aper);
-	}
+	    }*/
 	break;
     default:
 	error("sim.recon=%d is not recognized\n", parms->sim.recon);
@@ -2511,6 +2502,12 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     if(parms->fit.alg==1){
 	muv_direct_free(&recon->FL);
     }
+#if USE_CUDA
+    if(use_cuda){
+	gpu_setup_recon(parms, powfs, recon);
+    }
+#endif
+
     /*
       The following arrys are not used after preparation is done.
     */
@@ -2543,6 +2540,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->TT);
     dcellfree(recon->PTT);
     dcellfree(recon->DF);
+    dcellfree(recon->PDF);
     dcellfree(recon->TTF);
     dcellfree(recon->PTTF);
     dcellfree(recon->RFlgs);
@@ -2582,13 +2580,12 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	free(recon->aembed[idm]);
     }
     maparrfree(recon->amap, parms->ndm);
+    mapfree(recon->pmap);
     free(recon->aembed);
     free(recon->alocm);
     free(recon->aloc);
     icellfree(recon->actstuck);
     icellfree(recon->actfloat);
-    free(recon->xloc_nx); 
-    free(recon->xloc_ny);
     dcellfree(recon->aimcc);//used in filter.c
     muv_free(&recon->RR);
     muv_free(&recon->RL);

@@ -2,11 +2,13 @@ extern "C"
 {
 #include <cuda.h>
 #include "gpu.h"
-#include "utils.h"
 }
+#include "utils.h"
 #include <pthread.h>
 static cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
+extern cusparseMatDescr_t cuspdesc;
+
 int nstream=0;
 /**
    Get GPU info.
@@ -68,7 +70,6 @@ int gpu_init(int igpu){
 	switch(ans){
 	case cudaSuccess:
 	    return 1;
-	    break;
 	case cudaErrorInvalidDevice:
 	    error2("Invalid GPU device %d\n", igpu);
 	    _exit(1);
@@ -92,7 +93,7 @@ void gpu_cleanup(void){
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float array.
 */
-void gpu_map2dev(map_t **source, int nps, cumap_t *dest, int type){
+void gpu_map2dev( cumap_t *dest, map_t **source, int nps, int type){
     if(nps==0) return;
     if(dest->nlayer!=0 && dest->nlayer!=nps){
 	error("Mismatch. nlayer=%d, nps=%d\n", dest->nlayer, nps);
@@ -101,7 +102,7 @@ void gpu_map2dev(map_t **source, int nps, cumap_t *dest, int type){
     int nx0=source[0]->nx;
     int ny0=source[0]->ny;
     if(!dest->vx){
-	if(type==1){
+	if(type==1){//all layers must be same size.
 	    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 	    DO(cudaMalloc3DArray(&dest->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), 
 				 cudaArrayLayered));
@@ -109,7 +110,7 @@ void gpu_map2dev(map_t **source, int nps, cumap_t *dest, int type){
 	    DO(cudaMallocHost(&(dest->p), nps*sizeof(float*)));
 	    //memory in device.
 	    for(int ips=0; ips<nps; ips++){
-		DO(cudaMalloc(&(dest->p[ips]), nx0*ny0*sizeof(float)));
+		DO(cudaMalloc(&(dest->p[ips]), source[ips]->nx*source[ips]->ny*sizeof(float)));
 	    }
 	}
         dest->vx=new float[nps];
@@ -120,6 +121,13 @@ void gpu_map2dev(map_t **source, int nps, cumap_t *dest, int type){
 	dest->dx=new float[nps];
 	dest->nx=new int[nps];
 	dest->ny=new int[nps];
+	for(int ips=0; ips<nps; ips++){
+	    if(type==1 && source[ips]->nx!=nx0 && source[ips]->ny!=ny0){
+		error("Only support map_t arrays of the same size if type==1\n");
+	    }
+	    dest->nx[ips]=source[ips]->nx;
+	    dest->ny[ips]=source[ips]->ny;
+	}
     }
     
     float *tmp=NULL;
@@ -128,17 +136,13 @@ void gpu_map2dev(map_t **source, int nps, cumap_t *dest, int type){
     for(int ips=0; ips<nps; ips++){
 	int nx=source[ips]->nx;
 	int ny=source[ips]->ny;
-	if(type==1 && (nx!=nx0 || ny!=ny0)){
-	    error("Only support map_t arrays of the same size if type==1\n");
-	}
 	dest->vx[ips]=source[ips]->vx;
 	dest->vy[ips]=source[ips]->vy;
 	dest->ht[ips]=source[ips]->h;
 	dest->ox[ips]=source[ips]->ox;
 	dest->oy[ips]=source[ips]->oy;
 	dest->dx[ips]=source[ips]->dx;
-	dest->nx[ips]=source[ips]->nx;
-	dest->ny[ips]=source[ips]->ny;
+
 	if(type==1){//cudaArray
 	    for(long ix=0; ix<(long)nx0*(long)ny0; ix++){
 		tmp[ips*nx0*ny0+ix]=(float)source[ips]->p[ix];
@@ -164,9 +168,9 @@ void gpu_map2dev(map_t **source, int nps, cumap_t *dest, int type){
 /*
   Convert a host dsp array to GPU sprase array. Both are in CSC format. 
 */
-void gpu_sp2dev(cusp_t **dest0, dsp *src){
-    if(!*dest0) *dest0=(cusp_t*)calloc(1, sizeof(cusp_t));
-    cusp_t *dest=*dest0;
+void gpu_sp2dev(cusp **dest0, dsp *src){
+    if(!*dest0) *dest0=(cusp*)calloc(1, sizeof(cusp));
+    cusp *dest=*dest0;
     dest->nx=src->m;
     dest->ny=src->n;
     dest->nzmax=src->nzmax;
@@ -181,7 +185,7 @@ void gpu_sp2dev(cusp_t **dest0, dsp *src){
     gpu_dbl2dev(&dest->x, src->x, src->nzmax);
 #endif
 }
-__global__ void cuspmul_do(float *y, cusp_t *A, float *x, float alpha){
+__global__ void cuspmul_do(float *y, cusp *A, float *x, float alpha){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<A->ny; i+=step){
 	for(int j=A->p[i]; j<A->p[i+1]; j++){
@@ -192,14 +196,29 @@ __global__ void cuspmul_do(float *y, cusp_t *A, float *x, float alpha){
 /*
   y=A*x where A is sparse. x, y are vectors. Slow for GS0.
 */
-void cuspmul(float *y, cusp_t *A, float *x, float alpha, cudaStream_t stream){
+void cuspmul(float *y, cusp *A, float *x, float alpha, 
+#if MYSPARSE ==1
+	     cudaStream_t stream
+#else
+	     cusparseHandle_t handle
+#endif
+	     ){
+#if MYSPARSE ==1
     cuspmul_do<<<A->nx/256, 256, 0, stream>>>(y,A,x,alpha);
+#else
+    int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_TRANSPOSE, 
+			      A->ny, A->nx, alpha, cuspdesc,
+			      A->x, A->p, A->i, x, 1.f, y);
+    if(status!=0){
+	error("cusparseScsrmv failed with status %d\n", status);
+    }
+#endif
 }
 
 /*
   y=A'*x where A is sparse. x, y are vectors
 */
-__global__ void cusptmul_do(float *y, int icol, cusp_t *A, float *x, float alpha){
+__global__ void cusptmul_do(float *y, int icol, cusp *A, float *x, float alpha){
     __shared__ float val;
     if(threadIdx.x==0) val=0;
     int i=blockIdx.x * blockDim.x + threadIdx.x;
@@ -208,12 +227,28 @@ __global__ void cusptmul_do(float *y, int icol, cusp_t *A, float *x, float alpha
     if(threadIdx.x==0) y[icol]+=val*alpha;
 }
 /*
-  Does not work yet. Try to launch a block for each column and n items in each block.
+  Does not work right yet. Try to launch a block for each column and n items in each block.
 */
-void cusptmul(float *y, cusp_t *A, float *x, float alpha, cudaStream_t stream){
+void cusptmul(float *y, cusp *A, float *x, float alpha, 
+#if MYSPARSE ==1
+	     cudaStream_t stream
+#else
+	     cusparseHandle_t handle
+#endif
+	      ){
+#if MYSPARSE == 1
     for(int i=0; i<A->ny; i++){
 	cusptmul_do<<<1, A->p[i+1]-A->p[i], 0, stream>>>(y,i,A,x,alpha);
     }
+    warning("Not working correctly yet\n");
+#else
+    int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, 
+			      A->ny, A->nx, alpha, cuspdesc,
+			      A->x, A->p, A->i, x, 1.f, y);
+    if(status!=0){
+	error("cusparseScsrmv failed with status %d\n", status);
+    }
+#endif
 }
 __global__ static void calc_ptt_do( float *cc,
 				    const float (*restrict loc)[2], 
@@ -394,6 +429,7 @@ void gpu_loc2dev(float (* restrict *dest)[2], loc_t *src){
    Convert double array to device memory (float)
 */
 void gpu_dbl2dev(float * restrict *dest, double *src, int n){
+    if(!src) return;
     float *tmp=(float*)malloc(n*sizeof(float));
     for(int i=0; i<n; i++){
 	tmp[i]=(float)src[i];
@@ -409,6 +445,7 @@ void gpu_dbl2dev(float * restrict *dest, double *src, int n){
    Convert double array to device memory (float)
 */
 void gpu_cmp2dev(fcomplex * restrict *dest, dcomplex *src, int n){
+    if(!src) return;
     fcomplex *tmp=(fcomplex*)malloc(n*sizeof(fcomplex));
     for(int i=0; i<n; i++){
 	tmp[i]=(make_cuFloatComplex)(cuCreal(src[i]), cuCimag(src[i]));
@@ -424,8 +461,32 @@ void gpu_cmp2dev(fcomplex * restrict *dest, dcomplex *src, int n){
    Convert dmat array to device memory.
 */
 void gpu_dmat2dev(float * restrict *dest, dmat *src){
-    if(src){
-	gpu_dbl2dev(dest, src->p, src->nx*src->ny);
+    if(!src) return;
+    gpu_dbl2dev(dest, src->p, src->nx*src->ny);
+}
+/**
+   Convert dmat array to curmat
+*/
+void gpu_dmat2cu(curmat *restrict *dest, dmat *src){
+    if(!src) return;
+    if(!*dest){
+	*dest=curnew(src->nx, src->ny);
+    }
+    gpu_dbl2dev(&(*dest)->p, src->p, src->nx*src->ny);
+}
+/**
+   Convert dcell to curcell
+*/
+void gpu_dcell2cu(curcell *restrict *dest, dcell *src){
+    if(!src) return;
+    if(!*dest) 
+	*dest=curcellnew(src->nx, src->ny);
+    else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
+	error("Mismatch: %dx%d vs %ldx%ld\n", 
+	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
+    }
+    for(int i=0; i<src->nx*src->ny; i++){
+	gpu_dmat2cu(&(*dest)->p[i], src->p[i]);
     }
 }
 /**
@@ -440,6 +501,7 @@ void gpu_cmat2dev(fcomplex * restrict *dest, cmat *src){
    Convert double array to device memory (float)
 */
 void gpu_dbl2flt(float * restrict *dest, double *src, int n){
+    if(!src) return;
     if(!*dest){
 	cudaMallocHost((float**)dest, n*sizeof(float));
     }
@@ -451,6 +513,7 @@ void gpu_dbl2flt(float * restrict *dest, double *src, int n){
    Convert long array to device int
 */
 void gpu_long2dev(int * restrict *dest, long *src, int n){
+    if(!src) return;
     if(!*dest){
 	DO(cudaMalloc((int**)dest, n*sizeof(int)));
     }
@@ -571,4 +634,30 @@ void gpu_writeint(int *p, int nx, int ny, const char *format, ...){
     writeint(tmp,nx,ny,"%s",fn);
     free(tmp);
 }
- 
+/**
+   Compute the dot product of two vectors
+*/
+/*
+__global__ static void dot_do(float *res, const float *restrict a, const float *restrict b, const int n){
+    float sumt=0;
+    __shared__ float sumb;
+    if(threadIdx.x == 0) sumb=0;
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	sumt+=a[i]*b[i];
+	}
+    atomicAdd(&sumb, sumt);
+    __syncthreads();
+    if(threadIdx.x==0){
+	atomicAdd(res, sumb);
+    }
+}
+float gpu_dot(const float *restrict a, const float *restrict b, const int n, cudaStream_t stream){
+    float *res=NULL;
+    cudaCallocHost(res, 1*sizeof(float), stream);
+    dot_do<<<MAX(MIN(n/256, 32), 1), MIN(n, 256), 0, stream>>>(res, a, b, n);
+    CUDA_SYNC_STREAM;
+    float result=res[0];
+    DO(cudaFreeHost(res));
+    return result;
+    }*/

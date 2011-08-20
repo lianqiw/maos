@@ -2,9 +2,9 @@ extern "C"
 {
 #include <cuda.h>
 #include "gpu.h"
+}
 #include "utils.h"
 #include "accphi.h"
-}
 #include "curand_kernel.h"
 #include "cusparse.h"
 #include "cufft.h"
@@ -171,23 +171,7 @@ __global__ static void collect_noise_do(float *restrict neareal, const float *re
 	nea[3]+=dy*dy;
     }
 }
-void gpu_wfsgrad2(thread_t *info){
-{
-    int n=64;
-    fcomplex *in;
-    fcomplex *out;
-    cudaMalloc(&in, n*n*sizeof(fcomplex));
-    cudaMalloc(&out, n*n*sizeof(fcomplex));
-    cudaMemset(in, 0, n*n*sizeof(fcomplex));
-    cufftHandle plan;
-    int ans;
-    ans=cufftPlan2d(&plan, n, n, CUFFT_C2C);
-    if(ans) warning("plan failed: %d\n", ans);
-    ans=cufftExecC2C(plan, in, in, CUFFT_FORWARD);
-    if(ans) error("exec failed: %d\n", ans);
 
-}
-}
 /**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
    data back to CPU.
@@ -251,7 +235,7 @@ void gpu_wfsgrad(thread_t *info){
     if(CL){
 	gpu_dm2loc(phiout, loc, nloc, hs, thetax, thetay, mispx, mispy, -1, stream);
     }
-    CUDA_SYNC_STREAM;
+    //CUDA_SYNC_STREAM;
 
     if(imoao>-1){
 	TO_IMPLEMENT;
@@ -271,13 +255,13 @@ void gpu_wfsgrad(thread_t *info){
 	    cuztilt<<<nsa, dim3(16,16), 0, stream>>>(gradacc, phiout, cupowfs[ipowfs].nsa, 
 					     cupowfs[ipowfs].dx, 
 					     cupowfs[ipowfs].nxsa, cuwfs[iwfs].imcc,
-					     cupowfs[ipowfs].saorig, cuwfs[iwfs].amp, 
+					     cupowfs[ipowfs].pts, cuwfs[iwfs].amp, 
 					     1.f/(float)dtrat);
 	}else{
-	    cusp_t *GS0=cuwfs[iwfs].GS0;
-#if MYSPARSE==1
-	    cusptmul(gradacc, &cuGS0[ipowfs][iGS0], phiout, 1.f/(float)dtrat, stream);
-#else
+	    cusp *GS0=cuwfs[iwfs].GS0t;
+	    cusptmul(gradacc, GS0, phiout, 1.f/(float)dtrat, cuwfs[iwfs].sphandle);
+	    /*
+	    //THe following is relocated to cusptmul.
 	    int status=cusparseScsrmv(cuwfs[iwfs].sphandle, CUSPARSE_OPERATION_NON_TRANSPOSE, 
 				      GS0->ny, GS0->nx, 1.f/(float)dtrat, cuspdesc,
 				      GS0->x, GS0->p, GS0->i, phiout, 1.f,
@@ -285,7 +269,7 @@ void gpu_wfsgrad(thread_t *info){
 	    if(status!=0){
 		error("cusparseScsrmv failed with status %d\n", status);
 	    }
-#endif
+	    */
 	}
     }   
     CUDA_SYNC_STREAM;

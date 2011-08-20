@@ -274,6 +274,26 @@ loc_t* map2loc(map_t *map){
     return loc;
 }
 /**
+   convert loc to map.
+*/
+map_t *loc2map(loc_t *loc){
+    double xmax, xmin, ymax, ymin;
+    maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
+    maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
+    int nx=ceil((xmax-xmin)/loc->dx)+1;
+    int ny=ceil((ymax-ymin)/loc->dx)+1;
+    map_t *map=mapnew(nx, ny, loc->dx, NULL);
+    map->ox=xmin;
+    map->oy=ymin;
+    double dx_in1=1./loc->dx;
+    for(int iloc=0; iloc<loc->nloc; iloc++){
+	int ix=(int)round((loc->locx[iloc]-xmin)*dx_in1);
+	int iy=(int)round((loc->locy[iloc]-ymin)*dx_in1);
+	map->p[ix+iy*nx]=1.;
+    }	
+    return map;
+}
+/**
    map is a square array of values of 0, or nonzero. 0 means that point is
    missing. the returned vector of long integers can be used to embed an
    irregular OPD into the square array of map->nx*map->ny. The OPDs only goes to

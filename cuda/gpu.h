@@ -24,5 +24,7 @@ void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rst
 void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper);
 void gpu_wfsgrad(thread_t *info);
 void gpu_perfevl(thread_t *info);
-
+void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
+void gpu_tomofit(SIM_T *simu);
 #endif
+

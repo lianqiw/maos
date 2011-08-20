@@ -36,19 +36,19 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	 ){
     
     dcell *r0=NULL, *x0=NULL, *z0=NULL;
+    //computes r0=b-A*x0
+    dcellcp(&r0, b);
     if(!*px || !warm){//start from zero guess.
 	x0=dcellnew2(b);
 	if(!*px) dcellcp(px, x0);//initialize the output;
     }else{
 	dcellcp(&x0, *px);
+	Amul(&r0, A, x0, -1);//r0=r0+(-1)*A*x0
     }
-    //computes r0=b-A*x0
-    dcelladd(&r0, 0., b, 1.);//r0=b;
-    (*Amul)(&r0, A, x0, -1);//r0=r0+(-1)*A*x0
     double r0z1,r0z2,r0zmin;
     dcell *p0=NULL;
     if(Mmul){
-	(*Mmul)(&z0,M,r0);
+	Mmul(&z0,M,r0);
     }else{
 	z0=r0;
     }

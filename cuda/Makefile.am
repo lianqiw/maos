@@ -6,10 +6,10 @@ endif
 AM_CFLAGS+=-DHAVE_CONFIG_H -I..
 AM_LDFLAGS=-L/opt/cuda/lib64/ -lcudart -lcurand 
 
-EXTRA_DIST=gpu.h wfs.h utils.h accphi.h
+EXTRA_DIST=gpu.h wfs.h utils.h accphi.h recon.h curmat.h
 #LTLIBRARIES does not work.
 lib_LIBRARIES=libgpu.a
-libgpu_a_SOURCES=accphi.cu utils.cu wfsgrad.cu wfsints.cu wfsinit.cu perfevl.cu
+libgpu_a_SOURCES=accphi.cu utils.cu curmat.cu wfsgrad.cu wfsints.cu wfsinit.cu perfevl.cu recon.cu
 libgpu_a_LIBADD=
 
 .SUFFIXES=.cu.o

@@ -268,11 +268,13 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     const double hs=parms->powfs[hipowfs].hs;
     const long nps=recon->npsr;
     long os[nps];//oversampling ratio of each layer.
-    const long* nx=recon->xloc_nx;
-    const long* ny=recon->xloc_ny;
+    long nx[nps];
+    long ny[nps];
     const double *ht=parms->atmr.ht;
     long nxtot=0;
     for(long ips=0; ips<nps; ips++){
+	nx[ips]=recon->xmap[ips]->nx;
+	ny[ips]=recon->xmap[ips]->ny;
 	os[ips]=(long)round(saloc->dx/(xloc[ips]->dx/(1.-ht[ips]/hs)));
 	nxtot+=nx[ips]*ny[ips];
     }
@@ -301,7 +303,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    if(parms->tomo.square){
 		L2=spref(recon->L2->p[ips+nps*ips]);
 	    }else{//L2 is for non square xloc. need to build L2 for square xloc.
-		L2=mklaplacian_map(recon->xloc_nx[ips], recon->xloc_ny[ips],
+		L2=mklaplacian_map(nx[ips], ny[ips],
 				   recon->xloc[ips]->dx, recon->r0,
 				   recon->wt->p[ips]);
 	    }

@@ -66,6 +66,7 @@ void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);\
 void X(scale)(X(mat) *A, T w);\
 T X(sum)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac);\
+void X(adds)(X(mat*)A, const T ac);\
 T X(inn)(const X(mat)*A, const X(mat) *B);			\
 T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\
 T X(wdot2)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\

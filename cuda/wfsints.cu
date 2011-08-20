@@ -2,9 +2,9 @@ extern "C"
 {
 #include <cuda.h>
 #include "gpu.h"
+}
 #include "utils.h"
 #include "accphi.h"
-}
 #include "curand_kernel.h"
 #include "cusparse.h"
 #include "cufft.h"
@@ -318,11 +318,11 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 		cudaCallocHost(lltg, 2*sizeof(float), stream);
 		cuztilt<<<1,dim3(16,16),0,stream>>>(lltg, lltopd, 1, cupowfs[ipowfs].llt->dx, 
 						    cupowfs[ipowfs].llt->nxsa, cuwfs[iwfs].lltimcc,
-						    cupowfs[ipowfs].llt->saorig, cuwfs[iwfs].lltamp, 1.f);
+						    cupowfs[ipowfs].llt->pts, cuwfs[iwfs].lltamp, 1.f);
 		CUDA_SYNC_STREAM;		
 		ttx=-lltg[0];
 		tty=-lltg[1];
-		cudaFree(lltg);
+		cudaFreeHost(lltg);
 	    }else{
 		ttx=simu->uptreal->p[iwfs]->p[0];
 		tty=simu->uptreal->p[iwfs]->p[1];
@@ -375,91 +375,103 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	float norm_psf=sqrt(powfs[ipowfs].areascale)/((float)powfs[ipowfs].pts->nx*npsf);
 	float norm=siglev*norm_psf*norm_psf/((float)ncompx*ncompy);
 	float norm_pistat=norm_psf*norm_psf/((float)npsf*npsf);
+
+	/* Do msa subapertures in a batch to avoid using too much memory.*/
 	fcomplex *psf, *otf;
-	cudaCalloc(psf, sizeof(fcomplex)*npsf*npsf*nsa, stream);
+	int msa=cuwfs[iwfs].msa;
+	cudaCalloc(psf, sizeof(fcomplex)*npsf*npsf*msa, stream);
 	if(srot1 || ncompx!=npsf || ncompy!=npsf){
-	    cudaCalloc(otf, sizeof(fcomplex)*ncompx*ncompy*nsa, stream);
+	    cudaCalloc(otf, sizeof(fcomplex)*ncompx*ncompy*msa, stream);
 	}else{
 	    otf=psf;
 	}
-	//embed amp/opd to wvf
-	embed_wvf_do<<<nsa, dim3(16,16),0,stream>>>(psf, phiout, cuwfs[iwfs].amp, wvl, nx, npsf);
-	ctoc("embed");
-	//turn to complex psf, peak in corner
-	CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
-	ctoc("psf");
-	if(psfout) TO_IMPLEMENT;
-	//abs2 part to real, peak in corner
-	abs2real_do<<<nsa,dim3(16,16),0,stream>>>(psf, npsf, 1);
-	ctoc("abs2real");
-	if(lltopd || pistatout){
-	    //turn to otf.
+	for(int isa=0; isa<nsa; isa+=msa){
+	    int ksa=MIN(msa, nsa-isa);//total number of subapertures left to do.
+	    //embed amp/opd to wvf
+	    cudaMemsetAsync(psf, 0, sizeof(fcomplex)*msa*npsf*npsf, stream);
+	    if(otf!=psf) cudaMemsetAsync(otf, 0, sizeof(fcomplex)*msa*ncompx*ncompy, stream);
+	    embed_wvf_do<<<ksa, dim3(16,16),0,stream>>>
+		(psf, phiout+isa*nx*nx, cuwfs[iwfs].amp+isa*nx*nx, wvl, nx, npsf);
+	    ctoc("embed");
+	    //turn to complex psf, peak in corner
 	    CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
-	    ctoc("fft to otf");
-	    if(lltopd){//multiply with uplink otf.
-		ccwm_do<<<nsa,dim3(16,16),0,stream>>>(psf, npsf, npsf, (fcomplex**)lotfc, 1);
-	    }
-	    ctoc("ccwm with lotfc");
-	    if(pistatout){
-		TO_IMPLEMENT;
-	    }
-	    //is OTF now.
-	}
-	ctoc("before ints");
-	CUDA_SYNC_STREAM;
-	if(ints){
-	    if(srot1 || !(lltopd || pistatout) || otf!=psf){
-		//rotate PSF, or turn to OTF first time.
-		if(lltopd || pistatout){//srot1 is true. turn otf back to psf for rotation.
-		    //Was OTF. Turn to PSF
-		    norm/=((float)npsf*npsf);
-		    CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_INVERSE);
-		    ctoc("fft to psf");
-		}
-		if(srot1){
-		    fftshift_do<<<nsa, dim3(16,16),0,stream>>>(psf, npsf, npsf);//shift to center
-		    embed_rot_do<<<nsa, dim3(16,16), 0, stream>>>(otf, ncompx, ncompy, psf, npsf, npsf, srot1);
-		    fftshift_do<<<nsa, dim3(16,16),0,stream>>>(otf, ncompx, ncompy);//shift back to corner
-		}else if(otf!=psf){
-		    cpcorner_do<<<nsa, dim3(16,16),0,stream>>>(otf, ncompx, ncompy, psf, npsf, npsf);
-		    ctoc("cpcorner");
-		}
-		//Turn PSF to OTF.
-		CUFFT(cuwfs[iwfs].plan2, otf,CUFFT_FORWARD);
+	    ctoc("psf");
+	    if(psfout) TO_IMPLEMENT;
+	    //abs2 part to real, peak in corner
+	    abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, npsf, 1);
+	    ctoc("abs2real");
+
+	    if(lltopd || pistatout){
+		//turn to otf.
+		CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
 		ctoc("fft to otf");
-	    }
-	    //now we have otf. multiple with etf, dtf.
-	    if(cuwfs[iwfs].dtf[iwvl].etf){
-		if(cuwfs[iwfs].dtf[iwvl].etfis1d){
-		    ccwmcol_do<<<nsa,dim3(16,16),0,stream>>>
-			(otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf, 0);
-		}else{
-		    ctoc("before ccwm");
-		    ccwm_do<<<nsa,dim3(16,16),0,stream>>>
-			(otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf, 0);
-		    ctoc("ccwm");
+		if(lltopd){//multiply with uplink otf.
+		    ccwm_do<<<ksa,dim3(16,16),0,stream>>>(psf, npsf, npsf, (fcomplex**)lotfc, 1);
 		}
+		ctoc("ccwm with lotfc");
+		if(pistatout){
+		    TO_IMPLEMENT;
+		}
+		//is OTF now.
 	    }
-	    //multiple with nominal
-	    if(cuwfs[iwfs].dtf[iwvl].nominal){
-		ccwm_do<<<nsa,dim3(16,16),0,stream>>>
-		    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].nominal, 0);
-		ctoc("nominal");
-	    }
-	    //back to spatial domain.
-	    CUFFT(cuwfs[iwfs].plan2,otf, CUFFT_INVERSE);
-	    ctoc("fft");
-	    float *psfr;
-	    DO(cudaMalloc(&psfr, sizeof(float)*ncompx*ncompy*nsa));
-	    realpart_do<<<nsa, dim3(16,16),0,stream>>>(psfr, otf, ncompx, ncompy);
-	    ctoc("realpart");
-	    si_rot_do<<<nsa, dim3(16,16),0,stream>>>
-		(ints, pixpsax, pixpsay, parms->powfs[ipowfs].pixoffx, parms->powfs[ipowfs].pixoffy,
-		 pixtheta, psfr, dtheta, ncompx, ncompy, srot2, norm);
-	    ctoc("final");
+	    ctoc("before ints");
 	    CUDA_SYNC_STREAM;
-	    cudaFree(psfr);
-	}//if ints.
+	    if(ints){
+		if(srot1 || !(lltopd || pistatout) || otf!=psf){
+		    //rotate PSF, or turn to OTF first time.
+		    if(lltopd || pistatout){//srot1 is true. turn otf back to psf for rotation.
+			//Was OTF. Turn to PSF
+			norm/=((float)npsf*npsf);
+			CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_INVERSE);
+			ctoc("fft to psf");
+		    }
+		    if(srot1){
+			fftshift_do<<<ksa, dim3(16,16),0,stream>>>(psf, npsf, npsf);//shift to center
+			embed_rot_do<<<ksa, dim3(16,16), 0, stream>>>
+			    (otf, ncompx, ncompy, psf, npsf, npsf, srot1?srot1+isa:NULL);
+			fftshift_do<<<ksa, dim3(16,16),0,stream>>>(otf, ncompx, ncompy);//shift back to corner
+		    }else if(otf!=psf){
+			cpcorner_do<<<ksa, dim3(16,16),0,stream>>>(otf, ncompx, ncompy, psf, npsf, npsf);
+			ctoc("cpcorner");
+		    }
+		    //Turn PSF to OTF.
+		    CUFFT(cuwfs[iwfs].plan2, otf,CUFFT_FORWARD);
+		    ctoc("fft to otf");
+		}
+		//now we have otf. multiple with etf, dtf.
+		if(cuwfs[iwfs].dtf[iwvl].etf){
+		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
+			ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf+isa, 0);
+		    }else{
+			ctoc("before ccwm");
+			ccwm_do<<<ksa,dim3(16,16),0,stream>>>
+			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf+isa, 0);
+			ctoc("ccwm");
+		    }
+		}
+		//multiple with nominal
+		if(cuwfs[iwfs].dtf[iwvl].nominal){
+		    ccwm_do<<<ksa,dim3(16,16),0,stream>>>
+			(otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].nominal+isa, 0);
+		    ctoc("nominal");
+		}
+		//back to spatial domain.
+		CUFFT(cuwfs[iwfs].plan2, otf, CUFFT_INVERSE);
+		ctoc("fft");
+		float *psfr;
+		DO(cudaMalloc(&psfr, sizeof(float)*ncompx*ncompy*ksa));
+		realpart_do<<<ksa, dim3(16,16),0,stream>>>(psfr, otf, ncompx, ncompy);
+		ctoc("realpart");
+		si_rot_do<<<ksa, dim3(16,16),0,stream>>>
+		    (ints+isa*pixpsax*pixpsay, pixpsax, pixpsay, 
+		     parms->powfs[ipowfs].pixoffx, parms->powfs[ipowfs].pixoffy,
+		     pixtheta, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, norm);
+		ctoc("final");
+		CUDA_SYNC_STREAM;
+		cudaFree(psfr);
+	    }//if ints.
+	}//for isa
 	if(otf!=psf) cudaFree(otf);
 	cudaFree(psf);
 	if(lotfc) cudaFree(lotfc);

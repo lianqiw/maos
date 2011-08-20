@@ -491,7 +491,15 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	}
     }
 }
-
+/**
+   Add a scalar to matrix
+*/
+void X(adds)(X(mat*)A, const T ac){
+    if(!A) return;
+    for(int i=0; i<A->nx*A->ny; i++){
+	A->p[i]+=ac;
+    }
+}
 /**
    compute the inner product of A and B. (inner product)
 */

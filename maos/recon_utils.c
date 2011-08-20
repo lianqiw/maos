@@ -65,7 +65,6 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
 	    cembed_locstat(&fftxopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, alpha, 0);
 	}
 	cfft2(fftxopd->p[ips],-1);
-	//cwrite(fftxopd->p[ips],"fftxopd_%d",ips);
 	ccwmd(fftxopd->p[ips], invpsd->p[ips], 1);
 	cfft2(fftxopd->p[ips],1);
 	if(extra->square){
@@ -374,6 +373,7 @@ void TomoL(dcell **xout, const void *A,
     thread_t info_ips[recon->nthread];
     thread_prep(info_ips, 0, nps, recon->nthread, Tomo_iprop, &data);
     CALL_THREAD(info_iwfs1, recon->nthread, 1);
+    static int count=-1; count++;
     if(!parms->tomo.split || parms->dbg.splitlrt){
 	/*Remove global Tip/Tilt, differential focus only in integrated
 	  tomography to limit noise propagation.*/
@@ -389,7 +389,7 @@ void TomoL(dcell **xout, const void *A,
        ips:   takes 6 ms 9 ms
     */
     dcellfree(gg);
-    
+  
     if(recon->ZZT){//single point piston constraint. fast if any
 	sptcellmulmat_thread(xout, recon->ZZT, xin, alpha);
     }
@@ -567,10 +567,10 @@ void windest(SIM_T *simu){
 	simu->opdrhat=ccellnew(nps,1);
 	simu->opdrhat=ccellnew(nps,1);
 	for(long ips=0; ips<nps; ips++){
-	    simu->opdrhat->p[ips]=cnew(simu->recon->xloc_nx[ips],
-				       simu->recon->xloc_ny[ips]);
-	    simu->opdrhatlast->p[ips]=cnew(simu->recon->xloc_nx[ips],
-					   simu->recon->xloc_ny[ips]);
+	    simu->opdrhat->p[ips]=cnew(simu->recon->xmap[ips]->nx,
+				       simu->recon->xmap[ips]->ny);
+	    simu->opdrhatlast->p[ips]=cnew(simu->recon->xmap[ips]->nx,
+					   simu->recon->xmap[ips]->ny);
 	    cfft2plan(simu->opdrhat->p[ips], -1);
 	    cfft2plan(simu->opdrhatlast->p[ips], -1);
 	}

@@ -196,9 +196,6 @@ typedef struct map_t{
     double h;       /**<Heigh conjugation of this surface*/
     double vx;      /**Wind velocity. Useful for atmospheric grid*/
     double vy;      /**Wind velocity. Useful for atmospheric grid*/
-#if USE_POSIX_SHM == 1
-    //long shm;       /**Records the length of the memory mmaped of positive. -1 means it is part of shared shm.*/
-#endif
 } map_t;
 
 /**
@@ -219,8 +216,8 @@ typedef struct rectmap_t{
 }rectmap_t;
 
 /**
-   map of locs
-*/
+   map of locs. Convert any coordinate (x,y) to corresponding iloc that has the
+   coordinate.  */
 typedef struct locmap_t{
     long *restrict p;       /**<The map, of size nx*ny*/
     int nx;        /**<Number of points along x*/

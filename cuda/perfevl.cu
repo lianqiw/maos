@@ -2,9 +2,10 @@ extern "C"
 {
 #include <cuda.h>
 #include "gpu.h"
+}
 #include "utils.h"
 #include "accphi.h"
-}
+
 static float (*cuplocs)[2]=NULL;
 static float *cupamp=NULL;
 
@@ -110,7 +111,7 @@ void gpu_perfevl(thread_t *info){
     }
     if(parms->tomo.split){
 	if(parms->ndm<=2){
-	        PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
+	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
 	    if(nmod==3){
 		gpu_calc_ngsmod(pclep[isim], pclmp[isim], pcleNGSmp[isim],recon->ngsmod->nmod,
 				recon->ngsmod->aper_fcp, recon->ngsmod->ht,

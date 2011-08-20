@@ -592,7 +592,7 @@ typedef struct PARMS_T{
     SAVE_CFG_T   save;  /**<Specify what to save to file for debugging*/
     int npowfs;      /**<Number of wfs types*/
     int nwfs;        /**<Number of wfs*/
-    int nwfsr;       /**<Number of wfsr*/
+    int nwfsr;       /**<Number of wfs used in reconstruction. =npowfs in glao, =nwfs otherwise*/
     int ndm;         /**<Number of DMs*/
     int nmoao;       /**<Number of different MOAO type*/
     char **surf;     /**<OPD surfaces*/

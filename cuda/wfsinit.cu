@@ -2,9 +2,9 @@ extern "C"
 {
 #include <cuda.h>
 #include "gpu.h"
+}
 #include "utils.h"
 #include "accphi.h"
-}
 #include "curand_kernel.h"
 #include "cusparse.h"
 #include "cufft.h"
@@ -14,7 +14,7 @@ static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
     wloc->nsa=pts->nsa;
     wloc->dx=pts->dx;
     wloc->nloc=loc->nloc;
-    gpu_loc2dev(&wloc->saorig, (loc_t*)pts);
+    gpu_loc2dev(&wloc->pts, (loc_t*)pts);
     gpu_loc2dev(&wloc->loc, loc);
 }
 
@@ -35,12 +35,15 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	pts_t *pts=powfs[ipowfs].pts;
 	loc_t *loc=powfs[ipowfs].loc;
 	gpu_pts2cuwloc(&cupowfs[ipowfs], pts, loc);
+	gpu_loc2dev(&cupowfs[ipowfs].saloc, powfs[ipowfs].saloc);
+	cupowfs[ipowfs].dsa=pts->dsa;
 	if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	    pts=powfs[ipowfs].llt->pts;
 	    loc=powfs[ipowfs].llt->loc;
 	    cupowfs[ipowfs].llt=(cuwloc_t*)calloc(1, sizeof(cuwloc_t));
 	    gpu_pts2cuwloc(cupowfs[ipowfs].llt, pts, loc);
 	}
+	//cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip;
     }
     if(cuwfs) error("Already initialized\n");
     cuwfs=(cuwfs_t*)calloc(parms->nwfs, sizeof(cuwfs_t));
@@ -67,15 +70,16 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cuwfs[iwfs].imcc=cuwfs[iwfs0].imcc;
 	    }
 	}
+	cuwfs[iwfs].powfs=cupowfs+ipowfs;
 	cudaDeviceSynchronize();
 	//GS0 for gtilt.
 	if(powfs[ipowfs].GS0){
 	    if(powfs[ipowfs].GS0->nx>1 || wfsind==0){
 		dsp *t=sptrans(powfs[ipowfs].GS0->p[wfsind]);
-		gpu_sp2dev(&cuwfs[iwfs].GS0, t);
+		gpu_sp2dev(&cuwfs[iwfs].GS0t, t);
 		spfree(t);
 	    }else{
-		cuwfs[iwfs].GS0=cuwfs[iwfs0].GS0;
+		cuwfs[iwfs].GS0t=cuwfs[iwfs0].GS0t;
 	    }
 	}
 	//wfs amplitude map on loc
@@ -141,10 +145,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	      inembed, istride, idist, 
 	      CUFFT_C2C, nsa));
 	    */
-	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, npsf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, nsa)){
+	    /*limit the number of subapertures in each batch to less than 1024
+	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
+	    cuwfs[iwfs].msa=nsa>1024?((int)ceil((float)nsa/(float)(nsa/800))):nsa;
+	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, npsf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, cuwfs[iwfs].msa)){
 		error("CUFFT plan failed\n");
 	    }
-	    if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, ncomp, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, nsa)){
+	    if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, ncomp, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, cuwfs[iwfs].msa)){
 		error("CUFFT plan failed\n");
 	    }
 	    cufftSetStream(cuwfs[iwfs].plan1, 0);
@@ -200,7 +207,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			}
 		    }
 		}//for iwvl.
-		gpu_dmat2dev(&cuwfs[iwfs].srot, powfs[ipowfs].srot->p[wfsind]);
+		if(parms->powfs[ipowfs].llt){
+		    gpu_dmat2dev(&cuwfs[iwfs].srot, powfs[ipowfs].srot->p[wfsind]);
+		}
 	    }else{
 		cuwfs[iwfs].dtf  = cuwfs[iwfs0].dtf;
 		cuwfs[iwfs].srot = cuwfs[iwfs0].srot;

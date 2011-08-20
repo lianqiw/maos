@@ -2,9 +2,9 @@ extern "C"
 {
 #include <cuda.h>
 #include "gpu.h"
+}
 #include "utils.h"
 #include "accphi.h"
-}
 #define AOS_CUDA_ACCPHI_CU
 #undef EPS
 #define EPS 1e-5
@@ -21,59 +21,6 @@ extern "C"
    cc into the kernel.
 
    2) copying DM information to cuda messes up atm because gpu_dm2gpu used texRefatm.
-   
-   Lesson: 
-
-   1) Do not declare file scope variables of __device__. Do not work.  
-
-   2) When call cudaBindTextureToArray in multi-threaded algorithms, the binding
-   will conflict between different threads.
-
-   3) For layered 2D texture., must use cudaMalloc3DArray with cudaArrayLayered
-
-   4) Be careful when use cudaMallocHost followed with cudaMemset, and test of
-   memory. the cudaMemset is asynchronousx for small dimension, which creates
-   disaster if you test the memory immediately after memset. Call
-   cudaDeviceSynchronize() after everycall to cudaMemset unless you are not
-   using the memory immediately. 
-
-   5) cuda-gdb shows internal error and can not catch error if source is too long.
-   
-   6) Don't take the & of a variable and put into kernel. the variable is on host stack.
-
-   7) FFT keeps failing the first time in each time it is called, even for a
-   simple FFT. The reason is that (quote rom CUDA 4.0 Readiness Tech Brief
-   "
-   IMPORTANT: The CUFFT library is not yet thread-safe and therefore cannot safely
-   access the same device context from multiple host threads concurrently. This
-   restriction will be removed in a future release of the CUDA Toolkit.
-   "
-   8) CUBLAS is indeed thread-safe.
-
-   9) A butterfly effect: Enabling gpu_perfevl caused cufft to fail. Reason
-   narrowed down to cudaCallocHost in gpu_calc_ptt. Change to
-   cudaCalloc. Problem disappear.
-   
-   10) Matched filter mtche_do failes randomly when I set blockDim to pixpsa and
-   run all wfs in parallel. Doing ok if set it to 32. Whe it fails, the value in
-   the shared memory g[2] is bizarre. I suspect it is caused by memory or
-   computing error. The error cannot be detected due to lack of ECC.
-   
-   11) Important: During kernel calling, never set blockDim to more than
-   256. bizarre errors may happen. For example, FFT randomly error out.
-
-   12) Always sync the stream before using the kernel output in host code.
-   
-   Look for the following in debugging
-
-   1) For pointers, where are they located. host or device. In host heap or stack?
-
-   2) Synchronize device before and after problemetic area to isolate the cause.
-
-   3) During kernel calling, never set blockDim to more than 256. bizarre errors
-   may happen. For example, FFT randomly error out.
-   
-
 */
 
 #define ATM_TEXTURE 1 //Use texture for ATM. Same speed as not after make p in device memory.
@@ -107,9 +54,9 @@ static float *cc=NULL;
   Transfer atmospheric data to GPU.
 */
 void gpu_atm2gpu(map_t **atm, int nps){
-    TIC;tic
+    TIC;tic;
 #if ATM_TEXTURE
-    gpu_map2dev(atm, nps, &cuatm, 1);
+    gpu_map2dev(&cuatm, atm, nps, 1);
     texRefatm.addressMode[0] = cudaAddressModeWrap;
     texRefatm.addressMode[1] = cudaAddressModeWrap;
     texRefatm.filterMode     = cudaFilterModeLinear;
@@ -117,7 +64,7 @@ void gpu_atm2gpu(map_t **atm, int nps){
     cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
     DO(cudaBindTextureToArray(texRefatm, cuatm.ca, channelDesc));
 #else
-    gpu_map2dev(atm, nps, &cuatm, 2);
+    gpu_map2dev(&cuatm, atm, nps, 2);
 #endif
     toc2("atm to gpu");//0.4 second.
 }
@@ -126,7 +73,7 @@ void gpu_atm2gpu(map_t **atm, int nps){
 */
 void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
 #if DM_TEXTURE
-    gpu_map2dev(dmreal, ndm, &cudm, 1);
+    gpu_map2dev(&cudm, dmreal, ndm, 1);
     texRefdm.addressMode[0] = cudaAddressModeClamp;
     texRefdm.addressMode[1] = cudaAddressModeClamp;
     texRefdm.filterMode     = cudaFilterModePoint;
@@ -134,7 +81,7 @@ void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
     cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
     DO(cudaBindTextureToArray(texRefdm, cudm.ca, channelDesc));
 #else
-    gpu_map2dev(dmreal, ndm, &cudm, 2);
+    gpu_map2dev(&cudm, dmreal, ndm, 2);
 #endif
     if(dmcfg && !cudm.cubic){
 	cudm.cubic=new int[ndm];

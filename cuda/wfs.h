@@ -1,24 +1,29 @@
 #ifndef AOS_CUDA_WFS_H
 #define AOS_CUDA_WFS_H
+#include "cusparse.h"
+#include "curand_kernel.h"
+#include "cufft.h"
 typedef curandState_t curandStat;
-
 
 #define RAND_BLOCK 16
 #define RAND_THREAD 32
 typedef struct {
     fcomplex **nominal;//array for each sa.
-    //cusp_t **si;
     fcomplex **etf;
     int etfis1d;
 }cudtf_t;
 
 typedef struct cuwloc_t{
-    float (*saorig)[2];
-    float dx;
-    float (*loc)[2];
+    float (*pts)[2];  /**<location of lower left OPD point in each sa*/
+    float (*loc)[2];  /**<location of OPD points*/
+    float dx;         /**<Sampling of OPD*/
+    float dsa;        /**<Subaperture spacing*/
     int nloc;
+    float (*saloc)[2];/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
+    int (*saptr)[2];  /**<pointer of subaperture in ploc*/
     int nsa;
-    int nxsa;
+    int nxsa;         /**<number of points in each subaperture in each dimension.*/
+    cusp *GP;         /**<Is GP in col major*/
     struct cuwloc_t *llt;
 }cuwloc_t;
 
@@ -26,7 +31,8 @@ typedef struct cuwloc_t{
 typedef struct{
     cusparseHandle_t sphandle;
     cudaStream_t stream;
-    cusp_t *GS0;        /**<For gtilt*/
+    cuwloc_t *powfs;
+    cusp *GS0t;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
     float  *gradacc;    /**<For accumulating grads*/
     float  *ints;       /**<For accumulating subaperture image.*/
@@ -42,6 +48,7 @@ typedef struct{
     float  *lltncpa;    /**<NCPA for llt*/
     float (**lltimcc)[3];
     float  *lltamp;
+    int msa;/**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
     cufftHandle lltplan1, lltplan2;/**<FFTW plan for LLT*/
     //For random number of this wfs.
     curandStat *custat;
