@@ -1915,18 +1915,12 @@ static void print_parms(const PARMS_T *parms){
    Limited sanity check of the parameters to prevent obvious mistakes.
 */
 static void check_parms(const PARMS_T *parms){
-    /*
-      if(fabs(parms->atmr.dx[0]-parms->aper.dxr)>1.e-12){
-      warning("Reconstructed atmosphere grid is %g, "
-      "aperture PLOC sampling is %g. They don't match\n",
-      parms->atmr.dx[0],parms->aper.dxr);
-      }*/
     int i;
     for(i=0;i<parms->npowfs;i++){
 	if(fabs(parms->atm.dx-parms->powfs[i].dx)>1.e-12){
-	    warning2("powfs %d: The grid sampling 1/%gm doesn't match "
-		     "atmosphere sampling 1/%gm\n", i,
-		     1./parms->powfs[i].dx,1./parms->atm.dx);
+	    info("powfs %d: The grid sampling 1/%gm doesn't match "
+		 "atmosphere sampling of 1/%gm. This is ok.\n", i,
+		 1./parms->powfs[i].dx,1./parms->atm.dx);
 	}
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){

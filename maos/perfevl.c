@@ -397,7 +397,8 @@ static void perfevl_mean(SIM_T *simu){
 		  pcleNGSmp'; (Hm*m)'*W*(Hm*m) = m'*(Hm'*W*Hm)*m. (Hm'*W*Hm)
 		  is simply MCCp.
 		*/
-		double *pcleNGSmp=simu->cleNGSmp->p[ievl]->p+isim*nngsmod;
+		if(!recon->ngsmod->MCCP->p[ievl]) continue;
+ 		double *pcleNGSmp=simu->cleNGSmp->p[ievl]->p+isim*nngsmod;
 		double sum=0;
 		for(int imod=0; imod<nngsmod; imod++){
 		    sum+=pcleNGSmp[imod]*pcleNGSm[imod];
