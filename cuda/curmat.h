@@ -29,6 +29,7 @@ void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans
 /**
    Compute the inner product as vectors. A.*B
 */
+/*
 inline void curinn(float *result, const curmat *A, const curmat *B, cublasHandle_t handle){
     cublasSdot(handle, A->nx*A->ny, A->p, 1, B->p, 1, result);
 }
@@ -46,7 +47,10 @@ inline float curcellinn(const curcell *A, const curcell *B, cublasHandle_t handl
     }
     return result;
 }
+*/
 void curcellzero(curcell *A, cudaStream_t stream);
 void curcellcp(curcell **A, const curcell *B, cudaStream_t stream);
 void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cublasHandle_t handle);
+float curinn(const curmat *a, const curmat *b, cudaStream_t stream);
+float curcellinn(const curcell *A, const curcell *B, cudaStream_t stream);
 #endif

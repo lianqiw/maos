@@ -1,3 +1,7 @@
+   Optimizing
+   Use parallel streams, avoid synching streams as much as possible.
+   Depth first has better performance when Width first. As contrary to the book.
+
    Lesson: 
 
    1) Do not declare file scope variables of __device__. Do not work.  

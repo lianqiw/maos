@@ -2,8 +2,11 @@
 #define AOS_CUDA_RECON_H
 #include "curmat.h"
 typedef struct{
-    curcell *grad; /**< The grad to operator on*/
+    curcell *gradin; /**< The grad to operator on*/
     curcell *neai;
+    curcell *opdwfs;/**<Temporary*/
+    curcell *opdx;  /**<Temporary*/
+    curcell *grad;  /**<Temporary*/
     cudaStream_t *wfsstream;
     cublasHandle_t *wfshandle;
     cusparseHandle_t *wfssphandle;

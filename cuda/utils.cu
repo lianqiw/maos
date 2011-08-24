@@ -256,8 +256,8 @@ __global__ static void calc_ptt_do( float *cc,
 				    const float *restrict phi,
 				    const float *restrict amp){
     __shared__ float ccb[4];//for each block.
-    if(threadIdx.x==0){
-	ccb[0]=ccb[1]=ccb[2]=ccb[3]=0.f;
+    if(threadIdx.x<4){
+	ccb[threadIdx.x]=0.f;
     }
     float cci[4]={0.f,0.f,0.f,0.f};//for each thread
     int step=blockDim.x * gridDim.x; 
@@ -274,11 +274,8 @@ __global__ static void calc_ptt_do( float *cc,
     atomicAdd(&ccb[2], cci[2]);
     atomicAdd(&ccb[3], cci[3]);
     __syncthreads();//Wait until all threads in this block is done.
-    if(threadIdx.x==0){//This is the first thread of a block. add block result to global.
-	atomicAdd(&cc[0], ccb[0]);
-	atomicAdd(&cc[1], ccb[1]);
-	atomicAdd(&cc[2], ccb[2]);
-	atomicAdd(&cc[3], ccb[3]);
+    if(threadIdx.x<4){//This is the first thread of a block. add block result to global.
+	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x]);
     }
 }
 __global__ static void calc_ngsmod_do( float *cc,
@@ -289,8 +286,8 @@ __global__ static void calc_ngsmod_do( float *cc,
     int step=blockDim.x * gridDim.x; 
     float cci[7]={0,0,0,0,0,0,0};//for each thread
     __shared__ float ccb[7];//for each block.
-    if(threadIdx.x==0){
-	ccb[0]=ccb[1]=ccb[2]=ccb[3]=ccb[4]=ccb[5]=ccb[6]=0;
+    if(threadIdx.x<7){
+	ccb[threadIdx.x]=0.f;
     }
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	float tmp=phi[i]*amp[i];
@@ -311,14 +308,8 @@ __global__ static void calc_ngsmod_do( float *cc,
     atomicAdd(&ccb[5], cci[5]);
     atomicAdd(&ccb[6], cci[6]);
     __syncthreads();//Wait until all threads in this block is done.
-    if(threadIdx.x==0){//This is the first thread of a block. add block result to global.
-	atomicAdd(&cc[0], ccb[0]);
-	atomicAdd(&cc[1], ccb[1]);
-	atomicAdd(&cc[2], ccb[2]);
-	atomicAdd(&cc[3], ccb[3]);
-	atomicAdd(&cc[4], ccb[4]);
-	atomicAdd(&cc[5], ccb[5]);
-	atomicAdd(&cc[6], ccb[6]);
+    if(threadIdx.x<7){//This is the first thread of a block. add block result to global.
+	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x]);
     }
 }
 /*

@@ -41,6 +41,9 @@ extern int nstream;
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #define MYSPARSE 0
 
+#define DIM(nsa,nb,ng) MAX(1,MIN((nsa)/nb,ng)),MIN((nsa),nb)
+#define DIM2(nx,ny,nb,ng) dim3(MAX(1,MIN((nx)/(nb),ng)),MAX(1,MIN((nx)/(nb),ng))),dim3(nb,nb)
+
 /*
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
 the problem by using mutex locking to makesure only 1 thread is calling FFT. */
@@ -128,4 +131,5 @@ __global__ void fscale_do(float *v, int n, float alpha);
 void gpu_writeflt(float *p, int nx, int ny, const char *format, ...);
 void gpu_writefcmp(fcomplex *p, int nx, int ny, const char *format, ...);
 void gpu_writeint(int *p, int nx, int ny, const char *format, ...);
+
 #endif

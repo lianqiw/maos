@@ -27,7 +27,7 @@ external/fft*
 lib/tmp.c
 *.o
 *.mex*
-
+*.bak
 #misc
 *.tar*
 *~

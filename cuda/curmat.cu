@@ -64,10 +64,13 @@ void curwrite(const curmat *A, const char *format, ...){
    out=out*beta+in*alpha;
 */
 void curadd(curmat **out, float beta, curmat *in, float alpha, cublasHandle_t handle){
-    if(fabsf(beta-1)>1e-6 && *out){
-	cublasSscal(handle, (*out)->nx*(*out)->ny, &beta, (*out)->p, 1);
+    if(*out){
+	if(fabsf(beta-1)>1e-6){
+	    cublasSscal(handle, (*out)->nx*(*out)->ny, &beta, (*out)->p, 1);
+	}
+    }else{
+	*out=curnew(in->nx, in->ny);
     }
-    if(!*out) *out=curnew(in->nx, in->ny);
     cublasSaxpy(handle, in->nx*in->ny, &alpha, in->p, 1, (*out)->p, 1);
 }
 __global__ static void scale_do(float *restrict in, int n, float alpha){
@@ -180,4 +183,44 @@ void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cublasHa
     for(int i=0; i<B->nx*B->ny; i++){
 	curadd(&((*A)->p[i]), beta, B->p[i], alpha, handle);
     }
+}
+__global__ static void inn_do(float *restrict res, const float *a, const float *b, const int n){
+    __shared__ float sb;
+    if(threadIdx.x==0) sb=0;
+    const int step=blockDim.x * gridDim.x;
+    float si=0;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	si+=a[i]*b[i];
+    }
+    atomicAdd(&sb, si);
+    __syncthreads();
+    if(threadIdx.x==0) {
+	atomicAdd(res, sb);
+    }
+}
+float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
+    float *res;
+    cudaMalloc(&res, sizeof(float));
+    cudaMemset(res, 0, sizeof(float));
+    const int n=a->nx*a->ny;
+    inn_do<<<DIM(n, 64, 32), 0, stream>>> (res, a->p, a->p, n);
+    float out;
+    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDefault, stream);
+    CUDA_SYNC_STREAM;
+    return out;
+}
+float curcellinn(const curcell *A, const curcell *B, cudaStream_t stream){
+    float out;
+    static float *res=NULL;
+    if(!res) cudaMalloc(&res, sizeof(float));
+    cudaMemsetAsync(res, 0, sizeof(float), stream);
+    for(int i=0; i<A->nx*A->ny; i++){
+	const curmat *a=A->p[i];
+	const curmat *b=B->p[i];
+	const int n=a->nx*a->ny;
+	inn_do<<<DIM(n, 64, 64), 0, stream>>> (res, a->p, b->p, n);
+    }
+    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDefault, stream);
+    cudaStreamSynchronize(stream);
+    return out;
 }
