@@ -179,8 +179,8 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 #endif
     }
     bp[locout->nloc]=count;
-    spclean(hback);
     spsetnzmax(hback, count);
+    spdroptol(hback,1e-12);
     return hback;
 }
 /**
@@ -269,8 +269,8 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 	}
     }//for
     bp[locout->nloc]=count;
-    spclean(hback);
     spsetnzmax(hback, count);
+    spdroptol(hback,1e-12);
     if(missing>0){
 	warning("%d points not covered by input screen\n", missing);
     }

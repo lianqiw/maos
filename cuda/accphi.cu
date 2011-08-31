@@ -351,3 +351,256 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 #undef FUNL
     }//idm
 }
+
+/*
+  Ray tracing with matched spacing. Reverse, from out to in. out is xloc, in is ploc.
+*/
+__global__ static void prop_grid_match_do(float *restrict out, int nxout,
+					  const float *restrict in, int nxin, 
+					  float fracx, float fracy,
+					  float alpha, int nx, int ny){
+    int stepx=blockDim.x*gridDim.x;
+    int stepy=blockDim.y*gridDim.y;
+    float fracx1=1.f-fracx;
+    float fracy1=1.f-fracy;
+    for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
+	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
+	    out[ix+iy*nxout]+=
+		alpha*(+(in[ix+    iy*nxin]*fracx1+in[ix+1+    iy*nxin]*fracx)*fracy1
+		       +(in[ix+(iy+1)*nxin]*fracx1+in[ix+1+(iy+1)*nxin]*fracx)*fracy);
+	}
+    }
+}
+
+__global__ static void prop_grid_nomatch_do(float *restrict out, int nxo, const float *restrict in, 
+					    int nxi, float dispx, float dispy, float ratio, float alpha, int nx, int ny){
+    int stepx=blockDim.x*gridDim.x;
+    int stepy=blockDim.y*gridDim.y;
+    for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
+	float jy;
+	float fracy=modff(dispy+iy*ratio, &jy);
+	int ky=(int)jy;
+	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
+	    float jx;
+	    float fracx=modff(dispx+ix*ratio, &jx);
+	    int kx=(int)jx;
+	    out[ix+iy*nxo]+=
+		alpha*(+(in[kx+      ky*nxi]*(1.f-fracx)+
+			 in[kx+1+    ky*nxi]*fracx)*(1.f-fracy)
+		       +(in[kx  +(ky+1)*nxi]*(1.f-fracx)+
+			 in[kx+1+(ky+1)*nxi]*fracx)*fracy);
+	}
+    }
+}
+__global__ static void prop_grid_nomatch_trans_do(const float *restrict out, int nxo, float *restrict in, 
+						  int nxi, float dispx, float dispy, float ratio, float alpha, int nx, int ny){
+    int stepx=blockDim.x*gridDim.x;
+    int stepy=blockDim.y*gridDim.y;
+    for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
+	float jy;
+	float fracy=modff(dispy+iy*ratio, &jy);
+	int ky=(int)jy;
+	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
+	    float jx;
+	    float fracx=modff(dispx+ix*ratio, &jx);
+	    int kx=(int)jx;
+	    float temp=out[ix+iy*nxo]*alpha;
+	    atomicAdd(&in[kx+      ky*nxi], temp*(1.f-fracx)*(1.f-fracy));
+	    atomicAdd(&in[kx+1    +ky*nxi], temp*fracx*(1.f-fracy));
+	    atomicAdd(&in[kx+  (ky+1)*nxi], temp*(1.f-fracx)*fracy);
+	    atomicAdd(&in[kx+1+(ky+1)*nxi], temp*fracx*fracy);
+	}
+    }
+}
+
+/*
+  Ray tracing with over sampling. Reverse, from out to in. out is xloc, in is
+ploc. confirmed to agree with HXW'.  */
+__global__ static void prop_grid_os2_trans_do(const float *restrict out, int nxout,
+					      float *restrict in, int nxin, 
+					      float fracx, float fracy,
+					      float alpha, int nx, int ny){
+    int stepx=blockDim.x*gridDim.x;
+    int stepy=blockDim.y*gridDim.y;
+    int ax=fracx<0.5f?0:1;
+    int ay=fracy<0.5f?0:1;
+    for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
+	for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
+	    //odd and even points are different.
+#pragma unroll 
+	    for(int by=0; by<2; by++){
+		int iy2=iy*2+by;
+		int iy3=iy+ay*by;
+		float fracy2=fracy+(0.5f-ay)*by;
+		float fracy21=1.f-fracy2;
+		for(int bx=0; bx<2; bx++){
+		    int ix2=ix*2+bx;
+		    int ix3=ix+ax*bx;
+		    float fracx2=fracx+(0.5f-ax)*bx;
+		    float fracx21=1.f-fracx2;
+		    if(ix2<nx && iy2<ny){
+			float a=out[ix2+(iy2)*nxout]*alpha;
+			atomicAdd(&in[ix3+    (iy3)*nxin], a*fracx21*fracy21);
+			atomicAdd(&in[ix3+1+  (iy3)*nxin], a*fracx2*fracy21);
+			atomicAdd(&in[ix3+  (iy3+1)*nxin], a*fracx21*fracy2);
+			atomicAdd(&in[ix3+1+(iy3+1)*nxin], a*fracx2*fracy2);
+		    }
+		}
+	    }
+	}
+    }
+}
+/*
+  Ray tracing with over sampling. Forward, from out to in. out is xloc, in is
+ploc. confirmed to agree with HXW'.  */
+__global__ static void prop_grid_os2_do(float *restrict out, int nxout,
+					const float *restrict in, int nxin, 
+					float fracx, float fracy,
+					float alpha, int nx, int ny){
+    int stepx=blockDim.x*gridDim.x;
+    int stepy=blockDim.y*gridDim.y;
+    int ax=fracx<0.5f?0:1;
+    int ay=fracy<0.5f?0:1;
+    for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
+	for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
+	    //odd and even points are different.
+#pragma unroll 
+	    for(int by=0; by<2; by++){
+		int iy2=iy*2+by;
+		int iy3=iy+ay*by;
+		float fracy2=fracy+(0.5f-ay)*by;
+		float fracy21=1.f-fracy2;
+		for(int bx=0; bx<2; bx++){
+		    int ix2=ix*2+bx;
+		    int ix3=ix+ax*bx;
+		    float fracx2=fracx+(0.5f-ax)*bx;
+		    float fracx21=1.f-fracx2;
+		    if(ix2<nx && iy2<ny){
+			out[ix2+(iy2)*nxout]+=
+			    alpha*(+in[ix3+    (iy3)*nxin]*fracx21*fracy21
+				   +in[ix3+1+  (iy3)*nxin]*fracx2*fracy21
+				   +in[ix3+  (iy3+1)*nxin]*fracx21*fracy2
+				   +in[ix3+1+(iy3+1)*nxin]*fracx2*fracy2);
+		    }
+		}
+	    }
+	}
+    }
+}
+/* Do the ray tracing when in/out grid matches in sampling. Handle offsets correctly.*/
+/*
+void prop_grid_match(curmat *out, float oxo, float oyo,
+		     const curmat *in, float oxi, float oyi, float dxi,
+		     float dispx, float dispy,
+		     float alpha, cudaStream_t stream){
+    const float dx1=1.f/dxi;
+    dispx=(dispx-oxi+oxo)*dx1;
+    dispy=(dispy-oyi+oyo)*dx1;
+    const int offx=(int)floorf(dispx); dispx-=offx;
+    const int offy=(int)floorf(dispy); dispy-=offy;
+    const int nxo=out->nx;
+    const int nyo=out->ny;
+    const int nxi=in->nx;
+    const int nyi=in->ny;
+    int offx1, offx2;
+    int offy1, offy2;
+    int nx, ny;
+    if(offx>0){
+	offx1=0;
+	offx2=offx;
+	nx=nxi-offx-1; if(nx>nxo) nx=nxo;
+    }else{
+	offx1=-offx;
+	offx2=0;
+	nx=nxo+offx; if(nx>nxi-1) nx=nxi-1;
+    }
+    if(offy>0){
+	offy1=0;
+	offy2=offy;
+	ny=nyi-offy-1; if(ny>nyo) ny=nyo;
+    }else{
+	offy1=-offy;
+	offy2=0;
+	ny=nyo+offy; if(ny>nyi-1) ny=nyi-1;
+    }
+    prop_grid_match_do<<<DIM2(nx,ny,16,8),0,stream>>>
+	(out->p+offx1+offy1*nxo, nxo, in->p+offx2+offy2*nxi, nxi, dispx, dispy, alpha, nx, ny);
+}
+*/
+
+/**
+   Do the ray tracing
+   from in to out if trans=='n'
+   from out to in if trans=='t'
+ */
+void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
+		   curmat *in, float oxi, float oyi, float dxi,
+		   float dispx, float dispy,
+		   float alpha, char trans, cudaStream_t stream){
+    const float dxi1=1.f/dxi;
+    const float ratio=dxo*dxi1;
+    if(fabs(ratio-1.f)<1.e-4 && trans=='t'){
+	gpu_prop_grid(in, oxi, oyi, dxi, out, oxo, oyo, dxo, -dispx, -dispy, alpha,'n', stream);
+	return;
+    }
+    const int nxo=out->nx;
+    const int nyo=out->ny;
+    const int nxi=in->nx;
+    const int nyi=in->ny;
+    const float ratio1=1.f/ratio;
+    //offset of origin in input grid spacing.
+    dispx=(dispx-oxi+oxo)*dxi1;
+    dispy=(dispy-oyi+oyo)*dxi1;
+    int offx1=0, offy1=0;
+    //if output is bigger than input.
+    if(dispx<0){
+	offx1=(int)ceilf(-dispx*ratio1);
+	dispx+=offx1*ratio;
+    }
+    if(dispy<0){
+	offy1=(int)ceilf(-dispy*ratio1);
+	dispy+=offy1*ratio;
+    }
+    //convert offset into input grid coordinate. -1e-4 to avoid laying on the last point.
+    int nx=(int)floorf((nxi-1-dispx-1e-4)*ratio1)+1;
+    int ny=(int)floorf((nyi-1-dispy-1e-4)*ratio1)+1;
+
+    if(nx>nxo-offx1) nx=nxo-offx1;
+    if(ny>nyo-offy1) ny=nyo-offy1;
+    int offx2=(int)floorf(dispx); dispx-=offx2;
+    int offy2=(int)floorf(dispy); dispy-=offy2;
+    if(trans=='n'){
+	if(fabs(ratio-1.f)<1.e-4){
+	    prop_grid_match_do<<<DIM2(nx, ny, 16, 8), 0, stream>>>
+		(out->p+offy1*nxo+offx1, nxo,
+		 in->p+offy2*nxi+offx2, nxi, 
+		 dispx, dispy, alpha, nx, ny);
+	}else if(fabs(ratio-0.5f)<1.e-4){
+	    prop_grid_os2_do<<<DIM2(nx, ny, 16, 8), 0, stream>>>
+		(out->p+offy1*nxo+offx1, nxo,
+		 in->p+offy2*nxi+offx2, nxi, 
+		 dispx, dispy, alpha, nx, ny);
+	}else{
+	    prop_grid_nomatch_do<<<DIM2(nx, ny, 16, 8), 0, stream>>>
+		(out->p+offy1*nxo+offx1, nxo,
+		 in->p+offy2*nxi+offx2, nxi, 
+		 dispx, dispy, ratio, alpha, nx, ny);
+	}
+    }else if(trans=='t'){
+	if(fabs(ratio-1.f)<1.e-4){
+	    error("Please revert the input/output and call with trans='n'\n");
+	}else if(fabs(ratio-0.5f)<1.e-4){
+	    prop_grid_os2_trans_do<<<DIM2(nx, ny, 16, 8), 0, stream>>>
+		(out->p+offy1*nxo+offx1, nxo,
+		 in->p+offy2*nxi+offx2, nxi, 
+		 dispx, dispy, alpha, nx, ny);
+	}else{
+	    prop_grid_nomatch_trans_do<<<DIM2(nx, ny, 16, 8), 0, stream>>>
+		(out->p+offy1*nxo+offx1, nxo,
+		 in->p+offy2*nxi+offx2, nxi, 
+		 dispx, dispy, ratio, alpha, nx, ny);
+	}
+    }else{
+	error("Invalid trans=%c\n", trans);
+    }
+}

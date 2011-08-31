@@ -38,6 +38,8 @@ extern int nstream;
 #define STREAM_NEW(stream) DO(cudaStreamCreate(&stream))
 #define STREAM_DONE(stream) DO(cudaStreamDestroy(stream))
 #endif
+#undef TIMING
+
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #define MYSPARSE 0
 
@@ -79,14 +81,6 @@ typedef struct{
 }cumap_t;
 
 
-typedef struct{
-    int *p;
-    int *i;
-    float *x;
-    int nx;
-    int ny;
-    int nzmax;
-}cusp;
 
 void gpu_map2dev(cumap_t *dest, map_t **source, int nps, int type);
 void gpu_sp2dev(cusp **dest, dsp *src);
@@ -118,6 +112,7 @@ void gpu_cmat2dev(fcomplex * restrict *dest, cmat *src);
 void gpu_dbl2flt(float * restrict *dest, double *src, int n);
 void gpu_long2dev(int * restrict *dest, long *src, int n);
 void gpu_spint2dev(int * restrict *dest, spint *src, int n);
+void gpu_int2dev(int * restrict *dest, int *src, int n);
 void gpu_spint2int(int * restrict *dest, spint *src, int n);
 void gpu_dev2dbl(double * restrict *dest, float *src, int n, cudaStream_t stream);
 #if MYSPARSE
@@ -131,5 +126,8 @@ __global__ void fscale_do(float *v, int n, float alpha);
 void gpu_writeflt(float *p, int nx, int ny, const char *format, ...);
 void gpu_writefcmp(fcomplex *p, int nx, int ny, const char *format, ...);
 void gpu_writeint(int *p, int nx, int ny, const char *format, ...);
+void gpu_muv2dev(cumuv_t *out, MUV_T *in);
+void gpu_cu2d(dmat **out, curmat *in, cudaStream_t stream);
+void gpu_cucell2d(dcell **out, curcell *in, cudaStream_t stream);
 
 #endif

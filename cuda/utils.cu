@@ -93,7 +93,7 @@ void gpu_cleanup(void){
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float array.
 */
-void gpu_map2dev( cumap_t *dest, map_t **source, int nps, int type){
+void gpu_map2dev(cumap_t *dest, map_t **source, int nps, int type){
     if(nps==0) return;
     if(dest->nlayer!=0 && dest->nlayer!=nps){
 	error("Mismatch. nlayer=%d, nps=%d\n", dest->nlayer, nps);
@@ -184,6 +184,14 @@ void gpu_sp2dev(cusp **dest0, dsp *src){
     gpu_spint2dev(&dest->i, src->i, src->nzmax);
     gpu_dbl2dev(&dest->x, src->x, src->nzmax);
 #endif
+}
+void gpu_spcell2dev(cuspcell **dest0, spcell *src){
+    if(!*dest0){
+	*dest0=cuspcellnew(src->nx, src->ny);
+    }
+    for(int i=0; i<src->nx*src->ny; i++){
+	gpu_sp2dev(&(*dest0)->p[i], src->p[i]);
+    }
 }
 __global__ void cuspmul_do(float *y, cusp *A, float *x, float alpha){
     int step=blockDim.x * gridDim.x;
@@ -459,7 +467,10 @@ void gpu_dmat2dev(float * restrict *dest, dmat *src){
    Convert dmat array to curmat
 */
 void gpu_dmat2cu(curmat *restrict *dest, dmat *src){
-    if(!src) return;
+    if(!src){
+	dzero(*dest);
+	return;
+    }
     if(!*dest){
 	*dest=curnew(src->nx, src->ny);
     }
@@ -469,10 +480,13 @@ void gpu_dmat2cu(curmat *restrict *dest, dmat *src){
    Convert dcell to curcell
 */
 void gpu_dcell2cu(curcell *restrict *dest, dcell *src){
-    if(!src) return;
-    if(!*dest) 
+    if(!src) {
+	dzero(*dest);
+	return;
+    }
+    if(!*dest) {
 	*dest=curcellnew(src->nx, src->ny);
-    else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
+    }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
 	error("Mismatch: %dx%d vs %ldx%ld\n", 
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
     }
@@ -524,6 +538,12 @@ void gpu_long2dev(int * restrict *dest, long *src, int n){
 	free(tmp);
     }
 }
+void gpu_int2dev(int *restrict *dest, int *src, int n){
+    if(!*dest){
+	DO(cudaMalloc((int**)dest, n*sizeof(int)));
+    }
+    DO(cudaMemcpy(*dest, src, sizeof(int)*n, cudaMemcpyDefault));
+}
 /**
    Convert long array to device int
 */
@@ -567,7 +587,7 @@ void gpu_spint2int(int * restrict *dest, spint *src, int n){
 void gpu_dev2dbl(double * restrict *dest, float *src, int n, cudaStream_t stream){
     TIC;tic;
     float *tmp=(float*)malloc(n*sizeof(float));
-    DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDefault, stream));
+    DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
     CUDA_SYNC_STREAM;
     if(!*dest){
 	*dest=(double*)malloc(sizeof(double)*n);
@@ -625,6 +645,7 @@ void gpu_writeint(int *p, int nx, int ny, const char *format, ...){
     writeint(tmp,nx,ny,"%s",fn);
     free(tmp);
 }
+
 /**
    Compute the dot product of two vectors
 */
@@ -652,3 +673,22 @@ float gpu_dot(const float *restrict a, const float *restrict b, const int n, cud
     DO(cudaFreeHost(res));
     return result;
     }*/
+
+void gpu_muv2dev(cumuv_t *out, MUV_T *in){
+    if(!in->M) error("in->M should not be NULL\n");
+    spcell *Mt=spcelltrans(in->M);
+    gpu_spcell2dev(&(out)->Mt, Mt);
+    gpu_dcell2cu(&(out)->U, in->U);
+    gpu_dcell2cu(&(out)->V, in->V);
+    spcellfree(Mt);
+}
+void gpu_cu2d(dmat **out, curmat *in, cudaStream_t stream){
+    if(!*out) *out=dnew(in->nx, in->ny);
+    gpu_dev2dbl(&(*out)->p, in->p, in->nx*in->ny, stream);
+}
+void gpu_cucell2d(dcell **out, curcell *in, cudaStream_t stream){
+    if(!*out) *out=dcellnew(in->nx, in->ny);
+    for(int i=0; i<in->nx*in->ny; i++){
+	gpu_cu2d(&(*out)->p[i], in->p[i], stream);
+    }
+}

@@ -482,7 +482,7 @@ void perfevl(SIM_T *simu){
     double tk_start=myclockd();
     //Cache the ground layer.
     const PARMS_T *parms=simu->parms;
-    if(!use_cuda){
+    if(!(use_cuda && parms->dbg.gpu_evl)){
 	int ips=simu->perfevl_iground;
 	if(ips!=-1 && simu->atm && !parms->sim.idealevl){
 	    simu->opdevlground=dnew(simu->aper->locs->nloc,1);
@@ -497,7 +497,7 @@ void perfevl(SIM_T *simu){
 	}
     }
     CALL_THREAD(simu->perf_evl, parms->evl.nevl, 0);
-    if(!use_cuda){
+    if(!(use_cuda && parms->dbg.gpu_evl)){
 	dfree(simu->opdevlground);simu->opdevlground=NULL;
     }
     perfevl_mean(simu);

@@ -45,7 +45,7 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	dcellcp(&x0, *px);
 	Amul(&r0, A, x0, -1);//r0=r0+(-1)*A*x0
     }
-    double r0z1,r0z2,r0zmin;
+    double r0z1,r0z2;
     dcell *p0=NULL;
     if(Mmul){
 	Mmul(&z0,M,r0);
@@ -57,10 +57,10 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
     dcell *Ap=NULL;
     double ak,bk;
 
-    r0zmin=r0z1;
+    //double r0zmin=r0z1;
 #if PRINT_RES == 1
     double r0z0=dcellinn(b,b);//|b|
-    double *res=malloc(sizeof(double)*(maxiter+1));
+    double res[maxiter+1];
     if(Mmul){
 	res[0]=sqrt(dcellinn(r0,r0)/r0z0);
     }else{
@@ -94,13 +94,7 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	r0z2=dcellinn(r0,z0);//r0z2=r0'*r0
 	bk=r0z2/r0z1;
 	dcelladd(&p0, bk, z0, 1.);//p0=bk*pi+r0
-	if(r0z2<r0zmin){
-	    dcellcp(px, x0);//record new result
-	    r0zmin=r0z2;
-#if PRINT_RES == 1
-	    kres=k;
-#endif
-	}
+
 	r0z1=r0z2;
 #if PRINT_RES == 1
 	if(Mmul){
@@ -111,10 +105,7 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	info("Step %d, res=%g\n", k+1, res[k+1]);
 #endif
     }
-#if PRINT_RES == 1
-    info("Solution found at step %d with residual %g\n", kres+1, res[kres+1]);
-    free(res);
-#endif
+    dcellcp(px, x0);
     dcellfree(r0); 
     if(Mmul){
 	dcellfree(z0);

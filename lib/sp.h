@@ -84,8 +84,8 @@ X(mat) *Y(spsum)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
 X(mat) *Y(spsumabs)(const X(sp) *A, int col) CHECK_UNUSED_RESULT;\
 void Y(spclean)(X(sp) *A);\
 void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac, const T * restrict xc, T alpha);\
-void Y(spdropeps)(X(sp) *A);\
-void Y(spcelldropeps)(Y(spcell) *A);\
+void Y(spdroptol)(X(sp) *A, double thres);		\
+void Y(spcelldroptol)(Y(spcell) *A, double thres); \
 void Y(spsort)(X(sp) *A);\
 void Y(spcellsort)(Y(spcell) *A);\
 void Y(spsym)(X(sp) *A);\

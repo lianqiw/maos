@@ -248,12 +248,14 @@ typedef struct RECON_T{
     dmat *os;          /**<over sampling of the layers.*/
     dmat *dx;          /**<sampling in meter of the layers*/
 
-    loc_t *ploc;       /**<reconstructed pupil*/
+    loc_t *ploc;       /**<Grid on pupil for tomography*/
     map_t *pmap;       /**<square grid of ploc.*/
 
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
     map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
+
+    loc_t *floc;       /**<Grid on pupil for DM fitting. */
 
     loc_t **aloc;      /**<actuator grid*/
     map_t **amap;      /**<square grid of actuators*/
@@ -263,8 +265,8 @@ typedef struct RECON_T{
     icell *actstuck;   /**<stuck actuators*/
 
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
-    dsp  *W0;          /**<ploc weighting for circle of diam aper.d*/
-    dmat *W1;          /**<ploc weighting for circle of diam aper.d*/
+    dsp  *W0;          /**<floc weighting for circle of diam aper.d*/
+    dmat *W1;          /**<floc weighting for circle of diam aper.d*/
     dmat *fitwt;       /**<fit weighting in each direction.*/
     spcell *L2;        /**<Laplacian square regularization.*/
     spcell *L2save;    /**<save old L2 to update the tomography matrix.*/
@@ -272,7 +274,8 @@ typedef struct RECON_T{
     FRACTAL_T *fractal;/**<data to apply fractal regularization on opd on xloc*/
     FDPCG_T *fdpcg;    /**<fdpcg preconditioner data.*/
     spcell *GWR;       /**<gradient of wfs for recon: gtilt or ztilt (on amp) depending on gtype_recon.*/
-    spcell *GP;        /**<Gradient operator from HXW. GX=GP*H.*/
+    spcell *GP;        /**<Gradient operator from HXW. GX=GP*H for each powfs.*/
+    spcell *GP2;        /**<Gradient operator from HXW. GX=GP*H for each wfs, referenced from GP.*/
     spcell *HXW;       /**<Ray tracing operator from xloc to ploc for all WFS.*/
     spcell *HXWtomo;   /**<Like GXtomo*/
     spcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/
@@ -287,8 +290,8 @@ typedef struct RECON_T{
     spcell *GA;        /**<actuator to wfs grad.*/
     spcell *GAlo;      /**<GA of low order WFS.*/
     spcell *GAhi;      /**<GA of high order WFS.*/
-    spcell *HXF;       /**<ray tracing propagator from xloc to ploc for fitting directions.*/
-    spcell *HA;        /**<ray tracing from aloc to ploc for fitting directions.*/
+    spcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
+    spcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
     dcell *DF;         /**<Differential focus modes for LGS wfs*/

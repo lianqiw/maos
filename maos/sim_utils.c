@@ -502,7 +502,7 @@ void seeding(SIM_T *simu){
     }
     seed_rand(simu->telws_rand, lrand(simu->init));
 #if USE_CUDA
-    if(use_cuda){
+    if(use_cuda && parms->dbg.gpu_wfs){
 	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
     }
 #endif
@@ -962,12 +962,19 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
 #if USE_CUDA
-    if(use_cuda && 0){
+    if(use_cuda && parms->dbg.gpu_wfs){
 	thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, gpu_wfsgrad, simu);
-	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
     }else{
 #endif
 	thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, wfsgrad_iwfs, simu);
+#if USE_CUDA
+    }
+#endif
+#if USE_CUDA
+    if(use_cuda && parms->dbg.gpu_evl){
+	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
+    }else{
+#endif
 	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, perfevl_ievl, simu);
 #if USE_CUDA
     }
@@ -1493,7 +1500,7 @@ void print_progress(const SIM_T *simu){
 	}
 	fprintf(stderr,"\033[00;00m\n");
     
-	fprintf(stderr,"Timing: WFS:%5.2f Recon:%5.2f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
+	fprintf(stderr,"Timing: WFS:%5.2f Recon:%5.3f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
 		" Used %ld:%02ld, Left %ld:%02ld\n",
 		status->wfs*tkmean, status->recon*tkmean, 
 		status->cache*tkmean, status->eval*tkmean, 

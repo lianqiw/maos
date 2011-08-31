@@ -146,7 +146,7 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
     loc_t *loc;
     double *amp=NULL;
     if(use_ploc){
-	loc=recon->ploc;
+	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
 	prop_nongrid_bin(aper->locs,aper->amp->p, loc,NULL,amp,1,0,0,1);
 	normalize(amp,loc->nloc,1);
@@ -205,7 +205,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
     int nloc;
     double *amp=NULL;
     if(use_ploc){
-	loc=recon->ploc;
+	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
 	prop_nongrid_bin(aper->locs,aper->amp->p,loc,NULL,amp,1,0,0,1);
 	normalize(amp,loc->nloc,1);
@@ -297,7 +297,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
     int nloc;
     double *amp=NULL;
     if(use_ploc){
-	loc=recon->ploc;
+	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
 	prop_nongrid_bin(aper->locs, aper->amp->p,loc,NULL,amp,1,0,0,1);
 	normalize(amp,loc->nloc,1);

@@ -114,7 +114,6 @@ void tomofit(SIM_T *simu){
 	    }
 #endif
 	}
-
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
     
 	/*
@@ -133,6 +132,7 @@ void tomofit(SIM_T *simu){
     }else{//if high order WFS has output
 	dcellfree(simu->dmerr_hi);
     }
+
     if(!parms->sim.idealfit && parms->tomo.split){
 	if(parms->tomo.split==2){
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
@@ -259,7 +259,6 @@ void reconstruct(SIM_T *simu){
 	if(parms->cn2.pair){
 	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
 	}//if cn2est
-
 	switch(parms->sim.recon){
 	case 0:
 	    tomofit(simu);//tomography and fitting.
@@ -277,5 +276,6 @@ void reconstruct(SIM_T *simu){
 	}
 	save_recon(simu);//Moved to inside.
     }
+    
     simu->tk_recon=myclockd()-tk_start;
 }

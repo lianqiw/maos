@@ -405,7 +405,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
   
     cspfree(Mmid);
-    cspdropeps(Mhat);
+    cspdroptol(Mhat,EPS);
     cspsym(Mhat);
     if(parms->save.setup){
 	cspwrite(Mhat,"%s/fdpcg_Mhat",dirsetup);

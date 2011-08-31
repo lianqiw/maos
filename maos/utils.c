@@ -311,7 +311,6 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
    Rename the log files when simulation exits.
  */
 void rename_file(int sig){
-    info2("Renaming files ...");
     char fnnew[256];
     char fnold[256];
     char suffix[16];
@@ -355,7 +354,6 @@ void rename_file(int sig){
 	    }
 	}
     }
-    info2("done\n");
 }
 /**
    Handles signals. We don't want to exit the simulation when SIGPIPE happens

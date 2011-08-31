@@ -651,6 +651,8 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.precond);
     READ_INT(fit.maxit);
     READ_INT(fit.square);
+    READ_INT(fit.assemble);
+    READ_INT(fit.pos);
 }
 
 /**
@@ -783,6 +785,11 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.useopdr);
     READ_INT(dbg.force);
     READ_INT(dbg.usegwr);
+    READ_INT(dbg.gpu_wfs);
+    READ_INT(dbg.gpu_evl);
+    READ_INT(dbg.gpu_tomo);
+    READ_INT(dbg.gpu_fit);
+    READ_INT(dbg.dxonedge);
 }
 
 /**
@@ -846,6 +853,7 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.aloc);
     READ_STR(load.xloc);
     READ_STR(load.ploc);
+    READ_STR(load.floc);
     READ_STR(load.cxx);
     READ_STR(load.HXF);
     READ_STR(load.HXW);
@@ -1093,7 +1101,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	parms->wfsr = parms->wfs;
 	parms->nwfsr= parms->nwfs;
     }
-
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].nwfs==0) continue;
+	if(parms->powfs[ipowfs].lo && parms->powfs[ipowfs].gtype_sim==0)
+	    warning("Low order POWFS %d is using gtilt in simulation. "
+		    "This is not recommended\n",ipowfs);
+    }
 }
 /**
    postproc atmosphere parameters.
@@ -1606,6 +1619,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     if(parms->load.tomo || parms->tomo.alg!=1 || parms->tomo.bgs){
 	parms->tomo.assemble=1;
     }
+    if(parms->load.fit || parms->fit.alg!=1 || parms->fit.bgs){
+	parms->fit.assemble=1;
+    }
     if(parms->tomo.bgs && parms->tomo.precond){
 	error("Please implement the preconditioner for each block for BGS.\n");
     }
@@ -1620,9 +1636,14 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
     }
     if(use_cuda){
-	parms->sim.cachedm=0; //Done in CUDA.
-	parms->tomo.square=1;
-	parms->fit.square=1;
+	if(parms->dbg.gpu_evl && parms->dbg.gpu_wfs){
+	    parms->sim.cachedm=0; //Done in CUDA.
+	}
+	if(parms->dbg.gpu_tomo){
+	    parms->tomo.square=1;
+	    parms->dbg.dxonedge=1;
+	}
+	//parms->fit.square=1; no need since we are using matrix.
     }
     //Assign each turbulence layer to a corresponding reconstructon layer
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));

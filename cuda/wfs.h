@@ -23,7 +23,9 @@ typedef struct cuwloc_t{
     int (*saptr)[2];  /**<pointer of subaperture in ploc*/
     int nsa;
     int nxsa;         /**<number of points in each subaperture in each dimension.*/
-    cusp *GP;         /**<Is GP in col major*/
+    cusp *GP;         /**<GP in col major*/
+    curmat *GPpx;     /**<GP for x grad in dense matrix format.*/
+    curmat *GPpy;     /**<GP for y grad in dense matrix format.*/
     struct cuwloc_t *llt;
 }cuwloc_t;
 

@@ -63,6 +63,8 @@
 #define DBLNZ(A) (fabs(A)>TOL)
 
 static const double TOL=1.e-14;
+#define OFF 1 //0: Only use points inside subaperture. introduced on 2011-08-28. 1: original approach.
+
 /**
    \file mkg.c
    Contains function that creates average gradient operator
@@ -309,9 +311,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	  The new limits are used to include points that are outside of 
 	  but adjacent to the subaperture
 	*/
-	    
-	for (limy=CEIL(limy1)-1; limy<FLOOR(limy2)+2; limy++){
-	    for (limx=CEIL(limx1)-1; limx<FLOOR(limx2)+2; limx++){
+	for (limy=CEIL(limy1)-OFF; limy<FLOOR(limy2)+OFF+1; limy++){
+	    for (limx=CEIL(limx1)-OFF; limx<FLOOR(limx2)+OFF+1; limx++){
 		PMAP(ipix,limx,limy);
 
 		if (ipix--){
@@ -491,6 +492,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     spfree(GS0t[1]); GS0t[1]=NULL;
     loc_free_map(ploc);
     loc_free_map(xloc);
+    spdroptol(GS0, 1e-7);//drop small values.
     return GS0;
 }
 #ifndef MATLAB_MEX_FILE

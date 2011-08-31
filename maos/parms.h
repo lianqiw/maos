@@ -375,6 +375,8 @@ typedef struct FIT_CFG_T{
     int precond;     /**<Preconditioner. Not available.*/
     int maxit;       /**<max iterations. Usually 4 for CG*/
     int square;      /**<using square grid on DM and ploc.*/
+    int assemble;    /**<force assemble fit matrix in CG*/
+    int pos;         /**<over sampling of floc over aloc. for fitting. normally equal to tomo.pos*/
 }FIT_CFG_T;
 
 /**
@@ -487,6 +489,11 @@ typedef struct DBG_CFG_T{
     int useopdr;     /**<use opdr in psf reconstruction*/
     int force;       /**<Force run even if Res_${seed}.done exists*/
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
+    int gpu_wfs;     /**<Use GPU for WFS*/
+    int gpu_evl;     /**<Use GPU for evaluation*/
+    int gpu_tomo;    /**<Use GPU for tomography*/
+    int gpu_fit;     /**<Use GPU for DM fitting*/
+    int dxonedge;    /**<have points on the edge of subapertures.*/
 }DBG_CFG_T;
 /**
    contains input parameters for each MOAO type.
@@ -510,6 +517,7 @@ typedef struct LOAD_CFG_T{
     char *aloc;      /**<load DM aloc from*/
     char *xloc;      /**<load xloc for recon from*/
     char *ploc;      /**<load ploc for recon from*/
+    char *floc;      /**<load floc for recon from*/
     char *cxx;       /**<load laplacian from to do Cxx^-1 in tomo.*/
     char *HXF;       /**<load HXF from.*/
     char *HXW;       /**<load HXW from.*/

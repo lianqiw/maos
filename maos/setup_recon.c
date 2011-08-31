@@ -32,9 +32,9 @@
    and DM fitting.  Use parms->wfsr instead of parms->wfs for wfs information,
    which hands GLAO mode correctly.x */
 /**
-   Setting up PLOC grid, which is a coarse sampled (similar to subaperture
-   spacing) grid that defines the circular aperture for wavefront reconstruction
-   and DM fitting.*/
+   Setting up PLOC grid, which is a coarse sampled (usually halves the
+   subaperture spacing) grid that defines the circular aperture for wavefront
+   reconstruction and DM fitting.*/
 static void
 setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     if(recon->ploc){//free the old one in case of repeated call
@@ -53,7 +53,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	  create_metapupil with height of 0. We don't add any guard points.*/
 	double dxr=parms->atmr.dx/parms->tomo.pos;//sampling of ploc
 	map_t *pmap=create_metapupil_wrap 
-	    (parms,0,dxr,0,0,0,0,parms->fit.square);
+	    (parms,0,dxr,0,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);//convert map_t to loc_t
 	recon->pmap = pmap;
@@ -63,7 +63,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     loc_create_stat(recon->ploc);
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+    /*for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].lo){//this is a low order wfs
 	    if(parms->powfs[ipowfs].gtype_recon==0 
@@ -74,6 +74,32 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 		    warning("Low order POWFS %d is using gtilt in sim. "
 			    "This is not recommended\n",ipowfs);
 	    }
+	}
+    }
+    */
+    if(parms->plot.setup){//plot the ploc grid.
+	plotloc("FoV",parms,recon->ploc,0, "ploc");
+    }
+}
+static void
+setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
+    if(recon->floc){
+	locfree(recon->floc); recon->floc=NULL;
+    }
+    if(parms->load.floc){
+	warning("Loading floc from %s\n", parms->load.floc);
+	recon->floc=locread("%s", parms->load.floc);
+    }else{
+	if((parms->fit.pos==-1 || parms->fit.pos==parms->tomo.pos) && parms->tomo.square==parms->fit.square){
+	    recon->floc=recon->ploc;
+	    info2("FLOC is using PLOC\n");
+	}else{
+	    double dxr=parms->atmr.dx/parms->fit.pos;//sampling of ploc
+	    map_t *fmap=create_metapupil_wrap 
+		(parms,0,dxr,0,0,0,0,parms->fit.square);
+	    info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
+	    recon->floc=map2loc(fmap);//convert map_t to loc_t
+	    mapfree(fmap);
 	}
     }
     //create the weighting W for bilinear influence function. See [Ellerbroek 2002]
@@ -96,17 +122,20 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	    warning("Define the W0/W1 on annular aperture instead of circular.\n");
 	    rin=parms->aper.din/2;
 	}
-	mkw_annular(recon->ploc, 0, 0, rin, parms->aper.d/2,
+	mkw_annular(recon->floc, 0, 0, rin, parms->aper.d/2,
 		    &(recon->W0), &(recon->W1));
 	if(parms->save.setup){
 	    spwrite(recon->W0, "%s/W0",dirsetup);
 	    dwrite(recon->W1, "%s/W1",dirsetup);
 	}
+	if(parms->save.setup){
+	    locwrite(recon->floc, "%s/floc",dirsetup);
+	}
     }
-    
     if(parms->plot.setup){//plot the ploc grid.
-	plotloc("FoV",parms,recon->ploc,0, "ploc");
+	plotloc("FoV",parms,recon->floc,0, "floc");
     }
+    loc_create_stat(recon->floc);
 }
 /**
    Setup the deformable mirrors grid aloc. This is used for DM fitting.
@@ -422,12 +451,13 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
     }
     //assign GP for powfs to recon->GP for each wfs
     spcellfree(recon->GP);
-    recon->GP=spcellnew(nwfs,1);
+    spcellfree(recon->GP2);
+    recon->GP=GP;
+    recon->GP2=spcellnew(nwfs,1);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
-	recon->GP->p[iwfs]=spref(GP->p[ipowfs]);
+	recon->GP2->p[iwfs]=spref(recon->GP->p[ipowfs]);
     }
-    spcellfree(GP);//assigned to recon->GP already;
 }
 /**
    Setup gradient operator form aloc for wfs by using GP.
@@ -487,7 +517,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 			       displace[0],displace[1],scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
 		    
-		    GA[idm][iwfs]=spmulsp(recon->GP->p[iwfs], H);
+		    GA[idm][iwfs]=spmulsp(recon->GP->p[ipowfs], H);
 		    spfree(H);
 		}
 	    }//idm
@@ -544,7 +574,7 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	//gradient from xloc
 	for(int ips=0; ips<npsr; ips++){
-	    GX[ips][iwfs]=spmulsp(recon->GP->p[iwfs], HXW[ips][iwfs]);
+	    GX[ips][iwfs]=spmulsp(recon->GP2->p[iwfs], HXW[ips][iwfs]);
 	}//ips
     }
     toc2(" ");
@@ -1250,6 +1280,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
   
     if(parms->tomo.assemble){
 	spcellfree(recon->GP);
+	spcellfree(recon->GP2);
     }
     if(parms->tomo.assemble || parms->tomo.square){
 	spcellfree(recon->HXWtomo);
@@ -1438,7 +1469,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 		double displace[2];
 		displace[0]=parms->fit.thetax[ifit]*ht;
 		displace[1]=parms->fit.thetay[ifit]*ht;
-		HXF[ips][ifit]=mkh(recon->xloc[ips], recon->ploc, NULL,
+		HXF[ips][ifit]=mkh(recon->xloc[ips], recon->floc, NULL,
 				   displace[0], displace[1], scale,
 				   parms->tomo.cubic, parms->tomo.iac);
 	    }
@@ -1470,7 +1501,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 		double displace[2];
 		displace[0]=parms->fit.thetax[ifit]*ht;
 		displace[1]=parms->fit.thetay[ifit]*ht;
-		HA[idm][ifit]=mkh(recon->aloc[idm], recon->ploc, NULL,
+		HA[idm][ifit]=mkh(recon->aloc[idm], recon->floc, NULL,
 				  displace[0], displace[1], 
 				  scale,parms->dm[idm].cubic,parms->dm[idm].iac);
 	    }
@@ -1679,7 +1710,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    if(scl0>recon->fitscl) recon->fitscl=scl0;
 	}
     }else{
-	recon->fitscl=1./recon->ploc->nloc;//scale the constraints. Important!!
+	recon->fitscl=1./recon->floc->nloc;//scale the constraints. Important!!
     }
 
     if(parms->load.fit){
@@ -1696,7 +1727,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	    /*
 	      2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found that slaving is causing mis-measurement of a few edge actuators. First try to remove W1. Or lower the weight. Revert back.
 	     */
-	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->fitNW, recon->actstuck, recon->actfloat, 0.1, 1./recon->ploc->nloc);
+	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->fitNW, recon->actstuck, recon->actfloat, 0.1, 1./recon->floc->nloc);
 	    if(parms->save.setup){
 		spcellwrite(recon->actslave,"%s/actslave",dirsetup);
 		dcellwrite(recon->fitNW,"%s/fitNW2",dirsetup);
@@ -2030,7 +2061,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcell *Qn=NULL;
 	spcellmulmat(&Qn, recon->HA, recon->MVModes, 1);
 	dcell *Qntt=dcellnew(Qn->nx,Qn->ny);
-	dmat *TTploc=loc2mat(recon->ploc,1);//TT mode. need piston mode too!
+	dmat *TTploc=loc2mat(recon->floc,1);//TT mode. need piston mode too!
 	dmat *PTTploc=dpinv(TTploc,NULL,recon->W0);//TT projector. no need w1 since we have piston.
 	dfree(TTploc);
 	for(int ix=0; ix<Qn->nx*Qn->ny; ix++){
@@ -2182,7 +2213,9 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     }
     setup_recon_HA(recon,parms);
     //always assemble fit matrix, faster if many directions
-    setup_recon_fit_matrix(recon,parms);
+    if(parms->fit.assemble){
+	setup_recon_fit_matrix(recon,parms);
+    }
     toc2("Generating fit matrix");
     //Fall back function method if FR.M is NULL (!HXF<-idealfit)
     recon->FR.Mfun  = FitR;
@@ -2454,6 +2487,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     setup_recon_aloc(recon,parms);
     //setup pupil coarse grid
     setup_recon_ploc(recon,parms);
+    setup_recon_floc(recon,parms);
     setup_recon_GWR(recon, parms, powfs);
     setup_recon_GP(recon,parms,powfs,aper);
     setup_recon_GA(recon,parms,powfs);
@@ -2529,6 +2563,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->xmcc);
     spcellfree(recon->GX);
     spcellfree(recon->GP);
+    spcellfree(recon->GP2);
     spcellfree(recon->GXfocus);
     spcellfree(recon->GA); 
     spcellfree(recon->GAlo);
@@ -2572,6 +2607,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
    
     locarrfree(recon->xloc, npsr); recon->xloc=NULL;
     maparrfree(recon->xmap, npsr); recon->xmap=NULL;
+    if(recon->floc!=recon->ploc) locfree(recon->floc); recon->floc=NULL;
     locfree(recon->ploc); recon->ploc=NULL;
     for(int idm=0; idm<ndm; idm++){
 	if(recon->alocm[idm]!=recon->aloc[idm])

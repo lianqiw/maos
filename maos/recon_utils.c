@@ -218,7 +218,7 @@ static void Tomo_prop(thread_t *info){
 	    }
 	}
 	//Apply the gradient operation
-	spmulmat(&data->gg->p[iwfs], recon->GP->p[iwfs], xx, 1);
+	spmulmat(&data->gg->p[iwfs], recon->GP2->p[iwfs], xx, 1);
 	dfree(xx);
 	/*
 	  For each wfs, Ray tracing takes 1.5 ms.  GP takes 0.7 ms.
@@ -241,7 +241,7 @@ static void Tomo_nea(thread_t *info){
 	//Apply the gradient operation
 	spmulmat(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 1);
 	dfree(data->gg->p[iwfs]); //We reuse gg.
-	sptmulmat(&data->gg->p[iwfs], recon->GP->p[iwfs], gg2, data->alpha);
+	sptmulmat(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, data->alpha);
 	dfree(gg2);
     }
 }
@@ -297,6 +297,9 @@ static void Tomo_iprop(thread_t *info){
 	    case 2:
 		apply_fractal(&data->xout, recon->fractal, data->xin, data->alpha, ips, ips);
 		break;
+	    }
+	    if(recon->ZZT){
+		sptmulmat(&data->xout->p[ips], recon->ZZT->p[ips+ips*nps], data->xin->p[ips], data->alpha);
 	    }
 	}
     }
@@ -381,7 +384,6 @@ void TomoL(dcell **xout, const void *A,
     }
     CALL_THREAD(info_iwfs2, recon->nthread, 1);
     CALL_THREAD(info_ips, recon->nthread, 1);
-   
     /* 
        square=1  square=0 (1 thread on T410s)
        iwfs1: takes 6 ms 13 ms
@@ -389,10 +391,6 @@ void TomoL(dcell **xout, const void *A,
        ips:   takes 6 ms 9 ms
     */
     dcellfree(gg);
-  
-    if(recon->ZZT){//single point piston constraint. fast if any
-	sptcellmulmat_thread(xout, recon->ZZT, xin, alpha);
-    }
     /*Tikhonov regularization is not added because it is not necessary in CG
       mode.*/
 }
@@ -413,14 +411,14 @@ void FitR(dcell **xout, const void *A,
 	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.ht[ifit];
-	    xp->p[ifit]=dnew(recon->ploc->nloc,1);
+	    xp->p[ifit]=dnew(recon->floc->nloc,1);
 	    for(int ips=0; ips<parms->atm.nps; ips++){
 		const double ht = parms->atm.ht[ips];
 		double scale=1-ht/hs;
 		double displace[2];
 		displace[0]=parms->fit.thetax[ifit]*ht-simu->atm[ips]->vx*isim*simu->dt;
 		displace[1]=parms->fit.thetay[ifit]*ht-simu->atm[ips]->vy*isim*simu->dt;
-		prop_grid(simu->atm[ips], recon->ploc, NULL, xp->p[ifit]->p, 
+		prop_grid(simu->atm[ips], recon->floc, NULL, xp->p[ifit]->p, 
 			  alpha, displace[0], displace[1], scale, 1, 0, 0);
 	    }
 	}
@@ -433,14 +431,14 @@ void FitR(dcell **xout, const void *A,
 	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
 	    double hs=parms->fit.ht[ifit];
-	    xp->p[ifit]=dnew(recon->ploc->nloc,1);
+	    xp->p[ifit]=dnew(recon->floc->nloc,1);
 	    for(int ips=0; ips<npsr; ips++){
 		const double ht = recon->ht->p[ips];
 		double scale=1-ht/hs;
 		double displace[2];
 		displace[0]=parms->fit.thetax[ifit]*ht;
 		displace[1]=parms->fit.thetay[ifit]*ht;
-		prop_nongrid(recon->xloc[ips], xin->p[ips]->p, recon->ploc, NULL, 
+		prop_nongrid(recon->xloc[ips], xin->p[ips]->p, recon->floc, NULL, 
 			     xp->p[ifit]->p, alpha, displace[0], displace[1], scale, 0, 0);
 	    }
 	}

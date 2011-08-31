@@ -1283,21 +1283,22 @@ void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac,
 /**
    Drop elements that are EPS times the largest value.
 */
-void Y(spdropeps)(X(sp) *A){
-    double max;
+void Y(spdroptol)(X(sp) *A, double thres){
+    if(thres<EPS) thres=EPS;
+    double maxv;
 #ifdef USE_COMPLEX
-    maxmincmp(A->x,A->nzmax,&max,NULL,NULL);
+    maxmincmp(A->x,A->nzmax,&maxv,NULL,NULL);
 #else
-    max=maxabs(A->x, A->nzmax);
+    maxv=maxabs(A->x, A->nzmax);
 #endif
-    Y(cs_droptol)(A, max*EPS);
+    Y(cs_droptol)(A, maxv*thres);
 }
 /**
    Drop elements that are EPS times the largest value.
 */
-void Y(spcelldropeps)(Y(spcell) *A){
+void Y(spcelldroptol)(Y(spcell) *A, double thres){
     for(int i=0; i<A->nx*A->ny; i++){
-	Y(spdropeps)(A->p[i]);
+	Y(spdroptol)(A->p[i], thres);
     }
 }
 
@@ -1352,7 +1353,7 @@ void Y(spsym)(X(sp) *A){
     Y(spadd)(&A,B);
     Y(spscale)(A,0.5);
     Y(spfree)(B);
-    Y(spdropeps)(A);
+    Y(spdroptol)(A,EPS);
     Y(spsort)(A);//This is important to make chol work.
 }
 /**
@@ -1364,7 +1365,7 @@ void Y(spcellsym)(Y(spcell) *A){
     Y(spcelladd)(&A,B);
     Y(spcellfree)(B);
     Y(spcellscale)(A,0.5);
-    Y(spcelldropeps)(A);
+    Y(spcelldroptol)(A,EPS);
     Y(spcellsort)(A);
 }
 
