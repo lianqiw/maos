@@ -350,17 +350,15 @@ __global__ void sum_do(float *restrict res, const float *a, const int n){
 
 inline static void inn_wrap(float *res, const float *restrict a, const float *restrict b, 
 			    const int n, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
     inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,b,n);
 }
 inline static void sum_wrap(float *res, const float *restrict a, const int n, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
     sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
 float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     float *res;
     cudaMalloc(&res, sizeof(float));
-    inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
+    curinn2(res,a,b,stream);
     float out;
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDefault, stream);
     CUDA_SYNC_STREAM;
@@ -377,12 +375,14 @@ float curcellinn(const curcell *A, const curcell *B, cudaStream_t stream){
 }
 
 void curinn2(float *restrict res, const curmat *a, const curmat *b, cudaStream_t stream){
+    cudaMemsetAsync(res, 0,sizeof(float), stream);
     inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
 }
 /**
    res points to a scalar in device memory.
 */
 void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
+    cudaMemsetAsync(res, 0,sizeof(float), stream);
     for(int i=0; i<A->nx*A->ny; i++){
 	const curmat *a=A->p[i];
 	const curmat *b=B->p[i];
@@ -395,5 +395,6 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
    Sum all the elements in an array.
  */
 void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
+    cudaMemsetAsync(res, 0,sizeof(float), stream);
     sum_wrap(res, a->p, a->nx*a->ny, stream);
 }
