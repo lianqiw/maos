@@ -300,6 +300,9 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(dbg.evlol, sim.evlol);
 	    RENAME(sim.fitonly, sim.idealfit);
 	    RENAME(evl.ht, evl.hs);
+	    RENAME(sim.recon, recon.alg);
+	    RENAME(sim.glao, recon.glao);
+	    RENAME(tomo.split, recon.split);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);

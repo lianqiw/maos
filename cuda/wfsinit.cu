@@ -22,7 +22,7 @@ static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
    Initialize other arrays
 */
 void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
-    DO(cudaSetDeviceFlags(cudaDeviceBlockingSync));
+    //DO(cudaSetDeviceFlags(cudaDeviceBlockingSync));
     DO(cusparseCreateMatDescr(&cuspdesc));
     cusparseSetMatType(cuspdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
     cusparseSetMatIndexBase(cuspdesc, CUSPARSE_INDEX_BASE_ZERO);

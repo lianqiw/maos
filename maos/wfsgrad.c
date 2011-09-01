@@ -458,7 +458,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
 		}
 		dmat *PTT=NULL;
-		if(parms->sim.glao){
+		if(parms->recon.glao){
 		    PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
 		}else{
 		    PTT=recon->PTT->p[iwfs+iwfs*nwfs];

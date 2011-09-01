@@ -479,7 +479,7 @@ dcell *ngsmod_hm_accphi(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
  */
 dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, 
 			    APER_T *aper){
-    //if(parms->tomo.split!=1) error("Only in split mode 1.");
+    //if(parms->recon.split!=1) error("Only in split mode 1.");
     //confirmed to agree with ngsmod_hm_accphi except DM artifacts
     NGSMOD_T *ngsmod=recon->ngsmod;
     const double hs=ngsmod->hs;
@@ -527,7 +527,7 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon,
  */
 void setup_ngsmod(const PARMS_T *parms, RECON_T *recon, 
 		  APER_T *aper, POWFS_T *powfs){
-    //if(parms->tomo.split!=1) error("Only work in split mode 1.");
+    //if(parms->recon.split!=1) error("Only work in split mode 1.");
 
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
     const int ndm=parms->ndm;	
@@ -582,7 +582,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
        Pngs=Rngs*GA
      */
     spcell *saneai=recon->saneai;
-    if(parms->tomo.split==1 && !parms->sim.skysim){
+    if(parms->recon.split==1 && !parms->sim.skysim){
 	//we disabled GA for low order wfs in skysim mode.
 	ngsmod->GM=ngsmod_g(parms,recon,powfs);
 	ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,saneai);

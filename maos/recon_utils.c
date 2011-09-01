@@ -377,7 +377,7 @@ void TomoL(dcell **xout, const void *A,
     thread_prep(info_ips, 0, nps, recon->nthread, Tomo_iprop, &data);
     CALL_THREAD(info_iwfs1, recon->nthread, 1);
     static int count=-1; count++;
-    if(!parms->tomo.split || parms->dbg.splitlrt){
+    if(!parms->recon.split || parms->dbg.splitlrt){
 	/*Remove global Tip/Tilt, differential focus only in integrated
 	  tomography to limit noise propagation.*/
 	TTFR(gg, recon->TTF, recon->PTTF);
@@ -645,7 +645,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
     */
     dcell *dmadd=NULL;
     if(dmpsol){//Pseudo OL estimates
-	if(parms->tomo.split==1){
+	if(parms->recon.split==1){
 	    /* We will remove NGS modes from dmlast which is in NULL modes of
 	       tomography reconstructor (is this 100% true)?  SHould we remove NGS
 	       modes from final OPD, xx, instead?*/
@@ -727,7 +727,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 */
 void shift_grad(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.glao){
+    if(parms->recon.glao){
 	/* Every the gradients in GLAO mode. */
 	if(simu->gradlastcl){
 	    dcellzero(simu->gradlastcl);

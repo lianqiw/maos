@@ -109,7 +109,7 @@ void gpu_perfevl(thread_t *info){
     if(parms->plot.run){
 	TO_IMPLEMENT;
     }
-    if(parms->tomo.split){
+    if(parms->recon.split){
 	if(parms->ndm<=2){
 	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
 	    if(nmod==3){

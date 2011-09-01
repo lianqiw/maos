@@ -328,7 +328,6 @@ typedef struct RECON_T{
     int has_ttr;       /**<whether there is any tip/tilt removed WFS*/
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
-    int warm_restart;  /**<Use warm restart.*/
     int cxx;           /**<records parms->tomo.cxx*/
 }RECON_T;
 

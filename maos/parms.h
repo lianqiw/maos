@@ -327,10 +327,7 @@ typedef struct TOMO_CFG_T{
     int guard;       /**<guard rings of reconstruction grid xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
     int piston_cr;   /**<single point piston constraint. */
-    int split;       /**<split tomography type.
-			- 0: integrated tomography
-			- 1: adhoc split tomography
-			- 2: minimum variance split tomography*/
+ 
     int ahst_wt;     /**<0: use Wg, 1: using Wa*/
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
     int ahst_rtt;    /**<remote tip/tilt in high order DM fit output in split mode*/
@@ -378,7 +375,33 @@ typedef struct FIT_CFG_T{
     int assemble;    /**<force assemble fit matrix in CG*/
     int pos;         /**<over sampling of floc over aloc. for fitting. normally equal to tomo.pos*/
 }FIT_CFG_T;
-
+/**
+   contains input parameters for the least square reconstructor.
+*/
+typedef struct LSR_CFG_T{
+    double tikcr;    /**<tikhonov regularization*/
+    double svdthres; /**<Threshold in SVD inversion*/
+    int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
+    int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
+    int alg;         /**<algorithm to solve the linear equation.
+			0: Cholesky direct solve for the large matrix.  (CBS)
+			1: CG or PCG.
+			2: SVD or EVD: Eigen value decompsition
+		     */
+    int maxit;       /**<max iterations. Usually 30 for CG*/
+}LSR_CFG_T;
+/**
+   contains input parameters for wavefront reconstruction.
+*/
+typedef struct RECON_CFG_T{
+    int alg;        /**<algorithm for reconstruction. 0: MVR. 1: LSR. moved from sim.recon*/
+    int glao;       /**<whether we are in GLAO mode where all WFS in each powfs are averaged*/
+    int split;      /**<split reconstruction/tomography type.
+		       - 0: integrated tomography
+		       - 1: adhoc split tomography
+		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
+    int warm_restart; /**<Warm restart in CG*/
+}RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
 */
@@ -489,12 +512,18 @@ typedef struct DBG_CFG_T{
     int useopdr;     /**<use opdr in psf reconstruction*/
     int force;       /**<Force run even if Res_${seed}.done exists*/
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
-    int gpu_wfs;     /**<Use GPU for WFS*/
-    int gpu_evl;     /**<Use GPU for evaluation*/
-    int gpu_tomo;    /**<Use GPU for tomography*/
-    int gpu_fit;     /**<Use GPU for DM fitting*/
     int dxonedge;    /**<have points on the edge of subapertures.*/
 }DBG_CFG_T;
+/**
+   Configure GPU usage for different parts.
+*/
+typedef struct GPU_CFG_T{
+    int wfs;         /**<Use GPU for wavefront sensor*/
+    int evl;         /**<Use GPU for performance evaluation*/
+    int tomo;        /**<Use GPU for tomography*/
+    int fit;         /**<Use GPU for DM fitting*/
+    int lsr;         /**<Use GPU for least square reconstruction*/
+}GPU_CFG_T;
 /**
    contains input parameters for each MOAO type.
 */
@@ -582,8 +611,10 @@ typedef struct PARMS_T{
     APER_CFG_T   aper;  /**<aperture parameters*/
     TOMO_CFG_T   tomo;  /**<tomography parameters*/
     FIT_CFG_T    fit;   /**<DM fit parameters*/
+    LSR_CFG_T    lsr;   /**<LSR parameters*/
+    RECON_CFG_T  recon; /**<general reconstruction parameters*/
     EVL_CFG_T    evl;   /**<Performance evaluation parameters*/
-
+    
     /*the following are pointers because there may be several*/
     POWFS_CFG_T *powfs; /**<Array of wfs type*/
     WFS_CFG_T   *wfs;   /**<Array of wfs*/
@@ -596,6 +627,7 @@ typedef struct PARMS_T{
     CN2EST_CFG_T cn2;   /**<Parameters for Cn2 estimation*/
     PLOT_CFG_T   plot;  /**<Specify what to plot during simulation.*/
     DBG_CFG_T    dbg;   /**<Specify debugging parameters*/
+    GPU_CFG_T    gpu;   /**<Specify GPU options.*/
     LOAD_CFG_T   load;  /**<Specify what matrices to load for debugging*/
     SAVE_CFG_T   save;  /**<Specify what to save to file for debugging*/
     int npowfs;      /**<Number of wfs types*/

@@ -54,7 +54,7 @@ void save_recon(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     if(parms->plot.run){
-	if(parms->sim.recon==0){
+	if(parms->recon.alg==0){
 	    for(int i=0; simu->opdr && i<simu->opdr->nx; i++){
 		if(simu->opdr->p[i]){
 		    drawopd("opdr", recon->xloc[i], simu->opdr->p[i]->p, NULL,
@@ -78,7 +78,7 @@ void save_recon(SIM_T *simu){
     }
     if(parms->plot.run && simu->Merr_lo){
 	dcell *dmlo=NULL;
-	switch(simu->parms->tomo.split){
+	switch(simu->parms->recon.split){
 	case 1:
 	    ngsmod2dm(&dmlo, recon, simu->Merr_lo, 1);
 	    break;
@@ -93,7 +93,7 @@ void save_recon(SIM_T *simu){
 	}
 	dcellfree(dmlo);
     }
-    if(parms->sim.recon==0){//minimum variance tomo/fit reconstructor
+    if(parms->recon.alg==0){//minimum variance tomo/fit reconstructor
 	if(parms->save.opdr){
 	    cellarr_dcell(simu->save->opdr, simu->opdr);
 	}

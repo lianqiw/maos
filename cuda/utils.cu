@@ -10,6 +10,9 @@ pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
 extern cusparseMatDescr_t cuspdesc;
 
 int nstream=0;
+int NG1D=64; /**<Optimum number of blocks. Twice of multi processors.*/
+int NG2D=8; /**<Optimum number of blocks. Twice of multi processors.*/
+
 /**
    Get GPU info.
 */
@@ -68,8 +71,27 @@ int gpu_init(int igpu){
     if(igpu>-1){
 	int ans=cudaSetDevice(igpu);
 	switch(ans){
-	case cudaSuccess:
-	    return 1;
+	case cudaSuccess:{
+	    cudaDeviceProp prop;
+	    cudaGetDeviceProperties(&prop, igpu);
+	    NG1D=prop.multiProcessorCount*2;
+	    NG2D=(int)round(sqrt((double)NG1D));
+	    if(0){
+		int nn=16777216;
+		//int nn=1024;
+		curmat *temp=curnew(nn,1);
+		curset(temp,1,0);
+		curmat *res=curnew(1,1);
+		TIC;tic;
+		cursum2(res->p, temp, 0);
+		cudaStreamSynchronize(0);
+		toc("inn %d", nn);
+		curshow(res, 0);
+		CUDA_SYNC_DEVICE;
+		cudaStreamSynchronize(0);
+		exit(0);
+	    }
+	}return 1;
 	case cudaErrorInvalidDevice:
 	    error2("Invalid GPU device %d\n", igpu);
 	    _exit(1);

@@ -11,7 +11,8 @@ typedef struct{
     cudaStream_t     *wfsstream;
     cublasHandle_t   *wfshandle;
     cusparseHandle_t *wfssphandle;
-
+    cudaEvent_t      *wfsevent;
+    
     cudaStream_t     *psstream;
 
     cudaStream_t     *fitstream;

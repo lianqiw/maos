@@ -502,7 +502,7 @@ void seeding(SIM_T *simu){
     }
     seed_rand(simu->telws_rand, lrand(simu->init));
 #if USE_CUDA
-    if(use_cuda && parms->dbg.gpu_wfs){
+    if(use_cuda && parms->gpu.wfs){
 	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
     }
 #endif
@@ -962,7 +962,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
 #if USE_CUDA
-    if(use_cuda && parms->dbg.gpu_wfs){
+    if(use_cuda && parms->gpu.wfs){
 	thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, gpu_wfsgrad, simu);
     }else{
 #endif
@@ -971,7 +971,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
 #endif
 #if USE_CUDA
-    if(use_cuda && parms->dbg.gpu_evl){
+    if(use_cuda && parms->gpu.evl){
 	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
     }else{
 #endif
@@ -1001,7 +1001,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolmp_%d.bin",seed);
 	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclmp_%d.bin",seed);
 
-	if(parms->tomo.split && parms->ndm<=2){
+	if(parms->recon.split && parms->ndm<=2){
 	    long nnx_split[nevl];
 	    long nnx_3[nevl];
 	    for(int ievl=0; ievl<nevl; ievl++){
@@ -1011,7 +1011,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, NULL,NULL,"Resclemp_%d.bin",seed);
 	    simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescleNGSm_%d.bin",seed);
 	    simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,NULL,"RescleNGSmp_%d.bin",seed);
-	    if(parms->tomo.split==1 && !parms->sim.fuseint){
+	    if(parms->recon.split==1 && !parms->sim.fuseint){
 		simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescorrNGSm_%d.bin",seed);
 	    }
 	    if(parms->sim.skysim){
@@ -1037,7 +1037,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	long nny[4]={nsim,nsim,nsim,nsim};
 	nnx[1]=0;
 	nny[1]=0;
-	if(!parms->tomo.split || parms->ndm>2){
+	if(!parms->recon.split || parms->ndm>2){
 	    nnx[3]=0; 
 	    nny[3]=0;
 	}
@@ -1130,10 +1130,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->save.dm){
 	int nrstep=nstep-(parms->sim.closeloop?1:0);
 	save->dmerr_hi=cellarr_init(nrstep, 1,"dmerr_hi_%d.bin", seed);
-	if(parms->sim.recon==0){
+	if(parms->recon.alg==0){
 	    save->dmfit_hi=cellarr_init(nrstep, 1, "dmfit_hi_%d.bin", seed);
 	}
-	if(parms->tomo.split){
+	if(parms->recon.split){
 	    save->Merr_lo=cellarr_init(nrstep, 1, "Merr_lo_%d.bin", seed);
 	}	
 	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
@@ -1161,7 +1161,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->save.dmpttr){
 	save->dmpttr=cellarr_init(nstep, 1,"dmpttr_%d.bin", seed);
     }
-    if(parms->sim.recon==0){
+    if(parms->recon.alg==0){
 	if(parms->save.opdr){
 	    save->opdr=cellarr_init(nstep,1, "opdr_%d.bin", seed);
 	}
@@ -1210,7 +1210,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		save->gradcl[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
 		if(parms->powfs[ipowfs].noisy)
 		    save->gradnf[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradnf_%d.bin", iwfs, seed);
-		if(parms->sim.recon==0 &&(parms->tomo.split==2 || !parms->powfs[ipowfs].skip)){
+		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
 		    save->gradol[iwfs]=cellarr_init((nstep-(parms->sim.closeloop?1:0))/dtrat,1, 
 						    "wfs%d_gradol_%d.bin", iwfs, seed);
 		}
@@ -1385,7 +1385,7 @@ void free_simu(SIM_T *simu){
     dcellfreearr(simu->sanea_sim, parms->nwfs);
     dcellfree(simu->upterrs);
     dcellfree(simu->uptcmds);
-    if(parms->tomo.split){
+    if(parms->recon.split){
 	dcellfree(simu->clemp);
 	dfree(simu->cleNGSm);
 	dfree(simu->corrNGSm);
@@ -1492,7 +1492,7 @@ void print_progress(const SIM_T *simu){
 		mysqrt(simu->cle->p[isim*nmod])*1e9,
 		mysqrt(simu->cle->p[1+isim*nmod])*1e9,
 		mysqrt(simu->cle->p[2+isim*nmod])*1e9);
-	if(parms->tomo.split && parms->ndm<=2){
+	if(parms->recon.split && parms->ndm<=2){
 	    fprintf(stderr," Split %6.1f %6.1f %6.1f nm;",
 		    mysqrt(simu->clem->p[isim*3])*1e9,
 		    mysqrt(simu->clem->p[1+isim*3])*1e9,

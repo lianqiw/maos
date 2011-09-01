@@ -20,20 +20,14 @@ extern "C"
 __global__ static void assign_do(float *dest, const float *restrict res){
     dest[0]=res[0];
 }
-__global__ static void div_do(float *dest, const float *restrict a, const float *restrict b){
+__global__ static void div_do(float *dest, const float *a, const float *b){
     dest[0]=a[0]/b[0];
 }
 #if PRINT_RES
-__global__ static void div2_do(float *dest,  const float *restrict b){
-    dest[0]/=b[0];
-}
-__global__ static void div_sqrt_do(float *dest,  const float *restrict b){
-    dest[0]=sqrt(dest[0]/b[0]);
+__global__ static void div_sqrt_do(float *dest, const float *a,  const float *b){
+    dest[0]=sqrt(a[0]/b[0]);
 }
 #endif
-__global__ static void div_left_do(float *dest,  const float *restrict b){
-    dest[0]=b[0]/dest[0];
-}
 __global__ static void scale_do(float *dest,  float b){
     dest[0]*=b;
 }
@@ -87,14 +81,14 @@ void gpu_pcg(curcell **px,
     curcellinn2(&res->r0z0, b, b, stream);
     float diff[maxiter+1];
     if(Mmul){
-	//double tmp=curcellinn(r0, r0, stream);
+	//double tmp=curcellinn(r0, r0, stream);//diff[0]=sqrt(tmp/r0z0);
 	curcellinn2(&res->tmp, r0, r0, stream);
-	div2_do<<<1,1,0,stream>>>(&res->tmp, &res->r0z0);
-	//diff[0]=sqrt(tmp/r0z0);
-	cudaMemcpyAsync(&diff[0], &res->tmp, 1, sizeof(float), stream);
-    }else{
-	diff[0]=sqrt(r0z1/r0z0);
+	div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->tmp, &res->r0z0);
+	
+    }else{ //diff[0]=sqrt(r0z1/r0z0);
+	div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->r0z1, &res->r0z0);
     }
+    cudaMemcpyAsync(&diff[0], &res->tmp, sizeof(float), cudaMemcpyDefault, stream);
     int kres=0;
     warning2("Step %d, res=%g\n", kres, diff[kres]);
 #endif
@@ -103,7 +97,7 @@ void gpu_pcg(curcell **px,
 	Amul(&Ap, A, p0, 1);
 	//ak=r0z1/curcellinn(p0,Ap,stream);
 	curcellinn2(&res->ak, p0, Ap, stream);
-	div_left_do<<<1,1,0,stream>>>(&res->ak, &res->r0z1);
+	div_do<<<1,1,0,stream>>>(&res->ak, &res->r0z1, &res->ak);
 	//x0=x0+ak*p0
 	//r0=r0-ak*Ap
 	curcelladd2(&x0, p0, &res->ak, stream);//x0=x0+ak*p0
@@ -124,24 +118,21 @@ void gpu_pcg(curcell **px,
 	//r0z1=r0z2;
 	assign_do<<<1,1,0,stream>>>(&res->r0z1, &res->r0z2);
 #if PRINT_RES == 1
-	if(Mmul){
-	    //diff[k+1]=sqrt(r0'*r0/r0z0)
+	if(Mmul){ //diff[k+1]=sqrt(r0'*r0/r0z0)
 	    curcellinn2(&res->tmp, r0, r0, stream);
-	    div_sqrt_do(&res->tmp, &res->tmp, &res->r0z0);
-	    cudaMemcpyAsync(&diff[k+1], &res->tmp, sizeof(float), stream);
-	}else{
-	    //diff[k+1]=sqrt(r0z2/r0z0);
-	    div_sqrt_do(&res->tmp, &res->r0z2, &res->r0z0);
-	    cudaMemcpyAsync(&diff[k+1], &res->tmp, sizeof(float), stream);
+	    div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->tmp, &res->r0z0);
+	}else{ //diff[k+1]=sqrt(r0z2/r0z0);
+	    div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->r0z2, &res->r0z0);
 	}
-	warning2("Step %d, res=%g\n", k+1, diff[k+1]);
+	cudaMemcpyAsync(&diff[k+1], &res->tmp, sizeof(float), cudaMemcpyDefault,stream);
+	//warning2("Step %d, res=%g\n", k+1, diff[k+1]);
 #endif
 	toc("cg");
     }
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     curcellcp(px, x0, stream);
 #if PRINT_RES == 1
-    info("Solution found at step %d with residual %g\n", kres+1, diff[kres+1]);
+    warning2("Step %d, res=%g\n", maxiter, diff[maxiter]);
 #endif
     curcellfree(r0); 
     if(Mmul){

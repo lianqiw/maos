@@ -1,5 +1,5 @@
 #use -g -G for debugging.
-AM_CFLAGS=-I/opt/cuda/include --compiler-options -Wall -g -O3 -I/opt/cuda/sdk/C/common/inc/ -I/opt/cuda/sdk/shared/inc/ -arch=sm_20 
+AM_CFLAGS=-I/opt/cuda/include --compiler-options -Wall -g -O -I/opt/cuda/sdk/C/common/inc/ -I/opt/cuda/sdk/shared/inc/ -arch=sm_20 
 if USE_LONG
 AM_CFLAGS+=-DDLONG
 endif

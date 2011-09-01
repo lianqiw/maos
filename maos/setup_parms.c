@@ -611,7 +611,6 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_DBL(tomo.tikcr);
     READ_DBL(tomo.svdthres);
     READ_INT(tomo.piston_cr);
-    READ_INT(tomo.split);
     READ_INT(tomo.ahst_wt);
     READ_INT(tomo.ahst_idealngs);
     READ_INT(tomo.ahst_rtt);
@@ -654,7 +653,25 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.assemble);
     READ_INT(fit.pos);
 }
-
+/**
+   Read LSR parameters.
+*/
+static void readcfg_lsr(PARMS_T *parms){
+    READ_DBL(lsr.tikcr);
+    READ_DBL(lsr.svdthres);
+    READ_INT(lsr.alg);
+    READ_INT(lsr.actslave);
+    READ_INT(lsr.bgs);
+    READ_INT(lsr.maxit);
+}
+/**
+   Read general reconstruction parameters
+ */
+static void readcfg_recon(PARMS_T *parms){
+    READ_INT(recon.alg);
+    READ_INT(recon.glao);
+    READ_INT(recon.split);
+}
 /**
    Read in simulation parameters
 */
@@ -712,8 +729,6 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.fuseint);
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
-    READ_INT(sim.recon);
-    READ_INT(sim.glao);
     READ_DBL(sim.fov);
     parms->sim.za = readcfg_dbl("sim.zadeg")*M_PI/180.;
     READ_INT(sim.evlol);
@@ -785,13 +800,18 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.useopdr);
     READ_INT(dbg.force);
     READ_INT(dbg.usegwr);
-    READ_INT(dbg.gpu_wfs);
-    READ_INT(dbg.gpu_evl);
-    READ_INT(dbg.gpu_tomo);
-    READ_INT(dbg.gpu_fit);
     READ_INT(dbg.dxonedge);
 }
-
+/**
+   Read in GPU options
+*/
+static void readcfg_gpu(PARMS_T *parms){
+    READ_INT(gpu.wfs);
+    READ_INT(gpu.evl);
+    READ_INT(gpu.tomo);
+    READ_INT(gpu.fit);
+    READ_INT(gpu.lsr);
+}
 /**
    Specify which variables to save
 */
@@ -877,9 +897,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    warning("in skycoverage presimulation, ahst_wt need to be 3. Changed\n");
 	    parms->tomo.ahst_wt=3;
 	}
-	if(parms->ndm>0 && parms->tomo.split!=1){
+	if(parms->ndm>0 && parms->recon.split!=1){
 	    warning("Can only do skysim in split tomography mode 1. Changed\n");
-	    parms->tomo.split=1;
+	    parms->recon.split=1;
 	}
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
@@ -898,21 +918,21 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	parms->sim.end=parms->dbg.ntomo_maxit;
     }
     if(parms->sim.idealfit){
-	if(parms->sim.recon!=0){
-	    warning("idealfit only works in sim.recon=0 mode. changed\n");
-	    parms->sim.recon=0;
+	if(parms->recon.alg!=0){
+	    warning("idealfit only works in recon.alg=0 mode. changed\n");
+	    parms->recon.alg=0;
 	}
-	if(parms->tomo.split){
+	if(parms->recon.split){
 	    warning("idealfit only works in integrated tomo mode. changed\n");
-	    parms->tomo.split=0;
+	    parms->recon.split=0;
 	}
     }
-    if(parms->sim.glao && parms->ndm!=1){
+    if(parms->recon.glao && parms->ndm!=1){
 	error("GLAO only works with 1 dm\n");
     }
-    if(parms->sim.recon==1 && parms->tomo.split==2){
+    if(parms->recon.alg==1 && parms->recon.split==2){
 	info2("MVST does not work with least square reconstructor. Changed to AHST");
-	parms->tomo.split=1;
+	parms->recon.split=1;
     }
     if(parms->sim.wfsalias && parms->sim.idealwfs){
 	error("sim.wfsalias conflicts with sim.idealwfs. Do not enable both.\n");
@@ -1049,7 +1069,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
     }
-    if(parms->tomo.split){
+    if(parms->recon.split){
 	int hi_found=0;
 	int hi_hastt=0;
 	int lo_found=0;
@@ -1070,7 +1090,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	if(!lo_found || !hi_found){
 	    warning("There are either no high order or no low order wfs. Disable split tomo.\n");
-	    parms->tomo.split=0;
+	    parms->recon.split=0;
 	    if(parms->sim.skysim){
 		error("There is only high or low order WFS. "
 		      "can not do skycoverage presimulation\n");
@@ -1084,12 +1104,12 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
     }
    
-    if((parms->tomo.split) && parms->ndm==0){
+    if((parms->recon.split) && parms->ndm==0){
 	warning("Disable split tomography since there is no common DM\n");
-	parms->tomo.split=0;
+	parms->recon.split=0;
     }
 
-    if(parms->sim.glao){
+    if(parms->recon.glao){
 	parms->wfsr=calloc(parms->npowfs, sizeof(WFS_CFG_T));
 	parms->nwfsr=parms->npowfs;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1158,7 +1178,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	parms->atmr.nps=nps;
     }
-    if(parms->sim.glao && parms->sim.recon==0){
+    if(parms->recon.glao && parms->recon.alg==0){
 	/*GLAO mode. reconstruct only a single layer near the DM. Using only 1 fitting direction on axis.*/
 	warning2("In GLAO Mode, use 1 tomography grid near the ground dm and 1 on axis fitting direction\n");
 	parms->atmr.ht=realloc(parms->atmr.ht, sizeof(double));
@@ -1424,23 +1444,23 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	error("Only CG work with non L2 cxx.\n");
 	parms->tomo.cxx=0;
     }
-    if(parms->tomo.split == 1 && !parms->sim.closeloop){
+    if(parms->recon.split==1 && !parms->sim.closeloop){
 	warning("ahst split tomography does not have good NGS correction in open loop\n");
     }
-    if(parms->tomo.split==2 && parms->sim.fuseint==1){
+    if(parms->recon.split==2 && parms->sim.fuseint==1){
 	warning("MVST Mode can only use separated integrator for the moment. Changed\n");
 	parms->sim.fuseint=0;
     }
-    if(!parms->tomo.split && !parms->sim.fuseint){
+    if(!parms->recon.split && !parms->sim.fuseint){
 	parms->sim.fuseint=1;//integrated tomo. only 1 integrator.
     }
     if(parms->sim.closeloop && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done in open loop\n");
     }
-    if(parms->tomo.split && parms->evl.tomo){
+    if(parms->recon.split && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");
     }
-    if(parms->tomo.precond==1 && !parms->tomo.split && parms->tomo.maxit<10){
+    if(parms->tomo.precond==1 && !parms->recon.split && parms->tomo.maxit<10){
 	warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
     }
     if(parms->tomo.precond==1 && parms->tomo.square!=1){
@@ -1458,7 +1478,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->sim.mffocus=0;
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->tomo.split && parms->powfs[ipowfs].lo){
+	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
 	}else{
 	    parms->powfs[ipowfs].skip=0;
@@ -1468,9 +1488,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    //focus tracking or cn2 estimation, or save gradient covariance. 
 	    parms->powfs[ipowfs].psol=1;
 	}else{//no focus tracking
-	    if(parms->sim.recon==0){//MV
+	    if(parms->recon.alg==0){//MV
 		//low order wfs in ahst mode does not need psol.
-		if(parms->tomo.split==1 && parms->powfs[ipowfs].skip){
+		if(parms->recon.split==1 && parms->powfs[ipowfs].skip){
 		    parms->powfs[ipowfs].psol=0;
 		}else{
 		    parms->powfs[ipowfs].psol=1;
@@ -1508,6 +1528,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    error("parms->aper.dx=%g is probably too large to save ecxx. Recommend parms->aper.dx=%g\n", parms->aper.dx, parms->atmr.dx*0.25);
 	}
     }
+    parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
 }
 
 /**
@@ -1636,14 +1657,29 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
     }
     if(use_cuda){
-	if(parms->dbg.gpu_evl && parms->dbg.gpu_wfs){
+	if(parms->recon.alg==0){
+	    if(parms->gpu.tomo && parms->tomo.alg !=1){
+		parms->gpu.tomo=0;
+		warning("\n\nGPU reconstruction is only available for CG. Disable GPU Tomography.\n");
+	    }
+	    if(parms->gpu.fit && parms->fit.alg!=1){
+		warning("\n\nGPU reconstruction is only available for CG. Disable GPU Fitting.\n");
+		parms->gpu.fit=0;
+	    }
+	}else if(parms->recon.alg==1){
+	    if(parms->gpu.lsr && parms->lsr.alg!=1){
+		warning("\n\nGPU reconstruction is only available for CG. Disable GPU LSR.\n");
+		parms->gpu.lsr=0;
+	    }
+	}
+
+	if(parms->gpu.evl && parms->gpu.wfs){
 	    parms->sim.cachedm=0; //Done in CUDA.
 	}
-	if(parms->dbg.gpu_tomo){
+	if(parms->gpu.tomo){
 	    parms->tomo.square=1;
 	    parms->dbg.dxonedge=1;
 	}
-	//parms->fit.square=1; no need since we are using matrix.
     }
     //Assign each turbulence layer to a corresponding reconstructon layer
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
@@ -1745,7 +1781,7 @@ static void print_parms(const PARMS_T *parms){
 	info2("layer %d: ht= %6.0f m, wt= %5.3f, ws= %4.1f m/s\n",
 	      ips,parms->atm.ht[ips],parms->atm.wt[ips],parms->atm.ws[ips]);
     }
-    if(parms->sim.recon==0){
+    if(parms->recon.alg==0){
 	info2("\033[0;32mTomography\033[0;0m: r0=%gm l0=%gm "
 	      "ZA is %g deg. %d layers.%s\n", 
 	      parms->atmr.r0, parms->atmr.l0,  
@@ -1831,7 +1867,7 @@ static void print_parms(const PARMS_T *parms){
 	    info2("     Bilinear influence function.\n");
 	}
     }
-    if(parms->sim.recon==0){
+    if(parms->recon.alg==0){
 	info2("\033[0;32mTomography\033[0;0m is using ");
 	if(parms->tomo.bgs){
 	    info2("Block Gauss Seidel with ");
@@ -1853,7 +1889,7 @@ static void print_parms(const PARMS_T *parms){
 	default:
 	    error("Invalid\n");
 	}
-	switch(parms->tomo.split){
+	switch(parms->recon.split){
 	case 0:
 	    info2(" integrated tomo.\n");break;
 	case 1:
@@ -1884,7 +1920,7 @@ static void print_parms(const PARMS_T *parms){
 	default:
 	    error("Invalid");
 	}
-    }else if(parms->sim.recon==1){
+    }else if(parms->recon.alg==1){
 	info2("\033[0;32mLeast square reconstructor\033[0;0m is using ");
 	if(parms->tomo.bgs){
 	    info2("Block Gauss Seidel with ");
@@ -1903,7 +1939,7 @@ static void print_parms(const PARMS_T *parms){
 	    error("Invalid\n");
 	}
     }else{
-	error("parms->sim.recon=%d is illegal\n", parms->sim.recon);
+	error("parms->recon.alg=%d is illegal\n", parms->recon.alg);
     }
     info2("\n");
     info2("\033[0;32mSimulation\033[0;0m start at step %d, end at step %d, "
@@ -1978,6 +2014,9 @@ static void check_parms(const PARMS_T *parms){
     if(parms->fit.alg<0 || parms->fit.alg>2){
 	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
     }
+    if(parms->lsr.alg<0 || parms->lsr.alg>2){
+	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
+    }
 }
 
 /**
@@ -1999,11 +2038,14 @@ PARMS_T * setup_parms(ARG_T *arg){
     readcfg_atmr(parms);
     readcfg_tomo(parms);
     readcfg_fit(parms);
+    readcfg_lsr(parms);
+    readcfg_recon(parms);
     readcfg_evl(parms);
     readcfg_sim(parms);
     readcfg_cn2(parms);
     readcfg_plot(parms);
     readcfg_dbg(parms);
+    readcfg_gpu(parms);
     readcfg_save(parms);
     readcfg_load(parms);
     parms->nsurf=readcfg_strarr(&parms->surf, "surf");

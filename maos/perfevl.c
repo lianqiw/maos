@@ -230,7 +230,7 @@ void perfevl_ievl(thread_t *info){
     }
 
     //Evaluate closed loop performance.
-    if(parms->tomo.split){//for split tomography
+    if(parms->recon.split){//for split tomography
 	if(parms->ndm<=2){
 	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
 	    //compute the dot product of wavefront with NGS mode for that direction
@@ -341,7 +341,7 @@ static void perfevl_mean(SIM_T *simu){
     }
   
     const RECON_T *recon=simu->recon;
-    if(parms->tomo.split){
+    if(parms->recon.split){
 	if(parms->ndm<=2){
 	    /* convert cleNGSm into mode and put NGS mode WVE into clem. */
 	    int nngsmod=recon->ngsmod->nmod;
@@ -482,7 +482,7 @@ void perfevl(SIM_T *simu){
     double tk_start=myclockd();
     //Cache the ground layer.
     const PARMS_T *parms=simu->parms;
-    if(!(use_cuda && parms->dbg.gpu_evl)){
+    if(!(use_cuda && parms->gpu.evl)){
 	int ips=simu->perfevl_iground;
 	if(ips!=-1 && simu->atm && !parms->sim.idealevl){
 	    simu->opdevlground=dnew(simu->aper->locs->nloc,1);
@@ -497,7 +497,7 @@ void perfevl(SIM_T *simu){
 	}
     }
     CALL_THREAD(simu->perf_evl, parms->evl.nevl, 0);
-    if(!(use_cuda && parms->dbg.gpu_evl)){
+    if(!(use_cuda && parms->gpu.evl)){
 	dfree(simu->opdevlground);simu->opdevlground=NULL;
     }
     perfevl_mean(simu);

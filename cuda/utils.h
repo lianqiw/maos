@@ -7,6 +7,9 @@
 #include "curmat.h"
 #define fcomplex cuFloatComplex
 #define dcomplex cuDoubleComplex
+extern int NG1D;
+extern int NG2D;
+
 
 #define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
 #define cudaCallocBlock(P,N)     ({DO(cudaMalloc(&(P),N));     DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
@@ -43,8 +46,10 @@ extern int nstream;
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #define MYSPARSE 0
 
-#define DIM(nsa,nb,ng) MAX(1,MIN((nsa)/nb,ng)),MIN((nsa),nb)
-#define DIM2(nx,ny,nb,ng) dim3(MAX(1,MIN((nx)/(nb),ng)),MAX(1,MIN((nx)/(nb),ng))),dim3(nb,nb)
+#define WRAP_SIZE 32 //The wrap size is currently always 32
+#define DIM_REDUCE 128 //dimension to use in reduction.
+#define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
+#define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((nx+nb-1)/(nb),NG2D)),dim3(nb,nb)
 
 /*
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of

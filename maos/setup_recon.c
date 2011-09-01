@@ -331,7 +331,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 	PDSPCELL(recon->HXW,HXW);
     	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
-	    if(parms->tomo.split!=2 && parms->powfs[ipowfs].skip){
+	    if(parms->recon.split!=2 && parms->powfs[ipowfs].skip){
 		//don't need HXW for low order wfs that does not participate in tomography.
 		continue;
 	    }
@@ -501,7 +501,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		double  ht = parms->dm[idm].ht;
 		double  scale=1. - ht/hs;
 		double  displace[2]={0,0};
-		if(parms->sim.recon!=2){
+		if(parms->recon.alg!=2){
 		    displace[0]=parms->wfsr[iwfs].thetax*ht;
 		    displace[1]=parms->wfsr[iwfs].thetay*ht;
 		}
@@ -679,7 +679,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 	    //Physical optics
 	    if(parms->powfs[ipowfs].phytype==1){
 		const int nmtch=powfs[ipowfs].intstat->mtche->ny;
-		if(parms->sim.glao && nmtch!=1){
+		if(parms->recon.glao && nmtch!=1){
 		    error("Please average intstat->saneaxy for GLAO mode.\n");
 		}
 		int indsanea=0;
@@ -814,7 +814,7 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms,
 		TTx[isa]=0;
 		TTy[isa]=1;
 	    }
-	    if(parms->sim.glao){
+	    if(parms->recon.glao){
 		recon->TT->p[ipowfs*(parms->npowfs+1)]=ddup(TT);
 	    }else{
 		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -1188,7 +1188,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 		}
 	    }
 	}
-	if(!parms->tomo.split || parms->dbg.splitlrt){
+	if(!parms->recon.split || parms->dbg.splitlrt){
 	    recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 	    dcell *GPTTDF=NULL;
 	    sptcellmulmat(&GPTTDF, recon->GX, recon->RR.V, 1);
@@ -1244,7 +1244,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
     }
     if(((parms->tomo.alg==0 || parms->tomo.alg==2) && !parms->tomo.bgs)
-       ||((parms->sim.ecnn || (parms->tomo.split==2 && !parms->load.mvst)) && !recon->RL.C && !recon->RL.MI)){
+       ||((parms->sim.ecnn || (parms->recon.split==2 && !parms->load.mvst)) && !recon->RL.C && !recon->RL.MI)){
 	if(parms->load.tomo){
 	    if(parms->tomo.alg==0 && zfexist("RLC")){
 		recon->RL.C=chol_read("RLC");
@@ -1278,13 +1278,6 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	    spcellfree(recon->ZZT);
     }
   
-    if(parms->tomo.assemble){
-	spcellfree(recon->GP);
-	spcellfree(recon->GP2);
-    }
-    if(parms->tomo.assemble || parms->tomo.square){
-	spcellfree(recon->HXWtomo);
-    }
     if(parms->sim.ecnn){
 	/**
 	   We compute the wavefront estimation error covariance in science focal
@@ -1444,7 +1437,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
 	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
 
-    if(parms->tomo.split==2){
+    if(parms->recon.split==2){
 	setup_recon_mvst(recon,parms);
     }
 }
@@ -1785,7 +1778,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	muv_direct_diag_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
     }
     if(((parms->fit.alg==0 || parms->fit.alg==2) && !parms->fit.bgs)
-       ||((parms->tomo.split==2 && !parms->load.mvst) && !recon->FL.C && !recon->RL.MI)){
+       ||((parms->recon.split==2 && !parms->load.mvst) && !recon->FL.C && !recon->RL.MI)){
 	if(fabs(parms->fit.tikcr)<1.e-14){
 	    warning("tickcr=%g is too small, chol may fail.\n", parms->fit.tikcr);
 	}
@@ -1969,7 +1962,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
       called muv_direct_solve. The former doesn ot apply the low rank
       terms.
     */
-    if(parms->tomo.split!=2){
+    if(parms->recon.split!=2){
 	return;
     }
  
@@ -2169,7 +2162,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     //setup xloc/aloc to WFS grad
     toc2("Generating xloc");
     if(!parms->sim.idealfit &&
-       !(parms->sim.recon==1 && (parms->sim.wfsalias || parms->sim.idealwfs))){
+       !(parms->recon.alg==1 && (parms->sim.wfsalias || parms->sim.idealwfs))){
 	setup_recon_HXW(recon,parms);
 	setup_recon_GX(recon,parms);
 	spcellfree(recon->HXW);//only keep HXWtomo for tomography
@@ -2178,7 +2171,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	//prepare for tomography setup
 	setup_recon_tomo_prep(recon,parms);
 	toc2("Prepare tomography");
-	if(parms->tomo.assemble || parms->tomo.split==2 || parms->sim.psfr){
+	if(parms->tomo.assemble || parms->recon.split==2 || parms->sim.psfr){
 	    /*assemble the matrix only if not using CG CG apply the
 	      individual matrices on fly to speed up and save memory. */
 	    setup_recon_tomo_matrix(recon,parms,aper);
@@ -2205,7 +2198,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	}
 	recon->RL.alg = parms->tomo.alg;
 	recon->RL.bgs = parms->tomo.bgs;
-	recon->RL.warm  = recon->warm_restart;
+	recon->RL.warm  = parms->recon.warm_restart;
 	recon->RL.maxit = parms->tomo.maxit;
     }
     if(!parms->sim.idealfit){//In idealfit, xloc has high sampling. We avoid HXF.
@@ -2225,7 +2218,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     recon->FL.Mdata = recon;
     recon->FL.alg = parms->fit.alg;
     recon->FL.bgs = parms->fit.bgs;
-    recon->FL.warm  = recon->warm_restart;
+    recon->FL.warm  = parms->recon.warm_restart;
     recon->FL.maxit = parms->fit.maxit;
     //moao
     setup_recon_moao(recon,parms);
@@ -2233,17 +2226,17 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     if(parms->sim.mffocus){
 	setup_recon_focus(recon, powfs, parms);
     }
-    if(parms->tomo.split){
+    if(parms->recon.split){
 	//split tomography
-	if(parms->tomo.split){
+	if(parms->recon.split){
 	    if(parms->ndm<=2){
 		//setup the ngsmode in both ahst and mvst mode 
 		setup_ngsmod(parms,recon,aper,powfs);
-	    }else if(parms->tomo.split==1){
+	    }else if(parms->recon.split==1){
 		error("Not implemented");
 	    }
 	}
-	if(!parms->sim.idealfit && parms->tomo.split==2){//Need to be after fit
+	if(!parms->sim.idealfit && parms->recon.split==2){//Need to be after fit
 	    setup_recon_mvst(recon,parms);
 	}
     }
@@ -2275,7 +2268,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     spcellfree(recon->GX);
     spcellfree(recon->GXhi);
     spcellfree(recon->GXtomo);//we use HXWtomo instead. faster
-    if(!(parms->cn2.tomo && parms->tomo.split==2)){//mvst needs GXlo when updating.
+    if(!(parms->cn2.tomo && parms->recon.split==2)){//mvst needs GXlo when updating.
 	spcellfree(recon->GXlo);
     }
     if(parms->tomo.alg!=1 || parms->tomo.assemble){
@@ -2297,7 +2290,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
 
-    if(parms->tomo.split){
+    if(parms->recon.split){
 	//high order wfs only in split mode.
 	GAlsr=recon->GAhi;
 	setup_ngsmod(parms,recon,aper,powfs);
@@ -2319,13 +2312,13 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     info2("Building recon->LL\n");
     recon->LL.M=spcellmulspcell(recon->LR.M, GAlsr, 1);
     double maxeig=pow(recon->neamhi * recon->aloc[0]->dx, -2);
-    if(fabs(parms->tomo.tikcr)>EPS){
-	info2("Adding tikhonov constraint of %g to LLM\n", parms->tomo.tikcr);
+    if(fabs(parms->lsr.tikcr)>EPS){
+	info2("Adding tikhonov constraint of %g to LLM\n", parms->lsr.tikcr);
 	info2("The maximum eigen value is estimated to be around %g\n", maxeig);
-	spcelladdI(recon->LL.M, parms->tomo.tikcr*maxeig);
+	spcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
     }
     dcell *NW=NULL;
-    if(parms->tomo.alg!=2){//Not SVD, need low rank terms for piston/checkboard constraint.
+    if(parms->lsr.alg!=2){//Not SVD, need low rank terms for piston/checkboard constraint.
 	NW=dcellnew(ndm,1);
 	int nmod=2;//two modes.
 	for(int idm=0; idm<ndm; idm++){
@@ -2354,7 +2347,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    dcellwrite(NW, "%s/lsrNW",dirsetup);
 	}
     }
-    if(parms->fit.actslave && parms->tomo.alg!=1){
+    if(parms->lsr.actslave && parms->lsr.alg!=1){
 	//actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14.
 	spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NW, recon->actstuck, recon->actfloat, 0.1, sqrt(maxeig));
 	if(parms->save.setup){
@@ -2403,10 +2396,10 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellfree(tmp);
 	dcellfree(NW);
     }
-    recon->LL.alg = parms->tomo.alg;
-    recon->LL.bgs = parms->tomo.bgs;
-    recon->LL.warm = recon->warm_restart;
-    recon->LL.maxit = parms->tomo.maxit;
+    recon->LL.alg = parms->lsr.alg;
+    recon->LL.bgs = parms->lsr.bgs;
+    recon->LL.warm = parms->recon.warm_restart;
+    recon->LL.maxit = parms->lsr.maxit;
     //Remove empty cells.
     dcelldropempty(&recon->LR.U,2);
     dcelldropempty(&recon->LR.V,2);
@@ -2420,9 +2413,9 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellwrite(recon->LL.U,"%s/LLU",dirsetup);
 	dcellwrite(recon->LL.V,"%s/LLV",dirsetup); 
     }
-    if(parms->tomo.alg==0 || parms->tomo.alg==2){
-	if(!parms->tomo.bgs){
-	    muv_direct_prep(&recon->LL, (parms->tomo.alg==2)*parms->tomo.svdthres);
+    if(parms->lsr.alg==0 || parms->lsr.alg==2){
+	if(!parms->lsr.bgs){
+	    muv_direct_prep(&recon->LL, (parms->lsr.alg==2)*parms->lsr.svdthres);
 	    if(parms->save.recon){
 		if(recon->LL.C)
 		    chol_save(recon->LL.C, "%s/LLC.bin", dirsetup);
@@ -2433,7 +2426,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    dcellfree(recon->LL.U);
 	    dcellfree(recon->LL.V);	
 	}else{
-	    muv_direct_diag_prep(&(recon->LL), (parms->tomo.alg==2)*parms->tomo.svdthres);
+	    muv_direct_diag_prep(&(recon->LL), (parms->lsr.alg==2)*parms->lsr.svdthres);
 	    if(parms->save.recon){
 		for(int ib=0; ib<recon->LL.nb; ib++){
 		    if(recon->LL.CB)
@@ -2457,10 +2450,9 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	  be fed to the tomography */
 	recon->cn2est=cn2est_prepare(parms,powfs);
     }
-    recon->warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
     //number of deformable mirrors
     recon->ndm = parms->ndm;
-    if(recon->warm_restart){
+    if(parms->recon.warm_restart){
 	info2("Using warm restart\n");
     }else{
 	warning2("Do not use warm restart\n");
@@ -2474,7 +2466,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    break;
 	}
     }
-    if(parms->sim.recon!=2){
+    if(parms->recon.alg!=2){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].nwfs<=1) continue;
 	    if(parms->powfs[ipowfs].dfrs){
@@ -2495,7 +2487,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     setup_recon_saneai(recon,parms,powfs);
     //setup LGS tip/tilt/diff focus removal
     setup_recon_TTFR(recon,parms,powfs);
-    switch(parms->sim.recon){
+    switch(parms->recon.alg){
     case 0:
 	setup_recon_mvr(recon, parms, powfs, aper);
 	break;
@@ -2507,10 +2499,10 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    }*/
 	break;
     default:
-	error("sim.recon=%d is not recognized\n", parms->sim.recon);
+	error("recon.alg=%d is not recognized\n", parms->recon.alg);
     }
     spcellfree(recon->GWR);
-    if(parms->sim.recon!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
+    if(parms->recon.alg!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
 	//We already assembled tomo matrix. don't need these matric any more.
 	dcellfree(recon->TTF);
 	dcellfree(recon->PTTF);
@@ -2541,7 +2533,13 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	gpu_setup_recon(parms, powfs, recon);
     }
 #endif
-
+    if(parms->tomo.assemble){
+	spcellfree(recon->GP);
+	spcellfree(recon->GP2);
+    }
+    if(parms->tomo.assemble || parms->tomo.square){
+	spcellfree(recon->HXWtomo);
+    }
     /*
       The following arrys are not used after preparation is done.
     */

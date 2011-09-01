@@ -77,7 +77,7 @@ void hysterisis(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
  */
 void addlow2dm(dcell **dmval, const SIM_T *simu, 
 	       const dcell *low_val, double gain){
-    switch(simu->parms->tomo.split){
+    switch(simu->parms->recon.split){
     case 0:
 	break;//nothing to do.
     case 1:
@@ -241,14 +241,14 @@ void filter_cl(SIM_T *simu){
     }
     //copy dm computed in last cycle. This is used in next cycle (already after perfevl)
     const SIM_CFG_T *simt=&(parms->sim);
-    if(!simu->dmerr_hi && !(parms->tomo.split && simu->Merr_lo)){
+    if(!simu->dmerr_hi && !(parms->recon.split && simu->Merr_lo)){
 	return;
     }
     if(parms->sim.fuseint){
 	shift_inte(simt->napdm,simt->apdm,simu->dmint);
     }else{
 	shift_inte(simt->napdm,simt->apdm,simu->dmint_hi);
-	if(parms->tomo.split){
+	if(parms->recon.split){
 		shift_inte(simt->napngs,simt->apngs,simu->Mint_lo);
 	}
     }
@@ -268,7 +268,7 @@ void filter_cl(SIM_T *simu){
     }
     //Low order, modal in split tomography only. 
     //Merr_lo is non-empty only if in split mode and (isim+1)%dtrat==0 as governed by tomofit
-    if(parms->tomo.split && simu->Merr_lo){
+    if(parms->recon.split && simu->Merr_lo){
 	switch(simt->servotype_lo){
 	case 1:{
 	    if(parms->sim.fuseint){

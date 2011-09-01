@@ -236,7 +236,7 @@ void moao_recon(SIM_T *simu){
 	if(parms->sim.closeloop){
 	    if(parms->sim.fuseint){
 		dcellcp(&dmcommon, simu->dmint[0]);
-		if(parms->tomo.split==1){
+		if(parms->recon.split==1){
 		    remove_dm_ngsmod(simu, dmcommon);
 		}
 	    }else{
@@ -256,7 +256,7 @@ void moao_recon(SIM_T *simu){
 	    if(imoao<0) continue;
 	    double hs=parms->powfs[ipowfs].hs;
 	    dmmoao->p[0]=simu->moao_wfs->p[iwfs];
-	    if(!recon->warm_restart){
+	    if(!parms->recon.warm_restart){
 		dcellzero(dmmoao);
 	    }
 	    dcellzero(rhs);
@@ -264,8 +264,8 @@ void moao_recon(SIM_T *simu){
 		      parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
 		      hs, simu->opdr, dmcommon, &rhsout, 1);
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs, 
-		recon->warm_restart, parms->fit.maxit);
-	    /*if(parms->tomo.split){//remove the tip/tilt form MEMS DM
+		parms->recon.warm_restart, parms->fit.maxit);
+	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM
 	      double ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
 	      dmat *aimcc=recon->moao[imoao].aimcc;
@@ -298,7 +298,7 @@ void moao_recon(SIM_T *simu){
 	dcell *dmmoao=dcellnew(1,1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    dmmoao->p[0]=simu->moao_evl->p[ievl];
-	    if(!recon->warm_restart){
+	    if(!parms->recon.warm_restart){
 		dcellzero(dmmoao);
 	    }
 	    dcell *rhsout=NULL;
@@ -308,8 +308,8 @@ void moao_recon(SIM_T *simu){
 		      INFINITY, simu->opdr, dmcommon, &rhsout, 1);
 	    
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
-		recon->warm_restart, parms->fit.maxit);
-	    /*if(parms->tomo.split){//remove the tip/tilt form MEMS DM
+		parms->recon.warm_restart, parms->fit.maxit);
+	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM
 	      double ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
 	      dmat *aimcc=recon->moao[imoao].aimcc;
