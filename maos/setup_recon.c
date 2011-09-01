@@ -2271,10 +2271,10 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     if(!(parms->cn2.tomo && parms->recon.split==2)){//mvst needs GXlo when updating.
 	spcellfree(recon->GXlo);
     }
-    if(parms->tomo.alg!=1 || parms->tomo.assemble){
+    if(parms->tomo.alg!=1 || (parms->tomo.assemble || (parms->tomo.square && !parms->dbg.tomo_hxw))){
 	spcellfree(recon->HXWtomo);
     }
-    toc2("setup_recon");
+    toc2("setup_recon_mvr");
 }
 /**
    Setup the least square reconstruct by directly inverting GA matrix. 
@@ -2537,9 +2537,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	spcellfree(recon->GP);
 	spcellfree(recon->GP2);
     }
-    if(parms->tomo.assemble || parms->tomo.square){
-	spcellfree(recon->HXWtomo);
-    }
+
     /*
       The following arrys are not used after preparation is done.
     */

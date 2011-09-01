@@ -196,8 +196,7 @@ static void Tomo_prop(thread_t *info){
     Tomo_T *data=info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=recon->parms;
-    PSPCELL(recon->HXWtomo,HXW);
-    const int nps=recon->HXWtomo->ny;
+    const int nps=recon->npsr;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
@@ -214,6 +213,7 @@ static void Tomo_prop(thread_t *info){
 		prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
 			       displace[0],displace[1], scale, 0, 0, 0);
 	    }else{
+		PSPCELL(recon->HXWtomo,HXW);
 		spmulmat(&xx, HXW[ips][iwfs], data->xin->p[ips], 1);
 	    }
 	}
@@ -255,8 +255,7 @@ static void Tomo_iprop(thread_t *info){
     Tomo_T *data=info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=recon->parms;
-    const int nps=recon->HXWtomo->ny;
-    PSPCELL(recon->HXWtomo,HXW);
+    const int nps=recon->npsr;
     //for(int ips=0; ips<recon->HXWtomo->ny; ips++){
     for(int ips=info->start; ips<info->end; ips++){
 	if(parms->tomo.square && !parms->dbg.tomo_hxw){
@@ -266,7 +265,7 @@ static void Tomo_iprop(thread_t *info){
 	    }
 	    recon->xmap[ips]->p=data->xout->p[ips]->p;
 	    double ht=recon->ht->p[ips];
-	    for(int iwfs=0; iwfs<recon->HXWtomo->nx; iwfs++){
+	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(!data->gg->p[iwfs]) continue;
 		int ipowfs = parms->wfsr[iwfs].powfs;
 		const double hs=parms->powfs[ipowfs].hs;
@@ -278,7 +277,8 @@ static void Tomo_iprop(thread_t *info){
 					 displace[0],displace[1], scale, 0, 0, 0);
 	    }
 	}else{
-	    for(int iwfs=0; iwfs<recon->HXWtomo->nx; iwfs++){
+	    PSPCELL(recon->HXWtomo,HXW);
+	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		sptmulmat(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], 1);
 	    }
 	}
