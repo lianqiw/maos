@@ -17,8 +17,9 @@
 */
 
 /**
-   Convert covariance matrices to OTF.
-*/
+   Convert covariance matrices to OTF. Deprecated. Use the mex routine
+   genotfmex.c in mex/ folder instead for easy access in MATLAB.
+  */
 #include "../lib/aos.h"
 int main(int argc, char *argv[]){
     if(argc<7){
