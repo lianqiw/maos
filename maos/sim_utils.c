@@ -1500,7 +1500,7 @@ void print_progress(const SIM_T *simu){
 	}
 	fprintf(stderr,"\033[00;00m\n");
     
-	fprintf(stderr,"Timing: WFS:%5.2f Recon:%5.3f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
+	fprintf(stderr,"Timing: WFS:%5.2f Recon:%6.4f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
 		" Used %ld:%02ld, Left %ld:%02ld\n",
 		status->wfs*tkmean, status->recon*tkmean, 
 		status->cache*tkmean, status->eval*tkmean, 

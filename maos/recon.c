@@ -246,7 +246,6 @@ void reconstruct(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
-    double tk_start=myclockd();
     if(simu->gradlastcl){
 	if(!parms->sim.idealfit && !parms->sim.evlol){
 	    if(parms->sim.closeloop){
@@ -259,6 +258,7 @@ void reconstruct(SIM_T *simu){
 	if(parms->cn2.pair){
 	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
 	}//if cn2est
+	double tk_start=myclockd();
 	switch(parms->recon.alg){
 	case 0:
 	    tomofit(simu);//tomography and fitting.
@@ -271,11 +271,10 @@ void reconstruct(SIM_T *simu){
 	if(recon->moao){
 	    moao_recon(simu);
 	}
+	simu->tk_recon=myclockd()-tk_start;
 	if(parms->sim.mffocus){
 	    focus_tracking(simu);
 	}
 	save_recon(simu);//Moved to inside.
     }
-    
-    simu->tk_recon=myclockd()-tk_start;
 }

@@ -208,32 +208,27 @@ void gpu_wfsgrad(thread_t *info){
     const float mispx=powfs[ipowfs].misreg[wfsind][0];
     const float mispy=powfs[ipowfs].misreg[wfsind][1];
     const float dtisim=parms->sim.dt*isim;
-    const float (*loc)[2]=cupowfs[ipowfs].loc;
+    float (*loc)[2]=cupowfs[ipowfs].loc;
     const int nloc=cupowfs[ipowfs].nloc;
     //Out to host for now. \todo : keep grad in device when do reconstruction on device.
-    //cudaStream_t stream=cuwfs[iwfs].stream;
-    cudaStream_t stream;
-    STREAM_NEW(stream);
-    cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream);
+    cudaStream_t stream=cuwfs[iwfs].stream;
     dmat *gradout=simu->gradcl->p[iwfs];
-    float *phiout;
+    curmat *phiout=curnew(nloc, 1);
+    curzero(phiout, stream);
     float *gradacc=cuwfs[iwfs].gradacc;
-    cudaCalloc(phiout, nloc*sizeof(float), stream);
-
-    if(simu->surfwfs && simu->surfwfs->p[iwfs] || powfs[ipowfs].ncpa){
-	//copy to GPU and copy to phiout.
-	TO_IMPLEMENT;
+    if(cuwfs[iwfs].opdadd){ //copy to phiout.
+	curcp(&phiout, cuwfs[iwfs].opdadd, stream);
     }
     if(parms->sim.idealwfs){
 	TO_IMPLEMENT;
     }else{
-	gpu_atm2loc(phiout, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
+	gpu_atm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
 	if(parms->sim.wfsalias){
 	    TO_IMPLEMENT;
 	}
     }
     if(CL){
-	gpu_dm2loc(phiout, loc, nloc, hs, thetax, thetay, mispx, mispy, -1, stream);
+	gpu_dm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, -1, stream);
     }
     //CUDA_SYNC_STREAM;
 
@@ -241,7 +236,9 @@ void gpu_wfsgrad(thread_t *info){
 	TO_IMPLEMENT;
     }
     if(simu->telws){
-	TO_IMPLEMENT;
+	float tt=simu->telws->p[isim];
+	float angle=simu->winddir?simu->winddir->p[0]:0;
+	curaddptt(phiout, loc, tt*cosf(angle), tt*sinf(angle), stream);
     }
    
     if(powfs[ipowfs].focus){
@@ -252,31 +249,21 @@ void gpu_wfsgrad(thread_t *info){
     }
     if(do_geom){
 	if(parms->powfs[ipowfs].gtype_sim==1){
-	    cuztilt<<<nsa, dim3(16,16), 0, stream>>>(gradacc, phiout, cupowfs[ipowfs].nsa, 
+	    cuztilt<<<nsa, dim3(16,16), 0, stream>>>(gradacc, phiout->p, cupowfs[ipowfs].nsa, 
 					     cupowfs[ipowfs].dx, 
 					     cupowfs[ipowfs].nxsa, cuwfs[iwfs].imcc,
 					     cupowfs[ipowfs].pts, cuwfs[iwfs].amp, 
 					     1.f/(float)dtrat);
 	}else{
 	    cusp *GS0=cuwfs[iwfs].GS0t;
-	    cusptmul(gradacc, GS0, phiout, 1.f/(float)dtrat, cuwfs[iwfs].sphandle);
-	    /*
-	    //THe following is relocated to cusptmul.
-	    int status=cusparseScsrmv(cuwfs[iwfs].sphandle, CUSPARSE_OPERATION_NON_TRANSPOSE, 
-				      GS0->ny, GS0->nx, 1.f/(float)dtrat, cuspdesc,
-				      GS0->x, GS0->p, GS0->i, phiout, 1.f,
-				      gradacc);
-	    if(status!=0){
-		error("cusparseScsrmv failed with status %d\n", status);
-	    }
-	    */
+	    cusptmul(gradacc, GS0, phiout->p, 1.f/(float)dtrat, cuwfs[iwfs].sphandle);
 	}
     }   
-    CUDA_SYNC_STREAM;
+    //CUDA_SYNC_STREAM;
     if(do_phy || parms->powfs[ipowfs].psfout || (parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart)){//physical optics
-	wfsints(simu, phiout, iwfs, isim, stream);
+	wfsints(simu, phiout->p, iwfs, isim, stream);
     }//do phy
-    CUDA_SYNC_STREAM;
+    //CUDA_SYNC_STREAM;
     ctoc("grad");
     if(dtrat_output){
 	if(do_phy){
@@ -293,7 +280,7 @@ void gpu_wfsgrad(thread_t *info){
 	    default:
 		TO_IMPLEMENT;
 	    }
-	    CUDA_SYNC_STREAM;
+	    //CUDA_SYNC_STREAM;
 	    ctoc("mtche");tic;
 	    if(noisy){
 		float rne=parms->powfs[ipowfs].rne;
@@ -312,24 +299,26 @@ void gpu_wfsgrad(thread_t *info){
 		    TO_IMPLEMENT;
 		}
 		collect_noise_do<<<MAX(nsa/256,1), MIN(256, nsa), 0, stream>>>(cuwfs[iwfs].neareal, gradnf, gradny, nsa);
-		CUDA_SYNC_STREAM;
+		//CUDA_SYNC_STREAM;
 	    }
+	    //send grad to CPU.
 	    gpu_dev2dbl(&gradout->p, gradny?gradny:gradnf, nsa*2, stream);
-	    CUDA_SYNC_STREAM;
 	    
 	    if(save_ints){
 		dmat *intstmp=dnew(pixpsa, nsa);
 		gpu_dev2dbl(&intstmp->p, ints, pixpsa*nsa, stream);
+		CUDA_SYNC_STREAM;
 		cellarr_dmat(simu->save->intsnf[iwfs], intstmp);
 		dfree(intstmp);
 	    }
 	    if(save_grad && noisy){
 		dmat *gradnftmp=dnew(nsa*2,1);
 		gpu_dev2dbl(&(gradnftmp->p), gradnf, nsa*2, stream);
+		CUDA_SYNC_STREAM;
 		cellarr_dmat(simu->save->gradnf[iwfs], gradnftmp);
 		dfree(gradnftmp);
 	    }
-	    CUDA_SYNC_STREAM;
+	    //CUDA_SYNC_STREAM;
 	    if(gradny) cudaFree(gradny);
 	    cudaFree(gradnf);
 	    cudaMemsetAsync(ints, 0, nsa*pixpsa*sizeof(float), stream);
@@ -367,6 +356,7 @@ void gpu_wfsgrad(thread_t *info){
 	    cudaMemsetAsync(gradacc, 0, nsa*2*sizeof(float), stream);
 	    ctoc("zero");
 	}
+	CUDA_SYNC_STREAM;
 	if(powfs[ipowfs].ncpa_grad){
 	    warning("Applying ncpa_grad to gradout\n");
 	    dadd(&gradout, 1., powfs[ipowfs].ncpa_grad->p[wfsind], -1.);
@@ -377,13 +367,12 @@ void gpu_wfsgrad(thread_t *info){
 	if(save_gradgeom){
 	    dmat *gradtmp=dnew(nsa*2,1);
 	    gpu_dev2dbl(&gradtmp->p, gradacc, nsa*2, stream);
+	    CUDA_SYNC_STREAM;
 	    if(dtrat!=1) dscale(gradtmp, 1./dtrat);
 	    cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);//noise free.
 	    dfree(gradtmp);
 	}
     }
-    CUDA_SYNC_STREAM;
     ctoc("done");
-    STREAM_DONE(stream);
-    cudaFree(phiout);
+    curfree(phiout);
 }

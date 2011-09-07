@@ -8,7 +8,7 @@ extern "C"
 
 static float (*cuplocs)[2]=NULL;
 static float *cupamp=NULL;
-
+static curcell *cusurfevl;
 /**
   save aper_locs, aper_amp to GPU.
 */
@@ -25,7 +25,12 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     (void)parms;
     gpu_plocs2gpu(aper->locs, aper->amp);
 }
-
+/**
+   Add surface to surfevl;
+ */
+void gpu_evlsurf2gpu(dcell *surfevl){
+    gpu_dcell2cu(&cusurfevl, surfevl);
+}
 /**
    Performance evaluation. Designed to replace perfevl_ievl in maos/perfevl.c
  */
@@ -51,27 +56,28 @@ void gpu_perfevl(thread_t *info){
     PDMAT(simu->clmp->p[ievl],pclmp);
     PDMAT(simu->clep->p[ievl],pclep);
 
-    float *iopdevl; 
+    curmat *iopdevl=curnew(aper->locs->nloc, 1);
     cudaStream_t stream;
     STREAM_NEW(stream);
     /* iopdevl must be in device memory. 6 times slower if in host memory.*/
-    cudaCalloc(iopdevl, aper->locs->nloc*sizeof(float), stream);
-
+    if(cusurfevl && cusurfevl->p[ievl]){
+	curcp(&iopdevl, cusurfevl->p[ievl], stream);
+    }else{
+	curset(iopdevl, 0, stream);
+    }
     if(parms->sim.idealevl){
 	error("Please finished by: \n"
 	      "1) make aloc square, \n"
 	      "2) send dmproj to this file by calling gpu_dm2gpu\n");
     }else if(simu->atm && !parms->sim.wfsalias){
-	gpu_atm2loc(iopdevl, cuplocs, nloc, parms->evl.hs[ievl], thetax, thetay, 
+	gpu_atm2loc(iopdevl->p, cuplocs, nloc, parms->evl.hs[ievl], thetax, thetay, 
 		parms->evl.misreg[0], parms->evl.misreg[1], isim*dt, 1, stream);
     }
-
-    CUDA_SYNC_STREAM;
+    
     if(simu->telws){//Wind shake
-	TO_IMPLEMENT;
-    }
-    if(simu->surfevl && simu->surfevl->p[ievl]){
-	TO_IMPLEMENT;
+	float tt=simu->telws->p[isim];
+	float angle=simu->winddir?simu->winddir->p[0]:0;
+	curaddptt(iopdevl, cuplocs, tt*cosf(angle), tt*sinf(angle), stream);
     }
     if(save_evlopd){
 	TO_IMPLEMENT;
@@ -81,7 +87,7 @@ void gpu_perfevl(thread_t *info){
     }
     if(nmod==3){
 	gpu_calc_ptt(polep[isim], polmp[isim], aper->ipcc, aper->imcc,
-		     cuplocs, nloc, iopdevl, cupamp, stream);
+		     cuplocs, nloc, iopdevl->p, cupamp, stream);
     }else{
 	TO_IMPLEMENT;
     }
@@ -96,9 +102,8 @@ void gpu_perfevl(thread_t *info){
     if(parms->evl.tomo){
 	TO_IMPLEMENT;
     }else{
-	gpu_dm2loc(iopdevl, cuplocs, nloc, parms->evl.hs[ievl], thetax, thetay,
+	gpu_dm2loc(iopdevl->p, cuplocs, nloc, parms->evl.hs[ievl], thetax, thetay,
 	       parms->evl.misreg[0], parms->evl.misreg[1], -1, stream);
-	CUDA_SYNC_STREAM;
 	if(imoao>-1){
 	    TO_IMPLEMENT;
 	}
@@ -117,20 +122,20 @@ void gpu_perfevl(thread_t *info){
 				recon->ngsmod->aper_fcp, recon->ngsmod->ht,
 				recon->ngsmod->scale, thetax, thetay,
 				aper->ipcc, aper->imcc,
-				cuplocs, nloc, iopdevl, cupamp, stream);
+				cuplocs, nloc, iopdevl->p, cupamp, stream);
 	    }else{
 		gpu_calc_ngsmod(NULL, NULL, pcleNGSmp[isim],recon->ngsmod->nmod,
 				recon->ngsmod->aper_fcp, recon->ngsmod->ht,
 				recon->ngsmod->scale, thetax, thetay,
 				aper->ipcc, aper->imcc,
-				cuplocs, nloc, iopdevl, cupamp, stream);	
-		TO_IMPLEMENT;
+				cuplocs, nloc, iopdevl->p, cupamp, stream);	
+		TO_IMPLEMENT;//mode decomposition.
 	    }
 	}
     }else{
 	if(nmod==3){
 	    gpu_calc_ptt(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc,
-			 cuplocs, nloc, iopdevl, cupamp, stream);
+			 cuplocs, nloc, iopdevl->p, cupamp, stream);
 	}else{
 	    TO_IMPLEMENT;
 	}
@@ -141,5 +146,5 @@ void gpu_perfevl(thread_t *info){
  end:
     CUDA_SYNC_STREAM;
     STREAM_DONE(stream);
-    cudaFree(iopdevl);
+    curfree(iopdevl);
 }

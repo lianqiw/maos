@@ -243,6 +243,16 @@ int main(int argc, char *argv[]){
 	    free(legs[iseed]);
 	}
     }else{
+
+	plot_points("Reshi", npath, NULL, reshim, NULL, NULL, 0, NULL, path,
+		    "High order wavefront Error", "Steps","Error (nm)", "High_mean");
+	plot_points("Reslo", npath, NULL, reslom, NULL, NULL, 0, NULL, path,
+		    "Low order wavefront Error", "Steps","Error (nm)", "Low_mean");
+	plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, 0, NULL, path,
+		    "High order open loop wavefront Error", "Steps","Error (nm)", "High_mean");
+	plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, 0, NULL, path,
+		    "Low order open loop wavefront Error", "Steps","Error (nm)", "Low_mean");
+
 	for(int iseed=0; iseed<nseed; iseed++){
 	    dcell *reshi_i=dcellsub(reshi, 0,0,iseed, 1);
 	    dcell *reslo_i=dcellsub(reslo, 0,0,iseed, 1);
@@ -260,13 +270,5 @@ int main(int argc, char *argv[]){
 	    dcellfree(reshi_i);dcellfree(reslo_i);dcellfree(resolhi_i);dcellfree(resollo_i);
 	}
 
-	plot_points("Reshi", npath, NULL, reshim, NULL, NULL, 0, NULL, path,
-		    "High order wavefront Error", "Steps","Error (nm)", "High_mean");
-	plot_points("Reslo", npath, NULL, reslom, NULL, NULL, 0, NULL, path,
-		    "Low order wavefront Error", "Steps","Error (nm)", "Low_mean");
-	plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, 0, NULL, path,
-		    "High order open loop wavefront Error", "Steps","Error (nm)", "High_mean");
-	plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, 0, NULL, path,
-		    "Low order open loop wavefront Error", "Steps","Error (nm)", "Low_mean");
     }
 }

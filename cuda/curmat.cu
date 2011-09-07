@@ -3,8 +3,8 @@ extern "C"
 #include <cuda.h>
 #include "gpu.h"
 }
-#include "utils.h"
 #include "curmat.h"
+#include "utils.h"
 
 /**
    Createa curmat object.
@@ -397,4 +397,12 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
 void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
     cudaMemsetAsync(res, 0,sizeof(float), stream);
     sum_wrap(res, a->p, a->nx*a->ny, stream);
+}
+
+
+__global__ void addptt_do(float *restrict opd, float (*restrict loc)[2], int n, float tx, float ty){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	opd[i]+=loc[i][0]*tx+loc[i][1]*ty;
+    }
 }

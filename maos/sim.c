@@ -68,12 +68,18 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
-#if USE_CUDA
-	    if(use_cuda){
-		gpu_atm2gpu(simu->atm, parms->atm.nps);//takes 0.4s for NFIRAOS.
-	    }
-#endif
 	}
+#if USE_CUDA
+	if(parms->gpu.evl || parms->gpu.wfs){
+	    gpu_atm2gpu(simu->atm, parms->atm.nps);//takes 0.4s for NFIRAOS.
+	}
+	if(parms->gpu.wfs){
+	    gpu_wfssurf2gpu(simu->surfwfs, parms, powfs);
+	}
+	if(parms->gpu.evl){
+	    gpu_evlsurf2gpu(simu->surfevl);
+	}
+#endif
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
 	for(int isim=simstart; isim<simend; isim++){

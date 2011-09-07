@@ -26,6 +26,8 @@
 const double stroke_dot[2]={1,5};
 const double stroke_dash[2]={10,10};
 const double stroke_solid[2]={10,0};
+int maxtic_x=12;//Maximum number of tics along x
+int maxtic_y=12;//Maximum number of tics along y
 
 double SP_XL;//space reserved for ylabel
 double SP_YT;//space reserved for title
@@ -106,7 +108,7 @@ static void pango_text_powindex(cairo_t *cr, PangoLayout *layout, double x, doub
 
 
 static void calc_tic(double *tic1, double *dtic, int *ntic, int *order, 
-		     double xmax, double xmin){
+		     double xmax, double xmin, int maxtic){
     double diff=xmax-xmin;
     //first get the order of magnitude.
     double rmax=fabs(xmax);
@@ -126,8 +128,8 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	    diff=diff*10;
 	}
 	double spacing=0;
-	if(diff>=12){
-	    spacing=2;
+	if(diff>=maxtic){
+	    spacing=ceil(diff/maxtic);
 	}else if(diff>=6){
 	    spacing=1;
 	}else{
@@ -156,7 +158,7 @@ void round_limit(double *xmin, double *xmax){
     }else{
 	double tic1, dtic;
 	int ntic, order;
-	calc_tic(&tic1, &dtic, &ntic, &order, *xmax, *xmin);
+	calc_tic(&tic1, &dtic, &ntic, &order, *xmax, *xmin, 12);
 	double xmin0=tic1*pow(10,order);
 	double xmax0=(tic1+dtic*(ntic-1))*pow(10,order);
 	if(fabs(xmin0-*xmin)<1e-5*xmin0){
@@ -420,6 +422,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     widthim=(int)(xdim*scalex/2)*2;
     heightim=(int)(ydim*scaley/2)*2;
+    maxtic_x=widthim/(3*font_size);
+    maxtic_y=heightim/(3*font_size);
     scalex = widthim/xdim;
     scaley = heightim/ydim;
     drawdata->widthim=widthim;
@@ -750,7 +754,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     double tic1, dtic;
     int ntic, order;
     double sep;
-    calc_tic(&tic1,&dtic,&ntic,&order,xmax0,xmin0);
+    calc_tic(&tic1,&dtic,&ntic,&order,xmax0,xmin0,maxtic_x);
     sep=xmax0-xmin0;
     for(int itic=0; itic<ntic; itic++){
 	double ticv=(tic1+dtic*itic);
@@ -780,7 +784,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 1, 0);
     }
     pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2,order, 0);
-    calc_tic(&tic1,&dtic,&ntic,&order,ymax0,ymin0);
+    calc_tic(&tic1,&dtic,&ntic,&order,ymax0,ymin0,maxtic_y);
     sep=ymax0-ymin0;
     for(int itic=0; itic<ntic; itic++){
 	double ticv=(tic1+dtic*itic);
@@ -830,8 +834,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_stroke(cr);
 
 	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);
-	calc_tic(&tic1,&dtic,&ntic,&order,
-		 drawdata->zlim[1],drawdata->zlim[0]);
+	calc_tic(&tic1,&dtic,&ntic,&order, drawdata->zlim[1],drawdata->zlim[0],maxtic_y);
 	sep=drawdata->zlim[1]-drawdata->zlim[0];
 
 	for(int itic=0; itic<ntic; itic++){

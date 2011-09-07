@@ -35,7 +35,7 @@ static drawdata_t *drawdata_dialog=NULL;
 PangoFontDescription *desc=NULL;
 int font_name_version=0;
 char *font_name=NULL;
-double font_size=9;
+double font_size=11;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
 static int cursor_type=0;//cursor type of the drawing area.
@@ -110,7 +110,7 @@ static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, Gt
     (void)child;
     (void)n;
     int npage=gtk_notebook_get_n_pages(topnb);
-    if(npage==0){
+    if(npage==0){//no more pages left.
 	if(g_slist_length(windows)>1){
 	    GtkWidget *window=gtk_widget_get_parent
 		(gtk_widget_get_parent(GTK_WIDGET(topnb)));
@@ -120,6 +120,7 @@ static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, Gt
 	}
     }else{
 	gtk_widget_set_sensitive(toolbar, TRUE);
+	
     }
     //gtk_notebook_set_show_tabs(topnb, npage!=1);
 }
@@ -133,7 +134,7 @@ static void topnb_detach(GtkMenuItem *menu){
     g_object_ref(label);
     gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), n);
     GtkWidget *window=create_window();//create a new window.
-    topnb=get_topnb(window);
+    topnb=get_topnb(window);//another topnb
     gtk_notebook_append_page(GTK_NOTEBOOK(topnb), page, label);
     gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), page, TRUE);
     gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), page, TRUE);
@@ -633,7 +634,7 @@ void addpage(drawdata_t **drawdatawrap)
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox),FALSE);
 	g_signal_connect(eventbox, "button-press-event", G_CALLBACK(tab_button_cb), root);
 	gtk_widget_show_all(eventbox);
-	GtkWidget *topnb=get_topnb(GTK_WIDGET(windows->data));//chose the first window.
+	GtkWidget *topnb=get_topnb(GTK_WIDGET(windows->data));
 	gtk_notebook_append_page(GTK_NOTEBOOK(topnb),root,eventbox);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), root, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), root, TRUE);
@@ -880,6 +881,11 @@ static void spin_changed(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
     delayed_update_pixmap(drawdata_dialog);
     drawdata_dialog->drawn=0;
+}
+static void toolbutton_cumu_click(GtkToolButton *btn){
+    drawdata_t *page=get_current_page();
+    page->cumu=page->cumu?0:1;
+    delayed_update_pixmap(page);
 }
 /**
    Response to the quest to set the zaxis limit (the range of the color bar)
@@ -1163,11 +1169,15 @@ GtkWidget *create_window(void){
     g_signal_connect(item,"clicked",G_CALLBACK(tool_property),NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
+    item=gtk_tool_button_new_from_stock(GTK_STOCK_COPY);
+    g_signal_connect(item, "clicked", G_CALLBACK(toolbutton_cumu_click), NULL);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
     item=gtk_separator_tool_item_new();
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
     gtk_widget_set_sensitive(toolbar, FALSE);
     item=gtk_tool_item_new();
-    GtkWidget *fontsel=gtk_font_button_new_with_font("sans 9");
+    GtkWidget *fontsel=gtk_font_button_new_with_font("sans 11");
     gtk_container_add(GTK_CONTAINER(item),fontsel);
     g_signal_connect(GTK_FONT_BUTTON(fontsel),"font-set", 
 		     G_CALLBACK(tool_font_set),NULL);
@@ -1180,6 +1190,7 @@ GtkWidget *create_window(void){
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(topnb), TRUE);
     g_signal_connect(GTK_NOTEBOOK(topnb), "page-added", G_CALLBACK(topnb_page_changed), toolbar);
     g_signal_connect(GTK_NOTEBOOK(topnb), "page-removed", G_CALLBACK(topnb_page_changed), toolbar);
+    g_signal_connect(GTK_NOTEBOOK(topnb), "change-current-page", G_CALLBACK(topnb_page_changed), toolbar);
     GtkWidget *vbox=gtk_vbox_new(FALSE,0);
     gtk_box_pack_start(GTK_BOX(vbox),toolbar,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(vbox),topnb,TRUE,TRUE,0);

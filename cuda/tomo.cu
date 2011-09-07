@@ -47,7 +47,7 @@ __global__ static void ptt_proj_do(float *restrict out, float (*restrict PTT)[2]
 /**
    Multiply nea to gradients inplace.
 */
-__global__ static void gpu_nea_do(float *restrict g, const float (*neai)[3], const float *const tt, const int nsa){
+__global__ static void gpu_tt_nea_do(float *restrict g, const float (*neai)[3], const float *const tt, const int nsa){
     const int step=blockDim.x * gridDim.x;
     for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 	float gx=g[isa]+tt[0]; 
@@ -149,7 +149,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
     const float ht=recon->ht->p[ips];					\
     const float oxx=recon->xmap[ips]->ox;				\
     const float oyx=recon->xmap[ips]->oy;				\
-    for(int iwfs=0; iwfs<nwfs; iwfs++){					\
+    for(int iwfs=0; iwfs<nwfs; iwfs++){				\
 	const int ipowfs = parms->wfsr[iwfs].powfs;			\
 	if(parms->powfs[ipowfs].skip) continue;				\
 	const float hs = parms->powfs[ipowfs].hs;			\
@@ -168,26 +168,28 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
   actually faster. Final timing: 0.260 ms per call.
 */
 
-#define DO_PTT								\
-    ttf->p[iwfs]=curnew(2,1);						\
-    if(ptt && curecon->PTT && curecon->PTT->p[iwfs+iwfs*nwfs]){		\
-	/*Using ptt_proj_do is much faster than using curmm.*/		\
-    	ptt_proj_do<<<DIM(nsa*2, DIM_REDUCE), 0, curecon->wfsstream[iwfs]>>> \
-	    (ttf->p[iwfs]->p, (float(*)[2])curecon->PTT->p[iwfs+iwfs*nwfs]->p, grad->p[iwfs]->p, nsa*2); \
-    }									\
-    curzero(opdwfs->p[iwfs], curecon->wfsstream[iwfs]);			
-
 #define DO_GP								\
     if(cupowfs[ipowfs].GP){						\
 	curzero(grad->p[iwfs], curecon->wfsstream[iwfs]);		\
 	cuspmul(grad->p[iwfs]->p, cupowfs[ipowfs].GP, opdwfs->p[iwfs]->p, 1.f, curecon->wfssphandle[iwfs]); \
+	gpu_tt_nea_do<<<DIM(nsa,256),0,curecon->wfsstream[iwfs]>>>	\
+	    (grad->p[iwfs]->p, (float(*)[3])curecon->neai->p[iwfs]->p, ttf->p[iwfs]->p, nsa); \
     }else{								\
 	gpu_gp_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>>	\
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, cuwfs[iwfs].powfs->saptr, dsa, \
 	     cupowfs[ipowfs].GPpx->p, cupowfs[ipowfs].GPpy->p, nsa);	\
     } 
 
+#define DO_PTT								\
+    ttf->p[iwfs]=curnew(2,1);						\
+    if(ptt && curecon->PTT && curecon->PTT->p[iwfs+iwfs*nwfs]){		\
+	/*Using ptt_proj_do is much faster than using curmm.*/		\
+    	ptt_proj_do<<<DIM(nsa*2, DIM_REDUCE), 0, curecon->wfsstream[iwfs]>>> \
+	    (ttf->p[iwfs]->p, (float(*)[2])curecon->PTT->p[iwfs+iwfs*nwfs]->p, grad->p[iwfs]->p, nsa*2); \
+    }									
+
 #define DO_NEA_GPT								\
+    curzero(opdwfs->p[iwfs], curecon->wfsstream[iwfs]);			\
     if(cupowfs[ipowfs].GP){						\
 	cusptmul(opdwfs->p[iwfs]->p, cupowfs[ipowfs].GP, grad->p[iwfs]->p, 1.f, curecon->wfssphandle[iwfs]); \
     }else{								\
@@ -263,8 +265,7 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
     curcellfree(ttf);
     for(int ips=0; ips<recon->npsr; ips++){
 	DO_HXT;
-	//curwrite(opdx->p[ips], "opdx_%d", ips);
-    }//exit(0);
+    };
     SYNC_PS;
     toc("TomoR");
 }

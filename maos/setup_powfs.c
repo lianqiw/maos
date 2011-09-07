@@ -747,7 +747,12 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	if(parms->powfs[ipowfs].ncpa_method<0 || parms->powfs[ipowfs].ncpa_method>2){
 	    error("Invalid ncpa_method=%d\n", parms->powfs[ipowfs].ncpa_method);
 	}
-	
+	/*
+	  ncpa_method:
+	  0: do not calibrate
+	  1: use gradient offset
+	  2: use offset in matched filter.
+	 */
 	if(parms->powfs[ipowfs].ncpa_method==1){
 	    info2("Calculating gradient offset due to NCPA\n");
 	    dcellfree(powfs[ipowfs].ncpa_grad);

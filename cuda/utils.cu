@@ -4,6 +4,7 @@ extern "C"
 #include "gpu.h"
 }
 #include "utils.h"
+#include "curmat.h"
 #include <pthread.h>
 static cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
@@ -714,3 +715,4 @@ void gpu_cucell2d(dcell **out, curcell *in, cudaStream_t stream){
 	gpu_cu2d(&(*out)->p[i], in->p[i], stream);
     }
 }
+

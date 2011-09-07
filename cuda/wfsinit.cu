@@ -55,9 +55,11 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	int iwfs0=parms->powfs[ipowfs].wfs[0];//first wfs in this group.
 	//imcc for ztilt.
+	STREAM_NEW(cuwfs[iwfs].stream);
 	DO(cusparseCreate(&cuwfs[iwfs].sphandle));
-	//STREAM_NEW(cuwfs[iwfs].stream);
-	//cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream);
+	DO(cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream));
+	DO(cublasCreate(&cuwfs[iwfs].handle));
+	DO(cublasSetStream(cuwfs[iwfs].handle, cuwfs[iwfs].stream));
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].nsaimcc>1 || wfsind==0){
 		cudaMallocHost(&cuwfs[iwfs].imcc, nsa*sizeof(void*));
@@ -253,7 +255,23 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
     CUDA_SYNC_DEVICE;
 }
 
-
+void gpu_wfssurf2gpu(dcell *wfssurf, const PARMS_T *parms, POWFS_T *powfs){
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	if(powfs[ipowfs].ncpa){
+	    gpu_dmat2cu(&cuwfs[iwfs].opdadd, powfs[ipowfs].ncpa->p[wfsind]);
+	}else{
+	    curzero(cuwfs[iwfs].opdadd, cuwfs[iwfs].stream);
+	}
+	if(wfssurf && wfssurf->p[iwfs]){
+	    curmat *temp=NULL;
+	    gpu_dmat2cu(&temp, wfssurf->p[iwfs]);
+	    curadd(&cuwfs[iwfs].opdadd, 1, temp, 1, cuwfs[iwfs].handle);
+	    curfree(temp);
+	}
+    }
+}
 __global__ static void setup_rand(curandStat *rstat, int seed){
     int id=threadIdx.x + blockIdx.x * blockDim.x;
     curand_init(seed, id, 0, &rstat[id]);

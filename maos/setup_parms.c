@@ -1672,7 +1672,11 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		parms->gpu.lsr=0;
 	    }
 	}
-
+	if(!parms->atm.frozenflow){
+	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
+	    parms->gpu.evl=0;
+	    parms->gpu.wfs=0;
+	}
 	if(parms->gpu.evl && parms->gpu.wfs){
 	    parms->sim.cachedm=0; //Done in CUDA.
 	}
@@ -1680,6 +1684,8 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    parms->tomo.square=1;
 	    parms->dbg.dxonedge=1;
 	}
+    }else{
+	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=0;
     }
     //Assign each turbulence layer to a corresponding reconstructon layer
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));

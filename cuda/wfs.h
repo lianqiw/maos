@@ -32,6 +32,7 @@ typedef struct cuwloc_t{
 
 typedef struct{
     cusparseHandle_t sphandle;
+    cublasHandle_t handle;
     cudaStream_t stream;
     cuwloc_t *powfs;
     cusp *GS0t;         /**<For gtilt. is GS0t in col major */
@@ -50,13 +51,14 @@ typedef struct{
     float  *lltncpa;    /**<NCPA for llt*/
     float (**lltimcc)[3];
     float  *lltamp;
-    int msa;/**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
+    int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
     cufftHandle lltplan1, lltplan2;/**<FFTW plan for LLT*/
     //For random number of this wfs.
     curandStat *custat;
     int     custatb;//allocated block
     int     custatt;//allocated thread
     float  *neareal;
+    curmat *opdadd;    /**<The ncpa and surface aberration.*/
 }cuwfs_t;
 
 extern cuwloc_t *cupowfs;
