@@ -29,6 +29,11 @@ void dgemm_(const char*, const char*,
 	    const double*, const int*, 
 	    const double*, const int*,    
 	    const double*, double*, const int*);
+void sgemm_(const char*, const char*,   
+	    const int*, const int*, const int*, const float*, 
+	    const float*, const int*, 
+	    const float*, const int*,    
+	    const float*, float*, const int*);
 void zgemm_(const char*, const char*,   
 	    const int*, const int*, const int*, const dcomplex*, 
 	    const dcomplex*, const int*, 
@@ -38,12 +43,17 @@ void zgemm_(const char*, const char*,
 //Lapack
 void dposv_(const char*,const int*,const int*, double*,const int*,
 	    double*,const int*, int*);
+void sposv_(const char*,const int*,const int*, float*,const int*,
+	    float*,const int*, int*);
 void zposv_(const char*,const int*,const int*, dcomplex*,const int*,
 	    dcomplex*,const int*, int*);
 void dger_ (int*,int*,double*,double*,int*,double*,int*,double*,int*);
 void dgesv_(int*,int*,double*,int*,int*,double*,int*,int*);
+void sger_ (int*,int*,float*,float*,int*,float*,int*,float*,int*);
+void sgesv_(int*,int*,float*,int*,int*,float*,int*,int*);
 void zgesv_(int*,int*,dcomplex*,int*,int*,dcomplex*,int*,int*);
 void dpotrf_(int *, int *, double *, int *, int *);
+void spotrf_(int *, int *, float *, int *, int *);
 void zpotrf_(int *, int *, dcomplex *, int *, int *);
 /* DGESVD prototype */
 extern void 
@@ -51,12 +61,19 @@ dgesvd_(char* jobu, char* jobvt, int* m, int* n, double* a,
 	int* lda, double* s, double* u, int* ldu, double* vt, int* ldvt,
 	double* work, int* lwork, int* info );
 extern void 
+sgesvd_(char* jobu, char* jobvt, int* m, int* n, float* a,
+	int* lda, float* s, float* u, int* ldu, float* vt, int* ldvt,
+	float* work, int* lwork, int* info );
+extern void 
 zgesvd_(char* jobu, char* jobvt, int* m, int* n, dcomplex* a,
 	int* lda, double* s, dcomplex* u, int* ldu, dcomplex* vt, int* ldvt,
 	dcomplex* work, int* lwork, double *rwork, int* info );
 
 void dsyev_(char *jobz, char *uplo, int *n, double *a,
 	    int *lda, double *w, double *work, int *lwork,
+	    int *info);
+void ssyev_(char *jobz, char *uplo, int *n, float *a,
+	    int *lda, float *w, float *work, int *lwork,
 	    int *info);
 void zheev_(char *jobz, char *uplo, int *n, dcomplex *a,
 	    int *lda, double *w, dcomplex *work, int *lwork, double *rwork,

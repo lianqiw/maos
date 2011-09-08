@@ -88,24 +88,57 @@ void curwrite(const curmat *A, const char *format, ...){
     curwritedata(A, fp);
     zfclose(fp);
 }
+
 /**
-   out=out*beta+in*alpha;
+   add a vector to another, scaled by alpha and beta. all in device memory.
+   a=a*alpha+b*beta;
 */
-void curadd(curmat **out, float beta, curmat *in, float alpha, cublasHandle_t handle){
-    if(*out){
-	if(fabsf(beta-1)>1e-6){
-	    cublasSscal(handle, (*out)->nx*(*out)->ny, &beta, (*out)->p, 1);
-	}
-    }else{
-	*out=curnew(in->nx, in->ny);
+__global__ void add_do(float *restrict a, float alpha, 
+		       const float *restrict b, float beta, int n){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	a[i]=a[i]*alpha+b[i]*beta;
     }
-    cublasSaxpy(handle, in->nx*in->ny, &alpha, in->p, 1, (*out)->p, 1);
 }
+
 __global__ static void scale_do(float *restrict in, int n, float alpha){
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	in[i]*=alpha;
     }
+}
+
+/**
+   out=out*beta+in*alpha;
+*/
+void curadd(curmat **out, float alpha, curmat *in, float beta, cudaStream_t stream){
+    if(!*out || fabsf(alpha)<1e-7){
+	curcp(out, in, stream);
+	scale_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
+	    ((*out)->p, in->nx*in->ny, beta);
+    }else{
+	add_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
+	    ((*out)->p, alpha, in->p, beta, in->nx*in->ny);
+    }
+}
+__global__ void addcabs2_do(float *restrict a, float alpha, 
+			    const fcomplex *restrict b, float beta, int n){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	a[i]=a[i]*alpha+CABS2(b[i])*beta;
+    }
+}
+/**
+   out=out*beta+abs2(in)*alpha;
+*/
+void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t stream){
+    if(!*out){
+	*out=curnew(in->nx,in->ny);
+    }else if(fabsf(alpha)<1e-7){
+	curzero(*out, stream);
+    }
+    addcabs2_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
+	((*out)->p, alpha, in->p, beta, in->nx*in->ny);
 }
 void curscale(curmat *in, float alpha, cudaStream_t stream){
     int n=in->nx*in->ny;
@@ -217,7 +250,7 @@ void curcellcp(curcell **A, const curcell *B, cudaStream_t stream){
 /*
   A=A*beta+B*alpha;
 */
-void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cublasHandle_t handle){
+void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream){
     if(!B) return;
     if(!*A){
 	*A=curcellnew2(B);
@@ -225,14 +258,14 @@ void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cublasHa
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
     for(int i=0; i<B->nx*B->ny; i++){
-	curadd(&((*A)->p[i]), beta, B->p[i], alpha, handle);
+	curadd(&((*A)->p[i]), beta, B->p[i], alpha,stream);
     }
 }
 
 
 /**
    add a scalar alpha, scaled by beta to a vector. all in device memory.
- */
+*/
 __global__ void adds_do(float *vec, float *palpha, float beta, int n){
     __shared__ float alpha;
     if(threadIdx.x==0) alpha=beta**palpha;
@@ -245,7 +278,7 @@ __global__ void adds_do(float *vec, float *palpha, float beta, int n){
    add a vector to another, scaled by alpha and beta. all in device memory.
    a=a+b*alpha*beta;
 */
-__global__ void add_do(float *restrict a, const float *restrict b, const float *restrict b_sc1, float b_sc2, int n){
+__global__ void add2_do(float *restrict a, const float *restrict b, const float *restrict b_sc1, float b_sc2, int n){
     float alpha=*b_sc1*b_sc2;
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
@@ -253,13 +286,6 @@ __global__ void add_do(float *restrict a, const float *restrict b, const float *
     }
 }
 
-__global__ static void add2_do(float *restrict a, const float *restrict a_sc, const float a_sc2, const float *restrict b, int n){
-    float alpha=*a_sc*a_sc2;
-    const int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	a[i]=a[i]*alpha+b[i];
-    }
-}
 
 /**
    out=out+in*alpha; beta, alpha lives in device memory.
@@ -268,13 +294,13 @@ void curadd2(curmat **out, const curmat *in, float *alpha, cudaStream_t stream){
     if(!*out){
 	*out=curnew(in->nx, in->ny);
     }
-    add_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
+    add2_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 	((*out)->p, in->p, alpha, 1.f, in->nx*in->ny);
 }
 
 
 /**
-  A=A*beta+B*alpha; beta, alpha lives in device memory.
+   A=A*beta+B*alpha; beta, alpha lives in device memory.
 */
 void curcelladd2(curcell **A, const curcell *B, float* alpha, cudaStream_t stream){
     if(!B) return;
@@ -288,6 +314,13 @@ void curcelladd2(curcell **A, const curcell *B, float* alpha, cudaStream_t strea
     }
 }
 
+__global__ static void add3_do(float *restrict a, const float *restrict a_sc, const float a_sc2, const float *restrict b, int n){
+    float alpha=*a_sc*a_sc2;
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	a[i]=a[i]*alpha+b[i];
+    }
+}
 /**
    out=out*beta+in; beta, alpha lives in device memory.
 */
@@ -295,7 +328,7 @@ void curadd3(curmat **out, float *beta, const curmat *in, cudaStream_t stream){
     if(!*out){
 	*out=curnew(in->nx, in->ny);
     }
-    add2_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
+    add3_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 	((*out)->p, beta, 1.f, in->p, in->nx*in->ny);
 }
 

@@ -43,15 +43,15 @@ static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha)
 	double dispy=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
 	double scale=1.-ht/hs;
 	if(parms->dm[idm].cubic){
-	    prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
-			       powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
-			       alpha, dispx, dispy, scale, parms->dm[idm].iac, 
-			       0, 0);
+	    prop_grid_cubic(simu->dmprojsq[idm],
+			    powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+			    alpha, dispx, dispy, scale, parms->dm[idm].iac, 
+			    0, 0);
 	}else{
-	    prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
-			 powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
-			 alpha, dispx, dispy, scale, 
-			 0, 0);
+	    prop_grid(simu->dmprojsq[idm],
+		      powfs[ipowfs].loc, powfs[ipowfs].amp->p, opd->p, 
+		      alpha, dispx, dispy, scale, 0,
+		      0, 0);
 	}
     }
 }
@@ -118,8 +118,8 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     /* Add surface error*/
-    if(simu->surfwfs && simu->surfwfs->p[iwfs]){
-	dadd(&opd,1, simu->surfwfs->p[iwfs],1);
+    if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
+	dadd(&opd,1, powfs[ipowfs].opdadd->p[wfsind],1);
     }
 
     /* Add NCPA to WFS as needed. Todo: merge surfwfs with ncpa. be careful

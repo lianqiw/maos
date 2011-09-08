@@ -452,8 +452,8 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 		      1,disx,disy,1,1,0,0);
 	}
     }
-    if(simu->surfopdx){
-	dcelladd(opdx, 1, simu->surfopdx, 1);
+    if(recon->opdxadd){
+	dcelladd(opdx, 1, recon->opdxadd, 1);
     }
 }
 
@@ -605,9 +605,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
     //we initialize dmreal, so that wfs_prop_dm can reference dmreal.
-    simu->dmreal=dcellnew(parms->ndm,1);
     simu->dmcmd=dcellnew(parms->ndm,1);
+    simu->dmreal=dcellnew(parms->ndm,1);
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
+    if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
+	simu->dmproj=dcellnew(parms->ndm,1);
+	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
+    }
     for(int idm=0; idm<parms->ndm; idm++){
 	simu->dmcmd->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	if(simu->hyst){
@@ -616,15 +620,27 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
 	}
 	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
+	if(simu->dmprojsq){
+	    simu->dmproj->p[idm]=dnew(recon->aloc[idm]->nloc,1);
+	    simu->dmprojsq[idm]=mapnew2(recon->amap[idm]);
+	}
 	if(parms->fit.square){
 	    free(simu->dmrealsq[idm]->p);
 	    free(simu->dmrealsq[idm]->nref);simu->dmrealsq[idm]->nref=NULL;
 	    simu->dmrealsq[idm]->p=simu->dmreal->p[idm]->p;
+	    if(simu->dmprojsq){
+		free(simu->dmprojsq[idm]->p);
+		free(simu->dmprojsq[idm]->nref);simu->dmprojsq[idm]->nref=NULL;
+		simu->dmprojsq[idm]->p=simu->dmproj->p[idm]->p;
+	    }
 	}
     }
 #if USE_CUDA
     if(use_cuda){
-	gpu_dm2gpu(simu->dmrealsq, parms->ndm, parms->dm);
+	gpu_dm2gpu(&cudmreal, simu->dmrealsq, parms->ndm, parms->dm);
+	if(simu->dmprojsq){
+	    gpu_dm2gpu(&cudmproj, simu->dmprojsq, parms->ndm, parms->dm);
+	}
     }
 #endif
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
@@ -1247,8 +1263,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->status->nthread=parms->sim.nthread;
     simu->status->timstart=myclocki();
     simu->status->info=S_RUNNING;
-    setup_tsurf(simu);//setting up M3 tilted surf.
-    setup_surf(simu);//setting up M1/M2/M3 surface OPD.
     return simu;
 }
 /**
@@ -1440,8 +1454,6 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->moao_evl, parms->evl.nevl);
     cellarr_close_n(save->moao_wfs, parms->nwfs);
     dcellfree(save->evlopdcov);
-    dcellfree(simu->surfevl);
-    dcellfree(simu->surfwfs);
     dfree(simu->windest);
     dfree(simu->winddir);
     spcellfree(simu->windshift);

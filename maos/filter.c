@@ -378,7 +378,7 @@ void filter(SIM_T *simu){
     }
 #if USE_CUDA
     if(use_cuda){
-	gpu_dm2gpu(simu->dmrealsq, parms->ndm,NULL);
+	gpu_dm2gpu(&cudmreal, simu->dmrealsq, parms->ndm,NULL);
     }
 #endif
     calc_cachedm(simu);

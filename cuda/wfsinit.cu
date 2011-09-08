@@ -105,7 +105,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 
 	if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout){
 	    if(parms->powfs[ipowfs].usephy){
-		cudaCallocBlock(cuwfs[iwfs].ints, nsa*sizeof(float)*powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay);
+		cuwfs[iwfs].ints=curnew(nsa, powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay);
 		if(parms->powfs[ipowfs].noisy){
 		    cudaCallocBlock(cuwfs[iwfs].neareal, nsa*sizeof(float)*4);
 		}
@@ -255,7 +255,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
     CUDA_SYNC_DEVICE;
 }
 
-void gpu_wfssurf2gpu(dcell *wfssurf, const PARMS_T *parms, POWFS_T *powfs){
+void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
@@ -264,11 +264,12 @@ void gpu_wfssurf2gpu(dcell *wfssurf, const PARMS_T *parms, POWFS_T *powfs){
 	}else{
 	    curzero(cuwfs[iwfs].opdadd, cuwfs[iwfs].stream);
 	}
-	if(wfssurf && wfssurf->p[iwfs]){
+	if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
 	    curmat *temp=NULL;
-	    gpu_dmat2cu(&temp, wfssurf->p[iwfs]);
-	    curadd(&cuwfs[iwfs].opdadd, 1, temp, 1, cuwfs[iwfs].handle);
+	    gpu_dmat2cu(&temp, powfs[ipowfs].opdadd->p[wfsind]);
+	    curadd(&cuwfs[iwfs].opdadd, 1, temp, 1, cuwfs[iwfs].stream);
 	    curfree(temp);
+	    dfree(powfs[ipowfs].opdadd->p[wfsind]);//no longer need it in CPU memory.
 	}
     }
 }

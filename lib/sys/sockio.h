@@ -17,12 +17,12 @@
 */
 #ifndef AOS_SOCKIO_H
 #define AOS_SOCKIO_H
-int swrite(int *fd, const void *p, size_t len);
-int sread(int *fd, void *p, size_t len);
-void swriteint(int *fd, int cmd);
-void swriteintarr(int *fd, int* cmd, unsigned int len);
-int sreadint(int *fd);
-void sreadintarr(int *fd, int* cmd, unsigned int len);
-void swritestr(int *fd, const char *str);
-char *sreadstr(int *fd);
+int stwrite(int *fd, const void *p, size_t len);
+int stread(int *fd, void *p, size_t len);
+void stwriteint(int *fd, int cmd);
+void stwriteintarr(int *fd, int* cmd, unsigned int len);
+int streadint(int *fd);
+void streadintarr(int *fd, int* cmd, unsigned int len);
+void stwritestr(int *fd, const char *str);
+char *streadstr(int *fd);
 #endif

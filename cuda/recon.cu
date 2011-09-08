@@ -342,7 +342,7 @@ void gpu_tomofit(SIM_T *simu){
 	curcellfree(curecon->grad);   curecon->grad=NULL;
 	curcellfree(curecon->gradin); curecon->gradin=NULL;
 	if(parms->save.opdr){
-	    gpu_cucell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
+	    gpu_curcell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
 	}
     }else{
 	//Use CPU tomography to compare fit with cpu.
@@ -369,11 +369,11 @@ void gpu_tomofit(SIM_T *simu){
 	gpu_pcg(&curecon->dmfit, (G_CGFUN)cumuv, &curecon->FL, NULL, NULL, rhs,
 		simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream);
 	toc("FitL CG");
-	gpu_cucell2d(&simu->dmfit_hi, curecon->dmfit, curecon->cgstream);
+	gpu_curcell2d(&simu->dmfit_hi, curecon->dmfit, curecon->cgstream);
 	curcellfree(curecon->opdfit);
 	curcellfree(curecon->opdfit2);
     }else{
-	gpu_cucell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
+	gpu_curcell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
 	for(int i=0; i<simu->opdr->nx; i++){
 	    simu->opdr->p[i]->nx=simu->opdr->p[i]->nx*simu->opdr->p[i]->ny;
 	    simu->opdr->p[i]->ny=1;

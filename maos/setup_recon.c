@@ -1244,7 +1244,8 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
     }
     if(((parms->tomo.alg==0 || parms->tomo.alg==2) && !parms->tomo.bgs)
-       ||((parms->sim.ecnn || (parms->recon.split==2 && !parms->load.mvst)) && !recon->RL.C && !recon->RL.MI)){
+       ||((parms->sim.ecnn || (parms->recon.split==2 && !parms->load.mvst))
+	  && !recon->RL.C && !recon->RL.MI)){
 	if(parms->load.tomo){
 	    if(parms->tomo.alg==0 && zfexist("RLC")){
 		recon->RL.C=chol_read("RLC");
@@ -2629,6 +2630,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 
     fdpcg_free(recon->fdpcg);
     cn2est_free(recon->cn2est);
+    dcellfree(recon->opdxadd);
     free(recon);
 }
 

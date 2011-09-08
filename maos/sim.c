@@ -73,12 +73,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    gpu_atm2gpu(simu->atm, parms->atm.nps);//takes 0.4s for NFIRAOS.
 	}
-	if(parms->gpu.wfs){
-	    gpu_wfssurf2gpu(simu->surfwfs, parms, powfs);
-	}
-	if(parms->gpu.evl){
-	    gpu_evlsurf2gpu(simu->surfevl);
-	}
+
 #endif
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
@@ -105,6 +100,22 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		if(parms->save.dm){
 		    cellarr_dcell(simu->save->dmproj, simu->dmproj);
 		}
+		if(!parms->fit.square){
+		    /* Embed DM commands to a square array for fast ray tracing */
+		    for(int idm=0; idm<parms->ndm; idm++){
+			long *embed=simu->recon->aembed[idm];
+			double *pout=simu->dmprojsq[idm]->p;
+			double *pin=simu->dmproj->p[idm]->p;
+			for(long i=0; i<simu->dmproj->p[idm]->nx; i++){
+			    pout[embed[i]]=pin[i];
+			}
+		    }
+		}
+#if USE_CUDA
+		if(use_cuda){
+		    gpu_dm2gpu(&cudmproj, simu->dmprojsq, parms->ndm, NULL);
+		}
+#endif
 	    }
 	    if(parms->dbg.parallel){
 		/*

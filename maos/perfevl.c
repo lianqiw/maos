@@ -20,6 +20,9 @@
 #include "sim.h"
 #include "ahst.h"
 #include "sim_utils.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file perfevl.c Peformance evaluation on science FoV. Notice that the science
    FoV can be different from the DM fitting FoV, which is tuned to better
@@ -58,15 +61,15 @@ static void perfevl_ideal_correction(SIM_T *simu, dmat *iopdevl, int ievl, doubl
 	double dispy=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
 	double scale=1.-ht/hs;
 	if(parms->dm[idm].cubic){
-	    prop_nongrid_cubic(recon->aloc[idm], simu->dmproj->p[idm]->p,
-			       aper->locs, aper->amp->p, iopdevl->p, 
-			       alpha, dispx, dispy, scale, parms->dm[idm].iac, 
-			       0, 0);
+	    prop_grid_cubic(simu->dmprojsq[idm],
+			    aper->locs, aper->amp->p, iopdevl->p, 
+			    alpha, dispx, dispy, scale, parms->dm[idm].iac, 
+			    0, 0);
 	}else{
-	    prop_nongrid(recon->aloc[idm], simu->dmproj->p[idm]->p,
-			 aper->locs, aper->amp->p, iopdevl->p,
-			 alpha, dispx, dispy, scale, 
-			 0, 0);
+	    prop_grid(simu->dmprojsq[idm],
+		      aper->locs, aper->amp->p, iopdevl->p,
+		      alpha, dispx, dispy, scale, 0,
+		      0, 0);
 	}
     }
 }
@@ -123,8 +126,8 @@ void perfevl_ievl(thread_t *info){
 	loc_add_ptt(iopdevl->p, ptt, aper->locs);
     }
     //Add surfaces along science path. prepared in setup_surf.c
-    if(simu->surfevl && simu->surfevl->p[ievl]){
-	dadd(&iopdevl, 1, simu->surfevl->p[ievl], 1);
+    if(aper->opdadd && aper->opdadd->p[ievl]){
+	dadd(&iopdevl, 1, aper->opdadd->p[ievl], 1);
     }
 
     TIM(1);
@@ -501,6 +504,14 @@ void perfevl(SIM_T *simu){
 	dfree(simu->opdevlground);simu->opdevlground=NULL;
     }
     perfevl_mean(simu);
-    perfevl_save(simu);
+#if USE_CUDA
+    if(use_cuda){
+	gpu_perfevl_save(simu);
+    }else{
+#endif
+	perfevl_save(simu);
+#if USE_CUDA
+    }
+#endif
     simu->tk_eval=myclockd()-tk_start;
 }

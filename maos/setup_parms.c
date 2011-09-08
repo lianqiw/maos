@@ -725,7 +725,6 @@ static void readcfg_sim(PARMS_T *parms){
     }
     READ_STR(sim.wspsd);
     READ_INT(sim.cachedm);
-    READ_INT(sim.cachesurf);
     READ_INT(sim.fuseint);
     READ_INT(sim.closeloop);
     READ_INT(sim.skysim);
@@ -1655,6 +1654,10 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    parms->sim.cachedm=0;
 	    warning("cachedm disabled for SCAO\n");
 	}
+    }
+    if(parms->evl.tomo){
+	warning("evl.tomo disable cuda\n");
+	use_cuda=1;
     }
     if(use_cuda){
 	if(parms->recon.alg==0){

@@ -442,7 +442,6 @@ typedef struct SIM_CFG_T{
     int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
     int servotype_lo;/**<servo type for low order loop. 1: simple integrator. 2: type II*/
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/
-    int cachesurf;   /**<cache surface on fine sampled grid matched WFS or Science grid*/
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
     int recon;       /**<reconstruction method. 0: minimum variance, 1: least square*/

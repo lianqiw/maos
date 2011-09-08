@@ -18,6 +18,6 @@
 
 #ifndef AOS_SETUP_TSURF
 #define AOS_SETUP_TSURF
-void setup_tsurf(SIM_T *simu);
-void setup_surf(SIM_T*simu);
+void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs);
+void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon);
 #endif

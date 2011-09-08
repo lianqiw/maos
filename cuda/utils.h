@@ -1,12 +1,8 @@
 #ifndef AOS_CUDA_UTILS_H
 #define AOS_CUDA_UTILS_H
-#include <cuda.h>
-#include <cublas_v2.h>
-#include <cuComplex.h>
-#include "cusparse.h"
 #include "types.h"
-#define fcomplex cuFloatComplex
-#define dcomplex cuDoubleComplex
+#include <cublas_v2.h>
+#include "cusparse.h"
 extern int NG1D;
 extern int NG2D;
 
@@ -56,7 +52,7 @@ the problem by using mutex locking to makesure only 1 thread is calling FFT. */
 extern pthread_mutex_t cufft_mutex;
 #define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
 
-void gpu_map2dev(cumap_t *dest, map_t **source, int nps, int type);
+void gpu_map2dev(cumap_t **dest, map_t **source, int nps, int type);
 void gpu_sp2dev(cusp **dest, dsp *src);
 void gpu_calc_ptt(double *rmsout, double *coeffout, 
 		  const double ipcc, const dmat *imcc,
@@ -101,7 +97,16 @@ void gpu_writeflt(float *p, int nx, int ny, const char *format, ...);
 void gpu_writefcmp(fcomplex *p, int nx, int ny, const char *format, ...);
 void gpu_writeint(int *p, int nx, int ny, const char *format, ...);
 void gpu_muv2dev(cumuv_t *out, MUV_T *in);
-void gpu_cu2d(dmat **out, curmat *in, cudaStream_t stream);
-void gpu_cucell2d(dcell **out, curcell *in, cudaStream_t stream);
-
+void gpu_cur2d(dmat **out, const curmat *in, cudaStream_t stream);
+void gpu_cur2s(smat **out, const curmat *in, cudaStream_t stream);
+void gpu_cuc2z(zmat **out, const cucmat *in, cudaStream_t stream);
+void gpu_curcell2d(dcell **out, const curcell *in, cudaStream_t stream);
+void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream);
+void gpu_cuccell2z(zcell **out, const cuccell *in, cudaStream_t stream);
+void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream);
+__device__ inline float CABS2(fcomplex r){
+    const float a=cuCrealf(r);
+    const float b=cuCimagf(r);
+    return a*a+b*b;
+}
 #endif

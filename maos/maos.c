@@ -25,6 +25,7 @@
 #include "setup_aper.h"
 #include "sim.h"
 #include "sim_utils.h"
+#include "setup_surf.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -57,7 +58,18 @@ void maos(const PARMS_T *parms){
 #endif    
     recon = setup_recon(parms, powfs, aper);
     info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
-
+    setup_tsurf(parms, aper, powfs);//setting up M3 tilted surf.
+    setup_surf(parms, aper, powfs, recon);//setting up M1/M2/M3 surface OPD.
+#if USE_CUDA
+    if(use_cuda){
+	if(parms->gpu.wfs){
+	    gpu_wfssurf2gpu(parms, powfs);
+	}
+	if(parms->gpu.evl){
+	    gpu_evlsurf2gpu(aper);
+	}	
+    }
+#endif
     /*
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.

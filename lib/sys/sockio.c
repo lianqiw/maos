@@ -26,13 +26,13 @@
 /**
    Socket IO
 */
-int swrite(int *fd, const void *p, size_t len){
+int stwrite(int *fd, const void *p, size_t len){
     if(*fd==-1){
 	warning3("Trying to write to a closed socket\n");
 	return -1;
     }
     if(write(*fd, p, len)!=len){
-	perror("swrite");
+	perror("stwrite");
 	warning3("Write failed. close socket %d\n", *fd);
 	close(*fd);
 	*fd=-1;
@@ -41,13 +41,13 @@ int swrite(int *fd, const void *p, size_t len){
 	return 0;
     }
 }
-int sread(int *fd, void *p, size_t len){
+int stread(int *fd, void *p, size_t len){
     if(*fd==-1){
 	warning3("Trying to read a closed socket\n");
 	return -1;
     }
     if(read(*fd, p, len)!=len){
-	perror("sread");
+	perror("stread");
 	warning3("Read failed. close socket %d\n",*fd);
 	close(*fd);
 	*fd=-1;
@@ -56,40 +56,40 @@ int sread(int *fd, void *p, size_t len){
 	return 0;
     }
 }
-//Provent calling read/write in this file from now on. use sread/swrite instead
+//Provent calling read/write in this file from now on. use stread/stwrite instead
 #define read READ_IS_PROHIBITED
 #define write WRITE_IS_PROHIBITED
-void swriteint(int *fd, int cmd){
-    swrite(fd, &cmd, sizeof(int));
+void stwriteint(int *fd, int cmd){
+    stwrite(fd, &cmd, sizeof(int));
 }
-void swriteintarr(int *fd, int* cmd, unsigned int len){
-    swrite(fd,cmd,len*sizeof(int));
+void stwriteintarr(int *fd, int* cmd, unsigned int len){
+    stwrite(fd,cmd,len*sizeof(int));
 }
-int sreadint(int *fd){
+int streadint(int *fd){
     int cmd=-1;
-    sread(fd, &cmd, sizeof(int));
+    stread(fd, &cmd, sizeof(int));
     return cmd;
 }
-void sreadintarr(int *fd, int* cmd, unsigned int len){
-    sread(fd,cmd,len*sizeof(int));
+void streadintarr(int *fd, int* cmd, unsigned int len){
+    stread(fd,cmd,len*sizeof(int));
 }
-void swritestr(int *fd, const char *str){
+void stwritestr(int *fd, const char *str){
     if(str){
 	int len=strlen(str)+1;
-	swriteint(fd, len);
-	swrite(fd, str, len);
+	stwriteint(fd, len);
+	stwrite(fd, str, len);
     }else{
-	swriteint(fd, 0);
+	stwriteint(fd, 0);
     }
 }
 
-char *sreadstr(int *fd){
+char *streadstr(int *fd){
     int len;
     char *str;
-    len=sreadint(fd);
+    len=streadint(fd);
     if(len>0){
 	str=calloc(1, sizeof(char)*len);
-	if(sread(fd, str, len)){
+	if(stread(fd, str, len)){
 	    free(str);
 	    str=NULL;
 	}

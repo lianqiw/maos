@@ -93,8 +93,8 @@ void prop_index(PROPDATA_T *propdata);//A unified wrapper
 	double scale     /**<[in] scaling of the beam diameter (cone)*/
 
 void prop_grid_map(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, int wrap);
-void prop_grid_pts(ARGIN_GRID, ARGOUT_PTS, ARG_PROP,int wrap, long sastart, long saend);
-void prop_grid(ARGIN_GRID, ARGOUT_LOC,ARG_PROP,int wrap, long start, long end);
+void prop_grid_pts(ARGIN_GRID, ARGOUT_PTS, ARG_PROP, int wrap, long sastart, long saend);
+void prop_grid    (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, int wrap, long start, long end);
 
 void prop_nongrid(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, long start, long end);
 void prop_nongrid_map(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP, long start, long end);
@@ -102,11 +102,11 @@ void prop_nongrid_pts(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP, long start, long end)
 /*
   A few cubic propagations.
  */
-void prop_grid_cubic(ARGIN_GRID, ARGOUT_LOC, ARG_PROP, double cubic_iac, long start, long end);
-void prop_grid_pts_cubic(ARGIN_GRID, ARGOUT_PTS, ARG_PROP,double cubic_iac, long start, long end);
+void prop_grid_cubic    (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, double cubic_iac, long start, long end);
+void prop_grid_pts_cubic(ARGIN_GRID, ARGOUT_PTS, ARG_PROP, double cubic_iac, long start, long end);
 void prop_grid_map_cubic(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, double cubic_iac, long start, long end);
-void prop_nongrid_cubic(ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, double cubic_iac, long start, long end);
-void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP,double cubic_iac, long start, long end);
+void prop_nongrid_cubic    (ARGIN_NONGRID, ARGOUT_LOC, ARG_PROP, double cubic_iac, long start, long end);
+void prop_nongrid_pts_cubic(ARGIN_NONGRID, ARGOUT_PTS, ARG_PROP, double cubic_iac, long start, long end);
 void prop_nongrid_map_cubic(ARGIN_NONGRID, ARGOUT_MAP, ARG_PROP, double cubic_iac, long start, long end);
 
 /**

@@ -175,5 +175,6 @@ void free_aper(APER_T *aper, const PARMS_T *parms){
 	free(aper->embed);
 	free(aper->nembed);
     }
+    dcellfree(aper->opdadd);
     free(aper);
 }

@@ -18,7 +18,9 @@
 #include <sys/file.h>
 #include "cellarr.h"
 #include "dmat.h"
+#include "smat.h"
 #include "cmat.h"
+#include "zmat.h"
 #include "bin.h"
 /**
    \file cellarr.c
@@ -55,12 +57,32 @@ void cellarr_dcell(cellarr *ca, const dcell *A){
     ca->cur++;
     zflush(ca->fp);
 }
+
+/**
+   Append a dcell A into the cellarr ca.
+ */
+void cellarr_scell(cellarr *ca, const scell *A){
+    if(!ca) error("callarr is NULL\n");
+    scellwritedata(ca->fp,A);
+    ca->cur++;
+    zflush(ca->fp);
+}
+
 /**
    Append a ccell A into the cellarr ca.
  */
 void cellarr_ccell(cellarr *ca, const ccell *A){
     if(!ca) error("callarr is NULL\n");
     ccellwritedata(ca->fp,A);
+    ca->cur++;
+    zflush(ca->fp);
+}
+/**
+   Append a ccell A into the cellarr ca.
+ */
+void cellarr_zcell(cellarr *ca, const zcell *A){
+    if(!ca) error("callarr is NULL\n");
+    zcellwritedata(ca->fp,A);
     ca->cur++;
     zflush(ca->fp);
 }
@@ -74,12 +96,32 @@ void cellarr_dmat(cellarr *ca, const dmat *A){
     ca->cur++;
     zflush(ca->fp);
 }
+
+/**
+   Append a dmat A into the cellarr ca.
+ */
+void cellarr_smat(cellarr *ca, const smat *A){
+    if(!ca) error("callarr is NULL\n");
+    swritedata(ca->fp,A);
+    ca->cur++;
+    zflush(ca->fp);
+}
 /**
    Append a ccell A into the cellarr ca.
  */
 void cellarr_cmat(cellarr *ca, const cmat *A){
     if(!ca) error("callarr is NULL\n");
     cwritedata(ca->fp,A);
+    ca->cur++;
+    zflush(ca->fp);
+}
+
+/**
+   Append a ccell A into the cellarr ca.
+ */
+void cellarr_zmat(cellarr *ca, const zmat *A){
+    if(!ca) error("callarr is NULL\n");
+    zwritedata(ca->fp,A);
     ca->cur++;
     zflush(ca->fp);
 }

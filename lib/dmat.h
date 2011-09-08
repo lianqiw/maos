@@ -24,7 +24,7 @@
 #include "mat.h"
 #include "cell.h"
 #include "matbin.h"
-AOS_MAT_DEF(AOS_DMAT,AOS_DSP,double)
+AOS_MAT_DEF(AOS_DMAT,AOS_DMAT,AOS_DSP,double,double)
 AOS_CELL_DEF(AOS_DMAT,AOS_DSP,double)
 AOS_MATBIN_DEF(AOS_DMAT,AOS_DSP,double)
 

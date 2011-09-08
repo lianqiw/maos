@@ -22,24 +22,40 @@
 #include "type.h"
 void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define PDMAT(M,P)   double (*restrict P)[(M)->nx]=(double(*)[(M)->nx])(M)->p
-#define PDCELL(M,P)   dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
-#define dfree(A) ({dfree_do((A),0);(A)=NULL;})
-#define dcp2(A,B)  memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
+#define PDCELL(M,P)  dmat* (*restrict P)[(M)->nx]=(dmat*(*)[(M)->nx])(M)->p
+#define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
+#define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
 #define dcellfree(A) ({dcellfree_do(A);A=NULL;})
 #define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);})
-#define dzero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
+#define dzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
 #define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
-#define AOS_CMAT(A) c##A
-#define AOS_CSPARSE(A) c##A
-#define PCMAT(M,P) dcomplex (*restrict P)[(M)->nx]=(dcomplex(*)[(M)->nx])(M)->p
-#define PCCELL(M,P)   cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
-#define cfree(A) ({cfree_do(A,0);A=NULL;})
+
+#define PSMAT(M,P)   float (*restrict P)[(M)->nx]=(float(*)[(M)->nx])(M)->p
+#define PSCELL(M,P)  smat* (*restrict P)[(M)->nx]=(smat*(*)[(M)->nx])(M)->p
+#define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
+#define scp2(A,B)    memcpy(A->p,B->p,sizeof(float)*A->nx*A->ny)
+#define scellfree(A) ({scellfree_do(A);A=NULL;})
+#define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);})
+#define szero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(float))
+#define shash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(float), key)
+
+#define PCMAT(M,P)   dcomplex (*restrict P)[(M)->nx]=(dcomplex(*)[(M)->nx])(M)->p
+#define PCCELL(M,P)  cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
+#define cfree(A)     ({cfree_do(A,0);A=NULL;})
 #define ccellfree(A) ({ccellfree_do(A);A=NULL;})
-#define cabs2(A) (pow(creal(A),2)+pow(cimag(A),2))
-#define czero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
+#define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
+#define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 #define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)
 
-#define AOS_MAT_DEF(X,Y,T)\
+#define PZMAT(M,P)   fcomplex (*restrict P)[(M)->nx]=(fcomplex(*)[(M)->nx])(M)->p
+#define PZCELL(M,P)  zmat* (*restrict P)[(M)->nx]=(zmat*(*)[(M)->nx])(M)->p
+#define zfree(A)     ({zfree_do(A,0);A=NULL;})
+#define zcellfree(A) ({zcellfree_do(A);A=NULL;})
+#define zabs2(A)     (pow(crealf(A),2)+pow(cimagf(A),2))
+#define zzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(fcomplex))
+#define zhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(fcomplex), key)
+
+#define AOS_MAT_DEF(X,XR,Y,T,R)					\
 X(mat) *X(new_ref)(long nx, long ny, T *p) CHECK_UNUSED_RESULT; \
 X(mat) *X(new_data)(long nx, long ny, T *p) CHECK_UNUSED_RESULT; \
 X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;\
@@ -57,9 +73,9 @@ X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(cp)(X(mat) **out0, const X(mat) *in);\
 X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(set)(X(mat) *A, const T val);\
-double X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;\
-double X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;\
-double X(norm2)(const X(mat) *in) CHECK_UNUSED_RESULT;\
+R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;\
+R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;\
+R X(norm2)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(randu)(X(mat) *A, const T mean, rand_t *rstat);\
 void X(randn)(X(mat) *A, const T sigma, rand_t *rstat);\
 void X(show)(const X(mat) *A, const char *format,...) CHECK_ARG(2);\
@@ -96,26 +112,26 @@ void X(mulvec3)(T *y, const X(mat) *A, const T *x);\
 void X(cog)(double *grad,const X(mat) *i0,double offsetx, double offsety, double thres, double bkgrnd);\
 void X(shift2center)(X(mat) *A, double offsetx, double offsety);\
 int X(clip)(X(mat) *A, double min, double max);\
-void X(gramschmidt)(X(mat) *Mod, double *amp);	\
+void X(gramschmidt)(X(mat) *Mod, R *amp);	\
 void X(muldiag)(X(mat) *A, X(mat) *s);\
 void X(cwpow)(X(mat) *A, double power);\
-void X(svd)(X(mat) **U, dmat **Sdiag, X(mat) **VT, const X(mat) *A);\
-void X(evd)(X(mat) **U, dmat **Sdiag, const X(mat) *A);  \
+void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
+void X(evd)(X(mat) **U, XR(mat) **Sdiag, const X(mat) *A); \
 void X(svd_pow)(X(mat) *A, double power, int issym, double thres);\
 void X(addI)(X(mat) *A, T val);\
 void X(tikcr)(X(mat) *A, T thres);\
 void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha);\
 X(mat)* X(logspace)(double emin, double emax, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(linspace)(double min, double dx, long n) CHECK_UNUSED_RESULT;\
-X(mat)* X(interp1)(dmat *xin, dmat *yin, dmat *xnew) CHECK_UNUSED_RESULT;\
-X(mat)* X(interp1log)(dmat *xin, dmat *yin, dmat *xnew) CHECK_UNUSED_RESULT;\
-void X(histfill)(dmat **out, const X(mat)* A, double center, double spacing, int n);\
+X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew) CHECK_UNUSED_RESULT;\
+X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew) CHECK_UNUSED_RESULT;\
+void X(histfill)(X(mat) **out, const X(mat)* A, double center, double spacing, int n);\
 X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y);\
 X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat)*xnew);\
 X(mat)* X(spline)(X(mat) *x,X(mat) *y,X(mat) *xnew);\
 X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);\
 X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);\
 void X(cwlog10)(X(mat) *A);\
-void X(embed_locstat)(X(mat) **out, double alpha, loc_t *loc, double *oin, double beta, int reverse);\
+void X(embed_locstat)(X(mat) **out, double alpha, loc_t *loc, R *oin, double beta, int reverse);\
 long X(fwhm)(X(mat) *A);
 #endif

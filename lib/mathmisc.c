@@ -65,6 +65,32 @@ double dotdbl(const double *restrict p1, const double *restrict p2,
     }
     return  ans;
 }
+
+/**
+   compute sum(p1.*p2.*p3)*/
+
+float dotflt(const float *restrict p1, const float *restrict p2, 
+	   const float *restrict p3, long n){
+    float ans=0;
+    if(p1 && p2 && p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
+    }else if(!p1 && p2 && p3){
+	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
+    }else if(p1 && !p2 && p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
+    }else if(!p1 && !p2 && p3){
+	for(long i=0; i<n; i++) ans+=p3[i];
+    }else if(p1 && p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
+    }else if(!p1 && p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p2[i];
+    }else if(p1 && !p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p1[i];
+    }else if(!p1 && !p2 && !p3){
+	ans=(float)n;//assume all ones.
+    }
+    return  ans;
+}
 /**
    compute sum(p1.*p2.*p3) for complex p1, p2 and double p3*/
 dcomplex dotcmp(const dcomplex *restrict p1, const dcomplex *restrict p2, 
@@ -86,6 +112,31 @@ dcomplex dotcmp(const dcomplex *restrict p1, const dcomplex *restrict p2,
 	for(long i=0; i<n; i++) ans+=p1[i];
     }else if(!p1 && !p2 && !p3){
 	ans=(double)n;//assume all ones.
+    }
+    return  ans;
+}
+
+/**
+   compute sum(p1.*p2.*p3) for complex p1, p2 and float p3*/
+fcomplex dotzmp(const fcomplex *restrict p1, const fcomplex *restrict p2, 
+		const float *restrict p3, long n){
+    fcomplex ans=0;
+    if(p1 && p2 && p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p2[i]*p3[i];
+    }else if(!p1 && p2 && p3){
+	for(long i=0; i<n; i++) ans+=p2[i]*p3[i];
+    }else if(p1 && !p2 && p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p3[i];
+    }else if(!p1 && !p2 && p3){
+	for(long i=0; i<n; i++) ans+=p3[i];
+    }else if(p1 && p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p1[i]*p2[i];
+    }else if(!p1 && p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p2[i];
+    }else if(p1 && !p2 && !p3){
+	for(long i=0; i<n; i++) ans+=p1[i];
+    }else if(!p1 && !p2 && !p3){
+	ans=(float)n;//assume all ones.
     }
     return  ans;
 }
@@ -114,6 +165,16 @@ double maxabs(const double *p, long n){
    Compute the sum of double vector*/
 double dblsum(double *p, long nx){
     double sum=0;
+    for(long ix=0; ix<nx; ix++){
+	sum+=p[ix];
+    }
+    return sum;
+}
+
+/**
+   Compute the sum of double vector*/
+float fltsum(float *p, long nx){
+    float sum=0;
     for(long ix=0; ix<nx; ix++){
 	sum+=p[ix];
     }
@@ -221,6 +282,29 @@ void maxmindbl(const double *restrict p, long N,
     if(max) *max=a;
     if(min) *min=b;
 }
+
+/**
+   Compute max, min and sum of a double vector*/
+void maxminflt(const float *restrict p, long N, 
+	       float *restrict max, float *restrict min){
+    if(N==0){
+	*max=0;
+	*min=0;
+	return;
+    }
+    float a,b;
+    long i;
+    a=-INFINITY;
+    b=INFINITY;
+    for(i=0; i<N; i++){
+	if(!isnan(p[i]) && p[i]>a) a=p[i];
+	if(!isnan(p[i]) && p[i]<b) b=p[i];
+    }
+    if(isinf(a)) a=0;
+    if(isinf(b)) b=0;
+    if(max) *max=a;
+    if(min) *min=b;
+}
 /**
  Compute max, min and sum of a long vector*/
 void maxminlong(const long *restrict p, long N,
@@ -256,6 +340,25 @@ void maxmincmp(const dcomplex *restrict p, long N,
     if(sum)*sum=s;
 }
 
+/**
+ Compute max, min and sum of a complex vector*/
+void maxminfcmp(const fcomplex *restrict p, long N,
+	       float *restrict max, float *restrict min, float *restrict sum){
+    float a,b,s;
+    long i;
+    a=cabs(p[0]); 
+    b=cabs(p[0]);
+    s=0;
+    for(i=0; i<N; i++){
+	float tmp=cabs(p[i]);
+	s+=tmp;
+	if(tmp>a) a=tmp;
+	if(tmp<b) b=tmp;
+    }
+    if(max)*max=a; 
+    if(min)*min=b; 
+    if(sum)*sum=s;
+}
 /**
    Remove piston from p of length n
 */

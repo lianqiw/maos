@@ -72,6 +72,14 @@ dcomplex conj(dcomplex __z);
 dcomplex cpow(dcomplex x, dcomplex z);
 dcomplex csqrt(dcomplex);
 dcomplex clog(dcomplex);
+
+float cimagf(fcomplex __z);
+float crealf(fcomplex __z);
+fcomplex conjf(fcomplex __z);
+#define cexpf(z) expf(crealf(z))*(cosf(cimagf(z))+I*sinf(cimagf(z)))
+fcomplex cpowf(fcomplex x, fcomplex z);
+fcomplex csqrtf(fcomplex);
+fcomplex clogf(fcomplex);
 #endif
 #include "sys/mem.h"
 #ifdef __linux__

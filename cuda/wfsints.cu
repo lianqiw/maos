@@ -55,7 +55,7 @@ __global__ static void cpcorner_do(fcomplex *restrict out, int noutx,  int nouty
     in+=isa*ninx*niny;
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
-	    out[iy*noutx+ix]                 = in[iy*ninx+ix];
+	    out[iy*noutx+ix]                   = in[iy*ninx+ix];
 	    out[iy*noutx+(noutx-1-ix)]         = in[iy*ninx+(ninx-1-ix)];
 	    out[(nouty-1-iy)*noutx+(noutx-1-ix)] = in[(niny-1-iy)*ninx+(ninx-1-ix)];
 	    out[(nouty-1-iy)*noutx+(ix)]       = in[(niny-1-iy)*ninx+(ix)];
@@ -275,7 +275,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
     const float *restrict const srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot:NULL;
     const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot &&parms->powfs[ipowfs].radpix);
     const float *restrict const srot2=multi_dtf?cuwfs[iwfs].srot:NULL;
-    float *restrict const ints=cuwfs[iwfs].ints;
+    float *restrict const ints=cuwfs[iwfs].ints->p;
     float *lltopd=NULL;
     dcell *pistatout=NULL;
     if(parms->powfs[ipowfs].pistatout

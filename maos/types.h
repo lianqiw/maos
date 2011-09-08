@@ -41,9 +41,10 @@ typedef struct APER_T{
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
     double ipcc;         /**<piston term in imcc.*/
     double sumamp2;      /**<sum of amplitude squared*/
-    long **embed;         /**<Embedding index for PSF computing, one per wvl*/
-    long *nembed;         /**<dimension of embed.*/
+    long **embed;        /**<Embedding index for PSF computing, one per wvl*/
+    long *nembed;        /**<dimension of embed.*/
     double fcp;          /**<piston correction in focus term.*/
+    dcell *opdadd;       /**<OPD surface for each evaluation direction.*/
 }APER_T;
 /**
    contains the data associated with a detector transfer function for a
@@ -154,8 +155,10 @@ typedef struct POWFS_T{
     //The following are a few convenient pointers.
     double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
     double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
-    dmat *sumamp;        /**<sum of realamp*/
-    dmat *sumamp2;       /**<sum of realamp.^2*/
+    dmat *sumamp;       /**<sum of realamp*/
+    dmat *sumamp2;      /**<sum of realamp.^2*/
+    
+    dcell *opdadd;      /**<Additional OPD surfaces for each WFS*/
 }
 POWFS_T;
 
@@ -264,6 +267,7 @@ typedef struct RECON_T{
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
 
+    dcell *opdxadd;    /**<additional OPD surface projected onto xloc for fitonly*/
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp  *W0;          /**<floc weighting for circle of diam aper.d*/
     dmat *W1;          /**<floc weighting for circle of diam aper.d*/
@@ -429,9 +433,6 @@ typedef struct SIM_T{
     /*Optional surface errors in M1, M2, or M3*/
     rectmap_t **tsurf; /**<input tilted M3 surface read from parms->tsurf*/
     map_t **surf;      /**<input surface: M1, M2 or else. common to all wfs and science field.*/
-    dcell *surfwfs;    /**<additional OPD surface for each WFS.*/
-    dcell *surfevl;    /**<additional OPD surface for each evaluation field*/
-    dcell *surfopdx;   /**<additional OPD surface projected onto xloc for fitonly*/
 
     /*Telescope windshake time series and direction.*/
     dmat  *telws;      /**<Telescope wind shake time series, along ground layer wind direction*/
@@ -469,9 +470,10 @@ typedef struct SIM_T{
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
-    map_t **dmrealsq;   /**<dmreal embeded into an square map, zero padded.*/
+    map_t **dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/
+    map_t **dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
     dcell **dmint;     /**<dm integrator. (used of fuseint==1)*/
@@ -574,5 +576,6 @@ typedef struct SIM_T{
     int has_upt;       /**<whether we have uplink pointer loop.*/
     int last_report_time;/**<The time we lasted reported status to the scheduler.*/
 }SIM_T;
+#define CHECK_SAVE(start,end,now,every) ((now)+1>(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
 
 #endif

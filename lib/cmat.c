@@ -21,7 +21,6 @@
 #include "cell.c"
 #include "matbin.c"
 
-
 /**
    \file cmat.c
    The following are functions that are only useful for

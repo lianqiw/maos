@@ -1775,6 +1775,7 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    }
 	    free(powfs[ipowfs].etfprep);
 	}
+	dcellfree(powfs[ipowfs].opdadd);
     }
     free(powfs);
 }

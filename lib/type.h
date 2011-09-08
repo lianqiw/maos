@@ -161,11 +161,25 @@ typedef struct dsp{
 }dsp;
 
 /**
+   a sparse array of double numbers stored in
+   compressed column format, i.e. MATLAB format */
+typedef struct ssp{
+    SPMAT(float)
+}ssp;
+
+/**
    a sparse array of double complex numbers stored in
    compressed column format */
 typedef struct csp{
     SPMAT(dcomplex)
 }csp;
+
+/**
+   a sparse array of double complex numbers stored in
+   compressed column format */
+typedef struct zsp{
+    SPMAT(fcomplex)
+}zsp;
 
 
 /**
@@ -176,11 +190,25 @@ typedef struct spcell{
 }spcell;
 
 /**
+   an 2-d array of sparse.
+ */
+typedef struct sspcell{
+    MAT(ssp*)
+}sspcell;
+
+/**
    an 2-d array of csp.
  */
 typedef struct cspcell{
     MAT(csp*)
 }cspcell;
+
+/**
+   an 2-d array of csp.
+ */
+typedef struct zspcell{
+    MAT(zsp*)
+}zspcell;
 
 /**
    OPD or Amplitude map defined on square/rectangular grids. with equal spacing
@@ -287,4 +315,8 @@ typedef struct cell{
 #define AOS_CSP(A)  c##A
 #define AOS_DMAT(A) d##A
 #define AOS_DSP(A)  A
+#define AOS_SSP(A)  s##A
+#define AOS_SMAT(A) s##A
+#define AOS_ZMAT(A) z##A
+#define AOS_ZSP(A)  z##A
 #endif

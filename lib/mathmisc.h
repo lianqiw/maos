@@ -29,12 +29,17 @@ void normalize(double *p, long nloc, double norm);
 void normalize_max(double *p, long nloc, double max);
 double dotdbl(const double *restrict p1, const double *restrict p2, 
 	      const double *restrict p3, long n);
+float dotflt(const float *restrict p1, const float *restrict p2, 
+	     const float *restrict p3, long n);
 dcomplex dotcmp(const dcomplex *restrict p1, const dcomplex *restrict p2, 
 		const double *restrict p3, long n);
+fcomplex dotzmp(const fcomplex *restrict p1, const fcomplex *restrict p2, 
+		const float *restrict p3, long n);
 double maxdbl(const double *p, long n);
 double maxabs(const double *p, long n);
 
 double dblsum(double *p, long nx);
+float fltsum(float *p, long nx);
 #define sinc(x) (fabs(x)<1.e-5?1:sin(M_PI*x)/(M_PI*x))
 
 void adddbl(double *restrict out, double alpha, 
@@ -46,10 +51,14 @@ void cvecperm(dcomplex *restrict out, const dcomplex *restrict in, const long *p
 void cvecpermi(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx);
 void maxmindbl(const double *restrict p, long N, 
 	       double *restrict max, double *restrict min);
+void maxminflt(const float *restrict p, long N, 
+	       float *restrict max, float *restrict min);
 void maxminlong(const long *restrict p, long N,
 		long *restrict max, long *restrict min);
 void maxmincmp(const dcomplex *restrict p, long N,
 	       double *restrict max, double *restrict min, double *restrict sum);
+void maxminfcmp(const fcomplex *restrict p, long N,
+		float *restrict max, float *restrict min, float *restrict sum);
 void remove_piston(double *p, long n);
 long nextpow2(long n);
 unsigned long mylog2(unsigned long n);

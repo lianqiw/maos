@@ -1,8 +1,3 @@
-extern "C"
-{
-#include <cuda.h>
-#include "gpu.h"
-}
 #include "utils.h"
 #include "curmat.h"
 #include <pthread.h>
@@ -116,11 +111,14 @@ void gpu_cleanup(void){
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float array.
 */
-void gpu_map2dev(cumap_t *dest, map_t **source, int nps, int type){
+void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
     if(nps==0) return;
-    if(dest->nlayer!=0 && dest->nlayer!=nps){
-	error("Mismatch. nlayer=%d, nps=%d\n", dest->nlayer, nps);
+    if(!*dest0){
+	*dest0=(cumap_t*)calloc(1, sizeof(cumap_t));
+    }else if((*dest0)->nlayer!=nps){
+	error("Mismatch. nlayer=%d, nps=%d\n", (*dest0)->nlayer, nps);
     }
+    cumap_t *dest=*dest0;
     dest->nlayer=nps;
     int nx0=source[0]->nx;
     int ny0=source[0]->ny;
@@ -705,14 +703,53 @@ void gpu_muv2dev(cumuv_t *out, MUV_T *in){
     gpu_dcell2cu(&(out)->V, in->V);
     spcellfree(Mt);
 }
-void gpu_cu2d(dmat **out, curmat *in, cudaStream_t stream){
+void gpu_cur2d(dmat **out, const curmat *in, cudaStream_t stream){
     if(!*out) *out=dnew(in->nx, in->ny);
     gpu_dev2dbl(&(*out)->p, in->p, in->nx*in->ny, stream);
 }
-void gpu_cucell2d(dcell **out, curcell *in, cudaStream_t stream){
+void gpu_curcell2d(dcell **out, const curcell *in, cudaStream_t stream){
     if(!*out) *out=dcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
-	gpu_cu2d(&(*out)->p[i], in->p[i], stream);
+	gpu_cur2d(&(*out)->p[i], in->p[i], stream);
     }
 }
 
+void gpu_cur2s(smat **out, const curmat *in, cudaStream_t stream){
+    if(!*out) *out=snew(in->nx, in->ny);
+    DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDeviceToHost, stream));
+}
+
+
+void gpu_cuc2z(zmat **out, const cucmat *in, cudaStream_t stream){
+    if(!*out) *out=znew(in->nx, in->ny);
+    DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(fcomplex), cudaMemcpyDeviceToHost, stream));
+}
+
+void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream){
+    if(!*out) *out=scellnew(in->nx, in->ny);
+    for(int i=0; i<in->nx*in->ny; i++){
+	gpu_cur2s(&(*out)->p[i], in->p[i], stream);
+    }
+}
+
+void gpu_cuccell2z(zcell **out, const cuccell *in, cudaStream_t stream){
+    if(!*out) *out=zcellnew(in->nx, in->ny);
+    for(int i=0; i<in->nx*in->ny; i++){
+	gpu_cuc2z(&(*out)->p[i], in->p[i], stream);
+    }
+}
+void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream){
+    smat *tmp=NULL;
+    gpu_cur2s(&tmp,A,stream);
+    CUDA_SYNC_STREAM;
+    cellarr_smat(ca, tmp);
+    sfree(tmp);
+}
+
+void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream){
+    zmat *tmp=NULL;
+    gpu_cuc2z(&tmp,A,stream);
+    CUDA_SYNC_STREAM;
+    cellarr_zmat(ca, tmp);
+    zfree(tmp);
+}

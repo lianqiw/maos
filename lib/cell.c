@@ -468,93 +468,6 @@ void X(cellcwm)(X(cell) *B, const X(cell) *A){
 }
 
 /**
-   Compute A*B and add to C0.
-   C=C+trans(A)*trans(B)*alpha
-       
-   2009-11-09: There was initially a beta parameter
-   It was implemented wrongly for beta!=1 because for every 
-   call to dmm, the already accumulated ones are scaled.
-   removed beta.
-*/
-void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B, 
-	       const char trans[2], const double alpha){
-    if(!A || !B) return;
-    int ax, az;
-    int nx,ny,nz;
-    int bz, by;
-    if(trans[0]=='n'||trans[0]=='N'){
-	nx=A->nx; 
-	ax=1; az=A->nx;
-	nz=A->ny;
-    }else{ 
-	nx=A->ny;
-	az=1; ax=A->nx;
-	nz=A->nx;
-    }
-    if(trans[1]=='n'||trans[0]=='N'){
-	ny=B->ny; 
-	bz=1; by=B->nx;
-	if(nz!=B->nx) error("mismatch\n");
-    }else{
-	ny=B->nx;
-	by=1; bz=B->nx;
-	if(nz!=B->ny) error("mismatch\n");
-    }
-    if(!*C0){
-	*C0=X(cellnew)(nx,ny);
-    }
-    X(cell) *C=*C0;
-    for(int iy=0; iy<ny; iy++){
-	for(int ix=0; ix<nx; ix++){
-	    for(int iz=0; iz<nz; iz++){
-		if(A->p[ix*ax+iz*az]&&B->p[iz*bz+iy*by]){
-		    X(mm)(&C->p[ix+iy*nx],A->p[ix*ax+iz*az], 
-			  B->p[iz*bz+iy*by],trans,alpha);
-		}
-	    }
-	}
-    }
-}
-
-/**
-   Inplace Invert a SPD matrix. It is treated as a block matrix
-*/
-X(cell)* X(cellinvspd)(X(cell) *A){
-    X(mat) *Ab=X(cell2m)(A);
-    X(invspd_inplace)(Ab);
-    X(cell) *B=NULL;
-    X(2cell)(&B, Ab, A);
-    X(celldropzero)(B,0);
-    X(free)(Ab);
-    return B;
-}
-
-/**
-   Inplace Invert a matrix. It is treated as a block matrix.
-*/
-X(cell)* X(cellinv)(X(cell) *A){
-    X(mat) *Ab=X(cell2m)(A);
-    X(inv_inplace)(Ab);
-    X(cell) *B=NULL;
-    X(2cell)(&B, Ab, A);
-    X(celldropzero)(B,0);
-    X(free)(Ab);
-    return B;
-}
-/**
-   invert each component of the dcell. Each cell is treated
-   as an individual matrix.
-*/
-X(cell)* X(cellinvspd_each)(X(cell) *A){
-    X(cell) *out=NULL;
-    X(cellcp)(&out,A);
-    for(int i=0; i<out->nx*out->ny; i++){
-	X(invspd_inplace)(out->p[i]);
-    }
-    return out;
-}
-
-/**
    Convert a block matrix to a matrix.
 */
 X(mat) *X(cell2m)(const X(cell) *A){
@@ -698,58 +611,13 @@ int X(cellclip)(X(cell) *Ac, double min, double max){
     return nclip;
 }
 
-/**
-   Apply tickholov regularization of relative thres to cell array by
-   converting it to mat
-*/
-void X(celltikcr)(X(cell) *A, double thres){
-    X(mat) *Ab=X(cell2m)(A);
-    X(tikcr)(Ab,thres);
-    X(2cell)(&A,Ab,NULL);
-    X(free)(Ab);
-}
-
-/**
-   compute the pseudo inverse of block matrix A.  A is n*p cell, wt n*n cell or
-   sparse cell.  \f$B=inv(A'*W*A)*A'*W\f$  */
-X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
-		     const X(cell) *wt,   /**<[in] Use a dense matrix for weighting*/
-		     const Y(spcell) *Wsp /**<[in] Use a sparse matrix for weighting*/
-		     ){
-    if(!A) return NULL;
-    X(cell) *wA=NULL;
-    if(wt){
-	if(Wsp){
-	    error("Both wt and Wsp are specified.\n");
-	}
-	assert(wt->nx==A->nx && wt->ny==A->nx);
-	X(cellmm)(&wA, wt, A, "nn",1);
-    }else{
-	if(Wsp){
-	    assert(Wsp->nx==A->nx && Wsp->ny==A->nx);
-	    Y(spcellmulmat)(&wA,Wsp,A,1);
-	}else{
-	    wA=X(cellref)(A);
-	}
-    }
-
-    X(cell) *ata=NULL;
-    X(cell) *iata;
-    X(cellmm)(&ata,wA,A,"tn",1);
-    iata=X(cellinvspd)(ata);
-    X(cellfree)(ata);
-    X(cell) *out=NULL;
-    X(cellmm)(&out, iata, wA, "nt",1);
-    X(cellfree)(wA);
-    X(cellfree)(iata);
-    return out;
-}
 
 /**
    Multiply a cell with a sparse cell.
 
   \f$C0+=A*B*alpha\f$.
 */
+#ifndef USE_SINGLE
 void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, double alpha){
     if(!A || !B) return;
     int ax, az;
@@ -789,7 +657,7 @@ void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, double alp
 	}
     }
 }
-
+#endif
 /**
    add a to diagonal elements of A;
 */
@@ -799,17 +667,6 @@ void X(celladdI)(X(cell) *A, double a){
     for(int ib=0; ib<A->nx; ib++){
 	X(addI)(A->p[ib+ib*A->nx], a);
     }
-}
-
-/**
-   compute the power of a block matrix using svd method. First convert it do
-   X(mat), do the power, and convert back to block matrix.
-*/
-void X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres){
-    X(mat) *Ac=X(cell2m)(A);
-    X(svd_pow)(Ac, power, issym, thres);
-    X(2cell)(&A, Ac, NULL);
-    X(free)(Ac);
 }
 
 /**

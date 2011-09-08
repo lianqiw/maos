@@ -38,7 +38,7 @@ typedef struct{
     cusp *GS0t;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
     float  *gradacc;    /**<For accumulating grads*/
-    float  *ints;       /**<For accumulating subaperture image.*/
+    curmat *ints;       /**<For accumulating subaperture image.*/
     float  *neasim;     /**<The noise equivalent angles for each grad.*/
     float  *amp;        /**<Amplitude map*/
     cufftHandle plan1, plan2;   /**<FFTW plan if any*/

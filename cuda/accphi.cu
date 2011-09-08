@@ -24,18 +24,14 @@ extern "C"
 */
 
 #define ATM_TEXTURE 1 //Use texture for ATM. Same speed as not after make p in device memory.
-#define DM_TEXTURE 0  //Use texture for DM. not critical.
-
+//Removed option of making DM in texture
 #if ATM_TEXTURE
 texture<float, cudaTextureType2DLayered, cudaReadModeElementType> texRefatm;
 #endif
-#if DM_TEXTURE
-texture<float, cudaTextureType2DLayered, cudaReadModeElementType> texRefdm;
-#endif
 
-
-static cumap_t cuatm={0};//array of cumap_t;
-static cumap_t cudm={0};
+static cumap_t *cuatm=NULL;//array of cumap_t;
+cumap_t *cudmreal=NULL;
+cumap_t *cudmproj=NULL;
 static float *cc=NULL;
 
 /*
@@ -60,7 +56,7 @@ void gpu_atm2gpu(map_t **atm, int nps){
     texRefatm.filterMode     = cudaFilterModeLinear;
     texRefatm.normalized     = true; 
     cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
-    DO(cudaBindTextureToArray(texRefatm, cuatm.ca, channelDesc));
+    DO(cudaBindTextureToArray(texRefatm, cuatm->ca, channelDesc));
 #else
     gpu_map2dev(&cuatm, atm, nps, 2);
 #endif
@@ -69,24 +65,14 @@ void gpu_atm2gpu(map_t **atm, int nps){
 /**
    Copy DM commands to GPU.
 */
-void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
-#if DM_TEXTURE
-    gpu_map2dev(&cudm, dmreal, ndm, 1);
-    texRefdm.addressMode[0] = cudaAddressModeClamp;
-    texRefdm.addressMode[1] = cudaAddressModeClamp;
-    texRefdm.filterMode     = cudaFilterModePoint;
-    texRefdm.normalized     = false; 
-    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
-    DO(cudaBindTextureToArray(texRefdm, cudm.ca, channelDesc));
-#else
-    gpu_map2dev(&cudm, dmreal, ndm, 2);
-#endif
-    if(dmcfg && !cudm.cubic){
-	cudm.cubic=new int[ndm];
-	cudm.iac=new float[ndm];
+void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
+    gpu_map2dev(cudm, dmreal, ndm, 2);
+    if(dmcfg && !(*cudm)->cubic){
+	(*cudm)->cubic=new int[ndm];
+	(*cudm)->iac=new float[ndm];
 	for(int idm=0; idm<ndm; idm++){
-	    cudm.cubic[idm]=dmcfg[idm].cubic;
-	    cudm.iac[idm]=dmcfg[idm].iac;
+	    (*cudm)->cubic[idm]=dmcfg[idm].cubic;
+	    (*cudm)->iac[idm]=dmcfg[idm].iac;
 	}
     }
     CUDA_SYNC_DEVICE;
@@ -97,8 +83,8 @@ void gpu_dm2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
 /*
   Ray tracing from texture to atm.
 */
-__global__ static void prop_atm(float *restrict out, const int ilayer, 
-				KARG_COMMON){
+__global__ void prop_atm(float *restrict out, const int ilayer, 
+			 KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	float x=loc[i][0]*dx+dispx;
@@ -107,72 +93,9 @@ __global__ static void prop_atm(float *restrict out, const int ilayer,
     }
 }
 #endif
-#if DM_TEXTURE 
-/*
-  Ray tracing from texture to dm.
-*/
-__global__ static void prop_dm_linear(float *restrict out,  const int ilayer, 
-				      KARG_COMMON){
-    int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x;i<nloc; i+=step){
-	float x=loc[i][0]*dx+dispx;
-	float y=loc[i][1]*dy+dispy;
-	out[i]+=tex2DLayered(texRefdm, x, y, ilayer)*alpha;
-    }
-}
-/*
-  Ray tracing from texture to dm with cubic influence functions..
-*/
-__global__ static void prop_dm_cubic(float *restrict out, const int ilayer,
-				     KARG_COMMON, const float *cc){
-    int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dx+dispx;
-	float y=loc[i][1]*dy+dispy;
-	int ix=floorf(x); x=x-ix;
-	int iy=floorf(y); y=y-iy;
-	float fx[4],fy, sum=0;
-   
-	fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
-	fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
-	fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
-	fx[3]=x*x*(cc[3]+cc[4]*x);		
-	fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
-	fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
-	fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
-	fx[3]=x*x*(cc[3]+cc[4]*x);		
-		
-	fy=(1.f-y)*(1.f-y)*(cc[3]+cc[4]*(1.f-y)); 
-#pragma unroll
-	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*tex2DLayered(texRefdm, kx+ix, iy-1, ilayer);
-	}
 
-	fy=cc[0]+y*y*(cc[1]+cc[2]*y); 
-#pragma unroll
-	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*tex2DLayered(texRefdm, kx+ix, iy, ilayer);
-	}
-
-	fy=cc[0]+(1.f-y)*(1.f-y)*(cc[1]+cc[2]*(1.f-y)); 
-#pragma unroll
-	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*tex2DLayered(texRefdm, kx+ix, iy+1, ilayer);
-	}
-
-	fy=y*y*(cc[3]+cc[4]*y); 
-#pragma unroll
-	for(int kx=-1; kx<3; kx++){
-	    sum+=fx[kx+1]*fy*tex2DLayered(texRefdm, kx+ix, iy+2, ilayer);
-	}
-
-	out[i]+=sum*alpha;
-    }
-}
-#endif
-#if !ATM_TEXTURE || !DM_TEXTURE 
 //This is memory bound. So increasing # of points processed does not help.
-__global__ static void prop_linear(float *restrict out, const float *restrict in, const int nx, const int ny,
+__global__ void prop_linear(float *restrict out, const float *restrict in, const int nx, const int ny,
 				   KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
@@ -188,7 +111,7 @@ __global__ static void prop_linear(float *restrict out, const float *restrict in
     }
 }
 //This is memory bound. So increasing # of points processed does not help.
-__global__ static void prop_linear_wrap(float *restrict out, const float *restrict in, const int nx, const int ny,
+__global__ void prop_linear_wrap(float *restrict out, const float *restrict in, const int nx, const int ny,
 					KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
@@ -207,10 +130,9 @@ __global__ static void prop_linear_wrap(float *restrict out, const float *restri
 	    +(in[(iy1)*nx+ix]*(1-x)+in[(iy1)*nx+ix1]*x)*y;
     }
 }
-#endif
-#if !DM_TEXTURE 
+
 //This is memory bound. So increasing # of points processed does not help.
-__global__ static void prop_cubic(float *restrict out, const float *restrict in, const int nx, const int ny,
+__global__ void prop_cubic(float *restrict out, const float *restrict in, const int nx, const int ny,
 				  KARG_COMMON, const float *cc){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
@@ -255,7 +177,6 @@ __global__ static void prop_cubic(float *restrict out, const float *restrict in,
 	out[i]+=sum*alpha;
     }
 }
-#endif
 
 /**
    Ray tracing of atm.
@@ -264,23 +185,23 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 		 const float mispx, const float mispy, const float dtisim, const float atmalpha, cudaStream_t stream){
 
     if(fabs(atmalpha)<EPS) return;
-    for(int ips=0; ips<cuatm.nlayer; ips++){
-	const float dx=cuatm.dx[ips];
+    for(int ips=0; ips<cuatm->nlayer; ips++){
+	const float dx=cuatm->dx[ips];
 	const float du=1.f/dx;
 #if ATM_TEXTURE
-	const float scx=du/(float)cuatm.nx[ips];
-	const float scy=du/(float)cuatm.ny[ips];
+	const float scx=du/(float)cuatm->nx[ips];
+	const float scy=du/(float)cuatm->ny[ips];
 #define offset 0.5	    
 #else
 #define scx du
 #define scy du
 #define offset 0
 #endif
-	const float ht=cuatm.ht[ips];
-	const float vx=cuatm.vx[ips];
-	const float vy=cuatm.vy[ips];
-	const float dispx=(ht*thetax+mispx-vx*dtisim-cuatm.ox[ips]+offset*dx)*scx;
-	const float dispy=(ht*thetay+mispy-vy*dtisim-cuatm.oy[ips]+offset*dx)*scy;
+	const float ht=cuatm->ht[ips];
+	const float vx=cuatm->vx[ips];
+	const float vy=cuatm->vy[ips];
+	const float dispx=(ht*thetax+mispx-vx*dtisim-cuatm->ox[ips]+offset*dx)*scx;
+	const float dispy=(ht*thetay+mispy-vy*dtisim-cuatm->oy[ips]+offset*dx)*scy;
 	const float scale=1.f-ht/hs;
 
 #define COMM loc,nloc,scale*scx,scale*scy, dispx, dispy, atmalpha
@@ -289,7 +210,7 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 #define KARG ips, COMM
 #else
 #define FUN prop_linear_wrap
-#define KARG cuatm.p[ips], cuatm.nx[ips], cuatm.ny[ips], COMM
+#define KARG cuatm->p[ips], cuatm->nx[ips], cuatm->ny[ips], COMM
 #endif
 	FUN <<<nloc/256, 256, 0, stream>>> (phiout, KARG);
 #undef KARG
@@ -301,12 +222,13 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 /**
    Ray tracing of dm
 */
-void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, const float hs, const float thetax, const float thetay,
+void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, cumap_t *cudm,
+		const float hs, const float thetax, const float thetay,
 		const float mispx, const float mispy, const float dmalpha, cudaStream_t stream){
-    if(fabs(dmalpha)<EPS && !cudm.nx) return;
-    for(int idm=0; idm<cudm.nlayer; idm++){
-	const int cubic=cudm.cubic[idm];
-	const float iac=cudm.iac[idm];
+    if(fabs(dmalpha)<EPS && !cudm->nx) return;
+    for(int idm=0; idm<cudm->nlayer; idm++){
+	const int cubic=cudm->cubic[idm];
+	const float iac=cudm->iac[idm];
 	if(cubic){
 	    if(!cc) {
 		DO(cudaMallocHost(&cc, 5*sizeof(float)));
@@ -318,35 +240,26 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 	    cc[3]=(2.f*iac-0.5f)*cubicn;			
 	    cc[4]=(0.5f-iac)*cubicn; 
 	}
-	const float dx=cudm.dx[idm];
+	const float dx=cudm->dx[idm];
 	const float du=1.f/dx;
 	//Bind automatically unbinds previous.
 	    
 	//In cubic, cudaFilterModePoint does not need 0.5 offset.
-	const float ht=cudm.ht[idm];
-	const float dispx=(ht*thetax+mispx-cudm.ox[idm])*du;
-	const float dispy=(ht*thetay+mispy-cudm.oy[idm])*du;
+	const float ht=cudm->ht[idm];
+	const float dispx=(ht*thetax+mispx-cudm->ox[idm])*du;
+	const float dispy=(ht*thetay+mispy-cudm->oy[idm])*du;
 	const float scale=1.f-ht/hs;
 
 #define COMM loc,nloc,scale*du,scale*du, dispx, dispy, dmalpha
-#if DM_TEXTURE
-#define KARG idm, COMM
-#define FUNC prop_dm_cubic
-#define FUNL prop_dm_linear
-#else
-#define KARG cudm.p[idm],cudm.nx[idm],cudm.ny[idm], COMM
-#define FUNC prop_cubic
-#define FUNL prop_linear
-#endif
+#define KARG cudm->p[idm],cudm->nx[idm],cudm->ny[idm], COMM
 	if (cubic){//128 is a good number for cubic.
-	    FUNC <<<128, 256, 0, stream>>>(phiout, KARG, cc);
+	    prop_cubic <<<128, 256, 0, stream>>>(phiout, KARG, cc);
 	}else{
-	    FUNL <<<nloc/256, 256, 0, stream>>>(phiout, KARG);
+	    prop_linear <<<nloc/256, 256, 0, stream>>>(phiout, KARG);
 	}
 #undef KARG
 #undef COMM
-#undef FUNC
-#undef FUNL
+
     }//idm
 }
 

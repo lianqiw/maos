@@ -131,7 +131,7 @@ void gpu_FitR(curcell **xout, const void *A, const curcell *xin, const float alp
 	}
 	inn_do<<<DIM(np, 256), 0, curecon->fitstream[ifit]>>>
 	    (&pis[ifit], opdfit->p[ifit]->p, curecon->W1->p, np);
-	add_do<<<DIM(np, 256), 0, curecon->fitstream[ifit]>>>
+	add2_do<<<DIM(np, 256), 0, curecon->fitstream[ifit]>>>
 	    (opdfit2->p[ifit]->p, curecon->W1->p, &pis[ifit], -1.f, np);
 	cuspmul(opdfit2->p[ifit]->p, curecon->W0p, opdfit->p[ifit]->p, 1.f, curecon->fitsphandle[ifit]);
 	apply_W_do<<<DIM(np, 256)>>>

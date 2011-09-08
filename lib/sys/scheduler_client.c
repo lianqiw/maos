@@ -54,7 +54,7 @@ void scheduler_shutdown(int *sock, int mode){
 	    cmd[0]=CMD_SHUTWR;
 	}
 	cmd[1]=getpid();
-	swriteintarr(sock, cmd, 2);
+	stwriteintarr(sock, cmd, 2);
     }
 }
 
@@ -115,8 +115,8 @@ static void scheduler_report_path(char *path){
     int cmd[2];
     cmd[0]=CMD_PATH;
     cmd[1]=getpid();
-    swriteintarr(&psock, cmd, 2);
-    swritestr(&psock,path_save);
+    stwriteintarr(&psock, cmd, 2);
+    stwritestr(&psock,path_save);
 }
 void scheduler_deinit(void){
     free(path_save);
@@ -135,10 +135,10 @@ int scheduler_start(char *path, int nthread, int waiting){
     int cmd[2];
     cmd[0]=CMD_START;
     cmd[1]=getpid();
-    swriteintarr(&psock,cmd,2);
+    stwriteintarr(&psock,cmd,2);
     cmd[0]=nthread;
     cmd[1]=waiting;
-    swriteintarr(&psock,cmd,2);
+    stwriteintarr(&psock,cmd,2);
     return 0;
 }
 
@@ -171,7 +171,7 @@ void scheduler_finish(int status){
     else 
 	cmd[0]=CMD_CRASH;
     cmd[1]=getpid();
-    swriteintarr(&psock,cmd,2);
+    stwriteintarr(&psock,cmd,2);
     close(psock);psock=-1;
 }
 // called by sim.c to report job status
@@ -184,8 +184,8 @@ void scheduler_report(STATUS_T *status){
     int cmd[2];
     cmd[0]=CMD_STATUS;
     cmd[1]=getpid();
-    swriteintarr(&psock,cmd,2);
-    swrite(&psock,status,sizeof(STATUS_T));
+    stwriteintarr(&psock,cmd,2);
+    stwrite(&psock,status,sizeof(STATUS_T));
     //don't close socket.
 }
 
@@ -220,9 +220,9 @@ void print_backtrace_symbol(void *const *buffer, int size){
     int cmd[2];
     cmd[0]=CMD_TRACE;
     cmd[1]=getpid();
-    swrite(&psock,cmd,sizeof(int)*2);
-    swritestr(&psock,cmdstr);
-    char *ans=sreadstr(&psock);
+    stwrite(&psock,cmd,sizeof(int)*2);
+    stwritestr(&psock,cmdstr);
+    char *ans=streadstr(&psock);
     fprintf(stderr, " %s\n",ans);
     free(ans);
 #else
@@ -389,7 +389,7 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	    int cmd[2];
 	    cmd[0]=CMD_DRAW;
 	    cmd[1]=pid;
-	    swrite(&sock,cmd,sizeof(int)*2);
+	    stwrite(&sock,cmd,sizeof(int)*2);
 	    //make sure the drawdaemon appears in our DISPLAY.
 	    const char *display=getenv("DISPLAY");
 	    if(strlen(display)==0){
@@ -397,10 +397,10 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 		return NULL;
 	    }
 	    const char *xauth=getenv("XAUTHORITY");
-	    swritestr(&sock,display);
-	    swritestr(&sock,xauth);
-	    swritestr(&sock,fifo);
-	    if(sread(&sock,cmd,sizeof(int))) return NULL;
+	    stwritestr(&sock,display);
+	    stwritestr(&sock,xauth);
+	    stwritestr(&sock,fifo);
+	    if(stread(&sock,cmd,sizeof(int))) return NULL;
 	    if(sock!=-1) close(sock);
 	    if(cmd[0]==-1) return NULL;//failed
 	}

@@ -30,14 +30,15 @@
 #include "misc.h"
 #include "mathmisc.h"
 #include "dsp.h"
+#include "ssp.h"
 #include "csp.h"
 #include "dmat.h"
+#include "smat.h"
 #include "cmat.h"
+#include "zmat.h"
 #include "fft.h"
 #include "matbin.h"
 #include "loc.h"
-#include "dmat.h"
-#include "cmat.h"
 #include "defs.h"//Defines T, X, etc
 
 vtbl X(mat_vtbl)={M_TT,
@@ -305,12 +306,20 @@ void X(arrfree)(X(mat) **As, int n){
 /**
    find the maximum value of a X(mat) object
 */
-double X(max)(const X(mat) *A){
-    double max,min;
+R X(max)(const X(mat) *A){
+    R max,min;
 #ifdef USE_COMPLEX
+#ifdef USE_SINGLE
+    maxminfcmp(A->p,A->nx*A->ny,&max,&min,NULL);
+#else
     maxmincmp(A->p,A->nx*A->ny,&max,&min,NULL);
+#endif
+#else
+#ifdef USE_SINGLE
+    maxminflt(A->p,A->nx*A->ny,&max,&min);
 #else
     maxmindbl(A->p,A->nx*A->ny,&max,&min);
+#endif
 #endif
     return max;
 }
@@ -318,12 +327,20 @@ double X(max)(const X(mat) *A){
 /**
    find the minimum value of a X(mat) object
 */
-double X(min)(const X(mat) *A){
-    double max,min;
+R X(min)(const X(mat) *A){
+    R max,min;
 #ifdef USE_COMPLEX
+#ifdef USE_SINGLE
+    maxminfcmp(A->p,A->nx*A->ny,&max,&min,NULL);
+#else
     maxmincmp(A->p,A->nx*A->ny,&max,&min,NULL);
+#endif
+#else
+#ifdef USE_SINGLE
+    maxminflt(A->p,A->nx*A->ny,&max,&min);
 #else
     maxmindbl(A->p,A->nx*A->ny,&max,&min);
+#endif
 #endif
     return min;
 }
@@ -388,10 +405,10 @@ void X(set)(X(mat) *A, const T val){
 /**
    compute the norm2 of A
 */
-double X(norm2)(const X(mat)*A){
-    double out=0;
+R X(norm2)(const X(mat)*A){
+    R out=0;
     for(int i=0; i<A->nx; i++){
-	out+=(double)(A->p[i]*CONJ(A->p[i]));
+	out+=(R)(A->p[i]*CONJ(A->p[i]));
     }
     return out;
 }
@@ -591,132 +608,6 @@ void X(mulvec)(T *restrict y, const X(mat) * restrict A,
 }
 
 /**
-   compute matrix product using blas dgemm with beta=1;
-   C=beta*C+ alpha *trans(A)*trans(B); if C exist.
-*/
-void X(mm)(X(mat)**C0, const X(mat) *A, const X(mat) *B,   
-	   const char trans[2], const T alpha){
-    if(!A || !B) return;
-    int m,n,k,lda,ldb,ldc,k2;
-    if (trans[0]=='T' || trans[0]=='t' || trans[0]=='C' || trans[0]=='c'){
-	m=A->ny; k=A->nx;
-    }else{
-	m=A->nx; k=A->ny;
-    }
-    if (trans[1]=='T' || trans[1]=='t'|| trans[0]=='C' || trans[0]=='c'){
-	n=B->nx;
-	k2=B->ny;
-    }else{
-	n=B->ny;
-	k2=B->nx;
-    }
-    if(k!=k2) error("dmm: Matrix doesn't match\n");
-    if(!*C0){
-	*C0=X(new)(m,n); 
-    }else if(m!=(*C0)->nx || n!=(*C0)->ny){
-	error("dmm: Matrix doesn't match\n");
-    }
-    X(mat) *C=*C0;
-    lda=A->nx;
-    ldb=B->nx;
-    ldc=C->nx;
-    const T beta=1;
-    Z(gemm)(&trans[0], &trans[1], &m,&n,&k,&alpha, 
-	    A->p, &lda, B->p, &ldb, &beta, C->p,&ldc);
-}
-
-/**
-   inplace invert a small square SPD matrix using lapack dposv_, usually
-   (A'*w*A).  by solving Ax=I; copy x to A.  dposv_ modifies A also. be
-   careful
-*/
-void X(invspd_inplace)(X(mat) *A){
-    if(!A) return;
-    if(A->nx!=A->ny) error("Must be a square matrix");
-    int info=0, N=A->nx;
-    const char uplo='U';
-    // B is identity matrix
-    T *B=calloc(N*N,sizeof(T));
-    for(long i=0;i<N;i++)
-	B[i+i*N]=1;
-    Z(posv)(&uplo, &N, &N, A->p, &N, B, &N, &info);
-    if(info!=0){
-	X(write)(A,"posv");
-	error("posv_ failed, info=%d. data saved to posv.\n",info);
-    }
-    memcpy(A->p, B, sizeof(T)*N*N);
-    free(B);
-}
-
-/**
-   out of place version of dinvspd_inplace
-*/
-X(mat)* X(invspd)(const X(mat) *A){
-    if(!A) return NULL;
-    X(mat) *out=NULL;
-    X(cp)(&out, A);
-    X(invspd_inplace)(out);
-    return out;
-}
-
-/**
-   inplace invert a general square matrix using lapack dgesv_
-*/
-void X(inv_inplace)(X(mat)*A){
-    if(!A) return;
-    if(A->nx!=A->ny) error("Must be a square matrix");
-    int info=0, N=A->nx;
-    T *B=calloc(N*N,sizeof(T));
-    for(int i=0;i<N;i++)
-	B[i+i*N]=1;
-    int *ipiv=calloc(N, sizeof(int));
-    Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
-    if(info!=0){
-	X(write)(A,"gesv");
-	error("dgesv_ failed, info=%d. data saved to posv.\n",info);
-    }
-    memcpy(A->p, B, sizeof(T)*N*N);
-    free(B);
-    free(ipiv);
-}
-
-/**
-   out of place version of dinv
-*/
-X(mat)* X(inv)(const X(mat) *A){
-    if(!A) return NULL;
-    X(mat) *out=NULL;
-    X(cp)(&out, A);
-    X(inv_inplace)(out);
-    return out;
-}
-/**
-   Compute the cholesky decomposition of a symmetric semi-definit dense matrix.
-*/
-X(mat)* X(chol)(const X(mat) *A){
-    if(!A) return NULL;
-    if(A->nx!=A->ny) error("dchol requires square matrix\n");
-    X(mat) *B = X(dup)(A);
-    int uplo='L', n=B->nx, info;
-    Z(potrf)(&uplo, &n, B->p, &n, &info);
-    if(info){
-	if(info<0){
-	    error("The %d-th parameter has an illegal value\n", -info);
-	}else{
-	    error("The leading minor of order %d is not posite denifite\n", info);
-	}
-    }else{//Zero out the upper diagonal. For some reason they are not zero.
-	PDMAT(B, Bp);
-	for(long iy=0; iy<A->ny; iy++){
-	    for(long ix=0; ix<iy; ix++){
-		Bp[iy][ix]=0;
-	    }
-	}
-    }
-    return B;
-}
-
-/**
    compute (A'*W*A); where diag(W)=wt
 */
 X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt){
@@ -741,15 +632,6 @@ X(mat) *X(mcc)(const X(mat) *A, const X(mat) *wt){
 }
 
 /**
-   compute inv(dmcc(A, wt))
-*/
-X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt){
-    X(mat) *mcc=X(mcc)(A,wt);
-    X(invspd_inplace)(mcc);
-    return mcc;
-}
-
-/**
    compute (A*W*A'); where diag(W)=wt
 */
 X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt){
@@ -771,62 +653,6 @@ X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt){
 	}
     }
     return ata;
-}
-
-/**
-   compute the pseudo inverse of matrix A with weigthing of full matrix W or
-   sparse matrix weighting Wsp.  For full matrix, wt can be either W or diag (W)
-   for diagonal weighting.  B=inv(A'*W*A)*A'*W; */
-X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
-    if(!A) return NULL;
-    X(mat) *AtW=NULL;
-    //Compute AtW=A'*W
-    if(wt){
-	if(Wsp){
-	    error("Both wt and Wsp are supplied. Not supported\n");
-	}
-	if(wt->ny==wt->nx){
-	    X(mm)(&AtW, A, wt, "tn", 1);
-	}else if(wt->ny==1){
-	    AtW=X(new)(A->ny,A->nx);
-	    PMAT(A,pA);
-	    PMAT(AtW,pAtW);
-	    T *w=wt->p;
-	    for(long iy=0; iy<A->ny; iy++){
-		for(long ix=0;ix<A->nx; ix++){
-		    pAtW[ix][iy]=pA[iy][ix]*w[ix];
-		}
-	    }
-	}else{
-	    error("Invalid format\n");
-	}
-    }else{
-	if(Wsp){
-	    X(mat)*At = X(trans)(A);
-	    X(mulsp)(&AtW, At, Wsp, 1);
-	    X(free)(At);
-	}else{
-	    AtW=X(trans)(A);
-	}
-    }
-    //Compute cc=A'*W*A
-    X(mat) *cc=NULL;
-    X(mm) (&cc, AtW, A, "nn", 1);
-    //Compute inv of cc
-    //X(invspd_inplace)(cc);
-    if(X(isnan(cc))){
-	X(write)(cc,"cc_isnan");
-	X(write)(A,"A_isnan");
-	X(write)(wt,"wt_isnan");
-	Y(spwrite)(Wsp, "Wsp_isnan");
-    }
-    X(svd_pow)(cc,-1,0,1e-14);//invert the matrix using SVD. safe with small eigen values.
-    X(mat) *out=NULL;
-    //Compute (A'*W*A)*A'*W
-    X(mm) (&out, cc, AtW, "nn", 1);
-    X(free)(AtW);
-    X(free)(cc);
-    return out;
 }
 
 /**
@@ -1135,6 +961,7 @@ void X(cog)(double *grad,const X(mat) *i0,double offsetx,
    Shift the image in A to center on physical
    center+[offsetx,offsety] using cog and fft.
 */
+#ifndef USE_SINGLE
 void X(shift2center)(X(mat) *A, double offsetx, double offsety){
     double grad[2];
     double Amax=X(max)(A);
@@ -1166,7 +993,7 @@ void X(shift2center)(X(mat) *A, double offsetx, double offsety){
 	cfree(B);
     }
 }
-
+#endif
 /**
    Limit numbers in A to within [min, max]. used for DM clipping.
 */
@@ -1195,30 +1022,34 @@ int X(clip)(X(mat) *A, double min, double max){
    <Mod|wt|Mod> is equal to sum(wt).
    2010-07-21: Bug found: The result is not orthonormal. cause: nonvalid is not initialized to 0.
 */
-void X(gramschmidt)(X(mat) *Mod, double *amp){
+void X(gramschmidt)(X(mat) *Mod, R *amp){
     const int nmod=Mod->ny;
     const long nx=Mod->nx;
-    T wtsum=(T)nx;
+    R wtsum=(R)nx;
     if(amp){
+#ifdef USE_SINGLE
+	wtsum=fltsum(amp, nx);
+#else
 	wtsum=dblsum(amp, nx);
+#endif
     }
     int nonvalid[nmod];
     memset(nonvalid, 0, sizeof(int)*nmod);
     PMAT(Mod,pMod);
     for(int imod=0; imod<nmod; imod++){
 	if(imod>0){//orthogonalize
-	    T cross;
+	    R cross;
 	    //compute dot product.
 	    for(int jmod=0; jmod<imod; jmod++){
 		if(nonvalid[jmod]) continue;
-		cross=-dot_do(pMod[imod],pMod[jmod],amp,nx)/wtsum;
+		cross=-DOT(pMod[imod],pMod[jmod],amp,nx)/wtsum;
 		for(long ix=0; ix<nx; ix++){
 		    pMod[imod][ix]+=cross*pMod[jmod][ix];
 		}
 	    }
 	}
 	
-	T norm=SQRT(dot_do(pMod[imod],pMod[imod],amp,nx)/wtsum);
+	R norm=SQRT(DOT(pMod[imod],pMod[imod],amp,nx)/wtsum);
 	if(ABS(norm)>1.e-15){
 	    norm=1./norm;
 	    for(long ix=0; ix<nx; ix++){
@@ -1251,150 +1082,10 @@ void X(muldiag)(X(mat) *A, X(mat) *s){
 void X(cwpow)(X(mat)*A, double power){
     if(!A) return;
     for(long i=0; i<A->nx*A->ny; i++){
-	A->p[i]=Y(pow)(A->p[i],power);
+	A->p[i]=POW(A->p[i],power);
     }
 }
 
-/**
-   Compute SVD of a general matrix A. 
-   A=U*diag(S)*V';
-   diag(S) is returned.
-*/
-void X(svd)(X(mat) **U, dmat **Sdiag, X(mat) **VT, const X(mat) *A){
-    char jobuv='S';
-    int M=(int)A->nx;
-    int N=(int)A->ny;
-    /*if((Sdiag&&*Sdiag)||(U&&*U)||(VT&&*VT)){
-	warning("Sdiag,U,VT should all be NULL. discard their value\n");
-	}*/
-    X(mat) *tmp=X(dup)(A);
-    int nsvd=M<N?M:N;
-    dmat *s=dnew(nsvd,1);
-    X(mat) *u=X(new)(M,nsvd);
-    X(mat) *vt=X(new)(nsvd,N);
-    int lwork=-1;
-    T work0[1];
-    int info=0;
-#ifdef USE_COMPLEX
-    warning("Not tested\n");
-    double *rwork=malloc(nsvd*5*sizeof(double));
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
-#else
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,&info);
-#endif
-    lwork=(int)(work0[0]);
-    T *work1=malloc(sizeof(T)*lwork);
-#ifdef USE_COMPLEX
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,rwork,&info);
-#else
-    Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work1,&lwork,&info);
-#endif
-    free(work1);
-    if(info){
-	X(write)(A,"A_svd_failed");
-	if(info<0){
-	    error("The %d-th argument has an illegal value\n",info);
-	}else{
-	    error("svd: dbdsqr doesn't converge. info is %d\n",info);
-	}
-    }
-    if(Sdiag) *Sdiag=s; else dfree(s);
-    if(U) *U=u; else X(free)(u);
-    if(VT) *VT=vt; else X(free)(vt);
-    X(free)(tmp);
-#ifdef USE_COMPLEX
-    free(rwork);
-#endif
-}
-
-/**
-   Compute the eigen values and, optionally, eigen vectors of a real symmetric
-matrix. Notice that here Sdiag is in ascending order, which is different from
-X(svd).  */
-void X(evd)(X(mat) **U, dmat **Sdiag,const X(mat) *A){
-    assert(A->nx==A->ny && A->nx>0);
-    *Sdiag=dnew(A->nx,1);
-    char jobz=U?'V':'N';
-    char uplo='U';
-    int lda=A->nx;
-    T worksize;
-    int lwork=-1;
-    int info;
-    X(mat) *atmp=X(dup)(A);
-#ifdef USE_COMPLEX
-    double *rwork=malloc((3*A->nx-2)*sizeof(double));
-    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, &worksize, &lwork,rwork, &info);
-    lwork=(int)worksize;
-    T *work=malloc(sizeof(double)*lwork);
-    Z(heev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork,rwork, &info);
-    free(rwork);
-#else
-    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, &worksize, &lwork, &info);
-    lwork=(int)worksize;
-    T *work=malloc(sizeof(double)*lwork);
-    Z(syev)(&jobz, &uplo, &lda, atmp->p, &lda, (*Sdiag)->p, work, &lwork, &info);
-#endif
-    if(info){
-	X(write)(A,"A_evd_failed");
-	if(info<0)
-	    error("The %dth argument had an illegal value\n", -info);
-	else
-	    error("The %dth number of elements did not converge to zero\n", info);
-    }
-    if(U) *U=atmp; else X(free)(atmp);
-    free(work);
-}
-
-/**
-   computes pow(A,power) in place using svd or evd. if issym==1, use evd, otherwise use svd
-*/
-void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
-    int use_evd=0;
-    if(A->nx!=A->ny){
-	warning("dpow is only good for square arrays.\n");
-    }else if(issym){
-	use_evd=1;
-    }
-    dmat *Sdiag=NULL;
-    X(mat) *U=NULL;
-    X(mat) *VT=NULL;
-    double maxeig;
-    if(use_evd){
-	X(evd)(&U, &Sdiag, A);
-	//eigen values below the threshold will not be used. the last is the biggest.
-	maxeig=fabs(Sdiag->p[Sdiag->nx-1]);
-	VT=X(trans)(U);
-    }else{
-	X(svd)(&U, &Sdiag, &VT, A);
-	//eigen values below the threshold will not be used. the first is the biggest.
-	maxeig=fabs(Sdiag->p[0]);
-    }
-    thres*=maxeig;
-    long skipped=0;
-    double mineig=INFINITY;
-    for(long i=0; i<Sdiag->nx; i++){
-	if(fabs(Sdiag->p[i])>thres){//only do with 
-	    Sdiag->p[i]=pow(Sdiag->p[i],power);
-	}else{
-	    if(fabs(Sdiag->p[i])<mineig) 
-		mineig=fabs(Sdiag->p[i]);
-	    Sdiag->p[i]=0;
-	    skipped++;
-	}
-    }
-    for(long iy=0; iy <VT->ny; iy++){
-	T *p=VT->p+iy*VT->nx;
-	for (long ix=0; ix<VT->nx; ix++){
-	    p[ix]*=Sdiag->p[ix];
-	}
-    }
-    X(zero)(A);
-    X(mm)(&A,U,VT,"nn",1);
-    
-    X(free)(U);
-    X(free)(VT);
-    dfree(Sdiag);
-}
 
 /**
    add val to diagonal values of A.
@@ -1408,18 +1099,7 @@ void X(addI)(X(mat) *A, T val){
 	A->p[i+i*A->nx]+=val;
     } 
 }
-
-/**
-   Apply tikhonov regularization to A
-*/
-void X(tikcr)(X(mat) *A, T thres){
-    dmat *S=NULL;
-    X(svd)(NULL,&S,NULL,A);
-    T val=S->p[0]*thres;
-    dfree(S);
-    X(addI)(A,val);
-}
-
+#ifndef USE_SINGLE
 /**
    y=y+alpha*x*A;
    implemented by transposing x,y index in sptmulmat implementation
@@ -1458,7 +1138,7 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
 	}
     }
 }
-
+#endif
 /**
    Create log spaced vector.
 */
@@ -1487,7 +1167,7 @@ X(mat)* X(linspace)(double min, double dx, long n){
    Interpolate using linear interp. xin is the coordinate of yin. xnew is the
    coordinate of the output.
 */
-X(mat)* X(interp1)(dmat *xin, dmat *yin, dmat *xnew){
+X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
     long nmax=xin->nx;
     long nmax1=nmax-1;
     double xminl=(xin->p[0]);
@@ -1523,7 +1203,7 @@ X(mat)* X(interp1)(dmat *xin, dmat *yin, dmat *xnew){
    Interpolate using log(xin) and log(xnew)
    xin is the coordinate of yin. xnew is the coordinate of the output.
 */
-X(mat)* X(interp1log)(dmat *xin, dmat *yin, dmat *xnew){
+X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
     long nmax=xin->nx;
     long nmax1=nmax-1;
     double xminl=log10(xin->p[0]);
@@ -1629,14 +1309,14 @@ void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
 /**
    For each entry in A, call repeatly to collect its histogram, centered at
    center, spaced by spacing, for n bins in total. center if at bin n/2.  */
-void X(histfill)(dmat **out, const X(mat)* A,
+void X(histfill)(X(mat) **out, const X(mat)* A,
 		 double center, double spacing, int n){
     if(!A || !A->p) return;
     int nn=A->nx*A->ny;
     if(!*out){
-	*out=dnew(n,nn);
+	*out=X(new)(n,nn);
     }
-    PDMAT(*out,Op);
+    PMAT(*out,Op);
     const T *restrict Ap=A->p;
     const double spacingi=1./spacing;
     const int noff=n/2;
@@ -1910,7 +1590,7 @@ X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat
     T xsep1=(double)(nx-1)/(x->p[nx-1]-xmin);
     T ysep1=(double)(ny-1)/(y->p[ny-1]-ymin);
     assert(xnew->nx == ynew->nx && xnew->ny == ynew->ny);
-    X(mat)*znew=X(new)(xnew->nx, xnew->ny);
+    X(mat)*zz=X(new)(xnew->nx, xnew->ny);
     PCELL(coeff,pc);
     for(long ix=0; ix<xnew->nx*xnew->ny; ix++){
 	double xm=REAL((xnew->p[ix]-xmin)*xsep1);
@@ -1930,13 +1610,13 @@ X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat
 	T ym2=ym *ym;
 	T ym3=ym2*ym;
 	PMAT(pc[ymf][xmf],ppc);
-	znew->p[ix]= ppc[0][0] + ppc[0][1] * xm + ppc[0][2] * xm2 + ppc[0][3] * xm3 +
+	zz->p[ix]= ppc[0][0] + ppc[0][1] * xm + ppc[0][2] * xm2 + ppc[0][3] * xm3 +
 	    ppc[1][0] * ym + ppc[1][1] * ym * xm + ppc[1][2] * ym * xm2 + ppc[1][3] * ym * xm3 +
 	    ppc[2][0] * ym2 + ppc[2][1] * ym2 * xm + ppc[2][2] * ym2 * xm2 + ppc[2][3] * ym2 * xm3 +
 	    ppc[3][0] * ym3 + ppc[3][1] * ym3 * xm + ppc[3][2] * ym3 * xm2 + ppc[3][3] * ym3 * xm3;
 
     }
-    return znew;
+    return zz;
 }
 /**
    Do a component wise log10 on each element of A.
@@ -1944,7 +1624,7 @@ X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat
 void X(cwlog10)(X(mat) *A){
     double ratio=1./log(10);
     for(long i=0; i<A->nx*A->ny; i++){
-	A->p[i]=Y(log)(A->p[i])*ratio;
+	A->p[i]=LOG(A->p[i])*ratio;
     }
 }
 /**
@@ -1955,7 +1635,7 @@ void X(cwlog10)(X(mat) *A){
 */
 void X(embed_locstat)(X(mat) **restrict out, double alpha,
 		      loc_t *restrict loc, 
-		      double *restrict oin, double beta, int reverse){
+		      R *restrict oin, double beta, int reverse){
     loc_create_stat(loc);
     locstat_t *restrict locstat=loc->stat;
     if(!*out){
@@ -1983,7 +1663,7 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 	T *restrict dest=&p[yoff+yoff0][xoff+xoff0];
 	if(!reverse){
 	    if(oin){
-		const double *restrict oin2=oin+pos1;
+		const R *restrict oin2=oin+pos1;
 		if(fabs(alpha)>EPS){
 		    for(long ix=0; ix<pos2-pos1; ix++){
 			dest[ix]=dest[ix]*alpha+oin2[ix]*beta;
@@ -2005,7 +1685,7 @@ void X(embed_locstat)(X(mat) **restrict out, double alpha,
 		}
 	    }
 	}else{
-	    double *restrict oin2=oin+pos1;
+	    R *restrict oin2=oin+pos1;
 	    if(fabs(beta)>EPS){
 		for(long ix=0; ix<pos2-pos1; ix++){
 		    oin2[ix]=oin2[ix]*beta+alpha*REAL(dest[ix]);
@@ -2032,3 +1712,7 @@ long X(fwhm)(X(mat) *A){
     }
     return fwhm;
 }
+
+#ifndef USE_SINGLE
+#include "blas.c"
+#endif

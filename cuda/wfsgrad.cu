@@ -220,18 +220,18 @@ void gpu_wfsgrad(thread_t *info){
 	curcp(&phiout, cuwfs[iwfs].opdadd, stream);
     }
     if(parms->sim.idealwfs){
-	TO_IMPLEMENT;
+	gpu_dm2loc(phiout->p, loc, nloc, cudmproj, hs, thetax, thetay, mispx, mispy, 1, stream);
     }else{
 	gpu_atm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
 	if(parms->sim.wfsalias){
-	    TO_IMPLEMENT;
+	    gpu_dm2loc(phiout->p, loc, nloc, cudmproj, hs, thetax, thetay, mispx, mispy, -1, stream);
 	}
     }
     if(CL){
-	gpu_dm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, -1, stream);
+	gpu_dm2loc(phiout->p, loc, nloc, cudmreal, hs, thetax, thetay, mispx, mispy, -1, stream);
     }
     //CUDA_SYNC_STREAM;
-
+    
     if(imoao>-1){
 	TO_IMPLEMENT;
     }
@@ -268,14 +268,15 @@ void gpu_wfsgrad(thread_t *info){
     if(dtrat_output){
 	if(do_phy){
 	    //signal level was already multiplied in ints.
-	    float *restrict const ints=cuwfs[iwfs].ints;
-	    float *gradnf, *gradny=NULL;
+	    curmat *ints=cuwfs[iwfs].ints;
+	    curmat *gradnf=curnew(nsa,2);
+	    curmat *gradny=NULL;
 	    const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
-	    cudaMalloc(&gradnf, 2*nsa*sizeof(float));
 	    switch(parms->powfs[ipowfs].phytypesim){
 	    case 1:
-		//use 32 instead of pixpsa here. using pixpsa causes random error in g. is this due to lack of ECC?
-		mtche_do<<<nsa, 32,0,stream>>>(gradnf, cuwfs[iwfs].mtche, ints, pixpsa, nsa);
+		/*use 32 instead of pixpsa here. using pixpsa causes random
+		  error in g. is this due to lack of ECC?*/
+		mtche_do<<<nsa, 32,0,stream>>>(gradnf->p, cuwfs[iwfs].mtche, ints->p, pixpsa, nsa);
 		break;
 	    default:
 		TO_IMPLEMENT;
@@ -286,42 +287,35 @@ void gpu_wfsgrad(thread_t *info){
 		float rne=parms->powfs[ipowfs].rne;
 		float bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 		addnoise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-		    (ints, nsa, pixpsa, bkgrnd, parms->powfs[ipowfs].bkgrndc,
+		    (ints->p, nsa, pixpsa, bkgrnd, parms->powfs[ipowfs].bkgrndc,
 		     cuwfs[iwfs].bkgrnd2, cuwfs[iwfs].bkgrnd2c, 
 		     rne, cuwfs[iwfs].custat);
 		ctoc("noise");tic;
-		DO(cudaMalloc(&gradny, 2*nsa*sizeof(float)));
+		gradny=curnew(nsa,2);
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:
-		    mtche_do<<<nsa, 16, 0, stream>>>(gradny, cuwfs[iwfs].mtche, ints, pixpsa, nsa);
+		    mtche_do<<<nsa, 16, 0, stream>>>(gradny->p, cuwfs[iwfs].mtche, ints->p, pixpsa, nsa);
 		    break;
 		default:
 		    TO_IMPLEMENT;
 		}
-		collect_noise_do<<<MAX(nsa/256,1), MIN(256, nsa), 0, stream>>>(cuwfs[iwfs].neareal, gradnf, gradny, nsa);
+		collect_noise_do<<<MAX(nsa/256,1), MIN(256, nsa), 0, stream>>>
+		    (cuwfs[iwfs].neareal, gradnf->p, gradny->p, nsa);
 		//CUDA_SYNC_STREAM;
 	    }
 	    //send grad to CPU.
-	    gpu_dev2dbl(&gradout->p, gradny?gradny:gradnf, nsa*2, stream);
+	    gpu_dev2dbl(&gradout->p, gradny?gradny->p:gradnf->p, nsa*2, stream);
 	    
 	    if(save_ints){
-		dmat *intstmp=dnew(pixpsa, nsa);
-		gpu_dev2dbl(&intstmp->p, ints, pixpsa*nsa, stream);
-		CUDA_SYNC_STREAM;
-		cellarr_dmat(simu->save->intsnf[iwfs], intstmp);
-		dfree(intstmp);
+		cellarr_cur(simu->save->intsnf[iwfs], ints, stream);
 	    }
 	    if(save_grad && noisy){
-		dmat *gradnftmp=dnew(nsa*2,1);
-		gpu_dev2dbl(&(gradnftmp->p), gradnf, nsa*2, stream);
-		CUDA_SYNC_STREAM;
-		cellarr_dmat(simu->save->gradnf[iwfs], gradnftmp);
-		dfree(gradnftmp);
+		cellarr_cur(simu->save->gradnf[iwfs], gradnf, stream);
 	    }
 	    //CUDA_SYNC_STREAM;
-	    if(gradny) cudaFree(gradny);
-	    cudaFree(gradnf);
-	    cudaMemsetAsync(ints, 0, nsa*pixpsa*sizeof(float), stream);
+	    curfree(gradny);
+	    curfree(gradnf);
+	    curzero(ints, stream);
 	    ctoc("mtche");
 	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		if(!recon->PTT){

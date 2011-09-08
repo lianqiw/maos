@@ -532,7 +532,7 @@ static void process_queue(void){
 	//don't close the socket. will close it in select loop.
 	//warning3("process %d launched. write to sock %d cmd %d\n",
 	//irun->pid, irun->sock, S_START);
-	swriteint(&(irun->sock),S_START);
+	stwriteint(&(irun->sock),S_START);
 	irun->status.timstart=myclocki();
 	irun->status.info=S_START;
 	monitor_send(irun,NULL);
@@ -868,7 +868,7 @@ static int monitor_send_do(RUN_T *irun, char *path, int sock){
 	    perror("write");
 	    return 1;
 	}
-	swritestr(&sock,path);
+	stwritestr(&sock,path);
     }else{
 	cmd[0]=CMD_STATUS;
 	if(write(sock,cmd,sizeof(int)*3)!=sizeof(int)*3){
