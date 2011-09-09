@@ -109,8 +109,8 @@ void gpu_cleanup(void){
     cudaDeviceReset();
 }
 /**
-   Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float array.
-*/
+   Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
+array. Allow multiple calling to override the data.  */
 void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
     if(nps==0) return;
     if(!*dest0){
@@ -122,7 +122,7 @@ void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
     dest->nlayer=nps;
     int nx0=source[0]->nx;
     int ny0=source[0]->ny;
-    if(!dest->vx){
+    if(!dest->vx){//data is not initialized.
 	if(type==1){//all layers must be same size.
 	    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 	    DO(cudaMalloc3DArray(&dest->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), 

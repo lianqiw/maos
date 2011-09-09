@@ -488,12 +488,15 @@ void wfsgrad_iwfs(thread_t *info){
 		    const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
 		    const double *neax=nea->p;
 		    const double *neay=nea->p+nsa;
+		    const double *neaxy=nea->p+nsa*2;
 		    double *ggx=(*gradout)->p;
 		    double *ggy=(*gradout)->p+nsa;
 		    for(int isa=0; isa<nsa; isa++){
 			//Preserve the random sequence.
-			double errx=neax[isa]*randn(&simu->wfs_rand[iwfs]);
-			double erry=neay[isa]*randn(&simu->wfs_rand[iwfs]);
+			double n1=randn(&simu->wfs_rand[iwfs]);
+			double n2=randn(&simu->wfs_rand[iwfs]);
+			double errx=neax[isa]*n1;
+			double erry=neay[isa]*n2+neaxy[isa]*n1;//cross term.
 			ggx[isa]+=errx;
 			ggy[isa]+=erry;
 			simu->sanea_sim[iwfs]->p[isa]->p[0]+=errx*errx;
@@ -555,14 +558,18 @@ static void wfsgrad_save(SIM_T *simu){
 	}
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
 	    if(!simu->sanea_sim[iwfs]) continue;
-	    dcell *sanea=NULL;
-	    dcellcp(&sanea, simu->sanea_sim[iwfs]);
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	    const int dtrat=parms->powfs[ipowfs].dtrat;
-	    if(sanea && simu->isim >=simu->parms->powfs[ipowfs].phystep){
-		int nstep=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
-		dcellscale(sanea,1./nstep);
+	    dcell *sanea=NULL;
+	    double scale;
+	    if(parms->powfs[ipowfs].usephy){
+		scale=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
+	    }else{
+		scale=(simu->isim+1)/dtrat;
 	    }
+	    if(scale<=0) continue;
+	    scale=1./floor(scale);//only multiple of dtrat is recorded.
+	    dcelladd(&sanea, 0, simu->sanea_sim[iwfs], scale);
 	    dcellwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
 	    dcellfree(sanea);
 	}

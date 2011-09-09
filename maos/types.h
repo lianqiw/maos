@@ -93,11 +93,11 @@ typedef struct INTSTAT_T{
     dcell *mtchera;     /**<mtched filter operator along r/a*/
     dcell *mtche;       /**<mtched filter operator along x/y*/
     dcell *saneara;     /**<computed sanea along ra (rad^2) (only for radian coord ccd)*/
-    dcell *sanea;       /**<SANEA of matched filter output discarding
-			   coupling. ra or xy (rad^2). Just for saving.*/
+    dcell *sanea;       /**<SANEA of matched filter output. ra or xy (rad^2). no
+			   coupling is saved.*/
     dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
-    dcell *saneaixy;    /**<computed sanea inverse along xy (rad^-2)*/
     dcell *saneaxyl;    /**<decomposition of saneaxy: L*L'=saneaxy.*/
+    dcell *saneaixy;    /**<computed sanea inverse along xy (rad^-2)*/
     int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
     int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/

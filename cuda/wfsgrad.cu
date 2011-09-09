@@ -20,12 +20,15 @@ cuwfs_t *cuwfs=NULL;
   Notice that both blocks and threads are partitioning isa
  */
 __global__ static void add_geom_noise_do(float *restrict g, const float *restrict nea, 
-				      int ng, curandStat *restrict rstat){
+				      int nsa, curandStat *restrict rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
-    const int nstep=blockDim.x * gridDim.x;
     curandStat lstat=rstat[id];
-    for(int i=id; i<ng; i+=nstep){
-	g[i]+=curand_normal(&lstat)*nea[i];
+    const int nstep=blockDim.x * gridDim.x;
+    for(int i=id; i<nsa; i+=nstep){
+	float n1=curand_normal(&lstat);
+	float n2=curand_normal(&lstat);
+	g[i]+=n1*nea[i];
+	g[i+nsa]+=n2*nea[i+nsa]+n1*nea[i+nsa*2];//cross term.
     }
     rstat[id]=lstat;
 }
@@ -341,7 +344,7 @@ void gpu_wfsgrad(thread_t *info){
 	}else{
 	    if(noisy){
 		add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-		    (gradacc, cuwfs[iwfs].neasim, nsa*2,cuwfs[iwfs].custat);
+		    (gradacc, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
 		CUDA_SYNC_STREAM;
 		ctoc("noise");
 	    }

@@ -635,7 +635,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
     spcell *sanea=recon->sanea=spcellnew(nwfs,nwfs);
     spcell *saneal=recon->saneal=spcellnew(nwfs,nwfs);
     spcell *saneai=recon->saneai=spcellnew(nwfs,nwfs);
-    info2("saneai:");
+    info2("Recon NEA:");
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;

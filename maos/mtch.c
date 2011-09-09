@@ -348,6 +348,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		   "%s/powfs%d_saneara",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->saneaxy,
 		   "%s/powfs%d_saneaxy",dirsetup,ipowfs);
+	dcellwrite(powfs[ipowfs].intstat->saneaxyl,
+		   "%s/powfs%d_saneaxyl",dirsetup,ipowfs);
 	dcellwrite(powfs[ipowfs].intstat->sanea,
 		   "%s/powfs%d_sanea",dirsetup,ipowfs);
     }

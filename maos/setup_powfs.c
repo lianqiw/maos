@@ -456,18 +456,22 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		    error("neasimfile and neasim can not both be supplied\n");
 		}
 		nea=dread("%s_wfs%d",parms->powfs[ipowfs].neasimfile,iwfs);//rad
-		if(nea->nx!=powfs[ipowfs].pts->nsa*2 || nea->ny!=1){
-		    error("wfs %d: NEA read from %s_wfs%d has incorrect format. We want %ldx1 array.\n",
-			  iwfs, parms->powfs[ipowfs].neasimfile, iwfs,powfs[ipowfs].pts->nsa*2);
+		if(nea->nx!=nsa || (nea->ny!=2 && nea->ny!=3)){
+		    error("wfs %d: NEA read from %s_wfs%d has incorrect format. We want %ldx2(3) array.\n",
+			  iwfs, parms->powfs[ipowfs].neasimfile, iwfs,powfs[ipowfs].pts->nsa);
 		}
 	    }else{
-		nea=dnew(nsa*2, 1);
+		nea=dnew(nsa, 2);
 		if(parms->powfs[ipowfs].neasim<0){
 		    dset(nea, parms->powfs[ipowfs].nearecon);
 		}else{
 		    dset(nea, parms->powfs[ipowfs].neasim);
 		}
 		dscale(nea, 1./206265000);//convert from mas to rad.
+	    }
+	    if(nea->ny==2){
+		dresize(nea,nsa,3);
+		memset(nea->p+nsa*2,0,nsa*sizeof(double));
 	    }
 	    //Sanity check
 	    double neamax=dmax(nea);
@@ -489,8 +493,12 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		double scale=dl?(1./saa[isa]):(1./sqrt(saa[isa]));
 		nea->p[isa]*=scale;
 		nea->p[isa+nsa]*=scale;
+		nea->p[isa+nsa*2]*=scale;//cross term.
 	    }
 	    powfs[ipowfs].neasim->p[jwfs]=nea;
+	}
+	if(parms->save.setup){
+	    dcellwrite(powfs[ipowfs].neasim,"%s/powfs%d_neasim", dirsetup, ipowfs);
 	}
     }
     if(parms->save.setup && powfs[ipowfs].GS0){
@@ -1657,15 +1665,24 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
     if(parms->powfs[ipowfs].neaphy){
 	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-	    dmat *sanea=NULL;
-	    if(powfs[ipowfs].intstat->sanea->nx==1){
-		sanea=powfs[ipowfs].intstat->sanea->p[0];
+	    dmat **sanea=NULL;
+	    //saneaxyl is the cholesky decomposition of the Cnn.
+	    if(powfs[ipowfs].intstat->saneaxyl->ny==1){
+		sanea=powfs[ipowfs].intstat->saneaxyl->p;
 	    }else{
-		sanea=powfs[ipowfs].intstat->sanea->p[jwfs];
+		sanea=powfs[ipowfs].intstat->saneaxyl->p+jwfs;
 	    }
-	    dmat *nea=ddup(sanea);
-	    dcwpow(nea, 0.5);//convert from radian^2 to radian. no need to do dtrat scaling.
+	    dmat *nea=dnew(nsa,3);
+	    PDMAT(nea, pnea);
+	    for(int isa=0; isa<nsa; isa++){
+		pnea[0][isa]=sanea[isa]->p[0];
+		pnea[1][isa]=sanea[isa]->p[3];
+		pnea[2][isa]=sanea[isa]->p[1];
+	    }
 	    powfs[ipowfs].neasim->p[jwfs]=nea;
+	}
+	if(parms->save.setup){
+	    dcellwrite(powfs[ipowfs].neasim,"%s/powfs%d_neasim", dirsetup, ipowfs);
 	}
     }
     //Remove OTFs that are older than 30 days.
