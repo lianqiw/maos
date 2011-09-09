@@ -684,7 +684,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dwrite(simu->telws, "telws_%d", seed);
     }
     /* Evaluation */
-    if(parms->evl.psfmean){
+    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
 	char header[800];
 	header[0]='\0';
 	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
@@ -695,53 +695,65 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		     aper->sumamp2*aper->nembed[iwvl]*aper->nembed[iwvl]); 
 	    strncat(header, headeri, 800-strlen(header)-2);
 	}
-	long nframe=1;
+	long nframepsf=1;
+	long nframecov=1;
 	if(parms->evl.psfmean>1){
 	    long nstep=(parms->sim.end-parms->evl.psfisim);
-	    nframe=nstep/parms->evl.psfmean;
-	    if(nstep > nframe*parms->evl.psfmean) nframe++;
+	    nframepsf=nstep/parms->evl.psfmean;
+	    if(nstep > nframepsf*parms->evl.psfmean) nframepsf++;
 	}
-
-
+	if(parms->evl.opdcov>1){
+	    long nstep=(parms->sim.end-parms->evl.psfisim);
+	    nframecov=nstep/parms->evl.opdcov;
+	    if(nstep > nframecov*parms->evl.opdcov) nframecov++;
+	}
 	char strht[24];
-	simu->evlpsfmean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
-	simu->evlpsfmean->header=strdup(header);
-	save->evlpsfmean=calloc(parms->evl.nevl, sizeof(cellarr*));
+	if(parms->evl.psfmean){
+	    simu->evlpsfmean=dcellnew(parms->evl.nwvl,parms->evl.nevl);
+	    simu->evlpsfmean->header=strdup(header);
+	    save->evlpsfmean=calloc(parms->evl.nevl, sizeof(cellarr*));
+	}
+	if(parms->evl.psfhist){
+	    save->evlpsfhist=calloc(nevl, sizeof(cellarr*));
+	}
+	if(parms->evl.opdcov){
+	    simu->evlopdcov=dcellnew(parms->evl.nevl,1);
+	    save->evlopdcov=calloc(parms->evl.nevl, sizeof(cellarr*));
+	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!isinf(parms->evl.hs[ievl])){
-		snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
-	    }else{
-		strht[0]='\0';
-	    }
-	    save->evlpsfmean[ievl]=cellarr_init(parms->evl.nwvl,nframe, 
-						"evlpsfcl_%d_x%g_y%g%s.bin", seed,
-						parms->evl.thetax[ievl]*206265,
-						parms->evl.thetay[ievl]*206265, strht);
-	}
-	
-	if(parms->evl.psfol){
-	    simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
-	    simu->evlpsfolmean->header=strdup(header);
-	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframe, "evlpsfol_%d.bin", seed);
-	}
-    }
-    if(parms->evl.psfhist){
-	save->evlpsfhist=calloc(nevl, sizeof(cellarr*));
-	char strht[24];
-	for(int ievl=0; ievl<nevl; ievl++){
 	    if(!parms->evl.psf[ievl]) continue;
 	    if(!isinf(parms->evl.hs[ievl])){
 		snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 	    }else{
 		strht[0]='\0';
 	    }
-	    save->evlpsfhist[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim, 1,
-						"evlpsfhist_%d_x%g_y%g%s.bin", seed,
-						parms->evl.thetax[ievl]*206265,
-						parms->evl.thetay[ievl]*206265,strht);
-	   
+	    if(parms->evl.psfmean){
+		save->evlpsfmean[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
+						    "evlpsfcl_%d_x%g_y%g%s.bin", seed,
+						    parms->evl.thetax[ievl]*206265,
+						    parms->evl.thetay[ievl]*206265, strht);
+	    }
+	    if(parms->evl.psfhist){
+		save->evlpsfhist[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim, 1,
+						    "evlpsfhist_%d_x%g_y%g%s.bin", seed,
+						    parms->evl.thetax[ievl]*206265,
+						    parms->evl.thetay[ievl]*206265,strht);
+	    }
+	    if(parms->evl.opdcov){
+		save->evlopdcov[ievl]=cellarr_init(nframecov, 1,
+						   "evlopdcov_%d_x%g_y%g%s.bin", seed,
+						   parms->evl.thetax[ievl]*206265,
+						   parms->evl.thetay[ievl]*206265, strht);
+	    }
+	}//for ievl
+	
+	if(parms->evl.psfmean && parms->evl.psfol){
+	    simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
+	    simu->evlpsfolmean->header=strdup(header);
+	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.bin", seed);
 	}
     }
+  
     if(parms->evl.psfmean || parms->evl.psfhist){
 	//compute diffraction limited PSF.
 	dmat *iopdevl=dnew(aper->locs->nloc,1);
@@ -756,7 +768,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dcellwrite(evlpsfdl, "evlpsfdl_%d.bin",seed);
 	dcellfree(evlpsfdl);
     }
-  
     simu->has_upt=0;//flag for uplink tip/tilt control
     if(parms->sim.epfocus>1.e-15){
 	if(parms->sim.lpfocus<1.e-15){
@@ -1254,7 +1265,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 					      "evl%d_opdcl_%d.bin",ievl,seed);
 	}
     }
-    save->evlopdcov=dcellnew(parms->evl.nevl, 1);
     simu->status=calloc(1, sizeof(STATUS_T));
     simu->status->iseed=iseed;
     simu->status->nseed=parms->sim.nseed;
@@ -1453,7 +1463,8 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->intsnf, parms->nwfs);
     cellarr_close_n(save->moao_evl, parms->evl.nevl);
     cellarr_close_n(save->moao_wfs, parms->nwfs);
-    dcellfree(save->evlopdcov);
+    dcellfree(simu->evlopdcov);
+    cellarr_close_n(save->evlopdcov, parms->evl.nevl);
     dfree(simu->windest);
     dfree(simu->winddir);
     spcellfree(simu->windshift);

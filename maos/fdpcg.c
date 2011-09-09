@@ -593,14 +593,6 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     info.ips=0;
     //Apply inverse FFT
     CALL(fdpcg_ifft,&info,recon->nthread,1);
-    /*{
-	static int isim=-1; isim++;
-	
-	dcellwrite(*xout, "xout_%d", isim);
-	dcellwrite(xin, "xin_%d", isim);
-	ccellwrite(fdpcg->xhati, "xhati_%d", isim);
-	ccellwrite(fdpcg->xhat2i, "xhat2i_%d", isim);
-	}*/
 }
 
 /**

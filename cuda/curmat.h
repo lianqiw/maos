@@ -8,7 +8,7 @@ curcell *curcellnew(int nx, int ny);
 curcell *curcellnew2(const curcell *in);
 void curcellfree(curcell *A);
 curmat *curnew(int nx, int ny);
-curmat *curnew(int nx, int ny, float *p);
+curmat *curnew(int nx, int ny, cudaStream_t stream);
 void curfree(curmat *A);
 void curwrite(const curmat *A, const char *format, ...);
 void curcellwrite(const curcell *A, const char *format, ...);

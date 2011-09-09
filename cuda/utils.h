@@ -6,6 +6,19 @@
 extern int NG1D;
 extern int NG2D;
 
+#define DEBUG_MEM 0
+#if DEBUG_MEM
+//static int tot_mem=0;
+#undef cudaMalloc
+inline int CUDAMALLOC(float **p, size_t size){
+    return cudaMalloc((float**)p,size);
+}
+inline int CUDAFREE(float *p){
+    return cudaFree(p);
+}
+#define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((float**)p,size);})
+#define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((float*)p);})
+#endif
 #define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
 #define cudaCallocBlock(P,N)     ({DO(cudaMalloc(&(P),N));     DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
@@ -51,6 +64,7 @@ extern int nstream;
 the problem by using mutex locking to makesure only 1 thread is calling FFT. */
 extern pthread_mutex_t cufft_mutex;
 #define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
+#define CUFFT2(plan,in,dir) ({LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir);UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
 
 void gpu_map2dev(cumap_t **dest, map_t **source, int nps, int type);
 void gpu_sp2dev(cusp **dest, dsp *src);

@@ -264,7 +264,7 @@ void perfevl_ievl(thread_t *info){
     if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim){
 	/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
 	if(parms->evl.opdcov){
-	    dmm(&simu->save->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
+	    dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
 	}//opdcov
 	if(do_psf){//Evaluate closed loop PSF.	
 	    /* the OPD after this time will be tilt removed. Don't use for
@@ -464,18 +464,14 @@ static void perfevl_save(SIM_T *simu){
 	char strht[24];
 	long nstep=isim+1-parms->evl.psfisim;
 	double scale=1./nstep;
+	dmat *covmean=NULL;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(simu->save->evlopdcov->p[ievl]){
-		if(!isinf(parms->evl.hs[ievl])){
-		    snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
-		}else{
-		    strht[0]='\0';
-		}
-		dswrite(simu->save->evlopdcov->p[ievl], scale, "evlopdcov_%d_x%g_y%g%s_%ld.bin", seed, 
-			parms->evl.thetax[ievl]*206265,
-			parms->evl.thetay[ievl]*206265, strht, nstep);
+	    if(simu->evlopdcov->p[ievl]){
+		dadd(&covmean, 0, simu->evlopdcov->p[ievl], scale);
+		cellarr_dmat(simu->save->evlopdcov[ievl], covmean);
 	    }
 	}
+	dfree(covmean);
     }
 }
 /**

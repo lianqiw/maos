@@ -13,6 +13,17 @@ cucmat *cucnew(int nx, int ny){
     out->ny=ny;
     return out;
 }
+
+cucmat *cucnew(int nx, int ny, cudaStream_t stream){
+    cucmat *out;
+    out=(cucmat*)calloc(1, sizeof(cucmat));
+    out->ref=0;
+    DO(cudaMalloc(&(out->p), nx*ny*sizeof(fcomplex)));
+    DO(cudaMemsetAsync(out->p, 0, nx*ny*sizeof(fcomplex), stream));
+    out->nx=nx;
+    out->ny=ny;
+    return out;
+}
 void cucfree(cucmat *A){
     if(A){
 	if(A->p){

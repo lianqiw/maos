@@ -19,6 +19,20 @@ curmat *curnew(int nx, int ny){
     out->ny=ny;
     return out;
 }
+
+/**
+   Createa curmat object.
+*/
+curmat *curnew(int nx, int ny, cudaStream_t stream){
+    curmat *out;
+    out=(curmat*)calloc(1, sizeof(curmat));
+    out->ref=0;
+    DO(cudaMalloc(&(out->p), nx*ny*sizeof(float)));
+    DO(cudaMemsetAsync(out->p, 0, nx*ny*sizeof(float), stream));
+    out->nx=nx;
+    out->ny=ny;
+    return out;
+}
 void curfree(curmat *A){
     if(A){
 	if(A->p){
@@ -71,7 +85,7 @@ void curcp(curmat **out, const curmat *in, cudaStream_t stream){
     }
 }
 void curwritedata(const curmat *A, file_t *fp){
-    if(A && A->nx >0 && A->ny>0){
+    if(A && A->nx>0 && A->ny>0){
 	cudaDeviceSynchronize();
 	float *tmp=(float*)malloc(A->nx*A->ny*sizeof(float));
 	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(float), cudaMemcpyDefault);
@@ -149,17 +163,34 @@ void curscale(curmat *in, float alpha, cudaStream_t stream){
    Computes C = alpha * C + beta * op(A) * B ;
 */
 void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans[2], float beta, cublasHandle_t handle){
+    int m,n,k,k2;
+    cublasOperation_t transa, transb;
+    if(trans[0]=='t'){
+	m=A->ny;
+	k=A->nx;
+	transa=CUBLAS_OP_T;
+    }else{
+	m=A->nx;
+	k=A->ny;
+	transa=CUBLAS_OP_N;
+    }
+    if(trans[1]=='t'){
+	n=B->nx;
+	k2=B->ny;
+	transb=CUBLAS_OP_T;
+    }else{
+	n=B->ny;
+	k2=B->nx;
+	transb=CUBLAS_OP_N;
+    }
     if(!*C){
-	*C=curnew(trans[0]=='t'?A->ny:A->nx, trans[1]=='t'?B->nx:B->ny);
+	*C=curnew(m,n);
     }else{
-	assert((*C)->nx==(trans[0]=='t'?A->ny:A->nx) && (*C)->ny==(trans[1]=='t'?B->nx:B->ny));
+	assert((*C)->nx==m && (*C)->ny==n);
     }
-
-    if(B->ny==1){
-	cublasSgemv(handle, trans[0]=='t'?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, B->p, 1, &alpha, (*C)->p, 1);
-    }else{
-	cublasSgemm(handle, trans[0]=='t'?CUBLAS_OP_T:CUBLAS_OP_N, trans[1]=='t'?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, B->ny, A->ny, &beta, A->p, A->nx, B->p, B->nx, &alpha, (*C)->p, (*C)->nx);
-    }
+    assert(k==k2);
+    DO(cublasSgemm(handle, transa, transb, m,n,k,
+		       &beta, A->p, A->nx, B->p, B->nx, &alpha, (*C)->p, (*C)->nx));
 }
 /**
    Computes C = alpha * C + beta * op(A) * B ;

@@ -351,6 +351,7 @@ typedef struct SIM_SAVE_T{
     cellarr*  evlpsfolmean;  /**<science field psf OL time average*/
     cellarr** evlpsfmean;    /**<science field psf CL time average*/
     cellarr** evlpsfhist;    /**<to save time history of science field psf*/
+    cellarr** evlopdcov;     /**<science field OPD covariance*/
     cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
     //Deformable mirror.
     cellarr *dmerr_hi;
@@ -380,7 +381,6 @@ typedef struct SIM_SAVE_T{
     cellarr **moao_evl;
     cellarr **moao_wfs;
     //covariances
-    dcell *evlopdcov;
 }SIM_SAVE_T;
 /*
   data wrap for wfsints.
@@ -506,7 +506,7 @@ typedef struct SIM_T{
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
     dcell *evlpsfmean;    /**<science field psf time average*/
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
-
+    dcell *evlopdcov;     /**<science field opd covariance*/
     /*Optinal telemetry saving for PSF reconstruction.*/
     dcell *ecov;       /**<covariance of Hx*x-Ha*a for science directions.*/
     dcell *gcov;       /**<covariance of psuedo open loop gradients.*/
