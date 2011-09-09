@@ -141,6 +141,8 @@ static int read_fifo(FILE *fp){
 	    drawdata->gray=0;
 	    drawdata->ticinside=1;
 	    drawdata->legendbox=1;
+	    drawdata->legendoffx=1;
+	    drawdata->legendoffy=0;
 	    drawdata->fig=NULL;
 	    drawdata->cumulast=-1;//mark as unknown.
 	    break;

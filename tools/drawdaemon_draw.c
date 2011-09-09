@@ -74,19 +74,19 @@ static double myceil(double a){
     return b;
 }
 /**
-   Drawing text.
+   Drawing text. frac=0: left align. frac=0.5: center. frac=1: right align
 */
 static void pango_text(cairo_t *cr, PangoLayout *layout, double x, double y, 
-		       const char *text, int center, int vertical){
+		       const char *text, double frac, int vertical){
     cairo_save(cr);
     pango_layout_set_markup(layout, text, -1);
-    if(center){
+    if(frac>0){
 	int width, height;
 	pango_layout_get_size(layout, &width, &height);
 	if(vertical){
-	    cairo_move_to(cr, x-height*0.5/PANGO_SCALE, y+width*0.5/PANGO_SCALE);
+	    cairo_move_to(cr, x-height*frac/PANGO_SCALE, y+width*frac/PANGO_SCALE);
 	}else{
-	    cairo_move_to(cr, x-width*0.5/PANGO_SCALE, y-height*0.5/PANGO_SCALE);
+	    cairo_move_to(cr, x-width*frac/PANGO_SCALE,  y-height*frac/PANGO_SCALE);
 	}
     }else{
 	cairo_move_to(cr, x, y);
@@ -621,8 +621,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    if(drawdata->cumu && icumu<pts->nx){
 		ips0=icumu;
 	    }
+	    double ix=0, iy=0, y, y_cumu=0;
 	    if(connectpts){//plot curves.
-		double ix, iy, y, y_cumu=0;
 		unsigned int ips=ips0;
 		//Draw first point
 		if(ptsx){//don't do round here.
@@ -661,7 +661,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_stroke(cr);
 	    }
 	    if(!(connectpts && style==5)){//plot points.
-		double ix, iy, y,y_cumu=0;
+		y_cumu=0;
 		for(unsigned int ips=ips0; ips<pts->nx; ips++){
 		    //Map the coordinate to the image
 		    if(ptsx){//don't do round here.
@@ -690,6 +690,19 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }//if
 	    if(!drawdata->style){
 		cairo_stroke(cr);//stroke all together.
+	    }
+	    if(drawdata->cumu && pts->nx>0){
+		cairo_save(cr);
+		char val[80];
+		double ym=y_cumu/(pts->nx-ips0+1);
+		if(drawdata->cumuquad){
+		    ym=sqrt(ym);
+		}
+		snprintf(val, 80, "%.2f", ym);
+		cairo_translate(cr, round((ix-15)/1)*1, round((iy-font_size-5)/1)*1);
+		cairo_scale(cr,1,-1);
+		pango_text(cr, layout, 0, 0, val, 1, 0);
+		cairo_restore(cr);
 	    }
 	}//iptsy
 #if DRAW_NEW == 1
@@ -781,7 +794,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	}
 	snprintf(ticval,80,"%g",ticv);
-	pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 1, 0);
+	pango_text(cr, layout, xpos, yoff+heightim+font_size*0.6+ticskip+1,ticval, 0.5, 0);
     }
     pango_text_powindex(cr, layout, xoff+widthim-font_size*2, yoff+heightim+6+font_size*1.2,order, 0);
     calc_tic(&tic1,&dtic,&ntic,&order,ymax0,ymin0,maxtic_y);
@@ -811,7 +824,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	}
 	snprintf(ticval,80,"%g",ticv);
-	pango_text(cr,layout,xoff-font_size*0.6-ticskip+1, ypos,ticval,1,1);
+	pango_text(cr,layout,xoff-font_size*0.6-ticskip+1, ypos,ticval,0.5,1);
     }
     pango_text_powindex(cr,layout,xoff-font_size*2.8, yoff+font_size*1.8,order, 1);
 
@@ -860,13 +873,13 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_restore(cr);
     }
     if(drawdata->title){
-	pango_text(cr,layout,xoff+widthim/2,yoff-font_size*0.5-4,drawdata->title,1,0);
+	pango_text(cr,layout,xoff+widthim/2,yoff-font_size*0.5-4,drawdata->title,0.5,0);
     }
     if(drawdata->xlabel){
-	pango_text(cr,layout,xoff+widthim/2,yoff+heightim+8+font_size*1.8, drawdata->xlabel,1,0);
+	pango_text(cr,layout,xoff+widthim/2,yoff+heightim+8+font_size*1.8, drawdata->xlabel,0.5,0);
     }
     if(drawdata->ylabel){
-	pango_text(cr,layout,xoff-font_size*1.8-6,yoff+heightim/2, drawdata->ylabel,1,1);
+	pango_text(cr,layout,xoff-font_size*1.8-6,yoff+heightim/2, drawdata->ylabel,0.5,1);
     }
     if(drawdata->legend && drawdata->npts){
 	int style, color, connectpts;
@@ -898,10 +911,12 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	const double legmarout=5;//margin outside of box
 	const double linehead=3;//space before and after symbol
 	double legwidth=maxlen+leglen+2*legmarin+linehead*2;
-	cairo_translate(cr, xoff+widthim - legwidth - legmarout, yoff + legmarout);
+	double legheight=tall*ng+legmarin*2;
+	cairo_translate(cr, xoff + legmarout + drawdata->legendoffx*(widthim - legwidth - 2*legmarout), 
+			yoff + legmarout + drawdata->legendoffy*(heightim -legheight - 2*legmarout));
 	if(drawdata->legendbox){
 	    cairo_save(cr);
-	    cairo_rectangle(cr, 0, 0, legwidth, tall*ng+legmarin*2);
+	    cairo_rectangle(cr, 0, 0, legwidth, legheight);
 	    cairo_set_source_rgba(cr, 1.0, 1.0, 1.0,1.0);
 	    cairo_fill_preserve(cr);
 	    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0,1.0);

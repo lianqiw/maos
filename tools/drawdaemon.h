@@ -105,7 +105,9 @@ struct drawdata_t{
     int ticinside;//put tick inside.
     int cursorinside;
     int limit_changed;//limit has changed.
-    int legendbox;
+    int legendbox;//whether draw legend box or not.
+    double legendoffx;//location of legend along x.
+    double legendoffy;//location of legend along y
     int drawn;//whether we have been drawn. 
     int cumu;//plot cumulative mean.
     int cumuquad;//make cumulative quadrature

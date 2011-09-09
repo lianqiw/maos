@@ -755,7 +755,7 @@ static void tool_save(GtkToolButton *button){
     (void)button;
     drawdata_t *drawdata=get_current_page();
     static gchar *folder=NULL;
-    char *filename;
+    static gchar *filename=NULL;
     GtkWidget *dialog;
     cairo_surface_t *surface;
     int width,height;
@@ -769,7 +769,9 @@ static void tool_save(GtkToolButton *button){
 	 NULL);
     gtk_file_chooser_set_do_overwrite_confirmation 
 	(GTK_FILE_CHOOSER (dialog), TRUE);
-    if(folder){
+    if(filename){
+	gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(dialog), filename);
+    }else if(folder){
 	gtk_file_chooser_set_current_folder
 	    (GTK_FILE_CHOOSER(dialog), folder);
     }else{
@@ -784,13 +786,13 @@ static void tool_save(GtkToolButton *button){
     if(gtk_dialog_run(GTK_DIALOG(dialog))==GTK_RESPONSE_ACCEPT){
 	g_free(folder);
 	folder=gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(dialog));
+	if(filename) g_free(filename);
 	filename=gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+	gtk_widget_destroy(dialog);
     }else{
-	filename=NULL;
+	gtk_widget_destroy(dialog);
+	return;
     }
-    gtk_widget_destroy(dialog);
-    if(!filename) return;
-
     char *suffix=rindex(filename,'.');
     if(!suffix){
 	char *filename2=stradd(filename,".png",NULL);
@@ -843,7 +845,6 @@ static void tool_zoom(GtkToolButton *button, gpointer data){
     drawdata_t *drawdata=get_current_page();
     int mode=GPOINTER_TO_INT(data);
     do_zoom(drawdata,0,0,mode);
-    drawdata->drawn=0;
 }
 static void tool_toggled(GtkToggleToolButton *button, gpointer data){
     int active=gtk_toggle_tool_button_get_active(button);
@@ -851,36 +852,36 @@ static void tool_toggled(GtkToggleToolButton *button, gpointer data){
 	cursor_type=(GPOINTER_TO_INT(data));
     }
     drawdata_dialog->drawn=0;
+    delayed_update_pixmap(drawdata_dialog);
 }
 
 static void limit_change(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
     drawdata_dialog->limit_changed=1;
     delayed_update_pixmap(drawdata_dialog);
-    drawdata_dialog->drawn=0;
 }
 
 static void limit_change2(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
     drawdata_dialog->limit_changed=2;
     delayed_update_pixmap(drawdata_dialog);
-    drawdata_dialog->drawn=0;
 }
 static void checkbtn_toggle(GtkToggleButton *btn, gint *key){
     *key=gtk_toggle_button_get_active(btn);
     delayed_update_pixmap(drawdata_dialog);
-    drawdata_dialog->drawn=0;
+}
+static void range_changed(GtkRange *range, gdouble *val){
+    *val=gtk_range_get_value(range);
+    delayed_update_pixmap(drawdata_dialog);
 }
 static void entry_changed(GtkEditable *entry, char **key){
     free(*key);
     *key=gtk_editable_get_chars(entry, 0, -1);
     delayed_update_pixmap(drawdata_dialog);
-    drawdata_dialog->drawn=0;
 }
 static void spin_changed(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
     delayed_update_pixmap(drawdata_dialog);
-    drawdata_dialog->drawn=0;
 }
 static void toolbutton_cumu_click(GtkToolButton *btn){
     drawdata_t *page=get_current_page();
@@ -954,12 +955,29 @@ static void tool_property(GtkToolButton *button, gpointer data){
     gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->ticinside);
 
-    checkbtn=gtk_check_button_new_with_label("Draw box around legend");
+    hbox=gtk_hbox_new(FALSE,0);
+
+    checkbtn=gtk_check_button_new_with_label("Legend box. ");
     g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->legendbox);
-    gtk_box_pack_start(GTK_BOX(vbox), checkbtn,FALSE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(hbox), checkbtn,FALSE,FALSE,0);
     gtk_widget_set_sensitive(checkbtn, drawdata->legend!=NULL);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbtn), drawdata->legendbox);
-    
+    checkbtn=gtk_hscale_new_with_range(0,1,0.01);
+    gtk_widget_set_size_request(checkbtn,80,20);
+    gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
+    gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffx);
+    g_signal_connect(checkbtn,"value-changed",G_CALLBACK(range_changed), &drawdata->legendoffx);
+    gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new("Position: H"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+    checkbtn=gtk_hscale_new_with_range(0,1,0.01);
+    gtk_widget_set_size_request(checkbtn, 80, 20);
+    gtk_scale_set_draw_value(GTK_SCALE(checkbtn), 0);
+    gtk_range_set_value(GTK_RANGE(checkbtn), drawdata->legendoffy);
+    g_signal_connect(checkbtn,"value-changed",G_CALLBACK(range_changed), &drawdata->legendoffy);
+    gtk_box_pack_start(GTK_BOX(hbox), gtk_label_new("V"), FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), checkbtn, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
+
     hbox=gtk_hbox_new(FALSE,0);
     checkbtn=gtk_check_button_new_with_label("Plot cumulative average (");
     g_signal_connect(checkbtn, "toggled", G_CALLBACK(checkbtn_toggle), &drawdata->cumu);
