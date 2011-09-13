@@ -47,13 +47,14 @@ static float *cc=NULL;
 /**
    Transfer atmosphere or update atmosphere in GPU.
 */
-void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int isim){
+void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     if(parms->atm.evolve){
 	TO_IMPLEMENT;
 	//test whether screen changed. transfer if changed.
     }
     const int nps=parms->atm.nps;
     static int nx0=0,ny0=0;
+    static int iseed0=-1;
     if(!nx0){
 	if(parms->atm.nxm!=parms->atm.nx || parms->atm.nym!=parms->atm.ny){//user specified atmosphere size.
 	    long avail=gpu_get_mem();
@@ -79,8 +80,9 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int isim){
     }
     //The atm in GPU is the same as in CPU.
     if(nx0==parms->atm.nx && ny0==parms->atm.ny){
-	if(!cuatm){
+	if(!cuatm || iseed0!=iseed){
 	    gpu_atm2gpu(atm, nps);
+	    iseed0=iseed;
 	}
 	return;
     }
@@ -132,7 +134,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int isim){
 	float ly=-(parms->atm.nyn/2)*dx+yisim;
 	float rx=(parms->atm.nxn/2+1)*dx+xisim;//+1 to have margin for linear interpolation
 	float ry=(parms->atm.nyn/2+1)*dx+yisim;
-	int need=0;
+	int need=iseed0!=iseed;
 	if(isinf(cuatm->ox[ips])){
 	    need=1;//align middle
 	    cuatm->ox[ips]=(-parms->atm.nxm/2)*dx+xisim;
@@ -157,10 +159,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int isim){
 	    cuatm->ox[ips]=atm[ips]->ox+offx*dx;
 	    cuatm->oy[ips]=atm[ips]->oy+offy*dx;
 	    info("Copying layer %d at step %d\n", ips, isim);
-	    /*info("Need to copy layer %d: offx=%d, offy=%d\n", ips, offx, offy);
-	    info("ox=%g, oy=%g; lx=%g, ly=%g, rx=%g, ry=%g\n", 
-		 cuatm->ox[ips], cuatm->oy[ips], lx, ly, rx, ry);
-	    */
+	    info("Need to copy layer %d: offx=%d, offy=%d\n", ips, offx, offy);
 	    const int nxi=atm[ips]->nx;
 	    const int nyi=atm[ips]->ny;
 	    offx=offx%nxi; if(offx<0) offx+=nxi;
@@ -219,6 +218,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int isim){
     }
     free(pout);
     CUDA_SYNC_DEVICE;
+    iseed0=iseed;
 }
 /**
    Transfer atmospheric data to GPU.

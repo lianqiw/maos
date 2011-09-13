@@ -304,6 +304,7 @@ __global__ static void calc_ptt_do( float *cc,
     if(threadIdx.x<4){
 	ccb[threadIdx.x]=0.f;
     }
+    __syncthreads();
     float cci[4]={0.f,0.f,0.f,0.f};//for each thread
     int step=blockDim.x * gridDim.x; 
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
@@ -334,6 +335,7 @@ __global__ static void calc_ngsmod_do( float *cc,
     if(threadIdx.x<7){
 	ccb[threadIdx.x]=0.f;
     }
+    __syncthreads();
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	float tmp=phi[i]*amp[i];
 	cci[0]+=tmp;

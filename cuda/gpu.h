@@ -19,7 +19,7 @@ void gpu_info(void);
 int  gpu_init(int igpu);
 void gpu_cleanup(void);
 void gpu_atm2gpu(map_t **atm, int nps);
-void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int isim);
+void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim);
 void gpu_dm2gpu(struct cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg);
 void gpu_telws2gpu(dmat *telws);
 void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs);

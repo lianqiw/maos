@@ -88,7 +88,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		}
 #if USE_CUDA
 		if(parms->gpu.evl || parms->gpu.wfs){
-		    gpu_atm2gpu_new(simu->atm, parms, isim);//takes 0.4s for NFIRAOS.
+		    gpu_atm2gpu_new(simu->atm, parms, iseed, isim);//takes 0.4s for NFIRAOS.
 		}
 #endif
 	    }else{
