@@ -456,6 +456,9 @@ ARG_T * parse_args(int argc, char **argv){
     if(arg->nthread>NCPU2 || arg->nthread<=0){
 	arg->nthread=NCPU2;
     }
+#if USE_PTHREAD == 0
+    arg->nthread=1;
+#endif
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
     FILE *fptmp=fopen(fntmp,"w");
@@ -476,23 +479,10 @@ ARG_T * parse_args(int argc, char **argv){
 	warning("-p and -d are both specified, disable -d\n");
 	arg->detach=0;
     }
-    if(!arg->detach){//foreground task will start immediately.
-	arg->force=1;
-    }
 
-    if(!arg->dirout){
-	arg->dirout=strtime();
-    }
-    
     if(!arg->conf){ /*If -c is not specifid in path, will use default.conf*/
 	arg->conf=strdup("default.conf");
     }
-#if USE_CUDA 
-    use_cuda=gpu_init(arg->gpu);
-#else
-    use_cuda=0;
-#endif
-    info2("Main config file is %s\n",arg->conf);
     //Setup PATH and result directory so that the config_path is in the back of path
     char *config_path=find_config("maos");
 #if USE_STATIC && 0
@@ -531,15 +521,16 @@ ARG_T * parse_args(int argc, char **argv){
     addpath(bin_path);
     free(bin_path);
     free(config_path);
+
+    if(!arg->dirout){
+	arg->dirout=strtime();
+    }
     addpath(".");
     mymkdir("%s",arg->dirout);
-#if USE_PTHREAD == 0
-    arg->nthread=1;
-#endif
-    info2("Output folder is '%s' %d threads\n",arg->dirout, arg->nthread);
     if(chdir(arg->dirout)){
 	error("Unable to chdir to %s\n", arg->dirout);
     }
+
     return arg;
 }
 /**

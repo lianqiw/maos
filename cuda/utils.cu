@@ -46,7 +46,10 @@ size_t gpu_get_mem(void){
    Initialize GPU. Return 1 if success.
  */
 int gpu_init(int igpu){
-    if(igpu<0) return 0;
+    if(igpu<0) {
+	info2("CUDA is disabled by user.\n");
+	return 0;
+    }
     if(igpu==INT_MAX){//automatic
 	int ngpu=0;
 	DO(cudaGetDeviceCount(&ngpu));
@@ -59,7 +62,7 @@ int gpu_init(int igpu){
 	    cudaDeviceProp prop;
 	    cudaGetDeviceProperties(&prop, 0);
 	    if(prop.major==9999){
-		warning("The only device is in emulation mode. Won't use it\n");
+		warning2("The only device is in emulation mode. Won't use it\n");
 		igpu=-1;
 	    }else{
 		igpu=0;
@@ -72,7 +75,7 @@ int gpu_init(int igpu){
 	    prop.major=2;
 	    int ans=cudaChooseDevice(&igpu, &prop);
 	    if(ans==cudaErrorInvalidValue){
-		warning("cudaChooseDevice Failed. Will not use GPU computing.\n");
+		warning2("cudaChooseDevice Failed. Will not use GPU computing.\n");
 		igpu=-1;
 	    }
 	}
@@ -83,6 +86,7 @@ int gpu_init(int igpu){
 	int ans=cudaSetDevice(igpu);
 	switch(ans){
 	case cudaSuccess:{
+	    info2("Will use GPU %d for CUDA.\n", igpu);
 	    cudaDeviceProp prop;
 	    cudaGetDeviceProperties(&prop, igpu);
 	    NG1D=prop.multiProcessorCount*2;
@@ -102,18 +106,22 @@ int gpu_init(int igpu){
 		cudaStreamSynchronize(0);
 		exit(0);
 	    }
-	}return 1;
+	}
+	    return 1;
 	case cudaErrorInvalidDevice:
 	    error2("Invalid GPU device %d\n", igpu);
 	    _exit(1);
 	    break;
 	case cudaErrorSetOnActiveProcess:
 	    warning2("Error set on active process\n");
+	    info("DISPLAY=%s\n",getenv("DISPLAY"));
 	    break;
 	default:
 	    error2("Unknown error\n");
 	    _exit(1);
 	}
+    }else{
+	warning2("No usable GPU found for CUDA.\n");
     }
     gpu_print_mem("gpu init");
     return 0;

@@ -2040,6 +2040,7 @@ static void check_parms(const PARMS_T *parms){
    struct parms and check for possible errors. parms is kept constant after
    returned from setup_parms. */
 PARMS_T * setup_parms(ARG_T *arg){
+    info2("Main config file is %s\n",arg->conf);
     open_config(arg->conf,NULL,0);//main .conf file.
     open_config(arg->confcmd, NULL, 1);
     

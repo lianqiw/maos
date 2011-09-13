@@ -136,22 +136,34 @@ int main(int argc, char **argv){
     free(fn);
     char *scmd=argv2str(argc,argv);
     ARG_T* arg=parse_args(argc,argv);//does chdir
+
     if(arg->detach){
 	daemonize();
-	fprintf(stderr, "%s\n", scmd);
+    }else{
+	//foreground task will start immediately.
+	arg->force=1;
     }
-    
+    fprintf(stderr, "%s\n", scmd);
     info2("MAOS Version %s. Compiled on %s %s by %s ", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__);
-#ifdef __OPTIMIZE__
-    info2("with optimization.\n");
-#else
-    info2("without optimization\n");
-#endif
 #if USE_CUDA
-    info2("CUDA is enabled\n");
+    info2(",with CUDA ");
+#else
+    info2(",without CUDA ");
+#endif
+#ifdef __OPTIMIZE__
+    info2(",with optimization.\n");
+#else
+    info2(",without optimization\n");
 #endif
     info2("Source: %s\n", SRCDIR);
-    info2("Launched at %s in %s.\n",myasctime(),myhostname());
+    info2("Launched at %s in %s with %d threads\n",myasctime(),myhostname(),arg->nthread);
+    info2("Output folder is '%s'.\n",arg->dirout);
+
+#if USE_CUDA 
+    use_cuda=gpu_init(arg->gpu);
+#else
+    use_cuda=0;
+#endif
 
     //Launch the scheduler and report about our process
     scheduler_start(scmd,arg->nthread,!arg->force);
