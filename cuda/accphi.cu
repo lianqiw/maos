@@ -45,9 +45,186 @@ static float *cc=NULL;
 */
 
 /**
+   Transfer atmosphere or update atmosphere in GPU.
+*/
+void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int isim){
+    if(parms->atm.evolve){
+	TO_IMPLEMENT;
+	//test whether screen changed. transfer if changed.
+    }
+    const int nps=parms->atm.nps;
+    static int nx0=0,ny0=0;
+    if(!nx0){
+	if(parms->atm.nxm!=parms->atm.nx || parms->atm.nym!=parms->atm.ny){//user specified atmosphere size.
+	    long avail=gpu_get_mem();
+	    long nxa=avail/2/nps/sizeof(float);//we are able to host this amount.
+	    info("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
+	    if(nxa>parms->atm.nx*parms->atm.ny){//we can host all atmosphere.
+		info("We can host all layers in full.\n");
+		nx0=parms->atm.nx;
+		ny0=parms->atm.ny;
+	    }else if(nxa>parms->atm.nxm*parms->atm.nym){//we can not host all atmosphere.
+		nx0=(int)round(sqrt((double)nxa));
+		ny0=nxa/nx0;
+	    }else{
+		nx0=parms->atm.nxm;
+		ny0=parms->atm.nym;
+	    }
+	    nx0=parms->atm.nxm;
+	    ny0=parms->atm.nym;
+	    info("We will host %dx%d in GPU\n", nx0, ny0);
+	}else{
+	    nx0=ny0=parms->atm.nxm;
+	}
+    }
+    //The atm in GPU is the same as in CPU.
+    if(nx0==parms->atm.nx && ny0==parms->atm.ny){
+	if(!cuatm){
+	    gpu_atm2gpu(atm, nps);
+	}
+	return;
+    }
+    //The atm in GPU is smaller than in CPU.
+    if(!cuatm){//initialize the data array.
+	cuatm=(cumap_t*)calloc(1, sizeof(cumap_t));
+	cuatm->nlayer=nps;
+#if ATM_TEXTURE
+	cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
+	DO(cudaMalloc3DArray(&cuatm->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), 
+			     cudaArrayLayered));
+	texRefatm.addressMode[0] = cudaAddressModeWrap;
+	texRefatm.addressMode[1] = cudaAddressModeWrap;
+	texRefatm.filterMode     = cudaFilterModeLinear;
+	texRefatm.normalized     = true; 
+	DO(cudaBindTextureToArray(texRefatm, cuatm->ca, channelDesc));
+#else
+	DO(cudaMallocHost(&(cuatm->p), nps*sizeof(float*)));
+	for(int ips=0; ips<nps; ips++){
+	    DO(cudaMalloc(&(cuatm->p[ips]), nx0*ny0*sizeof(float)));
+	}
+#endif
+	cuatm->vx=new float[nps];
+	cuatm->vy=new float[nps]; 
+	cuatm->ht=new float[nps];
+	cuatm->ox=new float[nps];
+	cuatm->oy=new float[nps];
+	cuatm->dx=new float[nps];
+	cuatm->nx=new int[nps];
+	cuatm->ny=new int[nps];
+	for(int ips=0; ips<nps; ips++){
+	    cuatm->nx[ips]=nx0;
+	    cuatm->ny[ips]=ny0;
+	    cuatm->vx[ips]=atm[ips]->vx;
+	    cuatm->vy[ips]=atm[ips]->vy;
+	    cuatm->ht[ips]=atm[ips]->h;
+	    cuatm->dx[ips]=atm[ips]->dx;
+	    cuatm->ox[ips]=INFINITY;//place holder
+	    cuatm->oy[ips]=INFINITY;
+	}
+    }
+    const double dtisim=isim*parms->sim.dt;
+    float (*pout)[nx0]=NULL;
+    for(int ips=0; ips<nps; ips++){
+	float dx=parms->atm.dx;
+	float xisim=-cuatm->vx[ips]*dtisim;
+	float yisim=-cuatm->vy[ips]*dtisim;
+	float lx=-(parms->atm.nxn/2)*dx+xisim;//not -1 to have margin for linear interpolation
+	float ly=-(parms->atm.nyn/2)*dx+yisim;
+	float rx=(parms->atm.nxn/2+1)*dx+xisim;//+1 to have margin for linear interpolation
+	float ry=(parms->atm.nyn/2+1)*dx+yisim;
+	int need=0;
+	if(isinf(cuatm->ox[ips])){
+	    need=1;//align middle
+	    cuatm->ox[ips]=(-parms->atm.nxm/2)*dx+xisim;
+	    cuatm->oy[ips]=(-parms->atm.nym/2)*dx+yisim;
+	}else if(cuatm->ox[ips] > lx){
+	    need=1;//align right
+	    cuatm->ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx+xisim;
+	}else if(cuatm->ox[ips]+cuatm->nx[ips]*cuatm->dx[ips] <rx){
+	    need=1;//align left
+	    cuatm->ox[ips]=(-parms->atm.nxn/2)*dx+xisim;
+	}
+	if(cuatm->oy[ips] > ly){
+	    need=1;
+	    cuatm->oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx+yisim;
+	}else if(cuatm->oy[ips]+cuatm->ny[ips]*cuatm->dx[ips] <ry){
+	    need=1;
+	    cuatm->oy[ips]=(-parms->atm.nyn/2)*dx+yisim;
+	}
+	if(need){
+	    int offx=(int)round((cuatm->ox[ips]-atm[ips]->ox)/dx);
+	    int offy=(int)round((cuatm->oy[ips]-atm[ips]->oy)/dx);
+	    cuatm->ox[ips]=atm[ips]->ox+offx*dx;
+	    cuatm->oy[ips]=atm[ips]->oy+offy*dx;
+	    info("Copying layer %d at step %d\n", ips, isim);
+	    /*info("Need to copy layer %d: offx=%d, offy=%d\n", ips, offx, offy);
+	    info("ox=%g, oy=%g; lx=%g, ly=%g, rx=%g, ry=%g\n", 
+		 cuatm->ox[ips], cuatm->oy[ips], lx, ly, rx, ry);
+	    */
+	    const int nxi=atm[ips]->nx;
+	    const int nyi=atm[ips]->ny;
+	    offx=offx%nxi; if(offx<0) offx+=nxi;
+	    offy=offy%nyi; if(offy<0) offy+=nyi;
+
+	    int mx, my;
+	    if(offx+nx0>nxi){
+		mx=nxi-offx;
+	    }else{
+		mx=nx0;
+	    }
+	    if(offy+ny0>nyi){
+		my=nyi-offy;
+	    }else{
+		my=ny0;
+	    }
+	    if(!pout) {
+		pout=(float(*)[nx0])malloc(sizeof(float)*nx0*ny0);
+	    }
+	    
+	    PDMAT(atm[ips], pin);
+	    for(int iy=0; iy<my; iy++){
+		for(int ix=0; ix<mx; ix++){
+		    pout[iy][ix]=(float)pin[iy+offy][ix+offx];
+		}
+		for(int ix=mx; ix<nx0; ix++){
+		    pout[iy][ix]=(float)pin[iy+offy][ix+offx-nxi];
+		}
+	    }
+	    for(int iy=my; iy<ny0; iy++){
+		for(int ix=0; ix<mx; ix++){
+		    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx];
+		}
+		for(int ix=mx; ix<nx0; ix++){
+		    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
+		}
+	    }
+#if ATM_TEXTURE
+	    /*The extent field defines the dimensions of the transferred area in
+	      elements. If a CUDA array is participating in the copy, the extent
+	      is defined in terms of that array's elements. If no CUDA array is
+	      participating in the copy then the extents are defined in elements
+	      of unsigned char.*/
+	    struct cudaMemcpy3DParms par={0};
+	    par.srcPos = make_cudaPos(0,0,0);
+	    par.srcPtr = make_cudaPitchedPtr((float*)pout, nx0*sizeof(float), nx0, ny0);
+	    par.dstPos = make_cudaPos(0,0,ips);
+	    par.dstArray=cuatm->ca;
+	    par.extent = make_cudaExtent(nx0, ny0, 1);
+	    par.kind   = cudaMemcpyHostToDevice;
+	    DO(cudaMemcpy3D(&par));
+#else
+	    DO(cudaMemcpy(cuatm->p[ips], (float*)pout, nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
+#endif
+	}
+    }
+    free(pout);
+    CUDA_SYNC_DEVICE;
+}
+/**
    Transfer atmospheric data to GPU.
 */
 void gpu_atm2gpu(map_t **atm, int nps){
+    gpu_print_mem("atm in");
     TIC;tic;
 #if ATM_TEXTURE
     gpu_map2dev(&cuatm, atm, nps, 1);
@@ -61,6 +238,7 @@ void gpu_atm2gpu(map_t **atm, int nps){
     gpu_map2dev(&cuatm, atm, nps, 2);
 #endif
     toc2("atm to gpu");//0.4 second.
+    gpu_print_mem("atm out");
 }
 /**
    Copy DM commands to GPU.

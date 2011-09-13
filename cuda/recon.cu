@@ -248,6 +248,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     }
     STREAM_DONE(stream);
     cublasDestroy(handle);
+    gpu_print_mem("recon init");
 }
 
 void cumuv(curcell **out, cumuv_t *A, const curcell *in, float alpha){

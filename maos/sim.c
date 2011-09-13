@@ -69,12 +69,11 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 	}
-#if USE_CUDA
+	/*#if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    gpu_atm2gpu(simu->atm, parms->atm.nps);//takes 0.4s for NFIRAOS.
 	}
-
-#endif
+	#endif*/
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
 	for(int isim=simstart; isim<simend; isim++){
@@ -87,6 +86,11 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		if(parms->atm.evolve){
 		    evolve_screen(simu);
 		}
+#if USE_CUDA
+		if(parms->gpu.evl || parms->gpu.wfs){
+		    gpu_atm2gpu_new(simu->atm, parms, isim);//takes 0.4s for NFIRAOS.
+		}
+#endif
 	    }else{
 		genscreen(simu);
 		//re-seed the atmosphere in case atm is loaded from shm/file

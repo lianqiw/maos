@@ -47,8 +47,12 @@ typedef struct ATM_CFG_T{
     int wdrand;   /**<randomize wind direction*/
     int iground;  /**<index into the ground layer*/
     int *ipsr;    /**<corresponding reconstruction layer*/
-    int nx;       /**<turbulence screen size alog x*/
+    int nx;       /**<turbulence screen size along x*/
     int ny;       /**<turbulence screen size along y*/
+    int nxm;      /**<minimum turbulence screen size along x for fft*/
+    int nym;      /**<minimum turbulence screen size along y for fft*/
+    int nxn;      /**<minimum turbulence screen size along to cover meta pupil*/
+    int nyn;      /**<minimum turbulence screen size along to cover meta pupil*/
     int fractal;  /**<1: Use fractal method to generate atmosphere screen.*/
     int evolve;   /**<evolve the atm in additional to frozen flow. developed for
 		     fractal since it does not wrap.*/

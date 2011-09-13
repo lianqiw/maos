@@ -1306,12 +1306,19 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
 	if(nyout[ips]>Nmax) Nmax=nyout[ips];
     }
+    //Minimum screen size required. Used to transport atm to GPU.
+    parms->atm.nxn=Nmax;
+    parms->atm.nyn=Nmax;
+    parms->atm.nxm=nextpow2(Nmax);
+    parms->atm.nym=parms->atm.nxm;
     if(fabs(parms->atm.size[0])<EPS ||fabs(parms->atm.size[1])<EPS){
-	parms->atm.nx=nextpow2(Nmax);
-	parms->atm.ny=parms->atm.nx;
+	parms->atm.nx=parms->atm.nxm;
+	parms->atm.ny=parms->atm.nym;
     }else{
 	parms->atm.nx=2*(int)round(0.5*parms->atm.size[0]/parms->atm.dx);
 	parms->atm.ny=2*(int)round(0.5*parms->atm.size[1]/parms->atm.dx);
+	if(parms->atm.nx<parms->atm.nxm) parms->atm.nx=parms->atm.nxm;
+	if(parms->atm.ny<parms->atm.nym) parms->atm.ny=parms->atm.nym;
     }
     if(parms->atm.fractal){//must be square and 1+power of 2
 	int nn=parms->atm.nx>parms->atm.ny?parms->atm.nx:parms->atm.ny;

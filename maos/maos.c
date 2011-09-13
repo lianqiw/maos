@@ -147,6 +147,9 @@ int main(int argc, char **argv){
 #else
     info2("without optimization\n");
 #endif
+#if USE_CUDA
+    info2("CUDA is enabled\n");
+#endif
     info2("Source: %s\n", SRCDIR);
     info2("Launched at %s in %s.\n",myasctime(),myhostname());
 

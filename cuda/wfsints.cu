@@ -337,8 +337,8 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	    const double oy=powfs[ipowfs].llt->pts->origy[0];
 	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd, nlx, nlx, ox, oy, dx, ttx, tty);
 	}//if upt
+	ctoc("llt opd");
     }//if has llt
-    ctoc("llt opd");
     // Now begin physical optics 
     int rotpsfotf=(hasllt && parms->powfs[ipowfs].radrot);
     CUDA_SYNC_STREAM;

@@ -26,7 +26,22 @@ void gpu_info(){
 	 prop.regsPerBlock,
 	 prop.warpSize);
 }
-
+/**
+   Print memory consumption.
+*/
+void gpu_print_mem(const char *msg){
+    size_t fr, tot;
+    DO(cudaMemGetInfo(&fr, &tot));
+    info2("GPU mem used %5lu MiB (%s)\n",(tot-fr)/1024/1024, msg);
+}
+/**
+   Get available memory.
+*/
+size_t gpu_get_mem(void){
+    size_t fr, tot;
+    DO(cudaMemGetInfo(&fr, &tot));
+    return fr;
+}
 /**
    Initialize GPU. Return 1 if success.
  */
@@ -100,6 +115,7 @@ int gpu_init(int igpu){
 	    _exit(1);
 	}
     }
+    gpu_print_mem("gpu init");
     return 0;
 }
 /**

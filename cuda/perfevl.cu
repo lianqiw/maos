@@ -75,6 +75,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 	    }
 	}//for iwvl
     }
+    gpu_print_mem("perf init");
 }
 /**
    Add surface to surfevl;
