@@ -63,6 +63,7 @@ void free_parms(PARMS_T *parms){
     free(parms->evl.psfsize);
     free(parms->evl.misreg);
     free(parms->evl.psfpttr);
+    free(parms->evl.psfngsr);
 
     free(parms->fit.thetax);
     free(parms->fit.thetay);
@@ -586,14 +587,12 @@ static void readcfg_evl(PARMS_T *parms){
     READ_INT(evl.psfol);
     READ_INT(evl.psfisim);
     readcfg_intarr_nmax(&parms->evl.psfpttr, parms->evl.nevl, "evl.psfpttr");
+    readcfg_intarr_nmax(&parms->evl.psfngsr, parms->evl.nevl, "evl.psfngsr");
     READ_INT(evl.psfmean); 
     READ_INT(evl.psfhist); 
     READ_INT(evl.opdcov);//Science OPD covariance.
     READ_INT(evl.tomo);
     READ_INT(evl.moao);
-    for(ievl=0; ievl<parms->evl.nevl; ievl++){
-	parms->evl.npsf+=(parms->evl.psf[ievl]>0);
-    }
     //it is never good to parallelize the evl ray tracing because it is already so fast
     parms->evl.nthread=1;//parms->sim.nthread;
     parms->evl.nmod=(parms->evl.rmax+1)*(parms->evl.rmax+2)/2;
@@ -685,7 +684,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_DBL(sim.lpfocus);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
-    
+
     parms->sim.napdm=readcfg_dblarr(&parms->sim.apdm,"sim.apdm");
     parms->sim.napngs=readcfg_dblarr(&parms->sim.apngs,"sim.apngs");
     parms->sim.napupt=readcfg_dblarr(&parms->sim.apupt,"sim.apupt");
@@ -739,6 +738,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.wfsalias);
     READ_INT(sim.idealwfs);
     READ_INT(sim.idealevl);
+    READ_INT(sim.parallel);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -793,7 +793,6 @@ static void readcfg_dbg(PARMS_T *parms){
     shm_keep_unused=parms->dbg.keepshm;
 #endif
     READ_INT(dbg.tomo_hxw);
-    READ_INT(dbg.parallel);
     READ_INT(dbg.splitlrt);
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
@@ -1038,6 +1037,16 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning("powfs %d: in open loop mode, only dtrat=1 is supported. Changed\n", ipowfs);
 	    parms->powfs[ipowfs].dtrat=1;
 	}
+	if(parms->sim.wfsalias){
+	    if(parms->powfs[ipowfs].noisy){
+		warning("powfs%d: wfsalias is set. make it noise free\n", ipowfs);
+		parms->powfs[ipowfs].noisy=0;
+	    }
+	    if(parms->powfs[ipowfs].phystep>=parms->sim.start || parms->powfs[ipowfs].phystep<parms->sim.end){
+		warning("powfs%d: wfsalias is set. make it geometric wfs since the mtched fitler won't work well\n", ipowfs);
+		parms->powfs[ipowfs].phystep=-1;
+	    }
+	}
     }
     /*link wfs with powfs*/
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1125,6 +1134,47 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].lo && parms->powfs[ipowfs].gtype_sim==0)
 	    warning("Low order POWFS %d is using gtilt in simulation. "
 		    "This is not recommended\n",ipowfs);
+    }
+    parms->sim.ndtrat=0;
+    parms->sim.dtrats=calloc(parms->npowfs, sizeof(int));
+    parms->sim.dtrats_psol=calloc(parms->npowfs, sizeof(int));
+    parms->sim.idtrat_hi=-1;
+    parms->sim.idtrat_lo=-1;
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	int idtrat;
+	for(idtrat=0; idtrat<parms->sim.ndtrat; idtrat++){
+	    if(parms->powfs[ipowfs].dtrat==parms->sim.dtrats[idtrat]){
+		parms->powfs[ipowfs].idtrat=idtrat;
+		break;
+	    }
+	}
+	if(idtrat==parms->sim.ndtrat){
+	    parms->powfs[ipowfs].idtrat=idtrat;
+	    parms->sim.dtrats[idtrat]=parms->powfs[ipowfs].dtrat;
+	    parms->sim.ndtrat++;
+	}
+	if(parms->powfs[ipowfs].psol){
+	    parms->sim.dtrats_psol[idtrat]=1;
+	}
+	if(!parms->powfs[ipowfs].lo){//hi wfs
+	    if(parms->sim.idtrat_hi==-1){
+		parms->sim.idtrat_hi=parms->powfs[ipowfs].idtrat;
+	    }else if(parms->sim.idtrat_hi>-1){
+		if(parms->sim.idtrat_hi!=parms->powfs[ipowfs].idtrat){
+		    warning("High order WFS has multiple dtrats\n");
+		    parms->sim.idtrat_hi==-2;
+		}
+	    }
+	}else{
+	    if(parms->sim.idtrat_lo==-1){
+		parms->sim.idtrat_lo=parms->powfs[ipowfs].idtrat;
+	    }else if(parms->sim.idtrat_lo>-1){
+		if(parms->sim.idtrat_lo!=parms->powfs[ipowfs].idtrat){
+		    warning("High order WFS has multiple dtrats\n");
+		    parms->sim.idtrat_lo==-2;
+		}
+	    }
+	}
     }
 }
 /**
@@ -1724,7 +1774,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }
     if(NCPU==1 || parms->sim.closeloop==0 || parms->evl.tomo || parms->sim.nthread==1){
 	//disable parallelizing the big loop.
-	parms->dbg.parallel=0;
+	parms->sim.parallel=0;
     }
     if(parms->evl.psfmean || parms->evl.psfhist){
 	int fnd=sum_intarr(parms->evl.nevl, parms->evl.psf);
@@ -1734,9 +1784,21 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    info2("Output PSF for %d directions\n", fnd);
 	}
     }
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	parms->evl.npsf+=(parms->evl.psf[ievl]>0);
+	if(!parms->recon.split){
+	    parms->evl.psfngsr[ievl]=0;
+	}
+	if(!isinf(parms->evl.hs[ievl]) && parms->evl.psfngsr[ievl]){
+	    parms->evl.psfngsr[ievl]=0;
+	    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
+		warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
+	    }
+	}
+    }
 }
 
-/**
+    /**
    Selectively print out parameters for easy diagnose of possible mistakes.
 */
 static void print_parms(const PARMS_T *parms){

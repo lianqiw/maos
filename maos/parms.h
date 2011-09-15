@@ -213,6 +213,7 @@ typedef struct POWFS_CFG_T{
     int pistatstc;  /**<1: shift to center using fft method. 0: use geometric gradients.*/
     int psfout;     /**<output time history of low order wfs PSF. never do this for LGS.*/
     int dtrat;      /**<ratio of sample period over fast loop (LGS)*/
+    int idtrat;     /**<Index of dtrat into parms->sim.dtrats*/
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
@@ -286,19 +287,21 @@ typedef struct EVL_CFG_T{
     int *psf;       /**<1: participate in psf evaluation.*/
     int *psfr;      /**<1: participate in psf reconstruction telemetry*/
     int npsf;       /**<how many directions we compute psf for*/
-    int psfol;      /**<compute Open loop PSF.
-		       - 1: on axis only.
-		       - 2: all directions and average them.*/
     int rmax;       /**<max radial mode for performance evaluation. 
 		       - 0: piston only
 		       - 1: piston/tip/tilt.*/
     int nmod;       /**<Number of modes. derived from rmax. (nmax+1)*(nmax+2)/2*/
 
+    int psfol;      /**<compute Open loop PSF.
+		       - 1: on axis only.
+		       - 2: all directions and average them.*/
     int psfhist;    /**<output history of the psf (a lot of storage)*/
-    int *psfpttr;   /**<remove p/t/t from psf. 1 number for each evl.*/
     int psfmean;    /**<output time averaged psf*/
     int opdcov;     /**<save covairance of science OPD ,every this time step,
 		       for directions where evl.psf is 1*/
+    int *psfpttr;   /**<remove p/t/t from psf. 1 number for each evl.*/
+    int *psfngsr;   /**<remove ngs modes from psf.*/
+
 
     int psfisim;    /**<time step to start psfmean.*/
     int *psfsize;    /**<save this number of pixels of the center of the psf. 1
@@ -466,6 +469,12 @@ typedef struct SIM_CFG_T{
     int dmttcast;    /**<derived: cast tip/tilt from DM commands to study saturation or
 			histogram and then add back*/
     int dmclip;      /**<drived: Need to clip actuators*/
+    int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
+    int ndtrat;      /**<Total number of dtras for all wfs*/
+    int *dtrats;     /**<Value of reach dtrat. derived from powfs.dtrat*/
+    int *dtrats_psol;/**<Do we need PSOL grad for this dtrat*/
+    int idtrat_hi;   /**<dtrat of high order wfs. 0 if multiple dtrat is found for hi wfs.*/
+    int idtrat_lo;   /**<dtrat of low order wfs. 0 if multiple dtrat is found for lo wfs.*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
@@ -509,7 +518,6 @@ typedef struct DBG_CFG_T{
     int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
     int ntomo_maxit; /**<Number of elements in tomo_maxit*/
     int tomo_hxw;    /**<1: Force use hxw always instead of ray tracing from xloc to ploc.*/
-    int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
     int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
     int ecovxx;      /**<save the xx used to calculate ecov in psfr.*/
     int useopdr;     /**<use opdr in psf reconstruction*/

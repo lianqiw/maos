@@ -801,6 +801,7 @@ int main(int argc, char *argv[])
     gtk_widget_show(image_finished);
     icon_finished=gtk_image_get_pixbuf(GTK_IMAGE(image_finished));
     */
+    gtk_rc_parse_string(rc_string_widget);
     gtk_rc_parse_string(rc_string_treeview);
     gtk_rc_parse_string(rc_string_progress);
     gtk_rc_parse_string(rc_string_entry);

@@ -28,7 +28,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain);
 
 void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 		    const RECON_T *recon, const APER_T *aper,
-		    const dcell *M, int ievl, double gain);
+		    const double *mod, int ievl, double alpha);
 
 void setup_ngsmod(const PARMS_T *parms, RECON_T *recon, 
 		  APER_T *aper, POWFS_T* powfs);

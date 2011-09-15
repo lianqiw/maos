@@ -37,7 +37,7 @@ typedef struct{
     cuwloc_t *powfs;
     cusp *GS0t;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
-    float  *gradacc;    /**<For accumulating grads*/
+    curmat *gradacc;    /**<For accumulating grads*/
     curmat *ints;       /**<For accumulating subaperture image.*/
     float  *neasim;     /**<The noise equivalent angles for each grad.*/
     float  *amp;        /**<Amplitude map*/

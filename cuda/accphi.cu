@@ -390,7 +390,7 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 #define FUN prop_linear_wrap
 #define KARG cuatm->p[ips], cuatm->nx[ips], cuatm->ny[ips], COMM
 #endif
-	FUN <<<nloc/256, 256, 0, stream>>> (phiout, KARG);
+	FUN <<<DIM(nloc,256), 0, stream>>> (phiout, KARG);
 #undef KARG
 #undef FUN
 #undef COMM
@@ -431,9 +431,9 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 #define COMM loc,nloc,scale*du,scale*du, dispx, dispy, dmalpha
 #define KARG cudm->p[idm],cudm->nx[idm],cudm->ny[idm], COMM
 	if (cubic){//128 is a good number for cubic.
-	    prop_cubic <<<128, 256, 0, stream>>>(phiout, KARG, cc);
+	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cc);
 	}else{
-	    prop_linear <<<nloc/256, 256, 0, stream>>>(phiout, KARG);
+	    prop_linear<<<DIM(nloc,256), 0, stream>>>(phiout, KARG);
 	}
 #undef KARG
 #undef COMM

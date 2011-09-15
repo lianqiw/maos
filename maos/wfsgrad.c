@@ -32,7 +32,6 @@
 static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
-    RECON_T *recon=simu->recon;
     const int ipowfs=parms->wfs[iwfs].powfs;
     const double hs=parms->powfs[ipowfs].hs;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];

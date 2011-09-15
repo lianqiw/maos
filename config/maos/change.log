@@ -21,3 +21,5 @@ sim.fitonly   ==> sim.idealfit
 sim.wfsideal  ==> sim.idealwfs
 sim.evlideal  ==> sim.idealevl
 dbg.clemp_all ==> (removed)
+dbg.parallel  ==> sim.parallel
+	

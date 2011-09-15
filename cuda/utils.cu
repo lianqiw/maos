@@ -257,7 +257,7 @@ void cuspmul(float *y, cusp *A, float *x, float alpha,
 #endif
 	     ){
 #if MYSPARSE ==1
-    cuspmul_do<<<A->nx/256, 256, 0, stream>>>(y,A,x,alpha);
+    cuspmul_do<<<DIM(A->nx, 256), 0, stream>>>(y,A,x,alpha);
 #else
     int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_TRANSPOSE, 
 			      A->ny, A->nx, alpha, cuspdesc,
@@ -381,7 +381,7 @@ void gpu_calc_ptt(double *rmsout, double *coeffout,
         //sum with 16 blocks, each with 256 threads.
     float *cc;
     cudaCalloc(cc, 4*sizeof(float), stream);
-    calc_ptt_do<<<16, 256, 0, stream>>>(cc, loc, nloc, phi, amp);
+    calc_ptt_do<<<DIM(nloc, 256), 0, stream>>>(cc, loc, nloc, phi, amp);
     CUDA_SYNC_STREAM;
     float ccb[4];
     cudaMemcpy(ccb, cc, 4*sizeof(float), cudaMemcpyDefault);
@@ -413,9 +413,9 @@ void gpu_calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     double tot=0;
     cudaCalloc(cc, 7*sizeof(float), stream);
     if(nmod==2){//single DM.
-	calc_ptt_do<<<16,256,0,stream>>>(cc, loc, nloc, phi, amp);
+	calc_ptt_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
     }else if(nmod==5){//AHST mode
-	calc_ngsmod_do<<<16,256,0,stream>>>(cc, loc, nloc, phi, amp);
+	calc_ngsmod_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
     }else{
 	TO_IMPLEMENT;
     }

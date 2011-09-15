@@ -51,7 +51,6 @@
 static double *opdzlim=NULL;
 static void perfevl_ideal_correction(SIM_T *simu, dmat *iopdevl, int ievl, double alpha){
     const PARMS_T *parms=simu->parms;
-    RECON_T *recon=simu->recon;
     const APER_T *aper=simu->aper;
     const double hs = parms->evl.hs[ievl];
   
@@ -73,6 +72,39 @@ static void perfevl_ideal_correction(SIM_T *simu, dmat *iopdevl, int ievl, doubl
 	}
     }
 }
+static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
+			  dcell *evlpsfmean, cellarr** evlpsfhist,
+			  dmat *iopdevl, int ievl){
+    /* the OPD after this time will be tilt removed. Don't use for
+       performance evaluation. */
+   
+	    
+    ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
+			 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+    int nwvl=parms->evl.nwvl;
+    if(parms->evl.psfmean){
+	PDCELL(evlpsfmean, pevlpsfmean);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    cabs22d(&pevlpsfmean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
+	}
+    }
+    if(parms->evl.psfhist){
+	cellarr_ccell(evlpsfhist[ievl], psf2s);
+    }
+    if(parms->plot.run){
+	dmat *psftemp=NULL;
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+	    dcwlog10(psftemp);
+	    double xylim[4]={-12,12,-12,12};
+	    ddraw("CL PSF", psftemp, xylim, opdzlim, 
+		  "Science Closed Loop PSF", 
+		  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl[iwvl]*1e6);
+	    dfree(psftemp);
+	}
+    }
+    ccellfree(psf2s);
+}
 /**
    Performance evaluation for each direction in parallel mode.  */
 void perfevl_ievl(thread_t *info){
@@ -89,7 +121,7 @@ void perfevl_ievl(thread_t *info){
     const int imoao=parms->evl.moao;
     const double dt=simu->dt;
     const int nthread=parms->evl.nthread;
-    const int do_psf=(parms->evl.psfmean || parms->evl.psfhist) && isim>=parms->evl.psfisim;
+    const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov) && isim>=parms->evl.psfisim && parms->evl.psf[ievl];
     const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
     dmat *iopdevl=dnew(aper->locs->nloc,1);
     TIM(0);
@@ -152,9 +184,11 @@ void perfevl_ievl(thread_t *info){
 			     ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
 	//Compute on axis OL psf.
 	dmat *opdevlcopy=NULL;
-	dcp(&opdevlcopy,iopdevl);
 	if(parms->evl.psfpttr[ievl]){
+	    dcp(&opdevlcopy,iopdevl);
 	    loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
+	}else{
+	    opdevlcopy=dref(iopdevl);
 	}
 	ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
 			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
@@ -261,48 +295,28 @@ void perfevl_ievl(thread_t *info){
 			 aper->mod,aper->amp->p,iopdevl->p);
 	}
     }
-    if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim){
-	/** opdcov does not have p/t/t removed. do it in postproc is necessary*/
-	if(parms->evl.opdcov){
-	    dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
-	}//opdcov
-	if(do_psf){//Evaluate closed loop PSF.	
-	    /* the OPD after this time will be tilt removed. Don't use for
-	   performance evaluation. */
-	    
-	    if(parms->evl.psfpttr[ievl]){
-		if(isim==parms->evl.psfisim && ievl==0){
-		    warning("Removing piston/tip/tilt from PSF.\n");
+    if(do_psf_cov){
+	if(parms->evl.psfngsr[ievl]!=0){
+	    /* even if psfpttr=1, referencing is ok.  Change to copy if
+	       incompatible in the future.*/
+	    simu->evlopd->p[ievl]=dref(iopdevl);
+	    // dcp(&simu->evlopd->p[ievl], iopdevl);
+	}
+	if(parms->evl.psfngsr[ievl]!=2){//ngsr==2 means only want ngsr.
+	    /** opdcov does not have p/t/t removed. do it in postproc is necessary*/
+	    if(parms->evl.opdcov){
+		dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
+	    }//opdcov
+	    if(parms->evl.psfmean || parms->evl.psfhist){//Evaluate closed loop PSF.	
+		if(parms->evl.psfpttr[ievl]){
+		    if(isim==parms->evl.psfisim && ievl==0){
+			warning("Removing piston/tip/tilt from PSF.\n");
+		    }
+		    loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
 		}
-		loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
-	    }
-	    
-	    ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
-				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
-	    int nwvl=parms->evl.nwvl;
-	    if(parms->evl.psfmean){
-		PDCELL(simu->evlpsfmean, pevlpsfmean);
-		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    cabs22d(&pevlpsfmean[ievl][iwvl], 1, psf2s->p[iwvl], 1);
-		}
-	    }
-	    if(parms->evl.psfhist){
-		cellarr_ccell(simu->save->evlpsfhist[ievl], psf2s);
-	    }
-	    if(parms->plot.run){
-		dmat *psftemp=NULL;
-		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-		    dcwlog10(psftemp);
-		    double xylim[4]={-12,12,-12,12};
-		    ddraw("CL PSF", psftemp, xylim, opdzlim, 
-			  "Science Closed Loop PSF", 
-			  "x", "y", "CL%2d PSF %.2f", ievl, parms->evl.wvl[iwvl]*1e6);
-		    dfree(psftemp);
-		}
-	    }
-	    ccellfree(psf2s);
-	}//do_psf
+		perfevl_psfcl(parms, aper, simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
+	    }//do_psf
+	}
     }
     TIM(5);
  end:
@@ -383,6 +397,38 @@ static void perfevl_mean(SIM_T *simu){
 		calc_cachedm(simu);
 		tot-=ngs; ngs=0; tt=0;
 	    }
+	    int do_psf=(parms->evl.psfmean || parms->evl.psfhist);
+	    if(isim>=parms->evl.psfisim && (do_psf || parms->evl.opdcov)){
+#if USE_CUDA
+		if(use_cuda){
+		    gpu_perfevl_ngsr(simu, pcleNGSm);
+		}else{
+#endif
+		    const APER_T *aper=simu->aper;
+		    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+			if(!parms->evl.psf[ievl] || !parms->evl.psfngsr[ievl]) continue;
+			dmat *iopdevl=simu->evlopd->p[ievl];
+			if(!iopdevl) continue;
+			ngsmod2science(iopdevl, parms, recon, aper, pcleNGSm, ievl, -1);
+			if(parms->evl.opdcov){
+			    dmm(&simu->evlopdcov_ngsr->p[ievl], iopdevl, iopdevl, "nt", 1);
+			}
+			if(do_psf){
+			    if(parms->evl.psfpttr[ievl]){
+				/*we cannot use clmp because the removed ngsmod
+				  has tip/tilt component*/
+				double ptt[3];
+				loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
+				loc_remove_ptt(iopdevl->p, ptt, aper->locs);
+			    }
+			    perfevl_psfcl(parms, aper, simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
+			}
+			dfree(simu->evlopd->p[ievl]);
+		    }
+#if USE_CUDA
+		}
+#endif
+	    }//ideal ngs
 	    simu->clem->p[isim*3]=tot-ngs; //lgs mode
 	    simu->clem->p[isim*3+1]=tt;    //tt mode
 	    simu->clem->p[isim*3+2]=ngs;   //ngs mod
@@ -432,7 +478,6 @@ static void perfevl_mean(SIM_T *simu){
 static void perfevl_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
-    const int seed=simu->seed;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 	info2("Output PSF\n");
 	if(simu->evlpsfmean){
@@ -441,8 +486,16 @@ static void perfevl_save(SIM_T *simu){
 	    dcelladd(&psfmean, 0, simu->evlpsfmean, scale);
 	    PDCELL(psfmean, pcl);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if(!simu->save->evlpsfmean[ievl]) continue;
 		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		    cellarr_dmat(simu->save->evlpsfmean[ievl], pcl[ievl][iwvl]);
+		}
+	    }
+	    dcelladd(&psfmean, 0, simu->evlpsfmean_ngsr, scale);
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if(!simu->save->evlpsfmean_ngsr[ievl]) continue;
+		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		    cellarr_dmat(simu->save->evlpsfmean_ngsr[ievl], pcl[ievl][iwvl]);
 		}
 	    }
 	    dcellfree(psfmean);
@@ -461,15 +514,18 @@ static void perfevl_save(SIM_T *simu){
 	}
     }
     if(parms->evl.opdcov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdcov)){
-	char strht[24];
 	long nstep=isim+1-parms->evl.psfisim;
 	double scale=1./nstep;
 	dmat *covmean=NULL;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(simu->evlopdcov->p[ievl]){
-		dadd(&covmean, 0, simu->evlopdcov->p[ievl], scale);
-		cellarr_dmat(simu->save->evlopdcov[ievl], covmean);
-	    }
+	    if(!simu->evlopdcov->p[ievl]) continue;
+	    dadd(&covmean, 0, simu->evlopdcov->p[ievl], scale);
+	    cellarr_dmat(simu->save->evlopdcov[ievl], covmean);
+	}
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    if(!simu->evlopdcov_ngsr->p[ievl]) continue;
+	    dadd(&covmean, 0, simu->evlopdcov_ngsr->p[ievl], scale);
+	    cellarr_dmat(simu->save->evlopdcov_ngsr[ievl], covmean);
 	}
 	dfree(covmean);
     }

@@ -121,7 +121,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		}
 #endif
 	    }
-	    if(parms->dbg.parallel){
+	    if(parms->sim.parallel){
 		/*
 		  We do the big loop in parallel to make better use the
 		  CPUs. Notice that the reconstructor is working on grad from
@@ -190,7 +190,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		print_progress(simu);
 #if defined(__linux__) 
 		if(!use_cuda){
-		    if(parms->dbg.parallel){
+		    if(parms->sim.parallel){
 			info2("CPU Usage: %.2f\n", cpu_all);
 		    }else{
 			info2("CPU Usage: WFS:%.2f Recon:%.2f CACHE: %.2f EVAL:%.2f Mean:%.2f\n",

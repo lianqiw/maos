@@ -3,6 +3,7 @@
 
 #include "utils.h"
 #include "types.h"
+#include "kernel.h"
 cuspcell *cuspcellnew(int nx, int ny);
 curcell *curcellnew(int nx, int ny);
 curcell *curcellnew2(const curcell *in);
@@ -43,11 +44,10 @@ void curinn2(float *restrict res, const curmat *a, const curmat *b, cudaStream_t
 void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream);
 void cursum2(float *restrict, const curmat *a, cudaStream_t stream);
 
-__global__ void addptt_do(float *restrict opd, float (*restrict loc)[2], int n, float tx, float ty);
 /**
    Add tip/tilt to OPD
 */
-inline void curaddptt(curmat *opd, float (*loc)[2], float tx, float ty, cudaStream_t stream){
-    addptt_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>(opd->p, loc, opd->nx*opd->ny, tx, ty);
+inline static void curaddptt(curmat *opd, float (*loc)[2], float pis, float tx, float ty, cudaStream_t stream){
+    add_ptt_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>(opd->p, loc, opd->nx*opd->ny, pis, tx, ty);
 }
 #endif

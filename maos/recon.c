@@ -48,8 +48,9 @@ void tomofit(SIM_T *simu){
     int hi_output=(!parms->sim.closeloop || parms->sim.idealfit || (isim+1)%simu->dtrat_hi==0);
     int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
     dcell *dmpsol[2];//Hi and Lo
-    /* Question: Why not use simu->dmpsol?
-     */
+    /*
+      todo: The following need to be revised to use dmpsol, which is averaged over dtrat. 
+    */
     if(parms->sim.fuseint){
 	dmpsol[0]=dmpsol[1]=simu->dmint[parms->dbg.psol?0:1];
     }else{

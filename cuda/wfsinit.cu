@@ -93,7 +93,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	if(!parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].phystep>parms->sim.start||parms->save.gradgeom[iwfs]){
 	    //gradacc for geom wfs accumulation
 	    warning2("Allocating gradacc\n");
-	    cudaCallocBlock(cuwfs[iwfs].gradacc, nsa*2*sizeof(float));
+	    cuwfs[iwfs].gradacc=curnew(nsa*2,1);
 	}
 
 	dmat *nea=powfs[ipowfs].neasim->p[wfsind];

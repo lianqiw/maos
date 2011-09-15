@@ -354,6 +354,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	    cudaCalloc(lotfc, nlpsf*nlpsf*sizeof(fcomplex), stream);
 	    embed_wvf_do<<<1,dim3(16,16),0,stream>>>(lotfc, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlpsf);
 	    //Turn to PSF
+	    CUDA_SYNC_DEVICE;
 	    CUFFT2(cuwfs[iwfs].lltplan1, lotfc, CUFFT_FORWARD);
 	    if(nlpsf != npsf){
 		//crop or embed the array.

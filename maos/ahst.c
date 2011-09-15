@@ -824,14 +824,14 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
    Convert NGS mode vector to aperture grid for science directions.  */
 void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 		    const RECON_T *recon, const APER_T *aper,
-		    const dcell *M, int ievl, double gain){
+		    const double *mod, int ievl, double alpha){
     const double *locx=aper->locs->locx;
     const double *locy=aper->locs->locy;
-    const double *mod=M->p[0]->p;
+    //const double *mod=M->p[0]->p;
     if(recon->ngsmod->nmod==2){
 	for(int iloc=0; iloc<aper->locs->nloc; iloc++){
 	    double tmp=locx[iloc]*mod[0]+locy[iloc]*mod[1];
-	    iopdevl->p[iloc]+=tmp*gain;
+	    iopdevl->p[iloc]+=tmp*alpha;
 	}
     }else{
 	const double MCC_fcp=recon->ngsmod->aper_fcp;
@@ -851,7 +851,7 @@ void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 		+mod[2]*((x2+y2-MCC_fcp)*scale1-2*scale*ht*(thetax*x+thetay*y))
 		+mod[3]*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
 		+mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y));
-	    iopdevl->p[iloc]+=tmp*gain;
+	    iopdevl->p[iloc]+=tmp*alpha;
 	}
     }
 }

@@ -5,7 +5,7 @@ extern "C"
 }
 #include "curmat.h"
 #include "utils.h"
-
+#include "kernel.h"
 /**
    Createa curmat object.
 */
@@ -46,24 +46,9 @@ void curzero(curmat *A, cudaStream_t stream){
 	DO(cudaMemsetAsync(A->p, 0, A->nx*A->ny*sizeof(float), stream));
     }
 }
-__global__ static void set_do(float *a, float alpha, int n){
-    const int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	a[i]=alpha;
-    }
-}
 void curset(curmat *A, float alpha, cudaStream_t stream){
     if(A && A->p){
 	set_do<<<DIM(A->nx*A->ny,256),0,stream>>>(A->p, alpha, A->nx*A->ny);
-    }
-}
-__global__ static void show_do(float *a, int nx, int ny){
-    const int stepx=blockDim.x * gridDim.x;
-    const int stepy=blockDim.y * gridDim.y;
-    for(int iy=blockIdx.y * blockDim.y + threadIdx.y; iy<ny; iy+=stepy){
-	for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=stepx){
-	    printf("a(%d,%d)=%g\n", ix, iy, a[ix+iy*nx]);
-	}
     }
 }
 /**< Show the content of an array*/
@@ -126,6 +111,7 @@ __global__ static void scale_do(float *restrict in, int n, float alpha){
    out=out*beta+in*alpha;
 */
 void curadd(curmat **out, float alpha, curmat *in, float beta, cudaStream_t stream){
+    if(!in) return;
     if(!*out || fabsf(alpha)<1e-7){
 	curcp(out, in, stream);
 	scale_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
@@ -156,7 +142,7 @@ void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t
 }
 void curscale(curmat *in, float alpha, cudaStream_t stream){
     int n=in->nx*in->ny;
-    scale_do<<<MAX(MIN(n/256, 32), 1), MIN(n, 256), 0, stream>>>(in->p, n, alpha); 
+    scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
 }
 
 /**
@@ -461,12 +447,4 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
 void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
     cudaMemsetAsync(res, 0,sizeof(float), stream);
     sum_wrap(res, a->p, a->nx*a->ny, stream);
-}
-
-
-__global__ void addptt_do(float *restrict opd, float (*restrict loc)[2], int n, float tx, float ty){
-    const int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	opd[i]+=loc[i][0]*tx+loc[i][1]*ty;
-    }
 }

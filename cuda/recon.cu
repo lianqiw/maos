@@ -74,7 +74,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    if(parms->powfs[ipowfs].skip) continue;
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    cudaMalloc(&cupowfs[ipowfs].saptr, nsa*2*sizeof(int));
-	    saloc2ptr_do<<<MAX(MIN(nsa/256,16),1), MIN(256, nsa)>>>
+	    saloc2ptr_do<<<DIM(nsa,256)>>>
 		(cupowfs[ipowfs].saptr, cupowfs[ipowfs].saloc, nsa, 
 		 recon->pmap->ox, recon->pmap->oy, recon->pmap->dx);
 	    if(recon->GP->p[ipowfs]){

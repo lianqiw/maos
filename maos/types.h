@@ -352,6 +352,9 @@ typedef struct SIM_SAVE_T{
     cellarr** evlpsfmean;    /**<science field psf CL time average*/
     cellarr** evlpsfhist;    /**<to save time history of science field psf*/
     cellarr** evlopdcov;     /**<science field OPD covariance*/
+    cellarr** evlpsfmean_ngsr;    /**<science field psf CL time average with NGS mode removed*/
+    cellarr** evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
+    cellarr** evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
     cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
     //Deformable mirror.
     cellarr *dmerr_hi;
@@ -503,10 +506,13 @@ typedef struct SIM_T{
     dcell *focusint;   /**<focus tracking integrator*/
 
     /*science evaluation*/
+    dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
     dcell *evlpsfmean;    /**<science field psf time average*/
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
     dcell *evlopdcov;     /**<science field opd covariance*/
+    dcell *evlpsfmean_ngsr;    /**<science field psf time average with NGS mode removed.*/
+    dcell *evlopdcov_ngsr;     /**<science field opd covariance with NGS mode removed.*/
     /*Optinal telemetry saving for PSF reconstruction.*/
     dcell *ecov;       /**<covariance of Hx*x-Ha*a for science directions.*/
     dcell *gcov;       /**<covariance of psuedo open loop gradients.*/

@@ -114,13 +114,18 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
     double rmax=fabs(xmax);
     if(fabs(xmin)>rmax) rmax=fabs(xmin);
     int order1=(int)floor(log10(rmax));
-
-    if(fabs(diff)<fabs(1.e-4*rmax)){//very small separation
-	xmax=xmax/pow(10,order1);
+    if(rmax<EPS){
+	order1=0;
 	*order=order1;
 	*ntic=2;
 	*dtic=0;
-	*tic1=xmax;
+	*tic1=xmin;
+    }else if(fabs(diff)<fabs(1.e-4*rmax)){//very small separation
+	xmax=xmax/pow(10,order1);
+	*order=order1;
+	*ntic=2;
+	*dtic=xmax-xmin;
+	*tic1=xmin;
     }else{
 	diff/=pow(10,order1);
 	while(diff<2){

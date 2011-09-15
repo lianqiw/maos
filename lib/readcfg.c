@@ -302,6 +302,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(evl.ht, evl.hs);
 	    RENAME(sim.recon, recon.alg);
 	    RENAME(sim.glao, recon.glao);
+	    RENAME(dbg.parallel, sim.parallel);
 	    RENAME(tomo.split, recon.split);
 #endif
 	    if(prefix){
