@@ -119,6 +119,10 @@ void gpu_curcell2d(dcell **out, const curcell *in, cudaStream_t stream);
 void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream);
 void gpu_cuccell2z(zcell **out, const cuccell *in, cudaStream_t stream);
 void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream);
+void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream);
+void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream);
+void cellarr_cuccell(struct cellarr *ca, const cuccell *A, cudaStream_t stream);
+
 __device__ inline float CABS2(fcomplex r){
     const float a=cuCrealf(r);
     const float b=cuCimagf(r);

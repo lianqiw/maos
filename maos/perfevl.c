@@ -400,7 +400,7 @@ static void perfevl_mean(SIM_T *simu){
 	    int do_psf=(parms->evl.psfmean || parms->evl.psfhist);
 	    if(isim>=parms->evl.psfisim && (do_psf || parms->evl.opdcov)){
 #if USE_CUDA
-		if(use_cuda){
+		if(parms->gpu.evl){
 		    gpu_perfevl_ngsr(simu, pcleNGSm);
 		}else{
 #endif
@@ -537,7 +537,7 @@ void perfevl(SIM_T *simu){
     double tk_start=myclockd();
     //Cache the ground layer.
     const PARMS_T *parms=simu->parms;
-    if(!(use_cuda && parms->gpu.evl)){
+    if(!(parms->gpu.evl)){
 	int ips=simu->perfevl_iground;
 	if(ips!=-1 && simu->atm && !parms->sim.idealevl){
 	    simu->opdevlground=dnew(simu->aper->locs->nloc,1);
@@ -552,18 +552,16 @@ void perfevl(SIM_T *simu){
 	}
     }
     CALL_THREAD(simu->perf_evl, parms->evl.nevl, 0);
-    if(!(use_cuda && parms->gpu.evl)){
+    if(!(parms->gpu.evl)){
 	dfree(simu->opdevlground);simu->opdevlground=NULL;
     }
     perfevl_mean(simu);
 #if USE_CUDA
-    if(use_cuda){
+    if(parms->gpu.evl){
 	gpu_perfevl_save(simu);
-    }else{
+    }else
 #endif
 	perfevl_save(simu);
-#if USE_CUDA
-    }
-#endif
+
     simu->tk_eval=myclockd()-tk_start;
 }

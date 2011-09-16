@@ -635,7 +635,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
     spcell *sanea=recon->sanea=spcellnew(nwfs,nwfs);
     spcell *saneal=recon->saneal=spcellnew(nwfs,nwfs);
     spcell *saneai=recon->saneai=spcellnew(nwfs,nwfs);
-    info2("Recon NEA:");
+    info2("Recon NEA:\n");
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
@@ -661,7 +661,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 		    double nea2x=nea->p[isa];
 		    double nea2y=nea->p[isa+nsa];
 		    if(nea1x<0.5*nea2x || nea1x>2*nea2x || nea1y<0.5*nea2y || nea1y>2*nea2y){
-			warning2("iwfs %d, isa %d : Phy nea: %g %g mas. Provided nea: %g %g mas.\n",
+			warning2("iwfs %d, isa %d : Phy nea: %.4f %.4f mas. Provided nea: %.4f %.4f mas.\n",
 				 iwfs,isa,nea1x*206265000, nea1y*206265000, 
 				 nea2x*206265000, nea2y*206265000);
 		    }
@@ -2530,7 +2530,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	muv_direct_free(&recon->FL);
     }
 #if USE_CUDA
-    if(use_cuda){
+    if(parms->gpu.tomo || parms->gpu.fit){
 	gpu_setup_recon(parms, powfs, recon);
     }
 #endif

@@ -74,9 +74,12 @@ void tomofit(SIM_T *simu){
 		    error("Out of range\n");
 		}
 	    }
-	    if(!use_cuda || parms->ndm==0){
-		muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
-	    }
+#if USE_CUDA
+	    if(parms->gpu.tomo && parms->ndm!=0){
+		gpu_tomo(simu);
+	    }else
+#endif
+		    muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
 	    /*
 	    if(parms->tomo.windest){
 		info2("Estimating wind direction and speed using FFT method\n");
@@ -106,14 +109,11 @@ void tomofit(SIM_T *simu){
 	}
 	if(parms->ndm>0){
 #if USE_CUDA
-	    if(use_cuda){
-		gpu_tomofit(simu);
-	    }else{
+	    if(parms->gpu.fit){
+		gpu_fit(simu);
+	    }else
 #endif
 		muv_solve(&simu->dmfit_hi, &recon->FL, &recon->FR, simu->opdr);
-#if USE_CUDA
-	    }
-#endif
 	}
 	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
     

@@ -779,3 +779,19 @@ void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream){
     cellarr_zmat(ca, tmp);
     zfree(tmp);
 }
+
+void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream){
+    scell *tmp=NULL;
+    gpu_curcell2s(&tmp,A,stream);
+    CUDA_SYNC_STREAM;
+    cellarr_scell(ca, tmp);
+    scellfree(tmp);
+}
+
+void cellarr_cuccell(struct cellarr *ca, const cuccell *A, cudaStream_t stream){
+    zcell *tmp=NULL;
+    gpu_cuccell2z(&tmp,A,stream);
+    CUDA_SYNC_STREAM;
+    cellarr_zcell(ca, tmp);
+    zcellfree(tmp);
+}

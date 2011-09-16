@@ -35,6 +35,7 @@ typedef struct{
     curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
     cumuv_t FR;
     cumuv_t FL;
+    int reconisim;
 }curecon_t;
 
 

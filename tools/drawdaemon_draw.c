@@ -293,8 +293,8 @@ draw_point(cairo_t *cr, double ix, double iy, long style, double size){
 }
 void update_limit(drawdata_t *drawdata){
     //need to update max/minimum.
+    drawdata->limit_changed=0;
     if(drawdata->cumulast!=drawdata->cumu){
-	drawdata->limit_changed=0;
 	drawdata->offx=0;
 	drawdata->offy=0;
 	drawdata->zoomx=1;
@@ -600,7 +600,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	if(drawdata->nstyle==1){
 	    PARSE_STYLE(drawdata->style[0]);
 	}
-
 	//computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim
 	int icumu=(int)drawdata->icumu;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
@@ -626,6 +625,22 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    if(drawdata->cumu && icumu<pts->nx){
 		ips0=icumu;
 	    }
+	    int nptsx=pts->nx;
+	    int ptstep=1;
+	    if(nptsx>1000 && !ptsx){//too many points. reduce the number to plot.
+#if DRAW_NEW
+		int width_max=new_width;
+#else
+		int width_max=widthim;
+#endif
+		int i0=floor((-ncx)/(zoomx*scalex)+centerx);
+		int i1=ceil((width_max-ncx)/(zoomx*scalex)+centerx);
+		if(i0>ips0) ips0=i0;
+		if(i1<nptsx) nptsx=i1;
+		/*if((nptsx-ips0)>5000){//too many points. skip a few.
+		    ptstep=(nptsx-ips0)/5000;
+		    }*/
+	    }
 	    double ix=0, iy=0, y, y_cumu=0;
 	    if(connectpts){//plot curves.
 		unsigned int ips=ips0;
@@ -643,7 +658,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		}
 		cairo_move_to(cr, ix, iy);
 		//connect additional points.
-		for(ips++; ips<pts->nx; ips++){
+		for(ips++; ips<nptsx; ips+=ptstep){
 		    if(ptsx){//don't do round here.
 			ix=((ptsx[ips]-centerx)*scalex*zoomx+ncx);
 		    }else{
@@ -667,7 +682,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	    if(!(connectpts && style==5)){//plot points.
 		y_cumu=0;
-		for(unsigned int ips=ips0; ips<pts->nx; ips++){
+		for(unsigned int ips=ips0; ips<nptsx; ips+=ptstep){
 		    //Map the coordinate to the image
 		    if(ptsx){//don't do round here.
 			ix=((ptsx[ips]-centerx)*scalex*zoomx+ncx);

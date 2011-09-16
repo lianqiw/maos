@@ -278,7 +278,7 @@ void gpu_perfevl(thread_t *info){
     const int nmod=parms->evl.nmod;
     const int imoao=parms->evl.moao;
     const double dt=simu->dt;
-    const int do_psf=(parms->evl.psfmean || parms->evl.psfhist) && isim>=parms->evl.psfisim;
+    const int do_psf_cov=(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov) && isim>=parms->evl.psfisim && parms->evl.psf[ievl]!=0;
     const int save_evlopd=parms->save.evlopd>0 && ((isim+1)%parms->save.evlopd)==0;
     const int nloc=aper->locs->nloc;
     const int nwvl=parms->evl.nwvl;
@@ -337,6 +337,7 @@ void gpu_perfevl(thread_t *info){
 	}
 	psfcomp_r(cuevlpsfol->p, opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
 	if(opdcopy!=iopdevl){
+	    CUDA_SYNC_STREAM;
 	    curfree(opdcopy);
 	}
     }
@@ -384,7 +385,7 @@ void gpu_perfevl(thread_t *info){
 	    TO_IMPLEMENT;
 	}
     }
-    if(parms->evl.psf[ievl] && isim>=parms->evl.psfisim){
+    if(do_psf_cov){
 	if(parms->evl.psfngsr[ievl]!=0){//do after ngs mode removal
 	    if(cuevlopd->p[ievl]) error("cuevlopd->p[%d] should be NULL\n", ievl);
 	    cuevlopd->p[ievl]=iopdevl;//record.
@@ -396,23 +397,17 @@ void gpu_perfevl(thread_t *info){
 	    if(parms->evl.opdcov){
 		curmm(&cuevlopdcov->p[ievl], 1, iopdevl, iopdevl, "nt", 1, handle);
 	    }//opdcov
-	    if(do_psf){
-		if(parms->evl.psfhist){
-		    //Compute complex.
-		    cuccell *psfs=psfcomp(iopdevl, nwvl, ievl, nloc, stream);
-		    zcell *temp=NULL;
-		    gpu_cuccell2z(&temp, psfs, stream);
-		    CUDA_SYNC_STREAM;
-		    cellarr_zcell(simu->save->evlpsfhist[ievl], temp);
-		    zcellfree(temp);
-		    if(parms->evl.psfmean){
-			for(int iwvl=0; iwvl<nwvl; iwvl++){
-			    curaddcabs2(cuevlpsfcl->p+iwvl+nwvl*ievl, 1, psfs->p[iwvl], 1, stream);
-			}
+	    if(parms->evl.psfhist){
+		//Compute complex.
+		cuccell *psfs=psfcomp(iopdevl, nwvl, ievl, nloc, stream);
+		cellarr_cuccell(simu->save->evlpsfhist[ievl], psfs, stream);
+		if(parms->evl.psfmean){
+		    for(int iwvl=0; iwvl<nwvl; iwvl++){
+			curaddcabs2(cuevlpsfcl->p+iwvl+nwvl*ievl, 1, psfs->p[iwvl], 1, stream);
 		    }
-		}else if(parms->evl.psfmean){
-		    psfcomp_r(cuevlpsfcl->p+nwvl*ievl, iopdevl, nwvl, ievl, nloc, 0, stream);
 		}
+	    }else if(parms->evl.psfmean){
+		psfcomp_r(cuevlpsfcl->p+nwvl*ievl, iopdevl, nwvl, ievl, nloc, 0, stream);
 	    }
 	}
     }
@@ -447,11 +442,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    if(parms->evl.psfhist){
 		//Compute complex.
 		cuccell *psfs=psfcomp(iopdevl, nwvl, ievl, nloc, stream);
-		zcell *temp=NULL;
-		gpu_cuccell2z(&temp, psfs, stream);
-		CUDA_SYNC_STREAM;
-		cellarr_zcell(simu->save->evlpsfhist_ngsr[ievl], temp);
-		zcellfree(temp);
+		cellarr_cuccell(simu->save->evlpsfhist_ngsr[ievl], psfs, stream);
 		if(parms->evl.psfmean){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			curaddcabs2(cuevlpsfcl_ngsr->p+iwvl+nwvl*ievl, 1, psfs->p[iwvl], 1, stream);

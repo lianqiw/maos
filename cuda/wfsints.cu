@@ -155,8 +155,11 @@ __global__ static void embed_rot_do(fcomplex *restrict out, const int noutx, con
 	    int jx=floorf(x); x=x-jx;
 	    int jy=floorf(y); y=y-jy;
 	    if(jx>=0 && jx<ninx-1 && jy>=0 && jy<niny-1){
-		out[iy*noutx+ix]=make_cuFloatComplex((cuCrealf(in[jy*ninx+jx])*(1-x)+cuCrealf(in[jy*ninx+jx+1])*x)*(1-y)
-						     +(cuCrealf(in[(jy+1)*ninx+jx])*(1-x)+cuCrealf(in[(jy+1)*ninx+jx+1])*x)*y, 0);
+		out[iy*noutx+ix]=
+		    make_cuFloatComplex((cuCrealf(in[jy*ninx+jx])*(1-x)
+					 +cuCrealf(in[jy*ninx+jx+1])*x)*(1-y)
+					+(cuCrealf(in[(jy+1)*ninx+jx])*(1-x)
+					  +cuCrealf(in[(jy+1)*ninx+jx+1])*x)*y, 0);
 	    }
 	}
     }

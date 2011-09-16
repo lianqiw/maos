@@ -32,6 +32,7 @@ void gpu_wfsgrad(thread_t *info);
 void gpu_perfevl(thread_t *info);
 void gpu_perfevl_save(SIM_T *simu);
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
-void gpu_tomofit(SIM_T *simu);
+void gpu_tomo(SIM_T *simu);
+void gpu_fit(SIM_T *simu);
 #endif
 

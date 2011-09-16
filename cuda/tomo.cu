@@ -31,12 +31,13 @@ __global__ static void ptt_proj_do(float *restrict out, float (*restrict PTT)[2]
 	gx[threadIdx.x]+=PTT[ig][0]*grad[ig];
 	gy[threadIdx.x]+=PTT[ig][1]*grad[ig];
     }
+    __syncthreads();
     for(int step=(DIM_REDUCE>>1); step>0; step>>=1){
-	__syncthreads();
 	if(threadIdx.x<step){
 	    gx[threadIdx.x]+=gx[threadIdx.x+step];
 	    gy[threadIdx.x]+=gy[threadIdx.x+step];
 	}
+	__syncthreads();
     }
     if(threadIdx.x==0){
 	atomicAdd(&out[0], -gx[0]);
@@ -154,7 +155,6 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	if(parms->powfs[ipowfs].skip) continue;				\
 	const float hs = parms->powfs[ipowfs].hs;			\
 	const float scale = 1.f - ht/hs;				\
-	cudaStreamWaitEvent(curecon->psstream[ips], curecon->wfsevent[iwfs],0);\
 	gpu_prop_grid(opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, \
 		      opdx->p[ips], oxx, oyx,recon->xmap[ips]->dx,	\
 		      parms->wfsr[iwfs].thetax*ht, parms->wfsr[iwfs].thetay*ht, \
@@ -197,8 +197,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, \
 	     (float(*)[3])curecon->neai->p[iwfs]->p, ttf->p[iwfs]->p, cuwfs[iwfs].powfs->saptr, dsa, \
 	     cupowfs[ipowfs].GPpx->p, cupowfs[ipowfs].GPpy->p, nsa);	\
-    }									\
-    cudaEventRecord(curecon->wfsevent[iwfs], curecon->wfsstream[iwfs]);
+    }									
 
 __global__ static void laplacian_do(float *restrict out, const float *in, int nx, int ny, const float alpha){
     int stepx=blockDim.x*gridDim.x;
@@ -261,12 +260,12 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
 	DO_NEA_GPT;
 	//curwrite(opdwfs->p[iwfs], "gpt_%d", iwfs);
     }
-    //SYNC_WFS;//not necessary.
-    curcellfree(ttf);
+    SYNC_WFS;
     for(int ips=0; ips<recon->npsr; ips++){
 	DO_HXT;
-    };
+    }
     SYNC_PS;
+    curcellfree(ttf);
     toc("TomoR");
 }
 
@@ -346,13 +345,13 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
 	DO_PTT;
 	DO_NEA_GPT;
     }
-    //SYNC_WFS;//no need. we use event.
+    SYNC_WFS;
 #endif
-    curcellfree(ttf);
     for(int ips=0; ips<recon->npsr; ips++){
 	DO_HXT;
     }
     SYNC_PS;
+    curcellfree(ttf);
 #if TIMING==2
     toc("TomoL:HXT");
 #elif TIMING ==1

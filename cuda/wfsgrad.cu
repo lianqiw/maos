@@ -290,6 +290,9 @@ void gpu_wfsgrad(thread_t *info){
 	    default:
 		TO_IMPLEMENT;
 	    }
+	    if(save_ints){
+		cellarr_cur(simu->save->intsnf[iwfs], ints, stream);
+	    }
 	    //CUDA_SYNC_STREAM;
 	    toc("mtche");tic;
 	    if(noisy){
@@ -310,21 +313,19 @@ void gpu_wfsgrad(thread_t *info){
 		}
 		collect_noise_do<<<DIM(nsa,256), 0, stream>>>
 		    (cuwfs[iwfs].neareal, gradnf->p, gradny->p, nsa);
-		//CUDA_SYNC_STREAM;
+		if(save_ints){
+		    cellarr_cur(simu->save->intsny[iwfs], ints, stream);
+		}
+		if(save_grad){
+		    cellarr_cur(simu->save->gradnf[iwfs], gradnf, stream);
+		}
 	    }
 	    //send grad to CPU.
 	    gpu_dev2dbl(&gradout->p, gradny?gradny->p:gradnf->p, nsa*2, stream);
-	    
-	    if(save_ints){
-		cellarr_cur(simu->save->intsnf[iwfs], ints, stream);
-	    }
-	    if(save_grad && noisy){
-		cellarr_cur(simu->save->gradnf[iwfs], gradnf, stream);
-	    }
-	    //CUDA_SYNC_STREAM;
+	    curzero(ints, stream);
+	    CUDA_SYNC_STREAM;//necessary.
 	    curfree(gradny);
 	    curfree(gradnf);
-	    curzero(ints, stream);
 	    toc("mtche");
 	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		if(!recon->PTT){
@@ -354,7 +355,6 @@ void gpu_wfsgrad(thread_t *info){
 		}
 		add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
 		    (gradacc->p, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
-		CUDA_SYNC_STREAM;
 		toc("noise");
 	    }
 	    gpu_cur2d(&gradout, gradacc, stream);
@@ -379,5 +379,6 @@ void gpu_wfsgrad(thread_t *info){
 	}
     }//dtrat_output
     toc("done");
+    CUDA_SYNC_STREAM;
     curfree(phiout);
 }

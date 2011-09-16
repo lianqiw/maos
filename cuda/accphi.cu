@@ -58,10 +58,10 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     if(!nx0){
 	if(parms->atm.nxm!=parms->atm.nx || parms->atm.nym!=parms->atm.ny){//user specified atmosphere size.
 	    long avail=gpu_get_mem();
-	    long nxa=avail/2/nps/sizeof(float);//we are able to host this amount.
-	    info("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
+	    long nxa=(avail-600000000)/nps/sizeof(float);//we are able to host this amount.
+	    info2("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
 	    if(nxa>parms->atm.nx*parms->atm.ny){//we can host all atmosphere.
-		info("We can host all layers in full.\n");
+		info2("We can host all layers in full.\n");
 		nx0=parms->atm.nx;
 		ny0=parms->atm.ny;
 	    }else if(nxa>parms->atm.nxm*parms->atm.nym){//we can not host all atmosphere.
@@ -73,7 +73,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    }
 	    nx0=parms->atm.nxm;
 	    ny0=parms->atm.nym;
-	    info("We will host %dx%d in GPU\n", nx0, ny0);
+	    info2("We will host %dx%d in GPU\n", nx0, ny0);
 	}else{
 	    nx0=ny0=parms->atm.nxm;
 	}
@@ -158,8 +158,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    int offy=(int)round((cuatm->oy[ips]-atm[ips]->oy)/dx);
 	    cuatm->ox[ips]=atm[ips]->ox+offx*dx;
 	    cuatm->oy[ips]=atm[ips]->oy+offy*dx;
-	    info("Copying layer %d at step %d\n", ips, isim);
-	    info("Need to copy layer %d: offx=%d, offy=%d\n", ips, offx, offy);
+	    info2("Copying layer %d at step %d to GPU: offx=%d, offy=%d\n", ips, isim, offx, offy);
 	    const int nxi=atm[ips]->nx;
 	    const int nyi=atm[ips]->ny;
 	    offx=offx%nxi; if(offx<0) offx+=nxi;
@@ -216,8 +215,8 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 #endif
 	}
     }
-    free(pout);
     CUDA_SYNC_DEVICE;
+    free(pout);
     iseed0=iseed;
 }
 /**

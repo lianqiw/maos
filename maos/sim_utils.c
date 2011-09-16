@@ -502,7 +502,7 @@ void seeding(SIM_T *simu){
     }
     seed_rand(simu->telws_rand, lrand(simu->init));
 #if USE_CUDA
-    if(use_cuda && parms->gpu.wfs){
+    if(parms->gpu.wfs){
 	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
     }
 #endif
@@ -636,7 +636,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
 #if USE_CUDA
-    if(use_cuda){
+    if(parms->gpu.evl || parms->gpu.wfs){
 	gpu_dm2gpu(&cudmreal, simu->dmrealsq, parms->ndm, parms->dm);
 	if(simu->dmprojsq){
 	    gpu_dm2gpu(&cudmproj, simu->dmprojsq, parms->ndm, parms->dm);
@@ -1018,7 +1018,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->wfs_grad=calloc(parms->nwfs, sizeof(thread_t));
     simu->perf_evl=calloc(parms->evl.nevl, sizeof(thread_t));
 #if USE_CUDA
-    if(use_cuda && parms->gpu.wfs){
+    if(parms->gpu.wfs){
 	thread_prep(simu->wfs_grad, 0, parms->nwfs, parms->nwfs, gpu_wfsgrad, simu);
     }else{
 #endif
@@ -1027,7 +1027,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
 #endif
 #if USE_CUDA
-    if(use_cuda && parms->gpu.evl){
+    if(parms->gpu.evl){
 	thread_prep(simu->perf_evl, 0, parms->evl.nevl, parms->evl.nevl, gpu_perfevl, simu);
     }else{
 #endif
@@ -1530,7 +1530,7 @@ void print_progress(const SIM_T *simu){
     const int nmod=parms->evl.nmod;
     
     if(parms->sim.evlol){
-	fprintf(stderr,"\033[00;32mStep %3d: OL: %6.1f %6.1f %6.1f nm;\033[00;00m\n",
+	fprintf(stderr,"\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm;\033[00;00m\n",
 		isim,
 		mysqrt(simu->ole->p[isim*nmod])*1e9,
 		mysqrt(simu->ole->p[1+isim*nmod])*1e9,
@@ -1539,7 +1539,7 @@ void print_progress(const SIM_T *simu){
 	fprintf(stderr,"Timing: Tot:%5.2f Mean:%5.2f. Used %ld:%02ld, Left %ld:%02ld\n",
 		status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
     }else{    
-	fprintf(stderr,"\033[00;32mStep %3d: OL: %6.1f %6.1f %6.1f nm; CL %6.1f %6.1f %6.1f nm;",
+	fprintf(stderr,"\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm; CL %6.1f %6.1f %6.1f nm;",
 		isim,
 		mysqrt(simu->ole->p[isim*nmod])*1e9,
 		mysqrt(simu->ole->p[1+isim*nmod])*1e9,

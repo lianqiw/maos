@@ -1162,7 +1162,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }else if(parms->sim.idtrat_hi>-1){
 		if(parms->sim.idtrat_hi!=parms->powfs[ipowfs].idtrat){
 		    warning("High order WFS has multiple dtrats\n");
-		    parms->sim.idtrat_hi==-2;
+		    parms->sim.idtrat_hi=-2;
 		}
 	    }
 	}else{
@@ -1171,7 +1171,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }else if(parms->sim.idtrat_lo>-1){
 		if(parms->sim.idtrat_lo!=parms->powfs[ipowfs].idtrat){
 		    warning("High order WFS has multiple dtrats\n");
-		    parms->sim.idtrat_lo==-2;
+		    parms->sim.idtrat_lo=-2;
 		}
 	    }
 	}
@@ -1713,8 +1713,8 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
     }
     if(parms->evl.tomo){
-	warning("evl.tomo disable cuda\n");
-	use_cuda=1;
+	warning("evl.tomo in cuda not implemented yet.\n");
+	use_cuda=0;
     }
     if(use_cuda){
 	if(parms->recon.alg==0){

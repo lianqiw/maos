@@ -51,8 +51,10 @@ void maos(const PARMS_T *parms){
     powfs = setup_powfs(parms, aper);
     info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
 #if USE_CUDA
-    if(use_cuda){
+    if(parms->gpu.wfs || parms->gpu.tomo){
 	gpu_wfsgrad_init(parms, powfs);
+    }
+    if(parms->gpu.evl){
 	gpu_perfevl_init(parms, aper);
     }
 #endif    
@@ -61,13 +63,11 @@ void maos(const PARMS_T *parms){
     setup_tsurf(parms, aper, powfs);//setting up M3 tilted surf.
     setup_surf(parms, aper, powfs, recon);//setting up M1/M2/M3 surface OPD.
 #if USE_CUDA
-    if(use_cuda){
-	if(parms->gpu.wfs){
-	    gpu_wfssurf2gpu(parms, powfs);
-	}
-	if(parms->gpu.evl){
-	    gpu_evlsurf2gpu(aper);
-	}	
+    if(parms->gpu.wfs){
+	gpu_wfssurf2gpu(parms, powfs);
+    }
+    if(parms->gpu.evl){
+	gpu_evlsurf2gpu(aper);
     }
 #endif
     /*

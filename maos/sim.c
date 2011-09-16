@@ -116,7 +116,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    }
 		}
 #if USE_CUDA
-		if(use_cuda){
+		if(parms->gpu.evl || parms->gpu.wfs){
 		    gpu_dm2gpu(&cudmproj, simu->dmprojsq, parms->ndm, NULL);
 		}
 #endif
@@ -188,8 +188,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		scheduler_report(simu->status);
 #endif
 		print_progress(simu);
-#if defined(__linux__) 
-		if(!use_cuda){
+#if defined(__linux__)  && !defined(USE_CUDA)
 		    if(parms->sim.parallel){
 			info2("CPU Usage: %.2f\n", cpu_all);
 		    }else{
@@ -197,7 +196,6 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 			      cpu_wfs, cpu_recon, cpu_evl, cpu_cachedm,
 			      (cpu_wfs+cpu_recon+cpu_evl+cpu_cachedm)*0.25);
 		    }
-		}
 #endif
 	    }
 	    if(parms->pause){//does not work.
