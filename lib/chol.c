@@ -568,8 +568,8 @@ static void chol_solve_upper_each(thread_t *info){
     }
 }
 /*
-  2010-08-09: The following two routines are a bit slower than the cholmod solver.
-*/
+  2010-08-09: The following two routines are a bit slower than the cholmod
+  solver because the later uses supernodal paritition.  */
 /**
    Solve A*x=Y where the A=LL' and L is stored in A.
    
