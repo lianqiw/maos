@@ -116,7 +116,7 @@ typedef struct{
     int yb;
 }MUV_IB_T;
 /**
-   Apply the sparse plug low rand compuation to xin with scaling of alpha for block (xb, yb):
+   Apply the sparse plus low rand compuation to xin with scaling of alpha for block (xb, yb):
    \f$xout_x=(A.M_xy-A.U_xi*A.V_yi')*xin_y*alpha\f$; U,V are low rank. */
 void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     const MUV_IB_T *C=B;

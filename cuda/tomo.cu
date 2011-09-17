@@ -358,3 +358,8 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
     toc("TomoL:");
 #endif
 }
+
+/*void gpu_fdpcg_precond(curcell **xout, const void *A, const curcell *xin){
+    SIM_T *simu=(SIM_T*)A;
+    
+    }*/
