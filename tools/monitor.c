@@ -92,14 +92,14 @@ GdkColor color_odd;
 
    properties belonging to certain widget that are descendent of GtkWidget, need
 to specify the classname before the key like GtkTreeView::allow-rules */
-static const gchar *rc_string_widget =
+/*static const gchar *rc_string_widget =
     {
 	"style \"widget\" {               \n"
 	"xthickness   = 0                \n"
 	"ythickness   = 0                \n"
      	"}\n"
 	"class \"GtkWidget\" style \"widget\" \n"
-    };
+	};*/
 static const gchar *rc_string_treeview = 
     {
 	"style \"solidTreeLines\"{                       \n" 
@@ -801,7 +801,7 @@ int main(int argc, char *argv[])
     gtk_widget_show(image_finished);
     icon_finished=gtk_image_get_pixbuf(GTK_IMAGE(image_finished));
     */
-    gtk_rc_parse_string(rc_string_widget);
+    //gtk_rc_parse_string(rc_string_widget);
     gtk_rc_parse_string(rc_string_treeview);
     gtk_rc_parse_string(rc_string_progress);
     gtk_rc_parse_string(rc_string_entry);

@@ -51,7 +51,7 @@
 #include "common.h"
 #include "monitor.h"
 #include "misc.h"
-#include "gtkcellrendererprogressnew.h" //modify appearance of progress
+//#include "gtkcellrendererprogressnew.h" //modify appearance of progress
 static GtkListStore **lists=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
     GtkListStore *list=lists[p->hid];
@@ -323,7 +323,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_set_title(col,"ErrHi");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
 	
-    render=gtk_cell_renderer_progressnew_new();
+    render=gtk_cell_renderer_progress_new();
     g_object_set(G_OBJECT(render), "ypad", 0, NULL);
     col=gtk_tree_view_column_new();
     gtk_tree_view_column_set_spacing(col, spacing);
@@ -335,7 +335,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_set_title(col,"Seed");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
    
-    render=gtk_cell_renderer_progressnew_new();
+    render=gtk_cell_renderer_progress_new();
     g_object_set(G_OBJECT(render), "ypad", 0, NULL);
     gtk_cell_renderer_set_fixed_size(render,30,5);
     col=gtk_tree_view_column_new();

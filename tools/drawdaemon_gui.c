@@ -877,10 +877,12 @@ static void range_changed(GtkRange *range, gdouble *val){
 static void entry_changed(GtkEditable *entry, char **key){
     free(*key);
     *key=gtk_editable_get_chars(entry, 0, -1);
+    drawdata_dialog->drawn=0;
     delayed_update_pixmap(drawdata_dialog);
 }
 static void spin_changed(GtkSpinButton *spin, gdouble *val){
     *val=gtk_spin_button_get_value(spin);
+    drawdata_dialog->drawn=0;
     delayed_update_pixmap(drawdata_dialog);
 }
 static void toolbutton_cumu_click(GtkToolButton *btn){
