@@ -41,7 +41,7 @@ typedef struct{
 
 extern curecon_t *curecon;
 void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha);
-void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float alpha);
+void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *xin, const float alpha);
 void gpu_FitR(curcell **xout, const void *A, const curcell *xin, const float alpha);
 
 #endif

@@ -20,10 +20,6 @@ extern "C"
 #define tic
 #define toc(A)
 #endif
-cusparseMatDescr_t cuspdesc;
-cuwloc_t *cupowfs=NULL;
-cuwfs_t *cuwfs=NULL;
-
 /*
   Notice that both blocks and threads are partitioning isa
  */
@@ -184,11 +180,15 @@ __global__ static void collect_noise_do(float *restrict neareal, const float *re
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
    data back to CPU.
 */
+extern int *wfsgpu;
 void gpu_wfsgrad(thread_t *info){
+    const int iwfs=info->start;
+    gpu_set(wfsgpu[iwfs]);
+    cuwloc_t *cupowfs=cudata->powfs;
+    cuwfs_t *cuwfs=cudata->wfs;
     TIC;tic;
     SIM_T *simu=(SIM_T*)info->data;
     const PARMS_T *parms=simu->parms;
-    const int iwfs=info->start;
     assert(info->end==info->start+1);//only 1 WFS.
     assert(iwfs<parms->nwfs);
     const POWFS_T *powfs=simu->powfs;
@@ -228,15 +228,15 @@ void gpu_wfsgrad(thread_t *info){
 	curcp(&phiout, cuwfs[iwfs].opdadd, stream);
     }
     if(parms->sim.idealwfs){
-	gpu_dm2loc(phiout->p, loc, nloc, cudmproj, hs, thetax, thetay, mispx, mispy, 1, stream);
+	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, hs, thetax, thetay, mispx, mispy, 1, stream);
     }else{
 	gpu_atm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
 	if(parms->sim.wfsalias){
-	    gpu_dm2loc(phiout->p, loc, nloc, cudmproj, hs, thetax, thetay, mispx, mispy, -1, stream);
+	    gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, hs, thetax, thetay, mispx, mispy, -1, stream);
 	}
     }
     if(CL){
-	gpu_dm2loc(phiout->p, loc, nloc, cudmreal, hs, thetax, thetay, mispx, mispy, -1, stream);
+	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmreal, hs, thetax, thetay, mispx, mispy, -1, stream);
     }
     //CUDA_SYNC_STREAM;
     

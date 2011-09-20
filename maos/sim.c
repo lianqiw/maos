@@ -117,7 +117,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		}
 #if USE_CUDA
 		if(parms->gpu.evl || parms->gpu.wfs){
-		    gpu_dm2gpu(&cudmproj, simu->dmprojsq, parms->ndm, NULL);
+		    gpu_dmproj2gpu(simu->dmprojsq, parms->ndm, NULL);
 		}
 #endif
 	    }

@@ -176,7 +176,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	    (grad->p[iwfs]->p, (float(*)[3])curecon->neai->p[iwfs]->p, ttf->p[iwfs]->p, nsa); \
     }else{								\
 	gpu_gp_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>>	\
-	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, cuwfs[iwfs].powfs->saptr, dsa, \
+	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, cupowfs[ipowfs].saptr, dsa, \
 	     cupowfs[ipowfs].GPpx->p, cupowfs[ipowfs].GPpy->p, nsa);	\
     } 
 
@@ -195,7 +195,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
     }else{								\
 	gpu_gpt_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>> \
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, \
-	     (float(*)[3])curecon->neai->p[iwfs]->p, ttf->p[iwfs]->p, cuwfs[iwfs].powfs->saptr, dsa, \
+	     (float(*)[3])curecon->neai->p[iwfs]->p, ttf->p[iwfs]->p, cupowfs[ipowfs].saptr, dsa, \
 	     cupowfs[ipowfs].GPpx->p, cupowfs[ipowfs].GPpy->p, nsa);	\
     }									
 
@@ -222,7 +222,9 @@ __global__ static void laplacian_do(float *restrict out, const float *in, int nx
     }
 }
 __global__ static void zzt_do(float *restrict out, const float *in, int ix, float val){
-    atomicAdd(&out[ix], in[ix]*val);
+    if(threadIdx.x==0 && threadIdx.y==0){
+	out[ix]+=in[ix]*val;
+    }
 }
 static inline curcell *new_xout(const RECON_T *recon){
     curcell *xout=curcellnew(recon->npsr, 1);
@@ -250,11 +252,12 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
     const float dxp=recon->pmap->dx;
     curcell *opdwfs=curecon->opdwfs;
     curcell *ttf=curcellnew(nwfs, 1);
+    cuwloc_t *cupowfs=cudata->powfs;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int nsa=cuwfs[iwfs].powfs->nsa;
 	const int ipowfs = parms->wfsr[iwfs].powfs;
+	const int nsa=cupowfs[ipowfs].nsa;
 	if(parms->powfs[ipowfs].skip) continue;
-	const float dsa=cuwfs[iwfs].powfs->dsa;
+	const float dsa=cupowfs[ipowfs].dsa;
 	DO_PTT;
 	//curwrite(grad->p[iwfs], "grad_nea_%d", iwfs);
 	DO_NEA_GPT;
@@ -263,6 +266,7 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
     SYNC_WFS;
     for(int ips=0; ips<recon->npsr; ips++){
 	DO_HXT;
+
     }
     SYNC_PS;
     curcellfree(ttf);
@@ -270,19 +274,19 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
 }
 
 
-void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float alpha){
+void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *xin, const float alpha){
     TIC;tic;
     SIM_T *simu=(SIM_T*)A;
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int nwfs=parms->nwfsr;
+    curcell *grad=curecon->grad;
     if(!*xout){
 	*xout=new_xout(recon);
     }
     curcell *opdx=*xout;
-    curcell *grad=curecon->grad;
-  
     for(int ips=0; ips<recon->npsr; ips++){
+	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
 	const int nxo=recon->xmap[ips]->nx;
 	const int nyo=recon->xmap[ips]->ny;
 	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
@@ -300,6 +304,7 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
     curcell *opdwfs=curecon->opdwfs;
     int ptt=(!parms->recon.split || parms->dbg.splitlrt); 
     curcell *ttf=curcellnew(nwfs, 1);
+    cuwloc_t *cupowfs=cudata->powfs;
 #if TIMING == 2
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
@@ -311,16 +316,16 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
-	const int nsa=cuwfs[iwfs].powfs->nsa;
-	const float dsa=cuwfs[iwfs].powfs->dsa;
+	const int nsa=cupowfs[ipowfs].nsa;
+	const float dsa=cupowfs[ipowfs].dsa;
 	DO_GP;
     }
     SYNC_WFS;
     toc("TomoL:GP"); tic;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int nsa=cuwfs[iwfs].powfs->nsa;
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
+	const int nsa=cupowfs[ipowfs].nsa;
 	DO_PTT;
     }
     SYNC_WFS;
@@ -328,8 +333,8 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
-	const int nsa=cuwfs[iwfs].powfs->nsa;
-	const float dsa=cuwfs[iwfs].powfs->dsa;
+	const int nsa=cupowfs[ipowfs].nsa;
+	const float dsa=cupowfs[ipowfs].dsa;
 	DO_NEA_GPT;
     }
     SYNC_WFS;
@@ -338,8 +343,8 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
-	const int nsa=cuwfs[iwfs].powfs->nsa;
-	const float dsa=cuwfs[iwfs].powfs->dsa;
+	const int nsa=cupowfs[ipowfs].nsa;
+	const float dsa=cupowfs[ipowfs].dsa;
 	DO_HX;
 	DO_GP;
 	DO_PTT;
@@ -347,6 +352,7 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
     }
     SYNC_WFS;
 #endif
+   
     for(int ips=0; ips<recon->npsr; ips++){
 	DO_HXT;
     }
@@ -360,6 +366,5 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
 }
 
 /*void gpu_fdpcg_precond(curcell **xout, const void *A, const curcell *xin){
-    SIM_T *simu=(SIM_T*)A;
-    
-    }*/
+  SIM_T *simu=(SIM_T*)A;
+  }*/

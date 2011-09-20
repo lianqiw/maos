@@ -66,7 +66,6 @@ void curcp(curmat **out, const curmat *in, cudaStream_t stream){
 	    assert((*out)->nx * (*out)->ny==in->nx * in->ny);
 	}
 	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDefault, stream);
-	
     }
 }
 void curwritedata(const curmat *A, file_t *fp){
@@ -93,7 +92,7 @@ void curwrite(const curmat *A, const char *format, ...){
    a=a*alpha+b*beta;
 */
 __global__ void add_do(float *restrict a, float alpha, 
-		       const float *restrict b, float beta, int n){
+		       const float * b, float beta, int n){
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	a[i]=a[i]*alpha+b[i]*beta;
@@ -141,8 +140,13 @@ void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t
 	((*out)->p, alpha, in->p, beta, in->nx*in->ny);
 }
 void curscale(curmat *in, float alpha, cudaStream_t stream){
-    int n=in->nx*in->ny;
-    scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
+    if(!in) return;
+    if(fabsf(alpha)<1e-5) {
+	curzero(in, stream);
+    }else if(fabsf(alpha-1.f)>1e-5){
+	int n=in->nx*in->ny;
+	scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
+    }
 }
 
 /**
@@ -295,7 +299,7 @@ __global__ void adds_do(float *vec, float *palpha, float beta, int n){
    add a vector to another, scaled by alpha and beta. all in device memory.
    a=a+b*alpha*beta;
 */
-__global__ void add2_do(float *restrict a, const float *restrict b, const float *restrict b_sc1, float b_sc2, int n){
+__global__ void add2_do(float *restrict a, const float * b, const float *restrict b_sc1, float b_sc2, int n){
     float alpha=*b_sc1*b_sc2;
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
@@ -307,19 +311,19 @@ __global__ void add2_do(float *restrict a, const float *restrict b, const float 
 /**
    out=out+in*alpha; beta, alpha lives in device memory.
 */
-void curadd2(curmat **out, const curmat *in, float *alpha, cudaStream_t stream){
+void curadd2(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStream_t stream){
     if(!*out){
 	*out=curnew(in->nx, in->ny);
     }
     add2_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
-	((*out)->p, in->p, alpha, 1.f, in->nx*in->ny);
+	((*out)->p, in->p, alpha, alpha2, in->nx*in->ny);
 }
 
 
 /**
    A=A*beta+B*alpha; beta, alpha lives in device memory.
 */
-void curcelladd2(curcell **A, const curcell *B, float* alpha, cudaStream_t stream){
+void curcelladd2(curcell **A, const curcell *B, float* alpha, float alpha2, cudaStream_t stream){
     if(!B) return;
     if(!*A){
 	*A=curcellnew2(B);
@@ -327,7 +331,7 @@ void curcelladd2(curcell **A, const curcell *B, float* alpha, cudaStream_t strea
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
     for(int i=0; i<B->nx*B->ny; i++){
-	curadd2(&((*A)->p[i]), B->p[i], alpha, stream);
+	curadd2((*A)->p+i, B->p[i], alpha, alpha2,  stream);
     }
 }
 
@@ -398,11 +402,11 @@ __global__ void sum_do(float *restrict res, const float *a, const int n){
     }
 }
 
-inline static void inn_wrap(float *res, const float *restrict a, const float *restrict b, 
+inline static void inn_wrap(float *res, const float * a, const float * b, 
 			    const int n, cudaStream_t stream){
     inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,b,n);
 }
-inline static void sum_wrap(float *res, const float *restrict a, const int n, cudaStream_t stream){
+inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
 float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
@@ -447,4 +451,47 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
 void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
     cudaMemsetAsync(res, 0,sizeof(float), stream);
     sum_wrap(res, a->p, a->nx*a->ny, stream);
+}
+
+__global__ void max_do(float *restrict res, const float *a, const int n){
+    extern __shared__ float sb[];
+    sb[threadIdx.x]=0;
+    int step=blockDim.x * gridDim.x ;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	if(sb[threadIdx.x]<a[i]) sb[threadIdx.x]=a[i];
+    }
+    for(step=(blockDim.x>>1);step>0;step>>=1){
+	__syncthreads();
+	if(threadIdx.x<step){
+	    if(sb[threadIdx.x]<sb[threadIdx.x+step]){
+		sb[threadIdx.x]=sb[threadIdx.x+step];
+	    }
+	}
+    }
+    if(threadIdx.x==0){
+	*res=sb[0];
+    }
+}
+/**
+   Find the maximum value
+*/
+float curmax(const curmat *a, cudaStream_t stream){
+    float *res;
+    cudaMallocHost(&res, sizeof(float));
+    int n=a->nx*a->ny;
+    max_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>> (res, a->p, n);
+    CUDA_SYNC_STREAM;
+    float out=res[0];
+    cudaFreeHost(res);
+    return out;
+}
+
+/**
+   Scale elements
+*/
+void curcellscale(curcell *A, float alpha, cudaStream_t stream){
+    if(!A) return;
+    for(int i=0; i<A->nx*A->ny; i++){
+	curscale(A->p[i], alpha, stream);
+    }
 }

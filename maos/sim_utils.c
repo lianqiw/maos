@@ -637,9 +637,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
-	gpu_dm2gpu(&cudmreal, simu->dmrealsq, parms->ndm, parms->dm);
+	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm, parms->dm);
 	if(simu->dmprojsq){
-	    gpu_dm2gpu(&cudmproj, simu->dmprojsq, parms->ndm, parms->dm);
+	    gpu_dmproj2gpu(simu->dmprojsq, parms->ndm, parms->dm);
 	}
     }
 #endif

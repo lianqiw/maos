@@ -30,7 +30,8 @@ __global__ static void saloc2ptr_do(int (*restrict saptr)[2], float (*restrict s
 }
 
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
-    CUDA_SYNC_DEVICE;
+    gpu_set(0);
+    cuwloc_t *cupowfs=cudata->powfs;
     cudaStream_t stream;
     STREAM_NEW(stream);
     cublasHandle_t handle;
@@ -251,7 +252,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     gpu_print_mem("recon init");
 }
 
-void cumuv(curcell **out, cumuv_t *A, const curcell *in, float alpha){
+void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha){
     if(!A->Mt) error("A->M Can not be empty\n");
     if(A->U->ny>1 || A->V->ny>1) error("Not handled yet\n");
     if(!*out){
@@ -259,6 +260,8 @@ void cumuv(curcell **out, cumuv_t *A, const curcell *in, float alpha){
 	for(int ix=0; ix<A->Mt->ny; ix++){
 	    (*out)->p[ix]=curnew(A->Mt->p[ix*A->Mt->nx]->ny, 1);
 	}
+    }else if(fabsf(beta-1.)>1e-5){
+	curcellscale(*out, beta, curecon->fitstream[0]);
     }
     cusparseHandle_t sphandle=curecon->fitsphandle[0];
     cublasHandle_t handle=curecon->fithandle[0];
@@ -281,6 +284,7 @@ __global__ void nothing(void){
 
 }
 void gpu_tomo(SIM_T *simu){
+    gpu_set(0);
     TIC;tic;
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
@@ -304,7 +308,7 @@ void gpu_tomo(SIM_T *simu){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
 	curecon->opdwfs->p[iwfs]=curnew(nxp, nyp);
-	const int nsa=cuwfs[iwfs].powfs->nsa;
+	const int nsa=simu->powfs[ipowfs].pts->nsa;
 	curecon->grad->p[iwfs]=curnew(nsa*2,1);
     }
     if(0){
@@ -321,7 +325,7 @@ void gpu_tomo(SIM_T *simu){
 	curcell *lg=NULL;
 	gpu_TomoR(&rhsg, simu, curecon->gradin, 1);
 	curcellwrite(rhsg, "GPU_TomoR");
-	gpu_TomoL(&lg, simu, rhsg, -1);
+	gpu_TomoL(&lg, 1, simu, rhsg, -1);
 	curcellwrite(lg, "GPU_TomoL");
 	CUDA_SYNC_DEVICE;
 	exit(0);
@@ -332,8 +336,14 @@ void gpu_tomo(SIM_T *simu){
     curcell *rhs=NULL;
     gpu_TomoR(&rhs, simu, curecon->gradin, 1);
     toc("TomoR");
-    gpu_pcg(&curecon->opdr, gpu_TomoL, simu, NULL, NULL, rhs, 
-	    simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream);
+    if(gpu_pcg(&curecon->opdr, gpu_TomoL, simu, NULL, NULL, rhs, 
+	       simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream)){
+	dcellwrite(simu->gradlastol, "tomo_gradlastol_%d", simu->reconisim);
+	curcellwrite(curecon->gradin, "tomo_gradin_%d", simu->reconisim);
+	curcellwrite(rhs, "tomo_rhs_%d", simu->reconisim);
+	exit(1);
+    }
+    
     toc("TomoL CG");
     curcellfree(rhs); rhs=NULL;
     curcellfree(curecon->opdwfs); curecon->opdwfs=NULL;
@@ -341,6 +351,7 @@ void gpu_tomo(SIM_T *simu){
     curcellfree(curecon->gradin); curecon->gradin=NULL;
     if(!parms->gpu.fit || parms->save.opdr){
 	gpu_curcell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
+	cudaStreamSynchronize(curecon->cgstream);
 	for(int i=0; i<simu->opdr->nx; i++){
 	    simu->opdr->p[i]->nx=simu->opdr->p[i]->nx*simu->opdr->p[i]->ny;
 	    simu->opdr->p[i]->ny=1;
@@ -348,6 +359,7 @@ void gpu_tomo(SIM_T *simu){
     }
 }
 void gpu_fit(SIM_T *simu){
+    gpu_set(0);
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     if(!parms->gpu.tomo){
@@ -364,12 +376,19 @@ void gpu_fit(SIM_T *simu){
     }
     toc("Before FitR");
     curcell *rhs=NULL;
-    cumuv(&rhs, &curecon->FR, curecon->opdr, 1);
+    cumuv(&rhs, 0, &curecon->FR, curecon->opdr, 1);
     toc("FitR");
-    gpu_pcg(&curecon->dmfit, (G_CGFUN)cumuv, &curecon->FL, NULL, NULL, rhs,
-	    simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream);
+    if(gpu_pcg(&curecon->dmfit, (G_CGFUN)cumuv, &curecon->FL, NULL, NULL, rhs,
+	       simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream)){
+	curcellwrite(curecon->opdr, "fit_opdr_%d", simu->reconisim);
+	curcellwrite(rhs, "fit_rhs_%d", simu->reconisim);
+	curcellwrite(curecon->dmfit, "fit_dmfit_%d", simu->reconisim);
+	dcellwrite(simu->gradlastol, "fit_gradlastol_%d", simu->reconisim);
+	exit(1);
+    }
     toc("FitL CG");
     gpu_curcell2d(&simu->dmfit_hi, curecon->dmfit, curecon->cgstream);
+    cudaStreamSynchronize(curecon->cgstream);
     curcellfree(curecon->opdfit);
     curcellfree(curecon->opdfit2);
     //Don't free opdr.

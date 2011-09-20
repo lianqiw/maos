@@ -29,10 +29,6 @@ extern "C"
 texture<float, cudaTextureType2DLayered, cudaReadModeElementType> texRefatm;
 #endif
 
-static cumap_t *cuatm=NULL;//array of cumap_t;
-cumap_t *cudmreal=NULL;
-cumap_t *cudmproj=NULL;
-static float *cc=NULL;
 
 /*
   Question: when I declare CC as a float* here and initialize once, I get
@@ -80,85 +76,97 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     }
     //The atm in GPU is the same as in CPU.
     if(nx0==parms->atm.nx && ny0==parms->atm.ny){
-	if(!cuatm || iseed0!=iseed){
+	if(iseed0!=iseed){
 	    gpu_atm2gpu(atm, nps);
 	    iseed0=iseed;
 	}
 	return;
     }
     //The atm in GPU is smaller than in CPU.
-    if(!cuatm){//initialize the data array.
-	cuatm=(cumap_t*)calloc(1, sizeof(cumap_t));
-	cuatm->nlayer=nps;
+    for(int im=0; im<NGPU; im++){//Loop over all GPUs.
+	gpu_set(im);
+	if(!cudata->atm){
+	    cudata->atm=(cumap_t*)calloc(1, sizeof(cumap_t));
+	    cumap_t *cuatm=cudata->atm;
+	    cuatm->nlayer=nps;
 #if ATM_TEXTURE
-	cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
-	DO(cudaMalloc3DArray(&cuatm->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), 
-			     cudaArrayLayered));
-	texRefatm.addressMode[0] = cudaAddressModeWrap;
-	texRefatm.addressMode[1] = cudaAddressModeWrap;
-	texRefatm.filterMode     = cudaFilterModeLinear;
-	texRefatm.normalized     = true; 
-	DO(cudaBindTextureToArray(texRefatm, cuatm->ca, channelDesc));
+	    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
+	    DO(cudaMalloc3DArray(&cuatm->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), 
+				 cudaArrayLayered));
+	    texRefatm.addressMode[0] = cudaAddressModeWrap;
+	    texRefatm.addressMode[1] = cudaAddressModeWrap;
+	    texRefatm.filterMode     = cudaFilterModeLinear;
+	    texRefatm.normalized     = true; 
+	    DO(cudaBindTextureToArray(texRefatm, cuatm->ca, channelDesc));
 #else
-	DO(cudaMallocHost(&(cuatm->p), nps*sizeof(float*)));
-	for(int ips=0; ips<nps; ips++){
-	    DO(cudaMalloc(&(cuatm->p[ips]), nx0*ny0*sizeof(float)));
-	}
+	    DO(cudaMallocHost(&(cuatm->p), nps*sizeof(float*)));
+	    for(int ips=0; ips<nps; ips++){
+		DO(cudaMalloc(&(cuatm->p[ips]), nx0*ny0*sizeof(float)));
+	    }
 #endif
-	cuatm->vx=new float[nps];
-	cuatm->vy=new float[nps]; 
-	cuatm->ht=new float[nps];
-	cuatm->ox=new float[nps];
-	cuatm->oy=new float[nps];
-	cuatm->dx=new float[nps];
-	cuatm->nx=new int[nps];
-	cuatm->ny=new int[nps];
-	for(int ips=0; ips<nps; ips++){
-	    cuatm->nx[ips]=nx0;
-	    cuatm->ny[ips]=ny0;
-	    cuatm->vx[ips]=atm[ips]->vx;
-	    cuatm->vy[ips]=atm[ips]->vy;
-	    cuatm->ht[ips]=atm[ips]->h;
-	    cuatm->dx[ips]=atm[ips]->dx;
-	    cuatm->ox[ips]=INFINITY;//place holder
-	    cuatm->oy[ips]=INFINITY;
+	    cuatm->vx=new float[nps];
+	    cuatm->vy=new float[nps]; 
+	    cuatm->ht=new float[nps];
+	    cuatm->ox=new float[nps];
+	    cuatm->oy=new float[nps];
+	    cuatm->dx=new float[nps];
+	    cuatm->nx=new int[nps];
+	    cuatm->ny=new int[nps];
+	    for(int ips=0; ips<nps; ips++){
+		cuatm->nx[ips]=nx0;
+		cuatm->ny[ips]=ny0;
+		cuatm->vx[ips]=atm[ips]->vx;
+		cuatm->vy[ips]=atm[ips]->vy;
+		cuatm->ht[ips]=atm[ips]->h;
+		cuatm->dx[ips]=atm[ips]->dx;
+		cuatm->ox[ips]=INFINITY;//place holder
+		cuatm->oy[ips]=INFINITY;
+	    }
 	}
     }
     const double dtisim=isim*parms->sim.dt;
     float (*pout)[nx0]=NULL;
+    //We keep the same atm in all GPU.
     for(int ips=0; ips<nps; ips++){
-	float dx=parms->atm.dx;
-	float xisim=-cuatm->vx[ips]*dtisim;
-	float yisim=-cuatm->vy[ips]*dtisim;
-	float lx=-(parms->atm.nxn/2)*dx+xisim;//not -1 to have margin for linear interpolation
-	float ly=-(parms->atm.nyn/2)*dx+yisim;
-	float rx=(parms->atm.nxn/2+1)*dx+xisim;//+1 to have margin for linear interpolation
-	float ry=(parms->atm.nyn/2+1)*dx+yisim;
+	int offx, offy;
 	int need=iseed0!=iseed;
-	if(isinf(cuatm->ox[ips])){
-	    need=1;//align middle
-	    cuatm->ox[ips]=(-parms->atm.nxm/2)*dx+xisim;
-	    cuatm->oy[ips]=(-parms->atm.nym/2)*dx+yisim;
-	}else if(cuatm->ox[ips] > lx){
-	    need=1;//align right
-	    cuatm->ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx+xisim;
-	}else if(cuatm->ox[ips]+cuatm->nx[ips]*cuatm->dx[ips] <rx){
-	    need=1;//align left
-	    cuatm->ox[ips]=(-parms->atm.nxn/2)*dx+xisim;
-	}
-	if(cuatm->oy[ips] > ly){
-	    need=1;
-	    cuatm->oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx+yisim;
-	}else if(cuatm->oy[ips]+cuatm->ny[ips]*cuatm->dx[ips] <ry){
-	    need=1;
-	    cuatm->oy[ips]=(-parms->atm.nyn/2)*dx+yisim;
+	for(int im=0; im<NGPU; im++){
+	    gpu_set(im);
+	    cumap_t *cuatm=cudata->atm;
+	    float dx=parms->atm.dx;
+	    float xisim=-cuatm->vx[ips]*dtisim;
+	    float yisim=-cuatm->vy[ips]*dtisim;
+	    float lx=-(parms->atm.nxn/2)*dx+xisim;//not -1 to have margin for linear interpolation
+	    float ly=-(parms->atm.nyn/2)*dx+yisim;
+	    float rx=(parms->atm.nxn/2+1)*dx+xisim;//+1 to have margin for linear interpolation
+	    float ry=(parms->atm.nyn/2+1)*dx+yisim;
+	    if(isinf(cuatm->ox[ips])){
+		need=1;//align middle
+		cuatm->ox[ips]=(-parms->atm.nxm/2)*dx+xisim;
+		cuatm->oy[ips]=(-parms->atm.nym/2)*dx+yisim;
+	    }else if(cuatm->ox[ips] > lx){
+		need=1;//align right
+		cuatm->ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx+xisim;
+	    }else if(cuatm->ox[ips]+cuatm->nx[ips]*cuatm->dx[ips] <rx){
+		need=1;//align left
+		cuatm->ox[ips]=(-parms->atm.nxn/2)*dx+xisim;
+	    }
+	    if(cuatm->oy[ips] > ly){
+		need=1;
+		cuatm->oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx+yisim;
+	    }else if(cuatm->oy[ips]+cuatm->ny[ips]*cuatm->dx[ips] <ry){
+		need=1;
+		cuatm->oy[ips]=(-parms->atm.nyn/2)*dx+yisim;
+	    }
+	    if(need){
+		offx=(int)round((cuatm->ox[ips]-atm[ips]->ox)/dx);
+		offy=(int)round((cuatm->oy[ips]-atm[ips]->oy)/dx);
+		cuatm->ox[ips]=atm[ips]->ox+offx*dx;
+		cuatm->oy[ips]=atm[ips]->oy+offy*dx;
+	    }
 	}
 	if(need){
-	    int offx=(int)round((cuatm->ox[ips]-atm[ips]->ox)/dx);
-	    int offy=(int)round((cuatm->oy[ips]-atm[ips]->oy)/dx);
-	    cuatm->ox[ips]=atm[ips]->ox+offx*dx;
-	    cuatm->oy[ips]=atm[ips]->oy+offy*dx;
-	    info2("Copying layer %d at step %d to GPU: offx=%d, offy=%d\n", ips, isim, offx, offy);
+	    TIC;tic;
 	    const int nxi=atm[ips]->nx;
 	    const int nyi=atm[ips]->ny;
 	    offx=offx%nxi; if(offx<0) offx+=nxi;
@@ -176,7 +184,8 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		my=ny0;
 	    }
 	    if(!pout) {
-		pout=(float(*)[nx0])malloc(sizeof(float)*nx0*ny0);
+		//pinned memory is faster for copying to GPU.
+		cudaMallocHost((float**)&pout, sizeof(float)*nx0*ny0);
 	    }
 	    
 	    PDMAT(atm[ips], pin);
@@ -196,53 +205,61 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
 		}
 	    }
+	    for(int im=0; im<NGPU; im++){
+		gpu_set(im);
+		cumap_t *cuatm=cudata->atm;
 #if ATM_TEXTURE
-	    /*The extent field defines the dimensions of the transferred area in
-	      elements. If a CUDA array is participating in the copy, the extent
-	      is defined in terms of that array's elements. If no CUDA array is
-	      participating in the copy then the extents are defined in elements
-	      of unsigned char.*/
-	    struct cudaMemcpy3DParms par={0};
-	    par.srcPos = make_cudaPos(0,0,0);
-	    par.srcPtr = make_cudaPitchedPtr((float*)pout, nx0*sizeof(float), nx0, ny0);
-	    par.dstPos = make_cudaPos(0,0,ips);
-	    par.dstArray=cuatm->ca;
-	    par.extent = make_cudaExtent(nx0, ny0, 1);
-	    par.kind   = cudaMemcpyHostToDevice;
-	    DO(cudaMemcpy3D(&par));
+		/*The extent field defines the dimensions of the transferred area in
+		  elements. If a CUDA array is participating in the copy, the extent
+		  is defined in terms of that array's elements. If no CUDA array is
+		  participating in the copy then the extents are defined in elements
+		  of unsigned char.*/
+		struct cudaMemcpy3DParms par={0};
+		par.srcPos = make_cudaPos(0,0,0);
+		par.srcPtr = make_cudaPitchedPtr((float*)pout, nx0*sizeof(float), nx0, ny0);
+		par.dstPos = make_cudaPos(0,0,ips);
+		par.dstArray=cuatm->ca;
+		par.extent = make_cudaExtent(nx0, ny0, 1);
+		par.kind   = cudaMemcpyHostToDevice;
+		DO(cudaMemcpy3D(&par));
 #else
-	    DO(cudaMemcpy(cuatm->p[ips], (float*)pout, nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
+		DO(cudaMemcpy(cuatm->p[ips], (float*)pout, nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
 #endif
+		CUDA_SYNC_DEVICE;
+		toc2("Step %d: Copying layer %d to GPU %d: offx=%d, offy=%d", isim, ips, GPUS[im], offx, offy);tic;
+	    }
 	}
     }
-    CUDA_SYNC_DEVICE;
-    free(pout);
+    cudaFreeHost(pout);
     iseed0=iseed;
 }
 /**
    Transfer atmospheric data to GPU.
 */
 void gpu_atm2gpu(map_t **atm, int nps){
-    gpu_print_mem("atm in");
-    TIC;tic;
+    for(int im=0; im<NGPU; im++){
+	gpu_set(im);
+	gpu_print_mem("atm in");
+	TIC;tic;
 #if ATM_TEXTURE
-    gpu_map2dev(&cuatm, atm, nps, 1);
-    texRefatm.addressMode[0] = cudaAddressModeWrap;
-    texRefatm.addressMode[1] = cudaAddressModeWrap;
-    texRefatm.filterMode     = cudaFilterModeLinear;
-    texRefatm.normalized     = true; 
-    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
-    DO(cudaBindTextureToArray(texRefatm, cuatm->ca, channelDesc));
+	gpu_map2dev(&cudata_all[im]->atm, atm, nps, 1);
+	texRefatm.addressMode[0] = cudaAddressModeWrap;
+	texRefatm.addressMode[1] = cudaAddressModeWrap;
+	texRefatm.filterMode     = cudaFilterModeLinear;
+	texRefatm.normalized     = true; 
+	cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
+	DO(cudaBindTextureToArray(texRefatm, cudata_all[im]->atm->ca, channelDesc));
 #else
-    gpu_map2dev(&cuatm, atm, nps, 2);
+	gpu_map2dev(&cudata_all[im]->atm, atm, nps, 2);
 #endif
-    toc2("atm to gpu");//0.4 second.
-    gpu_print_mem("atm out");
+	toc2("atm to gpu");//0.4 second.
+	gpu_print_mem("atm out");
+    }
 }
 /**
    Copy DM commands to GPU.
 */
-void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
+static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
     gpu_map2dev(cudm, dmreal, ndm, 2);
     if(dmcfg && !(*cudm)->cubic){
 	(*cudm)->cubic=new int[ndm];
@@ -253,6 +270,18 @@ void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
 	}
     }
     CUDA_SYNC_DEVICE;
+}
+void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
+    for(int im=0; im<NGPU; im++){
+	gpu_set(im);
+	gpu_dm2gpu(&cudata_all[im]->dmreal, dmreal, ndm, dmcfg);
+    }
+}
+void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg){
+    for(int im=0; im<NGPU; im++){
+	gpu_set(im);
+	gpu_dm2gpu(&cudata_all[im]->dmproj, dmproj, ndm, dmcfg);
+    }
 }
 
 #define KARG_COMMON const float (*restrict loc)[2], const int nloc, const float dx, const float dy, const float dispx, const float dispy, const float alpha
@@ -358,9 +387,10 @@ __global__ void prop_cubic(float *restrict out, const float *restrict in, const 
 /**
    Ray tracing of atm.
 */
-void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, const float hs, const float thetax,const float thetay,
+void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, const float hs, 
+		 const float thetax,const float thetay,
 		 const float mispx, const float mispy, const float dtisim, const float atmalpha, cudaStream_t stream){
-
+    cumap_t *cuatm=cudata->atm;
     if(fabs(atmalpha)<EPS) return;
     for(int ips=0; ips<cuatm->nlayer; ips++){
 	const float dx=cuatm->dx[ips];
@@ -407,15 +437,19 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 	const int cubic=cudm->cubic[idm];
 	const float iac=cudm->iac[idm];
 	if(cubic){
-	    if(!cc) {
-		DO(cudaMallocHost(&cc, 5*sizeof(float)));
+	    if(!cudata->cc) {
+		PNEW(lock);
+		LOCK(lock);
+		DO(cudaMallocHost(&(cudata->cc), 5*sizeof(float)));
+		float *cc=cudata->cc;
+		float cubicn=1.f/(1.f+2.f*iac);
+		cc[0]=1.f*cubicn;
+		cc[1]=(4.f*iac-2.5f)*cubicn; 
+		cc[2]=(1.5f-3.f*iac)*cubicn;		       
+		cc[3]=(2.f*iac-0.5f)*cubicn;			
+		cc[4]=(0.5f-iac)*cubicn; 
+		UNLOCK(lock);
 	    }
-	    float cubicn=1.f/(1.f+2.f*iac);
-	    cc[0]=1.f*cubicn;
-	    cc[1]=(4.f*iac-2.5f)*cubicn; 
-	    cc[2]=(1.5f-3.f*iac)*cubicn;		       
-	    cc[3]=(2.f*iac-0.5f)*cubicn;			
-	    cc[4]=(0.5f-iac)*cubicn; 
 	}
 	const float dx=cudm->dx[idm];
 	const float du=1.f/dx;
@@ -430,7 +464,7 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 #define COMM loc,nloc,scale*du,scale*du, dispx, dispy, dmalpha
 #define KARG cudm->p[idm],cudm->nx[idm],cudm->ny[idm], COMM
 	if (cubic){//128 is a good number for cubic.
-	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cc);
+	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudata->cc);
 	}else{
 	    prop_linear<<<DIM(nloc,256), 0, stream>>>(phiout, KARG);
 	}
@@ -757,7 +791,7 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		   float alpha, char trans, cudaStream_t stream){
     const float dxi1=1.f/dxi;
     const float ratio=dxo*dxi1;
-    if(fabs(ratio-1.f)<1.e-4 && trans=='t'){
+    if(fabs(ratio-1.f)<1.e-5 && trans=='t'){
 	gpu_prop_grid(in, oxi, oyi, dxi, out, oxo, oyo, dxo, -dispx, -dispy, alpha,'n', stream);
 	return;
     }
@@ -780,15 +814,15 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 	dispy+=offy1*ratio;
     }
     //convert offset into input grid coordinate. -1e-4 to avoid laying on the last point.
-    int nx=(int)floorf((nxi-1-dispx-1e-4)*ratio1)+1;
-    int ny=(int)floorf((nyi-1-dispy-1e-4)*ratio1)+1;
+    int nx=(int)floorf((nxi-1-dispx-1e-5)*ratio1)+1;
+    int ny=(int)floorf((nyi-1-dispy-1e-5)*ratio1)+1;
 
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;
     int offx2=(int)floorf(dispx); dispx-=offx2;//for input. coarse sampling.
     int offy2=(int)floorf(dispy); dispy-=offy2;
     if(trans=='n'){
-	if(fabs(ratio-1.f)<1.e-4){
+	if(fabs(ratio-1.f)<1.e-5){
 	    prop_grid_match_do<<<DIM2(nx, ny, 32), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
@@ -800,9 +834,9 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		 dispx, dispy, ratio, alpha, nx, ny);
 	}
     }else if(trans=='t'){
-	if(fabs(ratio-1.f)<1.e-4){
+	if(fabs(ratio-1.f)<1.e-5){
 	    error("Please revert the input/output and call with trans='n'\n");
-	}else if(fabs(ratio-0.5f)<1.e-4){
+	}else if(fabs(ratio-0.5f)<1.e-5){
 	    if(dispy>0.5f){//do a single col first.
 		prop_grid_os2_trans_col_do<<<DIM2(nx,1,256),0,stream>>>
 		    (out->p+offy1*nxo+offx1, nxo,

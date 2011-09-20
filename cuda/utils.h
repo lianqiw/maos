@@ -2,10 +2,41 @@
 #define AOS_CUDA_UTILS_H
 #include "types.h"
 #include <cublas_v2.h>
-#include "cusparse.h"
+#include <cusparse.h>
+#include <cufft.h>
+#include "wfs.h"
+extern int NGPU;
+extern int *GPUS;
 extern int NG1D;
 extern int NG2D;
+typedef struct{
+    //for accphi
+    cumap_t *atm;//array of cumap_t;
+    cumap_t *dmreal;
+    cumap_t *dmproj;
+    float   *cc;
+    //for perfevl
+    float  (*plocs)[2];
+    float   *pamp;
+    int    **embed;
+    curcell *surfevl;
+    curcell *evlopd;
+    curcell *evlpsfol;
+    curcell *evlpsfcl;
+    curcell *evlpsfcl_ngsr;
+    curcell *evlopdcov;
+    curcell *evlopdcov_ngsr;
+    cufftHandle *evlplan;
+    cublasHandle_t *evlhandle;
+    cudaStream_t *evlstream;
 
+    //for wfsgrad
+    cusparseMatDescr_t wfsspdesc;
+    cuwloc_t *powfs;
+    cuwfs_t *wfs;
+}cudata_t;
+extern __thread cudata_t *cudata;
+extern cudata_t **cudata_all;//use pointer array to avoid misuse.
 #define DEBUG_MEM 0
 #if DEBUG_MEM
 //static int tot_mem=0;
@@ -67,6 +98,7 @@ extern pthread_mutex_t cufft_mutex;
 #define CUFFT2(plan,in,dir) ({LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir);UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
 void gpu_print_mem(const char *msg);
 size_t gpu_get_mem(void);
+void gpu_set(int igpu);
 void gpu_map2dev(cumap_t **dest, map_t **source, int nps, int type);
 void gpu_sp2dev(cusp **dest, dsp *src);
 void gpu_calc_ptt(double *rmsout, double *coeffout, 

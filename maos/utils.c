@@ -438,14 +438,13 @@ static __attribute__((destructor)) void deinit(){
 ARG_T * parse_args(int argc, char **argv){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
     int *seeds=NULL; int nseed=0;
-    arg->gpu=INT_MAX;
     ARGOPT_T options[]={
 	{"help",   'h',T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
 	{"force",  'f',T_INT, 0, &arg->force, NULL},
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
-	{"gpu",    'g',T_INT, 1, &arg->gpu, NULL},
+	{"gpu",    'g',T_INTARR, 1, &arg->gpus, &arg->ngpu},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
 	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},

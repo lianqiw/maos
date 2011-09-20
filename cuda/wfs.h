@@ -37,8 +37,6 @@ typedef struct{
     cuwloc_t *powfs;
     cusp *GS0t;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
-    curmat *gradacc;    /**<For accumulating grads*/
-    curmat *ints;       /**<For accumulating subaperture image.*/
     float  *neasim;     /**<The noise equivalent angles for each grad.*/
     float  *amp;        /**<Amplitude map*/
     cufftHandle plan1, plan2;   /**<FFTW plan if any*/
@@ -53,17 +51,19 @@ typedef struct{
     float  *lltamp;
     int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
     cufftHandle lltplan1, lltplan2;/**<FFTW plan for LLT*/
+    curmat *opdadd;    /**<The ncpa and surface aberration.*/
+
+    //Run time data that changes
     //For random number of this wfs.
     curandStat *custat;
     int     custatb;//allocated block
     int     custatt;//allocated thread
     float  *neareal;
-    curmat *opdadd;    /**<The ncpa and surface aberration.*/
+    curmat *gradacc;    /**<For accumulating grads*/
+    curmat *ints;       /**<For accumulating subaperture image.*/
+    
 }cuwfs_t;
 
-extern cuwloc_t *cupowfs;
-extern cuwfs_t *cuwfs;
-extern cusparseMatDescr_t cuspdesc;
 void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream);
 
 __global__ void cuztilt(float *restrict g, float *restrict opd, 

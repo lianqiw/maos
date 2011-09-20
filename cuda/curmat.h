@@ -27,10 +27,10 @@ void curcellzero(curcell *A, cudaStream_t stream);
 void curcellcp(curcell **A, const curcell *B, cudaStream_t stream);
 void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream);
 __global__ void adds_do(float *vec, float *palpha, float beta, int n);
-__global__ void add2_do(float *restrict a, const float *restrict b, const float *restrict b_sc1, float b_sc2, int n);
-void curadd2(curmat **out, const curmat *in, float *alpha, cudaStream_t stream);
+__global__ void add2_do(float *restrict a, const float * b, const float *restrict b_sc1, float b_sc2, int n);
+void curadd2(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStream_t stream);
 void curadd3(curmat **out, float *beta, const curmat *in, cudaStream_t stream);
-void curcelladd2(curcell **A, const curcell *B, float* alpha, cudaStream_t stream);
+void curcelladd2(curcell **A, const curcell *B, float* alpha, float alpha2, cudaStream_t stream);
 void curcelladd3(curcell **A, float* beta, const curcell *B, cudaStream_t stream);
 
 /**
@@ -43,7 +43,8 @@ float curcellinn(const curcell *A, const curcell *B, cudaStream_t stream);
 void curinn2(float *restrict res, const curmat *a, const curmat *b, cudaStream_t stream);
 void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream);
 void cursum2(float *restrict, const curmat *a, cudaStream_t stream);
-
+void curcellscale(curcell *A, float alpha, cudaStream_t stream);
+float curmax(const curmat *a, cudaStream_t stream);
 /**
    Add tip/tilt to OPD
 */

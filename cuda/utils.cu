@@ -3,12 +3,14 @@
 #include <pthread.h>
 static cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
-extern cusparseMatDescr_t cuspdesc;
 
+int NGPU=0;
+int* GPUS=NULL;
 int nstream=0;
 int NG1D=64; /**<Optimum number of blocks. Twice of multi processors.*/
 int NG2D=8; /**<Optimum number of blocks. Twice of multi processors.*/
-
+cudata_t **cudata_all=NULL;//for all GPU.
+__thread cudata_t *cudata=NULL;//for current thread and current GPU
 /**
    Get GPU info.
 */
@@ -45,92 +47,139 @@ size_t gpu_get_mem(void){
 /**
    Initialize GPU. Return 1 if success.
  */
-int gpu_init(int igpu){
-    if(igpu<0) {
+int gpu_init(int *gpus, int ngpu){
+    if(gpus && gpus[0]<0){
 	info2("CUDA is disabled by user.\n");
 	return 0;
     }
-    if(igpu==INT_MAX){//automatic
-	int ngpu=0;
-	DO(cudaGetDeviceCount(&ngpu));
-	switch(ngpu){
+    if(!gpus){//automatic
+	int navail=0;
+	DO(cudaGetDeviceCount(&navail));
+	switch(navail){
 	case 0:
 	    warning2("No GPU is available for computing\n");
-	    igpu=-1;
 	    break;
 	case 1:{//1 device. check whethere it is emulation.
 	    cudaDeviceProp prop;
 	    cudaGetDeviceProperties(&prop, 0);
 	    if(prop.major==9999){
 		warning2("The only device is in emulation mode. Won't use it\n");
-		igpu=-1;
 	    }else{
-		igpu=0;
+		NGPU=1;
+		GPUS=(int*)calloc(1, sizeof(int));
+		GPUS[0]=0;
 	    }
 	}
 	    break;
 	default:{//There are multiple devices.
-	    cudaDeviceProp prop;
-	    prop.canMapHostMemory=1;
-	    prop.major=2;
-	    int ans=cudaChooseDevice(&igpu, &prop);
-	    if(ans==cudaErrorInvalidValue){
-		warning2("cudaChooseDevice Failed. Will not use GPU computing.\n");
-		igpu=-1;
+	    GPUS=(int*)calloc(navail, sizeof(int));
+	    for(int ig=0; ig<navail; ig++){
+		cudaDeviceProp prop;
+		cudaGetDeviceProperties(&prop, ig);
+		if(prop.major!=9999){
+		    if(prop.totalGlobalMem>1000000000){//require minimum of 1.5G
+			GPUS[NGPU]=ig;
+			NGPU++;
+		    }else{
+			warning("Skip %d due to insufficient memory\n", ig);
+		    }
+		}
 	    }
 	}
 	    break;
-	}
-    }
-    if(igpu>-1){
-	int ans=cudaSetDevice(igpu);
-	switch(ans){
-	case cudaSuccess:{
-	    info2("Will use GPU %d for CUDA.\n", igpu);
-	    cudaDeviceProp prop;
-	    cudaGetDeviceProperties(&prop, igpu);
-	    NG1D=prop.multiProcessorCount*2;
-	    NG2D=(int)round(sqrt((double)NG1D));
-	    if(0){
-		int nn=16777216;
-		//int nn=1024;
-		curmat *temp=curnew(nn,1);
-		curset(temp,1,0);
-		curmat *res=curnew(1,1);
-		TIC;tic;
-		cursum2(res->p, temp, 0);
-		cudaStreamSynchronize(0);
-		toc("inn %d", nn);
-		curshow(res, 0);
-		CUDA_SYNC_DEVICE;
-		cudaStreamSynchronize(0);
-		exit(0);
-	    }
-	}
-	    return 1;
-	case cudaErrorInvalidDevice:
-	    error2("Invalid GPU device %d\n", igpu);
-	    _exit(1);
-	    break;
-	case cudaErrorSetOnActiveProcess:
-	    warning2("Error set on active process\n");
-	    info("DISPLAY=%s\n",getenv("DISPLAY"));
-	    break;
-	default:
-	    error2("Unknown error\n");
-	    _exit(1);
 	}
     }else{
-	warning2("No usable GPU found for CUDA.\n");
+	GPUS=(int*)calloc(ngpu ,sizeof(int));
+	for(int im=0; im<ngpu; im++){
+	    int ig=gpus[im];
+	    cudaDeviceProp prop;
+	    cudaGetDeviceProperties(&prop, ig);
+	    if(prop.major!=9999){
+		if(prop.totalGlobalMem>1000000000){//require minimum of 1.5G
+		    GPUS[NGPU]=ig;
+		    NGPU++;
+		}else{
+		    warning("Skip %d due to insufficient memory\n", ig);
+		}
+	    }
+	}
+    }
+    if(NGPU>0){
+	int ic=0;
+	for(int im=0; im<NGPU; im++){
+	    int igpu=GPUS[im];
+	    if(ic!=im){
+		GPUS[ic]=GPUS[im];//delete invalid devices.
+	    }
+	    int ans=cudaSetDevice(igpu);
+	    switch(ans){
+	    case cudaSuccess:{
+		ic++;
+		info2("Will use GPU %d for CUDA.\n", igpu);
+		cudaDeviceProp prop;
+		cudaGetDeviceProperties(&prop, igpu);
+		NG1D=prop.multiProcessorCount*2;
+		NG2D=(int)round(sqrt((double)NG1D));
+		if(0){
+		    int nn=16777216;
+		    //int nn=1024;
+		    curmat *temp=curnew(nn,1);
+		    curset(temp,1,0);
+		    curmat *res=curnew(1,1);
+		    TIC;tic;
+		    cursum2(res->p, temp, 0);
+		    cudaStreamSynchronize(0);
+		    toc("inn %d", nn);
+		    curshow(res, 0);
+		    CUDA_SYNC_DEVICE;
+		    cudaStreamSynchronize(0);
+		    exit(0);
+		}
+	    }
+		break;
+	    case cudaErrorInvalidDevice:
+		warning2("Invalid GPU device %d\n", igpu);
+		break;
+	    case cudaErrorSetOnActiveProcess:
+		warning2("Error set on active process\n");
+		info("DISPLAY=%s\n",getenv("DISPLAY"));
+		break;
+	    default:
+		warning2("Unknown error\n");
+	    }
+	}
+	NGPU=ic;
+	if(NGPU) {
+	    cudata_all=(cudata_t**)calloc(NGPU, sizeof(cudata_t*));
+	    for(int im=0; im<NGPU; im++){
+		cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
+	    }
+	}
     }
     gpu_print_mem("gpu init");
-    return 0;
+    if(!NGPU){
+	warning("no gpu is available\n");
+	return 0;
+    }else{
+	return 1;
+    }
+}
+/**
+   switch to the next GPU and update the pointer.
+*/
+void gpu_set(int igpu){
+    igpu=igpu%NGPU;
+    cudaSetDevice(GPUS[igpu]);
+    cudata=cudata_all[igpu];
 }
 /**
    Clean up device.
 */
 void gpu_cleanup(void){
-    cudaDeviceReset();
+    for(int ig=0; ig<NGPU; ig++){
+	cudaSetDevice(GPUS[ig]);
+	cudaDeviceReset();
+    }
 }
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
@@ -260,7 +309,7 @@ void cuspmul(float *y, cusp *A, float *x, float alpha,
     cuspmul_do<<<DIM(A->nx, 256), 0, stream>>>(y,A,x,alpha);
 #else
     int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_TRANSPOSE, 
-			      A->ny, A->nx, alpha, cuspdesc,
+			      A->ny, A->nx, alpha, cudata->wfsspdesc,
 			      A->x, A->p, A->i, x, 1.f, y);
     if(status!=0){
 	error("cusparseScsrmv failed with status %d\n", status);
@@ -296,7 +345,7 @@ void cusptmul(float *y, cusp *A, float *x, float alpha,
     warning("Not working correctly yet\n");
 #else
     int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, 
-			      A->ny, A->nx, alpha, cuspdesc,
+			      A->ny, A->nx, alpha, cudata->wfsspdesc,
 			      A->x, A->p, A->i, x, 1.f, y);
     if(status!=0){
 	error("cusparseScsrmv failed with status %d\n", status);
@@ -380,11 +429,11 @@ void gpu_calc_ptt(double *rmsout, double *coeffout,
 		  ){
         //sum with 16 blocks, each with 256 threads.
     float *cc;
+    float ccb[4];
     cudaCalloc(cc, 4*sizeof(float), stream);
     calc_ptt_do<<<DIM(nloc, 256), 0, stream>>>(cc, loc, nloc, phi, amp);
+    cudaMemcpyAsync(ccb, cc, 4*sizeof(float), cudaMemcpyDefault, stream);
     CUDA_SYNC_STREAM;
-    float ccb[4];
-    cudaMemcpy(ccb, cc, 4*sizeof(float), cudaMemcpyDefault);
     cudaFree(cc); cc=NULL;
     double coeff[3], tot;
     coeff[0]=ccb[0]; coeff[1]=ccb[1]; coeff[2]=ccb[2]; tot=ccb[3];
@@ -730,10 +779,18 @@ void gpu_muv2dev(cumuv_t *out, MUV_T *in){
     spcellfree(Mt);
 }
 void gpu_cur2d(dmat **out, const curmat *in, cudaStream_t stream){
+    if(!in){
+	if(*out) dzero(*out);
+	return;
+    }
     if(!*out) *out=dnew(in->nx, in->ny);
     gpu_dev2dbl(&(*out)->p, in->p, in->nx*in->ny, stream);
 }
 void gpu_curcell2d(dcell **out, const curcell *in, cudaStream_t stream){
+    if(!in){
+	if(*out) dcellzero(*out);
+	return;
+    }
     if(!*out) *out=dcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
 	gpu_cur2d(&(*out)->p[i], in->p[i], stream);
@@ -741,17 +798,29 @@ void gpu_curcell2d(dcell **out, const curcell *in, cudaStream_t stream){
 }
 
 void gpu_cur2s(smat **out, const curmat *in, cudaStream_t stream){
+    if(!in) {
+	if(*out) szero(*out);
+	return;
+    }
     if(!*out) *out=snew(in->nx, in->ny);
     DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDeviceToHost, stream));
 }
 
 
 void gpu_cuc2z(zmat **out, const cucmat *in, cudaStream_t stream){
+    if(!in){
+	if(*out) zzero(*out);
+	return;
+    }
     if(!*out) *out=znew(in->nx, in->ny);
     DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(fcomplex), cudaMemcpyDeviceToHost, stream));
 }
 
 void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream){
+    if(!in){
+	if(*out) scellzero(*out);
+	return;
+    }
     if(!*out) *out=scellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
 	gpu_cur2s(&(*out)->p[i], in->p[i], stream);
@@ -759,6 +828,10 @@ void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream){
 }
 
 void gpu_cuccell2z(zcell **out, const cuccell *in, cudaStream_t stream){
+    if(!in){
+	if(*out) zcellzero(*out);
+	return;
+    }
     if(!*out) *out=zcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
 	gpu_cuc2z(&(*out)->p[i], in->p[i], stream);

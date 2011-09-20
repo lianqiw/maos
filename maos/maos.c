@@ -160,7 +160,7 @@ int main(int argc, char **argv){
     info2("Output folder is '%s'.\n",arg->dirout);
 
 #if USE_CUDA 
-    use_cuda=gpu_init(arg->gpu);
+    use_cuda=gpu_init(arg->gpus, arg->ngpu);
 #else
     use_cuda=0;
 #endif

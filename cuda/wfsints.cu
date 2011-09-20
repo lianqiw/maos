@@ -259,6 +259,8 @@ __global__ static void add_tilt_do(float *opd, int nx, int ny, float ox, float o
 }
 void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream){
     TIC;tic;
+    cuwloc_t *cupowfs=cudata->powfs;
+    cuwfs_t *cuwfs=cudata->wfs;
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
