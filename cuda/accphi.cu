@@ -502,8 +502,8 @@ __global__ void prop_linear(float *restrict out, const float *restrict in, const
 	int iy=floorf(y);
 	x=x-ix; y=y-iy;
 	if(ix>=0 && ix<nx-1 && iy>=0 && iy<ny-1){
-	    out[i]+=(in[iy*nx+ix]*(1-x)+in[iy*nx+ix+1]*x)*(1-y)
-		+(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y;
+	    out[i]+= alpha*((+in[iy*nx+ix]*(1.f-x) +in[iy*nx+ix+1]*x)*(1.f-y)
+			    +(+in[(iy+1)*nx+ix]*(1.f-x) +in[(iy+1)*nx+ix+1]*x)*y);
 	}
     }
 }
@@ -517,8 +517,8 @@ __global__ void prop_linear_nocheck(float *restrict out, const float *restrict i
 	int ix=floorf(x);
 	int iy=floorf(y);
 	x=x-ix; y=y-iy;
-	out[i]+=(in[iy*nx+ix]*(1-x)+in[iy*nx+ix+1]*x)*(1-y)
-	    +(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y;
+	out[i]+=alpha*((in[iy*nx+ix]*(1-x)+in[iy*nx+ix+1]*x)*(1-y)
+		       +(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y);
     }
 }
 //This is memory bound. So increasing # of points processed does not help.
@@ -537,8 +537,8 @@ __global__ void prop_linear_wrap(float *restrict out, const float *restrict in, 
 	while(iy>ny-1) iy=iy-ny;
 	int ix1=(ix==nx-1)?0:ix+1;
 	int iy1=(iy==ny-1)?0:iy+1;
-	out[i]+=(in[iy*nx+ix]*(1-x)+in[iy*nx+ix1]*x)*(1-y)
-	    +(in[(iy1)*nx+ix]*(1-x)+in[(iy1)*nx+ix1]*x)*y;
+	out[i]+=alpha*((in[iy*nx+ix]*(1-x)+in[iy*nx+ix1]*x)*(1-y)
+		       +(in[(iy1)*nx+ix]*(1-x)+in[(iy1)*nx+ix1]*x)*y);
     }
 }
 
