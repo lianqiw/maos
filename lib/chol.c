@@ -239,20 +239,32 @@ void chol_save(spchol *A, const char *format,...){
 	write_magic(MCC_ANY, fp);
 	nc=L->is_super?7:8;
 	zfwritelarr(fp, 2, &nc, &one);
+	write_header("Perm", fp);
 	do_write(fp, 0, sizeof(spint), M_SPINT, L->Perm, L->n, 1);
+	write_header("ColCount", fp);
 	do_write(fp, 0, sizeof(spint), M_SPINT, L->ColCount, L->n, 1);
 	if(L->is_super==0){//Simplicity
+	    write_header("p", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->p, L->n+1, 1);
+	    write_header("i", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->i, L->nzmax, 1);
+	    write_header("nz", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->nz, L->n, 1);
+	    write_header("next", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->next, L->n+2, 1);
+	    write_header("priv", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->prev, L->n+2, 1);
 	}else{
+	    write_header("super", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->super, L->nsuper+1, 1);
+	    write_header("pi", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->pi, L->nsuper+1, 1);
+	    write_header("px", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->px, L->nsuper+1, 1);
+	    write_header("s", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->s, L->ssize, 1);
 	}
+	write_header("x", fp);
 	do_write(fp, 0, sizeof(double),M_DBL, L->x, L->is_super?L->xsize:L->nzmax, 1);
     }
     zfclose(fp);

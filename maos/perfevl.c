@@ -300,20 +300,19 @@ void perfevl_ievl(thread_t *info){
 	    /* even if psfpttr=1, referencing is ok.  Change to copy if
 	       incompatible in the future.*/
 	    simu->evlopd->p[ievl]=dref(iopdevl);
-	    // dcp(&simu->evlopd->p[ievl], iopdevl);
 	}
 	if(parms->evl.psfngsr[ievl]!=2){//ngsr==2 means only want ngsr.
 	    /** opdcov does not have p/t/t removed. do it in postproc is necessary*/
+	    if(parms->evl.psfpttr[ievl]){
+		if(isim==parms->evl.psfisim && ievl==0){
+		    warning("Removing piston/tip/tilt from OPD.\n");
+		}
+		loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
+	    }
 	    if(parms->evl.opdcov){
 		dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
 	    }//opdcov
 	    if(parms->evl.psfmean || parms->evl.psfhist){//Evaluate closed loop PSF.	
-		if(parms->evl.psfpttr[ievl]){
-		    if(isim==parms->evl.psfisim && ievl==0){
-			warning("Removing piston/tip/tilt from PSF.\n");
-		    }
-		    loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
-		}
 		perfevl_psfcl(parms, aper, simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
 	    }//do_psf
 	}
@@ -410,17 +409,17 @@ static void perfevl_mean(SIM_T *simu){
 			dmat *iopdevl=simu->evlopd->p[ievl];
 			if(!iopdevl) continue;
 			ngsmod2science(iopdevl, parms, recon, aper, pcleNGSm, ievl, -1);
+			if(parms->evl.psfpttr[ievl]){
+			    /*we cannot use clmp because the removed ngsmod
+			      has tip/tilt component*/
+			    double ptt[3];
+			    loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
+			    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
+			}
 			if(parms->evl.opdcov){
 			    dmm(&simu->evlopdcov_ngsr->p[ievl], iopdevl, iopdevl, "nt", 1);
 			}
 			if(do_psf){
-			    if(parms->evl.psfpttr[ievl]){
-				/*we cannot use clmp because the removed ngsmod
-				  has tip/tilt component*/
-				double ptt[3];
-				loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
-				loc_remove_ptt(iopdevl->p, ptt, aper->locs);
-			    }
 			    perfevl_psfcl(parms, aper, simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
 			}
 			dfree(simu->evlopd->p[ievl]);

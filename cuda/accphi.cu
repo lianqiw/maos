@@ -27,8 +27,9 @@ extern "C"
 //Removed option of making DM in texture
 #if ATM_TEXTURE
 texture<float, cudaTextureType2DLayered, cudaReadModeElementType> texRefatm;
+#else
+static int WRAP_ATM;
 #endif
-
 
 /*
   Question: when I declare CC as a float* here and initialize once, I get
@@ -39,7 +40,63 @@ texture<float, cudaTextureType2DLayered, cudaReadModeElementType> texRefatm;
   has been cleared. Same problem with cc. it is cleared to all zeros.
 
 */
-
+typedef struct{
+    int ips;
+    float *next_atm;
+    int nx0;
+    int ny0;
+    int offx;
+    int offy;
+    map_t *atm;
+    pthread_mutex_t *mutex;
+}atm_prep_t;
+void atm_prep(atm_prep_t *data){
+    PNEW(lock);
+    const int ips=data->ips;
+    LOCK(lock);//make sure we only read one layer at a time.
+    const int nx0=data->nx0;
+    const int ny0=data->ny0;
+    const map_t *atm=data->atm;
+    const int nxi=atm->nx;
+    const int nyi=atm->ny;
+    int offx=data->offx;
+    int offy=data->offy;
+    offx=offx%nxi; if(offx<0) offx+=nxi;
+    offy=offy%nyi; if(offy<0) offy+=nyi;
+    
+    int mx, my;
+    if(offx+nx0>nxi){
+	mx=nxi-offx;
+    }else{
+	mx=nx0;
+    }
+    if(offy+ny0>nyi){
+	my=nyi-offy;
+    }else{
+	my=ny0;
+    }
+    PDMAT(atm, pin);
+    float (*pout)[nx0]=(float(*)[nx0])(data->next_atm);
+    for(int iy=0; iy<my; iy++){
+	for(int ix=0; ix<mx; ix++){
+	    pout[iy][ix]=(float)pin[iy+offy][ix+offx];
+	}
+	for(int ix=mx; ix<nx0; ix++){
+	    pout[iy][ix]=(float)pin[iy+offy][ix+offx-nxi];
+	}
+    }
+    for(int iy=my; iy<ny0; iy++){
+	for(int ix=0; ix<mx; ix++){
+	    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx];
+	}
+	for(int ix=mx; ix<nx0; ix++){
+	    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
+	}
+    }
+    UNLOCK(lock);
+    UNLOCK(data->mutex[ips]);//data is ready.
+    free(data);//allocated in parent thread. we free it here.
+}
 /**
    Transfer atmosphere or update atmosphere in GPU.
 */
@@ -76,25 +133,45 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     }
     //The atm in GPU is the same as in CPU.
     if(nx0==parms->atm.nx && ny0==parms->atm.ny){
+#if !ATM_TEXTURE
+	WRAP_ATM=1;
+#endif
 	if(iseed0!=iseed){
 	    gpu_atm2gpu(atm, nps);
 	    iseed0=iseed;
 	}
 	return;
     }
-    //The atm in GPU is smaller than in CPU.
-    for(int im=0; im<NGPU; im++){//Loop over all GPUs.
-	gpu_set(im);
-	if(!cudata->atm){
-	    cudata->atm=(cumap_t*)calloc(1, sizeof(cumap_t));
-	    cumap_t *cuatm=cudata->atm;
+#if !ATM_TEXTURE
+    WRAP_ATM=0;
+#endif
+    static int need_init=1;
+    static int *next_isim=NULL;//next time step to update this atmosphere.
+    static float *next_ox=NULL;
+    static float *next_oy=NULL;
+    static float **next_atm=NULL;
+    static pthread_mutex_t *next_mutex=NULL;
+    if(need_init){
+	//The atm in GPU is smaller than in CPU.
+	next_isim=(int*)calloc(nps, sizeof(int));
+	next_ox=(float*)calloc(nps, sizeof(float));
+	next_oy=(float*)calloc(nps, sizeof(float));
+	next_mutex=(pthread_mutex_t*)calloc(nps, sizeof(pthread_mutex_t));
+	for(int ips=0; ips<nps; ips++){
+	    pthread_mutex_init(&next_mutex[ips], NULL);
+	}
+	next_atm=(float **)calloc(nps, sizeof(void*));
+
+	for(int im=0; im<NGPU; im++){//Loop over all GPUs.
+	    gpu_set(im);
+	    cumap_t *cuatm=cudata->atm=(cumap_t*)calloc(1, sizeof(cumap_t));
 	    cuatm->nlayer=nps;
 #if ATM_TEXTURE
 	    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 	    DO(cudaMalloc3DArray(&cuatm->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), 
 				 cudaArrayLayered));
-	    texRefatm.addressMode[0] = cudaAddressModeWrap;
-	    texRefatm.addressMode[1] = cudaAddressModeWrap;
+	    texRefatm.addressMode[0] = cudaAddressModeClamp;//Wrap; don't use wrap since we are cropped
+	    texRefatm.addressMode[1] = cudaAddressModeClamp;//Wrap;
 	    texRefatm.filterMode     = cudaFilterModeLinear;
 	    texRefatm.normalized     = true; 
 	    DO(cudaBindTextureToArray(texRefatm, cuatm->ca, channelDesc));
@@ -115,16 +192,133 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    for(int ips=0; ips<nps; ips++){
 		cuatm->nx[ips]=nx0;
 		cuatm->ny[ips]=ny0;
+	    }
+	}//for im
+	need_init=0;
+    }//if need_init;
+    const double dt=parms->sim.dt;
+    const double dx=parms->atm.dx;
+    if(iseed0!=iseed){//A new seed update vx, vy, ht, etc.
+	for(int im=0; im<NGPU; im++){
+	    gpu_set(im);
+	    cumap_t *cuatm=cudata->atm;
+	    for(int ips=0; ips<nps; ips++){
 		cuatm->vx[ips]=atm[ips]->vx;
 		cuatm->vy[ips]=atm[ips]->vy;
 		cuatm->ht[ips]=atm[ips]->h;
 		cuatm->dx[ips]=atm[ips]->dx;
 		cuatm->ox[ips]=INFINITY;//place holder
 		cuatm->oy[ips]=INFINITY;
+		next_isim[ips]=isim;//right now.
+		//copy from below.
+		if(atm[ips]->vx>0){//align right
+		    next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-cuatm->vx[ips]*dt*next_isim[ips];
+		}else{//align left
+		    next_ox[ips]=(-parms->atm.nxn/2)*dx-cuatm->vx[ips]*dt*next_isim[ips];
+		}
+		if(atm[ips]->vy>0){//align right
+		    next_oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx-cuatm->vy[ips]*dt*next_isim[ips];
+		}else{//align left
+		    next_oy[ips]=(-parms->atm.nyn/2)*dx-cuatm->vy[ips]*dt*next_isim[ips];
+		}
+		info2("Layer %d: vx=%f vy=%f ox=%f oy=%f\n", 
+		     ips, cuatm->vx[ips], cuatm->vy[ips], next_ox[ips], next_oy[ips]);
 	    }
 	}
     }
-    const double dtisim=isim*parms->sim.dt;
+    for(int ips=0; ips<nps; ips++){
+	/*Load atmosphere to float memory in advance. This takes time if atm is
+	  stored in file.*/
+	if(isim>next_isim[ips]-100 && !next_atm[ips]){
+	    LOCK(next_mutex[ips]);
+	    //pinned memory is faster for copying to GPU.
+	    cudaMallocHost(&(next_atm[ips]), sizeof(float)*nx0*ny0);
+	    const int nxi=atm[ips]->nx;
+	    const int nyi=atm[ips]->ny;
+	    int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
+	    int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
+	    next_ox[ips]=atm[ips]->ox+offx*dx;
+	    next_oy[ips]=atm[ips]->oy+offy*dx;
+	    offx=offx%nxi; if(offx<0) offx+=nxi;
+	    offy=offy%nyi; if(offy<0) offy+=nyi;
+	    atm_prep_t *data=(atm_prep_t*)calloc(1, sizeof(atm_prep_t));//cannot use local variable.
+	    data->ips=ips;
+	    data->next_atm=next_atm[ips];
+	    data->nx0=nx0;
+	    data->ny0=ny0;
+	    data->offx=offx;
+	    data->offy=offy;
+	    data->atm=atm[ips];
+	    data->mutex=next_mutex;
+	    pthread_t thread;
+	    //launch an independent thread to pull data in. thread will exit when it is done.
+	    pthread_create(&thread, NULL, (void *(*)(void *))atm_prep, data);
+	}//need to cpy atm to next_atm.
+	if(isim==next_isim[ips]){
+	    //need to copy atm to gpu. and update next_isim
+	    TIC;tic;
+	    LOCK(next_mutex[ips]);//wait for atm_prep to finish.
+	    tic("Layer %d wait ",ips);
+	    for(int im=0; im<NGPU; im++){
+		tic;
+		gpu_set(im);
+		cumap_t *cuatm=cudata->atm;
+		cuatm->ox[ips]=next_ox[ips];
+		cuatm->oy[ips]=next_oy[ips];
+#if ATM_TEXTURE
+		/*The extent field defines the dimensions of the transferred area in
+		  elements. If a CUDA array is participating in the copy, the extent
+		  is defined in terms of that array's elements. If no CUDA array is
+		  participating in the copy then the extents are defined in elements
+		  of unsigned char.*/
+		struct cudaMemcpy3DParms par={0};
+		par.srcPos = make_cudaPos(0,0,0);
+		par.srcPtr = make_cudaPitchedPtr((float*)next_atm[ips], nx0*sizeof(float), nx0, ny0);
+		par.dstPos = make_cudaPos(0,0,ips);
+		par.dstArray=cuatm->ca;
+		par.extent = make_cudaExtent(nx0, ny0, 1);
+		par.kind   = cudaMemcpyHostToDevice;
+		DO(cudaMemcpy3D(&par));
+#else
+		DO(cudaMemcpy(cuatm->p[ips], (float*)next_atm[ips], 
+			      nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
+#endif
+		CUDA_SYNC_DEVICE;
+		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
+		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
+		toc2("Step %d: Copying layer %d to GPU %d: offx=%d, offy=%d", 
+		     isim, ips, GPUS[im], offx, offy);tic;
+	    }//for im
+	    cudaFreeHost(next_atm[ips]);
+	    next_atm[ips]=NULL;
+	    UNLOCK(next_mutex[ips]);
+	    //Update next_isim.
+	    long isim1, isim2;
+	    if(atm[ips]->vx>0){//align right.
+		isim1=(long)floor(-(next_ox[ips]+(parms->atm.nxn/2)*dx)/(atm[ips]->vx*dt));
+	    }else{//align left
+		isim1=(long)floor(-(next_ox[ips]+(nx0-(parms->atm.nxn/2+1))*dx)/(atm[ips]->vx*dt));
+	    }
+	    if(atm[ips]->vy>0){//align right.
+		isim2=(long)floor(-(next_oy[ips]+(parms->atm.nyn/2)*dx)/(atm[ips]->vy*dt));
+	    }else{//align left
+		isim2=(long)floor(-(next_oy[ips]+(ny0-(parms->atm.nyn/2+1))*dx)/(atm[ips]->vy*dt));
+	    }
+	    next_isim[ips]=isim1<isim2?isim1:isim2;
+	    if(atm[ips]->vx>0){//align right
+		next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-atm[ips]->vx*dt*next_isim[ips];
+	    }else{//align left
+		next_ox[ips]=(-parms->atm.nxn/2)*dx-atm[ips]->vx*dt*next_isim[ips];
+	    }
+	    if(atm[ips]->vy>0){//align right
+		next_oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx-atm[ips]->vy*dt*next_isim[ips];
+	    }else{//align left
+		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
+	    }
+	    //Compute ox, oy, next_isim.
+	}
+    }
+    /*
     float (*pout)[nx0]=NULL;
     //We keep the same atm in all GPU.
     for(int ips=0; ips<nps; ips++){
@@ -209,11 +403,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		gpu_set(im);
 		cumap_t *cuatm=cudata->atm;
 #if ATM_TEXTURE
-		/*The extent field defines the dimensions of the transferred area in
-		  elements. If a CUDA array is participating in the copy, the extent
-		  is defined in terms of that array's elements. If no CUDA array is
-		  participating in the copy then the extents are defined in elements
-		  of unsigned char.*/
+	
 		struct cudaMemcpy3DParms par={0};
 		par.srcPos = make_cudaPos(0,0,0);
 		par.srcPtr = make_cudaPitchedPtr((float*)pout, nx0*sizeof(float), nx0, ny0);
@@ -231,6 +421,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	}
     }
     cudaFreeHost(pout);
+*/
     iseed0=iseed;
 }
 /**
@@ -314,6 +505,20 @@ __global__ void prop_linear(float *restrict out, const float *restrict in, const
 	    out[i]+=(in[iy*nx+ix]*(1-x)+in[iy*nx+ix+1]*x)*(1-y)
 		+(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y;
 	}
+    }
+}
+//This is memory bound. So increasing # of points processed does not help.
+__global__ void prop_linear_nocheck(float *restrict out, const float *restrict in, 
+				    const int nx, const int ny, KARG_COMMON){
+    int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
+	float x=loc[i][0]*dx+dispx;
+	float y=loc[i][1]*dy+dispy;
+	int ix=floorf(x);
+	int iy=floorf(y);
+	x=x-ix; y=y-iy;
+	out[i]+=(in[iy*nx+ix]*(1-x)+in[iy*nx+ix+1]*x)*(1-y)
+	    +(in[(iy+1)*nx+ix]*(1-x)+in[(iy+1)*nx+ix+1]*x)*y;
     }
 }
 //This is memory bound. So increasing # of points processed does not help.
@@ -413,15 +618,16 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 
 #define COMM loc,nloc,scale*scx,scale*scy, dispx, dispy, atmalpha
 #if ATM_TEXTURE
-#define FUN prop_atm
-#define KARG ips, COMM
+	prop_atm<<<DIM(nloc,256), 0, stream>>> (phiout, ips, COMM);
 #else
-#define FUN prop_linear_wrap
-#define KARG cuatm->p[ips], cuatm->nx[ips], cuatm->ny[ips], COMM
+	if(WRAP_ATM){
+	    prop_linear_wrap<<<DIM(nloc,256), 0, stream>>>
+		(phiout, cuatm->p[ips], cuatm->nx[ips], cuatm->ny[ips], COMM);
+	}else{//we are gauranteed.
+	    prop_linear_nocheck<<<DIM(nloc,256), 0, stream>>>
+		(phiout, cuatm->p[ips], cuatm->nx[ips], cuatm->ny[ips], COMM);
+	}
 #endif
-	FUN <<<DIM(nloc,256), 0, stream>>> (phiout, KARG);
-#undef KARG
-#undef FUN
 #undef COMM
     }    
 }
