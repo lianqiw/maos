@@ -47,6 +47,7 @@ config/maos/wfs_lgs_tt.conf\
 config/maos/wfs_lgs_ttf_tt.conf\
 config/maos/wfs_ngs.conf\
 config/maos/default.conf\
+config/maos/change.log\
 config/skyc/maos_test.conf\
 config/skyc/skyc.conf\
 config/skyc/skyc_za0.conf\

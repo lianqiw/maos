@@ -402,6 +402,8 @@ void gpu_perfevl(thread_t *info){
 	if(parms->evl.psfngsr[ievl]!=2){
 	    if(parms->evl.psfpttr[ievl]){
 		curaddptt(iopdevl, cudata->plocs, -pclmp[isim][0], -pclmp[isim][1], -pclmp[isim][2], stream);
+	    }else{
+		curadds(iopdevl, -pclmp[isim][0], stream);
 	    }
 	    if(parms->evl.opdcov){
 		curmm(&cudata->evlopdcov->p[ievl], 1, iopdevl, iopdevl, "nt", 1, handle);
@@ -487,7 +489,9 @@ void gpu_perfevl_save(SIM_T *simu){
 		cudaStreamSynchronize(0);
 		scelladd(&temp, 1, temp2, scale);
 	    }
-	    cellarr_scell(simu->save->evlpsfolmean, temp);
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		cellarr_smat(simu->save->evlpsfolmean, temp->p[iwvl]);
+	    }
 	    scellfree(temp);
 	    scellfree(temp2);
 	}

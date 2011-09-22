@@ -308,6 +308,8 @@ void perfevl_ievl(thread_t *info){
 		    warning("Removing piston/tip/tilt from OPD.\n");
 		}
 		loc_remove_ptt(iopdevl->p, pclmp[isim], aper->locs);
+	    }else if(parms->evl.opdcov){//remove piston
+		dadds(iopdevl, -pclmp[isim][0]);
 	    }
 	    if(parms->evl.opdcov){
 		dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);

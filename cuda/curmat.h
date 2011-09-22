@@ -32,6 +32,7 @@ void curadd2(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStr
 void curadd3(curmat **out, float *beta, const curmat *in, cudaStream_t stream);
 void curcelladd2(curcell **A, const curcell *B, float* alpha, float alpha2, cudaStream_t stream);
 void curcelladd3(curcell **A, float* beta, const curcell *B, cudaStream_t stream);
+void curadds(curmat *A, float beta, cudaStream_t stream);
 
 /**
    Routine that does reduction.

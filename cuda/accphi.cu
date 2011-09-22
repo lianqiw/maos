@@ -54,6 +54,7 @@ void atm_prep(atm_prep_t *data){
     PNEW(lock);
     const int ips=data->ips;
     LOCK(lock);//make sure we only read one layer at a time.
+    TIC;tic;
     const int nx0=data->nx0;
     const int ny0=data->ny0;
     const map_t *atm=data->atm;
@@ -93,6 +94,7 @@ void atm_prep(atm_prep_t *data){
 	    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
 	}
     }
+    toc("Layer %d: Preparing atm", ips);
     UNLOCK(lock);
     UNLOCK(data->mutex[ips]);//data is ready.
     free(data);//allocated in parent thread. we free it here.
@@ -221,8 +223,6 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		}else{//align left
 		    next_oy[ips]=(-parms->atm.nyn/2)*dx-cuatm->vy[ips]*dt*next_isim[ips];
 		}
-		info2("Layer %d: vx=%f vy=%f ox=%f oy=%f\n", 
-		     ips, cuatm->vx[ips], cuatm->vy[ips], next_ox[ips], next_oy[ips]);
 	    }
 	}
     }

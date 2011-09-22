@@ -285,15 +285,17 @@ void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStre
 
 
 /**
-   add a scalar alpha, scaled by beta to a vector. all in device memory.
+   add a beta to a vector. 
 */
-__global__ void adds_do(float *vec, float *palpha, float beta, int n){
-    __shared__ float alpha;
-    if(threadIdx.x==0) alpha=beta**palpha;
+__global__ void adds_do(float *vec, float beta, int n){
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	vec[i]+=alpha;
+	vec[i]+=beta;
     }
+}
+void curadds(curmat *A, float beta, cudaStream_t stream){
+    const int n=A->nx*A->ny;
+    adds_do<<<DIM(n, 256), 0, stream>>>(A->p, beta, n);
 }
 /**
    add a vector to another, scaled by alpha and beta. all in device memory.
