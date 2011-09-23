@@ -1,0 +1,12 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$maos_2setup__powfs_8c.html#ab1890fbc6facc2013338054962b1398a" title="Setting up Detector transfer function used to translate PSFs from FFTs to detector pixel images..." alt="" coords="169,5,284,35"/>
+<area shape="rect" id="node5" href="$maos_2setup__powfs_8c.html#abd59ad37c2a3372a70066e4b5cf34ac1" title="Compute Elongation Transfer function." alt="" coords="169,59,284,88"/>
+<area shape="rect" id="node7" href="$maos_2setup__powfs_8c.html#a7bbae2bc69e06f553d55c7c2d8c68ff3" title="setup the range to sodium layer as an additional parameter." alt="" coords="161,112,292,141"/>
+<area shape="rect" id="node9" href="$maos_2setup__powfs_8c.html#a77b6fd986d6105964adf2c844ee9df87" title="setting up subaperture geometry." alt="" coords="160,165,293,195"/>
+<area shape="rect" id="node11" href="$maos_2setup__powfs_8c.html#ae92ae33f8f650cb9c7975044bd82432f" title="Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture grads..." alt="" coords="164,219,289,248"/>
+<area shape="rect" id="node13" href="$maos_2setup__powfs_8c.html#aa8ee626a374ebefb84c2d560793c4c1e" title="setting up uplink pts/amp lotf" alt="" coords="172,272,281,301"/>
+<area shape="rect" id="node15" href="$maos_2setup__powfs_8c.html#aa16bf88378b48f5765294689df77c22f" title="Setup the matched filter pixel processing parameters for physical optics wfs." alt="" coords="161,325,292,355"/>
+<area shape="rect" id="node17" href="$maos_2setup__powfs_8c.html#a2589e29c8b5c4bd05b33da3638e8ae53" title="Set up NCPA maps for each WFS." alt="" coords="163,379,291,408"/>
+<area shape="rect" id="node19" href="$maos_2setup__powfs_8c.html#ab1409e69dddf8131559ea35731109bda" title="Prepare the parameters for physical optics setup." alt="" coords="149,432,304,461"/>
+<area shape="rect" id="node21" href="$maos_2setup__powfs_8c.html#ae2eab1b8ad97f659e38afe630140834e" title="Load and smooth out sodium profile." alt="" coords="156,485,297,515"/>
+</map>

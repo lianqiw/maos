@@ -1,0 +1,8 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$dmat_8h.html#a0d7497e2dbb79adb228de6bdde4a201e" title="Create a new T matrix object." alt="" coords="244,5,295,35"/>
+<area shape="rect" id="node5" href="$recon__utils_8c.html#a4a4842b145e88d09b903f986fe8951f2" title="Apply fit left hand side matrix in CG mode without using assembled matrix." alt="" coords="248,59,291,88"/>
+<area shape="rect" id="node7" href="$recon__utils_8c.html#a168e09881164d7f61ac8e0620ec7135b" title="Apply fit right hand side matrix in CG mode without using assembled matrix." alt="" coords="247,112,292,141"/>
+<area shape="rect" id="node9" href="$setup__recon_8c.html#af7a8a7478b06b8b4f0d27784819f41c2" title="Assemble the DM fitting matrix." alt="" coords="193,165,345,195"/>
+<area shape="rect" id="node11" href="$setup__recon_8c.html#a99b595aebae8532a2893e98edd9356c2" title="Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction." alt="" coords="211,219,328,248"/>
+<area shape="rect" id="node13" href="$setup__recon_8c.html#a855fa8cdbea7f506b823e00f362f06c5" title="Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions." alt="" coords="208,272,331,301"/>
+</map>
