@@ -13,7 +13,8 @@ typedef struct{
     float *p;
     int nx;
     int ny;
-    int ref;
+    int igpu;//which gpu we are on.
+    int *nref;
 }curmat;
 
 typedef struct{

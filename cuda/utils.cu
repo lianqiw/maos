@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "curmat.h"
+#include "curcell.h"
 #include <pthread.h>
 static cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
@@ -10,6 +11,7 @@ int nstream=0;
 int NG1D=64; /**<Optimum number of blocks. Twice of multi processors.*/
 int NG2D=8; /**<Optimum number of blocks. Twice of multi processors.*/
 cudata_t **cudata_all=NULL;//for all GPU.
+int cugpu=0;//current GPU.
 __thread cudata_t *cudata=NULL;//for current thread and current GPU
 /**
    Get GPU info.
@@ -154,6 +156,16 @@ int gpu_init(int *gpus, int ngpu){
 	    for(int im=0; im<NGPU; im++){
 		cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
 	    }
+	    for(int im=0; im<NGPU; im++){
+		for(int jm=0; jm<NGPU; jm++){
+		    if(im!=jm){
+			int val=0;
+			DO(cudaDeviceCanAccessPeer(&val, im, jm));
+			info("Peer access between GPU %d and %d is %s\n", im, jm, val?"Enabled":"Disabled");
+		    }
+		}
+	    }
+	    cudata=cudata_all[0];
 	}
     }
     gpu_print_mem("gpu init");
@@ -164,14 +176,7 @@ int gpu_init(int *gpus, int ngpu){
 	return 1;
     }
 }
-/**
-   switch to the next GPU and update the pointer.
-*/
-void gpu_set(int igpu){
-    igpu=igpu%NGPU;
-    cudaSetDevice(GPUS[igpu]);
-    cudata=cudata_all[igpu];
-}
+
 /**
    Clean up device.
 */

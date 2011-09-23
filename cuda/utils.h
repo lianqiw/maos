@@ -5,6 +5,7 @@
 #include <cusparse.h>
 #include <cufft.h>
 #include "wfs.h"
+#include "recon.h"
 extern int NGPU;
 extern int *GPUS;
 extern int NG1D;
@@ -34,8 +35,11 @@ typedef struct{
     cusparseMatDescr_t wfsspdesc;
     cuwloc_t *powfs;
     cuwfs_t *wfs;
+    //for recon
+    curecon_t *recon;
 }cudata_t;
 extern __thread cudata_t *cudata;
+extern int cugpu;
 extern cudata_t **cudata_all;//use pointer array to avoid misuse.
 #define DEBUG_MEM 0
 #if DEBUG_MEM
@@ -69,8 +73,9 @@ inline int CUDAFREE(float *p){
 #else
 #define CUDA_SYNC_STREAM cudaStreamSynchronize(stream)
 #endif
-#define CUDA_SYNC_DEVICE DO(cudaDeviceSynchronize())
 
+#define CUDA_SYNC_DEVICE DO(cudaDeviceSynchronize())
+#define CUDA_SYNC_ALL ({int old_gpu=cugpu;for(int im=0; im<NGPU; im++){gpu_set(im); CUDA_SYNC_DEVICE;};gpu_set(old_gpu);})
 #define TIMING 0
 #if TIMING == 1
 extern int nstream;
@@ -98,7 +103,26 @@ extern pthread_mutex_t cufft_mutex;
 #define CUFFT2(plan,in,dir) ({LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir);UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
 void gpu_print_mem(const char *msg);
 size_t gpu_get_mem(void);
-void gpu_set(int igpu);
+/**
+   switch to the next GPU and update the pointer.
+*/
+inline void gpu_set(int igpu){
+    igpu=igpu%NGPU;
+    //if(cugpu!=GPUS[igpu]){
+	cudaSetDevice(GPUS[igpu]);
+	cudata=cudata_all[igpu];
+	cugpu=GPUS[igpu];//record current GPU.
+	//}
+}
+/**
+   returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.
+*/
+inline int gpu_next(){
+    static int cur=-1;
+    return cur=(cur+1)%NGPU;
+}
+/*void gpu_set(int igpu);
+  int  gpu_next(void);*/
 void gpu_map2dev(cumap_t **dest, map_t **source, int nps, int type);
 void gpu_sp2dev(cusp **dest, dsp *src);
 void gpu_calc_ptt(double *rmsout, double *coeffout, 

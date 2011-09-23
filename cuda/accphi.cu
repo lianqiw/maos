@@ -291,7 +291,6 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    }//for im
 	    cudaFreeHost(next_atm[ips]);
 	    next_atm[ips]=NULL;
-	    UNLOCK(next_mutex[ips]);
 	    //Update next_isim.
 	    long isim1, isim2;
 	    if(atm[ips]->vx>0){//align right.
@@ -315,7 +314,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    }else{//align left
 		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
-	    //Compute ox, oy, next_isim.
+	    UNLOCK(next_mutex[ips]);
 	}
     }
     /*

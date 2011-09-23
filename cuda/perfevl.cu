@@ -6,6 +6,7 @@ extern "C"
 #include "utils.h"
 #include "accphi.h"
 #include "cucmat.h"
+#include "curcell.h"
 #include "kernel.h"
 static int *cunembed=NULL;
 static int *cupsfsize=NULL;
@@ -50,7 +51,7 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     const int nwvl=parms->evl.nwvl;
     evlgpu=(int*)calloc(nevl, sizeof(int));
     for(int ievl=0; ievl<nevl; ievl++){
-	evlgpu[ievl]=(ievl+NGPU-1)%NGPU;//start from last GPU to balance between wfs and evl.
+	evlgpu[ievl]=gpu_next();
     }
     //The following lives in CPU.
     if(parms->evl.psfmean || parms->evl.psfhist){

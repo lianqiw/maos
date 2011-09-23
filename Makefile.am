@@ -25,6 +25,7 @@ config/maos/atm_mk13n50p.conf\
 config/maos/atm_mk13n75p.conf\
 config/maos/atm_scao.conf\
 config/maos/atm_srd.conf\
+config/maos/atm_single.conf\
 config/maos/dbg.conf\
 config/maos/dm_dual.conf\
 config/maos/dm_none.conf\

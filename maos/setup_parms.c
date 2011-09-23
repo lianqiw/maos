@@ -1732,6 +1732,20 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		parms->gpu.lsr=0;
 	    }
 	}
+	if(parms->recon.alg!=2){
+	    int has_dfr=0;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].nwfs<=1) continue;
+		if(parms->powfs[ipowfs].dfrs){
+		    has_dfr=1;
+		}
+	    }
+	    if(has_dfr){
+		warning("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
+		parms->gpu.tomo=0;
+	    }
+	}
+
 	if(!parms->atm.frozenflow){
 	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
 	    parms->gpu.evl=0;
