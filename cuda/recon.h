@@ -1,6 +1,6 @@
 #ifndef AOS_CUDA_RECON_H
 #define AOS_CUDA_RECON_H
-#include "curmat.h"
+#include "types.h"
 typedef struct{
     curcell *gradin; /**< The grad to operator on*/
     curcell *neai;

@@ -7,10 +7,12 @@
 cuspcell *cuspcellnew(int nx, int ny);
 curcell *curcellnew(int nx, int ny);
 curcell *curcellnew2(const curcell *in);
+curmat *curref(curmat *A);
 void curcellfree(curcell *A);
 curmat *curnew(int nx, int ny);
 curmat *curnew(int nx, int ny, cudaStream_t stream);
 void curfree(curmat *A);
+void curwritedata(const curmat *A, file_t *fp);
 void curwrite(const curmat *A, const char *format, ...);
 void curcellwrite(const curcell *A, const char *format, ...);
 void curset(curmat *A, float alpha, cudaStream_t stream);

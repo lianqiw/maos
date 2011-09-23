@@ -7,6 +7,7 @@ extern "C"
 #include "wfs.h"
 #include "recon.h"
 #include "pcg.h"
+#include "curmat.h"
 curecon_t *curecon;
 #define SCALE 1e-12 //Scale both NEA and L2 to balance the dynamic range. Does not work yet (strange).
 #undef TIMING

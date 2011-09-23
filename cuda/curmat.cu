@@ -12,7 +12,9 @@ extern "C"
 curmat *curnew(int nx, int ny){
     curmat *out;
     out=(curmat*)calloc(1, sizeof(curmat));
-    out->ref=0;
+    out->nref=(int*)calloc(1, sizeof(int));
+    out->nref[0]=1;
+    out->igpu=cugpu;
     DO(cudaMalloc(&(out->p), nx*ny*sizeof(float)));
     DO(cudaMemset(out->p, 0, nx*ny*sizeof(float)));
     out->nx=nx;
@@ -26,17 +28,36 @@ curmat *curnew(int nx, int ny){
 curmat *curnew(int nx, int ny, cudaStream_t stream){
     curmat *out;
     out=(curmat*)calloc(1, sizeof(curmat));
-    out->ref=0;
+    out->nref=(int*)calloc(1, sizeof(int));
+    out->nref[0]=1;
+    out->igpu=cugpu;
     DO(cudaMalloc(&(out->p), nx*ny*sizeof(float)));
     DO(cudaMemsetAsync(out->p, 0, nx*ny*sizeof(float), stream));
     out->nx=nx;
     out->ny=ny;
     return out;
 }
+curmat *curref(curmat *A){
+    if(!A) return NULL;
+    if(cugpu!=A->igpu){
+	warning("GPU mismatch: %d %d\n", cugpu, A->igpu);
+    }
+    curmat *out=(curmat*)calloc(1, sizeof(curmat));
+    memcpy(out, A, sizeof(curmat));
+    A->nref[0]++;
+    return out;
+}
+
 void curfree(curmat *A){
     if(A){
-	if(A->p){
+	if(A->nref[0]==1){
 	    cudaFree(A->p);
+	    free(A->nref);
+	}else{
+	    A->nref[0]--;
+	    if(A->nref[0]<0){
+		error("Invalid nref=%d\n", A->nref[0]);
+	    }
 	}
 	free(A);
     }
