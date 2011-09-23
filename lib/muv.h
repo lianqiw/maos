@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_LIB_muv_H
-#define AOS_LIB_muv_H
+#ifndef AOS_LIB_MUV_H
+#define AOS_LIB_MUV_H
 #include "dmat.h"
 #include "cmat.h"
 #include "cell.h"

@@ -160,7 +160,7 @@ int gpu_init(int *gpus, int ngpu){
 		    if(im!=jm){
 			int val=0;
 			DO(cudaDeviceCanAccessPeer(&val, im, jm));
-			info("Peer access between GPU %d and %d is %s\n", im, jm, val?"Enabled":"Disabled");
+			info2("Peer access between GPU %d and %d is %s\n", im, jm, val?"Enabled":"Disabled");
 		    }
 		}
 	    }

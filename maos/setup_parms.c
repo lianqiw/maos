@@ -624,6 +624,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.cubic);
     READ_DBL(tomo.iac);
     READ_INT(tomo.ninit);
+    READ_INT(tomo.psol);
 }
 
 /**
@@ -658,6 +659,7 @@ static void readcfg_fit(PARMS_T *parms){
 static void readcfg_lsr(PARMS_T *parms){
     READ_DBL(lsr.tikcr);
     READ_DBL(lsr.svdthres);
+    READ_STR(lsr.fnreg);
     READ_INT(lsr.alg);
     READ_INT(lsr.actslave);
     READ_INT(lsr.bgs);
@@ -1140,9 +1142,9 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning("Low order POWFS %d is using gtilt in simulation. "
 		    "This is not recommended\n",ipowfs);
     }
+    /*
     parms->sim.ndtrat=0;
     parms->sim.dtrats=calloc(parms->npowfs, sizeof(int));
-    parms->sim.dtrats_psol=calloc(parms->npowfs, sizeof(int));
     parms->sim.idtrat_hi=-1;
     parms->sim.idtrat_lo=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1157,9 +1159,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].idtrat=idtrat;
 	    parms->sim.dtrats[idtrat]=parms->powfs[ipowfs].dtrat;
 	    parms->sim.ndtrat++;
-	}
-	if(parms->powfs[ipowfs].psol){
-	    parms->sim.dtrats_psol[idtrat]=1;
 	}
 	if(!parms->powfs[ipowfs].lo){//hi wfs
 	    if(parms->sim.idtrat_hi==-1){
@@ -1180,7 +1179,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 	    }
 	}
-    }
+	}*/
 }
 /**
    postproc atmosphere parameters.
@@ -1544,14 +1543,13 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    parms->powfs[ipowfs].skip=0;
 	}
-	if(parms->sim.mffocus || parms->save.ngcov>0 
-	   || (parms->cn2.pair&&!parms->powfs[ipowfs].lo)){
+	if(parms->sim.mffocus || parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
 	    //focus tracking or cn2 estimation, or save gradient covariance. 
 	    parms->powfs[ipowfs].psol=1;
 	}else{//no focus tracking
 	    if(parms->recon.alg==0){//MV
 		//low order wfs in ahst mode does not need psol.
-		if(parms->recon.split==1 && parms->powfs[ipowfs].skip){
+		if((parms->recon.split==1 && parms->powfs[ipowfs].skip) || !parms->tomo.psol){
 		    parms->powfs[ipowfs].psol=0;
 		}else{
 		    parms->powfs[ipowfs].psol=1;

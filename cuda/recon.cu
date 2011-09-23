@@ -332,7 +332,7 @@ void gpu_tomo(SIM_T *simu){
 	exit(0);
     }
     toc("Before gradin");
-    gpu_dcell2cu(&curecon->gradin, simu->gradlastol);
+    gpu_dcell2cu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     toc("Gradin");
     curcell *rhs=NULL;
     gpu_TomoR(&rhs, simu, curecon->gradin, 1);

@@ -39,9 +39,7 @@
    reconstruction and DM fitting.*/
 static void
 setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
-    if(recon->ploc){//free the old one in case of repeated call
-	locfree(recon->ploc); recon->ploc=NULL;
-    }
+    CALL_ONCE;
     if(parms->load.ploc){//optionally load ploc from the file. see dbg.conf
 	char *fn=parms->load.ploc;
 	warning("Loading ploc from %s\n",fn);
@@ -85,9 +83,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 }
 static void
 setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
-    if(recon->floc){
-	locfree(recon->floc); recon->floc=NULL;
-    }
+    CALL_ONCE;
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
@@ -146,9 +142,7 @@ static void
 setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     const int ndm=parms->ndm;
     if(ndm==0) return;
-    if(recon->aloc){
-	locarrfree(recon->aloc, ndm); recon->aloc=NULL;
-    }
+    CALL_ONCE;
     recon->amap=calloc(ndm, sizeof(map_t*));
     recon->aembed=calloc(ndm, sizeof(long*));
     if(parms->load.aloc){
@@ -244,10 +238,8 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 */
 static void 
 setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
     const int npsr=recon->npsr;
-    if(recon->xloc){
-	locarrfree(recon->xloc, npsr); recon->xloc=NULL;
-    }
     recon->xmap=calloc(npsr, sizeof(map_t*));
     if(parms->load.xloc){
 	char *fn=parms->load.xloc;
@@ -373,6 +365,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 if necessary.  */
 static void
 setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+    CALL_ONCE;
     if(!parms->dbg.usegwr) return;
     recon->GWR=spcellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -397,6 +390,7 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 */
 static void
 setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+    CALL_ONCE;
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     spcell *GP=NULL;
@@ -466,6 +460,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 */
 static void
 setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
+    CALL_ONCE;
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
@@ -566,9 +561,9 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 */
 static void 
 setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
     const int nwfs=parms->nwfsr;
     const int npsr=recon->npsr;
-    spcellfree(recon->GX);
     recon->GX=spcellnew(nwfs, npsr);
     PDSPCELL(recon->GX,GX);
     PDSPCELL(recon->HXW,HXW);
@@ -628,8 +623,8 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
    matched filter output. For geometric optics, the NEA is from input.
 */
 static void
-setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, 
-		   const POWFS_T *powfs){
+setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+    CALL_ONCE;
     const int nwfs=parms->nwfsr;
     spcellfree(recon->sanea);
     spcellfree(recon->saneai);
@@ -788,13 +783,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms,
 */
 
 static void
-setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, 
-		const POWFS_T *powfs){
+setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     if(!recon->has_ttr) return;
-    if(recon->TT){
-	dcellfree(recon->TT);
-	dcellfree(recon->PTT);
-    }
+    CALL_ONCE;
     int nwfs=parms->nwfsr;
     recon->TT=dcellnew(nwfs,nwfs);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -839,10 +830,9 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms,
 */
 
 static void
-setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, 
-		const POWFS_T *powfs){
-
+setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     if(!recon->has_dfr) return;
+    CALL_ONCE;
     if(recon->DF){ 
 	dcellfree(recon->DF);
 	dcellfree(recon->PDF);
@@ -887,9 +877,8 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms,
    differential focus.
 */
 static void
-setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms, 
-		 const POWFS_T *powfs){
-  
+setup_recon_TTFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
+    CALL_ONCE;
     setup_recon_TTR(recon,parms,powfs);
     setup_recon_DFR(recon,parms,powfs);
     if(recon->DF){
@@ -922,7 +911,7 @@ static void free_cxx(RECON_T *recon){
     }
 }
 /**
-   Prepares for tomography
+   Prepares for tomography. ALlow it to be called multiple times for Cn2 update.
 */
 void
 setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
@@ -1083,6 +1072,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 
 */
 void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
+    CALL_ONCE;
     //if not cg or forced, build explicitly the tomography matrix.
     int npsr=recon->npsr;
     int nwfs=parms->nwfsr;
@@ -1449,6 +1439,7 @@ void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
    Setup ray tracing operator HXF from xloc to aperture ploc along DM fiting directions*/
 static void
 setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
     if(parms->load.HXF && zfexist(parms->load.HXF)){
 	warning("Loading saved HXF\n");
 	recon->HXF=spcellread("%s",parms->load.HXF);
@@ -1481,6 +1472,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
 static void
 setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
     if(parms->load.HA && zfexist(parms->load.HA)){
 	warning("Loading saved HA\n");
 	recon->HA=spcellread("%s",parms->load.HA);
@@ -1529,6 +1521,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
    DMs. Becareful with tip/tilt contraint when using CBS.  */
 static void 
 fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
     const int ndm=parms->ndm;
     if(ndm>=3) warning("Low rank terms for 3 or more dms are not tested\n");
     recon->fitNW=dcellnew(ndm,1);
@@ -1618,6 +1611,7 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 */
 static void
 setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
     const int nfit=parms->fit.nfit;
     const int ndm=parms->ndm;
     if(ndm==0) return;
@@ -1817,8 +1811,8 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
    sodium tracking error. Need to average out the focus error caused by
    atmosphere when applying (a low pass filter is applied to the output).  */
 static void
-setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
-		  const PARMS_T *parms){
+setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
+    CALL_ONCE;
     int ilgs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
@@ -1958,6 +1952,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs,
 
 void
 setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
     /*
       Notice that: Solve Fitting on Uw and using FUw to form Rngs gives
       slightly different answer than solve fitting after assemble the
@@ -2299,6 +2294,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
    We use the tomogrpahy parameters for lsr, since lsr is simply "tomography" onto DM directly.
 */
 void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+    CALL_ONCE;
     spcell *GAlsr;
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfsr;
@@ -2331,7 +2327,8 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	spcelladdI(recon->LL.M, parms->lsr.tikcr*maxeig);
     }
     dcell *NW=NULL;
-    if(parms->lsr.alg!=2){//Not SVD, need low rank terms for piston/checkboard constraint.
+    if(parms->lsr.alg!=2){
+	/* Not SVD, need low rank terms for piston/waffle mode constraint. */
 	NW=dcellnew(ndm,1);
 	int nmod=2;//two modes.
 	for(int idm=0; idm<ndm; idm++){
@@ -2409,6 +2406,12 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	dcellfree(tmp);
 	dcellfree(NW);
     }
+    if(parms->lsr.fnreg){
+	warning("Loading LSR regularization from file %s.\n", parms->lsr.fnreg);
+	spcell *tmp=spcellread("%s", parms->lsr.fnreg);
+	spcelladd(&recon->LL.M, tmp);
+	spcellfree(tmp);
+    }
     recon->LL.alg = parms->lsr.alg;
     recon->LL.bgs = parms->lsr.bgs;
     recon->LL.warm = parms->recon.warm_restart;
@@ -2456,6 +2459,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
    or least square reconstructor by calling setup_recon_lsr() */
 RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+    CALL_ONCE;
     RECON_T * recon = calloc(1, sizeof(RECON_T));
     recon->parms=parms;//save a pointer.
     if(parms->cn2.npair){
@@ -2562,6 +2566,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
    Free the recon struct.
 */
 void free_recon(const PARMS_T *parms, RECON_T *recon){
+    CALL_ONCE;
     free_recon_moao(recon, parms);
     dfree(recon->ht);
     dfree(recon->os);

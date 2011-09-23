@@ -355,6 +355,7 @@ typedef struct TOMO_CFG_T{
     int windshift;   /**<shift opdr using wind velocity (from input if windest=0)*/
     int cubic;       /**<cubic influence function in tomography (testing)*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
+    int psol;        /**<Use pseudo open loop gradients*/
 }TOMO_CFG_T;
 /**
    contains input parameters for deformable mirror fitting.
@@ -388,6 +389,7 @@ typedef struct FIT_CFG_T{
 typedef struct LSR_CFG_T{
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
+    char  *fnreg;    /**<File containing a regularization term to add to LL.M*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
     int bgs;         /**<1: use BGS, block Gaussia Seidel then use alg to solve each block.*/
     int alg;         /**<algorithm to solve the linear equation.
@@ -471,11 +473,6 @@ typedef struct SIM_CFG_T{
     int dmclip;      /**<derived: Need to clip actuators*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
-    int ndtrat;      /**<Total number of dtras for all wfs*/
-    int *dtrats;     /**<Value of reach dtrat. derived from powfs.dtrat*/
-    int *dtrats_psol;/**<Do we need PSOL grad for this dtrat*/
-    int idtrat_hi;   /**<dtrat of high order wfs. 0 if multiple dtrat is found for hi wfs.*/
-    int idtrat_lo;   /**<dtrat of low order wfs. 0 if multiple dtrat is found for lo wfs.*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.

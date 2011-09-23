@@ -79,7 +79,7 @@ void tomofit(SIM_T *simu){
 		gpu_tomo(simu);
 	    }else
 #endif
-		muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
+		muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
 	    /*
 	      if(parms->tomo.windest){
 	      info2("Estimating wind direction and speed using FFT method\n");
@@ -121,8 +121,9 @@ void tomofit(SIM_T *simu){
 	  Form error signal. Make sure what is subtracted here is what is added
 	  to gradcl to form gramol.
 	*/
-	dcelladd(&simu->dmerr_hi, 1, dmpsol[0], -1);
-
+	if(parms->tomo.psol){
+	    dcelladd(&simu->dmerr_hi, 1, dmpsol[0], -1);
+	}
 	if(!parms->sim.idealfit && parms->recon.split==1){//ahst
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
@@ -152,7 +153,7 @@ void tomofit(SIM_T *simu){
 	    case 2:{
 		dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
 		dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
-		dcelladd(&simu->Merr_lo, 1., dmpsol[1], -1);
+		if(parms->tomo.psol) dcelladd(&simu->Merr_lo, 1., dmpsol[1], -1);
 		dcellzero(simu->opdrmvst);//reset accumulation.
 	    }
 		break;
@@ -171,7 +172,7 @@ void tomofit(SIM_T *simu){
 	  space. The residuals estimated here have to be in DM space only. Do
 	  not use opdr which covers more than DM space.
 	*/
-	if(!simu->opdr || !parms->dbg.useopdr){//opdr is not available. in sim.idealfit=1 mode.
+	if(!simu->opdr || !parms->dbg.useopdr || !parms->tomo.psol){//opdr is not available. in sim.idealfit=1 mode.
 	    psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);
 	}else{
 	    psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
