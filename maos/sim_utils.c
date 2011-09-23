@@ -608,7 +608,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->dmcmd=dcellnew(parms->ndm,1);
     simu->dmreal=dcellnew(parms->ndm,1);
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
-    if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
+    if(parms->sim.dmproj){
 	simu->dmproj=dcellnew(parms->ndm,1);
 	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
     }
@@ -1194,7 +1194,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}	
 	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
 	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
-	if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
+	if(parms->sim.dmproj){
 	    save->dmproj = cellarr_init(nstep, 1, "dmproj_%d.bin", seed);
 	}
 	if(simu->moao_wfs){

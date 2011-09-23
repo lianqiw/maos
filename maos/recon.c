@@ -79,33 +79,33 @@ void tomofit(SIM_T *simu){
 		gpu_tomo(simu);
 	    }else
 #endif
-		    muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
+		muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
 	    /*
-	    if(parms->tomo.windest){
-		info2("Estimating wind direction and speed using FFT method\n");
-		windest(simu); //Update wind, and interpolation matrix.
-	    }
-	    if(parms->tomo.windshift){
-		int factor=parms->tomo.windshift;
-		if(!simu->windshift){
-		    simu->windshift=spcellnew(recon->npsr, 1);
-		    for(int ips=0; ips<recon->npsr; ips++){
-			double dispx=simu->dt*simu->atm[ips]->vx*factor;//2 is two cycle delay.
-			double dispy=simu->dt*simu->atm[ips]->vy*factor;
-			info("ips=%d: dispx=%g, dispy=%g\n", ips, dispx, dispy);
-			simu->windshift->p[ips]=mkhb(recon->xloc[ips], recon->xloc[ips], NULL,
-						     dispx,dispy,1,0,0);
-		    }
-		    spcellwrite(simu->windshift,"windshift");
-		}
-		info2("Using wind information to shift opdr by %d v*dt.\n", factor);
-		for(int ips=0; ips<recon->npsr; ips++){
-		    dmat *tmp=simu->opdr->p[ips];
-		    simu->opdr->p[ips]=NULL;
-		    spmulmat(&simu->opdr->p[ips], simu->windshift->p[ips], tmp, 1);
-		    dfree(tmp);
-		}
-		}*/
+	      if(parms->tomo.windest){
+	      info2("Estimating wind direction and speed using FFT method\n");
+	      windest(simu); //Update wind, and interpolation matrix.
+	      }
+	      if(parms->tomo.windshift){
+	      int factor=parms->tomo.windshift;
+	      if(!simu->windshift){
+	      simu->windshift=spcellnew(recon->npsr, 1);
+	      for(int ips=0; ips<recon->npsr; ips++){
+	      double dispx=simu->dt*simu->atm[ips]->vx*factor;//2 is two cycle delay.
+	      double dispy=simu->dt*simu->atm[ips]->vy*factor;
+	      info("ips=%d: dispx=%g, dispy=%g\n", ips, dispx, dispy);
+	      simu->windshift->p[ips]=mkhb(recon->xloc[ips], recon->xloc[ips], NULL,
+	      dispx,dispy,1,0,0);
+	      }
+	      spcellwrite(simu->windshift,"windshift");
+	      }
+	      info2("Using wind information to shift opdr by %d v*dt.\n", factor);
+	      for(int ips=0; ips<recon->npsr; ips++){
+	      dmat *tmp=simu->opdr->p[ips];
+	      simu->opdr->p[ips]=NULL;
+	      spmulmat(&simu->opdr->p[ips], simu->windshift->p[ips], tmp, 1);
+	      dfree(tmp);
+	      }
+	      }*/
 	}
 	if(parms->ndm>0){
 #if USE_CUDA
@@ -167,10 +167,10 @@ void tomofit(SIM_T *simu){
     }
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
 	/*
-	   Since the DM fitting error is in the othorgonal of DM vector
-	   space. The residuals estimated here have to be in DM space only. Do
-	   not use opdr which covers more than DM space.
-	 */
+	  Since the DM fitting error is in the othorgonal of DM vector
+	  space. The residuals estimated here have to be in DM space only. Do
+	  not use opdr which covers more than DM space.
+	*/
 	if(!simu->opdr || !parms->dbg.useopdr){//opdr is not available. in sim.idealfit=1 mode.
 	    psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);
 	}else{
@@ -218,7 +218,7 @@ void lsr(SIM_T *simu){
    DM command to both LGS and NGS WFS grads in MV Inte or MVST mode. For dtrat>1
    cases, we copy over cl to ol in a end of multi-step integration, and add to
    the accumulated DM commands scaled by 1/dtrat. Tested works
- */
+*/
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;

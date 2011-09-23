@@ -468,7 +468,8 @@ typedef struct SIM_CFG_T{
     /* A few derived parameters*/
     int dmttcast;    /**<derived: cast tip/tilt from DM commands to study saturation or
 			histogram and then add back*/
-    int dmclip;      /**<drived: Need to clip actuators*/
+    int dmclip;      /**<derived: Need to clip actuators*/
+    int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
     int ndtrat;      /**<Total number of dtras for all wfs*/
     int *dtrats;     /**<Value of reach dtrat. derived from powfs.dtrat*/

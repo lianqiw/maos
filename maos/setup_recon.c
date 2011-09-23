@@ -27,6 +27,8 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
+#define CALL_ONCE\
+    {static int count=0; count++; if(count>1) warning("This function should only be called once\n");}
 /**
    \file setup_recon.c Contains routines that setup the wavefront reconstructor
    and DM fitting.  Use parms->wfsr instead of parms->wfs for wfs information,
@@ -1398,8 +1400,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
     info2("After assemble tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
 }
 /**
-   Update assembled tomography matrix with new L2.
-*/
+   Update assembled tomography matrix with new L2. Called from cn2est when new
+   profiles are available.
+  */
 void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
     setup_recon_tomo_prep(recon, parms); //redo L2, invpsd
     if(parms->tomo.alg==1&&!parms->tomo.assemble){//no need to do anything
@@ -1719,7 +1722,10 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	fit_prep_lrt(recon,parms);
 	if(parms->fit.actslave && parms->fit.alg!=1){
 	    /*
-	      2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found that slaving is causing mis-measurement of a few edge actuators. First try to remove W1. Or lower the weight. Revert back.
+	      2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found
+	      that slaving is causing mis-measurement of a few edge
+	      actuators. First try to remove W1. Or lower the weight. Revert
+	      back.
 	     */
 	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1, recon->fitNW, recon->actstuck, recon->actfloat, 0.1, 1./recon->floc->nloc);
 	    if(parms->save.setup){
@@ -2118,8 +2124,37 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
    MOAO is handled in setup_recon_moao().
    
 */
+static void setup_recon_mvr_fit(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+    CALL_ONCE;
+    TIC;tic;
+    if(parms->recon.alg==0 && !parms->sim.idealfit){//In idealfit, xloc has high sampling. We avoid HXF.
+	setup_recon_HXF(recon,parms);
+    }
+    setup_recon_HA(recon,parms);
     
+    //copy over fitwt since we need a dmat
+    int nfit=parms->fit.nfit;
+    recon->fitwt=dnew(nfit,1);
+    memcpy(recon->fitwt->p,parms->fit.wt,sizeof(double)*nfit);
+    
+    //always assemble fit matrix, faster if many directions
+    if(parms->fit.assemble){
+	setup_recon_fit_matrix(recon,parms);
+    }
+    toc2("Generating fit matrix");
+    //Fall back function method if FR.M is NULL (!HXF<-idealfit)
+    recon->FR.Mfun  = FitR;
+    recon->FR.Mdata = recon;
+    //Fall back function method if FL.M is NULL
+    recon->FL.Mfun  = FitL;
+    recon->FL.Mdata = recon;
+    recon->FL.alg = parms->fit.alg;
+    recon->FL.bgs = parms->fit.bgs;
+    recon->FL.warm  = parms->recon.warm_restart;
+    recon->FL.maxit = parms->fit.maxit;
+}
 void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+    CALL_ONCE;
     TIC;tic;
     if(parms->cn2.tomo){
 	/*Use cn2 estimation results for tomography. Use its ht to build
@@ -2152,18 +2187,11 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     }
     //number of reconstruction layers
     recon->npsr= recon->ht->nx;
-   
-    //copy over fitwt since we need a dmat
-    int nfit=parms->fit.nfit;
-    recon->fitwt=dnew(nfit,1);
-    memcpy(recon->fitwt->p,parms->fit.wt,sizeof(double)*nfit);
-  
     //setup atm reconstruction layer grid
     setup_recon_xloc(recon,parms);
     //setup xloc/aloc to WFS grad
     toc2("Generating xloc");
-    if(!parms->sim.idealfit &&
-       !(parms->recon.alg==1 && (parms->sim.wfsalias || parms->sim.idealwfs))){
+    if(!parms->sim.idealfit){
 	setup_recon_HXW(recon,parms);
 	setup_recon_GX(recon,parms);
 	spcellfree(recon->HXW);//only keep HXWtomo for tomography
@@ -2202,25 +2230,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	recon->RL.warm  = parms->recon.warm_restart;
 	recon->RL.maxit = parms->tomo.maxit;
     }
-    if(!parms->sim.idealfit){//In idealfit, xloc has high sampling. We avoid HXF.
-	setup_recon_HXF(recon,parms);
-    }
-    setup_recon_HA(recon,parms);
-    //always assemble fit matrix, faster if many directions
-    if(parms->fit.assemble){
-	setup_recon_fit_matrix(recon,parms);
-    }
-    toc2("Generating fit matrix");
-    //Fall back function method if FR.M is NULL (!HXF<-idealfit)
-    recon->FR.Mfun  = FitR;
-    recon->FR.Mdata = recon;
-    //Fall back function method if FL.M is NULL
-    recon->FL.Mfun  = FitL;
-    recon->FL.Mdata = recon;
-    recon->FL.alg = parms->fit.alg;
-    recon->FL.bgs = parms->fit.bgs;
-    recon->FL.warm  = parms->recon.warm_restart;
-    recon->FL.maxit = parms->fit.maxit;
+    setup_recon_mvr_fit(recon, parms, powfs, aper);
     //moao
     setup_recon_moao(recon,parms);
     toc2("Preparing moao");
@@ -2241,6 +2251,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    setup_recon_mvst(recon,parms);
 	}
     }
+    //todo: can we move to near setting up tomography?
     if(!parms->sim.idealfit && parms->tomo.precond==1){
 	recon->fdpcg=fdpcg_prepare(parms, recon, powfs);
 	toc2("Preparing fdpcg");
@@ -2248,7 +2259,8 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     //The following have been used in fit matrix.
     dcellfree(recon->fitNW);
     spcellfree(recon->actslave);
-    if(recon->FR.M && !parms->sim.wfsalias && !parms->sim.idealwfs){
+    /* when sim.dmproj=1, we need these matrices to use in FR.Mfun*/
+    if(recon->FR.M && !parms->sim.dmproj){
 	spfree(recon->W0); 
 	dfree(recon->W1); 
 	spcellfree(recon->HA); 
@@ -2491,13 +2503,18 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     switch(parms->recon.alg){
     case 0:
 	setup_recon_mvr(recon, parms, powfs, aper);
+#if USE_CUDA
+	if(parms->gpu.tomo || parms->gpu.fit){
+	    gpu_setup_recon(parms, powfs, recon);
+	}
+#endif
 	break;
     case 1:
     case 2:
 	setup_recon_lsr(recon, parms, powfs, aper);
-	/*if(parms->sim.wfsalias || parms->sim.idealwfs){
-	    setup_recon_mvr(recon, parms, powfs, aper);
-	    }*/
+	if(parms->sim.dmproj){
+	    setup_recon_mvr_fit(recon, parms, powfs, aper);
+	}
 	break;
     default:
 	error("recon.alg=%d is not recognized\n", parms->recon.alg);
@@ -2529,11 +2546,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     if(parms->fit.alg==1){
 	muv_direct_free(&recon->FL);
     }
-#if USE_CUDA
-    if(parms->gpu.tomo || parms->gpu.fit){
-	gpu_setup_recon(parms, powfs, recon);
-    }
-#endif
+
     if(parms->tomo.assemble){
 	spcellfree(recon->GP);
 	spcellfree(recon->GP2);

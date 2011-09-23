@@ -29,7 +29,7 @@
 #define TIM(A)
 #endif
 
-static void wfs_ideal_correction(SIM_T *simu, dmat *opd, int iwfs, double alpha){
+static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
     const PARMS_T *parms=simu->parms;
     POWFS_T *powfs=simu->powfs;
     const int ipowfs=parms->wfs[iwfs].powfs;
@@ -129,7 +129,7 @@ void wfsgrad_iwfs(thread_t *info){
 
     /* Now begin ray tracing. */
     if(parms->sim.idealwfs){
-	wfs_ideal_correction(simu, opd, iwfs, 1);
+	wfs_ideal_atm(simu, opd, iwfs, 1);
     }else if(atm){
 	for(int ips=0; ips<nps; ips++){
 	    thread_t *wfs_prop=simu->wfs_prop_atm[iwfs+parms->nwfs*ips];
@@ -143,7 +143,7 @@ void wfsgrad_iwfs(thread_t *info){
 	/* most expensive 0.10 per LGS for*/
 	if(parms->sim.wfsalias){
 	    /* Remove subspace of atm projected onto range of DM.*/
-	    wfs_ideal_correction(simu, opd, iwfs,-1);
+	    wfs_ideal_atm(simu, opd, iwfs, -1);
 	}
     }
     if(save_opd){

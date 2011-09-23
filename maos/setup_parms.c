@@ -932,8 +932,13 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	info2("MVST does not work with least square reconstructor. Changed to AHST");
 	parms->recon.split=1;
     }
-    if(parms->sim.wfsalias && parms->sim.idealwfs){
-	error("sim.wfsalias conflicts with sim.idealwfs. Do not enable both.\n");
+    if(parms->sim.wfsalias){
+	if(parms->sim.idealwfs){
+	    error("sim.wfsalias conflicts with sim.idealwfs. Do not enable both.\n");
+	}
+	if(parms->sim.idealevl){
+	    error("sim.wfsalias conflicts with sim.idealevl. Do not enable both.\n");
+	}
     }
     if(parms->sim.idealtomo){
 	if(parms->sim.wfsalias){
@@ -945,9 +950,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	if(parms->sim.idealwfs){
 	    error("idealwfs and idealtomo conflicts\n");
 	}
-	if(parms->sim.idealevl){
-	    error("idealevl and idealtomo conflicts\n");
-	}
+    }
+    if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
+	parms->sim.dmproj=1;//need dmproj
     }
 }
 /**

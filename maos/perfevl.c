@@ -47,9 +47,8 @@
 #else
 #define TIM(A)
 #endif
-//static double opdzlim[2]={-2e-5,2e-5};
 static double *opdzlim=NULL;
-static void perfevl_ideal_correction(SIM_T *simu, dmat *iopdevl, int ievl, double alpha){
+static void perfevl_ideal_atm(SIM_T *simu, dmat *iopdevl, int ievl, double alpha){
     const PARMS_T *parms=simu->parms;
     const APER_T *aper=simu->aper;
     const double hs = parms->evl.hs[ievl];
@@ -75,10 +74,8 @@ static void perfevl_ideal_correction(SIM_T *simu, dmat *iopdevl, int ievl, doubl
 static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
 			  dcell *evlpsfmean, cellarr** evlpsfhist,
 			  dmat *iopdevl, int ievl){
-    /* the OPD after this time will be tilt removed. Don't use for
-       performance evaluation. */
-   
-	    
+    /* the OPD after this time will be tilt removed. Don't use for performance
+       evaluation. */
     ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
 			 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
     int nwvl=parms->evl.nwvl;
@@ -133,7 +130,7 @@ void perfevl_ievl(thread_t *info){
 
     //atmosphere contribution.
     if(parms->sim.idealevl){
-	perfevl_ideal_correction(simu, iopdevl, ievl, 1);
+	perfevl_ideal_atm(simu, iopdevl, ievl, 1);
     }else if(simu->atm && !parms->sim.wfsalias){
 	if(simu->opdevlground){
 	    memcpy(iopdevl->p,simu->opdevlground->p, aper->locs->nloc*sizeof(double));
