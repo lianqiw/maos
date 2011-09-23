@@ -1,6 +1,5 @@
 #include "utils.h"
 #include "curmat.h"
-#include "curcell.h"
 #include <pthread.h>
 static cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;

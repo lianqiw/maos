@@ -6,7 +6,6 @@ extern "C"
 #include "utils.h"
 #include "accphi.h"
 #include "cucmat.h"
-#include "curcell.h"
 #include "kernel.h"
 static int *cunembed=NULL;
 static int *cupsfsize=NULL;

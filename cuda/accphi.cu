@@ -48,7 +48,6 @@ typedef struct{
     int offx;
     int offy;
     map_t *atm;
-    pthread_mutex_t *mutex;
 }atm_prep_t;
 void atm_prep(atm_prep_t *data){
     PNEW(lock);
@@ -96,7 +95,6 @@ void atm_prep(atm_prep_t *data){
     }
     toc("Layer %d: Preparing atm", ips);
     UNLOCK(lock);
-    UNLOCK(data->mutex[ips]);//data is ready.
     free(data);//allocated in parent thread. we free it here.
 }
 /**
@@ -126,8 +124,6 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		nx0=parms->atm.nxm;
 		ny0=parms->atm.nym;
 	    }
-	    nx0=parms->atm.nxm;
-	    ny0=parms->atm.nym;
 	    info2("We will host %dx%d in GPU\n", nx0, ny0);
 	}else{
 	    nx0=ny0=parms->atm.nxm;
@@ -152,16 +148,14 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     static float *next_ox=NULL;
     static float *next_oy=NULL;
     static float **next_atm=NULL;
-    static pthread_mutex_t *next_mutex=NULL;
+    static pthread_t *next_threads=NULL;
     if(need_init){
+	need_init=0;
 	//The atm in GPU is smaller than in CPU.
 	next_isim=(int*)calloc(nps, sizeof(int));
 	next_ox=(float*)calloc(nps, sizeof(float));
 	next_oy=(float*)calloc(nps, sizeof(float));
-	next_mutex=(pthread_mutex_t*)calloc(nps, sizeof(pthread_mutex_t));
-	for(int ips=0; ips<nps; ips++){
-	    pthread_mutex_init(&next_mutex[ips], NULL);
-	}
+	next_threads=(pthread_t*)calloc(nps, sizeof(pthread_t));
 	next_atm=(float **)calloc(nps, sizeof(void*));
 
 	for(int im=0; im<NGPU; im++){//Loop over all GPUs.
@@ -196,7 +190,6 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cuatm->ny[ips]=ny0;
 	    }
 	}//for im
-	need_init=0;
     }//if need_init;
     const double dt=parms->sim.dt;
     const double dx=parms->atm.dx;
@@ -212,6 +205,11 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cuatm->ox[ips]=INFINITY;//place holder
 		cuatm->oy[ips]=INFINITY;
 		next_isim[ips]=isim;//right now.
+		if(next_atm[ips]){
+		    warning("next_atm[%d] is not empty!!!\n", ips);
+		    cudaFreeHost(next_atm[ips]);
+		    next_atm[ips]=NULL;
+		}
 		//copy from below.
 		if(atm[ips]->vx>0){//align right
 		    next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-cuatm->vx[ips]*dt*next_isim[ips];
@@ -230,7 +228,6 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	/*Load atmosphere to float memory in advance. This takes time if atm is
 	  stored in file.*/
 	if(isim>next_isim[ips]-100 && !next_atm[ips]){
-	    LOCK(next_mutex[ips]);
 	    //pinned memory is faster for copying to GPU.
 	    cudaMallocHost(&(next_atm[ips]), sizeof(float)*nx0*ny0);
 	    const int nxi=atm[ips]->nx;
@@ -249,15 +246,13 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    data->offx=offx;
 	    data->offy=offy;
 	    data->atm=atm[ips];
-	    data->mutex=next_mutex;
-	    pthread_t thread;
 	    //launch an independent thread to pull data in. thread will exit when it is done.
-	    pthread_create(&thread, NULL, (void *(*)(void *))atm_prep, data);
+	    pthread_create(&next_threads[ips], NULL, (void *(*)(void *))atm_prep, data);
 	}//need to cpy atm to next_atm.
 	if(isim==next_isim[ips]){
 	    //need to copy atm to gpu. and update next_isim
 	    TIC;tic;
-	    LOCK(next_mutex[ips]);//wait for atm_prep to finish.
+	    pthread_join(next_threads[ips], NULL);
 	    tic("Layer %d wait ",ips);
 	    for(int im=0; im<NGPU; im++){
 		tic;
@@ -304,6 +299,9 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		isim2=(long)floor(-(next_oy[ips]+(ny0-(parms->atm.nyn/2+1))*dx)/(atm[ips]->vy*dt));
 	    }
 	    next_isim[ips]=isim1<isim2?isim1:isim2;
+	    if(next_isim[ips]>parms->sim.end){//no need to do
+		next_isim[ips]=INT_MAX;
+	    }
 	    if(atm[ips]->vx>0){//align right
 		next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-atm[ips]->vx*dt*next_isim[ips];
 	    }else{//align left
@@ -314,113 +312,8 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    }else{//align left
 		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
-	    UNLOCK(next_mutex[ips]);
 	}
     }
-    /*
-    float (*pout)[nx0]=NULL;
-    //We keep the same atm in all GPU.
-    for(int ips=0; ips<nps; ips++){
-	int offx, offy;
-	int need=iseed0!=iseed;
-	for(int im=0; im<NGPU; im++){
-	    gpu_set(im);
-	    cumap_t *cuatm=cudata->atm;
-	    float dx=parms->atm.dx;
-	    float xisim=-cuatm->vx[ips]*dtisim;
-	    float yisim=-cuatm->vy[ips]*dtisim;
-	    float lx=-(parms->atm.nxn/2)*dx+xisim;//not -1 to have margin for linear interpolation
-	    float ly=-(parms->atm.nyn/2)*dx+yisim;
-	    float rx=(parms->atm.nxn/2+1)*dx+xisim;//+1 to have margin for linear interpolation
-	    float ry=(parms->atm.nyn/2+1)*dx+yisim;
-	    if(isinf(cuatm->ox[ips])){
-		need=1;//align middle
-		cuatm->ox[ips]=(-parms->atm.nxm/2)*dx+xisim;
-		cuatm->oy[ips]=(-parms->atm.nym/2)*dx+yisim;
-	    }else if(cuatm->ox[ips] > lx){
-		need=1;//align right
-		cuatm->ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx+xisim;
-	    }else if(cuatm->ox[ips]+cuatm->nx[ips]*cuatm->dx[ips] <rx){
-		need=1;//align left
-		cuatm->ox[ips]=(-parms->atm.nxn/2)*dx+xisim;
-	    }
-	    if(cuatm->oy[ips] > ly){
-		need=1;
-		cuatm->oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx+yisim;
-	    }else if(cuatm->oy[ips]+cuatm->ny[ips]*cuatm->dx[ips] <ry){
-		need=1;
-		cuatm->oy[ips]=(-parms->atm.nyn/2)*dx+yisim;
-	    }
-	    if(need){
-		offx=(int)round((cuatm->ox[ips]-atm[ips]->ox)/dx);
-		offy=(int)round((cuatm->oy[ips]-atm[ips]->oy)/dx);
-		cuatm->ox[ips]=atm[ips]->ox+offx*dx;
-		cuatm->oy[ips]=atm[ips]->oy+offy*dx;
-	    }
-	}
-	if(need){
-	    TIC;tic;
-	    const int nxi=atm[ips]->nx;
-	    const int nyi=atm[ips]->ny;
-	    offx=offx%nxi; if(offx<0) offx+=nxi;
-	    offy=offy%nyi; if(offy<0) offy+=nyi;
-
-	    int mx, my;
-	    if(offx+nx0>nxi){
-		mx=nxi-offx;
-	    }else{
-		mx=nx0;
-	    }
-	    if(offy+ny0>nyi){
-		my=nyi-offy;
-	    }else{
-		my=ny0;
-	    }
-	    if(!pout) {
-		//pinned memory is faster for copying to GPU.
-		cudaMallocHost((float**)&pout, sizeof(float)*nx0*ny0);
-	    }
-	    
-	    PDMAT(atm[ips], pin);
-	    for(int iy=0; iy<my; iy++){
-		for(int ix=0; ix<mx; ix++){
-		    pout[iy][ix]=(float)pin[iy+offy][ix+offx];
-		}
-		for(int ix=mx; ix<nx0; ix++){
-		    pout[iy][ix]=(float)pin[iy+offy][ix+offx-nxi];
-		}
-	    }
-	    for(int iy=my; iy<ny0; iy++){
-		for(int ix=0; ix<mx; ix++){
-		    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx];
-		}
-		for(int ix=mx; ix<nx0; ix++){
-		    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
-		}
-	    }
-	    for(int im=0; im<NGPU; im++){
-		gpu_set(im);
-		cumap_t *cuatm=cudata->atm;
-#if ATM_TEXTURE
-	
-		struct cudaMemcpy3DParms par={0};
-		par.srcPos = make_cudaPos(0,0,0);
-		par.srcPtr = make_cudaPitchedPtr((float*)pout, nx0*sizeof(float), nx0, ny0);
-		par.dstPos = make_cudaPos(0,0,ips);
-		par.dstArray=cuatm->ca;
-		par.extent = make_cudaExtent(nx0, ny0, 1);
-		par.kind   = cudaMemcpyHostToDevice;
-		DO(cudaMemcpy3D(&par));
-#else
-		DO(cudaMemcpy(cuatm->p[ips], (float*)pout, nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
-#endif
-		CUDA_SYNC_DEVICE;
-		toc2("Step %d: Copying layer %d to GPU %d: offx=%d, offy=%d", isim, ips, GPUS[im], offx, offy);tic;
-	    }
-	}
-    }
-    cudaFreeHost(pout);
-*/
     iseed0=iseed;
 }
 /**
