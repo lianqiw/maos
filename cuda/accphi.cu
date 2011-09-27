@@ -111,20 +111,21 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     if(!nx0){
 	if(parms->atm.nxm!=parms->atm.nx || parms->atm.nym!=parms->atm.ny){//user specified atmosphere size.
 	    long avail=gpu_get_mem();
+	    info("Available memory is %d\n", avail);
 	    long nxa=(avail-600000000)/nps/sizeof(float);//we are able to host this amount.
+	    if(nxa<0){
+		error("GPU does not have enough memory\n");
+	    }
 	    info2("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
 	    if(nxa>parms->atm.nx*parms->atm.ny){//we can host all atmosphere.
 		info2("We can host all layers in full.\n");
 		nx0=parms->atm.nx;
 		ny0=parms->atm.ny;
-	    }else if(nxa>parms->atm.nxm*parms->atm.nym){//we can not host all atmosphere.
-		nx0=(int)round(sqrt((double)nxa));
-		ny0=nxa/nx0;
 	    }else{
+		info2("We will host %dx%d in GPU\n", nx0, ny0);
 		nx0=parms->atm.nxm;
 		ny0=parms->atm.nym;
 	    }
-	    info2("We will host %dx%d in GPU\n", nx0, ny0);
 	}else{
 	    nx0=ny0=parms->atm.nxm;
 	}

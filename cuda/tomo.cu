@@ -173,7 +173,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	curzero(grad->p[iwfs], curecon->wfsstream[iwfs]);		\
 	cuspmul(grad->p[iwfs]->p, cupowfs[ipowfs].GP, opdwfs->p[iwfs]->p, 1.f, curecon->wfssphandle[iwfs]); \
 	gpu_tt_nea_do<<<DIM(nsa,256),0,curecon->wfsstream[iwfs]>>>	\
-	    (grad->p[iwfs]->p, (float(*)[3])curecon->neai->p[iwfs]->p, ttf->p[iwfs]->p, nsa); \
+	    (grad->p[iwfs]->p, (float(*)[3])curecon->neai->p[iwfs]->p, &ttf->p[iwfs*2], nsa); \
     }else{								\
 	gpu_gp_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>>	\
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, cupowfs[ipowfs].saptr, dsa, \
@@ -181,11 +181,10 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
     } 
 
 #define DO_PTT								\
-    ttf->p[iwfs]=curnew(2,1);						\
     if(ptt && curecon->PTT && curecon->PTT->p[iwfs+iwfs*nwfs]){		\
 	/*Using ptt_proj_do is much faster than using curmm.*/		\
     	ptt_proj_do<<<DIM(nsa*2, DIM_REDUCE), 0, curecon->wfsstream[iwfs]>>> \
-	    (ttf->p[iwfs]->p, (float(*)[2])curecon->PTT->p[iwfs+iwfs*nwfs]->p, grad->p[iwfs]->p, nsa*2); \
+	    (&ttf->p[iwfs*2], (float(*)[2])curecon->PTT->p[iwfs+iwfs*nwfs]->p, grad->p[iwfs]->p, nsa*2); \
     }									
 
 #define DO_NEA_GPT								\
@@ -195,7 +194,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
     }else{								\
 	gpu_gpt_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>> \
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, \
-	     (float(*)[3])curecon->neai->p[iwfs]->p, ttf->p[iwfs]->p, cupowfs[ipowfs].saptr, dsa, \
+	     (float(*)[3])curecon->neai->p[iwfs]->p, &ttf->p[iwfs*2], cupowfs[ipowfs].saptr, dsa, \
 	     cupowfs[ipowfs].GPpx->p, cupowfs[ipowfs].GPpy->p, nsa);	\
     }									
 
@@ -251,7 +250,7 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
     const int nxp=recon->pmap->nx;
     const float dxp=recon->pmap->dx;
     curcell *opdwfs=curecon->opdwfs;
-    curcell *ttf=curcellnew(nwfs, 1);
+    curmat *ttf=curnew(2, nwfs);
     cuwloc_t *cupowfs=cudata->powfs;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
@@ -269,7 +268,7 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
 
     }
     SYNC_PS;
-    curcellfree(ttf);
+    curfree(ttf);
     toc("TomoR");
 }
 
@@ -280,86 +279,113 @@ void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *x
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int nwfs=parms->nwfsr;
+    const int nps=recon->npsr;
     curcell *grad=curecon->grad;
     if(!*xout){
 	*xout=new_xout(recon);
     }
     curcell *opdx=*xout;
-    for(int ips=0; ips<recon->npsr; ips++){
-	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
-	const int nxo=recon->xmap[ips]->nx;
-	const int nyo=recon->xmap[ips]->ny;
-	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
-	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
-	zzt_do<<<1,1,0,curecon->psstream[ips]>>>
-	    (opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
-    }
-#if TIMING == 2
-    toc("TomoL:L2");tic;
-#endif
     const int nxp=recon->pmap->nx;
     const float oxp=recon->pmap->ox;
     const float oyp=recon->pmap->oy;
     const float dxp=recon->pmap->dx;
     curcell *opdwfs=curecon->opdwfs;
     int ptt=(!parms->recon.split || parms->dbg.splitlrt); 
-    curcell *ttf=curcellnew(nwfs, 1);
+    curmat *ttf=curnew(2, nwfs);
     cuwloc_t *cupowfs=cudata->powfs;
-#if TIMING == 2
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int ipowfs = parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip) continue;
-	DO_HX;
+#if TIMING==2
+    static cudaEvent_t (*wfsevent)[5]=NULL;
+    static cudaEvent_t (*psevent)[3]=NULL;
+    if(!wfsevent){
+	wfsevent=(cudaEvent_t (*)[5])calloc(5*nwfs, sizeof(cudaEvent_t));
+	psevent =(cudaEvent_t (*)[3])calloc(3*nps, sizeof(cudaEvent_t));
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip) continue;
+	    for(int it=0; it<5; it++){
+		DO(cudaEventCreate(&wfsevent[iwfs][it]));
+	    }
+	}
+	for(int ips=0; ips<nps; ips++){
+	    for(int it=0; it<3; it++){
+		DO(cudaEventCreate(&psevent[ips][it]));
+	    }
+	}
     }
-    SYNC_WFS;
-    toc("TomoL:HX");tic;
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int ipowfs = parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip) continue;
-	const int nsa=cupowfs[ipowfs].nsa;
-	const float dsa=cupowfs[ipowfs].dsa;
-	DO_GP;
-    }
-    SYNC_WFS;
-    toc("TomoL:GP"); tic;
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int ipowfs = parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip) continue;
-	const int nsa=cupowfs[ipowfs].nsa;
-	DO_PTT;
-    }
-    SYNC_WFS;
-    toc("TomoL:NEA"); tic;
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int ipowfs = parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip) continue;
-	const int nsa=cupowfs[ipowfs].nsa;
-	const float dsa=cupowfs[ipowfs].dsa;
-	DO_NEA_GPT;
-    }
-    SYNC_WFS;
-    toc("TomoL:GPT"); tic;
-#else
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int ipowfs = parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip) continue;
-	const int nsa=cupowfs[ipowfs].nsa;
-	const float dsa=cupowfs[ipowfs].dsa;
-	DO_HX;
-	DO_GP;
-	DO_PTT;
-	DO_NEA_GPT;
-    }
-    SYNC_WFS;
 #endif
+    for(int iwfs=0; iwfs<nwfs; iwfs++){
+	const int ipowfs = parms->wfsr[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip) continue;
+	const int nsa=cupowfs[ipowfs].nsa;
+	const float dsa=cupowfs[ipowfs].dsa;
+#if TIMING==2
+	cudaEventRecord(wfsevent[iwfs][0], curecon->wfsstream[iwfs]);
+	DO_HX;
+	cudaEventRecord(wfsevent[iwfs][1], curecon->wfsstream[iwfs]);
+	DO_GP;
+	cudaEventRecord(wfsevent[iwfs][2], curecon->wfsstream[iwfs]);
+	DO_PTT;
+	cudaEventRecord(wfsevent[iwfs][3], curecon->wfsstream[iwfs]);
+	DO_NEA_GPT;
+	cudaEventRecord(wfsevent[iwfs][4], curecon->wfsstream[iwfs]);
+#else
+	DO_HX;
+	DO_GP;
+	DO_PTT;
+	DO_NEA_GPT;
+#endif
+    }
+    SYNC_WFS;
+    //#endif
    
-    for(int ips=0; ips<recon->npsr; ips++){
+    for(int ips=0; ips<nps; ips++){
+	const int nxo=recon->xmap[ips]->nx;
+	const int nyo=recon->xmap[ips]->ny;
+#if TIMING == 2
+	cudaEventRecord(psevent[ips][0], curecon->psstream[ips]);
+	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
+	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
+	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
+	zzt_do<<<1,1,0,curecon->psstream[ips]>>>
+	    (opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
+	cudaEventRecord(psevent[ips][1], curecon->psstream[ips]);
 	DO_HXT;
+	cudaEventRecord(psevent[ips][2], curecon->psstream[ips]);
+#else
+	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
+	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
+	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
+	zzt_do<<<1,1,0,curecon->psstream[ips]>>>
+	    (opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
+	DO_HXT;
+#endif
     }
     SYNC_PS;
-    curcellfree(ttf);
+    curfree(ttf);
 #if TIMING==2
-    toc("TomoL:HXT");
+    static char *wfstimc[]={"TomoL:HX", "TomoL:GP", "TomoL:PTT", "TomoL:NEA_GPT"};
+    static int count=0;
+    static float wfstim[4]={0};
+    count++;
+    float tmp;
+    for(int it=0; it<4; it++){
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip) continue;
+	    DO(cudaEventElapsedTime(&tmp, wfsevent[iwfs][it], wfsevent[iwfs][it+1]));
+	    wfstim[it]+=tmp;
+	}
+	info2("%-20s takes %.3f ms\n", wfstimc[it], wfstim[it]/count);
+    }
+    static char *pstimc[]={"TomoL:L2", "TomoL:HXT"};
+    static float pstim[2]={0};
+    for(int it=0; it<2; it++){
+	for(int ips=0; ips<nps; ips++){
+	    DO(cudaEventElapsedTime(&tmp, psevent[ips][it], psevent[ips][it+1]));
+	    pstim[it]+=tmp;
+	}
+	info2("%-20s takes %.3f ms\n", pstimc[it], pstim[it]/count);
+    }
 #elif TIMING ==1
     toc("TomoL:");
 #endif

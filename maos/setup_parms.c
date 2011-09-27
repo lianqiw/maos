@@ -1760,6 +1760,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	if(parms->gpu.tomo){
 	    parms->tomo.square=1;
 	    parms->dbg.dxonedge=1;
+	    parms->dbg.splitlrt=0;//not quite necessary.
 	}
     }else{
 	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=0;

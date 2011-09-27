@@ -302,8 +302,8 @@ static int init_sockaddr (struct sockaddr_in *name,
     name->sin_port = htons(port);
     hostinfo = gethostbyname (hostname);
     if (hostinfo == NULL){
-	perror("gethostbyname");
-	fprintf (stderr, "Unknown host %s.\n", hostname);
+	//perror("gethostbyname");
+	//fprintf (stderr, "Unknown host %s.\n", hostname);
 	return -1;
     }else{
 	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
@@ -311,7 +311,7 @@ static int init_sockaddr (struct sockaddr_in *name,
 	    name->sin_addr = *addr;
 	    return 0;
 	}else{
-	    warning("h_addr_list is NULL for host %s\n", hostname);
+	    //warning("h_addr_list is NULL for host %s\n", hostname);
 	    return -1;
 	}
     }
@@ -352,7 +352,7 @@ int scheduler_connect(int ihost, int block, int mode){
     fcntl(sock, F_SETFD, flag);
     
     if(init_sockaddr (&servername, host, PORT)){
-	warning3("Unable to init_sockaddr.\n");
+	//	warning3("Unable to init_sockaddr.\n");
 	close(sock);
 	return -1;
     }

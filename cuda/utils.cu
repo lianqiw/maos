@@ -168,6 +168,7 @@ int gpu_init(int *gpus, int ngpu){
 	}
     }
     gpu_print_mem("gpu init");
+    gpu_cleanup();//Important: reset the devices to avoid locking up memory during queuing.
     if(!NGPU){
 	warning("no gpu is available\n");
 	return 0;

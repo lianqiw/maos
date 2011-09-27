@@ -103,11 +103,11 @@ int gpu_pcg(curcell **px,
 	//ak=r0z1/(p0'*Ap);
 	curcellinn2(&res->ak, p0, Ap, stream);
 	div_do<<<1,1,0,stream>>>(&res->ak, &res->r0z1, &res->ak);
-	CUDA_SYNC_STREAM;//Test whether put one here helps.
+	CUDA_SYNC_STREAM;//put here helps to remove the spikes in performance/wfs
 	curcelladd2(&r0, Ap, &res->ak, -1, stream);//r0=r0-ak*Ap
 	curcelladd2(&x0, p0, &res->ak, 1, stream);//x0=x0+ak*p0
-	CUDA_SYNC_STREAM;
 	if(Mmul){
+	    CUDA_SYNC_STREAM;
 	    Mmul(&z0,M,r0);
 	}
 	//r0z2=r0'*z0

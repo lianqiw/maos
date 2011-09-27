@@ -360,6 +360,7 @@ void gpu_tomo(SIM_T *simu){
     }
 }
 void gpu_fit(SIM_T *simu){
+    TIC;tic;
     gpu_set(0);
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
