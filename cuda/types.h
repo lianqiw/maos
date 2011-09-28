@@ -78,6 +78,7 @@ struct cumap_t{
     int* nx;
     int* ny;
     int nlayer;
+    float **cc;//coefficients for cubic dm.
 };
 
 

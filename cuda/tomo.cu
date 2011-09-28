@@ -140,9 +140,16 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	const float scale = 1.f - ht/hs;				\
 	const float oxx=recon->xmap[ips]->ox;				\
 	const float oyx=recon->xmap[ips]->oy;				\
+	float dispx=parms->wfsr[iwfs].thetax*ht;			\
+	float dispy=parms->wfsr[iwfs].thetay*ht;			\
+	if(parms->tomo.predict){					\
+	    int ips0=parms->atmr.indps[ips];				\
+	    dispx+=simu->atm[ips0]->vx*simu->dt*2;			\
+	    dispy+=simu->atm[ips0]->vy*simu->dt*2;			\
+	}								\
 	gpu_prop_grid(opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, \
 		      xin->p[ips], oxx, oyx,recon->xmap[ips]->dx,	\
-		      parms->wfsr[iwfs].thetax*ht, parms->wfsr[iwfs].thetay*ht, \
+		      dispx, dispy,					\
 		      1.f, 'n', curecon->wfsstream[iwfs]);		\
     }/*for ips*/
 
@@ -150,14 +157,21 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
     const float ht=recon->ht->p[ips];					\
     const float oxx=recon->xmap[ips]->ox;				\
     const float oyx=recon->xmap[ips]->oy;				\
-    for(int iwfs=0; iwfs<nwfs; iwfs++){				\
+    for(int iwfs=0; iwfs<nwfs; iwfs++){					\
 	const int ipowfs = parms->wfsr[iwfs].powfs;			\
 	if(parms->powfs[ipowfs].skip) continue;				\
 	const float hs = parms->powfs[ipowfs].hs;			\
 	const float scale = 1.f - ht/hs;				\
+	float dispx=parms->wfsr[iwfs].thetax*ht;			\
+	float dispy=parms->wfsr[iwfs].thetay*ht;			\
+	if(parms->tomo.predict){					\
+	    int ips0=parms->atmr.indps[ips];				\
+	    dispx+=simu->atm[ips0]->vx*simu->dt*2;			\
+	    dispy+=simu->atm[ips0]->vy*simu->dt*2;			\
+	}								\
 	gpu_prop_grid(opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, \
 		      opdx->p[ips], oxx, oyx,recon->xmap[ips]->dx,	\
-		      parms->wfsr[iwfs].thetax*ht, parms->wfsr[iwfs].thetay*ht, \
+		      dispx, dispy,					\
 		      alpha, 't', curecon->psstream[ips]);		\
     }
 

@@ -557,8 +557,6 @@ typedef struct SIM_T{
     /**For testing*/
     ccell *opdrhat;    /**<For wind estimation (testing)*/
     ccell *opdrhatlast;/**<for wind estimation.(testing)*/
-    dmat *windest;     /**<estimated wind velocity.(testing)*/
-    spcell *windshift; /**<operator to do wind shift on opdr(testing)*/
 
     /*A few indicators*/
     int nthread;       /**<number of threads*/

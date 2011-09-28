@@ -618,8 +618,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.precond);
     READ_INT(tomo.maxit);
     READ_INT(tomo.assemble);
-    READ_INT(tomo.windest);
-    READ_INT(tomo.windshift);
+    READ_INT(tomo.predict);
     READ_DBL(tomo.minwt);
     READ_INT(tomo.cubic);
     READ_DBL(tomo.iac);
@@ -1526,13 +1525,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->tomo.precond==1 && parms->tomo.square!=1){
 	warning("FDPCG prefers square XLOC.\n");
     }
-    if(parms->tomo.windest && parms->tomo.square!=1){
-	warning("Wind estimation requires square XLOC. changed\n");
-	parms->tomo.square=1;
-    }
-    if(parms->tomo.windest && parms->tomo.windshift==0){
-	warning("Windest=1 but windshift=0\n");
-    }
     if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
@@ -1765,7 +1757,8 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }else{
 	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=0;
     }
-    //Assign each turbulence layer to a corresponding reconstructon layer
+    /*Assign each turbulence layer to a corresponding reconstructon layer. Used
+      to compute opdx in a simple minded way.*/
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
     for(int ips=0; ips<parms->atm.nps; ips++){
 	double dist=INFINITY;
@@ -1782,7 +1775,19 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	parms->atm.ipsr[ips]=kpsr;
 	//info("atm layer %d is maped to atmr %d\n", ips,kpsr);
     }
-
+    /* Map reconstructed layers to input layers. for testing tomo.predict*/
+    parms->atmr.indps=calloc(parms->atmr.nps, sizeof(int));
+    for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
+	parms->atmr.indps[ipsr]=-1;
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    if(fabs(parms->atmr.ht[ipsr]-parms->atm.ht[ips])<1e-3){
+		if(parms->atmr.indps[ipsr]>-1){
+		    warning("One ipsr is mapped to multiple ips\n");
+		}
+		parms->atmr.indps[ipsr]=ips;
+	    }
+	}
+    }
     if(!parms->sim.closeloop){
 	warning2("psfisim is set from %d to %d in openloop mode\n", parms->evl.psfisim, parms->sim.start);
 	parms->evl.psfisim=parms->sim.start;

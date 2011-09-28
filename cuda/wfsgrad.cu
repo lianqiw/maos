@@ -278,7 +278,7 @@ void gpu_wfsgrad(thread_t *info){
 	if(do_phy){
 	    //signal level was already multiplied in ints.
 	    curmat *ints=cuwfs[iwfs].ints;
-	    curmat *gradnf=curnew(nsa,2);
+	    curmat *gradnf=curnew(nsa*2, 1);
 	    curmat *gradny=NULL;
 	    const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
 	    switch(parms->powfs[ipowfs].phytypesim){
@@ -303,7 +303,7 @@ void gpu_wfsgrad(thread_t *info){
 		     cuwfs[iwfs].bkgrnd2, cuwfs[iwfs].bkgrnd2c, 
 		     rne, cuwfs[iwfs].custat);
 		toc("noise");tic;
-		gradny=curnew(nsa,2);
+		gradny=curnew(nsa*2, 1);
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:
 		    mtche_do<<<nsa, 16, 0, stream>>>(gradny->p, cuwfs[iwfs].mtche, ints->p, pixpsa, nsa);

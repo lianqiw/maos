@@ -1497,9 +1497,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->moao_evl, parms->evl.nevl);
     cellarr_close_n(save->moao_wfs, parms->nwfs);
  
-    dfree(simu->windest);
     dfree(simu->winddir);
-    spcellfree(simu->windshift);
     {
 	//release the lock and close the file.
 	close(parms->fdlock[simu->iseed]);

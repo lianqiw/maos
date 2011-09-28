@@ -196,6 +196,7 @@ static void Tomo_prop(thread_t *info){
     Tomo_T *data=info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=recon->parms;
+    SIM_T *simu=recon->simu;
     const int nps=recon->npsr;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
@@ -209,6 +210,11 @@ static void Tomo_prop(thread_t *info){
 		double displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
+		if(parms->tomo.predict){
+		    int ips0=parms->atmr.indps[ips];
+		    displace[0]+=simu->atm[ips0]->vx*simu->dt*2;
+		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
+		}
 		double scale=1. - ht/hs;
 		prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
 			       displace[0],displace[1], scale, 0, 0, 0);
@@ -255,6 +261,7 @@ static void Tomo_iprop(thread_t *info){
     Tomo_T *data=info->data;
     const RECON_T *recon=data->recon;
     const PARMS_T *parms=recon->parms;
+    SIM_T *simu=recon->simu;
     const int nps=recon->npsr;
     //for(int ips=0; ips<recon->HXWtomo->ny; ips++){
     for(int ips=info->start; ips<info->end; ips++){
@@ -272,6 +279,11 @@ static void Tomo_iprop(thread_t *info){
 		double displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
 		displace[1]=parms->wfsr[iwfs].thetay*ht;
+		if(parms->tomo.predict){
+		    int ips0=parms->atmr.indps[ips];
+		    displace[0]+=simu->atm[ips0]->vx*simu->dt*2;
+		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
+		}
 		double scale=1. - ht/hs;
 		prop_grid_stat_transpose(recon->xmap[ips], recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
 					 displace[0],displace[1], scale, 0, 0, 0);
@@ -555,46 +567,6 @@ void focus_tracking(SIM_T*simu){
     dcellfree(graduse);
 }
 
-
-/**
-   Experimental routine to do wind estimation using correlation tracking of
-   tomography outputs. Not finished. Not verified.  */
-void windest(SIM_T *simu){
-    long nps=simu->opdr->nx;
-    if(!simu->opdrhat){
-	simu->opdrhat=ccellnew(nps,1);
-	simu->opdrhat=ccellnew(nps,1);
-	for(long ips=0; ips<nps; ips++){
-	    simu->opdrhat->p[ips]=cnew(simu->recon->xmap[ips]->nx,
-				       simu->recon->xmap[ips]->ny);
-	    simu->opdrhatlast->p[ips]=cnew(simu->recon->xmap[ips]->nx,
-					   simu->recon->xmap[ips]->ny);
-	    cfft2plan(simu->opdrhat->p[ips], -1);
-	    cfft2plan(simu->opdrhatlast->p[ips], -1);
-	}
-	simu->windest=dnew(2, nps);
-    }
-    ccell *temp;
-    temp=simu->opdrhatlast;
-    simu->opdrhatlast=simu->opdrhat;
-    simu->opdrhat=temp;
-    for(long ips=0; ips<nps; ips++){
-	dcomplex *restrict dest=simu->opdrhat->p[ips]->p;
-	double *restrict source=simu->opdr->p[ips]->p;
-	for(long ipix=0; ipix<simu->opdr->p[ips]->nx*simu->opdr->p[ips]->nx; ipix++){
-	    dest[ipix]=source[ipix];
-	}
-	cfftshift(simu->opdrhat->p[ips]);//may be able to remove
-	cfft2(simu->opdrhat->p[ips], -1);
-	cfftshift(simu->opdrhat->p[ips]);
-    }
-    if(simu->isim > simu->parms->sim.start){
-	//Compute Wind. not done yet.
-	ccellwrite(simu->opdrhat,"opdrhat");
-	ccellwrite(simu->opdrhatlast,"opdrhatlast");
-	exit(0);
-    }
-}
 
 /**
    Convert block of 2x2 neas to sparse matrix.

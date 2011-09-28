@@ -70,6 +70,7 @@ typedef struct ATMR_CFG_T{
     double *ht;   /**<height of each layer*/
     double *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     double dx;    /**<baseline sampling (when os=1). matches to high order wfs.*/
+    int *indps;   /**<Mapping atmr.ps to atm.ps*/
     int *os;      /**<over sampling factor of xloc over actuator spacing */
     int nps;      /**<number of phase screens*/
 }ATMR_CFG_T;
@@ -351,8 +352,7 @@ typedef struct TOMO_CFG_T{
     int maxit;       /**<max iterations. Usually 30 for CG, 3 for FDPCG in
 			closed loop warm restart. x10 in open loop*/
     int assemble;    /**<force assemble tomography matrix in CG*/
-    int windest;     /**<estimate wind. \todo finish implement it.*/
-    int windshift;   /**<shift opdr using wind velocity (from input if windest=0)*/
+    int predict;     /**<test predictive control.*/
     int cubic;       /**<cubic influence function in tomography (testing)*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
     int psol;        /**<Use pseudo open loop gradients*/

@@ -55,7 +55,9 @@ int gpu_init(int *gpus, int ngpu){
     }
     if(!gpus){//automatic
 	int navail=0;
-	DO(cudaGetDeviceCount(&navail));
+	if(cudaGetDeviceCount(&navail)){
+	    return 0;
+	}
 	switch(navail){
 	case 0:
 	    warning2("No GPU is available for computing\n");
@@ -105,7 +107,7 @@ int gpu_init(int *gpus, int ngpu){
 	    }
 	}
     }
-    if(NGPU>0){
+    if(NGPU>0 && 0){
 	int ic=0;
 	for(int im=0; im<NGPU; im++){
 	    int igpu=GPUS[im];
@@ -150,25 +152,14 @@ int gpu_init(int *gpus, int ngpu){
 	    }
 	}
 	NGPU=ic;
-	if(NGPU) {
-	    cudata_all=(cudata_t**)calloc(NGPU, sizeof(cudata_t*));
-	    for(int im=0; im<NGPU; im++){
-		cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
-	    }
-	    for(int im=0; im<NGPU; im++){
-		for(int jm=0; jm<NGPU; jm++){
-		    if(im!=jm){
-			int val=0;
-			DO(cudaDeviceCanAccessPeer(&val, im, jm));
-			info2("Peer access between GPU %d and %d is %s\n", im, jm, val?"Enabled":"Disabled");
-		    }
-		}
-	    }
-	    cudata=cudata_all[0];
-	}
     }
-    gpu_print_mem("gpu init");
-    gpu_cleanup();//Important: reset the devices to avoid locking up memory during queuing.
+    if(NGPU) {
+	cudata_all=(cudata_t**)calloc(NGPU, sizeof(cudata_t*));
+	for(int im=0; im<NGPU; im++){
+	    cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
+	}
+	cudata=NULL;
+    }
     if(!NGPU){
 	warning("no gpu is available\n");
 	return 0;
@@ -203,8 +194,7 @@ void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
     if(!dest->vx){//data is not initialized.
 	if(type==1){//all layers must be same size.
 	    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
-	    DO(cudaMalloc3DArray(&dest->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), 
-				 cudaArrayLayered));
+	    DO(cudaMalloc3DArray(&dest->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), cudaArrayLayered));
 	}else{
 	    DO(cudaMallocHost(&(dest->p), nps*sizeof(float*)));
 	    //memory in device.

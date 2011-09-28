@@ -164,7 +164,6 @@ int main(int argc, char **argv){
 #else
     use_cuda=0;
 #endif
-
     //Launch the scheduler and report about our process
     scheduler_start(scmd,arg->nthread,!arg->force);
 

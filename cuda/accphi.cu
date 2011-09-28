@@ -348,9 +348,19 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
     if(dmcfg && !(*cudm)->cubic){
 	(*cudm)->cubic=new int[ndm];
 	(*cudm)->iac=new float[ndm];
+	(*cudm)->cc=new float*[ndm];
 	for(int idm=0; idm<ndm; idm++){
 	    (*cudm)->cubic[idm]=dmcfg[idm].cubic;
 	    (*cudm)->iac[idm]=dmcfg[idm].iac;
+	    DO(cudaMallocHost(&((*cudm)->cc[idm]), 5*sizeof(float)));
+	    float *cc=(*cudm)->cc[idm];
+	    const float iac=(*cudm)->iac[idm];
+	    float cubicn=1.f/(1.f+2.f*iac);
+	    cc[0]=1.f*cubicn;
+	    cc[1]=(4.f*iac-2.5f)*cubicn; 
+	    cc[2]=(1.5f-3.f*iac)*cubicn;		       
+	    cc[3]=(2.f*iac-0.5f)*cubicn;			
+	    cc[4]=(0.5f-iac)*cubicn; 
 	}
     }
     CUDA_SYNC_DEVICE;
@@ -534,22 +544,6 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
     if(fabs(dmalpha)<EPS && !cudm->nx) return;
     for(int idm=0; idm<cudm->nlayer; idm++){
 	const int cubic=cudm->cubic[idm];
-	const float iac=cudm->iac[idm];
-	if(cubic){
-	    if(!cudata->cc) {
-		PNEW(lock);
-		LOCK(lock);
-		DO(cudaMallocHost(&(cudata->cc), 5*sizeof(float)));
-		float *cc=cudata->cc;
-		float cubicn=1.f/(1.f+2.f*iac);
-		cc[0]=1.f*cubicn;
-		cc[1]=(4.f*iac-2.5f)*cubicn; 
-		cc[2]=(1.5f-3.f*iac)*cubicn;		       
-		cc[3]=(2.f*iac-0.5f)*cubicn;			
-		cc[4]=(0.5f-iac)*cubicn; 
-		UNLOCK(lock);
-	    }
-	}
 	const float dx=cudm->dx[idm];
 	const float du=1.f/dx;
 	//Bind automatically unbinds previous.
@@ -563,7 +557,7 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 #define COMM loc,nloc,scale*du,scale*du, dispx, dispy, dmalpha
 #define KARG cudm->p[idm],cudm->nx[idm],cudm->ny[idm], COMM
 	if (cubic){//128 is a good number for cubic.
-	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudata->cc);
+	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm->cc[idm]);
 	}else{
 	    prop_linear<<<DIM(nloc,256), 0, stream>>>(phiout, KARG);
 	}

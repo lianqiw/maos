@@ -80,32 +80,10 @@ void tomofit(SIM_T *simu){
 	    }else
 #endif
 		muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-	    /*
-	      if(parms->tomo.windest){
-	      info2("Estimating wind direction and speed using FFT method\n");
-	      windest(simu); //Update wind, and interpolation matrix.
-	      }
-	      if(parms->tomo.windshift){
-	      int factor=parms->tomo.windshift;
-	      if(!simu->windshift){
-	      simu->windshift=spcellnew(recon->npsr, 1);
-	      for(int ips=0; ips<recon->npsr; ips++){
-	      double dispx=simu->dt*simu->atm[ips]->vx*factor;//2 is two cycle delay.
-	      double dispy=simu->dt*simu->atm[ips]->vy*factor;
-	      info("ips=%d: dispx=%g, dispy=%g\n", ips, dispx, dispy);
-	      simu->windshift->p[ips]=mkhb(recon->xloc[ips], recon->xloc[ips], NULL,
-	      dispx,dispy,1,0,0);
-	      }
-	      spcellwrite(simu->windshift,"windshift");
-	      }
-	      info2("Using wind information to shift opdr by %d v*dt.\n", factor);
-	      for(int ips=0; ips<recon->npsr; ips++){
-	      dmat *tmp=simu->opdr->p[ips];
-	      simu->opdr->p[ips]=NULL;
-	      spmulmat(&simu->opdr->p[ips], simu->windshift->p[ips], tmp, 1);
-	      dfree(tmp);
-	      }
-	      }*/
+	    /* wind shift does not work because tomography does not give exact
+	       layers. wind estimation from tomography results does not work
+	       either due to same argument. Now I implemented predictive control
+	       within tomography directly by altering ray tracing.*/
 	}
 	if(parms->ndm>0){
 #if USE_CUDA

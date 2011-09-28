@@ -15,7 +15,6 @@ typedef struct{
     cumap_t *atm;//array of cumap_t;
     cumap_t *dmreal;
     cumap_t *dmproj;
-    float   *cc;
     //for perfevl
     float  (*plocs)[2];
     float   *pamp;
