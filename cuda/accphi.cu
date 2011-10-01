@@ -93,7 +93,7 @@ void atm_prep(atm_prep_t *data){
 	    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
 	}
     }
-    toc("Layer %d: Preparing atm", ips);
+    toc2("Layer %d: Preparing atm", ips);
     UNLOCK(lock);
     free(data);//allocated in parent thread. we free it here.
 }
@@ -111,21 +111,20 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     if(!nx0){
 	if(parms->atm.nxm!=parms->atm.nx || parms->atm.nym!=parms->atm.ny){//user specified atmosphere size.
 	    long avail=gpu_get_mem();
-	    info("Available memory is %d\n", avail);
+	    info2("Available memory is %ld\n", avail);
 	    long nxa=(avail-600000000)/nps/sizeof(float);//we are able to host this amount.
 	    if(nxa<0){
 		error("GPU does not have enough memory\n");
 	    }
 	    info2("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
 	    if(nxa>parms->atm.nx*parms->atm.ny){//we can host all atmosphere.
-		info2("We can host all layers in full.\n");
 		nx0=parms->atm.nx;
 		ny0=parms->atm.ny;
 	    }else{
-		info2("We will host %dx%d in GPU\n", nx0, ny0);
 		nx0=parms->atm.nxm;
 		ny0=parms->atm.nym;
 	    }
+	    info2("We will host %dx%d in GPU\n", nx0, ny0);
 	}else{
 	    nx0=ny0=parms->atm.nxm;
 	}
@@ -195,7 +194,8 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     const double dt=parms->sim.dt;
     const double dx=parms->atm.dx;
     if(iseed0!=iseed){//A new seed update vx, vy, ht, etc.
-	for(int im=0; im<NGPU; im++){
+	iseed0=iseed;
+    	for(int im=0; im<NGPU; im++){
 	    gpu_set(im);
 	    cumap_t *cuatm=cudata->atm;
 	    for(int ips=0; ips<nps; ips++){
@@ -205,23 +205,24 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		cuatm->dx[ips]=atm[ips]->dx;
 		cuatm->ox[ips]=INFINITY;//place holder
 		cuatm->oy[ips]=INFINITY;
-		next_isim[ips]=isim;//right now.
-		if(next_atm[ips]){
-		    warning("next_atm[%d] is not empty!!!\n", ips);
-		    cudaFreeHost(next_atm[ips]);
-		    next_atm[ips]=NULL;
-		}
-		//copy from below.
-		if(atm[ips]->vx>0){//align right
-		    next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-cuatm->vx[ips]*dt*next_isim[ips];
-		}else{//align left
-		    next_ox[ips]=(-parms->atm.nxn/2)*dx-cuatm->vx[ips]*dt*next_isim[ips];
-		}
-		if(atm[ips]->vy>0){//align right
-		    next_oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx-cuatm->vy[ips]*dt*next_isim[ips];
-		}else{//align left
-		    next_oy[ips]=(-parms->atm.nyn/2)*dx-cuatm->vy[ips]*dt*next_isim[ips];
-		}
+	    }
+	}
+	for(int ips=0; ips<nps; ips++){
+	    if(next_atm[ips]){
+		cudaFreeHost(next_atm[ips]);
+		next_atm[ips]=NULL;
+	    }
+	    next_isim[ips]=isim;//right now.
+	    //copy from below.
+	    if(atm[ips]->vx>0){//align right
+		next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-atm[ips]->vx*dt*next_isim[ips];
+	    }else{//align left
+		next_ox[ips]=(-parms->atm.nxn/2)*dx-atm[ips]->vx*dt*next_isim[ips];
+	    }
+	    if(atm[ips]->vy>0){//align right
+		next_oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx-atm[ips]->vy*dt*next_isim[ips];
+	    }else{//align left
+		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
 	}
     }
@@ -254,7 +255,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    //need to copy atm to gpu. and update next_isim
 	    TIC;tic;
 	    pthread_join(next_threads[ips], NULL);
-	    tic("Layer %d wait ",ips);
+	    toc2("Layer %d: Wait for transfering",ips);
 	    for(int im=0; im<NGPU; im++){
 		tic;
 		gpu_set(im);
@@ -315,7 +316,6 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    }
 	}
     }
-    iseed0=iseed;
 }
 /**
    Transfer atmospheric data to GPU.

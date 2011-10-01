@@ -5,9 +5,9 @@ extern "C"
 }
 #include "utils.h"
 #include "accphi.h"
-#include "curand_kernel.h"
-#include "cusparse.h"
-#include "cufft.h"
+#include <curand_kernel.h>
+#include <cusparse.h>
+#include <cufft.h>
 #include "wfs.h"
 static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
     wloc->nxsa=pts->nx;
@@ -53,6 +53,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    //cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip;
 	}
     }
+
     /* setup information that maybe different for wfs in same powfs due to
        misregistration or NCPA.*/
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -99,11 +100,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}else{
 	    cuwfs[iwfs].amp=cuwfs[iwfs0].amp;
 	}
-	if(!parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].phystep>parms->sim.start||parms->save.gradgeom[iwfs]){
-	    //gradacc for geom wfs accumulation
-	    warning2("Allocating gradacc\n");
-	    cuwfs[iwfs].gradacc=curnew(nsa*2,1);
-	}
+	
 
 	dmat *nea=powfs[ipowfs].neasim->p[wfsind];
 	if(nea){
@@ -113,13 +110,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	/* * Now start physical optics setup * */
 
 	if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout){
-	    if(parms->powfs[ipowfs].usephy){
-		cuwfs[iwfs].ints=curnew(nsa, powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay);
-		if(parms->powfs[ipowfs].noisy){
-		    cudaCallocBlock(cuwfs[iwfs].neareal, nsa*sizeof(float)*4);
-		}
-	    }
-
 	    //If there is llt.
 	    if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		if(powfs[ipowfs].llt->ncpa){
@@ -263,7 +253,31 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	gpu_print_mem("wfs init");
     }//for iwfs
 }
-
+void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	gpu_set(wfsgpu[iwfs]);//Only initialize WFS in assigned GPU.
+	cuwloc_t *cupowfs=cudata->powfs;
+	cuwfs_t *cuwfs=cudata->wfs;
+	int ipowfs=parms->wfs[iwfs].powfs;
+	int nsa=powfs[ipowfs].pts->nsa;
+	if(!parms->powfs[ipowfs].usephy
+	   ||parms->powfs[ipowfs].phystep>parms->sim.start||parms->save.gradgeom[iwfs]){
+	    //gradacc for geom wfs accumulation
+	    warning2("Allocating gradacc\n");
+	    curfree(cuwfs[iwfs].gradacc);
+	    cuwfs[iwfs].gradacc=curnew(nsa*2,1);
+	}
+	if(parms->powfs[ipowfs].usephy){
+	    curfree(cuwfs[iwfs].ints);
+	    cuwfs[iwfs].ints=curnew(nsa, powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay);
+	    if(parms->powfs[ipowfs].noisy){
+		cudaFree(cuwfs[iwfs].neareal);
+		cudaCallocBlock(cuwfs[iwfs].neareal, nsa*sizeof(float)*4);
+	    }
+	}
+	CUDA_SYNC_DEVICE;
+    }
+}
 void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	gpu_set(GPUS[wfsgpu[iwfs]]);

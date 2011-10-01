@@ -1,8 +1,8 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.9.3, lianqiw@gmail.com)
+AC_INIT(maos, 0.9.4, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
-BASEURL=http://github.com/downloads/lianqiw/maos
+BASEURL=https://github.com/downloads/lianqiw/maos
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
@@ -27,6 +27,11 @@ AM_CONDITIONAL(WIN,    false)
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd $srcdir && pwd)
 BUILD_DIR=$(pwd)
+if test -d ${HOME} ;then
+LIBDIR=${HOME}/.aos/lib
+else
+LIBDIR=${SRC_DIR}/external
+fi
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
@@ -125,7 +130,7 @@ case "$host_os" in
 AC_MSG_ERROR([Unrecognized OS])
 esac
 
-mkl_lib="${SRC_DIR}/external/${mklname}/libmkl.la"
+mkl_lib="${LIBDIR}/${mklname}/libmkl.la"
 if test "$try_mkl" = "yes" ;then
     #Enable System V Interface definition (IPC,SHM)
     mkl_avail="yes" #available for download.
@@ -278,10 +283,10 @@ function download(){
    echo This library is only for non-commercial use.
    fn=$2
    $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} || exit 1
-   if test ! -d ${SRC_DIR}/external ;then
-      mkdir -p ${SRC_DIR}/external || exit 1
+   if test ! -d ${LIBDIR} ;then
+      mkdir -p ${LIBDIR} || exit 1
    fi
-   tar -xjvf /tmp/${fn} -C ${SRC_DIR}/external  || exit 1
+   tar -xjvf /tmp/${fn} -C ${LIBDIR}  || exit 1
    rm -rf /tmp/${fn}
 }
 if test ! "x$use_mkl" = "xyes" ;then
@@ -309,7 +314,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
       download MKL ${mklname}${mklextra}.tar.bz2
    fi
-   LAPACK="-L${SRC_DIR}/external/${mklname} -lmkl ${mkldep}"
+   LAPACK="-L${LIBDIR}/${mklname} -lmkl ${mkldep}"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
@@ -320,11 +325,11 @@ AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    if test "$system" = "linux" ;then
-      if test ! -d ${SRC_DIR}/external/fftw${cpu};then 
+      if test ! -d ${LIBDIR}/fftw${cpu};then 
          download FFTW fftw${cpu}.tar.bz2
       fi
-      LDFFT="-L${SRC_DIR}/external/fftw${cpu}"
-      OPTScommon="$OPTScommon -I${SRC_DIR}/external/fftw${cpu}"
+      LDFFT="-L${LIBDIR}/fftw${cpu}"
+      OPTScommon="$OPTScommon -I${LIBDIR}/fftw${cpu}"
    else
       AC_MSG_ERROR([Please install fftw library])
    fi
@@ -434,21 +439,67 @@ AC_CONFIG_FILES( [Makefile
 if test -d ${srcdir}/test ;then
 AC_CONFIG_FILES([test/Makefile])
 fi
+
 if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
+CUDA_OPT_H=
+CUDA_OPT_L=
+NVCC=nvcc
 if test "$use_cuda" = "yes" ;then
 AC_CONFIG_FILES([cuda/Makefile])
 AM_CONDITIONAL(USE_CUDA, true)
 AC_DEFINE(USE_CUDA, [1], "Has Cuda")
-echo Enabling CUDA
+echo Enabling CUDA ${CUDA_DIR}
+if test -z "${CUDA_DIR}" ;then
+   CUDA_DIR=/opt/cuda
+fi
+if test -z "$(${NVCC} -V)"  ;then
+   if test -f ${CUDA_DIR}/bin/nvcc ;then
+       NVCC=${CUDA_DIR}/bin/nvcc
+   elif test -f ${CUDA_DIR}/nvcc ;then
+       NVCC=${CUDA_DIR}/nvcc
+   else
+       echo "Cuda nvcc not found. Please set CUDA_DIR before calling configure"
+       echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+       AC_MSG_ERROR([nvcc not found])
+   fi
+fi
+AC_CHECK_HEADERS(cuda.h, [cuda_h="yes"] ,[cuda_h="no"])
+if test x$cuda_h=xno ;then
+   if test -f ${CUDA_DIR}/include/cuda.h ;then
+       CUDA_OPT_H=-I${CUDA_DIR}/include
+   elif test -f ${CUDA_DIR}/cuda.h ;then
+       CUDA_OPT_H=-I${CUDA_DIR}
+   else
+       echo "Cuda header not found. Please set CUDA_DIR before calling configure"
+       echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+       AC_MSG_ERROR([cuda header cuda.h not found])
+   fi
+fi
+AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
+if test x$cuda_lib=xno ;then
+   if test -f ${CUDA_DIR}/lib${cpu}/libcudart.so ;then
+       CUDA_OPT_L="-L${CUDA_DIR}/lib${cpu}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
+   elif test -f ${CUDA_DIR}/libcudart.so  ;then
+       CUDA_OPT_L="-L${CUDA_DIR}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
+   else
+       echo "Cuda library not found. Please set CUDA_DIR before calling configure"
+       echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+       AC_MSG_ERROR([cuda library cudart.so not found])
+   fi
+fi
 else
 AM_CONDITIONAL(USE_CUDA, false)
 AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
+AC_SUBST(CUDA_OPT_H)
+AC_SUBST(CUDA_OPT_L)
+AC_SUBST(NVCC)
 AC_OUTPUT
 echo host_os=$host_os
 echo use_icc=$use_icc
+
 echo use_static=$use_static
 echo Compile Drawdaemon=$comp_draw
 echo Compile Monitor=$comp_mon
@@ -464,3 +515,10 @@ echo LDOPTS=$LDOPTS
 echo LAPACK=$LAPACK
 echo LDCHOL=$LDCHOL
 echo LDFFT=$LDFFT
+if test x$use_icc_default = xno -a x$system=xlinux ;then
+echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
+fi
+echo "*********************************************************************************"
+echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos        ****"
+echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos/downloads  ****"
+echo "*********************************************************************************"

@@ -143,6 +143,8 @@ int main(int argc, char **argv){
 	//foreground task will start immediately.
 	arg->force=1;
     }
+    //Launch the scheduler and report about our process
+    scheduler_start(scmd,arg->nthread,!arg->force);
     fprintf(stderr, "%s\n", scmd);
     info2("MAOS Version %s. Compiled on %s %s by %s ", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__);
 #if USE_CUDA
@@ -164,8 +166,6 @@ int main(int argc, char **argv){
 #else
     use_cuda=0;
 #endif
-    //Launch the scheduler and report about our process
-    scheduler_start(scmd,arg->nthread,!arg->force);
 
     //setting up parameters before asking scheduler to check for any errors.
     PARMS_T *parms=setup_parms(arg);

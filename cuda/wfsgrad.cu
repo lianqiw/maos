@@ -5,9 +5,9 @@ extern "C"
 }
 #include "utils.h"
 #include "accphi.h"
-#include "curand_kernel.h"
-#include "cusparse.h"
-#include "cufft.h"
+#include <curand_kernel.h>
+#include <cusparse.h>
+#include <cufft.h>
 #include "wfs.h"
 
 #undef TIMING
@@ -203,8 +203,8 @@ void gpu_wfsgrad(thread_t *info){
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     const float hs=parms->powfs[ipowfs].hs;
     const int dtrat=parms->powfs[ipowfs].dtrat;
-    const int save_gradgeom=parms->save.gradgeom[iwfs];
     const int save_grad=parms->save.grad[iwfs];
+    const int save_gradgeom=parms->save.gradgeom[iwfs];
     const int save_ints=parms->save.ints[iwfs];
     const int noisy=parms->powfs[ipowfs].noisy;
     //The following depends on isim
@@ -348,6 +348,11 @@ void gpu_wfsgrad(thread_t *info){
 		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
 		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
 	    }
+	    if(save_gradgeom){
+		if(dtrat!=1) curscale(gradacc, 1./dtrat, stream);
+		cellarr_cur(simu->save->gradgeom[iwfs], gradacc, stream);
+		curzero(gradacc, stream);
+	    }
 	}else{
 	    if(noisy){
 		if(save_grad){
@@ -371,11 +376,6 @@ void gpu_wfsgrad(thread_t *info){
 	}
 	if(save_grad){
 	    cellarr_dmat(simu->save->gradcl[iwfs], gradout);
-	}
-	if(save_gradgeom){
-	    if(dtrat!=1) curscale(gradacc, 1./dtrat, stream);
-	    cellarr_cur(simu->save->gradgeom[iwfs], gradacc, stream);
-	    curzero(gradacc, stream);
 	}
     }//dtrat_output
     toc("done");

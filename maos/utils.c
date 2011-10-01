@@ -387,7 +387,7 @@ void maos_signal_handler(int sig){
 	warning2("Signal %d: %s\n", sig, info);
 	fflush(stderr);
 	fflush(stdout);
-	if(sig == SIGSEGV){
+	if(sig !=0){
 	    print_backtrace(0);
 	}
 	scheduler_finish(1);
@@ -514,7 +514,7 @@ ARG_T * parse_args(int argc, char **argv){
     if(!config_path || !exist(config_path)){
 	error("Unable to find usable configuration file\n");
     }
-    info2("Using config files found in %s\n", config_path);
+    //info2("Using config files found in %s\n", config_path);
     char *bin_path=stradd(config_path, "/bin", NULL);
     addpath(config_path);
     addpath(bin_path);

@@ -189,8 +189,8 @@ void scheduler_report(STATUS_T *status){
     //don't close socket.
 }
 
-
-#if !defined(__INTEL_COMPILER) && (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
+//!defined(__INTEL_COMPILER)||1) 
+#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
 #define PRINTBACKTRACE 1
 #else
 #define PRINTBACKTRACE 0

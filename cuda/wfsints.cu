@@ -5,9 +5,9 @@ extern "C"
 }
 #include "utils.h"
 #include "accphi.h"
-#include "curand_kernel.h"
-#include "cusparse.h"
-#include "cufft.h"
+#include <curand_kernel.h>
+#include <cusparse.h>
+#include <cufft.h>
 #include "wfs.h"
 /*
   Timing results for TMT NFIRAOS case per LGS WFS:
@@ -324,7 +324,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 		cuztilt<<<1,dim3(16,16),0,stream>>>(lltg, lltopd, 1, cupowfs[ipowfs].llt->dx, 
 						    cupowfs[ipowfs].llt->nxsa, cuwfs[iwfs].lltimcc,
 						    cupowfs[ipowfs].llt->pts, cuwfs[iwfs].lltamp, 1.f);
-		CUDA_SYNC_STREAM;		
+		CUDA_SYNC_STREAM;
 		ttx=-lltg[0];
 		tty=-lltg[1];
 		cudaFreeHost(lltg);
@@ -346,7 +346,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
     }//if has llt
     // Now begin physical optics 
     int rotpsfotf=(hasllt && parms->powfs[ipowfs].radrot);
-    CUDA_SYNC_STREAM;
+    //CUDA_SYNC_STREAM;
     for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
 	float wvl=parms->powfs[ipowfs].wvl[iwvl];
 	float dtheta=wvl/(npsf*powfs[ipowfs].pts->dx);
@@ -359,22 +359,22 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	    cudaCalloc(lotfc, nlpsf*nlpsf*sizeof(fcomplex), stream);
 	    embed_wvf_do<<<1,dim3(16,16),0,stream>>>(lotfc, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlpsf);
 	    //Turn to PSF
-	    CUDA_SYNC_DEVICE;
-	    CUFFT2(cuwfs[iwfs].lltplan1, lotfc, CUFFT_FORWARD);
+	    //CUDA_SYNC_DEVICE;
+	    CUFFT(cuwfs[iwfs].lltplan1, lotfc, CUFFT_FORWARD);
 	    if(nlpsf != npsf){
 		//crop or embed the array.
 		warning("Crop array from %d to %d\n", nlpsf, npsf);
 		fcomplex *lotfc2=NULL;
 		cudaCalloc(lotfc2, npsf*npsf*sizeof(fcomplex), stream);
 		cpcorner_do<<<1, dim3(16,16),0,stream>>>(lotfc2, npsf, npsf, lotfc, nlpsf, nlpsf);
-		CUDA_SYNC_STREAM;
+		//CUDA_SYNC_STREAM;
 		cudaFree(lotfc);
 		lotfc=lotfc2;
 	    }
 	    abs2real_do<<<1,dim3(16,16),0,stream>>>(lotfc, npsf, 1./(float)(nlpsf*nlpsf));
 	    //Use backward to make lotfc the conjugate of otf. peak is in corner.
-	    CUFFT2(cuwfs[iwfs].lltplan2, lotfc, CUFFT_INVERSE);
-	    CUDA_SYNC_STREAM;
+	    CUFFT(cuwfs[iwfs].lltplan2, lotfc, CUFFT_INVERSE);
+	    //CUDA_SYNC_STREAM;
 	}
 	ctoc("llt otf");
 	    
@@ -400,7 +400,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 		(psf, phiout+isa*nx*nx, cuwfs[iwfs].amp+isa*nx*nx, wvl, nx, npsf);
 	    ctoc("embed");
 	    //turn to complex psf, peak in corner
-	    CUFFT2(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
+	    CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
 	    ctoc("psf");
 	    if(psfout) TO_IMPLEMENT;
 	    //abs2 part to real, peak in corner
@@ -409,7 +409,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 
 	    if(lltopd || pistatout){
 		//turn to otf.
-		CUFFT2(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
+		CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
 		ctoc("fft to otf");
 		if(lltopd){//multiply with uplink otf.
 		    ccwm_do<<<ksa,dim3(16,16),0,stream>>>(psf, npsf, npsf, (fcomplex**)lotfc, 1);
@@ -421,14 +421,14 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 		//is OTF now.
 	    }
 	    ctoc("before ints");
-	    CUDA_SYNC_STREAM;
+	    //CUDA_SYNC_STREAM;
 	    if(ints){
 		if(srot1 || !(lltopd || pistatout) || otf!=psf){
 		    //rotate PSF, or turn to OTF first time.
 		    if(lltopd || pistatout){//srot1 is true. turn otf back to psf for rotation.
 			//Was OTF. Turn to PSF
 			norm/=((float)npsf*npsf);
-			CUFFT2(cuwfs[iwfs].plan1, psf, CUFFT_INVERSE);
+			CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_INVERSE);
 			ctoc("fft to psf");
 		    }
 		    if(srot1){
@@ -441,7 +441,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 			ctoc("cpcorner");
 		    }
 		    //Turn PSF to OTF.
-		    CUFFT2(cuwfs[iwfs].plan2, otf,CUFFT_FORWARD);
+		    CUFFT(cuwfs[iwfs].plan2, otf,CUFFT_FORWARD);
 		    ctoc("fft to otf");
 		}
 		//now we have otf. multiple with etf, dtf.
@@ -463,7 +463,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 		    ctoc("nominal");
 		}
 		//back to spatial domain.
-		CUFFT2(cuwfs[iwfs].plan2, otf, CUFFT_INVERSE);
+		CUFFT(cuwfs[iwfs].plan2, otf, CUFFT_INVERSE);
 		ctoc("fft");
 		float *psfr;
 		DO(cudaMalloc(&psfr, sizeof(float)*ncompx*ncompy*ksa));
@@ -474,7 +474,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 		     parms->powfs[ipowfs].pixoffx, parms->powfs[ipowfs].pixoffy,
 		     pixtheta, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, norm);
 		ctoc("final");
-		CUDA_SYNC_STREAM;
+		//CUDA_SYNC_STREAM;
 		cudaFree(psfr);
 	    }//if ints.
 	}//for isa
@@ -482,6 +482,6 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	cudaFree(psf);
 	if(lotfc) cudaFree(lotfc);
     }//for iwvl
+    //CUDA_SYNC_STREAM;
     cudaFree(lltopd);
-    CUDA_SYNC_STREAM;
 }

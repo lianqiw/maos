@@ -156,7 +156,7 @@ static __attribute__((constructor))void init(){
 	FILE *fp=fopen(fn,"r");
 	if(fp){
 	    if(fscanf(fp,"%hu",&PORT)!=1){
-		warning3("Failed to read port from %s\n",fn);
+		//warning3("Failed to read port from %s\n",fn);
 	    }
 	    fclose(fp);
 	}
@@ -167,9 +167,9 @@ static __attribute__((constructor))void init(){
     }
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
     if(!exist(fn)){
-	warning("File %s doesn't exist. "
+	/*warning("File %s doesn't exist. "
 		"Please create one and put in hostname of "
-		"all the computers you are going to run your job in.\n",fn);
+		"all the computers you are going to run your job in.\n",fn);*/
 	nhost=1;
 	hosts=malloc(nhost*sizeof(char*));
 	hosts[0]=calloc(60,sizeof(char));

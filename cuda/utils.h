@@ -26,10 +26,6 @@ typedef struct{
     curcell *evlpsfcl_ngsr;
     curcell *evlopdcov;
     curcell *evlopdcov_ngsr;
-    cufftHandle *evlplan;
-    cublasHandle_t *evlhandle;
-    cudaStream_t *evlstream;
-
     //for wfsgrad
     cusparseMatDescr_t wfsspdesc;
     cuwloc_t *powfs;
@@ -98,8 +94,22 @@ extern int nstream;
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
 the problem by using mutex locking to makesure only 1 thread is calling FFT. */
 extern pthread_mutex_t cufft_mutex;
-#define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
-#define CUFFT2(plan,in,dir) ({LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir);UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
+//#define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
+#define CUFFT(plan,in,dir) ({						\
+	LOCK(cufft_mutex);						\
+	int ans=cufftExecC2C(plan, in, in, dir);			\
+	UNLOCK(cufft_mutex);						\
+	if(ans) {							\
+	    warning("cufft failed with %d @GPU%d, retry.\n", ans, cugpu); \
+	    LOCK(cufft_mutex);						\
+	    int ans=cufftExecC2C(plan, in, in, dir);			\
+	    UNLOCK(cufft_mutex);					\
+	    if(ans){							\
+		error("cufft failed with %d\n", ans);			\
+	    }								\
+	}								\
+	})
+
 void gpu_print_mem(const char *msg);
 size_t gpu_get_mem(void);
 /**

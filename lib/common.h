@@ -170,12 +170,12 @@ fcomplex clogf(fcomplex);
 #endif
 
 
-#if USE_MEM == 1
+//#if USE_MEM == 1
 void print_backtrace(int sig);
 #define PRINT_BACKTRACE print_backtrace(0);
-#else//if USE_MEM
-#define PRINT_BACKTRACE
-#endif//if USE_MEM
+//#else//if USE_MEM
+//#define PRINT_BACKTRACE print_backtrace(0);
+//#endif//if USE_MEM
 #include <string.h>
 
 

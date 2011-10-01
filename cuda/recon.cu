@@ -252,7 +252,10 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     cublasDestroy(handle);
     gpu_print_mem("recon init");
 }
-
+void gpu_recon_reset(){
+    curcellfree(curecon->opdr); curecon->opdr=NULL;
+    curcellfree(curecon->dmfit); curecon->dmfit=NULL;
+}
 void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha){
     if(!A->Mt) error("A->M Can not be empty\n");
     if(A->U->ny>1 || A->V->ny>1) error("Not handled yet\n");
@@ -295,7 +298,35 @@ void gpu_tomo(SIM_T *simu){
     if(curecon->PDF){
 	TO_IMPLEMENT;
     }
- 
+    /*if(!curecon->hxconfig){
+	//don't move it to gpu_setup_recon because we need wind information.
+	const float hs = parms->powfs[ipowfs].hs;				
+	curzero(opdwfs->p[iwfs], curecon->wfsstream[iwfs]);	
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip) continue;
+	    const int nsa=cupowfs[ipowfs].nsa;
+	    const float dsa=cupowfs[ipowfs].dsa;		
+	    for(int ips=0; ips<recon->npsr; ips++){				
+		const float ht=recon->ht->p[ips];				
+		const float scale = 1.f - ht/hs;				
+		const float oxx=recon->xmap[ips]->ox;				
+		const float oyx=recon->xmap[ips]->oy;				
+		float dispx=parms->wfsr[iwfs].thetax*ht;			
+		float dispy=parms->wfsr[iwfs].thetay*ht;			
+		if(parms->tomo.predict){					
+		    int ips0=parms->atmr.indps[ips];				
+		    dispx+=simu->atm[ips0]->vx*simu->dt*2;			
+		    dispy+=simu->atm[ips0]->vy*simu->dt*2;			
+		}								
+		gpu_prop_grid(opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
+			      xin->p[ips], oxx, oyx,recon->xmap[ips]->dx,	
+			      dispx, dispy,					
+			      1.f, 'n', curecon->wfsstream[iwfs]);		
+	    }//ips
+
+	}//for iwfs
+    }//if*/
     //first send gradients to GPU. can be skipped if keep grad in gpu. fast though.
     int nxp=recon->pmap->nx;
     int nyp=recon->pmap->ny;

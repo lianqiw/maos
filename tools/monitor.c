@@ -785,7 +785,15 @@ int main(int argc, char *argv[])
 	notify_daemon=0;
     }
 #endif
-
+    if(argc>1){
+	hosts=realloc(hosts, sizeof(char*)*(nhost+(argc-1)));
+	for(int i=1; i<argc; i++){
+	    hosts[nhost]=strdup(argv[i]);
+	    nhost++;
+	}
+    }else if(nhost==1){
+	info2("Using %s hostname to monitor other machines, or put their hostnames in ~/.aos/hosts\n", argv[0]);
+    }
     gdk_color_parse("#EE0000",&red);
     gdk_color_parse("#00CC00",&green);
     gdk_color_parse("#FFFF33",&yellow);

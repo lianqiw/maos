@@ -6,8 +6,10 @@ typedef struct{
     curcell *neai;
     curcell *opdwfs;/**<Temporary*/
     curcell *grad;  /**<Temporary*/
-    curcell *opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart.*/
-    curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm restart.*/
+    curcell *opdr;  /**<Reconstructed atm on xloc. Don't free to have warm
+		       restart. Free with new seed*/
+    curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm
+		       restart. Free with new seed.*/
     cudaStream_t     *wfsstream;
     cublasHandle_t   *wfshandle;
     cusparseHandle_t *wfssphandle;

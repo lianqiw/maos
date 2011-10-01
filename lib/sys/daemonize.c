@@ -224,7 +224,7 @@ void daemonize(void){
     if (pid > 0) {//exit first parent.
 	/*give enough time for the job to communicate with the scheduler so that
 	  our jobs are in order.*/
-	usleep(50000);
+	usleep(10000);
 	_exit(EXIT_SUCCESS);
     }
     /* Create a new SID for the child process */

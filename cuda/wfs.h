@@ -1,8 +1,8 @@
 #ifndef AOS_CUDA_WFS_H
 #define AOS_CUDA_WFS_H
-#include "cusparse.h"
-#include "curand_kernel.h"
-#include "cufft.h"
+#include <cusparse.h>
+#include <curand_kernel.h>
+#include <cufft.h>
 typedef curandState_t curandStat;
 
 #define RAND_BLOCK 16
@@ -53,11 +53,11 @@ typedef struct{
     cufftHandle lltplan1, lltplan2;/**<FFTW plan for LLT*/
     curmat *opdadd;    /**<The ncpa and surface aberration.*/
 
-    //Run time data that changes
     //For random number of this wfs.
     curandStat *custat;
     int     custatb;//allocated block
     int     custatt;//allocated thread
+    //Run time data that changes
     float  *neareal;
     curmat *gradacc;    /**<For accumulating grads*/
     curmat *ints;       /**<For accumulating subaperture image.*/

@@ -22,6 +22,7 @@ void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg);
 void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg);
 
 void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs);
+void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs);
 void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rstat);
 void gpu_wfsgrad(thread_t *info);
 void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs);
@@ -31,8 +32,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper);
 void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm);
 void gpu_perfevl(thread_t *info);
 void gpu_perfevl_save(SIM_T *simu);
-
+void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper);
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
+void gpu_recon_reset(void);
 void gpu_tomo(SIM_T *simu);
 void gpu_fit(SIM_T *simu);
 #endif
