@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 all:read.mexa64 write.mexa64
 mexopts=$(shell mex -h|grep -q largeArrayDims && echo -largeArrayDims)
+mexopts+=-D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L
 read.mexa64:read.c io.c io.h 
 	mex $(mexopts) read.c io.c  -lz
 write.mexa64:write.c io.c io.h 

@@ -23,8 +23,12 @@
 
 #define spfree(A)      {spfree_do(A); A=NULL;}
 #define spcellfree(A)  {spcellfree_do(A); A=NULL;}
-#define PSPCELL(M,P)   dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
+//#define PSPCELL(M,P)   dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
 #define PDSPCELL(M,P)  dsp* (*restrict P)[(M)->nx]=(dsp*(*)[(M)->nx])(M)->p
+
+#define sspfree(A)      {sspfree_do(A); A=NULL;}
+#define sspcellfree(A)  {sspcellfree_do(A); A=NULL;}
+#define PSSPCELL(M,P)   ssp* (*restrict P)[(M)->nx]=(ssp*(*)[(M)->nx])(M)->p
 
 #define cspfree(A)     {cspfree_do(A); A=NULL;}
 #define cspcellfree(A) {cspcellfree_do(A); A=NULL;}

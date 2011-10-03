@@ -17,5 +17,6 @@
 */
 
 #define USE_COMPLEX
+#undef  USE_SINGLE
 #include "sp.c"
 #include "spbin.c"

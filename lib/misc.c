@@ -271,7 +271,7 @@ int islink(const char *fn){
 /**
  * Compute length of file in Bytes
  */
-off_t flen(const char *fn){
+size_t flen(const char *fn){
     if(!fn) return 0;
     struct stat buf;
     return stat(fn, &buf)?0:buf.st_size;

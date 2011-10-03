@@ -37,7 +37,7 @@ int exist(const char *fn);
 int isdir(const char *fn);
 int isfile(const char *fn);
 int islink(const char*fn);
-off_t flen(const char *fn);
+size_t flen(const char *fn);
 time_t fmtime(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
 char *strnadd(int argc, char **argv, const char *delim);

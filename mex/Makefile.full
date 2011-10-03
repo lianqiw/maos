@@ -7,34 +7,33 @@ BUILD=${HOME}/work/aos/comp/optim
 rand=crandcreate.mexa64 crandn.mexa64 crandp.mexa64 clrand.mexa64 mkw.mexa64
 all:read.mexa64 write.mexa64 mkgmex.mexa64 proj.mexa64 cp genotfmex.mexa64 svdmex.mexa64 $(rand)
 #all:read.mexa64 write.mexa64 cp
-
+mexopts=$(shell mex -h|grep -q largeArrayDims && echo -largeArrayDims)
+mexopts+=-D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L
 read.mexa64:read.c  io.c
-	mex -largeArrayDims read.c io.c  -lz
+	mex $(mexopts) read.c io.c  -lz
 write.mexa64:write.c io.c 
-	mex -largeArrayDims write.c io.c  -lz
-mkg.o:../lib/mkg.c
-	gcc -c -std=c99 ../lib/mkg.c -fPIC -DMATLAB_MEX_FILE=1
-mkgmex.mexa64:mkgmex.c mkg.o
-	mex  mkgmex.c mkg.o
+	mex $(mexopts) write.c io.c  -lz
 cp:read.mexa64 write.mexa64 
 	cp read.mexa64 write.mexa64 mkgmex.mexa64 ~/work/matlab_routines
 #The following depends in libaos.so
-AOS=-DDLONG -I../lib/ -laos_long -lz -lmwblas -lmwlapack -lfftw3 -lm -largeArrayDims
+AOS=-DDLONG  -I../lib/ -laos_long -lz -lmwblas -lmwlapack -lfftw3 -lm -largeArrayDims
+mkgmex.mexa64:mkgmex.c
+	mex $(mexopts) -largeArrayDims mkgmex.c  -I../lib/ $(AOS)
 crandcreate.mexa64:crandcreate.c  
-	mex crandcreate.c  -I../lib/ $(AOS)
+	mex $(mexopts) crandcreate.c  -I../lib/ $(AOS)
 crandn.mexa64:crandn.c 
-	mex crandn.c  -I../lib/ $(AOS)
+	mex $(mexopts) crandn.c  -I../lib/ $(AOS)
 crandp.mexa64:crandp.c 
-	mex crandp.c  -I../lib/ $(AOS)
+	mex $(mexopts) crandp.c  -I../lib/ $(AOS)
 clrand.mexa64:clrand.c 
-	mex clrand.c  -I../lib/ $(AOS)
+	mex $(mexopts) clrand.c  -I../lib/ $(AOS)
 mkw.mexa64:mkwmex.c 
-	mex mkwmex.c interface.c $(AOS)
+	mex $(mexopts) mkwmex.c  $(AOS)
 proj.mexa64:proj.c
-	mex proj.c interface.c $(AOS)
-genotfmex.mexa64:genotfmex.c interface.c 
-	mex  genotfmex.c interface.c $(AOS)
-svdmex.mexa64:svdmex.c interface.c
-	mex svdmex.c interface.c $(AOS)  
+	mex $(mexopts) proj.c  $(AOS)
+genotfmex.mexa64:genotfmex.c  
+	mex $(mexopts) genotfmex.c  $(AOS)
+svdmex.mexa64:svdmex.c 
+	mex $(mexopts) svdmex.c  $(AOS)  
 clean:
 	rm *.mexa64 *.o

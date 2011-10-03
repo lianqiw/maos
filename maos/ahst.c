@@ -404,7 +404,7 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     for(int idm=0; idm<ndm; idm++){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
     }
-    PSPCELL(recon->GA,GA);
+    PDSPCELL(recon->GA,GA);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip)

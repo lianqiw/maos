@@ -202,7 +202,7 @@ static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
-    PSPCELL(recon->GA, GA);
+    PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].psol) continue;
 	dcelladd(&simu->dmpsol[ipowfs], 1, dmpsol, 1./parms->powfs[ipowfs].dtrat);

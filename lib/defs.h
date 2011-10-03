@@ -1,4 +1,21 @@
 /*
+  Copyright 2009, 2010, 2011 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/*
   To be included in mat.c, cell.c and matbin.c
 */
 #if MAT_VERBOSE == 1
@@ -19,6 +36,8 @@
 #define R double
 #define M_T M_DBL
 #define M_TT M_DMAT
+#define M_SPT64 M_SP64
+#define M_SPT32 M_SP32
 #define REAL(A) (A)
 #define ABS(A) fabs(A)
 #define SQRT(A) sqrt(A)
@@ -38,6 +57,8 @@
 #define R double
 #define M_T M_CMP
 #define M_TT M_CMAT
+#define M_SPT64 M_CSP64
+#define M_SPT32 M_CSP32
 #define REAL(A) creal(A)
 #define ABS(A) cabs(A)
 #define SQRT(A) csqrt(A)
@@ -60,6 +81,8 @@
 #define R float
 #define M_T M_FLT
 #define M_TT M_SMAT
+#define M_SPT64 M_SSP64
+#define M_SPT32 M_SSP32
 #define REAL(A) (A)
 #define ABS(A) fabsf(A)
 #define SQRT(A) sqrtf(A)
@@ -79,6 +102,8 @@
 #define R float
 #define M_T M_ZMP
 #define M_TT M_ZMAT
+#define M_SPT64 M_ZSP64
+#define M_SPT32 M_ZSP32
 #define REAL(A) crealf(A)
 #define ABS(A) cabsf(A)
 #define SQRT(A) csqrtf(A)
@@ -94,3 +119,10 @@
 #endif//#define MATTYPE
 #define PMAT(A,pp) T (*restrict pp)[(A)->nx]=(void *)(A)->p
 #define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
+#define PSPCELL(M,P) X(sp)* (*restrict P)[(M)->nx]=(void *)(M)->p
+
+#ifdef DLONG
+#define M_SPT M_SPT64
+#else
+#define M_SPT M_SPT32
+#endif

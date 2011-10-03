@@ -581,16 +581,16 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     spcellfree(recon->GXfocus);
     
     recon->GXtomo=spcellnew(recon->GX->nx, recon->GX->ny);
-    PSPCELL(recon->GXtomo,GXtomo);
+    PDSPCELL(recon->GXtomo,GXtomo);
 
     recon->GXhi=spcellnew(recon->GX->nx, recon->GX->ny);
-    PSPCELL(recon->GXhi, GXhi);
+    PDSPCELL(recon->GXhi, GXhi);
 
     recon->GXlo=spcellnew(recon->GX->nx, recon->GX->ny);
-    PSPCELL(recon->GXlo, GXlo);
+    PDSPCELL(recon->GXlo, GXlo);
 
     recon->GXfocus=spcellnew(recon->GX->nx, recon->GX->ny);
-    PSPCELL(recon->GXfocus,GXfocus);
+    PDSPCELL(recon->GXfocus,GXfocus);
     
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;

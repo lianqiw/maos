@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 0.9.4, lianqiw@gmail.com)
+AC_INIT(maos, 0.9.5, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=https://github.com/downloads/lianqiw/maos
@@ -148,7 +148,16 @@ if test "$try_mkl" = "yes" ;then
     AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
     AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
 fi
-use_cuda_default="no"
+if test -n "$(nvcc -V)" ;then
+   use_cuda_default="yes"
+else
+   use_cuda_default="no"
+fi
+if test -n "$(mex -v 2>&1)" ;then
+   use_mex_default="yes"
+else
+   use_mex_default="no"
+fi
 #Common configure options.
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
@@ -159,6 +168,7 @@ AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
+AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
 if test "x$use_static" = "xyes" ;then
    LDEXE="-all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
@@ -181,7 +191,7 @@ AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
     if test "x$win32" != "xyes" ;then
-        OPTSprof="-pthread"
+        OPTSprof="-lpthread"
     fi
 else
     AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
@@ -426,8 +436,16 @@ DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
-AC_DISABLE_SHARED #disable shared object build on LTLIBARIRIES. should be before AC_PROG_LIBTOOL
+if test "x${use_mex}" = "xyes" ; then
+AC_ENABLE_SHARED
+else
+AC_DISABLE_SHARED
+fi
+if test "x${use_static}" = "xyes" ;then
 AC_ENABLE_STATIC
+else
+AC_DISABLE_STATIC
+fi
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
@@ -443,52 +461,74 @@ fi
 if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
+
+if test "x${use_mex}" = "xyes" ; then
+   AM_CONDITIONAL(USE_MEX, true)
+   AC_CONFIG_FILES([mex/Makefile])
+   FN=/tmp/mex_null
+   rm -rf ${FN}*
+   mex ${SRC_DIR}/mex/null.c -o ${FN}
+   FN2=$(ls ${FN}*)
+   if test -z "${FN2}" ;then
+      AC_MSG_ERROR([mex failed 0. reconfigure with --disable-mex to bypass mex.])
+   fi
+   MEXEXT=${FN2/${FN}/}
+   if test -z "${MEXEXT}" ;then
+      AC_MSG_ERROR([mex failed 1. reconfigure with --disable-mex to bypass mex.])
+   fi	
+   AC_SUBST(MEXEXT)
+else
+   AM_CONDITIONAL(USE_MEX, false)
+fi
 CUDA_OPT_H=
 CUDA_OPT_L=
 NVCC=nvcc
 if test "$use_cuda" = "yes" ;then
-AC_CONFIG_FILES([cuda/Makefile])
-AM_CONDITIONAL(USE_CUDA, true)
-AC_DEFINE(USE_CUDA, [1], "Has Cuda")
-echo Enabling CUDA ${CUDA_DIR}
-if test -z "${CUDA_DIR}" ;then
-   CUDA_DIR=/opt/cuda
-fi
-if test -z "$(${NVCC} -V)"  ;then
-   if test -f ${CUDA_DIR}/bin/nvcc ;then
-       NVCC=${CUDA_DIR}/bin/nvcc
-   elif test -f ${CUDA_DIR}/nvcc ;then
-       NVCC=${CUDA_DIR}/nvcc
-   else
-       echo "Cuda nvcc not found. Please set CUDA_DIR before calling configure"
-       echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
-       AC_MSG_ERROR([nvcc not found])
+   if test "$use_static" = "yes"; then
+      AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static");
    fi
-fi
-AC_CHECK_HEADERS(cuda.h, [cuda_h="yes"] ,[cuda_h="no"])
-if test x$cuda_h=xno ;then
-   if test -f ${CUDA_DIR}/include/cuda.h ;then
-       CUDA_OPT_H=-I${CUDA_DIR}/include
-   elif test -f ${CUDA_DIR}/cuda.h ;then
-       CUDA_OPT_H=-I${CUDA_DIR}
-   else
-       echo "Cuda header not found. Please set CUDA_DIR before calling configure"
-       echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
-       AC_MSG_ERROR([cuda header cuda.h not found])
+   AC_CONFIG_FILES([cuda/Makefile])
+   AM_CONDITIONAL(USE_CUDA, true)
+   AC_DEFINE(USE_CUDA, [1], "Has Cuda")
+   echo Enabling CUDA ${CUDA_DIR}
+   if test -z "${CUDA_DIR}" ;then
+      CUDA_DIR=/opt/cuda
    fi
-fi
-AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
-if test x$cuda_lib=xno ;then
-   if test -f ${CUDA_DIR}/lib${cpu}/libcudart.so ;then
-       CUDA_OPT_L="-L${CUDA_DIR}/lib${cpu}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
-   elif test -f ${CUDA_DIR}/libcudart.so  ;then
-       CUDA_OPT_L="-L${CUDA_DIR}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
-   else
-       echo "Cuda library not found. Please set CUDA_DIR before calling configure"
-       echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
-       AC_MSG_ERROR([cuda library cudart.so not found])
-   fi
-fi
+   if test -z "$(${NVCC} -V)"  ;then
+      if test -f ${CUDA_DIR}/bin/nvcc ;then
+      	  NVCC=${CUDA_DIR}/bin/nvcc
+      elif test -f ${CUDA_DIR}/nvcc ;then
+          NVCC=${CUDA_DIR}/nvcc
+      else
+          echo "Cuda nvcc not found. Please set CUDA_DIR before calling configure"
+          echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+          AC_MSG_ERROR([nvcc not found])
+      fi
+    fi
+    AC_CHECK_HEADERS(cuda.h, [cuda_h="yes"] ,[cuda_h="no"])
+    if test x$cuda_h=xno ;then
+       if test -f ${CUDA_DIR}/include/cuda.h ;then
+          CUDA_OPT_H=-I${CUDA_DIR}/include
+       elif test -f ${CUDA_DIR}/cuda.h ;then
+          CUDA_OPT_H=-I${CUDA_DIR}
+       else
+           echo "Cuda header not found. Please set CUDA_DIR before calling configure"
+           echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+           AC_MSG_ERROR([cuda header cuda.h not found])
+       fi
+    fi
+    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
+    if test x$cuda_lib=xno ;then
+       if test -f ${CUDA_DIR}/lib${cpu}/libcudart.so ;then
+           CUDA_OPT_L="-L${CUDA_DIR}/lib${cpu}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
+       elif test -f ${CUDA_DIR}/libcudart.so  ;then
+           CUDA_OPT_L="-L${CUDA_DIR}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
+       else
+           echo "Cuda library not found. Please set CUDA_DIR before calling configure"
+           echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+           AC_MSG_ERROR([cuda library cudart.so not found])
+       fi
+    fi
 else
 AM_CONDITIONAL(USE_CUDA, false)
 AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
@@ -499,7 +539,7 @@ AC_SUBST(NVCC)
 AC_OUTPUT
 echo host_os=$host_os
 echo use_icc=$use_icc
-
+echo use_cuda=$use_cuda
 echo use_static=$use_static
 echo Compile Drawdaemon=$comp_draw
 echo Compile Monitor=$comp_mon
@@ -521,4 +561,5 @@ fi
 echo "*********************************************************************************"
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos        ****"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos/downloads  ****"
+echo "*** Please drop me a line to lianqiw@gmail.com if you find MAOS useful       ****"
 echo "*********************************************************************************"

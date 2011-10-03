@@ -37,6 +37,7 @@ fcomplex dotzmp(const fcomplex *restrict p1, const fcomplex *restrict p2,
 		const float *restrict p3, long n);
 double maxdbl(const double *p, long n);
 double maxabs(const double *p, long n);
+float maxabsf(const float *p, long n);
 
 double dblsum(double *p, long nx);
 float fltsum(float *p, long nx);

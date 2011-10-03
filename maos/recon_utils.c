@@ -219,7 +219,7 @@ static void Tomo_prop(thread_t *info){
 		prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
 			       displace[0],displace[1], scale, 0, 0, 0);
 	    }else{
-		PSPCELL(recon->HXWtomo,HXW);
+		PDSPCELL(recon->HXWtomo,HXW);
 		spmulmat(&xx, HXW[ips][iwfs], data->xin->p[ips], 1);
 	    }
 	}
@@ -241,7 +241,7 @@ static void Tomo_prop(thread_t *info){
 static void Tomo_nea(thread_t *info){
     Tomo_T *data=info->data;
     const RECON_T *recon=data->recon;
-    PSPCELL(recon->saneai, NEAI);
+    PDSPCELL(recon->saneai, NEAI);
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
 	//Apply the gradient operation
@@ -289,7 +289,7 @@ static void Tomo_iprop(thread_t *info){
 					 displace[0],displace[1], scale, 0, 0, 0);
 	    }
 	}else{
-	    PSPCELL(recon->HXWtomo,HXW);
+	    PDSPCELL(recon->HXWtomo,HXW);
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		sptmulmat(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], 1);
 	    }

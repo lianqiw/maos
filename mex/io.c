@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <time.h>
 #include"io.h"
-const char *myasctime(void){
+static const char *myasctime(void){
     static char st[64];
     time_t a;
     time(&a);

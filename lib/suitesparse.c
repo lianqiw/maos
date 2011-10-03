@@ -29,15 +29,35 @@
 typedef spint CS_INT;
 
 #ifdef USE_COMPLEX
+#ifdef USE_SINGLE
+#define cs zsp
+#define CS_ENTRY fcomplex
+#define CS_REAL(x) crealf(x)
+#define CS_IMAG(x) cimagf(x)
+#define CS_CONJ(x) conjf(x)
+#define CS_ABS(x) cabsf(x)
+#define CS_MAX(a,b) ((cabsf(a) > cabsf(b)) ? (a) : (b))
+#define CS_MIN(a,b) ((cabsf(a) < cabsf(b)) ? (a) : (b))
+#else
 #define cs csp
 #define CS_ENTRY dcomplex
 #define CS_REAL(x) creal(x)
 #define CS_IMAG(x) cimag(x)
 #define CS_CONJ(x) conj(x)
 #define CS_ABS(x) cabs(x)
-
 #define CS_MAX(a,b) ((cabs(a) > cabs(b)) ? (a) : (b))
 #define CS_MIN(a,b) ((cabs(a) < cabs(b)) ? (a) : (b))
+#endif
+#else
+#ifdef USE_SINGLE
+#define cs ssp
+#define CS_ENTRY float
+#define CS_REAL(x) (x)
+#define CS_IMAG(x) (0.)
+#define CS_CONJ(x) (x)
+#define CS_ABS(x) fabsf(x)
+#define CS_MAX(a,b) (((a) > (b)) ? (a) : (b))
+#define CS_MIN(a,b) (((a) < (b)) ? (a) : (b))
 #else
 #define cs dsp
 #define CS_ENTRY double
@@ -47,6 +67,7 @@ typedef spint CS_INT;
 #define CS_ABS(x) fabs(x)
 #define CS_MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define CS_MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 #endif
 
 #define CS_FLIP(i) (-(i)-2)

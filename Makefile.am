@@ -4,6 +4,9 @@ if USE_CUDA
 SUBDIRS+=cuda
 endif
 SUBDIRS+= maos/ skyc/ tools/
+if USE_MEX
+SUBDIRS+=mex/
+endif
 include $(top_srcdir)/aminclude.am
 
 EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs

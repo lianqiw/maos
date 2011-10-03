@@ -1,12 +1,11 @@
-#include "interface.h"
-mxArray *dsp2mx(const dsp*A){
+inline mxArray *dsp2mx(const dsp*A){
     mxArray *out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
     memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
     memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
     return out;
 }
-dsp *mx2dsp(const mxArray *A){
+inline dsp *mx2dsp(const mxArray *A){
     dsp *out=calloc(1, sizeof(dsp));
     out->p=mxGetJc(A);
     out->i=mxGetIr(A);
@@ -16,12 +15,12 @@ dsp *mx2dsp(const mxArray *A){
     }
     return out;
 }
-mxArray *d2mx(const dmat *A){
+inline mxArray *d2mx(const dmat *A){
     mxArray *out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
     memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
     return out;
 }
-mxArray *c2mx(const cmat *A){
+inline mxArray *c2mx(const cmat *A){
     mxArray *out=mxCreateDoubleMatrix(A->nx, A->ny, mxCOMPLEX);
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
@@ -32,7 +31,7 @@ mxArray *c2mx(const cmat *A){
     return out;
 }
 
-loc_t *mx2loc(const mxArray *A){
+inline loc_t *mx2loc(const mxArray *A){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
@@ -44,7 +43,7 @@ loc_t *mx2loc(const mxArray *A){
     }
     return loc;
 }
-dmat *mx2d(const mxArray *A){
+inline dmat *mx2d(const mxArray *A){
     if(mxGetPi(A)){
 	mexErrMsgTxt("A is complex");
     }
@@ -54,7 +53,7 @@ dmat *mx2d(const mxArray *A){
     dmat *out=dnew_ref( mxGetM(A), mxGetN(A), mxGetPr(A));
     return out;
 }
-char *mx2str(const mxArray *A){
+inline char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=malloc(nlen);
     mxGetString(A, fn, nlen);

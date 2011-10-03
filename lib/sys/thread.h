@@ -115,15 +115,12 @@ struct thread_t{
 
 void thread_prep(thread_t *info, long start, long tot, long nthread, 
 		 thread_wrapfun fun, void *data);
-#if defined(X86) || defined(X86_64)
+
 #define LOCKADD(dest,src,step)\
     (({__asm__ __volatile__ ("lock; xaddl %0,%1"	\
 			   : "=r" (dest), "=m" (src)	\
 			    : "0" (step), "m" (src));}),dest)
 
-#else
-#define LOCKADD(dest,src,step) (dest=lockadd(&src,step),dest)
-#endif
 int lockadd(int *src, int step);
 
 #define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)

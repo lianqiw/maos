@@ -36,15 +36,18 @@
 #include "mathmisc.h"
 #include "type.h"
 #include "dsp.h" 
+#include "ssp.h"
 #include "csp.h"
 #include "dmat.h"
+#include "smat.h"
 #include "cmat.h"
 #include "cell.h"
 #include "suitesparse.h"
 #include "bin.h"
 #include "misc.h"
 #include "common.h"
-
+#include "defs.h"
+/*
 #ifndef USE_COMPLEX
 #define X(A) d##A
 #define Z(A) d##A##_
@@ -73,11 +76,7 @@
 #define PRINT(A) printf("(%10.3e %10.3eI)",creal(A),cimag(A));
 #define CONJ(x) conj(x)
 #define dot_do dotcmp
-#endif
-#undef PSPCELL
-#define PMAT(A,P)    T      (*restrict P)[(A)->nx]=(void *)(A)->p
-#define PSPCELL(M,P) X(sp)* (*restrict P)[(M)->nx]=(void *)(M)->p
-#define PXCELL(M,P)  X(mat)*(*restrict P)[(M)->nx]=(void *)(M)->p
+#endif*/
 #include "suitesparse.c"
 
 TIC;
@@ -670,8 +669,8 @@ T Y(spcellwdinn)(const X(cell) *y, const Y(spcell) *A, const X(cell) *x){
     if(x && y){
 	if(A){
 	    assert(x->ny==1 && y->ny==1 && A->nx==y->nx && A->ny==x->nx);
-	    PSPCELL(A,Ap);
-	    //X(sp) *(*Ap)[A->nx]=(X(sp) *(*)[A->nx])A->p;
+	    //PSPCELL(A,Ap);
+	    X(sp) *(*Ap)[A->nx]=(X(sp) *(*)[A->nx])A->p;
 	    for(int iy=0; iy<A->ny; iy++){
 		for(int ix=0; ix<A->nx; ix++){
 		    res+=Y(spwdinn)(y->p[ix], Ap[iy][ix], x->p[iy]);
@@ -912,7 +911,7 @@ void Y(spcellfull)(X(cell) **out0, const Y(spcell) *A, const T alpha){
 	assert(out->nx==A->nx && out->ny==A->ny);
     }
     PSPCELL(A,pA);
-    PXCELL(out,pout);
+    PCELL(out,pout);
     for(int iy=0; iy<A->ny; iy++){
 	for(int ix=0; ix<A->nx; ix++){
 	    Y(spfull)(&pout[iy][ix], pA[iy][ix], alpha);
@@ -930,7 +929,7 @@ void Y(sptcellfull)(X(cell) **out0, const Y(spcell) *A, const T alpha){
 	assert(out->nx==A->ny && out->ny==A->nx);
     }
     PSPCELL(A,pA);
-    PXCELL(out, pout);
+    PCELL(out, pout);
     for(int iy=0; iy<A->ny; iy++){
 	for(int ix=0; ix<A->nx; ix++){
 	    Y(spfull)(&pout[ix][iy], pA[iy][ix], alpha);
@@ -1287,9 +1286,17 @@ void Y(spdroptol)(X(sp) *A, double thres){
     if(thres<EPS) thres=EPS;
     double maxv;
 #ifdef USE_COMPLEX
-    maxmincmp(A->x,A->nzmax,&maxv,NULL,NULL);
+#ifdef USE_SINGLE
+    maxminfcmp(A->x,A->nzmax,&maxv,NULL,NULL);
 #else
+    maxmincmp(A->x,A->nzmax,&maxv,NULL,NULL);
+#endif
+#else
+#ifdef USE_SINGLE
+    maxv=maxabsf(A->x, A->nzmax);
+#else   
     maxv=maxabs(A->x, A->nzmax);
+#endif
 #endif
     Y(cs_droptol)(A, maxv*thres);
 }
@@ -1488,6 +1495,7 @@ X(sp) *Y(spperm)(X(sp) *A, int reverse, long *pcol, long *prow){
    Invert a SPD X(sp) matrix that is block diagonal with
    block sizes of bs.
 */
+#ifndef USE_SINGLE
 X(sp) *Y(spinvbdiag)(const X(sp) *A, long bs){
     if(A->m!=A->n){
 	error("Must be a square matrix\n");
@@ -1524,6 +1532,7 @@ X(sp) *Y(spinvbdiag)(const X(sp) *A, long bs){
     X(free)(bk);
     return B;
 }
+#endif
 /**
    Extrat the diagonal blocks of size bs into cell arrays.
 */

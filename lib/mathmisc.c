@@ -160,7 +160,16 @@ double maxabs(const double *p, long n){
     }
     return a;
 }
-
+/**
+   compute the maximum of the abs of float vector*/
+float maxabsf(const float *p, long n){
+    if(!p) return 0;
+    float a=fabs(p[0]);
+    for(long i=1; i<n; i++){
+	if(fabsf(p[i])>a) a=fabsf(p[i]);
+    }
+    return a;
+}
 /**
    Compute the sum of double vector*/
 double dblsum(double *p, long nx){

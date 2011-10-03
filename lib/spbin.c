@@ -25,24 +25,8 @@
 #include "spbin.h"
 #include "dsp.h"
 #include "csp.h"
-#ifdef USE_COMPLEX
-#define T dcomplex
-#define X(A) c##A
-#define Y(A) c##A
-#define M_SPT64 M_CSP64
-#define M_SPT32 M_CSP32
-#else
-#define T double
-#define X(A) d##A
-#define Y(A) A
-#define M_SPT64 M_SP64
-#define M_SPT32 M_SP32
-#endif
-#ifdef DLONG
-#define M_SPT M_SPT64
-#else
-#define M_SPT M_SPT32
-#endif
+#include "ssp.h"
+#include "defs.h"
 /**
    Function to write sparse matrix data into file pointed using a file
    pointer. Generally used by library developer.  We do not convert data during

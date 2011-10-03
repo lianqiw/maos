@@ -46,15 +46,11 @@ enum{
 typedef double __complex__ dcomplex;
 typedef float  __complex__ fcomplex;
 typedef double ddouble;/*just for saving.*/
-#if defined(DLONG) && !defined(X86_64)
-#undef DLONG
-#endif
-
 #if defined(DLONG)
-typedef long spint; //Only optionally activated in AMD64.
+typedef unsigned long spint; //Only optionally activated in AMD64.
 #define M_SPINT M_INT64
 #else
-typedef int spint;  //This is always 32 bit.
+typedef unsigned int spint;  //This is always 32 bit.
 #define M_SPINT M_INT32
 #endif
 

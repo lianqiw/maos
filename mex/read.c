@@ -239,7 +239,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    }
 	}
 	break;
-    case M_FCMP:/*float complex array*/
+    case M_ZMP:/*float complex array*/
 	{
 	    out=mxCreateNumericMatrix(nx,ny,mxSINGLE_CLASS,mxCOMPLEX);
 	    if(nx!=0 && ny!=0){

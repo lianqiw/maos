@@ -53,7 +53,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
     }
     dcell *actcplc=dcellnew(ndm, 1);
     spcell *actslavec=spcellnew(ndm, ndm);//block diagonal.
-    PSPCELL(actslavec, actslave);
+    PDSPCELL(actslavec, actslave);
     int nslavetot=0;
     for(int idm=0; idm<ndm; idm++){
 	int nact=aloc[idm]->nloc;
@@ -395,8 +395,8 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 	    }
 	}
 	if(HA && *HA){
-	    PSPCELL(*HA, pHA);
-	    PSPCELL(dHA, pdHA);
+	    PDSPCELL(*HA, pHA);
+	    PDSPCELL(dHA, pdHA);
 	    //Create dHA to assign weights of floating actuators to neighbors.
 	    for(int ifit=0; ifit<(*HA)->nx; ifit++){
 		spint *pp=pHA[idm][ifit]->p;
