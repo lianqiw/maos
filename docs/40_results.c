@@ -2,13 +2,15 @@
    \page page4 Simulation Results
    
    \section simu-results Simulation Results
+
    MAOS will generate output in binary format \c .bin or zipped \c .bin.gz files
    as described below. There are two MATLAB mex routines \c read and \c write
    that can read and write \c .bin or \c .bin.gz files in MATLAB. The source of
-   these mex routines are located in sub-folderx \c mex. Cd to this folder and
-   issue \c make to compile these mex routines.  Copy \c write.mexa64 and \c
-   read.mexa64 into a folder that is in your matlab path, such as
-   $HOME/matlab. The usage in MATLAB is as follows:
+   these mex routines are located in sub-folderx \c mex. If mex is found in the
+   system, this mex routine will be compiled automatically in the mex subfolder
+   of the compiling folder.  Copy \c write.mexa64 and \c read.mexa64 into a
+   folder that is in your matlab path, such as $HOME/matlab. The usage in MATLAB
+   is as follows:
 
 \verbatim 
    cle=read('Res_1'); 

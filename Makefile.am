@@ -15,7 +15,6 @@ EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs
 #folder, including compiled files (in the compiled folder), svn directory, will
 #be included.
 
-EXTRA_DIST += mex/Makefile mex/write.c mex/read.c mex/io.c mex/io.h
 EXTRA_DIST += scripts/readbin.pro scripts/readdata.pro scripts/readbin.m scripts/writebin.m\
 scripts/save_surf.m scripts/save_tsurf.m
 nobase_dist_pkgdata_DATA=\

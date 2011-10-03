@@ -16,7 +16,7 @@ endif
 
 MEX=@mex $(mexopts) 
 CCLD=mex
-
+EXTRA_DIST=null.c io.c io.h interface.h
 EXEEXT=$(MEXEXT) #Automatic add suffix
 
 bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex
