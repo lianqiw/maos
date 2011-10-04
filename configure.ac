@@ -466,12 +466,13 @@ if test "x${use_mex}" = "xyes" ; then
    AM_CONDITIONAL(USE_MEX, true)
    AC_CONFIG_FILES([mex/Makefile])
    FN=/tmp/mex_null
-   rm -rf ${FN}*
+   rm -f ${FN}*
    mex ${SRC_DIR}/mex/null.c -o ${FN}
    FN2=$(ls ${FN}*)
    if test -z "${FN2}" ;then
       AC_MSG_ERROR([mex failed 0. reconfigure with --disable-mex to bypass mex.])
    fi
+   rm -f ${FN2}
    MEXEXT=${FN2/${FN}/}
    if test -z "${MEXEXT}" ;then
       AC_MSG_ERROR([mex failed 1. reconfigure with --disable-mex to bypass mex.])

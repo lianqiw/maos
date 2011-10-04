@@ -75,7 +75,7 @@ typedef struct{
     int     custatb;//allocated block
     int     custatt;//allocated thread
     //Run time data that changes
-    float  *neareal;
+    curmat *neareal;
     curmat *gradacc;    /**<For accumulating grads*/
     curmat *ints;       /**<For accumulating subaperture image.*/
     

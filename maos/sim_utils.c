@@ -1386,7 +1386,6 @@ void free_simu(SIM_T *simu){
     free(simu->wfs_grad);
     free(simu->perf_evl);
     free(simu->status);
-    dcellfree(simu->wfspsfmean);
     dcellfree(simu->gradcl);
     dcellfree(simu->gradacc);
     dcellfree(simu->gradlastcl);

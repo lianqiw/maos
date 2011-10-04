@@ -1,10 +1,3 @@
-#To use this make file. Please prepare as follows
-# 1) Compile maos with configure --enable-shared --enable-long --disable-icc
-# 2) Copy lib/.libs/libaos_long.* to /usr/local/lib or other place in or LDPATH
-# 3) make -f Makefile.full
-
-#.NOTPARALLEL
-
 mexopts=$(shell mex -h|grep -q largeArrayDims && echo -largeArrayDims)
 mexopts+=-DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L -I$(SRC_DIR)/lib/
 AM_LDFLAGS=-DDLONG -lz -lmwblas -lmwlapack -lm -largeArrayDims
@@ -16,8 +9,10 @@ endif
 
 MEX=@mex $(mexopts) 
 CCLD=mex
-EXTRA_DIST=null.c io.c io.h interface.h
+EXTRA_DIST=null.c io.c io.h interface.h Makefile.mex
 EXEEXT=$(MEXEXT) #Automatic add suffix
+
+.NOTPARALLEL:io.c
 
 bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex
 

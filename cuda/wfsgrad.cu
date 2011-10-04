@@ -329,7 +329,7 @@ void gpu_wfsgrad(thread_t *info){
 		    TO_IMPLEMENT;
 		}
 		collect_noise_do<<<DIM(nsa,256), 0, stream>>>
-		    (cuwfs[iwfs].neareal, gradnf->p, gradny->p, nsa);
+		    (cuwfs[iwfs].neareal->p, gradnf->p, gradny->p, nsa);
 		if(save_ints){
 		    cellarr_cur(simu->save->intsny[iwfs], ints, stream);
 		}
@@ -375,9 +375,11 @@ void gpu_wfsgrad(thread_t *info){
 		if(save_grad){
 		    cellarr_cur(simu->save->gradnf[iwfs], gradacc, stream);
 		}
-		add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
-		    (gradacc->p, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
-		toc("noise");
+		if(!parms->powfs[ipowfs].usephy){
+		    add_geom_noise_do<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt, 0, stream>>>
+			(gradacc->p, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
+		    toc("noise");
+		}
 	    }
 	    gpu_cur2d(&gradout, gradacc, stream);
 	    //gpu_dev2dbl(&gradout->p, gradacc->p, nsa*2, stream);
@@ -398,4 +400,51 @@ void gpu_wfsgrad(thread_t *info){
     toc("done");
     CUDA_SYNC_STREAM;
     curfree(phiout);
+}
+void gpu_wfsgrad_save(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const int isim=simu->isim;
+    const int seed=simu->seed;
+    if((isim % 50 ==0) || isim+1==parms->sim.end){
+	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
+	    gpu_set(wfsgpu[iwfs]);
+	    cuwfs_t *cuwfs=cudata->wfs;
+	    const PARMS_T *parms=simu->parms;
+	    if(!cuwfs[iwfs].neareal) continue;
+	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
+	    const int dtrat=parms->powfs[ipowfs].dtrat;
+	    float scale;
+	    if(parms->powfs[ipowfs].usephy){
+		scale=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
+	    }else{
+		scale=(simu->isim+1)/dtrat;
+	    }
+	    if(scale<=0) continue;
+	    scale=1.f/floor(scale);//only multiple of dtrat is recorded.
+	    curmat *sanea=NULL;
+	    curadd(&sanea, 0, cuwfs[iwfs].neareal, scale, cuwfs[iwfs].stream);
+	    curwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
+	    curfree(sanea);
+
+	    if(simu->pistatout[iwfs]){
+		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
+		curcell* tmp=NULL;
+		TO_IMPLEMENT;//change pistatout to cur. implement curfftshift.
+		/*curcelladd(&tmp,0,simu->pistatout[iwfs],1./(float)nstep);
+		if(parms->sim.skysim){//need peak in corner
+		    for(long ic=0; ic<tmp->nx*tmp->ny; ic++){
+			curfftshift(tmp->p[ic]);
+		    }
+		    curcellwrite(tmp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+			       dirskysim,simu->seed,
+			       parms->powfs[ipowfs].order,
+			       parms->wfs[iwfs].thetax*206265,
+			       parms->wfs[iwfs].thetay*206265);
+		}else{//need peak in center
+		    curcellwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
+		}
+		curcellfree(tmp);*/
+	    }
+	}
+    }
 }

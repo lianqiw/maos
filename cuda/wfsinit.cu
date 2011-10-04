@@ -273,7 +273,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	gpu_set(wfsgpu[iwfs]);//Only initialize WFS in assigned GPU.
-	cuwloc_t *cupowfs=cudata->powfs;
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
@@ -288,8 +287,8 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	    curfree(cuwfs[iwfs].ints);
 	    cuwfs[iwfs].ints=curnew(nsa, powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay);
 	    if(parms->powfs[ipowfs].noisy){
-		cudaFree(cuwfs[iwfs].neareal);
-		cudaCallocBlock(cuwfs[iwfs].neareal, nsa*sizeof(float)*4);
+		curfree(cuwfs[iwfs].neareal);
+		cuwfs[iwfs].neareal=curnew(nsa*4,1);
 	    }
 	}
 	CUDA_SYNC_DEVICE;

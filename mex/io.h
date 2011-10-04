@@ -48,7 +48,6 @@ typedef struct file_t{
 
 #define MAT_SP 0xFF01
 #define MAT_CSP 0xFF02
-const char *myasctime(void);
 file_t* zfopen(const char *fn, char *mod);
 void zfclose(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);

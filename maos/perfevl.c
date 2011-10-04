@@ -478,29 +478,25 @@ static void perfevl_save(SIM_T *simu){
     const int isim=simu->isim;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
 	info2("Output PSF\n");
-	if(simu->evlpsfmean){
-	    dcell *psfmean=NULL;
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-	    dcelladd(&psfmean, 0, simu->evlpsfmean, scale);
-	    PDCELL(psfmean, pcl);
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!simu->save->evlpsfmean[ievl]) continue;
-		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    cellarr_dmat(simu->save->evlpsfmean[ievl], pcl[ievl][iwvl]);
-		}
+	dcell *psfmean=NULL;
+	double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
+	dcelladd(&psfmean, 0, simu->evlpsfmean, scale);
+	PDCELL(psfmean, pcl);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    if(!simu->save->evlpsfmean[ievl]) continue;
+	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		cellarr_dmat(simu->save->evlpsfmean[ievl], pcl[ievl][iwvl]);
 	    }
-	    dcelladd(&psfmean, 0, simu->evlpsfmean_ngsr, scale);
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!simu->save->evlpsfmean_ngsr[ievl]) continue;
-		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		    cellarr_dmat(simu->save->evlpsfmean_ngsr[ievl], pcl[ievl][iwvl]);
-		}
+	}
+	dcelladd(&psfmean, 0, simu->evlpsfmean_ngsr, scale);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    if(!simu->save->evlpsfmean_ngsr[ievl]) continue;
+	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		cellarr_dmat(simu->save->evlpsfmean_ngsr[ievl], pcl[ievl][iwvl]);
 	    }
-	    dcellfree(psfmean);
 	}
 	if(simu->evlpsfolmean){
-	    dcell *psfmean=NULL;
-	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
+	    scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    if(parms->evl.psfol==2){
 		scale=scale/parms->evl.npsf;
 	    }
@@ -508,8 +504,8 @@ static void perfevl_save(SIM_T *simu){
 	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
 		cellarr_dmat(simu->save->evlpsfolmean, psfmean->p[iwvl]);
 	    }
-	    dcellfree(psfmean);
 	}
+	dcellfree(psfmean);
     }
     if(parms->evl.opdcov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdcov)){
 	long nstep=isim+1-parms->evl.psfisim;

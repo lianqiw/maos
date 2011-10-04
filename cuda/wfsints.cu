@@ -396,8 +396,8 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	ctoc("llt otf");
 	    
 	float norm_psf=sqrt(powfs[ipowfs].areascale)/((float)powfs[ipowfs].pts->nx*npsf);
-	float norm=siglev*norm_psf*norm_psf/((float)ncompx*ncompy);
 	float norm_pistat=norm_psf*norm_psf/((float)npsf*npsf);
+	float norm=siglev*parms->wfs[iwfs].wvlwts[iwvl]*norm_psf*norm_psf/((float)ncompx*ncompy);
 
 	/* Do msa subapertures in a batch to avoid using too much memory.*/
 	fcomplex *psf, *otf;

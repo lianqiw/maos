@@ -445,7 +445,6 @@ typedef struct SIM_T{
     /*WFS data for each time step. Each has a cell for each wfs*/
     dcell **ints;      /**<WFS subaperture images.*/
     ccell **wfspsfout; /**<output WFS PSF history.*/
-    dcell *wfspsfmean; /**<To save time average of wfs psf of the full aperture. (for PSF recon)*/
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
     dcell **sanea_sim;  /**<accumulate effective sanea during simulation.*/

@@ -18,6 +18,9 @@
 #include "maos.h"
 #include "sim.h"
 #include "sim_utils.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file wfsgrad.c
    contains functions that computes WFS gradients in geometric or physical optics mode.
@@ -544,17 +547,13 @@ void wfsgrad_iwfs(thread_t *info){
 #endif
 }
 /**
-   Save telemetry
+   Save telemetry. TODO: copy from GPU to CPU.
  */
 static void wfsgrad_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     const int seed=simu->seed;
     if((isim % 50 ==0) || isim+1==parms->sim.end){
-	if(simu->wfspsfmean && simu->isim>=parms->evl.psfisim){
-	    double scalewfs=1./(double)(simu->isim+1-parms->evl.psfisim);
-	    dcellswrite(simu->wfspsfmean, scalewfs, "wfspsfmean_%d.bin", seed);
-	}
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
 	    if(!simu->sanea_sim[iwfs]) continue;
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
@@ -571,28 +570,24 @@ static void wfsgrad_save(SIM_T *simu){
 	    dcelladd(&sanea, 0, simu->sanea_sim[iwfs], scale);
 	    dcellwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
 	    dcellfree(sanea);
-	}
-	if(simu->pistatout){
-	    for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
-		const int ipowfs=simu->parms->wfs[iwfs].powfs;
-		if(simu->pistatout[iwfs]){
-		    int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
-		    dcell* tmp=NULL;
-		    dcelladd(&tmp,0,simu->pistatout[iwfs],1./(double)nstep);
-		    if(parms->sim.skysim){//need peak in corner
-			for(long ic=0; ic<tmp->nx*tmp->ny; ic++){
-			    dfftshift(tmp->p[ic]);
-			}
-			dcellwrite(tmp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
-				   dirskysim,simu->seed,
-				   parms->powfs[ipowfs].order,
-				   parms->wfs[iwfs].thetax*206265,
-				   parms->wfs[iwfs].thetay*206265);
-		    }else{//need peak in center
-			dcellwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
+
+	    if(simu->pistatout && simu->pistatout[iwfs]){
+		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
+		dcell* tmp=NULL;
+		dcelladd(&tmp,0,simu->pistatout[iwfs],1./(double)nstep);
+		if(parms->sim.skysim){//need peak in corner
+		    for(long ic=0; ic<tmp->nx*tmp->ny; ic++){
+			dfftshift(tmp->p[ic]);
 		    }
-		    dcellfree(tmp);
+		    dcellwrite(tmp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+			       dirskysim,simu->seed,
+			       parms->powfs[ipowfs].order,
+			       parms->wfs[iwfs].thetax*206265,
+			       parms->wfs[iwfs].thetay*206265);
+		}else{//need peak in center
+		    dcellwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 		}
+		dcellfree(tmp);
 	    }
 	}
     }
@@ -624,6 +619,11 @@ void wfsgrad(SIM_T *simu){
 	    dcellcp(&simu->upterrlast,simu->upterr);
 	}
     }
+#if USE_CUDA
+    if(parms->gpu.wfs){
+	gpu_wfsgrad_save(simu);
+    }else
+#endif
     wfsgrad_save(simu);
     simu->tk_wfs=myclockd()-tk_start;
 }

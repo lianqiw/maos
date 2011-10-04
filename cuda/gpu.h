@@ -42,6 +42,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs);
 void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs);
 void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rstat);
 void gpu_wfsgrad(thread_t *info);
+void gpu_wfsgrad_save(SIM_T *simu);
 void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs);
 
 void gpu_evlsurf2gpu(APER_T *aper);
