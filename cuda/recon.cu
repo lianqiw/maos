@@ -26,7 +26,7 @@ extern "C"
 #include "pcg.h"
 #include "curmat.h"
 curecon_t *curecon;
-#define SCALE 1e-12 //Scale both NEA and L2 to balance the dynamic range. Does not work yet (strange).
+#define SCALE 1e-12 /*Scale both NEA and L2 to balance the dynamic range. Does not work yet (strange). */
 #undef TIMING
 #define TIMING 0
 #if !TIMING
@@ -132,9 +132,9 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 			    if(zx>2) zx=2;
 			    if(zy<0) zy=0;
 			    if(zy>2) zy=2;
-			    if(ic<nsa){//x
+			    if(ic<nsa){/*x */
 				partx->p[9*isa+zx+zy*3]+=px[ir];
-			    }else{//y
+			    }else{/*y */
 				party->p[9*isa+zx+zy*3]+=px[ir];
 			    }
 			}
@@ -144,7 +144,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		    dfree(partx);
 		    dfree(party);
 		    spfree(GP);
-		}else{//use sparse
+		}else{/*use sparse */
 		    gpu_sp2dev(&cupowfs[ipowfs].GP, recon->GP->p[ipowfs]);
 		}
 	    }else{
@@ -170,11 +170,11 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    }
 	}
 	curecon->neai=curcellnew(parms->nwfsr, 1);
-	//convert recon->saneai to our format.
+	/*convert recon->saneai to our format. */
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    int nsa=powfs[ipowfs].pts->nsa;
-	    int iwfs0=parms->powfs[ipowfs].wfs[0];//first wfs in this group.
+	    int iwfs0=parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
 	    dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
 	    spint *pp=nea->p;
 	    spint *pi=nea->i;
@@ -185,13 +185,13 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
 		    int ix=pi[ir];
 		    int isa=ic<nsa?ic:ic-nsa;
-		    if(ix==ic){//diagonal part.
-			if(ic==isa){//x
+		    if(ix==ic){/*diagonal part. */
+			if(ic==isa){/*x */
 			    neai[isa][0]=(float)px[ir]*SCALE;
-			}else{//y
+			}else{/*y */
 			    neai[isa][1]=(float)px[ir]*SCALE;
 			}
-		    }else if(ix==ic-nsa || ix==ic+nsa){//cross part. symmetric.
+		    }else if(ix==ic-nsa || ix==ic+nsa){/*cross part. symmetric. */
 			neai[isa][2]=(float)px[ir]*SCALE;
 		    }else{
 			error("saneai has invalid format\n");
@@ -201,7 +201,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    curecon->neai->p[iwfs]=curnew(3, nsa);
 	    DO(cudaMemcpy(curecon->neai->p[iwfs]->p, neai, 3*nsa*sizeof(float), cudaMemcpyDefault));
 	    free(neai);
-	    if(iwfs!=iwfs0 && nsa>4){//don't check tt. overflows.
+	    if(iwfs!=iwfs0 && nsa>4){/*don't check tt. overflows. */
 		float diff=curinn(curecon->neai->p[iwfs], curecon->neai->p[iwfs0], stream);
 		float diff2=curinn(curecon->neai->p[iwfs0], curecon->neai->p[iwfs0],  stream);
 		if((diff-diff2)<1e-4*diff2){
@@ -209,7 +209,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		    curecon->neai->p[iwfs]=curecon->neai->p[iwfs0];
 		}
 	    }
-	}//for iwfs
+	}/*for iwfs */
 	CUDA_SYNC_DEVICE;
 	if(recon->PTT && !curecon->PTT){
 	    gpu_dcell2cu(&curecon->PTT, recon->PTT);
@@ -219,7 +219,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	}
     }
     if(parms->gpu.fit){
-	//For fitting
+	/*For fitting */
 	/*
 	  gpu_dmat2cu(&curecon->W1, recon->W1);
 	  if(recon->W0){
@@ -234,13 +234,13 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	  cudaMallocHost(&full, recon->W0->n*sizeof(int));
 	  double W1max=dmax(recon->W1);
 	  double thres=W1max*(1.f-1e-6);
-	  curecon->W0v=(float)(W1max*4./9.);//max of W0 is 4/9 of max of W1.
+	  curecon->W0v=(float)(W1max*4./9.);//max of W0 is 4/9 of max of W1. 
 	  info("W0v=%g\n", curecon->W0v);
 	  int count=0;
 	  int count2=0;
 	  for(int ic=0; ic<recon->W0->n; ic++){
 	  pp2[ic]=count;
-	  if(recon->W1->p[ic]>thres){//full
+	  if(recon->W1->p[ic]>thres){
 	  full[count2]=ic;
 	  count2++;
 	  }else{
@@ -315,44 +315,15 @@ void gpu_tomo(SIM_T *simu){
     if(curecon->PDF){
 	TO_IMPLEMENT;
     }
-    /*if(!curecon->hxconfig){
-	//don't move it to gpu_setup_recon because we need wind information.
-	const float hs = parms->powfs[ipowfs].hs;				
-	curzero(opdwfs->p[iwfs], curecon->wfsstream[iwfs]);	
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    const int ipowfs = parms->wfsr[iwfs].powfs;
-	    if(parms->powfs[ipowfs].skip) continue;
-	    const int nsa=cupowfs[ipowfs].nsa;
-	    const float dsa=cupowfs[ipowfs].dsa;		
-	    for(int ips=0; ips<recon->npsr; ips++){				
-		const float ht=recon->ht->p[ips];				
-		const float scale = 1.f - ht/hs;				
-		const float oxx=recon->xmap[ips]->ox;				
-		const float oyx=recon->xmap[ips]->oy;				
-		float dispx=parms->wfsr[iwfs].thetax*ht;			
-		float dispy=parms->wfsr[iwfs].thetay*ht;			
-		if(parms->tomo.predict){					
-		    int ips0=parms->atmr.indps[ips];				
-		    dispx+=simu->atm[ips0]->vx*simu->dt*2;			
-		    dispy+=simu->atm[ips0]->vy*simu->dt*2;			
-		}								
-		gpu_prop_grid(opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
-			      xin->p[ips], oxx, oyx,recon->xmap[ips]->dx,	
-			      dispx, dispy,					
-			      1.f, 'n', curecon->wfsstream[iwfs]);		
-	    }//ips
-
-	}//for iwfs
-    }//if*/
-    //first send gradients to GPU. can be skipped if keep grad in gpu. fast though.
+    /*first send gradients to GPU. can be skipped if keep grad in gpu. fast though. */
     int nxp=recon->pmap->nx;
     int nyp=recon->pmap->ny;
    
     const int nwfs=parms->nwfsr;
-    //Create temporary memory
+    /*Create temporary memory */
     curecon->reconisim=simu->reconisim;
     curecon->opdwfs=curcellnew(nwfs, 1);
-    curecon->grad=curcellnew(nwfs, 1);//intermediate.
+    curecon->grad=curcellnew(nwfs, 1);/*intermediate. */
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
@@ -361,7 +332,7 @@ void gpu_tomo(SIM_T *simu){
 	curecon->grad->p[iwfs]=curnew(nsa*2,1);
     }
     if(0){
-	//Debugging.
+	/*Debugging. */
 	dcell *rhsc=NULL;
 	dcell *lc=NULL;
 	muv(&rhsc, &recon->RR, simu->gradlastol, 1);
@@ -441,6 +412,6 @@ void gpu_fit(SIM_T *simu){
     cudaStreamSynchronize(curecon->cgstream);
     curcellfree(curecon->opdfit);
     curcellfree(curecon->opdfit2);
-    //Don't free opdr.
+    /*Don't free opdr. */
     curcellfree(rhs); rhs=NULL;
 }

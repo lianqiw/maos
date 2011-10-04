@@ -52,7 +52,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	ndm=actfloat->ny;
     }
     dcell *actcplc=dcellnew(ndm, 1);
-    spcell *actslavec=spcellnew(ndm, ndm);//block diagonal.
+    spcell *actslavec=spcellnew(ndm, ndm);/*block diagonal. */
     PDSPCELL(actslavec, actslave);
     int nslavetot=0;
     for(int idm=0; idm<ndm; idm++){
@@ -78,7 +78,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	    if(actcplc->p[idm]->nx*actcplc->p[idm]->ny!=nact){
 		error("Invalid actcplc\n");
 	    }
-	    normalize_max(actcplc->p[idm]->p, nact, 1);//bring max to 1;
+	    normalize_max(actcplc->p[idm]->p, nact, 1);/*bring max to 1; */
 	}else{
 	    dset(actcplc->p[idm], 1);
 	}
@@ -91,7 +91,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	    for(int jact=0; jact<nstuck; jact++){
 		int iact=actstuck->p[idm]->p[jact];
 		stuck[iact]=1;
-		actcplc->p[idm]->p[iact] = 1;//Skip the stuck actuators.
+		actcplc->p[idm]->p[iact] = 1;/*Skip the stuck actuators. */
 		warning2("Skip actuator %d in slaving\n", iact);
 	    }
 	}
@@ -103,9 +103,9 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		if(HA && actcplc->p[idm]->p[iact]>0.1){
 		    error("actuator %d is floating, but actcpl is not zero\n", iact);
 		}else{
-		    actcplc->p[idm]->p[iact]=0;//Slave this actuator.
+		    actcplc->p[idm]->p[iact]=0;/*Slave this actuator. */
 		}
-		//warning2("Don't constrain value of actuator %d in slaving\n", iact);
+		/*warning2("Don't constrain value of actuator %d in slaving\n", iact); */
 	    }
 	}
 	toc("collect");
@@ -138,13 +138,13 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	long count=0;
 	long icol=0;
 	for(int iact=0; iact<nact; iact++){
-	    if(stuck && stuck[iact]){//limit the strength of stuck actuators.
+	    if(stuck && stuck[iact]){/*limit the strength of stuck actuators. */
 		pp[icol]=count;
 		pi[count]=iact;
 		px[count]=scl;
 		count++;
 		icol++;
-	    }else if(actcpl[iact]<thres){//slave actuators
+	    }else if(actcpl[iact]<thres){/*slave actuators */
 		pp[icol]=count;
 		long mapx=(long)round((locx[iact]-ox)*dx1);
 		long mapy=(long)round((locy[iact]-oy)*dx1);
@@ -154,7 +154,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
 			if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
-			    continue;//skip center and corner
+			    continue;/*skip center and corner */
 			}
 			int kact1=map[mapy+idy][mapx+idx];
 			if(kact1 && !stuck[kact1-1]){
@@ -179,7 +179,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		if(actcpl[iact]<0.1 && !floated[iact]){
 		    px[count]+=scl*1;
 		}else if(actcpl[iact]<0.1 && floated[iact]){
-		    //warning2("Actuator %d is floating, don't limit its strength\n", iact);
+		    /*warning2("Actuator %d is floating, don't limit its strength\n", iact); */
 		}
 		count++;
 
@@ -192,7 +192,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		    for(int idy=-1; idy<2; idy++){
 			for(int idx=-1; idx<2; idx++){
 			    if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
-				continue;//skip center and corner
+				continue;/*skip center and corner */
 			    }
 			    int kact1=map[mapy+idy][mapx+idx];
 			    if(kact1 && actcpl0[kact1]>0.1 && !stuck[kact1-1]){
@@ -211,7 +211,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		    for(int idy=-1; idy<2; idy++){
 			for(int idx=-1; idx<2; idx++){
 			    if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
-				continue;//skip center and corner
+				continue;/*skip center and corner */
 			    }
 			    int kact1=map[mapy+idy][mapx+idx];
 			    if(kact1 && !stuck[kact1-1]){
@@ -224,8 +224,8 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	
 		}
 		icol++;
-	    }//if
-	}//for iact
+	    }/*if */
+	}/*for iact */
 	free(stuck);
 	free(floated);
 	pp[icol]=count;
@@ -250,7 +250,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		dfree(H);
 		dfree(Hinv);
 		dfree(mod);
-		if(nfloat || nstuck){//Remove corresponding rows in NW
+		if(nfloat || nstuck){/*Remove corresponding rows in NW */
 		    PDMAT(NW->p[idm], pNW);
 		    for(int iy=0; iy<NW->p[idm]->ny; iy++){
 			for(int jact=0; jact<nstuck; jact++){
@@ -268,7 +268,7 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	toc("NW");
 	spfree(slave);
 	spfree(slavet);
-    }//idm
+    }/*idm */
     dcellfree(actcplc);
     if(nslavetot==0){
 	spcellfree(actslavec);
@@ -357,13 +357,13 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 	const double *locy=aloc[idm]->locy;
 	long nact=aloc[idm]->nloc;
 	long ndead=actfloat->p[idm]->nx;
-	//actuator that is floating
+	/*actuator that is floating */
 	long *isfloat=calloc(nact, sizeof(long));
-	//which floating actuator to assign for this one.
+	/*which floating actuator to assign for this one. */
 	long (*indfloat)[4]=calloc(nact, sizeof(long)*4);
-	//number of floating actuators that is assigned for this one.
+	/*number of floating actuators that is assigned for this one. */
 	long *nindfloat=calloc(nact, sizeof(long));
-	//active neighbors of each dead act.
+	/*active neighbors of each dead act. */
 	long *neighbor=calloc(nact, sizeof(long));
 	long nzmax=0;
 	
@@ -371,16 +371,16 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 	    int iact=actfloat->p[idm]->p[jact];
 	    isfloat[iact]=1;
 	}
-	//loop through the floating actuators
+	/*loop through the floating actuators */
 	for(long jact=0; jact<ndead; jact++){
 	    int iact=actfloat->p[idm]->p[jact];
 	    long mapx=(long)round((locx[iact]-ox)*dx1);
 	    long mapy=(long)round((locy[iact]-oy)*dx1);
-	    //find all its neighbors.
+	    /*find all its neighbors. */
 	    for(int idy=-1; idy<2; idy++){
 		for(int idx=-1; idx<2; idx++){
 		    if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
-			continue;//skip center and corner
+			continue;/*skip center and corner */
 		    }
 		    if(map[mapy+idy][mapx+idx]){
 			int kact=map[mapy+idy][mapx+idx]-1;
@@ -388,7 +388,7 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 			    indfloat[kact][nindfloat[kact]]=iact;
 			    nindfloat[kact]++;
 			    neighbor[iact]++;
-			    nzmax+=4;//assume 1 point couples to 4 points max.
+			    nzmax+=4;/*assume 1 point couples to 4 points max. */
 			}
 		    }
 		}
@@ -397,7 +397,7 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 	if(HA && *HA){
 	    PDSPCELL(*HA, pHA);
 	    PDSPCELL(dHA, pdHA);
-	    //Create dHA to assign weights of floating actuators to neighbors.
+	    /*Create dHA to assign weights of floating actuators to neighbors. */
 	    for(int ifit=0; ifit<(*HA)->nx; ifit++){
 		spint *pp=pHA[idm][ifit]->p;
 		spint *pi=pHA[idm][ifit]->i;
@@ -412,7 +412,7 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 		    pp2[iact]=count;
 		    if(nindfloat[iact]){
 			for(long in=0; in<nindfloat[iact]; in++){
-			    long jact=indfloat[iact][in];//the floating act.
+			    long jact=indfloat[iact][in];/*the floating act. */
 			    double scale=1./neighbor[jact];
 			    for(long ie=pp[jact]; ie<pp[jact+1]; ie++){
 				if(count>=nzmax){
@@ -431,20 +431,20 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 		}
 		pp2[nact]=count;
 		spsetnzmax(pdHA[idm][ifit], count);
-		//Remove weights of floating actuatorsf from HA.
+		/*Remove weights of floating actuatorsf from HA. */
 		for(int jact=0; jact<actfloat->p[idm]->nx; jact++){
 		    int iact=actfloat->p[idm]->p[jact];
 		    for(int ic=pp[iact]; ic<pp[iact+1]; ic++){
 			px[ic]=0;
 		    }
 		}
-	    }//ifit
-	}else{//Do dense matrix
+	    }/*ifit */
+	}else{/*Do dense matrix */
 	    PDCELL(HB, hb);
 	    for(long iact=0; iact<nact; iact++){
 		if(nindfloat[iact]){
 		    for(long in=0; in<nindfloat[iact]; in++){
-			long jact=indfloat[iact][in];//the floating act.
+			long jact=indfloat[iact][in];/*the floating act. */
 			double scale=1./neighbor[jact];
 			for(int ifit=0; ifit<HB->nx; ifit++){
 			    dmat *hbi=hb[idm][ifit];
@@ -469,7 +469,7 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 	free(indfloat);
 	free(isfloat);
 	free(neighbor);	
-    }//idm
+    }/*idm */
     if(HA){
 	spcelladd(HA, dHA);
 	spcellfree(dHA);
@@ -514,7 +514,7 @@ spcell* act_float_interp(loc_t **aloc, icell *actfloat){
 	const double *locy=aloc[idm]->locy;
 	long nact=aloc[idm]->nloc;
 	long ndead=actfloat->p[idm]?actfloat->p[idm]->nx:0;
-	//actuator that is floating
+	/*actuator that is floating */
 	long *isfloat=calloc(nact, sizeof(long));
 	for(long jact=0; jact<ndead; jact++){
 	    int iact=actfloat->p[idm]->p[jact];
@@ -534,7 +534,7 @@ spcell* act_float_interp(loc_t **aloc, icell *actfloat){
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
 			if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
-			    continue;//skip center and corner
+			    continue;/*skip center and corner */
 			}
 			if(map[mapy+idy][mapx+idx]){
 			    int kact=map[mapy+idy][mapx+idx]-1;
@@ -550,7 +550,7 @@ spcell* act_float_interp(loc_t **aloc, icell *actfloat){
 			px[count2]=scl;
 		    }
 		}
-	    }else{//just copy over data
+	    }else{/*just copy over data */
 		pi[count]=iact;
 		px[count]=1;
 		count++;

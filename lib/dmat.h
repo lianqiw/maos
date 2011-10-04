@@ -28,6 +28,6 @@ AOS_MAT_DEF(AOS_DMAT,AOS_DMAT,AOS_DSP,double,double)
 AOS_CELL_DEF(AOS_DMAT,AOS_DSP,double)
 AOS_MATBIN_DEF(AOS_DMAT,AOS_DSP,double)
 
-//The following are only for dmat.
+/*The following are only for dmat. */
 dmat *denc(dmat *A, dmat *dvec, int type, int nthread);
 #endif

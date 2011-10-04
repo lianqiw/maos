@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//Taken from suitesparse package from UFL.
+/*Taken from suitesparse package from UFL. */
 #ifndef AOS_SUITE_SPARSE_H
 #define AOS_SUITE_SPARSE_H
 #include "type.h"

@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-// Check whether scheduler is already running.
+/* Check whether scheduler is already running. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
@@ -53,12 +53,12 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
     }
     count++;
     fd=open(fnlock,O_RDWR|O_CREAT,0644);
-    //cloexec(fd);//do not do this. need to carry over to forked routines
+    /*cloexec(fd);//do not do this. need to carry over to forked routines */
     if(fd>=0){
 	int op=LOCK_EX;
 	if(!block) op |= LOCK_NB;
-	if(flock(fd, op)){//lock faild.
-	    if(block){//In block mode, we should never fail.
+	if(flock(fd, op)){/*lock faild. */
+	    if(block){/*In block mode, we should never fail. */
 		perror("flock");
 		error("Lock failed\n");
 	    }
@@ -76,8 +76,8 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		    fclose(fp);
 		    remove(fnlock);
 		    goto retry;
-		}else{//already running. check version
-		    //warning("Process %ld already locks file %s\n",pid,fnlock);
+		}else{/*already running. check version */
+		    /*warning("Process %ld already locks file %s\n",pid,fnlock); */
 		    long version_old=0;
 		    if(version>0 && (fscanf(fp,"%ld",&version_old)==EOF || version_old < version)){
 			info("Killing old executive\n");
@@ -88,7 +88,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 				return -pid;
 			    }
 			}
-			fclose(fp);//closed fd also.
+			fclose(fp);/*closed fd also. */
 			goto retry;
 		    }else{
 			fclose(fp);
@@ -96,7 +96,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		    }
 		}
 	    }
-	}else{//lock succeed. write pid.
+	}else{/*lock succeed. write pid. */
 	    char strpid[60];
 	    snprintf(strpid,60,"%ld %ld\n",(long)getpid(),version);
 	    lseek(fd,0,SEEK_SET);
@@ -105,9 +105,9 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 	    if(write(fd,strpid,strlen(strpid)+1)!=strlen(strpid)+1){
 		warning("Write pid %d to %s failed\n",(int)getpid(),fnlock);
 	    }else{
-		//info("Write pid %d to %s success\n",(int)getpid(),fnlock);
+		/*info("Write pid %d to %s success\n",(int)getpid(),fnlock); */
 	    }
-	    fsync(fd);//don't close file. maintain lock.
+	    fsync(fd);/*don't close file. maintain lock. */
 	}
     }else{
 	warning("Open file failed. This should never happen\n");
@@ -131,7 +131,7 @@ void single_instance_daemonize(const char *lockfolder_in,
     expand_filename(&lockfolder,lockfolder_in);
     char *fnlock0=stradd(lockfolder,"/",progname,".pid",NULL);
     char *fnlog0=stradd(lockfolder,"/",progname,".log",NULL);
-    //Make those stack variable so that we don't have to free them.
+    /*Make those stack variable so that we don't have to free them. */
     char *fnlock=alloca(strlen(fnlock0)+1);
     strcpy(fnlock,fnlock0);
     char *fnlog=alloca(strlen(fnlog0)+1);
@@ -141,23 +141,23 @@ void single_instance_daemonize(const char *lockfolder_in,
     free(fnlock0);
 
     fd=lock_file(fnlock,0,version);
-    if(fd<0){//lock failed. daemon already running. no need to start the daemon.
+    if(fd<0){/*lock failed. daemon already running. no need to start the daemon. */
 	if(daemon_func){
 	    return;
 	}else{
 	    _exit(EXIT_SUCCESS);
-	    return;//just in case
+	    return;/*just in case */
 	}
     }
-    //lock success, forking and put to background.
+    /*lock success, forking and put to background. */
     /*fork to detach from terminal. Do the fist fork*/
     long pid = fork();
     if(pid<0){
 	exit(EXIT_FAILURE);
-    }else if (pid > 0) {//exit first parent.
-	close(fd);//release lock in this process that is not daemon.
-	waitpid(pid,NULL,0);//prevent child from defunct.
-	if(daemon_func){//The process that launched this routine will return.
+    }else if (pid > 0) {/*exit first parent. */
+	close(fd);/*release lock in this process that is not daemon. */
+	waitpid(pid,NULL,0);/*prevent child from defunct. */
+	if(daemon_func){/*The process that launched this routine will return. */
 	    return;
 	}else{
 	    exit(EXIT_SUCCESS);
@@ -172,11 +172,11 @@ void single_instance_daemonize(const char *lockfolder_in,
     if(setsid()==-1) warning("Error setsid\n");
     if(chdir("/")) warning("Error chdir\n");
     umask(0077);
-    //redirect stdin/stdout.
+    /*redirect stdin/stdout. */
     if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
     if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
     if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
-    setbuf(stdout,NULL);//disable buffering.
+    setbuf(stdout,NULL);/*disable buffering. */
     setbuf(stderr,NULL);
 
     /*We fork again. after this fork, the process is not the
@@ -185,8 +185,8 @@ void single_instance_daemonize(const char *lockfolder_in,
     pid = fork();
     if(pid<0){
 	exit(EXIT_FAILURE);
-    }else if (pid > 0) {//exit first parent.
-	close(fd);//close and release lock
+    }else if (pid > 0) {/*exit first parent. */
+	close(fd);/*close and release lock */
 	exit(EXIT_SUCCESS);
     }
   
@@ -201,12 +201,12 @@ void single_instance_daemonize(const char *lockfolder_in,
 	info("Write pid %d to %s success\n",(int)getpid(),fnlock);
     }
     
-    //fsync(fd);
-    //maintain lock. don't close fd
-    //return to main program and continue in the newly process.
+    /*fsync(fd); */
+    /*maintain lock. don't close fd */
+    /*return to main program and continue in the newly process. */
     if(daemon_func){
 	daemon_func(daemon_arg);
-	exit(EXIT_SUCCESS);//make sure we don't return.
+	exit(EXIT_SUCCESS);/*make sure we don't return. */
     }else{
 	return;
     }
@@ -221,7 +221,7 @@ void daemonize(void){
     if (pid < 0) {
 	exit(EXIT_FAILURE);
     }
-    if (pid > 0) {//exit first parent.
+    if (pid > 0) {/*exit first parent. */
 	/*give enough time for the job to communicate with the scheduler so that
 	  our jobs are in order.*/
 	usleep(10000);
@@ -248,7 +248,7 @@ void daemonize(void){
     if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
 	
     mysymlink(fn, "run_recent.log");
-    //turns off file buffering
+    /*turns off file buffering */
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
     snprintf(fn,256,"kill_%d",pid);

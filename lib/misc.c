@@ -47,7 +47,7 @@ char *mybasename(const char *fn){
     if(!fn || strlen(fn)==0) return NULL;
     char fn2[PATH_MAX];
     strcpy(fn2,fn);
-    //If this is a folder, remove the last /
+    /*If this is a folder, remove the last / */
     if(fn2[strlen(fn2)-1]=='/')
 	fn2[strlen(fn2)-1]='\0';
     char* sep=strrchr(fn2,'/');
@@ -158,7 +158,7 @@ const char *myasctime(void){
     time_t a;
     time(&a);
     ctime_r(&a, st);
-    st[strlen(st)-1]='\0';//remove final \n
+    st[strlen(st)-1]='\0';/*remove final \n */
     return st;
 }
 /**
@@ -169,7 +169,7 @@ char *strtime(void){
     char str[64];
     time_t t=myclocki();
     struct tm tmp;
-    localtime_r(&t,&tmp);//don't free tmp
+    localtime_r(&t,&tmp);/*don't free tmp */
     strftime(str,64,"%F-%H%M%S",&tmp);
     char *dir=strdup(str);
     return dir;
@@ -344,7 +344,7 @@ char *strnadd(int argc, char **argv, const char* delim){
    translate a filename into absolute file name that starts with /
 */
 void expand_filename(char **fnout, const char *fn){
-    //if fn contains leading ~, expand it.
+    /*if fn contains leading ~, expand it. */
     if(!(*fnout)){
 	char *out;
 	if(fn[0]=='~'){
@@ -510,7 +510,7 @@ static char *cmd_string(char *input, char **end2){
     char *end;
     while(isspace(input[0]) || input[0]==';') input++;
     if(input[0]=='\'' || input[0]== '"'){
-	end=index(input+1, input[0]);//find matching quote.
+	end=index(input+1, input[0]);/*find matching quote. */
 	input[0]=' ';
 	input++;
 	if(!end){
@@ -547,7 +547,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    char *value;
 	    int iopt=-1;
 	    start++;
-	    if(start[0]=='-'){//long option, replace with short ones.
+	    if(start[0]=='-'){/*long option, replace with short ones. */
 		start++;
 		for(int i=0; (options[i].name); i++){
 		    if(!mystrcmp(start, options[i].name)){
@@ -576,7 +576,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 		}
 	    }
 	    if(iopt==-1){
-		continue;//what don't want this key.
+		continue;/*what don't want this key. */
 	    }
 	    if((options[iopt].opt & 1) == 1){
 		value=start;
@@ -589,11 +589,11 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    }
 	    int isfun=((options[iopt].opt&2)==2);
 	    switch(options[iopt].type){
-	    case 0://no result needed
+	    case 0:/*no result needed */
 		break;
 	    case T_INT:{
 		int val=value?strtol(value, &start, 10):1;
-		if(isfun){//Is function
+		if(isfun){/*Is function */
 		    void (*tmp)(int)=(void (*)(int))options[iopt].val;
 		    tmp(val);
 		}else{
@@ -604,7 +604,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 		break;
 	    case T_DBL:{
 		double val=value?strtod(value, &start):1;
-		if(isfun){//Is function
+		if(isfun){/*Is function */
 		    void (*tmp)(double)=(void (*)(double))options[iopt].val;
 		    tmp(val);
 		}else{
@@ -650,11 +650,11 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 		(*tmp)[(*nval)-1]=val;
 	    }
 		break;
-	    }//switch
-	    //Empty the string that we already parsed.
+	    }/*switch */
+	    /*Empty the string that we already parsed. */
 	    memset(start0, ' ',start-start0);
-	}else if(start[0]=='='){//equal sign found
-	    //create a \n before the key.
+	}else if(start[0]=='='){/*equal sign found */
+	    /*create a \n before the key. */
 	    int skipspace=1;
 	    for(char *start2=start-1; start2>=cmds; start2--){
 		if(isspace(*start2) || *start2==';'){
@@ -667,8 +667,8 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 		}
 	    }
 	    start++;
-	}else if(!mystrcmp(start, ".conf")){ //.conf found.
-	    //create a \n before the key.
+	}else if(!mystrcmp(start, ".conf")){ /*.conf found. */
+	    /*create a \n before the key. */
 	    for(char *start2=start-1; start2>=cmds; start2--){
 		if(isspace(*start2) || *start2==';'){
 		    *start2='\n'; 
@@ -678,10 +678,10 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    start+=5;
 	    start[0]='\n';
 	    start++;
-	}else if(start[0]=='['){//make sure we don't split brackets.
+	}else if(start[0]=='['){/*make sure we don't split brackets. */
 	    char *bend=index(start+1, ']');
 	    char *bnextstart=index(start+1, '[');
-	    if(bend && (!bnextstart || bend<bnextstart)){//There is a closing bracket
+	    if(bend && (!bnextstart || bend<bnextstart)){/*There is a closing bracket */
 		for(; start<bend+1; start++){
 		    if(start[0]==';') start[0]=' ';
 		}
@@ -689,7 +689,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 		error("Bracked is not closed\n");
 		start++;
 	    }
-	}else if(start[0]=='\'' || start[0]=='"'){//make sure we don't split strings.
+	}else if(start[0]=='\'' || start[0]=='"'){/*make sure we don't split strings. */
 	    char *quoteend=index(start, start[0]);
 	    if(quoteend){
 		start=quoteend+1;

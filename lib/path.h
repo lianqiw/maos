@@ -21,8 +21,8 @@
 void addpath(const char*path);
 void rmpath(const char *path);
 void printpath(void);
-char *find_file(const char *fn);//quit if not found.
-char *search_file(const char *fn);//not quit if not found
+char *find_file(const char *fn);/*quit if not found. */
+char *search_file(const char *fn);/*not quit if not found */
 void freepath(void);
 char *find_config(const char *name);
 #endif

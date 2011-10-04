@@ -20,10 +20,10 @@ static void test_grid_proj(){
     mapin->dy=Y->p[1]-Y->p[0];
     mapin->nx=X->nx*X->ny;
     mapin->ny=Y->nx*Y->ny;
-    double d_m3_f=20.;//from m3 to focus
+    double d_m3_f=20.;/*from m3 to focus */
     double d_exitpupil_f=46.38661051;
-    //double d_m2_m3=23.59375000;
-    //double d_m2_f=43.59375000;
+    /*double d_m2_m3=23.59375000; */
+    /*double d_m2_f=43.59375000; */
     double d_exitpupil_m3=d_exitpupil_f-d_m3_f;
     double r_exitpupil=1.546220350;
     double r_pupil=15;
@@ -34,10 +34,10 @@ static void test_grid_proj(){
     if(Y->p[Y->nx*Y->ny-1]-Y->p[0]-mapin->dy*Y->nx*Y->ny>1.e-10){
 	error("Y has non even spacing\n");
     }
-    free(junk);//don't dfree
+    free(junk);/*don't dfree */
     dfree(X); dfree(Y);
-    //direction of guide star
-    //loc_t *loc2=mksqloc2(2000,2000,1./64.);
+    /*direction of guide star */
+    /*loc_t *loc2=mksqloc2(2000,2000,1./64.); */
     loc_t* loc2=locread("aper_locs.bin.gz");
     
     dmat *amp=dread("aper_amp.bin.gz");
@@ -45,10 +45,10 @@ static void test_grid_proj(){
     proj_rect_grid(mapin,M_PI*0.75,M_PI*0.5,
 		   loc2,-r_exitpupil/r_pupil,r_exitpupil/r_pupil,
 		   amp->p,phi2,-2,d_exitpupil_f,d_exitpupil_m3,-bx,-by);
-    //drawopdamp("test_proj",loc2,phi2,amp,"phi");
+    /*drawopdamp("test_proj",loc2,phi2,amp,"phi"); */
     
     writedbl(phi2,loc2->nloc,1,"phi");
-    //locwrite(loc2,"loc");
+    /*locwrite(loc2,"loc"); */
 }
 int main(){
     test_grid_proj();

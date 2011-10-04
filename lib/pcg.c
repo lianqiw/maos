@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define PRINT_RES 0 //Print residuals in CG interations.
+#define PRINT_RES 0 /*Print residuals in CG interations. */
 #include "pcg.h"
 
 /**
@@ -36,14 +36,14 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	 ){
     
     dcell *r0=NULL, *x0=NULL, *z0=NULL;
-    //computes r0=b-A*x0
+    /*computes r0=b-A*x0 */
     dcellcp(&r0, b);
-    if(!*px || !warm){//start from zero guess.
+    if(!*px || !warm){/*start from zero guess. */
 	x0=dcellnew2(b);
-	if(!*px) dcellcp(px, x0);//initialize the output;
+	if(!*px) dcellcp(px, x0);/*initialize the output; */
     }else{
 	dcellcp(&x0, *px);
-	Amul(&r0, A, x0, -1);//r0=r0+(-1)*A*x0
+	Amul(&r0, A, x0, -1);/*r0=r0+(-1)*A*x0 */
     }
     double r0z1,r0z2;
     dcell *p0=NULL;
@@ -57,9 +57,9 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
     dcell *Ap=NULL;
     double ak,bk;
 
-    //double r0zmin=r0z1;
+    /*double r0zmin=r0z1; */
 #if PRINT_RES == 1
-    double r0z0=dcellinn(b,b);//|b|
+    double r0z0=dcellinn(b,b);/*|b| */
     double res[maxiter+1];
     if(Mmul){
 	res[0]=sqrt(dcellinn(r0,r0)/r0z0);
@@ -70,10 +70,10 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
     info("Step %d, res=%g\n", kres, res[kres]);
 #endif
     for(int k=0; k<maxiter; k++){
-	if(k!=0 && k%100==0){ //restart every 100 steps exclude beginning
-	    //info("Restarting at step %d\n",k);
-	    dcelladd(&r0, 0., b, 1.);//r0=b;
-	    (*Amul)(&r0, A, x0, -1);//r0=r0+(-1)*A*x0
+	if(k!=0 && k%100==0){ /*restart every 100 steps exclude beginning */
+	    /*info("Restarting at step %d\n",k); */
+	    dcelladd(&r0, 0., b, 1.);/*r0=b; */
+	    (*Amul)(&r0, A, x0, -1);/*r0=r0+(-1)*A*x0 */
 	    if(Mmul){
 		(*Mmul)(&z0,M,r0);
 	    }else{
@@ -84,16 +84,16 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	if(Ap) dcellzero(Ap);
 	(*Amul)(&Ap, A, p0, 1);
 	ak=r0z1/dcellinn(p0,Ap);
-	dcelladd(&x0, 1, p0, ak);//x0=x0+ak*p0
-	dcelladd(&r0, 1, Ap, -ak);//r0=r0-ak*Ap
+	dcelladd(&x0, 1, p0, ak);/*x0=x0+ak*p0 */
+	dcelladd(&r0, 1, Ap, -ak);/*r0=r0-ak*Ap */
 	if(Mmul){
 	    (*Mmul)(&z0,M,r0);
 	}else{
 	    z0=r0;
 	}
-	r0z2=dcellinn(r0,z0);//r0z2=r0'*r0
+	r0z2=dcellinn(r0,z0);/*r0z2=r0'*r0 */
 	bk=r0z2/r0z1;
-	dcelladd(&p0, bk, z0, 1.);//p0=bk*pi+r0
+	dcelladd(&p0, bk, z0, 1.);/*p0=bk*pi+r0 */
 
 	r0z1=r0z2;
 #if PRINT_RES == 1

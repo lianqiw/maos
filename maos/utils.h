@@ -24,7 +24,7 @@
 extern char _binary____config_tar_gz_start;
 extern char _binary____config_tar_gz_end;
 #endif
-extern SIM_T *cursimu;//Used for the signal handler only.
+extern SIM_T *cursimu;/*Used for the signal handler only. */
 void addnoise(dmat *A, rand_t* rstat, 
 	      const double bkgrnd, const double pcalib, 
 	      const double *bkgrnd2, const double *bkgrnd2c,

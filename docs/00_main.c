@@ -58,8 +58,8 @@
                     - free_simu(): to delete run time structs and close files
 
 
-    \author Lianqi Wang <lianqiw@gmail.com> at TMT Corporation http://www.tmt.org
+    \author Lianqi Wang <lianqiw@gmail.com> at TMT Corporation www.tmt.org 
     
-    The source code can be obtained in http://github.com/lianqiw/maos
+    The source code can be obtained in github.com/lianqiw/maos 
 
  */

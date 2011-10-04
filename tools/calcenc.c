@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
     double dstep=1;
     int nthread=sysconf( _SC_NPROCESSORS_ONLN );
     int ipos=0;
-    int type=0;//default is square
+    int type=0;/*default is square */
     static struct option long_options[]={
 	{"nthread", 1, 0, 'n'},
 	{"diam",    1, 0, 'd'},

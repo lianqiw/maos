@@ -50,7 +50,7 @@ static void test_accuracy(){
     double d2=ddiff(v, v2);
     info("d1=%g, d2=%g\n", d1, d2);
 }
-static void test_cov(){//not good
+static void test_cov(){/*not good */
     rand_t rstat;
     int seed=4;
     double r0=0.2;
@@ -85,7 +85,7 @@ static void test_cov(){//not good
 	    atm->p[j]=randn(&rstat);
 	}
 	fractal(atm->p, nx, ny, dx, r0,L0,ninit);
-	//mapwrite(atm, "atm_%ld.bin", i);
+	/*mapwrite(atm, "atm_%ld.bin", i); */
 	cembedd(atmhat, (dmat*)atm, 0);
 	cfft2(atmhat, -1);
 	cabs22d(&atmhattot, 1, atmhat, 1);
@@ -177,7 +177,7 @@ static void test_stfun(){
 	dfree(rr);
 	dfree(covvk);
     }
-    //    return;
+    /*    return; */
     {
 	map_t *atm=mapnew(nx+1, ny+1, dx, NULL);
 	stfun_t *data=stfun_init(nx, ny, NULL);
@@ -197,7 +197,7 @@ static void test_stfun(){
 	dwrite(st, "stfun_fractal.bin");
 	ddraw("fractal", st, NULL,NULL, "Atmosphere","x","y","stfun");
     }
-    //exit(0);
+    /*exit(0); */
     {
 	stfun_t *data=stfun_init(nx, ny, NULL);
 	dmat *spect=turbpsd(nx, ny, dx, r0, 100,0.5);

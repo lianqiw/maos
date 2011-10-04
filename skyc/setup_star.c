@@ -31,7 +31,7 @@
 */
 static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
     if(!coord){
-	return NULL;//there are no stars available.
+	return NULL;/*there are no stars available. */
     }
     int nstar=coord->ny;
     PDMAT(coord,pc);
@@ -68,7 +68,7 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
 	for(int kstar=0; kstar<jstar; kstar++){
 	    if(pow(star[jstar].thetax-star[kstar].thetax,2)
 	       +pow(star[jstar].thetay-star[kstar].thetay,2)<keepout){
-		//warning("start %d is too close to %d. use J brightest.\n", jstar, kstar);
+		/*warning("start %d is too close to %d. use J brightest.\n", jstar, kstar); */
 		if(pc[istar][0]<star[kstar].mags->p[0]){
 		    memcpy(star[kstar].mags->p, pc[istar]+2, sizeof(double)*nwvl);
 		    star[kstar].thetax=star[jstar].thetax;
@@ -83,7 +83,7 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
 	jstar++;
     }
     if(jstar<nstar){
-	//warning2("%d stars dropped\n", nstar-jstar);
+	/*warning2("%d stars dropped\n", nstar-jstar); */
 	coord->ny=jstar;
 	star=realloc(star, jstar*sizeof(STAR_S));
     }
@@ -101,7 +101,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	stari->pistat=calloc(npowfs, sizeof(PISTAT_S));
-	const double thetax=stari->thetax*206265;//in as
+	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 	
 
@@ -123,14 +123,14 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 		    double thy=(thyl+iy)*ngsgrid;
 		    double wtxi=fabs(((1-ix)-wtx)*((1-iy)-wty));
 		    if(wtxi<0.01){
-			//info("skipping ix=%d,iy=%d because wt=%g\n",ix,iy,wtxi);
+			/*info("skipping ix=%d,iy=%d because wt=%g\n",ix,iy,wtxi); */
 			continue;
 		    }
 		    char fn[PATH_MAX];
 		    snprintf(fn,PATH_MAX,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g",
 			     dirstart, seed,msa,thx,thy);
 		    if(!zfexist(fn)){
-			//warning("%s doesn't exist\n",fn);
+			/*warning("%s doesn't exist\n",fn); */
 		    }else{
 			dcell *avgpsfi=dcellread("%s",fn);
 			dcelladd(&avgpsf, 1, avgpsfi, wtxi);
@@ -164,7 +164,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 					    simu->bspstrehlxy,simu->bspstrehlxy,
 					    gx, gy);
 		    double ratio=val->p[0]/avgpsf->p[ic]->p[0];
-		    //info("strehl: bilinear: %g, cubic: %g\n", avgpsf->p[ic]->p[0],val->p[0]);
+		    /*info("strehl: bilinear: %g, cubic: %g\n", avgpsf->p[ic]->p[0],val->p[0]); */
 		    if(ratio<0){
 			warning("Ratio is less than zero.\n");
 			scale->p[ic]=1;
@@ -179,7 +179,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 		dfree(gy);
 	    }
 
-	    stari->pistat[ipowfs].psf=avgpsf;//PSF is in corner.
+	    stari->pistat[ipowfs].psf=avgpsf;/*PSF is in corner. */
 	    stari->pistat[ipowfs].grad=grad;
 	    stari->pistat[ipowfs].scale=scale;
 	    if(parms->skyc.dbg){
@@ -202,9 +202,9 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 	star[istar].siglev=dnew(nwvl,npowfs);
 	star[istar].bkgrnd=dnew(npowfs,1);
 	star[istar].siglevtot=dnew(npowfs,1);
-	//Normalized angular distance
+	/*Normalized angular distance */
 	double th2=(pow(star[istar].thetax,2)+pow(star[istar].thetay,2))/r2;
-	//Field dependent error: nm^2=nma^2+nmb^2*theta_norm^2;
+	/*Field dependent error: nm^2=nma^2+nmb^2*theta_norm^2; */
 	double imperrnm=sqrt(pow(parms->skyc.imperrnm,2)+th2*pow(parms->skyc.imperrnmb,2));
 	for(long ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    int iscircle=parms->maos.nsa[ipowfs]<=4?1:0;
@@ -260,14 +260,14 @@ static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
 		int count=0;
 		dmat *grad=dnew(nsa*2,1);
 		for(int istep=0; istep<pistat->grad->ny; istep++){
-		    if(istep>phystart){//make sure same alignment.
+		    if(istep>phystart){/*make sure same alignment. */
 			if(istep % dtrat == 0){
 			    dzero(grad);
 			}	
 			for(int isa=0; isa<nsa*2; isa++){
 			    grad->p[isa]+=pgrad[istep][isa];
 			}
-			if((istep+1) % dtrat == 0){//has output
+			if((istep+1) % dtrat == 0){/*has output */
 			    dscale(grad, 1./dtrat);
 			    count++;
 			    dadd(&mean_grad, 1, grad, 1);
@@ -279,7 +279,7 @@ static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
 		dscale(mean_grad, 1./count);
 		dscale(mean_gradsq, 1./count);
 		dcwpow(mean_grad, 2);
-		//variance=<gg>-<g><g>
+		/*variance=<gg>-<g><g> */
 		dadd(&pistat->gnea->p[idtrat], 1, mean_gradsq, 1);
 		dadd(&pistat->gnea->p[idtrat], 1, mean_grad, -1);
 		dfree(grad);
@@ -354,12 +354,12 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 	    if(parms->skyc.dbg){
 		dcellwrite(pistat->sanea, "%s/star%d_ipowfs%d_sanea",
 			   dirsetup,istar,ipowfs);
-	    }//idtrat
+	    }/*idtrat */
 	    dcellfree(i0s);
 	    dcellfree(gxs);
 	    dcellfree(gys);
-	}//for istar
-    }//for ipowfs
+	}/*for istar */
+    }/*for ipowfs */
 }
 /**
    Compute Modal to gradient operator using average gradients. Similar to Z tilt
@@ -382,7 +382,7 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 	    star[istar].g->p[ipowfs]=dnew(nsa*2, parms->maos.nmod);
 	    PDMAT(star[istar].g->p[ipowfs], pg);
 	    for(long isa=0; isa<nsa; isa++){
-		const double xm=powfs[ipowfs].locxamp[isa];//dot of x with amp.
+		const double xm=powfs[ipowfs].locxamp[isa];/*dot of x with amp. */
 		const double ym=powfs[ipowfs].locyamp[isa];
 
 		pg[0][isa]     = 1.;
@@ -409,19 +409,19 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
     TIC;tic;
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
-    //Obtain exclusive lock before proceeding so that no two process will read concurrently.
+    /*Obtain exclusive lock before proceeding so that no two process will read concurrently. */
     int fd=lock_file(fnlock, 1, 0);
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
 	stari->wvfout=calloc(npowfs, sizeof(ccell**));
 	stari->ztiltout=calloc(npowfs, sizeof(dcell*));
-	const double thetax=stari->thetax*206265;//in as
+	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
 
 	double thxnorm=thetax/ngsgrid;
 	double thynorm=thetay/ngsgrid;
-	long thxl=(long)floor(thxnorm);//Used to be double, but -0 appears.
+	long thxl=(long)floor(thxnorm);/*Used to be double, but -0 appears. */
 	long thyl=(long)floor(thynorm);
 	double wtx=thxnorm-thxl;
 	double wty=thynorm-thyl;
@@ -436,7 +436,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 
 	    PISTAT_S *pistati=&stari->pistat[ipowfs];
 	    
-	    //info2("Reading PSF for (%5.1f, %5.1f), ipowfs=%d\n",thetax,thetay,ipowfs);
+	    /*info2("Reading PSF for (%5.1f, %5.1f), ipowfs=%d\n",thetax,thetay,ipowfs); */
 	    double wtsum=0;
 	    for(int ix=0; ix<2; ix++){
 		double thx=(thxl+ix)*ngsgrid;
@@ -445,7 +445,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    double wtxi=fabs(((1-ix)-wtx)*((1-iy)-wty));
 
 		    if(wtxi<0.01){
-			//info("skipping ix=%d,iy=%d because wt=%g\n",ix,iy,wtxi);
+			/*info("skipping ix=%d,iy=%d because wt=%g\n",ix,iy,wtxi); */
 			continue;
 		    }
 		    fnwvf[iy][ix]=alloca(PATH_MAX*sizeof(char));
@@ -469,12 +469,12 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 	    if(wtsum<0.01){
 		error("PSF is not available for (%g,%g). wtsum=%g\n",thetax,thetay, wtsum);
 	    }
-	    //Now do the actual reading
+	    /*Now do the actual reading */
 	    for(int ix=0; ix<2; ix++){
 		for(int iy=0; iy<2; iy++){
 		    double wtxi=fabs(((1-ix)-wtx)*((1-iy)-wty))/wtsum;
 		    if(fnwvf[iy][ix]){
-			//info("Loading %.4f x %s\n", wtxi, fnwvf[iy][ix]);
+			/*info("Loading %.4f x %s\n", wtxi, fnwvf[iy][ix]); */
 			file_t *fp_wvf=zfopen(fnwvf[iy][ix],"rb");
 			uint32_t magic;
 			magic=read_magic(fp_wvf, NULL);
@@ -505,7 +505,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			    ccelladd(&(pwvfout[istep]), 1, wvfi, wtxi);
 			    ccellfree(wvfi);
 			}
-			//zfeof(fp_wvf);
+			/*zfeof(fp_wvf); */
 			zfclose(fp_wvf);
 		    }
 		    if(fnztilt[iy][ix]){
@@ -528,28 +528,28 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			dmat  **pztiltout=stari->ztiltout[ipowfs]->p;
 			for(long istep=0; istep<nstep; istep++){
 			    dmat *ztilti=dreaddata(fp_ztilt, 0);
-			    dadd(&(pztiltout[istep]), 1, ztilti, wtxi);//(2nsa)*nstep dmat array
+			    dadd(&(pztiltout[istep]), 1, ztilti, wtxi);/*(2nsa)*nstep dmat array */
 			    dfree(ztilti);
 			}
 			zfclose(fp_ztilt);
-		    }// if(fnwvf)
-		}//iy
-	    }//ix
-	    //Don't bother to scale ztiltout since it does not participate in physical optics simulations.
+		    }/* if(fnwvf) */
+		}/*iy */
+	    }/*ix */
+	    /*Don't bother to scale ztiltout since it does not participate in physical optics simulations. */
 	    if(parms->skyc.bspstrehl){
 		PDMAT(pistati->scale, scale);
 		ccell **pwvfout=stari->wvfout[ipowfs];
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    for(int isa=0; isa<nsa; isa++){
-			//info("Scaling WVF isa %d iwvl %d with %g\n", isa, iwvl, scale[iwvl][isa]);
+			/*info("Scaling WVF isa %d iwvl %d with %g\n", isa, iwvl, scale[iwvl][isa]); */
 			for(long istep=0; istep<stari->nstep; istep++){
 			    cscale(pwvfout[istep]->p[isa+nsa*iwvl], scale[iwvl][isa]);
-			}//istep
-		    }//isa
-		}//iwvl
-	    }//
-	}//ipowfs
-    }//istar
+			}/*istep */
+		    }/*isa */
+		}/*iwvl */
+	    }/* */
+	}/*ipowfs */
+    }/*istar */
     if(parms->skyc.verbose){
 	toc2("Reading PSF");
     }
@@ -596,7 +596,7 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
 	return NULL;
     }
     if(jstar>parms->skyc.maxstar){
-	jstar=parms->skyc.maxstar;//we only keed maxstar number of brightest stars.
+	jstar=parms->skyc.maxstar;/*we only keed maxstar number of brightest stars. */
     }
     if(jstar!=nstar){
 	star=realloc(star,sizeof(STAR_S)*jstar);

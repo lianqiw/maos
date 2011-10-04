@@ -32,12 +32,12 @@ typedef struct GENPISTAT_S{
     long(*cases)[4];
     int icase;
 #if USE_PTHREAD > 0
-    pthread_mutex_t mutex_read;//don't let them read in the same time.
+    pthread_mutex_t mutex_read;/*don't let them read in the same time. */
 #endif
     const PARMS_S *parms;
     POWFS_S *powfs;
     double ngsgrid;
-    dcell *unwrap;//matrix that does unwraping.
+    dcell *unwrap;/*matrix that does unwraping. */
 }GENPISTAT_S;
 
 static void calc_pistat(GENPISTAT_S *data){
@@ -46,7 +46,7 @@ static void calc_pistat(GENPISTAT_S *data){
     int icase=0;
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
-    //Obtain exclusive lock before proceeding.
+    /*Obtain exclusive lock before proceeding. */
     int fd=lock_file(fnlock, 1, 0);
     while(LOCKADD(icase, data->icase, 1)<data->ncase){
 	double thetax=data->ngsgrid*data->cases[icase][0];
@@ -54,7 +54,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	long ipowfs=data->cases[icase][2];
 	long ncomp=parms->maos.ncomp[ipowfs];
 	long seed=data->cases[icase][3];
-	long msa=parms->maos.msa[ipowfs];//in 1-d
+	long msa=parms->maos.msa[ipowfs];/*in 1-d */
 	const long phystart=parms->skyc.phystart;
 	char fnwvf[PATH_MAX],fnztilt[PATH_MAX], fnpistat[PATH_MAX], fngstat[PATH_MAX];
 	snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g",
@@ -69,7 +69,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    continue;
 	}
 	if(zfexist(fnpistat) && zfexist(fngstat)){
-	    //warning("%s already exist, skip\n", fnpistat);
+	    /*warning("%s already exist, skip\n", fnpistat); */
 	}else{
 	    dmat *mapply=dnew(2,1);
 	    char dirstat[PATH_MAX];
@@ -90,7 +90,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    zfread(&junk,sizeof(uint64_t),1,fp_wvf);
 		
 	    file_t *fp_ztilt=zfopen(fnztilt,"rb");
-	    //zfread(&magic, sizeof(uint32_t),1,fp_ztilt);
+	    /*zfread(&magic, sizeof(uint32_t),1,fp_ztilt); */
 	    magic=read_magic(fp_ztilt,NULL);
 	    if(!iscell(magic)){
 		error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
@@ -104,8 +104,8 @@ static void calc_pistat(GENPISTAT_S *data){
 	    }
 	    const int nsa=msa*msa;
 	    const int nwvl=parms->maos.nwvl;
-	    dcell *pistat=dcellnew(nsa, nwvl);//pixel intensity mean(I)
-	    dmat *gstat=dnew(nsa*2, nstep);//original gradient at each time step.
+	    dcell *pistat=dcellnew(nsa, nwvl);/*pixel intensity mean(I) */
+	    dmat *gstat=dnew(nsa*2, nstep);/*original gradient at each time step. */
 	    cmat *wvf=cnew(ncomp,ncomp);
 	    cmat *wvfc=cnew(ncomp/2,ncomp/2);
 	    cfft2plan(wvf,-1);
@@ -137,7 +137,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    cabs22d(&ppistat[iwvl][isa],1, wvf, 1);
 			}
 		    }
-		    for(long iwvl=0; iwvl<nwvl; iwvl++){//don't apply ztilt.
+		    for(long iwvl=0; iwvl<nwvl; iwvl++){/*don't apply ztilt. */
 			for(long isa=0; isa<nsa; isa++){
 			    double grad[2]={0,0};
 			    ccp(&wvfc, wvfout[iwvl][isa]);
@@ -145,8 +145,8 @@ static void calc_pistat(GENPISTAT_S *data){
 			    cfft2(wvf,-1);
 			    dzero(psf);
 			    cabs22d(&psf, 1, wvf, 1);
-			    //Compute gradients.
-			    dfftshift(psf);//shift peak to center.
+			    /*Compute gradients. */
+			    dfftshift(psf);/*shift peak to center. */
 			    double pmax=dmax(psf);
 			    dcog(grad,psf,0.5, 0.5, 0.1*pmax, 0.1*pmax);
 			    pgstat[istep][isa]+=grad[0]*parms->skyc.pixtheta[ipowfs]*nwvli;
@@ -157,7 +157,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		}
 		ccellfree(wvfi);
 		dfree(ztilti);  
-	    }//for istep
+	    }/*for istep */
 	    zfeof(fp_wvf);
 	    zfeof(fp_ztilt);
 	    zfclose(fp_ztilt);
@@ -166,13 +166,13 @@ static void calc_pistat(GENPISTAT_S *data){
 	    cfree(wvfc);
 	    double pgrad[2];
 
-	    //Shift PSF so that the images are centered on FFT center.
+	    /*Shift PSF so that the images are centered on FFT center. */
 	    for(int i=0; i<nwvl*nsa; i++){
 		psf=pistat->p[i];
-		dfftshift(psf);//shift peak to center.
+		dfftshift(psf);/*shift peak to center. */
 		double pmax=dmax(psf);
 		dcog(pgrad,psf,0.5,0.5,0.1*pmax,0.1*pmax);
-		dfftshift(psf); //Shift peak to corner.
+		dfftshift(psf); /*Shift peak to corner. */
 		ccpd(&otf, psf);
 		cfft2(otf,-1);
 		ctilt(otf,-pgrad[0],-pgrad[1],0);
@@ -190,7 +190,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    dfree(gstat);
 	    dfree(mapply);
 	    toc2("Processing %s:", fnwvf);
-	}//if exist
+	}/*if exist */
     }
     close(fd);
 }
@@ -208,12 +208,12 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     data->ngsgrid=ngsgrid;
     long count=0;
     for(int iseed=0; iseed<parms->maos.nseed; iseed++){
-	int seed=parms->maos.seeds[iseed];//loop over seed
+	int seed=parms->maos.seeds[iseed];/*loop over seed */
 	for(long gy=-ng; gy<=ng; gy++){
 	    for(long gx=-ng; gx<=ng; gx++){
-		//double thetax=gx*ngsgrid;
-		//double thetay=gy*ngsgrid;
-		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){//for ipowfs
+		/*double thetax=gx*ngsgrid; */
+		/*double thetay=gy*ngsgrid; */
+		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){/*for ipowfs */
 		    data->cases[count][0]=gx;
 		    data->cases[count][1]=gy;
 		    data->cases[count][2]=ipowfs;
@@ -224,10 +224,10 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
 			data->cases=realloc(data->cases,sizeof(long)*data->ncase*4);
 		    }
 		}
-	    }//for gx
-	}//for gy
-    }//for iseed
-    //info("count=%ld, data->ncase=%ld\n",count,data->ncase);
+	    }/*for gx */
+	}/*for gy */
+    }/*for iseed */
+    /*info("count=%ld, data->ncase=%ld\n",count,data->ncase); */
     data->ncase=count;
     data->icase=0;
     data->cases=realloc(data->cases, sizeof(long)*4*data->ncase);
@@ -285,7 +285,7 @@ void prep_bspstrehl(SIM_S *simu){
 		if(zfexist(fnpistat)){
 		    dcell *tmp=dcellread("%s",fnpistat);
 		    for(long ic=0; ic<nsa*nwvl; ic++){
-			//peak is in the corner
+			/*peak is in the corner */
 			strehlgrid->p[ic]->p[gx+ng+(gy+ng)*ng2]=tmp->p[ic]->p[0];
 		    }
 		}

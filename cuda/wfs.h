@@ -25,7 +25,7 @@ typedef curandState_t curandStat;
 #define RAND_BLOCK 16
 #define RAND_THREAD 32
 typedef struct {
-    fcomplex **nominal;//array for each sa.
+    fcomplex **nominal;/*array for each sa. */
     fcomplex **etf;
     int etfis1d;
 }cudtf_t;
@@ -62,7 +62,7 @@ typedef struct{
     float  (**mtche)[2]; /**<matched filter gradient operator.*/
     float  **bkgrnd2;   /**<background as an image*/
     float  **bkgrnd2c;  /**<calibration of background to subtract.*/
-    //For LLT
+    /*For LLT */
     float  *lltncpa;    /**<NCPA for llt*/
     float (**lltimcc)[3];
     float  *lltamp;
@@ -70,11 +70,11 @@ typedef struct{
     cufftHandle lltplan1, lltplan2;/**<FFTW plan for LLT*/
     curmat *opdadd;    /**<The ncpa and surface aberration.*/
 
-    //For random number of this wfs.
+    /*For random number of this wfs. */
     curandStat *custat;
-    int     custatb;//allocated block
-    int     custatt;//allocated thread
-    //Run time data that changes
+    int     custatb;/*allocated block */
+    int     custatt;/*allocated thread */
+    /*Run time data that changes */
     curmat *neareal;
     curmat *gradacc;    /**<For accumulating grads*/
     curmat *ints;       /**<For accumulating subaperture image.*/

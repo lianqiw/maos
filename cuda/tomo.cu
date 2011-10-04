@@ -27,7 +27,7 @@ extern "C"
 #define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ cudaStreamSynchronize(curecon->psstream[ips]); }
 #define SYNC_WFS  for(int iwfs=0; iwfs<nwfs; iwfs++){ cudaStreamSynchronize(curecon->wfsstream[iwfs]); }
 
-#define DIM_REDUCE 128 //dimension to use in reduction.
+#define DIM_REDUCE 128 /*dimension to use in reduction. */
 
 #define TIMING 0
 #if !TIMING
@@ -44,7 +44,7 @@ __global__ static void ptt_proj_do(float *restrict out, float (*restrict PTT)[2]
     gx[threadIdx.x]=0;
     gy[threadIdx.x]=0;
     int step=blockDim.x * gridDim.x;
-    for(int ig=blockIdx.x * blockDim.x + threadIdx.x; ig<ng; ig+=step){//ng is nsa*2.
+    for(int ig=blockIdx.x * blockDim.x + threadIdx.x; ig<ng; ig+=step){/*ng is nsa*2. */
 	gx[threadIdx.x]+=PTT[ig][0]*grad[ig];
 	gy[threadIdx.x]+=PTT[ig][1]*grad[ig];
     }
@@ -144,7 +144,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	    +map[(iy+2)*nx+ix ] *py2[6]
 	    +map[(iy+2)*nx+ix+1]*py2[7]
 	    +map[(iy+2)*nx+ix+2]*py2[8];
-    }//for isa
+    }/*for isa */
 }
 
 
@@ -289,9 +289,9 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
 	if(parms->powfs[ipowfs].skip) continue;
 	const float dsa=cupowfs[ipowfs].dsa;
 	DO_PTT;
-	//curwrite(grad->p[iwfs], "grad_nea_%d", iwfs);
+	/*curwrite(grad->p[iwfs], "grad_nea_%d", iwfs); */
 	DO_NEA_GPT;
-	//curwrite(opdwfs->p[iwfs], "gpt_%d", iwfs);
+	/*curwrite(opdwfs->p[iwfs], "gpt_%d", iwfs); */
     }
     SYNC_WFS;
     for(int ips=0; ips<recon->npsr; ips++){
@@ -367,7 +367,7 @@ void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *x
 #endif
     }
     SYNC_WFS;
-    //#endif
+    /*#endif */
    
     for(int ips=0; ips<nps; ips++){
 	const int nxo=recon->xmap[ips]->nx;

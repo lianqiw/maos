@@ -33,7 +33,7 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
     }
     long nt=(tot-start)/nthread;
     long ithread;
-    if(nt<=0) nt=1;//added on 2011-04-28;
+    if(nt<=0) nt=1;/*added on 2011-04-28; */
     for(ithread=0; ithread<nthread; ithread++){
 	info[ithread].ithread=ithread;
 	info[ithread].data=data;
@@ -47,14 +47,14 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
 	    break;
 	}
     }
-    for(;ithread<nthread;ithread++){//skip these threads.
+    for(;ithread<nthread;ithread++){/*skip these threads. */
 	info[ithread].ithread=ithread;
 	info[ithread].start=0;
 	info[ithread].end=0;
 	info[ithread].data=data;
 	info[ithread].fun=fun;
     }
-    //Make sure we terminate at the right place.
+    /*Make sure we terminate at the right place. */
     if(info[nthread-1].end){
 	info[nthread-1].end=tot;
     }

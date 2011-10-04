@@ -103,22 +103,22 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	dcwm(aper->amp, ampmask);
 	dfree(ampmask);
 	mapfree(mask);
-    }else{//apply an annular mask
+    }else{/*apply an annular mask */
 	locannularmask(aper->amp->p, aper->locs, 0,0, parms->aper.d*0.5, parms->aper.din*0.5);
     }
     loc_reduce(aper->locs, aper->amp, 1, NULL);
-    //Set the amp for plotting.
+    /*Set the amp for plotting. */
     aper->amp1=ddup(aper->amp);
-    //normalize amp to sum to 1.
+    /*normalize amp to sum to 1. */
     normalize(aper->amp->p, aper->locs->nloc, 1);
     if(parms->plot.setup){
 	drawopd("amp",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
 		"x (m)","y (m)","aper");
     }
     aper->mcc=loc_mcc_ptt(aper->locs, aper->amp->p);
-    aper->ipcc=1./aper->mcc->p[0];//piston inverse. should be 1 since amp is normlaized.
-    aper->imcc=dinvspd(aper->mcc);//pttr inverse
-    //piston term correction in focus mode
+    aper->ipcc=1./aper->mcc->p[0];/*piston inverse. should be 1 since amp is normlaized. */
+    aper->imcc=dinvspd(aper->mcc);/*pttr inverse */
+    /*piston term correction in focus mode */
     aper->fcp=(aper->mcc->p[aper->mcc->nx+1]+aper->mcc->p[2*(aper->mcc->nx+1)])*aper->ipcc;
     if(parms->evl.rmax!=1){
 	aper->mod=loc_zernike(aper->locs, parms->aper.d/2, parms->evl.rmax);

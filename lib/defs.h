@@ -28,7 +28,7 @@
 #ifndef USE_SINGLE
 #define XR(A) d##A
 #ifndef USE_COMPLEX
-//Double
+/*Double */
 #define X(A) d##A
 #define Y(A) A
 #define Z(A) d##A##_
@@ -49,10 +49,10 @@
 #define POW pow
 #define LOG log
 #else
-//Double Complex
+/*Double Complex */
 #define X(A) c##A
 #define Y(A) c##A
-#define Z(A) z##A##_ //blas/lapack convention
+#define Z(A) z##A##_ /*blas/lapack convention */
 #define T dcomplex
 #define R double
 #define M_T M_CMP
@@ -70,9 +70,9 @@
 #define POW cpow
 #define LOG clog
 #endif
-#else //#define USE_SINGLE
+#else /*#define USE_SINGLE */
 #define XR(A) s##A
-//Float
+/*Float */
 #ifndef USE_COMPLEX
 #define X(A) s##A
 #define Y(A) s##A
@@ -94,10 +94,10 @@
 #define POW powf
 #define LOG logf
 #else
-//Single Complex
+/*Single Complex */
 #define X(A) z##A
 #define Y(A) z##A
-#define Z(A) c##A##_ //blas/lapack convention
+#define Z(A) c##A##_ /*blas/lapack convention */
 #define T fcomplex
 #define R float
 #define M_T M_ZMP
@@ -114,9 +114,9 @@
 #define DOT dotzmp
 #define POW cpowf
 #define LOG clogf
-#endif//#define USE_COMPLEX
-#endif//#define USE_SINGLE
-#endif//#define MATTYPE
+#endif/*#define USE_COMPLEX */
+#endif/*#define USE_SINGLE */
+#endif/*#define MATTYPE */
 #define PMAT(A,pp) T (*restrict pp)[(A)->nx]=(void *)(A)->p
 #define PCELL(M,P) X(mat)* (*restrict P)[(M)->nx]=(void*)(M)->p
 #define PSPCELL(M,P) X(sp)* (*restrict P)[(M)->nx]=(void *)(M)->p

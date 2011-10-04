@@ -35,7 +35,7 @@ const char *get_job_progname(void){
     static char *progname=NULL;
     if(!progname){
 	char path[PATH_MAX];
-	//readlink doesn't append \0
+	/*readlink doesn't append \0 */
 	int nprog=readlink("/proc/self/exe",path,PATH_MAX);
 	if(nprog>0){
 	    path[nprog]='\0';
@@ -81,9 +81,9 @@ double get_job_launchtime(int pid){
     }
     unsigned long long starttime0;
     int nread;
-    nread=fscanf(fp,"%*d %*s %*c %*d %*d %*d %*d %*d "//tpgid
-		 "%*u %*u %*u %*u %*u %*u %*u "//stime
-		 "%*d %*d %*d %*d %*d %*d %llu "//starttime
+    nread=fscanf(fp,"%*d %*s %*c %*d %*d %*d %*d %*d "/*tpgid */
+		 "%*u %*u %*u %*u %*u %*u %*u "/*stime */
+		 "%*d %*d %*d %*d %*d %*d %llu "/*starttime */
 		 , &starttime0);
     fclose(fp);
     if(nread<0){
@@ -96,15 +96,15 @@ double get_job_launchtime(int pid){
 static int proc_read_status(char *fnjob,  char *exename, char *cstat,long* nthread){
     FILE *fp=fopen(fnjob,"r");
     if(!fp){
-	//warning("Unable to open file %s\n",fnjob);//job exited
+	/*warning("Unable to open file %s\n",fnjob);//job exited */
 	return -1;
     }
-    int nread=fscanf(fp,"%*d %s %c %*d %*d %*d %*d %*d "//tpgid
-		     "%*u %*u %*u %*u %*u %*u %*u "//stime
+    int nread=fscanf(fp,"%*d %s %c %*d %*d %*d %*d %*d "/*tpgid */
+		     "%*u %*u %*u %*u %*u %*u %*u "/*stime */
 		     "%*d %*d %*d %*d %ld" , exename, cstat, nthread);
     fclose(fp);
     if(nread<0){
-	//warning("Unable to read %s, nread=%d\n", fnjob,nread);
+	/*warning("Unable to read %s, nread=%d\n", fnjob,nread); */
 	return -1;
     }else{
 	return 0;
@@ -138,12 +138,12 @@ int get_usage_running(void){
 	    continue;
 	}
 	if(strcmp(exename,"(maos)") && strcmp(exename,"(skyc)") && strcmp(exename,"(MATLAB)")){
-	    continue;//we only count maos or MATLAB.
+	    continue;/*we only count maos or MATLAB. */
 	}
 	if(cstat!='R' && nthread==1){
-	    continue;//Job is not running;
+	    continue;/*Job is not running; */
 	}
-	if(nthread>1){//There are many threads. Check each one.
+	if(nthread>1){/*There are many threads. Check each one. */
 	    snprintf(fnsub,64,"/proc/%s/task",dp->d_name);
 	    DIR* dirsub=opendir(fnsub);
 	    nthread=0;
@@ -166,9 +166,9 @@ int get_usage_running(void){
 		}
 		if(nthread>0){
 		    cstat='R';
-		}else{//check the process again to avoid racing condition
+		}else{/*check the process again to avoid racing condition */
 		    if(proc_read_status(fnjob,  exename, &cstat,&nthread2)){
-			nthread=0;//failed.
+			nthread=0;/*failed. */
 		    }else{
 			if(cstat=='R'){
 			    nthread=1;
@@ -182,12 +182,12 @@ int get_usage_running(void){
 	    }
 	}
 	nrunning+=nthread;
-	//if(nthread>0){
-	//    info("%s: %s is running with %ld threads\n",dp->d_name,exename,nthread);
-	//	}
+	/*if(nthread>0){ */
+	/*    info("%s: %s is running with %ld threads\n",dp->d_name,exename,nthread); */
+	/*	} */
     }
     closedir(dir);
-    //info("Nrunning=%d\n",nrunning);
+    /*info("Nrunning=%d\n",nrunning); */
     return nrunning;
 }
 
@@ -224,7 +224,7 @@ double get_usage_mem(void){
     return mem;
 }
 
-int read_usage_cpu(long *user, long *tot){//total cpu usage
+int read_usage_cpu(long *user, long *tot){/*total cpu usage */
     FILE *fp;
     fp=fopen("/proc/stat","r");
     long t_usr,t_nice, t_sys, t_idle;
@@ -238,7 +238,7 @@ int read_usage_cpu(long *user, long *tot){//total cpu usage
     *tot=*user+t_idle;
     return 0;
 }
-double read_self_cpu(void){//return CPU usage of current process
+double read_self_cpu(void){/*return CPU usage of current process */
  
     static double t_last=0,s_last=0;
     long stime,utime;
@@ -258,7 +258,7 @@ double read_self_cpu(void){//return CPU usage of current process
     fclose(fp);
     double t_tot=(double)(t_usr+t_nice+t_sys+t_idle);
     double s_tot=(double)(stime+utime);
-    //info("t_tot/TCK=%g\n",(t_tot-t_last)/TCK); == NCPU
+    /*info("t_tot/TCK=%g\n",(t_tot-t_last)/TCK); == NCPU */
     double frac=(s_tot-s_last)/(t_tot-t_last)*NCPU;
     t_last=t_tot;
     s_last=s_tot;
@@ -272,15 +272,15 @@ int get_ncpu(void){
     FILE *fp=fopen("/proc/cpuinfo","r");
 #define nmax 4096
     char line[1024];
-    int phyid[nmax];//record the list of physical cpu ids
-    int coreid[nmax];//record the list of core ids
+    int phyid[nmax];/*record the list of physical cpu ids */
+    int coreid[nmax];/*record the list of core ids */
     int iphy=0, icore=0;
-    const char *s_phy="physical id"; //records number of CPUs
-    const char *s_core="core id";    //should record number of cores per cpu
-    const char *s_cores="cpu cores"; //should record number of cores per cpu.
+    const char *s_phy="physical id"; /*records number of CPUs */
+    const char *s_core="core id";    /*should record number of cores per cpu */
+    const char *s_cores="cpu cores"; /*should record number of cores per cpu. */
     int ncore=0;
     while(fgets(line,1024,fp)){
-	if(!mystrcmp(line,s_phy)){//contains physical id
+	if(!mystrcmp(line,s_phy)){/*contains physical id */
 	    int kphy;
 	    char *ss=index(line,':');
 	    int jphy=strtol(ss+1, NULL, 10);
@@ -297,7 +297,7 @@ int get_ncpu(void){
 		}
 	    }
 	}
-	if(!mystrcmp(line,s_core)){//contains core id
+	if(!mystrcmp(line,s_core)){/*contains core id */
 	    int kcore;
 	    char *ss=index(line,':');
 	    int jcore=strtol(ss+1, NULL, 10);
@@ -314,7 +314,7 @@ int get_ncpu(void){
 		}
 	    }
 	}
-	if(!mystrcmp(line,s_cores)){//contains cpu cores
+	if(!mystrcmp(line,s_cores)){/*contains cpu cores */
 	    int mcore=strtol(index(line,':')+1,NULL,10);
 	    if(ncore==0 || ncore == mcore){
 		ncore=mcore;

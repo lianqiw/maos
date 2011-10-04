@@ -32,7 +32,7 @@
 #include <math.h>
 #include "accphi.h"
 #include "proj.h"
-//const double pi=3.1415926535897932384626433832795;
+/*const double pi=3.1415926535897932384626433832795; */
 static inline double cosangle(double a[3], double b[3]){
     return (a[0]*b[0]+a[1]*b[1]+a[2]*b[2])
 	/sqrt((a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
@@ -85,7 +85,7 @@ void proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
     double sc2;
     for(int iloc=0; iloc<locout->nloc; iloc++){
 	if(ampout && fabs(ampout[iloc])<1.e-10)
-	    continue;//skip points that has zero amplitude
+	    continue;/*skip points that has zero amplitude */
 	double alx=atan2(locout->locx[iloc]*ratiox+offx,hs);
 	double aly=atan2(locout->locy[iloc]*ratioy+offy,hs);
 	double btx=thetax-alx;
@@ -103,7 +103,7 @@ void proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
 	    nplocy1=nplocy+1;
 	}
 	sc2=sc*cosangle(vi,vm3);
-	//sc2=sc*0.707;
+	/*sc2=sc*0.707; */
 	phiout[iloc]+=sc2*(phiin[nplocy][nplocx]*(1.-dplocx)*(1.-dplocy)
 			  +phiin[nplocy][nplocx1]*(dplocx)*(1.-dplocy)
 			  +phiin[nplocy1][nplocx]*(1.-dplocx)*(dplocy)

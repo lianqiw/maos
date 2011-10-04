@@ -31,7 +31,7 @@
 
 const char *get_job_progname(void){
     static char *progname=NULL;
-    if(!progname){ //Not tested yet.
+    if(!progname){ /*Not tested yet. */
 	int mib[4];
 	mib[0] = CTL_KERN;
 	mib[1] = KERN_PROC;
@@ -44,7 +44,7 @@ const char *get_job_progname(void){
     }
     return progname;
 }
-int get_job_mem(void){//return in KiB
+int get_job_mem(void){/*return in KiB */
     int mem;
     struct rusage usage;
     getrusage(0, &usage);

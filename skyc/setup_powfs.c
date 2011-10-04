@@ -91,9 +91,9 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		int jx=ix<ncomp2?ix:(ix-ncomp);
 		U[ix]=-2.*I*M_PI*jx*du;
 	    }
-	}//iwvl
+	}/*iwvl */
 	locfree(loc_ccd);
-    }//ipowfs
+    }/*ipowfs */
 }
 /**
    Read in the WFS grid and amplitude map.
@@ -157,7 +157,7 @@ static void setup_powfs_coarseloc(POWFS_S *powfs, const PARMS_S *parms){
 		fpc+=locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc];
 	    }
 	    powfs[ipowfs].fpc[isa]=fpc/nloc;
-	    //info("powfs[%ld].fpc[%ld]=%g\n",ipowfs,isa,powfs[ipowfs].fpc[isa]);
+	    /*info("powfs[%ld].fpc[%ld]=%g\n",ipowfs,isa,powfs[ipowfs].fpc[isa]); */
 	}
     }
 }

@@ -426,7 +426,7 @@ typedef struct SIM_CFG_T{
     char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
-    //control
+    /*control */
     double *apdm;    /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
 			A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
@@ -578,10 +578,10 @@ typedef struct SAVE_CFG_T{
     int recon;       /**<save reconstructor information. large*/
     int mvst;        /**<MVST computation intermediate matrices*/
 
-    //run time special ones that need extra computation
+    /*run time special ones that need extra computation */
     int dmpttr;      /**<save p/t/t removed dm act cmds at each time step*/
 
-    //run time
+    /*run time */
     int atm;         /**<save atmosphere*/
     int run;         /**<save run time informaton for each time step*/
     int opdr;        /**<save reconstructed OPD on XLOC for each time step*/
@@ -597,7 +597,7 @@ typedef struct SAVE_CFG_T{
     int *ints;        /**<save WFS subaperture image*/
     int *grad;        /**<save WFS gradients*/
     int *gradgeom;    /**<save WFS geometric gradient during physical optics simu*/
-    //The following are derived from above.
+    /*The following are derived from above. */
     int wfsopdhi;    /**<save high order WFS OPD(derived)*/
     int wfsopdlo;    /**<save low order WFS OPD(derived)*/
     int intshi;      /**<save high orrder WFS integration(derived)*/
@@ -668,8 +668,8 @@ typedef struct ARG_T{
 }ARG_T;
 PARMS_T* setup_parms(ARG_T *arg);
 void free_parms(PARMS_T *parms);
-//The following are here so that we don't have to include type.h or utils.h
-//convenient constants. used in utils.c
+/*The following are here so that we don't have to include type.h or utils.h */
+/*convenient constants. used in utils.c */
 typedef enum T_TYPE{
     T_PLOC=0,
     T_ALOC,

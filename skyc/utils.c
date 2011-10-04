@@ -65,7 +65,7 @@ ARG_S *parse_args(int argc, char **argv){
     fclose(fptmp);
     free(cmds); cmds=NULL;
     arg->confcmd=strdup(fntmp);
-    if(!arg->detach){//foreground task will start immediately.
+    if(!arg->detach){/*foreground task will start immediately. */
 	arg->force=1;
     }
     if(!arg->dirout){
@@ -74,7 +74,7 @@ ARG_S *parse_args(int argc, char **argv){
     if(!arg->conf){ /*If -c is not specifid in path, will use maos.conf*/
 	arg->conf=strdup("maos.conf");
     }
-    //Setup PATH and result directory
+    /*Setup PATH and result directory */
     char *config_path=find_config("skyc");
     addpath(config_path);
     free(config_path);
@@ -105,9 +105,9 @@ void rename_file(int sig){
 	sprintf(suffix,"err");
 	break;
     case SIGKILL:
-    case SIGINT: //Ctrl-C
+    case SIGINT: /*Ctrl-C */
     case SIGTERM:
-    case SIGQUIT: //Ctrl-'\'
+    case SIGQUIT: /*Ctrl-'\' */
 	sprintf(suffix,"killed");
 	break;
     }
@@ -129,7 +129,7 @@ void skyc_signal_handler(int sig){
 	return;
     }
     disable_signal_handler;
-    rename_file(sig);//handles signal
+    rename_file(sig);/*handles signal */
     if(sig!=0){
 	info2("Caught signal %d\n",sig);
 	if(sig == SIGSEGV){
@@ -176,7 +176,7 @@ dmat *add_psd(dmat *psd1, dmat *psd2){
 	    warning("The two PSDs doesn't have the same freq.");
 	    dfree(psd);
 	    return add_psd_nomatch(psd1,psd2);
-	    //todo: apply interp1 to interpolate the second PSD.
+	    /*todo: apply interp1 to interpolate the second PSD. */
 	}
 	psd->p[i]=psd1->p[i];
 	pp[i]=p1[i]+p2[i];

@@ -34,7 +34,7 @@ static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
     gpu_loc2dev(&wloc->pts, (loc_t*)pts);
     gpu_loc2dev(&wloc->loc, loc);
 }
-int *wfsgpu=NULL;//assign GPU to wfs statically.
+int *wfsgpu=NULL;/*assign GPU to wfs statically. */
 /**
    Initialize other arrays
 */
@@ -49,7 +49,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	cudata->wfs=(cuwfs_t*)calloc(parms->nwfs, sizeof(cuwfs_t));
 	cuwloc_t *cupowfs=cudata->powfs;
 	
-	//DO(cudaSetDeviceFlags(cudaDeviceBlockingSync));
+	/*DO(cudaSetDeviceFlags(cudaDeviceBlockingSync)); */
 	DO(cusparseCreateMatDescr(&cudata->wfsspdesc));
 	cusparseSetMatType(cudata->wfsspdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
 	cusparseSetMatIndexBase(cudata->wfsspdesc, CUSPARSE_INDEX_BASE_ZERO);
@@ -67,21 +67,21 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cupowfs[ipowfs].llt=(cuwloc_t*)calloc(1, sizeof(cuwloc_t));
 		gpu_pts2cuwloc(cupowfs[ipowfs].llt, pts, loc);
 	    }
-	    //cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip;
+	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
 	}
     }
 
     /* setup information that maybe different for wfs in same powfs due to
        misregistration or NCPA.*/
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	gpu_set(wfsgpu[iwfs]);//Only initialize WFS in assigned GPU.
+	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 	cuwloc_t *cupowfs=cudata->powfs;
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	int iwfs0=parms->powfs[ipowfs].wfs[0];//first wfs in this group.
-	//imcc for ztilt.
+	int iwfs0=parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
+	/*imcc for ztilt. */
 	STREAM_NEW(cuwfs[iwfs].stream);
 	DO(cusparseCreate(&cuwfs[iwfs].sphandle));
 	DO(cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream));
@@ -101,7 +101,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	cuwfs[iwfs].powfs=cupowfs+ipowfs;
 	cudaDeviceSynchronize();
-	//GS0 for gtilt.
+	/*GS0 for gtilt. */
 	if(powfs[ipowfs].GS0){
 	    if(powfs[ipowfs].GS0->nx>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		dsp *t=sptrans(powfs[ipowfs].GS0->p[powfs[ipowfs].GS0->nx>1?wfsind:0]);
@@ -111,7 +111,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cuwfs[iwfs].GS0t=cuwfs[iwfs0].GS0t;
 	    }
 	}
-	//wfs amplitude map on loc
+	/*wfs amplitude map on loc */
 	if(powfs[ipowfs].nlocm>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 	    gpu_dbl2dev(&cuwfs[iwfs].amp, powfs[ipowfs].realamp[powfs[ipowfs].nlocm>1?wfsind:0], powfs[ipowfs].loc->nloc);
 	}else{
@@ -127,7 +127,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	/* * Now start physical optics setup * */
 
 	if(parms->powfs[ipowfs].usephy||parms->powfs[ipowfs].psfout||parms->powfs[ipowfs].pistatout){
-	    //If there is llt.
+	    /*If there is llt. */
 	    if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		if(powfs[ipowfs].llt->ncpa){
 		    if(powfs[ipowfs].llt->ncpa->nx>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
@@ -148,8 +148,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 	    cudaDeviceSynchronize();
 
-	    //CUFFTW is row major.
-	    int npsf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;//size of fft
+	    /*CUFFTW is row major. */
+	    int npsf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
 	    int npsf2[2]={npsf, npsf};
 	    const int ncompx=powfs[ipowfs].ncompx;
 	    const int ncompy=powfs[ipowfs].ncompy;
@@ -186,9 +186,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cufftSetStream(cuwfs[iwfs].lltplan1, cuwfs[iwfs].stream);
 		cufftSetStream(cuwfs[iwfs].lltplan2, cuwfs[iwfs].stream);
 	    }
-	    //DTF.
+	    /*DTF. */
 	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].llt->n>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-		//Need one per wfs in this powfs, or the first wfs.
+		/*Need one per wfs in this powfs, or the first wfs. */
 		int nwvl=parms->powfs[ipowfs].nwvl;
 		cuwfs[iwfs].dtf=(cudtf_t*)calloc(nwvl, sizeof(cudtf_t));
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -196,7 +196,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    if(notfused){
 			cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].nominal, nsa*sizeof(void*));
 		    }
-		    //cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].si, nsa*sizeof(void*));
+		    /*cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].si, nsa*sizeof(void*)); */
 		    int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
 		    for(int isa=0; isa<nsa; isa++){
 			if(multi_nominal || isa==0){
@@ -223,7 +223,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			    gpu_cmat2dev(&cuwfs[iwfs].dtf[iwvl].etf[isa], petf[parms->powfs[ipowfs].llt->n>1?wfsind:0][isa]);
 			}
 		    }
-		}//for iwvl.
+		}/*for iwvl. */
 		if(parms->powfs[ipowfs].llt){
 		    gpu_dmat2dev(&cuwfs[iwfs].srot, powfs[ipowfs].srot->p[parms->powfs[ipowfs].llt->n>1?wfsind:0]);
 		}
@@ -231,7 +231,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cuwfs[iwfs].dtf  = cuwfs[iwfs0].dtf;
 		cuwfs[iwfs].srot = cuwfs[iwfs0].srot;
 	    }
-	    //Matched filter
+	    /*Matched filter */
 	    if(parms->powfs[ipowfs].phytypesim==1){
 		if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		    cudaCallocHostBlock(cuwfs[iwfs].mtche, nsa*sizeof(void*));
@@ -265,20 +265,20 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cuwfs[iwfs].bkgrnd2c=cuwfs[iwfs0].bkgrnd2c;
 		}	
 	    }
-	}//if phy
+	}/*if phy */
 	CUDA_SYNC_DEVICE;
 	gpu_print_mem("wfs init");
-    }//for iwfs
+    }/*for iwfs */
 }
 void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	gpu_set(wfsgpu[iwfs]);//Only initialize WFS in assigned GPU.
+	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	if(!parms->powfs[ipowfs].usephy
 	   ||parms->powfs[ipowfs].phystep>parms->sim.start||parms->save.gradgeom[iwfs]){
-	    //gradacc for geom wfs accumulation
+	    /*gradacc for geom wfs accumulation */
 	    warning2("Allocating gradacc\n");
 	    curfree(cuwfs[iwfs].gradacc);
 	    cuwfs[iwfs].gradacc=curnew(nsa*2,1);
@@ -310,7 +310,7 @@ void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
 	    gpu_dmat2cu(&temp, powfs[ipowfs].opdadd->p[wfsind]);
 	    curadd(&cuwfs[iwfs].opdadd, 1, temp, 1, cuwfs[iwfs].stream);
 	    curfree(temp);
-	    dfree(powfs[ipowfs].opdadd->p[wfsind]);//no longer need it in CPU memory.
+	    dfree(powfs[ipowfs].opdadd->p[wfsind]);/*no longer need it in CPU memory. */
 	}
     }
 }
@@ -325,7 +325,7 @@ void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rst
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	gpu_set(GPUS[wfsgpu[iwfs]]);
 	cuwfs_t *cuwfs=cudata->wfs;
-	int seed=lrand(rstat);//don't put this after continue.
+	int seed=lrand(rstat);/*don't put this after continue. */
 	int ipowfs=parms->wfs[iwfs].powfs;
 	if(!parms->powfs[ipowfs].noisy) continue;
 	int nsa=powfs[ipowfs].pts->nsa*2;

@@ -25,30 +25,30 @@
 #include <pthread.h>
 #include "common.h"
 #define IO_TIMMING 0
-//The definitions here should not be changed once set for backward/foreward compatibility.
-#define M_CSP64  0x6400  //sparse complex
-#define M_SP64   0x6401  //sparse
-#define M_DBL    0x6402  //double
-#define M_INT64  0x6403  //int 64 array
-#define M_CMP    0x6404  //complex array
-#define M_INT32  0x6405  //int 32 array
-#define M_CSP32  0x6406  //sparse complex 32 bit
-#define M_SP32   0x6407  //sparse 32 bit
-#define M_FLT    0x6408  //single precision float.
-#define M_ZMP    0x6409  //single precision complex
-#define M_SSP64  0x6430  //single precision float + int64
-#define M_SSP32  0x6431  //single precision float + int 32
-#define M_ZSP64  0x6432  //single precision complex + int64
-#define M_ZSP32  0x6433  //single precision complex + int32
-//The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type
-#define MCC_ANY  0x6421  //cell of any thing
-#define M_HEADER 0x6500  //header.
-#define M_SKIP   0x6600  //the padding of magic number.
+/*The definitions here should not be changed once set for backward/foreward compatibility. */
+#define M_CSP64  0x6400  /*sparse complex */
+#define M_SP64   0x6401  /*sparse */
+#define M_DBL    0x6402  /*double */
+#define M_INT64  0x6403  /*int 64 array */
+#define M_CMP    0x6404  /*complex array */
+#define M_INT32  0x6405  /*int 32 array */
+#define M_CSP32  0x6406  /*sparse complex 32 bit */
+#define M_SP32   0x6407  /*sparse 32 bit */
+#define M_FLT    0x6408  /*single precision float. */
+#define M_ZMP    0x6409  /*single precision complex */
+#define M_SSP64  0x6430  /*single precision float + int64 */
+#define M_SSP32  0x6431  /*single precision float + int 32 */
+#define M_ZSP64  0x6432  /*single precision complex + int64 */
+#define M_ZSP32  0x6433  /*single precision complex + int32 */
+/*The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type */
+#define MCC_ANY  0x6421  /*cell of any thing */
+#define M_HEADER 0x6500  /*header. */
+#define M_SKIP   0x6600  /*the padding of magic number. */
 #define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
 
 #define USE_ZLIB_H 0
 #if USE_ZLIB_H
-#include <zlib.h> //zlib.h in ubuntu sucks
+#include <zlib.h> /*zlib.h in ubuntu sucks */
 #else
 typedef void* voidp;
 char* procfn(const char *fn, const char *mod,const int defaultgzip);

@@ -25,12 +25,12 @@ int scheduler_connect_self(int block,int mode);
 #ifdef __CYGWIN__
 #define print_backtrace(A)
 #endif
-//called by maos
+/*called by maos */
 int scheduler_start(char *path, int nthread, int waiting);
 int scheduler_wait(void);
 void scheduler_finish(int status);
 void scheduler_report(STATUS_T *status);
-//called by monitor
+/*called by monitor */
 int scheduler_kill_job(int ihost,int pid);
 int scheduler_remove_job(int ihost, int pid);
 int scheduler_launch_drawdaemon(char *fifo);

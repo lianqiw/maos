@@ -38,9 +38,9 @@ typedef void (*thread_wrapfun)(thread_t*);
 struct thread_t{
     long start;
     long end;
-    long ithread;//which thread this is.
-    thread_wrapfun fun;//the function, takes data as argument
-    void *data;//the data to pass to the function.
+    long ithread;/*which thread this is. */
+    thread_wrapfun fun;/*the function, takes data as argument */
+    void *data;/*the data to pass to the function. */
 };
 /*
   For all the following calls, if urgent is 1, the job is queued in the front, otherwise in the end.
@@ -52,7 +52,7 @@ struct thread_t{
   CALL_THREAD(A, nthread, urgent) calls QUEUE_THREAD and waits for all to finish.
   
 */
-#if USE_PTHREAD //Always use thread_pool
+#if USE_PTHREAD /*Always use thread_pool */
 #include <pthread.h>
 #include "thread_pool.h"
 #define CALL(fun,arg,nthread,urgent)					\
@@ -80,7 +80,7 @@ struct thread_t{
 #define WAIT_THREAD(group) thread_pool_wait(&group)
 #define THREAD_POOL_INIT(A) thread_pool_init(A)
 #define THREAD_RUN_ONCE thread_pool_do_job_once()
-#else//no threading
+#else/*no threading */
 #define CALL(A,B,nthread,urgent) A(B)
 #define QUEUE_THREAD(group,A,nthread,urgent) A->fun(A)
 #define THREAD_POOL_INIT(A)

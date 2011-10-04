@@ -113,18 +113,18 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
     const double gain=parms->skyc.intgain;
     const int nmod=mideal->nx;
-    dmat *mint=NULL;        //integrator output.
-    dmat *mreal=NULL;       //modal correction at this step.
-    dmat *merr=dnew(nmod,1);//modal error
-    dmat *merrm=NULL;       //measured model error
+    dmat *mint=NULL;        /*integrator output. */
+    dmat *mreal=NULL;       /*modal correction at this step. */
+    dmat *merr=dnew(nmod,1);/*modal error */
+    dmat *merrm=NULL;       /*measured model error */
     PDMAT(mideal,pmideal);
-    dcell *mres=dcellnew(1,aster->nstep);//residual mode.
+    dcell *mres=dcellnew(1,aster->nstep);/*residual mode. */
     dmat *grad=NULL;
     dmat *pgm=aster->pgm->p[aster->pgm->nx-1];
     for(int istep=0; istep<aster->nstep; istep++){
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
-	dadd(&merr, 1, mreal, -1);//form error;
-	dcp(&mres->p[istep],merr);//record error.
+	dadd(&merr, 1, mreal, -1);/*form error; */
+	dcp(&mres->p[istep],merr);/*record error. */
 	dzero(grad);
 	dmm(&grad, aster->gm, merr, "nn", 1);
 	int itsa=0;
@@ -139,9 +139,9 @@ dcell* skysim_ztilt(dmat *mideal, ASTER_S *aster, const PARMS_S *parms){
 	dzero(merrm);
 	dmm(&merrm, pgm, grad, "nn", 1);
 	
-	//Servo filter.
-	dcp(&mreal, mint);//integrator output from last step.
-	dadd(&mint, 1, merrm, gain);//integrator;
+	/*Servo filter. */
+	dcp(&mreal, mint);/*integrator output from last step. */
+	dadd(&mint, 1, merrm, gain);/*integrator; */
     }
     dfree(mint); dfree(mreal); dfree(merr); dfree(merrm);dfree(grad);
     return mres;
@@ -165,9 +165,9 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     dmat *res=dnew(6,1);/*Results. 1-2: NGS and TT modes., 
 			  3-4:On axis NGS and TT modes,
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
-    dmat *mreal=NULL;//modal correction at this step.
-    dmat *merr=dnew(nmod,1);//modal error
-    dmat *merrm=NULL;//measured model error
+    dmat *mreal=NULL;/*modal correction at this step. */
+    dmat *merr=dnew(nmod,1);/*modal error */
+    dmat *merrm=NULL;/*measured model error */
     
     dmat *mres=dnew(nmod,aster->nstep);
     PDMAT(mres,pmres);
@@ -217,12 +217,12 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     int phycount=0;
     for(int istep=0; istep<aster->nstep; istep++){
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
-	dadd(&merr, 1, mreal, -1);//form NGS mode error;
+	dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
 
 	if(istep>=parms->skyc.evlstart){
 	    double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
 	    if(res_ngs>ngsol*5){
-		//warning2("%5.1f Hz: loop diverged. \n", parms->skyc.fss[idtrat]);
+		/*warning2("%5.1f Hz: loop diverged. \n", parms->skyc.fss[idtrat]); */
 		dfree(res); res=NULL;
 		break;
 	    }
@@ -240,7 +240,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	    }
 	    {
 		double dot_oa_tt=dwdot2(merr->p, parms->maos.mcc_oa_tt, merr->p);
-		//Notice that mcc_oa_tt2 is 2x5 marix.
+		/*Notice that mcc_oa_tt2 is 2x5 marix. */
 		double dot_res_ideal_tt=dwdot(merr->p, parms->maos.mcc_oa_tt2, pmideal[istep]);
 		double dot_res_oa_tt=0;
 		for(int imod=0; imod<2; imod++){
@@ -253,23 +253,23 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	memcpy(pmres[istep],merr->p,sizeof(double)*nmod);
 	
 	if(istep<parms->skyc.phystart){
-	    //Ztilt, noise free simulation for acquisition.
+	    /*Ztilt, noise free simulation for acquisition. */
 	    if(istep % dtrat == 0){
 		dzero(zgrad);
 	    }
-	    dmm(&zgrad, aster->gm, merr, "nn", 1);//grad due to residual NGS mode.
+	    dmm(&zgrad, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
 	    int itsa=0;
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const int ipowfs=aster->wfs[iwfs].ipowfs;
 		const long nsa=parms->maos.nsa[ipowfs];
-		for(long isa=0; isa<nsa*2; isa++){//add ztilt.
+		for(long isa=0; isa<nsa*2; isa++){/*add ztilt. */
 		    zgrad->p[isa+itsa]+=aster->wfs[iwfs].ztiltout->p[istep]->p[isa];
 		}
 		itsa+=nsa*2;
 	    }
 	    dcp(&mreal, st2t->mint);
-	    if((istep+1) % dtrat == 0){//has output
-		dscale(zgrad, 1./dtrat);//averaging gradients.
+	    if((istep+1) % dtrat == 0){/*has output */
+		dscale(zgrad, 1./dtrat);/*averaging gradients. */
 		dzero(merrm);
 		dmm(&merrm, pgm, zgrad, "nn", 1);
 		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
@@ -300,19 +300,19 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    double wvl=parms->maos.wvl[iwvl];
 		    for(long isa=0; isa<nsa; isa++){
 			ccp(&wvfc->p[iwfs], wvfout[iwvl][isa]);
-			//Apply NGS mode error to PSF.
+			/*Apply NGS mode error to PSF. */
 			ngsmod2wvf(wvfc->p[iwfs], wvl, merr, powfs[ipowfs].cloc[isa],
 				   powfs[ipowfs].fpc[isa], thetax, thetay, parms);
 			cembed(wvf->p[iwfs],wvfc->p[iwfs],0,C_FULL);
 			cfft2(wvf->p[iwfs],-1);
-			cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);//peak in corner.
-		    }//isa
-		}//iwvl
-	    }//iwfs
+			cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);/*peak in corner. */
+		    }/*isa */
+		}/*iwvl */
+	    }/*iwfs */
 	    dcp(&mreal, st2t->mint);
-	    if((istep+1) % dtrat == 0){//has output
+	    if((istep+1) % dtrat == 0){/*has output */
 		phycount++;
-		//Form detector image
+		/*Form detector image */
 		double igrad[2];
 		int itsa=0;
 		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -323,22 +323,22 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 			    double siglev=aster->wfs[iwfs].siglev[iwvl];
 			    ccpd(&otf->p[iwfs],psf[iwfs]->p[isa+nsa*iwvl]);
-			    cifft2(otf->p[iwfs], 1); //turn to OTF, peak in corner
+			    cifft2(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
 			    ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
 			    cfft2(otf->p[iwfs], -1);
 			    spmulcreal(ints[iwfs]->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
 				       otf->p[iwfs]->p, siglev);
 			}
 		
-			//Add noise and apply matched filter.
+			/*Add noise and apply matched filter. */
 			switch(noisy){
-			case 0://no noise at all.
+			case 0:/*no noise at all. */
 			    break;
-			case 1://both poisson and read out noise.
+			case 1:/*both poisson and read out noise. */
 			    addnoise(ints[iwfs]->p[isa], &aster->rand, aster->wfs[iwfs].bkgrnd*dtrat,
 				     1, rnefs[ipowfs][idtrat]);
 			    break;
-			case 2://there is still poisson noise.
+			case 2:/*there is still poisson noise. */
 			    addnoise(ints[iwfs]->p[isa], &aster->rand, 0, 1, 0);
 			    break;
 			default:
@@ -362,9 +362,9 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			grad->p[isa+itsa]=igrad[0];
 			grad->p[isa+nsa+itsa]=igrad[1];
 		
-		    }//isa
+		    }/*isa */
 		    itsa+=nsa*2;
-		}//iwfs
+		}/*iwfs */
 		dzero(merrm);
 		dmm(&merrm, pgm, grad, "nn", 1);
 		memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
@@ -378,9 +378,9 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		default:
 		    error("Invalid\n");
 		}
-	    }//if dtrat
-	}//if phystart
-    }//istep;
+	    }/*if dtrat */
+	}/*if phystart */
+    }/*istep; */
     if(parms->skyc.dbg){
 	dwrite(zgrads,"%s/skysim_zgrads_aster%d_dtrat%d",dirsetup,aster->iaster,dtrat);
 	dwrite(grads,"%s/skysim_grads_aster%d_dtrat%d",dirsetup, aster->iaster,dtrat);
@@ -391,8 +391,8 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     dfree(merrm);
     dfree(grad);
     dfree(zgrad);
-    dfree(grads);//////////////remove this dmat after debugging
-    dfree(zgrads);//////////////remove this dmat debugging
+    dfree(grads);/*////////////remove this dmat after debugging */
+    dfree(zgrads);/*////////////remove this dmat debugging */
     for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 	dcellfree(psf[iwfs]);
 	dcellfree(ints[iwfs]);
@@ -411,7 +411,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     if(parms->skyc.dbg){
 	dwrite(mres,"%s/skysim_phy_mres_aster%d_%d",dirsetup,aster->iaster,dtrat);
     }
-    //dfree(mres);
+    /*dfree(mres); */
     *mresout=mres;
     dscale(res, 1./(aster->nstep-parms->skyc.evlstart));
     return res;
@@ -429,7 +429,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	dcell *sepsf=dcelldup(aster[selaster].wfs[iwfs].pistat->psf);
 	for(int ic=0; ic<sepsf->nx*sepsf->ny; ic++){
-	    dfftshift(sepsf->p[ic]);//put peak in center. required by MAOS.
+	    dfftshift(sepsf->p[ic]);/*put peak in center. required by MAOS. */
 	}
 	dcellwrite(sepsf, "%s/pistat_wfs%d",path,iwfs+6);
 	dcellfree(sepsf);
@@ -518,7 +518,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     }else{
 	error("Fill this out please\n");
     }
-    fprintf(fp,"sim.servotype_lo=2\n");//type II
+    fprintf(fp,"sim.servotype_lo=2\n");/*type II */
     fprintf(fp, "sim.gtypeII_lo=\"gain.bin\"\n");
     if(parms->maos.wddeg){
 	fprintf(fp, "atm.wddeg=[");

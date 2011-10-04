@@ -29,39 +29,39 @@ typedef struct thread_t thread_t;
    Unified data structure for automatic selection of propagation.
 */
 typedef struct PROPDATA_T{
-    //Input. 
+    /*Input.  */
     map_t *mapin;
-    //Or
+    /*Or */
     loc_t *locin; const double *phiin;
     
-    //Output
+    /*Output */
     map_t *mapout;
-    //Or
+    /*Or */
     double *phiout;
-    //Combined with
+    /*Combined with */
     const pts_t *ptsout;
-    //Or
+    /*Or */
     const loc_t *locout; const double *ampout;
-    //Or 
+    /*Or  */
     const locstat_t *ostat;
 
-    //Constant displacement
+    /*Constant displacement */
     double displacex0, displacey0;
-    //Time step dependent displacement
+    /*Time step dependent displacement */
     double displacex1, displacey1;
-    //scale of coordinate
+    /*scale of coordinate */
     double scale;
-    //scale of value:
+    /*scale of value: */
     double alpha;
-    //Options:
-    int cubic; double cubic_iac; //for cubic interpolation.
+    /*Options: */
+    int cubic; double cubic_iac; /*for cubic interpolation. */
     int wrap;
-    int nooptim;//disable optim.
+    int nooptim;/*disable optim. */
     int index;
 }PROPDATA_T;
 
-void prop(thread_t *data);//A unified wrapper
-void prop_index(PROPDATA_T *propdata);//A unified wrapper
+void prop(thread_t *data);/*A unified wrapper */
+void prop_index(PROPDATA_T *propdata);/*A unified wrapper */
 
 #define ARGIN_GRID						\
     const map_t *mapin /**<[in] OPD defind on a square grid*/

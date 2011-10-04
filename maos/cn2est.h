@@ -56,7 +56,7 @@ struct CN2EST_T{
     dcell *wt;       /**<Estimated weighting of the layers*/
     dcell *ht;       /**<Estimated Height of the layers*/
     dmat *r0;        /**<Estimated r0*/
-    //the following are used to feed into reconstructor.
+    /*the following are used to feed into reconstructor. */
     dmat *htrecon;   /**<layer heights for tomography*/
     dmat *os;        /**<over sampling factor of the layers in htrecon*/
     dmat *dx;        /**<sampling of each layer in reconstruction.*/

@@ -51,7 +51,7 @@ const char *get_job_progname(void){
     return progname;
 }
 
-int get_job_mem(void){//return in KiB
+int get_job_mem(void){/*return in KiB */
     int mem;
 
     struct task_basic_info t_info;
@@ -61,15 +61,15 @@ int get_job_mem(void){//return in KiB
 				  TASK_BASIC_INFO, (task_info_t)&t_info, 
 				  &t_info_count)){
 	mem=0;
-	// resident size is in t_info.resident_size;
-	// virtual size is in t_info.virtual_size;
+	/* resident size is in t_info.resident_size; */
+	/* virtual size is in t_info.virtual_size; */
     }else{
 	mem=t_info.resident_size/1024;
     }
     info("mem=%d KiB\n",mem);
-    //struct rusage usage;
-    //getrusage(0, &usage);
-    //info("mem2=%d KiB\n",(int)usage.ru_maxrss);
+    /*struct rusage usage; */
+    /*getrusage(0, &usage); */
+    /*info("mem2=%d KiB\n",(int)usage.ru_maxrss); */
     return mem;
 }
 
@@ -77,35 +77,35 @@ double get_job_launchtime(int pid){
     double starttime;
     struct timeval tp;
     gettimeofday(&tp, NULL);
-    //set to the current time
+    /*set to the current time */
     starttime=tp.tv_sec+tp.tv_usec;
-    //warning("Please finish it\n");
+    /*warning("Please finish it\n"); */
     return starttime;
 }
 
 int get_usage_running(void){
-    //warning("Please implement it\n");
+    /*warning("Please implement it\n"); */
     return 0;
 }
 double get_usage_load(void){
     double load=0;
     return load;
-    //warning("Please implement");
+    /*warning("Please implement"); */
 }
 double get_usage_mem(void){
     double mem=0;
-    //warning("Please implement");
+    /*warning("Please implement"); */
     return mem;
 }
 double read_self_cpu(void){
-    //warning("Please implement");
+    /*warning("Please implement"); */
     return 0;
 }
 int read_usage_cpu(long *user, long *tot){
     processor_cpu_load_info_data_t *pinfo;
     mach_msg_type_number_t info_count;
-    //long tot1=0;
-    //long idle1=0;
+    /*long tot1=0; */
+    /*long idle1=0; */
     unsigned int ncpu0;
     if (host_processor_info (mach_host_self (),
 			     PROCESSOR_CPU_LOAD_INFO,

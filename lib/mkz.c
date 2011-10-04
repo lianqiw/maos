@@ -77,7 +77,7 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
 	double scx=saloc->locx[isa]*dx2+poffset[0];
 	double scy=saloc->locy[isa]*dx2+poffset[1];
 	int count=0;
-	//find points that belongs to this subaperture.
+	/*find points that belongs to this subaperture. */
 	for(int iy=iceil(scy-dsa2);
 	    iy<ifloor(scy+dsa2);iy++){
 	    for(int ix=iceil(scx-dsa2);
@@ -93,13 +93,13 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
 		}
 	    }
 	}
-	//locwrite(sloc,"sloc_isa%d",isa);
-	//writedbl(amploc,count,1,"amploc_isa%d",isa);
+	/*locwrite(sloc,"sloc_isa%d",isa); */
+	/*writedbl(amploc,count,1,"amploc_isa%d",isa); */
 	sloc->nloc=count;
 	dmat *mcc=loc_mcc_ptt(sloc,amploc);
-	//dwrite(mcc,"mcc_isa%d",isa);
+	/*dwrite(mcc,"mcc_isa%d",isa); */
 	dinvspd_inplace(mcc);
-	//dwrite(mcc,"imcc_isa%d",isa);
+	/*dwrite(mcc,"imcc_isa%d",isa); */
 	double (*MCC)[3]=(double(*)[3])mcc->p;
 	xpp[isa]=xcount;
 	ypp[isa]=ycount;

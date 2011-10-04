@@ -87,7 +87,7 @@ typedef struct STAR_S{
     double thetay;     /**<star location*/
     double scbcs;      /**<scale factor to match strehl for bi-cubic spline*/
     dmat  *mags;       /**<star magnitude at each wavelength*/
-    //The following is for each ipowfs
+    /*The following is for each ipowfs */
     dmat  *siglev;     /**<signal level of size nwvl*npowfs*/
     dmat  *siglevtot;  /**<total signal level of size npowfs*1*/
     dmat  *bkgrnd;     /**<pixel background of size npowfs*1*/
@@ -112,7 +112,7 @@ typedef struct ASTER_S{
     dmat *dettf;       /**<demoting ttf operator.*/
     dmat *gmtt;        /**<gm with ttf demotion.*/
 
-    //The following are for each dtrat
+    /*The following are for each dtrat */
     dcell *nea_tot;    /**<total NEA: measurement + tilt anisoplanatism effects.*/
     dcell *pgm;        /**<mode reconstructor */
     dcell *pgmtt;      /**<pgm with demote ttf.*/

@@ -122,7 +122,7 @@ void X(cellcp)(X(cell)** out0, const X(cell) *in){
 	for(int i=0; i<in->nx*in->ny; i++){
 	    X(cp)(&out->p[i], in->p[i]);
 	}
-    }else{//if input is empty, zero the output. do not free.
+    }else{/*if input is empty, zero the output. do not free. */
 	X(cellzero)(*out0);
     }
 }
@@ -284,7 +284,7 @@ X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
     PCELL(B,pB);
 
     if(dim==1){
-	//along x.
+	/*along x. */
 	if(A->ny!=B->ny){
 	    error("Mismatch: A is (%ld, %ld), B is (%ld, %ld)\n",
 		  A->nx, A->ny, B->nx, B->ny);
@@ -300,7 +300,7 @@ X(cell) *X(cellcat)(const X(cell) *A, const X(cell) *B, int dim){
 	    }
 	}
     }else if(dim==2){
-	//along y.
+	/*along y. */
 	if(A->nx!=B->nx){
 	    error("Mismatch. A is (%ld, %ld), B is (%ld, %ld)\n", 
 		  A->nx, A->ny, B->nx, B->ny);
@@ -355,7 +355,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
     if(!A) return;
     PCELL(A,pA);
     if(dim==1){
-	//drop rows
+	/*drop rows */
 	int keep[A->nx];
 	int ndrop=0;
 	for(int ix=0; ix<A->nx; ix++){
@@ -395,7 +395,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 	    }
 	}
     }else if(dim==2){
-	//drop cols
+	/*drop cols */
 	int count=0;
 	for(int iy=0; iy<A->ny; iy++){
 	    int keep=0;
@@ -411,7 +411,7 @@ void X(celldropempty)(X(cell) **A0, int dim){
 		}
 		count++;
 	    }else{
-		//warning("Col %d dropped\n", iy);
+		/*warning("Col %d dropped\n", iy); */
 	    }
 	}
 	A->ny=count;
@@ -515,7 +515,7 @@ X(cell)* X(2cellref)(const X(mat) *A, int*dims, int ndim){
     long kr=0;
     X(cell) *B=X(cellnew)(ndim,1);
     for(long ix=0; ix<ndim; ix++){
-	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);//refrence the data. 
+	B->p[ix]=X(new_ref)(dims[ix],1,A->p+kr);/*refrence the data.  */
 	kr+=dims[ix];
     }
     return B;
@@ -526,7 +526,7 @@ X(cell)* X(2cellref)(const X(mat) *A, int*dims, int ndim){
 */
 void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref){
     long nx,ny,*nxs,*nys;
-    if(*B) ref=*B;//use B as reference.
+    if(*B) ref=*B;/*use B as reference. */
     X(celldim)(ref, &nx, &ny, &nxs, &nys);
     if(nx!=A->nx || ny!=A->ny){
 	error("Shape doesn't agree. Reference is %ldx%ld but input is %ldx%ld\n",
@@ -580,7 +580,7 @@ void X(celldropzero)(X(cell) *B, double thres){
 	    if(!hasnonzero){
 		X(free)(Bp[iy][ix]);
 		Bp[iy][ix]=NULL;
-		//warning("Dropped block (%ld, %ld)\n", ix, iy);
+		/*warning("Dropped block (%ld, %ld)\n", ix, iy); */
 	    }
 	}
     }

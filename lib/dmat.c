@@ -45,7 +45,7 @@ void denc_thread(thread_t *pdata){
     if(type==0){
 	dmat *ksinc=dnew(dvec->nx, ncomp2);
 	PDMAT(ksinc, pks);
-	//Cache the data.
+	/*Cache the data. */
 	for(long iy=0; iy<ncomp2; iy++){
 	    double ky=(iy<ncomp?iy:iy-ncomp2)*dk;
 	    for(long ir=pdata->start; ir<pdata->end; ir++){
@@ -67,7 +67,7 @@ void denc_thread(thread_t *pdata){
 	    for(long ix=0; ix<ncomp2; ix++){
 		double kx=(ix<ncomp?ix:ix-ncomp2)*dk;
 		switch(type){
-		case -1: {//azimuthal average. dr is radius
+		case -1: {/*azimuthal average. dr is radius */
 		    double k=sqrt(kx*kx+ky*ky);
 		    for(long ir=pdata->start; ir<pdata->end; ir++){
 			double s=j0(k*pi2*dr[ir]);
@@ -76,17 +76,17 @@ void denc_thread(thread_t *pdata){
 		} break;
 		case 0:
 		    break;
-		case 1: {//Encircled energy. dr is diameter
+		case 1: {/*Encircled energy. dr is diameter */
 		    double k=sqrt(kx*kx+ky*ky);
 		    for(long ir=pdata->start; ir<pdata->end; ir++){
 			const double r=dr[ir]*0.5;
 			const double tmp=k*pi2*r;
 			double s=j1(tmp)*r/k;
-			if(!ix && !iy) s=pi2*r*r;//special case.
+			if(!ix && !iy) s=pi2*r*r;/*special case. */
 			enc->p[ir]+=s*ppsf[iy][ix];
 		    }
 		} break;
-		case 2://Enstripped energe in a slit.
+		case 2:/*Enstripped energe in a slit. */
 		    error("To implement: Do FFT only along 1-d\n");
 		    break;
 		default:

@@ -108,7 +108,7 @@ static void create_entry(PROC_T *p){
     p->entry_errhi=new_label("Hi (nm)",WIDTH_ERRHI,1);
     p->entry_iseed=new_entry("iSEED",WIDTH_ISEED,0.5);
     p->entry_timing=new_entry("Timing",WIDTH_TIMING,1);
-    //kill_button_new(p);
+    /*kill_button_new(p); */
     change_button(p, GTK_STOCK_STOP, kill_job_event);
     int irow=nrows[p->hid];
     nrows[p->hid]++;
@@ -162,7 +162,7 @@ static void update_prog(PROC_T *p){
     }
 }
 void remove_entry(PROC_T *iproc){
-    //Delete widget;
+    /*Delete widget; */
     gtk_widget_destroy(iproc->entry_pid);
     gtk_widget_destroy(iproc->entry_path);
     gtk_widget_destroy(iproc->entry_errlo);
@@ -183,29 +183,29 @@ void refresh(PROC_T *p){
     case S_RUNNING:
 	break;
     case S_WAIT:
-	//waiting to start
+	/*waiting to start */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting to start");
 	break;
     case S_START:
-	//just started.
+	/*just started. */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Started");
 	notify_user(p);
 	break;
-    case S_FINISH://Finished
+    case S_FINISH:/*Finished */
 	p->frac=1;
 	p->done=1;
 	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
-	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);//progress bar color.
+	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);/*progress bar color. */
 	notify_user(p);
 	break;
-    case S_CRASH://Error
+    case S_CRASH:/*Error */
 	p->done=1;
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Error");
 	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);
 	notify_user(p);
 	break;
-    case S_TOKILL://kill command sent
+    case S_TOKILL:/*kill command sent */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Kill command sent");
 	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&yellow);

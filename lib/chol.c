@@ -50,10 +50,10 @@ static cholmod_sparse *sp2chol(const dsp *A){
     B->nrow=A->m;
     B->ncol=A->n;
     B->nzmax=A->nzmax;
-    B->p=A->p;//do not duplicate.
+    B->p=A->p;/*do not duplicate. */
     B->i=A->i;
     B->x=A->x;
-    B->stype=1;//assume data is symmetric. upper triangular part is used.
+    B->stype=1;/*assume data is symmetric. upper triangular part is used. */
     B->itype=ITYPE;
     B->xtype=CHOLMOD_REAL;
     B->dtype=CHOLMOD_DOUBLE;
@@ -102,16 +102,16 @@ spchol* chol_factorize(dsp *A_in){
     cholmod_sparse *A=sp2chol(A_in);
     out->c->status=CHOLMOD_OK;
 #if CHOL_SIMPLE == 1
-    out->c->final_super=0;//we want a simplicity result.
-    out->c->final_ll=1;   //Leave in LL instead of LDL format.
-    out->c->final_asis=0; //do the conversion as shown above.
+    out->c->final_super=0;/*we want a simplicity result. */
+    out->c->final_ll=1;   /*Leave in LL instead of LDL format. */
+    out->c->final_asis=0; /*do the conversion as shown above. */
 #endif
-    //Try AMD ordering only. SLOW
+    /*Try AMD ordering only. SLOW */
     /*
       out->c.nmethods=1;
       out->c.method[0].ordering=CHOLMOD_AMD;
       out->c.postorder=1;
-      out->c.supernodal=CHOLMOD_SIMPLICIAL;//force simplicial only.
+      out->c.supernodal=CHOLMOD_SIMPLICIAL; force simplicial only. 
     */
     
     out->L=MOD(analyze)(A,out->c);
@@ -141,7 +141,7 @@ spchol* chol_factorize(dsp *A_in){
     MOD(factorize)(A,out->L, out->c);
 #if CHOL_SIMPLE == 1 && 0
     if(!out->c->final_asis){
-	//Our solver is much slower than the simplicity solver, or the supernodal solver.
+	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */
 	warning2("Converted to our format.");
 	cholmod_factor *L=out->L;
 	out->Cp=L->Perm; L->Perm=NULL;
@@ -207,13 +207,13 @@ void chol_save(spchol *A, const char *format,...){
     dsp *C=A->Cl?A->Cl:A->Cu;
     long nc=0;
     long one=1;
-    if(C){//Save our easy to use format.
+    if(C){/*Save our easy to use format. */
 	write_magic(MCC_ANY, fp);
 	nc=2;
 	zfwritelarr(fp, 2, &nc, &one);
 	spwritedata(fp, C);
 	do_write(fp, 0, sizeof(spint), M_SPINT, A->Cp, C->m, 1);
-    }else if(A->L){//Save native cholmod format.
+    }else if(A->L){/*Save native cholmod format. */
 	cholmod_factor *L=A->L;
 	char header[1024];
 	snprintf(header,1024,
@@ -243,7 +243,7 @@ void chol_save(spchol *A, const char *format,...){
 	do_write(fp, 0, sizeof(spint), M_SPINT, L->Perm, L->n, 1);
 	write_header("ColCount", fp);
 	do_write(fp, 0, sizeof(spint), M_SPINT, L->ColCount, L->n, 1);
-	if(L->is_super==0){//Simplicity
+	if(L->is_super==0){/*Simplicity */
 	    write_header("p", fp);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, L->p, L->n+1, 1);
 	    write_header("i", fp);
@@ -284,7 +284,7 @@ spchol *chol_read(const char *format, ...){
     }
     long ncx, ncy;
     zfreadlarr(fp, 2, &ncx, &ncy);
-    if(ncx*ncy==2){//Contains Cl(Cu) and Perm
+    if(ncx*ncy==2){/*Contains Cl(Cu) and Perm */
 	info("Reading converted cholmod_factor\n");
 	dsp *C=spreaddata(fp, 0);
 	int type=spcheck(C);
@@ -300,7 +300,7 @@ spchol *chol_read(const char *format, ...){
 	if(nxp*nyp!=C->m){
 	    error("Cp is in wrong format\n");
 	}
-    }else{//Native cholmod format exists. Read it.
+    }else{/*Native cholmod format exists. Read it. */
 	if(!header){
 	    error("File %s does not contain a cholmod_facotr\n", fn);
 	}
@@ -337,7 +337,7 @@ spchol *chol_read(const char *format, ...){
 	
 	READSPINT(Perm, L->n);
 	READSPINT(ColCount, L->n);
-	if(L->is_super==0){//Simplicity
+	if(L->is_super==0){/*Simplicity */
 	    info("Reading simplicity cholmod_factor\n");
 	    READSPINT(p, L->n+1);
 	    READSPINT(i, L->nzmax);
@@ -393,9 +393,9 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 	    error("There is no cholesky factor\n");
 	}
     }else{
-	assert(A->L->xtype!=0);// error("A->L is pattern only!\n");
+	assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
 	if(y->ny==1){
-	    cholmod_dense *y2=d2chol(y, 0, y->ny);//share pointer.
+	    cholmod_dense *y2=d2chol(y, 0, y->ny);/*share pointer. */
 	    cholmod_dense *x2=NULL;
 	    x2=MOD(solve)(CHOLMOD_A,A->L,y2,A->c);
 	    if(!x2) error("chol_solve failed\n");
@@ -404,7 +404,7 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 		error("Fix here\n");
 	    }
 	    if(!*x){
-		*x=dnew_data(x2->nrow,x2->ncol, x2->x);//takes over the owner of x2->x.
+		*x=dnew_data(x2->nrow,x2->ncol, x2->x);/*takes over the owner of x2->x. */
 	    }else{
 		if((*x)->nx!=x2->nrow || (*x)->ny!=x2->ncol){
 		    error("Matrix mismatch\n");
@@ -412,8 +412,8 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 		memcpy((*x)->p,x2->x,sizeof(double)*((*x)->nx)*((*x)->ny));
 		free(x2->x);
 	    }
-	    free(y2);//don't do dfree
-	    free(x2);//don't do dfree
+	    free(y2);/*don't do dfree */
+	    free(x2);/*don't do dfree */
 	}else{
 	    if(!*x) *x=dnew(y->nx, y->ny);
 	    CHOLSOLVE_T data={*x,A,y};
@@ -428,7 +428,7 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
    because the result may have different nzmax.
 */
 dsp *chol_spsolve(spchol *A, const dsp *y){
-    assert(A->L->xtype!=0);// error("A->L is pattern only!\n");
+    assert(A->L->xtype!=0);/* error("A->L is pattern only!\n"); */
     cholmod_sparse *y2=sp2chol(y);
     cholmod_sparse *x2=MOD(spsolve)(CHOLMOD_A,A->L,y2,A->c);
     if(!x2) error("chol_solve failed\n");
@@ -438,8 +438,8 @@ dsp *chol_spsolve(spchol *A, const dsp *y){
     x->i=x2->i;
     x->x=x2->x;
     x->nzmax=x2->nzmax;
-    free(y2);//don't do spfree
-    free(x2);//don't do spfree
+    free(y2);/*don't do spfree */
+    free(x2);/*don't do spfree */
     return x;
 }
 
@@ -454,7 +454,7 @@ static inline void chol_perm_f(dmat **out, spint *perm, const dmat *in){
     }
     PDMAT(in,pin);
     PDMAT(*out,pout);
-    if(*out==in){//Do each column in place.
+    if(*out==in){/*Do each column in place. */
 	double *tmp=malloc(in->nx*sizeof(double));
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
@@ -482,7 +482,7 @@ static inline void chol_perm_b(dmat **out, spint *perm, const dmat *in){
     }
     PDMAT(in,pin);
     PDMAT(*out,pout);
-    if(*out==in){//Do each column in place.
+    if(*out==in){/*Do each column in place. */
 	double *tmp=malloc(in->nx*sizeof(double));
 	for(int icy=0; icy<in->ny; icy++){
 	    for(int icx=0; icx<in->nx; icx++){
@@ -514,7 +514,7 @@ static void chol_solve_lower_each(thread_t *info){
     spint *Ai=A->i;
     dmat *y2=data->y2;
     info2("Lower solving %ld x %ld, %ld\n", y2->nx, info->start, info->end);
-    //Solve L\y
+    /*Solve L\y */
     PDMAT(y2, py);
     for(long icol=0; icol<A->n; icol++){
 	double AxI=1./Ax[Ap[icol]];
@@ -522,17 +522,17 @@ static void chol_solve_lower_each(thread_t *info){
 	    py[iy][icol]*=AxI;
 	    double val=-py[iy][icol];
 	    for(long irow=Ap[icol]+1; irow<Ap[icol+1]; irow++){
-		py[iy][Ai[irow]]+=val*Ax[irow];//update in place.
+		py[iy][Ai[irow]]+=val*Ax[irow];/*update in place. */
 	    }
 	}
     }
 
-    //Solve L'\y;
+    /*Solve L'\y; */
     for(long icol=A->n-1; icol>-1; icol--){
 	double AxI=1./Ax[Ap[icol]];
 	for(long iy=info->start; iy<info->end; iy++){
 	    double sum=0;
-	    //We do in reverse order to increase memory reuse. 1.5xFaster than forward order.
+	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-1; irow>Ap[icol]; irow--){
 		sum+=Ax[irow]*py[iy][Ai[irow]];
 	    }
@@ -551,9 +551,9 @@ static void chol_solve_upper_each(thread_t *info){
     spint *Ai=A->i;
     dmat *y2=data->y2;
     info2("Upper solving %ld x (%ld to %ld)\n", y2->nx, info->start, info->end);
-    //Solve L\y
+    /*Solve L\y */
     PDMAT(y2, py);
-    //Solve R'\y
+    /*Solve R'\y */
     for(long icol=0; icol<A->m; icol++){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
@@ -561,18 +561,18 @@ static void chol_solve_upper_each(thread_t *info){
 	    for(long irow=Ap[icol]; irow<Ap[icol+1]-1; irow++){
 		sum+=Ax[irow]*py[iy][Ai[irow]];
 	    }
-	    //assert(Ai[Ap[icol+1]-1]==icol);//confirm upper right triangular
+	    /*assert(Ai[Ap[icol+1]-1]==icol);//confirm upper right triangular */
 	    py[iy][icol]=(py[iy][icol]-sum)*AxI;
 	}
     }
 	
-    //Solve R\y
+    /*Solve R\y */
     for(long icol=A->m-1; icol>-1; icol--){
 	double AxI=1./Ax[Ap[icol+1]-1];
 	for(long iy=info->start; iy<info->end; iy++){
 	    py[iy][icol]*=AxI;
 	    double val=-py[iy][icol];
-	    //We do in reverse order to increase memory reuse. 1.5xFaster than forward order.
+	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order. */
 	    for(long irow=Ap[icol+1]-2; irow>Ap[icol]-1; irow--){
 		py[iy][Ai[irow]]+=val*Ax[irow];
 	    }
@@ -611,25 +611,25 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
 	assert((*x)->nx==y->nx && (*x)->ny==y->ny);
     }
     dmat *y2=NULL;
-    if(*x==y) y2=y;//do inplace.
+    if(*x==y) y2=y;/*do inplace. */
     chol_perm_f(&y2, perm, y);
     double *Ax=A->x;
     spint *Ap=A->p;
     spint *Ai=A->i;
     if(y2->ny==1){
-	//Solve L\y
+	/*Solve L\y */
 	double *py=y2->p;
 	
 	for(long icol=0; icol<A->n; icol++){
-	    //assert(Ai[Ap[icol]]==icol);//lower triangular matrix.
+	    /*assert(Ai[Ap[icol]]==icol);//lower triangular matrix. */
 	    py[icol]/=Ax[Ap[icol]];
 	    double val=-py[icol];
 	    for(long irow=Ap[icol]+1; irow<Ap[icol+1]; irow++){
-		py[Ai[irow]]+=val*Ax[irow];//update in place.
+		py[Ai[irow]]+=val*Ax[irow];/*update in place. */
 	    }
 	}
 
-	//Solve L'\y;
+	/*Solve L'\y; */
 	for(long icol=A->n-1; icol>-1; icol--){
 	    double sum=0;
 	    /*We do in reverse order to increase memory reuse. 1.5xFaster than forward order.*/
@@ -638,7 +638,7 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
 	    }
 	    py[icol]=(py[icol]-sum)/Ax[Ap[icol]];
 	}
-    }else{//When there are multiple columns.
+    }else{/*When there are multiple columns. */
 	CHOL_LOWER_T data={C,y2};
 	thread_t info[NCPU];
 	thread_prep(info, 0, y2->ny, NCPU, chol_solve_lower_each, &data);
@@ -674,13 +674,13 @@ void chol_solve_upper(dmat **x, spchol *C, dmat *y){
 	assert((*x)->nx==y->nx && (*x)->ny==y->ny);
     }
     dmat *y2=NULL;
-    if(*x==y) y2=y;//do inplace.
+    if(*x==y) y2=y;/*do inplace. */
     chol_perm_f(&y2, perm, y);
     double *Ax=A->x;
     spint *Ap=A->p;
     spint *Ai=A->i;
     if(y2->ny==1){
-	//Solve R'\y
+	/*Solve R'\y */
 	double *py=y2->p;
 
 	for(long icol=0; icol<A->m; icol++){
@@ -691,7 +691,7 @@ void chol_solve_upper(dmat **x, spchol *C, dmat *y){
 	    py[icol]=(py[icol]-sum)/Ax[Ap[icol+1]-1];
 	}
 
-	//Solve R\y
+	/*Solve R\y */
 	for(long icol=A->m-1; icol>-1; icol--){
 	    py[icol]/=Ax[Ap[icol+1]-1];
 	    double val=-py[icol];

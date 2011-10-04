@@ -58,7 +58,7 @@ void readrand(rand_t *rstat, const char *format,...){
 /* 
    extracted from mtwist.h/c
    The Web page on the Mersenne Twist algorithm is at:
-   http://www.math.keio.ac.jp/~matumoto/emt.html
+   www.math.keio.ac.jp/~matumoto/emt.html 
    These functions were written by Geoffrey H. Kuenning, Claremont, CA.
    
    * This software is based on LGPL-ed code by Takuji Nishimura.  It has
@@ -90,7 +90,7 @@ void readrand(rand_t *rstat, const char *format,...){
  * Programming, Vol. 2, 3rd ed).
  */
 #define KNUTH_MULTIPLIER_NEW 1812433253ul
-#define KNUTH_SHIFT	30		// Even on a 64-bit machine!
+#define KNUTH_SHIFT	30		/* Even on a 64-bit machine! */
 
 /*
  * Default 32-bit random seed if mts_seed32 wasn't called
@@ -193,7 +193,7 @@ void mts_seed32(
     mt_state*		state,		/* State vector to initialize */
     unsigned long	seed)		/* 32-bit seed to start from */
     {
-	seed=~seed;//added by lianqiw.
+	seed=~seed;/*added by lianqiw. */
     int			i;		/* Loop index */
 
     if (seed == 0)
@@ -249,7 +249,7 @@ long randp(rand_t *rstat, double xm){
     return x;
 }
 
-//The following is ziggurate normal number generator
+/*The following is ziggurate normal number generator */
 
 #define LEVELS 256 /*must be 2^n*/
 #define LEVELS_1 (LEVELS-1) /*LEVELS-1*/

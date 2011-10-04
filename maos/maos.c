@@ -60,8 +60,8 @@ void maos(const PARMS_T *parms){
 #endif    
     recon = setup_recon(parms, powfs, aper);
     info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
-    setup_tsurf(parms, aper, powfs);//setting up M3 tilted surf.
-    setup_surf(parms, aper, powfs, recon);//setting up M1/M2/M3 surface OPD.
+    setup_tsurf(parms, aper, powfs);/*setting up M3 tilted surf. */
+    setup_surf(parms, aper, powfs, recon);/*setting up M1/M2/M3 surface OPD. */
 #if USE_CUDA
     if(parms->gpu.wfs){
 	gpu_wfssurf2gpu(parms, powfs);
@@ -76,7 +76,7 @@ void maos(const PARMS_T *parms){
     */
 #if USE_MKL==1
     int one=1;
-    omp_set_num_threads(&one);//only allow 1 thread after svd/chol is done.
+    omp_set_num_threads(&one);/*only allow 1 thread after svd/chol is done. */
 #endif
     sim(parms, powfs, aper, recon);
     /*Free all allocated memory in setup_* functions. So that we
@@ -135,15 +135,15 @@ int main(int argc, char **argv){
     strcpy(argv[0], fn);
     free(fn);
     char *scmd=argv2str(argc,argv);
-    ARG_T* arg=parse_args(argc,argv);//does chdir
+    ARG_T* arg=parse_args(argc,argv);/*does chdir */
 
     if(arg->detach){
 	daemonize();
     }else{
-	//foreground task will start immediately.
+	/*foreground task will start immediately. */
 	arg->force=1;
     }
-    //Launch the scheduler and report about our process
+    /*Launch the scheduler and report about our process */
     scheduler_start(scmd,arg->nthread,!arg->force);
     fprintf(stderr, "%s\n", scmd);
     info2("MAOS Version %s. Compiled on %s %s by %s ", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__);
@@ -167,13 +167,13 @@ int main(int argc, char **argv){
     use_cuda=0;
 #endif
 
-    //setting up parameters before asking scheduler to check for any errors.
+    /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg);
     
 #if USE_MKL==1
     if(arg->nthread==1){
 	int one=1;
-	//only allow 1 thread to make debug easy.
+	/*only allow 1 thread to make debug easy. */
 	omp_set_num_threads(&one);
     }
 #endif
@@ -181,7 +181,7 @@ int main(int argc, char **argv){
     curparms = parms;
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
     
-    //register signal handler
+    /*register signal handler */
     register_signal_handler(maos_signal_handler);
  
     if(!arg->force){
@@ -234,6 +234,6 @@ int main(int argc, char **argv){
     info2("Job finished at %s\t%.2f MiB\n",myasctime(),get_job_mem()/1024.);
     rename_file(0);
     scheduler_finish(0);
-    exit_success=1;//tell mem.c to print non-freed memory in debug mode.
+    exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
     return 0;
 }

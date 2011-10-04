@@ -4,7 +4,7 @@ static void test_ints(){
     rand_t init;
     seed_rand(&init,1);
     const int nwfs=6;
-    lrand(&init);//atm
+    lrand(&init);/*atm */
     rand_t wfs_rand[nwfs];
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	seed_rand(wfs_rand+iwfs,lrand(&init));
@@ -20,9 +20,9 @@ static void test_ints(){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	for(int isim=0; isim<nsim; isim++){
 	    info("iwfs %d isim=%d\n",iwfs,isim);
-	    //dcell *ints=dcellread("ints_%d_wfs%d.bin.gz",isim,iwfs);
+	    /*dcell *ints=dcellread("ints_%d_wfs%d.bin.gz",isim,iwfs); */
 	    dcell *ints=dcellread("ints_%d_wfs%d.bin",isim,iwfs);
-	    //dcell *i0=dcellread("powfs0_i0.bin.gz");
+	    /*dcell *i0=dcellread("powfs0_i0.bin.gz"); */
 	    dmat *im=NULL, *imy=NULL;
 	    double gnf[2], gny[2];
 

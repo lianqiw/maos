@@ -29,7 +29,7 @@ void TomoL(dcell **xout, const void *A,
 	apply_invpsd(xout, recon->xloc_embed, recon->invpsd,
 		     recon->fftxopd, xin, alpha);
     }
-    if(recon->ZZT){//single point piston constraint
+    if(recon->ZZT){/*single point piston constraint */
 	sptcellmulmat_thread(xout, recon->ZZT, xin, alpha,
 			     recon->nthread);
     }
@@ -156,8 +156,8 @@ static int test_fit(){
 int main(){
     test_tomo();
     test_fit();
-    //tested ok. 
-    //For tomography, MUV is slower than assembly on the fly.
-    //For fit, MUV is faster than assembly on the fly primarily due to many fit directions.
+    /*tested ok.  */
+    /*For tomography, MUV is slower than assembly on the fly. */
+    /*For fit, MUV is faster than assembly on the fly primarily due to many fit directions. */
 }
 #endif

@@ -151,18 +151,18 @@ static void opb(long n, double *x, double *y){
 }
 static void spsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     /* make a lanczos run; see landr for meaning of parameters */
-    A2=A;//Save it to global.
+    A2=A;/*Save it to global. */
     nrow=A->m;
     ncol=A->n;
     long i;
-    long n=ncol;      //Dimension of B=A'A;
+    long n=ncol;      /*Dimension of B=A'A; */
     long nn=ncol+nrow;
-    long lanmax=ncol;    //upper limit of desired number of Lanczos steps
-    long maxprs=ncol; //upper limit of desired number of eigenpairs
+    long lanmax=ncol;    /*upper limit of desired number of Lanczos steps */
+    long maxprs=ncol; /*upper limit of desired number of eigenpairs */
     long nnzero=A->nzmax;
     double endl=-1e-30;
     double endr=1e-30;
-    long vectors=1;    //1: indicates both eigenvalues and eigen vectors are wanted.
+    long vectors=1;    /*1: indicates both eigenvalues and eigen vectors are wanted. */
     double kappa=1e-6; /*relative accuracy of ritz values acceptable as
 			 eigenvalues of B (singular values of A)*/
    /*******************************************************************
@@ -200,7 +200,7 @@ static void spsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
     TIC;tic;
     if(landr(n, lanmax, maxprs, nnzero, endl, endr, vectors, kappa, ritz, bnd, r)){ 
 	warning("landr failed\n");
-	//clean up
+	/*clean up */
     }
     toc("landr");
     {
@@ -214,7 +214,7 @@ static void spsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	    info("...... %3ld   %22.14E  (%11.2E)\n", i + 1, ritz[i], bnd[i]);
     }
 
-    if(vectors){//we do want eigen vectors
+    if(vectors){/*we do want eigen vectors */
 	size1 = sizeof(double) * nrow;
 	
 	long id = 0;
@@ -230,7 +230,7 @@ static void spsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	    long ida = id + ncol;
 
 	    /* multiply by matrix A to get (scaled) left s-vector */
-	    //opa(&xv1[id], &xv1[ida]);
+	    /*opa(&xv1[id], &xv1[ida]); */
 	    mxvcount+=1;
 	    memset(&xv1[ida], 0, sizeof(double)*nrow);
 	    spmulvec(&xv1[ida], A, &xv1[id], 1);
@@ -241,7 +241,7 @@ static void spsvd(dmat **Sdiag, dmat **U, dmat **VT, const dsp *A){
 	    d[i] = tmp0;
 	    (*Sdiag)->p[i]=tmp0;
 	    /* write left s-vector to output file */
-	    //write(fp_out2, (char *)&xv1[ida], size1);
+	    /*write(fp_out2, (char *)&xv1[ida], size1); */
 	    memcpy(&pV[i], &xv1[ida], size1);
 	    id += nn;
 	}
@@ -599,7 +599,7 @@ static void ritvec(long n, double kappa, double *ritz, double *bnd, double *alf,
 		daxpy(n, s[tmp], w2, 1, w1, 1);
 		tmp -= js;
 	    }
-	    //write(fp_out2, (char *)w1, size);
+	    /*write(fp_out2, (char *)w1, size); */
 
 	    /* store the w1 vector row-wise in array xv1;   
 	     * size of xv1 is (j+1) * (nrow+ncol) elements 
@@ -1133,13 +1133,13 @@ static double startv(long n, double *wptr[])
 
 {
     double rnm2, *r, t;
-    //long irand;
+    /*long irand; */
     rand_t rstat;
     long id, i;
 
     /* get initial vector; default is random */
     rnm2 = ddot(n, wptr[0], 1, wptr[0], 1);
-    //irand = 918273 + j;
+    /*irand = 918273 + j; */
     seed_rand(&rstat, 918273);
     r = wptr[0];
     for (id = 0; id < 3; id++) {

@@ -47,7 +47,7 @@ static inline dcomplex nafocus_Hol(double nu,  /**<[in] frequency.*/
    Compute sodium power spectrum density. alpha, beta are the parameters of the
 sodium power spectrum obtained by fitting measurement data at UBC. */
 static inline double nafocus_NaPSD(double nu, double alpha, double beta){
-    return pow(10,beta)*pow(nu,alpha);//we don't divide 2pi
+    return pow(10,beta)*pow(nu,alpha);/*we don't divide 2pi */
 }
     /**
        Sodium tracking Openloop transfer function. The cross over frequency
@@ -86,11 +86,11 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     }
     double nu1=nu-1;
     double nu2=nu;
-    //true nu lies in between nu1 and nu2.
+    /*true nu lies in between nu1 and nu2. */
     
-    dcomplex Hol1=nafocus_Hol(nu1, fs, tau, zeta, zcf);//>aw
-    dcomplex Hol2=nafocus_Hol(nu2, fs, tau, zeta, zcf);//<aw
-    double a1=atan2(cimag(Hol1), creal(Hol1));//bigger than aw
+    dcomplex Hol1=nafocus_Hol(nu1, fs, tau, zeta, zcf);/*>aw */
+    dcomplex Hol2=nafocus_Hol(nu2, fs, tau, zeta, zcf);/*<aw */
+    double a1=atan2(cimag(Hol1), creal(Hol1));/*bigger than aw */
     double a2=atan2(cimag(Hol2), creal(Hol2));
     while(fabs(nu1-nu2)>1.e-5){
 	nu=(nu1+nu2)/2;
@@ -106,18 +106,18 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
     angle=atan2(cimag(Hol), creal(Hol));
     double gain=1./cabs(Hol);
-    //We integrate over f, not f*2pi
-    dmat *nus=dlogspace(-3,5,2000);//agrees good with skycoverage matlab code.
+    /*We integrate over f, not f*2pi */
+    dmat *nus=dlogspace(-3,5,2000);/*agrees good with skycoverage matlab code. */
     double rms=0;
     for(long i=0; i<nus->nx; i++){
 	nu=nus->p[i];
 	Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
 	const dcomplex Hrej=1./(1.+gain*Hol);
 	const double NaPSD=nafocus_NaPSD(nu, alpha, beta);
-	rms+=NaPSD*pow(cabs(Hrej),2)*nu;//we integratr f(nu)nu d(log(nu))
+	rms+=NaPSD*pow(cabs(Hrej),2)*nu;/*we integratr f(nu)nu d(log(nu)) */
     }
     rms*=(log(nus->p[nus->nx-1])-log(nus->p[0]))/(nus->nx-1);
-    double focus=sqrt(rms)*1./(16*sqrt(3))*pow((D/hs),2);//convert to focus error in meter.
+    double focus=sqrt(rms)*1./(16*sqrt(3))*pow((D/hs),2);/*convert to focus error in meter. */
     dfree(nus);
     return focus;
 }

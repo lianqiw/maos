@@ -22,7 +22,7 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "loc.h"
-extern int DRAW_ID;//number to use for drawdaemon, usually PID.
+extern int DRAW_ID;/*number to use for drawdaemon, usually PID. */
 extern int DRAW_DIRECT;
 void draw_helper(void);
 void imagesc(char *fig, long nx, long ny, const double *limit, const double *zlimit,
@@ -67,12 +67,12 @@ void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, dou
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...) CHECK_ARG(9);
 
-//set to one to disable drawing.
+/*set to one to disable drawing. */
 extern int disable_draw;
 #define DRAW_GRAY   0x0
 #define DRAW_COLOR  0x1
 enum{
-    FIFO_START=0, //Mark the starting of data stream.
+    FIFO_START=0, /*Mark the starting of data stream. */
     FIFO_DATA,
     FIFO_SHM,
     FIFO_POINTS,
@@ -85,7 +85,7 @@ enum{
     FIFO_XLABEL,
     FIFO_YLABEL,
     FIFO_ZLIM,
-    FIFO_LEGEND,//legend
+    FIFO_LEGEND,/*legend */
     FIFO_END=100
 };
 

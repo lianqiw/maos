@@ -34,9 +34,9 @@
 #include "process.h"
 #include "daemonize.h"
 int NCPU;
-int NCPU2;//NCPU2=2*NCPU when hyperthreading is enabled.
+int NCPU2;/*NCPU2=2*NCPU when hyperthreading is enabled. */
 int TCK;
-long NMEM=0;//Total memory in byte.
+long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
 const char *TEMP=NULL;
 const char *USER=NULL;
@@ -59,7 +59,7 @@ void init_path(void){
 	    temp="C:/Windows/Temp";
 	}
 	if(!exist(temp)){
-	    temp=HOME;//set to home
+	    temp=HOME;/*set to home */
 	}
 	if(!exist(temp)){
 	    error("Unable to determine the path to temporary files");
@@ -90,7 +90,7 @@ static __attribute__((constructor))void init(){
     }
     fclose(fp);
 #else
-    NMEM=0;//do not know.
+    NMEM=0;/*do not know. */
 #endif
     init_path();
 }
@@ -101,7 +101,7 @@ double get_usage_cpu(void){
     static long user1, tot1;
     static double cent=100;
     long user2, tot2;
-    if(thistime >=lasttime+2){//information was too old.
+    if(thistime >=lasttime+2){/*information was too old. */
 	read_usage_cpu(&user1, &tot1);
 	usleep(50000);
     }
@@ -118,7 +118,7 @@ double get_usage_cpu(void){
     lasttime=thistime;
     user1=user2;
     tot1=tot2;
-    cent=cent*NCPU2/NCPU;//discount hyperthreading.
+    cent=cent*NCPU2/NCPU;/*discount hyperthreading. */
     return cent;
 }
 int get_cpu_avail(void){
@@ -130,7 +130,7 @@ int get_cpu_avail(void){
     double cent=get_usage_cpu();
     int nrunning=get_usage_running();
     info("load=%g, cent=%g, nrun=%d, ncpu=%d\n", load, cent, nrunning, NCPU);
-    if(load>NCPU+1){//don't want to put too much load on the machine.
+    if(load>NCPU+1){/*don't want to put too much load on the machine. */
 	return 0;
     }
     avail=(int)round((1.-cent)*NCPU);
@@ -138,7 +138,7 @@ int get_cpu_avail(void){
 	avail=NCPU-nrunning;
     }
     if(avail<0) avail=0;
-    //info("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail);
+    /*info("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail); */
     return avail;
 }
 
@@ -150,6 +150,6 @@ void wait_cpu(int nthread){
     while(get_cpu_avail()<nthread-1){
 	sleep(5);
     }
-    close(fd);//remove lock
+    close(fd);/*remove lock */
 }
 

@@ -61,7 +61,7 @@ double dotdbl(const double *restrict p1, const double *restrict p2,
     }else if(p1 && !p2 && !p3){
 	for(long i=0; i<n; i++) ans+=p1[i];
     }else if(!p1 && !p2 && !p3){
-	ans=(double)n;//assume all ones.
+	ans=(double)n;/*assume all ones. */
     }
     return  ans;
 }
@@ -87,7 +87,7 @@ float dotflt(const float *restrict p1, const float *restrict p2,
     }else if(p1 && !p2 && !p3){
 	for(long i=0; i<n; i++) ans+=p1[i];
     }else if(!p1 && !p2 && !p3){
-	ans=(float)n;//assume all ones.
+	ans=(float)n;/*assume all ones. */
     }
     return  ans;
 }
@@ -111,7 +111,7 @@ dcomplex dotcmp(const dcomplex *restrict p1, const dcomplex *restrict p2,
     }else if(p1 && !p2 && !p3){
 	for(long i=0; i<n; i++) ans+=p1[i];
     }else if(!p1 && !p2 && !p3){
-	ans=(double)n;//assume all ones.
+	ans=(double)n;/*assume all ones. */
     }
     return  ans;
 }
@@ -136,7 +136,7 @@ fcomplex dotzmp(const fcomplex *restrict p1, const fcomplex *restrict p2,
     }else if(p1 && !p2 && !p3){
 	for(long i=0; i<n; i++) ans+=p1[i];
     }else if(!p1 && !p2 && !p3){
-	ans=(float)n;//assume all ones.
+	ans=(float)n;/*assume all ones. */
     }
     return  ans;
 }
@@ -243,7 +243,7 @@ void adddbl(double *restrict out, double alpha,
    A=B(p) <==> A(pi)=B
 */ 
 long *invperm(long *p, long np){
-    long *restrict pi=malloc(sizeof(long)*np);//inverse of p
+    long *restrict pi=malloc(sizeof(long)*np);/*inverse of p */
     for(long irow=0; irow<np; irow++){
 	pi[p[irow]]=irow;
     }
@@ -391,7 +391,7 @@ long nextpow2(long n){
     }
     return n+1;
 }
-unsigned long mylog2(unsigned long n){//find m so that pow(2,m)==n.
+unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
     assert((n & (n-1))==0);
     unsigned long m=-1;
     for(;n;n>>=1){

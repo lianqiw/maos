@@ -124,7 +124,7 @@ static void create_entry(PROC_T *p){
     gtk_box_pack_start(GTK_BOX(p->vbox),gtk_hseparator_new(),FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(pages[p->hid]),p->vbox,FALSE,FALSE,0);
     
-    //gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),p->hid);
+    /*gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),p->hid); */
     gtk_widget_show_all(p->vbox);
 }
 static void update_prog(PROC_T *p){
@@ -135,7 +135,7 @@ static void update_prog(PROC_T *p){
 	}
     
 	const double tkmean=p->status.scale;
-	const long tot=p->status.rest+p->status.laps;//show total time.
+	const long tot=p->status.rest+p->status.laps;/*show total time. */
 	const long toth=tot/3600;
 	const long totm=(tot-toth*3600)/60;
 	const long rest=p->status.rest;
@@ -165,13 +165,13 @@ static void update_prog(PROC_T *p){
     }
 }
 void remove_entry(PROC_T *iproc){
-    //Delete widget;
+    /*Delete widget; */
     if(iproc->vbox){
-	//warning3("destroy hbox\n");
+	/*warning3("destroy hbox\n"); */
 	gtk_widget_destroy(iproc->vbox);
 	iproc->vbox=NULL;
     }else{
-	//warning("hbox is empty\n");
+	/*warning("hbox is empty\n"); */
     }
 }
 void refresh(PROC_T *p){
@@ -185,30 +185,30 @@ void refresh(PROC_T *p){
     case S_RUNNING:
 	break;
     case S_WAIT:
-	//waiting to start
+	/*waiting to start */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting to start");
 	break;
     case S_START:
-	//just started.
+	/*just started. */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Started");
 	notify_user(p);
 	break;
-    case S_FINISH://Finished
+    case S_FINISH:/*Finished */
 	p->done=1;
 	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
-	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);//progress bar color.(filled bkgrnd)
-	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&green);//progress bar color.(empty bkgrnd)
+	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);/*progress bar color.(filled bkgrnd) */
+	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&green);/*progress bar color.(empty bkgrnd) */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Skipped");
 	notify_user(p);
 	break;
-    case S_CRASH://Error
+    case S_CRASH:/*Error */
 	p->done=1;
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Error");
 	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);
 	notify_user(p);
 	break;
-    case S_TOKILL://kill command sent
+    case S_TOKILL:/*kill command sent */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Kill command sent");
 	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&yellow);

@@ -30,7 +30,7 @@
    \file maos/sim_utils.c
    Contains a few support functions for simulation.
 */
-//static double opdzlim[2]={-3e-5,3e-5};
+/*static double opdzlim[2]={-3e-5,3e-5}; */
 static double *opdzlim=NULL;
 
 static map_t **genscreen_do(SIM_T *simu){
@@ -42,7 +42,7 @@ static map_t **genscreen_do(SIM_T *simu){
     if(parms->dbg.atm == 0 || parms->dbg.atm == -1){
 	GENSCREEN_T *gs=simu->genscreen;
 	if(!gs){
-	    simu->genscreen=calloc(1, sizeof(GENSCREEN_T));//the data for generating screens.
+	    simu->genscreen=calloc(1, sizeof(GENSCREEN_T));/*the data for generating screens. */
 	    gs=simu->genscreen;
 	    gs->rstat  = simu->atm_rand;
 	    gs->wt     = atm->wt;
@@ -104,9 +104,9 @@ static map_t **genscreen_do(SIM_T *simu){
 		for(int ix=0; ix<nx; ix++){
 		    double x=(ix-nx/2)*dx;
 		    double xx=x*x;
-		    //double xy=x*y;
-		    //p0[ix]=(iy-nx/2)*dx*strength;
-		    //p0[ix]=(x*0.2+y*0.1+xx*0.3-yy*0.7+xy*0.3)*strength;
+		    /*double xy=x*y; */
+		    /*p0[ix]=(iy-nx/2)*dx*strength; */
+		    /*p0[ix]=(x*0.2+y*0.1+xx*0.3-yy*0.7+xy*0.3)*strength; */
 		    p0[ix]=(xx+yy)*strength;
 		    p1[ix]=scale*(p0[ix]);
 		}
@@ -122,7 +122,7 @@ static map_t **genscreen_do(SIM_T *simu){
 	double angle=simu->winddir->p[i];
 	screens[i]->vx=cos(angle)*atm->ws[i];
 	screens[i]->vy=sin(angle)*atm->ws[i];
-	//misregistration
+	/*misregistration */
 	screens[i]->ox+=parms->aper.misreg[0];
 	screens[i]->oy+=parms->aper.misreg[1];
     }
@@ -138,21 +138,21 @@ static void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy){
     const long ny=atm1->ny;
     int ca=0;
     if(atm1->vx>EPS){
-	ca=-1;//reverse sign of vx
+	ca=-1;/*reverse sign of vx */
     }else if(atm1->vx<-EPS){
 	ca=1;
     }
     int sa=0;
     if(atm1->vy>EPS){
-	sa=-1;//reverse sign of vy
+	sa=-1;/*reverse sign of vy */
     }else if(atm1->vy<-EPS){
 	sa=1;
     }
     long rr;
     long offx=nx-overx;
     long offy=(ny-overy)*nx;
-    if(ca==0){//along y.
-	rr=ny-overy;//distance between the origins.
+    if(ca==0){/*along y. */
+	rr=ny-overy;/*distance between the origins. */
 	atm2->oy=atm1->oy + rr*sa*atm1->dx;
 	atm2->ox=atm1->ox;
 	double wty=sa<0?1:0;
@@ -169,7 +169,7 @@ static void blend_screen_side(map_t *atm1, map_t *atm2, long overx, long overy){
 	    }
 	}
     }else if(sa==0){
-	rr=nx-overx;//distance between the origins.
+	rr=nx-overx;/*distance between the origins. */
 	atm2->ox=atm1->ox + rr*ca*atm1->dx;
 	atm2->oy=atm1->oy;
 	double wtx=ca<0?1:0;
@@ -201,7 +201,7 @@ static void map_crop(map_t *atm, long overx, long overy){
     long ny=atm->ny;
     long nxnew, nynew;
     double ox, oy;
-    if(fabs(atm->vx)<EPS){//along y
+    if(fabs(atm->vx)<EPS){/*along y */
 	atm->vx=0;
 	nxnew=overx;
 	nynew=atm->ny;
@@ -248,7 +248,7 @@ void genscreen(SIM_T *simu){
 	warning("sim.noatm flag is on. will not generate atmoshere\n");
 	return;
     }
-    info2("Wind dir:");//initialize wind direction one time only for each seed in frozen flow mode.
+    info2("Wind dir:");/*initialize wind direction one time only for each seed in frozen flow mode. */
     simu->winddir=dnew(atm->nps,1);
     int wdnz=0;
     for(int i=0; i<atm->nps; i++){
@@ -302,7 +302,7 @@ void genscreen(SIM_T *simu){
 	    long overy=parms->atm.overy[ips];
 	    map_crop(simu->atm[ips], overx, overy);
 	    map_crop(simu->atm2[ips], overx, overy);
-	    //blend with the new screen.
+	    /*blend with the new screen. */
 	    blend_screen_side(simu->atm[ips], simu->atm2[ips],
 			      parms->atm.overx[ips],
 			      parms->atm.overy[ips]);
@@ -352,10 +352,10 @@ void evolve_screen(SIM_T *simu){
     const double dt=parms->sim.dt;
     const int nps=parms->atm.nps;
     for(int ips=0; ips<nps; ips++){
-	//center of beam
+	/*center of beam */
 	double dx=simu->atm[ips]->dx;
 	int do_evolve=0;
-	if(fabs(simu->atm[ips]->vx)<EPS){//along y
+	if(fabs(simu->atm[ips]->vx)<EPS){/*along y */
 	    long ny=simu->atm[ips]->ny;
 	    long ry=(parms->atm.overy[ips]>>1);
 	    double ay=-simu->atm[ips]->vy*isim*dt;
@@ -368,7 +368,7 @@ void evolve_screen(SIM_T *simu){
 		    do_evolve=1;
 		}
 	    }
-	}else{//along x.
+	}else{/*along x. */
 	    long nx=simu->atm[ips]->nx;
 	    long rx=parms->atm.overx[ips]>>1;
 	    double ax=-simu->atm[ips]->vx*isim*dt;
@@ -383,7 +383,7 @@ void evolve_screen(SIM_T *simu){
 	    }
 	}
 	if(do_evolve){
-	    //need to evolve screen.
+	    /*need to evolve screen. */
 	    long overx=parms->atm.overx[ips];
 	    long overy=parms->atm.overy[ips];
 	    info("Evolving screen %d\n", ips);
@@ -431,7 +431,7 @@ void evolve_screen(SIM_T *simu){
 void atm2xloc(dcell **opdx, const SIM_T *simu){
     const RECON_T *recon=simu->recon;
     const PARMS_T *parms=simu->parms;
-    //in close loop mode, opdr is from last time step.
+    /*in close loop mode, opdr is from last time step. */
     int isim=parms->sim.closeloop?simu->isim-1:simu->isim;
     if(!*opdx){
 	*opdx=dcellnew(recon->npsr,1);
@@ -466,7 +466,7 @@ void sim_update_etf(SIM_T *simu){
     POWFS_T *powfs=simu->powfs;
     if(isim>0){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    // Update ETF if necessary.
+	    /* Update ETF if necessary. */
 	    if((parms->powfs[ipowfs].usephy
 		||parms->powfs[ipowfs].psfout
 		||parms->powfs[ipowfs].pistatout) 
@@ -493,7 +493,7 @@ void seeding(SIM_T *simu){
     simu->telws_rand=calloc(1, sizeof(rand_t));
     seed_rand(simu->init,simu->seed);
     seed_rand(simu->atm_rand,   lrand(simu->init));
-    //2011-02-02: changed to wdrand-1 so that when wdrand=1, we reproduce old directions.
+    /*2011-02-02: changed to wdrand-1 so that when wdrand=1, we reproduce old directions. */
     seed_rand(simu->atmwd_rand, lrand(simu->init)+(simu->parms->atm.wdrand-1));
     const PARMS_T *parms=simu->parms;
     simu->wfs_rand=calloc(parms->nwfs, sizeof(rand_t));
@@ -544,13 +544,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     save->ztiltout=calloc(parms->nwfs,sizeof(cellarr*));
     simu->pistatout=calloc(parms->nwfs,sizeof(dcell*));
     simu->sanea_sim=calloc(parms->nwfs, sizeof(dcell*));
-    simu->gradcl=dcellnew(parms->nwfs,1);//output
+    simu->gradcl=dcellnew(parms->nwfs,1);/*output */
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
       loop. They are used for testing*/
     if(parms->sim.closeloop){
 	simu->gradlastol=dcellnew(parms->nwfsr, 1);
     }
-    simu->gradacc=dcellnew(parms->nwfs,1);//wfsgrad internal
+    simu->gradacc=dcellnew(parms->nwfs,1);/*wfsgrad internal */
     simu->nthread=parms->sim.nthread;
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
@@ -580,7 +580,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
   
-    {//Setup hysterisis
+    {/*Setup hysterisis */
 	int anyhyst=0;
 	simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -604,7 +604,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    free(simu->hyst); simu->hyst=NULL;
 	}
     }
-    //we initialize dmreal, so that wfs_prop_dm can reference dmreal.
+    /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
     simu->dmcmd=dcellnew(parms->ndm,1);
     simu->dmreal=dcellnew(parms->ndm,1);
     simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
@@ -774,7 +774,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 							    parms->evl.thetay[ievl]*206265, strht);
 		}
 	    }
-	}//for ievl
+	}/*for ievl */
 	
 	if(parms->evl.psfmean && parms->evl.psfol){
 	    simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
@@ -784,7 +784,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
   
     if(parms->evl.psfmean || parms->evl.psfhist){
-	//compute diffraction limited PSF.
+	/*compute diffraction limited PSF. */
 	dmat *iopdevl=dnew(aper->locs->nloc,1);
 	ccell *psf2s=psfcomp(iopdevl, aper->amp->p, aper->embed, aper->nembed,
 			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
@@ -797,7 +797,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dcellwrite(evlpsfdl, "evlpsfdl_%d.bin",seed);
 	dcellfree(evlpsfdl);
     }
-    simu->has_upt=0;//flag for uplink tip/tilt control
+    simu->has_upt=0;/*flag for uplink tip/tilt control */
     if(parms->sim.epfocus>1.e-15){
 	if(parms->sim.lpfocus<1.e-15){
 	    error("When epfocus is nonzero, lpfocus need to be zero\n");
@@ -809,10 +809,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].llt){
-	    //has LGS pointing loop.
+	    /*has LGS pointing loop. */
 	    simu->has_upt=1;
 	    if(parms->powfs[ipowfs].trs && !recon->PTT) 
-		//needed to form upterr from LGS gradients.
+		/*needed to form upterr from LGS gradients. */
 		error("PTT is not specified for an LGS!");
 	    if(!simu->upterr){
 		simu->upterr=dcellnew(parms->nwfs,1);
@@ -891,10 +891,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->scale=1.-ht/hs;
 	    data->alpha=1;
 	    data->wrap=1;
-	    data->mapin=(void*)1;//need to update this in genscreen.
-	    data->phiout=(void*)1;//replace later in simulation.
+	    data->mapin=(void*)1;/*need to update this in genscreen. */
+	    data->phiout=(void*)1;/*replace later in simulation. */
 	    int tot=0;
-	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){//misregistration.
+	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){/*misregistration. */
 		data->locout=powfs[ipowfs].locm[ilocm];
 		tot=data->locout->nloc;
 	    }else{
@@ -912,13 +912,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->displacex0=ht*parms->wfs[iwfs].thetax+powfs[ipowfs].misreg[wfsind][0];
 	    data->displacey0=ht*parms->wfs[iwfs].thetay+powfs[ipowfs].misreg[wfsind][1];
 	    data->scale=1.-ht/hs;
-	    data->alpha=-1;//remove dm contribution.
+	    data->alpha=-1;/*remove dm contribution. */
 	    data->wrap=0;
 	    if(simu->cachedm){
 		int isc=parms->powfs[ipowfs].scalegroup[idm];
 		data->mapin=simu->cachedm[idm][isc];
-		data->cubic=0;//already accounted for in cachedm.
-		data->cubic_iac=0;//not needed
+		data->cubic=0;/*already accounted for in cachedm. */
+		data->cubic_iac=0;/*not needed */
 	    }else{
 		if(simu->dmrealsq){
 		    data->mapin=simu->dmrealsq[idm];
@@ -929,8 +929,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
 	    }
-	    data->phiout=(void*)1;//replace later in simulation
-	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){//misregistration.
+	    data->phiout=(void*)1;/*replace later in simulation */
+	    if(powfs[ipowfs].locm && powfs[ipowfs].locm[ilocm]){/*misregistration. */
 		data->locout=powfs[ipowfs].locm[ilocm];
 		tot=data->locout->nloc;
 	    }else{
@@ -940,8 +940,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    prop_index(data);
 	    simu->wfs_prop_dm[iwfs+parms->nwfs*idm]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->wfs_prop_dm[iwfs+parms->nwfs*idm], 0, tot, nthread, prop,data);
-	}//idm
-    }//iwfs
+	}/*idm */
+    }/*iwfs */
     simu->wfs_intsdata=calloc(parms->nwfs, sizeof(WFSINTS_T));
     simu->wfs_ints=calloc(parms->nwfs, sizeof(thread_t*));
 
@@ -973,8 +973,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->scale=1-ht/parms->evl.hs[ievl];
 	    data->alpha=1;
 	    data->wrap=1;
-	    data->mapin=(void*)1;//need to update this in genscreen.
-	    data->phiout=(void*)1;//replace later in simulation.
+	    data->mapin=(void*)1;/*need to update this in genscreen. */
+	    data->phiout=(void*)1;/*replace later in simulation. */
 	    data->ostat=aper->locs->stat;
 	    prop_index(data);
 	    tot=aper->locs->stat->ncol;
@@ -993,8 +993,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    if(simu->cachedm){
 		int isc=parms->evl.scalegroup[idm+ievl*parms->ndm];
 		data->mapin=simu->cachedm[idm][isc];
-		data->cubic=0;//already accounted for in cachedm.
-		data->cubic_iac=0;//not needed
+		data->cubic=0;/*already accounted for in cachedm. */
+		data->cubic_iac=0;/*not needed */
 		data->ostat=aper->locs->stat;
 		tot=aper->locs->stat->ncol;
 	    }else{
@@ -1006,10 +1006,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		}
 		data->cubic=parms->dm[idm].cubic;
 		data->cubic_iac=parms->dm[idm].iac;
-		data->locout=aper->locs;//propagate to locs if no cachedm.
+		data->locout=aper->locs;/*propagate to locs if no cachedm. */
 		tot=aper->locs->nloc;
 	    }
-	    data->phiout=(void*)1;//replace later in simulation.
+	    data->phiout=(void*)1;/*replace later in simulation. */
 	    prop_index(data);
 	    simu->evl_prop_dm[ind]=calloc(nthread, sizeof(thread_t));
 	    thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
@@ -1043,9 +1043,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->dtlo=simu->dtrat_lo*simu->dt;
     simu->dthi=simu->dtrat_hi*simu->dt;
     
-    //evaluation.
+    /*evaluation. */
    
-    {//USE MMAP for data that need to save at every time step
+    {/*USE MMAP for data that need to save at every time step */
 	long nnx[nevl];
 	long nny[nevl];
 	for(int ievl=0; ievl<nevl; ievl++){
@@ -1088,7 +1088,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}
     }
-    {//MMAP the main result file
+    {/*MMAP the main result file */
 	long nnx[4]={nmod,nmod,nmod,nmod};
 	long nny[4]={nsim,nsim,nsim,nsim};
 	nnx[1]=0;
@@ -1102,7 +1102,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->cle     = dref(simu->res->p[2]);
 	simu->clem    = dref(simu->res->p[3]);
     }
-    {//MMAP the LGS uptlink error/command output
+    {/*MMAP the LGS uptlink error/command output */
 	long nnx[parms->nwfs];
 	long nny[parms->nwfs];
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -1125,7 +1125,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	long ncompy=powfs[ipowfs].ncompy;
 	if(parms->powfs[ipowfs].psfout){
 	    const int nsa=powfs[ipowfs].pts->nsa;
-	    //The PSFs here are PSFs of each subaperture.
+	    /*The PSFs here are PSFs of each subaperture. */
 	    simu->wfspsfout[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
 	    for(long ipsf=0; ipsf<simu->wfspsfout[iwfs]->nx*simu->wfspsfout[iwfs]->ny; ipsf++){
 		simu->wfspsfout[iwfs]->p[ipsf]=cnew(ncompx/2,ncompy/2);
@@ -1159,10 +1159,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
     if(parms->sim.psfr){
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
-	    simu->ecov=dcellnew(parms->ndm,parms->ndm);//not really need.
-	}else{//deprecated
+	    simu->ecov=dcellnew(parms->ndm,parms->ndm);/*not really need. */
+	}else{/*deprecated */
 	    simu->ecov=dcellnew(parms->evl.nevl, 1);
-	    if(parms->dbg.ecovxx){//temporary.
+	    if(parms->dbg.ecovxx){/*temporary. */
 		warning("Saving history of ecov_xx\n");
 		save->ecovxx=calloc(nevl, sizeof(cellarr *));
 		char strht[24];
@@ -1468,7 +1468,7 @@ void free_simu(SIM_T *simu){
     free(simu->ints);
     free(simu->wfspsfout);
     free(simu->pistatout);
-    //Close all files
+    /*Close all files */
     
     cellarr_close_n(save->wfspsfout, parms->nwfs);
     cellarr_close_n(save->ztiltout, parms->nwfs);
@@ -1498,7 +1498,7 @@ void free_simu(SIM_T *simu){
  
     dfree(simu->winddir);
     {
-	//release the lock and close the file.
+	/*release the lock and close the file. */
 	close(parms->fdlock[simu->iseed]);
 	char fn[80];
 	char fnnew[80];

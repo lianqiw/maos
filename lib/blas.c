@@ -38,7 +38,7 @@
 #include "fft.h"
 #include "matbin.h"
 #include "loc.h"
-#include "defs.h"//Defines T, X, etc
+#include "defs.h"/*Defines T, X, etc */
 
 /*
   Group operations related to BLAS/LAPACK to this file.
@@ -89,7 +89,7 @@ void X(invspd_inplace)(X(mat) *A){
     if(A->nx!=A->ny) error("Must be a square matrix");
     int info=0, N=A->nx;
     const char uplo='U';
-    // B is identity matrix
+    /* B is identity matrix */
     T *B=calloc(N*N,sizeof(T));
     for(long i=0;i<N;i++)
 	B[i+i*N]=1;
@@ -154,7 +154,7 @@ X(mat)* X(inv)(const X(mat) *A){
 X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
     if(!A) return NULL;
     X(mat) *AtW=NULL;
-    //Compute AtW=A'*W
+    /*Compute AtW=A'*W */
     if(wt){
 	if(Wsp){
 	    error("Both wt and Wsp are supplied. Not supported\n");
@@ -183,20 +183,20 @@ X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp){
 	    AtW=X(trans)(A);
 	}
     }
-    //Compute cc=A'*W*A
+    /*Compute cc=A'*W*A */
     X(mat) *cc=NULL;
     X(mm) (&cc, AtW, A, "nn", 1);
-    //Compute inv of cc
-    //X(invspd_inplace)(cc);
+    /*Compute inv of cc */
+    /*X(invspd_inplace)(cc); */
     if(X(isnan(cc))){
 	X(write)(cc,"cc_isnan");
 	X(write)(A,"A_isnan");
 	X(write)(wt,"wt_isnan");
 	Y(spwrite)(Wsp, "Wsp_isnan");
     }
-    X(svd_pow)(cc,-1,0,1e-14);//invert the matrix using SVD. safe with small eigen values.
+    X(svd_pow)(cc,-1,0,1e-14);/*invert the matrix using SVD. safe with small eigen values. */
     X(mat) *out=NULL;
-    //Compute (A'*W*A)*A'*W
+    /*Compute (A'*W*A)*A'*W */
     X(mm) (&out, cc, AtW, "nn", 1);
     X(free)(AtW);
     X(free)(cc);
@@ -239,7 +239,7 @@ X(mat)* X(chol)(const X(mat) *A){
 	}else{
 	    error("The leading minor of order %d is not posite denifite\n", info);
 	}
-    }else{//Zero out the upper diagonal. For some reason they are not zero.
+    }else{/*Zero out the upper diagonal. For some reason they are not zero. */
 	PDMAT(B, Bp);
 	for(long iy=0; iy<A->ny; iy++){
 	    for(long ix=0; ix<iy; ix++){
@@ -359,19 +359,19 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
     double maxeig;
     if(use_evd){
 	X(evd)(&U, &Sdiag, A);
-	//eigen values below the threshold will not be used. the last is the biggest.
+	/*eigen values below the threshold will not be used. the last is the biggest. */
 	maxeig=fabs(Sdiag->p[Sdiag->nx-1]);
 	VT=X(trans)(U);
     }else{
 	X(svd)(&U, &Sdiag, &VT, A);
-	//eigen values below the threshold will not be used. the first is the biggest.
+	/*eigen values below the threshold will not be used. the first is the biggest. */
 	maxeig=fabs(Sdiag->p[0]);
     }
     thres*=maxeig;
     long skipped=0;
     double mineig=INFINITY;
     for(long i=0; i<Sdiag->nx; i++){
-	if(fabs(Sdiag->p[i])>thres){//only do with 
+	if(fabs(Sdiag->p[i])>thres){/*only do with  */
 	    Sdiag->p[i]=pow(Sdiag->p[i],power);
 	}else{
 	    if(fabs(Sdiag->p[i])<mineig) 

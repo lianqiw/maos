@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     }else{
 	sscanf(fifo2, "drawdaemon_%d.fifo", &ppid);
     }
-    {//record the drawdaemon pid. and redirect output
+    {/*record the drawdaemon pid. and redirect output */
 	char fnpid[PATH_MAX];
 	snprintf(fnpid, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
 	FILE *fp=fopen(fnpid, "w");
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 	    perror("freopen");
 	    warning("Error redirect stderr\n");
 	}
-	setbuf(stdout,NULL);//disable buffering.
+	setbuf(stdout,NULL);/*disable buffering. */
 	setbuf(stderr,NULL);
     }
     create_window();
@@ -83,4 +83,4 @@ int main(int argc, char *argv[])
 	remove(fn);
     }
     remove(fifo);
-}//main
+}/*main */

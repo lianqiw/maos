@@ -47,7 +47,7 @@ void tomofit(SIM_T *simu){
     int isim=simu->reconisim;
     int hi_output=(!parms->sim.closeloop || parms->sim.idealfit || (isim+1)%simu->dtrat_hi==0);
     int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
-    dcell *dmpsol[2];//Hi and Lo
+    dcell *dmpsol[2];/*Hi and Lo */
     /*
       todo: The following need to be revised to use dmpsol, which is averaged over dtrat. 
     */
@@ -55,7 +55,7 @@ void tomofit(SIM_T *simu){
 	dmpsol[0]=dmpsol[1]=simu->dmint[parms->dbg.psol?0:1];
     }else{
 	dmpsol[0]=simu->dmint_hi[parms->dbg.psol?0:1];
-	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];//This can not be simu->dmpsol[lopowfs].
+	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];/*This can not be simu->dmpsol[lopowfs]. */
     }
     if(hi_output){
 	if(parms->sim.idealfit){
@@ -63,12 +63,12 @@ void tomofit(SIM_T *simu){
 	}else if(parms->sim.idealtomo){
 	    atm2xloc(&simu->opdr, simu);
 	}else{
-	    //do tomography.
+	    /*do tomography. */
 	    int maxit=parms->tomo.maxit;
 	    if(parms->dbg.ntomo_maxit){
 		if(isim<parms->dbg.ntomo_maxit){
 		    maxit=parms->dbg.tomo_maxit[isim];
-		    recon->RL.maxit=maxit;//update maxit information
+		    recon->RL.maxit=maxit;/*update maxit information */
 		    info2("Running tomo.maxit=%d\n",maxit);
 		}else{
 		    error("Out of range\n");
@@ -93,7 +93,7 @@ void tomofit(SIM_T *simu){
 #endif
 		muv_solve(&simu->dmfit_hi, &recon->FL, &recon->FR, simu->opdr);
 	}
-	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);//keep dmfit_hi for warm restart
+	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);/*keep dmfit_hi for warm restart */
     
 	/*
 	  Form error signal. Make sure what is subtracted here is what is added
@@ -102,14 +102,14 @@ void tomofit(SIM_T *simu){
 	if(parms->tomo.psol){
 	    dcelladd(&simu->dmerr_hi, 1, dmpsol[0], -1);
 	}
-	if(!parms->sim.idealfit && parms->recon.split==1){//ahst
+	if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
 	if(parms->tomo.ahst_rtt && parms->recon.split){
 	    remove_dm_tt(simu, simu->dmerr_hi);
 	}
 
-    }else{//if high order WFS has output
+    }else{/*if high order WFS has output */
 	dcellfree(simu->dmerr_hi);
     }
 
@@ -117,22 +117,22 @@ void tomofit(SIM_T *simu){
 	if(parms->recon.split==2){
 	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
 	}
-	//Low order has output
+	/*Low order has output */
 	if(lo_output){
 	    dcellzero(simu->Merr_lo);
 	    switch(parms->recon.split){
 	    case 1:{
 		NGSMOD_T *ngsmod=recon->ngsmod;
-		if(!parms->tomo.ahst_idealngs){//Low order NGS recon.
+		if(!parms->tomo.ahst_idealngs){/*Low order NGS recon. */
 		    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
-		}//else: there is ideal NGS correction done in perfevl.
+		}/*else: there is ideal NGS correction done in perfevl. */
 	    }
 		break;
 	    case 2:{
 		dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
 		dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
 		if(parms->tomo.psol) dcelladd(&simu->Merr_lo, 1., dmpsol[1], -1);
-		dcellzero(simu->opdrmvst);//reset accumulation.
+		dcellzero(simu->opdrmvst);/*reset accumulation. */
 	    }
 		break;
 	    default:
@@ -141,7 +141,7 @@ void tomofit(SIM_T *simu){
 	    if(parms->sim.psfr)
 		dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
 	}else{
-	    dcellfree(simu->Merr_lo);//don't have output.
+	    dcellfree(simu->Merr_lo);/*don't have output. */
 	}
     }
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
@@ -150,7 +150,7 @@ void tomofit(SIM_T *simu){
 	  space. The residuals estimated here have to be in DM space only. Do
 	  not use opdr which covers more than DM space.
 	*/
-	if(!simu->opdr || !parms->dbg.useopdr || !parms->tomo.psol){//opdr is not available. in sim.idealfit=1 mode.
+	if(!simu->opdr || !parms->dbg.useopdr || !parms->tomo.psol){/*opdr is not available. in sim.idealfit=1 mode. */
 	    psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);
 	}else{
 	    psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
@@ -169,21 +169,21 @@ void lsr(SIM_T *simu){
    
     if(hi_output){
 	muv_solve(&simu->dmerr_hi,&(recon->LL), &(recon->LR), simu->gradlastcl);
-	if(parms->recon.split==1){//ahst
+	if(parms->recon.split==1){/*ahst */
 	    remove_dm_ngsmod(simu, simu->dmerr_hi);
 	}
-    }else{//if high order does not has output
+    }else{/*if high order does not has output */
 	dcellfree(simu->dmerr_hi);
     }
-    if(parms->recon.split){ //Split reconstruction.
-	if(lo_output){//Low order has output
+    if(parms->recon.split){ /*Split reconstruction. */
+	if(lo_output){/*Low order has output */
 	    dcellzero(simu->Merr_lo);
 	    NGSMOD_T *ngsmod=recon->ngsmod;
 	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
 	    if(parms->sim.psfr)
 		dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
 	}else{
-	    dcellfree(simu->Merr_lo);//don't have output.
+	    dcellfree(simu->Merr_lo);/*don't have output. */
 	}
     } 
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
@@ -206,7 +206,7 @@ static void calc_gradol(SIM_T *simu){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].psol) continue;
 	dcelladd(&simu->dmpsol[ipowfs], 1, dmpsol, 1./parms->powfs[ipowfs].dtrat);
-	if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){//Has output.
+	if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
 	    int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
 	    for(int indwfs=0; indwfs<nindwfs; indwfs++){
 		int iwfs=parms->recon.glao?ipowfs:parms->powfs[ipowfs].wfs[indwfs];
@@ -215,7 +215,7 @@ static void calc_gradol(SIM_T *simu){
 		    spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], simu->dmpsol[ipowfs]->p[idm], 1);
 		}
 	    }
-	    dcellzero(simu->dmpsol[ipowfs]);//reset accumulation.
+	    dcellzero(simu->dmpsol[ipowfs]);/*reset accumulation. */
 	}
     }
 }
@@ -233,15 +233,15 @@ void reconstruct(SIM_T *simu){
 	    }else if(!simu->gradlastol){
 		simu->gradlastol=dcellref(simu->gradlastcl);
 	    }
-	    save_gradol(simu);//must be here since gradol is only calculated in this file.
+	    save_gradol(simu);/*must be here since gradol is only calculated in this file. */
 	}
 	if(parms->cn2.pair){
 	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
-	}//if cn2est
+	}/*if cn2est */
 	double tk_start=myclockd();
 	switch(parms->recon.alg){
 	case 0:
-	    tomofit(simu);//tomography and fitting.
+	    tomofit(simu);/*tomography and fitting. */
 	    break;
 	case 1:
 	case 2:
@@ -255,6 +255,6 @@ void reconstruct(SIM_T *simu){
 	if(parms->sim.mffocus){
 	    focus_tracking(simu);
 	}
-	save_recon(simu);//Moved to inside.
+	save_recon(simu);/*Moved to inside. */
     }
 }

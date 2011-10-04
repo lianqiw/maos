@@ -47,36 +47,6 @@
 #include "misc.h"
 #include "common.h"
 #include "defs.h"
-/*
-#ifndef USE_COMPLEX
-#define X(A) d##A
-#define Z(A) d##A##_
-#define ZI(A) mkl_d##A
-#define Y(A) A
-#define T double
-#define M_TT M_DSP
-#define REAL(A) (A)
-#define ABS(A) fabs(A)
-#define RANDU(A) randu(A)
-#define RANDN(A) randn(A)
-#define PRINT(A) printf("%10.3e",A);
-#define CONJ(x) (x)
-#define dot_do dotdbl
-#else
-#define X(A) c##A
-#define Z(A) z##A##_ //blas/lapack convention
-#define ZI(A) mkl_z##A
-#define Y(A) c##A
-#define T dcomplex
-#define M_TT M_CSP
-#define REAL(A) creal(A)
-#define ABS(A) cabs(A)
-#define RANDU(A) (randu(A)+I*randu(A))
-#define RANDN(A) (randn(A)+I*randn(A))
-#define PRINT(A) printf("(%10.3e %10.3eI)",creal(A),cimag(A));
-#define CONJ(x) conj(x)
-#define dot_do dotcmp
-#endif*/
 #include "suitesparse.c"
 
 TIC;
@@ -185,10 +155,10 @@ X(sp)* Y(spnewrandu)(int nx, int ny, const T mean,
 		px[count]=RANDU(rstat)*mean;
 		count++;
 		if(count>nz1){
-		    //check out of bound;
+		    /*check out of bound; */
 		    nz1=nz1*2; if(nz1>nzmax) nz1=nzmax;
 		    Y(spsetnzmax)(A,nz1);
-		    //the pointers may change
+		    /*the pointers may change */
 		    pp=A->p;
 		    pi=A->i;
 		    px=A->x;
@@ -369,8 +339,8 @@ X(mat) *Y(spdiag)(const X(sp) *A){
    W_ii=w_i; W_ij=0 if i!=j
    A=A*W*alpha; 
    W is a diagonal X(sp) matrix. diag(W) is w
-   //multiply w[i] to all numbers in column[i]
-   */
+   multiply w[i] to all numbers in column[i] 
+*/
 void Y(spmuldiag)(X(sp) *restrict A, const T* w, T alpha){
     if(A && w){
 	for(long icol=0; icol<A->n; icol++){
@@ -479,7 +449,7 @@ static void Y(sptmulvec_thread_do)(thread_t *info){
     const long icol_min=info->start;
     const long icol_max=info->end;
     toc2("step 2: %ld to %ld", icol_min, icol_max);
-    //It takes 0.0079 s to long the latest threads with thread_pool!!! too bad.
+    /*It takes 0.0079 s to long the latest threads with thread_pool!!! too bad. */
     sp_thread_t *data=info->data;
     const X(sp) *A = data->A;
     const T *restrict x = data->x;
@@ -522,7 +492,7 @@ void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A,
 void Y(sptmulvec)(T *restrict y, const X(sp) *A, 
 		  const T * restrict x,const T alpha){
     if(A && x){
-	//y=y+alpha*A'*x;
+	/*y=y+alpha*A'*x; */
 	assert(y);
 	long icol, ix;
 	if(ABS(alpha-1.)<EPS){
@@ -545,7 +515,7 @@ void Y(sptmulvec)(T *restrict y, const X(sp) *A,
 void Y(spmulcreal)(T *restrict y, const X(sp) *A, 
 		   const dcomplex * restrict x, 
 		   T alpha){
-    //y=y+alpha*A*creal(x);
+    /*y=y+alpha*A*creal(x); */
     if(A && x){
 	long icol, ix;
 	if(ABS(alpha-1.)<EPS){
@@ -569,7 +539,7 @@ void Y(spmulcreal)(T *restrict y, const X(sp) *A,
 void Y(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, 
 		 const T alpha){
     if(A&&x){
-	// y=y+alpha*A*x;
+	/* y=y+alpha*A*x; */
 	long icol, ix;
 	if(!*yout){
 	    *yout=X(new)(A->m, x->ny); 
@@ -644,8 +614,8 @@ void Y(sptmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha)
 /**
  * Multiply two matrices with weighting by sparse matrix.  return y'*(A*x)*/
 T Y(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x){
-    //X(sp) weighted ddot.
-    //computes y'*(A*x). x,y are vectors
+    /*X(sp) weighted ddot. */
+    /*computes y'*(A*x). x,y are vectors */
     T res=0;
     if(x && y){
 	if(A){
@@ -664,12 +634,12 @@ T Y(spwdinn)(const X(mat) *y, const X(sp) *A, const X(mat) *x){
 /**
  * Multiply two cell arrays with weighting by sparse matrix*/
 T Y(spcellwdinn)(const X(cell) *y, const Y(spcell) *A, const X(cell) *x){
-    //computes y'*(A*x)
+    /*computes y'*(A*x) */
     T res=0;
     if(x && y){
 	if(A){
 	    assert(x->ny==1 && y->ny==1 && A->nx==y->nx && A->ny==x->nx);
-	    //PSPCELL(A,Ap);
+	    /*PSPCELL(A,Ap); */
 	    X(sp) *(*Ap)[A->nx]=(X(sp) *(*)[A->nx])A->p;
 	    for(int iy=0; iy<A->ny; iy++){
 		for(int ix=0; ix<A->nx; ix++){
@@ -760,7 +730,7 @@ static void Y(spcellmulmat_thread_do)(thread_t *info){
 static void Y(spcellmulmat_thread2)(X(cell) **C0, const Y(spcell)*A, 
 				    const X(cell)*B, const T alpha, 
 				    const int trans){
-    //C=C+A*B*alpha
+    /*C=C+A*B*alpha */
     if(!A || !B) return;
     int nx,ny,nz;
     if(trans){
@@ -946,7 +916,7 @@ X(sp) *Y(spadd2)(X(sp) *A,X(sp)*B,T a,T b){
 /**
  * Add a sparse matrix to another: A0=A0+B*/
 void Y(spadd)(X(sp) **A0, const X(sp) *B){
-    //add B to A.
+    /*add B to A. */
     if(B){
 	if(!*A0) 
 	    *A0=Y(spdup)(B);
@@ -957,8 +927,8 @@ void Y(spadd)(X(sp) **A0, const X(sp) *B){
 	    }
 	    X(sp) *res=Y(cs_add)(*A0,B,1.,1.);
 	    Y(cs_dropzeros)(res);
-	    //move the data over.
-	    Y(spmove)(*A0,res);//move the data from res to A.
+	    /*move the data over. */
+	    Y(spmove)(*A0,res);/*move the data from res to A. */
 	}
     }
 }
@@ -1003,7 +973,7 @@ X(sp) *Y(sptrans)(const X(sp) *A){
 /**
  * Multiply two sparse arrays: return A*B*/
 X(sp) *Y(spmulsp)(const X(sp) *A, const X(sp) *B){		
-    //return C=(A*B)
+    /*return C=(A*B) */
     if(!A || !B) return NULL;
     X(sp) *C=Y(cs_multiply)(A, B);
     Y(cs_dropzeros)(C);
@@ -1012,8 +982,8 @@ X(sp) *Y(spmulsp)(const X(sp) *A, const X(sp) *B){
 /**
  * Multiply the transpose of a sparse with another: return A'*B*/
 X(sp) *Y(sptmulsp)(const X(sp) *A, const X(sp) *B){
-    //return A'*B;
-    //fixme : may need to improve this so that tranpose of A is not necessary.
+    /*return A'*B; */
+    /*fixme : may need to improve this so that tranpose of A is not necessary. */
     X(sp) *At=Y(sptrans)(A);
     X(sp) *C=Y(spmulsp)(At, B);
     Y(spfree)(At);
@@ -1024,7 +994,7 @@ X(sp) *Y(sptmulsp)(const X(sp) *A, const X(sp) *B){
  * Multiply two sparse arrays and add to the third: C0=C0+A*B*scale*/
 void Y(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B, 
 		 const T scale){
-    //return C=C+ alpha*(A*B)
+    /*return C=C+ alpha*(A*B) */
     if(!A || !B) return;
     X(sp) *res=Y(cs_multiply)(A, B);
     if(ABS(scale-1.)>EPS){
@@ -1043,7 +1013,7 @@ void Y(spmulsp2)(X(sp) **C0, const X(sp) *A, const X(sp) *B,
 Y(spcell) *Y(spcellmulspcell)(const Y(spcell) *A, 
 			      const Y(spcell) *B, 
 			      const T scale){
-    //return C=A*B;
+    /*return C=A*B; */
     if(!A || !B) return NULL;
     if(A->ny!=B->nx) error("mismatch\n");
     Y(spcell) *C=Y(spcellnew)(A->nx, B->ny);
@@ -1135,8 +1105,8 @@ X(sp) *Y(spcat)(const X(sp) *A, const X(sp) *B, int dim){
 /**
  * Concatenate a spcell to sparse array*/
 X(sp) *Y(spcell2sp)(const Y(spcell) *A){
-    //convert Y(spcell) to sparse.
-    if(A->nx*A->ny==1){//There is a single cell
+    /*convert Y(spcell) to sparse. */
+    if(A->nx*A->ny==1){/*There is a single cell */
 	return Y(spref)(A->p[0]);
     }
     PSPCELL(A,Ap);
@@ -1191,8 +1161,8 @@ X(sp) *Y(spcell2sp)(const Y(spcell) *A){
     if(count>nzmax){
 	error("Y(spcell2sp) gets Wrong results. count=%ld, nzmax=%ld\n",count,nzmax);
     }
-    //nzmax maybe smaller than A->p[A->n] 
-    //because nzmax simply show the slots available.
+    /*nzmax maybe smaller than A->p[A->n]  */
+    /*because nzmax simply show the slots available. */
     return out;
 }
 
@@ -1200,11 +1170,11 @@ X(sp) *Y(spcell2sp)(const Y(spcell) *A){
 /**
  * Sum elements of sparse array along dimension dim*/
 X(mat) *Y(spsum)(const X(sp) *A, int dim){
-    //Sum X(sp) matrix along col or row to form a vector
+    /*Sum X(sp) matrix along col or row to form a vector */
     X(mat) *v=NULL;
     T *p;
     switch(dim){
-    case 1://sum along col
+    case 1:/*sum along col */
 	v=X(new)(1,A->n);
 	p=v->p;
 	for(int icol=0; icol<A->n; icol++){
@@ -1213,7 +1183,7 @@ X(mat) *Y(spsum)(const X(sp) *A, int dim){
 	    }
 	}
 	break;
-    case 2://sum along row
+    case 2:/*sum along row */
 	v=X(new)(A->m,1);
 	p=v->p;
 	for(int icol=0; icol<A->n; icol++){
@@ -1233,7 +1203,7 @@ X(mat) *Y(spsumabs)(const X(sp) *A, int col){
     X(mat) *v=NULL;
     T *p;
     switch(col){
-    case 1://sum along col
+    case 1:/*sum along col */
 	v=X(new)(1,A->n);
 	p=v->p;
 	for(int icol=0; icol<A->n; icol++){
@@ -1242,7 +1212,7 @@ X(mat) *Y(spsumabs)(const X(sp) *A, int col){
 	    }
 	}
 	break;
-    case 2://sum along row
+    case 2:/*sum along row */
 	v=X(new)(A->m,1);
 	p=v->p;
 	for(int icol=0; icol<A->n; icol++){
@@ -1265,7 +1235,7 @@ void Y(spclean)(X(sp) *A){
  * Multiply a spcell with vectors*/
 void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac, 
 		     const T * restrict xc, T alpha){
-    //y=y+alpha*A*creal(x); Ac X(sp) cell. xc is vector.
+    /*y=y+alpha*A*creal(x); Ac X(sp) cell. xc is vector. */
     if(Ac && xc){
 	const T *restrict x=xc;
 	for(long icy=0; icy<Ac->ny; icy++){
@@ -1361,7 +1331,7 @@ void Y(spsym)(X(sp) *A){
     Y(spscale)(A,0.5);
     Y(spfree)(B);
     Y(spdroptol)(A,EPS);
-    Y(spsort)(A);//This is important to make chol work.
+    Y(spsort)(A);/*This is important to make chol work. */
 }
 /**
    symmetricize a X(sp) cell and drop values below a
@@ -1382,7 +1352,7 @@ void Y(spcellsym)(Y(spcell) *A){
    A must be very X(sp) with only a view non-zero value otherwise C will be too full.
 */
 X(sp) *Y(spconvolvop)(X(mat) *A){
-    //First collect statistics on A.
+    /*First collect statistics on A. */
     long nini=10;
     T *vals=calloc(nini, sizeof(T));
     long *sepx=calloc(nini, sizeof(spint));
@@ -1505,7 +1475,7 @@ X(sp) *Y(spinvbdiag)(const X(sp) *A, long bs){
     X(mat) *bk=X(new)(bs,bs);
     PMAT(bk,pbk);
     for(long ib=0;ib<nb; ib++){
-	long is=ib*bs;//starting col
+	long is=ib*bs;/*starting col */
 	X(zero)(bk);
 
 	for(long icol=is; icol<is+bs; icol++){
@@ -1543,7 +1513,7 @@ X(cell) *Y(spblockextract)(const X(sp) *A, long bs){
     long nb=A->m/bs;
     X(cell) *out=X(cellnew)(nb,1);
     for(long ib=0;ib<nb; ib++){
-	long is=ib*bs;//starting col
+	long is=ib*bs;/*starting col */
 	out->p[ib]=X(new)(bs,bs);
 	PMAT(out->p[ib],pbk);
 	for(long icol=is; icol<is+bs; icol++){

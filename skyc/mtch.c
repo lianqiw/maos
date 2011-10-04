@@ -33,16 +33,16 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     cfft2plan(otf, 1);
     cfft2plan(otf, -1);
     cfft2plan(otfsave,1);
-    ccpd(&otf, psf);//loaded psf has peak in corner
-    cifft2(otf, 1);//turn to OTF, peak in corner
+    ccpd(&otf, psf);/*loaded psf has peak in corner */
+    cifft2(otf, 1);/*turn to OTF, peak in corner */
     ccwm(otf, dtf->nominal);
     ccp(&otfsave, otf);
-    cfft2(otf, -1);//turn back.
+    cfft2(otf, -1);/*turn back. */
     spmulcreal(i0->p, dtf->si, otf->p, 1);
     ccp(&otf, otfsave);
     PCMAT(otf, potf);
     PCMAT(otfsave, potfsave);
-    //Now derivative
+    /*Now derivative */
     for(int iy=0; iy<otf->ny; iy++){
 	for(int ix=0; ix<otf->nx; ix++){
 	    potf[iy][ix]*=dtf->U->p[ix];
@@ -123,7 +123,7 @@ void mtch(dcell **mtche, dmat **sanea,
     for(long isa=0; isa<nsa; isa++){    
 
 	dzero(i0g);
-	//kp is here to ensure good conditioning
+	/*kp is here to ensure good conditioning */
 	adddbl(pi0g[0], 1, gx->p[isa]->p, npixtot, 1, 0);
 	adddbl(pi0g[1], 1, gy->p[isa]->p, npixtot, 1, 0);
 	adddbl(pi0g[2], 1, i0->p[isa]->p, npixtot, kp, 0);
@@ -140,7 +140,7 @@ void mtch(dcell **mtche, dmat **sanea,
 	dfree(tmp);
 	dcwpow(wt,-1);
 	dmat *nea2=dtmcc((*mtche)->p[isa], wt);
-	//Drop coupling in x/y gradients.
+	/*Drop coupling in x/y gradients. */
 	(*sanea)->p[isa]=sqrt(nea2->p[0]);
 	(*sanea)->p[isa+nsa]=sqrt(nea2->p[3]);
 	dfree(nea2);

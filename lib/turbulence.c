@@ -55,7 +55,7 @@ enum{
  */
 static char *fnatm(GENSCREEN_T *data){
     uint32_t key;
-    key=hashlittle(data->rstat, sizeof(rand_t), 0);//contains seed
+    key=hashlittle(data->rstat, sizeof(rand_t), 0);/*contains seed */
     key=hashlittle(data->wt, sizeof(double)*data->nlayer, key);
     key=hashlittle(&data->dx, sizeof(double), key);
     key=hashlittle(&data->r0, sizeof(double), key);
@@ -76,7 +76,7 @@ static char *fnatm(GENSCREEN_T *data){
     long gavail=(available(dirshm)>>30);
     if(gavail >=0 && gavail<10){
 	warning("There are only %ld G available in %s. Remove all files there.\n", gavail, dirshm);
-	remove_file_older(dirshm, 10);//10 second old. keeps fnshm.
+	remove_file_older(dirshm, 10);/*10 second old. keeps fnshm. */
     }else{
 	remove_file_older(dirshm, 30*24*3600);
     }
@@ -125,8 +125,8 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
     for(int ilayer=0; ilayer<nlayer; ilayer+=2){
 	double tk1=myclockd();
 	for(long i=0; i<nx*ny; i++){
-	    p1[i]=randn(rstat)*spect->p[i];//real
-	    p2[i]=randn(rstat)*spect->p[i];//imag
+	    p1[i]=randn(rstat)*spect->p[i];/*real */
+	    p2[i]=randn(rstat)*spect->p[i];/*imag */
 	}
 	double tk2=myclockd();
 	fft2(fft, -1);
@@ -135,7 +135,7 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	    dscale(dc->p[1], sqrt(wt[ilayer+1]));
 	}
 	double tk3=myclockd();
-	if(fc){//save to file.
+	if(fc){/*save to file. */
 	    cellarr_dmat(fc, dc->p[0]);
 	    if(ilayer+1<nlayer){
 		cellarr_dmat(fc, dc->p[1]);
@@ -169,14 +169,14 @@ static map_t** create_screen(GENSCREEN_T *data,
 			     void (*funmem)(GENSCREEN_T *data)){
     map_t **screen;
     long nlayer=data->nlayer;
-    if(data->share){//shared with file
+    if(data->share){/*shared with file */
 	char *fnshm=fnatm(data);
 	char fnlock[PATH_MAX]; 
 	snprintf(fnlock, PATH_MAX, "%s.lock", fnshm);
 	dcell *in=NULL;
 	while(!in){
 	    if(exist(fnlock)){
-		//when fnlock exists, the data in fnshm is not good.
+		/*when fnlock exists, the data in fnshm is not good. */
 		info2("Will not read since %s exists\n", fnlock);
 	    }else{
 		in=dcellread_mmap(fnshm);
@@ -184,15 +184,15 @@ static map_t** create_screen(GENSCREEN_T *data,
 	    }
 	    if(!in){
 		info2("Creating %s\n", fnshm);
-		int fd=lock_file(fnlock, 0, 0);//non blocking exclusive lock.
-		if(fd>=0){//succeed to lock file.
+		int fd=lock_file(fnlock, 0, 0);/*non blocking exclusive lock. */
+		if(fd>=0){/*succeed to lock file. */
 		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fnshm); 
 		    funsave(fc, data);
 		    cellarr_close(fc);
 		    remove(fnlock);
 		    close(fd);
-		}else{//some other process is working on the data.
-		    //wait for the lock to release. The following lock will block.
+		}else{/*some other process is working on the data. */
+		    /*wait for the lock to release. The following lock will block. */
 		    fd=lock_file(fnlock, 1, 0);
 		    close(fd);
 		    remove(fnlock);
@@ -267,7 +267,7 @@ static void fractal_screen_thread(GENSCREEN_T *data){
     drandn((dmat*)screen[ilayer], 1, rstat);
     UNLOCK(data->mutex_ilayer);
     double r0i=data->r0*pow(wt[ilayer], -3./5.);
-    //info("r0i=%g\n", r0i);
+    /*info("r0i=%g\n", r0i); */
     fractal(screen[ilayer]->p, nx, ny, screen[0]->dx, r0i, data->l0, data->ninit);
     remove_piston(screen[ilayer]->p, nx*ny);
     goto repeat;
@@ -296,17 +296,17 @@ dmat* turbcov(dmat *r, double rmax, double r0, double L0){
     double tg1=tgamma(11./6) * pow(24./5 * tgamma(6./5.), 5./6.)
 	* pow(2 * M_PI/0.5e-6, -2) / pow(M_PI, 8./3.);
     double vkcoeff  = tg1 / pow(2, 5./6.);    
-    double vkcoeff0 = tg1 * tgamma(5./6.) / 2 ;//for variance
+    double vkcoeff0 = tg1 * tgamma(5./6.) / 2 ;/*for variance */
     dmat *cov=dnew(r->nx, r->ny);
     long n=r->nx*r->ny;
-    if(isinf(L0)){//kolmogorov.
+    if(isinf(L0)){/*kolmogorov. */
 	const double power=5./3.;
 	double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
 	double sigma2=0.5*coeff*pow(rmax, power);
 	for(long i=0; i<n; i++){
 	    cov->p[i]=sigma2-0.5*coeff*pow(r->p[i], power);
 	}
-    }else{//von karman.
+    }else{/*von karman. */
 	const double f0=1./L0;
 	const double r0f0p=pow(r0*f0, -5./3.);
 	double ri, rk, rip, rkp;
@@ -352,7 +352,7 @@ dmat *turbpsd_full(long nx,      /**<The size*/
     const int ny2=ny/2;
     dmat *psd=dnew(nx,ny);
     for(int i=0;i<ny;i++){
-	double r2y=pow((i<ny2?i:i-ny)*dfy,2);// to avoid fft shifting.
+	double r2y=pow((i<ny2?i:i-ny)*dfy,2);/* to avoid fft shifting. */
 	double *psd1=psd->p+i*nx;
 	for(int j=0;j<nx2;j++){
 	    double r2x=j*j*dfx2;

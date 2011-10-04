@@ -39,7 +39,7 @@ typedef struct PATH_T{
 
    This file contains function managing the searching path for files, behaves as
    PATH in POSIX systemsx */
-static PATH_T *PATH=NULL;//privately maintained path to locate config files.
+static PATH_T *PATH=NULL;/*privately maintained path to locate config files. */
 
 /**
    Add a directory to path.
@@ -59,8 +59,8 @@ void rmpath(const char *path){
     char *abspath=myabspath(path);
     PATH_T *ia,*ib=NULL;
     for(ia=PATH;ia;ia=ia->next){
-	if(!strcmp(ia->path,abspath)){//found
-	    if(ib){//there is parent node
+	if(!strcmp(ia->path,abspath)){/*found */
+	    if(ib){/*there is parent node */
 		ib->next=ia->next;
 	    }else{
 		PATH=ia->next;
@@ -151,13 +151,13 @@ char *find_config(const char *name){
     }
 
     if(!exist(config_path)){
-	//info("Configuration files not found in %s\n", config_path);
+	/*info("Configuration files not found in %s\n", config_path); */
 	free(config_path);
 	config_path=stradd(cwd,"/config/",name,NULL);
     }
     if(!exist(config_path)){
 	free(config_path);
-	//info("Configuration files not found in %s\n", config_path);
+	/*info("Configuration files not found in %s\n", config_path); */
 	config_path=stradd(HOME,"/.aos/config-",PACKAGE_VERSION,"/",name,NULL);
     }
  

@@ -102,7 +102,7 @@ static void test_clip(){
     dwrite(A,"A1");
     dclip(A,-0.5, 0.5);
     dwrite(A,"A2");
-    //exit(0);
+    /*exit(0); */
 }
 static void test_hist(){
     int N=64;
@@ -115,7 +115,7 @@ static void test_hist(){
 	dhistfill(&B, A, 0, 0.1, 100);
     }
     dwrite(B,"hist");
-    //exit(0);
+    /*exit(0); */
 }
 static void test_dcellpinv(){
     dcell *TT=dcellread("TT.bin.gz");
@@ -127,7 +127,7 @@ static void test_dcellpinv(){
 	PTT2->p[i+i*PTT->nx]=dpinv(TT->p[i+i*TT->nx], NULL,saneai->p[i+i*TT->nx]);
     }
     dcellwrite(PTT2,"TT2_pinv.bin.gz");
-    //exit(0);
+    /*exit(0); */
 }
 static void test_dcellcat(int argc, char**argv){
     if(argc!=2){
@@ -140,8 +140,8 @@ static void test_dcellcat(int argc, char**argv){
     dcellwrite(C,"C");
     exit(0);
 }
-static void test_save(void){//passed
-    //info("page size is %ld\n",sysconf(_SC_PAGE_SIZE));
+static void test_save(void){/*passed */
+    /*info("page size is %ld\n",sysconf(_SC_PAGE_SIZE)); */
     dmat *a=dnew_mmap(20,20,NULL,"a");
     rand_t rstat;
     seed_rand(&rstat,1);

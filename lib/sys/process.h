@@ -38,8 +38,8 @@ extern int NCPU;  /**<True number of cores*/
 extern int NCPU2; /**<Number of hyper threads. may be larger than NCPU*/
 extern int TCK;
 extern long NMEM;
-extern const char *HOME;//the user home
-extern const char *TEMP;//the temporary folder
-extern const char *USER;//the user name
+extern const char *HOME;/*the user home */
+extern const char *TEMP;/*the temporary folder */
+extern const char *USER;/*the user name */
 int get_ncpu(void);
 #endif

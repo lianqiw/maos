@@ -35,13 +35,13 @@
  */
 void Y(spwritedata)(file_t *fp, const X(sp) *sp){
     uint32_t magic=M_SPT;
-    Y(spsort)((X(sp)*)sp);//sort the matrix to have the right order
+    Y(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
     zfwrite(&magic, sizeof(uint32_t),1,fp);
     if(sp && sp->nzmax){
 	uint64_t m,n,nzmax;
 	m=sp->m;
 	n=sp->n;
-	nzmax=sp->p[n];//don't use sp->nzmax, which maybe larger than actual
+	nzmax=sp->p[n];/*don't use sp->nzmax, which maybe larger than actual */
 	zfwritelarr(fp, 3, &m, &n, &nzmax);
 	zfwrite(sp->p, sizeof(spint), n+1, fp);
 	zfwrite(sp->i, sizeof(spint), nzmax, fp);
@@ -92,10 +92,10 @@ X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic){
 */
 void Y(spwrite)(const X(sp) *sp, const char *format,...){
     format2fn;
-    //write the sparse matrix to file to later load from matlab
+    /*write the sparse matrix to file to later load from matlab */
     file_t *fp=zfopen(fn,"wb");
     Y(spwritedata)(fp, sp);
-    //don't worry about the warning of 0x401ee45 in valgrind. That is the IO 
+    /*don't worry about the warning of 0x401ee45 in valgrind. That is the IO  */
     zfclose(fp);
 }
 /**

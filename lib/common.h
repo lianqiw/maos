@@ -24,7 +24,7 @@
 */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h" //not a good idea to include HAVE_CONFIG_H here
+#include "config.h" /*not a good idea to include HAVE_CONFIG_H here */
 #endif
 #include <signal.h>
 #include <stdarg.h>
@@ -47,17 +47,17 @@ typedef double __complex__ dcomplex;
 typedef float  __complex__ fcomplex;
 typedef double ddouble;/*just for saving.*/
 #if defined(DLONG)
-typedef unsigned long spint; //Only optionally activated in AMD64.
+typedef unsigned long spint; /*Only optionally activated in AMD64. */
 #define M_SPINT M_INT64
 #else
-typedef unsigned int spint;  //This is always 32 bit.
+typedef unsigned int spint;  /*This is always 32 bit. */
 #define M_SPINT M_INT32
 #endif
 
 #ifndef __CYGWIN__
 #include <complex.h>
 #else
-//CYGWIN does not have complex.h.
+/*CYGWIN does not have complex.h. */
 #define complex __complex__
 #define _Complex_I (__extension__ 1.0iF)
 #define I _Complex_I
@@ -79,8 +79,8 @@ fcomplex clogf(fcomplex);
 #endif
 #include "sys/mem.h"
 #ifdef __linux__
-#include <linux/limits.h> //includes definition of PATH_MAX
-#endif//__linux__
+#include <linux/limits.h> /*includes definition of PATH_MAX */
+#endif/*__linux__ */
 #ifndef restrict
 #define restrict __restrict
 #endif
@@ -166,12 +166,12 @@ fcomplex clogf(fcomplex);
 #endif
 
 
-//#if USE_MEM == 1
+/*#if USE_MEM == 1 */
 void print_backtrace(int sig);
 #define PRINT_BACKTRACE print_backtrace(0);
-//#else//if USE_MEM
-//#define PRINT_BACKTRACE print_backtrace(0);
-//#endif//if USE_MEM
+/*#else//if USE_MEM */
+/*#define PRINT_BACKTRACE print_backtrace(0); */
+/*#endif//if USE_MEM */
 #include <string.h>
 
 

@@ -72,14 +72,14 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
 	const double scalex=-mag;
 	const double scaley=mag;
 	const double scaleopd=-2;
-	const double het=fexit-fsurf;//distance between exit pupil and M3.
+	const double het=fexit-fsurf;/*distance between exit pupil and M3. */
 	rectmap_t *mapsurf=tsurf[itsurf];
 
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!aper->opdadd->p[ievl]){
 		aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
 	    }
-	    double bx=parms->evl.thetax[ievl]/mag;//2010-04-02: do not put - sign
+	    double bx=parms->evl.thetax[ievl]/mag;/*2010-04-02: do not put - sign */
 	    double by=parms->evl.thetay[ievl]/mag;
 	    double d_img_exit=fexit;
 	    proj_rect_grid(mapsurf,alx,aly,locevl,scalex,scaley,
@@ -114,10 +114,10 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
 	    }
 
 	    double d_img_focus=1./(1./ftel-1./hs)-ftel;
-	    //info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus);
+	    /*info2("iwfs%d: d_img_focus=%g\n",iwfs,d_img_focus); */
 	    double d_img_exit=fexit+d_img_focus;
 		
-	    //2010-04-02: do not put - sign
+	    /*2010-04-02: do not put - sign */
 	    double bx=parms->wfs[iwfs].thetax*(d_img_focus+ftel)/d_img_exit;
 	    double by=parms->wfs[iwfs].thetay*(d_img_focus+ftel)/d_img_exit;
 	    proj_rect_grid(mapsurf,alx,aly,locwfs,scalex,scaley,
@@ -129,7 +129,7 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
 	    }
 	    dwrite(powfs[ipowfs].opdadd->p[wfsind],"surfwfs_%d.bin", iwfs);
 	}
-	//exit(0);
+	/*exit(0); */
 	
     }
     if(do_rot){
@@ -235,7 +235,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->sim.idealfit){
 	    double distmin=INFINITY;
 	    int jpsr=-1;
-	    //Select the layer that is closed to the surface.
+	    /*Select the layer that is closed to the surface. */
 	    for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
 		double dist=fabs(parms->atmr.ht[ipsr]-hl);
 		if(dist < distmin){

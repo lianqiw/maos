@@ -106,7 +106,7 @@ typedef struct INTSTAT_T{
    contains the data associated with a certain type of WFS. not
 necessarily physical optics WFS.x */
 typedef struct POWFS_T{
-    //Parameters about subapertures.
+    /*Parameters about subapertures. */
     loc_t *saloc;       /**<lower left corner of the subaperture*/
     pts_t *pts;         /**<records lower left-most point of each sa in a regular grid.*/
     dmat *saa;          /**<Subaperture area*/
@@ -117,12 +117,12 @@ typedef struct POWFS_T{
     dcell *ampm;        /**<real amplitude map on misregistered grid, locm. used for gradient computing*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     double (*misreg)[2];/**<pure misregistration taken from parms->powfs[ipowfs].misreg*/
-    //NCPA
+    /*NCPA */
     dcell *ncpa;        /**<NCPA OPDs to add to WFS OPD during simulation.*/
     dcell *ncpa_grad;   /**<NCPA grads to subtract from measurement. */
-    //Physical optics
+    /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
-    //LGS Physical Optics
+    /*LGS Physical Optics */
     dmat *sodium;       /**<Loaded and downsampled sodium profile from the file.*/
     ETF_T *etfprep;     /**<ETF for computing short exposure matched filter.*/
     ETF_T *etfsim;      /**<ETF for simulation.*/
@@ -132,11 +132,11 @@ typedef struct POWFS_T{
     dcell *srot;        /**<subaperture rotation wrt LLT*/
     dcell *srsa;        /**<subaperture distance wrt LLT*/
     dmat *srsamax;      /**<max of srsa for each llt.*/
-    //Geometric gradient
+    /*Geometric gradient */
     spcell *GS0;        /**<gtilt (average gradient) on ampm*/
     dcell *neasim;      /**<NEA in radian, at dtrat, to be used in simulation
 			   for geometric wfs model.*/
-    //Matched filter
+    /*Matched filter */
     dcell *sprint;      /**<which subapertures to print sanea*/
     INTSTAT_T *intstat; /**<matched filter i0 and its derivative.*/
     dmat *dtheta;       /**<sampling of the imaging fft grid. wvl/(embfac*dxsa);*/
@@ -152,7 +152,7 @@ typedef struct POWFS_T{
     int nlocm;          /**<number of misregistered loc. 1 or nwfs of this powfs.*/
     int nsaimcc;         /**<number of saimcc*/
     int nthread;        /**<Equal to MAX(nsa,sim.nthread)*/
-    //The following are a few convenient pointers.
+    /*The following are a few convenient pointers. */
     double **realamp;   /**<The real (after misregisteration/distortion) amplitude map*/
     double **realsaa;   /**<The real (after misregisteration/distortion) subaperture area*/
     dmat *sumamp;       /**<sum of realamp*/
@@ -320,7 +320,7 @@ typedef struct RECON_T{
     MUV_T LR;          /**<least square reconstructor rhs*/
     MUV_T LL;          /**<least square reconstructor lhs. solve LL*x=LR*y*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
-    //For focus tracking.
+    /*For focus tracking. */
     dcell *RFlgs;      /**<focus reconstruction from each LGS grad*/
     dcell *RFngs;      /**<focus reconstruction from NGS grad.*/
     dcell *RFtomo;     /**<focus recon from reconstructed X.*/
@@ -347,7 +347,7 @@ typedef struct SIM_SAVE_T{
     /*cellarrs to save telemetry data.*/
     cellarr** wfspsfout; /**<special file to save wfs psf history*/
     cellarr** ztiltout;  /**<special file to save zernike wfs tilt history*/
-    //Evaluation directions PSF.
+    /*Evaluation directions PSF. */
     cellarr*  evlpsfolmean;  /**<science field psf OL time average*/
     cellarr** evlpsfmean;    /**<science field psf CL time average*/
     cellarr** evlpsfhist;    /**<to save time history of science field psf*/
@@ -356,25 +356,25 @@ typedef struct SIM_SAVE_T{
     cellarr** evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
     cellarr** evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
     cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
-    //Deformable mirror.
+    /*Deformable mirror. */
     cellarr *dmerr_hi;
     cellarr *dmfit_hi;
     cellarr *dmpttr;
     cellarr *dmreal;
     cellarr *dmcmd;
     cellarr *dmproj;
-    //Low order modes
+    /*Low order modes */
     cellarr *Merr_lo;
     cellarr *opdr;
     cellarr *opdx;
-    //science
+    /*science */
     cellarr **evlopdcl;
     cellarr **evlopdol;
 
     cellarr **wfsopd;
     cellarr **wfsopdol;
     cellarr **wfslltopd;
-    //gradients
+    /*gradients */
     cellarr **gradcl;
     cellarr **gradgeom;
     cellarr **gradnf;
@@ -383,7 +383,7 @@ typedef struct SIM_SAVE_T{
     cellarr **intsnf;
     cellarr **moao_evl;
     cellarr **moao_wfs;
-    //covariances
+    /*covariances */
 }SIM_SAVE_T;
 /*
   data wrap for wfsints.

@@ -45,15 +45,15 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
     dcell *invpsd=extra->invpsd;
     ccell *fftxopd=extra->fftxopd;
     int ips1, ips2;
-    if(xb<0){//do all cells
+    if(xb<0){/*do all cells */
 	ips1=0; 
 	ips2=xin->nx*xin->ny;
-    }else{//do the specified cell
+    }else{/*do the specified cell */
 	ips1=xb;
 	ips2=xb+1;
     }
     for(int ips=ips1; ips<ips2; ips++){
-	//for(int ips=0; ips<xin->nx*xin->ny; ips++){
+	/*for(int ips=0; ips<xin->nx*xin->ny; ips++){ */
 	long nx=fftxopd->p[ips]->nx;
 	long ny=fftxopd->p[ips]->ny;
 	if(extra->square){
@@ -87,15 +87,15 @@ void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, 
     if(xb!=yb) return;
     const FRACTAL_T *extra=A;
     int ips1, ips2;
-    if(xb<0){//do all cells
+    if(xb<0){/*do all cells */
 	ips1=0; 
 	ips2=xin->nx*xin->ny;
-    }else{//do the specified cell
+    }else{/*do the specified cell */
 	ips1=xb;
 	ips2=xb+1;
     }
     for(int ips=ips1; ips<ips2; ips++){
-	//for(int ips=0; ips<xin->nx*xin->ny; ips++){
+	/*for(int ips=0; ips<xin->nx*xin->ny; ips++){ */
 	dzero(extra->xopd->p[ips]);
 	double r0i=extra->r0*pow(extra->wt[ips], -3./5.);
 	dembed_locstat(&extra->xopd->p[ips], 0, extra->xloc[ips], xin->p[ips]->p, 
@@ -180,9 +180,9 @@ dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0,
 typedef struct Tomo_T{
     const RECON_T *recon;
     const double alpha;
-    const dcell *xin;//input
-    dcell *gg;//intermediate gradient
-    dcell *xout;//output
+    const dcell *xin;/*input */
+    dcell *gg;/*intermediate gradient */
+    dcell *xout;/*output */
 }Tomo_T;
 
 /**
@@ -205,7 +205,7 @@ static void Tomo_prop(thread_t *info){
 	const double hs=parms->powfs[ipowfs].hs;
 	for(int ips=0; ips<nps; ips++){
 	    if(parms->tomo.square && !parms->dbg.tomo_hxw){
-		//Do the ray tracing instead of using HXW.
+		/*Do the ray tracing instead of using HXW. */
 		double ht=recon->ht->p[ips];
 		double displace[2];
 		displace[0]=parms->wfsr[iwfs].thetax*ht;
@@ -223,7 +223,7 @@ static void Tomo_prop(thread_t *info){
 		spmulmat(&xx, HXW[ips][iwfs], data->xin->p[ips], 1);
 	    }
 	}
-	//Apply the gradient operation
+	/*Apply the gradient operation */
 	spmulmat(&data->gg->p[iwfs], recon->GP2->p[iwfs], xx, 1);
 	dfree(xx);
 	/*
@@ -244,9 +244,9 @@ static void Tomo_nea(thread_t *info){
     PDSPCELL(recon->saneai, NEAI);
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	dmat *gg2=NULL;
-	//Apply the gradient operation
+	/*Apply the gradient operation */
 	spmulmat(&gg2, NEAI[iwfs][iwfs], data->gg->p[iwfs], 1);
-	dfree(data->gg->p[iwfs]); //We reuse gg.
+	dfree(data->gg->p[iwfs]); /*We reuse gg. */
 	sptmulmat(&data->gg->p[iwfs], recon->GP2->p[iwfs], gg2, data->alpha);
 	dfree(gg2);
     }
@@ -263,10 +263,10 @@ static void Tomo_iprop(thread_t *info){
     const PARMS_T *parms=recon->parms;
     SIM_T *simu=recon->simu;
     const int nps=recon->npsr;
-    //for(int ips=0; ips<recon->HXWtomo->ny; ips++){
+    /*for(int ips=0; ips<recon->HXWtomo->ny; ips++){ */
     for(int ips=info->start; ips<info->end; ips++){
 	if(parms->tomo.square && !parms->dbg.tomo_hxw){
-	    //Do the ray tracing instead of using HXW.
+	    /*Do the ray tracing instead of using HXW. */
 	    if(!data->xout->p[ips]){
 		data->xout->p[ips]=dnew(recon->xloc[ips]->nloc, 1);
 	    }
@@ -294,9 +294,9 @@ static void Tomo_iprop(thread_t *info){
 		sptmulmat(&data->xout->p[ips], HXW[ips][iwfs], data->gg->p[iwfs], 1);
 	    }
 	}
-	if(data->xin){//data->xin is empty when called from TomoR
+	if(data->xin){/*data->xin is empty when called from TomoR */
 	    switch(recon->cxx){
-	    case 0:{//L2
+	    case 0:{/*L2 */
 		dmat *xx=NULL;
 		spmulmat(&xx, recon->L2->p[ips+ips*nps], data->xin->p[ips], 1);
 		sptmulmat(&data->xout->p[ips], recon->L2->p[ips+ips*nps], xx, data->alpha);
@@ -330,7 +330,7 @@ void TomoR(dcell **xout, const void *A,
     
     const RECON_T *recon=(const RECON_T *)A;
     dcell *gg=NULL;
-    dcellcp(&gg, gin);//copy to gg so we don't touch the input.
+    dcellcp(&gg, gin);/*copy to gg so we don't touch the input. */
     TTFR(gg, recon->TTF, recon->PTTF);
 
     if(!*xout){
@@ -368,7 +368,7 @@ void TomoL(dcell **xout, const void *A,
 	   const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
-    assert(xin->ny==1);//modify the code for ny>1 case.
+    assert(xin->ny==1);/*modify the code for ny>1 case. */
     dcell *gg=dcellnew(parms->nwfsr, 1);
     const int nps=recon->npsr;
     if(!*xout){
@@ -376,9 +376,9 @@ void TomoL(dcell **xout, const void *A,
     }
     Tomo_T data={recon, alpha, xin, gg, *xout};
 
-    if(parms->tomo.square){//do ray tracing instead of HXW.
+    if(parms->tomo.square){/*do ray tracing instead of HXW. */
 	for(int ips=0; ips<nps; ips++){
-	    recon->xmap[ips]->p=xin->p[ips]->p; //replace the vector.
+	    recon->xmap[ips]->p=xin->p[ips]->p; /*replace the vector. */
 	}
     }
     thread_t info_iwfs1[recon->nthread];
@@ -415,7 +415,7 @@ void FitR(dcell **xout, const void *A,
 	  const dcell *xin, const double alpha){
     const RECON_T *recon=(const RECON_T *)A;
     dcell *xp=NULL;
-    if(!xin){//xin is empty. We will trace rays from atmosphere directly
+    if(!xin){/*xin is empty. We will trace rays from atmosphere directly */
 	const PARMS_T *parms=recon->parms;
 	SIM_T *simu=recon->simu;
 	int isim=parms->sim.closeloop?simu->isim-1:simu->isim;
@@ -436,7 +436,7 @@ void FitR(dcell **xout, const void *A,
 	}
     }else if(recon->HXF){
 	spcellmulmat_thread(&xp, recon->HXF, xin, 1.);
-    }else{//Do the ray tracing from xloc to ploc
+    }else{/*Do the ray tracing from xloc to ploc */
 	const PARMS_T *parms=recon->parms;
 	const int nfit=parms->fit.nfit;
 	const int npsr=recon->npsr;
@@ -519,21 +519,21 @@ void focus_tracking(SIM_T*simu){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int gs_psol, gs_x;
-	if(parms->powfs[ipowfs].llt){//LGS
+	if(parms->powfs[ipowfs].llt){/*LGS */
 	    gs_psol=lgs_psol;
 	    gs_x=lgs_x;
-	}else{//NGS
-	    if(parms->powfs[ipowfs].order==1) continue;//no bother with TT NGS.
+	}else{/*NGS */
+	    if(parms->powfs[ipowfs].order==1) continue;/*no bother with TT NGS. */
 	    gs_psol=ngs_psol;
 	    gs_x=ngs_x;
 	}
-	if(gs_psol){//psol
+	if(gs_psol){/*psol */
 	    if(simu->gradlastol->p[iwfs]){
 		graduse->p[iwfs]=ddup(simu->gradlastol->p[iwfs]);
 	    }else{
 		error("Require PSOL grads for wfs %d\n",iwfs);
 	    }
-	}else{//cl
+	}else{/*cl */
 	    graduse->p[iwfs]=ddup(simu->gradlastcl->p[iwfs]);
 	}
 	if(gs_x){
@@ -555,7 +555,7 @@ void focus_tracking(SIM_T*simu){
 	    continue;
 	dmat *LGSfocus=NULL;
 	dmm (&LGSfocus,recon->RFlgs->p[iwfs],graduse->p[iwfs],"nn",1);
-	//Use NGS focus - LGS focus to drive the zoom optics/reference vector
+	/*Use NGS focus - LGS focus to drive the zoom optics/reference vector */
 	dadd(&LGSfocus,-1, NGSfocus->p[0], 1);
 	dadd(&simu->focuslpf->p[iwfs], 1.-parms->sim.lpfocus, 
 	     LGSfocus, parms->sim.lpfocus);
@@ -578,23 +578,23 @@ dsp *nea2sp(dmat **nea, long nsa){
     double *px=sanea->x;
     long count=0;
     for(long isa=0; isa<nsa; isa++){
-	//Cxx
+	/*Cxx */
 	pp[isa]=count;
 	pi[count]=isa;
 	px[count]=nea[isa]->p[0];
 	count++;
-	//Cyx
+	/*Cyx */
 	pi[count]=isa+nsa;
 	px[count]=nea[isa]->p[1];
 	count++;
     }
     for(long isa=0; isa<nsa; isa++){
-	//Cxy
+	/*Cxy */
 	pp[isa+nsa]=count;
 	pi[count]=isa;
 	px[count]=nea[isa]->p[2];
 	count++;
-	//Cyy
+	/*Cyy */
 	pi[count]=isa+nsa;
 	px[count]=nea[isa]->p[3];
 	count++;
@@ -616,13 +616,13 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
       estimates.
     */
     dcell *dmadd=NULL;
-    if(dmpsol){//Pseudo OL estimates
+    if(dmpsol){/*Pseudo OL estimates */
 	if(parms->recon.split==1){
 	    /* We will remove NGS modes from dmlast which is in NULL modes of
 	       tomography reconstructor (is this 100% true)?  SHould we remove NGS
 	       modes from final OPD, xx, instead?*/
-	    dcell *tmp = dcelldup(dmpsol);//The DM command used for high order.
-	    remove_dm_ngsmod(simu, tmp);//remove NGS modes as we do in ahst.
+	    dcell *tmp = dcelldup(dmpsol);/*The DM command used for high order. */
+	    remove_dm_ngsmod(simu, tmp);/*remove NGS modes as we do in ahst. */
 	    dcelladd(&dmadd, 1, tmp, -1);
 	    dcellfree(tmp);
 	}else{
@@ -654,7 +654,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 			double scale=1-ht/hs;
 			double dispx=parms->evl.thetax[ievl]*ht;
 			double dispy=parms->evl.thetay[ievl]*ht;
-			if(parms->tomo.square){//square xloc
+			if(parms->tomo.square){/*square xloc */
 			    recon->xmap[ips]->p=opdr->p[ips]->p;
 			    prop_grid_stat(recon->xmap[ips], locs->stat, xx->p, 1, 
 					   dispx, dispy, scale, 0, 0, 0);
@@ -683,10 +683,10 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 		if(parms->dbg.ecovxx){
 		    cellarr_dmat(simu->save->ecovxx[ievl], xx);
 		}
-	    }//if psfr[ievl]
-	}//ievl
+	    }/*if psfr[ievl] */
+	}/*ievl */
 	dfree(xx);
-    }else{//Always use Ha*a. Do Ha in postproc, so just do a.
+    }else{/*Always use Ha*a. Do Ha in postproc, so just do a. */
 	dcellmm(&simu->ecov, dmadd, dmadd, "nt", 1);
     }
     dcellfree(dmadd);

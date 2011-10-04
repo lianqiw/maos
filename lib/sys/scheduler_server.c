@@ -51,7 +51,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
-#include <netinet/tcp.h> //SOL_TCP
+#include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -71,8 +71,8 @@ char** hosts;
 int nhost;
 static int all_done=0;
 /*A linked list to store running process*/
-RUN_T *running=NULL;//points to the begining
-RUN_T *running_end=NULL;//points to the last to add.
+RUN_T *running=NULL;/*points to the begining */
+RUN_T *running_end=NULL;/*points to the last to add. */
 /*A linked list to store ended process*/
 RUN_T *runned=NULL;
 RUN_T *runned_end=NULL;
@@ -127,10 +127,10 @@ static void scheduler_launch_do(void *junk){
     if(exist(fn_scheduler)){
 	execl(fn_scheduler,"scheduler", NULL);
     }else if(exist(prog)){
-	//this will rename the exe to scheduler. avoids accidental killing by pkill maos.
-	//execve replace the environment, so we don't use it.
+	/*this will rename the exe to scheduler. avoids accidental killing by pkill maos. */
+	/*execve replace the environment, so we don't use it. */
 	execl(prog,"scheduler", NULL);
-    }else{//fall back. this won't have the right argv set.
+    }else{/*fall back. this won't have the right argv set. */
 	warning("(%s) does not exist\n", prog);
 	scheduler();
     }
@@ -139,14 +139,14 @@ static void scheduler_launch_do(void *junk){
 static void scheduler_launch(void){
     char lockpath[PATH_MAX];
     snprintf(lockpath,PATH_MAX,"%s",TEMP);
-    //launch scheduler if it is not already running.
+    /*launch scheduler if it is not already running. */
     single_instance_daemonize(lockpath,"scheduler", scheduler_version,
 			      (void(*)(void*))scheduler_launch_do,NULL);
 }
 
-//Initialize hosts and associate an id number
+/*Initialize hosts and associate an id number */
 static __attribute__((constructor))void init(){
-    init_path();//the constructor in process.c may not have been called.
+    init_path();/*the constructor in process.c may not have been called. */
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
     fnlog=strdup0(fn);
@@ -156,13 +156,13 @@ static __attribute__((constructor))void init(){
 	FILE *fp=fopen(fn,"r");
 	if(fp){
 	    if(fscanf(fp,"%hu",&PORT)!=1){
-		//warning3("Failed to read port from %s\n",fn);
+		/*warning3("Failed to read port from %s\n",fn); */
 	    }
 	    fclose(fp);
 	}
     }
     if(PORT==0){
-	//user dependent PORT to avoid conflict
+	/*user dependent PORT to avoid conflict */
 	PORT= (uint16_t)((uint16_t)(hashlittle(USER,strlen(USER),0)&0x2FFF)|10000);
     }
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
@@ -203,8 +203,8 @@ static __attribute__((constructor))void init(){
     if(gethostname(host,60)) warning3("Unable to get hostname\n");
     hid=myhostid(host);
     if(hid==-1){
-	//Not running in office machines.
-	hosts[0]=strdup0(host);//use local machine
+	/*Not running in office machines. */
+	hosts[0]=strdup0(host);/*use local machine */
 	nhost=1;
 	hid=myhostid(host);
 	if(hid==-1){
@@ -213,12 +213,12 @@ static __attribute__((constructor))void init(){
     }
     {
 	const char *start=getenv("MAOS_START_SCHEDULER");
-	if(start && !strcmp(start, "YES")){//we need to launch scheduler.
+	if(start && !strcmp(start, "YES")){/*we need to launch scheduler. */
 	    info("Launch the scheduler\n");
-	    scheduler();//this never exits.
+	    scheduler();/*this never exits. */
 	}
     }
-    //we always try to launch the scheduler.
+    /*we always try to launch the scheduler. */
     scheduler_launch();
 }
 /**
@@ -229,9 +229,9 @@ static __attribute__((constructor))void init(){
 void socket_tcp_keepalive(int sock){
     int keeplive=1;
 #ifdef __linux__
-    int keepidle =1;//second before try to probe
-    int keepintvl=1;//wait this seconds before repeat
-    int keepcnt  =2;//repeat before declare dead
+    int keepidle =1;/*second before try to probe */
+    int keepintvl=1;/*wait this seconds before repeat */
+    int keepcnt  =2;/*repeat before declare dead */
 #endif
     if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
 #ifdef __linux__
@@ -291,7 +291,7 @@ static int runned_add(RUN_T *irun){
 	warning("runned_add: already exist\n");
 	return 1;
     }else{
-	//move irun to runned list from running list.
+	/*move irun to runned list from running list. */
 	irun->next=NULL;
 	if(runned_end){
 	    runned_end->next=irun;
@@ -352,21 +352,21 @@ static RUN_T* running_add(int pid,int sock){
     if((irun=running_get(pid))){
 	return irun;
     }else{
-	//create the node
+	/*create the node */
 	irun=calloc(1, sizeof(RUN_T));
 	irun->pid=pid;
 	irun->sock=sock;
-	//record the launch time
+	/*record the launch time */
 	irun->launchtime=get_job_launchtime(pid);
 	irun->next=NULL;
 	if(running_end){
 	    if(running_end->launchtime <= irun->launchtime){
-		//append the node to the end.
+		/*append the node to the end. */
 		running_end->next=irun;
 		running_end=irun;
 		irun->next=NULL;
 	    }else{
-		//insert the node in the middle.
+		/*insert the node in the middle. */
 		RUN_T *jrun,*jrun2=NULL;
 		for(jrun=running; jrun; jrun2=jrun,jrun=jrun->next){
 		    if(jrun->launchtime >= irun->launchtime){
@@ -396,21 +396,21 @@ static RUN_T* running_add(int pid,int sock){
 }
 static void running_update(int pid, int status){
     RUN_T *irun=running_get(pid);
-    //info3("running_update %s:%d with status %d\n",hosts[host],pid,status);
+    /*info3("running_update %s:%d with status %d\n",hosts[host],pid,status); */
     if(irun){
 	if(irun->status.info!=S_WAIT && status>10){
-	    nrun-=irun->nthread;//negative decrease
+	    nrun-=irun->nthread;/*negative decrease */
 	}
 	irun->status.info=status;
 	monitor_send(irun,NULL);
-	if(status>10){//ended
+	if(status>10){/*ended */
 	    irun->time=(int)myclockd();
 	    if(nrun<0) nrun=0;
-	    running_remove(pid);//moved to runned.
-	    //info3("running_update %s:%d is moved to runned\n",hosts[host],pid);
+	    running_remove(pid);/*moved to runned. */
+	    /*info3("running_update %s:%d is moved to runned\n",hosts[host],pid); */
 	}
     }else{
-	//warning3("running_update %s:%d not found\n",hosts[host],pid);
+	/*warning3("running_update %s:%d not found\n",hosts[host],pid); */
     }
 }
 static void running_remove(int pid){
@@ -428,7 +428,7 @@ static void running_remove(int pid){
 		    running_end=running;
 	    }
 	    irun->status.timend=myclocki();
-	    //move irun to runned
+	    /*move irun to runned */
 	    runned_add(irun);
 	    {
 		FILE *fp=fopen(fnlog,"a");
@@ -500,7 +500,7 @@ static void check_jobs(void){
 	for(irun=running; irun; irun=irun->next){
 	    if(kill(irun->pid,0)){
 		running_update(irun->pid,S_CRASH);
-		//list is changed. need to restart the loop.
+		/*list is changed. need to restart the loop. */
 		goto restart;
 	    }
 	}
@@ -529,9 +529,9 @@ static void process_queue(void){
     int nthread=irun->nthread;
     if(nrun+nthread<=NCPU && (nthread<=avail || avail >=3)){
 	nrun+=nthread;
-	//don't close the socket. will close it in select loop.
-	//warning3("process %d launched. write to sock %d cmd %d\n",
-	//irun->pid, irun->sock, S_START);
+	/*don't close the socket. will close it in select loop. */
+	/*warning3("process %d launched. write to sock %d cmd %d\n", */
+	/*irun->pid, irun->sock, S_START); */
 	stwriteint(&(irun->sock),S_START);
 	irun->status.timstart=myclocki();
 	irun->status.info=S_START;
@@ -550,7 +550,7 @@ static int respond(int sock){
     int cmd[2];
     int ret=read(sock, cmd, sizeof(int)*2);
    
-    if(ret==EOF || ret!=sizeof(int)*2){//remote shutdown write or closed.
+    if(ret==EOF || ret!=sizeof(int)*2){/*remote shutdown write or closed. */
 	RUN_T *irun=running_get_by_sock(sock);
 	if(irun && irun->status.info<10){
 	    sleep(1);
@@ -559,7 +559,7 @@ static int respond(int sock){
 		running_update(pid,S_CRASH);
 	    }
 	}
-	return -1;//socket closed.
+	return -1;/*socket closed. */
     }
     int pid=cmd[1];
     switch(cmd[0]){
@@ -579,7 +579,7 @@ static int respond(int sock){
 		irun->status.info=S_WAIT;
 		all_done=0;
 		info2("%d queued. nrun=%d\n",pid,nrun);
-	    }else{//no waiting, no need reply.
+	    }else{/*no waiting, no need reply. */
 		nrun+=nthread;
 		irun->status.info=S_START;
 		irun->status.timstart=myclocki();
@@ -604,17 +604,17 @@ static int respond(int sock){
 	running_update(pid,S_FINISH);
 	return -1;
 	break;
-    case CMD_CRASH://called by maos
+    case CMD_CRASH:/*called by maos */
 	running_update(pid,S_CRASH);
 	return -1;
 	break;
-    case CMD_STATUS://called by maos
+    case CMD_STATUS:/*called by maos */
 	{
 	    RUN_T *irun=running_get(pid);
 	    int added=0;
 	    if(!irun){
 		added=1;
-		//started before scheduler is relaunched.
+		/*started before scheduler is relaunched. */
 		irun=running_add(pid,sock);
 		irun->status.info=S_START;
 	    }
@@ -629,25 +629,25 @@ static int respond(int sock){
 	    monitor_send(irun,NULL);
 	}
 	break;
-    case CMD_MONITOR://called by monitor
+    case CMD_MONITOR:/*called by monitor */
 	{
 	    MONITOR_T *tmp=monitor_add(sock);
-	    if(pid>=0x8){//check monitor version.
+	    if(pid>=0x8){/*check monitor version. */
 		tmp->load=1;
 	    }
 	    info("Monitor is connected at sock %d.\n", sock);
 	}
 	break;
-    case CMD_KILL://called by mnitor.
+    case CMD_KILL:/*called by mnitor. */
 	{
 	    kill(pid,SIGTERM);
 	    running_update(pid,S_KILLED);
 	}
 	break;
-    case CMD_REMOVE://called by monitor to remove a runned object.
+    case CMD_REMOVE:/*called by monitor to remove a runned object. */
 	{
-	    //int host=readint(sock);//todo: remove this in next run of updates.
-	    //(void)host;
+	    /*int host=readint(sock);//todo: remove this in next run of updates. */
+	    /*(void)host; */
 	    RUN_T*irun=runned_get(pid);
 	    if(irun){
 		runned_remove(pid);
@@ -707,7 +707,7 @@ static int respond(int sock){
     }
     cmd[0]=-1;
     cmd[1]=-1;
-    return 0;//don't close the port yet. may be reused by the client.
+    return 0;/*don't close the port yet. may be reused by the client. */
 }
 
 static void scheduler_crash_handler(int sig){
@@ -729,12 +729,12 @@ static void scheduler_crash_handler(int sig){
 	}
 	close(scheduler_sock);
 	usleep(100);
-	_Exit(sig);//don't call clean up functions
+	_Exit(sig);/*don't call clean up functions */
     }
 }
 static void scheduler(void){
     register_signal_handler(scheduler_crash_handler);
-    if(unsetenv("MAOS_START_SCHEDULER")){//important.
+    if(unsetenv("MAOS_START_SCHEDULER")){/*important. */
 	error("Unable to unsetenv\n");
     }
     fd_set read_fd_set;
@@ -778,19 +778,19 @@ static void scheduler(void){
 			perror ("accept");
 			exit (EXIT_FAILURE);
 		    }
-		    cloexec(new);//close on exec.
-		    //add fd to watched list.
+		    cloexec(new);/*close on exec. */
+		    /*add fd to watched list. */
 		    FD_SET (new, &active_fd_set);
 		} else {
 		    /* Data arriving on an already-connected
 		       socket. */
 		    if (respond (i) < 0){
-			shutdown(i, SHUT_RD);//don't read any more.
-			FD_CLR (i, &active_fd_set);//don't monitor any more
+			shutdown(i, SHUT_RD);/*don't read any more. */
+			FD_CLR (i, &active_fd_set);/*don't monitor any more */
 			if(monitor_get(i)){
-			    //warning("This is a monitor, don't close\n");
+			    /*warning("This is a monitor, don't close\n"); */
 			}else{
-			    //warning("This is not a monitor. close %d\n",i);
+			    /*warning("This is not a monitor. close %d\n",i); */
 			    close (i);
 			}
 		    }
@@ -803,7 +803,7 @@ static void scheduler(void){
 	if(!all_done){
 	    process_queue();
 	}
-	//Report CPU usage every 3 seconds.
+	/*Report CPU usage every 3 seconds. */
 	int thistime=myclocki();
 	if(thistime>=(lasttime3+3)){
 	    if(nrun>0){
@@ -816,9 +816,9 @@ static void scheduler(void){
     }
 }
 
-//The following routines maintains the MONITOR_T linked list.
+/*The following routines maintains the MONITOR_T linked list. */
 MONITOR_T* monitor_add(int sock){
-    //info("added monitor on sock %d\n",sock);
+    /*info("added monitor on sock %d\n",sock); */
     MONITOR_T *node=calloc(1, sizeof(MONITOR_T));
     node->sock=sock;
     node->next=pmonitor;
@@ -828,7 +828,7 @@ MONITOR_T* monitor_add(int sock){
 }
 void monitor_remove(int sock){
     MONITOR_T *ic,*ic2=NULL;
-    //int freed=0;
+    /*int freed=0; */
     for(ic=pmonitor; ic; ic2=ic,ic=ic->next){
 	if(ic->sock==sock){
 	    if(ic2){
@@ -836,12 +836,12 @@ void monitor_remove(int sock){
 	    }else{
 		pmonitor=ic->next;
 	    }
-	    //info("removed monitor on sock %d close it.\n",ic->sock);
+	    /*info("removed monitor on sock %d close it.\n",ic->sock); */
 	    close(ic->sock);
-	    //remove from listening queue.
+	    /*remove from listening queue. */
 	    FD_CLR (ic->sock, &active_fd_set);
 	    free(ic);
-	    //freed=1;
+	    /*freed=1; */
 	    break;
 	}
     }
@@ -862,7 +862,7 @@ static int monitor_send_do(RUN_T *irun, char *path, int sock){
     int cmd[3];
     cmd[1]=hid;
     cmd[2]=irun->pid;
-    if(path){//don't do both.
+    if(path){/*don't do both. */
 	cmd[0]=CMD_PATH;
 	if(write(sock,cmd,sizeof(int)*3)!=sizeof(int)*3){
 	    perror("write");
@@ -882,26 +882,26 @@ static int monitor_send_do(RUN_T *irun, char *path, int sock){
     }
     return 0;
 }
-// Notify alreadyed connected monitors job update.
+/* Notify alreadyed connected monitors job update. */
 void monitor_send(RUN_T *irun,char*path){
     MONITOR_T *ic;
  redo:
     for(ic=pmonitor; ic; ic=ic->next){
-	//sock=monitor_connect(hosts[ic->id]);
+	/*sock=monitor_connect(hosts[ic->id]); */
 	int sock=ic->sock;
 	if(monitor_send_do(irun,path,sock)){
-	    //warning3("Send to monitor %d failed. "
-	    //		     "Remove monitor and restart.\n",sock);
+	    /*warning3("Send to monitor %d failed. " */
+	    /*		     "Remove monitor and restart.\n",sock); */
 	    monitor_remove(sock);
 	    goto redo;
 	}
     }
 }
-// Notify alreadyed connected monitors machine load.
+/* Notify alreadyed connected monitors machine load. */
 void monitor_send_load(void){
     MONITOR_T *ic;
     double mem=get_usage_mem();
-    //info("usage_cpu=%g, mem=%g\n",usage_cpu,mem);
+    /*info("usage_cpu=%g, mem=%g\n",usage_cpu,mem); */
     int cmd[3];
     cmd[0]=CMD_LOAD;
     cmd[1]=hid;
@@ -915,28 +915,28 @@ void monitor_send_load(void){
 	    continue;
 
 	if(write(sock,cmd,sizeof(int)*3)!=sizeof(int)*3){
-	    //perror("write");
-	    //warning3("Unabled to send cmd\n");
+	    /*perror("write"); */
+	    /*warning3("Unabled to send cmd\n"); */
 	    monitor_remove(sock);
 	    goto redo;
 	}
     }
 }
-// Notify the new added monitor all job information.
+/* Notify the new added monitor all job information. */
 void monitor_send_initial(MONITOR_T *ic){
-    //info("Monitor_send_initial\n");
+    /*info("Monitor_send_initial\n"); */
     int sock;
     RUN_T *irun;
     sock=ic->sock;
     {
-	//send version information.
+	/*send version information. */
 	int cmd[3];
 	cmd[0]=CMD_VERSION;
 	cmd[1]=scheduler_version;
-	cmd[2]=hid;//Fixme: sending hid to monitor is not good is hosts does not match.
+	cmd[2]=hid;/*Fixme: sending hid to monitor is not good is hosts does not match. */
 	if(write(sock,cmd,sizeof(int)*3)!=sizeof(int)*3){
-	    //perror("write");
-	    //warning3("Unabled to send version to monitor.\n");
+	    /*perror("write"); */
+	    /*warning3("Unabled to send version to monitor.\n"); */
 	    return;
 	}
     }
@@ -954,12 +954,12 @@ void monitor_send_initial(MONITOR_T *ic){
 	    return;
 	}
     }
-    //info("Monitor_send_initial success\n");
+    /*info("Monitor_send_initial success\n"); */
 }
 
 #ifdef SCHEDULER
 int main(){
-    //we should not enter here. the constructor runs scheduler and won't return.
+    /*we should not enter here. the constructor runs scheduler and won't return. */
     scheduler();
 }
 #endif

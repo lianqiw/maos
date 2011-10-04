@@ -39,7 +39,7 @@
 #include "fft.h"
 #include "matbin.h"
 #include "loc.h"
-#include "defs.h"//Defines T, X, etc
+#include "defs.h"/*Defines T, X, etc */
 
 vtbl X(mat_vtbl)={M_TT,
 		  (vtbl_write)X(write),
@@ -59,7 +59,7 @@ static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
     out->vtbl=&X(mat_vtbl);
     out->nx=nx;
     out->ny=ny;
-    if(ref){//the data does not belong to us.
+    if(ref){/*the data does not belong to us. */
 	if(!p && nx*ny!=0){
 	    error("When ref is 1, p must not be NULL.\n");
 	}
@@ -122,7 +122,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 		}
 	    }
 	    if(!keepdata && A->p){
-		if(A->mmap){//data is mmap'ed.
+		if(A->mmap){/*data is mmap'ed. */
 		    mmap_unref(A->mmap);
 		}else{
 		    free(A->p);
@@ -135,7 +135,7 @@ void X(free_do)(X(mat) *A, int keepdata){
 	}else{
 	    error("The ref is less than 1. unlikely!!!:%ld\n",A->nref[0]);
 	}
-    }else{//data does not belong to us.
+    }else{/*data does not belong to us. */
 	free(A->header);
     }
     free(A);
@@ -263,7 +263,7 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
     X(mat) *out=NULL;
 
     if(dim==1){
-	//along x.
+	/*along x. */
 	if(in1->ny!=in2->ny){
 	    error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld)\n", 
 		  in1->nx, in1->ny, in2->nx, in2->ny);
@@ -277,7 +277,7 @@ X(mat)* X(cat)(const X(mat) *in1, const X(mat) *in2, int dim){
 	    memcpy(pout[iy]+in1->nx, pin2[iy], in2->nx*sizeof(T));
 	}
     }else if(dim==2){
-	//along y.
+	/*along y. */
 	if(in1->nx!=in2->nx){
 	    error("Mismatch. in1 is (%ld, %ld), in2 is (%ld, %ld)\n", 
 		  in1->nx, in1->ny, in2->nx, in2->ny);
@@ -493,7 +493,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
     if(A){
 	if(!*B0){
 	    *B0=X(new)(A->nx, A->ny); 
-	    bc=0;//no bother to accumulate.
+	    bc=0;/*no bother to accumulate. */
 	}
 	X(mat) *B=*B0;
 	assert(A->nx==B->nx && A->ny == B->ny);
@@ -501,7 +501,7 @@ void X(add)(X(mat) **B0, T bc,const X(mat) *A, const T ac){
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=B->p[i]*bc+A->p[i]*ac;
 	    }
-	}else{//just assign
+	}else{/*just assign */
 	    for(int i=0; i<A->nx*A->ny; i++){
 		B->p[i]=A->p[i]*ac;
 	    }
@@ -836,12 +836,12 @@ void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy){
 	int dy=ny-sy;
 	int dx=nx-sx;
 	for(int iy=0; iy<sy; iy++){
-	    memcpy(B->p+iy*nx, A->p+(dy+iy)*nx+dx, sx*sizeof(T));//3
-	    memcpy(B->p+iy*nx+sx, A->p+(dy+iy)*nx, dx*sizeof(T));//4
+	    memcpy(B->p+iy*nx, A->p+(dy+iy)*nx+dx, sx*sizeof(T));/*3 */
+	    memcpy(B->p+iy*nx+sx, A->p+(dy+iy)*nx, dx*sizeof(T));/*4 */
 	}
 	for(int iy=sy; iy<ny; iy++){
-	    memcpy(B->p+iy*nx, A->p+(iy-sy)*nx+dx, sx*sizeof(T));//1
-	    memcpy(B->p+iy*nx+sx, A->p+(iy-sy)*nx, dx*sizeof(T));//2
+	    memcpy(B->p+iy*nx, A->p+(iy-sy)*nx+dx, sx*sizeof(T));/*1 */
+	    memcpy(B->p+iy*nx+sx, A->p+(iy-sy)*nx, dx*sizeof(T));/*2 */
 	}
     }else{
 	memcpy(B->p, A->p, sizeof(T)*nx*ny);
@@ -898,12 +898,12 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, double theta){
     T tmp[2][2];
     PMAT(A,Ap);
     PMAT(B,Bp);
-    //first apply left R
+    /*first apply left R */
     tmp[0][0]=ctheta*Ap[0][0]-stheta*Ap[0][1];
     tmp[1][0]=ctheta*Ap[1][0]-stheta*Ap[1][1];
     tmp[0][1]=stheta*Ap[0][0]+ctheta*Ap[0][1];
     tmp[1][1]=stheta*Ap[1][0]+ctheta*Ap[1][1];
-    //then apply right R'
+    /*then apply right R' */
     
     Bp[0][0]=ctheta*tmp[0][0]-stheta*tmp[1][0];
     Bp[1][0]=stheta*tmp[0][0]+ctheta*tmp[1][0];
@@ -919,7 +919,7 @@ void X(rotvecnn)(X(mat) **B0, const X(mat) *A, double theta){
 void X(mulvec3)(T *y, const X(mat) *A, const T *x){
     assert(A->nx==3 && A->ny==3);
     PMAT(A,Ap);
-    //calculate y=A*x for 3.
+    /*calculate y=A*x for 3. */
     y[0]=Ap[0][0]*x[0]+Ap[1][0]*x[1]+Ap[2][0]*x[2];
     y[1]=Ap[0][1]*x[0]+Ap[1][1]*x[1]+Ap[2][1]*x[2];
     y[2]=Ap[0][2]*x[0]+Ap[1][2]*x[1]+Ap[2][2]*x[2];
@@ -967,7 +967,7 @@ void X(shift2center)(X(mat) *A, double offsetx, double offsety){
     double Amax=X(max)(A);
     X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
     if(fabs(grad[0])>0.1 || fabs(grad[1])>0.1){
-	//info("Before shift, residual grad is %g %g\n",grad[0],grad[1]);
+	/*info("Before shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	cmat *B=cnew(A->nx,A->ny);
 	cfft2plan(B,-1);
 	cfft2plan(B,1);
@@ -989,7 +989,7 @@ void X(shift2center)(X(mat) *A, double offsetx, double offsety){
 	creal2d(&A,0,B,1);
 #endif
 	X(cog)(grad,A,offsetx,offsety,Amax*0.1,Amax*0.2);
-	//info("After shift, residual grad is %g %g\n",grad[0],grad[1]);
+	/*info("After shift, residual grad is %g %g\n",grad[0],grad[1]); */
 	cfree(B);
     }
 }
@@ -1037,9 +1037,9 @@ void X(gramschmidt)(X(mat) *Mod, R *amp){
     memset(nonvalid, 0, sizeof(int)*nmod);
     PMAT(Mod,pMod);
     for(int imod=0; imod<nmod; imod++){
-	if(imod>0){//orthogonalize
+	if(imod>0){/*orthogonalize */
 	    R cross;
-	    //compute dot product.
+	    /*compute dot product. */
 	    for(int jmod=0; jmod<imod; jmod++){
 		if(nonvalid[jmod]) continue;
 		cross=-DOT(pMod[imod],pMod[jmod],amp,nx)/wtsum;
@@ -1252,7 +1252,7 @@ void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
     const long noutx=A->nx;
     const long nouty=A->ny;
     memset(A->p, 0, sizeof(T)*noutx*nouty);
-    if(fabs(theta)<1.e-10){//no rotation.
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx)/2;
 	const long skipy=(nouty-niny)/2;
 	long ixstart=0, ixend=ninx;
@@ -1375,7 +1375,7 @@ void X(histfill)(X(mat) **out, const X(mat)* A,
    \f[f^\prime(0)=(f(1)-f(0))\f]
    Otehr type of boundaries are handled in the same way.
 
-   see http://www.paulinternet.nl/?page=bicubicx */
+   see www.paulinternet.nl/?page=bicubicx */
 X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y){
     T *px,*py;
     const long nx=x->nx;
@@ -1412,10 +1412,10 @@ X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y){
 	}else{
 	    ynext=py[ix+2];
 	}
-	pc[ix][0]=-0.5*ypriv+1.5*py[ix]-1.5*py[ix+1]+0.5*ynext;//a
-	pc[ix][1]=     ypriv-2.5*py[ix]+2.0*py[ix+1]-0.5*ynext;//b
-	pc[ix][2]=-0.5*ypriv           +0.5*py[ix+1];//c
-	pc[ix][3]=               py[ix] ;//d
+	pc[ix][0]=-0.5*ypriv+1.5*py[ix]-1.5*py[ix+1]+0.5*ynext;/*a */
+	pc[ix][1]=     ypriv-2.5*py[ix]+2.0*py[ix+1]-0.5*ynext;/*b */
+	pc[ix][2]=-0.5*ypriv           +0.5*py[ix+1];/*c */
+	pc[ix][3]=               py[ix] ;/*d */
 	/*
 	  For any point within this bin, with normalized coordinate t (0<t<1);
 	  y(t)=a*pow(t,3)+b*pow(t,2)+c*t+d;
@@ -1479,80 +1479,80 @@ X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z){
 	for(long ix=0; ix<nx-1; ix++){
 	    if(iy==0){
 		if(ix==0){
-		    p00=2*(2*p[iy][ix]-p[iy][ix+1])-(2*p[iy+1][ix]-p[iy+1][ix+1]);//from a
+		    p00=2*(2*p[iy][ix]-p[iy][ix+1])-(2*p[iy+1][ix]-p[iy+1][ix+1]);/*from a */
 		}else{
-		    p00=2*p[iy][ix-1]-p[iy+1][ix-1];//from b
+		    p00=2*p[iy][ix-1]-p[iy+1][ix-1];/*from b */
 		}
 		p01=2*p[iy][ix]-p[iy+1][ix];
 		p02=2*p[iy][ix+1]-p[iy+1][ix+1];
 		if(ix==nx-2){
-		    p03=2*(p[iy][ix+1]*2-p[iy][ix])-(p[iy+1][ix+1]*2-p[iy+1][ix]);//from n
+		    p03=2*(p[iy][ix+1]*2-p[iy][ix])-(p[iy+1][ix+1]*2-p[iy+1][ix]);/*from n */
 		}else{
-		    p03=2*p[iy][ix+2]-p[iy+1][ix+2];//from m
+		    p03=2*p[iy][ix+2]-p[iy+1][ix+2];/*from m */
 		}
 	    }else{
 		if(ix==0){
-		    p00=2*p[iy-1][ix]-p[iy-1][ix+1];//a from b
+		    p00=2*p[iy-1][ix]-p[iy-1][ix+1];/*a from b */
 		}else{
-		    p00=p[iy-1][ix-1];//b
+		    p00=p[iy-1][ix-1];/*b */
 		}
 		p01=p[iy-1][ix];
 		p02=p[iy-1][ix+1];
 		if(ix==nx-2){
-		    p03=p[iy-1][ix+1]*2-p[iy-1][ix];//n from m
+		    p03=p[iy-1][ix+1]*2-p[iy-1][ix];/*n from m */
 		}else{
-		    p03=p[iy-1][ix+2];//m
+		    p03=p[iy-1][ix+2];/*m */
 		}
 	    }
 	    if(ix==0){
-		p10=p[iy][ix]*2-p[iy][ix+1];//from c
+		p10=p[iy][ix]*2-p[iy][ix+1];/*from c */
 	    }else{
-		p10=p[iy][ix-1];//c
+		p10=p[iy][ix-1];/*c */
 	    }
 	    p11=p[iy][ix];
 	    p12=p[iy][ix+1];
 	    if(ix==nx-2){
-		p13=p[iy][ix+1]*2-p[iy][ix];//from d
+		p13=p[iy][ix+1]*2-p[iy][ix];/*from d */
 	    }else{
-		p13=p[iy][ix+2];//d
+		p13=p[iy][ix+2];/*d */
 	    }
 	    if(ix==0){
-		p20=p[iy+1][ix]*2-p[iy+1][ix+1];//from e
+		p20=p[iy+1][ix]*2-p[iy+1][ix+1];/*from e */
 	    }else{
-		p20=p[iy+1][ix-1];//e
+		p20=p[iy+1][ix-1];/*e */
 	    }
 	    p21=p[iy+1][ix];
 	    p22=p[iy+1][ix+1];
 	    if(ix==nx-2){
-		p23=p[iy+1][ix+1]*2-p[iy+1][ix];//from f
+		p23=p[iy+1][ix+1]*2-p[iy+1][ix];/*from f */
 	    }else{
-		p23=p[iy+1][ix+2];//f
+		p23=p[iy+1][ix+2];/*f */
 	    }
 	    if(iy==ny-2){
 		if(ix==0){
-		    p30=2*(p[iy+1][ix]*2-p[iy+1][ix+1])-(p[iy][ix]*2-p[iy][ix+1]);//from h
+		    p30=2*(p[iy+1][ix]*2-p[iy+1][ix+1])-(p[iy][ix]*2-p[iy][ix+1]);/*from h */
 		}else{
-		    p30=2*p[iy+1][ix-1]-p[iy][ix-1];//from g
+		    p30=2*p[iy+1][ix-1]-p[iy][ix-1];/*from g */
 		}
 		p31=2*p[iy+1][ix]-p[iy][ix];
 		p32=2*p[iy+1][ix+1]-p[iy][ix+1];
 		if(ix==nx-2){
-		    p33=2*(2*p[iy+1][ix+1]-p[iy+1][ix])-(2*p[iy][ix+1]-p[iy][ix]);//from j
+		    p33=2*(2*p[iy+1][ix+1]-p[iy+1][ix])-(2*p[iy][ix+1]-p[iy][ix]);/*from j */
 		}else{
-		    p33=2*p[iy+1][ix+2]-p[iy][ix+2];//from i
+		    p33=2*p[iy+1][ix+2]-p[iy][ix+2];/*from i */
 		}
 	    }else{
 		if(ix==0){
-		    p30=p[iy+2][ix]*2-p[iy+2][ix+1];//h from g
+		    p30=p[iy+2][ix]*2-p[iy+2][ix+1];/*h from g */
 		}else{
-		    p30=p[iy+2][ix-1];//g
+		    p30=p[iy+2][ix-1];/*g */
 		}
 		p31=p[iy+2][ix];
 		p32=p[iy+2][ix+1];
 		if(ix==nx-2){
-		    p33=2*p[iy+2][ix+1]-p[iy+2][ix];//j from i
+		    p33=2*p[iy+2][ix+1]-p[iy+2][ix];/*j from i */
 		}else{
-		    p33=p[iy+2][ix+2];//i
+		    p33=p[iy+2][ix+2];/*i */
 		}
 	    }
 	    pc[iy][ix] = X(new)(4,4);

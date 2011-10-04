@@ -46,7 +46,7 @@ static inline uint16_t myhtons(uint16_t port){
    Status about each process. Timing, wavefront error, etc.
  */
 typedef struct STATUS_T{
-    //Individual timing
+    /*Individual timing */
     double wfs;
     double recon;
     double cache;
@@ -56,7 +56,7 @@ typedef struct STATUS_T{
     double mean;
     long rest;
     long laps;
-    //status report
+    /*status report */
     int iseed;
     int nseed;
     int nthread;
@@ -84,7 +84,7 @@ typedef struct QUEUE_T{
 typedef struct RUN_T{
     struct RUN_T *next;
     STATUS_T status;
-    double started;//started execution.
+    double started;/*started execution. */
     double launchtime;
     int pid;
     int sock;
@@ -98,7 +98,7 @@ typedef struct RUN_T{
 */
 typedef struct MONITOR_T{
     int sock;
-    int load;//handle machine load information.
+    int load;/*handle machine load information. */
     struct MONITOR_T *next;
 }MONITOR_T;
 
@@ -117,19 +117,19 @@ enum{
     CMD_START=1,
     CMD_FINISH,
     CMD_STATUS,
-    CMD_CRASH,//4
+    CMD_CRASH,/*4 */
     CMD_MONITOR,
-    CMD_PATH,//6
+    CMD_PATH,/*6 */
     CMD_KILL,
-    CMD_TRACE,//8
+    CMD_TRACE,/*8 */
     CMD_DRAW,
     CMD_BROADCAST,
     CMD_REMOVE,
     CMD_HOSTUP,
-    CMD_VERSION,//13
-    CMD_LOAD,//14
-    CMD_SHUTRD,//15
-    CMD_SHUTWR,//16
+    CMD_VERSION,/*13 */
+    CMD_LOAD,/*14 */
+    CMD_SHUTRD,/*15 */
+    CMD_SHUTWR,/*16 */
 };
 enum{
     S_RUNNING=1,
@@ -143,7 +143,7 @@ enum{
 };
 extern uint16_t PORTMON;
 extern uint16_t PORT;
-//#define MAXNHOST 10
+/*#define MAXNHOST 10 */
 extern int nhost;
 extern char** hosts;
 extern int hid;

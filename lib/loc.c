@@ -154,7 +154,7 @@ long *loc_create_embed(long *nembed, const loc_t *loc){
     const double dx_in1=1./loc->dx;
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
     long ny=(long)round((ymax-ymin)*dx_in1)+1;
-    long nxy=(nx>ny?nx:ny)*2;//minimum size
+    long nxy=(nx>ny?nx:ny)*2;/*minimum size */
     long mapn;
     if(*nembed<=0){
 	mapn=nextpow2(nxy);
@@ -204,12 +204,12 @@ void loc_create_map_npad(loc_t *loc, int npad){
 	return;
     }
     loc->map = calloc(1,sizeof(locmap_t));
-    loc->map->npad = npad;//just record the information.
+    loc->map->npad = npad;/*just record the information. */
     double xmin,xmax,ymin,ymax;
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     int map_nx, map_ny;
-    //padding the map. normally don't need.
+    /*padding the map. normally don't need. */
     if(npad>0){
 	xmin-=npad*loc->dx;
 	ymin-=npad*loc->dx;
@@ -232,7 +232,7 @@ void loc_create_map_npad(loc_t *loc, int npad){
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	ix=(int)round((locx[iloc]-xmin)*dx_in1);
 	iy=(int)round((locy[iloc]-ymin)*dx_in1);
-	pmap[iy][ix]=iloc+1;//start from 1.
+	pmap[iy][ix]=iloc+1;/*start from 1. */
     }
     UNLOCK(maplock);
 }
@@ -334,7 +334,7 @@ loc_t *mk1dloc(double x0, double dx, long nx){
     loc->nloc=nx;
     loc->dx=dx;
     loc->locx=malloc(sizeof(double)*nx);
-    loc->locy=calloc(sizeof(double),nx);//initialize to zero.
+    loc->locy=calloc(sizeof(double),nx);/*initialize to zero. */
     for(long ix=0; ix<nx; ix++){
 	loc->locx[ix]=x0+dx*ix;
     }
@@ -412,7 +412,7 @@ loc_t *mkcirloc(double dcir, double dx){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=malloc(sizeof(double)*N*N);
     loc->locy=malloc(sizeof(double)*N*N);
-    rmax2=(dcir/dx/2.+0.5);//Changed from 1*1.414 to 0.5 on 2011-07-13 to make plocs just big enough.
+    rmax2=(dcir/dx/2.+0.5);/*Changed from 1*1.414 to 0.5 on 2011-07-13 to make plocs just big enough. */
     rmax2*=rmax2;
     count=0;
    
@@ -470,8 +470,8 @@ loc_t* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
     loc->locx=malloc(sizeof(double)*ampin->nx*ampin->ny);
     loc->locy=malloc(sizeof(double)*ampin->nx*ampin->ny);
     *ampout  =malloc(sizeof(double)*ampin->nx*ampin->ny);
-    count=0;   //count number of points.
-    colcount=0;//count number of columns (y)
+    count=0;   /*count number of points. */
+    colcount=0;/*count number of columns (y) */
 
     int ncolstat=ampin->ny+1;
     if(cstat){
@@ -483,8 +483,8 @@ loc_t* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
     for(int iy=0; iy<ampin->ny; iy++){
 	double ry=iy+offsety;
 	int imin, imax, iminnotfound;
-	double xmax2=rmax2-ry*ry;//max limit of x coord
-	count0=count;//starting number of this column
+	double xmax2=rmax2-ry*ry;/*max limit of x coord */
+	count0=count;/*starting number of this column */
 
 	imin=INT_MAX;
 	imax=-INT_MAX;
@@ -654,11 +654,11 @@ void loc_calc_ptt(double *rmsout, double *coeffout,
 	dmulvec3(coeffout, imcc, coeff);
     }
     if(rmsout){
-	double pis=ipcc*coeff[0]*coeff[0];//piston mode variance
-	double ptt=dwdot3(coeff, imcc, coeff);//p/t/t mode variance.
-	rmsout[0]=tot-pis;//PR
-	rmsout[1]=ptt-pis;//TT
-	rmsout[2]=tot-ptt;//PTTR
+	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
+	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
+	rmsout[0]=tot-pis;/*PR */
+	rmsout[1]=ptt-pis;/*TT */
+	rmsout[2]=tot-ptt;/*PTTR */
     }
 }
 /**
@@ -778,7 +778,7 @@ void loc_create_stat_do(loc_t *loc){
     int ncolmax=(int)round((locy[nloc-1]-locy[0])/dx)+2;
     locstat->cols=malloc(ncolmax*sizeof(locstatcol_t));
     int colcount=0;
-    //do first column separately.
+    /*do first column separately. */
     int iloc=0;
     locstat->cols[colcount].pos=iloc;
     locstat->cols[colcount].xstart=locx[iloc];
@@ -789,9 +789,9 @@ void loc_create_stat_do(loc_t *loc){
 
     colcount++;
     for(iloc=1; iloc<loc->nloc; iloc++){
-	if(fabs(locy[iloc]-locy[iloc-1])>1.e-12 //a new column starts
+	if(fabs(locy[iloc]-locy[iloc-1])>1.e-12 /*a new column starts */
 	   || fabs(locx[iloc]-locx[iloc-1]-dx)>1.e-12){
-	    if(colcount>=ncolmax){//expand the memory.
+	    if(colcount>=ncolmax){/*expand the memory. */
 		ncolmax*=2;
 		locstat->cols=realloc(locstat->cols, ncolmax*sizeof(locstatcol_t));
 	    }
@@ -821,7 +821,7 @@ void loc_create_stat_do(loc_t *loc){
    Create a gray pixel circular map in phi using coordinates defined in loc, center
 defined using cx, cy, radius of r, and value of val */
 void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
-    //cx,cy,r are in unit of true unit, as in loc
+    /*cx,cy,r are in unit of true unit, as in loc */
     double dx=loc->dx;
     int nres=10;
     double cres=(nres-1.)/2.;
@@ -870,7 +870,7 @@ void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,d
    Create a hard annular mask in phi.
 */
 void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin){
-    //apply the hard pupil mask of aper.d, using loc. not locm
+    /*apply the hard pupil mask of aper.d, using loc. not locm */
     /* 2011-07-13: changed from r^2 to (r+0.5*dx)^2*/
     double rr2max=pow(r+0.5*loc->dx,2);
     double rr2min=MIN(rin*rin, pow(rin-0.5*loc->dx,2));
@@ -886,7 +886,7 @@ void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double r
 center defined using cx, cy, radii of rx, ry, and value of val */
 void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val){
-    //cx,cy,r are in unit of true unit, as in loc
+    /*cx,cy,r are in unit of true unit, as in loc */
     double dx=loc->dx;
     int nres=10;
     double cres=(nres-1.)/2.;
@@ -932,11 +932,11 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
 
 void loc_reduce(loc_t *loc, dmat *amp, int cont, int **skipout){
     int redo_stat=loc->stat?1:0;
-    loc_free_map(loc);//remove the internal map before touchlong loc.
+    loc_free_map(loc);/*remove the internal map before touchlong loc. */
     loc_free_stat(loc);
     int nloc=loc->nloc; 
     int *skip=calloc(nloc,sizeof(int));
-    if(cont){//make sure loc is continuous.
+    if(cont){/*make sure loc is continuous. */
 	loc_create_stat(loc);
 	locstat_t *locstat=loc->stat;
 	int ncol=locstat->ncol;
@@ -1008,7 +1008,7 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
     loc_reduce(loc, sum, cont, &skip);
     dfree(sum);
     int count;
-    if(dim==1){//opd(loc)=sp*opd(locin);
+    if(dim==1){/*opd(loc)=sp*opd(locin); */
 	count=0;
 	int *map=calloc(nloc,sizeof(int));
 	for(int iloc=0; iloc<nloc; iloc++){
@@ -1047,7 +1047,7 @@ void loc_reduce_spcell(loc_t *loc, spcell *spc, int dim, int cont){
    Remove uncoupled points in loc and modify sp in the same time. debugged on 2009-12-20.  use single sparse
    matrix, which is modified accordingly.  */
 void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
-    loc_free_map(loc);//remove the internal map before touchlong loc.
+    loc_free_map(loc);/*remove the internal map before touchlong loc. */
     loc_free_stat(loc);
     int nloc=loc->nloc;
     if((dim==1 && nloc!=sp->m) || (dim==2 && nloc!=sp->n) || dim<0 || dim>2)
@@ -1057,7 +1057,7 @@ void loc_reduce_sp(loc_t *loc, dsp *sp, int dim, int cont){
     loc_reduce(loc, sum, cont, &skip);
     dfree(sum);
     int count=0;
-    if(dim==1){//opd(loc)=sp*opd(locin);
+    if(dim==1){/*opd(loc)=sp*opd(locin); */
 	int *map=calloc(nloc,sizeof(int));
 	for(int iloc=0; iloc<nloc; iloc++){
 	    map[iloc]=count;
@@ -1138,7 +1138,7 @@ dmat* loc_zernike(loc_t *loc, double R, int nr){
 	for(int im=0; im<=ir; im++){
 	    if((ir-im)%2!=0) continue;
 	    dmat *Rnm=genRnm(locr, ir, im);
-	    //dwrite(Rnm,"Rnm_%d_%d",ir,im);
+	    /*dwrite(Rnm,"Rnm_%d_%d",ir,im); */
 	    if(im==0){
 		double coeff=sqrt(ir+1.);
 		double *restrict pmod=MOD->p+nloc*cmod;
@@ -1277,7 +1277,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 
     const double *restrict x=loc->locx;
     const double *restrict y=loc->locy;
-    //Test whether the transform is pure shift.
+    /*Test whether the transform is pure shift. */
     int keepx=0, keepy=0;
     int shift=1;
     double shiftx=0, shifty=0;
@@ -1290,15 +1290,15 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 	if(fabs(cx[ic][0]-1)<EPS && fabs(cx[ic][1]-1)<EPS && fabs(cx[ic][2])<EPS){
 	    if(keepx==0){
 		keepx=1;
-	    }else{//we only want 1 such column.
+	    }else{/*we only want 1 such column. */
 		warning("keepx is already 1\n");
 		shift=0;
 	    }
 	}else if(fabs(cx[ic][1])<EPS && fabs(cx[ic][2])<EPS){
 	    shiftx+=cx[ic][0];
-	    if(shiftxy) cx[ic][0]=0;//remove the transform.
-	}else{//something we don't recognize. not pure shift.
-	    //warning("something we don't recognize\n");
+	    if(shiftxy) cx[ic][0]=0;/*remove the transform. */
+	}else{/*something we don't recognize. not pure shift. */
+	    /*warning("something we don't recognize\n"); */
 	    shift=0;
 	}
     }
@@ -1311,15 +1311,15 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 	if(fabs(cy[ic][0]-1)<EPS && fabs(cy[ic][1])<EPS && fabs(cy[ic][2]-1)<EPS){
 	    if(keepy==0){
 		keepy=1;
-	    }else{//we only want 1 such column.
+	    }else{/*we only want 1 such column. */
 		warning("keepy is already 1\n");
 		shift=0;
 	    }
 	}else if(fabs(cy[ic][1])<EPS && fabs(cy[ic][2])<EPS){
 	    shifty+=cy[ic][0];
-	    if(shiftxy) cy[ic][0]=0;//remove from the transform.
-	}else{//something we don't recognize. not pure shift.
-	    //warning("something we don't recognize\n");
+	    if(shiftxy) cy[ic][0]=0;/*remove from the transform. */
+	}else{/*something we don't recognize. not pure shift. */
+	    /*warning("something we don't recognize\n"); */
 	    shift=0;
 	}
     }
@@ -1329,7 +1329,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 	(*shiftxy)[0]=shiftx;
 	(*shiftxy)[1]=shifty;
     }
-    if(shift && shiftxy){//pure shift, and shiftxy is set.
+    if(shift && shiftxy){/*pure shift, and shiftxy is set. */
 	info("The transform is pure shift by %g along x, %g along y\n", shiftx, shifty);
 	return NULL;
     }else{
@@ -1356,7 +1356,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 		for(long ic=0; ic<coeff[1]->ny; ic++){
 		    ym[iloc]+=cy[ic][0]*pow(x[iloc],cy[ic][1])*pow(y[iloc],cy[ic][2]);
 		}
-	    }else{//faster method for integer powers (>10x speed up).
+	    }else{/*faster method for integer powers (>10x speed up). */
 		double xp[np], yp[np];
 		xp[0]=1; yp[0]=1;
 		for(long ip=1; ip<np; ip++){

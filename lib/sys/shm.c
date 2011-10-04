@@ -45,7 +45,7 @@ int shm_keep_unused=0;
 
 void shm_unmap(void *p, int fd){
     if(fd<=0) return;
-    futimes(fd,NULL);//set access, modification time to current.
+    futimes(fd,NULL);/*set access, modification time to current. */
     struct stat buf;
     if(fstat(fd, &buf)){
 	perror("fstat");
@@ -82,23 +82,23 @@ int shm_free_unused(char *fnshm, int timeout){
     long sec2=myclocki()-timeout;
     while((dp=readdir(dir))){
 	snprintf(fnshm2,NAME_MAX,"/%s", dp->d_name);
-	if(!mystrcmp(fnshm2, "/maos_atm_")){//this is a maos atm
+	if(!mystrcmp(fnshm2, "/maos_atm_")){/*this is a maos atm */
 	    if(!fnshm || strcmp(fnshm, fnshm2)){
-		//not equal to fnshm. 
+		/*not equal to fnshm.  */
 		if(!shm_keep_unused){
 		    int fd=shm_open(fnshm2, O_RDONLY, 00777);
 		    if(fd<0){
 			perror("open");
 			warning("unable to open shared segment %s\n", fnshm2);
 		    }
-		    if(!flock(fd, LOCK_EX|LOCK_NB) ){//nobody is using this shm.
+		    if(!flock(fd, LOCK_EX|LOCK_NB) ){/*nobody is using this shm. */
 			fstat(fd, &buf);
 			if(buf.st_mtime<sec2){
 			    info2("\nUnlink %s ...", fnshm2);
 			    shm_unlink(fnshm2);
 			}
 		    }else{
-			//info2("\nKeep %s ...", fnshm2);
+			/*info2("\nKeep %s ...", fnshm2); */
 		    }
 		    close(fd);
 		}
@@ -107,7 +107,7 @@ int shm_free_unused(char *fnshm, int timeout){
 	    }
 	}
     }
-    closedir(dir);//don't forget to close it.
+    closedir(dir);/*don't forget to close it. */
     return already_exist;
 }
 

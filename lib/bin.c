@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
-#include <ctype.h> //isspace
+#include <ctype.h> /*isspace */
 #include "common.h"
 #include "thread.h"
 #include "process.h"
@@ -74,7 +74,7 @@ struct file_t{
     pthread_mutex_t lock;
 #endif
     char *fn;
-    int fd;//For locking.
+    int fd;/*For locking. */
 #if IO_TIMMING == 1
     struct timeval tv1;
 #endif
@@ -107,25 +107,25 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	fn2=malloc(strlen(fn)+16);
 	strcpy(fn2,fn);
     }
-    //If there is no recognized suffix, add .bin in the end.
+    /*If there is no recognized suffix, add .bin in the end. */
     if(!check_suffix(fn2,".bin") && !check_suffix(fn2, ".bin.gz")){
 	strncat(fn2, ".bin", 4);
     }
     if(mod[0]=='r' || mod[0]=='a'){
 	char *fnr=NULL;
-	if(!(fnr=search_file(fn2))){//If does not exist.
+	if(!(fnr=search_file(fn2))){/*If does not exist. */
 	    if(check_suffix(fn2, ".bin")){
-		//ended with .bin, change to .bin.gz
+		/*ended with .bin, change to .bin.gz */
 		strncat(fn2, ".gz", 3);
 	    }else{
-		//ended with bin.gz, change to .bin
+		/*ended with bin.gz, change to .bin */
 	    }
 	    fnr=search_file(fn2);
 	}
 	free(fn2);
 	fn2=fnr;
-    }else if (mod[0]=='w'){//for write, no suffix. we append .bin or .bin.gz
-	if(islink(fn2)){//remove old file to avoid write over a symbolic link.
+    }else if (mod[0]=='w'){/*for write, no suffix. we append .bin or .bin.gz */
+	if(islink(fn2)){/*remove old file to avoid write over a symbolic link. */
 	    if(remove(fn2)){
 		error("Failed to remove %s\n", fn2);
 	    }
@@ -174,16 +174,16 @@ file_t* zfopen(const char *fn, char *mod){
     /*Now open the file to get a fd number that we can use to lock on the
       file.*/
     switch(mod[0]){
-    case 'r'://read only
+    case 'r':/*read only */
 	fp->fd=open(fn2, O_RDONLY);
 	break;
-    case 'w'://write
+    case 'w':/*write */
     case 'a':
 	fp->fd=open(fn2, O_RDWR | O_CREAT, 0600);
 	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
 	    error("Trying to write to a file that is already opened for writing: %s\n", fn2);
 	}else{
-	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){//Need to manually truncate the file.
+	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
 		warning2("Truncating %s failed\n", fn2);
 	    }
 	}
@@ -380,7 +380,7 @@ uint32_t read_magic(file_t *fp, char **header){
 		if(header){
 		    char header2[nlen];
 		    zfread(header2, 1, nlen, fp);
-		    header2[nlen-1]='\0'; //make sure it is NULL terminated.
+		    header2[nlen-1]='\0'; /*make sure it is NULL terminated. */
 		    if(*header){
 			*header=realloc(*header, ((*header)?strlen(*header):0)+strlen(header2)+1);
 			strncat(*header, header2, nlen);
@@ -427,7 +427,7 @@ void write_header(const char *header, file_t *fp){
     if(!header) return;
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(header)+1;
-    //make header 8 byte alignment.
+    /*make header 8 byte alignment. */
     char *header2=strdup(header);
     if(nlen % 8 != 0){
 	nlen=(nlen/8+1)*8;
@@ -475,7 +475,7 @@ const char *search_header(const char *header, const char *key){
 	if(val>header){
 	    if(!isspace(val[-1]) && val[-1]!=';' && val[-1] !=','){
 		val=val+strlen(key);
-		continue;//Invalid
+		continue;/*Invalid */
 	    }
 	}
 	val=val+strlen(key);
@@ -496,7 +496,7 @@ double search_header_num(const char *header, const char *key){
     if(val){
 	return readstr_num(val, NULL);
     }else{
-	return NAN;//not found.
+	return NAN;/*not found. */
     }
 }
 /**
@@ -505,12 +505,12 @@ call with zfwritelarr(fp, 3, &a, &b, &c); */
 void zfwritelarr(file_t *fp, int count, ...){
     va_list ap;
     int i;
-    va_start (ap, count);              //Initialize the argument list.
+    va_start (ap, count);              /*Initialize the argument list. */
     for (i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  //Get the next argument value.  
+	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
 	zfwrite(addr, sizeof(uint64_t), 1, fp);
     }
-    va_end (ap);                       // Clean up. 
+    va_end (ap);                       /* Clean up.  */
 }
 /**
    Read multiple long numbers from the file. To read three numbers, a, b, c,
@@ -519,12 +519,12 @@ void zfwritelarr(file_t *fp, int count, ...){
 void zfreadlarr(file_t *fp, int count, ...){
     va_list ap;
     int i;
-    va_start (ap, count);              //Initialize the argument list.
+    va_start (ap, count);              /*Initialize the argument list. */
     for (i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  //Get the next argument value.  
+	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
 	zfread(addr, sizeof(uint64_t), 1, fp);
     }
-    va_end (ap);                       // Clean up. 
+    va_end (ap);                       /* Clean up.  */
 }
 /**
    Write an 1-d or 2-d array into the file. First write a magic number that
@@ -545,7 +545,7 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
     }else{
 	fp=(file_t*) fpn;
     }
-    //Write a dummy magic so that our header is multiple of 8 bytes long.
+    /*Write a dummy magic so that our header is multiple of 8 bytes long. */
     write_magic(magic, fp);
     if(p && nx>0 && ny>0){
 	zfwritelarr(fp, 2, &nx, &ny);
@@ -615,13 +615,13 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
     case M_INT32:
 	size=4;
 	break;
-    case M_DBL://saved by matlab.
+    case M_DBL:/*saved by matlab. */
 	size=-8;
 	break;
     default:
 	error("This is not a valid sparse spint file. magic=%x\n", magic);
     }
-    if(sizeof(spint)==size){//Matched int.
+    if(sizeof(spint)==size){/*Matched int. */
 	zfread(out, sizeof(spint), len, fp);
     }else{
 	size=abs(size);
@@ -677,9 +677,9 @@ spint *readspint(file_t *fp, long* nx, long* ny){
 void mmap_unref(struct mmap_t *in){
     if(in->nref>1){
 	in->nref--;
-	//info("%p: nref decreased to %ld\n", in->p, in->nref);
+	/*info("%p: nref decreased to %ld\n", in->p, in->nref); */
     }else{
-	//info("%p: nref is 1, unmap\n", in->p);
+	/*info("%p: nref is 1, unmap\n", in->p); */
 	munmap(in->p, in->n);
 	if(in->fd!=-1){
 	    close(in->fd);

@@ -30,7 +30,7 @@ typedef struct{
     float *p;
     int nx;
     int ny;
-    int igpu;//which gpu we are on.
+    int igpu;/*which gpu we are on. */
     int *nref;
 }curmat;
 
@@ -72,7 +72,7 @@ typedef struct{
 }cumuv_t;
 
 typedef struct{
-    float (*loc)[2];//in device.
+    float (*loc)[2];/*in device. */
     float dx;
     int nloc;
 }culoc_t;
@@ -82,8 +82,8 @@ typedef struct{
   the speed is largely the same with layered texture or flat memory.
  */
 struct cumap_t{
-    cudaArray *ca;//3D array. for layered texture
-    float **p;//float array.
+    cudaArray *ca;/*3D array. for layered texture */
+    float **p;/*float array. */
     float *ht;
     float *vx;
     float *vy;
@@ -95,7 +95,7 @@ struct cumap_t{
     int* nx;
     int* ny;
     int nlayer;
-    float **cc;//coefficients for cubic dm.
+    float **cc;/*coefficients for cubic dm. */
 };
 
 

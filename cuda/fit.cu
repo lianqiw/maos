@@ -73,12 +73,12 @@ void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
 			 const curmat *in, float oxi, float oyi, float dxi,
 			 float dispx, float dispy,float iac,
 			 float alpha,  cudaStream_t stream){
-    //offset of origin.
+    /*offset of origin. */
     dispx=(dispx-oxi+oxo);
     dispy=(dispy-oyi+oyo);
     int offx1=0, offy1=0;
     const double dxo1=1./dxo;
-    //if output is bigger than input.
+    /*if output is bigger than input. */
     if(dispx<0){
 	offx1=(int)ceilf(-dispx*dxo1);
 	dispx+=offx1*dxo;

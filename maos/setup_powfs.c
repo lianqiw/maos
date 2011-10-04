@@ -114,8 +114,8 @@ static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx,
     }else{
 	locannular(amp->p, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
     }
-    //Don't apply the mask any more. We limited available subapertures using r2min, r2max (2011-02-23)
-    //locannularmask(amp->p, locn, 0,0, D*0.5, Din*0.5);
+    /*Don't apply the mask any more. We limited available subapertures using r2min, r2max (2011-02-23) */
+    /*locannularmask(amp->p, locn, 0,0, D*0.5, Din*0.5); */
     return amp;
 }
 /**
@@ -141,51 +141,51 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     double offset,dxoffset;
     int count;
  
-    //order of the system. 60 for TMT
+    /*order of the system. 60 for TMT */
     const int order  = parms->powfs[ipowfs].order;
-    //Subaperture lateral length. 0.5 for TMT.
+    /*Subaperture lateral length. 0.5 for TMT. */
     const double dxsa = parms->aper.d/(double)order;
-    //The subaperture area that are considered as full.
+    /*The subaperture area that are considered as full. */
     double areafulli;
     if(order>2){
 	areafulli=1.;
     }else{
 	areafulli=4./M_PI;
     }
-    //The threashold for normalized area (by areafulli) to keep subaperture.
+    /*The threashold for normalized area (by areafulli) to keep subaperture. */
     const double thresarea=parms->powfs[ipowfs].saat;
-    //Offset of the coordinate of the center most subaperture from the center.
-    if(order & 1){//odd
+    /*Offset of the coordinate of the center most subaperture from the center. */
+    if(order & 1){/*odd */
 	offset = -0.5;
     }else{
 	offset = 0.0;
     }
-    //r2max: Maximum distance^2 from the center to keep a subaperture
+    /*r2max: Maximum distance^2 from the center to keep a subaperture */
     double r2max=pow(order/2+0.5, 2);
     double r2min=dxsa<parms->aper.din?pow(parms->aper.din/dxsa/2-0.5,2):-1;
-    //the lower left *grid* coordinate of the subaperture
+    /*the lower left *grid* coordinate of the subaperture */
     
-    //The coordinate of the subaperture (lower left coordinate)
+    /*The coordinate of the subaperture (lower left coordinate) */
     powfs[ipowfs].saloc=locnew(order*order, dxsa);
     /*Number of OPD pixels in 1 direction in each
       subaperture. Make it even to do fft.*/
     int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
-    const double dx=dxsa/nx;//adjust dx.
-    powfs[ipowfs].pts=ptsnew(order*order, dxsa, nx, dx);//calloc(1, sizeof(pts_t));
+    const double dx=dxsa/nx;/*adjust dx. */
+    powfs[ipowfs].pts=ptsnew(order*order, dxsa, nx, dx);/*calloc(1, sizeof(pts_t)); */
 
     if(fabs(parms->powfs[ipowfs].dx-powfs[ipowfs].pts->dx)>EPS)
 	warning("Adjusting dx from %g to %g\n",
 		parms->powfs[ipowfs].dx,powfs[ipowfs].pts->dx);
     if(fabs(dxsa - nx * powfs[ipowfs].pts->dx)>EPS)
 	warning("nx=%d,dsa=%f,dx=%f for not agree\n", nx, dxsa, dx);
-    if(parms->dbg.dxonedge){//do we want to put a point on edge.
+    if(parms->dbg.dxonedge){/*do we want to put a point on edge. */
 	warning("Put points on the edge of subapertures\n");
 	dxoffset=0;
     }else{
 	dxoffset=dx*0.5;
     }
     info2("There are %d points in each subapeture of %gm.\n", nx, dxsa);
-    const int nxsa=nx*nx;//Total Number of OPD points.
+    const int nxsa=nx*nx;/*Total Number of OPD points. */
     count = 0;
     /*Collect all the subapertures that are within the allowed radius*/
     for(int j=-order/2; j<=(order-1)/2; j++){
@@ -209,7 +209,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       the pupil amplitude map.*/
     powfs[ipowfs].pts->nsa=count;
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
-    //The assumed amp.
+    /*The assumed amp. */
     powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
 			       0,0, parms->aper.d, parms->aper.din);
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
@@ -243,7 +243,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    /*Transforms loc using misregistration information. The do ray
 	      tracing to determine the misregistered ampltidue map*/
 	    double *shiftxy=NULL;
-	    powfs[ipowfs].locm[ilocm]=loctransform(powfs[ipowfs].loc, &shiftxy, pmisreg[ilocm]);//may return NUL;
+	    powfs[ipowfs].locm[ilocm]=loctransform(powfs[ipowfs].loc, &shiftxy, pmisreg[ilocm]);/*may return NUL; */
 	    powfs[ipowfs].misreg[ilocm][0]=shiftxy[0];
 	    powfs[ipowfs].misreg[ilocm][1]=shiftxy[1];
 	    powfs[ipowfs].saam->p[ilocm]=dnew(powfs[ipowfs].pts->nsa, 1);
@@ -259,7 +259,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    powfs[ipowfs].misreg[ilocm][0]=powfs[ipowfs].misreg[0][0];
 	    powfs[ipowfs].misreg[ilocm][1]=powfs[ipowfs].misreg[0][1];
 	}
-    }else if(parms->aper.ismisreg){//do not need powfs[ipowfs].locm.
+    }else if(parms->aper.ismisreg){/*do not need powfs[ipowfs].locm. */
 	powfs[ipowfs].nlocm=1;
 	powfs[ipowfs].locm=calloc(1, sizeof(loc_t*));
 	powfs[ipowfs].ampm=dcellnew(1,1);
@@ -268,7 +268,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 					  -parms->aper.misreg[0], -parms->aper.misreg[1], 
 					  parms->aper.d, parms->aper.din);
 	powfs[ipowfs].saam->p[0]=wfsamp2saa(powfs[ipowfs].ampm->p[0], nxsa);
-    }//if misreg
+    }/*if misreg */
     count=0;
     /*Go over all the subapertures, calculate the normalized
       subaperture illumination area and remove all that are below
@@ -281,7 +281,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     case 1:
 	saa=ddup(powfs[ipowfs].saam->p[0]);break;
     default:
-	{//We take the average now to avoid different geometry in different LGS WFS. 
+	{/*We take the average now to avoid different geometry in different LGS WFS.  */
 	    const double scale=1./(double)nlocm;
 	    saa=dnew(powfs[ipowfs].pts->nsa, 1);
 	    for(int ilocm=0; ilocm<nlocm; ilocm++){
@@ -405,7 +405,7 @@ static void
 setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(parms->powfs[ipowfs].gtype_recon==0 ||parms->powfs[ipowfs].gtype_sim==0){
 	spcellfree(powfs[ipowfs].GS0);
-	//Setting up every gradient tilt (g-ztilt)
+	/*Setting up every gradient tilt (g-ztilt) */
 	if(parms->load.GS0){
 	    powfs[ipowfs].GS0=spcellread("powfs%d_GS0",ipowfs);
 	    if(powfs[ipowfs].ampm && powfs[ipowfs].ampm->nx>1){
@@ -415,7 +415,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    }
 	}else{
 	    double displace[2]={0,0};
-	    //This mkg takes about 5 seconds.
+	    /*This mkg takes about 5 seconds. */
 	    if(powfs[ipowfs].ampm && powfs[ipowfs].ampm->nx>1){
 		powfs[ipowfs].GS0=spcellnew(powfs[ipowfs].ampm->nx, 1);
 	    }else{
@@ -431,7 +431,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	}
     }
     if(parms->powfs[ipowfs].gtype_recon==1 ||parms->powfs[ipowfs].gtype_sim==1){
-	//setting up zernike best fit (ztilt) inv(M'*W*M). good for NGS.
+	/*setting up zernike best fit (ztilt) inv(M'*W*M). good for NGS. */
 	if(parms->powfs[ipowfs].order>4) 
 	    warning("Ztilt for high order wfs is not good");
 	powfs[ipowfs].nsaimcc=MAX(1,powfs[ipowfs].nlocm);
@@ -455,7 +455,7 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		if(parms->powfs[ipowfs].neasim!=-1){
 		    error("neasimfile and neasim can not both be supplied\n");
 		}
-		nea=dread("%s_wfs%d",parms->powfs[ipowfs].neasimfile,iwfs);//rad
+		nea=dread("%s_wfs%d",parms->powfs[ipowfs].neasimfile,iwfs);/*rad */
 		if(nea->nx!=nsa || (nea->ny!=2 && nea->ny!=3)){
 		    error("wfs %d: NEA read from %s_wfs%d has incorrect format. We want %ldx2(3) array.\n",
 			  iwfs, parms->powfs[ipowfs].neasimfile, iwfs,powfs[ipowfs].pts->nsa);
@@ -467,13 +467,13 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		}else{
 		    dset(nea, parms->powfs[ipowfs].neasim);
 		}
-		dscale(nea, 1./206265000);//convert from mas to rad.
+		dscale(nea, 1./206265000);/*convert from mas to rad. */
 	    }
 	    if(nea->ny==2){
 		dresize(nea,nsa,3);
 		memset(nea->p+nsa*2,0,nsa*sizeof(double));
 	    }
-	    //Sanity check
+	    /*Sanity check */
 	    double neamax=dmax(nea);
 	    if(neamax>0){
 		if(neamax<parms->powfs[ipowfs].pixtheta*1e-5){
@@ -482,18 +482,18 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		    warning("wfs %d: NEA=%g mas, read from file is too big. Unit error?\n",iwfs, neamax*206265000);
 		}
 	    }
-	    //Scale by dtrat
+	    /*Scale by dtrat */
 	    dscale(nea, 1./sqrt(parms->powfs[ipowfs].dtrat));
-	    //Scale by normalized subaperture area.
+	    /*Scale by normalized subaperture area. */
 	    double *saa=powfs[ipowfs].realsaa[jwfs];
-	    const int dl=parms->powfs[ipowfs].dl; //diffraction limited.
+	    const int dl=parms->powfs[ipowfs].dl; /*diffraction limited. */
 	    for(long isa=0; isa<nsa; isa++){
-		//scale nea by sqrt(1/area). (seeing limited)
-		//scale nea by 1/area if diffraction limited (NGS)
+		/*scale nea by sqrt(1/area). (seeing limited) */
+		/*scale nea by 1/area if diffraction limited (NGS) */
 		double scale=dl?(1./saa[isa]):(1./sqrt(saa[isa]));
 		nea->p[isa]*=scale;
 		nea->p[isa+nsa]*=scale;
-		nea->p[isa+nsa*2]*=scale;//cross term.
+		nea->p[isa+nsa*2]*=scale;/*cross term. */
 	    }
 	    powfs[ipowfs].neasim->p[jwfs]=nea;
 	}
@@ -534,7 +534,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	powfs[ipowfs].sprint=dcellnew(nllt,1);
 
 	for(int illt=0;illt<nllt;illt++){
-	    //adjusted llt center because pts->orig is corner
+	    /*adjusted llt center because pts->orig is corner */
 	    double ox2=parms->powfs[ipowfs].llt->ox[illt]-dxsa*0.5;
 	    double oy2=parms->powfs[ipowfs].llt->oy[illt]-dxsa*0.5;
 	    powfs[ipowfs].srot->p[illt]=dnew(nsa,1);
@@ -581,20 +581,20 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	}
     }
     int pixpsax=pixpsay;
-    if(radpix<0){//determine radpix adaptively
-	//use rsa2max to determine radpix
+    if(radpix<0){/*determine radpix adaptively */
+	/*use rsa2max to determine radpix */
 	error("Not emplemented yet\n");
     }
     pixpsax=(radpix)?radpix:pixpsay;
     
-    //record # of detector pixels.
+    /*record # of detector pixels. */
     powfs[ipowfs].pixpsax=pixpsax;
     powfs[ipowfs].pixpsay=pixpsay;
 
-    //to avoid aliasing, fft warping. usually 2.
+    /*to avoid aliasing, fft warping. usually 2. */
     const double embfac=parms->powfs[ipowfs].embfac;
  
-    //size required to form detector image.
+    /*size required to form detector image. */
     int ncompx, ncompy;
     if(parms->powfs[ipowfs].ncomp){
 	ncompx=parms->powfs[ipowfs].ncomp;
@@ -613,12 +613,12 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    if(wvlmin>parms->powfs[ipowfs].wvl[iwvl])
 		wvlmin=parms->powfs[ipowfs].wvl[iwvl];
 	}
-	double dtheta=wvlmin/(dxsa*embfac);//Min PSF sampling.
+	double dtheta=wvlmin/(dxsa*embfac);/*Min PSF sampling. */
 	ncompx=4*(int)round(0.25*pixpsax*pixtheta/dtheta);
 	ncompy=4*(int)round(0.25*pixpsay*pixtheta/dtheta);
 	
 	if(!parms->powfs[ipowfs].radrot){
-	    //Follow laos method, need square 
+	    /*Follow laos method, need square  */
 	    ncompx=ncompx>ncompy?ncompx:ncompy;
 	    ncompy=ncompx;
 	}else{
@@ -629,7 +629,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    ncompx=ncompx>ncompy?ncompx:ncompy;
 	    ncompy=ncompx;
 	}
-	//A few manual optimizations.
+	/*A few manual optimizations. */
 	if(ncompx==ncompy){
 	    if(ncompx>8 && ncompx<16){
 		ncompx=ncompy=16;
@@ -642,7 +642,7 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    }
 	}
 	info2("ncompx=%d, ncompy=%d\n", ncompx,ncompy);
-    }//ncomp
+    }/*ncomp */
     powfs[ipowfs].ncompx=ncompx;
     powfs[ipowfs].ncompy=ncompy;
 
@@ -694,7 +694,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     const double rot=-parms->aper.rotdeg/180.*M_PI;
     int do_rot=(fabs(rot)>1.e-10);
     const char *fn_ncpa = parms->powfs[ipowfs].ncpa;
-    if(fn_ncpa){//Always make nwfs NCPA's
+    if(fn_ncpa){/*Always make nwfs NCPA's */
 	char *fn=find_file(fn_ncpa);
 	int nncpa_in;
 	map_t **ncpa=maparrread(&nncpa_in, "%s",fn);
@@ -715,7 +715,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ilocm=0;
-	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){//misregistration.
+	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){/*misregistration. */
 		ilocm=parms->powfs[ipowfs].wfsind[iwfs];
 	    }
 	    int incpa_in=incpa_mul*iwfs;
@@ -750,7 +750,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    if(do_rot){
 		locfree(locwfs);
 	    }
-	}//iwfs;
+	}/*iwfs; */
 	maparrfree(ncpa,nncpa_in);
 	if(parms->powfs[ipowfs].ncpa_method<0 || parms->powfs[ipowfs].ncpa_method>2){
 	    error("Invalid ncpa_method=%d\n", parms->powfs[ipowfs].ncpa_method);
@@ -784,7 +784,7 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    dcellwrite(powfs[ipowfs].ncpa, "%s/powfs%d_ncpa",dirsetup,ipowfs);
 
 	}
-    }//if(fn_ncpa)
+    }/*if(fn_ncpa) */
 }
 /**
    Free the detector transfer function.
@@ -853,12 +853,12 @@ free_powfs_dtf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 */
 static void 
 setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
-    //wvl independent parameters
+    /*wvl independent parameters */
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nsa=powfs[ipowfs].pts->nsa;
     const double pixtheta=parms->powfs[ipowfs].pixtheta;
     const double blur=parms->powfs[ipowfs].pixblur*pixtheta;
-    const double e0=exp(-2*M_PI*M_PI*blur*blur);//blurring factors
+    const double e0=exp(-2*M_PI*M_PI*blur*blur);/*blurring factors */
     const int ncompx=powfs[ipowfs].ncompx;
     const int ncompy=powfs[ipowfs].ncompy;
     const int ncompx2=ncompx>>1;
@@ -883,7 +883,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	nllt=parms->powfs[ipowfs].llt->n;
 	multi_dtf=1;
     }else{
-	//We only need a single DTF.
+	/*We only need a single DTF. */
 	ndtf=1;
 	nllt=1;
 	multi_dtf=0;
@@ -892,7 +892,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     powfs[ipowfs].dtheta=dnew(nwvl,1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const double wvl=parms->powfs[ipowfs].wvl[iwvl];
-	const double dtheta=wvl/(dxsa*embfac);//PSF sampling.
+	const double dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
 	const double dux=1./(dtheta*ncompx);
 	const double duy=1./(dtheta*ncompy);
 	const double dux2=dux*dux;
@@ -943,13 +943,13 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
 		
 		ccp(&nominals[illt][isa], nominal);
-		//nominals[illt][isa]=cffttreat(nominal);
+		/*nominals[illt][isa]=cffttreat(nominal); */
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay,
 					  pixtheta,pxo,pyo,theta);
 		sis[illt][isa]=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 		locfree(loc_ccd);
-	    }//isa
-	}//illt
+	    }/*isa */
+	}/*illt */
 	cfree(nominal);
 	locfree(loc_psf);
 	if(parms->save.setup){
@@ -976,7 +976,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	    Uy[iy]=-2.*I*M_PI*jy*duy;
 	}
 
-    }//iwvl
+    }/*iwvl */
 }
 /**
    setup the range to sodium layer as an additional parameter.
@@ -993,7 +993,7 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	      parms->powfs[ipowfs].nwfs);
     }
     double *p=powfs[ipowfs].focus->p;
-    //Convert range to focus.
+    /*Convert range to focus. */
     double range2focus=pow(parms->aper.d/parms->powfs[ipowfs].hs,2)/(16.*sqrt(3));
     for(int ii=0; ii<powfs[ipowfs].focus->nx*powfs[ipowfs].focus->ny; ii++){
 	p[ii]*=range2focus;
@@ -1011,14 +1011,14 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
     }
     free(lltfn);
 
-    if(parms->powfs[0].llt->smooth){//resampling the sodium profile by binning.
-	//Make new sampling:
+    if(parms->powfs[0].llt->smooth){/*resampling the sodium profile by binning. */
+	/*Make new sampling: */
 	double rsamax=dmax(powfs[ipowfs].srsamax);
 	double dthetamin=dmin(powfs[ipowfs].dtheta);
 	const double x0in=Nain->p[0];
 	const long nxin=Nain->nx;
 	double dxin=(Nain->p[nxin-1]-x0in)/(nxin-1);
-	//minimum sampling required.
+	/*minimum sampling required. */
 	double dxnew=pow(parms->powfs[ipowfs].hs,2)/rsamax*dthetamin;
 	if(dxnew > dxin * 2){
 	    info2("Smoothing sodium profile\n");
@@ -1030,11 +1030,11 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 	    memcpy(powfs[ipowfs].sodium->p, loc_out->locx, sizeof(double)*nxnew);
 			     
 	    for(long icol=1; icol<Nain->ny; icol++){
-		//input profile
+		/*input profile */
 		double *pin=Nain->p + nxin * icol;
-		//output profile
+		/*output profile */
 		double *pout=powfs[ipowfs].sodium->p + nxnew*icol;
-		//preserve sum of input profile
+		/*preserve sum of input profile */
 		double Nasum=dblsum(pin, nxin);
 		spmulvec(pout, ht, pin, 1);
 		normalize(pout, nxnew, Nasum);
@@ -1072,7 +1072,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
     const int ncompy2=ncompy>>1;
     ETF_T *powfsetf=NULL;
     int colstart, colskip;
-    if(mode==0){//preparation.
+    if(mode==0){/*preparation. */
 	powfs[ipowfs].etfprep=calloc(nwvl, sizeof(ETF_T));
 	powfsetf=powfs[ipowfs].etfprep;
 	colskip=parms->powfs[ipowfs].llt->colprep;
@@ -1101,22 +1101,22 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	powfsetf=powfs[ipowfs].etfsim;
 	colskip=parms->powfs[ipowfs].llt->colsim;
     }
-    //find maximum elongation. 
-    //Then test if # of pixels large enough.
+    /*find maximum elongation.  */
+    /*Then test if # of pixels large enough. */
  
-    assert(nwvl==1);//sanity check. need to double check the code is nwvl!=1.
+    assert(nwvl==1);/*sanity check. need to double check the code is nwvl!=1. */
     const double embfac=parms->powfs[ipowfs].embfac;
-    //setup elongation along radial direction. don't care azimuthal.
+    /*setup elongation along radial direction. don't care azimuthal. */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	const double wvl=parms->powfs[ipowfs].wvl[iwvl];
-	const double dtheta=wvl/(dxsa*embfac);//PSF sampling.
+	const double dtheta=wvl/(dxsa*embfac);/*PSF sampling. */
 	/**
 	   fixme: should do integrate instead of just interpolating closest point. 
 	*/
 	cmat *(*petf)[nsa]=NULL;
 	const int ndtf=powfs[ipowfs].dtf[iwvl].nominal->nx;
 	cmat *(*pnominal)[ndtf]=(void*)powfs[ipowfs].dtf[iwvl].nominal->p;
-	int mnominal;//multiply with isa to get index into pnominal.
+	int mnominal;/*multiply with isa to get index into pnominal. */
 	if(ndtf==1)
 	    mnominal=0;
 	else if(ndtf==nsa)
@@ -1177,9 +1177,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	      2009-12-18:Thinking of padding here also to reduce aliasing. 
 	      result: helps little, not much.
 	    */
-	    npad=2;//zero padding to reduce aliasing?
+	    npad=2;/*zero padding to reduce aliasing? */
 	    nover=2;
-	    //padding by x2.
+	    /*padding by x2. */
 	    netf=ncompx*nover*npad;
 	    dtetf=dtheta/nover;
 	}else{
@@ -1190,17 +1190,17 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	      accurate.
 	    */
 	    npad=2;
-	    nover=2;//doesn't change a lot. reduce aliasing
-	    //padding by x2.
+	    nover=2;/*doesn't change a lot. reduce aliasing */
+	    /*padding by x2. */
 	    netf=ncompx*nover*npad;
-	    //make du array bigger so that rotation is covered
+	    /*make du array bigger so that rotation is covered */
 	    dtetf=dtheta/nover;
 	}
 	dusc=(netf*dtetf)/(dtheta*ncompx);
 	etf=cnew(netf,1);
 	double *thetas=calloc(netf, sizeof(double));
 	int netf2=netf>>1;
-	//Only interpolating the center part. the rest is padding.
+	/*Only interpolating the center part. the rest is padding. */
 	int etf0=netf2-(int)round(ncompx2*(dtheta/dtetf));
 	int etf1=etf0+(int)round(ncompx*(dtheta/dtetf));
 	if(etf0<0) error("Invalid configuration\n");
@@ -1217,7 +1217,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	const double hs=parms->powfs[ipowfs].hs;
 	double hpmin=sodium->p[0]/cos(parms->sim.za);
 	double dhp1=1./(sodium->p[1]-sodium->p[0]);
-	//assume linear spacing. check the assumption valid
+	/*assume linear spacing. check the assumption valid */
 	if(fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)/dhp1)>1.e-7){
 	    error("llt profile is not evenly spaced:%g\n",
 		  fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)/dhp1));
@@ -1228,9 +1228,9 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	}
 	colstart=colskip+istep%(sodium->ny-1-colskip);
 	info2("Na using column %d in %s\n",colstart, mode==0?"preparation":"simulation");
-	//points to the effective sodium profile.
+	/*points to the effective sodium profile. */
 	double* pp=sodium->p+nhp*(1+colstart);
-	//the sum of pp determines the scaling of the pixel intensity.
+	/*the sum of pp determines the scaling of the pixel intensity. */
 	double i0scale=dblsum(pp, nhp);
 	if(fabs(i0scale-1)>0.01){
 	    warning("Siglev is scaled by %g by sodium profile\n", i0scale);
@@ -1240,18 +1240,18 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	}
 	for(int illt=0; illt<nllt; illt++){
 	    for(int isa=0; isa<nsa; isa++){
-		//1d ETF along radius.
+		/*1d ETF along radius. */
 		double rsa=powfs[ipowfs].srsa->p[illt]->p[isa];
 		double etf2sum=0;
 		czero(etf);
 		for(int icomp=etf0; icomp<etf1; icomp++){
-		    //peak in center
+		    /*peak in center */
 		    const double itheta=thetas[icomp];
-		    //non linear mapping.
+		    /*non linear mapping. */
 		    const double ih=hs*rsa/(rsa-itheta*hs);
-		    //interpolating to get Na profile strenght.
-		    //this is bilinear interpolation. not good. 
-		    //need to do averaging
+		    /*interpolating to get Na profile strenght. */
+		    /*this is bilinear interpolation. not good.  */
+		    /*need to do averaging */
 		    const double iih=(ih-hpmin)*dhp1;
 		    const int iihf=ifloor(iih);
 		    const double iihw=iih-iihf;
@@ -1259,7 +1259,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 			etf->p[icomp]=0.;
 		    }else{
 			double tmp=pp[iihf]*(1.-iihw)+pp[iihf+1]*iihw;
-			//neglected rsa1 due to renormalization.
+			/*neglected rsa1 due to renormalization. */
 			etf->p[icomp]=tmp;
 			etf2sum+=tmp;
 		    }
@@ -1276,7 +1276,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		      
 		    */
 		    cscale(etf,i0scale/etf2sum);
-		    cfftshift(etf);//put peak in corner;
+		    cfftshift(etf);/*put peak in corner; */
 		    cfft2(etf, -1);
 		    if(use1d){
 			if(npad==1 && nover==1){
@@ -1297,8 +1297,8 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 			    cfftshift(petf[illt][isa]);
 			}
 		    }else{
-			//Rotate the ETF.
-			//need to put peak in center.
+			/*Rotate the ETF. */
+			/*need to put peak in center. */
 			cfftshift(etf);
 			double theta=powfs[ipowfs].srot->p[illt]->p[isa];
 			double ct=cos(theta);
@@ -1309,17 +1309,17 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 			    double iy=(icompy-ncompy2);
 			    for(int icompx=0; icompx<ncompx; icompx++){
 				double ix=(icompx-ncompx2);
-				double ir=(dusc*(ct*ix+st*iy))+netf2;//index in etf
+				double ir=(dusc*(ct*ix+st*iy))+netf2;/*index in etf */
 				int iir=ifloor(ir);
 				ir=ir-iir;
 				if(iir>=0 && iir<netf-1){
-				    //bilinear interpolation.
+				    /*bilinear interpolation. */
 				    etf2d[icompy][icompx]=etf->p[iir]*(1.-ir)
 					+etf->p[iir+1]*ir;
 				}/*else{etf2d[icompy][icompx]=0;}*/
 			    }
 			}
-			cfftshift(petf[illt][isa]);//peak in corner;
+			cfftshift(petf[illt][isa]);/*peak in corner; */
 		    }
 		}else{
 		    warning("Wrong focus!\n");
@@ -1331,7 +1331,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 		    cset(petf[illt][isa],1);
 		}
 		if(fuse_etf){
-		    //Fuse dtf into this 2d etf.
+		    /*Fuse dtf into this 2d etf. */
 		    ccwm(petf[illt][isa], pnominal[illt][isa*mnominal]);
 		}
 	    }
@@ -1362,7 +1362,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     LLT_T *llt=powfs[ipowfs].llt=calloc(1, sizeof(LLT_T));
     pts_t *lpts=llt->pts=calloc(1, sizeof(pts_t));
     lpts->nsa=1;
-    //Keep the same dx as wfs subaps so the OTF have same sampling
+    /*Keep the same dx as wfs subaps so the OTF have same sampling */
     const double dx = powfs[ipowfs].pts->dx;
     lpts->dx=dx;
     double lltd=parms->powfs[ipowfs].llt->d;
@@ -1376,7 +1376,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 
     double oy=lpts->origx[0]=(dx-lpts->dsa)*0.5;
     double ox=lpts->origy[0]=(dx-lpts->dsa)*0.5;
-    //fixme: when LLT is larger than dsa, need to change this.
+    /*fixme: when LLT is larger than dsa, need to change this. */
     llt->amp=dnew(nx,nx);
     PDMAT(llt->amp, amps);
     double l2max =pow(lltd*0.5,2);
@@ -1395,7 +1395,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    }
 	}
     }
-    //normalized so that max(otf)=1;
+    /*normalized so that max(otf)=1; */
     sumamp2=1./(sqrt(sumamp2));
     dscale(llt->amp, sumamp2);
     llt->loc=mksqloc(nx,nx,dx, lpts->origx[0], lpts->origy[0]);
@@ -1452,7 +1452,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 static void 
 setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, 
 		 int ipowfs){
-    if(parms->powfs[ipowfs].phytype!=1){//not matched filter
+    if(parms->powfs[ipowfs].phytype!=1){/*not matched filter */
 	error("This is only intended for matched filter\n");
     }
     long nsa=powfs[ipowfs].pts->nsa;
@@ -1473,7 +1473,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	intstat->gy=dcellread("powfs%d_gy",ipowfs);
     }else{
 	if(parms->powfs[ipowfs].piinfile){
-	    //load psf. 1 for each wavefront sensor.
+	    /*load psf. 1 for each wavefront sensor. */
 	    info2("Using 1 sepsf for each wfs when loading sepsf\n");
 	    intstat->nsepsf=parms->powfs[ipowfs].nwfs;
 	    intstat->sepsf=calloc(intstat->nsepsf, sizeof(dcell*));
@@ -1491,7 +1491,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	}else if(parms->powfs[ipowfs].lo){
 	    error("Please specify piinfile for lo order phy wfs\n");
 	}else{
-	    //LGS
+	    /*LGS */
 	    {
 		int npsfx=powfs[ipowfs].pts->nx *parms->powfs[ipowfs].embfac;
 		int npsfy=npsfx;
@@ -1541,9 +1541,9 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			 parms->powfs[ipowfs].embfac,npsfx,npsfy);
 		snprintf(fnlock, PATH_MAX, "%s.lock", fnotf);
 	    retry:
-		if(exist(fnlock) || !zfexist(fnotf)){//need to create data
-		    int fd=lock_file(fnlock, 0, 0);//nonblocking exclusive lock
-		    if(fd>=0){//succeed
+		if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
+		    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
+		    if(fd>=0){/*succeed */
 			info2("Generating WFS OTF for %s...", fnotf);tic;
 			genseotf(parms,powfs,ipowfs);
 			toc2("done");
@@ -1551,7 +1551,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 			close(fd);
 			remove(fnlock);
 		    }else{
-			fd=lock_file(fnlock,1,0);//blocking exclusive lock
+			fd=lock_file(fnlock,1,0);/*blocking exclusive lock */
 			close(fd);
 			remove(fnlock);
 			goto retry;
@@ -1591,16 +1591,16 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		char fnllock[PATH_MAX];
 		snprintf(fnllock, PATH_MAX, "%s.lock", fnlotf);
 	    retry2:
-		if(exist(fnllock) || !zfexist(fnlotf)){//need to create data
-		    int fd2=lock_file(fnllock, 0, 0);//nonblocking exclusive lock
-		    if(fd2>=0){//succeed
+		if(exist(fnllock) || !zfexist(fnlotf)){/*need to create data */
+		    int fd2=lock_file(fnllock, 0, 0);/*nonblocking exclusive lock */
+		    if(fd2>=0){/*succeed */
 			info2("Generating WFS LLT OTF for %s\n", fnlotf);
 			genselotf(parms,powfs,ipowfs);
 			ccellwrite(intstat->lotf, "%s",fnlotf);
 			close(fd2);
 			remove(fnllock);
 		    }else{
-			fd2=lock_file(fnllock, 1, 0);//blocking, exclusive
+			fd2=lock_file(fnllock, 1, 0);/*blocking, exclusive */
 			close(fd2);
 			remove(fnllock);
 			goto retry2;
@@ -1635,20 +1635,20 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 		cfree(psfhat);
 		dfree(psf);
 	    }
-	    //Generating short exposure images.
+	    /*Generating short exposure images. */
 	    gensepsf(parms,powfs,ipowfs);
 	    if(parms->save.setup && intstat){
 		dcellwrite(intstat->sepsf[0],
 			   "%s/powfs%d_sepsf",dirsetup,ipowfs);
 	    }
-	    //Free short exposure otf.
+	    /*Free short exposure otf. */
 	    ccellfree(intstat->lotf);
 	    for(int iotf=0; iotf<intstat->notf; iotf++){
 		ccellfree(intstat->otf[iotf]);
 	    }
 	    free(intstat->otf);
 	}
-	//generate short exposure i0,gx,gy from psf.
+	/*generate short exposure i0,gx,gy from psf. */
 	gensei(parms,powfs,ipowfs);
 	dcellfreearr(intstat->sepsf,intstat->nsepsf);
 	if(parms->save.setup && intstat){
@@ -1657,7 +1657,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	    dcellwrite(intstat->gy,"%s/powfs%d_gy",dirsetup,ipowfs);
 	}
     }
-    //Generating Matched filter
+    /*Generating Matched filter */
     genmtch(parms,powfs,ipowfs);
     dcellfree(intstat->i0);
     dcellfree(intstat->gx);
@@ -1666,7 +1666,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    dmat **sanea=NULL;
-	    //saneaxyl is the cholesky decomposition of the Cnn.
+	    /*saneaxyl is the cholesky decomposition of the Cnn. */
 	    if(powfs[ipowfs].intstat->saneaxyl->ny==1){
 		sanea=powfs[ipowfs].intstat->saneaxyl->p;
 	    }else{
@@ -1685,7 +1685,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms,
 	    dcellwrite(powfs[ipowfs].neasim,"%s/powfs%d_neasim", dirsetup, ipowfs);
 	}
     }
-    //Remove OTFs that are older than 30 days.
+    /*Remove OTFs that are older than 30 days. */
     char *dirotf=stradd(HOME, "/.aos/otfc", NULL);
     remove_file_older(dirotf, 30*24*3600);
     free(dirotf);
@@ -1713,29 +1713,29 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 	      error("Must use geometric grad for pistatout\n");
 	      }
 	    */
-	    //We have physical optics. setup necessary struct
+	    /*We have physical optics. setup necessary struct */
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);
 	    setup_powfs_dtf(powfs,parms,ipowfs);
 	    if(parms->powfs[ipowfs].llt){
-		//prepare Laser launch telescope.
-		setup_powfs_sodium(powfs,parms,ipowfs);//read sodium profile and smooth it
-		setup_powfs_etf(powfs,parms,ipowfs,0,0);//etf for prep
-		setup_powfs_etf(powfs,parms,ipowfs,1,0);//etf for sim
+		/*prepare Laser launch telescope. */
+		setup_powfs_sodium(powfs,parms,ipowfs);/*read sodium profile and smooth it */
+		setup_powfs_etf(powfs,parms,ipowfs,0,0);/*etf for prep */
+		setup_powfs_etf(powfs,parms,ipowfs,1,0);/*etf for sim */
 		setup_powfs_llt(powfs,parms,ipowfs);
 	    }
 	}
 	if(parms->powfs[ipowfs].llt){
-	    //If there is LLT, setup the extra focus term if needed.
+	    /*If there is LLT, setup the extra focus term if needed. */
 	    setup_powfs_focus(powfs,parms,ipowfs);
 	}
 	if(TEST_POWFS||parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].neaphy){
-	    if(parms->powfs[ipowfs].phytype==1){//matched filter
+	    if(parms->powfs[ipowfs].phytype==1){/*matched filter */
 		setup_powfs_mtch(powfs,parms,ipowfs);
 	    }else{
 		error("Please fill in this part\n");
 	    }
 	}
-    }//ipowfs
+    }/*ipowfs */
     toc("setup_powfs");
     return powfs;
 }

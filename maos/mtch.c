@@ -66,7 +66,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     const double rne=parms->powfs[ipowfs].rne;
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
     const double bkgrnd_res=bkgrnd*(1.-parms->powfs[ipowfs].bkgrndc);
-    const int sub_i0=1;//doesn't make any difference.
+    const int sub_i0=1;/*doesn't make any difference. */
     int ni0=powfs[ipowfs].intstat->i0->ny;
     if(ni0!=1 && ni0!=parms->powfs[ipowfs].nwfs){
 	error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
@@ -118,8 +118,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     int mtchcrx=0;
     int mtchcry=0;
     double shiftx=0, shifty=0;
-    //always use saved i0. cyclic shift is not good
-    //because of the wrapped ring.
+    /*always use saved i0. cyclic shift is not good */
+    /*because of the wrapped ring. */
     if(fabs(parms->powfs[ipowfs].mtchcrx)>1.e-10){
 	shiftx=parms->powfs[ipowfs].mtchcrx;
 	mtchcrx=nmod;
@@ -167,18 +167,18 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	pi0m[0][0]=1;
 	pi0m[1][1]=1;
 
-	if(mtchcrx){//constrained x(radial)
+	if(mtchcrx){/*constrained x(radial) */
 	    double shift=parms->powfs[ipowfs].pixtheta*shiftx;
-	    pi0m[mtchcrx][0]=shift*kp;//k is here to ensure good conditioning
+	    pi0m[mtchcrx][0]=shift*kp;/*k is here to ensure good conditioning */
 	    pi0m[mtchcrx+1][0]=-shift*kp;
 	}
-	if(mtchcry){//constrained y(azimuthal).
+	if(mtchcry){/*constrained y(azimuthal). */
 	    double shift=parms->powfs[ipowfs].pixtheta*shifty;
 	    pi0m[mtchcry][1]=shift*kp;
 	    pi0m[mtchcry+1][1]=-shift*kp;
 	}
 	double i0summax=0;
-	int crdisable=0;//adaptively disable mtched filter based in FWHM.
+	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
 	int ncrdisable=0;
 	for(int isa=0; isa<nsa; isa++){
 	    i0sum[ii0][isa]=dsum(i0s[ii0][isa]);
@@ -203,12 +203,12 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    if(powfs[ipowfs].bkgrndc && powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]){
 		bkgrnd2c= powfs[ipowfs].bkgrndc->p[ii0*nsa+isa]->p; 
 	    }
-	    dzero(i0g);//don't forget to zero out
+	    dzero(i0g);/*don't forget to zero out */
 	    adddbl(pi0g[0], 1, gxs[ii0][isa]->p, i0n, 1, 0);
 	    adddbl(pi0g[1], 1, gys[ii0][isa]->p, i0n, 1, 0);
 	    adddbl(pi0g[2], 1, i0s[ii0][isa]->p, i0n, kp, bkgrnd_res);
 	    adddbl(pi0g[2], 1, bkgrnd2, i0n, 1, bkgrnd_res);
-	    adddbl(pi0g[2], 1, bkgrnd2c, i0n, -1, 0);//subtract calibration
+	    adddbl(pi0g[2], 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
 	    if(mtchcrx && !crdisable){
 		/*
 		  constrained matched filter. compute separately for each wfs.
@@ -236,12 +236,12 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }
 	  
 	    if(bkgrnd2){
-		//adding rayleigh backscatter poisson noise.
-		for(int i=0; i<i0n; i++){//noise weighting.
+		/*adding rayleigh backscatter poisson noise. */
+		for(int i=0; i<i0n; i++){/*noise weighting. */
 		    wt->p[i]=1./(rne*rne+bkgrnd+i0s[ii0][isa]->p[i]+bkgrnd2[i]);
 		}	
 	    }else{
-		for(int i=0; i<i0n; i++){//noise weighting.
+		for(int i=0; i<i0n; i++){/*noise weighting. */
 		    wt->p[i]=1./(rne*rne+bkgrnd+i0s[ii0][isa]->p[i]);
 		}
 	    }
@@ -255,18 +255,18 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    dmm(&mtchera[ii0][isa],i0m, tmp, "nn", 1);
 	    dfree(tmp);
 	    if(crdisable){
-		//Put old values back.
+		/*Put old values back. */
 		i0g->ny=nmod;
 		i0m->ny=nmod;
 	    }
-	    for(int i=0; i<i0n; i++){//noise weighting.
+	    for(int i=0; i<i0n; i++){/*noise weighting. */
 		wt->p[i]=1./wt->p[i];
 	    }
 	    dmat *nea2=dtmcc(mtchera[ii0][isa], wt);
 	    nea2->p[0]+=neaspeckle2;
 	    nea2->p[3]+=neaspeckle2;
 	    if(parms->powfs[ipowfs].mtchcpl==0){
-		//remove coupling between r/a measurements.
+		/*remove coupling between r/a measurements. */
 		nea2->p[1]=nea2->p[2]=0;
 	    }
 	    psanea[0][isa]=nea2->p[0];
@@ -284,7 +284,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }
 	    saneaixy[ii0][isa]=dinvspd(saneaxy[ii0][isa]);
 	    saneaxyl[ii0][isa]=dchol(saneaxy[ii0][isa]);
-	}//isa 
+	}/*isa  */
 	double siglev=parms->powfs[ipowfs].dtrat*parms->wfs[iwfs].siglev;
 	if(i0summax<siglev*0.1 || i0summax>siglev){
 	    warning("i0 sum to maximum of %g, wfs %d has siglev of %g\n",
@@ -294,7 +294,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    info2("Mtched filter contraint are disabled for %d subaps out of %d.\n",
 		  ncrdisable, nsa);
 	}
-    }//ii0
+    }/*ii0 */
     info2("Matched filter sanea:\n");
     if(powfs[ipowfs].sprint){
 	if(parms->powfs[ipowfs].llt->n!=ni0){
@@ -336,8 +336,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 			  isa, locx, sqrt(psanea[0][isa])*206265000,
 			  sqrt(psanea[1][isa])*206265000);
 		}
-	    }//isa 
-	}//ii0
+	    }/*isa  */
+	}/*ii0 */
     }
     if(parms->save.setup){
 	dcellwrite(powfs[ipowfs].intstat->mtchera,

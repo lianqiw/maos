@@ -21,14 +21,14 @@
 
 
 static dmat* gen_unwrap(long nx, long ny){
-    //Create phase unwrap operator
+    /*Create phase unwrap operator */
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/unwrap_%ld_%ld.bin",HOME,nx,ny);
-    //if(exist(fn)){
-    //	cmat *out=cread(fn);
-    //	return out;
-    //}
-    dsp *Ht=spnew(nx*ny,nx*ny*2, nx*ny*2*2);//forward
+    /*if(exist(fn)){ */
+    /*	cmat *out=cread(fn); */
+    /*	return out; */
+    /*} */
+    dsp *Ht=spnew(nx*ny,nx*ny*2, nx*ny*2*2);/*forward */
     long count=0;
     spint *pp=Ht->p;
     spint *pi=Ht->i;
@@ -36,11 +36,11 @@ static dmat* gen_unwrap(long nx, long ny){
     long col=0;
     for(long iy=0; iy<ny; iy++){
 	long offx=iy*nx;
-	//X difference
+	/*X difference */
 	for(long ix=0; ix<nx; ix++){
 	    pp[col]=count;
 	    if(ix==0 && iy==0){
-		px[count]=1;//piston constraint.
+		px[count]=1;/*piston constraint. */
 		pi[count]=0;
 		count++;
 	    }
@@ -63,7 +63,7 @@ static dmat* gen_unwrap(long nx, long ny){
 		count++;*/
 	    }
 	}
-	//Y difference
+	/*Y difference */
 	for(long ix=0; ix<nx; ix++){
 	    pp[col]=count;
 	    col++;
@@ -91,19 +91,19 @@ static dmat* gen_unwrap(long nx, long ny){
     
     info("col=%ld,count=%ld\n",col,count);
     spsetnzmax(Ht,count);
-    //spwrite(Ht,"Ht");
+    /*spwrite(Ht,"Ht"); */
     dsp *H=sptrans(Ht);
-    //spwrite(H,"H");
+    /*spwrite(H,"H"); */
     dsp *HtH=spmulsp(Ht,H);
     dmat *cHtH=NULL;
     spfull(&cHtH,HtH,1);
-    //dwrite(cHtH,"cHtH");
-    //caddI(cHtH,1e-9);
+    /*dwrite(cHtH,"cHtH"); */
+    /*caddI(cHtH,1e-9); */
     dmat *IcHtH=dinv(cHtH);
-    //dwrite(IcHtH,"IcHtH");
+    /*dwrite(IcHtH,"IcHtH"); */
     dmat *out=NULL;
     dmulsp(&out, IcHtH, Ht, 1);
-    //dwrite(out,"HI");
+    /*dwrite(out,"HI"); */
     dfree(IcHtH);
     dfree(cHtH);
     spfree(HtH);
@@ -122,7 +122,7 @@ static void do_unwrap(cmat *phi, cmat *wvf, dmat *unwrap, dmat *diff, dmat *phir
     int npsf=wvf->nx;
     PCMAT(wvf, pwvf);
     PDMAT(diff,pdiff);
-    //TIC;tic;
+    /*TIC;tic; */
     for(int ix=1; ix<npsf; ix++){
 	pdiff[0][ix]=carg(pwvf[0][ix]*conj(pwvf[0][ix-1]));
 	pdiff[ix][npsf]=carg(pwvf[ix][0]*conj(pwvf[ix-1][0]));
@@ -131,23 +131,23 @@ static void do_unwrap(cmat *phi, cmat *wvf, dmat *unwrap, dmat *diff, dmat *phir
 	    pdiff[iy][ix+npsf]=carg(pwvf[iy][ix]*conj(pwvf[iy-1][ix]));
 	}
     }
-    //toc("assemble");tic;
+    /*toc("assemble");tic; */
     dzero(phirecon);
-    //dwrite(diff,"diff");
+    /*dwrite(diff,"diff"); */
     dmulvec(phirecon->p, unwrap, diff->p, 1);
-    //toc("mul");tic;
-    //assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx);
+    /*toc("mul");tic; */
+    /*assert(phi->nx==npsf && phi->ny==npsf && npsf*npsf==unwrap->nx); */
     for(int ix=0; ix<npsf*npsf; ix++){
-	phi->p[ix]=phirecon->p[ix]*I+log(cabs(wvf->p[ix]));//real part saves amplitude.
+	phi->p[ix]=phirecon->p[ix]*I+log(cabs(wvf->p[ix]));/*real part saves amplitude. */
     }
-    //toc("assign");
+    /*toc("assign"); */
 }
 
 static void convert_wvf(GENPISTAT_S *data){
     const PARMS_S *parms=data->parms;
-    //POWFS_S *powfs=data->powfs;
+    /*POWFS_S *powfs=data->powfs; */
     long icase=0;
-    //Do not run this function.
+    /*Do not run this function. */
     return;
     while((LOCKADD(icase,data->icase, 1))<data->ncase){
     TIC;tic;
@@ -156,7 +156,7 @@ static void convert_wvf(GENPISTAT_S *data){
     long ipowfs=data->cases[icase][2];
     long ncomp=parms->maos.ncomp[ipowfs];
     long seed=data->cases[icase][3];
-    long msa=parms->maos.msa[ipowfs];//in 1-d
+    long msa=parms->maos.msa[ipowfs];/*in 1-d */
     char fnwvf[PATH_MAX],fnphase[PATH_MAX];
     mymkdir("%s/phase",dirstart);
     snprintf(fnwvf,PATH_MAX,"%s/wvfout/wvfout_seed%ld_sa%ld_x%g_y%g",
@@ -169,7 +169,7 @@ static void convert_wvf(GENPISTAT_S *data){
     info("processing %s\n", fnwvf);
     file_t *fp_wvf=zfopen(fnwvf,"rb");
     uint32_t magic;
-    //zfread(&magic, sizeof(uint32_t),1,fp_wvf);
+    /*zfread(&magic, sizeof(uint32_t),1,fp_wvf); */
     magic=read_magic(fp_wvf, NULL);
     if(!iscell(magic)){
 	error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
@@ -205,7 +205,7 @@ static void convert_wvf(GENPISTAT_S *data){
     toc2("Processing %s:", fnphase);
     }
 }
-  //convert wvf of a+bi to log(a+bi) for interpolation.
+  /*convert wvf of a+bi to log(a+bi) for interpolation. */
     /*
     data->unwrap=dcellnew(parms->maos.npowfs,1);
     for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
@@ -213,7 +213,7 @@ static void convert_wvf(GENPISTAT_S *data){
 	data->unwrap->p[ipowfs]=gen_unwrap(ncomp/2,ncomp/2);
 	}*/
     /*  
-	//test phase unwrap.
+	/*test phase unwrap. */
 	{
 	rand_t rstat;
 	seed_rand(&rstat,1);
@@ -234,7 +234,7 @@ static void convert_wvf(GENPISTAT_S *data){
 	cwrite(wvf,"wvf");
 	cwrite(phi,"phi");
 	dwrite(opd,"opd");
-	//	exit(0);
+	/*	exit(0); */
 	}
     data->icase=0;
     CALL(convert_wvf, data, parms->skyc.nthread);

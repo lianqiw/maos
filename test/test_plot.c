@@ -23,9 +23,9 @@ int main(){
     }
     p=(unsigned char*)data->x;
     fprintf(stderr, "p=%p",p);
-    //for(int i=0; i<m*m; i++){
-    //	fprintf(stderr,"%d",p[i]);
-    //}
+    /*for(int i=0; i<m*m; i++){ */
+    /*	fprintf(stderr,"%d",p[i]); */
+    /*} */
    
 #endif
 }

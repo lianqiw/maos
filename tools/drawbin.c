@@ -54,7 +54,7 @@ static void draw_opd(file_t *fp1, file_t *fp2, int id){
     char *header1=NULL, *header2=NULL;
     magic1=read_magic(fp1, &header1);
     magic2=read_magic(fp2, &header2);
-    if(iscell(magic1) && iscell(magic2)){ //cells
+    if(iscell(magic1) && iscell(magic2)){ /*cells */
 	zfreadlarr(fp1, 2, &nx1, &ny1);
 	zfreadlarr(fp2, 2, &nx2, &ny2);
 	if(nx1*ny1!=nx2*ny2){
@@ -94,9 +94,9 @@ static void draw_loc(file_t *fp, int id){
 	}
     }else{
 	loc_t *loc=locreaddata(fp, magic, header);
-	if(loc->nloc>100000){//if too many points, we draw it.
+	if(loc->nloc>100000){/*if too many points, we draw it. */
 	    drawloc("loc",loc,NULL,zfname(fp),"x","y","%s",zfname(fp));
-	}else{//we plot individual points.
+	}else{/*we plot individual points. */
 	    plot_points("loc",1, &loc, NULL, NULL,NULL,0,NULL,NULL,name,"x","y","%s:%d",name,id);
 	}
 	locfree(loc);
@@ -118,18 +118,18 @@ int main(int argc, char *argv[]){
 	usage();
 	return 0;
     }
-    //use the parent pid so same bash session has the same drawdaemon.
+    /*use the parent pid so same bash session has the same drawdaemon. */
     DRAW_ID=getppid();
     DRAW_DIRECT=1;
-    //launch scheduler if it is not already running.
-    if(!strcmp(argv[1],"loc")){//draw coordinate grid
+    /*launch scheduler if it is not already running. */
+    if(!strcmp(argv[1],"loc")){/*draw coordinate grid */
 	if(argc!=3){
 	    error("Invalid number of input\n");
 	}
 	file_t *fp=zfopen(argv[2],"r");
 	draw_loc(fp, 0);
 	zfclose(fp);
-    }else if(!strcmp(argv[1],"opd")){//draw OPD with coordinate
+    }else if(!strcmp(argv[1],"opd")){/*draw OPD with coordinate */
 	if(argc==3){
 	    file_t *fp1=zfopen(argv[2],"r");
 	    draw_map(fp1, 0);

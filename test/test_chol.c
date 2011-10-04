@@ -22,7 +22,7 @@ int main(){
 */
 TIC;
 int main(int argc, char* argv[]){
-    //dsp *RLMc1=spread("RLMc_old.bin");
+    /*dsp *RLMc1=spread("RLMc_old.bin"); */
     if(argc!=2){
 	error("Need 1 argument\n");
     }

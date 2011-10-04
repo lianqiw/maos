@@ -40,7 +40,7 @@ void save_gradol(SIM_T *simu){
 	}
     }
     if(parms->save.ngcov>0){
-	//Outputing psol gradient covariance.
+	/*Outputing psol gradient covariance. */
 	for(int igcov=0; igcov<parms->save.ngcov; igcov++){
 	    int iwfs1=parms->save.gcov[igcov*2];
 	    int iwfs2=parms->save.gcov[igcov*2+1];
@@ -93,7 +93,7 @@ void save_recon(SIM_T *simu){
 	}
 	dcellfree(dmlo);
     }
-    if(parms->recon.alg==0){//minimum variance tomo/fit reconstructor
+    if(parms->recon.alg==0){/*minimum variance tomo/fit reconstructor */
 	if(parms->save.opdr){
 	    cellarr_dcell(simu->save->opdr, simu->opdr);
 	}
@@ -108,7 +108,7 @@ void save_recon(SIM_T *simu){
 	    if(parms->save.opdx){
 		cellarr_dcell(simu->save->opdx, opdx);
 	    }
-	    if(parms->plot.opdx){ //draw opdx
+	    if(parms->plot.opdx){ /*draw opdx */
 		for(int i=0; i<opdx->nx; i++){
 		    if(opdx->p[i]){
 			drawopd("opdx", recon->xloc[i], opdx->p[i]->p, NULL,
@@ -142,7 +142,7 @@ void save_recon(SIM_T *simu){
 	double scale=1./nstep;
 	if(!parms->dbg.useopdr || parms->sim.idealfit){
 	    dcellswrite(simu->ecov, scale, "ecov_%d_%ld", seed, nstep);
-	}else{//deprecated
+	}else{/*deprecated */
 	    char strht[24];
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 		if(!simu->ecov->p[ievl]) continue;

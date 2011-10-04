@@ -56,8 +56,8 @@ loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
 	zfread(out->locx, sizeof(double), nx, fp);
 	out->locy=malloc(sizeof(double)*nx);
 	zfread(out->locy, sizeof(double), nx, fp);
-	if(fabs(dx)<EPS || isnan(dx)){//dx is not available.
-	    for(long i=0; i<out->nloc-1; i++){//we assume the rows are continuous.
+	if(fabs(dx)<EPS || isnan(dx)){/*dx is not available. */
+	    for(long i=0; i<out->nloc-1; i++){/*we assume the rows are continuous. */
 		if(out->locy[i+1]>out->locy[i]){
 		    dx=out->locy[i+1]-out->locy[i];
 		    info("Guessing: dx=%g\n", dx);
@@ -239,7 +239,7 @@ map_t *mapread(const char *format, ...){
 	}
 	map=d2map(in);
 	dfree(in);
-    }else if(iscell(magic)){//old format.
+    }else if(iscell(magic)){/*old format. */
 	dcell *in=dcellreaddata(fp, magic);
 	if(in){
 	    in->header=header;

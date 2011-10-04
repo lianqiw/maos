@@ -103,14 +103,14 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 		      double guard, long nin, int pad,int square){
     double R=parms->aper.d/2;
     double maxx=0,maxy=0;
-    double sx,sy;//temporary variables
+    double sx,sy;/*temporary variables */
     int i;
     int use_wfs_hi=1;
     int use_wfs_lo=1;
     int use_evl=1;
     int use_fit=1;
    
-    //find minimum map size to cover all the beams
+    /*find minimum map size to cover all the beams */
     for(i=0; i<parms->nwfs; i++){
 	int ipowfs=parms->wfs[i].powfs;
 	if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
@@ -140,24 +140,24 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	    if(sy>maxy) maxy=sy;
 	}
     }
-    //normalized grid size +3 is extra guard band
+    /*normalized grid size +3 is extra guard band */
     maxx=ceil(maxx/dx)+2;
     maxy=ceil(maxy/dx)+2;
     long nx,ny;
     nx=iceil(maxx+offset+1)*2;
     ny=iceil(maxy+offset+1)*2;
-    if(pad){//pad to power of 2
+    if(pad){/*pad to power of 2 */
 	nx=1<<iceil(log2((double)nx));
 	ny=1<<iceil(log2((double)ny));
     }
-    //Make it square
+    /*Make it square */
     nx=(nx<ny)?ny:nx;
     ny=nx;
     if(nin>1){
 	if(nin<nx){
 	    warning("nin=%ld is too small\n",nin);
 	}
-	//warning("overriding nx=%ld, ny=%ld by supplied nin=%ld\n",nx,ny,nin);
+	/*warning("overriding nx=%ld, ny=%ld by supplied nin=%ld\n",nx,ny,nin); */
 	nx=nin;
 	ny=nin;
     }
@@ -180,7 +180,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	dset(dmap,1);
 	dfree_keepdata(dmap);
     }else if(map){
-	//guard+=0.707;//necessary with dcircle_deprecated. not with current dcircle
+	/*guard+=0.707;//necessary with dcircle_deprecated. not with current dcircle */
 	dmat *dmap=dnew(nx,ny);
 	*map=dmap->p;
 	double Rn=R/dx;
@@ -234,7 +234,7 @@ void plotloc(char *fig, const PARMS_T *parms,
 	cir[count][0]=ht*parms->evl.thetax[ievl];
 	cir[count][1]=ht*parms->evl.thetay[ievl];
 	cir[count][2]=parms->aper.d*0.5;
-	cir[count][3]=0xFF0000;//rgb color
+	cir[count][3]=0xFF0000;/*rgb color */
 	count++;
     }
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -243,9 +243,9 @@ void plotloc(char *fig, const PARMS_T *parms,
 	cir[count][1]=parms->wfs[iwfs].thetay*ht;
 	cir[count][2]=parms->aper.d*0.5*(1.-ht/hs);
 	if(isinf(hs)){
-	    cir[count][3]=0x44FF00;//rgb color
+	    cir[count][3]=0x44FF00;/*rgb color */
 	}else{
-	    cir[count][3]=0xFFFF33;//rgb color
+	    cir[count][3]=0xFFFF33;/*rgb color */
 	}
 	count++;
     }
@@ -263,7 +263,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][0]=0;
     cir[0][1]=0;
     cir[0][2]=totfov/2;
-    cir[0][3]=0x000000;//rgb color
+    cir[0][3]=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
     loc_t **locs=calloc(ngroup, sizeof(loc_t*));
     int32_t *style=calloc(ngroup, sizeof(int32_t));
@@ -326,9 +326,9 @@ void rename_file(int sig){
 	sprintf(suffix,"err");
 	break;
     case SIGKILL:
-    case SIGINT: //Ctrl-C
+    case SIGINT: /*Ctrl-C */
     case SIGTERM:
-    case SIGQUIT: //Ctrl-'\'
+    case SIGQUIT: /*Ctrl-'\' */
 	sprintf(suffix,"killed");
 	break;
     default:
@@ -365,7 +365,7 @@ void maos_signal_handler(int sig){
 	return;
     }
     disable_signal_handler;
-    rename_file(sig);//handles signal
+    rename_file(sig);/*handles signal */
     if(sig!=0){
 	char *info="Unknown";
 	switch(sig){
@@ -376,11 +376,11 @@ void maos_signal_handler(int sig){
 	    info="Segmentation falt";
 	    break;
 	case SIGKILL:
-	case SIGINT: //Ctrl-C
+	case SIGINT: /*Ctrl-C */
 	case SIGTERM:
-	case SIGQUIT: //Ctrl-'\'
+	case SIGQUIT: /*Ctrl-'\' */
 	    info="Killed";
-	case SIGUSR1://user defined
+	case SIGUSR1:/*user defined */
 	    info="User exited";
 	    break;
 	}
@@ -391,7 +391,7 @@ void maos_signal_handler(int sig){
 	    print_backtrace(0);
 	}
 	scheduler_finish(1);
-	_Exit(sig);//don't call clean up functions, but does flush files.
+	_Exit(sig);/*don't call clean up functions, but does flush files. */
     }
 }
 /**
@@ -482,11 +482,11 @@ ARG_T * parse_args(int argc, char **argv){
     if(!arg->conf){ /*If -c is not specifid in path, will use default.conf*/
 	arg->conf=strdup("default.conf");
     }
-    //Setup PATH and result directory so that the config_path is in the back of path
+    /*Setup PATH and result directory so that the config_path is in the back of path */
     char *config_path=find_config("maos");
 #if USE_STATIC && 0
     if(!exist(config_path)){
-	//We are binding the config files in the executable, extract and use it.
+	/*We are binding the config files in the executable, extract and use it. */
 	char *start=&_binary____config_tar_gz_start;
 	char *end=&_binary____config_tar_gz_end;
 	long len=end-start;
@@ -514,7 +514,7 @@ ARG_T * parse_args(int argc, char **argv){
     if(!config_path || !exist(config_path)){
 	error("Unable to find usable configuration file\n");
     }
-    //info2("Using config files found in %s\n", config_path);
+    /*info2("Using config files found in %s\n", config_path); */
     char *bin_path=stradd(config_path, "/bin", NULL);
     addpath(config_path);
     addpath(bin_path);
@@ -550,7 +550,7 @@ cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl){
     return psf2;
 }
 typedef struct PSFCOMP_T{
-    ccell *psf2s;//output psf.
+    ccell *psf2s;/*output psf. */
     const dmat *iopdevl;
     const double *amp;
     long **embeds;
@@ -601,7 +601,7 @@ void psfcomp_iwvl(thread_t *thdata){
 	    cmat *psf2=cnew(nembed,nembed);
 	    int use1d;
 	    int use1d_enable=0;
-	    if(psfsize[iwvl]<nembed && use1d_enable){//Want smaller PSF.
+	    if(psfsize[iwvl]<nembed && use1d_enable){/*Want smaller PSF. */
 		use1d=1;
 		cfft2partialplan(psf2, psfsize[iwvl], -1);
 	    }else{
@@ -610,7 +610,7 @@ void psfcomp_iwvl(thread_t *thdata){
 	    }
 	 
 	    /*
-	      //The following makes sum(psf)=1;
+	      //The following makes sum(psf)=1; 
 	      double psfnorm=1./(sqrt(aper->sumamp2)*aper->nembed);
 	    */
 	    
@@ -628,10 +628,10 @@ void psfcomp_iwvl(thread_t *thdata){
 	    }else{
 		cfft2(psf2,-1);
 	    }
-	    if(psfsize[iwvl]==nembed){//just reference
+	    if(psfsize[iwvl]==nembed){/*just reference */
 		cfftshift(psf2);
 		psf2s->p[iwvl]=cref(psf2);
-	    }else{//create a new array, smaller.
+	    }else{/*create a new array, smaller. */
 		psf2s->p[iwvl]=cnew(psfsize[iwvl], psfsize[iwvl]);
 		ccpcorner2center(psf2s->p[iwvl], psf2);
 	    }
@@ -710,9 +710,9 @@ void shift_inte(int nap, double *ap, dcell **inte){
     for(int iap=nap-1; iap>=0; iap--){
 	dcelladd(&tmp,1,inte[iap],ap[iap]);
 	if(iap>0){
-	    inte[iap]=inte[iap-1];//shifting
+	    inte[iap]=inte[iap-1];/*shifting */
 	}else{
-	    inte[iap]=tmp;//new command.
+	    inte[iap]=tmp;/*new command. */
 	}
     }
     dcellfree(keepjunk);

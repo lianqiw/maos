@@ -64,15 +64,15 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	curiseed=iseed;
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
-	if(!simu) continue;//skip.
+	if(!simu) continue;/*skip. */
 	recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 	}
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
-	    //put here to avoid messing up timing due to transfering.
-	    gpu_atm2gpu_new(simu->atm, parms, iseed, simstart);//takes 0.4s for NFIRAOS.
+	    /*put here to avoid messing up timing due to transfering. */
+	    gpu_atm2gpu_new(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
 	    if(parms->gpu.evl){
 		gpu_perfevl_init_sim(parms, aper);
 	    }
@@ -97,13 +97,13 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    evolve_screen(simu);
 		}
 #if USE_CUDA
-		if(parms->gpu.evl || parms->gpu.wfs){//may need to copy another part
-		    gpu_atm2gpu_new(simu->atm, parms, iseed, isim);//takes 0.4s for NFIRAOS 64 meter screen.
+		if(parms->gpu.evl || parms->gpu.wfs){/*may need to copy another part */
+		    gpu_atm2gpu_new(simu->atm, parms, iseed, isim);/*takes 0.4s for NFIRAOS 64 meter screen. */
 		}
 #endif
 	    }else{
 		genscreen(simu);
-		//re-seed the atmosphere in case atm is loaded from shm/file
+		/*re-seed the atmosphere in case atm is loaded from shm/file */
 		seed_rand(simu->atm_rand, lrand(simu->init));
 	    }
 	    if(parms->sim.dmproj){
@@ -140,31 +140,31 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		  presimulation case because perfevl updates dmreal before
 		  wfsgrad
 		*/
-		read_self_cpu();//initialize CPU usage counter
-		//when we want to apply idealngs correction, wfsgrad need to wait for perfevl.
+		read_self_cpu();/*initialize CPU usage counter */
+		/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 		long group=0;
 		thread_pool_queue(&group, (thread_fun)reconstruct, simu, 0);
 		thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
-		if(parms->tomo.ahst_idealngs)//Need to wait until perfevl is done to start wfsgrad.
+		if(parms->tomo.ahst_idealngs)/*Need to wait until perfevl is done to start wfsgrad. */
 		    thread_pool_wait(&group);
 		thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
 		thread_pool_wait(&group);
-		shift_grad(simu);//before filter()
-		filter(simu);//updates dmreal, so has to be after prefevl/wfsgrad is done.
+		shift_grad(simu);/*before filter() */
+		filter(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
 		cpu_all=read_self_cpu();
-	    }else{//do the big loop in serial mode.
-		read_self_cpu();//initialize CPU usage counter
+	    }else{/*do the big loop in serial mode. */
+		read_self_cpu();/*initialize CPU usage counter */
 		if(CL){
-		    perfevl(simu);//before wfsgrad so we can apply ideal NGS modes
+		    perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
 		    cpu_evl=read_self_cpu();
-		    wfsgrad(simu);//output grads to gradcl, gradol
+		    wfsgrad(simu);/*output grads to gradcl, gradol */
 		    cpu_wfs=read_self_cpu();
-		    reconstruct(simu);//uses grads from gradlast cl, gradlast ol.
+		    reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
 		    cpu_recon=read_self_cpu();
 		    shift_grad(simu);
 		    filter(simu);
 		    cpu_cachedm=read_self_cpu();
-		}else{//in OL mode, 
+		}else{/*in OL mode,  */
 		    wfsgrad(simu);
 		    cpu_wfs=read_self_cpu();
 		    shift_grad(simu);
@@ -192,7 +192,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 
 	    int this_time=myclocki();
 	    if(this_time>simu->last_report_time+1 || isim+1==simend){
-		//we don't print out or report too frequenctly.
+		/*we don't print out or report too frequenctly. */
 		simu->last_report_time=this_time;
 #if defined(__linux__) || defined(__APPLE__)
 		scheduler_report(simu->status);
@@ -208,11 +208,11 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		    }
 #endif
 	    }
-	    if(parms->pause){//does not work.
+	    if(parms->pause){/*does not work. */
 		info2("Press Enter to continue.\n");
 		while(getchar()!=0x0a);
 	    }
-	}//isim
+	}/*isim */
 	free_simu(simu);
-    }//seed
+    }/*seed */
 }

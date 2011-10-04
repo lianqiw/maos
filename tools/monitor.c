@@ -103,7 +103,7 @@ to specify the classname before the key like GtkTreeView::allow-rules */
 static const gchar *rc_string_treeview = 
     {
 	"style \"solidTreeLines\"{                       \n" 
-	//" GtkTreeView::grid-line-pattern=\"\111\111\"\n"
+	/*" GtkTreeView::grid-line-pattern=\"\111\111\"\n" */
 	" GtkTreeView::grid-line-width   = 1             \n"
 	" GtkTreeView::allow-rules       = 1             \n"
 	" GtkTreeView::odd-row-color     = \"#EFEFFF\"   \n"
@@ -160,7 +160,7 @@ static void host_up(int host){
     pthread_mutex_unlock(&pmutex);
     gtk_widget_set_sensitive(cmdconnect[host],0);
     gtk_widget_hide(cmdconnect[host]);
-    proc_remove_all(host);//remove all entries.
+    proc_remove_all(host);/*remove all entries. */
 }
 static void host_down(int host, int info){
     pthread_mutex_lock(&pmutex);
@@ -197,7 +197,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
     gsize nread;
     int cmd[3];
     if(cond&G_IO_HUP || cond&G_IO_ERR || cond&G_IO_NVAL){
-	//warning2("Lost connection to %s\n", hosts[host_from_sock(sock)]);
+	/*warning2("Lost connection to %s\n", hosts[host_from_sock(sock)]); */
 	return FALSE;
     }
     GIOStatus status;
@@ -217,7 +217,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
     if(status==G_IO_STATUS_EOF|| status==G_IO_STATUS_ERROR
        || status==G_IO_STATUS_AGAIN||nread!=3*sizeof(int)){
 	warning("Error encountered. Disconnect\n");
-	return FALSE;//disconnect.
+	return FALSE;/*disconnect. */
     }
     int host=-1;
     for(int ihost=0; ihost<nhost; ihost++){
@@ -271,7 +271,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
 		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[host]), usage_mem[host]);
 		if(usage_cpu[host]>=0.8 && last_cpu<0.8){
 		    gtk_widget_modify_bg(prog_cpu[host],GTK_STATE_SELECTED,&red);
-		    //somehow the XFCE engines only respect PRELIGHT
+		    /*somehow the XFCE engines only respect PRELIGHT */
 		    gtk_widget_modify_bg(prog_cpu[host],GTK_STATE_PRELIGHT,&red);
 		}else if(usage_cpu[host]<0.8 && last_cpu>=0.8){
 		    gtk_widget_modify_bg(prog_cpu[host],GTK_STATE_SELECTED,&blue);
@@ -302,8 +302,8 @@ static int init_sockaddr (struct sockaddr_in *name,
     name->sin_port = htons(port);
     hostinfo = gethostbyname (hostname);
     if (hostinfo == NULL){
-	//perror("gethostbyname");
-	//fprintf (stderr, "Unknown host %s.\n", hostname);
+	/*perror("gethostbyname"); */
+	/*fprintf (stderr, "Unknown host %s.\n", hostname); */
 	return -1;
     }else{
 	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
@@ -311,7 +311,7 @@ static int init_sockaddr (struct sockaddr_in *name,
 	    name->sin_addr = *addr;
 	    return 0;
 	}else{
-	    //warning("h_addr_list is NULL for host %s\n", hostname);
+	    /*warning("h_addr_list is NULL for host %s\n", hostname); */
 	    return -1;
 	}
     }
@@ -348,11 +348,11 @@ int scheduler_connect(int ihost, int block, int mode){
 	warning("flag==-1\n");
 	flag=0;
     }
-    flag |= FD_CLOEXEC; //close on exec.
+    flag |= FD_CLOEXEC; /*close on exec. */
     fcntl(sock, F_SETFD, flag);
     
     if(init_sockaddr (&servername, host, PORT)){
-	//	warning3("Unable to init_sockaddr.\n");
+	/*	warning3("Unable to init_sockaddr.\n"); */
 	close(sock);
 	return -1;
     }
@@ -383,12 +383,12 @@ int scheduler_kill_job(int host,int pid){
     if(sock==-1) return 1;
     int cmd[2];
     cmd[0]=CMD_KILL;
-    cmd[1]=pid;//pid
+    cmd[1]=pid;/*pid */
     if(write(sock,cmd,2*sizeof(int))!=sizeof(int)*2){
 	warning("write to socket %d failed\n",sock);
     }
     close(sock);
-    return 0;//success
+    return 0;/*success */
 }
 
 /**
@@ -399,12 +399,12 @@ int scheduler_remove_job(int host, int pid){
     if(sock==-1) return 1;
     int cmd[2];
     cmd[0]=CMD_REMOVE;
-    cmd[1]=pid;//pid
+    cmd[1]=pid;/*pid */
     if(write(sock,cmd,2*sizeof(int))!=sizeof(int)*2){
 	warning("write to socket %d failed\n",sock);
     }
     close(sock);
-    return 0;//success
+    return 0;/*success */
 }
 
 /**
@@ -432,12 +432,12 @@ static void add_host_thread(void *value){
 		if(write(sock,cmd,sizeof(int)*2)!=sizeof(int)*2){
 		    hsock[ihost]=0;
 		}else{
-		    //2010-07-03:we don't write. to detect remote close.
+		    /*2010-07-03:we don't write. to detect remote close. */
 		    shutdown(sock,SHUT_WR);
 		    gdk_threads_enter();
 		    GIOChannel *channel=g_io_channel_unix_new(sock);
 		    g_io_channel_set_encoding(channel,NULL,NULL);
-		    //must not be buffered
+		    /*must not be buffered */
 		    g_io_channel_set_buffered(channel,FALSE);
 		    g_io_channel_set_close_on_unref (channel,1);
 		    g_io_add_watch_full
@@ -458,9 +458,9 @@ static void add_host_thread(void *value){
 	}
 	
 	pthread_mutex_lock(&pmutex);
-	if(hsock[ihost]){//host is up. sleep
+	if(hsock[ihost]){/*host is up. sleep */
 	    pthread_cond_wait(&pcond, &pmutex);
-	}else{//sleep 5 seconds before retry.
+	}else{/*sleep 5 seconds before retry. */
 	    struct timespec abstime;
 	    abstime.tv_sec=myclockd()+5;
 	    abstime.tv_nsec=0;
@@ -470,7 +470,7 @@ static void add_host_thread(void *value){
     }
 }
 static void add_host_wakeup(void){
-    //Wakeup add_host_thread
+    /*Wakeup add_host_thread */
     pthread_cond_broadcast(&pcond);
 }
 void notify_user(PROC_T *p){
@@ -481,7 +481,7 @@ void notify_user(PROC_T *p){
     static NotifyNotification *notify_urgent=NULL, *notify_normal=NULL, *notify_low=NULL;
     if (!notify_urgent){
 #if defined(NOTIFY_CHECK_VERSION) 
-#if NOTIFY_CHECK_VERSION(0,7,0) //newer versions doesnot have _new_with_status_icon
+#if NOTIFY_CHECK_VERSION(0,7,0) /*newer versions doesnot have _new_with_status_icon */
 	notify_low=notify_notification_new("Low", NULL, NULL);
 	notify_normal=notify_notification_new("Low", NULL, NULL);
 	notify_urgent=notify_notification_new("Low", NULL, NULL);
@@ -675,9 +675,9 @@ static void create_status_icon(){
 static gboolean delete_window(void){
     if(gtk_status_icon_is_embedded(status_icon)){
 	gtk_widget_hide(window);
-	return TRUE;//do not quit
+	return TRUE;/*do not quit */
     }else{
-	return FALSE;//quit.
+	return FALSE;/*quit. */
     }
 }
 
@@ -809,7 +809,7 @@ int main(int argc, char *argv[])
     gtk_widget_show(image_finished);
     icon_finished=gtk_image_get_pixbuf(GTK_IMAGE(image_finished));
     */
-    //gtk_rc_parse_string(rc_string_widget);
+    /*gtk_rc_parse_string(rc_string_widget); */
     gtk_rc_parse_string(rc_string_treeview);
     gtk_rc_parse_string(rc_string_progress);
     gtk_rc_parse_string(rc_string_entry);
@@ -847,7 +847,7 @@ int main(int argc, char *argv[])
 #if GTK_MAJOR_VERSION<=2 && GTK_MINOR_VERSION <20 
     gtk_box_pack_start(GTK_BOX(vbox), toolbar,FALSE,FALSE,0);
 #else
-    //Newer GTK_NOTEBOOK has action widgets.
+    /*Newer GTK_NOTEBOOK has action widgets. */
     gtk_notebook_set_action_widget(GTK_NOTEBOOK(notebook), toolbar, GTK_PACK_START);
 #endif
     gtk_box_pack_start(GTK_BOX(vbox), notebook, TRUE,TRUE,0);

@@ -32,7 +32,7 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
     long offy=-xloc->locy[0]*dx1+saloc->dx*0.5*dx1;
     for(long isa=0; isa<saloc->nloc; isa++){
 	if(saa[isa]>0.9){
-	    long ix=(saloc->locx[isa])*dx1+offx;//subaperture center.
+	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture center. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
 	    pxsel[iy][ix]=1;
 	}
@@ -41,9 +41,9 @@ static csp* fdpcg_sa(loc_t *xloc, loc_t *saloc, double *saa){
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
-    //temporary. cancel fft effect and compare with laos.
+    /*temporary. cancel fft effect and compare with laos. */
     cscale(xsel,1./(double)(nx*ny));
-    double xselc=creal(pxsel[ny/2][nx/2])*threas;//Fourier center
+    double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
 	for(long iy=0; iy<ny; iy++){
@@ -98,7 +98,7 @@ static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
     long count=0;
     for(long iy=-adim/2; iy<adim/2; iy++){
 	for(long ix=-adim/2; ix<adim/2; ix++){
-	    //(ix,iy) is the frequency in SALOC grid.
+	    /*(ix,iy) is the frequency in SALOC grid. */
 	    for(long juse_os=0; juse_os<use_os; juse_os++){
 		long jy=(iy+adim*juse_os);
 		if(jy>=osx) jy-=xdim[0];
@@ -106,9 +106,9 @@ static long *fdpcg_perm(long *nperm, loc_t **xloc, int nps, loc_t *saloc){
 		    long jx=(ix+adim*iuse_os);
 		    if(jx>=osx) jx-=xdim[0];
 
-		    //jx, jy is the frequency in XLOC grid.
+		    /*jx, jy is the frequency in XLOC grid. */
 		    for(long ips=0; ips<nps; ips++){
-			if(jy>=-fxlim[ips] && jy<fxlim[ips] //this layer has such freq.
+			if(jy>=-fxlim[ips] && jy<fxlim[ips] /*this layer has such freq. */
 			   && jx>=-fxlim[ips] && jx<fxlim[ips]){
 			    perm[count]=noff[ips]+(jx+fxlim[ips])+(jy+fxlim[ips])*xdim[ips];
 			    count++;
@@ -136,7 +136,7 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double ds
  
     double *wt=alloca(sizeof(double)*(os+1));
     double *st=alloca(sizeof(double)*(os+1));
-    //Trapzoidal weights for averaging.
+    /*Trapzoidal weights for averaging. */
     wt[os]=wt[0]=0.5/(double)os/dsa;
     for(long ios=1; ios<os; ios++){
 	wt[ios]=1./(double)os/dsa;
@@ -162,7 +162,7 @@ static void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double ds
 	    dcomplex ty=0;
 	    dcomplex offset=0;
 	    if(os>1){
-		offset=cexp(-cf*(fx+fy)*dsa2);//shift by half a subaperture
+		offset=cexp(-cf*(fx+fy)*dsa2);/*shift by half a subaperture */
 	    }
 	    for(int ios=0; ios<os+1; ios++){
 		tx+=wt[ios]*(cexp(cf*(fx*dsa+fy*st[ios]))-cexp(cf*(fy*st[ios])));
@@ -201,8 +201,8 @@ static csp *fdpcg_prop(long nps, const long *os, long nxg, double dx,
 	    long icol=ix+iy*nxg;
 	    pp[icol]=count;
 	    for(long ips=0; ips<nps; ips++){
-		long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];//map to layer ips.
-		long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];//map to layer ips.
+		long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
+		long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
 		double fx=(jx-nxi2[ips])*dk;
 		double fy=(jy-nxi2[ips])*dk;
 		pi[count]=jx+jy*nxi[ips]+noff[ips];
@@ -230,7 +230,7 @@ static csp *fdpcg_prop(long nps, const long *os, long nxg, double dx,
 	}
     }
     pp[nxg*nxg]=count;
-    //we put conj above because csptrans applies a conjugation.
+    /*we put conj above because csptrans applies a conjugation. */
     csp *prop0=csptrans(propt);
     cspfree(propt);
     return prop0;
@@ -253,14 +253,14 @@ int main(){
     double NEA[]={1.712908313e-07,1.712908313e-07,1.712908313e-07,1.712908313e-07,1.712908313e-07,1.712908313e-07};
     double wt[]={0.383615641256048,0.161455623630726,0.065928670909859,0.140502287357995,0.121599369179309,0.126898407666063};
     dmat *saa=dread("SAA.bin.gz");
-    csp *sel=fdpcg_sa(xloc,saloc,saa->p);//Tested. fully agree with laos mkapfd
+    csp *sel=fdpcg_sa(xloc,saloc,saa->p);/*Tested. fully agree with laos mkapfd */
     cspwrite(sel,"sel.bin.gz");
 
     long nperm;
-    long *perm=fdpcg_perm(&nperm,xlocs,nps,saloc);//tested ok.
+    long *perm=fdpcg_perm(&nperm,xlocs,nps,saloc);/*tested ok. */
     writelong(perm, nperm,1,"perm");
     cmat *gx, *gy;
-    fdpcg_g(&gx,&gy,256,256,xloc->dx,saloc->dx);//tested ok.
+    fdpcg_g(&gx,&gy,256,256,xloc->dx,saloc->dx);/*tested ok. */
     cwrite(gx,"gx");
     cwrite(gy,"gy");
     double dispx[nps],dispy[nps];
@@ -288,9 +288,9 @@ int main(){
 	csp *Mpsd=cspnewdiag(256*256*6,invpsd,1);
 	cspwrite(Mpsd,"Mpsd.bin");
 
-	//csp *Mhat=cspnewdiag(256*256*6,invpsd,1);
-	//cspwrite(Mhat,"cinvpsd");
-	//Compute gx'*sel'*sel*gx+gy'*sel'*sel*gy
+	/*csp *Mhat=cspnewdiag(256*256*6,invpsd,1); */
+	/*cspwrite(Mhat,"cinvpsd"); */
+	/*Compute gx'*sel'*sel*gx+gy'*sel'*sel*gy */
 	csp *Mmid=NULL;
 	for(int i=0; i<2; i++){
 	    cmat *g;
@@ -315,14 +315,14 @@ int main(){
 		dispx[ips]=ht[ips]*thetax[iwfs]/(1-ht[ips]/hs);
 		dispy[ips]=ht[ips]*thetay[iwfs]/(1-ht[ips]/hs);
 	    }
-	    //tested ok if all layers share the same sampling.
+	    /*tested ok if all layers share the same sampling. */
 	    csp *prop1=fdpcg_prop(nps,os,256,0.25,dispx,dispy);
 	    cspwrite(prop1,"prop_%d",iwfs);
 
-	    //need to test this in spatial domain.
+	    /*need to test this in spatial domain. */
 	    toc("prop");
 	    cspscale(prop1,1./NEA[iwfs]);
-	    //Compute prop'*Mmid*prop and add to Mhat;
+	    /*Compute prop'*Mmid*prop and add to Mhat; */
 	    csp *tmp=cspmulsp(Mmid,prop1);
 	    toc("Mul1");
 	    csp *tmp2=csptmulsp(prop1,tmp);
@@ -339,15 +339,15 @@ int main(){
 
 	cspadd(&Mhat,Mpsd);
 	cspfree(Mpsd);
-	cspwrite(Mhat,"Mhat.bin");//Verified with manual computation in MATLAB so far.
+	cspwrite(Mhat,"Mhat.bin");/*Verified with manual computation in MATLAB so far. */
 	cspdropeps(Mhat);
 	cspsym(Mhat);
 	Mhatp=cspperm(Mhat,0,perm,perm);
 	cspfree(Mhat);
-	cspwrite(Mhatp,"Mhatperm.bin");//Verified so far.
+	cspwrite(Mhatp,"Mhatperm.bin");/*Verified so far. */
     }
-    //Now invert each block.
-    //First blocksize.
+    /*Now invert each block. */
+    /*First blocksize. */
     long bs=0;
     for(long ips=0; ips<nps; ips++){
 	if(os[0]==2){

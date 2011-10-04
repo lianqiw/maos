@@ -56,7 +56,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 	constamp=1./(double)nloc;
     }
     *W0=spnew(nloc,nloc,9*nloc);
-    loc_create_map_npad(loc,1);//pad by one
+    loc_create_map_npad(loc,1);/*pad by one */
     
     double ox=loc->map->ox;
     double oy=loc->map->oy;
@@ -69,7 +69,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
     long count=0;
     double *amp0=NULL;
     if(amp){
-	amp0=amp-1;//offset by -1
+	amp0=amp-1;/*offset by -1 */
     }
     *W1=dnew(nloc,1);
     double *W1p=(*W1)->p;
@@ -87,7 +87,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 		double bamp=0; if(amp) bamp=amp[aloc1]; 
 		double wt=0;
 		if(abs(ix-jx)==1 && abs(iy-jy)==1){
-		    //corner to corner
+		    /*corner to corner */
 		    int bloc0=map[jy][ix]; 
 		    int bloc1=map[iy][jx]; 
 		    if(bloc0 && bloc1){
@@ -98,7 +98,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 			}
 		    }
 		}else if(abs(iy-jy)==1){
-		    //neighbor, up/down
+		    /*neighbor, up/down */
 		    for(int ioff=-1; ioff<2; ioff+=2){
 			int bloc0=map[jy][ix+ioff];
 			int bloc1=map[iy][jx+ioff];
@@ -111,7 +111,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 			}
 		    }
 		}else if(abs(ix-jx)==1){
-		    //neighbor, left/right
+		    /*neighbor, left/right */
 		    for(int joff=-1; joff<2; joff+=2){
 			int bloc0=map[jy+joff][ix];
 			int bloc1=map[iy+joff][jx];
@@ -124,8 +124,8 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 			}
 		    }
 		}else{
-		    //same point.
-		    //loop over four corners;
+		    /*same point. */
+		    /*loop over four corners; */
 		    for (int joff=-1; joff<2; joff+=2){
 			for(int ioff=-1; ioff<2; ioff+=2){
 			    int bloc0=map[iy+joff][ix]; 
@@ -150,10 +150,10 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 		    W0x[count]=wt;
 		    count++;
 		}
-	    }//jx
-	}//jy
+	    }/*jx */
+	}/*jy */
 	W1p[iloc]=wt2;
-    }//iloc
+    }/*iloc */
     W0p[nloc]=count;
     spsetnzmax(*W0,count);
     double sumW1=dsum(*W1);
@@ -186,14 +186,14 @@ static double calcwtcorner(int ix, int iy,
        &&pow(ix-icx,2)+pow(jy-icy,2)<icr2
        &&pow(jx-icx,2)+pow(iy-icy,2)<icr2
        &&pow(jx-icx,2)+pow(jy-icy,2)<icr2){
-	//The box is fully inside.
+	/*The box is fully inside. */
 	return 1./36.;
     }
     if(pow(ix-icx,2)+pow(iy-icy,2)>icr2
        &&pow(ix-icx,2)+pow(jy-icy,2)>icr2
        &&pow(jx-icx,2)+pow(iy-icy,2)>icr2
        &&pow(jx-icx,2)+pow(jy-icy,2)>icr2){
-	//The box is fully outside.
+	/*The box is fully outside. */
 	return 0;
     }
     double dres=1./(double)nres;
@@ -202,11 +202,11 @@ static double calcwtcorner(int ix, int iy,
     double wt=0.;
     
     for(int iiy=0; iiy<nres; iiy++){
-	double dy=((double)iiy+0.5)*ddy;//dy may be negative
+	double dy=((double)iiy+0.5)*ddy;/*dy may be negative */
 	for(int iix=0; iix<nres; iix++){
 	    double dx=((double)iix+0.5)*ddx;
 	    if(pow(ix+dx-icx,2)+pow(iy+dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=(1.-fabs(dx))*(1.-fabs(dy))*fabs(dx*dy);
 	    }
 	}
@@ -226,19 +226,19 @@ static double calcwtlr(int ix, int iy,
        &&pow(ix-icx,2)+pow(iy-1-icy,2)<icr2
        &&pow(jx-icx,2)+pow(iy+1-icy,2)<icr2
        &&pow(jx-icx,2)+pow(iy-1-icy,2)<icr2){
-	//The box is fully inside.
+	/*The box is fully inside. */
 	return 1./9.;
     }
     if(pow(ix-icx,2)+pow(iy+1-icy,2)>icr2
        &&pow(ix-icx,2)+pow(iy-1-icy,2)>icr2
        &&pow(jx-icx,2)+pow(iy+1-icy,2)>icr2
        &&pow(jx-icx,2)+pow(iy-1-icy,2)>icr2){
-	//The box is fully outside.
+	/*The box is fully outside. */
 	return 0;
     }
     double dres=1./(double)nres;
     double ddx=(double)(jx-ix)/(double)nres;
-    //double ddy=(double)(jy-iy)/(double)nres;
+    /*double ddy=(double)(jy-iy)/(double)nres; */
     double ddy=1./(double)nres;
     double wt=0.;
     
@@ -246,14 +246,14 @@ static double calcwtlr(int ix, int iy,
 	double dy=((double)iiy+0.5)*ddy;
 	for(int iix=0; iix<nres; iix++){
 	    double dx=((double)iix+0.5)*ddx;
-	    //upper
+	    /*upper */
 	    if(pow(ix+dx-icx,2)+pow(iy+dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=(1.-fabs(dx))*pow(1.-fabs(dy),2)*fabs(dx);
 	    }
-	    //lower
+	    /*lower */
 	    if(pow(ix+dx-icx,2)+pow(iy-dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=(1.-fabs(dx))*pow(1.-fabs(dy),2)*fabs(dx);
 	    }
 	}
@@ -273,19 +273,19 @@ static double calcwtud(int ix, int iy,
        &&pow(ix-1-icx,2)+pow(jy-icy,2)<icr2
        &&pow(ix+1-icx,2)+pow(iy-icy,2)<icr2
        &&pow(ix+1-icx,2)+pow(jy-icy,2)<icr2){
-	//The box is fully inside.
+	/*The box is fully inside. */
 	return 1./9.;
     }
     if(pow(ix-1-icx,2)+pow(iy-icy,2)>icr2
        &&pow(ix-1-icx,2)+pow(jy-icy,2)>icr2
        &&pow(ix+1-icx,2)+pow(iy-icy,2)>icr2
        &&pow(ix+1-icx,2)+pow(jy-icy,2)>icr2){
-	//The box is fully outside.
+	/*The box is fully outside. */
 	return 0;
     }
     
     double dres=1./(double)nres;
-    //double ddx=(double)(jx-ix)/(double)nres;
+    /*double ddx=(double)(jx-ix)/(double)nres; */
     double ddy=(double)(jy-iy)/(double)nres;
     double ddx=1./(double)nres;
     double wt=0.;
@@ -294,14 +294,14 @@ static double calcwtud(int ix, int iy,
 	double dy=((double)iiy+0.5)*ddy;
 	for(int iix=0; iix<nres; iix++){
 	    double dx=((double)iix+0.5)*ddx;
-	    //upper
+	    /*upper */
 	    if(pow(ix+dx-icx,2)+pow(iy+dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=pow(1.-fabs(dx),2)*(1.-fabs(dy))*fabs(dy);
 	    }
-	    //lower
+	    /*lower */
 	    if(pow(ix-dx-icx,2)+pow(iy+dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=pow(1.-fabs(dx),2)*(1.-fabs(dy))*fabs(dy);
 	    }
 	}
@@ -320,14 +320,14 @@ static double calcwtcenter(int ix, int iy, int jx, int jy,
        &&pow(ix+1-icx,2)+pow(iy-1-icy,2)<icr2
        &&pow(ix-1-icx,2)+pow(iy+1-icy,2)<icr2
        &&pow(ix-1-icx,2)+pow(iy-1-icy,2)<icr2){
-	//The box is fully inside.
+	/*The box is fully inside. */
 	return 4./9.;
     }
     if(pow(ix+1-icx,2)+pow(iy+1-icy,2)>icr2
        &&pow(ix+1-icx,2)+pow(iy-1-icy,2)>icr2
        &&pow(ix-1-icx,2)+pow(iy+1-icy,2)>icr2
        &&pow(ix-1-icx,2)+pow(iy-1-icy,2)>icr2){
-	//The box is fully outside.
+	/*The box is fully outside. */
 	return 0;
     }
     double dres=1./(double)nres;
@@ -338,24 +338,24 @@ static double calcwtcenter(int ix, int iy, int jx, int jy,
 	double dy=((double)iiy+0.5)*ddy;
 	for(int iix=0; iix<nres; iix++){
 	    double dx=((double)iix+0.5)*ddx;
-	    //lower left
+	    /*lower left */
 	    if(pow(ix-dx-icx,2)+pow(iy-dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=pow((1.-fabs(dx))*(1.-fabs(dy)),2);
 	    }
-	    //lower right
+	    /*lower right */
 	    if(pow(ix+dx-icx,2)+pow(iy-dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=pow((1.-fabs(dx))*(1.-fabs(dy)),2);
 	    }
-	    //upper left
+	    /*upper left */
 	    if(pow(ix-dx-icx,2)+pow(iy+dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=pow((1.-fabs(dx))*(1.-fabs(dy)),2);
 	    }
-	    //upper right
+	    /*upper right */
 	    if(pow(ix+dx-icx,2)+pow(iy+dy-icy,2)<icr2){
-		//inside circle.
+		/*inside circle. */
 		wt+=pow((1.-fabs(dx))*(1.-fabs(dy)),2);
 	    }
 	}
@@ -376,7 +376,7 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 		   dmat **W1  /**<[out] dense  W1*/){
     long nloc=loc->nloc;
     *W0=spnew(nloc,nloc,9*nloc);
-    loc_create_map_npad(loc,1);//pad by one
+    loc_create_map_npad(loc,1);/*pad by one */
     double ox=loc->map->ox;
     double oy=loc->map->oy;
     long nxmap=loc->map->nx;
@@ -388,10 +388,10 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
     *W1=dnew(nloc,1);
     double *W1p=(*W1)->p;
     double idx=1./loc->dx;
-    //center of circle in the map.
+    /*center of circle in the map. */
     double icx=(cx-ox)*idx;
     double icy=(cy-oy)*idx;
-    //radius of circle in unit of the map.
+    /*radius of circle in unit of the map. */
     double icr=cr*idx;
     double sc=1./(M_PI*pow(icr,2));
     for(int iloc=0; iloc<nloc ;iloc++){
@@ -411,16 +411,16 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 		  of the points. 
 		 */
 		if(abs(ix-jx)==1 && abs(iy-jy)==1){
-		    //corner to corner
+		    /*corner to corner */
 		    wt=calcwtcorner(ix,iy,jx,jy,icx,icy,icr);
 		}else if(abs(iy-jy)==1){
-		    //up to down
+		    /*up to down */
 		    wt=calcwtud(ix,iy,jx,jy,icx,icy,icr);
 		}else if(abs(ix-jx)==1){
-		    //left to right
+		    /*left to right */
 		    wt=calcwtlr(ix,iy,jx,jy,icx,icy,icr);
 		}else{ 
-		    //self
+		    /*self */
 		    wt=calcwtcenter(ix,iy,jx,jy,icx,icy,icr);
 		}
 		if(wt>0){
@@ -429,10 +429,10 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 		    count++;
 		}
 		wt2+=wt;
-	    }//jx
-	}//jy
+	    }/*jx */
+	}/*jy */
 	W1p[iloc]=wt2*sc;
-    }//iloc
+    }/*iloc */
     W0p[nloc]=count;
     spsetnzmax(*W0,count);
     double sumW1=dsum(*W1);
@@ -461,26 +461,26 @@ void mkw_annular(loc_t *loc, /**<[in] grid coordinate */
 		 dsp **W0,   /**<[out] sparse W0*/
 		 dmat **W1   /**<[out] dense  W1*/
 		 ){
-    if(cri<loc->dx){//filled aperture
+    if(cri<loc->dx){/*filled aperture */
 	mkw_circular(loc, cx, cy, cro, W0, W1);
     }else{
 	dsp *W0o = NULL;
 	dmat *W1o= NULL;
 	dsp *W0i = NULL;
 	dmat *W1i= NULL;
-	mkw_circular(loc, cx, cy, cri, &W0i, &W1i);//inner
-	mkw_circular(loc, cx, cy, cro, &W0o, &W1o);//outer
+	mkw_circular(loc, cx, cy, cri, &W0i, &W1i);/*inner */
+	mkw_circular(loc, cx, cy, cro, &W0o, &W1o);/*outer */
 
-	//Calculate the factor applied in mkw_circular
+	/*Calculate the factor applied in mkw_circular */
 	double idx=1./loc->dx;
 	double sco=1/(M_PI*pow(cro*idx, 2));
 	double sci=1/(M_PI*pow(cri*idx, 2));
 
 	*W1 = W1o;
-	dadd(W1, 1./sco, W1i, -1/sci);//cancel the factor applied in mkw_circular
+	dadd(W1, 1./sco, W1i, -1/sci);/*cancel the factor applied in mkw_circular */
 	double sc=1./dsum(*W1);
 	dscale(*W1, sc);
-	//cancel the factor applied in mkw_circular and apply the new factor
+	/*cancel the factor applied in mkw_circular and apply the new factor */
 	*W0 = spadd2(W0o, W0i, sc/sco, -sc/sci);
 
 	spfree(W0o);

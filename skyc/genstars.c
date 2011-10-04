@@ -32,7 +32,7 @@
    The sort function for stars. Sort stars according total flux.
  */
 static int sortfun(const double *p1, const double *p2){
-    double tot1=Z_J*pow(10,-0.4*p1[2])+Z_H*pow(10,-0.4*p1[3]);//tot flux
+    double tot1=Z_J*pow(10,-0.4*p1[2])+Z_H*pow(10,-0.4*p1[3]);/*tot flux */
     double tot2=Z_J*pow(10,-0.4*p2[2])+Z_H*pow(10,-0.4*p2[3]);
     return tot1<tot2?1:-1;
 }
@@ -51,10 +51,10 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 		rand_t *rstat /**<random stream*/
 ){
     char fn[80];
-    double cat_fov;//catalogue fov
+    double cat_fov;/*catalogue fov */
     if(nwvl==2 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10){
 	snprintf(fn,80,"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
-	cat_fov=5.0;//5 arc-degree squared.
+	cat_fov=5.0;/*5 arc-degree squared. */
     }else{
 	error("We only have stars for J+H band. Please fill this part\n");
     }
@@ -75,17 +75,17 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    res->p[isky]=dnew(nwvl+2, nstar);
 	    PDMAT(res->p[isky],pres);
 	    for(long istar=0; istar<nstar; istar++){
-		long ind=round(ntot*randu(rstat));//randomly draw a star index in the catlog
+		long ind=round(ntot*randu(rstat));/*randomly draw a star index in the catlog */
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    pres[istar][2+iwvl]=pcatalog[iwvl][ind];
 		}
-		//randomly draw the star location.
+		/*randomly draw the star location. */
 		double r=sqrt(fov22*randu(rstat));
 		double th=2*M_PI*randu(rstat);
 		pres[istar][0]=r*cos(th);
 		pres[istar][1]=r*sin(th);
 	    }
-	    //sort the stars from brigtest to dimmest
+	    /*sort the stars from brigtest to dimmest */
 	    qsort(res->p[isky]->p, res->p[isky]->ny, res->p[isky]->nx*sizeof(double), 
 		  (int(*)(const void*, const void*))sortfun);
 	}else{

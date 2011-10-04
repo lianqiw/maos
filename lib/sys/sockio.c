@@ -56,7 +56,7 @@ int stread(int *fd, void *p, size_t len){
 	return 0;
     }
 }
-//Provent calling read/write in this file from now on. use stread/stwrite instead
+/*Provent calling read/write in this file from now on. use stread/stwrite instead */
 #define read READ_IS_PROHIBITED
 #define write WRITE_IS_PROHIBITED
 void stwriteint(int *fd, int cmd){

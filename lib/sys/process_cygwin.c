@@ -17,7 +17,7 @@
 */
 #if defined (__CYGWIN__)
 #include "process.h"
-//Largely not implemented.
+/*Largely not implemented. */
 const char *get_job_progname(void){
     return "maos";
 }

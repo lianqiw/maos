@@ -243,7 +243,7 @@ static int mmap_open(char *fn, int rw){
     int fd;
     if(rw){
 	fd=open(fn2, O_RDWR|O_CREAT, 0600);
-	if(fd!=-1 && ftruncate(fd, 0)){//truncate the file.
+	if(fd!=-1 && ftruncate(fd, 0)){/*truncate the file. */
 	    error("Unable to ftruncate file to 0 size\n");
 	}
     }else{
@@ -263,7 +263,7 @@ static int mmap_open(char *fn, int rw){
 */
 static inline void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header){
     char *p=*p0;
-    //Always have a header to align the data.
+    /*Always have a header to align the data. */
     if(header){
 	uint64_t nlen=bytes_header(header)-24;
 	((uint32_t*)p)[0]=(uint32_t)M_HEADER; p+=4;
@@ -298,7 +298,7 @@ X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
 	error("mmap failed\n");
     }
     char *map0=map;
-    //memset(map, 0, msize);
+    /*memset(map, 0, msize); */
     char *header0;
     mmap_header_rw(&map, &header0, M_T, nx, ny, header);
     X(mat) *out=X(new_data)(nx, ny, (T*)map);
@@ -329,7 +329,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *header1, 
 	error("mmap failed\n");
     }
     char *map0=map;
-    //memset(map, 0, msize);
+    /*memset(map, 0, msize); */
     char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header1);
     X(cell) *out=X(cellnew)(nx,ny);
@@ -340,7 +340,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *header1, 
 	out->p[ix]=X(new_data)(nnx[ix], nny[ix], (T*)map);
 	map+=nnx[ix]*nny[ix]*sizeof(T);
 	if(out->p[ix]) {
-	    out->p[ix]->mmap=mmap_ref(out->mmap);//reference
+	    out->p[ix]->mmap=mmap_ref(out->mmap);/*reference */
 	    out->p[ix]->header=header0;
 	}
     }
@@ -367,7 +367,7 @@ X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, char *header,
 	error("mmap failed\n");
     }
     char *map0=map;
-    //memset(map, 0, msize);
+    /*memset(map, 0, msize); */
     X(cell) *out=X(cellnew)(nx,ny);
     char *header0;
     mmap_header_rw(&map, &header0, MCC_ANY, nx, ny, header);

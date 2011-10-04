@@ -121,14 +121,14 @@ void cfft2plan(cmat *A, int dir){
 	FFTW_FLAGS=FFTW_ESTIMATE;
     }
     LOCK_FFT;
-    //!!fft uses row major mode. so need to reverse order
+    /*!!fft uses row major mode. so need to reverse order */
     if(A->nx==1 || A->ny==1){
 	A->fft->plan[dir+1]=fftw_plan_dft_1d(A->ny*A->nx, A->p, A->p, dir, FFTW_FLAGS);
     }else{
 	A->fft->plan[dir+1]=fftw_plan_dft_2d(A->ny, A->nx, A->p, A->p, dir, FFTW_FLAGS);
     }
     UNLOCK_FFT;  
-    //info("Plan %p created\n", A->fft->plan[dir+1]);
+    /*info("Plan %p created\n", A->fft->plan[dir+1]); */
 }
 
 /**
@@ -147,24 +147,24 @@ void cfft2partialplan(cmat *A, int ncomp, int dir){
     }
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
-    //along columns for all columns.
+    /*along columns for all columns. */
     plan1d->plan[0]=fftw_plan_many_dft(1, &nx, ny,
 				       A->p,NULL,1,nx,
 				       A->p,NULL,1,nx,
 				       dir,FFTW_FLAGS);
-    //selected along rows, beginning
+    /*selected along rows, beginning */
     plan1d->plan[1]=fftw_plan_many_dft(1, &ny, ncomp/2,
 				       A->p,NULL,nx,1,
 				       A->p,NULL,nx,1,
 				       dir,FFTW_FLAGS);
-    //selected along rows, end
+    /*selected along rows, end */
     plan1d->plan[2]=fftw_plan_many_dft(1,&ny,ncomp/2, 
 				 A->p+nx-ncomp/2,NULL,nx,1,
 				 A->p+nx-ncomp/2,NULL,nx,1,
 				 dir,FFTW_FLAGS);
     UNLOCK_FFT; 
     plan1d->ncomp=ncomp;
-    //info("Plan %p created\n", A->fft->plan1d[dir+1]);
+    /*info("Plan %p created\n", A->fft->plan1d[dir+1]); */
 }
 /**
    Free FFTW plans.
@@ -177,12 +177,12 @@ void fft_free_plan(fft_t *fft){
 	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[0]);
 	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[1]);
 	    fftw_destroy_plan(fft->plan1d[idir+1]->plan[2]);
-	    //info("Plan %p destroyed\n", fft->plan1d[idir+1]);
+	    /*info("Plan %p destroyed\n", fft->plan1d[idir+1]); */
 	    free(fft->plan1d[idir+1]);
 	}
 	if(fft->plan[idir+1]){
 	    fftw_destroy_plan(fft->plan[idir+1]);
-	    //info("Plan %p destroyed\n", fft->plan[idir+1]);
+	    /*info("Plan %p destroyed\n", fft->plan[idir+1]); */
 
 	}
 	UNLOCK_FFT;
@@ -194,9 +194,9 @@ void fft_free_plan(fft_t *fft){
  */
 void cfft2(cmat *A, int dir){
     assert(abs(dir)==1); assert(A && A->p);
-    //do 2d FFT on A.
+    /*do 2d FFT on A. */
     dir++;
-    //can not do planning here because planning will override the data.
+    /*can not do planning here because planning will override the data. */
     if(!A->fft || !A->fft->plan[dir]) error("Please run cfft2plan first\n");
     fftw_execute(A->fft->plan[dir]);
 }
@@ -213,7 +213,7 @@ void cifft2(cmat *A, int dir){
 /**
    Do 2d FFT transforms and scale the output by 1/sqrt(nx*ny)
  */
-void cfft2s(cmat *A, int dir){//symmetrical cfft2.
+void cfft2s(cmat *A, int dir){/*symmetrical cfft2. */
     cfft2(A,dir);
     cscale(A,1./sqrt((double)(A->nx*A->ny)));
 }
@@ -269,7 +269,7 @@ fft_t* dcell_fft2plan(dcell *dc, int dir, int nthreads){
     fftw_iodim howmany_dims={1,1,1};
     double *restrict p1=dc->p[0]->p;
     double *restrict p2=dc->p[1]->p;
-    //Use FFTW_ESTIMATE since the size may be large, and measuring takes too long.
+    /*Use FFTW_ESTIMATE since the size may be large, and measuring takes too long. */
     fft_t *fft=calloc(1, sizeof(fft_t));
     if(!fft->plan[dir+1]){
 	TIC;tic;

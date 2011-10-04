@@ -28,11 +28,11 @@ extern int *GPUS;
 extern int NG1D;
 extern int NG2D;
 typedef struct{
-    //for accphi
-    cumap_t *atm;//array of cumap_t;
+    /*for accphi */
+    cumap_t *atm;/*array of cumap_t; */
     cumap_t *dmreal;
     cumap_t *dmproj;
-    //for perfevl
+    /*for perfevl */
     float  (*plocs)[2];
     float   *pamp;
     int    **embed;
@@ -43,19 +43,19 @@ typedef struct{
     curcell *evlpsfcl_ngsr;
     curcell *evlopdcov;
     curcell *evlopdcov_ngsr;
-    //for wfsgrad
+    /*for wfsgrad */
     cusparseMatDescr_t wfsspdesc;
     cuwloc_t *powfs;
     cuwfs_t *wfs;
-    //for recon
+    /*for recon */
     curecon_t *recon;
 }cudata_t;
 extern __thread cudata_t *cudata;
 extern int cugpu;
-extern cudata_t **cudata_all;//use pointer array to avoid misuse.
+extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
 #define DEBUG_MEM 0
 #if DEBUG_MEM
-//static int tot_mem=0;
+/*static int tot_mem=0; */
 #undef cudaMalloc
 inline int CUDAMALLOC(float **p, size_t size){
     return cudaMalloc((float**)p,size);
@@ -102,8 +102,8 @@ extern int nstream;
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #define MYSPARSE 0
 
-#define WRAP_SIZE 32 //The wrap size is currently always 32
-#define DIM_REDUCE 128 //dimension to use in reduction.
+#define WRAP_SIZE 32 /*The wrap size is currently always 32 */
+#define DIM_REDUCE 128 /*dimension to use in reduction. */
 #define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
 #define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D)),dim3(MIN(nx,nb),MIN(ny,nb))
 
@@ -111,7 +111,7 @@ extern int nstream;
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
 the problem by using mutex locking to makesure only 1 thread is calling FFT. */
 extern pthread_mutex_t cufft_mutex;
-//#define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);})
+/*#define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);}) */
 #define CUFFT(plan,in,dir) ({						\
 	LOCK(cufft_mutex);						\
 	int ans=cufftExecC2C(plan, in, in, dir);			\
@@ -134,11 +134,11 @@ size_t gpu_get_mem(void);
 */
 inline void gpu_set(int igpu){
     igpu=igpu%NGPU;
-    //if(cugpu!=GPUS[igpu]){
+    /*if(cugpu!=GPUS[igpu]){ */
 	cudaSetDevice(GPUS[igpu]);
 	cudata=cudata_all[igpu];
-	cugpu=GPUS[igpu];//record current GPU.
-	//}
+	cugpu=GPUS[igpu];/*record current GPU. */
+	/*} */
 }
 /**
    returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.

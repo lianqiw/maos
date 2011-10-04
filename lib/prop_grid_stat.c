@@ -233,7 +233,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    /*figure out which row we can go in this segment. */
 		  
 	    rowdiv = iceil((wrapx-dplocx)/ratio);
-	    if(rowdiv<0) rowdiv=0;//rowdiv may be -1 if dplocx=wrapx+0.*
+	    if(rowdiv<0) rowdiv=0;/*rowdiv may be -1 if dplocx=wrapx+0.* */
 	    if(rowdiv>collen) rowdiv=collen;
 	    dplocx = dplocx + ratio*irows;
 	    for(irow=irows; irow<rowdiv; irow++){/*no wrap*/
@@ -255,7 +255,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    }
 	    if(wrap){
 		while(rowdiv < collen){/*can wrap several times*/ 
-		    //falls on the edge.
+		    /*falls on the edge. */
 		    while(dplocx<wrapx1 && rowdiv<collen){
 			SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0

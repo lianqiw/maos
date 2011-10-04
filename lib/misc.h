@@ -57,8 +57,8 @@ extern char* (*strdup0)(const char *);
 #if USE_MEM == 1
 char *mystrdup(const char *A);
 #undef strdup
-#define strdup mystrdup //our strdup handles NULL correctly, and talk to mem.c
-#endif //USE_MEM=1
+#define strdup mystrdup /*our strdup handles NULL correctly, and talk to mem.c */
+#endif /*USE_MEM=1 */
 
 typedef struct ARGOPT_T{
     char *name; /**<The long name*/

@@ -23,7 +23,7 @@ dsp *mkg(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc,
     int saorc, double scale, double *displace, int do_partial);
 dsp *mkgt(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
     int saorc, double scale, double *displace, int do_partial);
-//dsp *mkgold(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc, 
-//   int saorc, double scale, double *displace, int do_partial);
+/*dsp *mkgold(loc_t* xloc, loc_t *ploc, double *amp, loc_t *saloc,  */
+/*   int saorc, double scale, double *displace, int do_partial); */
 
 #endif

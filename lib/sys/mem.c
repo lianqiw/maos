@@ -62,7 +62,7 @@ PNEW(mutex_mem);
 static void *MROOT=NULL;
 static long long memcnt=0;
 
-//max depth in backtrace
+/*max depth in backtrace */
 #define DT 16
 typedef struct T_MEMKEY{
     void *p;
@@ -79,7 +79,7 @@ static void print_usage(const void *key, VISIT value, int level){
 	print_backtrace_symbol(key2->func, key2->nfunc-2);
     }
 }
-typedef struct T_DEINIT{//contains either fun or data that need to be freed.
+typedef struct T_DEINIT{/*contains either fun or data that need to be freed. */
     void (*fun)(void);
     void *data;
     struct T_DEINIT *next;
@@ -168,9 +168,9 @@ static void memkey_del(void*p){
     void **found;
     T_MEMKEY key;
     key.p=p;
-    if((found=tfind(&key, &MROOT, key_cmp))){//found.
-	T_MEMKEY* key1=*found;//the address of allocated T_MEMKEY.
-	if(!tdelete(&key, &MROOT, key_cmp)){//return parent.
+    if((found=tfind(&key, &MROOT, key_cmp))){/*found. */
+	T_MEMKEY* key1=*found;/*the address of allocated T_MEMKEY. */
+	if(!tdelete(&key, &MROOT, key_cmp)){/*return parent. */
 	    error("Error deleting old record\n");
 	}
 	free(key1);
@@ -202,7 +202,7 @@ void *REALLOC(void*p0, size_t size){
     if(!p0) return MALLOC(size);
     void *p=realloc(p0,size);
     if(p){
-	//return p;
+	/*return p; */
 	if(p==p0){
 	    memkey_update(p,size);
 	}else{

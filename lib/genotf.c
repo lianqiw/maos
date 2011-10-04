@@ -74,7 +74,7 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
     PDMAT(B0, B);
   
     double *mod[3];
-    dmat *mcc=dnew(3,3);//modal cross coupling matrix.
+    dmat *mcc=dnew(3,3);/*modal cross coupling matrix. */
     PDMAT(mcc, cc);
  
     mod[0]=NULL;
@@ -88,10 +88,10 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
 	}
     }
     dinvspd_inplace(mcc);
-    dmat *M   =dnew(nloc, 3);//The tip/tilt modal matrix
-    dmat *MW  =dnew(nloc, 3);//M*W
-    dmat *MCC =dnew(3, nloc);//M*inv(M'*W*M)
-    dmat *Mtmp=dnew(3, nloc);//B'*MW;
+    dmat *M   =dnew(nloc, 3);/*The tip/tilt modal matrix */
+    dmat *MW  =dnew(nloc, 3);/*M*W */
+    dmat *MCC =dnew(3, nloc);/*M*inv(M'*W*M) */
+    dmat *Mtmp=dnew(3, nloc);/*B'*MW; */
  
     for(long iloc=0; iloc<nloc; iloc++){
 	M->p[iloc]=1;
@@ -151,10 +151,10 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 		      const dmat* B,  const T_VALID *pval){
     long nloc=loc->nloc;
     dmat *B2;
-    if(pttr){//remove p/t/t from the B matrix
+    if(pttr){/*remove p/t/t from the B matrix */
 	B2=pttr_B(B,loc,amp);
     }else{
-	B2=ddup(B);//duplicate since we need to modify it.
+	B2=ddup(B);/*duplicate since we need to modify it. */
     }
     PDMAT(B2, BP);
     if(!*otf){
@@ -185,8 +185,8 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	    double tmp1,tmp2; dcomplex tmp3;
 	    register dcomplex tmp=0.;
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
-		long iloc1=jloc[iloc][0];//iloc1 is continuous.
-		long iloc2=jloc[iloc][1];//iloc2 is not continuous.
+		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
+		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
 		tmp1=amp[iloc1]*BPD[iloc1]*BP[iloc1][iloc2];
 		tmp2=amp[iloc2]*BPD[iloc2];
 		tmp3=opdbias?cexp(wvk*(opdbias[iloc1]-opdbias[iloc2])):1;
@@ -228,7 +228,7 @@ static void *genotf_wrap(GENOTF_T *data){
 	    opdbiasi=NULL;
 	}
 	if(otffull && (!area || area[isa]>thres)){
-	    ccp(&otf[isa],otffull);//just copy the full array
+	    ccp(&otf[isa],otffull);/*just copy the full array */
 	}else if(!area || area[isa]>0){ 
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp+isa*nxsa,opdbiasi,wvl,B,pval);
 	}
@@ -265,11 +265,11 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
     double dx1=1./loc->dx;
     long (*mapp)[map->nx]=(long(*)[map->nx])map->p;
     for(long jm=0; jm<notfy; jm++){
-	long jm2=(jm-notfy2);//peak in the center
-	//long jm2=jm<notfy2?jm:jm-notfy;//peak in the corner
+	long jm2=(jm-notfy2);/*peak in the center */
+	/*long jm2=jm<notfy2?jm:jm-notfy;//peak in the corner */
 	for(long im=0; im<notfx; im++){
 	    long im2=(im-notfx2);
-	    //long im2=im<notfx2?im:im-notfx;
+	    /*long im2=im<notfx2?im:im-notfx; */
 	    count2=count;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
 		long iy=(long)round((locy[iloc]+jm2*duywvl-map->oy)*dx1);
@@ -288,7 +288,7 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
 	}
     }
     loc_free_map(loc);
-    //pval0=realloc(pval0, sizeof(int)*count*2); //do not realloc. will change position.
+    /*pval0=realloc(pval0, sizeof(int)*count*2); //do not realloc. will change position. */
     return pval;
 }
 /**
@@ -334,7 +334,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	     ){
     /*creating pairs of points that both exist with given separation*/
-    T_VALID *pval=gen_pval(ncompx, ncompy, loc, dtheta, wvl);//returns T_VALID array.
+    T_VALID *pval=gen_pval(ncompx, ncompy, loc, dtheta, wvl);/*returns T_VALID array. */
     /* Generate the B matrix. */
     dmat *B=cov?(dmat*)cov:genotfB(loc, r0, l0);
     cmat *otffull=NULL;
@@ -367,7 +367,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     data.ncompx=ncompx;
     data.ncompy=ncompy;
     data.nsa=nsa;
-    data.pttr=pttr;//was missing.
+    data.pttr=pttr;/*was missing. */
     data.B=B;
     data.pval=pval;
     data.isafull=isafull;

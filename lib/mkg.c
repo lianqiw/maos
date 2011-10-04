@@ -63,7 +63,7 @@
 #define DBLNZ(A) (fabs(A)>TOL)
 
 static const double TOL=1.e-14;
-#define OFF 1 //0: Only use points inside subaperture. introduced on 2011-08-28. 1: original approach.
+#define OFF 1 /*0: Only use points inside subaperture. introduced on 2011-08-28. 1: original approach. */
 
 /**
    \file mkg.c
@@ -284,7 +284,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     double  *restrict px[2];
     long count[2];
     for(iw=0; iw<2; iw++){
-	nzmax[iw]=nsa*(dsa/dx)*16;//four row in each side.
+	nzmax[iw]=nsa*(dsa/dx)*16;/*four row in each side. */
 	GS0t[iw]=spnew(xloc->nloc, nsa, nzmax[iw]);
 	pp[iw]=GS0t[iw]->p; 
 	pi[iw]=GS0t[iw]->i; 
@@ -409,16 +409,16 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 				plocy=ploc->locy[ipix]*dx2+displacey;
 				SPLIT(plocx,dplocx,nplocx);
 				SPLIT(plocy,dplocy,nplocy);
-				//info2("weight[%d]=%g\n",iw,weight[iw]);
-				//info2("(%g, %g, %d), (%g, %g, %d)\n",
-				//    plocx,dplocx,nplocx,
-				//   plocy,dplocy,nplocy);
+				/*info2("weight[%d]=%g\n",iw,weight[iw]); */
+				/*info2("(%g, %g, %d), (%g, %g, %d)\n", */
+				/*    plocx,dplocx,nplocx, */
+				/*   plocy,dplocy,nplocy); */
 				wtsum=0;
 				ADDWT(nplocx,1-dplocx,nplocy,1-dplocy);
 				ADDWT(1+nplocx,dplocx,nplocy,1-dplocy);
 				ADDWT(nplocx,1-dplocx,1+nplocy,dplocy);
 				ADDWT(1+nplocx,dplocx,1+nplocy,dplocy);
-				//info2("wtsum=%g\n",wtsum);
+				/*info2("wtsum=%g\n",wtsum); */
 				wtsum=1./wtsum;
 				/*We are computing gradients on the PLOC.
 				  This gradient is scaled by 1/scale in XLOC*/
@@ -454,7 +454,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 		}/*if ipix*/
 	    }/*limx*/
 	}/*limy*/
-	//info2("ampsum=%g\n",ampsum);
+	/*info2("ampsum=%g\n",ampsum); */
 	if(ampsum>TOL){
 	    ampsum=1./ampsum;
 	}else{
@@ -465,11 +465,11 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 		px[iw][ii]*=ampsum;
 	    }
 	}
-		//raise(SIGSEGV);
+		/*raise(SIGSEGV); */
     }/*isa*/
     for(iw=0; iw<2; iw++){
 	if(count[iw]>nzmax[iw]){
-	    error("Over flow\n");//should never happen
+	    error("Over flow\n");/*should never happen */
 	}
 	pp[iw][nsa]=count[iw];
 	spsetnzmax(GS0t[iw],count[iw]);
@@ -486,13 +486,13 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     }
     if(ampcopy!=amp)
 	free(ampcopy);
-    //concatenate x and y gradient operators together.
+    /*concatenate x and y gradient operators together. */
     dsp *GS0=spcat(GS0t[0], GS0t[1],1);
     spfree(GS0t[0]); GS0t[0]=NULL;
     spfree(GS0t[1]); GS0t[1]=NULL;
     loc_free_map(ploc);
     loc_free_map(xloc);
-    spdroptol(GS0, 1e-7);//drop small values.
+    spdroptol(GS0, 1e-7);/*drop small values. */
     return GS0;
 }
 #ifndef MATLAB_MEX_FILE

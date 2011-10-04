@@ -22,7 +22,7 @@
 #include "../maos/types.h"
 /* Data for propagation to WFS */
 typedef struct{
-    dmat *phi;//return.
+    dmat *phi;/*return. */
     int iwfs;
     int isim;
     const PARMS_T *parms;

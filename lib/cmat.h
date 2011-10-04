@@ -27,7 +27,7 @@
 AOS_MAT_DEF(AOS_CMAT,AOS_DMAT,AOS_CSP,dcomplex,double)
 AOS_CELL_DEF(AOS_CMAT,AOS_CSP,dcomplex)
 AOS_MATBIN_DEF(AOS_CMAT,AOS_CSP,dcomplex)
-//The following are only useful for cmat
+/*The following are only useful for cmat */
 double cmaxabs(const cmat *A);
 double cminabs(const cmat *A);
 double csumabs(const cmat *A);

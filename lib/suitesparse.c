@@ -16,16 +16,16 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-//Taken from suitesparse package from UFL.
+/*Taken from suitesparse package from UFL. */
 
-//my defines.
+/*my defines. */
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include "common.h"
 #include "type.h"
-//Obtain from SuiteSparse cs_multiply. Gather together
+/*Obtain from SuiteSparse cs_multiply. Gather together */
 typedef spint CS_INT;
 
 #ifdef USE_COMPLEX

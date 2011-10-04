@@ -110,7 +110,7 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
       Must set USE_PARTIAL to 1. Otherwise, the SCAO, NGS, Phy, NF, case is worse than LAOS.
       USE_PARTIAL == 1 gives identical results to LAOS (upto round off error)
      */
-    loc_create_map_npad(loc,1);//must have padding of at least 1.
+    loc_create_map_npad(loc,1);/*must have padding of at least 1. */
     dsp *L2;
     L2=spnew(loc->nloc,loc->nloc,loc->nloc*5);
     int ix,iy;
@@ -218,11 +218,11 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 	error("Over flow happened\n");
     }
     spsetnzmax(L2,px-px0);
-    //spcheck(L2);
-    //L2->px may be reallocated. so scale before setnzmax.
+    /*spcheck(L2); */
+    /*L2->px may be reallocated. so scale before setnzmax. */
     dsp *L2r=sptrans(L2);
     spfree(L2);
     loc_free_map(loc);
-    //spclean(L2r);
+    /*spclean(L2r); */
     return L2r;
 }

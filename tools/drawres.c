@@ -64,9 +64,9 @@ static ARG_T * parse_args(int argc, char **argv){
 */
 int main(int argc, char *argv[]){
     ARG_T *arg=parse_args(argc, argv);
-    //use the parent pid so same bash session has the same drawdaemon.
-    DRAW_ID=getppid();//variables in draw.c
-    DRAW_DIRECT=1;//launch drawdaemon directly, without going through server.
+    /*use the parent pid so same bash session has the same drawdaemon. */
+    DRAW_ID=getppid();/*variables in draw.c */
+    DRAW_DIRECT=1;/*launch drawdaemon directly, without going through server. */
     char **path;
     int npath;
 
@@ -83,19 +83,19 @@ int main(int argc, char *argv[]){
     }
     long nseed=arg->nseed;
     long *seed=arg->seeds;
-    //Find all valid path and seeds.
+    /*Find all valid path and seeds. */
     int jpath=0, mpath=0;
     for(int ipath=0; ipath<npath; ipath++){
 	if(!isdir(path[ipath])){
 	    continue;
 	}
-	//info("Try path %s\n", path[ipath]);
+	/*info("Try path %s\n", path[ipath]); */
 	DIR *dir=opendir(path[ipath]);
 	if(!dir){
 	    warning("Unable to read directory %s\n", path[0]);
 	    continue;
 	}
-	if(!nseed){//find available seeds
+	if(!nseed){/*find available seeds */
 	    long nmax=20;
 	    seed=calloc(nmax, sizeof(long));
 	    struct dirent *dp;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]){
 		    continue;
 		}else{
 		    if(sscanf(dp->d_name, "Res_%ld.bin",&(seed[nseed]))==1){
-			//info2("found seed %ld\n", seed[nseed]);
+			/*info2("found seed %ld\n", seed[nseed]); */
 			nseed++;
 			if(nseed>nmax){
 			    nmax*=2;
@@ -117,10 +117,10 @@ int main(int argc, char *argv[]){
 	    if(nseed>0){
 		seed=realloc(seed, nseed*sizeof(long));
 	    }else{
-		free(seed);//try the next folder.
+		free(seed);/*try the next folder. */
 	    }
 	}
-	//record the path as valid
+	/*record the path as valid */
 	path[jpath]=path[ipath];
 	info2("Found path: %s\n", path[jpath]);
 	jpath++; mpath++;
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]){
 	return 1;
     }
     int jseed=0, mseed=0;
-    //Find seeds that are available in all folders.
+    /*Find seeds that are available in all folders. */
     for(int iseed=0; iseed<nseed; iseed++){
 	int ipath;
 	for(ipath=0; ipath<npath; ipath++){
@@ -179,14 +179,14 @@ int main(int argc, char *argv[]){
 	    int ind=0;
 	    int indlo=0;
 	    int indhi=0;
-	    if(res->p[3]){//split tomography.
+	    if(res->p[3]){/*split tomography. */
 		ind=3;
 		indlo=2;
 		indhi=0;
 	    }else{
 		ind=2;
-		indlo=1;//tt
-		indhi=2;//pttr
+		indlo=1;/*tt */
+		indhi=2;/*pttr */
 	    }
 	    int ii=ipath+npath*iseed;
 	    dmat *tmp;

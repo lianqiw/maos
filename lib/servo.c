@@ -47,19 +47,19 @@ static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
 	double val=cabs(Hol->p[i]);
 	if(val<1){
 	    double valpre=cabs(Hol->p[i-1]);
-	    double logvalpre=log10(valpre);//positive. log10(val) is negative.
+	    double logvalpre=log10(valpre);/*positive. log10(val) is negative. */
 	    double rat=logvalpre/(logvalpre-log10(val));
 	    fc=pow(10,log10(nu->p[i-1])*(1-rat)+log10(nu->p[i])*rat);
 	    double phi0=atan2(cimag(Hol->p[i-1]), creal(Hol->p[i-1]));
 	    double phi1=atan2(cimag(Hol->p[i]), creal(Hol->p[i]));
-	    //if(fabs(phi0-phi1)>2*pi)
-	    double diff=(phi1-phi0)/(2*M_PI);//positive.
+	    /*if(fabs(phi0-phi1)>2*pi) */
+	    double diff=(phi1-phi0)/(2*M_PI);/*positive. */
 	    diff=diff-round(diff);
 	    phi1=phi0+diff*2*M_PI;
 	    phi=pow(10,log10(phi0)*(1-rat)+log10(phi1)*rat);
 	    double nphi=phi/(2*M_PI);
 	    nphi=nphi-floor(nphi)-1;
-	    phi=nphi*2*M_PI;//from -2*M_PI to 0.
+	    phi=nphi*2*M_PI;/*from -2*M_PI to 0. */
 	    found=1;
 	    break;
 	}
@@ -78,7 +78,7 @@ typedef struct SERVOII_T{
     cmat *s;
     dmat *psd;
     double sigman;
-    //Output.
+    /*Output. */
     double rms_sig;
     double rms_n;
     double gain_n;
@@ -97,7 +97,7 @@ static double servoii_calc(SERVOII_T *data, double g0){
     double margin, fcross;    
     cadd(&Hol, 0, Hsys, g0);
     margin=servo_phi_margin(&fcross, nu, Hol);
-    double phineed=M_PI/4-margin;//want to ensure PI/4 margin
+    double phineed=M_PI/4-margin;/*want to ensure PI/4 margin */
     double a=(1-sin(phineed))/(1+sin(phineed));
     double f0=fcross*sqrt(a);
     double T=1./(2.*M_PI*f0);
@@ -110,7 +110,7 @@ static double servoii_calc(SERVOII_T *data, double g0){
 	dcomplex Hrej=1./(1.+Holt);
 	dcomplex Hcl=Holt*Hrej;
 	dcomplex Hn=Hcl/Hwfs->p[i];
-	//fixme: cabs(Hrej)*cabs(Hrej) or cabs(Href*Href)?
+	/*fixme: cabs(Hrej)*cabs(Hrej) or cabs(Href*Href)? */
 	rms_sig+=psd->p[i]*creal(Hrej*conj(Hrej))*nu->p[i];
 	sum_n+=pow(cabs(Hn),2)*nu->p[i];
 	sum_1+=nu->p[i];
@@ -122,7 +122,7 @@ static double servoii_calc(SERVOII_T *data, double g0){
     sum_1*=dlognu;
     double gain_n=(sum_n/sum_1);
     data->gain_n=gain_n;
-    if(gain_n>1) gain_n*=100;//don't want gain_n>1.
+    if(gain_n>1) gain_n*=100;/*don't want gain_n>1. */
     double rms_n=gain_n*sigman;
     double rms_tot=rms_sig+rms_n;
     data->rms_sig=rms_sig;
@@ -139,11 +139,11 @@ typedef double(*golden_section_fun)(void *param, double x);
 */
 static double golden_section_search(golden_section_fun f, SERVOII_T *param, 
 				    double x1, double x4, double tau){
-    static double resphi= 0.381966011250105;//2-0.5*(1+sqrt(5));
+    static double resphi= 0.381966011250105;/*2-0.5*(1+sqrt(5)); */
     double x2=(x4-x1)*resphi+x1;
     double f2=f(param, x2);
     double x3, f3;
-    //stop searching.
+    /*stop searching. */
     while(fabs(x4-x1) > tau * (fabs(x1)+fabs(x4))){
 	x3=(x4-x2)*resphi+x2;
 	f3=f(param, x3);
@@ -182,8 +182,8 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
     dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
     dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
     double fs=1./(lgsdt*dtrat);
-    //Compute error in un-corretable part of the PSD
-    dmat *nu2=dlogspace(log10(fs/2),3,1000);//Frequencies that no correction can be made.
+    /*Compute error in un-corretable part of the PSD */
+    dmat *nu2=dlogspace(log10(fs/2),3,1000);/*Frequencies that no correction can be made. */
     dmat *psd2=dinterp1log(psdf,psdval,nu2);
     
     double rms2_sig=psd_intelog(nu2->p, psd2->p, nu2->nx);
@@ -199,13 +199,13 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
     cmat *Hsys=cnew(nu->nx,1);
     cmat *Hwfs=cnew(nu->nx,1);
     dcomplex expsTs,Hdac,Hmir,Hlag,Hint;
-    Hmir=1;//DM
+    Hmir=1;/*DM */
     for(long i=0; i<s->nx; i++){
 	s->p[i]=pi2i*nu->p[i];
 	expsTs=1-cexp(-s->p[i]*Ts);
 	Hwfs->p[i]=expsTs/(Ts*s->p[i]);
 	Hdac=Hwfs->p[i];
-	Hlag=cexp(-s->p[i]*lgsdt);//lag
+	Hlag=cexp(-s->p[i]*lgsdt);/*lag */
 	Hint=1./expsTs;
 	Hsys->p[i]=Hwfs->p[i]*Hlag*Hint*Hdac*Hmir*Hint;
     }
@@ -223,7 +223,7 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
     double g0_max;
     for(g0_max=g0_min; ; g0_max+=0.1){
 	servoii_calc(&data, g0_max);
-	if(data.gain_n>2){//don't magnify noise by twice.
+	if(data.gain_n>2){/*don't magnify noise by twice. */
 	    break;
 	}
     }
@@ -238,7 +238,7 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
 	gm->p[ins]->p[2]=data.T;
 	gm->p[ins]->p[3]=data.rms_sig+rms2_sig;
 	gm->p[ins]->p[4]=data.rms_n;
-    }//for in.
+    }/*for in. */
     dfree(nu);
     dfree(psd);
     cfree(Hsys);
@@ -259,7 +259,7 @@ cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt){
     double a=gain->p[1];
     double T=gain->p[2];
     dcomplex s,expsTs,Hdac,Hmir,Hlag,Hint,Hsys,Hwfs,Hlead;
-    Hmir=1;//DM
+    Hmir=1;/*DM */
     cmat *Hol=cnew(nu->nx, 3);
     PCMAT(Hol, pHol);
     for(long i=0; i<nu->nx; i++){
@@ -267,15 +267,15 @@ cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt){
 	expsTs=1-cexp(-s*Ts);
 	Hwfs=expsTs/(Ts*s);
 	Hdac=Hwfs;
-	Hlag=cexp(-s*lgsdt);//lag
+	Hlag=cexp(-s*lgsdt);/*lag */
 	Hint=1./expsTs;
 	Hsys=Hwfs*Hlag*Hint*Hdac*Hmir*Hint;
 	Hlead=(1+T*s)/(1+a*T*s);
 	pHol[0][i]=nu->p[i];
 	pHol[1][i]=Hsys*g0*Hlead;
 	pHol[2][i]=Hwfs;
-	//Hol=Hsys*g0*Hlead;
-	//Hrej=1./(1+Hol);
+	/*Hol=Hsys*g0*Hlead; */
+	/*Hrej=1./(1+Hol); */
     }
     dfree(nu);
     return Hol;
@@ -289,7 +289,7 @@ cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt){
    Tested OK: 2010-06-11
 */
 double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt){
-    dmat *nu=dlogspace(-3,3,1000);//Should go beyond Nyquist freq. Hrej=1 for nu>fs/2.
+    dmat *nu=dlogspace(-3,3,1000);/*Should go beyond Nyquist freq. Hrej=1 for nu>fs/2. */
     dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
     dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);  
     dmat *psd=dinterp1log(psdf,psdval,nu);
@@ -297,7 +297,7 @@ double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, dou
     double Ts=1./fs;
 
     dcomplex s,expsTs,Hdac,Hmir,Hlag,Hint,Hsys,Hwfs,Hol,Hrej,Hlead;
-    Hmir=1;//DM
+    Hmir=1;/*DM */
     double g0=gain->p[0];
     double a=gain->p[1];
     double T=gain->p[2];
@@ -307,13 +307,13 @@ double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, dou
 	expsTs=1-cexp(-s*Ts);
 	Hwfs=expsTs/(Ts*s);
 	Hdac=Hwfs;
-	Hlag=cexp(-s*lgsdt);//lag
+	Hlag=cexp(-s*lgsdt);/*lag */
 	Hint=1./expsTs;
 	Hsys=Hwfs*Hlag*Hint*Hdac*Hmir*Hint;
 	Hlead=(1+T*s)/(1+a*T*s);
 	Hol=Hsys*g0*Hlead;
 	Hrej=1./(1+Hol);
-	rms_sig+=psd->p[i]*pow(cabs(Hrej),2)*nu->p[i];//we integrate f(nu)nu d(log(nu))
+	rms_sig+=psd->p[i]*pow(cabs(Hrej),2)*nu->p[i];/*we integrate f(nu)nu d(log(nu)) */
     }
     double dlognu=(log(nu->p[nu->nx-1])-log(nu->p[0]))/(nu->nx-1);
     rms_sig*=dlognu;
@@ -355,7 +355,7 @@ void servo_typeII_filter(SERVO_T *st, dmat *merr, double dtngs, const dmat *gain
     if(gain->nx!=3){
 	error("Wrong format in gain\n");
     }
-    int nmod=0;//error.
+    int nmod=0;/*error. */
     if(merr->ny==1){
 	nmod=merr->nx;
     }else{
@@ -407,12 +407,12 @@ dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtlgs, int dtrat){
 	if(istep % dtrat == 0){
 	    dzero(meas);
 	}
-	dadd(&meas, 1, merr, 1);//average the error.
+	dadd(&meas, 1, merr, 1);/*average the error. */
 	dcp(&mreal, st2t->mint);
 	if((istep+1) % dtrat == 0){
 	    dscale(meas, 1./dtrat);
 	    servo_typeII_filter(st2t, meas, dtlgs*dtrat, gain);
-	    //servo_typeI_filter(st2t, meas, .5);
+	    /*servo_typeI_filter(st2t, meas, .5); */
 	}
     }
     dfree(merr);
@@ -443,7 +443,7 @@ dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     cfft2(psdc,-1);
     creal2d(&psd2,0,psdc,1);
     cfree(psdc);
-    //transpose.
+    /*transpose. */
     psd2->ny=psd2->nx;
     psd2->nx=1;
     return psd2;
@@ -501,14 +501,14 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dmat *psd=NULL;
     double var=psd_intelog2(psdin);
     info("Input psd has variance of %g m^2\n",var*1e18);
-    if(fabs(psdx->p[0]*psdx->p[2]-pow(psdx->p[1],2))<EPS){//log spaced
+    if(fabs(psdx->p[0]*psdx->p[2]-pow(psdx->p[1],2))<EPS){/*log spaced */
 	psd=dinterp1log(psdx, psdy, fs);
-    }else if(fabs(psdx->p[0]+psdx->p[2]-psdx->p[1]*2.)<EPS){//linear spaced
+    }else if(fabs(psdx->p[0]+psdx->p[2]-psdx->p[1]*2.)<EPS){/*linear spaced */
 	psd=dinterp1(psdx, psdy, fs);
     }else{
 	error("Frequency in PSD must be log or linearly spaced\n");
     }
-    psd->p[0]=0;//disable pistion.
+    psd->p[0]=0;/*disable pistion. */
     cmat *wshat=cnew(nstep, 1);
     cfft2plan(wshat, -1);
     for(long i=0; i<nstep; i++){

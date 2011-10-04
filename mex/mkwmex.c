@@ -3,12 +3,12 @@
 #include "interface.h"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-    enum{//input
+    enum{/*input */
 	P_LOC,
 	P_R,
 	P_TOT,
     };
-    enum{//output
+    enum{/*output */
 	PL_W0,
 	PL_W1,
 	PL_TOT,

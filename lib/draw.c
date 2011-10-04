@@ -30,8 +30,8 @@
 #include "mathmisc.h"
 #include "io.h"
 int DRAW_ID=0;
-int DRAW_DIRECT=0; //set to 1 to launch drawdaemon directly without going through scheduler.
-int disable_draw=0; //if 1, draw will be disabled 
+int DRAW_DIRECT=0; /*set to 1 to launch drawdaemon directly without going through scheduler. */
+int disable_draw=0; /*if 1, draw will be disabled  */
 PNEW(lock);
 int write_helper=0;
 int read_helper=0;
@@ -84,13 +84,13 @@ void draw_helper(void){
 	warning("Fork failed. Return.\n");
 	return;
     }
-    if(pid){//Parent
+    if(pid){/*Parent */
 	close(fd[0]);
 	write_helper=fd[1];
 	close(fd2[1]);
 	read_helper=fd2[0];
 	return;
-    }else{//Child
+    }else{/*Child */
 	close(fd[1]);
 	int read_parent=fd[0];
 	close(fd2[0]);
@@ -115,13 +115,13 @@ static int fifo_open(){
 	return -1;
     }
     if(pfifo){ 
-	//return 0;
+	/*return 0; */
 	fclose(pfifo); pfifo=NULL;
     }
 retry:
-    if(fifo_fn){//fifo_fn is already set. drawdaemon has already started.
+    if(fifo_fn){/*fifo_fn is already set. drawdaemon has already started. */
 	fd=open(fifo_fn,O_NONBLOCK|O_WRONLY);
-	if(fd!=-1){//open succeed.
+	if(fd!=-1){/*open succeed. */
 	    pfifo=fopen(fifo_fn,"wb");
 	    close(fd);
 	    if(pfifo){
@@ -139,26 +139,26 @@ retry:
     if(!DRAW_ID){
 	DRAW_ID=getpid();
     }
-    //Open failed. drawdaemon has closed.
+    /*Open failed. drawdaemon has closed. */
   
     if(write_helper && read_helper){
 	info2("Helper is running, launch drawdaemon through it\n");
 	if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
 	    fifo_fn=readstr(read_helper);
 	    free_fifo_fn=1;
-	}else{//helper has exited, launch it again
+	}else{/*helper has exited, launch it again */
 	    draw_helper();
 	    if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
 		fifo_fn=readstr(read_helper);
 		free_fifo_fn=1;
-	    }else{//still failed.
+	    }else{/*still failed. */
 		write_helper=0;
 		read_helper=0;
 	    }
 	}
     }
 
-    if(!fifo_fn){//above method failed.
+    if(!fifo_fn){/*above method failed. */
 	fifo_fn=strdup(scheduler_get_drawdaemon(DRAW_ID, DRAW_DIRECT));
     }
     if(!fifo_fn){
@@ -214,13 +214,13 @@ void plot_points(char *fig,          /**<Category of the figure*/
 		 ...){
     format2fn;
     LOCK(lock);
-    if(fifo_open()){//failed to open.
+    if(fifo_open()){/*failed to open. */
 	warning("Failed to open\n");
 	goto done;
     }
-    //info2("pts");getchar();
+    /*info2("pts");getchar(); */
     FWRITEINT(pfifo, FIFO_START);
-    if(loc){//there are points to plot.
+    if(loc){/*there are points to plot. */
 	for(int ig=0; ig<ngroup; ig++){
 	    FWRITEINT(pfifo, FIFO_POINTS);
 	    FWRITEINT(pfifo, loc[ig]->nloc);
@@ -255,7 +255,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
 	FWRITEINT(pfifo, ncir);
 	FWRITE(pcir, sizeof(double), ncir*4, pfifo);
     }
-    if(limit){//xmin,xmax,ymin,ymax
+    if(limit){/*xmin,xmax,ymin,ymax */
 	FWRITEINT(pfifo, FIFO_LIMIT);
 	FWRITE(limit, sizeof(double), 4, pfifo);
     }
@@ -274,7 +274,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
     FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
     FWRITEINT(pfifo,FIFO_END);
     if(fflush(pfifo)){
-	//it is important to flush it so that drawdaemon does not stuck waiting.
+	/*it is important to flush it so that drawdaemon does not stuck waiting. */
 	warning("Failed to fflush the fifo");
     }
  done:
@@ -310,7 +310,7 @@ void imagesc(char *fig, /**<Category of the figure*/
 	FWRITEINT(pfifo,FIFO_ZLIM);
 	FWRITE(zlim,sizeof(double),2,pfifo);
     }
-    if(limit){//xmin,xmax,ymin,ymax
+    if(limit){/*xmin,xmax,ymin,ymax */
 	FWRITEINT(pfifo, FIFO_LIMIT);
 	FWRITE(limit, sizeof(double), 4, pfifo);
     }
@@ -324,7 +324,7 @@ void imagesc(char *fig, /**<Category of the figure*/
     FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
     FWRITEINT(pfifo,FIFO_END);
     if(fflush(pfifo)){
-	//it is important to flush it so that drawdaemon does not stuck waiting
+	/*it is important to flush it so that drawdaemon does not stuck waiting */
 	warning("Failed to fflush the fifo");
     }
  done:

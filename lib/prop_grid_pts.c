@@ -69,7 +69,7 @@ void prop_grid_pts(ARGIN_GRID,
 		}else
 		    sx=0;
 		
-		my=niny-nplocy-1;//remaining possible points.
+		my=niny-nplocy-1;/*remaining possible points. */
 		if(my>nx){
 		    my=nx;
 		}
@@ -87,7 +87,7 @@ void prop_grid_pts(ARGIN_GRID,
 		if((dplocx)<EPS && (dplocy)<EPS){
 		    /*aligned perfectly.*/
 		    for(jpix=sy; jpix<my; jpix++){
-			//nplocy2=nplocy+jpix;
+			/*nplocy2=nplocy+jpix; */
 			double *restrict phiin2=phiin[nplocy+jpix];
 			double *restrict phiout2=phioutsq[jpix];
 			for(ipix=sx; ipix<mx; ipix++){
@@ -100,7 +100,7 @@ void prop_grid_pts(ARGIN_GRID,
 		    w01=dplocx*(1.-dplocy);
 		    w00=(1.-dplocx)*(1.-dplocy);	
 		    for(jpix=sy; jpix<my; jpix++){
-			//nplocy2=nplocy+jpix;
+			/*nplocy2=nplocy+jpix; */
 			double *restrict phiin2=phiin[nplocy+jpix];
 			double *restrict phiin3=phiin[nplocy+jpix+1];
 			double *restrict phiout2=phioutsq[jpix];
@@ -113,7 +113,7 @@ void prop_grid_pts(ARGIN_GRID,
 			}
 		    }
 		}
-	    }else{//wraping
+	    }else{/*wraping */
 		double *phiin_1, *phiin_2;
 
 		if(ninx < nx || niny < nx){
@@ -130,7 +130,7 @@ void prop_grid_pts(ARGIN_GRID,
 		nplocx-=ninx*(nplocx/ninx);
 		if(nplocx<0)
 		    nplocx+=ninx;
-		my=niny-nplocy-1;//remaining possible points.
+		my=niny-nplocy-1;/*remaining possible points. */
 		mx=ninx-nplocx-1;
 		if(my>nx) my=nx;
 		if(mx>nx) mx=nx;
@@ -269,7 +269,7 @@ void prop_grid_pts(ARGIN_GRID,
 		    dplocx0+=ratio;
 		}
 		if(mx<nx){
-		    while(dplocx0<ninx && mx<nx){//falls on the edge
+		    while(dplocx0<ninx && mx<nx){/*falls on the edge */
 			SPLIT(dplocx0,dplocx,nplocx);
 			nplocxs[mx]=nplocx;
 			nplocxs2[mx]=0;

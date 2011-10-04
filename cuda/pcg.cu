@@ -24,7 +24,7 @@ extern "C"
 #include "curmat.h"
 #include "pcg.h"
 
-#include "recon.h" //for  debugging
+#include "recon.h" /*for  debugging */
 
 #define PRINT_RES 0
 #undef TIMING
@@ -68,8 +68,8 @@ int gpu_pcg(curcell **px,
     TIC;tic;
     int ans=0;
     curcell *r0=NULL;
-    curcell *x0=NULL;//The initial vector.
-    curcell *z0=NULL;//Is reference or preconditioned value.
+    curcell *x0=NULL;/*The initial vector. */
+    curcell *z0=NULL;/*Is reference or preconditioned value. */
     typedef struct{
 	float r0z0;
 	float r0z1;
@@ -79,17 +79,17 @@ int gpu_pcg(curcell **px,
 	float tmp;
     }CGRES_T;
     CGRES_T *res;
-    //structure that contains temporary scalars.
+    /*structure that contains temporary scalars. */
     DO(cudaMalloc((float**)&res, sizeof(CGRES_T)));
-    //computes r0=b-A*x0
+    /*computes r0=b-A*x0 */
     curcellcp(&r0, b, stream);
-    if(!*px || !warm){//start from zero guess.
+    if(!*px || !warm){/*start from zero guess. */
 	x0=curcellnew2(b);
 	if(!*px) *px=curcellnew(x0->nx, x0->ny);
     }else{
 	curcellcp(&x0, *px, stream);
 	CUDA_SYNC_STREAM;
-	Amul(&r0, 1, A, x0, -1);//r0=r0+(-1)*A*x0
+	Amul(&r0, 1, A, x0, -1);/*r0=r0+(-1)*A*x0 */
     }
     curcell *p0=NULL;
     if(Mmul){
@@ -105,37 +105,37 @@ int gpu_pcg(curcell **px,
     curcellinn2(&res->r0z0, b, b, stream);
     float diff[maxiter+1];
     if(Mmul){
-	//res->tmp=r0'*r0;
+	/*res->tmp=r0'*r0; */
 	curcellinn2(&res->tmp, r0, r0, stream);
-	//tmp=sqrt(rmp/r0z0);
+	/*tmp=sqrt(rmp/r0z0); */
 	div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->tmp, &res->r0z0);
     }else{
-	//tmp=sqrt(r0z1/r0z0);
+	/*tmp=sqrt(r0z1/r0z0); */
 	div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->r0z1, &res->r0z0);
     }
     cudaMemcpyAsync(&diff[0], &res->tmp, sizeof(float), cudaMemcpyDefault, stream);
 #endif
     for(int k=0; k<maxiter; k++){
 	Amul(&Ap, 0, A, p0, 1);
-	//ak=r0z1/(p0'*Ap);
+	/*ak=r0z1/(p0'*Ap); */
 	curcellinn2(&res->ak, p0, Ap, stream);
 	div_do<<<1,1,0,stream>>>(&res->ak, &res->r0z1, &res->ak);
-	CUDA_SYNC_STREAM;//put here helps to remove the spikes in performance/wfs
-	curcelladd2(&r0, Ap, &res->ak, -1, stream);//r0=r0-ak*Ap
-	curcelladd2(&x0, p0, &res->ak, 1, stream);//x0=x0+ak*p0
+	CUDA_SYNC_STREAM;/*put here helps to remove the spikes in performance/wfs */
+	curcelladd2(&r0, Ap, &res->ak, -1, stream);/*r0=r0-ak*Ap */
+	curcelladd2(&x0, p0, &res->ak, 1, stream);/*x0=x0+ak*p0 */
 	if(Mmul){
 	    CUDA_SYNC_STREAM;
 	    Mmul(&z0,M,r0);
 	}
-	//r0z2=r0'*z0
+	/*r0z2=r0'*z0 */
 	curcellinn2(&res->r0z2, r0, z0, stream);
 #if PRINT_RES == 1
 	if(Mmul){ 
-	    //diff[k+1]=sqrt(r0'*r0/r0z0)
+	    /*diff[k+1]=sqrt(r0'*r0/r0z0) */
 	    curcellinn2(&res->tmp, r0, r0, stream);
 	    div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->tmp, &res->r0z0);
 	}else{ 
-	    //diff[k+1]=sqrt(r0z2/r0z0);
+	    /*diff[k+1]=sqrt(r0z2/r0z0); */
 	    div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->r0z2, &res->r0z0);
 	}
 	cudaMemcpyAsync(&diff[k+1], &res->tmp, sizeof(float), cudaMemcpyDefault,stream);
@@ -170,11 +170,11 @@ int gpu_pcg(curcell **px,
 	    }
 	}
 #endif
-	//bk=r0z2/r0z1;
+	/*bk=r0z2/r0z1; */
 	div_do<<<1,1,0,stream>>>(&res->bk, &res->r0z2, &res->r0z1);
-	//p0=bk*p0+z0
+	/*p0=bk*p0+z0 */
 	curcelladd3(&p0, &res->bk, z0, stream);
-	//r0z1=r0z2;
+	/*r0z1=r0z2; */
 	assign_do<<<1,1,0,stream>>>(&res->r0z1, &res->r0z2);
 	toc("cg");
     }
@@ -183,7 +183,7 @@ int gpu_pcg(curcell **px,
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
     if(diff[maxiter]>0.02 && curecon->reconisim>5){
-	if(maxiter>20){//tomo
+	if(maxiter>20){/*tomo */
 	    warning2("Tomo %d: PCG: %.5f --> %.5f\n", curecon->reconisim, diff[0], diff[maxiter]);
 	    for(int i=0; i<=maxiter; i++){
 		info("Tomo %d: PCG: Step %d: res=%.5f\n", curecon->reconisim, i, diff[i]);

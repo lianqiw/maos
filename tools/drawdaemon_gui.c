@@ -38,7 +38,7 @@ char *font_name=NULL;
 double font_size=11;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
-static int cursor_type=0;//cursor type of the drawing area.
+static int cursor_type=0;/*cursor type of the drawing area. */
 /*
   Routines in this file are about the GUI.
 */
@@ -81,9 +81,9 @@ static void set_cur_window(GtkWidget *window){
 static drawdata_t *get_current_page(void){
     GtkWidget *topnb=curtopnb;
     int p1=gtk_notebook_get_current_page(GTK_NOTEBOOK(topnb));
-    GtkWidget *w1=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb),p1);//second notebook
+    GtkWidget *w1=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb),p1);/*second notebook */
     int p2=gtk_notebook_get_current_page(GTK_NOTEBOOK(w1));
-    GtkWidget *w2=gtk_notebook_get_nth_page(GTK_NOTEBOOK(w1),p2);//scrolled window
+    GtkWidget *w2=gtk_notebook_get_nth_page(GTK_NOTEBOOK(w1),p2);/*scrolled window */
     drawdata_t **pdrawdata=g_object_get_data(G_OBJECT(w2),"drawdatawrap");
     if(pdrawdata){
 	return *pdrawdata;
@@ -110,7 +110,7 @@ static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, Gt
     (void)child;
     (void)n;
     int npage=gtk_notebook_get_n_pages(topnb);
-    if(npage==0){//no more pages left.
+    if(npage==0){/*no more pages left. */
 	if(g_slist_length(windows)>1){
 	    GtkWidget *window=gtk_widget_get_parent
 		(gtk_widget_get_parent(GTK_WIDGET(topnb)));
@@ -122,7 +122,7 @@ static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, Gt
 	gtk_widget_set_sensitive(toolbar, TRUE);
 	
     }
-    //gtk_notebook_set_show_tabs(topnb, npage!=1);
+    /*gtk_notebook_set_show_tabs(topnb, npage!=1); */
 }
 static void topnb_detach(GtkMenuItem *menu){
     (void)menu;
@@ -133,8 +133,8 @@ static void topnb_detach(GtkMenuItem *menu){
     g_object_ref(page);
     g_object_ref(label);
     gtk_notebook_remove_page(GTK_NOTEBOOK(topnb), n);
-    GtkWidget *window=create_window();//create a new window.
-    topnb=get_topnb(window);//another topnb
+    GtkWidget *window=create_window();/*create a new window. */
+    topnb=get_topnb(window);/*another topnb */
     gtk_notebook_append_page(GTK_NOTEBOOK(topnb), page, label);
     gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(topnb), page, TRUE);
     gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), page, TRUE);
@@ -169,7 +169,7 @@ typedef struct updatetimer_t{
     drawdata_t *drawdata;
 }updatetimer_t;
 static void update_pixmap(drawdata_t *drawdata){
-    //no more pending updates, do the updating.
+    /*no more pending updates, do the updating. */
     gint width=drawdata->width;
     gint height=drawdata->height;
     gint width2, height2;
@@ -181,10 +181,10 @@ static void update_pixmap(drawdata_t *drawdata){
 	}
     }
     if(!drawdata->pixmap){
-	//Create a new server size pixmap and then draw on it.
+	/*Create a new server size pixmap and then draw on it. */
 	drawdata->pixmap=gdk_pixmap_new(curwindow->window, width, height, -1);
     }
-    //cairo_t is destroyed in draw
+    /*cairo_t is destroyed in draw */
     cairo_draw(gdk_cairo_create(drawdata->pixmap), drawdata,width,height);
     gtk_widget_queue_draw(drawdata->drawarea);
 }
@@ -244,7 +244,7 @@ on_expose_event(GtkWidget *widget,
     return FALSE;
 }
 static void drawdata_free_input(drawdata_t *drawdata){
-    //Only free the input received via fifo from draw.c
+    /*Only free the input received via fifo from draw.c */
     if(drawdata->image) cairo_surface_destroy(drawdata->image);
 
     free(drawdata->p0);
@@ -295,11 +295,11 @@ static void drawdata_free(drawdata_t *drawdata){
 static void delete_page(GtkButton *btn, drawdata_t **drawdatawrap){
     (void)btn;
     GtkWidget *root;
-    //First find the root page
+    /*First find the root page */
     GtkWidget *topnb=curtopnb;
     root=gtk_notebook_get_nth_page(GTK_NOTEBOOK(topnb), 
 				   gtk_notebook_get_current_page (GTK_NOTEBOOK(topnb)));
-    //Find the sub page. it may not be the current page
+    /*Find the sub page. it may not be the current page */
     int ipage=gtk_notebook_page_num(GTK_NOTEBOOK(root), (*drawdatawrap)->page);
     gtk_notebook_remove_page(GTK_NOTEBOOK(root), ipage);
     drawdata_free(*drawdatawrap);
@@ -365,7 +365,7 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
 static void do_move(drawdata_t *drawdata, double xdiff, double ydiff){
     drawdata->offx+=xdiff/drawdata->zoomx;
     drawdata->offy+=ydiff/drawdata->zoomy;
-    update_pixmap(drawdata);//no need delay since motion notify already did it.
+    update_pixmap(drawdata);/*no need delay since motion notify already did it. */
 }
 
 static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event, 
@@ -373,7 +373,7 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
     (void)widget;
     drawdata_t *drawdata=*drawdatawrap;
     if(((event->state & GDK_BUTTON1_MASK) || (event->state & GDK_BUTTON3_MASK))
-       && drawdata->valid){//move with left cursor
+       && drawdata->valid){/*move with left cursor */
 	double x, y;
 	x = event->x;
 	y = event->y;
@@ -382,25 +382,25 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	dy = y - drawdata->mydown;
 
 	if(((event->state & GDK_BUTTON1_MASK) && cursor_type==0)
-	   ||((event->state & GDK_BUTTON3_MASK) && cursor_type==1)){//move
-	    do_move(drawdata, dx, -dy);//notice the reverse sign.
+	   ||((event->state & GDK_BUTTON3_MASK) && cursor_type==1)){/*move */
+	    do_move(drawdata, dx, -dy);/*notice the reverse sign. */
 	    drawdata->mxdown=x;
 	    drawdata->mydown=y;
-	}else{//select and zoom.
-	    if(drawdata->square){//for a square
+	}else{/*select and zoom. */
+	    if(drawdata->square){/*for a square */
 		if(fabs(dx)<fabs(dy)){
 		    dy*=fabs(dx/dy);
 		}else{
 		    dx*=fabs(dy/dx);
 		}
 	    }
-	    if(drawdata->pixmap){//force a refresh to remove previous rectangule
+	    if(drawdata->pixmap){/*force a refresh to remove previous rectangule */
 		gdk_draw_drawable(widget->window, 
 				  widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
 				  drawdata->pixmap,
 				  0,0,0,0,-1,-1);
 	    }
-	    //do not draw to pixmap, use window
+	    /*do not draw to pixmap, use window */
 	    cairo_t *cr=gdk_cairo_create(widget->window);
 	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
 	    cairo_set_source_rgba(cr,0,0,1,0.1);
@@ -413,7 +413,7 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 	
 	}
     }
-    //we set the cursor
+    /*we set the cursor */
     if(event->x > drawdata->xoff && event->x < drawdata->xoff + drawdata->widthim 
        && event->y > drawdata->yoff && event->y < drawdata->yoff + drawdata->heightim){
 	if(!drawdata->cursorinside){
@@ -434,13 +434,13 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
 
     double old_zoomx=drawdata->zoomx;
     double old_zoomy=drawdata->zoomy;
-    if(mode==1){//zoom in
+    if(mode==1){/*zoom in */
 	drawdata->zoomx*=1.2;
 	drawdata->zoomy*=1.2;
     }else if(mode==-1){
 	drawdata->zoomx/=1.2;
 	drawdata->zoomy/=1.2;
-    }else if(mode==0){//reset everything
+    }else if(mode==0){/*reset everything */
 	drawdata->zoomx=1;
 	drawdata->zoomy=1;
 	drawdata->offx=0;
@@ -456,7 +456,7 @@ static void do_zoom(drawdata_t *drawdata, double xdiff, double ydiff, int mode){
     else if(drawdata->zoomy>MAX_ZOOM){
 	drawdata->zoomy=MAX_ZOOM;
     }
-    if(mode){//not zero.
+    if(mode){/*not zero. */
 	double factorx=1/old_zoomx-1/drawdata->zoomx;
 	drawdata->offx-=xdiff*factorx;
 	double factory=1/old_zoomy-1/drawdata->zoomy;
@@ -480,7 +480,7 @@ static gboolean scroll_event(GtkWidget *widget, GdkEventScroll *event,
 }
 static gboolean button_press(GtkWidget *widget, GdkEventButton *event, drawdata_t **drawdatawrap){
     drawdata_t *drawdata=*drawdatawrap;
-    //Grab focus so the keys work
+    /*Grab focus so the keys work */
     if(!GTK_WIDGET_HAS_FOCUS(widget))
 	gtk_widget_grab_focus(widget);
     
@@ -492,7 +492,7 @@ static gboolean button_press(GtkWidget *widget, GdkEventButton *event, drawdata_
     }else{
 	drawdata->valid=0;
     }
-    //}
+    /*} */
     return FALSE;
 }
 
@@ -505,11 +505,11 @@ static gboolean button_release(GtkWidget *widget, GdkEventButton *event, drawdat
     x = event->x;
     y = event->y;
     if((cursor_type==0 && event->button==1)
-       ||(cursor_type==1 && event->button==3)){//move only on left button
+       ||(cursor_type==1 && event->button==3)){/*move only on left button */
 	double dx = x - drawdata->mxdown;
 	double dy = y - drawdata->mydown;
 	do_move(drawdata, dx, -dy);
-    }else{//select and zoom.
+    }else{/*select and zoom. */
 	double xx = drawdata->mxdown;
 	double dx = x - drawdata->mxdown;
 	double dy = y - drawdata->mydown;
@@ -608,14 +608,14 @@ void addpage(drawdata_t **drawdatawrap)
 	    const gchar *text=gtk_label_get_text(GTK_LABEL(label));
 	    if(!strcmp(text,drawdata->fig)){
 		roots=g_slist_append(roots,root);
-		nroot++;//number of roots find.
+		nroot++;/*number of roots find. */
 		break;
 	    }else{
 		root=NULL;
 	    }
 	}
     }
-    if(!nroot){//root not found.
+    if(!nroot){/*root not found. */
 	GtkWidget *root=gtk_notebook_new();
 	roots=g_slist_append(roots,root);
 	nroot++;
@@ -640,7 +640,7 @@ void addpage(drawdata_t **drawdatawrap)
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(topnb), root, TRUE);
     }
     GtkWidget *page=NULL;
-    for(GSList *p=roots; p; p=p->next){//scan through all the root pages with same label
+    for(GSList *p=roots; p; p=p->next){/*scan through all the root pages with same label */
 	GtkWidget *root=p->data;
 	for(int itab=0; itab<gtk_notebook_get_n_pages(GTK_NOTEBOOK(root)); itab++){
 	    page=gtk_notebook_get_nth_page(GTK_NOTEBOOK(root),itab);
@@ -687,8 +687,8 @@ void addpage(drawdata_t **drawdatawrap)
 	drawdata_old->zlim=drawdata->zlim;
 	drawdata_old->format=drawdata->format;
 	drawdata_old->gray=drawdata->gray;
-	drawdata_old->drawn=0;//need redraw.
-	//we preserve the limit instead of off, zoom in case we are drawing curves
+	drawdata_old->drawn=0;/*need redraw. */
+	/*we preserve the limit instead of off, zoom in case we are drawing curves */
 	if(drawdata_old->npts){
 	    drawdata_old->limit_changed=1;
 	}
@@ -698,11 +698,11 @@ void addpage(drawdata_t **drawdatawrap)
 	    ndrawdata--;
 	    pthread_mutex_unlock(&mutex_drawdata);
 	}
-	if(get_current_page()==drawdata_old){//we are the current page. need to update pixmap
+	if(get_current_page()==drawdata_old){/*we are the current page. need to update pixmap */
 	    update_pixmap(drawdata_old);
-	}//otherwise, don't have to do anything.
+	}/*otherwise, don't have to do anything. */
     }else{
-	//new tab inside the fig to contain the plot.
+	/*new tab inside the fig to contain the plot. */
 	drawdata->page=page=gtk_scrolled_window_new(NULL,NULL);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(page), 
 				       GTK_POLICY_AUTOMATIC,
@@ -733,20 +733,20 @@ void addpage(drawdata_t **drawdatawrap)
 	gtk_scrolled_window_add_with_viewport
 	    (GTK_SCROLLED_WINDOW(page), drawarea);
 	GtkWidget *button=tab_label_new(drawdatawrap);
-	GtkWidget *root=roots->data;//choose first.
+	GtkWidget *root=roots->data;/*choose first. */
 	gtk_notebook_append_page(GTK_NOTEBOOK(root), page,button);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(root), page, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(root), page, TRUE);
 	g_signal_connect (drawarea, "expose-event", 
 	     G_CALLBACK (on_expose_event), drawdatawrap);
-	//handles zooming.
+	/*handles zooming. */
 	g_signal_connect (drawarea, "configure-event", 
 	     G_CALLBACK (on_configure_event), drawdatawrap);
 	gtk_widget_set_size_request(drawarea, DRAWAREA_MIN_WIDTH, 
 				    DRAWAREA_MIN_HEIGHT);
 	gtk_widget_show_all(root);
     }
-    //gdk_threads_leave();
+    /*gdk_threads_leave(); */
 }
 
 
@@ -804,7 +804,7 @@ static void tool_save(GtkToolButton *button){
     if(strcmp(suffix,".eps")==0){
 #if CAIRO_HAS_PS_SURFACE == 1
 	width=72*8;
-	height=(drawdata)->height*72*8/(drawdata)->width;//same aspect ratio as widget
+	height=(drawdata)->height*72*8/(drawdata)->width;/*same aspect ratio as widget */
 	surface=cairo_ps_surface_create(filename, width,height);
 	cairo_ps_surface_set_eps (surface, TRUE);
 #else
@@ -812,13 +812,13 @@ static void tool_save(GtkToolButton *button){
 	goto retry;
 #endif
     }else if(strcmp(suffix,".png")==0){
-	width=(drawdata)->width;//same size as the widget.
+	width=(drawdata)->width;/*same size as the widget. */
 	height=(drawdata)->height;
 	surface=cairo_image_surface_create
 	    ((cairo_format_t)CAIRO_FORMAT_RGB24,width,height);
     }else if(strcmp(suffix, ".svg")==0){
 #if CAIRO_HAS_SVG_SURFACE == 1
-	width=(drawdata)->width;//same size as the widget.
+	width=(drawdata)->width;/*same size as the widget. */
 	height=(drawdata)->height;
 	surface=cairo_svg_surface_create(filename, width,height);
 #else
@@ -924,7 +924,7 @@ static void tool_property(GtkToolButton *button, gpointer data){
 	n=4;
     }
     for(int i=0; i<n; i++){
-	//divide the separation to 100 steps.
+	/*divide the separation to 100 steps. */
 	if(diff[i/2]<EPS){
 	    diff[i/2]=1;
 	}
@@ -1053,7 +1053,7 @@ static void tool_font_set(GtkFontButton *btn){
     desc = pango_font_description_from_string(font_name_new);
     PangoFontDescription *pfd
 	=pango_font_description_from_string(font_name_new);
-    font_name_version++;//tell every expose event to update the figure.
+    font_name_version++;/*tell every expose event to update the figure. */
     if(font_name) free(font_name);
     font_name=strdup(pango_font_description_get_family(pfd));
     
@@ -1076,7 +1076,7 @@ static void tool_font_set(GtkFontButton *btn){
 	font_weight=CAIRO_FONT_WEIGHT_BOLD;
     }
     int size=pango_font_description_get_size(pfd);
-    //get font_size in device unit (dots, pixels);
+    /*get font_size in device unit (dots, pixels); */
     if(pango_font_description_get_size_is_absolute(pfd)){
 	font_size=(double)size/(double)PANGO_SCALE;
     }else{
@@ -1109,7 +1109,7 @@ static void close_window(GtkObject *object){
     if(!windows){
 	gtk_main_quit();
     }
-    //don't call exit here.
+    /*don't call exit here. */
 }
 
 static gboolean window_state(GtkWidget *window, GdkEvent *event){
@@ -1219,11 +1219,11 @@ GtkWidget *create_window(void){
     gtk_window_set_position(GTK_WINDOW(window), 
 			    GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(window), 600, 500);
-    gtk_widget_add_events(GTK_WIDGET(window),GDK_FOCUS_CHANGE_MASK);//in case this is not on.
+    gtk_widget_add_events(GTK_WIDGET(window),GDK_FOCUS_CHANGE_MASK);/*in case this is not on. */
     g_signal_connect(GTK_WIDGET(window),"event", G_CALLBACK(window_state), NULL);
     gtk_widget_show_all(window); 
     gtk_window_present(GTK_WINDOW(window));
-    tool_font_set(GTK_FONT_BUTTON(fontsel));//initialize.
+    tool_font_set(GTK_FONT_BUTTON(fontsel));/*initialize. */
     iwindow++;
     return window;
 }

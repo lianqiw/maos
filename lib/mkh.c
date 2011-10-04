@@ -23,7 +23,7 @@
 #include "misc.h"
 #include "loc.h"
 
-#define ONLY_FULL 0 //1: comply with other propagators.
+#define ONLY_FULL 0 /*1: comply with other propagators. */
 /*
   ONLY_FULL==0: calc weights if not all points exist. preferred
   ONLY_FULL==1: calc weights only if all points exist
@@ -76,12 +76,12 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	return mkhb_cubic(locin, locout, ampout, displacex, displacey, scale, cubic_iac);
     }
   
-    loc_create_map_npad(locin,1);//will only do once and save in locin.
+    loc_create_map_npad(locin,1);/*will only do once and save in locin. */
     dsp *hback;
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
     long iloc;
-    //int missing=0;
+    /*int missing=0; */
     const int wrapx = locin->map->nx-1;
     const int wrapy = locin->map->ny-1;
     const double dx_in1 = 1./locin->dx;
@@ -95,9 +95,9 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 #else
     long iphi;
 #endif
-    //-1 because we count from 1 in the map.
+    /*-1 because we count from 1 in the map. */
     long (*map)[locin->map->nx] =(long(*)[locin->map->nx])(locin->map->p);
-    //transpose of hfor
+    /*transpose of hfor */
     long nzmax=locout->nloc*4;
     hback = spnew(locin->nloc, locout->nloc, nzmax);
     spint *bp=hback->p;
@@ -105,9 +105,9 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     double *bx=hback->x;
     long count=0;
     double weight;
-    //double *phiin0=phiin-1;
+    /*double *phiin0=phiin-1; */
     for(iloc=0; iloc<locout->nloc; iloc++){
-	bp[iloc]=count;//column index
+	bp[iloc]=count;/*column index */
 	if(ampout && fabs(ampout[iloc])<EPS)
 	    continue;
 	if(count+5>nzmax){
@@ -128,7 +128,7 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	}
 	nplocx1=nplocx+1;
 	nplocy1=nplocy+1;
-#if ONLY_FULL == 1 //only proceed if all four points exist. preferred
+#if ONLY_FULL == 1 /*only proceed if all four points exist. preferred */
 	iphi1=map[nplocy][nplocx];
 	iphi2=map[nplocy][nplocx1];
 	iphi3=map[nplocy1][nplocx];
@@ -202,10 +202,10 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     const double *px=locout->locx;
     const double *py=locout->locy;
     long iphi;
-    //-1 because we count from 1 in the map.
+    /*-1 because we count from 1 in the map. */
     long (*map)[locin->map->nx]
 	=(long(*)[locin->map->ny])(locin->map->p);
-    //cubic
+    /*cubic */
     double fx[4],fy[4];
     const double cubicn=1./(1.+2.*cubic_iac);
     const double c0=1*cubicn;
@@ -267,7 +267,7 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		}
 	    }
 	}
-    }//for
+    }/*for */
     bp[locout->nloc]=count;
     spsetnzmax(hback, count);
     spdroptol(hback,1e-12);
@@ -295,11 +295,11 @@ dsp *mkhbin1d(dmat *xin, dmat *xout){
 	while(iout+1<xout->nx && xout->p[iout+1]<ixin){
 	    iout++;
 	}
-	if(xout->p[iout]>ixin || (iout+1==xout->nx && xout->p[iout]<ixin)){//outside of the area.
+	if(xout->p[iout]>ixin || (iout+1==xout->nx && xout->p[iout]<ixin)){/*outside of the area. */
 	    hbin->i[count]=iout;
 	    hbin->x[count]=1;
 	    count++;
-	}else{//within the area
+	}else{/*within the area */
 	    if(iout+1==xout->nx){
 		error("This shouldn't happen\n");
 	    }

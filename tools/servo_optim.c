@@ -27,7 +27,7 @@ int main(int argc, char **argv){
     dmat *psd=dread("%s",argv[1]);
     long dtrat=strtol(argv[2],NULL,10);
     double dt=strtod(argv[3],NULL);
-    double sigma=strtod(argv[4],NULL);//m^2
+    double sigma=strtod(argv[4],NULL);/*m^2 */
     dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma;
     dcell *gain=servo_typeII_optim(psd,dtrat,dt,sigma2);
     dwrite(gain->p[0],"%s",argv[5]);

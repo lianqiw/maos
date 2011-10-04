@@ -50,7 +50,7 @@
 	var=#new;/*strcpy may overflow. just reference the char*/	\
     }
 #else
-#define RENAME(old,new) //do nothing.
+#define RENAME(old,new) /*do nothing. */
 #endif
 
 static int MAX_ENTRY=1000;
@@ -60,10 +60,10 @@ typedef struct STORE_T{
     long protect;
     long count;
 }STORE_T;
-//Keep record of all the strings so that we can check whether they have all been used.
-static STORE_T *store=NULL;//store the pointers.
-static long nstore=0;//number of total records
-static long nused=0;//number of read records
+/*Keep record of all the strings so that we can check whether they have all been used. */
+static STORE_T *store=NULL;/*store the pointers. */
+static long nstore=0;/*number of total records */
+static long nused=0;/*number of read records */
 static int print_override=1;
 
 #define STRICT 1
@@ -75,28 +75,28 @@ trim the spaces, ", ', before and after string.*/
 static void strtrim(char **str){
     if(!*str) return;
     int iend;
-    //turn non-printable characters, coma, and semicolumn, to space
+    /*turn non-printable characters, coma, and semicolumn, to space */
     for(char *tmp=*str; *tmp!='\0'; tmp++){
       if(!isgraph((int)*tmp) || *tmp==';' || *tmp==',' || isspace((int)*tmp)){
 	    *tmp=' ';
-      }else if(*tmp=='\''){//replace single quote to double quote.
+      }else if(*tmp=='\''){/*replace single quote to double quote. */
 	  *tmp='"';
       }
     }
-    //remove leading spaces.
+    /*remove leading spaces. */
     while((*str)[0]!='\0' && isspace((int)(*str)[0])) (*str)++;
     iend=strlen(*str)-1;
-    //remove tailing spaces.
+    /*remove tailing spaces. */
     while(isspace((int)(*str)[iend]) && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
-    //remove duplicated spaces
+    /*remove duplicated spaces */
     char *tmp2=*str;
     int issp=0;
     for(char *tmp=*str; *tmp!='\0'; tmp++){
 	if(*tmp==' '){
-	    if(issp){//there is already a space, skip.
+	    if(issp){/*there is already a space, skip. */
 		continue;
 	    }else{
 		issp=1;
@@ -104,11 +104,11 @@ static void strtrim(char **str){
 	}else{
 	    issp=0;
 	}
-	//copy the string.
+	/*copy the string. */
 	*tmp2=*tmp;
 	tmp2++;
     }
-    *tmp2='\0';//properly end the string
+    *tmp2='\0';/*properly end the string */
     if((*str)[0]=='\0') *str=NULL;
 }
 /**
@@ -183,15 +183,15 @@ void close_config(const char *format, ...){
 		print_file("change.log");
 		error("key \"%s\" is not recognized, value is %s\n", store[i].key,store[i].data);
 	    }else if(store[i].count!=1){
-		//this should not happen.
+		/*this should not happen. */
 		error("Key %s is used %ld times\n", store[i].key,store[i].count);
 	    }
 #if defined(__linux__)
-	    //Linux doesn't free the keys. but Mac does.
-	    free(store[i].key);//free key;
+	    /*Linux doesn't free the keys. but Mac does. */
+	    free(store[i].key);/*free key; */
 #endif
 	    if(store[i].data){
-		free(store[i].data);//free value
+		free(store[i].data);/*free value */
 	    }
 	}
 	hdestroy();
@@ -233,11 +233,11 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     }
 #define MAXLN 4096
     char ssline[MAXLN];
-    ssline[0]='\0';//stores the available line.
+    ssline[0]='\0';/*stores the available line. */
     char line[MAXLN];
     while (fgets(line, MAXLN, fd)){
 	sline=squeeze(line);
-	if(!sline || sline[0]=='\0')//skip empty lines.
+	if(!sline || sline[0]=='\0')/*skip empty lines. */
 	    continue;
 	if(sline){
 	    if((strlen(sline)+strlen(ssline))>=MAXLN){
@@ -245,7 +245,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    }
 	    strcat(ssline, sline);
 	}
-	//lines ended with \ will continue on next line
+	/*lines ended with \ will continue on next line */
 	if(ssline[strlen(ssline)-1]=='\\'){
 	    ssline[strlen(ssline)-1]='\0';
 	    continue;
@@ -270,7 +270,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	if(strtok(NULL,"=") || !var || strlen(var)==0){
 	    error("Line '%s' is invalid\n",line);
 	}else if(var && !strcmp(var,"include")){
-	    //info("Opening embeded config file %s\n",value);
+	    /*info("Opening embeded config file %s\n",value); */
 	    char *embeded=strextract(value);
 	    if(embeded){
 		print_override=0;
@@ -294,7 +294,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(tomo.split_rtt, tomo.ahst_rtt);
 	    RENAME(evl.psfwvl, evl.wvl);
 	    RENAME(cn2.nhtrecon, cn2.nhtomo);
-	    //Added on 2011-04-28
+	    /*Added on 2011-04-28 */
 	    RENAME(dbg.noatm, sim.noatm);
 	    RENAME(dbg.fitonly, sim.fitonly);
 	    RENAME(dbg.evlol, sim.evlol);
@@ -317,14 +317,14 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 		store[nstore].data=NULL;
 	    }
 	    store[nstore].protect=protect;
-	    entry.data=(void*)nstore;//record entry.
+	    entry.data=(void*)nstore;/*record entry. */
 	    if(store[nstore].data && !strcmp(store[nstore].data, "ignore")){
-		store[nstore].count=1;//Mark it as already consumed.
+		store[nstore].count=1;/*Mark it as already consumed. */
 	    }else{
 		store[nstore].count=0;
 	    }
 	    if((entryfind=hsearch(entry,FIND))){
-		//same key found
+		/*same key found */
 		long istore=(long)(entryfind->data);
 		if(store[istore].protect && !protect){
 		    info2("%s={%s} is protected. Will not be overriden by {%s}\n",
@@ -342,21 +342,21 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 			      entry.key, (char*)store[istore].data,
 			      (char*)store[nstore].data);
 		    }
-		    //free old value
+		    /*free old value */
 		    if(store[istore].data)
 			free(store[istore].data);
-		    //copy pointer of new value.
+		    /*copy pointer of new value. */
 		    store[istore].data=store[nstore].data;
 		    store[istore].protect=store[nstore].protect;
 		    store[istore].count=store[nstore].count;
-		    //free key.
+		    /*free key. */
 		    free(store[nstore].key);
 		}
 		store[nstore].key=NULL;
 		store[nstore].data=NULL;
 		countold++;
 	    }else{
-		//new key
+		/*new key */
 		entryfind=hsearch(entry,ENTER);
 		countnew++;
 		nstore++;
@@ -389,7 +389,7 @@ static long getrecord(char *key, int mark){
 	    if(store[irecord].count){
 		error("This record %s is already read\n",key);
 	    }
-	    store[irecord].count++;//record read
+	    store[irecord].count++;/*record read */
 	    nused++;
 	}
     }else{
@@ -403,7 +403,7 @@ static long getrecord(char *key, int mark){
    Check whether a have a record of a key.
  */
 int readcfg_peek(const char *format,...){
-    //Check whether key exists
+    /*Check whether key exists */
     format2key;
     long irecord=getrecord(key, 0);
     if(irecord==-1){
@@ -425,14 +425,14 @@ int readcfg_peek_n(const char *format, ...){
     if(!endptr) endptr=startptr+strlen(sdata)-1;
     const char *quote=strchr(startptr,'"');
     int count=0;
-    if(quote && quote<endptr){//this is string array
+    if(quote && quote<endptr){/*this is string array */
 	char **ret=NULL;
 	count=readstr_strarr(&ret, 0, sdata);
 	for(int i=0; i<count; i++){
 	    free(ret[i]);
 	}
 	free(ret);
-    }else{//this is numerical array
+    }else{/*this is numerical array */
 	void *ret;
 	count=readstr_numarr(&ret, 0, T_DBL, sdata);
 	free(ret);
@@ -443,7 +443,7 @@ int readcfg_peek_n(const char *format, ...){
    Check whether the record is overriden by user supplied conf files.
 */
 int readcfg_override(const char *format,...){
-    //Check whether key exists
+    /*Check whether key exists */
     format2key;
     long irecord=getrecord(key, 0);
     if(irecord==-1){
@@ -473,16 +473,16 @@ char *readcfg_str(const char *format,...){
     return data;
 }
 int readcfg_strarr(char ***res, const char *format,...){
-   //Read str array.
+   /*Read str array. */
     format2key;
-    *res=NULL;//initialize
+    *res=NULL;/*initialize */
     long irecord=getrecord(key, 1);
-    if(irecord==-1){//record not found.
+    if(irecord==-1){/*record not found. */
 	error("key '%s' not found\n", key);
 	return 0;
     }else{
 	const char *sdata=store[irecord].data;
-	if(!sdata){//record is empty.
+	if(!sdata){/*record is empty. */
 	    return 0;
 	}
 	return readstr_strarr(res, 0, sdata);
@@ -509,8 +509,8 @@ int readstr_strarr(char ***res, int len, const char *sdata){
     }else{
 	sdata2=sdata+1;
     }
-    //sdataend--;
-    //find each string.
+    /*sdataend--; */
+    /*find each string. */
     while(sdata2<sdataend && sdata2[0]==' '){
 	sdata2++;
     }
@@ -695,7 +695,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	return 0;
     }
     size_t nmax=10;
-    size_t size=0;//size of each number
+    size_t size=0;/*size of each number */
     switch(type){
     case T_INT:
 	size=sizeof(int);
@@ -722,13 +722,13 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
     char *endptr, *startptr2;
     double fact=1;
     int power=1;
-    //process possible numbers before the array.
-    if(strchr(startptr,'[')){//there is indeed '['
+    /*process possible numbers before the array. */
+    if(strchr(startptr,'[')){/*there is indeed '[' */
 	while(startptr[0]!='['){
-	    double fact1=strtod(startptr, &endptr);//get the number
+	    double fact1=strtod(startptr, &endptr);/*get the number */
 	    if(startptr==endptr){
 		error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
-	    }else{//valid number
+	    }else{/*valid number */
 		if(power==1){
 		    fact*=fact1;
 		}else{
@@ -748,12 +748,12 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	if(startptr[0]!='['){
 	    error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
 	}
-	startptr++;//points to the beginning of the array in []
+	startptr++;/*points to the beginning of the array in [] */
 	/*process possible numbers after the array. do not use startptr here.*/
     }else{
-	//warning2("Expecting array: {%s} should start with [\n", data);
+	/*warning2("Expecting array: {%s} should start with [\n", data); */
     }
-    if(strchr(startptr,']')){//there is indeed ']'
+    if(strchr(startptr,']')){/*there is indeed ']' */
 	endptr=strchr(startptr,']')+1;
 	while(isspace((int)endptr[0])) endptr++;
 	while(endptr[0]=='/' || endptr[0]=='*'){
@@ -782,7 +782,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	}
     }
     int count=0;
-    //Read in the array
+    /*Read in the array */
     while(startptr[0]!=']' && startptr[0]!='\0'){
 	if(count>=nmax){
 	    if(len){
@@ -792,17 +792,17 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 		*ret=realloc(*ret, size*nmax);
 	    }
 	}
-	//parse the string for a floating point number. 
+	/*parse the string for a floating point number.  */
 	double res=readstr_num(startptr, &endptr);
 
 	startptr=endptr;
-	//apply the factors appear before or after []
+	/*apply the factors appear before or after [] */
 	if(power==1){
 	    res=fact*res;
 	}else{
 	    res=fact/res;
 	}
-	//assign the value to appropriate array. convert to int if necessary.
+	/*assign the value to appropriate array. convert to int if necessary. */
 	switch(type){
 	case T_INT:
 	    ((int*)(*ret))[count]=(int)res;
@@ -814,7 +814,7 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	    error("Invalid type");
 	}
 	count++;
-	//Skip the number separators.
+	/*Skip the number separators. */
 	while(startptr[0]==' '){
 	    startptr++;
 	}

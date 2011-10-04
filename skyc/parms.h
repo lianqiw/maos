@@ -44,7 +44,7 @@ typedef struct MAOS_S{
 		      maos for integrated simulation.*/
     int nwddeg;    /**<number of wddeg*/
 
-    //The following are vectors for each powfs.
+    /*The following are vectors for each powfs. */
     int *nsa;      /**<total number of subapertures*/
     int *msa;      /**<order of correction in 1-d*/
     int *ncomp;    /**<size of saved psf/wvf*/

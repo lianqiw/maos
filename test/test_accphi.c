@@ -3,7 +3,7 @@
 #include <string.h>
 #include "../lib/aos.h"
 TIC;
-//const double EPS=1e-12;
+/*const double EPS=1e-12; */
 /*for propagation to WFS PTS*/
 typedef struct PROP_GRD_PTS2_T{
     /*input*/
@@ -41,7 +41,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
     int isa, ipix,jpix;
     int mx,my;
     int nplocx2;
-    //const int optim = 0;//for debugging
+    /*const int optim = 0;//for debugging */
     const int ninx   = mapin->nx;
     const int niny   = mapin->ny;
     const int nx     = pts->nx;
@@ -83,7 +83,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
 		    }else
 			sx=0;
 		
-		    my=niny-nplocy-1;//remaining possible points.
+		    my=niny-nplocy-1;/*remaining possible points. */
 		    if(my>nx){
 			my=nx;
 		    }
@@ -101,7 +101,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
 		    if((dplocx)<EPS && (dplocy)<EPS){
 			/*aligned perfectly.*/
 			for(jpix=sy; jpix<my; jpix++){
-			    //nplocy2=nplocy+jpix;
+			    /*nplocy2=nplocy+jpix; */
 			    double *restrict phiin2=phiin[nplocy+jpix];
 			    double *restrict phiout2=phiout[jpix];
 			    for(ipix=sx; ipix<mx; ipix++){
@@ -114,7 +114,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
 			w01=dplocx*(1.-dplocy);
 			w00=(1.-dplocx)*(1.-dplocy);	
 			for(jpix=sy; jpix<my; jpix++){
-			    //nplocy2=nplocy+jpix;
+			    /*nplocy2=nplocy+jpix; */
 			    double *restrict phiin2=phiin[nplocy+jpix];
 			    double *restrict phiin3=phiin[nplocy+jpix+1];
 			    double *restrict phiout2=phiout[jpix];
@@ -127,7 +127,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
 			    }
 			}
 		    }
-		}else{//wraping
+		}else{/*wraping */
 		    double *phiin_1, *phiin_2;
 
 		    if(ninx < nx || niny < nx){
@@ -144,7 +144,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
 		    nplocx-=ninx*(nplocx/ninx);
 		    if(nplocx<0)
 			nplocx+=ninx;
-		    my=niny-nplocy-1;//remaining possible points.
+		    my=niny-nplocy-1;/*remaining possible points. */
 		    mx=ninx-nplocx-1;
 		    if(my>nx) my=nx;
 		    if(mx>nx) mx=nx;
@@ -285,7 +285,7 @@ static void prop_grid_pts_wrap2(PROP_GRD_PTS2_T *data){
 		    dplocx0+=ratio;
 		}
 		if(mx<nx){
-		    while(dplocx0<ninx && mx<nx){//falls on the edge
+		    while(dplocx0<ninx && mx<nx){/*falls on the edge */
 			SPLIT(dplocx0,dplocx,nplocx);
 			nplocxs[mx]=nplocx;
 			nplocxs2[mx]=0;
@@ -340,7 +340,7 @@ static void test_accuracy(void){
     double r0=0.15;
     double L0=30;
     rand_t rstat;
-    //long m=2048, n=2048;
+    /*long m=2048, n=2048; */
     double dx=1./2.;
     long m=(long)round(10/dx/16)*16;
     long n=(long)round(20/dx/16)*16;
@@ -360,10 +360,10 @@ static void test_accuracy(void){
     data.wt=wt;
     data.nlayer=nlayer;
     screens=vonkarman_screen(&data);
-    //screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1);
+    /*screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1); */
     map_t *screen=screens[0];
     mapwrite(screen,"accphi_screen");
-    //loc for the map
+    /*loc for the map */
     loc_t *locin=mksqloc(m,n,dx,screen->ox,screen->oy);
 
     dmat *A=dnew(60,60);
@@ -388,7 +388,7 @@ static void test_accuracy(void){
     double displacex,displacey,scale;
     displacex=0;
     displacey=0;
-    scale=1.2;//.414065;
+    scale=1.2;/*.414065; */
     int ic;
     int wrap=0;
     int nc=1;
@@ -544,7 +544,7 @@ static void test_speed(int nthread){
    double r0=0.15;
     double L0=30;
     rand_t rstat;
-    //long m=2048, n=2048;
+    /*long m=2048, n=2048; */
     double dx=1./2.;
     long m=(long)round(10/dx/16)*16;
     long n=(long)round(20/dx/16)*16;
@@ -564,7 +564,7 @@ static void test_speed(int nthread){
     data.wt=wt;
     data.nlayer=nlayer;
     screens=vonkarman_screen(&data);
-    //screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1);
+    /*screens=vonkarman_screen(&rstat,m,n,dx,r0,L0,wt,nlayer,0,1); */
     info("\n");
     map_t *screen=screens[0];
     double dsa=0.1;
@@ -582,7 +582,7 @@ static void test_speed(int nthread){
     double displacex,displacey,scale;
     displacex=0;
     displacey=0;
-    scale=1.2;//.414065;
+    scale=1.2;/*.414065; */
     int wrap=0;
     
     PROP_GRD_PTS2_T *propdata= calloc(1, sizeof(PROP_GRD_PTS2_T));
@@ -595,7 +595,7 @@ static void test_speed(int nthread){
     propdata->scale=scale;
     propdata->wrap=wrap;
     propdata->saend=pts->nsa;
-    //prop_index(propdata);
+    /*prop_index(propdata); */
     PINIT(propdata->mutex);
    
     read_self_cpu();

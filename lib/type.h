@@ -215,7 +215,7 @@ typedef struct zspcell{
    on x/y. Can be casted to dmat
 */
 typedef struct map_t{
-    //The OPD, takes the same form of dmat so can be casted.
+    /*The OPD, takes the same form of dmat so can be casted. */
     MAT(double)
     long *nref; /**< reference count */
     double ox;      /**<Origin in x*/

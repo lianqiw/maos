@@ -46,15 +46,15 @@ void hysterisis(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
 	int naloc=dmcmd->p[idm]->nx;
 	for(int ia=0; ia<naloc; ia++){
 	    double dx=x[ia]-xlast[ia];
-	    if(fabs(dx)>1e-14){//There is change in command
+	    if(fabs(dx)>1e-14){/*There is change in command */
 		if(dx*dxlast[ia]<0){
-		    //Changes in moving direction, change the initial condition
+		    /*Changes in moving direction, change the initial condition */
 		    x0[ia]=xlast[ia];
 		    for(int imod=0; imod<nmod; imod++){
 			yy0[ia][imod]=ylast[ia][imod];
 		    }
 		}
-		double alphasc=dx>0?1:-1;//To revert the sign of alpha when dx<0
+		double alphasc=dx>0?1:-1;/*To revert the sign of alpha when dx<0 */
 		for(int imod=0; imod<nmod; imod++){
 		    const double alpha=alphasc*coeff[imod][1];
 		    const double alphabeta=alpha*coeff[imod][2];
@@ -62,8 +62,8 @@ void hysterisis(HYST_T **hyst, dcell *dmreal, const dcell *dmcmd){
 		}
 		xlast[ia]=x[ia];
 		dxlast[ia]=dx;
-	    }//else: no change in voltage, no change in output.
-	    //update output.
+	    }/*else: no change in voltage, no change in output. */
+	    /*update output. */
 	    double y=0;
 	    for(int imod=0; imod<nmod; imod++){
 		y+=ylast[ia][imod]*coeff[imod][0];
@@ -79,7 +79,7 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	       const dcell *low_val, double gain){
     switch(simu->parms->recon.split){
     case 0:
-	break;//nothing to do.
+	break;/*nothing to do. */
     case 1:
 	dcellmm(dmval, simu->recon->ngsmod->Modes, low_val, "nn", gain);
 	break;
@@ -95,7 +95,7 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
    Do type II servo filtering, except the last integrator.
 */
 static void typeII_filter(TYPEII_T *MtypeII, dmat *gain, double dtngs, dcell *Merr){
-    //lead filter
+    /*lead filter */
     double gg,ga,gs;
     if(!MtypeII->lead){
 	MtypeII->lead=dcellnew(Merr->nx, Merr->ny);
@@ -115,15 +115,15 @@ static void typeII_filter(TYPEII_T *MtypeII, dmat *gain, double dtngs, dcell *Me
     for(long imlo=0; imlo<Merr->nx*Merr->ny; imlo++){
 	const long nmod=Merr->p[imlo]->nx;
 	long indmul=0;
-	//if(nmod!=5){
-	//   warning("nmod != 5\n");
-	//}
+	/*if(nmod!=5){ */
+	/*   warning("nmod != 5\n"); */
+	/*} */
 	if(gain->ny==nmod){
 	    indmul=1;
 	}else if(gain->ny==1){
 	    indmul=0;
 	}else if(gain->ny>1 && gain->ny < nmod){
-	    indmul=0;//temporary; use only first column to filter all modes
+	    indmul=0;/*temporary; use only first column to filter all modes */
 	}else{
 	    error("Wrong format\n");
 	}
@@ -142,9 +142,9 @@ static void typeII_filter(TYPEII_T *MtypeII, dmat *gain, double dtngs, dcell *Me
 					    -merrlast[imod]*(2*gs-1));
 	}
     }
-    //record Merrlast for use next time
+    /*record Merrlast for use next time */
     dcellcp(&MtypeII->errlast, Merr);
-    //first integrator
+    /*first integrator */
     dcelladd(&MtypeII->firstint, 1, MtypeII->lead, 1);
 }
 static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
@@ -194,7 +194,7 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 		}
 	    }
 	}
-	if(parms->save.dmpttr){//2 cycle delay.
+	if(parms->save.dmpttr){/*2 cycle delay. */
 	    cellarr_dcell(simu->save->dmpttr, dmint);
 	}
 	double totalptt[3]={0,0,0};
@@ -202,7 +202,7 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 	    totalptt[1]+=ptt->p[idm]->p[1];
 	    totalptt[2]+=ptt->p[idm]->p[2];
 	}
-	//Add tip/tilt back to the ground DM only.
+	/*Add tip/tilt back to the ground DM only. */
 	loc_add_ptt(dmint->p[0]->p, totalptt, recon->aloc[0]);
 	dcellfree(ptt);
     }else if(parms->save.dmpttr){
@@ -239,7 +239,7 @@ void filter_cl(SIM_T *simu){
 	cellarr_dcell(simu->save->dmreal, simu->dmreal);
 	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
     }
-    //copy dm computed in last cycle. This is used in next cycle (already after perfevl)
+    /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simt=&(parms->sim);
     if(!simu->dmerr_hi && !(parms->recon.split && simu->Merr_lo)){
 	return;
@@ -252,10 +252,10 @@ void filter_cl(SIM_T *simu){
 		shift_inte(simt->napngs,simt->apngs,simu->Mint_lo);
 	}
     }
-    //High order.
+    /*High order. */
     if(simu->dmerr_hi){
 	switch(simt->servotype_hi){
-	case 1://simple servo
+	case 1:/*simple servo */
 	    if(parms->sim.fuseint){
 		dcelladd(&simu->dmint[0], 1, simu->dmerr_hi, simt->epdm);
 	    }else{
@@ -266,8 +266,8 @@ void filter_cl(SIM_T *simu){
 	    error("Not implemented yet\n");
 	}
     }
-    //Low order, modal in split tomography only. 
-    //Merr_lo is non-empty only if in split mode and (isim+1)%dtrat==0 as governed by tomofit
+    /*Low order, modal in split tomography only.  */
+    /*Merr_lo is non-empty only if in split mode and (isim+1)%dtrat==0 as governed by tomofit */
     if(parms->recon.split && simu->Merr_lo){
 	switch(simt->servotype_lo){
 	case 1:{
@@ -278,10 +278,10 @@ void filter_cl(SIM_T *simu){
 	    }
 	}
 	    break;
-	case 2:{ //type II with lead filter
-	    //info("LoWFS DM output\n");
+	case 2:{ /*type II with lead filter */
+	    /*info("LoWFS DM output\n"); */
 	    typeII_filter(simu->MtypeII_lo, simu->gtypeII_lo, simu->dtlo, simu->Merr_lo);
-	    //second integrator, merged to LGS integrator.
+	    /*second integrator, merged to LGS integrator. */
 	    if(parms->sim.fuseint){
 		addlow2dm(&simu->dmint[0], simu, simu->MtypeII_lo->firstint, 1);
 	    }else{
@@ -305,7 +305,7 @@ void filter_cl(SIM_T *simu){
 	dcellcp(&simu->dmcmd,simu->dmint_hi[0]);
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo[0], 1);
     }   
-    //hysterisis.
+    /*hysterisis. */
     if(simu->hyst){
 	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
     }
@@ -336,7 +336,7 @@ void filter_ol(SIM_T *simu){
     if(simu->parms->sim.dmttcast){
 	cast_tt_do(simu, simu->dmcmd);
     }
-    //hysterisis.
+    /*hysterisis. */
     if(simu->hyst){
 	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
     }
@@ -383,7 +383,7 @@ void filter(SIM_T *simu){
 #endif
     calc_cachedm(simu);
   
-    if(parms->plot.run){ //Moved from recon.c to here.
+    if(parms->plot.run){ /*Moved from recon.c to here. */
 	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
 	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
 		    "Actual DM Actuator Commands","x (m)", "y (m)",

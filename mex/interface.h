@@ -5,7 +5,9 @@
 #ifdef MATLAB_MEX_FILE
 #include <mex.h>
 #endif
-
+#if __STDC_VERSION__ < 199901L /*C99*/
+#define inline __inline
+#endif
 inline mxArray *dsp2mx(const dsp*A){
     mxArray *out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
@@ -32,7 +34,8 @@ inline mxArray *c2mx(const cmat *A){
     mxArray *out=mxCreateDoubleMatrix(A->nx, A->ny, mxCOMPLEX);
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
-    for(long i=0; i<A->nx*A->ny; i++){
+    long i;
+    for(i=0; i<A->nx*A->ny; i++){
 	pr[i]=creal(A->p[i]);
 	pi[i]=cimag(A->p[i]);
     }

@@ -75,7 +75,7 @@ void prep_cachedm(SIM_T *simu){
 	    count++;
 	}
     }
-    //new scheme for ray tracing
+    /*new scheme for ray tracing */
     simu->cachedm_prop=calloc(simu->cachedm_n, sizeof(thread_t*));
     simu->cachedm_propdata=calloc(simu->cachedm_n, sizeof(PROPDATA_T));
     PROPDATA_T *cpropdata=simu->cachedm_propdata;
@@ -96,7 +96,7 @@ void prep_cachedm(SIM_T *simu){
 	cpropdata[ic].displacey0=0;
 	cpropdata[ic].displacex1=0;
 	cpropdata[ic].displacey1=0;
-	cpropdata[ic].scale=1;//scale is not taken care off.
+	cpropdata[ic].scale=1;/*scale is not taken care off. */
 	cpropdata[ic].cubic=simu->parms->dm[idm].cubic;
 	cpropdata[ic].cubic_iac=simu->parms->dm[idm].iac;
 	prop_index(&cpropdata[ic]);
@@ -113,12 +113,12 @@ void calc_cachedm(SIM_T *simu){
     double tk_start=myclockd();
     if(simu->parms->sim.cachedm){
 	long group=0;
-	//zero out the data.
+	/*zero out the data. */
 	for(int ic=0; ic<simu->cachedm_n; ic++){
 	    int idm=simu->pcachedm[ic][0];
 	    int iscale=simu->pcachedm[ic][1];
 	    dzero((dmat*)simu->cachedm[idm][iscale]);
-	    //do the multi-threaded ray tracing
+	    /*do the multi-threaded ray tracing */
 	    QUEUE_THREAD(group,simu->cachedm_prop[ic], simu->nthread, 1);
 	}
 	WAIT_THREAD(group);

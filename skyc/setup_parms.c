@@ -24,9 +24,9 @@
 #undef free
 #undef realloc
 
-#define READ_INT(A) parms->A = readcfg_int(#A) //read a key with int value.
-#define READ_DBL(A) parms->A = readcfg_dbl(#A) //read a key with double value
-#define READ_STR(A) parms->A = readcfg_str(#A) //read a key with string value.
+#define READ_INT(A) parms->A = readcfg_int(#A) /*read a key with int value. */
+#define READ_DBL(A) parms->A = readcfg_dbl(#A) /*read a key with double value */
+#define READ_STR(A) parms->A = readcfg_str(#A) /*read a key with string value. */
 
 static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.dbg);

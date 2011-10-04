@@ -40,7 +40,7 @@ void zgemm_(const char*, const char*,
 	    const dcomplex*, const int*,    
 	    const dcomplex*, dcomplex*, const int*);
 
-//Lapack
+/*Lapack */
 void dposv_(const char*,const int*,const int*, double*,const int*,
 	    double*,const int*, int*);
 void sposv_(const char*,const int*,const int*, float*,const int*,

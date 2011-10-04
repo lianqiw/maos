@@ -81,10 +81,10 @@
     OpenGLSDK.pkg
     DeveloperToolsSystemSupport
 
-    Second, download and install pkg-config from http://pkgconfig.freedesktop.org/releases/
-    
+    Second, download and install pkg-config from pkgconfig.freedesktop.org/releases/     
+
     Third, following the instructions on page
-    http://gtk-osx.sourceforge.net/ to install gtk+ for osx. The
+    gtk-osx.sourceforge.net/ to install gtk+ for osx. The 
     environmental variables are set by jhbuild, here we take important
     ones and put them in our .bash_profile to avoid running jhbuild
     each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.
@@ -98,7 +98,7 @@
 
     To make the app bundles. 
     First, install quartz engine and ige-mac-buildler. 
-    http://sourceforge.net/apps/trac/gtk-osx/wiki/Bundle
+    sourceforge.net/apps/trac/gtk-osx/wiki/Bundle 
     jhbuild build gtk-quartz-engine
     
     Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin

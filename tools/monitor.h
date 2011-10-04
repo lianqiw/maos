@@ -25,9 +25,9 @@
    Information for each process.
 */
 typedef struct PROC_T{
-    int hid;//host id. hosts[hid] gives hostname.
+    int hid;/*host id. hosts[hid] gives hostname. */
     int pid;
-    int done;//done with it.
+    int done;/*done with it. */
     double frac;
     int oldinfo;
     int iseed_old;
@@ -50,7 +50,7 @@ typedef struct PROC_T{
     struct PROC_T *next;
 }PROC_T;
 
-//void proc_remove(int id,int pid, int flag);
+/*void proc_remove(int id,int pid, int flag); */
 void refresh(PROC_T *p);
 void kill_job(PROC_T *p);
 void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p);
@@ -60,9 +60,9 @@ enum{
     COL_PID,
     COL_PATH,
     COL_SEED,
-    COL_SEEDP,//float
+    COL_SEEDP,/*float */
     COL_STEP,
-    COL_STEPP,//float
+    COL_STEPP,/*float */
     COL_TIMING,
     COL_LAPS,
     COL_REST,

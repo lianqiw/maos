@@ -35,7 +35,7 @@ int main(int argc, char **argv){
     ARG_S* arg=parse_args(argc,argv);
     /*In detach mode send to background and disable drawing*/
     if(arg->detach){
-	disable_draw=1;//disable drawing.
+	disable_draw=1;/*disable drawing. */
 	daemonize();
 	fprintf(stderr, "%s\n", scmd);
     }
@@ -57,7 +57,7 @@ int main(int argc, char **argv){
 #else
     fprintf(stderr, "without optimization!!!\n");
 #endif
-    //register signal handler
+    /*register signal handler */
     register_signal_handler(skyc_signal_handler);
     /*
       Ask job scheduler for permission to proceed. If no CPUs are available,
@@ -65,7 +65,7 @@ int main(int argc, char **argv){
       immediately.
     */
     scheduler_start(scmd,arg->nthread,!arg->force);
-    //setting up parameters before asking scheduler to check for any errors.
+    /*setting up parameters before asking scheduler to check for any errors. */
     dirsetup=stradd("setup",NULL);
     PARMS_S * parms=setup_parms(arg);
     if(parms->skyc.dbg){

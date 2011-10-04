@@ -61,7 +61,7 @@ void photon_flux(double *Np,      /**<[out] number of total signal at each wvl.*
        Written 2010-06-09;
        Tested PASS 2010-06-09;
      */
-    double pixas=pixtheta*206265;//in arcsec.
+    double pixas=pixtheta*206265;/*in arcsec. */
     double Npsum=0;
     double Nbsum=0;
     double saa;
@@ -79,16 +79,16 @@ void photon_flux(double *Np,      /**<[out] number of total signal at each wvl.*
 	double Z=0, ZB=0;
 	double imperr_rad2=pow(imperrnm*1e-9*(2*M_PI/wvl),2);
 	double imperr_strehl=exp(-imperr_rad2);
-	if(fabs(wvl-1.25e-6)<1.e-7){ //J band
+	if(fabs(wvl-1.25e-6)<1.e-7){ /*J band */
 	    Z=Z_J; ZB=pow(10,-MB_J/2.5)*Z_J;
-	}else if(fabs(wvl-1.65e-6)<1.e-7){//H band
+	}else if(fabs(wvl-1.65e-6)<1.e-7){/*H band */
 	    Z=Z_H; ZB=pow(10,-MB_H/2.5)*Z_H;
-	}else if(fabs(wvl-2.2e-6)<1.e-7){//K band
+	}else if(fabs(wvl-2.2e-6)<1.e-7){/*K band */
 	    Z=Z_K; ZB=pow(10,-MB_K/2.5)*Z_K;
 	}else{
 	    error("Invalid");
 	}
-	double absorp=(1./cos(za)-1)*(-log(0.98));//atmosphere absorption.
+	double absorp=(1./cos(za)-1)*(-log(0.98));/*atmosphere absorption. */
 	double strehl_iwvl=1;
 	if(strehl){
 	    strehl_iwvl=strehl[iwvl];
@@ -99,7 +99,7 @@ void photon_flux(double *Np,      /**<[out] number of total signal at each wvl.*
 	Nbsum+=dt*saa*pow(pixas,2)*ZB*thruput[iwvl]*qe[iwvl];
 	Npwvl+=Np[iwvl]/wvl;
     }
-    double wvlm=Npsum/Npwvl; //Average wavelength 1/mean(1/wvl) with signal weighting
+    double wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
     double deltheta=wvlm/dxsa;
     double thetaB=3*M_PI*deltheta/16;
     double snr=Npsum/sqrt(Npsum+4*Nbsum+4*pow(rne,2));

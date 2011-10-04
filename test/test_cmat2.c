@@ -12,48 +12,48 @@ static static void cmat_benchmark(){
     tic;
     for(int i=0; i<10000;i++){
 	cembed(A,B,0,C_FULL);
-	//initially: 0.008 ms in polaris.
-	//after change interpolation: 0.009 ms.
+	/*initially: 0.008 ms in polaris. */
+	/*after change interpolation: 0.009 ms. */
     }
     toc("cembed 0");
     tic;
     for(int i=0; i<10000;i++){
 	cembed(A,B,-M_PI*0.25,C_FULL);
-	//3.3 ms in polaris. with switch.
-	//after change interpolation: 0.098 ms in polaris
+	/*3.3 ms in polaris. with switch. */
+	/*after change interpolation: 0.098 ms in polaris */
     }
     toc("cembed -45");
     tic;
     tic;
     for(int i=0; i<10000;i++){
 	cembed(A,B,-M_PI*0.25,C_REAL);
-	//convert xy to abs/phase, do interpolation, and change back. very slow.
-	//takes 0.436ms. astatic void using this mode. set flag to 2.
+	/*convert xy to abs/phase, do interpolation, and change back. very slow. */
+	/*takes 0.436ms. astatic void using this mode. set flag to 2. */
     }
     toc("cembed -45, abs/pi");
     tic;
     for(int i=0; i<10000;i++){
 	cembed_wvf(A,D->p,D->p,D->nx,D->ny,0.5e-6,0);
-	//not usint LUT:
-	//0.067 ms in polaris if D is zero.
-	//0.274 ms in polaris if D is non zero;
-	//using LUT:
-	//0.049 ms if D is zero
-	//0.066 ms if D is non zero.
+	/*not usint LUT: */
+	/*0.067 ms in polaris if D is zero. */
+	/*0.274 ms in polaris if D is non zero; */
+	/*using LUT: */
+	/*0.049 ms if D is zero */
+	/*0.066 ms if D is non zero. */
     }
     toc("cembed_wvf 0");
     tic;
     for(int i=0; i<10000;i++){
 	cembed_wvf(A,D->p,D->p,D->nx,D->ny,0.5e-6,-45);
-	//0.127 ms in polaris.
-	//0.138 ms after change interpolation.
+	/*0.127 ms in polaris. */
+	/*0.138 ms after change interpolation. */
     }
     toc("cembed_wvf -45");
-    //cdraw("test_cmat",B,"B");
+    /*cdraw("test_cmat",B,"B"); */
     cdraw("test_cmat",A,"A");
     tic;
     for(int i=0; i<10000;i++){
-	cfftshift(A,C_REAL);//0.014 ms in polaris.
+	cfftshift(A,C_REAL);/*0.014 ms in polaris. */
     }
     toc("cfftshift");
 }
@@ -98,25 +98,25 @@ static static void test_sq2(){
     toc("*conj");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	D->p[i]=C->p[i]*conj(C->p[i]);//0.26
+	D->p[i]=C->p[i]*conj(C->p[i]);/*0.26 */
     }
     toc("*conj");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
 	const dcomplex tmp=C->p[i];
-	D->p[i]=creal(tmp*conj(tmp));//0.26
+	D->p[i]=creal(tmp*conj(tmp));/*0.26 */
     }
     toc("*conj2");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
 	const dcomplex tmp=C->p[i];
-	D->p[i]=creal(tmp)*creal(tmp)+cimag(tmp)*cimag(tmp);//0.23
+	D->p[i]=creal(tmp)*creal(tmp)+cimag(tmp)*cimag(tmp);/*0.23 */
     }
     toc("real*real+imag*imag");
     tic;
     for(int i=0; i<C->nx*C->ny; i++){
 	const dcomplex tmp=C->p[i];
-	D->p[i]=pow(creal(tmp),2)+pow(cimag(tmp),2);//0.23
+	D->p[i]=pow(creal(tmp),2)+pow(cimag(tmp),2);/*0.23 */
     }
     toc("pow real+pow imag");
     tic;
@@ -140,7 +140,7 @@ static static void test_cwm(){
     toc("*conj");
      tic;
     for(int i=0; i<C->nx*C->ny; i++){
-	D->p[i]*=conj(C->p[i]);//0.28
+	D->p[i]*=conj(C->p[i]);/*0.28 */
     }
     toc("*conj");
 }
@@ -154,11 +154,11 @@ static void test_ctilt(){
     cfft2plan(C,-1);
     cfft2plan(C,1);
     cfft2(C,-1);
-    //cfftshift(C,C_FULL);
+    /*cfftshift(C,C_FULL); */
     cwrite(C,"C_otf");
     ctilt(C,0.1,0.1,0);
     cwrite(C,"C_otf_tilt");
-    //cfftshift(C,C_FULL);
+    /*cfftshift(C,C_FULL); */
     cfft2(C,1);
     cwrite(C,"C_psf_shift");
     cscale(C,1./(N*N));
@@ -216,7 +216,7 @@ static void bench_ccwm(void){
     toc("ccwm3");
     cwrite(E,"E2.bin");
 }
-//TIC;
+/*TIC; */
 /*
 int test_ints(){
     int nopd=32;
@@ -233,31 +233,31 @@ int test_ints(){
 	psf[i]=amp[i]*cexp(wvk*opd[i]);
 	psf2[i]=amp[i]*cexp(wvk*opd[i]);
     }
-    //    tic;
+    /*    tic; */
     for(int j=0; j<10000; j++){
 	for(int i=0; i<nopd*nopd; i++){
 	    psf[i]=amp[i]*cexp(wvk*opd[i]);
 	}
     }
-    //takes 0.15 ms in debug mode, 0.12 ms in O3 mode
-    //tic;
+    /*takes 0.15 ms in debug mode, 0.12 ms in O3 mode */
+    /*tic; */
     for(int j=0; j<10000; j++){
 	for(int i=0; i<nopd*nopd; i++){
 	    double junk=wvkr*opd[i];
 	    psf[i]=amp[i]*(cos(junk)+I*sin(junk));
 	}
     }
-    //takes 0.9 ms in debug mode, 0.09ms in O3 mode.
-    //tic;
+    /*takes 0.9 ms in debug mode, 0.09ms in O3 mode. */
+    /*tic; */
     for(int j=0; j<10000; j++){
 	for(int i=0; i<nopd*nopd; i++){
 	    double junk=cos(wvkr*opd[i]);
 	    psf[i]=amp[i]*(junk+I*sqrt(1-junk*junk));
 	}
     }
-    //takes 0.9 ms in debug mode, 0.09ms in O3 mode.
+    /*takes 0.9 ms in debug mode, 0.09ms in O3 mode. */
  
-    //tic;
+    /*tic; */
     for(int i=0; i<10000; i++){
 	embed_wvf(psf,npsf,opd,amp,nopd,0.5e-6,0.5);
     }
@@ -265,43 +265,43 @@ int test_ints(){
   
     fftw_plan plan_psf=fftw_plan_dft_2d
 	(npsf,npsf,psf,psf,-1,FFTW_MEASURE);
-    //tic;
+    /*tic; */
     for(int i=0; i<10000; i++){
 	fftw_execute(plan_psf);
     }
-    //takes 0.07ms todo 64x64 FFT.
-    //tic;
+    /*takes 0.07ms todo 64x64 FFT. */
+    /*tic; */
     for(int j=0; j<10000; j++){
 	for(int i=0; i<npsf*npsf; i++){
 	    psf[i]*=psf2[i];
 	}
     }
-    //takes 0.08ms in debug mode, 0.03 in O3 mode.
+    /*takes 0.08ms in debug mode, 0.03 in O3 mode. */
  
     for(int j=0; j<10000; j++){
 	fftshift(psf,npsf,npsf);
     }
-    toc("fftshift");//0.014 ms in O3
+    toc("fftshift");/*0.014 ms in O3 */
     
     tic;
     for(int j=0; j<10000; j++){
 	add_hf(psf,npsf,npsf);
     }
-    toc("addhf");//0.011 ms in O3 mode
+    toc("addhf");/*0.011 ms in O3 mode */
    
     }*/
 
 int main(){
     /*
-    cmat_benchmark();//passed
-    cmat_correctness();//passed
-    test_sq2();//passed
-    test_cwm();//passed
+    cmat_benchmark();/*passed */
+    cmat_correctness();/*passed */
+    test_sq2();/*passed */
+    test_cwm();/*passed */
     dcomplex a=2342+3*I;
     info("a*conj(a)=%g\n",creal(a*conj(a)));
     info("abs2(a)=%g\n", cabs2(a));
     test_ctilt();
     */
-    //bench_cembed();
+    /*bench_cembed(); */
     bench_ccwm();
 }

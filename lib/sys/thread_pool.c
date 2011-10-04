@@ -60,7 +60,7 @@
 #include "process.h"
 #define USE_SPIN_LOCK 1
 #if USE_SPIN_LOCK == 1
-//Important to be volatile, otherwise lockes up in Sandy Bridge CPUs
+/*Important to be volatile, otherwise lockes up in Sandy Bridge CPUs */
 #define LOCK_T volatile int 
 #define LOCK_DO(A) SPIN_LOCK(A)
 #define LOCK_UN(A) SPIN_UNLOCK(A)
@@ -104,7 +104,7 @@ struct thread_pool_t{
     int nidle;/**<Number of idle threads, excluding the master thread.*/
     int inited;/**<Whether the thread pool has been inited*/
 };
-static thread_pool_t pool;//The default pool;
+static thread_pool_t pool;/*The default pool; */
 
 /**
  * Do a job. The mutex should have already been locked when calling this
@@ -113,21 +113,21 @@ static thread_pool_t pool;//The default pool;
  * finished.
  */
 static inline void do_job(void) {
-    //Take the job out of the todo list
+    /*Take the job out of the todo list */
     jobs_t *job=pool.jobshead;
     pool.jobshead=job->next;
     pthread_mutex_unlock(&pool.mutex);
-    //run the job
+    /*run the job */
     job->fun(job->arg); 
     pthread_mutex_lock(&pool.mutex);
-    //decrease the counter.
+    /*decrease the counter. */
     (*job->count)--;
     if(!(*job->count)){
 	/*job is done. need broadcast since multiple threads may be waiting for
 	  their job to finish*/
 	pthread_cond_broadcast(&pool.jobdone);
     }
-    //return job to the pool.
+    /*return job to the pool. */
     LOCK_DO(pool.mutex_pool);
     job->next=pool.jobspool;
     pool.jobspool=job;
@@ -171,30 +171,30 @@ static void run_thread(){
 	  locked immediately when cond is satisfied.
 	*/
 	if(!pool.jobshead){
-	    //this thread is idle. add to the idle count
+	    /*this thread is idle. add to the idle count */
 	    pool.nidle++;
-	    //at most ncur-1 threads can be idle.
-	    if(pool.nidle+1==pool.ncur){//all threads are idle
+	    /*at most ncur-1 threads can be idle. */
+	    if(pool.nidle+1==pool.ncur){/*all threads are idle */
 		pthread_cond_signal(&pool.idle);
 	    }
 	    if(pool.ncur>pool.nmax){
 		break;
 	    }
-	    //no more jobs to do, wait for the condition.
+	    /*no more jobs to do, wait for the condition. */
 	    pthread_cond_wait(&pool.jobwait, &pool.mutex);
-	    pool.nidle--;//no longer idle.
-	    //jobshead should be not empty now.
-	    if(!pool.jobshead){//some other task already did the job.
+	    pool.nidle--;/*no longer idle. */
+	    /*jobshead should be not empty now. */
+	    if(!pool.jobshead){/*some other task already did the job. */
 		continue;
 	    }
 	}
-	//Take the jobs out of the job queue and run it.
+	/*Take the jobs out of the job queue and run it. */
 	while(pool.jobshead){
 	    do_job();
 	}
     }
     pool.ncur--;
-    if(pool.ncur==1){//all thread are exited except the master thread.
+    if(pool.ncur==1){/*all thread are exited except the master thread. */
 	pthread_cond_signal(&pool.exited);
     }
     pthread_mutex_unlock(&pool.mutex);
@@ -221,7 +221,7 @@ void thread_pool_init(int nthread){
 	pool.jobspool=NULL;
 	pool.jobshead=NULL;
 	pool.jobstail=NULL;
-	pool.ncur=1;//counting the master thread.
+	pool.ncur=1;/*counting the master thread. */
 	pool.nmax=1;
     }
     int nthread_max=sysconf( _SC_NPROCESSORS_ONLN );
@@ -230,16 +230,16 @@ void thread_pool_init(int nthread){
     pthread_mutex_lock(&pool.mutex);
     int nmax=pool.nmax;
     pool.nmax=nthread;
-    if(nmax<nthread){//need to launch more threads.
-	pthread_t thread;//we don't need the thread information.
+    if(nmax<nthread){/*need to launch more threads. */
+	pthread_t thread;/*we don't need the thread information. */
 	for(int ith=0; ith<nthread-nmax; ith++){
 	    if(pthread_create(&thread, &pool.attr, (thread_fun)run_thread, NULL)){
 		error("Can not create thread\n");
 	    }
 	}
     }else if(nmax>nthread){
-	//need to quit some threads.
-	pthread_cond_broadcast(&pool.jobwait);//wake up all threads.
+	/*need to quit some threads. */
+	pthread_cond_broadcast(&pool.jobwait);/*wake up all threads. */
     }
     pthread_mutex_unlock(&pool.mutex);
 }
@@ -249,9 +249,9 @@ void thread_pool_init(int nthread){
  *  finished. Wait on it will clear when count is decreased to zero.
  */
 void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
-    //Add the job to the head if urgent>0, otherwise to the tail.
+    /*Add the job to the head if urgent>0, otherwise to the tail. */
     jobs_t *job;
-    if(pool.jobspool){//take it from the pool.
+    if(pool.jobspool){/*take it from the pool. */
 	LOCK_DO(pool.mutex_pool);
 	job=pool.jobspool;
 	pool.jobspool=pool.jobspool->next;
@@ -266,24 +266,24 @@ void thread_pool_queue(long *group, thread_fun fun, void *arg, int urgent){
     job->urgent=urgent;
     job->next=NULL;
     pthread_mutex_lock(&pool.mutex);
-    if(pool.jobshead){//list is not empty
+    if(pool.jobshead){/*list is not empty */
 	if(urgent){
-	    //add to head
+	    /*add to head */
 	    job->next=pool.jobshead;
 	    pool.jobshead=job;
 	}else{     
-	    //add to tail.
+	    /*add to tail. */
 	    pool.jobstail->next=job;
 	    pool.jobstail=job;
 	}
     }else{
-	//list is empty. need to signal the thresds.
+	/*list is empty. need to signal the thresds. */
 	pool.jobshead=job;
 	pool.jobstail=job;
     }
     if(pool.nidle>0){
-	pthread_cond_signal(&pool.jobwait);//wake up one thread only.
-	pthread_cond_signal(&pool.jobdone);//wake up the thread that is waiting for jobdone.
+	pthread_cond_signal(&pool.jobwait);/*wake up one thread only. */
+	pthread_cond_signal(&pool.jobdone);/*wake up the thread that is waiting for jobdone. */
     }
     pthread_mutex_unlock(&pool.mutex);
 }
@@ -316,7 +316,7 @@ void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, in
 	    job->fun=(thread_fun)(arg2[ijob].fun);
 	    job->arg=arg2+ijob;
 	    if(((thread_t*)job->arg)->end==((thread_t*)job->arg)->start){
-		//empty job. don't queue it.
+		/*empty job. don't queue it. */
 		LOCK_DO(pool.mutex_pool);
 		job->next=pool.jobspool;
 		pool.jobspool=job;
@@ -331,25 +331,25 @@ void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, in
 	head=job;
 	njob2++;
     }
-    //Add the temporary list of jobs to the todo queue
+    /*Add the temporary list of jobs to the todo queue */
     pthread_mutex_lock(&pool.mutex);
-    *group+=njob2;//Need to be inside the lock.
-    if(pool.jobshead){//list is not empty
-	if(urgent){//add to head
+    *group+=njob2;/*Need to be inside the lock. */
+    if(pool.jobshead){/*list is not empty */
+	if(urgent){/*add to head */
 	    tail->next=pool.jobshead;
 	    pool.jobshead=head;
-	}else{//add to tail.
+	}else{/*add to tail. */
 	    pool.jobstail->next=head;
 	    pool.jobstail=tail;
 	}
     }else{
-	//list is empty. need to signal the thresds.
+	/*list is empty. need to signal the thresds. */
 	pool.jobshead=head;
 	pool.jobstail=tail;
     }
     if(pool.nidle){
-	pthread_cond_broadcast(&pool.jobwait);//wake up all idle threads.
-	pthread_cond_broadcast(&pool.jobdone);//wake up the thread that is waiting for jobdone.
+	pthread_cond_broadcast(&pool.jobwait);/*wake up all idle threads. */
+	pthread_cond_broadcast(&pool.jobdone);/*wake up the thread that is waiting for jobdone. */
     }
     pthread_mutex_unlock(&pool.mutex);
 }
@@ -358,7 +358,7 @@ void thread_pool_queue_many(long *group, thread_fun fun, void *arg, int njob, in
  */
 void thread_pool_wait(long *count){
     pthread_mutex_lock(&pool.mutex);
-    //Do some job while we are waiting.
+    /*Do some job while we are waiting. */
     while((*count)){
 	if(pool.jobshead){
 	    do_job();
@@ -383,7 +383,7 @@ void thread_pool_wait_all(void){
     while(pool.jobshead){
 	do_job();
     }
-    if(pool.nidle+1<pool.ncur){//some job is still doing the last bit.
+    if(pool.nidle+1<pool.ncur){/*some job is still doing the last bit. */
        	/*
 	  thread_pool_wait may not obtain the lock in pool.mutex immediately
 	  after signal on pool.idle is emmited. thread_pool_queue may obtain
@@ -398,8 +398,8 @@ void thread_pool_wait_all(void){
  */
 void thread_pool_destroy(void){
     if(!pool.inited) return;
-    thread_pool_wait_all();//let all jobs finish.
-    //tell all jobs to quit.
+    thread_pool_wait_all();/*let all jobs finish. */
+    /*tell all jobs to quit. */
     pool.quit=1;
     pthread_cond_broadcast(&pool.jobwait);
     pthread_mutex_lock(&pool.mutex);
@@ -427,7 +427,7 @@ static __attribute__((destructor)) void deinit(){
 }
 
 static __attribute__((constructor)) void init(){
-    register_deinit(thread_pool_destroy,NULL);//register to mem.c
+    register_deinit(thread_pool_destroy,NULL);/*register to mem.c */
 }
 /**
    It does not work to initialize the thread pool in the beginning because it is before main and ?

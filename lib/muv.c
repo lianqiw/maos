@@ -123,12 +123,12 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
     int xb=C->xb;
     int yb=C->yb;
     const MUV_T *A=C->A;
-    assert(xin->ny==1);//if this is not true, make a loop here.
+    assert(xin->ny==1);/*if this is not true, make a loop here. */
     if(xb==-1 || yb==-1){
 	muv(xout, A, xin, alpha);
 	return;
     }
-    assert(A->M);//Don't support A->Mfun yet. 
+    assert(A->M);/*Don't support A->Mfun yet.  */
     PDSPCELL(A->M, AM);
     if(!*xout){
 	*xout=dcellnew(A->M->nx, xin->ny);
@@ -164,14 +164,14 @@ static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, d
 	chol_solve(Up,C,U);
     }
     dmat *UpV=NULL;
-    //UpV=(I-Up'*V)^{-1}
+    /*UpV=(I-Up'*V)^{-1} */
     dmm(&UpV,*Up,V,"tn",-1);
     for(unsigned long ii=0; ii<UpV->ny; ii++){
 	UpV->p[ii+ii*UpV->nx]+=1;
     }
     dinv_inplace(UpV);
     dmat *VI=NULL;
-    //VI=V*UpV
+    /*VI=V*UpV */
     dmm(&VI,V,UpV,"nn",-1);
     dfree(UpV);
     if(MI){
@@ -199,14 +199,14 @@ void muv_direct_prep(MUV_T *A, double svd){
     TIC;tic;
     muv_direct_free(A);
     dsp *muvM=spcell2sp(A->M);
-    if(svd>0){//Do SVD
+    if(svd>0){/*Do SVD */
 	spfull(&A->MI, muvM, 1);
-	if(svd<1){//use svd as threashold
+	if(svd<1){/*use svd as threashold */
 	    dsvd_pow(A->MI, -1, 1, svd);
-	}else{//use a threshold good for lsr.
+	}else{/*use a threshold good for lsr. */
 	    dsvd_pow(A->MI, -1, 1, 2e-4);
 	}
-    }else{//Do Cholesky decomposition.
+    }else{/*Do Cholesky decomposition. */
 	A->C=chol_factorize(muvM);
     }
     spfree(muvM);
@@ -244,7 +244,7 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
     }else{
 	A->CB=calloc(nb, sizeof(spchol*));
     }
-    for(int ib=0; ib<nb; ib++){//Invert each diagonal block.
+    for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
 	dsp *muvM=A->M->p[ib+ib*nb];
 	if(svd>0){
 	    spfull(&A->MIB->p[ib], muvM, 1);
@@ -256,10 +256,10 @@ void muv_direct_diag_prep(MUV_T *A, double svd){
 	}else{
 	    A->CB[ib]=chol_factorize(muvM);
 	}
-	//Don't free muvM.
+	/*Don't free muvM. */
     }
-    if(A->U && A->V){//deal with low rank terms
-	//First reduce U, V to column block vectors. 
+    if(A->U && A->V){/*deal with low rank terms */
+	/*First reduce U, V to column block vectors.  */
 	dcell *U2=dcellreduce(A->U, 2);
 	dcellfree(A->U); A->U=U2;
 	dcell *V2=dcellreduce(A->V, 2);
@@ -362,13 +362,13 @@ void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib){
    convert the data from dcell to dmat and apply muv_direct_solve() . May be done in place.*/
 void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin){
     if(!xin) return;
-    if(xin->nx*xin->ny==1){//there is only one cell.
+    if(xin->nx*xin->ny==1){/*there is only one cell. */
 	if(!*xout) *xout=dcellnew(1,1);
 	muv_direct_solve(&((*xout)->p[0]), A, xin->p[0]);
     }else{
 	dmat *xin2=dcell2m(xin);
-	muv_direct_solve(&xin2, A, xin2);//in place solve.
-	d2cell(xout,xin2,xin);//xin is the reference for dimensions. copy data into xout.
+	muv_direct_solve(&xin2, A, xin2);/*in place solve. */
+	d2cell(xout,xin2,xin);/*xin is the reference for dimensions. copy data into xout. */
 	dfree(xin2);
     }
 }
@@ -383,12 +383,12 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
     int nb=b->nx;
     assert(b->ny==1);
     if(!*px){
-	*px=dcellnew2(b); //initialize the output array.
+	*px=dcellnew2(b); /*initialize the output array. */
     }else if(!A->warm){
 	dcellzero(*px);
     }
-    dcell *x0=*px; //Just a convenient pointer.
-    dcell *c0=dcellnew2(b);//Auxillary array
+    dcell *x0=*px; /*Just a convenient pointer. */
+    dcell *c0=dcellnew2(b);/*Auxillary array */
     MUV_IB_T B={A,-1,-1};
     dcell *x0b=dcellnew(nb,1);
     dcell *c0b=dcellnew(nb,1);
@@ -409,7 +409,7 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
 	    case 2:
 		muv_direct_diag_solve(&x0->p[ib], A, c0->p[ib],ib);
 		break;
-	    case 1://Have to call CG, for this block. Embed this block into an empty block matrix.
+	    case 1:/*Have to call CG, for this block. Embed this block into an empty block matrix. */
 		x0b->p[ib]=x0->p[ib];
 		c0b->p[ib]=c0->p[ib];
 		B.xb=ib;
@@ -445,11 +445,11 @@ void muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm res
 	muv_bgs_solve(px, L, rhs);
     }else{
 	switch(L->alg){
-	case 0://CBS
-	case 2://SVD
+	case 0:/*CBS */
+	case 2:/*SVD */
 	    muv_direct_solve_cell(px, L, rhs);
 	    break;
-	case 1://CG
+	case 1:/*CG */
 	    pcg(px, L->M?muv:L->Mfun, L->M?L:L->Mdata, L->pfun, L->pdata, rhs, L->warm, L->maxit);
 	    break;
 	default:
@@ -497,7 +497,7 @@ void muv_free(MUV_T *A){
     dcellfree(A->U);
     dcellfree(A->V);
     if(A->extra){
-	free(A->extra);//a struct contains pointers.
+	free(A->extra);/*a struct contains pointers. */
     }
     muv_direct_free(A);
     muv_direct_diag_free(A);

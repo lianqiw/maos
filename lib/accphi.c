@@ -149,26 +149,26 @@ void prop_index(PROPDATA_T *propdata){
 	if(propdata->cubic){
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		//case 10
+		/*case 10 */
 		propdata->index=10;
 		done=1;
 	    }
 	    if(propdata->phiout){
 		if(propdata->ptsout){
 		    if(done) error("Invalid\n");
-		    //case 11
+		    /*case 11 */
 		    propdata->index=11;
 		    done=1;
 		}
 		if(propdata->locout){
 		    if(done) error("Invalid\n");
-		    //case 12
+		    /*case 12 */
 		    propdata->index=12;
 		    done=1;
 		}
 		if(propdata->ostat){
 		    error("Invalid\n");
-		    //case 13
+		    /*case 13 */
 		    propdata->index=13;
 		    done=1;
 		}
@@ -176,26 +176,26 @@ void prop_index(PROPDATA_T *propdata){
 	}else{
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		//case 0
+		/*case 0 */
 		propdata->index=0;
 		done=1;
 	    }
 	    if(propdata->phiout){
 		if(propdata->ptsout){
 		    if(done) error("Invalid\n");
-		    //case 1
+		    /*case 1 */
 		    propdata->index=1;
 		    done=1;
 		}
 		if(propdata->locout){
 		    if(done) error("Invalid\n");
-		    //case 2
+		    /*case 2 */
 		    propdata->index=2;
 		    done=1;
 		}
 		if(propdata->ostat){
 		    if(done) error("Invalid\n");
-		    //case 3
+		    /*case 3 */
 		    propdata->index=3;
 		    done=1;
 		}
@@ -206,38 +206,38 @@ void prop_index(PROPDATA_T *propdata){
 	if(propdata->cubic){
 	    if(propdata->locout){
 		if(done) error("Invalid\n");
-		//case 4
+		/*case 4 */
 		propdata->index=4;
 		done=1;
 	    }
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		//case 5
+		/*case 5 */
 		propdata->index=5;
 		done=1;
 	    }
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
-		//case 6
+		/*case 6 */
 		propdata->index=6;
 		done=1;
 	    }
 	}else{
 	    if(propdata->locout){
 		if(done) error("Invalid\n");
-		//case 7
+		/*case 7 */
 		propdata->index=7;
 		done=1;
 	    }
 	    if(propdata->mapout){
 		if(done) error("Invalid\n");
-		//case 8
+		/*case 8 */
 		propdata->index=8;
 		done=1;
 	    }
 	    if(propdata->ptsout){
 		if(done) error("Invalid\n");
-		//case 9
+		/*case 9 */
 		propdata->index=9;
 		done=1;
 	    }
@@ -395,7 +395,7 @@ void prop_grid_map(ARGIN_GRID,
 		    ARG_PROP,
 		    int wrap            /**<[in] wrap input OPD or not*/
 		    ){
-    //A convenient function. Not optimized
+    /*A convenient function. Not optimized */
     pts_t pts;
     pts.nsa=1;
     pts.origx=&mapout->ox;
@@ -433,7 +433,7 @@ void prop_grid(ARGIN_GRID,
 
     for(long iloc=start; iloc<end; iloc++){
 	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;//skip points that has zero amplitude
+	    continue;/*skip points that has zero amplitude */
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 	dplocy=myfma(py[iloc],dx_in2,displacey);
 	SPLIT(dplocx,dplocx,nplocx);
@@ -484,7 +484,7 @@ void prop_nongrid(ARGIN_NONGRID,
     RUNTIME_LINEAR;
     for(long iloc=start; iloc<end; iloc++){
 	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;//skip points that has zero amplitude
+	    continue;/*skip points that has zero amplitude */
 	dplocy=myfma(py[iloc],dx_in2,displacey);
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 
@@ -511,7 +511,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 		      long start,       /**<[in] First point to do*/
 		      long end          /**<[in] Last point to do*/
 		      ){
-    PREPIN_NONGRID(1,2);//Do we need 2 in first?
+    PREPIN_NONGRID(1,2);/*Do we need 2 in first? */
     PREPOUT_MAP;
     RUNTIME_LINEAR ;
     for(int iy=start; iy<end; iy++){
@@ -566,7 +566,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	    for(int ix=0; ix<pts->nx; ix++){
 		iloc++;
 		if(ampout && fabs(ampout[iloc])<EPS)
-		    continue;//skip points that has zero amplitude
+		    continue;/*skip points that has zero amplitude */
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		SPLIT(dplocx,dplocx,nplocx);
 		if(nplocx<0||nplocx>nxmax){
@@ -645,7 +645,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	    for(int ix=0; ix<pts->nx; ix++){
 		iloc++;
 		if(ampout && fabs(ampout[iloc])<EPS)
-		    continue;//skip points that has zero amplitude
+		    continue;/*skip points that has zero amplitude */
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		SPLIT(dplocx,dplocx,nplocx);
 		if(nplocx<1||nplocx>nxmax){
@@ -704,7 +704,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 
     for(long iloc=start; iloc<end; iloc++){
 	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;//skip points that has zero amplitude
+	    continue;/*skip points that has zero amplitude */
 	dplocy=myfma(py[iloc],dx_in2,displacey);
 	dplocx=myfma(px[iloc],dx_in2,displacex);
 
@@ -746,7 +746,7 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	    for(int ix=0; ix<pts->nx; ix++){
 		iloc++;
 		if(ampout && fabs(ampout[iloc])<EPS)
-		    continue;//skip points that has zero amplitude
+		    continue;/*skip points that has zero amplitude */
 		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 		SPLIT(dplocx,dplocx,nplocx);
 		if(nplocx<1||nplocx>nxmax){
@@ -814,7 +814,7 @@ void prop_nongrid_bin(const loc_t *locin,
 	error("This routine is designed for down sampling.\n");
     }
     (void) ampout;
-    loc_create_map_npad(locout,1);//will only do once and save in locout.
+    loc_create_map_npad(locout,1);/*will only do once and save in locout. */
     double dplocx, dplocy;
     int nplocx, nplocy, nplocx1, nplocy1;
     const int wrapx1 = locout->map->nx;
@@ -822,14 +822,14 @@ void prop_nongrid_bin(const loc_t *locin,
     const int nxmax = wrapx1-1;
     const int nymax = wrapy1-1;
     const double dx_out1 = 1./locout->dx;
-    //notice inverse of scale.
+    /*notice inverse of scale. */
     const double dx_out2 = (1./scale)*dx_out1;
-    //notice negative sign in displacex/y.
+    /*notice negative sign in displacex/y. */
     displacex = (-displacex/scale-locout->map->ox)*dx_out1;
     displacey = (-displacey/scale-locout->map->oy)*dx_out1;
     const double *px=locin->locx;
     const double *py=locin->locy;
-    //Scale alpha to cancel out scaling
+    /*Scale alpha to cancel out scaling */
     alpha *= pow(locin->dx/locout->dx/scale,2);
 #if ONLY_FULL==1
     long iphi1,iphi2,iphi3,iphi4;
@@ -838,7 +838,7 @@ void prop_nongrid_bin(const loc_t *locin,
 #endif
     long (*map)[locout->map->nx]
 	=(long(*)[locout->map->nx])(locout->map->p);
-    //-1 because we count from 1 in the map.
+    /*-1 because we count from 1 in the map. */
     double *phiout0=phiout-1;
     for(long iloc=0; iloc<locin->nloc; iloc++){
 	dplocy=myfma(py[iloc],dx_out2,displacey);
@@ -853,7 +853,7 @@ void prop_nongrid_bin(const loc_t *locin,
 	    nplocy1=nplocy+1;
 	}
 
-#if ONLY_FULL == 1 //only proceed if all four points exist.
+#if ONLY_FULL == 1 /*only proceed if all four points exist. */
 	iphi1=map[nplocy][nplocx];
 	iphi2=map[nplocy][nplocx1];
 	iphi3=map[nplocy1][nplocx];

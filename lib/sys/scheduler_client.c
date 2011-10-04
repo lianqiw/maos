@@ -15,7 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-// make a client address
+/* make a client address */
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
@@ -46,7 +46,7 @@
 static int psock;
 static int scheduler_crashed;
 void scheduler_shutdown(int *sock, int mode){
-   if(mode>0){//tell the server to shutdown read or write
+   if(mode>0){/*tell the server to shutdown read or write */
 	int cmd[2];
 	if(mode==1){
 	    cmd[0]=CMD_SHUTRD;
@@ -58,7 +58,7 @@ void scheduler_shutdown(int *sock, int mode){
     }
 }
 
-// To open a port and connect to scheduler
+/* To open a port and connect to scheduler */
 int scheduler_connect_self(int block, int mode){
     /*
       mode=0: read/write
@@ -124,7 +124,7 @@ void scheduler_deinit(void){
 static __attribute__((constructor)) void init(){
     register_deinit(scheduler_deinit, NULL);
 }
-// called by mcao to wait for available cpu.
+/* called by mcao to wait for available cpu. */
 int scheduler_start(char *path, int nthread, int waiting){
     psock=scheduler_connect_self(1,0);
     if(psock==-1){
@@ -147,18 +147,18 @@ int scheduler_wait(void){
 	warning3("Failed to connect to scheduler\n");
 	return -1;
     }
-    //read will block until clearance is received.
+    /*read will block until clearance is received. */
     int cmd[2];
     if(read(psock, cmd, sizeof(int))==sizeof(int)){
-	//info2("Scheduler replied %d.\n",cmd[0]);
+	/*info2("Scheduler replied %d.\n",cmd[0]); */
 	return 0;
     }else{
 	warning("Failed to get answer from scheduler.\n");
 	return -1;
     }
-    //don't close socket.
+    /*don't close socket. */
 }
-// called by mcao to notify scheduler the completion of a job
+/* called by mcao to notify scheduler the completion of a job */
 void scheduler_finish(int status){
     if(psock==-1){
 	psock=scheduler_connect_self(0,2);
@@ -174,7 +174,7 @@ void scheduler_finish(int status){
     stwriteintarr(&psock,cmd,2);
     close(psock);psock=-1;
 }
-// called by sim.c to report job status
+/* called by sim.c to report job status */
 void scheduler_report(STATUS_T *status){
     if(psock==-1){
 	psock=scheduler_connect_self(0, 2);
@@ -186,10 +186,10 @@ void scheduler_report(STATUS_T *status){
     cmd[1]=getpid();
     stwriteintarr(&psock,cmd,2);
     stwrite(&psock,status,sizeof(STATUS_T));
-    //don't close socket.
+    /*don't close socket. */
 }
 
-//!defined(__INTEL_COMPILER)||1) 
+/*!defined(__INTEL_COMPILER)||1)  */
 #if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
 #define PRINTBACKTRACE 1
 #else
@@ -199,7 +199,7 @@ void scheduler_report(STATUS_T *status){
 void print_backtrace_symbol(void *const *buffer, int size){
     char cmdstr[BACKTRACE_CMD_LEN];
     char add[24];
-    const char *progname=get_job_progname();//don't free pointer.
+    const char *progname=get_job_progname();/*don't free pointer. */
     if(!progname){
 	error("Unable to get progname\n");
     }
@@ -250,12 +250,12 @@ int scheduler_launch_drawdaemon(char *fifo){
     int method=0;
 #if defined(__APPLE__) && 0
     char cmdopen[1024];
-    //Run the exe directly can pass the argumnents. --args is a new feature in 10.6 to do the samething with open
+    /*Run the exe directly can pass the argumnents. --args is a new feature in 10.6 to do the samething with open */
     snprintf(cmdopen, 1024, "%s/scripts/drawdaemon.app/Contents/MacOS/drawdaemon %s &", SRCDIR, fifo);
     if(system(cmdopen)){
-	method=0;//failed
+	method=0;/*failed */
 	warning("%s failed\n", cmdopen);
-    }else{//succeed
+    }else{/*succeed */
 	info("%s succeeded\n", cmdopen);
 	method=3;
     }
@@ -263,7 +263,7 @@ int scheduler_launch_drawdaemon(char *fifo){
 	snprintf(cmdopen, 1024, "open -n -a drawdaemon.app --args %s", fifo);
 	if(system(cmdopen)){
 	    warning("%s failed\n", cmdopen);
-	    method=0;//failed
+	    method=0;/*failed */
 	}else{
 	    info("%s succeeded\n", cmdopen);
 	    method=3;
@@ -288,19 +288,19 @@ int scheduler_launch_drawdaemon(char *fifo){
     }
     int ans;
     if(method==0){
-	ans=1;//failed
+	ans=1;/*failed */
     }else{
-	ans=0;//succeed
+	ans=0;/*succeed */
     }
     if(method==3){
 	return ans;
     }
-    //Now start to fork.
+    /*Now start to fork. */
     int pid2=fork();
     if(pid2<0){
 	warning3("Error forking\n");
     }else if(pid2>0){
-	//wait the child so that it won't be a zoombie
+	/*wait the child so that it won't be a zoombie */
 	waitpid(pid2,NULL,0);
 	return ans;
     }
@@ -309,9 +309,9 @@ int scheduler_launch_drawdaemon(char *fifo){
 	warning3("Error forking\n");
 	_exit(EXIT_FAILURE);
     }else if(pid2>0){
-	_exit(EXIT_SUCCESS);//waited by parent.
+	_exit(EXIT_SUCCESS);/*waited by parent. */
     }
-    //safe child.
+    /*safe child. */
     setsid();
     fclose(stdin);
     if(method==1){
@@ -336,28 +336,28 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	fifo=realloc(fifo,strlen(fifo)+1);
     }
     if(exist(fifo)){
-        //warning2("fifo already exist. test when drawdaemon exists\n");
+        /*warning2("fifo already exist. test when drawdaemon exists\n"); */
         char fnpid[PATH_MAX];
 	snprintf(fnpid, PATH_MAX, "%s/drawdaemon_%d.pid", TEMP, pid);
 	FILE *fp=fopen(fnpid, "r");
 	if(fp){
 	    int fpid;
 	    if(fscanf(fp, "%d", &fpid)!=1){
-		fpid=-1;//failed to read fpid.
+		fpid=-1;/*failed to read fpid. */
 		launch=1;
 	    }else{
 		if(kill(fpid,0)){
-		    //warning2("Drawdaemon has exited\n");
+		    /*warning2("Drawdaemon has exited\n"); */
 		    launch=1;
 		}
 	    }
 	    fclose(fp);
 	}else{
-	    //warning2("Drawdaemon has exited\n");
+	    /*warning2("Drawdaemon has exited\n"); */
 	    launch=1;
 	}
     }else{
-        //info2("make fifo\n");
+        /*info2("make fifo\n"); */
 	if(mkfifo(fifo,0700)){
 	    warning3("Error making fifo\n");
 	}
@@ -366,7 +366,7 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 
     if(launch){
 	if(direct){
-	    //launch directly, used by drawres, drawbin where overhead is small.
+	    /*launch directly, used by drawres, drawbin where overhead is small. */
 	    scheduler_launch_drawdaemon(fifo);
 	}else{
 	    /*launch indirectly through drawdaemon by maos. Slow to launch
@@ -390,7 +390,7 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	    cmd[0]=CMD_DRAW;
 	    cmd[1]=pid;
 	    stwrite(&sock,cmd,sizeof(int)*2);
-	    //make sure the drawdaemon appears in our DISPLAY.
+	    /*make sure the drawdaemon appears in our DISPLAY. */
 	    const char *display=getenv("DISPLAY");
 	    if(strlen(display)==0){
 		warning("There is no DISPLAY\n");
@@ -402,9 +402,9 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	    stwritestr(&sock,fifo);
 	    if(stread(&sock,cmd,sizeof(int))) return NULL;
 	    if(sock!=-1) close(sock);
-	    if(cmd[0]==-1) return NULL;//failed
+	    if(cmd[0]==-1) return NULL;/*failed */
 	}
-	sleep(1);//wait for drawdaemon to start.
+	sleep(1);/*wait for drawdaemon to start. */
     }
     return fifo;
 }

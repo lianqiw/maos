@@ -51,7 +51,7 @@
 #include "common.h"
 #include "monitor.h"
 #include "misc.h"
-//#include "gtkcellrendererprogressnew.h" //modify appearance of progress
+/*#include "gtkcellrendererprogressnew.h" //modify appearance of progress */
 static GtkListStore **lists=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
     GtkListStore *list=lists[p->hid];
@@ -146,7 +146,7 @@ void refresh(PROC_T *p){
 	proc_remove(p->hid,p->pid);
 	return;
     }
-    if(p->done) return;//we are done with it (finished or crashed)
+    if(p->done) return;/*we are done with it (finished or crashed) */
     if(!p->row){
 	char sdate[80];
 	char spid[12];
@@ -178,33 +178,33 @@ void refresh(PROC_T *p){
 	list_modify_icon(p,icon_running);
 	break;
     case S_WAIT:
-	//waiting to start
-	//list_modify_status(p, "Queued");
+	/*waiting to start */
+	/*list_modify_status(p, "Queued"); */
 	break;
     case S_START:
-	//just started.
+	/*just started. */
 	list_modify_status(p, "Started");
 	notify_user(p);
 	break;
-    case S_FINISH://Finished
-	//p->frac=1;
-	//p->done=1;
-	//list_modify_progress(p,100);
+    case S_FINISH:/*Finished */
+	/*p->frac=1; */
+	/*p->done=1; */
+	/*list_modify_progress(p,100); */
 	list_update_progress(p);
-	//list_modify_status(p, "Finished");
+	/*list_modify_status(p, "Finished"); */
 	list_modify_icon(p, icon_finished);
 	list_modify_color(p,"#00DD00");
-	//gtk_widget_modify_base(p->prog3,GTK_STATE_NORMAL,&green);
+	/*gtk_widget_modify_base(p->prog3,GTK_STATE_NORMAL,&green); */
 	notify_user(p);
 	break;
-    case S_CRASH://Error
+    case S_CRASH:/*Error */
 	p->done=1;
 	list_modify_status(p, "Error");
 	list_modify_icon(p,icon_failed);
 	list_modify_color(p,"#CC0000");
 	notify_user(p);
 	break;
-    case S_TOKILL://kill command sent
+    case S_TOKILL:/*kill command sent */
 	list_modify_status(p, "Kill command sent");
 	list_modify_icon(p,icon_failed);
 	list_modify_color(p,"#CCCC00");
@@ -232,20 +232,20 @@ GtkWidget *new_page(int ihost){
     }
 
     lists[ihost]=gtk_list_store_new(COL_TOT,
-				    G_TYPE_STRING,//DATE
-				    G_TYPE_STRING,//PID
-				    G_TYPE_STRING,//PATH
-				    G_TYPE_STRING,//SEED
-				    G_TYPE_FLOAT, //SEEDP
-				    G_TYPE_STRING,//STEP
-				    G_TYPE_FLOAT, //STEPP
-				    G_TYPE_STRING,//TIMING
-				    G_TYPE_STRING,//LAPS
-				    G_TYPE_STRING,//REST
-				    G_TYPE_STRING,//ERRLO
-				    G_TYPE_STRING,//ERRHI
-				    GDK_TYPE_PIXBUF,//ACTION
-				    G_TYPE_STRING //COLOR
+				    G_TYPE_STRING,/*DATE */
+				    G_TYPE_STRING,/*PID */
+				    G_TYPE_STRING,/*PATH */
+				    G_TYPE_STRING,/*SEED */
+				    G_TYPE_FLOAT, /*SEEDP */
+				    G_TYPE_STRING,/*STEP */
+				    G_TYPE_FLOAT, /*STEPP */
+				    G_TYPE_STRING,/*TIMING */
+				    G_TYPE_STRING,/*LAPS */
+				    G_TYPE_STRING,/*REST */
+				    G_TYPE_STRING,/*ERRLO */
+				    G_TYPE_STRING,/*ERRHI */
+				    GDK_TYPE_PIXBUF,/*ACTION */
+				    G_TYPE_STRING /*COLOR */
 				    );
     GtkWidget *view;
     view=gtk_tree_view_new_with_model(GTK_TREE_MODEL(lists[ihost]));
@@ -253,7 +253,7 @@ GtkWidget *new_page(int ihost){
     GtkCellRenderer *render;
     GtkTreeViewColumn *col;
     GtkTreeSelection *viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
-    //gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL);
+    /*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
     gtk_tree_selection_set_mode(viewsel,GTK_SELECTION_MULTIPLE);
     /*
       The implementation of GtkTreeView hardcoded GDK_LINE_ON_OFF_DASH in
@@ -264,9 +264,9 @@ GtkWidget *new_page(int ihost){
     */
     int spacing=0;
     float align=0.5;
-    //gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(view), GTK_TREE_VIEW_GRID_LINES_VERTICAL);
+    /*gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(view), GTK_TREE_VIEW_GRID_LINES_VERTICAL); */
     gtk_tree_view_set_enable_search(GTK_TREE_VIEW(view), TRUE);
-    //g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL);
+    /*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
 
     render=gtk_cell_renderer_text_new();
@@ -349,7 +349,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_set_min_width(col,80);
     gtk_tree_view_column_set_max_width(col,80);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-    //gtk_tree_view_column_set_min_width(GTK_TREE_VIEW_COLUMN(col),200);
+    /*gtk_tree_view_column_set_min_width(GTK_TREE_VIEW_COLUMN(col),200); */
 
     render=gtk_cell_renderer_text_new();
     g_object_set(G_OBJECT(render), "ypad", 0, NULL);
@@ -358,8 +358,8 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_set_alignment(col,align);
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_TIMING);
-    //gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR);
-    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
+    /*gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR); */
+    /*gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR); */
     gtk_tree_view_column_set_title(col,"Time");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
 
@@ -370,8 +370,8 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_set_alignment(col,align);
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_REST);
-    //gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR);
-    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
+    /*gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR); */
+    /*gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR); */
     gtk_tree_view_column_set_title(col,"Left");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
   
@@ -382,8 +382,8 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_set_alignment(col,align);
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"text",COL_LAPS);
-    //gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR);
-    //gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
+    /*gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR); */
+    /*gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR); */
     gtk_tree_view_column_set_title(col,"Used");
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
 
@@ -396,7 +396,7 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_column_pack_start(col,render,TRUE);
     gtk_tree_view_column_add_attribute(col,render,"pixbuf",COL_ACTION);
     gtk_tree_view_column_set_title(col,"   ");
-    //gtk_tree_view_column_set_clickable(col,TRUE);
+    /*gtk_tree_view_column_set_clickable(col,TRUE); */
     gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
     g_signal_connect(col, "clicked",G_CALLBACK(action_clicked),NULL);
 

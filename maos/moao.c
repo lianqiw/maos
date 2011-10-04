@@ -76,7 +76,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    nused++;
 	}
     }
-    if(nused==0) return;//nothing need to be done.
+    if(nused==0) return;/*nothing need to be done. */
     if(recon->moao){
 	free_recon_moao(recon, parms);
     }
@@ -87,7 +87,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	int order=parms->moao[imoao].order;
 	if(order==0){
 	    if(parms->ndm>0){
-		order=parms->dm[0].order;//inherits.
+		order=parms->dm[0].order;/*inherits. */
 	    }else{
 		error("Please specify the order of the moao DM\n");
 	    }
@@ -122,10 +122,10 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    const double *locx=recon->moao[imoao].aloc->locx;
 	    const double *locy=recon->moao[imoao].aloc->locy;
 	    for(long iloc=0; iloc<nloc; iloc++){
-		//We don't want piston/tip/tilt on the mems.
-		pNW[0][iloc]=scl;//piston;
-		pNW[1][iloc]=scl2*locx[iloc];//tip
-		pNW[2][iloc]=scl2*locy[iloc];//tilt
+		/*We don't want piston/tip/tilt on the mems. */
+		pNW[0][iloc]=scl;/*piston; */
+		pNW[1][iloc]=scl2*locx[iloc];/*tip */
+		pNW[2][iloc]=scl2*locy[iloc];/*tilt */
 	    }
 	}
 	recon->moao[imoao].W0=spref(recon->W0);
@@ -149,7 +149,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	if(parms->plot.setup){
 	    plotloc("FoV",parms,recon->moao[imoao].aloc,0,"moao_aloc");
 	}
-    }//imoao
+    }/*imoao */
 }
 
 /**
@@ -230,9 +230,9 @@ void moao_recon(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     dcell *dmcommon=NULL;
-    if(1){//Take High order fitting result
+    if(1){/*Take High order fitting result */
 	dcellcp(&dmcommon, simu->dmfit_hi);
-    }else{//Take integrator output, remove NGS modes if any.
+    }else{/*Take integrator output, remove NGS modes if any. */
 	if(parms->sim.closeloop){
 	    if(parms->sim.fuseint){
 		dcellcp(&dmcommon, simu->dmint[0]);
@@ -247,7 +247,7 @@ void moao_recon(SIM_T *simu){
 	}
     }
     dcell *rhs=NULL;
-    if(simu->moao_wfs){//There is MOAO DM for WFS
+    if(simu->moao_wfs){/*There is MOAO DM for WFS */
 	dcell *dmmoao=dcellnew(1,1);
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -265,7 +265,7 @@ void moao_recon(SIM_T *simu){
 		      hs, simu->opdr, dmcommon, &rhsout, 1);
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs, 
 		parms->recon.warm_restart, parms->fit.maxit);
-	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM
+	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
 	      double ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
 	      dmat *aimcc=recon->moao[imoao].aimcc;
@@ -290,10 +290,10 @@ void moao_recon(SIM_T *simu){
 		cellarr_dmat(simu->save->moao_wfs[iwfs], dmmoao->p[0]);
 	    }
 	    dcellfree(rhsout);
-	}//if wfs
-	free(dmmoao);//Don't do dcellfree.
+	}/*if wfs */
+	free(dmmoao);/*Don't do dcellfree. */
     }
-    if(simu->moao_evl){//There is MOAO DM for Science
+    if(simu->moao_evl){/*There is MOAO DM for Science */
 	int imoao=parms->evl.moao;
 	dcell *dmmoao=dcellnew(1,1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -309,7 +309,7 @@ void moao_recon(SIM_T *simu){
 	    
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		parms->recon.warm_restart, parms->fit.maxit);
-	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM
+	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
 	      double ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
 	      dmat *aimcc=recon->moao[imoao].aimcc;
@@ -334,8 +334,8 @@ void moao_recon(SIM_T *simu){
 		cellarr_dmat(simu->save->moao_evl[ievl], dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
-	}//ievl
-	free(dmmoao);//don't do dcellfree
+	}/*ievl */
+	free(dmmoao);/*don't do dcellfree */
     }
     dcellfree(dmcommon);
     dcellfree(rhs);

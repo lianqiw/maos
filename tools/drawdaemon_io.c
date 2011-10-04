@@ -87,7 +87,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 	maxmindbl(p, nx*ny, &max, &min);
 	info[0]=min; info[1]=max;
     }
-    if(color){//colored
+    if(color){/*colored */
 	int *pi=pout;
 	double scale,offset;
 	if(fabs(max-min)>1.e-4*fabs(min)){
@@ -105,7 +105,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 		pi[i]=255<<24 | crp(x,0.75)<<16 | crp(x, 0.5)<<8 | crp(x, 0.25);
 	    }
 	}
-    }else{//b/w
+    }else{/*b/w */
 	unsigned char *pc=pout;
 	double scale=255./(max-min);
 	for(int i=0; i<nx*ny; i++){
@@ -135,7 +135,7 @@ static int read_fifo(FILE *fp){
 	    pthread_mutex_unlock(&mutex_drawdata);
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
-	    drawdata->square=1;//default to square.
+	    drawdata->square=1;/*default to square. */
 	    drawdata->name=defname;
 	    drawdata->format=(cairo_format_t)0;
 	    drawdata->gray=0;
@@ -144,9 +144,9 @@ static int read_fifo(FILE *fp){
 	    drawdata->legendoffx=1;
 	    drawdata->legendoffy=0;
 	    drawdata->fig=NULL;
-	    drawdata->cumulast=-1;//mark as unknown.
+	    drawdata->cumulast=-1;/*mark as unknown. */
 	    break;
-	case FIFO_DATA://image data.
+	case FIFO_DATA:/*image data. */
 	    {
 		int32_t header[2];
 		FILE_READ(header, 2*sizeof(int32_t));
@@ -217,7 +217,7 @@ static int read_fifo(FILE *fp){
 	    break;
 	case FIFO_END:
 	    {
-		if(drawdata->p0){//draw image
+		if(drawdata->p0){/*draw image */
 		    int nx=drawdata->nx;
 		    int ny=drawdata->ny;
 		    size_t size=0;
@@ -237,13 +237,13 @@ static int read_fifo(FILE *fp){
 			drawdata->limit_data[2]=0;
 			drawdata->limit_data[3]=drawdata->ny;
 		    }
-		    //convert data from double to int/char.
+		    /*convert data from double to int/char. */
 		    if(!drawdata->zlim){
 			drawdata->zlim=calloc(2, sizeof(double));
 		    }
 		    drawdata->p=calloc(nx*ny, size);
 		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
-		    gdk_threads_enter();//do I need this?
+		    gdk_threads_enter();/*do I need this? */
 		    drawdata->image= cairo_image_surface_create_for_data 
 			(drawdata->p, drawdata->format, nx, ny, stride);
 		    gdk_threads_leave();
@@ -254,7 +254,7 @@ static int read_fifo(FILE *fp){
 		    if(drawdata->nstyle>1){
 			if(drawdata->nstyle!=drawdata->npts){
 			    warning("nstyle must equal to npts\n");
-			    drawdata->nstyle=0;//disable it.
+			    drawdata->nstyle=0;/*disable it. */
 			    free(drawdata->style);
 			}
 		    }
@@ -269,7 +269,7 @@ static int read_fifo(FILE *fp){
 	    }
 	    break;
 	case -1:
-	    return 1;//read failed.
+	    return 1;/*read failed. */
 	    break;
 	default:
 	    warning("Unknown cmd: %x\n", cmd);
@@ -278,8 +278,8 @@ static int read_fifo(FILE *fp){
 		return 1;
 	    }
 	    break;
-	}//switch
-    }//while
+	}/*switch */
+    }/*while */
 }
 
 void open_fifo(void* nothing){

@@ -34,7 +34,7 @@ typedef struct GENSCREEN_T{
     long ninit;      /**<In Fractal method, the size of initial screen*/
     long share;      /**<Use file backend for sharing of atmosphere*/
     long nthread;    /**<Number of threads to use*/
-    //The following are private data. do not set when call.
+    /*The following are private data. do not set when call. */
     map_t **screen;  /**<The destination screen pointer*/
     dmat *spect;     /**<The turbulence spectrum, sqrt of PSD*/
     long ilayer;     /**<Current layer*/

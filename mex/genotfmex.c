@@ -49,7 +49,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     dims[1]=1;
     if(nsa>1){
 	plhs[PL_OTF]=mxCreateCellArray(2,dims);
-	for(int isa=0; isa<nsa; isa++){
+	int isa;
+	for(isa=0; isa<nsa; isa++){
 	    mxArray *iotf=c2mx(otf->p[isa]);
 	    mxSetCell(plhs[PL_OTF],isa,iotf);
 	}

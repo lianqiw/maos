@@ -78,8 +78,8 @@ int main(int argc, char **argv){
 	exit(EXIT_SUCCESS);
     }
 
-    //Now we are in the background.
-    //info("Waiting for the scheduelr\n");
+    /*Now we are in the background. */
+    /*info("Waiting for the scheduelr\n"); */
     scheduler_start(scmd,1,1);
     int count=0;
     while(scheduler_wait()&& count<60){
@@ -92,7 +92,7 @@ int main(int argc, char **argv){
 	warning3("fall back to own checker\n");
 	wait_cpu(1);
     }
-    //info("Ready to go\n");
+    /*info("Ready to go\n"); */
     
     pid=fork();
     if(pid<0){
@@ -123,7 +123,7 @@ int main(int argc, char **argv){
 	}
 	scheduler_report(st);
 	free(st);
-	//scheduler_finish(status);
+	/*scheduler_finish(status); */
 	exit(EXIT_SUCCESS);
     }else{
 	char fnlog[PATH_MAX];
@@ -131,7 +131,7 @@ int main(int argc, char **argv){
 	if(!freopen("/dev/null", "r", stdout)) warning("Error redirect stdin\n");
 	if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
 	if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
-	setbuf(stdout,NULL);//disable buffering.
+	setbuf(stdout,NULL);/*disable buffering. */
 	setbuf(stderr,NULL);
 	unsetenv("DISPLAY");
 	execlp("matlab","matlab","-nojvm","-nodesktop","-nosplash","-r",argv[1],NULL);

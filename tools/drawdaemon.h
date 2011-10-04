@@ -42,30 +42,30 @@
 typedef struct drawdata_t drawdata_t;
 
 struct drawdata_t{
-    //First, input data from draw.c
-    //Draw images.
+    /*First, input data from draw.c */
+    /*Draw images. */
     cairo_surface_t *image;
-    double *p0;      //original pointer of double
-    unsigned char *p;//converted pointer of char or int.
-    //Draw points
-    dmat **pts;      //pts;
-    int npts;        //number of pts mat, not points.
+    double *p0;      /*original pointer of double */
+    unsigned char *p;/*converted pointer of char or int. */
+    /*Draw points */
+    dmat **pts;      /*pts; */
+    int npts;        /*number of pts mat, not points. */
     int32_t *style;
-    int *style_pts;    //save pts style for legend
+    int *style_pts;    /*save pts style for legend */
     unsigned int nstyle;
-    //draw circles
+    /*draw circles */
     double (*cir)[4];
     unsigned int ncir;
-    //limit
-    double *limit_data;//x,y,limit of data. might be suplied by user.
-    double *limit_cumu;//x,y,limit of cumulatively averaged data.
-    double *limit;//points to either limit_data or limit_cumu
+    /*limit */
+    double *limit_data;/*x,y,limit of data. might be suplied by user. */
+    double *limit_cumu;/*x,y,limit of cumulatively averaged data. */
+    double *limit;/*points to either limit_data or limit_cumu */
     double *zlim;
-    //The following are for surfaces
-    int nx, ny;   //array size
+    /*The following are for surfaces */
+    int nx, ny;   /*array size */
     cairo_format_t format;
 
-    int gray;       //do we draw in gray scale or in colored
+    int gray;       /*do we draw in gray scale or in colored */
 
     char *name;
     char *title;
@@ -77,45 +77,45 @@ struct drawdata_t{
 
     GtkWidget *page;
     GtkWidget *drawarea;
-    GdkPixmap *pixmap;//server side memory.
-    GtkWidget **spins;//used on the dialog to change limits.
-    cairo_surface_t *cacheplot;//cache the plot results so that we don't have to redraw during just panning.
-    int pending;//drawing is pending.
-    int width;//width of the canvas
-    int height;//height of the canvas
+    GdkPixmap *pixmap;/*server side memory. */
+    GtkWidget **spins;/*used on the dialog to change limits. */
+    cairo_surface_t *cacheplot;/*cache the plot results so that we don't have to redraw during just panning. */
+    int pending;/*drawing is pending. */
+    int width;/*width of the canvas */
+    int height;/*height of the canvas */
 
-    int widthim;//width of the part of the canvas for drawing
-    int heightim;//height of the part of the canvas for drawing
-    int widthim_last, heightim_last;//width,height of last drawing canvas.
+    int widthim;/*width of the part of the canvas for drawing */
+    int heightim;/*height of the part of the canvas for drawing */
+    int widthim_last, heightim_last;/*width,height of last drawing canvas. */
     
-    double zoomx, zoomy;//zoom level.
-    double zoomxlast, zoomylast;//last zoom level.
-    double offx,offy;//off set of the center of the data.
-    double mxdown,mydown;//mouse pointer down.
-    double scalex, scaley;//scale of the data to fit the display.
+    double zoomx, zoomy;/*zoom level. */
+    double zoomxlast, zoomylast;/*last zoom level. */
+    double offx,offy;/*off set of the center of the data. */
+    double mxdown,mydown;/*mouse pointer down. */
+    double scalex, scaley;/*scale of the data to fit the display. */
     double centerx, centery;
-    double xoff, yoff;//offset of the area to draw figure.
-    int ncxoff, ncyoff;//offset of ncx, ncy
-    double limit0[4];//x,y limit of displayed region.
+    double xoff, yoff;/*offset of the area to draw figure. */
+    int ncxoff, ncyoff;/*offset of ncx, ncy */
+    double limit0[4];/*x,y limit of displayed region. */
 
-    int square;//make x/y scaling be the same, for image and coordinate display
-    int valid;//move is valid.
+    int square;/*make x/y scaling be the same, for image and coordinate display */
+    int valid;/*move is valid. */
     int font_name_version;
-    int grid;//whether we want grid lines.
-    int ticinside;//put tick inside.
+    int grid;/*whether we want grid lines. */
+    int ticinside;/*put tick inside. */
     int cursorinside;
-    int limit_changed;//limit has changed.
-    int legendbox;//whether draw legend box or not.
-    double legendoffx;//location of legend along x.
-    double legendoffy;//location of legend along y
-    int drawn;//whether we have been drawn. 
-    int cumu;//plot cumulative mean.
-    int cumuquad;//make cumulative quadrature
+    int limit_changed;/*limit has changed. */
+    int legendbox;/*whether draw legend box or not. */
+    double legendoffx;/*location of legend along x. */
+    double legendoffy;/*location of legend along y */
+    int drawn;/*whether we have been drawn.  */
+    int cumu;/*plot cumulative mean. */
+    int cumuquad;/*make cumulative quadrature */
     int cumuquadlast;
-    //icumu has to be double because it is used by the GtkSpin
-    double icumu;//plot cumulative mean from this time step if cumu!=0
-    double icumulast;//plot cumulative mean from this time step if cumu!=0
-    int cumulast;//=0: we are drawing cumu the first time.
+    /*icumu has to be double because it is used by the GtkSpin */
+    double icumu;/*plot cumulative mean from this time step if cumu!=0 */
+    double icumulast;/*plot cumulative mean from this time step if cumu!=0 */
+    int cumulast;/*=0: we are drawing cumu the first time. */
 };
 extern char *font_name;
 extern double font_size;
@@ -128,24 +128,24 @@ extern int font_name_version;
 extern int ndrawdata;
 extern pthread_mutex_t mutex_drawdata;
 extern int fifopid;
-//Spaces reserved for title, label, etc
-#define SP_LEG 20//space between image and legend
-#define LEN_LEG 25 //size of legend
+/*Spaces reserved for title, label, etc */
+#define SP_LEG 20/*space between image and legend */
+#define LEN_LEG 25 /*size of legend */
 
-extern double SP_XL;//space on x, left
-extern double SP_XR;//space on x, right
-extern double SP_YT;//space on y, top
-extern double SP_YB;//space on y, buttom
+extern double SP_XL;/*space on x, left */
+extern double SP_XR;/*space on x, right */
+extern double SP_YT;/*space on y, top */
+extern double SP_YB;/*space on y, buttom */
 extern PangoFontDescription *desc;
 
-//from drawdaemon_draw
+/*from drawdaemon_draw */
 void round_limit(double *xmin, double *xmax);
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height);
 void apply_limit(drawdata_t *drawdata);
-//from drawdaemon_gui
+/*from drawdaemon_gui */
 GtkWidget* create_window(void);
 void addpage(drawdata_t **drawdatawrap);
-//from drawdaemon_io
+/*from drawdaemon_io */
 void open_fifo(void *);
 void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info);
 #endif

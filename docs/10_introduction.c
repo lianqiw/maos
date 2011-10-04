@@ -39,8 +39,8 @@
 
     This software is written in the C language (revision 99), with external
     dependent libraries of FFTW version 3 (www.fftw.org) and blas/lapack
-    (http://www.netlib.org/lapack/). The code contains a local copy of the
-    Cholmod (http://www.cise.ufl.edu/research/sparse/SuiteSparse/, to do
+    (www.netlib.org/lapack/). The code contains a local copy of the 
+    Cholmod (www.cise.ufl.edu/research/sparse/SuiteSparse/, to do 
     Cholesky factorization, copied from suite-sparse).  An optimized blas
     library such ATLAS, GOTO-BLAS, or Intel MKL is necessary to get good
     performance for Cholesky decompositions of the tomography and/or fitting

@@ -39,9 +39,9 @@ typedef struct vkcov_t{
     long n;
     long ninit;
     dmat *cov;
-    dmat *C;//the covariance matrix.
-    dmat *K;//initial matrix for generating atmosphere.
-    dmat *KI;//inverse of K.
+    dmat *C;/*the covariance matrix. */
+    dmat *K;/*initial matrix for generating atmosphere. */
+    dmat *KI;/*inverse of K. */
     struct vkcov_t *next;
 }vkcov_t;
 vkcov_t *head=NULL;
@@ -77,7 +77,7 @@ static __attribute__((constructor)) void init(){
    ninit is the initial side size of the atm array to start with.
 */
 static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
-    if(L0>9000) L0=INFINITY;//L0 bigger than 9000 is treated as infinity.
+    if(L0>9000) L0=INFINITY;/*L0 bigger than 9000 is treated as infinity. */
     vkcov_t *node=vkcov_get(r0, L0, dx, n, ninit);
     if(node) return node;
     node=calloc(1, sizeof(vkcov_t));
@@ -137,7 +137,7 @@ static vkcov_t* vkcov_calc(double r0, double L0, double dx, long n, long ninit){
     dfree(u);
     dfree(v);
     dfree(s);
-    //we have: K*K'==C
+    /*we have: K*K'==C */
     return node;
 }
 

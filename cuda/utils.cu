@@ -26,9 +26,9 @@ int* GPUS=NULL;
 int nstream=0;
 int NG1D=64; /**<Optimum number of blocks. Twice of multi processors.*/
 int NG2D=8; /**<Optimum number of blocks. Twice of multi processors.*/
-cudata_t **cudata_all=NULL;//for all GPU.
-int cugpu=0;//current GPU.
-__thread cudata_t *cudata=NULL;//for current thread and current GPU
+cudata_t **cudata_all=NULL;/*for all GPU. */
+int cugpu=0;/*current GPU. */
+__thread cudata_t *cudata=NULL;/*for current thread and current GPU */
 /**
    Get GPU info.
 */
@@ -70,7 +70,7 @@ int gpu_init(int *gpus, int ngpu){
 	info2("CUDA is disabled by user.\n");
 	return 0;
     }
-    if(!gpus){//automatic
+    if(!gpus){/*automatic */
 	int navail=0;
 	if(cudaGetDeviceCount(&navail)){
 	    return 0;
@@ -79,7 +79,7 @@ int gpu_init(int *gpus, int ngpu){
 	case 0:
 	    warning2("No GPU is available for computing\n");
 	    break;
-	case 1:{//1 device. check whethere it is emulation.
+	case 1:{/*1 device. check whethere it is emulation. */
 	    cudaDeviceProp prop;
 	    cudaGetDeviceProperties(&prop, 0);
 	    if(prop.major==9999){
@@ -91,13 +91,13 @@ int gpu_init(int *gpus, int ngpu){
 	    }
 	}
 	    break;
-	default:{//There are multiple devices.
+	default:{/*There are multiple devices. */
 	    GPUS=(int*)calloc(navail, sizeof(int));
 	    for(int ig=0; ig<navail; ig++){
 		cudaDeviceProp prop;
 		cudaGetDeviceProperties(&prop, ig);
 		if(prop.major!=9999){
-		    if(prop.totalGlobalMem>1000000000){//require minimum of 1.5G
+		    if(prop.totalGlobalMem>1000000000){/*require minimum of 1.5G */
 			GPUS[NGPU]=ig;
 			NGPU++;
 		    }else{
@@ -115,7 +115,7 @@ int gpu_init(int *gpus, int ngpu){
 	    cudaDeviceProp prop;
 	    cudaGetDeviceProperties(&prop, ig);
 	    if(prop.major!=9999){
-		if(prop.totalGlobalMem>1000000000){//require minimum of 1.5G
+		if(prop.totalGlobalMem>1000000000){/*require minimum of 1.5G */
 		    GPUS[NGPU]=ig;
 		    NGPU++;
 		}else{
@@ -129,7 +129,7 @@ int gpu_init(int *gpus, int ngpu){
 	for(int im=0; im<NGPU; im++){
 	    int igpu=GPUS[im];
 	    if(ic!=im){
-		GPUS[ic]=GPUS[im];//delete invalid devices.
+		GPUS[ic]=GPUS[im];/*delete invalid devices. */
 	    }
 	    int ans=cudaSetDevice(igpu);
 	    switch(ans){
@@ -142,7 +142,7 @@ int gpu_init(int *gpus, int ngpu){
 		NG2D=(int)round(sqrt((double)NG1D));
 		if(0){
 		    int nn=16777216;
-		    //int nn=1024;
+		    /*int nn=1024; */
 		    curmat *temp=curnew(nn,1);
 		    curset(temp,1,0);
 		    curmat *res=curnew(1,1);
@@ -208,13 +208,13 @@ void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
     dest->nlayer=nps;
     int nx0=source[0]->nx;
     int ny0=source[0]->ny;
-    if(!dest->vx){//data is not initialized.
-	if(type==1){//all layers must be same size.
+    if(!dest->vx){/*data is not initialized. */
+	if(type==1){/*all layers must be same size. */
 	    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 	    DO(cudaMalloc3DArray(&dest->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), cudaArrayLayered));
 	}else{
 	    DO(cudaMallocHost(&(dest->p), nps*sizeof(float*)));
-	    //memory in device.
+	    /*memory in device. */
 	    for(int ips=0; ips<nps; ips++){
 		DO(cudaMalloc(&(dest->p[ips]), source[ips]->nx*source[ips]->ny*sizeof(float)));
 	    }
@@ -249,11 +249,11 @@ void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
 	dest->oy[ips]=source[ips]->oy;
 	dest->dx[ips]=source[ips]->dx;
 
-	if(type==1){//cudaArray
+	if(type==1){/*cudaArray */
 	    for(long ix=0; ix<(long)nx0*(long)ny0; ix++){
 		tmp[ips*nx0*ny0+ix]=(float)source[ips]->p[ix];
 	    }
-	}else{//Flat memory
+	}else{/*Flat memory */
 	    gpu_dbl2dev(&dest->p[ips], source[ips]->p, nx*ny);
 	}
     }
@@ -369,12 +369,12 @@ __global__ static void calc_ptt_do( float *cc,
 				    const int nloc,
 				    const float *restrict phi,
 				    const float *restrict amp){
-    __shared__ float ccb[4];//for each block.
+    __shared__ float ccb[4];/*for each block. */
     if(threadIdx.x<4){
 	ccb[threadIdx.x]=0.f;
     }
     __syncthreads();
-    float cci[4]={0.f,0.f,0.f,0.f};//for each thread
+    float cci[4]={0.f,0.f,0.f,0.f};/*for each thread */
     int step=blockDim.x * gridDim.x; 
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
 	float tmp=phi[i]*amp[i];
@@ -383,13 +383,13 @@ __global__ static void calc_ptt_do( float *cc,
 	cci[2]+=tmp*loc[i][1];
 	cci[3]+=tmp*phi[i];
     }
-    //Add results to shared value in each block.
+    /*Add results to shared value in each block. */
     atomicAdd(&ccb[0], cci[0]);
     atomicAdd(&ccb[1], cci[1]);
     atomicAdd(&ccb[2], cci[2]);
     atomicAdd(&ccb[3], cci[3]);
-    __syncthreads();//Wait until all threads in this block is done.
-    if(threadIdx.x<4){//This is the first thread of a block. add block result to global.
+    __syncthreads();/*Wait until all threads in this block is done. */
+    if(threadIdx.x<4){/*This is the first thread of a block. add block result to global. */
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x]);
     }
 }
@@ -399,8 +399,8 @@ __global__ static void calc_ngsmod_do( float *cc,
 				       const float *restrict phi,
 				       const float *restrict amp){
     int step=blockDim.x * gridDim.x; 
-    float cci[7]={0,0,0,0,0,0,0};//for each thread
-    __shared__ float ccb[7];//for each block.
+    float cci[7]={0,0,0,0,0,0,0};/*for each thread */
+    __shared__ float ccb[7];/*for each block. */
     if(threadIdx.x<7){
 	ccb[threadIdx.x]=0.f;
     }
@@ -415,7 +415,7 @@ __global__ static void calc_ngsmod_do( float *cc,
 	cci[5]+=tmp*loc[i][0]*loc[i][1];
 	cci[6]+=tmp*phi[i];
     }
-    //Add results to shared value in each block.
+    /*Add results to shared value in each block. */
     atomicAdd(&ccb[0], cci[0]);
     atomicAdd(&ccb[1], cci[1]);
     atomicAdd(&ccb[2], cci[2]);
@@ -423,8 +423,8 @@ __global__ static void calc_ngsmod_do( float *cc,
     atomicAdd(&ccb[4], cci[4]);
     atomicAdd(&ccb[5], cci[5]);
     atomicAdd(&ccb[6], cci[6]);
-    __syncthreads();//Wait until all threads in this block is done.
-    if(threadIdx.x<7){//This is the first thread of a block. add block result to global.
+    __syncthreads();/*Wait until all threads in this block is done. */
+    if(threadIdx.x<7){/*This is the first thread of a block. add block result to global. */
 	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x]);
     }
 }
@@ -439,7 +439,7 @@ void gpu_calc_ptt(double *rmsout, double *coeffout,
 		  const float *restrict amp,
 		  cudaStream_t stream
 		  ){
-        //sum with 16 blocks, each with 256 threads.
+        /*sum with 16 blocks, each with 256 threads. */
     float *cc;
     float ccb[4];
     cudaCalloc(cc, 4*sizeof(float), stream);
@@ -453,11 +453,11 @@ void gpu_calc_ptt(double *rmsout, double *coeffout,
 	dmulvec3(coeffout, imcc, coeff);
     }
     if(rmsout){
-	double pis=ipcc*coeff[0]*coeff[0];//piston mode variance
-	double ptt=dwdot3(coeff, imcc, coeff);//p/t/t mode variance.
-	rmsout[0]=tot-pis;//PR
-	rmsout[1]=ptt-pis;//TT
-	rmsout[2]=tot-ptt;//PTTR	
+	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
+	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
+	rmsout[0]=tot-pis;/*PR */
+	rmsout[1]=ptt-pis;/*TT */
+	rmsout[2]=tot-ptt;/*PTTR	 */
     }
 }
 void gpu_calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
@@ -473,9 +473,9 @@ void gpu_calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     float *cc;
     double tot=0;
     cudaCalloc(cc, 7*sizeof(float), stream);
-    if(nmod==2){//single DM.
+    if(nmod==2){/*single DM. */
 	calc_ptt_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
-    }else if(nmod==5){//AHST mode
+    }else if(nmod==5){/*AHST mode */
 	calc_ngsmod_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
     }else{
 	TO_IMPLEMENT;
@@ -496,14 +496,14 @@ void gpu_calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 	dmulvec(pttrcoeff_out, imcc, coeff, 1);
     }
     if(pttr_out){
-	//compute TT removed wavefront variance as a side product
+	/*compute TT removed wavefront variance as a side product */
 	double pis=ipcc*coeff[0]*coeff[0];
 	double ptt=dwdot3(coeff, imcc, coeff);
-	pttr_out[0]=tot-pis;//PR
-	pttr_out[1]=ptt-pis;//TT
-	pttr_out[2]=tot-ptt;//PTTR
+	pttr_out[0]=tot-pis;/*PR */
+	pttr_out[1]=ptt-pis;/*TT */
+	pttr_out[2]=tot-ptt;/*PTTR */
     }
-    //don't use +=. need locking
+    /*don't use +=. need locking */
     ngsmod_out[0]=coeff[1];
     ngsmod_out[1]=coeff[2];
     const double scale1=1.-scale;

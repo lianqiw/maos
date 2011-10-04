@@ -65,7 +65,7 @@ void ccwm3(cmat *restrict A, const cmat *restrict B, const cmat *restrict C){
     }else{
 	assert(A && B && C);
 	assert(A->nx==B->nx && A->nx==C->nx&&A->ny==B->ny && A->ny==C->ny);
-	//component-wise multiply A=A.*B
+	/*component-wise multiply A=A.*B */
 	const size_t ntot=A->nx*A->ny;
 	for(size_t i=0; i<ntot; i++){
 	    A->p[i]=A->p[i]*B->p[i]*C->p[i];
@@ -268,7 +268,7 @@ void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
  
     dcomplex wvk=2.*M_PI/wvl*I;
     memset(psf, 0, sizeof(dcomplex)*npsfx*npsfy);
-    if(fabs(theta)<1.e-10){//no rotation.
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const int skipx=(npsfx-nopdx)/2;
 	const int skipy=(npsfy-nopdy)/2;
 	assert(skipx>=0 && skipy>=0);
@@ -278,17 +278,17 @@ void cembed_wvf(cmat *restrict A, const double *opd, const double *amp,
 	    const double *opdi=opd+iy*nopdx;
 	    const double *ampi=amp+iy*nopdx;
 	    for(int ix=0; ix<nopdx; ix++){
-		//sqrt(1-cos^2)!=sin due to sign problem. 
+		/*sqrt(1-cos^2)!=sin due to sign problem.  */
 		psfi[ix]=ampi[ix]*cexp(wvk*opdi[ix]);
-		//most time is spend in cexp.
+		/*most time is spend in cexp. */
 	    }
 	}
     }else{
-	//rotated for LGS.
-	//rotate image CCW to -theta. coordinate rotate in reverse way.
-	//xnew=x*cos(theta)-y*sin(theta)
-	//ynew=x*sin(theta)+y*cos(theta);
-	//rotation is around the fft center: (nx/2, ny/2);
+	/*rotated for LGS. */
+	/*rotate image CCW to -theta. coordinate rotate in reverse way. */
+	/*xnew=x*cos(theta)-y*sin(theta) */
+	/*ynew=x*sin(theta)+y*cos(theta); */
+	/*rotation is around the fft center: (nx/2, ny/2); */
 	/*
 	  The original method of adding in to out is not right.
 	*/
@@ -379,7 +379,7 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
       flag==2: copy real only.
     */
     memset(out, 0, sizeof(dcomplex)*noutx*nouty);
-    if(fabs(theta)<1.e-10){//no rotation.
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const int skipx=(noutx-ninx)/2;
 	const int skipy=(nouty-niny)/2;
 	int ixstart=0, ixend=ninx;
@@ -396,7 +396,7 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	for(int iy=iystart; iy<iyend; iy++){
 	    dcomplex *restrict outi=out2+iy*noutx;
 	    const dcomplex *restrict ini=in+iy*ninx;
-	    switch(flag){//this switch does not affect speed.
+	    switch(flag){/*this switch does not affect speed. */
 	    case C_FULL:
 		cmpcpy(outi+ixstart,ini+ixstart,(ixend-ixstart));
 		break;
@@ -409,7 +409,7 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	    case C_ABS:
 		abscpy(outi+ixstart,ini+ixstart,(ixend-ixstart));
 		break;
-	    case C_LITERAL://same as 0.
+	    case C_LITERAL:/*same as 0. */
 		cmpcpy(outi+ixstart,ini+ixstart,(ixend-ixstart));
 		break;
 	    default:
@@ -430,8 +430,8 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	const double ctheta=cos(theta);
 	const double stheta=sin(theta);
 	const double negstheta=-stheta;
-	//const double negctheta=-ctheta;
-	//use long double to reduce accumulation error. but slow. error is on order of 1.e-14 
+	/*const double negctheta=-ctheta; */
+	/*use long double to reduce accumulation error. but slow. error is on order of 1.e-14  */
 	double x2,y2;
 	double x4,y4;
 	double x3,y3,x31;
@@ -465,7 +465,7 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	    x4+=stheta;							\
 	    y4+=ctheta;							\
 	} 
-	//it is not good to embed flag in the inner most loop.
+	/*it is not good to embed flag in the inner most loop. */
 	switch(flag){
 	case C_FULL:
 	    DO_LOOP(,);
@@ -496,7 +496,7 @@ void cembedd(cmat *restrict A, dmat *restrict B, const double theta){
     const long noutx=A->nx;
     const long nouty=A->ny;
     memset(out, 0, sizeof(dcomplex)*noutx*nouty);
-    if(fabs(theta)<1.e-10){//no rotation.
+    if(fabs(theta)<1.e-10){/*no rotation. */
 	const long skipx=(noutx-ninx)/2;
 	const long skipy=(nouty-niny)/2;
 	long ixstart=0, ixend=ninx;
@@ -599,7 +599,7 @@ void cembedscaleout(cmat *restrict A, const cmat *B,
 	    }else outs[iy][ix]=0;					\
 	}								\
     }
-    //it is not good to embed flag in the inner most loop.
+    /*it is not good to embed flag in the inner most loop. */
     switch(flag){
     case C_FULL:
 	DO_LOOP(,);
@@ -694,7 +694,7 @@ void cabs2toreal(cmat *A){
    Put abs of each elemnt into its realpart. A=abs(A);
 */
 void cabstoreal(cmat *A){
-    //put abs to real
+    /*put abs to real */
     for(int i=0; i<A->nx*A->ny; i++){
 	A->p[i]=cabs(A->p[i]);
     }
@@ -776,7 +776,7 @@ void ctilt(cmat *otf, double sx, double sy, int pinct){
     dcomplex ux[nx], uy[ny];
     dcomplex cx=cexp(-2*M_PI*I*dux*sx);
     dcomplex cy=cexp(-2*M_PI*I*duy*sy);
-    if(pinct==1){//peak in center
+    if(pinct==1){/*peak in center */
 	ux[0]=cexp(-2*M_PI*I*dux*sx*(-nx/2));
 	for(int i=1; i<nx; i++){
 	    ux[i]=ux[i-1]*cx;

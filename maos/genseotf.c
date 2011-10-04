@@ -42,15 +42,15 @@
    library with p/t/t removal set.
 */
 void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
-    //create a grid representing the aperture.
+    /*create a grid representing the aperture. */
     loc_t *loc=mksqloc(powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->dx,
 		       0,0);
-    //size of the OTF grid
+    /*size of the OTF grid */
     int ncompx=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;
     int ncompy=ncompx;
-    //The embeding factor for embedding the aperture
+    /*The embeding factor for embedding the aperture */
     const int embfac=parms->powfs[ipowfs].embfac;
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nwvl=parms->powfs[ipowfs].nwvl;
@@ -85,7 +85,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		   thres,wvl,dtheta,NULL,parms->atm.r0, parms->atm.l0, 
 		   ncompx, ncompy, nsa, 1);
 	}
-    }//iwvl
+    }/*iwvl */
     locfree(loc);
 }
 /**
@@ -117,7 +117,7 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
 	    genotf(&lotf[ilotf][iwvl], loc, powfs[ipowfs].llt->amp->p, ncpa?ncpa->p[ilotf]->p:NULL, 
 		   &one, thres, wvl, dtheta, NULL,parms->atm.r0, parms->atm.l0, ncompx, ncompy, 1, 1);
 	}
-    }//iwvl
+    }/*iwvl */
     locfree(loc);
 }
 /**
@@ -156,8 +156,8 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    
 	    for(int isa=0; isa<nsa; isa++){
 		double norm=area[isa]/((double)(notfx*notfy));
-		ccp(&sepsf,otf[iwvl][isa]);//peak in center
-		if(nllt>0){//has laser launch
+		ccp(&sepsf,otf[iwvl][isa]);/*peak in center */
+		if(nllt>0){/*has laser launch */
 		    if(sepsf->nx == lotf[iwvl]->nx){
 			ccwm(sepsf,lotf[iwvl]);
 		    }else{
@@ -168,10 +168,10 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 			cfree(tmp);
 		    }
 		}
-		cfftshift(sepsf); //peak now in corner.
-		cfft2(sepsf,1);   //turn to psf. FFT 1th
-		cfftshift(sepsf); //psf with peak in center
-		creal2d(&psepsf[iwvl][isa],0,sepsf,norm);//copy to output.
+		cfftshift(sepsf); /*peak now in corner. */
+		cfft2(sepsf,1);   /*turn to psf. FFT 1th */
+		cfftshift(sepsf); /*psf with peak in center */
+		creal2d(&psepsf[iwvl][isa],0,sepsf,norm);/*copy to output. */
 	    }
 	    cfree(sepsf);
 	}
@@ -184,9 +184,9 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(parms->powfs[ipowfs].radrot){
 #if ROT_OTF == 1
-    info2("Rotating OTF for Polar CCD\n");//Used mainly for off-axis launch
+    info2("Rotating OTF for Polar CCD\n");/*Used mainly for off-axis launch */
 #elif ROT_OTF==0
-    info2("Rotating PSF for Polar CCD\n");//Used mainly for on-axis launch
+    info2("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
 #else
     error("Invalid ROT_OTF\n");
 #endif
@@ -213,7 +213,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }else{
 	ni0=nllt;
     }
-    if(ni0==1 && parms->powfs[ipowfs].nwfs>1){//check wvlwts.
+    if(ni0==1 && parms->powfs[ipowfs].nwfs>1){/*check wvlwts. */
 	int iwfs0=parms->powfs[ipowfs].wfs[0];
 	double siglev0=parms->wfs[iwfs0].siglev;
 	double *wvlwts0=parms->wfs[iwfs0].wvlwts;
@@ -256,7 +256,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     powfs[ipowfs].intstat->i0=dcellnew(nsa,ni0);
     powfs[ipowfs].intstat->gx=dcellnew(nsa,ni0);
     powfs[ipowfs].intstat->gy=dcellnew(nsa,ni0);
-    //subaperture rotation angle.
+    /*subaperture rotation angle. */
     dmat* (*i0)[nsa]=(dmat*(*)[nsa])powfs[ipowfs].intstat->i0->p;
     dmat* (*gx)[nsa]=(dmat*(*)[nsa])powfs[ipowfs].intstat->gx->p;
     dmat* (*gy)[nsa]=(dmat*(*)[nsa])powfs[ipowfs].intstat->gy->p;
@@ -339,8 +339,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	cmat *nominal=NULL;
 	dsp *si=NULL;
 
-	double angle=0;//angle to rotate otf/psf
-	double angleg=0;//angle to derivative of i0 to r/a from x/y
+	double angle=0;/*angle to rotate otf/psf */
+	double angleg=0;/*angle to derivative of i0 to r/a from x/y */
 	double anglegoff=0;
 	for(int ii0=0; ii0<ni0; ii0++){
 	    const double *area=powfs[ipowfs].realsaa[ii0];
@@ -355,7 +355,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    dmat *(*psepsf)[nsa]=(void*)powfs[ipowfs].intstat->sepsf[isepsf]->p;
 	    double pgrad[2];
 	    cmat **nominals=NULL;
-	    if(!powfs[ipowfs].dtf[iwvl].fused){//may be null if fused to etf
+	    if(!powfs[ipowfs].dtf[iwvl].fused){/*may be null if fused to etf */
 		nominals=powfs[ipowfs].dtf[iwvl].nominal->p+nsa*idtf;
 	    }
 	    dsp **sis=powfs[ipowfs].dtf[iwvl].si->p+nsa*idtf;
@@ -368,36 +368,36 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    nominal=nominals[isadtf];
 		si=sis[isadtf];
 		if(nllt && parms->powfs[ipowfs].radpix){
-		    //Polar CCD.
-		    if(rotpsf){//OTF is along R/A direction. angleg is 0.
+		    /*Polar CCD. */
+		    if(rotpsf){/*OTF is along R/A direction. angleg is 0. */
 			angle=angles[isa];
 		    }else{
 			angleg=angles[isa];
 		    }
 		}
 	
-		//loaded psepsf. sum to 1 for full sa. peak in center
+		/*loaded psepsf. sum to 1 for full sa. peak in center */
 		if(parms->powfs[ipowfs].mtchstc){
-		    //Forst psf to be centered.
+		    /*Forst psf to be centered. */
 		    double pmax=dmax(psepsf[iwvl][isa]);
 		    dcog(pgrad,psepsf[iwvl][isa],0.5,0.5,0.1*pmax,0.2*pmax);
 		}
 		ccpd(&sepsf,psepsf[iwvl][isa]);
-#if ROT_OTF == 1//ROTATE OTF
-		cfftshift(sepsf);//peak in corner
-		cfft2(sepsf,-1);//turn to OTF;//max at 1.
-		cfftshift(sepsf);//peak in center
+#if ROT_OTF == 1/*ROTATE OTF */
+		cfftshift(sepsf);/*peak in corner */
+		cfft2(sepsf,-1);/*turn to OTF;//max at 1. */
+		cfftshift(sepsf);/*peak in center */
 		cembedscaleout(seotfk,sepsf,xscale,yscale,-angle,C_FULL);
-		cfftshift(seotfk); //otf, peak in corner
+		cfftshift(seotfk); /*otf, peak in corner */
 #endif
 
-#if ROT_OTF==0//rotate PSF
-		cembed(seotfk,sepsf,-angle,C_ABS);//ABS to avoid small negative
+#if ROT_OTF==0/*rotate PSF */
+		cembed(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */
 #if SAVE_OTF == 1
 		ccp(&psavepsf[iwvl][isa],seotfk);
 #endif
-		cfftshift(seotfk);//PSF, peak in corner;
-		cfft2(seotfk,-1);//turn to OTF peak in corner
+		cfftshift(seotfk);/*PSF, peak in corner; */
+		cfft2(seotfk,-1);/*turn to OTF peak in corner */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
 		    ctilt(seotfk,-pgrad[0],-pgrad[1],0);
 		}
@@ -405,17 +405,17 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 #if SAVE_OTF ==1
 		ccp(&psaveotf[iwvl][isa],seotfk);
 #endif
-		if(nllt){//elongation.
+		if(nllt){/*elongation. */
 		    (*pccwm)(seotfk,petf[ietf][isa]);
 		}
-		//seotfk has peak in corner
+		/*seotfk has peak in corner */
 #if SAVE_OTF ==1
 		ccp(&psaveotfetf[iwvl][isa],seotfk);
 #endif
-		ccwm2(seotfk,nominal,norm);//NULL is handled correctly.
-		ccp(&seotfj,seotfk);//backup
-		cfft2(seotfk,1);//peak in center.
-		//no need fftshift becaose nominal is pre-treated
+		ccwm2(seotfk,nominal,norm);/*NULL is handled correctly. */
+		ccp(&seotfj,seotfk);/*backup */
+		cfft2(seotfk,1);/*peak in center. */
+		/*no need fftshift becaose nominal is pre-treated */
 		spmulcreal(i0[ii0][isa]->p,si,seotfk->p, wvlsig);
 		ccp(&seotfk,seotfj);
 		dcomplex(*X)[ncompx]
@@ -442,12 +442,12 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dscale(gx[ii0][isa],scale);
 		    dscale(gy[ii0][isa],scale);
 		}
-	    }//for illt
-	}//isa
+	    }/*for illt */
+	}/*isa */
 	cfree(sepsf);
 	cfree(seotfj);
 	cfree(seotfk);
-    }//iwvl
+    }/*iwvl */
 #if SAVE_OTF==1
     ccellwrite(saveotf,"powfs%d_saveotf",ipowfs);
     ccellwrite(savepsf,"powfs%d_savepsf",ipowfs);

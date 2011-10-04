@@ -22,7 +22,7 @@
 /* 
    extracted from mtwist.h/c
    The Web page on the Mersenne Twist algorithm is at:
-   http://www.math.keio.ac.jp/~matumoto/emt.html
+   www.math.keio.ac.jp/~matumoto/emt.html 
    These functions were written by Geoffrey H. Kuenning, Claremont, CA.
    
    * This software is based on LGPL-ed code by Takuji Nishimura.  It has
@@ -36,10 +36,10 @@
    * the License, or (at your option) any later version.
    */
 #ifdef MT_NO_EXTERN
-//compile to normal functions in random.c
+/*compile to normal functions in random.c */
 #define MT_INLINE
 #else
-/*gcc4.3 changes the meaning of extern inline to conform to ISO C9*/
+/*gcc4.3 changes the meaning of extern inline to conform to ISO C99*/
 /*
 #if !defined(__INTEL_COMPILER)&&( __GNUC__ >4 || (__GNUC__==4 &&__GNUC_MINOR__>=3))
 #define MT_INLINE extern inline __attribute__((__gnu_inline__))
@@ -50,12 +50,16 @@
 #endif
 */
 /*2009-12-30: Changed to static inline which is portable*/
+#if __STDC_VERSION__ >= 199901L /*C99*/
 #define MT_INLINE static inline
+#else
+#define MT_INLINE static
+#endif
 #endif
 #include <stdio.h>
 #ifndef MT_MACHINE_BITS
 #include <limits.h>
-#if LONG_MAX == 2147483647 //changed to LONG by lianqiw
+#if LONG_MAX == 2147483647 /*changed to LONG by lianqiw */
 #define MT_MACHINE_BITS	32
 #else /* INT_MAX */
 #define MT_MACHINE_BITS	64
@@ -141,7 +145,7 @@ static double mt_32_to_double=1./4294967296.;
 static double mt_64_to_double=1./18446744073709551616.;
 /* Mult'r to cvt long long to dbl */
 
-MT_INLINE unsigned long mts_lrand(//32 bit val
+MT_INLINE unsigned long mts_lrand(/*32 bit val */
     register mt_state*	state)		/* State for the PRNG */
     {
     register unsigned long random_value;	/* Pseudorandom value generated */
@@ -153,7 +157,7 @@ MT_INLINE unsigned long mts_lrand(//32 bit val
     MT_PRE_TEMPER(random_value);
     return MT_FINAL_TEMPER(random_value);
     }
-MT_INLINE double mts_drand( //32 bit precision double. [0,1)
+MT_INLINE double mts_drand( /*32 bit precision double. [0,1) */
     register mt_state*	state)		/* State for the PRNG */
     {
     register unsigned long random_value;	/* Pseudorandom value generated */
@@ -166,7 +170,7 @@ MT_INLINE double mts_drand( //32 bit precision double. [0,1)
 
     return random_value * mt_32_to_double;
     }
-MT_INLINE double mts_ldrand( //64 bit precision double
+MT_INLINE double mts_ldrand( /*64 bit precision double */
     register mt_state*	state)		/* State for the PRNG */
     {
 #if MT_MACHINE_BITS == 64
@@ -213,9 +217,9 @@ MT_INLINE double mts_ldrand( //64 bit precision double
 void mts_seed32(mt_state* state, unsigned long	seed);
 typedef mt_state  rand_t;
 #define seed_rand mts_seed32
-#define lrand     mts_lrand //rand integer
-#define randu     mts_drand //rand double [0,1)
-#define lrandu    mts_ldrand//rand double with 64 bit precision within [0,1)
+#define lrand     mts_lrand /*rand integer */
+#define randu     mts_drand /*rand double [0,1) */
+#define lrandu    mts_ldrand/*rand double with 64 bit precision within [0,1) */
 double randn(rand_t *rstat);/*normal distribution with 1*/
 long   randp(rand_t *rstat, double xm);
 rand_t *new_rand(int seed);

@@ -22,9 +22,9 @@
 #endif
 #ifndef USE_MEM
 #if defined(__INTEL_COMPILER) || !defined(DEBUG) || defined(NDEBUG)
-#define USE_MEM 0 //backtrace is not compatible with icc.
+#define USE_MEM 0 /*backtrace is not compatible with icc. */
 #else
-#define USE_MEM 1 //set to 0 disable memory management.
+#define USE_MEM 1 /*set to 0 disable memory management. */
 #endif
 #endif
 
@@ -44,7 +44,7 @@ void  FREE(void *p);
 #define free FREE
 
 void mem_usage(void);
-size_t memsize(void *p);//return allocated size
+size_t memsize(void *p);/*return allocated size */
 void register_deinit(void (*fun)(void), void *data);
 #else
 #undef malloc
