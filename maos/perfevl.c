@@ -496,6 +496,7 @@ static void perfevl_save(SIM_T *simu){
 	    }
 	}
 	if(simu->evlpsfolmean){
+	    dcellfree(psfmean);//different format.
 	    scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    if(parms->evl.psfol==2){
 		scale=scale/parms->evl.npsf;
