@@ -6,7 +6,7 @@ AM_LDFLAGS+=../lib/.libs/libaos_long.so
 else
 AM_LDFLAGS+=../lib/.libs/libaos_int.so 
 endif
-
+CFLAGS=
 MEX=@mex $(mexopts) 
 CCLD=mex
 EXTRA_DIST=null.c io.c io.h interface.h Makefile.mex

@@ -51,18 +51,28 @@ else
    echo "Intel Compiler is not found."
    use_icc_default="no"
 fi
+if test -n "$(which mex)" ;then
+   use_mex_default="yes"
+else
+   use_mex_default="no"
+fi
 case "$host_os" in  #compile 32 exe in 64 bit.
    *linux*)
-   AC_ARG_ENABLE(32,   [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
-   if test "$use_32" = "yes" ;then
-      CFLAGS="$CFLAGS -m32"
-      CHOST="i686-pc-linux-gnu"
-      CDEFINE="__i386__"
-      HOST="i686-linux"
-      BUILD="i686-linux"
-      use_icc_default="no"
-      host_cpu=i386
-   fi
+   case "$host_cpu" in
+      *64)
+      AC_ARG_ENABLE(32,   [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
+      if test "$use_32" = "yes" ;then
+         CFLAGS="$CFLAGS -m32"
+         CHOST="i686-pc-linux-gnu"
+         CDEFINE="__i386__"
+         HOST="i686-linux"
+         BUILD="i686-linux"
+         use_icc_default="no"
+         host_cpu=i386
+         use_mex_default="no" #disable mex
+      fi
+      ;;
+   esac
    ;;
 esac
 case "$host_cpu" in 
@@ -153,11 +163,7 @@ if test -n "$(nvcc -V)" ;then
 else
    use_cuda_default="no"
 fi
-if test -n "$(mex -v 2>&1)" ;then
-   use_mex_default="yes"
-else
-   use_mex_default="no"
-fi
+
 #Common configure options.
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
@@ -191,7 +197,7 @@ AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
     if test "x$win32" != "xyes" ;then
-        OPTSprof="-lpthread"
+        OPTSprof="-pthread"
     fi
 else
     AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
@@ -393,7 +399,7 @@ else
    AM_CONDITIONAL(USE_LONG, false)
 fi
 
-AC_CHECK_LIB([cholmod_${SUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -lpthread])
+AC_CHECK_LIB([cholmod_${SUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread])
 if test "x$have_chol" = "xyes" ;then
     LDCHOL="-lcholmod_${SUFFIX}"
     AM_CONDITIONAL(COMP_CHOL, false)
