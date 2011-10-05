@@ -374,12 +374,19 @@ AM_CONDITIONAL(MONN,true) #for full monitor with notify
 PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [comp_draw="yes"],[comp_draw="no"])
 PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[comp_mon="yes"], [comp_mon="no"])
 PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[comp_monn="yes"],[comp_monn="no"])
+#OLD GLIB has GTHREAD separated
+PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [], [])
 #The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
 #with their values in Makefile.in 
 #so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
 AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
 AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
 AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
+if test -n "$GTHREAD_LIBS" ;then
+   DRAW_LIBS="$DRAW_LIBS $GTHREAD_LIBS"
+   MON_LIBS="$MON_LIBS $GTHREAD_LIBS"
+   MONN_LIBS="$MONN_LIBS $GTHREAD_LIBS"
+fi
 AC_SUBST(DRAW_CFLAGS)
 AC_SUBST(DRAW_LIBS)
 AC_SUBST(MON_CFLAGS)
