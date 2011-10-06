@@ -375,7 +375,7 @@ PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [comp_draw="yes"],[comp
 PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[comp_mon="yes"], [comp_mon="no"])
 PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[comp_monn="yes"],[comp_monn="no"])
 #OLD GLIB has GTHREAD separated
-PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [], [])
+PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
 #The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
 #with their values in Makefile.in 
 #so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
