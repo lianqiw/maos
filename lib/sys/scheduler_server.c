@@ -183,11 +183,13 @@ static __attribute__((constructor))void init(){
 	if(fp){
 	    char line[64];
 	    while(fscanf(fp,"%s\n",line)==1){
-		hosts[ihost]=strdup0(line);
-		ihost++;
-		if(ihost>=nhost){
-		    nhost*=2;
-		    hosts=realloc(hosts,nhost*sizeof(char*));
+		if(strlen(line)>0){
+		    hosts[ihost]=strdup0(line);
+		    ihost++;
+		    if(ihost>=nhost){
+			nhost*=2;
+			hosts=realloc(hosts,nhost*sizeof(char*));
+		    }
 		}
 	    }
 	    fclose(fp);
@@ -203,20 +205,18 @@ static __attribute__((constructor))void init(){
     if(gethostname(host,60)) warning3("Unable to get hostname\n");
     hid=myhostid(host);
     if(hid==-1){
-	/*Not running in office machines. */
-	hosts[0]=strdup0(host);/*use local machine */
-	nhost=1;
-	hid=myhostid(host);
+	hosts[nhost]=strdup0(host);/*use local machine */
+	hid=nhost;
+	nhost++;
 	if(hid==-1){
 	    warning3("Unable to determine proper hostname. Monitor may not work\n");
 	}
     }
-    {
-	const char *start=getenv("MAOS_START_SCHEDULER");
-	if(start && !strcmp(start, "YES")){/*we need to launch scheduler. */
-	    info("Launch the scheduler\n");
-	    scheduler();/*this never exits. */
-	}
+    
+    const char *start=getenv("MAOS_START_SCHEDULER");
+    if(start && !strcmp(start, "YES")){/*we need to launch scheduler. */
+	info("Launch the scheduler\n");
+	scheduler();/*this never exits. */
     }
     /*we always try to launch the scheduler. */
     scheduler_launch();

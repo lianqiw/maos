@@ -792,7 +792,7 @@ int main(int argc, char *argv[])
 	    nhost++;
 	}
     }else if(nhost==1){
-	info2("Using %s hostname to monitor other machines, or put their hostnames in ~/.aos/hosts\n", argv[0]);
+	info2("Using '%s host1 host2' to monitor other machines, or put their hostnames in ~/.aos/hosts\n", argv[0]);
     }
     gdk_color_parse("#EE0000",&red);
     gdk_color_parse("#00CC00",&green);
