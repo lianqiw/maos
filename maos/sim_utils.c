@@ -624,7 +624,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    simu->dmproj->p[idm]=dnew(recon->aloc[idm]->nloc,1);
 	    simu->dmprojsq[idm]=mapnew2(recon->amap[idm]);
 	}
-	if(parms->fit.square){
+	if(parms->fit.square){/*dmreal is already square.*/
 	    free(simu->dmrealsq[idm]->p);
 	    free(simu->dmrealsq[idm]->nref);simu->dmrealsq[idm]->nref=NULL;
 	    simu->dmrealsq[idm]->p=simu->dmreal->p[idm]->p;
@@ -914,7 +914,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->scale=1.-ht/hs;
 	    data->alpha=-1;/*remove dm contribution. */
 	    data->wrap=0;
-	    if(simu->cachedm){
+	    if(simu->cachedm && parms->powfs[ipowfs].scalegroup[idm]!=-1){
 		int isc=parms->powfs[ipowfs].scalegroup[idm];
 		data->mapin=simu->cachedm[idm][isc];
 		data->cubic=0;/*already accounted for in cachedm. */
@@ -990,7 +990,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    data->scale=1-ht/parms->evl.hs[ievl];
 	    data->alpha=-1;
 	    data->wrap=0;
-	    if(simu->cachedm){
+	    if(simu->cachedm && parms->evl.scalegroup){
 		int isc=parms->evl.scalegroup[idm+ievl*parms->ndm];
 		data->mapin=simu->cachedm[idm][isc];
 		data->cubic=0;/*already accounted for in cachedm. */

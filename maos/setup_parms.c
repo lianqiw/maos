@@ -1423,7 +1423,6 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     /*
       Setup the parameters used to do DM caching on a finer grid.
     */
-    parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int));
     for(int idm=0; idm<ndm; idm++){
 	double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	if(fabs(ht)<1.e-10){
@@ -1437,13 +1436,24 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    if(idm==0){
 		parms->powfs[ipowfs].scalegroup=calloc(ndm,sizeof(int));
 	    }
-	    parms->powfs[ipowfs].scalegroup[idm]=arrind(scale, &nscale, dxscl);
+	    if(parms->dm[idm].dx>parms->powfs[ipowfs].dx*10){
+		parms->powfs[ipowfs].scalegroup[idm]=arrind(scale, &nscale, dxscl);
+	    }else{
+		warning("skip powfs %d in cachedm.\n", ipowfs);
+		parms->powfs[ipowfs].scalegroup[idm]=-1;
+	    }
 	}
 	/*evl; */
-
-	for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
-	    double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->aper.dx;
-	    parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
+	if(parms->dm[idm].dx>parms->aper.dx*10){
+	    if(idm==0){
+		parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int)); 
+	    }
+	    for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
+		double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->aper.dx;
+		parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
+	    }
+	}else{
+	    warning("skip evl in cachedm.\n");
 	}
 	/*info2("idm=%d, nscale=%d\n", idm, nscale); */
 	parms->dm[idm].ncache=nscale;

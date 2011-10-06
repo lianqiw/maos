@@ -40,6 +40,16 @@
 */
 void prep_cachedm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
+    int count=0;
+    for(int idm=0; idm<parms->ndm; idm++){
+	for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
+	    count++;
+	}
+    }
+    if(!count){
+	warning("No caching is needed\n");
+	return;
+    }
     if(!simu->cachedm){
 	simu->cachedm=calloc(parms->ndm, sizeof(map_t**));
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -59,12 +69,7 @@ void prep_cachedm(SIM_T *simu){
 	    }
 	}
     }
-    int count=0;
-    for(int idm=0; idm<parms->ndm; idm++){
-	for(int iscale=0; iscale<parms->dm[idm].ncache; iscale++){
-	    count++;
-	}
-    }
+ 
     simu->cachedm_n=count;
     simu->pcachedm=malloc(sizeof(int)*2*simu->cachedm_n);
     count=0;
@@ -96,7 +101,7 @@ void prep_cachedm(SIM_T *simu){
 	cpropdata[ic].displacey0=0;
 	cpropdata[ic].displacex1=0;
 	cpropdata[ic].displacey1=0;
-	cpropdata[ic].scale=1;/*scale is not taken care off. */
+	cpropdata[ic].scale=1;
 	cpropdata[ic].cubic=simu->parms->dm[idm].cubic;
 	cpropdata[ic].cubic_iac=simu->parms->dm[idm].iac;
 	prop_index(&cpropdata[ic]);

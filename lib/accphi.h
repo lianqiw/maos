@@ -86,13 +86,13 @@ void prop_index(PROPDATA_T *propdata);/*A unified wrapper */
     const locstat_t *ostat,/*<[in] statics of columns in a loc_t*/	\
 	double *phiout /**<[in, out] Output OPD defined on ostat*/
 
-#define ARG_PROP					\
-    double alpha,     /**<[in] scaling of OPD*/				\
-	double displacex, /**<[in] displacement of the ray */		\
-	double displacey, /**<[in] displacement of the ray */		\
-	double scale     /**<[in] scaling of the beam diameter (cone)*/
+#define ARG_PROP							\
+    const double alpha,     /**<[in] scaling of OPD*/			\
+	double displacex, /**<[in] displacement of the ray */	\
+	double displacey, /**<[in] displacement of the ray */	\
+	const double scale     /**<[in] scaling of the beam diameter (cone)*/
 
-void prop_grid_map(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, int wrap);
+void prop_grid_map(ARGIN_GRID, ARGOUT_MAP, ARG_PROP, int wrap, long start, long end);
 void prop_grid_pts(ARGIN_GRID, ARGOUT_PTS, ARG_PROP, int wrap, long sastart, long saend);
 void prop_grid    (ARGIN_GRID, ARGOUT_LOC, ARG_PROP, int wrap, long start, long end);
 

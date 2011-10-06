@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*
-  Included by accphi.c for prop_grid_stat and prop_grid_stat_tranpose
-  Implemented and test on 2011-04-28
+  Included by accphi.c for prop_grid_map and prop_grid_map_tranpose
+  derived from prop_grid_stat.c on 2011-10-05.
 */
 #undef CONST_IN
 #undef CONST_OUT
@@ -25,12 +25,18 @@
 #if TRANSPOSE == 0
 #define CONST_IN const
 #define CONST_OUT 
-#define FUN_NAME prop_grid_stat
+#define FUN_NAME prop_grid_map
 #else
 #define CONST_IN 
 #define CONST_OUT const
-#define FUN_NAME prop_grid_stat_transpose
+#define FUN_NAME prop_grid_map_transpose
 #endif
+
+/**
+   Propagate OPD defines on grid mapin to grid mapout.  alpha is the scaling of
+   data. displacex, displacy is the displacement of the center of the beam on
+   the input grid. scale is the cone effect.*/
+
 /*
   Implement prop_grid_stat or prop_grid_stat_tranpose in a unified way. 
   Let mapin be x, phiout be y. H be propagator.
@@ -38,25 +44,21 @@
   prop_grid_stat_transpose does x+=H'*y;
  
 */
-void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
-	       const locstat_t *ostat, /**<[in] information about each clumn of a output loc grid*/
-	       CONST_OUT double *phiout,    /**<[in,out] OPD defined on ostat*/
-	       double alpha,       /**<[in] scaling of OPD*/
-	       double displacex,   /**<[in] displacement of the ray */
-	       double displacey,   /**<[in] displacement of the ray */
-	       double scale,       /**<[in] scaling of the beam diameter (cone)*/
+void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
+	       CONST_OUT map_t *mapout, /**<[in,out] output OPD defined on a square grid*/
+	       ARG_PROP,
 	       int wrap,           /**<[in] wrap input OPD or not*/
 	       long colstart,      /**<[in] First column to do ray tracing*/
 	       long colend         /**<[in] Last column (exclusive) to do ray tracing*/
 	       ){
+    CONST_OUT double *phiout=mapout->p;
     CONST_OUT double *phiout2;
     double dplocx, dplocy;
     int nplocx, nplocy;
     int icol,irow;
     long offset;
     int collen;
-    int missing=0;
-    if(colend==0) colend = ostat->ncol;
+    if(colend==0) colend = mapout->ny;
 
     const int wrapx1 = mapin->nx;
     const int wrapy1 = mapin->ny;
@@ -65,41 +67,40 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     
     const double dx_in1 = 1./mapin->dx;
     const double dx_in2 = scale*dx_in1;
-    const double dxout  = ostat->dx;
+    const double dxout  = mapout->dx;
     displacex = (displacex-mapin->ox)*dx_in1;
     displacey = (displacey-mapin->oy)*dx_in1;
     CONST_IN double *phiin  = mapin->p;
     const double ratio  = dxout*dx_in2;
 #if USE_OPTIM == 1
-    if(fabs(ratio-1)<EPS){
+    if(fabs(ratio-1.)<EPS){
 	/*grid size of loc_in and loc_out agree*/
 	double bl, br, tl, tr;
 	CONST_IN double *phicol, *phicol2;
 	int rowdiv,rowdiv2;
 	int irows;
+	dplocx=mapout->ox*dx_in2+displacex;
+	if(wrap){
+	    dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
+	    irows=0;
+	}else{
+	    if(dplocx<0)
+		irows=iceil(-dplocx);
+	    else
+		irows=0;
+	}
+	SPLIT(dplocx,dplocx,nplocx);
 	/*loc_out and loc_in has the same grid sampling.*/
 	for(icol=colstart; icol<colend; icol++){
 	    /*starting address of that col*/
-	    offset=ostat->cols[icol].pos;
-	    collen=ostat->cols[icol+1].pos-offset;/*exclusive*/
-
+	    offset=icol*mapout->nx;
+	    collen=mapout->nx;
 	    phiout2=phiout+offset;
-	    dplocy=ostat->cols[icol].ystart*dx_in2+displacey;
+	    dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
 	    if(wrap){
 		dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 	    }
 	    SPLIT(dplocy,dplocy,nplocy);
-	    dplocx=ostat->cols[icol].xstart*dx_in2+displacex;
-	    if(wrap){
-		dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
-		irows=0;
-	    }else{
-		if(dplocx<0)
-		    irows=iceil(-dplocx);
-		else
-		    irows=0;
-	    }
-	    SPLIT(dplocx,dplocx,nplocx);
 
 	    if(wrap){
 		phicol  = phiin+nplocy*wrapx1+nplocx;
@@ -109,7 +110,6 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    phicol=phiin+nplocy*wrapx1+nplocx;
 		    phicol2=phiin+(nplocy+1)*wrapx1+nplocx;
 		}else{
-		    missing+=collen;
 		    continue;
 		}
 	    }
@@ -192,29 +192,29 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	int nplocx0;
 	int rowdiv,rowdiv2;
 	int irows;
+
 	for(icol=colstart; icol<colend; icol++){
 	    /*starting address of that col*/
-	    offset=ostat->cols[icol].pos;
-	    collen=ostat->cols[icol+1].pos-offset;/*exclusive*/
-
+	    offset=icol*mapout->nx;
+	    collen=mapout->nx;
 	    phiout2=phiout+offset;
-	    dplocy=ostat->cols[icol].ystart*dx_in2+displacey;
+	    dplocx=mapout->ox*dx_in2+displacex;
+	    if(wrap){
+		dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
+		irows=0;
+	    }else{
+		if(dplocx<0)
+		    irows=iceil(-dplocx);
+		else
+		    irows=0;
+	    }
+	    dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
 	    if(wrap){
 		dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 	    }
 	    SPLIT(dplocy,dplocy,nplocy);
 	    const double dplocy1=1.-dplocy;
-	    dplocx=ostat->cols[icol].xstart*dx_in2+displacex;
-	    if(wrap){
-		dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
-		irows=0;
-	    }else{
-		if(dplocx<0){
-		    irows=iceil(-dplocx/ratio);
-		}else
-		    irows=0;
-	    }
-
+	
 	    if(wrap){
 		phicol  = phiin+nplocy*wrapx1;
 		phicol2 = phiin+(nplocy==wrapy?0:(nplocy+1))*wrapx1;
@@ -223,7 +223,6 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    phicol=phiin+nplocy*wrapx1;
 		    phicol2=phiin+(nplocy+1)*wrapx1;
 		}else{
-		    missing+=collen;
 		    continue;
 		}
 	    }
@@ -304,10 +303,10 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 
     /*non optimized case. slower, but hopefully accurate*/
     for(icol=colstart; icol<colend; icol++){
-	offset=ostat->cols[icol].pos;
-	collen=ostat->cols[icol+1].pos-offset;
+	offset=icol*mapout->nx;
+	collen=mapout->nx;
 	phiout2=phiout+offset;
-	dplocy=ostat->cols[icol].ystart*dx_in2+displacey;
+	dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
 	SPLIT(dplocy,dplocy,nplocy);
 	const double dplocy1=1.-dplocy;
 	if(nplocy<0||nplocy>=wrapy){
@@ -318,13 +317,12 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    nplocy-=wrapy1;
 		nplocy1=(nplocy==wrapx?0:nplocy+1);
 	    }else{
-		missing+=collen;
 		continue;
 	    }
 	}else{
 	    nplocy1=nplocy+1;
 	}
-	dplocx0=(ostat->cols[icol].xstart)*dx_in2+displacex;
+	dplocx0=(mapout->ox)*dx_in2+displacex;
 	for(irow=0; irow<collen; irow++){
 	    SPLIT(dplocx0,dplocx,nplocx);
 	    dplocx0+=ratio;
@@ -338,7 +336,6 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			nplocx-=wrapx1;
 		    nplocx1=(nplocx==wrapx?0:nplocx+1);
 		}else{
-		    missing++;
 		    continue;
 		}
 	    }
@@ -358,7 +355,4 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	}/*for irow*/
     }/*for icol*/
 #endif
-    if(missing>0){
-	warning("%d points not covered by input screen\n", missing);
-    }
 }/*function*/

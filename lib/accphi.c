@@ -48,8 +48,8 @@ void prop(thread_t *data){
     switch(propdata->index){
     case 0:
 	prop_grid_map(propdata->mapin, propdata->mapout,
-		       propdata->alpha, displacex, displacey,
-		       propdata->scale, propdata->wrap);
+		      propdata->alpha, displacex, displacey,
+		      propdata->scale, propdata->wrap, data->start, data->end);
 	break;
     case 1:
 	prop_grid_pts(propdata->mapin, propdata->ptsout, 
@@ -362,56 +362,36 @@ void prop_index(PROPDATA_T *propdata){
     }								\
     phiout[iloc]+=sum*alpha;
 
-#define CUBIC_ADD_NONGRID				\
-    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);		\
-    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);		\
-    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);		\
-    fx[3]=dplocx*dplocx*(c3+c4*dplocx);			\
-							\
-    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);		\
-    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);		\
-    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);		\
-    fy[3]=dplocy*dplocy*(c3+c4*dplocy);			\
-							\
-    for(int jy=-1; jy<3; jy++){				\
-	for(int jx=-1; jx<3; jx++){			\
-	    long iphi=map[jy+nplocy][jx+nplocx];	\
-	    if(iphi){					\
-		phiout[iloc]+=alpha*fx[jx+1]		\
-		    *fy[jy+1]*phiin0[iphi];		\
-	    }						\
-	}						\
+#define CUBIC_ADD_NONGRID						\
+    fx[0]=dplocx0*dplocx0*(c3+c4*dplocx0);				\
+    fx[1]=c0+dplocx*dplocx*(c1+c2*dplocx);				\
+    fx[2]=c0+dplocx0*dplocx0*(c1+c2*dplocx0);				\
+    fx[3]=dplocx*dplocx*(c3+c4*dplocx);					\
+									\
+    fy[0]=dplocy0*dplocy0*(c3+c4*dplocy0);				\
+    fy[1]=c0+dplocy*dplocy*(c1+c2*dplocy);				\
+    fy[2]=c0+dplocy0*dplocy0*(c1+c2*dplocy0);				\
+    fy[3]=dplocy*dplocy*(c3+c4*dplocy);					\
+									\
+    for(int jy=-1; jy<3; jy++){						\
+	for(int jx=-1; jx<3; jx++){					\
+	    long iphi=map[jy+nplocy][jx+nplocx];			\
+	    if(iphi){							\
+		phiout[iloc]+=alpha*fx[jx+1]*fy[jy+1]*phiin0[iphi];	\
+	    }								\
+	}								\
     }
 
 
-
-
-/**
-   Propagate OPD defines on grid mapin to grid mapout.  alpha is the scaling of
-   data. displacex, displacy is the displacement of the center of the beam on
-   the input grid. scale is the cone effect.*/
-void prop_grid_map(ARGIN_GRID,
-		    ARGOUT_MAP,
-		    ARG_PROP,
-		    int wrap            /**<[in] wrap input OPD or not*/
-		    ){
-    /*A convenient function. Not optimized */
-    pts_t pts;
-    pts.nsa=1;
-    pts.origx=&mapout->ox;
-    pts.origy=&mapout->oy;
-    pts.dx=mapout->dx;
-    pts.nx=mapout->nx;
-    prop_grid_pts(mapin, &pts, NULL, mapout->p, alpha, displacex, displacey,
-		  scale, wrap, 0, 1);
-}
 #include "prop_grid_pts.c"
 #define TRANSPOSE 0
 #include "prop_grid_stat.c"
+#include "prop_grid_map.c"
 #undef  TRANSPOSE
 
 #define TRANSPOSE 1
 #include "prop_grid_stat.c"
+#include "prop_grid_map.c"
 #undef  TRANSPOSE
 /**
    Propagate OPD defines on grid mapin to coordinate locout.  alpha is the
@@ -830,7 +810,7 @@ void prop_nongrid_bin(const loc_t *locin,
     const double *px=locin->locx;
     const double *py=locin->locy;
     /*Scale alpha to cancel out scaling */
-    alpha *= pow(locin->dx/locout->dx/scale,2);
+    double alpha2 = alpha*pow(locin->dx/locout->dx/scale,2);
 #if ONLY_FULL==1
     long iphi1,iphi2,iphi3,iphi4;
 #else
@@ -859,20 +839,20 @@ void prop_nongrid_bin(const loc_t *locin,
 	iphi3=map[nplocy1][nplocx];
 	iphi4=map[nplocy1][nplocx1];
 	if(iphi1 && iphi2 && iphi3 && iphi4){
-	    phiout0[iphi1]+=alpha*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
-	    phiout0[iphi2]+=alpha*(phiin[iloc]*(dplocx)*(1.-dplocy));
-	    phiout0[iphi3]+=alpha*(phiin[iloc]*(1.-dplocx)*(dplocy));
-	    phiout0[iphi4]+=alpha*(phiin[iloc]*(dplocx)*(dplocy));
+	    phiout0[iphi1]+=alpha2*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
+	    phiout0[iphi2]+=alpha2*(phiin[iloc]*(dplocx)*(1.-dplocy));
+	    phiout0[iphi3]+=alpha2*(phiin[iloc]*(1.-dplocx)*(dplocy));
+	    phiout0[iphi4]+=alpha2*(phiin[iloc]*(dplocx)*(dplocy));
 	}
 #else	
 	if((iphi=map[nplocy][nplocx])) 
-	    phiout0[iphi]+=alpha*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
+	    phiout0[iphi]+=alpha2*(phiin[iloc]*(1.-dplocx)*(1.-dplocy));
 	if((iphi=map[nplocy][nplocx1]))
-	    phiout0[iphi]+=alpha*(phiin[iloc]*(dplocx)*(1.-dplocy));
+	    phiout0[iphi]+=alpha2*(phiin[iloc]*(dplocx)*(1.-dplocy));
 	if((iphi=map[nplocy1][nplocx]))
-	    phiout0[iphi]+=alpha*(phiin[iloc]*(1.-dplocx)*(dplocy));
+	    phiout0[iphi]+=alpha2*(phiin[iloc]*(1.-dplocx)*(dplocy));
 	if((iphi=map[nplocy1][nplocx1]))
-	    phiout0[iphi]+=alpha*(phiin[iloc]*(dplocx)*(dplocy));
+	    phiout0[iphi]+=alpha2*(phiin[iloc]*(dplocx)*(dplocy));
 #endif
     }
 }

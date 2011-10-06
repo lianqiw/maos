@@ -209,8 +209,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #endif
 	    }
 	    if(parms->pause){/*does not work. */
-		info2("Press Enter to continue.\n");
+		info2("Press Enter to continue:");
 		while(getchar()!=0x0a);
+		info2("continue...\n");
 	    }
 	}/*isim */
 	free_simu(simu);

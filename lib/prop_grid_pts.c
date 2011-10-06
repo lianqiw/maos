@@ -48,8 +48,8 @@ void prop_grid_pts(ARGIN_GRID,
 	double dplocx, dplocy;
 	int nplocx, nplocy;
         for(isa=sastart; isa<saend; isa++){
-	    double (*phioutsq)[nx]=(double(*)[nx])(phiout+nx*nx*isa);
-	    double (*phiin)[ninx]=(double(*)[ninx])(mapin->p);
+	    double (*restrict phioutsq)[nx]=(double(*)[nx])(phiout+nx*nx*isa);
+	    double (*restrict phiin)[ninx]=(double(*)[ninx])(mapin->p);
 	    const double origx=pts->origx[isa];
 	    const double origy=pts->origy[isa];
 	    double w11,w10,w01,w00;
