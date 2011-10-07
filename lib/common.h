@@ -61,6 +61,7 @@ typedef unsigned int spint;  /*This is always 32 bit. */
 #define complex __complex__
 #define _Complex_I (__extension__ 1.0iF)
 #define I _Complex_I
+double cabs(dcomplex __z);
 double cimag(dcomplex __z);
 double creal(dcomplex __z);
 dcomplex conj(dcomplex __z);
@@ -68,7 +69,7 @@ dcomplex conj(dcomplex __z);
 dcomplex cpow(dcomplex x, dcomplex z);
 dcomplex csqrt(dcomplex);
 dcomplex clog(dcomplex);
-
+float cabsf(fcomplex __z);
 float cimagf(fcomplex __z);
 float crealf(fcomplex __z);
 fcomplex conjf(fcomplex __z);
@@ -168,7 +169,11 @@ fcomplex clogf(fcomplex);
 
 /*#if USE_MEM == 1 */
 void print_backtrace(int sig);
+#ifndef __CYGWIN__
 #define PRINT_BACKTRACE print_backtrace(0);
+#else
+#define PRINT_BACKTRACE
+#endif
 /*#else//if USE_MEM */
 /*#define PRINT_BACKTRACE print_backtrace(0); */
 /*#endif//if USE_MEM */

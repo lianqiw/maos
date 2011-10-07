@@ -473,7 +473,8 @@ const char *search_header(const char *header, const char *key){
     const char *val=header;
     while(val[0]!='\0' && (val=strstr(val, key))){
 	if(val>header){
-	    if(!isspace(val[-1]) && val[-1]!=';' && val[-1] !=','){
+	  char prev=*(val-1);
+	  if(!isspace((int)prev) && prev!=';' && prev !=','){
 		val=val+strlen(key);
 		continue;/*Invalid */
 	    }

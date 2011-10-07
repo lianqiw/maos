@@ -508,7 +508,7 @@ long available(const char *path){
    Extract a string constant from the command line, and output the position where the string terminates.*/
 static char *cmd_string(char *input, char **end2){
     char *end;
-    while(isspace(input[0]) || input[0]==';') input++;
+    while(isspace((int)input[0]) || input[0]==';') input++;
     if(input[0]=='\'' || input[0]== '"'){
 	end=index(input+1, input[0]);/*find matching quote. */
 	input[0]=' ';
@@ -536,7 +536,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
     char *cmds_end=cmds+strlen(cmds);
     char *start=cmds;
     while(start<cmds_end){
-	if(isspace(start[0]) || start[0]==';'){
+        if(isspace((int)start[0]) || start[0]==';'){
 	    start[0]=' ';
 	    start++;
 	    continue;
@@ -553,7 +553,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 		    if(!mystrcmp(start, options[i].name)){
 			key=options[i].key;
 			start+=strlen(options[i].name);
-			while(isspace(start[0]) || start[0]==';'){
+			while(isspace((int)start[0]) || start[0]==';'){
 			    start[0]=' ';
 			    start++;
 			}
@@ -580,7 +580,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    }
 	    if((options[iopt].opt & 1) == 1){
 		value=start;
-		while(value[0]==';' || isspace(value[0])){
+		while(value[0]==';' || isspace((int)value[0])){
 		    value[0]=' ';
 		    value++;
 		}
@@ -657,7 +657,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    /*create a \n before the key. */
 	    int skipspace=1;
 	    for(char *start2=start-1; start2>=cmds; start2--){
-		if(isspace(*start2) || *start2==';'){
+  	        if(isspace((int)*start2) || *start2==';'){
 		    if(!skipspace){
 			*start2='\n';
 			break;
@@ -670,7 +670,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	}else if(!mystrcmp(start, ".conf")){ /*.conf found. */
 	    /*create a \n before the key. */
 	    for(char *start2=start-1; start2>=cmds; start2--){
-		if(isspace(*start2) || *start2==';'){
+	        if(isspace((int)*start2) || *start2==';'){
 		    *start2='\n'; 
 		    break;
 		}

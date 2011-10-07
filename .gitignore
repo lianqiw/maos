@@ -33,3 +33,4 @@ lib/tmp.c
 *~
 
 scripts/*.app
+*.stackdump
