@@ -1,10 +1,12 @@
 mexopts=$(shell mex -h|grep -q largeArrayDims && echo -largeArrayDims)
 mexopts+=-DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L -I$(SRC_DIR)/lib/
 AM_LDFLAGS=-DDLONG -lz -lmwblas -lmwlapack -lm -largeArrayDims
+AM_LDFLAGS+=-R$(BUILD_DIR)/lib/.libs/
+#The following usage is to get rid of the warning from mex: -pthread is not a valid option
 if USE_LONG
-AM_LDFLAGS+=../lib/.libs/libaos_long.so 
+AM_LDFLAGS+=$(BUILD_DIR)/lib/.libs/libaos_long.so
 else
-AM_LDFLAGS+=../lib/.libs/libaos_int.so 
+AM_LDFLAGS+=$(BUILD_DIR)/lib/.libs/libaos_int.so
 endif
 CFLAGS=
 MEX=@mex $(mexopts) 
