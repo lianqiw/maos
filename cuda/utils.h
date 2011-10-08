@@ -112,21 +112,21 @@ extern int nstream;
 the problem by using mutex locking to makesure only 1 thread is calling FFT. */
 extern pthread_mutex_t cufft_mutex;
 /*#define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);}) */
-#define CUFFT(plan,in,dir) ({						\
+#define CUFFT2(plan,in,out,dir) ({					\
 	LOCK(cufft_mutex);						\
-	int ans=cufftExecC2C(plan, in, in, dir);			\
+	int ans=cufftExecC2C(plan, in, out, dir);			\
 	UNLOCK(cufft_mutex);						\
 	if(ans) {							\
 	    warning("cufft failed with %d @GPU%d, retry.\n", ans, cugpu); \
 	    LOCK(cufft_mutex);						\
-	    int ans=cufftExecC2C(plan, in, in, dir);			\
+	    int ans=cufftExecC2C(plan, in, out, dir);			\
 	    UNLOCK(cufft_mutex);					\
 	    if(ans){							\
 		error("cufft failed with %d\n", ans);			\
 	    }								\
 	}								\
 	})
-
+#define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 void gpu_print_mem(const char *msg);
 size_t gpu_get_mem(void);
 /**

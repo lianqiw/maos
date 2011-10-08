@@ -18,19 +18,34 @@
 #include "cucmat.h"
 #include "utils.h"
 /**
-   Createa cucmat object.
+   Create cucmat object.
 */
 cucmat *cucnew(int nx, int ny){
     cucmat *out;
     out=(cucmat*)calloc(1, sizeof(cucmat));
-    out->ref=0;
+    out->nref=(int*)calloc(1, sizeof(int));
+    out->nref[0]=1;
     DO(cudaMalloc(&(out->p), nx*ny*sizeof(fcomplex)));
     DO(cudaMemset(out->p, 0, nx*ny*sizeof(fcomplex)));
     out->nx=nx;
     out->ny=ny;
     return out;
 }
-
+/**
+   Create cucmat object with existing vector. own=1: we own the pointer. own=0: we don't own the pointer.
+*/
+cucmat *cucnew(int nx, int ny, float *p, int own){
+    cucmat *out;
+    out=(cucmat*)calloc(1, sizeof(cucmat));
+    if(own){
+	out->nref=(int*)calloc(1, sizeof(int));
+	out->nref[0]=1;
+    }
+    out->p=p;
+    out->nx=nx;
+    out->ny=ny;
+    return out;
+}
 cucmat *cucnew(int nx, int ny, cudaStream_t stream){
     cucmat *out;
     out=(cucmat*)calloc(1, sizeof(cucmat));
@@ -41,15 +56,31 @@ cucmat *cucnew(int nx, int ny, cudaStream_t stream){
     out->ny=ny;
     return out;
 }
+cucmat *cucref(cucmat *A){
+    if(!A) return NULL;
+ 
+    cucmat *out=(cucmat*)calloc(1, sizeof(cucmat));
+    memcpy(out, A, sizeof(cucmat));
+    A->nref[0]++;
+    return out;
+}
+
 void cucfree(cucmat *A){
     if(A){
-	if(A->p){
-	    cudaFree(A->p);
+	if(A->nref){
+	    if(A->nref[0]==1){
+		cudaFree(A->p);
+		free(A->nref);
+	    }else{
+		A->nref[0]--;
+		if(A->nref[0]<0){
+		    error("Invalid nref=%d\n", A->nref[0]);
+		}
+	    }
 	}
 	free(A);
     }
 }
-
 
 cuccell* cuccellnew(int nx, int ny){
     cuccell *out=(cuccell*)calloc(1, sizeof(cuccell));
@@ -58,8 +89,16 @@ cuccell* cuccellnew(int nx, int ny){
     out->ny=ny;
     return out;
 }
-
-
+/** Allocate continuous memory for blocks of the same size*/
+cuccell *cuccellnew(int nx, int ny, int mx, int my){
+    cuccell *out=cuccellnew(nx, ny);
+    fcomplex *p;
+    cudaMalloc(p, nx*ny*mx*my*sizeof(fcomplex));
+    for(int i=0; i<nx*ny; i++){
+	out->p[i]=cucnew(mx, my, p+i*(mx*my), (i==0));
+    }
+    return out;
+}
 
 void cuccellfree(cuccell *A){
     if(!A) return;

@@ -247,14 +247,9 @@ void wfsints(thread_t *thread_data){
 	    /*sum(psf) is sumamp2*npsf*npsf */
 	    if(ppsfout){
 		ccp(&fftpsfout, psf);
-		cscale(fftpsfout, norm_psf);
-		cifft2(fftpsfout,1);/*peak in corner. WVF. cifft2 is normalized. */
+		cscale(fftpsfout, norm_psf/((double)psf->nx*psf->ny);
+		cfft2(fftpsfout,1);/*peak in corner. become WVF in center.*/
 		cembed(ppsfout[iwvl][isa], fftpsfout, 0, C_FULL);
-		/*
-		  ccp(&ppsfout[iwvl][isa], psf);
-		  cscale(ppsfout[iwvl][isa], norm_psf);
-		  cfftshift(ppsfout[iwvl][isa]);//peak in center. 
-		*/
 	    }
 	    cabs2toreal(psf);/*peak in corner */
 #if ROT_OTF == 1/*deprecated */

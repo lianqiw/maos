@@ -31,7 +31,6 @@ curmat *curnew(int nx, int ny){
     out=(curmat*)calloc(1, sizeof(curmat));
     out->nref=(int*)calloc(1, sizeof(int));
     out->nref[0]=1;
-    out->igpu=cugpu;
     DO(cudaMalloc(&(out->p), nx*ny*sizeof(float)));
     DO(cudaMemset(out->p, 0, nx*ny*sizeof(float)));
     out->nx=nx;
@@ -67,13 +66,15 @@ curmat *curref(curmat *A){
 
 void curfree(curmat *A){
     if(A){
-	if(A->nref[0]==1){
-	    cudaFree(A->p);
-	    free(A->nref);
-	}else{
-	    A->nref[0]--;
-	    if(A->nref[0]<0){
+	if(A->nref){
+	    if(A->nref[0]==1){
+		cudaFree(A->p);
+		free(A->nref);
+	    }else{
+		A->nref[0]--;
+		if(A->nref[0]<0){
 		error("Invalid nref=%d\n", A->nref[0]);
+		}
 	    }
 	}
 	free(A);

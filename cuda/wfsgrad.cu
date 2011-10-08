@@ -284,6 +284,9 @@ void gpu_wfsgrad(thread_t *info){
 	    cusptmul(gradacc->p, GS0, phiout->p, 1.f/(float)dtrat, cuwfs[iwfs].sphandle);
 	}
     }   
+    if(parms->powfs[ipowfs].psfout){
+	cellarr_curmat(simu->save->ztiltout[iwfs], gradacc);
+    }
     /*CUDA_SYNC_STREAM; */
     if(do_phy || parms->powfs[ipowfs].psfout 
        || (parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart)){/*physical optics */

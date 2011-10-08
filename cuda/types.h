@@ -30,7 +30,6 @@ typedef struct{
     float *p;
     int nx;
     int ny;
-    int igpu;/*which gpu we are on. */
     int *nref;
 }curmat;
 
@@ -43,7 +42,7 @@ typedef struct{
     fcomplex *p;
     int nx;
     int ny;
-    int ref;
+    int *nref;
 }cucmat;
 
 typedef struct{

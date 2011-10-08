@@ -81,10 +81,10 @@ __global__ static void cpcorner_do(fcomplex *restrict out, int noutx,  int nouty
 }
 
 /**
-   Embed or crop an array to another array. Preserve center.
+   Embed or crop an array to another array. Preserve center. 
 */
 __global__ void cpcenter_do(fcomplex *restrict out, int noutx, int nouty,
-				   const fcomplex *restrict in, int ninx, int niny){
+			    const fcomplex *restrict in, int ninx, int niny, float scale){
     int nx, ny, nskipoutx, nskipouty, nskipinx, nskipiny;
     if(noutx<ninx){
 	nx=noutx;
@@ -109,7 +109,7 @@ __global__ void cpcenter_do(fcomplex *restrict out, int noutx, int nouty,
     in+=isa*ninx*niny+nskipiny*(ninx)+nskipinx;
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
-	    out[iy*noutx+ix]=in[iy*ninx+ix];
+	    out[iy*noutx+ix]=scale*in[iy*ninx+ix];
 	}
     }
 }
@@ -297,6 +297,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
     const float *restrict const srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot:NULL;
     const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot &&parms->powfs[ipowfs].radpix);
     const float *restrict const srot2=multi_dtf?cuwfs[iwfs].srot:NULL;
+    const int nwvl=parms->powfs[ipowfs].nwvl;
     float *restrict const ints=cuwfs[iwfs].ints->p;
     float *lltopd=NULL;
     dcell *pistatout=NULL;
@@ -304,17 +305,13 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
        &&isim>=parms->powfs[ipowfs].pistatstart){
 	if(!simu->pistatout[iwfs]){
 	    simu->pistatout[iwfs]
-		=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
+		=dcellnew(nsa,nwvl);
 	}
 	pistatout=simu->pistatout[iwfs];
     }
-    ccell *psfout=NULL;
-    cellarr *psfoutcellarr=NULL;
-    cellarr *ztiltoutcellarr=NULL;
+    cuccell *wvfout=NULL;
     if(parms->powfs[ipowfs].psfout){
-	psfout=simu->wfspsfout[iwfs];
-	psfoutcellarr=simu->save->wfspsfout[iwfs];
-	ztiltoutcellarr=simu->save->ztiltout[iwfs];
+	wvfout=cuccellnew(nsa,nwvl, ncompx/2, ncompy/2);
     }
     if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	int nlx=powfs[ipowfs].llt->pts->nx;
@@ -364,7 +361,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
     /* Now begin physical optics  */
     int rotpsfotf=(hasllt && parms->powfs[ipowfs].radrot);
     /*CUDA_SYNC_STREAM; */
-    for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
+    for(int iwvl=0; iwvl<nwvl; iwvl++){
 	float wvl=parms->powfs[ipowfs].wvl[iwvl];
 	float dtheta=wvl/(npsf*powfs[ipowfs].pts->dx);
 	fcomplex *lotfc=NULL;
@@ -400,13 +397,16 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	float norm=siglev*parms->wfs[iwfs].wvlwts[iwvl]*norm_psf*norm_psf/((float)ncompx*ncompy);
 
 	/* Do msa subapertures in a batch to avoid using too much memory.*/
-	fcomplex *psf, *otf;
+	fcomplex *psf, *otf, *psfout=NULL;
 	int msa=cuwfs[iwfs].msa;
 	cudaCalloc(psf, sizeof(fcomplex)*npsf*npsf*msa, stream);
 	if(srot1 || ncompx!=npsf || ncompy!=npsf){
 	    cudaCalloc(otf, sizeof(fcomplex)*ncompx*ncompy*msa, stream);
 	}else{
 	    otf=psf;
+	}
+	if(parms->powfs[ipowfs].psfout){
+	    cudaCalloc(psf, sizeof(fcomplex)*npsf*npsf*msa, stream);
 	}
 	for(int isa=0; isa<nsa; isa+=msa){
 	    int ksa=MIN(msa, nsa-isa);/*total number of subapertures left to do. */
@@ -419,7 +419,11 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	    /*turn to complex psf, peak in corner */
 	    CUFFT(cuwfs[iwfs].plan1, psf, CUFFT_FORWARD);
 	    ctoc("psf");
-	    if(psfout) TO_IMPLEMENT;
+	    if(psfout){
+		CUFFT2(cuwfs[iwfs].plan1, psf, psfout, CUFFT_BACKWARD);
+		cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
+		    (wvfout->p[isa+nsa*iwvl]->p, ncompx/2, ncompy/2, psfout, npsf, npsf, norm_psf/(npsf*npsf));
+	    }
 	    /*abs2 part to real, peak in corner */
 	    abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, npsf, 1);
 	    ctoc("abs2real");
@@ -433,6 +437,7 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 		}
 		ctoc("ccwm with lotfc");
 		if(pistatout){
+		 
 		    TO_IMPLEMENT;
 		}
 		/*is OTF now. */
@@ -497,8 +502,13 @@ void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream
 	}/*for isa */
 	if(otf!=psf) cudaFree(otf);
 	cudaFree(psf);
+	if(psfout) cudaFree(psfout);
 	if(lotfc) cudaFree(lotfc);
     }/*for iwvl */
     /*CUDA_SYNC_STREAM; */
     cudaFree(lltopd);
+    if(parms->powfs[ipowfs].psfout){
+	cellarr_cuccell(simu->save->wfspsfout[iwfs], wvfout);
+	cuccellfree(wvfout);
+    }
 }
