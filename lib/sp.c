@@ -49,7 +49,6 @@
 #include "defs.h"
 #include "suitesparse.c"
 
-TIC;
 vtbl X(sp_vtbl)={M_TT,
 		 (vtbl_write)Y(spwrite),
 		 (vtbl_writedata)Y(spwritedata),
@@ -448,7 +447,6 @@ void Y(spmulvec)(T *restrict y, const X(sp) *A,
 static void Y(sptmulvec_thread_do)(thread_t *info){
     const long icol_min=info->start;
     const long icol_max=info->end;
-    toc2("step 2: %ld to %ld", icol_min, icol_max);
     /*It takes 0.0079 s to long the latest threads with thread_pool!!! too bad. */
     sp_thread_t *data=info->data;
     const X(sp) *A = data->A;
@@ -468,7 +466,6 @@ static void Y(sptmulvec_thread_do)(thread_t *info){
 	    }
 	}
     }
-    toc2("step 3: %ld to %ld", icol_min, icol_max);
     return;
 }
 /**

@@ -75,6 +75,7 @@ case "$host_os" in  #compile 32 exe in 64 bit.
    esac
    ;;
 esac
+echo host_cpu=$host_cpu
 case "$host_cpu" in 
     *86)
         cpu="32"
@@ -114,6 +115,7 @@ case "$host_os" in
  mkldep="-lguide"
  mklname=mkl${cpu}
  system="linux"
+ ldsuffix="so"
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
@@ -124,10 +126,12 @@ case "$host_os" in
  mkldep="-liomp5"
  mklname=mklfat
  system="darwin"
+ ldsuffix="dylib"
  ;;
 *bsd*)
  AM_CONDITIONAL(BSD, true)
  system="bsd"
+ ldsuffix="so"
  ;;
 *cygwin*|*mingw*)
  AM_CONDITIONAL(WIN, true)
@@ -135,11 +139,12 @@ case "$host_os" in
  win32=yes
  use_static_default=yes #blas/lapack are linked statically, but others are still dynamic. ship those
  system="win"
+ ldsuffix="dll"
  ;;
 *)
 AC_MSG_ERROR([Unrecognized OS])
 esac
-
+AC_SUBST(ldsuffix)
 mkl_lib="${LIBDIR}/${mklname}/libmkl.la"
 if test "$try_mkl" = "yes" ;then
     #Enable System V Interface definition (IPC,SHM)
@@ -533,14 +538,14 @@ if test "$use_cuda" = "yes" ;then
     fi
     AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
     if test x$cuda_lib=xno ;then
-       if test -f ${CUDA_DIR}/lib${cpu}/libcudart.so ;then
+       if test -f ${CUDA_DIR}/lib${cpu}/libcudart.$ldsuffix ;then
            CUDA_OPT_L="-L${CUDA_DIR}/lib${cpu}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
-       elif test -f ${CUDA_DIR}/libcudart.so  ;then
+       elif test -f ${CUDA_DIR}/libcudart.$ldsuffix  ;then
            CUDA_OPT_L="-L${CUDA_DIR}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
        else
            echo "Cuda library not found. Please set CUDA_DIR before calling configure"
            echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
-           AC_MSG_ERROR([cuda library cudart.so not found])
+           AC_MSG_ERROR([cuda library cudart not found])
        fi
     fi
 else

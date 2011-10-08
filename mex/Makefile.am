@@ -4,9 +4,9 @@ AM_LDFLAGS=-DDLONG -lz -lmwblas -lmwlapack -lm -largeArrayDims
 AM_LDFLAGS+=-R$(BUILD_DIR)/lib/.libs/
 #The following usage is to get rid of the warning from mex: -pthread is not a valid option
 if USE_LONG
-AM_LDFLAGS+=$(BUILD_DIR)/lib/.libs/libaos_long.so
+AM_LDFLAGS+=$(BUILD_DIR)/lib/.libs/libaos_long.$(ldsuffix)
 else
-AM_LDFLAGS+=$(BUILD_DIR)/lib/.libs/libaos_int.so
+AM_LDFLAGS+=$(BUILD_DIR)/lib/.libs/libaos_int.$(ldsuffix)
 endif
 CFLAGS=
 MEX=@mex $(mexopts) 
