@@ -50,8 +50,15 @@ typedef struct{
     /*for recon */
     curecon_t *recon;
 }cudata_t;
+#ifdef __APPLE__
+extern pthread_key_t cudata_key;
+inline cudata_t* _cudata(){
+    return (cudata_t*)pthread_getspecific(cudata_key);
+}
+#define cudata _cudata()
+#else
 extern __thread cudata_t *cudata;
-extern int cugpu;
+#endif
 extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
 #define DEBUG_MEM 0
 #if DEBUG_MEM
@@ -87,7 +94,6 @@ inline int CUDAFREE(float *p){
 #endif
 
 #define CUDA_SYNC_DEVICE DO(cudaDeviceSynchronize())
-#define CUDA_SYNC_ALL ({int old_gpu=cugpu;for(int im=0; im<NGPU; im++){gpu_set(im); CUDA_SYNC_DEVICE;};gpu_set(old_gpu);})
 #define TIMING 0
 #if TIMING == 1
 extern int nstream;
@@ -117,7 +123,7 @@ extern pthread_mutex_t cufft_mutex;
 	int ans=cufftExecC2C(plan, in, out, dir);			\
 	UNLOCK(cufft_mutex);						\
 	if(ans) {							\
-	    warning("cufft failed with %d @GPU%d, retry.\n", ans, cugpu); \
+	    warning("cufft failed with %d, retry.\n", ans); \
 	    LOCK(cufft_mutex);						\
 	    int ans=cufftExecC2C(plan, in, out, dir);			\
 	    UNLOCK(cufft_mutex);					\
@@ -134,11 +140,12 @@ size_t gpu_get_mem(void);
 */
 inline void gpu_set(int igpu){
     igpu=igpu%NGPU;
-    /*if(cugpu!=GPUS[igpu]){ */
-	cudaSetDevice(GPUS[igpu]);
-	cudata=cudata_all[igpu];
-	cugpu=GPUS[igpu];/*record current GPU. */
-	/*} */
+    cudaSetDevice(GPUS[igpu]);
+#ifdef __APPLE__
+    pthread_setspecific(cudata_key, cudata_all[igpu]);
+#else
+    cudata=cudata_all[igpu];
+#endif
 }
 /**
    returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.

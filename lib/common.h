@@ -55,7 +55,11 @@ typedef unsigned int spint;  /*This is always 32 bit. */
 #endif
 
 #ifndef __CYGWIN__
+#ifdef __APPLE__
+#include </usr/include/complex.h>
+#else
 #include <complex.h>
+#endif
 #else
 /*CYGWIN does not have complex.h. */
 #define complex __complex__

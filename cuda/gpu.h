@@ -20,16 +20,6 @@
 #include "../lib/aos.h"
 #include "../maos/parms.h"
 #include "../maos/types.h"
-/* Data for propagation to WFS */
-typedef struct{
-    dmat *phi;/*return. */
-    int iwfs;
-    int isim;
-    const PARMS_T *parms;
-    const POWFS_T *powfs;
-    float atmalpha;
-    float dmalpha;
-}gpu_wfs_t;
 void gpu_info(void);
 int  gpu_init(int *gpus, int ngpu);
 void gpu_cleanup(void);

@@ -194,14 +194,14 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		DO(cudaMalloc(&(cuatm->p[ips]), nx0*ny0*sizeof(float)));
 	    }
 #endif
-	    cuatm->vx=new float[nps];
-	    cuatm->vy=new float[nps]; 
-	    cuatm->ht=new float[nps];
-	    cuatm->ox=new float[nps];
-	    cuatm->oy=new float[nps];
-	    cuatm->dx=new float[nps];
-	    cuatm->nx=new int[nps];
-	    cuatm->ny=new int[nps];
+	    cuatm->vx=(float*)malloc(nps*sizeof(float));
+	    cuatm->vy=(float*)malloc(nps*sizeof(float)); 
+	    cuatm->ht=(float*)malloc(nps*sizeof(float));
+	    cuatm->ox=(float*)malloc(nps*sizeof(float));
+	    cuatm->oy=(float*)malloc(nps*sizeof(float));
+	    cuatm->dx=(float*)malloc(nps*sizeof(float));
+	    cuatm->nx=(int*)malloc(nps*sizeof(int));
+	    cuatm->ny=(int*)malloc(nps*sizeof(int));
 	    for(int ips=0; ips<nps; ips++){
 		cuatm->nx[ips]=nx0;
 		cuatm->ny[ips]=ny0;
@@ -343,7 +343,7 @@ void gpu_atm2gpu(map_t **atm, int nps){
 	gpu_print_mem("atm in");
 	TIC;tic;
 #if ATM_TEXTURE
-	gpu_map2dev(&cudata_all[im]->atm, atm, nps, 1);
+	gpu_map2dev(&cudata->atm, atm, nps, 1);
 	texRefatm.addressMode[0] = cudaAddressModeWrap;
 	texRefatm.addressMode[1] = cudaAddressModeWrap;
 	texRefatm.filterMode     = cudaFilterModeLinear;
@@ -351,7 +351,7 @@ void gpu_atm2gpu(map_t **atm, int nps){
 	cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
 	DO(cudaBindTextureToArray(texRefatm, cudata_all[im]->atm->ca, channelDesc));
 #else
-	gpu_map2dev(&cudata_all[im]->atm, atm, nps, 2);
+	gpu_map2dev(&cudata->atm, atm, nps, 2);
 #endif
 	toc2("atm to gpu");/*0.4 second. */
 	gpu_print_mem("atm out");
@@ -363,9 +363,9 @@ void gpu_atm2gpu(map_t **atm, int nps){
 static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
     gpu_map2dev(cudm, dmreal, ndm, 2);
     if(dmcfg && !(*cudm)->cubic){
-	(*cudm)->cubic=new int[ndm];
-	(*cudm)->iac=new float[ndm];
-	(*cudm)->cc=new float*[ndm];
+	(*cudm)->cubic=(int*)malloc(ndm*sizeof(int));
+	(*cudm)->iac=(float*)malloc(ndm*sizeof(float));
+	(*cudm)->cc=(float**)malloc(ndm*sizeof(float*));
 	for(int idm=0; idm<ndm; idm++){
 	    (*cudm)->cubic[idm]=dmcfg[idm].cubic;
 	    (*cudm)->iac[idm]=dmcfg[idm].iac;
@@ -385,13 +385,13 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
 void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	gpu_dm2gpu(&cudata_all[im]->dmreal, dmreal, ndm, dmcfg);
+	gpu_dm2gpu(&cudata->dmreal, dmreal, ndm, dmcfg);
     }
 }
 void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg){
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	gpu_dm2gpu(&cudata_all[im]->dmproj, dmproj, ndm, dmcfg);
+	gpu_dm2gpu(&cudata->dmproj, dmproj, ndm, dmcfg);
     }
 }
 
