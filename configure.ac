@@ -63,9 +63,9 @@ else
 fi
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 if test "x$use_cuda" = "xyes" ;then
-   echo CUDA Require 64 bit CPU.
-   case "$host_cpu" in
-       *86)
+   case "$host_os" in
+       *darwin*)
+       #In MAC OS, gcc defaults to 64 bit, but nvcc is 32 bit. force both to 64 bit.
        host_cpu=x86_64;
        CFLAGS="$CFLAGS -m64"
        LDFLAGS="$LDFLAGS -m64"
@@ -141,7 +141,7 @@ case "$host_os" in
  wgetoutput="--output"
  mkldep="-liomp5"
  mklname=mklfat
- system="darwin"
+ system="apple"
  ldsuffix="dylib"
  ;;
 *bsd*)
@@ -352,7 +352,7 @@ else
 fi
 #Check for FFTW3 header and library.
 has_fftw='yes'
-AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
+AC_CHECK_HEADER([fftw3.h],[], [has_fftw='no'])
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    if test "$system" = "linux" ;then
@@ -433,7 +433,7 @@ fi
 # use the cholmod in the system even if it is available because we want to
 # customize the dependency on blas/lapack.
 
-AC_CHECK_HEADERS([unistd.h])
+AC_CHECK_HEADER([unistd.h])
 #LDCHOL must be before LAPACK
 LDOPTS="$LAPACK $LDSYS $LDFFT -lm"
 LDEXE="${LDEXE} -no-install"
@@ -510,7 +510,6 @@ if test "x${use_mex}" = "xyes" ; then
 else
    AM_CONDITIONAL(USE_MEX, false)
 fi
-CUDA_OPT_H=
 CUDA_OPT_L=
 NVCC=nvcc
 if test "$use_cuda" = "yes" ;then
@@ -520,60 +519,28 @@ if test "$use_cuda" = "yes" ;then
    AC_CONFIG_FILES([cuda/Makefile])
    AM_CONDITIONAL(USE_CUDA, true)
    AC_DEFINE(USE_CUDA, [1], "Has Cuda")
-   echo Enabling CUDA ${CUDA_DIR}
-   if test -z "${CUDA_DIR}" ;then
-      if test -d /opt/cuda ;then
-         CUDA_DIR=/opt/cuda
-      elif test -d /usr/local/cuda ;then
-         CUDA_DIR=/usr/local/cuda
-      else
-         echo CUDA_DIR is not set.
-      fi
-   fi
+   echo Enabling CUDA 
    if test -z "$(${NVCC} -V)"  ;then
-      if test -f ${CUDA_DIR}/bin/nvcc ;then
-      	  NVCC=${CUDA_DIR}/bin/nvcc
-      elif test -f ${CUDA_DIR}/nvcc ;then
-          NVCC=${CUDA_DIR}/nvcc
-      else
-          echo "Cuda nvcc not found. Please set CUDA_DIR before calling configure"
-          echo "Example: export CUDA_DIR=/opt/cuda && ./configure --enable-cuda"
-          AC_MSG_ERROR([nvcc not found])
-      fi
-    fi
-    AC_CHECK_HEADERS(cuda.h, [cuda_h="yes"] ,[cuda_h="no"])
-    if test x$cuda_h=xno ;then
-       if test -f ${CUDA_DIR}/include/cuda.h ;then
-          CUDA_OPT_H=-I${CUDA_DIR}/include
-       elif test -f ${CUDA_DIR}/cuda.h ;then
-          CUDA_OPT_H=-I${CUDA_DIR}
+       AC_MSG_ERROR([nvcc not found. Please add the path containing nvcc to your environmental variable PATH])
+   fi
+   AC_CHECK_HEADER(cuda.h, [cuda_h="yes"] ,[cuda_h="no"], [])
+   if test "x${cuda_h}" = "xno" ;then
+       AC_MSG_ERROR([cuda.h not cound. Please add the path containing cuda.h to your environmental variable CPATH or C_INCLUDE_PATH]);
+   fi
+   AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
+   if test x$cuda_lib = xno ;then
+       if test x$system = xapple;then
+           LDPREFIX="DY"
        else
-           echo "Cuda header not found. Please export CUDA_DIR before calling configure"
-           echo "Example: export CUDA_DIR=/opt/cuda && ./configure --enable-cuda"
-           AC_MSG_ERROR([cuda header cuda.h not found])
+	   LDPREFIX=
        fi
-    fi
-    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
-    CUDA_OPT_L=""
-    if test x$cuda_lib=xno ;then
-       if test -f ${CUDA_DIR}/lib/libcudart.$ldsuffix ;then
-       	   CUDA_OPT_L="-L${CUDA_DIR}/lib -R${CUDA_DIR}/lib"
-       elif test -f ${CUDA_DIR}/lib${cpu}/libcudart.$ldsuffix ;then
-           CUDA_OPT_L="-L${CUDA_DIR}/lib${cpu} -R${CUDA_DIR}/lib${cpu}"
-       elif test -f ${CUDA_DIR}/libcudart.$ldsuffix  ;then
-           CUDA_OPT_L="-L${CUDA_DIR} -R${CUDA_DIR}"
-       else
-           echo "Cuda library not found. Please set CUDA_DIR before calling configure"
-           echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
-           AC_MSG_ERROR([cuda library cudart not found])
-       fi
-    fi
-    CUDA_OPT_L="${CUDA_OPT_L} -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
+       AC_MSG_ERROR([libcudart.$ldsuffix not found. Please add the path containing it to your environment variable LIBRARY_PATH and ${LDPREFIX}LD_LIBRARY_PATH])
+   fi
+   CUDA_OPT_L="-lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
 else
-AM_CONDITIONAL(USE_CUDA, false)
-AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
+   AM_CONDITIONAL(USE_CUDA, false)
+   AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
-AC_SUBST(CUDA_OPT_H)
 AC_SUBST(CUDA_OPT_L)
 AC_SUBST(NVCC)
 AC_OUTPUT
