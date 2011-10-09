@@ -56,6 +56,22 @@ if test -n "$(which mex)" ;then
 else
    use_mex_default="no"
 fi
+if test -n "$(nvcc -V)" ;then
+   use_cuda_default="yes"
+else
+   use_cuda_default="no"
+fi
+AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
+if test "x$use_cuda" = "xyes" ;then
+   echo CUDA Require 64 bit CPU.
+   case "$host_cpu" in
+       *86)
+       host_cpu=x86_64;
+       CFLAGS="$CFLAGS -m64"
+       LDFLAGS="$LDFLAGS -m64"
+       ;;
+   esac
+fi
 case "$host_os" in  #compile 32 exe in 64 bit.
    *linux*)
    case "$host_cpu" in
@@ -163,11 +179,6 @@ if test "$try_mkl" = "yes" ;then
     AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
     AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
 fi
-if test -n "$(nvcc -V)" ;then
-   use_cuda_default="yes"
-else
-   use_cuda_default="no"
-fi
 
 #Common configure options.
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
@@ -178,7 +189,6 @@ AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_o
 AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
-AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
 if test "x$use_static" = "xyes" ;then
    LDEXE="-all-static" #Enable all static build.
@@ -202,7 +212,7 @@ AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
     if test "x$win32" != "xyes" ;then
-        OPTSprof="-pthread"
+        echo OPTSprof="-pthread"
     fi
 else
     AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
@@ -425,7 +435,8 @@ fi
 
 AC_CHECK_HEADERS([unistd.h])
 #LDCHOL must be before LAPACK
-LDOPTS="$LAPACK $LDSYS"
+LDOPTS="$LAPACK $LDSYS $LDFFT -lm"
+LDEXE="${LDEXE} -no-install"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
@@ -454,16 +465,16 @@ DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
-if test "x${use_mex}" = "xyes" ; then
-AC_ENABLE_SHARED
-else
+#if test "x${use_mex}" = "xyes" ; then
+#AC_ENABLE_SHARED
+#else
 AC_DISABLE_SHARED
-fi
-if test "x${use_static}" = "xyes" ;then
+#fi
+#if test "x${use_static}" = "xyes" ;then
 AC_ENABLE_STATIC
-else
-AC_DISABLE_STATIC
-fi
+#else
+#AC_DISABLE_STATIC
+#fi
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
@@ -511,7 +522,13 @@ if test "$use_cuda" = "yes" ;then
    AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    echo Enabling CUDA ${CUDA_DIR}
    if test -z "${CUDA_DIR}" ;then
-      CUDA_DIR=/opt/cuda
+      if test -d /opt/cuda ;then
+         CUDA_DIR=/opt/cuda
+      elif test -d /usr/local/cuda ;then
+         CUDA_DIR=/usr/local/cuda
+      else
+         echo CUDA_DIR is not set.
+      fi
    fi
    if test -z "$(${NVCC} -V)"  ;then
       if test -f ${CUDA_DIR}/bin/nvcc ;then
@@ -520,7 +537,7 @@ if test "$use_cuda" = "yes" ;then
           NVCC=${CUDA_DIR}/nvcc
       else
           echo "Cuda nvcc not found. Please set CUDA_DIR before calling configure"
-          echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+          echo "Example: export CUDA_DIR=/opt/cuda && ./configure --enable-cuda"
           AC_MSG_ERROR([nvcc not found])
       fi
     fi
@@ -531,23 +548,27 @@ if test "$use_cuda" = "yes" ;then
        elif test -f ${CUDA_DIR}/cuda.h ;then
           CUDA_OPT_H=-I${CUDA_DIR}
        else
-           echo "Cuda header not found. Please set CUDA_DIR before calling configure"
-           echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
+           echo "Cuda header not found. Please export CUDA_DIR before calling configure"
+           echo "Example: export CUDA_DIR=/opt/cuda && ./configure --enable-cuda"
            AC_MSG_ERROR([cuda header cuda.h not found])
        fi
     fi
     AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
+    CUDA_OPT_L=""
     if test x$cuda_lib=xno ;then
-       if test -f ${CUDA_DIR}/lib${cpu}/libcudart.$ldsuffix ;then
-           CUDA_OPT_L="-L${CUDA_DIR}/lib${cpu}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
+       if test -f ${CUDA_DIR}/lib/libcudart.$ldsuffix ;then
+       	   CUDA_OPT_L="-L${CUDA_DIR}/lib -R${CUDA_DIR}/lib"
+       elif test -f ${CUDA_DIR}/lib${cpu}/libcudart.$ldsuffix ;then
+           CUDA_OPT_L="-L${CUDA_DIR}/lib${cpu} -R${CUDA_DIR}/lib${cpu}"
        elif test -f ${CUDA_DIR}/libcudart.$ldsuffix  ;then
-           CUDA_OPT_L="-L${CUDA_DIR}  -lcudart -lcurand -lcusparse -lcufft -lcublas"
+           CUDA_OPT_L="-L${CUDA_DIR} -R${CUDA_DIR}"
        else
            echo "Cuda library not found. Please set CUDA_DIR before calling configure"
            echo "Example: CUDA_DIR=/opt/cuda ./configure --enable-cuda"
            AC_MSG_ERROR([cuda library cudart not found])
        fi
     fi
+    CUDA_OPT_L="${CUDA_OPT_L} -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
 else
 AM_CONDITIONAL(USE_CUDA, false)
 AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
@@ -574,11 +595,13 @@ echo LDOPTS=$LDOPTS
 echo LAPACK=$LAPACK
 echo LDCHOL=$LDCHOL
 echo LDFFT=$LDFFT
-if test x$use_icc_default = xno -a x$system=xlinux ;then
+if test x$use_icc_default = xno -a x$system = xlinux ;then
 echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
 fi
 echo "*********************************************************************************"
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos        ****"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos/downloads  ****"
-echo "*** Please drop me a line to lianqiw@gmail.com if you find MAOS useful       ****"
+if test ! -d "${HOME}/.aos" ;then
+   echo "*** Please drop me a line to lianqiw@gmail.com if you find MAOS useful       ****"
+fi
 echo "*********************************************************************************"

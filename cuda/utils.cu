@@ -27,8 +27,14 @@ int nstream=0;
 int NG1D=64; /**<Optimum number of blocks. Twice of multi processors.*/
 int NG2D=8; /**<Optimum number of blocks. Twice of multi processors.*/
 cudata_t **cudata_all=NULL;/*for all GPU. */
-int cugpu=0;/*current GPU. */
+#ifdef __APPLE__
+pthread_key_t cudata_key;
+static __attribute((constructor)) void init(){
+    pthread_key_create(&cudata_key, NULL);
+}
+#else
 __thread cudata_t *cudata=NULL;/*for current thread and current GPU */
+#endif
 /**
    Get GPU info.
 */
@@ -75,29 +81,14 @@ int gpu_init(int *gpus, int ngpu){
 	if(cudaGetDeviceCount(&navail)){
 	    return 0;
 	}
-	switch(navail){
-	case 0:
-	    warning2("No GPU is available for computing\n");
-	    break;
-	case 1:{/*1 device. check whethere it is emulation. */
-	    cudaDeviceProp prop;
-	    cudaGetDeviceProperties(&prop, 0);
-	    if(prop.major==9999){
-		warning2("The only device is in emulation mode. Won't use it\n");
-	    }else{
-		NGPU=1;
-		GPUS=(int*)calloc(1, sizeof(int));
-		GPUS[0]=0;
-	    }
-	}
-	    break;
-	default:{/*There are multiple devices. */
+	if(navail){
 	    GPUS=(int*)calloc(navail, sizeof(int));
 	    for(int ig=0; ig<navail; ig++){
 		cudaDeviceProp prop;
 		cudaGetDeviceProperties(&prop, ig);
 		if(prop.major!=9999){
-		    if(prop.totalGlobalMem>1000000000){/*require minimum of 1.5G */
+		    if(prop.major>=2){
+			/*&& prop.totalGlobalMem>1000000000){*//*require minimum of 1.5G */
 			GPUS[NGPU]=ig;
 			NGPU++;
 		    }else{
@@ -105,8 +96,6 @@ int gpu_init(int *gpus, int ngpu){
 		    }
 		}
 	    }
-	}
-	    break;
 	}
     }else{
 	GPUS=(int*)calloc(ngpu ,sizeof(int));
@@ -175,7 +164,6 @@ int gpu_init(int *gpus, int ngpu){
 	for(int im=0; im<NGPU; im++){
 	    cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
 	}
-	cudata=NULL;
     }
     if(!NGPU){
 	warning("no gpu is available\n");
@@ -219,14 +207,14 @@ void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
 		DO(cudaMalloc(&(dest->p[ips]), source[ips]->nx*source[ips]->ny*sizeof(float)));
 	    }
 	}
-        dest->vx=new float[nps];
-	dest->vy=new float[nps]; 
-	dest->ht=new float[nps];
-	dest->ox=new float[nps];
-	dest->oy=new float[nps];
-	dest->dx=new float[nps];
-	dest->nx=new int[nps];
-	dest->ny=new int[nps];
+        dest->vx=(float*)malloc(nps*sizeof(float));
+	dest->vy=(float*)malloc(nps*sizeof(float)); 
+	dest->ht=(float*)malloc(nps*sizeof(float));
+	dest->ox=(float*)malloc(nps*sizeof(float));
+	dest->oy=(float*)malloc(nps*sizeof(float));
+	dest->dx=(float*)malloc(nps*sizeof(float));
+	dest->nx=(int*)malloc(nps*sizeof(int));
+	dest->ny=(int*)malloc(nps*sizeof(int));
 	for(int ips=0; ips<nps; ips++){
 	    if(type==1 && source[ips]->nx!=nx0 && source[ips]->ny!=ny0){
 		error("Only support map_t arrays of the same size if type==1\n");
@@ -237,7 +225,7 @@ void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
     }
     
     float *tmp=NULL;
-    if(type==1) tmp=new float[nx0*ny0*nps];
+    if(type==1) tmp=(float*)malloc((nx0*ny0*nps)*sizeof(float));
     
     for(int ips=0; ips<nps; ips++){
 	int nx=source[ips]->nx;
@@ -266,7 +254,7 @@ void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
 	par.extent = make_cudaExtent(nx0, ny0, nps);
 	par.kind   = cudaMemcpyHostToDevice;
 	DO(cudaMemcpy3D(&par));
-	delete [] tmp;
+	free(tmp);
     }
     CUDA_SYNC_DEVICE;
 }

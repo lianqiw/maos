@@ -9,5 +9,5 @@ ___bin_skyc_SOURCES=parms.h types.h setup_parms.c  skyc.c  skyc.h  utils.c  util
 if USE_LONG
 ___bin_skyc_LDADD=../lib/libaos_long.la $(LDOPTS)
 else
-___bin_skyc_LDADD=../lib/libaos_int.la $(LDOPTS)
+___bin_skyc_LDADD=../lib/libaos_int.la $(LDOPTS) 
 endif
