@@ -24,8 +24,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	PL_OPD,
 	PL_TOT,
     };
-    if(P_TOT!=nrhs) mexErrMsgTxt("Incorrect input arguments");
-    if(PL_TOT!=nlhs) mexErrMsgTxt("Incorrect output arguments");
+    if(P_TOT!=nrhs || PL_TOT!=nlhs){
+	mexErrMsgTxt("Usage: OPD=proj(surf, x, y, alx, aly, thetax, thetay, loc, amp)\n");
+    }
     rectmap_t *mapin=calloc(1, sizeof(rectmap_t));
     mapin->p=mxGetPr(prhs[P_SURF]);
     mapin->nx=mxGetM(prhs[P_SURF]);

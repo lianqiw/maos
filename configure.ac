@@ -10,7 +10,6 @@ fi
 if test -z "$LIBS" ;then
    LIBS=" "
 fi
-LDFLAGS="$LDFLAGS -Wl,--as-needed"
 AC_LANG([C])
 #After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
 AC_CONFIG_MACRO_DIR([m4])
@@ -78,7 +77,7 @@ case "$host_os" in  #compile 32 exe in 64 bit.
       *64)
       AC_ARG_ENABLE(32,   [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
       if test "$use_32" = "yes" ;then
-         CFLAGS="$CFLAGS -m32"
+         CFLAGS="$CFLAGS -Xcompiler -m32"
          CHOST="i686-pc-linux-gnu"
          CDEFINE="__i386__"
          HOST="i686-linux"
@@ -132,6 +131,7 @@ case "$host_os" in
  mklname=mkl${cpu}
  system="linux"
  ldsuffix="so"
+ LDFLAGS="$LDFLAGS -Wl,--as-needed"
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
@@ -539,7 +539,7 @@ if test "x${use_mex}" = "xyes" ; then
 	mexmaci64)
 		MEXLIB=maci64
 		MEXOPT="-O3 -DNDEBUG -fno-common -no-cpp-precomp -fexceptions -arch x86_64"
-		MEXOPT=${MEXOPT} -DDLONG
+		MEXOPT="${MEXOPT} -DDLONG"
 	;;
 	mexw64)
 		MEXLIB=win64
@@ -553,7 +553,7 @@ if test "x${use_mex}" = "xyes" ; then
 		AC_MSG_ERROR([Unknown mex extension "$MEXEXT"])
 	;;
    esac
-   LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath-link,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++"
+   LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++ -lz"
    if test x$use_icc = xyes ;then
        LDMEX="${LDMEX} -static-intel"
    fi
@@ -561,7 +561,7 @@ if test "x${use_mex}" = "xyes" ; then
    AC_SUBST(MEXEXT)
    AC_SUBST(LDMEX)
    AC_SUBST(MEXOPT)
-   CFLAGS="$CFLAGS -fPIC"
+   CFLAGS="$CFLAGS -Xcompiler -fPIC"
 else
    AM_CONDITIONAL(USE_MEX, false)
 fi
@@ -635,7 +635,10 @@ else
    AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
 AC_OUTPUT
+echo SRC_DIR=$SRC_DIR
+echo BUILD_DIR=$BUILD_DIR
 echo host_os=$host_os
+echo use_mex=$use_mex
 echo use_icc=$use_icc
 echo use_cuda=$use_cuda
 echo use_static=$use_static
@@ -644,10 +647,9 @@ echo Compile Monitor=$comp_mon
 echo Compile Monitor with Libnotify=$comp_monn
 echo CC=$CC
 echo CFLAGS=$CFLAGS
+echo LDFLAGS=$LCFLAGS
 echo LIBS=$LIBS
 echo LDEXE=$LDEXE
-echo SRC_DIR=$SRC_DIR
-echo BUILD_DIR=$BUILD_DIR
 echo OPTS=$OPTS
 echo LDOPTS=$LDOPTS
 echo LAPACK=$LAPACK

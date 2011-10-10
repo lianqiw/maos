@@ -13,8 +13,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_W1,
 	PL_TOT,
     };
-    if(nlhs!=PL_TOT || nrhs!=P_TOT)
-	mexErrMsgTxt("Invalid number of arguments");
+    if(nlhs!=PL_TOT || nrhs!=P_TOT){
+	mexErrMsgTxt("Usage: [W0, W1]=mkwmex(loc, Radius)\n");
+    }
     loc_t *loc=mx2loc(prhs[P_LOC]);
     double R=mxGetScalar(prhs[P_R]);
     dsp *W0;

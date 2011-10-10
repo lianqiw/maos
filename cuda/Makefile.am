@@ -15,7 +15,7 @@ libgpu_a_LIBADD=
 
 .SUFFIXES=.cu
 .cu.o:
-	$(NVCC) $(AM_CFLAGS) --compiler-options "$(CFLAGS)" -c -o $@ $< 
+	$(NVCC) $(AM_CFLAGS) $(CFLAGS) -c -o $@ $< 
 
 #In Makefile for .c, there are include $(DEPDIR)/file.Po automatically generated. I don't know how to do for nvcc. So the dependency tracing is not correct.
 #include ./$(DEPDIR)/accphi.Po

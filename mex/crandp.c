@@ -8,7 +8,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double *p,*pin;
     int nx,ny;
     int i;
-    if(nrhs!=2) mexErrMsgTxt("Except two input\n");
+    if(nrhs!=2){
+	mexErrMsgTxt("Usage: val=crandp(stat, mean[])\n");
+    }
     strand=(rand_t*)mxGetPr(prhs[0]);
     nx=mxGetM(prhs[1]);
     ny=mxGetN(prhs[1]);

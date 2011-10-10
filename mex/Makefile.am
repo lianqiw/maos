@@ -1,5 +1,5 @@
 AM_CFLAGS=-DDLONG $(MEXOPT) -I$(SRC_DIR)/lib
-AM_LDFLAGS=$(LDMEX) -lz -lmwblas -lmwlapack -lm -lfftw3
+AM_LDFLAGS=$(LDMEX) -lmwblas -lmwlapack -lm -lfftw3
 if USE_LONG
 AM_LDFLAGS+=$(BUILD_DIR)/lib/libaos_long.la
 else

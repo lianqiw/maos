@@ -14,9 +14,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if(nlhs!=PL_TOT || nrhs !=P_TOT){
       mexErrMsgTxt("Usage: [u,s,v]=svdmex(A)\n");
   }
-#if USE_MKL
-  omp_set_num_threads(&NCPU2);
-#endif
   dmat *A=mx2d(prhs[P_A]);
   dmat *U=NULL, *Sdiag=NULL, *VT=NULL;
   dsvd(&U, &Sdiag, &VT, A);

@@ -16,22 +16,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	P_DP,
 	P_AMP,
 	P_SALOC,
-	P_SAORC, /*saorc: SALOC is subaperture origin or center.
-		   1: origin (lower left corner), 0: center.*/
 	P_DSA,
 	P_SCALE,
 	P_DISPLACE,
 	P_DOPARTIAL,
 	P_TOT,
     };
+    enum{
+	PL_H,
+	PL_TOT,
+    };
     int do_partial;
-    int saorc;
     loc_t xloc,ploc,saloc;
     double *amp;
     double scale, *displace;
-    if(nrhs!=P_TOT){
-	printf("Number of inputs expected: %d\n", P_TOT);
-	mexErrMsgTxt("Wrong number of inputs!");
+    if(nrhs!=P_TOT || nlhs!=PL_TOT){
+	mexErrMsgTxt("Usage: G=mkgmex(xloc, dx, ploc, dp, amp, saloc, dsa, scale, displace[2], dopartial)\n");
     }
     if(mxGetNumberOfElements(prhs[P_DISPLACE])!=2){
 	mexErrMsgTxt("Displace needs to be a two-vector.\n");
@@ -50,10 +50,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     /*scale and displace is between XLOC and PLOC->*/
     scale=mxGetScalar(prhs[P_SCALE]);
     displace=mxGetPr(prhs[P_DISPLACE]);
-    saorc=(int)mxGetScalar(prhs[P_SAORC]);
     do_partial=(int)mxGetScalar(prhs[P_DOPARTIAL]);
     dsp *GS0T=mkgt(&xloc, &ploc, amp, &saloc, 
-		       saorc, scale, displace, do_partial);
+		   1, scale, displace, do_partial);
     mxArray *GS0T2=mxCreateSparse(GS0T->m, GS0T->n, GS0T->nzmax, mxREAL);
     memcpy(mxGetPr(GS0T2), GS0T->x, GS0T->nzmax*sizeof(double));
     memcpy(mxGetIr(GS0T2), GS0T->i, GS0T->nzmax*sizeof(long));

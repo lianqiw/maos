@@ -8,8 +8,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double *p;
     int nelem=1,M;
     int i;
-    if(nrhs<1) 
-	mexErrMsgTxt("Except one or more input\n");
+    if(nrhs<1){ 
+	mexErrMsgTxt("Usage: val=crandn(stat)\n");
+    }
     strand=(rand_t*)mxGetPr(prhs[0]);
     if(nrhs==1){
 	plhs[0]=mxCreateDoubleMatrix(1,1,mxREAL);
