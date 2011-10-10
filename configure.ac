@@ -10,7 +10,7 @@ fi
 if test -z "$LIBS" ;then
    LIBS=" "
 fi
-
+LDFLAGS="$LDFLAGS -Wl,--as-needed"
 AC_LANG([C])
 #After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
 AC_CONFIG_MACRO_DIR([m4])
@@ -212,7 +212,7 @@ AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
     if test "x$win32" != "xyes" ;then
-        echo OPTSprof="-pthread"
+    echo        OPTSprof="-pthread"
     fi
 else
     AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
@@ -345,14 +345,14 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
       download MKL ${mklname}${mklextra}.tar.bz2
    fi
-   LAPACK="-L${LIBDIR}/${mklname} -lmkl ${mkldep}"
+   LAPACK="-L${LIBDIR}/${mklname} -lmkl -pthread ${mkldep}"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
 #Check for FFTW3 header and library.
 has_fftw='yes'
-AC_CHECK_HEADER([fftw3.h],[], [has_fftw='no'])
+AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    if test "$system" = "linux" ;then
@@ -367,6 +367,7 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 else
    LDFFT=""
 fi
+
 AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
 AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
 if test "x$has_fftw_threads" = "xyes" ;then
@@ -433,7 +434,7 @@ fi
 # use the cholmod in the system even if it is available because we want to
 # customize the dependency on blas/lapack.
 
-AC_CHECK_HEADER([unistd.h])
+AC_CHECK_HEADERS([unistd.h])
 #LDCHOL must be before LAPACK
 LDOPTS="$LAPACK $LDSYS $LDFFT -lm"
 LDEXE="${LDEXE} -no-install"
@@ -466,15 +467,16 @@ DX_INIT_DOXYGEN($PACKAGE_NAME, doxygen.cfg)
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 #if test "x${use_mex}" = "xyes" ; then
-#AC_ENABLE_SHARED
+AC_ENABLE_SHARED
 #else
-AC_DISABLE_SHARED
+#AC_DISABLE_SHARED
 #fi
 #if test "x${use_static}" = "xyes" ;then
 AC_ENABLE_STATIC
 #else
 #AC_DISABLE_STATIC
 #fi
+LT_INIT([pic-only])
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
@@ -494,55 +496,144 @@ fi
 if test "x${use_mex}" = "xyes" ; then
    AM_CONDITIONAL(USE_MEX, true)
    AC_CONFIG_FILES([mex/Makefile])
-   FN=/tmp/mex_null
-   rm -f ${FN}*
-   mex ${SRC_DIR}/mex/null.c -o ${FN}
-   FN2=$(ls ${FN}*)
-   if test -z "${FN2}" ;then
-      AC_MSG_ERROR([mex failed 0. reconfigure with --disable-mex to bypass mex.])
+   AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval}], [MEXDIR=])
+   if test -n "$MEXDIR" ;then
+       if test -f ${MEXDIR}/mex ;then
+           MEXDIR=${MEXDIR}
+       elif test -f ${MEXDIR}/bin/mex ;then
+           MEXDIR=${MEXDIR}/bin
+       else
+           AC_MSG_ERROR([mex not found in specified matlab path ${withval}])
+       fi
+   else
+       MEX=$(which mex)
+       if test -z "${MEX}" ;then
+           AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location])
+       elif test -L ${MEX} ;then
+           MEX=$(readlink $MEX)
+       fi
+       MEXDIR=$(dirname $MEX)
+       if test ! -d $MEXDIR ;then
+           AC_MSG_ERROR([$MEXDIR does not exist. reconfigure with --disable-mex to bypass mex.])
+       fi
    fi
-   rm -f ${FN2}
-   MEXEXT=${FN2/${FN}/}
-   if test -z "${MEXEXT}" ;then
-      AC_MSG_ERROR([mex failed 1. reconfigure with --disable-mex to bypass mex.])
-   fi	
+   MEXEXT=$($MEXDIR/mexext)
+   if test -z "$MEXEXT" ;then
+       AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --disable-mex to bypass mex.])
+   fi
+   case $MEXEXT in
+   	mexglx)
+		MEXLIB=glnx86
+		MEXOPT="-O3 -DNDEBUG -fPIC -pthread -m32 -fexceptions -D_FILE_OFFSET_BITS=64"
+		MEXOPT="${MEXOPT} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+	;;
+   	mexa64)
+		MEXLIB=glnxa64
+		MEXOPT="-O3 -DNDEBUG -fPIC -pthread -m64 -fexceptions -fno-omit-frame-pointer"
+		MEXOPT="${MEXOPT} -DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+	;;
+	mexmaci)
+		MEXLIB=maci
+		MEXOPT="-O3 -DNDEBUG -fno-common -no-cpp-precomp -m32 -fexceptions"
+	;;
+	mexmaci64)
+		MEXLIB=maci64
+		MEXOPT="-O3 -DNDEBUG -fno-common -no-cpp-precomp -fexceptions -arch x86_64"
+		MEXOPT=${MEXOPT} -DDLONG
+	;;
+	mexw64)
+		MEXLIB=win64
+		MEXOPT=""
+	;;
+	mexw32)
+		MEXLIB=win32
+		MEXOPT=""
+	;;
+	*)
+		AC_MSG_ERROR([Unknown mex extension "$MEXEXT"])
+	;;
+   esac
+   LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath-link,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++"
+   if test x$use_icc = xyes ;then
+       LDMEX="${LDMEX} -static-intel"
+   fi
+   MEXOPT="${MEXOPT} -I${MEXDIR}/../extern/include -DMATLAB_MEX_FILE"
    AC_SUBST(MEXEXT)
+   AC_SUBST(LDMEX)
+   AC_SUBST(MEXOPT)
+   CFLAGS="$CFLAGS -fPIC"
 else
    AM_CONDITIONAL(USE_MEX, false)
 fi
-CUDA_OPT_L=
-NVCC=nvcc
 if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
-      AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static");
+      AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
    fi
    AC_CONFIG_FILES([cuda/Makefile])
    AM_CONDITIONAL(USE_CUDA, true)
    AC_DEFINE(USE_CUDA, [1], "Has Cuda")
-   echo Enabling CUDA 
-   if test -z "$(${NVCC} -V)"  ;then
-       AC_MSG_ERROR([nvcc not found. Please add the path containing nvcc to your environmental variable PATH])
-   fi
-   AC_CHECK_HEADER(cuda.h, [cuda_h="yes"] ,[cuda_h="no"], [])
-   if test "x${cuda_h}" = "xno" ;then
-       AC_MSG_ERROR([cuda.h not cound. Please add the path containing cuda.h to your environmental variable CPATH or C_INCLUDE_PATH]);
-   fi
-   AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"])
-   if test x$cuda_lib = xno ;then
-       if test x$system = xapple;then
-           LDPREFIX="DY"
-       else
-	   LDPREFIX=
+   AC_MSG_NOTICE([Enabling CUDA])
+   AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval}], [CUDADIR=])
+   LDCUDA=
+   if test -n "$CUDADIR" ;then
+       AC_MSG_NOTICE([User provided cuda directory $CUDADIR])
+       NVCC=$CUDADIR/bin/nvcc
+       if test ! -x $NVCC ;then
+       	  NVCC=$CUDADIR/nvcc
+	  CUDADIR=$(dirname $CUDADIR)
        fi
-       AC_MSG_ERROR([libcudart.$ldsuffix not found. Please add the path containing it to your environment variable LIBRARY_PATH and ${LDPREFIX}LD_LIBRARY_PATH])
+   else
+       if test -n "$(which nvcc)"  ;then
+           NVCC=$(which nvcc)
+           if test -L $NVCC ;then
+               NVCC=$(readlink $NVCC)
+           fi
+       elif test -f /usr/local/cuda/bin/nvcc ;then
+           NVCC=/usr/local/cuda/bin/nvcc
+       elif test -f /opt/cuda/bin/nvcc ;then
+           NVCC=/opt/cuda/bin/nvcc
+       fi
+       CUDADIR=$(dirname $(dirname ${NVCC}))
    fi
-   CUDA_OPT_L="-lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
+   AC_MSG_NOTICE([CUDADIR=$CUDADIR])
+   if test -f ${CUDADIR}/lib/libcudart.$ldsuffix ;then
+       CUDA_L=${CUDADIR}/lib
+   elif test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
+       CUDA_L=${CUDADIR}/lib${cpu}
+   fi
+   if test -d "$CUDA_L" ;then
+       LDCUDA="-L$CUDA_L -R$CUDA_L"
+   else
+       LDCUDA=
+   fi
+
+   CUDA_H=$(dirname "$(find $CUDADIR -name 'cuda.h' || find $CUDADIR/../ -name 'cuda.h')")
+   if test -d $CUDA_H ;then
+       CUDAOPT="-I$CUDA_H"
+       if test ! -f $CUDA_H/cuda.h ;then
+           AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location])
+       fi
+   else
+       AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location])])
+       CUDAOPT=
+   fi
+   echo LDCUDA=$LDCUDA
+   echo CUDAOPT=$CUDAOPT
+   if test ! -x $NVCC ;then
+        AC_MSG_ERROR([nvcc not found])
+   fi
+   AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
+   if test x$cuda_lib = xno ;then
+       AC_MSG_ERROR([libcudart not found. Please use --with-cuda=DIR to specify CUDA location])
+   fi
+   LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
+   AC_SUBST(CUDAOPT)
+   AC_SUBST(LDCUDA)
+   AC_SUBST(NVCC)
 else
    AM_CONDITIONAL(USE_CUDA, false)
    AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
-AC_SUBST(CUDA_OPT_L)
-AC_SUBST(NVCC)
 AC_OUTPUT
 echo host_os=$host_os
 echo use_icc=$use_icc
@@ -569,6 +660,6 @@ echo "**************************************************************************
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos        ****"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos/downloads  ****"
 if test ! -d "${HOME}/.aos" ;then
-   echo "*** Please drop me a line to lianqiw@gmail.com if you find MAOS useful       ****"
+echo "*** Please drop me a line to lianqiw@gmail.com if you find MAOS useful       ****"
 fi
 echo "*********************************************************************************"
