@@ -279,7 +279,7 @@ static char *mx2str(const mxArray *A){
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     file_t *fp;
     if(nrhs!=1 || nlhs>2){
-	mexErrMsgTxt("Usage:var=read('filename') or [var, header]=read('file name')\n");
+	mexErrMsgTxt("Usage: var=read('filename') or [var, header]=read('filename')\n");
     }
     char *fn=mx2str(prhs[0]);
     fp=zfopen(fn,"rb");

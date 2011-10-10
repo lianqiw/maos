@@ -9,8 +9,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     unsigned int seed,nlem;
     rand_t *p;
-    if(nrhs!=1 || nlhs!=1) 
-	mexErrMsgTxt("Accept one input one output\n");
+    if(nrhs!=1 || nlhs!=1){
+	mexErrMsgTxt("Usage: stat=crandcreate(seed)");
+    }
     seed=(unsigned int)mxGetScalar(prhs[0]);
     nlem=(unsigned int)ceil((double)sizeof(rand_t)
 			    /(double)sizeof(mxINT32_CLASS));

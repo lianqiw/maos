@@ -37,6 +37,7 @@ endif
 if USE_LONG
 AM_CFLAGS+=-DDLONG
 endif
+AM_CFLAGS+=-fPIC
 if COMP_CHOL
 if USE_LONG
 lib_LTLIBRARIES=libcholmod_long.la

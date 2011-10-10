@@ -146,7 +146,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	ifn=2;
 	header=prhs[1];
     }else{
-	error("Usage: write(a,'a') or write(a, header, 'a')\n");
+	mexErrMsgTxt("Usage: write(var,'file') or write(var, header, 'file')\n");
     }
     int nlen=mxGetM(prhs[ifn])*mxGetN(prhs[ifn])+1;
     char *fn=malloc(nlen);
