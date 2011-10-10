@@ -43,13 +43,13 @@ lib_LTLIBRARIES=libcholmod_long.la
 libcholmod_long_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/Include
 libcholmod_long_la_SOURCES= $(CHOL_SRC)
 libcholmod_long_la_LIBADD =
-libcholmod_long_la_LDFLAGS= -avoid-version
+libcholmod_long_la_LDFLAGS= -avoid-version -static
 else
 lib_LTLIBRARIES=libcholmod_int.la
 libcholmod_int_la_CFLAGS = $(AM_CFLAGS) -I$(srcdir)/Include
 libcholmod_int_la_SOURCES= $(CHOL_SRC)
 libcholmod_int_la_LIBADD =
-libcholmod_int_la_LDFLAGS= -avoid-version
+libcholmod_int_la_LDFLAGS= -avoid-version -static
 endif
 else
 EXTRA_DIST+=$(CHOL_SRC)

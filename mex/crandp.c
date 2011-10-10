@@ -1,7 +1,6 @@
 #include "random.h"
 #include <mex.h>
 #include <math.h>
-#define USE_PTHREAD 0
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {

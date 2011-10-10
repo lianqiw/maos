@@ -30,13 +30,13 @@ AOS_SRC+=nr/beschb.c  nr/bessik.c  nr/chebev.c
 if USE_LONG
 lib_LTLIBRARIES=libaos_long.la
 libaos_long_la_SOURCES=$(AOS_SRC)
-libaos_long_la_LIBADD=$(LDCHOL) 
-libaos_long_la_LDFLAGS = -avoid-version
+libaos_long_la_LIBADD=$(LDCHOL) $(LDFFT)
+libaos_long_la_LDFLAGS = -avoid-version -static
 else
 lib_LTLIBRARIES=libaos_int.la
 libaos_int_la_SOURCES=$(AOS_SRC)
-libaos_int_la_LIBADD=$(LDCHOL) 
-libaos_int_la_LDFLAGS = -avoid-version
+libaos_int_la_LIBADD=$(LDCHOL) $(LDFFT)
+libaos_int_la_LDFLAGS = -avoid-version -static
 endif
 #The following enables the generation of documentation for cmat, ccell, csp functions.
 cmat.c:tmp.c
