@@ -561,7 +561,7 @@ if test "x${use_mex}" = "xyes" ; then
    AC_SUBST(MEXEXT)
    AC_SUBST(LDMEX)
    AC_SUBST(MEXOPT)
-   CFLAGS="$CFLAGS -Xcompiler -fPIC"
+   CFLAGS="$CFLAGS"
 else
    AM_CONDITIONAL(USE_MEX, false)
 fi
