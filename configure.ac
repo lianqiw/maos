@@ -44,7 +44,7 @@ OPTSextra=""
 use_shm="no"
 use_static="no"
 
-if test -n "$(icc -dumpversion)" ;then	
+if test -n "$(which icc)" ;then	
    use_icc_default="yes"
 else
    echo "Intel Compiler is not found."
@@ -55,12 +55,21 @@ if test -n "$(which mex)" ;then
 else
    use_mex_default="no"
 fi
-if test -n "$(nvcc -V)" ;then
+if test -n "$(which nvcc)" ;then
    use_cuda_default="yes"
+   CUDADIR_AUTO=
+elif test -f /opt/cuda/bin/nvcc ;then
+   use_cuda_default="yes"
+   CUDADIR_AUTO="/opt/cuda"
+elif test -f /usr/local/cuda/bin/nvcc ;then
+   use_cuda_default="yes"
+   CUDADIR_AUTO="/usr/local/cuda/"
 else
    use_cuda_default="no"
+   CUDADIR_AUTO=
 fi
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
+AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR=])
 if test "x$use_cuda" = "xyes" ;then
    case "$host_os" in
        *darwin*)
@@ -437,7 +446,7 @@ fi
 AC_CHECK_HEADERS([unistd.h])
 #LDCHOL must be before LAPACK
 LDOPTS="$LAPACK $LDSYS $LDFFT -lm"
-LDEXE="${LDEXE} -no-install"
+#LDEXE="${LDEXE} -no-install"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
@@ -573,7 +582,6 @@ if test "$use_cuda" = "yes" ;then
    AM_CONDITIONAL(USE_CUDA, true)
    AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    AC_MSG_NOTICE([Enabling CUDA])
-   AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval}], [CUDADIR=])
    LDCUDA=
    if test -n "$CUDADIR" ;then
        AC_MSG_NOTICE([User provided cuda directory $CUDADIR])
@@ -588,12 +596,12 @@ if test "$use_cuda" = "yes" ;then
            if test -L $NVCC ;then
                NVCC=$(readlink $NVCC)
            fi
-       elif test -f /usr/local/cuda/bin/nvcc ;then
-           NVCC=/usr/local/cuda/bin/nvcc
-       elif test -f /opt/cuda/bin/nvcc ;then
-           NVCC=/opt/cuda/bin/nvcc
+           CUDADIR=$(dirname $(dirname ${NVCC}))
+       else 
+           CUDADIR=${CUDADIR_AUTO}
+	   NVCC=${CUDADIR}/bin/nvcc
        fi
-       CUDADIR=$(dirname $(dirname ${NVCC}))
+
    fi
    AC_MSG_NOTICE([CUDADIR=$CUDADIR])
    if test -f ${CUDADIR}/lib/libcudart.$ldsuffix ;then
@@ -602,7 +610,7 @@ if test "$use_cuda" = "yes" ;then
        CUDA_L=${CUDADIR}/lib${cpu}
    fi
    if test -d "$CUDA_L" ;then
-       LDCUDA="-L$CUDA_L -R$CUDA_L"
+       LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
    else
        LDCUDA=
    fi
