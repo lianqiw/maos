@@ -833,10 +833,13 @@ int main(int argc, char *argv[])
 
     g_signal_connect(tool_clear_crashed, "clicked", G_CALLBACK(clear_jobs_crashed),NULL);
     g_signal_connect(tool_clear_finished,"clicked", G_CALLBACK(clear_jobs_finished),NULL);
-   
+#if GTK_MAJOR_VERSION<=2 && GTK_MINOR_VERSION <20
+    gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_crashed, FALSE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_finished,FALSE,FALSE,0);
+#else
     gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_crashed, TRUE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(toolbar),tool_clear_finished,TRUE,FALSE,0);
-
+#endif
     notebook=gtk_notebook_new();
     gtk_widget_show(notebook);
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
