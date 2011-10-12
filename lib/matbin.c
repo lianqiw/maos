@@ -93,9 +93,7 @@ X(mat) *X(readdata)(file_t *fp, uint32_t magic){
     if(!magic){
 	magic=read_magic(fp, &header);
     }
-    if(magic!=M_T)
-	error("%s is not a X(mat) file. magic=%x\n", zfname(fp), magic);
-    uint64_t nx,ny;
+    uint64_t nx, ny;
     zfreadlarr(fp, 2, &nx, &ny);
     X(mat) *out;
     if(nx==0 || ny==0){
@@ -103,7 +101,18 @@ X(mat) *X(readdata)(file_t *fp, uint32_t magic){
 	free(header);
     }else{
 	out=X(new)((long)nx,(long)ny);
-	zfread(out->p,sizeof(T),nx*ny,fp);
+	if(magic==M_T){
+	    zfread(out->p,sizeof(T),nx*ny,fp);
+	}else if(M_T==M_DBL && magic==M_FLT){
+	    float *p=malloc(nx*ny*sizeof(float));
+	    zfread(p, sizeof(float), nx*ny, fp);
+	    for(int i=0; i<nx*ny; i++){
+		out->p[i]=(T)p[i];
+	    }
+	    free(p);
+	}else{
+	    error("%s is not a X(mat) file. magic=%x\n", zfname(fp), magic);
+	}
 	out->header=header;
     }
     return out;

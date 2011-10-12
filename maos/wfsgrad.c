@@ -105,8 +105,10 @@ void wfsgrad_iwfs(thread_t *info){
     /*const int dtrat_reset=(isim%dtrat==0); */
     const int dtrat_output=((isim+1)%dtrat==0);
     const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
-    const int do_geom=!do_phy || save_gradgeom;
+    const int do_pistatout=parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart;
+    const int do_geom=!do_phy || save_gradgeom || do_pistatout;
     const double *realamp=powfs[ipowfs].realamp[wfsind];
+    dmat *gradref=NULL;
     dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
     dcell *ints=simu->ints[iwfs];
@@ -213,13 +215,26 @@ void wfsgrad_iwfs(thread_t *info){
 
     if(do_geom){
 	/* Now Geometric Optics gradient calculations */
-	if(parms->powfs[ipowfs].gtype_sim==1){
-	    /*compute ztilt. */
-	    pts_ztilt(gradacc,powfs[ipowfs].pts,
+	dmat **gradcalc=NULL;
+	if(do_pistatout && !parms->powfs[ipowfs].pistatstc){
+	    if(dtrat>1){
+		gradcalc=&gradref;
+	    }else{
+		gradref=dref(*gradacc);
+		gradcalc=gradacc;
+	    }
+	}else{
+	    gradcalc=gradacc;
+	}
+	if(parms->powfs[ipowfs].gtype_sim==1){ /*compute ztilt. */
+	    pts_ztilt(gradcalc,powfs[ipowfs].pts,
 		      powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{/*G tilt */
-	    spmulmat(gradacc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
+	    spmulmat(gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
+	}
+	if(gradcalc!=gradacc){
+	    dadd(gradacc, 1, gradref, 1);
 	}
     }
 
@@ -231,18 +246,9 @@ void wfsgrad_iwfs(thread_t *info){
 	psfoutcellarr=simu->save->wfspsfout[iwfs];
 	ztiltoutcellarr=simu->save->ztiltout[iwfs];
     }
-    dcell *pistatout=NULL;
-    if(parms->powfs[ipowfs].pistatout
-       &&isim>=parms->powfs[ipowfs].pistatstart){
-	if(!simu->pistatout[iwfs]){
-	    simu->pistatout[iwfs]
-		=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
-	}
-	pistatout=simu->pistatout[iwfs];
-    }
     TIM(1);
     /* Now begin Physical Optics Intensity calculations */
-    if(do_phy || psfout || pistatout){
+    if(do_phy || psfout || do_pistatout){
 	dmat *lltopd=NULL;
 	if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	    if(powfs[ipowfs].llt->ncpa){
@@ -270,14 +276,14 @@ void wfsgrad_iwfs(thread_t *info){
 				  scale, 1., 0, 0);
 		}
 	    }
-	    if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout||parms->sim.uptideal){
+	    if((simu->uptreal && simu->uptreal->p[iwfs]) ||do_pistatout||parms->sim.uptideal){
 		const double dx=powfs[ipowfs].llt->pts->dx;
 		const double ox=powfs[ipowfs].llt->pts->origx[0];
 		const double oy=powfs[ipowfs].llt->pts->origy[0];
 		double ttx;
 		double tty;
-		if(pistatout||parms->sim.uptideal){
-		    warning("Remove tip/tilt in uplink ideally\n");
+		if(do_pistatout||parms->sim.uptideal){
+		    //warning("Remove tip/tilt in uplink ideally\n");
 		    /* remove tip/tilt completely */
 		    dmat *lltg=dnew(2,1);
 		    pts_ztilt(&lltg,powfs[ipowfs].llt->pts,
@@ -308,14 +314,10 @@ void wfsgrad_iwfs(thread_t *info){
 		cellarr_dmat(simu->save->wfslltopd[iwfs],lltopd);
 	    }
 	}
-	dmat *gradref=NULL;
-	if(pistatout && !parms->powfs[ipowfs].pistatstc && do_geom){
-	    gradref=*gradacc;
-	}
 	WFSINTS_T *intsdata=simu->wfs_intsdata+iwfs;
 	intsdata->ints=ints;
 	intsdata->psfout=psfout;
-	intsdata->pistatout=pistatout;
+	intsdata->pistatout=simu->pistatout[iwfs];
 	intsdata->gradref=gradref;
 	intsdata->opd=opd;
 	intsdata->lltopd=lltopd;
@@ -539,8 +541,8 @@ void wfsgrad_iwfs(thread_t *info){
 	if(do_phy){
 	    dcellzero(simu->ints[iwfs]);
 	}
-    }
-    
+    }//dtrat_out
+    dfree(gradref);
     TIM(3);
 #if TIMING==1
     info("wfs %d grad timing: ray %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2);

@@ -39,6 +39,21 @@ curmat *curnew(int nx, int ny){
 }
 
 /**
+   Create curmat object with existing vector. own=1: we own the pointer. own=0: we don't own the pointer.
+*/
+curmat *curnew(int nx, int ny, float *p, int own){
+    curmat *out;
+    out=(curmat*)calloc(1, sizeof(curmat));
+    if(own){
+	out->nref=(int*)calloc(1, sizeof(int));
+	out->nref[0]=1;
+    }
+    out->p=p;
+    out->nx=nx;
+    out->ny=ny;
+    return out;
+}
+/**
    Createa curmat object.
 */
 curmat *curnew(int nx, int ny, cudaStream_t stream){
@@ -100,14 +115,14 @@ void curcp(curmat **out, const curmat *in, cudaStream_t stream){
 	}else{
 	    assert((*out)->nx * (*out)->ny==in->nx * in->ny);
 	}
-	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDefault, stream);
+	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDeviceToDevice, stream);
     }
 }
 void curwritedata(const curmat *A, file_t *fp){
     if(A && A->nx>0 && A->ny>0){
 	cudaDeviceSynchronize();
 	float *tmp=(float*)malloc(A->nx*A->ny*sizeof(float));
-	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(float), cudaMemcpyDefault);
+	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(float), cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
 	do_write(fp, 0, sizeof(float), M_FLT, tmp, A->nx, A->ny);
 	free(tmp);
@@ -236,7 +251,17 @@ curcell* curcellnew(int nx, int ny){
     out->ny=ny;
     return out;
 }
-
+/** Allocate continuous memory for blocks of the same size*/
+curcell *curcellnew(int nx, int ny, int mx, int my){
+    curcell *out=curcellnew(nx, ny);
+    float *p;
+    DO(cudaMalloc(&p, nx*ny*mx*my*sizeof(float)));
+    DO(cudaMemset(p, 0, nx*ny*mx*my*sizeof(float)));
+    for(int i=0; i<nx*ny; i++){
+	out->p[i]=curnew(mx, my, p+i*(mx*my), (i==0)?1:0);
+    }
+    return out;
+}
 cuspcell* cuspcellnew(int nx, int ny){
     cuspcell *out=(cuspcell*)calloc(1, sizeof(cuspcell));
     out->p=(cusp**)calloc(nx*ny, sizeof(void*));
@@ -451,7 +476,7 @@ float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     cudaMalloc(&res, sizeof(float));
     curinn2(res,a,b,stream);
     float out;
-    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDefault, stream);
+    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
     CUDA_SYNC_STREAM;
     return out;
 }
@@ -460,7 +485,7 @@ float curcellinn(const curcell *A, const curcell *B, cudaStream_t stream){
     static float *res=NULL;
     if(!res) cudaMalloc(&res, sizeof(float));
     curcellinn2(res, A, B, stream);
-    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDefault, stream);
+    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
     cudaStreamSynchronize(stream);
     return out;
 }

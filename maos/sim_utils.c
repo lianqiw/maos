@@ -568,8 +568,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		simu->ints[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 	    }
 	}
-	if(!parms->powfs[ipowfs].usephy || parms->save.gradgeom[iwfs]){
+	if(!parms->powfs[ipowfs].usephy || parms->save.gradgeom[iwfs] || parms->powfs[ipowfs].pistatout){
 	    simu->gradacc->p[iwfs]=dnew(nsa*2,1);
+	}
+	if(parms->powfs[ipowfs].pistatout){
+	    simu->pistatout[iwfs]=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
 	}
     }
     if(parms->sim.servotype_lo==2){
@@ -1149,7 +1152,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		 parms->wfs[iwfs].thetay*206265);
 
 	}
-	if(parms->powfs[ipowfs].pistatout){
+	if(parms->sim.skysim && parms->powfs[ipowfs].pistatout){
 	    mymkdir("%s/pistat/",dirskysim);
 	}
     }

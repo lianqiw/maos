@@ -120,6 +120,7 @@ void cfft2plan(cmat *A, int dir){
     }else{
 	FFTW_FLAGS=FFTW_ESTIMATE;
     }
+    if(A->fft->plan[dir+1]) return;
     LOCK_FFT;
     /*!!fft uses row major mode. so need to reverse order */
     if(A->nx==1 || A->ny==1){
@@ -145,6 +146,7 @@ void cfft2partialplan(cmat *A, int ncomp, int dir){
     }else{
 	FFTW_FLAGS=FFTW_ESTIMATE;
     }
+    if(A->fft->plan1d[dir+1]) return;
     PLAN1D_T *plan1d=A->fft->plan1d[dir+1]=calloc(1, sizeof(PLAN1D_T));
     LOCK_FFT;
     /*along columns for all columns. */

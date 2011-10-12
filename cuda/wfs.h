@@ -56,7 +56,7 @@ typedef struct{
     float (**imcc)[3];  /**<For ztilt.*/
     float  *neasim;     /**<The noise equivalent angles for each grad.*/
     float  *amp;        /**<Amplitude map*/
-    cufftHandle plan1, plan2;   /**<FFTW plan if any*/
+    cufftHandle plan1, plan2, plan3;   /**<FFTW plan if any*/
     cudtf_t *dtf;       /**<array for each wvl.*/
     float   *srot;      /**<angle to rotate PSF/OTF*/
     float  (**mtche)[2]; /**<matched filter gradient operator.*/
@@ -67,7 +67,7 @@ typedef struct{
     float (**lltimcc)[3];
     float  *lltamp;
     int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
-    cufftHandle lltplan1, lltplan2;/**<FFTW plan for LLT*/
+    cufftHandle lltplan_wvf, lltplan_otf;/**<FFTW plan for LLT*/
     curmat *opdadd;    /**<The ncpa and surface aberration.*/
 
     /*For random number of this wfs. */
@@ -77,11 +77,11 @@ typedef struct{
     /*Run time data that changes */
     curmat *neareal;
     curmat *gradacc;    /**<For accumulating grads*/
-    curmat *ints;       /**<For accumulating subaperture image.*/
-    
+    curcell *ints;       /**<For accumulating subaperture image.*/
+    curcell *pistatout;  /**<For output pistatout*/
 }cuwfs_t;
 
-void wfsints(SIM_T *simu, float *phiout, int iwfs, int isim, cudaStream_t stream);
+void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim, cudaStream_t stream);
 
 __global__ void cuztilt(float *restrict g, float *restrict opd, 
 			const int nsa, const float dx, const int nx, float (**imcc)[3],

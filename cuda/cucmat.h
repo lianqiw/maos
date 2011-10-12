@@ -21,13 +21,13 @@
 #include "utils.h"
 #include "types.h"
 cucmat *cucnew(int nx, int ny);
-cucmat *cucnew(int nx, int ny, float *p, int own);
+cucmat *cucnew(int nx, int ny, fcomplex *p, int own);
 cucmat *cucnew(int nx, int ny, cudaStream_t stream);
 cucmat *cucref(cucmat *A);
 void cucfree(cucmat *A);
 cuccell *cuccellnew(int nx, int ny);
 cuccell *cuccellnew(int nx, int ny, int mx, int my);
-void curcellfree(curcell *A);
+void cuccellfree(cuccell *A);
 void cucwrite(const cucmat *A, const char *format, ...);
 
 inline void cuczero(cucmat *A, cudaStream_t stream){

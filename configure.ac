@@ -345,7 +345,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
       download MKL ${mklname}${mklextra}.tar.bz2
    fi
-   LAPACK="-L${LIBDIR}/${mklname} -lmkl -pthread ${mkldep}"
+   LAPACK="-L${LIBDIR}/${mklname} -lmkl -lm -pthread ${mkldep}"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
@@ -422,12 +422,12 @@ else
    AM_CONDITIONAL(USE_LONG, false)
 fi
 
-AC_CHECK_LIB([cholmod_${SUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread])
+AC_CHECK_LIB([cholmod_${SUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod])
 if test "x$have_chol" = "xyes" ;then
-    LDCHOL="-lcholmod_${SUFFIX}"
+    LDCHOL="-L${LIBDIR}/cholmod -lcholmod_${SUFFIX}"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
-    LDCHOL="../external/cholmod/libcholmod_${SUFFIX}.la"
+    LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${SUFFIX}.la"
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
 # Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not

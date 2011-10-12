@@ -1767,6 +1767,13 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }else{
 	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=0;
     }
+#if USE_CUDA
+	warning("MAOS is compiled with cuda. make cpu code follows gpu convention\n");
+	parms->sim.cachedm=0;
+	parms->tomo.square=1;
+	parms->dbg.dxonedge=1;
+	parms->dbg.splitlrt=0;/*not quite necessary. */
+#endif
     /*Assign each turbulence layer to a corresponding reconstructon layer. Used
       to compute opdx in a simple minded way.*/
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));

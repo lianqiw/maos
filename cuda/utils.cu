@@ -432,7 +432,7 @@ void gpu_calc_ptt(double *rmsout, double *coeffout,
     float ccb[4];
     cudaCalloc(cc, 4*sizeof(float), stream);
     calc_ptt_do<<<DIM(nloc, 256), 0, stream>>>(cc, loc, nloc, phi, amp);
-    cudaMemcpyAsync(ccb, cc, 4*sizeof(float), cudaMemcpyDefault, stream);
+    cudaMemcpyAsync(ccb, cc, 4*sizeof(float), cudaMemcpyDeviceToHost, stream);
     CUDA_SYNC_STREAM;
     cudaFree(cc); cc=NULL;
     double coeff[3], tot;
@@ -470,7 +470,7 @@ void gpu_calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     }
     CUDA_SYNC_STREAM;
     float ccb[7];
-    cudaMemcpy(ccb, cc, 7*sizeof(float), cudaMemcpyDefault);
+    cudaMemcpy(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost);
     cudaFree(cc); 
     tot=ccb[nmod==2?3:6];
     
@@ -516,7 +516,7 @@ void gpu_loc2dev(float (* restrict *dest)[2], loc_t *src){
     if(!*dest){
 	DO(cudaMalloc((float**)dest, src->nloc*2*sizeof(float)));
     }
-    DO(cudaMemcpy(*dest, tmp, src->nloc*2*sizeof(float),cudaMemcpyDefault));
+    DO(cudaMemcpy(*dest, tmp, src->nloc*2*sizeof(float),cudaMemcpyHostToDevice));
     cudaDeviceSynchronize();
     free(tmp);
 }
@@ -532,7 +532,7 @@ void gpu_dbl2dev(float * restrict *dest, double *src, int n){
     if(!*dest){
 	DO(cudaMalloc((float**)dest, n*sizeof(float)));
     }
-    DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyDefault));
+    DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyHostToDevice));
     cudaDeviceSynchronize();
     free(tmp);
 }
@@ -548,7 +548,7 @@ void gpu_cmp2dev(fcomplex * restrict *dest, dcomplex *src, int n){
     if(!*dest){
 	DO(cudaMalloc((fcomplex**)dest, n*sizeof(fcomplex)));
     }
-    DO(cudaMemcpy(*dest, tmp, n*sizeof(fcomplex),cudaMemcpyDefault));
+    DO(cudaMemcpy(*dest, tmp, n*sizeof(fcomplex),cudaMemcpyHostToDevice));
     cudaDeviceSynchronize();
     free(tmp);
 }
@@ -619,7 +619,7 @@ void gpu_long2dev(int * restrict *dest, long *src, int n){
 	DO(cudaMalloc((int**)dest, n*sizeof(int)));
     }
     if(sizeof(long)==sizeof(int)){
-	DO(cudaMemcpy(*dest, src, n*sizeof(int), cudaMemcpyDefault));
+	DO(cudaMemcpy(*dest, src, n*sizeof(int), cudaMemcpyHostToDevice));
 	cudaDeviceSynchronize();
     }else{
 	int *tmp=(int*)malloc(sizeof(int)*n);
@@ -629,7 +629,7 @@ void gpu_long2dev(int * restrict *dest, long *src, int n){
 		error("Overflow occured\n");
 	    }
 	}
-	DO(cudaMemcpy(*dest, tmp, n*sizeof(int), cudaMemcpyDefault));
+	DO(cudaMemcpy(*dest, tmp, n*sizeof(int), cudaMemcpyHostToDevice));
 	cudaDeviceSynchronize();
 	free(tmp);
     }
@@ -638,7 +638,7 @@ void gpu_int2dev(int *restrict *dest, int *src, int n){
     if(!*dest){
 	DO(cudaMalloc((int**)dest, n*sizeof(int)));
     }
-    DO(cudaMemcpy(*dest, src, sizeof(int)*n, cudaMemcpyDefault));
+    DO(cudaMemcpy(*dest, src, sizeof(int)*n, cudaMemcpyHostToDevice));
 }
 /**
    Convert long array to device int
@@ -648,7 +648,7 @@ void gpu_spint2dev(int * restrict *dest, spint *src, int n){
 	DO(cudaMalloc((int**)dest, n*sizeof(int)));
     }
     if(sizeof(spint)==sizeof(int)){
-	DO(cudaMemcpy(*dest, src, n*sizeof(int), cudaMemcpyDefault));
+	DO(cudaMemcpy(*dest, src, n*sizeof(int), cudaMemcpyHostToDevice));
 	cudaDeviceSynchronize();
     }else{
 	int *tmp=(int*)malloc(sizeof(int)*n);
@@ -658,7 +658,7 @@ void gpu_spint2dev(int * restrict *dest, spint *src, int n){
 		error("Overflow occured\n");
 	    }
 	}
-	DO(cudaMemcpy(*dest, tmp, n*sizeof(int), cudaMemcpyDefault));
+	DO(cudaMemcpy(*dest, tmp, n*sizeof(int), cudaMemcpyHostToDevice));
 	cudaDeviceSynchronize();
 	free(tmp);
     }
@@ -711,8 +711,7 @@ void gpu_writeflt(float *p, int nx, int ny, const char *format, ...){
     format2fn;
     float *tmp=(float*)malloc(nx*ny*sizeof(float));
     cudaDeviceSynchronize();
-    cudaMemcpy(tmp, p, nx*ny*sizeof(float), cudaMemcpyDefault);
-    cudaDeviceSynchronize();
+    cudaMemcpy(tmp, p, nx*ny*sizeof(float), cudaMemcpyDeviceToHost);
     writeflt(tmp,nx,ny,"%s",fn);
     free(tmp);
 }
@@ -724,8 +723,7 @@ void gpu_writefcmp(fcomplex *p, int nx, int ny, const char *format, ...){
     format2fn;
     fcomplex *tmp=(fcomplex*)malloc(nx*ny*sizeof(fcomplex));
     cudaDeviceSynchronize();
-    cudaMemcpy(tmp, p, nx*ny*sizeof(fcomplex), cudaMemcpyDefault);
-    cudaDeviceSynchronize();
+    cudaMemcpy(tmp, p, nx*ny*sizeof(fcomplex), cudaMemcpyDeviceToHost);
     writefcmp((float complex*)tmp,nx,ny,"%s",fn);
     free(tmp);
 }
@@ -736,7 +734,7 @@ void gpu_writeint(int *p, int nx, int ny, const char *format, ...){
     format2fn;
     int *tmp=(int*)malloc(nx*ny*sizeof(int));
     cudaDeviceSynchronize();
-    cudaMemcpy(tmp, p, nx*ny*sizeof(int), cudaMemcpyDefault);
+    cudaMemcpy(tmp, p, nx*ny*sizeof(int), cudaMemcpyDeviceToHost);
     cudaDeviceSynchronize();
     writeint(tmp,nx,ny,"%s",fn);
     free(tmp);

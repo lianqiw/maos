@@ -20,9 +20,6 @@
 #include <time.h>
 #include "maos.h"
 #include "sim.h"
-#ifndef ROT_OTF
-#define ROT_OTF 0
-#endif
 #define TIMING 1
 /**
    \file wfsints.c Contains wfsints() that computes physical optics WFS
@@ -42,10 +39,6 @@ void wfsints(thread_t *thread_data){
        first, unwrap the data
      */
     WFSINTS_T *data=thread_data->data;
-    dcell *ints=data->ints;
-    ccell *psfout=data->psfout;
-    dcell *pistatout=data->pistatout;
-    const dmat *gradref=data->gradref;
     const PARMS_T *parms=data->parms;
     const POWFS_T *powfs=data->powfs;
     const int iwfs=data->iwfs;
@@ -56,145 +49,121 @@ void wfsints(thread_t *thread_data){
     const int ipowfs=parms->wfs[iwfs].powfs;
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     const int hasllt=(parms->powfs[ipowfs].llt!=NULL);
+    const int illt=hasllt?parms->powfs[ipowfs].llt->i[wfsind]:0;
+    const double *srot=(hasllt && parms->powfs[ipowfs].radrot)?powfs[ipowfs].srot->p[illt]->p:NULL;
     const int nsa=powfs[ipowfs].pts->nsa;
-    const int nx=powfs[ipowfs].pts->nx;
     const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
     const int ncompy=powfs[ipowfs].ncompy;
-    const int npsf=nx*parms->powfs[ipowfs].embfac;
-
+    const int npsf=MAX(ncompx,ncompy);
+    const int nopd=powfs[ipowfs].pts->nx;
+    const int nxsa=nopd*nopd;
+    const int nwvf=nopd*parms->powfs[ipowfs].embfac;
+    const int use1d=(nwvf>2*ncompy?1:0)&&(!hasllt)&&(!lltopd);
     const int nwvl=parms->powfs[ipowfs].nwvl;
-
-    cmat *psflarge=NULL;
+    dcell *ints=data->ints;
+    dcell *pistatout=data->pistatout; 
+    const int isotf=(lltopd || pistatout);
+    cmat *wvf=NULL;
     cmat *psf=NULL;
     cmat *psftmp=NULL;
-    cmat *otf=cnew(ncompx,ncompy);
-    cfft2plan(otf,-1);
-    cfft2plan(otf,1);
-    /*make sure we use 2d for LGS, need to multiply to lotfc. */
-    const int use1d=(npsf>ncompy?1:0)&&(!hasllt)&&(!lltopd);
-    const int ncompm=ncompx>ncompy?ncompx:ncompy;
-    const int nxsa=nx*nx;
-    if(use1d){
-	psflarge=cnew(npsf,npsf);
-	cfft2partialplan(psflarge,ncompm, -1);
-	/*there should be no inverse fft2 here. */
-	psf=cnew(ncompx,ncompy);
+    cmat *otf=NULL;
+    cmat *lotfc=NULL;
+    cmat *lwvf=NULL;
+    /*this coefficient normalize the complex psf so its abs2 sum to 1.*/
+    double norm_psf=sqrt(powfs[ipowfs].areascale)/(double)(powfs[ipowfs].pts->nx*nwvf);
+    /*this ncompx*ncompy is due to cfft2 after cwm and detector transfer function. */
+    double norm=norm_psf*norm_psf/((double)ncompx*ncompy);
+    /*normalized pistat. npsf is due to a pair of FFT on psf. */
+    double norm_pistat=norm_psf*norm_psf/((double)npsf*npsf);
+    /*wvf first contains the complex wavefront, embed to get nyquist sampling.*/
+    wvf=cnew(nwvf,nwvf);
+    if(use1d){/* use 1d fft for NGS if nwvl >> npsf*/
+	cfft2partialplan(wvf,npsf, -1);
     }else{
+	cfft2plan(wvf, -1);
+    }
+    /* psf contains the psf/otf necessary to cover the focal plane. square */
+    if(nwvf!=npsf){
 	psf=cnew(npsf,npsf);
+    }else{
+	psf=wvf;
     }
     cfft2plan(psf,-1);
     cfft2plan(psf,1);
-  
-    int illt=0;
-    if(hasllt){
-	/*has llt */
-	const int indwfs=parms->powfs[ipowfs].wfsind[iwfs];
-	illt=parms->powfs[ipowfs].llt->i[indwfs];
+    /* otf contains the psf/otf used to generate detecter image. maybe rectangular*/
+    if(npsf!=ncompx || npsf!=ncompy || srot){
+	otf=cnew(ncompx,ncompy);
+	cfft2plan(otf,-1);
+	cfft2plan(otf,1);
+	if(isotf){/*there is an additional pair of FFT*/
+	    norm/=(double)(npsf*npsf);
+	}
+    }else{
+	otf=psf;
+    }
+    /* there is uplink beam */
+    if(lltopd){
+	const int nlx=powfs[ipowfs].llt->pts->nx;
+	const int nlpsf=nlx*parms->powfs[ipowfs].embfac;
+	lwvf=cnew(nlpsf,nlpsf);
+	cfft2plan(lwvf,-1);
+	cfft2plan(lwvf,1);
+	if(nlpsf != npsf){
+	    lotfc=cnew(npsf,npsf);
+	    cfft2plan(lotfc,-1);
+	    cfft2plan(lotfc,1);
+	}else{
+	    lotfc=lwvf;
+	}
     }
     cmat *fftpsfout=NULL;
+    /* hold the complex psf to save to file. */
     cmat *(*ppsfout)[nsa]=NULL;
-    if(psfout){
-	assert(psfout->nx==nsa && psfout->ny==nwvl);
-	ppsfout=(void*)psfout->p;
+    /* need to output psf time history */
+    if(data->psfout){
+	ppsfout=(void*)data->psfout->p;
 	fftpsfout=cnew(psf->nx, psf->ny);
 	cfft2plan(fftpsfout,1);
     }
     dmat *(*ppistatout)[nsa]=NULL;
     double *gx=NULL; double *gy=NULL;
+    /* need to output pixel itnensity averages */
     if(pistatout){
 	assert(pistatout->nx==nsa && pistatout->ny==nwvl);
 	ppistatout=(void*)pistatout->p;
 	psftmp=cnew(psf->nx,psf->ny);
 	cfft2plan(psftmp,1);
-	if(gradref){
-	    gx=gradref->p;
-	    gy=gradref->p+nsa;
+	/* the gradient reference for pistatout*/
+	if(data->gradref){
+	    gx=data->gradref->p;
+	    gy=gx+nsa;
 	}
     }
     double *realamp=powfs[ipowfs].realamp[wfsind];
-    
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	
-	double wvl=parms->powfs[ipowfs].wvl[iwvl];
-	const double dtheta1=(powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac
-			      *powfs[ipowfs].pts->dx)/wvl;
-	cmat *lotfc=NULL;
-	/*const double lltxc=parms->powfs[ipowfs].llt[iwfs].ox; */
+	const double wvl=parms->powfs[ipowfs].wvl[iwvl];
+	const double dtheta1=(nwvf*powfs[ipowfs].pts->dx)/wvl;
+	/* uplink llt opd*/
 	if(lltopd){
 	    const int nlx=powfs[ipowfs].llt->pts->nx;
 	    const int nlpsf=nlx*parms->powfs[ipowfs].embfac;
-
-	    lotfc=cnew(nlpsf,nlpsf);
-	    cfft2plan(lotfc,-1);
-	    cfft2plan(lotfc,1);
-	    /*build otf. use same config as subaperture */
-	    cembed_wvf(lotfc,lltopd->p,powfs[ipowfs].llt->amp->p,nlx,nlx,wvl,0);
-	    cfft2(lotfc,-1);
-	    if(npsf != nlpsf){/*moved to before the second fft on 2011-08-07 */
-		cmat *tmp=cnew(npsf, npsf);
-		cfft2plan(tmp, 1);
-		ccpcorner(tmp, lotfc, C_FULL);
-		cfree(lotfc);
-		lotfc=tmp;
-	    }
+	    /*embed opd to compute complex pupil function*/
+	    cembed_wvf(lwvf,lltopd->p,powfs[ipowfs].llt->amp->p,nlx,nlx,wvl,0);
+	    /*turn to complex psf*/
+	    cfft2(lwvf,-1);
+	    if(lwvf != lotfc){
+		/* uplink llt has different aperture size than LGS subaperture*/
+		ccpcorner(lotfc, lwvf, C_FULL);
+	    }/*else: same*/
+	    /*now work with lotfc only. lotfc has peak in corner*/
 	    cabs2toreal(lotfc);
-	    cfft2(lotfc,1);/*lotfc has peak nlpsf*nlpsf in corner. */
-	    /*lotfc need to be scaled by 1/(npsf*npsf). */
+	    /*now contains conjugate of otf. use 1 insteaf of -1 to get complex conjugate*/
+	    cfft2(lotfc,1);
+	    /*lotfc has peak nlpsf*nlpsf in corner. */
 	    cscale(lotfc,1./(double)((long)nlpsf*nlpsf));/*max of 1 */
-
 	}
-#if ROT_OTF == 1
-	double xscale=(double)npsf/(double)ncompx;
-	double yscale=(double)npsf/(double)ncompy;
-#endif
-	/*
-
-	  Originally norm=(powfs[ipowfs].pts->area[isa]/maxarea)
-	  /(powfs[ipowfs].pts->sumamp2[isa]*npsf*npsf*ncompx*ncompy);
-	  with maxarea=max(powfs[ipowfs].pts->area[isa]);
-	  where 
-	  (ncompx*ncompy) is to cancel out the scaling in DTF nominal.
-	  *npsf*npsf is to cancel out psf normalization
-
-	  The area is normalized by square subaperture area.
-	  We have powfs[ipowfs].pts->area[isa]=powfs[ipowfs].pts->sumamp2[isa]*dx*dx/(dsa*dsa);
-	  therefore powfs[ipowfs].pts->area[isa]/powfs[ipowfs].pts->sumamp2[isa])
-	  =dsa*dsa/(dx*dx)=pts->nx*pts->nx;
-	  therefore norm=(1/maxarea)/(pts->nx*pts->nx*npsfx*npsfy*ncompx*ncompy);
-	  we set 1/maxarea to powfs[ipowfs].areascale .
-	  so the new norm becomes
-	  norm=norm_otf/(ncompx*nocmpy);
-	  with norm_otf=areascale/(pts->nx*pts->nx*npsf*npsf));
-
-	  
-	  Notice that fftw ifft doesn't normalize. a forward
-	  and backward fft doesn't bring data back to
-	  original value, instead Nx*Ny times larger.
-
-	  Notice: the non-rotated case is handled properly
-	  in ROT_OTF or ROT_PSF mode without executing extra
-	  FFT.
-	 */
-
-	/*normalize complex psf */
-	double norm_psf=sqrt(powfs[ipowfs].areascale)/((double)powfs[ipowfs].pts->nx*npsf);
-	double norm_otf;
-#if ROT_OTF == 1
-	/*norm_otf noramlized otf before mul ccwm to 1. */
-	norm_otf=norm_psf*norm_psf;
-#else
-	if(lltopd || ppistatout){
-	    norm_otf=norm_psf*norm_psf/((double)psf->nx*psf->ny);
-	}else{
-	    norm_otf=norm_psf*norm_psf;
-	}
-#endif
-	/*this ncompx*ncompy is due to cfft2 after  */
-	/*cwm and detector transfer function. */
-	double norm=norm_otf/((double)ncompx*ncompy);
-	/*normalized pistat */
-	double norm_pistat=norm_psf*norm_psf/((double)psf->nx*psf->ny);
 	int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
+	/* nominal and si are used to sampled PSF onto detector pixels */
 	cmat *nominal=NULL;
 	dsp *si=NULL;
 	if(!multi_nominal){
@@ -204,6 +173,7 @@ void wfsints(thread_t *thread_data){
 	    }
 	    si=powfs[ipowfs].dtf[iwvl].si->p[0];
 	}
+	/* elongation due to uplink projection */
 	cmat *(*petf)[nsa]=NULL;
 	void (*pccwm)(cmat*,const cmat*,const cmat*)=NULL;
 	if(hasllt){
@@ -215,8 +185,7 @@ void wfsints(thread_t *thread_data){
 		pccwm=ccwm3;
 	    }
 	}
-	int rotpsfotf=(hasllt && parms->powfs[ipowfs].radrot);
-	double angle=0;
+	/* now big loop over subapertures */
 	for(int isa=isa_start; isa<isa_end; isa++){
 	    if(multi_nominal){
 		if(!powfs[ipowfs].dtf[iwvl].fused){
@@ -224,95 +193,90 @@ void wfsints(thread_t *thread_data){
 		}
 		si=powfs[ipowfs].dtf[iwvl].si->p[isa+nsa*illt];
 	    }
-	    if(rotpsfotf){
-		angle=powfs[ipowfs].srot->p[illt]->p[isa];
-	    }
 	    int ioffset=isa*nxsa;
 	    /*embed amp/opd to complex wvf with a embedding factor of 2. */
-	    if(use1d){
-		cembed_wvf(psflarge,opd->p+ioffset, 
-			   realamp+ioffset,nx,nx,
-			   parms->powfs[ipowfs].wvl[iwvl],0);
-		/*fft */
-		cfft2partial(psflarge,ncompm, -1);
-		/*move from psflarge to psf */
-		ccpcorner(psf,psflarge,C_FULL);
+	    cembed_wvf(wvf,opd->p+ioffset, 
+		       realamp+ioffset,nopd,nopd,
+		       parms->powfs[ipowfs].wvl[iwvl],0);
+	    if(use1d){ /*use 1d fft */
+		cfft2partial(wvf,npsf, -1);
 	    }else{
-		cembed_wvf(psf,opd->p+ioffset, 
-			   realamp+ioffset,nx,nx,
-			   parms->powfs[ipowfs].wvl[iwvl],0);
-		cfft2(psf,-1);
-		/*form PSF. */
+		cfft2(wvf,-1); /*use 2d fft to form PSF. */
 	    }
-	    /*sum(psf) is sumamp2*npsf*npsf */
+	    if(psf!=wvf){
+		/*copy the peaks (at corner) from wvf to psf */
+		ccpcorner(psf, wvf, C_FULL);
+	    }
+
+	    /*output complex pupil function to use in skyc*/
 	    if(ppsfout){
 		ccp(&fftpsfout, psf);
-		cscale(fftpsfout, norm_psf/((double)psf->nx*psf->ny);
-		cfft2(fftpsfout,1);/*peak in corner. become WVF in center.*/
+		/*npsf * npsf to cancel out the effect of fft pair (one here, one later in skyc)*/
+		cscale(fftpsfout, norm_psf/((double)npsf*npsf));
+		/*peak in corner. become WVF in center.*/
+		cfft2(fftpsfout,1);
+		/*output center of the complex pupil function.*/
 		cembed(ppsfout[iwvl][isa], fftpsfout, 0, C_FULL);
 	    }
-	    cabs2toreal(psf);/*peak in corner */
-#if ROT_OTF == 1/*deprecated */
-	    cfft2(psf,-1);
-#elif ROT_OTF == 0
-	    if(lltopd || ppistatout){
-		cfft2(psf,-1);/*turn to otf. peak in corner */
-	    }
-#endif
-	    if(lltopd){/*lotfc */
-		ccwm(psf,lotfc);/*normalization done in gen of lotfc. */
-	    }
-	    if(ppistatout){
-		/*remove tip/tilt from OTF using tilt reference. */
-		ccp(&psftmp,psf);/*peak is in the corner */
-		if(gradref){
-		    ctilt(psftmp,-gx[isa]*dtheta1,-gy[isa]*dtheta1,0);
+	    /* form PSF with peak in corner*/
+	    cabs2toreal(psf);
+	    /* need to turn to otf to add llt contribution or output pixel intensities.*/
+	    if(isotf){
+		cfft2(psf,-1);   /*turn to otf. peak in corner */
+		if(ppistatout){  /*The pistat does not include uplink effect*/
+		                 /*copy to temporary array. peak in in corner*/
+		    ccp(&psftmp,psf);
+		    if(gx){      /*remove tip/tilt from OTF using tilt reference. */
+			ctilt(psftmp,-gx[isa]*dtheta1,-gy[isa]*dtheta1,0);
+		    }
+		    cfft2(psftmp,1);   /*back to psf. */
+		    cfftshift(psftmp); /*peak in center. */
+		    cabstoreal(psftmp);/*take abs.*/
+		    if(!gx){           /*no gradient reference. compute using cog and shift.*/
+			cshift2center(psftmp,0.5,0.5);
+		    }
+		                       /*accumulate the real part of psf*/
+		    creal2d(&ppistatout[iwvl][isa],1,psftmp,norm_pistat);
 		}
-		cfft2(psftmp,1);/*back to psf. */
-		cfftshift(psftmp);
-		cabstoreal(psftmp);/*take abs. peak at center. */
-		if(!gradref){
-		    cshift2center(psftmp,0.5,0.5);
+		if(lltopd){            /*add uplink otf */
+		    ccwm(psf,lotfc);   /*normalization done in gen of lotfc. */
 		}
-		creal2d(&ppistatout[iwvl][isa],1,psftmp,norm_pistat);
-	    }
+		/* we have otf here in psf*/
+	    }/* else: we have psf here in psf*/
 	    if(ints){
-#if ROT_OTF == 1 /*rotate OTF preserves sum(PSF) */
-		cfftshift(psf);/*OTF with peak in center */
-		/*rotate from xy to ra, so negative angle. */
-		/*Rotate and scale otf (in psf var) into otf. */
-		cembedscaleout(otf,psf,xscale,yscale,-angle,C_FULL);
-		cfftshift(otf);/*put otf peak in corner */
-#elif ROT_OTF == 0 /*rotate PSF. preserves maximum PSF (strehl) */
-		if(lltopd || ppistatout){
-		    /*turn back to PSF. peak in corner. should be real */
-		    cfft2(psf,1);
+		if(!isotf /* Need to turn PSF to OTF*/ || otf!=psf /* Need to embed*/ ){
+		    if(isotf){ /*turn back to PSF for embedding. peak in corner.*/
+			cfft2(psf,1);
+		    }
+		    /* now we have PSF with peak in corner */
+		    if(srot){
+			cfftshift(psf);/*peak in center */
+			cembed(otf,psf,-srot[isa],C_REAL);/*notice otf and psf may have different size */
+			cfftshift(otf);/*peak in corner */
+		    }else if(otf!=psf){/*copy the corner (peak)*/
+			ccpcorner(otf, psf, C_FULL);
+		    }
+		    cfft2(otf,-1);/*turn to OTF. peak in corner */
 		}
-		cfftshift(psf);/*peak in center */
-		cembed(otf,psf,-angle,C_REAL);/*notice otf and psf may have different size */
-		cfftshift(otf);/*peak in corner */
-		cfft2(otf,-1);/*turn to OTF. peak in corner */
-#endif
-		/*fft to otf. peak in corner */
-		if(hasllt){/*has llt, ETF */
+		if(hasllt){/*has llt, multiply with DTF and ETF.*/
 		    (*pccwm)(otf,nominal,petf[illt][isa]);
-		}else{
+		}else{/*no uplink, multiply with DTF only.*/
 		    ccwm(otf,nominal);
 		}
-		/*max(otf) is 1. peak in corner  */
-		/*Now peak in center because nominal has excessive freq.  */
+		/*max(otf) is 1 after multiply with norm. peak in corner  */
 		cfft2(otf,1);
-		spmulcreal(ints->p[isa]->p,si,
-			   otf->p, parms->wfs[iwfs].wvlwts[iwvl]*norm);
+		/*Now peak in center because nominal is pre-treated.  */
+		spmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts[iwvl]*norm);
 	    }
 	}/*isa */
-	if(lotfc) cfree(lotfc);
     }/*iwvl */
-    cfree(psf);
-    cfree(psflarge);
+    if(otf!=psf) cfree(otf);
+    if(psf!=wvf) cfree(psf);
+    cfree(wvf);
     cfree(psftmp);
-    cfree(otf);
-    if(psfout){
-	cfree(fftpsfout);
+    cfree(fftpsfout);
+    if(lltopd){
+	if(lotfc!=lwvf) cfree(lotfc);
+	cfree(lwvf);
     }
 }

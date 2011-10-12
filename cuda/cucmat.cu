@@ -34,7 +34,7 @@ cucmat *cucnew(int nx, int ny){
 /**
    Create cucmat object with existing vector. own=1: we own the pointer. own=0: we don't own the pointer.
 */
-cucmat *cucnew(int nx, int ny, float *p, int own){
+cucmat *cucnew(int nx, int ny, fcomplex *p, int own){
     cucmat *out;
     out=(cucmat*)calloc(1, sizeof(cucmat));
     if(own){
@@ -49,9 +49,10 @@ cucmat *cucnew(int nx, int ny, float *p, int own){
 cucmat *cucnew(int nx, int ny, cudaStream_t stream){
     cucmat *out;
     out=(cucmat*)calloc(1, sizeof(cucmat));
-    out->ref=0;
+    out->nref=(int*)calloc(1, sizeof(int));
+    out->nref[0]=1;
     DO(cudaMalloc(&(out->p), nx*ny*sizeof(fcomplex)));
-    DO(cudaMemsetAsync(out->p, 0, nx*ny*sizeof(fcomplex), stream));
+    DO(cudaMemsetAsync(out->p, 0, nx*ny*sizeof(fcomplex),stream));
     out->nx=nx;
     out->ny=ny;
     return out;
@@ -93,7 +94,8 @@ cuccell* cuccellnew(int nx, int ny){
 cuccell *cuccellnew(int nx, int ny, int mx, int my){
     cuccell *out=cuccellnew(nx, ny);
     fcomplex *p;
-    cudaMalloc(p, nx*ny*mx*my*sizeof(fcomplex));
+    cudaMalloc(&p, nx*ny*mx*my*sizeof(fcomplex));
+    cudaMemset(p, 0, nx*ny*mx*my*sizeof(fcomplex));
     for(int i=0; i<nx*ny; i++){
 	out->p[i]=cucnew(mx, my, p+i*(mx*my), (i==0));
     }

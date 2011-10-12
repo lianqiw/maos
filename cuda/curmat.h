@@ -23,6 +23,7 @@
 #include "kernel.h"
 cuspcell *cuspcellnew(int nx, int ny);
 curcell *curcellnew(int nx, int ny);
+curcell *curcellnew(int nx, int ny, int mx, int my);
 curcell *curcellnew2(const curcell *in);
 curmat *curref(curmat *A);
 void curcellfree(curcell *A);
