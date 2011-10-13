@@ -1,4 +1,5 @@
 AM_CFLAGS=$(OPTS) -I $(top_srcdir) -I $(top_srcdir)/lib/ -I $(top_srcdir)/lib/sys
+AM_LDFLAGS=$(LDEXE)
 if USE_LONG
 LDADD=../lib/libaos_long.la $(LDOPTS)
 else
@@ -20,7 +21,6 @@ if DRAW
 PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres ../bin/calcenc
 ___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
 ___bin_drawdaemon_CFLAGS=$(DRAW_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
-___bin_drawdaemon_LDFLAGS=
 ___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0
 ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
@@ -37,15 +37,12 @@ endif
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table
 ___bin_monitor_SOURCES=monitor.c monitor_gui.c
 ___bin_monitor_CFLAGS=$(MONITOR_FLAGS)
-___bin_monitor_LDFLAGS=
 ___bin_monitor_LDADD=$(MONITOR_LIBS)
 ___bin_monitor_list_SOURCES=monitor_gui_list.c monitor.c #gtkcellrendererprogressnew.c gtkcellrendererprogressnew.h
 ___bin_monitor_list_CFLAGS=$(MONITOR_FLAGS)
-___bin_monitor_list_LDFLAGS=
 ___bin_monitor_list_LDADD=$(MONITOR_LIBS)
 ___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
-___bin_monitor_table_LDFLAGS=
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif
 PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf

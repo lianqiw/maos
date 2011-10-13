@@ -200,12 +200,12 @@ AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
 if test "x$use_static" = "xyes" ;then
-   LDEXE="-all-static" #Enable all static build.
+   LDEXE="$LDEXE -all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
    AC_DEFINE(USE_STATIC, [1], "We are compling maos statically")
    #(cd ${SRC_DIR} && tar zcf ${BUILD_DIR}/config.tar.gz config/)
 else
-   LDEXE=""
+   LDEXE="$LDEXE -static" #show that we prefer static linking.
    AM_CONDITIONAL(USE_STATIC, false)
    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
@@ -655,7 +655,7 @@ echo Compile Monitor=$comp_mon
 echo Compile Monitor with Libnotify=$comp_monn
 echo CC=$CC
 echo CFLAGS=$CFLAGS
-echo LDFLAGS=$LCFLAGS
+echo LDFLAGS=$LDFLAGS
 echo LIBS=$LIBS
 echo LDEXE=$LDEXE
 echo OPTS=$OPTS
