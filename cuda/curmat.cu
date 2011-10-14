@@ -254,12 +254,9 @@ curcell* curcellnew(int nx, int ny){
 /** Allocate continuous memory for blocks of the same size*/
 curcell *curcellnew(int nx, int ny, int mx, int my){
     curcell *out=curcellnew(nx, ny);
-    float *p;
-    out->fused=1;
-    DO(cudaMalloc(&p, nx*ny*mx*my*sizeof(float)));
-    DO(cudaMemset(p, 0, nx*ny*mx*my*sizeof(float)));
+    out->m=curnew(mx, my*nx*ny);
     for(int i=0; i<nx*ny; i++){
-	out->p[i]=curnew(mx, my, p+i*(mx*my), (i==0)?1:0);
+	out->p[i]=curnew(mx, my, out->m->p+i*(mx*my), 0);
     }
     return out;
 }
@@ -289,6 +286,7 @@ void curcellfree(curcell *A){
 	}
 	free(A->p);
     }
+    curfree(A->m);
     free(A);
 }
 
@@ -311,8 +309,8 @@ void curcellwrite(const curcell *A, const char *format, ...){
 }
 void curcellzero(curcell *A, cudaStream_t stream){
     if(!A) return;
-    if(A->fused){
-	cudaMemsetAsync(A->p[0]->p, 0, A->nx*A->ny*A->p[0]->nx*A->p[0]->ny*sizeof(float), stream);
+    if(A->m){
+	curzero(A->m, stream);
     }else{
 	for(int i=0; i<A->nx*A->ny; i++){
 	    curzero(A->p[i], stream);

@@ -37,7 +37,7 @@ typedef struct{
     curmat **p;
     int nx;
     int ny;
-    int fused; /*data of individual curmat are allocated once*/
+    curmat *m; /* equivalent curmat. */
 }curcell;
 typedef struct{
     fcomplex *p;
@@ -50,7 +50,7 @@ typedef struct{
     cucmat **p;
     int nx;
     int ny;
-    int fused; /*data of individual curmat are allocated once*/
+    cucmat *m; /* equivalent cucmat */
 }cuccell;
 
 typedef struct{
