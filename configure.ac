@@ -162,7 +162,7 @@ case "$host_os" in
  AM_CONDITIONAL(WIN, true)
  LAPACK="-lblas -llapack -lgfortran"
  win32=yes
- use_static_default=yes #blas/lapack are linked statically, but others are still dynamic. ship those
+ use_static_default=no #blas/lapack are linked statically, but others are still dynamic. ship those
  system="win"
  ldsuffix="dll"
  ;;
@@ -485,7 +485,7 @@ AC_ENABLE_STATIC
 #else
 #AC_DISABLE_STATIC
 #fi
-LT_INIT([pic-only])
+#LT_INIT([pic-only])
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
