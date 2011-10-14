@@ -94,6 +94,7 @@ cuccell* cuccellnew(int nx, int ny){
 cuccell *cuccellnew(int nx, int ny, int mx, int my){
     cuccell *out=cuccellnew(nx, ny);
     fcomplex *p;
+    out->fused=1;
     cudaMalloc(&p, nx*ny*mx*my*sizeof(fcomplex));
     cudaMemset(p, 0, nx*ny*mx*my*sizeof(fcomplex));
     for(int i=0; i<nx*ny; i++){

@@ -255,6 +255,7 @@ curcell* curcellnew(int nx, int ny){
 curcell *curcellnew(int nx, int ny, int mx, int my){
     curcell *out=curcellnew(nx, ny);
     float *p;
+    out->fused=1;
     DO(cudaMalloc(&p, nx*ny*mx*my*sizeof(float)));
     DO(cudaMemset(p, 0, nx*ny*mx*my*sizeof(float)));
     for(int i=0; i<nx*ny; i++){
@@ -310,8 +311,12 @@ void curcellwrite(const curcell *A, const char *format, ...){
 }
 void curcellzero(curcell *A, cudaStream_t stream){
     if(!A) return;
-    for(int i=0; i<A->nx*A->ny; i++){
-	curzero(A->p[i], stream);
+    if(A->fused){
+	cudaMemsetAsync(A->p[0]->p, 0, A->nx*A->ny*A->p[0]->nx*A->p[0]->ny*sizeof(float), stream);
+    }else{
+	for(int i=0; i<A->nx*A->ny; i++){
+	    curzero(A->p[i], stream);
+	}
     }
 }
 void curcellcp(curcell **A, const curcell *B, cudaStream_t stream){
