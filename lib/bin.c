@@ -377,18 +377,17 @@ uint32_t read_magic(file_t *fp, char **header){
 	}else if(magic==M_HEADER){
 	    zfread(&nlen, sizeof(uint64_t), 1, fp);
 	    if(nlen>0){
+		/*zfseek failed in cygwin (gzseek). so we already readin the header instead.*/
+		char header2[nlen];
+		zfread(header2, 1, nlen, fp);
+		header2[nlen-1]='\0'; /*make sure it is NULL terminated. */
 		if(header){
-		    char header2[nlen];
-		    zfread(header2, 1, nlen, fp);
-		    header2[nlen-1]='\0'; /*make sure it is NULL terminated. */
 		    if(*header){
 			*header=realloc(*header, ((*header)?strlen(*header):0)+strlen(header2)+1);
 			strncat(*header, header2, nlen);
 		    }else{
 			*header=strdup(header2);
 		    }
-		}else{
-		    zfseek(fp, nlen, SEEK_CUR);
 		}
 	    }
 	    zfread(&nlen2, sizeof(uint64_t),1,fp);
