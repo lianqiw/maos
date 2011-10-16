@@ -294,28 +294,6 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
     return TRUE;
 }
 
-static int init_sockaddr (struct sockaddr_in *name,
-			  const char *hostname, uint16_t port){
-    struct hostent *hostinfo;
-    
-    name->sin_family = AF_INET;
-    name->sin_port = htons(port);
-    hostinfo = gethostbyname (hostname);
-    if (hostinfo == NULL){
-	/*perror("gethostbyname"); */
-	/*fprintf (stderr, "Unknown host %s.\n", hostname); */
-	return -1;
-    }else{
-	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
-	if(addr){
-	    name->sin_addr = *addr;
-	    return 0;
-	}else{
-	    /*warning("h_addr_list is NULL for host %s\n", hostname); */
-	    return -1;
-	}
-    }
-}
 /**
    To open a port and connect to scheduler. This requires host name lookup and
    can not be compiled statically, so do not put it in scheduler_client.c
