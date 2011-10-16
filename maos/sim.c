@@ -86,8 +86,13 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #endif
 	double tk_atm=myclockd();
 	const int CL=parms->sim.closeloop;
+#if defined(__linux__)  && !defined(USE_CUDA)
+	double cpu_evl=0, cpu_wfs=0, cpu_recon=0, cpu_cachedm=0, cpu_all=0;
+#define READ_CPU(A) A=read_self_cpu()
+#else
+#define READ_CPU(A)
+#endif
 	for(int isim=simstart; isim<simend; isim++){
-	    double cpu_evl=0, cpu_wfs=0, cpu_recon=0, cpu_cachedm=0, cpu_all=0;
 	    ck_0=myclockd();
 	    simu->isim=isim;
 	    simu->status->isim=isim;
@@ -151,29 +156,29 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		thread_pool_wait(&group);
 		shift_grad(simu);/*before filter() */
 		filter(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
-		cpu_all=read_self_cpu();
+		READ_CPU(cpu_all);
 	    }else{/*do the big loop in serial mode. */
 		read_self_cpu();/*initialize CPU usage counter */
 		if(CL){
 		    perfevl(simu);/*before wfsgrad so we can apply ideal NGS modes */
-		    cpu_evl=read_self_cpu();
+		    READ_CPU(cpu_evl);
 		    wfsgrad(simu);/*output grads to gradcl, gradol */
-		    cpu_wfs=read_self_cpu();
+		    READ_CPU(cpu_wfs);
 		    reconstruct(simu);/*uses grads from gradlast cl, gradlast ol. */
-		    cpu_recon=read_self_cpu();
+		    READ_CPU(cpu_recon);
 		    shift_grad(simu);
 		    filter(simu);
-		    cpu_cachedm=read_self_cpu();
+		    READ_CPU(cpu_cachedm);
 		}else{/*in OL mode,  */
 		    wfsgrad(simu);
-		    cpu_wfs=read_self_cpu();
+		    READ_CPU(cpu_wfs);
 		    shift_grad(simu);
 		    reconstruct(simu);
-		    cpu_recon=read_self_cpu();
+		    READ_CPU(cpu_recon);
 		    filter(simu);
-		    cpu_cachedm=read_self_cpu();
+		    READ_CPU(cpu_cachedm);
 		    perfevl(simu);
-		    cpu_evl=read_self_cpu();
+		    READ_CPU(cpu_evl);
 		}
 	    }
 	    ck_end=myclockd();
