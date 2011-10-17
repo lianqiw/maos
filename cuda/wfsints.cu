@@ -164,8 +164,8 @@ __global__ static void fftshift_do(fcomplex *wvf, const int nx, const int ny){
 /**
    FFT Shift from complex to real.
 */
-__global__ static void real2float_fftshift_do(float *restrict out, const fcomplex *restrict wvf, 
-					     int nx, int ny, float alpha){
+__global__ static void acc_real_fftshift_do(float *restrict out, const fcomplex *restrict wvf, 
+					    int nx, int ny, float alpha){
     const int isa=blockIdx.x;
     wvf+=nx*ny*isa;
     out+=nx*ny*isa;
@@ -247,18 +247,28 @@ __global__ static void ccwmcol_do(fcomplex *otf, const int notfx, const int notf
     }
 }
 /**
-   Take the real part
+   Take the real part. Notice we are using = instead of +=
 */
 __global__ static void realpart_do(float *out, const fcomplex*restrict in, int ninx, int niny){
     const int isa=blockIdx.x;
     in+=isa*ninx*niny;
     out+=isa*ninx*niny;
     for(int iy=threadIdx.y; iy<niny; iy+=blockDim.y){
-    	const int skip=iy*ninx;
-	float *restrict out2=out+skip;
-	const fcomplex *restrict in2=in+skip;
 	for(int ix=threadIdx.x; ix<ninx; ix+=blockDim.x){
-	    out2[ix]=cuCrealf(in2[ix]);
+	    out[ix+iy*ninx]=cuCrealf(in[ix+iy*ninx]);
+	}
+    }
+}
+/**
+   Take the real part and accumulate to output
+*/
+__global__ static void acc_real_do(float *out, const fcomplex*restrict in, int ninx, int niny, float alpha){
+    const int isa=blockIdx.x;
+    in+=isa*ninx*niny;
+    out+=isa*ninx*niny;
+    for(int iy=threadIdx.y; iy<niny; iy+=blockDim.y){
+	for(int ix=threadIdx.x; ix<ninx; ix+=blockDim.x){
+	    out[ix+iy*ninx]+=cuCrealf(in[ix+iy*ninx])*alpha;
 	}
     }
 }
@@ -516,8 +526,13 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		    add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
 			(psfstat, npsf,npsf, gradref->p+isa, gradref->p+nsa+isa, -1.f/dtheta);
 		    CUFFT(cuwfs[iwfs].plan3, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/
-		    real2float_fftshift_do<<<ksa,dim3(16,16),0,stream>>>
-			(pistatout->p[isa+nsa*iwvl]->p, psfstat, npsf, npsf, norm_pistat);
+		    if(parms->sim.skysim){/*want peak in corner*/
+			acc_real_do<<<ksa,dim3(16,16),0,stream>>>
+			    (pistatout->p[isa+nsa*iwvl]->p, psfstat, npsf, npsf, norm_pistat);
+		    }else{/*want peak in center*/
+			acc_real_fftshift_do<<<ksa,dim3(16,16),0,stream>>>
+			    (pistatout->p[isa+nsa*iwvl]->p, psfstat, npsf, npsf, norm_pistat);
+		    }
 		}
 		if(lltopd){/*multiply with uplink otf. */
 		    ccwm_do<<<ksa,dim3(16,16),0,stream>>>(psf, npsf, npsf, (fcomplex**)lotfc, 1);

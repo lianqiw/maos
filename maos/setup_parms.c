@@ -904,6 +904,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		parms->powfs[ipowfs].psfout=1;
+		parms->powfs[ipowfs].pistatout=1;
 	    }
 	}
     }
