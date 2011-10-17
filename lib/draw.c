@@ -107,15 +107,13 @@ void draw_helper(void){
    Open a fifo (created by the drawdaemon) and start writing to it.
 */
 static int fifo_open(){
-    int fd;
+    int fd=-1;
     int retry=0;
     static char *fifo_fn=NULL;
-    int free_fifo_fn=0;
     if(disable_draw){
 	return -1;
     }
     if(pfifo){ 
-	/*return 0; */
 	fclose(pfifo); pfifo=NULL;
     }
 retry:
@@ -127,30 +125,27 @@ retry:
 	    if(pfifo){
 		return 0;
 	    }
+	}else{
+	    sleep(1);
+	    free(fifo_fn); fifo_fn=NULL;
+	    if(retry++>20){
+		disable_draw=1;
+		return -1;
+	    }
 	}
     }
-    sleep(1);
-    retry++;
-    if(retry>20){
-	disable_draw=1;
-	return -1;
-    }
-    free(fifo_fn); fifo_fn=NULL;
     if(!DRAW_ID){
 	DRAW_ID=getpid();
     }
     /*Open failed. drawdaemon has closed. */
-  
     if(write_helper && read_helper){
 	info2("Helper is running, launch drawdaemon through it\n");
 	if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
 	    fifo_fn=readstr(read_helper);
-	    free_fifo_fn=1;
 	}else{/*helper has exited, launch it again */
 	    draw_helper();
 	    if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
 		fifo_fn=readstr(read_helper);
-		free_fifo_fn=1;
 	    }else{/*still failed. */
 		write_helper=0;
 		read_helper=0;

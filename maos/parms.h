@@ -453,8 +453,6 @@ typedef struct SIM_CFG_T{
     int cachedm;     /**<cache dm shape on fine sampled grid matched WFS or Science grid*/
     int fuseint;     /**<fuse the high and low order integrators in split tomography */
     int skysim;      /**<1: we are doing skycoverage preprocessing*/
-    int recon;       /**<reconstruction method. 0: minimum variance, 1: least square*/
-    int glao;        /**<reconstruction in GLAO mode: average WFS measurements*/
     int evlol;       /**<evaluate open loop error only*/
     int noatm;       /**<disable atmosphere*/
     int idealfit;    /**<do ideal DM fitting from atmosphere directly.*/

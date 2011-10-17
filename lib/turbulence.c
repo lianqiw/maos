@@ -73,14 +73,14 @@ static char *fnatm(GENSCREEN_T *data){
     snprintf(fnshm,PATH_MAX,"%s/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
 	     dirshm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
     if(zfexist(fnshm)) zftouch(fnshm);
-    long gavail=(available(dirshm)>>30);
-    if(gavail >=0 && gavail<10){
-	warning("There are only %ld G available in %s. Remove all files there.\n", gavail, dirshm);
-	remove_file_older(dirshm, 10);/*10 second old. keeps fnshm. */
+    remove_file_older(dirshm, 30*24*3600);
+    long avail=available(dirshm);
+    long need=data->nx*data->ny*data->nlayer*sizeof(double)+500000000;
+    if(avail>need){
+	return strdup(fnshm);
     }else{
-	remove_file_older(dirshm, 30*24*3600);
+	return NULL;
     }
-    return strdup(fnshm);
 }
 
 /**
@@ -169,8 +169,11 @@ static map_t** create_screen(GENSCREEN_T *data,
 			     void (*funmem)(GENSCREEN_T *data)){
     map_t **screen;
     long nlayer=data->nlayer;
+    char *fnshm=NULL;
     if(data->share){/*shared with file */
-	char *fnshm=fnatm(data);
+	fnshm=fnatm(data);
+    }
+    if(fnshm){
 	char fnlock[PATH_MAX]; 
 	snprintf(fnlock, PATH_MAX, "%s.lock", fnshm);
 	dcell *in=NULL;

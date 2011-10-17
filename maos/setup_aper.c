@@ -44,11 +44,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    map_d_din(aper->ampground, &amp_d, &amp_din);
 	    if(fabs(parms->aper.d - amp_d) > (parms->aper.d + amp_d) * 0.005 ||
 	       fabs(parms->aper.din - amp_din) > (parms->aper.din+parms->aper.din) * 0.005){
-		warning("\n\n\nAmplitude map is supplied, but does not match aperture diameter.\n"
-			"The amplitude map has inner and outer diameter of %g and %g\n"
-			"But the aperture has inner and outer diameter of %g and %g\n"
-			"Will not use the amplitude map.\n\n\n"
-			, amp_din, amp_d, parms->aper.din, parms->aper.d);
+		warning2("Amplitude map does not match aperture diameter. Disabled\n");
 		mapfree(aper->ampground);
 	    }
 	}
@@ -82,7 +78,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 			   parms->evl.misreg[1]-parms->aper.misreg[1],
 			   1, 0, 0, 0);
 	}else{
-	    warning("Using locannular to create a gray pixel aperture\n");
+	    warning2("Using locannular to create a gray pixel aperture\n");
 	    locannular(aper->amp->p, aper->locs,
 		       parms->aper.misreg[0]-parms->evl.misreg[0],
 		       parms->aper.misreg[1]-parms->evl.misreg[1],

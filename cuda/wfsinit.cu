@@ -168,33 +168,52 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    /*limit the number of subapertures in each batch to less than 1024
 	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
 	    cuwfs[iwfs].msa=nsa>1024?((int)ceil((float)nsa/(float)(nsa/800))):nsa;
-	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, npsf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, cuwfs[iwfs].msa)){
-		error("CUFFT plan failed\n");
-	    }
-	    if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, ncomp, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, cuwfs[iwfs].msa)){
-		error("CUFFT plan failed\n");
-	    }
-	    if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, ncompm2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, cuwfs[iwfs].msa)){
+	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, npsf2, NULL, 1, 0, NULL, 1, 0, 
+			     CUFFT_C2C, cuwfs[iwfs].msa)){
 		error("CUFFT plan failed\n");
 	    }
 	    cufftSetStream(cuwfs[iwfs].plan1, cuwfs[iwfs].stream);
-	    cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
-	    cufftSetStream(cuwfs[iwfs].plan3, cuwfs[iwfs].stream);
+	    if(ncompx==npsf && ncompy==npsf){
+		cuwfs[iwfs].plan2=cuwfs[iwfs].plan1;
+	    }else{
+		if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, ncomp, NULL, 1, 0, NULL, 1, 0, 
+				 CUFFT_C2C, cuwfs[iwfs].msa)){
+		    error("CUFFT plan failed\n");
+		}
+		cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
+	    }
+	    if(ncompm==ncompx && ncompm==ncompy){
+		cuwfs[iwfs].plan3=cuwfs[iwfs].plan2;
+	    }else{
+		if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, ncompm2, NULL, 1, 0, NULL, 1, 0, 
+				 CUFFT_C2C, cuwfs[iwfs].msa)){
+		    error("CUFFT plan failed\n");
+		}
+		cufftSetStream(cuwfs[iwfs].plan3, cuwfs[iwfs].stream);
+	    }
+
 	    if(parms->powfs[ipowfs].llt){
 		int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 		int nlpsf2[2]={nlpsf, nlpsf};
-		if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlpsf2, NULL, 1,0, NULL, 1, 0, CUFFT_C2C, 1)){
+		if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlpsf2, NULL, 1,0, NULL, 1, 0, 
+				 CUFFT_C2C, 1)){
 		    error("CUFFT plan failed\n");
+		    cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
 		}
-		if(cufftPlanMany(&cuwfs[iwfs].lltplan_otf, 2, npsf2, NULL, 1, 0, NULL, 1, 0, CUFFT_C2C, 1)){
-		    error("CUFFT plan failed\n");
+		if(npsf==nlpsf){
+		    cuwfs[iwfs].lltplan_otf=cuwfs[iwfs].lltplan_wvf;
+		}else{
+		    if(cufftPlanMany(&cuwfs[iwfs].lltplan_otf, 2, npsf2, NULL, 1, 0, NULL, 1, 0, 
+				     CUFFT_C2C, 1)){
+			error("CUFFT plan failed\n");
+		    }
+		    cufftSetStream(cuwfs[iwfs].lltplan_otf, cuwfs[iwfs].stream);
 		}
-		cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
-		cufftSetStream(cuwfs[iwfs].lltplan_otf, cuwfs[iwfs].stream);
 	    }
 	    /*DTF. */
 	    if(parms->powfs[ipowfs].usephy){
-		if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].llt->n>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+		if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].llt->n>1 
+		   || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		    /*Need one per wfs in this powfs, or the first wfs. */
 		    int nwvl=parms->powfs[ipowfs].nwvl;
 		    cuwfs[iwfs].dtf=(cudtf_t*)calloc(nwvl, sizeof(cudtf_t));
@@ -284,7 +303,7 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
-	if(!parms->powfs[ipowfs].usephy
+	if(parms->powfs[ipowfs].phystep!=0
 	   ||parms->save.gradgeom[iwfs]
 	   ||parms->powfs[ipowfs].pistatout){
 	    /*gradacc for geom wfs accumulation */

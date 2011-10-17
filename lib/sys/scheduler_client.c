@@ -57,7 +57,28 @@ void scheduler_shutdown(int *sock, int mode){
 	stwriteintarr(sock, cmd, 2);
     }
 }
-
+int init_sockaddr (struct sockaddr_in *name,
+		   const char *hostname, uint16_t port){
+    struct hostent *hostinfo;
+    
+    name->sin_family = AF_INET;
+    name->sin_port = htons(port);
+    hostinfo = gethostbyname (hostname);
+    if (hostinfo == NULL){
+	/*perror("gethostbyname"); */
+	/*fprintf (stderr, "Unknown host %s.\n", hostname); */
+	return -1;
+    }else{
+	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
+	if(addr){
+	    name->sin_addr = *addr;
+	    return 0;
+	}else{
+	    /*warning("h_addr_list is NULL for host %s\n", hostname); */
+	    return -1;
+	}
+    }
+}
 /* To open a port and connect to scheduler */
 int scheduler_connect_self(int block, int mode){
     /*
@@ -83,9 +104,7 @@ int scheduler_connect_self(int block, int mode){
 	cloexec(sock);
 	socket_tcp_keepalive(sock);
 	/* Give the socket a name. */
-	servername.sin_family = AF_INET;
-	servername.sin_port = htons(PORT);
-	servername.sin_addr.s_addr = htonl(INADDR_ANY);
+	init_sockaddr(&servername, "localhost", PORT);
 	if(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
 	    perror("connect");
 	    close(sock);

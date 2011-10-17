@@ -172,9 +172,9 @@ fcomplex clogf(fcomplex);
 
 
 /*#if USE_MEM == 1 */
-void print_backtrace(int sig);
 #ifndef __CYGWIN__
 #define PRINT_BACKTRACE print_backtrace(0);
+void print_backtrace(int sig);
 #else
 #define PRINT_BACKTRACE
 #endif

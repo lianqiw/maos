@@ -67,14 +67,16 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
     dcell *mcc=NULL;
     if(parms->ndm==1){
 	/*Single conjugate. low order WFS only controls Tip/tilt */
-	mcc=dcellnew(1,1);
-	mcc->p[0]=dnew(2,2);
-	PDMAT(mcc->p[0],MCC);
+	mcc=dcellnew(parms->evl.nevl,1);
 	PDMAT(aper->mcc,aMCC);
-	/*not yet available in ngsmod */
-	MCC[0][0]=aMCC[1][1];
-	MCC[1][1]=aMCC[2][2];
-	MCC[1][0]=MCC[0][1]=aMCC[1][2];
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    mcc->p[ievl]=dnew(2,2);
+	    PDMAT(mcc->p[ievl],MCC);
+	    /*not yet available in ngsmod */
+	    MCC[0][0]=aMCC[1][1];
+	    MCC[1][1]=aMCC[2][2];
+	    MCC[1][0]=MCC[0][1]=aMCC[1][2];
+	}
     }else if(parms->ndm==2){
 	double *mod[5];
 	mcc=dcellnew(parms->evl.nevl, 1);

@@ -122,13 +122,17 @@ static void scheduler_launch_do(void *junk){
     if(setenv("MAOS_START_SCHEDULER","YES",1)){
 	error("Unable to setenv\n");
     }
+#if defined(__CYGWIN__)
+    char *fn_scheduler=stradd(BUILDDIR, "/bin/scheduler.exe", NULL);
+#else
     char *fn_scheduler=stradd(BUILDDIR, "/bin/scheduler", NULL);
+#endif
     const char *prog=get_job_progname();
+    /*this will rename the exe to scheduler. avoids accidental killing by pkill maos. */
+    /*execve replace the environment, so we don't use it. */
     if(exist(fn_scheduler)){
 	execl(fn_scheduler,"scheduler", NULL);
     }else if(exist(prog)){
-	/*this will rename the exe to scheduler. avoids accidental killing by pkill maos. */
-	/*execve replace the environment, so we don't use it. */
 	execl(prog,"scheduler", NULL);
     }else{/*fall back. this won't have the right argv set. */
 	warning("(%s) does not exist\n", prog);
@@ -215,7 +219,6 @@ static __attribute__((constructor))void init(){
     
     const char *start=getenv("MAOS_START_SCHEDULER");
     if(start && !strcmp(start, "YES")){/*we need to launch scheduler. */
-	info("Launch the scheduler\n");
 	scheduler();/*this never exits. */
     }
     /*we always try to launch the scheduler. */
@@ -276,7 +279,7 @@ int make_socket (uint16_t port, int retry){
 	    error("Failed to bind to port %d\n",port);
 	}
     }
-    info("binded to port %hd at sock %d\n",port,sock);
+    info2("binded to port %hd at sock %d\n",port,sock);
     return sock;
 }
 /**
@@ -596,7 +599,7 @@ static int respond(int sock){
 	}
 	if(irun->path) free(irun->path);
 	irun->path=readstr(sock);
-	info("Received path: %s\n",irun->path);
+	info2("Received path: %s\n",irun->path);
 	monitor_send(irun,irun->path);
     }
 	break;
@@ -635,7 +638,7 @@ static int respond(int sock){
 	    if(pid>=0x8){/*check monitor version. */
 		tmp->load=1;
 	    }
-	    info("Monitor is connected at sock %d.\n", sock);
+	    info2("Monitor is connected at sock %d.\n", sock);
 	}
 	break;
     case CMD_KILL:/*called by mnitor. */

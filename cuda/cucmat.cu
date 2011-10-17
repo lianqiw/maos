@@ -93,15 +93,12 @@ cuccell* cuccellnew(int nx, int ny){
 /** Allocate continuous memory for blocks of the same size*/
 cuccell *cuccellnew(int nx, int ny, int mx, int my){
     cuccell *out=cuccellnew(nx, ny);
-    fcomplex *p;
-    cudaMalloc(&p, nx*ny*mx*my*sizeof(fcomplex));
-    cudaMemset(p, 0, nx*ny*mx*my*sizeof(fcomplex));
+    out->m=cucnew(mx, my*nx*ny);
     for(int i=0; i<nx*ny; i++){
-	out->p[i]=cucnew(mx, my, p+i*(mx*my), (i==0));
+	out->p[i]=cucnew(mx, my, out->m->p+i*(mx*my), 0);
     }
     return out;
 }
-
 void cuccellfree(cuccell *A){
     if(!A) return;
     if(A->p){
@@ -110,6 +107,7 @@ void cuccellfree(cuccell *A){
 	}
 	free(A->p);
     }
+    cucfree(A->m);
     free(A);
 }
 

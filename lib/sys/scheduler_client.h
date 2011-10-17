@@ -20,6 +20,8 @@
 #define MAXMSG  512
 #include "scheduler_server.h"
 void start_scheduler(int argc, char **argv);
+int init_sockaddr (struct sockaddr_in *name,
+		   const char *hostname, uint16_t port);
 int scheduler_connect(int ihost, int block,int mode);
 int scheduler_connect_self(int block,int mode);
 #ifdef __CYGWIN__

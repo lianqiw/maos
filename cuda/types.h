@@ -37,6 +37,7 @@ typedef struct{
     curmat **p;
     int nx;
     int ny;
+    curmat *m; /* equivalent curmat. */
 }curcell;
 typedef struct{
     fcomplex *p;
@@ -49,6 +50,7 @@ typedef struct{
     cucmat **p;
     int nx;
     int ny;
+    cucmat *m; /* equivalent cucmat */
 }cuccell;
 
 typedef struct{

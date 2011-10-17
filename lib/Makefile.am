@@ -1,4 +1,7 @@
-AM_CFLAGS=$(OPTS) -fPIC -I$(top_srcdir) -I$(top_srcdir)/lib/sys -I$(top_srcdir)/external/cholmod/Include
+AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/lib/sys -I$(top_srcdir)/external/cholmod/Include
+if !WIN
+AM_CFLAGS+=-fPIC
+endif
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
 nobase_include_HEADERS=accphi.h common.h type.h locbin.h misc.h mathmisc.h	\
@@ -48,4 +51,4 @@ tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/spbin.c $(sr
 bin_PROGRAMS=../bin/scheduler 
 ___bin_scheduler_SOURCES=$(SYS_SRC) misc.c hashlittle.c path.c
 ___bin_scheduler_CFLAGS=$(AM_CFLAGS) -DSCHEDULER
-___bin_scheduler_LDFLAGS=$(LDSYS)
+___bin_scheduler_LDFLAGS=$(LDSYS) $(LDEXE)

@@ -568,7 +568,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		simu->ints[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
 	    }
 	}
-	if(!parms->powfs[ipowfs].usephy || parms->save.gradgeom[iwfs] || parms->powfs[ipowfs].pistatout){
+	if(parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom[iwfs] || parms->powfs[ipowfs].pistatout){
 	    simu->gradacc->p[iwfs]=dnew(nsa*2,1);
 	}
 	if(parms->powfs[ipowfs].pistatout){

@@ -179,7 +179,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(fabs(dxsa - nx * powfs[ipowfs].pts->dx)>EPS)
 	warning("nx=%d,dsa=%f,dx=%f for not agree\n", nx, dxsa, dx);
     if(parms->dbg.dxonedge){/*do we want to put a point on edge. */
-	warning("Put points on the edge of subapertures\n");
+	warning2("Put points on the edge of subapertures\n");
 	dxoffset=0;
     }else{
 	dxoffset=dx*0.5;
