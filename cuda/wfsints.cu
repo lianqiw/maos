@@ -36,11 +36,20 @@ extern "C"
 
   Total takes about 12 ms.
 */
-/*#undef TIC
+
+#undef TIMING
+#define TIMING 0
+#if !TIMING
+#undef TIC
 #undef tic
+#undef toc
 #define TIC
-#define tic*/
-#define ctoc(A) // CUDA_SYNC_STREAM; toc2(A) 
+#define tic
+#define ctoc(A)
+#else
+#define ctoc(A) CUDA_SYNC_STREAM; toc2(A)
+#endif
+
 /**
    Embed amp*exp(2*pi*i*opd). input is nxin*nxin, output is nxout*nxout;
 */

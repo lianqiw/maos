@@ -800,6 +800,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.force);
     READ_INT(dbg.usegwr);
     READ_INT(dbg.dxonedge);
+    READ_INT(dbg.cmpgpu);
 }
 /**
    Read in GPU options
@@ -1423,7 +1424,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     /*
       Setup the parameters used to do DM caching on a finer grid.
     */
-    for(int idm=0; idm<ndm; idm++){
+    for(int idm=0; idm<ndm && parms->sim.cachedm; idm++){
 	double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	if(fabs(ht)<1.e-10){
 	    parms->dm[idm].isground=1;
@@ -1439,7 +1440,6 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    if(parms->dm[idm].dx>parms->powfs[ipowfs].dx*10){
 		parms->powfs[ipowfs].scalegroup[idm]=arrind(scale, &nscale, dxscl);
 	    }else{
-		warning("skip powfs %d in cachedm.\n", ipowfs);
 		parms->powfs[ipowfs].scalegroup[idm]=-1;
 	    }
 	}
@@ -1452,10 +1452,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 		double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->aper.dx;
 		parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
 	    }
-	}else{
-	    warning("skip evl in cachedm.\n");
 	}
-	/*info2("idm=%d, nscale=%d\n", idm, nscale); */
 	parms->dm[idm].ncache=nscale;
 	parms->dm[idm].dxcache=calloc(1, nscale*sizeof(double));
 	for(int iscale=0; iscale<nscale; iscale++){
@@ -1762,18 +1759,18 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	if(parms->gpu.tomo){
 	    parms->tomo.square=1;
 	    parms->dbg.dxonedge=1;
-	    parms->dbg.splitlrt=0;/*not quite necessary. */
+	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
     }else{
 	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=0;
     }
-#if USE_CUDA
-	warning("MAOS is compiled with cuda. make cpu code follows gpu convention\n");
+    if(parms->dbg.cmpgpu){
+	warning("Make cpu code follows gpu implementations.\n");
 	parms->sim.cachedm=0;
 	parms->tomo.square=1;
 	parms->dbg.dxonedge=1;
-	parms->dbg.splitlrt=0;/*not quite necessary. */
-#endif
+	/*parms->dbg.splitlrt=0;*//*need extensity comparison. */
+    }
     /*Assign each turbulence layer to a corresponding reconstructon layer. Used
       to compute opdx in a simple minded way.*/
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));

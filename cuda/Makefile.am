@@ -7,10 +7,10 @@ endif
 AM_CFLAGS+=-DHAVE_CONFIG_H -I..
 AM_LDFLAGS=$(LDCUDA) -static
 
-EXTRA_DIST=accphi.h  cucmat.h  curmat.h  gpu.h  pcg.h  recon.h  types.h  utils.h  wfs.h kernel.h
+EXTRA_DIST=accphi.h  cucmat.h  curmat.h  gpu.h  pcg.h  recon.h  types.h  utils.h  wfs.h kernel.h cumat.h
 #LTLIBRARIES does not work.
 lib_LIBRARIES=libgpu.a
-libgpu_a_SOURCES=accphi.cu utils.cu curmat.cu cucmat.cu  wfsgrad.cu wfsints.cu wfsinit.cu perfevl.cu recon.cu pcg.cu fit.cu tomo.cu kernel.cu $(EXTRA_DIST)
+libgpu_a_SOURCES=accphi.cu utils.cu curmat.cu cucmat.cu  wfsgrad.cu wfsints.cu wfsinit.cu perfevl.cu recon.cu pcg.cu tomo.cu kernel.cu $(EXTRA_DIST)
 libgpu_a_LIBADD=
 
 .SUFFIXES=.cu

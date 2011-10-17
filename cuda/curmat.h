@@ -21,21 +21,20 @@
 #include "utils.h"
 #include "types.h"
 #include "kernel.h"
+#include "cumat.h"
+#define curnew  cunew<float> 
+#define curref  curef<float>
+#define curfree cufree<float>
+#define curzero cuzero<float>
+#define curcellnew  cucellnew<float>
+#define curcellfree cucellfree<float>
+#define curcellzero cucellzero<float>
+#define curwrite     cuwrite<float, (uint32_t)M_FLT>
+#define curcellwrite cucellwrite<float, (uint32_t)M_FLT>
+
 cuspcell *cuspcellnew(int nx, int ny);
-curcell *curcellnew(int nx, int ny);
-curcell *curcellnew(int nx, int ny, int mx, int my);
-curcell *curcellnew2(const curcell *in);
-curmat *curref(curmat *A);
-void curcellfree(curcell *A);
-curmat *curnew(int nx, int ny);
-curmat *curnew(int nx, int ny, cudaStream_t stream);
-void curfree(curmat *A);
-void curwritedata(const curmat *A, file_t *fp);
-void curwrite(const curmat *A, const char *format, ...);
-void curcellwrite(const curcell *A, const char *format, ...);
 void curset(curmat *A, float alpha, cudaStream_t stream);
 void curshow(curmat *A, cudaStream_t stream);
-void curzero(curmat *A, cudaStream_t stream);
 void curcp(curmat **out, const curmat *in, cudaStream_t stream);
 void curadd(curmat **out,float alpha,curmat *in,float beta,cudaStream_t stream);
 void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t stream);
@@ -43,7 +42,6 @@ void curscale(curmat *in, float alpha, cudaStream_t stream);
 void curmv(curmat **C, float alpha, const curmat *A, const curmat *B, char trans, float beta, cublasHandle_t handle);
 void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans[2], float beta, cublasHandle_t handle);
 
-void curcellzero(curcell *A, cudaStream_t stream);
 void curcellcp(curcell **A, const curcell *B, cudaStream_t stream);
 void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream);
 __global__ void adds_do(float *vec, float *palpha, float beta, int n);
@@ -69,7 +67,7 @@ float curmax(const curmat *a, cudaStream_t stream);
 /**
    Add tip/tilt to OPD
 */
-inline static void curaddptt(curmat *opd, float (*loc)[2], float pis, float tx, float ty, cudaStream_t stream){
+inline void curaddptt(curmat *opd, float (*loc)[2], float pis, float tx, float ty, cudaStream_t stream){
     add_ptt_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>(opd->p, loc, opd->nx*opd->ny, pis, tx, ty);
 }
 #endif

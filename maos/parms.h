@@ -520,6 +520,7 @@ typedef struct DBG_CFG_T{
     int force;       /**<Force run even if Res_${seed}.done exists*/
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
     int dxonedge;    /**<have points on the edge of subapertures.*/
+    int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

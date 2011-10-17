@@ -51,9 +51,9 @@
 */
 /*2009-12-30: Changed to static inline which is portable*/
 #if __STDC_VERSION__ >= 199901L /*C99*/
-#define MT_INLINE static inline
+#define MT_INLINE inline /*static inline*/
 #else
-#define MT_INLINE static
+#define MT_INLINE inline /*static*/
 #endif
 #endif
 #include <stdio.h>
@@ -140,9 +140,9 @@ typedef struct
 	}								\
 	while (0)
 void mts_refresh(register mt_state* state);
-static double mt_32_to_double=1./4294967296.; 
+#define mt_32_to_double (1./4294967296.)
 /* Multiplier to convert long to dbl [0,1)*/
-static double mt_64_to_double=1./18446744073709551616.;
+#define mt_64_to_double (1./18446744073709551616.)
 /* Mult'r to cvt long long to dbl */
 
 MT_INLINE unsigned long mts_lrand(/*32 bit val */

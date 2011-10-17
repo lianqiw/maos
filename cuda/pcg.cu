@@ -84,7 +84,7 @@ int gpu_pcg(curcell **px,
     /*computes r0=b-A*x0 */
     curcellcp(&r0, b, stream);
     if(!*px || !warm){/*start from zero guess. */
-	x0=curcellnew2(b);
+	x0=curcellnew(b);
 	if(!*px) *px=curcellnew(x0->nx, x0->ny);
     }else{
 	curcellcp(&x0, *px, stream);

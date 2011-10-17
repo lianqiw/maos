@@ -846,9 +846,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
     simu->perfevl_iground=parms->atm.iground;
-    if(parms->sim.cachedm)
+    if(parms->sim.cachedm){
 	prep_cachedm(simu);
- 
+    }
  
     simu->dtrat_hi=1;
     simu->dtrat_lo=1;

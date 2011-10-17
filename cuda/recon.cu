@@ -389,12 +389,6 @@ void gpu_fit(SIM_T *simu){
     int nxp=recon->pmap->nx;
     int nyp=recon->pmap->ny;
     int nfit=parms->fit.nfit;
-    curecon->opdfit=curcellnew(nfit, 1);
-    curecon->opdfit2=curcellnew(nfit,1);
-    for(int ifit=0; ifit<nfit; ifit++){
-	curecon->opdfit->p[ifit]=curnew(nxp, nyp);
-	curecon->opdfit2->p[ifit]=curnew(nxp, nyp);
-    }
     toc("Before FitR");
     curcell *rhs=NULL;
     cumuv(&rhs, 0, &curecon->FR, curecon->opdr, 1);
@@ -410,8 +404,6 @@ void gpu_fit(SIM_T *simu){
     toc("FitL CG");
     gpu_curcell2d(&simu->dmfit_hi, curecon->dmfit, curecon->cgstream);
     cudaStreamSynchronize(curecon->cgstream);
-    curcellfree(curecon->opdfit);
-    curcellfree(curecon->opdfit2);
     /*Don't free opdr. */
     curcellfree(rhs); rhs=NULL;
 }
