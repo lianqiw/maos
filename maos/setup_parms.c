@@ -701,16 +701,16 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.napngs=2;
     }
     if(fabs(dblsum(parms->sim.apdm, parms->sim.napdm)-1)>1.e-10){
-	error("sum(sim.apdm)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apdm, parms->sim.napdm));
+	warning("sum(sim.apdm)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apdm, parms->sim.napdm));
     }
     if(fabs(dblsum(parms->sim.apngs, parms->sim.napngs)-1)>1.e-10){
-	error("sum(sim.apngs)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apngs, parms->sim.napngs));
+	warning("sum(sim.apngs)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apngs, parms->sim.napngs));
     }
     if(fabs(dblsum(parms->sim.apupt, parms->sim.napupt)-1)>1.e-10){
-	error("sum(sim.apupt)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apupt, parms->sim.napupt));
+	warning("sum(sim.apupt)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apupt, parms->sim.napupt));
     }
     parms->sim.nseed=readcfg_intarr(&parms->sim.seeds,"sim.seeds");
     READ_DBL(sim.dt);
@@ -1591,6 +1591,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(covmem>MAX(NMEM, 4000000000) && parms->aper.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
 	    error("parms->aper.dx=%g is probably too large to save ecxx. Recommend parms->aper.dx=%g\n", parms->aper.dx, parms->atmr.dx*0.25);
 	}
+    }
+    if(parms->tomo.predict && !parms->tomo.square){
+	info("Please implement wind shifting on HX. need wind velocity\n");
+	error("Prediction is only implemented for square grid currently\n");
     }
     parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
 }
