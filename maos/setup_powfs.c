@@ -134,6 +134,24 @@ static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx,
    (non-misregistered).
    
 */
+static void wfspupmask(const PARMS_T *parms, dmat *amp, loc_t *loc, double misreg[2], int iwfs){
+    long nloc=loc->nloc;
+    dmat *ampmask=dnew(nloc, 1);
+    double ht=parms->atm.hmax;
+    int ipowfs=parms->wfs[iwfs].powfs;
+    for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
+	int jpowfs=parms->wfs[jwfs].powfs;
+	if(parms->powfs[jpowfs].lo) continue;
+	double r=parms->aper.d*0.5*(1.-ht/parms->powfs[jpowfs].hs)/(1.-ht/parms->powfs[ipowfs].hs);
+	double sx=(parms->wfs[jwfs].thetax-parms->wfs[iwfs].thetax)*ht-misreg[0];
+	double sy=(parms->wfs[jwfs].thetay-parms->wfs[iwfs].thetay)*ht-misreg[1];
+	loccircle(ampmask->p, loc, sx,sy, r, 1);
+    }
+    for(int i=0; i<nloc; i++){
+	if(ampmask->p[i]<0.5) amp->p[i]=0;
+    }
+    dfree(ampmask);
+}
 static void 
 setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms, 
 		 APER_T *aper, int ipowfs){
@@ -213,18 +231,14 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
 			       0,0, parms->aper.d, parms->aper.din);
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
-    dmat *ampmask=NULL;
-    if(aper->ampmask && parms->powfs[ipowfs].lo){
-	ampmask=dnew(powfs[ipowfs].loc->nloc, 1);
-	double ht=parms->atm.hmax;
-	for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
-	    int jpowfs=parms->wfs[jwfs].powfs;
-	    if(parms->powfs[jpowfs].lo) continue;
-	    
-	    loccircle(ampmask->p, powfs[ipowfs].loc, 
-		      parms->wfs[jwfs].thetax*ht, parms->wfs[jwfs].thetay*ht,
-		      (1-ht/parms->wfs[jwfs].hs)/(1-ht/parms->wfs[iwfs].hs), 1);
+    long nloc=powfs[ipowfs].loc->nloc;
+    if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
+	double misreg[2]={0,0};
+	if(parms->powfs[ipowfs].nwfs>1){
+	    error("dbg.pupmask=1, only powfs can only have 1 wfs.\n");
 	}
+	int iwfs=parms->powfs[ipowfs].wfs[0];
+	wfspupmask(parms, powfs[ipowfs].amp, powfs[ipowfs].loc, misreg, iwfs);
     }
     powfs[ipowfs].misreg=calloc(2*parms->powfs[ipowfs].nwfs, sizeof(double));
     if(parms->powfs[ipowfs].misreg){
@@ -255,7 +269,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    /*Transforms loc using misregistration information. The do ray
 	      tracing to determine the misregistered ampltidue map*/
 	    double *shiftxy=NULL;
-	    powfs[ipowfs].locm[ilocm]=loctransform(powfs[ipowfs].loc, &shiftxy, pmisreg[ilocm]);/*may return NUL; */
+	    /*may return NUL; if it is purely transform.*/
+	    powfs[ipowfs].locm[ilocm]=loctransform(powfs[ipowfs].loc, &shiftxy, pmisreg[ilocm]);
 	    powfs[ipowfs].misreg[ilocm][0]=shiftxy[0];
 	    powfs[ipowfs].misreg[ilocm][1]=shiftxy[1];
 	    powfs[ipowfs].saam->p[ilocm]=dnew(powfs[ipowfs].pts->nsa, 1);
@@ -265,6 +280,14 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 						  shiftxy[0]-parms->aper.misreg[0], 
 						  shiftxy[1]-parms->aper.misreg[1],
 						  parms->aper.d, parms->aper.din);
+	    if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
+		//don't use aper.misreg since the pupil mask is in wfs.
+		if(parms->powfs[ipowfs].nwfs>1){
+		    error("dbg.pupmask=1, only powfs can only have 1 wfs.\n");
+		}
+		int iwfs=parms->powfs[ipowfs].wfs[0];
+		wfspupmask(parms, powfs[ipowfs].amp, powfs[ipowfs].loc, shiftxy, iwfs);
+	    }
 	    powfs[ipowfs].saam->p[ilocm]=wfsamp2saa(powfs[ipowfs].ampm->p[ilocm], nxsa);
 	}
         for(int ilocm=nlocm; nlocm==1 && ilocm<parms->powfs[ipowfs].nwfs; ilocm++){
