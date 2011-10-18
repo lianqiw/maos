@@ -213,7 +213,19 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
 			       0,0, parms->aper.d, parms->aper.din);
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
-    
+    dmat *ampmask=NULL;
+    if(aper->ampmask && parms->powfs[ipowfs].lo){
+	ampmask=dnew(powfs[ipowfs].loc->nloc, 1);
+	double ht=parms->atm.hmax;
+	for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
+	    int jpowfs=parms->wfs[jwfs].powfs;
+	    if(parms->powfs[jpowfs].lo) continue;
+	    
+	    loccircle(ampmask->p, powfs[ipowfs].loc, 
+		      parms->wfs[jwfs].thetax*ht, parms->wfs[jwfs].thetay*ht,
+		      (1-ht/parms->wfs[jwfs].hs)/(1-ht/parms->wfs[iwfs].hs), 1);
+	}
+    }
     powfs[ipowfs].misreg=calloc(2*parms->powfs[ipowfs].nwfs, sizeof(double));
     if(parms->powfs[ipowfs].misreg){
 	/*Create misregistered coordinate and amplitude map to do physical

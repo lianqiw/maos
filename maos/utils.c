@@ -74,12 +74,12 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
    Calls create_metapupil is simplified interface by returning a map_t object.
  */
 map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
-			      double offset,double guard, long nin,
+			      double offset,double guard, long ninx,long niny,
 			      int pad,int square){
     long nx, ny;
     double ox, oy, *p;
     create_metapupil(parms,ht,dx,offset,&(nx),&(ny),
-		     &(ox),&(oy),&(p),guard, nin,pad,square);
+		     &(ox),&(oy),&(p),guard, ninx, niny, pad,square);
     map_t *amp=mapnew(nx, ny, dx, p);
     amp->ox=ox;
     amp->oy=oy;
@@ -100,7 +100,7 @@ map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
 void create_metapupil(const PARMS_T *parms, double ht,double dx,
 		      double offset, long* nxout, long* nyout,
 		      double *oxout, double *oyout, double**map, 
-		      double guard, long nin, int pad,int square){
+		      double guard, long ninx, long niny, int pad,int square){
     double R=parms->aper.d/2;
     double maxx=0,maxy=0;
     double sx,sy;/*temporary variables */
@@ -153,13 +153,13 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     /*Make it square */
     nx=(nx<ny)?ny:nx;
     ny=nx;
-    if(nin>1){
-	if(nin<nx){
-	    warning("nin=%ld is too small\n",nin);
-	}
-	/*warning("overriding nx=%ld, ny=%ld by supplied nin=%ld\n",nx,ny,nin); */
-	nx=nin;
-	ny=nin;
+    if(ninx>1){
+	if(ninx<nx) warning("ninx=%ld is too small\n",ninx);
+	nx=ninx;
+    }
+    if(niny>1){
+	if(niny<ny)  warning("niny=%ld is too small\n",niny);
+	ny=niny;
     }
     double ox,oy;
     ox=((nx/2)-offset);

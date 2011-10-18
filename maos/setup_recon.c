@@ -53,7 +53,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	  create_metapupil with height of 0. We don't add any guard points.*/
 	double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
 	map_t *pmap=create_metapupil_wrap 
-	    (parms,0,dxr,0,0,0,0,parms->tomo.square);
+	    (parms,0,dxr,0,0,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
 	recon->pmap = pmap;
@@ -80,7 +80,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	}else{
 	    double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of ploc */
 	    map_t *fmap=create_metapupil_wrap 
-		(parms,0,dxr,0,0,0,0,parms->fit.square);
+		(parms,0,dxr,0,0,0,0,0,parms->fit.square);
 	    info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
 	    recon->floc=map2loc(fmap);/*convert map_t to loc_t */
 	    mapfree(fmap);
@@ -152,7 +152,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
 	    
 	    map_t *map=create_metapupil_wrap
-		(parms,ht,dx,offset,guard,0,0,parms->fit.square);
+		(parms,ht,dx,offset,guard,0,0,0,parms->fit.square);
 	    info("Dm %d: map is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
 	    recon->amap[idm]=map;
@@ -253,7 +253,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 		    *recon->os->p[ips]/recon->os->p[0];
 	    }
 	    map_t *map=create_metapupil_wrap
-		(parms,ht,dxr,0,guard,nin,0,parms->tomo.square);
+		(parms,ht,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    info2("layer %d: xloc map is %3ld x %3ld, sampling is %.3f m\n",
 		  ips, map->nx,map->ny,dxr);
 	    recon->xloc[ips]=map2loc(map);

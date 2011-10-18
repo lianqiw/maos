@@ -801,6 +801,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.usegwr);
     READ_INT(dbg.dxonedge);
     READ_INT(dbg.cmpgpu);
+    READ_INT(dbg.pupmask);
 }
 /**
    Read in GPU options
@@ -1260,6 +1261,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
       Find ground turbulence layer. The ray tracing can be shared between different directions.
     */
     parms->atm.iground=-1;
+    parms->atm.hmax=-INFINITY;
     for(int ips=0; ips<parms->atm.nps; ips++){
 	if(fabs(parms->atm.ht[ips])<1.e-10){
 	    if(parms->atm.iground==-1)
@@ -1272,6 +1274,9 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	if(parms->atm.ht[ips]>0 && parms->atm.ht[ips]<20){
 	    warning("Layer %d height %g is too close to the ground\n",ips,parms->atm.ht[ips]);
+	}
+	if(parms->atm.hmax<parms->atm.ht[ips]){
+	    parms->atm.hmax=parms->atm.ht[ips];
 	}
     }
     if(parms->atm.iground==-1){
@@ -1357,7 +1362,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     long nxout[nps],nyout[nps];
     for(int ips=0; ips<nps; ips++){
 	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,0.5,
-			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,1);
+			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,0,1);
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
 	if(nyout[ips]>Nmax) Nmax=nyout[ips];
     }
