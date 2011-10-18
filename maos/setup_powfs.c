@@ -137,7 +137,7 @@ static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx,
 static void wfspupmask(const PARMS_T *parms, dmat *amp, loc_t *loc, double misreg[2], int iwfs){
     long nloc=loc->nloc;
     dmat *ampmask=dnew(nloc, 1);
-    double ht=parms->atm.hmax;
+    double ht=parms->atm.hmax*0.7;
     int ipowfs=parms->wfs[iwfs].powfs;
     for(int jwfs=0; jwfs<parms->nwfs; jwfs++){
 	int jpowfs=parms->wfs[jwfs].powfs;

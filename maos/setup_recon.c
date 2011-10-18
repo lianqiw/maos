@@ -272,7 +272,12 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);
 	}
     }
-    
+    recon->xnx=calloc(recon->npsr, sizeof(long));
+    recon->xny=calloc(recon->npsr, sizeof(long));
+    for(long i=0; i<recon->npsr; i++){
+	recon->xnx[i]=recon->xmap[i]->nx;
+	recon->xny[i]=recon->xmap[i]->ny;
+    }
     recon->xmcc=dcellnew(npsr,1);
     for(int ipsr=0; ipsr<npsr; ipsr++){
 	recon->xmcc->p[ipsr]=loc_mcc_ptt(recon->xloc[ipsr],NULL);
@@ -2608,6 +2613,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
    
     locarrfree(recon->xloc, npsr); recon->xloc=NULL;
     maparrfree(recon->xmap, npsr); recon->xmap=NULL;
+    free(recon->xnx);
+    free(recon->xny);
     if(recon->floc!=recon->ploc) locfree(recon->floc); recon->floc=NULL;
     locfree(recon->ploc); recon->ploc=NULL;
     for(int idm=0; idm<ndm; idm++){

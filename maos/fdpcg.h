@@ -20,10 +20,10 @@
 #define AOS_RECON_FDPCG
 #include "maos.h"
 csp* fdpcg_saselect(long nx, long ny, double dx, loc_t *saloc, double *saa);
-long *fdpcg_perm(const long *nx, const long *ny, const long *os, int nps);
+long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps);
 void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa);
-csp *fdpcg_prop(long nps, const long *os, long nxg, double dx, 
-		    double *dispx, double *dispy);
+csp *fdpcg_prop(long nps, long pos, const int *os, long nxg, double dx, 
+		double *dispx, double *dispy);
 FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, 
 	       const POWFS_T *powfs);
 void fdpcg_precond(dcell **xout, const void *A, const dcell *xin);

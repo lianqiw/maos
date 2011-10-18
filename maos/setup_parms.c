@@ -1331,6 +1331,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
 	}
+	parms->atm.hmax*=secz;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(!isinf(parms->powfs[ipowfs].hs)){
 		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
