@@ -31,6 +31,7 @@
 #define curcellzero cucellzero<float>
 #define curwrite     cuwrite<float, (uint32_t)M_FLT>
 #define curcellwrite cucellwrite<float, (uint32_t)M_FLT>
+#define curcellcp    cucellcp<float>
 
 cuspcell *cuspcellnew(int nx, int ny);
 void curset(curmat *A, float alpha, cudaStream_t stream);
@@ -42,7 +43,6 @@ void curscale(curmat *in, float alpha, cudaStream_t stream);
 void curmv(curmat **C, float alpha, const curmat *A, const curmat *B, char trans, float beta, cublasHandle_t handle);
 void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans[2], float beta, cublasHandle_t handle);
 
-void curcellcp(curcell **A, const curcell *B, cudaStream_t stream);
 void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream);
 __global__ void adds_do(float *vec, float *palpha, float beta, int n);
 __global__ void add2_do(float *restrict a, const float * b, const float *restrict b_sc1, float b_sc2, int n);

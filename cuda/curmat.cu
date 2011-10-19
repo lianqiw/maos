@@ -21,6 +21,7 @@ extern "C"
 #include "gpu.h"
 }
 #include "curmat.h"
+#include "cucmat.h"
 #include "utils.h"
 #include "kernel.h"
 
@@ -162,21 +163,6 @@ cuspcell* cuspcellnew(int nx, int ny){
     return out;
 }
 
-
-void curcellcp(curcell **A, const curcell *B, cudaStream_t stream){
-    if(!B)
-	curcellzero(*A, stream);
-    else{
-	if(!*A){
-	    *A=curcellnew(B);
-	}else{
-	    assert((*A)->nx * (*A)->ny == B->nx * B->ny);
-	}
-	for(int i=0; i<B->nx*B->ny; i++){
-	    curcp(&(*A)->p[i], B->p[i], stream);
-	}
-    }
-}
 /*
   A=A*beta+B*alpha;
 */

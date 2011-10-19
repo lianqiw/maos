@@ -24,6 +24,7 @@ extern "C"
 #include "wfs.h"
 #include "recon.h"
 #include "accphi.h"
+#include "cucmat.h"
 #define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ cudaStreamSynchronize(curecon->psstream[ips]); }
 #define SYNC_WFS  for(int iwfs=0; iwfs<nwfs; iwfs++){ cudaStreamSynchronize(curecon->wfsstream[iwfs]); }
 
@@ -257,12 +258,13 @@ __global__ static void zzt_do(float *restrict out, const float *in, int ix, floa
     }
 }
 static inline curcell *new_xout(const RECON_T *recon){
-    curcell *xout=curcellnew(recon->npsr, 1);
+    /*curcell *xout=curcellnew(recon->npsr, 1);
     for(int ips=0; ips<recon->npsr; ips++){
 	const int nxo=recon->xmap[ips]->nx;
 	const int nyo=recon->xmap[ips]->ny;
 	xout->p[ips]=curnew(nxo, nyo);
-    }
+	}*/
+    curcell *xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     return xout;
 }
 void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
@@ -421,7 +423,109 @@ void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *x
     toc("TomoL:");
 #endif
 }
-
-/*void gpu_fdpcg_precond(curcell **xout, const void *A, const curcell *xin){
-  SIM_T *simu=(SIM_T*)A;
-  }*/
+/* embed real to complex data.*/
+__global__ static void fdpcg_embed(fcomplex *out, float *in, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[ix]=make_cuComplex(in[ix], 0);
+    }
+}
+/* extract real from complex data.*/
+__global__ static void fdpcg_extract(float *out, fcomplex *in, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[ix]=cuCrealf(in[ix]);
+    }
+}
+__global__ static void fdpcg_perm(fcomplex *out, fcomplex *in, int *perm, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[ix]=in[perm[ix]];
+    }
+}
+__global__ static void fdpcg_permi(fcomplex *out, fcomplex *in, int *perm, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[perm[ix]]=in[ix];
+    }
+}
+__global__ static void fdpcg_mul_block(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
+    extern __shared__ fcomplex v[];
+    int ib=blockIdx.x;
+    int bs=blockDim.x;
+    int ix=threadIdx.x;
+    int iy=threadIdx.y;
+    fcomplex *vin=v;
+    fcomplex *vout=v+bs;
+    xin+=ib*bs;
+    xout+=ib*bs;
+    M+=ib*bs*bs;
+    if(iy==0){
+	vin[ix]=xin[ix];
+	vout[ix]=make_cuComplex(0,0);
+    }
+    __syncthreads();
+    fcomplex tmp=cuCmulf(M[ix+iy*bs],vin[iy]);
+    atomicAdd((float*)(&vout[ix]), cuCrealf(tmp));
+    atomicAdd(((float*)(&vout[ix]))+1, cuCimagf(tmp));
+    __syncthreads();
+    if(iy==0){
+	xout[ix]=vout[ix];
+    }
+}
+__global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
+    int step=blockDim.x * gridDim.x; 
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nx; i+=step){
+	x[i]=make_cuComplex(cuCrealf(x[i])*alpha, cuCimagf(x[i])*alpha);
+    }
+}
+void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
+    SIM_T *simu=(SIM_T*)A;
+    RECON_T *recon=simu->recon;
+    if(!xin->m){
+	error("xin is not continuous");
+    }
+    if(!*xout){
+	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+    }else if(!(*xout)->m){
+	error("xout is not continuous");
+    }
+    cudaStream_t stream=curecon->cgstream;
+    fdpcg_embed<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+	(curecon->fd_xhat1->p[0]->p, xin->p[0]->p, curecon->fd_nxtot);
+    cuccellwrite(curecon->fd_xhat1, "fdpcg_copy");
+    for(int ic=0; ic<curecon->fd_fftnc; ic++){
+	int ips=curecon->fd_fftips[ic];
+	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat1->p[ips]->p, CUFFT_FORWARD);
+	int nps=curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic];
+	int nx=curecon->fd_xhat1->p[ips]->nx;
+	int ny=curecon->fd_xhat1->p[ips]->ny;
+	info("nx=%d, ny=%d\n", nx, ny);
+	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
+	    (curecon->fd_xhat1->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
+    }
+    cuccellwrite(curecon->fd_xhat1, "fdpcg_fft");
+    fdpcg_perm<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
+    cuccellwrite(curecon->fd_xhat2, "fdpcg_perm");
+    int nb=curecon->fd_Mb->nx;
+    int bs=curecon->fd_Mb->p[0]->nx;
+    fdpcg_mul_block<<<nb, dim3(bs,bs), sizeof(fcomplex)*bs*2, stream>>>
+	(curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
+    cuccellwrite(curecon->fd_xhat1, "fdpcg_mul");
+    fdpcg_permi<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
+    cuccellwrite(curecon->fd_xhat2, "fdpcg_perm_i");
+    for(int ic=0; ic<curecon->fd_fftnc; ic++){
+	int ips=curecon->fd_fftips[ic];
+	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat2->p[ips]->p, CUFFT_INVERSE);
+	int nps=curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic];
+	int nx=curecon->fd_xhat1->p[ips]->nx;
+	int ny=curecon->fd_xhat1->p[ips]->ny;
+	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
+	    (curecon->fd_xhat2->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
+    }
+    cuccellwrite(curecon->fd_xhat2, "fdpcg_fft_i");exit(0);
+    fdpcg_extract<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+	((*xout)->p[0]->p, curecon->fd_xhat2->p[0]->p, curecon->fd_nxtot);
+}

@@ -79,7 +79,7 @@ inline void cuzero(cumat<T> *A, cudaStream_t stream){
 */
 
 template <typename T>
-inline cucell<T>* cucellnew(int nx, int ny){
+inline cucell<T>* cucellnew(const int nx, const int ny){
     cucell<T> *out=(cucell<T>*)calloc(1, sizeof(cucell<T>));
     out->p=(cumat<T>**)calloc(nx*ny, sizeof(cumat<T>*));
     out->nx=nx;
@@ -87,20 +87,11 @@ inline cucell<T>* cucellnew(int nx, int ny){
     return out;
 }
 
-template <typename T>
-inline cucell<T>* cucellnew(const cucell<T> *in){
-    cucell<T> *out=cucellnew<T>(in->nx, in->ny);
-    for(int i=0; i<in->nx*in->ny; i++){
-	out->p[i]=cunew<T>(in->p[i]->nx, in->p[i]->ny);
-    }
-    return out;
-}
-
 /** Allocate continuous memory for blocks of the same size*/
 template <typename T>
-inline cucell<T>* cucellnew(int nx, int ny, int mx, int my){
+inline cucell<T>* cucellnew(const int nx, const int ny, int mx, int my){
     cucell<T> *out=cucellnew<T>(nx, ny);
-    out->m=cunew<T>(mx, my*nx*ny);
+    out->m=cunew<T>(mx*my*nx*ny, 1);
     for(int i=0; i<nx*ny; i++){
 	out->p[i]=cunew<T>(mx, my, out->m->p+i*(mx*my), 0);
     }
@@ -110,9 +101,9 @@ inline cucell<T>* cucellnew(int nx, int ny, int mx, int my){
 /**
    Create a cellarray, mx and my should be nx*ny long.
 */
-template <typename T>
-inline cucell<T>* cucellnew(int nx, int ny, int *mx, int *my){
-    int tot=0;
+template <typename T, typename L>
+inline cucell<T>* cucellnew(const int nx, const int ny, L *mx, L *my){
+    long tot=0;
     for(int i=0; i<nx*ny; i++){
 	tot+=mx[i]*my[i];
     }
@@ -125,6 +116,28 @@ inline cucell<T>* cucellnew(int nx, int ny, int *mx, int *my){
     }
     return out;
 }
+
+template <typename T>
+inline cucell<T>* cucellnew(const cucell<T> *in){
+    cucell<T> *out;
+    if(!in->m){
+	out=cucellnew<T>(in->nx, in->ny);
+	for(int i=0; i<in->nx*in->ny; i++){
+	    out->p[i]=cunew<T>(in->p[i]->nx, in->p[i]->ny);
+	}
+    }else{
+	int mx[in->nx*in->ny];
+	int my[in->nx*in->ny];
+	for(int i=0; i<in->nx*in->ny; i++){
+	    mx[i]=in->p[i]->nx;
+	    my[i]=in->p[i]->ny;
+	}
+	out=cucellnew<T,int>(in->nx, in->ny, (int*)mx, (int*)my);
+    }
+    return out;
+}
+
+
 
 template <typename T>
 inline void cucellfree(cucell<T> *A){
@@ -189,4 +202,20 @@ template <typename T, uint32_t magic>
     zfclose(fp);	
 }
 
+template <typename T>
+inline void cucellcp(cucell<T> **out, const cucell<T>*in, cudaStream_t stream){
+    if(!*out){
+	*out=cucellnew<T>(in);
+    }
+    if(!in->m){
+	for(int i=0; i<in->nx*in->ny; i++){
+	    curcp(&(*out)->p[i], in->p[i], stream);
+	}
+    }else{
+	if(!(*out)->m){
+	    error("in is continuous, out is not\n");
+	}
+	curcp(&(*out)->m, in->m, stream);
+    }
+}
 #endif

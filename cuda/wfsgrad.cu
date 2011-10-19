@@ -458,7 +458,6 @@ void gpu_wfsgrad_save(SIM_T *simu){
 		    curcell* tmp=NULL;
 		    curcelladd(&tmp, 0, cuwfs[iwfs].pistatout, 1.f/(float)nstep, stream);
 		    if(parms->sim.skysim){
-			TO_IMPLEMENT;//fftshift in gpu.
 			curcellwrite(tmp, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
 				     dirskysim,simu->seed,
 				     parms->powfs[ipowfs].order,

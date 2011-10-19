@@ -35,6 +35,7 @@ typedef struct ATM_CFG_T{
     double r0;    /**<derived from r0z for zenith angle za*/
     double l0;    /**<outer scale*/
     double dx;    /**<sampling of turbulence screens*/
+    double hmax;  /**<maximum in ht*/
     double *ht;   /**<height of each layer*/
     double *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     double *ws;   /**<wind speed of each layer*/
@@ -521,6 +522,7 @@ typedef struct DBG_CFG_T{
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
     int dxonedge;    /**<have points on the edge of subapertures.*/
     int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
+    int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -677,9 +679,9 @@ typedef enum T_TYPE{
 }T_TYPE;
 void create_metapupil(const PARMS_T *parms, double ht, double dx,
 		      double offset,long* nx, long* ny, double *ox, double *oy, 
-		      double **map,double guard, long nin, int pad,int square);
+		      double **map,double guard, long ninx, long niny, int pad,int square);
 map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
-			     double offset,double guard,long nin, 
+			     double offset,double guard,long ninx, long niny,
 			     int pad,int square);
 void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
 #endif

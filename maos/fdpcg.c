@@ -28,12 +28,19 @@
    1) use normalized FFT. changed prop accordingly by *0.5
    2) use Laplacian to generate Cxx instead of PSD to follow forward reg.
    3) Fixed a bug in dispx,dispy. should not include cone effect since dk doesn't
+
+   2011-10-19:
+   Changed to use frequencies from 0 to N-1 to avoid fftshift.
  */
 
 #include "maos.h"
 #include "fdpcg.h"
-#define PRE_PERMUT 1 /*1: apply permutation to the inverse of the sparse matrix.
-		       0: apply permutation to the vectors.*/
+#if USE_CUDA
+#define PRE_PERMUT 0
+#else
+#define PRE_PERMUT 0 /*1: apply permutation to the inverse of the sparse matrix.
+		       0: apply permutation to the vectors: faster*/
+#endif
 
 /**
    Create aperture selection function that selects the gradients for valid
@@ -44,8 +51,8 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     cfft2plan(xsel,-1);
     PCMAT(xsel,pxsel);
     double dx1=1./dx;
-    long offx=nx/2+saloc->dx*0.5*dx1;
-    long offy=ny/2+saloc->dx*0.5*dx1;
+    long offx=nx/2;
+    long offy=ny/2;
     for(long isa=0; isa<saloc->nloc; isa++){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture center. */
@@ -55,7 +62,7 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
-    cfftshift(xsel);
+    //cfftshift(xsel);
     cscale(xsel,1./(double)(nx*ny));/*cancel FFT effect. */
     double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
    
@@ -82,41 +89,39 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
    spatial frequencies. Group them together.
 
 */
-long *fdpcg_perm(const long *nx, const long *ny, const long *os, int nps){
-    long nx2[nps],ny2[nps];
+long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps){
+    //long nx2[nps],ny2[nps];
     long noff[nps];
     long xloctot=0;
     for(long ips=0; ips<nps; ips++){
-	nx2[ips]=nx[ips]/2;
-	ny2[ips]=ny[ips]/2;
+	//nx2[ips]=nx[ips]/2;
+	//ny2[ips]=ny[ips]/2;
 	noff[ips]=xloctot;
 	xloctot+=nx[ips]*ny[ips];
-	if(os[ips]>os[0]){
-	    error("Layer %ld os is greater than ground\n", ips);
-	}
     }
     long *perm=calloc(xloctot, sizeof(long));
-    long use_os=os[0];
+    long use_os=pos;
     long adim=nx[0]/use_os;
-    long osx=nx[0]/2;
+    //long osx=nx[0];
     long count=0;
-    for(long iy=-adim/2; iy<adim/2; iy++){
-	for(long ix=-adim/2; ix<adim/2; ix++){
+    //for(long iy=-adim/2; iy<adim/2; iy++){
+    //	for(long ix=-adim/2; ix<adim/2; ix++){
+    for(long iy=0; iy<adim; iy++){
+	for(long ix=0; ix<adim; ix++){
 	    /*(ix,iy) is the frequency in SALOC grid. */
+	    /*loop over oversampling.*/
 	    for(long juse_os=0; juse_os<use_os; juse_os++){
 		long jy=(iy+adim*juse_os);
-		if(jy>=osx) jy-=nx[0];
+		while(jy>=ny[0]) jy-=ny[0];
 		for(long iuse_os=0; iuse_os<use_os; iuse_os++){
 		    long jx=(ix+adim*iuse_os);
-		    if(jx>=osx) jx-=nx[0];
-
+		    while(jx>=nx[0]) jx-=nx[0];
 		    /*jx, jy is the frequency in XLOC grid. */
 		    for(long ips=0; ips<nps; ips++){
-			/*this layer has such freq. */
-			if(jy>=-ny2[ips] && jy<ny2[ips] 
-			   && jx>=-nx2[ips] && jx<nx2[ips]){
-			    perm[count]=noff[ips]
-				+(jx+nx2[ips])+(jy+ny2[ips])*nx[ips];
+			/*if this layer has such freq. */
+			//if(jy>=-ny2[ips] && jy<ny2[ips] && jx>=-nx2[ips] && jx<nx2[ips]){
+			if(jy>=0 && jy<ny[ips] && jx>=0 && jx<nx[ips]){
+			    perm[count]=noff[ips]+(jx)+(jy)*nx[ips];
 			    count++;
 			}
 		    }
@@ -128,7 +133,7 @@ long *fdpcg_perm(const long *nx, const long *ny, const long *os, int nps){
 }
 
 /**
-   Compute gradient operator in Fourier domain
+   Compute gradient operator in Fourier domain. Subapertures are denoted with lower left corner, so no shift is required.
 */
 void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
     long os=(long)(dsa/dx);
@@ -157,15 +162,14 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
     dcomplex *pgy=(*gy)->p;
     double dsa2=dsa*0.5;
     for(long iy=0; iy<ny; iy++){
-	double fy=(double)(iy-ny2)*dfy;
+	//double fy=(double)(iy-ny2)*dfy;
+	double fy=iy*dfy;
 	for(long ix=0; ix<nx; ix++){
-	    double fx=(double)(ix-nx2)*dfx;
+	    //double fx=(double)(ix-nx2)*dfx;
+	    double fx=ix*dfx;
 	    dcomplex tx=0;
 	    dcomplex ty=0;
 	    dcomplex offset=1;
-	    if(os>1){
-		offset=cexp(-cf*(fx+fy)*dsa2);/*shift by half a subaperture */
-	    }
 	    for(int ios=0; ios<os+1; ios++){
 		tx+=wt[ios]*(cexp(cf*(fx*dsa+fy*st[ios]))-cexp(cf*(fy*st[ios])));
 		ty+=wt[ios]*(cexp(cf*(fy*dsa+fx*st[ios]))-cexp(cf*(fx*st[ios])));
@@ -180,12 +184,12 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
    Propagate operator for nlayer screens to ground of size
    nxg*nxg, sampling dx, with displacement of dispx, dispy.
 */
-csp *fdpcg_prop(long nps, const long *os, long nxg, double dx, double *dispx, double *dispy){
+csp *fdpcg_prop(long nps, long pos, const int *os, long nxg, double dx, double *dispx, double *dispy){
     long nxi[nps],nxi2[nps],nxi3[nps],noff[nps];
     long nxtot=0;
     double dk=1./(nxg*dx);
     for(long ips=0; ips<nps; ips++){
-	nxi[ips]=nxg/os[0]*os[ips];
+	nxi[ips]=nxg/pos*os[ips];
 	nxi2[ips]=nxi[ips]/2;
 	nxi3[ips]=nxi[ips]/2+nxi[ips];
 	noff[ips]=nxtot;
@@ -202,18 +206,24 @@ csp *fdpcg_prop(long nps, const long *os, long nxg, double dx, double *dispx, do
     double cfr=2*M_PI;
     for(long iy=0; iy<nxg; iy++){
 	for(long ix=0; ix<nxg; ix++){
-	    double fxg=(ix-nxg2)*dk;/*spatial frequency in ground layer. */
-	    double fyg=(iy-nxg2)*dk;
+	    //double fxg=(ix-nxg2)*dk;/*spatial frequency in ground layer. */
+	    //double fyg=(iy-nxg2)*dk;
+	    double fxg=ix*dk;
+	    double fyg=iy*dk;
 	    long icol=ix+iy*nxg;
 	    pp[icol]=count;
 	    for(long ips=0; ips<nps; ips++){
-		long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
-		long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
-		double fx=(jx-nxi2[ips])*dk;/*spatial frequency in plane ips. */
-		double fy=(jy-nxi2[ips])*dk;
+		//long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
+		//long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
+		long jx=ix%nxi[ips];
+		long jy=iy%nxi[ips];
+		//double fx=(jx-nxi2[ips])*dk;/*spatial frequency in plane ips. */
+		//double fy=(jy-nxi2[ips])*dk;
+		double fx=jx*dk;
+		double fy=jy*dk;
 		pi[count]=jx+jy*nxi[ips]+noff[ips];
 		dcomplex shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
-		switch(os[0]/os[ips]){
+		switch(pos/os[ips]){
 		case 1:
 		    px[count]=conj(shift);
 		    break;
@@ -267,16 +277,20 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     loc_t *saloc=powfs[hipowfs].saloc;
     const double hs=parms->powfs[hipowfs].hs;
     const long nps=recon->npsr;
-    long os[nps];/*oversampling ratio of each layer. */
-    long nx[nps];
-    long ny[nps];
+    long pos=parms->tomo.pos;
+    const int* os=parms->atmr.os;
+    if(pos!=os[0]){
+	error("pupil does not equal to ground layer over sampling. Please change.\n");
+    }
+    long* nx=recon->xnx;
+    long* ny=recon->xny;
     const double *ht=parms->atmr.ht;
     long nxtot=0;
     for(long ips=0; ips<nps; ips++){
-	nx[ips]=recon->xmap[ips]->nx;
-	ny[ips]=recon->xmap[ips]->ny;
-	os[ips]=(long)round(saloc->dx/(xloc[ips]->dx/(1.-ht[ips]/hs)));
 	nxtot+=nx[ips]*ny[ips];
+	if(os[ips]>pos){
+	    error("Layer %ld os is greater than ground\n", ips);
+	}
     }
     /*Subaperture selection operator */
     csp *sel=fdpcg_saselect(nx[0],ny[0],xloc[0]->dx, 
@@ -389,7 +403,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    dispx[ips]=ht[ips]*parms->wfs[iwfs].thetax;
 	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;
 	}
-	csp *propx=fdpcg_prop(nps,os,nx[0],xloc[0]->dx,dispx,dispy);
+	csp *propx=fdpcg_prop(nps,pos,os,nx[0],xloc[0]->dx,dispx,dispy);
 	if(parms->save.setup){
 	    cspwrite(propx,"%s/fdpcg_prop_wfs%d",dirsetup,iwfs);
 	}
@@ -411,26 +425,16 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	cspwrite(Mhat,"%s/fdpcg_Mhat",dirsetup);
     }
     /*Now invert each block. */
-    /*First blocksize. */
+    /*bs: blocksize. */
     long bs=0;
     for(long ips=0; ips<nps; ips++){
-	if(os[0]==2){
-	    if(os[ips]==2){
-		bs+=4;
-	    }else if(os[ips]==1){
-		bs+=1;
-	    }else{
-		error("Invalid");
-	    }
-	}else{
-	    bs+=1;
-	}
+	bs+=os[ips]*os[ips];
     }
     long nb=Mhat->m/bs;
     info("Block size is %ld, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
-    long *perm=fdpcg_perm(nx,ny,os, nps);
+    long *perm=fdpcg_perm(nx,ny, pos, nps);
     csp *Mhatp=cspperm(Mhat,0,perm,perm);/*forward permutation. */
     cspfree(Mhat);
 #if PRE_PERMUT == 1
@@ -506,7 +510,7 @@ static void fdpcg_fft(void *data){
 	/*cfftshift(xhati->p[ips]);//enable this needs enable the one in fdpcg_ifft. */
 	/*cfft2(xhati->p[ips],-1); */
 	cfft2s(xhati->p[ips],-1);
-	cfftshift(xhati->p[ips]);
+	//cfftshift(xhati->p[ips]);
     }
 }
 
@@ -538,7 +542,7 @@ static void fdpcg_ifft(void *p){
     dcell *xout=info->xout;
     /*const dcell *xin=info->xin; */
     while(LOCKADD(ips, info->ips, 1)<nps){
-	cfftshift(xhat2i->p[ips]);
+	//cfftshift(xhat2i->p[ips]);
 	cfft2s(xhat2i->p[ips],1);
 	/*cfftshift(xhat2i->p[ips]);//enable this needs enable the one in fdpcg_fft. */
 	if(fdpcg->square){
@@ -579,20 +583,25 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     info.xout=*xout;
     /*apply forward FFT */
     CALL(fdpcg_fft,&info,recon->nthread,1);
+    ccellwrite(recon->fdpcg->xhati, "fdpcg_fft");
     if(recon->fdpcg->Minv){/*use sparse matrix */
 	czero(xhat2);
 	cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
     }else{/*permute vectors and apply block diagonal matrix */
 	/*permute xhat and put into xhat2 */
 	cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
+	cwrite(xhat2, "fdpcg_perm");
 	czero(xhat);
 	CALL(fdpcg_mulblock,&info,recon->nthread,1);
+	cwrite(xhat, "fdpcg_mul");
 	/*permute back to have natural order. */
 	cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
+	ccellwrite(fdpcg->xhat2i, "fdpcg_perm_i");
     }
     info.ips=0;
     /*Apply inverse FFT */
     CALL(fdpcg_ifft,&info,recon->nthread,1);
+    ccellwrite(fdpcg->xhat2i, "fdpcg_ifft");exit(0);
 }
 
 /**

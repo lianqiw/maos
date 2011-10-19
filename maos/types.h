@@ -36,6 +36,7 @@ typedef struct APER_T{
 			    performance evaluation*/
     dmat *amp1;          /**<amplitude map defined o locs, maximum is 1. use for plotting.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
+    //map_t *ampmask;      /**<The amplitude map for pupil masking in NGS WFS*/
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
@@ -257,7 +258,8 @@ typedef struct RECON_T{
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
     map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
-
+    long *xnx;
+    long *xny;
     loc_t *floc;       /**<Grid on pupil for DM fitting. */
 
     loc_t **aloc;      /**<actuator grid*/

@@ -27,6 +27,14 @@ typedef struct{
 		       restart. Free with new seed*/
     curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm
 		       restart. Free with new seed.*/
+    int *fd_perm;   /**<permutation vector for fdpcg*/
+    long fd_nxtot;  /**<total number of points*/
+    cuccell *fd_Mb;  /**<The main fdpcg block matrix*/
+    cufftHandle *fd_fft;
+    int      fd_fftnc;/*total number of ffts*/
+    int     *fd_fftips;/*starting ips for each fft.*/
+    cuccell *fd_xhat1;
+    cuccell *fd_xhat2;
     cudaStream_t     *wfsstream;
     cublasHandle_t   *wfshandle;
     cusparseHandle_t *wfssphandle;
@@ -62,5 +70,5 @@ extern curecon_t *curecon;
 void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha);
 void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *xin, const float alpha);
 void gpu_FitR(curcell **xout, const void *A, const curcell *xin, const float alpha);
-
+void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin);
 #endif

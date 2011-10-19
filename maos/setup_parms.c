@@ -701,16 +701,16 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.napngs=2;
     }
     if(fabs(dblsum(parms->sim.apdm, parms->sim.napdm)-1)>1.e-10){
-	error("sum(sim.apdm)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apdm, parms->sim.napdm));
+	warning("sum(sim.apdm)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apdm, parms->sim.napdm));
     }
     if(fabs(dblsum(parms->sim.apngs, parms->sim.napngs)-1)>1.e-10){
-	error("sum(sim.apngs)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apngs, parms->sim.napngs));
+	warning("sum(sim.apngs)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apngs, parms->sim.napngs));
     }
     if(fabs(dblsum(parms->sim.apupt, parms->sim.napupt)-1)>1.e-10){
-	error("sum(sim.apupt)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apupt, parms->sim.napupt));
+	warning("sum(sim.apupt)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apupt, parms->sim.napupt));
     }
     parms->sim.nseed=readcfg_intarr(&parms->sim.seeds,"sim.seeds");
     READ_DBL(sim.dt);
@@ -798,6 +798,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.usegwr);
     READ_INT(dbg.dxonedge);
     READ_INT(dbg.cmpgpu);
+    READ_INT(dbg.pupmask);
 }
 /**
    Read in GPU options
@@ -901,6 +902,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		parms->powfs[ipowfs].psfout=1;
+		parms->powfs[ipowfs].pistatout=1;
 	    }
 	}
     }
@@ -1256,6 +1258,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
       Find ground turbulence layer. The ray tracing can be shared between different directions.
     */
     parms->atm.iground=-1;
+    parms->atm.hmax=-INFINITY;
     for(int ips=0; ips<parms->atm.nps; ips++){
 	if(fabs(parms->atm.ht[ips])<1.e-10){
 	    if(parms->atm.iground==-1)
@@ -1268,6 +1271,9 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	if(parms->atm.ht[ips]>0 && parms->atm.ht[ips]<20){
 	    warning("Layer %d height %g is too close to the ground\n",ips,parms->atm.ht[ips]);
+	}
+	if(parms->atm.hmax<parms->atm.ht[ips]){
+	    parms->atm.hmax=parms->atm.ht[ips];
 	}
     }
     if(parms->atm.iground==-1){
@@ -1322,6 +1328,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
 	}
+	parms->atm.hmax*=secz;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(!isinf(parms->powfs[ipowfs].hs)){
 		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
@@ -1353,7 +1360,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     long nxout[nps],nyout[nps];
     for(int ips=0; ips<nps; ips++){
 	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,0.5,
-			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,1);
+			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,0,1);
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
 	if(nyout[ips]>Nmax) Nmax=nyout[ips];
     }
@@ -1582,6 +1589,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(covmem>MAX(NMEM, 4000000000) && parms->aper.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
 	    error("parms->aper.dx=%g is probably too large to save ecxx. Recommend parms->aper.dx=%g\n", parms->aper.dx, parms->atmr.dx*0.25);
 	}
+    }
+    if(parms->tomo.predict && !parms->tomo.square){
+	info("Please implement wind shifting on HX. need wind velocity\n");
+	error("Prediction is only implemented for square grid currently\n");
     }
     parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
 }
