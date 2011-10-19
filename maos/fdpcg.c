@@ -30,7 +30,7 @@
    3) Fixed a bug in dispx,dispy. should not include cone effect since dk doesn't
 
    2011-10-19:
-   Changed to use frequencies from 0 to N-1 to avoid fftshift.
+   No need to do fftshift after the first fft. this is done by the permutation vector.
  */
 
 #include "maos.h"
@@ -62,7 +62,7 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
-    //cfftshift(xsel);
+    cfftshift(xsel);
     cscale(xsel,1./(double)(nx*ny));/*cancel FFT effect. */
     double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
    
@@ -89,39 +89,42 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
    spatial frequencies. Group them together.
 
 */
-long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps){
-    //long nx2[nps],ny2[nps];
+long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps, int shift){
+    long nx2[nps],ny2[nps];
     long noff[nps];
     long xloctot=0;
     for(long ips=0; ips<nps; ips++){
-	//nx2[ips]=nx[ips]/2;
-	//ny2[ips]=ny[ips]/2;
+	nx2[ips]=nx[ips]/2;
+	ny2[ips]=ny[ips]/2;
 	noff[ips]=xloctot;
 	xloctot+=nx[ips]*ny[ips];
     }
     long *perm=calloc(xloctot, sizeof(long));
     long use_os=pos;
     long adim=nx[0]/use_os;
-    //long osx=nx[0];
+    long osx=nx[0]/2;
     long count=0;
-    //for(long iy=-adim/2; iy<adim/2; iy++){
-    //	for(long ix=-adim/2; ix<adim/2; ix++){
-    for(long iy=0; iy<adim; iy++){
-	for(long ix=0; ix<adim; ix++){
+    for(long iy=-adim/2; iy<adim/2; iy++){
+	for(long ix=-adim/2; ix<adim/2; ix++){
 	    /*(ix,iy) is the frequency in SALOC grid. */
 	    /*loop over oversampling.*/
 	    for(long juse_os=0; juse_os<use_os; juse_os++){
 		long jy=(iy+adim*juse_os);
-		while(jy>=ny[0]) jy-=ny[0];
+		if(jy>=osx) jy-=nx[0];
 		for(long iuse_os=0; iuse_os<use_os; iuse_os++){
 		    long jx=(ix+adim*iuse_os);
-		    while(jx>=nx[0]) jx-=nx[0];
+		    if(jx>=osx) jx-=nx[0];
+
 		    /*jx, jy is the frequency in XLOC grid. */
 		    for(long ips=0; ips<nps; ips++){
-			/*if this layer has such freq. */
-			//if(jy>=-ny2[ips] && jy<ny2[ips] && jx>=-nx2[ips] && jx<nx2[ips]){
-			if(jy>=0 && jy<ny[ips] && jx>=0 && jx<nx[ips]){
-			    perm[count]=noff[ips]+(jx)+(jy)*nx[ips];
+			/*this layer has such freq. */
+			if(jy>=-ny2[ips] && jy<ny2[ips] && jx>=-nx2[ips] && jx<nx2[ips]){
+			    if(shift){
+				/*we embeded a fftshift here.*/
+				perm[count]=noff[ips]+(jx<0?jx+nx[ips]:jx)+(jy<0?jy+ny[ips]:jy)*nx[ips];
+			    }else{
+				perm[count]=noff[ips]+(jx+nx2[ips])+(jy+ny2[ips])*nx[ips];
+			    }
 			    count++;
 			}
 		    }
@@ -162,20 +165,17 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
     dcomplex *pgy=(*gy)->p;
     double dsa2=dsa*0.5;
     for(long iy=0; iy<ny; iy++){
-	//double fy=(double)(iy-ny2)*dfy;
-	double fy=iy*dfy;
+	double fy=(double)(iy-ny2)*dfy;
 	for(long ix=0; ix<nx; ix++){
-	    //double fx=(double)(ix-nx2)*dfx;
-	    double fx=ix*dfx;
+	    double fx=(double)(ix-nx2)*dfx;
 	    dcomplex tx=0;
 	    dcomplex ty=0;
-	    dcomplex offset=1;
 	    for(int ios=0; ios<os+1; ios++){
 		tx+=wt[ios]*(cexp(cf*(fx*dsa+fy*st[ios]))-cexp(cf*(fy*st[ios])));
 		ty+=wt[ios]*(cexp(cf*(fy*dsa+fx*st[ios]))-cexp(cf*(fx*st[ios])));
 	    }
-	    pgx[ix+iy*nx]=offset*tx;
-	    pgy[ix+iy*nx]=offset*ty;
+	    pgx[ix+iy*nx]=tx;
+	    pgy[ix+iy*nx]=ty;
 	}
     }
 }
@@ -185,11 +185,12 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
    nxg*nxg, sampling dx, with displacement of dispx, dispy.
 */
 csp *fdpcg_prop(long nps, long pos, const int *os, long nxg, double dx, double *dispx, double *dispy){
-    long nxi[nps],nxi2[nps],nxi3[nps],noff[nps];
+    long nxi[nps],nxi2[nps],nxi3[nps];
+    long noff[nps];
     long nxtot=0;
     double dk=1./(nxg*dx);
     for(long ips=0; ips<nps; ips++){
-	nxi[ips]=nxg/pos*os[ips];
+	nxi[ips]=nxg/os[0]*os[ips];
 	nxi2[ips]=nxi[ips]/2;
 	nxi3[ips]=nxi[ips]/2+nxi[ips];
 	noff[ips]=nxtot;
@@ -206,21 +207,19 @@ csp *fdpcg_prop(long nps, long pos, const int *os, long nxg, double dx, double *
     double cfr=2*M_PI;
     for(long iy=0; iy<nxg; iy++){
 	for(long ix=0; ix<nxg; ix++){
-	    //double fxg=(ix-nxg2)*dk;/*spatial frequency in ground layer. */
-	    //double fyg=(iy-nxg2)*dk;
-	    double fxg=ix*dk;
-	    double fyg=iy*dk;
+	    double fxg=(ix-nxg2)*dk;/*spatial frequency in pupil. */
+	    double fyg=(iy-nxg2)*dk;
 	    long icol=ix+iy*nxg;
 	    pp[icol]=count;
 	    for(long ips=0; ips<nps; ips++){
-		//long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
-		//long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
-		long jx=ix%nxi[ips];
-		long jy=iy%nxi[ips];
-		//double fx=(jx-nxi2[ips])*dk;/*spatial frequency in plane ips. */
-		//double fy=(jy-nxi2[ips])*dk;
-		double fx=jx*dk;
-		double fy=jy*dk;
+		long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
+		long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
+		//long jx=(ix-nxg2)%nxi[ips]; if(jx<0) jx+=nxi[ips];
+		//long jy=(iy-nxg2)%nxi[ips]; if(jy<0) jy+=nxi[ips];
+		double fx=(jx-nxi2[ips])*dk;/*spatial frequency in plane ips. */
+		double fy=(jy-nxi2[ips])*dk;
+		//double fx=jx*dk;
+		//double fy=jy*dk;
 		pi[count]=jx+jy*nxi[ips]+noff[ips];
 		dcomplex shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
 		switch(pos/os[ips]){
@@ -361,9 +360,6 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     /*make it sparse diagonal operator */
     csp *Mhat=cspnewdiag(nxtot,invpsd,1);
     free(invpsd);
-    if(parms->save.setup){
-	cspwrite(Mhat,"%s/fdpcg_invpsd",dirsetup);
-    }
 
     csp *Mmid=NULL;
     /*Compute gx'*sel'*sel*gx+gy'*sel'*sel*gy as Mmid */
@@ -388,6 +384,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     double dispy[nps];
     /*Ray tracing operator for each WFS */
     if(parms->save.setup){
+	cspwrite(Mhat,"%s/fdpcg_invpsd",dirsetup);
 	cspwrite(Mmid,"%s/fdpcg_Mmid",dirsetup);
     }
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
@@ -434,14 +431,19 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     info("Block size is %ld, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
-    long *perm=fdpcg_perm(nx,ny, pos, nps);
+    long *perm=fdpcg_perm(nx,ny, pos, nps,0);
+    if(parms->save.setup){
+	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
+    }
     csp *Mhatp=cspperm(Mhat,0,perm,perm);/*forward permutation. */
     cspfree(Mhat);
+    free(perm);
+    perm=fdpcg_perm(nx,ny, pos, nps, 1);/*contains fft shift information*/
 #if PRE_PERMUT == 1
     csp *Minvp=cspinvbdiag(Mhatp,bs);
     csp *Minv=cspperm(Minvp,1,perm, perm);/*revert permutation */
-    cspfree(Minvp);
     free(perm);
+    cspfree(Minvp);
     fdpcg->Minv=Minv;
     if(parms->save.setup){
 	cspwrite(Minv,"%s/fdpcg_Minv",dirsetup);
@@ -454,7 +456,6 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
 #endif
     cspfree(Mhatp);
-
     fdpcg->xhat=cnew(nxtot,1);
     fdpcg->xhat2=cnew(nxtot,1);
     fdpcg->xhati=ccellnew(nps,1);/*references the data in xhat. */
@@ -507,7 +508,7 @@ static void fdpcg_fft(void *data){
 	    cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc[ips],  xin->p[ips]->p, 1, 0);
 	}
 	/*Apply FFT. first fftshift is not necessary. */
-	/*cfftshift(xhati->p[ips]);//enable this needs enable the one in fdpcg_ifft. */
+	cfftshift(xhati->p[ips]);//enable this needs enable the one in fdpcg_ifft. 
 	/*cfft2(xhati->p[ips],-1); */
 	cfft2s(xhati->p[ips],-1);
 	//cfftshift(xhati->p[ips]);
@@ -544,7 +545,7 @@ static void fdpcg_ifft(void *p){
     while(LOCKADD(ips, info->ips, 1)<nps){
 	//cfftshift(xhat2i->p[ips]);
 	cfft2s(xhat2i->p[ips],1);
-	/*cfftshift(xhat2i->p[ips]);//enable this needs enable the one in fdpcg_fft. */
+	cfftshift(xhat2i->p[ips]);//enable this needs enable the one in fdpcg_fft. 
 	if(fdpcg->square){
 	    for(long i=0; i<xhat2i->p[ips]->nx*xhat2i->p[ips]->ny; i++){
 		xout->p[ips]->p[i]=creal(xhat2i->p[ips]->p[i]);
@@ -583,25 +584,25 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     info.xout=*xout;
     /*apply forward FFT */
     CALL(fdpcg_fft,&info,recon->nthread,1);
-    ccellwrite(recon->fdpcg->xhati, "fdpcg_fft");
-    if(recon->fdpcg->Minv){/*use sparse matrix */
-	czero(xhat2);
-	cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
-    }else{/*permute vectors and apply block diagonal matrix */
-	/*permute xhat and put into xhat2 */
-	cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
-	cwrite(xhat2, "fdpcg_perm");
-	czero(xhat);
-	CALL(fdpcg_mulblock,&info,recon->nthread,1);
-	cwrite(xhat, "fdpcg_mul");
-	/*permute back to have natural order. */
-	cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
-	ccellwrite(fdpcg->xhat2i, "fdpcg_perm_i");
-    }
+    //ccellwrite(recon->fdpcg->xhati, "fdpcg_fft");
+#if PRE_PERMUT
+    czero(xhat2);
+    cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
+#else/*permute vectors and apply block diagonal matrix */
+    /*permute xhat and put into xhat2 */
+    cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
+    //cwrite(xhat2, "fdpcg_perm");
+    czero(xhat);
+    CALL(fdpcg_mulblock,&info,recon->nthread,1);
+    //cwrite(xhat, "fdpcg_mul");
+    /*permute back to have natural order. */
+    cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
+    //ccellwrite(fdpcg->xhat2i, "fdpcg_perm_i");
+#endif
     info.ips=0;
     /*Apply inverse FFT */
     CALL(fdpcg_ifft,&info,recon->nthread,1);
-    ccellwrite(fdpcg->xhat2i, "fdpcg_ifft");exit(0);
+    //ccellwrite(fdpcg->xhat2i, "fdpcg_ifft");exit(0);
 }
 
 /**

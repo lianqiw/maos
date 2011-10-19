@@ -443,7 +443,7 @@ __global__ static void fdpcg_perm(fcomplex *out, fcomplex *in, int *perm, int nx
 	out[ix]=in[perm[ix]];
     }
 }
-__global__ static void fdpcg_permi(fcomplex *out, fcomplex *in, int *perm, int nx){
+__global__ static void fdpcg_perm_i(fcomplex *out, fcomplex *in, int *perm, int nx){
     const int step=blockDim.x * gridDim.x;
     for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
 	out[perm[ix]]=in[ix];
@@ -493,29 +493,29 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
     cudaStream_t stream=curecon->cgstream;
     fdpcg_embed<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat1->p[0]->p, xin->p[0]->p, curecon->fd_nxtot);
-    cuccellwrite(curecon->fd_xhat1, "fdpcg_copy");
+    //cuccellwrite(curecon->fd_xhat1, "fdpcg_copy");
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
 	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat1->p[ips]->p, CUFFT_FORWARD);
 	int nps=curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic];
 	int nx=curecon->fd_xhat1->p[ips]->nx;
 	int ny=curecon->fd_xhat1->p[ips]->ny;
-	info("nx=%d, ny=%d\n", nx, ny);
+	//info("nx=%d, ny=%d\n", nx, ny);
 	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
 	    (curecon->fd_xhat1->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
-    cuccellwrite(curecon->fd_xhat1, "fdpcg_fft");
+    //cuccellwrite(curecon->fd_xhat1, "fdpcg_fft");
     fdpcg_perm<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
-    cuccellwrite(curecon->fd_xhat2, "fdpcg_perm");
+    //cuccellwrite(curecon->fd_xhat2, "fdpcg_perm");
     int nb=curecon->fd_Mb->nx;
     int bs=curecon->fd_Mb->p[0]->nx;
     fdpcg_mul_block<<<nb, dim3(bs,bs), sizeof(fcomplex)*bs*2, stream>>>
 	(curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
-    cuccellwrite(curecon->fd_xhat1, "fdpcg_mul");
-    fdpcg_permi<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+    //cuccellwrite(curecon->fd_xhat1, "fdpcg_mul");
+    fdpcg_perm_i<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
-    cuccellwrite(curecon->fd_xhat2, "fdpcg_perm_i");
+    //cuccellwrite(curecon->fd_xhat2, "fdpcg_perm_i");
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
 	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat2->p[ips]->p, CUFFT_INVERSE);
@@ -525,7 +525,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
 	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
 	    (curecon->fd_xhat2->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
-    cuccellwrite(curecon->fd_xhat2, "fdpcg_fft_i");exit(0);
+    //cuccellwrite(curecon->fd_xhat2, "fdpcg_fft_i");exit(0);
     fdpcg_extract<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	((*xout)->p[0]->p, curecon->fd_xhat2->p[0]->p, curecon->fd_nxtot);
 }

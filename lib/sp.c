@@ -1481,7 +1481,7 @@ X(sp) *Y(spinvbdiag)(const X(sp) *A, long bs){
 		long ind=row-is;
 		if(ind<0 || ind>=bs){
 		    info("solving block %ld\n",ib);
-		    error("The array is not block diagonal matrix or not calculated property\n");
+		    error("The array is not block diagonal matrix or not calculated properly.\n");
 		}
 		pbk[icol-is][ind]=A->x[irow];
 	    }
