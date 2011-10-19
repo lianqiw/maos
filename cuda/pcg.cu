@@ -68,7 +68,7 @@ int gpu_pcg(curcell **px,
     TIC;tic;
     int ans=0;
     curcell *r0=NULL;
-    curcell *x0=NULL;/*The initial vector. */
+    curcell *x0=NULL;/*The initial vector. equals to *px*/
     curcell *z0=NULL;/*Is reference or preconditioned value. */
     typedef struct{
 	float r0z0;
@@ -83,14 +83,16 @@ int gpu_pcg(curcell **px,
     DO(cudaMalloc((float**)&res, sizeof(CGRES_T)));
     /*computes r0=b-A*x0 */
     curcellcp(&r0, b, stream);
-    if(!*px || !warm){/*start from zero guess. */
-	x0=curcellnew(b);
-	if(!*px) *px=curcellnew(x0->nx, x0->ny);
-    }else{
-	curcellcp(&x0, *px, stream);
-	CUDA_SYNC_STREAM;
-	Amul(&r0, 1, A, x0, -1);/*r0=r0+(-1)*A*x0 */
+    if(!*px){
+	*px=curcellnew(b);
     }
+    x0=*px;
+    if(warm){
+	Amul(&r0, 1, A, x0, -1);/*r0=r0+(-1)*A*x0 */
+    }else{
+	curcellzero(x0, stream);
+    }
+
     curcell *p0=NULL;
     if(Mmul){
 	CUDA_SYNC_STREAM;
@@ -139,36 +141,6 @@ int gpu_pcg(curcell **px,
 	    div_sqrt_do<<<1,1,0,stream>>>(&res->tmp, &res->r0z2, &res->r0z0);
 	}
 	cudaMemcpyAsync(&diff[k+1], &res->tmp, sizeof(float), cudaMemcpyDefault,stream);
-	if(curecon->reconisim>10){
-	    if(diff[k+1]>diff[k]){
-		warning("CG%d  %d: Step %d %.5f --> %.5f\n", maxiter,
-			curecon->reconisim, k+1, diff[k], diff[k+1]);
-		if(diff[k+1]>0.1){
-		    curcellwrite(Ap, "CG%d_Ap_%d_%d", maxiter,curecon->reconisim, k+1);
-		    curcellwrite(p0, "CG%d_p0_%d_%d", maxiter,curecon->reconisim, k+1);
-		    curcellwrite(x0, "CG%d_x0_%d_%d", maxiter,curecon->reconisim, k+1);
-		    curcellwrite(r0, "CG%d_r0_%d_%d", maxiter,curecon->reconisim, k+1);
-		    Amul(&Ap, 0, A, p0, 1);
-		    curcellwrite(Ap, "CG%d_Ap2_%d_%d", maxiter,curecon->reconisim, k+1);
-		    ans=1;
-		}
-	    }
-
-	    for(int ips=0; ips<x0->nx; ips++){
-		float max=0;
-		if((max=curmax(x0->p[ips], curecon->psstream[ips]))>2e-5){
-		    warning("CG%d  %d: Step %d max(x0)=%g\n", maxiter, curecon->reconisim, k+1, max);
-		    curcellwrite(Ap, "CG%d_Ap_%d_%d", maxiter,curecon->reconisim, k+1);
-		    curcellwrite(p0, "CG%d_p0_%d_%d", maxiter,curecon->reconisim, k+1);
-		    curcellwrite(x0, "CG%d_x0_%d_%d", maxiter,curecon->reconisim, k+1);
-		    curcellwrite(r0, "CG%d_r0_%d_%d", maxiter,curecon->reconisim, k+1);
-		    curcellwrite(*px, "CG%d_px_%d_%d", maxiter,curecon->reconisim, k+1);
-		    Amul(&Ap, 0, A, p0, 1);
-		    curcellwrite(Ap, "CG%d_Ap2_%d_%d", maxiter,curecon->reconisim, k+1);
-		    ans=1;
-		}
-	    }
-	}
 #endif
 	/*bk=r0z2/r0z1; */
 	div_do<<<1,1,0,stream>>>(&res->bk, &res->r0z2, &res->r0z1);
@@ -179,48 +151,17 @@ int gpu_pcg(curcell **px,
 	toc("cg");
     }
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
-    curcellcp(px, x0, stream);
+//curcellcp(px, x0, stream);
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
     if(diff[maxiter]>0.02 && curecon->reconisim>5){
-	if(maxiter>20){/*tomo */
-	    warning2("Tomo %d: PCG: %.5f --> %.5f\n", curecon->reconisim, diff[0], diff[maxiter]);
-	    for(int i=0; i<=maxiter; i++){
-		info("Tomo %d: PCG: Step %d: res=%.5f\n", curecon->reconisim, i, diff[i]);
-	    }
-	    curcellwrite(curecon->gradin, "tomo_cugrad_%d", curecon->reconisim);
-	    curcellwrite(b, "tomo_b_%d", curecon->reconisim);
-	    curcellwrite(*px, "tomo_x_%d",  curecon->reconisim);
-	}else{
-	    warning2("Fit  %d: PCG: %.5f --> %.5f\n", curecon->reconisim, diff[0], diff[maxiter]);
-	    for(int i=0; i<=maxiter; i++){
-		info("Fit  %d: PCG: Step %d: res=%.5f\n", curecon->reconisim, i, diff[i]);
-	    }	
-	    curcellwrite(b, "fit_b_%d", curecon->reconisim);
-	    curcellwrite(*px, "fit_x_%d",  curecon->reconisim);
-	}
 	ans=1;
-    }
-
-    for(int ips=0; ips<x0->nx; ips++){
-	float max=0;
-	if((max=curmax((*px)->p[ips], curecon->psstream[ips]))>2e-5){
-	    int k=31;
-	    warning("CG%d  %d: Step %d max(x0)=%g\n", maxiter, curecon->reconisim, k+1, max);
-	    curcellwrite(Ap, "CG%d_Ap_%d_%d", maxiter,curecon->reconisim, k+1);
-	    curcellwrite(p0, "CG%d_p0_%d_%d", maxiter,curecon->reconisim, k+1);
-	    curcellwrite((*px), "CG%d_x0_%d_%d", maxiter,curecon->reconisim, k+1);
-	    Amul(&Ap, 0, A, p0, 1);
-	    curcellwrite(Ap, "CG%d_Ap2_%d_%d", maxiter,curecon->reconisim, k+1);
-	    ans=1;
-	}
     }
 #endif
     curcellfree(r0); 
     if(Mmul){
 	curcellfree(z0);
     }
-    curcellfree(x0);
     curcellfree(Ap);
     curcellfree(p0);
     cudaFree(res);

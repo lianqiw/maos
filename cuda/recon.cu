@@ -25,8 +25,10 @@ extern "C"
 #include "recon.h"
 #include "pcg.h"
 #include "curmat.h"
+#include "cucmat.h"
 curecon_t *curecon;
-#define SCALE 1e-12 /*Scale both NEA and L2 to balance the dynamic range. Does not work yet (strange). */
+//#define SCALE 1e-12 /*Scale both NEA and L2 to balance the dynamic range. Does not work yet (strange). */
+#define SCALE 1
 #undef TIMING
 #define TIMING 0
 #if !TIMING
@@ -217,6 +219,56 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	if(recon->PDF && !curecon->PDF){
 	    gpu_dcell2cu(&curecon->PDF, recon->PDF);
 	}
+	if(parms->tomo.precond==1){/*fdpcg*/
+#if SCALE != 1
+#error "FDPCG only support SCALE=1"
+#endif
+	    FDPCG_T *fdpcg=recon->fdpcg;
+	    int nb=fdpcg->Mbinv->nx;
+	    int bs=fdpcg->Mbinv->p[0]->nx;
+	    gpu_long2dev(&curecon->fd_perm, fdpcg->perm, nb*bs);//not bs*bs
+	    curecon->fd_Mb=cuccellnew(nb, 1, bs, bs);
+	    fcomplex *tmp;
+	    cudaMallocHost(&tmp, nb*bs*bs*sizeof(fcomplex));
+	    for(int ib=0; ib<nb; ib++){
+		dcomplex *in=(dcomplex*)fdpcg->Mbinv->p[ib]->p;
+		fcomplex *tmp2=tmp+ib*(bs*bs);
+		for(int i=0; i<bs*bs; i++){
+		    tmp2[i]=make_cuFloatComplex((float)cuCreal(in[i]), (float)cuCimag(in[i]));
+		}
+	    }
+	    DO(cudaMemcpy(curecon->fd_Mb->p[0]->p, tmp, nb*bs*bs*sizeof(fcomplex), cudaMemcpyHostToDevice));
+	    curecon->fd_nxtot=nb*bs;
+	    cudaFreeHost(tmp);
+	    int nps=recon->npsr;
+	    int count=0;
+	    int osi=-1;
+	    int start[nps];
+	    for(int ips=0; ips<nps; ips++){
+		if(osi != parms->atmr.os[ips]){
+		    start[count]=ips;
+		    osi = parms->atmr.os[ips];
+		    count++;
+		}
+	    }
+	    curecon->fd_fft=(cufftHandle*)calloc(count, sizeof(cufftHandle));
+	    curecon->fd_fftnc=count;
+	    curecon->fd_fftips=(int*)calloc(count+1, sizeof(int));
+	    for(int ic=0; ic<count; ic++){
+		curecon->fd_fftips[ic]=start[ic];
+	    }
+	    curecon->fd_fftips[count]=nps;
+	    for(int ic=0; ic<count; ic++){
+		int ncomp[2];
+		ncomp[0]=recon->xnx[start[ic]];
+		ncomp[1]=recon->xny[start[ic]];
+		cufftPlanMany(&curecon->fd_fft[ic], 2, ncomp, NULL, 1, 0, NULL, 1, 0, 
+			      CUFFT_C2C, curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic]);
+	    }
+	    /* notice: performance may be improved by using
+	       R2C FFTs instead of C2C. Need to update perm
+	       and Mbinv to use R2C.*/
+	}
     }
     if(parms->gpu.fit){
 	/*For fitting */
@@ -356,14 +408,25 @@ void gpu_tomo(SIM_T *simu){
     curcell *rhs=NULL;
     gpu_TomoR(&rhs, simu, curecon->gradin, 1);
     toc("TomoR");
-    if(gpu_pcg(&curecon->opdr, gpu_TomoL, simu, NULL, NULL, rhs, 
+    G_PREFUN prefun=NULL;
+    void *predata=NULL;
+    if(parms->tomo.precond==1){
+	curecon->fd_xhat1=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	curecon->fd_xhat2=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	prefun=gpu_Tomo_fdprecond;
+	predata=(void*)simu;
+    }
+    if(gpu_pcg(&curecon->opdr, gpu_TomoL, simu, prefun, predata, rhs, 
 	       simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream)){
 	dcellwrite(simu->gradlastol, "tomo_gradlastol_%d", simu->reconisim);
 	curcellwrite(curecon->gradin, "tomo_gradin_%d", simu->reconisim);
 	curcellwrite(rhs, "tomo_rhs_%d", simu->reconisim);
 	exit(1);
     }
-    
+    if(parms->tomo.precond==1){
+	cuccellfree(curecon->fd_xhat1);
+	cuccellfree(curecon->fd_xhat2);
+    }
     toc("TomoL CG");
     curcellfree(rhs); rhs=NULL;
     curcellfree(curecon->opdwfs); curecon->opdwfs=NULL;
