@@ -66,7 +66,6 @@
 #include "daemonize.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
-#include "shm.h"
 char** hosts;
 int nhost;
 static int all_done=0;

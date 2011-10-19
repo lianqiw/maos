@@ -21,6 +21,5 @@
 #include "process.h"
 #include "scheduler_client.h"
 #include "daemonize.h"
-#include "shm.h"
 #include "mem.h"
 #endif

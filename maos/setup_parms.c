@@ -790,9 +790,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
     parms->dbg.ntomo_maxit=readcfg_intarr(&parms->dbg.tomo_maxit, "dbg.tomo_maxit");
-#if USE_POSIX_SHM
-    shm_keep_unused=parms->dbg.keepshm;
-#endif
     READ_INT(dbg.tomo_hxw);
     READ_INT(dbg.splitlrt);
     READ_INT(dbg.ecovxx);

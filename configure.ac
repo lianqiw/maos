@@ -41,7 +41,6 @@ if test "${USER}" = "lianqiw" ;then
 fi
 LDSYS="-lz -lm"
 OPTSextra=""
-use_shm="no"
 use_static="no"
 
 if test -n "$(which icc)" ;then	
@@ -179,14 +178,8 @@ if test "$try_mkl" = "yes" ;then
     else
        use_mkl_default="no"
     fi
-    if test -d /dev/shm ;then
-       use_shm_default="yes"
-    else
-       use_shm_default="no"
-    fi
     #We only have MKL redistributable for linux and MAC.
     AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
-    AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
 fi
 
 #Common configure options.
@@ -210,11 +203,6 @@ else
    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
-if test "x$use_shm" = "xyes" ;then
-   AC_DEFINE(USE_POSIX_SHM, [1], "Enable posix shared memory")
-else
-   AC_DEFINE(USE_POSIX_SHM, [0], "Disable posix shared memory")
-fi 
 AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([zlib is not found])])
 AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"])
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])

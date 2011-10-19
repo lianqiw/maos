@@ -6,11 +6,12 @@
    MAOS will generate output in binary format \c .bin or zipped \c .bin.gz files
    as described below. There are two MATLAB mex routines \c read and \c write
    that can read and write \c .bin or \c .bin.gz files in MATLAB. The source of
-   these mex routines are located in sub-folderx \c mex. If mex is found in the
-   system, this mex routine will be compiled automatically in the mex subfolder
-   of the compiling folder.  Copy \c write.mexa64 and \c read.mexa64 into a
-   folder that is in your matlab path, such as $HOME/matlab. The usage in MATLAB
-   is as follows:
+   these mex routines are located in sub-folderx \c mex. If \c mex is found in
+   the system, this mex routines will be compiled automatically in the \c mex
+   subfolder of the compiling folder. If it doesn't get compiled, please goto
+   the \c mex subfolder in the source folder and type ./compile.sh to compile
+   them. Copy \c write.mexa64 and \c read.mexa64 into a folder that is in your
+   matlab path, such as $HOME/matlab. The usage in MATLAB is as follows:
 
 \verbatim 
    cle=read('Res_1'); 

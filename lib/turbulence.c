@@ -23,7 +23,6 @@
 #include <dirent.h>
 #include "common.h"
 #include "thread.h"
-#include "shm.h"
 #include "process.h"
 #include "turbulence.h"
 #include "path.h"
@@ -53,7 +52,7 @@ enum{
 /**
  * hash the data to get a unique file name
  */
-static char *fnatm(GENSCREEN_T *data){
+static char *get_fnatm(GENSCREEN_T *data){
     uint32_t key;
     key=hashlittle(data->rstat, sizeof(rand_t), 0);/*contains seed */
     key=hashlittle(data->wt, sizeof(double)*data->nlayer, key);
@@ -65,19 +64,19 @@ static char *fnatm(GENSCREEN_T *data){
     key=hashlittle(&data->nlayer, sizeof(long), key);
     key=hashlittle(&data->ninit, sizeof(long), key);
 
-    char dirshm[PATH_MAX];
-    snprintf(dirshm,PATH_MAX,"%s/.aos/atm", HOME);
-    if(!exist(dirshm)) mymkdir("%s", dirshm);
-    char fnshm[PATH_MAX];
+    char diratm[PATH_MAX];
+    snprintf(diratm,PATH_MAX,"%s/.aos/atm", HOME);
+    if(!exist(diratm)) mymkdir("%s", diratm);
+    char fnatm[PATH_MAX];
     char *types[]={"vonkarman","fractal","biharmonic"};
-    snprintf(fnshm,PATH_MAX,"%s/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
-	     dirshm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
-    if(zfexist(fnshm)) zftouch(fnshm);
-    remove_file_older(dirshm, 30*24*3600);
-    long avail=available(dirshm);
+    snprintf(fnatm,PATH_MAX,"%s/maos_%s_%ld_%ldx%ld_%g_%ud.bin",
+	     diratm,types[data->method],data->nlayer,data->nx,data->ny,data->dx,key);
+    if(zfexist(fnatm)) zftouch(fnatm);
+    remove_file_older(diratm, 30*24*3600);
+    long avail=available(diratm);
     long need=data->nx*data->ny*data->nlayer*sizeof(double)+500000000;
     if(avail>need){
-	return strdup(fnshm);
+	return strdup(fnatm);
     }else{
 	return NULL;
     }
@@ -169,27 +168,27 @@ static map_t** create_screen(GENSCREEN_T *data,
 			     void (*funmem)(GENSCREEN_T *data)){
     map_t **screen;
     long nlayer=data->nlayer;
-    char *fnshm=NULL;
+    char *fnatm=NULL;
     if(data->share){/*shared with file */
-	fnshm=fnatm(data);
+	fnatm=get_fnatm(data);
     }
-    if(fnshm){
+    if(fnatm){
 	char fnlock[PATH_MAX]; 
-	snprintf(fnlock, PATH_MAX, "%s.lock", fnshm);
+	snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);
 	dcell *in=NULL;
 	while(!in){
 	    if(exist(fnlock)){
-		/*when fnlock exists, the data in fnshm is not good. */
+		/*when fnlock exists, the data in fnatm is not good. */
 		info2("Will not read since %s exists\n", fnlock);
 	    }else{
-		in=dcellread_mmap(fnshm);
-		if(in) info2("Reading %s\n", fnshm);
+		in=dcellread_mmap(fnatm);
+		if(in) info2("Reading %s\n", fnatm);
 	    }
 	    if(!in){
-		info2("Creating %s\n", fnshm);
+		info2("Creating %s\n", fnatm);
 		int fd=lock_file(fnlock, 0, 0);/*non blocking exclusive lock. */
 		if(fd>=0){/*succeed to lock file. */
-		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fnshm); 
+		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fnatm); 
 		    funsave(fc, data);
 		    cellarr_close(fc);
 		    remove(fnlock);
@@ -206,7 +205,7 @@ static map_t** create_screen(GENSCREEN_T *data,
 	screen=dcell2map(&nlayer2, in);
 	assert(nlayer==nlayer2);
 	dcellfree(in);
-	free(fnshm);
+	free(fnatm);
     }else{
   	screen=calloc(nlayer,sizeof(map_t*));
 	long nx = data->nx;
