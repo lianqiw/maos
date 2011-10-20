@@ -92,11 +92,9 @@ int gpu_pcg(curcell **px,
     }else{
 	curcellzero(x0, stream);
     }
-
     curcell *p0=NULL;
     if(Mmul){
-	CUDA_SYNC_STREAM;
-	Mmul(&z0,M,r0);
+	Mmul(&z0,M,r0,stream);
     }else{
 	z0=r0;
     }
@@ -123,11 +121,11 @@ int gpu_pcg(curcell **px,
 	curcellinn2(&res->ak, p0, Ap, stream);
 	div_do<<<1,1,0,stream>>>(&res->ak, &res->r0z1, &res->ak);
 	CUDA_SYNC_STREAM;/*put here helps to remove the spikes in performance/wfs */
-	curcelladd2(&r0, Ap, &res->ak, -1, stream);/*r0=r0-ak*Ap */
 	curcelladd2(&x0, p0, &res->ak, 1, stream);/*x0=x0+ak*p0 */
+	if(k+1==maxiter) break;
+	curcelladd2(&r0, Ap, &res->ak, -1, stream);/*r0=r0-ak*Ap */
 	if(Mmul){
-	    CUDA_SYNC_STREAM;
-	    Mmul(&z0,M,r0);
+	    Mmul(&z0,M,r0, stream);
 	}
 	/*r0z2=r0'*z0 */
 	curcellinn2(&res->r0z2, r0, z0, stream);
@@ -151,7 +149,6 @@ int gpu_pcg(curcell **px,
 	toc("cg");
     }
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
-//curcellcp(px, x0, stream);
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
     if(diff[maxiter]>0.02 && curecon->reconisim>5){

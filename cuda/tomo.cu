@@ -30,7 +30,7 @@ extern "C"
 
 #define DIM_REDUCE 128 /*dimension to use in reduction. */
 
-#define TIMING 0
+#define TIMING 1
 #if !TIMING
 #undef TIC
 #undef tic
@@ -456,7 +456,9 @@ __global__ static void fdpcg_perm_i(fcomplex *out, fcomplex *in, int *perm, int 
 	out[perm[ix]]=in[ix];
     }
 }
-__global__ static void fdpcg_mul_block(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
+/* Each thread block is bsxbs*/
+/*
+__global__ static void fdpcg_mul_block_slow(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
     extern __shared__ fcomplex v[];
     int ib=blockIdx.x;
     int bs=blockDim.x;
@@ -479,6 +481,45 @@ __global__ static void fdpcg_mul_block(fcomplex *xout, fcomplex *xin, fcomplex *
     if(iy==0){
 	xout[ix]=vout[ix];
     }
+    }*/
+/* Each thread block is bs x 1. no need to lock.*/
+__global__ static void fdpcg_mul_block_sync(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
+    extern __shared__ fcomplex v[];
+    int ib=blockIdx.x;
+    int bs=blockDim.x;
+    int ix=threadIdx.x;
+    fcomplex *vin=v;
+    fcomplex *vout=v+bs;
+    xin+=ib*bs;
+    xout+=ib*bs;
+    M+=ib*bs*bs;
+    vin[ix]=xin[ix];
+    vout[ix]=make_cuComplex(0,0);
+    __syncthreads();
+    for(int iy=0; iy<bs; iy++){
+	//vout[ix]=cuCaddf(vout[ix],cuCmulf(M[ix+iy*bs],vin[iy]));
+	vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
+    }
+    xout[ix]=vout[ix];
+}
+/* Each thread block is bs x 1. no need to lock.*/
+__global__ static void fdpcg_mul_block_nosync(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
+    extern __shared__ fcomplex v[];
+    int ib=blockIdx.x;
+    int bs=blockDim.x;
+    int ix=threadIdx.x;
+    fcomplex *vin=v;
+    fcomplex *vout=v+bs;
+    xin+=ib*bs;
+    xout+=ib*bs;
+    M+=ib*bs*bs;
+    vin[ix]=xin[ix];
+    vout[ix]=make_cuComplex(0,0);
+    for(int iy=0; iy<bs; iy++){
+	//vout[ix]=cuCaddf(vout[ix],cuCmulf(M[ix+iy*bs],vin[iy]));
+	vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
+    }
+    xout[ix]=vout[ix];
 }
 __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
     int step=blockDim.x * gridDim.x; 
@@ -486,7 +527,23 @@ __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
 	x[i]=make_cuComplex(cuCrealf(x[i])*alpha, cuCimagf(x[i])*alpha);
     }
 }
-void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
+/**
+   Timing for full reconstruction (tomo+fit)
+   0.0238 with mul_block.
+   0.0224 with mul_block_nosync
+   0.0225 with mul_block_sync
+
+   Detailed timing here (in micro-second)
+   Copy:          36
+   FFT+scale:    160
+   Permutation:  122
+   Multiply:     967
+   Inverse Perm: 153
+   Inverse FFT:  149
+   Copy back:     42
+   Total:       1619
+*/
+void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream){
     TIC;tic;
     SIM_T *simu=(SIM_T*)A;
     RECON_T *recon=simu->recon;
@@ -498,7 +555,6 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
     }else if(!(*xout)->m){
 	error("xout is not continuous");
     }
-    cudaStream_t stream=curecon->cgstream;
     fdpcg_embed<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat1->p[0]->p, xin->p[0]->p, curecon->fd_nxtot);
     ctoc("fdpcg: Copy");
@@ -517,8 +573,13 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
     ctoc("fdpcg: Permutation");
     int nb=curecon->fd_Mb->nx;
     int bs=curecon->fd_Mb->p[0]->nx;
-    fdpcg_mul_block<<<nb, dim3(bs,bs), sizeof(fcomplex)*bs*2, stream>>>
-	(curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
+    if(bs<32){
+    	fdpcg_mul_block_nosync<<<nb, bs, sizeof(fcomplex)*bs*2, stream>>>
+    	    (curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
+    }else{
+	fdpcg_mul_block_sync<<<nb, bs, sizeof(fcomplex)*bs*2, stream>>>
+	    (curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
+    }
     ctoc("fdpcg: mul block");
     fdpcg_perm_i<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
