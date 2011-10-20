@@ -402,9 +402,9 @@ void gpu_tomo(SIM_T *simu){
 	CUDA_SYNC_DEVICE;
 	exit(0);
     }
-    toc("Before gradin");
+    toc("Before gradin");tic;
     gpu_dcell2cu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-    toc("Gradin");
+    toc("Gradin");tic;
     curcell *rhs=NULL;
     gpu_TomoR(&rhs, simu, curecon->gradin, 1);
     toc("TomoR");
@@ -416,6 +416,7 @@ void gpu_tomo(SIM_T *simu){
 	prefun=gpu_Tomo_fdprecond;
 	predata=(void*)simu;
     }
+    tic;
     if(gpu_pcg(&curecon->opdr, gpu_TomoL, simu, prefun, predata, rhs, 
 	       simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream)){
 	dcellwrite(simu->gradlastol, "tomo_gradlastol_%d", simu->reconisim);
@@ -423,11 +424,11 @@ void gpu_tomo(SIM_T *simu){
 	curcellwrite(rhs, "tomo_rhs_%d", simu->reconisim);
 	exit(1);
     }
+    toc("TomoL CG");tic;
     if(parms->tomo.precond==1){
 	cuccellfree(curecon->fd_xhat1);
 	cuccellfree(curecon->fd_xhat2);
     }
-    toc("TomoL CG");
     curcellfree(rhs); rhs=NULL;
     curcellfree(curecon->opdwfs); curecon->opdwfs=NULL;
     curcellfree(curecon->grad);   curecon->grad=NULL;
@@ -445,13 +446,9 @@ void gpu_fit(SIM_T *simu){
     TIC;tic;
     gpu_set(0);
     const PARMS_T *parms=simu->parms;
-    RECON_T *recon=simu->recon;
     if(!parms->gpu.tomo){
 	gpu_dcell2cu(&curecon->opdr, simu->opdr);
     }
-    int nxp=recon->pmap->nx;
-    int nyp=recon->pmap->ny;
-    int nfit=parms->fit.nfit;
     toc("Before FitR");
     curcell *rhs=NULL;
     cumuv(&rhs, 0, &curecon->FR, curecon->opdr, 1);

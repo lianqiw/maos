@@ -624,6 +624,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_DBL(tomo.iac);
     READ_INT(tomo.ninit);
     READ_INT(tomo.psol);
+    READ_INT(tomo.nxbase);
 }
 
 /**
@@ -1734,6 +1735,10 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }
     if(use_cuda){
 	if(parms->recon.alg==0){
+	    if(parms->gpu.tomo && parms->tomo.pos !=2){
+		parms->gpu.tomo=0;
+		warning("\n\nGPU reconstruction is only available for CG with tomo.pos=2 for the moment.\n");
+	    }
 	    if(parms->gpu.tomo && parms->tomo.alg !=1){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for CG. Disable GPU Tomography.\n");

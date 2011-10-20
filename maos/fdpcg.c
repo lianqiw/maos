@@ -57,7 +57,7 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     long offy=ny/2;
     for(long isa=0; isa<saloc->nloc; isa++){
 	if(saa[isa]>0.9){
-	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture center. */
+	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture lower left corner. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
 	    pxsel[iy][ix]=1;
 	}
@@ -89,9 +89,11 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 
    The ray tracing couples the screens but only on points with same or harmonic
    spatial frequencies. Group them together.
-
+   
+   shift=1: apply a fftshift with permutation vector.
+   half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix)
 */
-long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps, int shift){
+long *fdpcg_perm(const long *nx, const long *ny, const int *os, int nps, int shift, int half){
     long nx2[nps],ny2[nps];
     long noff[nps];
     long xloctot=0;
@@ -99,12 +101,16 @@ long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps, int shift){
 	nx2[ips]=nx[ips]/2;
 	ny2[ips]=ny[ips]/2;
 	noff[ips]=xloctot;
-	xloctot+=nx[ips]*ny[ips];
+	if(half){
+	    xloctot+=(nx[ips]/2+1)*ny[ips];
+	}else{
+	    xloctot+=nx[ips]*ny[ips];
+	}
     }
     long *perm=calloc(xloctot, sizeof(long));
-    long use_os=pos;
-    long adim=nx[0]/use_os;
-    long osx=nx[0]/2;
+    // long use_os=pos;
+    long adim=nx[0]/os[0];//subaperture dimension.
+    //long osx=nx[0]/2;
     long count=0;
 
     for(long iy=-adim/2; iy<adim/2; iy++){
@@ -112,24 +118,19 @@ long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps, int shift){
 	    /*(ix,iy) is the frequency in SALOC grid. We are going to group all
 	      points couple to this subaperture together. First loop over all
 	      points on PLOC and find all coupled points in XLOC*/
-	    for(long juse_os=0; juse_os<use_os; juse_os++){
-		long jy=(iy+adim*juse_os);
-		if(jy>=osx) jy-=nx[0];
-		for(long iuse_os=0; iuse_os<use_os; iuse_os++){
-		    long jx=(ix+adim*iuse_os);
-		    if(jx>=osx) jx-=nx[0];
-		    /*jx, jy is the frequency in XLOC grid. */
-		    for(long ips=0; ips<nps; ips++){
-			/*this layer has such freq. */
-			if(jy>=-ny2[ips] && jy<ny2[ips] && jx>=-nx2[ips] && jx<nx2[ips]){
-			    if(shift){
-				/*we embeded a fftshift here.*/
-				perm[count]=noff[ips]+(jx<0?jx+nx[ips]:jx)+(jy<0?jy+ny[ips]:jy)*nx[ips];
-			    }else{
-				perm[count]=noff[ips]+(jx+nx2[ips])+(jy+ny2[ips])*nx[ips];
-			    }
-			    count++;
+	    for(long ips=0; ips<nps; ips++){
+		for(long jos=0; jos<os[ips]; jos++){
+		    long jy=(iy+adim*jos); 
+		    if(jy>=ny2[ips]) jy-=ny[ips];
+		    for(long ios=0; ios<os[ips]; ios++){
+			long jx=(ix+adim*ios); 
+			if(jx>=nx2[ips]) jx-=nx[ips];
+			if(shift){ /*we embeded a fftshift here.*/
+			    perm[count]=noff[ips]+(jx<0?jx+nx[ips]:jx)+(jy<0?jy+ny[ips]:jy)*nx[ips];
+			}else{
+			    perm[count]=noff[ips]+(jx+nx2[ips])+(jy+ny2[ips])*nx[ips];
 			}
+			count++;
 		    }
 		}
 	    }
@@ -185,43 +186,48 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
 
 /**
    Propagate operator for nlayer screens to ground of size
-   nxg*nxg, sampling dx, with displacement of dispx, dispy.
+   nxp*nxp, sampling dx, with displacement of dispx, dispy.
 */
-csp *fdpcg_prop(long nps, long pos, const int *os, long nxg, double dx, double *dispx, double *dispy){
-    long nxi[nps],nxi2[nps],nxi3[nps];
+csp *fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
+    long nx2[nps],nx3[nps];
+    long ny2[nps],ny3[nps];
     long noff[nps];
     long nxtot=0;
-    double dk=1./(nxg*dx);
+    double dkx=1./(nxp*dx);
+    double dky=1./(nyp*dx);
     for(long ips=0; ips<nps; ips++){
-	nxi[ips]=nxg/os[0]*os[ips];
-	nxi2[ips]=nxi[ips]/2;
-	nxi3[ips]=nxi[ips]/2+nxi[ips];
+	nx2[ips]=nx[ips]/2;
+	nx3[ips]=nx2[ips]+nx[ips];
+	ny2[ips]=ny[ips]/2;
+	ny3[ips]=ny2[ips]+ny[ips];
 	noff[ips]=nxtot;
-	nxtot+=nxi[ips]*nxi[ips];
+	nxtot+=nx[ips]*ny[ips];
     }
-    long nxg2=nxg/2;
+    long nxp2=nxp/2;
+    long nyp2=nyp/2;
     /*We build the transposed matrix.*/
-    csp *propt=cspnew(nxtot,nxg*nxg,nxg*nxg*nps);
+    csp *propt=cspnew(nxtot,nxp*nyp,nxp*nyp*nps);
     spint *pp=propt->p;
     spint *pi=propt->i;
     dcomplex *px=propt->x;
     long count=0;
     dcomplex cf=2*M_PI*I;
     double cfr=2*M_PI;
-    for(long iy=0; iy<nxg; iy++){
-	for(long ix=0; ix<nxg; ix++){
-	    double fxg=(ix-nxg2)*dk;/*spatial frequency in pupil. */
-	    double fyg=(iy-nxg2)*dk;
-	    long icol=ix+iy*nxg;
+    for(long iy=0; iy<nyp; iy++){
+	double fyg=(iy-nyp2)*dky;
+	for(long ix=0; ix<nxp; ix++){
+	    double fxg=(ix-nxp2)*dkx;/*spatial frequency in pupil. */
+	    long icol=ix+iy*nxp;
 	    pp[icol]=count;
 	    for(long ips=0; ips<nps; ips++){
-		long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
-		long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
-		double fx=(jx-nxi2[ips])*dk;/*spatial frequency in plane ips. */
-		double fy=(jy-nxi2[ips])*dk;
-		pi[count]=jx+jy*nxi[ips]+noff[ips];
+		long jx=((ix-nxp2)+nx3[ips])%nx[ips];/*map to layer ips. */
+		long jy=((iy-nyp2)+ny3[ips])%ny[ips];/*map to layer ips. */
+		double fx=(jx-nx2[ips])*dkx;/*spatial frequency in plane ips. */
+		double fy=(jy-ny2[ips])*dky;
+		pi[count]=jx+jy*nx[ips]+noff[ips];
 		dcomplex shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
-		switch(pos/os[ips]){
+		switch(nxp/nx[ips]){
+		case 0:
 		case 1:
 		    px[count]=conj(shift);
 		    break;
@@ -244,13 +250,13 @@ csp *fdpcg_prop(long nps, long pos, const int *os, long nxg, double dx, double *
 		    }
 		    break;
 		default:
-		    error("Invalid\n");
+		    error("Invalid: %ld\n", nxp/nx[ips]);
 		}
 		count++;
 	    }
 	}
     }
-    pp[nxg*nxg]=count;
+    pp[nxp*nxp]=count;
     /*we put conj above because csptrans applies a conjugation. */
     csp *propf=csptrans(propt);
     cspfree(propt);
@@ -278,31 +284,26 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     long pos=parms->tomo.pos;
     const int* os=parms->atmr.os;
     if(pos!=os[0]){
-	error("pupil does not equal to ground layer over sampling. Please change.\n");
+	warning("pupil does not equal to ground layer over sampling. Debug required.\n");
     }
     long* nx=recon->xnx;
     long* ny=recon->xny;
+    const long nxp=nx[0]/os[0]*parms->tomo.pos;
+    const long nyp=ny[0]/os[0]*parms->tomo.pos;
+    const double dxp=recon->ploc->dx;
     const double *ht=parms->atmr.ht;
     long nxtot=0;
     for(long ips=0; ips<nps; ips++){
 	nxtot+=nx[ips]*ny[ips];
 	if(os[ips]>pos){
-	    error("Layer %ld os is greater than ground\n", ips);
+	    warning("Layer %ld os is greater than ground\n", ips);
 	}
     }
     /*Subaperture selection operator */
-    csp *sel=fdpcg_saselect(nx[0],ny[0],xloc[0]->dx, 
-			    saloc, powfs[hipowfs].saa->p);
-    if(parms->save.setup){
-	cspwrite(sel,"%s/fdpcg_sel",dirsetup);
-    }
+    csp *sel=fdpcg_saselect(nxp,nyp,dxp, saloc, powfs[hipowfs].saa->p);
     /*Gradient operator. */
     cmat *gx, *gy;
-    fdpcg_g(&gx,&gy,nx[0],ny[0],xloc[0]->dx,saloc->dx);/*tested ok. */
-    if(parms->save.setup){
-	cwrite(gx,"%s/fdpcg_gx",dirsetup);
-	cwrite(gy,"%s/fdpcg_gy",dirsetup);
-    }
+    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx);/*tested ok. */
     /*Concatenate invpsd; */
     dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
     long offset=0;
@@ -376,20 +377,23 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	cspfree(tmp);
 	cspfree(tmp2);
     }
+    /*Ray tracing operator for each WFS */
+    if(parms->save.setup){
+	cspwrite(sel,"%s/fdpcg_sel",dirsetup);
+	cwrite(gx,"%s/fdpcg_gx",dirsetup);
+	cwrite(gy,"%s/fdpcg_gy",dirsetup);
+	cspwrite(Mhat,"%s/fdpcg_invpsd",dirsetup);
+	cspwrite(Mmid,"%s/fdpcg_Mmid",dirsetup);
+    }
     cfree(gx);
     cfree(gy);
     cspfree(sel);
     double dispx[nps];
     double dispy[nps];
-    /*Ray tracing operator for each WFS */
-    if(parms->save.setup){
-	cspwrite(Mhat,"%s/fdpcg_invpsd",dirsetup);
-	cspwrite(Mmid,"%s/fdpcg_Mmid",dirsetup);
-    }
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
 	int iwfs=parms->powfs[hipowfs].wfs[jwfs];
 	double neai=recon->neam->p[iwfs];
-	info("sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai);
+	info2("fdpcg: mean sanea used for wfs %d is %g mas\n",iwfs, 206265000*neai);
 	for(long ips=0; ips<nps; ips++){
 	    /*
 	      2010-05-28: The cone effect cancels with the cone
@@ -399,7 +403,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    dispx[ips]=ht[ips]*parms->wfs[iwfs].thetax;
 	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;
 	}
-	csp *propx=fdpcg_prop(nps,pos,os,nx[0],xloc[0]->dx,dispx,dispy);
+	csp *propx=fdpcg_prop(nps,pos,nxp,nyp,nx,ny,dxp,dispx,dispy);
 	if(parms->save.setup){
 	    cspwrite(propx,"%s/fdpcg_prop_wfs%d",dirsetup,iwfs);
 	}
@@ -430,14 +434,14 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     info("Block size is %ld, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
-    long *perm=fdpcg_perm(nx,ny, pos, nps,0);
+    long *perm=fdpcg_perm(nx,ny, os, nps,0,0);
     if(parms->save.setup){
 	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
     }
     csp *Mhatp=cspperm(Mhat,0,perm,perm);/*forward permutation. */
     cspfree(Mhat);
     free(perm);
-    perm=fdpcg_perm(nx,ny, pos, nps, 1);/*contains fft shift information*/
+    perm=fdpcg_perm(nx,ny, os, nps, 1,0); /*contains fft shift information*/
 #if PRE_PERMUT == 1
     csp *Minvp=cspinvbdiag(Mhatp,bs);
     csp *Minv=cspperm(Minvp,1,perm, perm);/*revert permutation */

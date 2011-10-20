@@ -50,10 +50,10 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
     }else{ 
 	/*
 	  Create a circular PLOC with telescope diameter by calling
-	  create_metapupil with height of 0. We don't add any guard points.*/
+	  create_metapupil with height of 0. We don't add any guard points. PLOC
+	  does not need to be follow XLOC in FDPCG.*/
 	double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
-	map_t *pmap=create_metapupil_wrap 
-	    (parms,0,dxr,0,0,0,0,0,parms->tomo.square);
+	map_t *pmap=create_metapupil_wrap(parms,0,dxr,0,0,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
 	recon->pmap = pmap;
@@ -74,17 +74,12 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
     }else{
-	if((parms->fit.pos==-1 || parms->fit.pos==parms->tomo.pos) && parms->tomo.square==parms->fit.square){
-	    recon->floc=recon->ploc;
-	    info2("FLOC is using PLOC\n");
-	}else{
-	    double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of ploc */
-	    map_t *fmap=create_metapupil_wrap 
-		(parms,0,dxr,0,0,0,0,0,parms->fit.square);
-	    info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
-	    recon->floc=map2loc(fmap);/*convert map_t to loc_t */
-	    mapfree(fmap);
-	}
+	double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
+	map_t *fmap=create_metapupil_wrap 
+	    (parms,0,dxr,0,0,0,0,0,parms->fit.square);
+	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
+	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
+	mapfree(fmap);
     }
     /*create the weighting W for bilinear influence function. See [Ellerbroek 2002] */
     if(parms->load.W){
@@ -242,16 +237,18 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     }else{
 	recon->xloc=calloc(npsr, sizeof(loc_t *));
 	info2("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
+	int nin0=0;
+	/*FFT in FDPCG prefers power of 2 dimensions. for embeding and fast FFT*/
+	if(parms->tomo.nxbase){
+	    nin0=parms->tomo.nxbase;
+	}else if(!parms->sim.idealfit && (parms->tomo.precond==1 || parms->tomo.square==2)){
+	    nin0=nextpow2((long)round(parms->aper.d/recon->dx->p[0]*2.))/recon->os->p[0];
+	}
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
 	    double dxr=(parms->sim.idealfit)?parms->atm.dx:recon->dx->p[ips];
 	    const double guard=parms->tomo.guard*dxr;
-	    long nin=0;
-	    if(!parms->sim.idealfit && (parms->tomo.precond==1 || parms->tomo.square==2)){
-		/*FFT in FDPCG prefers power of 2 dimensions. */
-		nin=nextpow2((long)round(parms->aper.d/recon->dx->p[0]*2.))
-		    *recon->os->p[ips]/recon->os->p[0];
-	    }
+	    long nin=nin0*recon->os->p[ips];
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    info2("layer %d: xloc map is %3ld x %3ld, sampling is %.3f m\n",

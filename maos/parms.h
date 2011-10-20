@@ -335,6 +335,7 @@ typedef struct TOMO_CFG_T{
     int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
     int guard;       /**<guard rings of reconstruction grid xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
+    int nxbase;      /**<Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.*/
     int piston_cr;   /**<single point piston constraint. */
  
     int ahst_wt;     /**<0: use Wg, 1: using Wa*/

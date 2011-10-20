@@ -30,7 +30,7 @@ extern "C"
 
 #define DIM_REDUCE 128 /*dimension to use in reduction. */
 
-#define TIMING 1
+#define TIMING 0
 #if !TIMING
 #undef TIC
 #undef tic
@@ -40,7 +40,7 @@ extern "C"
 #define toc(A)
 #define ctoc(A)
 #else
-#define ctoc(A) CUDA_SYNC_STREAM; toc2(A)
+#define ctoc(A) CUDA_SYNC_STREAM; toc2(A);tic
 #endif
 __global__ static void ptt_proj_do(float *restrict out, float (*restrict PTT)[2], float *restrict grad, int ng){
     __shared__ float gx[DIM_REDUCE];
@@ -497,26 +497,25 @@ __global__ static void fdpcg_mul_block_sync(fcomplex *xout, fcomplex *xin, fcomp
     vout[ix]=make_cuComplex(0,0);
     __syncthreads();
     for(int iy=0; iy<bs; iy++){
-	//vout[ix]=cuCaddf(vout[ix],cuCmulf(M[ix+iy*bs],vin[iy]));
 	vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
     }
     xout[ix]=vout[ix];
 }
-/* Each thread block is bs x 1. no need to lock.*/
-__global__ static void fdpcg_mul_block_nosync(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
-    extern __shared__ fcomplex v[];
+
+/* Each thread block is bs x 1. no need to lock. unroll the loop.*/
+template <int bs>
+__global__ static void fdpcg_mul_block(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
     int ib=blockIdx.x;
-    int bs=blockDim.x;
     int ix=threadIdx.x;
-    fcomplex *vin=v;
-    fcomplex *vout=v+bs;
+    __shared__ fcomplex vin[bs];
+    __shared__ fcomplex vout[bs];
     xin+=ib*bs;
     xout+=ib*bs;
     M+=ib*bs*bs;
     vin[ix]=xin[ix];
     vout[ix]=make_cuComplex(0,0);
+#pragma unroll
     for(int iy=0; iy<bs; iy++){
-	//vout[ix]=cuCaddf(vout[ix],cuCmulf(M[ix+iy*bs],vin[iy]));
 	vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
     }
     xout[ix]=vout[ix];
@@ -533,15 +532,25 @@ __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
    0.0224 with mul_block_nosync
    0.0225 with mul_block_sync
 
-   Detailed timing here (in micro-second)
-   Copy:          36
-   FFT+scale:    160
-   Permutation:  122
-   Multiply:     967
-   Inverse Perm: 153
-   Inverse FFT:  149
-   Copy back:     42
-   Total:       1619
+   Detailed timing here (in micro-second). os4n means not unrolled. others are unrolled.
+   Done in orion with nfiraos with 6 layer.
+                 os4n os4  os1   os6   os2
+   Copy:          72   72   42    93    52
+   FFT+scale:    152  144   89   165   109
+   Permutation:   90   86   38   162    54
+   Multiply:     964  563  232   568   288
+   Inverse Perm: 161  156   47   242    77
+   Inverse FFT:  148  140   83   158   107
+   Copy back:     44   38   27    43    38
+   Total:       1619 1199  558  1431   725
+   Total FDPCG3:     6982 5760  7434  5759 (excluding right hand size)
+   Try to use the hermitian property when trying to optimize for the speed. 
+   Be careful about oversampling:
+
+   The positive (right half) base frequency (os=1) couples to both positive and
+   negative frequencies to layers with os=2. Only apply the block matrix to
+   positive frequencies maynot be good.
+
 */
 void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream){
     TIC;tic;
@@ -573,10 +582,44 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     ctoc("fdpcg: Permutation");
     int nb=curecon->fd_Mb->nx;
     int bs=curecon->fd_Mb->p[0]->nx;
-    if(bs<32){
-    	fdpcg_mul_block_nosync<<<nb, bs, sizeof(fcomplex)*bs*2, stream>>>
-    	    (curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
-    }else{
+
+#define MUL(N)								\
+    fdpcg_mul_block<N><<<nb, N, 0, stream>>>				\
+	(curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p,		\
+	 curecon->fd_Mb->p[0]->p, curecon->fd_nxtot)
+    switch(bs){
+    case 1: MUL(1); break;
+    case 2: MUL(2); break;
+    case 3: MUL(3); break;
+    case 4: MUL(4); break;
+    case 5: MUL(5); break;
+    case 6: MUL(6); break;
+    case 7: MUL(7); break;
+    case 8: MUL(8); break;
+    case 9: MUL(9); break;
+    case 10: MUL(10); break;
+    case 11: MUL(11); break;
+    case 12: MUL(12); break;
+    case 13: MUL(13); break;
+    case 14: MUL(14); break;
+    case 15: MUL(15); break;
+    case 16: MUL(16); break;
+    case 17: MUL(17); break;
+    case 18: MUL(18); break;
+    case 19: MUL(19); break;
+    case 20: MUL(20); break;
+    case 21: MUL(21); break;
+    case 22: MUL(22); break;
+    case 23: MUL(23); break;
+    case 24: MUL(24); break;
+    case 25: MUL(25); break;
+    case 26: MUL(26); break;
+    case 27: MUL(27); break;
+    case 28: MUL(28); break;
+    case 29: MUL(29); break;
+    case 30: MUL(30); break;
+    case 31: MUL(31); break;
+    default:
 	fdpcg_mul_block_sync<<<nb, bs, sizeof(fcomplex)*bs*2, stream>>>
 	    (curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
     }
