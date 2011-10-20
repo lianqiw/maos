@@ -1530,11 +1530,17 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->recon.split && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");
     }
-    if(parms->tomo.precond==1 && !parms->recon.split && parms->tomo.maxit<10){
-	warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
-    }
-    if(parms->tomo.precond==1 && parms->tomo.square!=1){
-	warning("FDPCG prefers square XLOC.\n");
+    if(parms->tomo.alg==1){
+	if(parms->tomo.precond==1 && !parms->recon.split && parms->tomo.maxit<10){
+	    warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
+	}
+	if(parms->tomo.precond==1 && parms->tomo.piston_cr){
+	    warning("FDPCG does not perform well with piston_cr=1. Disabled piston_cr\n");
+	    parms->tomo.piston_cr=0;
+	}
+	if(parms->tomo.precond==1 && parms->tomo.square!=1){
+	    warning("FDPCG prefers square XLOC.\n");
+	}
     }
     if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");

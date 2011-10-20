@@ -30,7 +30,9 @@
    3) Fixed a bug in dispx,dispy. should not include cone effect since dk doesn't
 
    2011-10-19:
-   No need to do fftshift after the first fft. this is done by the permutation vector.
+   1) No need to do fftshift after the first fft. this is done by the incorporting
+   the fftshift into the permutation vector.
+
  */
 
 #include "maos.h"
@@ -104,17 +106,18 @@ long *fdpcg_perm(const long *nx, const long *ny, long pos, int nps, int shift){
     long adim=nx[0]/use_os;
     long osx=nx[0]/2;
     long count=0;
+
     for(long iy=-adim/2; iy<adim/2; iy++){
 	for(long ix=-adim/2; ix<adim/2; ix++){
-	    /*(ix,iy) is the frequency in SALOC grid. */
-	    /*loop over oversampling.*/
+	    /*(ix,iy) is the frequency in SALOC grid. We are going to group all
+	      points couple to this subaperture together. First loop over all
+	      points on PLOC and find all coupled points in XLOC*/
 	    for(long juse_os=0; juse_os<use_os; juse_os++){
 		long jy=(iy+adim*juse_os);
 		if(jy>=osx) jy-=nx[0];
 		for(long iuse_os=0; iuse_os<use_os; iuse_os++){
 		    long jx=(ix+adim*iuse_os);
 		    if(jx>=osx) jx-=nx[0];
-
 		    /*jx, jy is the frequency in XLOC grid. */
 		    for(long ips=0; ips<nps; ips++){
 			/*this layer has such freq. */
@@ -214,12 +217,8 @@ csp *fdpcg_prop(long nps, long pos, const int *os, long nxg, double dx, double *
 	    for(long ips=0; ips<nps; ips++){
 		long jx=((ix-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
 		long jy=((iy-nxg2)+nxi3[ips])%nxi[ips];/*map to layer ips. */
-		//long jx=(ix-nxg2)%nxi[ips]; if(jx<0) jx+=nxi[ips];
-		//long jy=(iy-nxg2)%nxi[ips]; if(jy<0) jy+=nxi[ips];
 		double fx=(jx-nxi2[ips])*dk;/*spatial frequency in plane ips. */
 		double fy=(jy-nxi2[ips])*dk;
-		//double fx=jx*dk;
-		//double fy=jy*dk;
 		pi[count]=jx+jy*nxi[ips]+noff[ips];
 		dcomplex shift=cexp(cf*(fx*dispx[ips]+fy*dispy[ips]));
 		switch(pos/os[ips]){
@@ -501,17 +500,14 @@ static void fdpcg_fft(void *data){
 		xhati->p[ips]->p[i]=xin->p[ips]->p[i];
 	    }
 	}else{
-	    /*czero takes 0.000074 */
-	    /*cembed_locstat takes 0.000037 */
-	    /*embedc_in takes 0.000062 */
+	    /*
+	      czero takes 0.000074 
+	      cembed_locstat takes 0.000037
+	    */
 	    czero(xhati->p[ips]);
 	    cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc[ips],  xin->p[ips]->p, 1, 0);
 	}
-	/*Apply FFT. first fftshift is not necessary. */
-	cfftshift(xhati->p[ips]);//enable this needs enable the one in fdpcg_ifft. 
-	/*cfft2(xhati->p[ips],-1); */
 	cfft2s(xhati->p[ips],-1);
-	//cfftshift(xhati->p[ips]);
     }
 }
 
@@ -541,11 +537,8 @@ static void fdpcg_ifft(void *p){
     int nps=fdpcg->xhati->nx;
     ccell *xhat2i=fdpcg->xhat2i;
     dcell *xout=info->xout;
-    /*const dcell *xin=info->xin; */
     while(LOCKADD(ips, info->ips, 1)<nps){
-	//cfftshift(xhat2i->p[ips]);
 	cfft2s(xhat2i->p[ips],1);
-	cfftshift(xhat2i->p[ips]);//enable this needs enable the one in fdpcg_fft. 
 	if(fdpcg->square){
 	    for(long i=0; i<xhat2i->p[ips]->nx*xhat2i->p[ips]->ny; i++){
 		xout->p[ips]->p[i]=creal(xhat2i->p[ips]->p[i]);
@@ -553,7 +546,6 @@ static void fdpcg_ifft(void *p){
 	}else{
 	    dzero(xout->p[ips]);
 	    cembed_locstat(&xhat2i->p[ips], 1, fdpcg->xloc[ips], xout->p[ips]->p, 0, 1);
-	    /*embedc_out(xhat2i->p[ips]->p, xout->p[ips]->p, xout->p[ips]->nx, fdpcg->xembed[ips]); */
 	}
     }
 }
@@ -584,25 +576,19 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     info.xout=*xout;
     /*apply forward FFT */
     CALL(fdpcg_fft,&info,recon->nthread,1);
-    //ccellwrite(recon->fdpcg->xhati, "fdpcg_fft");
 #if PRE_PERMUT
     czero(xhat2);
     cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
 #else/*permute vectors and apply block diagonal matrix */
     /*permute xhat and put into xhat2 */
     cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
-    //cwrite(xhat2, "fdpcg_perm");
     czero(xhat);
     CALL(fdpcg_mulblock,&info,recon->nthread,1);
-    //cwrite(xhat, "fdpcg_mul");
-    /*permute back to have natural order. */
     cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
-    //ccellwrite(fdpcg->xhat2i, "fdpcg_perm_i");
 #endif
     info.ips=0;
     /*Apply inverse FFT */
     CALL(fdpcg_ifft,&info,recon->nthread,1);
-    //ccellwrite(fdpcg->xhat2i, "fdpcg_ifft");exit(0);
 }
 
 /**

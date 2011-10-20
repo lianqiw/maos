@@ -38,6 +38,9 @@ extern "C"
 #define TIC
 #define tic
 #define toc(A)
+#define ctoc(A)
+#else
+#define ctoc(A) CUDA_SYNC_STREAM; toc2(A)
 #endif
 __global__ static void ptt_proj_do(float *restrict out, float (*restrict PTT)[2], float *restrict grad, int ng){
     __shared__ float gx[DIM_REDUCE];
@@ -379,8 +382,10 @@ void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *x
 	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
 	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
 	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
-	zzt_do<<<1,1,0,curecon->psstream[ips]>>>
-	    (opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
+	if(parms->tomo.piston_cr){
+	    zzt_do<<<1,1,0,curecon->psstream[ips]>>>
+		(opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
+	}
 	cudaEventRecord(psevent[ips][1], curecon->psstream[ips]);
 	DO_HXT;
 	cudaEventRecord(psevent[ips][2], curecon->psstream[ips]);
@@ -388,8 +393,10 @@ void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *x
 	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
 	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
 	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
-	zzt_do<<<1,1,0,curecon->psstream[ips]>>>
-	    (opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
+	if(parms->tomo.piston_cr){
+	    zzt_do<<<1,1,0,curecon->psstream[ips]>>>
+		(opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
+	}
 	DO_HXT;
 #endif
     }
@@ -480,6 +487,7 @@ __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
     }
 }
 void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
+    TIC;tic;
     SIM_T *simu=(SIM_T*)A;
     RECON_T *recon=simu->recon;
     if(!xin->m){
@@ -493,29 +501,28 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
     cudaStream_t stream=curecon->cgstream;
     fdpcg_embed<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat1->p[0]->p, xin->p[0]->p, curecon->fd_nxtot);
-    //cuccellwrite(curecon->fd_xhat1, "fdpcg_copy");
+    ctoc("fdpcg: Copy");
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
 	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat1->p[ips]->p, CUFFT_FORWARD);
 	int nps=curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic];
 	int nx=curecon->fd_xhat1->p[ips]->nx;
 	int ny=curecon->fd_xhat1->p[ips]->ny;
-	//info("nx=%d, ny=%d\n", nx, ny);
 	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
 	    (curecon->fd_xhat1->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
-    //cuccellwrite(curecon->fd_xhat1, "fdpcg_fft");
+    ctoc("fdpcg: FFT+scale");
     fdpcg_perm<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
-    //cuccellwrite(curecon->fd_xhat2, "fdpcg_perm");
+    ctoc("fdpcg: Permutation");
     int nb=curecon->fd_Mb->nx;
     int bs=curecon->fd_Mb->p[0]->nx;
     fdpcg_mul_block<<<nb, dim3(bs,bs), sizeof(fcomplex)*bs*2, stream>>>
 	(curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
-    //cuccellwrite(curecon->fd_xhat1, "fdpcg_mul");
+    ctoc("fdpcg: mul block");
     fdpcg_perm_i<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
-    //cuccellwrite(curecon->fd_xhat2, "fdpcg_perm_i");
+    ctoc("fdpcg: Inverse Permutation");
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
 	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat2->p[ips]->p, CUFFT_INVERSE);
@@ -525,7 +532,8 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin){
 	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
 	    (curecon->fd_xhat2->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
-    //cuccellwrite(curecon->fd_xhat2, "fdpcg_fft_i");exit(0);
+    ctoc("fdpcg: Inverse FFT + scale");
     fdpcg_extract<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	((*xout)->p[0]->p, curecon->fd_xhat2->p[0]->p, curecon->fd_nxtot);
+    ctoc("fdpcg: Copy back");
 }

@@ -1012,7 +1012,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    double r0=recon->r0;
 	    double dx=recon->xloc[ips]->dx;
 	    double wt=recon->wt->p[ips];
-	    double val=pow(laplacian_coef(r0,wt,dx),2);
+	    double val=pow(laplacian_coef(r0,wt,dx),2)*1e-6;
 	    /*info("Scaling of ZZT is %g\n",val); */
 	    /*piston mode eq 47 in Brent 2002 paper */
 	    int icenter=loccenter(recon->xloc[ips]);
@@ -1258,8 +1258,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
     }
     if(parms->tomo.assemble && !parms->cn2.tomo){
 	/*Don't free PTT. Used in forming LGS uplink err */
-	if(parms->tomo.piston_cr)
+	if(parms->tomo.piston_cr){
 	    spcellfree(recon->ZZT);
+	}
     }
   
     if(parms->sim.ecnn){

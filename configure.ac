@@ -209,7 +209,7 @@ AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
     if test "x$win32" != "xyes" ;then
-    echo        OPTSprof="-pthread"
+         OPTSprof="-pthread"
     fi
 else
     AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])

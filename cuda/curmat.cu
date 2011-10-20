@@ -227,8 +227,12 @@ void curcelladd2(curcell **A, const curcell *B, float* alpha, float alpha2, cuda
     }else{
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
-    for(int i=0; i<B->nx*B->ny; i++){
-	curadd2((*A)->p+i, B->p[i], alpha, alpha2,  stream);
+    if((*A)->m && B->m){
+	curadd2(&(*A)->m, B->m, alpha, alpha2, stream);
+    }else{
+	for(int i=0; i<B->nx*B->ny; i++){
+	    curadd2((*A)->p+i, B->p[i], alpha, alpha2,  stream);
+	}
     }
 }
 
@@ -334,11 +338,15 @@ void curinn2(float *restrict res, const curmat *a, const curmat *b, cudaStream_t
 */
 void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
     cudaMemsetAsync(res, 0,sizeof(float), stream);
-    for(int i=0; i<A->nx*A->ny; i++){
-	const curmat *a=A->p[i];
-	const curmat *b=B->p[i];
-	const int n=a->nx*a->ny;
-	inn_wrap(res, a->p, b->p, n, stream);
+    if(A->m && B->m){
+	inn_wrap(res, A->m->p, B->m->p, A->m->nx*A->m->ny, stream);
+    }else{
+	for(int i=0; i<A->nx*A->ny; i++){
+	    const curmat *a=A->p[i];
+	    const curmat *b=B->p[i];
+	    const int n=a->nx*a->ny;
+	    inn_wrap(res, a->p, b->p, n, stream);
+	}
     }
 }
 
