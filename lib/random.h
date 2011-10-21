@@ -51,7 +51,7 @@
 */
 /*2009-12-30: Changed to static inline which is portable*/
 #if __STDC_VERSION__ >= 199901L /*C99*/
-#define MT_INLINE inline /*static inline*/
+#define MT_INLINE inline __attribute__((always_inline)) /*static inline*/
 #else
 #define MT_INLINE inline /*static*/
 #endif

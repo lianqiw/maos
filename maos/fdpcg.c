@@ -167,7 +167,6 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
     *gy=cnew(nx*ny,1);
     dcomplex *pgx=(*gx)->p;
     dcomplex *pgy=(*gy)->p;
-    double dsa2=dsa*0.5;
     for(long iy=0; iy<ny; iy++){
 	double fy=(double)(iy-ny2)*dfy;
 	for(long ix=0; ix<nx; ix++){
@@ -267,7 +266,6 @@ csp *fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, doub
   Prepare data for Tomography Fourier Domain Preconditioner
 */
 FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs){
-    loc_t **xloc=recon->xloc;
     int hipowfs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].lo){
@@ -279,7 +277,6 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	}
     }
     loc_t *saloc=powfs[hipowfs].saloc;
-    const double hs=parms->powfs[hipowfs].hs;
     const long nps=recon->npsr;
     long pos=parms->tomo.pos;
     const int* os=parms->atmr.os;

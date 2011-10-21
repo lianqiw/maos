@@ -313,41 +313,12 @@ inline static void sum_wrap(float *res, const float * a, const int n, cudaStream
 float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     float *res;
     cudaMalloc(&res, sizeof(float));
-    curinn2(res,a,b,stream);
+    cudaMemsetAsync(res, 0,sizeof(float), stream);
+    inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
     float out;
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
     CUDA_SYNC_STREAM;
     return out;
-}
-float curcellinn(const curcell *A, const curcell *B, cudaStream_t stream){
-    float out;
-    static float *res=NULL;
-    if(!res) cudaMalloc(&res, sizeof(float));
-    curcellinn2(res, A, B, stream);
-    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
-    cudaStreamSynchronize(stream);
-    return out;
-}
-
-void curinn2(float *restrict res, const curmat *a, const curmat *b, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
-    inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
-}
-/**
-   res points to a scalar in device memory.
-*/
-void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
-    if(A->m && B->m){
-	inn_wrap(res, A->m->p, B->m->p, A->m->nx*A->m->ny, stream);
-    }else{
-	for(int i=0; i<A->nx*A->ny; i++){
-	    const curmat *a=A->p[i];
-	    const curmat *b=B->p[i];
-	    const int n=a->nx*a->ny;
-	    inn_wrap(res, a->p, b->p, n, stream);
-	}
-    }
 }
 
 /**

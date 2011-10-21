@@ -105,17 +105,15 @@ static dmat *wfsamp2saa(dmat *wfsamp, long nxsa){
     return saa;
 }
 /**
-   Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). locn is always non-misregistered loc.
+   Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). 
 */
-static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx, double misregy, double D, double Din){
+static dmat *mkwfsamp(loc_t *loc, map_t *ampground, double misregx, double misregy, double D, double Din){
     dmat *amp=dnew(loc->nloc, 1);
     if(ampground){
 	prop_grid(ampground, loc, NULL, amp->p, 1, misregx, misregy,1,0,0,0);
     }else{
 	locannular(amp->p, loc, -misregx, -misregy, D*0.5, Din*0.5, 1);
     }
-    /*Don't apply the mask any more. We limited available subapertures using r2min, r2max (2011-02-23) */
-    /*locannularmask(amp->p, locn, 0,0, D*0.5, Din*0.5); */
     return amp;
 }
 /**
@@ -134,7 +132,7 @@ static dmat *mkwfsamp(loc_t *loc, loc_t *locn, map_t *ampground, double misregx,
    (non-misregistered).
    
 */
-static void wfspupmask(const PARMS_T *parms, dmat *amp, loc_t *loc, double misreg[2], int iwfs){
+static void wfspupmask(const PARMS_T *parms, loc_t *loc, dmat *amp, double misreg[2], int iwfs){
     long nloc=loc->nloc;
     dmat *ampmask=dnew(nloc, 1);
     double ht=parms->atm.hmax*0.7;
@@ -194,14 +192,16 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(fabs(parms->powfs[ipowfs].dx-powfs[ipowfs].pts->dx)>EPS)
 	warning("Adjusting dx from %g to %g\n",
 		parms->powfs[ipowfs].dx,powfs[ipowfs].pts->dx);
-    if(fabs(dxsa - nx * powfs[ipowfs].pts->dx)>EPS)
+    if(fabs(dxsa - nx * powfs[ipowfs].pts->dx)>EPS){
 	warning("nx=%d,dsa=%f,dx=%f for not agree\n", nx, dxsa, dx);
-    if(parms->dbg.dxonedge){/*do we want to put a point on edge. */
+    }
+    dxoffset=dx*0.5;//Always keep points inside subaperture for simulation.
+
+    /*if(parms->dbg.dxonedge){
 	warning2("Put points on the edge of subapertures\n");
 	dxoffset=0;
-    }else{
-	dxoffset=dx*0.5;
-    }
+	}else{*/
+    //}
     info2("There are %d points in each subapeture of %gm.\n", nx, dxsa);
     const int nxsa=nx*nx;/*Total Number of OPD points. */
     count = 0;
@@ -228,17 +228,29 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     powfs[ipowfs].pts->nsa=count;
     powfs[ipowfs].loc=pts2loc(powfs[ipowfs].pts);
     /*The assumed amp. */
-    powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
+    powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, aper->ampground, 
 			       0,0, parms->aper.d, parms->aper.din);
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
-    long nloc=powfs[ipowfs].loc->nloc;
+    if(parms->dbg.dxonedge){
+	//Create another set of loc/amp that can be used to build GP.
+	map_t *map=create_metapupil_wrap(parms, 0, dx, 0, 0, 0, 0, 0, 0);
+	powfs[ipowfs].gloc=map2loc(map); mapfree(map);
+	powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
+				    0,0, parms->aper.d, parms->aper.din);
+    }else{
+	powfs[ipowfs].gloc=powfs[ipowfs].loc;
+	powfs[ipowfs].gamp=powfs[ipowfs].amp;
+    }
     if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
 	double misreg[2]={0,0};
 	if(parms->powfs[ipowfs].nwfs>1){
 	    error("dbg.pupmask=1, only powfs can only have 1 wfs.\n");
 	}
 	int iwfs=parms->powfs[ipowfs].wfs[0];
-	wfspupmask(parms, powfs[ipowfs].amp, powfs[ipowfs].loc, misreg, iwfs);
+	wfspupmask(parms, powfs[ipowfs].loc, powfs[ipowfs].amp, misreg, iwfs);
+	if(parms->dbg.dxonedge){
+	    wfspupmask(parms, powfs[ipowfs].gloc, powfs[ipowfs].gamp, misreg, iwfs);
+	}
     }
     powfs[ipowfs].misreg=calloc(2*parms->powfs[ipowfs].nwfs, sizeof(double));
     if(parms->powfs[ipowfs].misreg){
@@ -276,7 +288,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    powfs[ipowfs].saam->p[ilocm]=dnew(powfs[ipowfs].pts->nsa, 1);
 	    powfs[ipowfs].ampm->p[ilocm]=dnew(powfs[ipowfs].loc->nloc, 1);
 	    loc_t *loc=powfs[ipowfs].locm[ilocm]?powfs[ipowfs].locm[ilocm]:powfs[ipowfs].loc;
-	    powfs[ipowfs].ampm->p[ilocm]=mkwfsamp(loc, powfs[ipowfs].loc, aper->ampground, 
+	    powfs[ipowfs].ampm->p[ilocm]=mkwfsamp(loc, aper->ampground, 
 						  shiftxy[0]-parms->aper.misreg[0], 
 						  shiftxy[1]-parms->aper.misreg[1],
 						  parms->aper.d, parms->aper.din);
@@ -286,7 +298,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		    error("dbg.pupmask=1, only powfs can only have 1 wfs.\n");
 		}
 		int iwfs=parms->powfs[ipowfs].wfs[0];
-		wfspupmask(parms, powfs[ipowfs].amp, powfs[ipowfs].loc, shiftxy, iwfs);
+		wfspupmask(parms, powfs[ipowfs].locm[ilocm], powfs[ipowfs].ampm->p[ilocm], shiftxy, iwfs);
 	    }
 	    powfs[ipowfs].saam->p[ilocm]=wfsamp2saa(powfs[ipowfs].ampm->p[ilocm], nxsa);
 	}
@@ -299,7 +311,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].locm=calloc(1, sizeof(loc_t*));
 	powfs[ipowfs].ampm=dcellnew(1,1);
 	powfs[ipowfs].saam=dcellnew(1,1);
-	powfs[ipowfs].ampm->p[0]=mkwfsamp(powfs[ipowfs].loc, powfs[ipowfs].loc, aper->ampground, 
+	powfs[ipowfs].ampm->p[0]=mkwfsamp(powfs[ipowfs].loc, aper->ampground, 
 					  -parms->aper.misreg[0], -parms->aper.misreg[1], 
 					  parms->aper.d, parms->aper.din);
 	powfs[ipowfs].saam->p[0]=wfsamp2saa(powfs[ipowfs].ampm->p[0], nxsa);

@@ -113,9 +113,11 @@ typedef struct POWFS_T{
     dmat *saa;          /**<Subaperture area*/
     loc_t *loc;         /**<concatenated points for all subapertures.*/
     loc_t **locm;       /**<mis-registered loc, if any.*/
+    loc_t *gloc;        /**<loc used to generate GP*/
     dcell *saam;        /**<mis-registered saa, if any*/
     dmat *amp;          /**<amplitude map, max at 1.*/
     dcell *ampm;        /**<real amplitude map on misregistered grid, locm. used for gradient computing*/
+    dmat  *gamp;        /**<amplitude defined on gloc*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     double (*misreg)[2];/**<pure misregistration taken from parms->powfs[ipowfs].misreg*/
     /*NCPA */

@@ -349,8 +349,8 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     }
 }
 /**
-   Setup gradient operator from powfs.loc to wavefront sensor for reconstruction
-if necessary.  */
+   Setup gradient operator from powfs.loc to wavefront sensor for least square reconstruction.
+*/
 static void
 setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     CALL_ONCE;
@@ -358,17 +358,17 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     recon->GWR=spcellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].gtype_recon==0){
-	    if(!powfs[ipowfs].locm && powfs[ipowfs].GS0){
+	    if(!powfs[ipowfs].locm && powfs[ipowfs].GS0 && powfs[ipowfs].loc==powfs[ipowfs].gloc){
 		recon->GWR->p[ipowfs] = spref(powfs[ipowfs].GS0->p[0]);
 	    }else{
 		double displace[2]={0,0};
-		recon->GWR->p[ipowfs] = mkg(powfs[ipowfs].loc, powfs[ipowfs].loc,
-					    powfs[ipowfs].amp->p, powfs[ipowfs].saloc,
+		recon->GWR->p[ipowfs] = mkg(powfs[ipowfs].gloc, powfs[ipowfs].gloc,
+					    powfs[ipowfs].gamp->p, powfs[ipowfs].saloc,
 					    1, 1, displace, 1);
 	    }
 	}else{
 	    double displace[2]={0,0};
-	    recon->GWR->p[ipowfs] = mkz(powfs[ipowfs].loc,powfs[ipowfs].amp->p,
+	    recon->GWR->p[ipowfs] = mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
 					(loc_t*)powfs[ipowfs].pts, 1,1,displace);
 	}
     }
@@ -405,7 +405,7 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 		       using fine sampled powfs.loc as intermediate plane*/
 		double displace[2]={0,0};
 		info2(" Gploc");
-		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].loc,powfs[ipowfs].amp->p,
+		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
 				  powfs[ipowfs].saloc,1,1,displace,1);
 		if(parms->save.setup){
 		    spwrite(GP->p[ipowfs], "%s/powfs%d_GP", dirsetup, ipowfs);
@@ -415,10 +415,10 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
 		       powfs.loc as intermediate plane.*/
 		double displace[2]={0,0};
-		dsp* ZS0=mkz(powfs[ipowfs].loc,powfs[ipowfs].amp->p,
+		dsp* ZS0=mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
 			     (loc_t*)powfs[ipowfs].pts, 1,1,displace);
 		info2(" Zploc");
-		dsp *H=mkh(ploc,powfs[ipowfs].loc,powfs[ipowfs].amp->p, 0,0,1,0,0);
+		dsp *H=mkh(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p, 0,0,1,0,0);
 		GP->p[ipowfs]=spmulsp(ZS0,H);
 		spfree(H);
 		spfree(ZS0);
@@ -434,8 +434,6 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 	}
     }
     /*assign GP for powfs to recon->GP for each wfs */
-    spcellfree(recon->GP);
-    spcellfree(recon->GP2);
     recon->GP=GP;
     recon->GP2=spcellnew(nwfs,1);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
@@ -492,7 +490,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		}
 		if(parms->dbg.usegwr){
 		    warning("todo: Fix and use mkg directly\n");
-		    dsp *H=mkh(recon->aloc[idm], powfs[ipowfs].loc, NULL, 
+		    dsp *H=mkh(recon->aloc[idm], powfs[ipowfs].gloc, NULL, 
 			       displace[0],displace[1],scale,
 			       parms->dm[idm].cubic,parms->dm[idm].iac);
 		    GA[idm][iwfs]=spmulsp(recon->GWR->p[ipowfs], H);
@@ -2544,7 +2542,12 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	spcellfree(recon->GP);
 	spcellfree(recon->GP2);
     }
-
+    if(parms->dbg.dxonedge){
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    locfree(powfs[ipowfs].gloc);
+	    dfree(powfs[ipowfs].gamp);
+	}
+    }
     /*
       The following arrys are not used after preparation is done.
     */

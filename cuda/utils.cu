@@ -681,7 +681,6 @@ void gpu_spint2int(int * restrict *dest, spint *src, int n){
    Convert device (float) array to host double.
 */
 void gpu_dev2dbl(double * restrict *dest, float *src, int n, cudaStream_t stream){
-    TIC;tic;
     float *tmp=(float*)malloc(n*sizeof(float));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
     CUDA_SYNC_STREAM;
