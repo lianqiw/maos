@@ -365,13 +365,18 @@ AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
    if test "$system" = "linux" ;then
-      if test ! -d ${LIBDIR}/fftw${cpu};then 
-         download FFTW fftw${cpu}.tar.bz2
-      fi
-      LDFFT="-L${LIBDIR}/fftw${cpu}"
-      OPTScommon="$OPTScommon -I${LIBDIR}/fftw${cpu}"
+      fftwname=fftw${cpu}
+   elif test "$system" = "apple" ;then
+      fftwname=fftwfat
    else
       AC_MSG_ERROR([Please install fftw library])
+   fi	
+   if test -n "$fftwname" ;then
+      if test ! -d ${LIBDIR}/${fftwname} ;then 
+         download FFTW ${fftwname}.tar.bz2
+      fi
+      LDFFT="-L${LIBDIR}/${fftwname}"
+      OPTScommon="$OPTScommon -I${LIBDIR}/${fftwname}"
    fi
 else
    LDFFT=""
