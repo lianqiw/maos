@@ -1439,7 +1439,6 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    if(parms->dm[idm].dx>parms->powfs[ipowfs].dx*10){
 		parms->powfs[ipowfs].scalegroup[idm]=arrind(scale, &nscale, dxscl);
 	    }else{
-		warning("skip powfs %d in cachedm.\n", ipowfs);
 		parms->powfs[ipowfs].scalegroup[idm]=-1;
 	    }
 	}
@@ -1585,7 +1584,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->evl.psfmean=1;/*Saves psfmean for verification. */
 	/*required memory to hold memory. */
 	long covmem=(long)round(pow(parms->aper.d/parms->aper.dx,4))*8*fnd;
-	if(covmem>MAX(NMEM, 4000000000) && parms->aper.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
+	if(covmem>MAX(NMEM, LONG_MAX/2) && parms->aper.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
 	    error("parms->aper.dx=%g is probably too large to save ecxx. Recommend parms->aper.dx=%g\n", parms->aper.dx, parms->atmr.dx*0.25);
 	}
     }

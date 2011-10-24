@@ -2,7 +2,7 @@ AC_PREREQ(2.57)
 AC_INIT(maos, 0.9.7, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
-BASEURL=https://github.com/downloads/lianqiw/maos
+BASEURL=https://github.com/downloads/lianqiw/files
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
@@ -15,7 +15,8 @@ AC_LANG([C])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
-
+#In darwin it reports wrong host_cpu (i386). The following is usually correct.
+host_cpu=$(uname -m)
 AC_TYPE_SIZE_T  
 
 #Check operating system.
@@ -50,55 +51,76 @@ else
    echo "Intel Compiler is not found."
    use_icc_default="no"
 fi
+
+use_mex_default="no"
+MEXDIR_AUTO=
 if test -n "$(which mex)" ;then
    use_mex_default="yes"
-else
-   use_mex_default="no"
+   MEX=$(which mex)
+   if test -L $MEX ;then
+      MEX=$(readlink $MEX)
+   fi
+   MEXDIR_AUTO=$(dirname $MEX)
+elif test -n "$(ls -d /Applications/MATLAB*.app 2>/dev/null)" ;then
+   for i in "$(ls -d /Applications/MATLAB*.app)" ;do
+       if test -f $i/bin/mex ;then
+       	  MEXDIR_AUTO=${i}/bin
+          use_mex_default="yes"
+       fi
+   done
 fi
+
+use_cuda_default="no"
+CUDADIR_AUTO=
 if test -n "$(which nvcc)" ;then
    use_cuda_default="yes"
-   CUDADIR_AUTO=
+   NVCC=$(which nvcc)
+   if test -L $NVCC ;then
+      NVCC=$(readlink $NVCC)
+   fi
+   CUDADIR_AUTO=$(dirname $(dirname ${NVCC}))
 elif test -f /opt/cuda/bin/nvcc ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/opt/cuda"
 elif test -f /usr/local/cuda/bin/nvcc ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/usr/local/cuda/"
-else
-   use_cuda_default="no"
-   CUDADIR_AUTO=
 fi
-AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
-AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR=])
-if test "x$use_cuda" = "xyes" ;then
-   case "$host_os" in
-       *darwin*)
-       #In MAC OS, gcc defaults to 64 bit, but nvcc is 32 bit. force both to 64 bit.
-       host_cpu=x86_64;
-       CFLAGS="$CFLAGS -m64"
-       LDFLAGS="$LDFLAGS -m64"
-       ;;
-   esac
+AC_ARG_ENABLE(32,  [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
+AC_ARG_ENABLE(64,  [  --enable-64   Compile 64 bit executables], [use_64="$enableval"], [use_64="no"])
+if test "$use_64" = "yes" ;then
+   host_cpu=x86_64
+elif test "$use_32" = "yes" ;then
+   host_cpu=i386
 fi
-case "$host_os" in  #compile 32 exe in 64 bit.
-   *linux*)
-   case "$host_cpu" in
-      *64)
-      AC_ARG_ENABLE(32,   [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
-      if test "$use_32" = "yes" ;then
-         CFLAGS="$CFLAGS -Xcompiler -m32"
-         CHOST="i686-pc-linux-gnu"
-         CDEFINE="__i386__"
-         HOST="i686-linux"
-         BUILD="i686-linux"
-         use_icc_default="no"
-         host_cpu=i386
-         use_mex_default="no" #disable mex
-      fi
-      ;;
-   esac
+case ${host_cpu} in 
+   *64)
+        CFLAGS="$CFLAGS -m64"
+        LDFLAGS="$LDFLAGS -m64"
+        CDEFINE="__x86_64__"
+	host_cpu=x86_64
    ;;
-esac
+   *86)
+	CFLAGS="$CFLAGS -m32"
+	LDFLAGS="$LDFLAGS -m32"
+        CDEFINE="__i386__"
+	host_cpu=i386
+   ;;
+esac   
+#use_mex_default="no"
+#use_cuda_default="no"
+#CFLAGS="$CFLAGS -Xcompiler -m32"
+#CHOST="i686-pc-linux-gnu"
+#CDEFINE="__i386__"
+#HOST="i686-linux"
+#BUILD="i686-linux"
+#use_icc_default="no"
+#host_cpu=i386
+#use_mex_default="no" #disable mex
+
+AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
+AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
+       
 echo host_cpu=$host_cpu
 case "$host_cpu" in 
     *86)
@@ -120,8 +142,6 @@ case "$host_cpu" in
 esac
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
-
-mklextra=_redistributed
 
 win32=no
 use_mkl="no"
@@ -199,6 +219,8 @@ AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
+AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
+
 if test "x$use_static" = "xyes" ;then
    LDEXE="$LDEXE -all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
@@ -352,7 +374,7 @@ if test ! "x$use_mkl" = "xyes" ;then
 fi
 if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
-      download MKL ${mklname}${mklextra}.tar.bz2
+      download MKL ${mklname}.tar.bz2
    fi
    LAPACK="-L${LIBDIR}/${mklname} -lmkl -lm -pthread ${mkldep}"
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
@@ -508,66 +530,73 @@ AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
 
 if test "x${use_mex}" = "xyes" ; then
-   AM_CONDITIONAL(USE_MEX, true)
-   AC_CONFIG_FILES([mex/Makefile])
-   AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval}], [MEXDIR=])
+   AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
    if test -n "$MEXDIR" ;then
        if test -f ${MEXDIR}/mex ;then
            MEXDIR=${MEXDIR}
        elif test -f ${MEXDIR}/bin/mex ;then
            MEXDIR=${MEXDIR}/bin
        else
-           AC_MSG_ERROR([mex not found in specified matlab path ${withval}])
+           AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --disable-mex to disable])
        fi
    else
-       MEX=$(which mex)
-       if test -z "${MEX}" ;then
-           AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location])
-       elif test -L ${MEX} ;then
-           MEX=$(readlink $MEX)
-       fi
-       MEXDIR=$(dirname $MEX)
-       if test ! -d $MEXDIR ;then
-           AC_MSG_ERROR([$MEXDIR does not exist. reconfigure with --disable-mex to bypass mex.])
-       fi
+       AC_MSG_ERROR([mex not found. please reconfigure with --with-matlab=DIR to specify MATLAB location or --disable-mex to disable])
    fi
    MEXEXT=$($MEXDIR/mexext)
    if test -z "$MEXEXT" ;then
-       AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --disable-mex to bypass mex.])
+       AC_MSG_ERROR([Unable to determine mex extension. reconfigure with --disable-mex to disable mex.])
    fi
    case $MEXEXT in
    	mexglx)
 		MEXLIB=glnx86
 		MEXOPT="-O3 -DNDEBUG -fPIC -pthread -m32 -fexceptions -D_FILE_OFFSET_BITS=64"
 		MEXOPT="${MEXOPT} -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+		mex_cpu=i386
 	;;
    	mexa64)
 		MEXLIB=glnxa64
 		MEXOPT="-O3 -DNDEBUG -fPIC -pthread -m64 -fexceptions -fno-omit-frame-pointer"
 		MEXOPT="${MEXOPT} -DDLONG -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
+		mex_cpu=x86_64
 	;;
 	mexmaci)
 		MEXLIB=maci
 		MEXOPT="-O3 -DNDEBUG -fno-common -no-cpp-precomp -m32 -fexceptions"
+		mex_cpu=i386
 	;;
 	mexmaci64)
 		MEXLIB=maci64
 		MEXOPT="-O3 -DNDEBUG -fno-common -no-cpp-precomp -fexceptions -arch x86_64"
 		MEXOPT="${MEXOPT} -DDLONG"
+		mex_cpu=x86_64
 	;;
 	mexw64)
 		MEXLIB=win64
 		MEXOPT=""
+		mex_cpu=x86_64
 	;;
 	mexw32)
 		MEXLIB=win32
 		MEXOPT=""
+		mex_cpu=i386
 	;;
 	*)
 		AC_MSG_ERROR([Unknown mex extension "$MEXEXT"])
 	;;
    esac
-   LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++ -lz"
+   if test $mex_cpu != $host_cpu ;then
+       mex_lib="no"
+   else       
+       LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++ -lz"
+       AC_CHECK_LIB([mex], [mexGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
+   fi
+   if test x$mex_lib = xyes ;then
+       AM_CONDITIONAL(USE_MEX, true)
+       AC_CONFIG_FILES([mex/Makefile])
+   else
+       AC_MSG_NOTICE([mex library test failed. Disable mex])
+       AM_CONDITIONAL(USE_MEX, false)
+   fi
    if test x$use_icc = xyes ;then
        LDMEX="${LDMEX} -static-intel"
    fi
@@ -583,32 +612,18 @@ if test "$use_cuda" = "yes" ;then
    if test "$use_static" = "yes"; then
       AC_MSG_ERROR("all-static conflicts with cuda support. Please disable all-static")
    fi
-   AC_CONFIG_FILES([cuda/Makefile])
-   AM_CONDITIONAL(USE_CUDA, true)
-   AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    AC_MSG_NOTICE([Enabling CUDA])
    LDCUDA=
    if test -n "$CUDADIR" ;then
-       AC_MSG_NOTICE([User provided cuda directory $CUDADIR])
        NVCC=$CUDADIR/bin/nvcc
        if test ! -x $NVCC ;then
        	  NVCC=$CUDADIR/nvcc
 	  CUDADIR=$(dirname $CUDADIR)
        fi
    else
-       if test -n "$(which nvcc)"  ;then
-           NVCC=$(which nvcc)
-           if test -L $NVCC ;then
-               NVCC=$(readlink $NVCC)
-           fi
-           CUDADIR=$(dirname $(dirname ${NVCC}))
-       else 
-           CUDADIR=${CUDADIR_AUTO}
-	   NVCC=${CUDADIR}/bin/nvcc
-       fi
-
+       AC_MSG_ERROR([CUDADIR is empty. Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])
    fi
-   AC_MSG_NOTICE([CUDADIR=$CUDADIR])
+   AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
    if test -f ${CUDADIR}/lib/libcudart.$ldsuffix ;then
        CUDA_L=${CUDADIR}/lib
    elif test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
@@ -619,15 +634,10 @@ if test "$use_cuda" = "yes" ;then
    else
        LDCUDA=
    fi
-
-   CUDA_H=$(dirname "$(find $CUDADIR -name 'cuda.h' || find $CUDADIR/../ -name 'cuda.h')")
-   if test -d $CUDA_H ;then
-       CUDAOPT="-I$CUDA_H"
-       if test ! -f $CUDA_H/cuda.h ;then
-           AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location])
-       fi
+   if test -f ${CUDADIR}/include/cuda.h ;then
+       CUDAOPT="-I${CUDADIR}/include"
    else
-       AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location])])
+       AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
        CUDAOPT=
    fi
    echo LDCUDA=$LDCUDA
@@ -637,7 +647,12 @@ if test "$use_cuda" = "yes" ;then
    fi
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
    if test x$cuda_lib = xno ;then
-       AC_MSG_ERROR([libcudart not found. Please use --with-cuda=DIR to specify CUDA location])
+       AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])
+       AM_CONDITIONAL(USE_CUDA, false)
+   else
+       AC_CONFIG_FILES([cuda/Makefile])
+       AM_CONDITIONAL(USE_CUDA, true)
+       AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
    AC_SUBST(CUDAOPT)
