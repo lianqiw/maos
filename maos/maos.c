@@ -146,16 +146,16 @@ int main(int argc, char **argv){
     /*Launch the scheduler and report about our process */
     scheduler_start(scmd,arg->nthread,!arg->force);
     fprintf(stderr, "%s\n", scmd);
-    info2("MAOS Version %s. Compiled on %s %s by %s ", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__);
+    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
 #if USE_CUDA
-    info2(",with CUDA ");
+    info2(", w/t CUDA");
 #else
-    info2(",without CUDA ");
+    info2(", w/o CUDA");
 #endif
 #ifdef __OPTIMIZE__
-    info2(",with optimization.\n");
+    info2(", w/t optimization.\n");
 #else
-    info2(",without optimization\n");
+    info2(", w/o optimization\n");
 #endif
     info2("Source: %s\n", SRCDIR);
     info2("Launched at %s in %s with %d threads\n",myasctime(),myhostname(),arg->nthread);
@@ -231,7 +231,7 @@ int main(int argc, char **argv){
     free_parms(parms);
     free(dirsetup);
     free(dirskysim);
-    info2("Job finished at %s\t%.2f MiB\n",myasctime(),get_job_mem()/1024.);
+    info2("Job finished at %s\n",myasctime());
     rename_file(0);
     scheduler_finish(0);
     exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
