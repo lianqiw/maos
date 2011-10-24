@@ -41,12 +41,14 @@ libaos_int_la_SOURCES=$(AOS_SRC)
 libaos_int_la_LIBADD=$(LDCHOL) $(LDFFT)
 libaos_int_la_LDFLAGS = -avoid-version -static
 endif
+
+if DO_DOXYGEN
 #The following enables the generation of documentation for cmat, ccell, csp functions.
 cmat.c:tmp.c
 tmp.c:$(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/spbin.c $(srcdir)/sp.c
 	@echo "#define USE_COMPLEX" > $(srcdir)/tmp.c
 	@cat $(srcdir)/mat.c $(srcdir)/cell.c $(srcdir)/matbin.c $(srcdir)/spbin.c $(srcdir)/sp.c >> $(srcdir)/tmp.c
-
+endif
 #we compile a scheduler, which takes less memory than maos.
 bin_PROGRAMS=../bin/scheduler 
 ___bin_scheduler_SOURCES=$(SYS_SRC) misc.c hashlittle.c path.c
