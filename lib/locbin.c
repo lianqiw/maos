@@ -208,15 +208,10 @@ map_t **dcell2map(int *nlayer, dcell *in){
     *nlayer=in->nx*in->ny;
     map_t **map=calloc(in->nx*in->ny, sizeof(map_t*));
     for(long i=0; i<in->nx*in->ny; i++){
-	int rem=0;
 	if(!in->p[i]->header){
-	    in->p[i]->header=in->header;
-	    rem=1;
+	    in->p[i]->header=strdup(in->header);
 	}
 	map[i]=d2map(in->p[i]);
-	if(rem){
-	    in->p[i]->header=NULL;
-	}
     }
     return map;
 }
