@@ -28,16 +28,15 @@
 /**
    compute physical optics images and add to ints.  be careful that fftw inverse
    fft doesn't have 1/n^2 scaling.  this function lives inside the threading
-   routine wfsgradx  */
+   routine wfsgradx  
+   
+   Notice that the uplink psf have to have the same sampling as the subaperture psf.
+   uplink psf has sampling lambda/(nlwvf*ldx)
+   subaperture has sampling lambda/(nwvf*dx)
+   When the uplink pupil is larger than subaperture, we need to scale ldx accordingly.
+*/
 void wfsints(thread_t *thread_data){
-    /*void wfsints(dcell *ints, ccell *psfout, dcell *pistatout,
-	     const dmat *gradref,const PARMS_T *parms,
-	     const POWFS_T *powfs,int iwfs,
-	     const dmat *opd, const dmat *lltopd){
-    */
-    /**
-       first, unwrap the data
-     */
+    /* first, unwrap the data */
     WFSINTS_T *data=thread_data->data;
     const PARMS_T *parms=data->parms;
     const POWFS_T *powfs=data->powfs;
@@ -54,7 +53,7 @@ void wfsints(thread_t *thread_data){
     const int nsa=powfs[ipowfs].pts->nsa;
     const int ncompx=powfs[ipowfs].ncompx;/*necessary size to build detector image. */
     const int ncompy=powfs[ipowfs].ncompy;
-    const int npsf=MAX(ncompx,ncompy);
+    const int notf=MAX(ncompx,ncompy);
     const int nopd=powfs[ipowfs].pts->nx;
     const int nxsa=nopd*nopd;
     const int nwvf=nopd*parms->powfs[ipowfs].embfac;
@@ -71,32 +70,32 @@ void wfsints(thread_t *thread_data){
     cmat *lwvf=NULL;
     /*this coefficient normalize the complex psf so its abs2 sum to 1.*/
     double norm_psf=sqrt(powfs[ipowfs].areascale)/(double)(powfs[ipowfs].pts->nx*nwvf);
+    /*normalized pistat. notf is due to a pair of FFT on psf. */
+    double norm_pistat=norm_psf*norm_psf/((double)notf*notf);
     /*this ncompx*ncompy is due to cfft2 after cwm and detector transfer function. */
-    double norm=norm_psf*norm_psf/((double)ncompx*ncompy);
-    /*normalized pistat. npsf is due to a pair of FFT on psf. */
-    double norm_pistat=norm_psf*norm_psf/((double)npsf*npsf);
+    double norm_ints=parms->wfs[iwfs].siglevsim*norm_psf*norm_psf/((double)ncompx*ncompy);
     /*wvf first contains the complex wavefront, embed to get nyquist sampling.*/
     wvf=cnew(nwvf,nwvf);
-    if(use1d){/* use 1d fft for NGS if nwvl >> npsf*/
-	cfft2partialplan(wvf,npsf, -1);
+    if(use1d){/* use 1d fft for NGS if nwvl >> notf*/
+	cfft2partialplan(wvf,notf, -1);
     }else{
 	cfft2plan(wvf, -1);
     }
     /* psf contains the psf/otf necessary to cover the focal plane. square */
-    if(nwvf!=npsf){
-	psf=cnew(npsf,npsf);
+    if(nwvf!=notf){
+	psf=cnew(notf,notf);
     }else{
 	psf=wvf;
     }
     cfft2plan(psf,-1);
     cfft2plan(psf,1);
     /* otf contains the psf/otf used to generate detecter image. maybe rectangular*/
-    if(npsf!=ncompx || npsf!=ncompy || srot){
+    if(notf!=ncompx || notf!=ncompy || srot){
 	otf=cnew(ncompx,ncompy);
 	cfft2plan(otf,-1);
 	cfft2plan(otf,1);
 	if(isotf){/*there is an additional pair of FFT*/
-	    norm/=(double)(npsf*npsf);
+	    norm_ints/=(double)(notf*notf);
 	}
     }else{
 	otf=psf;
@@ -104,12 +103,12 @@ void wfsints(thread_t *thread_data){
     /* there is uplink beam */
     if(lltopd){
 	const int nlx=powfs[ipowfs].llt->pts->nx;
-	const int nlpsf=nlx*parms->powfs[ipowfs].embfac;
-	lwvf=cnew(nlpsf,nlpsf);
+	const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
+	lwvf=cnew(nlwvf,nlwvf);
 	cfft2plan(lwvf,-1);
 	cfft2plan(lwvf,1);
-	if(nlpsf != npsf){
-	    lotfc=cnew(npsf,npsf);
+	if(nlwvf != notf){
+	    lotfc=cnew(notf,notf);
 	    cfft2plan(lotfc,-1);
 	    cfft2plan(lotfc,1);
 	}else{
@@ -146,7 +145,7 @@ void wfsints(thread_t *thread_data){
 	/* uplink llt opd*/
 	if(lltopd){
 	    const int nlx=powfs[ipowfs].llt->pts->nx;
-	    const int nlpsf=nlx*parms->powfs[ipowfs].embfac;
+	    const int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 	    /*embed opd to compute complex pupil function*/
 	    cembed_wvf(lwvf,lltopd->p,powfs[ipowfs].llt->amp->p,nlx,nlx,wvl,0);
 	    /*turn to complex psf*/
@@ -159,8 +158,8 @@ void wfsints(thread_t *thread_data){
 	    cabs2toreal(lotfc);
 	    /*now contains conjugate of otf. use 1 insteaf of -1 to get complex conjugate*/
 	    cfft2(lotfc,1);
-	    /*lotfc has peak nlpsf*nlpsf in corner. */
-	    cscale(lotfc,1./(double)((long)nlpsf*nlpsf));/*max of 1 */
+	    /*lotfc has peak nlwvf*nlwvf in corner. */
+	    cscale(lotfc,1./(double)((long)nlwvf*nlwvf));/*max of 1 */
 	}
 	int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
 	/* nominal and si are used to sampled PSF onto detector pixels */
@@ -199,7 +198,7 @@ void wfsints(thread_t *thread_data){
 		       realamp+ioffset,nopd,nopd,
 		       parms->powfs[ipowfs].wvl[iwvl],0);
 	    if(use1d){ /*use 1d fft */
-		cfft2partial(wvf,npsf, -1);
+		cfft2partial(wvf,notf, -1);
 	    }else{
 		cfft2(wvf,-1); /*use 2d fft to form PSF. */
 	    }
@@ -211,8 +210,8 @@ void wfsints(thread_t *thread_data){
 	    /*output complex pupil function to use in skyc*/
 	    if(ppsfout){
 		ccp(&fftpsfout, psf);
-		/*npsf * npsf to cancel out the effect of fft pair (one here, one later in skyc)*/
-		cscale(fftpsfout, norm_psf/((double)npsf*npsf));
+		/*notf * notf to cancel out the effect of fft pair (one here, one later in skyc)*/
+		cscale(fftpsfout, norm_psf/((double)notf*notf));
 		/*peak in corner. become WVF in center.*/
 		cfft2(fftpsfout,1);
 		/*output center of the complex pupil function.*/
@@ -266,7 +265,7 @@ void wfsints(thread_t *thread_data){
 		/*max(otf) is 1 after multiply with norm. peak in corner  */
 		cfft2(otf,1);
 		/*Now peak in center because nominal is pre-treated.  */
-		spmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts[iwvl]*norm);
+		spmulcreal(ints->p[isa]->p,si, otf->p, parms->wfs[iwfs].wvlwts[iwvl]*norm_ints);
 	    }
 	}/*isa */
     }/*iwvl */

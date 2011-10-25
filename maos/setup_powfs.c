@@ -1409,13 +1409,13 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     LLT_T *llt=powfs[ipowfs].llt=calloc(1, sizeof(LLT_T));
     pts_t *lpts=llt->pts=calloc(1, sizeof(pts_t));
     lpts->nsa=1;
-    /*Keep the same dx as wfs subaps so the OTF have same sampling */
-    const double dx = powfs[ipowfs].pts->dx;
-    lpts->dx=dx;
     double lltd=parms->powfs[ipowfs].llt->d;
-    const double dxsa=powfs[ipowfs].pts->dsa;
-    lpts->dsa=lltd>dxsa?lltd:dxsa;
-    const int nx=lpts->nx=round(lpts->dsa/dx);
+    lpts->dsa=MAX(lltd, powfs[ipowfs].pts->dsa);
+    int notf=MAX(powfs[ipowfs].ncompx, powfs[ipowfs].ncompy);
+    /*The otf would be dx/lambda. Make it equal to pts->dsa/lambda/notf)*/
+    const double dx=lpts->dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
+    info("llt dx=%g\n", dx);
+    const int nx=lpts->nx=round(lpts->dsa/lpts->dx);
     lpts->dsa=lpts->dx*lpts->nx;
     
     lpts->origx=calloc(1, sizeof(double));
@@ -1423,7 +1423,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 
     double oy=lpts->origx[0]=(dx-lpts->dsa)*0.5;
     double ox=lpts->origy[0]=(dx-lpts->dsa)*0.5;
-    /*fixme: when LLT is larger than dsa, need to change this. */
+
     llt->amp=dnew(nx,nx);
     PDMAT(llt->amp, amps);
     double l2max =pow(lltd*0.5,2);

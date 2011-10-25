@@ -149,13 +149,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    cudaDeviceSynchronize();
 
 	    /*CUFFTW is row major. */
-	    int npsf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
-	    int npsf2[2]={npsf, npsf};
+	    int nwvf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
+	    int nwvf2[2]={nwvf, nwvf};
 	    const int ncompx=powfs[ipowfs].ncompx;
 	    const int ncompy=powfs[ipowfs].ncompy;
-	    const int ncompm=MAX(ncompx, ncompy);
-	    int ncomp[2]={ncompx, ncompy};
-	    int ncompm2[2]={ncompm, ncompm};
+	    const int notf=MAX(ncompx, ncompy);
+	    int ncomp2[2]={ncompx, ncompy};
+	    int notf2[2]={notf, notf};
 	    /*
 	      int inembed[2]; inembed[0]=nx; inembed[1]=nx;
 	      int istride=1;
@@ -168,24 +168,26 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    /*limit the number of subapertures in each batch to less than 1024
 	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
 	    cuwfs[iwfs].msa=nsa>1024?((int)ceil((float)nsa/(float)(nsa/800))):nsa;
-	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, npsf2, NULL, 1, 0, NULL, 1, 0, 
+	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, nwvf2, NULL, 1, 0, NULL, 1, 0, 
 			     CUFFT_C2C, cuwfs[iwfs].msa)){
 		error("CUFFT plan failed\n");
 	    }
 	    cufftSetStream(cuwfs[iwfs].plan1, cuwfs[iwfs].stream);
-	    if(ncompx==npsf && ncompy==npsf){
+
+	    if(notf==nwvf){
 		cuwfs[iwfs].plan2=cuwfs[iwfs].plan1;
 	    }else{
-		if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, ncomp, NULL, 1, 0, NULL, 1, 0, 
+		if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, notf2, NULL, 1, 0, NULL, 1, 0, 
 				 CUFFT_C2C, cuwfs[iwfs].msa)){
 		    error("CUFFT plan failed\n");
 		}
 		cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
 	    }
-	    if(ncompm==ncompx && ncompm==ncompy){
+
+	    if(notf==ncompx && notf==ncompy){
 		cuwfs[iwfs].plan3=cuwfs[iwfs].plan2;
 	    }else{
-		if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, ncompm2, NULL, 1, 0, NULL, 1, 0, 
+		if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, ncomp2, NULL, 1, 0, NULL, 1, 0, 
 				 CUFFT_C2C, cuwfs[iwfs].msa)){
 		    error("CUFFT plan failed\n");
 		}
@@ -193,17 +195,17 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 
 	    if(parms->powfs[ipowfs].llt){
-		int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
-		int nlpsf2[2]={nlpsf, nlpsf};
-		if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlpsf2, NULL, 1,0, NULL, 1, 0, 
+		int nlwvf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
+		int nlwvf2[2]={nlwvf, nlwvf};
+		if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlwvf2, NULL, 1,0, NULL, 1, 0, 
 				 CUFFT_C2C, 1)){
 		    error("CUFFT plan failed\n");
 		    cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
 		}
-		if(npsf==nlpsf){
+		if(notf==nlwvf){
 		    cuwfs[iwfs].lltplan_otf=cuwfs[iwfs].lltplan_wvf;
 		}else{
-		    if(cufftPlanMany(&cuwfs[iwfs].lltplan_otf, 2, npsf2, NULL, 1, 0, NULL, 1, 0, 
+		    if(cufftPlanMany(&cuwfs[iwfs].lltplan_otf, 2, notf2, NULL, 1, 0, NULL, 1, 0, 
 				     CUFFT_C2C, 1)){
 			error("CUFFT plan failed\n");
 		    }

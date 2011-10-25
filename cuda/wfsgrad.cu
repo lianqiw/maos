@@ -120,9 +120,9 @@ __global__ static void mtche_do(float *restrict grad, float (*restrict *restrict
 	gp[0]+=mtche[ipix][0]*ints[ipix];
 	gp[1]+=mtche[ipix][1]*ints[ipix];
     }
-    if(fabsf(gp[0])>1e-5 || fabsf(gp[1])>1e-5){
+    /*if(fabsf(gp[0])>1e-5 || fabsf(gp[1])>1e-5){
 	printf("gp=%g %g. g=%g %g\n", gp[0], gp[1], g[0], g[1]);
-    }
+	}*/
     atomicAdd(&g[0], gp[0]);
     atomicAdd(&g[1], gp[1]);
     __syncthreads();

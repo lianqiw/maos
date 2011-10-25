@@ -27,8 +27,6 @@ extern "C"
 #include "curmat.h"
 #include "cucmat.h"
 curecon_t *curecon;
-//#define SCALE 1e-12 /*Scale both NEA and L2 to balance the dynamic range. Does not work yet (strange). */
-#define SCALE 1
 #undef TIMING
 #define TIMING 0
 #if !TIMING
@@ -157,7 +155,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	curecon->l2c=(float*)calloc(recon->npsr, sizeof(float));
 	for(int ips=0; ips<recon->npsr; ips++){
 	    float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
-	    curecon->l2c[ips]=tmp*tmp*SCALE;
+	    curecon->l2c[ips]=tmp*tmp*TOMOSCALE;
 	}
 	if(parms->tomo.piston_cr){
 	    curecon->zzi=(int*)calloc(recon->npsr, sizeof(int));
@@ -168,7 +166,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		double wt=recon->wt->p[ips];
 		int icenter=loccenter(recon->xloc[ips]);
 		curecon->zzi[ips]=icenter;
-		curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*SCALE;
+		curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*TOMOSCALE;
 	    }
 	}
 	curecon->neai=curcellnew(parms->nwfsr, 1);
@@ -187,14 +185,15 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
 		    int ix=pi[ir];
 		    int isa=ic<nsa?ic:ic-nsa;
+		    float val=(float)px[ir]*TOMOSCALE;
 		    if(ix==ic){/*diagonal part. */
 			if(ic==isa){/*x */
-			    neai[isa][0]=(float)px[ir]*SCALE;
+			    neai[isa][0]=val;
 			}else{/*y */
-			    neai[isa][1]=(float)px[ir]*SCALE;
+			    neai[isa][1]=val;
 			}
 		    }else if(ix==ic-nsa || ix==ic+nsa){/*cross part. symmetric. */
-			neai[isa][2]=(float)px[ir]*SCALE;
+			neai[isa][2]=val;
 		    }else{
 			error("saneai has invalid format\n");
 		    }
@@ -220,9 +219,6 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    gpu_dcell2cu(&curecon->PDF, recon->PDF);
 	}
 	if(parms->tomo.precond==1){/*fdpcg*/
-#if SCALE != 1
-#error "FDPCG only support SCALE=1"
-#endif
 	    FDPCG_T *fdpcg=recon->fdpcg;
 	    int nb=fdpcg->Mbinv->nx;
 	    int bs=fdpcg->Mbinv->p[0]->nx;

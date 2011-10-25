@@ -1126,12 +1126,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	int ipowfs=parms->wfs[iwfs].powfs;
 	long ncompx=powfs[ipowfs].ncompx;
 	long ncompy=powfs[ipowfs].ncompy;
+	long notf=MAX(ncompx, ncompy);
 	if(parms->powfs[ipowfs].psfout){
 	    const int nsa=powfs[ipowfs].pts->nsa;
 	    /*The PSFs here are PSFs of each subaperture. */
 	    simu->wfspsfout[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
 	    for(long ipsf=0; ipsf<simu->wfspsfout[iwfs]->nx*simu->wfspsfout[iwfs]->ny; ipsf++){
-		simu->wfspsfout[iwfs]->p[ipsf]=cnew(ncompx/2,ncompy/2);
+		simu->wfspsfout[iwfs]->p[ipsf]=cnew(notf/2,notf/2);
 	    }
 	    mymkdir("%s/wvfout/", dirskysim);
 	    mymkdir("%s/ztiltout/", dirskysim);

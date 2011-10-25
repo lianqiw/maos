@@ -376,14 +376,12 @@ void wfsgrad_iwfs(thread_t *info){
 	    /*output directly to simu->gradcl. replace */
 	    const double rne=parms->powfs[ipowfs].rne;
 	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
-	    const double siglev=parms->wfs[iwfs].siglevsim;/*don't multiply to dtrat. */
 	    double *pgradx=(*gradout)->p;
 	    double *pgrady=pgradx+nsa;
 	    dmat *gradnf=NULL;
 	    if(save_grad){
 		gradnf=dnew(nsa*2,1);/*save noise free gradients. */
 	    }
-	    dcellscale(ints, siglev);
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsnf[iwfs], ints);
 	    }

@@ -794,14 +794,16 @@ void X(cpcorner2center)(X(mat) *A, const X(mat)*B){
     const size_t nx=A->nx;
     const size_t ny=A->ny;
     T *Ap=A->p;
-    memset(Ap, 0, sizeof(T)*nx*ny);
     const size_t ninx=B->nx;
     const size_t niny=B->ny;
+    if(nx>ninx || ny>niny){
+	memset(Ap, 0, sizeof(T)*nx*ny);
+    }
     const T * Bp=B->p;
     assert((nx&1)==0 && (ny&1)==0 && (ninx&1)==0 && (niny&1)==0);
 
-    const int ny2=(ny<niny)?ny/2:niny/2;
-    const int nx2=(nx<ninx)?nx/2:ninx/2;
+    const int ny2=MIN(ny,niny)>>1;
+    const int nx2=MIN(nx,ninx)>>1;
     const int xskip=nx/2-nx2;
     const int yskip=ny/2-ny2;
     T* Ap0=Ap+yskip*nx+xskip;
