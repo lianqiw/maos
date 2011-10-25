@@ -94,8 +94,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     if(!parms->powfs[ipowfs].llt) return;
     loc_t *loc=pts2loc(powfs[ipowfs].llt->pts);
-    int ncompx=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
-    int ncompy=ncompx;
+    int notf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
     const int nwvl=parms->powfs[ipowfs].nwvl;
 
     int nlotf=1;
@@ -110,12 +109,12 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     }
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
-	double dtheta=powfs[ipowfs].dtheta->p[iwvl];
+	double dtheta=wvl/(notf*powfs[ipowfs].llt->pts->dx);
 	double thres=1;
 	double one=1;
 	for(int ilotf=0; ilotf<nlotf; ilotf++){
 	    genotf(&lotf[ilotf][iwvl], loc, powfs[ipowfs].llt->amp->p, ncpa?ncpa->p[ilotf]->p:NULL, 
-		   &one, thres, wvl, dtheta, NULL,parms->atm.r0, parms->atm.l0, ncompx, ncompy, 1, 1);
+		   &one, thres, wvl, dtheta, NULL,parms->atm.r0, parms->atm.l0, notf, notf, 1, 1);
 	}
     }/*iwvl */
     locfree(loc);
