@@ -38,6 +38,7 @@ config/maos/fov_wirc.conf\
 config/maos/fov_oa.conf\
 config/maos/fov_pmos.conf\
 config/maos/llt_CL.conf\
+config/maos/llt_SL.conf\
 config/maos/nfiraos.conf\
 config/maos/recon.conf\
 config/maos/scao_base.conf\

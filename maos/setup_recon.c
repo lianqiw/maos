@@ -621,7 +621,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     info2("Recon NEA:\n");
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
+	int iwfs0=parms->powfs[ipowfs].wfs[0];
 	int nsa=powfs[ipowfs].pts->nsa;
+	int do_ref=0;
 	if(parms->powfs[ipowfs].neareconfile){/*taks precedance */
 	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);/*rad */
 	    /* sanity check */
@@ -674,35 +676,49 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 		    error("invalid\n");
 		}
 		long ldx=powfs[ipowfs].intstat->saneaxy->nx;
-		dmat **saneaxy=powfs[ipowfs].intstat->saneaxy->p+indsanea*ldx;
-		dmat **sanealxy=powfs[ipowfs].intstat->saneaxyl->p+indsanea*ldx;
-		dmat **saneaixy=powfs[ipowfs].intstat->saneaixy->p+indsanea*ldx;
-		sanea->p[iwfs+iwfs*nwfs]=nea2sp(saneaxy,nsa);
-		saneal->p[iwfs+iwfs*nwfs]=nea2sp(sanealxy,nsa);
-		saneai->p[iwfs+iwfs*nwfs]=nea2sp(saneaixy,nsa);
+		if(nmtch>1 || iwfs==iwfs0){
+		    dmat **saneaxy=powfs[ipowfs].intstat->saneaxy->p+indsanea*ldx;
+		    dmat **sanealxy=powfs[ipowfs].intstat->saneaxyl->p+indsanea*ldx;
+		    dmat **saneaixy=powfs[ipowfs].intstat->saneaixy->p+indsanea*ldx;
+		    sanea->p[iwfs+iwfs*nwfs]=nea2sp(saneaxy,nsa);
+		    saneal->p[iwfs+iwfs*nwfs]=nea2sp(sanealxy,nsa);
+		    saneai->p[iwfs+iwfs*nwfs]=nea2sp(saneaixy,nsa);
+		}else{
+		    do_ref=1;
+		}
 	    }else{
 		error("Not implemented yet\n");
 	    }
 	}else{
 	    /*nea scales as sqrt(1/dtrat) */
-	    const double neasq=pow(parms->powfs[ipowfs].nearecon/206265000.,2)/parms->powfs[ipowfs].dtrat;
-	    if(neasq<1.e-30) error("nea is too small\n");
-	    dmat *nea=dnew(nsa,2);
-	    /*scale neasq by area^-1. (seeing limited) */
-	    /*scale neasq by area^-2 if diffraction limited */
-	    /*only implementing seeing limited here. */
-	    PDMAT(nea, neap);
-	    double *area=powfs[ipowfs].saa->p;
-	    for(int i=0; i<nsa; i++){
-		double tmp=neasq/area[i];
-		neap[0][i]=neap[1][i]=tmp;
+	    if(iwfs==iwfs0){
+		const double neasq=pow(parms->powfs[ipowfs].nearecon/206265000.,2)/parms->powfs[ipowfs].dtrat;
+		if(neasq<1.e-30) error("nea is too small\n");
+		dmat *nea=dnew(nsa,2);
+		/*scale neasq by area^-1. (seeing limited) */
+		/*scale neasq by area^-2 if diffraction limited */
+		/*only implementing seeing limited here. */
+		PDMAT(nea, neap);
+		double *area=powfs[ipowfs].saa->p;
+		for(int i=0; i<nsa; i++){
+		    double tmp=neasq/area[i];
+		    neap[0][i]=neap[1][i]=tmp;
+		}
+		sanea->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+		dcwpow(nea, -1);
+		saneai->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+		dcwpow(nea, -0.5);
+		saneal->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
+		dfree(nea);
+	    }else{
+		do_ref=1;
 	    }
-	    sanea->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
-	    dcwpow(nea, -1);
-	    saneai->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
-	    dcwpow(nea, -0.5);
-	    saneal->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
-	    dfree(nea);
+	}
+	if(do_ref){
+	    info2("wfs %d is reusing sanea for %d\n", iwfs, iwfs0);
+	    sanea->p[iwfs+iwfs*nwfs] =spref( sanea->p[iwfs0+iwfs0*nwfs]);
+	    saneal->p[iwfs+iwfs*nwfs]=spref(saneal->p[iwfs0+iwfs0*nwfs]);
+	    saneai->p[iwfs+iwfs*nwfs]=spref(saneai->p[iwfs0+iwfs0*nwfs]);
 	}
     }/*iwfs */
     

@@ -682,7 +682,4 @@ fi
 echo "*********************************************************************************"
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos        ****"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos/downloads  ****"
-if test ! -d "${HOME}/.aos" ;then
-echo "*** Please drop me a line to lianqiw@gmail.com if you find MAOS useful       ****"
-fi
 echo "*********************************************************************************"

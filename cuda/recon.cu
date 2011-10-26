@@ -175,40 +175,40 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    int iwfs0=parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
-	    dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
-	    spint *pp=nea->p;
-	    spint *pi=nea->i;
-	    double *px=nea->x;
-	    float (*neai)[3]=(float(*)[3])calloc(3*nsa, sizeof(float));
-	    if(nea->n!=2*nsa) error("nea doesn't have 2nsa x 2nsa dimension\n");
-	    for(int ic=0; ic<nea->n; ic++){
-		for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
-		    int ix=pi[ir];
-		    int isa=ic<nsa?ic:ic-nsa;
-		    float val=(float)px[ir]*TOMOSCALE;
-		    if(ix==ic){/*diagonal part. */
-			if(ic==isa){/*x */
-			    neai[isa][0]=val;
-			}else{/*y */
-			    neai[isa][1]=val;
+	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
+	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
+		info2("wfs %d is reusing nea for %d\n", iwfs, iwfs0);
+		curecon->neai->p[iwfs]=curref(curecon->neai->p[iwfs0]);
+	    }else{
+		info2("wfs %d has different nea than %d\n", iwfs, iwfs0);
+		dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
+		spint *pp=nea->p;
+		spint *pi=nea->i;
+		double *px=nea->x;
+		
+		float (*neai)[3]=(float(*)[3])calloc(3*nsa, sizeof(float));
+		if(nea->n!=2*nsa) error("nea doesn't have 2nsa x 2nsa dimension\n");
+		for(int ic=0; ic<nea->n; ic++){
+		    for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
+			int ix=pi[ir];
+			int isa=ic<nsa?ic:ic-nsa;
+			float val=(float)px[ir]*TOMOSCALE;
+			if(ix==ic){/*diagonal part. */
+			    if(ic==isa){/*x */
+				neai[isa][0]=val;
+			    }else{/*y */
+				neai[isa][1]=val;
+			    }
+			}else if(ix==ic-nsa || ix==ic+nsa){/*cross part. symmetric. */
+			    neai[isa][2]=val;
+			}else{
+			    error("saneai has invalid format\n");
 			}
-		    }else if(ix==ic-nsa || ix==ic+nsa){/*cross part. symmetric. */
-			neai[isa][2]=val;
-		    }else{
-			error("saneai has invalid format\n");
 		    }
 		}
-	    }
-	    curecon->neai->p[iwfs]=curnew(3, nsa);
-	    DO(cudaMemcpy(curecon->neai->p[iwfs]->p, neai, 3*nsa*sizeof(float), cudaMemcpyDefault));
-	    free(neai);
-	    if(iwfs!=iwfs0 && nsa>4){/*don't check tt. overflows. */
-		float diff=curinn(curecon->neai->p[iwfs], curecon->neai->p[iwfs0], stream);
-		float diff2=curinn(curecon->neai->p[iwfs0], curecon->neai->p[iwfs0],  stream);
-		if((diff-diff2)<1e-4*diff2){
-		    curfree(curecon->neai->p[iwfs]);
-		    curecon->neai->p[iwfs]=curecon->neai->p[iwfs0];
-		}
+		curecon->neai->p[iwfs]=curnew(3, nsa);
+		DO(cudaMemcpy(curecon->neai->p[iwfs]->p, neai, 3*nsa*sizeof(float), cudaMemcpyDefault));
+		free(neai);
 	    }
 	}/*for iwfs */
 	CUDA_SYNC_DEVICE;
