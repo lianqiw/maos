@@ -9,7 +9,7 @@ static void test_ints(){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	seed_rand(wfs_rand+iwfs,lrand(&init));
     }
-    dcell *mtche=dcellread("powfs0_mtche.bin.gz");
+    dcell *mtche=dcellread("powfs0_mtche.bin");
     int nsim=500;
     int nsa=2582;
     dmat *nea=dnew(nsim,nsa*2);
@@ -20,9 +20,9 @@ static void test_ints(){
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	for(int isim=0; isim<nsim; isim++){
 	    info("iwfs %d isim=%d\n",iwfs,isim);
-	    /*dcell *ints=dcellread("ints_%d_wfs%d.bin.gz",isim,iwfs); */
+	    /*dcell *ints=dcellread("ints_%d_wfs%d.bin",isim,iwfs); */
 	    dcell *ints=dcellread("ints_%d_wfs%d.bin",isim,iwfs);
-	    /*dcell *i0=dcellread("powfs0_i0.bin.gz"); */
+	    /*dcell *i0=dcellread("powfs0_i0.bin"); */
 	    dmat *im=NULL, *imy=NULL;
 	    double gnf[2], gny[2];
 
@@ -46,7 +46,7 @@ static void test_ints(){
 static void test_i0(){
     rand_t i0rand;
     seed_rand(&i0rand,100);
-    dcell *mtche=dcellread("powfs0_mtche.bin.gz");
+    dcell *mtche=dcellread("powfs0_mtche.bin");
     int nsim=500;
     int nsa=2582;
     dmat *nea=dnew(nsim,nsa*2);
@@ -54,7 +54,7 @@ static void test_i0(){
     double rne=3;
     double bkgrnd=0;
     double siglev=1000;
-    dcell *i0=dcellread("powfs0_i0.bin.gz");
+    dcell *i0=dcellread("powfs0_i0.bin");
     for(int isim=0; isim<nsim; isim++){
 	info("isim=%d\n",isim);
 	dmat *im=NULL, *imy=NULL;

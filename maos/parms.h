@@ -565,7 +565,7 @@ typedef struct LOAD_CFG_T{
     char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
-    int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin.gz*/
+    int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin*/
     int tomo;        /**<if 1, load tomo matrix*/
     int fit;         /**<if 1, load fit matrix*/
     int W;           /**<if 1, load W0, W1*/

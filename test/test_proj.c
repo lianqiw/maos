@@ -5,10 +5,10 @@
  */
 
 static void test_grid_proj(){
-    dmat *junk=dread("M3_p.bin.gz");
-    dmat *X=dread("M3_x.bin.gz");
-    dmat *Y=dread("M3_y.bin.gz");
-    dmat *tmp=dread("M3_theta.bin.gz");
+    dmat *junk=dread("M3_p.bin");
+    dmat *X=dread("M3_x.bin");
+    dmat *Y=dread("M3_y.bin");
+    dmat *tmp=dread("M3_theta.bin");
     double bx=tmp->p[0];
     double by=tmp->p[1];
     dfree(tmp);
@@ -38,9 +38,9 @@ static void test_grid_proj(){
     dfree(X); dfree(Y);
     /*direction of guide star */
     /*loc_t *loc2=mksqloc2(2000,2000,1./64.); */
-    loc_t* loc2=locread("aper_locs.bin.gz");
+    loc_t* loc2=locread("aper_locs.bin");
     
-    dmat *amp=dread("aper_amp.bin.gz");
+    dmat *amp=dread("aper_amp.bin");
     double *phi2=calloc(1, sizeof(double)*loc2->nloc);
     proj_rect_grid(mapin,M_PI*0.75,M_PI*0.5,
 		   loc2,-r_exitpupil/r_pupil,r_exitpupil/r_pupil,

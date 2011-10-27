@@ -88,7 +88,7 @@ X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic){
 /**
    User callable function to write sparse matrix into file. 
 
-   Usage: spwrite(A,"A.bin.gz");
+   Usage: spwrite(A,"A.bin");
 */
 void Y(spwrite)(const X(sp) *sp, const char *format,...){
     format2fn;
@@ -101,7 +101,7 @@ void Y(spwrite)(const X(sp) *sp, const char *format,...){
 /**
    User callable function to write cell array of sparse matrix into file. 
 
-   Usage: spcellwrite(A,"A.bin.gz"); */
+   Usage: spcellwrite(A,"A.bin"); */
 void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
     format2fn;
     uint32_t magic=MCC_ANY;
@@ -125,7 +125,7 @@ void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
 /**
    User callable function to read sparse metrix from file. 
 
-   Usage: A=spread("A.bin.gz");*/
+   Usage: A=spread("A.bin");*/
 X(sp)* Y(spread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
@@ -136,7 +136,7 @@ X(sp)* Y(spread)(const char *format,...){
 }
 /**
    User callable function to read cell array of sparse matrix
-   from file. Usage: A=spcellread("A.bin.gz");
+   from file. Usage: A=spcellread("A.bin");
  */
 Y(spcell) *Y(spcellread)(const char *format,...){
     format2fn;

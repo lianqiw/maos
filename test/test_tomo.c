@@ -60,44 +60,44 @@ void MUV(dcell **xout, const void *A,
 TIC;
 static int test_tomo(){
     info("Tomo\n");
-    dcell *grad=dcellread("grad.bin.gz");
+    dcell *grad=dcellread("grad.bin");
     MUV_T RR;
-    RR.M=spcellread("RRM.bin.gz"); 
-    RR.U=dcellread("RRU.bin.gz");
-    RR.V=dcellread("RRV.bin.gz");
+    RR.M=spcellread("RRM.bin"); 
+    RR.U=dcellread("RRU.bin");
+    RR.V=dcellread("RRV.bin");
     tic;
     dcell *rhs=NULL;
     MUV(&rhs, &RR, grad, 1);
     toc("");
-    dcellwrite(rhs,"rhs.bin.gz");
+    dcellwrite(rhs,"rhs.bin");
     MUV_T RL;
-    RL.M=spcellread("RLM.bin.gz");
-    RL.U=dcellread("RLU.bin.gz");
-    RL.V=dcellread("RLV.bin.gz");
+    RL.M=spcellread("RLM.bin");
+    RL.U=dcellread("RLU.bin");
+    RL.V=dcellread("RLV.bin");
     dcell *junk=NULL;
     tic; 
     for(int i=0; i<1; i++){
 	MUV(&junk, &RL, rhs, 1);
     } 
     toc("");
-    dcellwrite(junk,"MUV1.bin.gz");
+    dcellwrite(junk,"MUV1.bin");
     RECON_T *recon=calloc(1, sizeof(RECON_T));
-    recon->G0=spcellread("G0.bin.gz");
-    recon->TT=dcellread("TT.bin.gz");
-    recon->PTT=dcellread("PTT.bin.gz");
-    recon->L2=spcellread("L2.bin.gz");
-    recon->ZZT=spcellread("ZZT.bin.gz");
-    recon->saneai=spcellread("saneai.bin.gz");
+    recon->G0=spcellread("G0.bin");
+    recon->TT=dcellread("TT.bin");
+    recon->PTT=dcellread("PTT.bin");
+    recon->L2=spcellread("L2.bin");
+    recon->ZZT=spcellread("ZZT.bin");
+    recon->saneai=spcellread("saneai.bin");
     tic;
     dcell *rhs2=NULL;
     TomoR(&rhs2, recon, grad, 1);
     toc("");
-    dcellwrite(rhs2,"rhs2.bin.gz");
+    dcellwrite(rhs2,"rhs2.bin");
     dcell *junk2=NULL;
     tic;
     TomoL(&junk2, recon, rhs, 1);
     toc("");
-    dcellwrite(junk2,"TomoL1.bin.gz");
+    dcellwrite(junk2,"TomoL1.bin");
     info("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
     info("Diff between lhs is %g\n", dcelldiff(junk,junk2));
 
@@ -105,15 +105,15 @@ static int test_tomo(){
 }
 static int test_fit(){
     info("Fit\n");
-    dcell *opdr=dcellread("opdr.bin.gz");
+    dcell *opdr=dcellread("opdr.bin");
     MUV_T FR;
-    FR.M=spcellread("FRM.bin.gz");
-    FR.U=dcellread("FRU.bin.gz");
-    FR.V=dcellread("FRV.bin.gz");
+    FR.M=spcellread("FRM.bin");
+    FR.U=dcellread("FRU.bin");
+    FR.V=dcellread("FRV.bin");
     MUV_T FL;
-    FL.M=spcellread("FLM.bin.gz");
-    FL.U=dcellread("FLU.bin.gz");
-    FL.V=dcellread("FLV.bin.gz");
+    FL.M=spcellread("FLM.bin");
+    FL.U=dcellread("FLU.bin");
+    FL.V=dcellread("FLV.bin");
     dcell *rhs=NULL;
     tic;
     for(int i=0; i<10; i++)
@@ -124,27 +124,27 @@ static int test_fit(){
     for(int i=0; i<10; i++)
 	MUV(&MUV_f, &FL, rhs, 1);
     toc("");
-    dcellwrite(rhs,"fit_rhs1.bin.gz");
-    dcellwrite(MUV_f,"MUV_f.bin.gz");
+    dcellwrite(rhs,"fit_rhs1.bin");
+    dcellwrite(MUV_f,"MUV_f.bin");
     RECON_T *recon=calloc(1, sizeof(RECON_T));
-    recon->HX=spcellread("HX.bin.gz");
-    recon->HA=spcellread("HA.bin.gz");
-    recon->W1=dread("W1.bin.gz");
-    recon->W0=spread("W0.bin.gz");
-    recon->NW=dcellread("NW.bin.gz");
-    recon->fitwt=dread("fitwt.bin.gz");
+    recon->HX=spcellread("HX.bin");
+    recon->HA=spcellread("HA.bin");
+    recon->W1=dread("W1.bin");
+    recon->W0=spread("W0.bin");
+    recon->NW=dcellread("NW.bin");
+    recon->fitwt=dread("fitwt.bin");
     dcell *rhs2=NULL;
     tic;
     for(int i=0; i<10; i++)
 	FitR(&rhs2, recon, opdr, 1);
     toc("");
-    dcellwrite(rhs2,"fit_rhs2.bin.gz");
+    dcellwrite(rhs2,"fit_rhs2.bin");
     tic;
     dcell *FitL_f=NULL;
     for(int i=0; i<10; i++)
 	FitL(&FitL_f, recon, rhs2, 1);
     toc("");
-    dcellwrite(FitL_f,"FitL_f.bin.gz");
+    dcellwrite(FitL_f,"FitL_f.bin");
     info("Diff between rhs is %g\n", dcelldiff(rhs, rhs2));
     info("Diff between lhs is %g\n", dcelldiff(MUV_f, FitL_f));
     dcellfree(rhs);

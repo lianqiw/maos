@@ -1,7 +1,7 @@
 #include "../lib/aos.h"
 /*
 int main(){
-    spcell *FLM=spcellread("FLM.bin.gz");
+    spcell *FLM=spcellread("FLM.bin");
     dsp *F=FLM->p[0];
     spchol *Fchol=chol_factorize(F);
  

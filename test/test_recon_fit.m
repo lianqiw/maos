@@ -1,13 +1,13 @@
 
-HX=read('HX.bin.gz');
-HA=read('HA.bin.gz');
+HX=read('HX.bin');
+HA=read('HA.bin');
 
-W0=read('W0.bin.gz'); 
-W1=read('W1.bin.gz');
+W0=read('W0.bin'); 
+W1=read('W1.bin');
 
 wtevl=[4/9,1/9,1/9,1/9,1/9,1/36,1/36,1/36,1/36];
 %wtevl=[1 zeros(1,8)];
-FRM=read('FRM.bin.gz');
+FRM=read('FRM.bin');
 FRM2=cell(2,6);
 for ips=1:6
     for idm=1:2
@@ -25,7 +25,7 @@ for idm=1:2
         FRU2{idm}(:,ievl)=HA{ievl,idm}'*W1*sqrt(wtevl(ievl));
     end
 end
-FRU=read('FRU.bin.gz');
+FRU=read('FRU.bin');
 norm(cell2mat(FRU)-cell2mat(FRU2))
 
 
@@ -35,7 +35,7 @@ for ips=1:6
         FRV2{ips}(:,ievl)=HX{ievl,ips}'*W1*sqrt(wtevl(ievl));
     end
 end
-FRV=read('FRV.bin.gz');
+FRV=read('FRV.bin');
 norm(cell2mat(FRV)-cell2mat(FRV2))
 
 
@@ -50,7 +50,7 @@ for idm=1:2
         end
     end
 end
-FLM=read('FLM.bin.gz');
+FLM=read('FLM.bin');
 flm=full(cell2mat(FLM));
 flm2=full(cell2mat(FLM2));
 norm(flm(:)-flm2(:))

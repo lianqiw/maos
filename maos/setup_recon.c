@@ -1627,7 +1627,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     int npsr=recon->npsr;
     if(parms->load.fit){
 	if(!(zfexist("FRM") && zfexist("FRU") && zfexist("FRV"))){
-	    error("FRM, FRU, FRV (.bin or .bin.gz) not all exist\n");
+	    error("FRM, FRU, FRV (.bin) not all exist\n");
 	}
 	warning("Loading saved recon->FR\n");
 	recon->FR.M=spcellread("FRM");
@@ -1709,7 +1709,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 
     if(parms->load.fit){
 	if(!(zfexist("FLM") && zfexist("FLU") && zfexist("FLV"))){
-	    error("FLM, FLU, FLV (.bin or .bin.gz) not all exist\n");
+	    error("FLM, FLU, FLV (.bin) not all exist\n");
 	}
 	warning("Loading saved recon->FL\n");
 	recon->FL.M=spcellread("FLM");

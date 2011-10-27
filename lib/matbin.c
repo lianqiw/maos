@@ -78,7 +78,7 @@ void X(write)(const X(mat) *A, const char* format,...){
 }
 /**
    User callable function to write cell array of dense matrix into a
-   file. Usage: dcellwrite(A,"A.bin.gz") for double matrix cell. */
+   file. Usage: dcellwrite(A,"A") for double matrix cell. */
 void X(cellwrite)(const X(cell) *dc, const char* format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
@@ -145,7 +145,7 @@ X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic){
 }
 /**
    User callable function to read dense matrix into memory from file. Usage:
-   A=dread("A.bin.gz"); for a dmat*/
+   A=dread("A"); for a dmat*/
 X(mat)* X(read)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
@@ -158,7 +158,7 @@ X(mat)* X(read)(const char *format,...){
    User callable function to read cell array of dense matrix into memory from
    file.
 
-   Usage: A=dcellread("A.bin.gz"); for a double dcell.
+   Usage: A=dcellread("A"); for a double dcell.
 */
 X(cell)* X(cellread)(const char *format,...){
     format2fn;
