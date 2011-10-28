@@ -562,7 +562,8 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 */
 static void 
 setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
-    const double pixtheta=parms->powfs[ipowfs].pixtheta;
+    const double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    const double pixthetay=parms->powfs[ipowfs].pixtheta;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     const int pixpsay=parms->powfs[ipowfs].pixpsa;
     const int radpix=parms->powfs[ipowfs].radpix;
@@ -661,8 +662,8 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		wvlmin=parms->powfs[ipowfs].wvl[iwvl];
 	}
 	double dtheta=wvlmin/(dxsa*embfac);/*Min PSF sampling. */
-	ncompx=4*(int)round(0.25*pixpsax*pixtheta/dtheta);
-	ncompy=4*(int)round(0.25*pixpsay*pixtheta/dtheta);
+	ncompx=4*(int)round(0.25*pixpsax*pixthetax/dtheta);
+	ncompy=4*(int)round(0.25*pixpsay*pixthetay/dtheta);
 	
 	if(!parms->powfs[ipowfs].radrot){
 	    /*Follow laos method, need square  */
@@ -694,18 +695,16 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     powfs[ipowfs].ncompy=ncompy;
 
     if(parms->powfs[ipowfs].bkgrndfn){
-	char *fn=find_file(parms->powfs[ipowfs].bkgrndfn);
+	char *fn=parms->powfs[ipowfs].bkgrndfn;
 	info2("Loading sky background/rayleigh backscatter from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrnd);
 	powfs[ipowfs].bkgrnd=dcellread("%s",fn);
-	free(fn);
     }
     if(parms->powfs[ipowfs].bkgrndfnc){
-	char *fn=find_file(parms->powfs[ipowfs].bkgrndfnc);
+	char *fn=parms->powfs[ipowfs].bkgrndfnc;
 	info2("Loading sky background/rayleigh backscatter correction from %s\n",fn);
 	dcellfree(powfs[ipowfs].bkgrndc);
 	powfs[ipowfs].bkgrndc=dcellread("%s",fn);
-	free(fn);
     }
     if(parms->powfs[ipowfs].bkgrndfn || parms->powfs[ipowfs].bkgrndfnc){
 	double bkscale = parms->sim.dt*800*parms->powfs[ipowfs].dtrat;
@@ -742,10 +741,8 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     int do_rot=(fabs(rot)>1.e-10);
     const char *fn_ncpa = parms->powfs[ipowfs].ncpa;
     if(fn_ncpa){/*Always make nwfs NCPA's */
-	char *fn=find_file(fn_ncpa);
 	int nncpa_in;
-	map_t **ncpa=maparrread(&nncpa_in, "%s",fn);
-	free(fn);
+	map_t **ncpa=maparrread(&nncpa_in, "%s",fn_ncpa);
 	const int nwfs=parms->powfs[ipowfs].nwfs;
 	if(nncpa_in != 1 && nncpa_in != nwfs){
 	    error("powfs[%d].ncpa is in wrong format. nncpa_in=%d, nwfs=%d\n",
@@ -903,9 +900,12 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     /*wvl independent parameters */
     const double dxsa=powfs[ipowfs].pts->dsa;
     const int nsa=powfs[ipowfs].pts->nsa;
-    const double pixtheta=parms->powfs[ipowfs].pixtheta;
-    const double blur=parms->powfs[ipowfs].pixblur*pixtheta;
-    const double e0=exp(-2*M_PI*M_PI*blur*blur);/*blurring factors */
+    const double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    const double pixthetay=parms->powfs[ipowfs].pixtheta;
+    const double blurx=parms->powfs[ipowfs].pixblur*pixthetax;
+    const double blury=parms->powfs[ipowfs].pixblur*pixthetay;/*Is this right?*/
+    const double e0x=-2*M_PI*M_PI*blurx*blurx;/*blurring factors */
+    const double e0y=-2*M_PI*M_PI*blury*blury;
     const int ncompx=powfs[ipowfs].ncompx;
     const int ncompy=powfs[ipowfs].ncompy;
     const int ncompx2=ncompx>>1;
@@ -914,8 +914,8 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     const int pixpsax=powfs[ipowfs].pixpsax;
     const int pixpsay=powfs[ipowfs].pixpsay;
     const double embfac=parms->powfs[ipowfs].embfac;
-    const double pxo=-(pixpsax*0.5-0.5+parms->powfs[ipowfs].pixoffx)*pixtheta;
-    const double pyo=-(pixpsay*0.5-0.5+parms->powfs[ipowfs].pixoffy)*pixtheta;
+    const double pxo=-(pixpsax*0.5-0.5+parms->powfs[ipowfs].pixoffx)*pixthetax;
+    const double pyo=-(pixpsay*0.5-0.5+parms->powfs[ipowfs].pixoffy)*pixthetay;
     int ndtf;
     int nllt;
     int multi_dtf=0;
@@ -944,9 +944,9 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	const double duy=1./(dtheta*ncompy);
 	const double dux2=dux*dux;
 	const double duy2=duy*duy;
-	const double pdtheta=pixtheta*pixtheta/(dtheta*dtheta);
-	const double duyp=duy*pixtheta;
-	const double duxp=dux*pixtheta;
+	const double pdtheta=pixthetax*pixthetay/(dtheta*dtheta);
+	const double duxp=dux*pixthetax;
+	const double duyp=duy*pixthetay;
 	powfs[ipowfs].dtheta->p[iwvl]=dtheta;
 	powfs[ipowfs].dtf[iwvl].nominal=ccellnew(ndtf,nllt);
 	powfs[ipowfs].dtf[iwvl].si=spcellnew(ndtf,nllt);
@@ -976,7 +976,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			double ir=ct*jx+st*jy;
 			double ia=-st*jx+ct*jy;
 			pn[iy][ix]=sinc(ir*duyp)*sinc(ia*duxp)
-			    *pow(e0, ir*ir*duy2 + ia*ia*dux2)
+			    *exp(e0x*(ir*ir*duy2)+e0y*(ia*ia*dux2))
 			    *pdtheta;
 		    }
 		}
@@ -991,8 +991,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		
 		ccp(&nominals[illt][isa], nominal);
 		/*nominals[illt][isa]=cffttreat(nominal); */
-		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay,
-					  pixtheta,pxo,pyo,theta);
+		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
 		sis[illt][isa]=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 		locfree(loc_ccd);
 	    }/*isa */
@@ -1030,11 +1029,10 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 */
 static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(!parms->powfs[ipowfs].llt || !parms->powfs[ipowfs].llt->fnrange) return;
-    char *fnrange=find_file(parms->powfs[ipowfs].llt->fnrange);
+    char *fnrange=parms->powfs[ipowfs].llt->fnrange;
     warning("loading sodium range from %s\n", fnrange);
     if(powfs[ipowfs].focus) dfree(powfs[ipowfs].focus);
     powfs[ipowfs].focus=dread("%s",fnrange);
-    free(fnrange);
     if(powfs[ipowfs].focus->ny!=1 &&powfs[ipowfs].focus->ny!=parms->powfs[ipowfs].nwfs){
 	error("fnrange has wrong format. Must be column vectors of 1 or %d columns\n",
 	      parms->powfs[ipowfs].nwfs);
@@ -1051,12 +1049,11 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
    Load and smooth out sodium profile. We preserve the sum of the sodium profile,
    which represents a scaling factor of the signal level.  */
 static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
-    char *lltfn=find_file(parms->powfs[ipowfs].llt->fn);
+    char *lltfn=parms->powfs[ipowfs].llt->fn;
     dmat *Nain=dread("%s",lltfn);
     if(Nain->ny<2){
 	error("The sodium profile input %s is in wrong fromat\n", lltfn);
     }
-    free(lltfn);
 
     if(parms->powfs[0].llt->smooth){/*resampling the sodium profile by binning. */
 	/*Make new sampling: */

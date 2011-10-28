@@ -238,6 +238,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,rne);
     READ_POWFS(dbl,dx);
     READ_POWFS(dbl,pixtheta);
+    READ_POWFS(dbl,radpixtheta);
     READ_POWFS(dbl,pixoffx);
     READ_POWFS(dbl,pixoffy);
     READ_POWFS(int,phyusenea);
@@ -1004,7 +1005,15 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}else if(parms->powfs[ipowfs].pixtheta<wvl/dxsa*1.22){
 	    parms->powfs[ipowfs].dl=1;/*mark as diffraction limited. */
 	}
-	
+	if(fabs(parms->powfs[ipowfs].radpixtheta)<EPS){
+	    parms->powfs[ipowfs].radpixtheta=parms->powfs[ipowfs].pixtheta;
+	}else{
+	    if(parms->powfs[ipowfs].radpixtheta>1e-4){
+		parms->powfs[ipowfs].radpixtheta/=206265.;
+	    }else if(parms->powfs[ipowfs].radpixtheta<0){
+		error("powfs %d radpixtheta<0\n", ipowfs);
+	    }
+	}
 	if (parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom){
 	    parms->powfs[ipowfs].hasGS0=1;
 	}else{
@@ -1945,9 +1954,10 @@ static void print_parms(const PARMS_T *parms){
 	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[i].pixblur);
 	}
 	info2("\n");
-	info2("    CCD image is %dx%d @ %gmas, %gHz, ", 
+	info2("    CCD image is %dx%d @ %gx%gmas, %gHz, ", 
 	      (parms->powfs[i].radpix?parms->powfs[i].radpix:parms->powfs[i].pixpsa), 
-	      parms->powfs[i].pixpsa, parms->powfs[i].pixtheta*206265000,
+	      parms->powfs[i].pixpsa, 
+	      parms->powfs[i].radpixtheta*206265000,parms->powfs[i].pixtheta*206265000,
 	      1./parms->sim.dt/parms->powfs[i].dtrat);
 	info2("wvl: [");
 	for(int iwvl=0; iwvl<parms->powfs[i].nwvl; iwvl++){

@@ -119,6 +119,7 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 		strncat(fn2, ".gz", 3);
 	    }else{
 		/*ended with bin.gz, change to .bin */
+		fn2[strlen(fn2)-3]='\0';
 	    }
 	    fnr=search_file(fn2);
 	}

@@ -379,7 +379,7 @@ loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy){
    like mksqloc, but roated theta CCW. Useful in creating the
    pixel coordinates in a polar coordinate CCD.
 */
-loc_t *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double theta){
+loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, double theta){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx*ny;
     loc->dx=dx;
@@ -392,7 +392,7 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double thet
     double ct=cos(theta);
     double st=sin(theta);
     for(iy=0; iy<ny; iy++){
-	y=iy*dx+oy;
+	y=iy*dy+oy;
 	for(ix=0; ix<nx; ix++){
 	    x=ix*dx+ox;
 	    locx[iy][ix]=ct*x-st*y;

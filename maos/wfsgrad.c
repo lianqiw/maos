@@ -353,8 +353,8 @@ void wfsgrad_iwfs(thread_t *info){
 		    i0sum=powfs[ipowfs].intstat->i0sum->p+nsa*wfsind;
 		}
 	    }
-	    double pixtheta=parms->powfs[ipowfs].pixtheta;
-	    
+	    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+	    double pixthetay=parms->powfs[ipowfs].pixtheta;
 	    /*Rayleigh scattering (bkgrnd) */
 	    dmat **bkgrnd2=NULL;
 	    dmat **bkgrnd2c=NULL;
@@ -398,8 +398,8 @@ void wfsgrad_iwfs(thread_t *info){
 		case 2:{
 		    double pmax=dmax(ints->p[isa]);
 		    dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
-		    gnf[0]*=pixtheta;
-		    gnf[1]*=pixtheta;
+		    gnf[0]*=pixthetax;
+		    gnf[1]*=pixthetay;
 		}
 		    break;
 		default:
@@ -423,8 +423,8 @@ void wfsgrad_iwfs(thread_t *info){
 		    case 2:{
 			double pmax=dmax(ints->p[isa]);
 			dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
-			gny[0]*=pixtheta;
-			gny[1]*=pixtheta;
+			gny[0]*=pixthetax;
+			gny[1]*=pixthetay;
 		    }
 			break;
 		    default:
@@ -553,7 +553,7 @@ static void wfsgrad_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     const int seed=simu->seed;
-    if((isim % 50 ==0) || isim+1==parms->sim.end){
+    if(isim+1==parms->sim.end){
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
 	    if(!simu->sanea_sim[iwfs]) continue;
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;

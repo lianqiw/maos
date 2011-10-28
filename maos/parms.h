@@ -141,7 +141,9 @@ typedef struct POWFS_CFG_T{
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
     double dx;      /**<sampling of opd points in each subaperture. usually
 		       matches atmosphere sampling for LGS. may be coraser for NGS.*/
-    double pixtheta;/**<size of pixel pitch along x or y in radian.*/
+    double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
+		       ccd. Converted to radian from user input*/
+    double radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
     double sigscale;/**<scale the signal level for simulation.*/

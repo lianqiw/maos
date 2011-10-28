@@ -44,10 +44,9 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
     info("Setting up tilt surface (M3)\n");
     rectmap_t **tsurf=calloc(parms->ntsurf, sizeof(rectmap_t*));
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
-	char *fn=find_file(parms->tsurf[itsurf]);
+	char *fn=parms->tsurf[itsurf];
 	info("Loading tilt surface from %s\n", fn);
 	tsurf[itsurf]=rectmapread("%s",fn); 
-	free(fn);
     }
     loc_t *locevl;
     const double rot=-parms->aper.rotdeg/180.*M_PI;
@@ -161,9 +160,9 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     map_t **surf=calloc(parms->nsurf, sizeof(map_t*));
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	if(!parms->surf[isurf]) continue;
-	char *fn=find_file(parms->surf[isurf]);
+	char *fn=parms->surf[isurf];
 	info("Loading surface OPD from %s\n", fn);
-	surf[isurf]=mapread("%s",fn); free(fn);
+	surf[isurf]=mapread("%s",fn);
 	surf[isurf]->ox+=parms->aper.misreg[0];
 	surf[isurf]->oy+=parms->aper.misreg[1];
     }

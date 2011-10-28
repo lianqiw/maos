@@ -277,11 +277,11 @@ __global__ static void acc_real_do(float *out, const fcomplex*restrict in, int n
    Output ints is sampled with pixpsax*pixpsay, at pixtheta.
 */
 __global__ static void si_rot_do(float *restrict ints, int pixpsax, int pixpsay, 
-				 int pixoffx, int pixoffy, float pixtheta, 
+				 int pixoffx, int pixoffy, float pixthetax, float pixthetay,
 				 const float *restrict psfr, float dtheta, int notfx, int notfy,
 				 const float *restrict srot, float alpha){
-    float pxo=-(pixpsax*0.5-0.5+pixoffx)*pixtheta;
-    float pyo=-(pixpsay*0.5-0.5+pixoffy)*pixtheta;
+    float pxo=-(pixpsax*0.5-0.5+pixoffx)*pixthetax;
+    float pyo=-(pixpsay*0.5-0.5+pixoffy)*pixthetay;
     int isa=blockIdx.x;
     float dispx=notfx/2;
     float dispy=notfy/2;
@@ -293,9 +293,9 @@ __global__ static void si_rot_do(float *restrict ints, int pixpsax, int pixpsay,
     ints+=isa*pixpsax*pixpsay;
     psfr+=isa*notfx*notfy;
     for(int iy=threadIdx.y; iy<pixpsay; iy+=blockDim.y){
-	float y0=iy*pixtheta+pyo;
+	float y0=iy*pixthetay+pyo;
 	for(int ix=threadIdx.x; ix<pixpsax; ix+=blockDim.x){
-	    float x0=ix*pixtheta+pxo;
+	    float x0=ix*pixthetax+pxo;
 	    float x=(cx*x0-sx*y0)*dtheta1+dispx;
 	    float y=(sx*x0+cx*y0)*dtheta1+dispy;
 	    int jx=floorf(x); x=x-jx;
@@ -361,7 +361,8 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
     const int nwvf=nx*parms->powfs[ipowfs].embfac;
     const int pixpsax=powfs[ipowfs].pixpsax;
     const int pixpsay=powfs[ipowfs].pixpsay;
-    const float pixtheta=parms->powfs[ipowfs].pixtheta;
+    const float pixthetax=parms->powfs[ipowfs].radpixtheta;
+    const float pixthetay=parms->powfs[ipowfs].pixtheta;
     const float siglev=parms->wfs[iwfs].siglevsim;
     const float *restrict const srot1=parms->powfs[ipowfs].radrot?cuwfs[iwfs].srot:NULL;
     const int multi_dtf=(parms->powfs[ipowfs].llt&&!parms->powfs[ipowfs].radrot 
@@ -600,7 +601,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		si_rot_do<<<ksa, dim3(16,16),0,stream>>>
 		    (ints->p[isa]->p, pixpsax, pixpsay, 
 		     parms->powfs[ipowfs].pixoffx, parms->powfs[ipowfs].pixoffy,
-		     pixtheta, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
+		     pixthetax, pixthetay, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts[iwvl]);
 		ctoc("final");
 		cudaFree(psfr);

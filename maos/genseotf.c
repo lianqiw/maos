@@ -382,15 +382,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dcog(pgrad,psepsf[iwvl][isa],0.5,0.5,0.1*pmax,0.2*pmax);
 		}
 		ccpd(&sepsf,psepsf[iwvl][isa]);
-#if ROT_OTF == 1/*ROTATE OTF */
-		cfftshift(sepsf);/*peak in corner */
-		cfft2(sepsf,-1);/*turn to OTF;//max at 1. */
-		cfftshift(sepsf);/*peak in center */
-		cembedscaleout(seotfk,sepsf,xscale,yscale,-angle,C_FULL);
-		cfftshift(seotfk); /*otf, peak in corner */
-#endif
-
-#if ROT_OTF==0/*rotate PSF */
 		cembed(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */
 #if SAVE_OTF == 1
 		ccp(&psavepsf[iwvl][isa],seotfk);
@@ -400,7 +391,6 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
 		    ctilt(seotfk,-pgrad[0],-pgrad[1],0);
 		}
-#endif
 #if SAVE_OTF ==1
 		ccp(&psaveotf[iwvl][isa],seotfk);
 #endif

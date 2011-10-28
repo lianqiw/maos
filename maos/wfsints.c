@@ -150,14 +150,14 @@ void wfsints(thread_t *thread_data){
 	    cembed_wvf(lwvf,lltopd->p,powfs[ipowfs].llt->amp->p,nlx,nlx,wvl,0);
 	    /*turn to complex psf*/
 	    cfft2(lwvf,-1);
+	    /*turn to psf*/
+	    cabs2toreal(lwvf);
+	    /*turn to otf. */
+	    cfft2(lwvf, 1);
 	    if(lwvf != lotfc){
 		/* uplink llt has different aperture size than LGS subaperture*/
 		ccpcorner(lotfc, lwvf, C_FULL);
-	    }/*else: same*/
-	    /*now work with lotfc only. lotfc has peak in corner*/
-	    cabs2toreal(lotfc);
-	    /*now contains conjugate of otf. use 1 insteaf of -1 to get complex conjugate*/
-	    cfft2(lotfc,1);
+	    }
 	    /*lotfc has peak nlwvf*nlwvf in corner. */
 	    cscale(lotfc,1./(double)((long)nlwvf*nlwvf));/*max of 1 */
 	}

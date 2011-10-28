@@ -61,8 +61,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     if(!powfs[ipowfs].intstat){
 	error("Please create intstat before calling mtch");
     }
-    const double pixtheta=parms->powfs[ipowfs].pixtheta;
-    const double kp=1./pixtheta;
+    const double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    const double pixthetay=parms->powfs[ipowfs].pixtheta;
+    const double kpx=1./pixthetax;
+    const double kpy=1./pixthetay;
     const double rne=parms->powfs[ipowfs].rne;
     const double bkgrnd=parms->powfs[ipowfs].bkgrnd*parms->powfs[ipowfs].dtrat;
     const double bkgrnd_res=bkgrnd*(1.-parms->powfs[ipowfs].bkgrndc);
@@ -148,7 +150,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	int iwfs=parms->powfs[ipowfs].wfs[ii0];
 
 	double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
-	if(neaspeckle>parms->powfs[ipowfs].pixtheta){
+	if(neaspeckle>pixthetax){
 	    error("parms->powfs[%d].neaspeckle=%g is bigger than pixel size\n",
 		  ipowfs, neaspeckle);
 	}
@@ -168,14 +170,14 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	pi0m[1][1]=1;
 
 	if(mtchcrx){/*constrained x(radial) */
-	    double shift=parms->powfs[ipowfs].pixtheta*shiftx;
-	    pi0m[mtchcrx][0]=shift*kp;/*k is here to ensure good conditioning */
-	    pi0m[mtchcrx+1][0]=-shift*kp;
+	    double shift=pixthetax*shiftx;
+	    pi0m[mtchcrx][0]=shift*kpx;/*kp is here to ensure good conditioning */
+	    pi0m[mtchcrx+1][0]=-shift*kpx;
 	}
 	if(mtchcry){/*constrained y(azimuthal). */
-	    double shift=parms->powfs[ipowfs].pixtheta*shifty;
-	    pi0m[mtchcry][1]=shift*kp;
-	    pi0m[mtchcry+1][1]=-shift*kp;
+	    double shift=pixthetay*shifty;
+	    pi0m[mtchcry][1]=shift*kpy;
+	    pi0m[mtchcry+1][1]=-shift*kpy;
 	}
 	double i0summax=0;
 	int crdisable=0;/*adaptively disable mtched filter based in FWHM. */
@@ -206,17 +208,17 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    dzero(i0g);/*don't forget to zero out */
 	    adddbl(pi0g[0], 1, gxs[ii0][isa]->p, i0n, 1, 0);
 	    adddbl(pi0g[1], 1, gys[ii0][isa]->p, i0n, 1, 0);
-	    adddbl(pi0g[2], 1, i0s[ii0][isa]->p, i0n, kp, bkgrnd_res);
+	    adddbl(pi0g[2], 1, i0s[ii0][isa]->p, i0n, kpx, bkgrnd_res);
 	    adddbl(pi0g[2], 1, bkgrnd2, i0n, 1, bkgrnd_res);
 	    adddbl(pi0g[2], 1, bkgrnd2c, i0n, -1, 0);/*subtract calibration */
 	    if(mtchcrx && !crdisable){
 		/*
 		  constrained matched filter. compute separately for each wfs.
 		*/
-		mki0shx(pi0g[mtchcrx],pi0g[mtchcrx+1],i0s[ii0][isa],kp);
+		mki0shx(pi0g[mtchcrx],pi0g[mtchcrx+1],i0s[ii0][isa],kpx);
 		if(sub_i0){
-		    adddbl(pi0g[mtchcrx],1,i0s[ii0][isa]->p, i0n, -kp, 0);
-		    adddbl(pi0g[mtchcrx+1],1,i0s[ii0][isa]->p, i0n, -kp,0);
+		    adddbl(pi0g[mtchcrx],1,i0s[ii0][isa]->p, i0n, -kpx, 0);
+		    adddbl(pi0g[mtchcrx+1],1,i0s[ii0][isa]->p, i0n, -kpx,0);
 		}
 		adddbl(pi0g[mtchcrx],   1, bkgrnd2,  i0n,  1, bkgrnd_res);
 		adddbl(pi0g[mtchcrx],   1, bkgrnd2c, i0n, -1, 0);
@@ -224,10 +226,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		adddbl(pi0g[mtchcrx+1], 1, bkgrnd2c, i0n, -1, 0);
 	    }
 	    if(mtchcry && !crdisable){
-		mki0shy(pi0g[mtchcry],pi0g[mtchcry+1],i0s[ii0][isa],kp);
+		mki0shy(pi0g[mtchcry],pi0g[mtchcry+1],i0s[ii0][isa],kpy);
 		if(sub_i0){
-		    adddbl(pi0g[mtchcry],1,i0s[ii0][isa]->p, i0n, -kp,0);
-		    adddbl(pi0g[mtchcry+1],1,i0s[ii0][isa]->p,i0n, -kp,0);
+		    adddbl(pi0g[mtchcry],1,i0s[ii0][isa]->p, i0n, -kpy,0);
+		    adddbl(pi0g[mtchcry+1],1,i0s[ii0][isa]->p,i0n, -kpy,0);
 		}
 		adddbl(pi0g[mtchcry],  1, bkgrnd2,  i0n,  1, bkgrnd_res);
 		adddbl(pi0g[mtchcry],  1, bkgrnd2c, i0n, -1, 0);
