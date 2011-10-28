@@ -581,7 +581,7 @@ if test "x${use_mex}" = "xyes" ; then
        mex_lib="no"
    else       
        LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++ -lz"
-       AC_CHECK_LIB([mex], [mexGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
+       AC_CHECK_LIB([mex], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
    fi
    if test x$mex_lib = xyes ;then
        AM_CONDITIONAL(USE_MEX, true)
