@@ -106,7 +106,7 @@ static double mapfun(double *x, mapdata_t *info){
 	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
 	cfft2(info->otf->p[iwvl], 1);
-	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig/**x[2]*/);
+	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig*x[2]);
     }
  
     double sigma=0;
@@ -120,14 +120,7 @@ static double mapfun(double *x, mapdata_t *info){
 	    sigma+=pow(ints->p[i]-ints2->p[i],2);
 	}
     }
-    /*info("Map fun called with [%g %g] %g, sigma=%g. noisy=%d\n", x[0], x[1], x[2], sigma, info->noisy);
-    if(isnan(sigma)){
-	ccellwrite(info->fotf, "fotf");
-	ccellwrite(info->otf, "otf");
-	dwrite(info->ints, "ints");
-	dwrite(ints2, "ints2");
-	_exit(0);
-	}*/
+    /*info("Map fun called with [%g %g] %g, sigma=%g. noisy=%d\n", x[0], x[1], x[2], sigma, info->noisy);*/
     dfree(ints2);
     return sigma;
 }
@@ -165,7 +158,7 @@ static void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
     double scale[3]={5e-8, 5e-8, 0.1};
     //info2("%.4e %.4e %.2f", g[0], g[1], g[2]);
-    int ncall=dminsearch(g, scale, 2, 1e-9, (minsearch_fun)mapfun, &data);
+    int ncall=dminsearch(g, scale, 3, 1e-9, (minsearch_fun)mapfun, &data);
     ccellfree(data.otf);
     //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
 
