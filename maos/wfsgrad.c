@@ -57,7 +57,119 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	}
     }
 }
+typedef double (*minsearch_fun)(double *x, void *info);
+typedef struct {
+    const PARMS_T *parms;
+    const POWFS_T *powfs;
+    dmat *ints;
+    ccell *fotf;
+    ccell *otf;//temporary.
+    double bkgrnd;
+    double rne;
+    int noisy;
+    int iwfs;
+    int isa;
+}mapdata_t;
+/**
+  The function to evaluate the result at x.
+*/
+static double mapfun(double *x, mapdata_t *info){
+    dmat *ints=info->ints;
+    ccell *fotf=info->fotf;
+    ccell *otf=info->otf;
+    const PARMS_T *parms=info->parms;
+    const POWFS_T *powfs=info->powfs;
+    int iwfs=info->iwfs;
+    int ipowfs=parms->wfs[iwfs].powfs;
+    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    int isa=info->isa;
+    int nsa=fotf->nx;
+    int nwvl=fotf->ny;
+    if(!otf){
+	info->otf=ccellnew(nwvl,1);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    info->otf->p[iwvl]=cnew(info->fotf->p[0]->nx, info->fotf->p[0]->ny);
+	    cfft2plan(info->otf->p[iwvl], 1);
+	    cfft2plan(info->otf->p[iwvl], -1);
+	}
+	otf=info->otf;
+    }
+    dmat *ints2=dnew(ints->nx, ints->ny);
+    for(int iwvl=0; iwvl<nwvl; iwvl++){
+	double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
+	    *parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+	PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
+	int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
+	int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
+	dsp *sis=psi[idtf][idtfsa];
+	double wvl=parms->powfs[ipowfs].wvl[iwvl];
+	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
+	cfft2(info->otf->p[iwvl], 1);
+	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig/**x[2]*/);
+    }
+ 
+    double sigma=0;
+    if(info->noisy){
+	double noise=info->rne*info->rne+info->bkgrnd;
+	for(int i=0; i<ints->nx*ints->ny; i++){
+	    sigma+=pow(ints->p[i]-ints2->p[i],2)/(ints2->p[i]+noise);
+	}
+    }else{
+	for(int i=0; i<ints->nx*ints->ny; i++){
+	    sigma+=pow(ints->p[i]-ints2->p[i],2);
+	}
+    }
+    /*info("Map fun called with [%g %g] %g, sigma=%g. noisy=%d\n", x[0], x[1], x[2], sigma, info->noisy);
+    if(isnan(sigma)){
+	ccellwrite(info->fotf, "fotf");
+	ccellwrite(info->otf, "otf");
+	dwrite(info->ints, "ints");
+	dwrite(ints2, "ints2");
+	_exit(0);
+	}*/
+    dfree(ints2);
+    return sigma;
+}
+/*
+  Search minimum along multiple dimenstions. scale is the size of the problem. x contains initial warm restart values.
+*/
+static int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch_fun fun, void *info){
+    double pinit[nmod+1][nmod];
+    double *pinit2[nmod+1];
+    double yinit[nmod+1];
+    for(int i=0; i<nmod+1; i++){
+	pinit2[i]=pinit[i];
+	for(int j=0; j<nmod; j++){
+	    pinit[i][j]=x[j];
+	}
+	if(i>0){
+	    pinit[i][i-1]+=scale[i-1];
+	}
+	yinit[i]=fun(pinit[i], info);
+    }
+    int ncall=0;
+    amoeba(pinit2, yinit, nmod, ftol, fun, info, &ncall);
+    for(int j=0; j<nmod; j++){
+	x[j]=pinit[0][j];
+    }
+    return ncall;
+}
+static void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
+		       const POWFS_T *powfs, int iwfs, int isa, int noisy,
+		       double bkgrnd, double rne){
+    int ipowfs=parms->wfs[iwfs].powfs;
+    int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    INTSTAT_T *intstat=powfs[ipowfs].intstat;
+    ccell *fotf=intstat->fotf[intstat->nsepsf>1?wfsind:0];
+    mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
+    double scale[3]={5e-8, 5e-8, 0.1};
+    //info2("%.4e %.4e %.2f", g[0], g[1], g[2]);
+    int ncall=dminsearch(g, scale, 2, 1e-9, (minsearch_fun)mapfun, &data);
+    ccellfree(data.otf);
+    //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
 
+}
 /**
    computes close loop and pseudo open loop gradidents for both gometric and
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
@@ -70,7 +182,8 @@ void wfsgrad_iwfs(thread_t *info){
     assert(info->end==info->start+1);/*only 1 WFS. */
     assert(iwfs<parms->nwfs);
     /*
-      simu->gradcl is CL grad output
+      simu->gradcl is CL grad output (also for warm-restart of maxapriori
+      simu->gradnf is CL grad noise free output for warm-restart of maxapriori
       simu->gradacc is internal, to accumulate geometric grads.
       do not accumulate opd. accumate ints for phy, g for GS
     */
@@ -344,7 +457,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    dmat **mtche=NULL;
 	    double *i0sum=NULL;
 	    
-	    if(parms->powfs[ipowfs].phytypesim==1){
+	    if(parms->powfs[ipowfs].phytype==1){
 		if(powfs[ipowfs].intstat->mtche->ny==1){
 		    mtche=powfs[ipowfs].intstat->mtche->p;
 		    i0sum=powfs[ipowfs].intstat->i0sum->p;
@@ -379,8 +492,12 @@ void wfsgrad_iwfs(thread_t *info){
 	    double *pgradx=(*gradout)->p;
 	    double *pgrady=pgradx+nsa;
 	    dmat *gradnf=NULL;
-	    if(save_grad){
-		gradnf=dnew(nsa*2,1);/*save noise free gradients. */
+	    if(save_grad || parms->powfs[ipowfs].phytypesim==3){
+		/*keep noise free gradients. */
+		if(!simu->gradnf->p[iwfs]){
+		    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
+		}
+		gradnf=simu->gradnf->p[iwfs];
 	    }
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsnf[iwfs], ints);
@@ -389,21 +506,32 @@ void wfsgrad_iwfs(thread_t *info){
 		/* TODO: Do something to remove negative pixels. shift image or
 		   mask out. This is important when bkgrndfnc is greater than
 		   1. */
-		double gnf[2]={0,0};
-		double gny[2]={0,0};
+		double gnf[3]={0,0,1};/*the third element is strength, for maxapriori.*/
+		double gny[3]={0,0,1};
 		switch(parms->powfs[ipowfs].phytypesim){
-		case 1:
+		case 1:{/*(constraint) Matched filter*/
 		    dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
+		}
 		    break;
-		case 2:{
+		case 2:{/*tCoG*/
 		    double pmax=dmax(ints->p[isa]);
 		    dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
 		    gnf[0]*=pixthetax;
 		    gnf[1]*=pixthetay;
 		}
 		    break;
+		case 3:{/*MAP*/
+		    gnf[0]=gradnf->p[isa];//warm restart
+		    gnf[1]=gradnf->p[isa+nsa];
+		    maxapriori(gnf, ints->p[isa], parms, powfs, iwfs, isa, 1, 0, 1);
+		}
+		    break;
 		default:
 		    error("Invalid");
+		}
+		if(gradnf){
+		    gradnf->p[isa]=gnf[0];
+		    gradnf->p[isa+nsa]=gnf[1];
 		}
 		if(noisy){/*add noise */
 		    double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
@@ -412,19 +540,29 @@ void wfsgrad_iwfs(thread_t *info){
 			     bkgrnd,parms->powfs[ipowfs].bkgrndc,
 			     bkgrnd2i, bkgrnd2ic, rne);
 		    switch(parms->powfs[ipowfs].phytypesim){
-		    case 1:
+		    case 1:{
 			dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
 			if(parms->powfs[ipowfs].mtchscl){
 			    double scale=i0sum[isa]/dsum(ints->p[isa]);
 			    gny[0]*=scale;
 			    gny[1]*=scale;
 			}
+		    }
 			break;
 		    case 2:{
 			double pmax=dmax(ints->p[isa]);
 			dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
 			gny[0]*=pixthetax;
 			gny[1]*=pixthetay;
+		    }
+			break;
+		    case 3:{
+			gny[0]=pgradx[isa];//warm restart
+			gny[1]=pgrady[isa];
+			maxapriori(gny, ints->p[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
+			if(bkgrnd2i){
+			    error("Please implement\n");
+			}
 		    }
 			break;
 		    default:
@@ -440,10 +578,6 @@ void wfsgrad_iwfs(thread_t *info){
 		    gny[0]=gnf[0];
 		    gny[1]=gnf[1];
 		}
-		if(save_grad){
-		    gradnf->p[isa]=gnf[0];
-		    gradnf->p[isa+nsa]=gnf[1];
-		}
 		pgradx[isa]=gny[0];
 		pgrady[isa]=gny[1];
 	    };/*isa */
@@ -453,7 +587,6 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	    if(save_grad && noisy){
 		cellarr_dmat(simu->save->gradnf[iwfs], gradnf);
-		dfree(gradnf);
 	    }
 	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		if(!recon->PTT){

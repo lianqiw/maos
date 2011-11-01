@@ -768,7 +768,7 @@ void cabs22d(dmat**restrict A0, double alpha,
    pinct=1: peak is in center
    pinct=0: peak is in corner
 */
-void ctilt(cmat *otf, double sx, double sy, int pinct){
+void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
     int nx=otf->nx;
     int ny=otf->ny;
     double dux=1./(double)nx;
@@ -804,9 +804,13 @@ void ctilt(cmat *otf, double sx, double sy, int pinct){
 	}
     }
     for(int iy=0; iy<ny; iy++){
-	dcomplex *p=otf->p+iy*nx;
+	dcomplex *restrict p=otf->p+iy*nx;
+	dcomplex *restrict pin=otfin->p+iy*nx;
 	for(int ix=0; ix<nx; ix++){
-	    p[ix]*=ux[ix]*uy[iy];
+	    p[ix]=pin[ix]*ux[ix]*uy[iy];
 	}
     }
+}
+void ctilt(cmat *otf, double sx, double sy, int pinct){
+    ctilt2(otf, otf, sx, sy, pinct);
 }

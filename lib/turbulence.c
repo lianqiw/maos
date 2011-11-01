@@ -33,7 +33,7 @@
 #include "hashlittle.h"
 #include "fractal.h"
 #include "mathmisc.h"
-#include "nr/nr.h"
+#include "nr.h"
 #include "locbin.h"
 #include "misc.h"
 #include "cellarr.h"

@@ -160,7 +160,7 @@ case "$host_os" in
  mklname=mkl${cpu}
  system="linux"
  ldsuffix="so"
- LDFLAGS="$LDFLAGS -Wl,--as-needed"
+ LDFLAGS="$LDFLAGS" #as-needed is conflicting with fftw3 openmp detection.
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)

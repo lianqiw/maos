@@ -340,7 +340,7 @@ int main(){
 	cspadd(&Mhat,Mpsd);
 	cspfree(Mpsd);
 	cspwrite(Mhat,"Mhat.bin");/*Verified with manual computation in MATLAB so far. */
-	cspdropeps(Mhat);
+	cspdroptol(Mhat,1e-15);
 	cspsym(Mhat);
 	Mhatp=cspperm(Mhat,0,perm,perm);
 	cspfree(Mhat);

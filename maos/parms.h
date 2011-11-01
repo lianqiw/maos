@@ -175,7 +175,7 @@ typedef struct POWFS_CFG_T{
     int gtype_recon;/**<wfs type if not using physical optics in simulation. 
 		       - 0: geometric
 		       - 1: ztilt.*/
-    int phytype;    /**<physical optics type. 1: mtch, 2: tcog*/
+    int phytype;    /**<physical optics type. 1: mtch, 2: tcog, 3: MAP*/
     int phytypesim; /**<physical optics type for simulation. -1 to follow phytype*/
     int phystep;    /**<frames to start using physical optics. 
 		       -  0: means from frame 0.

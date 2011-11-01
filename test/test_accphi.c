@@ -437,15 +437,15 @@ static void test_accuracy(void){
 	   
 
 	    tic;
-	    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+	    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 			  scale, wrap, 0,0);
 	    toc("pts optim\t\t");
 	    tic;
-	    prop_grid_pts(screen, pts, phi_pts1,-1, displacex, displacey,
+	    prop_grid_pts(screen, pts, NULL,phi_pts1,-1, displacex, displacey,
 			  scale, wrap, 0,0);
 	    toc("pts nonoptim\t");
 	    tic;
-	    prop_grid(screen, loc, phi_loc, -1,displacex, displacey, scale, 
+	    prop_grid(screen, loc, NULL,phi_loc, -1,displacex, displacey, scale, 
 		      wrap, 0,0);
 	    toc("loc\t\t\t");
 	    tic;
@@ -600,28 +600,28 @@ static void test_speed(int nthread){
    
     read_self_cpu();
     tic;
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
     
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
 
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
 
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
 
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
 
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
 
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
 
-    prop_grid_pts(screen, pts, phi_pts, -1, displacex, displacey,
+    prop_grid_pts(screen, pts, NULL,phi_pts, -1, displacex, displacey,
 		  scale, wrap, 0,0);
 
     toc("prop_grid_pts");

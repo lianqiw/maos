@@ -952,6 +952,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	powfs[ipowfs].dtf[iwvl].si=spcellnew(ndtf,nllt);
 	cmat*(*nominals)[ndtf]=
 	    (void*)powfs[ipowfs].dtf[iwvl].nominal->p;
+	/*both nominal and si depends on wavelength.*/
 	dsp*(*sis)[ndtf]=(void*)powfs[ipowfs].dtf[iwvl].si->p;
 	cmat *nominal=cnew(ncompx,ncompy);
 	cfft2plan(nominal,-1);
@@ -988,9 +989,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 		cfftshift(nominal);
 		cfft2(nominal,1);
 		cscale(nominal,1./(double)(nominal->nx*nominal->ny));
-		
 		ccp(&nominals[illt][isa], nominal);
-		/*nominals[illt][isa]=cffttreat(nominal); */
 		loc_t *loc_ccd=mksqlocrot(pixpsax,pixpsay, pixthetax,pixthetay,pxo,pyo,theta);
 		sis[illt][isa]=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 		locfree(loc_ccd);
@@ -1183,13 +1182,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	      warning("Using rot psf/otf method to do radial
 	      pixel detector\n");
 	    */
-#if ROT_OTF == 1
-	    warning("Rotate OTF to do radial format detector (non-preferred)\n");
-#elif ROT_OTF==0
 	    warning("Rotate PSF to do radial format detector (preferred)\n");
-#else
-	    error("Invalid option\n");
-#endif
 	    powfsetf[iwvl].p1=ccellnew(nsa,nllt);
 	    petf=(void*)powfsetf[iwvl].p1->p;
 	    use1d=1;
@@ -1494,10 +1487,9 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
    Setup the matched filter pixel processing parameters for physical optics wfs.
 */
 static void 
-setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, 
-		 int ipowfs){
-    if(parms->powfs[ipowfs].phytype!=1){/*not matched filter */
-	error("This is only intended for matched filter\n");
+setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
+    if(parms->powfs[ipowfs].phytype!=1 ){/*not matched filter */
+	warning("This is only intended for matched filter || \n");
     }
     long nsa=powfs[ipowfs].pts->nsa;
     if(powfs[ipowfs].intstat){
@@ -1776,7 +1768,8 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 	    if(parms->powfs[ipowfs].phytype==1){/*matched filter */
 		setup_powfs_mtch(powfs,parms,ipowfs);
 	    }else{
-		error("Please fill in this part\n");
+		warning("Please fill in this part. Use matched filter to estimate noise for the moment.\n");
+		setup_powfs_mtch(powfs,parms,ipowfs);
 	    }
 	}
     }/*ipowfs */
@@ -1794,15 +1787,18 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	spcellfree(powfs[ipowfs].GS0);
 	dcellfree(powfs[ipowfs].neasim);
 	if(powfs[ipowfs].intstat){
-	    dcellfree(powfs[ipowfs].intstat->mtche);
-	    dcellfree(powfs[ipowfs].intstat->mtchera);
-	    dcellfree(powfs[ipowfs].intstat->sanea);
-	    dcellfree(powfs[ipowfs].intstat->saneara);
-	    dcellfree(powfs[ipowfs].intstat->saneaxyl);
-	    dcellfree(powfs[ipowfs].intstat->saneaxy);
-	    dcellfree(powfs[ipowfs].intstat->saneaixy);
-	    dfree(powfs[ipowfs].intstat->i0sum);
-	    free(powfs[ipowfs].intstat);
+	    INTSTAT_T *intstat=powfs[ipowfs].intstat;
+	    ccellfreearr(intstat->fotf, intstat->nsepsf);
+	    dcellfree(intstat->mtche);
+	    dcellfree(intstat->mtchera);
+	    dcellfree(intstat->sanea);
+	    dcellfree(intstat->saneara);
+	    dcellfree(intstat->saneaxyl);
+	    dcellfree(intstat->saneaxy);
+	    dcellfree(intstat->saneaixy);
+	    dfree(intstat->i0sum);
+	    free(intstat);
+	    powfs[ipowfs].intstat=NULL;
 	}
 	if(parms->powfs[ipowfs].llt){
 	    dcellfree(powfs[ipowfs].srot);

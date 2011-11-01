@@ -86,6 +86,8 @@ physical optics wfs. */
 typedef struct INTSTAT_T{
     ccell *lotf;        /**<llt otf*/
     ccell **otf;        /**<short exposure OTF. time consuming to calculate. */
+    ccell **fotf;       /**<The final optf before fft and multiply with si to
+			   get i0. Used for MAP tracking.*/
     dcell **sepsf;      /**<short expsoure PSF.*/
     dcell *i0;          /**<short exposure image. nsa x nllt*/
     dcell *gx;          /**<gradient of i0 along x*/
@@ -451,6 +453,7 @@ typedef struct SIM_T{
     ccell **wfspsfout; /**<output WFS PSF history.*/
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
+    dcell *gradnf;     /**<cl nf grad output*/
     dcell **sanea_sim;  /**<accumulate effective sanea during simulation.*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/

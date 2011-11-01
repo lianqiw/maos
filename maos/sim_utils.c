@@ -544,7 +544,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     save->ztiltout=calloc(parms->nwfs,sizeof(cellarr*));
     simu->pistatout=calloc(parms->nwfs,sizeof(dcell*));
     simu->sanea_sim=calloc(parms->nwfs, sizeof(dcell*));
-    simu->gradcl=dcellnew(parms->nwfs,1);/*output */
+    simu->gradcl=dcellnew(parms->nwfs,1);
+    simu->gradnf=dcellnew(parms->nwfs,1);
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
       loop. They are used for testing*/
     if(parms->sim.closeloop){
@@ -1391,6 +1392,7 @@ void free_simu(SIM_T *simu){
     free(simu->perf_evl);
     free(simu->status);
     dcellfree(simu->gradcl);
+    dcellfree(simu->gradnf);
     dcellfree(simu->gradacc);
     dcellfree(simu->gradlastcl);
     dcellfree(simu->gradlastol);

@@ -43,6 +43,7 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define PCCELL(M,P)  cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
 #define cfree(A)     ({cfree_do(A,0);A=NULL;})
 #define ccellfree(A) ({ccellfree_do(A);A=NULL;})
+#define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);})
 #define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
 #define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 #define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)

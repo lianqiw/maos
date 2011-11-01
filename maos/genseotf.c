@@ -32,11 +32,6 @@
 #include "maos.h"
 #include "genseotf.h"
 #define DEBUG_POWFSINTS 0
-#ifndef ROT_OTF
-#define ROT_OTF 0
-#endif
-#define SAVE_OTF 0
-
 /**
    Master routine that generates short exposure OTF by calling genotf() in the
    library with p/t/t removal set.
@@ -182,14 +177,9 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
    sodium layer, and the detector transfer function. */
 void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(parms->powfs[ipowfs].radrot){
-#if ROT_OTF == 1
-    info2("Rotating OTF for Polar CCD\n");/*Used mainly for off-axis launch */
-#elif ROT_OTF==0
-    info2("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
-#else
-    error("Invalid ROT_OTF\n");
-#endif
+	info2("Rotating PSF for Polar CCD\n");/*Used mainly for on-axis launch */
     }
+    INTSTAT_T *intstat=powfs[ipowfs].intstat;
     const int ncompx=powfs[ipowfs].ncompx;
     const int ncompy=powfs[ipowfs].ncompy;
     const int nwvl=parms->powfs[ipowfs].nwvl;
@@ -206,12 +196,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
        2) different signal level or wvlwts
        3) powfs[ipowfs].bkgrnd contains rayleigh scatter bkgrnd for each wfs in this powfs.
     */
-    int ni0;
-    if(nllt<=1){ 
-	ni0=powfs[ipowfs].intstat->nsepsf;
-    }else{
-	ni0=nllt;
-    }
+    int nsepsf=intstat->nsepsf;
+    int ni0=nllt<=1?nsepsf:nllt;
     if(ni0==1 && parms->powfs[ipowfs].nwfs>1){/*check wvlwts. */
 	int iwfs0=parms->powfs[ipowfs].wfs[0];
 	double siglev0=parms->wfs[iwfs0].siglev;
@@ -252,13 +238,19 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	error("Number of i0 must be either 1 or %d, but is %d\n",
 	      parms->powfs[ipowfs].nwfs,ni0);
     }
-    powfs[ipowfs].intstat->i0=dcellnew(nsa,ni0);
-    powfs[ipowfs].intstat->gx=dcellnew(nsa,ni0);
-    powfs[ipowfs].intstat->gy=dcellnew(nsa,ni0);
+    intstat->i0=dcellnew(nsa,ni0);
+    intstat->gx=dcellnew(nsa,ni0);
+    intstat->gy=dcellnew(nsa,ni0);
+    if(parms->powfs[ipowfs].phytypesim==3){
+	intstat->fotf=calloc(nsepsf, sizeof(ccell*));
+	for(int i=0; i<nsepsf; i++){
+	    intstat->fotf[i]=ccellnew(nsa,nwvl);
+	}
+    }
     /*subaperture rotation angle. */
-    dmat* (*i0)[nsa]=(dmat*(*)[nsa])powfs[ipowfs].intstat->i0->p;
-    dmat* (*gx)[nsa]=(dmat*(*)[nsa])powfs[ipowfs].intstat->gx->p;
-    dmat* (*gy)[nsa]=(dmat*(*)[nsa])powfs[ipowfs].intstat->gy->p;
+    dmat* (*i0)[nsa]=(dmat*(*)[nsa])intstat->i0->p;
+    dmat* (*gx)[nsa]=(dmat*(*)[nsa])intstat->gx->p;
+    dmat* (*gy)[nsa]=(dmat*(*)[nsa])intstat->gy->p;
     /*
       Notice, the generation of shifted i0s are not accurate
       because the PSF is not enough to cover the size.
@@ -279,16 +271,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(i0scale){
 	warning("i0 is scaled to match sa area\n");
     }
-#if SAVE_OTF==1
-    ccell *saveotf=ccellnew(nsa,nwvl);
-    cmat *(*psaveotf)[nsa]=(void*)saveotf->p;
-    ccell *saveotfetf=ccellnew(nsa,nwvl);
-    cmat *(*psaveotfetf)[nsa]=(void*)saveotfetf->p;
-    ccell *savepsf=ccellnew(nsa,nwvl);
-    cmat *(*psavepsf)[nsa]=(void*)savepsf->p;
-#endif
-    int isepsf_multiplier
-	=powfs[ipowfs].intstat->nsepsf>1?1:0;
+    int isepsf_multiplier=nsepsf>1?1:0;
     int irot_multiplier=nllt>1?1:0;
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	int idtf_multiplier
@@ -304,11 +287,7 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	dcomplex *Uy=powfs[ipowfs].dtf[iwvl].Uy->p;
 	
 	double norm=1./(double)(ncompx*ncompy);
-	const int npsf=powfs[ipowfs].intstat->sepsf[0]->p[0]->nx;
-#if ROT_OTF == 1
-	double xscale=(double)npsf/(double)ncompx;
-	double yscale=(double)npsf/(double)ncompy;
-#endif
+	const int npsf=intstat->sepsf[0]->p[0]->nx;
 	cmat *sepsf=cnew(npsf,npsf);
 	cfft2plan(sepsf,-1);
 
@@ -351,20 +330,19 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	    double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
 		*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
 	    info2("iwvl=%d, iwfs=%d, wvlsig=%g\n",iwvl,iwfs,wvlsig);
-	    dmat *(*psepsf)[nsa]=(void*)powfs[ipowfs].intstat->sepsf[isepsf]->p;
+	    dmat *(*psepsf)[nsa]=(void*)intstat->sepsf[isepsf]->p;
 	    double pgrad[2];
 	    cmat **nominals=NULL;
 	    if(!powfs[ipowfs].dtf[iwvl].fused){/*may be null if fused to etf */
-		nominals=powfs[ipowfs].dtf[iwvl].nominal->p+nsa*idtf;
+		nominals=powfs[ipowfs].dtf[iwvl].nominal->p+powfs[ipowfs].dtf[iwvl].nominal->nx*idtf;
 	    }
-	    dsp **sis=powfs[ipowfs].dtf[iwvl].si->p+nsa*idtf;
+	    dsp **sis=powfs[ipowfs].dtf[iwvl].si->p+powfs[ipowfs].dtf[iwvl].si->nx*idtf;
 	    const double *angles=NULL;
 	    if(nllt)
 		angles=powfs[ipowfs].srot->p[irot]->p;
 	    for(int isa=0; isa<nsa; isa++){
 		int isadtf=isa*idtfisa_multiplier;
-		if(nominals)
-		    nominal=nominals[isadtf];
+		if(nominals) nominal=nominals[isadtf];
 		si=sis[isadtf];
 		if(nllt && parms->powfs[ipowfs].radpix){
 		    /*Polar CCD. */
@@ -383,26 +361,22 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		}
 		ccpd(&sepsf,psepsf[iwvl][isa]);
 		cembed(seotfk,sepsf,-angle,C_ABS);/*ABS to avoid small negative */
-#if SAVE_OTF == 1
-		ccp(&psavepsf[iwvl][isa],seotfk);
-#endif
+
 		cfftshift(seotfk);/*PSF, peak in corner; */
 		cfft2(seotfk,-1);/*turn to OTF peak in corner */
 		if(parms->powfs[ipowfs].mtchstc && fabs(pgrad[0])>EPS && fabs(pgrad[1])>EPS){
 		    ctilt(seotfk,-pgrad[0],-pgrad[1],0);
 		}
-#if SAVE_OTF ==1
-		ccp(&psaveotf[iwvl][isa],seotfk);
-#endif
+
 		if(nllt){/*elongation. */
 		    (*pccwm)(seotfk,petf[ietf][isa]);
 		}
 		/*seotfk has peak in corner */
-#if SAVE_OTF ==1
-		ccp(&psaveotfetf[iwvl][isa],seotfk);
-#endif
 		ccwm2(seotfk,nominal,norm);/*NULL is handled correctly. */
 		ccp(&seotfj,seotfk);/*backup */
+		if(intstat->fotf){
+		    ccp(&intstat->fotf[isepsf]->p[iwvl*nsa+isa], seotfk);
+		}
 		cfft2(seotfk,1);/*peak in center. */
 		/*no need fftshift becaose nominal is pre-treated */
 		spmulcreal(i0[ii0][isa]->p,si,seotfk->p, wvlsig);
@@ -431,8 +405,8 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    dscale(gx[ii0][isa],scale);
 		    dscale(gy[ii0][isa],scale);
 		}
-	    }/*for illt */
-	}/*isa */
+	    }/*for isa */
+	}/*for ii0*/
 	cfree(sepsf);
 	cfree(seotfj);
 	cfree(seotfk);
