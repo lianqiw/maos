@@ -184,8 +184,8 @@ typedef struct POWFS_CFG_T{
 		    */
     int usephy;     /**<whether physical optics is used at all during
 		       simulation.(derived parameter)*/
-    double mtchcrx; /**<if >0 use constrained mtch for x for this amount of pixels*/
-    double mtchcry; /**<if >0 use constrained mtch for y for this amount of pixels*/
+    double mtchcr;  /**<if >0 use constrained mtch for this amount of pixels*/
+    double mtchcra; /**<if >0 use constrained mtch for azimuthal for this amount of pixels*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
     int mtchstc;    /**<shift peak in the time averaged short exposure PSF to center using fft.*/
     int mtchscl;    /**<scale subaperture image to have the same intensity as i0. Keep false.*/

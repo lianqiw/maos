@@ -259,8 +259,8 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,gtype_recon);
     READ_POWFS(int,phytype);
     READ_POWFS(int,phytypesim);
-    READ_POWFS(dbl,mtchcrx);
-    READ_POWFS(dbl,mtchcry);
+    READ_POWFS(dbl,mtchcr);
+    READ_POWFS(dbl,mtchcra);
     READ_POWFS(int,mtchcpl);
     READ_POWFS(int,mtchstc);
     READ_POWFS(int,mtchscl);
@@ -326,7 +326,9 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
 		*parms->powfs[ipowfs].dtrat;
 	}
-
+	if(parms->powfs[ipowfs].mtchcra==-1){
+	    parms->powfs[ipowfs].mtchcra=parms->powfs[ipowfs].mtchcr;
+	}
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);

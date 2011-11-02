@@ -106,7 +106,7 @@ static double mapfun(double *x, mapdata_t *info){
 	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
 	cfft2(info->otf->p[iwvl], 1);
-	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig*x[2]);
+	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig/**x[2]*/);
     }
  
     double sigma=0;
@@ -148,9 +148,9 @@ static int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch
     }
     return ncall;
 }
-static void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
-		       const POWFS_T *powfs, int iwfs, int isa, int noisy,
-		       double bkgrnd, double rne){
+void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
+		const POWFS_T *powfs, int iwfs, int isa, int noisy,
+		double bkgrnd, double rne){
     int ipowfs=parms->wfs[iwfs].powfs;
     int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
@@ -158,8 +158,25 @@ static void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
     double scale[3]={5e-8, 5e-8, 0.1};
     //info2("%.4e %.4e %.2f", g[0], g[1], g[2]);
-    int ncall=dminsearch(g, scale, 3, 1e-9, (minsearch_fun)mapfun, &data);
+    int ncall=dminsearch(g, scale, 2/*3*/, 1e-9, (minsearch_fun)mapfun, &data);
     ccellfree(data.otf);
+    {
+	double pixthetax=parms->powfs[ipowfs].radpixtheta;
+	double pixthetay=parms->powfs[ipowfs].pixtheta;
+	double gx=g[0]/pixthetax*2./ints->nx;
+	double gy=g[1]/pixthetay*2./ints->ny;
+	if(fabs(gx)>0.55||fabs(gy)>0.55){
+	    static int count=-1;
+	    count++;
+	    dwrite(ints, "ints_wfs%d_isa%d_count%d", iwfs, isa, count);
+	    warning("gradient is wrapped: gx=%g, gy=%g\n", gx, gy);
+	    gx=gx-floor(gx+0.5);
+	    gy=gy-floor(gy+0.5);
+	    warning("new gradient is gx=%g, gy=%g\n", gx, gy);
+	    g[0]=pixthetax*ints->nx/2*gx;
+	    g[1]=pixthetay*ints->ny/2*gy;
+	}
+    }
     //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
 
 }
@@ -487,9 +504,6 @@ void wfsgrad_iwfs(thread_t *info){
 	    dmat *gradnf=NULL;
 	    if(save_grad || parms->powfs[ipowfs].phytypesim==3){
 		/*keep noise free gradients. */
-		if(!simu->gradnf->p[iwfs]){
-		    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
-		}
 		gradnf=simu->gradnf->p[iwfs];
 	    }
 	    if(save_ints){

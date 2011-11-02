@@ -122,16 +122,16 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     double shiftx=0, shifty=0;
     /*always use saved i0. cyclic shift is not good */
     /*because of the wrapped ring. */
-    if(fabs(parms->powfs[ipowfs].mtchcrx)>1.e-10){
-	shiftx=parms->powfs[ipowfs].mtchcrx;
+    if(fabs(parms->powfs[ipowfs].mtchcr)>1.e-10){
+	shiftx=parms->powfs[ipowfs].mtchcr;
 	mtchcrx=nmod;
 	nmod+=2;
 	if(fabs(shiftx-1)>1.e-10){
 	    error("Only constraint of 1 pixel is implemented\n");
 	}
     }
-    if(fabs(parms->powfs[ipowfs].mtchcry)>1.e-10){
-	shifty=parms->powfs[ipowfs].mtchcry;
+    if(fabs(parms->powfs[ipowfs].mtchcra)>1.e-10){
+	shifty=parms->powfs[ipowfs].mtchcra;
 	mtchcry=nmod;
 	nmod+=2;
 	if(fabs(shifty-1)>1.e-10){

@@ -238,8 +238,6 @@ static void inline
 draw_point(cairo_t *cr, double ix, double iy, long style, double size){
     double size1=size+1;
     /*It is important to round ix, iy to have right symbols. */
-    ix=(ix);
-    iy=(iy); 
     switch(style){
     case 0:/*nothing. just connect lines */
 	break;

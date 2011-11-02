@@ -19,6 +19,7 @@ extern "C"
 {
 #include <cuda.h>
 #include "gpu.h"
+#include "../maos/sim.h"
 }
 #include "utils.h"
 #include "accphi.h"
@@ -326,6 +327,28 @@ void gpu_wfsgrad(thread_t *info){
 		  error in g. is this due to lack of ECC?*/
 		mtche_do<<<nsa, 32,0,stream>>>(gradnf->p, cuwfs[iwfs].mtche, ints->p[0]->p, pixpsa, nsa);
 		break;
+	    case 2:
+		TO_IMPLEMENT;
+		break;
+	    case 3:{/*The following need to port to GPU*/
+		if(!noisy){
+		    dcell *cints=NULL;
+		    dmat *gradnf=simu->gradnf->p[iwfs];
+		    gpu_curcell2d(&cints, ints, stream);
+		    CUDA_SYNC_STREAM;
+		    double gnf[3];
+		    for(int isa=0; isa<nsa; isa++){
+			gnf[0]=gradnf->p[isa];
+			gnf[1]=gradnf->p[isa+nsa];
+			gnf[2]=1;
+			maxapriori(gnf, cints->p[isa], parms, powfs, iwfs, isa, 1, 0, 1);
+			gradout->p[isa]=gradnf->p[isa]=gnf[0];
+			gradout->p[isa+nsa]=gradnf->p[isa+nsa]=gnf[1];
+		    }
+		    dcellfree(cints);
+		}
+	    }
+		break;
 	    default:
 		TO_IMPLEMENT;
 	    }
@@ -347,21 +370,45 @@ void gpu_wfsgrad(thread_t *info){
 		case 1:
 		    mtche_do<<<nsa, 16, 0, stream>>>(gradny->p, cuwfs[iwfs].mtche, ints->p[0]->p, pixpsa, nsa);
 		    break;
+		case 2:
+		    TO_IMPLEMENT;
+		    break;
+		case 3:{
+		    dcell *cints=NULL;
+		    dmat *gradcl=simu->gradcl->p[iwfs];
+		    gpu_curcell2d(&cints, ints, stream);
+		    CUDA_SYNC_STREAM;
+		    double gny[3];
+		    for(int isa=0; isa<nsa; isa++){
+			gny[0]=gradcl->p[isa];
+			gny[1]=gradcl->p[isa+nsa];
+			gny[2]=1;
+			maxapriori(gny, cints->p[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
+			gradout->p[isa]=gny[0];
+			gradout->p[isa+nsa]=gny[1];
+		    }
+		    dcellfree(cints);
+		}
+		    break;
 		default:
 		    TO_IMPLEMENT;
 		}
-		collect_noise_do<<<DIM(nsa,256), 0, stream>>>
-		    (cuwfs[iwfs].neareal->p, gradnf->p, gradny->p, nsa);
+		if(parms->powfs[ipowfs].phytypesim!=3){
+		    collect_noise_do<<<DIM(nsa,256), 0, stream>>>
+			(cuwfs[iwfs].neareal->p, gradnf->p, gradny->p, nsa);
+		    if(save_grad){
+			cellarr_cur(simu->save->gradnf[iwfs], gradnf, stream);
+		    }
+		}
 		if(save_ints){
 		    cellarr_curcell(simu->save->intsny[iwfs], ints, stream);
-		}
-		if(save_grad){
-		    cellarr_cur(simu->save->gradnf[iwfs], gradnf, stream);
 		}
 		ctoc("mtche");
 	    }
 	    /*send grad to CPU. */
-	    gpu_dev2dbl(&gradout->p, gradny?gradny->p:gradnf->p, nsa*2, stream);
+	    if(parms->powfs[ipowfs].phytypesim!=3){
+		gpu_dev2dbl(&gradout->p, gradny?gradny->p:gradnf->p, nsa*2, stream);
+	    }
 	    ctoc("dev2dbl");
 	    curcellzero(ints, stream);
 	    CUDA_SYNC_STREAM;/*necessary. */

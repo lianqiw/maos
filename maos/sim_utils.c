@@ -557,6 +557,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
+	if(parms->powfs[ipowfs].phytypesim==3 || parms->save.grad[iwfs]){
+	    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
+	}
 	if(parms->powfs[ipowfs].noisy){
 	    simu->sanea_sim[iwfs]=dcellnew(nsa, 1);
 	    for(int isa=0; isa<nsa; isa++){
