@@ -56,6 +56,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	
 	/* Setup information that are same for wfs in each powfs*/
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(parms->powfs[ipowfs].nwfs==0) continue;
 	    pts_t *pts=powfs[ipowfs].pts;
 	    loc_t *loc=powfs[ipowfs].loc;
 	    gpu_pts2cuwloc(&cupowfs[ipowfs], pts, loc);
@@ -317,7 +318,7 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	    cuwfs[iwfs].ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
 	    if(parms->powfs[ipowfs].noisy){
 		curfree(cuwfs[iwfs].neareal);
-		cuwfs[iwfs].neareal=curnew(nsa*4,1);
+		cuwfs[iwfs].neareal=curnew(4,nsa);
 	    }
 	}
 	if(parms->powfs[ipowfs].pistatout){

@@ -241,13 +241,13 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     intstat->i0=dcellnew(nsa,ni0);
     intstat->gx=dcellnew(nsa,ni0);
     intstat->gy=dcellnew(nsa,ni0);
-    if(parms->powfs[ipowfs].phytypesim==3){
+    if(parms->powfs[ipowfs].phytypesim==3 || (parms->dbg.wfslinearity!=-1 && parms->wfs[parms->dbg.wfslinearity].powfs==ipowfs)){
 	intstat->fotf=calloc(nsepsf, sizeof(ccell*));
 	for(int i=0; i<nsepsf; i++){
 	    intstat->fotf[i]=ccellnew(nsa,nwvl);
 	}
     }
-    /*subaperture rotation angle. */
+    /* subaperture rotation angle. */
     dmat* (*i0)[nsa]=(dmat*(*)[nsa])intstat->i0->p;
     dmat* (*gx)[nsa]=(dmat*(*)[nsa])intstat->gx->p;
     dmat* (*gy)[nsa]=(dmat*(*)[nsa])intstat->gy->p;

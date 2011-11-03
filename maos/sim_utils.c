@@ -541,9 +541,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
   
     simu->wfspsfout=calloc(parms->nwfs,sizeof(dcell*));
     save->wfspsfout=calloc(parms->nwfs,sizeof(cellarr*));
-    save->ztiltout=calloc(parms->nwfs,sizeof(cellarr*));
+    save->ztiltout =calloc(parms->nwfs,sizeof(cellarr*));
     simu->pistatout=calloc(parms->nwfs,sizeof(dcell*));
-    simu->sanea_sim=calloc(parms->nwfs, sizeof(dcell*));
+    simu->sanea_sim=dcellnew(parms->nwfs, 1);
     simu->gradcl=dcellnew(parms->nwfs,1);
     simu->gradnf=dcellnew(parms->nwfs,1);
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
@@ -561,10 +561,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
 	}
 	if(parms->powfs[ipowfs].noisy){
-	    simu->sanea_sim[iwfs]=dcellnew(nsa, 1);
-	    for(int isa=0; isa<nsa; isa++){
-		simu->sanea_sim[iwfs]->p[isa]=dnew(2,2);
-	    }
+	    simu->sanea_sim->p[iwfs]=dnew(4, nsa);
 	}
 	if(parms->powfs[ipowfs].usephy){
 	    simu->ints[iwfs]=dcellnew(nsa,1);
@@ -1443,7 +1440,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->olmp);
     dcellfree(simu->clep);
     dcellfree(simu->clmp);
-    dcellfreearr(simu->sanea_sim, parms->nwfs);
+    dcellfree(simu->sanea_sim);
     dcellfree(simu->upterrs);
     dcellfree(simu->uptcmds);
     if(parms->recon.split){

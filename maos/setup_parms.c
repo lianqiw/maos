@@ -803,6 +803,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.dxonedge);
     READ_INT(dbg.cmpgpu);
     READ_INT(dbg.pupmask);
+    READ_INT(dbg.wfslinearity);
 }
 /**
    Read in GPU options

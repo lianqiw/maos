@@ -173,8 +173,12 @@ void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStre
     }else{
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
-    for(int i=0; i<B->nx*B->ny; i++){
-	curadd(&((*A)->p[i]), beta, B->p[i], alpha,stream);
+    if((*A)->m && B->m){
+	curadd(&(*A)->m, beta, B->m, alpha, stream);
+    }else{
+	for(int i=0; i<B->nx*B->ny; i++){
+	    curadd(&((*A)->p[i]), beta, B->p[i], alpha,stream);
+	}
     }
 }
 
@@ -264,8 +268,12 @@ void curcelladd3(curcell **A, float* beta, const curcell *B, cudaStream_t stream
     }else{
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
-    for(int i=0; i<B->nx*B->ny; i++){
-	curadd3(&((*A)->p[i]), beta, B->p[i],  stream);
+    if((*A)->m && B->m){
+	curadd3(&(*A)->m, beta, B->m, stream);
+    }else{
+	for(int i=0; i<B->nx*B->ny; i++){
+	    curadd3(&((*A)->p[i]), beta, B->p[i],  stream);
+	}
     }
 }
 __global__ void inn_do(float *restrict res, const float *a, const float *b, const int n){
@@ -367,7 +375,11 @@ float curmax(const curmat *a, cudaStream_t stream){
 */
 void curcellscale(curcell *A, float alpha, cudaStream_t stream){
     if(!A) return;
-    for(int i=0; i<A->nx*A->ny; i++){
-	curscale(A->p[i], alpha, stream);
+    if(A->m){
+	curscale(A->m, alpha, stream);
+    }else{
+	for(int i=0; i<A->nx*A->ny; i++){
+	    curscale(A->p[i], alpha, stream);
+	}
     }
 }

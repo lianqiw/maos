@@ -1743,12 +1743,6 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 	   ||parms->powfs[ipowfs].psfout
 	   ||parms->powfs[ipowfs].pistatout
 	   ||parms->powfs[ipowfs].neaphy){
-	    /*
-	      if(parms->powfs[ipowfs].pistatout 
-	      &&parms->powfs[ipowfs].usephy){
-	      error("Must use geometric grad for pistatout\n");
-	      }
-	    */
 	    /*We have physical optics. setup necessary struct */
 	    setup_powfs_prep_phy(powfs,parms,ipowfs);
 	    setup_powfs_dtf(powfs,parms,ipowfs);

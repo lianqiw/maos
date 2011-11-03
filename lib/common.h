@@ -231,6 +231,10 @@ void print_backtrace(int sig);
 	    fprintf(stderr, "[%s]%-20s",myasctime(),fline);	\
 	    fprintf(stderr, A);})
 #endif
+#define PAUSE					\
+    info2("Press Enter to continue:");		\
+    while(getchar()!=0x0a);			\
+    info2("continue...\n");
 
 #define register_signal_handler(func)	\
     signal(SIGBUS, func);		\

@@ -74,7 +74,9 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 		inhi=i;
 	    }
 	}
-	rtol=2.0*fabs(y[ihi]-y[ilo])/(fabs(y[ihi])+fabs(y[ilo]));
+	/* We use ftol as absolute instead of relative tolerance. relative tol does not work near zero.*/
+	/*rtol=2.0*fabs(y[ihi]-y[ilo])/(fabs(y[ihi])+fabs(y[ilo]));*/
+	rtol=2.0*fabs(y[ihi]-y[ilo]);
 	if (rtol < ftol) {//solution found at ilo.
 	    SWAP(y[0],y[ilo]);
 	    for (i=0;i<ndim;i++) {
@@ -82,7 +84,14 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 	    }
 	    break;
 	}
-	if (*nfunk >= NMAX) error("NMAX exceeded");
+	if (*nfunk >= NMAX) {
+	    warning("NMAX exceeded");
+	    SWAP(y[0],y[ilo]);
+	    for (i=0;i<ndim;i++) {
+		SWAP(p[0][i],p[ilo][i]);
+	    }
+	    break;
+	}
 	*nfunk += 2;
 	ytry=amotry(p,y,psum,ndim,funk,data,ihi,-1.0);
 	if (ytry <= y[ilo])

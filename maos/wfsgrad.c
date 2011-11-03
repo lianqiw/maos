@@ -57,6 +57,130 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	}
     }
 }
+
+
+void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int nwvl=parms->powfs[ipowfs].nwvl;
+    const int nsa=powfs[ipowfs].pts->nsa;
+    INTSTAT_T *intstat=powfs[ipowfs].intstat;
+    ccell *fotf=intstat->fotf[intstat->nsepsf>1?wfsind:0];
+    ccell *otf=ccellnew(nwvl,1);
+    for(int iwvl=0; iwvl<nwvl; iwvl++){
+	otf->p[iwvl]=cnew(fotf->p[0]->nx, fotf->p[0]->ny);
+	cfft2plan(otf->p[iwvl], 1);
+	cfft2plan(otf->p[iwvl], -1);
+    }
+    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    double pixthetay=parms->powfs[ipowfs].pixtheta;
+    dmat **mtche=NULL;
+    if(parms->powfs[ipowfs].phytype==1){
+	if(powfs[ipowfs].intstat->mtche->ny==1){
+	    mtche=powfs[ipowfs].intstat->mtche->p;
+	}else{
+	    mtche=powfs[ipowfs].intstat->mtche->p+nsa*wfsind;
+	}
+    }
+    double *srot=NULL;
+    if(parms->powfs[ipowfs].radpix){
+	srot=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p;
+    }
+
+    const int nsep=20;
+    const double dg=0.1;
+    double gx=0, gy=0, dgx, dgy;
+    dmat *ints=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
+    double theta=0, cx=1, sx=0;
+    dmat *gnf=dnew(nsep,nsa*2);
+    PDMAT(gnf,pgnf);
+    char *dirs[]={"x", "y", "diag"};
+    char *types[]={"","MF", "CoG", "MAP"};
+    if(parms->powfs[ipowfs].mtchcr){
+	types[1]="MFC";
+    }
+    int radrot=parms->powfs[ipowfs].radrot;
+    int type=parms->powfs[ipowfs].phytypesim;
+    for(int dir=0; dir<3; dir++){
+	dzero(gnf);
+	for(int isa=0; isa<nsa; isa++){
+	    switch(dir){
+	    case 0:
+		dgx=dg*pixthetax;
+		dgy=0;
+		break;
+	    case 1:
+		dgx=0;
+		dgy=dg*pixthetay;
+		break;
+	    case 2:
+		dgx=sqrt(0.5)*dg*pixthetax;
+		dgy=sqrt(0.5)*dg*pixthetay;
+		break;
+	    }
+	    if(srot){
+		theta=srot[isa];
+		cx=cos(theta);
+		sx=sin(theta);
+	    }
+	    if(srot && !radrot){/*rot the vector from r/a to x/y*/
+		double tmp=dgx*cx-dgy*sx;
+		dgy=dgx*sx+dgy*cx;
+		dgx=tmp;
+	    }
+	    for(int isep=0; isep<nsep; isep++){
+		gx=dgx*isep;
+		gy=dgy*isep;
+		dzero(ints);
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    double wvlsig=parms->wfs[iwfs].wvlwts[iwvl]
+			*parms->wfs[iwfs].siglev*parms->powfs[ipowfs].dtrat;
+		    int idtf=powfs[ipowfs].dtf[iwvl].si->ny>1?wfsind:0;
+		    int idtfsa=powfs[ipowfs].dtf[iwvl].si->nx>1?isa:0;
+		    PDSPCELL(powfs[ipowfs].dtf[iwvl].si, psi);
+		    dsp *sis=psi[idtf][idtfsa];
+		    double wvl=parms->powfs[ipowfs].wvl[iwvl];
+		    double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
+		    ctilt2(otf->p[iwvl], fotf->p[isa+nsa*iwvl], gx*dtheta1, gy*dtheta1, 0);
+		    cfft2(otf->p[iwvl], 1);
+		    spmulcreal(ints->p, sis, otf->p[iwvl]->p, wvlsig);
+		}
+		//ddraw("ints", ints, NULL, NULL, "ints", "x", "y", "ints"); PAUSE;
+		double g[3]={gx+pixthetax*0.1,gy+pixthetay*0.1,1};
+		switch(type){
+		case 1:{/*(constraint) Matched filter*/
+		    dmulvec(g, mtche[isa], ints->p,1.);
+		}
+		    break;
+		case 2:{/*tCoG*/
+		    double pmax=dmax(ints);
+		    dcog(g,ints,0.,0.,0.1*pmax,0.1*pmax);
+		    g[0]*=pixthetax;
+		    g[1]*=pixthetay;
+		}
+		    break;
+		case 3:{/*MAP*/
+		    maxapriori(g, ints, parms, powfs, iwfs, isa, 1, 0, 1);
+		}
+		    break;
+		default:
+		    error("Invalid");
+		}
+		if(srot){/*rotate from xy to r/a*/
+		    double tmp=g[0]*cx+g[1]*sx;
+		    g[1]=-g[0]*sx+g[1]*cx;
+		    g[0]=tmp;
+		}
+		pgnf[isa][isep]=g[0]/pixthetax;
+		pgnf[isa+nsa][isep]=g[1]/pixthetay;
+	    }
+	}/*for isa*/
+	dwrite(gnf, "wfslinearity_wfs%d_%s_%s", iwfs, types[type],dirs[dir]);
+    }
+    dfree(ints);
+    ccellfree(otf);
+}
+
 typedef double (*minsearch_fun)(double *x, void *info);
 typedef struct {
     const PARMS_T *parms;
@@ -106,7 +230,7 @@ static double mapfun(double *x, mapdata_t *info){
 	double dtheta1=powfs[ipowfs].pts->nx*powfs[ipowfs].pts->dx*parms->powfs[ipowfs].embfac/wvl;
 	ctilt2(info->otf->p[iwvl], info->fotf->p[isa+nsa*iwvl], x[0]*dtheta1, x[1]*dtheta1, 0);
 	cfft2(info->otf->p[iwvl], 1);
-	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig/**x[2]*/);
+	spmulcreal(ints2->p, sis, info->otf->p[iwvl]->p, wvlsig*x[2]);
     }
  
     double sigma=0;
@@ -153,29 +277,25 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
 		double bkgrnd, double rne){
     int ipowfs=parms->wfs[iwfs].powfs;
     int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    double pixthetay=parms->powfs[ipowfs].pixtheta;
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     ccell *fotf=intstat->fotf[intstat->nsepsf>1?wfsind:0];
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
     double scale[3]={5e-8, 5e-8, 0.1};
     //info2("%.4e %.4e %.2f", g[0], g[1], g[2]);
-    int ncall=dminsearch(g, scale, 2/*3*/, 1e-9, (minsearch_fun)mapfun, &data);
+    dminsearch(g, scale, 3, MIN(pixthetax, pixthetay)*1e-5, (minsearch_fun)mapfun, &data);
     ccellfree(data.otf);
-    {
-	double pixthetax=parms->powfs[ipowfs].radpixtheta;
-	double pixthetay=parms->powfs[ipowfs].pixtheta;
-	double gx=g[0]/pixthetax*2./ints->nx;
-	double gy=g[1]/pixthetay*2./ints->ny;
-	if(fabs(gx)>0.55||fabs(gy)>0.55){
-	    static int count=-1;
-	    count++;
-	    dwrite(ints, "ints_wfs%d_isa%d_count%d", iwfs, isa, count);
-	    warning("gradient is wrapped: gx=%g, gy=%g\n", gx, gy);
-	    gx=gx-floor(gx+0.5);
-	    gy=gy-floor(gy+0.5);
-	    warning("new gradient is gx=%g, gy=%g\n", gx, gy);
-	    g[0]=pixthetax*ints->nx/2*gx;
-	    g[1]=pixthetay*ints->ny/2*gy;
-	}
+    
+    double gx=g[0]/pixthetax*2./ints->nx;
+    double gy=g[1]/pixthetay*2./ints->ny;
+    if(fabs(gx)>0.55||fabs(gy)>0.55){
+	warning("gradient is wrapped: gx=%g, gy=%g\n", gx, gy);
+	gx=gx-floor(gx+0.5);
+	gy=gy-floor(gy+0.5);
+	warning("new gradient is gx=%g, gy=%g\n", gx, gy);
+	g[0]=pixthetax*ints->nx/2*gx;
+	g[1]=pixthetay*ints->ny/2*gy;
     }
     //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
 
@@ -577,10 +697,11 @@ void wfsgrad_iwfs(thread_t *info){
 		    }
 		    double errx=gny[0]-gnf[0];
 		    double erry=gny[1]-gnf[1];
-		    simu->sanea_sim[iwfs]->p[isa]->p[0]+=errx*errx;
-		    simu->sanea_sim[iwfs]->p[isa]->p[1]+=errx*erry;
-		    simu->sanea_sim[iwfs]->p[isa]->p[2]+=errx*erry;
-		    simu->sanea_sim[iwfs]->p[isa]->p[3]+=erry*erry;
+		    double *pp=simu->sanea_sim->p[iwfs]->p+isa*4;
+		    pp[0]+=errx*errx;
+		    pp[1]+=errx*erry;
+		    pp[2]+=erry*errx;
+		    pp[3]+=erry*erry;
 		}else{
 		    gny[0]=gnf[0];
 		    gny[1]=gnf[1];
@@ -631,8 +752,8 @@ void wfsgrad_iwfs(thread_t *info){
 		    const double *neax=nea->p;
 		    const double *neay=nea->p+nsa;
 		    const double *neaxy=nea->p+nsa*2;
-		    double *ggx=(*gradout)->p;
-		    double *ggy=(*gradout)->p+nsa;
+		    double *restrict ggx=(*gradout)->p;
+		    double *restrict ggy=(*gradout)->p+nsa;
 		    for(int isa=0; isa<nsa; isa++){
 			/*Preserve the random sequence. */
 			double n1=randn(&simu->wfs_rand[iwfs]);
@@ -641,10 +762,11 @@ void wfsgrad_iwfs(thread_t *info){
 			double erry=neay[isa]*n2+neaxy[isa]*n1;/*cross term. */
 			ggx[isa]+=errx;
 			ggy[isa]+=erry;
-			simu->sanea_sim[iwfs]->p[isa]->p[0]+=errx*errx;
-			simu->sanea_sim[iwfs]->p[isa]->p[1]+=errx*erry;
-			simu->sanea_sim[iwfs]->p[isa]->p[2]+=errx*erry;
-			simu->sanea_sim[iwfs]->p[isa]->p[3]+=erry*erry;
+			double *restrict pp=simu->sanea_sim->p[iwfs]->p+isa*4;
+			pp[0]+=errx*errx;
+			pp[1]+=errx*erry;
+			pp[2]+=erry*errx;
+			pp[3]+=erry*erry;
 		    }
 		}else if(isim==0){
 		    info2("Will not add noise at acquisition proccess for physical optics\n");
@@ -688,17 +810,17 @@ void wfsgrad_iwfs(thread_t *info){
 }
 /**
    Save telemetry. TODO: copy from GPU to CPU.
- */
+*/
 static void wfsgrad_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     const int seed=simu->seed;
     if(isim+1==parms->sim.end){
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
-	    if(!simu->sanea_sim[iwfs]) continue;
+	    if(!simu->sanea_sim->p[iwfs]) continue;
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	    const int dtrat=parms->powfs[ipowfs].dtrat;
-	    dcell *sanea=NULL;
+	    dmat *sanea=NULL;
 	    double scale;
 	    if(parms->powfs[ipowfs].usephy){
 		scale=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
@@ -707,9 +829,9 @@ static void wfsgrad_save(SIM_T *simu){
 	    }
 	    if(scale<=0) continue;
 	    scale=1./floor(scale);/*only multiple of dtrat is recorded. */
-	    dcelladd(&sanea, 0, simu->sanea_sim[iwfs], scale);
-	    dcellwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
-	    dcellfree(sanea);
+	    dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
+	    dwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
+	    dfree(sanea);
 
 	    if(simu->pistatout && simu->pistatout[iwfs]){
 		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;

@@ -526,6 +526,7 @@ typedef struct DBG_CFG_T{
     int dxonedge;    /**<have points on the edge of subapertures.*/
     int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
+    int wfslinearity;/**<Study the linearity of this wfs*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

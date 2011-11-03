@@ -454,7 +454,7 @@ typedef struct SIM_T{
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
     dcell *gradnf;     /**<cl nf grad output*/
-    dcell **sanea_sim;  /**<accumulate effective sanea during simulation.*/
+    dcell *sanea_sim;  /**<accumulate effective sanea during simulation.*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
