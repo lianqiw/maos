@@ -272,6 +272,9 @@ static int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch
     }
     return ncall;
 }
+/**
+   Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun if parms->powfs.radrot=0;
+*/
 void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
 		const POWFS_T *powfs, int iwfs, int isa, int noisy,
 		double bkgrnd, double rne){
@@ -284,9 +287,9 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
     double scale[3]={5e-8, 5e-8, 0.1};
     //info2("%.4e %.4e %.2f", g[0], g[1], g[2]);
-    dminsearch(g, scale, 3, MIN(pixthetax, pixthetay)*1e-5, (minsearch_fun)mapfun, &data);
+    dminsearch(g, scale, 3, MIN(pixthetax, pixthetay)*1e-3, (minsearch_fun)mapfun, &data);
     ccellfree(data.otf);
-    
+  
     double gx=g[0]/pixthetax*2./ints->nx;
     double gy=g[1]/pixthetay*2./ints->ny;
     if(fabs(gx)>0.55||fabs(gy)>0.55){
@@ -298,7 +301,14 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
 	g[1]=pixthetay*ints->ny/2*gy;
     }
     //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
-
+    if(parms->powfs[ipowfs].radrot){
+	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
+	double cx=cos(theta);
+	double sx=sin(theta);
+	double tmp=g[0]*cx-g[1]*sx;
+	g[1]=g[0]*sx+g[1]*cx;
+	g[0]=tmp;
+    }
 }
 /**
    computes close loop and pseudo open loop gradidents for both gometric and

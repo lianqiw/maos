@@ -601,6 +601,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	/*computed from below ix, iy formula by setting ix, iy to 0 and widthim or heightim */
 	int icumu=(int)drawdata->icumu;
 	for(int ipts=0; ipts<drawdata->npts; ipts++){
+	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
 	    if(drawdata->nstyle>1){
 		PARSE_STYLE(drawdata->style[ipts]);
 	    }else if(drawdata->nstyle==0){

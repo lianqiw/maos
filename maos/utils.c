@@ -381,7 +381,7 @@ void maos_signal_handler(int sig){
 	case SIGQUIT: /*Ctrl-'\' */
 	    info="Killed";
 	case SIGUSR1:/*user defined */
-	    info="User exited";
+	    info="Quit";
 	    break;
 	}
 	warning2("Signal %d: %s\n", sig, info);
