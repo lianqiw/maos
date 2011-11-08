@@ -807,7 +807,6 @@ setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	 */
 	if(parms->powfs[ipowfs].ncpa_method==1){
 	    info2("Calculating gradient offset due to NCPA\n");
-	    dcellfree(powfs[ipowfs].ncpa_grad);
 	    powfs[ipowfs].ncpa_grad=dcellnew(nwfs,1);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		double *realamp=powfs[ipowfs].realamp[iwfs];
@@ -1695,9 +1694,7 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     }
     /*Generating Matched filter */
     genmtch(parms,powfs,ipowfs);
-    dcellfree(intstat->i0);
-    dcellfree(intstat->gx);
-    dcellfree(intstat->gy);
+ 
     if(parms->powfs[ipowfs].neaphy){
 	powfs[ipowfs].neasim=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -1726,6 +1723,34 @@ setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     remove_file_older(dirotf, 30*24*3600);
     free(dirotf);
 }
+
+static void 
+setup_powfs_cog(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
+    if(parms->powfs[ipowfs].phytypesim!=2) return;
+    const int nwfs=parms->powfs[ipowfs].nwfs;
+    const double pixthetax=parms->powfs[ipowfs].radpixtheta;
+    const double pixthetay=parms->powfs[ipowfs].pixtheta;
+    powfs[ipowfs].gradphyoff=dcellnew(nwfs, 1);
+    for(int iwfs=0; iwfs<nwfs; iwfs++){
+	if(iwfs==0 || powfs[ipowfs].intstat->i0->ny>1){
+	    int nsa=powfs[ipowfs].pts->nsa;
+	    powfs[ipowfs].gradphyoff->p[iwfs]=dnew(nsa*2,1);
+	    double *restrict gx=powfs[ipowfs].gradphyoff->p[iwfs]->p;
+	    double *restrict gy=gx+nsa;
+	    double g[2]={0,0};
+	    for(int isa=0; isa<nsa; isa++){
+		dmat *ints=powfs[ipowfs].intstat->i0->p[isa+iwfs*nsa];
+		double maxi0=dmax(ints);
+		dcog(g, ints, 0, 0, parms->powfs[ipowfs].cogthres*maxi0, parms->powfs[ipowfs].cogoff*maxi0);
+		gx[isa]=g[0]*pixthetax;
+		gy[isa]=g[1]*pixthetay;
+	    }
+	}else{
+	    powfs[ipowfs].gradphyoff->p[iwfs]=dref(powfs[ipowfs].gradphyoff->p[0]);
+	}
+    }
+}
+
 /**
    Setup the powfs struct based on parms and aper. Everything about wfs are
    setup here.  \callgraph */
@@ -1765,6 +1790,12 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 		warning("Please fill in this part. Use matched filter to estimate noise for the moment.\n");
 		setup_powfs_mtch(powfs,parms,ipowfs);
 	    }
+	    if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].phytypesim==2){
+		setup_powfs_cog(powfs,parms,ipowfs);
+	    }
+	    dcellfree(powfs[ipowfs].intstat->i0);
+	    dcellfree(powfs[ipowfs].intstat->gx);
+	    dcellfree(powfs[ipowfs].intstat->gy);
 	}
     }/*ipowfs */
     toc("setup_powfs");

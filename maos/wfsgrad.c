@@ -154,7 +154,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		    break;
 		case 2:{/*tCoG*/
 		    double pmax=dmax(ints);
-		    dcog(g,ints,0.,0.,0.1*pmax,0.1*pmax);
+		    dcog(g,ints,0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 		    g[0]*=pixthetax;
 		    g[1]*=pixthetay;
 		}
@@ -285,23 +285,31 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
     ccell *fotf=intstat->fotf[intstat->nsepsf>1?wfsind:0];
     mapdata_t data={parms, powfs, ints, fotf, NULL, bkgrnd, rne, noisy, iwfs, isa};
-    double scale[3]={5e-8, 5e-8, 0.1};
-    //info2("%.4e %.4e %.2f", g[0], g[1], g[2]);
-    dminsearch(g, scale, 3, MIN(pixthetax, pixthetay)*1e-3, (minsearch_fun)mapfun, &data);
+    double scale[3]={0.1*pixthetax, 0.1*pixthetay, 0.1};
+    //info2("isa %d: %.4e %.4e %.2f", isa, g[0], g[1], g[2]);
+    int ncall=dminsearch(g, scale, 3, MIN(pixthetax, pixthetay)*1e-2, (minsearch_fun)mapfun, &data);
     ccellfree(data.otf);
-  
+    /* convert to native format along x/y or r/a to check for overflow*/
+    if(parms->powfs[ipowfs].radpix && !parms->powfs[ipowfs].radrot){
+	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
+	double cx=cos(theta);
+	double sx=sin(theta);
+	double tmp=g[0]*cx+g[1]*sx;
+	g[1]=-g[0]*sx+g[1]*cx;
+	g[0]=tmp;
+    }
     double gx=g[0]/pixthetax*2./ints->nx;
     double gy=g[1]/pixthetay*2./ints->ny;
     if(fabs(gx)>0.55||fabs(gy)>0.55){
-	warning("gradient is wrapped: gx=%g, gy=%g\n", gx, gy);
+	warning2("sa %4d iter %3d: wrapped: gx=%6.3f, gy=%6.3f ==> ", isa, ncall, gx, gy);
 	gx=gx-floor(gx+0.5);
 	gy=gy-floor(gy+0.5);
-	warning("new gradient is gx=%g, gy=%g\n", gx, gy);
+	warning2("gx=%6.3f, gy=%6.3f\n", gx, gy);
 	g[0]=pixthetax*ints->nx/2*gx;
 	g[1]=pixthetay*ints->ny/2*gy;
     }
     //info2("==> %.4e %.4e %.2f after %d iter\n", g[0], g[1], g[2], ncall);
-    if(parms->powfs[ipowfs].radrot){
+    if(parms->powfs[ipowfs].radpix){
 	double theta=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p[isa];
 	double cx=cos(theta);
 	double sx=sin(theta);
@@ -652,7 +660,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    break;
 		case 2:{/*tCoG*/
 		    double pmax=dmax(ints->p[isa]);
-		    dcog(gnf,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
+		    dcog(gnf,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 		    gnf[0]*=pixthetax;
 		    gnf[1]*=pixthetay;
 		}
@@ -688,7 +696,7 @@ void wfsgrad_iwfs(thread_t *info){
 			break;
 		    case 2:{
 			double pmax=dmax(ints->p[isa]);
-			dcog(gny,ints->p[isa],0.,0.,0.1*pmax,0.1*pmax);
+			dcog(gny,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 			gny[0]*=pixthetax;
 			gny[1]*=pixthetay;
 		    }
@@ -719,7 +727,9 @@ void wfsgrad_iwfs(thread_t *info){
 		pgradx[isa]=gny[0];
 		pgrady[isa]=gny[1];
 	    };/*isa */
-
+	    if(powfs[ipowfs].gradphyoff){
+		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+	    }
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsny[iwfs], ints);
 	    }
@@ -872,7 +882,7 @@ void wfsgrad(SIM_T *simu){
     if(parms->sim.idealfit || parms->sim.evlol) return;
     double tk_start=myclockd();
   
-    /* call the task in parallel and wait for them to finish. */
+    /* call the task in parallel and wait for them to finish. It may be done in CPU or GPU.*/
     CALL_THREAD(simu->wfs_grad, parms->nwfs, 0);
     /* Uplink pointing servo. Moved to here from filter.c because of
        synchronization issue. dcellcp before integrator changes because wfsgrad

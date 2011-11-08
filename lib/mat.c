@@ -935,14 +935,14 @@ void X(mulvec3)(T *y, const X(mat) *A, const T *x){
    point (cog=0) from the physical center.
    all length are given in terms of pixel.
 */
-void X(cog)(double *grad,const X(mat) *i0,double offsetx,
+void X(cog)(double *grad,const X(mat) *im,double offsetx,
 	    double offsety, double thres, double bkgrnd){
     double sum=0,sumx=0,sumy=0;
     double iI;
-    PMAT(i0,pi0);
-    for(int iy=0; iy<i0->ny; iy++){
-	for(int ix=0; ix<i0->nx; ix++){
-	    iI=REAL(pi0[iy][ix])-bkgrnd;
+    PMAT(im,pim);
+    for(int iy=0; iy<im->ny; iy++){
+	for(int ix=0; ix<im->nx; ix++){
+	    iI=REAL(pim[iy][ix])-bkgrnd;
 	    if(iI>thres){
 		sum+=iI;
 		sumx+=iI*ix;
@@ -951,8 +951,8 @@ void X(cog)(double *grad,const X(mat) *i0,double offsetx,
 	}
     }
     if(fabs(sum)>0){
-	grad[0]=sumx/sum-((double)(i0->ny-1)*0.5+offsetx);
-	grad[1]=sumy/sum-((double)(i0->nx-1)*0.5+offsety);
+	grad[0]=sumx/sum-((double)(im->ny-1)*0.5+offsetx);
+	grad[1]=sumy/sum-((double)(im->nx-1)*0.5+offsety);
     }else{
 	grad[0]=0;
 	grad[1]=0;

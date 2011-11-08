@@ -265,6 +265,8 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,mtchstc);
     READ_POWFS(int,mtchscl);
     READ_POWFS(int,mtchadp);
+    READ_POWFS(dbl,cogthres);
+    READ_POWFS(dbl,cogoff);
     READ_POWFS(int,phystep);
     READ_POWFS(int,noisy);
     READ_POWFS(str,misreg);

@@ -164,6 +164,7 @@ typedef struct POWFS_T{
     dmat *sumamp2;      /**<sum of realamp.^2*/
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS*/
+    dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
 }
 POWFS_T;
 
