@@ -1732,6 +1732,11 @@ setup_powfs_cog(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     const double pixthetay=parms->powfs[ipowfs].pixtheta;
     powfs[ipowfs].gradphyoff=dcellnew(nwfs, 1);
     for(int iwfs=0; iwfs<nwfs; iwfs++){
+	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+	double *srot=NULL;
+	if(parms->powfs[ipowfs].radpix){
+	    srot=powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p;
+	}
 	if(iwfs==0 || powfs[ipowfs].intstat->i0->ny>1){
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    powfs[ipowfs].gradphyoff->p[iwfs]=dnew(nsa*2,1);
@@ -1742,12 +1747,25 @@ setup_powfs_cog(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		dmat *ints=powfs[ipowfs].intstat->i0->p[isa+iwfs*nsa];
 		double maxi0=dmax(ints);
 		dcog(g, ints, 0, 0, parms->powfs[ipowfs].cogthres*maxi0, parms->powfs[ipowfs].cogoff*maxi0);
-		gx[isa]=g[0]*pixthetax;
-		gy[isa]=g[1]*pixthetay;
+		g[0]*=pixthetax;
+		g[1]*=pixthetay;
+		if(srot){
+		    double theta=srot[isa];
+		    double cx=cos(theta);
+		    double sx=sin(theta);
+		    double tmp=g[0]*cx-g[1]*sx;
+		    g[1]=g[0]*sx+g[1]*cx;
+		    g[0]=tmp;
+		}
+		gx[isa]=g[0];
+		gy[isa]=g[1];
 	    }
 	}else{
 	    powfs[ipowfs].gradphyoff->p[iwfs]=dref(powfs[ipowfs].gradphyoff->p[0]);
 	}
+    }
+    if(parms->save.setup){
+	dcellwrite(powfs[ipowfs].gradphyoff, "%s/powfs%d_gradphyoff", dirsetup, ipowfs);
     }
 }
 

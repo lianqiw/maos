@@ -369,6 +369,7 @@ void wfsgrad_iwfs(thread_t *info){
     const int do_pistatout=parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart;
     const int do_geom=!do_phy || save_gradgeom || do_pistatout;
     const double *realamp=powfs[ipowfs].realamp[wfsind];
+    double *srot=parms->powfs[ipowfs].radpix?powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
     dmat *gradref=NULL;
     dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
@@ -663,6 +664,14 @@ void wfsgrad_iwfs(thread_t *info){
 		    dcog(gnf,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 		    gnf[0]*=pixthetax;
 		    gnf[1]*=pixthetay;
+		    if(srot){
+			double theta=srot[isa];
+			double cx=cos(theta);
+			double sx=sin(theta);
+			double tmp=gnf[0]*cx-gnf[1]*sx;
+			gnf[1]=gnf[0]*sx+gnf[1]*cx;
+			gnf[0]=tmp;
+		    }
 		}
 		    break;
 		case 3:{/*MAP*/
@@ -699,6 +708,14 @@ void wfsgrad_iwfs(thread_t *info){
 			dcog(gny,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 			gny[0]*=pixthetax;
 			gny[1]*=pixthetay;
+			if(srot){
+			    double theta=srot[isa];
+			    double cx=cos(theta);
+			    double sx=sin(theta);
+			    double tmp=gny[0]*cx-gny[1]*sx;
+			    gny[1]=gny[0]*sx+gny[1]*cx;
+			    gny[0]=tmp;
+			}
 		    }
 			break;
 		    case 3:{
@@ -728,7 +745,9 @@ void wfsgrad_iwfs(thread_t *info){
 		pgrady[isa]=gny[1];
 	    };/*isa */
 	    if(powfs[ipowfs].gradphyoff){
+		dwrite(*gradout, "wfs%d_gradout", iwfs);
 		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+		dwrite(*gradout, "wfs%d_gradout", iwfs);
 	    }
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsny[iwfs], ints);

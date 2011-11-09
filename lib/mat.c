@@ -951,8 +951,8 @@ void X(cog)(double *grad,const X(mat) *im,double offsetx,
 	}
     }
     if(fabs(sum)>0){
-	grad[0]=sumx/sum-((double)(im->ny-1)*0.5+offsetx);
-	grad[1]=sumy/sum-((double)(im->nx-1)*0.5+offsety);
+	grad[0]=sumx/sum-((double)(im->nx-1)*0.5+offsetx);
+	grad[1]=sumy/sum-((double)(im->ny-1)*0.5+offsety);
     }else{
 	grad[0]=0;
 	grad[1]=0;
