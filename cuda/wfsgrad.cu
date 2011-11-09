@@ -141,7 +141,7 @@ __global__ static void tcog_do(float *grad, const float *restrict ints,
 			       float cogthres, float cogoff, float *srot){
     __shared__ float sum[3];
     __shared__ uint32_t imax;
-    __shared__ float thres;
+    __shared__ float fmax;
     if(threadIdx.x==0 && threadIdx.y==0) imax=0;
     if(threadIdx.x<3 && threadIdx.y==0) sum[threadIdx.x]=0.f;
     __syncthreads();//is this necessary?
@@ -156,15 +156,17 @@ __global__ static void tcog_do(float *grad, const float *restrict ints,
 	    //atomicMax(&imax, ints[ix+iy*nx]);//not supported
 	}
     }
+    __syncthreads();
     if(threadIdx.x==0 && threadIdx.y==0){
-	*((uint32_t*)(&thres))=int2float(imax);
-	thres*=cogthres;
+	*((uint32_t*)(&fmax))=int2float(imax);
     }
     __syncthreads();
+    cogoff*=fmax;
+    cogthres*=fmax;
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
 	    float im=ints[ix+iy*nx]-cogoff;
-	    if(im>thres){
+	    if(im>cogthres){
 		atomicAdd(&sum[0], im);
 		atomicAdd(&sum[1], im*ix);
 		atomicAdd(&sum[2], im*iy);
@@ -173,7 +175,7 @@ __global__ static void tcog_do(float *grad, const float *restrict ints,
     }
     __syncthreads();
     if(threadIdx.x==0 && threadIdx.y==0){
-	if(sum[0]>0){
+	if(fabsf(sum[0])>0){
 	    float gx=(sum[1]/sum[0]-(nx-1)*0.5)*pixthetax;
 	    float gy=(sum[2]/sum[0]-(ny-1)*0.5)*pixthetay;
 	    if(srot){
@@ -499,6 +501,9 @@ void gpu_wfsgrad(thread_t *info){
 	    /*send grad to CPU. */
 	    if(parms->powfs[ipowfs].phytypesim!=3){
 		gpu_dev2dbl(&gradcl->p, gradny?gradny->p:gradnf->p, nsa*2, stream);
+	    }
+	    if(powfs[ipowfs].gradphyoff){
+		dadd(&gradcl, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
 	    }
 	    ctoc("dev2dbl");
 	    curcellzero(ints, stream);

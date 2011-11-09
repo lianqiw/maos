@@ -745,9 +745,7 @@ void wfsgrad_iwfs(thread_t *info){
 		pgrady[isa]=gny[1];
 	    };/*isa */
 	    if(powfs[ipowfs].gradphyoff){
-		dwrite(*gradout, "wfs%d_gradout", iwfs);
 		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
-		dwrite(*gradout, "wfs%d_gradout", iwfs);
 	    }
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsny[iwfs], ints);
