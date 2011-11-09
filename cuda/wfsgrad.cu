@@ -147,11 +147,11 @@ __global__ static void tcog_do(float *grad, const float *restrict ints,
     __syncthreads();//is this necessary?
     int isa=blockIdx.x;
     ints+=isa*nx*ny;
-    /* First find the maximum. This code needs to be optimized. Serialized in
-       current impl. */
+    /*
+    // First find the maximum. This code needs to be optimized. Serialized in current impl. 
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
-	    /*We use a trick to convert floating numbers to sortable integers*/
+	    //We use a trick to convert floating numbers to sortable integers
 	    atomicMax(&imax, float2int((uint32_t*)&ints[ix+iy*nx]));
 	    //atomicMax(&imax, ints[ix+iy*nx]);//not supported
 	}
@@ -163,6 +163,7 @@ __global__ static void tcog_do(float *grad, const float *restrict ints,
     __syncthreads();
     cogoff*=fmax;
     cogthres*=fmax;
+    */
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
 	    float im=ints[ix+iy*nx]-cogoff;
@@ -396,9 +397,9 @@ void gpu_wfsgrad(thread_t *info){
 		float *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot:NULL;
 		tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
 		    (gradnf->p, ints->p[0]->p, 
-		     pixpsax, pixpsay, pixthetax, pixthetay, nsa,  
-		     (float)parms->powfs[ipowfs].cogthres, 
-		     (float)parms->powfs[ipowfs].cogoff, srot);
+		     pixpsax, pixpsay, pixthetax, pixthetay, nsa,
+		     (float)parms->powfs[ipowfs].cogthres*1, 
+		     (float)parms->powfs[ipowfs].cogoff*1, srot);
 	    }
 		break;
 	    case 3:{/*The following need to port to GPU*/
@@ -448,11 +449,12 @@ void gpu_wfsgrad(thread_t *info){
 		    int pixpsax=powfs[ipowfs].pixpsax;
 		    int pixpsay=powfs[ipowfs].pixpsay;
 		    float *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot:NULL;
+		    float rnee=sqrt(rne*rne+bkgrnd);
 		    tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
 			(gradny->p, ints->p[0]->p, 
 			 pixpsax, pixpsay, pixthetax, pixthetay, nsa,  
-			 (float)parms->powfs[ipowfs].cogthres, 
-			 (float)parms->powfs[ipowfs].cogoff, srot);
+			 (float)parms->powfs[ipowfs].cogthres*rnee, 
+			 (float)parms->powfs[ipowfs].cogoff*rnee, srot);
 		}
 		    break;
 		case 3:{

@@ -152,7 +152,7 @@ static void update_prog(PROC_T *p){
 		 (double)(p->status.iseed+1)/(double)p->status.nseed);
 	}
 	char tmp[64];
-	snprintf(tmp,64, "%4.1fs %d of %d %ld:%02ld of %ld:%02ld",
+	snprintf(tmp,64, "%5.2fs %d of %d %ld:%02ld of %ld:%02ld",
 		 step,p->status.isim+1,p->status.simend,
 		 resth,restm,toth,totm);
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),tmp);

@@ -153,7 +153,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 		}
 		    break;
 		case 2:{/*tCoG*/
-		    double pmax=dmax(ints);
+		    double pmax=1;
 		    dcog(g,ints,0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 		    g[0]*=pixthetax;
 		    g[1]*=pixthetay;
@@ -660,7 +660,7 @@ void wfsgrad_iwfs(thread_t *info){
 		}
 		    break;
 		case 2:{/*tCoG*/
-		    double pmax=dmax(ints->p[isa]);
+		    double pmax=1;
 		    dcog(gnf,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 		    gnf[0]*=pixthetax;
 		    gnf[1]*=pixthetay;
@@ -704,7 +704,7 @@ void wfsgrad_iwfs(thread_t *info){
 		    }
 			break;
 		    case 2:{
-			double pmax=dmax(ints->p[isa]);
+			double pmax=sqrt(rne*rne+bkgrnd);
 			dcog(gny,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
 			gny[0]*=pixthetax;
 			gny[1]*=pixthetay;

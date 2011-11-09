@@ -1745,7 +1745,7 @@ setup_powfs_cog(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    double g[2]={0,0};
 	    for(int isa=0; isa<nsa; isa++){
 		dmat *ints=powfs[ipowfs].intstat->i0->p[isa+iwfs*nsa];
-		double maxi0=dmax(ints);
+		double maxi0=1;
 		dcog(g, ints, 0, 0, parms->powfs[ipowfs].cogthres*maxi0, parms->powfs[ipowfs].cogoff*maxi0);
 		g[0]*=pixthetax;
 		g[1]*=pixthetay;
