@@ -199,7 +199,7 @@ void genpistat(const PARMS_S *parms, POWFS_S *powfs){
     double patfov=parms->skyc.patfov;
     double ngsgrid=parms->maos.ngsgrid;
     long ng=ceil(patfov/2/ngsgrid);
-    info("Genpistat..");
+    info2("Genpistat..");
     GENPISTAT_S *data=calloc(1, sizeof(GENPISTAT_S));
     data->parms=parms;
     data->powfs=powfs;

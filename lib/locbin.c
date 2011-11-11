@@ -60,7 +60,6 @@ loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
 	    for(long i=0; i<out->nloc-1; i++){/*we assume the rows are continuous. */
 		if(out->locy[i+1]>out->locy[i]){
 		    dx=out->locy[i+1]-out->locy[i];
-		    info("Guessing: dx=%g\n", dx);
 		    break;
 		}
 	    }

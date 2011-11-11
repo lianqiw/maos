@@ -93,11 +93,7 @@ typedef struct INTSTAT_T{
     dcell *gx;          /**<gradient of i0 along x*/
     dcell *gy;          /**<gradient of i0 along y*/
     dmat *i0sum;        /**<sum of i0*/
-    dcell *mtchera;     /**<mtched filter operator along r/a*/
-    dcell *mtche;       /**<mtched filter operator along x/y*/
-    dcell *saneara;     /**<computed sanea along ra (rad^2) (only for radian coord ccd)*/
-    dcell *sanea;       /**<SANEA of matched filter output. ra or xy (rad^2). no
-			   coupling is saved.*/
+    dcell *mtche;       /**<mtched filter operator along x/y, even if radpix=1*/
     dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
     dcell *saneaxyl;    /**<decomposition of saneaxy: L*L'=saneaxy.*/
     dcell *saneaixy;    /**<computed sanea inverse along xy (rad^-2)*/

@@ -89,7 +89,35 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
     if(nstar==0){
 	*naster=0;
 	return NULL;
+    }else if(parms->skyc.keeporder){
+	/*Use the same order as input stars.*/
+	ASTER_S *aster=calloc(1, sizeof(ASTER_S));
+	*naster=1;
+	int npowfs=parms->skyc.npowfs;
+	int nleft=nstar;
+	int stars[npowfs];
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    stars[ipowfs]=MIN(nleft, parms->skyc.nwfsmax[ipowfs]);
+	    nleft-=stars[ipowfs];
+	}
+	if(nleft>0){
+	    warning("skyc.keeporder is set, but there are more stars than needed, dropped the extra\n");
+	}
+	int ntot=nstar-nleft;
+	aster[0].nwfs=ntot;
+	aster[0].wfs=calloc(ntot, sizeof(WFS_S));
+	aster[0].iaster=0;
+	int count=0;
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    for(int istar=0; istar<stars[ipowfs]; istar++){
+		aster[0].wfs[count].ipowfs=ipowfs;
+		aster[0].wfs[count].istar=count;
+		count++;
+	    }
+	}
+	return aster;
     }
+    
     int ncomb=1;
     ASTER_S *aster;
     int npowfs=parms->skyc.npowfs;
