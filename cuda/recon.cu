@@ -429,7 +429,7 @@ void gpu_tomo(SIM_T *simu){
     curcellfree(curecon->opdwfs); curecon->opdwfs=NULL;
     curcellfree(curecon->grad);   curecon->grad=NULL;
     curcellfree(curecon->gradin); curecon->gradin=NULL;
-    if(!parms->gpu.fit || parms->save.opdr){
+    if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2){
 	gpu_curcell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
 	cudaStreamSynchronize(curecon->cgstream);
 	for(int i=0; i<simu->opdr->nx; i++){
