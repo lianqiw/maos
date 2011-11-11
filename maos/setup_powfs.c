@@ -23,7 +23,6 @@
 #include <sys/types.h>
 #include <math.h>
 #include "maos.h"
-TIC;
 #include "setup_powfs.h"
 #include "mtch.h"
 #include "genseotf.h"
@@ -1501,14 +1500,14 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     if(parms->powfs[ipowfs].phytypesim==2){;
 	powfs[ipowfs].gradphyoff=dcellnew(nwfs, 1);
     }
-    rand_t srand;
+    rand_t rstat;
     double neaspeckle2=0;
     dcell *sanea=NULL;
     if(parms->powfs[ipowfs].phytype==2){
 	do_nea=1;
 	intstat->saneaxy=dcellnew(nsa, intstat->i0->ny);
 	sanea=dcellnew(intstat->i0->ny, 1);
-	seed_rand(&srand, 1);
+	seed_rand(&rstat, 1);
 	double neaspeckle=parms->powfs[ipowfs].neaspeckle/206265000.;
 	if(neaspeckle>pixthetax){
 	    error("parms->powfs[%d].neaspeckle=%g is bigger than pixel size\n",
@@ -1568,7 +1567,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    pmax=sqrt(rne*rne+bkgrnd);
 		    for(int i=0; i<ntry; i++){
 			dcp(&ints2, ints);
-			addnoise(ints2, &srand,
+			addnoise(ints2, &rstat,
 				 bkgrnd,parms->powfs[ipowfs].bkgrndc,
 				 bkgrnd2i, bkgrnd2ic, rne);
 			dcog(gny, ints2, 0, 0, parms->powfs[ipowfs].cogthres*pmax, parms->powfs[ipowfs].cogoff*pmax);
@@ -1714,7 +1713,8 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		if(exist(fnlock) || !zfexist(fnotf)){/*need to create data */
 		    int fd=lock_file(fnlock, 0, 0);/*nonblocking exclusive lock */
 		    if(fd>=0){/*succeed */
-			info2("Generating WFS OTF for %s...", fnotf);tic;
+			info2("Generating WFS OTF for %s...", fnotf);
+			TIC;tic;
 			genseotf(parms,powfs,ipowfs);
 			toc2("done");
 			ccellwritearr(intstat->otf, intstat->notf, 1, "%s", fnotf);
@@ -1881,7 +1881,7 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
     POWFS_T *powfs=calloc(parms->npowfs, sizeof(POWFS_T));
     int ipowfs;
-    tic;
+    TIC;tic;
     for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	info2("\n\033[0;32mSetting up powfs %d\033[0;0m\n\n", ipowfs);
