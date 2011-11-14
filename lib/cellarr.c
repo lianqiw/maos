@@ -40,11 +40,13 @@ cellarr* cellarr_init(long nx, long ny,const char*format,...){
     out->fp=zfopen(fn,"wb");
     out->cur=0;
     out->tot=nx*ny;
-    write_magic(MCC_ANY, out->fp);
-    uint64_t nx2=nx;
-    uint64_t ny2=ny;
-    zfwrite(&nx2,sizeof(uint64_t),1,out->fp);
-    zfwrite(&ny2,sizeof(uint64_t),1,out->fp);
+    if(!zfisfits(out->fp)){
+	write_magic(MCC_ANY, out->fp);
+	uint64_t nx2=nx;
+	uint64_t ny2=ny;
+	zfwrite(&nx2,sizeof(uint64_t),1,out->fp);
+	zfwrite(&ny2,sizeof(uint64_t),1,out->fp);
+    }
     return out;
 }
 

@@ -57,6 +57,7 @@ inline void cufree(cumat<T> *A){
 	    if(A->nref[0]==1){
 		cudaFree(A->p);
 		free(A->nref);
+		free(A->header);
 	    }else{
 		A->nref[0]--;
 		if(A->nref[0]<0){

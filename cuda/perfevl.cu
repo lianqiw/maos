@@ -529,7 +529,9 @@ void gpu_perfevl_save(SIM_T *simu){
 		scelladd(&temp, 1, temp2, scale);
 	    }
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		temp->p[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
 		cellarr_smat(simu->save->evlpsfolmean, temp->p[iwvl]);
+		free(temp->p[iwvl]->header); temp->p[iwvl]->header=NULL;
 	    }
 	    scellfree(temp);
 	    scellfree(temp2);
@@ -543,9 +545,10 @@ void gpu_perfevl_save(SIM_T *simu){
 		cudaStream_t stream=evlstream[ievl];
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curadd(&temp, 0, cudata->evlpsfcl->p[iwvl+nwvl*ievl], scale, stream);
+		    temp->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    cellarr_cur(simu->save->evlpsfmean[ievl], temp, stream);
+		    free(temp->header); temp->header=NULL;
 		}
-		CUDA_SYNC_STREAM;
 		curfree(temp);
 	    }
 	}
@@ -558,9 +561,10 @@ void gpu_perfevl_save(SIM_T *simu){
 		cudaStream_t stream=evlstream[ievl];
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    curadd(&temp, 0, cudata->evlpsfcl_ngsr->p[iwvl+nwvl*ievl], scale, stream);
+		    temp->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
 		    cellarr_cur(simu->save->evlpsfmean_ngsr[ievl], temp, stream);
+		    free(temp->header); temp->header=NULL;
 		}
-		CUDA_SYNC_STREAM;
 		curfree(temp);
 	    }
 	}

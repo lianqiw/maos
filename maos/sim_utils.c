@@ -741,7 +741,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    if(parms->evl.psfngsr[ievl]!=2){
 		if(parms->evl.psfmean){
 		    save->evlpsfmean[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
-							"evlpsfcl_%d_x%g_y%g%s.bin", seed,
+							"evlpsfcl_%d_x%g_y%g%s.fits", seed,
 							parms->evl.thetax[ievl]*206265,
 							parms->evl.thetay[ievl]*206265, strht);
 		}
@@ -761,7 +761,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    if(parms->evl.psfngsr[ievl]!=0){
 		if(parms->evl.psfmean){
 		    save->evlpsfmean_ngsr[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
-							     "evlpsfcl_ngsr_%d_x%g_y%g%s.bin", seed,
+							     "evlpsfcl_ngsr_%d_x%g_y%g%s.fits", seed,
 							     parms->evl.thetax[ievl]*206265,
 							     parms->evl.thetay[ievl]*206265, strht);
 		}
@@ -783,7 +783,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	if(parms->evl.psfmean && parms->evl.psfol){
 	    simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
 	    simu->evlpsfolmean->header=strdup(header);
-	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.bin", seed);
+	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
 	}
     }
   
@@ -796,9 +796,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
+	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl);
 	}
 	ccellfree(psf2s);
-	dcellwrite(evlpsfdl, "evlpsfdl_%d.bin",seed);
+	dcellwrite(evlpsfdl, "evlpsfdl_%d.fits",seed);
 	dcellfree(evlpsfdl);
     }
     simu->has_upt=0;/*flag for uplink tip/tilt control */

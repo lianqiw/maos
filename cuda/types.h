@@ -31,6 +31,7 @@ struct cumat{
     int nx;
     int ny;
     int *nref;
+    char *header;
 };
 
 template <typename T>

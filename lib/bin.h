@@ -84,6 +84,7 @@ int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
 file_t *zfopen(const char *fn, char *mod);
 const char *zfname(file_t *fp);
+int zfisfits(file_t *fp);
 void zfclose(file_t *fp);
 void zflush(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
@@ -101,8 +102,8 @@ void write_magic(uint32_t magic, file_t *fp);
 void zfwritelarr(file_t* fp,int count, ...);
 void zfreadlarr(file_t* fp,int count, ...);
 
-void do_write(const void *fpn, const int isfile, const size_t size, const uint32_t magic, 
-	      const void *p, const uint64_t nx, const uint64_t ny);
+void do_write(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
+	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writecmp(const dcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);

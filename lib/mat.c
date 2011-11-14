@@ -54,18 +54,17 @@ vtbl X(mat_vtbl)={M_TT,
    forward.
 */
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
-    if(nx<=0 || ny<=0) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
     out->vtbl=&X(mat_vtbl);
     out->nx=nx;
     out->ny=ny;
     if(ref){/*the data does not belong to us. */
-	if(!p && nx*ny!=0){
+	if(!p && nx!=0 && ny!=0){
 	    error("When ref is 1, p must not be NULL.\n");
 	}
 	out->p=p;
     }else{
-	if(!p){
+	if(!p && nx!=0 && ny!=0){
 	    p=calloc((nx*ny), sizeof(T));
 	}
 	out->p=p;

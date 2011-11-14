@@ -35,30 +35,30 @@
    Function to write dense matrix data into a file pointer. Generally used by
    library developer */
 void X(writedata)(file_t *fp, const X(mat) *A){
-    void *p=NULL;
     uint64_t nx=0, ny=0;
     if(A){
-	p=A->p;
 	nx=(uint64_t)A->nx;
 	ny=(uint64_t)A->ny;
-	write_header(A->header, fp);
     }
-    do_write(fp, 0, sizeof(T), M_T, p, nx, ny);
+    do_write(fp, 0, sizeof(T), M_T, A?A->header:NULL, A?A->p:NULL, nx, ny);
 }
 /**
    Function to write cell array of dense matrix data. into a file pointer
    Generally used by library developer
 */
 void X(cellwritedata)(file_t *fp, const X(cell) *dc){
-    if(dc) write_header(dc->header, fp);
-    write_magic(MCC_ANY, fp);
-    if(!dc){
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
-    }else{
-	uint64_t nx=dc->nx;
-	uint64_t ny=dc->ny;
+    uint64_t nx=0;
+    uint64_t ny=0;
+    if(dc){
+	nx=dc->nx;
+	ny=dc->ny;
+    }
+    if(!zfisfits(fp)){
+	if(dc->header) write_header(dc->header, fp);
+	write_magic(MCC_ANY, fp);
 	zfwritelarr(fp, 2, &nx, &ny);
+    }
+    if(dc){
 	for(unsigned long iy=0; iy<ny; iy++){
 	    for(unsigned long ix=0; ix<nx; ix++){
 		X(writedata)(fp, dc->p[ix+iy*nx]);
@@ -125,11 +125,15 @@ X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic){
     if(!magic){
 	magic=read_magic(fp, &header);
     }
-    if(!iscell(magic)){
-	error("This is is not a X(mat) cell file. want %d, get %d\n",(int)MCC_ANY,(int)magic);
-    }
     uint64_t nx,ny;
-    zfreadlarr(fp, 2, &nx, &ny);
+    if(!iscell(magic)){
+	info2("This is is not a X(mat) cell file. want %d, get %d. Treat as 1 cell.\n",(int)MCC_ANY,(int)magic);
+	nx=1;
+	ny=1;
+    }else{
+	zfreadlarr(fp, 2, &nx, &ny);
+	magic=0;
+    }
     X(cell) *out;
     if(nx==0 || ny==0){
 	out=NULL;
@@ -138,7 +142,7 @@ X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic){
 	out=X(cellnew)((long)nx,(long)ny);
 	out->header=header;
 	for(unsigned long ix=0; ix<nx*ny; ix++){
-	    out->p[ix]=X(readdata)(fp, 0);
+	    out->p[ix]=X(readdata)(fp, magic);
 	}
     }
     return out;

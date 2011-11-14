@@ -22,7 +22,7 @@ static void test_wploc(){
     double ampmax=maxdbl(amp,nx);
     double ampmax1=1./ampmax;
     for(int i=0; i<nx; i++){
-	amp[i]=round(amp[i]*ampmax1)*ampmax;/*turn to B/W map. */
+	amp[i]=round(amp[i]*ampmax1)*ampmax;
     }
     normalize(amp,nx,1);
     drawopd("test_loc",loc,amp,"loc");
@@ -75,8 +75,6 @@ static void test_int_rand(){
     rand_t stat;
     seed_rand(&stat,1);
     for(int i=0; i<n; i++){
-	/*double x=randu(&stat); */
-	/*double y=randu(&stat); */
 	double x=drand48();
 	double y=drand48();
 	if(pow(x-cx,2)+pow(y-cy,2) <= cr2){
@@ -101,7 +99,6 @@ void test_loc_reduce_sp(void){
     int nloc;
     loc_t **xloc=locarrread(&nloc,"xloc.bin");
     spcell *G0=spcellread("G0.bin");
-    /*loc_t *saloc=locread("powfs0_saloc.bin"); */
     loc_reduce_sp(xloc[0],G0->p[0],2,1);
     locarrwrite(xloc,nloc,"xloc2");
     spcellwrite(G0,"G02.bin");

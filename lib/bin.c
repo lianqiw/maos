@@ -69,7 +69,8 @@
 */
 struct file_t{
     void *p;
-    int isgzip;
+    int isgzip;/*Is the file zipped.*/
+    int isfits;/*Is the file fits.*/
 #if USE_PTHREAD > 0
     pthread_mutex_t lock;
 #endif
@@ -108,17 +109,18 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
 	strcpy(fn2,fn);
     }
     /*If there is no recognized suffix, add .bin in the end. */
-    if(!check_suffix(fn2,".bin") && !check_suffix(fn2, ".bin.gz")){
+    if(!check_suffix(fn2,".bin")  && !check_suffix(fn2, ".bin.gz")
+       && !check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
 	strncat(fn2, ".bin", 4);
     }
     if(mod[0]=='r' || mod[0]=='a'){
 	char *fnr=NULL;
 	if(!(fnr=search_file(fn2))){/*If does not exist. */
-	    if(check_suffix(fn2, ".bin")){
-		/*ended with .bin, change to .bin.gz */
+	    if(!check_suffix(fn2, ".gz")){
+		/*does not end with .gz, add gz*/
 		strncat(fn2, ".gz", 3);
-	    }else{
-		/*ended with bin.gz, change to .bin */
+	    }else if (check_suffix(fn, ".gz")){
+		/*ended with gz, remove .gz*/
 		fn2[strlen(fn2)-3]='\0';
 	    }
 	    fnr=search_file(fn2);
@@ -196,7 +198,8 @@ file_t* zfopen(const char *fn, char *mod){
 	error("Unable to open file %s\n", fn2);
 	_exit(1);
     }
-    if(check_suffix(fn2, ".bin") && mod[0]=='w'){
+    /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
+    if((check_suffix(fn, ".bin") || check_suffix(fn, ".fits")) && mod[0]=='w'){
 	fp->isgzip=0;
 	if(!(fp->p=fdopen(fp->fd,mod))){
 	    error("Error fdopen for %s\n",fn2);
@@ -207,7 +210,10 @@ file_t* zfopen(const char *fn, char *mod){
 	    error("Error gzdopen for %s\n",fn2);
 	}
     }
-    if(mod[0]=='w'){
+    if(check_suffix(fn, ".fits") || check_suffix(fn, ".fits.gz")){
+	fp->isfits=1;
+    }
+    if(mod[0]=='w' && !fp->isfits){
 	write_timestamp(fp);
     }
     UNLOCK(lock);
@@ -220,7 +226,12 @@ file_t* zfopen(const char *fn, char *mod){
 const char *zfname(file_t *fp){
     return fp->fn;
 }
-
+/**
+   Return whether it's fits file.
+*/
+int zfisfits(file_t *fp){
+    return fp->isfits?1:0;
+}
 /**
    Close the file.
  */
@@ -256,15 +267,16 @@ void zfclose(file_t *fp){
    Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
    fwrite. Follows the interface of fwrite.
  */
-void zfwrite(const void* ptr, const size_t size, 
-	     const size_t nmemb, file_t *fp){
+void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     LOCK(fp->lock);
     if(fp->isgzip){
-	gzwrite((voidp)fp->p, ptr, size*nmemb);
+	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
+	    perror("gzwrite");
+	    error("write to %s failed\n", fp->fn);
+	}
     }else{
-	size_t ct=fwrite(ptr, size, nmemb, (FILE*)fp->p);
-	if(ct!=nmemb){
+	if(fwrite(ptr, size, nmemb, (FILE*)fp->p)!=nmemb){
 	    perror("fwrite");
 	    error("write to %s failed\n", fp->fn);
 	}
@@ -277,6 +289,9 @@ void zfwrite(const void* ptr, const size_t size,
  */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
+    if(fp->isfits){
+	error("Not yet implemented\n");
+    }
     LOCK(fp->lock);
     if(fp->isgzip){
 	int status;
@@ -408,6 +423,7 @@ uint32_t read_magic(file_t *fp, char **header){
    Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
 */
 void write_magic(uint32_t magic, file_t *fp){
+    if(fp->isfits) error("fits file is not supported\n");
     uint32_t magic2=M_SKIP;
     zfwrite(&magic2, sizeof(uint32_t), 1, fp);
     zfwrite(&magic,  sizeof(uint32_t), 1, fp);
@@ -427,6 +443,7 @@ void write_magic(uint32_t magic, file_t *fp){
  */
 void write_header(const char *header, file_t *fp){
     if(!header) return;
+    if(fp->isfits) error("fits file is not supported\n");
     uint32_t magic=M_HEADER;
     uint64_t nlen=strlen(header)+1;
     /*make header 8 byte alignment. */
@@ -530,14 +547,86 @@ void zfreadlarr(file_t *fp, int count, ...){
     va_end (ap);                       /* Clean up.  */
 }
 /**
+   Write fits header. extra is extra header that will be put in fits comment
+*/
+void write_fits_header(file_t *fp, const char *extra, uint32_t magic, int count, ...){
+    uint64_t naxis[count];
+    va_list ap;
+    va_start (ap, count);              /*Initialize the argument list. */
+    int empty=0;
+    for (int i = 0; i < count; i++){
+	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
+	if((*addr)==0) empty=1;
+	naxis[i]=*addr;
+    }
+    va_end(ap);
+
+    if(empty) count=0;
+
+    int bitpix;
+    switch(magic){
+    case M_DBL:
+	bitpix=-64;
+	break;
+    default:
+	error("Data type is not supported\n");
+    }
+    const int nh=36;
+    char header[nh][80];
+    memset(header, ' ', sizeof(char)*36*80);
+    int hc=0;
+    if(fp->isfits==1){
+	snprintf(header[hc], 80, "%-8s= %20s", "SIMPLE", "T");    header[hc][30]=' '; hc++;
+	fp->isfits++;
+    }else{
+	snprintf(header[hc], 80, "%-8s= %s", "XTENSION", "'IMAGE   '");    header[hc][20]=' '; hc++;
+    }
+    snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
+    snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
+#define FLUSH_OUT /*write the block and reset */	\
+	if(hc==nh){					\
+	    zfwrite(header, sizeof(char), 36*80, fp);	\
+	    memset(header, ' ', sizeof(char)*36*80);	\
+	    hc=0;					\
+	}
+    for (int i = 0; i < count; i++){
+	FLUSH_OUT;
+	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
+    }
+    if(extra){
+	const char *extra2=extra+strlen(extra);
+	while(extra<extra2){
+	    char *nl=strchr(extra, '\n');
+	    int length;
+	    if(nl){
+		length=nl-extra;
+	    }else{
+		length=strlen(extra);
+	    }
+	    if(length>70) length=70;
+	    FLUSH_OUT;
+	    strncpy(header[hc], "COMMENT   ", 10);
+	    strncpy(header[hc]+10, extra, length);
+	    hc++;
+	    extra+=length;
+	    if(nl) extra++; //skip '\n'
+	}
+    }
+    FLUSH_OUT;
+    snprintf(header[hc], 80, "%-8s", "END"); header[hc][8]=' '; hc++;
+    zfwrite(header, sizeof(char), 36*80, fp);
+#undef FLUSH_OUT
+}
+/**
    Write an 1-d or 2-d array into the file. First write a magic number that
    represents the data type. Then write two numbers representing the
    dimension. Finally write the data itself.
  */
 void do_write(const void *fpn,     /**<[in] The file pointer*/
-	      const int isfn,    /**<[in] Is this a filename or already opened file*/
+	      const int isfn,      /**<[in] Is this a filename or already opened file*/
 	      const size_t size,   /**<[in] Size of each element*/
 	      const uint32_t magic,/**<[in] The magic number. see bin.h*/ 
+	      const char *header,  /**<[in] The header as string*/
 	      const void *p,       /**<[in] The data of the array*/
 	      const uint64_t nx,   /**<[in] Number of rows. this index changes fastest*/
 	      const uint64_t ny    /**<[in] Number of columns. 1 for vector*/
@@ -548,14 +637,66 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
     }else{
 	fp=(file_t*) fpn;
     }
-    /*Write a dummy magic so that our header is multiple of 8 bytes long. */
-    write_magic(magic, fp);
-    if(p && nx>0 && ny>0){
+    if(fp->isfits){
+	write_fits_header(fp, header, magic, 2, &nx, &ny);
+	/* write a block of 2880 bytes each time, with big-endianness.*/
+	const int bs=2880;
+	char junk[bs];
+	int length=nx*ny*size;
+	int nb=(length+bs-1)/bs;
+	char *in=(char*)p;
+	for(int ib=0; ib<nb; ib++){
+	    int nd=length<bs?length:bs;
+	    switch(size){
+	    case 1:
+		memcpy(junk, in, nd);
+		break;
+	    case 2:
+		for(int i=0; i<nd; i+=2){
+		    junk[i]=in[i+1];
+		    junk[i+1]=in[i];
+		}
+		break;
+	    case 4:
+		for(int i=0; i<nd; i+=4){
+		    junk[i]  =in[i+3];
+		    junk[i+1]=in[i+2];
+		    junk[i+2]=in[i+1];
+		    junk[i+3]=in[i  ];
+		}
+		break;
+	    case 8:
+	    case 16:
+		for(int i=0; i<nd; i+=8){
+		    junk[i  ]=in[i+7];
+		    junk[i+1]=in[i+6];
+		    junk[i+2]=in[i+5];
+		    junk[i+3]=in[i+4];
+		    junk[i+4]=in[i+3];
+		    junk[i+5]=in[i+2];
+		    junk[i+6]=in[i+1];
+		    junk[i+7]=in[i  ];
+		}
+		break;
+	    default:
+		error("Invalid\n");
+	    }
+	    /* use bs instead of nd to test tailing blanks*/
+	    in+=bs; length-=bs;
+	    if(length<0){
+		memset(junk+nd, 0, (bs-nd)*sizeof(char));
+	    }
+	    zfwrite(junk, sizeof(char), bs, fp);
+	}
+    }else{ /*Write a dummy magic so that our header is multiple of 8 bytes long. */
+	if(header){
+	    write_header(header, fp);
+	}
+	write_magic(magic, fp);
 	zfwritelarr(fp, 2, &nx, &ny);
-	zfwrite(p, size, nx*ny,fp);
-    }else{
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
+	if(nx>0 && ny>0){
+	    zfwrite(p, size, nx*ny, fp);
+	}
     }
     if(isfn) zfclose(fp);
 }
@@ -565,49 +706,49 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 */
 void writedbl(const double *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(double), M_DBL, p, nx, ny);
+    do_write(fn, 1, sizeof(double), M_DBL, NULL, p, nx, ny);
 }
 /**
    Write a double array of size nx*ny to file.
 */
 void writeflt(const float *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(float), M_FLT, p, nx, ny);
+    do_write(fn, 1, sizeof(float), M_FLT, NULL, p, nx, ny);
 }
 /**
    Write a double complex array of size nx*ny to file.
 */
 void writecmp(const dcomplex *p, long nx,long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(dcomplex), M_CMP, p, nx, ny);
+    do_write(fn, 1, sizeof(dcomplex), M_CMP, NULL, p, nx, ny);
 }
 /**
    Write a float complex array of size nx*ny to file.
 */
 void writefcmp(const fcomplex *p, long nx,long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(fcomplex), M_ZMP, p, nx, ny);
+    do_write(fn, 1, sizeof(fcomplex), M_ZMP, NULL, p, nx, ny);
 }
 /**
    Write a int array of size nx*ny to file.
  */
 void writeint(const int *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(int), M_INT32, p, nx, ny);
+    do_write(fn, 1, sizeof(int), M_INT32, NULL, p, nx, ny);
 }
 /**
    Write a long array of size nx*ny to file.
  */
 void writelong(const long *p, long nx, long ny, const char*format,...){
     format2fn;
-    do_write(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, p, nx, ny);
+    do_write(fn, 1, sizeof(long), sizeof(long)==8?M_INT64:M_INT32, NULL, p, nx, ny);
 }
 /**
    Write spint array of size nx*ny to file. 
  */
 void writespint(const spint *p, long nx, long ny, const char *format,...){
     format2fn;
-    do_write(fn, 1, sizeof(spint), M_SPINT, p, nx, ny);
+    do_write(fn, 1, sizeof(spint), M_SPINT, NULL, p, nx, ny);
 }
 void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
     uint32_t size=0;
