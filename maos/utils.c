@@ -722,16 +722,22 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
     int nembed=aper->nembed[iwvl];
     double wvl=parms->evl.wvl[iwvl];
     double sumamp2=aper->sumamp2;
-    snprintf(header, 320, "Science PSF at (%.15g, %.15g) arcsec\n"
+    int npos=parms->evl.psfmean;
+    if(npos==1) {
+	npos=parms->sim.end-parms->evl.psfisim;
+    }
+    snprintf(header, 320, 
+	     "Science PSF at (%.15g, %.15g) arcsec\n"
 	     "Turbulence: r0=%g, l0=%g\n"
 	     "Wavelength: %.15gm\n"
 	     "OPD Sampling: %.15gm\n"
 	     "FFT Grid: %dx%d\n"
 	     "PSF Sampling: %.15g arcsec\n"
-	     "PSF sum to %.15g", 
+	     "PSF Sum to %.15g\n"
+	     "Exposure: %gs", 
 	     ievl<0?0:parms->evl.thetax[ievl]*206265, ievl<0?0:parms->evl.thetay[ievl]*206265,
 	     parms->atm.r0, parms->atm.l0,
 	     wvl, parms->aper.dx, nembed, nembed, wvl/(nembed*parms->aper.dx)*206265,
-	     sumamp2*nembed*nembed);
+	     sumamp2*nembed*nembed, parms->sim.dt*npos);
     return strdup(header);
 }
