@@ -22,6 +22,7 @@ typedef float __complex__ fcomplex;
 typedef struct file_t{
     void *p;
     int isgzip;
+    int isfits;
     int eof;
 }file_t;
 #define M_CSP64 0x6400
@@ -48,15 +49,24 @@ typedef struct file_t{
 
 #define MAT_SP 0xFF01
 #define MAT_CSP 0xFF02
+#define iscell(magic) (((magic)&0x6410)==0x6410 || ((magic)&0x6420) == 0x6420)
+
+typedef struct {
+    uint32_t magic;
+    uint64_t nx;
+    uint64_t ny;
+    char *str;
+}header_t;
 file_t* zfopen(const char *fn, char *mod);
 void zfclose(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 void zfwrite_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
-int test_eof(file_t *fp);
+int zfeof(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
-void write_header(const char *header, file_t *fp);
-void write_timestamp(file_t *fp);
-uint32_t read_magic(file_t *fp, char **header);
-void write_magic(uint32_t magic, file_t *fp);
+void zfwritelarr(file_t *fp, int count, ...);
+void zfreadlarr(file_t* fp,int count, ...);
+void write_header(const header_t *header, file_t *fp);
+int read_header2(header_t *header, file_t *fp);
+void read_header(header_t *header, file_t *fp);
 #endif

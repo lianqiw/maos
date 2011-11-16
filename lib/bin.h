@@ -92,6 +92,7 @@ int zfisfits(file_t *fp);
 void zfclose(file_t *fp);
 void zflush(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
+int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 const char *search_header(const char *header, const char *key);
 double search_header_num(const char *header, const char *key);
@@ -100,6 +101,7 @@ void write_timestamp(file_t *fp);
 //uint32_t read_magic(file_t *fp, char **header);
 //void write_magic(uint32_t magic, file_t *fp);
 void write_header(const header_t *header, file_t *fp);
+int read_header2(header_t *header, file_t *fp);
 void read_header(header_t *header, file_t *fp);
 __attribute__((always_inline))inline header_t *check_cell(header_t *header, long *nx, long *ny){
     header_t *headerc=NULL;

@@ -110,14 +110,6 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
 	}else{
 	    error("%s is not a X(mat) file. magic=%x\n", zfname(fp), header->magic);
 	}
-	if(zfisfits(fp)){/* make sure we read all blocks (2880 each)*/
-	    int length=nx*ny*sizeof(T);
-	    int left=length%2880;
-	    if(left){
-		char tmp[2880-left];
-		zfread(tmp, 1, 2880-left, fp);
-	    }
-	}
     }
     return out;
 }
@@ -133,14 +125,27 @@ X(cell)* X(cellreaddata)(file_t *fp, header_t *header){
     long nx,ny;
     header_t *headerc=check_cell(header, &nx, &ny);
     X(cell) *out;
-    out=X(cellnew)((long)nx,(long)ny);
-    if(!headerc){
-	out->header=header->str; header->str=NULL;
+    if(!headerc || !zfisfits(fp)){/*genuine cell array or bin data.*/
+	out=X(cellnew)((long)nx,(long)ny);
+	if(!headerc){
+	    out->header=header->str; header->str=NULL;
+	}
+        for(unsigned long ix=0; ix<nx*ny; ix++){
+	    out->p[ix]=X(readdata)(fp, headerc);
+	}
+    }else{/*fits format. need to read extensions*/
+	if(ny!=1) error("Not expected\n");
+	X(mat) **tmp=calloc(nx, sizeof(X(mat)*));
+	tmp[nx-1]=X(readdata)(fp, headerc);
+	while(!read_header2(headerc, fp)){
+	    nx++;
+	    tmp=realloc(tmp, nx*sizeof(X(mat)*));
+	    tmp[nx-1]=X(readdata)(fp, headerc);
+	}
+	out=X(cellnew)(nx, 1);
+	memcpy(out->p, tmp, sizeof(X(mat)*)*nx);
+	free(tmp);
     }
-    for(unsigned long ix=0; ix<nx*ny; ix++){
-	out->p[ix]=X(readdata)(fp, headerc);
-    }
-    free(header->str);
     return out;
 }
 /**

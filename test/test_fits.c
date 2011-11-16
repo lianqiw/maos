@@ -5,8 +5,8 @@
 #include <sys/mman.h>
 #include "../lib/aos.h"
 int main(){
-    int N=64;
-    dmat *A=dnew(1024,1024);
+    int N=4;
+    dmat *A=dnew(N,N);
     dcell *B=dcellnew(2,2);
     B->p[0]=dnew(N,N);
     B->p[2]=dnew(N,N);
@@ -23,4 +23,9 @@ int main(){
     dcellwrite(B, "B.fits");
     dmat *C=dread("A.fits");
     dwrite(C, "C.fits");
+    dcell *D=dcellread("B.fits");
+    dcellwrite(D, "D.fits");
+    dcell *E=dcellread("A.fits");
+    dcellwrite(E, "E.fits");
+    dcellwrite(E, "E.fits.gz");
 }

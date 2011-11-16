@@ -11,21 +11,23 @@
 static mxArray *readdata(file_t *fp, mxArray **header){
     uint32_t magic;
     mxArray *out=NULL;
-    uint64_t nx,ny;
+    long nx,ny;
     if(fp->eof) return NULL;
-    char *header2=NULL;
-    magic=read_magic(fp, &header2);
-
+    header_t header2;
+    if(read_header2(&header2, fp)){
+	return NULL;
+    }
+    magic=header2.magic;
     if(header){
-	if(header2)
-	    *header=mxCreateString(header2);
+	if(header2.str)
+	    *header=mxCreateString(header2.str);
 	else
 	    *header=mxCreateString("");
     }
-    free(header2); header2=NULL;
-
-    zfread(&nx, sizeof(uint64_t), 1,fp);
-    zfread(&ny, sizeof(uint64_t), 1,fp);
+    free(header2.str); header2.str=NULL;
+    nx=header2.nx;
+    ny=header2.ny;
+    int iscell=0;
     if(fp->eof) return NULL;
     switch(magic){
     case MCC_ANY:
@@ -38,6 +40,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
     case MC_INT32:
     case MC_INT64:
 	{
+	    iscell=1;
 	    mwIndex ix;
 	    if(fp->eof) return NULL;
 	    out=mxCreateCellMatrix(nx,ny);
@@ -270,6 +273,34 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	warning("Unrecognized file. Please recompile the mex routines in the newest code\n");
 	out=NULL;
     }
+    if(!iscell && fp->isfits==1){/*fits file may contain extra extensions.*/
+	fp->isfits++;
+	int nx=0;
+	mxArray **outarr=NULL;
+	mxArray **headerarr=NULL;
+	while(out){
+	    nx++;
+	    outarr=realloc(outarr, sizeof(mxArray*)*nx);
+	    headerarr=realloc(headerarr, sizeof(mxArray*)*nx);
+	    outarr[nx-1]=out;
+	    if(header) headerarr[nx-1]=*header;
+	    out=readdata(fp, header);
+	}
+	if(nx>1){
+	    out=mxCreateCellMatrix(nx, 1);
+	    if(header) *header=mxCreateCellMatrix(nx, 1);
+	    int i;
+	    for(i=0; i<nx; i++){
+		mxSetCell(out, i, outarr[i]);
+		if(header) mxSetCell(*header, i, headerarr[i]);
+	    }
+	    free(outarr);
+	    free(headerarr);
+	}else{
+	    out=outarr[0];
+	    if(header) *header=headerarr[0];
+	}
+    }
     if(!out){
 	out=mxCreateDoubleMatrix(0,0,mxREAL);
     }
@@ -295,7 +326,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	plhs[0]=readdata(fp, &plhs[1]);
     }else{
 	plhs[0]=readdata(fp, NULL);
-	test_eof(fp);
+	zfeof(fp);
     }
     zfclose(fp);
 }

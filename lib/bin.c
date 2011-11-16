@@ -71,9 +71,6 @@ struct file_t{
     void *p;
     int isgzip;/*Is the file zipped.*/
     int isfits;/*Is the file fits.*/
-#if USE_PTHREAD > 0
-    pthread_mutex_t lock;
-#endif
     char *fn;
     int fd;/*For locking. */
 #if IO_TIMMING == 1
@@ -164,7 +161,6 @@ PNEW(lock);
 file_t* zfopen(const char *fn, char *mod){
     LOCK(lock);
     file_t* fp=calloc(1, sizeof(file_t));
-    PINIT(fp->lock);
     fp->fn=procfn(fn,mod,1);
     if(!fp->fn){
 	error("%s does not exist for read\n", fn);
@@ -237,7 +233,6 @@ int zfisfits(file_t *fp){
  */
 void zfclose(file_t *fp){
     LOCK(lock);
-    PDEINIT(fp->lock);
 #if IO_TIMMING == 1
     long fpos;
     if(fp->isgzip){
@@ -263,13 +258,7 @@ void zfclose(file_t *fp){
     free(fp);
     UNLOCK(lock);
 }
-/**
-   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
-   fwrite. Follows the interface of fwrite.
- */
-void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
-    /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
-    LOCK(fp->lock);
+static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
 	    perror("gzwrite");
@@ -281,45 +270,140 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
 	    error("write to %s failed\n", fp->fn);
 	}
     }
-    UNLOCK(fp->lock);
+}
+/**
+   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
+   fwrite. Follows the interface of fwrite.
+ */
+void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
+    /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
+    if(fp->isfits && size>1){
+	/* write a block of 2880 bytes each time, with big-endianness.*/
+	const int bs=2880;
+	char junk[bs];
+	int length=size*nmemb;
+	int nb=(length+bs-1)/bs;
+	char *in=(char*)ptr;
+	for(int ib=0; ib<nb; ib++){
+	    int nd=length<bs?length:bs;
+	    switch(size){
+	    case 2:
+		for(int i=0; i<nd; i+=2){
+		    junk[i]=in[i+1];
+		    junk[i+1]=in[i];
+		}
+		break;
+	    case 4:
+		for(int i=0; i<nd; i+=4){
+		    junk[i]  =in[i+3];
+		    junk[i+1]=in[i+2];
+		    junk[i+2]=in[i+1];
+		    junk[i+3]=in[i  ];
+		}
+		break;
+	    case 8:
+	    case 16:
+		for(int i=0; i<nd; i+=8){
+		    junk[i  ]=in[i+7];
+		    junk[i+1]=in[i+6];
+		    junk[i+2]=in[i+5];
+		    junk[i+3]=in[i+4];
+		    junk[i+4]=in[i+3];
+		    junk[i+5]=in[i+2];
+		    junk[i+6]=in[i+1];
+		    junk[i+7]=in[i  ];
+		}
+		break;
+	    default:
+		error("Invalid\n");
+	    }
+	    /* use bs instead of nd to test tailing blanks*/
+	    in+=bs; length-=bs;
+	    if(length<0){
+		memset(junk+nd, 0, (bs-nd)*sizeof(char));
+	    }
+	    zfwrite_do(junk, sizeof(char), bs, fp);
+	}
+    }else{
+	zfwrite_do(ptr, size, nmemb, fp);
+    }
+}
+static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+    if(fp->isgzip){
+	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
+    }else{
+	return fread(ptr, size, nmemb, (FILE*)fp->p)==nmemb?0:-1;
+    }
+}
+/**
+   Read from the file. if in gzip mode, calls gzread, otherwise calls
+   fread. follows the interface of fread. It does byte ordering from big endian
+   to small endian in case we are reading fits file.  */
+int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
+    /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
+    if(fp->isfits && size>1){/*need to do byte swapping.*/
+	const long bs=2880;
+	char junk[bs];
+	long length=size*nmemb;
+	long nb=(length+bs-1)/bs;
+	char *out=(char*)ptr;
+	for(int ib=0; ib<nb; ib++){
+	    if(zfread_do(junk, sizeof(char), bs, fp)) return -1;
+	    int nd=length<bs?length:bs;
+	    switch(size){
+	    case 2:
+		for(int i=0; i<nd; i+=2){
+		    out[i]  =junk[i+1];
+		    out[i+1]=junk[i];
+		}
+		break;
+	    case 4:
+		for(int i=0; i<nd; i+=4){
+		    out[i]  =junk[i+3];
+		    out[i+1]=junk[i+2];
+		    out[i+2]=junk[i+1];
+		    out[i+3]=junk[i  ];
+		}
+		break;
+	    case 8:
+	    case 16:
+		for(int i=0; i<nd; i+=8){
+		    out[i  ]=junk[i+7];
+		    out[i+1]=junk[i+6];
+		    out[i+2]=junk[i+5];
+		    out[i+3]=junk[i+4];
+		    out[i+4]=junk[i+3];
+		    out[i+5]=junk[i+2];
+		    out[i+6]=junk[i+1];
+		    out[i+7]=junk[i  ];
+		}
+		break;
+	    default:
+		error("Invalid\n");
+	    }
+	    out+=bs;
+	    length-=bs;
+	}
+	return 0;
+    }else{
+	return zfread_do(ptr, size, nmemb, fp);
+    }
 }
 /**
    Read from the file. if in gzip mode, calls gzread, otherwise calls
    fread. follows the interface of fread.
  */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-    /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
-    LOCK(fp->lock);
-    if(fp->isgzip){
-	int status;
-	if((status=gzread((voidp)fp->p, ptr, size*nmemb))<1){
-	    if(status==-1){
-		warning("Error happened in reading\n");
-	    }else{
-		warning("End of File encoutnered\n");
-	    }
-	}
-    }else{
-	size_t ct=fread(ptr, size, nmemb, (FILE*)fp->p);
-	if(ct!=nmemb){
-	    error("Reading from %s failed\n", fp->fn);
-	}
-	if(feof((FILE*)fp->p)){
-	    warning("End of File encountered in %s\n",fp->fn);
-	}
+    if(zfread2(ptr, size, nmemb, fp)){
+	error("Error happened while reading %s\n", fp->fn);
     }
-    UNLOCK(fp->lock);
 }
 /**
    Move the current position pointer, like fseek
 */
 int zfseek(file_t *fp, long offset, int whence){
     if(fp->isgzip){
-	int res=gzseek((voidp)fp->p,offset,whence);
-	if(res<0)
-	    return 1;
-	else
-	    return 0;
+	return gzseek((voidp)fp->p,offset,whence)<0?-1:0;
     }else{
 	return fseek((FILE*)fp->p,offset,whence);
     }
@@ -350,27 +434,7 @@ int zfpos(file_t *fp){
    Tell whether we end of file is reached.
  */
 int zfeof(file_t *fp){
-    LOCK(fp->lock);
-    int ans;
-    long cpos, fpos;
-    if(fp->isgzip){
-	cpos=gztell((voidp)fp->p);
-	gzseek((voidp)fp->p,0,SEEK_END);
-	fpos=gztell((voidp)fp->p);
-    }else{
-	cpos=ftell((FILE*)fp->p);
-	fseek((FILE*)fp->p, 0, SEEK_END);    
-	fpos=ftell((FILE*)fp->p);
-    }
-    if(cpos!=fpos){
-	fprintf(stderr,"There are unread bytes near the end of the file\n"
-		"Current position is %ld, File END is %ld\n",cpos, fpos);
-	ans=1;
-    }else{
-	ans=0;
-    }
-    UNLOCK(fp->lock);
-    return ans;
+    return zfseek(fp, 1, SEEK_SET)<0?-1:0;
 }
 /**
    Flush the buffer.
@@ -421,9 +485,10 @@ static uint32_t
 read_bin_magic(file_t *fp, char **header){
     uint32_t magic,magic2;
     uint64_t nlen, nlen2;
+    if(fp->isfits) error("fits file is not supported\n");
     while(1){
 	/*read the magic number.*/
-	zfread(&magic, sizeof(uint32_t), 1, fp);
+	if(zfread2(&magic, sizeof(uint32_t), 1, fp)) return 0;
 	/*If it is header, read or skip it.*/
 	if(magic==M_SKIP){
 	    continue;
@@ -577,7 +642,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 /**
    Read fits header
  */
-void read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
+int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
     char line[81];
     int end=0;
     int page=0;
@@ -586,8 +651,8 @@ void read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uin
     while(!end){
 	int start=0;
 	if(page==0){
-	    zfread(line, 1, 80, fp); line[80]='\0';
-	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "IMAGE", 5)){
+	    if(zfread2(line, 1, 80, fp)) return -1; line[80]='\0';
+	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
 		error("Fits header is not recognized\n");
 	    }
 	    zfread(line, 1, 80, fp); line[80]='\0';
@@ -598,10 +663,14 @@ void read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uin
 	    if(naxis>0){
 		zfread(line, 1, 80, fp); line[80]='\0';
 		if(sscanf(line+10, "%20lu", nx)!=1) error("Unable to determine nx\n");
+	    }else{
+		*nx=0;
 	    }
 	    if(naxis>1){
 		zfread(line, 1, 80, fp); line[80]='\0';
 		if(sscanf(line+10, "%20lu", ny)!=1) error("Unable to determine ny\n");
+	    }else{
+		*ny=0;
 	    }
 	    start=3+naxis;
 	}
@@ -637,6 +706,7 @@ void read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uin
     default:
 	error("Invalid\n");
     }
+    return 0;
 }
 /**
   A unified header writing routine for .bin and .fits files. It write the array
@@ -655,15 +725,29 @@ void write_header(const header_t *header, file_t *fp){
     }
 }
 /**
-   A unified header reading routine for .bin and .fits files. It read the array information and string header if any.
-*/
-void read_header(header_t *header, file_t *fp){
+   A unified header reading routine for .bin and .fits files. It read the array
+information and string header if any.  Return error signal.*/
+int read_header2(header_t *header, file_t *fp){
+    int ans;
     header->str=NULL;
     if(fp->isfits){
-	read_fits_header(fp, &header->str, &header->magic, &header->nx, &header->ny);
+	ans=read_fits_header(fp, &header->str, &header->magic, &header->nx, &header->ny);
     }else{
 	header->magic=read_bin_magic(fp, &header->str);
-	zfreadlarr(fp, 2, &header->nx, &header->ny);
+	if(header->magic==0){
+	    ans=-1;
+	}else{
+	    ans=0;
+	    zfreadlarr(fp, 2, &header->nx, &header->ny);
+	}
+    }
+    return ans;
+}
+/**
+   calls read_header2 and abort if error happens.*/
+void read_header(header_t *header, file_t *fp){
+    if(read_header2(header, fp)){
+	error("read_header failed for %s\n", fp->fn);
     }
 }
 /**
@@ -750,64 +834,9 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 	fp=(file_t*) fpn;
     }
     write_header(&header, fp);
-    if(fp->isfits){
-	/* write a block of 2880 bytes each time, with big-endianness.*/
-	const int bs=2880;
-	char junk[bs];
-	int length=nx*ny*size;
-	int nb=(length+bs-1)/bs;
-	char *in=(char*)p;
-	for(int ib=0; ib<nb; ib++){
-	    int nd=length<bs?length:bs;
-	    switch(size){
-	    case 1:
-		memcpy(junk, in, nd);
-		break;
-	    case 2:
-		for(int i=0; i<nd; i+=2){
-		    junk[i]=in[i+1];
-		    junk[i+1]=in[i];
-		}
-		break;
-	    case 4:
-		for(int i=0; i<nd; i+=4){
-		    junk[i]  =in[i+3];
-		    junk[i+1]=in[i+2];
-		    junk[i+2]=in[i+1];
-		    junk[i+3]=in[i  ];
-		}
-		break;
-	    case 8:
-	    case 16:
-		for(int i=0; i<nd; i+=8){
-		    junk[i  ]=in[i+7];
-		    junk[i+1]=in[i+6];
-		    junk[i+2]=in[i+5];
-		    junk[i+3]=in[i+4];
-		    junk[i+4]=in[i+3];
-		    junk[i+5]=in[i+2];
-		    junk[i+6]=in[i+1];
-		    junk[i+7]=in[i  ];
-		}
-		break;
-	    default:
-		error("Invalid\n");
-	    }
-	    /* use bs instead of nd to test tailing blanks*/
-	    in+=bs; length-=bs;
-	    if(length<0){
-		memset(junk+nd, 0, (bs-nd)*sizeof(char));
-	    }
-	    zfwrite(junk, sizeof(char), bs, fp);
-	}
-    }else{ 
-	if(nx>0 && ny>0){
-	    zfwrite(p, size, nx*ny, fp);
-	}
-    }
+    if(nx*ny>0) zfwrite(p, size, nx*ny, fp);
     if(isfn) zfclose(fp);
 }
-
 /**
    Write a double array of size nx*ny to file.
 */
