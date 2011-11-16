@@ -145,8 +145,14 @@ static void skysim_isky(SIM_S *simu){
 	for(int iaster=0; iaster<naster; iaster++){
 	    ASTER_S *asteri=&aster[iaster];
 	    asteri->nstep=nstep;
-	    if(!asteri->use || (parms->skyc.dbgaster>-1 && iaster!=parms->skyc.dbgaster)){
-		continue;
+	    if(parms->skyc.dbgaster>-1){
+		if(iaster!=parms->skyc.dbgaster){
+		    continue;
+		}
+	    }else{
+		if(!asteri->use){
+		    continue;
+		}
 	    }
 	    if(parms->skyc.verbose>1){
 		for(int iwfs=0; iwfs<aster[iaster].nwfs; iwfs++){

@@ -189,8 +189,18 @@ X(cell) **X(cellreadarr)(long *nxout, long *nyout, const char *format,...){
 	free(header.str); header.str=NULL;
     }
     X(cell) **out=calloc(nx*ny, sizeof(X(cell)*));
-    for(long ic=0; ic<nx*ny; ic++){
-	out[ic]=X(cellreaddata)(fp, headerc);
+    if(!headerc || !zfisfits(fp)){
+	for(long ic=0; ic<nx*ny; ic++){
+	    out[ic]=X(cellreaddata)(fp, headerc);
+	}
+    }else{/*fits format. need to read extensions*/
+	out[0]=X(cellreaddata)(fp, headerc);
+	if(ny!=1) error("Not expected\n");
+	while(!read_header2(headerc, fp)){
+	    nx++;
+	    out=realloc(out, nx*sizeof(X(cell)*));
+	    out[nx-1]=X(cellreaddata)(fp, headerc);
+	}
     }
     *nxout=nx;
     *nyout=ny;

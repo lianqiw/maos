@@ -452,7 +452,8 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	    char *nl=strchr(str, '\n');
 	    int length;
 	    if(nl){
-		length=nl-str;
+		length=nl-str+1;
+		if(length<=70) nl[0]=';';
 	    }else{
 		length=strlen(str);
 	    }
@@ -462,7 +463,6 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	    strncpy(header[hc]+10, str, length);
 	    hc++;
 	    str+=length;
-	    if(nl) str++; /* skip '\n' */
 	}
     }
     FLUSH_OUT;
