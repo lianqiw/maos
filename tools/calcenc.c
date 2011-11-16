@@ -24,12 +24,12 @@
 #include "../lib/aos.h"
 static void calcenc_do(file_t *fpin,   /**<Input file pointer*/
 		       file_t *fpout,  /**<Output file pointer*/
-		       uint32_t magic, /**<The magic number if already read*/
+		       header_t *header,
 		       dmat *restrict dvec,     /**<Vector of the diameter*/
 		       int type,        /**<Type of encloded energy: 0: square, 1: circle*/
 		       int nthread     /**<Number of threads*/
 		       ){
-    dmat *psf=dreaddata(fpin, magic);
+    dmat *psf=dreaddata(fpin, header);
     int free_dvec=0;
     if(!dvec){
 	free_dvec=1;
@@ -72,18 +72,16 @@ static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
     file_t *fp=zfopen(fn, "r");
     file_t *fpout=zfopen(fnout, "w");
     info2("%s --> %s\n", fn, fnout);
-    uint32_t magic=read_magic(fp, NULL);
-    long nx, ny;
-    if(iscell(magic)){
-	write_magic(magic, fpout);
-	zfreadlarr(fp, 2, &nx, &ny);
-	zfwritelarr(fpout, 2, &nx, &ny);
-	for(long i=0; i<nx*ny; i++){
-	    info2("%ld of %ld\n", i, nx*ny);
-	    calcenc_do(fp, fpout, 0, dvec, type, nthread);
+    header_t header;
+    read_header(&header, fp);
+    if(iscell(header.magic)){
+	write_header(&header, fpout);
+	for(long i=0; i<header.nx*header.ny; i++){
+	    info2("%ld of %ld\n", i, header.nx*header.ny);
+	    calcenc_do(fp, fpout, NULL, dvec, type, nthread);
 	}
     }else{
-	calcenc_do(fp, fpout, magic, dvec, type, nthread);
+	calcenc_do(fp, fpout, &header, dvec, type, nthread);
     }
     zfclose(fp);
     zfclose(fpout);

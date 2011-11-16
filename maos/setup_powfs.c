@@ -904,6 +904,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     const double blury=parms->powfs[ipowfs].pixblur*pixthetay;/*Is this right?*/
     const double e0x=-2*M_PI*M_PI*blurx*blurx;/*blurring factors */
     const double e0y=-2*M_PI*M_PI*blury*blury;
+    const int do_blur=fabs(blurx)>EPS && fabs(blury)>EPS;
     const int ncompx=powfs[ipowfs].ncompx;
     const int ncompy=powfs[ipowfs].ncompy;
     const int ncompx2=ncompx>>1;
@@ -974,9 +975,10 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 			int jx=ix-ncompx2;
 			double ir=ct*jx+st*jy;
 			double ia=-st*jx+ct*jy;
-			pn[iy][ix]=sinc(ir*duyp)*sinc(ia*duxp)
-			    *exp(e0x*(ir*ir*duy2)+e0y*(ia*ia*dux2))
-			    *pdtheta;
+			pn[iy][ix]=sinc(ir*duyp)*sinc(ia*duxp)*pdtheta;
+			if(do_blur){
+			    pn[iy][ix]*=exp(e0x*(ir*ir*duy2)+e0y*(ia*ia*dux2));
+			}
 		    }
 		}
 		/*put peak in corner. pretreat nominal so

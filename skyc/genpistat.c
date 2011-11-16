@@ -80,28 +80,22 @@ static void calc_pistat(GENPISTAT_S *data){
 		error("%s exist, but %s doesn't exist\n", fnwvf, fnztilt);
 	    }
 	    file_t *fp_wvf=zfopen(fnwvf,"rb");
-	    uint32_t magic;
-	    magic=read_magic(fp_wvf,NULL);
-	    if(!iscell(magic)){
-		error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
+	    header_t header;
+	    read_header(&header, fp_wvf);
+	    long nstep=header.nx;
+	    if(!iscell(header.magic)){
+		error("expected data type: %u, got %u\n", (uint32_t)MCC_ANY, header.magic);
 	    }
-	    long nstep,junk;
-	    zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
-	    zfread(&junk,sizeof(uint64_t),1,fp_wvf);
-		
+	    free(header.str); header.str=NULL;
 	    file_t *fp_ztilt=zfopen(fnztilt,"rb");
-	    /*zfread(&magic, sizeof(uint32_t),1,fp_ztilt); */
-	    magic=read_magic(fp_ztilt,NULL);
-	    if(!iscell(magic)){
-		error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
+	    read_header(&header, fp_ztilt);
+	    if(!iscell(header.magic)){
+		error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
 	    } 
-	    long nstep2;
-	    zfread(&nstep2,sizeof(uint64_t),1,fp_ztilt);
-	    zfread(&junk,sizeof(uint64_t),1,fp_ztilt);
-		
-	    if(nstep!=nstep2){
+	    if(nstep!=header.nx){
 		error("length of wvfout doesn't equal to length of ztiltout\n");
 	    }
+	    free(header.str); header.str=NULL;
 	    const int nsa=msa*msa;
 	    const int nwvl=parms->maos.nwvl;
 	    dcell *pistat=dcellnew(nsa, nwvl);/*pixel intensity mean(I) */

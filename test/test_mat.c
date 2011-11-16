@@ -212,7 +212,7 @@ static void test_spline_2d(void){
 	}
     }
     dcell *coeff=dbspline_prep(x,y,z);
-    dmat *znew=dbspline_eval(coeff,x,y,xnew,ynew);
+    dmat *z22=dbspline_eval(coeff,x,y,xnew,ynew);
 
     dwrite(x,"x");
     dwrite(y,"y");
@@ -220,7 +220,7 @@ static void test_spline_2d(void){
 
     dwrite(xnew,"xnew");
     dwrite(ynew,"ynew");
-    dwrite(znew,"znew");
+    dwrite(z22,"z22");
     dcellwrite(coeff,"coeff");
     exit(0);
 }
@@ -229,8 +229,7 @@ static void test_svd(void){
     dmat *A=NULL;
     spfull(&A, a->p[0], 1);
     if(0){
-    dmat *U, *S, *VT, *U2, *S2, *VT2;
-    TIC;
+    dmat *U, *S, *VT, *U2, *S2;
     tic;
     dsvd(&U, &S, &VT, A);
     toc("dsvd");

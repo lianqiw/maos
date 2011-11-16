@@ -476,14 +476,13 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    if(fnwvf[iy][ix]){
 			/*info("Loading %.4f x %s\n", wtxi, fnwvf[iy][ix]); */
 			file_t *fp_wvf=zfopen(fnwvf[iy][ix],"rb");
-			uint32_t magic;
-			magic=read_magic(fp_wvf, NULL);
-			if(!iscell(magic)){			
-			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
+			header_t header;
+			read_header(&header, fp_wvf);
+			if(!iscell(header.magic)){
+			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
 			}
-			long junk;
-			zfread(&nstep,sizeof(uint64_t),1,fp_wvf);
-			zfread(&junk,sizeof(uint64_t),1,fp_wvf);
+			nstep=header.nx;
+			free(header.str);
 			if(parms->skyc.limitnstep >0 && nstep>parms->skyc.limitnstep){
 			    nstep=parms->skyc.limitnstep;
 			    warning("Only read %ld steps\n",nstep);
@@ -510,14 +509,13 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    }
 		    if(fnztilt[iy][ix]){
 			file_t *fp_ztilt=zfopen(fnztilt[iy][ix],"rb");
-			uint32_t magic;
-			magic=read_magic(fp_ztilt, NULL);
-			if(!iscell(magic)){
-			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY,magic);
+			header_t header;
+			read_header(&header, fp_ztilt);
+			if(!iscell(header.magic)){
+			    error("expected data type: %u, got %u\n",(uint32_t)MCC_ANY, header.magic);
 			}
-			long junk;
-			zfread(&nstep,sizeof(uint64_t),1,fp_ztilt);
-			zfread(&junk,sizeof(uint64_t),1,fp_ztilt);
+			nstep=header.nx;
+			free(header.str);
 			if(parms->skyc.limitnstep >0 && nstep>parms->skyc.limitnstep){
 			    nstep=parms->skyc.limitnstep;
 			    warning("Only read %ld steps\n",nstep);

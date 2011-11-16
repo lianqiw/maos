@@ -67,13 +67,13 @@ int main(int argc, char *argv[]){
 	}
 	strcpy(tmp, ".fits");
 	info2("Copying from %s to %s\n", fn, fn2);
-	dcell *temp=dcellread(fn);
+	dcell *temp=dcellread("%s", fn);
 	if(header){
 	    for(int i=0; i<temp->nx*temp->ny; i++){
 		temp->p[i]->header=strdup(header[i]);
 	    }
 	}
-	dcellwrite(temp, fn2);
+	dcellwrite(temp, "%s", fn2);
 	dcellfree(temp);
     }
 }

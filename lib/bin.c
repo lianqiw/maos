@@ -289,9 +289,6 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
  */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
-    if(fp->isfits){
-	error("Not yet implemented\n");
-    }
     LOCK(fp->lock);
     if(fp->isgzip){
 	int status;
@@ -340,6 +337,16 @@ void zfrewind(file_t *fp){
     }
 }
 /**
+   Tell position in file.
+ */
+int zfpos(file_t *fp){
+    if(fp->isgzip){
+	return gztell((voidp)fp->p);
+    }else{
+	return ftell((FILE*)fp->p);
+    }
+}
+/**
    Tell whether we end of file is reached.
  */
 int zfeof(file_t *fp){
@@ -375,13 +382,43 @@ void zflush(file_t *fp){
 	fflush(fp->p);
     }
 }
+
+/**
+   Write multiple long numbers into the file. To write three numbers, a, b, c,
+call with zfwritelarr(fp, 3, &a, &b, &c); */
+void zfwritelarr(file_t *fp, int count, ...){
+    va_list ap;
+    int i;
+    va_start (ap, count);              /*Initialize the argument list. */
+    for (i = 0; i < count; i++){
+	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
+	zfwrite(addr, sizeof(uint64_t), 1, fp);
+    }
+    va_end (ap);                       /* Clean up.  */
+}
+/**
+   Read multiple long numbers from the file. To read three numbers, a, b, c,
+   call with zfreadlarr(fp, 3, &a, &b, &c);
+ */
+void zfreadlarr(file_t *fp, int count, ...){
+    va_list ap;
+    int i;
+    va_start (ap, count);              /*Initialize the argument list. */
+    for (i = 0; i < count; i++){
+	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
+	zfread(addr, sizeof(uint64_t), 1, fp);
+    }
+    va_end (ap);                       /* Clean up.  */
+}
+
 /**
    Obtain the current magic number. If it is a header, read it out if output of
    header is not NULL.  The header will be appended to the output header.
 
    In file, the header is located before the data magic.
 */
-uint32_t read_magic(file_t *fp, char **header){
+static uint32_t 
+read_bin_magic(file_t *fp, char **header){
     uint32_t magic,magic2;
     uint64_t nlen, nlen2;
     while(1){
@@ -422,7 +459,8 @@ uint32_t read_magic(file_t *fp, char **header){
 /**
    Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
 */
-void write_magic(uint32_t magic, file_t *fp){
+static void 
+write_bin_magic(uint32_t magic, file_t *fp){
     if(fp->isfits) error("fits file is not supported\n");
     uint32_t magic2=M_SKIP;
     zfwrite(&magic2, sizeof(uint32_t), 1, fp);
@@ -441,7 +479,8 @@ void write_magic(uint32_t magic, file_t *fp){
 /*
  * Don't need to write M_SKIP here because we have a pair of magic
  */
-void write_header(const char *header, file_t *fp){
+static void 
+write_bin_header(const char *header, file_t *fp){
     if(!header) return;
     if(fp->isfits) error("fits file is not supported\n");
     uint32_t magic=M_HEADER;
@@ -458,6 +497,174 @@ void write_header(const char *header, file_t *fp){
     zfwrite(&nlen, sizeof(uint64_t), 1, fp);
     zfwrite(&magic, sizeof(uint32_t), 1, fp);
     free(header2);
+}
+
+/**
+   Write fits header. extra is extra header that will be put in fits comment
+*/
+static void
+write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
+    uint64_t naxis[count];
+    va_list ap;
+    va_start (ap, count);              /*Initialize the argument list. */
+    int empty=0;
+    for (int i = 0; i < count; i++){
+	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
+	if((*addr)==0) empty=1;
+	naxis[i]=*addr;
+    }
+    va_end(ap);
+
+    if(empty) count=0;
+
+    int bitpix;
+    switch(magic){
+    case M_FLT:
+	bitpix=-32;
+	break;
+    case M_DBL:
+	bitpix=-64;
+	break;
+    default:
+	error("Data type is not yet supported.\n");
+    }
+    const int nh=36;
+    char header[nh][80];
+    memset(header, ' ', sizeof(char)*36*80);
+    int hc=0;
+    if(fp->isfits==1){
+	snprintf(header[hc], 80, "%-8s= %20s", "SIMPLE", "T");    header[hc][30]=' '; hc++;
+	fp->isfits++;
+    }else{
+	snprintf(header[hc], 80, "%-8s= %s", "XTENSION", "'IMAGE   '");    header[hc][20]=' '; hc++;
+    }
+    snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
+    snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
+#define FLUSH_OUT /*write the block and reset */	\
+	if(hc==nh){					\
+	    zfwrite(header, sizeof(char), 36*80, fp);	\
+	    memset(header, ' ', sizeof(char)*36*80);	\
+	    hc=0;					\
+	}
+    for (int i = 0; i < count; i++){
+	FLUSH_OUT;
+	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
+    }
+    if(str){
+	const char *str2=str+strlen(str);
+	while(str<str2){
+	    char *nl=strchr(str, '\n');
+	    int length;
+	    if(nl){
+		length=nl-str;
+	    }else{
+		length=strlen(str);
+	    }
+	    if(length>70) length=70;
+	    FLUSH_OUT;
+	    strncpy(header[hc], "COMMENT   ", 10);
+	    strncpy(header[hc]+10, str, length);
+	    hc++;
+	    str+=length;
+	    if(nl) str++; //skip '\n'
+	}
+    }
+    FLUSH_OUT;
+    snprintf(header[hc], 80, "%-8s", "END"); header[hc][8]=' '; hc++;
+    zfwrite(header, sizeof(char), 36*80, fp);
+#undef FLUSH_OUT
+}
+/**
+   Read fits header
+ */
+void read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
+    char line[81];
+    int end=0;
+    int page=0;
+    int bitpix=0;
+    int naxis=0;
+    while(!end){
+	int start=0;
+	if(page==0){
+	    zfread(line, 1, 80, fp); line[80]='\0';
+	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "IMAGE", 5)){
+		error("Fits header is not recognized\n");
+	    }
+	    zfread(line, 1, 80, fp); line[80]='\0';
+	    if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
+	    zfread(line, 1, 80, fp); line[80]='\0';
+	    if(sscanf(line+10, "%20d", &naxis)!=1) error("Unable to determine naxis\n");
+	    if(naxis>2) error("Data type not supported\n");
+	    if(naxis>0){
+		zfread(line, 1, 80, fp); line[80]='\0';
+		if(sscanf(line+10, "%20lu", nx)!=1) error("Unable to determine nx\n");
+	    }
+	    if(naxis>1){
+		zfread(line, 1, 80, fp); line[80]='\0';
+		if(sscanf(line+10, "%20lu", ny)!=1) error("Unable to determine ny\n");
+	    }
+	    start=3+naxis;
+	}
+	for(int i=start; i<36; i++){
+	    zfread(line, 1, 80, fp); line[80]='\0';
+	    if(!strncmp(line, "COMMENT", 7)){
+		for(int j=79; j>9; j--){
+		    if(isspace((int)line[j])){
+			line[j]='\0';
+		    }else{
+			break;
+		    }
+		}
+		int length=strlen(line+10);
+		if(*str){
+		    *str=realloc(*str, strlen(*str)+length+1);
+		}else{
+		    *str=malloc(length+1); (*str)[0]='\0';
+		}
+		strcat(*str, line+10);
+	    }else if(!strncmp(line, "END",3)){
+		end=1;
+	    }
+	}
+    }
+    switch(bitpix){
+    case -32:
+	*magic=M_FLT;
+	break;
+    case -64:
+	*magic=M_DBL;
+	break;
+    default:
+	error("Invalid\n");
+    }
+}
+/**
+  A unified header writing routine for .bin and .fits files. It write the array
+information and string header if any.  */
+void write_header(const header_t *header, file_t *fp){
+    if(fp->isfits){
+	if(!iscell(header->magic)){
+	    write_fits_header(fp, header->str, header->magic, 2, &header->nx, &header->ny);
+	}
+    }else{
+	if(header){
+	    write_bin_header(header->str, fp);
+	}
+	write_bin_magic(header->magic, fp);
+	zfwritelarr(fp, 2, &header->nx, &header->ny);
+    }
+}
+/**
+   A unified header reading routine for .bin and .fits files. It read the array information and string header if any.
+*/
+void read_header(header_t *header, file_t *fp){
+    header->str=NULL;
+    if(fp->isfits){
+	read_fits_header(fp, &header->str, &header->magic, &header->nx, &header->ny);
+    }else{
+	header->magic=read_bin_magic(fp, &header->str);
+	zfreadlarr(fp, 2, &header->nx, &header->ny);
+    }
 }
 /**
  * Get the length of string in header, rounded to multiple of 8.
@@ -480,7 +687,7 @@ void write_timestamp(file_t *fp){
     char header[128];
     snprintf(header,128, "Created by MAOS Version %s on %s in %s\n",
 	     PACKAGE_VERSION, myasctime(), myhostname());
-    write_header(header, fp);
+    write_bin_header(header, fp);
 }
 
 /**
@@ -519,104 +726,8 @@ double search_header_num(const char *header, const char *key){
 	return NAN;/*not found. */
     }
 }
-/**
-   Write multiple long numbers into the file. To write three numbers, a, b, c,
-call with zfwritelarr(fp, 3, &a, &b, &c); */
-void zfwritelarr(file_t *fp, int count, ...){
-    va_list ap;
-    int i;
-    va_start (ap, count);              /*Initialize the argument list. */
-    for (i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
-	zfwrite(addr, sizeof(uint64_t), 1, fp);
-    }
-    va_end (ap);                       /* Clean up.  */
-}
-/**
-   Read multiple long numbers from the file. To read three numbers, a, b, c,
-   call with zfreadlarr(fp, 3, &a, &b, &c);
- */
-void zfreadlarr(file_t *fp, int count, ...){
-    va_list ap;
-    int i;
-    va_start (ap, count);              /*Initialize the argument list. */
-    for (i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
-	zfread(addr, sizeof(uint64_t), 1, fp);
-    }
-    va_end (ap);                       /* Clean up.  */
-}
-/**
-   Write fits header. extra is extra header that will be put in fits comment
-*/
-void write_fits_header(file_t *fp, const char *extra, uint32_t magic, int count, ...){
-    uint64_t naxis[count];
-    va_list ap;
-    va_start (ap, count);              /*Initialize the argument list. */
-    int empty=0;
-    for (int i = 0; i < count; i++){
-	uint64_t *addr=va_arg (ap, uint64_t*);  /*Get the next argument value.   */
-	if((*addr)==0) empty=1;
-	naxis[i]=*addr;
-    }
-    va_end(ap);
 
-    if(empty) count=0;
 
-    int bitpix;
-    switch(magic){
-    case M_DBL:
-	bitpix=-64;
-	break;
-    default:
-	error("Data type is not supported\n");
-    }
-    const int nh=36;
-    char header[nh][80];
-    memset(header, ' ', sizeof(char)*36*80);
-    int hc=0;
-    if(fp->isfits==1){
-	snprintf(header[hc], 80, "%-8s= %20s", "SIMPLE", "T");    header[hc][30]=' '; hc++;
-	fp->isfits++;
-    }else{
-	snprintf(header[hc], 80, "%-8s= %s", "XTENSION", "'IMAGE   '");    header[hc][20]=' '; hc++;
-    }
-    snprintf(header[hc], 80, "%-8s= %20d", "BITPIX", bitpix); header[hc][30]=' '; hc++;
-    snprintf(header[hc], 80, "%-8s= %20d", "NAXIS", count);   header[hc][30]=' '; hc++;
-#define FLUSH_OUT /*write the block and reset */	\
-	if(hc==nh){					\
-	    zfwrite(header, sizeof(char), 36*80, fp);	\
-	    memset(header, ' ', sizeof(char)*36*80);	\
-	    hc=0;					\
-	}
-    for (int i = 0; i < count; i++){
-	FLUSH_OUT;
-	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
-    }
-    if(extra){
-	const char *extra2=extra+strlen(extra);
-	while(extra<extra2){
-	    char *nl=strchr(extra, '\n');
-	    int length;
-	    if(nl){
-		length=nl-extra;
-	    }else{
-		length=strlen(extra);
-	    }
-	    if(length>70) length=70;
-	    FLUSH_OUT;
-	    strncpy(header[hc], "COMMENT   ", 10);
-	    strncpy(header[hc]+10, extra, length);
-	    hc++;
-	    extra+=length;
-	    if(nl) extra++; //skip '\n'
-	}
-    }
-    FLUSH_OUT;
-    snprintf(header[hc], 80, "%-8s", "END"); header[hc][8]=' '; hc++;
-    zfwrite(header, sizeof(char), 36*80, fp);
-#undef FLUSH_OUT
-}
 /**
    Write an 1-d or 2-d array into the file. First write a magic number that
    represents the data type. Then write two numbers representing the
@@ -626,19 +737,20 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 	      const int isfn,      /**<[in] Is this a filename or already opened file*/
 	      const size_t size,   /**<[in] Size of each element*/
 	      const uint32_t magic,/**<[in] The magic number. see bin.h*/ 
-	      const char *header,  /**<[in] The header as string*/
+	      const char *str,     /**<[in] The header as string*/
 	      const void *p,       /**<[in] The data of the array*/
 	      const uint64_t nx,   /**<[in] Number of rows. this index changes fastest*/
 	      const uint64_t ny    /**<[in] Number of columns. 1 for vector*/
 	      ){
     file_t *fp;
+    header_t header={magic, nx, ny, (char*)str};
     if(isfn){
 	fp=zfopen((char*)fpn, "wb");
     }else{
 	fp=(file_t*) fpn;
     }
+    write_header(&header, fp);
     if(fp->isfits){
-	write_fits_header(fp, header, magic, 2, &nx, &ny);
 	/* write a block of 2880 bytes each time, with big-endianness.*/
 	const int bs=2880;
 	char junk[bs];
@@ -688,12 +800,7 @@ void do_write(const void *fpn,     /**<[in] The file pointer*/
 	    }
 	    zfwrite(junk, sizeof(char), bs, fp);
 	}
-    }else{ /*Write a dummy magic so that our header is multiple of 8 bytes long. */
-	if(header){
-	    write_header(header, fp);
-	}
-	write_magic(magic, fp);
-	zfwritelarr(fp, 2, &nx, &ny);
+    }else{ 
 	if(nx>0 && ny>0){
 	    zfwrite(p, size, nx*ny, fp);
 	}
@@ -800,7 +907,7 @@ void readspintdata(file_t *fp, uint32_t magic, spint *out, long len){
    Read spint array of size nx*ny from file. Optionally convert from other formats.
  */
 spint *readspint(file_t *fp, long* nx, long* ny){
-    uint32_t magic=read_magic(fp, NULL);
+    uint32_t magic=read_bin_magic(fp, NULL);
     uint64_t nx2, ny2;
     zfreadlarr(fp, 2, &nx2, &ny2);
     spint *out=NULL;

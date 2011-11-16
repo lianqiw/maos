@@ -21,4 +21,6 @@ int main(){
     dwrite(A, "A.fits.gz");
     dcellwrite(B, "B.bin");
     dcellwrite(B, "B.fits");
+    dmat *C=dread("A.fits");
+    dwrite(C, "C.fits");
 }
