@@ -146,9 +146,6 @@ __global__ static void tcog_do(float *grad, const float *restrict ints,
 			       int nx, int ny, float pixthetax, float pixthetay, int nsa, 
 			       float cogthres, float cogoff, float *srot){
     __shared__ float sum[3];
-    __shared__ uint32_t imax;
-    __shared__ float fmax;
-    if(threadIdx.x==0 && threadIdx.y==0) imax=0;
     if(threadIdx.x<3 && threadIdx.y==0) sum[threadIdx.x]=0.f;
     __syncthreads();//is this necessary?
     int isa=blockIdx.x;
