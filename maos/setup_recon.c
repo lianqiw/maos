@@ -626,6 +626,9 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	int do_ref=0;
 	if(parms->powfs[ipowfs].neareconfile){/*taks precedance */
 	    dmat *nea=dread("%s_wfs%d",parms->powfs[ipowfs].neareconfile,iwfs);/*rad */
+	    if(nea && nea->p[0]<1e-11) {
+		error("Supplied NEA is too small\n");
+	    }
 	    /*rad */
 	    saneal->p[iwfs+iwfs*nwfs]=spnewdiag(nsa*2,nea->p,1.);
 	    dcwpow(nea, 2);/*rad^2 */

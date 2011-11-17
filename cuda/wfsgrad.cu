@@ -101,9 +101,9 @@ __global__ void cuztilt(float *restrict g, float *restrict opd,
    Apply matched filter. \todo this implementation relies on shared variable. It
 is probably causing competition.  */
 __global__ static void mtche_do(float *restrict grad, float (*restrict *restrict mtches)[2], 
-				const float *restrict ints, int pixpsa, int nsa){
-    __shared__ float g[2];/*shared by threads in the same block (with the same isa). */
-    if(threadIdx.x<2){
+				const float *restrict ints, const float *restrict i0sum, int pixpsa, int nsa){
+    __shared__ float g[3];/*shared by threads in the same block (with the same isa). */
+    if(threadIdx.x<3){
 	g[threadIdx.x]=0.f;
     }
     __syncthreads();//is this necessary?
@@ -111,15 +111,21 @@ __global__ static void mtche_do(float *restrict grad, float (*restrict *restrict
     ints+=isa*pixpsa;
     const float (*const restrict mtche)[2]=mtches[isa];
  
-    float gp[2]={0.f,0.f};
+    float gp[3]={0.f,0.f,0.f};
     for (int ipix=threadIdx.x; ipix<pixpsa; ipix+=blockDim.x){
 	gp[0]+=mtche[ipix][0]*ints[ipix];
 	gp[1]+=mtche[ipix][1]*ints[ipix];
+	gp[2]+=ints[ipix];
     }
     atomicAdd(&g[0], gp[0]);
     atomicAdd(&g[1], gp[1]);
+    atomicAdd(&g[2], gp[2]);
     __syncthreads();
     if(threadIdx.x<2){
+	if(i0sum){
+	    /*normalize gradients according to siglev.*/
+	    g[threadIdx.x]*=i0sum[isa]/g[2];
+	}
 	grad[isa+nsa*threadIdx.x]=g[threadIdx.x];
     }
 }
@@ -387,7 +393,9 @@ void gpu_wfsgrad(thread_t *info){
 	    case 1:
 		/*use 32 instead of pixpsa here. using pixpsa causes random
 		  error in g. is this due to lack of ECC?*/
-		mtche_do<<<nsa, 32,0,stream>>>(gradnf->p, cuwfs[iwfs].mtche, ints->p[0]->p, pixpsa, nsa);
+		mtche_do<<<nsa, 32,0,stream>>>(gradnf->p, cuwfs[iwfs].mtche, ints->p[0]->p,
+					       parms->powfs[ipowfs].mtchscl?cuwfs[iwfs].i0sum:NULL,
+					       pixpsa, nsa);
 		break;
 	    case 2:{
 		float pixthetax=(float)parms->powfs[ipowfs].radpixtheta;
@@ -441,7 +449,9 @@ void gpu_wfsgrad(thread_t *info){
 		gradny=curnew(nsa*2, 1);
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:
-		    mtche_do<<<nsa, 16, 0, stream>>>(gradny->p, cuwfs[iwfs].mtche, ints->p[0]->p, pixpsa, nsa);
+		    mtche_do<<<nsa, 16, 0, stream>>>(gradny->p, cuwfs[iwfs].mtche, ints->p[0]->p, 
+						     parms->powfs[ipowfs].mtchscl?cuwfs[iwfs].i0sum:NULL,
+						     pixpsa, nsa);
 		    break;
 		case 2:{
 		    float pixthetax=(float)parms->powfs[ipowfs].radpixtheta;
@@ -594,12 +604,12 @@ void gpu_wfsgrad_save(SIM_T *simu){
 		    if(parms->powfs[ipowfs].phytypesim==3){
 			dmat *sanea=NULL;
 			dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
-			dwrite(sanea, "sanea_sim_wfs%d_%d.bin",iwfs,seed);
+			dwrite(sanea, "sanea_sim_%d_wfs%d.bin",seed,iwfs);
 			dfree(sanea);
 		    }else{
 			curmat *sanea=NULL;
 			curadd(&sanea, 0, cuwfs[iwfs].neareal, scale, stream);
-			curwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
+			curwrite(sanea,"sanea_sim_%d_wfs%d.bin",seed,iwfs);
 			curfree(sanea);
 		    }
 		}

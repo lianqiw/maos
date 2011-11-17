@@ -81,7 +81,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	int iwfs0=parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
+	int iwfs0=parms->powfs[ipowfs].wfs[0];
+	/*for(int i=0; i<parms->powfs[ipowfs].nwfs; i++){
+	    if(wfsgpu[i]==wfsgpu[iwfs]){
+		iwfs0=parms->powfs[ipowfs].wfs[i];
+		break;
+	    }
+	    }*/
 	/*imcc for ztilt. */
 	STREAM_NEW(cuwfs[iwfs].stream);
 	DO(cusparseCreate(&cuwfs[iwfs].sphandle));
@@ -268,8 +274,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			for(int isa=0; isa<nsa; isa++){
 			    gpu_dmat2dev((float**)&cuwfs[iwfs].mtche[isa], mtche[isa]);
 			}
+			gpu_dbl2dev(&cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0), nsa);
 		    }else{
 			cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
+			cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
 		    }
 		}
 		if(powfs[ipowfs].bkgrnd){

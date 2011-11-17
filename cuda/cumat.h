@@ -170,10 +170,10 @@ template <typename T, uint32_t magic>
 	T *tmp=(T*)malloc(A->nx*A->ny*sizeof(T));
 	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(T), cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
-	do_write(fp, 0, sizeof(T), magic, tmp, A->nx, A->ny);
+	do_write(fp, 0, sizeof(T), magic, NULL, tmp, A->nx, A->ny);
 	free(tmp);
     }else{
-	do_write(fp, 0, sizeof(T), magic, NULL, 0, 0);
+	do_write(fp, 0, sizeof(T), magic, NULL, NULL, 0, 0);
     }
 }
 template <typename T, uint32_t magic>
@@ -188,17 +188,12 @@ template <typename T, uint32_t magic>
     inline void cucellwrite(const cucell<T> *A, const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn, "wb");
-    write_magic(MCC_ANY, fp);
+    header_t header={MCC_ANY, A?A->nx:0, A?A->ny:0, NULL};
+    write_header(&header, fp);
     if(A){
-	uint64_t nx=A->nx;
-	uint64_t ny=A->ny;
-	zfwritelarr(fp, 2, &nx, &ny);
 	for(int i=0; i<A->nx*A->ny; i++){
 	    cuwritedata<T, magic>(A->p[i], fp);
 	}
-    }else{
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
     }
     zfclose(fp);	
 }

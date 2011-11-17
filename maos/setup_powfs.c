@@ -1490,7 +1490,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     TIC;tic;
     const int nwfs=parms->powfs[ipowfs].nwfs;
     const int nsa=powfs[ipowfs].pts->nsa;
-    const int ntry=100;
+    const int ntry=500;
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const double stry=1./ntry;
     const double pixthetax=parms->powfs[ipowfs].radpixtheta;
@@ -1623,7 +1623,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
     }
     dcellfree(sanea);
-    toc("setup_powfs_cog");
+    toc2("setup_powfs_cog");
 }
 
 

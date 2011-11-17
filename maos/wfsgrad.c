@@ -657,6 +657,11 @@ void wfsgrad_iwfs(thread_t *info){
 		switch(parms->powfs[ipowfs].phytypesim){
 		case 1:{/*(constraint) Matched filter*/
 		    dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
+		    if(parms->powfs[ipowfs].mtchscl){
+			double scale=i0sum[isa]/dsum(ints->p[isa]);
+			gnf[0]*=scale;
+			gnf[1]*=scale;
+		    }
 		}
 		    break;
 		case 2:{/*tCoG*/
@@ -867,7 +872,7 @@ static void wfsgrad_save(SIM_T *simu){
 	    if(scale<=0) continue;
 	    scale=1./floor(scale);/*only multiple of dtrat is recorded. */
 	    dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
-	    dwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
+	    dwrite(sanea,"sanea_sim_%d_wfs%d.bin",seed,iwfs);
 	    dfree(sanea);
 
 	    if(simu->pistatout && simu->pistatout[iwfs]){
