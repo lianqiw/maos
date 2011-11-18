@@ -872,7 +872,7 @@ static void wfsgrad_save(SIM_T *simu){
 	    if(scale<=0) continue;
 	    scale=1./floor(scale);/*only multiple of dtrat is recorded. */
 	    dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
-	    dwrite(sanea,"sanea_sim_%d_wfs%d.bin",seed,iwfs);
+	    dwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
 	    dfree(sanea);
 
 	    if(simu->pistatout && simu->pistatout[iwfs]){

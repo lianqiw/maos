@@ -601,12 +601,12 @@ void gpu_wfsgrad_save(SIM_T *simu){
 		    if(parms->powfs[ipowfs].phytypesim==3){
 			dmat *sanea=NULL;
 			dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
-			dwrite(sanea, "sanea_sim_%d_wfs%d.bin",seed,iwfs);
+			dwrite(sanea, "sanea_sim_wfs%d.bin",iwfs,seed);
 			dfree(sanea);
 		    }else{
 			curmat *sanea=NULL;
 			curadd(&sanea, 0, cuwfs[iwfs].neareal, scale, stream);
-			curwrite(sanea,"sanea_sim_%d_wfs%d.bin",seed,iwfs);
+			curwrite(sanea,"sanea_sim_wfs%d.bin",iwfs,seed);
 			curfree(sanea);
 		    }
 		}
