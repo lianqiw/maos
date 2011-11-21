@@ -161,12 +161,11 @@ PNEW(lock);
 file_t* zfopen(const char *fn, char *mod){
     LOCK(lock);
     file_t* fp=calloc(1, sizeof(file_t));
-    fp->fn=procfn(fn,mod,1);
+    const char* fn2=fp->fn=procfn(fn,mod,1);
     if(!fp->fn){
 	error("%s does not exist for read\n", fn);
 	_exit(1);
     }
-    const char* fn2=fp->fn;
 #if IO_TIMMING == 1
     gettimeofday(&(fp->tv1), NULL);
 #endif
@@ -195,15 +194,29 @@ file_t* zfopen(const char *fn, char *mod){
 	_exit(1);
     }
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
-    if((check_suffix(fn, ".bin") || check_suffix(fn, ".fits")) && mod[0]=='w'){
-	fp->isgzip=0;
-	if(!(fp->p=fdopen(fp->fd,mod))){
-	    error("Error fdopen for %s\n",fn2);
+    if(mod[0]=='w'){
+	if(check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
+	    fp->isgzip=0;
+	}else{
+	    fp->isgzip=1;
 	}
     }else{ 
-	fp->isgzip=1;
+	uint16_t magic;
+	read(fp->fd, &magic, sizeof(uint16_t));
+	if(magic==0x8b1f){
+	    fp->isgzip=1;
+	}else{
+	    fp->isgzip=0;
+	}
+	lseek(fp->fd, 0, SEEK_SET);
+    }
+    if(fp->isgzip){
 	if(!(fp->p=gzdopen(fp->fd,mod))){
 	    error("Error gzdopen for %s\n",fn2);
+	}
+    }else{
+	if(!(fp->p=fdopen(fp->fd,mod))){
+	    error("Error fdopen for %s\n",fn2);
 	}
     }
     if(check_suffix(fn, ".fits") || check_suffix(fn, ".fits.gz")){

@@ -539,7 +539,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	if(cudata->evlpsfcl){
 	    double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!parms->evl.psf[ievl]) continue;
+		if(!parms->evl.psf[ievl] || parms->evl.psfngsr[ievl]==2) continue;
 		gpu_set(evlgpu[ievl]);
 		curmat *temp=NULL;
 		cudaStream_t stream=evlstream[ievl];
@@ -573,7 +573,7 @@ void gpu_perfevl_save(SIM_T *simu){
 	info("Output opdcov\n");
 	double scale=1./(isim+1-parms->evl.psfisim);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!parms->evl.psf[ievl]) continue;
+	    if(!parms->evl.psf[ievl]|| parms->evl.psfngsr[ievl]==2) continue;
 	    gpu_set(evlgpu[ievl]);
 	    curmat *temp=NULL;
 	    cudaStream_t stream=evlstream[ievl];

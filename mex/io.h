@@ -21,6 +21,7 @@ typedef float __complex__ fcomplex;
 	mexErrMsgTxt("Error happend\n");}
 typedef struct file_t{
     void *p;
+    int fd;
     int isgzip;
     int isfits;
     int eof;

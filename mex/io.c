@@ -106,30 +106,69 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     return fn2;
 }
 /*stripped down version of io.c*/
-file_t* zfopen(const char *fn_in, char *mod){
-    char *fn=procfn(fn_in, mod, 1);
-    if(!fn){
-	error("%s does not exist\n", fn_in);
+file_t* zfopen(const char *fn, char *mod){
+    char *fn2=procfn(fn, mod, 1);
+    if(!fn2){
+	error("%s does not exist\n", fn);
     }
     file_t* fp=calloc(1, sizeof(file_t));
-    if((check_suffix(fn, ".bin") || check_suffix(fn, ".fits")) && mod[0]=='w'){
-	fp->isgzip=0;
-	if(!(fp->p=fopen(fn,mod))){
-	    error("Error fopen for %s\n",fn);
+    /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
+    /*Now open the file to get a fd number that we can use to lock on the
+      file.*/
+    switch(mod[0]){
+    case 'r':/*read only */
+	fp->fd=open(fn2, O_RDONLY);
+	break;
+    case 'w':/*write */
+    case 'a':
+	fp->fd=open(fn2, O_RDWR | O_CREAT, 0600);
+	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
+	    error("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	}else{
+	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
+		warning("Truncating %s failed\n", fn2);
+	    }
+	}
+	break;
+    default:
+	error("Unknown mod=%s\n", mod);
+    }
+    if(fp->fd==-1){
+	error("Unable to open file %s\n", fn2);
+	_exit(1);
+    }
+    if(mod[0]=='w'){
+	if(check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
+	    fp->isgzip=0;
+	}else{
+	    fp->isgzip=1;
 	}
     }else{ 
-	fp->isgzip=1;
-	if(!(fp->p=gzopen(fn,mod))){
-	    error("Error gzopen for %s\n",fn);
+	uint16_t magic;
+	read(fp->fd, &magic, sizeof(uint16_t));
+	if(magic==0x8b1f){
+	    fp->isgzip=1;
+	}else{
+	    fp->isgzip=0;
+	}
+	lseek(fp->fd, 0, SEEK_SET);
+    }
+    if(fp->isgzip){
+	if(!(fp->p=gzdopen(fp->fd,mod))){
+	    error("Error gzdopen for %s\n",fn2);
+	}
+    }else{
+	if(!(fp->p=fdopen(fp->fd,mod))){
+	    error("Error fdopen for %s\n",fn2);
 	}
     }
     if(check_suffix(fn, ".fits") || check_suffix(fn, ".fits.gz")){
 	fp->isfits=1;
-    }
+    }  
     if(mod[0]=='w' && !fp->isfits){
 	write_timestamp(fp);
     }
-    free(fn);
+    free(fn2);
     return fp;
 }
 void zfclose(file_t *fp){
