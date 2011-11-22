@@ -405,7 +405,7 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed){
     const double ngsgrid=parms->maos.ngsgrid;
     const int nwvl=parms->maos.nwvl;
-    long nstep;
+    long nstep=0;
     TIC;tic;
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);

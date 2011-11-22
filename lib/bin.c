@@ -202,7 +202,9 @@ file_t* zfopen(const char *fn, char *mod){
 	}
     }else{ 
 	uint16_t magic;
-	read(fp->fd, &magic, sizeof(uint16_t));
+	if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
+	    error("Unable to read %s.\n", fp->fn);
+	}
 	if(magic==0x8b1f){
 	    fp->isgzip=1;
 	}else{
@@ -595,7 +597,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 
     if(empty) count=0;
 
-    int bitpix;
+    int bitpix=0;
     switch(magic){
     case M_FLT:
 	bitpix=-32;
