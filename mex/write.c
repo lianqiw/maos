@@ -14,7 +14,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
     char *str=NULL;
     if(header && mxIsChar(header)){
 	int nheader=mxGetM(header)*mxGetN(header)+1;
-	char *str=malloc(nheader);
+	str=malloc(nheader);
 	mxGetString(header, str, nheader);
     }
     uint32_t magic;

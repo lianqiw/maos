@@ -678,8 +678,9 @@ static int respond(int sock){
 		    if(strlen(out)+3+strlen(tmp)<sizeof(out)){
 			strcat(out, "->");
 			strcat(out, tmp);
-		    }else
-			error("over flow\n");
+		    }else{
+			warning("over flow. gave up\n");
+		    }
 		    
 		}
 	    }
