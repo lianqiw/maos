@@ -96,11 +96,12 @@ static GtkWidget *new_label(const char *text, int width,float align){
 static void create_entry(PROC_T *p){
     p->hbox=gtk_hbox_new(FALSE,0);
     char lb[12];
+    char stime[80];
     snprintf(lb,12," %5d",p->pid);
     struct tm *tim=localtime(&(p->status.timstart));
-    strftime(p->time,80,"[%F %k:%M:%S]",tim);
-    strcat(p->time,lb);
-    p->entry_pid=new_label(p->time,WIDTH_PID,0);
+    strftime(stime,80,"[%F %k:%M:%S]",tim);
+    strcat(stime,lb);
+    p->entry_pid=new_label(stime,WIDTH_PID,0);
     p->entry_path=new_label(p->path,WIDTH_PATH,0);
     gtk_label_set_selectable(GTK_LABEL(p->entry_path), TRUE);
     gtk_label_set_ellipsize(GTK_LABEL(p->entry_path),PANGO_ELLIPSIZE_START);

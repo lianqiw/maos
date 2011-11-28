@@ -33,6 +33,7 @@ typedef struct PROC_T{
     int iseed_old;
     char *path;
     STATUS_T status;
+    GtkWidget *entry_start;
     GtkWidget *entry_pid;
     GtkWidget *entry_path;
     GtkWidget *entry_errlo;
@@ -43,7 +44,6 @@ typedef struct PROC_T{
     GtkWidget *label;
     GtkWidget *btn;
     GtkWidget *btnimage;
-    char time[80];
     char time3[80];
     GtkTreeRowReference *row;
     gulong btnhandler;
