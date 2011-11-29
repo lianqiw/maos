@@ -140,6 +140,7 @@ typedef struct SKYC_S{
     dmat *resfocus;  /**<residual focus error at each sampling frequency.*/
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/
+    double pmargin;  /**<phase margin of type II*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

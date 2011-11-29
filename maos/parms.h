@@ -432,6 +432,7 @@ typedef struct SIM_CFG_T{
     char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
+    int wsseq;       /**<sequence of wind shake time series.*/
     /*control */
     double *apdm;    /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by

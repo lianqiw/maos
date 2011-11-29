@@ -500,7 +500,7 @@ void seeding(SIM_T *simu){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	seed_rand(&simu->wfs_rand[iwfs],lrand(simu->init));
     }
-    seed_rand(simu->telws_rand, lrand(simu->init));
+    seed_rand(simu->telws_rand, lrand(simu->init)*parms->sim.wsseq);
 #if USE_CUDA
     if(parms->gpu.wfs){
 	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);

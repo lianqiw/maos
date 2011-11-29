@@ -452,9 +452,9 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 		interp_gain(pg_ps, simu->gain_ps[idtrat], simu->gain_x, sigma_ps);
 	    }else{
 		dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma_tt;
-		dcell *pg_tt2=servo_typeII_optim(simu->psd_tt_ws, dtrat, parms->maos.dt, sigma2);
+		dcell *pg_tt2=servo_typeII_optim(simu->psd_tt_ws, dtrat, parms->maos.dt, parms->skyc.pmargin, sigma2);
 		sigma2->p[0]=sigma_ps;
-		dcell *pg_ps2=servo_typeII_optim(simu->psd_ps,    dtrat, parms->maos.dt, sigma2);
+		dcell *pg_ps2=servo_typeII_optim(simu->psd_ps,    dtrat, parms->maos.dt, parms->skyc.pmargin, sigma2);
 		dfree(sigma2);
 		memcpy(pg_tt, pg_tt2->p[0]->p, 5*sizeof(double));
 		memcpy(pg_ps, pg_ps2->p[0]->p, 5*sizeof(double));
@@ -475,7 +475,7 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 		interp_gain(pg_ngs, simu->gain_ngs[idtrat], simu->gain_x, sigma_ngs);
 	    }else{
 		dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma_ngs;
-		dcell *pg_ngs2=servo_typeII_optim(simu->psd_ngs_ws, dtrat, parms->maos.dt, sigma2);
+		dcell *pg_ngs2=servo_typeII_optim(simu->psd_ngs_ws, dtrat, parms->maos.dt, parms->skyc.pmargin, sigma2);
 		memcpy(pg_ngs, pg_ngs2->p[0]->p, 5*sizeof(double));
 		dcellfree(pg_ngs2);
 	    }

@@ -86,6 +86,7 @@ static void setup_parms_skyc(PARMS_S *parms){
 
     READ_STR(skyc.stars);
     READ_INT(skyc.addws);
+    READ_DBL(skyc.pmargin);
     if(!parms->skyc.stars){
 	if(parms->skyc.keeporder){
 	    error("When skyc.keeporder is set, skyc.stars need to be set\n");

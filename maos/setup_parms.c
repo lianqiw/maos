@@ -730,6 +730,7 @@ static void readcfg_sim(PARMS_T *parms){
 	      parms->sim.servotype_lo);
     }
     READ_STR(sim.wspsd);
+    READ_INT(sim.wsseq);
     READ_INT(sim.cachedm);
     READ_INT(sim.fuseint);
     READ_INT(sim.closeloop);
