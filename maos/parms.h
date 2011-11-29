@@ -97,8 +97,9 @@ typedef struct LLT_CFG_T{
     double d;      /**<LLT clear aperture diameter*/
     double widthp; /**<Gaussian beam width percentage of d*/
     char *fnrange; /**<File contains range to sodium layer*/
-    char *fn;      /**<File contains sodium profile*/
-    char *fnsurf;  /**<Surface OPD error*/
+    char *fnprof;  /**<File contains sodium profile*/
+    char *fnsurf;  /**<Pupil Surface OPD error*/
+    char *fnamp;   /**<Pupil amplitude map. overrides widthp*/
     double *ox;    /**<location x of LLT center wrt telescope aperture center*/
     double *oy;    /**<see ox.*/
     double *misreg;

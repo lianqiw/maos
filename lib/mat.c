@@ -522,9 +522,9 @@ void X(adds)(X(mat*)A, const T ac){
 
 T X(inn)(const X(mat)*A, const X(mat) *B){
     if(!A || !B) return 0;
-    assert(A->nx==B->nx && A->ny==1 && B->ny==1);
+    assert(A->nx==B->nx && A->ny==B->ny);
     T out=0;
-    for(int i=0; i<A->nx; i++){
+    for(int i=0; i<A->nx*A->ny; i++){
 	out+=A->p[i]*B->p[i];
     }
     if(isnan(out)){

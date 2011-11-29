@@ -181,7 +181,6 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     ccellfree(otf);
 }
 
-typedef double (*minsearch_fun)(double *x, void *info);
 typedef struct {
     const PARMS_T *parms;
     const POWFS_T *powfs;
@@ -247,30 +246,6 @@ static double mapfun(double *x, mapdata_t *info){
     /*info("Map fun called with [%g %g] %g, sigma=%g. noisy=%d\n", x[0], x[1], x[2], sigma, info->noisy);*/
     dfree(ints2);
     return sigma;
-}
-/*
-  Search minimum along multiple dimenstions. scale is the size of the problem. x contains initial warm restart values.
-*/
-static int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch_fun fun, void *info){
-    double pinit[nmod+1][nmod];
-    double *pinit2[nmod+1];
-    double yinit[nmod+1];
-    for(int i=0; i<nmod+1; i++){
-	pinit2[i]=pinit[i];
-	for(int j=0; j<nmod; j++){
-	    pinit[i][j]=x[j];
-	}
-	if(i>0){
-	    pinit[i][i-1]+=scale[i-1];
-	}
-	yinit[i]=fun(pinit[i], info);
-    }
-    int ncall=0;
-    amoeba(pinit2, yinit, nmod, ftol, fun, info, &ncall);
-    for(int j=0; j<nmod; j++){
-	x[j]=pinit[0][j];
-    }
-    return ncall;
 }
 /**
    Implements MAP tracking algorithm. The polar coordinate is implicitly taken care of in mapfun if parms->powfs.radrot=0;

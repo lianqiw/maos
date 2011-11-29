@@ -128,45 +128,28 @@ __global__ static void mtche_do(float *restrict grad, float (*restrict *restrict
 	}
 	grad[isa+nsa*threadIdx.x]=g[threadIdx.x];
     }
-}
+}/*
 static inline __device__ uint32_t float2int(uint32_t *f){
-    /*if *tmp is positive, mask is 0x800000000. If *tmp is negative,
-      mask is 0xFFFFFFFF since -1 is 0xFFFFFFFF.*/
+    //if *tmp is positive, mask is 0x800000000. If *tmp is negative, mask is 0xFFFFFFFF since -1 is 0xFFFFFFFF.
     uint32_t mask = (-(int32_t)(*f >> 31)) | 0x80000000;
     return (*f) ^ mask;
 }
 static inline __device__ uint32_t int2float(uint32_t f){
     uint32_t mask = ((f >> 31) - 1) | 0x80000000;
     return f ^ mask;
-}
+    }*/
 /**
    Apply tCoG.
 */
 __global__ static void tcog_do(float *grad, const float *restrict ints, 
-			       int nx, int ny, float pixthetax, float pixthetay, int nsa, 
-			       float cogthres, float cogoff, float *srot){
+			       int nx, int ny, float pixthetax, float pixthetay, int nsa, float (*cogcoeff)[2], float rne, float *srot){
     __shared__ float sum[3];
     if(threadIdx.x<3 && threadIdx.y==0) sum[threadIdx.x]=0.f;
     __syncthreads();//is this necessary?
     int isa=blockIdx.x;
     ints+=isa*nx*ny;
-    /*
-    // First find the maximum. This code needs to be optimized. Serialized in current impl. 
-    for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
-	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
-	    //We use a trick to convert floating numbers to sortable integers
-	    atomicMax(&imax, float2int((uint32_t*)&ints[ix+iy*nx]));
-	    //atomicMax(&imax, ints[ix+iy*nx]);//not supported
-	}
-    }
-    __syncthreads();
-    if(threadIdx.x==0 && threadIdx.y==0){
-	*((uint32_t*)(&fmax))=int2float(imax);
-    }
-    __syncthreads();
-    cogoff*=fmax;
-    cogthres*=fmax;
-    */
+    float cogthres=cogcoeff[isa][0]*rne;
+    float cogoff=cogcoeff[isa][1]*rne;
     for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
 	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
 	    float im=ints[ix+iy*nx]-cogoff;
@@ -402,9 +385,7 @@ void gpu_wfsgrad(thread_t *info){
 		float *srot=parms->powfs[ipowfs].radpix?cuwfs[iwfs].srot:NULL;
 		tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
 		    (gradnf->p, ints->p[0]->p, 
-		     pixpsax, pixpsay, pixthetax, pixthetay, nsa,
-		     (float)parms->powfs[ipowfs].cogthres*1, 
-		     (float)parms->powfs[ipowfs].cogoff*1, srot);
+		     pixpsax, pixpsay, pixthetax, pixthetay, nsa, (float(*)[2])cuwfs[iwfs].cogcoeff, 1, srot);
 	    }
 		break;
 	    case 3:{/*The following need to port to GPU*/
@@ -459,9 +440,7 @@ void gpu_wfsgrad(thread_t *info){
 		    float rnee=sqrt(rne*rne+bkgrnd);
 		    tcog_do<<<nsa, dim3(pixpsax, pixpsay),0,stream>>>
 			(gradny->p, ints->p[0]->p, 
-			 pixpsax, pixpsay, pixthetax, pixthetay, nsa,  
-			 (float)parms->powfs[ipowfs].cogthres*rnee, 
-			 (float)parms->powfs[ipowfs].cogoff*rnee, srot);
+			 pixpsax, pixpsay, pixthetax, pixthetay, nsa, (float(*)[2])cuwfs[iwfs].cogcoeff, rnee, srot);
 		}
 		    break;
 		case 3:{
@@ -601,12 +580,12 @@ void gpu_wfsgrad_save(SIM_T *simu){
 		    if(parms->powfs[ipowfs].phytypesim==3){
 			dmat *sanea=NULL;
 			dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
-			dwrite(sanea, "sanea_sim_wfs%d.bin",iwfs,seed);
+			dwrite(sanea, "sanea_sim_wfs%d_%d.bin",iwfs,seed);
 			dfree(sanea);
 		    }else{
 			curmat *sanea=NULL;
 			curadd(&sanea, 0, cuwfs[iwfs].neareal, scale, stream);
-			curwrite(sanea,"sanea_sim_wfs%d.bin",iwfs,seed);
+			curwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
 			curfree(sanea);
 		    }
 		}

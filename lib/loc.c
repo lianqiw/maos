@@ -600,12 +600,13 @@ dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
 	    const double *ampx=ampi+iy*pts->nx;
 	    for(int ix=0; ix<pts->nx; ix++){
 		double x=ix*dx+origx;
-		a00+=ampx[ix];
-		a01+=ampx[ix]*x;
-		a02+=ampx[ix]*y;
-		a11+=ampx[ix]*x*x;
-		a12+=ampx[ix]*x*y;
-		a22+=ampx[ix]*y*y;
+		double a=ampx[ix];
+		a00+=a;
+		a01+=a*x;
+		a02+=a*y;
+		a11+=a*x*x;
+		a12+=a*x*y;
+		a22+=a*y*y;
 	    }
 	}
 	ATA[0][0]=a00;

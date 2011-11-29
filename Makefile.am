@@ -25,7 +25,6 @@ config/maos/bin/PSD_TMT_WindShake20mas_rad2.bin\
 config/maos/atm_mk13n25p.conf\
 config/maos/atm_mk13n50p.conf\
 config/maos/atm_mk13n75p.conf\
-config/maos/atm_scao.conf\
 config/maos/atm_srd.conf\
 config/maos/atm_single.conf\
 config/maos/dbg.conf\

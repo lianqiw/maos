@@ -97,6 +97,7 @@ typedef struct INTSTAT_T{
     dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
     dcell *saneaxyl;    /**<decomposition of saneaxy: L*L'=saneaxy.*/
     dcell *saneaixy;    /**<computed sanea inverse along xy (rad^-2)*/
+    dcell *cogcoeff;    /**<per subaperture CoG offset/threshold*/
     int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
     int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/

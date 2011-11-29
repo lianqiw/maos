@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "common.h"
+#include "nr.h"
 #define NRANSI
 #define NR_END 1
 #define FREE_ARG char*
@@ -85,7 +86,7 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 	    break;
 	}
 	if (*nfunk >= NMAX) {
-	    warning("NMAX exceeded");
+	    warning("NMAX exceeded\n");
 	    SWAP(y[0],y[ilo]);
 	    for (i=0;i<ndim;i++) {
 		SWAP(p[0][i],p[ilo][i]);
@@ -118,3 +119,27 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 #undef NMAX
 #undef NRANSI
 /* (C) Copr. 1986-92 Numerical Recipes Software ?421.1-9. */
+/*
+  Search minimum along multiple dimenstions. scale is the size of the problem. x contains initial warm restart values.
+*/
+int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch_fun fun, void *info){
+    double pinit[nmod+1][nmod];
+    double *pinit2[nmod+1];
+    double yinit[nmod+1];
+    for(int i=0; i<nmod+1; i++){
+	pinit2[i]=pinit[i];
+	for(int j=0; j<nmod; j++){
+	    pinit[i][j]=x[j];
+	}
+	if(i>0){
+	    pinit[i][i-1]+=scale[i-1];
+	}
+	yinit[i]=fun(pinit[i], info);
+    }
+    int ncall=0;
+    amoeba(pinit2, yinit, nmod, ftol, fun, info, &ncall);
+    for(int j=0; j<nmod; j++){
+	x[j]=pinit[0][j];
+    }
+    return ncall;
+}

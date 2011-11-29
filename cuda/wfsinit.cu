@@ -279,6 +279,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
 			cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
 		    }
+		}else if(parms->powfs[ipowfs].phytypesim==2){/*cog*/
+		    if(powfs[ipowfs].intstat->cogcoeff->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+			gpu_dbl2dev(&cuwfs[iwfs].cogcoeff, 
+				    powfs[ipowfs].intstat->cogcoeff->p[powfs[ipowfs].intstat->cogcoeff->nx>1?wfsind:0]->p, nsa*2);
+		    }else{
+			cuwfs[iwfs].cogcoeff=cuwfs[iwfs0].cogcoeff;
+		    }
 		}
 		if(powfs[ipowfs].bkgrnd){
 		    if(powfs[ipowfs].bkgrnd->ny==1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){

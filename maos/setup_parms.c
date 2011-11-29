@@ -95,7 +95,8 @@ void free_parms(PARMS_T *parms){
 	}
 	if(parms->powfs[ipowfs].llt){
 	    free(parms->powfs[ipowfs].llt->fnrange);
-	    free(parms->powfs[ipowfs].llt->fn);
+	    free(parms->powfs[ipowfs].llt->fnprof);
+	    free(parms->powfs[ipowfs].llt->fnamp);
 	    free(parms->powfs[ipowfs].llt->fnsurf);
 	    free(parms->powfs[ipowfs].llt->i);
 	    free(parms->powfs[ipowfs].llt->ox);
@@ -291,7 +292,8 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->d=readcfg_dbl("%sllt.d",prefix);
 	    parms->powfs[ipowfs].llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
 	    parms->powfs[ipowfs].llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
-	    parms->powfs[ipowfs].llt->fn=readcfg_str("%sllt.fn",prefix);
+	    parms->powfs[ipowfs].llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
+	    parms->powfs[ipowfs].llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
 	    parms->powfs[ipowfs].llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
 	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix);
 	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix);

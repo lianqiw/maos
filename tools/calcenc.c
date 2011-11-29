@@ -61,7 +61,7 @@ static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
     if(iscell(header.magic)){
 	write_header(&header, fpout);
 	for(long i=0; i<header.nx*header.ny; i++){
-	    info2("%ld of %ld\n", i, header.nx*header.ny);
+	    info2("%ld of %lld\n", i, header.nx*header.ny);
 	    dmat *psf=dreaddata(fp, &header);
 	    if(!dvec){
 		free_dvec=1;

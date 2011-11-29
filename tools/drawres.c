@@ -179,7 +179,7 @@ int main(int argc, char *argv[]){
 	    int ind=0;
 	    int indlo=0;
 	    int indhi=0;
-	    if(res->p[3]){/*split tomography. */
+	    if(res->p[3] && res->p[3]->nx>0){/*split tomography. */
 		ind=3;
 		indlo=2;
 		indhi=0;

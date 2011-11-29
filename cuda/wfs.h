@@ -63,6 +63,7 @@ typedef struct{
     float   *i0sum;     /**<sum of i0 for each subaperture.*/
     float  **bkgrnd2;   /**<background as an image*/
     float  **bkgrnd2c;  /**<calibration of background to subtract.*/
+    float *cogcoeff;
     /*For LLT */
     float  *lltncpa;    /**<NCPA for llt*/
     float (**lltimcc)[3];
