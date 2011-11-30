@@ -1419,12 +1419,14 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     if(lltcfg->fnamp){
 	map_t *lltamp=mapread("%s", lltcfg->fnamp);
 	prop_grid_pts(lltamp, llt->pts, NULL, llt->amp->p, 1, 0, 0, 1, 1, 0, 0);
-	mapfree(lltamp);
 	sumamp2=dinn(llt->amp, llt->amp);
+	mapfree(lltamp);
     }else{
 	PDMAT(llt->amp, amps);
 	double l2max =pow(lltd*0.5,2);
-	double r2eff=l2max*pow(parms->powfs[ipowfs].llt->widthp,2);
+	/*the waist is defined as the radius where amplitude
+	  drop to 1/e or intensity to 1/e^2.*/
+	double r2waist=pow(lltd*0.5*parms->powfs[ipowfs].llt->widthp,2);
 	for(int iy=0; iy<nx; iy++){
 	    double yy=iy*dx+oy;
 	    yy*=yy;
@@ -1433,7 +1435,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 		xx*=xx;
 		double r2=xx+yy;
 		if(r2<=l2max){
-		    amps[iy][ix]=exp(-r2/r2eff);
+		    amps[iy][ix]=exp(-r2/r2waist);
 		    sumamp2+=pow(amps[iy][ix],2);
 		}
 	    }
@@ -1861,6 +1863,10 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
 		cmat *psfhat=cnew(nlpsf, nlpsf);
 		dmat *psf=dnew(nlpsf, nlpsf);
+		cellarr *lltpsfsave=NULL;
+		if(parms->save.setup){
+		    lltpsfsave=cellarr_init(nwvl, intstat->lotf->ny, "%s/powfs%d_llt_psf", dirsetup, ipowfs);
+		}
 		cfft2plan(psfhat, 1);
 		for(int illt=0; illt<intstat->lotf->ny; illt++){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
@@ -1874,8 +1880,10 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			creal2d(&psf, 0, psfhat, 1);
 			info2("illt %d, iwvl %d has FWHM of %g\"\n",
 			      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
+			if(lltpsfsave) cellarr_dmat(lltpsfsave, psf);
 		    }
 		}
+		if(lltpsfsave) cellarr_close(lltpsfsave);
 		cfree(psfhat);
 		dfree(psf);
 	    }
