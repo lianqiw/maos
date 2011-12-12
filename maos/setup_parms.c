@@ -1897,8 +1897,8 @@ static void print_parms(const PARMS_T *parms){
     double wh=0;
     double wv=0;
     for(int ips=0; ips<parms->atm.nps; ips++){
-	wh+=pow(parms->atm.ht[ips],5./3.)*parms->atm.wt[ips];
-	wv+=pow(parms->atm.ws[ips],5./3.)*parms->atm.wt[ips];
+	wh+=pow(fabs(parms->atm.ht[ips]),5./3.)*parms->atm.wt[ips];
+	wv+=pow(fabs(parms->atm.ws[ips]),5./3.)*parms->atm.wt[ips];
     }
     double theta0z=0.3144*parms->atm.r0z*pow(wh,-3./5.);
     double fgreen=0.426/parms->atm.r0z*pow(wv,3./5.);

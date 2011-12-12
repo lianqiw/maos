@@ -216,6 +216,11 @@ void muv_direct_prep(MUV_T *A, double svd){
 	muv_direct_prep_lowrank(&A->Up, &A->Vp, A->C, A->MI, U, V);
 	dfree(V);
 	dfree(U);
+	if(svd>0){
+	    dmm(&A->MI, A->Up, A->Vp, "nt", -1);
+	    dfree(A->Up);
+	    dfree(A->Vp);
+	}
     }
     toc2("done.");
 }
