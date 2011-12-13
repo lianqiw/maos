@@ -56,6 +56,7 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	
 	/* Setup information that are same for wfs in each powfs*/
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(parms->powfs[ipowfs].nwfs==0) continue;
 	    pts_t *pts=powfs[ipowfs].pts;
 	    loc_t *loc=powfs[ipowfs].loc;
 	    gpu_pts2cuwloc(&cupowfs[ipowfs], pts, loc);
