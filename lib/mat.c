@@ -41,11 +41,6 @@
 #include "loc.h"
 #include "defs.h"/*Defines T, X, etc */
 
-vtbl X(mat_vtbl)={M_TT,
-		  (vtbl_write)X(write),
-		  (vtbl_writedata)X(writedata),
-		  (vtbl_read)X(read),
-		  (vtbl_readdata)X(readdata)};
 /**
    Work horse function that creats the matrix object. if p is
    NULL, memory is allocated. Allocation for X(mat) objects
@@ -54,8 +49,8 @@ vtbl X(mat_vtbl)={M_TT,
    forward.
 */
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
+    if(!nx || !ny) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
-    out->vtbl=&X(mat_vtbl);
     out->nx=nx;
     out->ny=ny;
     if(ref){/*the data does not belong to us. */
@@ -1113,7 +1108,7 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
 	    *yout=X(new)(x->nx, A->n);
 	}
 	X(mat) *y=*yout;
-	assert(x->nx==y->nx);
+	assert(x->nx==y->nx && x->ny==A->m);
 	if(x->nx==1){
 	    Y(sptmulvec)(y->p, A, x->p, alpha);
 	}else{

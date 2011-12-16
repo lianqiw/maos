@@ -49,11 +49,6 @@
 #include "defs.h"
 #include "suitesparse.c"
 
-vtbl X(sp_vtbl)={M_TT,
-		 (vtbl_write)Y(spwrite),
-		 (vtbl_writedata)Y(spwritedata),
-		 (vtbl_read)Y(spread),
-		 (vtbl_readdata)Y(spreaddata)};
 /**
    Create a nx*ny X(sp) matrix with memory for nmax max
    elements allocated.
@@ -63,7 +58,6 @@ X(sp)* Y(spnew)(long nx, long ny, long nzmax){
     if(nx<0) nx=0;
     if(ny<0) ny=0;
     sp = calloc(1, sizeof(X(sp)));
-    sp->vtbl=&X(sp_vtbl);
     if(nzmax>0){
 	sp->p=malloc((ny+1)*sizeof(spint));
 	sp->i=malloc(nzmax*sizeof(spint));

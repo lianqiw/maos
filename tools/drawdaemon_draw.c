@@ -626,20 +626,6 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	    int nptsx=pts->nx;
 	    int ptstep=1;
-	    if(nptsx>1000 && !ptsx){/*too many points. reduce the number to plot. */
-#if DRAW_NEW
-		int width_max=new_width;
-#else
-		int width_max=widthim;
-#endif
-		int i0=floor((-ncx)/(zoomx*scalex)+centerx);
-		int i1=ceil((width_max-ncx)/(zoomx*scalex)+centerx);
-		if(i0>ips0) ips0=i0;
-		if(i1<nptsx) nptsx=i1;
-		/*if((nptsx-ips0)>5000){//too many points. skip a few.
-		  ptstep=(nptsx-ips0)/5000;
-		  }*/
-	    }
 	    double ix=0, iy=0, y, y_cumu=0;
 	    if(connectpts){/*plot curves. */
 		unsigned int ips=ips0;
@@ -675,7 +661,11 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		    }
 		    iy=((y-centery)*scaley*zoomy+ncy);
 	
-		    cairo_line_to(cr, ix, iy);
+		    cairo_line_to(cr, round(ix), round(iy));
+		    if(ips%100==0){
+			cairo_stroke(cr);
+			cairo_move_to(cr, round(ix), round(iy));
+		    }
 		}
 		cairo_stroke(cr);
 	    }

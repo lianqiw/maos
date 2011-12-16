@@ -24,8 +24,14 @@
 #include "skyc.h"
 #include "photon.h"
 const double Z_J=1.97e7*(20*9.56);
-const double Z_H=9.6e6*(20*16.5);
-const double Z_K=4.5e6*(20*14.41);
+/*
+  The following were obtain by R Clare on Table IV in Bessel 1988. But the print was garbelled. Fixed.
+  const double Z_H=9.6e6*(20*16.5);
+  const double Z_K=4.5e6*(20*14.41);
+*/
+const double Z_H=9.6e6*(20*14.17);
+const double Z_K=4.5e6*(20*16.74);
+
 
 const double MB_J=(16.7+15.8)/2;
 const double MB_H=(15.0+13.8)/2;

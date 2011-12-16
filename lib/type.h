@@ -45,31 +45,7 @@ typedef enum{
     M_ZSP,
     M_CELL,
 }M_TYPE;
-typedef void (*vtbl_write)(void *A, const char *format, ...);
-typedef void (*vtbl_writedata)(file_t *fp, void *A);
-typedef void *(*vtbl_read)(const char *format, ...);
-typedef void *(*vtbl_readdata)(file_t *fp);
-/**
-   A virtual table that contails pointers to functions.
-*/
-typedef struct vtbl{
-    M_TYPE type;/**<Denoting the type of this data*/
-    vtbl_write write;
-    vtbl_writedata writedata;
-    vtbl_read read;
-    vtbl_readdata readdata;
-}vtbl;
-extern vtbl dmat_vtbl;
-extern vtbl cmat_vtbl;
-extern vtbl cell_vtbl;
-extern vtbl dsp_vtbl;
-extern vtbl csp_vtbl;
-extern vtbl map_vtbl;
-extern vtbl rectmap_vtbl;
-extern vtbl loc_vtbl;
-extern vtbl pts_vtbl;
 #define MAT(T) \
-    vtbl *vtbl;    /**<The virtual function table*/\
     T *restrict p; /**<The data pointer*/\
     long nx;       /**< number of rows */\
     long ny;       /**< number of columns */\
@@ -80,7 +56,9 @@ extern vtbl pts_vtbl;
 */
 typedef struct dmat{
     MAT(double)
-    long *nref; /**< reference count */
+    long *nref; /**< reference count. We use pointers because different array
+		   may use the same pointer, but with different nx or ny
+		   partition. */
 }dmat;
 /**
    a single matrix object contains 2-d array of double numbers
@@ -141,7 +119,6 @@ typedef enum CEMBED{
     C_LITERAL
 }CEMBED;
 #define SPMAT(T)\
-    vtbl *vtbl;           /**<The virtual function table*/		\
     T *restrict x ;       /**< numerical values, size nzmax */		\
     long m ;	          /**< number of rows */			\
     long n ;	          /**< number of columns */			\

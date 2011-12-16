@@ -40,7 +40,7 @@ int main(int argc, char **argv){
 	fprintf(stderr, "%s\n", scmd);
     }
     info2("Output folder is '%s' %d threads\n",arg->dirout, arg->nthread);
-
+    warning("\n\nPlease notice that the J/H band zero mag flux has been updated.\n\n\n");
 #ifdef SVN_REV
     if(strlen(SVN_REV)>1 && strcmp(SVN_REV,"exported")){
 	info2("MAOS Version %s, Revision %s,",PACKAGE_VERSION,SVN_REV);
