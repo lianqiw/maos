@@ -224,8 +224,6 @@ int main(int argc, char *argv[]){
 	    upterr->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	    dcellfree(upt);
-	    info("upterr->p[%d]=%p. %ldx%ld\n", 
-		 ii, upterr->p[ii], upterr->p[ii]->nx, upterr->p[ii]->ny);
 	}
     }
     dcellcwpow(reshi, 0.5); dcellscale(reshi, 1e9);
