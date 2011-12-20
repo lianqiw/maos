@@ -94,6 +94,7 @@ X(mat) *X(readdata)(file_t *fp, header_t *header){
     uint64_t nx, ny;
     nx=header->nx;
     ny=header->ny;
+    if(!nx || !ny) return NULL;
     X(mat) *out;
     out=X(new)((long)nx,(long)ny);
     out->header=header->str; header->str=NULL;
