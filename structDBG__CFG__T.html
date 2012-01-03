@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: DBG_CFG_T Struct Reference</title>
+<title>maos-1.0.0: DBG_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -135,6 +135,12 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">GA/GX method: 0: GP, 1: GS0.  <a href="#a67d031d6a9f671d7cabf3060e80df967"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#af6872c326aa5d6b1590af2715879ab75">dxonedge</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">have points on the edge of subapertures.  <a href="#af6872c326aa5d6b1590af2715879ab75"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a78dabaa61a56a4d94a09b08a44a08248">cmpgpu</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">1: cpu code follows GPU implementation.  <a href="#a78dabaa61a56a4d94a09b08a44a08248"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a89a60c3153f9bfbd7c803a620ae313d7">pupmask</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Testing pupil mask for NGS WFS to be within LGS volume.  <a href="#a89a60c3153f9bfbd7c803a620ae313d7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDBG__CFG__T.html#a7b7363a941e9896fbce7990e1f04c779">wfslinearity</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Study the linearity of this wfs.  <a href="#a7b7363a941e9896fbce7990e1f04c779"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>contains input parameters for debugging. </p>
@@ -364,6 +370,51 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="a78dabaa61a56a4d94a09b08a44a08248"></a><!-- doxytag: member="DBG_CFG_T::cmpgpu" ref="a78dabaa61a56a4d94a09b08a44a08248" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structDBG__CFG__T.html#a78dabaa61a56a4d94a09b08a44a08248">DBG_CFG_T::cmpgpu</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>1: cpu code follows GPU implementation. </p>
+
+</div>
+</div>
+<a class="anchor" id="a89a60c3153f9bfbd7c803a620ae313d7"></a><!-- doxytag: member="DBG_CFG_T::pupmask" ref="a89a60c3153f9bfbd7c803a620ae313d7" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structDBG__CFG__T.html#a89a60c3153f9bfbd7c803a620ae313d7">DBG_CFG_T::pupmask</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Testing pupil mask for NGS WFS to be within LGS volume. </p>
+
+</div>
+</div>
+<a class="anchor" id="a7b7363a941e9896fbce7990e1f04c779"></a><!-- doxytag: member="DBG_CFG_T::wfslinearity" ref="a7b7363a941e9896fbce7990e1f04c779" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structDBG__CFG__T.html#a7b7363a941e9896fbce7990e1f04c779">DBG_CFG_T::wfslinearity</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Study the linearity of this wfs. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2parms_8h.html">parms.h</a></li>
 </ul>
@@ -372,7 +423,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structDBG__CFG__T.html">DBG_CFG_T</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

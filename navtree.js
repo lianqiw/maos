@@ -1,6 +1,6 @@
 var NAVTREE =
 [
-  [ "maos-0.9.3", "index.html", [
+  [ "maos-1.0.0", "index.html", [
     [ "MAOS Documentation", "index.html", null ],
     [ "Related Pages", "pages.html", [
       [ "Introduction", "page1.html", null ],
@@ -39,16 +39,14 @@ var NAVTREE =
       [ "CN2PAIR_T", "structCN2PAIR__T.html", null ],
       [ "csp", "structcsp.html", null ],
       [ "cspcell", "structcspcell.html", null ],
-      [ "cuccell", "structcuccell.html", null ],
-      [ "cucmat", "structcucmat.html", null ],
+      [ "cucell< T >", "structcucell.html", null ],
       [ "cudata_t", "structcudata__t.html", null ],
       [ "cudtf_t", "structcudtf__t.html", null ],
       [ "culoc_t", "structculoc__t.html", null ],
       [ "cumap_t", "structcumap__t.html", null ],
+      [ "cumat< T >", "structcumat.html", null ],
       [ "cumuv_t", "structcumuv__t.html", null ],
-      [ "curcell", "structcurcell.html", null ],
       [ "curecon_t", "structcurecon__t.html", null ],
-      [ "curmat", "structcurmat.html", null ],
       [ "cusp", "structcusp.html", null ],
       [ "cuspcell", "structcuspcell.html", null ],
       [ "cuwfs_t", "structcuwfs__t.html", null ],
@@ -68,7 +66,7 @@ var NAVTREE =
       [ "FRACTAL_T", "structFRACTAL__T.html", null ],
       [ "GENSCREEN_T", "structGENSCREEN__T.html", null ],
       [ "GPU_CFG_T", "structGPU__CFG__T.html", null ],
-      [ "gpu_wfs_t", "structgpu__wfs__t.html", null ],
+      [ "header_t", "structheader__t.html", null ],
       [ "HYST_T", "structHYST__T.html", null ],
       [ "icell", "structicell.html", null ],
       [ "imat", "structimat.html", null ],
@@ -122,7 +120,6 @@ var NAVTREE =
       [ "thread_t", "structthread__t.html", null ],
       [ "TOMO_CFG_T", "structTOMO__CFG__T.html", null ],
       [ "TYPEII_T", "structTYPEII__T.html", null ],
-      [ "vtbl", "structvtbl.html", null ],
       [ "WFS_CFG_T", "structWFS__CFG__T.html", null ],
       [ "WFS_S", "structWFS__S.html", null ],
       [ "WFSINTS_T", "structWFSINTS__T.html", null ],
@@ -135,6 +132,7 @@ var NAVTREE =
     [ "Data Fields", "functions.html", null ],
     [ "File List", "files.html", [
       [ "lib/accphi.c", "accphi_8c.html", null ],
+      [ "lib/bessik.c", "bessik_8c.html", null ],
       [ "lib/bin.c", "bin_8c.html", null ],
       [ "lib/cellarr.c", "cellarr_8c.html", null ],
       [ "lib/chol.c", "chol_8c.html", null ],
@@ -161,7 +159,6 @@ var NAVTREE =
       [ "lib/servo.c", "servo_8c.html", null ],
       [ "lib/turbulence.c", "turbulence_8c.html", null ],
       [ "lib/type.h", "type_8h.html", null ],
-      [ "lib/nr/bessik.c", "bessik_8c.html", null ],
       [ "lib/sys/thread_pool.c", "thread__pool_8c.html", null ],
       [ "maos/ahst.c", "ahst_8c.html", null ],
       [ "maos/cachedm.c", "cachedm_8c.html", null ],

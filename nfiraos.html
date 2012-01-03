@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: Example: NFIRAOS</title>
+<title>maos-1.0.0: Example: NFIRAOS</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -118,7 +118,7 @@ function toggleVisibility(linkObj) {
 <span class="preprocessor"></span><span class="preprocessor">#ftel: The telescope effective focal length, </span>
 <span class="preprocessor"></span><span class="preprocessor">#fexit: the distance between the exit pupil and the focus, </span>
 <span class="preprocessor"></span><span class="preprocessor">#fsurf: the distance between the M3 and the focus.</span>
-<span class="preprocessor"></span>tsurf       = [] #[<span class="stringliteral">&quot;M3_PrintThrough_ZA0_AA180_YA45.bin.gz&quot;</span>]
+<span class="preprocessor"></span>tsurf       = [] #[<span class="stringliteral">&quot;M3_PrintThrough_ZA0_AA180_YA45.bin&quot;</span>]
 
 <span class="preprocessor">#OPD surfaces. Each file contains a dmat array with the following key in header.</span>
 <span class="preprocessor"></span><span class="preprocessor">#dx: the sampling along x and y direction (must be the same)</span>
@@ -153,7 +153,7 @@ include     = <span class="stringliteral">&quot;wfs_lgs_ttf_tt.conf&quot;</span>
 <span class="preprocessor"></span>aper.d     = [30 3.6] #may contain one <span class="keywordflow">for</span> [d] or two numbers <span class="keywordflow">for</span> [d din]. d is
 <span class="preprocessor">              #outer diameter. din is optimal inner hole diameter.</span>
 <span class="preprocessor"></span>aper.dx       = 1/64  #sampling of the aperture in simulation
-aper.fnamp    = <span class="stringliteral">&quot;TMT_CurDesign.bin.gz&quot;</span> #The amplitude map contains a <a class="code" href="structcell.html" title="Cell of anything.">cell</a> array
+aper.fnamp    = <span class="stringliteral">&quot;TMT_CurDesign.bin&quot;</span> #The amplitude map contains a <a class="code" href="structcell.html" title="Cell of anything.">cell</a> array
 <span class="preprocessor">                  # of 2 elements.  The first element is 5x1 vector,</span>
 <span class="preprocessor"></span><span class="preprocessor">                  # specifying sampling dx, dy, origin coordinate ox, oy and</span>
 <span class="preprocessor"></span><span class="preprocessor">                  # height (0).  The second element is a NxN square array.</span>
@@ -203,7 +203,8 @@ sim.uptideal  = 0     #ideal correction on uplink (debugging)
 sim.parallel  = 1     #make the big loop parallel.
 sim.wspsd     =       #Telescope wind shake PSD input. Nx2. First column is freq
 <span class="preprocessor">              #in Hz, Second column is PSD in rad^2/Hz.</span>
-<span class="preprocessor"></span>gpu.wfs       = 1     #Use GPU <span class="keywordflow">for</span> WFS sensing
+<span class="preprocessor"></span><a class="code" href="sim_8c.html#ab5fd8ff2c1fe7a6270dad89ec5da4873" title="Closed loop simulation main loop.">sim</a>.wsseq     = 1     #windshake sequency. different wsseq gives different realizations
+gpu.wfs       = 1     #Use GPU <span class="keywordflow">for</span> WFS sensing
 gpu.evl       = 1     #Use GPU <span class="keywordflow">for</span> Performance evaluation
 gpu.tomo      = 1     #Use GPU <span class="keywordflow">for</span> tomography
 gpu.fit       = 1     #Use GPU <span class="keywordflow">for</span> DM fitting
@@ -217,7 +218,7 @@ sim.evlol     = 0     #evaluate open loop performance only. don<span class="stri
 <span class="stringliteral">sim.wfsalias  = 0     #Study the wfs aliasing effect by project turbulence onto</span>
 <span class="stringliteral">                  #the orthogonal of the DM vector space.</span>
 <span class="stringliteral">sim.idealfit  = 0     #evaluation ideal fit error only. no wfs, no recon. (was fitonly)</span>
-<span class="stringliteral">sim.idealtomo =0      #ideal tomography without wfs (directly propagate from turbulence).</span>
+<span class="stringliteral">sim.idealtomo = 0     #ideal tomography without wfs (directly propagate from turbulence).</span>
 <span class="stringliteral">sim.idealwfs  = 0     #Implements ideal WFS by only using turbulence in DM range. conflicts sim.wfsalias</span>
 <span class="stringliteral">sim.idealevl  = 0     #Evaluate the performance only in DM range.</span>
 <span class="stringliteral">#Common atmospheric parameters</span>
@@ -350,13 +351,15 @@ atmr.wt  = [0.5248    0.1136    0.0416    0.1167    0.0926    0.1107]
 <span class="preprocessor"></span>
 llt.d=0.4      #laser launch telescope diameter in meter.
 llt.widthp=0.6 #Gaussian beam width. 60 percent of d
-llt.ox=[0]     #LLT x coordinate. single number or match # of wfs belongs to
+llt.fnamp=<span class="stringliteral">&quot;&quot;</span>   #Pupil amplitude map. Overrides widthp
+llt.fnsurf=<span class="stringliteral">&quot;&quot;</span>  #Pupil surface error of each LLT. <a class="code" href="structcell.html" title="Cell of anything.">cell</a> array of 2-d <a class="code" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids.">map_t</a> arrays.
+llt.<a class="code" href="structmap__t.html#ac7a7ed6823814624bbe926ba3dadd79a" title="Origin in x.">ox</a>=[0]     #LLT x coordinate. single number or match # of wfs belongs to
 <span class="preprocessor">          #this powfs.</span>
 <span class="preprocessor"></span>llt.oy=[0]     #LLT y coordinate.
 llt.misreg=[0 0]#misregistration during ray tracing (<span class="keywordflow">for</span> testing purpose)
 llt.fnrange=<span class="stringliteral">&quot;&quot;</span> #additional change of sodium height <span class="keywordflow">for</span> LGS. in meter. 
 <span class="preprocessor">          #matrix of size nsim*1 or nsim*nLGS.</span>
-<span class="preprocessor"></span>llt.fn=<span class="stringliteral">&quot;NapMean.bin.gz&quot;</span> #sodium profile to build LGS elongation ETF. can
+<span class="preprocessor"></span>llt.fnprof=<span class="stringliteral">&quot;NapMean.bin&quot;</span> #sodium profile to build LGS elongation ETF. can
 <span class="preprocessor">               #contain 2 or more columns. The first column is the</span>
 <span class="preprocessor"></span><span class="preprocessor">               #altitude, the second and the rest columns are the</span>
 <span class="preprocessor"></span><span class="preprocessor">               #strength of sodium layer that sum to the scaling</span>
@@ -366,10 +369,8 @@ llt.colprep= 0 #which column of the profiles to use in matched <a class="code" h
 llt.colsim = 0 #which column of the profiles to start to use in simulation.
 llt.colsimdtrat=0 #every coldsimtrat to increment to next column during
 <span class="preprocessor">               #simulation and update etf. 0 means not updating.</span>
-<span class="preprocessor"></span>llt.fnsurf=<span class="stringliteral">&quot;&quot;</span>  #Pupil surface error of each LLT. <a class="code" href="structcell.html" title="Cell of anything.">cell</a> array of 2-d <a class="code" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids.">map_t</a> arrays.
-
-#For side launch, uncomment and put the following in your <span class="keyword">override</span> .conf file
-<span class="preprocessor">#SL_6</span>
+<span class="preprocessor"></span><span class="preprocessor">#For side launch, uncomment and put the following in your override .conf file</span>
+<span class="preprocessor"></span><span class="preprocessor">#SL_6</span>
 <span class="preprocessor"></span><span class="preprocessor">#powfs.radpix=[30 0 0]</span>
 <span class="preprocessor"></span><span class="preprocessor">#llt.ox=[3.2618  -10.6046  -13.8664   -3.2618   10.6046   13.8664]</span>
 <span class="preprocessor"></span><span class="preprocessor">#llt.oy=[14.1284    9.8890   -4.2394  -14.1284   -9.8890    4.2394]</span>
@@ -404,11 +405,11 @@ recon.split     = 1 #0: integrated reconstruction. 1: ad hoc Split. 2: mvst (onl
 <span class="preprocessor"></span>
 tomo.assemble   = 0 #1: Assemble tomography matrix.  0: don<span class="stringliteral">&#39;t assemble. 0 is</span>
 <span class="stringliteral">            #fast for CG. automatically set to 1 in CBS mode</span>
-<span class="stringliteral">tomo.windest    = 0 #estimate wind velocity from tomography outputs. (testing)</span>
-<span class="stringliteral">tomo.windshift  = 0 #shift opdr using wind velocity. (testing)</span>
+<span class="stringliteral">tomo.predict    = 0 #prediction through modified ray tracing direction in tomo (testing)</span>
 <span class="stringliteral">tomo.tikcr      = 1e-9#tikhonov regularization. Necessary if tomo.alg=0</span>
 <span class="stringliteral">tomo.svdthres   = 1e-9 #threshold of SVD inversion. 1e-9 for GLAO. 2e-4 for BGS?</span>
-<span class="stringliteral">tomo.piston_cr  = 1 #single point piston constraint in tomography.</span>
+<span class="stringliteral">tomo.piston_cr  = 0 #single point piston constraint in tomography. degrads</span>
+<span class="stringliteral">            #fdpcg. does not help cg or cbs</span>
 <span class="stringliteral"></span>
 <span class="stringliteral">tomo.alg        = 1 #Tomography algorithm. 0: cholesky backsubstitution (CBS) on full #matrix</span>
 <span class="stringliteral">            #1: Conjugate Gradient (CG). 2: SVD Inversion.</span>
@@ -430,6 +431,7 @@ tomo.assemble   = 0 #1: Assemble tomography matrix.  0: don<span class="stringli
 <span class="stringliteral">tomo.cxxscale = 1 #scale the Cxx^-1 term.</span>
 <span class="stringliteral">tomo.guard    = 1 #rings of padding in generating reconstruction grid, not too small, not too large.</span>
 <span class="stringliteral">tomo.pos      = 2 #over sampling ratio of ploc grid over actuator grid</span>
+<span class="stringliteral">tomo.nxbase   = 0 #Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.</span>
 <span class="stringliteral"></span>
 <span class="stringliteral">tomo.cubic    = 0 #cubic influence function in tomography (testing)</span>
 <span class="stringliteral">tomo.iac      = 0 #inter-actuator-coupling in cubic influence function (testing)</span>
@@ -479,6 +481,9 @@ dbg.useopdr=0   #use opdr. (deprecated)
 dbg.force=0     #force run even <span class="keywordflow">if</span> Res_${seed}.done exists.
 dbg.usegwr=0    #GA/GX method. 0: GP, 1: GS0
 dbg.dxonedge=0  #have points on the edge of subapertures.
+dbg.cmpgpu=0    #1: make cpu code follow GPU implementation.
+dbg.pupmask=0   #pupil mask (<span class="keywordflow">for</span> ngs wfs, within LGS volume)
+dbg.wfslinearity=-1#Study the linearity/noise <span class="keyword">property</span> of pixel processing algorithms of <span class="keyword">this</span> wfs.
 #For plotting
 plot.setup=0 #plot aperture,powfs,recon grids, etc.
 plot.atm=0   #plot atmosphere
@@ -540,7 +545,7 @@ load.mvst=0 #load mvst intermediate matrices to avoid CBS
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: maos/recon_utils.c File Reference</title>
+<title>maos-1.0.0: maos/recon_utils.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -145,8 +145,6 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>Tomo_prop</b> 
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply fit left hand side matrix in CG mode without using assembled matrix.  <a href="#a4a4842b145e88d09b903f986fe8951f2"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a3c8efd1ec94a9fdaae9021172da85d7a">focus_tracking</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Update LGS focus or reference vector.  <a href="#a3c8efd1ec94a9fdaae9021172da85d7a"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a7c33d35c2db2900c7439731319ffaf67">windest</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Experimental routine to do wind estimation using correlation tracking of tomography outputs.  <a href="#a7c33d35c2db2900c7439731319ffaf67"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdsp.html">dsp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#a8275bff1050a3bf784cbf75b0ed42092">nea2sp</a> (<a class="el" href="structdmat.html">dmat</a> **nea, long nsa)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert block of 2x2 neas to sparse matrix.  <a href="#a8275bff1050a3bf784cbf75b0ed42092"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="recon__utils_8c.html#ad788e53dd64065c0991bba52acbfb0ad">psfr_calc</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdcell.html">dcell</a> *opdr, <a class="el" href="structdcell.html">dcell</a> *dmpsol, <a class="el" href="structdcell.html">dcell</a> *dmerr_hi, <a class="el" href="structdcell.html">dcell</a> *dmerr_lo)</td></tr>
@@ -738,26 +736,6 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>Tomo_prop</b> 
    </pre></div> 
 </div>
 </div>
-<a class="anchor" id="a7c33d35c2db2900c7439731319ffaf67"></a><!-- doxytag: member="recon_utils.c::windest" ref="a7c33d35c2db2900c7439731319ffaf67" args="(SIM_T *simu)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void windest </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structSIM__T.html">SIM_T</a> *&#160;</td>
-          <td class="paramname"><em>simu</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Experimental routine to do wind estimation using correlation tracking of tomography outputs. </p>
-<p>Not finished. Not verified. </p>
-
-</div>
-</div>
 <a class="anchor" id="a8275bff1050a3bf784cbf75b0ed42092"></a><!-- doxytag: member="recon_utils.c::nea2sp" ref="a8275bff1050a3bf784cbf75b0ed42092" args="(dmat **nea, long nsa)" -->
 <div class="memitem">
 <div class="memproto">
@@ -896,7 +874,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>Tomo_prop</b> 
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="recon__utils_8c.html">recon_utils.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

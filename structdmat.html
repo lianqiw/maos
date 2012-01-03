@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: dmat Struct Reference</title>
+<title>maos-1.0.0: dmat Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -105,8 +105,6 @@ function toggleVisibility(linkObj) {
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structvtbl.html">vtbl</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdmat.html#a64748ab8a80ebe66d201bbc344026e95">vtbl</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">The virtual function table.  <a href="#a64748ab8a80ebe66d201bbc344026e95"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double *__restrict&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdmat.html#a7631ace2aaa2e310bda8a8eb6eca3b11">p</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">The data pointer.  <a href="#a7631ace2aaa2e310bda8a8eb6eca3b11"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdmat.html#a983086836d817046db8588de2873dd36">nx</a></td></tr>
@@ -118,26 +116,11 @@ Data Fields</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct mmap_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdmat.html#a98c1d9ab7267abdedd5b7a3d10397772">mmap</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">not NULL if mmaped.  <a href="#a98c1d9ab7267abdedd5b7a3d10397772"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">long *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdmat.html#a0aed31047c7881be15167e19415a0557">nref</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">reference count  <a href="#a0aed31047c7881be15167e19415a0557"></a><br/></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">reference count.  <a href="#a0aed31047c7881be15167e19415a0557"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>a double matrix object contains 2-d array of double numbers </p>
 </div><hr/><h2>Field Documentation</h2>
-<a class="anchor" id="a64748ab8a80ebe66d201bbc344026e95"></a><!-- doxytag: member="dmat::vtbl" ref="a64748ab8a80ebe66d201bbc344026e95" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structvtbl.html">vtbl</a>* <a class="el" href="structdmat.html#a64748ab8a80ebe66d201bbc344026e95">dmat::vtbl</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>The virtual function table. </p>
-
-</div>
-</div>
 <a class="anchor" id="a7631ace2aaa2e310bda8a8eb6eca3b11"></a><!-- doxytag: member="dmat::p" ref="a7631ace2aaa2e310bda8a8eb6eca3b11" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -225,7 +208,8 @@ Data Fields</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>reference count </p>
+<p>reference count. </p>
+<p>We use pointers because different array may use the same pointer, but with different nx or ny partition. </p>
 
 </div>
 </div>
@@ -237,7 +221,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structdmat.html">dmat</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

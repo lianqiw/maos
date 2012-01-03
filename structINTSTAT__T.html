@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: INTSTAT_T Struct Reference</title>
+<title>maos-1.0.0: INTSTAT_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -109,6 +109,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">llt otf  <a href="#a631d102615175b2c467b2deb56c1a5f4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structccell.html">ccell</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#ab5ffa44764b98913ef1f26ab075f493d">otf</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">short exposure OTF.  <a href="#ab5ffa44764b98913ef1f26ab075f493d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structccell.html">ccell</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#ab3de3a37d24301140fafb6248f1a7e6c">fotf</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">The final optf before fft and multiply with si to get i0.  <a href="#ab3de3a37d24301140fafb6248f1a7e6c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a9cdbda1504aa0508c1a5821801268569">sepsf</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">short expsoure PSF.  <a href="#a9cdbda1504aa0508c1a5821801268569"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a17e9e1cb4c6fa2c3d568309f19536c6b">i0</a></td></tr>
@@ -119,20 +121,16 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">gradient of i0 along y  <a href="#a0cee55e1121df68253f8e51abcae8899"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#ac3579bfed8599c928d05aac5cd109d82">i0sum</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">sum of i0  <a href="#ac3579bfed8599c928d05aac5cd109d82"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a77b2a1c03ceea0e527899ac78dfc76b0">mtchera</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">mtched filter operator along r/a  <a href="#a77b2a1c03ceea0e527899ac78dfc76b0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a0165680cc8d86944018418a1e361df81">mtche</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">mtched filter operator along x/y  <a href="#a0165680cc8d86944018418a1e361df81"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a5283c52d0c42cde7190b481307cabf46">saneara</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">computed sanea along ra (rad^2) (only for radian coord ccd)  <a href="#a5283c52d0c42cde7190b481307cabf46"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a819af79d00b50193756b47c766425129">sanea</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">SANEA of matched filter output.  <a href="#a819af79d00b50193756b47c766425129"></a><br/></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">mtched filter operator along x/y, even if radpix=1  <a href="#a0165680cc8d86944018418a1e361df81"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a02032157ea0454eaee56b5f9d9ebed16">saneaxy</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">computed sanea along xy.  <a href="#a02032157ea0454eaee56b5f9d9ebed16"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#aa4642e0a8b89262386e731f37b2cb2ba">saneaxyl</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">decomposition of saneaxy: L*L'=saneaxy.  <a href="#aa4642e0a8b89262386e731f37b2cb2ba"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a98a206f564e70b7e42ffea0f441f86b3">saneaixy</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">computed sanea inverse along xy (rad^-2)  <a href="#a98a206f564e70b7e42ffea0f441f86b3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#abe3059adef4f433c4943ab824d4ec265">cogcoeff</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">per subaperture CoG offset/threshold  <a href="#abe3059adef4f433c4943ab824d4ec265"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#ac36294be21c9b94bd24d5eeea089f996">notf</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">number of otf; 1 unless there is ncpa.  <a href="#ac36294be21c9b94bd24d5eeea089f996"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structINTSTAT__T.html#a4c4e98be2b8a57d4feb99abb892574b0">nsepsf</a></td></tr>
@@ -171,6 +169,22 @@ Data Fields</h2></td></tr>
 
 <p>short exposure OTF. </p>
 <p>time consuming to calculate. </p>
+
+</div>
+</div>
+<a class="anchor" id="ab3de3a37d24301140fafb6248f1a7e6c"></a><!-- doxytag: member="INTSTAT_T::fotf" ref="ab3de3a37d24301140fafb6248f1a7e6c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structccell.html">ccell</a>** <a class="el" href="structINTSTAT__T.html#ab3de3a37d24301140fafb6248f1a7e6c">INTSTAT_T::fotf</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>The final optf before fft and multiply with si to get i0. </p>
+<p>Used for MAP tracking. </p>
 
 </div>
 </div>
@@ -250,21 +264,6 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a77b2a1c03ceea0e527899ac78dfc76b0"></a><!-- doxytag: member="INTSTAT_T::mtchera" ref="a77b2a1c03ceea0e527899ac78dfc76b0" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structINTSTAT__T.html#a77b2a1c03ceea0e527899ac78dfc76b0">INTSTAT_T::mtchera</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>mtched filter operator along r/a </p>
-
-</div>
-</div>
 <a class="anchor" id="a0165680cc8d86944018418a1e361df81"></a><!-- doxytag: member="INTSTAT_T::mtche" ref="a0165680cc8d86944018418a1e361df81" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -276,38 +275,7 @@ Data Fields</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>mtched filter operator along x/y </p>
-
-</div>
-</div>
-<a class="anchor" id="a5283c52d0c42cde7190b481307cabf46"></a><!-- doxytag: member="INTSTAT_T::saneara" ref="a5283c52d0c42cde7190b481307cabf46" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structINTSTAT__T.html#a5283c52d0c42cde7190b481307cabf46">INTSTAT_T::saneara</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>computed sanea along ra (rad^2) (only for radian coord ccd) </p>
-
-</div>
-</div>
-<a class="anchor" id="a819af79d00b50193756b47c766425129"></a><!-- doxytag: member="INTSTAT_T::sanea" ref="a819af79d00b50193756b47c766425129" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structINTSTAT__T.html#a819af79d00b50193756b47c766425129">INTSTAT_T::sanea</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>SANEA of matched filter output. </p>
-<p>ra or xy (rad^2). no coupling is saved. </p>
+<p>mtched filter operator along x/y, even if radpix=1 </p>
 
 </div>
 </div>
@@ -354,6 +322,21 @@ Data Fields</h2></td></tr>
 <div class="memdoc">
 
 <p>computed sanea inverse along xy (rad^-2) </p>
+
+</div>
+</div>
+<a class="anchor" id="abe3059adef4f433c4943ab824d4ec265"></a><!-- doxytag: member="INTSTAT_T::cogcoeff" ref="abe3059adef4f433c4943ab824d4ec265" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structINTSTAT__T.html#abe3059adef4f433c4943ab824d4ec265">INTSTAT_T::cogcoeff</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>per subaperture CoG offset/threshold </p>
 
 </div>
 </div>
@@ -411,7 +394,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structINTSTAT__T.html">INTSTAT_T</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

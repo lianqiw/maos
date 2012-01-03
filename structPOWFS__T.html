@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: POWFS_T Struct Reference</title>
+<title>maos-1.0.0: POWFS_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -115,12 +115,16 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">concatenated points for all subapertures.  <a href="#af05e3e57eed3b132f01d6f07a9df121b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a3d1f74a15a557e4f369e643832af7f1e">locm</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">mis-registered loc, if any.  <a href="#a3d1f74a15a557e4f369e643832af7f1e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#aa6f97e7e4cb05241f430dc9e794235b7">gloc</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">loc used to generate GP  <a href="#aa6f97e7e4cb05241f430dc9e794235b7"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a48ba7bd690a639150e25b75e16c22e2c">saam</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">mis-registered saa, if any  <a href="#a48ba7bd690a639150e25b75e16c22e2c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a7fa51e744699b27538142aa5495b608c">amp</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">amplitude map, max at 1.  <a href="#a7fa51e744699b27538142aa5495b608c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a989fc897ad2fea50a086dfdb172bbc93">ampm</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">real amplitude map on misregistered grid, locm.  <a href="#a989fc897ad2fea50a086dfdb172bbc93"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#aa8aeb688207de9758a0ae84320860a29">gamp</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">amplitude defined on gloc  <a href="#aa8aeb688207de9758a0ae84320860a29"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#afa84bfe5be5b4a95270aeddf7ffe8d55">areascale</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">1.  <a href="#afa84bfe5be5b4a95270aeddf7ffe8d55"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double(*&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a160b7b31335a045390b0a67718c1a5d0">misreg</a> )[2]</td></tr>
@@ -193,6 +197,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">sum of realamp.  <a href="#aef05d76e01b324b0e7915416b1304349"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#a7b06f0f15439a4c7593b827b876cd03a">opdadd</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional OPD surfaces for each WFS.  <a href="#a7b06f0f15439a4c7593b827b876cd03a"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__T.html#ac7659d2030cab8f1c92c9bf0a6043962">gradphyoff</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Gradient offset for physical optics algorithm, specifically for tCoG.  <a href="#ac7659d2030cab8f1c92c9bf0a6043962"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>contains the data associated with a certain type of WFS. </p>
@@ -273,6 +279,21 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="aa6f97e7e4cb05241f430dc9e794235b7"></a><!-- doxytag: member="POWFS_T::gloc" ref="aa6f97e7e4cb05241f430dc9e794235b7" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structloc__t.html">loc_t</a>* <a class="el" href="structPOWFS__T.html#aa6f97e7e4cb05241f430dc9e794235b7">POWFS_T::gloc</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>loc used to generate GP </p>
+
+</div>
+</div>
 <a class="anchor" id="a48ba7bd690a639150e25b75e16c22e2c"></a><!-- doxytag: member="POWFS_T::saam" ref="a48ba7bd690a639150e25b75e16c22e2c" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -316,6 +337,21 @@ Data Fields</h2></td></tr>
 
 <p>real amplitude map on misregistered grid, locm. </p>
 <p>used for gradient computing </p>
+
+</div>
+</div>
+<a class="anchor" id="aa8aeb688207de9758a0ae84320860a29"></a><!-- doxytag: member="POWFS_T::gamp" ref="aa8aeb688207de9758a0ae84320860a29" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structPOWFS__T.html#aa8aeb688207de9758a0ae84320860a29">POWFS_T::gamp</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>amplitude defined on gloc </p>
 
 </div>
 </div>
@@ -866,6 +902,21 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ac7659d2030cab8f1c92c9bf0a6043962"></a><!-- doxytag: member="POWFS_T::gradphyoff" ref="ac7659d2030cab8f1c92c9bf0a6043962" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structPOWFS__T.html#ac7659d2030cab8f1c92c9bf0a6043962">POWFS_T::gradphyoff</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Gradient offset for physical optics algorithm, specifically for tCoG. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>maos/<a class="el" href="maos_2types_8h.html">types.h</a></li>
 </ul>
@@ -874,7 +925,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structPOWFS__T.html">POWFS_T</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:46 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

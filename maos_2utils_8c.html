@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: maos/utils.c File Reference</title>
+<title>maos-1.0.0: maos/utils.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -112,10 +112,10 @@ typedef struct PSFCOMP_T&#160;</td><td class="memItemRight" valign="bottom"><b>P
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a25c26cc7bf98368cc8e5b86e7dff8849">addnoise</a> (<a class="el" href="structdmat.html">dmat</a> *A, <a class="el" href="structmt__state.html">rand_t</a> *rstat, const double bkgrnd, const double pcalib, const double *bkgrnd2, const double *bkgrnd2c, const double rne)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">add photon and read out noise.  <a href="#a25c26cc7bf98368cc8e5b86e7dff8849"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#ae04fd2b20da3fa2edfb7c51624d1f9cb">create_metapupil_wrap</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double ht, double dx, double offset, double guard, long nin, int pad, int square)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Calls create_metapupil is simplified interface by returning a <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids.">map_t</a> object.  <a href="#ae04fd2b20da3fa2edfb7c51624d1f9cb"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#ab24d9308f5efae4f8762a76d4b6be998">create_metapupil</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double ht, double dx, double offset, long *nxout, long *nyout, double *oxout, double *oyout, double **map, double guard, long nin, int pad, int square)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx, height of ht, that can cover all the WFS and science beams.  <a href="#ab24d9308f5efae4f8762a76d4b6be998"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a8d09c1d4e25788f3c2bda232ef257eba">create_metapupil_wrap</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double ht, double dx, double offset, double guard, long ninx, long niny, int pad, int square)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Calls create_metapupil is simplified interface by returning a <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids.">map_t</a> object.  <a href="#a8d09c1d4e25788f3c2bda232ef257eba"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a3f2c82d60281e9d95e31fd76d44ff113">create_metapupil</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double ht, double dx, double offset, long *nxout, long *nyout, double *oxout, double *oyout, double **map, double guard, long ninx, long niny, int pad, int square)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">create a metapupil map, with size nx*ny, origin at (ox,oy), sampling of dx, height of ht, that can cover all the WFS and science beams.  <a href="#a3f2c82d60281e9d95e31fd76d44ff113"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#aa6846a7e8753720495fab427eb73a333">plotloc</a> (char *fig, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structloc__t.html">loc_t</a> *loc, double ht, char *format,...)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Plot the projection of all the different FoVs on a certain grid.  <a href="#aa6846a7e8753720495fab427eb73a333"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a17f83b9d00296996ebdaff0335ef4340">plotdir</a> (char *fig, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, double totfov, char *format,...)</td></tr>
@@ -148,6 +148,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Estimate generalized aniso angle theta2 from Fried parameter r0, and layer height and weights, and deformable mirror conjugation heights hc1 hc2 of the ground and altitude DMs.  <a href="#a066f38258e20d362d1e184a397697828"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2utils_8c.html#a96003cdcd3a1b15cb9c12ac0511b23e8">shift_inte</a> (int nap, double *ap, <a class="el" href="structdcell.html">dcell</a> **inte)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">prepare the integrator by shifting commands.  <a href="#a96003cdcd3a1b15cb9c12ac0511b23e8"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a42587bb89ea768b120b893036125bd92"></a><!-- doxytag: member="maos/utils.c::evl_header" ref="a42587bb89ea768b120b893036125bd92" args="(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl)" -->
+char *&#160;</td><td class="memItemRight" valign="bottom"><b>evl_header</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ievl, int iwvl)</td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>A few utility routines. </p>
@@ -224,7 +226,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ae04fd2b20da3fa2edfb7c51624d1f9cb"></a><!-- doxytag: member="utils.c::create_metapupil_wrap" ref="ae04fd2b20da3fa2edfb7c51624d1f9cb" args="(const PARMS_T *parms, double ht, double dx, double offset, double guard, long nin, int pad, int square)" -->
+<a class="anchor" id="a8d09c1d4e25788f3c2bda232ef257eba"></a><!-- doxytag: member="utils.c::create_metapupil_wrap" ref="a8d09c1d4e25788f3c2bda232ef257eba" args="(const PARMS_T *parms, double ht, double dx, double offset, double guard, long ninx, long niny, int pad, int square)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -262,7 +264,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nin</em>, </td>
+          <td class="paramname"><em>ninx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>niny</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -289,7 +297,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ab24d9308f5efae4f8762a76d4b6be998"></a><!-- doxytag: member="utils.c::create_metapupil" ref="ab24d9308f5efae4f8762a76d4b6be998" args="(const PARMS_T *parms, double ht, double dx, double offset, long *nxout, long *nyout, double *oxout, double *oyout, double **map, double guard, long nin, int pad, int square)" -->
+<a class="anchor" id="a3f2c82d60281e9d95e31fd76d44ff113"></a><!-- doxytag: member="utils.c::create_metapupil" ref="a3f2c82d60281e9d95e31fd76d44ff113" args="(const PARMS_T *parms, double ht, double dx, double offset, long *nxout, long *nyout, double *oxout, double *oyout, double **map, double guard, long ninx, long niny, int pad, int square)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -357,7 +365,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nin</em>, </td>
+          <td class="paramname"><em>ninx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>niny</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -995,7 +1009,7 @@ Functions</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="maos_2utils_8c.html">utils.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

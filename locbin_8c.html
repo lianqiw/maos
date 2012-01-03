@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: lib/locbin.c File Reference</title>
+<title>maos-1.0.0: lib/locbin.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -105,8 +105,8 @@ function toggleVisibility(linkObj) {
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8c.html#a3be3be8305d05372380aa30f45fea559">locreaddata</a> (file_t *fp, uint32_t magic, char *header0)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify the magic, dimension and read in the <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc.">loc_t</a> by calling locreaddata2().  <a href="#a3be3be8305d05372380aa30f45fea559"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8c.html#a22b5b42fb69c0946972bc87f2f95b1e6">locreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Verify the magic, dimension and read in the <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc.">loc_t</a> by calling locreaddata2().  <a href="#a22b5b42fb69c0946972bc87f2f95b1e6"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8c.html#affa4ea33919087df93a01fda0e6da30d">locread</a> (const char *format,...)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc.">loc_t</a> from file.  <a href="#affa4ea33919087df93a01fda0e6da30d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="locbin_8c.html#a64bf8c7e48784242f248462412b37bb6">locarrread</a> (int *nloc, const char *format,...)</td></tr>
@@ -143,7 +143,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>i/o functions for <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc.">loc_t</a>, <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids.">map_t</a>. </p>
 </div><hr/><h2>Function Documentation</h2>
-<a class="anchor" id="a3be3be8305d05372380aa30f45fea559"></a><!-- doxytag: member="locbin.c::locreaddata" ref="a3be3be8305d05372380aa30f45fea559" args="(file_t *fp, uint32_t magic, char *header0)" -->
+<a class="anchor" id="a22b5b42fb69c0946972bc87f2f95b1e6"></a><!-- doxytag: member="locbin.c::locreaddata" ref="a22b5b42fb69c0946972bc87f2f95b1e6" args="(file_t *fp, header_t *header)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -156,14 +156,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>magic</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>header0</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -472,7 +466,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>maparrwrite</b> (<a c
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="locbin_8c.html">locbin.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

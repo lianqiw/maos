@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: maos/fdpcg.c File Reference</title>
+<title>maos-1.0.0: maos/fdpcg.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -117,12 +117,12 @@ typedef struct thread_info&#160;</td><td class="memItemRight" valign="bottom"><b
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#ad7fab5e16936b3bb3d1eed399e0d1f48">fdpcg_saselect</a> (long nx, long ny, double dx, <a class="el" href="structloc__t.html">loc_t</a> *saloc, double *saa)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create aperture selection function that selects the gradients for valid subapertures from ground layer xloc (or ploc).  <a href="#ad7fab5e16936b3bb3d1eed399e0d1f48"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">long *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a8237a1605e01a23072de807bc3da901d">fdpcg_perm</a> (const long *nx, const long *ny, const long *os, int nps)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a permulation acting on xhat (fft of x on xloc) so that points of the same spatial frequency in all layers are grouped together.  <a href="#a8237a1605e01a23072de807bc3da901d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">long *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a652cfe1c02df1fc3b8ac4fe83ff38149">fdpcg_perm</a> (const long *nx, const long *ny, const int *os, int nps, int shift, int half)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a permulation acting on xhat (fft of x on xloc) so that points of the same spatial frequency in all layers are grouped together.  <a href="#a652cfe1c02df1fc3b8ac4fe83ff38149"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#ac2daf71a65006a481dd9dd2d688fd4a9">fdpcg_g</a> (<a class="el" href="structcmat.html">cmat</a> **gx, <a class="el" href="structcmat.html">cmat</a> **gy, long nx, long ny, double dx, double dsa)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute gradient operator in Fourier domain.  <a href="#ac2daf71a65006a481dd9dd2d688fd4a9"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a14291891e819287ccc8eda6ed921c1a1">fdpcg_prop</a> (long nps, const long *os, long nxg, double dx, double *dispx, double *dispy)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate operator for nlayer screens to ground of size nxg*nxg, sampling dx, with displacement of dispx, dispy.  <a href="#a14291891e819287ccc8eda6ed921c1a1"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcsp.html">csp</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a3d630f7a3e53048262050ccf1dd56bc8">fdpcg_prop</a> (long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate operator for nlayer screens to ground of size nxp*nxp, sampling dx, with displacement of dispx, dispy.  <a href="#a3d630f7a3e53048262050ccf1dd56bc8"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFDPCG__T.html">FDPCG_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a8af00f91380661f9d85542ac9738ba95">fdpcg_prepare</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structRECON__T.html">RECON_T</a> *recon, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Prepare data for Tomography Fourier Domain Preconditioner.  <a href="#a8af00f91380661f9d85542ac9738ba95"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="fdpcg_8c.html#a09c63e1c19db0f9fde055a420c34490b">fdpcg_fft</a> (void *data)</td></tr>
@@ -187,7 +187,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a8237a1605e01a23072de807bc3da901d"></a><!-- doxytag: member="fdpcg.c::fdpcg_perm" ref="a8237a1605e01a23072de807bc3da901d" args="(const long *nx, const long *ny, const long *os, int nps)" -->
+<a class="anchor" id="a652cfe1c02df1fc3b8ac4fe83ff38149"></a><!-- doxytag: member="fdpcg.c::fdpcg_perm" ref="a652cfe1c02df1fc3b8ac4fe83ff38149" args="(const long *nx, const long *ny, const int *os, int nps, int shift, int half)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -206,14 +206,26 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const long *&#160;</td>
+          <td class="paramtype">const int *&#160;</td>
           <td class="paramname"><em>os</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nps</em>&#160;</td>
+          <td class="paramname"><em>nps</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>shift</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>half</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -226,7 +238,8 @@ Functions</h2></td></tr>
 
 <p>Create a permulation acting on xhat (fft of x on xloc) so that points of the same spatial frequency in all layers are grouped together. </p>
 <p>In this implementation, it implies that all the screens have the same spatial sampling frequency, or they have the same tot spatial size.</p>
-<p>The ray tracing couples the screens but only on points with same or harmonic spatial frequencies. Group them together. </p>
+<p>The ray tracing couples the screens but only on points with same or harmonic spatial frequencies. Group them together.</p>
+<p>shift=1: apply a fftshift with permutation vector. half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix) </p>
 
 </div>
 </div>
@@ -280,10 +293,11 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Compute gradient operator in Fourier domain. </p>
+<p>Subapertures are denoted with lower left corner, so no shift is required. </p>
 
 </div>
 </div>
-<a class="anchor" id="a14291891e819287ccc8eda6ed921c1a1"></a><!-- doxytag: member="fdpcg.c::fdpcg_prop" ref="a14291891e819287ccc8eda6ed921c1a1" args="(long nps, const long *os, long nxg, double dx, double *dispx, double *dispy)" -->
+<a class="anchor" id="a3d630f7a3e53048262050ccf1dd56bc8"></a><!-- doxytag: member="fdpcg.c::fdpcg_prop" ref="a3d630f7a3e53048262050ccf1dd56bc8" args="(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -296,14 +310,32 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const long *&#160;</td>
-          <td class="paramname"><em>os</em>, </td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>pos</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">long&#160;</td>
-          <td class="paramname"><em>nxg</em>, </td>
+          <td class="paramname"><em>nxp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>nyp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long *&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long *&#160;</td>
+          <td class="paramname"><em>ny</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -332,7 +364,7 @@ Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>Propagate operator for nlayer screens to ground of size nxg*nxg, sampling dx, with displacement of dispx, dispy. </p>
+<p>Propagate operator for nlayer screens to ground of size nxp*nxp, sampling dx, with displacement of dispx, dispy. </p>
 
 </div>
 </div>
@@ -489,7 +521,7 @@ Functions</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="fdpcg_8c.html">fdpcg.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

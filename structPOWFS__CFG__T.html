@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: POWFS_CFG_T Struct Reference</title>
+<title>maos-1.0.0: POWFS_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -140,7 +140,9 @@ Data Fields</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#ad4d9c6fffdd734c54ceb97cb450b772a">dx</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">sampling of opd points in each subaperture.  <a href="#ad4d9c6fffdd734c54ceb97cb450b772a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#aadf117b796aef86ac0b1759f81ad59fd">pixtheta</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">size of pixel pitch along x or y in radian.  <a href="#aadf117b796aef86ac0b1759f81ad59fd"></a><br/></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">size of pixel pitch along x/y or azimuthal if radial ccd.  <a href="#aadf117b796aef86ac0b1759f81ad59fd"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#acecd61f7937e56cac8ffc6d0ac8df27c">radpixtheta</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">size of pixel pitch along radial direction.  <a href="#acecd61f7937e56cac8ffc6d0ac8df27c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a8ee802eb87cf570b564cd2d8e73d153b">pixoffx</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">offset of image center from center of detector  <a href="#a8ee802eb87cf570b564cd2d8e73d153b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a13af893d9ac11f1ebab08b690f39e78e">pixoffy</a></td></tr>
@@ -201,10 +203,10 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">frames to start using physical optics.  <a href="#a97585440f1dc5d79451e775697d52452"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a3ed2651dd13ae9327644808da9ac6cb3">usephy</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">whether physical optics is used at all during simulation.  <a href="#a3ed2651dd13ae9327644808da9ac6cb3"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#ae98503e618818d78c41ba76c168df7b0">mtchcrx</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">if &gt;0 use constrained mtch for x for this amount of pixels  <a href="#ae98503e618818d78c41ba76c168df7b0"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#acee927819560b5eff64b0d2d7ec1f7b2">mtchcry</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">if &gt;0 use constrained mtch for y for this amount of pixels  <a href="#acee927819560b5eff64b0d2d7ec1f7b2"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#acbe92a6c79aa60d3806f97a8a835c228">mtchcr</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">if &gt;0 use constrained mtch for this amount of pixels  <a href="#acbe92a6c79aa60d3806f97a8a835c228"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a4f9fc87655cd270fedb7f95c2e18e41c">mtchcra</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">if &gt;0 use constrained mtch for azimuthal for this amount of pixels  <a href="#a4f9fc87655cd270fedb7f95c2e18e41c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#ad4d4430a7f1ecd79ead4a000521a5f47">mtchcpl</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">use coupling between r/a measure error.  <a href="#ad4d4430a7f1ecd79ead4a000521a5f47"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a943debf6f291b09a0c05c59c5e8de8f3">mtchstc</a></td></tr>
@@ -213,6 +215,10 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">scale subaperture image to have the same intensity as i0.  <a href="#a2955dfacba62c468c7cc4028439c6eee"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a06ebbf381fc7a1168fb0c2423c27d8bf">mtchadp</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Using adaptive matched filter.  <a href="#a06ebbf381fc7a1168fb0c2423c27d8bf"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#abbd9591185bc907a7eb41178cc323468">cogthres</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">CoG threshold, relative to max(im)  <a href="#abbd9591185bc907a7eb41178cc323468"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#a5d5b1cff8df0912039add82ee9fea407">cogoff</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">CoG offset to remove, relative to max(im).  <a href="#a5d5b1cff8df0912039add82ee9fea407"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#ab490b1da338cd038e98d39547a2e75b8">hasGS0</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">need to compute GS0 (derived parameter)  <a href="#ab490b1da338cd038e98d39547a2e75b8"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPOWFS__CFG__T.html#adf2e5e35af169d9d5e702ef4c42b7163">noisy</a></td></tr>
@@ -523,7 +529,24 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>misreg</b></td></tr
 </div>
 <div class="memdoc">
 
-<p>size of pixel pitch along x or y in radian. </p>
+<p>size of pixel pitch along x/y or azimuthal if radial ccd. </p>
+<p>Converted to radian from user input </p>
+
+</div>
+</div>
+<a class="anchor" id="acecd61f7937e56cac8ffc6d0ac8df27c"></a><!-- doxytag: member="POWFS_CFG_T::radpixtheta" ref="acecd61f7937e56cac8ffc6d0ac8df27c" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#acecd61f7937e56cac8ffc6d0ac8df27c">POWFS_CFG_T::radpixtheta</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>size of pixel pitch along radial direction. </p>
+<p>-1 for square pixel </p>
 
 </div>
 </div>
@@ -947,7 +970,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>misreg</b></td></tr
 <div class="memdoc">
 
 <p>physical optics type. </p>
-<p>1: mtch, 2: tcog </p>
+<p>1: mtch, 2: tcog, 3: MAP </p>
 
 </div>
 </div>
@@ -1003,33 +1026,33 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>misreg</b></td></tr
 
 </div>
 </div>
-<a class="anchor" id="ae98503e618818d78c41ba76c168df7b0"></a><!-- doxytag: member="POWFS_CFG_T::mtchcrx" ref="ae98503e618818d78c41ba76c168df7b0" args="" -->
+<a class="anchor" id="acbe92a6c79aa60d3806f97a8a835c228"></a><!-- doxytag: member="POWFS_CFG_T::mtchcr" ref="acbe92a6c79aa60d3806f97a8a835c228" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#ae98503e618818d78c41ba76c168df7b0">POWFS_CFG_T::mtchcrx</a></td>
+          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#acbe92a6c79aa60d3806f97a8a835c228">POWFS_CFG_T::mtchcr</a></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 
-<p>if &gt;0 use constrained mtch for x for this amount of pixels </p>
+<p>if &gt;0 use constrained mtch for this amount of pixels </p>
 
 </div>
 </div>
-<a class="anchor" id="acee927819560b5eff64b0d2d7ec1f7b2"></a><!-- doxytag: member="POWFS_CFG_T::mtchcry" ref="acee927819560b5eff64b0d2d7ec1f7b2" args="" -->
+<a class="anchor" id="a4f9fc87655cd270fedb7f95c2e18e41c"></a><!-- doxytag: member="POWFS_CFG_T::mtchcra" ref="a4f9fc87655cd270fedb7f95c2e18e41c" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#acee927819560b5eff64b0d2d7ec1f7b2">POWFS_CFG_T::mtchcry</a></td>
+          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#a4f9fc87655cd270fedb7f95c2e18e41c">POWFS_CFG_T::mtchcra</a></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 
-<p>if &gt;0 use constrained mtch for y for this amount of pixels </p>
+<p>if &gt;0 use constrained mtch for azimuthal for this amount of pixels </p>
 
 </div>
 </div>
@@ -1093,6 +1116,36 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>misreg</b></td></tr
 
 <p>Using adaptive matched filter. </p>
 <p>When the number of pixels in the image brighter than half maximum is more than this value, use constraint. introduced on 2011-02-21. </p>
+
+</div>
+</div>
+<a class="anchor" id="abbd9591185bc907a7eb41178cc323468"></a><!-- doxytag: member="POWFS_CFG_T::cogthres" ref="abbd9591185bc907a7eb41178cc323468" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#abbd9591185bc907a7eb41178cc323468">POWFS_CFG_T::cogthres</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>CoG threshold, relative to max(im) </p>
+
+</div>
+</div>
+<a class="anchor" id="a5d5b1cff8df0912039add82ee9fea407"></a><!-- doxytag: member="POWFS_CFG_T::cogoff" ref="a5d5b1cff8df0912039add82ee9fea407" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structPOWFS__CFG__T.html#a5d5b1cff8df0912039add82ee9fea407">POWFS_CFG_T::cogoff</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>CoG offset to remove, relative to max(im). </p>
 
 </div>
 </div>
@@ -1326,7 +1379,7 @@ char *&#160;</td><td class="memItemRight" valign="bottom"><b>misreg</b></td></tr
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structPOWFS__CFG__T.html">POWFS_CFG_T</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:46 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

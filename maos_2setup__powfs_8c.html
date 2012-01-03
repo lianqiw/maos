@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: maos/setup_powfs.c File Reference</title>
+<title>maos-1.0.0: maos/setup_powfs.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -124,10 +124,12 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Free the powfs geometric parameters.  <a href="#af500bd9800a3b3f47a36b855a9f88ae9"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static <a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a5f48c23ede245553b05e9bb42b335d93">wfsamp2saa</a> (<a class="el" href="structdmat.html">dmat</a> *wfsamp, long nxsa)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert amplitude map of subapertures to normalized subaperture area.  <a href="#a5f48c23ede245553b05e9bb42b335d93"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static <a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a9c1859a575bd60ae3b2b2126d153bc67">mkwfsamp</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structloc__t.html">loc_t</a> *locn, <a class="el" href="structmap__t.html">map_t</a> *ampground, double misregx, double misregy, double D, double Din)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).  <a href="#a9c1859a575bd60ae3b2b2126d153bc67"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a77b6fd986d6105964adf2c844ee9df87">setup_powfs_geom</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ipowfs)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">setting up subaperture geometry.  <a href="#a77b6fd986d6105964adf2c844ee9df87"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static <a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a516d29b0a6799fc55f07562bf55059d8">mkwfsamp</a> (<a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structmap__t.html">map_t</a> *ampground, double misregx, double misregy, double D, double Din)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create WFS amplitude map from coordinate, masked with annular defined by (D,Din).  <a href="#a516d29b0a6799fc55f07562bf55059d8"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a45091e8a3495393326547d1c9ac09f41">wfspupmask</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structloc__t.html">loc_t</a> *loc, <a class="el" href="structdmat.html">dmat</a> *amp, double misreg[2], int iwfs)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">setting up subaperture geometry.  <a href="#a45091e8a3495393326547d1c9ac09f41"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77b6fd986d6105964adf2c844ee9df87"></a><!-- doxytag: member="maos/setup_powfs.c::setup_powfs_geom" ref="a77b6fd986d6105964adf2c844ee9df87" args="(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)" -->
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>setup_powfs_geom</b> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper, int ipowfs)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#ae92ae33f8f650cb9c7975044bd82432f">setup_powfs_grad</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture grads.  <a href="#ae92ae33f8f650cb9c7975044bd82432f"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#ab1409e69dddf8131559ea35731109bda">setup_powfs_prep_phy</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs)</td></tr>
@@ -146,8 +148,14 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute Elongation Transfer function.  <a href="#abd59ad37c2a3372a70066e4b5cf34ac1"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#aa8ee626a374ebefb84c2d560793c4c1e">setup_powfs_llt</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">setting up uplink pts/amp lotf  <a href="#aa8ee626a374ebefb84c2d560793c4c1e"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#aa16bf88378b48f5765294689df77c22f">setup_powfs_mtch</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup the matched filter pixel processing parameters for physical optics wfs.  <a href="#aa16bf88378b48f5765294689df77c22f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38aad1ba60413494dbd0a53f61f3fb6f"></a><!-- doxytag: member="maos/setup_powfs.c::cog_nea" ref="a38aad1ba60413494dbd0a53f61f3fb6f" args="(double *nea, dmat *ints, double cogthres, double cogoff, int ntry, rand_t *rstat, double bkgrnd, double bkgrndc, double *bkgrnd2i, double *bkgrnd2ic, double rne)" -->
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>cog_nea</b> (double *nea, <a class="el" href="structdmat.html">dmat</a> *ints, double cogthres, double cogoff, int ntry, <a class="el" href="structmt__state.html">rand_t</a> *rstat, double bkgrnd, double bkgrndc, double *bkgrnd2i, double *bkgrnd2ic, double rne)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adecde92a5275b55c35b79747ff1a0d73"></a><!-- doxytag: member="maos/setup_powfs.c::cogfun" ref="adecde92a5275b55c35b79747ff1a0d73" args="(double *x, cogdata_t *info)" -->
+static double&#160;</td><td class="memItemRight" valign="bottom"><b>cogfun</b> (double *x, cogdata_t *info)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a73a4e883843481bf61e73bebf4a00958">setup_powfs_cog</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int ipowfs)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup CoG gradient offset for simulation and NEA for reconstruction.  <a href="#a73a4e883843481bf61e73bebf4a00958"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#ad7450a59aa11dce99fa3ce0ea02b1d84">setup_powfs_phy</a> (<a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, int ipowfs)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup the matched filter pixel processing parameters for physical optics wfs.  <a href="#ad7450a59aa11dce99fa3ce0ea02b1d84"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#ac7b704504acb96d7fbcbdd60f15c6cf8">setup_powfs</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structAPER__T.html">APER_T</a> *aper)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Setup the powfs struct based on parms and aper.  <a href="#ac7b704504acb96d7fbcbdd60f15c6cf8"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="maos_2setup__powfs_8c.html#a4fdd29141f0d60af1fd7c6b2385f0031">free_powfs</a> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs)</td></tr>
@@ -156,7 +164,7 @@ Functions</h2></td></tr>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Setting up WFS geometry. </p>
 <p>like the subaperture location, subaperture grid points, physical optics detection transfer function, LGS elongation transfer function, etc.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>isolate DTF, ETF, routines, make then generic interface and relocate to the lib folder.</dd></dl>
 <p>Do not use sparse interpolation to replace ray tracing for fine sampled destination grid, especially cubic splines. The interpolation marix takes too much space. </p>
 </div><hr/><h2>Function Documentation</h2>
 <a class="anchor" id="af500bd9800a3b3f47a36b855a9f88ae9"></a><!-- doxytag: member="setup_powfs.c::free_powfs_geom" ref="af500bd9800a3b3f47a36b855a9f88ae9" args="(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)" -->
@@ -224,7 +232,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a9c1859a575bd60ae3b2b2126d153bc67"></a><!-- doxytag: member="setup_powfs.c::mkwfsamp" ref="a9c1859a575bd60ae3b2b2126d153bc67" args="(loc_t *loc, loc_t *locn, map_t *ampground, double misregx, double misregy, double D, double Din)" -->
+<a class="anchor" id="a516d29b0a6799fc55f07562bf55059d8"></a><!-- doxytag: member="setup_powfs.c::mkwfsamp" ref="a516d29b0a6799fc55f07562bf55059d8" args="(loc_t *loc, map_t *ampground, double misregx, double misregy, double D, double Din)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -233,12 +241,6 @@ Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
           <td class="paramname"><em>loc</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
-          <td class="paramname"><em>locn</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -280,37 +282,42 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Create WFS amplitude map from coordinate, masked with annular defined by (D,Din). </p>
-<p>locn is always non-misregistered loc. </p>
 
 </div>
 </div>
-<a class="anchor" id="a77b6fd986d6105964adf2c844ee9df87"></a><!-- doxytag: member="setup_powfs.c::setup_powfs_geom" ref="a77b6fd986d6105964adf2c844ee9df87" args="(POWFS_T *powfs, const PARMS_T *parms, APER_T *aper, int ipowfs)" -->
+<a class="anchor" id="a45091e8a3495393326547d1c9ac09f41"></a><!-- doxytag: member="setup_powfs.c::wfspupmask" ref="a45091e8a3495393326547d1c9ac09f41" args="(const PARMS_T *parms, loc_t *loc, dmat *amp, double misreg[2], int iwfs)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">static void setup_powfs_geom </td>
+          <td class="memname">static void wfspupmask </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
-          <td class="paramname"><em>powfs</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
           <td class="paramname"><em>parms</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structAPER__T.html">APER_T</a> *&#160;</td>
-          <td class="paramname"><em>aper</em>, </td>
+          <td class="paramtype"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td>
+          <td class="paramname"><em>loc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>amp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>misreg</em>[2], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>ipowfs</em>&#160;</td>
+          <td class="paramname"><em>iwfs</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -403,7 +410,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Prepare the parameters for physical optics setup. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>Make LGS number of pixels depend on subapertue elongation in radial coordinate CCD mode. Make ncompx, ncompy dependent on number of pixels for radial ccd.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>Make LGS number of pixels depend on subapertue elongation in radial coordinate CCD mode. Make ncompx, ncompy dependent on number of pixels for radial ccd.</dd></dl>
 
 </div>
 </div>
@@ -698,12 +705,47 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aa16bf88378b48f5765294689df77c22f"></a><!-- doxytag: member="setup_powfs.c::setup_powfs_mtch" ref="aa16bf88378b48f5765294689df77c22f" args="(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)" -->
+<a class="anchor" id="a73a4e883843481bf61e73bebf4a00958"></a><!-- doxytag: member="setup_powfs.c::setup_powfs_cog" ref="a73a4e883843481bf61e73bebf4a00958" args="(const PARMS_T *parms, POWFS_T *powfs, int ipowfs)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">static void setup_powfs_mtch </td>
+          <td class="memname">static void setup_powfs_cog </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramname"><em>powfs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>ipowfs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Setup CoG gradient offset for simulation and NEA for reconstruction. </p>
+
+</div>
+</div>
+<a class="anchor" id="ad7450a59aa11dce99fa3ce0ea02b1d84"></a><!-- doxytag: member="setup_powfs.c::setup_powfs_phy" ref="ad7450a59aa11dce99fa3ce0ea02b1d84" args="(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void setup_powfs_phy </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
           <td class="paramname"><em>powfs</em>, </td>
@@ -768,7 +810,7 @@ Functions</h2></td></tr>
 <div id="dynsection-0-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="maos_2setup__powfs_8c_ac7b704504acb96d7fbcbdd60f15c6cf8_cgraph.png" border="0" usemap="#maos_2setup__powfs_8c_ac7b704504acb96d7fbcbdd60f15c6cf8_cgraph" alt=""/></div>
 <map name="maos_2setup__powfs_8c_ac7b704504acb96d7fbcbdd60f15c6cf8_cgraph" id="maos_2setup__powfs_8c_ac7b704504acb96d7fbcbdd60f15c6cf8_cgraph">
-<area shape="rect" id="node3" href="maos_2setup__powfs_8c.html#ab1890fbc6facc2013338054962b1398a" title="Setting up Detector transfer function used to translate PSFs from FFTs to detector pixel images..." alt="" coords="169,5,284,35"/><area shape="rect" id="node5" href="maos_2setup__powfs_8c.html#abd59ad37c2a3372a70066e4b5cf34ac1" title="Compute Elongation Transfer function." alt="" coords="169,59,284,88"/><area shape="rect" id="node7" href="maos_2setup__powfs_8c.html#a7bbae2bc69e06f553d55c7c2d8c68ff3" title="setup the range to sodium layer as an additional parameter." alt="" coords="161,112,292,141"/><area shape="rect" id="node9" href="maos_2setup__powfs_8c.html#a77b6fd986d6105964adf2c844ee9df87" title="setting up subaperture geometry." alt="" coords="160,165,293,195"/><area shape="rect" id="node11" href="maos_2setup__powfs_8c.html#ae92ae33f8f650cb9c7975044bd82432f" title="Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture grads..." alt="" coords="164,219,289,248"/><area shape="rect" id="node13" href="maos_2setup__powfs_8c.html#aa8ee626a374ebefb84c2d560793c4c1e" title="setting up uplink pts/amp lotf" alt="" coords="172,272,281,301"/><area shape="rect" id="node15" href="maos_2setup__powfs_8c.html#aa16bf88378b48f5765294689df77c22f" title="Setup the matched filter pixel processing parameters for physical optics wfs." alt="" coords="161,325,292,355"/><area shape="rect" id="node17" href="maos_2setup__powfs_8c.html#a2589e29c8b5c4bd05b33da3638e8ae53" title="Set up NCPA maps for each WFS." alt="" coords="163,379,291,408"/><area shape="rect" id="node19" href="maos_2setup__powfs_8c.html#ab1409e69dddf8131559ea35731109bda" title="Prepare the parameters for physical optics setup." alt="" coords="149,432,304,461"/><area shape="rect" id="node21" href="maos_2setup__powfs_8c.html#ae2eab1b8ad97f659e38afe630140834e" title="Load and smooth out sodium profile." alt="" coords="156,485,297,515"/></map>
+<area shape="rect" id="node3" href="maos_2setup__powfs_8c.html#ab1890fbc6facc2013338054962b1398a" title="Setting up Detector transfer function used to translate PSFs from FFTs to detector pixel images..." alt="" coords="179,5,307,33"/><area shape="rect" id="node5" href="maos_2setup__powfs_8c.html#abd59ad37c2a3372a70066e4b5cf34ac1" title="Compute Elongation Transfer function." alt="" coords="179,55,307,83"/><area shape="rect" id="node7" href="maos_2setup__powfs_8c.html#a7bbae2bc69e06f553d55c7c2d8c68ff3" title="setup the range to sodium layer as an additional parameter." alt="" coords="169,106,316,134"/><area shape="rect" id="node9" href="maos_2setup__powfs_8c.html#ae92ae33f8f650cb9c7975044bd82432f" title="Creating geometric wavefront gradient operator GS0 and ZA0 from WFS OPD to subaperture grads..." alt="" coords="173,157,312,185"/><area shape="rect" id="node11" href="maos_2setup__powfs_8c.html#aa8ee626a374ebefb84c2d560793c4c1e" title="setting up uplink pts/amp lotf" alt="" coords="181,207,304,235"/><area shape="rect" id="node13" href="maos_2setup__powfs_8c.html#a2589e29c8b5c4bd05b33da3638e8ae53" title="Set up NCPA maps for each WFS." alt="" coords="172,258,313,286"/><area shape="rect" id="node15" href="maos_2setup__powfs_8c.html#ad7450a59aa11dce99fa3ce0ea02b1d84" title="Setup the matched filter pixel processing parameters for physical optics wfs." alt="" coords="176,309,309,337"/><area shape="rect" id="node17" href="maos_2setup__powfs_8c.html#ab1409e69dddf8131559ea35731109bda" title="Prepare the parameters for physical optics setup." alt="" coords="157,359,328,387"/><area shape="rect" id="node19" href="maos_2setup__powfs_8c.html#ae2eab1b8ad97f659e38afe630140834e" title="Load and smooth out sodium profile." alt="" coords="164,410,321,438"/></map>
 </div>
 </p>
 
@@ -808,7 +850,7 @@ Functions</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="maos_2setup__powfs_8c.html">setup_powfs.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

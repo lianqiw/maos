@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: lib/dmat.h File Reference</title>
+<title>maos-1.0.0: lib/dmat.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -335,10 +335,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Contains routines to write/read dense/sparse matrix into/from file.  <a href="#a3452afc53eefe2391f8720999be80c19"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#a9a8e4a59501eeb3bdd87e490ff04d0e7">dcellwritedata</a> (file_t *fp, const <a class="el" href="structdcell.html">dcell</a> *dc)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to write cell array of dense matrix data.  <a href="#a9a8e4a59501eeb3bdd87e490ff04d0e7"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#a41d92768709ddfc9b8862ae55bd6c97e">dreaddata</a> (file_t *fp, uint32_t magic)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to read dense matrix into memory from file pointer.  <a href="#a41d92768709ddfc9b8862ae55bd6c97e"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#a47f492f62df187672db653542562827b">dcellreaddata</a> (file_t *fp, uint32_t magic)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to read dense matrix cell array into memory from file pointer.  <a href="#a47f492f62df187672db653542562827b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#ab6c9042ea1d71dbc9c2d51719a866c48">dreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to read dense matrix into memory from file pointer.  <a href="#ab6c9042ea1d71dbc9c2d51719a866c48"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#ad6d7d944d36f1bc8244c1accdf8410ba">dcellreaddata</a> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to read dense matrix cell array into memory from file pointer.  <a href="#ad6d7d944d36f1bc8244c1accdf8410ba"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#a37ebad9e8c582e694664b562a78114d2">dwrite</a> (const <a class="el" href="structdmat.html">dmat</a> *A, const char *format,...)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">User callable function to write dense matrix into a file.  <a href="#a37ebad9e8c582e694664b562a78114d2"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#a70cd951a3932002ccc9270944d2005ec">dcellwrite</a> (const <a class="el" href="structdcell.html">dcell</a> *dc, const char *format,...)</td></tr>
@@ -1996,7 +1996,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
-          <td class="paramname"><em>i0</em>, </td>
+          <td class="paramname"><em>im</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -2661,7 +2661,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 <img class="formulaDsp" alt="\[f^\prime(0)=(f(1)-f(0))\]" src="form_13.png"/>
 </p>
 <p> Otehr type of boundaries are handled in the same way.</p>
-<p>see <a href="http://www.paulinternet.nl/?page=bicubicx">http://www.paulinternet.nl/?page=bicubicx</a> </p>
+<p>see www.paulinternet.nl/?page=bicubicx </p>
 
 </div>
 </div>
@@ -3961,7 +3961,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 
 </div>
 </div>
-<a class="anchor" id="a41d92768709ddfc9b8862ae55bd6c97e"></a><!-- doxytag: member="dmat.h::dreaddata" ref="a41d92768709ddfc9b8862ae55bd6c97e" args="(file_t *fp, uint32_t magic)" -->
+<a class="anchor" id="ab6c9042ea1d71dbc9c2d51719a866c48"></a><!-- doxytag: member="dmat.h::dreaddata" ref="ab6c9042ea1d71dbc9c2d51719a866c48" args="(file_t *fp, header_t *header)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -3974,8 +3974,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>magic</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -3991,7 +3991,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 
 </div>
 </div>
-<a class="anchor" id="a47f492f62df187672db653542562827b"></a><!-- doxytag: member="dmat.h::dcellreaddata" ref="a47f492f62df187672db653542562827b" args="(file_t *fp, uint32_t magic)" -->
+<a class="anchor" id="ad6d7d944d36f1bc8244c1accdf8410ba"></a><!-- doxytag: member="dmat.h::dcellreaddata" ref="ad6d7d944d36f1bc8244c1accdf8410ba" args="(file_t *fp, header_t *header)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -4004,8 +4004,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>magic</em>&#160;</td>
+          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramname"><em>header</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -4089,7 +4089,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 <div class="memdoc">
 
 <p>User callable function to write cell array of dense matrix into a file. </p>
-<p>Usage: dcellwrite(A,"A.bin.gz") for double matrix cell. </p>
+<p>Usage: dcellwrite(A,"A") for double matrix cell. </p>
 
 </div>
 </div>
@@ -4119,7 +4119,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 <div class="memdoc">
 
 <p>User callable function to read dense matrix into memory from file. </p>
-<p>Usage: A=dread("A.bin.gz"); for a dmat </p>
+<p>Usage: A=dread("A"); for a dmat </p>
 
 </div>
 </div>
@@ -4149,7 +4149,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 <div class="memdoc">
 
 <p>User callable function to read cell array of dense matrix into memory from file. </p>
-<p>Usage: A=dcellread("A.bin.gz"); for a double dcell. </p>
+<p>Usage: A=dcellread("A"); for a double dcell. </p>
 
 </div>
 </div>
@@ -4611,7 +4611,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="dmat_8h.html">dmat.h</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

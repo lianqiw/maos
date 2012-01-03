@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: maos/wfsgrad.c File Reference</title>
+<title>maos-1.0.0: maos/wfsgrad.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -114,6 +114,12 @@ Defines</h2></td></tr>
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a141e94e63a5efdc5414a56be5b25a730"></a><!-- doxytag: member="wfsgrad.c::wfs_ideal_atm" ref="a141e94e63a5efdc5414a56be5b25a730" args="(SIM_T *simu, dmat *opd, int iwfs, double alpha)" -->
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>wfs_ideal_atm</b> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu, <a class="el" href="structdmat.html">dmat</a> *opd, int iwfs, double alpha)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5afdf7a505966f64b56d7f21bd776c8b"></a><!-- doxytag: member="wfsgrad.c::wfslinearity" ref="a5afdf7a505966f64b56d7f21bd776c8b" args="(const PARMS_T *parms, POWFS_T *powfs, const int iwfs)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>wfslinearity</b> (const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, const int iwfs)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#aa1f5fd1e34764a0ab953f173c404caa7">mapfun</a> (double *x, mapdata_t *info)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">The function to evaluate the result at x.  <a href="#aa1f5fd1e34764a0ab953f173c404caa7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#a57fc84d03735ab8fc00b25e65f82ec86">maxapriori</a> (double *g, <a class="el" href="structdmat.html">dmat</a> *ints, const <a class="el" href="structPARMS__T.html">PARMS_T</a> *parms, const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *powfs, int iwfs, int isa, int noisy, double bkgrnd, double rne)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Implements MAP tracking algorithm.  <a href="#a57fc84d03735ab8fc00b25e65f82ec86"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#a7d7d20b6b274be139712a0c74329803d">wfsgrad_iwfs</a> (<a class="el" href="structthread__t.html">thread_t</a> *info)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">computes close loop and pseudo open loop gradidents for both gometric and physical optics WFS.  <a href="#a7d7d20b6b274be139712a0c74329803d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="wfsgrad_8c.html#ab09e003f82269e4fd785815beb4f58dd">wfsgrad_save</a> (<a class="el" href="structSIM__T.html">SIM_T</a> *simu)</td></tr>
@@ -124,6 +130,107 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>wfs_ideal_atm<
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>contains functions that computes WFS gradients in geometric or physical optics mode. </p>
 </div><hr/><h2>Function Documentation</h2>
+<a class="anchor" id="aa1f5fd1e34764a0ab953f173c404caa7"></a><!-- doxytag: member="wfsgrad.c::mapfun" ref="aa1f5fd1e34764a0ab953f173c404caa7" args="(double *x, mapdata_t *info)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static double mapfun </td>
+          <td>(</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">mapdata_t *&#160;</td>
+          <td class="paramname"><em>info</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>The function to evaluate the result at x. </p>
+
+</div>
+</div>
+<a class="anchor" id="a57fc84d03735ab8fc00b25e65f82ec86"></a><!-- doxytag: member="wfsgrad.c::maxapriori" ref="a57fc84d03735ab8fc00b25e65f82ec86" args="(double *g, dmat *ints, const PARMS_T *parms, const POWFS_T *powfs, int iwfs, int isa, int noisy, double bkgrnd, double rne)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void maxapriori </td>
+          <td>(</td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>g</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>ints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structPARMS__T.html">PARMS_T</a> *&#160;</td>
+          <td class="paramname"><em>parms</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structPOWFS__T.html">POWFS_T</a> *&#160;</td>
+          <td class="paramname"><em>powfs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>iwfs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>isa</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>noisy</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>bkgrnd</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>rne</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Implements MAP tracking algorithm. </p>
+<p>The polar coordinate is implicitly taken care of in mapfun if parms-&gt;powfs.radrot=0; </p>
+
+</div>
+</div>
 <a class="anchor" id="a7d7d20b6b274be139712a0c74329803d"></a><!-- doxytag: member="wfsgrad.c::wfsgrad_iwfs" ref="a7d7d20b6b274be139712a0c74329803d" args="(thread_t *info)" -->
 <div class="memitem">
 <div class="memproto">
@@ -160,6 +267,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>wfs_ideal_atm<
 <div class="memdoc">
 
 <p>Save telemetry. </p>
+<p>TODO: copy from GPU to CPU. </p>
 
 </div>
 </div>
@@ -187,7 +295,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>wfs_ideal_atm<
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="wfsgrad_8c.html">wfsgrad.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: cuwfs_t Struct Reference</title>
+<title>maos-1.0.0: cuwfs_t Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -120,18 +120,24 @@ cudaStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>stream</b></t
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Amplitude map.  <a href="#a6b6a8aff2b7f9cd4fbc0a818f75c1a89"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a76abc39e43edb9524cc85dd878380167"></a><!-- doxytag: member="cuwfs_t::plan1" ref="a76abc39e43edb9524cc85dd878380167" args="" -->
 cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><b>plan1</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a5c605e4077ce5977f11f47052f18e0b1">plan2</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">FFTW plan if any.  <a href="#a5c605e4077ce5977f11f47052f18e0b1"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c605e4077ce5977f11f47052f18e0b1"></a><!-- doxytag: member="cuwfs_t::plan2" ref="a5c605e4077ce5977f11f47052f18e0b1" args="" -->
+cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><b>plan2</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#aec1efdfe787ae3fc842201d4ced55f12">plan3</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">FFTW plan if any.  <a href="#aec1efdfe787ae3fc842201d4ced55f12"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcudtf__t.html">cudtf_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a48b3239acd949fb19726089478e6dd93">dtf</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">array for each wvl.  <a href="#a48b3239acd949fb19726089478e6dd93"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">float *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a2a9a2e45a5464247c43c4fb171c33544">srot</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">angle to rotate PSF/OTF  <a href="#a2a9a2e45a5464247c43c4fb171c33544"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">float(**&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#acaaa6cb576884ccc77989f0e2b84d992">mtche</a> )[2]</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">matched filter gradient operator.  <a href="#acaaa6cb576884ccc77989f0e2b84d992"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">float *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a3b2b4f50a8711cc2b1b97822f7e97bdc">i0sum</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">sum of i0 for each subaperture.  <a href="#a3b2b4f50a8711cc2b1b97822f7e97bdc"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">float **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a25f9ff4d5625ed52fb928b6effbd1573">bkgrnd2</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">background as an image  <a href="#a25f9ff4d5625ed52fb928b6effbd1573"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">float **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a7fd692312c9fc4dafd256d2e79d770ef">bkgrnd2c</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">calibration of background to subtract.  <a href="#a7fd692312c9fc4dafd256d2e79d770ef"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a326ad9e6734a12e77c3e5e32018c3eaf"></a><!-- doxytag: member="cuwfs_t::cogcoeff" ref="a326ad9e6734a12e77c3e5e32018c3eaf" args="" -->
+float *&#160;</td><td class="memItemRight" valign="bottom"><b>cogcoeff</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">float *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a88c6a6426eda7c46a8172aa439c8fa3d">lltncpa</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">NCPA for llt.  <a href="#a88c6a6426eda7c46a8172aa439c8fa3d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a88cd2a43b76b941ee9f5c7f46fb6a135"></a><!-- doxytag: member="cuwfs_t::lltimcc" ref="a88cd2a43b76b941ee9f5c7f46fb6a135" args=")[3]" -->
@@ -140,11 +146,11 @@ float(**&#160;</td><td class="memItemRight" valign="bottom"><b>lltimcc</b> )[3]<
 float *&#160;</td><td class="memItemRight" valign="bottom"><b>lltamp</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a29ee663fb10ea5204d1cd201eb0b83ec">msa</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of subapertures in each batch of FFT.  <a href="#a29ee663fb10ea5204d1cd201eb0b83ec"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01ec6ec9019215cb1ae8e842d9656f61"></a><!-- doxytag: member="cuwfs_t::lltplan1" ref="a01ec6ec9019215cb1ae8e842d9656f61" args="" -->
-cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><b>lltplan1</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#af6ab64736a9ac30965e507d13f6694ef">lltplan2</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">FFTW plan for LLT.  <a href="#af6ab64736a9ac30965e507d13f6694ef"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcurmat.html">curmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a079e64901232693dc5d11df4c762833d">opdadd</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3993777a5d0a2fec4988cc53eee1e27a"></a><!-- doxytag: member="cuwfs_t::lltplan_wvf" ref="a3993777a5d0a2fec4988cc53eee1e27a" args="" -->
+cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><b>lltplan_wvf</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">cufftHandle&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#aca30f005953663bfbed04a96d5f463f3">lltplan_otf</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">FFTW plan for LLT.  <a href="#aca30f005953663bfbed04a96d5f463f3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcumat.html">curmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a079e64901232693dc5d11df4c762833d">opdadd</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">The ncpa and surface aberration.  <a href="#a079e64901232693dc5d11df4c762833d"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5698db09d194ad89d9f83a752f6fcac6"></a><!-- doxytag: member="cuwfs_t::custat" ref="a5698db09d194ad89d9f83a752f6fcac6" args="" -->
 curandStat *&#160;</td><td class="memItemRight" valign="bottom"><b>custat</b></td></tr>
@@ -152,12 +158,14 @@ curandStat *&#160;</td><td class="memItemRight" valign="bottom"><b>custat</b></t
 int&#160;</td><td class="memItemRight" valign="bottom"><b>custatb</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12661f2a6e50af41d2b23f5e4db97f99"></a><!-- doxytag: member="cuwfs_t::custatt" ref="a12661f2a6e50af41d2b23f5e4db97f99" args="" -->
 int&#160;</td><td class="memItemRight" valign="bottom"><b>custatt</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a94ca339a88207911c06f02da24a54d"></a><!-- doxytag: member="cuwfs_t::neareal" ref="a1a94ca339a88207911c06f02da24a54d" args="" -->
-float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcurmat.html">curmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#aa5ba7d3d32a668634ef607b7dfd222a5">gradacc</a></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4d20c3f169e643732ec42dd45b03395"></a><!-- doxytag: member="cuwfs_t::neareal" ref="af4d20c3f169e643732ec42dd45b03395" args="" -->
+<a class="el" href="structcumat.html">curmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcumat.html">curmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#aa5ba7d3d32a668634ef607b7dfd222a5">gradacc</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">For accumulating grads.  <a href="#aa5ba7d3d32a668634ef607b7dfd222a5"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcurmat.html">curmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a522f7945002d2911947ba92e5801aaaa">ints</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">For accumulating subaperture image.  <a href="#a522f7945002d2911947ba92e5801aaaa"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcucell.html">curcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a16d80d05773805a8fd46c85175f6b7bc">ints</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">For accumulating subaperture image.  <a href="#a16d80d05773805a8fd46c85175f6b7bc"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcucell.html">curcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structcuwfs__t.html#a33c6794c2a7b50ffbd2c22951a80ec64">pistatout</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">For output pistatout.  <a href="#a33c6794c2a7b50ffbd2c22951a80ec64"></a><br/></td></tr>
 </table>
 <hr/><h2>Field Documentation</h2>
 <a class="anchor" id="a3ef4fd9d2666b07577d334b2ec5856bd"></a><!-- doxytag: member="cuwfs_t::GS0t" ref="a3ef4fd9d2666b07577d334b2ec5856bd" args="" -->
@@ -221,12 +229,12 @@ float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></
 
 </div>
 </div>
-<a class="anchor" id="a5c605e4077ce5977f11f47052f18e0b1"></a><!-- doxytag: member="cuwfs_t::plan2" ref="a5c605e4077ce5977f11f47052f18e0b1" args="" -->
+<a class="anchor" id="aec1efdfe787ae3fc842201d4ced55f12"></a><!-- doxytag: member="cuwfs_t::plan3" ref="aec1efdfe787ae3fc842201d4ced55f12" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">cufftHandle <a class="el" href="structcuwfs__t.html#a5c605e4077ce5977f11f47052f18e0b1">cuwfs_t::plan2</a></td>
+          <td class="memname">cufftHandle <a class="el" href="structcuwfs__t.html#aec1efdfe787ae3fc842201d4ced55f12">cuwfs_t::plan3</a></td>
         </tr>
       </table>
 </div>
@@ -278,6 +286,21 @@ float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></
 <div class="memdoc">
 
 <p>matched filter gradient operator. </p>
+
+</div>
+</div>
+<a class="anchor" id="a3b2b4f50a8711cc2b1b97822f7e97bdc"></a><!-- doxytag: member="cuwfs_t::i0sum" ref="a3b2b4f50a8711cc2b1b97822f7e97bdc" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float* <a class="el" href="structcuwfs__t.html#a3b2b4f50a8711cc2b1b97822f7e97bdc">cuwfs_t::i0sum</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>sum of i0 for each subaperture. </p>
 
 </div>
 </div>
@@ -342,12 +365,12 @@ float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></
 
 </div>
 </div>
-<a class="anchor" id="af6ab64736a9ac30965e507d13f6694ef"></a><!-- doxytag: member="cuwfs_t::lltplan2" ref="af6ab64736a9ac30965e507d13f6694ef" args="" -->
+<a class="anchor" id="aca30f005953663bfbed04a96d5f463f3"></a><!-- doxytag: member="cuwfs_t::lltplan_otf" ref="aca30f005953663bfbed04a96d5f463f3" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">cufftHandle <a class="el" href="structcuwfs__t.html#af6ab64736a9ac30965e507d13f6694ef">cuwfs_t::lltplan2</a></td>
+          <td class="memname">cufftHandle <a class="el" href="structcuwfs__t.html#aca30f005953663bfbed04a96d5f463f3">cuwfs_t::lltplan_otf</a></td>
         </tr>
       </table>
 </div>
@@ -362,7 +385,7 @@ float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structcurmat.html">curmat</a>* <a class="el" href="structcuwfs__t.html#a079e64901232693dc5d11df4c762833d">cuwfs_t::opdadd</a></td>
+          <td class="memname"><a class="el" href="structcumat.html">curmat</a>* <a class="el" href="structcuwfs__t.html#a079e64901232693dc5d11df4c762833d">cuwfs_t::opdadd</a></td>
         </tr>
       </table>
 </div>
@@ -377,7 +400,7 @@ float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structcurmat.html">curmat</a>* <a class="el" href="structcuwfs__t.html#aa5ba7d3d32a668634ef607b7dfd222a5">cuwfs_t::gradacc</a></td>
+          <td class="memname"><a class="el" href="structcumat.html">curmat</a>* <a class="el" href="structcuwfs__t.html#aa5ba7d3d32a668634ef607b7dfd222a5">cuwfs_t::gradacc</a></td>
         </tr>
       </table>
 </div>
@@ -387,18 +410,33 @@ float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></
 
 </div>
 </div>
-<a class="anchor" id="a522f7945002d2911947ba92e5801aaaa"></a><!-- doxytag: member="cuwfs_t::ints" ref="a522f7945002d2911947ba92e5801aaaa" args="" -->
+<a class="anchor" id="a16d80d05773805a8fd46c85175f6b7bc"></a><!-- doxytag: member="cuwfs_t::ints" ref="a16d80d05773805a8fd46c85175f6b7bc" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structcurmat.html">curmat</a>* <a class="el" href="structcuwfs__t.html#a522f7945002d2911947ba92e5801aaaa">cuwfs_t::ints</a></td>
+          <td class="memname"><a class="el" href="structcucell.html">curcell</a>* <a class="el" href="structcuwfs__t.html#a16d80d05773805a8fd46c85175f6b7bc">cuwfs_t::ints</a></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 
 <p>For accumulating subaperture image. </p>
+
+</div>
+</div>
+<a class="anchor" id="a33c6794c2a7b50ffbd2c22951a80ec64"></a><!-- doxytag: member="cuwfs_t::pistatout" ref="a33c6794c2a7b50ffbd2c22951a80ec64" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structcucell.html">curcell</a>* <a class="el" href="structcuwfs__t.html#a33c6794c2a7b50ffbd2c22951a80ec64">cuwfs_t::pistatout</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>For output pistatout. </p>
 
 </div>
 </div>
@@ -410,7 +448,7 @@ float *&#160;</td><td class="memItemRight" valign="bottom"><b>neareal</b></td></
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structcuwfs__t.html">cuwfs_t</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

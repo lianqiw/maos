@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: Data Fields - Variables</title>
+<title>maos-1.0.0: Data Fields - Variables</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -216,6 +216,9 @@ function toggleVisibility(linkObj) {
 <li>wfsints_isa
 : <a class="el" href="structSIM__T.html#ad315103cb3314a69188f3618dd6100db">SIM_T</a>
 </li>
+<li>wfslinearity
+: <a class="el" href="structDBG__CFG__T.html#a7b7363a941e9896fbce7990e1f04c779">DBG_CFG_T</a>
+</li>
 <li>wfsopd
 : <a class="el" href="structSAVE__CFG__T.html#adde01d9e1e9def2a1e912cc699cd66f1">SAVE_CFG_T</a>
 </li>
@@ -224,9 +227,6 @@ function toggleVisibility(linkObj) {
 </li>
 <li>wfsopdlo
 : <a class="el" href="structSAVE__CFG__T.html#a10d1345f20457fbeae19109b83c5d9d8">SAVE_CFG_T</a>
-</li>
-<li>wfspsfmean
-: <a class="el" href="structSIM__T.html#a415618a464d8eb2d9fd629356bf1c414">SIM_T</a>
 </li>
 <li>wfspsfout
 : <a class="el" href="structSIM__SAVE__T.html#a7041aa82c44fc7205a4c973b0beeea49">SIM_SAVE_T</a>
@@ -241,29 +241,24 @@ function toggleVisibility(linkObj) {
 <li>winddir
 : <a class="el" href="structSIM__T.html#a90b521b076481fe938a37cbe4b1c5b79">SIM_T</a>
 </li>
-<li>windest
-: <a class="el" href="structSIM__T.html#aec5148b2cbcb290d3f6d3e9c6f587b58">SIM_T</a>
-, <a class="el" href="structTOMO__CFG__T.html#aca7b490ba52cfa6226d84a4248cfc65b">TOMO_CFG_T</a>
-</li>
-<li>windshift
-: <a class="el" href="structTOMO__CFG__T.html#ab55475bb28aee1940de2fe860707e33f">TOMO_CFG_T</a>
-, <a class="el" href="structSIM__T.html#ac13a335178113fe760f472df5990463b">SIM_T</a>
-</li>
 <li>ws
 : <a class="el" href="structATM__CFG__T.html#aa9a86b3cc0c73d0d27cbad43f9706108">ATM_CFG_T</a>
 </li>
 <li>wspsd
 : <a class="el" href="structSIM__CFG__T.html#a712dd4f546f1058a525c33e50fb8a6df">SIM_CFG_T</a>
 </li>
+<li>wsseq
+: <a class="el" href="structSIM__CFG__T.html#a43f7320d412072410d9faae843a78cbb">SIM_CFG_T</a>
+</li>
 <li>wt
-: <a class="el" href="structFIT__CFG__T.html#ae921bb24d3f1439f4023b4009a004cd0">FIT_CFG_T</a>
+: <a class="el" href="structGENSCREEN__T.html#a5769e612f930528bfa598875feb11ce8">GENSCREEN_T</a>
 , <a class="el" href="structATM__CFG__T.html#ad539b2f97fd31f5e5dc999b852b71228">ATM_CFG_T</a>
+, <a class="el" href="structEVL__CFG__T.html#a1099d0a05e59fced8655347bbb50b9c8">EVL_CFG_T</a>
+, <a class="el" href="structFIT__CFG__T.html#ae921bb24d3f1439f4023b4009a004cd0">FIT_CFG_T</a>
+, <a class="el" href="structRECON__T.html#a9ea2aeada827b00b36ade3789738a907">RECON_T</a>
+, <a class="el" href="structATMR__CFG__T.html#aa49819f62905b8043d11d4a2fe512bfa">ATMR_CFG_T</a>
 , <a class="el" href="structFRACTAL__T.html#a3c7e01f84f5853b8d02fcb414a1d5081">FRACTAL_T</a>
 , <a class="el" href="structCN2EST__T.html#aa344d07c706736e7375c1ec023f7239c">CN2EST_T</a>
-, <a class="el" href="structEVL__CFG__T.html#a1099d0a05e59fced8655347bbb50b9c8">EVL_CFG_T</a>
-, <a class="el" href="structGENSCREEN__T.html#a5769e612f930528bfa598875feb11ce8">GENSCREEN_T</a>
-, <a class="el" href="structATMR__CFG__T.html#aa49819f62905b8043d11d4a2fe512bfa">ATMR_CFG_T</a>
-, <a class="el" href="structRECON__T.html#a9ea2aeada827b00b36ade3789738a907">RECON_T</a>
 </li>
 <li>wtconvert
 : <a class="el" href="structCN2EST__T.html#aaf90f4974c463af47373007b736c35f2">CN2EST_T</a>
@@ -276,9 +271,9 @@ function toggleVisibility(linkObj) {
 , <a class="el" href="structWFS__S.html#aef15a4659210bd84bfefd92fa66f3256">WFS_S</a>
 </li>
 <li>wvl
-: <a class="el" href="structMAOS__S.html#a662f32729b33a08eff3bc276b5982011">MAOS_S</a>
+: <a class="el" href="structEVL__CFG__T.html#ae36c873b00a4bbc1a3dae8a6aa1549fd">EVL_CFG_T</a>
+, <a class="el" href="structMAOS__S.html#a662f32729b33a08eff3bc276b5982011">MAOS_S</a>
 , <a class="el" href="structPOWFS__CFG__T.html#a086be0f3919fffb2809d891e895bab83">POWFS_CFG_T</a>
-, <a class="el" href="structEVL__CFG__T.html#ae36c873b00a4bbc1a3dae8a6aa1549fd">EVL_CFG_T</a>
 </li>
 <li>wvlwts
 : <a class="el" href="structWFS__CFG__T.html#a8c33157663ab4c88862edbb6c6150c2f">WFS_CFG_T</a>
@@ -289,7 +284,7 @@ function toggleVisibility(linkObj) {
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

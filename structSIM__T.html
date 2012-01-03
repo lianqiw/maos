@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: SIM_T Struct Reference</title>
+<title>maos-1.0.0: SIM_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -141,14 +141,14 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">WFS subaperture images.  <a href="#ada7dc24074ead7e87d800f8b99584fce"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structccell.html">ccell</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a7175cc941d5dbae02503ff90df35a7b3">wfspsfout</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">output WFS PSF history.  <a href="#a7175cc941d5dbae02503ff90df35a7b3"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a415618a464d8eb2d9fd629356bf1c414">wfspsfmean</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">To save time average of wfs psf of the full aperture.  <a href="#a415618a464d8eb2d9fd629356bf1c414"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a9150a4d2687fb6e309da0a1857930e2e">pistatout</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">WFS time averaged tip/tilt removed PSF.  <a href="#a9150a4d2687fb6e309da0a1857930e2e"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a1ce78a265b859aa46fe4bd4d055073e8">gradcl</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">cl grad output at step isim.  <a href="#a1ce78a265b859aa46fe4bd4d055073e8"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> **&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a214da39c9cf99c4e78009ea9cf140d80">sanea_sim</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">accumulate effective sanea during simulation.  <a href="#a214da39c9cf99c4e78009ea9cf140d80"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#ae0ab211e704b9c8af4dec53529cc4bc0">gradnf</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">cl nf grad output  <a href="#ae0ab211e704b9c8af4dec53529cc4bc0"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a9fa58c6d12a9a59b829d2578c800ab20">sanea_sim</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">accumulate effective sanea during simulation.  <a href="#a9fa58c6d12a9a59b829d2578c800ab20"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#aa738e7a4294a049073428945f65695e0">gradacc</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">accumulate gradident for dtrat&gt;1  <a href="#aa738e7a4294a049073428945f65695e0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdcell.html">dcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#acd0f9ab573ce30b6a42ca98de3eb31b3">gradlastcl</a></td></tr>
@@ -303,10 +303,6 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">For testing.  <a href="#ae7c3be846a2bcf3ce66afb764880604c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structccell.html">ccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a65207b82230e05888d85ba37decbfc7f">opdrhatlast</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">for wind estimation.  <a href="#a65207b82230e05888d85ba37decbfc7f"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structdmat.html">dmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#aec5148b2cbcb290d3f6d3e9c6f587b58">windest</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">estimated wind velocity.  <a href="#aec5148b2cbcb290d3f6d3e9c6f587b58"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structspcell.html">spcell</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#ac13a335178113fe760f472df5990463b">windshift</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">operator to do wind shift on opdr(testing)  <a href="#ac13a335178113fe760f472df5990463b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#a4f9c43677faa9f6745d3220bed8b8977">nthread</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">number of threads  <a href="#a4f9c43677faa9f6745d3220bed8b8977"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__T.html#ad315103cb3314a69188f3618dd6100db">wfsints_isa</a></td></tr>
@@ -606,22 +602,6 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a415618a464d8eb2d9fd629356bf1c414"></a><!-- doxytag: member="SIM_T::wfspsfmean" ref="a415618a464d8eb2d9fd629356bf1c414" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#a415618a464d8eb2d9fd629356bf1c414">SIM_T::wfspsfmean</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>To save time average of wfs psf of the full aperture. </p>
-<p>(for PSF recon) </p>
-
-</div>
-</div>
 <a class="anchor" id="a9150a4d2687fb6e309da0a1857930e2e"></a><!-- doxytag: member="SIM_T::pistatout" ref="a9150a4d2687fb6e309da0a1857930e2e" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -652,12 +632,27 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a214da39c9cf99c4e78009ea9cf140d80"></a><!-- doxytag: member="SIM_T::sanea_sim" ref="a214da39c9cf99c4e78009ea9cf140d80" args="" -->
+<a class="anchor" id="ae0ab211e704b9c8af4dec53529cc4bc0"></a><!-- doxytag: member="SIM_T::gradnf" ref="ae0ab211e704b9c8af4dec53529cc4bc0" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structdcell.html">dcell</a>** <a class="el" href="structSIM__T.html#a214da39c9cf99c4e78009ea9cf140d80">SIM_T::sanea_sim</a></td>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#ae0ab211e704b9c8af4dec53529cc4bc0">SIM_T::gradnf</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>cl nf grad output </p>
+
+</div>
+</div>
+<a class="anchor" id="a9fa58c6d12a9a59b829d2578c800ab20"></a><!-- doxytag: member="SIM_T::sanea_sim" ref="a9fa58c6d12a9a59b829d2578c800ab20" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structdcell.html">dcell</a>* <a class="el" href="structSIM__T.html#a9fa58c6d12a9a59b829d2578c800ab20">SIM_T::sanea_sim</a></td>
         </tr>
       </table>
 </div>
@@ -1757,37 +1752,6 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aec5148b2cbcb290d3f6d3e9c6f587b58"></a><!-- doxytag: member="SIM_T::windest" ref="aec5148b2cbcb290d3f6d3e9c6f587b58" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structdmat.html">dmat</a>* <a class="el" href="structSIM__T.html#aec5148b2cbcb290d3f6d3e9c6f587b58">SIM_T::windest</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>estimated wind velocity. </p>
-<p>(testing) </p>
-
-</div>
-</div>
-<a class="anchor" id="ac13a335178113fe760f472df5990463b"></a><!-- doxytag: member="SIM_T::windshift" ref="ac13a335178113fe760f472df5990463b" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structspcell.html">spcell</a>* <a class="el" href="structSIM__T.html#ac13a335178113fe760f472df5990463b">SIM_T::windshift</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>operator to do wind shift on opdr(testing) </p>
-
-</div>
-</div>
 <a class="anchor" id="a4f9c43677faa9f6745d3220bed8b8977"></a><!-- doxytag: member="SIM_T::nthread" ref="a4f9c43677faa9f6745d3220bed8b8977" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -2083,7 +2047,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structSIM__T.html">SIM_T</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:46 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: SKYC_S Struct Reference</title>
+<title>maos-1.0.0: SKYC_S Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -113,6 +113,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">only run this sky frame if not -1  <a href="#aebb29a66c21f9222ad837f8f7b11258a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSKYC__S.html#a5837c6a87afd49d11620b7955623cc20">dbgaster</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">only run this asterism if not -1  <a href="#a5837c6a87afd49d11620b7955623cc20"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSKYC__S.html#abc8503bc5d19f8437bd82fb4652d8c27">keeporder</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">1: Keep order of stars as input is skyc.star.  <a href="#abc8503bc5d19f8437bd82fb4652d8c27"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSKYC__S.html#aa69a5372835f90b1fa4f6f92d53e8684">interpg</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate gain based in dtrat and signan.  <a href="#aa69a5372835f90b1fa4f6f92d53e8684"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSKYC__S.html#a9f78bafda1cb625b875bfd02c929a6fa">save</a></td></tr>
@@ -233,6 +235,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">file name of not NULL to load stars from  <a href="#a8f96158f5a5b7d588df1ab7cd51b1a98"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSKYC__S.html#ad760790d5fd47c794c028d13ada655fc">addws</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">add wind shake time series to simulation  <a href="#ad760790d5fd47c794c028d13ada655fc"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSKYC__S.html#ad2597e45b204cf53301cce6d672e57e9">pmargin</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">phase margin of type II  <a href="#ad2597e45b204cf53301cce6d672e57e9"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Contains parameters for skycoverage. </p>
@@ -294,6 +298,21 @@ Data Fields</h2></td></tr>
 <div class="memdoc">
 
 <p>only run this asterism if not -1 </p>
+
+</div>
+</div>
+<a class="anchor" id="abc8503bc5d19f8437bd82fb4652d8c27"></a><!-- doxytag: member="SKYC_S::keeporder" ref="abc8503bc5d19f8437bd82fb4652d8c27" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSKYC__S.html#abc8503bc5d19f8437bd82fb4652d8c27">SKYC_S::keeporder</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>1: Keep order of stars as input is skyc.star. </p>
 
 </div>
 </div>
@@ -1204,6 +1223,21 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ad2597e45b204cf53301cce6d672e57e9"></a><!-- doxytag: member="SKYC_S::pmargin" ref="ad2597e45b204cf53301cce6d672e57e9" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="structSKYC__S.html#ad2597e45b204cf53301cce6d672e57e9">SKYC_S::pmargin</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>phase margin of type II </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>skyc/<a class="el" href="skyc_2parms_8h.html">parms.h</a></li>
 </ul>
@@ -1212,7 +1246,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structSKYC__S.html">SKYC_S</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:46 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

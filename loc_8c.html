@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: lib/loc.c File Reference</title>
+<title>maos-1.0.0: lib/loc.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -151,8 +151,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)  <a href="#a56a881e95fbc17b041c1054e6d73c185"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8c.html#a908b73cad7f5c79f288098460680691f">mksqloc</a> (long nx, long ny, double dx, double ox, double oy)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a loc array contains coorindates in a square map of size nx*ny, with sampling dx, and at origin ox,oy.  <a href="#a908b73cad7f5c79f288098460680691f"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8c.html#a75054dbe25069830b00722acba51db07">mksqlocrot</a> (long nx, long ny, double dx, double ox, double oy, double theta)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like mksqloc, but roated theta CCW.  <a href="#a75054dbe25069830b00722acba51db07"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8c.html#a67ecca0c93a5633b2039574d754fd9ca">mksqlocrot</a> (long nx, long ny, double dx, double dy, double ox, double oy, double theta)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like mksqloc, but roated theta CCW.  <a href="#a67ecca0c93a5633b2039574d754fd9ca"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8c.html#ab8e1a32ce8c88b3595214e9d50e3ecf1">mkcirloc</a> (double dcir, double dx)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Create rough circular grid, within diameter of dcir.  <a href="#ab8e1a32ce8c88b3595214e9d50e3ecf1"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="el" href="structloc__t.html">loc_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="loc_8c.html#ac7f14244184dca15b65de064d22ead63">mkcirloc_amp</a> (double **ampout, <a class="el" href="structlocstat__t.html">locstat_t</a> *cstat, <a class="el" href="structmap__t.html">map_t</a> *ampin, double dcir, double dx, int cropamp)</td></tr>
@@ -788,7 +788,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a75054dbe25069830b00722acba51db07"></a><!-- doxytag: member="loc.c::mksqlocrot" ref="a75054dbe25069830b00722acba51db07" args="(long nx, long ny, double dx, double ox, double oy, double theta)" -->
+<a class="anchor" id="a67ecca0c93a5633b2039574d754fd9ca"></a><!-- doxytag: member="loc.c::mksqlocrot" ref="a67ecca0c93a5633b2039574d754fd9ca" args="(long nx, long ny, double dx, double dy, double ox, double oy, double theta)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -809,6 +809,12 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype">double&#160;</td>
           <td class="paramname"><em>dx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dy</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -2095,7 +2101,7 @@ Functions</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="loc_8c.html">loc.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

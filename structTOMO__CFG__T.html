@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: TOMO_CFG_T Struct Reference</title>
+<title>maos-1.0.0: TOMO_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -125,6 +125,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">guard rings of reconstruction grid xloc  <a href="#ae5a188c0e3452b842d2646ba7724d690"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#a0c2f4cb89b5c8829fe24ecad0a7c203c">pos</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">over sampling factor of ploc over actuator spacing  <a href="#a0c2f4cb89b5c8829fe24ecad0a7c203c"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#aaae452b6ddff1cdf5df55fe736a76d34">nxbase</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Each layer xloc grid size is tomo.os*tomo.nxbase is not zero.  <a href="#aaae452b6ddff1cdf5df55fe736a76d34"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#a92881e916c336aa7e5b337f4f1aab397">piston_cr</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">single point piston constraint.  <a href="#a92881e916c336aa7e5b337f4f1aab397"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#a251db726cf66e7523832f2c8bb4ff72b">ahst_wt</a></td></tr>
@@ -143,10 +145,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">max iterations.  <a href="#a51f34eccc5590bde667bc522829c5be4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#ab3d83877db6d942c80c35d3ae0829e78">assemble</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">force assemble tomography matrix in CG  <a href="#ab3d83877db6d942c80c35d3ae0829e78"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#aca7b490ba52cfa6226d84a4248cfc65b">windest</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">estimate wind.  <a href="#aca7b490ba52cfa6226d84a4248cfc65b"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#ab55475bb28aee1940de2fe860707e33f">windshift</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">shift opdr using wind velocity (from input if windest=0)  <a href="#ab55475bb28aee1940de2fe860707e33f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#a3f791395e4280d0850637cdbd50f3332">predict</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">test predictive control.  <a href="#a3f791395e4280d0850637cdbd50f3332"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#ae00e0bbe65e2f3befc1cc7ecd5b33cbe">cubic</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">cubic influence function in tomography (testing)  <a href="#ae00e0bbe65e2f3befc1cc7ecd5b33cbe"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structTOMO__CFG__T.html#ab22689e6073b30826a752cd54eeed379">ninit</a></td></tr>
@@ -309,6 +309,22 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="aaae452b6ddff1cdf5df55fe736a76d34"></a><!-- doxytag: member="TOMO_CFG_T::nxbase" ref="aaae452b6ddff1cdf5df55fe736a76d34" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#aaae452b6ddff1cdf5df55fe736a76d34">TOMO_CFG_T::nxbase</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. </p>
+<p>same for ploc. </p>
+
+</div>
+</div>
 <a class="anchor" id="a92881e916c336aa7e5b337f4f1aab397"></a><!-- doxytag: member="TOMO_CFG_T::piston_cr" ref="a92881e916c336aa7e5b337f4f1aab397" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -448,34 +464,18 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aca7b490ba52cfa6226d84a4248cfc65b"></a><!-- doxytag: member="TOMO_CFG_T::windest" ref="aca7b490ba52cfa6226d84a4248cfc65b" args="" -->
+<a class="anchor" id="a3f791395e4280d0850637cdbd50f3332"></a><!-- doxytag: member="TOMO_CFG_T::predict" ref="a3f791395e4280d0850637cdbd50f3332" args="" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#aca7b490ba52cfa6226d84a4248cfc65b">TOMO_CFG_T::windest</a></td>
+          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#a3f791395e4280d0850637cdbd50f3332">TOMO_CFG_T::predict</a></td>
         </tr>
       </table>
 </div>
 <div class="memdoc">
 
-<p>estimate wind. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>finish implement it. </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="ab55475bb28aee1940de2fe860707e33f"></a><!-- doxytag: member="TOMO_CFG_T::windshift" ref="ab55475bb28aee1940de2fe860707e33f" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structTOMO__CFG__T.html#ab55475bb28aee1940de2fe860707e33f">TOMO_CFG_T::windshift</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>shift opdr using wind velocity (from input if windest=0) </p>
+<p>test predictive control. </p>
 
 </div>
 </div>
@@ -532,7 +532,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structTOMO__CFG__T.html">TOMO_CFG_T</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:46 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

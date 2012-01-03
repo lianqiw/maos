@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: lib/cmat.h File Reference</title>
+<title>maos-1.0.0: lib/cmat.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -335,10 +335,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccellcwpow</b> (<a cl
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cwritedata</b> (file_t *fp, const <a class="el" href="structcmat.html">cmat</a> *A)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5fc25bdbb6758549b60bc4b9c34a9bef"></a><!-- doxytag: member="cmat.h::ccellwritedata" ref="a5fc25bdbb6758549b60bc4b9c34a9bef" args="(file_t *fp, const ccell *dc)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ccellwritedata</b> (file_t *fp, const <a class="el" href="structccell.html">ccell</a> *dc)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab577060fce34c8520b7443cdf8fe49f2"></a><!-- doxytag: member="cmat.h::creaddata" ref="ab577060fce34c8520b7443cdf8fe49f2" args="(file_t *fp, uint32_t magic)" -->
-<a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>creaddata</b> (file_t *fp, uint32_t magic)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a34c854eb8a7f9bbebcf5724f8ff66f0a"></a><!-- doxytag: member="cmat.h::ccellreaddata" ref="a34c854eb8a7f9bbebcf5724f8ff66f0a" args="(file_t *fp, uint32_t magic)" -->
-<a class="el" href="structccell.html">ccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ccellreaddata</b> (file_t *fp, uint32_t magic)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa340e7c8bdf5727d239cddfe601f1dae"></a><!-- doxytag: member="cmat.h::creaddata" ref="aa340e7c8bdf5727d239cddfe601f1dae" args="(file_t *fp, header_t *header)" -->
+<a class="el" href="structcmat.html">cmat</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>creaddata</b> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a003e2f17fd0cc1facc4b3d201fce6a34"></a><!-- doxytag: member="cmat.h::ccellreaddata" ref="a003e2f17fd0cc1facc4b3d201fce6a34" args="(file_t *fp, header_t *header)" -->
+<a class="el" href="structccell.html">ccell</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ccellreaddata</b> (file_t *fp, <a class="el" href="structheader__t.html">header_t</a> *header)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9593e890699be4f48e826d9048018c04"></a><!-- doxytag: member="cmat.h::cwrite" ref="a9593e890699be4f48e826d9048018c04" args="(const cmat *A, const char *format,...)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cwrite</b> (const <a class="el" href="structcmat.html">cmat</a> *A, const char *format,...)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae75214457fa1e5c394d311b307a7f5e4"></a><!-- doxytag: member="cmat.h::ccellwrite" ref="ae75214457fa1e5c394d311b307a7f5e4" args="(const ccell *dc, const char *format,...)" -->
@@ -411,8 +411,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cembedd</b> (<a class
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy abs squared of a cmat to dmat with optional scaling: A0=A0*alpha+abs(B).  <a href="#a8922c4474048f514d355ab01c48e5a76"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace4935d06b577f97e69eb7cc9cb733ba"></a><!-- doxytag: member="cmat.h::ccp" ref="ace4935d06b577f97e69eb7cc9cb733ba" args="(cmat **__restrict A0, const cmat *__restrict B)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ccp</b> (<a class="el" href="structcmat.html">cmat</a> **__restrict A0, const <a class="el" href="structcmat.html">cmat</a> *__restrict B)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#af912fcd3192a45180c528f075f1d0988">ctilt</a> (<a class="el" href="structcmat.html">cmat</a> *otf, double sx, double sy, int pinct)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Tilt the otf to make the image shift.  <a href="#af912fcd3192a45180c528f075f1d0988"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#a8b4d0c05262a489951cb0e3b0c695654">ctilt2</a> (<a class="el" href="structcmat.html">cmat</a> *otf, <a class="el" href="structcmat.html">cmat</a> *otfin, double sx, double sy, int pinct)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Tilt the otf to make the image shift.  <a href="#a8b4d0c05262a489951cb0e3b0c695654"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af912fcd3192a45180c528f075f1d0988"></a><!-- doxytag: member="cmat.h::ctilt" ref="af912fcd3192a45180c528f075f1d0988" args="(cmat *otf, double sx, double sy, int pinct)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ctilt</b> (<a class="el" href="structcmat.html">cmat</a> *otf, double sx, double sy, int pinct)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef3fa593c6eee076904747ae270b1436"></a><!-- doxytag: member="cmat.h::ccogreal" ref="aef3fa593c6eee076904747ae270b1436" args="(double *grad, const cmat *i0, double offsetx, double offsety, double thres, double bkgrnd)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogreal</b> (double *grad, const <a class="el" href="structcmat.html">cmat</a> *i0, double offsetx, double offsety, double thres, double bkgrnd)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e892e0cb11cf1928bf18a40a76d1f05"></a><!-- doxytag: member="cmat.h::ccogabs" ref="a8e892e0cb11cf1928bf18a40a76d1f05" args="(double *grad, const cmat *i0, double offsetx, double offsety, double thres, double bkgrnd)" -->
@@ -1170,15 +1172,21 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (double *
 
 </div>
 </div>
-<a class="anchor" id="af912fcd3192a45180c528f075f1d0988"></a><!-- doxytag: member="cmat.h::ctilt" ref="af912fcd3192a45180c528f075f1d0988" args="(cmat *otf, double sx, double sy, int pinct)" -->
+<a class="anchor" id="a8b4d0c05262a489951cb0e3b0c695654"></a><!-- doxytag: member="cmat.h::ctilt2" ref="a8b4d0c05262a489951cb0e3b0c695654" args="(cmat *otf, cmat *otfin, double sx, double sy, int pinct)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void ctilt </td>
+          <td class="memname">void ctilt2 </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structcmat.html">cmat</a> *&#160;</td>
           <td class="paramname"><em>otf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structcmat.html">cmat</a> *&#160;</td>
+          <td class="paramname"><em>otfin</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1217,7 +1225,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (double *
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="cmat_8h.html">cmat.h</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

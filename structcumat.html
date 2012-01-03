@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: vtbl Struct Reference</title>
+<title>maos-1.0.0: cumat&lt; T &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -89,60 +89,42 @@ function toggleVisibility(linkObj) {
   </div>
 </div>
 <script type="text/javascript">
-  initNavTree('structvtbl.html','');
+  initNavTree('structcumat.html','');
 </script>
 <div id="doc-content">
 <div class="header">
   <div class="summary">
 <a href="#pub-attribs">Data Fields</a>  </div>
   <div class="headertitle">
-<h1>vtbl Struct Reference</h1>  </div>
+<h1>cumat&lt; T &gt; Struct Template Reference</h1>  </div>
 </div>
 <div class="contents">
-<!-- doxytag: class="vtbl" -->
-<p>A virtual table that contails pointers to functions.  
-<a href="#_details">More...</a></p>
-<table class="memberdecls">
+<!-- doxytag: class="cumat" --><table class="memberdecls">
 <tr><td colspan="2"><h2><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">M_TYPE&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvtbl.html#ac3cb7c9d0b89cbcc6320992e1e66bfa2">type</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Denoting the type of this data.  <a href="#ac3cb7c9d0b89cbcc6320992e1e66bfa2"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e30e870abeff0ba94f844579c44681c"></a><!-- doxytag: member="vtbl::write" ref="a6e30e870abeff0ba94f844579c44681c" args="" -->
-vtbl_write&#160;</td><td class="memItemRight" valign="bottom"><b>write</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4aafa641840ed42386498feccc528405"></a><!-- doxytag: member="vtbl::writedata" ref="a4aafa641840ed42386498feccc528405" args="" -->
-vtbl_writedata&#160;</td><td class="memItemRight" valign="bottom"><b>writedata</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0eabb3a4b3289d5975130e270bf9a68"></a><!-- doxytag: member="vtbl::read" ref="ac0eabb3a4b3289d5975130e270bf9a68" args="" -->
-vtbl_read&#160;</td><td class="memItemRight" valign="bottom"><b>read</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b85d7b7cf9417dbf3b4f32c489f018e"></a><!-- doxytag: member="vtbl::readdata" ref="a2b85d7b7cf9417dbf3b4f32c489f018e" args="" -->
-vtbl_readdata&#160;</td><td class="memItemRight" valign="bottom"><b>readdata</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7392d26b28be499c837ca65ad6390c2"></a><!-- doxytag: member="cumat::p" ref="ac7392d26b28be499c837ca65ad6390c2" args="" -->
+T *&#160;</td><td class="memItemRight" valign="bottom"><b>p</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2663a8924402438d3d28fe1b2370a251"></a><!-- doxytag: member="cumat::nx" ref="a2663a8924402438d3d28fe1b2370a251" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>nx</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a381389346a5c234cf2d59251d1cc5dcd"></a><!-- doxytag: member="cumat::ny" ref="a381389346a5c234cf2d59251d1cc5dcd" args="" -->
+int&#160;</td><td class="memItemRight" valign="bottom"><b>ny</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd26a23561a6a11179136ca0c73f9765"></a><!-- doxytag: member="cumat::nref" ref="abd26a23561a6a11179136ca0c73f9765" args="" -->
+int *&#160;</td><td class="memItemRight" valign="bottom"><b>nref</b></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29da5ef9095ea63c39665d09e251cf95"></a><!-- doxytag: member="cumat::header" ref="a29da5ef9095ea63c39665d09e251cf95" args="" -->
+char *&#160;</td><td class="memItemRight" valign="bottom"><b>header</b></td></tr>
 </table>
-<hr/><a name="_details"></a><h2>Detailed Description</h2>
-<div class="textblock"><p>A virtual table that contails pointers to functions. </p>
-</div><hr/><h2>Field Documentation</h2>
-<a class="anchor" id="ac3cb7c9d0b89cbcc6320992e1e66bfa2"></a><!-- doxytag: member="vtbl::type" ref="ac3cb7c9d0b89cbcc6320992e1e66bfa2" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">M_TYPE <a class="el" href="structvtbl.html#ac3cb7c9d0b89cbcc6320992e1e66bfa2">vtbl::type</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
+<h3>template&lt;typename T&gt;<br/>
+ struct cumat&lt; T &gt;</h3>
 
-<p>Denoting the type of this data. </p>
-
-</div>
-</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>lib/<a class="el" href="type_8h.html">type.h</a></li>
+<li>cuda/types.h</li>
 </ul>
 </div>
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="navelem"><a class="el" href="structvtbl.html">vtbl</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:46 for maos-0.9.3 by&#160;
+      <li class="navelem"><a class="el" href="structcumat.html">cumat</a>      </li>
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

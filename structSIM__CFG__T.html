@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: SIM_CFG_T Struct Reference</title>
+<title>maos-1.0.0: SIM_CFG_T Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -125,6 +125,8 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">contains 3x1 or 3xnmod type II gains.  <a href="#af0e66665827c92aefc31d47c000069ec"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a712dd4f546f1058a525c33e50fb8a6df">wspsd</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Telescope wind shake PSD input.  <a href="#a712dd4f546f1058a525c33e50fb8a6df"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a43f7320d412072410d9faae843a78cbb">wsseq</a></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">sequence of wind shake time series.  <a href="#a43f7320d412072410d9faae843a78cbb"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a4be58c3c2eb209ecdc69103539564fd4">apdm</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">servo coefficient for high order dm.  <a href="#a4be58c3c2eb209ecdc69103539564fd4"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a622c97555ba7a5e6117c0ebc94019274">apngs</a></td></tr>
@@ -165,10 +167,6 @@ Data Fields</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">fuse the high and low order integrators in split tomography  <a href="#a16a3a1b709068ad2f3ed43b343cce6d6"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a8615676f068e88311d6f774e6cb92354">skysim</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">1: we are doing skycoverage preprocessing  <a href="#a8615676f068e88311d6f774e6cb92354"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#ad22d1675f9cc1625e0f2ba07e96c0a76">recon</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">reconstruction method.  <a href="#ad22d1675f9cc1625e0f2ba07e96c0a76"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a578a16840173d3fead07f59f98420c3f">glao</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">reconstruction in GLAO mode: average WFS measurements  <a href="#a578a16840173d3fead07f59f98420c3f"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a0ca1ef171610250f5271d9692a85bb19">evlol</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">evaluate open loop error only  <a href="#a0ca1ef171610250f5271d9692a85bb19"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structSIM__CFG__T.html#a3efd0f6ef09845d59a4e5faf8ee55b8c">noatm</a></td></tr>
@@ -350,6 +348,21 @@ Data Fields</h2></td></tr>
 
 <p>Telescope wind shake PSD input. </p>
 <p>Nx2. First column is freq in Hz, Second column is PSD in rad^2/Hz. </p>
+
+</div>
+</div>
+<a class="anchor" id="a43f7320d412072410d9faae843a78cbb"></a><!-- doxytag: member="SIM_CFG_T::wsseq" ref="a43f7320d412072410d9faae843a78cbb" args="" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int <a class="el" href="structSIM__CFG__T.html#a43f7320d412072410d9faae843a78cbb">SIM_CFG_T::wsseq</a></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>sequence of wind shake time series. </p>
 
 </div>
 </div>
@@ -662,37 +675,6 @@ Data Fields</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ad22d1675f9cc1625e0f2ba07e96c0a76"></a><!-- doxytag: member="SIM_CFG_T::recon" ref="ad22d1675f9cc1625e0f2ba07e96c0a76" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structSIM__CFG__T.html#ad22d1675f9cc1625e0f2ba07e96c0a76">SIM_CFG_T::recon</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>reconstruction method. </p>
-<p>0: minimum variance, 1: least square </p>
-
-</div>
-</div>
-<a class="anchor" id="a578a16840173d3fead07f59f98420c3f"></a><!-- doxytag: member="SIM_CFG_T::glao" ref="a578a16840173d3fead07f59f98420c3f" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int <a class="el" href="structSIM__CFG__T.html#a578a16840173d3fead07f59f98420c3f">SIM_CFG_T::glao</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>reconstruction in GLAO mode: average WFS measurements </p>
-
-</div>
-</div>
 <a class="anchor" id="a0ca1ef171610250f5271d9692a85bb19"></a><!-- doxytag: member="SIM_CFG_T::evlol" ref="a0ca1ef171610250f5271d9692a85bb19" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -898,7 +880,7 @@ Data Fields</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="structSIM__CFG__T.html">SIM_CFG_T</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:46 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

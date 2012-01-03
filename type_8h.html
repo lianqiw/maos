@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: lib/type.h File Reference</title>
+<title>maos-1.0.0: lib/type.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -108,8 +108,6 @@ function toggleVisibility(linkObj) {
 <table class="memberdecls">
 <tr><td colspan="2"><h2><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structvtbl.html">vtbl</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">A virtual table that contails pointers to functions.  <a href="structvtbl.html#_details">More...</a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structdmat.html">dmat</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">a double matrix object contains 2-d array of double numbers  <a href="structdmat.html#_details">More...</a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structsmat.html">smat</a></td></tr>
@@ -182,16 +180,6 @@ Defines</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>AOS_ZSP</b>(A)</td></tr>
 <tr><td colspan="2"><h2><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adac21eefcf0393c6d0c28a7d7147e60a"></a><!-- doxytag: member="type.h::vtbl_write" ref="adac21eefcf0393c6d0c28a7d7147e60a" args=")(void *A, const char *format,...)" -->
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>vtbl_write</b> )(void *A, const char *format,...)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="affd537ab32b721224585cae32e4a269f"></a><!-- doxytag: member="type.h::vtbl_writedata" ref="affd537ab32b721224585cae32e4a269f" args=")(file_t *fp, void *A)" -->
-typedef void(*&#160;</td><td class="memItemRight" valign="bottom"><b>vtbl_writedata</b> )(file_t *fp, void *A)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a69122a14106635f96496cbf81492e487"></a><!-- doxytag: member="type.h::vtbl_read" ref="a69122a14106635f96496cbf81492e487" args=")(const char *format,...)" -->
-typedef void *(*&#160;</td><td class="memItemRight" valign="bottom"><b>vtbl_read</b> )(const char *format,...)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98cc7c10292201d06cac7881d86aa0af"></a><!-- doxytag: member="type.h::vtbl_readdata" ref="a98cc7c10292201d06cac7881d86aa0af" args=")(file_t *fp)" -->
-typedef void *(*&#160;</td><td class="memItemRight" valign="bottom"><b>vtbl_readdata</b> )(file_t *fp)</td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structvtbl.html">vtbl</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a7c911c1655dba4ba99c90d9d8c0060a0">vtbl</a></td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">A virtual table that contails pointers to functions.  <a href="#a7c911c1655dba4ba99c90d9d8c0060a0"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structdmat.html">dmat</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a50f4a2db4598b312a884c7ff82396266">dmat</a></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">a double matrix object contains 2-d array of double numbers  <a href="#a50f4a2db4598b312a884c7ff82396266"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structsmat.html">smat</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a543222f3afbd979a3a299bf00113757e">smat</a></td></tr>
@@ -312,21 +300,6 @@ Enumerations</h2></td></tr>
 </div>
 </div>
 <hr/><h2>Typedef Documentation</h2>
-<a class="anchor" id="a7c911c1655dba4ba99c90d9d8c0060a0"></a><!-- doxytag: member="type.h::vtbl" ref="a7c911c1655dba4ba99c90d9d8c0060a0" args="" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef struct <a class="el" href="structvtbl.html">vtbl</a> <a class="el" href="structvtbl.html">vtbl</a></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>A virtual table that contails pointers to functions. </p>
-
-</div>
-</div>
 <a class="anchor" id="a50f4a2db4598b312a884c7ff82396266"></a><!-- doxytag: member="type.h::dmat" ref="a50f4a2db4598b312a884c7ff82396266" args="" -->
 <div class="memitem">
 <div class="memproto">
@@ -698,7 +671,7 @@ Enumerations</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="type_8h.html">type.h</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

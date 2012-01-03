@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: Compile and Run the Code</title>
+<title>maos-1.0.0: Compile and Run the Code</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -142,11 +142,11 @@ Preparing the folders and compiling</h3>
 <h3><a class="anchor" id="Installing"></a>
 GTK+ in MAC OS and Compile Monitor, Drawdaemon</h3>
 <p>First, if xcode is not installed in full, make sure the following packages are installed DeveloperToolsCLI.pkg gcc4.2.pkg MACOSX10.5.pkg DevSDK.pkg OpenGLSDK.pkg DeveloperToolsSystemSupport</p>
-<p>Second, download and install pkg-config from <a href="http://pkgconfig.freedesktop.org/releases/">http://pkgconfig.freedesktop.org/releases/</a></p>
-<p>Third, following the instructions on page <a href="http://gtk-osx.sourceforge.net/">http://gtk-osx.sourceforge.net/</a> to install gtk+ for osx. The environmental variables are set by jhbuild, here we take important ones and put them in our .bash_profile to avoid running jhbuild each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.</p>
+<p>Second, download and install pkg-config from pkgconfig.freedesktop.org/releases/</p>
+<p>Third, following the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for osx. The environmental variables are set by jhbuild, here we take important ones and put them in our .bash_profile to avoid running jhbuild each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.</p>
 <p>export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig" export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib" export PATH="$PATH:$HOME/gtk/inst/bin" export C_INCLUDE_PATH="$HOME/gtk/inst/include"</p>
 <p>Now rerun configure and make. Monitor and drawdaemon should appear in bin folder now.</p>
-<p>To make the app bundles. First, install quartz engine and ige-mac-buildler. <a href="http://sourceforge.net/apps/trac/gtk-osx/wiki/Bundle">http://sourceforge.net/apps/trac/gtk-osx/wiki/Bundle</a> jhbuild build gtk-quartz-engine</p>
+<p>To make the app bundles. First, install quartz engine and ige-mac-buildler. sourceforge.net/apps/trac/gtk-osx/wiki/Bundle jhbuild build gtk-quartz-engine</p>
 <p>Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin And cd to scripts/bundle folder, run build.sh. .app files should appear in your desktop.</p>
 <h3><a class="anchor" id="sect-monitor"></a>
 Using the job monitor</h3>
@@ -201,7 +201,7 @@ a.conf Append a.conf to the config file list
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

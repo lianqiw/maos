@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: lib/bin.c File Reference</title>
+<title>maos-1.0.0: lib/bin.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -94,6 +94,7 @@ function toggleVisibility(linkObj) {
 <div id="doc-content">
 <div class="header">
   <div class="summary">
+<a href="#define-members">Defines</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <h1>lib/bin.c File Reference</h1>  </div>
@@ -103,6 +104,10 @@ function toggleVisibility(linkObj) {
 <p>Defines our custom file format .bin or zipped .bin.gz and the basic IO functions.  
 <a href="#_details">More...</a></p>
 <table class="memberdecls">
+<tr><td colspan="2"><h2><a name="define-members"></a>
+Defines</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0016d90662ca4190e978ebcd93f3eb5d"></a><!-- doxytag: member="bin.c::FLUSH_OUT" ref="a0016d90662ca4190e978ebcd93f3eb5d" args="" -->
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>FLUSH_OUT</b></td></tr>
 <tr><td colspan="2"><h2><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a3460abaa987907e837b1a0c7ff627034">procfn</a> (const char *fn, const char *mod, const int defaultgzip)</td></tr>
@@ -117,26 +122,50 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zftouch</b> (const ch
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Open the file and return a file_t struct that either contains a file descriptor (for .bin) or a zlib file pointer.  <a href="#a3d9545eb7bf658ee050828326040278c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a4b81bfaf82d10ec42e8d296544a0b3dc">zfname</a> (file_t *fp)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the underlining filename.  <a href="#a4b81bfaf82d10ec42e8d296544a0b3dc"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a01b67a362199a6b984e5759f7d84c168">zfisfits</a> (file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Return whether it's fits file.  <a href="#a01b67a362199a6b984e5759f7d84c168"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a4ed840d37c980314e41e565e7dd617d3">zfclose</a> (file_t *fp)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Close the file.  <a href="#a4ed840d37c980314e41e565e7dd617d3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a758ea8410a35084ddb90d9ab73f97d5f"></a><!-- doxytag: member="bin.c::zfwrite_do" ref="a758ea8410a35084ddb90d9ab73f97d5f" args="(const void *ptr, const size_t size, const size_t nmemb, file_t *fp)" -->
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>zfwrite_do</b> (const void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a67c349fe1033d91feb34b436dbb7e6b3">zfwrite</a> (const void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write to the file.  <a href="#a67c349fe1033d91feb34b436dbb7e6b3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af3d5456f854a2f40b2fceb27927dc99e"></a><!-- doxytag: member="bin.c::zfread_do" ref="af3d5456f854a2f40b2fceb27927dc99e" args="(void *ptr, const size_t size, const size_t nmemb, file_t *fp)" -->
+static int&#160;</td><td class="memItemRight" valign="bottom"><b>zfread_do</b> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a092420d038c729b4dc5e9829b515fd94">zfread2</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Read from the file.  <a href="#a092420d038c729b4dc5e9829b515fd94"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a6f90c7b343cad172afd005feb5112c30">zfread</a> (void *ptr, const size_t size, const size_t nmemb, file_t *fp)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Read from the file.  <a href="#a6f90c7b343cad172afd005feb5112c30"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a3d718e30cd4faabe0c6b902e3ede141c">zfseek</a> (file_t *fp, long offset, int whence)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move the current position pointer, like fseek.  <a href="#a3d718e30cd4faabe0c6b902e3ede141c"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a0fb14ee86ee80eac407abb5fe9b5e289">zfrewind</a> (file_t *fp)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Move the file position pointer to the beginning.  <a href="#a0fb14ee86ee80eac407abb5fe9b5e289"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a1d046d102635bba171fb6eaf42ff54fc">zfpos</a> (file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Tell position in file.  <a href="#a1d046d102635bba171fb6eaf42ff54fc"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#afb7723b26befc0c6f2a95a7e1a516201">zfeof</a> (file_t *fp)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Tell whether we end of file is reached.  <a href="#afb7723b26befc0c6f2a95a7e1a516201"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a956297097c436bc2e8eaf8789fa522ee">zflush</a> (file_t *fp)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Flush the buffer.  <a href="#a956297097c436bc2e8eaf8789fa522ee"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a88d45a259851e05a6a6b080f56491a48">read_magic</a> (file_t *fp, char **header)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the current magic number.  <a href="#a88d45a259851e05a6a6b080f56491a48"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#acaa86eabed0e055f00c413c25e93e744">write_magic</a> (uint32_t magic, file_t *fp)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the magic into file.  <a href="#acaa86eabed0e055f00c413c25e93e744"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#afe0008162097f28d219f86669e62ed9e">write_header</a> (const char *header, file_t *fp)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append the header to current position in the file.  <a href="#afe0008162097f28d219f86669e62ed9e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a661981dba53025cce58eb981094679b7">zfwritelarr</a> (file_t *fp, int count,...)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write multiple long numbers into the file.  <a href="#a661981dba53025cce58eb981094679b7"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#af2343993fa331cbf30672791bdf90e7d">zfreadlarr</a> (file_t *fp, int count,...)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Read multiple long numbers from the file.  <a href="#af2343993fa331cbf30672791bdf90e7d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a4e7e5b8bce8516e4521ee83e6523ad57">read_bin_magic</a> (file_t *fp, char **header)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtain the current magic number.  <a href="#a4e7e5b8bce8516e4521ee83e6523ad57"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a8c9be74a07c1993bbb2af09ab95717f3">write_bin_magic</a> (uint32_t magic, file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the magic into file.  <a href="#a8c9be74a07c1993bbb2af09ab95717f3"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a137b6fe8f33659e66e9952e7278d495f">write_bin_header</a> (const char *header, file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Append the header to current position in the file.  <a href="#a137b6fe8f33659e66e9952e7278d495f"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a930b3628a64d9f6fa488c8bd0f161e95">write_fits_header</a> (file_t *fp, const char *str, uint32_t magic, int count,...)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write fits header.  <a href="#a930b3628a64d9f6fa488c8bd0f161e95"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a07ea5474fc7e2a0f1e9f4e0f952bfc93">read_fits_header</a> (file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Read fits header.  <a href="#a07ea5474fc7e2a0f1e9f4e0f952bfc93"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#aeafd15c22e61f56f291b709b43ddb04e">write_header</a> (const <a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">A unified header writing routine for .bin and .fits files.  <a href="#aeafd15c22e61f56f291b709b43ddb04e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a972a1cdff7d5f045daa2ffe7fb43ecc0">read_header2</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">A unified header reading routine for .bin and .fits files.  <a href="#a972a1cdff7d5f045daa2ffe7fb43ecc0"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a5ed0da59c78ad3c8ada5c0ce67fa1c94">read_header</a> (<a class="el" href="structheader__t.html">header_t</a> *header, file_t *fp)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">calls read_header2 and abort if error happens.  <a href="#a5ed0da59c78ad3c8ada5c0ce67fa1c94"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a343d68b2551eff30cf94bb976cafb0ff">bytes_header</a> (const char *header)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the length of string in header, rounded to multiple of 8.  <a href="#a343d68b2551eff30cf94bb976cafb0ff"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a1825ca342f947862c152e0408e923189">write_timestamp</a> (file_t *fp)</td></tr>
@@ -145,12 +174,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>zftouch</b> (const ch
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Search and return the value correspond to key.  <a href="#adf3e8d275430f33c2cd8262fac88cac8"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#af916b0aa443255291534c8a9222dd585">search_header_num</a> (const char *header, const char *key)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a number from the header with key.  <a href="#af916b0aa443255291534c8a9222dd585"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a661981dba53025cce58eb981094679b7">zfwritelarr</a> (file_t *fp, int count,...)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write multiple long numbers into the file.  <a href="#a661981dba53025cce58eb981094679b7"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#af2343993fa331cbf30672791bdf90e7d">zfreadlarr</a> (file_t *fp, int count,...)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Read multiple long numbers from the file.  <a href="#af2343993fa331cbf30672791bdf90e7d"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#ac5c20bac0a27f6ef3d81ac689236fe0d">do_write</a> (const void *fpn, const int isfn, const size_t size, const uint32_t magic, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write an 1-d or 2-d array into the file.  <a href="#ac5c20bac0a27f6ef3d81ac689236fe0d"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a39d866e52a84b78885f8262f23e1e361">do_write</a> (const void *fpn, const int isfn, const size_t size, const uint32_t magic, const char *str, const void *p, const uint64_t nx, const uint64_t ny)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write an 1-d or 2-d array into the file.  <a href="#a39d866e52a84b78885f8262f23e1e361"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#a07e8fcd0256fd8377d0bb0d86bfd3c53">writedbl</a> (const double *p, long nx, long ny, const char *format,...)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a double array of size nx*ny to file.  <a href="#a07e8fcd0256fd8377d0bb0d86bfd3c53"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bin_8c.html#ad50c5f6b6016874997a5be6105482229">writeflt</a> (const float *p, long nx, long ny, const char *format,...)</td></tr>
@@ -264,6 +289,25 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 
 </div>
 </div>
+<a class="anchor" id="a01b67a362199a6b984e5759f7d84c168"></a><!-- doxytag: member="bin.c::zfisfits" ref="a01b67a362199a6b984e5759f7d84c168" args="(file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int zfisfits </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Return whether it's fits file. </p>
+
+</div>
+</div>
 <a class="anchor" id="a4ed840d37c980314e41e565e7dd617d3"></a><!-- doxytag: member="bin.c::zfclose" ref="a4ed840d37c980314e41e565e7dd617d3" args="(file_t *fp)" -->
 <div class="memitem">
 <div class="memproto">
@@ -322,6 +366,48 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 
 <p>Write to the file. </p>
 <p>If in gzip mode, calls gzwrite, otherwise, calls fwrite. Follows the interface of fwrite. </p>
+
+</div>
+</div>
+<a class="anchor" id="a092420d038c729b4dc5e9829b515fd94"></a><!-- doxytag: member="bin.c::zfread2" ref="a092420d038c729b4dc5e9829b515fd94" args="(void *ptr, const size_t size, const size_t nmemb, file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int zfread2 </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const size_t&#160;</td>
+          <td class="paramname"><em>nmemb</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Read from the file. </p>
+<p>if in gzip mode, calls gzread, otherwise calls fread. follows the interface of fread. It does byte ordering from big endian to small endian in case we are reading fits file. </p>
 
 </div>
 </div>
@@ -421,6 +507,25 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 
 </div>
 </div>
+<a class="anchor" id="a1d046d102635bba171fb6eaf42ff54fc"></a><!-- doxytag: member="bin.c::zfpos" ref="a1d046d102635bba171fb6eaf42ff54fc" args="(file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int zfpos </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Tell position in file. </p>
+
+</div>
+</div>
 <a class="anchor" id="afb7723b26befc0c6f2a95a7e1a516201"></a><!-- doxytag: member="bin.c::zfeof" ref="afb7723b26befc0c6f2a95a7e1a516201" args="(file_t *fp)" -->
 <div class="memitem">
 <div class="memproto">
@@ -459,12 +564,84 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 
 </div>
 </div>
-<a class="anchor" id="a88d45a259851e05a6a6b080f56491a48"></a><!-- doxytag: member="bin.c::read_magic" ref="a88d45a259851e05a6a6b080f56491a48" args="(file_t *fp, char **header)" -->
+<a class="anchor" id="a661981dba53025cce58eb981094679b7"></a><!-- doxytag: member="bin.c::zfwritelarr" ref="a661981dba53025cce58eb981094679b7" args="(file_t *fp, int count,...)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">uint32_t read_magic </td>
+          <td class="memname">void zfwritelarr </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Write multiple long numbers into the file. </p>
+<p>To write three numbers, a, b, c, call with zfwritelarr(fp, 3, &amp;a, &amp;b, &amp;c); </p>
+
+</div>
+</div>
+<a class="anchor" id="af2343993fa331cbf30672791bdf90e7d"></a><!-- doxytag: member="bin.c::zfreadlarr" ref="af2343993fa331cbf30672791bdf90e7d" args="(file_t *fp, int count,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void zfreadlarr </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Read multiple long numbers from the file. </p>
+<p>To read three numbers, a, b, c, call with zfreadlarr(fp, 3, &amp;a, &amp;b, &amp;c); </p>
+
+</div>
+</div>
+<a class="anchor" id="a4e7e5b8bce8516e4521ee83e6523ad57"></a><!-- doxytag: member="bin.c::read_bin_magic" ref="a4e7e5b8bce8516e4521ee83e6523ad57" args="(file_t *fp, char **header)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static uint32_t read_bin_magic </td>
           <td>(</td>
           <td class="paramtype">file_t *&#160;</td>
           <td class="paramname"><em>fp</em>, </td>
@@ -478,7 +655,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
+          <td></td><td><code> [static]</code></td>
         </tr>
       </table>
 </div>
@@ -490,12 +667,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 
 </div>
 </div>
-<a class="anchor" id="acaa86eabed0e055f00c413c25e93e744"></a><!-- doxytag: member="bin.c::write_magic" ref="acaa86eabed0e055f00c413c25e93e744" args="(uint32_t magic, file_t *fp)" -->
+<a class="anchor" id="a8c9be74a07c1993bbb2af09ab95717f3"></a><!-- doxytag: member="bin.c::write_bin_magic" ref="a8c9be74a07c1993bbb2af09ab95717f3" args="(uint32_t magic, file_t *fp)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void write_magic </td>
+          <td class="memname">static void write_bin_magic </td>
           <td>(</td>
           <td class="paramtype">uint32_t&#160;</td>
           <td class="paramname"><em>magic</em>, </td>
@@ -509,7 +686,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
+          <td></td><td><code> [static]</code></td>
         </tr>
       </table>
 </div>
@@ -520,14 +697,139 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 
 </div>
 </div>
-<a class="anchor" id="afe0008162097f28d219f86669e62ed9e"></a><!-- doxytag: member="bin.c::write_header" ref="afe0008162097f28d219f86669e62ed9e" args="(const char *header, file_t *fp)" -->
+<a class="anchor" id="a137b6fe8f33659e66e9952e7278d495f"></a><!-- doxytag: member="bin.c::write_bin_header" ref="a137b6fe8f33659e66e9952e7278d495f" args="(const char *header, file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void write_bin_header </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Append the header to current position in the file. </p>
+<p>First write magic number, then the length of the header, then the header, then the length of the header again, then the magic number again. The two set of strlen and header are used to identify the header from the end of the file and also to verify that what we are reading are indeed header. The header may be written multiple times. They will be concatenated when read. The header should contain key=value entries just like the configuration files. The entries should be separated by new line charactor. </p>
+
+</div>
+</div>
+<a class="anchor" id="a930b3628a64d9f6fa488c8bd0f161e95"></a><!-- doxytag: member="bin.c::write_fits_header" ref="a930b3628a64d9f6fa488c8bd0f161e95" args="(file_t *fp, const char *str, uint32_t magic, int count,...)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void write_fits_header </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>str</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>magic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>count</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Write fits header. </p>
+<p>extra is extra header that will be put in fits comment </p>
+
+</div>
+</div>
+<a class="anchor" id="a07ea5474fc7e2a0f1e9f4e0f952bfc93"></a><!-- doxytag: member="bin.c::read_fits_header" ref="a07ea5474fc7e2a0f1e9f4e0f952bfc93" args="(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int read_fits_header </td>
+          <td>(</td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char **&#160;</td>
+          <td class="paramname"><em>str</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t *&#160;</td>
+          <td class="paramname"><em>magic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t *&#160;</td>
+          <td class="paramname"><em>nx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t *&#160;</td>
+          <td class="paramname"><em>ny</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Read fits header. </p>
+
+</div>
+</div>
+<a class="anchor" id="aeafd15c22e61f56f291b709b43ddb04e"></a><!-- doxytag: member="bin.c::write_header" ref="aeafd15c22e61f56f291b709b43ddb04e" args="(const header_t *header, file_t *fp)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname">void write_header </td>
           <td>(</td>
-          <td class="paramtype">const char *&#160;</td>
+          <td class="paramtype">const <a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
           <td class="paramname"><em>header</em>, </td>
         </tr>
         <tr>
@@ -545,8 +847,67 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 </div>
 <div class="memdoc">
 
-<p>Append the header to current position in the file. </p>
-<p>First write magic number, then the length of the header, then the header, then the length of the header again, then the magic number again. The two set of strlen and header are used to identify the header from the end of the file and also to verify that what we are reading are indeed header. The header may be written multiple times. They will be concatenated when read. The header should contain key=value entries just like the configuration files. The entries should be separated by new line charactor. </p>
+<p>A unified header writing routine for .bin and .fits files. </p>
+<p>It write the array information and string header if any. </p>
+
+</div>
+</div>
+<a class="anchor" id="a972a1cdff7d5f045daa2ffe7fb43ecc0"></a><!-- doxytag: member="bin.c::read_header2" ref="a972a1cdff7d5f045daa2ffe7fb43ecc0" args="(header_t *header, file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int read_header2 </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>A unified header reading routine for .bin and .fits files. </p>
+<p>It read the array information and string header if any. Return error signal. </p>
+
+</div>
+</div>
+<a class="anchor" id="a5ed0da59c78ad3c8ada5c0ce67fa1c94"></a><!-- doxytag: member="bin.c::read_header" ref="a5ed0da59c78ad3c8ada5c0ce67fa1c94" args="(header_t *header, file_t *fp)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void read_header </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structheader__t.html">header_t</a> *&#160;</td>
+          <td class="paramname"><em>header</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">file_t *&#160;</td>
+          <td class="paramname"><em>fp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>calls read_header2 and abort if error happens. </p>
 
 </div>
 </div>
@@ -647,79 +1008,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
 
 </div>
 </div>
-<a class="anchor" id="a661981dba53025cce58eb981094679b7"></a><!-- doxytag: member="bin.c::zfwritelarr" ref="a661981dba53025cce58eb981094679b7" args="(file_t *fp, int count,...)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void zfwritelarr </td>
-          <td>(</td>
-          <td class="paramtype">file_t *&#160;</td>
-          <td class="paramname"><em>fp</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>count</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Write multiple long numbers into the file. </p>
-<p>To write three numbers, a, b, c, call with zfwritelarr(fp, 3, &amp;a, &amp;b, &amp;c); </p>
-
-</div>
-</div>
-<a class="anchor" id="af2343993fa331cbf30672791bdf90e7d"></a><!-- doxytag: member="bin.c::zfreadlarr" ref="af2343993fa331cbf30672791bdf90e7d" args="(file_t *fp, int count,...)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void zfreadlarr </td>
-          <td>(</td>
-          <td class="paramtype">file_t *&#160;</td>
-          <td class="paramname"><em>fp</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>count</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Read multiple long numbers from the file. </p>
-<p>To read three numbers, a, b, c, call with zfreadlarr(fp, 3, &amp;a, &amp;b, &amp;c); </p>
-
-</div>
-</div>
-<a class="anchor" id="ac5c20bac0a27f6ef3d81ac689236fe0d"></a><!-- doxytag: member="bin.c::do_write" ref="ac5c20bac0a27f6ef3d81ac689236fe0d" args="(const void *fpn, const int isfn, const size_t size, const uint32_t magic, const void *p, const uint64_t nx, const uint64_t ny)" -->
+<a class="anchor" id="a39d866e52a84b78885f8262f23e1e361"></a><!-- doxytag: member="bin.c::do_write" ref="a39d866e52a84b78885f8262f23e1e361" args="(const void *fpn, const int isfn, const size_t size, const uint32_t magic, const char *str, const void *p, const uint64_t nx, const uint64_t ny)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -746,6 +1035,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
           <td></td>
           <td class="paramtype">const uint32_t&#160;</td>
           <td class="paramname"><em>magic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>str</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -782,6 +1077,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
     <tr><td class="paramdir">[in]</td><td class="paramname">isfn</td><td>Is this a filename or already opened file </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Size of each element </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">magic</td><td>The magic number. see bin.h </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">str</td><td>The header as string </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">p</td><td>The data of the array </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nx</td><td>Number of rows. this index changes fastest </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">ny</td><td>Number of columns. 1 for vector </td></tr>
@@ -1235,7 +1531,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>readspintdata</b> (fi
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="bin_8c.html">bin.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-0.9.3: lib/accphi.c File Reference</title>
+<title>maos-1.0.0: lib/accphi.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-0.9.3</div>
+   <div id="projectname">maos-1.0.0</div>
   </td>
  </tr>
  </tbody>
@@ -146,30 +146,28 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">A wrapper prop routine that handles all the different cases by calling the different routines.  <a href="#a56055820d17e7869e938c41ff78e087a"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a6d0dbe527df42bcb35aefadb7b252dfa">prop_index</a> (<a class="el" href="structPROPDATA__T.html">PROPDATA_T</a> *propdata)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Identify the index of this ray tracing.  <a href="#a6d0dbe527df42bcb35aefadb7b252dfa"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ad685182925d445c46a85f7c0f17e6f74">prop_grid_map</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, <a class="el" href="structmap__t.html">map_t</a> *mapout, double alpha, double displacex, double displacey, double scale, int wrap)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on grid mapin to grid mapout.  <a href="#ad685182925d445c46a85f7c0f17e6f74"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ade769450faedafb6aae0841d95ac4837">prop_grid</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, int wrap, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on grid mapin to coordinate locout.  <a href="#ade769450faedafb6aae0841d95ac4837"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a43223562a6bd6b6aab20e934ead00c53">prop_nongrid</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on coordinate locin to coordinate locout.  <a href="#a43223562a6bd6b6aab20e934ead00c53"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#aa42eaa5739f38be0ebed508fb93a86a0">prop_nongrid_map</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, <a class="el" href="structmap__t.html">map_t</a> *mapout, double alpha, double displacex, double displacey, double scale, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on coordinate locin to grid mapout.  <a href="#aa42eaa5739f38be0ebed508fb93a86a0"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ae55fe0041a233856b284033951dc4165">prop_nongrid_pts</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structpts__t.html">pts_t</a> *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on coordinate locin to subapertures pts.  <a href="#ae55fe0041a233856b284033951dc4165"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a2c452357b044f1e1cdcb91b64cc60866">prop_grid_cubic</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on grid mapin to coordinate locout with cubic influence functions.  <a href="#a2c452357b044f1e1cdcb91b64cc60866"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a631c94ceab8a88ba25177618d6e82181">prop_grid_pts_cubic</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, const <a class="el" href="structpts__t.html">pts_t</a> *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on grid mapin to coordinate locout with cubic influence functions.  <a href="#a631c94ceab8a88ba25177618d6e82181"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a2c3cc01c46fb5433e6a7ed35c1fc6e3c">prop_grid_map_cubic</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, <a class="el" href="structmap__t.html">map_t</a> *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like <a class="el" href="accphi_8c.html#ad685182925d445c46a85f7c0f17e6f74" title="Propagate OPD defines on grid mapin to grid mapout.">prop_grid_map()</a> but with cubic influence functions.  <a href="#a2c3cc01c46fb5433e6a7ed35c1fc6e3c"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ae81687e796eceded488c54b3e3954a64">prop_nongrid_cubic</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like <a class="el" href="accphi_8c.html#a43223562a6bd6b6aab20e934ead00c53" title="Propagate OPD defines on coordinate locin to coordinate locout.">prop_nongrid()</a> but with cubic influence functions.  <a href="#ae81687e796eceded488c54b3e3954a64"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ac2d53c9a5b738956ab6d36a9e3eb2b50">prop_nongrid_pts_cubic</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structpts__t.html">pts_t</a> *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like <a class="el" href="accphi_8c.html#ae55fe0041a233856b284033951dc4165" title="Propagate OPD defines on coordinate locin to subapertures pts.">prop_nongrid_pts()</a> but with cubic influence functions.  <a href="#ac2d53c9a5b738956ab6d36a9e3eb2b50"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#aa8259f5227ff17e52d98a0871e2c3bf5">prop_nongrid_map_cubic</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, <a class="el" href="structmap__t.html">map_t</a> *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like <a class="el" href="accphi_8c.html#aa42eaa5739f38be0ebed508fb93a86a0" title="Propagate OPD defines on coordinate locin to grid mapout.">prop_nongrid_map()</a> but with cubic influence functions.  <a href="#aa8259f5227ff17e52d98a0871e2c3bf5"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a3810df5c381891843ee92fa7201242a4">prop_nongrid_bin</a> (const <a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">the following routine is used to do down sampling by doing binning ray tracing using reverse interplation.  <a href="#a3810df5c381891843ee92fa7201242a4"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a84cf4bf6f625710e31fbad042458389c">prop_grid</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, int wrap, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on grid mapin to coordinate locout.  <a href="#a84cf4bf6f625710e31fbad042458389c"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#acb944cd9067c1a3d0cb4ba288514052c">prop_nongrid</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on coordinate locin to coordinate locout.  <a href="#acb944cd9067c1a3d0cb4ba288514052c"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a5bf21aba806259ce6b8eb123802ac396">prop_nongrid_map</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, <a class="el" href="structmap__t.html">map_t</a> *mapout, const double alpha, double displacex, double displacey, const double scale, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on coordinate locin to grid mapout.  <a href="#a5bf21aba806259ce6b8eb123802ac396"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a86d1b4ef9430b5a03dde08300f5822b5">prop_nongrid_pts</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structpts__t.html">pts_t</a> *pts, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on coordinate locin to subapertures pts.  <a href="#a86d1b4ef9430b5a03dde08300f5822b5"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#af2ba4a31bce464a53b89fc92f4ad1005">prop_grid_cubic</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on grid mapin to coordinate locout with cubic influence functions.  <a href="#af2ba4a31bce464a53b89fc92f4ad1005"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ab594d95683a3b29eac99a865dc1dc5fe">prop_grid_pts_cubic</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, const <a class="el" href="structpts__t.html">pts_t</a> *pts, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagate OPD defines on grid mapin to coordinate locout with cubic influence functions.  <a href="#ab594d95683a3b29eac99a865dc1dc5fe"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#adc951818f7de4ab90e8fc7ac8c943d4e">prop_grid_map_cubic</a> (const <a class="el" href="structmap__t.html">map_t</a> *mapin, <a class="el" href="structmap__t.html">map_t</a> *mapout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like prop_grid_map() but with cubic influence functions.  <a href="#adc951818f7de4ab90e8fc7ac8c943d4e"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a551e3541b34b1d760d1f80605e587ed0">prop_nongrid_cubic</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like <a class="el" href="accphi_8c.html#acb944cd9067c1a3d0cb4ba288514052c" title="Propagate OPD defines on coordinate locin to coordinate locout.">prop_nongrid()</a> but with cubic influence functions.  <a href="#a551e3541b34b1d760d1f80605e587ed0"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a80ce2a89bb4e1afaeb3fb3b15fd531f9">prop_nongrid_pts_cubic</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, const <a class="el" href="structpts__t.html">pts_t</a> *pts, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like <a class="el" href="accphi_8c.html#a86d1b4ef9430b5a03dde08300f5822b5" title="Propagate OPD defines on coordinate locin to subapertures pts.">prop_nongrid_pts()</a> but with cubic influence functions.  <a href="#a80ce2a89bb4e1afaeb3fb3b15fd531f9"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#a6ec1d92a984bc1246dc967aaf0ad0743">prop_nongrid_map_cubic</a> (<a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, <a class="el" href="structmap__t.html">map_t</a> *mapout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">like <a class="el" href="accphi_8c.html#a5bf21aba806259ce6b8eb123802ac396" title="Propagate OPD defines on coordinate locin to grid mapout.">prop_nongrid_map()</a> but with cubic influence functions.  <a href="#a6ec1d92a984bc1246dc967aaf0ad0743"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="accphi_8c.html#ad662c812037e536bbdf5619a4647a0ea">prop_nongrid_bin</a> (const <a class="el" href="structloc__t.html">loc_t</a> *locin, const double *phiin, <a class="el" href="structloc__t.html">loc_t</a> *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">the following routine is used to do down sampling by doing binning ray tracing using reverse interplation.  <a href="#ad662c812037e536bbdf5619a4647a0ea"></a><br/></td></tr>
 </table>
 <hr/><a name="_details"></a><h2>Detailed Description</h2>
 <div class="textblock"><p>Contains ray tracing routines optimized for different input/output formats. </p>
@@ -260,79 +258,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ad685182925d445c46a85f7c0f17e6f74"></a><!-- doxytag: member="accphi.c::prop_grid_map" ref="ad685182925d445c46a85f7c0f17e6f74" args="(const map_t *mapin, map_t *mapout, double alpha, double displacex, double displacey, double scale, int wrap)" -->
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void prop_grid_map </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="structmap__t.html">map_t</a> *&#160;</td>
-          <td class="paramname"><em>mapin</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structmap__t.html">map_t</a> *&#160;</td>
-          <td class="paramname"><em>mapout</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>alpha</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>displacex</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>displacey</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>scale</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>wrap</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div>
-<div class="memdoc">
-
-<p>Propagate OPD defines on grid mapin to grid mapout. </p>
-<p>alpha is the scaling of data. displacex, displacy is the displacement of the center of the beam on the input grid. scale is the cone effect. </p>
-<dl><dt><b>Parameters:</b></dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">mapin</td><td>OPD defind on a square grid </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">mapout</td><td>Output OPD defined in a square grid </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">alpha</td><td>scaling of OPD </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">displacex</td><td>displacement of the ray </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">displacey</td><td>displacement of the ray </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">scale</td><td>scaling of the beam diameter (cone) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">wrap</td><td>wrap input OPD or not </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="ade769450faedafb6aae0841d95ac4837"></a><!-- doxytag: member="accphi.c::prop_grid" ref="ade769450faedafb6aae0841d95ac4837" args="(const map_t *mapin, const loc_t *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, int wrap, long start, long end)" -->
+<a class="anchor" id="a84cf4bf6f625710e31fbad042458389c"></a><!-- doxytag: member="accphi.c::prop_grid" ref="a84cf4bf6f625710e31fbad042458389c" args="(const map_t *mapin, const loc_t *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, int wrap, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -363,7 +289,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -381,7 +307,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -432,7 +358,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a43223562a6bd6b6aab20e934ead00c53"></a><!-- doxytag: member="accphi.c::prop_nongrid" ref="a43223562a6bd6b6aab20e934ead00c53" args="(loc_t *locin, const double *phiin, const loc_t *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, long start, long end)" -->
+<a class="anchor" id="acb944cd9067c1a3d0cb4ba288514052c"></a><!-- doxytag: member="accphi.c::prop_nongrid" ref="acb944cd9067c1a3d0cb4ba288514052c" args="(loc_t *locin, const double *phiin, const loc_t *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -469,7 +395,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -487,7 +413,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -512,7 +438,7 @@ Functions</h2></td></tr>
 <div class="memdoc">
 
 <p>Propagate OPD defines on coordinate locin to coordinate locout. </p>
-<p>This is the <em>slowest</em>. alpha is the scaling of data. displacex, displacy is the displacement of the center of the beam on the input grid. scale is the cone effect. See <a class="el" href="accphi_8c.html#ade769450faedafb6aae0841d95ac4837" title="Propagate OPD defines on grid mapin to coordinate locout.">prop_grid()</a> for definition of other parameters. </p>
+<p>This is the <em>slowest</em>. alpha is the scaling of data. displacex, displacy is the displacement of the center of the beam on the input grid. scale is the cone effect. See <a class="el" href="accphi_8c.html#a84cf4bf6f625710e31fbad042458389c" title="Propagate OPD defines on grid mapin to coordinate locout.">prop_grid()</a> for definition of other parameters. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">locin</td><td>Coordinate of iregular source grid </td></tr>
@@ -532,7 +458,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aa42eaa5739f38be0ebed508fb93a86a0"></a><!-- doxytag: member="accphi.c::prop_nongrid_map" ref="aa42eaa5739f38be0ebed508fb93a86a0" args="(loc_t *locin, const double *phiin, map_t *mapout, double alpha, double displacex, double displacey, double scale, long start, long end)" -->
+<a class="anchor" id="a5bf21aba806259ce6b8eb123802ac396"></a><!-- doxytag: member="accphi.c::prop_nongrid_map" ref="a5bf21aba806259ce6b8eb123802ac396" args="(loc_t *locin, const double *phiin, map_t *mapout, const double alpha, double displacex, double displacey, const double scale, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -557,7 +483,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -575,7 +501,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -618,7 +544,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ae55fe0041a233856b284033951dc4165"></a><!-- doxytag: member="accphi.c::prop_nongrid_pts" ref="ae55fe0041a233856b284033951dc4165" args="(loc_t *locin, const double *phiin, const pts_t *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, long start, long end)" -->
+<a class="anchor" id="a86d1b4ef9430b5a03dde08300f5822b5"></a><!-- doxytag: member="accphi.c::prop_nongrid_pts" ref="a86d1b4ef9430b5a03dde08300f5822b5" args="(loc_t *locin, const double *phiin, const pts_t *pts, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -655,7 +581,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -673,7 +599,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -718,7 +644,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a2c452357b044f1e1cdcb91b64cc60866"></a><!-- doxytag: member="accphi.c::prop_grid_cubic" ref="a2c452357b044f1e1cdcb91b64cc60866" args="(const map_t *mapin, const loc_t *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)" -->
+<a class="anchor" id="af2ba4a31bce464a53b89fc92f4ad1005"></a><!-- doxytag: member="accphi.c::prop_grid_cubic" ref="af2ba4a31bce464a53b89fc92f4ad1005" args="(const map_t *mapin, const loc_t *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -749,7 +675,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -767,7 +693,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -818,7 +744,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a631c94ceab8a88ba25177618d6e82181"></a><!-- doxytag: member="accphi.c::prop_grid_pts_cubic" ref="a631c94ceab8a88ba25177618d6e82181" args="(const map_t *mapin, const pts_t *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)" -->
+<a class="anchor" id="ab594d95683a3b29eac99a865dc1dc5fe"></a><!-- doxytag: member="accphi.c::prop_grid_pts_cubic" ref="ab594d95683a3b29eac99a865dc1dc5fe" args="(const map_t *mapin, const pts_t *pts, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -849,7 +775,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -867,7 +793,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -918,7 +844,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a2c3cc01c46fb5433e6a7ed35c1fc6e3c"></a><!-- doxytag: member="accphi.c::prop_grid_map_cubic" ref="a2c3cc01c46fb5433e6a7ed35c1fc6e3c" args="(const map_t *mapin, map_t *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)" -->
+<a class="anchor" id="adc951818f7de4ab90e8fc7ac8c943d4e"></a><!-- doxytag: member="accphi.c::prop_grid_map_cubic" ref="adc951818f7de4ab90e8fc7ac8c943d4e" args="(const map_t *mapin, map_t *mapout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -937,7 +863,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -955,7 +881,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -985,7 +911,7 @@ Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>like <a class="el" href="accphi_8c.html#ad685182925d445c46a85f7c0f17e6f74" title="Propagate OPD defines on grid mapin to grid mapout.">prop_grid_map()</a> but with cubic influence functions. </p>
+<p>like prop_grid_map() but with cubic influence functions. </p>
 <p>cubic_iac is the inter-actuator-coupling. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
@@ -1001,7 +927,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ae81687e796eceded488c54b3e3954a64"></a><!-- doxytag: member="accphi.c::prop_nongrid_cubic" ref="ae81687e796eceded488c54b3e3954a64" args="(loc_t *locin, const double *phiin, const loc_t *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)" -->
+<a class="anchor" id="a551e3541b34b1d760d1f80605e587ed0"></a><!-- doxytag: member="accphi.c::prop_nongrid_cubic" ref="a551e3541b34b1d760d1f80605e587ed0" args="(loc_t *locin, const double *phiin, const loc_t *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1038,7 +964,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -1056,7 +982,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -1086,7 +1012,7 @@ Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>like <a class="el" href="accphi_8c.html#a43223562a6bd6b6aab20e934ead00c53" title="Propagate OPD defines on coordinate locin to coordinate locout.">prop_nongrid()</a> but with cubic influence functions. </p>
+<p>like <a class="el" href="accphi_8c.html#acb944cd9067c1a3d0cb4ba288514052c" title="Propagate OPD defines on coordinate locin to coordinate locout.">prop_nongrid()</a> but with cubic influence functions. </p>
 <p>cubic_iac is the inter-actuator coupling. Consider embed the input into a <a class="el" href="structmap__t.html" title="OPD or Amplitude map defined on square/rectangular grids.">map_t</a> and call prop_grid_cubic instead. That one is must faster. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
@@ -1105,7 +1031,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ac2d53c9a5b738956ab6d36a9e3eb2b50"></a><!-- doxytag: member="accphi.c::prop_nongrid_pts_cubic" ref="ac2d53c9a5b738956ab6d36a9e3eb2b50" args="(loc_t *locin, const double *phiin, const pts_t *pts, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)" -->
+<a class="anchor" id="a80ce2a89bb4e1afaeb3fb3b15fd531f9"></a><!-- doxytag: member="accphi.c::prop_nongrid_pts_cubic" ref="a80ce2a89bb4e1afaeb3fb3b15fd531f9" args="(loc_t *locin, const double *phiin, const pts_t *pts, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1142,7 +1068,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -1160,7 +1086,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -1190,7 +1116,7 @@ Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>like <a class="el" href="accphi_8c.html#ae55fe0041a233856b284033951dc4165" title="Propagate OPD defines on coordinate locin to subapertures pts.">prop_nongrid_pts()</a> but with cubic influence functions. </p>
+<p>like <a class="el" href="accphi_8c.html#a86d1b4ef9430b5a03dde08300f5822b5" title="Propagate OPD defines on coordinate locin to subapertures pts.">prop_nongrid_pts()</a> but with cubic influence functions. </p>
 <p>cubic_iac is the inter-actuator-coupling. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
@@ -1209,7 +1135,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="aa8259f5227ff17e52d98a0871e2c3bf5"></a><!-- doxytag: member="accphi.c::prop_nongrid_map_cubic" ref="aa8259f5227ff17e52d98a0871e2c3bf5" args="(loc_t *locin, const double *phiin, map_t *mapout, double alpha, double displacex, double displacey, double scale, double cubic_iac, long start, long end)" -->
+<a class="anchor" id="a6ec1d92a984bc1246dc967aaf0ad0743"></a><!-- doxytag: member="accphi.c::prop_nongrid_map_cubic" ref="a6ec1d92a984bc1246dc967aaf0ad0743" args="(loc_t *locin, const double *phiin, map_t *mapout, const double alpha, double displacex, double displacey, const double scale, double cubic_iac, long start, long end)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1234,7 +1160,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -1252,7 +1178,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>, </td>
         </tr>
         <tr>
@@ -1282,7 +1208,7 @@ Functions</h2></td></tr>
 </div>
 <div class="memdoc">
 
-<p>like <a class="el" href="accphi_8c.html#aa42eaa5739f38be0ebed508fb93a86a0" title="Propagate OPD defines on coordinate locin to grid mapout.">prop_nongrid_map()</a> but with cubic influence functions. </p>
+<p>like <a class="el" href="accphi_8c.html#a5bf21aba806259ce6b8eb123802ac396" title="Propagate OPD defines on coordinate locin to grid mapout.">prop_nongrid_map()</a> but with cubic influence functions. </p>
 <p>cubic_iac is the inter-actuator-coupling. </p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table class="params">
@@ -1299,7 +1225,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a3810df5c381891843ee92fa7201242a4"></a><!-- doxytag: member="accphi.c::prop_nongrid_bin" ref="a3810df5c381891843ee92fa7201242a4" args="(const loc_t *locin, const double *phiin, loc_t *locout, const double *ampout, double *phiout, double alpha, double displacex, double displacey, double scale)" -->
+<a class="anchor" id="ad662c812037e536bbdf5619a4647a0ea"></a><!-- doxytag: member="accphi.c::prop_nongrid_bin" ref="ad662c812037e536bbdf5619a4647a0ea" args="(const loc_t *locin, const double *phiin, loc_t *locout, const double *ampout, double *phiout, const double alpha, double displacex, double displacey, const double scale)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1336,7 +1262,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>alpha</em>, </td>
         </tr>
         <tr>
@@ -1354,7 +1280,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
+          <td class="paramtype">const double&#160;</td>
           <td class="paramname"><em>scale</em>&#160;</td>
         </tr>
         <tr>
@@ -1386,7 +1312,7 @@ Functions</h2></td></tr>
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="accphi_8c.html">accphi.c</a>      </li>
-      <li class="footer">Generated on Fri Sep 23 2011 10:43:45 for maos-0.9.3 by&#160;
+      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>
