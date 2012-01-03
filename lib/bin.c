@@ -677,13 +677,13 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	    if(naxis>2) error("Data type not supported\n");
 	    if(naxis>0){
 		zfread(line, 1, 80, fp); line[80]='\0';
-		if(sscanf(line+10, "%20llu", nx)!=1) error("Unable to determine nx\n");
+		if(sscanf(line+10, "%20lu", (unsigned long *)nx)!=1) error("Unable to determine nx\n");
 	    }else{
 		*nx=0;
 	    }
 	    if(naxis>1){
 		zfread(line, 1, 80, fp); line[80]='\0';
-		if(sscanf(line+10, "%20llu", ny)!=1) error("Unable to determine ny\n");
+		if(sscanf(line+10, "%20lu", (unsigned long *)ny)!=1) error("Unable to determine ny\n");
 	    }else{
 		*ny=0;
 	    }

@@ -145,7 +145,9 @@ file_t* zfopen(const char *fn, char *mod){
 	}
     }else{ 
 	uint16_t magic;
-	read(fp->fd, &magic, sizeof(uint16_t));
+	if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
+	    error("Read magic failed\n");
+	}
 	if(magic==0x8b1f){
 	    fp->isgzip=1;
 	}else{

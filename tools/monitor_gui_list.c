@@ -240,7 +240,7 @@ void refresh(PROC_T *p){
 
 static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ...){
     GtkTreeViewColumn *col;
-    GtkCellRenderer *render;
+    GtkCellRenderer *render=NULL;
     col=gtk_tree_view_column_new();
     switch(type){
     case 0:
@@ -278,7 +278,7 @@ static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ..
     va_list ap;
     va_start(ap, title);
     const char *att=NULL;
-    while(att=va_arg(ap, const char *)){
+    while((att=va_arg(ap, const char *))){
 	gtk_tree_view_column_add_attribute(col, render, att, va_arg(ap,int));
     }
     va_end(ap);
@@ -308,8 +308,6 @@ GtkWidget *new_page(int ihost){
     GtkWidget *view;
     view=gtk_tree_view_new_with_model(GTK_TREE_MODEL(lists[ihost]));
     g_object_unref(lists[ihost]);
-    GtkCellRenderer *render;
-    GtkTreeViewColumn *col;
     GtkTreeSelection *viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
     /*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
     gtk_tree_selection_set_mode(viewsel,GTK_SELECTION_MULTIPLE);
@@ -320,8 +318,6 @@ GtkWidget *new_page(int ihost){
       pixels of on and 1 pixel of off. I can not have \0 for the second part
       because it terminates the string.
     */
-    int spacing=0;
-    float align=0.5;
     /*gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(view), GTK_TREE_VIEW_GRID_LINES_VERTICAL); */
     gtk_tree_view_set_enable_search(GTK_TREE_VIEW(view), TRUE);
     /*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */

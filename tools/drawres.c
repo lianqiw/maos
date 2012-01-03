@@ -213,13 +213,13 @@ int main(int argc, char *argv[]){
 	    dadd(&resollom->p[ipath], 1, resollo->p[ii], 1);
 	    
 	    snprintf(fn, PATH_MAX, "%s/Resuptcmd_%ld.bin", path[ipath], seed[iseed]);
-	    dcell *upt=dcellread(fn);
+	    dcell *upt=dcellread("%s",fn);
 	    tmp=dcell2m(upt);
 	    uptcmd->p[ii]=dtrans(tmp);
 	    dfree(tmp);
 	    dcellfree(upt);
 	    snprintf(fn, PATH_MAX, "%s/Resupterr_%ld.bin", path[ipath], seed[iseed]);
-	    upt=dcellread(fn);
+	    upt=dcellread("%s",fn);
 	    tmp=dcell2m(upt);
 	    upterr->p[ii]=dtrans(tmp);
 	    dfree(tmp);
