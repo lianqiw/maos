@@ -26,7 +26,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     };
     if(nlhs!=PL_TOT || nrhs !=P_TOT){
-	mexErrMsgTxt("Usage: otf=genotfmex(loc, amp, opdbias, area, thres, wvl[], dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr)");
+	mexErrMsgTxt("Usage: otf=genotfmex(loc, amp, opdbias, area, thres, wvl, dtheta, cov, r0, l0, ncompx, ncompy, nsa, pttr)");
     }
     loc_t *loc=mx2loc(prhs[P_LOC]);
     double *amp=mxGetPr(prhs[P_AMP]);

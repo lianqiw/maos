@@ -12,23 +12,21 @@ muv.h draw.h fft.h genotf.h fractal.h stfun.h servo.h slaving.h imat.h
 
 nobase_include_HEADERS+=sys/mem.h sys/process.h sys/scheduler_server.h		\
 sys/sockio.h sys/thread.h sys/io.h sys/daemonize.h sys/scheduler_client.h	\
-sys/shm.h sys/sys.h sys/thread_pool.h nr/nr.h
+sys/sys.h sys/thread_pool.h nr.h 
 
-EXTRA_DIST=cell.c sp.c matbin.c spbin.c mat.c suitesparse.c fractal_do.c	\
+EXTRA_DIST=cell.c sp.c matbin.c matmap.c spbin.c mat.c suitesparse.c fractal_do.c	\
 prop_grid_stat.c prop_grid_pts.c prop_grid_map.c defs.h blas.c
 
-AOS_SRC=readcfg.c dmat.c smat.c zmat.c cmat.c hashlittle.c dsp.c ssp.c csp.c bin.c	\
-misc.c mathmisc.c random.c loc.c locbin.c cellarr.c turbulence.c path.c mkg.c	\
-mkh.c mkz.c mkw.c accphi.c proj.c chol.c laplacian.c pcg.c muv.c draw.c fft.c	\
-genotf.c fractal.c stfun.c servo.c slaving.c imat.c
+AOS_SRC=readcfg.c dmat.c smat.c zmat.c cmat.c hashlittle.c dsp.c ssp.c csp.c	\
+bin.c misc.c mathmisc.c random.c loc.c locbin.c cellarr.c turbulence.c path.c	\
+mkg.c mkh.c mkz.c mkw.c accphi.c proj.c chol.c laplacian.c pcg.c muv.c draw.c	\
+fft.c genotf.c fractal.c stfun.c servo.c slaving.c imat.c bessik.c amoeba.c
 
 SYS_SRC=sys/io.c sys/daemonize.c sys/process_bsd.c sys/process_cygwin.c		\
 sys/scheduler_server.c sys/sockio.c sys/mem.c sys/process_apple.c sys/process.c	\
-sys/process_linux.c sys/scheduler_client.c sys/shm.c sys/thread.c		\
-sys/thread_pool.c
+sys/process_linux.c sys/scheduler_client.c sys/thread.c sys/thread_pool.c
 
 AOS_SRC+=$(SYS_SRC) 
-AOS_SRC+=nr/beschb.c  nr/bessik.c  nr/chebev.c 
 
 if USE_LONG
 lib_LTLIBRARIES=libaos_long.la

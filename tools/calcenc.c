@@ -22,28 +22,11 @@
 #include <getopt.h>
 
 #include "../lib/aos.h"
-static void calcenc_do(file_t *fpin,   /**<Input file pointer*/
-		       file_t *fpout,  /**<Output file pointer*/
-		       uint32_t magic, /**<The magic number if already read*/
-		       dmat *restrict dvec,     /**<Vector of the diameter*/
-		       int type,        /**<Type of encloded energy: 0: square, 1: circle*/
-		       int nthread     /**<Number of threads*/
-		       ){
-    dmat *psf=dreaddata(fpin, magic);
-    int free_dvec=0;
-    if(!dvec){
-	free_dvec=1;
-	dvec=dlinspace(0, 1, psf->nx);
-    }
-    dmat *enc=denc(psf, dvec, type, nthread);
-    dwritedata(fpout, enc);
-    dfree(psf);
-    dfree(enc);
-    if(free_dvec) dfree(dvec);
-}
+
 static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
     char fnout[PATH_MAX];
     char *suffix=strstr(fn, ".bin");
+    if(!suffix) suffix=strstr(fn, ".fits");
     if(!suffix) error("%s has wrong suffix\n", suffix);
     memcpy(fnout, fn, suffix-fn+1);
     fnout[suffix-fn]='\0';
@@ -72,18 +55,39 @@ static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
     file_t *fp=zfopen(fn, "r");
     file_t *fpout=zfopen(fnout, "w");
     info2("%s --> %s\n", fn, fnout);
-    uint32_t magic=read_magic(fp, NULL);
-    long nx, ny;
-    if(iscell(magic)){
-	write_magic(magic, fpout);
-	zfreadlarr(fp, 2, &nx, &ny);
-	zfwritelarr(fpout, 2, &nx, &ny);
-	for(long i=0; i<nx*ny; i++){
-	    info2("%ld of %ld\n", i, nx*ny);
-	    calcenc_do(fp, fpout, 0, dvec, type, nthread);
+    header_t header;
+    read_header(&header, fp);
+    int free_dvec=0;
+    if(iscell(header.magic)){
+	write_header(&header, fpout);
+	for(long i=0; i<header.nx*header.ny; i++){
+	    info2("%ld of %lld\n", i, header.nx*header.ny);
+	    dmat *psf=dreaddata(fp, &header);
+	    if(!dvec){
+		free_dvec=1;
+		dvec=dlinspace(0, 1, psf->nx);
+	    }
+	    dmat *enc=denc(psf, dvec, type, nthread);
+	    dwritedata(fpout, enc);
+	    dfree(psf); dfree(enc);
 	}
     }else{
-	calcenc_do(fp, fpout, magic, dvec, type, nthread);
+	int nenc=0;
+	dmat **encs=NULL;
+	do{
+	    dmat *psf=dreaddata(fp, &header);
+	    if(!dvec){
+		free_dvec=1;
+		dvec=dlinspace(0, 1, psf->nx);
+	    }
+	    dmat *enc=denc(psf, dvec, type, nthread);
+	    nenc++;
+	    encs=realloc(encs, nenc*sizeof(dmat*));
+	    encs[nenc-1]=enc;
+	}while(!read_header2(&header, fp));
+	dcell *encs2=dcellnew(nenc, 1);
+	memcpy(encs2->p, encs, sizeof(dmat*)*nenc);
+	dcellwritedata(fpout, encs2);
     }
     zfclose(fp);
     zfclose(fpout);

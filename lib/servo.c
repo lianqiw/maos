@@ -78,6 +78,7 @@ typedef struct SERVOII_T{
     cmat *s;
     dmat *psd;
     double sigman;
+    double pmargin;/*phase margin. default: M_PI/4*/
     /*Output. */
     double rms_sig;
     double rms_n;
@@ -97,7 +98,7 @@ static double servoii_calc(SERVOII_T *data, double g0){
     double margin, fcross;    
     cadd(&Hol, 0, Hsys, g0);
     margin=servo_phi_margin(&fcross, nu, Hol);
-    double phineed=M_PI/4-margin;/*want to ensure PI/4 margin */
+    double phineed=data->pmargin-margin;/*want to ensure PI/4 margin */
     double a=(1-sin(phineed))/(1+sin(phineed));
     double f0=fcross*sqrt(a);
     double T=1./(2.*M_PI*f0);
@@ -174,7 +175,7 @@ static double golden_section_search(golden_section_fun f, SERVOII_T *param,
    sigman is a dmat array of all wanted sigman.
    Returns a cellarray of a dmat of [g0, a, T, res_n, res_sig]
 */
-dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dmat* sigman){
+dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, double pmargin, const dmat* sigman){
     /*The upper end must be nyquist freq so that noise transfer can be
       computed. But we need to capture the turbulence PSD beyond nyquist freq,
       which are uncorrectable.
@@ -219,6 +220,7 @@ dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, const dma
     data.nu=nu;
     data.s=s;
     data.psd=psd;
+    data.pmargin=pmargin;
     double g0_min=0.001;
     double g0_max;
     for(g0_max=g0_min; ; g0_max+=0.1){

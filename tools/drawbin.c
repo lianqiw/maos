@@ -20,52 +20,47 @@
    draw square map.
  */
 static void draw_map(file_t *fp, int id){
-    char *header=NULL;
-    uint32_t magic=read_magic(fp, &header);
-    uint64_t nx,ny;
+    header_t header;
+    read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
     suf[0]='\0';
-    if(iscell(magic)){
-	zfreadlarr(fp, 2, &nx, &ny);
-	for(int ii=0; ii<nx*ny; ii++){
+    if(iscell(header.magic)){
+	for(int ii=0; ii<header.nx*header.ny; ii++){
 	    draw_map(fp, ii);
 	}
+	free(header.str);
     }else{
-	dmat *in=dreaddata(fp, magic);
-	in->header=header; header=NULL;
+	dmat *in=dreaddata(fp, &header);
 	map_t *data=d2map(in);
 	drawmap("map", data, NULL, name,"x", "y", "%s:%d", name, id);
 	mapfree(data);
 	dfree(in);
     }
-    free(header);
     free(name);
 }
 /** 
    A recursive opd drawing routine. The two files must contains matched information of loc grid and opd.
 */
 static void draw_opd(file_t *fp1, file_t *fp2, int id){
-    uint32_t magic1, magic2;
-    uint64_t nx1,ny1,nx2,ny2;
     char *name=mybasename(zfname(fp2));
     char *suf=strstr(name, ".bin");
     suf[0]='\0';
-    char *header1=NULL, *header2=NULL;
-    magic1=read_magic(fp1, &header1);
-    magic2=read_magic(fp2, &header2);
-    if(iscell(magic1) && iscell(magic2)){ /*cells */
-	zfreadlarr(fp1, 2, &nx1, &ny1);
-	zfreadlarr(fp2, 2, &nx2, &ny2);
-	if(nx1*ny1!=nx2*ny2){
+    header_t header1, header2;
+    read_header(&header1, fp1);
+    read_header(&header2, fp2);
+    if(iscell(header1.magic) && iscell(header2.magic)){ /*cells */
+	if(header1.nx*header1.ny!=header2.nx*header2.ny){
 	    error("cell arrays does have the same length.\n");
 	}
-	for(int ii=0; ii<nx1*ny1; ii++){
+	for(int ii=0; ii<header1.nx*header1.ny; ii++){
 	    draw_opd(fp1, fp2, ii);
 	}
+	free(header1.str);
+	free(header2.str);
     }else{
-	loc_t *loc=locreaddata(fp1, magic1, header1);
-	dmat *opd=dreaddata(fp2, magic2);
+	loc_t *loc=locreaddata(fp1, &header1);
+	dmat *opd=dreaddata(fp2, &header2);
 	if(loc->nloc!=opd->nx){
 	    error("we expect matching loc_t and a double vector.\n");
 	}
@@ -73,27 +68,24 @@ static void draw_opd(file_t *fp1, file_t *fp2, int id){
 	dfree(opd);
 	locfree(loc);
     }
-    free(header1);
-    free(header2);
     free(name);
 }
 /**
    A recursive loc drawing routine
 */
 static void draw_loc(file_t *fp, int id){
-    char *header=NULL;
-    uint32_t magic=read_magic(fp, &header);
-    uint64_t nx,ny;
+    header_t header;
+    read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
     suf[0]='\0';
-    if(iscell(magic)){
-	zfreadlarr(fp, 2, &nx, &ny);
-   	for(int ii=0; ii<nx*ny; ii++){
+    if(iscell(header.magic)){
+   	for(int ii=0; ii<header.nx*header.ny; ii++){
 	    draw_loc(fp, ii);
 	}
+	free(header.str);
     }else{
-	loc_t *loc=locreaddata(fp, magic, header);
+	loc_t *loc=locreaddata(fp, &header);
 	if(loc->nloc>100000){/*if too many points, we draw it. */
 	    drawloc("loc",loc,NULL,zfname(fp),"x","y","%s",zfname(fp));
 	}else{/*we plot individual points. */
@@ -102,7 +94,6 @@ static void draw_loc(file_t *fp, int id){
 	locfree(loc);
     }
     free(name);
-    free(header);
 }
 static void usage(){
 	info2("Usage:\n"

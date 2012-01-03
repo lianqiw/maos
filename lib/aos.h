@@ -58,4 +58,5 @@
 #include "servo.h"
 #include "slaving.h"
 #include "imat.h"
+#include "nr.h"
 #endif

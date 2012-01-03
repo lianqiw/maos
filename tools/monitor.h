@@ -33,6 +33,7 @@ typedef struct PROC_T{
     int iseed_old;
     char *path;
     STATUS_T status;
+    GtkWidget *entry_start;
     GtkWidget *entry_pid;
     GtkWidget *entry_path;
     GtkWidget *entry_errlo;
@@ -43,7 +44,6 @@ typedef struct PROC_T{
     GtkWidget *label;
     GtkWidget *btn;
     GtkWidget *btnimage;
-    char time[80];
     char time3[80];
     GtkTreeRowReference *row;
     gulong btnhandler;
@@ -55,23 +55,7 @@ void refresh(PROC_T *p);
 void kill_job(PROC_T *p);
 void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p);
 void notify_user(PROC_T *p);
-enum{
-    COL_DATE,
-    COL_PID,
-    COL_PATH,
-    COL_SEED,
-    COL_SEEDP,/*float */
-    COL_STEP,
-    COL_STEPP,/*float */
-    COL_TIMING,
-    COL_LAPS,
-    COL_REST,
-    COL_ERRLO,
-    COL_ERRHI,
-    COL_ACTION,
-    COL_COLOR,
-    COL_TOT,
-};
+
 extern GdkColor blue;
 extern GdkColor green;
 extern GdkColor red;

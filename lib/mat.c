@@ -41,11 +41,6 @@
 #include "loc.h"
 #include "defs.h"/*Defines T, X, etc */
 
-vtbl X(mat_vtbl)={M_TT,
-		  (vtbl_write)X(write),
-		  (vtbl_writedata)X(writedata),
-		  (vtbl_read)X(read),
-		  (vtbl_readdata)X(readdata)};
 /**
    Work horse function that creats the matrix object. if p is
    NULL, memory is allocated. Allocation for X(mat) objects
@@ -54,18 +49,17 @@ vtbl X(mat_vtbl)={M_TT,
    forward.
 */
 static inline X(mat) *X(new_do)(long nx, long ny, T *p, int ref){
-    if(nx<=0 || ny<=0) return NULL;
+    if(!nx || !ny) return NULL;
     X(mat) *out=calloc(1, sizeof(X(mat)));
-    out->vtbl=&X(mat_vtbl);
     out->nx=nx;
     out->ny=ny;
     if(ref){/*the data does not belong to us. */
-	if(!p && nx*ny!=0){
+	if(!p && nx!=0 && ny!=0){
 	    error("When ref is 1, p must not be NULL.\n");
 	}
 	out->p=p;
     }else{
-	if(!p){
+	if(!p && nx!=0 && ny!=0){
 	    p=calloc((nx*ny), sizeof(T));
 	}
 	out->p=p;
@@ -523,9 +517,9 @@ void X(adds)(X(mat*)A, const T ac){
 
 T X(inn)(const X(mat)*A, const X(mat) *B){
     if(!A || !B) return 0;
-    assert(A->nx==B->nx && A->ny==1 && B->ny==1);
+    assert(A->nx==B->nx && A->ny==B->ny);
     T out=0;
-    for(int i=0; i<A->nx; i++){
+    for(int i=0; i<A->nx*A->ny; i++){
 	out+=A->p[i]*B->p[i];
     }
     if(isnan(out)){
@@ -794,14 +788,16 @@ void X(cpcorner2center)(X(mat) *A, const X(mat)*B){
     const size_t nx=A->nx;
     const size_t ny=A->ny;
     T *Ap=A->p;
-    memset(Ap, 0, sizeof(T)*nx*ny);
     const size_t ninx=B->nx;
     const size_t niny=B->ny;
+    if(nx>ninx || ny>niny){
+	memset(Ap, 0, sizeof(T)*nx*ny);
+    }
     const T * Bp=B->p;
     assert((nx&1)==0 && (ny&1)==0 && (ninx&1)==0 && (niny&1)==0);
 
-    const int ny2=(ny<niny)?ny/2:niny/2;
-    const int nx2=(nx<ninx)?nx/2:ninx/2;
+    const int ny2=MIN(ny,niny)>>1;
+    const int nx2=MIN(nx,ninx)>>1;
     const int xskip=nx/2-nx2;
     const int yskip=ny/2-ny2;
     T* Ap0=Ap+yskip*nx+xskip;
@@ -933,14 +929,14 @@ void X(mulvec3)(T *y, const X(mat) *A, const T *x){
    point (cog=0) from the physical center.
    all length are given in terms of pixel.
 */
-void X(cog)(double *grad,const X(mat) *i0,double offsetx,
+void X(cog)(double *grad,const X(mat) *im,double offsetx,
 	    double offsety, double thres, double bkgrnd){
     double sum=0,sumx=0,sumy=0;
     double iI;
-    PMAT(i0,pi0);
-    for(int iy=0; iy<i0->ny; iy++){
-	for(int ix=0; ix<i0->nx; ix++){
-	    iI=REAL(pi0[iy][ix])-bkgrnd;
+    PMAT(im,pim);
+    for(int iy=0; iy<im->ny; iy++){
+	for(int ix=0; ix<im->nx; ix++){
+	    iI=REAL(pim[iy][ix])-bkgrnd;
 	    if(iI>thres){
 		sum+=iI;
 		sumx+=iI*ix;
@@ -949,8 +945,8 @@ void X(cog)(double *grad,const X(mat) *i0,double offsetx,
 	}
     }
     if(fabs(sum)>0){
-	grad[0]=sumx/sum-((double)(i0->ny-1)*0.5+offsetx);
-	grad[1]=sumy/sum-((double)(i0->nx-1)*0.5+offsety);
+	grad[0]=sumx/sum-((double)(im->nx-1)*0.5+offsetx);
+	grad[1]=sumy/sum-((double)(im->ny-1)*0.5+offsety);
     }else{
 	grad[0]=0;
 	grad[1]=0;
@@ -1112,7 +1108,7 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x,const X(sp) *A, const T alpha){
 	    *yout=X(new)(x->nx, A->n);
 	}
 	X(mat) *y=*yout;
-	assert(x->nx==y->nx);
+	assert(x->nx==y->nx && x->ny==A->m);
 	if(x->nx==1){
 	    Y(sptmulvec)(y->p, A, x->p, alpha);
 	}else{

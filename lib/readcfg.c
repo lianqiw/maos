@@ -304,6 +304,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(sim.glao, recon.glao);
 	    RENAME(dbg.parallel, sim.parallel);
 	    RENAME(tomo.split, recon.split);
+	    RENAME(llt.fn, llt.fnprof);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);
@@ -722,9 +723,10 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
     char *endptr, *startptr2;
     double fact=1;
     int power=1;
+    int addition=0; double addval=0; 
     /*process possible numbers before the array. */
     if(strchr(startptr,'[')){/*there is indeed '[' */
-	while(startptr[0]!='['){
+	while(startptr[0]!='['){/*parse number before [*/
 	    double fact1=strtod(startptr, &endptr);/*get the number */
 	    if(startptr==endptr){
 		error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
@@ -756,12 +758,22 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
     if(strchr(startptr,']')){/*there is indeed ']' */
 	endptr=strchr(startptr,']')+1;
 	while(isspace((int)endptr[0])) endptr++;
-	while(endptr[0]=='/' || endptr[0]=='*'){
+	while(endptr[0]=='/' || endptr[0]=='*' || endptr[0]=='+' || endptr[0]=='-'){
 	    int power2=1;
 	    if(endptr[0]=='/'){
 		power2=-1;
-	    }else{
+	    }else if(endptr[0]=='*'){
 		power2=1;
+	    }else if(endptr[0]=='+' || endptr[0]=='-'){
+		power2=0;
+		if(endptr[0]=='+'){
+		    addition=1;
+		}else{
+		    addition=-1;
+		}
+	    }
+	    if(addition && power2){
+		error("We do not yet support * or / after + or - \n");
 	    }
 	    endptr++;
 	    while(isspace((int)endptr[0])) endptr++;
@@ -771,10 +783,18 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 		error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
 	    }
 	    while(isspace((int)endptr[0])) endptr++;
-	    if(power2==1){
-		fact*=fact2;
+	    if(addition){/*addition*/
+		if(addition==1){
+		    addval+=fact2;
+		}else{
+		    addval-=fact2;
+		}
 	    }else{
-		fact/=fact2;
+		if(power2==1){
+		    fact*=fact2;
+		}else{
+		    fact/=fact2;
+		}
 	    }
 	}
 	if(endptr[0]!='\0'){
@@ -801,6 +821,9 @@ int readstr_numarr(void **ret, int len, int type, const char *data){
 	    res=fact*res;
 	}else{
 	    res=fact/res;
+	}
+	if(addition){
+	    res+=addval;
 	}
 	/*assign the value to appropriate array. convert to int if necessary. */
 	switch(type){

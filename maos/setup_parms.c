@@ -95,7 +95,8 @@ void free_parms(PARMS_T *parms){
 	}
 	if(parms->powfs[ipowfs].llt){
 	    free(parms->powfs[ipowfs].llt->fnrange);
-	    free(parms->powfs[ipowfs].llt->fn);
+	    free(parms->powfs[ipowfs].llt->fnprof);
+	    free(parms->powfs[ipowfs].llt->fnamp);
 	    free(parms->powfs[ipowfs].llt->fnsurf);
 	    free(parms->powfs[ipowfs].llt->i);
 	    free(parms->powfs[ipowfs].llt->ox);
@@ -238,6 +239,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,rne);
     READ_POWFS(dbl,dx);
     READ_POWFS(dbl,pixtheta);
+    READ_POWFS(dbl,radpixtheta);
     READ_POWFS(dbl,pixoffx);
     READ_POWFS(dbl,pixoffy);
     READ_POWFS(int,phyusenea);
@@ -258,12 +260,14 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,gtype_recon);
     READ_POWFS(int,phytype);
     READ_POWFS(int,phytypesim);
-    READ_POWFS(dbl,mtchcrx);
-    READ_POWFS(dbl,mtchcry);
+    READ_POWFS(dbl,mtchcr);
+    READ_POWFS(dbl,mtchcra);
     READ_POWFS(int,mtchcpl);
     READ_POWFS(int,mtchstc);
     READ_POWFS(int,mtchscl);
     READ_POWFS(int,mtchadp);
+    READ_POWFS(dbl,cogthres);
+    READ_POWFS(dbl,cogoff);
     READ_POWFS(int,phystep);
     READ_POWFS(int,noisy);
     READ_POWFS(str,misreg);
@@ -288,7 +292,8 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->d=readcfg_dbl("%sllt.d",prefix);
 	    parms->powfs[ipowfs].llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
 	    parms->powfs[ipowfs].llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
-	    parms->powfs[ipowfs].llt->fn=readcfg_str("%sllt.fn",prefix);
+	    parms->powfs[ipowfs].llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
+	    parms->powfs[ipowfs].llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
 	    parms->powfs[ipowfs].llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
 	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix);
 	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix);
@@ -325,7 +330,9 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].phystep=(parms->powfs[ipowfs].phystep/parms->powfs[ipowfs].dtrat)
 		*parms->powfs[ipowfs].dtrat;
 	}
-
+	if(parms->powfs[ipowfs].mtchcra==-1){
+	    parms->powfs[ipowfs].mtchcra=parms->powfs[ipowfs].mtchcr;
+	}
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);
@@ -624,6 +631,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_DBL(tomo.iac);
     READ_INT(tomo.ninit);
     READ_INT(tomo.psol);
+    READ_INT(tomo.nxbase);
 }
 
 /**
@@ -701,16 +709,16 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.napngs=2;
     }
     if(fabs(dblsum(parms->sim.apdm, parms->sim.napdm)-1)>1.e-10){
-	error("sum(sim.apdm)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apdm, parms->sim.napdm));
+	warning("sum(sim.apdm)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apdm, parms->sim.napdm));
     }
     if(fabs(dblsum(parms->sim.apngs, parms->sim.napngs)-1)>1.e-10){
-	error("sum(sim.apngs)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apngs, parms->sim.napngs));
+	warning("sum(sim.apngs)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apngs, parms->sim.napngs));
     }
     if(fabs(dblsum(parms->sim.apupt, parms->sim.napupt)-1)>1.e-10){
-	error("sum(sim.apupt)=%g. Should be 1.\n", 
-	      dblsum(parms->sim.apupt, parms->sim.napupt));
+	warning("sum(sim.apupt)=%g. Should be 1.\n", 
+		dblsum(parms->sim.apupt, parms->sim.napupt));
     }
     parms->sim.nseed=readcfg_intarr(&parms->sim.seeds,"sim.seeds");
     READ_DBL(sim.dt);
@@ -724,6 +732,7 @@ static void readcfg_sim(PARMS_T *parms){
 	      parms->sim.servotype_lo);
     }
     READ_STR(sim.wspsd);
+    READ_INT(sim.wsseq);
     READ_INT(sim.cachedm);
     READ_INT(sim.fuseint);
     READ_INT(sim.closeloop);
@@ -790,9 +799,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
     parms->dbg.ntomo_maxit=readcfg_intarr(&parms->dbg.tomo_maxit, "dbg.tomo_maxit");
-#if USE_POSIX_SHM
-    shm_keep_unused=parms->dbg.keepshm;
-#endif
     READ_INT(dbg.tomo_hxw);
     READ_INT(dbg.splitlrt);
     READ_INT(dbg.ecovxx);
@@ -800,6 +806,9 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.force);
     READ_INT(dbg.usegwr);
     READ_INT(dbg.dxonedge);
+    READ_INT(dbg.cmpgpu);
+    READ_INT(dbg.pupmask);
+    READ_INT(dbg.wfslinearity);
 }
 /**
    Read in GPU options
@@ -903,6 +912,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		parms->powfs[ipowfs].psfout=1;
+		parms->powfs[ipowfs].pistatout=1;
 	    }
 	}
     }
@@ -1003,7 +1013,15 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}else if(parms->powfs[ipowfs].pixtheta<wvl/dxsa*1.22){
 	    parms->powfs[ipowfs].dl=1;/*mark as diffraction limited. */
 	}
-	
+	if(fabs(parms->powfs[ipowfs].radpixtheta)<EPS){
+	    parms->powfs[ipowfs].radpixtheta=parms->powfs[ipowfs].pixtheta;
+	}else{
+	    if(parms->powfs[ipowfs].radpixtheta>1e-4){
+		parms->powfs[ipowfs].radpixtheta/=206265.;
+	    }else if(parms->powfs[ipowfs].radpixtheta<0){
+		error("powfs %d radpixtheta<0\n", ipowfs);
+	    }
+	}
 	if (parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom){
 	    parms->powfs[ipowfs].hasGS0=1;
 	}else{
@@ -1258,6 +1276,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
       Find ground turbulence layer. The ray tracing can be shared between different directions.
     */
     parms->atm.iground=-1;
+    parms->atm.hmax=-INFINITY;
     for(int ips=0; ips<parms->atm.nps; ips++){
 	if(fabs(parms->atm.ht[ips])<1.e-10){
 	    if(parms->atm.iground==-1)
@@ -1270,6 +1289,9 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	if(parms->atm.ht[ips]>0 && parms->atm.ht[ips]<20){
 	    warning("Layer %d height %g is too close to the ground\n",ips,parms->atm.ht[ips]);
+	}
+	if(parms->atm.hmax<parms->atm.ht[ips]){
+	    parms->atm.hmax=parms->atm.ht[ips];
 	}
     }
     if(parms->atm.iground==-1){
@@ -1324,6 +1346,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	for(int ips=0; ips<parms->atm.nps; ips++){
 	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
 	}
+	parms->atm.hmax*=secz;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(!isinf(parms->powfs[ipowfs].hs)){
 		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
@@ -1355,7 +1378,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     long nxout[nps],nyout[nps];
     for(int ips=0; ips<nps; ips++){
 	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,0.5,
-			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,1);
+			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,0,1);
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
 	if(nyout[ips]>Nmax) Nmax=nyout[ips];
     }
@@ -1423,7 +1446,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     /*
       Setup the parameters used to do DM caching on a finer grid.
     */
-    for(int idm=0; idm<ndm; idm++){
+    for(int idm=0; idm<ndm && parms->sim.cachedm; idm++){
 	double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
 	if(fabs(ht)<1.e-10){
 	    parms->dm[idm].isground=1;
@@ -1451,10 +1474,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 		double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->aper.dx;
 		parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
 	    }
-	}else{
-	    warning("skip evl in cachedm.\n");
 	}
-	/*info2("idm=%d, nscale=%d\n", idm, nscale); */
 	parms->dm[idm].ncache=nscale;
 	parms->dm[idm].dxcache=calloc(1, nscale*sizeof(double));
 	for(int iscale=0; iscale<nscale; iscale++){
@@ -1528,11 +1548,17 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->recon.split && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");
     }
-    if(parms->tomo.precond==1 && !parms->recon.split && parms->tomo.maxit<10){
-	warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
-    }
-    if(parms->tomo.precond==1 && parms->tomo.square!=1){
-	warning("FDPCG prefers square XLOC.\n");
+    if(parms->tomo.alg==1){
+	if(parms->tomo.precond==1 && !parms->recon.split && parms->tomo.maxit<10){
+	    warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
+	}
+	if(parms->tomo.precond==1 && parms->tomo.piston_cr){
+	    warning("FDPCG does not perform well with piston_cr=1. Disabled piston_cr\n");
+	    parms->tomo.piston_cr=0;
+	}
+	if(parms->tomo.precond==1 && parms->tomo.square!=1){
+	    warning("FDPCG prefers square XLOC.\n");
+	}
     }
     if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
@@ -1587,6 +1613,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(covmem>MAX(NMEM, LONG_MAX/2) && parms->aper.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
 	    error("parms->aper.dx=%g is probably too large to save ecxx. Recommend parms->aper.dx=%g\n", parms->aper.dx, parms->atmr.dx*0.25);
 	}
+    }
+    if(parms->tomo.predict && !parms->tomo.square){
+	info("Please implement wind shifting on HX. need wind velocity\n");
+	error("Prediction is only implemented for square grid currently\n");
     }
     parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
 }
@@ -1722,6 +1752,10 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     }
     if(use_cuda){
 	if(parms->recon.alg==0){
+	    if(parms->gpu.tomo && parms->tomo.pos !=2){
+		parms->gpu.tomo=0;
+		warning("\n\nGPU reconstruction is only available for CG with tomo.pos=2 for the moment.\n");
+	    }
 	    if(parms->gpu.tomo && parms->tomo.alg !=1){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for CG. Disable GPU Tomography.\n");
@@ -1761,18 +1795,18 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	if(parms->gpu.tomo){
 	    parms->tomo.square=1;
 	    parms->dbg.dxonedge=1;
-	    parms->dbg.splitlrt=0;/*not quite necessary. */
+	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
     }else{
 	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=0;
     }
-#if USE_CUDA
-	warning("MAOS is compiled with cuda. make cpu code follows gpu convention\n");
+    if(parms->dbg.cmpgpu){
+	warning("Make cpu code follows gpu implementations.\n");
 	parms->sim.cachedm=0;
 	parms->tomo.square=1;
 	parms->dbg.dxonedge=1;
-	parms->dbg.splitlrt=0;/*not quite necessary. */
-#endif
+	/*parms->dbg.splitlrt=0;*//*need extensity comparison. */
+    }
     /*Assign each turbulence layer to a corresponding reconstructon layer. Used
       to compute opdx in a simple minded way.*/
     parms->atm.ipsr=calloc(parms->atm.nps, sizeof(int));
@@ -1845,7 +1879,8 @@ static void print_parms(const PARMS_T *parms){
     int i;
     const char *phytype[]={
 	"\033[0;32mmatched filter\033[0;0m",
-	"\033[0;31mthresholded center of gravity\033[0;0m"
+	"\033[0;31mthresholded center of gravity\033[0;0m",
+	"\033[0;31mMaximum A Priori Tracing (MAP)\033[0;0m"
     };
     const char* tomo_precond[]={
 	"\033[0;32mNo\033[0;0m",
@@ -1862,8 +1897,8 @@ static void print_parms(const PARMS_T *parms){
     double wh=0;
     double wv=0;
     for(int ips=0; ips<parms->atm.nps; ips++){
-	wh+=pow(parms->atm.ht[ips],5./3.)*parms->atm.wt[ips];
-	wv+=pow(parms->atm.ws[ips],5./3.)*parms->atm.wt[ips];
+	wh+=pow(fabs(parms->atm.ht[ips]),5./3.)*parms->atm.wt[ips];
+	wv+=pow(fabs(parms->atm.ws[ips]),5./3.)*parms->atm.wt[ips];
     }
     double theta0z=0.3144*parms->atm.r0z*pow(wh,-3./5.);
     double fgreen=0.426/parms->atm.r0z*pow(wv,3./5.);
@@ -1928,9 +1963,10 @@ static void print_parms(const PARMS_T *parms){
 	    info2("\033[0;32m Pixel is blurred by %g.\033[0;0m", parms->powfs[i].pixblur);
 	}
 	info2("\n");
-	info2("    CCD image is %dx%d @ %gmas, %gHz, ", 
+	info2("    CCD image is %dx%d @ %gx%gmas, %gHz, ", 
 	      (parms->powfs[i].radpix?parms->powfs[i].radpix:parms->powfs[i].pixpsa), 
-	      parms->powfs[i].pixpsa, parms->powfs[i].pixtheta*206265000,
+	      parms->powfs[i].pixpsa, 
+	      parms->powfs[i].radpixtheta*206265000,parms->powfs[i].pixtheta*206265000,
 	      1./parms->sim.dt/parms->powfs[i].dtrat);
 	info2("wvl: [");
 	for(int iwvl=0; iwvl<parms->powfs[i].nwvl; iwvl++){

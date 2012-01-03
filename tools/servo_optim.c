@@ -29,7 +29,7 @@ int main(int argc, char **argv){
     double dt=strtod(argv[3],NULL);
     double sigma=strtod(argv[4],NULL);/*m^2 */
     dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma;
-    dcell *gain=servo_typeII_optim(psd,dtrat,dt,sigma2);
+    dcell *gain=servo_typeII_optim(psd,dtrat,dt,M_PI/4,sigma2);
     dwrite(gain->p[0],"%s",argv[5]);
     dfree(sigma2);
     dcellfree(gain);

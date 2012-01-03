@@ -36,6 +36,7 @@ typedef struct APER_T{
 			    performance evaluation*/
     dmat *amp1;          /**<amplitude map defined o locs, maximum is 1. use for plotting.*/
     map_t *ampground;    /**<The input amplitude map on ground level read from file.*/
+    //map_t *ampmask;      /**<The amplitude map for pupil masking in NGS WFS*/
     dmat *mod;           /**<modal columne vectors if parms->evl.nmax>1*/
     dmat *mcc;           /*piston/tip/tilt mode cross-coupling for evaluations.*/
     dmat *imcc;          /**<inverse of piston/tip/tilt mode cross-coupling for evaluations.*/
@@ -85,19 +86,18 @@ physical optics wfs. */
 typedef struct INTSTAT_T{
     ccell *lotf;        /**<llt otf*/
     ccell **otf;        /**<short exposure OTF. time consuming to calculate. */
+    ccell **fotf;       /**<The final optf before fft and multiply with si to
+			   get i0. Used for MAP tracking.*/
     dcell **sepsf;      /**<short expsoure PSF.*/
     dcell *i0;          /**<short exposure image. nsa x nllt*/
     dcell *gx;          /**<gradient of i0 along x*/
     dcell *gy;          /**<gradient of i0 along y*/
     dmat *i0sum;        /**<sum of i0*/
-    dcell *mtchera;     /**<mtched filter operator along r/a*/
-    dcell *mtche;       /**<mtched filter operator along x/y*/
-    dcell *saneara;     /**<computed sanea along ra (rad^2) (only for radian coord ccd)*/
-    dcell *sanea;       /**<SANEA of matched filter output. ra or xy (rad^2). no
-			   coupling is saved.*/
+    dcell *mtche;       /**<mtched filter operator along x/y, even if radpix=1*/
     dcell *saneaxy;     /**<computed sanea along xy. (rad^2)*/
     dcell *saneaxyl;    /**<decomposition of saneaxy: L*L'=saneaxy.*/
     dcell *saneaixy;    /**<computed sanea inverse along xy (rad^-2)*/
+    dcell *cogcoeff;    /**<per subaperture CoG offset/threshold*/
     int notf;           /**<number of otf; 1 unless there is ncpa.*/
     int nsepsf;         /**<number of sepsf; usually 1.*/
     int nmtche;         /**<number of matched filters. 1 or nwfs of this powfs.*/
@@ -112,9 +112,11 @@ typedef struct POWFS_T{
     dmat *saa;          /**<Subaperture area*/
     loc_t *loc;         /**<concatenated points for all subapertures.*/
     loc_t **locm;       /**<mis-registered loc, if any.*/
+    loc_t *gloc;        /**<loc used to generate GP*/
     dcell *saam;        /**<mis-registered saa, if any*/
     dmat *amp;          /**<amplitude map, max at 1.*/
     dcell *ampm;        /**<real amplitude map on misregistered grid, locm. used for gradient computing*/
+    dmat  *gamp;        /**<amplitude defined on gloc*/
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     double (*misreg)[2];/**<pure misregistration taken from parms->powfs[ipowfs].misreg*/
     /*NCPA */
@@ -159,6 +161,7 @@ typedef struct POWFS_T{
     dmat *sumamp2;      /**<sum of realamp.^2*/
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS*/
+    dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
 }
 POWFS_T;
 
@@ -257,7 +260,8 @@ typedef struct RECON_T{
     loc_t **xloc;      /**<reconstructed atmosphere grid.*/
     map_t **xmap;      /**<The map of xloc (only if tomo.square is true)*/
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
-
+    long *xnx;
+    long *xny;
     loc_t *floc;       /**<Grid on pupil for DM fitting. */
 
     loc_t **aloc;      /**<actuator grid*/
@@ -447,7 +451,8 @@ typedef struct SIM_T{
     ccell **wfspsfout; /**<output WFS PSF history.*/
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
-    dcell **sanea_sim;  /**<accumulate effective sanea during simulation.*/
+    dcell *gradnf;     /**<cl nf grad output*/
+    dcell *sanea_sim;  /**<accumulate effective sanea during simulation.*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/

@@ -1,14 +1,14 @@
 addpath('../mex');
-opdr=read('opdr.bin.gz');
-HX=read('HX.bin.gz');
-HA=read('HA.bin.gz');
-ploc=read('ploc.bin.gz');
-aloc0=read('dm0_loc.bin.gz');
-aloc1=read('dm1_loc.bin.gz');
+opdr=read('opdr.bin');
+HX=read('HX.bin');
+HA=read('HA.bin');
+ploc=read('ploc.bin');
+aloc0=read('dm0_loc.bin');
+aloc1=read('dm1_loc.bin');
 
 opd=cell_mm(HX, opdr);
-W0=read('W0.bin.gz');
-W1=read('W1.bin.gz');
+W0=read('W0.bin');
+W1=read('W1.bin');
 HAT=celltransp(HA);
 wtevl=[4/9,1/9,1/9,1/9,1/9,1/36,1/36,1/36,1/36];
 for ievl=1:9
@@ -23,11 +23,11 @@ end
 
 adm=cell_mm(HAT,opd);
 
-fit_rhs=read('fit_rhs.bin.gz');
+fit_rhs=read('fit_rhs.bin');
 
-FRM=read('FRM.bin.gz');
-FRU=read('FRU.bin.gz');
-FRV=read('FRV.bin.gz');
+FRM=read('FRM.bin');
+FRU=read('FRU.bin');
+FRV=read('FRV.bin');
 adm0=cell_mm(FRM,opdr);
 FRVT=celltransp(FRV);
 tmp=cell_mm(FRVT,opdr);

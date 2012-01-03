@@ -34,37 +34,40 @@
 
  */
 void Y(spwritedata)(file_t *fp, const X(sp) *sp){
-    uint32_t magic=M_SPT;
-    Y(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
-    zfwrite(&magic, sizeof(uint32_t),1,fp);
+    header_t header={M_SPT, 0, 0, NULL};
     if(sp && sp->nzmax){
-	uint64_t m,n,nzmax;
-	m=sp->m;
-	n=sp->n;
-	nzmax=sp->p[n];/*don't use sp->nzmax, which maybe larger than actual */
-	zfwritelarr(fp, 3, &m, &n, &nzmax);
-	zfwrite(sp->p, sizeof(spint), n+1, fp);
+	header.nx=sp->m;
+	header.ny=sp->n;
+	header.str=sp->header;
+    }
+    write_header(&header, fp);
+    if(sp && sp->nzmax){
+	Y(spsort)((X(sp)*)sp);/*sort the matrix to have the right order */
+	uint64_t nzmax;
+	nzmax=sp->p[sp->n];/*don't use sp->nzmax, which maybe larger than actual */
+	zfwritelarr(fp, 1, &nzmax);
+	zfwrite(sp->p, sizeof(spint), sp->n+1, fp);
 	zfwrite(sp->i, sizeof(spint), nzmax, fp);
 	zfwrite(sp->x ,sizeof(T),nzmax,fp);  
-    }else{
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
     }
 }
 /**
    Function to read sparse matrix data from file pointer into memory. Used by
    library developer.
   */
-X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic){
-    if(!magic){
-	magic=read_magic(fp, NULL);
+X(sp) *Y(spreaddata)(file_t *fp, header_t *header){
+    header_t header2;
+    if(!header){
+	header=&header2;
+	read_header(header, fp);
     }
-    uint64_t m,n,nzmax;
-    zfreadlarr(fp, 2, &m, &n);
+    long m=header->nx;
+    long n=header->ny;
+    uint64_t nzmax;
     X(sp) *out=NULL;
     if(m!=0 && n!=0){
 	uint32_t magic2=0;
-	switch(magic){
+	switch(header->magic){
 	case M_SPT64:
 	    magic2=M_INT64;
 	    break;
@@ -72,23 +75,25 @@ X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic){
 	    magic2=M_INT32;
 	    break;
 	default:
-	    error("This is not a valid sparse matrix file. magic=%x\n", magic);
+	    error("This is not a valid sparse matrix file. magic=%x\n", header->magic);
 	}
 	zfread(&nzmax,sizeof(uint64_t),1,fp);
 	if(nzmax!=0){
 	    out=Y(spnew)(m,n,nzmax);
+	    out->header=header->str; header->str=NULL;
 	    readspintdata(fp, magic2, out->p, n+1);
 	    readspintdata(fp, magic2, out->i, nzmax);
 	    zfread(out->x, sizeof(T), nzmax, fp);
 	}
     }
+    free(header->str);
     return out;
 }
 
 /**
    User callable function to write sparse matrix into file. 
 
-   Usage: spwrite(A,"A.bin.gz");
+   Usage: spwrite(A,"A.bin");
 */
 void Y(spwrite)(const X(sp) *sp, const char *format,...){
     format2fn;
@@ -101,31 +106,30 @@ void Y(spwrite)(const X(sp) *sp, const char *format,...){
 /**
    User callable function to write cell array of sparse matrix into file. 
 
-   Usage: spcellwrite(A,"A.bin.gz"); */
+   Usage: spcellwrite(A,"A.bin"); */
 void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...){
     format2fn;
-    uint32_t magic=MCC_ANY;
     file_t *fp=zfopen(fn,"wb");
-    zfwrite(&magic, sizeof(uint32_t), 1, fp);
+    header_t header={MCC_ANY, 0, 0, NULL};
     if(spc){
-	uint64_t nx=spc->nx;
-	uint64_t ny=spc->ny;
-	zfwritelarr(fp, 2, &nx, &ny);
+	header.nx=spc->nx;
+	header.ny=spc->ny;
+	header.str=spc->header;
+    }
+    write_header(&header, fp);
+    if(spc){
 	for(unsigned long iy=0; iy<spc->ny; iy++){
 	    for(unsigned long ix=0; ix<spc->nx; ix++){
 		Y(spwritedata)(fp, spc->p[ix+iy*spc->nx]);
 	    }
 	}
-    }else{
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
     }
     zfclose(fp);
 }
 /**
    User callable function to read sparse metrix from file. 
 
-   Usage: A=spread("A.bin.gz");*/
+   Usage: A=spread("A.bin");*/
 X(sp)* Y(spread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
@@ -136,25 +140,29 @@ X(sp)* Y(spread)(const char *format,...){
 }
 /**
    User callable function to read cell array of sparse matrix
-   from file. Usage: A=spcellread("A.bin.gz");
+   from file. Usage: A=spcellread("A.bin");
  */
 Y(spcell) *Y(spcellread)(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    uint32_t magic=read_magic(fp, NULL);
-    if(!iscell(magic)){
-	error("%s is not a sparse cell file. want %d, got %u\n", fn, MCC_ANY, magic);
+    header_t header;
+    read_header(&header, fp);
+    header_t *headerc=NULL;
+    long nx, ny;
+    if(!iscell(header.magic)){
+	headerc=&header;
+	warning("%s is not a sparse cell file. want %d, got %u\n", fn, MCC_ANY, header.magic);
+	nx=1; ny=1;
+    }else{
+	free(header.str);
+	nx=header.nx;
+	ny=header.ny;
     }
-    uint64_t nx,ny;
-    zfreadlarr(fp, 2, &nx, &ny);
     Y(spcell) *out;
-    if(nx==0 || ny==0)
-	out=NULL;
-    else{
-	out=Y(spcellnew)(nx,ny);
-	for(unsigned long ix=0; ix<nx*ny; ix++){
-	    out->p[ix]=Y(spreaddata)(fp, 0);
-	}
+    out=Y(spcellnew)(nx,ny);
+    out->header=header.str; header.str=NULL;
+    for(unsigned long ix=0; ix<nx*ny; ix++){
+	out->p[ix]=Y(spreaddata)(fp, headerc);
     }
     zfeof(fp);
     zfclose(fp);

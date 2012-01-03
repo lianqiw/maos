@@ -681,7 +681,6 @@ void gpu_spint2int(int * restrict *dest, spint *src, int n){
    Convert device (float) array to host double.
 */
 void gpu_dev2dbl(double * restrict *dest, float *src, int n, cudaStream_t stream){
-    TIC;tic;
     float *tmp=(float*)malloc(n*sizeof(float));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
     CUDA_SYNC_STREAM;
@@ -802,6 +801,7 @@ void gpu_cur2s(smat **out, const curmat *in, cudaStream_t stream){
     }
     if(!*out) *out=snew(in->nx, in->ny);
     DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDeviceToHost, stream));
+    if(in->header) (*out)->header=strdup(in->header);
 }
 
 
@@ -812,6 +812,7 @@ void gpu_cuc2z(zmat **out, const cucmat *in, cudaStream_t stream){
     }
     if(!*out) *out=znew(in->nx, in->ny);
     DO(cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(fcomplex), cudaMemcpyDeviceToHost, stream));
+    if(in->header) (*out)->header=strdup(in->header);
 }
 
 void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream){

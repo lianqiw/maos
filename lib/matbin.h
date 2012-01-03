@@ -24,8 +24,8 @@
 #define AOS_MATBIN_DEF(X,Y,T)\
 void X(writedata)(file_t *fp, const X(mat) *A);	\
 void X(cellwritedata)(file_t *fp, const X(cell) *dc);\
-X(mat) *X(readdata)(file_t *fp, uint32_t magic); \
-X(cell)* X(cellreaddata)(file_t *fp, uint32_t magic); \
+X(mat) *X(readdata)(file_t *fp, header_t *header); \
+X(cell)* X(cellreaddata)(file_t *fp, header_t *header); \
 void X(write)(const X(mat) *A, const char *format,...) CHECK_ARG(2); \
 void X(cellwrite)(const X(cell) *dc, const char *format,...) CHECK_ARG(2); \
 X(mat)* X(read)(const char *format,...) CHECK_ARG(1);\

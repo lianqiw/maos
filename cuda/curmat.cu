@@ -21,81 +21,10 @@ extern "C"
 #include "gpu.h"
 }
 #include "curmat.h"
+#include "cucmat.h"
 #include "utils.h"
 #include "kernel.h"
-/**
-   Createa curmat object.
-*/
-curmat *curnew(int nx, int ny){
-    curmat *out;
-    out=(curmat*)calloc(1, sizeof(curmat));
-    out->nref=(int*)calloc(1, sizeof(int));
-    out->nref[0]=1;
-    DO(cudaMalloc(&(out->p), nx*ny*sizeof(float)));
-    DO(cudaMemset(out->p, 0, nx*ny*sizeof(float)));
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
 
-/**
-   Create curmat object with existing vector. own=1: we own the pointer. own=0: we don't own the pointer.
-*/
-curmat *curnew(int nx, int ny, float *p, int own){
-    curmat *out;
-    out=(curmat*)calloc(1, sizeof(curmat));
-    if(own){
-	out->nref=(int*)calloc(1, sizeof(int));
-	out->nref[0]=1;
-    }
-    out->p=p;
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
-/**
-   Createa curmat object.
-*/
-curmat *curnew(int nx, int ny, cudaStream_t stream){
-    curmat *out;
-    out=(curmat*)calloc(1, sizeof(curmat));
-    out->nref=(int*)calloc(1, sizeof(int));
-    out->nref[0]=1;
-    DO(cudaMalloc(&(out->p), nx*ny*sizeof(float)));
-    DO(cudaMemsetAsync(out->p, 0, nx*ny*sizeof(float), stream));
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
-curmat *curref(curmat *A){
-    if(!A) return NULL;
-    curmat *out=(curmat*)calloc(1, sizeof(curmat));
-    memcpy(out, A, sizeof(curmat));
-    A->nref[0]++;
-    return out;
-}
-
-void curfree(curmat *A){
-    if(A){
-	if(A->nref){
-	    if(A->nref[0]==1){
-		cudaFree(A->p);
-		free(A->nref);
-	    }else{
-		A->nref[0]--;
-		if(A->nref[0]<0){
-		error("Invalid nref=%d\n", A->nref[0]);
-		}
-	    }
-	}
-	free(A);
-    }
-}
-void curzero(curmat *A, cudaStream_t stream){
-    if(A && A->p){
-	DO(cudaMemsetAsync(A->p, 0, A->nx*A->ny*sizeof(float), stream));
-    }
-}
 void curset(curmat *A, float alpha, cudaStream_t stream){
     if(A && A->p){
 	set_do<<<DIM(A->nx*A->ny,256),0,stream>>>(A->p, alpha, A->nx*A->ny);
@@ -117,24 +46,6 @@ void curcp(curmat **out, const curmat *in, cudaStream_t stream){
 	}
 	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDeviceToDevice, stream);
     }
-}
-void curwritedata(const curmat *A, file_t *fp){
-    if(A && A->nx>0 && A->ny>0){
-	cudaDeviceSynchronize();
-	float *tmp=(float*)malloc(A->nx*A->ny*sizeof(float));
-	cudaMemcpy(tmp, A->p, A->nx*A->ny*sizeof(float), cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
-	do_write(fp, 0, sizeof(float), M_FLT, tmp, A->nx, A->ny);
-	free(tmp);
-    }else{
-	do_write(fp, 0, sizeof(float), M_FLT, NULL, 0, 0);
-    }
-}
-void curwrite(const curmat *A, const char *format, ...){
-    format2fn;
-    file_t *fp=zfopen(fn, "wb");
-    curwritedata(A, fp);
-    zfclose(fp);
 }
 
 /**
@@ -244,22 +155,6 @@ void curmv(curmat **C, float alpha, const curmat *A, const curmat *B, char trans
     cublasSgemv(handle, trans=='t'?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, B->p, 1, &alpha, (*C)->p, 1);
 }
 
-curcell* curcellnew(int nx, int ny){
-    curcell *out=(curcell*)calloc(1, sizeof(curcell));
-    out->p=(curmat**)calloc(nx*ny, sizeof(void*));
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
-/** Allocate continuous memory for blocks of the same size*/
-curcell *curcellnew(int nx, int ny, int mx, int my){
-    curcell *out=curcellnew(nx, ny);
-    out->m=curnew(mx, my*nx*ny);
-    for(int i=0; i<nx*ny; i++){
-	out->p[i]=curnew(mx, my, out->m->p+i*(mx*my), 0);
-    }
-    return out;
-}
 cuspcell* cuspcellnew(int nx, int ny){
     cuspcell *out=(cuspcell*)calloc(1, sizeof(cuspcell));
     out->p=(cusp**)calloc(nx*ny, sizeof(void*));
@@ -267,82 +162,23 @@ cuspcell* cuspcellnew(int nx, int ny){
     out->ny=ny;
     return out;
 }
-curcell *curcellnew2(const curcell *in){
-    curcell *out=(curcell*)calloc(1, sizeof(curcell));
-    out->p=(curmat**)calloc(in->nx*in->ny, sizeof(void*));
-    out->nx=in->nx;
-    out->ny=in->ny;
-    for(int i=0; i<in->nx*in->ny; i++){
-	out->p[i]=curnew(in->p[i]->nx, in->p[i]->ny);
-    }
-    return out;
-}
 
-void curcellfree(curcell *A){
-    if(!A) return;
-    if(A->p){
-	for(int i=0; i<A->nx*A->ny; i++){
-	    curfree(A->p[i]);
-	}
-	free(A->p);
-    }
-    curfree(A->m);
-    free(A);
-}
-
-void curcellwrite(const curcell *A, const char *format, ...){
-    format2fn;
-    file_t *fp=zfopen(fn, "wb");
-    write_magic(MCC_ANY, fp);
-    if(A){
-	uint64_t nx=A->nx;
-	uint64_t ny=A->ny;
-	zfwritelarr(fp, 2, &nx, &ny);
-	for(int i=0; i<A->nx*A->ny; i++){
-	    curwritedata(A->p[i], fp);
-	}
-    }else{
-	uint64_t zero=0;
-	zfwritelarr(fp, 2, &zero, &zero);
-    }
-    zfclose(fp);	
-}
-void curcellzero(curcell *A, cudaStream_t stream){
-    if(!A) return;
-    if(A->m){
-	curzero(A->m, stream);
-    }else{
-	for(int i=0; i<A->nx*A->ny; i++){
-	    curzero(A->p[i], stream);
-	}
-    }
-}
-void curcellcp(curcell **A, const curcell *B, cudaStream_t stream){
-    if(!B)
-	curcellzero(*A, stream);
-    else{
-	if(!*A){
-	    *A=curcellnew2(B);
-	}else{
-	    assert((*A)->nx * (*A)->ny == B->nx * B->ny);
-	}
-	for(int i=0; i<B->nx*B->ny; i++){
-	    curcp(&(*A)->p[i], B->p[i], stream);
-	}
-    }
-}
 /*
   A=A*beta+B*alpha;
 */
 void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream){
     if(!B) return;
     if(!*A){
-	*A=curcellnew2(B);
+	*A=curcellnew(B);
     }else{
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
-    for(int i=0; i<B->nx*B->ny; i++){
-	curadd(&((*A)->p[i]), beta, B->p[i], alpha,stream);
+    if((*A)->m && B->m){
+	curadd(&(*A)->m, beta, B->m, alpha, stream);
+    }else{
+	for(int i=0; i<B->nx*B->ny; i++){
+	    curadd(&((*A)->p[i]), beta, B->p[i], alpha,stream);
+	}
     }
 }
 
@@ -391,12 +227,16 @@ void curadd2(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStr
 void curcelladd2(curcell **A, const curcell *B, float* alpha, float alpha2, cudaStream_t stream){
     if(!B) return;
     if(!*A){
-	*A=curcellnew2(B);
+	*A=curcellnew(B);
     }else{
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
-    for(int i=0; i<B->nx*B->ny; i++){
-	curadd2((*A)->p+i, B->p[i], alpha, alpha2,  stream);
+    if((*A)->m && B->m){
+	curadd2(&(*A)->m, B->m, alpha, alpha2, stream);
+    }else{
+	for(int i=0; i<B->nx*B->ny; i++){
+	    curadd2((*A)->p+i, B->p[i], alpha, alpha2,  stream);
+	}
     }
 }
 
@@ -424,12 +264,16 @@ void curadd3(curmat **out, float *beta, const curmat *in, cudaStream_t stream){
 void curcelladd3(curcell **A, float* beta, const curcell *B, cudaStream_t stream){
     if(!B) return;
     if(!*A){
-	*A=curcellnew2(B);
+	*A=curcellnew(B);
     }else{
 	assert((*A)->nx==B->nx && (*A)->ny==B->ny);
     }
-    for(int i=0; i<B->nx*B->ny; i++){
-	curadd3(&((*A)->p[i]), beta, B->p[i],  stream);
+    if((*A)->m && B->m){
+	curadd3(&(*A)->m, beta, B->m, stream);
+    }else{
+	for(int i=0; i<B->nx*B->ny; i++){
+	    curadd3(&((*A)->p[i]), beta, B->p[i],  stream);
+	}
     }
 }
 __global__ void inn_do(float *restrict res, const float *a, const float *b, const int n){
@@ -477,37 +321,12 @@ inline static void sum_wrap(float *res, const float * a, const int n, cudaStream
 float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     float *res;
     cudaMalloc(&res, sizeof(float));
-    curinn2(res,a,b,stream);
+    cudaMemsetAsync(res, 0,sizeof(float), stream);
+    inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
     float out;
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
     CUDA_SYNC_STREAM;
     return out;
-}
-float curcellinn(const curcell *A, const curcell *B, cudaStream_t stream){
-    float out;
-    static float *res=NULL;
-    if(!res) cudaMalloc(&res, sizeof(float));
-    curcellinn2(res, A, B, stream);
-    cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
-    cudaStreamSynchronize(stream);
-    return out;
-}
-
-void curinn2(float *restrict res, const curmat *a, const curmat *b, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
-    inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
-}
-/**
-   res points to a scalar in device memory.
-*/
-void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
-    for(int i=0; i<A->nx*A->ny; i++){
-	const curmat *a=A->p[i];
-	const curmat *b=B->p[i];
-	const int n=a->nx*a->ny;
-	inn_wrap(res, a->p, b->p, n, stream);
-    }
 }
 
 /**
@@ -556,7 +375,11 @@ float curmax(const curmat *a, cudaStream_t stream){
 */
 void curcellscale(curcell *A, float alpha, cudaStream_t stream){
     if(!A) return;
-    for(int i=0; i<A->nx*A->ny; i++){
-	curscale(A->p[i], alpha, stream);
+    if(A->m){
+	curscale(A->m, alpha, stream);
+    }else{
+	for(int i=0; i<A->nx*A->ny; i++){
+	    curscale(A->p[i], alpha, stream);
+	}
     }
 }

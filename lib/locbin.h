@@ -20,7 +20,7 @@
 #define AOS_LOCBIN_H
 #include "bin.h"
 #include "loc.h"
-loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0);
+loc_t *locreaddata(file_t *fp, header_t* header);
 void locwritedata(file_t *fp, const loc_t *loc);
 void locwrite(const loc_t *loc, const char *format,...) CHECK_ARG(2);
 loc_t *locread(const char *format,...) CHECK_ARG(1);
@@ -28,7 +28,7 @@ void locarrwrite(loc_t ** loc, int nloc, const char *format,...) CHECK_ARG(3);
 loc_t ** locarrread(int *nloc, const char *format,...) CHECK_ARG(2);
 
 map_t *mapread(const char *format,...) CHECK_ARG(1);
-map_t *mapreaddata(file_t *fp, uint32_t magic, char *header);
+map_t *mapreaddata(file_t *fp, header_t *header);
 rectmap_t *rectmapread(const char *format,...) CHECK_ARG(1);
 rectmap_t **rectmaparrread(int *nlayer, const char *format, ...);
 void mapwrite(map_t *map, const char *format,...) CHECK_ARG(2);

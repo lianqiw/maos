@@ -97,7 +97,7 @@ static __attribute__((constructor)) void init(){
     register_deinit(freepath,NULL);
 }
 /**
-   Try to find a file in path and return its absolute filename of exist, NULL
+   Try to find a file in path and return its absolute filename if exist, NULL
 otherwise.  */
 char *search_file(const char *fn){
     if(!fn) return NULL;

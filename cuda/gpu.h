@@ -20,6 +20,7 @@
 #include "../lib/aos.h"
 #include "../maos/parms.h"
 #include "../maos/types.h"
+#include "../maos/utils.h"
 void gpu_info(void);
 int  gpu_init(int *gpus, int ngpu);
 void gpu_cleanup(void);

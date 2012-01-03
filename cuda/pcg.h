@@ -18,7 +18,7 @@
 #ifndef AOS_CUDA_PCG_H
 #define AOS_CUDA_PCG_H
 typedef void (*G_CGFUN)(curcell**, float, const void*, const curcell*, float);
-typedef void (*G_PREFUN)(curcell**, const void*, const curcell*);
+typedef void (*G_PREFUN)(curcell**, const void*, const curcell*, cudaStream_t stream);
 
 int gpu_pcg(curcell **px, 
 	    G_CGFUN Amul, const void *A, 

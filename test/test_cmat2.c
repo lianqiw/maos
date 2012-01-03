@@ -1,6 +1,6 @@
 #include "../lib/aos.h"
 TIC;
-/*
+#if 0
 static static void cmat_benchmark(){
     cmat *A=cnew(64,64);
     cmat *B=cnew(32,32);
@@ -164,7 +164,7 @@ static void test_ctilt(){
     cscale(C,1./(N*N));
     cdraw("test_cmat",C,"shift");
 }
-*/
+#endif
 static void bench_ccwm(void){
     int N=1024*4;
     rand_t strand;
@@ -217,7 +217,7 @@ static void bench_ccwm(void){
     cwrite(E,"E2.bin");
 }
 /*TIC; */
-/*
+#if 0
 int test_ints(){
     int nopd=32;
     int npsf=64;
@@ -289,10 +289,10 @@ int test_ints(){
     }
     toc("addhf");/*0.011 ms in O3 mode */
    
-    }*/
-
+    }
+#endif
 int main(){
-    /*
+#if 0
     cmat_benchmark();/*passed */
     cmat_correctness();/*passed */
     test_sq2();/*passed */
@@ -301,7 +301,7 @@ int main(){
     info("a*conj(a)=%g\n",creal(a*conj(a)));
     info("abs2(a)=%g\n", cabs2(a));
     test_ctilt();
-    */
+#endif
     /*bench_cembed(); */
     bench_ccwm();
 }

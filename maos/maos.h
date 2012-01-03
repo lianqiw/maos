@@ -36,9 +36,6 @@
 extern int exit_success;
 extern char* dirsetup;
 extern char *dirskysim;
-#define ROT_OTF 0
-/*ROT_OTF==0: Rotate PSF to radial/azimuthal coordinate in LGS, Radial CCD Mode (Preferred). */
-/*ROT_OTF==1: Rotate OTF. */
 #define EXIT raise(SIGUSR1)
 void maos(const PARMS_T *parms);
 extern const PARMS_T *curparms;

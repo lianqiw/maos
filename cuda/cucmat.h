@@ -20,19 +20,15 @@
 
 #include "utils.h"
 #include "types.h"
-cucmat *cucnew(int nx, int ny);
-cucmat *cucnew(int nx, int ny, fcomplex *p, int own);
-cucmat *cucnew(int nx, int ny, cudaStream_t stream);
-cucmat *cucref(cucmat *A);
-void cucfree(cucmat *A);
-cuccell *cuccellnew(int nx, int ny);
-cuccell *cuccellnew(int nx, int ny, int mx, int my);
-void cuccellfree(cuccell *A);
-void cucwrite(const cucmat *A, const char *format, ...);
 
-inline void cuczero(cucmat *A, cudaStream_t stream){
-    if(A && A->p){
-	DO(cudaMemsetAsync(A->p, 0, A->nx*A->ny*sizeof(fcomplex), stream));
-    }
-}
+#define cucnew  cunew<fcomplex> 
+#define cucref  curef<fcomplex>
+#define cucfree cufree<fcomplex>
+#define cuczero cuzero<fcomplex>
+#define cuccellnew  cucellnew<fcomplex>
+#define cuccellfree cucellfree<fcomplex>
+#define cuccellzero cucellzero<fcomplex>
+#define cucwrite     cuwrite<fcomplex, (uint32_t)M_ZMP>
+#define cuccellwrite cucellwrite<fcomplex, (uint32_t)M_ZMP>
+
 #endif

@@ -25,33 +25,26 @@ extern "C"
 #include <cuComplex.h>
 #define fcomplex cuFloatComplex
 #define dcomplex cuDoubleComplex
-
-typedef struct{
-    float *p;
+template <typename T>
+struct cumat{
+    T *p;
     int nx;
     int ny;
     int *nref;
-}curmat;
+    char *header;
+};
 
-typedef struct{
-    curmat **p;
+template <typename T>
+struct cucell{
+    cumat<T> **p;
     int nx;
     int ny;
-    curmat *m; /* equivalent curmat. */
-}curcell;
-typedef struct{
-    fcomplex *p;
-    int nx;
-    int ny;
-    int *nref;
-}cucmat;
-
-typedef struct{
-    cucmat **p;
-    int nx;
-    int ny;
-    cucmat *m; /* equivalent cucmat */
-}cuccell;
+    cumat<T> *m; /*contains the continuous data*/
+};
+typedef struct cumat<float>    curmat;
+typedef struct cumat<fcomplex> cucmat;
+typedef struct cucell<float>  curcell;
+typedef struct cucell<fcomplex>  cuccell;
 
 typedef struct{
     int *p;

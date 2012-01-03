@@ -25,8 +25,8 @@ extern "C"
 #include "recon.h"
 #include "pcg.h"
 #include "curmat.h"
+#include "cucmat.h"
 curecon_t *curecon;
-#define SCALE 1e-12 /*Scale both NEA and L2 to balance the dynamic range. Does not work yet (strange). */
 #undef TIMING
 #define TIMING 0
 #if !TIMING
@@ -155,7 +155,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	curecon->l2c=(float*)calloc(recon->npsr, sizeof(float));
 	for(int ips=0; ips<recon->npsr; ips++){
 	    float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
-	    curecon->l2c[ips]=tmp*tmp*SCALE;
+	    curecon->l2c[ips]=tmp*tmp*TOMOSCALE;
 	}
 	if(parms->tomo.piston_cr){
 	    curecon->zzi=(int*)calloc(recon->npsr, sizeof(int));
@@ -166,7 +166,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		double wt=recon->wt->p[ips];
 		int icenter=loccenter(recon->xloc[ips]);
 		curecon->zzi[ips]=icenter;
-		curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*SCALE;
+		curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*TOMOSCALE;
 	    }
 	}
 	curecon->neai=curcellnew(parms->nwfsr, 1);
@@ -175,39 +175,40 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    int nsa=powfs[ipowfs].pts->nsa;
 	    int iwfs0=parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
-	    dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
-	    spint *pp=nea->p;
-	    spint *pi=nea->i;
-	    double *px=nea->x;
-	    float (*neai)[3]=(float(*)[3])calloc(3*nsa, sizeof(float));
-	    if(nea->n!=2*nsa) error("nea doesn't have 2nsa x 2nsa dimension\n");
-	    for(int ic=0; ic<nea->n; ic++){
-		for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
-		    int ix=pi[ir];
-		    int isa=ic<nsa?ic:ic-nsa;
-		    if(ix==ic){/*diagonal part. */
-			if(ic==isa){/*x */
-			    neai[isa][0]=(float)px[ir]*SCALE;
-			}else{/*y */
-			    neai[isa][1]=(float)px[ir]*SCALE;
+	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
+	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
+		info2("wfs %d is reusing nea for %d\n", iwfs, iwfs0);
+		curecon->neai->p[iwfs]=curref(curecon->neai->p[iwfs0]);
+	    }else{
+		info2("wfs %d has different nea than %d\n", iwfs, iwfs0);
+		dsp *nea=recon->saneai->p[iwfs+iwfs*parms->nwfsr];
+		spint *pp=nea->p;
+		spint *pi=nea->i;
+		double *px=nea->x;
+		
+		float (*neai)[3]=(float(*)[3])calloc(3*nsa, sizeof(float));
+		if(nea->n!=2*nsa) error("nea doesn't have 2nsa x 2nsa dimension\n");
+		for(int ic=0; ic<nea->n; ic++){
+		    for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
+			int ix=pi[ir];
+			int isa=ic<nsa?ic:ic-nsa;
+			float val=(float)px[ir]*TOMOSCALE;
+			if(ix==ic){/*diagonal part. */
+			    if(ic==isa){/*x */
+				neai[isa][0]=val;
+			    }else{/*y */
+				neai[isa][1]=val;
+			    }
+			}else if(ix==ic-nsa || ix==ic+nsa){/*cross part. symmetric. */
+			    neai[isa][2]=val;
+			}else{
+			    error("saneai has invalid format\n");
 			}
-		    }else if(ix==ic-nsa || ix==ic+nsa){/*cross part. symmetric. */
-			neai[isa][2]=(float)px[ir]*SCALE;
-		    }else{
-			error("saneai has invalid format\n");
 		    }
 		}
-	    }
-	    curecon->neai->p[iwfs]=curnew(3, nsa);
-	    DO(cudaMemcpy(curecon->neai->p[iwfs]->p, neai, 3*nsa*sizeof(float), cudaMemcpyDefault));
-	    free(neai);
-	    if(iwfs!=iwfs0 && nsa>4){/*don't check tt. overflows. */
-		float diff=curinn(curecon->neai->p[iwfs], curecon->neai->p[iwfs0], stream);
-		float diff2=curinn(curecon->neai->p[iwfs0], curecon->neai->p[iwfs0],  stream);
-		if((diff-diff2)<1e-4*diff2){
-		    curfree(curecon->neai->p[iwfs]);
-		    curecon->neai->p[iwfs]=curecon->neai->p[iwfs0];
-		}
+		curecon->neai->p[iwfs]=curnew(3, nsa);
+		DO(cudaMemcpy(curecon->neai->p[iwfs]->p, neai, 3*nsa*sizeof(float), cudaMemcpyDefault));
+		free(neai);
 	    }
 	}/*for iwfs */
 	CUDA_SYNC_DEVICE;
@@ -216,6 +217,53 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	}
 	if(recon->PDF && !curecon->PDF){
 	    gpu_dcell2cu(&curecon->PDF, recon->PDF);
+	}
+	if(parms->tomo.precond==1){/*fdpcg*/
+	    FDPCG_T *fdpcg=recon->fdpcg;
+	    int nb=fdpcg->Mbinv->nx;
+	    int bs=fdpcg->Mbinv->p[0]->nx;
+	    gpu_long2dev(&curecon->fd_perm, fdpcg->perm, nb*bs);//not bs*bs
+	    curecon->fd_Mb=cuccellnew(nb, 1, bs, bs);
+	    fcomplex *tmp;
+	    cudaMallocHost(&tmp, nb*bs*bs*sizeof(fcomplex));
+	    for(int ib=0; ib<nb; ib++){
+		dcomplex *in=(dcomplex*)fdpcg->Mbinv->p[ib]->p;
+		fcomplex *tmp2=tmp+ib*(bs*bs);
+		for(int i=0; i<bs*bs; i++){
+		    tmp2[i]=make_cuFloatComplex((float)cuCreal(in[i]), (float)cuCimag(in[i]));
+		}
+	    }
+	    DO(cudaMemcpy(curecon->fd_Mb->p[0]->p, tmp, nb*bs*bs*sizeof(fcomplex), cudaMemcpyHostToDevice));
+	    curecon->fd_nxtot=nb*bs;
+	    cudaFreeHost(tmp);
+	    int nps=recon->npsr;
+	    int count=0;
+	    int osi=-1;
+	    int start[nps];
+	    for(int ips=0; ips<nps; ips++){
+		if(osi != parms->atmr.os[ips]){
+		    start[count]=ips;
+		    osi = parms->atmr.os[ips];
+		    count++;
+		}
+	    }
+	    curecon->fd_fft=(cufftHandle*)calloc(count, sizeof(cufftHandle));
+	    curecon->fd_fftnc=count;
+	    curecon->fd_fftips=(int*)calloc(count+1, sizeof(int));
+	    for(int ic=0; ic<count; ic++){
+		curecon->fd_fftips[ic]=start[ic];
+	    }
+	    curecon->fd_fftips[count]=nps;
+	    for(int ic=0; ic<count; ic++){
+		int ncomp[2];
+		ncomp[0]=recon->xnx[start[ic]];
+		ncomp[1]=recon->xny[start[ic]];
+		cufftPlanMany(&curecon->fd_fft[ic], 2, ncomp, NULL, 1, 0, NULL, 1, 0, 
+			      CUFFT_C2C, curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic]);
+	    }
+	    /* notice: performance may be improved by using
+	       R2C FFTs instead of C2C. Need to update perm
+	       and Mbinv to use R2C.*/
 	}
     }
     if(parms->gpu.fit){
@@ -350,26 +398,38 @@ void gpu_tomo(SIM_T *simu){
 	CUDA_SYNC_DEVICE;
 	exit(0);
     }
-    toc("Before gradin");
+    toc("Before gradin");tic;
     gpu_dcell2cu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-    toc("Gradin");
+    toc("Gradin");tic;
     curcell *rhs=NULL;
     gpu_TomoR(&rhs, simu, curecon->gradin, 1);
     toc("TomoR");
-    if(gpu_pcg(&curecon->opdr, gpu_TomoL, simu, NULL, NULL, rhs, 
+    G_PREFUN prefun=NULL;
+    void *predata=NULL;
+    if(parms->tomo.precond==1){
+	curecon->fd_xhat1=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	curecon->fd_xhat2=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	prefun=gpu_Tomo_fdprecond;
+	predata=(void*)simu;
+    }
+    tic;
+    if(gpu_pcg(&curecon->opdr, gpu_TomoL, simu, prefun, predata, rhs, 
 	       simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream)){
 	dcellwrite(simu->gradlastol, "tomo_gradlastol_%d", simu->reconisim);
 	curcellwrite(curecon->gradin, "tomo_gradin_%d", simu->reconisim);
 	curcellwrite(rhs, "tomo_rhs_%d", simu->reconisim);
 	exit(1);
     }
-    
-    toc("TomoL CG");
+    toc("TomoL CG");tic;
+    if(parms->tomo.precond==1){
+	cuccellfree(curecon->fd_xhat1);
+	cuccellfree(curecon->fd_xhat2);
+    }
     curcellfree(rhs); rhs=NULL;
     curcellfree(curecon->opdwfs); curecon->opdwfs=NULL;
     curcellfree(curecon->grad);   curecon->grad=NULL;
     curcellfree(curecon->gradin); curecon->gradin=NULL;
-    if(!parms->gpu.fit || parms->save.opdr){
+    if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2){
 	gpu_curcell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
 	cudaStreamSynchronize(curecon->cgstream);
 	for(int i=0; i<simu->opdr->nx; i++){
@@ -382,18 +442,8 @@ void gpu_fit(SIM_T *simu){
     TIC;tic;
     gpu_set(0);
     const PARMS_T *parms=simu->parms;
-    RECON_T *recon=simu->recon;
     if(!parms->gpu.tomo){
 	gpu_dcell2cu(&curecon->opdr, simu->opdr);
-    }
-    int nxp=recon->pmap->nx;
-    int nyp=recon->pmap->ny;
-    int nfit=parms->fit.nfit;
-    curecon->opdfit=curcellnew(nfit, 1);
-    curecon->opdfit2=curcellnew(nfit,1);
-    for(int ifit=0; ifit<nfit; ifit++){
-	curecon->opdfit->p[ifit]=curnew(nxp, nyp);
-	curecon->opdfit2->p[ifit]=curnew(nxp, nyp);
     }
     toc("Before FitR");
     curcell *rhs=NULL;
@@ -410,8 +460,6 @@ void gpu_fit(SIM_T *simu){
     toc("FitL CG");
     gpu_curcell2d(&simu->dmfit_hi, curecon->dmfit, curecon->cgstream);
     cudaStreamSynchronize(curecon->cgstream);
-    curcellfree(curecon->opdfit);
-    curcellfree(curecon->opdfit2);
     /*Don't free opdr. */
     curcellfree(rhs); rhs=NULL;
 }

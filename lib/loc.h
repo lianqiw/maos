@@ -65,7 +65,7 @@ loc_t *mk1dloc(double x0, double dx, long nx);
 loc_t *mksqloc_auto(long nx, long ny, double dx);
 loc_t *mksqloc_map(map_t*map);
 loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy);
-loc_t *mksqlocrot(long nx, long ny, double dx, 
+loc_t *mksqlocrot(long nx, long ny, double dx, double dy,
 		  double ox, double oy, double theta);
 loc_t *mkcirloc(double d, double dx);
 loc_t *mkcirloc_amp(double** restrict ampout, locstat_t *cstat, 

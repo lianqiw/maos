@@ -65,8 +65,12 @@ int   gzflush(voidp gzfile, int flush);
 #endif
 typedef struct file_t file_t;
 typedef struct mmap_t mmap_t;
-
-
+typedef struct {
+    uint32_t magic;
+    uint64_t nx;
+    uint64_t ny;
+    char *str;
+}header_t;
 /*
   wrapping for standard and zlib functions that 
   open, close, write and read files, test end of file.
@@ -84,25 +88,41 @@ int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
 file_t *zfopen(const char *fn, char *mod);
 const char *zfname(file_t *fp);
+int zfisfits(file_t *fp);
 void zfclose(file_t *fp);
 void zflush(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
+int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 const char *search_header(const char *header, const char *key);
 double search_header_num(const char *header, const char *key);
-void write_header(const char *header, file_t *fp);
 uint64_t bytes_header(const char *header);
 void write_timestamp(file_t *fp);
-uint32_t read_magic(file_t *fp, char **header);
-void write_magic(uint32_t magic, file_t *fp);
+//uint32_t read_magic(file_t *fp, char **header);
+//void write_magic(uint32_t magic, file_t *fp);
+void write_header(const header_t *header, file_t *fp);
+int read_header2(header_t *header, file_t *fp);
+void read_header(header_t *header, file_t *fp);
+__attribute__((always_inline))inline header_t *check_cell(header_t *header, long *nx, long *ny){
+    header_t *headerc=NULL;
+    if(iscell(header->magic)){
+	*nx=header->nx;
+	*ny=header->ny;
+    }else{
+	*nx=1;
+	*ny=1;
+	headerc=header;
+    }
+    return headerc;
+}
 /*
   convenient function to write multiple long numbers
 */
 void zfwritelarr(file_t* fp,int count, ...);
 void zfreadlarr(file_t* fp,int count, ...);
 
-void do_write(const void *fpn, const int isfile, const size_t size, const uint32_t magic, 
-	      const void *p, const uint64_t nx, const uint64_t ny);
+void do_write(const void *fpn, const int isfile, const size_t size, const uint32_t magic,
+	      const char *header, const void *p, const uint64_t nx, const uint64_t ny);
 void writedbl(const double *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writeflt(const float *p, long nx, long ny, const char* format,...) CHECK_ARG(4);
 void writecmp(const dcomplex *p, long nx, long ny, const char* format,...) CHECK_ARG(4);

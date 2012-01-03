@@ -17,7 +17,7 @@
 */
 #include "fractal.h"
 #include "mathmisc.h"
-#include "nr/nr.h"
+#include "nr.h"
 #include "sys/thread.h"
 #include "turbulence.h"
 /**

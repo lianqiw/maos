@@ -43,7 +43,6 @@ typedef struct GENSCREEN_T{
 }GENSCREEN_T;
 
 extern int genscreen_keep_unused;
-void map_shm(map_t **screen, long totmem, int nlayer, int fd, int rw);
 map_t** genscreen_from_spect(GENSCREEN_T *data);
 map_t** vonkarman_screen(GENSCREEN_T *data);
 map_t** biharmonic_screen(GENSCREEN_T *data);

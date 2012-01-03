@@ -50,6 +50,16 @@ void maos(const PARMS_T *parms){
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
     powfs = setup_powfs(parms, aper);
     info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
+    if(parms->dbg.wfslinearity!=-1){
+	int iwfs=parms->dbg.wfslinearity;
+	assert(iwfs>-1 || iwfs<parms->nwfs);
+	info2("Studying wfslineariy for WFS %d\n", iwfs);
+	wfslinearity(parms, powfs, iwfs);
+	rename_file(0);
+	scheduler_finish(0);
+	exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
+	exit(0);
+    }
 #if USE_CUDA
     if(parms->gpu.wfs || parms->gpu.tomo){
 	gpu_wfsgrad_init(parms, powfs);

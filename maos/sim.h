@@ -20,6 +20,10 @@
 #define AOS_SIM_H
 void sim(const PARMS_T *parms,  POWFS_T *powfs, APER_T *aper,  RECON_T *recon);
 void wfsgrad(SIM_T *simu);
+void maxapriori(double *g, dmat *ints, const PARMS_T *parms, 
+		const POWFS_T *powfs, int iwfs, int isa, int noisy,
+		double bkgrnd, double rne);
+void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs);
 void perfevl_ievl(thread_t *info);
 void perfevl(SIM_T *simu);
 void prep_cachedm(SIM_T *simu);

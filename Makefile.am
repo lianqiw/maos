@@ -18,14 +18,13 @@ EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs
 EXTRA_DIST += scripts/readbin.pro scripts/readdata.pro scripts/readbin.m scripts/writebin.m\
 scripts/save_surf.m scripts/save_tsurf.m
 nobase_dist_pkgdata_DATA=\
-config/maos/bin/TMT_CurDesign.bin.gz\
-config/maos/bin/KECK.bin.gz\
-config/maos/bin/NapMean.bin.gz\
-config/maos/bin/PSD_TMT_WindShake20mas_rad2.bin.gz\
+config/maos/bin/TMT_CurDesign.bin\
+config/maos/bin/KECK.bin\
+config/maos/bin/NapMean.bin\
+config/maos/bin/PSD_TMT_WindShake20mas_rad2.bin\
 config/maos/atm_mk13n25p.conf\
 config/maos/atm_mk13n50p.conf\
 config/maos/atm_mk13n75p.conf\
-config/maos/atm_scao.conf\
 config/maos/atm_srd.conf\
 config/maos/atm_single.conf\
 config/maos/dbg.conf\
@@ -38,6 +37,7 @@ config/maos/fov_wirc.conf\
 config/maos/fov_oa.conf\
 config/maos/fov_pmos.conf\
 config/maos/llt_CL.conf\
+config/maos/llt_SL.conf\
 config/maos/nfiraos.conf\
 config/maos/recon.conf\
 config/maos/scao_base.conf\
@@ -59,8 +59,8 @@ config/skyc/skyc_za30.conf\
 config/skyc/skyc_za45.conf\
 config/skyc/skyc_za55.conf\
 config/skyc/skyc_za60.conf\
-config/skyc/PSD/PSD_NGS.bin.gz\
-config/skyc/PSD/PSD_PS.bin.gz\
-config/skyc/PSD/PSD_TMT_WindShake20mas_m2.bin.gz\
-config/skyc/PSD/PSD_TT.bin.gz\
-config/skyc/besancon/JH_5sqdeg_lat90_lon200_besancon.bin.gz
+config/skyc/PSD/PSD_NGS.bin\
+config/skyc/PSD/PSD_PS.bin\
+config/skyc/PSD/PSD_TMT_WindShake20mas_m2.bin\
+config/skyc/PSD/PSD_TT.bin\
+config/skyc/besancon/JH_5sqdeg_lat90_lon200_besancon.bin

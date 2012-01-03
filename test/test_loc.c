@@ -16,13 +16,13 @@ static void test_w1(){
     locwrite(loc,"loc");
 }
 static void test_wploc(){
-    loc_t *loc=locread("ploc.bin.gz");
+    loc_t *loc=locread("ploc.bin");
     double *amp=NULL; long nx,ny;
-    readdbl(&amp,&nx,&ny,"pamp.bin.gz");
+    readdbl(&amp,&nx,&ny,"pamp.bin");
     double ampmax=maxdbl(amp,nx);
     double ampmax1=1./ampmax;
     for(int i=0; i<nx; i++){
-	amp[i]=round(amp[i]*ampmax1)*ampmax;/*turn to B/W map. */
+	amp[i]=round(amp[i]*ampmax1)*ampmax;
     }
     normalize(amp,nx,1);
     drawopd("test_loc",loc,amp,"loc");
@@ -75,8 +75,6 @@ static void test_int_rand(){
     rand_t stat;
     seed_rand(&stat,1);
     for(int i=0; i<n; i++){
-	/*double x=randu(&stat); */
-	/*double y=randu(&stat); */
 	double x=drand48();
 	double y=drand48();
 	if(pow(x-cx,2)+pow(y-cy,2) <= cr2){
@@ -92,38 +90,37 @@ static void test_sqlocrot(void){
     int nn=64;
     double dx=1./64.;
     loc_t *loc=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,0);
-    locwrite(loc,"loc_0deg.bin.gz");
+    locwrite(loc,"loc_0deg.bin");
     loc_t *loc2=mksqlocrot(nn,nn,dx,-nn/2*dx,-nn/2*dx,M_PI/10);
-    locwrite(loc2,"loc_18deg.bin.gz");
+    locwrite(loc2,"loc_18deg.bin");
     }*/
 /*
 void test_loc_reduce_sp(void){
     int nloc;
-    loc_t **xloc=locarrread(&nloc,"xloc.bin.gz");
-    spcell *G0=spcellread("G0.bin.gz");
-    /*loc_t *saloc=locread("powfs0_saloc.bin.gz"); */
+    loc_t **xloc=locarrread(&nloc,"xloc.bin");
+    spcell *G0=spcellread("G0.bin");
     loc_reduce_sp(xloc[0],G0->p[0],2,1);
     locarrwrite(xloc,nloc,"xloc2");
-    spcellwrite(G0,"G02.bin.gz");
+    spcellwrite(G0,"G02.bin");
     locarrfree(xloc,nloc);
     spcellfree(G0);
-    G0=spcellread("G0.bin.gz");
-    xloc=locarrread(&nloc,"xloc.bin.gz");
+    G0=spcellread("G0.bin");
+    xloc=locarrread(&nloc,"xloc.bin");
     dsp *G0t=sptrans(G0->p[0]);
     loc_reduce_sp(xloc[0],G0t,1,1);
     dsp *G03=sptrans(G0t);
-    spwrite(G03,"G03.bin.gz");
+    spwrite(G03,"G03.bin");
     locarrwrite(xloc,nloc,"xloc3");
     }
 
 static void test_loc_reduce_spcell(void){
     int nloc;
-    loc_t **xloc=locarrread(&nloc,"xloc.bin.gz");
-    spcell *G0=spcellread("G0.bin.gz");
+    loc_t **xloc=locarrread(&nloc,"xloc.bin");
+    spcell *G0=spcellread("G0.bin");
     spcell *G0t=spcelltrans(G0);
     loc_reduce_spcell(xloc[0],G0t,1,1);
     spcell *G04=spcelltrans(G0t);
-    spcellwrite(G04,"G05.bin.gz");
+    spcellwrite(G04,"G05.bin");
     locarrwrite(xloc,nloc,"xloc5");
     }
 static void test_zernike(){

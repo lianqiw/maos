@@ -1,9 +1,9 @@
 %test the setting up of tomography in setup_recon
 split=1
 %right hand side
-pts=read('powfs0_loc.bin.gz');
-amp=read('powfs0_amp.bin.gz');
-orig=read('powfs0_orig.bin.gz');
+pts=read('powfs0_loc.bin');
+amp=read('powfs0_amp.bin');
+orig=read('powfs0_orig.bin');
 nsa=size(orig,1);
 %TT=zeros(nsa*2,2);
 %TT(1:end/2,1)=1;
@@ -14,21 +14,21 @@ nsa=size(orig,1);
 %TTw(:,1)=TT(:,1).*saneai;
 %TTw(:,2)=TT(:,2).*saneai;
 %PTT=inv(TTw'*TT)*TTw';
-TT=read('TT.bin.gz');
-PTT=read('PTT.bin.gz');
+TT=read('TT.bin');
+PTT=read('PTT.bin');
 
-G0=read('G0.bin.gz');
+G0=read('G0.bin');
 [nwfs,nps]=size(G0);
 RRM=cell(nps,nwfs);
-RRM2=read('RRM.bin.gz');
+RRM2=read('RRM.bin');
 
 RRV=cell(nwfs,nwfs);
 PTTt=PTT';
-RRV2 = read('RRV.bin.gz');
+RRV2 = read('RRV.bin');
 
 RRU=cell(nps,nwfs);
-RRU2 = read('RRU.bin.gz');
-saneai=read('saneai.bin.gz');
+RRU2 = read('RRU.bin');
+saneai=read('saneai.bin');
 disp('RHS');
 if split==1
     skipwfs=[zeros(6,1); ones(3,1);];
@@ -62,11 +62,11 @@ disp('LHS');
 RLU=cell(nps,nwfs);
 RLV=cell(nps,nwfs);
 RLM2=read('RLM.bin');
-%RLM20=read('RLM_0.bin.gz');
-RLU2=read('RLU.bin.gz');
-RLV2=read('RLV.bin.gz');
-L2=read('L2.bin.gz');
-xloc=read('xloc.bin.gz');
+%RLM20=read('RLM_0.bin');
+RLU2=read('RLU.bin');
+RLV2=read('RLV.bin');
+L2=read('L2.bin');
+xloc=read('xloc.bin');
 Z=cell(nps,1);
 %when compare sparse matrices, becareful about the ordering.
 %for ips=1:nps
@@ -75,7 +75,7 @@ Z=cell(nps,1);
 %        %RLM20{ips,jps}=sparse(full(RLM20{ips,jps}));
 %    end
 %end
-ZZT=read('ZZT.bin.gz');
+ZZT=read('ZZT.bin');
 RLM=cell(nps,nps);
 mt0=read('/home/lianqiw/work/laos/runs/nominal/test_cmp_aos_geom_noisefree_noreg/mt_0.bin');
 mt1=read('/home/lianqiw/work/laos/runs/nominal/test_cmp_aos_geom_noisefree_noreg/mt_1.bin');

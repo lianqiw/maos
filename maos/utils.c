@@ -74,12 +74,12 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
    Calls create_metapupil is simplified interface by returning a map_t object.
  */
 map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
-			      double offset,double guard, long nin,
+			      double offset,double guard, long ninx,long niny,
 			      int pad,int square){
     long nx, ny;
     double ox, oy, *p;
     create_metapupil(parms,ht,dx,offset,&(nx),&(ny),
-		     &(ox),&(oy),&(p),guard, nin,pad,square);
+		     &(ox),&(oy),&(p),guard, ninx, niny, pad,square);
     map_t *amp=mapnew(nx, ny, dx, p);
     amp->ox=ox;
     amp->oy=oy;
@@ -100,7 +100,7 @@ map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
 void create_metapupil(const PARMS_T *parms, double ht,double dx,
 		      double offset, long* nxout, long* nyout,
 		      double *oxout, double *oyout, double**map, 
-		      double guard, long nin, int pad,int square){
+		      double guard, long ninx, long niny, int pad,int square){
     double R=parms->aper.d/2;
     double maxx=0,maxy=0;
     double sx,sy;/*temporary variables */
@@ -153,13 +153,13 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     /*Make it square */
     nx=(nx<ny)?ny:nx;
     ny=nx;
-    if(nin>1){
-	if(nin<nx){
-	    warning("nin=%ld is too small\n",nin);
-	}
-	/*warning("overriding nx=%ld, ny=%ld by supplied nin=%ld\n",nx,ny,nin); */
-	nx=nin;
-	ny=nin;
+    if(ninx>1){
+	if(ninx<nx) warning("ninx=%ld is too small\n",ninx);
+	nx=ninx;
+    }
+    if(niny>1){
+	if(niny<ny)  warning("niny=%ld is too small\n",niny);
+	ny=niny;
     }
     double ox,oy;
     ox=((nx/2)-offset);
@@ -381,7 +381,7 @@ void maos_signal_handler(int sig){
 	case SIGQUIT: /*Ctrl-'\' */
 	    info="Killed";
 	case SIGUSR1:/*user defined */
-	    info="User exited";
+	    info="Quit";
 	    break;
 	}
 	warning2("Signal %d: %s\n", sig, info);
@@ -716,4 +716,28 @@ void shift_inte(int nap, double *ap, dcell **inte){
 	}
     }
     dcellfree(keepjunk);
+}
+char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
+    char header[320];
+    int nembed=aper->nembed[iwvl];
+    double wvl=parms->evl.wvl[iwvl];
+    double sumamp2=aper->sumamp2;
+    int npos=parms->evl.psfmean;
+    if(npos==1) {
+	npos=parms->sim.end-parms->evl.psfisim;
+    }
+    snprintf(header, 320, 
+	     "Science PSF at (%.15g, %.15g) arcsec\n"
+	     "Turbulence: r0=%g, l0=%g\n"
+	     "Wavelength: %.15gm\n"
+	     "OPD Sampling: %.15gm\n"
+	     "FFT Grid: %dx%d\n"
+	     "PSF Sampling: %.15g arcsec\n"
+	     "PSF Sum to %.15g\n"
+	     "Exposure: %gs", 
+	     ievl<0?0:parms->evl.thetax[ievl]*206265, ievl<0?0:parms->evl.thetay[ievl]*206265,
+	     parms->atm.r0, parms->atm.l0,
+	     wvl, parms->aper.dx, nembed, nembed, wvl/(nembed*parms->aper.dx)*206265,
+	     sumamp2*nembed*nembed, parms->sim.dt*npos);
+    return strdup(header);
 }

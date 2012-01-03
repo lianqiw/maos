@@ -3,31 +3,31 @@
 /*
 void benchmark()
     tic;
-    spcell *G0=spcellread("G0.bin.gz");
+    spcell *G0=spcellread("G0.bin");
     toc("");tic;
     spcell *G0T=spcelltrans(G0);
     toc("");tic;
-    spcell *A=spcellmulspcell(G0T,G0,1);/*this is slow. */
+    spcell *A=spcellmulspcell(G0T,G0,1);//this is slow. 
     toc("");
-    dcell *x=dcellread("rhs.bin.gz");
+    dcell *x=dcellread("rhs.bin");
     tic;
-    double res=spcellwddot(x,A,x);/*this takes 0.15s in debugging 0.04 in optim */
+    double res=spcellwddot(x,A,x);//this takes 0.15s in debugging 0.04 in optim 
     toc("");
     printf("%g\n",res);
     tic;
     dcell *y=NULL;
     spcellmulmat(&y, A,x,1);
-    double res2=dcellinn(x,y);/*this takes 0.15s in debugging 0.04 in optim */
+    double res2=dcellinn(x,y);//this takes 0.15s in debugging 0.04 in optim 
     toc("");
     printf("%g\n",res2);
-    /*dcell *saneai=dcellread("saneai.bin.gz"); */
+    //dcell *saneai=dcellread("saneai.bin"); 
     tic;
     dcell *z=NULL;
     spcellmulmat(&z, G0,x,1);toc("");
     dcell *z2=NULL;
     spcellmulmat(&z2, G0T,z,1);toc("");
     double res3=dcellinn(x,z2);
-    /*this three steps takes 0.02 s, 0.01 s in optim */
+    //this three steps takes 0.02 s, 0.01 s in optim 
     toc("");
     printf("%g\n",res3);
 }*/
@@ -51,8 +51,8 @@ static void test_spmul(){
     spdisp(diff);
     }*/
 /*
-static void test_spsum(){/*passed */
-    spcell *FLMc=spcellread("FLM.bin.gz");
+static void test_spsum(){//passed 
+    spcell *FLMc=spcellread("FLM.bin");
     dsp *FLM=FLMc->p[0];
     dmat *sum1=spsum(FLM,1);
     dwrite(sum1,"sum_1");   dfree(sum1);
@@ -65,7 +65,7 @@ static void test_spsum(){/*passed */
     spcellfree(FLMc);
     }*/
 /*static void test_L2(){
-    dsp*L2=spread("L2tmp.bin.gz");
+    dsp*L2=spread("L2tmp.bin");
     spcheck(L2);
     }*/
 static void test_spmul(){

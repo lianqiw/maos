@@ -81,7 +81,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	int iwfs0=parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
+	int iwfs0=parms->powfs[ipowfs].wfs[0];
+	/*for(int i=0; i<parms->powfs[ipowfs].nwfs; i++){
+	    if(wfsgpu[i]==wfsgpu[iwfs]){
+		iwfs0=parms->powfs[ipowfs].wfs[i];
+		break;
+	    }
+	    }*/
 	/*imcc for ztilt. */
 	STREAM_NEW(cuwfs[iwfs].stream);
 	DO(cusparseCreate(&cuwfs[iwfs].sphandle));
@@ -150,13 +156,13 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    cudaDeviceSynchronize();
 
 	    /*CUFFTW is row major. */
-	    int npsf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
-	    int npsf2[2]={npsf, npsf};
+	    int nwvf=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;/*size of fft */
+	    int nwvf2[2]={nwvf, nwvf};
 	    const int ncompx=powfs[ipowfs].ncompx;
 	    const int ncompy=powfs[ipowfs].ncompy;
-	    const int ncompm=MAX(ncompx, ncompy);
-	    int ncomp[2]={ncompx, ncompy};
-	    int ncompm2[2]={ncompm, ncompm};
+	    const int notf=MAX(ncompx, ncompy);
+	    int ncomp2[2]={ncompx, ncompy};
+	    int notf2[2]={notf, notf};
 	    /*
 	      int inembed[2]; inembed[0]=nx; inembed[1]=nx;
 	      int istride=1;
@@ -169,24 +175,26 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    /*limit the number of subapertures in each batch to less than 1024
 	      to save memory. The speed is actually a tiny bit faster for NFIRAOS.*/
 	    cuwfs[iwfs].msa=nsa>1024?((int)ceil((float)nsa/(float)(nsa/800))):nsa;
-	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, npsf2, NULL, 1, 0, NULL, 1, 0, 
+	    if(cufftPlanMany(&cuwfs[iwfs].plan1, 2, nwvf2, NULL, 1, 0, NULL, 1, 0, 
 			     CUFFT_C2C, cuwfs[iwfs].msa)){
 		error("CUFFT plan failed\n");
 	    }
 	    cufftSetStream(cuwfs[iwfs].plan1, cuwfs[iwfs].stream);
-	    if(ncompx==npsf && ncompy==npsf){
+
+	    if(notf==nwvf){
 		cuwfs[iwfs].plan2=cuwfs[iwfs].plan1;
 	    }else{
-		if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, ncomp, NULL, 1, 0, NULL, 1, 0, 
+		if(cufftPlanMany(&cuwfs[iwfs].plan2, 2, notf2, NULL, 1, 0, NULL, 1, 0, 
 				 CUFFT_C2C, cuwfs[iwfs].msa)){
 		    error("CUFFT plan failed\n");
 		}
 		cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
 	    }
-	    if(ncompm==ncompx && ncompm==ncompy){
+
+	    if(notf==ncompx && notf==ncompy){
 		cuwfs[iwfs].plan3=cuwfs[iwfs].plan2;
 	    }else{
-		if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, ncompm2, NULL, 1, 0, NULL, 1, 0, 
+		if(cufftPlanMany(&cuwfs[iwfs].plan3, 2, ncomp2, NULL, 1, 0, NULL, 1, 0, 
 				 CUFFT_C2C, cuwfs[iwfs].msa)){
 		    error("CUFFT plan failed\n");
 		}
@@ -194,17 +202,17 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    }
 
 	    if(parms->powfs[ipowfs].llt){
-		int nlpsf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
-		int nlpsf2[2]={nlpsf, nlpsf};
-		if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlpsf2, NULL, 1,0, NULL, 1, 0, 
+		int nlwvf=powfs[ipowfs].llt->pts->nx*parms->powfs[ipowfs].embfac;
+		int nlwvf2[2]={nlwvf, nlwvf};
+		if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlwvf2, NULL, 1,0, NULL, 1, 0, 
 				 CUFFT_C2C, 1)){
 		    error("CUFFT plan failed\n");
 		    cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
 		}
-		if(npsf==nlpsf){
+		if(notf==nlwvf){
 		    cuwfs[iwfs].lltplan_otf=cuwfs[iwfs].lltplan_wvf;
 		}else{
-		    if(cufftPlanMany(&cuwfs[iwfs].lltplan_otf, 2, npsf2, NULL, 1, 0, NULL, 1, 0, 
+		    if(cufftPlanMany(&cuwfs[iwfs].lltplan_otf, 2, notf2, NULL, 1, 0, NULL, 1, 0, 
 				     CUFFT_C2C, 1)){
 			error("CUFFT plan failed\n");
 		    }
@@ -266,8 +274,17 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			for(int isa=0; isa<nsa; isa++){
 			    gpu_dmat2dev((float**)&cuwfs[iwfs].mtche[isa], mtche[isa]);
 			}
+			gpu_dbl2dev(&cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0), nsa);
 		    }else{
 			cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;
+			cuwfs[iwfs].i0sum=cuwfs[iwfs0].i0sum;
+		    }
+		}else if(parms->powfs[ipowfs].phytypesim==2){/*cog*/
+		    if(powfs[ipowfs].intstat->cogcoeff->nx>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
+			gpu_dbl2dev(&cuwfs[iwfs].cogcoeff, 
+				    powfs[ipowfs].intstat->cogcoeff->p[powfs[ipowfs].intstat->cogcoeff->nx>1?wfsind:0]->p, nsa*2);
+		    }else{
+			cuwfs[iwfs].cogcoeff=cuwfs[iwfs0].cogcoeff;
 		    }
 		}
 		if(powfs[ipowfs].bkgrnd){
@@ -316,7 +333,7 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	    cuwfs[iwfs].ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
 	    if(parms->powfs[ipowfs].noisy){
 		curfree(cuwfs[iwfs].neareal);
-		cuwfs[iwfs].neareal=curnew(nsa*4,1);
+		cuwfs[iwfs].neareal=curnew(4,nsa);
 	    }
 	}
 	if(parms->powfs[ipowfs].pistatout){

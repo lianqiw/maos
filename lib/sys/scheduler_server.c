@@ -66,7 +66,6 @@
 #include "daemonize.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
-#include "shm.h"
 char** hosts;
 int nhost;
 static int all_done=0;
@@ -679,8 +678,9 @@ static int respond(int sock){
 		    if(strlen(out)+3+strlen(tmp)<sizeof(out)){
 			strcat(out, "->");
 			strcat(out, tmp);
-		    }else
-			error("over flow\n");
+		    }else{
+			warning("over flow. gave up\n");
+		    }
 		    
 		}
 	    }

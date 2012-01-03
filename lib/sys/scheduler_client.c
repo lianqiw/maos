@@ -334,9 +334,13 @@ int scheduler_launch_drawdaemon(char *fifo){
     setsid();
     fclose(stdin);
     if(method==1){
-	if(execl(fn, "drawdaemon",fifo,NULL));
+	if(execl(fn, "drawdaemon",fifo,NULL)){
+	    warning("execl failed\n");
+	}
     }else if(method==2){
-	if(execlp("drawdaemon","drawdaemon",fifo,NULL));
+	if(execlp("drawdaemon","drawdaemon",fifo,NULL)){
+	    warning("execlp failed\n");
+	}
     }else{
 	error("Invalid method.\n");
     }

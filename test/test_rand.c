@@ -33,11 +33,6 @@ static void test_speed(){
     seed_rand(&rstat, seed);
     ck=clock();
     for(i=0; i<N; i++){
-	p[i]=drand48();
-    }
-    printf("drand48 elapsed %f seconds\n", (double)(clock()-ck)/CLOCKS_PER_SEC);
-    ck=clock();
-    for(i=0; i<N; i++){
 	p[i]=randu(&rstat);
     }
     printf("randu elapsed %f seconds\n", (double)(clock()-ck)/CLOCKS_PER_SEC);

@@ -58,14 +58,13 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    dfree(B);
 	}
     }
- 
     if(parms->load.locs){
 	char *fn=parms->load.locs;
 	if(!zfexist(fn)) error("%s doesn't exist\n",fn);
 	warning("Loading plocs from %s\n",fn);
 	aper->locs=locread("%s",fn);
     }else{/* locs act as a pupil mask. no points outside will be evaluated. */
-	map_t *smap=create_metapupil_wrap(parms,0,parms->aper.dx,0,0,0,0,0);
+	map_t *smap=create_metapupil_wrap(parms,0,parms->aper.dx,0,0,0,0,0,0);
 	aper->locs=map2loc(smap);
 	mapfree(smap);
     }

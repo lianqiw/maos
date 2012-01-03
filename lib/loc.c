@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include "common.h"
 #include "thread.h"
-#include "shm.h"
 #include "misc.h"
 #include "loc.h"
 #include "cell.h"
@@ -380,7 +379,7 @@ loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy){
    like mksqloc, but roated theta CCW. Useful in creating the
    pixel coordinates in a polar coordinate CCD.
 */
-loc_t *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double theta){
+loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, double theta){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx*ny;
     loc->dx=dx;
@@ -393,7 +392,7 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double ox, double oy, double thet
     double ct=cos(theta);
     double st=sin(theta);
     for(iy=0; iy<ny; iy++){
-	y=iy*dx+oy;
+	y=iy*dy+oy;
 	for(ix=0; ix<nx; ix++){
 	    x=ix*dx+ox;
 	    locx[iy][ix]=ct*x-st*y;
@@ -601,12 +600,13 @@ dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
 	    const double *ampx=ampi+iy*pts->nx;
 	    for(int ix=0; ix<pts->nx; ix++){
 		double x=ix*dx+origx;
-		a00+=ampx[ix];
-		a01+=ampx[ix]*x;
-		a02+=ampx[ix]*y;
-		a11+=ampx[ix]*x*x;
-		a12+=ampx[ix]*x*y;
-		a22+=ampx[ix]*y*y;
+		double a=ampx[ix];
+		a00+=a;
+		a01+=a*x;
+		a02+=a*y;
+		a11+=a*x*x;
+		a12+=a*x*y;
+		a22+=a*y*y;
 	    }
 	}
 	ATA[0][0]=a00;

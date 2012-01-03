@@ -500,7 +500,7 @@ void seeding(SIM_T *simu){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	seed_rand(&simu->wfs_rand[iwfs],lrand(simu->init));
     }
-    seed_rand(simu->telws_rand, lrand(simu->init));
+    seed_rand(simu->telws_rand, lrand(simu->init)*parms->sim.wsseq);
 #if USE_CUDA
     if(parms->gpu.wfs){
 	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
@@ -541,10 +541,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
   
     simu->wfspsfout=calloc(parms->nwfs,sizeof(dcell*));
     save->wfspsfout=calloc(parms->nwfs,sizeof(cellarr*));
-    save->ztiltout=calloc(parms->nwfs,sizeof(cellarr*));
+    save->ztiltout =calloc(parms->nwfs,sizeof(cellarr*));
     simu->pistatout=calloc(parms->nwfs,sizeof(dcell*));
-    simu->sanea_sim=calloc(parms->nwfs, sizeof(dcell*));
-    simu->gradcl=dcellnew(parms->nwfs,1);/*output */
+    simu->sanea_sim=dcellnew(parms->nwfs, 1);
+    simu->gradcl=dcellnew(parms->nwfs,1);
+    simu->gradnf=dcellnew(parms->nwfs,1);
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
       loop. They are used for testing*/
     if(parms->sim.closeloop){
@@ -556,11 +557,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
+	if(parms->powfs[ipowfs].phytypesim==3 || parms->save.grad[iwfs]){
+	    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
+	}
 	if(parms->powfs[ipowfs].noisy){
-	    simu->sanea_sim[iwfs]=dcellnew(nsa, 1);
-	    for(int isa=0; isa<nsa; isa++){
-		simu->sanea_sim[iwfs]->p[isa]=dnew(2,2);
-	    }
+	    simu->sanea_sim->p[iwfs]=dnew(4, nsa);
 	}
 	if(parms->powfs[ipowfs].usephy){
 	    simu->ints[iwfs]=dcellnew(nsa,1);
@@ -740,7 +741,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    if(parms->evl.psfngsr[ievl]!=2){
 		if(parms->evl.psfmean){
 		    save->evlpsfmean[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
-							"evlpsfcl_%d_x%g_y%g%s.bin", seed,
+							"evlpsfcl_%d_x%g_y%g%s.fits", seed,
 							parms->evl.thetax[ievl]*206265,
 							parms->evl.thetay[ievl]*206265, strht);
 		}
@@ -760,7 +761,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    if(parms->evl.psfngsr[ievl]!=0){
 		if(parms->evl.psfmean){
 		    save->evlpsfmean_ngsr[ievl]=cellarr_init(parms->evl.nwvl,nframepsf, 
-							     "evlpsfcl_ngsr_%d_x%g_y%g%s.bin", seed,
+							     "evlpsfcl_ngsr_%d_x%g_y%g%s.fits", seed,
 							     parms->evl.thetax[ievl]*206265,
 							     parms->evl.thetay[ievl]*206265, strht);
 		}
@@ -782,7 +783,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	if(parms->evl.psfmean && parms->evl.psfol){
 	    simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
 	    simu->evlpsfolmean->header=strdup(header);
-	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.bin", seed);
+	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
 	}
     }
   
@@ -795,9 +796,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dcell *evlpsfdl=dcellnew(nwvl,1);
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cabs22d(&evlpsfdl->p[iwvl], 1, psf2s->p[iwvl], 1);
+	    evlpsfdl->p[iwvl]->header=evl_header(parms, aper, -1, iwvl);
 	}
 	ccellfree(psf2s);
-	dcellwrite(evlpsfdl, "evlpsfdl_%d.bin",seed);
+	dcellwrite(evlpsfdl, "evlpsfdl_%d.fits",seed);
 	dcellfree(evlpsfdl);
     }
     simu->has_upt=0;/*flag for uplink tip/tilt control */
@@ -846,9 +848,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
     simu->perfevl_iground=parms->atm.iground;
-    if(parms->sim.cachedm)
+    if(parms->sim.cachedm){
 	prep_cachedm(simu);
- 
+    }
  
     simu->dtrat_hi=1;
     simu->dtrat_lo=1;
@@ -1126,12 +1128,13 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	int ipowfs=parms->wfs[iwfs].powfs;
 	long ncompx=powfs[ipowfs].ncompx;
 	long ncompy=powfs[ipowfs].ncompy;
+	long notf=MAX(ncompx, ncompy);
 	if(parms->powfs[ipowfs].psfout){
 	    const int nsa=powfs[ipowfs].pts->nsa;
 	    /*The PSFs here are PSFs of each subaperture. */
 	    simu->wfspsfout[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
 	    for(long ipsf=0; ipsf<simu->wfspsfout[iwfs]->nx*simu->wfspsfout[iwfs]->ny; ipsf++){
-		simu->wfspsfout[iwfs]->p[ipsf]=cnew(ncompx/2,ncompy/2);
+		simu->wfspsfout[iwfs]->p[ipsf]=cnew(notf/2,notf/2);
 	    }
 	    mymkdir("%s/wvfout/", dirskysim);
 	    mymkdir("%s/ztiltout/", dirskysim);
@@ -1390,6 +1393,7 @@ void free_simu(SIM_T *simu){
     free(simu->perf_evl);
     free(simu->status);
     dcellfree(simu->gradcl);
+    dcellfree(simu->gradnf);
     dcellfree(simu->gradacc);
     dcellfree(simu->gradlastcl);
     dcellfree(simu->gradlastol);
@@ -1437,7 +1441,7 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->olmp);
     dcellfree(simu->clep);
     dcellfree(simu->clmp);
-    dcellfreearr(simu->sanea_sim, parms->nwfs);
+    dcellfree(simu->sanea_sim);
     dcellfree(simu->upterrs);
     dcellfree(simu->uptcmds);
     if(parms->recon.split){

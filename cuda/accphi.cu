@@ -649,41 +649,41 @@ __global__ static void prop_grid_nomatch_trans_do(const float *restrict out, int
   Ray tracing with over sampling. Reverse, from out to in. out is xloc, in is
   ploc. confirmed to agree with HXW'.  */
 /*
-  __global__ static void prop_grid_os2_trans_old_do(const float *restrict out, int nxout,
-  float *restrict in, int nxin, 
-  float fracx, float fracy,
-  float alpha, int nx, int ny){
-  int stepx=blockDim.x*gridDim.x;
-  int stepy=blockDim.y*gridDim.y;
-  int ax=fracx<0.5f?0:1;
-  int ay=fracy<0.5f?0:1;
-  for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
-  for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
+__global__ static void prop_grid_os2_trans_old_do(const float *restrict out, int nxout,
+						  float *restrict in, int nxin, 
+						  float fracx, float fracy,
+						  float alpha, int nx, int ny){
+    int stepx=blockDim.x*gridDim.x;
+    int stepy=blockDim.y*gridDim.y;
+    int ax=fracx<0.5f?0:1;
+    int ay=fracy<0.5f?0:1;
+    for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
+	for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
 
-  #pragma unroll 
-  for(int by=0; by<2; by++){
-  int iy2=iy*2+by;
-  int iy3=iy+ay*by;
-  float fracy2=fracy+(0.5f-ay)*by;
-  float fracy21=1.f-fracy2;
-  #pragma unroll 
-  for(int bx=0; bx<2; bx++){
-  int ix2=ix*2+bx;
-  int ix3=ix+ax*bx;
-  float fracx2=fracx+(0.5f-ax)*bx;
-  float fracx21=1.f-fracx2;
-  if(ix2<nx && iy2<ny){
-  float a=out[ix2+(iy2)*nxout]*alpha;
-  atomicAdd(&in[ix3+    (iy3)*nxin], a*fracx21*fracy21);
-  atomicAdd(&in[ix3+1+  (iy3)*nxin], a*fracx2*fracy21);
-  atomicAdd(&in[ix3+  (iy3+1)*nxin], a*fracx21*fracy2);
-  atomicAdd(&in[ix3+1+(iy3+1)*nxin], a*fracx2*fracy2);
-  }
-  }
-  }
-  }
-  }
-  }*/
+#pragma unroll 
+	    for(int by=0; by<2; by++){
+		int iy2=iy*2+by;
+		int iy3=iy+ay*by;
+		float fracy2=fracy+(0.5f-ay)*by;
+		float fracy21=1.f-fracy2;
+#pragma unroll 
+		for(int bx=0; bx<2; bx++){
+		    int ix2=ix*2+bx;
+		    int ix3=ix+ax*bx;
+		    float fracx2=fracx+(0.5f-ax)*bx;
+		    float fracx21=1.f-fracx2;
+		    if(ix2<nx && iy2<ny){
+			float a=out[ix2+(iy2)*nxout]*alpha;
+			atomicAdd(&in[ix3+    (iy3)*nxin], a*fracx21*fracy21);
+			atomicAdd(&in[ix3+1+  (iy3)*nxin], a*fracx2*fracy21);
+			atomicAdd(&in[ix3+  (iy3+1)*nxin], a*fracx21*fracy2);
+			atomicAdd(&in[ix3+1+(iy3+1)*nxin], a*fracx2*fracy2);
+		    }
+		}
+	    }
+	}
+    }
+}*/
 /**
    Do a single column (along x).
 */
@@ -697,7 +697,6 @@ __global__ static void prop_grid_os2_trans_col_do(float *restrict out, int nxout
     const int iy3=0;
     float fracy21=1.f-fracy2;
     for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
-#pragma unroll
 	for(int bx=0; bx<2; bx++){
 	    int ix2=ix*2+bx;
 	    if(ix2<nx){
@@ -725,7 +724,6 @@ __global__ static void prop_grid_os2_trans_row_do(float *restrict out, int nxout
     const int ix3=0;
     float fracx21=1.f-fracx2;
     for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
-#pragma unroll
 	for(int by=0; by<2; by++){
 	    int iy2=iy*2+by;
 	    if(iy2<ny){
@@ -808,6 +806,7 @@ __global__ static void prop_grid_os2_trans_share_do(float *restrict out, int nxo
 /*
   Ray tracing with over sampling. Forward, from out to in. out is xloc, in is
   ploc. confirmed to agree with HXW'.  */
+/*
 __global__ static void prop_grid_os2_trans_do(float *restrict out, int nxout,
 					      float *restrict in, int nxin, 
 					      float fracx, float fracy,
@@ -837,58 +836,45 @@ __global__ static void prop_grid_os2_trans_do(float *restrict out, int nxout,
 							+out[ix2+1+    iy2*nxout]*(0.5f+fracx))*(fracy)
 						      +(+out[ix2+  (iy2+1)*nxout]*(fracx)
 							+out[ix2+1+(iy2+1)*nxout]*(0.5f+fracx))*(0.5f+fracy)));
-	    
-	    /*float in00=in[ix  +iy*nxin]*alpha;
-	      float in01=in[ix+1+iy*nxin]*alpha;
-	      float in10=in[ix    +(iy+1)*nxin]*alpha;
-	      float in11=in[(ix+1)+(iy+1)*nxin]*alpha;
-	      out[ix2+iy2*nxout]+=(+(in00*(1.f-fracx)+in01*fracx)*(1.f-fracy)
-	      +(in10*(1.f-fracx)+in11*fracx)*fracy);
-	      out[ix2+1+iy2*nxout]+=(+(in00*(0.5f-fracx)+in01*(0.5f+fracx))*(1.f-fracy)
-	      +(in10*(0.5f-fracx)+in11*(0.5f+fracx))*fracy);
-	      out[ix2+(iy2+1)*nxout]+=(+(in00*(1.f-fracx)+in01*fracx)*(0.5f-fracy)
-	      +(in10*(1.f-fracx)+in11*fracx)*(0.5f+fracy));
-	      out[ix2+1+(iy2+1)*nxout]+=(+(in00*(0.5f-fracx)+in01*(0.5f+fracx))*(0.5f-fracy)
-	      +(in10*(0.5f-fracx)+in11*(0.5f+fracx))*(0.5f+fracy));*/
+	}
+    }
+    }*/
+/*
+__global__ static void prop_grid_os2_old_do(float *restrict out, int nxout,
+					    const float *restrict in, int nxin, 
+					    float fracx, float fracy,
+					    float alpha, int nx, int ny){
+    int stepx=blockDim.x*gridDim.x;
+    int stepy=blockDim.y*gridDim.y;
+    int ax=fracx<0.5f?0:1;
+    int ay=fracy<0.5f?0:1;
+    for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
+	for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
+
+#pragma unroll 
+	    for(int by=0; by<2; by++){
+		int iy2=iy*2+by;
+		int iy3=iy+ay*by;
+		float fracy2=fracy+(0.5f-ay)*by;
+		float fracy21=1.f-fracy2;
+#pragma unroll 
+		for(int bx=0; bx<2; bx++){
+		    int ix2=ix*2+bx;
+		    int ix3=ix+ax*bx;
+		    float fracx2=fracx+(0.5f-ax)*bx;
+		    float fracx21=1.f-fracx2;
+		    if(ix2<nx && iy2<ny){
+			out[ix2+(iy2)*nxout]+=
+			    alpha*(+in[ix3+    (iy3)*nxin]*fracx21*fracy21
+				   +in[ix3+1+  (iy3)*nxin]*fracx2*fracy21
+				   +in[ix3+  (iy3+1)*nxin]*fracx21*fracy2
+				   +in[ix3+1+(iy3+1)*nxin]*fracx2*fracy2);
+		    }
+		}
+	    }
 	}
     }
 }
-/*
-  __global__ static void prop_grid_os2_old_do(float *restrict out, int nxout,
-  const float *restrict in, int nxin, 
-  float fracx, float fracy,
-  float alpha, int nx, int ny){
-  int stepx=blockDim.x*gridDim.x;
-  int stepy=blockDim.y*gridDim.y;
-  int ax=fracx<0.5f?0:1;
-  int ay=fracy<0.5f?0:1;
-  for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<(ny+1)/2; iy+=stepy){
-  for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<(nx+1)/2; ix+=stepx){
-
-  #pragma unroll 
-  for(int by=0; by<2; by++){
-  int iy2=iy*2+by;
-  int iy3=iy+ay*by;
-  float fracy2=fracy+(0.5f-ay)*by;
-  float fracy21=1.f-fracy2;
-  #pragma unroll 
-  for(int bx=0; bx<2; bx++){
-  int ix2=ix*2+bx;
-  int ix3=ix+ax*bx;
-  float fracx2=fracx+(0.5f-ax)*bx;
-  float fracx21=1.f-fracx2;
-  if(ix2<nx && iy2<ny){
-  out[ix2+(iy2)*nxout]+=
-  alpha*(+in[ix3+    (iy3)*nxin]*fracx21*fracy21
-  +in[ix3+1+  (iy3)*nxin]*fracx2*fracy21
-  +in[ix3+  (iy3+1)*nxin]*fracx21*fracy2
-  +in[ix3+1+(iy3+1)*nxin]*fracx2*fracy2);
-  }
-  }
-  }
-  }
-  }
-  }
 */
 /**
    Do the ray tracing

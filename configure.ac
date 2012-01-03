@@ -17,8 +17,6 @@ AC_CONFIG_HEADER([config.h])
 AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
 #In darwin it reports wrong host_cpu (i386). The following is usually correct.
 host_cpu=$(uname -m)
-AC_TYPE_SIZE_T  
-
 #Check operating system.
 AM_CONDITIONAL(LINUX,  false)
 AM_CONDITIONAL(BSD,    false)
@@ -35,6 +33,7 @@ fi
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
+AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA to avoid overflow in single precision"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 OPTScommon=" -Wshadow -Wall " #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
@@ -42,10 +41,9 @@ if test "${USER}" = "lianqiw" ;then
 fi
 LDSYS="-lz -lm"
 OPTSextra=""
-use_shm="no"
 use_static="no"
 
-if test -n "$(which icc)" ;then	
+if test -n "$(which icc 2>/dev/null)" -a -z "$CC" ;then	
    use_icc_default="yes"
 else
    echo "Intel Compiler is not found."
@@ -54,7 +52,7 @@ fi
 
 use_mex_default="no"
 MEXDIR_AUTO=
-if test -n "$(which mex)" ;then
+if test -n "$(which mex 2>/dev/null)" ;then
    use_mex_default="yes"
    MEX=$(which mex)
    if test -L $MEX ;then
@@ -72,7 +70,7 @@ fi
 
 use_cuda_default="no"
 CUDADIR_AUTO=
-if test -n "$(which nvcc)" ;then
+if test -n "$(which nvcc 2>/dev/null)" ;then
    use_cuda_default="yes"
    NVCC=$(which nvcc)
    if test -L $NVCC ;then
@@ -160,7 +158,7 @@ case "$host_os" in
  mklname=mkl${cpu}
  system="linux"
  ldsuffix="so"
- LDFLAGS="$LDFLAGS -Wl,--as-needed"
+ LDFLAGS="$LDFLAGS" #as-needed is conflicting with fftw3 openmp detection.
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
@@ -199,14 +197,8 @@ if test "$try_mkl" = "yes" ;then
     else
        use_mkl_default="no"
     fi
-    if test -d /dev/shm ;then
-       use_shm_default="yes"
-    else
-       use_shm_default="no"
-    fi
     #We only have MKL redistributable for linux and MAC.
     AC_ARG_ENABLE(mkl,   [  --enable-mkl   Enable MKL blas/lapack], [use_mkl="$enableval"], [use_mkl="$use_mkl_default"])
-    AC_ARG_ENABLE(shm,   [  --disable-shm  Disable posix shared memory usage], [use_shm="$enableval"],[use_shm="$use_shm_default"])
 fi
 
 #Common configure options.
@@ -215,7 +207,6 @@ AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [d
 AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$enableval"],[use_mem="no"])
 AC_ARG_ENABLE(icc,   [  --enable-icc    Using intel compiler], [use_icc="$enableval"], [use_icc=$use_icc_default])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
-AC_ARG_ENABLE(opencc,[  --enable-opencc Enable opencc compiling], [use_opencc="$enableval"], [use_opencc="no"])
 AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
@@ -232,18 +223,13 @@ else
    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
-if test "x$use_shm" = "xyes" ;then
-   AC_DEFINE(USE_POSIX_SHM, [1], "Enable posix shared memory")
-else
-   AC_DEFINE(USE_POSIX_SHM, [0], "Disable posix shared memory")
-fi 
 AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([zlib is not found])])
 AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"])
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
     AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
     if test "x$win32" != "xyes" ;then
-    echo        OPTSprof="-pthread"
+         OPTSprof="-pthread"
     fi
 else
     AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
@@ -265,8 +251,6 @@ OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays 
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -rdynamic -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
-AM_CONDITIONAL(USE_OPENCC,false)
-use_ifort="no"
 if test "x$use_mem" = "xyes" ;then
     AC_DEFINE(USE_MEM,[1],["Use memory management"])
     use_icc="no" #disable icc.
@@ -275,11 +259,15 @@ else
     AC_DEFINE(USE_MEM,[0],["Do not use memory management"])	
 fi
 if test "x$use_icc" = "xyes" ;then
+    CC=icc
+fi
+AC_PROG_CC([$CC])
+AC_TYPE_SIZE_T #it sets CC if empty
+case "${CC}" in	
+  icc)
     OPTIM="$OPTIM_ICC $COMMON_ICC"
     OPT_DEBUG="$OPT_DEBUG $COMMON_ICC"
-    CC=icc
-    AC_PROG_CC([icc])
-    which icc || AC_MSG_ERROR([icc is not found in path.])
+    which icc 2>/dev/null|| AC_MSG_ERROR([icc is not found in path.])
     AM_CONDITIONAL(USE_ICC,true)	
     #Test ICC version
     CC_VERSION=$($CC -dumpversion)
@@ -297,15 +285,9 @@ if test "x$use_icc" = "xyes" ;then
 	    echo "icc version is old"
 	fi
     fi
-elif test "x$use_opencc" = "xyes" ;then
-    OPTIM=$OPTIM_OPENCC
-    CC=opencc
-    AC_PROG_CC([opencc])
-    AM_CONDITIONAL(USE_OPENCC,true)
-else
+    ;;
+  gcc)
     OPTIM=$OPTIM_GCC
-    AC_PROG_CC
-
     #Test GCC version
     CC_VERSION=$($CC -dumpversion)
     if test -n $CC_VERSION ;then
@@ -322,7 +304,11 @@ else
 	    OPTIM="$OPTIM -ftree-vectorize " #introduced in GCC 4
 	fi
     fi
-fi	
+    ;;
+  *) #Other compilears
+    OPTIM="-O3"
+    ;;
+esac
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
@@ -592,7 +578,7 @@ if test "x${use_mex}" = "xyes" ; then
        mex_lib="no"
    else       
        LDMEX="-L${MEXDIR}/${MEXLIB} -Wl,-rpath,${MEXDIR}/${MEXLIB} -lmx -lmex -lmat -lstdc++ -lz"
-       AC_CHECK_LIB([mex], [mexGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
+       AC_CHECK_LIB([mex], [mxGetPr], [mex_lib="yes"], [mex_lib="no"], [$LDMEX])
    fi
    if test x$mex_lib = xyes ;then
        AM_CONDITIONAL(USE_MEX, true)
@@ -687,13 +673,10 @@ echo LDOPTS=$LDOPTS
 echo LAPACK=$LAPACK
 echo LDCHOL=$LDCHOL
 echo LDFFT=$LDFFT
-if test x$use_icc_default = xno -a x$system = xlinux ;then
+if test x$use_icc = xno -a x$system = xlinux ;then
 echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
 fi
 echo "*********************************************************************************"
 echo "*** MAOS Documentation can be found at http://lianqiw.github.com/maos        ****"
 echo "*** MAOS Source can be obtained at http://github.com/lianqiw/maos/downloads  ****"
-if test ! -d "${HOME}/.aos" ;then
-echo "*** Please drop me a line to lianqiw@gmail.com if you find MAOS useful       ****"
-fi
 echo "*********************************************************************************"

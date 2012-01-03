@@ -32,6 +32,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.dbg);
     READ_INT(skyc.dbgsky);
     READ_INT(skyc.dbgaster);
+    READ_INT(skyc.keeporder);
     READ_INT(skyc.interpg);
     READ_INT(skyc.verbose);
     READ_INT(skyc.save);
@@ -85,6 +86,21 @@ static void setup_parms_skyc(PARMS_S *parms){
 
     READ_STR(skyc.stars);
     READ_INT(skyc.addws);
+    READ_DBL(skyc.pmargin);
+    if(!parms->skyc.stars){
+	if(parms->skyc.keeporder){
+	    error("When skyc.keeporder is set, skyc.stars need to be set\n");
+	}
+    }else{
+	if(parms->skyc.interpg==1){
+	    info2("disable interpg when skyc.stars is set\n");
+	    parms->skyc.interpg=0;
+	}
+	if(parms->skyc.nseed>1){
+	    warning2("skyc.stars is set, set skyc.nseed=1");
+	    parms->skyc.nseed=1;
+	}
+    }
 }
 /**
    Setup infromation output from maos run.
@@ -231,12 +247,10 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }
     info2("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);
     
-    if(arg->detach){
+    if(arg->detach || parms->skyc.nthread){
 	parms->skyc.verbose=0;
-    }else if(parms->skyc.verbose<=0 || parms->skyc.dbg || parms->skyc.dbgsky){
+    }else if(parms->skyc.verbose==0 && (parms->skyc.dbg || parms->skyc.dbgsky)){
 	parms->skyc.verbose=1;
-    }else if(parms->skyc.nthread>1){
-	parms->skyc.verbose=0;
     }
     parms->skyc.nwfstot=0;
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){

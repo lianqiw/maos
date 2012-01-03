@@ -60,8 +60,10 @@ typedef struct{
     cudtf_t *dtf;       /**<array for each wvl.*/
     float   *srot;      /**<angle to rotate PSF/OTF*/
     float  (**mtche)[2]; /**<matched filter gradient operator.*/
+    float   *i0sum;     /**<sum of i0 for each subaperture.*/
     float  **bkgrnd2;   /**<background as an image*/
     float  **bkgrnd2c;  /**<calibration of background to subtract.*/
+    float *cogcoeff;
     /*For LLT */
     float  *lltncpa;    /**<NCPA for llt*/
     float (**lltimcc)[3];

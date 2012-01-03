@@ -1,14 +1,14 @@
 
 %addpath('../mex/');
-RR.M=cell2mat(read('RRM.bin.gz'));
-RR.U=cell2mat(read('RRU.bin.gz'));
-RR.V=cell2mat(read('RRV.bin.gz'));
+RR.M=cell2mat(read('RRM.bin'));
+RR.U=cell2mat(read('RRU.bin'));
+RR.V=cell2mat(read('RRV.bin'));
 
 RL.M=cell2mat(read('RLM.bin'));
-RL.U=cell2mat(read('RLU.bin.gz'));
-RL.V=cell2mat(read('RLV.bin.gz'));
+RL.U=cell2mat(read('RLU.bin'));
+RL.V=cell2mat(read('RLV.bin'));
 
-gradcl=read('gradcl_1.bin.gz');
+gradcl=read('gradcl_1.bin');
 grad=cell2mat(gradcl(1:6));
 
 rhs=RR.M*grad-RR.U*(RR.V'*grad);

@@ -61,6 +61,7 @@ void creal2d(dmat**restrict A0, double alpha,const cmat *restrict B, double beta
 void cabs22d(dmat**restrict A0, double alpha,const cmat *restrict B, double beta);
 void ccp(cmat**restrict A0, const cmat *restrict B);
 void cscale(cmat *A, dcomplex alpha);
+void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct);
 void ctilt(cmat *otf, double sx, double sy, int pinct);
 void ccogreal(double *grad,const cmat *i0,double offsetx,
 	      double offsety,double thres, double bkgrnd);

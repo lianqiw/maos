@@ -23,7 +23,7 @@
 
 #define AOS_SPBIN_DEF(X,Y,T)\
 void Y(spwritedata)(file_t *fp, const X(sp) *sp);\
-X(sp) *Y(spreaddata)(file_t *fp, uint32_t magic);		     \
+X(sp) *Y(spreaddata)(file_t *fp, header_t *header);		     \
 void Y(spwrite)(const X(sp) *sp, const char *format,...) CHECK_ARG(2); \
 void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...) CHECK_ARG(2);\
 X(sp)* Y(spread)(const char *format,...) CHECK_ARG(1);\

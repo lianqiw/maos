@@ -64,28 +64,28 @@ static void test_dcircle(){
     info("r=%g, r2=%g\n",r,r2);
 }
 static void test_d2cell(){
-    dcell *A=dcellread("bcell.bin.gz");
+    dcell *A=dcellread("bcell.bin");
     dmat *A2=dcell2m(A);
-    dwrite(A2,"bcell2m.bin.gz");
+    dwrite(A2,"bcell2m.bin");
     dcell *B=NULL;
     d2cell(&B,A2,A);
-    dcellwrite(B,"bcell2m2cell.bin.gz");
+    dcellwrite(B,"bcell2m2cell.bin");
     dcellfree(A);
     dfree(A2);
 
-    A=dcellread("ccell.bin.gz");
+    A=dcellread("ccell.bin");
     int *dims=calloc(A->nx,sizeof(int));
     for(int ix=0; ix<A->nx; ix++){
 	dims[ix]=A->p[ix]->nx;
     }
     A2=dcell2m(A);
     dcell *B2=d2cellref(A2,dims,A->nx);
-    dcellwrite(B2,"ccell2m2cell2.bin.gz");
+    dcellwrite(B2,"ccell2m2cell2.bin");
     
 }
 static void test_dshift2center(){
 
-    dcell *pis=dcellread("pistat_seed1_wfs6.bin.gz");
+    dcell *pis=dcellread("pistat_seed1_wfs6.bin");
     cmat *B=NULL;
     for(int ip=0; ip<pis->nx; ip++){
 	ccpd(&B,pis->p[ip]);
@@ -118,20 +118,20 @@ static void test_hist(){
     /*exit(0); */
 }
 static void test_dcellpinv(){
-    dcell *TT=dcellread("TT.bin.gz");
-    spcell *saneai=spcellread("saneai.bin.gz");
+    dcell *TT=dcellread("TT.bin");
+    spcell *saneai=spcellread("saneai.bin");
     dcell *PTT=dcellpinv(TT,NULL,saneai);
-    dcellwrite(PTT,"TT_pinv.bin.gz");
+    dcellwrite(PTT,"TT_pinv.bin");
     dcell *PTT2=dcellnew2(TT);
     for(int i=0; i<PTT->ny; i++){
 	PTT2->p[i+i*PTT->nx]=dpinv(TT->p[i+i*TT->nx], NULL,saneai->p[i+i*TT->nx]);
     }
-    dcellwrite(PTT2,"TT2_pinv.bin.gz");
+    dcellwrite(PTT2,"TT2_pinv.bin");
     /*exit(0); */
 }
 static void test_dcellcat(int argc, char**argv){
     if(argc!=2){
-	error("Usage: %s FILE.bin.gz", argv[0]);
+	error("Usage: %s FILE.bin", argv[0]);
     }
     dcell *A=dcellread("%s",argv[1]);
     dcell *B=dcellreduce(A,1);
@@ -212,7 +212,7 @@ static void test_spline_2d(void){
 	}
     }
     dcell *coeff=dbspline_prep(x,y,z);
-    dmat *znew=dbspline_eval(coeff,x,y,xnew,ynew);
+    dmat *z22=dbspline_eval(coeff,x,y,xnew,ynew);
 
     dwrite(x,"x");
     dwrite(y,"y");
@@ -220,7 +220,7 @@ static void test_spline_2d(void){
 
     dwrite(xnew,"xnew");
     dwrite(ynew,"ynew");
-    dwrite(znew,"znew");
+    dwrite(z22,"z22");
     dcellwrite(coeff,"coeff");
     exit(0);
 }
@@ -229,8 +229,7 @@ static void test_svd(void){
     dmat *A=NULL;
     spfull(&A, a->p[0], 1);
     if(0){
-    dmat *U, *S, *VT, *U2, *S2, *VT2;
-    TIC;
+    dmat *U, *S, *VT, *U2, *S2;
     tic;
     dsvd(&U, &S, &VT, A);
     toc("dsvd");

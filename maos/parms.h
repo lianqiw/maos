@@ -35,6 +35,7 @@ typedef struct ATM_CFG_T{
     double r0;    /**<derived from r0z for zenith angle za*/
     double l0;    /**<outer scale*/
     double dx;    /**<sampling of turbulence screens*/
+    double hmax;  /**<maximum in ht*/
     double *ht;   /**<height of each layer*/
     double *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     double *ws;   /**<wind speed of each layer*/
@@ -96,8 +97,9 @@ typedef struct LLT_CFG_T{
     double d;      /**<LLT clear aperture diameter*/
     double widthp; /**<Gaussian beam width percentage of d*/
     char *fnrange; /**<File contains range to sodium layer*/
-    char *fn;      /**<File contains sodium profile*/
-    char *fnsurf;  /**<Surface OPD error*/
+    char *fnprof;  /**<File contains sodium profile*/
+    char *fnsurf;  /**<Pupil Surface OPD error*/
+    char *fnamp;   /**<Pupil amplitude map. overrides widthp*/
     double *ox;    /**<location x of LLT center wrt telescope aperture center*/
     double *oy;    /**<see ox.*/
     double *misreg;
@@ -140,7 +142,9 @@ typedef struct POWFS_CFG_T{
     double pixblur; /**<pixel bluring due to leakage. relative to pixel size.*/
     double dx;      /**<sampling of opd points in each subaperture. usually
 		       matches atmosphere sampling for LGS. may be coraser for NGS.*/
-    double pixtheta;/**<size of pixel pitch along x or y in radian.*/
+    double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
+		       ccd. Converted to radian from user input*/
+    double radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
     double sigscale;/**<scale the signal level for simulation.*/
@@ -172,7 +176,7 @@ typedef struct POWFS_CFG_T{
     int gtype_recon;/**<wfs type if not using physical optics in simulation. 
 		       - 0: geometric
 		       - 1: ztilt.*/
-    int phytype;    /**<physical optics type. 1: mtch, 2: tcog*/
+    int phytype;    /**<physical optics type. 1: mtch, 2: tcog, 3: MAP*/
     int phytypesim; /**<physical optics type for simulation. -1 to follow phytype*/
     int phystep;    /**<frames to start using physical optics. 
 		       -  0: means from frame 0.
@@ -181,14 +185,16 @@ typedef struct POWFS_CFG_T{
 		    */
     int usephy;     /**<whether physical optics is used at all during
 		       simulation.(derived parameter)*/
-    double mtchcrx; /**<if >0 use constrained mtch for x for this amount of pixels*/
-    double mtchcry; /**<if >0 use constrained mtch for y for this amount of pixels*/
+    double mtchcr;  /**<if >0 use constrained mtch for this amount of pixels*/
+    double mtchcra; /**<if >0 use constrained mtch for azimuthal for this amount of pixels*/
     int mtchcpl;    /**<use coupling between r/a measure error. useful for LGS with x-y ccd.*/
     int mtchstc;    /**<shift peak in the time averaged short exposure PSF to center using fft.*/
     int mtchscl;    /**<scale subaperture image to have the same intensity as i0. Keep false.*/
     int mtchadp;    /**<Using adaptive matched filter. When the number of pixels
 		       in the image brighter than half maximum is more than this
 		       value, use constraint. introduced on 2011-02-21.*/
+    double cogthres;/**<CoG threshold, relative to max(im)*/
+    double cogoff;  /**<CoG offset to remove, relative to max(im). */
     int hasGS0;     /**<need to compute GS0 (derived parameter)*/
     int noisy;      /**<noisy or not during *simulation* */
     char* misreg;   /**misregistration of the WFS, described by file containing
@@ -334,6 +340,7 @@ typedef struct TOMO_CFG_T{
     int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
     int guard;       /**<guard rings of reconstruction grid xloc*/
     int pos;         /**<over sampling factor of ploc over actuator spacing*/
+    int nxbase;      /**<Each layer xloc grid size is tomo.os*tomo.nxbase is not zero. same for ploc.*/
     int piston_cr;   /**<single point piston constraint. */
  
     int ahst_wt;     /**<0: use Wg, 1: using Wa*/
@@ -426,6 +433,7 @@ typedef struct SIM_CFG_T{
     char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
+    int wsseq;       /**<sequence of wind shake time series.*/
     /*control */
     double *apdm;    /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
@@ -520,6 +528,9 @@ typedef struct DBG_CFG_T{
     int force;       /**<Force run even if Res_${seed}.done exists*/
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
     int dxonedge;    /**<have points on the edge of subapertures.*/
+    int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
+    int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
+    int wfslinearity;/**<Study the linearity of this wfs*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -561,7 +572,7 @@ typedef struct LOAD_CFG_T{
     char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
-    int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin.gz*/
+    int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin*/
     int tomo;        /**<if 1, load tomo matrix*/
     int fit;         /**<if 1, load fit matrix*/
     int W;           /**<if 1, load W0, W1*/
@@ -676,9 +687,9 @@ typedef enum T_TYPE{
 }T_TYPE;
 void create_metapupil(const PARMS_T *parms, double ht, double dx,
 		      double offset,long* nx, long* ny, double *ox, double *oy, 
-		      double **map,double guard, long nin, int pad,int square);
+		      double **map,double guard, long ninx, long niny, int pad,int square);
 map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
-			     double offset,double guard,long nin, 
+			     double offset,double guard,long ninx, long niny,
 			     int pad,int square);
 void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);
 #endif

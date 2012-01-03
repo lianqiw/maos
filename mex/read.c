@@ -11,21 +11,23 @@
 static mxArray *readdata(file_t *fp, mxArray **header){
     uint32_t magic;
     mxArray *out=NULL;
-    uint64_t nx,ny;
+    long nx,ny;
     if(fp->eof) return NULL;
-    char *header2=NULL;
-    magic=read_magic(fp, &header2);
-
+    header_t header2;
+    if(read_header2(&header2, fp)){
+	return NULL;
+    }
+    magic=header2.magic;
     if(header){
-	if(header2)
-	    *header=mxCreateString(header2);
+	if(header2.str)
+	    *header=mxCreateString(header2.str);
 	else
 	    *header=mxCreateString("");
     }
-    free(header2); header2=NULL;
-
-    zfread(&nx, sizeof(uint64_t), 1,fp);
-    zfread(&ny, sizeof(uint64_t), 1,fp);
+    free(header2.str); header2.str=NULL;
+    nx=header2.nx;
+    ny=header2.ny;
+    int iscell=0;
     if(fp->eof) return NULL;
     switch(magic){
     case MCC_ANY:
@@ -38,6 +40,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
     case MC_INT32:
     case MC_INT64:
 	{
+	    iscell=1;
 	    mwIndex ix;
 	    if(fp->eof) return NULL;
 	    out=mxCreateCellMatrix(nx,ny);
@@ -198,11 +201,18 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    }
 	}
 	break;
-    case M_FLT:/*float array*/
+    case M_FLT:/*float array. convert to double*/
 	{
-	    out=mxCreateNumericMatrix(nx,ny,mxSINGLE_CLASS,mxREAL);
+	    out=mxCreateDoubleMatrix(nx,ny,mxREAL);
 	    if(nx!=0 && ny!=0){
-		zfread(mxGetPr(out), sizeof(float),nx*ny,fp);
+		float *tmp=malloc(nx*ny*sizeof(float));
+		zfread(tmp, sizeof(float),nx*ny, fp);
+		double *p=mxGetPr(out);
+		long i;
+		for(i=0; i<nx*ny; i++){
+		    p[i]=tmp[i];
+		}
+		free(tmp);
 	    }
 	}break;
     case M_INT64:/*long array*/
@@ -239,18 +249,18 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    }
 	}
 	break;
-    case M_ZMP:/*float complex array*/
+    case M_ZMP:/*float complex array. convert to double*/
 	{
-	    out=mxCreateNumericMatrix(nx,ny,mxSINGLE_CLASS,mxCOMPLEX);
+	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
 		fcomplex*tmp=malloc(sizeof(fcomplex)*nx*ny);
 		zfread(tmp,sizeof(fcomplex),nx*ny,fp);
-		float *Pr=(float*)mxGetPr(out);
-		float *Pi=(float*)mxGetPi(out);
+		double *Pr=mxGetPr(out);
+		double *Pi=mxGetPi(out);
 		long i;
 		for(i=0; i<nx*ny; i++){
-		    Pr[i]=crealf(tmp[i]);
-		    Pi[i]=cimagf(tmp[i]);
+		    Pr[i]=(double)crealf(tmp[i]);
+		    Pi[i]=(double)cimagf(tmp[i]);
 		}
 		free(tmp);
 	    }
@@ -262,6 +272,34 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	fprintf(stderr,"magic=%x\n",magic);
 	warning("Unrecognized file. Please recompile the mex routines in the newest code\n");
 	out=NULL;
+    }
+    if(!iscell && fp->isfits==1){/*fits file may contain extra extensions.*/
+	fp->isfits++;
+	int nx=0;
+	mxArray **outarr=NULL;
+	mxArray **headerarr=NULL;
+	while(out){
+	    nx++;
+	    outarr=realloc(outarr, sizeof(mxArray*)*nx);
+	    headerarr=realloc(headerarr, sizeof(mxArray*)*nx);
+	    outarr[nx-1]=out;
+	    if(header) headerarr[nx-1]=*header;
+	    out=readdata(fp, header);
+	}
+	if(nx>1){
+	    out=mxCreateCellMatrix(nx, 1);
+	    if(header) *header=mxCreateCellMatrix(nx, 1);
+	    int i;
+	    for(i=0; i<nx; i++){
+		mxSetCell(out, i, outarr[i]);
+		if(header) mxSetCell(*header, i, headerarr[i]);
+	    }
+	    free(outarr);
+	    free(headerarr);
+	}else{
+	    out=outarr[0];
+	    if(header) *header=headerarr[0];
+	}
     }
     if(!out){
 	out=mxCreateDoubleMatrix(0,0,mxREAL);
@@ -288,7 +326,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	plhs[0]=readdata(fp, &plhs[1]);
     }else{
 	plhs[0]=readdata(fp, NULL);
-	test_eof(fp);
+	zfeof(fp);
     }
     zfclose(fp);
 }

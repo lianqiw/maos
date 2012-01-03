@@ -36,10 +36,11 @@
 #include "common.h"
 #include "monitor.h"
 
-#define WIDTH_PID 24
+#define WIDTH_START 13
+#define WIDTH_PID 6
 #define WIDTH_PATH 20
-#define WIDTH_ISEED 5
-#define WIDTH_TIMING 28
+#define WIDTH_ISEED 4
+#define WIDTH_TIMING 20
 #define WIDTH_ERRLO 7
 #define WIDTH_ERRHI 7
 
@@ -91,16 +92,20 @@ static void create_entry(PROC_T *p){
     char lb[12];
     snprintf(lb,12," %5d",p->pid);
     struct tm *tim=localtime(&(p->status.timstart));
-    strftime(p->time,80,"[%F %k:%M:%S]",tim);
-    strcat(p->time,lb);
-    p->entry_pid=new_label(p->time,WIDTH_PID,0);
+    char stime[80];
+    strftime(stime,80,"[%a %k:%M:%S]",tim);
+    p->entry_start=new_label(stime,WIDTH_START,0.5);
+    p->entry_pid=new_label(lb,WIDTH_PID,1);
     p->entry_path=new_label(p->path,WIDTH_PATH,0);
     gtk_label_set_selectable(GTK_LABEL(p->entry_path), TRUE);
     gtk_label_set_ellipsize(GTK_LABEL(p->entry_path),PANGO_ELLIPSIZE_START);
+    gtk_widget_set_tooltip_text(p->entry_path, p->path);
     p->entry_errlo=new_label("Lo (nm)",WIDTH_ERRLO,1);
     p->entry_errhi=new_label("Hi (nm)",WIDTH_ERRHI,1);
-    p->entry_iseed=new_entry("iSEED",WIDTH_ISEED,0.5);
+    p->entry_iseed=new_entry("seed",WIDTH_ISEED,0.5);
     p->entry_timing=new_entry("Timing",WIDTH_TIMING,1);
+    gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_start,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_pid,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
@@ -138,13 +143,15 @@ static void update_prog(PROC_T *p){
 	const long tot=p->status.rest+p->status.laps;/*show total time. */
 	const long toth=tot/3600;
 	const long totm=(tot-toth*3600)/60;
+	const long tots=tot-toth*3600-totm*60;
 	const long rest=p->status.rest;
 	const long resth=rest/3600;
 	const long restm=(rest-resth*3600)/60;
+	const long rests=rest-resth*3600-restm*60;
 	const double step=p->status.tot*tkmean;
 	if(p->iseed_old!=p->status.iseed){
 	    char tmp[64];
-	    snprintf(tmp,64,"%d of %d",p->status.iseed+1,p->status.nseed);
+	    snprintf(tmp,64,"%d/%d",p->status.iseed+1,p->status.nseed);
 	    gtk_entry_set_text(GTK_ENTRY(p->entry_iseed), tmp);
 	    p->iseed_old=p->status.iseed;
 	    gtk_entry_set_progress_fraction
@@ -152,9 +159,19 @@ static void update_prog(PROC_T *p){
 		 (double)(p->status.iseed+1)/(double)p->status.nseed);
 	}
 	char tmp[64];
-	snprintf(tmp,64, "%4.1fs %d of %d %ld:%02ld of %ld:%02ld",
-		 step,p->status.isim+1,p->status.simend,
-		 resth,restm,toth,totm);
+	/*snprintf(tmp,64, "%5.2fs %d/%d %2ld:%02ld/%ld:%02ld",
+	  step,p->status.isim+1,p->status.simend,
+	  restm,rests,totm,tots);*/
+	if(toth>99){
+	    snprintf(tmp,64, "%d %5.2fs %ldh/%ldh",p->status.simend,
+		     step, resth,toth);
+	}else if(toth>0){
+	    snprintf(tmp,64, "%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.simend,
+		     step, resth,restm,toth,totm);
+	}else{
+	    snprintf(tmp,64, "%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.simend,
+		     step, restm,rests,totm,tots);	
+	}
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),tmp);
 	snprintf(tmp,64,"%.2f",p->status.clerrlo);
 	gtk_label_set_text(GTK_LABEL(p->entry_errlo),tmp);
@@ -184,12 +201,10 @@ void refresh(PROC_T *p){
     switch(p->status.info){
     case S_RUNNING:
 	break;
-    case S_WAIT:
-	/*waiting to start */
+    case S_WAIT: /*waiting to start */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting to start");
 	break;
-    case S_START:
-	/*just started. */
+    case S_START: /*just started. */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Started");
 	notify_user(p);
 	break;

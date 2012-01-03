@@ -26,26 +26,19 @@
 /**
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().
  */
-loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
-    char *header=NULL;
-    int free_header;
-    if(!magic){
-	magic=read_magic(fp, &header);
-	free_header=1;
-    }else{
-	header=header0;
-	free_header=0;
+loc_t *locreaddata(file_t *fp, header_t *header){
+    header_t header2;
+    if(!header){
+	header=&header2;
+	read_header(header, fp);
     }
-    if(magic!=M_DBL){
-	error("magic=%x. Expect %x\n", magic, M_DBL);
+    if(header->magic!=M_DBL){
+	error("magic=%x. Expect %x\n", header->magic, M_DBL);
     }
-    double dx=search_header_num(header,"dx");
-    if(free_header){
-	free(header);
-    }
-    uint64_t nx,ny;
-    zfread(&nx, sizeof(uint64_t), 1, fp);
-    zfread(&ny, sizeof(uint64_t), 1, fp);
+    double dx=search_header_num(header->str,"dx");
+    free(header->str);
+    long nx=header->nx;
+    long ny=header->ny;
     loc_t *out;
     if(nx==0 || ny==0){
 	out=NULL;
@@ -60,7 +53,6 @@ loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
 	    for(long i=0; i<out->nloc-1; i++){/*we assume the rows are continuous. */
 		if(out->locy[i+1]>out->locy[i]){
 		    dx=out->locy[i+1]-out->locy[i];
-		    info("Guessing: dx=%g\n", dx);
 		    break;
 		}
 	    }
@@ -76,7 +68,7 @@ loc_t *locreaddata(file_t *fp, uint32_t magic, char *header0){
 loc_t *locread(const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn, "rb");
-    loc_t *loc=locreaddata(fp, 0, NULL);
+    loc_t *loc=locreaddata(fp, NULL);
     zfclose(fp);
     return loc;
 }
@@ -86,37 +78,33 @@ loc_t *locread(const char *format,...){
 loc_t ** locarrread(int *nloc, const char*format,...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    uint32_t magic=read_magic(fp, NULL);
-    if(!iscell(magic)){
-	error("This is not a locarr file");
-    }
-    uint64_t nx,ny;
-    zfread(&nx, sizeof(uint64_t), 1, fp);
-    zfread(&ny, sizeof(uint64_t), 1, fp);
+    header_t header;
+    read_header(&header, fp);
+    long nx,ny;
+    header_t *headerc=check_cell(&header, &nx, &ny);
     *nloc=nx*ny;
     loc_t **locarr=calloc(nx*ny, sizeof(loc_t*));
+    if(!headerc){
+	free(header.str);
+    }
     for(long ix=0; ix<nx*ny; ix++){
-	locarr[ix]=locreaddata(fp, 0, NULL);
+	locarr[ix]=locreaddata(fp, headerc);
     }
     zfclose(fp);
     return locarr;
 }
 void locwritedata(file_t *fp, const loc_t *loc){
-    char header[80];
-    snprintf(header,80,"dx=%.15g\n",loc->dx);
-    write_header(header,fp);
-    write_magic(M_DBL, fp);
+    char str[80];
+    snprintf(str,80,"dx=%.15g\n",loc->dx);
+    header_t header={M_DBL, 0, 0, str};
     if(loc){
-	uint64_t nx=loc->nloc;
-	uint64_t ny=2;
-	zfwrite(&nx,sizeof(uint64_t),1,fp);
-	zfwrite(&ny,sizeof(uint64_t),1,fp);
+	header.nx=loc->nloc;
+	header.ny=2;
+    }
+    write_header(&header,fp);
+    if(loc){
 	zfwrite(loc->locx, sizeof(double),loc->nloc,fp);
 	zfwrite(loc->locy, sizeof(double),loc->nloc,fp);
-    }else{
-	uint64_t nx=0;
-	zfwrite(&nx, sizeof(uint64_t),1,fp);
-	zfwrite(&nx, sizeof(uint64_t),1,fp);
     }
 }
 void locwrite(const loc_t *loc, const char *format,...){
@@ -129,11 +117,8 @@ void locwrite(const loc_t *loc, const char *format,...){
 void locarrwrite(loc_t ** loc, int nloc, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
-    uint64_t nx=nloc;
-    uint64_t ny=1;
-    write_magic(MCC_ANY, fp);
-    zfwrite(&nx,sizeof(uint64_t),1, fp);
-    zfwrite(&ny,sizeof(uint64_t),1, fp);
+    header_t header={MCC_ANY, nloc, 1, NULL};
+    write_header(&header, fp);
     for(unsigned long iloc=0; iloc<nloc; iloc++){
 	locwritedata(fp, loc[iloc]);
     }
@@ -161,10 +146,8 @@ void mapwrite(map_t *map, const char *format,...){
 void maparrwrite(map_t ** map, int nmap, const char *format,...){
     format2fn;
     file_t *fp=zfopen(fn,"wb");
-    uint64_t nx=nmap;
-    uint64_t ny=1;
-    write_magic(MCC_ANY, fp);
-    zfwritelarr(fp, 2, &nx, &ny);
+    header_t header={MCC_ANY, nmap, 1, NULL};
+    write_header(&header, fp);
     for(int imap=0; imap<nmap; imap++){
 	mapwritedata(fp, map[imap]);
     }
@@ -222,26 +205,15 @@ map_t **dcell2map(int *nlayer, dcell *in){
 map_t *mapread(const char *format, ...){
     format2fn;
     file_t *fp=zfopen(fn,"rb");
-    char *header=NULL;
-    uint32_t magic=read_magic(fp, &header);
+    header_t header;
+    read_header(&header, fp);
     map_t *map=NULL;
-    if(magic==M_DBL){
-	dmat *in=dreaddata(fp, magic);
-	if(in){
-	    in->header=header;
-	}else{
-	    free(header);
-	}
+    if(header.magic==M_DBL){
+	dmat *in=dreaddata(fp, &header);
 	map=d2map(in);
 	dfree(in);
-    }else if(iscell(magic)){/*old format. */
-	dcell *in=dcellreaddata(fp, magic);
-	if(in){
-	    in->header=header;
-	}else{
-	    free(header);
-	}
-
+    }else if(iscell(header.magic)){/*old format. */
+	dcell *in=dcellreaddata(fp, &header);
 	if(fabs(in->p[0]->p[0]-in->p[0]->p[1])>1.e-14){
 	    error("Map should be square\n");
 	}
@@ -262,7 +234,7 @@ map_t *mapread(const char *format, ...){
 	    warning("Ampground %s is not centered.\n",fn);
 	}
     }else{
-	error("Invalid format. magic=%u\n", magic);
+	error("Invalid format. magic=%u\n", header.magic);
     }
     zfclose(fp);
     return map;

@@ -1,7 +1,7 @@
 #include "../lib/aos.h"
 /*
 int main(){
-    spcell *FLM=spcellread("FLM.bin.gz");
+    spcell *FLM=spcellread("FLM.bin");
     dsp *F=FLM->p[0];
     spchol *Fchol=chol_factorize(F);
  
@@ -36,8 +36,6 @@ int main(int argc, char* argv[]){
     dmat *y=dnew(RLMc->m, 1);
     drandn(y, 1, &rstat);
     dmat *x=NULL, *x2=NULL, *x3=NULL;
-    dsp *S1=NULL;
-    long *perm=NULL;
     chol_convert(R1, 1);
     tic;
     chol_solve(&x, R1, y);

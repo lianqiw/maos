@@ -73,6 +73,7 @@ typedef struct SKYC_S{
     int dbg;         /**<save intermediate information for debugging.*/
     int dbgsky;      /**<only run this sky frame if not -1*/
     int dbgaster;    /**<only run this asterism if not -1*/
+    int keeporder;   /**<1: Keep order of stars as input is skyc.star.*/
     int interpg;     /**<Interpolate gain based in dtrat and signan*/
     int save;        /**<save information for latter running in MAOS.*/
     int maxstar;     /**<maximum number of (brightest) stars for each star field.*/
@@ -139,6 +140,7 @@ typedef struct SKYC_S{
     dmat *resfocus;  /**<residual focus error at each sampling frequency.*/
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/
+    double pmargin;  /**<phase margin of type II*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

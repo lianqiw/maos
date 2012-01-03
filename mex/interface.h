@@ -47,13 +47,23 @@ inline loc_t *mx2loc(const mxArray *A){
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
     loc->locy=loc->locx+loc->nloc;
-    if(fabs(loc->locx[2]+loc->locx[0]-loc->locx[1]*2)<1.e-10){
-	loc->dx=loc->locx[1]-loc->locx[0];
-    }else{
+    int found=0;
+    int iloc;
+    for(iloc=0; iloc<loc->nloc-2; iloc++){
+	if(fabs(loc->locy[2+iloc]-loc->locy[iloc])<1.e-10 
+	   && fabs(loc->locy[2+iloc]-loc->locy[1+iloc])<1.e-10
+	   && fabs(loc->locx[2+iloc]+loc->locx[iloc]-loc->locx[1+iloc]*2)<1.e-10){
+	    loc->dx=loc->locx[iloc+1]-loc->locx[iloc];
+	    found=1;
+	    break;
+	}
+    }
+    if(!found){
 	mexErrMsgTxt("Unable to determine dx");
     }
     return loc;
 }
+
 inline dmat *mx2d(const mxArray *A){
     if(mxGetPi(A)){
 	mexErrMsgTxt("A is complex");

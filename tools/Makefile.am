@@ -45,8 +45,9 @@ ___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif
-PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf
+PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits
 bin_PROGRAMS=$(PROGS)
 ___bin_servo_optim_SOURCES=servo_optim.c
 ___bin_slaving_SOURCES=slaving.c
 ___bin_cov2psf_SOURCES=cov2psf.c
+___bin_bin2fits_SOURCES=bin2fits.c

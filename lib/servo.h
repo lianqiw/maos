@@ -33,7 +33,7 @@ typedef struct SERVO_T{
     dmat *mint;        /**<second integrator*/
     int initialized;   /**<is this data initialized*/
 }SERVO_T;
-dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt,const dmat* sigman);
+dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, double pmargin, const dmat* sigman);
 double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt);
 void servo_typeII_filter(SERVO_T *st, dmat *merr, double dtngs, const dmat *gain);
 void servo_typeI_filter(SERVO_T *st, dmat *merr, double gain);
