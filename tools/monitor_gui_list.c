@@ -51,6 +51,23 @@
 #include "common.h"
 #include "monitor.h"
 #include "misc.h"
+enum{
+    COL_DATE,
+    COL_PID,
+    COL_PATH,
+    COL_SEED,
+    COL_SEEDP,/*float */
+    COL_STEP,
+    COL_STEPP,/*float */
+    COL_TIMING,
+    COL_ALL,
+    COL_REST,
+    COL_ERRLO,
+    COL_ERRHI,
+    COL_ACTION,
+    COL_COLOR,
+    COL_TOT,
+};
 /*#include "gtkcellrendererprogressnew.h" //modify appearance of progress */
 static GtkListStore **lists=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
@@ -86,9 +103,9 @@ static void list_modify_status(PROC_T *p, const char *status){
 static void list_update_progress(PROC_T *p){
     if(p->status.nseed==0) return;
     GtkListStore *list=lists[p->hid];
-    double tot=(double)(p->status.rest+p->status.laps);
-    if(fabs(tot)>1.e-10){
-	p->frac=(double)p->status.laps/tot;
+    double total=(double)(p->status.rest+p->status.laps);
+    if(fabs(total)>1.e-10){
+	p->frac=(double)p->status.laps/total;
     }else{
 	p->frac=0;
     }
@@ -96,14 +113,16 @@ static void list_update_progress(PROC_T *p){
     list_get_iter(p, &iter);
 	    
     const double tkmean=p->status.scale;
+    const long tot=p->status.rest+p->status.laps;/*show total time. */
+    const long toth=tot/3600;
+    const long totm=(tot-toth*3600)/60;
+    const long tots=tot-toth*3600-totm*60;
     const long rest=p->status.rest;
-    const long laps=p->status.laps;
     const long resth=rest/3600;
     const long restm=(rest-resth*3600)/60;
-    const long lapsh=laps/3600;
-    const long lapsm=(laps-lapsh*3600)/60;
-    tot=p->status.tot*tkmean;
-    if(p->status.iseed!=p->iseed_old-1){
+    const long rests=rest-resth*3600-restm*60;
+    const double step=p->status.tot*tkmean;
+    if(p->status.iseed!=p->iseed_old){
 	char tmp[64];
 	snprintf(tmp,64,"%d/%d",p->status.iseed+1,p->status.nseed);
 	gtk_list_store_set(list, &iter, 
@@ -111,26 +130,32 @@ static void list_update_progress(PROC_T *p){
 			   COL_SEEDP,
 			   100*(double)(p->status.iseed+1.)/(double)p->status.nseed,
 			   -1);
-	p->iseed_old=p->status.iseed+1;
+	p->iseed_old=p->status.iseed;
     }
     char tmp[64];
+    snprintf(tmp,64,"%5.2f", step); gtk_list_store_set(list, &iter, COL_TIMING,tmp, -1);
+    if(toth>99){
+	snprintf(tmp,64,"%ldh", resth);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
+	snprintf(tmp,64,"%ldh", toth);   gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
+    }else if(toth>0){
+	snprintf(tmp,64,"%ldh%02ld", resth, restm);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
+	snprintf(tmp,64,"%ldh%02ld", toth, totm);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
+    }else{
+	snprintf(tmp,64, "%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.simend,
+		 step, restm,rests,totm,tots);	
+ 	snprintf(tmp,64,"%02ld:%02ld", restm, rests);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
+	snprintf(tmp,64,"%02ld:%02ld", totm, tots);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
+     }
+    
+
     snprintf(tmp,64,"%d/%d",p->status.isim+1,p->status.simend);
-    gtk_list_store_set(list, &iter, 
-		       COL_STEP,tmp, 
-		       COL_STEPP,p->frac*100, -1);
-    snprintf(tmp,64,"%.2f",tot);
-    gtk_list_store_set(list, &iter, COL_TIMING,tmp, -1);
-    
-    snprintf(tmp,64,"%ld:%02ld", lapsh,lapsm);
-    gtk_list_store_set(list, &iter, COL_LAPS, tmp, -1);
-    
-    snprintf(tmp,64,"%ld:%02ld", resth,restm);
-    gtk_list_store_set(list, &iter, COL_REST, tmp, -1);
+    gtk_list_store_set(list, &iter, COL_STEP,tmp, COL_STEPP,p->frac*100, -1);
     
     snprintf(tmp,64,"%.2f",p->status.clerrlo);
     gtk_list_store_set(list, &iter, COL_ERRLO,tmp, -1);
     snprintf(tmp,64,"%.2f",p->status.clerrhi);
     gtk_list_store_set(list, &iter, COL_ERRHI,tmp, -1);
+    
 }
 void remove_entry(PROC_T *p){
     GtkTreePath *path=gtk_tree_row_reference_get_path(p->row);
@@ -169,32 +194,24 @@ void refresh(PROC_T *p){
 			   -1);
 	GtkTreePath *tpath=gtk_tree_model_get_path(GTK_TREE_MODEL(list), &iter);
 	p->row=gtk_tree_row_reference_new(GTK_TREE_MODEL(list),tpath);
-	gtk_tree_path_free(tpath);
 	list_update_progress(p);
+	gtk_tree_path_free(tpath);
     }
     switch(p->status.info){
     case S_RUNNING:
 	list_update_progress(p);
 	list_modify_icon(p,icon_running);
 	break;
-    case S_WAIT:
-	/*waiting to start */
-	/*list_modify_status(p, "Queued"); */
+    case S_WAIT: /*waiting to start */
 	break;
-    case S_START:
-	/*just started. */
+    case S_START: /*just started. */
 	list_modify_status(p, "Started");
 	notify_user(p);
 	break;
     case S_FINISH:/*Finished */
-	/*p->frac=1; */
-	/*p->done=1; */
-	/*list_modify_progress(p,100); */
 	list_update_progress(p);
-	/*list_modify_status(p, "Finished"); */
 	list_modify_icon(p, icon_finished);
 	list_modify_color(p,"#00DD00");
-	/*gtk_widget_modify_base(p->prog3,GTK_STATE_NORMAL,&green); */
 	notify_user(p);
 	break;
     case S_CRASH:/*Error */
@@ -221,11 +238,52 @@ void refresh(PROC_T *p){
     }
 }
 
-static void action_clicked(GtkTreeViewColumn *col){
-    (void)col;
-    info("clicked\n");
+static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ...){
+    GtkTreeViewColumn *col;
+    GtkCellRenderer *render;
+    col=gtk_tree_view_column_new();
+    switch(type){
+    case 0:
+	render=gtk_cell_renderer_text_new();
+	gtk_cell_renderer_set_padding(render, 1, 1);
+	gtk_cell_renderer_set_alignment(render, 1, 0.5);
+	break;
+    case 1:
+	render=gtk_cell_renderer_progress_new();
+	break;
+    case 2:
+	render=gtk_cell_renderer_pixbuf_new();
+	break;
+    default:
+	error("Invalid\n");
+    }
+    gtk_tree_view_column_set_title(col, title);
+    gtk_tree_view_column_set_spacing(col, 1);
+    gtk_tree_view_column_set_alignment(col, 0.5);
+
+    if(width>0){
+	gtk_tree_view_column_set_min_width(col, width);
+	gtk_tree_view_column_set_expand(col,TRUE);
+	if(type==0){
+	    g_object_set(G_OBJECT(render),"ellipsize",PANGO_ELLIPSIZE_START,NULL);
+	}
+	gtk_tree_view_column_pack_start(col,render,TRUE);
+    }else if(width<0){
+	gtk_tree_view_column_set_min_width(col,-width);
+	gtk_tree_view_column_set_max_width(col,-width);
+	gtk_tree_view_column_pack_start(col,render,TRUE);
+    }else{
+	gtk_tree_view_column_pack_start(col,render,FALSE);
+    }
+    va_list ap;
+    va_start(ap, title);
+    const char *att=NULL;
+    while(att=va_arg(ap, const char *)){
+	gtk_tree_view_column_add_attribute(col, render, att, va_arg(ap,int));
+    }
+    va_end(ap);
+    return col;
 }
- 
 GtkWidget *new_page(int ihost){
     if(!lists){
 	lists=calloc(nhost,sizeof(GtkListStore*));
@@ -240,7 +298,7 @@ GtkWidget *new_page(int ihost){
 				    G_TYPE_STRING,/*STEP */
 				    G_TYPE_FLOAT, /*STEPP */
 				    G_TYPE_STRING,/*TIMING */
-				    G_TYPE_STRING,/*LAPS */
+				    G_TYPE_STRING,/*TOT */
 				    G_TYPE_STRING,/*REST */
 				    G_TYPE_STRING,/*ERRLO */
 				    G_TYPE_STRING,/*ERRHI */
@@ -268,138 +326,18 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_set_enable_search(GTK_TREE_VIEW(view), TRUE);
     /*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
-
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,FALSE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_DATE);
-    gtk_tree_view_column_set_title(col,"Date");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,FALSE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_PID);
-    gtk_tree_view_column_set_title(col,"PID");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_PATH);
-    gtk_tree_view_column_set_title(col,"Path");
-    gtk_tree_view_column_set_min_width(col,20);
-    gtk_tree_view_column_set_expand(col,TRUE);
-    g_object_set(G_OBJECT(render),"ellipsize",PANGO_ELLIPSIZE_START,NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
-
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_ERRLO);
-    gtk_tree_view_column_set_title(col,"ErrLo");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_ERRHI);
-    gtk_tree_view_column_set_title(col,"ErrHi");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-	
-    render=gtk_cell_renderer_progress_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_SEED);
-    gtk_tree_view_column_add_attribute(col,render,"value",COL_SEEDP);
-    gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
-    gtk_tree_view_column_set_title(col,"Seed");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-   
-    render=gtk_cell_renderer_progress_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    gtk_cell_renderer_set_fixed_size(render,30,5);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_STEP);
-    gtk_tree_view_column_add_attribute(col,render,"value",COL_STEPP);
-    gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR);
-    gtk_tree_view_column_set_title(col,"Progress");
-    gtk_tree_view_column_set_min_width(col,80);
-    gtk_tree_view_column_set_max_width(col,80);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-    /*gtk_tree_view_column_set_min_width(GTK_TREE_VIEW_COLUMN(col),200); */
-
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_TIMING);
-    /*gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR); */
-    /*gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR); */
-    gtk_tree_view_column_set_title(col,"Time");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_REST);
-    /*gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR); */
-    /*gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR); */
-    gtk_tree_view_column_set_title(col,"Left");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-  
-    render=gtk_cell_renderer_text_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"text",COL_LAPS);
-    /*gtk_tree_view_column_add_attribute(col,render,"foreground",COL_COLOR); */
-    /*gtk_tree_view_column_add_attribute(col,render,"cell-background",COL_COLOR); */
-    gtk_tree_view_column_set_title(col,"Used");
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
- 
-    render=gtk_cell_renderer_pixbuf_new();
-    g_object_set(G_OBJECT(render), "ypad", 0, NULL);
-    col=gtk_tree_view_column_new();
-    gtk_tree_view_column_set_spacing(col, spacing);
-    gtk_tree_view_column_set_alignment(col,align);
-    gtk_tree_view_column_pack_start(col,render,TRUE);
-    gtk_tree_view_column_add_attribute(col,render,"pixbuf",COL_ACTION);
-    gtk_tree_view_column_set_title(col,"   ");
-    /*gtk_tree_view_column_set_clickable(col,TRUE); */
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-    g_signal_connect(col, "clicked",G_CALLBACK(action_clicked),NULL);
-
-
+    
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID" , "text", COL_PID, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 20,"Path", "text", COL_PATH, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low" , "text", COL_ERRLO, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_TIMING, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Left", "text", COL_REST, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Tot", "text", COL_ALL, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value",COL_SEEDP,NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value",COL_STEPP,NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
+    
     return view;
 }

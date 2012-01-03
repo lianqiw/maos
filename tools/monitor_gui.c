@@ -40,7 +40,7 @@
 #define WIDTH_PID 6
 #define WIDTH_PATH 20
 #define WIDTH_ISEED 4
-#define WIDTH_TIMING 16
+#define WIDTH_TIMING 20
 #define WIDTH_ERRLO 7
 #define WIDTH_ERRHI 7
 
@@ -163,13 +163,13 @@ static void update_prog(PROC_T *p){
 	  step,p->status.isim+1,p->status.simend,
 	  restm,rests,totm,tots);*/
 	if(toth>99){
-	    snprintf(tmp,64, "%5.2fs %ldh/%ldh",
+	    snprintf(tmp,64, "%d %5.2fs %ldh/%ldh",p->status.simend,
 		     step, resth,toth);
 	}else if(toth>0){
-	    snprintf(tmp,64, "%5.2fs %ldh%02ld/%ldh%02ld",
+	    snprintf(tmp,64, "%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.simend,
 		     step, resth,restm,toth,totm);
 	}else{
-	    snprintf(tmp,64, "%5.2fs %2ld:%02ld/%ld:%02ld",
+	    snprintf(tmp,64, "%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.simend,
 		     step, restm,rests,totm,tots);	
 	}
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),tmp);
@@ -201,12 +201,10 @@ void refresh(PROC_T *p){
     switch(p->status.info){
     case S_RUNNING:
 	break;
-    case S_WAIT:
-	/*waiting to start */
+    case S_WAIT: /*waiting to start */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting to start");
 	break;
-    case S_START:
-	/*just started. */
+    case S_START: /*just started. */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Started");
 	notify_user(p);
 	break;

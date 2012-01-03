@@ -106,22 +106,12 @@ static const gchar *rc_string_treeview =
 	/*" GtkTreeView::grid-line-pattern=\"\111\111\"\n" */
 	" GtkTreeView::grid-line-width   = 1             \n"
 	" GtkTreeView::allow-rules       = 1             \n"
-	" GtkTreeView::odd-row-color     = \"#EFEFFF\"   \n"
+	" GtkTreeView::odd-row-color     = \"#EFEFEF\"   \n"
 	" GtkTreeView::even-row-color    = \"#FFFFFF\"   \n"
 	" GtkTreeView::horizontal-separator = 0          \n"
 	" GtkTreeView::vertical-separator = 0            \n"
 	"}\n                                             \n" 
 	"class \"GtkTreeView\" style \"solidTreeLines\"  \n" 
-    };
-static const gchar *rc_string_progress = 
-    {
-	"style \"progressbar\" {                          \n"
-	"fg[SELECTED] = \"red\"                           \n"
-	"bg[SELECTED] = \"yellow\"                        \n"
-	"base[SELECTED] = \"green\"                       \n"
-	"text[SELECTED] = \"purple\"                      \n"
-	"}\n                                              \n"
-	"class \"GtkCellRenderer\" style \"progressbar\"  \n"
     };
 
 static const gchar *rc_string_entry =
@@ -255,7 +245,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
 	    if(!p){
 		p=proc_add(host,pid);
 	    }
-	    p->path=readstr(sock);
+	    p->path=readstr(sock); if(!p->path) warning("readstr failed\n");
 	}
 	break;
     case CMD_LOAD:
@@ -789,7 +779,6 @@ int main(int argc, char *argv[])
     */
     gtk_rc_parse_string(rc_string_widget); 
     gtk_rc_parse_string(rc_string_treeview);
-    gtk_rc_parse_string(rc_string_progress);
     gtk_rc_parse_string(rc_string_entry);
     create_status_icon();
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
