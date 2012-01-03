@@ -1560,7 +1560,6 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     const int nsa=powfs[ipowfs].pts->nsa;
     const int ntry=500;
     const int dtrat=parms->powfs[ipowfs].dtrat;
-    const double stry=1./ntry;
     const double pixthetax=parms->powfs[ipowfs].radpixtheta;
     const double pixthetay=parms->powfs[ipowfs].pixtheta;
     const double rne=parms->powfs[ipowfs].rne;
@@ -1645,11 +1644,9 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 		    cogcoeff[isa][1]=coeff[1];
 		    info("isa %d:, ncall=%3d, coeff=%g %g\n", isa, ncall, coeff[0], coeff[1]);
 		}
-		double pmax=1;
 		dcog(g, ints, 0, 0, cogcoeff[isa][0]*rne2, cogcoeff[isa][1]*rne2);
 		if(do_nea){
 		    dmat *nea=dnew(2,2);
-		    double gny[2]={0,0};
 		    cog_nea(nea->p, ints, cogcoeff[isa][0], cogcoeff[isa][1], ntry, &rstat, bkgrnd, bkgrndc, bkgrnd2i, bkgrnd2ic, rne);
 		    nea->p[0]=nea->p[0]*pixthetax*pixthetax+neaspeckle2;
 		    nea->p[3]=nea->p[3]*pixthetay*pixthetay+neaspeckle2;

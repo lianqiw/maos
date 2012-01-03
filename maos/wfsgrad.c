@@ -89,7 +89,7 @@ void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
 
     const int nsep=20;
     const double dg=0.1;
-    double gx=0, gy=0, dgx, dgy;
+    double gx=0, gy=0, dgx=0, dgy=0;
     dmat *ints=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
     double theta=0, cx=1, sx=0;
     dmat *gnf=dnew(nsep,nsa*2);

@@ -3,7 +3,7 @@ SUBDIRS=external/cholmod/ lib/
 if USE_CUDA
 SUBDIRS+=cuda
 endif
-SUBDIRS+= maos/ skyc/ tools/
+SUBDIRS+=maos/ skyc/ tools/
 if USE_MEX
 SUBDIRS+=mex/
 endif
