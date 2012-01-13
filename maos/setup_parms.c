@@ -2180,7 +2180,9 @@ PARMS_T * setup_parms(ARG_T *arg){
     info2("Main config file is %s\n",arg->conf);
     open_config(arg->conf,NULL,0);/*main .conf file. */
     open_config(arg->confcmd, NULL, 1);
-    
+    remove(arg->confcmd);
+    free(arg->conf);
+    free(arg->confcmd);
     PARMS_T* parms=calloc(1, sizeof(PARMS_T));
     parms->sim.nthread=arg->nthread;
     readcfg_aper(parms);

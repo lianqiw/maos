@@ -152,7 +152,9 @@ static void setup_parms_maos(PARMS_S *parms){
 PARMS_S *setup_parms(const ARG_S *arg){
     open_config(arg->conf,NULL,0);
     open_config(arg->confcmd,NULL,1);
-   
+    remove(arg->confcmd);
+    free(arg->conf);
+    free(arg->confcmd);
     PARMS_S *parms=calloc(1, sizeof(PARMS_S));
     parms->skyc.nthread=arg->nthread;
     setup_parms_skyc(parms);
