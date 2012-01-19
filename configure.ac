@@ -40,7 +40,7 @@ OPTScommon=" -Wshadow -Wall " #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror"
 fi
-LDSYS="-lz -lm"
+LDEXE="-lm"
 OPTSextra=""
 use_static="no"
 
@@ -149,7 +149,7 @@ mkl_avail="no"
 case "$host_os" in
 *linux*)
  AM_CONDITIONAL(LINUX, true)
- LDSYS="$LDSYS -lrt" #real time library.
+ LDEXE="$LDEXE -lrt" #real time library.
  OPTSextra="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
  try_mkl="yes"
  use_static_default="no"
@@ -239,7 +239,7 @@ else
 fi
 if test "x$use_duma" = "xyes" ;then	
     AC_CHECK_LIB([duma],[malloc],[],[AC_MSG_ERROR([duma not found])])
-    LDSYS="$LDSYS -lduma"
+    LDEXE="$LDEXE -lduma"
 fi 
 
 if test x$use_oprof = "xyes" ;then
@@ -391,7 +391,9 @@ if test "$has_z" = "no" ;then
    if test ! -d ${LIBDIR}/${zlibname} ;then
       download ZLIB ${zlibname}.tar.bz2
    fi
-   LDZ="-L${LIBDIR}/${zlibname}"
+   LDZ="-L${LIBDIR}/${zlibname} -lz"
+else
+   LDZ="-lz"
 fi
 #Check for FFTW3 header and library.
 has_fftw='yes'
@@ -454,21 +456,21 @@ AC_SUBST(MONN_CFLAGS)
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
 if test "x$use_long" = "xyes" -a "x$cpu" = "x64" ;then
    OPTScommon="$OPTScommon -DDLONG"
-   SUFFIX="long"
+   CHOLSUFFIX="long"
    chol_fun=cholmod_l_factorize
    AM_CONDITIONAL(USE_LONG, true)
 else
-   SUFFIX="int"
+   CHOLSUFFIX="int"
    chol_fun=cholmod_factorize
    AM_CONDITIONAL(USE_LONG, false)
 fi
 
-AC_CHECK_LIB([cholmod_${SUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod])
+AC_CHECK_LIB([cholmod_${CHOLSUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod${libsuffix}])
 if test "x$have_chol" = "xyes" ;then
-    LDCHOL="-L${LIBDIR}/cholmod -lcholmod_${SUFFIX}"
+    LDCHOL="-L${LIBDIR}/cholmod${libsuffix} -lcholmod_${CHOLSUFFIX}"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
-    LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${SUFFIX}.la"
+    LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${CHOLSUFFIX}.la"
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
 # Here cholmod_long and cholmod_int are custom made cholmod libraries. We do not
@@ -476,18 +478,14 @@ fi
 # customize the dependency on blas/lapack.
 
 AC_CHECK_HEADERS([unistd.h])
-#LDCHOL must be before LAPACK
-LDOPTS="$LAPACK $LDSYS $LDFFT $LDZ "
-#LDEXE="${LDEXE} -no-install"
+LDLIB="$LDCHOL $LDFFT $LDZ -lm"
+LDOPTS="$LAPACK"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)
 AC_SUBST(LDEXE)
-AC_SUBST(LDSYS)
-AC_SUBST(LDCHOL)
-AC_SUBST(LDFFT)
-AC_SUBST(LAPACK)
+AC_SUBST(LDLIB)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
@@ -685,13 +683,9 @@ echo Compile Monitor with Libnotify=$comp_monn
 echo CC=$CC
 echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
-echo LIBS=$LIBS
-echo LDEXE=$LDEXE
 echo OPTS=$OPTS
+echo LDEXE=$LDEXE
 echo LDOPTS=$LDOPTS
-echo LAPACK=$LAPACK
-echo LDCHOL=$LDCHOL
-echo LDFFT=$LDFFT
 if test x$use_icc = xno -a x$system = xlinux ;then
 echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
 fi

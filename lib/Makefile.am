@@ -31,12 +31,12 @@ AOS_SRC+=$(SYS_SRC)
 if USE_LONG
 lib_LTLIBRARIES=libaos_long.la
 libaos_long_la_SOURCES=$(AOS_SRC)
-libaos_long_la_LIBADD=$(LDCHOL) $(LDFFT)
+libaos_long_la_LIBADD=$(LDLIB)
 libaos_long_la_LDFLAGS = -avoid-version -static
 else
 lib_LTLIBRARIES=libaos_int.la
 libaos_int_la_SOURCES=$(AOS_SRC)
-libaos_int_la_LIBADD=$(LDCHOL) $(LDFFT)
+libaos_int_la_LIBADD=$(LDLIB)
 libaos_int_la_LDFLAGS = -avoid-version -static
 endif
 
