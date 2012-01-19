@@ -197,8 +197,10 @@ file_t* zfopen(const char *fn, char *mod){
     if(mod[0]=='w'){
 	if(check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
 	    fp->isgzip=0;
-	}else{
+	}else if (check_suffix(fn, ".gz")){
 	    fp->isgzip=1;
+	}else{
+	    fp->isgzip=0;
 	}
     }else{ 
 	uint16_t magic;

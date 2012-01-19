@@ -103,7 +103,7 @@ void write_timestamp(file_t *fp);
 void write_header(const header_t *header, file_t *fp);
 int read_header2(header_t *header, file_t *fp);
 void read_header(header_t *header, file_t *fp);
-__attribute__((always_inline))inline header_t *check_cell(header_t *header, long *nx, long *ny){
+INLINE header_t *check_cell(header_t *header, long *nx, long *ny){
     header_t *headerc=NULL;
     if(iscell(header->magic)){
 	*nx=header->nx;

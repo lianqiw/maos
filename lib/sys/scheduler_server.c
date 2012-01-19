@@ -96,6 +96,23 @@ static void running_remove(int pid);
 static void running_update(int pid, int status);
 static RUN_T *running_get_by_sock(int sock);
 
+#if defined(__INTEL_COMPILER)
+/*with htons defined in glibc 2.4, intel compiler complains
+  about conversion from in to uint16. THis is an ugly workaround*/
+#undef htons
+#define htons myhtons
+static inline uint16_t myhtons(uint16_t port){
+    uint16_t ans;
+#if __BYTE_ORDER == __BIG_ENDIAN
+    ans=(port);
+#else
+    ans=(unsigned short int)
+	((((port) >> 8) & 0xff) | (unsigned short int)(((port) & 0xff) << 8));
+#endif
+    return ans;
+}
+#endif
+
 int myhostid(const char *host){
     int i;
     for(i=0; i<nhost; i++){

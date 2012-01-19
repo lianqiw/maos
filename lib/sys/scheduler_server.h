@@ -18,30 +18,8 @@
 #ifndef AOS_SCHEDULER_SERVER_H
 #define AOS_SCHEDULER_SERVER_H
 #define MAXMSG  512
-/*
-#include <sys/types.h>       
-#include <sys/socket.h>
-*/
 #include <netinet/in.h>
-/*
-  Struct to hold status information of a running process.
- */
-#if defined(__INTEL_COMPILER)
-/*with htons defined in glibc 2.4, intel compiler complains
-  about conversion from in to uint16. THis is an ugly workaround*/
-#undef htons
-#define htons myhtons
-static inline uint16_t myhtons(uint16_t port){
-    uint16_t ans;
-#if __BYTE_ORDER == __BIG_ENDIAN
-    ans=(port);
-#else
-    ans=(unsigned short int)
-	((((port) >> 8) & 0xff) | (unsigned short int)(((port) & 0xff) << 8));
-#endif
-    return ans;
-}
-#endif
+
 /**
    Status about each process. Timing, wavefront error, etc.
  */

@@ -30,6 +30,7 @@ LIBDIR=${HOME}/.aos/lib
 else
 LIBDIR=${SRC_DIR}/external
 fi
+#AC_DEFINE_UNQUOTED means expand the $ quoting in shell
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
@@ -152,7 +153,7 @@ case "$host_os" in
  OPTSextra="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
  try_mkl="yes"
  use_static_default="no"
- wget="wget --no-check-certificate"
+ wget="wget -t1 --no-check-certificate"
  wgetoutput="-O"
  mkldep="-lguide"
  mklname=mkl${cpu}
@@ -164,7 +165,7 @@ case "$host_os" in
  AM_CONDITIONAL(DARWIN, true)
  try_mkl="yes"
  use_static_default="no"
- wget="curl -L --progress-bar"
+ wget="curl --retry 1 -L --progress-bar"
  wgetoutput="--output"
  mkldep="-liomp5"
  mklname=mklfat
@@ -263,6 +264,7 @@ if test "x$use_icc" = "xyes" ;then
 fi
 AC_PROG_CC([$CC])
 AC_TYPE_SIZE_T #it sets CC if empty
+INLINE="inline"
 case "${CC}" in	
   icc)
     OPTIM="$OPTIM_ICC $COMMON_ICC"
@@ -303,12 +305,18 @@ case "${CC}" in
 	    OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
 	    OPTIM="$OPTIM -ftree-vectorize " #introduced in GCC 4
 	fi
+	if test $major -ge 4 -a $minor -ge 3;then #GCC4.3 changed meaning of inline
+	    INLINE="inline __attribute__((always_inline))"
+	else
+	    INLINE="extern inline __attribute__((always_inline))"
+	fi
     fi
     ;;
   *) #Other compilears
     OPTIM="-O3"
     ;;
 esac
+AC_DEFINE_UNQUOTED(INLINE, $INLINE, [Portable definition of inline])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
     AC_DEFINE(DEBUG,[1],["Debug the code"])
@@ -330,7 +338,13 @@ function download(){
    echo Will download one from the website.
    echo This library is only for non-commercial use.
    fn=$2
-   $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} || exit 1
+   if ! $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} ;then
+      AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
+      AC_MSG_NOTICE([Please download it manually and put in /tmp/${fn}])
+      while test ! -s /tmp/${fn};do
+         sleep 2s
+      done
+   fi
    if test ! -d ${LIBDIR} ;then
       mkdir -p ${LIBDIR} || exit 1
    fi
@@ -389,7 +403,6 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 else
    LDFFT=""
 fi
-
 AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
 AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
 if test "x$has_fftw_threads" = "xyes" ;then

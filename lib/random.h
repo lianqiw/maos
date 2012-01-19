@@ -35,27 +35,7 @@
    * as published by the Free Software Foundation; either version 2 of
    * the License, or (at your option) any later version.
    */
-#ifdef MT_NO_EXTERN
-/*compile to normal functions in random.c */
-#define MT_INLINE
-#else
-/*gcc4.3 changes the meaning of extern inline to conform to ISO C99*/
-/*
-#if !defined(__INTEL_COMPILER)&&( __GNUC__ >4 || (__GNUC__==4 &&__GNUC_MINOR__>=3))
-#define MT_INLINE extern inline __attribute__((__gnu_inline__))
-#elif defined(__APPLE__)
-#define MT_INLINE inline
-#else
-#define MT_INLINE extern inline 
-#endif
-*/
-/*2009-12-30: Changed to static inline which is portable*/
-#if __STDC_VERSION__ >= 199901L /*C99*/
-#define MT_INLINE inline __attribute__((always_inline)) /*static inline*/
-#else
-#define MT_INLINE inline /*static*/
-#endif
-#endif
+
 #include <stdio.h>
 #ifndef MT_MACHINE_BITS
 #include <limits.h>
@@ -145,7 +125,7 @@ void mts_refresh(register mt_state* state);
 #define mt_64_to_double (1./18446744073709551616.)
 /* Mult'r to cvt long long to dbl */
 
-MT_INLINE unsigned long mts_lrand(/*32 bit val */
+INLINE unsigned long mts_lrand(/*32 bit val */
     register mt_state*	state)		/* State for the PRNG */
     {
     register unsigned long random_value;	/* Pseudorandom value generated */
@@ -157,7 +137,7 @@ MT_INLINE unsigned long mts_lrand(/*32 bit val */
     MT_PRE_TEMPER(random_value);
     return MT_FINAL_TEMPER(random_value);
     }
-MT_INLINE double mts_drand( /*32 bit precision double. [0,1) */
+INLINE double mts_drand( /*32 bit precision double. [0,1) */
     register mt_state*	state)		/* State for the PRNG */
     {
     register unsigned long random_value;	/* Pseudorandom value generated */
@@ -170,7 +150,7 @@ MT_INLINE double mts_drand( /*32 bit precision double. [0,1) */
 
     return random_value * mt_32_to_double;
     }
-MT_INLINE double mts_ldrand( /*64 bit precision double */
+INLINE double mts_ldrand( /*64 bit precision double */
     register mt_state*	state)		/* State for the PRNG */
     {
 #if MT_MACHINE_BITS == 64
