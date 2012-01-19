@@ -383,7 +383,7 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
-AC_CHECK_LIB([z],[gzopen],[has_z='no'],[has_z='no'])
+AC_CHECK_LIB([z],[gzopen],[has_z='yes'],[has_z='no'])
 if test "$has_z" = "no" ;then
    if test -z "$libsuffix" ;then
       AC_MSG_ERROR([Please install zlib library])
