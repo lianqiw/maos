@@ -344,7 +344,8 @@ void wfsgrad_iwfs(thread_t *info){
     const int do_pistatout=parms->powfs[ipowfs].pistatout&&isim>=parms->powfs[ipowfs].pistatstart;
     const int do_geom=!do_phy || save_gradgeom || do_pistatout;
     const double *realamp=powfs[ipowfs].realamp[wfsind];
-    double *srot=parms->powfs[ipowfs].radpix?powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
+    double *srot=(do_phy && parms->powfs[ipowfs].radpix)?
+	powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
     dmat *gradref=NULL;
     dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
