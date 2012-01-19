@@ -156,7 +156,7 @@ case "$host_os" in
  wget="wget -t1 --no-check-certificate"
  wgetoutput="-O"
  mkldep="-lguide"
- mklname=mkl${cpu}
+ libsuffix=${cpu}
  system="linux"
  ldsuffix="so"
  LDFLAGS="$LDFLAGS" #as-needed is conflicting with fftw3 openmp detection.
@@ -168,7 +168,7 @@ case "$host_os" in
  wget="curl --retry 1 -L --progress-bar"
  wgetoutput="--output"
  mkldep="-liomp5"
- mklname=mklfat
+ libsuffix=fat
  system="apple"
  ldsuffix="dylib"
  ;;
@@ -188,6 +188,9 @@ case "$host_os" in
 *)
 AC_MSG_ERROR([Unrecognized OS])
 esac
+mklname=mkl${libsuffix}
+fftwname=fftw${libsuffix}
+zlibname=libz${libsuffix}
 AC_SUBST(ldsuffix)
 mkl_lib="${LIBDIR}/${mklname}/libmkl.la"
 if test "$try_mkl" = "yes" ;then
@@ -224,7 +227,6 @@ else
    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
-AC_CHECK_LIB([z],[gzopen],[],[AC_MSG_ERROR([zlib is not found])])
 AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"])
 AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
 if test "x$pthread_good" = "xyes" ;then
@@ -381,25 +383,29 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
 fi
+AC_CHECK_LIB([z],[gzopen],[has_z='no'],[has_z='no'])
+if test "$has_z" = "no" ;then
+   if test -z "$libsuffix" ;then
+      AC_MSG_ERROR([Please install zlib library])
+   fi
+   if test ! -d ${LIBDIR}/${zlibname} ;then
+      download ZLIB ${zlibname}.tar.bz2
+   fi
+   LDZ="-L${LIBDIR}/${zlibname}"
+fi
 #Check for FFTW3 header and library.
 has_fftw='yes'
 AC_CHECK_HEADERS([fftw3.h],[], [has_fftw='no'])
 AC_CHECK_LIB([fftw3], [fftw_execute],[],[has_fftw='no'])
 if test "$has_fftw" = "no" ;then #fftw does not exist in system.
-   if test "$system" = "linux" ;then
-      fftwname=fftw${cpu}
-   elif test "$system" = "apple" ;then
-      fftwname=fftwfat
-   else
+   if test -z "$libsuffix" ;then
       AC_MSG_ERROR([Please install fftw library])
    fi	
-   if test -n "$fftwname" ;then
-      if test ! -d ${LIBDIR}/${fftwname} ;then 
-         download FFTW ${fftwname}.tar.bz2
-      fi
-      LDFFT="-L${LIBDIR}/${fftwname}"
-      OPTScommon="$OPTScommon -I${LIBDIR}/${fftwname}"
+   if test ! -d ${LIBDIR}/${fftwname} ;then 
+       download FFTW ${fftwname}.tar.bz2
    fi
+   LDFFT="-L${LIBDIR}/${fftwname}"
+   OPTScommon="$OPTScommon -I${LIBDIR}/${fftwname}"
 else
    LDFFT=""
 fi
@@ -471,7 +477,7 @@ fi
 
 AC_CHECK_HEADERS([unistd.h])
 #LDCHOL must be before LAPACK
-LDOPTS="$LAPACK $LDSYS $LDFFT -lm"
+LDOPTS="$LAPACK $LDSYS $LDFFT $LDZ "
 #LDEXE="${LDEXE} -no-install"
 OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
 AC_SUBST(LDAOS)
