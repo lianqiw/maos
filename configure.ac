@@ -310,7 +310,7 @@ case "${CC}" in
 	if test $major -ge 4 -a $minor -ge 3;then #GCC4.3 changed meaning of inline
 	    INLINE="inline __attribute__((always_inline))"
 	else
-	    INLINE="extern inline __attribute__((always_inline))"
+	    INLINE="extern __inline __attribute__((gnu_inline))"
 	fi
     fi
     ;;
