@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-1.0.0: Simulation Results</title>
+<title>maos-1.0.1: Simulation Results</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-1.0.0</div>
+   <div id="projectname">maos-1.0.1</div>
   </td>
  </tr>
  </tbody>
@@ -93,7 +93,10 @@ function toggleVisibility(linkObj) {
 <div class="contents">
 <div class="textblock"><h2><a class="anchor" id="simu-results"></a>
 Simulation Results</h2>
-<p>MAOS will generate output in binary format <code></code>.bin or zipped <code></code>.bin.gz files as described below. There are two MATLAB mex routines <code>read</code> and <code>write</code> that can read and write <code></code>.bin or <code></code>.bin.gz files in MATLAB. The source of these mex routines are located in sub-folderx <code>mex</code>. If <code>mex</code> is found in the system, this mex routines will be compiled automatically in the <code>mex</code> subfolder of the compiling folder. If it doesn't get compiled, please goto the <code>mex</code> subfolder in the source folder and type ./compile.sh to compile them. Copy <code>write.mexa64</code> and <code>read.mexa64</code> into a folder that is in your matlab path, such as $HOME/matlab. The usage in MATLAB is as follows:</p>
+<p>MAOS will generate output in binary format <code></code>.bin or zipped <code></code>.bin.gz files as described below. PSFs are written into fits files with extensions.</p>
+<h3><a class="anchor" id="sect-matlab"></a>
+Reading Results in MATLAB</h3>
+<p>There are two MATLAB mex routines <code>read</code> and <code>write</code> that can read and write <code></code>.bin or <code></code>.bin.gz files in MATLAB. The source of these mex routines are located in sub-folder <code>mex</code>. If <code>mex</code> is found in the system, this mex routines will be compiled automatically in the <code>mex</code> subfolder of the compiling folder. If it doesn't get compiled, please goto the <code>mex</code> subfolder in the source folder and type ./compile.sh to compile them. Copy <code>write.mexa64</code> and <code>read.mexa64</code> into a folder that is in your matlab path, such as $HOME/matlab. The usage in MATLAB is as follows:</p>
 <div class="fragment"><pre class="fragment">
    cle=read('Res_1'); 
 or cle=read('Res_1.bin'); 
@@ -105,6 +108,11 @@ or cle=read('Res_1.bin.gz');
 </pre></div><p>If there is any problem in compling read.c and write.c, there are two matlab scripts in the scripts folder, readbin.m and writebin.m, that have most of functionality of read.c, write.c albeit a bit slower.</p>
 <p>The data are saved to the bin files in a moduler way. For a simple matrix (like double matrix or cell matrix), we first write a magic number (4 byte unsigned int) representing the data type, and then x and y dimension (two 8 byte unsigned ints), and finally the data itself (if it is cell, recursively write the data contained in the cell with the same method).</p>
 <p>Each block of data may optionally be proceeded with a metadata header that describes the data, for example, the sampling of a <a class="el" href="structloc__t.html" title="Struct for coordinates like plocs, xloc, aloc etc.">loc_t</a> grid. The surf OPD contains header information about the sampling, origin and height of the OPD array.</p>
+<h3><a class="anchor" id="sect-idl"></a>
+Reading Results in IDL</h3>
+<p>There are two idl scripts in the sub-folder <code>script</code>. They are readbin.pro for reading bin files, and writebin.pro for writing bin files.</p>
+<h3><a class="anchor" id="sect-interpret"></a>
+Result Format</h3>
 <p>There will be several files created during simulation in the result folder. The number after underscore _ is the seed. For example, with seed 1 the following files are produced. Read in these files using provided mex function <code>read</code> in MATLAB. Notice that the suffix .bin or .bin.gz has been removed. You do not need to add the suffix when use <code>read</code>.</p>
 <ul>
 <li><code>Res_1:</code> A binary file containing a cell array that include the main results. i.e. res=read('Res_1');<ul>
@@ -176,7 +184,7 @@ or cle=read('Res_1.bin.gz');
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
+      <li class="footer">Generated on Thu Jan 19 2012 17:43:40 for maos-1.0.1 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

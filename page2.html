@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-1.0.0: Compile and Run the Code</title>
+<title>maos-1.0.1: Compile and Run the Code</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-1.0.0</div>
+   <div id="projectname">maos-1.0.1</div>
   </td>
  </tr>
  </tbody>
@@ -97,18 +97,16 @@ Requirements</h2>
 <li>C99 compliant compiler: GCC4 or ICC.</li>
 </ul>
 <ul>
-<li>FFTW version 3. Can usually be installed through the linux distribution official repository or using source from www.fftw.org</li>
-</ul>
-<ul>
-<li>Optimized blas and lapack. Blas and lapack can usually be installed through the linux distribution official repository. For 64 bit linux machines, it is also possible to use a redistributed version of the Intel MKL by appending --enable-mkl when you run configure</li>
-</ul>
-<ul>
 <li>(Optional) GTK+ and Cairo. For drawdaemon and monitor.</li>
 </ul>
-<h2><a class="anchor" id="sect-run"></a>
-Run the code</h2>
-<h3><a class="anchor" id="sect-prep"></a>
-Preparing the folders and compiling</h3>
+<ul>
+<li>(Optional in Linux/Mac) FFTW version 3. Will download from MAOS site if not available in the system.</li>
+</ul>
+<ul>
+<li>(Optional in Linux/Mac) Optimized blas and lapack. Blas and lapack can usually be installed through the linux distribution official repository. Will download from MAOS site if not available in the system.</li>
+</ul>
+<h2><a class="anchor" id="sect-prep"></a>
+Preparing the folders and compiling</h2>
 <p>We recommend using three different folders to 1) store the source tree, 2) compile the code, and 3) run the simulation.</p>
 <p>The source tree is where the source is extracted. Obtain the software in the form of the compressed tar ball: maos_version.tar.gz. Extract it into some directory and name the directory src_dir. Example:</p>
 <div class="fragment"><pre class="fragment">
@@ -121,17 +119,16 @@ Preparing the folders and compiling</h3>
     cd ~/work/maos
     mkdir comp_optim &amp;&amp; cd comp_optim
     $src_dir/configure
-    make
+    make -j4 #this will compile using 4 threads.
     </pre></div><p>which will config the compiling folder with GCC compiler and default optimization flags and compile the code.</p>
-<p>To use intel C++ compiler, do the following</p>
+<p>Intel C++ compiler icc will be automatically used if it exists in the system. To disable it, do the following</p>
 <div class="fragment"><pre class="fragment">
     cd ~/work/maos
-    mkdir comp_icc &amp;&amp; cd comp_icc
-    $src_dir/configure --enable-icc
+    $src_dir/configure --disable-icc
     make
-    </pre></div><p>To use the redistributed Intel MKL library (for fast cholesky decomposition) </p>
+    </pre></div><p>To for using the redistributed Intel MKL library (for fast cholesky decomposition) </p>
 <div class="fragment"><pre class="fragment">
-    $src_dir/configure --enable-icc --enable-mkl
+    $src_dir/configure --enable-mkl
     </pre></div><p>To enable debug mode </p>
 <div class="fragment"><pre class="fragment">
     $src_dir/configure --enable-debug
@@ -139,13 +136,24 @@ Preparing the folders and compiling</h3>
 <div class="fragment"><pre class="fragment">
     CC=gcc4.1 $src_dir/configure
     </pre></div><p>The compiled executable is maos in the sub-folder “bin” of the compiling folder. You do not have to do "make install" to run the simulations.</p>
-<h3><a class="anchor" id="Installing"></a>
-GTK+ in MAC OS and Compile Monitor, Drawdaemon</h3>
-<p>First, if xcode is not installed in full, make sure the following packages are installed DeveloperToolsCLI.pkg gcc4.2.pkg MACOSX10.5.pkg DevSDK.pkg OpenGLSDK.pkg DeveloperToolsSystemSupport</p>
-<p>Second, download and install pkg-config from pkgconfig.freedesktop.org/releases/</p>
-<p>Third, following the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for osx. The environmental variables are set by jhbuild, here we take important ones and put them in our .bash_profile to avoid running jhbuild each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.</p>
-<p>export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig" export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib" export PATH="$PATH:$HOME/gtk/inst/bin" export C_INCLUDE_PATH="$HOME/gtk/inst/include"</p>
-<p>Now rerun configure and make. Monitor and drawdaemon should appear in bin folder now.</p>
+<h3><a class="anchor" id="sect-mac-gtk"></a>
+Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon</h3>
+<p>First, if xcode is not installed in full, make sure the following packages are installed </p>
+<div class="fragment"><pre class="fragment">
+    DeveloperToolsCLI.pkg
+    gcc4.2.pkg
+    MACOSX10.5.pkg
+    DevSDK.pkg
+    OpenGLSDK.pkg
+    DeveloperToolsSystemSupport
+    </pre></div><p> Second, download and install pkg-config from pkgconfig.freedesktop.org/releases/</p>
+<p>Third, following the instructions on page gtk-osx.sourceforge.net/ to install gtk+ for osx. The environmental variables are set by jhbuild, here we take important ones and put them in our .bash_profile to avoid running jhbuild each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options. </p>
+<div class="fragment"><pre class="fragment">
+    export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig"
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib"
+    export PATH="$PATH:$HOME/gtk/inst/bin"
+    export C_INCLUDE_PATH="$HOME/gtk/inst/include"
+    </pre></div><p> Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now.</p>
 <p>To make the app bundles. First, install quartz engine and ige-mac-buildler. sourceforge.net/apps/trac/gtk-osx/wiki/Bundle jhbuild build gtk-quartz-engine</p>
 <p>Second, symbolic link bin/drawdaemon and bin/monitor to $HOME/gtk/inst/bin And cd to scripts/bundle folder, run build.sh. .app files should appear in your desktop.</p>
 <h3><a class="anchor" id="sect-monitor"></a>
@@ -164,13 +172,13 @@ Using the job monitor</h3>
               Different users should have different port number. 
 	      The port has to be the same on all the machines. 
     </pre></div><h3><a class="anchor" id="sect-run"></a>
-Run the code</h3>
+Run the simulation</h3>
 <p>The simulation is usually done outside of the source and compilation folder by linking the maos executable into the simulation folder or link maos into a direction that is in the PATH. Example</p>
 <div class="fragment"><pre class="fragment">
-cd ~/work/maos
-mkdir NFIRAOS &amp;&amp; cd NFIRAOS
-ln ~/work/aos/comp_optim/bin/maos . -s
-./maos
+    cd ~/work/maos
+    mkdir NFIRAOS &amp;&amp; cd NFIRAOS
+    ln ~/work/aos/comp_optim/bin/maos . -s
+    ./maos -o result
     </pre></div><p>You can also link “maos” into your PATH and run “maos” instead of “./maos”</p>
 <div class="fragment"><pre class="fragment">
     cd ~/local/bin #make sure this is in your PATH
@@ -181,18 +189,18 @@ ln ~/work/aos/comp_optim/bin/maos . -s
     maos -h  #will print the help message and exit.
     </pre></div><p>If maos is launched without any parameters, it will use default.conf which contains the baseline NFIRAOS configuration nfiraos.conf. Users can change the content of default.conf to include another file to make that the default option. The valid command line arguments are as follows</p>
 <div class="fragment"><pre class="fragment">
--c scao_lgs.conf   Change the baseline config from nfiraos.conf to scao_lgs.conf
--d     deteach from the console and run in background. You can then close
-       the terminal and log out without killing the job
--n 4   use 4 threads. (default is 1)
--s 2   to override the seed (normally specified in sim.seed) to 2. 
-       repeat to have multiple seeds (-s1 -s2 -s3)
--f     Force starting immediately. Otherwise only proceed when cpu is available
-       as controlled by the built-in "scheduler"
-a.conf Append a.conf to the config file list
--o ABC Put the results in folder ABC (create if not already exists). If not 
-       specified the default output folder name will be composed of the data 
-       and time string in the form of 2010-03-05-161539.
+    -c scao_lgs.conf   Change the baseline config from nfiraos.conf to scao_lgs.conf
+    -d     deteach from the console and run in background. You can then close
+           the terminal and log out without killing the job
+    -n 4   use 4 threads. (default is 1)
+    -s 2   to override the seed (normally specified in sim.seed) to 2. 
+           repeat to have multiple seeds (-s1 -s2 -s3)
+    -f     Force starting immediately. Otherwise only proceed when cpu is available
+           as controlled by the built-in "scheduler"
+    a.conf Append a.conf to the config file list
+    -o ABC Put the results in folder ABC (create if not already exists). If not 
+           specified the default output folder name will be composed of the data 
+           and time string in the form of 2010-03-05-161539.
     </pre></div><p>Example: </p>
 <div class="fragment"><pre class="fragment">
     maos -c scao_lgs.conf override.conf -n 4 -d -o test 
@@ -201,7 +209,7 @@ a.conf Append a.conf to the config file list
 </div>
   <div id="nav-path" class="navpath">
     <ul>
-      <li class="footer">Generated on Tue Jan 3 2012 09:57:09 for maos-1.0.0 by&#160;
+      <li class="footer">Generated on Thu Jan 19 2012 17:43:40 for maos-1.0.1 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

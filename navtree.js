@@ -1,6 +1,6 @@
 var NAVTREE =
 [
-  [ "maos-1.0.0", "index.html", [
+  [ "maos-1.0.1", "index.html", [
     [ "MAOS Documentation", "index.html", null ],
     [ "Related Pages", "pages.html", [
       [ "Introduction", "page1.html", null ],
