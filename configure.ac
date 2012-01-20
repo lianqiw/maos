@@ -106,16 +106,6 @@ case ${host_cpu} in
 	host_cpu=i386
    ;;
 esac   
-#use_mex_default="no"
-#use_cuda_default="no"
-#CFLAGS="$CFLAGS -Xcompiler -m32"
-#CHOST="i686-pc-linux-gnu"
-#CDEFINE="__i386__"
-#HOST="i686-linux"
-#BUILD="i686-linux"
-#use_icc_default="no"
-#host_cpu=i386
-#use_mex_default="no" #disable mex
 
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
@@ -209,11 +199,12 @@ fi
 AC_ARG_ENABLE(all-static,[  --diable-all-static Compile statically], [use_static="$enableval"],[use_static=$use_static_default])
 AC_ARG_ENABLE(debug, [  --enable-debug  Turn on debug], [debug="$enableval"], [debug="no"])
 AC_ARG_ENABLE(mem,   [  --enable-mem    Turn on memory management],[use_mem="$enableval"],[use_mem="no"])
-AC_ARG_ENABLE(icc,   [  --enable-icc    Using intel compiler], [use_icc="$enableval"], [use_icc=$use_icc_default])
+AC_ARG_ENABLE(icc,   [  --disable-icc   Disable using intel compiler], [use_icc="$enableval"], [use_icc=$use_icc_default])
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
-AC_ARG_ENABLE(long,  [  --enable-long   Use long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
+AC_ARG_ENABLE(long,  [  --disable-long  Disable long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
 AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
+AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
 AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
 
 if test "x$use_static" = "xyes" ;then
@@ -266,9 +257,17 @@ if test "x$use_icc" = "xyes" ;then
 fi
 AC_PROG_CC([$CC])
 AC_TYPE_SIZE_T #it sets CC if empty
-INLINE="inline"
+
+#inline definition:
+
+#in GCC, extern inline will use the inline and not emit function definition.
+#in GCC, inline will cause use the inline, but also emit function deminition, causing multiple definitions if put in header.
+#in C99, extern inline will cause use the inline, but also emit function deminition, causing multiple definitions if put in header. This is equivalent to GCC inline
+#in C99, inline will use the inline and not emit function definition. This is equivalent to GCC extern inline 
+#GCC mode can be forced on using __attribute__((gnu_inline))
+#always_inline causes inline to be done in debug mode.
 case "${CC}" in	
-  icc)
+  icc*)
     OPTIM="$OPTIM_ICC $COMMON_ICC"
     OPT_DEBUG="$OPT_DEBUG $COMMON_ICC"
     which icc 2>/dev/null|| AC_MSG_ERROR([icc is not found in path.])
@@ -290,7 +289,7 @@ case "${CC}" in
 	fi
     fi
     ;;
-  gcc)
+  gcc*)
     OPTIM=$OPTIM_GCC
     #Test GCC version
     CC_VERSION=$($CC -dumpversion)
@@ -307,10 +306,8 @@ case "${CC}" in
 	    OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
 	    OPTIM="$OPTIM -ftree-vectorize " #introduced in GCC 4
 	fi
-	if test $major -ge 4 -a $minor -ge 3;then #GCC4.3 changed meaning of inline
-	    INLINE="inline __attribute__((always_inline))"
-	else
-	    INLINE="extern __inline __attribute__((gnu_inline))"
+	if test $major -eq 4 -a $minor -lt 3;then #GCC4.3 changed meaning of inline to C99
+	    gnu_inline="yes"
 	fi
     fi
     ;;
@@ -318,6 +315,11 @@ case "${CC}" in
     OPTIM="-O3"
     ;;
 esac
+if test "$gnu_inline" = "yes" ;then
+INLINE="extern __inline __attribute__((gnu_inline, always_inline))" #C99
+else
+INLINE="inline __attribute__((always_inline))" #C99
+fi
 AC_DEFINE_UNQUOTED(INLINE, $INLINE, [Portable definition of inline])
 if test "x$debug" = "xyes" ;then
     AM_CONDITIONAL(DEBUG,true)
