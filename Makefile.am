@@ -17,7 +17,7 @@ include $(top_srcdir)/aminclude.am
 #	rm -rf $(distdir)/external $(distdir)/test
 
 all-local:$(srcdir)/lib/tmp.c
-$(srcdir)/tmp.c:$(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c \
+$(srcdir)/lib/tmp.c:$(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c \
 	$(srcdir)/lib/spbin.c $(srcdir)/lib/sp.c
 	@echo "#define USE_COMPLEX" > $(srcdir)/lib/tmp.c
 	@cat $(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c $(srcdir)/lib/spbin.c $(srcdir)/lib/sp.c >> $(srcdir)/lib/tmp.c
