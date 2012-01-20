@@ -5,18 +5,16 @@
 
     - C99 compliant compiler: GCC4 or ICC.
 
-    - FFTW version 3. Can usually be installed through the linux distribution
-    official repository or using source from www.fftw.org
-    
-    - Optimized blas and lapack. Blas and lapack can usually be installed
-    through the linux distribution official repository. For 64 bit linux
-    machines, it is also possible to use a redistributed version of the Intel
-    MKL by appending --enable-mkl when you run configure
-    
     - (Optional) GTK+ and Cairo. For drawdaemon and monitor.
 
-    \section sect-run Run the code
-    \subsection sect-prep Preparing the folders and compiling
+    - (Optional in Linux/Mac) FFTW version 3. Will download from MAOS site if not available in the system.
+    
+    - (Optional in Linux/Mac) Optimized blas and lapack. Blas and lapack can
+    usually be installed through the linux distribution official
+    repository. Will download from MAOS site if not available in the system.
+    
+    
+    \section sect-prep Preparing the folders and compiling
 
     We recommend using three different folders to 1) store the source tree, 2)
     compile the code, and 3) run the simulation.
@@ -38,24 +36,23 @@
     cd ~/work/maos
     mkdir comp_optim && cd comp_optim
     $src_dir/configure
-    make
+    make -j4 #this will compile using 4 threads.
     \endverbatim
 
     which will config the compiling folder with GCC compiler and default
     optimization flags and compile the code.
     
-    To use intel C++ compiler, do the following
+    Intel C++ compiler icc will be automatically used if it exists in the system. To disable it, do the following
 
     \verbatim
     cd ~/work/maos
-    mkdir comp_icc && cd comp_icc
-    $src_dir/configure --enable-icc
+    $src_dir/configure --disable-icc
     make
     \endverbatim
     
-    To use the redistributed Intel MKL library (for fast cholesky decomposition)
+    To for using the redistributed Intel MKL library (for fast cholesky decomposition)
     \verbatim
-    $src_dir/configure --enable-icc --enable-mkl
+    $src_dir/configure --enable-mkl
     \endverbatim
 
     To enable debug mode
@@ -71,16 +68,17 @@
     The compiled executable is maos in the sub-folder “bin” of the compiling
     folder. You do not have to do "make install" to run the simulations.
 
-    \subsection Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon
+    \subsection sect-mac-gtk Installing GTK+ in MAC OS and Compile Monitor, Drawdaemon
 
     First, if xcode is not installed in full, make sure the following packages are installed
+    \verbatim
     DeveloperToolsCLI.pkg
     gcc4.2.pkg
     MACOSX10.5.pkg
     DevSDK.pkg
     OpenGLSDK.pkg
     DeveloperToolsSystemSupport
-
+    \endverbatim
     Second, download and install pkg-config from pkgconfig.freedesktop.org/releases/     
 
     Third, following the instructions on page
@@ -88,13 +86,13 @@
     environmental variables are set by jhbuild, here we take important
     ones and put them in our .bash_profile to avoid running jhbuild
     each time. Put the following in your .bash_profile. Adjust the path accordingly if you changed gtk-osx installing options.
-
+    \verbatim
     export PKG_CONFIG_PATH="/usr/lib/pkgconfig:$HOME/gtk/inst/lib/pkgconfig:$HOME/gtk/inst/share/pkgconfig"
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/gtk/inst/lib"
     export PATH="$PATH:$HOME/gtk/inst/bin"
     export C_INCLUDE_PATH="$HOME/gtk/inst/include"
-    
-    Now rerun configure and make. Monitor and drawdaemon should appear in bin folder now.
+    \endverbatim
+    Now rerun MAOS configure and make. Monitor and drawdaemon should appear in bin folder now.
 
     To make the app bundles. 
     First, install quartz engine and ige-mac-buildler. 
@@ -139,10 +137,10 @@
     a direction that is in the PATH. Example
 
     \verbatim
-cd ~/work/maos
-mkdir NFIRAOS && cd NFIRAOS
-ln ~/work/aos/comp_optim/bin/maos . -s
-./maos
+    cd ~/work/maos
+    mkdir NFIRAOS && cd NFIRAOS
+    ln ~/work/aos/comp_optim/bin/maos . -s
+    ./maos -o result
     \endverbatim
     
     You can also link “maos” into your PATH and run “maos” instead of “./maos”
@@ -164,18 +162,18 @@ ln ~/work/aos/comp_optim/bin/maos . -s
     option. The valid command line arguments are as follows
 
     \verbatim
--c scao_lgs.conf   Change the baseline config from nfiraos.conf to scao_lgs.conf
--d     deteach from the console and run in background. You can then close
-       the terminal and log out without killing the job
--n 4   use 4 threads. (default is 1)
--s 2   to override the seed (normally specified in sim.seed) to 2. 
-       repeat to have multiple seeds (-s1 -s2 -s3)
--f     Force starting immediately. Otherwise only proceed when cpu is available
-       as controlled by the built-in "scheduler"
-a.conf Append a.conf to the config file list
--o ABC Put the results in folder ABC (create if not already exists). If not 
-       specified the default output folder name will be composed of the data 
-       and time string in the form of 2010-03-05-161539.
+    -c scao_lgs.conf   Change the baseline config from nfiraos.conf to scao_lgs.conf
+    -d     deteach from the console and run in background. You can then close
+           the terminal and log out without killing the job
+    -n 4   use 4 threads. (default is 1)
+    -s 2   to override the seed (normally specified in sim.seed) to 2. 
+           repeat to have multiple seeds (-s1 -s2 -s3)
+    -f     Force starting immediately. Otherwise only proceed when cpu is available
+           as controlled by the built-in "scheduler"
+    a.conf Append a.conf to the config file list
+    -o ABC Put the results in folder ABC (create if not already exists). If not 
+           specified the default output folder name will be composed of the data 
+           and time string in the form of 2010-03-05-161539.
     \endverbatim
 
     Example:

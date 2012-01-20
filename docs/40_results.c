@@ -4,9 +4,13 @@
    \section simu-results Simulation Results
 
    MAOS will generate output in binary format \c .bin or zipped \c .bin.gz files
-   as described below. There are two MATLAB mex routines \c read and \c write
+   as described below. PSFs are written into fits files with extensions.
+
+   \subsection sect-matlab Reading Results in MATLAB
+
+   There are two MATLAB mex routines \c read and \c write
    that can read and write \c .bin or \c .bin.gz files in MATLAB. The source of
-   these mex routines are located in sub-folderx \c mex. If \c mex is found in
+   these mex routines are located in sub-folder \c mex. If \c mex is found in
    the system, this mex routines will be compiled automatically in the \c mex
    subfolder of the compiling folder. If it doesn't get compiled, please goto
    the \c mex subfolder in the source folder and type ./compile.sh to compile
@@ -38,11 +42,18 @@ describes the data, for example, the sampling of a loc_t grid. The surf OPD
 contains header information about the sampling, origin and height of the OPD
 array. 
 
-There will be several files created during simulation in the result folder. The
-number after underscore _ is the seed. For example, with seed 1 the following
-files are produced. Read in these files using provided mex function \c read in
-MATLAB. Notice that the suffix .bin or .bin.gz has been removed. You do not need
-to add the suffix when use \c read.
+   \subsection sect-idl Reading Results in IDL
+
+   There are two idl scripts in the sub-folder \c script. They are readbin.pro
+   for reading bin files, and writebin.pro for writing bin files.
+
+   \subsection sect-interpret Result Format
+
+   There will be several files created during simulation in the result folder. The
+   number after underscore _ is the seed. For example, with seed 1 the following
+   files are produced. Read in these files using provided mex function \c read in
+   MATLAB. Notice that the suffix .bin or .bin.gz has been removed. You do not need
+   to add the suffix when use \c read.
 
  - \c Res_1: A binary file containing a cell array that include the main
 results. i.e. res=read('Res_1'); 
@@ -110,6 +121,5 @@ results. i.e. res=read('Res_1');
    unit of radian.
 
 
-  
 
  */

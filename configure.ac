@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 1.0.0, lianqiw@gmail.com)
+AC_INIT(maos, 1.0.1, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
 BASEURL=https://github.com/downloads/lianqiw/files
@@ -347,10 +347,15 @@ function download(){
          sleep 2s
       done
    fi
-   if test ! -d ${LIBDIR} ;then
-      mkdir -p ${LIBDIR} || exit 1
+   if test -n "$3" ;then
+      OUTDIR=$3
+   else
+      OUTDIR=${LIBDIR}
    fi
-   tar -xjvf /tmp/${fn} -C ${LIBDIR}  || exit 1
+   if test ! -d ${OUTDIR} ;then
+      mkdir -p ${OUTDIR} || exit 1
+   fi
+   tar -xf /tmp/${fn} -C ${OUTDIR}  || exit 1
    rm -rf /tmp/${fn}
 }
 if test ! "x$use_mkl" = "xyes" ;then
@@ -464,12 +469,17 @@ else
    chol_fun=cholmod_factorize
    AM_CONDITIONAL(USE_LONG, false)
 fi
-
+if test ! -d ${LIBDIR}/cholmod${libsuffix} -a -n "$libsuffix" ;then
+   download CHOLMOD cholmod${libsuffix}.tar.bz2
+fi
 AC_CHECK_LIB([cholmod_${CHOLSUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod${libsuffix}])
 if test "x$have_chol" = "xyes" ;then
     LDCHOL="-L${LIBDIR}/cholmod${libsuffix} -lcholmod_${CHOLSUFFIX}"
     AM_CONDITIONAL(COMP_CHOL, false)
 else
+    if test ! -d ${SRC_DIR}/external/cholmod ;then
+        download CHOLMOD_SRC cholmod_src.tar.bz2 ${SRC_DIR}/external
+    fi
     LDCHOL="${BUILD_DIR}/external/cholmod/libcholmod_${CHOLSUFFIX}.la"
     AM_CONDITIONAL(COMP_CHOL, true)
 fi
@@ -509,17 +519,8 @@ fi
 #The following must be after AC_PROG_CC
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
-#if test "x${use_mex}" = "xyes" ; then
 AC_ENABLE_SHARED
-#else
-#AC_DISABLE_SHARED
-#fi
-#if test "x${use_static}" = "xyes" ;then
 AC_ENABLE_STATIC
-#else
-#AC_DISABLE_STATIC
-#fi
-#LT_INIT([pic-only])
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
@@ -527,15 +528,15 @@ AC_CONFIG_FILES( [Makefile
 		 tools/Makefile
 		 maos/Makefile 
 		 skyc/Makefile
+		 mex/Makefile
+		 cuda/Makefile
 		 ])
 if test -d ${srcdir}/test ;then
 AC_CONFIG_FILES([test/Makefile])
 fi
-
 if test -d ${srcdir}/external/cholmod ;then
 AC_CONFIG_FILES([external/cholmod/Makefile])
 fi
-
 if test "x${use_mex}" = "xyes" ; then
    AC_MSG_NOTICE([MEXDIR=${MEXDIR}])
    if test -n "$MEXDIR" ;then
@@ -599,7 +600,6 @@ if test "x${use_mex}" = "xyes" ; then
    fi
    if test x$mex_lib = xyes ;then
        AM_CONDITIONAL(USE_MEX, true)
-       AC_CONFIG_FILES([mex/Makefile])
    else
        AC_MSG_NOTICE([mex library test failed. Disable mex])
        AM_CONDITIONAL(USE_MEX, false)
@@ -657,7 +657,6 @@ if test "$use_cuda" = "yes" ;then
        AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])
        AM_CONDITIONAL(USE_CUDA, false)
    else
-       AC_CONFIG_FILES([cuda/Makefile])
        AM_CONDITIONAL(USE_CUDA, true)
        AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    fi

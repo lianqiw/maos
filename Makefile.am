@@ -1,13 +1,26 @@
 ACLOCAL_AMFLAGS=-I m4 --install
-SUBDIRS=external/cholmod/ lib/
+SUBDIRS=
+if COMP_CHOL
+SUBDIRS+=external/cholmod
+endif
+SUBDIRS+=lib
 if USE_CUDA
 SUBDIRS+=cuda
 endif
-SUBDIRS+=maos/ skyc/ tools/
+SUBDIRS+=maos skyc tools
 if USE_MEX
-SUBDIRS+=mex/
+SUBDIRS+=mex
 endif
 include $(top_srcdir)/aminclude.am
+
+dist-hook:
+	rm -rf $(distdir)/external $(distdir)/test
+
+all-local:$(srcdir)/lib/tmp.c
+$(srcdir)/tmp.c:$(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c \
+	$(srcdir)/lib/spbin.c $(srcdir)/lib/sp.c
+	@echo "#define USE_COMPLEX" > $(srcdir)/lib/tmp.c
+	@cat $(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c $(srcdir)/lib/spbin.c $(srcdir)/lib/sp.c >> $(srcdir)/lib/tmp.c
 
 EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs 
 
