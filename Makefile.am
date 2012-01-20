@@ -13,8 +13,8 @@ SUBDIRS+=mex
 endif
 include $(top_srcdir)/aminclude.am
 
-dist-hook:
-	rm -rf $(distdir)/external $(distdir)/test
+#dist-hook:
+#	rm -rf $(distdir)/external $(distdir)/test
 
 all-local:$(srcdir)/lib/tmp.c
 $(srcdir)/tmp.c:$(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c \
