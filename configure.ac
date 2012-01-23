@@ -1,7 +1,9 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 1.0.1, lianqiw@gmail.com)
+AC_INIT(maos, 1.0.2, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) #silent building #disable this if automake is too old.
+#silent building #disable this if automake is too old.
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
+#The URL where misc supportive libaries are located.
 BASEURL=https://github.com/downloads/lianqiw/files
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
@@ -11,26 +13,25 @@ if test -z "$LIBS" ;then
    LIBS=" "
 fi
 AC_LANG([C])
-#After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
 AC_CONFIG_MACRO_DIR([m4])
+#After enable HEADER, the package name will not appear in CFLAGS. Appear in config.h instead.
 AC_CONFIG_HEADER([config.h])
-AC_CANONICAL_HOST #defines host host_os host_cpu host_vendor etc
-#In darwin it reports wrong host_cpu (i386). The following is usually correct.
-host_cpu=$(uname -m)
-#Check operating system.
-AM_CONDITIONAL(LINUX,  false)
-AM_CONDITIONAL(BSD,    false)
-AM_CONDITIONAL(DARWIN, false)
-AM_CONDITIONAL(WIN,    false)
+#defines host host_os host_cpu host_vendor etc
+AC_CANONICAL_HOST 
+#In darwin it reports wrong host_cpu (i386). The following is correct in Linux and SL.
+if which uname 2>/dev/null;then
+   host_cpu=$(uname -m)
+fi
+
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd $srcdir && pwd)
 BUILD_DIR=$(pwd)
 if test -d ${HOME} ;then
-LIBDIR=${HOME}/.aos/lib
+    LIBDIR=${HOME}/.aos/lib
 else
-LIBDIR=${SRC_DIR}/external
+    LIBDIR=${SRC_DIR}/external
 fi
-#AC_DEFINE_UNQUOTED means expand the $ quoting in shell
+#AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
@@ -42,15 +43,8 @@ if test "${USER}" = "lianqiw" ;then
 fi
 LDEXE="-lm"
 OPTSextra=""
-use_static="no"
 
-if test -n "$(which icc 2>/dev/null)" -a -z "$CC" ;then	
-   use_icc_default="yes"
-else
-   echo "Intel Compiler is not found."
-   use_icc_default="no"
-fi
-
+#Compile mex routines if MATLAB is detected
 use_mex_default="no"
 MEXDIR_AUTO=
 if test -n "$(which mex 2>/dev/null)" ;then
@@ -69,6 +63,7 @@ elif test -n "$(ls -d /Applications/MATLAB*.app 2>/dev/null)" ;then
    done
 fi
 
+#Compile CUDA branch if CUDA toolkit is detected
 use_cuda_default="no"
 CUDADIR_AUTO=
 if test -n "$(which nvcc 2>/dev/null)" ;then
@@ -85,63 +80,80 @@ elif test -f /usr/local/cuda/bin/nvcc ;then
    use_cuda_default="yes"
    CUDADIR_AUTO="/usr/local/cuda/"
 fi
+
+#Enable the user to force 32 or 64 bit program
 AC_ARG_ENABLE(32,  [  --enable-32   Compile 32 bit executables], [use_32="$enableval"], [use_32="no"])
 AC_ARG_ENABLE(64,  [  --enable-64   Compile 64 bit executables], [use_64="$enableval"], [use_64="no"])
+cross_compile="no"
 if test "$use_64" = "yes" ;then
+   case $host_cpu in
+      *86)
+         cross_compile="yes"
+      ;;
+   esac
    host_cpu=x86_64
 elif test "$use_32" = "yes" ;then
+   case $host_cpu in
+      *64)
+         cross_compile="yes"
+      ;;
+   esac
    host_cpu=i386
 fi
 case ${host_cpu} in 
    *64)
+	host_cpu=x86_64
+        cpu="64"
         CFLAGS="$CFLAGS -m64"
         LDFLAGS="$LDFLAGS -m64"
         CDEFINE="__x86_64__"
-	host_cpu=x86_64
-   ;;
-   *86)
-	CFLAGS="$CFLAGS -m32"
-	LDFLAGS="$LDFLAGS -m32"
-        CDEFINE="__i386__"
-	host_cpu=i386
-   ;;
-esac   
-
-AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
-AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
-       
-echo host_cpu=$host_cpu
-case "$host_cpu" in 
-    *86)
-        cpu="32"
-	AC_DEFINE(X86, [1], "I386 Machine")
-	objcopy_output=elf32-i386
-	objcopy_arch=i386
-	echo "CPU is 32 bit"
-	;;
-    *64)
-        cpu="64"
 	AC_DEFINE(X86_64, [1], "X86_64 Machine")
 	objcopy_output=elf64-x86-64
 	objcopy_arch=i386:x86-64
 	echo "CPU is 64 bit"
-	;;
-    *)
+   ;;
+   *86)
+	host_cpu=i386
+        cpu="32"
+	CFLAGS="$CFLAGS -m32"
+	LDFLAGS="$LDFLAGS -m32"
+        CDEFINE="__i386__"
+	AC_DEFINE(X86, [1], "I386 Machine")
+	objcopy_output=elf32-i386
+	objcopy_arch=i386
+	echo "CPU is 32 bit"
+   ;;
+   *)
         AC_MSG_ERROR([Unrecognized host_cpu])
-esac
+   ;;
+esac   
+#Use icc if it exists in the system and user does not set CC
+if test -n "$(which icc 2>/dev/null)" -a -z "$CC" -a $cross_compile = no ;then	
+   use_icc_default="yes"
+else
+   echo "Intel Compiler is not found."
+   use_icc_default="no"
+fi
+#Used for embedding conf folder in maos exe
 AC_SUBST(objcopy_output)
 AC_SUBST(objcopy_arch)
 
+#Check operating system.
+AM_CONDITIONAL(LINUX,  false)
+AM_CONDITIONAL(BSD,    false)
+AM_CONDITIONAL(DARWIN, false)
+AM_CONDITIONAL(WIN,    false)
+
 win32=no
 use_mkl="no"
-try_mkl="no"
+mkl_avail="no"
 mkl_avail="no"
 case "$host_os" in
 *linux*)
  AM_CONDITIONAL(LINUX, true)
- LDEXE="$LDEXE -lrt" #real time library.
+ LDEXE="$LDEXE -lrt" #need real time library.
  OPTSextra="-g -D_BSD_SOURCE -D_POSIX_C_SOURCE=200112L"
- try_mkl="yes"
+ mkl_avail="yes"
  use_static_default="no"
  wget="wget -t1 --no-check-certificate"
  wgetoutput="-O"
@@ -153,7 +165,7 @@ case "$host_os" in
  ;;
 *darwin*)
  AM_CONDITIONAL(DARWIN, true)
- try_mkl="yes"
+ mkl_avail="yes"
  use_static_default="no"
  wget="curl --retry 1 -L --progress-bar"
  wgetoutput="--output"
@@ -183,9 +195,8 @@ fftwname=fftw${libsuffix}
 zlibname=libz${libsuffix}
 AC_SUBST(ldsuffix)
 mkl_lib="${LIBDIR}/${mklname}/libmkl.la"
-if test "$try_mkl" = "yes" ;then
-    #Enable System V Interface definition (IPC,SHM)
-    mkl_avail="yes" #available for download.
+if test "$mkl_avail" = "yes" ;then
+    #MKL is already downloaded. use it.
     if test -f "$mkl_lib" ;then
        use_mkl_default="yes"
     else
@@ -203,9 +214,11 @@ AC_ARG_ENABLE(icc,   [  --disable-icc   Disable using intel compiler], [use_icc=
 AC_ARG_ENABLE(oprof, [  --enable-oprof  Enable oprof for code profiling.],[use_oprof="$enableval"],[use_oprf="no"])
 AC_ARG_ENABLE(long,  [  --disable-long  Disable long for sparse matrix index], [use_long="$enableval"], [use_long="yes"])
 AC_ARG_ENABLE(duma,  [  --enable-duma   Use duma, the memory debugger],[use_duma="$enableval"],[use_duma="no"])
-AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
 AC_ARG_ENABLE(gnu-inline, [  --enable-gnu-inline  Force GNU type of inline ], [gnu_inline="$enableval"], [gnu_inline="no"])
+AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines, requires mex to be in the PATH],[use_mex="$enableval"],[use_mex="$use_mex_default"])
 AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
+AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
+AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 
 if test "x$use_static" = "xyes" ;then
    LDEXE="$LDEXE -all-static" #Enable all static build.
@@ -306,7 +319,8 @@ case "${CC}" in
 	    OPTIM="$OPTIM -mtune=native" #introduced in GCC 4.2
 	    OPTIM="$OPTIM -ftree-vectorize " #introduced in GCC 4
 	fi
-	if test $major -eq 4 -a $minor -lt 3;then #GCC4.3 changed meaning of inline to C99
+	 #GCC4.3 changed meaning of inline to C99
+	if test $major -eq 4 -a $minor -lt 5;then
 	    gnu_inline="yes"
 	fi
     fi
@@ -360,8 +374,8 @@ function download(){
    tar -xf /tmp/${fn} -C ${OUTDIR}  || exit 1
    rm -rf /tmp/${fn}
 }
-if test ! "x$use_mkl" = "xyes" ;then
 #Check for LAPACK library in the system
+if test ! "x$use_mkl" = "xyes" ;then
    if test -z "$LAPACK" ;then
        if test -n "$(pkg-config --libs blas lapack)" ;then
            LAPACK=$(pkg-config --libs blas lapack)
@@ -369,17 +383,17 @@ if test ! "x$use_mkl" = "xyes" ;then
            LAPACK="-lblas -llapack"
        fi
    fi
-       echo Trying LAPACK=$LAPACK
-       AC_CHECK_LIB([blas],  [dgemm_],[],[has_lapack=no],[$LAPACK])
-       AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
-       if test  "x$has_lapack" = "xno" ;then
-           if test "x$mkl_avail" = "xyes"; then
-       	       use_mkl="yes"
-	       AC_MSG_NOTICE([blas/lapack is not found. Download and use mkl])
-           else
-               AC_MSG_ERROR([Please install blas and lapack])
-	   fi
+   echo Trying LAPACK=$LAPACK
+   AC_CHECK_LIB([blas],  [dgemm_],[],[has_lapack=no],[$LAPACK])
+   AC_CHECK_LIB([lapack],[dposv_],[],[has_lapack=no],[$LAPACK])
+   if test  "x$has_lapack" = "xno" ;then
+       if test "x$mkl_avail" = "xyes" ; then
+           use_mkl="yes"
+           AC_MSG_NOTICE([blas/lapack is not found. Download and use mkl])
+       else
+           AC_MSG_ERROR([Please install blas and lapack])
        fi
+    fi
 fi
 if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
@@ -436,23 +450,41 @@ fi
 AM_CONDITIONAL(DRAW,true) #for drawdaemon
 AM_CONDITIONAL(MON,true)  #for parital monitor without notify
 AM_CONDITIONAL(MONN,true) #for full monitor with notify
+#cairo 1.2 comes with gtk+-2.10
 #make sure there are spaces before and after >=
-PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,    [comp_draw="yes"],[comp_draw="no"])
-PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2                 ,[comp_mon="yes"], [comp_mon="no"])
-PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1,[comp_monn="yes"],[comp_monn="no"])
-#OLD GLIB has GTHREAD separated
-PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
-#The above will define MON_CFLAGS and MON_LIBS. The following will substitute the variables name 
-#with their values in Makefile.in 
+PKG_CHECK_MODULES(GTK3, gtk+-3.0,           [gtk_3="yes"], [gtk_3="no"])
+PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2,    [gtk_2="yes"], [gtk_2="no"])
+if test "$gtk_2" = "yes" -a  "$gtk_3" = "yes" ;then 
+   #both gtk2 & gtk3 exist in system. let use choose
+   AC_ARG_ENABLE(gtk-3, [  --enable-gtk-3  Using GTK+-3 ], [gtk_3="$enableval"], [gtk_3="no"])
+fi
+#The following will define MON_CFLAGS and MON_LIBS with their values in Makefile.in,
 #so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
+if test "$gtk_3" = "yes" ;then
+   PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
+   PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])
+   PKG_CHECK_MODULES(MONN, gtk+-3.0 >= 0.0 libnotify >= 0.0, [comp_monn="yes"],[comp_monn="no"])
+else
+   PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,     [comp_draw="yes"],[comp_draw="no"])
+   PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2,                  [comp_mon="yes"], [comp_mon="no"])
+   PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1, [comp_monn="yes"],[comp_monn="no"])
+fi
+
 AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
 AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
 AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
-if test -n "$GTHREAD_LIBS" ;then
-   DRAW_LIBS="$DRAW_LIBS $GTHREAD_LIBS"
-   MON_LIBS="$MON_LIBS $GTHREAD_LIBS"
-   MONN_LIBS="$MONN_LIBS $GTHREAD_LIBS"
+if test "$comp_mon" = "yes" ;then
+ if ! grep -q gthread <<<$MON_LIBS ;then
+   #OLD GLIB has GTHREAD separated
+   PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
+   if test -n "$GTHREAD_LIBS" ;then
+      DRAW_LIBS="$DRAW_LIBS $GTHREAD_LIBS"
+      MON_LIBS="$MON_LIBS $GTHREAD_LIBS"
+      MONN_LIBS="$MONN_LIBS $GTHREAD_LIBS"
+   fi
+ fi
 fi
+#The following will substitute the variables name 
 AC_SUBST(DRAW_CFLAGS)
 AC_SUBST(DRAW_LIBS)
 AC_SUBST(MON_CFLAGS)
@@ -678,6 +710,7 @@ echo use_mex=$use_mex
 echo use_icc=$use_icc
 echo use_cuda=$use_cuda
 echo use_static=$use_static
+echo Cross compile=$cross_compile
 echo Compile Drawdaemon=$comp_draw
 echo Compile Monitor=$comp_mon
 echo Compile Monitor with Libnotify=$comp_monn
@@ -685,9 +718,10 @@ echo CC=$CC
 echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
+echo LDLIB=$LDLIB
 echo LDEXE=$LDEXE
 echo LDOPTS=$LDOPTS
-if test x$use_icc = xno -a x$system = xlinux ;then
+if test x$use_icc = xno -a x$system = xlinux -a $cross_compile = no ;then
 echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
 fi
 echo "*********************************************************************************"

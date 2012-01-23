@@ -90,7 +90,6 @@ void prep_cachedm(SIM_T *simu){
 	simu->cachedm_prop[ic]=calloc(parms->sim.nthread, sizeof(thread_t));
 	if(simu->dmrealsq){
 	    cpropdata[ic].mapin=simu->dmrealsq[idm];
-	    warning2("Using dmrealsq\n");
 	}else{
 	    cpropdata[ic].locin=simu->recon->alocm[idm];
 	    cpropdata[ic].phiin=simu->dmreal->p[idm]->p;

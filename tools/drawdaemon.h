@@ -77,7 +77,12 @@ struct drawdata_t{
 
     GtkWidget *page;
     GtkWidget *drawarea;
+#if GTK_MAJOR_VERSION>=3 
+    cairo_surface_t *pixmap;
+#else
     GdkPixmap *pixmap;/*server side memory. */
+#endif
+    gint pwidth, pheight;/*size of pixmap.*/
     GtkWidget **spins;/*used on the dialog to change limits. */
     cairo_surface_t *cacheplot;/*cache the plot results so that we don't have to redraw during just panning. */
     int pending;/*drawing is pending. */

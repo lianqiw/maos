@@ -99,9 +99,13 @@ static void create_entry(PROC_T *p){
     p->entry_path=new_label(p->path,WIDTH_PATH,0);
     gtk_label_set_selectable(GTK_LABEL(p->entry_path), TRUE);
     gtk_label_set_ellipsize(GTK_LABEL(p->entry_path),PANGO_ELLIPSIZE_START);
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 12
     gtk_widget_set_tooltip_text(p->entry_path, p->path);
+#endif
     p->entry_errlo=new_label("Lo (nm)",WIDTH_ERRLO,1);
     p->entry_errhi=new_label("Hi (nm)",WIDTH_ERRHI,1);
+    gtk_label_set_max_width_chars(GTK_LABEL(p->entry_errlo),WIDTH_ERRLO);
+    gtk_label_set_max_width_chars(GTK_LABEL(p->entry_errhi),WIDTH_ERRHI);
     p->entry_iseed=new_entry("seed",WIDTH_ISEED,0.5);
     p->entry_timing=new_entry("Timing",WIDTH_TIMING,1);
     gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
@@ -154,9 +158,11 @@ static void update_prog(PROC_T *p){
 	    snprintf(tmp,64,"%d/%d",p->status.iseed+1,p->status.nseed);
 	    gtk_entry_set_text(GTK_ENTRY(p->entry_iseed), tmp);
 	    p->iseed_old=p->status.iseed;
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 16
 	    gtk_entry_set_progress_fraction
 		(GTK_ENTRY(p->entry_iseed),
 		 (double)(p->status.iseed+1)/(double)p->status.nseed);
+#endif
 	}
 	char tmp[64];
 	/*snprintf(tmp,64, "%5.2fs %d/%d %2ld:%02ld/%ld:%02ld",
@@ -177,8 +183,9 @@ static void update_prog(PROC_T *p){
 	gtk_label_set_text(GTK_LABEL(p->entry_errlo),tmp);
 	snprintf(tmp,64,"%.2f",p->status.clerrhi);
 	gtk_label_set_text(GTK_LABEL(p->entry_errhi),tmp);
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 16
 	gtk_entry_set_progress_fraction(GTK_ENTRY(p->entry_timing),p->frac);
-	
+#endif	
     }
 }
 void remove_entry(PROC_T *iproc){

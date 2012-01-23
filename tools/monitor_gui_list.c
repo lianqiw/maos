@@ -147,8 +147,17 @@ static void list_update_progress(PROC_T *p){
 	snprintf(tmp,64,"%02ld:%02ld", totm, tots);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
      }
     
-
-    snprintf(tmp,64,"%d/%d",p->status.isim+1,p->status.simend);
+    if(toth>99){
+	snprintf(tmp,64, "%d %5.2fs %ldh/%ldh",p->status.simend,
+		 step, resth,toth);
+    }else if(toth>0){
+	snprintf(tmp,64, "%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.simend,
+		 step, resth,restm,toth,totm);
+    }else{
+	snprintf(tmp,64, "%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.simend,
+		 step, restm,rests,totm,tots);	
+    }
+    //snprintf(tmp,64,"%d/%d",p->status.isim+1,p->status.simend);
     gtk_list_store_set(list, &iter, COL_STEP,tmp, COL_STEPP,p->frac*100, -1);
     
     snprintf(tmp,64,"%.2f",p->status.clerrlo);
@@ -245,8 +254,10 @@ static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ..
     switch(type){
     case 0:
 	render=gtk_cell_renderer_text_new();
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 18
 	gtk_cell_renderer_set_padding(render, 1, 1);
 	gtk_cell_renderer_set_alignment(render, 1, 0.5);
+#endif
 	break;
     case 1:
 	render=gtk_cell_renderer_progress_new();
@@ -260,21 +271,17 @@ static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ..
     gtk_tree_view_column_set_title(col, title);
     gtk_tree_view_column_set_spacing(col, 1);
     gtk_tree_view_column_set_alignment(col, 0.5);
-
-    if(width>0){
+    if(width>0){/*minimum width*/
 	gtk_tree_view_column_set_min_width(col, width);
 	gtk_tree_view_column_set_expand(col,TRUE);
 	if(type==0){
 	    g_object_set(G_OBJECT(render),"ellipsize",PANGO_ELLIPSIZE_START,NULL);
 	}
-	gtk_tree_view_column_pack_start(col,render,TRUE);
-    }else if(width<0){
+    }else if(width<0){/*exact width*/
 	gtk_tree_view_column_set_min_width(col,-width);
 	gtk_tree_view_column_set_max_width(col,-width);
-	gtk_tree_view_column_pack_start(col,render,TRUE);
-    }else{
-	gtk_tree_view_column_pack_start(col,render,FALSE);
     }
+    gtk_tree_view_column_pack_start(col,render,TRUE);
     va_list ap;
     va_start(ap, title);
     const char *att=NULL;
@@ -326,13 +333,13 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID" , "text", COL_PID, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 20,"Path", "text", COL_PATH, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low" , "text", COL_ERRLO, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_TIMING, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -46, "Low" , "text", COL_ERRLO, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -46, "High", "text", COL_ERRHI, NULL));
+    /*gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_TIMING, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Left", "text", COL_REST, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Tot", "text", COL_ALL, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Tot", "text", COL_ALL, NULL));*/
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value",COL_SEEDP,NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value",COL_STEPP,NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value",COL_STEPP,"cell-background",COL_COLOR,NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
     
     return view;

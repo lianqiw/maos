@@ -22,6 +22,20 @@
 #include "mouse_hand.h"
 #include "mouse_white.h"
 
+#ifndef GTK_WIDGET_HAS_FOCUS
+#define GTK_WIDGET_HAS_FOCUS gtk_widget_has_focus
+#endif
+#if GTK_MAJOR_VERSION>=3
+#define GDK_Left GDK_KEY_Left
+#define GDK_Right GDK_KEY_Right
+#define GDK_Up GDK_KEY_Up
+#define GDK_Down GDK_KEY_Down
+#define GDK_plus GDK_KEY_plus
+#define GDK_minus GDK_KEY_minus
+#define GDK_equal GDK_KEY_equal
+#define GDK_0 GDK_KEY_0
+#define GDK_1 GDK_KEY_1
+#endif
 #define DRAWAREA_MIN_WIDTH 440
 #define DRAWAREA_MIN_HEIGHT 320
 #define MAX_ZOOM 1000
@@ -68,8 +82,6 @@ static const char *rc_string_notebook={
 	gtk_widget_destroy(dialog0);			\
     }
 
-static void close_window(GtkObject *object);
-
 static void set_cur_window(GtkWidget *window){
     curwindow=window;
     GtkWidget *vbox=gtk_bin_get_child(GTK_BIN(curwindow));
@@ -114,7 +126,11 @@ static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, Gt
 	if(g_slist_length(windows)>1){
 	    GtkWidget *window=gtk_widget_get_parent
 		(gtk_widget_get_parent(GTK_WIDGET(topnb)));
+#if GTK_MAJOR_VERSION>=3
+	    gtk_widget_destroy(GTK_WIDGET(window));
+#else
 	    gtk_object_destroy(GTK_OBJECT(window));
+#endif
 	}else{
 	    gtk_widget_set_sensitive(toolbar, FALSE);
 	}
@@ -172,20 +188,32 @@ static void update_pixmap(drawdata_t *drawdata){
     /*no more pending updates, do the updating. */
     gint width=drawdata->width;
     gint height=drawdata->height;
-    gint width2, height2;
     if(drawdata->pixmap){
-	gdk_drawable_get_size(drawdata->pixmap, &width2, &height2);
-	if(width!=width2 || height !=height2){
+	if(width != drawdata->pwidth || height != drawdata->pheight){
+#if GTK_MAJOR_VERSION>=3 
+	    cairo_surface_destroy(drawdata->pixmap);
+#else
 	    g_object_unref(drawdata->pixmap);
+#endif
 	    drawdata->pixmap=NULL;
 	}
     }
     if(!drawdata->pixmap){
 	/*Create a new server size pixmap and then draw on it. */
+	drawdata->pwidth=width;
+	drawdata->pheight=height;
+#if GTK_MAJOR_VERSION>=3 
+	drawdata->pixmap=gdk_window_create_similar_surface(gtk_widget_get_window(curwindow), CAIRO_CONTENT_COLOR_ALPHA, width, height);
+#else
 	drawdata->pixmap=gdk_pixmap_new(curwindow->window, width, height, -1);
+#endif
     }
     /*cairo_t is destroyed in draw */
+#if GTK_MAJOR_VERSION>=3 
+    cairo_draw(cairo_create(drawdata->pixmap), drawdata,width,height);
+#else
     cairo_draw(gdk_cairo_create(drawdata->pixmap), drawdata,width,height);
+#endif
     gtk_widget_queue_draw(drawdata->drawarea);
 }
 static gboolean update_pixmap_timer(updatetimer_t * timer){
@@ -225,10 +253,20 @@ on_configure_event(GtkWidget *widget, GdkEventConfigure *event, gpointer pdata){
     return FALSE;
 }
 /* Redraw the screen from the backing pixmap */
+#if GTK_MAJOR_VERSION>=3
 static gboolean
-on_expose_event(GtkWidget *widget,
-		GdkEventExpose *event,
-		gpointer pdata){
+on_draw_event(GtkWidget *widget, cairo_t *cr, gpointer pdata){
+    drawdata_t* drawdata=*((drawdata_t**)pdata);
+    if(drawdata->font_name_version != font_name_version || !drawdata->drawn){
+	update_pixmap(drawdata);
+    }
+    cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
+    cairo_paint(cr);
+    return FALSE;
+}
+#else
+static gboolean
+on_expose_event(GtkWidget *widget, GdkEventExpose *event, gpointer pdata){
     drawdata_t* drawdata=*((drawdata_t**)pdata);
     if(drawdata->font_name_version != font_name_version || !drawdata->drawn){
 	update_pixmap(drawdata);
@@ -240,9 +278,13 @@ on_expose_event(GtkWidget *widget,
 			  event->area.x, event->area.y,
 			  event->area.x, event->area.y,
 			  event->area.width, event->area.height);
+    }else{
+	warning("pixmap is empty\n");
     }
     return FALSE;
 }
+#endif
+
 static void drawdata_free_input(drawdata_t *drawdata){
     /*Only free the input received via fifo from draw.c */
     if(drawdata->image) cairo_surface_destroy(drawdata->image);
@@ -275,7 +317,11 @@ static void drawdata_free_input(drawdata_t *drawdata){
 }
 static void drawdata_free(drawdata_t *drawdata){
     if(drawdata->pixmap){
+#if GTK_MAJOR_VERSION>=3 
+	cairo_surface_destroy(drawdata->pixmap);
+#else
 	g_object_unref(drawdata->pixmap);
+#endif
 	drawdata->pixmap=NULL;
     }
     if(drawdata->cacheplot){
@@ -336,7 +382,7 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
 		      gtk_image_new_from_stock(GTK_STOCK_CLOSE, GTK_ICON_SIZE_MENU));
     g_signal_connect(close_btn, "clicked", G_CALLBACK(delete_page), drawdatawrap);
     /* make button as small as possible */
-
+#if GTK_MAJOR_VERSION<3
     GtkRcStyle *rcstyle;
     gtk_button_set_relief(GTK_BUTTON(close_btn), GTK_RELIEF_NONE);
     rcstyle = gtk_rc_style_new();
@@ -344,6 +390,7 @@ static GtkWidget *tab_label_new(drawdata_t **drawdatawrap){
     gtk_widget_modify_style(close_btn, rcstyle);
     gtk_widget_set_size_request(close_btn,14,14);
     gtk_rc_style_unref(rcstyle);
+#endif
     gtk_box_pack_end(GTK_BOX(out), close_btn, FALSE, FALSE, 0);
 #else
     GtkWidget *ebox=gtk_event_box_new();
@@ -395,13 +442,24 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 		}
 	    }
 	    if(drawdata->pixmap){/*force a refresh to remove previous rectangule */
-		gdk_draw_drawable(widget->window, 
-				  widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
-				  drawdata->pixmap,
-				  0,0,0,0,-1,-1);
+#if GTK_MAJOR_VERSION>=3
+	cairo_t *cr=gdk_cairo_create(gtk_widget_get_window(widget));
+	cairo_set_source_surface(cr, drawdata->pixmap, 0, 0);
+	cairo_paint(cr);
+	cairo_destroy(cr);
+#else
+	gdk_draw_drawable(widget->window, 
+			  widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
+			  drawdata->pixmap,
+			  0,0,0,0,-1,-1);
+#endif
 	    }
 	    /*do not draw to pixmap, use window */
+#if GTK_MAJOR_VERSION>=3
+	    cairo_t *cr=gdk_cairo_create(gtk_widget_get_window(widget));
+#else
 	    cairo_t *cr=gdk_cairo_create(widget->window);
+#endif
 	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
 	    cairo_set_source_rgba(cr,0,0,1,0.1);
 	    cairo_set_line_width(cr, 1);
@@ -620,7 +678,9 @@ void addpage(drawdata_t **drawdatawrap)
 	roots=g_slist_append(roots,root);
 	nroot++;
 	gtk_container_set_border_width(GTK_CONTAINER(root),2);
-#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 12
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 24
+	gtk_notebook_set_group_name(GTK_NOTEBOOK(root), "secondlevel");
+#elif GTK_MINOR_VERSION >=12	
 	gtk_notebook_set_group(GTK_NOTEBOOK(root), "secondlevel");
 #endif
 	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(root),GTK_POS_RIGHT);
@@ -716,8 +776,13 @@ void addpage(drawdata_t **drawdatawrap)
 			       GDK_BUTTON1_MOTION_MASK|
 			       GDK_KEY_PRESS_MASK|
 			       GDK_KEY_RELEASE_MASK);
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION>=22
+	gtk_widget_set_can_focus(drawarea,TRUE);
+	gtk_widget_set_sensitive(drawarea,TRUE);
+#else
 	GTK_WIDGET_SET_FLAGS(drawarea,GTK_CAN_FOCUS);
 	GTK_WIDGET_SET_FLAGS(drawarea,GTK_SENSITIVE);
+#endif
 	g_signal_connect(drawarea,"motion-notify-event",
 			 G_CALLBACK(motion_notify),drawdatawrap);
 	g_signal_connect(drawarea,"button-press-event",
@@ -737,8 +802,13 @@ void addpage(drawdata_t **drawdatawrap)
 	gtk_notebook_append_page(GTK_NOTEBOOK(root), page,button);
 	gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(root), page, TRUE);
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(root), page, TRUE);
+#if GTK_MAJOR_VERSION>=3
+	g_signal_connect (drawarea, "draw", 
+	     G_CALLBACK (on_draw_event), drawdatawrap);
+#else
 	g_signal_connect (drawarea, "expose-event", 
 	     G_CALLBACK (on_expose_event), drawdatawrap);
+#endif
 	/*handles zooming. */
 	g_signal_connect (drawarea, "configure-event", 
 	     G_CALLBACK (on_configure_event), drawdatawrap);
@@ -1089,8 +1159,12 @@ static void tool_font_set(GtkFontButton *btn){
     SP_XR=SP_LEG+LEN_LEG+font_size*2;
     pango_font_description_free(pfd);
 }
-
-static void close_window(GtkObject *object){
+#if GTK_MAJOR_VERSION>=3
+static void close_window(GtkWidget *object)
+#else
+static void close_window(GtkObject *object)
+#endif
+{
     windows = g_slist_remove(windows, object);
     GtkWidget *topnb=get_topnb(GTK_WIDGET(object));
     GtkWidget *toolbar=get_toolbar(GTK_WIDGET(object));
@@ -1148,6 +1222,40 @@ GtkWidget *create_window(void){
     char title[80];
     snprintf(title,80,"MAOS Drawdaemon %d (%d)", fifopid, iwindow);
     gtk_window_set_title(GTK_WINDOW(window), title);
+#if GTK_MAJOR_VERSION>=3
+
+    const gchar *all_style="*{"
+	"padding:0;\n"
+	"border-radius:0;\n"
+	"border-width:1;\n"
+	"font:Sans 8;\n"
+	"-GtkToolbar-button-releaf:2\n"
+	"}"
+	".notebook{"
+	"-GtkNotebook-tab-overlap: 0;"
+	"-GtkNotebook-tab-curvature: 0;"
+	"-GtkWidget-focus-line-width: 0;"
+	"}"
+	".notebook tab{"
+	"-adwaita-focus-border-radius: 0;"
+	"border-width: 0;"
+	"padding: 0 0 0;"
+	"background-color:@theme_bg_color;"
+	"background-image:none;"
+	"}"
+	".notebook tab:active{"
+	"-adwaita-focus-border-radius: 0;"
+	"border-width: 1;"
+	"padding: 0 0 0;"
+	"background-image:-gtk-gradient(linear,left bottom, right bottom, from (#FFFFFF), to (#FFFFFF));"
+	"}";
+    GtkCssProvider *provider_default=gtk_css_provider_new();
+    gtk_css_provider_load_from_data(provider_default, all_style, strlen(all_style), NULL);
+    GtkStyleContext *all_context=gtk_widget_get_style_context(window);
+    GdkScreen *screen=gtk_style_context_get_screen(all_context);
+    gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider_default),
+					      GTK_STYLE_PROVIDER_PRIORITY_USER);
+#endif
 
     GtkWidget *toolbar=gtk_toolbar_new();
     gtk_toolbar_set_icon_size(GTK_TOOLBAR(toolbar),GTK_ICON_SIZE_MENU);
@@ -1204,7 +1312,9 @@ GtkWidget *create_window(void){
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
     GtkWidget *topnb=gtk_notebook_new();
     gtk_container_set_border_width(GTK_CONTAINER(topnb),2);
-#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 12
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 24
+    gtk_notebook_set_group_name(GTK_NOTEBOOK(topnb), "toplevel");
+#elif GTK_MINOR_VERSION >= 12
     gtk_notebook_set_group(GTK_NOTEBOOK(topnb), "toplevel");
 #endif
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(topnb), TRUE);

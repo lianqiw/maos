@@ -145,9 +145,11 @@ static void update_prog(PROC_T *p){
 	    snprintf(tmp,64,"%d of %d",p->status.iseed+1,p->status.nseed);
 	    gtk_entry_set_text(GTK_ENTRY(p->entry_iseed), tmp);
 	    p->iseed_old=p->status.iseed;
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 16
 	    gtk_entry_set_progress_fraction
 		(GTK_ENTRY(p->entry_iseed),
 		 (double)(p->status.iseed+1)/(double)p->status.nseed);
+#endif
 	}
 	char tmp[64];
 	snprintf(tmp,64, "%d of %d %ld:%02ld %ld:%02ld %.2fs",
@@ -158,8 +160,9 @@ static void update_prog(PROC_T *p){
 	gtk_label_set_text(GTK_LABEL(p->entry_errlo),tmp);
 	snprintf(tmp,64,"%.2f",p->status.clerrhi);
 	gtk_label_set_text(GTK_LABEL(p->entry_errhi),tmp);
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 16
 	gtk_entry_set_progress_fraction(GTK_ENTRY(p->entry_timing),p->frac);
-	
+#endif	
     }
 }
 void remove_entry(PROC_T *iproc){
