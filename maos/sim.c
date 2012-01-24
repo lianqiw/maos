@@ -21,7 +21,6 @@
    Call various functions to do the simulation and evaluate performance.
 */
 #include <math.h>
-#include <alloca.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

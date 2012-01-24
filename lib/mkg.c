@@ -32,7 +32,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <alloca.h>
 #ifdef MATLAB_MEX_FILE
 #include "../mex/mkgmex.h"
 #else

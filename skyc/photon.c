@@ -20,7 +20,6 @@
   Contains functions used to calculate star flux.
 */
 #include <math.h>
-#include <alloca.h>
 #include "skyc.h"
 #include "photon.h"
 const double Z_J=1.97e7*(20*9.56);

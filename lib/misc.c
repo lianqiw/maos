@@ -406,7 +406,7 @@ void remove_file_older(const char *fndir, long sec){
 	snprintf(fnfull,PATH_MAX,"%s/%s",fndir,dp->d_name);
 	if(!stat(fnfull,&buf) && S_ISREG(buf.st_mode) && (buf.st_mtime<=sec2 || sec==0)){
 	    remove(fnfull);
-	    info2("Remove %s. %ld days old\n", fnfull, (myclocki()-buf.st_mtime)/3600/24);
+	    info2("Remove %s. %ld days old\n", fnfull, (long)(myclocki()-buf.st_mtime)/3600/24);
 	}
     }
     closedir(dir);
@@ -459,7 +459,7 @@ double factorial(long n){
     while(n>1){
 	fact*=n--;
     }
-    if(isinf(fact)){
+    if(!isfinite(fact)){
 	error("Factorial overflows\n");
     }
     return fact;

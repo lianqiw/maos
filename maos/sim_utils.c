@@ -733,7 +733,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!parms->evl.psf[ievl]) continue;
-	    if(!isinf(parms->evl.hs[ievl])){
+	    if(isfinite(parms->evl.hs[ievl])){
 		snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 	    }else{
 		strht[0]='\0';
@@ -1174,7 +1174,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		char strht[24];
 		for(int ievl=0; ievl<nevl; ievl++){
 		    if(!parms->evl.psf[ievl]) continue;
-		    if(!isinf(parms->evl.hs[ievl])){
+		    if(isfinite(parms->evl.hs[ievl])){
 			snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
 		    }else{
 			strht[0]='\0';

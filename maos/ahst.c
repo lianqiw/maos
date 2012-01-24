@@ -540,13 +540,13 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     }
     double hs=INFINITY;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(!isinf(parms->powfs[ipowfs].hs)){
-	    if(!isinf(hs) && fabs(hs-parms->powfs[ipowfs].hs)>1.e-5) 
+	if(isfinite(parms->powfs[ipowfs].hs)){
+	    if(isfinite(hs) && fabs(hs-parms->powfs[ipowfs].hs)>1.e-5) 
 		error("There are multiple LGS type with different hs.\n");
 	    hs=parms->powfs[ipowfs].hs;
 	}
     }
-    if(isinf(hs)){
+    if(!isfinite(hs)){
 	warning("No LGS found. No Need split tomography\n");
     }
     ngsmod->hs=hs;

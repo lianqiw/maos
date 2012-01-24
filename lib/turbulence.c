@@ -301,7 +301,7 @@ dmat* turbcov(dmat *r, double rmax, double r0, double L0){
     double vkcoeff0 = tg1 * tgamma(5./6.) / 2 ;/*for variance */
     dmat *cov=dnew(r->nx, r->ny);
     long n=r->nx*r->ny;
-    if(isinf(L0)){/*kolmogorov. */
+    if(!isfinite(L0)){/*kolmogorov. */
 	const double power=5./3.;
 	double coeff=6.88*pow(2*M_PI/0.5e-6, -2) * pow(r0, -power);
 	double sigma2=0.5*coeff*pow(rmax, power);

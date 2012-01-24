@@ -272,7 +272,7 @@ void moao_recon(SIM_T *simu){
 	      loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
 	      loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
 	      }*/
-	    if(!isinf(parms->moao[imoao].stroke)){
+	    if(isfinite(parms->moao[imoao].stroke)){
 		int nclip=dclip(dmmoao->p[0], 
 				-parms->moao[imoao].stroke,
 				parms->moao[imoao].stroke);
@@ -316,7 +316,7 @@ void moao_recon(SIM_T *simu){
 	      loc_calc_ptt(NULL, ptt, aloc, 0, aimcc, NULL, dmmoao->p[0]->p);
 	      loc_remove_ptt(dmmoao->p[0]->p, ptt, aloc);
 	      }*/
-	    if(!isinf(parms->moao[imoao].stroke)){
+	    if(isfinite(parms->moao[imoao].stroke)){
 		int nclip=dclip(dmmoao->p[0],
 				-parms->moao[imoao].stroke,
 				parms->moao[imoao].stroke);

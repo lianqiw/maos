@@ -89,6 +89,7 @@ static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
 	memcpy(encs2->p, encs, sizeof(dmat*)*nenc);
 	dcellwritedata(fpout, encs2);
     }
+    if(free_dvec) dfree(dvec);
     zfclose(fp);
     zfclose(fpout);
 }

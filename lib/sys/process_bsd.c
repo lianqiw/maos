@@ -22,6 +22,7 @@
 #include <math.h>
 #include <limits.h>
 #include <sys/types.h>
+#include <sys/sysctl.h>
 #include <dirent.h>
 #include <sys/resource.h>
 
@@ -40,7 +41,7 @@ const char *get_job_progname(void){
 	char buf[PATH_MAX];
 	size_t cb = sizeof(buf);
 	sysctl(mib, 4, buf, &cb, NULL, 0);
-	progname=strdup0(buf);
+	progname=strdup(buf);
     }
     return progname;
 }
@@ -52,16 +53,31 @@ int get_job_mem(void){/*return in KiB */
     return mem;
 }
 double get_job_launchtime(int pid){
+#warning "Please implement"
     double starttime;
-#error "Please implement"
+    return 0;
 }
 int get_usage_running(void){
-#error "Please implement"
+#warning "Please implement"
+  return 0;
 }
 double get_usage_mem(void){
-#error "Please implement"
+#warning "Please implement"
+  return 0;
 }
 int read_usage_cpu(long *user, long *tot){
-#error "Please implement"
+#warning "Please implement"
+  return 0;
+}
+double get_usage_load(void){
+#warning "Please implement"
+  return 0;
+}
+int get_ncpu(void){
+  return sysconf(_SC_NPROCESSORS_ONLN);
+}
+double read_self_cpu(void){
+#warning "Please implement
+  return 0;
 }
 #endif

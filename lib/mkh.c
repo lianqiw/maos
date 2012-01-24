@@ -17,7 +17,6 @@
 */
 
 #include <math.h>
-#include <alloca.h>
 #include "common.h"
 #include "mkh.h"
 #include "misc.h"

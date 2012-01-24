@@ -603,7 +603,7 @@ double X(celldiff)(const X(cell) *A, const X(cell) *B){
 */
 int X(cellclip)(X(cell) *Ac, double min, double max){
     if(!Ac || !Ac->p) return 0;
-    if(isinf(min)==-1 && isinf(max)==1) return 0;
+    if(!isfinite(min)==-1 && !isfinite(max)==1) return 0;
     int nclip=0;
     for(long i=0; i<Ac->nx*Ac->ny; i++){
 	nclip+=X(clip)(Ac->p[i],min,max);

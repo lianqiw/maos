@@ -33,7 +33,9 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <alloca.h>
+#endif
 #include <time.h>
 enum{
     T_INT=1,
@@ -54,13 +56,7 @@ typedef unsigned int spint;  /*This is always 32 bit. */
 #define M_SPINT M_INT32
 #endif
 
-#ifndef __CYGWIN__
-#ifdef __APPLE__
-#include </usr/include/complex.h>
-#else
-#include <complex.h>
-#endif
-#else
+#if defined(__CYGWIN__)
 /*CYGWIN does not have complex.h. */
 #define complex __complex__
 #define _Complex_I (__extension__ 1.0iF)
@@ -81,7 +77,27 @@ fcomplex conjf(fcomplex __z);
 fcomplex cpowf(fcomplex x, fcomplex z);
 fcomplex csqrtf(fcomplex);
 fcomplex clogf(fcomplex);
+#elif defined(__FreeBSD__) || defined(__NetBSD__)
+#include <complex.h>
+/*BSD lacks cpow in C99 implementation*/
+INLINE dcomplex clog(dcomplex x){
+  return log(cabs(x))+I*carg(x);
+}
+INLINE fcomplex clogf(fcomplex x){
+  return logf(cabsf(x))+I*cargf(x);
+}
+INLINE dcomplex cpow(dcomplex x, dcomplex z){
+  return cexp(clog(x)*z);
+}
+INLINE fcomplex cpowf(fcomplex x, fcomplex z){
+  return cexpf(clogf(x)*z);
+}
+#elif defined(__APPLE__)
+#include </usr/include/complex.h>
+#else
+#include <complex.h>
 #endif
+
 #include "sys/mem.h"
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
@@ -172,11 +188,11 @@ fcomplex clogf(fcomplex);
 
 
 /*#if USE_MEM == 1 */
-#ifndef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetPSD__)
+#define PRINT_BACKTRACE
+#else
 #define PRINT_BACKTRACE print_backtrace(0);
 void print_backtrace(int sig);
-#else
-#define PRINT_BACKTRACE
 #endif
 /*#else//if USE_MEM */
 /*#define PRINT_BACKTRACE print_backtrace(0); */

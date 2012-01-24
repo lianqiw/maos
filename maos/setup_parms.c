@@ -19,7 +19,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <alloca.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -279,7 +278,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,moao);
 
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	if(isinf(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
+	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
 	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
 	    free(parms->powfs[ipowfs].fnllt);
 	    parms->powfs[ipowfs].fnllt=NULL;
@@ -305,7 +304,7 @@ static void readcfg_powfs(PARMS_T *parms){
 
 	}else{/*there is no LLT. */
 	    parms->powfs[ipowfs].llt=NULL;
-	    if(!isinf(parms->powfs[ipowfs].hs)){
+	    if(isfinite(parms->powfs[ipowfs].hs)){
 		warning2("powfs%d has finite hs at %g but no llt specified\n",
 			ipowfs, parms->powfs[ipowfs].hs);
 	    }
@@ -1348,7 +1347,7 @@ static void setup_parms_postproc_za(PARMS_T *parms){
 	}
 	parms->atm.hmax*=secz;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(!isinf(parms->powfs[ipowfs].hs)){
+	    if(isfinite(parms->powfs[ipowfs].hs)){
 		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
 		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
 		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
@@ -1497,8 +1496,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 		if (parms->powfs[ipowfs].lo){/*skip low order wfs */
 		    continue;
 		}
-		if(!isinf(parms->powfs[ipowfs].hs)){/*at finite. */
-		    if(!isinf(hs) && fabs(hs-parms->powfs[ipowfs].hs)>1.e-6){
+		/*isinf and isfinite both return 0 on inf in FreeBSD 9.0.*/
+		if(isfinite(parms->powfs[ipowfs].hs)){/*at finite. */
+		    if(isfinite(hs) && fabs(hs-parms->powfs[ipowfs].hs)>1.e-6){
 			error("Two high order POWFS with different hs found");
 		    }else{
 			hs = parms->powfs[ipowfs].hs;
@@ -1590,7 +1590,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->dm[idm].hist){
 	    parms->sim.dmttcast=1;
 	}
-	if(!isinf(parms->dm[idm].stroke)){
+	if(isfinite(parms->dm[idm].stroke)){
 	    parms->sim.dmclip=1;
 	}
     }
@@ -1862,7 +1862,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	if(!parms->recon.split){
 	    parms->evl.psfngsr[ievl]=0;
 	}
-	if(!isinf(parms->evl.hs[ievl]) && parms->evl.psfngsr[ievl]){
+	if(isfinite(parms->evl.hs[ievl]) && parms->evl.psfngsr[ievl]){
 	    parms->evl.psfngsr[ievl]=0;
 	    if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
 		warning("evl %d: star is not at infinity. disable NGS mode removal for it\n", ievl);
@@ -2135,14 +2135,14 @@ static void check_parms(const PARMS_T *parms){
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].llt){
-	    if(isinf(parms->powfs[ipowfs].hs)){
+	    if(!isfinite(parms->powfs[ipowfs].hs)){
 		warning("powfs with llt should have finite hs\n");
 	    }
 	    if(parms->powfs[ipowfs].trs==0){
 		warning("powfs with llt should have trs=1. Will disable uplink ray tracing, but keep ETF.\n");
 	    }
 	}else{
-	    if(!isinf(parms->powfs[ipowfs].hs)){
+	    if(isfinite(parms->powfs[ipowfs].hs)){
 		warning("powfs without llt should infinite hs\n");
 	    }
 	    if(parms->powfs[ipowfs].trs==1){
@@ -2152,7 +2152,7 @@ static void check_parms(const PARMS_T *parms){
     }
 
     for(i=0; i<parms->ndm; i++){
-	if(!isinf(parms->dm[i].stroke)){
+	if(isfinite(parms->dm[i].stroke)){
 	    double strokemicron=parms->dm[i].stroke*1e6;
 	    if(strokemicron<1 || strokemicron>50){
 		warning("dm %d: stroke %g m is probably wrong\n",

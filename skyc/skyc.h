@@ -23,7 +23,6 @@
 #include <sys/time.h>
 #include <sys/times.h>
 #include <math.h>
-#include <alloca.h>
 #include <string.h>
 #include <search.h>
 #include <assert.h>

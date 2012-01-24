@@ -995,7 +995,7 @@ void X(shift2center)(X(mat) *A, double offsetx, double offsety){
 */
 int X(clip)(X(mat) *A, double min, double max){
     if(!A) return 0;
-    if(isinf(min)==-1 && isinf(max)==1) return 0;
+    if(!isfinite(min)==-1 && !isfinite(max)==1) return 0;
     if(max<=min){
 	error("upper light should be larger than lower limit\n");
     }

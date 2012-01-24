@@ -248,7 +248,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
     fprintf(stderr, " %s\n",cmdstr);
 #endif
 }
-#ifndef __CYGWIN__
+#if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>
 void print_backtrace(int sig){
     int size0,size1;

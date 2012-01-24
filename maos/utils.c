@@ -242,7 +242,7 @@ void plotloc(char *fig, const PARMS_T *parms,
 	cir[count][0]=parms->wfs[iwfs].thetax*ht;
 	cir[count][1]=parms->wfs[iwfs].thetay*ht;
 	cir[count][2]=parms->aper.d*0.5*(1.-ht/hs);
-	if(isinf(hs)){
+	if(!isfinite(hs)){
 	    cir[count][3]=0x44FF00;/*rgb color */
 	}else{
 	    cir[count][3]=0xFFFF33;/*rgb color */
@@ -288,7 +288,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
 	    locs[ipowfs+2]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
 	    locs[ipowfs+2]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
-	if(!isinf(parms->powfs[ipowfs].hs)){
+	if(isfinite(parms->powfs[ipowfs].hs)){
 	    style[ipowfs+2]=(0xFF8800<<8)+(4<<4)+2;
 	}else if(!parms->powfs[ipowfs].lo){
 	    style[ipowfs+2]=(0xFFFF00<<8)+(4<<4)+1;

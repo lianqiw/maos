@@ -18,7 +18,6 @@
 
 #include <math.h>
 #include <string.h>
-#include <alloca.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <math.h>

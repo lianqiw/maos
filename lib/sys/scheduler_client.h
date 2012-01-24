@@ -24,7 +24,7 @@ int init_sockaddr (struct sockaddr_in *name,
 		   const char *hostname, uint16_t port);
 int scheduler_connect(int ihost, int block,int mode);
 int scheduler_connect_self(int block,int mode);
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__)
 #define print_backtrace(A)
 #endif
 /*called by maos */

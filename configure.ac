@@ -351,7 +351,7 @@ AC_PROG_CC_C99 #enable C99.
 #call convention of fortran libraries
 #AC_F77_FUNC(dgemm)
 #AC_F77_FUNC(dposv)
-function download(){
+download(){
    echo The $1 library is not available in the system
    echo Will download one from the website.
    echo This library is only for non-commercial use.
@@ -474,7 +474,7 @@ AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
 AM_CONDITIONAL(MON,  test x$comp_mon  = xyes)
 AM_CONDITIONAL(MONN, test x$comp_monn = xyes)
 if test "$comp_mon" = "yes" ;then
- if ! grep -q gthread <<<$MON_LIBS ;then
+ if ! echo $MON_LIBS | grep -q gthread ;then
    #OLD GLIB has GTHREAD separated
    PKG_CHECK_MODULES(GTHREAD, gthread-2.0 >= 2.0, [has_gthread="yes"], [has_gthread="no"])
    if test -n "$GTHREAD_LIBS" ;then
@@ -714,6 +714,7 @@ echo Cross compile=$cross_compile
 echo Compile Drawdaemon=$comp_draw
 echo Compile Monitor=$comp_mon
 echo Compile Monitor with Libnotify=$comp_monn
+echo Using GTK+-3=$gtk_3
 echo CC=$CC
 echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
