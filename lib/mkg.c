@@ -489,8 +489,8 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
     dsp *GS0=spcat(GS0t[0], GS0t[1],1);
     spfree(GS0t[0]); GS0t[0]=NULL;
     spfree(GS0t[1]); GS0t[1]=NULL;
-    loc_free_map(ploc);
-    loc_free_map(xloc);
+    /*loc_free_map(ploc);
+      loc_free_map(xloc);*/
     spdroptol(GS0, 1e-7);/*drop small values. */
     return GS0;
 }

@@ -20,6 +20,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#ifndef USE_MEM
+#if defined(__INTEL_COMPILER) || !defined(DEBUG) || defined(NDEBUG)
+#define USE_MEM 0 /*backtrace is not compatible with icc. */
+#else
+#define USE_MEM 1 /*set to 0 disable memory management. */
+#endif
+#endif
 #ifndef USE_PTHREAD
 #if MATLAB_MEX_FILE
 #define USE_PTHREAD 1

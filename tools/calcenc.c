@@ -116,6 +116,16 @@ int main(int argc, char *argv[]){
     int nthread=sysconf( _SC_NPROCESSORS_ONLN );
     int ipos=0;
     int type=0;/*default is square */
+    /*
+    ARGOPT_T options[]={
+	{"help",    'h', T_INT, 2, usage, NULL},
+	{"nthread", 'n', T_INT, 1, &nthread, NULL},
+	{"diam",    'd', T_DBL, 1, &rmax, NULL},
+	{"step",    's', T_INT, 1, &dstep, NULL},
+	{"type",    't', T_INT, 1, &type, NULL},
+	{NULL, 0,0,0,NULL,NULL}};
+    char *cmds=parse_argopt(argc, argv, options);
+    */
     static struct option long_options[]={
 	{"nthread", 1, 0, 'n'},
 	{"diam",    1, 0, 'd'},

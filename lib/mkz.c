@@ -130,7 +130,7 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     spfree(zax);
     spfree(zay);
     if(amp) free(amploc);
-    loc_free_map(xloc);
+    /*loc_free_map(xloc);*/
     return ZAT;
 }
 /**

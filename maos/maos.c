@@ -17,9 +17,6 @@
 */
 
 #include "maos.h"
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
 #include "setup_powfs.h"
 #include "setup_recon.h"
 #include "setup_aper.h"

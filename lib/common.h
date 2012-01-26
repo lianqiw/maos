@@ -22,7 +22,6 @@
 /**
    Every source file in this folder should include this file
 */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h" /*not a good idea to include HAVE_CONFIG_H here */
 #endif

@@ -27,7 +27,6 @@
 #define USE_MEM 1 /*set to 0 disable memory management. */
 #endif
 #endif
-
 #if USE_MEM == 1
 #include <stdlib.h>
 #include <string.h>

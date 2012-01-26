@@ -79,7 +79,7 @@ X(mat) *X(new_ref)(long nx, long ny, T *p){
 
 /**
    Creat a X(mat) object with already allocated memory
-   chunk. the memory is freed when the memory is freed.
+   chunk. the memory is freed when the X(mat) is freed.
 */
 X(mat) *X(new_data)(long nx, long ny, T *p){
     return X(new_do)(nx,ny,p,0);
@@ -577,6 +577,16 @@ void X(cwm)(X(mat) *B, const X(mat) *A){
     }
 }
 
+/**
+   Component wise division B=B./A. 0/0 is replace by value;
+ */
+void X(cwdiv)(X(mat) *B, const X(mat) *A, T value){
+    assert(A->nx==B->nx && A->ny==B->ny);
+    for(int i=0; i<A->nx*A->ny; i++){
+	B->p[i]/=A->p[i];
+	if(isnan(REAL(B->p[i]))) B->p[i]=value;
+    }
+}
 /**
    multiply a X(mat) matrix with a vector and accumulate to y:
    y+=A*x*alpha

@@ -227,7 +227,7 @@ void ccwmc(cmat *restrict A, const cmat *restrict B, const double alpha){
     }
 }
 /**
-   component multiply dmat A with cmat B. A=A.*B;
+   component multiply cmat A with dmat B. A=A.*B;
  */
 void ccwmd(cmat *restrict A, const dmat *restrict B, const double alpha){
     assert(A && A->p);

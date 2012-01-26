@@ -222,7 +222,7 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     /*L2->px may be reallocated. so scale before setnzmax. */
     dsp *L2r=sptrans(L2);
     spfree(L2);
-    loc_free_map(loc);
+    /*loc_free_map(loc);*/
     /*spclean(L2r); */
     return L2r;
 }

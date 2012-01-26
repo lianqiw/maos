@@ -65,6 +65,7 @@ static dmat* pttr_B(const dmat *B0,   /**<The B matrix. */
 		    loc_t *loc,       /**<The aperture grid*/
 		    const double *amp /**<The amplitude map*/
 		   ){
+    if(!amp) error("amplitude map has to be not empty to remove pistion/tip/tilt\n");
     double *locx=loc->locx;
     double *locy=loc->locy;
     int nloc=loc->nloc;
@@ -171,10 +172,13 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	BPD[iloc]=pow(BP[iloc][iloc], -0.5);
     }
     double otfnorm=0;
-    for(long iloc=0; iloc<nloc; iloc++){
-	otfnorm+=amp[iloc]*amp[iloc];
+    if(amp){
+	for(long iloc=0; iloc<nloc; iloc++){
+	    otfnorm+=amp[iloc]*amp[iloc];
+	}
+    }else{
+	otfnorm=nloc;
     }
-
     otfnorm=1./otfnorm;
     struct T_VALID (*qval)[notfx]=(struct T_VALID (*)[notfx])pval;
 
@@ -187,8 +191,12 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 	    for(long iloc=0; iloc<qval[jm][im].n; iloc++){
 		long iloc1=jloc[iloc][0];/*iloc1 is continuous. */
 		long iloc2=jloc[iloc][1];/*iloc2 is not continuous. */
-		tmp1=amp[iloc1]*BPD[iloc1]*BP[iloc1][iloc2];
-		tmp2=amp[iloc2]*BPD[iloc2];
+		tmp1=BPD[iloc1]*BP[iloc1][iloc2];
+		tmp2=BPD[iloc2];
+		if(amp){
+		    tmp1*=amp[iloc1];
+		    tmp2*=amp[iloc2];
+		}
 		tmp3=opdbias?cexp(wvk*(opdbias[iloc1]-opdbias[iloc2])):1;
 		tmp+=tmp1*tmp2*tmp3;
 	    }
@@ -230,7 +238,7 @@ static void *genotf_wrap(GENOTF_T *data){
 	if(otffull && (!area || area[isa]>thres)){
 	    ccp(&otf[isa],otffull);/*just copy the full array */
 	}else if(!area || area[isa]>0){ 
-	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp+isa*nxsa,opdbiasi,wvl,B,pval);
+	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
     return NULL;
@@ -249,7 +257,7 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
     double *locx=loc->locx;
     double *locy=loc->locy;
     const long pvaltot=notfx*notfy*nloc*2;
-    long (*pval0)[2]=malloc(sizeof(long)*pvaltot);
+    long (*pval0)[2]=malloc(sizeof(long)*pvaltot*2);
     if(!pval0){
 	error("malloc for %ld failed\n", pvaltot);
     }
@@ -287,7 +295,10 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
 	    qval[jm][im].n=count-count2;
 	}
     }
-    loc_free_map(loc);
+    if(count>pvaltot){
+	error("count=%ld > pvaltot=%ld\n", count, pvaltot);
+    }
+    /*loc_free_map(loc);*//*do not free map. dangerous in multi-threaded envorionment. where other threads may be visiting loc->map.*/
     /*pval0=realloc(pval0, sizeof(int)*count*2); //do not realloc. will change position. */
     return pval;
 }
@@ -349,7 +360,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    }
 	}
 	if(isafull>0){
-	    genotf_do(&otffull,pttr,ncompx,ncompy,loc,amp+isafull*nloc,NULL,wvl,B,pval);
+	    genotf_do(&otffull,pttr,ncompx,ncompy,loc,amp?amp+isafull*nloc:NULL,NULL,wvl,B,pval);
 	}
     }
     

@@ -77,7 +77,7 @@ int get_ncpu(void){
   return sysconf(_SC_NPROCESSORS_ONLN);
 }
 double read_self_cpu(void){
-#warning "Please implement
+#warning "Please implement"
   return 0;
 }
 #endif

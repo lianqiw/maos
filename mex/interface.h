@@ -1,6 +1,5 @@
 #ifndef AOS_MEX_INTERFACE_H
 #define AOS_MEX_INTERFACE_H
-#define USE_MEM 0
 #include "../lib/aos.h"
 #ifdef MATLAB_MEX_FILE
 #include <mex.h>

@@ -171,7 +171,7 @@ void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1){
 	    p[i]*=sc;
 	}
     }
-    loc_free_map(loc);
+    /*loc_free_map(loc);*/
 }
 /**
    calculate the integral of a box with two points on corner to corner.  inside
@@ -447,7 +447,7 @@ void mkw_circular(loc_t *loc, /**<[in] grid coordinate*/
 	    p[i]*=sc;
 	}
     }
-    loc_free_map(loc);
+    /*loc_free_map(loc);*/
 }
 /**
    compute the  W0, W1 for bilinear influence function for a annular aperture of

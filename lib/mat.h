@@ -89,6 +89,7 @@ T X(wdot)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\
 T X(wdot2)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\
 T X(wdot3)(const T *a, const X(mat) *w, const T *b) CHECK_UNUSED_RESULT;\
 void X(cwm)(X(mat) *B, const X(mat) *A);\
+void X(cwdiv)(X(mat) *B, const X(mat) *A, T value);			\
 void X(mulvec)(T *restrict y, const X(mat) * restrict A, const T *restrict x, const T alpha);\
 void X(mm)(X(mat)**C0, const X(mat) *A, const X(mat) *B, const char trans[2], const T alpha);\
 void X(invspd_inplace)(X(mat) *A);\
