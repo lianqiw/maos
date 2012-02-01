@@ -35,20 +35,20 @@ else     #Monitor wihtout libnotify.
 MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
 MONITOR_LIBS=$(LDADD) $(MON_LIBS)
 endif
-MONITOR_LDFLAGS=
+MONLD=
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table
 ___bin_monitor_SOURCES=monitor.c monitor_gui.c
 ___bin_monitor_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_LDADD=$(MONITOR_LIBS)
-___bin_monitor_LDFLAGS=$(MONITOR_LDFLAGS)
+___bin_monitor_LDFLAGS=$(MONLD)
 ___bin_monitor_list_SOURCES=monitor_gui_list.c monitor.c #gtkcellrendererprogressnew.c gtkcellrendererprogressnew.h
 ___bin_monitor_list_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_list_LDADD=$(MONITOR_LIBS)
-___bin_monitor_list_LDFLAGS=$(MONITOR_LDFLAGS)
+___bin_monitor_list_LDFLAGS=$(MONLD)
 ___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
-___bin_monitor_table_LDFLAGS=$(MONITOR_LDFLAGS)
+___bin_monitor_table_LDFLAGS=$(MONLD)
 endif
 PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris
 bin_PROGRAMS=$(PROGS)

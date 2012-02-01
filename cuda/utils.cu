@@ -678,9 +678,10 @@ void gpu_spint2int(int * restrict *dest, spint *src, int n){
     }
 }
 /**
-   Convert device (float) array to host double.
+   Convert device (float) array and add to host double.
+   dest = alpha * dest + beta *src;
 */
-void gpu_dev2dbl(double * restrict *dest, float *src, int n, cudaStream_t stream){
+void gpu_dev2dbl(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream){
     float *tmp=(float*)malloc(n*sizeof(float));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
     CUDA_SYNC_STREAM;
@@ -689,7 +690,7 @@ void gpu_dev2dbl(double * restrict *dest, float *src, int n, cudaStream_t stream
     }
     double *restrict p=*dest;
     for(int i=0; i<n; i++){
-	p[i]=tmp[i];
+	p[i]=p[i]*alpha+beta*tmp[i];
     }
     free(tmp);
 }
@@ -775,22 +776,22 @@ void gpu_muv2dev(cumuv_t *out, MUV_T *in){
     gpu_dcell2cu(&(out)->V, in->V);
     spcellfree(Mt);
 }
-void gpu_cur2d(dmat **out, const curmat *in, cudaStream_t stream){
+void gpu_cur2d(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream){
     if(!in){
 	if(*out) dzero(*out);
 	return;
     }
     if(!*out) *out=dnew(in->nx, in->ny);
-    gpu_dev2dbl(&(*out)->p, in->p, in->nx*in->ny, stream);
+    gpu_dev2dbl(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream);
 }
-void gpu_curcell2d(dcell **out, const curcell *in, cudaStream_t stream){
+void gpu_curcell2d(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream){
     if(!in){
 	if(*out) dcellzero(*out);
 	return;
     }
     if(!*out) *out=dcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
-	gpu_cur2d(&(*out)->p[i], in->p[i], stream);
+	gpu_cur2d(&(*out)->p[i], alpha, in->p[i], beta, stream);
     }
 }
 

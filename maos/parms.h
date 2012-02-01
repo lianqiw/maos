@@ -541,6 +541,7 @@ typedef struct GPU_CFG_T{
     int tomo;        /**<Use GPU for tomography*/
     int fit;         /**<Use GPU for DM fitting*/
     int lsr;         /**<Use GPU for least square reconstruction*/
+    int psf;         /**<Use GPU for accumulating PSF. */
 }GPU_CFG_T;
 /**
    contains input parameters for each MOAO type.

@@ -430,7 +430,7 @@ void gpu_tomo(SIM_T *simu){
     curcellfree(curecon->grad);   curecon->grad=NULL;
     curcellfree(curecon->gradin); curecon->gradin=NULL;
     if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2){
-	gpu_curcell2d(&simu->opdr, curecon->opdr, curecon->cgstream);
+	gpu_curcell2d(&simu->opdr, 0, curecon->opdr, 1, curecon->cgstream);
 	cudaStreamSynchronize(curecon->cgstream);
 	for(int i=0; i<simu->opdr->nx; i++){
 	    simu->opdr->p[i]->nx=simu->opdr->p[i]->nx*simu->opdr->p[i]->ny;
@@ -458,7 +458,7 @@ void gpu_fit(SIM_T *simu){
 	exit(1);
     }
     toc("FitL CG");
-    gpu_curcell2d(&simu->dmfit_hi, curecon->dmfit, curecon->cgstream);
+    gpu_curcell2d(&simu->dmfit_hi, 0, curecon->dmfit, 1, curecon->cgstream);
     cudaStreamSynchronize(curecon->cgstream);
     /*Don't free opdr. */
     curcellfree(rhs); rhs=NULL;

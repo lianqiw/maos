@@ -126,11 +126,23 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     static int nx0=0,ny0=0;
     static int iseed0=-1;
     if(!nx0){
-	if(parms->atm.nxm!=parms->atm.nx || parms->atm.nym!=parms->atm.ny){/*user specified atmosphere size. */
+	long nxm=parms->atm.nxm;
+	long nym=parms->atm.nym;
+	if(nxm!=parms->atm.nx || nym!=parms->atm.ny){/*user specified atmosphere size. */
 	    long avail=gpu_get_mem();
 	    info2("Available memory is %ld\n", avail);
-	    long nxa=(avail-600000000)/nps/sizeof(float);/*we are able to host this amount. */
-	    if(nxa<0){
+	    long need=600*1024*1024;
+	    if((parms->evl.psfmean || parms->evl.psfhist) && parms->gpu.psf){
+		long needpsf=parms->evl.nevl*parms->evl.nwvl*parms->evl.psfsize[0]*parms->evl.psfsize[0]*4;
+		if(avail<need+needpsf+nxm*nym*4*parms->atm.nps){
+		    info("needpsf=%g M\n", needpsf/1024/1024);
+		    warning("Recommand disabling gpu.psf.\n");
+		}else{
+		    need+=needpsf;
+		}
+	    }
+	    long nxa=(avail-need)/nps/sizeof(float);/*we are able to host this amount. */
+	    if(nxa<nxm || nxa<nym){
 		error("GPU does not have enough memory\n");
 	    }
 	    info2("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
@@ -138,12 +150,12 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		nx0=parms->atm.nx;
 		ny0=parms->atm.ny;
 	    }else{
-		nx0=parms->atm.nxm;
-		ny0=parms->atm.nym;
+		nx0=nxm;
+		ny0=nym;
 	    }
 	    info2("We will host %dx%d in GPU\n", nx0, ny0);
 	}else{
-	    nx0=ny0=parms->atm.nxm;
+	    nx0=ny0=nxm;
 	}
     }
     /*The atm in GPU is the same as in CPU. */

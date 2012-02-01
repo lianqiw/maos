@@ -818,6 +818,7 @@ static void readcfg_gpu(PARMS_T *parms){
     READ_INT(gpu.tomo);
     READ_INT(gpu.fit);
     READ_INT(gpu.lsr);
+    READ_INT(gpu.psf);
 }
 /**
    Specify which variables to save
@@ -1798,7 +1799,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
     }else{
-	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=0;
+	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=parms->gpu.psf=0;
     }
     if(parms->dbg.cmpgpu){
 	warning("Make cpu code follows gpu implementations.\n");

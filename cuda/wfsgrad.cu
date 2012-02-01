@@ -391,7 +391,7 @@ void gpu_wfsgrad(thread_t *info){
 	    case 3:{/*The following need to port to GPU*/
 		dcell *cints=NULL;
 		dmat *gradnfc=simu->gradnf->p[iwfs];
-		gpu_curcell2d(&cints, ints, stream);
+		gpu_curcell2d(&cints, 0, ints, 1, stream);
 		CUDA_SYNC_STREAM;
 		double gnf[3];
 		for(int isa=0; isa<nsa; isa++){
@@ -445,7 +445,7 @@ void gpu_wfsgrad(thread_t *info){
 		    break;
 		case 3:{
 		    dcell *cints=NULL;
-		    gpu_curcell2d(&cints, ints, stream);
+		    gpu_curcell2d(&cints, 0, ints, 1, stream);
 		    CUDA_SYNC_STREAM;
 		    double gny[3];
 		    for(int isa=0; isa<nsa; isa++){
@@ -488,7 +488,7 @@ void gpu_wfsgrad(thread_t *info){
 	    }
 	    /*send grad to CPU. */
 	    if(parms->powfs[ipowfs].phytypesim!=3){
-		gpu_dev2dbl(&gradcl->p, gradny?gradny->p:gradnf->p, nsa*2, stream);
+		gpu_dev2dbl(&gradcl->p, 0, gradny?gradny->p:gradnf->p, 1, nsa*2, stream);
 	    }
 	    if(powfs[ipowfs].gradphyoff){
 		dadd(&gradcl, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
@@ -537,7 +537,7 @@ void gpu_wfsgrad(thread_t *info){
 		    ctoc("noise");
 		}
 	    }
-	    gpu_cur2d(&gradcl, gradacc, stream);
+	    gpu_cur2d(&gradcl, 0, gradacc, 1, stream);
 	    ctoc("dev2dbl");
 	    curzero(gradacc, stream);
 	    ctoc("zero");

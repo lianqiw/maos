@@ -558,10 +558,11 @@ void perfevl(SIM_T *simu){
     }
     perfevl_mean(simu);
 #if USE_CUDA
-    if(parms->gpu.evl){
+    if(parms->gpu.evl && parms->gpu.psf){
 	gpu_perfevl_save(simu);
     }else
 #endif
+	
 	perfevl_save(simu);
 
     simu->tk_eval=myclockd()-tk_start;
