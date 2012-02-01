@@ -7,8 +7,13 @@
 #include <complex.h>
 
 #include "io.h"
-
-static mxArray *readdata(file_t *fp, mxArray **header){
+mxArray *INVALID=(mxArray*)1;
+static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
+    /*
+      if start!=0 || howmany!=0 and data is cell, will only read cell from start to start+howmany
+      if data is not cell and start==-1, will skip the data.
+      Only the first call to readdata will possibly have howmany!=0
+     */
     uint32_t magic;
     mxArray *out=NULL;
     long nx,ny;
@@ -27,6 +32,26 @@ static mxArray *readdata(file_t *fp, mxArray **header){
     free(header2.str); header2.str=NULL;
     nx=header2.nx;
     ny=header2.ny;
+    int start_save=start;
+    if(iscell(magic)){
+	if(iscell(magic) && start!=-1 && howmany==0){
+	    if(start!=0){
+		error("Invalid use\n");
+	    }
+	    howmany=nx*ny;
+	}
+    }else if(fp->isfits){
+	if(howmany!=0){
+	    /*first read of fits file. determine if we need it*/
+	    if(start>0){
+		start=-1;//skip this block.
+	    }
+	}
+    }else{
+	if((start!=0 && start!=-1) || howmany!=0){
+	    error("invalid use");
+	}
+    }
     int iscell=0;
     if(fp->eof) return NULL;
     switch(magic){
@@ -46,12 +71,16 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    out=mxCreateCellMatrix(nx,ny);
 	    mxArray *header0=mxCreateCellMatrix(nx*ny+1,1);
 	    for(ix=0; ix<nx*ny; ix++){
+		int start2=0;
+		if(start==-1 || ix<start || ix>=start+howmany){
+		    start2=-1;
+		}
 		mxArray *header3=NULL;
-		mxArray *tmp=readdata(fp, &header3);
+		mxArray *tmp=readdata(fp, &header3, start2, 0);
 		if(fp->eof){
 		    break;
 		}
-		if(tmp){
+		if(tmp>0){
 		    mxSetCell(out, ix, tmp);
 		}
 		if(header3){
@@ -67,6 +96,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
     case M_SP64:
     case M_SP32:
 	{
+	    if(start==-1) error("Invalid use\n");
 	    size_t size;
 	    if(magic==M_SP32){
 		size=4;
@@ -128,6 +158,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
     case M_CSP64:
     case M_CSP32:/*complex sparse*/
 	{
+	    if(start==-1) error("Invalid use\n");
 	    size_t size;
 	    if(magic==M_CSP32){
 		size=4;
@@ -178,7 +209,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 			free(Ir);
 		    }else{
 			info("size=%lu\n", size);
-			mexErrMsgTxt("Invalid sparse format\n");
+			error("Invalid sparse format\n");
 		    }
 		}
 		dcomplex *tmp=malloc(sizeof(dcomplex)*nzmax);
@@ -194,7 +225,12 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	}
 	break;
     case M_DBL:/*double array*/
-	{
+	if(start==-1){
+	    if(zfseek(fp, sizeof(double)*nx*ny, SEEK_CUR)){
+		error("Seek failed\n");
+	    }
+	    out=INVALID;
+	}else{
 	    out=mxCreateDoubleMatrix(nx,ny,mxREAL);
 	    if(nx!=0 && ny!=0){
 		zfread(mxGetPr(out), sizeof(double),nx*ny,fp);
@@ -202,7 +238,12 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	}
 	break;
     case M_FLT:/*float array. convert to double*/
-	{
+	if(start==-1){
+	    if(zfseek(fp, sizeof(float)*nx*ny, SEEK_CUR)){
+		error("Seek failed\n");
+	    }
+	    out=INVALID;
+	}else{
 	    out=mxCreateDoubleMatrix(nx,ny,mxREAL);
 	    if(nx!=0 && ny!=0){
 		float *tmp=malloc(nx*ny*sizeof(float));
@@ -216,7 +257,12 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    }
 	}break;
     case M_INT64:/*long array*/
-	{
+	if(start==-1){
+	    if(zfseek(fp, 8*nx*ny, SEEK_CUR)){
+		error("Seek failed\n");
+	    }
+	    out=INVALID;
+	}else{
 	    out=mxCreateNumericMatrix(nx,ny,mxINT64_CLASS,mxREAL);
 	    if(nx!=0 && ny!=0){
 		/*Don't use sizeof(mxINT64_CLASS), it is just an integer, not a valid C type.*/
@@ -225,7 +271,12 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	}
 	break;
     case M_INT32:
-	{
+	if(start==-1){
+	    if(zfseek(fp, 4*nx*ny, SEEK_CUR)){
+		error("Seek failed\n");
+	    }
+	    out=INVALID;
+	}else{
 	    out=mxCreateNumericMatrix(nx,ny,mxINT32_CLASS,mxREAL);
 	    if(nx!=0 && ny!=0){
 		zfread(mxGetPr(out), 4,nx*ny,fp);
@@ -233,7 +284,12 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	}
 	break;
     case M_CMP:/*double complex array*/
-	{
+	if(start==-1){
+	    if(zfseek(fp, 16*nx*ny, SEEK_CUR)){
+		error("Seek failed\n");
+	    }
+	    out=INVALID;
+	}else{
 	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
 		dcomplex*tmp=malloc(sizeof(dcomplex)*nx*ny);
@@ -250,7 +306,12 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	}
 	break;
     case M_ZMP:/*float complex array. convert to double*/
-	{
+	if(start==-1){
+	    if(zfseek(fp, 8*nx*ny, SEEK_CUR)){
+		error("Seek failed\n");
+	    }
+	    out=INVALID;
+	}else{
 	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
 		fcomplex*tmp=malloc(sizeof(fcomplex)*nx*ny);
@@ -273,6 +334,7 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	warning("Unrecognized file. Please recompile the mex routines in the newest code\n");
 	out=NULL;
     }
+    start=start_save;
     if(!iscell && fp->isfits==1){/*fits file may contain extra extensions.*/
 	fp->isfits++;
 	int nx=0;
@@ -282,11 +344,18 @@ static mxArray *readdata(file_t *fp, mxArray **header){
 	    nx++;
 	    outarr=realloc(outarr, sizeof(mxArray*)*nx);
 	    headerarr=realloc(headerarr, sizeof(mxArray*)*nx);
+	    if(out==INVALID) out=NULL;
 	    outarr[nx-1]=out;
 	    if(header) headerarr[nx-1]=*header;
-	    out=readdata(fp, header);
+	    int start2=0;
+	    if(howmany!=0){//selective reading.
+		if(nx<start || nx+1>start+howmany){
+		    start2=-1;//don't read next data.
+		}
+	    }
+	    out=readdata(fp, header, start2, 0);
 	}
-	if(nx>1){
+	if(nx>1){/*set output.*/
 	    out=mxCreateCellMatrix(nx, 1);
 	    if(header) *header=mxCreateCellMatrix(nx, 1);
 	    int i;
@@ -304,7 +373,6 @@ static mxArray *readdata(file_t *fp, mxArray **header){
     if(!out){
 	out=mxCreateDoubleMatrix(0,0,mxREAL);
     }
-
     return out;
 }
 static char *mx2str(const mxArray *A){
@@ -316,16 +384,38 @@ static char *mx2str(const mxArray *A){
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     file_t *fp;
-    if(nrhs!=1 || nlhs>2){
-	mexErrMsgTxt("Usage: var=read('filename') or [var, header]=read('filename')\n");
+    char *fn=NULL;
+    int start=0, howmany=0;
+    switch(nrhs){
+    case 3:
+	howmany=(long)mxGetScalar(prhs[2]);//do not break
+    case 2:
+	start=(long)mxGetScalar(prhs[1]);//starting block to read. matlab index.
+    case 1:
+	fn=mx2str(prhs[0]);
+	break;
+    default:
+	mexErrMsgTxt("Usage: [var, [header]]=read('filename' [,start] [,howmany]). [] means optional\n");
     }
-    char *fn=mx2str(prhs[0]);
+    if(howmany>0){
+	if(start>0){
+	    start--;//convert to C index.
+	}
+	if(start<0){
+	    start=0;
+	}
+    }
     fp=zfopen(fn,"rb");
     free(fn);
-    if(nlhs==2){
-	plhs[0]=readdata(fp, &plhs[1]);
-    }else{
-	plhs[0]=readdata(fp, NULL);
+    switch(nlhs){
+    case 2:
+	plhs[0]=readdata(fp, &plhs[1], start, howmany); break;
+    case 1:
+	plhs[0]=readdata(fp, NULL, start, howmany); break;
+    default:
+	mexErrMsgTxt("Usage: [var, [header]]=read('filename' [,start] [,howmany]). [] means optional\n");
+    }
+    if(start==0 && howmany==0){
 	zfeof(fp);
     }
     zfclose(fp);

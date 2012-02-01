@@ -337,6 +337,11 @@ void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
    Move the current position pointer, like fseek
 */
 int zfseek(file_t *fp, long offset, int whence){
+    if(fp->isfits){/*in fits, we need to offset integer block of 2880.*/
+	const long bs=2880;
+	long nb=(offset+bs-1)/bs;
+	offset=nb*bs;
+    }
     if(fp->isgzip){
 	int res=gzseek((voidp)fp->p,offset,whence);
 	if(res<0)
@@ -349,7 +354,7 @@ int zfseek(file_t *fp, long offset, int whence){
 }
 
 int zfeof(file_t *fp){
-    return zfseek(fp, 1, SEEK_SET)<0?-1:0;
+    return zfseek(fp, 1, SEEK_CUR)<0?-1:0;
 }
 /**
    Write the magic into file. Also write a dummy header to make data alignment to 8 bytes.
@@ -526,7 +531,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	if(page==0){
 	    if(zfread2(line, 1, 80, fp)) return -1; line[80]='\0';
 	    if(strncmp(line, "SIMPLE", 6) && strncmp(line, "XTENSION= 'IMAGE", 16)){
-		error("Fits header is not recognized\n");
+		error("Fits header is not recognized: %s\n", line);
 	    }
 	    zfread(line, 1, 80, fp); line[80]='\0';
 	    if(sscanf(line+10, "%20d", &bitpix)!=1) error("Unable to determine bitpix\n");
