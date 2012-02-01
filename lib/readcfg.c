@@ -305,6 +305,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(dbg.parallel, sim.parallel);
 	    RENAME(tomo.split, recon.split);
 	    RENAME(llt.fn, llt.fnprof);
+	    RENAME(aper.dx, evl.dx);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);

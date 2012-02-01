@@ -548,7 +548,6 @@ static void readcfg_aper(PARMS_T *parms){
     if(parms->aper.d <= parms->aper.din){
 	error("Inner dimeter: %g, Outer Diameter: %g. Illegal\n", parms->aper.din, parms->aper.d);
     }
-    READ_DBL(aper.dx);
     READ_DBL(aper.rotdeg);
     READ_STR(aper.fnamp);
     READ_STR(aper.pupmask);
@@ -589,6 +588,7 @@ static void readcfg_evl(PARMS_T *parms){
 	    ramin=ra2;
 	}
     }
+    READ_DBL(evl.dx);
     READ_INT(evl.rmax);
     READ_INT(evl.psfol);
     READ_INT(evl.psfisim);
@@ -1052,7 +1052,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    double dx=dxsa/nx;/*adjust dx. */
 	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
 		warning("powfs %d: Adjusting dx from %g to %g. \n"
-			"Please adjust aper.dx, powfs.dx, atm.dx to match the new value for best efficiency.\n",
+			"Please adjust evl.dx, powfs.dx, atm.dx to match the new value for best efficiency.\n",
 			ipowfs,parms->powfs[ipowfs].dx, dx);
 	    }
 	    parms->powfs[ipowfs].dx=dx;
@@ -1287,8 +1287,9 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	if(parms->atm.ht[ips]<0){
 	    warning("Layer %d height %g is below ground\n",ips,parms->atm.ht[ips]);
 	}
-	if(parms->atm.ht[ips]>0 && parms->atm.ht[ips]<20){
-	    warning("Layer %d height %g is too close to the ground\n",ips,parms->atm.ht[ips]);
+	if(ips > 0 && fabs(parms->atm.ht[ips]-parms->atm.ht[ips-1])<20){
+	    warning("Layer %d at %gm is too close to layer %d at %gm\n",
+		    ips,parms->atm.ht[ips], ips-1, parms->atm.ht[ips-1]);
 	}
 	if(parms->atm.hmax<parms->atm.ht[ips]){
 	    parms->atm.hmax=parms->atm.ht[ips];
@@ -1466,12 +1467,12 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
 	    }
 	}
 	/*evl; */
-	if(parms->dm[idm].dx>parms->aper.dx*10){
+	if(parms->dm[idm].dx>parms->evl.dx*10){
 	    if(idm==0){
 		parms->evl.scalegroup=calloc(ndm*parms->evl.nevl, sizeof(int)); 
 	    }
 	    for(int ievl=0; ievl<parms->evl.nevl ;ievl++){
-		double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->aper.dx;
+		double dxscl=(1. - ht/parms->evl.hs[ievl])*parms->evl.dx;
 		parms->evl.scalegroup[idm+ievl*ndm]=arrind(scale, &nscale, dxscl);
 	    }
 	}
@@ -1610,9 +1611,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->evl.psfmean=1;/*Saves psfmean for verification. */
 	/*required memory to hold memory. */
-	long covmem=(long)round(pow(parms->aper.d/parms->aper.dx,4))*8*fnd;
-	if(covmem>MAX(NMEM, LONG_MAX/2) && parms->aper.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
-	    error("parms->aper.dx=%g is probably too large to save ecxx. Recommend parms->aper.dx=%g\n", parms->aper.dx, parms->atmr.dx*0.25);
+	long covmem=(long)round(pow(parms->aper.d/parms->evl.dx,4))*8*fnd;
+	if(covmem>MAX(NMEM, LONG_MAX/2) && parms->evl.dx > parms->atmr.dx*0.25+EPS){/*4G or actual */
+	    error("parms->evl.dx=%g is probably too large to save ecxx. Recommend parms->evl.dx=%g\n", parms->evl.dx, parms->atmr.dx*0.25);
 	}
     }
     if(parms->tomo.predict && !parms->tomo.square){
@@ -1894,7 +1895,7 @@ static void print_parms(const PARMS_T *parms){
     };
 
     info2("\033[0;32mAperture\033[0;0m is %g m with sampling 1/%g m\n",
-	  parms->aper.d, 1/parms->aper.dx);
+	  parms->aper.d, 1/parms->evl.dx);
     double wh=0;
     double wv=0;
     for(int ips=0; ips<parms->atm.nps; ips++){

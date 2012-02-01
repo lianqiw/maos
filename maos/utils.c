@@ -737,7 +737,7 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     "Exposure: %gs", 
 	     ievl<0?0:parms->evl.thetax[ievl]*206265, ievl<0?0:parms->evl.thetay[ievl]*206265,
 	     parms->atm.r0, parms->atm.l0,
-	     wvl, parms->aper.dx, nembed, nembed, wvl/(nembed*parms->aper.dx)*206265,
+	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
 	     sumamp2*nembed*nembed, parms->sim.dt*npos);
     return strdup(header);
 }

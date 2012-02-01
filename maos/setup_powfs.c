@@ -195,11 +195,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
     dxoffset=dx*0.5;//Always keep points inside subaperture for simulation.
 
-    /*if(parms->dbg.dxonedge){
-	warning2("Put points on the edge of subapertures\n");
-	dxoffset=0;
-	}else{*/
-    //}
     info2("There are %d points in each subapeture of %gm.\n", nx, dxsa);
     const int nxsa=nx*nx;/*Total Number of OPD points. */
     count = 0;

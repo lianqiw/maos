@@ -81,7 +81,6 @@ typedef struct ATMR_CFG_T{
 typedef struct APER_CFG_T{
     double d;     /**<Telescope aperture diameter*/
     double din;   /**<Telescope inner blocking diameter*/
-    double dx;    /**<sampling of aperture evaluation grid aper_locs*/
     double rotdeg;/**<pupil rotation in degree*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
@@ -289,6 +288,7 @@ typedef struct EVL_CFG_T{
     double *wvl;    /**<wavelength for PSF and strehl computation*/
     double *hs;     /**<height of each science object*/
     double *misreg; /**<Misregistration wrt to nominal pupil.*/
+    double dx;     /**<sampling of aperture for evaluation*/
     int ismisreg;   /**<Science evl is misregistered*/
     int nwvl;       /**<Number of wavelength*/
     int *psf;       /**<1: participate in psf evaluation.*/
