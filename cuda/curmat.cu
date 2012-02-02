@@ -30,11 +30,7 @@ void curset(curmat *A, float alpha, cudaStream_t stream){
 	set_do<<<DIM(A->nx*A->ny,256),0,stream>>>(A->p, alpha, A->nx*A->ny);
     }
 }
-/**< Show the content of an array*/
-void curshow(curmat *A, cudaStream_t stream){
-    info("curshow: %dx%d\n", A->nx, A->ny);
-    show_do<<<1,1,0,stream>>>(A->p, A->nx, A->ny);
-}
+
 void curcp(curmat **out, const curmat *in, cudaStream_t stream){
     if(!in){
 	curzero(*out, stream);

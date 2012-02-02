@@ -39,8 +39,11 @@ extern "C"
 
    2) copying DM information to cuda messes up atm because gpu_dm2gpu used texRefatm.
 */
-
+#if __CUDA_ARCH__ >= 200
 #define ATM_TEXTURE 1 /*Use texture for ATM. Same speed as not after make p in device memory. */
+#else
+#define ATM_TEXTURE 0
+#endif
 /*Removed option of making DM in texture */
 #if ATM_TEXTURE
 texture<float, cudaTextureType2DLayered, cudaReadModeElementType> texRefatm;

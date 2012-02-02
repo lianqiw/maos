@@ -219,7 +219,12 @@ AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines,
 AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
-
+AC_ARG_WITH(cuda-version, --with-cuda-version=20, [CUDAVER=${withval}], [CUDAVER=20])
+CUDAVER=${CUDAVER/./}
+if test $CUDAVER -lt 13 -o $CUDAVER -gt 99 ;then
+AC_MSG_ERROR([--with-cuda-version receives wrong version. Need to be between 13 and 99. use 13 for 1.3, 20 for 2.0])
+fi
+AC_SUBST(CUDAVER)
 if test "x$use_static" = "xyes" ;then
    LDEXE="$LDEXE -all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
@@ -690,6 +695,7 @@ if test "$use_cuda" = "yes" ;then
    if test x$cuda_lib = xno ;then
        AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])
        AM_CONDITIONAL(USE_CUDA, false)
+       use_cuda="no"
    else
        AM_CONDITIONAL(USE_CUDA, true)
        AC_DEFINE(USE_CUDA, [1], "Has Cuda")
@@ -709,6 +715,7 @@ echo host_os=$host_os
 echo use_mex=$use_mex
 echo use_icc=$use_icc
 echo use_cuda=$use_cuda
+echo CUDAVER=$CUDAVER
 echo use_static=$use_static
 echo Cross compile=$cross_compile
 echo Compile Drawdaemon=$comp_draw

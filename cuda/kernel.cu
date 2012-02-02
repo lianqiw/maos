@@ -28,15 +28,6 @@ __global__ void set_do(float *a, float alpha, int n){
     }
 }
 
-__global__ void show_do(float *a, int nx, int ny){
-    const int stepx=blockDim.x * gridDim.x;
-    const int stepy=blockDim.y * gridDim.y;
-    for(int iy=blockIdx.y * blockDim.y + threadIdx.y; iy<ny; iy+=stepy){
-	for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=stepx){
-	    printf("a(%d,%d)=%g\n", ix, iy, a[ix+iy*nx]);
-	}
-    }
-}
 __global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2], 
 			   int n, float pis, float tx, float ty){
     const int step=blockDim.x * gridDim.x;

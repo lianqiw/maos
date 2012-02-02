@@ -217,4 +217,20 @@ __device__ inline float CABS2(fcomplex r){
     const float b=cuCimagf(r);
     return a*a+b*b;
 }
+
+#if __CUDA_ARCH__ < 200 && __CUDA_ARCH__ >= 130
+static __inline__ __device__ float atomicAdd(float* address, float val)
+{
+    float old = *address;
+    float assumed;
+    do {
+	assumed = old;
+	old = __int_as_float( atomicCAS((unsigned int*)address,
+					__float_as_int(assumed),
+					__float_as_int(val + assumed)));
+    } while (assumed != old);
+    return old;
+}
+
+#endif
 #endif

@@ -1,6 +1,6 @@
 #We require at least computing capability of 2.0 because we use atomicAdd for floating numbers and various other things.
 #use -g -G for debugging.
-AM_CFLAGS=-arch=sm_20 --compiler-options -Wall -g -O $(CUDAOPT)
+AM_CFLAGS=-arch=sm_$(CUDAVER) --compiler-options -Wall -g -O $(CUDAOPT)
 if USE_LONG
 AM_CFLAGS+=-DDLONG
 endif
