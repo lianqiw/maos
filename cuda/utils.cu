@@ -76,43 +76,38 @@ int gpu_init(int *gpus, int ngpu){
 	info2("CUDA is disabled by user.\n");
 	return 0;
     }
-    if(!gpus){/*automatic */
-	int navail=0;
-	if(cudaGetDeviceCount(&navail)){
+    int free_gpus=0;
+    if(!gpus || ngpu==0){/*automatic. Use all GPUs. */
+	free_gpus=1;
+	if(cudaGetDeviceCount(&ngpu) || ngpu==0){
 	    return 0;
 	}
-	if(navail){
-	    GPUS=(int*)calloc(navail, sizeof(int));
-	    for(int ig=0; ig<navail; ig++){
-		cudaDeviceProp prop;
-		cudaGetDeviceProperties(&prop, ig);
-		if(prop.major!=9999){
-		    if(prop.major>=2){
-			/*&& prop.totalGlobalMem>1000000000){*//*require minimum of 1.5G */
-			GPUS[NGPU]=ig;
-			NGPU++;
-		    }else{
-			warning("Skip %d due to insufficient memory\n", ig);
-		    }
-		}
-	    }
+	gpus=(int*)calloc(ngpu, sizeof(int));
+	for(int i=0; i<ngpu; i++){
+	    gpus[i]=i;
 	}
-    }else{
-	GPUS=(int*)calloc(ngpu ,sizeof(int));
-	for(int im=0; im<ngpu; im++){
-	    int ig=gpus[im];
-	    cudaDeviceProp prop;
-	    cudaGetDeviceProperties(&prop, ig);
-	    if(prop.major!=9999){
-		if(prop.totalGlobalMem>1000000000){/*require minimum of 1.5G */
-		    GPUS[NGPU]=ig;
-		    NGPU++;
-		}else{
-		    warning("Skip %d due to insufficient memory\n", ig);
-		}
+    }
+    /* check usability of GPUs.*/
+    GPUS=(int*)calloc(ngpu ,sizeof(int));
+    for(int im=0; im<ngpu; im++){
+	int ig=gpus[im];
+	cudaDeviceProp prop={0};
+	if(cudaGetDeviceProperties(&prop, ig)){
+	    warning2("Skip GPU %d: not supporting CUDA.\n", ig);
+	}else if(prop.major!=9999){
+	    if(prop.major>=1.3 || prop.totalGlobalMem>500000000){/*require minimum of 500M */
+		GPUS[NGPU]=ig;
+		NGPU++;
+	    }else{
+		warning2("Skip GPU %d: insufficient memory\n", ig);
 	    }
 	}
     }
+    if(free_gpus) {
+	free(gpus); 
+	gpus=NULL;
+    }
+    /* testing GPUs.*/
     if(NGPU>0 && 0){
 	int ic=0;
 	for(int im=0; im<NGPU; im++){

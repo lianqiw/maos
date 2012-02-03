@@ -225,6 +225,7 @@ if test $CUDAVER -lt 13 -o $CUDAVER -gt 99 ;then
 AC_MSG_ERROR([--with-cuda-version receives wrong version. Need to be between 13 and 99. use 13 for 1.3, 20 for 2.0])
 fi
 AC_SUBST(CUDAVER)
+AC_DEFINE_UNQUOTED(CUDAVER, [$CUDAVER], ["CUDA Version Enabled."])
 if test "x$use_static" = "xyes" ;then
    LDEXE="$LDEXE -all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)

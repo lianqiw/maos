@@ -22,7 +22,7 @@ extern "C"
 }
 #include "utils.h"
 #include "accphi.h"
-#define AOS_CUDA_ACCPHI_CU
+
 #undef EPS
 #define EPS 1e-5
 /**
@@ -39,7 +39,7 @@ extern "C"
 
    2) copying DM information to cuda messes up atm because gpu_dm2gpu used texRefatm.
 */
-#if __CUDA_ARCH__ >= 200
+#if CUDAVER > 13 //Testing __CUDA_ARCH__  goes to both branches!!!
 #define ATM_TEXTURE 1 /*Use texture for ATM. Same speed as not after make p in device memory. */
 #else
 #define ATM_TEXTURE 0
@@ -138,7 +138,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    if((parms->evl.psfmean || parms->evl.psfhist) && parms->gpu.psf){
 		long needpsf=parms->evl.nevl*parms->evl.nwvl*parms->evl.psfsize[0]*parms->evl.psfsize[0]*4;
 		if(avail<need+needpsf+nxm*nym*4*parms->atm.nps){
-		    info("needpsf=%g M\n", needpsf/1024/1024);
+		    info("needpsf=%ld M\n", needpsf/1024/1024);
 		    warning("Recommand disabling gpu.psf.\n");
 		}else{
 		    need+=needpsf;
@@ -415,7 +415,7 @@ void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg){
 /*
   Ray tracing from texture to atm.
 */
-__global__ void prop_atm(float *restrict out, const int ilayer, 
+__global__ static void prop_atm(float *restrict out, const int ilayer, 
 			 KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){

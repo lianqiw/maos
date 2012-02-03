@@ -218,7 +218,7 @@ __device__ inline float CABS2(fcomplex r){
     return a*a+b*b;
 }
 
-#if __CUDA_ARCH__ < 200 && __CUDA_ARCH__ >= 130
+#if CUDAVER < 20
 static __inline__ __device__ float atomicAdd(float* address, float val)
 {
     float old = *address;
