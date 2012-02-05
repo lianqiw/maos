@@ -119,7 +119,7 @@ int main(int argc, char *argv[]){
     const int nexp=5;//number of exposure.
     const int nwvl=5;
     double wvls[15]={1.908,2.067,2.12,2.173,2.332};
-    const double imperr=110;
+    const double imperr=122.22;
 
     enum{
 	P_OUTFILE=1,
