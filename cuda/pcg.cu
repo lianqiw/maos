@@ -142,7 +142,7 @@ int gpu_pcg(curcell **px,
 	    /*r0r0=sqrt(r0z1/r0z0); */
 	    div_sqrt_do<<<1,1,0,stream>>>(r0r0+k, r0z1, r0z0);
 	}
-	cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), cudaMemcpyDefault, stream);
+	cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), cudaMemcpyDeviceToDevice, stream);
 #endif
 	Amul(&Ap, 0, A, p0, 1);
 	/*ak=r0z1/(p0'*Ap); */

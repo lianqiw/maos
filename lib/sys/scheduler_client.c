@@ -42,9 +42,8 @@
 #include "misc.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
-
-static int psock;
 static int scheduler_crashed;
+
 void scheduler_shutdown(int *sock, int mode){
    if(mode>0){/*tell the server to shutdown read or write */
 	int cmd[2];
@@ -121,6 +120,41 @@ int scheduler_connect_self(int block, int mode){
     return -1;
 }
 
+#ifdef MAOS_DISABLE_SCHEDULER
+
+int scheduler_start(char *path, int nthread, int waiting){
+  (void)path;
+  (void)nthread;
+  (void)waiting;
+   return 0;
+}
+int scheduler_wait(void){
+   return 0;
+}
+void scheduler_finish(int status){
+  (void)status;
+}
+void scheduler_report(STATUS_T *status){
+  (void)status;
+}
+void print_backtrace_symbol(void *const *buffer, int size){
+  (void) buffer;
+  (void)size;
+}
+void print_backtrace(int sig){
+  (void) sig;
+}
+int scheduelr_launch_drawdaemon(char *fifo){
+  (void)fifo;
+  return 1;
+}
+char* scheduler_get_drawdaemon(int pid, int direct){
+  (void)pid;
+  (void)direct;
+  return NULL;
+}
+#else
+static int psock;
 static char *path_save=NULL;
 static void scheduler_report_path(char *path){
     if(path){
@@ -431,3 +465,4 @@ char* scheduler_get_drawdaemon(int pid, int direct){
     }
     return fifo;
 }
+#endif

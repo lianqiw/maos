@@ -59,7 +59,10 @@
    3) During kernel calling, never set blockDim to more than 256. bizarre errors
    may happen. For example, FFT randomly error out.
    
-   
+   4) with sm_13 capability devices, kernel cannot address host memory. for
+example cudm->cc has to be copied to device memory.
+
+   5) CudaMemcpyAsync only works with page-locked host memory.
 
    ToDO
    
@@ -70,3 +73,8 @@
 
    NOTE:
    Pointers allocated by cudaMallocHost has to be freed with cudaFreeHost, not cudaFree.
+
+   Port from sm_20 to sm_13
+   1) Memcpy must specify HostToDevice or DeviceToHost.
+   2) Kernel cannot read host memory. Must use global memory.applies to imcc, dm cc, etf, nominal,etc
+   3) MemcpyAsnc must use page-locked host memory.

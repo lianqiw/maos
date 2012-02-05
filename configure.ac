@@ -220,12 +220,19 @@ AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXD
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(cuda-version, --with-cuda-version=20, [CUDAVER=${withval}], [CUDAVER=20])
+AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
+
 CUDAVER=${CUDAVER/./}
 if test $CUDAVER -lt 13 -o $CUDAVER -gt 99 ;then
 AC_MSG_ERROR([--with-cuda-version receives wrong version. Need to be between 13 and 99. use 13 for 1.3, 20 for 2.0])
 fi
 AC_SUBST(CUDAVER)
 AC_DEFINE_UNQUOTED(CUDAVER, [$CUDAVER], ["CUDA Version Enabled."])
+
+if test "$use_scheduler" = "no" ;then
+   AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
+fi
+
 if test "x$use_static" = "xyes" ;then
    LDEXE="$LDEXE -all-static" #Enable all static build.
    AM_CONDITIONAL(USE_STATIC, true)
@@ -671,10 +678,10 @@ if test "$use_cuda" = "yes" ;then
        AC_MSG_ERROR([CUDADIR is empty. Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])
    fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
-   if test -f ${CUDADIR}/lib/libcudart.$ldsuffix ;then
-       CUDA_L=${CUDADIR}/lib
-   elif test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
+   if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
        CUDA_L=${CUDADIR}/lib${cpu}
+   elif test -f ${CUDADIR}/lib/libcudart.$ldsuffix ;then
+       CUDA_L=${CUDADIR}/lib$
    fi
    if test -d "$CUDA_L" ;then
        LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"

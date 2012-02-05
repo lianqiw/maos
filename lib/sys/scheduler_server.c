@@ -66,36 +66,11 @@
 #include "daemonize.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
+uint16_t PORT=0;
 char** hosts;
 int nhost;
-static int all_done=0;
-/*A linked list to store running process*/
-RUN_T *running=NULL;/*points to the begining */
-RUN_T *running_end=NULL;/*points to the last to add. */
-/*A linked list to store ended process*/
-RUN_T *runned=NULL;
-RUN_T *runned_end=NULL;
-static int nrun=0;
-MONITOR_T *pmonitor=NULL;
-static char *fnlog=NULL;
-uint16_t PORT=0;
 uint16_t PORTMON=0;
 int hid=0;
-static int scheduler_sock;
-static double usage_cpu;
-fd_set active_fd_set;
-static void scheduler(void);
-static RUN_T* running_add(int pid,int sock);
-static RUN_T *running_get(int pid);
-static RUN_T *running_get_wait(void);
-
-static RUN_T *runned_get(int pid);
-static void runned_remove(int pid);
-static int runned_add(RUN_T *irun);
-static void running_remove(int pid);
-static void running_update(int pid, int status);
-static RUN_T *running_get_by_sock(int sock);
-
 #if defined(__INTEL_COMPILER)
 /*with htons defined in glibc 2.4, intel compiler complains
   about conversion from in to uint16. THis is an ugly workaround*/
@@ -112,6 +87,64 @@ static inline uint16_t myhtons(uint16_t port){
     return ans;
 }
 #endif
+/**
+   When the keepalive flag is on, the socket will receive notice when the
+   connection to remote socket is disrupted.
+
+  \todo Find keepalive options in mac.  */
+void socket_tcp_keepalive(int sock){
+    int keeplive=1;
+#ifdef __linux__
+    int keepidle =1;/*second before try to probe */
+    int keepintvl=1;/*wait this seconds before repeat */
+    int keepcnt  =2;/*repeat before declare dead */
+#endif
+    if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
+#ifdef __linux__
+       && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
+       && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
+       && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int))
+#endif
+       ){
+    }else{
+	warning("Keepalive failed\n");
+    }
+}
+/**
+   make a server port and bind to localhost on all addresses
+*/
+int make_socket (uint16_t port, int retry){
+    int sock;
+    struct sockaddr_in name;
+    
+    /* Create the socket. */
+    sock = socket(PF_INET, SOCK_STREAM, 0);
+    if (sock < 0){
+	perror ("socket");
+	exit (EXIT_FAILURE);
+    }
+    
+    cloexec(sock);
+    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
+    socket_tcp_keepalive(sock);
+    /* Give the socket a name. */
+    name.sin_family = AF_INET;
+    name.sin_port = htons(port);
+    name.sin_addr.s_addr = htonl(INADDR_ANY);
+    int count=0;
+    while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
+	info3("errno=%d. port=%d,sock=%d: ",errno,port,sock);
+	perror ("bind");
+	if(!retry) return -1;
+	sleep(10);
+	count++;
+	if(count>100){
+	    error("Failed to bind to port %d\n",port);
+	}
+    }
+    info2("binded to port %hd at sock %d\n",port,sock);
+    return sock;
+}
 
 int myhostid(const char *host){
     int i;
@@ -133,6 +166,33 @@ int myhostid(const char *host){
   function.
 
  */
+#ifndef MAOS_DISABLE_SCHEDULER
+static MONITOR_T *pmonitor=NULL;
+static int all_done=0;
+/*A linked list to store running process*/
+static RUN_T *running=NULL;/*points to the begining */
+static RUN_T *running_end=NULL;/*points to the last to add. */
+/*A linked list to store ended process*/
+static RUN_T *runned=NULL;
+static RUN_T *runned_end=NULL;
+static int nrun=0;
+static char *fnlog=NULL;
+static int scheduler_sock;
+static double usage_cpu;
+static fd_set active_fd_set;
+
+static RUN_T* running_add(int pid,int sock);
+static RUN_T *running_get(int pid);
+static RUN_T *running_get_wait(void);
+
+static RUN_T *runned_get(int pid);
+static void runned_remove(int pid);
+static int runned_add(RUN_T *irun);
+static void running_remove(int pid);
+static void running_update(int pid, int status);
+static RUN_T *running_get_by_sock(int sock);
+
+static void scheduler(void);
 static void scheduler_launch_do(void *junk){
     (void)junk;
     if(setenv("MAOS_START_SCHEDULER","YES",1)){
@@ -239,64 +299,6 @@ static __attribute__((constructor))void init(){
     }
     /*we always try to launch the scheduler. */
     scheduler_launch();
-}
-/**
-   When the keepalive flag is on, the socket will receive notice when the
-   connection to remote socket is disrupted.
-
-  \todo Find keepalive options in mac.  */
-void socket_tcp_keepalive(int sock){
-    int keeplive=1;
-#ifdef __linux__
-    int keepidle =1;/*second before try to probe */
-    int keepintvl=1;/*wait this seconds before repeat */
-    int keepcnt  =2;/*repeat before declare dead */
-#endif
-    if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
-#ifdef __linux__
-       && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
-       && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
-       && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int))
-#endif
-       ){
-    }else{
-	warning("Keepalive failed\n");
-    }
-}
-/**
-   make a server port and bind to localhost on all addresses
-*/
-int make_socket (uint16_t port, int retry){
-    int sock;
-    struct sockaddr_in name;
-    
-    /* Create the socket. */
-    sock = socket(PF_INET, SOCK_STREAM, 0);
-    if (sock < 0){
-	perror ("socket");
-	exit (EXIT_FAILURE);
-    }
-    
-    cloexec(sock);
-    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
-    socket_tcp_keepalive(sock);
-    /* Give the socket a name. */
-    name.sin_family = AF_INET;
-    name.sin_port = htons(port);
-    name.sin_addr.s_addr = htonl(INADDR_ANY);
-    int count=0;
-    while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
-	info3("errno=%d. port=%d,sock=%d: ",errno,port,sock);
-	perror ("bind");
-	if(!retry) return -1;
-	sleep(10);
-	count++;
-	if(count>100){
-	    error("Failed to bind to port %d\n",port);
-	}
-    }
-    info2("binded to port %hd at sock %d\n",port,sock);
-    return sock;
 }
 /**
    The following runned_* routines maintains the linked list
@@ -835,7 +837,6 @@ static void scheduler(void){
 	}
     }
 }
-
 /*The following routines maintains the MONITOR_T linked list. */
 MONITOR_T* monitor_add(int sock){
     /*info("added monitor on sock %d\n",sock); */
@@ -976,10 +977,13 @@ void monitor_send_initial(MONITOR_T *ic){
     }
     /*info("Monitor_send_initial success\n"); */
 }
+#endif
 
 #ifdef SCHEDULER
 int main(){
     /*we should not enter here. the constructor runs scheduler and won't return. */
+#ifndef MAOS_DISABLE_SCHEDULER
     scheduler();
+#endif
 }
 #endif

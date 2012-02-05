@@ -207,7 +207,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		    }
 		}
 		curecon->neai->p[iwfs]=curnew(3, nsa);
-		DO(cudaMemcpy(curecon->neai->p[iwfs]->p, neai, 3*nsa*sizeof(float), cudaMemcpyDefault));
+		DO(cudaMemcpy(curecon->neai->p[iwfs]->p, neai, 3*nsa*sizeof(float), cudaMemcpyHostToDevice));
 		free(neai);
 	    }
 	}/*for iwfs */

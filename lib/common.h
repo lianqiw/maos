@@ -94,7 +94,11 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #elif defined(__APPLE__)
 #include </usr/include/complex.h>
 #else
+#ifndef __cplusplus
 #include <complex.h>
+#else
+#include </usr/include/complex.h>
+#endif
 #endif
 
 #include "sys/mem.h"

@@ -73,13 +73,14 @@ inline int CUDAFREE(float *p){
 #define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((float**)p,size);})
 #define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((float*)p);})
 #endif
-#define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
+#define DO(A) ({int ans=(int)(A); if(ans!=0) error("(cuda) %d: %s\n", ans, cudaGetErrorString((cudaError_t)ans));})
+#define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); memset(P,0,N);})
 #define cudaCallocBlock(P,N)     ({DO(cudaMalloc(&(P),N));     DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
 
-#define DO(A) if((A)!=0) error("(cuda) %d: %s\n", cudaGetLastError(), cudaGetErrorString(cudaGetLastError()));
+
 #define CONCURRENT 0
 #if CONCURRENT
 #define CUDA_SYNC_STREAM				\
@@ -217,8 +218,8 @@ __device__ inline float CABS2(fcomplex r){
     const float b=cuCimagf(r);
     return a*a+b*b;
 }
-
-#if CUDAVER < 20
+/*somehow I must test both CUDA_ARCH existance and version.*/
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
 static __inline__ __device__ float atomicAdd(float* address, float val)
 {
     float old = *address;
@@ -231,6 +232,5 @@ static __inline__ __device__ float atomicAdd(float* address, float val)
     } while (assumed != old);
     return old;
 }
-
 #endif
 #endif

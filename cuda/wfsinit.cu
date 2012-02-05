@@ -96,12 +96,14 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	DO(cublasSetStream(cuwfs[iwfs].handle, cuwfs[iwfs].stream));
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].nsaimcc>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-		cudaMallocHost(&cuwfs[iwfs].imcc, nsa*sizeof(void*));
+		void *imcc[nsa];
 		for(int isa=0; isa<nsa; isa++){
-		    cuwfs[iwfs].imcc[isa]=NULL;
-		    gpu_dmat2dev((float**)&(cuwfs[iwfs].imcc[isa]),
+		    imcc[isa]=NULL;
+		    gpu_dmat2dev((float**)&(imcc[isa]),
 				 powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0]->p[isa]);
 		}
+		cudaMalloc(&cuwfs[iwfs].imcc, nsa*sizeof(void*));
+		cudaMemcpy(cuwfs[iwfs].imcc, imcc, nsa*sizeof(void*), cudaMemcpyHostToDevice);
 	    }else{
 		cuwfs[iwfs].imcc=cuwfs[iwfs0].imcc;
 	    }
@@ -207,8 +209,8 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		if(cufftPlanMany(&cuwfs[iwfs].lltplan_wvf, 2, nlwvf2, NULL, 1,0, NULL, 1, 0, 
 				 CUFFT_C2C, 1)){
 		    error("CUFFT plan failed\n");
-		    cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
 		}
+		cufftSetStream(cuwfs[iwfs].lltplan_wvf, cuwfs[iwfs].stream);
 		if(notf==nlwvf){
 		    cuwfs[iwfs].lltplan_otf=cuwfs[iwfs].lltplan_wvf;
 		}else{
@@ -229,23 +231,24 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
 			int notfused=!powfs[ipowfs].dtf[iwvl].fused;
 			if(notfused){
-			    cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].nominal, nsa*sizeof(void*));
-			}
+			    fcomplex *nominal[nsa];
 			/*cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].si, nsa*sizeof(void*)); */
 			int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
 			for(int isa=0; isa<nsa; isa++){
 			    if(multi_nominal || isa==0){
 				if(notfused){
-				    gpu_cmat2dev(&cuwfs[iwfs].dtf[iwvl].nominal[isa], 
+				    gpu_cmat2dev(&nominal[isa], 
 						 powfs[ipowfs].dtf[iwvl].nominal->p[isa+nsa*(powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0)]);
 				}
 			    }else{
-				cuwfs[iwfs].dtf[iwvl].nominal[isa]=cuwfs[iwfs].dtf[iwvl].nominal[0];
+				nominal[isa]=cuwfs[iwfs].dtf[iwvl].nominal[0];
 			    }
 			}
-		    
+			    cudaMalloc(&cuwfs[iwfs].dtf[iwvl].nominal, nsa*sizeof(void*));
+			    cudaMemcpy(cuwfs[iwfs].dtf[iwvl].nominal, nominal, nsa*sizeof(void*), cudaMemcpyHostToDevice);
+			}
 			if(parms->powfs[ipowfs].llt){
-			    cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].etf, nsa*sizeof(void*));
+			    fcomplex *etf[nsa];
 			    cmat *(*petf)[nsa]=NULL;
 			    if(powfs[ipowfs].etfsim[iwvl].p1){
 				petf=(cmat *(*)[nsa])powfs[ipowfs].etfsim[iwvl].p1->p;
@@ -255,8 +258,12 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				cuwfs[iwfs].dtf[iwvl].etfis1d=0;
 			    }
 			    for(int isa=0; isa<nsa; isa++){
-				gpu_cmat2dev(&cuwfs[iwfs].dtf[iwvl].etf[isa], petf[parms->powfs[ipowfs].llt->n>1?wfsind:0][isa]);
+				etf[isa]=NULL;
+				gpu_cmat2dev(&etf[isa], petf[parms->powfs[ipowfs].llt->n>1?wfsind:0][isa]);
 			    }
+			    cudaMalloc(&cuwfs[iwfs].dtf[iwvl].etf, nsa*sizeof(void*));
+			    cudaMemcpy(cuwfs[iwfs].dtf[iwvl].etf, etf, nsa*sizeof(void*), cudaMemcpyHostToDevice);
+
 			}
 		    }/*for iwvl. */
 		    if(parms->powfs[ipowfs].llt){
@@ -269,11 +276,14 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		/*Matched filter */
 		if(parms->powfs[ipowfs].phytypesim==1){
 		    if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
-			cudaCallocHostBlock(cuwfs[iwfs].mtche, nsa*sizeof(void*));
 			dmat **mtche=powfs[ipowfs].intstat->mtche->p+nsa*(powfs[ipowfs].intstat->mtche->ny>1?wfsind:0);
+			float *mtche2[nsa];
 			for(int isa=0; isa<nsa; isa++){
-			    gpu_dmat2dev((float**)&cuwfs[iwfs].mtche[isa], mtche[isa]);
+			    mtche2[isa]=NULL;
+			    gpu_dmat2dev((float**)&mtche2[isa], mtche[isa]);
 			}
+			cudaMalloc(&cuwfs[iwfs].mtche, nsa*sizeof(void*));
+			cudaMemcpy(cuwfs[iwfs].mtche, mtche2, nsa*sizeof(void*),cudaMemcpyHostToDevice);
 			gpu_dbl2dev(&cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0), nsa);
 		    }else{
 			cuwfs[iwfs].mtche=cuwfs[iwfs0].mtche;

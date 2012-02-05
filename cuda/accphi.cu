@@ -15,9 +15,9 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <cuda.h>
 extern "C"
 {
-#include <cuda.h>
 #include "gpu.h"
 }
 #include "utils.h"
@@ -39,7 +39,7 @@ extern "C"
 
    2) copying DM information to cuda messes up atm because gpu_dm2gpu used texRefatm.
 */
-#if CUDAVER > 13 //Testing __CUDA_ARCH__  goes to both branches!!!
+#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__>=200 //Testing __CUDA_ARCH__  goes to both branches!!!
 #define ATM_TEXTURE 1 /*Use texture for ATM. Same speed as not after make p in device memory. */
 #else
 #define ATM_TEXTURE 0
@@ -384,8 +384,8 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
 	for(int idm=0; idm<ndm; idm++){
 	    (*cudm)->cubic[idm]=dmcfg[idm].cubic;
 	    (*cudm)->iac[idm]=dmcfg[idm].iac;
-	    DO(cudaMallocHost(&((*cudm)->cc[idm]), 5*sizeof(float)));
-	    float *cc=(*cudm)->cc[idm];
+	    DO(cudaMalloc(&((*cudm)->cc[idm]), 5*sizeof(float)));
+	    float cc[5];
 	    const float iac=(*cudm)->iac[idm];
 	    float cubicn=1.f/(1.f+2.f*iac);
 	    cc[0]=1.f*cubicn;
@@ -393,6 +393,7 @@ static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg)
 	    cc[2]=(1.5f-3.f*iac)*cubicn;		       
 	    cc[3]=(2.f*iac-0.5f)*cubicn;			
 	    cc[4]=(0.5f-iac)*cubicn; 
+	    cudaMemcpy((*cudm)->cc[idm], cc, 5*sizeof(float), cudaMemcpyHostToDevice);
 	}
     }
     CUDA_SYNC_DEVICE;
@@ -489,9 +490,9 @@ __global__ void prop_cubic(float *restrict out, const float *restrict in, const 
 	float fx[4],fy;
 	float sum=0;
 	if(ix<1 || ix>nx-3 || iy<1 || iy>ny-3){
-	    return;/*out of range. */
+	    continue;/*out of range. */
 	}
-
+	/*cc need to be in device memory for sm_13 to work.*/
 	fx[0]=(1.f-x)*(1.f-x)*(cc[3]+cc[4]*(1.f-x));			
 	fx[1]=cc[0]+x*x*(cc[1]+cc[2]*x);			
 	fx[2]=cc[0]+(1.f-x)*(1.f-x)*(cc[1]+cc[2]*(1.f-x));			
