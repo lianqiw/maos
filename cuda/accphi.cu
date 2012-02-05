@@ -39,7 +39,7 @@ extern "C"
 
    2) copying DM information to cuda messes up atm because gpu_dm2gpu used texRefatm.
 */
-#if !defined(__CUDA_ARCH__) || __CUDA_ARCH__>=200 //Testing __CUDA_ARCH__  goes to both branches!!!
+#if CUDAVER > 13 //Testing __CUDA_ARCH__  goes to both branches!!!
 #define ATM_TEXTURE 1 /*Use texture for ATM. Same speed as not after make p in device memory. */
 #else
 #define ATM_TEXTURE 0
