@@ -19,8 +19,9 @@
 #include "curmat.h"
 #include <pthread.h>
 static cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
+#if CUDA_VERSION < 4010
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
-
+#endif
 int NGPU=0;
 int* GPUS=NULL;
 int nstream=0;
