@@ -112,6 +112,11 @@ extern int nstream;
 #define WRAP_SIZE 32 /*The wrap size is currently always 32 */
 #define DIM_REDUCE 128 /*dimension to use in reduction. */
 #define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
+#if CUDA_ARCH>13
+#define NTH2 32
+#else
+#define NTH2 16
+#endif
 #define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D)),dim3(MIN(nx,nb),MIN(ny,nb))
 
 /*

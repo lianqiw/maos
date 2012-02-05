@@ -935,12 +935,12 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
     int offy2=(int)floorf(dispy); dispy-=offy2;
     if(trans=='n'){
 	if(fabs(ratio-1.f)<1.e-5){
-	    prop_grid_match_do<<<DIM2(nx, ny, 32), 0, stream>>>
+	    prop_grid_match_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
 		 dispx, dispy, alpha, nx, ny);
 	}else{
-	    prop_grid_nomatch_do<<<DIM2(nx, ny, 32), 0, stream>>>
+	    prop_grid_nomatch_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
 		 dispx, dispy, ratio, alpha, nx, ny);
@@ -989,7 +989,7 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		     dispx, dispy, alpha, ny);
 	    }
 	}else{
-	    prop_grid_nomatch_trans_do<<<DIM2(nx, ny, 32), 0, stream>>>
+	    prop_grid_nomatch_trans_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
 		 dispx, dispy, ratio, alpha, nx, ny);
