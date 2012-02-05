@@ -117,21 +117,28 @@ extern int nstream;
 /*
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
 the problem by using mutex locking to makesure only 1 thread is calling FFT. */
+#if CUDA_VERSION < 4010
 extern pthread_mutex_t cufft_mutex;
-/*#define CUFFT(plan,in,dir) ({CUDA_SYNC_STREAM; LOCK(cufft_mutex); int ans=cufftExecC2C(plan, in, in, dir); cudaStreamSynchronize(0); UNLOCK(cufft_mutex); if(ans) error("cufft failed with %d\n", ans);}) */
+#define LOCK_CUFFT LOCK(cufft_muex)
+#define UNLOCK_CUFFT UNLOCK(cufft_mutex)
+#else
+/*cufft 4.1 is thread safe. no need lock.*/
+#define LOCK_CUFFT
+#define UNLOCK_CUFFT
+#endif
 #define CUFFT2(plan,in,out,dir) ({					\
-	LOCK(cufft_mutex);						\
-	int ans=cufftExecC2C(plan, in, out, dir);			\
-	UNLOCK(cufft_mutex);						\
-	if(ans) {							\
-	    warning("cufft failed with %d, retry.\n", ans); \
-	    LOCK(cufft_mutex);						\
+	    LOCK_CUFFT;							\
 	    int ans=cufftExecC2C(plan, in, out, dir);			\
-	    UNLOCK(cufft_mutex);					\
-	    if(ans){							\
-		error("cufft failed with %d\n", ans);			\
+	    UNLOCK_CUFFT;						\
+	    if(ans) {							\
+		warning("cufft failed with %d, retry.\n", ans);		\
+		LOCK_CUFFT;						\
+		int ans=cufftExecC2C(plan, in, out, dir);		\
+		UNLOCK_CUFFT;						\
+		if(ans){						\
+		    error("cufft failed with %d\n", ans);		\
+		}							\
 	    }								\
-	}								\
 	})
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 void gpu_print_mem(const char *msg);
