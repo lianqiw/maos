@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <unistd.h>
 #include "cholmod.h"
 #include "dmat.h"
 #include "cmat.h"
@@ -23,6 +24,8 @@
 #include "chol.h"
 #include "sys/thread.h"
 #include "sys/process.h"
+#include "sys/daemonize.h"
+#include "hashlittle.h"
 #if defined(DLONG)
 #define MOD(A) cholmod_l_##A
 #define ITYPE CHOLMOD_LONG
@@ -94,7 +97,7 @@ static cholmod_dense* d2chol(const dmat *A, int start, int end){
 /**
    Factorize a sparse array into LL' with reordering.
 */
-spchol* chol_factorize(dsp *A_in){
+static spchol* chol_factorize_do(dsp *A_in){
     if(!A_in) return NULL;
     spchol *out=calloc(1, sizeof(spchol));
     out->c=calloc(1, sizeof(cholmod_common));
@@ -106,7 +109,7 @@ spchol* chol_factorize(dsp *A_in){
     out->c->final_ll=1;   /*Leave in LL instead of LDL format. */
     out->c->final_asis=0; /*do the conversion as shown above. */
 #endif
-    /*Try AMD ordering only. SLOW */
+    /*Try AMD ordering only: SLOW */
     /*
       out->c.nmethods=1;
       out->c.method[0].ordering=CHOLMOD_AMD;
@@ -157,7 +160,61 @@ spchol* chol_factorize(dsp *A_in){
 	out->L=NULL;
     }
 #endif	
-    free(A);
+    free(A);/*just free our reference.*/
+    return out;
+}
+
+/**
+   Factorize a sparse array into LL' with reordering.
+*/
+spchol* chol_factorize(dsp *A_in){
+    if(!A_in) return NULL;
+    spchol *out=NULL;
+    char dirchol[PATH_MAX];
+    snprintf(dirchol, PATH_MAX, "%s/.aos/chol",HOME);
+    if(!exist(dirchol)) mymkdir("%s", dirchol);
+    long avail=available(dirchol);
+    if(avail>A_in->nzmax*3*sizeof(double) && A_in->m>10000){
+	uint32_t key;
+	key=hashlittle(A_in->p, sizeof(spint)*(A_in->n+1), 0);
+	key=hashlittle(A_in->i, sizeof(spint)*(A_in->nzmax), key);
+	key=hashlittle(A_in->x, sizeof(double)*(A_in->nzmax), key);
+	char fnchol[PATH_MAX];
+	snprintf(fnchol, PATH_MAX, "%s/chol_%ld_%ld_%ud.bin",dirchol, A_in->m, A_in->nzmax, key);
+	if(zfexist(fnchol)) zftouch(fnchol);
+	remove_file_older(dirchol, 365*24*3600);
+
+	while(!out){
+	    if(exist(fnchol)){
+		info2("\nreading chol from %s\n", fnchol);
+		out=chol_read("%s", fnchol);
+	    }else{
+		char fnlock[PATH_MAX];
+		snprintf(fnlock, PATH_MAX, "%s.lock", fnchol);
+		/*non blocking exclusive lock. */
+		int fd=lock_file(fnlock, 0, 0);
+		if(fd>=0){/*succeed to lock file. */
+		    out=chol_factorize_do(A_in);
+		    char fntmp[PATH_MAX];
+		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnchol);
+		    info2("\nsaving chol to %s\n", fnchol);
+		    chol_save(out, "%s", fntmp);
+		    if(rename(fntmp, fnchol)){
+			error("Unable to rename %s\n", fnlock);
+		    }
+		    close(fd); remove(fnlock);
+		}else{
+		    warning("Waiting for previous lock to release ...");
+		    fd=lock_file(fnlock, 1, 0);
+		    warning2("OK\n");
+		    close(fd); remove(fnlock);
+		}
+	    }
+	}
+    }else{
+	out=chol_factorize_do(A_in);
+    }
+    
     return out;
 }
 
@@ -174,14 +231,6 @@ void chol_convert(spchol *A, int keep){
     cholmod_factor *L=A->L;
     A->Cp=malloc(sizeof(spint)*A->L->n);
     memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
-#define USE_NEW_METHOD 0
-#if USE_NEW_METHOD == 1
-    if(keep){
-	A->Cl=spnew(L->n, L->n, 0);
-    }else{
-	A->Cl=spnew(L->n, L->n, 0);
-    }
-#else
     if(keep){
 	L=MOD(copy_factor)(A->L, A->c);
     }else{
@@ -197,7 +246,6 @@ void chol_convert(spchol *A, int keep){
 	A->c=NULL;
 	A->L=NULL;
     }
-#endif
 }
 /**
    Save cholesky factor and permutation vector to file.*/
@@ -233,7 +281,7 @@ void chol_save(spchol *A, const char *format,...){
 		 ,L->n, L->minor,L->nzmax,L->nsuper,L->ssize,L->xsize,L->maxcsize,L->maxesize,
 		 L->ordering,L->is_ll,L->is_super,L->is_monotonic,L->itype,L->xtype,L->dtype);
 	nc=L->is_super?7:8;
-	header_t header={MCC_ANY, nc, 1, NULL};
+	header_t header={MCC_ANY, nc, 1, str};
 	write_header(&header, fp);
 	do_write(fp, 0, sizeof(spint), M_SPINT, "Perm", L->Perm, L->n, 1);
 	do_write(fp, 0, sizeof(spint), M_SPINT, "ColCount", L->ColCount, L->n, 1);
@@ -249,7 +297,7 @@ void chol_save(spchol *A, const char *format,...){
 	    do_write(fp, 0, sizeof(spint), M_SPINT, "px", L->px, L->nsuper+1, 1);
 	    do_write(fp, 0, sizeof(spint), M_SPINT, "s", L->s, L->ssize, 1);
 	}
-	do_write(fp, 0, sizeof(double),M_DBL, L->x, "x", L->is_super?L->xsize:L->nzmax, 1);
+	do_write(fp, 0, sizeof(double),M_DBL, "x", L->x, L->is_super?L->xsize:L->nzmax, 1);
     }
     zfclose(fp);
 }
@@ -269,7 +317,6 @@ spchol *chol_read(const char *format, ...){
     long ncx=header.nx;
     long ncy=header.ny;;
     if(ncx*ncy==2){/*Contains Cl(Cu) and Perm */
-	info("Reading converted cholmod_factor\n");
 	dsp *C=spreaddata(fp, 0);
 	int type=spcheck(C);
 	if(type & 1){
@@ -286,7 +333,7 @@ spchol *chol_read(const char *format, ...){
 	}
     }else{/*Native cholmod format exists. Read it. */
 	if(!header.str){
-	    error("File %s does not contain a cholmod_facotr\n", fn);
+	    error("File %s does not contain a cholmod_factor\n", fn);
 	}
 #define READ_SIZE_T(A) L->A=(size_t)search_header_num(header.str,#A)
 #define READ_INT(A) L->A=(int)search_header_num(header.str,#A)
@@ -322,14 +369,14 @@ spchol *chol_read(const char *format, ...){
 	READSPINT(Perm, L->n);
 	READSPINT(ColCount, L->n);
 	if(L->is_super==0){/*Simplicity */
-	    info("Reading simplicity cholmod_factor\n");
+	    info2("Reading simplicity cholmod_factor\n");
 	    READSPINT(p, L->n+1);
 	    READSPINT(i, L->nzmax);
 	    READSPINT(nz, L->n);
 	    READSPINT(next, L->n+2);
 	    READSPINT(prev, L->n+2);
 	}else{
-	    info("Reading supernodal cholmod_factor\n");
+	    info2("Reading supernodal cholmod_factor\n");
 	    READSPINT(super, L->nsuper+1);
 	    READSPINT(pi, L->nsuper+1);
 	    READSPINT(px, L->nsuper+1);

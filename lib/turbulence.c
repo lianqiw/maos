@@ -173,31 +173,31 @@ static map_t** create_screen(GENSCREEN_T *data,
 	fnatm=get_fnatm(data);
     }
     if(fnatm){
-	char fnlock[PATH_MAX]; 
-	snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);
 	dcell *in=NULL;
 	while(!in){
-	    if(exist(fnlock)){
-		/*when fnlock exists, the data in fnatm is not good. */
-		info2("Will not read since %s exists\n", fnlock);
-	    }else{
+	    if(exist(fnatm)){
+		info2("Reading %s\n", fnatm);
 		in=dcellread_mmap(fnatm);
-		if(in) info2("Reading %s\n", fnatm);
-	    }
-	    if(!in){
-		info2("Creating %s\n", fnatm);
-		int fd=lock_file(fnlock, 0, 0);/*non blocking exclusive lock. */
+	    }else{
+		char fnlock[PATH_MAX];
+		snprintf(fnlock, PATH_MAX, "%s.lock", fnatm);
+		/*non blocking exclusive lock. */
+		int fd=lock_file(fnlock, 0, 0);
 		if(fd>=0){/*succeed to lock file. */
-		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fnatm); 
+		    char fntmp[PATH_MAX];
+		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnatm);
+		    cellarr *fc = cellarr_init(nlayer, 1, "%s", fntmp); 
 		    funsave(fc, data);
 		    cellarr_close(fc);
-		    remove(fnlock);
-		    close(fd);
-		}else{/*some other process is working on the data. */
-		    /*wait for the lock to release. The following lock will block. */
+		    if(rename(fntmp, fnatm)){
+			error("Unable to rename %s\n", fnlock);
+		    }
+		    close(fd); remove(fnlock);
+		}else{/*wait for the previous lock to release.*/
+		    warning("Waiting for previous lock to release ...");
 		    fd=lock_file(fnlock, 1, 0);
-		    close(fd);
-		    remove(fnlock);
+		    warning2("OK\n");
+		    close(fd); remove(fnlock);
 		}
 	    }
 	}
