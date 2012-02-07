@@ -317,6 +317,23 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     cublasDestroy(handle);
     gpu_print_mem("recon init");
 }
+/*update reconstruction parameters after slodar.*/
+void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
+    for(int ips=0; ips<recon->npsr; ips++){
+	float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
+	curecon->l2c[ips]=tmp*tmp*TOMOSCALE;
+    }
+    if(parms->tomo.piston_cr){
+	for(int ips=0; ips<recon->npsr; ips++){
+	    double r0=recon->r0;
+	    double dx=recon->xloc[ips]->dx;
+	    double wt=recon->wt->p[ips];
+	    int icenter=loccenter(recon->xloc[ips]);
+	    curecon->zzi[ips]=icenter;
+	    curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*TOMOSCALE;
+	}
+    }
+}
 void gpu_recon_reset(){
     curcellfree(curecon->opdr); curecon->opdr=NULL;
     curcellfree(curecon->dmfit); curecon->dmfit=NULL;

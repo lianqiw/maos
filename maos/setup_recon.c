@@ -1372,6 +1372,9 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
   */
 void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms){
     setup_recon_tomo_prep(recon, parms); /*redo L2, invpsd */
+    if(parms->gpu.tomo){
+	gpu_update_recon(parms, recon);
+    }
     if(parms->tomo.alg==1&&!parms->tomo.assemble){/*no need to do anything */
 	return;
     }
