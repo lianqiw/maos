@@ -434,7 +434,9 @@ void cn2est_cov(CN2EST_T *cn2est){
    Do the Cn2 Estimation.
  */
 void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
-    info("Cn2 is estimated with %d averages\n", cn2est->nstep);
+    if(parms->cn2.verbose){
+	info2("Cn2 is estimated with %d averages\n", cn2est->nstep);
+    }
     dcellzero(cn2est->wt);
     dcellmm(&cn2est->wt, cn2est->iPkn, cn2est->cc, "nn", 1./cn2est->nstep);
     double wtsumsum=0;
@@ -497,36 +499,39 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
 	double r0=pow(wtsum,-3./5.);
 	cn2est->r0->p[iwfspair]=r0;
 	dscale(wt, 1./wtsum);
-	
-	info2("r0=%.4fm theta0=%6f\" ",r0,calc_aniso(r0,wt->nx,ht->p,wt->p)*206265);
-	if(parms->ndm==2){
-	    info2("theta2=%6f\" ", calc_aniso2(r0,wt->nx,ht->p,wt->p,
-					      parms->dm[0].ht,parms->dm[1].ht)*206265);
+	if(parms->cn2.verbose){
+	    info2("r0=%.4fm theta0=%6f\" ",r0,calc_aniso(r0,wt->nx,ht->p,wt->p)*206265);
+	    if(parms->ndm==2){
+		info2("theta2=%6f\" ", calc_aniso2(r0,wt->nx,ht->p,wt->p,
+						   parms->dm[0].ht,parms->dm[1].ht)*206265);
+	    }
+	    info2("wt=[");
+	    for(int iht=0; iht<wt->nx; iht++){
+		info2("%5f ", wt->p[iht]);
+	    }
+	    info2("]\n");
 	}
-	info2("wt=[");
-	for(int iht=0; iht<wt->nx; iht++){
-	    info2("%5f ", wt->p[iht]);
-	}
-	info2("]\n");
     }
     cn2est->r0m=pow(wtsumsum/cn2est->wt->nx, -3./5.);
     dcellzero(cn2est->wtrecon);
     spcellmulmat(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, 1);
     /*only 1 cell. norm to sum to 1. */
     normalize(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
-    info2("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
-	  calc_aniso(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
-		     cn2est->htrecon->p,cn2est->wtrecon->p[0]->p)*206265);
-    if(parms->ndm==2){
-	info2("theta2=%6f\" ", calc_aniso2(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
-					  cn2est->htrecon->p,cn2est->wtrecon->p[0]->p,
-					  parms->dm[0].ht, parms->dm[1].ht)*206265);
+    if(parms->cn2.verbose){
+	info2("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
+	      calc_aniso(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
+			 cn2est->htrecon->p,cn2est->wtrecon->p[0]->p)*206265);
+	if(parms->ndm==2){
+	    info2("theta2=%6f\" ", calc_aniso2(cn2est->r0m,cn2est->wtrecon->p[0]->nx,
+					       cn2est->htrecon->p,cn2est->wtrecon->p[0]->p,
+					       parms->dm[0].ht, parms->dm[1].ht)*206265);
+	}
+	info2("wt=[");
+	for(int iht=0; iht<cn2est->wtrecon->p[0]->nx; iht++){
+	    info2("%5f ", cn2est->wtrecon->p[0]->p[iht]);
+	}
+	info2("]\n");
     }
-    info2("wt=[");
-    for(int iht=0; iht<cn2est->wtrecon->p[0]->nx; iht++){
-	info2("%5f ", cn2est->wtrecon->p[0]->p[iht]);
-    }
-    info2("]\n");
     /*divide by the number of accumulated frames. */
     if(cn2est->reset){
 	info("reset the covariance");
@@ -578,7 +583,9 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol, int isim){
 	    cn2est_moveht(recon);
 	}
 	if(parms->cn2.tomo){
-	    info("Updating tomography weights\n");
+	    if(parms->cn2.verbose){
+		info2("Updating tomography weights\n");
+	    }
 	    cn2est_updatetomo(recon,parms);/*notice, cannot be parallel with tomofit(). */
 	}
     }

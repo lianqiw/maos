@@ -490,6 +490,7 @@ typedef struct CN2EST_CFG_T{
     int step;        /**<do cn2 estimation every this time step*/
     int reset;       /**<reset the accumulated cn2 after every cn2step.*/
     int tomo;        /**<update tomography parameters if non zero*/
+    int verbose;     /**<1:Print out estimated r0, cn2 during simulation.*/
     int keepht;      /**<>0: use the layer ht specified by atmr.ht. 2: also do slodar
 			directly on these layers.*/
     int nhtomo;      /**<number of layers to feed into reconstructor. only

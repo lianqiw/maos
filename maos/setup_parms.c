@@ -758,6 +758,7 @@ static void readcfg_cn2(PARMS_T *parms){
     READ_INT(cn2.step);
     READ_INT(cn2.reset);
     READ_INT(cn2.tomo);
+    READ_INT(cn2.verbose);
     READ_INT(cn2.keepht);
     READ_INT(cn2.nhtomo);
     READ_INT(cn2.moveht);

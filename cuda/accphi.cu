@@ -145,7 +145,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		}
 	    }
 	    long nxa=(avail-need)/nps/sizeof(float);/*we are able to host this amount. */
-	    if(nxa<nxm || nxa<nym){
+	    if(nxa<nxm*nym){
 		error("GPU does not have enough memory\n");
 	    }
 	    info2("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
