@@ -66,7 +66,6 @@ GdkPixbuf *icon_finished=NULL;
 GdkPixbuf *icon_failed=NULL;
 GdkPixbuf *icon_running=NULL;
 
-static const char *ProgName="Job Monitoring";
 static GtkStatusIcon *status_icon;
 GtkWidget *notebook=NULL;
 GtkWidget **pages;
@@ -680,7 +679,9 @@ static void create_status_icon(){
     gtk_widget_show_all(menu);
     g_signal_connect(GTK_STATUS_ICON(status_icon),
 		     "popup-menu",G_CALLBACK(trayIconPopup),menu);
-    gtk_status_icon_set_tooltip_text(status_icon, ProgName);
+#if GTK_MAJOR_VERSION >=3 || GTK_MINOR_VERSION>=16
+    gtk_status_icon_set_tooltip_text(status_icon, "MAOS Job Monitoring");
+#endif
     gtk_status_icon_set_visible(status_icon, TRUE);
 }
 

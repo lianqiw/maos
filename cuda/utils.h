@@ -124,7 +124,7 @@ extern int nstream;
 the problem by using mutex locking to makesure only 1 thread is calling FFT. */
 #if CUDA_VERSION < 4010
 extern pthread_mutex_t cufft_mutex;
-#define LOCK_CUFFT LOCK(cufft_muex)
+#define LOCK_CUFFT LOCK(cufft_mutex)
 #define UNLOCK_CUFFT UNLOCK(cufft_mutex)
 #else
 /*cufft 4.1 is thread safe. no need lock.*/
