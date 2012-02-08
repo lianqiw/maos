@@ -1754,6 +1754,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	use_cuda=0;
     }
     if(use_cuda){
+	if(parms->sim.idealfit){
+	    parms->gpu.tomo=0;/*no need tomo.*/
+	}
 	if(parms->recon.alg==0){
 	    if(parms->gpu.tomo && parms->tomo.pos !=2){
 		parms->gpu.tomo=0;

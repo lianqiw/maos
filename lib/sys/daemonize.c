@@ -73,9 +73,11 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		goto retry;
 	    }else{
 		if(kill(pid,0)){
-		    warning("Process %ld already locks file, but it already exited\n",pid);
+		    count++;
+		    warning("Process %ld already locks file, but we don't find it, this may happen in NFS mounted system\n"
+			    " wait for 10 seconds before retry.\n",pid);
+		    sleep(10);
 		    fclose(fp);
-		    remove(fnlock);
 		    goto retry;
 		}else{/*already running. check version */
 		    /*warning("Process %ld already locks file %s\n",pid,fnlock); */
