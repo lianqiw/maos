@@ -147,6 +147,7 @@ int main(int argc, char **argv){
     if(arg->detach){
 	daemonize();
     }else{
+	redirect();
 	/*foreground task will start immediately. */
 	arg->force=1;
     }

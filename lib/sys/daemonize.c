@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
+#include <pthread.h>
 #include "common.h"
 #include "misc.h"
 #include "daemonize.h"
@@ -212,6 +213,62 @@ void single_instance_daemonize(const char *lockfolder_in,
     }
 }
 int detached=0;
+int stdoutfd;
+int stderrfd;
+static __attribute__((constructor)) void init(){
+    stdoutfd=dup(fileno(stdout));
+    stderrfd=dup(fileno(stderr));
+}
+static void fputs_stderr(char *fn){
+#define BUFL 400
+    FILE *fpout=fdopen(stderrfd, "w");
+    if(!fpout) {
+	fprintf(stdout, "open stdout failed\n");
+	return;
+    }
+    setbuf(fpout, NULL);
+    FILE *fp;
+    while(!(fp=fopen(fn,"r"))){
+	sleep(1);
+    }
+    free(fn);
+    char buf[BUFL];
+    while(1){
+	while(fgets(buf, BUFL, fp)){
+	    if(fputs(buf, fpout)==EOF){
+		return;
+	    }
+	}
+	sleep(1);
+	clearerr(fp);
+    }
+#undef BUFL
+}
+/*
+  Redirect output. If we are in detached mode, will not output to screen.
+*/
+void redirect(void){
+    if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
+    char fn[256];
+    pid_t pid=getpid();
+    snprintf(fn,256,"run_%d.log",pid);
+    if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
+    snprintf(fn,256,"run_%d.log",pid);
+    if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
+    mysymlink(fn, "run_recent.log");
+    /*turns off file buffering */
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
+    if(!detached){
+	/*output files content to screen*/
+	pthread_t thread;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_create(&thread, &attr, (void*(*)(void*))fputs_stderr, strdup(fn));
+	pthread_attr_destroy(&attr);
+    }
+}
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.
 */
@@ -229,7 +286,7 @@ void daemonize(void){
     }
     /* Create a new SID for the child process */
     if(setsid()==-1) error("Error setsid\n");
-    
+    pid=getpid();
     umask(0077);
     detached=1;/*we are in detached mode, disable certain print outs.*/
     /*
@@ -239,18 +296,8 @@ void daemonize(void){
       everything.
     */
     /*It may be the following producing garbage characters.*/
-    if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
+    redirect();
     char fn[256];
-    pid=getpid();
-    snprintf(fn,256,"run_%d.log",pid);
-    if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
-    snprintf(fn,256,"run_%d.log",pid);
-    if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
-	
-    mysymlink(fn, "run_recent.log");
-    /*turns off file buffering */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
     snprintf(fn,256,"kill_%d",pid);
     FILE *fp=fopen(fn,"w");
     fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);

@@ -26,6 +26,7 @@ void single_instance_daemonize(const char *lockfolder_in,
 			       void* daemon_arg);
 int lock_file(const char *fn, long block, long version);
 void daemonize(void);
+void redirect(void);
 extern int detached;
 #endif
 

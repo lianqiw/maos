@@ -38,6 +38,8 @@ int main(int argc, char **argv){
 	disable_draw=1;/*disable drawing. */
 	daemonize();
 	fprintf(stderr, "%s\n", scmd);
+    }else{
+	redirect();
     }
     info2("Output folder is '%s' %d threads\n",arg->dirout, arg->nthread);
     warning("\n\nPlease notice that the J/H band zero mag flux has been updated.\n\n\n");

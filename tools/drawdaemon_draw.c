@@ -703,11 +703,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    if(drawdata->cumu && pts->nx>0){
 		cairo_save(cr);
 		char val[80];
-		double ym=y_cumu/(pts->nx-ips0+1);
-		if(drawdata->cumuquad){
-		    ym=sqrt(ym);
-		}
-		snprintf(val, 80, "%.2f", ym);
+		snprintf(val, 80, "%.2f", y);
 		cairo_translate(cr, round((ix-15)/1)*1, round((iy-font_size-5)/1)*1);
 		cairo_scale(cr,1,-1);
 		pango_text(cr, layout, 0, 0, val, 1, 0);
