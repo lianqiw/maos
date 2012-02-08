@@ -661,13 +661,13 @@ typedef struct PARMS_T{
     int ntsurf;      /**<Number of tilted surfaces*/
     int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int pause;       /**<Pause at the end of every time step*/
-    int force;       /**<For start, bypassing scheduler*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.
 */
 typedef struct ARG_T{
     int detach;      /**<Detach from the command line and run in background*/
+    int override;    /**<Run simulation even if Res_${seed}.done exists*/
     int force;       /**<For start, bypassing scheduler*/
     int nthread;     /**<Number of threads*/
     int pause;       /**<pause at the end of every time step*/

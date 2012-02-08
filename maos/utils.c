@@ -442,6 +442,7 @@ ARG_T * parse_args(int argc, char **argv){
 	{"help",   'h',T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
 	{"force",  'f',T_INT, 0, &arg->force, NULL},
+	{"override",'O',T_INT,0, &arg->override, NULL},
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
 	{"gpu",    'g',T_INTARR, 1, &arg->gpus, &arg->ngpu},

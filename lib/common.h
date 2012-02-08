@@ -218,22 +218,22 @@ void print_backtrace(int sig);
 	    raise(SIGTERM);})
 #define info(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr, "%-20s",fline);			\
-	    fprintf(stderr, A);})
+	    fprintf(stdout, "%-20s",fline);			\
+	    fprintf(stdout, A);})
 #define warning(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr,"\033[01;31m%-20s", fline);		\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
+	    fprintf(stdout,"\033[01;31m%-20s", fline);		\
+	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
 
 #define error2(A...) ({							\
 	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
 	    fprintf(stderr, A);						\
 	    PRINT_BACKTRACE;						\
 	    raise(SIGTERM);})
-#define info2(A...) fprintf(stderr, A)
+#define info2(A...) fprintf(stdout, A)
 #define warning2(A...) ({					\
-	    fprintf(stderr,"\033[00;31m");			\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m"); }) 
+	    fprintf(stdout,"\033[00;31m");			\
+	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m"); }) 
 
 #define error3(A...) ({char fline[80];					\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
@@ -243,12 +243,12 @@ void print_backtrace(int sig);
 	    raise(SIGTERM);})
 #define warning3(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
+	    fprintf(stdout,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
+	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
 #define info3(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr, "[%s]%-20s",myasctime(),fline);	\
-	    fprintf(stderr, A);})
+	    fprintf(stdout, "[%s]%-20s",myasctime(),fline);	\
+	    fprintf(stdout, A);})
 #endif
 #define PAUSE					\
     info2("Press Enter to continue:");		\

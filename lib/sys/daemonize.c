@@ -215,36 +215,49 @@ void single_instance_daemonize(const char *lockfolder_in,
     }
 }
 int detached=0;
-int stdoutfd;
-int stderrfd;
-static __attribute__((constructor)) void init(){
-    stdoutfd=dup(fileno(stdout));
-    stderrfd=dup(fileno(stderr));
-}
-static void fputs_stderr(char *fn){
-#define BUFL 400
-    FILE *fpout=fdopen(stderrfd, "w");
-    if(!fpout) {
-	fprintf(stdout, "open stdout failed\n");
+static void fputs_stderr(int fd, int stdoutfd, const char *fn){
+    FILE *fpout[2];
+    fpout[0]=fdopen(stdoutfd, "w");
+    fpout[1]=fopen(fn, "w");
+    mysymlink(fn, "run_recent.log");
+    setbuf(fpout[0], NULL);
+    setbuf(fpout[1], NULL);
+    if(!fpout[0] || !fpout[1]) {
+	fprintf(stderr, "open stderr failed\n");
 	return;
     }
-    setbuf(fpout, NULL);
-    FILE *fp;
-    while(!(fp=fopen(fn,"r"))){
-	sleep(1);
-    }
-    free(fn);
-    char buf[BUFL];
-    while(1){
-	while(fgets(buf, BUFL, fp)){
-	    if(fputs(buf, fpout)==EOF){
-		return;
+    char buf[400];
+    while(fpout[0] || fpout[1]){
+	int len=read(fd, buf, sizeof buf);
+	if(len<0 && errno == EINTR){
+	    continue;
+	}
+	if(len<0){/*pipe closed. parent exited. we exit also.*/
+	    break;
+	}
+	for(int i=0; i<2; i++){
+	    if(fpout[i] && fwrite(buf, len, 1, fpout[i])!=1){
+		fpout[i]=NULL;
 	    }
 	}
-	sleep(1);
-	clearerr(fp);
     }
-#undef BUFL
+    _Exit(0);
+}
+void redirect_fd(const char *fn, int fd){
+    if(fn){
+	if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
+	if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
+	mysymlink(fn, "run_recent.log");
+    }else if(fd>-1){
+	/*do not close stdout here.*/
+	stdout=fdopen(fd, "w");
+	stderr=fdopen(fd, "w");
+    }else{
+	warning("Invalid argument");
+    }
+    /*turns off file buffering */
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
 }
 /*
   Redirect output. If we are in detached mode, will not output to screen.
@@ -253,22 +266,31 @@ void redirect(void){
     if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
     char fn[256];
     pid_t pid=getpid();
-    snprintf(fn,256,"run_%d.log",pid);
-    if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
-    snprintf(fn,256,"run_%d.log",pid);
-    if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
-    mysymlink(fn, "run_recent.log");
-    /*turns off file buffering */
-    setbuf(stdout, NULL);
-    setbuf(stderr, NULL);
-    if(!detached){
-	/*output files content to screen*/
-	pthread_t thread;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_create(&thread, &attr, (void*(*)(void*))fputs_stderr, strdup(fn));
-	pthread_attr_destroy(&attr);
+    snprintf(fn,sizeof fn,"run_%d.log",pid);
+    if(detached){
+	redirect_fd(fn, -1);
+    }else{/*output files content to screen*/
+	int stdoutfd=dup(fileno(stdout));
+	int pfd[2];
+	if(pipe(pfd)){
+	    warning("pipe failed\n");
+	    redirect_fd(fn, -1);
+	}else{
+	    int pid2=fork();
+	    if(pid2==-1){
+		perror("fork");
+		redirect_fd(fn, -1);
+	    }else if(pid2>0){//parent. output to pipe
+		info("pid2=%d. pfd[1]=%d\n", pid2, pfd[1]);
+		close(pfd[0]);
+		redirect_fd(NULL, pfd[1]);
+	    }else{//child. read pipe
+		close(pfd[1]);
+		if(setsid()==-1) error("Error setsid\n");
+		fputs_stderr(pfd[0], stdoutfd, fn);
+		_Exit(0);
+	    }
+	}
     }
 }
 /**

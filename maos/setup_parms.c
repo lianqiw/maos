@@ -803,7 +803,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.splitlrt);
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
-    READ_INT(dbg.force);
     READ_INT(dbg.usegwr);
     READ_INT(dbg.dxonedge);
     READ_INT(dbg.cmpgpu);
@@ -1665,7 +1664,6 @@ static void setup_parms_postproc_siglev(PARMS_T *parms){
 */
 static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     parms->pause=arg->pause;
-    parms->force=arg->force;
     {
 	/*Remove seeds that are already done. */
 	char fn[80];
@@ -1674,7 +1672,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	parms->fdlock=calloc(parms->sim.nseed, sizeof(int));
 	for(iseed=0; iseed<parms->sim.nseed; iseed++){
 	    snprintf(fn, 80, "Res_%d.done",parms->sim.seeds[iseed]);
-	    if(exist(fn) && !parms->force && !parms->dbg.force){
+	    if(exist(fn) && !arg->override){
 		parms->fdlock[iseed]=-1;
 		warning2("Skip seed %d because %s exist.\n", parms->sim.seeds[iseed], fn);
 	    }else{
@@ -1701,7 +1699,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    warning("There are no seed to run. Exit\n");
 	    scheduler_finish(0);
 	    raise(SIGUSR1);
-	    _exit(1);
+	    exit(1);
 	}
     }
     info2("There are %d valid simulation seeds: ",parms->sim.nseed);
