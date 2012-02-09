@@ -577,7 +577,7 @@ void cn2est_isim(RECON_T *recon, const PARMS_T *parms, dcell *gradol, int isim){
     CN2EST_T *cn2est=recon->cn2est;
     cn2est_cov(cn2est);/*convert gradients to cross covariance. */
     if((isim+1-parms->sim.start)%parms->cn2.step == 0){
-	dcellswrite(cn2est->cc, 1./cn2est->nstep, "cc_%d",isim+1);
+	/*dcellswrite(cn2est->cc, 1./cn2est->nstep, "cc_%d",isim+1);*/
 	cn2est_est(cn2est, parms);/*do the CN2 estimation */
 	if(parms->cn2.moveht){
 	    cn2est_moveht(recon);
