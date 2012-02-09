@@ -49,7 +49,7 @@
 #define DEBUG 0
 #endif
 #if DEBUG == 1
-#define pline fprintf(stderr,"Line: %d\n", __LINE__);
+#define pline info2("Line: %d\n", __LINE__);
 #else
 #define pline
 #endif
@@ -198,7 +198,7 @@ dsp * mkgt(loc_t* xloc,     /**<the grid on which OPDs are defined*/
 	displacey=(displace[1]-xloc->map->oy)*dx1;	
 	dp2=dp1;
 	if(fabs(scale-1)>1.e-10)
-	    fprintf(stderr,"This is a bug in mkg to do three plane mkg when scale!=1\n");
+	    info2("This is a bug in mkg to do three plane mkg when scale!=1\n");
     }else{
 	/*
 	  If XLOC is missing or XLOC and PLOC are the same, treat the

@@ -67,6 +67,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
+	    if(parms->tomo.predict && recon->HXWtomo){
+		setup_recon_HXW_predict(simu);
+	    }
 	}
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){

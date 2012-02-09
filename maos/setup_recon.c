@@ -327,7 +327,6 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
 		HXW[ips][iwfs]=mkh(recon->xloc[ips], ploc, NULL, 
 				   displace[0],displace[1],scale,
 				   parms->tomo.cubic, parms->tomo.iac);
-		
 	    }
 	}
 	toc2(" ");

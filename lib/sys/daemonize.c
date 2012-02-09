@@ -223,7 +223,7 @@ static void fputs_stderr(int fd, int stdoutfd, const char *fn){
     setbuf(fpout[0], NULL);
     setbuf(fpout[1], NULL);
     if(!fpout[0] || !fpout[1]) {
-	fprintf(stderr, "open stderr failed\n");
+	printf("open stderr failed\n");
 	return;
     }
     char buf[400];

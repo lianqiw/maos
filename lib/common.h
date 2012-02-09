@@ -136,6 +136,53 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #endif
 #define SPLIT(A,B,C) {C=ifloor(A); B=A-C;}
 
+#define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
+
+/*
+  use () to make the statements a single statement.
+*/
+#ifndef error
+#define error(A...) ({char fline[80];					\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
+	    PRINT_BACKTRACE;						\
+	    raise(SIGTERM);})
+#define info(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
+	    fprintf(stdout, "%-20s",fline);			\
+	    fprintf(stdout, A);})
+#define warning(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
+	    fprintf(stdout,"\033[01;31m%-20s", fline);		\
+	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
+
+#define error2(A...) ({							\
+	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
+	    fprintf(stderr, A);						\
+	    PRINT_BACKTRACE;						\
+	    raise(SIGTERM);})
+#define info2(A...) fprintf(stdout, A)
+#define warning2(A...) ({					\
+	    fprintf(stdout,"\033[00;31m");			\
+	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m"); }) 
+
+#define error3(A...) ({char fline[80];					\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
+	    PRINT_BACKTRACE;						\
+	    raise(SIGTERM);})
+#define warning3(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+	    fprintf(stdout,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
+	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
+#define info3(A...) ({char fline[80];				\
+	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
+	    fprintf(stdout, "[%s]%-20s",myasctime(),fline);	\
+	    fprintf(stdout, A);})
+#endif
+
 #define error_write error("Write failed\n")
 #define error_read error("Read failed\n")
 /**
@@ -150,8 +197,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 */
 #define TIC double tk
 #define tic tk=myclockd();
-#define toc(A...) ({info(A);fprintf(stderr," takes %.6f seconds.\n",myclockd()-tk);})
-#define toc2(A...) ({fprintf(stderr,A);fprintf(stderr," takes %.6f seconds.\n",myclockd()-tk);})
+#define toc(A...) ({info(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
+#define toc2(A...) ({info2(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
 #define toc3 myclockd()-tk
 
 #define format2fn					\
@@ -203,53 +250,6 @@ void print_backtrace(int sig);
 #include <string.h>
 
 
-#define BASEFILE (strrchr(__FILE__, '/') ?strrchr(__FILE__, '/')+1  : __FILE__)
-
-
-/*
-  use () to make the statements a single statement.
-*/
-#ifndef error
-#define error(A...) ({char fline[80];					\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
-	    PRINT_BACKTRACE;						\
-	    raise(SIGTERM);})
-#define info(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout, "%-20s",fline);			\
-	    fprintf(stdout, A);})
-#define warning(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout,"\033[01;31m%-20s", fline);		\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
-
-#define error2(A...) ({							\
-	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
-	    fprintf(stderr, A);						\
-	    PRINT_BACKTRACE;						\
-	    raise(SIGTERM);})
-#define info2(A...) fprintf(stdout, A)
-#define warning2(A...) ({					\
-	    fprintf(stdout,"\033[00;31m");			\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m"); }) 
-
-#define error3(A...) ({char fline[80];					\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
-	    PRINT_BACKTRACE;						\
-	    raise(SIGTERM);})
-#define warning3(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stdout,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
-#define info3(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout, "[%s]%-20s",myasctime(),fline);	\
-	    fprintf(stdout, A);})
-#endif
 #define PAUSE					\
     info2("Press Enter to continue:");		\
     while(getchar()!=0x0a);			\

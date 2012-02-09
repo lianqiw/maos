@@ -263,8 +263,8 @@ void zfclose(file_t *fp){
     double tm=(double)tv2.tv_sec+(double)tv2.tv_usec*1e-6
 	-((double)fp->tv1.tv_sec+(double)fp->tv1.tv_usec*1e-6);
     const char *type[2]={"\033[33mUncompress", "\033[32mCompressed"};
-    fprintf(stderr, "%s File %7.2f MiB takes %5.2f s at %6.1f MiB/s: "
-	    "%s\033[00m\n", type[fp->isgzip], size, tm, size/tm, fp->fn);
+    info2("%s File %7.2f MiB takes %5.2f s at %6.1f MiB/s: "
+	  "%s\033[00m\n", type[fp->isgzip], size, tm, size/tm, fp->fn);
 #endif
     if(fp->isgzip){
 	gzclose((voidp)fp->p);

@@ -37,7 +37,7 @@ int main(int argc, char **argv){
     if(arg->detach){
 	disable_draw=1;/*disable drawing. */
 	daemonize();
-	fprintf(stderr, "%s\n", scmd);
+	info2("%s\n", scmd);
     }else{
 	redirect();
     }
@@ -52,12 +52,12 @@ int main(int argc, char **argv){
 #endif
     info2("Launched at %s in %s.\n",myasctime(),myhostname());
 
-    fprintf(stderr, "Compiled on %s %s by %s ",
+    info2("Compiled on %s %s by %s ",
 	    __DATE__, __TIME__, __VERSION__);
 #ifdef __OPTIMIZE__
-    fprintf(stderr, "with optimization.\n");
+    info2("with optimization.\n");
 #else
-    fprintf(stderr, "without optimization!!!\n");
+    info2("without optimization!!!\n");
 #endif
     /*register signal handler */
     register_signal_handler(skyc_signal_handler);

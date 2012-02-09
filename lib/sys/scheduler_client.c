@@ -64,8 +64,6 @@ int init_sockaddr (struct sockaddr_in *name,
     name->sin_port = htons(port);
     hostinfo = gethostbyname (hostname);
     if (hostinfo == NULL){
-	/*perror("gethostbyname"); */
-	/*fprintf (stderr, "Unknown host %s.\n", hostname); */
 	return -1;
     }else{
 	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
@@ -276,10 +274,10 @@ void print_backtrace_symbol(void *const *buffer, int size){
     stwrite(&psock,cmd,sizeof(int)*2);
     stwritestr(&psock,cmdstr);
     char *ans=streadstr(&psock);
-    fprintf(stderr, " %s\n",ans);
+    info2(" %s\n",ans);
     free(ans);
 #else
-    fprintf(stderr, " %s\n",cmdstr);
+    info2(" %s\n",cmdstr);
 #endif
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)

@@ -137,7 +137,7 @@ void print_file(const char *fnin){
     if(!(fp=fopen(fn,"r"))){
 	error("Open %s failed\n",fn);
     }
-    copyfile_fp(stderr, fp);
+    copyfile_fp(stdout, fp);
     fclose(fp);
     free(fn);
 }

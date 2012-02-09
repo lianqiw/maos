@@ -72,7 +72,7 @@ void proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
   
     int nplocx,nplocy,nplocx1,nplocy1;
     if(fabs(thetax-M_PI*0.5)>M_PI*.45 || fabs(thetay-M_PI*0.5)>M_PI*0.45){
-	fprintf(stderr,"Tilting angle is too much\n");
+	info2("Tilting angle is too much\n");
 	return;
     }
     

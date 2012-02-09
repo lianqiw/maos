@@ -27,5 +27,6 @@ void free_simu(SIM_T *simu);
 void print_progress(const SIM_T *simu);
 void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms);
 void genscreen(SIM_T *simu);
+void setup_recon_HXW_predict(SIM_T *simu);
 void evolve_screen(SIM_T *simu);
 #endif

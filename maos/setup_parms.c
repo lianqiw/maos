@@ -1616,10 +1616,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    error("parms->evl.dx=%g is probably too large to save ecxx. Recommend parms->evl.dx=%g\n", parms->evl.dx, parms->atmr.dx*0.25);
 	}
     }
-    if(parms->tomo.predict && !parms->tomo.square){
-	info("Please implement wind shifting on HX. need wind velocity\n");
-	error("Prediction is only implemented for square grid currently\n");
-    }
     parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
 }
 

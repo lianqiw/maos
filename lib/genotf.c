@@ -227,7 +227,7 @@ static void *genotf_wrap(GENOTF_T *data){
     const T_VALID *pval=data->pval;
     while(LOCK(data->mutex_isa),isa=data->isa++,UNLOCK(data->mutex_isa),isa<nsa){
 	if(!detached && nsa>10){
-	    fprintf(stderr,"%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
+	    info2("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
 	}
 	const double *opdbiasi=NULL;
 	if(data->opdbias){

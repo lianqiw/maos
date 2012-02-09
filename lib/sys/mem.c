@@ -54,7 +54,7 @@ void (*call_freepath)(void)=NULL;
 #undef realloc
 PNEW(mutex_mem);
 #if MEM_VERBOSE == 1
-#define meminfo(A...) {fprintf(stderr,A);}
+#define meminfo(A...) {printf(A);}
 #else
 #define meminfo(A...)
 #endif
@@ -75,7 +75,7 @@ static void print_usage(const void *key, VISIT value, int level){
     const T_MEMKEY* key2=*((const T_MEMKEY**)key);
     (void) level;
     if(value>1){
-	fprintf(stderr,"%p: size %8zu B", key2->p, (key2->size));
+	printf("%p: size %8zu B", key2->p, (key2->size));
 	print_backtrace_symbol(key2->func, key2->nfunc-2);
     }
 }

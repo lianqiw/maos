@@ -421,13 +421,47 @@ void evolve_screen(SIM_T *simu){
     }
 }
 /**
+   Setup ray tracing operator from xloc to ploc, with predictive offsetting
+*/
+void setup_recon_HXW_predict(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
+    loc_t *ploc=recon->ploc;
+    const int nwfs=parms->nwfsr;
+    const int npsr=recon->npsr;
+    warning("Generating Predictive HXW\n");
+    PDSPCELL(recon->HXWtomo,HXWtomo);
+    for(int iwfs=0; iwfs<nwfs; iwfs++){
+	int ipowfs = parms->wfsr[iwfs].powfs;
+	if(!parms->powfs[ipowfs].skip){/*for tomography */
+	    double  hs = parms->powfs[ipowfs].hs;
+	    for(int ips=0; ips<npsr; ips++){
+		spfree(HXWtomo[ips][iwfs]);
+		double  ht = recon->ht->p[ips];
+		double  scale=1. - ht/hs;
+		double  displace[2];
+		displace[0]=parms->wfsr[iwfs].thetax*ht;
+		displace[1]=parms->wfsr[iwfs].thetay*ht;
+		if(parms->tomo.predict){
+		    int ips0=parms->atmr.indps[ips];
+		    displace[0]+=simu->atm[ips0]->vx*simu->dt*2;
+		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
+		}
+		HXWtomo[ips][iwfs]=mkh(recon->xloc[ips], ploc, NULL, 
+				       displace[0],displace[1],scale,
+				       parms->tomo.cubic, parms->tomo.iac);
+	    }
+	}
+    }
+}
+/**
    Propagate the atmosphere to closest xloc. skip wavefront sensing and
    reconstruction. 
 
    2011-04-26: opdx was incorrectly computed when atm.ht and atmr.ht does not
    match in number. Fixed. Do not do scaling even if fit.ht is less.
 
-  */
+*/
 void atm2xloc(dcell **opdx, const SIM_T *simu){
     const RECON_T *recon=simu->recon;
     const PARMS_T *parms=simu->parms;
@@ -1534,37 +1568,37 @@ void print_progress(const SIM_T *simu){
     const int nmod=parms->evl.nmod;
     
     if(parms->sim.evlol){
-	fprintf(stderr,"\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm;\033[00;00m\n",
-		isim,
-		mysqrt(simu->ole->p[isim*nmod])*1e9,
-		mysqrt(simu->ole->p[1+isim*nmod])*1e9,
-		mysqrt(simu->ole->p[2+isim*nmod])*1e9);
-
-	fprintf(stderr,"Timing: Tot:%5.2f Mean:%5.2f. Used %ld:%02ld, Left %ld:%02ld\n",
-		status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
+	info2("\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm;\033[00;00m\n",
+	      isim,
+	      mysqrt(simu->ole->p[isim*nmod])*1e9,
+	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
+	      mysqrt(simu->ole->p[2+isim*nmod])*1e9);
+	
+	info2("Timing: Tot:%5.2f Mean:%5.2f. Used %ld:%02ld, Left %ld:%02ld\n",
+	      status->tot*tkmean, status->mean*tkmean, lapsh,lapsm,resth,restm);
     }else{    
-	fprintf(stderr,"\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm; CL %6.1f %6.1f %6.1f nm;",
-		isim,
-		mysqrt(simu->ole->p[isim*nmod])*1e9,
-		mysqrt(simu->ole->p[1+isim*nmod])*1e9,
-		mysqrt(simu->ole->p[2+isim*nmod])*1e9,
-		mysqrt(simu->cle->p[isim*nmod])*1e9,
-		mysqrt(simu->cle->p[1+isim*nmod])*1e9,
-		mysqrt(simu->cle->p[2+isim*nmod])*1e9);
+	info2("\033[00;32mStep %5d: OL: %6.1f %6.1f %6.1f nm; CL %6.1f %6.1f %6.1f nm;",
+	      isim,
+	      mysqrt(simu->ole->p[isim*nmod])*1e9,
+	      mysqrt(simu->ole->p[1+isim*nmod])*1e9,
+	      mysqrt(simu->ole->p[2+isim*nmod])*1e9,
+	      mysqrt(simu->cle->p[isim*nmod])*1e9,
+	      mysqrt(simu->cle->p[1+isim*nmod])*1e9,
+	      mysqrt(simu->cle->p[2+isim*nmod])*1e9);
 	if(parms->recon.split && parms->ndm<=2){
-	    fprintf(stderr," Split %6.1f %6.1f %6.1f nm;",
-		    mysqrt(simu->clem->p[isim*3])*1e9,
-		    mysqrt(simu->clem->p[1+isim*3])*1e9,
-		    mysqrt(simu->clem->p[2+isim*3])*1e9);
+	    info2(" Split %6.1f %6.1f %6.1f nm;",
+		  mysqrt(simu->clem->p[isim*3])*1e9,
+		  mysqrt(simu->clem->p[1+isim*3])*1e9,
+		  mysqrt(simu->clem->p[2+isim*3])*1e9);
 	}
-	fprintf(stderr,"\033[00;00m\n");
+	info2("\033[00;00m\n");
     
-	fprintf(stderr,"Timing: WFS:%5.2f Recon:%6.4f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
-		" Used %ld:%02ld, Left %ld:%02ld\n",
-		status->wfs*tkmean, status->recon*tkmean, 
-		status->cache*tkmean, status->eval*tkmean, 
-		status->tot*tkmean, status->mean*tkmean,
-		lapsh,lapsm,resth,restm);
+	info2("Timing: WFS:%5.2f Recon:%6.4f CACHE:%5.2f EVAL:%5.2f Tot:%5.2f Mean:%5.2f."
+	      " Used %ld:%02ld, Left %ld:%02ld\n",
+	      status->wfs*tkmean, status->recon*tkmean, 
+	      status->cache*tkmean, status->eval*tkmean, 
+	      status->tot*tkmean, status->mean*tkmean,
+	      lapsh,lapsm,resth,restm);
     }
 }
 /**
