@@ -1736,6 +1736,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
     if(parms->fit.bgs && parms->fit.precond){
 	error("Please implement the preconditioner for each block for BGS.\n");
     }
+    if(parms->recon.alg==0 && parms->tomo.predict==1 && parms->tomo.alg!=1){
+	error("Predictive tomography only works with CG. need to redo CBS/MVM after wind velocity is know.\n");
+    }
     /*disable cache for low order systems. */
     if(parms->evl.nevl<2){
 	if(parms->sim.cachedm==1){

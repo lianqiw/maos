@@ -80,6 +80,22 @@ inline int CUDAFREE(float *p){
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
 
+inline void* malloc4async(int N){
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
+    void *tmp;
+    cudaMallocHost(&tmp, N);
+    return tmp;
+#else
+    return malloc(N);
+#endif
+}
+inline void free4async(void *P){
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
+    cudaFreeHost(P);
+#else
+    free(P);
+#endif
+}
 
 #define CONCURRENT 0
 #if CONCURRENT
