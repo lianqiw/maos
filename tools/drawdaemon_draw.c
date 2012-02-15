@@ -626,7 +626,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    }
 	    int nptsx=pts->nx;
 	    int ptstep=1;
-	    double ix=0, iy=0, y, y_cumu=0;
+	    double ix=0, iy=0, y=0, y_cumu=0;
 	    if(connectpts){/*plot curves. */
 		unsigned int ips=ips0;
 		/*Draw first point */
