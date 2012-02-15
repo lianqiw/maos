@@ -1,6 +1,6 @@
 var NAVTREE =
 [
-  [ "maos-1.0.1", "index.html", [
+  [ "maos-1.0.2", "index.html", [
     [ "MAOS Documentation", "index.html", null ],
     [ "Related Pages", "pages.html", [
       [ "Introduction", "page1.html", null ],
@@ -149,6 +149,7 @@ var NAVTREE =
       [ "lib/loc.c", "loc_8c.html", null ],
       [ "lib/locbin.c", "locbin_8c.html", null ],
       [ "lib/mathmisc.c", "mathmisc_8c.html", null ],
+      [ "lib/mkdtf.c", "mkdtf_8c.html", null ],
       [ "lib/mkg.c", "mkg_8c.html", null ],
       [ "lib/mkh.c", "mkh_8c.html", null ],
       [ "lib/mkw.c", "mkw_8c.html", null ],

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-1.0.1: lib/cmat.h File Reference</title>
+<title>maos-1.0.2: lib/cmat.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-1.0.1</div>
+   <div id="projectname">maos-1.0.2</div>
   </td>
  </tr>
  </tbody>
@@ -169,6 +169,8 @@ dcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>cwdot2</b> (const
 dcomplex&#160;</td><td class="memItemRight" valign="bottom"><b>cwdot3</b> (const dcomplex *a, const <a class="el" href="structcmat.html">cmat</a> *w, const dcomplex *b)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2417a6c93f1245cf129586dce262aba3"></a><!-- doxytag: member="cmat.h::ccwm" ref="a2417a6c93f1245cf129586dce262aba3" args="(cmat *B, const cmat *A)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ccwm</b> (<a class="el" href="structcmat.html">cmat</a> *B, const <a class="el" href="structcmat.html">cmat</a> *A)</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0cb6770702d1ea1e54d26713ad52f22a"></a><!-- doxytag: member="cmat.h::ccwdiv" ref="a0cb6770702d1ea1e54d26713ad52f22a" args="(cmat *B, const cmat *A, dcomplex value)" -->
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ccwdiv</b> (<a class="el" href="structcmat.html">cmat</a> *B, const <a class="el" href="structcmat.html">cmat</a> *A, dcomplex value)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a8428c3a2815cdb9ef00382e0f46408"></a><!-- doxytag: member="cmat.h::cmulvec" ref="a7a8428c3a2815cdb9ef00382e0f46408" args="(dcomplex *__restrict y, const cmat *__restrict A, const dcomplex *__restrict x, const dcomplex alpha)" -->
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cmulvec</b> (dcomplex *__restrict y, const <a class="el" href="structcmat.html">cmat</a> *__restrict A, const dcomplex *__restrict x, const dcomplex alpha)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada9977993e68f94425418b2c68d1789d"></a><!-- doxytag: member="cmat.h::cmm" ref="ada9977993e68f94425418b2c68d1789d" args="(cmat **C0, const cmat *A, const cmat *B, const char trans[2], const dcomplex alpha)" -->
@@ -388,7 +390,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>cswrite</b> (<a class
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#a26410f22086f4e0868e3e47587b15456">ccwmc</a> (<a class="el" href="structcmat.html">cmat</a> *__restrict A, const <a class="el" href="structcmat.html">cmat</a> *__restrict B, const double alpha)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">component-wise multiply A with conjugate of B: A=A.  <a href="#a26410f22086f4e0868e3e47587b15456"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#a37ae61b57dc15892d3e56cffeefa010b">ccwmd</a> (<a class="el" href="structcmat.html">cmat</a> *__restrict A, const <a class="el" href="structdmat.html">dmat</a> *__restrict B, const double alpha)</td></tr>
-<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">component multiply dmat A with cmat B.  <a href="#a37ae61b57dc15892d3e56cffeefa010b"></a><br/></td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">component multiply cmat A with dmat B.  <a href="#a37ae61b57dc15892d3e56cffeefa010b"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#a197b27b939cdc286cbb170addc58a926">cembed_wvf</a> (<a class="el" href="structcmat.html">cmat</a> *__restrict A, const double *opd, const double *amp, const int nopdx, const int nopdy, const double wvl, const double theta)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">reshape amp.  <a href="#a197b27b939cdc286cbb170addc58a926"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cmat_8h.html#a29ba177902f8b17254b0798fb68d123c">cembed</a> (<a class="el" href="structcmat.html">cmat</a> *__restrict A, const <a class="el" href="structcmat.html">cmat</a> *__restrict B, const double theta, CEMBED flag)</td></tr>
@@ -810,7 +812,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (double *
 </div>
 <div class="memdoc">
 
-<p>component multiply dmat A with cmat B. </p>
+<p>component multiply cmat A with dmat B. </p>
 <p>A=A.*B; </p>
 
 </div>
@@ -1225,7 +1227,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ccogabs</b> (double *
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="cmat_8h.html">cmat.h</a>      </li>
-      <li class="footer">Generated on Thu Jan 19 2012 17:43:39 for maos-1.0.1 by&#160;
+      <li class="footer">Generated on Wed Feb 15 2012 15:30:59 for maos-1.0.2 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

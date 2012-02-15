@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-1.0.1: lib/chol.c File Reference</title>
+<title>maos-1.0.2: lib/chol.c File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-1.0.1</div>
+   <div id="projectname">maos-1.0.2</div>
   </td>
  </tr>
  </tbody>
@@ -112,8 +112,6 @@ Defines</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>ITYPE</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b284eb097f892e7782212cba4a6c75a"></a><!-- doxytag: member="chol.c::CHOL_SIMPLE" ref="a2b284eb097f892e7782212cba4a6c75a" args="" -->
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CHOL_SIMPLE</b></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8d91cdd96d30c45a1e58d3125f888845"></a><!-- doxytag: member="chol.c::USE_NEW_METHOD" ref="a8d91cdd96d30c45a1e58d3125f888845" args="" -->
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>USE_NEW_METHOD</b></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98ea9ea419bf79f012dbd4f2cdf2dab5"></a><!-- doxytag: member="chol.c::READ_SIZE_T" ref="a98ea9ea419bf79f012dbd4f2cdf2dab5" args="(A)" -->
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_SIZE_T</b>(A)</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b1cebc0c19b95519324e40eee466bb8"></a><!-- doxytag: member="chol.c::READ_INT" ref="a6b1cebc0c19b95519324e40eee466bb8" args="(A)" -->
@@ -130,6 +128,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert cholmod_sparse to dsp.  <a href="#a4c3f90228ed466990631fd11e5d1ac30"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">static cholmod_dense *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8c.html#a40374f5b3badb4fc894e8ed058819524">d2chol</a> (const <a class="el" href="structdmat.html">dmat</a> *A, int start, int end)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert our dmat type to cholmod_dense type.  <a href="#a40374f5b3badb4fc894e8ed058819524"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">static spchol *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8c.html#afcc2774418d3977c491f8c55f9072562">chol_factorize_do</a> (<a class="el" href="structdsp.html">dsp</a> *A_in)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Factorize a sparse array into LL' with reordering.  <a href="#afcc2774418d3977c491f8c55f9072562"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">spchol *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8c.html#a43ab12416b0a5f5b4bb88587edbb9b12">chol_factorize</a> (<a class="el" href="structdsp.html">dsp</a> *A_in)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Factorize a sparse array into LL' with reordering.  <a href="#a43ab12416b0a5f5b4bb88587edbb9b12"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="chol_8c.html#ad676f4d815948a8ca80f5a85e3a89c70">chol_convert</a> (spchol *A, int keep)</td></tr>
@@ -234,6 +234,25 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>chol_solve_upp
 <div class="memdoc">
 
 <p>Convert our dmat type to cholmod_dense type. </p>
+
+</div>
+</div>
+<a class="anchor" id="afcc2774418d3977c491f8c55f9072562"></a><!-- doxytag: member="chol.c::chol_factorize_do" ref="afcc2774418d3977c491f8c55f9072562" args="(dsp *A_in)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">static spchol* chol_factorize_do </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structdsp.html">dsp</a> *&#160;</td>
+          <td class="paramname"><em>A_in</em></td><td>)</td>
+          <td><code> [static]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Factorize a sparse array into LL' with reordering. </p>
 
 </div>
 </div>
@@ -586,7 +605,7 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>chol_solve_upp
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="chol_8c.html">chol.c</a>      </li>
-      <li class="footer">Generated on Thu Jan 19 2012 17:43:39 for maos-1.0.1 by&#160;
+      <li class="footer">Generated on Wed Feb 15 2012 15:30:59 for maos-1.0.2 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>

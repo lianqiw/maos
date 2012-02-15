@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>maos-1.0.1: lib/dmat.h File Reference</title>
+<title>maos-1.0.2: lib/dmat.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
@@ -58,7 +58,7 @@ function toggleVisibility(linkObj) {
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">maos-1.0.1</div>
+   <div id="projectname">maos-1.0.2</div>
   </td>
  </tr>
  </tbody>
@@ -169,6 +169,8 @@ Functions</h2></td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">special version of dwdot for just 3 element vectors.  <a href="#a2ad0b887d8ae79cd753310e095e2bd07"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#afda5697c36cb1de9790b812d919697c8">dcwm</a> (<a class="el" href="structdmat.html">dmat</a> *B, const <a class="el" href="structdmat.html">dmat</a> *A)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute component wise multiply B=B.  <a href="#afda5697c36cb1de9790b812d919697c8"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#affc4442ecdecea8957119f18a06c8f85">dcwdiv</a> (<a class="el" href="structdmat.html">dmat</a> *B, const <a class="el" href="structdmat.html">dmat</a> *A, double value)</td></tr>
+<tr><td class="mdescLeft">&#160;</td><td class="mdescRight">Component wise division B=B.  <a href="#affc4442ecdecea8957119f18a06c8f85"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#ad0be58054f76752065768474f9269864">dmulvec</a> (double *__restrict y, const <a class="el" href="structdmat.html">dmat</a> *__restrict A, const double *__restrict x, const double alpha)</td></tr>
 <tr><td class="mdescLeft">&#160;</td><td class="mdescRight">multiply a X(mat) matrix with a vector and accumulate to y: y+=A*x*alpha  <a href="#ad0be58054f76752065768474f9269864"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="dmat_8h.html#aa9ddb63c56fcc2219955260936ee9e40">dmm</a> (<a class="el" href="structdmat.html">dmat</a> **C0, const <a class="el" href="structdmat.html">dmat</a> *A, const <a class="el" href="structdmat.html">dmat</a> *B, const char trans[2], const double alpha)</td></tr>
@@ -439,7 +441,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 <div class="memdoc">
 
 <p>Creat a X(mat) object with already allocated memory chunk. </p>
-<p>the memory is freed when the memory is freed. </p>
+<p>the memory is freed when the X(mat) is freed. </p>
 
 </div>
 </div>
@@ -1318,6 +1320,42 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
 
 <p>Compute component wise multiply B=B. </p>
 <p>*A </p>
+
+</div>
+</div>
+<a class="anchor" id="affc4442ecdecea8957119f18a06c8f85"></a><!-- doxytag: member="dmat.h::dcwdiv" ref="affc4442ecdecea8957119f18a06c8f85" args="(dmat *B, const dmat *A, double value)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void dcwdiv </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>B</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structdmat.html">dmat</a> *&#160;</td>
+          <td class="paramname"><em>A</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>value</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Component wise division B=B. </p>
+<p>/A. 0/0 is replace by value; </p>
 
 </div>
 </div>
@@ -4611,7 +4649,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dembed_locstat</b> (<
   <div id="nav-path" class="navpath">
     <ul>
       <li class="navelem"><a class="el" href="dmat_8h.html">dmat.h</a>      </li>
-      <li class="footer">Generated on Thu Jan 19 2012 17:43:39 for maos-1.0.1 by&#160;
+      <li class="footer">Generated on Wed Feb 15 2012 15:30:59 for maos-1.0.2 by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.3 </li>
     </ul>
