@@ -502,7 +502,7 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
     double var=psd_intelog2(psdin);
-    info("Input psd has variance of %g m^2\n",var*1e18);
+    info2("Input psd has variance of %g m^2\n",var*1e18);
     if(fabs(psdx->p[0]*psdx->p[2]-pow(psdx->p[1],2))<EPS){/*log spaced */
 	psd=dinterp1log(psdx, psdy, fs);
     }else if(fabs(psdx->p[0]+psdx->p[2]-psdx->p[1]*2.)<EPS){/*linear spaced */
@@ -526,7 +526,7 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dfree(fs);
     dresize(out, nstepin, 1);
     double var2=dinn(out,out)/out->nx;
-    info("Time series has variance of %g m^2\n",var2*1e18);
+    info2("Time series has variance of %g m^2\n",var2*1e18);
     dscale(out, sqrt(var/var2));
     return out;
 }

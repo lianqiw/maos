@@ -716,7 +716,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->sim.wspsd){
 	/* Telescope wind shake added to TT input. */
 	dmat *psdin=dread("%s", parms->sim.wspsd);
-	info("Loading windshake PSD from file %s\n", parms->sim.wspsd);
+	info2("Loading windshake PSD from file %s\n", parms->sim.wspsd);
 	simu->telws = psd2time(psdin, simu->telws_rand, parms->sim.dt, parms->sim.end);
 	dfree(psdin);
 	dwrite(simu->telws, "telws_%d", seed);

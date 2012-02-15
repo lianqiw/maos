@@ -232,18 +232,18 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			int notfused=!powfs[ipowfs].dtf[iwvl].fused;
 			if(notfused){
 			    fcomplex *nominal[nsa];
-			/*cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].si, nsa*sizeof(void*)); */
-			int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
-			for(int isa=0; isa<nsa; isa++){
-			    if(multi_nominal || isa==0){
-				if(notfused){
-				    gpu_cmat2dev(&nominal[isa], 
-						 powfs[ipowfs].dtf[iwvl].nominal->p[isa+nsa*(powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0)]);
+			    /*cudaCallocHostBlock(cuwfs[iwfs].dtf[iwvl].si, nsa*sizeof(void*)); */
+			    int multi_nominal=(powfs[ipowfs].dtf[iwvl].si->nx==nsa);
+			    for(int isa=0; isa<nsa; isa++){
+				if(multi_nominal || isa==0){
+				    if(notfused){
+					nominal[isa]=NULL;
+					gpu_cmat2dev(&nominal[isa], powfs[ipowfs].dtf[iwvl].nominal->p[isa+nsa*(powfs[ipowfs].dtf[iwvl].nominal->ny>1?wfsind:0)]);
+				    }
+				}else{
+				    nominal[isa]=nominal[0];
 				}
-			    }else{
-				nominal[isa]=cuwfs[iwfs].dtf[iwvl].nominal[0];
 			    }
-			}
 			    cudaMalloc(&cuwfs[iwfs].dtf[iwvl].nominal, nsa*sizeof(void*));
 			    cudaMemcpy(cuwfs[iwfs].dtf[iwvl].nominal, nominal, nsa*sizeof(void*), cudaMemcpyHostToDevice);
 			}
