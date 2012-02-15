@@ -294,11 +294,12 @@ static inline void zfwrite_do(const void* ptr, const size_t size, const size_t n
  */
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
-    if(fp->isfits && size>1){
+    if(fp->isfits){
+	int length=size*nmemb;
+	if(!length) return;
 	/* write a block of 2880 bytes each time, with big-endianness.*/
 	const int bs=2880;
 	char junk[bs];
-	int length=size*nmemb;
 	int nb=(length+bs-1)/bs;
 	char *in=(char*)ptr;
 	for(int ib=0; ib<nb; ib++){

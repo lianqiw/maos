@@ -38,7 +38,6 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		double thres,  /**<[in]The threshold that an actuator is deemed slave*/
 		double scl     /**<[in]The scaling of the overal value*/
 		){
-    TIC;tic;
     if(!HA && !actfloat) {
 	error("Both HA and actfloat are not supplied\n");
     }
@@ -108,7 +107,6 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		/*warning2("Don't constrain value of actuator %d in slaving\n", iact); */
 	    }
 	}
-	toc("collect");
   	double *actcpl= actcplc->p[idm]->p;
 	double *actcpl0 = actcpl-1;
 	int  nslave   = 0;
@@ -231,11 +229,8 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	pp[icol]=count;
 	assert(icol==nslave);
 	spsetnzmax(slavet, count);
-	toc("assemble");
 	dsp *slave=sptrans(slavet);
-	toc("trans");
 	actslave[idm][idm]=spmulsp(slavet, slave);
-	toc("mul");
 	if(NW){
 	    /*Now we need to make sure NW is in the NULL
 	      space of the slaving regularization, especially
@@ -265,7 +260,6 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 		}
 	    }
 	}
-	toc("NW");
 	spfree(slave);
 	spfree(slavet);
     }/*idm */
@@ -274,7 +268,6 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	spcellfree(actslavec);
 	actslavec=NULL;
     }
-    toc("slaving");
     return actslavec;
 }
 /**

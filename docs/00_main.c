@@ -7,6 +7,8 @@
     (SCAO), multi-conjugate AO (MCAO), laser tomography AO (LTAO), multi-object
     AO (MOAO), and ground layer AO (GLAO).
 
+    <a href="https://github.com/downloads/lianqiw/files/maos_gpu.pdf">AO4ELT2 Paper on MAOS</a>
+
     Some benchmarking results using the TMT NFIRAOS system:
     Dual Intel Xeon W5590 at 3.33 Ghz: 1.3 s per time step with 8 threads.
     Intel Core i7-2600 at 3.4 Ghz: 1.9s per time step with 4 threads.
@@ -60,6 +62,6 @@
 
     \author Lianqi Wang <lianqiw@gmail.com> at TMT Corporation www.tmt.org 
     
-    The source code can be obtained in github.com/lianqiw/maos 
+    The source code can be obtained in \link http://github.com/lianqiw/maos 
 
  */
