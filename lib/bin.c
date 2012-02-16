@@ -305,6 +305,9 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
 	for(int ib=0; ib<nb; ib++){
 	    int nd=length<bs?length:bs;
 	    switch(size){
+	    case 1:
+		memcpy(junk, in, nd);
+		break;
 	    case 2:
 		for(int i=0; i<nd; i+=2){
 		    junk[i]=in[i+1];
