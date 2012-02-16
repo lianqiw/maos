@@ -127,6 +127,7 @@ X(mat)* X(logspace)(double emin, double emax, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(linspace)(double min, double dx, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew) CHECK_UNUSED_RESULT;\
+void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap);\
 void X(histfill)(X(mat) **out, const X(mat)* A, double center, double spacing, int n);\
 X(mat) *X(spline_prep)(X(mat) *x, X(mat) *y);\
 X(mat)* X(spline_eval)(X(mat) *coeff, X(mat)* x, X(mat)*xnew);\

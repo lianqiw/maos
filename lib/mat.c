@@ -1311,7 +1311,52 @@ void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
 	} 
     }
 }
+/*blend B into center of A with width of overlap. The center
+  (size is B->nx-overlap, B->ny-overlap) of A is replaced by
+  center of B . The overlapping area is blended*/
+void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap){
+    const long ninx=B->nx;
+    const long niny=B->ny;
+    const long noutx=A->nx;
+    const long nouty=A->ny;
+    const long skipx=(noutx-ninx)/2;
+    const long skipy=(nouty-niny)/2;
+    long ixstart=0, ixlen=ninx;
+    long iystart=0, iylen=niny;
 
+    if(skipx<0){
+	ixstart=-skipx;
+	ixlen+=2*skipx;
+    }
+    if(skipy<0){
+	iystart=-skipy;
+	iylen+=2*skipy;
+    }
+    PMAT(A, pA);
+    PMAT(B, pB);
+    double wty, wtx;
+    for(long iy=0; iy<iylen; iy++){
+	T *outi=&pA[iystart+skipy+iy][ixstart+skipx];
+	T *ini =&pB[iystart+iy][ixstart];
+	if(iy<overlap){
+	    wty=(double)iy/(double)(overlap-1);
+	}else if(iylen-iy-1<overlap){
+	    wty=(double)(iylen-iy-1)/(double)(overlap-1);
+	}else{
+	    wty=1;
+	}
+	for(long ix=0; ix<ixlen; ix++){
+	    if(ix<overlap){
+		wtx=(double)ix/(double)(overlap-1);
+	    }else if(ixlen-ix-1<overlap){
+		wtx=(double)(ixlen-ix-1)/(double)(overlap-1);
+	    }else{
+		wtx=1;
+	    }
+	    outi[ix]=outi[ix]*(1-wtx*wty)+ini[ix]*wtx*wty;
+	}
+    }
+}
 /**
    For each entry in A, call repeatly to collect its histogram, centered at
    center, spaced by spacing, for n bins in total. center if at bin n/2.  */

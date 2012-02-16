@@ -77,6 +77,7 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 	strcpy(fn2,fn);
     } 
     /*If there is no recognized suffix, add .bin in the end.*/
+    int nosuffix=0;
     if(!check_suffix(fn2,".bin") && !check_suffix(fn2, ".bin.gz")
        &&!check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
 	strncat(fn2, ".bin", 4);
@@ -90,7 +91,15 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 		fn2[strlen(fn2)-3]='\0';
 	    }
 	    if(!exist(fn2)){
-		return NULL;
+		if(nosuffix){
+		    fn2[strlen(fn2)-4]='\0';/*remove the added .bin*/
+		    strncat(fn2, ".fits", 5);/*replace with .fits*/
+		    if(!exist(fn2)){
+			return NULL;
+		    }
+		}else{
+		    return NULL;
+		}
 	    }
 	}
     }else if (mod[0]=='w'){

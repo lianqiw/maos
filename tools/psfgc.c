@@ -24,9 +24,10 @@
 #include "../lib/aos.h"
 
 static void usage(){
-    info2("Usage: psfgc output.fits seed x y npix pixsize pixoffx pixoffy blur\n"
+    info2("Usage: psfgc output.fits seed exposure x y npix pixsize pixoffx pixoffy blur\n"
 	  "output.fits: stores the output\n"
 	  "seed:        the atmospheric seed. valid: integers from 1 to 10\n"
+	  "exposure:    in seconds. valid: 0, 4, 8, 12, 16, 20. 0 is for all length\n"
 	  "x y:         the focal plane coordinate in arcsec. valid: from -14 to 14 at step of 2.\n"
 	  "npix:        number of pixels in the detector. 0 will output PSF.\n"
 	  "pixsize:     size of detector pixel in arcsec.\n"
@@ -113,10 +114,7 @@ static void psfiris_do(thread_t *info){
 
 int main(int argc, char *argv[]){
     /*parameters defined by MAOS simulation */
-    const double dx=1./16;
-    const int notf=1024;/*size of otf/psf saved by maos*/
-    const double sumpsf=6.34772385106148;
-    const int nexp=5;//number of exposure.
+
     const int nwvl=5;
     double wvls[15]={1.908,2.067,2.12,2.173,2.332};
     const double imperr=122.22;
@@ -124,6 +122,7 @@ int main(int argc, char *argv[]){
     enum{
 	P_OUTFILE=1,
 	P_SEED,
+	P_EXP,
 	P_X,
 	P_Y,
 	P_NPIX,
@@ -146,6 +145,7 @@ int main(int argc, char *argv[]){
 	outfile=strdup(argv[P_OUTFILE]);
     }
     int seed=strtol(argv[P_SEED], NULL, 10);
+    int exposure=strtol(argv[P_EXP], NULL, 10);
     double thetax=strtod(argv[P_X], NULL);
     double thetay=strtod(argv[P_Y], NULL);
     int npix=strtol(argv[P_NPIX], NULL, 10);
@@ -153,7 +153,6 @@ int main(int argc, char *argv[]){
     double pixoffx=strtod(argv[P_PIXOFFX], NULL);
     double pixoffy=strtod(argv[P_PIXOFFY], NULL);
     double blur=strtod(argv[P_BLUR], NULL);
-
  
     char msg[400];
     snprintf(msg,400,
@@ -167,11 +166,46 @@ int main(int argc, char *argv[]){
 	     pixsize*206265, pixoffx, pixoffy, blur
 	     );
     info2("%s",msg);
-
-    int npsf=nexp*nwvl;
     dcell *psf_lgs=dcellread("PSF%d/evlpsfcl_%d_x%g_y%g.fits", seed, seed, thetax, thetay);
-    assert(psf_lgs->nx==npsf);
-    
+    int nexp=0; /*number of exposure*/
+    if(exposure%4!=0 || exposure <0 || exposure>20){
+	error("exposure time must be multiple of 4. 0 for all length, 4,8,12,16,20");
+    }
+    if(exposure>0){
+	int i1, i10=(exposure/4-1)*nwvl;
+	nexp=1;
+	for(i1=0; i1<nexp*nwvl; i1++){
+	    psf_lgs->p[i1]=psf_lgs->p[i1+i10];
+	}
+	psf_lgs->nx=nexp*nwvl;
+	psf_lgs->ny=1;
+    }
+    int npsf=nexp*nwvl;
+    double image_size=pixsize*npix;
+    double dx, sumpsf;
+    int notf;
+    if(image_size<wvls[0]/64*512){
+	dx=1./16;
+	notf=1024;/*size of otf/psf saved by maos*/
+	sumpsf=6.34772385106148;
+    }else{
+	int i1=0;
+	dx=1./64;
+	notf=4096;/*size of otf/psf saved by maos*/
+	sumpsf=6.34772385106148; /*use sumpsf value as 1/16 sampled one because we emphasize the center more.*/
+	info("Enlarging PSF\n");
+	dcell *psf_large=dcellread("evlpsfcl_4096.fits");
+	for(i1=0; i1<npsf; i1++){
+	    dmat *dtmp=ddup(psf_large->p[i1%nwvl]);
+	    dmat *dtmp2=dsub(psf_lgs->p[i1], 256, 512, 256, 512);
+	    dblend(dtmp, dtmp2, 10);
+	    dfree(psf_lgs->p[i1]);
+	    dfree(dtmp2);
+	    psf_lgs->p[i1]=dtmp;
+	}
+	/*don't change sumpsf after blending.*/
+	dcellfree(psf_large);
+    }
     dcell *output=dcellnew(nwvl,nexp);
     info2("%d: ", nwvl);
     psfiris_t data={notf, nwvl, dx, sumpsf, npix, pixsize, pixoffx, pixoffy, blur, imperr, wvls, psf_lgs, output, msg};
