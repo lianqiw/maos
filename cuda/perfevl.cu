@@ -375,9 +375,11 @@ void gpu_perfevl(thread_t *info){
     }else{
 	TO_IMPLEMENT;
     }
-    if(parms->evl.psfmean &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
-			     ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
-	/*calculate Openloop PSF. */
+    if(parms->evl.psfmean 
+       && isim>=parms->evl.psfisim 
+       &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
+	  ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
+	/*calculate Openloop PSF. we also test psfisim to synchronize with psfcl.*/
 	curmat *opdcopy=NULL;
 	if(parms->evl.psfpttr[ievl]){
 	    curcp(&opdcopy, iopdevl, stream);

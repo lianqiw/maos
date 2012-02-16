@@ -281,7 +281,6 @@ void redirect(void){
 		perror("fork");
 		redirect_fd(fn, -1);
 	    }else if(pid2>0){//parent. output to pipe
-		info("pid2=%d. pfd[1]=%d\n", pid2, pfd[1]);
 		close(pfd[0]);
 		redirect_fd(NULL, pfd[1]);
 	    }else{//child. read pipe

@@ -177,8 +177,10 @@ void perfevl_ievl(thread_t *info){
     }
 
     /*evaluate time averaged open loop PSF. */
-    if(parms->evl.psfmean &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
-			     ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
+    if(parms->evl.psfmean 
+       && isim>=parms->evl.psfisim 
+       &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
+	  ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
 	/*Compute on axis OL psf. */
 	dmat *opdevlcopy=NULL;
 	if(parms->evl.psfpttr[ievl]){
