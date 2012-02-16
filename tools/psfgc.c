@@ -167,7 +167,7 @@ int main(int argc, char *argv[]){
 	     );
     info2("%s",msg);
     dcell *psf_lgs=dcellread("PSF%d/evlpsfcl_%d_x%g_y%g.fits", seed, seed, thetax, thetay);
-    int nexp=0; /*number of exposure*/
+    int nexp; /*number of exposure*/
     if(exposure%4!=0 || exposure <0 || exposure>20){
 	error("exposure time must be multiple of 4. 0 for all length, 4,8,12,16,20");
     }
@@ -179,6 +179,8 @@ int main(int argc, char *argv[]){
 	}
 	psf_lgs->nx=nexp*nwvl;
 	psf_lgs->ny=1;
+    }else{
+	nexp=5;
     }
     int npsf=nexp*nwvl;
     double image_size=pixsize*npix;
