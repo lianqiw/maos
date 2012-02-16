@@ -78,7 +78,7 @@ static void psfiris_do(thread_t *info){
     cfft2plan(otf,-1);
     info2("%d ",ipsf);
     /*first create OTF of tt/ps modes on coarse sampling.*/
-    double wvl=wvls[iwvl]*1e-6;
+    double wvl=wvls[iwvl];
     double dtheta=wvl/(notf*dx);
     ccpd(&otf, psf_lgs->p[ipsf]);
     dfree(psf_lgs->p[ipsf]);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]){
     /*parameters defined by MAOS simulation */
 
     const int nwvl=5;
-    double wvls[15]={1.908,2.067,2.12,2.173,2.332};
+    double wvls[15]={1.908e-6,2.067e-6,2.12e-6,2.173e-6,2.332e-6};
     const double imperr=122.22;
 
     enum{
