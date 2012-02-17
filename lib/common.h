@@ -144,8 +144,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #ifndef error
 #define error(A...) ({char fline[80];					\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
+	    fprintf(stdout, "\033[01;31m%-20s Fatal error: ",fline);	\
+	    fprintf(stdout, A); fprintf(stdout,"\033[00;00m");		\
 	    PRINT_BACKTRACE;						\
 	    raise(SIGTERM);})
 #define info(A...) ({char fline[80];				\
@@ -158,8 +158,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
 
 #define error2(A...) ({							\
-	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
-	    fprintf(stderr, A);						\
+	    fprintf(stdout, "\033[01;31mFatal error\033[00;00m\t");	\
+	    fprintf(stdout, A);						\
 	    PRINT_BACKTRACE;						\
 	    raise(SIGTERM);})
 #define info2(A...) fprintf(stdout, A)
@@ -169,8 +169,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 
 #define error3(A...) ({char fline[80];					\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
+	    fprintf(stdout, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
+	    fprintf(stdout, A); fprintf(stdout,"\033[00;00m");		\
 	    PRINT_BACKTRACE;						\
 	    raise(SIGTERM);})
 #define warning3(A...) ({char fline[80];				\
