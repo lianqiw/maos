@@ -406,6 +406,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
 	}
     }
     fp=zfopen(fn,"rb");
+    if(!fp){
+	error("Unable to open file: %s\n", fn);
+	return;
+    }
     free(fn);
     switch(nlhs){
     case 2:

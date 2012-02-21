@@ -12,13 +12,20 @@ typedef unsigned int mwIndex;
 typedef double __complex__ dcomplex;
 typedef float __complex__ fcomplex;
 #define info(A...) fprintf(stderr,A)
-#define warning(A...) {							\
+#define warning(A...)							\
+    do{									\
 	fprintf(stderr,"\033[01;33m%-15s:%-3d\t", __FILE__, __LINE__);	\
-	fprintf(stderr,A);fprintf(stderr,"\033[00;00m");}
-#define error(A...) {							\
+	fprintf(stderr,A);						\
+	fprintf(stderr,"\033[00;00m");					\
+    }while(0)
+#define error(A...) \
+    do{									\
 	fprintf(stderr, "\033[01;31m%-15s:%-3d Fatal error\t",__FILE__, __LINE__); \
-	fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
-	mexErrMsgTxt("Error happend\n");}
+	fprintf(stderr, A);						\
+	fprintf(stderr,"\033[00;00m");					\
+	mexErrMsgTxt("Error happend\n");				\
+    }while(0)
+
 typedef struct file_t{
     void *p;
     int fd;

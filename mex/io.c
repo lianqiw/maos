@@ -66,6 +66,10 @@ static int islink(const char *fn){
     return !stat(fn, &buf) && S_ISLNK(buf.st_mode);
 }
 static char* procfn(const char *fn, const char *mod,const int gzip){
+    if(!fn){
+	info("fn is empty\n");
+	return NULL;
+    }
     char *fn2;
     if(fn[0]=='~'){
 	char *HOME=getenv("HOME");
@@ -81,6 +85,7 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
     if(!check_suffix(fn2,".bin") && !check_suffix(fn2, ".bin.gz")
        &&!check_suffix(fn2,".fits") && !check_suffix(fn2, ".fits.gz")){
 	strncat(fn2, ".bin", 4);
+	nosuffix=1;
     }
     if(mod[0]=='r' || mod[0]=='a'){
 	if(!exist(fn2)){/*If does not exist.*/
@@ -92,7 +97,7 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 	    }
 	    if(!exist(fn2)){
 		if(nosuffix){
-		    fn2[strlen(fn2)-4]='\0';/*remove the added .bin*/
+		    fn2[strlen(fn2)-7]='\0';/*remove the added .bin, .gz*/
 		    strncat(fn2, ".fits", 5);/*replace with .fits*/
 		    if(!exist(fn2)){
 			return NULL;
@@ -106,7 +111,8 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 	if(islink(fn2)){
 	    /*remove old file to avoid write over a symbolic link.*/
 	    if(remove(fn2)){
-		error("Failed to remove %s\n", fn2);
+		info("Failed to remove %s\n", fn2);
+		return NULL;
 	    }
 	}
     }else{
@@ -118,7 +124,8 @@ static char* procfn(const char *fn, const char *mod,const int gzip){
 file_t* zfopen(const char *fn, char *mod){
     char *fn2=procfn(fn, mod, 1);
     if(!fn2){
-	error("%s does not exist\n", fn);
+	info("%s does not exist\n", fn);
+	return NULL;
     }
     file_t* fp=calloc(1, sizeof(file_t));
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/
@@ -132,7 +139,9 @@ file_t* zfopen(const char *fn, char *mod){
     case 'a':
 	fp->fd=open(fn2, O_RDWR | O_CREAT, 0600);
 	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
-	    error("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	    info("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	    close(fp->fd);
+	    return NULL;
 	}else{
 	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
 		warning("Truncating %s failed\n", fn2);
@@ -140,11 +149,12 @@ file_t* zfopen(const char *fn, char *mod){
 	}
 	break;
     default:
-	error("Unknown mod=%s\n", mod);
+	info("Unknown mod=%s\n", mod);
+	return NULL;
     }
     if(fp->fd==-1){
-	error("Unable to open file %s\n", fn2);
-	_exit(1);
+	info("Unable to open file %s\n", fn2);
+	return NULL;
     }
     if(mod[0]=='w'){
 	if(check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
@@ -155,7 +165,8 @@ file_t* zfopen(const char *fn, char *mod){
     }else{ 
 	uint16_t magic;
 	if(read(fp->fd, &magic, sizeof(uint16_t))!=sizeof(uint16_t)){
-	    error("Read magic failed\n");
+	    info("Read magic failed\n");
+	    close(fp->fd); return NULL;
 	}
 	if(magic==0x8b1f){
 	    fp->isgzip=1;
@@ -166,11 +177,13 @@ file_t* zfopen(const char *fn, char *mod){
     }
     if(fp->isgzip){
 	if(!(fp->p=gzdopen(fp->fd,mod))){
-	    error("Error gzdopen for %s\n",fn2);
+	    info("Error gzdopen for %s\n",fn2);
+	    close(fp->fd); return NULL;
 	}
     }else{
 	if(!(fp->p=fdopen(fp->fd,mod))){
-	    error("Error fdopen for %s\n",fn2);
+	    info("Error fdopen for %s\n",fn2);
+	    close(fp->fd); return NULL;
 	}
     }
     if(check_suffix(fn, ".fits") || check_suffix(fn, ".fits.gz")){

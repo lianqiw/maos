@@ -136,6 +136,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
     char *fn=malloc(nlen);
     mxGetString(prhs[ifn],fn,nlen);
     fp=zfopen(fn,"wb");
+    if(!fp){
+	mexErrMsgTxt("Error writing file.\n");
+	return;
+    }
     free(fn);
     writedata(fp, 0, prhs[0], header);
     zfclose(fp);
