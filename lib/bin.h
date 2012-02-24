@@ -96,6 +96,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 const char *search_header(const char *header, const char *key);
 double search_header_num(const char *header, const char *key);
+double search_header_num_valid(const char *header, const char *key);
 uint64_t bytes_header(const char *header);
 void write_timestamp(file_t *fp);
 //uint32_t read_magic(file_t *fp, char **header);

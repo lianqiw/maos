@@ -697,10 +697,11 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 	}
 	for(int i=start; i<36; i++){
 	    zfread(line, 1, 80, fp); line[80]='\0';
-	    if(!strncmp(line, "COMMENT", 7)){
+	    if(!strncmp(line, "COMMENT", 7)){/*this is our custom header*/
 		for(int j=79; j>9; j--){
 		    if(isspace((int)line[j])){
-			line[j]='\0';
+			line[j]='\n';
+			line[j+1]='\0';
 		    }else{
 			break;
 		    }
@@ -801,29 +802,34 @@ void write_timestamp(file_t *fp){
 const char *search_header(const char *header, const char *key){
     if(!header) return NULL;
     const char *ans=NULL;
+    const char *ans_bak=NULL;
     const char *val=header;
     while(val[0]!='\0' && (val=strstr(val, key))){
 	if(val>header){
-	  char prev=*(val-1);
-	  if(!isspace((int)prev) && prev!=';' && prev !=','){
+	    char prev=*(val-1);
+	    if(!isspace((int)prev) && prev!=';' && prev !=','){
+		ans_bak=val;
 		val=val+strlen(key);
 		continue;/*Invalid */
 	    }
 	}
 	val=val+strlen(key);
 	while(val[0]==' ') val++;
-	if(val[0] == '='){
-	    ans=val+1;
-	    break;
+	if(val[0] == '=' || val[0]==':'){
+	    val++;
 	}
+	while(val[0]==' ') val++;
+	ans=val;
+	break;
     }
+    if(!ans) ans=ans_bak;
     return ans;
 }
 /**
    Read a number from the header with key
 */
 double search_header_num(const char *header, const char *key){
-    if(!header) return 0;
+    if(!header) return NAN;
     const char *val=search_header(header, key);
     if(val){
 	return readstr_num(val, NULL);
@@ -831,8 +837,16 @@ double search_header_num(const char *header, const char *key){
 	return NAN;/*not found. */
     }
 }
-
-
+/**
+   Read a number from the header and verify.
+*/
+double search_header_num_valid(const char *header, const char *key){
+    double val=search_header_num(header, key);
+    if(isnan(val)){
+	error("Unable to read %s from %s. val=%s\n", key, header, search_header(header, key));
+    }
+    return val;
+}
 /**
    Write an 1-d or 2-d array into the file. First write a magic number that
    represents the data type. Then write two numbers representing the

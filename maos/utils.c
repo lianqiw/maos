@@ -734,8 +734,8 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     "OPD Sampling: %.15gm\n"
 	     "FFT Grid: %dx%d\n"
 	     "PSF Sampling: %.15g arcsec\n"
-	     "PSF Sum to %.15g\n"
-	     "Exposure: %gs", 
+	     "PSF Sum to: %.15g\n"
+	     "Exposure: %gs\n", 
 	     ievl<0?0:parms->evl.thetax[ievl]*206265, ievl<0?0:parms->evl.thetay[ievl]*206265,
 	     parms->atm.r0, parms->atm.l0,
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,

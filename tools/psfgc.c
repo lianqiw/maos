@@ -72,23 +72,23 @@ static void psfiris_do(thread_t *info){
     dcell *psf_lgs=data->psf_lgs;
     dcell *output=data->output;
     char *msg=data->msg;
-
-    cmat *otf=cnew(notf, notf);
+    int ncomp=psf_lgs->p[0]->nx;
+    cmat *otf=cnew(ncomp, ncomp);
     cfft2plan(otf,1);
     cfft2plan(otf,-1);
     info2("%d ",ipsf);
     /*first create OTF of tt/ps modes on coarse sampling.*/
     double wvl=wvls[iwvl];
     double dtheta=wvl/(notf*dx);
-    ccpd(&otf, psf_lgs->p[ipsf]);
+    cembedd(otf, psf_lgs->p[ipsf], 0);
     dfree(psf_lgs->p[ipsf]);
     cfftshift(otf);
     cfft2(otf, 1);
-    double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9,2))/(notf*notf);
+    double impst=exp(-pow(2*M_PI/wvl*imperr*1e-9,2))/(ncomp*ncomp);
     if(npix>0){
 	ccell *dtf=NULL;
 	spcell *si=NULL;
-	mkdtf(&dtf, &si, notf, notf, dtheta, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur*pixsize, blur*pixsize, wvl, NULL);
+	mkdtf(&dtf, &si, ncomp, ncomp, dtheta, npix, npix, pixsize, pixsize, pixoffx, pixoffy, blur*pixsize, blur*pixsize, wvl, NULL);
 	ccwm(otf, dtf->p[0]);
 	cfft2(otf,-1);
 	output->p[ipsf]=dnew(npix, npix);
@@ -115,8 +115,6 @@ static void psfiris_do(thread_t *info){
 int main(int argc, char *argv[]){
     /*parameters defined by MAOS simulation */
 
-    const int nwvl=5;
-    double wvls[15]={1.908e-6,2.067e-6,2.12e-6,2.173e-6,2.332e-6};
     const double imperr=122.22;
 
     enum{
@@ -145,7 +143,7 @@ int main(int argc, char *argv[]){
 	outfile=strdup(argv[P_OUTFILE]);
     }
     int seed=strtol(argv[P_SEED], NULL, 10);
-    int exposure=strtol(argv[P_EXP], NULL, 10);
+    double exposure=strtod(argv[P_EXP], NULL);
     double thetax=strtod(argv[P_X], NULL);
     double thetay=strtod(argv[P_Y], NULL);
     int npix=strtol(argv[P_NPIX], NULL, 10);
@@ -166,40 +164,82 @@ int main(int argc, char *argv[]){
 	     pixsize*206265, pixoffx, pixoffy, blur
 	     );
     info2("%s",msg);
-    dcell *psf_lgs=dcellread("PSF%d/evlpsfcl_%d_x%g_y%g.fits", seed, seed, thetax, thetay);
-    int nexp; /*number of exposure*/
-    if(exposure%4!=0 || exposure <0 || exposure>20){
-	error("exposure time must be multiple of 4. 0 for all length, 4,8,12,16,20");
+    dcell *psf_lgs=NULL;
+    if(zfexist("evlpsfcl_%d_x%g_y%g.fits", seed, thetax, thetay)){
+	psf_lgs=dcellread("evlpsfcl_%d_x%g_y%g.fits", seed, thetax, thetay);
+    }else if(zfexist("PSF%d/evlpsfcl_%d_x%g_y%g.fits", seed, seed, thetax, thetay)){
+	psf_lgs=dcellread("PSF%d/evlpsfcl_%d_x%g_y%g.fits", seed, seed, thetax, thetay);
+    }
+    if(psf_lgs->nx*psf_lgs->nx==0){
+	warning("Array is empty, nothing to do\n"); exit(0);
+    }
+    int nwvl=0; /*number of wavelength*/
+    int nexp=0; /*number of exposure*/
+    double *wvls=NULL;
+    if(psf_lgs->ny!=1){
+	nwvl=psf_lgs->nx;
+	nexp=psf_lgs->ny;
+    }else{
+	for(int i=0; i<psf_lgs->nx*psf_lgs->ny; i++){
+	    double wvl=search_header_num_valid(psf_lgs->p[i]->header, "Wavelength");
+	    int iwvl;
+	    for(iwvl=0; iwvl<nwvl; iwvl++){
+		if(fabs(wvls[iwvl]-wvl)<1e-14){
+		    break;
+		}
+	    }
+	    if(iwvl==nwvl){//not found.
+		nwvl++;
+		wvls=realloc(wvls, nwvl*sizeof(double));
+		wvls[nwvl-1]=wvl;
+	    }
+	}
+	nexp=psf_lgs->nx/nwvl;
+	if(psf_lgs->nx!=nexp*nwvl){
+	    error("nwvl=%d, nexp=%d, not matching ntot=%ld\n", nwvl, nexp, psf_lgs->nx);
+	}
+    }
+    double texp=search_header_num_valid(psf_lgs->p[0]->header, "Exposure");
+    double tmp;
+    if(fabs(modf(exposure/texp,&tmp))>1e-5 || exposure <0 || exposure>texp*nexp){
+	error("exposure time must be multiple of %g and less than or equal to %g. 0 for all length\n", 
+	      texp, texp*nexp);
     }
     if(exposure>0){
-	int i1, i10=(exposure/4-1)*nwvl;
+	int i1;
+	int i10=(int)round(exposure/texp-1)*nwvl;
 	nexp=1;
 	for(i1=0; i1<nexp*nwvl; i1++){
 	    psf_lgs->p[i1]=psf_lgs->p[i1+i10];
 	}
 	psf_lgs->nx=nexp*nwvl;
 	psf_lgs->ny=1;
-    }else{
-	nexp=5;
     }
     int npsf=nexp*nwvl;
+    int psfsize1=psf_lgs->p[0]->nx;
     double image_size=pixsize*npix;
-    double dx, sumpsf;
-    int notf;
-    if(image_size<wvls[0]/64*512){
-	dx=1./16;
-	notf=1024;/*size of otf/psf saved by maos*/
-	sumpsf=6.34772385106148;
-    }else{
-	int i1=0;
-	dx=1./64;
-	notf=4096;/*size of otf/psf saved by maos*/
-	sumpsf=6.34772385106148; /*use sumpsf value as 1/16 sampled one because we emphasize the center more.*/
+    int notf=(int)search_header_num_valid(psf_lgs->p[0]->header, "FFT Grid");
+    double sumpsf=search_header_num_valid(psf_lgs->p[0]->header, "PSF Sum to");
+    double dx=search_header_num_valid(psf_lgs->p[0]->header, "OPD Sampling");
+    double dtheta1=search_header_num_valid(psf_lgs->p[0]->header, "PSF Sampling")/206265.d;
+    int psfsizevalid=MIN(psfsize1, notf/2);/*valid psf range*/
+    if(image_size>dtheta1*psfsizevalid){/*need blending*/
 	info("Enlarging PSF\n");
 	dcell *psf_large=dcellread("evlpsfcl_4096.fits");
-	for(i1=0; i1<npsf; i1++){
+	dx=search_header_num_valid(psf_large->p[0]->header, "OPD Sampling");
+	notf=(int)search_header_num_valid(psf_large->p[0]->header, "FFT Grid");
+	if(psf_large->nx!=nwvl){
+	    error("PSF large has incorrect dimension\n");
+	}
+	for(int i1=0; i1<npsf; i1++){
+	    double wvl2=search_header_num_valid(psf_large->p[i1%nwvl]->header, "Wavelength");
+	    if(fabs(wvl2-wvls[i1%nwvl])>1e-10){
+		error("Wavelenght mismatch.\n");
+	    }
 	    dmat *dtmp=ddup(psf_large->p[i1%nwvl]);
-	    dmat *dtmp2=dsub(psf_lgs->p[i1], 256, 512, 256, 512);
+	    dmat *dtmp2=dsub(psf_lgs->p[i1],
+			     (psfsize1-psfsizevalid)/2, psfsizevalid, 
+			     (psfsize1-psfsizevalid)/2, psfsizevalid);
 	    dblend(dtmp, dtmp2, 10);
 	    dfree(psf_lgs->p[i1]);
 	    dfree(dtmp2);
@@ -221,5 +261,6 @@ int main(int argc, char *argv[]){
     dcellfree(psf_lgs);
     dcellfree(output);
     free(outfile);
+    free(wvls);
     exit_success=1;
 }
