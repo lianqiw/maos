@@ -221,7 +221,7 @@ int main(int argc, char *argv[]){
     int notf=(int)search_header_num_valid(psf_lgs->p[0]->header, "FFT Grid");
     double sumpsf=search_header_num_valid(psf_lgs->p[0]->header, "PSF Sum to");
     double dx=search_header_num_valid(psf_lgs->p[0]->header, "OPD Sampling");
-    double dtheta1=search_header_num_valid(psf_lgs->p[0]->header, "PSF Sampling")/206265.d;
+    double dtheta1=search_header_num_valid(psf_lgs->p[0]->header, "PSF Sampling")/206265.;
     int psfsizevalid=MIN(psfsize1, notf/2);/*valid psf range*/
     if(image_size>dtheta1*psfsizevalid){/*need blending*/
 	info("Enlarging PSF\n");
