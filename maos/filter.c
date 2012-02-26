@@ -344,7 +344,9 @@ void filter_cl(SIM_T *simu){
 		    }
 		}
 	    }
+#if USE_CUDA
 	    gpu_moao_2gpu(simu);
+#endif
 	}
     }
 }
