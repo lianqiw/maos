@@ -20,6 +20,9 @@
 #include "recon_utils.h"
 #include "moao.h"
 #include "ahst.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 /**
    \file moao.c
    Routings to setup moao and carry out moao DM fitting.
@@ -33,6 +36,7 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
     for(int imoao=0; imoao<parms->nmoao; imoao++){
 	if(!recon->moao[imoao].used) continue;
 	locfree(recon->moao[imoao].aloc);
+	mapfree(recon->moao[imoao].amap);
 	spcellfree(recon->moao[imoao].HA);
 	dcellfree(recon->moao[imoao].NW);
 	spcellfree(recon->moao[imoao].actslave);
@@ -48,6 +52,9 @@ void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
    Prepare the propagation H matrix for MOAO and compute the reconstructor. We
    only need a reconstructor for every different MOAO type.  */
 void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
+    if(parms->recon.alg!=0){
+	error("Moao only works in recon.alg=0 mode MVR\n");
+    }
     const int nmoao=parms->nmoao;
     int used[parms->nmoao];
     memset(used,0,sizeof(int)*nmoao);
@@ -95,7 +102,8 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	double dxr=parms->aper.d/order;
 	map_t *map=create_metapupil_wrap(parms,0,dxr,0,0,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=map2loc(map);
-	mapfree(map);
+	recon->moao[imoao].amap=map;
+	free(map->p); map->p=NULL;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc, NULL);
 	dinvspd_inplace(recon->moao[imoao].aimcc);
 	recon->moao[imoao].HA=spcellnew(1,1);
@@ -150,6 +158,11 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    plotloc("FoV",parms,recon->moao[imoao].aloc,0,"moao_aloc");
 	}
     }/*imoao */
+#if USE_CUDA
+    if(parms->gpu.moao){
+	gpu_setup_moao(parms, recon);
+    }
+#endif    
 }
 
 /**
@@ -229,6 +242,8 @@ moao_FitL(dcell **xout, const void *A,
 void moao_recon(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
+    const int nwfs=parms->nwfs;
+    const int nevl=parms->evl.nevl;
     dcell *dmcommon=NULL;
     if(1){/*Take High order fitting result */
 	dcellcp(&dmcommon, simu->dmfit_hi);
@@ -247,22 +262,20 @@ void moao_recon(SIM_T *simu){
 	}
     }
     dcell *rhs=NULL;
+    int iy=parms->sim.closeloop?1:0;
     if(simu->moao_wfs){/*There is MOAO DM for WFS */
 	dcell *dmmoao=dcellnew(1,1);
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int imoao=parms->powfs[ipowfs].moao;
 	    dcell *rhsout=NULL;
 	    if(imoao<0) continue;
 	    double hs=parms->powfs[ipowfs].hs;
-	    dmmoao->p[0]=simu->moao_wfs->p[iwfs];
-	    if(!parms->recon.warm_restart){
-		dcellzero(dmmoao);
-	    }
+	    dmmoao->p[0]=dref(simu->moao_wfs->p[iwfs+iy*nwfs]);
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms,  imoao, 
 		      parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
-		      hs, simu->opdr, dmcommon, &rhsout, 1);
+		      hs, simu->opdr, dmcommon, parms->plot.run?&rhsout:NULL, 1);
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs, 
 		parms->recon.warm_restart, parms->fit.maxit);
 	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
@@ -291,21 +304,18 @@ void moao_recon(SIM_T *simu){
 	    }
 	    dcellfree(rhsout);
 	}/*if wfs */
-	free(dmmoao);/*Don't do dcellfree. */
+	dcellfree(dmmoao);
     }
     if(simu->moao_evl){/*There is MOAO DM for Science */
 	int imoao=parms->evl.moao;
 	dcell *dmmoao=dcellnew(1,1);
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    dmmoao->p[0]=simu->moao_evl->p[ievl];
-	    if(!parms->recon.warm_restart){
-		dcellzero(dmmoao);
-	    }
+	for(int ievl=0; ievl<nevl; ievl++){
+	    dmmoao->p[0]=dref(simu->moao_evl->p[ievl+iy*nevl]);
 	    dcell *rhsout=NULL;
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms, imoao, 
 		      parms->evl.thetax[ievl], parms->evl.thetay[ievl],
-		      INFINITY, simu->opdr, dmcommon, &rhsout, 1);
+		      INFINITY, simu->opdr, dmcommon, parms->plot.run?&rhsout:NULL, 1);
 	    
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		parms->recon.warm_restart, parms->fit.maxit);
@@ -335,7 +345,7 @@ void moao_recon(SIM_T *simu){
 	    }	 
 	    dcellfree(rhsout);
 	}/*ievl */
-	free(dmmoao);/*don't do dcellfree */
+	dcellfree(dmmoao);
     }
     dcellfree(dmcommon);
     dcellfree(rhs);

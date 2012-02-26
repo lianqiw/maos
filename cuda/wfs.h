@@ -18,9 +18,8 @@
 #ifndef AOS_CUDA_WFS_H
 #define AOS_CUDA_WFS_H
 #include <cusparse.h>
-#include <curand_kernel.h>
+//#include <curand_kernel.h>
 #include <cufft.h>
-typedef curandState_t curandStat;
 
 #define RAND_BLOCK 16
 #define RAND_THREAD 32
@@ -73,7 +72,7 @@ typedef struct{
     curmat *opdadd;    /**<The ncpa and surface aberration.*/
 
     /*For random number of this wfs. */
-    curandStat *custat;
+    struct curandStateXORWOW *custat;
     int     custatb;/*allocated block */
     int     custatt;/*allocated thread */
     /*Run time data that changes */

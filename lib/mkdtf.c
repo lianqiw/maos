@@ -30,21 +30,21 @@
    Routines to generate detector transfre functions.
 */
 void mkdtf(ccell **pnominal, /**<[out] to be multiplied to the OTF*/
-		  spcell **psi,     /**<[out] to be applied after IFFT of the final OTF*/
-		  int ncompx,       /**<[in] size of OTF FFT*/
-		  int ncompy,       /**<[in] size of OTF FFT*/
-		  double dtheta,    /**<[in] sampling of PSF*/
-		  int pixpsax,      /**<[in] number of pixels along x dimension*/
-		  int pixpsay,      /**<[in] number of pixels along y dimension*/
-		  double pixthetax, /**<[in] size of pixel along x dimension*/
-		  double pixthetay, /**<[in] size of pixel along y dimension*/
-		  double pixoffx,   /**<[in] offset of the image from the center of detector.*/
-		  double pixoffy,   /**<[in] offset of the image from the center of detector*/
-		  double blurx,     /**<[in] blurring as a percentage of pixel*/
-		  double blury,     /**<[in] blurring as a percentage of pixel*/
-		  double wvl,       /**<[in] the wavelength in meter*/
-		  dmat* theta       /**<[in] angle of rotation of each subaps for polar ccd. NULL for  geometry.*/
-		  ){
+	   spcell **psi,     /**<[out] to be applied after IFFT of the final OTF*/
+	   int ncompx,       /**<[in] size of OTF FFT*/
+	   int ncompy,       /**<[in] size of OTF FFT*/
+	   double dtheta,    /**<[in] sampling of PSF*/
+	   int pixpsax,      /**<[in] number of pixels along x dimension*/
+	   int pixpsay,      /**<[in] number of pixels along y dimension*/
+	   double pixthetax, /**<[in] size of pixel along x dimension*/
+	   double pixthetay, /**<[in] size of pixel along y dimension*/
+	   double pixoffx,   /**<[in] offset of the image from the center of detector.*/
+	   double pixoffy,   /**<[in] offset of the image from the center of detector*/
+	   double blurx,     /**<[in] blurring as a percentage of pixel*/
+	   double blury,     /**<[in] blurring as a percentage of pixel*/
+	   double wvl,       /**<[in] the wavelength in meter*/
+	   dmat* theta       /**<[in] angle of rotation of each subaps for polar ccd. NULL for  geometry.*/
+	   ){
     const int ncompx2=ncompx>>1;
     const int ncompy2=ncompy>>1;
     const double pxo=-(pixpsax*0.5-0.5+pixoffx)*pixthetax;

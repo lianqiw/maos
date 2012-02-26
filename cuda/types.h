@@ -17,11 +17,7 @@
 */
 #ifndef AOS_CUDA_TYPES_H
 #define AOS_CUDA_TYPES_H
-extern "C"
-{
-#include <cuda.h>
-#include "gpu.h"
-}
+#include "common.h"
 #include <cuComplex.h>
 #define fcomplex cuFloatComplex
 #define dcomplex cuDoubleComplex
@@ -32,6 +28,38 @@ struct cumat{
     int ny;
     int *nref;
     char *header;
+    cumat(int nxi, int nyi, T *pi=NULL, int own=1, cudaStream_t stream=0)
+	: p(pi), nx(nxi), ny(nyi), nref(NULL), header(NULL){
+	if(!p && nxi!=0 && nyi!=0){
+	    DO(cudaMalloc(&p, nxi*nyi*sizeof(T)));
+	    DO(cudaMemset(p, 0, nxi*nyi*sizeof(T)));
+	}
+	if(own){
+	    nref=new int[1];
+	    nref[0]=1;
+	}
+    }
+    cumat(int nxi, int nyi, cudaStream_t stream){
+	cumat<T>(nxi, nyi, NULL, 1, stream);
+    }
+    ~cumat(){
+	if(nref){
+	    nref[0]--;
+	    if(nref[0]==0){
+		cudaFree(p);
+		free(nref);
+		if(header) free(header);
+	    }else if(nref[0]<0){
+		error("Invalid nref=%d\n", nref[0]);
+	    }
+	}
+    }
+    cumat<T>* ref(){
+	cumat<T>*res=new cumat<T>(nx, ny, p, 0);
+	res->nref=nref;
+	nref[0]++;
+	return res;
+    }
 };
 
 template <typename T>
@@ -70,27 +98,16 @@ typedef struct{
     float dx;
     int nloc;
 }culoc_t;
-/*
-  We use a single map_t to contain all layers instead of using an array of map_t
-  because we want to use layered texture. This preference can be retired since
-  the speed is largely the same with layered texture or flat memory.
- */
-struct cumap_t{
-    cudaArray *ca;/*3D array. for layered texture */
-    float **p;/*float array. */
-    float *ht;
-    float *vx;
-    float *vy;
-    float *ox;
-    float *oy;
-    float *dx;
-    float *iac;
-    int* cubic;
-    int* nx;
-    int* ny;
-    int nlayer;
-    float **cc;/*coefficients for cubic dm. */
-};
 
+typedef struct cumap_t:curmat{
+    float ox, oy;
+    float dx;
+    float ht;
+    float vx, vy;
+    float *cubic_cc; /*coefficients for cubic influence function. */
+    cumap_t(int nxi, int nyi, float oxi=0, float oyi=0, float dxi=0, float hti=0, float vxi=0, float vyi=0):
+	curmat(nxi, nyi),ox(oxi),oy(oyi),dx(dxi),ht(hti),vx(vxi),vy(vyi),cubic_cc(NULL){};
+
+}cumap_t;
 
 #endif

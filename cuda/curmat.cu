@@ -38,12 +38,23 @@ void curcp(curmat **out, const curmat *in, cudaStream_t stream){
 	if(!*out){
 	    *out=curnew(in->nx, in->ny);
 	}else{
-	    assert((*out)->nx * (*out)->ny==in->nx * in->ny);
+	    assert((*out)->nx * (*out)->ny == in->nx * in->ny);
 	}
-	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), cudaMemcpyDeviceToDevice, stream);
+	cudaMemcpyAsync((*out)->p, in->p, in->nx*in->ny*sizeof(float), MEMCPY_D2D, stream);
     }
 }
-
+void curcp(curmat **out, const curmat *in){
+    if(!in){
+	curzero(*out);
+    }else{
+	if(!*out){
+	    *out=curnew(in->nx, in->ny);
+	}else{
+	    assert((*out)->nx * (*out)->ny == in->nx * in->ny);
+	}
+	cudaMemcpy((*out)->p, in->p, in->nx*in->ny*sizeof(float), MEMCPY_D2D);
+    }
+}
 /**
    add a vector to another, scaled by alpha and beta. all in device memory.
    a=a*alpha+b*beta;
@@ -142,13 +153,8 @@ void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
-void curmv(curmat **C, float alpha, const curmat *A, const curmat *B, char trans, float beta, cublasHandle_t handle){
-    if(!*C){
-	*C=curnew(trans=='t'?A->ny:A->nx, 1);
-    }else{
-	assert((*C)->nx==(trans=='t'?A->ny:A->nx) && (*C)->ny==1);
-    }
-    cublasSgemv(handle, trans=='t'?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, B->p, 1, &alpha, (*C)->p, 1);
+void curmv(float *c, float alpha, const curmat *A, const float *b, char trans, float beta, cublasHandle_t handle){
+    cublasSgemv(handle, trans=='t'?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, b, 1, &alpha, c, 1);
 }
 
 cuspcell* cuspcellnew(int nx, int ny){
@@ -272,23 +278,7 @@ void curcelladd3(curcell **A, float* beta, const curcell *B, cudaStream_t stream
 	}
     }
 }
-__global__ void inn_do(float *restrict res, const float *a, const float *b, const int n){
-    extern __shared__ float sb[];
-    sb[threadIdx.x]=0;
-    int step=blockDim.x * gridDim.x ;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	sb[threadIdx.x]+=a[i]*b[i];
-    }
-    for(step=(blockDim.x>>1);step>0;step>>=1){
-	__syncthreads();
-	if(threadIdx.x<step){
-	    sb[threadIdx.x]+=sb[threadIdx.x+step];
-	}
-    }
-    if(threadIdx.x==0){
-	atomicAdd(res, sb[0]);
-    }
-}
+
 __global__ void sum_do(float *restrict res, const float *a, const int n){
     extern __shared__ float sb[];
     sb[threadIdx.x]=0;
@@ -307,10 +297,6 @@ __global__ void sum_do(float *restrict res, const float *a, const int n){
     }
 }
 
-inline static void inn_wrap(float *res, const float * a, const float * b, 
-			    const int n, cudaStream_t stream){
-    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,b,n);
-}
 inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
@@ -318,7 +304,7 @@ float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     float *res;
     cudaMalloc(&res, sizeof(float));
     cudaMemsetAsync(res, 0,sizeof(float), stream);
-    inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
+    gpu_inn(res, a->p, b->p, a->nx*a->ny, stream);
     float out;
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
     CUDA_SYNC_STREAM;

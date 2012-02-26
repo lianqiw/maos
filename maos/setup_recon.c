@@ -73,14 +73,16 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
     if(parms->load.floc){
 	warning("Loading floc from %s\n", parms->load.floc);
 	recon->floc=locread("%s", parms->load.floc);
+	recon->fmap=loc2map(recon->floc);
     }else{
 	double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
 	map_t *fmap=create_metapupil_wrap 
 	    (parms,0,dxr,0,0,0,0,0,parms->fit.square);
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
+	recon->fmap=fmap;
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
-	mapfree(fmap);
     }
+    free(recon->fmap->p); recon->fmap->p=NULL;
     /*create the weighting W for bilinear influence function. See [Ellerbroek 2002] */
     if(parms->load.W){
 	if(!(zfexist("W0")&&zfexist("W1"))){
@@ -483,7 +485,7 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		double  ht = parms->dm[idm].ht;
 		double  scale=1. - ht/hs;
 		double  displace[2]={0,0};
-		if(parms->recon.alg!=2){
+		if(!parms->recon.glao){
 		    displace[0]=parms->wfsr[iwfs].thetax*ht;
 		    displace[1]=parms->wfsr[iwfs].thetay*ht;
 		}
@@ -2231,8 +2233,10 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     spcellfree(recon->actslave);
     /* when sim.dmproj=1, we need these matrices to use in FR.Mfun*/
     if(recon->FR.M && !parms->sim.dmproj){
-	spfree(recon->W0); 
-	dfree(recon->W1); 
+	if(parms->gpu.fit!=2 && !parms->gpu.moao){
+	    spfree(recon->W0); 
+	    dfree(recon->W1); 
+	}
 	spcellfree(recon->HA); 
 	spcellfree(recon->HXF); 
     }
@@ -2459,7 +2463,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    break;
 	}
     }
-    if(parms->recon.alg!=2){
+    if(!parms->recon.glao){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].nwfs<=1) continue;
 	    if(parms->powfs[ipowfs].dfrs){
@@ -2490,7 +2494,6 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 #endif
 	break;
     case 1:
-    case 2:
 	setup_recon_lsr(recon, parms, powfs, aper);
 	if(parms->sim.dmproj){
 	    setup_recon_mvr_fit(recon, parms, powfs, aper);
@@ -2606,8 +2609,10 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     maparrfree(recon->xmap, npsr); recon->xmap=NULL;
     free(recon->xnx);
     free(recon->xny);
-    if(recon->floc!=recon->ploc) locfree(recon->floc); recon->floc=NULL;
+    locfree(recon->floc); recon->floc=NULL;
+    mapfree(recon->fmap);
     locfree(recon->ploc); recon->ploc=NULL;
+    mapfree(recon->pmap);
     for(int idm=0; idm<ndm; idm++){
 	if(recon->alocm[idm]!=recon->aloc[idm])
 	    locfree(recon->alocm[idm]);
@@ -2615,7 +2620,6 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
 	free(recon->aembed[idm]);
     }
     maparrfree(recon->amap, parms->ndm);
-    mapfree(recon->pmap);
     free(recon->aembed);
     free(recon->alocm);
     free(recon->aloc);

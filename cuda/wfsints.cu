@@ -393,7 +393,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	cudaMalloc(&lltopd, sizeof(float)*nlx*nlx);
 	if(cuwfs[iwfs].lltncpa){
 	    cudaMemcpyAsync(lltopd, cuwfs[iwfs].lltncpa, 
-			    sizeof(float)*nlx*nlx, cudaMemcpyDeviceToDevice, stream);
+			    sizeof(float)*nlx*nlx, MEMCPY_D2D, stream);
 	}else{
 	    cudaMemsetAsync(lltopd, 0, sizeof(float)*nlx*nlx, stream);
 	}
@@ -465,7 +465,6 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
     if(pistatout){
 	cudaMalloc(&psfstat, sizeof(fcomplex)*notf*notf*msa);
     }
-
     /* Now begin physical optics  */
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	float wvl=parms->powfs[ipowfs].wvl[iwvl];
@@ -527,7 +526,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		ctoc("fft to otf");
 		if(pistatout){
 		    cudaMemcpyAsync(psfstat, psf, sizeof(fcomplex)*notf*notf*ksa, 
-				    cudaMemcpyDeviceToDevice, stream);
+				    MEMCPY_D2D, stream);
 		    add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
 			(psfstat, notf,notf, gradref->p+isa, gradref->p+nsa+isa, -1.f/dtheta);
 		    CUFFT(cuwfs[iwfs].plan2, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/

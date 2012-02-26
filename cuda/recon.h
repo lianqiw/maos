@@ -19,6 +19,30 @@
 #define AOS_CUDA_RECON_H
 #include "types.h"
 typedef struct{
+    curmat *W1;    /**< The aperture weighting, piston removal*/
+    cusp   *W0p;   /**< W0 for partial points*/
+    int    *W0f;   /**< index for fully illuminated points.*/
+    int     nW0f;  /**< Number of fully illuminated points.*/
+    float   W0v;   /**< maximum Value of W0*/
+}W01_T;
+typedef struct{
+    curcell *fitNW;
+    cuspcell *actslave;
+    float *cubic_cc;   
+    float dxa; /**<sampling of amap*/
+    float oxa; /**<original of amap*/
+    float oya; /**<original of amap*/
+    int nxa;   /**<size of amap*/
+    int nya;   /**<size of amap*/
+    float dxf; /**<sampling of fmap*/
+    float oxf; /**<original of fmap*/
+    float oyf; /**<original of fmap*/
+    int nxf;   /**<size of fmap*/
+    int nyf;   /**<size of fmap*/
+    /*aperture weighting*/
+    W01_T *W01;
+}cumoao_t;
+typedef struct{
     curcell *gradin; /**< The grad to operator on*/
     curcell *neai;
     curcell *opdwfs;/**<Temporary*/
@@ -27,6 +51,7 @@ typedef struct{
 		       restart. Free with new seed*/
     curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm
 		       restart. Free with new seed.*/
+    curcell *dmfit_vec;/*referencing dmfit, using vector instead of matrix.*/
     int *fd_perm;   /**<permutation vector for fdpcg*/
     long fd_nxtot;  /**<total number of points*/
     cuccell *fd_Mb;  /**<The main fdpcg block matrix*/
@@ -42,10 +67,14 @@ typedef struct{
     
     cudaStream_t     *psstream;
 
+    cudaStream_t     *dmstream;
+    cusparseHandle_t *dmsphandle;
+    cublasHandle_t   *dmhandle;
+
     cudaStream_t     *fitstream;
     cusparseHandle_t *fitsphandle;
     cublasHandle_t   *fithandle;
-
+    
     cudaStream_t     cgstream;
     cublasHandle_t   cghandle;
     curcell *PTT;  /**< Global tip/tilt, DF removal */
@@ -53,22 +82,28 @@ typedef struct{
     float *l2c;    /**< Laplacian */
     int   *zzi;    /**< Piston constraint coordinate*/
     float *zzv;    /**< Piston constraint value*/
-    curmat *W1;    /**< The aperture weighting, piston removal*/
-    cusp   *W0p;   /**< W0 for partial points*/
-    int    *W0f;   /**< index for fully illuminated points.*/
-    int     nW0f;  /**< Number of fully illuminated points.*/
-    float   W0v;   /**< maximum Value of W0*/
+    W01_T *W01;    /**< The aperture weighting,*/
     curcell *opdfit; /**<OPDs defined on ploc for fitting.*/
     curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
+    float **cubic_cc;
     cumuv_t FR;
     cumuv_t FL;
     int reconisim;
+    curcell *fitNW;/**< DM fitting low rank terms*/
+    cuspcell *actslave;/**<DM fitting actuator slaving*/
+    cumoao_t *moao;/**<moao configurations for GPU*/
+    curcell *moao_wfs;/**<moao results for wfs for warm restart*/
+    curcell *moao_evl;/**<moao results for evl for warm restart*/
 }curecon_t;
 
 
 extern curecon_t *curecon;
-void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha);
-void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *xin, const float alpha);
-void gpu_FitR(curcell **xout, const void *A, const curcell *xin, const float alpha);
+void gpu_TomoR(curcell **xout, const void *A, const curcell *grad, const float alpha);
+void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float alpha);
+void gpu_FitR (curcell **xout, const void *A, const curcell *xin, const float alpha);
+void gpu_FitL (curcell **xout, const void *A, const curcell *xin, const float alpha);
 void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream);
+__global__ void apply_W_do(float *restrict out, const float *restrict in, const int *W0f, 
+			   float alpha, int nx, int n);
+W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1);
 #endif

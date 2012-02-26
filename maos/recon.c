@@ -249,7 +249,12 @@ void reconstruct(SIM_T *simu){
 	    break;
 	}
 	if(recon->moao){
-	    moao_recon(simu);
+#if USE_CUDA
+	    if(parms->gpu.moao)
+		gpu_moao_recon(simu);
+	    else
+#endif
+		moao_recon(simu);
 	}
 	simu->tk_recon=myclockd()-tk_start;
 	if(parms->sim.mffocus){

@@ -21,7 +21,7 @@
 
 void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, const float hs, const float thetax,const float thetay,
 		 const float mispx, const float mispy, const float dtisim, const float atmalpha, cudaStream_t stream);
-void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, cumap_t *cudm,
+void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, cumap_t **cudm, int ndm,
 		const float hs, const float thetax, const float thetay,
 		const float mispx, const float mispy, const float dmalpha, cudaStream_t stream);
 
@@ -33,5 +33,11 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		   curmat *in, float oxi, float oyi, float dxi,
 		   float dispx, float dispy,
 		   float alpha, char trans, cudaStream_t stream);
+float* gpu_dmcubic_cc(float iac);
+
+void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
+			 curmat *in, float oxi, float oyi, float dxi,
+			 float dispx, float dispy, float *cc,
+			 float alpha, char trans, cudaStream_t stream);
 #endif
 

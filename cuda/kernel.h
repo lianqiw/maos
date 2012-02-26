@@ -27,4 +27,5 @@ __global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2], int n,
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
 			      float m0, float m1, float m2, float m3, float m4,
 			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha );
+__global__ void inn_do(float *restrict res, const float *a, const float *b, const int n);
 #endif

@@ -104,7 +104,8 @@ void X(free_keepdata)(X(mat) *A){
 void X(free_do)(X(mat) *A, int keepdata){
     if(!A) return;
     if(A->nref){
-	if(A->nref[0]==1){
+	A->nref[0]--;
+	if(!A->nref[0]){
 #ifdef USE_COMPLEX
 	    cfree_plan(A);
 #endif
@@ -124,13 +125,9 @@ void X(free_do)(X(mat) *A, int keepdata){
 		}
 	    }
 	    free(A->nref);
-	}else if(A->nref[0]>1){
-	    A->nref[0]--;
-	}else{
-	    error("The ref is less than 1. unlikely!!!:%ld\n",A->nref[0]);
+	}else if(A->nref[0]<0){
+	    error("The ref is less than 0. something wrong!!!:%ld\n",A->nref[0]);
 	}
-    }else{/*data does not belong to us. */
-	free(A->header);
     }
     free(A);
 }

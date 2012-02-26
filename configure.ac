@@ -282,6 +282,7 @@ if test "x$use_icc" = "xyes" ;then
     CC=icc
 fi
 AC_PROG_CC([$CC])
+AC_PROG_CXX([$CXX])
 AC_TYPE_SIZE_T #it sets CC if empty
 
 #inline definition:

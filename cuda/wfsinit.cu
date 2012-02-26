@@ -379,7 +379,7 @@ void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
 	}
     }
 }
-__global__ static void setup_rand(curandStat *rstat, int seed){
+__global__ static void setup_rand(curandState *rstat, int seed){
     int id=threadIdx.x + blockIdx.x * blockDim.x;
     curand_init(seed, id, 0, &rstat[id]);
 }
@@ -404,7 +404,7 @@ void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rst
 	    cuwfs[iwfs].custatt=RAND_THREAD;
 	    cuwfs[iwfs].custatb=RAND_BLOCK;
 	}
-	cudaMalloc(&cuwfs[iwfs].custat, (cuwfs[iwfs].custatt*cuwfs[iwfs].custatb)*sizeof(curandStat));
+	cudaMalloc(&cuwfs[iwfs].custat, (cuwfs[iwfs].custatt*cuwfs[iwfs].custatb)*sizeof(curandState));
 	setup_rand<<<cuwfs[iwfs].custatb, cuwfs[iwfs].custatt>>>(cuwfs[iwfs].custat, seed);
     }
     CUDA_SYNC_DEVICE;

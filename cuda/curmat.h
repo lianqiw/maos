@@ -22,9 +22,10 @@
 #include "types.h"
 #include "kernel.h"
 #include "cumat.h"
-#define curnew  cunew<float> 
-#define curref  curef<float>
-#define curfree cufree<float>
+#define curnew  new cumat<float> 
+#define curfree delete
+//#define curref  curef<float>
+#define curref(A) (A)->ref()
 #define curzero cuzero<float>
 #define curcellnew  cucellnew<float>
 #define curcellfree cucellfree<float>
@@ -36,11 +37,12 @@
 cuspcell *cuspcellnew(int nx, int ny);
 void curset(curmat *A, float alpha, cudaStream_t stream);
 void curshow(curmat *A, cudaStream_t stream);
+void curcp(curmat **out, const curmat *in);
 void curcp(curmat **out, const curmat *in, cudaStream_t stream);
 void curadd(curmat **out,float alpha,curmat *in,float beta,cudaStream_t stream);
 void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t stream);
 void curscale(curmat *in, float alpha, cudaStream_t stream);
-void curmv(curmat **C, float alpha, const curmat *A, const curmat *B, char trans, float beta, cublasHandle_t handle);
+void curmv(float *c, float alpha, const curmat *A, const float *b, char trans, float beta, cublasHandle_t handle);
 void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans[2], float beta, cublasHandle_t handle);
 
 void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream);

@@ -20,44 +20,7 @@
 */
 #ifndef AOS_CUDA_CUMAT_H
 #define AOS_CUDA_CUMAT_H
-
-template <typename T>
-inline cumat<T>* cunew(int nx, int ny){
-    cumat<T> *out;
-    out=(cumat<T>*)calloc(1, sizeof(cumat<T>));
-    out->nref=(int*)calloc(1, sizeof(int));
-    out->nref[0]=1;
-    DO(cudaMalloc(&(out->p), nx*ny*sizeof(T)));
-    DO(cudaMemset(out->p, 0, nx*ny*sizeof(T)));
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
-template <typename T>
-inline cumat<T> *cunew(int nx, int ny, T *p, int own){
-    cumat<T> *out;
-    out=(cumat<T>*)calloc(1, sizeof(cumat<T>));
-    if(own){
-	out->nref=(int*)calloc(1, sizeof(int));
-	out->nref[0]=1;
-    }
-    out->p=p;
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
-template <typename T>
-inline cumat<T> *cunew(int nx, int ny, cudaStream_t stream){
-    cumat<T> *out;
-    out=(cumat<T>*)calloc(1, sizeof(cumat<T>));
-    out->nref=(int*)calloc(1, sizeof(int));
-    out->nref[0]=1;
-    DO(cudaMalloc(&(out->p), nx*ny*sizeof(T)));
-    DO(cudaMemsetAsync(out->p, 0, nx*ny*sizeof(T), stream));
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
+/*
 template <typename T>
 inline cumat<T> *curef(cumat<T> *A){
     if(!A) return NULL;
@@ -66,29 +29,18 @@ inline cumat<T> *curef(cumat<T> *A){
     A->nref[0]++;
     return out;
 }
-
-template <typename T>
-inline void cufree(cumat<T> *A){
-    if(A){
-	if(A->nref){
-	    if(A->nref[0]==1){
-		cudaFree(A->p);
-		free(A->nref);
-		free(A->header);
-	    }else{
-		A->nref[0]--;
-		if(A->nref[0]<0){
-		error("Invalid nref=%d\n", A->nref[0]);
-		}
-	    }
-	}
-	free(A);
-    }
-}
+*/
 template <typename T>
 inline void cuzero(cumat<T> *A, cudaStream_t stream){
     if(A && A->p){
 	DO(cudaMemsetAsync(A->p, 0, A->nx*A->ny*sizeof(T), stream));
+    }
+}
+
+template <typename T>
+inline void cuzero(cumat<T> *A){
+    if(A && A->p){
+	DO(cudaMemset(A->p, 0, A->nx*A->ny*sizeof(T)));
     }
 }
 
@@ -109,9 +61,9 @@ inline cucell<T>* cucellnew(const int nx, const int ny){
 template <typename T>
 inline cucell<T>* cucellnew(const int nx, const int ny, int mx, int my){
     cucell<T> *out=cucellnew<T>(nx, ny);
-    out->m=cunew<T>(mx*my*nx*ny, 1);
+    out->m=new cumat<T>(mx*my*nx*ny, 1);
     for(int i=0; i<nx*ny; i++){
-	out->p[i]=cunew<T>(mx, my, out->m->p+i*(mx*my), 0);
+	out->p[i]=new cumat<T>(mx, my, out->m->p+i*(mx*my), 0);
     }
     return out;
 }
@@ -126,10 +78,10 @@ inline cucell<T>* cucellnew(const int nx, const int ny, L *mx, L *my){
 	tot+=mx[i]*my[i];
     }
     cucell<T> *out=cucellnew<T>(nx,ny);
-    out->m=cunew<T> (tot,1);
+    out->m=new cumat<T> (tot,1);
     tot=0;
     for(int i=0; i<nx*ny; i++){
-	out->p[i]=cunew<T>(mx[i],my[i],out->m->p+tot, 0);
+	out->p[i]=new cumat<T>(mx[i],my[i],out->m->p+tot, 0);
 	tot+=mx[i]*my[i];
     }
     return out;
@@ -141,7 +93,7 @@ inline cucell<T>* cucellnew(const cucell<T> *in){
     if(!in->m){
 	out=cucellnew<T>(in->nx, in->ny);
 	for(int i=0; i<in->nx*in->ny; i++){
-	    out->p[i]=cunew<T>(in->p[i]->nx, in->p[i]->ny);
+	    out->p[i]=new cumat<T>(in->p[i]->nx, in->p[i]->ny);
 	}
     }else{
 	int mx[in->nx*in->ny];
@@ -162,11 +114,11 @@ inline void cucellfree(cucell<T> *A){
     if(!A) return;
     if(A->p){
 	for(int i=0; i<A->nx*A->ny; i++){
-	    cufree(A->p[i]);
+	    delete A->p[i];
 	}
 	free(A->p);
     }
-    cufree(A->m);
+    delete A->m;
     free(A);
 }
 template <typename T>

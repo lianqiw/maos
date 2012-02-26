@@ -543,6 +543,7 @@ typedef struct GPU_CFG_T{
     int fit;         /**<Use GPU for DM fitting*/
     int lsr;         /**<Use GPU for least square reconstruction*/
     int psf;         /**<Use GPU for accumulating PSF. */
+    int moao;        /**<Use GPU for moao.*/
 }GPU_CFG_T;
 /**
    contains input parameters for each MOAO type.
@@ -552,6 +553,7 @@ typedef struct MOAO_CFG_T{
     int cubic;       /**<Whether use cubic influence function*/
     double iac;      /**<Inter-actuator-coupling for cubic influence function*/
     double stroke;   /**<Stroke of the MOAO DM*/
+    double gdm;      /**<The gain of type I controller. a[n]=a[n-1]+e*g where g=o[n]-a[n-1]*/
     int actslave;    /**<Do we do actuator slaving*/
     int lrt_ptt;     /**<Piston/tip/tilt constraint*/
     char *actfloat;  /**<file containing floating actuators. nx2 coordinate*/

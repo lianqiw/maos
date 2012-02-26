@@ -21,17 +21,20 @@
 #include <cublas_v2.h>
 #include <cusparse.h>
 #include <cufft.h>
-#include "wfs.h"
 #include "recon.h"
+#include "kernel.h"
+#include "wfs.h"
 extern int NGPU;
 extern int *GPUS;
 extern int NG1D;
 extern int NG2D;
-typedef struct{
-    /*for accphi */
-    cumap_t *atm;/*array of cumap_t; */
-    cumap_t *dmreal;
-    cumap_t *dmproj;
+typedef struct{ 
+    /**<for accphi */
+    cumap_t **atm;   /**<atmosphere: array of cumap_t */
+    cumap_t **dmreal;/**<DM: array of cumap_t */
+    cumap_t **dmproj;/**<DM: array of cumap_t */
+    int nps; /**<number of phase screens*/
+    int ndm; /**<number of DM.*/
     /*for perfevl */
     float  (*plocs)[2];
     float   *pamp;
@@ -49,6 +52,9 @@ typedef struct{
     cuwfs_t *wfs;
     /*for recon */
     curecon_t *recon;
+    /*for moao*/
+    curcell *moao_wfs;
+    curcell *moao_evl;
 }cudata_t;
 #ifdef __APPLE__
 extern pthread_key_t cudata_key;
@@ -60,108 +66,7 @@ inline cudata_t* _cudata(){
 extern __thread cudata_t *cudata;
 #endif
 extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
-#define DEBUG_MEM 0
-#if DEBUG_MEM
-/*static int tot_mem=0; */
-#undef cudaMalloc
-inline int CUDAMALLOC(float **p, size_t size){
-    return cudaMalloc((float**)p,size);
-}
-inline int CUDAFREE(float *p){
-    return cudaFree(p);
-}
-#define cudaMalloc(p,size) ({info("%ld cudaMalloc for %s: %9lu Byte\n",pthread_self(),#p, size);CUDAMALLOC((float**)p,size);})
-#define cudaFree(p)        ({info("%ld cudaFree   for %s\n", pthread_self(),#p);CUDAFREE((float*)p);})
-#endif
-#define DO(A) ({int ans=(int)(A); if(ans!=0) error("(cuda) %d: %s\n", ans, cudaGetErrorString((cudaError_t)ans));})
-#define cudaCallocHostBlock(P,N) ({DO(cudaMallocHost(&(P),N)); memset(P,0,N);})
-#define cudaCallocBlock(P,N)     ({DO(cudaMalloc(&(P),N));     DO(cudaMemset(P,0,N)); CUDA_SYNC_DEVICE;})
-#define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
-#define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
-#define TO_IMPLEMENT error("Please implement")
 
-inline void* malloc4async(int N){
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
-    void *tmp;
-    cudaMallocHost(&tmp, N);
-    return tmp;
-#else
-    return malloc(N);
-#endif
-}
-inline void free4async(void *P){
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
-    cudaFreeHost(P);
-#else
-    free(P);
-#endif
-}
-
-#define CONCURRENT 0
-#if CONCURRENT
-#define CUDA_SYNC_STREAM				\
-    while(cudaStreamQuery(stream)!=cudaSuccess){	\
-	if(THREAD_RUN_ONCE){/* no jobs to do*/		\
-	    cudaStreamSynchronize(stream);		\
-	    break;					\
-	}						\
-    }
-#else
-#define CUDA_SYNC_STREAM cudaStreamSynchronize(stream)
-#endif
-
-#define CUDA_SYNC_DEVICE DO(cudaDeviceSynchronize())
-#define TIMING 0
-#if TIMING == 1
-extern int nstream;
-#define STREAM_NEW(stream) ({DO(cudaStreamCreate(&stream));info2("nstream=%d\n",lockadd(&nstream,1)+1);})
-#define STREAM_DONE(stream) ({DO(cudaStreamSynchronize(stream));DO(cudaStreamDestroy(stream));info2("nstream=%d\n",lockadd(&nstream,-1)-1);})
-#else
-#define STREAM_NEW(stream) DO(cudaStreamCreate(&stream))
-#define STREAM_DONE(stream) DO(cudaStreamDestroy(stream))
-#endif
-#undef TIMING
-
-#define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
-#define MYSPARSE 0
-
-#define WRAP_SIZE 32 /*The wrap size is currently always 32 */
-#define DIM_REDUCE 128 /*dimension to use in reduction. */
-#define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
-#if CUDA_ARCH>13
-#define NTH2 32
-#else
-#define NTH2 16
-#endif
-#define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D)),dim3(MIN(nx,nb),MIN(ny,nb))
-
-/*
-  Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
-the problem by using mutex locking to makesure only 1 thread is calling FFT. */
-#if CUDA_VERSION < 4010
-extern pthread_mutex_t cufft_mutex;
-#define LOCK_CUFFT LOCK(cufft_mutex)
-#define UNLOCK_CUFFT UNLOCK(cufft_mutex)
-#else
-/*cufft 4.1 is thread safe. no need lock.*/
-#define LOCK_CUFFT
-#define UNLOCK_CUFFT
-#endif
-#define CUFFT2(plan,in,out,dir) ({					\
-	    LOCK_CUFFT;							\
-	    int ans=cufftExecC2C(plan, in, out, dir);			\
-	    UNLOCK_CUFFT;						\
-	    if(ans) {							\
-		warning("cufft failed with %d, retry.\n", ans);		\
-		LOCK_CUFFT;						\
-		int ans=cufftExecC2C(plan, in, out, dir);		\
-		UNLOCK_CUFFT;						\
-		if(ans){						\
-		    error("cufft failed with %d\n", ans);		\
-		}							\
-	    }								\
-	})
-#define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 void gpu_print_mem(const char *msg);
 size_t gpu_get_mem(void);
 /**
@@ -185,8 +90,9 @@ inline int gpu_next(){
 }
 /*void gpu_set(int igpu);
   int  gpu_next(void);*/
-void gpu_map2dev(cumap_t **dest, map_t **source, int nps, int type);
+void gpu_map2dev(cumap_t ***dest, map_t **source, int nps);
 void gpu_sp2dev(cusp **dest, dsp *src);
+void gpu_spcell2dev(cuspcell **dest, spcell *src);
 void gpu_calc_ptt(double *rmsout, double *coeffout, 
 		  const double ipcc, const dmat *imcc,
 		  const float (*restrict loc)[2], 
@@ -245,6 +151,9 @@ __device__ inline float CABS2(fcomplex r){
     const float a=cuCrealf(r);
     const float b=cuCimagf(r);
     return a*a+b*b;
+}
+inline void gpu_inn(float *restrict res, const float *a, const float *b, const int n, cudaStream_t stream){
+    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res, a, b, n);
 }
 /*somehow I must test both CUDA_ARCH existance and version.*/
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200

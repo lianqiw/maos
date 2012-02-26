@@ -28,7 +28,7 @@ static int *cunembed=NULL;
 static int *cupsfsize=NULL;
 static float *cuwvls=NULL;    
 static int evlfft_lock=0;
-static int *evlgpu=NULL;
+int *evlgpu=NULL;
 static cudaStream_t *evlstream=NULL;
 static cublasHandle_t *evlhandle=NULL;
 static cufftHandle *evlplan=NULL;
@@ -351,7 +351,8 @@ void gpu_perfevl(thread_t *info){
     }
 
     if(parms->sim.idealevl){
-	gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, cudata->dmproj, parms->evl.hs[ievl], thetax, thetay,
+	gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, cudata->dmproj, cudata->ndm,
+		   parms->evl.hs[ievl], thetax, thetay,
 		   parms->evl.misreg[0], parms->evl.misreg[1], 1, stream);
     }else if(simu->atm && !parms->sim.wfsalias){
 	gpu_atm2loc(iopdevl->p, cudata->plocs, nloc, parms->evl.hs[ievl], thetax, thetay, 
@@ -399,16 +400,17 @@ void gpu_perfevl(thread_t *info){
 	    }
 	}
     }
-    
     if(parms->sim.evlol) goto end;
     
     if(parms->evl.tomo){
 	TO_IMPLEMENT;
     }else{
-	gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, cudata->dmreal, parms->evl.hs[ievl], thetax, thetay,
-	       parms->evl.misreg[0], parms->evl.misreg[1], -1, stream);
-	if(imoao>-1){
-	    TO_IMPLEMENT;
+	gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, cudata->dmreal, cudata->ndm, 
+		   parms->evl.hs[ievl], thetax, thetay,
+		   parms->evl.misreg[0], parms->evl.misreg[1], -1, stream);
+	if(imoao>-1 && 0){
+	    gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, (cumap_t**)(&cudata->moao_evl->p[ievl]), 1,
+		       INFINITY, 0, 0, 0, 0, -1, stream);
 	}
     }
     if(save_evlopd){

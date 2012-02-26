@@ -405,7 +405,7 @@ void wfsgrad_iwfs(thread_t *info){
     if(imoao>-1){
 	dmat **dmwfs=simu->moao_wfs->p;
 	if(dmwfs[iwfs]){
-	    info("iwfs %d: Adding MOAO correction\n", iwfs);
+	    //info("iwfs %d: Adding MOAO correction\n", iwfs);
 	    /* No need to do mis registration here since the MOAO DM is attached
 	       to close to the WFS.*/
 	    if(parms->moao[imoao].cubic){

@@ -45,9 +45,9 @@ extern char *dirskysim;
   Notice that both blocks and threads are partitioning isa
  */
 __global__ static void add_geom_noise_do(float *restrict g, const float *restrict nea, 
-				      int nsa, curandStat *restrict rstat){
+				      int nsa, curandState *restrict rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
-    curandStat lstat=rstat[id];
+    curandState lstat=rstat[id];
     const int nstep=blockDim.x * gridDim.x;
     for(int i=id; i<nsa; i+=nstep){
 	float n1=curand_normal(&lstat);
@@ -183,7 +183,7 @@ __global__ static void tcog_do(float *grad, const float *restrict ints,
 /**
    Poisson random generator.
 */
-__device__ static float curandp(curandStat *rstat, float xm){
+__device__ static float curandp(curandState *rstat, float xm){
     float g, t, xmu;
     int x=0, xu;
     if(xm>200){
@@ -209,10 +209,10 @@ __device__ static float curandp(curandStat *rstat, float xm){
 */
 __global__ static void addnoise_do(float *restrict ints0, int nsa, int pixpsa, float bkgrnd, float pcalib, 
 				   float *const restrict *restrict bkgrnd2s, float *const restrict *restrict bkgrnd2cs,
-				   float rne, curandStat *rstat){
+				   float rne, curandState *rstat){
     const int id=threadIdx.x + blockIdx.x * blockDim.x;
     const int nstep=blockDim.x * gridDim.x;
-    curandStat lstat=rstat[id];
+    curandState lstat=rstat[id];
     for(int isa=id; isa<nsa; isa+=nstep){
 	float *restrict ints=ints0+isa*pixpsa;
 	const float *restrict bkgrnd2=bkgrnd2s?bkgrnd2s[isa]:NULL;
@@ -299,20 +299,24 @@ void gpu_wfsgrad(thread_t *info){
 	curcp(&phiout, cuwfs[iwfs].opdadd, stream);
     }
     if(parms->sim.idealwfs){
-	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, hs, thetax, thetay, mispx, mispy, 1, stream);
+	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, cudata->ndm,
+		   hs, thetax, thetay, mispx, mispy, 1, stream);
     }else{
 	gpu_atm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
 	if(parms->sim.wfsalias){
-	    gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, hs, thetax, thetay, mispx, mispy, -1, stream);
+	    gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, cudata->ndm,
+		       hs, thetax, thetay, mispx, mispy, -1, stream);
 	}
     }
     if(CL){
-	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmreal, hs, thetax, thetay, mispx, mispy, -1, stream);
+	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmreal, cudata->ndm,
+		   hs, thetax, thetay, mispx, mispy, -1, stream);
     }
     /*CUDA_SYNC_STREAM; */
     
-    if(imoao>-1){
-	TO_IMPLEMENT;
+    if(imoao>-1 && 0){
+	gpu_dm2loc(phiout->p, loc, nloc, (cumap_t**)(&cudata->moao_wfs->p[iwfs]), 1,
+		   INFINITY, 0, 0, 0, 0, -1, stream);
     }
     if(simu->telws){
 	float tt=simu->telws->p[isim];

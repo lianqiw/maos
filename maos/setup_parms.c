@@ -819,6 +819,7 @@ static void readcfg_gpu(PARMS_T *parms){
     READ_INT(gpu.fit);
     READ_INT(gpu.lsr);
     READ_INT(gpu.psf);
+    READ_INT(gpu.moao);
 }
 /**
    Specify which variables to save
@@ -1692,7 +1693,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
 	parms->sim.nseed=jseed;
 	if(parms->sim.nseed<1){
-	    warning("There are no seed to run. Exit\n");
+	    warning("There are no seed to run. Use -O to override. Exit\n");
 	    scheduler_finish(0);
 	    raise(SIGUSR1);
 	    exit(1);
@@ -1767,13 +1768,25 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		warning("\n\nGPU reconstruction is only available for CG. Disable GPU Fitting.\n");
 		parms->gpu.fit=0;
 	    }
+	    if(parms->gpu.fit==1 && !parms->fit.assemble){
+		warning("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
+		parms->fit.assemble=1;
+	    }
+	    if(parms->gpu.fit==2 && !parms->fit.square){
+		warning("GPU fitting=2 requires fit.square=1. Changed\n");
+		parms->fit.square=1;
+	    }
+	    if(parms->gpu.moao && !parms->fit.square){
+		warning("GPU moao=1 requires fit.square=1. Changed\n");
+		parms->fit.square=1;
+	    }
 	}else if(parms->recon.alg==1){
 	    if(parms->gpu.lsr && parms->lsr.alg!=1){
 		warning("\n\nGPU reconstruction is only available for CG. Disable GPU LSR.\n");
 		parms->gpu.lsr=0;
 	    }
 	}
-	if(parms->recon.alg!=2){
+	if(!parms->recon.glao){
 	    int has_dfr=0;
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].nwfs<=1) continue;

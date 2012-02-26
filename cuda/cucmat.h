@@ -21,9 +21,10 @@
 #include "utils.h"
 #include "types.h"
 
-#define cucnew  cunew<fcomplex> 
-#define cucref  curef<fcomplex>
-#define cucfree cufree<fcomplex>
+#define cucnew  new cumat<fcomplex> 
+#define cucfree delete 
+#define cucref(A) (A)->ref()
+//#define cucref  curef<fcomplex>
 #define cuczero cuzero<fcomplex>
 #define cuccellnew  cucellnew<fcomplex>
 #define cuccellfree cucellfree<fcomplex>

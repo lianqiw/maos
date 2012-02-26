@@ -59,15 +59,13 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
     //cudaMemsetAsync(res, 0,sizeof(float), stream);
     if(A->m && B->m){
 	const int n=A->m->nx*A->m->ny;
-	inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>
-	    (res, A->m->p, B->m->p, n);
+	gpu_inn(res, A->m->p, B->m->p, n, stream);
     }else{
 	for(int i=0; i<A->nx*A->ny; i++){
 	    const curmat *a=A->p[i];
 	    const curmat *b=B->p[i];
 	    const int n=a->nx*a->ny;
-	    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>
-		(res,a->p,b->p,n);
+	    gpu_inn(res,a->p,b->p,n,stream);
 	}
     }
 }
@@ -118,7 +116,7 @@ int gpu_pcg(curcell **px,
     }
     x0=*px;
     if(warm){
-	Amul(&r0, 1, A, x0, -1);/*r0=r0+(-1)*A*x0 */
+	Amul(&r0, A, x0, -1);/*r0=r0+(-1)*A*x0 */
     }else{
 	curcellzero(x0, stream);
     }
@@ -142,9 +140,12 @@ int gpu_pcg(curcell **px,
 	    /*r0r0=sqrt(r0z1/r0z0); */
 	    div_sqrt_do<<<1,1,0,stream>>>(r0r0+k, r0z1, r0z0);
 	}
-	cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), cudaMemcpyDeviceToDevice, stream);
+	cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), MEMCPY_D2D, stream);
 #endif
-	Amul(&Ap, 0, A, p0, 1);
+	if(Ap){
+	    curcellzero(Ap, stream);
+	}
+	Amul(&Ap, A, p0, 1);
 	/*ak=r0z1/(p0'*Ap); */
 	curcellinn2(ak+k, p0, Ap, stream);
 	div_do<<<1,1,0,stream>>>(ak+k, r0z1, ak+k);

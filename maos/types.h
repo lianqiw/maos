@@ -208,6 +208,7 @@ typedef struct FDPCG_T{
 */
 typedef struct MOAO_T{
     int used;         /**<Whether this MOAO is used or not*/
+    map_t *amap;      /**<Actuator map.*/
     loc_t *aloc;      /**<Actuator grid*/
     spcell *HA;       /**<Propagator from this aloc to PLOC*/
     dcell *NW;        /**<null modes and constraints*/
@@ -262,6 +263,7 @@ typedef struct RECON_T{
     dcell *xmcc;       /**<used for tip/tilt removal from tomographic screens.*/
     long *xnx;
     long *xny;
+    map_t *fmap;       /**<Grid on pupil for DM fitting*/
     loc_t *floc;       /**<Grid on pupil for DM fitting. */
 
     loc_t **aloc;      /**<actuator grid*/

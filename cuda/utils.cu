@@ -18,7 +18,18 @@
 #include "utils.h"
 #include "curmat.h"
 #include <pthread.h>
-static cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
+const char *cufft_str[]={
+    "success", 
+    "invalid plan",
+    "allocation failed",
+    "",
+    "invalid value",
+    "internal errlr",
+    "exec failed (error elsewhere caused cufft to fail)",
+    "setup failed"
+    "invalid size"
+};
+
 #if CUDA_VERSION < 4010
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
 #endif
@@ -181,76 +192,25 @@ void gpu_cleanup(void){
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
 array. Allow multiple calling to override the data.  */
-void gpu_map2dev(cumap_t **dest0, map_t **source, int nps, int type){
+void gpu_map2dev(cumap_t ***dest0, map_t **source, int nps){
     if(nps==0) return;
     if(!*dest0){
-	*dest0=(cumap_t*)calloc(1, sizeof(cumap_t));
-    }else if((*dest0)->nlayer!=nps){
-	error("Mismatch. nlayer=%d, nps=%d\n", (*dest0)->nlayer, nps);
-    }
-    cumap_t *dest=*dest0;
-    dest->nlayer=nps;
-    int nx0=source[0]->nx;
-    int ny0=source[0]->ny;
-    if(!dest->vx){/*data is not initialized. */
-	if(type==1){/*all layers must be same size. */
-	    cudaChannelFormatDesc channelDesc=cudaCreateChannelDesc(32,0,0,0,cudaChannelFormatKindFloat);
-	    DO(cudaMalloc3DArray(&dest->ca, &channelDesc, make_cudaExtent(nx0, ny0, nps), cudaArrayLayered));
-	}else{
-	    DO(cudaMallocHost(&(dest->p), nps*sizeof(float*)));
-	    /*memory in device. */
-	    for(int ips=0; ips<nps; ips++){
-		DO(cudaMalloc(&(dest->p[ips]), source[ips]->nx*source[ips]->ny*sizeof(float)));
-	    }
-	}
-        dest->vx=(float*)malloc(nps*sizeof(float));
-	dest->vy=(float*)malloc(nps*sizeof(float)); 
-	dest->ht=(float*)malloc(nps*sizeof(float));
-	dest->ox=(float*)malloc(nps*sizeof(float));
-	dest->oy=(float*)malloc(nps*sizeof(float));
-	dest->dx=(float*)malloc(nps*sizeof(float));
-	dest->nx=(int*)malloc(nps*sizeof(int));
-	dest->ny=(int*)malloc(nps*sizeof(int));
+	*dest0=new cumap_t*[nps];
 	for(int ips=0; ips<nps; ips++){
-	    if(type==1 && source[ips]->nx!=nx0 && source[ips]->ny!=ny0){
-		error("Only support map_t arrays of the same size if type==1\n");
-	    }
-	    dest->nx[ips]=source[ips]->nx;
-	    dest->ny[ips]=source[ips]->ny;
-	}
+	    (*dest0)[ips]=new cumap_t(source[ips]->nx, source[ips]->ny);
+	}	
     }
-    
-    float *tmp=NULL;
-    if(type==1) tmp=(float*)malloc((nx0*ny0*nps)*sizeof(float));
-    
+    cumap_t **dest=*dest0;
     for(int ips=0; ips<nps; ips++){
+	dest[ips]->vx=source[ips]->vx;
+	dest[ips]->vy=source[ips]->vy;
+	dest[ips]->ht=source[ips]->h;
+	dest[ips]->ox=source[ips]->ox;
+	dest[ips]->oy=source[ips]->oy;
+	dest[ips]->dx=source[ips]->dx;
 	int nx=source[ips]->nx;
 	int ny=source[ips]->ny;
-	dest->vx[ips]=source[ips]->vx;
-	dest->vy[ips]=source[ips]->vy;
-	dest->ht[ips]=source[ips]->h;
-	dest->ox[ips]=source[ips]->ox;
-	dest->oy[ips]=source[ips]->oy;
-	dest->dx[ips]=source[ips]->dx;
-
-	if(type==1){/*cudaArray */
-	    for(long ix=0; ix<(long)nx0*(long)ny0; ix++){
-		tmp[ips*nx0*ny0+ix]=(float)source[ips]->p[ix];
-	    }
-	}else{/*Flat memory */
-	    gpu_dbl2dev(&dest->p[ips], source[ips]->p, nx*ny);
-	}
-    }
-    if(type==1){
-	struct cudaMemcpy3DParms par={0};
-	par.srcPos = make_cudaPos(0,0,0);
-	par.dstPos = make_cudaPos(0,0,0);
-	par.dstArray=dest->ca;
-	par.srcPtr = make_cudaPitchedPtr(tmp, nx0*sizeof(float), nx0, ny0);
-	par.extent = make_cudaExtent(nx0, ny0, nps);
-	par.kind   = cudaMemcpyHostToDevice;
-	DO(cudaMemcpy3D(&par));
-	free(tmp);
+	gpu_dbl2dev(&dest[ips]->p, source[ips]->p, nx*ny);
     }
     CUDA_SYNC_DEVICE;
 }
@@ -276,6 +236,7 @@ void gpu_sp2dev(cusp **dest0, dsp *src){
 #endif
 }
 void gpu_spcell2dev(cuspcell **dest0, spcell *src){
+    if(!src) return;
     if(!*dest0){
 	*dest0=cuspcellnew(src->nx, src->ny);
     }
@@ -785,7 +746,11 @@ void gpu_cur2d(dmat **out, double alpha, const curmat *in, double beta, cudaStre
 	if(*out) dzero(*out);
 	return;
     }
-    if(!*out) *out=dnew(in->nx, in->ny);
+    if(!*out) {
+	*out=dnew(in->nx, in->ny);
+    }else{
+	assert((*out)->nx*(*out)->ny==in->nx*in->ny);
+    }
     gpu_dev2dbl(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream);
 }
 void gpu_curcell2d(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream){

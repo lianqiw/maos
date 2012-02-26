@@ -270,7 +270,7 @@ static inline curcell *new_xout(const RECON_T *recon){
     curcell *xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     return xout;
 }
-void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
+void gpu_TomoR(curcell **xout, const void *A, const curcell *grad, const float alpha){
     TIC;tic;
     SIM_T *simu=(SIM_T*)A;
     const PARMS_T *parms=simu->parms;
@@ -309,7 +309,7 @@ void gpu_TomoR(curcell **xout, const void *A, curcell *grad, const float alpha){
 }
 
 
-void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *xin, const float alpha){
+void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float alpha){
     TIC;tic;
     SIM_T *simu=(SIM_T*)A;
     const PARMS_T *parms=simu->parms;
@@ -379,7 +379,6 @@ void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *x
 	const int nyo=recon->xmap[ips]->ny;
 #if TIMING == 2
 	cudaEventRecord(psevent[ips][0], curecon->psstream[ips]);
-	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
 	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
 	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
 	if(parms->tomo.piston_cr){
@@ -390,7 +389,6 @@ void gpu_TomoL(curcell **xout, const float beta, const void *A, const curcell *x
 	DO_HXT;
 	cudaEventRecord(psevent[ips][2], curecon->psstream[ips]);
 #else
-	curscale((*xout)->p[ips], beta, curecon->psstream[ips]);
 	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
 	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
 	if(parms->tomo.piston_cr){

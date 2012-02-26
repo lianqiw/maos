@@ -48,7 +48,13 @@
    
    13) in thread_pool.c do_job_once(). If check for urgent, maos with cuda uses
    0.45s each step. without check, 0.36s.
-
+   
+   14) In CUDA 4.0, Fermi Card, memcpy between devices using
+   cudaMemcpyDeviceToDevice causes random error in cufft. Using
+   cudaMemcpyDefault does not have the problem.
+   
+   15) In CUDA 4.0, Fermi Card, directly address memory from another gpu also
+   causes random error in cufft. Need to copy over memory first.
 
    Look for the following in debugging
 
