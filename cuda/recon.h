@@ -41,6 +41,11 @@ typedef struct{
     int nyf;   /**<size of fmap*/
     /*aperture weighting*/
     W01_T *W01;
+    curcell *rhs;/*right hand side.*/
+    float *pis; /*a temporary variable*/
+    curmat *xp; /*temporary array*/
+    curmat *xp2;/*temporary array*/
+    curmat *tmpNW;/*temporary array*/
 }cumoao_t;
 typedef struct{
     curcell *gradin; /**< The grad to operator on*/
@@ -77,6 +82,7 @@ typedef struct{
     
     cudaStream_t     cgstream;
     cublasHandle_t   cghandle;
+
     curcell *PTT;  /**< Global tip/tilt, DF removal */
     curcell *PDF;  /**< Differential focus removal */
     float *l2c;    /**< Laplacian */
@@ -92,8 +98,11 @@ typedef struct{
     curcell *fitNW;/**< DM fitting low rank terms*/
     cuspcell *actslave;/**<DM fitting actuator slaving*/
     cumoao_t *moao;/**<moao configurations for GPU*/
-    curcell *moao_wfs;/**<moao results for wfs for warm restart*/
-    curcell *moao_evl;/**<moao results for evl for warm restart*/
+    curcell **moao_wfs;/**<moao results for wfs for warm restart*/
+    curcell **moao_evl;/**<moao results for evl for warm restart*/
+    cudaStream_t     moao_stream;
+    cublasHandle_t   moao_handle;
+    cusparseHandle_t moao_sphandle;
 }curecon_t;
 
 

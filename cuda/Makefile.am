@@ -1,5 +1,6 @@
 #use -g -G for debugging.
-AM_CFLAGS=-arch=sm_$(CUDAVER) --compiler-options "-Wall" -g -O $(CUDAOPT)
+WARN="-Wall -Wno-unused-value -Wno-unused-function"
+AM_CFLAGS=-arch=sm_$(CUDAVER) --compiler-options $(WARN) -g -O $(CUDAOPT)
 if USE_LONG
 AM_CFLAGS+=-DDLONG
 endif

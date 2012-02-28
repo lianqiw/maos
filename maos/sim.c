@@ -83,7 +83,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    }
 	}
 	if(parms->gpu.tomo || parms->gpu.fit){
-	    gpu_recon_reset();
+	    gpu_recon_reset(parms);
 	}
 #endif
 	double tk_atm=myclockd();

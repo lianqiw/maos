@@ -99,7 +99,7 @@ W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1){
     return W01;
 }
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
-    gpu_set(0);
+    gpu_set(gpu_recon);
     cuwloc_t *cupowfs=cudata->powfs;
     cudaStream_t stream;
     STREAM_NEW(stream);
@@ -367,12 +367,20 @@ void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
 	}
     }
 }
-void gpu_recon_reset(){/*reset warm restart.*/
+void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
     curcellzero(curecon->opdr, 0);
     curcellzero(curecon->dmfit, 0);
     curcellzero(curecon->dmfit_vec, 0);
-    curcellzero(curecon->moao_wfs, 0);
-    curcellzero(curecon->moao_evl, 0);
+    if(curecon->moao_wfs){
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    curcellzero(curecon->moao_wfs[iwfs], 0);
+	}
+    }
+    if(curecon->moao_evl){
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    curcellzero(curecon->moao_evl[ievl], 0);
+	}
+    }
     for(int igpu=0; igpu<NGPU; igpu++){
 	gpu_set(igpu);
 	curcellzero(cudata->moao_wfs,0);
@@ -413,7 +421,7 @@ __global__ void nothing(void){
 
 }
 void gpu_tomo(SIM_T *simu){
-    gpu_set(0);
+    gpu_set(gpu_recon);
     TIC;tic;
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
@@ -502,7 +510,7 @@ void gpu_tomo(SIM_T *simu){
 }
 void gpu_fit(SIM_T *simu){
     TIC;tic;
-    gpu_set(0);
+    gpu_set(gpu_recon);
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     if(!parms->gpu.tomo){

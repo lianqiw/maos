@@ -33,6 +33,7 @@ const char *cufft_str[]={
 #if CUDA_VERSION < 4010
 pthread_mutex_t cufft_mutex=PTHREAD_MUTEX_INITIALIZER;
 #endif
+int gpu_recon;/**<GPU for reconstruction*/
 int NGPU=0;
 int* GPUS=NULL;
 int nstream=0;
@@ -69,8 +70,9 @@ void gpu_info(){
 */
 void gpu_print_mem(const char *msg){
     size_t fr, tot;
+    cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU mem used %5lu MiB (%s)\n",(tot-fr)/1024/1024, msg);
+    info2("GPU mem used %'lu B (%s)\n",(tot-fr), msg);
 }
 /**
    Get available memory.
@@ -172,6 +174,7 @@ int gpu_init(int *gpus, int ngpu){
 	    cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
 	}
     }
+    gpu_recon=0;
     if(!NGPU){
 	warning("no gpu is available\n");
 	return 0;

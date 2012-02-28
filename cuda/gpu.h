@@ -44,7 +44,7 @@ void gpu_perfevl_save(SIM_T *simu);
 void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper);
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
 void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
-void gpu_recon_reset(void);
+void gpu_recon_reset(const PARMS_T *parms);
 void gpu_tomo(SIM_T *simu);
 void gpu_fit(SIM_T *simu);
 void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon);

@@ -47,7 +47,7 @@ struct cumat{
 	    nref[0]--;
 	    if(nref[0]==0){
 		cudaFree(p);
-		free(nref);
+		delete nref;
 		if(header) free(header);
 	    }else if(nref[0]<0){
 		error("Invalid nref=%d\n", nref[0]);
@@ -55,9 +55,9 @@ struct cumat{
 	}
     }
     cumat<T>* ref(){
-	cumat<T>*res=new cumat<T>(nx, ny, p, 0);
-	res->nref=nref;
 	nref[0]++;
+	cumat<T>* res=new cumat<T>(nx, ny, p, 0);
+	res->nref=nref;
 	return res;
     }
 };

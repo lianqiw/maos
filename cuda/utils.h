@@ -24,6 +24,7 @@
 #include "recon.h"
 #include "kernel.h"
 #include "wfs.h"
+extern int gpu_recon;
 extern int NGPU;
 extern int *GPUS;
 extern int NG1D;
