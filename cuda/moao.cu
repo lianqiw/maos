@@ -131,7 +131,6 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 #define DO_W								\
     gpu_inn(cumoao->pis, xp->p, cumoao->W01->W1->p, np, stream);	\
     add2_do<<<DIM(np, 256), 0, stream>>>(xp2->p, cumoao->W01->W1->p, cumoao->pis, -1.f, np); \
-    CUDA_SYNC_DEVICE;/**temp*/						\
     cuspmul(xp2->p, cumoao->W01->W0p, xp->p, 1.f, sphandle);		\
     if(cumoao->W01->nW0f){						\
 	apply_W_do<<<DIM(np, 256),0,stream>>>(xp2->p, xp->p, cumoao->W01->W0f, cumoao->W01->W0v, \
@@ -325,7 +324,6 @@ void gpu_moao_filter(SIM_T *simu){
 	    }
 	}
     }
-
     if(curecon->moao_evl){
 	int imoao=parms->evl.moao;
 	double g=parms->moao[imoao].gdm;
@@ -335,6 +333,7 @@ void gpu_moao_filter(SIM_T *simu){
 		gpu_set(evlgpu[ievl]);
 		curcp(&temp, curecon->moao_evl[ievl]->p[0]);
 	    }else{
+		gpu_set(gpu_recon);
 		temp=curecon->moao_evl[ievl]->p[0];
 	    }
 	    /*use 0 as stream because this is gpu specific*/
