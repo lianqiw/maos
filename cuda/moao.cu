@@ -309,6 +309,7 @@ void gpu_moao_filter(SIM_T *simu){
 		gpu_set(wfsgpu[iwfs]);
 		curcp(&temp, curecon->moao_wfs[iwfs]->p[0]);
 	    }else{
+		gpu_set(gpu_recon);
 		temp=curecon->moao_wfs[iwfs]->p[0];
 	    }
 	    /*use 0 as stream because this is gpu specific*/
