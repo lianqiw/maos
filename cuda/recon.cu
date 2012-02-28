@@ -322,6 +322,14 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	       and Mbinv to use R2C.*/
 	}
     }
+    if(parms->gpu.fit){
+	if(!curecon->dmfit){
+	    curecon->dmfit=curcellnew(parms->ndm, 1);
+	    for(int idm=0; idm<parms->ndm; idm++){
+		curecon->dmfit->p[idm]=new cumap_t(recon->amap[idm]->nx, recon->amap[idm]->ny);
+	    }
+	}
+    }
     if(parms->gpu.fit==1){ /*For fitting using sparse matrix*/
 	gpu_muv2dev(&curecon->FR, &recon->FR);
 	gpu_muv2dev(&curecon->FL, &recon->FL);
@@ -337,6 +345,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     for(int idm=0; idm<parms->ndm; idm++){
 	curecon->cubic_cc[idm]=gpu_dmcubic_cc(parms->dm[idm].iac);
     }
+    curecon->opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     STREAM_DONE(stream);
     cublasDestroy(handle);
     gpu_print_mem("recon init");

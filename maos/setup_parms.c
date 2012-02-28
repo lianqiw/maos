@@ -473,6 +473,7 @@ static void readcfg_moao(PARMS_T *parms){
     READ_MOAO(int,order);
     READ_MOAO_RELAX(int,cubic);
     READ_MOAO_RELAX(dbl,iac);
+    READ_MOAO_RELAX(dbl,gdm);
     READ_MOAO_RELAX(dbl,stroke);
     READ_MOAO_RELAX(int,actslave);
     READ_MOAO_RELAX(int,lrt_ptt);
@@ -1776,9 +1777,15 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		warning("GPU fitting=2 requires fit.square=1. Changed\n");
 		parms->fit.square=1;
 	    }
-	    if(parms->gpu.moao && !parms->fit.square){
-		warning("GPU moao=1 requires fit.square=1. Changed\n");
-		parms->fit.square=1;
+	    if(parms->gpu.moao){
+		if(!parms->fit.square){
+		    warning("GPU moao=1 requires fit.square=1. Changed\n");
+		    parms->fit.square=1;
+		}
+		if(!parms->tomo.square){
+		    warning("GPU moao=1 requires tomo.square=1. Changed\n");
+		    parms->tomo.square=1;
+		}
 	    }
 	}else if(parms->recon.alg==1){
 	    if(parms->gpu.lsr && parms->lsr.alg!=1){

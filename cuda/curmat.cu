@@ -81,9 +81,12 @@ void curadd(curmat **out, float alpha, curmat *in, float beta, cudaStream_t stre
     if(!in) return;
     if(!*out || fabsf(alpha)<1e-7){
 	curcp(out, in, stream);
-	scale_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
-	    ((*out)->p, in->nx*in->ny, beta);
+	if(fabs(beta-1)>1e-7){
+	    scale_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
+		((*out)->p, in->nx*in->ny, beta);
+	}
     }else{
+	assert(in->nx*in->ny==(*out)->nx*(*out)->ny);
 	add_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 	    ((*out)->p, alpha, in->p, beta, in->nx*in->ny);
     }
@@ -302,10 +305,9 @@ inline static void sum_wrap(float *res, const float * a, const int n, cudaStream
 }
 float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     float *res;
-    cudaMalloc(&res, sizeof(float));
-    cudaMemsetAsync(res, 0,sizeof(float), stream);
-    gpu_inn(res, a->p, b->p, a->nx*a->ny, stream);
     float out;
+    cudaMalloc(&res, sizeof(float));
+    gpu_inn(res, a->p, b->p, a->nx*a->ny, stream);
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
     CUDA_SYNC_STREAM;
     return out;

@@ -193,7 +193,6 @@ void gpu_FitR(curcell **xout, const void *A, const curcell *xin, const float alp
     curcell *opdfit2=curecon->opdfit2;
     float *pis;
     cudaMalloc(&pis, nfit*sizeof(float));
-    cudaMemset(pis, 0,  nfit*sizeof(float));
     for(int ifit=0; ifit<nfit; ifit++){
 	double hs=parms->fit.ht[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
@@ -237,7 +236,6 @@ void gpu_FitL(curcell **xout, const void *A, const curcell *xin, const float alp
     curcell *opdfit2=curecon->opdfit2;
     float *pis;
     cudaMalloc(&pis, nfit*sizeof(float));
-    cudaMemset(pis,0,nfit*sizeof(float));
     for(int ifit=0; ifit<nfit; ifit++){
 	float hs    =(float)parms->fit.ht[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
@@ -270,19 +268,18 @@ void gpu_FitL(curcell **xout, const void *A, const curcell *xin, const float alp
     /*do HAT operation, from opdfit2 to xout*/
     DO_HAT;
     curcell *tmp=NULL;
-    curcell *tmp2=NULL;
 #if TIMING
     SYNC_DM; toc("HAT");tic;//2.5ms for cubic, 0.2 ms for linear
 #endif
     if(curecon->fitNW){
-	if(!tmp) tmp=curcellnew(recon->ndm, 1);
+	tmp=curcellnew(recon->ndm, 1);
 	for(int idm=0; idm<recon->ndm; idm++){
-	    curmv(tmp->p[idm]->p, 1, curecon->fitNW->p[idm], xin->p[idm]->p, 't', 1, curecon->dmhandle[idm]);
+	    tmp->p[idm]=curnew(curecon->fitNW->p[idm]->nx, 1);
+	    curmv(tmp->p[idm]->p, 0, curecon->fitNW->p[idm], xin->p[idm]->p, 't', 1, curecon->dmhandle[idm]);
 	    curmv((*xout)->p[idm]->p, 1, curecon->fitNW->p[idm], tmp->p[idm]->p, 'n', alpha, curecon->dmhandle[idm]);
 	}
     }
     if(curecon->actslave){
-	if(!tmp2) tmp2=curcellnew(recon->ndm, 1);
 	for(int idm=0; idm<recon->ndm; idm++){
 	    cuspmul((*xout)->p[idm]->p, curecon->actslave->p[idm*(1+recon->ndm)],
 		    xin->p[idm]->p, alpha, curecon->dmsphandle[idm]);
@@ -291,5 +288,4 @@ void gpu_FitL(curcell **xout, const void *A, const curcell *xin, const float alp
     SYNC_DM;
     toc("fitNW");//0ms.
     curcellfree(tmp);
-    curcellfree(tmp2);
 }

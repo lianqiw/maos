@@ -493,6 +493,7 @@ void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, c
 		const float mispx, const float mispy, const float dmalpha, cudaStream_t stream){
     if(fabs(dmalpha)<EPS) return;
     for(int idm=0; idm<ndm; idm++){
+	assert(cudm[idm]->ny>1);//prevent accidentally pass in a vector
 	const float dx=cudm[idm]->dx;
 	const float du=1.f/dx;
 	const float ht=cudm[idm]->ht;
@@ -816,6 +817,7 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		   curmat *in, float oxi, float oyi, float dxi,
 		   float dispx, float dispy,
 		   float alpha, char trans, cudaStream_t stream){
+    assert(in->ny!=1);
     const float dxi1=1.f/dxi;
     const float ratio=dxo*dxi1;
     if(fabs(ratio-1.f)<1.e-5 && trans=='t'){
@@ -1019,6 +1021,7 @@ void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
 			 curmat *in, float oxi, float oyi, float dxi,
 			 float dispx, float dispy, float *cc,
 			 float alpha, char trans, cudaStream_t stream){
+    assert(in->ny!=1);
     const float dxi1=1.f/dxi;
     const float ratio=dxo*dxi1;
     const int nxo=out->nx;

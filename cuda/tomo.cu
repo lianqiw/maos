@@ -261,12 +261,6 @@ __global__ static void zzt_do(float *restrict out, const float *in, int ix, floa
     }
 }
 static inline curcell *new_xout(const RECON_T *recon){
-    /*curcell *xout=curcellnew(recon->npsr, 1);
-    for(int ips=0; ips<recon->npsr; ips++){
-	const int nxo=recon->xmap[ips]->nx;
-	const int nyo=recon->xmap[ips]->ny;
-	xout->p[ips]=curnew(nxo, nyo);
-	}*/
     curcell *xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     return xout;
 }
@@ -294,9 +288,7 @@ void gpu_TomoR(curcell **xout, const void *A, const curcell *grad, const float a
 	if(parms->powfs[ipowfs].skip) continue;
 	const float dsa=cupowfs[ipowfs].dsa;
 	DO_PTT;
-	/*curwrite(grad->p[iwfs], "grad_nea_%d", iwfs); */
 	DO_NEA_GPT;
-	/*curwrite(opdwfs->p[iwfs], "gpt_%d", iwfs); */
     }
     SYNC_WFS;
     for(int ips=0; ips<recon->npsr; ips++){

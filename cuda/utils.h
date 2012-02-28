@@ -152,6 +152,9 @@ __device__ inline float CABS2(fcomplex r){
     const float b=cuCimagf(r);
     return a*a+b*b;
 }
+inline void gpu_inn_acc(float *restrict res, const float *a, const float *b, const int n, cudaStream_t stream){
+    inn_do_acc<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res, a, b, n);
+}
 inline void gpu_inn(float *restrict res, const float *a, const float *b, const int n, cudaStream_t stream){
     inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res, a, b, n);
 }

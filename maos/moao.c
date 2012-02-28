@@ -271,7 +271,7 @@ void moao_recon(SIM_T *simu){
 	    dcell *rhsout=NULL;
 	    if(imoao<0) continue;
 	    double hs=parms->powfs[ipowfs].hs;
-	    dmmoao->p[0]=dref(simu->moao_wfs->p[iwfs+iy*nwfs]);
+	    dmmoao->p[0]=(simu->moao_wfs->p[iwfs+iy*nwfs]);
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms,  imoao, 
 		      parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
@@ -303,6 +303,7 @@ void moao_recon(SIM_T *simu){
 		cellarr_dmat(simu->save->moao_wfs[iwfs], dmmoao->p[0]);
 	    }
 	    dcellfree(rhsout);
+		dmmoao->p[0]=NULL;
 	}/*if wfs */
 	dcellfree(dmmoao);
     }
@@ -310,7 +311,7 @@ void moao_recon(SIM_T *simu){
 	int imoao=parms->evl.moao;
 	dcell *dmmoao=dcellnew(1,1);
 	for(int ievl=0; ievl<nevl; ievl++){
-	    dmmoao->p[0]=dref(simu->moao_evl->p[ievl+iy*nevl]);
+	    dmmoao->p[0]=(simu->moao_evl->p[ievl+iy*nevl]);
 	    dcell *rhsout=NULL;
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms, imoao, 
@@ -319,6 +320,8 @@ void moao_recon(SIM_T *simu){
 	    
 	    pcg(&dmmoao, moao_FitL, &recon->moao[imoao], NULL, NULL, rhs,
 		parms->recon.warm_restart, parms->fit.maxit);
+	    /*dwrite(rhs->p[0], "evl_rhs_%d_%d", ievl, simu->isim);
+	      dwrite(dmmoao->p[0], "evl_dmfit_%d_%d", ievl, simu->isim);*/
 	    /*if(parms->recon.split){//remove the tip/tilt form MEMS DM 
 	      double ptt[3]={0,0,0};
 	      loc_t *aloc=recon->moao[imoao].aloc;
@@ -344,6 +347,7 @@ void moao_recon(SIM_T *simu){
 		cellarr_dmat(simu->save->moao_evl[ievl], dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
+	dmmoao->p[0]=NULL;
 	}/*ievl */
 	dcellfree(dmmoao);
     }

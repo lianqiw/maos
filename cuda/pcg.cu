@@ -53,19 +53,19 @@ __global__ static void div_sqrt_do(float *restrict dest, const float *restrict a
 #endif
 
 /**
-   res points to a scalar in device memory. **The caller ha to zero it**
+   res points to a scalar in device memory. **The caller has to zero it**
 */
 void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
     //cudaMemsetAsync(res, 0,sizeof(float), stream);
     if(A->m && B->m){
 	const int n=A->m->nx*A->m->ny;
-	gpu_inn(res, A->m->p, B->m->p, n, stream);
+	gpu_inn_acc(res, A->m->p, B->m->p, n, stream);
     }else{
 	for(int i=0; i<A->nx*A->ny; i++){
 	    const curmat *a=A->p[i];
 	    const curmat *b=B->p[i];
 	    const int n=a->nx*a->ny;
-	    gpu_inn(res,a->p,b->p,n,stream);
+	    gpu_inn_acc(res,a->p,b->p,n,stream);
 	}
     }
 }

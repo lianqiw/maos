@@ -534,6 +534,8 @@ void gpu_dmat2cu(curmat *restrict *dest, dmat *src){
     }
     if(!*dest){
 	*dest=curnew(src->nx, src->ny);
+    }else{
+	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
     }
     gpu_dbl2dev(&(*dest)->p, src->p, src->nx*src->ny);
 }

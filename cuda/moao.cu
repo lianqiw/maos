@@ -24,7 +24,6 @@ extern "C"
 #include "recon.h"
 #include "accphi.h"
 #include "pcg.h"
-
 #define CALL_ONCE\
     do {static int count=0; count++; if(count>1) warning("This function should only be called once\n");} while(0)
 extern int *wfsgpu;
@@ -78,7 +77,7 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 	    if(!cudata->moao_wfs){
 		cudata->moao_wfs=curcellnew(nwfs, 1);
 	    }
-	    if(parms->sim.closeloop||NGPU>1){
+	    if(parms->sim.closeloop){
 		cudata->moao_wfs->p[iwfs]=new cumap_t(cumoao->nxa, cumoao->nya, 
 						      cumoao->oxa, cumoao->oya,
 						      cumoao->dxa, 0, 0, 0);
@@ -100,12 +99,11 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 						   cumoao->dxa, 0, 0, 0);
 	    if(parms->gpu.evl){
 		gpu_set(evlgpu[ievl]);
-		info("evlgpu[%d]=%d\n", ievl, evlgpu[ievl]);
 	    }
 	    if(!cudata->moao_evl){
 		cudata->moao_evl=curcellnew(nevl,1);
 	    }
-	    if(parms->sim.closeloop||NGPU>1){
+	    if(parms->sim.closeloop){
 		cudata->moao_evl->p[ievl]=new cumap_t(cumoao->nxa, cumoao->nya,
 						      cumoao->oxa, cumoao->oya,
 						      cumoao->dxa, 0, 0, 0);
@@ -118,14 +116,14 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 
 #define DO_W								\
     gpu_inn(pis, xp->p, cumoao->W01->W1->p, np, stream);			\
-    add2_do<<<DIM(np, 256), 0, stream>>>(xp->p, cumoao->W01->W1->p, pis, -1.f, np); \
-    cuspmul(xp->p, cumoao->W01->W0p, xp->p, 1.f, sphandle);			\
+    add2_do<<<DIM(np, 256), 0, stream>>>(xp2->p, cumoao->W01->W1->p, pis, -1.f, np); \
+    cuspmul(xp2->p, cumoao->W01->W0p, xp->p, 1.f, sphandle);			\
     if(cumoao->W01->nW0f){							\
 	apply_W_do<<<DIM(np, 256),0,stream>>>(xp2->p, xp->p, cumoao->W01->W0f, cumoao->W01->W0v, \
 					      cumoao->nxf, cumoao->W01->nW0f); \
     }
 
-#define DO_HAT /*Apply HAT, from xin2 to xout.*/\
+#define DO_HAT /*Apply HAT, from xp2 to xout.*/\
     if(!*xout) *xout=curcellnew(1,1);					\
     if(!(*xout)->p[0]) (*xout)->p[0]=curnew(cumoao->nxa, cumoao->nya);	\
     if(cumoao->cubic_cc){						\
@@ -184,7 +182,6 @@ void gpu_moao_FitR(curcell **xout, SIM_T *simu, cumoao_t *cumoao, float thetax, 
     DO_W;
     /*do HAT operation, from xp2 to xout*/
     DO_HAT;
-   
     STREAM_DONE(stream);
     SPHANDLE_DONE(sphandle);
     cudaFree(pis);
@@ -196,8 +193,10 @@ void gpu_moao_FitL(curcell **xout, const void *A, const curcell *xin, const floa
     cumoao_t *cumoao=(cumoao_t*)A;
     cudaStream_t stream;
     cusparseHandle_t sphandle;
+    cublasHandle_t handle;
     STREAM_NEW(stream);
     SPHANDLE_NEW(sphandle, stream);
+    HANDLE_NEW(handle, stream);
     float *pis; 
     cudaMalloc(&pis, sizeof(float));
     const int np=cumoao->nxf*cumoao->nyf;
@@ -216,14 +215,34 @@ void gpu_moao_FitL(curcell **xout, const void *A, const curcell *xin, const floa
     }
     /*Apply W, from xp to xp2*/
     DO_W;
+    
     /*Apply Hat, from xp2 to xout*/
     DO_HAT;
+    /*Additional terms*/
+    curmat *tmp=NULL;
+    if(cumoao->fitNW){
+	tmp=curnew(cumoao->fitNW->p[0]->nx, 1);
+	curmv(tmp->p, 0, cumoao->fitNW->p[0], xin->p[0]->p, 't', 1, handle);
+	curmv((*xout)->p[0]->p, 1, cumoao->fitNW->p[0], tmp->p, 'n', alpha, handle);
+    }
+    if(cumoao->actslave){
+	cuspmul((*xout)->p[0]->p, cumoao->actslave->p[0], xin->p[0]->p, alpha, sphandle);
+    }
     STREAM_DONE(stream);
     SPHANDLE_DONE(sphandle);
+    HANDLE_DONE(handle);
+    curfree(tmp);
     cudaFree(pis);
     curfree(xp);
     curfree(xp2);
 }
+/**
+   MOAO reconstruction.
+
+   Do not output directly to cudata->moao since that is being used by wfsgrad
+and perfevl. The new result is supposed to be used next time step. The input
+based on opdr, dmfit is on gradients from last time step. So two cycle delay is
+maintained.  */
 void gpu_moao_recon(SIM_T *simu){
     gpu_set(0);
     curcell *dmcommon=NULL;
@@ -280,14 +299,10 @@ void gpu_moao_recon(SIM_T *simu){
 	    if(gpu_pcg(&evl_dmfit[ievl], gpu_moao_FitL, cumoao, NULL, NULL, evl_rhs[ievl],
 		       simu->parms->recon.warm_restart, parms->fit.maxit, evl_stream[ievl])){
 		error("PCG failed\n");
-	    }/*
-	    curwrite(evl_rhs[ievl]->p[0], "evl_rhs_%d_%d", ievl, simu->isim);
-	    curwrite(evl_dmfit[ievl]->p[0], "evl_dmfit_%d_%d", ievl, simu->isim);*/
+	    }
 	}
     }
-    if(dmcommon!=curecon->dmfit){
-	curcellfree(dmcommon);
-    }
+
     if(curecon->moao_wfs){
 	for(int iwfs=0;iwfs<nwfs; iwfs++){
 	    if(wfs_stream[iwfs]){
@@ -305,6 +320,9 @@ void gpu_moao_recon(SIM_T *simu){
 		curcellfree(evl_rhs[ievl]);
 	    }
 	}
+    }
+    if(dmcommon!=curecon->dmfit){
+	curcellfree(dmcommon);
     }
 }
 void gpu_moao_filter(SIM_T *simu){
@@ -327,7 +345,7 @@ void gpu_moao_filter(SIM_T *simu){
 	    }else{
 		temp=curref(curecon->moao_wfs->p[iwfs]);
 	    }
-	    if(parms->sim.closeloop || NGPU>1){
+	    if(parms->sim.closeloop){
 		curadd(&cudata->moao_wfs->p[iwfs], 1.-g, temp, g, 0);
 	    }
 	    if(!parms->gpu.wfs ){
@@ -351,8 +369,7 @@ void gpu_moao_filter(SIM_T *simu){
 	    }else{
 		temp=curref(curecon->moao_evl->p[ievl]);
 	    }
-	    
-	    if(parms->sim.closeloop || NGPU>1){
+	    if(parms->sim.closeloop){
 		curadd(&cudata->moao_evl->p[ievl], 1.-g, temp, g, 0);
 	    }
 	    if(!parms->gpu.evl){
@@ -368,6 +385,7 @@ void gpu_moao_filter(SIM_T *simu){
    Copy MOAO DM commands from CPU to GPU.*/
 void gpu_moao_2gpu(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
     if(parms->gpu.moao){
 	error("Invalid use\n");
     }
@@ -386,10 +404,21 @@ void gpu_moao_2gpu(SIM_T *simu){
 	}
     }
     if(parms->gpu.evl && simu->moao_evl){
+	int imoao=parms->evl.moao;
 	for(int ievl=0; ievl<nevl; ievl++){
 	    gpu_set(evlgpu[ievl]);
 	    if(!cudata->moao_evl){
 		cudata->moao_evl=curcellnew(nevl, 1);
+	    }
+	    if(!cudata->moao_evl->p[ievl]){
+		double dxa=recon->moao[imoao].amap->dx;
+		double oxa=recon->moao[imoao].amap->ox;
+		double oya=recon->moao[imoao].amap->oy;
+		int nxa=recon->moao[imoao].amap->nx;
+		int nya=recon->moao[imoao].amap->ny;
+		cudata->moao_evl->p[ievl]=new cumap_t(nxa, nya,
+						      oxa, oya,
+						      dxa, 0, 0, 0);
 	    }
 	    gpu_dmat2cu(&cudata->moao_evl->p[ievl], simu->moao_evl->p[ievl]);
 	}

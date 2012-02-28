@@ -55,7 +55,9 @@ __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int
 			+m4*(xy*scale1-scale*ht*(thetay*x+thetax*y)));
     }
 }
-__global__ void inn_do(float *restrict res, const float *a, const float *b, const int n){
+/**
+   res+=sum(a.*b) */
+__global__ void inn_do_acc(float *restrict res, const float *a, const float *b, const int n){
     extern __shared__ float sb[];
     sb[threadIdx.x]=0;
     int step=blockDim.x * gridDim.x ;
@@ -70,5 +72,25 @@ __global__ void inn_do(float *restrict res, const float *a, const float *b, cons
     }
     if(threadIdx.x==0){
 	atomicAdd(res, sb[0]);
+    }
+}
+/**
+   res=sum(a.*b)
+ */
+__global__ void inn_do(float *restrict res, const float *a, const float *b, const int n){
+    extern __shared__ float sb[];
+    sb[threadIdx.x]=0;
+    int step=blockDim.x * gridDim.x ;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	sb[threadIdx.x]+=a[i]*b[i];
+    }
+    for(step=(blockDim.x>>1);step>0;step>>=1){
+	__syncthreads();
+	if(threadIdx.x<step){
+	    sb[threadIdx.x]+=sb[threadIdx.x+step];
+	}
+    }
+    if(threadIdx.x==0){
+	*res=sb[0];
     }
 }
