@@ -91,7 +91,16 @@ X(mat) *X(new_data)(long nx, long ny, T *p){
 X(mat) *X(new)(long nx, long ny){
     return X(new_do)(nx,ny,NULL,0);
 }
-
+/**
+   check the size of matrix if exist. Otherwise create it
+*/
+void X(init)(X(mat)**A, long nx, long ny){
+    if(*A){
+	assert((*A)->nx == nx && (*A)->ny==ny);
+    }else{
+	*A=X(new)(nx, ny);
+    }
+}
 /**
    Free the X(mat), but keep the data.
 */

@@ -728,13 +728,15 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
 	char header[800];
 	header[0]='\0';
-	for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-	    char headeri[80];
-	    snprintf(headeri, 80, "wvl=%g\nPSF sampling is %.15g radian\nPSF will sum to %.15g\n",
-		     parms->evl.wvl[iwvl],
-		     parms->evl.wvl[iwvl]/(aper->nembed[iwvl]*parms->evl.dx),
-		     aper->sumamp2*aper->nembed[iwvl]*aper->nembed[iwvl]); 
-	    strncat(header, headeri, 800-strlen(header)-2);
+	if(parms->evl.psfmean || parms->evl.psfhist ){
+	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		char headeri[80];
+		snprintf(headeri, 80, "wvl=%g\nPSF sampling is %.15g radian\nPSF will sum to %.15g\n",
+			 parms->evl.wvl[iwvl],
+			 parms->evl.wvl[iwvl]/(aper->nembed[iwvl]*parms->evl.dx),
+			 aper->sumamp2*aper->nembed[iwvl]*aper->nembed[iwvl]); 
+		strncat(header, headeri, 800-strlen(header)-2);
+	    }
 	}
 	long nframepsf=1;
 	long nframecov=1;
@@ -766,6 +768,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    simu->evlopdcov_ngsr=dcellnew(nevl,1);
 	    save->evlopdcov=calloc(nevl, sizeof(cellarr*));
 	    save->evlopdcov_ngsr=calloc(nevl, sizeof(cellarr*));
+	    simu->evlopdmean=dcellnew(nevl,1);
+	    simu->evlopdmean_ngsr=dcellnew(nevl,1);
+	    save->evlopdmean=calloc(nevl, sizeof(cellarr*));
+	    save->evlopdmean_ngsr=calloc(nevl, sizeof(cellarr*));
 	}
 	for(int ievl=0; ievl<nevl; ievl++){
 	    if(!parms->evl.psf[ievl]) continue;
@@ -792,6 +798,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 						       "evlopdcov_%d_x%g_y%g%s.bin", seed,
 						       parms->evl.thetax[ievl]*206265,
 						       parms->evl.thetay[ievl]*206265, strht);
+		    save->evlopdmean[ievl]=cellarr_init(nframecov, 1,
+							"evlopdmean_%d_x%g_y%g%s.bin", seed,
+							parms->evl.thetax[ievl]*206265,
+							parms->evl.thetay[ievl]*206265, strht);
 		}
 	    }
 	    if(parms->evl.psfngsr[ievl]!=0){
@@ -812,6 +822,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 							    "evlopdcov_ngsr_%d_x%g_y%g%s.bin", seed,
 							    parms->evl.thetax[ievl]*206265,
 							    parms->evl.thetay[ievl]*206265, strht);
+		    save->evlopdmean_ngsr[ievl]=cellarr_init(nframecov, 1,
+							     "evlopdmean_ngsr_%d_x%g_y%g%s.bin", seed,
+							     parms->evl.thetax[ievl]*206265,
+							     parms->evl.thetay[ievl]*206265, strht);
 		}
 	    }
 	}/*for ievl */
@@ -1514,12 +1528,16 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->evlpsfmean);
     dcellfree(simu->evlpsfolmean);
     dcellfree(simu->evlopdcov);
+    dcellfree(simu->evlopdmean);
     dcellfree(simu->evlpsfmean_ngsr);
     dcellfree(simu->evlopdcov_ngsr);
+    dcellfree(simu->evlopdmean_ngsr);
     cellarr_close_n(save->evlpsfmean, nevl);
     cellarr_close_n(save->evlopdcov, nevl);
+    cellarr_close_n(save->evlopdmean, nevl);
     cellarr_close_n(save->evlpsfmean_ngsr, nevl);
     cellarr_close_n(save->evlopdcov_ngsr, nevl);
+    cellarr_close_n(save->evlopdmean_ngsr,nevl);
     cellarr_close(save->evlpsfolmean);
     dcellfree(simu->evlopd);    
     free(simu->ints);

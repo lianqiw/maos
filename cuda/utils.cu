@@ -40,14 +40,21 @@ int nstream=0;
 int NG1D=64; /**<Optimum number of blocks. Twice of multi processors.*/
 int NG2D=8; /**<Optimum number of blocks. Twice of multi processors.*/
 cudata_t **cudata_all=NULL;/*for all GPU. */
+static cusparseMatDescr_t spdesc=NULL;
 #ifdef __APPLE__
 pthread_key_t cudata_key;
-static __attribute((constructor)) void init(){
-    pthread_key_create(&cudata_key, NULL);
-}
 #else
 __thread cudata_t *cudata=NULL;/*for current thread and current GPU */
 #endif
+
+static __attribute((constructor)) void init(){
+#ifdef __APPLE__
+    pthread_key_create(&cudata_key, NULL);
+#endif
+    DO(cusparseCreateMatDescr(&spdesc));
+    cusparseSetMatType(spdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(spdesc, CUSPARSE_INDEX_BASE_ZERO);
+}
 /**
    Get GPU info.
 */
@@ -269,7 +276,7 @@ void cuspmul(float *y, cusp *A, float *x, float alpha,
     cuspmul_do<<<DIM(A->nx, 256), 0, stream>>>(y,A,x,alpha);
 #else
     int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_TRANSPOSE, 
-			      A->ny, A->nx, alpha, cudata->wfsspdesc,
+			      A->ny, A->nx, alpha, spdesc,
 			      A->x, A->p, A->i, x, 1.f, y);
     if(status!=0){
 	error("cusparseScsrmv failed with status %d\n", status);
@@ -305,7 +312,7 @@ void cusptmul(float *y, cusp *A, float *x, float alpha,
     warning("Not working correctly yet\n");
 #else
     int status=cusparseScsrmv(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, 
-			      A->ny, A->nx, alpha, cudata->wfsspdesc,
+			      A->ny, A->nx, alpha, spdesc,
 			      A->x, A->p, A->i, x, 1.f, y);
     if(status!=0){
 	error("cusparseScsrmv failed with status %d\n", status);

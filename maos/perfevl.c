@@ -312,6 +312,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	    if(parms->evl.opdcov){
 		dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
+		dadd(&simu->evlopdmean->p[ievl], 1, iopdevl, 1);
 	    }/*opdcov */
 	    if(parms->evl.psfmean || parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
 		perfevl_psfcl(parms, aper, simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
@@ -419,6 +420,7 @@ static void perfevl_mean(SIM_T *simu){
 			}
 			if(parms->evl.opdcov){
 			    dmm(&simu->evlopdcov_ngsr->p[ievl], iopdevl, iopdevl, "nt", 1);
+			    dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
 			}
 			if(do_psf){
 			    perfevl_psfcl(parms, aper, simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
@@ -520,16 +522,22 @@ static void perfevl_save(SIM_T *simu){
 	long nstep=isim+1-parms->evl.psfisim;
 	double scale=1./nstep;
 	dmat *covmean=NULL;
+	dmat *opdmean=NULL;
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov->p[ievl]) continue;
 	    dadd(&covmean, 0, simu->evlopdcov->p[ievl], scale);
 	    cellarr_dmat(simu->save->evlopdcov[ievl], covmean);
+	    dadd(&opdmean, 0, simu->evlopdmean->p[ievl], scale);
+	    cellarr_dmat(simu->save->evlopdmean[ievl], opdmean);
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov_ngsr->p[ievl]) continue;
 	    dadd(&covmean, 0, simu->evlopdcov_ngsr->p[ievl], scale);
 	    cellarr_dmat(simu->save->evlopdcov_ngsr[ievl], covmean);
+	    dadd(&opdmean, 0, simu->evlopdmean_ngsr->p[ievl], scale);
+	    cellarr_dmat(simu->save->evlopdmean_ngsr[ievl], opdmean);
 	}
+	dfree(opdmean);
 	dfree(covmean);
     }
 }
@@ -564,7 +572,6 @@ void perfevl(SIM_T *simu){
 	gpu_perfevl_save(simu);
     }else
 #endif
-	
 	perfevl_save(simu);
 
     simu->tk_eval=myclockd()-tk_start;

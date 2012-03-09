@@ -49,11 +49,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	cudata->wfs=(cuwfs_t*)calloc(parms->nwfs, sizeof(cuwfs_t));
 	cuwloc_t *cupowfs=cudata->powfs;
 	
-	/*DO(cudaSetDeviceFlags(cudaDeviceBlockingSync)); */
-	DO(cusparseCreateMatDescr(&cudata->wfsspdesc));
-	cusparseSetMatType(cudata->wfsspdesc, CUSPARSE_MATRIX_TYPE_GENERAL);
-	cusparseSetMatIndexBase(cudata->wfsspdesc, CUSPARSE_INDEX_BASE_ZERO);
-	
 	/* Setup information that are same for wfs in each powfs*/
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
