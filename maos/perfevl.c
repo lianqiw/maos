@@ -481,7 +481,7 @@ static void perfevl_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
-	info2("Output PSF\n");
+	info2("Step %d: Output PSF\n", isim);
 	dcell *psfmean=NULL;
 	double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	dcelladd(&psfmean, 0, simu->evlpsfmean, scale);
@@ -519,6 +519,7 @@ static void perfevl_save(SIM_T *simu){
 	dcellfree(psfmean);
     }
     if(parms->evl.opdcov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdcov)){
+	info2("Step %d: Output opdcov\n", isim);
 	long nstep=isim+1-parms->evl.psfisim;
 	double scale=1./nstep;
 	dmat *covmean=NULL;

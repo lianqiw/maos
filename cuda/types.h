@@ -28,7 +28,7 @@ struct cumat{
     int ny;
     int *nref;
     char *header;
-    cumat(int nxi, int nyi, T *pi=NULL, int own=1, cudaStream_t stream=0)
+    cumat(int nxi, int nyi, T *pi=NULL, int own=1)
 	: p(pi), nx(nxi), ny(nyi), nref(NULL), header(NULL){
 	if(!p && nxi!=0 && nyi!=0){
 	    DO(cudaMalloc(&p, nxi*nyi*sizeof(T)));
@@ -38,9 +38,6 @@ struct cumat{
 	    nref=new int[1];
 	    nref[0]=1;
 	}
-    }
-    cumat(int nxi, int nyi, cudaStream_t stream){
-	cumat<T>(nxi, nyi, NULL, 1, stream);
     }
     ~cumat(){
 	if(nref){

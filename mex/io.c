@@ -157,7 +157,7 @@ file_t* zfopen(const char *fn, char *mod){
 	return NULL;
     }
     if(mod[0]=='w'){
-	if(check_suffix(fn, ".bin") || check_suffix(fn, ".fits")){
+	if(check_suffix(fn2, ".bin") || check_suffix(fn2, ".fits")){
 	    fp->isgzip=0;
 	}else{
 	    fp->isgzip=1;
@@ -186,7 +186,7 @@ file_t* zfopen(const char *fn, char *mod){
 	    close(fp->fd); return NULL;
 	}
     }
-    if(check_suffix(fn, ".fits") || check_suffix(fn, ".fits.gz")){
+    if(check_suffix(fn2, ".fits") || check_suffix(fn2, ".fits.gz")){
 	fp->isfits=1;
     }  
     if(mod[0]=='w' && !fp->isfits){
