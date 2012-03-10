@@ -46,5 +46,5 @@ int main(int argc, char *argv[]){
     for(int i=0; i<cov->nx*cov->ny; i++){
 	mk2dcov(&cov2d->p[i], loc, amp?amp->p:NULL, 0.5, cov->p[i]);
     }
-    dcellwrite(cov2d, argv[P_RES]); 
+    dcellwrite(cov2d, "%s", argv[P_RES]); 
 }
