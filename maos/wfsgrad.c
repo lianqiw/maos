@@ -838,7 +838,6 @@ static void wfsgrad_save(SIM_T *simu){
 	    if(!simu->sanea_sim->p[iwfs]) continue;
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	    const int dtrat=parms->powfs[ipowfs].dtrat;
-	    dmat *sanea=NULL;
 	    double scale;
 	    if(parms->powfs[ipowfs].usephy){
 		scale=(simu->isim+1-simu->parms->powfs[ipowfs].phystep)/dtrat;
@@ -846,28 +845,34 @@ static void wfsgrad_save(SIM_T *simu){
 		scale=(simu->isim+1)/dtrat;
 	    }
 	    if(scale<=0) continue;
-	    scale=1./floor(scale);/*only multiple of dtrat is recorded. */
-	    dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
-	    dwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
-	    dfree(sanea);
-
+	    {
+		scale=1./floor(scale);/*only multiple of dtrat is recorded. */
+		dmat *sanea=simu->sanea_sim->p[iwfs];
+		dscale(sanea, scale);
+		dwrite(sanea, "sanea_sim_wfs%d_%d.bin",iwfs,seed);
+		dscale(sanea, 1./scale);
+	    }
 	    if(simu->pistatout && simu->pistatout[iwfs]){
 		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
-		dcell* tmp=NULL;
-		dcelladd(&tmp,0,simu->pistatout[iwfs],1./(double)nstep);
+		scale=1./(double)nstep;
+		dcell *pp=simu->pistatout[iwfs];
+		dcellscale(pp,scale);
 		if(parms->sim.skysim){/*need peak in corner */
-		    for(long ic=0; ic<tmp->nx*tmp->ny; ic++){
-			dfftshift(tmp->p[ic]);
+		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
+			dfftshift(pp->p[ic]);
 		    }
-		    dcellwrite(tmp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
+		    dcellwrite(pp,"%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
 			       dirskysim,simu->seed,
 			       parms->powfs[ipowfs].order,
 			       parms->wfs[iwfs].thetax*206265,
 			       parms->wfs[iwfs].thetay*206265);
+		    for(long ic=0; ic<pp->nx*pp->ny; ic++){
+			dfftshift(pp->p[ic]);
+		    }
 		}else{/*need peak in center */
-		    dcellwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
+		    dcellwrite(pp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 		}
-		dcellfree(tmp);
+		dcellscale(pp,1./scale);
 	    }
 	}
     }

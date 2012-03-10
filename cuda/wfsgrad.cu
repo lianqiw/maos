@@ -582,23 +582,23 @@ void gpu_wfsgrad_save(SIM_T *simu){
 		if(scale>0){
 		    scale=1.f/floor(scale);/*only multiple of dtrat is recorded. */
 		    if(parms->powfs[ipowfs].phytypesim==3){
-			dmat *sanea=NULL;
-			dadd(&sanea, 0, simu->sanea_sim->p[iwfs], scale);
+			dmat *sanea=simu->sanea_sim->p[iwfs];
+			dscale(sanea, scale);
 			dwrite(sanea, "sanea_sim_wfs%d_%d.bin",iwfs,seed);
-			dfree(sanea);
+			dscale(sanea, 1./scale);
 		    }else{
-			curmat *sanea=NULL;
-			curadd(&sanea, 0, cuwfs[iwfs].neareal, scale, stream);
+			curmat *sanea=cuwfs[iwfs].neareal;
+			curscale(sanea, scale, stream);
 			curwrite(sanea,"sanea_sim_wfs%d_%d.bin",iwfs,seed);
-			curfree(sanea);
+			curscale(sanea, 1./scale, stream);
 		    }
 		}
 	    }
 	    if(cuwfs[iwfs].pistatout){
 		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
 		if(nstep>0){
-		    curcell* tmp=NULL;
-		    curcelladd(&tmp, 0, cuwfs[iwfs].pistatout, 1.f/(float)nstep, stream);
+		    curcell* tmp=cuwfs[iwfs].pistatout;
+		    curcellscale(tmp, 1.f/(float)nstep, stream);
 		    if(parms->sim.skysim){
 			curcellwrite(tmp, "%s/pistat/pistat_seed%d_sa%d_x%g_y%g.bin",
 				     dirskysim,simu->seed,
@@ -608,10 +608,9 @@ void gpu_wfsgrad_save(SIM_T *simu){
 		    }else{
 			curcellwrite(tmp,"pistat_seed%d_wfs%d.bin", simu->seed,iwfs);
 		    }
-		    curcellfree(tmp);
+		    curcellscale(tmp, nstep, stream);
 		}
 	    }
-	    CUDA_SYNC_STREAM;
 	}
     }
 }
