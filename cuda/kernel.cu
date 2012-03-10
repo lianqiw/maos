@@ -19,12 +19,19 @@
 /**
    A few kernels.
 */
+/*somehow I must test both CUDA_ARCH existance and version.*/
 
 
 __global__ void set_do(float *a, float alpha, int n){
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	a[i]=alpha;
+    }
+}
+__global__ void scale_do(float *restrict in, int n, float alpha){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	in[i]*=alpha;
     }
 }
 
@@ -55,14 +62,62 @@ __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int
 			+m4*(xy*scale1-scale*ht*(thetay*x+thetax*y)));
     }
 }
+
 /**
-   res+=sum(a.*b) */
-__global__ void inn_do_acc(float *restrict res, const float *a, const float *b, const int n){
+   add a vector to another, scaled by alpha and beta. all in device memory.
+   a=a*alpha+b*beta;
+*/
+__global__ void add_do(float *restrict a, float *alpha1, float alpha2, 
+		       const float *restrict b, float *beta1, float beta2, int n){
+    float alpha=alpha1?*alpha1*alpha2:alpha2;
+    float beta=beta1?*beta1*beta2:beta2;
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	a[i]=a[i]*alpha+b[i]*beta;
+    }
+}
+
+__global__ void add_do(float *restrict a, const float *restrict b, float *beta1, float beta2, int n){
+    float beta=beta1?*beta1*beta2:beta2;
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	a[i]+=b[i]*beta;
+    }
+}
+__global__ void add_do(float *restrict a, float *alpha1, float alpha2, const float *restrict b,  int n){
+    float alpha=alpha1?*alpha1*alpha2:alpha2;
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	a[i]=a[i]*alpha+b[i];
+    }
+}
+
+/**
+   add a beta to a vector. 
+*/
+__global__ void add_do(float *vec, float beta, int n){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	vec[i]+=beta;
+    }
+}
+
+__global__ void addcabs2_do(float *restrict a, float alpha, 
+			    const fcomplex *restrict b, float beta, int n){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	a[i]=a[i]*alpha+CABS2(b[i])*beta;
+    }
+}
+
+/*reduction routines*/
+
+__global__ void sum_do(float *restrict res, const float *a, const int n){
     extern __shared__ float sb[];
     sb[threadIdx.x]=0;
     int step=blockDim.x * gridDim.x ;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	sb[threadIdx.x]+=a[i]*b[i];
+	sb[threadIdx.x]+=a[i];
     }
     for(step=(blockDim.x>>1);step>0;step>>=1){
 	__syncthreads();
@@ -74,10 +129,28 @@ __global__ void inn_do_acc(float *restrict res, const float *a, const float *b, 
 	atomicAdd(res, sb[0]);
     }
 }
+__global__ void max_do(float *restrict res, const float *a, const int n){
+    extern __shared__ float sb[];
+    sb[threadIdx.x]=0;
+    int step=blockDim.x * gridDim.x ;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	if(sb[threadIdx.x]<a[i]) sb[threadIdx.x]=a[i];
+    }
+    for(step=(blockDim.x>>1);step>0;step>>=1){
+	__syncthreads();
+	if(threadIdx.x<step){
+	    if(sb[threadIdx.x]<sb[threadIdx.x+step]){
+		sb[threadIdx.x]=sb[threadIdx.x+step];
+	    }
+	}
+    }
+    if(threadIdx.x==0){
+	*res=sb[0];
+    }
+}
 /**
-   res=sum(a.*b)
- */
-__global__ void inn_do(float *restrict res, const float *a, const float *b, const int n){
+   tmp=sum(a.*b) res_rep=tmp, res_add+=tmp*/
+__global__ void inn_do(float *res_rep, float *res_add, const float *a, const float *b, const int n){
     extern __shared__ float sb[];
     sb[threadIdx.x]=0;
     int step=blockDim.x * gridDim.x ;
@@ -91,6 +164,7 @@ __global__ void inn_do(float *restrict res, const float *a, const float *b, cons
 	}
     }
     if(threadIdx.x==0){
-	*res=sb[0];
+	if(res_rep) *res_rep=sb[0];
+	if(res_add) atomicAdd(res_add, sb[0]);
     }
 }

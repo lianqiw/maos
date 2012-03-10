@@ -23,6 +23,7 @@
 #define AOS_CELL_DEF(X,Y,T)\
 X(cell) *X(cellnew)(long nx, long ny);\
 X(cell) *X(cellnew2)(const X(cell) *A);\
+void X(cellinit)(X(cell) **A, long nx, long ny);\
 void X(cellzero)(X(cell) *dc);\
 void X(cellset)(X(cell)*dc, T alpha);\
 void X(cellfree_do)(X(cell) *dc);\

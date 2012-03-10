@@ -162,8 +162,8 @@ void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
     }
 
 #define DO_W								\
-    gpu_inn(&pis[ifit], opdfit->p[ifit]->p, curecon->W01->W1->p, np, curecon->fitstream[ifit]); \
-    add2_do<<<DIM(np, 256), 0, curecon->fitstream[ifit]>>>		\
+    inn_wrap(&pis[ifit], NULL, opdfit->p[ifit]->p, curecon->W01->W1->p, np, curecon->fitstream[ifit]); \
+    add_do<<<DIM(np, 256), 0, curecon->fitstream[ifit]>>>		\
 	(opdfit2->p[ifit]->p, curecon->W01->W1->p, &pis[ifit], -recon->fitwt->p[ifit], np); \
     cuspmul(opdfit2->p[ifit]->p, curecon->W01->W0p, opdfit->p[ifit]->p,	\
 	    recon->fitwt->p[ifit], curecon->fitsphandle[ifit]);		\

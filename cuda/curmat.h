@@ -46,19 +46,17 @@ void curmv(float *c, float alpha, const curmat *A, const float *b, char trans, f
 void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans[2], float beta, cublasHandle_t handle);
 
 void curcelladd(curcell **A, float beta, const curcell *B, float alpha, cudaStream_t stream);
-__global__ void adds_do(float *vec, float *palpha, float beta, int n);
-__global__ void add2_do(float *restrict a, const float * b, const float *restrict b_sc1, float b_sc2, int n);
-void curadd2(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStream_t stream);
-void curadd3(curmat **out, float *beta, const curmat *in, cudaStream_t stream);
-void curcelladd2(curcell **A, const curcell *B, float* alpha, float alpha2, cudaStream_t stream);
-void curcelladd3(curcell **A, float* beta, const curcell *B, cudaStream_t stream);
-void curadds(curmat *A, float beta, cudaStream_t stream);
+__global__ void add_do(float *vec, float *palpha, float beta, int n);
+__global__ void add_do(float *restrict a, const float * b, const float *restrict b_sc1, float b_sc2, int n);
+void curadd(curmat **out, const curmat *in, float *alpha, float alpha2, cudaStream_t stream);
+void curadd(curmat **out, float *beta, const curmat *in, cudaStream_t stream);
+void curcelladd(curcell **A, const curcell *B, float* alpha, float alpha2, cudaStream_t stream);
+void curcelladd(curcell **A, float* beta, const curcell *B, cudaStream_t stream);
+void curadd(curmat *A, float beta, cudaStream_t stream);
 
 /**
    Routine that does reduction.
 */
-__global__ void inn_do(float *restrict res, const float *a, const float *b, const int n);
-__global__ void reduce_do(float *res, const float *a, const int n);
 float curinn(const curmat *a, const curmat *b, cudaStream_t stream);
 void cursum2(float *restrict, const curmat *a, cudaStream_t stream);
 void curcellscale(curcell *A, float alpha, cudaStream_t stream);

@@ -22,12 +22,59 @@ extern "C"
 #include <cuda.h>
 #include "gpu.h"
 }
+#include "common.h"
+#include <cuComplex.h>
+#define fcomplex cuFloatComplex
+#define dcomplex cuDoubleComplex
+const int NG1D=64;
+const int NG2D=8;
+const int WRAP_SIZE=32; /*The wrap size is currently always 32 */
+const int DIM_REDUCE=128; /*dimension to use in reduction. */
+
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
+__device__ inline float atomicAdd(float* address, float val)
+{
+    float old = *address;
+    float assumed;
+    do {
+	assumed = old;
+	old = __int_as_float( atomicCAS((unsigned int*)address,
+					__float_as_int(assumed),
+					__float_as_int(val + assumed)));
+    } while (assumed != old);
+    return old;
+}
+#endif
+
+__device__ inline float CABS2(fcomplex r){
+    const float a=cuCrealf(r);
+    const float b=cuCimagf(r);
+    return a*a+b*b;
+}
+
 __global__ void set_do(float *a, float alpha, int n);
+__global__ void scale_do(float *restrict in, int n, float alpha);
 __global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2], int n, float pis, float tx, float ty);
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
 			      float m0, float m1, float m2, float m3, float m4,
 			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha );
-__global__ void inn_do(float *restrict res, const float *a, const float *b, const int n);
-__global__ void inn_do_acc(float *restrict res, const float *a, const float *b, const int n);
 
+__global__ void add_do(float *vec, float beta, int n);
+__global__ void addcabs2_do(float *restrict a, float alpha, const fcomplex *restrict b, float beta, int n);
+__global__ void add_do(float *restrict a, float *alpha1, float alpha2, const float *restrict b,  int n);
+__global__ void add_do(float *restrict a, const float *restrict b, float *beta1, float beta2, int n);
+__global__ void add_do(float *restrict a, float *alpha1, float alpha2, 
+		       const float *restrict b, float *beta1, float beta2, int n);
+
+__global__ void max_do(float *restrict res, const float *a, const int n);
+__global__ void sum_do(float *restrict res, const float *a, const int n);
+__global__ void inn_do(float *res_rep, float *res_add, const float *a, const float *b, const int n);
+
+inline void inn_wrap(float *res_rep, float *res_add,
+		    const float *a, const float *b, const int n, cudaStream_t stream){
+    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res_rep, res_add, a, b, n);
+}
+inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
+    sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+}
 #endif

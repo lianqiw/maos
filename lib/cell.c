@@ -87,7 +87,16 @@ void X(cellfree_do)(X(cell) *dc){
     }
     free(dc);
 }
-
+/**
+   check the size of matrix if exist. Otherwise create it
+*/
+void X(cellinit)(X(cell)**A, long nx, long ny){
+    if(*A){
+	assert((*A)->nx == nx && (*A)->ny==ny);
+    }else{
+	*A=X(cellnew)(nx, ny);
+    }
+}
 /**
    creat a X(cell) reference an existing X(cell) by referencing the
    elements.

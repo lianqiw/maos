@@ -312,6 +312,7 @@ void perfevl_ievl(thread_t *info){
 	    }
 	    if(parms->evl.opdcov){
 		dmm(&simu->evlopdcov->p[ievl], iopdevl, iopdevl, "nt", 1);
+		dadd(&simu->evlopdmean->p[ievl], 1, iopdevl, 1);
 	    }/*opdcov */
 	    if(parms->evl.psfmean || parms->evl.psfhist){/*Evaluate closed loop PSF.	 */
 		perfevl_psfcl(parms, aper, simu->evlpsfmean, simu->save->evlpsfhist, iopdevl, ievl);
@@ -419,6 +420,7 @@ static void perfevl_mean(SIM_T *simu){
 			}
 			if(parms->evl.opdcov){
 			    dmm(&simu->evlopdcov_ngsr->p[ievl], iopdevl, iopdevl, "nt", 1);
+			    dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
 			}
 			if(do_psf){
 			    perfevl_psfcl(parms, aper, simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
@@ -479,58 +481,74 @@ static void perfevl_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
     if(parms->evl.psfmean && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.psfmean)){
-	info2("Output PSF\n");
-	dcell *psfmean=NULL;
+	info2("Step %d: Output PSF\n", isim);
 	double scale=1./(double)(simu->isim+1-parms->evl.psfisim);
-	dcelladd(&psfmean, 0, simu->evlpsfmean, scale);
-	PDCELL(psfmean, pcl);
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!simu->save->evlpsfmean[ievl]) continue;
-	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
-		cellarr_dmat(simu->save->evlpsfmean[ievl], pcl[ievl][iwvl]);
-		free(pcl[ievl][iwvl]->header);pcl[ievl][iwvl]->header=NULL;
+	{
+	    dcellscale(simu->evlpsfmean, scale);
+	    PDCELL(simu->evlpsfmean, pcl);
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if(!simu->save->evlpsfmean[ievl]) continue;
+		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		    if(!pcl[ievl][iwvl]->header){
+			pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
+		    }
+		    cellarr_dmat(simu->save->evlpsfmean[ievl], pcl[ievl][iwvl]);
+		}
 	    }
+	    dcellscale(simu->evlpsfmean, 1./scale);//scale it back;
 	}
-	dcelladd(&psfmean, 0, simu->evlpsfmean_ngsr, scale);
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!simu->save->evlpsfmean_ngsr[ievl]) continue;
-	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
-		cellarr_dmat(simu->save->evlpsfmean_ngsr[ievl], pcl[ievl][iwvl]);
-		free(pcl[ievl][iwvl]->header);pcl[ievl][iwvl]->header=NULL;
+	{
+	    dcellscale(simu->evlpsfmean_ngsr, scale);
+	    PDCELL(simu->evlpsfmean_ngsr, pcl);
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		if(!simu->save->evlpsfmean_ngsr[ievl]) continue;
+		for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
+		    if(!pcl[ievl][iwvl]->header){
+			pcl[ievl][iwvl]->header=evl_header(simu->parms, simu->aper, ievl, iwvl);
+		    }
+		    cellarr_dmat(simu->save->evlpsfmean_ngsr[ievl], pcl[ievl][iwvl]);
+		}
 	    }
+	    dcellscale(simu->evlpsfmean_ngsr, 1./scale);//scale it back;
 	}
 	if(simu->evlpsfolmean){
-	    dcellfree(psfmean);/*different format. */
 	    scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    if(parms->evl.psfol==2){
 		scale=scale/parms->evl.npsf;
 	    }
-	    dcelladd(&psfmean, 0, simu->evlpsfolmean, scale);
+	    dcellscale(simu->evlpsfolmean, scale);
+	    dmat **pcl=simu->evlpsfolmean->p;
 	    for(int iwvl=0; iwvl<parms->evl.nwvl; iwvl++){
-		psfmean->p[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
-		cellarr_dmat(simu->save->evlpsfolmean, psfmean->p[iwvl]);
-		free(psfmean->p[iwvl]->header); psfmean->p[iwvl]->header=NULL;
+		if(!pcl[iwvl]->header){
+		    pcl[iwvl]->header=evl_header(simu->parms, simu->aper, -1, iwvl);
+		}
+		cellarr_dmat(simu->save->evlpsfolmean, pcl[iwvl]);
 	    }
+	    dcellscale(simu->evlpsfolmean, 1./scale);//scale it back;
 	}
-	dcellfree(psfmean);
     }
     if(parms->evl.opdcov && CHECK_SAVE(parms->evl.psfisim, parms->sim.end, isim, parms->evl.opdcov)){
+	info2("Step %d: Output opdcov\n", isim);
 	long nstep=isim+1-parms->evl.psfisim;
 	double scale=1./nstep;
-	dmat *covmean=NULL;
+	dcellscale(simu->evlopdcov, scale);
+	dcellscale(simu->evlopdmean, scale);
+	dcellscale(simu->evlopdcov_ngsr, scale);
+	dcellscale(simu->evlopdmean_ngsr, scale);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov->p[ievl]) continue;
-	    dadd(&covmean, 0, simu->evlopdcov->p[ievl], scale);
-	    cellarr_dmat(simu->save->evlopdcov[ievl], covmean);
+	    cellarr_dmat(simu->save->evlopdcov[ievl], simu->evlopdcov->p[ievl]);
+	    cellarr_dmat(simu->save->evlopdmean[ievl], simu->evlopdmean->p[ievl]);
 	}
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	    if(!simu->evlopdcov_ngsr->p[ievl]) continue;
-	    dadd(&covmean, 0, simu->evlopdcov_ngsr->p[ievl], scale);
-	    cellarr_dmat(simu->save->evlopdcov_ngsr[ievl], covmean);
+	    cellarr_dmat(simu->save->evlopdcov_ngsr[ievl], simu->evlopdcov_ngsr->p[ievl]);
+	    cellarr_dmat(simu->save->evlopdmean_ngsr[ievl], simu->evlopdmean_ngsr->p[ievl]);
 	}
-	dfree(covmean);
+	dcellscale(simu->evlopdcov, 1./scale);//scale it back;
+	dcellscale(simu->evlopdmean, 1./scale);//scale it back;
+	dcellscale(simu->evlopdcov_ngsr, 1./scale);//scale it back;
+	dcellscale(simu->evlopdmean_ngsr, 1./scale);//scale it back;
     }
 }
 /**
@@ -564,7 +582,6 @@ void perfevl(SIM_T *simu){
 	gpu_perfevl_save(simu);
     }else
 #endif
-	
 	perfevl_save(simu);
 
     simu->tk_eval=myclockd()-tk_start;

@@ -60,6 +60,7 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 X(mat) *X(new_ref)(long nx, long ny, T *p) CHECK_UNUSED_RESULT; \
 X(mat) *X(new_data)(long nx, long ny, T *p) CHECK_UNUSED_RESULT; \
 X(mat) *X(new)(long nx, long ny) CHECK_UNUSED_RESULT;\
+void X(init)(X(mat)**A, long nx, long ny) ; \
 void X(free_keepdata)(X(mat) *A);\
 void X(free_do)(X(mat) *A, int keepdata);\
 void X(resize)(X(mat) *A, long nx, long ny);\

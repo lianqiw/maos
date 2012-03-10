@@ -305,7 +305,7 @@ void gpu_atm2gpu(map_t **atm, int nps){
 	gpu_print_mem("atm in");
 	TIC;tic;
 	cudata->nps=nps;
-	gpu_map2dev(&cudata->atm, atm, nps);
+	cp2gpu(&cudata->atm, atm, nps);
 	toc2("atm to gpu");/*0.4 second. */
 	gpu_print_mem("atm out");
     }
@@ -330,7 +330,7 @@ float* gpu_dmcubic_cc(float iac){
    Copy DM commands to GPU.
 */
 static void gpu_dm2gpu(cumap_t ***cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
-    gpu_map2dev(cudm, dmreal, ndm);
+    cp2gpu(cudm, dmreal, ndm);
     if(dmcfg){
 	for(int idm=0; idm<ndm; idm++){
 	    if(dmcfg[idm].cubic && !(*cudm)[idm]->cubic_cc){

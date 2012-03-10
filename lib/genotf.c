@@ -249,10 +249,7 @@ static void *genotf_wrap(GENOTF_T *data){
    2010-11-08: removed amp. It caused wrong otf because it uses the amp of the
    first subaperture to build pval, but this one is not fully illuminated. 
  */
-static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, 
-			 double dtheta, double wvl){
-    double dux=1./(dtheta*notfx);
-    double duy=1./(dtheta*notfy);
+static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double ysep){
     long nloc=loc->nloc;
     double *locx=loc->locx;
     double *locy=loc->locy;
@@ -268,8 +265,6 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
     locmap_t *map=loc->map;
     long notfx2=notfx/2;
     long notfy2=notfy/2;
-    double duxwvl=dux*wvl;
-    double duywvl=duy*wvl;
     double dx1=1./loc->dx;
     long (*mapp)[map->nx]=(long(*)[map->nx])map->p;
     for(long jm=0; jm<notfy; jm++){
@@ -280,8 +275,8 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc,
 	    /*long im2=im<notfx2?im:im-notfx; */
 	    count2=count;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
-		long iy=(long)round((locy[iloc]+jm2*duywvl-map->oy)*dx1);
-		long ix=(int)round((locx[iloc]+im2*duxwvl-map->ox)*dx1);
+		long iy=(long)round((locy[iloc]+jm2*ysep-map->oy)*dx1);
+		long ix=(long)round((locx[iloc]+im2*xsep-map->ox)*dx1);
 		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
 		    long iloc2=mapp[iy][ix];
 		    if(iloc2--){
@@ -323,11 +318,12 @@ static dmat* genotfB(loc_t *loc, double r0, double L0){
     return B0;
 }
 /**
-   Generate OTFs for multiple (sub)apertures. ALl these apertures must share the
-   same geometry, but may come with different amplitude map and OPD biasas. if
-   pttr is 1, the OTF will have tip/tilt removed. make r0 to infinity to build
-   diffraction limited OTF. make r0 to infinity and opdbias to none null to
-   build OTF for a static map.*/
+   Generate OTFs for an aperture or multiple subapertures. ALl these apertures
+   must share the same geometry, but may come with different amplitude map and/or
+   OPD biasas. if pttr is 1, the OTF will have tip/tilt removed. make r0 to
+   infinity to build diffraction limited OTF. make r0 to infinity and opdbias to
+   none null to build OTF for a static map.*/
+
 void genotf(cmat **otf,    /**<The otf array for output*/
 	    loc_t *loc,    /**<the aperture grid (same for all apertures)*/
 	    const double *amp,    /**<The amplitude map of all the (sub)apertures*/
@@ -345,7 +341,9 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	    long pttr      /**<Remove piston/tip/tilt*/
 	     ){
     /*creating pairs of points that both exist with given separation*/
-    T_VALID *pval=gen_pval(ncompx, ncompy, loc, dtheta, wvl);/*returns T_VALID array. */
+    double duxwvl=wvl/(dtheta*ncompx);
+    double duywvl=wvl/(dtheta*ncompy);
+    T_VALID *pval=gen_pval(ncompx, ncompy, loc, duxwvl, duywvl);/*returns T_VALID array. */
     /* Generate the B matrix. */
     dmat *B=cov?(dmat*)cov:genotfB(loc, r0, l0);
     cmat *otffull=NULL;
@@ -389,4 +387,64 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     if(!cov) dfree(B);
     free(pval[0].loc);
     free(pval);
+}
+
+/**
+   Average spatially the 4-d covariance function to create a 2-d covariance
+   function. For OPD f defined on points x (2-d coordinate), the 4-d covariance
+   is simply <f'f> where f is vector form of the OPD and the average of over
+   time. The 2-d covariance is additionally averaged over all the points so that
+   B(r)=<f(x)'f(x+r)>_x,t To compute B, we first figure out the number of
+   overlapping pairs of points for each r and then compute the averaging. When
+   the amplitude is less than the threshold, the point does not count.*/
+
+void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const dmat *cov){
+    if(loc->nloc!=cov->nx || loc->nloc!=cov->ny){
+	error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, cov->nx, cov->ny);
+    }
+    double xmin,xmax,ymin,ymax;
+    long nloc=loc->nloc;
+    double *locx=loc->locx;
+    double *locy=loc->locy;
+    maxmindbl(locx, nloc, &xmax, &xmin);
+    maxmindbl(locy, nloc, &ymax, &ymin);  
+    double dx1=1./loc->dx;
+    long ncovx=(long) round((xmax-xmin)*dx1/2)*2;
+    long ncovy=(long) round((ymax-ymin)*dx1/2)*2;
+    dinit(cov2d, ncovx, ncovy);
+    PDMAT(*cov2d, pcov2d);
+    PDMAT(cov, pcov);
+    /*the following is adapted from gen_pval*/
+    loc_create_map(loc);
+    locmap_t *map=loc->map;
+    long ncovx2=ncovx/2;
+    long ncovy2=ncovy/2;
+    long (*mapp)[map->nx]=(long(*)[map->nx])map->p;
+    for(long jm=0; jm<ncovy; jm++){
+	long jm2=(jm-ncovy2);//peak in the center 
+	/*long jm2=jm<ncovy2?jm:jm-ncovy;//peak in the corner */
+	for(long im=0; im<ncovx; im++){
+	    long im2=(im-ncovx2);//peak in the center 
+	    /*long im2=im<ncovx2?im:im-ncovx; //peak in the corner */
+	    long count=0;
+	    double acc=0;
+	    for(long iloc=0; iloc<loc->nloc; iloc++){
+		if(amp && amp[iloc]<ampthres) continue;
+		long iy=(long)round((locy[iloc]-map->oy)*dx1+jm2);
+		long ix=(long)round((locx[iloc]-map->ox)*dx1+im2);
+		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
+		    long iloc2=mapp[iy][ix];
+		    if(iloc2--){
+			if(!amp || amp[iloc2]>=ampthres){
+			    acc+=pcov[iloc][iloc2];
+			    count++;
+			}
+		    }
+		}
+	    }
+	    if(count>0){
+		pcov2d[jm][im]=acc/count;
+	    }
+	}
+    }
 }
