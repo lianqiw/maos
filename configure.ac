@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 1.0.2, lianqiw@gmail.com)
+AC_INIT(maos, 1.1.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 #silent building #disable this if automake is too old.
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 

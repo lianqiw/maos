@@ -46,7 +46,7 @@ void proj_rect_grid(rectmap_t *mapin, double thetax, double thetay,
 		    double betax, double betay){
     /*
       input parameters:
-      mapin: M3 surface map. 
+      mapin: M3 surface map, NOT OPD. 
       thetax, thetay: tilt of surface map along x or y. one has to be pi/2
       locout: Pupil plan opd grid.
       ratio: scaling of pupil plan to exit pupil plane.
