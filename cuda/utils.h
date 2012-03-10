@@ -27,8 +27,6 @@
 extern int gpu_recon;
 extern int NGPU;
 extern int *GPUS;
-extern int NG1D;
-extern int NG2D;
 typedef struct{ 
     /**<for accphi */
     cumap_t **atm;   /**<atmosphere: array of cumap_t */
@@ -92,40 +90,28 @@ inline int gpu_next(){
 }
 /*void gpu_set(int igpu);
   int  gpu_next(void);*/
-void gpu_map2dev(cumap_t ***dest, map_t **source, int nps);
-void gpu_sp2dev(cusp **dest, dsp *src);
-void gpu_spcell2dev(cuspcell **dest, spcell *src);
-void gpu_calc_ptt(double *rmsout, double *coeffout, 
-		  const double ipcc, const dmat *imcc,
-		  const float (*restrict loc)[2], 
-		  const int nloc,
-		  const float *restrict phi,
-		  const float *restrict amp,
-		  cudaStream_t stream
-		  );
-void gpu_calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
-		     double *ngsmod_out, int nmod,
-		     double MCC_fcp, double ht, double scale,
-		     double thetax, double thetay,
-		     const double ipcc, const dmat *imcc,
-		     const float (*restrict loc)[2], 
-		     const int nloc,
-		     const float *restrict phi,
-		     const float *restrict amp,
-		     cudaStream_t stream);
-void gpu_loc2dev(float (* restrict *dest)[2], loc_t *src);
-void gpu_dbl2dev(float * restrict *dest, double *src, int n);
-void gpu_cmp2dev(fcomplex * restrict *dest, dcomplex *src, int n);
-void gpu_dmat2dev(float * restrict *dest, dmat *src);
-void gpu_dmat2cu(curmat *restrict *dest, dmat *src);
-void gpu_dcell2cu(curcell *restrict *dest, dcell *src);
-void gpu_cmat2dev(fcomplex * restrict *dest, cmat *src);
-void gpu_dbl2flt(float * restrict *dest, double *src, int n);
-void gpu_long2dev(int * restrict *dest, long *src, int n);
-void gpu_spint2dev(int * restrict *dest, spint *src, int n);
-void gpu_int2dev(int * restrict *dest, int *src, int n);
-void gpu_spint2int(int * restrict *dest, spint *src, int n);
-void gpu_dev2dbl(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream);
+void dbl2flt(float * restrict *dest, double *src, int n);
+void spint2int(int * restrict *dest, spint *src, int n);
+
+void cp2gpu(cumap_t ***dest, map_t **source, int nps);
+void cp2gpu(cusp **dest, dsp *src);
+void cp2gpu(cuspcell **dest, spcell *src);
+void cp2gpu(float (* restrict *dest)[2], loc_t *src);
+void cp2gpu(float * restrict *dest, double *src, int n);
+void cp2gpu(float * restrict *dest, dmat *src);
+void cp2gpu(fcomplex * restrict *dest, dcomplex *src, int n);
+void cp2gpu(fcomplex * restrict *dest, cmat *src);
+
+void cp2gpu(curmat *restrict *dest, dmat *src);
+void cp2gpu(curcell *restrict *dest, dcell *src);
+void cp2gpu(cucmat *restrict *dest, cmat *src);
+
+void cp2gpu(int * restrict *dest, long *src, int n);
+void cp2gpu(int * restrict *dest, spint *src, int n);
+void cp2gpu(int * restrict *dest, int *src, int n);
+void cp2gpu(cumuv_t *out, MUV_T *in);
+
+
 #if MYSPARSE
 void cuspmul (float *y, cusp *A, float *x, float alpha, cudaStream_t stream);
 void cusptmul(float *y, cusp *A, float *x, float alpha, cudaStream_t stream);
@@ -133,46 +119,20 @@ void cusptmul(float *y, cusp *A, float *x, float alpha, cudaStream_t stream);
 void cuspmul (float *y, cusp *A, float *x, float alpha, cusparseHandle_t handle);
 void cusptmul(float *y, cusp *A, float *x, float alpha, cusparseHandle_t handle);
 #endif
-__global__ void fscale_do(float *v, int n, float alpha);
-void gpu_writeflt(float *p, int nx, int ny, const char *format, ...);
-void gpu_writefcmp(fcomplex *p, int nx, int ny, const char *format, ...);
-void gpu_writeint(int *p, int nx, int ny, const char *format, ...);
-void gpu_muv2dev(cumuv_t *out, MUV_T *in);
-void gpu_cur2d(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream);
-void gpu_cur2s(smat **out, const curmat *in, cudaStream_t stream);
-void gpu_cuc2z(zmat **out, const cucmat *in, cudaStream_t stream);
-void gpu_curcell2d(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream);
-void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream);
-void gpu_cuccell2z(zcell **out, const cuccell *in, cudaStream_t stream);
+void gpu_write(float *p, int nx, int ny, const char *format, ...);
+void gpu_write(fcomplex *p, int nx, int ny, const char *format, ...);
+void gpu_write(int *p, int nx, int ny, const char *format, ...);
+
+void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream);
+void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream);
+void cp2cpu(smat **out, const curmat *in, cudaStream_t stream);
+void cp2cpu(zmat **out, const cucmat *in, cudaStream_t stream);
+void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream);
+void cp2cpu(scell **out, const curcell *in, cudaStream_t stream);
+void cp2cpu(zcell **out, const cuccell *in, cudaStream_t stream);
+
 void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream);
 void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream);
 void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream);
 void cellarr_cuccell(struct cellarr *ca, const cuccell *A, cudaStream_t stream);
-
-__device__ inline float CABS2(fcomplex r){
-    const float a=cuCrealf(r);
-    const float b=cuCimagf(r);
-    return a*a+b*b;
-}
-inline void gpu_inn_acc(float *restrict res, const float *a, const float *b, const int n, cudaStream_t stream){
-    inn_do_acc<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res, a, b, n);
-}
-inline void gpu_inn(float *restrict res, const float *a, const float *b, const int n, cudaStream_t stream){
-    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res, a, b, n);
-}
-/*somehow I must test both CUDA_ARCH existance and version.*/
-#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
-static __inline__ __device__ float atomicAdd(float* address, float val)
-{
-    float old = *address;
-    float assumed;
-    do {
-	assumed = old;
-	old = __int_as_float( atomicCAS((unsigned int*)address,
-					__float_as_int(assumed),
-					__float_as_int(val + assumed)));
-    } while (assumed != old);
-    return old;
-}
-#endif
 #endif

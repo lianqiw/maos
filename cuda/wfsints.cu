@@ -507,7 +507,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		cpcorner_do<<<ksa, dim3(16,16),0,stream>>>
 		    (psf, notf, notf, wvf, nwvf, nwvf);
 	    }
-	    //gpu_writefcmp(psf, notf, notf*ksa, "psf_out_1");
+	    //gpu_write(psf, notf, notf*ksa, "psf_out_1");
 	    ctoc("psf");
 	    if(wvfout){
 		cudaMemsetAsync(psfout, 0, sizeof(fcomplex)*ksa*notf*notf, stream);
@@ -519,7 +519,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    /* abs2 part to real, peak in corner */
 	    abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, 1);
 	    ctoc("abs2real");
-	    //gpu_writefcmp(psf, notf, notf*ksa, "psf_out_2");
+	    //gpu_write(psf, notf, notf*ksa, "psf_out_2");
 	    if(isotf){
 		/* turn to otf. peak in corner */
 		CUFFT(cuwfs[iwfs].plan2, psf, CUFFT_FORWARD);
@@ -544,7 +544,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		}
 		/* is OTF now. */
 	    }
-	    //gpu_writefcmp(psf, notf, notf*ksa, "psf_out_3");
+	    //gpu_write(psf, notf, notf*ksa, "psf_out_3");
 	    ctoc("before ints");
 	    if(ints){
 		if(!isotf || otf!=psf){/*rotate PSF, or turn to OTF first time. */
@@ -571,7 +571,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		    CUFFT(cuwfs[iwfs].plan3, otf,CUFFT_FORWARD);
 		    ctoc("fft to otf");
 		}
-		//gpu_writefcmp(otf, ncompx, ncompy*ksa, "otf_out_1");CUDA_SYNC_DEVICE;_exit(1);
+		//gpu_write(otf, ncompx, ncompy*ksa, "otf_out_1");CUDA_SYNC_DEVICE;_exit(1);
 		/*now we have otf. multiple with etf, dtf. */
 		if(cuwfs[iwfs].dtf[iwvl].etf){
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){

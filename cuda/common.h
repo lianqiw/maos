@@ -95,8 +95,6 @@ extern int nstream;
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #define MYSPARSE 0
 
-#define WRAP_SIZE 32 /*The wrap size is currently always 32 */
-#define DIM_REDUCE 128 /*dimension to use in reduction. */
 #define DIM(nsa,nb) MIN((nsa+nb-1)/nb,NG1D),MIN((nsa),nb)
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
 #define NTH2 16

@@ -17,6 +17,7 @@
 */
 #include "utils.h"
 #include "curmat.h"
+#include "cucmat.h"
 #include <pthread.h>
 const char *cufft_str[]={
     "success", 
@@ -37,8 +38,6 @@ int gpu_recon;/**<GPU for reconstruction*/
 int NGPU=0;
 int* GPUS=NULL;
 int nstream=0;
-int NG1D=64; /**<Optimum number of blocks. Twice of multi processors.*/
-int NG2D=8; /**<Optimum number of blocks. Twice of multi processors.*/
 cudata_t **cudata_all=NULL;/*for all GPU. */
 static cusparseMatDescr_t spdesc=NULL;
 #ifdef __APPLE__
@@ -128,54 +127,7 @@ int gpu_init(int *gpus, int ngpu){
 	free(gpus); 
 	gpus=NULL;
     }
-    /* testing GPUs.*/
-    if(NGPU>0 && 0){
-	int ic=0;
-	for(int im=0; im<NGPU; im++){
-	    int igpu=GPUS[im];
-	    if(ic!=im){
-		GPUS[ic]=GPUS[im];/*delete invalid devices. */
-	    }
-	    int ans=cudaSetDevice(igpu);
-	    switch(ans){
-	    case cudaSuccess:{
-		ic++;
-		info2("Will use GPU %d for CUDA.\n", igpu);
-		cudaDeviceProp prop;
-		cudaGetDeviceProperties(&prop, igpu);
-		NG1D=prop.multiProcessorCount*2;
-		NG2D=(int)round(sqrt((double)NG1D));
-		if(0){
-		    int nn=16777216;
-		    /*int nn=1024; */
-		    curmat *temp=curnew(nn,1);
-		    curset(temp,1,0);
-		    curmat *res=curnew(1,1);
-		    TIC;tic;
-		    cursum2(res->p, temp, 0);
-		    cudaStreamSynchronize(0);
-		    toc("inn %d", nn);
-		    curshow(res, 0);
-		    CUDA_SYNC_DEVICE;
-		    cudaStreamSynchronize(0);
-		    exit(0);
-		}
-	    }
-		break;
-	    case cudaErrorInvalidDevice:
-		warning2("Invalid GPU device %d\n", igpu);
-		break;
-	    case cudaErrorSetOnActiveProcess:
-		warning2("Error set on active process\n");
-		info("DISPLAY=%s\n",getenv("DISPLAY"));
-		break;
-	    default:
-		warning2("Unknown error\n");
-	    }
-	}
-	NGPU=ic;
-    }
-    if(NGPU) {
+     if(NGPU) {
 	cudata_all=(cudata_t**)calloc(NGPU, sizeof(cudata_t*));
 	for(int im=0; im<NGPU; im++){
 	    cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
@@ -200,9 +152,44 @@ void gpu_cleanup(void){
     }
 }
 /**
+   Convert double array to device memory (float)
+*/
+
+void cp2gpu(float * restrict *dest, double *src, int n){
+    if(!src) return;
+    float *tmp=(float*)malloc(n*sizeof(float));
+    for(int i=0; i<n; i++){
+	tmp[i]=(float)src[i];
+    }
+    if(!*dest){
+	DO(cudaMalloc((float**)dest, n*sizeof(float)));
+    }
+    DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyHostToDevice));
+    cudaDeviceSynchronize();
+    free(tmp);
+    }
+/**
+   Convert double array to device memory (float)
+*/
+
+void cp2gpu(fcomplex * restrict *dest, dcomplex *restrict src, int n){
+    if(!src) return;
+    fcomplex *tmp=(fcomplex*)malloc(n*sizeof(fcomplex));
+    for(int i=0; i<n; i++){
+	tmp[i]=(make_cuFloatComplex)(cuCreal(src[i]), cuCimag(src[i]));
+    }
+    if(!*dest){
+	DO(cudaMalloc((fcomplex**)dest, n*sizeof(fcomplex)));
+    }
+    DO(cudaMemcpy(*dest, tmp, n*sizeof(fcomplex),cudaMemcpyHostToDevice));
+    cudaDeviceSynchronize();
+    free(tmp);
+}
+
+/**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
 array. Allow multiple calling to override the data.  */
-void gpu_map2dev(cumap_t ***dest0, map_t **source, int nps){
+void cp2gpu(cumap_t ***dest0, map_t **source, int nps){
     if(nps==0) return;
     if(!*dest0){
 	*dest0=new cumap_t*[nps];
@@ -220,7 +207,7 @@ void gpu_map2dev(cumap_t ***dest0, map_t **source, int nps){
 	dest[ips]->dx=source[ips]->dx;
 	int nx=source[ips]->nx;
 	int ny=source[ips]->ny;
-	gpu_dbl2dev(&dest[ips]->p, source[ips]->p, nx*ny);
+	cp2gpu(&dest[ips]->p, source[ips]->p, nx*ny);
     }
     CUDA_SYNC_DEVICE;
 }
@@ -228,30 +215,24 @@ void gpu_map2dev(cumap_t ***dest0, map_t **source, int nps){
 /*
   Convert a host dsp array to GPU sprase array. Both are in CSC format. 
 */
-void gpu_sp2dev(cusp **dest0, dsp *src){
+void cp2gpu(cusp **dest0, dsp *src){
     if(!*dest0) *dest0=(cusp*)calloc(1, sizeof(cusp));
     cusp *dest=*dest0;
     dest->nx=src->m;
     dest->ny=src->n;
     dest->nzmax=src->nzmax;
     dest->p=NULL; dest->i=NULL; dest->x=NULL;
-#if MYSPARSE == 1
-    gpu_spint2int(&dest->p, src->p, src->n+1);
-    gpu_spint2dev(&dest->i, src->i, src->nzmax);
-    gpu_dbl2dev(&dest->x, src->x, src->nzmax);
-#else
-    gpu_spint2dev(&dest->p, src->p, src->n+1);
-    gpu_spint2dev(&dest->i, src->i, src->nzmax);
-    gpu_dbl2dev(&dest->x, src->x, src->nzmax);
-#endif
+    cp2gpu(&dest->p, src->p, src->n+1);
+    cp2gpu(&dest->i, src->i, src->nzmax);
+    cp2gpu(&dest->x, src->x, src->nzmax);
 }
-void gpu_spcell2dev(cuspcell **dest0, spcell *src){
+void cp2gpu(cuspcell **dest0, spcell *src){
     if(!src) return;
     if(!*dest0){
 	*dest0=cuspcellnew(src->nx, src->ny);
     }
     for(int i=0; i<src->nx*src->ny; i++){
-	gpu_sp2dev(&(*dest0)->p[i], src->p[i]);
+	cp2gpu(&(*dest0)->p[i], src->p[i]);
     }
 }
 __global__ void cuspmul_do(float *y, cusp *A, float *x, float alpha){
@@ -319,170 +300,11 @@ void cusptmul(float *y, cusp *A, float *x, float alpha,
     }
 #endif
 }
-__global__ static void calc_ptt_do( float *cc,
-				    const float (*restrict loc)[2], 
-				    const int nloc,
-				    const float *restrict phi,
-				    const float *restrict amp){
-    __shared__ float ccb[4];/*for each block. */
-    if(threadIdx.x<4){
-	ccb[threadIdx.x]=0.f;
-    }
-    __syncthreads();
-    float cci[4]={0.f,0.f,0.f,0.f};/*for each thread */
-    int step=blockDim.x * gridDim.x; 
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float tmp=phi[i]*amp[i];
-	cci[0]+=tmp;
-	cci[1]+=tmp*loc[i][0];
-	cci[2]+=tmp*loc[i][1];
-	cci[3]+=tmp*phi[i];
-    }
-    /*Add results to shared value in each block. */
-    atomicAdd(&ccb[0], cci[0]);
-    atomicAdd(&ccb[1], cci[1]);
-    atomicAdd(&ccb[2], cci[2]);
-    atomicAdd(&ccb[3], cci[3]);
-    __syncthreads();/*Wait until all threads in this block is done. */
-    if(threadIdx.x<4){/*This is the first thread of a block. add block result to global. */
-	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x]);
-    }
-}
-__global__ static void calc_ngsmod_do( float *cc,
-				       const float (*restrict loc)[2], 
-				       const int nloc,
-				       const float *restrict phi,
-				       const float *restrict amp){
-    int step=blockDim.x * gridDim.x; 
-    float cci[7]={0,0,0,0,0,0,0};/*for each thread */
-    __shared__ float ccb[7];/*for each block. */
-    if(threadIdx.x<7){
-	ccb[threadIdx.x]=0.f;
-    }
-    __syncthreads();
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float tmp=phi[i]*amp[i];
-	cci[0]+=tmp;
-	cci[1]+=tmp*loc[i][0];
-	cci[2]+=tmp*loc[i][1];
-	cci[3]+=tmp*loc[i][0]*loc[i][0];
-	cci[4]+=tmp*loc[i][1]*loc[i][1];
-	cci[5]+=tmp*loc[i][0]*loc[i][1];
-	cci[6]+=tmp*phi[i];
-    }
-    /*Add results to shared value in each block. */
-    atomicAdd(&ccb[0], cci[0]);
-    atomicAdd(&ccb[1], cci[1]);
-    atomicAdd(&ccb[2], cci[2]);
-    atomicAdd(&ccb[3], cci[3]);
-    atomicAdd(&ccb[4], cci[4]);
-    atomicAdd(&ccb[5], cci[5]);
-    atomicAdd(&ccb[6], cci[6]);
-    __syncthreads();/*Wait until all threads in this block is done. */
-    if(threadIdx.x<7){/*This is the first thread of a block. add block result to global. */
-	atomicAdd(&cc[threadIdx.x], ccb[threadIdx.x]);
-    }
-}
-/*
-  Let M be the modal matrix of pistion/tip/tilt. Calculate M'*diag(amp)*phi
-  where amp is the amptliude weighting.  */
-void gpu_calc_ptt(double *rmsout, double *coeffout, 
-		  const double ipcc, const dmat *imcc,
-		  const float (*restrict loc)[2], 
-		  const int nloc,
-		  const float *restrict phi,
-		  const float *restrict amp,
-		  cudaStream_t stream
-		  ){
-        /*sum with 16 blocks, each with 256 threads. */
-    float *cc;
-#if CUDAVER >=20
-    float ccb[4];
-#else
-    float *ccb;
-    cudaMallocHost(&ccb, 4*sizeof(float));
-#endif
-    cudaCalloc(cc, 4*sizeof(float), stream);
-    calc_ptt_do<<<DIM(nloc, 256), 0, stream>>>(cc, loc, nloc, phi, amp);
-    cudaMemcpyAsync(ccb, cc, 4*sizeof(float), cudaMemcpyDeviceToHost, stream);
-    CUDA_SYNC_STREAM;
-    cudaFree(cc); cc=NULL;
-    double coeff[3], tot;
-    coeff[0]=ccb[0]; coeff[1]=ccb[1]; coeff[2]=ccb[2]; tot=ccb[3];
-    if(coeffout){
-	dmulvec3(coeffout, imcc, coeff);
-    }
-    if(rmsout){
-	double pis=ipcc*coeff[0]*coeff[0];/*piston mode variance */
-	double ptt=dwdot3(coeff, imcc, coeff);/*p/t/t mode variance. */
-	rmsout[0]=tot-pis;/*PR */
-	rmsout[1]=ptt-pis;/*TT */
-	rmsout[2]=tot-ptt;/*PTTR	 */
-    }
-#if CUDAVER <20
-    cudaFreeHost(ccb);
-#endif
-}
-void gpu_calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
-		     double *ngsmod_out, int nmod,
-		     double MCC_fcp, double ht, double scale,
-		     double thetax, double thetay,
-		     const double ipcc, const dmat *imcc,
-		     const float (*restrict loc)[2], 
-		     const int nloc,
-		     const float *restrict phi,
-		     const float *restrict amp,
-		     cudaStream_t stream){
-    float *cc;
-    double tot=0;
-    cudaCalloc(cc, 7*sizeof(float), stream);
-    if(nmod==2){/*single DM. */
-	calc_ptt_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
-    }else if(nmod==5){/*AHST mode */
-	calc_ngsmod_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
-    }else{
-	TO_IMPLEMENT;
-    }
-    CUDA_SYNC_STREAM;
-    float ccb[7];
-    cudaMemcpy(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(cc); 
-    tot=ccb[nmod==2?3:6];
-    
-    double coeff[6];
-    coeff[0]=ccb[0]; coeff[1]=ccb[1]; 
-    coeff[2]=ccb[2]; coeff[3]=ccb[3];
-    coeff[4]=ccb[4]; coeff[5]=ccb[5];
-    
-    if(pttrcoeff_out){
-	memset(pttrcoeff_out, 0, sizeof(double)*3);
-	dmulvec(pttrcoeff_out, imcc, coeff, 1);
-    }
-    if(pttr_out){
-	/*compute TT removed wavefront variance as a side product */
-	double pis=ipcc*coeff[0]*coeff[0];
-	double ptt=dwdot3(coeff, imcc, coeff);
-	pttr_out[0]=tot-pis;/*PR */
-	pttr_out[1]=ptt-pis;/*TT */
-	pttr_out[2]=tot-ptt;/*PTTR */
-    }
-    /*don't use +=. need locking */
-    ngsmod_out[0]=coeff[1];
-    ngsmod_out[1]=coeff[2];
-    const double scale1=1.-scale;
-    if(nmod==5){
-	ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
-		       -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
-	ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
-		       -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
-	ngsmod_out[4]=(scale1*(coeff[5])
-		       -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
-    }
-}
+
 /**
    Convert a source loc_t to device memory.
 */
-void gpu_loc2dev(float (* restrict *dest)[2], loc_t *src){
+void cp2gpu(float (* restrict *dest)[2], loc_t *src){
     float (*tmp)[2]=(float(*)[2])malloc(src->nloc*2*sizeof(float));
     for(int iloc=0; iloc<src->nloc; iloc++){
 	tmp[iloc][0]=(float)src->locx[iloc];
@@ -495,49 +317,18 @@ void gpu_loc2dev(float (* restrict *dest)[2], loc_t *src){
     cudaDeviceSynchronize();
     free(tmp);
 }
-/**
-   Convert double array to device memory (float)
-*/
-void gpu_dbl2dev(float * restrict *dest, double *src, int n){
-    if(!src) return;
-    float *tmp=(float*)malloc(n*sizeof(float));
-    for(int i=0; i<n; i++){
-	tmp[i]=(float)src[i];
-    }
-    if(!*dest){
-	DO(cudaMalloc((float**)dest, n*sizeof(float)));
-    }
-    DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
-    free(tmp);
-}
-/**
-   Convert double array to device memory (float)
-*/
-void gpu_cmp2dev(fcomplex * restrict *dest, dcomplex *src, int n){
-    if(!src) return;
-    fcomplex *tmp=(fcomplex*)malloc(n*sizeof(fcomplex));
-    for(int i=0; i<n; i++){
-	tmp[i]=(make_cuFloatComplex)(cuCreal(src[i]), cuCimag(src[i]));
-    }
-    if(!*dest){
-	DO(cudaMalloc((fcomplex**)dest, n*sizeof(fcomplex)));
-    }
-    DO(cudaMemcpy(*dest, tmp, n*sizeof(fcomplex),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
-    free(tmp);
-}
+
 /**
    Convert dmat array to device memory.
 */
-void gpu_dmat2dev(float * restrict *dest, dmat *src){
+void cp2gpu(float * restrict *dest, dmat *src){
     if(!src) return;
-    gpu_dbl2dev(dest, src->p, src->nx*src->ny);
+    cp2gpu(dest, src->p, src->nx*src->ny);
 }
 /**
    Convert dmat array to curmat
 */
-void gpu_dmat2cu(curmat *restrict *dest, dmat *src){
+void cp2gpu(curmat *restrict *dest, dmat *src){
     if(!src){
 	dzero(*dest);
 	return;
@@ -547,12 +338,27 @@ void gpu_dmat2cu(curmat *restrict *dest, dmat *src){
     }else{
 	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
     }
-    gpu_dbl2dev(&(*dest)->p, src->p, src->nx*src->ny);
+    cp2gpu(&(*dest)->p, src->p, src->nx*src->ny);
+}
+/*
+  convert cmat to cucmat
+*/
+void cp2gpu(cucmat *restrict *dest, cmat *src){
+    if(!src){
+	czero(*dest);
+	return;
+    }
+    if(!*dest){
+	*dest=cucnew(src->nx, src->ny);
+    }else{
+	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
+    }
+    cp2gpu(&(*dest)->p, (dcomplex*)src->p, (int)(src->nx*src->ny));
 }
 /**
    Convert dcell to curcell
 */
-void gpu_dcell2cu(curcell *restrict *dest, dcell *src){
+void cp2gpu(curcell *restrict *dest, dcell *src){
     if(!src) {
 	dzero(*dest);
 	return;
@@ -564,21 +370,21 @@ void gpu_dcell2cu(curcell *restrict *dest, dcell *src){
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
     }
     for(int i=0; i<src->nx*src->ny; i++){
-	gpu_dmat2cu(&(*dest)->p[i], src->p[i]);
+	cp2gpu(&(*dest)->p[i], src->p[i]);
     }
 }
 /**
    Convert dmat array to device memory.
 */
-void gpu_cmat2dev(fcomplex * restrict *dest, cmat *src){
+void cp2gpu(fcomplex * restrict *dest, cmat *src){
     if(src){
-	gpu_cmp2dev(dest, (dcomplex*)src->p, src->nx*src->ny);
+	cp2gpu(dest, (dcomplex*)src->p, src->nx*src->ny);
     }
 }
 /**
    Convert double array to device memory (float)
 */
-void gpu_dbl2flt(float * restrict *dest, double *src, int n){
+void dbl2flt(float * restrict *dest, double *src, int n){
     if(!src) return;
     if(!*dest){
 	cudaMallocHost((float**)dest, n*sizeof(float));
@@ -590,7 +396,7 @@ void gpu_dbl2flt(float * restrict *dest, double *src, int n){
 /**
    Convert long array to device int
 */
-void gpu_long2dev(int * restrict *dest, long *src, int n){
+void cp2gpu(int * restrict *dest, long *src, int n){
     if(!src) return;
     if(!*dest){
 	DO(cudaMalloc((int**)dest, n*sizeof(int)));
@@ -611,7 +417,7 @@ void gpu_long2dev(int * restrict *dest, long *src, int n){
 	free(tmp);
     }
 }
-void gpu_int2dev(int *restrict *dest, int *src, int n){
+void cp2gpu(int *restrict *dest, int *src, int n){
     if(!*dest){
 	DO(cudaMalloc((int**)dest, n*sizeof(int)));
     }
@@ -620,7 +426,7 @@ void gpu_int2dev(int *restrict *dest, int *src, int n){
 /**
    Convert long array to device int
 */
-void gpu_spint2dev(int * restrict *dest, spint *src, int n){
+void cp2gpu(int * restrict *dest, spint *src, int n){
     if(!*dest){
 	DO(cudaMalloc((int**)dest, n*sizeof(int)));
     }
@@ -641,24 +447,10 @@ void gpu_spint2dev(int * restrict *dest, spint *src, int n){
     }
 }
 /**
-   Convert long array to device int
-*/
-void gpu_spint2int(int * restrict *dest, spint *src, int n){
-    info("sizeof(spint)=%ld\n", sizeof(spint));
-
-    if(!*dest){
-	DO(cudaMallocHost((int**)dest, n*sizeof(int)));
-    }
-
-    for(int i=0; i<n; i++){
-	(*dest)[i]=(int)src[i];
-    }
-}
-/**
    Convert device (float) array and add to host double.
    dest = alpha * dest + beta *src;
 */
-void gpu_dev2dbl(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream){
+void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream){
     float *tmp=(float*)malloc4async(n*sizeof(float));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
     if(!*dest){
@@ -671,20 +463,10 @@ void gpu_dev2dbl(double * restrict *dest, double alpha, float *src, double beta,
     }
     free4async(tmp);
 }
-/**
-   scale vector by alpha.
-*/
-__global__ void fscale_do(float *v, int n, float alpha){
-    int step=blockDim.x * gridDim.x; 
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	v[i]*=alpha;
-    }
-}
-
 /*
   Write float on gpu to file
 */
-void gpu_writeflt(float *p, int nx, int ny, const char *format, ...){
+void gpu_write(float *p, int nx, int ny, const char *format, ...){
     format2fn;
     float *tmp=(float*)malloc(nx*ny*sizeof(float));
     cudaDeviceSynchronize();
@@ -696,7 +478,7 @@ void gpu_writeflt(float *p, int nx, int ny, const char *format, ...){
 /*
   Write float on gpu to file
 */
-void gpu_writefcmp(fcomplex *p, int nx, int ny, const char *format, ...){
+void gpu_write(fcomplex *p, int nx, int ny, const char *format, ...){
     format2fn;
     fcomplex *tmp=(fcomplex*)malloc(nx*ny*sizeof(fcomplex));
     cudaDeviceSynchronize();
@@ -707,7 +489,7 @@ void gpu_writefcmp(fcomplex *p, int nx, int ny, const char *format, ...){
 /*
   Write float on gpu to file
 */
-void gpu_writeint(int *p, int nx, int ny, const char *format, ...){
+void gpu_write(int *p, int nx, int ny, const char *format, ...){
     format2fn;
     int *tmp=(int*)malloc(nx*ny*sizeof(int));
     cudaDeviceSynchronize();
@@ -717,43 +499,15 @@ void gpu_writeint(int *p, int nx, int ny, const char *format, ...){
     free(tmp);
 }
 
-/**
-   Compute the dot product of two vectors
-*/
-/*
-__global__ static void dot_do(float *res, const float *restrict a, const float *restrict b, const int n){
-    float sumt=0;
-    __shared__ float sumb;
-    if(threadIdx.x == 0) sumb=0;
-    const int step=blockDim.x * gridDim.x;
-    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
-	sumt+=a[i]*b[i];
-	}
-    atomicAdd(&sumb, sumt);
-    __syncthreads();
-    if(threadIdx.x==0){
-	atomicAdd(res, sumb);
-    }
-}
-float gpu_dot(const float *restrict a, const float *restrict b, const int n, cudaStream_t stream){
-    float *res=NULL;
-    cudaCallocHost(res, 1*sizeof(float), stream);
-    dot_do<<<MAX(MIN(n/256, 32), 1), MIN(n, 256), 0, stream>>>(res, a, b, n);
-    CUDA_SYNC_STREAM;
-    float result=res[0];
-    DO(cudaFreeHost(res));
-    return result;
-    }*/
-
-void gpu_muv2dev(cumuv_t *out, MUV_T *in){
+void cp2gpu(cumuv_t *out, MUV_T *in){
     if(!in->M) error("in->M should not be NULL\n");
     spcell *Mt=spcelltrans(in->M);
-    gpu_spcell2dev(&(out)->Mt, Mt);
-    gpu_dcell2cu(&(out)->U, in->U);
-    gpu_dcell2cu(&(out)->V, in->V);
+    cp2gpu(&(out)->Mt, Mt);
+    cp2gpu(&(out)->U, in->U);
+    cp2gpu(&(out)->V, in->V);
     spcellfree(Mt);
 }
-void gpu_cur2d(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream){
+void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream){
     if(!in){
 	if(*out) dzero(*out);
 	return;
@@ -763,20 +517,20 @@ void gpu_cur2d(dmat **out, double alpha, const curmat *in, double beta, cudaStre
     }else{
 	assert((*out)->nx*(*out)->ny==in->nx*in->ny);
     }
-    gpu_dev2dbl(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream);
+    cp2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream);
 }
-void gpu_curcell2d(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream){
+void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream){
     if(!in){
 	if(*out) dcellzero(*out);
 	return;
     }
     if(!*out) *out=dcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
-	gpu_cur2d(&(*out)->p[i], alpha, in->p[i], beta, stream);
+	cp2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream);
     }
 }
 
-void gpu_cur2s(smat **out, const curmat *in, cudaStream_t stream){
+void cp2cpu(smat **out, const curmat *in, cudaStream_t stream){
     if(!in) {
 	if(*out) szero(*out);
 	return;
@@ -787,7 +541,7 @@ void gpu_cur2s(smat **out, const curmat *in, cudaStream_t stream){
 }
 
 
-void gpu_cuc2z(zmat **out, const cucmat *in, cudaStream_t stream){
+void cp2cpu(zmat **out, const cucmat *in, cudaStream_t stream){
     if(!in){
 	if(*out) zzero(*out);
 	return;
@@ -797,30 +551,30 @@ void gpu_cuc2z(zmat **out, const cucmat *in, cudaStream_t stream){
     if(in->header) (*out)->header=strdup(in->header);
 }
 
-void gpu_curcell2s(scell **out, const curcell *in, cudaStream_t stream){
+void cp2cpu(scell **out, const curcell *in, cudaStream_t stream){
     if(!in){
 	if(*out) scellzero(*out);
 	return;
     }
     if(!*out) *out=scellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
-	gpu_cur2s(&(*out)->p[i], in->p[i], stream);
+	cp2cpu(&(*out)->p[i], in->p[i], stream);
     }
 }
 
-void gpu_cuccell2z(zcell **out, const cuccell *in, cudaStream_t stream){
+void cp2cpu(zcell **out, const cuccell *in, cudaStream_t stream){
     if(!in){
 	if(*out) zcellzero(*out);
 	return;
     }
     if(!*out) *out=zcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
-	gpu_cuc2z(&(*out)->p[i], in->p[i], stream);
+	cp2cpu(&(*out)->p[i], in->p[i], stream);
     }
 }
 void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream){
     smat *tmp=NULL;
-    gpu_cur2s(&tmp,A,stream);
+    cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
     cellarr_smat(ca, tmp);
     sfree(tmp);
@@ -828,7 +582,7 @@ void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream){
 
 void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream){
     zmat *tmp=NULL;
-    gpu_cuc2z(&tmp,A,stream);
+    cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
     cellarr_zmat(ca, tmp);
     zfree(tmp);
@@ -836,7 +590,7 @@ void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream){
 
 void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream){
     scell *tmp=NULL;
-    gpu_curcell2s(&tmp,A,stream);
+    cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
     cellarr_scell(ca, tmp);
     scellfree(tmp);
@@ -844,7 +598,7 @@ void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream){
 
 void cellarr_cuccell(struct cellarr *ca, const cuccell *A, cudaStream_t stream){
     zcell *tmp=NULL;
-    gpu_cuccell2z(&tmp,A,stream);
+    cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
     cellarr_zcell(ca, tmp);
     zcellfree(tmp);

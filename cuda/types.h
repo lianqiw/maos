@@ -18,9 +18,7 @@
 #ifndef AOS_CUDA_TYPES_H
 #define AOS_CUDA_TYPES_H
 #include "common.h"
-#include <cuComplex.h>
-#define fcomplex cuFloatComplex
-#define dcomplex cuDoubleComplex
+#include "kernel.h"
 template <typename T>
 struct cumat{
     T *p;

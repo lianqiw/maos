@@ -59,13 +59,13 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
     //cudaMemsetAsync(res, 0,sizeof(float), stream);
     if(A->m && B->m){
 	const int n=A->m->nx*A->m->ny;
-	gpu_inn_acc(res, A->m->p, B->m->p, n, stream);
+	inn_wrap(NULL, res, A->m->p, B->m->p, n, stream);
     }else{
 	for(int i=0; i<A->nx*A->ny; i++){
 	    const curmat *a=A->p[i];
 	    const curmat *b=B->p[i];
 	    const int n=a->nx*a->ny;
-	    gpu_inn_acc(res,a->p,b->p,n,stream);
+	    inn_wrap(NULL, res,a->p,b->p,n,stream);
 	}
     }
 }
@@ -152,10 +152,10 @@ int gpu_pcg(curcell **px,
 	/*put here helps to remove the spikes in performance/wfs. why necessary? */
 	CUDA_SYNC_STREAM;
 	/*x0=x0+ak*p0 */
-	curcelladd2(&x0, p0, ak+k, 1, stream);
+	curcelladd(&x0, p0, ak+k, 1, stream);
 	if(k+1==maxiter) break;
 	/*r0=r0-ak*Ap */
-	curcelladd2(&r0, Ap, ak+k, -1, stream);
+	curcelladd(&r0, Ap, ak+k, -1, stream);
 	/*preconditioner */
 	if(Mmul) Mmul(&z0,M,r0, stream);
 	/*r0z2=r0'*z0 */
@@ -163,7 +163,7 @@ int gpu_pcg(curcell **px,
 	/*bk=r0z2/r0z1; r0z1=r0z2*/
 	div_assign_do<<<1,1,0,stream>>>(bk, r0z2+k, r0z1);
 	/*p0=bk*p0+z0 */
-	curcelladd3(&p0, bk, z0, stream);
+	curcelladd(&p0, bk, z0, stream);
 	toc("cg");
     }
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
