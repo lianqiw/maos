@@ -827,7 +827,7 @@ static void tool_save(GtkToolButton *button){
     static gchar *folder=NULL;
     static gchar *filename=NULL;
     GtkWidget *dialog;
-    cairo_surface_t *surface;
+    cairo_surface_t *surface=NULL;
     int width,height;
  retry:
     dialog=gtk_file_chooser_dialog_new
@@ -835,7 +835,7 @@ static void tool_save(GtkToolButton *button){
 	 GTK_WINDOW(curwindow),
 	 GTK_FILE_CHOOSER_ACTION_SAVE,
 	 GTK_STOCK_CANCEL,GTK_RESPONSE_CANCEL,
-	 GTK_STOCK_OPEN,GTK_RESPONSE_ACCEPT,
+	 GTK_STOCK_SAVE,GTK_RESPONSE_ACCEPT,
 	 NULL);
     gtk_file_chooser_set_do_overwrite_confirmation 
 	(GTK_FILE_CHOOSER (dialog), TRUE);
@@ -854,7 +854,7 @@ static void tool_save(GtkToolButton *button){
     }
 
     if(gtk_dialog_run(GTK_DIALOG(dialog))==GTK_RESPONSE_ACCEPT){
-	g_free(folder);
+	if(folder) g_free(folder);
 	folder=gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(dialog));
 	if(filename) g_free(filename);
 	filename=gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
@@ -899,14 +899,16 @@ static void tool_save(GtkToolButton *button){
 	error_msg("%s has unknown suffix\n",filename);
 	goto retry;
     }
+    if(!surface) {
+	error_msg("surface is NULL\n");
+	return;
+    }
     cairo_draw(cairo_create(surface), drawdata,width,height);
     if(strcmp(suffix,".png")==0){
 	cairo_surface_write_to_png(surface, filename);
     } 
     cairo_surface_finish(surface);
     cairo_surface_destroy(surface);
- 
-    g_free(filename);
 }
 
 

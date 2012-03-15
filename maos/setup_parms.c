@@ -197,7 +197,13 @@ static void readcfg_powfs(PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	int nwvl=parms->powfs[ipowfs].nwvl;
 	parms->powfs[ipowfs].wvl=calloc(nwvl, sizeof(double));
-	memcpy(parms->powfs[ipowfs].wvl,wvllist+count,sizeof(double)*nwvl);
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    double wvl=wvllist[count+iwvl];
+	    if(wvl>1e-3){
+		wvl=wvl*1e-6;
+	    }
+	    parms->powfs[ipowfs].wvl[iwvl]=wvl;
+	}
 	if(nwvlwts){
 	    parms->powfs[ipowfs].wvlwts=calloc(nwvl, sizeof(double));
 	    memcpy(parms->powfs[ipowfs].wvlwts, wvlwts+count,sizeof(double)*nwvl);
@@ -331,6 +337,17 @@ static void readcfg_powfs(PARMS_T *parms){
 	}
 	if(parms->powfs[ipowfs].mtchcra==-1){
 	    parms->powfs[ipowfs].mtchcra=parms->powfs[ipowfs].mtchcr;
+	}
+	if(parms->powfs[ipowfs].phytypesim==1 || parms->powfs[ipowfs].phytype==1){
+	    int pixpsay=parms->powfs[ipowfs].pixpsa;
+	    int pixpsax=parms->powfs[ipowfs].radpix;
+	    if(!pixpsax) pixpsax=pixpsay;
+	    if(pixpsax*pixpsay<4 && (parms->powfs[ipowfs].mtchcr>0
+				     || parms->powfs[ipowfs].mtchcra>0)){
+		warning("Disable constraint matched filte for quadcell\n");
+		parms->powfs[ipowfs].mtchcr=0;
+		parms->powfs[ipowfs].mtchcra=0;
+	    }
 	}
     }/*ipowfs */
     free(inttmp);
@@ -851,7 +868,6 @@ static void readcfg_save(PARMS_T *parms){
 	parms->save.mvst=1;
 	/*The following are run time information that are not enabled by
 	  save.run because they take a lot of space*/
-	parms->save.atm=1;
 	parms->save.opdr=1;
 	parms->save.opdx=1;
 	parms->save.evlopd=1;
@@ -1777,7 +1793,12 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		warning("GPU fitting=2 requires fit.square=1. Changed\n");
 		parms->fit.square=1;
 	    }
-	    if(parms->gpu.moao){
+	    int moao_used=0;
+	    if(parms->evl.moao>=0) moao_used++;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].moao>=0) moao_used++;
+	    }
+	    if(moao_used>0 && parms->gpu.moao){
 		if(!parms->fit.square){
 		    warning("GPU moao=1 requires fit.square=1. Changed\n");
 		    parms->fit.square=1;
