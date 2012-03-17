@@ -420,32 +420,7 @@ void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float al
     toc("TomoL:");
 #endif
 }
-/* embed real to complex data.*/
-__global__ static void fdpcg_embed(fcomplex *out, float *in, int nx){
-    const int step=blockDim.x * gridDim.x;
-    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
-	out[ix]=make_cuComplex(in[ix], 0);
-    }
-}
-/* extract real from complex data.*/
-__global__ static void fdpcg_extract(float *out, fcomplex *in, int nx){
-    const int step=blockDim.x * gridDim.x;
-    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
-	out[ix]=cuCrealf(in[ix]);
-    }
-}
-__global__ static void fdpcg_perm(fcomplex *out, fcomplex *in, int *perm, int nx){
-    const int step=blockDim.x * gridDim.x;
-    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
-	out[ix]=in[perm[ix]];
-    }
-}
-__global__ static void fdpcg_perm_i(fcomplex *out, fcomplex *in, int *perm, int nx){
-    const int step=blockDim.x * gridDim.x;
-    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
-	out[perm[ix]]=in[ix];
-    }
-}
+
 /* Each thread block is bsxbs*/
 /*
 __global__ static void fdpcg_mul_block_slow(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
@@ -554,7 +529,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     }else if(!(*xout)->m){
 	error("xout is not continuous");
     }
-    fdpcg_embed<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+    embed_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat1->p[0]->p, xin->p[0]->p, curecon->fd_nxtot);
     ctoc("fdpcg: Copy");
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
@@ -567,7 +542,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 	    (curecon->fd_xhat1->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
     ctoc("fdpcg: FFT+scale");
-    fdpcg_perm<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+    perm_f_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
     ctoc("fdpcg: Permutation");
     int nb=curecon->fd_Mb->nx;
@@ -614,7 +589,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 	    (curecon->fd_xhat1->p[0]->p,curecon->fd_xhat2->p[0]->p, curecon->fd_Mb->p[0]->p, curecon->fd_nxtot);
     }
     ctoc("fdpcg: mul block");
-    fdpcg_perm_i<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+    perm_i_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->p[0]->p, curecon->fd_xhat1->p[0]->p, curecon->fd_perm, curecon->fd_nxtot);
     ctoc("fdpcg: Inverse Permutation");
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
@@ -627,7 +602,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 	    (curecon->fd_xhat2->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
     ctoc("fdpcg: Inverse FFT + scale");
-    fdpcg_extract<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
+    extract_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	((*xout)->p[0]->p, curecon->fd_xhat2->p[0]->p, curecon->fd_nxtot);
     ctoc("fdpcg: Copy back");
 }

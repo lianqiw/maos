@@ -21,10 +21,16 @@
 #include "dsp.h"
 #include "dmat.h"
 #include "cmat.h"
-
+typedef struct cholmod_factor_struct cholmod_factor;
+typedef struct cholmod_common_struct cholmod_common;
+typedef struct spchol{
+    cholmod_factor *L;
+    cholmod_common *c;
+    dsp   *Cl;/*The sparse matrix (lower). A=Cl*CL' with reordering.*/
+    dsp   *Cu;/*The sparse matrix (upper). A=Cu'*Cu with reordering. Cu==CL'*/
+    spint *Cp;/*The Permutation vector.*/
+}spchol;
 /* assume large file support.  If problems occur, compile with -DNLARGEFILE */
-
-typedef struct spchol spchol;
 spchol* chol_factorize(dsp *A_in);
 void chol_solve(dmat **x, spchol *A, dmat *y);
 dsp *chol_spsolve(spchol *A, const dsp *y);

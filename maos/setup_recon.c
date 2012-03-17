@@ -191,6 +191,14 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc[idm], NULL);
 	dinvspd_inplace(recon->aimcc->p[idm]);
     }
+    recon->anx=calloc(ndm, sizeof(int));
+    recon->any=calloc(ndm, sizeof(int));
+    recon->anloc=calloc(ndm, sizeof(int));
+    for(int idm=0; idm<ndm; idm++){
+	recon->anx[idm]=recon->amap[idm]->nx;
+	recon->any[idm]=recon->amap[idm]->ny;
+	recon->anloc[idm]=recon->aloc[idm]->nloc;
+    }
     /*Dealing with stuck/floating actuators. */
     int anyfloat=0, anystuck=0;
     for(int idm=0; idm<ndm; idm++){
@@ -998,7 +1006,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    double r0=recon->r0;
 	    double dx=recon->xloc[ips]->dx;
 	    double wt=recon->wt->p[ips];
-	    double val=pow(laplacian_coef(r0,wt,dx),2)*1e-6;
+	    double val=pow(laplacian_coef(r0,wt,dx),2)*1e-6*TOMOSCALE;
 	    /*info("Scaling of ZZT is %g\n",val); */
 	    /*piston mode eq 47 in Brent 2002 paper */
 	    int icenter=loccenter(recon->xloc[ips]);
@@ -1087,7 +1095,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	  participate in tomography.
 	*/
 	spcell *GXtomoT=spcelltrans(recon->GXtomo);
-	recon->RR.M=spcellmulspcell(GXtomoT, saneai, 1);
+	recon->RR.M=spcellmulspcell(GXtomoT, saneai, TOMOSCALE);
 	PDSPCELL(recon->RR.M, RRM);
 	/*
 	  Tip/tilt and diff focus removal low rand terms for LGS WFS.
@@ -1114,7 +1122,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	    double tikcr=parms->tomo.tikcr;
 	    info2("Adding tikhonov constraint of %g to RLM\n",tikcr);
 	    info2("The maximum eigen value is estimated to be around %g\n", maxeig);
-	    spcelladdI(recon->RL.M, tikcr*maxeig);
+	    spcelladdI(recon->RL.M, tikcr*maxeig*TOMOSCALE);
 	}
 	/*add L2 and ZZT */
 	switch(parms->tomo.cxx){
@@ -1124,6 +1132,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 		if(!tmp){
 		    error("L2 is empty!!\n");
 		}
+		spscale(tmp, TOMOSCALE);
 		spadd(&RLM[ips][ips], tmp);
 		spfree(tmp);
 	    }
@@ -1230,6 +1239,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
     }
     if(parms->save.recon){
        	if(recon->RL.C)
+	    if(parms->save.recon>1) chol_convert(recon->RL.C, 1);
 	    chol_save(recon->RL.C,"%s/RLC.bin",dirsetup);
 	if(recon->RL.MI)
 	    dwrite(recon->RL.MI,"%s/RLMI", dirsetup);
@@ -2487,11 +2497,6 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     switch(parms->recon.alg){
     case 0:
 	setup_recon_mvr(recon, parms, powfs, aper);
-#if USE_CUDA
-	if(parms->gpu.tomo || parms->gpu.fit){
-	    gpu_setup_recon(parms, powfs, recon);
-	}
-#endif
 	break;
     case 1:
 	setup_recon_lsr(recon, parms, powfs, aper);
@@ -2502,6 +2507,11 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     default:
 	error("recon.alg=%d is not recognized\n", parms->recon.alg);
     }
+#if USE_CUDA
+    if(parms->gpu.tomo || parms->gpu.fit){
+	gpu_setup_recon(parms, powfs, recon);
+    }
+#endif
     spcellfree(recon->GWR);
     if(parms->recon.alg!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
 	/*We already assembled tomo matrix. don't need these matric any more. */

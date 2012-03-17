@@ -268,6 +268,9 @@ typedef struct RECON_T{
 
     loc_t **aloc;      /**<actuator grid*/
     map_t **amap;      /**<square grid of actuators*/
+    long  *anx;
+    long  *any;
+    long  *anloc;
     long **aembed;      /**<index to embed phi on aloc to square geometry of aloc_nx*aloc_ny.*/
     loc_t **alocm;     /**<misregistered actuator grid for ray tracing*/
     icell *actfloat;   /**<floating actuators*/
