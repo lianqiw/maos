@@ -395,7 +395,8 @@ static void perfevl_mean(SIM_T *simu){
 		/* apply ideal ngs modes immediately to dmreal.  Don't forget to
 		  updated DM Cache. */
 		ngsmod2dm(&simu->dmreal,simu->recon, Mngs, 1.);
-		calc_cachedm(simu);
+		dcellwrite(Mngs, "Mngs_%d", isim);
+		update_dm(simu);
 		tot-=ngs; ngs=0; tt=0;
 	    }
 	    int do_psf=(parms->evl.psfmean || parms->evl.psfhist);

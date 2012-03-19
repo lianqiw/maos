@@ -24,8 +24,7 @@
 void gpu_info(void);
 int  gpu_init(int *gpus, int ngpu);
 void gpu_cleanup(void);
-void gpu_atm2gpu(map_t **atm, int nps);
-void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim);
+void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim);
 void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg);
 void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg);
 

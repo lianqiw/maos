@@ -381,6 +381,38 @@ void filter_ol(SIM_T *simu){
 	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
     }
 }
+
+/**
+   Update various quantities upon updating dmreal.
+*/
+void update_dm(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    if(!parms->fit.square){
+	/* Embed DM commands to a square array for fast ray tracing */
+	for(int idm=0; idm<parms->ndm; idm++){
+	    long *embed=simu->recon->aembed[idm];
+	    double *pout=simu->dmrealsq[idm]->p;
+	    double *pin=simu->dmreal->p[idm]->p;
+	    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
+		pout[embed[i]]=pin[i];
+	    }
+	}
+    }
+#if USE_CUDA
+    if(parms->gpu.wfs || parms->gpu.evl){
+	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm,NULL);
+    }
+#endif
+    calc_cachedm(simu);
+    if(parms->plot.run){ /*Moved from recon.c to here. */
+	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
+	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
+		    "Actual DM Actuator Commands","x (m)", "y (m)",
+		    "Real %d",idm);
+	}
+    }
+}
+
 /**
    Does the servo filtering by calling filter_cl() or filter_ol()
  */
@@ -392,18 +424,6 @@ void filter(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
-    calc_cachedm(simu); 
-#if USE_CUDA
-    if(parms->gpu.wfs || parms->gpu.evl){
-	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm,NULL);
-    }
-#endif
-  
-    if(parms->plot.run){ /*Moved from recon.c to here. */
-	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
-	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
-		    "Actual DM Actuator Commands","x (m)", "y (m)",
-		    "Real %d",idm);
-	}
-    }
+    update_dm(simu);
+
 }

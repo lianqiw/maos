@@ -21,8 +21,10 @@
 #include "dsp.h"
 #include "dmat.h"
 #include "cmat.h"
+#ifndef CHOLMOD_CORE_H
 typedef struct cholmod_factor_struct cholmod_factor;
 typedef struct cholmod_common_struct cholmod_common;
+#endif
 typedef struct spchol{
     cholmod_factor *L;
     cholmod_common *c;

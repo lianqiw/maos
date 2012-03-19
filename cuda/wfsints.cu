@@ -370,7 +370,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
     const float *restrict const srot2=multi_dtf?cuwfs[iwfs].srot:NULL;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     curcell *restrict const ints=cuwfs[iwfs].ints;
-    float *lltopd=NULL;
+    curmat *lltopd=NULL;
     curcell *pistatout=NULL;
     if(parms->powfs[ipowfs].pistatout && isim>=parms->powfs[ipowfs].pistatstart){
 	pistatout=cuwfs[iwfs].pistatout;
@@ -390,17 +390,17 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 
     if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	int nlx=powfs[ipowfs].llt->pts->nx;
-	cudaMalloc(&lltopd, sizeof(float)*nlx*nlx);
+	lltopd=curnew(nlx, nlx);
 	if(cuwfs[iwfs].lltncpa){
-	    cudaMemcpyAsync(lltopd, cuwfs[iwfs].lltncpa, 
+	    cudaMemcpyAsync(lltopd->p, cuwfs[iwfs].lltncpa, 
 			    sizeof(float)*nlx*nlx, MEMCPY_D2D, stream);
 	}else{
-	    cudaMemsetAsync(lltopd, 0, sizeof(float)*nlx*nlx, stream);
+	    cudaMemsetAsync(lltopd->p, 0, sizeof(float)*nlx*nlx, stream);
 	}
 	const int illt=parms->powfs[ipowfs].llt->i[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
 	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
-	gpu_atm2loc(lltopd, cupowfs[ipowfs].llt->loc, cupowfs[ipowfs].llt->nloc, 
+	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt->loc, cupowfs[ipowfs].llt->nloc, 
 		    hs, thetaxl, thetayl, 
 		    parms->powfs[ipowfs].llt->misreg[0], 
 		    parms->powfs[ipowfs].llt->misreg[1], 
@@ -411,7 +411,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		//warning("Remove tip/tilt in uplink ideally\n");
 		float *lltg;
 		cudaCallocHost(lltg, 2*sizeof(float), stream);
-		cuztilt<<<1,dim3(16,16),0,stream>>>(lltg, lltopd, 1, cupowfs[ipowfs].llt->dx, 
+		cuztilt<<<1,dim3(16,16),0,stream>>>(lltg, lltopd->p, 1, cupowfs[ipowfs].llt->dx, 
 						    cupowfs[ipowfs].llt->nxsa, cuwfs[iwfs].lltimcc,
 						    cupowfs[ipowfs].llt->pts, cuwfs[iwfs].lltamp, 1.f);
 		CUDA_SYNC_STREAM;
@@ -430,7 +430,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    const double dx=powfs[ipowfs].llt->pts->dx;
 	    const double ox=powfs[ipowfs].llt->pts->origx[0];
 	    const double oy=powfs[ipowfs].llt->pts->origy[0];
-	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd, nlx, nlx, ox, oy, dx, ttx, tty);
+	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd->p, nlx, nlx, ox, oy, dx, ttx, tty);
 	}/*if upt */
 	ctoc("llt opd");
 	int nlwvf=nlx*parms->powfs[ipowfs].embfac;
@@ -439,6 +439,9 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    cudaMalloc(&lotfc, notf*notf*sizeof(fcomplex));
 	}else{
 	    lotfc=lwvf;
+	}
+	if(parms->save.wfsopd[iwfs]){
+	    cellarr_cur(simu->save->wfslltopd[iwfs],lltopd, stream);
 	}
     }/*if has llt */
 
@@ -477,7 +480,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		cudaMemsetAsync(lotfc, 0, sizeof(fcomplex)*notf*notf, stream);
 	    }
 	    embed_wvf_do<<<1,dim3(16,16),0,stream>>>
-		(lwvf, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
+		(lwvf, lltopd->p, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
 	    /*Turn to PSF. peak in corner */
 	    CUFFT(cuwfs[iwfs].lltplan_wvf, lwvf, CUFFT_FORWARD);
 	    abs2real_do<<<1,dim3(16,16),0,stream>>>(lwvf, nlwvf, 1./(float)(nlwvf*nlwvf));
@@ -608,7 +611,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	}/*for isa */
     }/*for iwvl */
     if(lltopd){
-	cudaFree(lltopd);
+	curfree(lltopd);
 	if(lwvf!=lotfc) cudaFree(lotfc);
 	cudaFree(lwvf);
     }

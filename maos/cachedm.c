@@ -115,19 +115,7 @@ void prep_cachedm(SIM_T *simu){
 */
 void calc_cachedm(SIM_T *simu){
     double tk_start=myclockd();
-    const PARMS_T *parms=simu->parms;
-    if(!parms->fit.square){
-	/* Embed DM commands to a square array for fast ray tracing */
-	for(int idm=0; idm<parms->ndm; idm++){
-	    long *embed=simu->recon->aembed[idm];
-	    double *pout=simu->dmrealsq[idm]->p;
-	    double *pin=simu->dmreal->p[idm]->p;
-	    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
-		pout[embed[i]]=pin[i];
-	    }
-	}
-    }
-    if(parms->sim.cachedm){
+    if(simu->parms->sim.cachedm){
 	long group=0;
 	/*zero out the data. */
 	for(int ic=0; ic<simu->cachedm_n; ic++){

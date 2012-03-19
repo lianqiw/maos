@@ -74,7 +74,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    /*put here to avoid messing up timing due to transfering. */
-	    gpu_atm2gpu_new(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
+	    gpu_atm2gpu(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
 	    if(parms->gpu.evl){
 		gpu_perfevl_init_sim(parms, aper);
 	    }
@@ -105,7 +105,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		}
 #if USE_CUDA
 		if(parms->gpu.evl || parms->gpu.wfs){/*may need to copy another part */
-		    gpu_atm2gpu_new(simu->atm, parms, iseed, isim);/*takes 0.4s for NFIRAOS 64 meter screen. */
+		    gpu_atm2gpu(simu->atm, parms, iseed, isim);/*takes 0.4s for NFIRAOS 64 meter screen. */
 		}
 #endif
 	    }else{

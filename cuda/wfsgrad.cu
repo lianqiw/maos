@@ -274,6 +274,7 @@ void gpu_wfsgrad(thread_t *info){
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const int save_grad=parms->save.grad[iwfs];
     const int save_gradgeom=parms->save.gradgeom[iwfs];
+    const int save_opd =parms->save.wfsopd[iwfs];
     const int save_ints=parms->save.ints[iwfs];
     const int noisy=parms->powfs[ipowfs].noisy;
     /*The following depends on isim */
@@ -308,6 +309,9 @@ void gpu_wfsgrad(thread_t *info){
 		       hs, thetax, thetay, mispx, mispy, -1, stream);
 	}
     }
+    if(save_opd){
+	cellarr_cur(simu->save->wfsopdol[iwfs], phiout, stream);
+    }
     if(CL){
 	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmreal, cudata->ndm,
 		   hs, thetax, thetay, mispx, mispy, -1, stream);
@@ -329,6 +333,9 @@ void gpu_wfsgrad(thread_t *info){
     }
     if(parms->powfs[ipowfs].llt && simu->focusint && simu->focusint->p[iwfs]){
 	TO_IMPLEMENT;
+    }
+    if(save_opd){
+	cellarr_cur(simu->save->wfsopd[iwfs], phiout, stream);
     }
     if(do_geom){
 	float *gradcalc;

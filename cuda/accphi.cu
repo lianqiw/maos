@@ -114,9 +114,23 @@ static void atm_prep(atm_prep_t *data){
     free(data);/*allocated in parent thread. we free it here. */
 }
 /**
+   Transfer atmospheric data to GPU.
+*/
+static void gpu_atm2gpu_full(map_t **atm, int nps){
+    for(int im=0; im<NGPU; im++){
+	gpu_set(im);
+	gpu_print_mem("atm in");
+	TIC;tic;
+	cudata->nps=nps;
+	cp2gpu(&cudata->atm, atm, nps);
+	toc2("atm to gpu");/*0.4 second. */
+	gpu_print_mem("atm out");
+    }
+}
+/**
    Transfer atmosphere or update atmosphere in GPU.
 */
-void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
+void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     if(parms->atm.evolve){
 	TO_IMPLEMENT;
 	/*test whether screen changed. transfer if changed. */
@@ -161,7 +175,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
     if(nx0==parms->atm.nx && ny0==parms->atm.ny){
 	WRAP_ATM=1;
 	if(iseed0!=iseed){
-	    gpu_atm2gpu(atm, nps);
+	    gpu_atm2gpu_full(atm, nps);
 	    iseed0=iseed;
 	}
 	return;
@@ -184,7 +198,11 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 
 	for(int im=0; im<NGPU; im++){/*Loop over all GPUs. */
 	    gpu_set(im);
-	    cudata->atm=new cumap_t*[nps];
+	    cudata->atm=(cumap_t**)calloc(nps, sizeof(cumap_t*));
+	    cudata->nps=nps;
+	    for(int ips=0; ips<nps; ips++){
+		cudata->atm[ips]=new cumap_t(nx0, ny0);
+	    }
 	}/*for im */
     }/*if need_init; */
     const double dt=parms->sim.dt;
@@ -262,8 +280,8 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		CUDA_SYNC_DEVICE;
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
-		toc2("Step %d: Copying layer %d to GPU %d: offx=%d, offy=%d", 
-		     isim, ips, GPUS[im], offx, offy);tic;
+		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
+		     isim, ips, nx0, ny0, GPUS[im], offx, offy);tic;
 	    }/*for im */
 	    cudaFreeHost(next_atm[ips]);
 	    next_atm[ips]=NULL;
@@ -296,20 +314,7 @@ void gpu_atm2gpu_new(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	}
     }
 }
-/**
-   Transfer atmospheric data to GPU.
-*/
-void gpu_atm2gpu(map_t **atm, int nps){
-    for(int im=0; im<NGPU; im++){
-	gpu_set(im);
-	gpu_print_mem("atm in");
-	TIC;tic;
-	cudata->nps=nps;
-	cp2gpu(&cudata->atm, atm, nps);
-	toc2("atm to gpu");/*0.4 second. */
-	gpu_print_mem("atm out");
-    }
-}
+
 /**
    Copy DM configurations to GPU.
 */
@@ -472,7 +477,6 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 	const float dispx=(ht*thetax+mispx-vx*dtisim-cuatm[ips]->ox)*du;
 	const float dispy=(ht*thetay+mispy-vy*dtisim-cuatm[ips]->oy)*du;
 	const float scale=1.f-ht/hs;
-
 #define COMM loc,nloc,scale*du,scale*du, dispx, dispy, atmalpha
 	if(WRAP_ATM){
 	    prop_linear_wrap<<<DIM(nloc,256), 0, stream>>>
