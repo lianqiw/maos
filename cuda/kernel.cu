@@ -168,3 +168,41 @@ __global__ void inn_do(float *res_rep, float *res_add, const float *a, const flo
 	if(res_add) atomicAdd(res_add, sb[0]);
     }
 }
+/* embed real to complex data.*/
+__global__ void embed_do(fcomplex *out, float *in, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[ix]=make_cuComplex(in[ix], 0);
+    }
+}
+/* extract real from complex data.*/
+__global__ void extract_do(float *out, fcomplex *in, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[ix]=cuCrealf(in[ix]);
+    }
+}
+__global__ void perm_f_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[ix]=in[perm[ix]];
+    }
+}
+__global__ void perm_i_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[perm[ix]]=in[ix];
+    }
+}
+__global__ void perm_f_do(float *restrict out, const float *restrict in, int *restrict perm, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[ix]=in[perm[ix]];
+    }
+}
+__global__ void perm_i_do(float *restrict out, const float *restrict in, int *restrict perm, int nx){
+    const int step=blockDim.x * gridDim.x;
+    for(int ix=blockIdx.x * blockDim.x + threadIdx.x; ix<nx; ix+=step){
+	out[perm[ix]]=in[ix];
+    }
+}

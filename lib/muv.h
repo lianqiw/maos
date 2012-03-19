@@ -50,9 +50,6 @@ typedef struct MUV_T{
     dcell *UpB;    /**<Up for each diagonal component*/
     dcell *VpB;    /**<Vp for each diagonal component*/
     int nb;        /**<Number of blocks in CB;*/
-    /*The following are not normaly used. */
-    dsp   *Cs;     /**<Converted cholesky factor.*/
-    long  *Cp;     /**<permutation vector for Cs.*/
     /*The operation of M can be done with the folloing function and data */
     CGFUN Mfun;    /**<Do M*x with a function*/
     void *Mdata;   /**<Parameter to Mfun*/

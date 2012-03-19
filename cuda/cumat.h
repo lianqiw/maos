@@ -75,14 +75,14 @@ template <typename T, typename L>
 inline cucell<T>* cucellnew(const int nx, const int ny, L *mx, L *my){
     long tot=0;
     for(int i=0; i<nx*ny; i++){
-	tot+=mx[i]*my[i];
+	tot+=mx[i]*(my?my[i]:1);
     }
     cucell<T> *out=cucellnew<T>(nx,ny);
     out->m=new cumat<T> (tot,1);
     tot=0;
     for(int i=0; i<nx*ny; i++){
-	out->p[i]=new cumat<T>(mx[i],my[i],out->m->p+tot, 0);
-	tot+=mx[i]*my[i];
+	out->p[i]=new cumat<T>(mx[i],(my?my[i]:1),out->m->p+tot, 0);
+	tot+=mx[i]*(my?my[i]:1);
     }
     return out;
 }

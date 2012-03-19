@@ -103,6 +103,19 @@ typedef struct{
     cudaStream_t     moao_stream;
     cublasHandle_t   moao_handle;
     cusparseHandle_t moao_sphandle;
+
+    //CBS Tomo
+    cusp *RCl;/**<Tomography Cholesky factor*/
+    int  *RCp;/**<Tomography Cholesky permutation vector*/
+    curmat *RUp;
+    curmat *RVp;
+    curmat *RMI;//SVD
+    
+    cusp *FCl;
+    int  *FCp;
+    curmat *FUp;
+    curmat *FVp;
+    curmat *FMI;//SVD
 }curecon_t;
 
 

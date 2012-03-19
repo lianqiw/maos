@@ -77,4 +77,10 @@ inline void inn_wrap(float *res_rep, float *res_add,
 inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
+__global__ void embed_do(fcomplex *out, float *in, int nx);
+__global__ void extract_do(float *out, fcomplex *in, int nx);
+__global__ void perm_f_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx);
+__global__ void perm_i_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx);
+__global__ void perm_f_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
+__global__ void perm_i_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
 #endif
