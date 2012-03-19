@@ -173,16 +173,21 @@ file_t* zfopen(const char *fn, char *mod){
       file.*/
     switch(mod[0]){
     case 'r':/*read only */
-	fp->fd=open(fn2, O_RDONLY);
+	if((fp->fd=open(fn2, O_RDONLY))==-1){
+	    perror("open");
+	}
 	break;
     case 'w':/*write */
     case 'a':
-	fp->fd=open(fn2, O_RDWR | O_CREAT, 0600);
-	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
-	    error("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0600))==-1){
+	    perror("open");
 	}else{
+	    if(flock(fp->fd, LOCK_EX|LOCK_NB)){
+		error("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	    }
 	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
-		warning2("Truncating %s failed\n", fn2);
+		perror("ftruncate");
+		warning2("Truncating %s failed. fd=%d\n", fn2, fp->fd);
 	    }
 	}
 	break;

@@ -241,15 +241,12 @@ void filter_cl(SIM_T *simu){
     }
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simt=&(parms->sim);
-    if(!simu->dmerr_hi && !(parms->recon.split && simu->Merr_lo)){
-	return;
-    }
     if(parms->sim.fuseint){
 	shift_inte(simt->napdm,simt->apdm,simu->dmint);
     }else{
 	shift_inte(simt->napdm,simt->apdm,simu->dmint_hi);
 	if(parms->recon.split){
-		shift_inte(simt->napngs,simt->apngs,simu->Mint_lo);
+	    shift_inte(simt->napngs,simt->apngs,simu->Mint_lo);
 	}
     }
     /*High order. */
@@ -296,7 +293,6 @@ void filter_cl(SIM_T *simu){
     if(parms->sim.dmttcast){
 	cast_tt_do(simu, simu->dmint[0]);
     }
- 
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
     if(parms->sim.fuseint){
@@ -396,23 +392,12 @@ void filter(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
-    if(!parms->fit.square){
-	/* Embed DM commands to a square array for fast ray tracing */
-	for(int idm=0; idm<parms->ndm; idm++){
-	    long *embed=simu->recon->aembed[idm];
-	    double *pout=simu->dmrealsq[idm]->p;
-	    double *pin=simu->dmreal->p[idm]->p;
-	    for(long i=0; i<simu->dmreal->p[idm]->nx; i++){
-		pout[embed[i]]=pin[i];
-	    }
-	}
-    }
+    calc_cachedm(simu); 
 #if USE_CUDA
     if(parms->gpu.wfs || parms->gpu.evl){
 	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm,NULL);
     }
 #endif
-    calc_cachedm(simu);
   
     if(parms->plot.run){ /*Moved from recon.c to here. */
 	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
