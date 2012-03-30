@@ -206,3 +206,126 @@ __global__ void perm_i_do(float *restrict out, const float *restrict in, int *re
 	out[perm[ix]]=in[ix];
     }
 }
+
+__global__ void embed_wvf_do(fcomplex *restrict wvf, 
+					const float *restrict opd, const float *restrict amp, 
+					const int *embed, const int nloc, const float wvl){
+    const float pi2l=2.f*M_PI/wvl;
+    for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nloc; ix+=blockDim.x*gridDim.x){
+	float s,c;
+	sincosf(pi2l*opd[ix], &s, &c);
+	wvf[embed[ix]]=make_cuComplex(amp[ix]*c, amp[ix]*s);
+    }
+}
+
+/**
+   Embed or crop an array to another array. Preserve corner.
+*/
+__global__ void corner2center_do(fcomplex *restrict out, int noutx,  int nouty,
+					    const fcomplex *restrict in, int ninx, int niny){
+    int nx,ny;
+    ny=MIN(niny, nouty)>>1;
+    nx=MIN(ninx, noutx)>>1;
+    int noutx2=noutx>>1;
+    int nouty2=nouty>>1;
+    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
+	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
+	    out[(iy+nouty2 )*noutx+(ix+noutx2)  ] = in[iy*ninx+ix];
+	    out[(iy+nouty2 )*noutx+(noutx2-1-ix)] = in[iy*ninx+(ninx-1-ix)];
+	    out[(nouty2-1-iy)*noutx+(noutx2-1-ix)] = in[(niny-1-iy)*ninx+(ninx-1-ix)];
+	    out[(nouty2-1-iy)*noutx+(ix+noutx2)  ] = in[(niny-1-iy)*ninx+(ix)];
+	}
+    }
+}
+
+/**
+   Embed or crop an array to another array. Preserve corner.
+*/
+__global__ void corner2center_abs2_do(float *restrict out, int noutx,  int nouty,
+					    const fcomplex *restrict in, int ninx, int niny){
+    int nx,ny;
+    ny=MIN(niny, nouty)>>1;
+    nx=MIN(ninx, noutx)>>1;
+    int noutx2=noutx>>1;
+    int nouty2=nouty>>1;
+    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
+	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
+	    out[(iy+nouty2)*noutx+(ix+noutx2)]+=     CABS2(in[iy*ninx+ix]);
+	    out[(iy+nouty2)*noutx+(noutx2-1-ix)]+=   CABS2(in[iy*ninx+(ninx-1-ix)]);
+	    out[(nouty2-1-iy)*noutx+(noutx2-1-ix)]+= CABS2(in[(niny-1-iy)*ninx+(ninx-1-ix)]);
+	    out[(nouty2-1-iy)*noutx+(ix+noutx2)]+=   CABS2(in[(niny-1-iy)*ninx+(ix)]);
+	}
+    }
+}
+
+/**
+   Embed or crop an array to another array. Preserve corner.
+*/
+__global__ void corner2center_abs2_atomic_do(float *restrict out, int noutx,  int nouty,
+					    const fcomplex *restrict in, int ninx, int niny){
+    int nx,ny;
+    ny=MIN(niny, nouty)>>1;
+    nx=MIN(ninx, noutx)>>1;
+    int noutx2=noutx>>1;
+    int nouty2=nouty>>1;
+    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
+	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
+	    atomicAdd(&out[(iy+nouty2)*noutx+(ix+noutx2)],     CABS2(in[iy*ninx+ix]));
+	    atomicAdd(&out[(iy+nouty2)*noutx+(noutx2-1-ix)],   CABS2(in[iy*ninx+(ninx-1-ix)]));
+	    atomicAdd(&out[(nouty2-1-iy)*noutx+(noutx2-1-ix)], CABS2(in[(niny-1-iy)*ninx+(ninx-1-ix)]));
+	    atomicAdd(&out[(nouty2-1-iy)*noutx+(ix+noutx2)],   CABS2(in[(niny-1-iy)*ninx+(ix)]));
+	}
+    }
+}
+/**
+   FFT Shift.
+*/
+__global__ void fftshift_do(fcomplex *wvf, const int nx, const int ny){
+    int nx2=nx>>1;
+    int ny2=ny>>1;
+    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny2; iy+=blockDim.y*gridDim.y){
+	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx2; ix+=blockDim.x*gridDim.x){
+	    fcomplex tmp;
+	    tmp=wvf[ix+iy*nx];
+	    wvf[ix+iy*nx]=wvf[(ix+nx2)+(iy+ny2)*nx];
+	    wvf[(ix+nx2)+(iy+ny2)*nx]=tmp;
+	    tmp=wvf[ix+(iy+ny2)*nx];
+	    wvf[ix+(iy+ny2)*nx]=wvf[(ix+nx2)+iy*nx];
+	    wvf[(ix+nx2)+iy*nx]=tmp;
+	}
+    }
+}
+/**
+   Add tip/tilt to the array. OPD=OPD+x*ttx+y*tty, where x=ix*dx+ox, y=iy*dy+oy; 
+*/
+__global__ void add_tilt_do(float *opd, int nx, int ny, float ox, float oy, float dx, float ttx, float tty){
+    for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
+	float vty=(oy+iy*dx)*tty;
+	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
+	    opd[ix+iy*nx]+=vty+(ox+ix*dx)*ttx;
+	}
+    }
+}
+
+/**
+   component wise multiply.
+*/
+__global__ void cwm_do(fcomplex *dest, float *from, int n){
+    for(int i=threadIdx.x+threadIdx.y*blockDim.x; i<n; i+=blockDim.x*blockDim.y){
+	dest[i].x*=from[i];
+	dest[i].y*=from[i];
+    }
+}
+/**
+   unwrap the wvf back to opd. assume it within lambda/2 of the opd.
+ */
+__global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, float wvl){
+    float kki=wvl/(2*M_PI);
+    float wvlh=wvl*0.5;
+    for(int i=threadIdx.x+threadIdx.y*blockDim.x; i<n; i+=blockDim.x*blockDim.y){
+	float val=atan2(wvf[embed[i]].y, wvf[embed[i]].x)*kki;
+	float diff=fmodf(val-opd[i]+wvlh, wvl);
+	if(diff<0) diff+=wvl;
+	opd[i]+=diff-wvlh;
+    }
+}

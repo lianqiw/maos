@@ -325,93 +325,7 @@ void gpu_evlsurf2gpu(APER_T *aper){
     }
 }
 
-__global__ static void evl_embed_wvf_do(fcomplex *restrict wvf, 
-					const float *restrict opd, const float *restrict amp, 
-					const int *embed, const int nloc, const float wvl){
-    const float pi2l=2.f*M_PI/wvl;
-    for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nloc; ix+=blockDim.x*gridDim.x){
-	float s,c;
-	sincosf(pi2l*opd[ix], &s, &c);
-	wvf[embed[ix]]=make_cuComplex(amp[ix]*c, amp[ix]*s);
-    }
-}
 
-/**
-   Embed or crop an array to another array. Preserve corner.
-*/
-__global__ static void evl_corner2center_do(fcomplex *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
-    int nx,ny;
-    ny=MIN(niny, nouty)>>1;
-    nx=MIN(ninx, noutx)>>1;
-    int noutx2=noutx>>1;
-    int nouty2=nouty>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    out[(iy+nouty2 )*noutx+(ix+noutx2)  ] = in[iy*ninx+ix];
-	    out[(iy+nouty2 )*noutx+(noutx2-1-ix)] = in[iy*ninx+(ninx-1-ix)];
-	    out[(nouty2-1-iy)*noutx+(noutx2-1-ix)] = in[(niny-1-iy)*ninx+(ninx-1-ix)];
-	    out[(nouty2-1-iy)*noutx+(ix+noutx2)  ] = in[(niny-1-iy)*ninx+(ix)];
-	}
-    }
-}
-
-/**
-   Embed or crop an array to another array. Preserve corner.
-*/
-__global__ static void evl_corner2center_abs2_do(float *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
-    int nx,ny;
-    ny=MIN(niny, nouty)>>1;
-    nx=MIN(ninx, noutx)>>1;
-    int noutx2=noutx>>1;
-    int nouty2=nouty>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    out[(iy+nouty2)*noutx+(ix+noutx2)]+=     CABS2(in[iy*ninx+ix]);
-	    out[(iy+nouty2)*noutx+(noutx2-1-ix)]+=   CABS2(in[iy*ninx+(ninx-1-ix)]);
-	    out[(nouty2-1-iy)*noutx+(noutx2-1-ix)]+= CABS2(in[(niny-1-iy)*ninx+(ninx-1-ix)]);
-	    out[(nouty2-1-iy)*noutx+(ix+noutx2)]+=   CABS2(in[(niny-1-iy)*ninx+(ix)]);
-	}
-    }
-}
-/**
-   Embed or crop an array to another array. Preserve corner.
-*/
-__global__ static void evl_corner2center_abs2_atomic_do(float *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
-    int nx,ny;
-    ny=MIN(niny, nouty)>>1;
-    nx=MIN(ninx, noutx)>>1;
-    int noutx2=noutx>>1;
-    int nouty2=nouty>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    atomicAdd(&out[(iy+nouty2)*noutx+(ix+noutx2)],     CABS2(in[iy*ninx+ix]));
-	    atomicAdd(&out[(iy+nouty2)*noutx+(noutx2-1-ix)],   CABS2(in[iy*ninx+(ninx-1-ix)]));
-	    atomicAdd(&out[(nouty2-1-iy)*noutx+(noutx2-1-ix)], CABS2(in[(niny-1-iy)*ninx+(ninx-1-ix)]));
-	    atomicAdd(&out[(nouty2-1-iy)*noutx+(ix+noutx2)],   CABS2(in[(niny-1-iy)*ninx+(ix)]));
-	}
-    }
-}
-/**
-   FFT Shift.
-*/
-__global__ static void evl_fftshift_do(fcomplex *wvf, const int nx, const int ny){
-    int nx2=nx>>1;
-    int ny2=ny>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny2; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx2; ix+=blockDim.x*gridDim.x){
-	    fcomplex tmp;
-	    tmp=wvf[ix+iy*nx];
-	    wvf[ix+iy*nx]=wvf[(ix+nx2)+(iy+ny2)*nx];
-	    wvf[(ix+nx2)+(iy+ny2)*nx]=tmp;
-	    tmp=wvf[ix+(iy+ny2)*nx];
-	    wvf[ix+(iy+ny2)*nx]=wvf[(ix+nx2)+iy*nx];
-	    wvf[(ix+nx2)+iy*nx]=tmp;
-	}
-    }
-}
 /**
    Compute complex PSF and return.
 */
@@ -421,17 +335,17 @@ static cuccell *psfcomp(curmat *iopdevl, int nwvl, int ievl, int nloc, cudaStrea
     cuccell *psfs=cuccellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
 	cucmat *wvf=cucnew(cunembed[iwvl], cunembed[iwvl]);
-	evl_embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
+	embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
 	    (wvf->p, iopdevl->p, cudata->pamp, cudata->embed[iwvl], nloc, cuwvls[iwvl]);
 	CUFFT(evlplan[iwvl+nwvl*ievl], wvf->p, CUFFT_FORWARD);
 	cucmat *psf=NULL;
 	if(cupsfsize[iwvl]<cunembed[iwvl]){
 	    psf=cucnew(cupsfsize[iwvl], cupsfsize[iwvl]);
-	    evl_corner2center_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
+	    corner2center_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
 		(psf->p, psf->nx, psf->ny, wvf->p, wvf->nx, wvf->ny);
 	}else{
 	    psf=wvf;
-	    evl_fftshift_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
+	    fftshift_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
 	    (psf->p, psf->nx, psf->ny);
 	}
 	if(psf!=wvf) cucfree(wvf);
@@ -458,16 +372,16 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
 	    cuczero(wvf, stream);
 	}
 	CUDA_SYNC_DEVICE;//temp
-	evl_embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
+	embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
 	    (wvf->p, iopdevl->p, cudata->pamp, cudata->embed[iwvl], nloc, cuwvls[iwvl]);
 	CUDA_SYNC_DEVICE;//temp
 	CUFFT(evlplan[iwvl+nwvl*ievl], wvf->p, CUFFT_FORWARD);
 	if(!psf[iwvl]) psf[iwvl]=curnew(cupsfsize[iwvl], cupsfsize[iwvl]);
 	if(atomic){
-	    evl_corner2center_abs2_atomic_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
+	    corner2center_abs2_atomic_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
 		((psf[iwvl])->p, (psf[iwvl])->nx, (psf[iwvl])->ny, wvf->p, wvf->nx, wvf->ny);
 	}else{
-	    evl_corner2center_abs2_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
+	    corner2center_abs2_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
 		((psf[iwvl])->p, (psf[iwvl])->nx, (psf[iwvl])->ny, wvf->p, wvf->nx, wvf->ny);
 	}
     }

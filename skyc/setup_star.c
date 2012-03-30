@@ -37,9 +37,10 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
     PDMAT(coord,pc);
     int nwvl=parms->maos.nwvl;
     STAR_S *star=calloc(nstar, sizeof(STAR_S));
-    double ngsgrid=parms->maos.ngsgrid/206265;
+    double ngsgrid=parms->maos.ngsgrid/206265.;
     double r2=pow(parms->skyc.patfov/206265./2.,2);
-    double keepout=pow(parms->skyc.keepout/206265,2);
+    double keepout=pow(parms->skyc.keepout/206265.,2);
+    double minrad2=pow(parms->skyc.minrad/206265.,2);
     int jstar=0;
     assert(nwvl+2==coord->nx);
     for(int istar=0; istar<nstar; istar++){
@@ -76,6 +77,11 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
 		}
 		continue;
 	    }
+	}
+	if(pow(star[istar].thetax,2)+pow(star[istar].thetay,2)<minrad2){
+	    info("Skip star at (%.0f, %.0f) because minrad=%g\n", 
+		 star[istar].thetax*206265, star[istar].thetay*206265, parms->skyc.minrad);
+	    continue;
 	}
 	star[jstar].mags=dnew(nwvl,1);
 	memcpy(star[jstar].mags->p, pc[istar]+2, sizeof(double)*nwvl);

@@ -24,8 +24,6 @@ extern "C"
 #include "recon.h"
 #include "accphi.h"
 #include "pcg.h"
-#define CALL_ONCE\
-    do {static int count=0; count++; if(count>1) warning("This function should only be called once\n");} while(0)
 extern int *wfsgpu;
 extern int *evlgpu;
 void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
@@ -254,7 +252,7 @@ void gpu_moao_recon(SIM_T *simu){
     if(parms->gpu.fit){
 	dmcommon=curecon->dmfit;
     }else{
-	cp2gpu(&dmcommon, simu->dmfit_hi);
+	cp2gpu(&dmcommon, simu->dmfit);
     }
     cudaStream_t stream=curecon->moao_stream;
     if(curecon->moao_wfs){/*There is MOAO DM for WFS */

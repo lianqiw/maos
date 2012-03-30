@@ -360,17 +360,17 @@ void skysim(const PARMS_S *parms){
 	    TIC;tic;
 	    for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		long dtrat=parms->skyc.dtrats[idtrat];
-		simu->gain_tt[idtrat]=servo_typeII_optim(simu->psd_tt_ws, dtrat,
-							 parms->maos.dt, parms->skyc.pmargin, sigma2);
-		simu->gain_ps[idtrat]=servo_typeII_optim(simu->psd_ps, dtrat,
-							 parms->maos.dt, parms->skyc.pmargin, sigma2);
-		simu->gain_ngs[idtrat]=servo_typeII_optim(simu->psd_ngs_ws, dtrat, 
-							  parms->maos.dt, parms->skyc.pmargin, sigma2);
+		simu->gain_tt[idtrat]=servo_optim(simu->psd_tt_ws, parms->maos.dt,
+						  dtrat, parms->skyc.pmargin, sigma2, 2);
+		simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 
+						  dtrat, parms->skyc.pmargin, sigma2, 2);
+		simu->gain_ngs[idtrat]=servo_optim(simu->psd_ngs_ws, parms->maos.dt,
+						   dtrat, parms->skyc.pmargin, sigma2, 2);
 		dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
 		dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
 		dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
 	    }
-	    toc("servo_typeII_optim");
+	    toc("servo_optim");
 	    simu->gain_x=dref(sigma2);
 	    dfree(sigma2);
 	}

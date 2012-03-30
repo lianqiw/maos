@@ -105,7 +105,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     /*Set the amp for plotting. */
     aper->amp1=ddup(aper->amp);
     /*normalize amp to sum to 1. */
-    normalize(aper->amp->p, aper->locs->nloc, 1);
+    normalize_sum(aper->amp->p, aper->locs->nloc, 1);
     if(parms->plot.setup){
 	drawopd("amp",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
 		"x (m)","y (m)","aper");
@@ -142,7 +142,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->embed=calloc(nwvl, sizeof(long*));
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    aper->nembed[iwvl]=parms->evl.psfgridsize[iwvl];
-	    aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs);
+	    aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs, 2);
 	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > aper->nembed[iwvl]){
 		parms->evl.psfsize[iwvl] = aper->nembed[iwvl];
 	    }

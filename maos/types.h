@@ -162,6 +162,9 @@ typedef struct POWFS_T{
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS*/
     dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
+    long *embed;        /**<Embedding index for field stop computing*/
+    long nembed;        /**<dimension of embed.*/
+    dmat *fieldstop;    /**<The field stop mask*/
 }
 POWFS_T;
 
@@ -293,7 +296,6 @@ typedef struct RECON_T{
     spcell *HXWtomo;   /**<Like GXtomo*/
     spcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/
     spcell *GXtomo;    /**<GX for tomography. excluding NGS in split tomography*/
-    spcell *GXhi;      /**<GX for high order WFS.*/
     spcell *GXlo;      /**<GX for low order WFs*/
     spcell *GXfocus;   /**<GX used for focus tracking.*/
     dcell *GXL;        /**<dense GX for low order WFS in MV split tomography.*/
@@ -344,14 +346,6 @@ typedef struct RECON_T{
     int cxx;           /**<records parms->tomo.cxx*/
 }RECON_T;
 
-/**
-   contains internal data for a type II integrator
-*/
-typedef struct TYPEII_T{
-    dcell *lead;       /**<Output of lead filter*/
-    dcell *errlast;    /**<Record error in last time*/
-    dcell *firstint;   /**<First integrator output*/
-}TYPEII_T;
 typedef struct SIM_SAVE_T{
     /*cellarrs to save telemetry data.*/
     cellarr** wfspsfout; /**<special file to save wfs psf history*/
@@ -368,8 +362,8 @@ typedef struct SIM_SAVE_T{
     cellarr** evlopdmean_ngsr;    /**<science field OPD mean with NGS mode removed.*/
     cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
     /*Deformable mirror. */
-    cellarr *dmerr_hi;
-    cellarr *dmfit_hi;
+    cellarr *dmerr;
+    cellarr *dmfit;
     cellarr *dmpttr;
     cellarr *dmreal;
     cellarr *dmcmd;
@@ -476,8 +470,6 @@ typedef struct SIM_T{
     dmat *cleNGSm;     /**<Close loop ngs mods in split tomogrpahy. */
     dcell *cleNGSmp;   /**<(M'*w*phi);*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
-    dmat *gtypeII_lo;  /**<gain for type II array.*/
-
     /*DM commands.*/
     dcell *dmcmd;      /**<This is the final command send to DM.*/
     dcell *dmcmdlast;  /**<The final command for last time step.*/
@@ -490,25 +482,22 @@ typedef struct SIM_T{
     map_t **dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
-    dcell **dmint;     /**<dm integrator. (used of fuseint==1)*/
+    SERVO_T *dmint;     /**<dm integrator. (used of fuseint==1)*/
     HYST_T**hyst;      /**<Hysterisis computation stat*/
 
     /*High order*/
-    dcell *dmfit_hi;   /**<direct high order fit output*/
-    dcell *dmerr_hi;   /**<high order dm error signal.*/
-    dcell **dmint_hi;  /**< integrator for high order (only if fuseint==0)*/
+    dcell *dmfit;   /**<direct high order fit output*/
+    dcell *dmerr;   /**<high order dm error signal.*/
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
     dcell *Merr_lo_keep;/**<Keep Merr_lo for PSF recon.*/
-    dcell **Mint_lo;   /**<NGS integrator (only used if fuseint==0)*/
-    TYPEII_T *MtypeII_lo;  /**<intermediate results for type II/lead filter*/  
+    SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     
     /*llt pointing loop*/
     dcell *upterr;     /**<uplink error*/
-    dcell *upterrlast; /**<uplink error from last step*/
     dcell *uptreal;    /**<uplink real*/
-    dcell **uptint;    /**<uplink integrator output.*/
+    SERVO_T *uptint;    /**<uplink integrator output.*/
     dcell *upterrs;    /**<mmaped file to store upterr history*/
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 

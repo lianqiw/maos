@@ -24,7 +24,7 @@
 #include "dsp.h"
 
 
-long *loc_create_embed(long *nembed, const loc_t *loc);
+long *loc_create_embed(long *nembed, const loc_t *loc, int oversize);
 void loc_create_map_npad(loc_t *loc, int npad);
 void loc_create_map(loc_t *loc);
 

@@ -144,6 +144,7 @@ typedef struct POWFS_CFG_T{
     double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
 		       ccd. Converted to radian from user input*/
     double radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
+    double fieldstop;/**<size of field stop in arcsec.*/
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
     double sigscale;/**<scale the signal level for simulation.*/
@@ -435,22 +436,18 @@ typedef struct SIM_CFG_T{
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/
     /*control */
-    double *apdm;    /**<servo coefficient for high order dm.  A is command. e is
+    dmat *apdm;    /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
 			A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
 		     */
-    double *apngs;   /**<servo coefficient for ngs modes.*/
-    double *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
-    double epdm;     /**<error gain for DM commands (high order)*/
-    double epngs;    /**<error gain for NGS modes (low order)*/
-    double epupt;    /**<error gain for uplink pointing*/
-    double dpupt;    /**<derivative tracking for uplink pointer. keep 0 to disable*/
+    dmat *epdm;     /**<error gain for DM commands (high order)*/
+    dmat *aplo;   /**<servo coefficient for ngs modes.*/
+    dmat *eplo;     /**<error gain for NGS modes (low order)*/
+    dmat *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
+    dmat *epupt;    /**<error gain for uplink pointing*/
     double epfocus;  /**<error gain for LGS focus tracking with zoom optics*/
     double lpfocus;  /**<parameter for low pass filter of LGS focus tracking with offset*/
     double fov;      /**<The diameter of total fov in arcsec*/
-    int napdm;       /**<number of entries in apdm*/
-    int napngs;      /**<number of entries in apngs*/
-    int napupt;      /**<number of entries in apupt*/
     int mffocus;     /**<method for focus tracing.
 			- 0: no focus tracking.
 			- use CL grads + DM grads - Xhat grad for LGS and NGS.
@@ -663,6 +660,9 @@ typedef struct PARMS_T{
     int ntsurf;      /**<Number of tilted surfaces*/
     int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int pause;       /**<Pause at the end of every time step*/
+    int nlopowfs;    /**<Number of low order wfs types*/
+    int nhipowfs;    /**<Number of high order wfs types*/
+    int ntrspowfs;   /**<Number of tile removed wfs types*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.

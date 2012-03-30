@@ -96,6 +96,7 @@ typedef struct SKYC_S{
     double lon;      /**<Galactic longitude.*/
     double catscl;   /**<Scale the catlog star count*/
     double patfov;   /**<Patrol FoV in arcsec (diameter)*/
+    double minrad;   /**<minimum radius of the stars (keep out of center science region)*/
     double imperrnm; /**<Implementation error in nm in the center.*/
     double imperrnmb;/**<Implementation error slopt in nm:
 			imperrnm(theta)=sqrt(imperrnm^2+imperrnmb^2*theta^2). The

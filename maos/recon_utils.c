@@ -607,8 +607,8 @@ dsp *nea2sp(dmat **nea, long nsa){
    Compute and save PSF reconstruction telemetry.  For pseudo open loop
    estimations, like high order loop, we add opdr to, and subtract dmpsol from
    the OPD.  For closed loop estimations, like ahst low order or lsr, we add
-   dmerr_lo, and dmerr_hi to the OPD.*/
-void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *dmerr_lo){
+   dmerr_lo, and dmerr to the OPD.*/
+void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     /* The tomography estimates, opdr is pseudo open loop estimates. We need to
@@ -629,8 +629,8 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *
 	    dcelladd(&dmadd, 1, dmpsol, -1);
 	}
     }
-    if(dmerr_hi){/*high order closed loop estimates. (lsr)*/
-	dcelladd(&dmadd, 1, dmerr_hi, 1);
+    if(dmerr){/*high order closed loop estimates. (lsr)*/
+	dcelladd(&dmadd, 1, dmerr, 1);
     }
     if(dmerr_lo){/*In AHST, dmerr_lo is CL Estimation.*/
 	addlow2dm(&dmadd, simu, dmerr_lo, 1);

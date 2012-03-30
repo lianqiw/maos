@@ -61,16 +61,16 @@ void save_recon(SIM_T *simu){
 			    "Reconstructed Atmosphere","x (m)","y (m)","opdr %d",i);
 		}
 	    }
-	    for(int i=0; simu->dmfit_hi && i<simu->dmfit_hi->nx; i++){
-		if(simu->dmfit_hi->p[i]){
-		    drawopd("DM", recon->aloc[i], simu->dmfit_hi->p[i]->p,NULL,
+	    for(int i=0; simu->dmfit && i<simu->dmfit->nx; i++){
+		if(simu->dmfit->p[i]){
+		    drawopd("DM", recon->aloc[i], simu->dmfit->p[i]->p,NULL,
 			    "DM Fitting Output","x (m)", "y (m)","Fit %d",i);
 		}
 	    }
 	}
-	for(int idm=0; simu->dmerr_hi && idm<parms->ndm; idm++){
-	    if(simu->dmerr_hi->p[idm]){
-		drawopd("DM",recon->aloc[idm], simu->dmerr_hi->p[idm]->p,NULL,
+	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
+	    if(simu->dmerr->p[idm]){
+		drawopd("DM",recon->aloc[idm], simu->dmerr->p[idm]->p,NULL,
 			"DM Error Signal (Hi)","x (m)","y (m)",
 			"Err Hi %d",idm);
 	    }
@@ -98,7 +98,7 @@ void save_recon(SIM_T *simu){
 	    cellarr_dcell(simu->save->opdr, simu->opdr);
 	}
 	if(parms->save.dm){
-	    cellarr_dcell(simu->save->dmfit_hi, simu->dmfit_hi);
+	    cellarr_dcell(simu->save->dmfit, simu->dmfit);
 	}
 	if(parms->save.opdx || parms->plot.opdx){
 	    dcell *opdx=simu->opdx;
@@ -122,7 +122,7 @@ void save_recon(SIM_T *simu){
 	}
     }
     if(parms->save.dm){
-	cellarr_dcell(simu->save->dmerr_hi, simu->dmerr_hi);
+	cellarr_dcell(simu->save->dmerr, simu->dmerr);
 	if(simu->save->Merr_lo){
 	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
 	}

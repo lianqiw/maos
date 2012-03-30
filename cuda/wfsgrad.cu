@@ -244,7 +244,18 @@ __global__ static void collect_noise_do(float *restrict neareal, const float *re
 	nea[3]+=dy*dy;
     }
 }
-
+void gpu_fieldstop(curmat *opd, float *amp, int *embed, int nembed, 
+		   curmat* fieldstop, float wvl, cufftHandle fftplan, cudaStream_t stream){
+    cucmat wvf(nembed, nembed);
+    embed_wvf_do<<<DIM(opd->nx, 256), 0, stream>>>
+	(wvf.p, opd->p, amp, embed, opd->nx, wvl);
+    CUFFT(fftplan, wvf.p, CUFFT_FORWARD);
+    cwm_do<<<DIM(wvf.nx*wvf.ny, 256),0,stream>>>
+      (wvf.p, fieldstop->p, wvf.nx*wvf.ny);
+    CUFFT(fftplan, wvf.p, CUFFT_INVERSE);
+    unwrap_phase_do<<<DIM2(wvf.nx, wvf.ny, 16),0,stream>>>
+	(wvf.p, opd->p, embed, opd->nx, wvl);
+}
 /**
    Ray tracing and gradient computation for WFS. \todo Expand to do gradients in GPU without transfering
    data back to CPU.
@@ -333,6 +344,10 @@ void gpu_wfsgrad(thread_t *info){
     }
     if(parms->powfs[ipowfs].llt && simu->focusint && simu->focusint->p[iwfs]){
 	TO_IMPLEMENT;
+    }
+    if(parms->powfs[ipowfs].fieldstop){
+	gpu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed, cupowfs[ipowfs].nembed, 
+		      cupowfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl[0], cuwfs[iwfs].plan_fs, stream);
     }
     if(save_opd){
 	cellarr_cur(simu->save->wfsopd[iwfs], phiout, stream);

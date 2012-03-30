@@ -47,6 +47,7 @@ void embedc_out(const dcomplex *out, double *in, long nin, long *embed);
 double calc_aniso(double r0, int nht, double *ht, double *wt);
 double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, double hc2);
 
-void shift_inte(int nap, double *ap, dcell **inte);
+void shift_inte(dmat *ap, dcell **inte);
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl);
+void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat* fieldstop, double wvl);
 #endif

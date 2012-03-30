@@ -25,6 +25,9 @@
 #include <ctype.h>
 #include "../lib/aos.h"
 #include "parms.h"
+#if USE_CUDA
+#include "../cuda/gpu.h"
+#endif
 extern int use_cuda;
 /*
   Don't include maos.h or types.h, so that we don't have to recompile
@@ -35,6 +38,34 @@ extern int use_cuda;
    This file contains necessary routines to read parametes for
    WFS, DM and wavefront reconstruction.  */
 
+void free_powfs_cfg(POWFS_CFG_T *powfscfg){
+    free(powfscfg->wvl);
+    if(powfscfg->wvlwts){
+	free(powfscfg->wvlwts);
+    }
+    if(powfscfg->llt){
+	free(powfscfg->llt->fnrange);
+	free(powfscfg->llt->fnprof);
+	free(powfscfg->llt->fnamp);
+	free(powfscfg->llt->fnsurf);
+	free(powfscfg->llt->i);
+	free(powfscfg->llt->ox);
+	free(powfscfg->llt->oy);
+	free(powfscfg->llt->misreg);
+	free(powfscfg->llt);
+    }
+    free(powfscfg->wfs);
+    free(powfscfg->wfsind);
+    free(powfscfg->scalegroup);
+    free(powfscfg->fnllt);
+    free(powfscfg->piinfile);
+    free(powfscfg->sninfile);
+    free(powfscfg->neareconfile);
+    free(powfscfg->neasimfile);
+    free(powfscfg->bkgrndfn);
+    free(powfscfg->misreg);
+    free(powfscfg->ncpa);
+}
 /**
    Free the parms struct.
  */
@@ -69,9 +100,12 @@ void free_parms(PARMS_T *parms){
     free(parms->fit.wt);
     free(parms->fit.ht);
 
-    free(parms->sim.apdm);
-    free(parms->sim.apngs);
-    free(parms->sim.apupt);
+    dfree(parms->sim.apdm);
+    dfree(parms->sim.epdm);
+    dfree(parms->sim.aplo);
+    dfree(parms->sim.eplo);
+    dfree(parms->sim.apupt);
+    dfree(parms->sim.epupt);
     free(parms->sim.seeds);
     free(parms->sim.gtypeII_lo);
     free(parms->sim.wspsd);
@@ -88,33 +122,7 @@ void free_parms(PARMS_T *parms){
     free(parms->tsurf);
 
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	free(parms->powfs[ipowfs].wvl);
-	if(parms->powfs[ipowfs].wvlwts){
-	    free(parms->powfs[ipowfs].wvlwts);
-	}
-	if(parms->powfs[ipowfs].llt){
-	    free(parms->powfs[ipowfs].llt->fnrange);
-	    free(parms->powfs[ipowfs].llt->fnprof);
-	    free(parms->powfs[ipowfs].llt->fnamp);
-	    free(parms->powfs[ipowfs].llt->fnsurf);
-	    free(parms->powfs[ipowfs].llt->i);
-	    free(parms->powfs[ipowfs].llt->ox);
-	    free(parms->powfs[ipowfs].llt->oy);
-	    free(parms->powfs[ipowfs].llt->misreg);
-	    free(parms->powfs[ipowfs].llt);
-	}
-	free(parms->powfs[ipowfs].wfs);
-	free(parms->powfs[ipowfs].wfsind);
-	free(parms->powfs[ipowfs].scalegroup);
-	free(parms->powfs[ipowfs].fnllt);
-	free(parms->powfs[ipowfs].piinfile);
-	free(parms->powfs[ipowfs].sninfile);
-	free(parms->powfs[ipowfs].neareconfile);
-	free(parms->powfs[ipowfs].neasimfile);
-	free(parms->powfs[ipowfs].bkgrndfn);
-	free(parms->powfs[ipowfs].misreg);
-	free(parms->powfs[ipowfs].ncpa);
-	
+	free_powfs_cfg(&parms->powfs[ipowfs]);
     }
     free(parms->powfs);
     if(parms->wfs!=parms->wfsr){
@@ -207,7 +215,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	if(nwvlwts){
 	    parms->powfs[ipowfs].wvlwts=calloc(nwvl, sizeof(double));
 	    memcpy(parms->powfs[ipowfs].wvlwts, wvlwts+count,sizeof(double)*nwvl);
-	    normalize(parms->powfs[ipowfs].wvlwts, nwvl, 1);
+	    normalize_sum(parms->powfs[ipowfs].wvlwts, nwvl, 1);
 	}
 	if(nsiglev){
 	    parms->powfs[ipowfs].siglev=siglev[ipowfs];
@@ -245,6 +253,7 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,dx);
     READ_POWFS(dbl,pixtheta);
     READ_POWFS(dbl,radpixtheta);
+    READ_POWFS(dbl,fieldstop);
     READ_POWFS(dbl,pixoffx);
     READ_POWFS(dbl,pixoffy);
     READ_POWFS(int,phyusenea);
@@ -349,6 +358,10 @@ static void readcfg_powfs(PARMS_T *parms){
 		parms->powfs[ipowfs].mtchcra=0;
 	    }
 	}
+	if(parms->powfs[ipowfs].fieldstop>0 && (parms->powfs[ipowfs].fieldstop>10 || parms->powfs[ipowfs].fieldstop<1e-4)){
+	    error("powfs%d: fieldstop=%g. probably wrong unit. (arcsec)\n", ipowfs, parms->powfs[ipowfs].fieldstop);
+	}
+	parms->powfs[ipowfs].fieldstop=parms->powfs[ipowfs].fieldstop/206265.;
     }/*ipowfs */
     free(inttmp);
     free(dbltmp);
@@ -385,8 +398,8 @@ static void readcfg_wfs(PARMS_T *parms){
     int nwvlwts=readcfg_dblarr(&wvlwts,"wfs.wvlwts");
     double *siglev=0;
     int nsiglev=readcfg_dblarr(&siglev,"wfs.siglev");
-    int powfs_siglev_override=readcfg_override("powfs.siglev");
-    int powfs_wvlwts_override=readcfg_override("powfs.wvlwts");
+    int powfs_siglev_override=readcfg_peek_override("powfs.siglev");
+    int powfs_wvlwts_override=readcfg_peek_override("powfs.wvlwts");
     int count=0;
     if(nsiglev!=0 && nsiglev!=parms->nwfs){
 	error("wfs.siglev can be either empty or %d\n",parms->nwfs);
@@ -588,7 +601,7 @@ static void readcfg_evl(PARMS_T *parms){
     if(fabs(parms->evl.misreg[0])>EPS || fabs(parms->evl.misreg[1])>EPS){
 	parms->evl.ismisreg=1;
     }
-    normalize(parms->evl.wt, parms->evl.nevl, 1);
+    normalize_sum(parms->evl.wt, parms->evl.nevl, 1);
     readcfg_intarr_nmax(&(parms->evl.psf), parms->evl.nevl, "evl.psf");
     readcfg_intarr_nmax(&(parms->evl.psfr), parms->evl.nevl, "evl.psfr");
     parms->evl.nwvl = readcfg_dblarr(&(parms->evl.wvl), "evl.wvl");
@@ -701,53 +714,37 @@ static void readcfg_recon(PARMS_T *parms){
    Read in simulation parameters
 */
 static void readcfg_sim(PARMS_T *parms){
-   
-    READ_DBL(sim.epdm);
-    READ_DBL(sim.epngs);
-    READ_DBL(sim.epupt);
-    READ_DBL(sim.dpupt);
+    parms->sim.apupt=readcfg_dmat("sim.apupt");
+    parms->sim.epupt=readcfg_dmat("sim.epupt");
     READ_DBL(sim.epfocus);
     READ_DBL(sim.lpfocus);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
 
-    parms->sim.napdm=readcfg_dblarr(&parms->sim.apdm,"sim.apdm");
-    parms->sim.napngs=readcfg_dblarr(&parms->sim.apngs,"sim.apngs");
-    parms->sim.napupt=readcfg_dblarr(&parms->sim.apupt,"sim.apupt");
-    if(parms->sim.napdm==1){
-	/*We append a 0 so that we keep a time history of the integrator. */
-	parms->sim.apdm=realloc(parms->sim.apdm, sizeof(double)*2);
-	parms->sim.apdm[1]=0;
-	parms->sim.napdm=2;
+    parms->sim.apdm=readcfg_dmat("sim.apdm");
+    parms->sim.epdm=readcfg_dmat("sim.epdm");
+    parms->sim.aplo=readcfg_dmat("sim.aplo");
+    parms->sim.eplo=readcfg_dmat("sim.eplo");
+    /*We append a 0 so that we keep a time history of the integrator. */
+    if(parms->sim.apdm->nx==1){
+	dresize(parms->sim.apdm, 2, 1);
     }
-    if(parms->sim.napngs==1){
-	parms->sim.apngs=realloc(parms->sim.apngs, sizeof(double)*2);
-	parms->sim.apngs[1]=0;
-	parms->sim.napngs=2;
+    if(parms->sim.aplo->nx==1){
+	dresize(parms->sim.aplo, 2, 1);
     }
-    if(fabs(dblsum(parms->sim.apdm, parms->sim.napdm)-1)>1.e-10){
-	warning("sum(sim.apdm)=%g. Should be 1.\n", 
-		dblsum(parms->sim.apdm, parms->sim.napdm));
+    if(fabs(dsum(parms->sim.apdm)-1)>1.e-10){
+	warning("sum(sim.apdm)=%g. Should be 1.\n", dsum(parms->sim.apdm));
     }
-    if(fabs(dblsum(parms->sim.apngs, parms->sim.napngs)-1)>1.e-10){
-	warning("sum(sim.apngs)=%g. Should be 1.\n", 
-		dblsum(parms->sim.apngs, parms->sim.napngs));
+    if(fabs(dsum(parms->sim.aplo)-1)>1.e-10){
+	warning("sum(sim.aplo)=%g. Should be 1.\n", dsum(parms->sim.aplo));
     }
-    if(fabs(dblsum(parms->sim.apupt, parms->sim.napupt)-1)>1.e-10){
-	warning("sum(sim.apupt)=%g. Should be 1.\n", 
-		dblsum(parms->sim.apupt, parms->sim.napupt));
+    if(fabs(dsum(parms->sim.apupt)-1)>1.e-10){
+	warning("sum(sim.apupt)=%g. Should be 1.\n", dsum(parms->sim.apupt));
     }
     parms->sim.nseed=readcfg_intarr(&parms->sim.seeds,"sim.seeds");
     READ_DBL(sim.dt);
     READ_INT(sim.start);
     READ_INT(sim.end);
-    READ_INT(sim.servotype_hi);
-    READ_INT(sim.servotype_lo);
-    READ_STR(sim.gtypeII_lo);
-    if(parms->sim.servotype_lo==2 && !parms->sim.gtypeII_lo){
-	error("Must supply parms->sim.gtypeII_lo when sim.servotype_lo=%d\n",
-	      parms->sim.servotype_lo);
-    }
     READ_STR(sim.wspsd);
     READ_INT(sim.wsseq);
     READ_INT(sim.cachedm);
@@ -994,6 +991,52 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
    -# necessary adjustments if outputing WFS PSF.
 */
 static void setup_parms_postproc_wfs(PARMS_T *parms){
+    /*link wfs with powfs*/
+    int jpowfs=0;/*records last powfs.*/
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	parms->powfs[ipowfs].wfs=calloc(parms->nwfs, sizeof(int));
+	parms->powfs[ipowfs].wfsind=calloc(parms->nwfs, sizeof(int));
+	int count=0;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    int kpowfs=parms->wfs[iwfs].powfs;
+	    if(kpowfs==ipowfs){
+		parms->powfs[ipowfs].wfs[count]=iwfs;
+		parms->powfs[ipowfs].wfsind[iwfs]=count;
+		count++;
+	    }else{
+		parms->powfs[ipowfs].wfsind[iwfs]=-1;/*not belong */
+	    }
+	}
+	parms->powfs[ipowfs].nwfs=count;
+	if(count>0){/*empty powfs*/
+	    if(jpowfs<ipowfs){
+		memcpy(parms->powfs+jpowfs, parms->powfs+ipowfs, sizeof(POWFS_CFG_T));
+	    }
+	    jpowfs++;
+	}else{
+	    info("Removing powfs %d\n", ipowfs);
+	    free_powfs_cfg(parms->powfs+ipowfs);
+	    continue;
+	}
+	if(parms->powfs[ipowfs].llt){
+	    parms->powfs[ipowfs].llt->i=calloc(count, sizeof(int));/*default to zero. */
+	    if(parms->powfs[ipowfs].llt->n>1){
+		/*this is single llt for this powfs. */
+		if(parms->powfs[ipowfs].llt->n!=count)
+		    error("# of llts should either be 1 or match nwfs for this powfs");
+		for(int iwfs=0; iwfs<parms->powfs[ipowfs].llt->n; iwfs++){
+		    parms->powfs[ipowfs].llt->i[iwfs]=iwfs;
+		}
+	    }
+	}
+    }
+    parms->npowfs=jpowfs;
+    if(jpowfs==0){
+	warning("No wfs is found\n");
+	if(!parms->sim.idealfit){
+	    error("Cannot proceed\n");
+	}
+    }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	/*Figure out order of High order WFS if not specified.*/
 	if(parms->powfs[ipowfs].order==0){
@@ -1003,7 +1046,22 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		error("Please specify powfs[%d].order in MOAO mode\n", ipowfs);
 	    }
 	}
-	
+	if(parms->powfs[ipowfs].nwfs>0){
+	    if(parms->powfs[ipowfs].lo){
+		parms->nlopowfs++;
+		if(parms->powfs[ipowfs].trs==1){
+		    error("Low order wfs should not be tilt removed\n");
+		}
+	    }else{
+		parms->nhipowfs++;
+	    }
+	    if(parms->powfs[ipowfs].trs){
+		if(parms->powfs[ipowfs].lo){
+		    error("WFS with tip/tilt removed should be high order\n");
+		}
+		parms->ntrspowfs++;
+	    }
+	}
 	/* 
 	   Figure out pixtheta if specified to be auto (<0).
 	   -pixtheta is the ratio to nominal value.
@@ -1089,37 +1147,23 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->powfs[ipowfs].phystep=-1;
 	    }
 	}
-    }
-    /*link wfs with powfs*/
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	parms->powfs[ipowfs].wfs=calloc(parms->nwfs, sizeof(int));
-	parms->powfs[ipowfs].wfsind=calloc(parms->nwfs, sizeof(int));
-	int count=0;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    int kpowfs=parms->wfs[iwfs].powfs;
-	    if(kpowfs==ipowfs){
-		parms->powfs[ipowfs].wfs[count]=iwfs;
-		parms->powfs[ipowfs].wfsind[iwfs]=count;
-		count++;
+	if(parms->powfs[ipowfs].mtchscl==-1){
+	    if(fabs(parms->powfs[ipowfs].sigscale-1)>EPS){
+		parms->powfs[ipowfs].mtchscl=1;
 	    }else{
-		parms->powfs[ipowfs].wfsind[iwfs]=-1;/*not belong */
-	    }
-	}
-	parms->powfs[ipowfs].nwfs=count;
-	if(parms->powfs[ipowfs].llt){
-	    parms->powfs[ipowfs].llt->i
-		=calloc(count, sizeof(int));/*default to zero. */
-	    if(parms->powfs[ipowfs].llt->n>1){
-		/*this is single llt for this powfs. */
-		if(parms->powfs[ipowfs].llt->n!=count)
-		    error("# of llts should either be 1 or match nwfs for this powfs");
-		for(int iwfs=0; iwfs<parms->powfs[ipowfs].llt->n; iwfs++){
-		    parms->powfs[ipowfs].llt->i[iwfs]=iwfs;
-		}
+		parms->powfs[ipowfs].mtchscl=0;
 	    }
 	}
     }
+
     if(parms->recon.split){
+	if(parms->nlopowfs==0){
+	    if(parms->ntrspowfs>=parms->nhipowfs){
+		warning("There is no WFS controlling tip/tilt.\n");
+	    }else{
+		warning("Split reconstruction is enabled when there is no low order WFS. Will split the tip/tilt modes from high order wfs\n");
+	    }
+	}
 	int hi_found=0;
 	int hi_hastt=0;
 	int lo_found=0;
@@ -1138,19 +1182,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		}
 	    }
 	}
-	if(!lo_found || !hi_found){
-	    warning("There are either no high order or no low order wfs. Disable split tomo.\n");
-	    parms->recon.split=0;
-	    if(parms->sim.skysim){
-		error("There is only high or low order WFS. "
-		      "can not do skycoverage presimulation\n");
-	    }
+	if(parms->sim.skysim && (parms->nhipowfs==0 || parms->nlopowfs==0)){
+	    error("There is only high or low order WFS. can not do skycoverage presimulation\n");
 	}
-	if(!hi_found){
+	if(!parms->nhipowfs){
 	    warning("There is no high order WFS!!!\n");
-	}
-	if(!lo_found && !hi_hastt){
-	    warning("There is no WFS controlling tip/tilt.\n");
 	}
     }
    
@@ -1252,7 +1288,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atm.ws=realloc(parms->atm.ws, sizeof(double)*jps);
 	parms->atm.wddeg=realloc(parms->atm.wddeg, sizeof(double)*jps);
     }
-    normalize(parms->atm.wt, parms->atm.nps, 1);
+    normalize_sum(parms->atm.wt, parms->atm.nps, 1);
     if(parms->sim.idealfit){/*If fit only, we using atm for atmr. */
 	warning("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 	int nps=parms->atm.nps;
@@ -1548,6 +1584,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
 	parms->atmr.dx=parms->aper.d/maxorder;
     }
+    if(parms->sim.ecnn){
+	parms->tomo.assemble=1;
+    }
     if((parms->tomo.bgs || parms->tomo.alg != 1) && parms->tomo.cxx !=0){
 	error("Only CG work with non L2 cxx.\n");
 	parms->tomo.cxx=0;
@@ -1635,6 +1674,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}
     }
     parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
+    if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
 }
 
 /**
@@ -1784,6 +1824,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    if(parms->gpu.fit && parms->fit.alg > 2){
 		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
 		parms->gpu.fit=0;
+	    }
+	    if(parms->sim.idealfit && parms->gpu.fit){
+		parms->gpu.fit=2;//In idealfit, FR is not assembled.
 	    }
 	    if(parms->gpu.fit==1 && !parms->fit.assemble){
 		warning("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
@@ -2170,13 +2213,6 @@ static void print_parms(const PARMS_T *parms){
 */
 static void check_parms(const PARMS_T *parms){
     int i;
-    for(i=0;i<parms->npowfs;i++){
-	if(fabs(parms->atm.dx-parms->powfs[i].dx)>1.e-12){
-	    info("powfs %d: The grid sampling 1/%gm doesn't match "
-		 "atmosphere sampling of 1/%gm. This is ok.\n", i,
-		 1./parms->powfs[i].dx,1./parms->atm.dx);
-	}
-    }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].llt){
 	    if(!isfinite(parms->powfs[ipowfs].hs)){
@@ -2258,6 +2294,12 @@ PARMS_T * setup_parms(ARG_T *arg){
     snprintf(fnconf, PATH_MAX, "maos_%ld.conf", (long)getpid());
     close_config("%s",fnconf);
     mysymlink(fnconf, "maos_recent.conf");
+#if USE_CUDA 
+    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu is there is only 1 wfs.*/
+    use_cuda=gpu_init(arg->gpus, arg->ngpu);
+#else
+    use_cuda=0;
+#endif
     /*
       Postprocess the parameters for integrity. The ordering of the following
       routines are critical.

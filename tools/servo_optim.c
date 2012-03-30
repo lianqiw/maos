@@ -20,17 +20,39 @@
 */
 #include "aos.h"
 int main(int argc, char **argv){
-    if(argc<6){
-	info2("Usage: %s psd.bin dtrat dt sigma gainout.bin\n", argv[0]);
+    enum{
+	P_EXE,
+	P_OUT,
+	P_PSD,
+	P_DT,
+	P_DTRAT,
+	P_SIGMAN,
+	P_STYPE,
+	P_TOT,
+    };
+    if(argc!=P_TOT){
+	info2("Usage: %s gainout.bin psd.bin dt dtrat sigman servotype\n", argv[0]);
+	info2(
+	      "PSD psd.bin should be in m^2/hz\n"
+	      "dt is the AO fundemental sampling period.\n"
+	      "dtrat is ratio of sampling period of the WFS over dt.\n"
+	      "sigman is wavefront error due to noise in m^2.\n"
+	      "servotype is 1 or 2 for typeI, typeII controller.\n"
+	      );
 	exit(1);
     }
-    dmat *psd=dread("%s",argv[1]);
-    long dtrat=strtol(argv[2],NULL,10);
-    double dt=strtod(argv[3],NULL);
-    double sigma=strtod(argv[4],NULL);/*m^2 */
+    dmat *psd=dread("%s",argv[P_PSD]);
+    double dt=strtod(argv[P_DT],NULL);
+    long dtrat=strtol(argv[P_DTRAT],NULL,10);
+    double sigma=strtod(argv[P_SIGMAN],NULL);/*m^2 */
     dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma;
-    dcell *gain=servo_typeII_optim(psd,dtrat,dt,M_PI/4,sigma2);
-    dwrite(gain->p[0],"%s",argv[5]);
+    int servotype=(int)strtol(argv[P_STYPE],NULL,10);
+    dcell *gain=servo_optim(psd,dt,dtrat,M_PI/4,sigma2,servotype);
+    dwrite(gain->p[0],"%s",argv[P_OUT]);
+    double gain_n;
+    double res=servo_residual(&gain_n, psd, dt, dtrat,  gain->p[0], servotype);
+    info2("sigma res=%g, noise prop=%g. signal res=%g noise prop=%g\n", 
+	  gain->p[0]->p[3], gain->p[0]->p[4], res, sigma*gain_n);
     dfree(sigma2);
     dcellfree(gain);
     dfree(psd);

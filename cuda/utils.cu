@@ -19,6 +19,20 @@
 #include "curmat.h"
 #include "cucmat.h"
 #include <pthread.h>
+#if defined(HAS_NVML) && HAS_NVML==1
+extern "C"{
+    /*taken from nvml.h*/
+    typedef struct nvmlDevice_st* nvmlDevice_t;
+    typedef struct nvmlMemory_st 
+    {
+	unsigned long long total; //!< Total installed FB memory (in bytes)
+	unsigned long long free; //!< Unallocated FB memory (in bytes)
+	unsigned long long used; //!< Allocated FB memory (in bytes). Note that the driver/GPU always sets aside a small amount of memory for bookkeeping
+    } nvmlMemory_t;
+    int nvmlDeviceGetHandleByIndex(unsigned int index, nvmlDevice_t *device);
+    int nvmlDeviceGetMemoryInfo(nvmlDevice_t device, nvmlMemory_t *memory);
+}
+#endif
 const char *cufft_str[]={
     "success", 
     "invalid plan",
@@ -88,60 +102,131 @@ size_t gpu_get_mem(void){
     DO(cudaMemGetInfo(&fr, &tot));
     return fr;
 }
+static int cmp_gpu_info(const long *a, const long *b){
+    return (int)(b[1]-a[1]);
+}
 /**
    Initialize GPU. Return 1 if success.
- */
+*/
 int gpu_init(int *gpus, int ngpu){
     if(gpus && gpus[0]<0){
 	info2("CUDA is disabled by user.\n");
 	return 0;
     }
     int free_gpus=0;
-    if(!gpus || ngpu==0){/*automatic. Use all GPUs. */
-	free_gpus=1;
-	if(cudaGetDeviceCount(&ngpu) || ngpu==0){
-	    return 0;
+    int ngpu_tot=0;//total number of GPUs.
+    long (*gpu_info)[2]=NULL;
+    if(cudaGetDeviceCount(&ngpu_tot) || ngpu_tot==0){//no GPUs available.
+	return 0;
+    }else{/*record information of all GPUs.*/
+	gpu_info=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
+	for(int ig=0; ig<ngpu_tot; ig++){
+	    gpu_info[ig][0]=ig;
+	    cudaDeviceProp prop={0};
+	    if(cudaGetDeviceProperties(&prop, ig)){
+		warning2("Skip GPU %d: not supporting CUDA.\n", ig);
+	    }else if(prop.major!=9999){
+		if(prop.major>=1.3 || prop.totalGlobalMem>500000000){/*require minimum of 500M */
+		    gpu_info[ig][1]=prop.totalGlobalMem;
+		}else{
+		    warning2("Skip GPU %d: insufficient memory\n", ig);
+		}
+	    }
 	}
-	gpus=(int*)calloc(ngpu, sizeof(int));
+    }
+    if(!gpus) free_gpus=1;
+    if(ngpu==0){//fully auto
+	ngpu=ngpu_tot;
+	gpus=(int*)malloc(ngpu_tot*sizeof(int));
 	for(int i=0; i<ngpu; i++){
 	    gpus[i]=i;
 	}
     }
-    /* check usability of GPUs.*/
-    GPUS=(int*)calloc(ngpu ,sizeof(int));
-    for(int im=0; im<ngpu; im++){
-	int ig=gpus[im];
-	cudaDeviceProp prop={0};
-	if(cudaGetDeviceProperties(&prop, ig)){
-	    warning2("Skip GPU %d: not supporting CUDA.\n", ig);
-	}else if(prop.major!=9999){
-	    if(prop.major>=1.3 || prop.totalGlobalMem>500000000){/*require minimum of 500M */
-		GPUS[NGPU]=ig;
-		NGPU++;
+    NGPU=0;
+    if(gpus){//user preselected gpus or fully auto choice
+	GPUS=(int*)calloc(ngpu ,sizeof(int));
+	for(int i=0; i<ngpu; i++){
+	    int jgpu=gpus[i];
+	    if(jgpu >= ngpu_tot){
+		info("out of range\n");
+	    }else if(gpu_info[jgpu][1]>0){
+		int found=0;
+		for(int j=0; j<NGPU; j++){
+		    if(GPUS[j]==jgpu){
+			info("Removing duplicate GPU: %d\n", jgpu);
+			found=1;
+		    }
+		}
+		if(!found){
+		    GPUS[NGPU]=jgpu; 
+		    NGPU++;
+		}
 	    }else{
-		warning2("Skip GPU %d: insufficient memory\n", ig);
+		info("GPU %d does not meet minimum requirement\n", jgpu);
 	    }
 	}
+    }else{//automatically select a subset. choose the ones with highest memory.
+	if(ngpu>ngpu_tot) ngpu=ngpu_tot;
+	NGPU=ngpu;/*assign GPU later*/
     }
-    if(free_gpus) {
-	free(gpus); 
-	gpus=NULL;
-    }
-     if(NGPU) {
+    if(free_gpus) free(gpus); gpus=NULL;
+    free(gpu_info);
+    if(NGPU) {
 	cudata_all=(cudata_t**)calloc(NGPU, sizeof(cudata_t*));
 	for(int im=0; im<NGPU; im++){
 	    cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
 	}
     }
-    gpu_recon=0;
+    gpu_recon=0;/*first gpu in GPUS*/
     if(!NGPU){
 	warning("no gpu is available\n");
 	return 0;
     }else{
+	for(int i=0; GPUS && i<NGPU; i++){
+	    info2("Using GPU %d\n", GPUS[i]);
+	}
 	return 1;
     }
 }
-
+/*Assign the right GPU if NGPU is empty (not yet assigned). This need to happen
+  when maos is already running so GPUs gets populated.*/
+void gpu_assign(){
+    if(!NGPU || GPUS) return;
+    int ngpu=NGPU; NGPU=0;
+    GPUS=(int*)calloc(ngpu ,sizeof(int));
+    int ngpu_tot=0;//total number of GPUs.
+    if(cudaGetDeviceCount(&ngpu_tot) || ngpu_tot==0){//no GPUs available.
+	return;
+    }
+    long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
+    for(int ig=0; ig<ngpu_tot; ig++){
+#if defined(HAS_NVML) && HAS_NVML==1
+	nvmlDevice_t dev;
+	nvmlMemory_t mem;
+	if(nvmlDeviceGetHandleByIndex(ig, &dev) == 0 
+	   && nvmlDeviceGetMemoryInfo(dev, &mem) == 0){
+	    gpu_info[ig][1]=mem.free;
+	    info2("%d: gpu %ld, mem %ld (nvml)\n", ig, gpu_info[ig][0], gpu_info[ig][1]);
+	}else
+#endif
+	    {
+		cudaSetDevice(ig);//this allocates context. try to avoid it.
+		gpu_info[ig][0]=ig;
+		gpu_info[ig][1]=gpu_get_mem();/*replace the total mem with available mem*/
+		cudaDeviceReset();
+		info2("%d: gpu %ld, mem %ld (cuda)\n", ig, gpu_info[ig][0], gpu_info[ig][1]);
+	    }
+    }
+    /*sort so that gpus with higest memory is in the front.*/
+    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
+    for(int i=0; i<ngpu; i++){
+	if(gpu_info[i][1]>0){
+	    GPUS[NGPU]=(int)gpu_info[i][0];
+	    info2("Using GPU %d with %ld available memory\n", GPUS[NGPU], gpu_info[i][1]);
+	    NGPU++;
+	}
+    }
+}
 /**
    Clean up device.
 */
@@ -167,7 +252,7 @@ void cp2gpu(float * restrict *dest, double *src, int n){
     DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyHostToDevice));
     cudaDeviceSynchronize();
     free(tmp);
-    }
+}
 /**
    Convert double array to device memory (float)
 */
@@ -188,7 +273,7 @@ void cp2gpu(fcomplex * restrict *dest, dcomplex *restrict src, int n){
 
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
-array. Allow multiple calling to override the data.  */
+   array. Allow multiple calling to override the data.  */
 void cp2gpu(cumap_t ***dest0, map_t **source, int nps){
     if(nps==0) return;
     if(!*dest0){
@@ -281,9 +366,9 @@ __global__ void cusptmul_do(float *y, int icol, cusp *A, float *x, float alpha){
 */
 void cusptmul(float *y, cusp *A, float *x, float alpha, 
 #if MYSPARSE ==1
-	     cudaStream_t stream
+	      cudaStream_t stream
 #else
-	     cusparseHandle_t handle
+	      cusparseHandle_t handle
 #endif
 	      ){
 #if MYSPARSE == 1

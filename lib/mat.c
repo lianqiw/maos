@@ -159,7 +159,8 @@ void X(resize)(X(mat) *A, long nx, long ny){
 	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
 	}
     }else{
-	warning("column vector length is not preserved!!!");
+	warning("column vector length is not preserved. %ldx%ld=>%ldx%ld!!!", 
+		A->nx, A->ny, nx, ny);
 	T *p=calloc(nx*ny,sizeof(T));
 	long minx=A->nx<nx?A->nx:nx;
 	long miny=A->ny<ny?A->ny:ny;
@@ -390,7 +391,6 @@ X(mat) *X(trans)(const X(mat) *A){
     }
     return B;
 }
-
 /**
    set values of each element in a X(mat) to val.
 */
@@ -697,9 +697,10 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
 	double r2y=(iy-cy)*(iy-cy);
 	for(int ix=0; ix<A->nx; ix++){
 	    double r2r=(ix-cx)*(ix-cx)+r2y;
-	    if(r2r<r2l) 
-	    	As[iy][ix]+=val;
-	    else if(r2r<r2u){
+	    double val2=0;
+	    if(r2r<r2l) {
+		val2=val;
+	    }else if(r2r<r2u){
 		double tot=0.;
 		for(int jy=0; jy<nres; jy++){
 		    double iiy=iy+(jy-resm)*2*res;
@@ -713,8 +714,49 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
 			    tot+=res2*wty*wtx;
 		    }
 		}
-		As[iy][ix]+=tot*val;
+		val2=tot*val;
 	    }
+	    As[iy][ix]+=val2;
+	}
+    }
+}
+/**
+   Similar to X(circle), by multiply instead of add.
+*/
+void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val){
+    int nres=100;
+    const double res=1./(double)(nres);
+    const double res1=1./(double)(nres);
+    const double res2=res1*res1*4.;
+    double resm=(double)(nres-1)/2.;
+    double r2=r*r;
+    double r2l=(r-1.5)*(r-1.5);
+    double r2u=(r+2.5)*(r+2.5);
+    PMAT(A,As);
+    for(int iy=0; iy<A->ny; iy++){
+	double r2y=(iy-cy)*(iy-cy);
+	for(int ix=0; ix<A->nx; ix++){
+	    double r2r=(ix-cx)*(ix-cx)+r2y;
+	    double val2=0;
+	    if(r2r<r2l) {
+		val2=val;
+	    }else if(r2r<r2u){
+		double tot=0.;
+		for(int jy=0; jy<nres; jy++){
+		    double iiy=iy+(jy-resm)*2*res;
+		    double rr2y=(iiy-cy)*(iiy-cy);
+		    double wty=1.-fabs(iy-iiy);
+		    for(int jx=0; jx<nres; jx++){
+			double iix=ix+(jx-resm)*2*res;
+			double rr2r=(iix-cx)*(iix-cx)+rr2y;
+			double wtx=1.-fabs(ix-iix);
+			if(rr2r<r2)
+			    tot+=res2*wty*wtx;
+		    }
+		}
+		val2=tot*val;
+	    }
+	    As[iy][ix]*=val2;
 	}
     }
 }
@@ -752,6 +794,7 @@ void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r){
 	}
     }
 }
+
 
 /**
    shift frequency components by n/2

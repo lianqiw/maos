@@ -64,6 +64,11 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		gpu_pts2cuwloc(cupowfs[ipowfs].llt, pts, loc);
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
+	    if(parms->powfs[ipowfs].fieldstop){
+		cp2gpu(&cupowfs[ipowfs].embed, powfs[ipowfs].embed, powfs[ipowfs].loc->nloc);
+		cupowfs[ipowfs].nembed=powfs[ipowfs].nembed;
+		cp2gpu(&cupowfs[ipowfs].fieldstop, powfs[ipowfs].fieldstop);
+	    }
 	}
     }
 
@@ -89,6 +94,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	DO(cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream));
 	DO(cublasCreate(&cuwfs[iwfs].handle));
 	DO(cublasSetStream(cuwfs[iwfs].handle, cuwfs[iwfs].stream));
+	if(parms->powfs[ipowfs].fieldstop){
+	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed, cupowfs[ipowfs].nembed, CUFFT_C2C));
+	    cufftSetStream(cuwfs[iwfs].plan_fs, cuwfs[iwfs].stream);
+	}
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].nsaimcc>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		void *imcc[nsa];

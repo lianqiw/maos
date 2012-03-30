@@ -344,6 +344,10 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    if(!recon->W0 || !recon->W1){
 		error("W0, W1 is required\n");
 	    }
+	    if(parms->sim.idealfit){
+		cp2gpu(&curecon->floc, recon->floc);
+		curecon->nfloc=recon->floc->nloc;
+	    }
 	    curecon->W01=gpu_get_W01(recon->W0, recon->W1);
 	    cp2gpu(&curecon->fitNW, recon->fitNW);
 	    cp2gpu(&curecon->actslave, recon->actslave);
@@ -676,7 +680,7 @@ void gpu_fit(SIM_T *simu){
     default:
 	error("Invalid");
     }
-    cp2cpu(&simu->dmfit_hi, 0, curecon->dmfit_vec, 1, curecon->cgstream);
+    cp2cpu(&simu->dmfit, 0, curecon->dmfit_vec, 1, curecon->cgstream);
     if(curecon->opdfit){
 	curcellfree(curecon->opdfit); curecon->opdfit=NULL;
 	curcellfree(curecon->opdfit2); curecon->opdfit2=NULL;  

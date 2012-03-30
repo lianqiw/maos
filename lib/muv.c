@@ -195,10 +195,10 @@ static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, d
 void muv_direct_prep(MUV_T *A, double svd){ 
     if(!A->M) error("M has to be none NULL\n");
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
-    info2("muv_direct_prep: (%s) ", svd?"svd":"chol");
     TIC;tic;
     muv_direct_free(A);
     dsp *muvM=spcell2sp(A->M);
+    info2("muv_direct_prep: (%s) on %ldx%ld array ", svd?"svd":"chol", muvM->m, muvM->n);
     if(svd>0){/*Do SVD */
 	spfull(&A->MI, muvM, 1);
 	if(svd<1){/*use svd as threashold */

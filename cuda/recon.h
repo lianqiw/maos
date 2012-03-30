@@ -94,6 +94,8 @@ typedef struct{
     float **cubic_cc;
     cumuv_t FR;
     cumuv_t FL;
+    float (*floc)[2];/**<recon->floc*/
+    int nfloc;       /**<recon->floc->nloc*/
     int reconisim;
     curcell *fitNW;/**< DM fitting low rank terms*/
     cuspcell *actslave;/**<DM fitting actuator slaving*/

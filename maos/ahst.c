@@ -35,14 +35,15 @@ TIC;
 /**
    Compute number of ahst modes from number of DMs.
  */
-static int ngsmod_nmod(int ndm){
+static int ngsmod_nmod(int ndm, double hs){
     int nmod=0;
-    if(ndm==1)
+    if(ndm==1 || !isfinite(hs)){
 	nmod=2;
-    else if(ndm==2)
+    }else if(ndm==2){
 	nmod=5;
-    else
+    }else{
 	error("Invalid ndm: %d\n",ndm);
+    }
     return nmod;
 }
 
@@ -65,7 +66,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
     amp=aper->amp->p;
     
     dcell *mcc=NULL;
-    if(parms->ndm==1){
+    if(ngsmod->nmod==2){
 	/*Single conjugate. low order WFS only controls Tip/tilt */
 	mcc=dcellnew(parms->evl.nevl,1);
 	PDMAT(aper->mcc,aMCC);
@@ -77,7 +78,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
 	    MCC[1][1]=aMCC[2][2];
 	    MCC[1][0]=MCC[0][1]=aMCC[1][2];
 	}
-    }else if(parms->ndm==2){
+    }else if(ngsmod->nmod==5){
 	double *mod[5];
 	mcc=dcellnew(parms->evl.nevl, 1);
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -151,7 +152,7 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
 	prop_nongrid_bin(aper->locs,aper->amp->p, loc,NULL,amp,1,0,0,1);
-	normalize(amp,loc->nloc,1);
+	normalize_sum(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
 	loc=aper->locs;
@@ -210,7 +211,7 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
 	prop_nongrid_bin(aper->locs,aper->amp->p,loc,NULL,amp,1,0,0,1);
-	normalize(amp,loc->nloc,1);
+	normalize_sum(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
 	loc=aper->locs;
@@ -302,7 +303,7 @@ static dcell* ngsmod_Ptt_Wa(const PARMS_T *parms, RECON_T *recon,
 	loc=recon->floc;
 	amp=calloc(loc->nloc,sizeof(double));
 	prop_nongrid_bin(aper->locs, aper->amp->p,loc,NULL,amp,1,0,0,1);
-	normalize(amp,loc->nloc,1);
+	normalize_sum(amp,loc->nloc,1);
     }else{
 	amp=aper->amp->p;
 	loc=aper->locs;
@@ -407,11 +408,13 @@ static dcell *ngsmod_g(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	dmt->p[idm]=dnew(aloc[idm]->nloc,1);
     }
     PDSPCELL(recon->GA,GA);
+    int nlo=parms->nlopowfs;
+    /* Use low order WFS only. If no such wfs, will use tilt included high order wfs.*/
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	if(!parms->powfs[ipowfs].skip)
+	if(!(parms->powfs[ipowfs].skip || (nlo==0 && parms->powfs[ipowfs].trs==0))){
 	    continue;
-
+	}
 	int nsa=powfs[ipowfs].pts->nsa;
 	if(ZSN->p[iwfs]) continue;
 	ZSN->p[iwfs]=dnew(nsa*2,nmod);
@@ -534,7 +537,6 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
     const int ndm=parms->ndm;	
     ngsmod->aper_fcp=aper->fcp;
-    ngsmod->nmod=ngsmod_nmod(ndm);
     if(ndm==2 && fabs(parms->dm[0].ht)>1.e-10){
 	error("Error configuration. First DM is not on ground\n");
     }
@@ -546,9 +548,8 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    hs=parms->powfs[ipowfs].hs;
 	}
     }
-    if(!isfinite(hs)){
-	warning("No LGS found. No Need split tomography\n");
-    }
+    ngsmod->nmod=ngsmod_nmod(ndm, hs);
+    info("ngsmod nmod=%d\n", ngsmod->nmod);
     ngsmod->hs=hs;
     if(ndm>1){
 	ngsmod->ht=parms->dm[1].ht;
@@ -778,7 +779,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
     if(ndm>2) error("Error Usage\n");
     /*first dm */
     double *pm=M->p[0]->p;
-    if(ndm==1){
+    if(recon->ngsmod->nmod==2){
 	if(M->p[0]->nx!=2) error("Invalid mode\n");
 	int idm=0;
 	double *p=(*dmc)->p[idm]->p;
@@ -788,7 +789,7 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 	for(unsigned long iloc=0; iloc<nloc; iloc++){
 	    p[iloc]+=gain*(pm[0]*xloc[iloc]+pm[1]*yloc[iloc]);
 	}
-    }else if(ndm==2){
+    }else if(recon->ngsmod->nmod==5){
 	if(M->p[0]->nx!=5) error("Invalid mode\n");
 	double scale2=-scale*gain;
 	for(int idm=0; idm<ndm; idm++){

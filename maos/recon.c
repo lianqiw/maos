@@ -52,10 +52,10 @@ void tomofit(SIM_T *simu){
       todo: The following need to be revised to use dmpsol, which is averaged over dtrat. 
     */
     if(parms->sim.fuseint){
-	dmpsol[0]=dmpsol[1]=simu->dmint[parms->dbg.psol?0:1];
+	dmpsol[0]=dmpsol[1]=simu->dmint->mint[parms->dbg.psol?0:1];
     }else{
-	dmpsol[0]=simu->dmint_hi[parms->dbg.psol?0:1];
-	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];/*This can not be simu->dmpsol[lopowfs]. */
+	dmpsol[0]=simu->dmint->mint[parms->dbg.psol?0:1];
+	dmpsol[1]=simu->Mint_lo->mint[parms->dbg.psol?0:1];/*This can not be simu->dmpsol[lopowfs]. */
     }
     if(hi_output){
 	if(parms->sim.idealfit){
@@ -91,26 +91,26 @@ void tomofit(SIM_T *simu){
 		gpu_fit(simu);
 	    }else
 #endif
-		muv_solve(&simu->dmfit_hi, &recon->FL, &recon->FR, simu->opdr);
+		muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
 	}
-	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);/*keep dmfit_hi for warm restart */
+	dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
     
 	/*
 	  Form error signal. Make sure what is subtracted here is what is added
 	  to gradcl to form gramol.
 	*/
 	if(parms->tomo.psol){
-	    dcelladd(&simu->dmerr_hi, 1, dmpsol[0], -1);
+	    dcelladd(&simu->dmerr, 1, dmpsol[0], -1);
 	}
 	if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
-	    remove_dm_ngsmod(simu, simu->dmerr_hi);
+	    remove_dm_ngsmod(simu, simu->dmerr);
 	}
 	if(parms->tomo.ahst_rtt && parms->recon.split){
-	    remove_dm_tt(simu, simu->dmerr_hi);
+	    remove_dm_tt(simu, simu->dmerr);
 	}
 
     }else{/*if high order WFS has output */
-	dcellfree(simu->dmerr_hi);
+	dcellfree(simu->dmerr);
     }
 
     if(!parms->sim.idealfit && parms->recon.split){
@@ -151,7 +151,7 @@ void tomofit(SIM_T *simu){
 	  not use opdr which covers more than DM space.
 	*/
 	if(!simu->opdr || !parms->dbg.useopdr || !parms->tomo.psol){/*opdr is not available. in sim.idealfit=1 mode. */
-	    psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);
+	    psfr_calc(simu, NULL, NULL, simu->dmerr, simu->Merr_lo_keep);
 	}else{
 	    psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
 	}
@@ -168,12 +168,12 @@ void lsr(SIM_T *simu){
     const int lo_output=parms->recon.split && (!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
    
     if(hi_output){
-	muv_solve(&simu->dmerr_hi,&(recon->LL), &(recon->LR), simu->gradlastcl);
+	muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
 	if(parms->recon.split==1){/*ahst */
-	    remove_dm_ngsmod(simu, simu->dmerr_hi);
+	    remove_dm_ngsmod(simu, simu->dmerr);
 	}
     }else{/*if high order does not has output */
-	dcellfree(simu->dmerr_hi);
+	dcellfree(simu->dmerr);
     }
     if(parms->recon.split){ /*Split reconstruction. */
 	if(lo_output){/*Low order has output */
@@ -187,7 +187,7 @@ void lsr(SIM_T *simu){
 	}
     } 
     if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);	
+	psfr_calc(simu, NULL, NULL, simu->dmerr, simu->Merr_lo_keep);	
     }
    
 }

@@ -610,14 +610,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    simu->pistatout[iwfs]=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
 	}
     }
-    if(parms->sim.servotype_lo==2){
-	simu->gtypeII_lo=dread("%s",parms->sim.gtypeII_lo);
-	simu->MtypeII_lo=calloc(1, sizeof(TYPEII_T));
-	if(simu->gtypeII_lo->nx!=3){
-	    error("%s has wrong format. should have 3 rows\n", parms->sim.gtypeII_lo);
-	}
-    }
-  
     {/*Setup hysterisis */
 	int anyhyst=0;
 	simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
@@ -684,13 +676,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     }
 #endif
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
-    if(parms->sim.fuseint){
-	simu->dmint=calloc(parms->sim.napdm, sizeof(dcell*));
-    }else{
-	simu->dmint_hi=calloc(parms->sim.napdm, sizeof(dcell*));
-	simu->Mint_lo=calloc(parms->sim.napdm, sizeof(dcell*));
-    }
-    simu->uptint=calloc(parms->sim.napupt, sizeof(dcell*));
+    simu->dmint=servo_new(simu->dmreal, parms->sim.epdm);
+    simu->Mint_lo=servo_new(NULL, parms->sim.eplo);
+    simu->uptint=servo_new(NULL, parms->sim.epupt);
     {
 	int dm_hist=0;
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -705,7 +693,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    for(int idm=0; idm<parms->ndm; idm++){
 		if(parms->dm[idm].hist){
 		    nnx[idm]=parms->dm[idm].histn;
-		    nny[idm]=simu->dmint[0]->p[idm]->nx*simu->dmint[0]->p[idm]->ny;
+		    nny[idm]=recon->aloc[idm]->nloc;
 		}else{
 		    nnx[idm]=0;
 		    nny[idm]=0;
@@ -1253,9 +1241,9 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     int nstep=parms->sim.end-parms->sim.start;
     if(parms->save.dm){
 	int nrstep=nstep-(parms->sim.closeloop?1:0);
-	save->dmerr_hi=cellarr_init(nrstep, 1,"dmerr_hi_%d.bin", seed);
+	save->dmerr=cellarr_init(nrstep, 1,"dmerr_%d.bin", seed);
 	if(parms->recon.alg==0){
-	    save->dmfit_hi=cellarr_init(nrstep, 1, "dmfit_hi_%d.bin", seed);
+	    save->dmfit=cellarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	}
 	if(parms->recon.split){
 	    save->Merr_lo=cellarr_init(nrstep, 1, "Merr_lo_%d.bin", seed);
@@ -1469,30 +1457,18 @@ void free_simu(SIM_T *simu){
     dcellfreearr(simu->dmpsol, parms->npowfs);
     dcellfree(simu->dmcmd);
     dcellfree(simu->dmcmdlast);
-    dfree(simu->gtypeII_lo);
-    if(parms->sim.fuseint){
-	dcellfreearr(simu->dmint, parms->sim.napdm);
-    }else{
-	dcellfreearr(simu->dmint_hi, parms->sim.napdm);
-	dcellfreearr(simu->Mint_lo, parms->sim.napngs);
-    }
+    servo_free(simu->dmint);
+    servo_free(simu->Mint_lo);
     dcellfree(simu->gcov);
     dcellfree(simu->ecov);
-    dcellfree(simu->dmerr_hi);
-    dcellfree(simu->dmfit_hi);
+    dcellfree(simu->dmerr);
+    dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
     dcellfree(simu->Merr_lo);
     dcellfree(simu->Merr_lo_keep);
-    if(simu->MtypeII_lo){
-	dcellfree(simu->MtypeII_lo->lead);
-	dcellfree(simu->MtypeII_lo->firstint);
-	dcellfree(simu->MtypeII_lo->errlast);
-	free(simu->MtypeII_lo);
-    }
     dcellfree(simu->upterr);
-    dcellfree(simu->upterrlast);
     dcellfree(simu->uptreal);
-    dcellfreearr(simu->uptint, parms->sim.napupt);
+    servo_free(simu->uptint);
 
     dcellfree(simu->moao_wfs);
     dcellfree(simu->moao_evl);
@@ -1548,8 +1524,8 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->wfspsfout, nwfs);
     cellarr_close_n(save->ztiltout, nwfs);
 
-    cellarr_close(save->dmerr_hi);
-    cellarr_close(save->dmfit_hi);
+    cellarr_close(save->dmerr);
+    cellarr_close(save->dmfit);
     cellarr_close(save->dmpttr);
     cellarr_close(save->dmreal);
     cellarr_close(save->dmproj);

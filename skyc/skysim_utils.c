@@ -167,8 +167,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
     dmat *mreal=NULL;/*modal correction at this step. */
     dmat *merr=dnew(nmod,1);/*modal error */
-    dmat *merrm=NULL;/*measured model error */
-    
+    dcell *merrm=dcellnew(1,1);
     dmat *mres=dnew(nmod,aster->nstep);
     PDMAT(mres,pmres);
     PDMAT(parms->skyc.rnefs,rnefs);
@@ -182,7 +181,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     dcell **mtche=calloc(aster->nwfs, sizeof(dcell*));
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
-    SERVO_T *st2t=calloc(1, sizeof(SERVO_T));
+    SERVO_T *st2t=servo_new(merrm, aster->gain->p[idtrat]);
     const double dtngs=parms->maos.dt*dtrat;
     const long nwvl=parms->maos.nwvl;
     dmat *pgm;
@@ -267,18 +266,19 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		}
 		itsa+=nsa*2;
 	    }
-	    dcp(&mreal, st2t->mint);
+	    dcp(&mreal, st2t->mint[0]->p[0]);
 	    if((istep+1) % dtrat == 0){/*has output */
 		dscale(zgrad, 1./dtrat);/*averaging gradients. */
-		dzero(merrm);
-		dmm(&merrm, pgm, zgrad, "nn", 1);
+		dzero(merrm->p[0]);
+		dmm(&merrm->p[0], pgm, zgrad, "nn", 1);
 		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
+		
 		switch(parms->skyc.servo){
 		case 1:
-		    dadd(&st2t->mint, 1, merrm, 0.3);
+		    dcelladd(st2t->mint, 1, merrm, 0.3);
 		    break;
 		case 2:
-		    servo_typeII_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
+		    servo_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
 		    break;
 		default:
 		    error("Invalid\n");
@@ -309,7 +309,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    }/*isa */
 		}/*iwvl */
 	    }/*iwfs */
-	    dcp(&mreal, st2t->mint);
+	    dcp(&mreal, st2t->mint[0]->p[0]);
 	    if((istep+1) % dtrat == 0){/*has output */
 		phycount++;
 		/*Form detector image */
@@ -365,15 +365,15 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    }/*isa */
 		    itsa+=nsa*2;
 		}/*iwfs */
-		dzero(merrm);
-		dmm(&merrm, pgm, grad, "nn", 1);
+		dzero(merrm->p[0]);
+		dmm(&merrm->p[0], pgm, grad, "nn", 1);
 		memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
 		switch(parms->skyc.servo){
 		case 1:
-		    dadd(&st2t->mint, 1, merrm, 0.5);
+		    dcelladd(st2t->mint, 1, merrm, 0.5);
 		    break;
 		case 2:
-		    servo_typeII_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
+		    servo_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
 		    break;
 		default:
 		    error("Invalid\n");
@@ -388,7 +388,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
   
     dfree(mreal);
     dfree(merr);
-    dfree(merrm);
+    dcellfree(merrm);
     dfree(grad);
     dfree(zgrad);
     dfree(grads);/*////////////remove this dmat after debugging */
@@ -400,11 +400,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     ccellfree(wvf);
     ccellfree(wvfc);
     ccellfree(otf);
-    dfree(st2t->mint);
-    dfree(st2t->mintfirst);
-    dfree(st2t->merrlast);
-    dfree(st2t->mlead);
-    free(st2t);
+    servo_free(st2t);
     free(psf);
     free(mtche);
     free(ints);

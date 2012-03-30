@@ -83,4 +83,17 @@ __global__ void perm_f_do(fcomplex *restrict out, const fcomplex *restrict in, i
 __global__ void perm_i_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx);
 __global__ void perm_f_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
 __global__ void perm_i_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
+__global__ void embed_wvf_do(fcomplex *restrict wvf, 
+			     const float *restrict opd, const float *restrict amp, 
+			     const int *embed, const int nloc, const float wvl);
+__global__ void corner2center_do(fcomplex *restrict out, int noutx, int nouty,
+				 const fcomplex *restrict in, int ninx, int niny);
+__global__ void corner2center_abs2_do(float *restrict out, int noutx, int nouty,
+				      const fcomplex *restrict in, int ninx, int niny);
+__global__ void corner2center_abs2_atomic_do(float *restrict out, int noutx, int nouty,
+					     const fcomplex *restrict in, int ninx, int niny);
+__global__ void fftshift_do(fcomplex *wvf, const int nx, const int ny);
+__global__ void add_tilt_do(float *opd, int nx, int ny, float ox, float oy, float dx, float ttx, float tty);
+__global__ void cwm_do(fcomplex *dest, float *from, int n);
+__global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, float wvl);
 #endif

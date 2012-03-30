@@ -168,13 +168,6 @@ int main(int argc, char **argv){
     info2("Source: %s\n", SRCDIR);
     info2("Launched at %s in %s with %d threads\n",myasctime(),myhostname(),arg->nthread);
     info2("Output folder is '%s'.\n",arg->dirout);
-
-#if USE_CUDA 
-    use_cuda=gpu_init(arg->gpus, arg->ngpu);
-#else
-    use_cuda=0;
-#endif
-
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg);
     
@@ -214,6 +207,11 @@ int main(int argc, char **argv){
     }
 
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
+#if USE_CUDA
+    if (use_cuda){
+	gpu_assign();
+    }
+#endif
     free(scmd);
     free(arg->dirout);
     free(arg);

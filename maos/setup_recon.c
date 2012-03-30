@@ -27,8 +27,7 @@
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
-#define CALL_ONCE\
-    {static int count=0; count++; if(count>1) warning("This function should only be called once\n");}
+
 /**
    \file setup_recon.c Contains routines that setup the wavefront reconstructor
    and DM fitting.  Use parms->wfsr instead of parms->wfs for wfs information,
@@ -540,12 +539,15 @@ setup_recon_GA(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     PDSPCELL(recon->GAlo,GAlo);
     PDSPCELL(recon->GAhi,GAhi);
     PDSPCELL(recon->GA,GA);
+    int nlo=parms->nlopowfs;
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
-	    if(parms->powfs[ipowfs].lo){/*for low order wfs */
+	    if(parms->powfs[ipowfs].lo
+	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
 		GAlo[idm][iwfs]=spref(GA[idm][iwfs]);
-	    }else{
+	    }
+	    if(!parms->powfs[ipowfs].skip){
 		GAhi[idm][iwfs]=spref(GA[idm][iwfs]);		
 	    }
 	}
@@ -570,7 +572,6 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 	}/*ips */
     }
     toc2(" ");
-    spcellfree(recon->GXhi);
     spcellfree(recon->GXlo);
     spcellfree(recon->GXtomo);
     spcellfree(recon->GXfocus);
@@ -578,35 +579,24 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
     recon->GXtomo=spcellnew(recon->GX->nx, recon->GX->ny);
     PDSPCELL(recon->GXtomo,GXtomo);
 
-    recon->GXhi=spcellnew(recon->GX->nx, recon->GX->ny);
-    PDSPCELL(recon->GXhi, GXhi);
-
     recon->GXlo=spcellnew(recon->GX->nx, recon->GX->ny);
     PDSPCELL(recon->GXlo, GXlo);
 
     recon->GXfocus=spcellnew(recon->GX->nx, recon->GX->ny);
     PDSPCELL(recon->GXfocus,GXfocus);
-    
+    int nlo=parms->nlopowfs;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	if(!parms->powfs[ipowfs].skip){/*for tomography */
-	    for(int ips=0; ips<npsr; ips++){
+	for(int ips=0; ips<npsr; ips++){
+	    if(!parms->powfs[ipowfs].skip){/*for tomography */
 		GXtomo[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
-	}
-	if(parms->powfs[ipowfs].lo){/*for low order wfs */
-	    for(int ips=0; ips<npsr; ips++){
+	    if(parms->powfs[ipowfs].lo 
+	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
 		GXlo[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
-	 
-	}else{/*for high order wfs */
-	    for(int ips=0; ips<npsr; ips++){
-		GXhi[ips][iwfs]=spref(GX[ips][iwfs]);
-	    }
-	}
-	if(!parms->sim.idealfit && parms->sim.mffocus && parms->sim.closeloop){
-	    /*for focus tracking. */
-	    for(int ips=0; ips<npsr; ips++){
+	    if(!parms->sim.idealfit && parms->sim.mffocus && parms->sim.closeloop){
+		/*for focus tracking. */
 		GXfocus[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
 	}
@@ -775,7 +765,8 @@ setup_recon_TTR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     recon->TT=dcellnew(nwfs,nwfs);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(parms->powfs[ipowfs].trs){
+	if(parms->powfs[ipowfs].trs 
+	   || (parms->recon.split && !parms->powfs[ipowfs].lo)){
 	    info2("powfs %d has tip/tilt removed in tomography\n", ipowfs);
 	    if(parms->powfs[ipowfs].skip){
 		error("This POWFS %d should be included in Tomo.\n", ipowfs);
@@ -914,7 +905,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
       regularization unstability issues.*/
     dclip(recon->wt, 0.01, 1);
     /*normalize the weights to sum to 1. */
-    normalize(recon->wt->p, recon->npsr, 1);
+    normalize_sum(recon->wt->p, recon->npsr, 1);
     const int npsr=recon->npsr;
     recon->cxx=parms->tomo.cxx;
     /*test_cxx(recon, parms); */
@@ -1106,7 +1097,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	}
  
 	info2("Building recon->RL\n"); /*left hand side matrix */
-	recon->RL.M=spcellmulspcell(recon->RR.M,recon->GXhi,1);
+	recon->RL.M=spcellmulspcell(recon->RR.M,recon->GXtomo,1);
 	PDSPCELL(recon->RL.M,RLM);
 	if(parms->tomo.piston_cr){ 
 	    /*single point piston constraint. no need tikholnov.*/
@@ -1238,9 +1229,10 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
     if(parms->save.recon){
-       	if(recon->RL.C)
+       	if(recon->RL.C){
 	    if(parms->save.recon>1) chol_convert(recon->RL.C, 1);
 	    chol_save(recon->RL.C,"%s/RLC.bin",dirsetup);
+	}
 	if(recon->RL.MI)
 	    dwrite(recon->RL.MI,"%s/RLMI", dirsetup);
 	if(recon->RL.CB){
@@ -1258,124 +1250,125 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	    spcellfree(recon->ZZT);
 	}
     }
-  
-    if(parms->sim.ecnn){
-	/**
-	   We compute the wavefront estimation error covariance in science focal
-	   plane due to wavefront measurement noise. Basically we compute
-	   Hx*E*Cnn*E'*Hx' where E is the tomography operator, and Hx is ray
-	   tracing from tomography grid xloc to science focal plane ploc. Since
-	   Cnn is symmetrical and sparse, we can decompose it easily into
-	   Cnn=Cnl*Cnl'; We first compute L=Hx*E*Cnl, and the result is simply
-	   LL'; This is much faster than computing left and right separately,
-	   because 1) the number of points in xloc is larger than in Cnn, so
-	   after the tomography right hand side vector is applied, the number of
-	   rows is larger than number of columns, this causes the right hand
-	   side solver to be much slower. 2) Simply double the computation.
+    info2("After assemble tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+}
 
-	   For HX opeation, build the sparse matrix and do multiply is way
-	   slower than doing ray tracing directly. 
+static void setup_recon_tomo_ecnn(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
+    if(!parms->sim.ecnn) return;
+    /**
+       We compute the wavefront estimation error covariance in science focal
+       plane due to wavefront measurement noise. Basically we compute
+       Hx*E*Cnn*E'*Hx' where E is the tomography operator, and Hx is ray
+       tracing from tomography grid xloc to science focal plane ploc. Since
+       Cnn is symmetrical and sparse, we can decompose it easily into
+       Cnn=Cnl*Cnl'; We first compute L=Hx*E*Cnl, and the result is simply
+       LL'; This is much faster than computing left and right separately,
+       because 1) the number of points in xloc is larger than in Cnn, so
+       after the tomography right hand side vector is applied, the number of
+       rows is larger than number of columns, this causes the right hand
+       side solver to be much slower. 2) Simply double the computation.
 
-	   For ad hoc split tomography, we need to remove the five NGS modes
-	   from here, as well as in time averaging of estimated turbulence.
+       For HX opeation, build the sparse matrix and do multiply is way
+       slower than doing ray tracing directly. 
 
-	   recon->saneal contains Cnl.
-	*/
-	TIC;tic;
-	read_self_cpu();
+       For ad hoc split tomography, we need to remove the five NGS modes
+       from here, as well as in time averaging of estimated turbulence.
+
+       recon->saneal contains Cnl.
+    */
+    TIC;tic;
+    read_self_cpu();
 	
-	if(0){
-	    /*Luc's Method. Solve E^T Hx^T */
-	    {
-		warning("Overriding sanea\n");
-		warning("Overriding sanea\n");
-		warning("Overriding sanea\n");
-		spcellfree(recon->sanea);
-		recon->sanea=spcellread("nt");
-	    }
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!parms->evl.psfr[ievl]) continue;
-		dcell *hxt=dcellnew(recon->npsr, 1);
-		double hs=parms->evl.hs[ievl];
-		for(int ips=0; ips<recon->npsr; ips++){
-		    const double ht=recon->ht->p[ips];
-		    const double scale=1.-ht/hs;
-		    const double dispx=parms->evl.thetax[ievl]*ht;
-		    const double dispy=parms->evl.thetay[ievl]*ht;
-		    dsp *HXT=mkhb(recon->xloc[ips], aper->locs, NULL,
-				 dispx, dispy, scale, 0, 0);
-		    spfull(&hxt->p[ips], HXT, 1); spfree(HXT);
-		}
-		dcell *t1=NULL;
-		info("CPU Usage: %.1f HXT   ", read_self_cpu()); toc2(" ");tic;
-		muv_direct_solve_cell(&t1, &recon->RL, hxt); dcellfree(hxt);
-		info("CPU Usage: %.1f Solve ", read_self_cpu()); toc2(" ");tic;
-		dcell *p=NULL;
-		muv_t(&p, &recon->RR, t1, 1); dcellfree(t1);
-		dcellwrite(p, "p_%d.bin", ievl);
-		info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
-		dcell *t2=NULL;
-		
-		spcellmulmat(&t2, recon->sanea, p, 1); 
-		dcell *t3=NULL;
-		dcellmm(&t3, p, t2, "tn", 1);
-		dcellfree(p); dcellfree(t2);
-		info("CPU Usage: %.1f MUL   ", read_self_cpu()); toc2(" ");tic;
-		dwrite(t3->p[0], "ecnn_new_%d.bin", ievl);
-		dcellfree(t3);
-	    }
+    if(0){
+	/*Luc's Method. Solve E^T Hx^T */
+	{
+	    warning("Overriding sanea\n");
+	    warning("Overriding sanea\n");
+	    warning("Overriding sanea\n");
+	    spcellfree(recon->sanea);
+	    recon->sanea=spcellread("nt");
 	}
-	if(1){
-	    dcell *rhs=NULL;
-	    muv_sp(&rhs, &recon->RR, recon->saneal, 1);
-	    info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
-	    dmat *rhs2=dcell2m(rhs); dcellfree(rhs);
-	    dwrite(rhs2, "rhs_1");
-	    dmat *t1=NULL;
-	    muv_direct_solve(&t1, &recon->RL, rhs2); dfree(rhs2);
-	    dwrite(t1, "solve_1");
-	    info("CPU Usage: %.1f Solve ", read_self_cpu()); toc2(" ");tic;
-	    recon->ecnn=dcellnew(parms->evl.nevl, 1);
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		if(!parms->evl.psfr[ievl]) continue;
-		tic;
-		char strht[24];
-		if(!isinf(parms->evl.hs[ievl])){
-		    snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
-		}else{
-		    strht[0]='\0';
-		}
-		/*Build HX for science directions that need ecov.*/
-	    
-		dmat *x1=dnew(aper->locs->nloc, t1->ny);
-		PDMAT(t1, pt1);
-		PDMAT(x1, px1);
-		int ind=0;
-		double hs=parms->evl.hs[ievl];
-		for(int ips=0; ips<recon->npsr; ips++){
-		    const double ht=recon->ht->p[ips];
-		    const double scale=1.-ht/hs;
-		    const double dispx=parms->evl.thetax[ievl]*ht;
-		    const double dispy=parms->evl.thetay[ievl]*ht;
-		    for(int icol=0; icol<t1->ny; icol++){
-			prop_nongrid(recon->xloc[ips], &pt1[icol][ind], aper->locs, NULL,
-				     px1[icol], 1, dispx, dispy, scale, 0, 0);
-		    }
-		    ind+=recon->xloc[ips]->nloc;
-		}
-		info("CPU Usage: %.1f accphi", read_self_cpu()); toc2(" ");tic;
-	    
-		dmm(&recon->ecnn->p[ievl], x1, x1, "nt", 1);
-		dfree(x1);
-		info("CPU Usage: %.1f Mul   ", read_self_cpu()); toc2(" ");
-		dwrite(recon->ecnn->p[ievl], "ecnn_x%g_y%g%s.bin", 
-		       parms->evl.thetax[ievl]*206265,
-		       parms->evl.thetay[ievl]*206265, strht);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    if(!parms->evl.psfr[ievl]) continue;
+	    dcell *hxt=dcellnew(recon->npsr, 1);
+	    double hs=parms->evl.hs[ievl];
+	    for(int ips=0; ips<recon->npsr; ips++){
+		const double ht=recon->ht->p[ips];
+		const double scale=1.-ht/hs;
+		const double dispx=parms->evl.thetax[ievl]*ht;
+		const double dispy=parms->evl.thetay[ievl]*ht;
+		dsp *HXT=mkhb(recon->xloc[ips], aper->locs, NULL,
+			      dispx, dispy, scale, 0, 0);
+		spfull(&hxt->p[ips], HXT, 1); spfree(HXT);
 	    }
-	    dfree(t1);
+	    dcell *t1=NULL;
+	    info("CPU Usage: %.1f HXT   ", read_self_cpu()); toc2(" ");tic;
+	    muv_direct_solve_cell(&t1, &recon->RL, hxt); dcellfree(hxt);
+	    info("CPU Usage: %.1f Solve ", read_self_cpu()); toc2(" ");tic;
+	    dcell *p=NULL;
+	    muv_t(&p, &recon->RR, t1, 1); dcellfree(t1);
+	    dcellwrite(p, "p_%d.bin", ievl);
+	    info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
+	    dcell *t2=NULL;
+		
+	    spcellmulmat(&t2, recon->sanea, p, 1); 
+	    dcell *t3=NULL;
+	    dcellmm(&t3, p, t2, "tn", 1);
+	    dcellfree(p); dcellfree(t2);
+	    info("CPU Usage: %.1f MUL   ", read_self_cpu()); toc2(" ");tic;
+	    dwrite(t3->p[0], "ecnn_new_%d.bin", ievl);
+	    dcellfree(t3);
 	}
     }
-    info2("After assemble tomo matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    if(1){
+	dcell *rhs=NULL;
+	muv_sp(&rhs, &recon->RR, recon->saneal, 1);
+	info("CPU Usage: %.1f RHS   ", read_self_cpu()); toc2(" ");tic;
+	dmat *rhs2=dcell2m(rhs); dcellfree(rhs);
+	dwrite(rhs2, "rhs_1");
+	dmat *t1=NULL;
+	muv_direct_solve(&t1, &recon->RL, rhs2); dfree(rhs2);
+	dwrite(t1, "solve_1");
+	info("CPU Usage: %.1f Solve ", read_self_cpu()); toc2(" ");tic;
+	recon->ecnn=dcellnew(parms->evl.nevl, 1);
+	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	    if(!parms->evl.psfr[ievl]) continue;
+	    tic;
+	    char strht[24];
+	    if(!isinf(parms->evl.hs[ievl])){
+		snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
+	    }else{
+		strht[0]='\0';
+	    }
+	    /*Build HX for science directions that need ecov.*/
+	    
+	    dmat *x1=dnew(aper->locs->nloc, t1->ny);
+	    PDMAT(t1, pt1);
+	    PDMAT(x1, px1);
+	    int ind=0;
+	    double hs=parms->evl.hs[ievl];
+	    for(int ips=0; ips<recon->npsr; ips++){
+		const double ht=recon->ht->p[ips];
+		const double scale=1.-ht/hs;
+		const double dispx=parms->evl.thetax[ievl]*ht;
+		const double dispy=parms->evl.thetay[ievl]*ht;
+		for(int icol=0; icol<t1->ny; icol++){
+		    prop_nongrid(recon->xloc[ips], &pt1[icol][ind], aper->locs, NULL,
+				 px1[icol], 1, dispx, dispy, scale, 0, 0);
+		}
+		ind+=recon->xloc[ips]->nloc;
+	    }
+	    info("CPU Usage: %.1f accphi", read_self_cpu()); toc2(" ");tic;
+	    
+	    dmm(&recon->ecnn->p[ievl], x1, x1, "nt", 1);
+	    dfree(x1);
+	    info("CPU Usage: %.1f Mul   ", read_self_cpu()); toc2(" ");
+	    dwrite(recon->ecnn->p[ievl], "ecnn_x%g_y%g%s.bin", 
+		   parms->evl.thetax[ievl]*206265,
+		   parms->evl.thetay[ievl]*206265, strht);
+	}
+	dfree(t1);
+    }
 }
 /**
    Update assembled tomography matrix with new L2. Called from cn2est when new
@@ -1946,6 +1939,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 void
 setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     CALL_ONCE;
+    TIC;tic;
     /*
       Notice that: Solve Fitting on Uw and using FUw to form Rngs gives
       slightly different answer than solve fitting after assemble the
@@ -1966,7 +1960,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 
     dcell *U=NULL; 
     dcell *FU=NULL;
-    if(parms->load.mvst){
+    if(parms->load.mvst && zfexist("mvst_U") && zfexist("mvst_FU")){
 	U=dcellread("mvst_U");
 	FU=dcellread("mvst_FU");
     }else{
@@ -1978,7 +1972,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	if(!recon->FL.C && !recon->FL.MI){
 	    muv_direct_prep(&(recon->FL), 0);
 	}
-	
+	toc2("MVST: svd prep");
 	dcell *GXLT=dcelltrans(recon->GXL);
 	muv_direct_solve_cell(&U, &recon->RL, GXLT);
 	dcellfree(GXLT);
@@ -1986,6 +1980,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	muv(&rhs, &recon->FR, U, 1);
 	muv_direct_solve_cell(&FU, &recon->FL, rhs);
 	dcellfree(rhs);
+	toc2("MVST: U, FU");
     }
     if(parms->save.mvst || parms->save.setup){
 	dcellwrite(U, "%s/mvst_U", dirsetup);
@@ -2095,6 +2090,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcellfree(MCC);
 	dcellfree(QQ);
 	}*/
+    toc2("MVST");
 }
 
 /**
@@ -2112,7 +2108,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
    MOAO is handled in setup_recon_moao().
    
 */
-static void setup_recon_mvr_fit(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+static void setup_recon_mvr_fit(RECON_T *recon, const PARMS_T *parms, APER_T *aper){
     CALL_ONCE;
     TIC;tic;
     if(parms->recon.alg==0 && !parms->sim.idealfit){/*In idealfit, xloc has high sampling. We avoid HXF. */
@@ -2190,6 +2186,9 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	      individual matrices on fly to speed up and save memory. */
 	    setup_recon_tomo_matrix(recon,parms,aper);
 	}
+	if(parms->sim.ecnn){
+	    setup_recon_tomo_ecnn(recon, parms, aper);
+	}
 	/*Fall back function method if .M is NULL */
 	recon->RL.Mfun=TomoL;
 	recon->RL.Mdata=recon;
@@ -2214,7 +2213,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	recon->RL.warm  = parms->recon.warm_restart;
 	recon->RL.maxit = parms->tomo.maxit;
     }
-    setup_recon_mvr_fit(recon, parms, powfs, aper);
+    setup_recon_mvr_fit(recon, parms, aper);
     /*moao */
     setup_recon_moao(recon,parms);
     if(parms->sim.mffocus){
@@ -2263,7 +2262,6 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
       The following arrys are not used after preparation is done.
     */
     spcellfree(recon->GX);
-    spcellfree(recon->GXhi);
     spcellfree(recon->GXtomo);/*we use HXWtomo instead. faster */
     if(!(parms->cn2.tomo && parms->recon.split==2)){/*mvst needs GXlo when updating. */
 	spcellfree(recon->GXlo);
@@ -2468,7 +2466,8 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     recon->nthread=parms->sim.nthread;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(parms->powfs[ipowfs].trs){
+	/*we will remove tip/tilt from the high order NGS wfs in split tomo mode.*/
+	if(parms->powfs[ipowfs].trs || (parms->recon.split && !parms->powfs[ipowfs].lo)){
 	    recon->has_ttr=1;
 	    break;
 	}
@@ -2501,7 +2500,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     case 1:
 	setup_recon_lsr(recon, parms, powfs, aper);
 	if(parms->sim.dmproj){
-	    setup_recon_mvr_fit(recon, parms, powfs, aper);
+	    setup_recon_mvr_fit(recon, parms, aper);
 	}
 	break;
     default:

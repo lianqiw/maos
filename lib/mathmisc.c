@@ -26,7 +26,7 @@
 */
 /**
    normalize vector to sum to norm;*/
-void normalize(double *p, long nloc, double norm){
+void normalize_sum(double *p, long nloc, double norm){
     double ss=norm/dotdbl(p,NULL,NULL,nloc);
     for(int i=0; i<nloc; i++){
 	p[i]*=ss;
@@ -398,4 +398,25 @@ unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
 	m++;
     }
     return m;
+}
+double golden_section_search(golden_section_fun f, void *param, 
+			     double x1, double x4, double tau){
+    static double resphi= 0.381966011250105;/*2-0.5*(1+sqrt(5)); */
+    double x2=(x4-x1)*resphi+x1;
+    double f2=f(param, x2);
+    double x3, f3;
+    /*stop searching. */
+    while(fabs(x4-x1) > tau * (fabs(x1)+fabs(x4))){
+	x3=(x4-x2)*resphi+x2;
+	f3=f(param, x3);
+	if(f3<f2){
+	    x1=x2;
+	    x2=x3;
+	    f2=f3;
+	}else{
+	    x4=x1;
+	    x1=x3;
+	}	    
+    }
+    return 0.5*(x4+x1);
 }

@@ -28,6 +28,7 @@
 */
 void thread_prep(thread_t *info, long start, long tot, long nthread, 
 		 thread_wrapfun fun, void *data){
+    if(nthread==0)return;
     if(tot==0 && nthread>1){
 	error("Need to specify tot\n");
     }

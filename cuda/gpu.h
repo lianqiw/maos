@@ -23,6 +23,7 @@
 #include "../maos/utils.h"
 void gpu_info(void);
 int  gpu_init(int *gpus, int ngpu);
+void gpu_assign(void);
 void gpu_cleanup(void);
 void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim);
 void gpu_dmreal2gpu(map_t **dmreal, int ndm, DM_CFG_T *dmcfg);

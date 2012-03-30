@@ -410,7 +410,19 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].realamp[iwfs]=realamp;
 	powfs[ipowfs].realsaa[iwfs]=realsaa;
     }
-   
+    if(parms->powfs[ipowfs].fieldstop){
+	warning("powfs%d: generating field stop \n", ipowfs);
+	if(parms->powfs[ipowfs].nwvl>1){
+	    error("Not implemented yet. need to do phase unwrap in wfsgrad.\n");
+	}
+	powfs[ipowfs].embed=loc_create_embed(&powfs[ipowfs].nembed, powfs[ipowfs].loc, 1);
+	long nembed=powfs[ipowfs].nembed;
+	powfs[ipowfs].fieldstop=dnew(nembed, nembed);
+	double dtheta=parms->powfs[ipowfs].wvl[0]/(powfs[ipowfs].loc->dx*nembed); 
+	double radius=parms->powfs[ipowfs].fieldstop/dtheta/2;
+	dcircle(powfs[ipowfs].fieldstop, nembed/2+1, nembed/2+1, radius, 1);
+	dfftshift(powfs[ipowfs].fieldstop);
+    }
     if(parms->plot.setup){
 	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
 		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
@@ -1074,7 +1086,7 @@ static void setup_powfs_sodium(POWFS_T *powfs, const PARMS_T *parms, int ipowfs)
 		/*preserve sum of input profile */
 		double Nasum=dblsum(pin, nxin);
 		spmulvec(pout, ht, pin, 1);
-		normalize(pout, nxnew, Nasum);
+		normalize_sum(pout, nxnew, Nasum);
 	    }
 	    spfree(ht);
 	    locfree(loc_in);
@@ -1724,7 +1736,7 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		    error("piinfile doesn't match\n");
 		}
 	    }
-	}else if(parms->powfs[ipowfs].lo){
+	}else if(parms->powfs[ipowfs].lo && parms->powfs[ipowfs].order<=2){
 	    error("Please specify piinfile for lo order phy wfs\n");
 	}else{
 	    /*LGS */

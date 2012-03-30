@@ -447,6 +447,12 @@ void wfsgrad_iwfs(thread_t *info){
     if(fabs(focus)>1.e-200){
 	loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
     }
+
+    if(parms->powfs[ipowfs].fieldstop>0){
+	apply_fieldstop(opd, powfs[ipowfs].amp, powfs[ipowfs].embed, powfs[ipowfs].nembed, 
+			powfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl[0]);
+    }
+
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
     }
@@ -890,19 +896,19 @@ void wfsgrad(SIM_T *simu){
     /* Uplink pointing servo. Moved to here from filter.c because of
        synchronization issue. dcellcp before integrator changes because wfsgrad
        updates upterr with current gradient. */
-    dcellcp(&simu->uptreal, simu->uptint[0]);
+    dcellcp(&simu->uptreal, simu->uptint->mint[0]);
     if(simu->upterr){
 	/* uplink tip/tilt mirror. use Integrator/Derivative control
 	   update command for next step.*/
-	shift_inte(parms->sim.napupt, parms->sim.apupt, simu->uptint);
-	double gain1=parms->sim.epupt+parms->sim.dpupt;
+	servo_shift(simu->uptint, parms->sim.apupt);
+	servo_filter(simu->uptint, simu->upterr, simu->dthi, parms->sim.epupt);
+	/*double gain1=parms->sim.epupt+parms->sim.dpupt;
 	double gain2=-parms->sim.dpupt;
 	dcelladd(&simu->uptint[0], 1., simu->upterr,gain1);
 	if(fabs(gain2)>EPS){
 	    dcelladd(&simu->uptint[0], 1., simu->upterrlast,gain2);
-	    /*save to use in next servo time step. */
 	    dcellcp(&simu->upterrlast,simu->upterr);
-	}
+	    }*/
     }
 #if USE_CUDA
     if(parms->gpu.wfs){

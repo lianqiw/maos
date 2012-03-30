@@ -7,6 +7,7 @@
 #if __STDC_VERSION__ < 199901L /*C99*/
 #define inline __inline
 #endif
+
 inline mxArray *dsp2mx(const dsp*A){
     mxArray *out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));

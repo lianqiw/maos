@@ -42,6 +42,9 @@ typedef struct cuwloc_t{
     cusp *GP;         /**<GP in col major*/
     curmat *GPpx;     /**<GP for x grad in dense matrix format.*/
     curmat *GPpy;     /**<GP for y grad in dense matrix format.*/
+    int *embed;       /**<embed for field stop computation*/
+    int nembed;       /**<embed for field stop computation*/
+    curmat *fieldstop;/**<*mask for field stop computation*/
     struct cuwloc_t *llt;
 }cuwloc_t;
 
@@ -55,7 +58,7 @@ typedef struct{
     float (**imcc)[3];  /**<For ztilt.*/
     float  *neasim;     /**<The noise equivalent angles for each grad.*/
     float  *amp;        /**<Amplitude map*/
-    cufftHandle plan1, plan2, plan3;   /**<FFTW plan if any*/
+    cufftHandle plan1, plan2, plan3,plan_fs;   /**<FFTW plan if any*/
     cudtf_t *dtf;       /**<array for each wvl.*/
     float   *srot;      /**<angle to rotate PSF/OTF*/
     float  (**mtche)[2]; /**<matched filter gradient operator.*/

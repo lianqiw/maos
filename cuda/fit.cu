@@ -199,14 +199,19 @@ void gpu_FitR(curcell **xout, const void *A, const curcell *xin, const float alp
 	float thetay=(float)parms->fit.thetay[ifit];
 	curzero(opdfit->p[ifit], curecon->fitstream[ifit]);
 	curzero(opdfit2->p[ifit], curecon->fitstream[ifit]);
-	/*do HX operation, from xin to opdfit.*/
-	for(int ips=0; ips<npsr; ips++){
-	    const float ht = (float)recon->ht->p[ips];
-	    const float scale=1.f-ht/hs;
-	    gpu_prop_grid(opdfit->p[ifit], oxp*scale, oyp*scale, dxp*scale, 
-			  xin->p[ips], recon->xmap[ips]->ox, recon->xmap[ips]->oy, recon->xmap[ips]->dx,
-			  thetax*ht, thetay*ht,
-			  1.f,'n', curecon->fitstream[ifit]);
+	if(xin){ /*do HX operation, from xin to opdfit.*/
+	    for(int ips=0; ips<npsr; ips++){
+		const float ht = (float)recon->ht->p[ips];
+		const float scale=1.f-ht/hs;
+		gpu_prop_grid(opdfit->p[ifit], oxp*scale, oyp*scale, dxp*scale, 
+			      xin->p[ips], recon->xmap[ips]->ox, recon->xmap[ips]->oy, recon->xmap[ips]->dx,
+			      thetax*ht, thetay*ht,
+			      1.f,'n', curecon->fitstream[ifit]);
+	    }
+	}else{ /*propagate from atmosphere*/
+	    gpu_atm2loc(opdfit->p[ifit]->p, curecon->floc, curecon->nfloc, hs,
+			thetax, thetay, 0, 0, parms->sim.dt*simu->isim,
+			1, curecon->fitstream[ifit]);
 	}
 	/*do W operation, from opdfit to opdfir2*/
 	DO_W;

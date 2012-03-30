@@ -341,7 +341,6 @@ void rename_file(int sig){
     snprintf(fnnew,256,"run_%d.%s", pid,suffix);
     rename(fnold,fnnew);
     mysymlink(fnnew, "run_recent.log");
-
     if(curparms && sig!=0){
 	char fn[80];
 	const PARMS_T *parms=curparms;
@@ -388,9 +387,10 @@ void maos_signal_handler(int sig){
 	fflush(stderr);
 	fflush(stdout);
 	if(sig !=0){
-	    print_backtrace(0);
+	    PRINT_BACKTRACE;
 	}
 	scheduler_finish(1);
+
 	_Exit(sig);/*don't call clean up functions, but does flush files. */
     }
 }
@@ -701,23 +701,6 @@ double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, doubl
     return 0.3144*r0*pow(wh,-3./5.);
 }
 
-/**
-   prepare the integrator by shifting commands. similar to laos.
-   inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
-*/
-void shift_inte(int nap, double *ap, dcell **inte){
-    dcell *tmp=NULL;
-    dcell *keepjunk=inte[nap-1];
-    for(int iap=nap-1; iap>=0; iap--){
-	dcelladd(&tmp,1,inte[iap],ap[iap]);
-	if(iap>0){
-	    inte[iap]=inte[iap-1];/*shifting */
-	}else{
-	    inte[iap]=tmp;/*new command. */
-	}
-    }
-    dcellfree(keepjunk);
-}
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
     char header[320];
     int nembed=aper->nembed[iwvl];
@@ -741,4 +724,25 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
 	     sumamp2*nembed*nembed, parms->sim.dt*npos);
     return strdup(header);
+}
+void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat *fieldstop, double wvl){
+    cmat *wvf=cnew(nembed, nembed);
+    cfft2plan(wvf, -1); cfft2plan(wvf, 1);
+    double kk=2*M_PI/wvl;
+    double kki=1./kk;
+    double wvlh=wvl*0.5;
+    dcomplex i2pi=I*kk;
+    for(int iloc=0; iloc<opd->nx; iloc++){
+	wvf->p[embed[iloc]]=amp->p[iloc]*cexp(i2pi*opd->p[iloc]);
+    }
+    cfft2(wvf, -1);
+    ccwmd(wvf, fieldstop, 1);
+    cfft2(wvf, 1);
+    for(int iloc=0; iloc<opd->nx; iloc++){
+	double val=carg(wvf->p[embed[iloc]])*kki;
+	double diff=fmod(val-opd->p[iloc]+wvlh, wvl);
+	if(diff<0) diff+=wvl;
+	opd->p[iloc]+=diff-wvlh;
+    }
+    cfree(wvf);
 }

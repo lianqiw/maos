@@ -398,7 +398,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
    overlapping pairs of points for each r and then compute the averaging. When
    the amplitude is less than the threshold, the point does not count.*/
 
-void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const dmat *cov){
+void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const dmat *cov, int norm){
     if(loc->nloc!=cov->nx || loc->nloc!=cov->ny){
 	error("loc and cov does not match. loc->nloc=%ld, cov is %ldx%ld\n", loc->nloc, cov->nx, cov->ny);
     }
@@ -409,8 +409,8 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     maxmindbl(locx, nloc, &xmax, &xmin);
     maxmindbl(locy, nloc, &ymax, &ymin);  
     double dx1=1./loc->dx;
-    long ncovx=(long) round((xmax-xmin)*dx1/2)*2;
-    long ncovy=(long) round((ymax-ymin)*dx1/2)*2;
+    long ncovx=(long) round((xmax-xmin)*dx1)*2;
+    long ncovy=(long) round((ymax-ymin)*dx1)*2;
     dinit(cov2d, ncovx, ncovy);
     PDMAT(*cov2d, pcov2d);
     PDMAT(cov, pcov);
@@ -443,7 +443,11 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 		}
 	    }
 	    if(count>0){
-		pcov2d[jm][im]=acc/count;
+		if(norm){/*compute the covariance*/
+		    pcov2d[jm][im]=acc/count;
+		}else{/*compute approximate PSD.*/
+		    pcov2d[jm][im]=acc;
+		}
 	    }
 	}
     }

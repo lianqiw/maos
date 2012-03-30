@@ -709,6 +709,13 @@ if test "$use_cuda" = "yes" ;then
        AM_CONDITIONAL(USE_CUDA, true)
        AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    fi
+   nvml_lib="yes"
+   AC_CHECK_HEADERS(nvml.h, [], [], [nvml_lib="no"])
+   AC_CHECK_LIB([nvidia-ml], [nvmlDeviceGetMemoryInfo], [],[nvml_lib="no"])
+   if test $nvml_lib = "yes" ;then
+       AC_DEFINE(HAS_NVML, [1], "Has nvidia ML library")
+       LDCUDA="$LDCUDA -lnvidia-ml"
+   fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
    AC_SUBST(CUDAOPT)
    AC_SUBST(LDCUDA)
