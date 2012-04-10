@@ -53,7 +53,7 @@ W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1){
     }
     W01_T *W01=(W01_T*)calloc(1, sizeof(W01_T));
     cp2gpu(&W01->W1, R_W1);
-    if(0){
+    if(0){warning("change to 0\n");
 	W01->nW0f=0;
 	cp2gpu(&W01->W0p, R_W0);
     }else{
@@ -154,7 +154,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		 recon->pmap->ox, recon->pmap->oy, recon->pmap->dx);
 	    if(recon->GP->p[ipowfs]){
 		const int use_mat=parms->tomo.pos==2;
-		if(use_mat){
+		if(use_mat){//normally true
 		    dsp *GP=sptrans(recon->GP->p[ipowfs]);
 		    spint *pp=GP->p;
 		    spint *pi=GP->i;
@@ -222,7 +222,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		double wt=recon->wt->p[ips];
 		int icenter=loccenter(recon->xloc[ips]);
 		curecon->zzi[ips]=icenter;
-		curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*TOMOSCALE;
+		curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*TOMOSCALE*1e-6;
 	    }
 	}
 	curecon->neai=curcellnew(parms->nwfsr, 1);
@@ -279,19 +279,9 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    int nb=fdpcg->Mbinv->nx;
 	    int bs=fdpcg->Mbinv->p[0]->nx;
 	    cp2gpu(&curecon->fd_perm, fdpcg->perm, nb*bs);//not bs*bs
-	    curecon->fd_Mb=cuccellnew(nb, 1, bs, bs);
-	    fcomplex *tmp;
-	    cudaMallocHost(&tmp, nb*bs*bs*sizeof(fcomplex));
-	    for(int ib=0; ib<nb; ib++){
-		dcomplex *in=(dcomplex*)fdpcg->Mbinv->p[ib]->p;
-		fcomplex *tmp2=tmp+ib*(bs*bs);
-		for(int i=0; i<bs*bs; i++){
-		    tmp2[i]=make_cuFloatComplex((float)cuCreal(in[i]), (float)cuCimag(in[i]));
-		}
-	    }
-	    DO(cudaMemcpy(curecon->fd_Mb->p[0]->p, tmp, nb*bs*bs*sizeof(fcomplex), cudaMemcpyHostToDevice));
+	    //curecon->fd_Mb=cuccellnew(nb, 1, bs, bs);
+	    cp2gpu(&curecon->fd_Mb, fdpcg->Mbinv);
 	    curecon->fd_nxtot=nb*bs;
-	    cudaFreeHost(tmp);
 	    int nps=recon->npsr;
 	    int count=0;
 	    int osi=-1;
@@ -316,6 +306,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		ncomp[1]=recon->xny[start[ic]];
 		cufftPlanMany(&curecon->fd_fft[ic], 2, ncomp, NULL, 1, 0, NULL, 1, 0, 
 			      CUFFT_C2C, curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic]);
+		cufftSetStream(curecon->fd_fft[ic], curecon->cgstream);
 	    }
 	    /* notice: performance may be improved by using
 	       R2C FFTs instead of C2C. Need to update perm
@@ -333,11 +324,43 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    cp2gpu(&curecon->RMI, recon->RL.MI);
 	}
 	curecon->opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	for(int ips=0; ips<recon->npsr; ips++){
+	    info("opdr[%d] is %dx%d\n", ips, curecon->opdr->p[ips]->nx, curecon->opdr->p[ips]->ny);
+	}
+	const int nwfs=parms->nwfsr;
+	int nxp=recon->pmap->nx;
+	int nyp=recon->pmap->ny;
+  
+	curecon->opdwfs=curcellnew(nwfs, 1);
+	curecon->grad=curcellnew(nwfs, 1);/*intermediate. */
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip) continue;
+	    curecon->opdwfs->p[iwfs]=curnew(nxp, nyp);
+	    const int nsa=powfs[ipowfs].pts->nsa;
+	    curecon->grad->p[iwfs]=curnew(nsa*2,1);
+	}
+	if(parms->tomo.precond==1){
+	    curecon->fd_xhat1=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	    curecon->fd_xhat2=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	}
     }
     if(parms->gpu.fit){
 	if(parms->gpu.fit==1){ /*For fitting using sparse matrix*/
 	    cp2gpu(&curecon->FR, &recon->FR);
 	    cp2gpu(&curecon->FL, &recon->FL);
+	    curecon->FR.fitstream=curecon->fitstream;
+	    curecon->FR.fithandle=curecon->fithandle;
+	    curecon->FR.fitsphandle=curecon->fitsphandle;
+	    curecon->FR.dmstream=curecon->dmstream;
+	    curecon->FR.dmhandle=curecon->dmhandle;
+	    curecon->FR.dmsphandle=curecon->dmsphandle;
+	    curecon->FL.fitstream=curecon->fitstream;
+	    curecon->FL.fithandle=curecon->fithandle;
+	    curecon->FL.fitsphandle=curecon->fitsphandle;
+	    curecon->FL.dmstream=curecon->dmstream;
+	    curecon->FL.dmhandle=curecon->dmhandle;
+	    curecon->FL.dmsphandle=curecon->dmsphandle;
 	    curecon->dmfit=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL);
 	    curecon->dmfit_vec=curecon->dmfit;
 	}else if(parms->gpu.fit==2){ /*For fitting using ray tracing*/
@@ -352,9 +375,17 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    cp2gpu(&curecon->fitNW, recon->fitNW);
 	    cp2gpu(&curecon->actslave, recon->actslave);
 	    curecon->dmfit=curcellnew(parms->ndm, 1);
-	    curecon->dmfit_vec=curcellnew(curecon->dmfit->nx, curecon->dmfit->ny);
+	    curecon->dmfit_vec=curcellnew(parms->ndm, 1);
+	    int ntotact=0;
 	    for(int idm=0; idm<parms->ndm; idm++){
-		curecon->dmfit->p[idm]=new cumap_t(recon->amap[idm]->nx,recon->amap[idm]->ny);
+		ntotact+=recon->amap[idm]->nx*recon->amap[idm]->ny;
+	    }
+	    curecon->dmfit->m=curnew(ntotact, 1);
+	    int ct=0;
+	    for(int idm=0; idm<parms->ndm; idm++){
+		curecon->dmfit->p[idm]=new cumap_t(recon->amap[idm]->nx,recon->amap[idm]->ny,
+						   curecon->dmfit->m->p+ct, 0);
+		ct+=recon->amap[idm]->nx,recon->amap[idm]->ny;
 		curecon->dmfit_vec->p[idm]=curref(curecon->dmfit->p[idm]);
 		curecon->dmfit_vec->p[idm]->nx=curecon->dmfit_vec->p[idm]->nx
 		    *curecon->dmfit_vec->p[idm]->ny;
@@ -376,10 +407,200 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	}else if(parms->fit.alg==2){
 	    cp2gpu(&curecon->FMI, recon->FL.MI);
 	}
+	const int nfit=parms->fit.nfit;
+	curecon->opdfit=curcellnew(nfit, 1);
+	curecon->opdfit2=curcellnew(nfit, 1);
+	for(int ifit=0; ifit<nfit; ifit++){
+	    curecon->opdfit->p[ifit] =curnew(recon->fmap->nx, recon->fmap->ny);
+	    curecon->opdfit2->p[ifit]=curnew(recon->fmap->nx, recon->fmap->ny);
+	}
+	curecon->pis=curnew(recon->npsr, 1);
     }
     STREAM_DONE(stream);
     cublasDestroy(handle);
     gpu_print_mem("recon init");
+}
+static __global__ void 
+copy_mvm_do(float *dest, long stride, float *in, long n){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	dest[i*stride]=in[i];
+    }
+}
+void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
+    gpu_set(gpu_recon);
+    if(parms->recon.alg!=0){
+	error("Please adept to LSR\n");
+    } 
+    if(!parms->gpu.tomo || !parms->gpu.fit){
+	setup_recon_mvr_mvm(recon, parms, powfs);
+	cp2gpu(&curecon->MVM, recon->MVM);
+	dcellfree(recon->MVM);
+    }else{
+	info2("Assembling MVR MVM in GPU\n");
+	int ntotact=0;
+	int ntotgrad=0;
+	const int nwfs=parms->nwfs;
+	const int ndm=parms->ndm;
+	for(int idm=0; idm<ndm; idm++){
+	    ntotact+=recon->anloc[idm];
+	}    
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    ntotgrad+=recon->ngrad[iwfs];
+	}
+	curcell *eyec;
+	if(parms->fit.square){
+	    eyec=curcellnew(ndm, 1, recon->anx, recon->any);
+	}else{
+	    eyec=curcellnew(ndm, 1, recon->anloc, (long*)0);
+	}
+	float eye2[2]={0,1.};
+	float eye1[1]={1.};
+	curecon->MVM=curcellnew(ndm, nwfs);
+	for(int idm=0; idm<ndm; idm++){
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		if(!parms->powfs[ipowfs].skip){
+		    curecon->MVM->p[idm+iwfs*ndm]
+			=curnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);
+		}
+	    }
+	}
+	curcell *dmfit=curcellnew(curecon->dmfit);
+	curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
+	curcell *grad=curcellnew(parms->nwfs, 1, recon->ngrad, (long*)0);
+	G_CGFUN cg_fun;
+	void *cg_data;
+	if(parms->gpu.fit==1){//sparse matrix
+	    cg_fun=(G_CGFUN) cumuv;
+	    cg_data=&curecon->FL;
+	}else{
+	    cg_fun=(G_CGFUN) gpu_FitL;
+	    cg_data=recon;
+	}
+	int curdm=0, curact=0;
+	for(int iact=0; iact<ntotact; iact++){
+	    TIC;tic;
+	    if(!detached){
+		info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact, ntotact);
+	    }
+	    if(iact){
+		cudaMemcpyAsync(eyec->m->p+iact-1, eye2, 2*sizeof(float),
+				cudaMemcpyHostToDevice, curecon->cgstream);
+	    }else{
+		cudaMemcpyAsync(eyec->m->p+iact, eye1, sizeof(float), 
+				cudaMemcpyHostToDevice, curecon->cgstream);
+	    }
+	    toc("copy");
+	    /*Fitting operator*/
+	    switch(parms->fit.alg){
+	    case 0:
+		cuchol_solve(dmfit->m->p, curecon->FCl, curecon->FCp, eyec->m->p, curecon->cgstream);
+		if(curecon->FUp){
+		    curmat *tmp=curnew(curecon->FVp->ny, 1);
+		    curmv(tmp->p, 0, curecon->FVp, eyec->m->p, 't', -1, curecon->cghandle);
+		    curmv(curecon->dmfit->m->p,1,curecon->FUp,tmp->p,'n',1,curecon->cghandle);
+		    cudaStreamSynchronize(curecon->cgstream);
+		    curfree(tmp);
+		}
+		break;
+	    case 1:
+		curcellzero(dmfit, curecon->cgstream);//temp
+		if(gpu_pcg(&dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, eyec,
+			   parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream)){
+		    error("Fit CG failed\n");
+		}
+		break;
+	    case 2:
+		curmv(dmfit->m->p, 0, curecon->FMI, eyec->m->p, 'n', 1, curecon->cghandle);
+		break;
+	    default:
+		error("Invalid");
+	    }
+	    toc("FitL");
+	    /*Transpose of fitting operator*/
+	    if(parms->gpu.fit==1){//sparse matrix
+		cumuv_trans(&opdx, 0, &curecon->FR, dmfit, 1);
+	    }else{
+		gpu_FitRt(&opdx, 0, recon, dmfit, 1);
+	    }
+	    
+	    toc("FitRt");
+	    /*Tomography*/
+	    G_PREFUN prefun=NULL;
+	    void *predata=NULL;
+	    if(parms->tomo.precond==1){
+		prefun=gpu_Tomo_fdprecond;
+		predata=(void*)recon;
+	    }
+	    curcellzero(opdr, curecon->cgstream);
+	    switch(parms->tomo.alg){
+	    case 0:
+		if(!opdr->m || !opdx->m){
+		    error("opdr and opdx must be continuous\n");
+		}
+		cuchol_solve(opdr->m->p, curecon->RCl, curecon->RCp, opdx->m->p, curecon->cgstream);
+		if(curecon->RUp){
+		    curmat *tmp=curnew(curecon->RVp->ny, 1);
+		    curmv(tmp->p, 0, curecon->RVp, opdx->m->p, 't', -1, curecon->cghandle);
+		    curmv(opdr->m->p, 1, curecon->RUp, tmp->p, 'n', 1, curecon->cghandle);
+		    cudaStreamSynchronize(curecon->cgstream);
+		    curfree(tmp);
+		}
+		break;
+	    case 1:{
+		int disablelrt=curecon->disablelrt;
+		curecon->disablelrt=1;
+		/*disable the t/t removal lrt in split tomo that creats problem in fdpcg mode*/
+		if(gpu_pcg(&opdr, gpu_TomoL, recon, prefun, predata, opdx, 
+			   parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream)){
+		    error("Tomo CG failed\n");
+		}
+		curecon->disablelrt=disablelrt;
+	    }
+		break;
+	    case 2:
+		curmv(opdr->m->p, 0, curecon->RMI, opdx->m->p, 'n', 1, curecon->cghandle);
+		break;
+	    default:
+		error("Invalid");
+	    }
+	    toc("TomoL");
+	    /*Right hand size*/
+	    gpu_TomoRt(&grad, 0, recon, opdr, 1);
+	    toc("TomoR");
+	    //copy grad out and transpose
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		curmat *to=curecon->MVM->p[curdm+ndm*iwfs];
+		if(to){
+		    copy_mvm_do<<<DIM(ntotgrad, 256), 0, curecon->cgstream>>>
+			(to->p+curact, recon->anloc[curdm], grad->p[iwfs]->p, recon->ngrad[iwfs]);
+		}
+	    }
+	    /*{
+	      curcellwrite(eyec, "eyec_%d", iact);
+	      curcellwrite(dmfit, "dmfit_%d", iact);
+	      curcellwrite(opdx, "opdx_%d", iact);
+	      curcellwrite(opdr, "opdr_%d", iact);
+	      curcellwrite(grad, "grad_%d", iact);
+	      }*/
+	    curact++;
+	    if(curact>=recon->anloc[curdm]){
+		curdm++;
+		curact=0;
+	    }
+	    toc("Copy");
+	}//for iact
+	warning("\n\nFree the various data for GPU tomo/fit\n\n");
+	curcellfree(dmfit);
+	curcellfree(opdx);
+	curcellfree(opdr);
+	curcellfree(grad);
+    }
+    if(parms->save.setup){
+	curcellwrite(curecon->MVM, "%s/MVM.bin", dirsetup);
+    }
 }
 /*update reconstruction parameters after slodar.*/
 void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
@@ -395,7 +616,7 @@ void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){
 	    double wt=recon->wt->p[ips];
 	    int icenter=loccenter(recon->xloc[ips]);
 	    curecon->zzi[ips]=icenter;
-	    curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*TOMOSCALE;
+	    curecon->zzv[ips]=pow(laplacian_coef(r0,wt,dx),2)*TOMOSCALE*1e-6;
 	}
     }
 }
@@ -420,86 +641,7 @@ void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
     }
     cudaStreamSynchronize(0);
 }
-void cumuv(curcell **out, cumuv_t *A, const curcell *in, float alpha){
-    if(!A->Mt) error("A->M Can not be empty\n");
-    if(A->U && A->U->ny>1 || A->V && A->V->ny>1) error("Not handled yet\n");
-    if(!*out){
-	*out=curcellnew(A->Mt->ny, 1);
-	int nx[A->Mt->ny];
-	for(int ix=0; ix<A->Mt->ny; ix++){
-	    nx[ix]=A->Mt->p[ix*A->Mt->nx]->ny;
-	}
-	*out=curcellnew(A->Mt->ny, 1, nx, (int*)NULL);
-    }
-    cusparseHandle_t sphandle=curecon->fitsphandle[0];
-    cublasHandle_t handle=curecon->fithandle[0];
-    for(int iy=0; iy<A->Mt->nx; iy++){
-	for(int ix=0; ix<A->Mt->ny; ix++){
-	    cusptmul((*out)->p[ix]->p, A->Mt->p[iy+ix*A->Mt->nx], in->p[iy]->p, alpha, sphandle);
-	}
-    }
-    curmat *tmp=NULL;
-    if(A->U && A->V){
-	tmp=curnew(A->V->p[0]->ny, 1);
-	for(int iy=0; iy<A->V->nx; iy++){
-	    curmv(tmp->p, 1.f, A->V->p[iy], in->p[iy]->p, 't', 1, handle);
-	}
-	for(int ix=0; ix<A->U->nx; ix++){
-	    curmv((*out)->p[ix]->p, 1.f, A->U->p[ix], tmp->p, 'n', -alpha, handle);
-	}
-    }
-    cudaStreamSynchronize(curecon->fitstream[0]);
-    curfree(tmp);
-}
-/*solve in place*/
-static __global__ void cuchol_solve_lower_do(float *restrict y, float *Cx, int *Cp, int *Ci, int n){
-    int id=threadIdx.x;
-    int nd=blockDim.x;
-    __shared__ float val;
-    __shared__ float sum;
-    /*first solve L\y*/
-    
-    for(int icol=0; icol<n; icol++){
-	if(id==0){
-	    y[icol]/=Cx[Cp[icol]];//divide by diagonal.
-	    val=-y[icol];
-	}
-	__syncthreads();//this is necessary!
-	for(int irow=Cp[icol]+1+id; irow<Cp[icol+1]; irow+=nd){
-	    y[Ci[irow]]+=val*Cx[irow];
-	}
-	__syncthreads();
-    }
-    /*Next solve L'\y*/
-    if(id==0) sum=0;
-    __syncthreads();
-    for(int icol=n-1; icol>-1; icol--){
-	for(int irow=Cp[icol]+1+id; irow<Cp[icol+1]; irow+=nd){
-	    atomicAdd(&sum, Cx[irow]*y[Ci[irow]]);
-	}
-	__syncthreads();
-	if(id==0){
-	    y[icol]=(y[icol]-sum)/Cx[Cp[icol]];
-	    sum=0;
-	}
-	__syncthreads();//this is necessary!
-    }
-}
-/**
-   Solve cholesky backsubstitution in GPU. Shared memory is not enough to contain the vector.
-*/
-void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict in, 
-		  cudaStream_t stream){
-    if(!Cl || !Cp) error("Invalid\n");
-    int n=Cl->nx;
-    float *y;
-    DO(cudaMalloc(&y, sizeof(float)*n));
-    perm_f_do<<<DIM(n, 256),0,stream>>>(y, in, Cp, n);
-    cuchol_solve_lower_do<<<1,256,0,stream>>>(y, Cl->x, Cl->p, Cl->i, n); //only 1 block for synchronization.
-    perm_i_do<<<DIM(n, 256),0,stream>>>(out, y, Cp, n);
-    cudaStreamSynchronize(stream);
-    cudaFree(y);
-}
+
 void gpu_tomo(SIM_T *simu){
     gpu_set(gpu_recon);
     TIC;tic;
@@ -512,38 +654,47 @@ void gpu_tomo(SIM_T *simu){
 	TO_IMPLEMENT;
     }
     /*first send gradients to GPU. can be skipped if keep grad in gpu. fast though. */
-    int nxp=recon->pmap->nx;
-    int nyp=recon->pmap->ny;
-   
-    const int nwfs=parms->nwfsr;
     /*Create temporary memory */
     curecon->reconisim=simu->reconisim;
-    curecon->opdwfs=curcellnew(nwfs, 1);
-    curecon->grad=curcellnew(nwfs, 1);/*intermediate. */
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int ipowfs = parms->wfsr[iwfs].powfs;
-	if(parms->powfs[ipowfs].skip) continue;
-	curecon->opdwfs->p[iwfs]=curnew(nxp, nyp);
-	const int nsa=simu->powfs[ipowfs].pts->nsa;
-	curecon->grad->p[iwfs]=curnew(nsa*2,1);
-    }
 #if 0
     {
 	/*Debugging. */
 	dcell *rhsc=NULL;
 	dcell *lc=NULL;
 	muv(&rhsc, &recon->RR, simu->gradlastol, 1);
-	muv(&lc, &recon->RL, rhsc, -1);
 	dcellwrite(rhsc, "CPU_TomoR");
+	muv(&lc, &recon->RL, rhsc, 1);
 	dcellwrite(lc, "CPU_TomoL");
-
+	muv(&lc, &recon->RL, rhsc, -1);
+	dcellwrite(lc, "CPU_TomoL2");
+	dcellzero(lc);
+	muv(&lc, &recon->RL, rhsc, 1);
+	dcellwrite(lc, "CPU_TomoL3");
+	if(parms->tomo.alg==1 && parms->tomo.precond==1){
+	    dcell *lp=NULL;
+	    fdpcg_precond(&lp, recon, lc);
+	    dcellwrite(lp, "CPU_TomoP");
+	    fdpcg_precond(&lp, recon, lc);
+	    dcellwrite(lp, "CPU_TomoP2");
+	}
 	cp2gpu(&curecon->gradin, simu->gradlastol);
 	curcell *rhsg=NULL;
 	curcell *lg=NULL;
-	gpu_TomoR(&rhsg, simu, curecon->gradin, 1);
+	gpu_TomoR(&rhsg, 0, recon, curecon->gradin, 1);
 	curcellwrite(rhsg, "GPU_TomoR");
-	gpu_TomoL(&lg, 1, simu, rhsg, -1);
+	gpu_TomoL(&lg, 0, recon, rhsg, 1);
 	curcellwrite(lg, "GPU_TomoL");
+	gpu_TomoL(&lg, 1, recon, rhsg, -1);
+	curcellwrite(lg, "GPU_TomoL2");
+	gpu_TomoL(&lg, 0, recon, rhsg, 1);
+	curcellwrite(lg, "GPU_TomoL3");
+	if(parms->tomo.alg==1 && parms->tomo.precond==1){
+	    curcell *lp=NULL;
+	    gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream);
+	    curcellwrite(lp, "GPU_TomoP");
+	    gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream);
+	    curcellwrite(lp, "GPU_TomoP2");
+	}
 	CUDA_SYNC_DEVICE;
 	exit(0);
     }
@@ -552,11 +703,8 @@ void gpu_tomo(SIM_T *simu){
     cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     toc("Gradin");
     curcell *rhs=NULL;
-    gpu_TomoR(&rhs, simu, curecon->gradin, 1);
+    gpu_TomoR(&rhs, 0, recon, curecon->gradin, 1);
     toc("TomoR");
-    if(!curecon->opdr){
-	curecon->opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
-    }
     switch(parms->tomo.alg){
     case 0:
 	if(!curecon->opdr->m){
@@ -585,17 +733,12 @@ void gpu_tomo(SIM_T *simu){
 	G_PREFUN prefun=NULL;
 	void *predata=NULL;
 	if(parms->tomo.precond==1){
-	    curecon->fd_xhat1=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
-	    curecon->fd_xhat2=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
 	    prefun=gpu_Tomo_fdprecond;
-	    predata=(void*)simu;
+	    predata=(void*)recon;
 	}
-	if(gpu_pcg(&curecon->opdr, gpu_TomoL, simu, prefun, predata, rhs, 
+	if(gpu_pcg(&curecon->opdr, gpu_TomoL, recon, prefun, predata, rhs, 
 		   simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream)){
-	    dcellwrite(simu->gradlastol, "tomo_gradlastol_%d", simu->reconisim);
-	    curcellwrite(curecon->gradin, "tomo_gradin_%d", simu->reconisim);
-	    curcellwrite(rhs, "tomo_rhs_%d", simu->reconisim);
-	    exit(1);
+	    error("Tomo CG failed\n");
 	}
 	toc("TomoL CG");
     }break;
@@ -605,15 +748,7 @@ void gpu_tomo(SIM_T *simu){
     default:
 	error("Invalid");
     }
-
-    if(parms->tomo.precond==1){
-	cuccellfree(curecon->fd_xhat1);
-	cuccellfree(curecon->fd_xhat2);
-    }
     curcellfree(rhs); rhs=NULL;
-    curcellfree(curecon->opdwfs); curecon->opdwfs=NULL;
-    curcellfree(curecon->grad);   curecon->grad=NULL;
-    curcellfree(curecon->gradin); curecon->gradin=NULL;
     if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2 || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr, 1, curecon->cgstream);
 	cudaStreamSynchronize(curecon->cgstream);
@@ -632,27 +767,63 @@ void gpu_fit(SIM_T *simu){
     if(!parms->gpu.tomo){
 	cp2gpu(&curecon->opdr, simu->opdr);
     }
+#if 0
+    {
+	/*Debugging. */
+	dcell *rhsc=NULL;
+	dcell *lc=NULL;
+	if(!simu->opdr){
+	    cp2cpu(&simu->opdr, 0, curecon->opdr, 1, 0);
+	    for(int i=0; i<simu->opdr->nx; i++){
+		simu->opdr->p[i]->nx=simu->opdr->p[i]->nx*simu->opdr->p[i]->ny;
+		simu->opdr->p[i]->ny=1;
+	    }
+	}
+	dcellwrite(simu->opdr, "opdr");
+	muv(&rhsc, &recon->FR, simu->opdr, 1);
+	dcellwrite(rhsc, "CPU_FitR");
+	muv(&lc, &recon->FL, rhsc, 1);
+	dcellwrite(lc, "CPU_FitL");
+	muv(&lc, &recon->FL, rhsc, -1);
+	dcellwrite(lc, "CPU_FitL2");
+	dcellzero(lc);
+	muv(&lc, &recon->FL, rhsc, 1);
+	dcellwrite(lc, "CPU_FitL3");
+	dcell *lhs=NULL;
+	muv_trans(&lhs, &recon->FR, rhsc, 1);
+	dcellwrite(lhs, "CPU_FitRt");
+	curcell *rhsg=NULL;
+	curcell *lg=NULL;
+	gpu_FitR(&rhsg, 0, recon, curecon->opdr, 1);
+	curcellwrite(rhsg, "GPU_FitR");
+	gpu_FitL(&lg, 0, recon, rhsg, 1);
+	curcellwrite(lg, "GPU_FitL");
+	gpu_FitL(&lg, 1, recon, rhsg, -1);
+	curcellwrite(lg, "GPU_FitL2");
+	gpu_FitL(&lg, 0, recon, rhsg, 1);
+	curcellwrite(lg, "GPU_FitL3");
+	curcell *lhsg=NULL;
+	gpu_FitRt(&lhsg, 0, recon, rhsg, 1);
+	curcellwrite(lhsg, "GPU_FitRt");
+
+	CUDA_SYNC_DEVICE;
+	exit(0);
+    }
+#endif
     toc("Before FitR");
     curcell *rhs=NULL;
     G_CGFUN cg_fun;
     void *cg_data;
     if(parms->gpu.fit==1){//sparse matrix
-	cumuv(&rhs, &curecon->FR, curecon->opdr, 1);
-	toc("FitR");
+	cumuv(&rhs, 0, &curecon->FR, curecon->opdr, 1);
 	cg_fun=(G_CGFUN) cumuv;
 	cg_data=&curecon->FL;
     }else{
-	const int nfit=parms->fit.nfit;
-	curecon->opdfit=curcellnew(nfit, 1);
-	curecon->opdfit2=curcellnew(nfit, 1);
-	for(int ifit=0; ifit<nfit; ifit++){
-	    curecon->opdfit->p[ifit] =curnew(recon->pmap->nx, recon->pmap->ny);
-	    curecon->opdfit2->p[ifit]=curnew(recon->pmap->nx, recon->pmap->ny);
-	}
-	gpu_FitR(&rhs, simu, curecon->opdr, 1);
+	gpu_FitR(&rhs, 0, recon, curecon->opdr, 1);
 	cg_fun=(G_CGFUN) gpu_FitL;
-	cg_data=simu;
+	cg_data=(void*)recon;
     }
+    toc("FitR");
     switch(parms->fit.alg){
     case 0:
 	cuchol_solve(curecon->dmfit->m->p, curecon->FCl, curecon->FCp, rhs->m->p, curecon->cgstream);
@@ -681,13 +852,19 @@ void gpu_fit(SIM_T *simu){
 	error("Invalid");
     }
     cp2cpu(&simu->dmfit, 0, curecon->dmfit_vec, 1, curecon->cgstream);
-    if(curecon->opdfit){
-	curcellfree(curecon->opdfit); curecon->opdfit=NULL;
-	curcellfree(curecon->opdfit2); curecon->opdfit2=NULL;  
-    }
     toc("FitL CG");
     cudaStreamSynchronize(curecon->cgstream);
     /*Don't free opdr. */
     curcellfree(rhs); rhs=NULL;
     toc("Fit");
+}
+void gpu_recon_mvm(SIM_T *simu){
+    gpu_set(gpu_recon);
+    const PARMS_T *parms=simu->parms;
+    cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+    curcellmm(&curecon->dmfit_vec, 0., curecon->MVM, curecon->gradin,"nn", 1., curecon->cghandle);
+    cp2cpu(&simu->dmerr, 0., curecon->dmfit_vec, 1., curecon->cgstream);
+    if(parms->tomo.psol){
+	dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
+    }
 }

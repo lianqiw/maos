@@ -50,6 +50,12 @@ __global__ static void div_assign_do(float *restrict dest, const float *restrict
 __global__ static void div_sqrt_do(float *restrict dest, const float *restrict a,  const float *restrict b){
     dest[0]=sqrt(a[0]/b[0]);
 }
+__global__ static void printf_do(float *a){
+    printf("%g\n", a[0]);
+}
+static void printf_wrap(float *a, cudaStream_t stream){
+    printf_do<<<1,1,0,stream>>>(a);
+}
 #endif
 
 /**
@@ -59,13 +65,13 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
     //cudaMemsetAsync(res, 0,sizeof(float), stream);
     if(A->m && B->m){
 	const int n=A->m->nx*A->m->ny;
-	inn_wrap(NULL, res, A->m->p, B->m->p, n, stream);
+	inn_wrap(res, A->m->p, B->m->p, n, stream);
     }else{
 	for(int i=0; i<A->nx*A->ny; i++){
 	    const curmat *a=A->p[i];
 	    const curmat *b=B->p[i];
 	    const int n=a->nx*a->ny;
-	    inn_wrap(NULL, res,a->p,b->p,n,stream);
+	    inn_wrap(res,a->p,b->p,n,stream);
 	}
     }
 }
@@ -84,19 +90,18 @@ int gpu_pcg(curcell **px,
 	    const curcell *b, int warm, int maxiter,
 	    cudaStream_t stream){
     TIC;tic;
-    int ans=0;
     curcell *r0=NULL;
     curcell *x0=NULL;/*The initial vector. equals to *px*/
     curcell *z0=NULL;/*Is reference or preconditioned value. */
     float *store;
     float *current;
     int ntot=maxiter*2+2;
-#if PRINT_RES == 1
+#if PRINT_RES 
     ntot+=maxiter+1;
 #endif
     DO(cudaMalloc(&store, ntot*sizeof(float)));current=store;
     DO(cudaMemsetAsync(store, 0, ntot*sizeof(float),stream));
-#if PRINT_RES == 1
+#if PRINT_RES 
     float *r0z0=store;   current++;
     float *r0r0=current; current+=maxiter;
 #endif
@@ -105,32 +110,35 @@ int gpu_pcg(curcell **px,
     float *r0z2=current; current+=maxiter;
     float *ak=current;   current+=maxiter;
  
-#if PRINT_RES == 1
+#if PRINT_RES 
     curcellinn2(r0z0, b, b, stream);
     float diff[maxiter+1];
+    info2("CG %d:", maxiter);
 #endif
     /*computes r0=b-A*x0 */
-    curcellcp(&r0, b, stream);
     if(!*px){
 	*px=curcellnew(b);
+    }else if(!warm){
+	curcellzero(*px, stream);
     }
     x0=*px;
-    if(warm){
-	Amul(&r0, A, x0, -1);/*r0=r0+(-1)*A*x0 */
-    }else{
-	curcellzero(x0, stream);
-    }
     curcell *p0=NULL;
-    if(Mmul){
-	Mmul(&z0,M,r0,stream);
-    }else{
-	z0=r0;
-    }
-    curcellcp(&p0, z0, stream);
-    curcellinn2(r0z1, r0, z0, stream);
     curcell *Ap=NULL;
     for(int k=0; k<maxiter; k++){
-#if PRINT_RES == 1
+	if(k%100==0){/*restart every 100 steps exclude beginning*/
+	    /*computes r0=b-A*x0 */
+	    curcellcp(&r0, b, stream);/*r0=b; */
+	    CUDA_SYNC_STREAM;
+	    Amul(&r0, 1, A, x0, -1);/*r0=r0+(-1)*A*x0 */
+	    if(Mmul){
+		Mmul(&z0,M,r0,stream);
+	    }else{
+		z0=r0;
+	    }
+	    curcellcp(&p0, z0, stream);
+	    curcellinn2(r0z1, r0, z0, stream);
+	}
+#if PRINT_RES 
 	if(Mmul){
 	    /*res->r0r0=r0'*r0; */
 	    curcellinn2(r0r0+k, r0, r0, stream);
@@ -141,23 +149,26 @@ int gpu_pcg(curcell **px,
 	    div_sqrt_do<<<1,1,0,stream>>>(r0r0+k, r0z1, r0z0);
 	}
 	cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), MEMCPY_D2D, stream);
+#if PRINT_RES == 2
+	info2("%.5f ", diff[k]);
+#endif	
 #endif
-	if(Ap){
-	    curcellzero(Ap, stream);
-	}
-	Amul(&Ap, A, p0, 1);
+	CUDA_SYNC_STREAM;//is this needed?
+	Amul(&Ap, 0, A, p0, 1);
 	/*ak=r0z1/(p0'*Ap); */
 	curcellinn2(ak+k, p0, Ap, stream);
 	div_do<<<1,1,0,stream>>>(ak+k, r0z1, ak+k);
 	/*put here helps to remove the spikes in performance/wfs. why necessary? */
-	CUDA_SYNC_STREAM;
+	//CUDA_SYNC_STREAM;
 	/*x0=x0+ak*p0 */
 	curcelladd(&x0, p0, ak+k, 1, stream);
 	if(k+1==maxiter) break;
 	/*r0=r0-ak*Ap */
 	curcelladd(&r0, Ap, ak+k, -1, stream);
 	/*preconditioner */
-	if(Mmul) Mmul(&z0,M,r0, stream);
+	if(Mmul) {
+	    Mmul(&z0,M,r0, stream);
+	}
 	/*r0z2=r0'*z0 */
 	curcellinn2(r0z2+k, r0, z0, stream);
 	/*bk=r0z2/r0z1; r0z1=r0z2*/
@@ -165,11 +176,20 @@ int gpu_pcg(curcell **px,
 	/*p0=bk*p0+z0 */
 	curcelladd(&p0, bk, z0, stream);
 	toc("cg");
+	/*{
+	    curcellwrite(Ap, "Ap");
+	    curcellwrite(p0, "p0");
+	    curcellwrite(z0, "z0");
+	    curcellwrite(r0, "r0");
+	    exit(0);
+	    }*/
     }
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
     info2("CG %2d: %.5f ==> %.5f\n", maxiter, diff[0], diff[maxiter-1]);
+#elif PRINT_RES==2
+    info2("\n");
 #endif
     curcellfree(r0); 
     if(Mmul){
@@ -178,5 +198,5 @@ int gpu_pcg(curcell **px,
     curcellfree(Ap);
     curcellfree(p0);
     cudaFree(store);
-    return ans;
+    return 0;
 }

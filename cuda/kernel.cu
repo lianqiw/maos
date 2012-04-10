@@ -145,12 +145,16 @@ __global__ void max_do(float *restrict res, const float *a, const int n){
 	}
     }
     if(threadIdx.x==0){
-	*res=sb[0];
+	atomicMax(res, sb[0]);
     }
 }
 /**
-   tmp=sum(a.*b) res_rep=tmp, res_add+=tmp*/
-__global__ void inn_do(float *res_rep, float *res_add, const float *a, const float *b, const int n){
+   tmp=sum(a.*b) res_add+=tmp
+
+   2012-04-07: Bug found. The original implementation of res_rep does not work
+   for multiple blocks where only the first block will be added to the final
+   result.  */
+__global__ void inn_do(float *res_add, const float *a, const float *b, const int n){
     extern __shared__ float sb[];
     sb[threadIdx.x]=0;
     int step=blockDim.x * gridDim.x ;
@@ -164,8 +168,7 @@ __global__ void inn_do(float *res_rep, float *res_add, const float *a, const flo
 	}
     }
     if(threadIdx.x==0){
-	if(res_rep) *res_rep=sb[0];
-	if(res_add) atomicAdd(res_add, sb[0]);
+	atomicAdd(res_add, sb[0]);
     }
 }
 /* embed real to complex data.*/

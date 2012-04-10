@@ -271,9 +271,10 @@ typedef struct RECON_T{
 
     loc_t **aloc;      /**<actuator grid*/
     map_t **amap;      /**<square grid of actuators*/
-    long  *anx;
-    long  *any;
-    long  *anloc;
+    long  *anx;        /**<Size of each amap*/
+    long  *any;        /**<Size of each amap*/
+    long  *anloc;      /**<Size of each aloc*/
+    long  *ngrad;      /**<Size of each grad for each wfs*/
     long **aembed;      /**<index to embed phi on aloc to square geometry of aloc_nx*aloc_ny.*/
     loc_t **alocm;     /**<misregistered actuator grid for ray tracing*/
     icell *actfloat;   /**<floating actuators*/
@@ -330,6 +331,8 @@ typedef struct RECON_T{
     MUV_T FL;          /**<DM fit left hand size matrix*/
     MUV_T LR;          /**<least square reconstructor rhs*/
     MUV_T LL;          /**<least square reconstructor lhs. solve LL*x=LR*y*/
+    dcell *MVM;        /**<Matrix vector multiply*/
+    dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */
     dcell *RFlgs;      /**<focus reconstruction from each LGS grad*/
@@ -344,6 +347,7 @@ typedef struct RECON_T{
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
     int cxx;           /**<records parms->tomo.cxx*/
+    int desplitlrt;    /**<disable dbg.splitlrt.*/
 }RECON_T;
 
 typedef struct SIM_SAVE_T{

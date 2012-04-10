@@ -21,6 +21,8 @@
 #include "../maos/parms.h"
 #include "../maos/types.h"
 #include "../maos/utils.h"
+#include "../maos/setup_recon.h"
+#include "../maos/fdpcg.h"
 void gpu_info(void);
 int  gpu_init(int *gpus, int ngpu);
 void gpu_assign(void);
@@ -43,10 +45,12 @@ void gpu_perfevl(thread_t *info);
 void gpu_perfevl_save(SIM_T *simu);
 void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper);
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
+void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
 void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
 void gpu_recon_reset(const PARMS_T *parms);
 void gpu_tomo(SIM_T *simu);
 void gpu_fit(SIM_T *simu);
+void gpu_recon_mvm(SIM_T *simu);
 void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon);
 void gpu_moao_recon(SIM_T *simu);
 void gpu_moao_filter(SIM_T *simu);

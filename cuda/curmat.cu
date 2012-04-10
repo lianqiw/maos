@@ -98,7 +98,7 @@ void curscale(curmat *in, float alpha, cudaStream_t stream){
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
-void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans[2], float beta, cublasHandle_t handle){
+void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, const char trans[2], float beta, cublasHandle_t handle){
     int m,n,k,k2;
     cublasOperation_t transa, transb;
     if(trans[0]=='t'){
@@ -126,13 +126,61 @@ void curmm(curmat **C, float alpha, const curmat *A, const curmat *B, char trans
     }
     assert(k==k2);
     DO(cublasSgemm(handle, transa, transb, m,n,k,
-		       &beta, A->p, A->nx, B->p, B->nx, &alpha, (*C)->p, (*C)->nx));
+		   &beta, A->p, A->nx, B->p, B->nx, &alpha, (*C)->p, (*C)->nx));
 }
 /**
    Computes C = alpha * C + beta * op(A) * B ;
 */
 void curmv(float *c, float alpha, const curmat *A, const float *b, char trans, float beta, cublasHandle_t handle){
     cublasSgemv(handle, trans=='t'?CUBLAS_OP_T:CUBLAS_OP_N, A->nx, A->ny, &beta, A->p, A->nx, b, 1, &alpha, c, 1);
+}
+void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B, 
+	       const char trans[2], const double beta, cublasHandle_t handle){
+    if(!A || !B) return;
+    int ax, az;
+    int nx,ny,nz;
+    int bz, by;
+    if(trans[0]=='n'||trans[0]=='N'){
+	nx=A->nx; 
+	ax=1; az=A->nx;
+	nz=A->ny;
+    }else{ 
+	nx=A->ny;
+	az=1; ax=A->nx;
+	nz=A->nx;
+    }
+    if(trans[1]=='n'||trans[0]=='N'){
+	ny=B->ny; 
+	bz=1; by=B->nx;
+	if(nz!=B->nx) error("mismatch\n");
+    }else{
+	ny=B->nx;
+	by=1; bz=B->nx;
+	if(nz!=B->ny) error("mismatch\n");
+    }
+    if(!*C0){
+	*C0=curcellnew(nx,ny);
+    }else{
+	assert((*C0)->nx==nx && (*C0)->ny==ny);
+	cudaStream_t stream;
+	cublasGetStream(handle, &stream);
+	if(fabs(alpha)<EPS){
+	    curcellzero(*C0, stream);
+	}else if(fabs(alpha-1)>EPS){
+	    curcellscale(*C0, alpha, stream);
+	}
+    }
+    curcell *C=*C0;
+    for(int iy=0; iy<ny; iy++){
+	for(int ix=0; ix<nx; ix++){
+	    for(int iz=0; iz<nz; iz++){
+		if(A->p[ix*ax+iz*az]&&B->p[iz*bz+iy*by]){
+		    curmm(&C->p[ix+iy*nx],alpha,A->p[ix*ax+iz*az], 
+			  B->p[iz*bz+iy*by],trans,beta,handle);
+		}
+	    }
+	}
+    }
 }
 
 cuspcell* cuspcellnew(int nx, int ny){
@@ -238,9 +286,11 @@ float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     float *res;
     float out;
     cudaMalloc(&res, sizeof(float));
-    inn_wrap(res, NULL, a->p, b->p, a->nx*a->ny, stream);
+    cudaMemsetAsync(res, 0, sizeof(float), stream);
+    inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
     CUDA_SYNC_STREAM;
+    cudaFree(res);
     return out;
 }
 
@@ -257,16 +307,39 @@ void cursum2(float *restrict res, const curmat *a, cudaStream_t stream){
    Find the maximum value
 */
 float curmax(const curmat *a, cudaStream_t stream){
+    float out;
     float *res;
-    cudaMallocHost(&res, sizeof(float));
+    cudaMalloc(&res, sizeof(float));
+    cudaMemsetAsync(res, 0, sizeof(float), stream);
     int n=a->nx*a->ny;
-    max_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>> (res, a->p, n);
+    max_wrap(res, a->p, n, stream);
     CUDA_SYNC_STREAM;
-    float out=res[0];
-    cudaFreeHost(res);
+    cudaMemcpy(&out, res, sizeof(float), cudaMemcpyDeviceToHost);
+    cudaFree(res);
     return out;
 }
-
+/**
+   Find the maximum value
+*/
+float curcellmax(const curcell *a, cudaStream_t stream){
+    int n=a->nx*a->ny;
+    float out;
+    float *res;
+    cudaMalloc(&res, (n+1)*sizeof(float));
+    cudaMemsetAsync(res, 0,(n+1)*sizeof(float), stream);
+    for(int i=0; i<n; i++){
+	int m=a->p[i]->nx*a->p[i]->ny;
+	info("n=%d, m=%d\n", n, m);
+	max_wrap(&res[i], a->p[i]->p, m, stream);
+    }
+    if(n>1) {
+	max_wrap(&res[n], res, n, stream);
+    }
+    CUDA_SYNC_STREAM;
+    cudaMemcpy(&out, &res[n>1?n:0], sizeof(float), cudaMemcpyDeviceToHost);
+    cudaFree(res);
+    return out;
+}
 /**
    Scale elements
 */

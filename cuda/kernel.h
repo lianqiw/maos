@@ -45,6 +45,18 @@ __device__ inline float atomicAdd(float* address, float val)
     return old;
 }
 #endif
+__device__ inline float atomicMax(float* address, float val)
+{
+    float old = *address;
+    float assumed;
+    do {
+	assumed = old;
+	old = __int_as_float( atomicCAS((unsigned int*)address,
+					__float_as_int(assumed),
+					__float_as_int(val>assumed?val:assumed)));
+    } while (assumed != old);
+    return old;
+}
 
 __device__ inline float CABS2(fcomplex r){
     const float a=cuCrealf(r);
@@ -68,14 +80,16 @@ __global__ void add_do(float *restrict a, float *alpha1, float alpha2,
 
 __global__ void max_do(float *restrict res, const float *a, const int n);
 __global__ void sum_do(float *restrict res, const float *a, const int n);
-__global__ void inn_do(float *res_rep, float *res_add, const float *a, const float *b, const int n);
+__global__ void inn_do(float *res_add, const float *a, const float *b, const int n);
 
-inline void inn_wrap(float *res_rep, float *res_add,
-		    const float *a, const float *b, const int n, cudaStream_t stream){
-    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res_rep, res_add, a, b, n);
+inline void inn_wrap(float *res_add, const float *a, const float *b, const int n, cudaStream_t stream){
+    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res_add, a, b, n);
 }
 inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+}
+inline static void max_wrap(float *res, const float * a, const int n, cudaStream_t stream){
+    max_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
 __global__ void embed_do(fcomplex *out, float *in, int nx);
 __global__ void extract_do(float *out, fcomplex *in, int nx);

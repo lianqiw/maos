@@ -709,6 +709,7 @@ static void readcfg_recon(PARMS_T *parms){
     READ_INT(recon.alg);
     READ_INT(recon.glao);
     READ_INT(recon.split);
+    READ_INT(recon.mvm);
 }
 /**
    Read in simulation parameters
@@ -810,7 +811,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.psol);
     READ_INT(dbg.wamethod);
     READ_INT(dbg.atm);
-    READ_INT(dbg.keepshm);
     READ_INT(dbg.mvstlimit);
     READ_INT(dbg.annular_W);
     parms->dbg.ntomo_maxit=readcfg_intarr(&parms->dbg.tomo_maxit, "dbg.tomo_maxit");
@@ -932,7 +932,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	}
     }
     if(parms->dbg.ntomo_maxit){
-	warning("dbg.tomo_maxit is set. Will run in open loop mode\n repeat the simulations"
+	warning("dbg.tomo_maxit is set. Will run in open loop mode\n to repeat the simulations"
 		" with different values of tomo.maxit.\n");
 	parms->sim.closeloop=0;
 	parms->atm.frozenflow=1;
@@ -949,6 +949,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	if(parms->recon.split){
 	    warning("idealfit only works in integrated tomo mode. changed\n");
 	    parms->recon.split=0;
+	}
+	if(parms->recon.mvm){
+	    parms->recon.mvm=0;
 	}
     }
     if(parms->recon.glao && parms->ndm!=1){
@@ -982,6 +985,54 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     }
 }
 /**
+   Scaling necessary values for non-zero zenith angle (za).
+   -# r0
+   -# turbulence height
+   -# WFS height
+   -# WFS siglev
+   -# reconstruction height.
+   
+   DM conjugation range is not changed!
+   2012-04-07: Relocated to beginning
+*/
+static void setup_parms_postproc_za(PARMS_T *parms){
+    /*
+      The input r0z is the r0 at zenith. Scale it if off zenith
+    */
+    parms->atm.r0=parms->atm.r0z*pow(cos(parms->sim.za),3./5.);
+    parms->atmr.r0=parms->atmr.r0z*pow(cos(parms->sim.za),3./5.);
+
+    if(fabs(parms->sim.za)>1.e-14){
+	warning("Scaling turbulence height and LGS hs to zenith angle %gdeg\n",
+		parms->sim.za*180./M_PI);
+	double cosz=cos(parms->sim.za);
+	double secz=1./cosz;
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
+	}
+	//parms->atm.hmax*=secz;
+	//parms->atmr.hmax*=secz;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(isfinite(parms->powfs[ipowfs].hs)){
+		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
+		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
+		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
+		    double siglev=parms->wfs[iwfs].siglev;
+		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
+		    info("iwfs%d: siglev scaled from %g to %g\n", 
+			 iwfs,siglev,parms->wfs[iwfs].siglev);
+		    warning("Need to update to account for the transmittance\n");
+		}
+	    }
+	}
+	warning("Scaling reconstruction height to zenith angle %gdeg\n",parms->sim.za*180./M_PI);
+	for(int ips=0; ips<parms->atmr.nps; ips++){
+	    parms->atmr.ht[ips] *= secz;/*scale reconstructed atmospheric height. */
+	}
+	parms->cn2.hmax*=secz;
+    }
+}
+/**
    postproc various WFS parameters based on other input information
 
    -# pixtheta if automatic
@@ -1008,7 +1059,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    }
 	}
 	parms->powfs[ipowfs].nwfs=count;
-	if(count>0){/*empty powfs*/
+	if(count>0){/*non empty powfs*/
 	    if(jpowfs<ipowfs){
 		memcpy(parms->powfs+jpowfs, parms->powfs+ipowfs, sizeof(POWFS_CFG_T));
 	    }
@@ -1333,10 +1384,11 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     parms->atm.hmax=-INFINITY;
     for(int ips=0; ips<parms->atm.nps; ips++){
 	if(fabs(parms->atm.ht[ips])<1.e-10){
-	    if(parms->atm.iground==-1)
+	    if(parms->atm.iground==-1){
 		parms->atm.iground=ips;
-	    else
+	    }else{
 		error("Multiple grounds atm. Please combine them together.\n");
+	    }
 	}
 	if(parms->atm.ht[ips]<0){
 	    warning("Layer %d height %g is below ground\n",ips,parms->atm.ht[ips]);
@@ -1347,6 +1399,12 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	}
 	if(parms->atm.hmax<parms->atm.ht[ips]){
 	    parms->atm.hmax=parms->atm.ht[ips];
+	}
+    }
+    parms->atmr.hmax=-INFINITY;
+    for(int ips=0; ips<parms->atmr.nps; ips++){
+	if(parms->atmr.hmax<parms->atmr.ht[ips]){
+	    parms->atmr.hmax=parms->atmr.ht[ips];
 	}
     }
     if(parms->atm.iground==-1){
@@ -1373,55 +1431,12 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
     }else{
 	parms->atm.fun=NULL;
     }
-}
-/**
-   Scaling necessary values for non-zero zenith angle (za).
-   -# r0
-   -# turbulence height
-   -# WFS height
-   -# WFS siglev
-   -# reconstruction height.
-   
-   DM conjugation range is not changed!
-*/
-static void setup_parms_postproc_za(PARMS_T *parms){
- 
-    /*
-      The input r0z is the r0 at zenith. Scale it if off zenith
-    */
- 
-    parms->atm.r0=parms->atm.r0z*pow(cos(parms->sim.za),3./5.);
-    parms->atmr.r0=parms->atmr.r0z*pow(cos(parms->sim.za),3./5.);
-
-    if(fabs(parms->sim.za)>1.e-14){
-	warning("Scaling turbulence height and LGS hs to zenith angle %gdeg\n",
-		parms->sim.za*180./M_PI);
-	double cosz=cos(parms->sim.za);
-	double secz=1./cosz;
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    parms->atm.ht[ips] *= secz;/*scale atmospheric height */
-	}
-	parms->atm.hmax*=secz;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(isfinite(parms->powfs[ipowfs].hs)){
-		parms->powfs[ipowfs].hs *= secz;/*scale GS height. */
-		for(int indwfs=0; indwfs<parms->powfs[ipowfs].nwfs; indwfs++){
-		    int iwfs=parms->powfs[ipowfs].wfs[indwfs];
-		    double siglev=parms->wfs[iwfs].siglev;
-		    parms->wfs[iwfs].siglev=siglev*cosz;/*scale signal level. */
-		    info("iwfs%d: siglev scaled from %g to %g\n", 
-			 iwfs,siglev,parms->wfs[iwfs].siglev);
-		    warning("Need to update to account for the transmittance\n");
-		}
-	    }
-	}
-	warning("Scaling reconstruction height to zenith angle %gdeg\n",parms->sim.za*180./M_PI);
-	for(int ips=0; ips<parms->atmr.nps; ips++){
-	    parms->atmr.ht[ips] *= secz;/*scale reconstructed atmospheric height. */
-	}
-	parms->cn2.hmax*=secz;
+    if(!parms->atm.frozenflow && parms->sim.end>parms->sim.start+10){
+	warning("Disable turbulence file based sharing in open loop nonfrozenflow simulation\n");
+	parms->atm.share=0;
     }
 }
+
 /**
    compute minimum size of atm screen to cover all the beam path. same for
    all layers.  todo:may need to consider l0 Must be after
@@ -1544,6 +1559,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
    altitude is allowed.
 */
 static void setup_parms_postproc_recon(PARMS_T *parms){    
+    parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
     {
 	double hs=INFINITY;
 	/*find out the height to setup cone coordinate. */
@@ -1608,8 +1624,8 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");
     }
     if(parms->tomo.alg==1){
-	if(parms->tomo.precond==1 && !parms->recon.split && parms->tomo.maxit<10){
-	    warning("\n\n\nFDPCG requires a lot of iterations in integrated tomography mode!!!\n\n\n");
+	if(parms->tomo.precond>1){
+	    error("Invalid preconditoner\n");
 	}
 	if(parms->tomo.precond==1 && parms->tomo.piston_cr){
 	    warning("FDPCG does not perform well with piston_cr=1. Disabled piston_cr\n");
@@ -1618,6 +1634,27 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->tomo.precond==1 && parms->tomo.square!=1){
 	    warning("FDPCG prefers square XLOC.\n");
 	}
+    }
+    /*check cg iterations*/
+    if(parms->recon.mvm || !parms->recon.warm_restart){
+	if(parms->recon.alg==0){
+	    if(parms->tomo.alg==1 && parms->tomo.maxit<10){
+		warning("In MVM or non warm restart mode, CG in TOMO need more iterations than %d. Make 10x bigger\n",
+			parms->tomo.maxit);
+		//parms->tomo.maxit*=10;
+	    }
+	    if(parms->fit.alg==1 && parms->fit.maxit<10){
+		warning("In MVM or non warm restart mode, CG in FIT need more iterations than %d. Make 10x bigger\n",
+			parms->fit.maxit);
+		//parms->fit.maxit*=10;
+	    }
+	}else{
+	    if(parms->lsr.alg==1 && parms->lsr.maxit<10){
+		warning("In MVM or non warm restart mode, CG in LSR need more iterations than %d. Make 10x bigger\n",
+			parms->lsr.maxit);
+		//parms->lsr.maxit*=10;
+	    }
+	}	
     }
     if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
@@ -1673,7 +1710,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    error("parms->evl.dx=%g is probably too large to save ecxx. Recommend parms->evl.dx=%g\n", parms->evl.dx, parms->atmr.dx*0.25);
 	}
     }
-    parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
     if(parms->fit.pos<=0) parms->fit.pos=parms->tomo.pos;
 }
 
@@ -2305,9 +2341,9 @@ PARMS_T * setup_parms(ARG_T *arg){
       routines are critical.
     */
     setup_parms_postproc_sim(parms);
+    setup_parms_postproc_za(parms);
     setup_parms_postproc_wfs(parms);
     setup_parms_postproc_atm(parms);
-    setup_parms_postproc_za(parms);
     setup_parms_postproc_atm_size(parms);
     setup_parms_postproc_dm(parms);
     setup_parms_postproc_recon(parms);

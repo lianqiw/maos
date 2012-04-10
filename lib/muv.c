@@ -63,7 +63,7 @@ void muv(dcell **xout, const void *B, const dcell *xin, const double alpha){
    Apply the transpose of operation muv(); Apply the sparse plug low rand
    compuation to xin with scaling of alpha: \f$xout=(A.M-A.V*A.U')*xin*alpha\f$;
    U,V are low rank.  */
-void muv_t(dcell **xout, const void *B, const dcell *xin, const double alpha){
+void muv_trans(dcell **xout, const void *B, const dcell *xin, const double alpha){
     const MUV_T *A = B;
     if(A->M){
 	if(!xin) return;
@@ -82,9 +82,10 @@ void muv_t(dcell **xout, const void *B, const dcell *xin, const double alpha){
 	    error("Need to implement this\n");
 	    A->exfun(xout, A->extra, xin, alpha, -1, -1);
 	}
+    }else if(A->Mtfun){
+	A->Mtfun(xout, A->Mdata, xin, alpha);
     }else{
-	error("Need to implement this\n");
-	A->Mfun(xout, A->Mdata, xin, alpha);
+	error("Please assign Mtfun for M' operation\n");
     }
 }
 /**
@@ -461,7 +462,7 @@ void muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm res
 	    error("Invalid alg=%d\n", L->alg);
 	}
     }
-    dcellfree(rhs);
+    if(rhs!=b) dcellfree(rhs);
 }
 
 /**

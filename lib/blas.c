@@ -123,8 +123,9 @@ void X(inv_inplace)(X(mat)*A){
     if(A->nx!=A->ny) error("Must be a square matrix");
     int info=0, N=A->nx;
     T *B=calloc(N*N,sizeof(T));
-    for(int i=0;i<N;i++)
+    for(int i=0;i<N;i++){
 	B[i+i*N]=1;
+    }
     int *ipiv=calloc(N, sizeof(int));
     Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
     if(info!=0){
@@ -274,7 +275,6 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     T work0[1];
     int info=0;
 #ifdef USE_COMPLEX
-    warning("Not tested\n");
     R *rwork=malloc(nsvd*5*sizeof(R));
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
 #else
@@ -452,6 +452,7 @@ void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B,
 */
 X(cell)* X(cellinvspd)(X(cell) *A){
     X(mat) *Ab=X(cell2m)(A);
+    if(!Ab) return NULL;
     X(invspd_inplace)(Ab);
     X(cell) *B=NULL;
     X(2cell)(&B, Ab, A);

@@ -31,6 +31,8 @@ void focus_tracking(SIM_T*simu);
 
 void TomoR(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha);
+void TomoRt(dcell **gout, const void *A, 
+	    const dcell *xin, const double alpha);
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha);
 

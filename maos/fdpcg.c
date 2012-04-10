@@ -46,7 +46,16 @@
 
 /**
    Create aperture selection function that selects the gradients for valid
-   subapertures from ground layer xloc (or ploc).  */
+   subapertures from ground layer xloc (or ploc).  
+   
+   2012-04-06: Found that by clipping xsel in FD, the strength of xsel in the
+   spatial domain (SD) is reduced because of reduced strength of xsel in FD. Need
+   to renormalize xsel in FD to have the same total, which corresponds to the center
+   value in SD. 
+
+   clipping xsel in FD essentially removed the boundary conditiona, making
+   infinite subapertures. The sum of xsel in FD has to be 1.
+*/
 csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     const long threas=1;
     cmat *xsel=cnew(nx,ny);
@@ -59,13 +68,12 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture lower left corner. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    pxsel[iy][ix]=1;
+	    pxsel[iy][ix]=1./(double)(nx*ny);/*cancel FFT scaling.*/
 	}
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
-    cscale(xsel,1./(double)(nx*ny));/*cancel FFT effect. */
     double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
@@ -75,6 +83,8 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	    }
 	}
     }
+    /*scale xsel to have the same sum, to preserve its value in spatial domain. (2012-04-06)*/
+    cscale(xsel, 1./(double)csum(xsel));
     csp *sel=cspconvolvop(xsel);
     cfree(xsel);
     return sel;
@@ -142,7 +152,7 @@ long *fdpcg_perm(const long *nx, const long *ny, const int *os, int nps, int shi
 /**
    Compute gradient operator in Fourier domain. Subapertures are denoted with lower left corner, so no shift is required.
 */
-void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
+void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa, int ttr){
     long os=(long)(dsa/dx);
     if(fabs(dsa-dx*os)>1.e-10){
 	error("dsa must be multiple of dx");
@@ -181,6 +191,14 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
 	    pgy[ix+iy*nx]=ty;
 	}
     }
+    /*Remove global tt is same as remove zero frequency value in fourier space.*/
+    /*if(ttr){
+	warning("fdpcg: Remove global t/t (%g %g) (%g, %g)", 
+		creal(pgx[nx/2+ny/2*nx]), cimag(pgx[nx/2+ny/2*nx]),
+		creal(pgy[nx/2+ny/2*nx]), cimag(pgy[nx/2+ny/2*nx]));
+	pgx[nx/2+ny/2*nx]=0;
+	pgy[nx/2+ny/2*nx]=0;
+	}*/
 }
 
 /**
@@ -300,7 +318,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     csp *sel=fdpcg_saselect(nxp,nyp,dxp, saloc, powfs[hipowfs].saa->p);
     /*Gradient operator. */
     cmat *gx, *gy;
-    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx);/*tested ok. */
+    int ttr=parms->recon.split?1:0;
+    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx,ttr);/*tested ok. */
     /*Concatenate invpsd; */
     dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
     long offset=0;
@@ -432,13 +451,13 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     /*Permutation vector */
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
     long *perm=fdpcg_perm(nx,ny, os, nps,0,0);
-    if(parms->save.setup){
-	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
-    }
     csp *Mhatp=cspperm(Mhat,0,perm,perm);/*forward permutation. */
     cspfree(Mhat);
     free(perm);
     perm=fdpcg_perm(nx,ny, os, nps, 1,0); /*contains fft shift information*/
+    if(parms->save.setup){
+	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
+    }
 #if PRE_PERMUT == 1
     csp *Minvp=cspinvbdiag(Mhatp,bs);
     csp *Minv=cspperm(Minvp,1,perm, perm);/*revert permutation */
@@ -451,8 +470,18 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 #else
     fdpcg->perm=perm;
     fdpcg->Mbinv=cspblockextract(Mhatp,bs);
+    if(parms->save.setup){
+	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
+    }
     for(long ib=0; ib<nb; ib++){
-	cinv_inplace(fdpcg->Mbinv->p[ib]);
+	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
+	  one of the cells the conditional is more than 1e8. This creates
+	  problem in GPU code causing a lot of pistion to accumulate and
+	  diverges the pcg.*/
+	csvd_pow(fdpcg->Mbinv->p[ib], -1, 0, 1e-7);
+    }
+    if(parms->save.setup){
+	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Minvb",dirsetup);
     }
 #endif
     cspfree(Mhatp);
@@ -577,19 +606,24 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     info.xout=*xout;
     /*apply forward FFT */
     CALL(fdpcg_fft,&info,recon->nthread,1);
+    //cwrite(xhat, "fdc_fft");
 #if PRE_PERMUT
     czero(xhat2);
     cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
 #else/*permute vectors and apply block diagonal matrix */
     /*permute xhat and put into xhat2 */
     cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
+    //cwrite(xhat2, "fdc_perm");
     czero(xhat);
     CALL(fdpcg_mulblock,&info,recon->nthread,1);
+    //cwrite(xhat, "fdc_mul");
     cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
+    //cwrite(xhat2, "fdc_iperm");
 #endif
     info.ips=0;
     /*Apply inverse FFT */
     CALL(fdpcg_ifft,&info,recon->nthread,1);
+    //cwrite(xhat2, "fdc_ifft");
 }
 
 /**

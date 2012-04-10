@@ -31,6 +31,8 @@ extern "C"{
     } nvmlMemory_t;
     int nvmlDeviceGetHandleByIndex(unsigned int index, nvmlDevice_t *device);
     int nvmlDeviceGetMemoryInfo(nvmlDevice_t device, nvmlMemory_t *memory);
+    int nvmlInit();
+    int nvmlShutdown();
 }
 #endif
 const char *cufft_str[]={
@@ -203,6 +205,7 @@ void gpu_assign(){
 #if defined(HAS_NVML) && HAS_NVML==1
 	nvmlDevice_t dev;
 	nvmlMemory_t mem;
+	nvmlInit();
 	if(nvmlDeviceGetHandleByIndex(ig, &dev) == 0 
 	   && nvmlDeviceGetMemoryInfo(dev, &mem) == 0){
 	    gpu_info[ig][1]=mem.free;
@@ -217,6 +220,9 @@ void gpu_assign(){
 		info2("%d: gpu %ld, mem %ld (cuda)\n", ig, gpu_info[ig][0], gpu_info[ig][1]);
 	    }
     }
+#if defined(HAS_NVML) && HAS_NVML==1
+    nvmlShutdown();
+#endif
     /*sort so that gpus with higest memory is in the front.*/
     qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
     for(int i=0; i<ngpu; i++){
@@ -449,7 +455,49 @@ void cp2gpu(curcell *restrict *dest, dcell *src){
 	return;
     }
     if(!*dest) {
-	*dest=curcellnew(src->nx, src->ny);
+	long nc=src->nx*src->ny;
+	long nx[nc];
+	long ny[nc];
+	for(long i=0; i<nc; i++){
+	    if(src->p[i]){
+		nx[i]=src->p[i]->nx;
+		ny[i]=src->p[i]->ny;
+	    }else{
+		nx[i]=0;
+		ny[i]=0;
+	    }
+	}
+	*dest=curcellnew(src->nx, src->ny, nx, ny);
+    }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
+	error("Mismatch: %dx%d vs %ldx%ld\n", 
+	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
+    }
+    for(int i=0; i<src->nx*src->ny; i++){
+	cp2gpu(&(*dest)->p[i], src->p[i]);
+    }
+}
+/**
+   Convert dcell to curcell
+*/
+void cp2gpu(cuccell *restrict *dest, ccell *src){
+    if(!src) {
+	dzero(*dest);
+	return;
+    }
+    if(!*dest) {
+	long nc=src->nx*src->ny;
+	long nx[nc];
+	long ny[nc];
+	for(long i=0; i<nc; i++){
+	    if(src->p[i]){
+		nx[i]=src->p[i]->nx;
+		ny[i]=src->p[i]->ny;
+	    }else{
+		nx[i]=0;
+		ny[i]=0;
+	    }
+	}
+	*dest=cuccellnew(src->nx, src->ny, nx, ny);
     }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
 	error("Mismatch: %dx%d vs %ldx%ld\n", 
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);

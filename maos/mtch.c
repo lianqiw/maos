@@ -294,6 +294,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 		error("Invalid combination\n");
 	    }
 	    info2("llt %d:\n",illt);
+	    info2("sa index: dist to llt  noise equivalent angle\n");
 	    PDMAT(sanea->p[ii0], psanea);
 	    for(int ksa=0; ksa<powfs[ipowfs].sprint->p[illt]->nx; ksa++){
 		int isa=(int)powfs[ipowfs].sprint->p[illt]->p[ksa];
@@ -307,11 +308,12 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	}
     }else{
 	for(int ii0=0; ii0<ni0; ii0++){
-	    info("ii0=%d:\n",ii0);
+	    info2("ii0=%d:\n",ii0);
 	    PDMAT(sanea->p[ii0], psanea);
 	    double dsa=powfs[ipowfs].saloc->dx;
 	    double llimit=-dsa/2;
 	    double ulimit=dsa/2;
+	    info2("sa index: radius   noise equivalent angle\n");
 	    for(int isa=0; isa<nsa; isa++){
 		double locx=powfs[ipowfs].saloc->locx[isa];
 		double locy=powfs[ipowfs].saloc->locy[isa];

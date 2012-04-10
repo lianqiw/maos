@@ -91,9 +91,11 @@ typedef struct{
     W01_T *W01;    /**< The aperture weighting,*/
     curcell *opdfit; /**<OPDs defined on ploc for fitting.*/
     curcell *opdfit2;/**<OPDs defined on ploc for fitting.*/
+    curmat *pis;     /**<contains result of W1'*opdfit*/
     float **cubic_cc;
     cumuv_t FR;
     cumuv_t FL;
+    curcell *MVM;
     float (*floc)[2];/**<recon->floc*/
     int nfloc;       /**<recon->floc->nloc*/
     int reconisim;
@@ -118,16 +120,27 @@ typedef struct{
     curmat *FUp;
     curmat *FVp;
     curmat *FMI;//SVD
+    int disablelrt; /*1: disable t/t removal lrt in split tomo*/
 }curecon_t;
 
 
 extern curecon_t *curecon;
-void gpu_TomoR(curcell **xout, const void *A, const curcell *grad, const float alpha);
-void gpu_TomoL(curcell **xout, const void *A, const curcell *xin, const float alpha);
-void gpu_FitR (curcell **xout, const void *A, const curcell *xin, const float alpha);
-void gpu_FitL (curcell **xout, const void *A, const curcell *xin, const float alpha);
-void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream);
 __global__ void apply_W_do(float *restrict out, const float *restrict in, const int *W0f, 
 			   float alpha, int nx, int n);
 W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1);
+
+
+void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha);
+void gpu_TomoRt(curcell **gout,float beta, const void *A, const curcell *xin, float alpha);
+void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
+void gpu_FitR (curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
+void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
+void gpu_FitL (curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
+void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream);
+
+void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha);
+void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha);
+
+void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict in, 
+		  cudaStream_t stream);
 #endif

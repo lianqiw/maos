@@ -68,6 +68,7 @@ typedef struct ATMR_CFG_T{
     double r0;    /**<derived from r0z for zenith angle za*/
     double l0;    /**<outer scale*/
     double hs;    /**<height of the high order guide star. derived*/
+    double hmax;  /**<maximum of ht*/
     double *ht;   /**<height of each layer*/
     double *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     double dx;    /**<baseline sampling (when os=1). matches to high order wfs.*/
@@ -418,6 +419,11 @@ typedef struct RECON_CFG_T{
 		       - 1: adhoc split tomography
 		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
     int warm_restart; /**<Warm restart in CG*/
+    int mvm;        /**<Use the various algorithms recon.alg to assemble a final
+		       matrix to multiply to gradients to get DM commands. If
+		       the algorithm needs PSOL gradient, we will have an
+		       auxillary matrix to multiply to the DM actuators and
+		       subtract from the result.*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -514,7 +520,6 @@ typedef struct DBG_CFG_T{
     int psol;        /**<test add dm command offseted by 1 frame in the future to psol grad*/
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
     int atm;         /**<test special atmosphere*/
-    int keepshm;     /**<keep the atmospehre in the shared memory.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
     int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/

@@ -36,43 +36,25 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	 ){
     
     dcell *r0=NULL, *x0=NULL, *z0=NULL;
-    /*computes r0=b-A*x0 */
-    dcellcp(&r0, b);
-    if(!*px || !warm){/*start from zero guess. */
-	x0=dcellnew2(b);
-	if(!*px) dcellcp(px, x0);/*initialize the output; */
-    }else{
-	dcellcp(&x0, *px);
-	Amul(&r0, A, x0, -1);/*r0=r0+(-1)*A*x0 */
+    if(!*px){
+	*px=dcellnew2(b);
+    }else if(!warm){
+	dcellzero(*px);
     }
+    x0=*px;
     double r0z1,r0z2;
     dcell *p0=NULL;
-    if(Mmul){
-	Mmul(&z0,M,r0);
-    }else{
-	z0=r0;
-    }
-    dcellcp(&p0, z0);
-    r0z1=dcellinn(r0,z0);
     dcell *Ap=NULL;
     double ak,bk;
-
-    /*double r0zmin=r0z1; */
-#if PRINT_RES == 1
+#if PRINT_RES 
     double r0z0=dcellinn(b,b);/*|b| */
     double res[maxiter+1];
-    if(Mmul){
-	res[0]=sqrt(dcellinn(r0,r0)/r0z0);
-    }else{
-	res[0]=sqrt(r0z1/r0z0);
-    }
-    int kres=0;
-    info("Step %d, res=%g\n", kres, res[kres]);
+    info2("CG %d:", maxiter);
 #endif
     for(int k=0; k<maxiter; k++){
-	if(k!=0 && k%100==0){ /*restart every 100 steps exclude beginning */
-	    /*info("Restarting at step %d\n",k); */
-	    dcelladd(&r0, 0., b, 1.);/*r0=b; */
+	if(k%100==0){ /*restart every 100 steps exclude beginning */
+	    /*computes r0=b-A*x0 */
+	    dcellcp(&r0, b);/*r0=b; */
 	    (*Amul)(&r0, A, x0, -1);/*r0=r0+(-1)*A*x0 */
 	    if(Mmul){
 		(*Mmul)(&z0,M,r0);
@@ -80,7 +62,18 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 		z0=r0;
 	    }
 	    dcellcp(&p0, z0);
+	    r0z1=dcellinn(r0,z0);
 	}
+#if PRINT_RES
+	if(Mmul){
+	    res[k]=sqrt(dcellinn(r0,r0)/r0z0);
+	}else{
+	    res[k]=sqrt(r0z1/r0z0);
+	}
+#if PRINT_RES == 2
+	info2("%.5f ", diff[k]);
+#endif	
+#endif
 	if(Ap) dcellzero(Ap);
 	(*Amul)(&Ap, A, p0, 1);
 	ak=r0z1/dcellinn(p0,Ap);
@@ -94,23 +87,17 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	r0z2=dcellinn(r0,z0);/*r0z2=r0'*r0 */
 	bk=r0z2/r0z1;
 	dcelladd(&p0, bk, z0, 1.);/*p0=bk*pi+r0 */
-
 	r0z1=r0z2;
-#if PRINT_RES == 1
-	if(Mmul){
-	    res[k+1]=sqrt(dcellinn(r0,r0)/r0z0);
-	}else{
-	    res[k+1]=sqrt(r0z2/r0z0);
-	}
-	info("Step %d, res=%g\n", k+1, res[k+1]);
-#endif
     }
-    dcellcp(px, x0);
+#if PRINT_RES == 1
+    info2("CG %2d: %.5f ==> %.5f\n", maxiter, diff[0], diff[maxiter-1]);
+#elif PRINT_RES==2
+    info2("\n");
+#endif
     dcellfree(r0); 
     if(Mmul){
 	dcellfree(z0);
     }
-    dcellfree(x0);
     dcellfree(Ap);
     dcellfree(p0);
 }

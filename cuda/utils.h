@@ -105,6 +105,7 @@ void cp2gpu(fcomplex * restrict *dest, cmat *src);
 void cp2gpu(curmat *restrict *dest, dmat *src);
 void cp2gpu(curcell *restrict *dest, dcell *src);
 void cp2gpu(cucmat *restrict *dest, cmat *src);
+void cp2gpu(cuccell *restrict *dest, ccell *src);
 
 void cp2gpu(int * restrict *dest, long *src, int n);
 void cp2gpu(int * restrict *dest, spint *src, int n);

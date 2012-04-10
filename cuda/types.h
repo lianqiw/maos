@@ -50,7 +50,7 @@ struct cumat{
 	}
     }
     cumat<T>* ref(){
-	nref[0]++;
+	if(nref) nref[0]++;
 	cumat<T>* res=new cumat<T>(nx, ny, p, 0);
 	res->nref=nref;
 	return res;
@@ -86,6 +86,12 @@ typedef struct{
     cuspcell *Mt;
     curcell *U;
     curcell *V;
+    cudaStream_t *fitstream;
+    cublasHandle_t *fithandle;
+    cusparseHandle_t *fitsphandle;
+    cudaStream_t *dmstream;
+    cublasHandle_t *dmhandle;
+    cusparseHandle_t *dmsphandle;
 }cumuv_t;
 
 typedef struct{
@@ -100,8 +106,8 @@ typedef struct cumap_t:curmat{
     float ht;
     float vx, vy;
     float *cubic_cc; /*coefficients for cubic influence function. */
-    cumap_t(int nxi, int nyi, float oxi=0, float oyi=0, float dxi=0, float hti=0, float vxi=0, float vyi=0):
-	curmat(nxi, nyi),ox(oxi),oy(oyi),dx(dxi),ht(hti),vx(vxi),vy(vyi),cubic_cc(NULL){};
+    cumap_t(int nxi, int nyi, float *p=NULL, int own=1, float oxi=0, float oyi=0, float dxi=0, float hti=0, float vxi=0, float vyi=0):
+	curmat(nxi, nyi,p,own),ox(oxi),oy(oyi),dx(dxi),ht(hti),vx(vxi),vy(vyi),cubic_cc(NULL){};
 
 }cumap_t;
 
