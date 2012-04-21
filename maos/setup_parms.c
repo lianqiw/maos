@@ -915,6 +915,9 @@ static void readcfg_load(PARMS_T *parms){
 */
 static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.skysim){
+	if(parms->recon.alg!=0){
+	    error("skysim need MVR");
+	}
 	parms->tomo.ahst_idealngs=1;
 	if(parms->tomo.ahst_wt!=3){
 	    warning("in skycoverage presimulation, ahst_wt need to be 3. Changed\n");
@@ -1623,17 +1626,19 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->recon.split && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");
     }
-    if(parms->tomo.alg==1){
+    if(parms->tomo.alg==1 && parms->recon.alg==0){
 	if(parms->tomo.precond>1){
 	    error("Invalid preconditoner\n");
 	}
-	if(parms->tomo.precond==1 && parms->tomo.piston_cr){
+	/*if(parms->tomo.precond==1 && parms->tomo.piston_cr){
 	    warning("FDPCG does not perform well with piston_cr=1. Disabled piston_cr\n");
 	    parms->tomo.piston_cr=0;
-	}
+	    }*/
 	if(parms->tomo.precond==1 && parms->tomo.square!=1){
 	    warning("FDPCG prefers square XLOC.\n");
 	}
+    }else{
+	parms->tomo.precond=0;
     }
     /*check cg iterations*/
     if(parms->recon.mvm || !parms->recon.warm_restart){
@@ -1888,8 +1893,10 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 		}
 	    }
 	}else if(parms->recon.alg==1){
-	    if(parms->gpu.lsr && parms->lsr.alg!=1){
-		warning("\n\nGPU reconstruction is only available for CG. Disable GPU LSR.\n");
+	    parms->gpu.tomo=0;
+	    parms->gpu.fit=0;
+	    if(parms->gpu.lsr){
+		warning("\n\nGPU reconstruction for LSR is not available yet\n");
 		parms->gpu.lsr=0;
 	    }
 	}
@@ -1921,7 +1928,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
     }else{
-	parms->gpu.tomo=parms->gpu.fit=parms->gpu.evl=parms->gpu.wfs=parms->gpu.psf=0;
+	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
     }
     if(parms->dbg.cmpgpu){
 	warning("Make cpu code follows gpu implementations.\n");

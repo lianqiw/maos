@@ -360,6 +360,8 @@ typedef struct SIM_SAVE_T{
     cellarr** evlpsfhist;    /**<to save time history of science field psf*/
     cellarr** evlopdcov;     /**<science field OPD covariance*/
     cellarr** evlopdmean;    /**<science field OPD mean*/
+    cellarr* evlopdcovol;    /**<science field OPD covariance (open loop)*/
+    cellarr* evlopdmeanol;   /**<science field OPD mean (open loop)*/
     cellarr** evlpsfmean_ngsr;    /**<science field psf CL time average with NGS mode removed*/
     cellarr** evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
     cellarr** evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
@@ -516,6 +518,8 @@ typedef struct SIM_T{
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
     dcell *evlopdcov;     /**<science field opd covariance*/
     dcell *evlopdmean;    /**<science field opd mean*/
+    dmat *evlopdcovol;   /**<science field opd covariance (open loop)*/
+    dmat *evlopdmeanol;  /**<science field opd mean (open loop)*/
     dcell *evlpsfmean_ngsr;    /**<science field psf time average with NGS mode removed.*/
     dcell *evlopdcov_ngsr;     /**<science field opd covariance with NGS mode removed.*/
     dcell *evlopdmean_ngsr;    /**<science field opd mean with NGS mode removed.*/

@@ -818,10 +818,16 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}/*for ievl */
 	
-	if(parms->evl.psfmean && parms->evl.psfol){
-	    simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
-	    simu->evlpsfolmean->header=strdup(header);
-	    save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
+	if(parms->evl.psfol){
+	    if(parms->evl.psfmean){
+		simu->evlpsfolmean=dcellnew(parms->evl.nwvl,1);
+		simu->evlpsfolmean->header=strdup(header);
+		save->evlpsfolmean=cellarr_init(parms->evl.nwvl, nframepsf, "evlpsfol_%d.fits", seed);
+	    }
+	    if(parms->evl.opdcov){
+		save->evlopdcovol=cellarr_init(nframecov, 1, "evlopdcovol_%d", seed);
+		save->evlopdmeanol=cellarr_init(nframecov, 1, "evlopdmean_%d", seed);
+	    }
 	}
     }
   
@@ -1505,12 +1511,16 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->evlpsfolmean);
     dcellfree(simu->evlopdcov);
     dcellfree(simu->evlopdmean);
+    dfree(simu->evlopdcovol);
+    dfree(simu->evlopdmeanol);
     dcellfree(simu->evlpsfmean_ngsr);
     dcellfree(simu->evlopdcov_ngsr);
     dcellfree(simu->evlopdmean_ngsr);
     cellarr_close_n(save->evlpsfmean, nevl);
     cellarr_close_n(save->evlopdcov, nevl);
     cellarr_close_n(save->evlopdmean, nevl);
+    cellarr_close(save->evlopdcovol);
+    cellarr_close(save->evlopdmeanol);
     cellarr_close_n(save->evlpsfmean_ngsr, nevl);
     cellarr_close_n(save->evlopdcov_ngsr, nevl);
     cellarr_close_n(save->evlopdmean_ngsr,nevl);

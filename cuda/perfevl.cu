@@ -289,8 +289,10 @@ void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
 	gpu_set(im);
 	if(parms->evl.opdcov){
 	    curcellfree(cudata->evlopdcov);
+	    curfree(cudata->evlopdcovol);
 	    curcellfree(cudata->evlopdcov_ngsr);
 	    curcellfree(cudata->evlopdmean);
+	    curfree(cudata->evlopdmeanol);
 	    curcellfree(cudata->evlopdmean_ngsr);
 	    cudata->evlopdcov     =curcellnew(nevl, 1);
 	    cudata->evlopdcov_ngsr=curcellnew(nevl, 1);
@@ -455,7 +457,7 @@ void gpu_perfevl(thread_t *info){
     }else{
 	TO_IMPLEMENT;
     }
-    if(parms->evl.psfmean 
+    if((parms->evl.psfmean  || parms->evl.opdcov)
        && isim>=parms->evl.psfisim 
        &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
 	  ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
@@ -464,19 +466,36 @@ void gpu_perfevl(thread_t *info){
 	if(parms->evl.psfpttr[ievl]){
 	    curcp(&opdcopy, iopdevl, stream);
 	    curaddptt(opdcopy, cudata->plocs, -polmp[isim][0], -polmp[isim][1], -polmp[isim][2], stream);
+	}else if(parms->evl.opdcov){
+	    curcp(&opdcopy, iopdevl, stream);
+	    curadd(opdcopy, -polmp[isim][0], stream);
 	}else{
 	    opdcopy=iopdevl;
 	}
-	psfcomp_r(cudata->evlpsfol->p, opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
-	if(opdcopy!=iopdevl){
-	    CUDA_SYNC_STREAM;
-	    curfree(opdcopy);
+	if(parms->evl.opdcov){
+	    if(parms->gpu.psf){
+		curmm(&cudata->evlopdcovol, 1, opdcopy, opdcopy, "nt", 1, handle);
+		curadd(&cudata->evlopdmeanol, 1, opdcopy, 1, stream);
+	    }else{
+		dmat *tmp=NULL;
+		cp2cpu(&tmp, 0, opdcopy, 1, stream);
+		dmm(&simu->evlopdcovol, tmp, tmp, "nt", 1);
+		dadd(&simu->evlopdmeanol, 1, tmp, 1);
+		dfree(tmp);
+	    }
 	}
-	if(!parms->gpu.psf){ /*need to move psf from GPU to CPU for accumulation.*/
-	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cp2cpu(&simu->evlpsfolmean->p[iwvl], 1, cudata->evlpsfol->p[iwvl], 1, stream);
+	if(parms->evl.psfmean){
+	    psfcomp_r(cudata->evlpsfol->p, opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
+	    if(opdcopy!=iopdevl){
 		CUDA_SYNC_STREAM;
-		curfree(cudata->evlpsfol->p[iwvl]); cudata->evlpsfol->p[iwvl]=NULL;
+		curfree(opdcopy);
+	    }
+	    if(!parms->gpu.psf){ /*need to move psf from GPU to CPU for accumulation.*/
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cp2cpu(&simu->evlpsfolmean->p[iwvl], 1, cudata->evlpsfol->p[iwvl], 1, stream);
+		    CUDA_SYNC_STREAM;
+		    curfree(cudata->evlpsfol->p[iwvl]); cudata->evlpsfol->p[iwvl]=NULL;
+		}
 	    }
 	}
     }
@@ -737,6 +756,37 @@ void gpu_perfevl_save(SIM_T *simu){
 		curscale(pp, scale, stream);
 		cellarr_cur(simu->save->evlopdmean_ngsr[ievl], pp, stream);
 		curscale(pp, 1./scale, stream);
+	    }
+	}
+	if(parms->evl.psfol){
+	    if(parms->evl.psfol==2){
+		scale=scale/parms->evl.npsf;
+	    }
+	    {
+		smat *temp=NULL;
+		smat *temp2=NULL;
+		for(int im=0; im<NGPU; im++){
+		    gpu_set(im);
+		    cp2cpu(&temp2, cudata->evlopdcovol, 0);
+		    cudaStreamSynchronize(0);
+		    sadd(&temp, 1, temp2, scale);
+		}
+		cellarr_smat(simu->save->evlopdcovol, temp);
+		sfree(temp);
+		sfree(temp2);
+	    }
+	    {
+		smat *temp=NULL;
+		smat *temp2=NULL;
+		for(int im=0; im<NGPU; im++){
+		    gpu_set(im);
+		    cp2cpu(&temp2, cudata->evlopdmeanol, 0);
+		    cudaStreamSynchronize(0);
+		    sadd(&temp, 1, temp2, scale);
+		}
+		cellarr_smat(simu->save->evlopdmeanol, temp);
+		sfree(temp);
+		sfree(temp2);
 	    }
 	}
     }

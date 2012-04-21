@@ -307,6 +307,7 @@ void cp2gpu(cumap_t ***dest0, map_t **source, int nps){
   Convert a host dsp array to GPU sprase array. Both are in CSC format. 
 */
 void cp2gpu(cusp **dest0, dsp *src){
+    if(!src) return;
     if(!*dest0) *dest0=(cusp*)calloc(1, sizeof(cusp));
     cusp *dest=*dest0;
     dest->nx=src->m;

@@ -100,15 +100,23 @@ W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1){
 }
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     gpu_set(gpu_recon);
+    if(!curecon){
+	curecon=(curecon_t*)calloc(1, sizeof(curecon_t));
+    }
+    STREAM_NEW(curecon->cgstream);
+    HANDLE_NEW(curecon->cghandle, curecon->cgstream);
+    if(parms->recon.mvm && (!parms->gpu.tomo || !parms->gpu.fit)){
+	return; /*Use CPU to assemble MVM*/
+    }
+    if(parms->recon.alg!=0){
+	error("Only MVR is implemented in GPU\n");
+    }
     cuwloc_t *cupowfs=cudata->powfs;
     cudaStream_t stream;
     STREAM_NEW(stream);
     cublasHandle_t handle;
     DO(cublasCreate(&handle));
     DO(cublasSetStream(handle, stream));
-    if(!curecon){
-	curecon=(curecon_t*)calloc(1, sizeof(curecon_t));
-    }
     curecon->wfsstream=(cudaStream_t*)calloc(parms->nwfsr, sizeof(cudaStream_t));
     curecon->wfshandle=(cublasHandle_t*)calloc(parms->nwfsr, sizeof(cublasHandle_t));
     curecon->wfssphandle=(cusparseHandle_t*)calloc(parms->nwfsr, sizeof(cusparseHandle_t));
@@ -142,8 +150,6 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	SPHANDLE_NEW(curecon->dmsphandle[idm],curecon->dmstream[idm]);
     }
     
-    STREAM_NEW(curecon->cgstream);
-    HANDLE_NEW(curecon->cghandle, curecon->cgstream);
     if(parms->gpu.tomo){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].skip) continue;

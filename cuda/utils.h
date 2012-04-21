@@ -44,8 +44,10 @@ typedef struct{
     curcell *evlpsfcl;
     curcell *evlpsfcl_ngsr;
     curcell *evlopdcov;
+    curmat *evlopdcovol;
     curcell *evlopdcov_ngsr;
     curcell *evlopdmean;
+    curmat *evlopdmeanol;
     curcell *evlopdmean_ngsr;
     /*for wfsgrad */
     cuwloc_t *powfs;

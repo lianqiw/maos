@@ -144,40 +144,40 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #ifndef error
 #define error(A...) ({char fline[80];					\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stdout, "\033[01;31m%-20s Fatal error: ",fline);	\
-	    fprintf(stdout, A); fprintf(stdout,"\033[00;00m");		\
+	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
 	    raise(SIGTERM);})
 #define info(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout, "%-20s",fline);			\
-	    fprintf(stdout, A);})
+	    fprintf(stderr, "%-20s",fline);			\
+	    fprintf(stderr, A);})
 #define warning(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout,"\033[01;31m%-20s", fline);		\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
+	    fprintf(stderr,"\033[01;31m%-20s", fline);		\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
 
 #define error2(A...) ({							\
-	    fprintf(stdout, "\033[01;31mFatal error\033[00;00m\t");	\
-	    fprintf(stdout, A);						\
+	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
+	    fprintf(stderr, A);						\
 	    raise(SIGTERM);})
-#define info2(A...) fprintf(stdout, A)
+#define info2(A...) fprintf(stderr, A)
 #define warning2(A...) ({					\
-	    fprintf(stdout,"\033[00;31m");			\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m"); }) 
+	    fprintf(stderr,"\033[00;31m");			\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m"); }) 
 
 #define error3(A...) ({char fline[80];					\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stdout, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
-	    fprintf(stdout, A); fprintf(stdout,"\033[00;00m");		\
+	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
 	    raise(SIGTERM);})
 #define warning3(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stdout,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
+	    fprintf(stderr,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
 #define info3(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout, "[%s]%-20s",myasctime(),fline);	\
-	    fprintf(stdout, A);})
+	    fprintf(stderr, "[%s]%-20s",myasctime(),fline);	\
+	    fprintf(stderr, A);})
 #endif
 
 #define error_write error("Write failed\n")

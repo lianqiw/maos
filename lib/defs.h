@@ -19,7 +19,7 @@
   To be included in mat.c, cell.c and matbin.c
 */
 #if MAT_VERBOSE == 1
-#define matinfo(A...) {fprintf(stdout, A);}
+#define matinfo(A...) {fprintf(stderr, A);}
 #else
 #define matinfo(A...)
 #endif

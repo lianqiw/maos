@@ -177,7 +177,7 @@ void perfevl_ievl(thread_t *info){
     }
 
     /*evaluate time averaged open loop PSF. */
-    if(parms->evl.psfmean 
+    if((parms->evl.psfmean || parms->evl.opdcov)
        && isim>=parms->evl.psfisim 
        &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
 	  ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
@@ -186,26 +186,35 @@ void perfevl_ievl(thread_t *info){
 	if(parms->evl.psfpttr[ievl]){
 	    dcp(&opdevlcopy,iopdevl);
 	    loc_remove_ptt(opdevlcopy->p,polmp[isim], aper->locs);
+	}else if(parms->evl.opdcov){
+	    dcp(&opdevlcopy,iopdevl);
+	    dadds(opdevlcopy, -polmp[isim][0]);
 	}else{
 	    opdevlcopy=dref(iopdevl);
 	}
-	ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
-			     parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
-	dfree(opdevlcopy);
-	int nwvl=parms->evl.nwvl;
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
-	}
-	if(parms->plot.run){
-	    dmat *psftemp=NULL;
+	if(parms->evl.opdcov){
+	    dmm(&simu->evlopdcovol, opdevlcopy, opdevlcopy, "nt", 1);
+	    dadd(&simu->evlopdmeanol, 1, opdevlcopy, 1);
+	}/*opdcov*/
+	if(parms->evl.psfmean){
+	    ccell *psf2s=psfcomp(opdevlcopy, aper->amp->p, aper->embed, aper->nembed,
+				 parms->evl.psfsize, parms->evl.nwvl, parms->evl.wvl);
+	    int nwvl=parms->evl.nwvl;
 	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
-		ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
-		      "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl[iwvl]*1e6);
-		dfree(psftemp);
+		cabs22d(&simu->evlpsfolmean->p[iwvl], 1, psf2s->p[iwvl], 1);
 	    }
+	    if(parms->plot.run){
+		dmat *psftemp=NULL;
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    cabs22d(&psftemp, 1, psf2s->p[iwvl], 1);
+		    ddraw("OL PSF", psftemp, NULL, NULL, "Science Openloop PSF", 
+			  "x", "y", "OL%2d PSF %.2f", ievl,  parms->evl.wvl[iwvl]*1e6);
+		    dfree(psftemp);
+		}
+	    }
+	    ccellfree(psf2s);
 	}
-	ccellfree(psf2s);
+	dfree(opdevlcopy);
     }
     if(parms->sim.evlol) goto end;
     TIM(2);
@@ -393,7 +402,7 @@ static void perfevl_mean(SIM_T *simu){
 	    Mngs->p[0]=dnew_ref(nngsmod,1,pcleNGSm);/*ref the data */
 	    if(simu->parms->tomo.ahst_idealngs){
 		/* apply ideal ngs modes immediately to dmreal.  Don't forget to
-		  updated DM Cache. */
+		   updated DM Cache. */
 		ngsmod2dm(&simu->dmreal,simu->recon, Mngs, 1.);
 		update_dm(simu);
 		tot-=ngs; ngs=0; tt=0;
@@ -511,7 +520,7 @@ static void perfevl_save(SIM_T *simu){
 	    }
 	    dcellscale(simu->evlpsfmean_ngsr, 1./scale);//scale it back;
 	}
-	if(simu->evlpsfolmean){
+	if(parms->evl.psfol){
 	    scale=1./(double)(simu->isim+1-parms->evl.psfisim);
 	    if(parms->evl.psfol==2){
 		scale=scale/parms->evl.npsf;
@@ -549,6 +558,18 @@ static void perfevl_save(SIM_T *simu){
 	dcellscale(simu->evlopdmean, 1./scale);//scale it back;
 	dcellscale(simu->evlopdcov_ngsr, 1./scale);//scale it back;
 	dcellscale(simu->evlopdmean_ngsr, 1./scale);//scale it back;
+	if(parms->evl.psfol){
+	    scale=1./(double)(simu->isim+1-parms->evl.psfisim);
+	    if(parms->evl.psfol==2){
+		scale=scale/parms->evl.npsf;
+	    }
+	    dscale(simu->evlopdcovol, scale);
+	    dscale(simu->evlopdmeanol, scale);
+	    cellarr_dmat(simu->save->evlopdcovol, simu->evlopdcovol);
+	    cellarr_dmat(simu->save->evlopdmeanol, simu->evlopdmeanol);
+	    dscale(simu->evlopdcovol, 1./scale);//scale it back;
+	    dscale(simu->evlopdmeanol, 1./scale);//scale it back;
+	}
     }
 }
 /**
