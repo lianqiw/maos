@@ -175,7 +175,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		
 		    for(int ic=0; ic<GP->n; ic++){
 			int isa=(ic<nsa)?ic:(ic-nsa);
-			for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
+			for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
 			    int ix=pi[ir];
 			    double lx=recon->ploc->locx[ix];
 			    double ly=recon->ploc->locy[ix];
@@ -251,7 +251,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 		float (*neai)[3]=(float(*)[3])calloc(3*nsa, sizeof(float));
 		if(nea->n!=2*nsa) error("nea doesn't have 2nsa x 2nsa dimension\n");
 		for(int ic=0; ic<nea->n; ic++){
-		    for(int ir=pp[ic]; ir<pp[ic+1]; ir++){
+		    for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
 			int ix=pi[ir];
 			int isa=ic<nsa?ic:ic-nsa;
 			float val=(float)px[ir]*TOMOSCALE;
@@ -391,7 +391,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    for(int idm=0; idm<parms->ndm; idm++){
 		curecon->dmfit->p[idm]=new cumap_t(recon->amap[idm]->nx,recon->amap[idm]->ny,
 						   curecon->dmfit->m->p+ct, 0);
-		ct+=recon->amap[idm]->nx,recon->amap[idm]->ny;
+		ct+=recon->amap[idm]->nx*recon->amap[idm]->ny;
 		curecon->dmfit_vec->p[idm]=curref(curecon->dmfit->p[idm]);
 		curecon->dmfit_vec->p[idm]->nx=curecon->dmfit_vec->p[idm]->nx
 		    *curecon->dmfit_vec->p[idm]->ny;
@@ -420,7 +420,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	    curecon->opdfit->p[ifit] =curnew(recon->fmap->nx, recon->fmap->ny);
 	    curecon->opdfit2->p[ifit]=curnew(recon->fmap->nx, recon->fmap->ny);
 	}
-	curecon->pis=curnew(recon->npsr, 1);
+	curecon->pis=curnew(parms->fit.nfit, 1);
     }
     STREAM_DONE(stream);
     cublasDestroy(handle);
@@ -795,9 +795,12 @@ void gpu_fit(SIM_T *simu){
 	dcellzero(lc);
 	muv(&lc, &recon->FL, rhsc, 1);
 	dcellwrite(lc, "CPU_FitL3");
-	dcell *lhs=NULL;
+	dcellzero(lc);
+	muv_solve(&lc, &recon->FL, NULL, rhsc);
+	dcellwrite(lc, "CPU_FitCG");
+	/*dcell *lhs=NULL;
 	muv_trans(&lhs, &recon->FR, rhsc, 1);
-	dcellwrite(lhs, "CPU_FitRt");
+	dcellwrite(lhs, "CPU_FitRt");*/
 	curcell *rhsg=NULL;
 	curcell *lg=NULL;
 	gpu_FitR(&rhsg, 0, recon, curecon->opdr, 1);
@@ -808,10 +811,13 @@ void gpu_fit(SIM_T *simu){
 	curcellwrite(lg, "GPU_FitL2");
 	gpu_FitL(&lg, 0, recon, rhsg, 1);
 	curcellwrite(lg, "GPU_FitL3");
-	curcell *lhsg=NULL;
+	/*curcell *lhsg=NULL;
 	gpu_FitRt(&lhsg, 0, recon, rhsg, 1);
-	curcellwrite(lhsg, "GPU_FitRt");
-
+	curcellwrite(lhsg, "GPU_FitRt");*/
+	curcellzero(lg, curecon->cgstream);
+	gpu_pcg(&lg, (G_CGFUN)gpu_FitL, (void*)recon, NULL, NULL, rhsg,
+		simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream);
+	curcellwrite(lg, "GPU_FitCG");
 	CUDA_SYNC_DEVICE;
 	exit(0);
     }
@@ -844,11 +850,7 @@ void gpu_fit(SIM_T *simu){
     case 1:
 	if(gpu_pcg(&curecon->dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, rhs,
 		   simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream)){
-	    curcellwrite(curecon->opdr, "fit_opdr_%d", simu->reconisim);
-	    curcellwrite(rhs, "fit_rhs_%d", simu->reconisim);
-	    curcellwrite(curecon->dmfit, "fit_dmfit_%d", simu->reconisim);
-	    dcellwrite(simu->gradlastol, "fit_gradlastol_%d", simu->reconisim);
-	    exit(1);
+	    error("DM Fitting PCG failed\n");
 	}
 	break;
     case 2:

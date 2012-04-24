@@ -260,6 +260,13 @@ void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, flo
     DO_HAT(xout, opdfit2);/*xout = beta*xout + alpha * HA' *opdfit2 */
     SYNC_DM;   
     toc("HAT");//2.4ms
+    /*{
+	curcellwrite(xin, "gpur_xin");
+	curcellwrite(opdfit, "gpur_opdfit");
+	curwrite(curecon->pis, "gpur_pis");
+	curcellwrite(opdfit2, "gpur_opdfit2");
+	curcellwrite(*xout, "gpur_xout");
+	}*/
 }
 void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
@@ -319,11 +326,11 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
     SYNC_DM; toc("HAT");tic;//2.5ms for cubic, 0.2 ms for linear
 #endif
     /*{
-	curcellwrite(xin, "xin");
-	curcellwrite(opdfit, "opdfit");
-	curwrite(curecon->pis, "pis");
-	curcellwrite(opdfit2, "opdfit2");
-	curcellwrite(*xout, "xout");
+	curcellwrite(xin, "gpu_xin");
+	curcellwrite(opdfit, "gpu_opdfit");
+	curwrite(curecon->pis, "gpu_pis");
+	curcellwrite(opdfit2, "gpu_opdfit2");
+	curcellwrite(*xout, "gpu_xout");
 	}*/
     if(curecon->fitNW){
 	curcell *tmp=curcellnew(recon->ndm, 1);

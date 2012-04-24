@@ -1342,7 +1342,6 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->atm.ws=realloc(parms->atm.ws, sizeof(double)*jps);
 	parms->atm.wddeg=realloc(parms->atm.wddeg, sizeof(double)*jps);
     }
-    normalize_sum(parms->atm.wt, parms->atm.nps, 1);
     if(parms->sim.idealfit){/*If fit only, we using atm for atmr. */
 	warning("Changing atmr.ht,wt to atm.ht,wt since we are doing fit only\n");
 	int nps=parms->atm.nps;
@@ -1375,6 +1374,9 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->fit.thetay[0]=0;
 	parms->fit.wt[0]=1;
     }
+    normalize_sum(parms->atm.wt, parms->atm.nps, 1);
+    normalize_sum(parms->atmr.wt, parms->atmr.nps, 1);
+    normalize_sum(parms->fit.wt, parms->fit.nfit, 1);
     /*
       We don't drop weak turbulence layers in reconstruction. Instead, we make
       it as least parms->tomo.minwt in setup_recon_tomo_prep
@@ -1853,7 +1855,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	if(parms->sim.idealfit){
 	    parms->gpu.tomo=0;/*no need tomo.*/
 	}
-	if(parms->recon.alg==0){
+	if(parms->recon.alg==0){/*MV*/
 	    if(parms->gpu.tomo && parms->tomo.pos !=2){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for CG with tomo.pos=2 for the moment.\n");
@@ -1882,14 +1884,16 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 		if(parms->powfs[ipowfs].moao>=0) moao_used++;
 	    }
-	    if(moao_used>0 && parms->gpu.moao){
-		if(!parms->fit.square){
-		    warning("GPU moao=1 requires fit.square=1. Changed\n");
-		    parms->fit.square=1;
-		}
-		if(!parms->tomo.square){
-		    warning("GPU moao=1 requires tomo.square=1. Changed\n");
-		    parms->tomo.square=1;
+	    if(moao_used>0){
+		if(parms->gpu.moao){
+		    if(!parms->fit.square){
+			warning("GPU moao=1 requires fit.square=1. Changed\n");
+			parms->fit.square=1;
+		    }
+		    if(!parms->tomo.square){
+			warning("GPU moao=1 requires tomo.square=1. Changed\n");
+			parms->tomo.square=1;
+		    }
 		}
 	    }
 	}else if(parms->recon.alg==1){

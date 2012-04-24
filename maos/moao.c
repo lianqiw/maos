@@ -102,6 +102,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	double dxr=parms->aper.d/order;
 	map_t *map=create_metapupil_wrap(parms,0,dxr,0,0,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=map2loc(map);
+	recon->moao[imoao].aembed=map2embed(map);
 	recon->moao[imoao].amap=map;
 	free(map->p); map->p=NULL;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc, NULL);

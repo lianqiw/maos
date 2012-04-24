@@ -42,7 +42,7 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	dcellzero(*px);
     }
     x0=*px;
-    double r0z1,r0z2;
+    double r0z1=0,r0z2;
     dcell *p0=NULL;
     dcell *Ap=NULL;
     double ak,bk;

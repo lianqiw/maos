@@ -221,34 +221,26 @@ void filter_cl(SIM_T *simu){
 	dcellfree(tmp);
     }
     if(recon->moao){
-	if(parms->gpu.moao){
-#if USE_CUDA
-	    gpu_moao_filter(simu);
-#endif
-	}else{
-	    if(parms->sim.closeloop){
-		if(simu->moao_wfs){
-		    const int nwfs=parms->nwfs;
-		    for(int iwfs=0; iwfs<nwfs; iwfs++){
-			int ipowfs=parms->wfs[iwfs].powfs;
-			int imoao=parms->powfs[ipowfs].moao;
-			if(imoao<0) continue;
-			double g=parms->moao[imoao].gdm;
-			dadd(&simu->moao_wfs->p[iwfs], 1.-g, simu->moao_wfs->p[iwfs+nwfs], g);
-		    }
-		}
-		if(simu->moao_evl){
-		    const int nevl=parms->evl.nevl;
-		    int imoao=parms->evl.moao;
+	if(!parms->gpu.moao){ /*close loop filtering.*/
+	    if(simu->moao_wfs){
+		const int nwfs=parms->nwfs;
+		for(int iwfs=0; iwfs<nwfs; iwfs++){
+		    int ipowfs=parms->wfs[iwfs].powfs;
+		    int imoao=parms->powfs[ipowfs].moao;
+		    if(imoao<0) continue;
 		    double g=parms->moao[imoao].gdm;
-		    for(int ievl=0; ievl<nevl; ievl++){
-			dadd(&simu->moao_evl->p[ievl], 1.-g, simu->moao_evl->p[ievl+nevl], g);
-		    }
+		    dadd(&simu->moao_wfs->p[iwfs], 1.-g, simu->moao_wfs->p[iwfs+nwfs], g);
 		}
 	    }
-#if USE_CUDA
-	    gpu_moao_2gpu(simu);
-#endif
+	    if(simu->moao_evl){
+		const int nevl=parms->evl.nevl;
+		int imoao=parms->evl.moao;
+		double g=parms->moao[imoao].gdm;
+		for(int ievl=0; ievl<nevl; ievl++){
+		    dadd(&simu->moao_evl->p[ievl], 1.-g, simu->moao_evl->p[ievl+nevl], g);
+		}
+	    }
+
 	}
     }
 }
@@ -286,6 +278,7 @@ void filter_ol(SIM_T *simu){
 	cellarr_dcell(simu->save->dmreal, simu->dmreal);
 	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
     }
+    /*moao DM is already taken care of automatically.*/
 }
 
 /**
@@ -330,6 +323,15 @@ void filter(SIM_T *simu){
     }else{
 	filter_ol(simu);
     }
+#if USE_CUDA
+    if(simu->recon->moao){
+	if(parms->gpu.moao){
+	    gpu_moao_filter(simu);
+	}else{
+	    gpu_moao_2gpu(simu);
+	}
+    }
+#endif
     update_dm(simu);
 
 }
