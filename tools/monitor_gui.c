@@ -40,7 +40,7 @@
 #define WIDTH_PID 6
 #define WIDTH_PATH 20
 #define WIDTH_ISEED 4
-#define WIDTH_TIMING 20
+#define WIDTH_TIMING 25
 #define WIDTH_ERRLO 7
 #define WIDTH_ERRHI 7
 
@@ -169,13 +169,13 @@ static void update_prog(PROC_T *p){
 	  step,p->status.isim+1,p->status.simend,
 	  restm,rests,totm,tots);*/
 	if(toth>99){
-	    snprintf(tmp,64, "%d %5.2fs %ldh/%ldh",p->status.simend,
+	    snprintf(tmp,64, "%d/%d %5.2fs %ldh/%ldh",p->status.isim+1,p->status.simend,
 		     step, resth,toth);
 	}else if(toth>0){
-	    snprintf(tmp,64, "%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.simend,
+	    snprintf(tmp,64, "%d/%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.isim+1,p->status.simend,
 		     step, resth,restm,toth,totm);
 	}else{
-	    snprintf(tmp,64, "%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.simend,
+	    snprintf(tmp,64, "%d/%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.isim+1,p->status.simend,
 		     step, restm,rests,totm,tots);	
 	}
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),tmp);

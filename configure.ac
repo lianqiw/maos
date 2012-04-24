@@ -41,7 +41,7 @@ OPTScommon=" -Wshadow -Wall " #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror"
 fi
-LDEXE="-lm"
+LDEXE="-lm -no-install"
 OPTSextra=""
 
 #Compile mex routines if MATLAB is detected

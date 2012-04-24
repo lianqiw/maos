@@ -264,8 +264,8 @@ static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ..
 	error("Invalid\n");
     }
     gtk_tree_view_column_set_title(col, title);
-    gtk_tree_view_column_set_spacing(col, 1);
-    gtk_tree_view_column_set_alignment(col, 0.5);
+    gtk_tree_view_column_set_spacing(col, 2);
+    gtk_tree_view_column_set_alignment(col, 1);
     if(width>0){/*minimum width*/
 	gtk_tree_view_column_set_min_width(col, width);
 	gtk_tree_view_column_set_expand(col,TRUE);
