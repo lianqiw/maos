@@ -131,6 +131,8 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
     curecon->dmhandle=(cublasHandle_t*)calloc(recon->ndm, sizeof(cublasHandle_t));
     curecon->dmsphandle=(cusparseHandle_t*)calloc(recon->ndm, sizeof(cusparseHandle_t));
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	if(parms->powfs[ipowfs].skip) continue;
 	STREAM_NEW(curecon->wfsstream[iwfs]);
 	HANDLE_NEW(curecon->wfshandle[iwfs], curecon->wfsstream[iwfs]);
 	SPHANDLE_NEW(curecon->wfssphandle[iwfs], curecon->wfsstream[iwfs]);

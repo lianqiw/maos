@@ -23,8 +23,6 @@ extern "C"
 #include "utils.h"
 #include "accphi.h"
 
-#undef EPS
-#define EPS 1e-5
 /**
    First written on 2011-07.
    Port wfsgrad.c perfevl, etc to GPU.
@@ -823,8 +821,17 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		   float alpha, char trans, cudaStream_t stream){
     assert(in->ny!=1);
     const float dxi1=1.f/dxi;
-    const float ratio=dxo*dxi1;
-    if(fabs(ratio-1.f)<1.e-5 && trans=='t'){
+    float ratio=dxo*dxi1;
+    int match=0,match2=0;
+    /*remove round off errors that causes trouble in nx, ny.*/
+    if(fabs(ratio-1.f)<EPS){
+	ratio=1.f;
+	match=1;
+    }else if(fabs(ratio-0.5f)<EPS){
+	ratio=0.5f;
+	match2=1;
+    }
+    if(match && trans=='t'){
 	gpu_prop_grid(in, oxi, oyi, dxi, out, oxo, oyo, dxo, -dispx, -dispy, alpha,'n', stream);
 	return;
     }
@@ -847,15 +854,15 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 	dispy+=offy1*ratio;
     }
     /*convert offset into input grid coordinate. -1e-4 to avoid laying on the last point. */
-    int nx=(int)floorf((nxi-1-dispx-1e-5)*ratio1)+1;
-    int ny=(int)floorf((nyi-1-dispy-1e-5)*ratio1)+1;
+    int nx=(int)floorf((nxi-dispx-EPS)*ratio1);
+    int ny=(int)floorf((nyi-dispy-EPS)*ratio1);
 
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;
     int offx2=(int)floorf(dispx); dispx-=offx2;/*for input. coarse sampling. */
     int offy2=(int)floorf(dispy); dispy-=offy2;
     if(trans=='n'){
-	if(fabs(ratio-1.f)<1.e-5){
+	if(match){
 	    prop_grid_match_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
@@ -867,9 +874,10 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		 dispx, dispy, ratio, alpha, nx, ny);
 	}
     }else if(trans=='t'){
-	if(fabs(ratio-1.f)<1.e-5){
+	if(match){
 	    error("Please revert the input/output and call with trans='n'\n");
-	}else if(fabs(ratio-0.5f)<1.e-5){
+	}else if(match2){
+	    ratio=0.5f;
 	    if(dispy>0.5f){/*do a single col first. */
 		prop_grid_os2_trans_col_do<<<DIM2(nx,1,256),0,stream>>>
 		    (out->p+offy1*nxo+offx1, nxo,
@@ -1027,7 +1035,13 @@ void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
 			 float alpha, char trans, cudaStream_t stream){
     assert(in->ny!=1);
     const float dxi1=1.f/dxi;
-    const float ratio=dxo*dxi1;
+    float ratio=dxo*dxi1;
+    /*remove round off errors.*/
+    if(fabs(ratio-1.f)<EPS){
+	ratio=1.f;
+    }else if(fabs(ratio-0.5f)<EPS){
+	ratio=0.5f;
+    }
     const int nxo=out->nx;
     const int nyo=out->ny;
     const int nxi=in->nx;
@@ -1046,9 +1060,9 @@ void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
 	offy1=(int)ceilf(-dispy*ratio1);
 	dispy+=offy1*ratio;
     }
-    /*convert offset into input grid coordinate. -1e-4 to avoid laying on the last point. */
-    int nx=(int)floorf((nxi-1-dispx-1e-5)*ratio1)+1;
-    int ny=(int)floorf((nyi-1-dispy-1e-5)*ratio1)+1;
+    /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
+    int nx=(int)floorf((nxi-1-dispx-EPS)*ratio1)+1;
+    int ny=(int)floorf((nyi-1-dispy-EPS)*ratio1)+1;
 
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;

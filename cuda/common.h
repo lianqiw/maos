@@ -26,7 +26,8 @@ extern "C"
 #include <cublas_v2.h>
 #include <cusparse.h>
 #include <cufft.h>
-
+#undef EPS
+#define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 #define DEBUG_MEM 0
 #if DEBUG_MEM
 /*static int tot_mem=0; */

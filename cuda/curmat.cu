@@ -61,9 +61,9 @@ void curcp(curmat **out, const curmat *in){
 */
 void curadd(curmat **out, float alpha, curmat *in, float beta, cudaStream_t stream){
     if(!in) return;
-    if(!*out || fabsf(alpha)<1e-7){
+    if(!*out || fabsf(alpha)<EPS){
 	curcp(out, in, stream);
-	if(fabs(beta-1)>1e-7){
+	if(fabs(beta-1)>EPS){
 	    scale_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
 		((*out)->p, in->nx*in->ny, beta);
 	}
@@ -79,7 +79,7 @@ void curadd(curmat **out, float alpha, curmat *in, float beta, cudaStream_t stre
 void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t stream){
     if(!*out){
 	*out=curnew(in->nx,in->ny);
-    }else if(fabsf(alpha)<1e-7){
+    }else if(fabsf(alpha)<EPS){
 	curzero(*out, stream);
     }
     addcabs2_do<<<DIM(in->nx*in->ny, 256),0,stream>>>
@@ -87,9 +87,9 @@ void curaddcabs2(curmat **out, float alpha, cucmat *in, float beta, cudaStream_t
 }
 void curscale(curmat *in, float alpha, cudaStream_t stream){
     if(!in) return;
-    if(fabsf(alpha)<1e-5) {
+    if(fabsf(alpha)<EPS) {
 	curzero(in, stream);
-    }else if(fabsf(alpha-1.f)>1e-5){
+    }else if(fabsf(alpha-1.f)>EPS){
 	int n=in->nx*in->ny;
 	scale_do<<<DIM(n,256), 0, stream>>>(in->p, n, alpha); 
     }
