@@ -197,10 +197,7 @@ typedef struct FDPCG_T{
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
     long *perm;    /**<Permutation vector to get block diagonal matrix*/
     long nxtot;    /**<Total number of reconstructed phase points*/
-    cmat *xhat;    /**<Intermediate matrices*/
-    cmat *xhat2;   /**<Intermediate matrices*/
-    ccell *xhati;  /**<Intermediate matrices*/
-    ccell *xhat2i; /**<Intermediate matrices*/
+    /*xhat, xhat2 has been removed for thread safety issues.*/
     long **xembed; /**<index to embed nonsquare opd on xloc to square map.*/
     double *scale; /**<Scaling factor for each layer*/
     int square;    /**<Whether xloc is square*/
@@ -218,6 +215,8 @@ typedef struct MOAO_T{
     dcell *NW;        /**<null modes and constraints*/
     dmat *W1;         /**<Weighting matrix on PLOC. same as recon->W1*/
     dsp *W0;          /**<Weighting matrix on PLOC. same as recon->W0*/
+    dcell *actcpl;    /**<actuator coupling factor. 0 means actuator is outside
+			 of FoV and need to be slaved.*/
     spcell *actslave; /**<Slaving operator for actuators not illuminated*/
     dmat *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     icell *actstuck;  /**<stuck actuators*/
@@ -317,6 +316,7 @@ typedef struct RECON_T{
     dcell *PTTF;       /**<pinv of TTF*/
     spcell *ZZT;       /**<single point piston constraint in tomography.*/
     dcell *fitNW;      /**<null modes for DM fit.*/
+    dcell *actcpl;     /**<actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved.*/
     spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     spcell *actinterp; /**<Interpolation operator for floating actuators. Slaving does not work well in CG. */
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/

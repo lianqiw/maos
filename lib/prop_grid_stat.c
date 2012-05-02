@@ -109,7 +109,9 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    phicol=phiin+nplocy*wrapx1+nplocx;
 		    phicol2=phiin+(nplocy+1)*wrapx1+nplocx;
 		}else{
-		    missing+=collen;
+		    if(nplocy!=wrapy){
+			missing+=collen;
+		    }
 		    continue;
 		}
 	    }
@@ -223,7 +225,9 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    phicol=phiin+nplocy*wrapx1;
 		    phicol2=phiin+(nplocy+1)*wrapx1;
 		}else{
-		    missing+=collen;
+		    if(nplocy!=wrapy){
+			missing+=collen;
+		    }
 		    continue;
 		}
 	    }
@@ -318,7 +322,9 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    nplocy-=wrapy1;
 		nplocy1=(nplocy==wrapx?0:nplocy+1);
 	    }else{
-		missing+=collen;
+		if(nplocy!=wrapy){
+		    missing+=collen;
+		}
 		continue;
 	    }
 	}else{
@@ -338,7 +344,9 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			nplocx-=wrapx1;
 		    nplocx1=(nplocx==wrapx?0:nplocx+1);
 		}else{
-		    missing++;
+		    if(nplocx!=wrapx){
+			missing++;
+		    }
 		    continue;
 		}
 	    }
@@ -359,6 +367,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     }/*for icol*/
 #endif
     if(missing>0){
-	warning("%d points not covered by input screen\n", missing);
+	warning(" %d points not covered by input screen\n", missing);
+	print_backtrace(0);
     }
 }/*function*/

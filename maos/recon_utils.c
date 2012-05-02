@@ -38,6 +38,7 @@ void apply_L2(dcell **xout, const spcell *L2, const dcell *xin,
    Apply turbulence invpsd to xin in Fourier space, scaled by alpha and add to xout.
    do nothing if xb != yb, since we apply to diagonal only.
    if xb==-1, do all blocks. 
+   \todo: this is not thread safe.
 */
 void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
     if(xb!=yb) return;
@@ -82,6 +83,7 @@ void apply_invpsd(dcell **xout, const void *A, const dcell *xin, double alpha, i
    Apply fractal regularization to x, scaled by alpha.
    do nothing if xb != yb, since we apply to diagonal only.
    if xb==-1, do all blocks. 
+   \todo: this is not thread safe.
 */
 void apply_fractal(dcell **xout, const void *A, const dcell *xin, double alpha, int xb, int yb){
     if(xb!=yb) return;
@@ -212,6 +214,7 @@ static void Tomo_prop_do(thread_t *info){
     const PARMS_T *parms=recon->parms;
     SIM_T *simu=recon->simu;
     const int nps=recon->npsr;
+    map_t xmap;/*make a temporary xmap for thread safety.*/
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
@@ -230,8 +233,9 @@ static void Tomo_prop_do(thread_t *info){
 		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
 		}
 		double scale=1. - ht/hs;
-		recon->xmap[ips]->p=data->xin->p[ips]->p;
-		prop_grid_stat(recon->xmap[ips], recon->ploc->stat, xx->p, 1, 
+		memcpy(&xmap, recon->xmap[ips], sizeof(map_t));
+		xmap.p=data->xin->p[ips]->p;
+		prop_grid_stat(&xmap, recon->ploc->stat, xx->p, 1, 
 			       displace[0],displace[1], scale, 0, 0, 0);
 	    }else{
 		PDSPCELL(recon->HXWtomo,HXW);
@@ -303,6 +307,7 @@ static void Tomo_iprop_do(thread_t *info){
     const PARMS_T *parms=recon->parms;
     SIM_T *simu=recon->simu;
     const int nps=recon->npsr;
+    map_t xmap;
     /*for(int ips=0; ips<recon->HXWtomo->ny; ips++){ */
     for(int ips=info->start; ips<info->end; ips++){
 	if(parms->tomo.square && !parms->dbg.tomo_hxw){
@@ -310,7 +315,8 @@ static void Tomo_iprop_do(thread_t *info){
 	    if(!data->xout->p[ips]){
 		data->xout->p[ips]=dnew(recon->xloc[ips]->nloc, 1);
 	    }
-	    recon->xmap[ips]->p=data->xout->p[ips]->p;
+	    memcpy(&xmap, recon->xmap[ips], sizeof(map_t));
+	    xmap.p=data->xout->p[ips]->p;
 	    double ht=recon->ht->p[ips];
 	    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 		if(!data->gg->p[iwfs]) continue;
@@ -325,7 +331,7 @@ static void Tomo_iprop_do(thread_t *info){
 		    displace[1]+=simu->atm[ips0]->vy*simu->dt*2;
 		}
 		double scale=1. - ht/hs;
-		prop_grid_stat_transpose(recon->xmap[ips], recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
+		prop_grid_stat_transpose(&xmap, recon->ploc->stat, data->gg->p[iwfs]->p, 1, 
 					 displace[0],displace[1], scale, 0, 0, 0);
 	    }
 	}else{
@@ -422,6 +428,9 @@ void TomoRt(dcell **gout, const void *A,
 
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha){
+    //static int count=-1; count++;//temp
+    //dcellwrite(xin, "tomo_xin_%d", count);//temp
+    //dcellwrite(*xout, "tomo_xout0_%d", count);//temp
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     assert(xin->ny==1);/*modify the code for ny>1 case. */
@@ -432,7 +441,7 @@ void TomoL(dcell **xout, const void *A,
     Tomo_T data={recon, alpha, xin, gg, *xout};
   
     Tomo_prop(&data, recon->nthread);  
-    static int count=-1; count++;
+    //dcellwrite(gg, "tomo_grad_%d", count);
     if(!parms->recon.split || (parms->dbg.splitlrt && !recon->desplitlrt)){
 	/*Remove global Tip/Tilt, differential focus only in integrated
 	  tomography to limit noise propagation.*/
@@ -448,6 +457,7 @@ void TomoL(dcell **xout, const void *A,
     */
     dcellfree(gg);
     /*Tikhonov regularization is not added because it is not necessary in CG mode.*/
+    //dcellwrite(*xout, "tomo_xout_%d", count);//temp
 }
 
 /**
@@ -465,7 +475,7 @@ void FitR(dcell **xout, const void *A,
 	const int nfit=parms->fit.nfit;
 	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.ht[ifit];
+	    double hs=parms->fit.hs[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
 	    for(int ips=0; ips<parms->atm.nps; ips++){
 		const double ht = parms->atm.ht[ips];
@@ -485,7 +495,7 @@ void FitR(dcell **xout, const void *A,
 	const int npsr=recon->npsr;
 	xp=dcellnew(nfit,1);
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.ht[ifit];
+	    double hs=parms->fit.hs[ifit];
 	    xp->p[ifit]=dnew(recon->floc->nloc,1);
 	    for(int ips=0; ips<npsr; ips++){
 		const double ht = recon->ht->p[ips];
@@ -685,6 +695,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 	    if(parms->evl.psfr[ievl]){
 		dzero(xx);
 		if(opdr){
+		    map_t xmap;
 		    const int npsr=recon->npsr;
 		    /*First compute residual opd: Hx*x-Ha*a*/
 		    for(int ips=0; ips<npsr; ips++){
@@ -693,8 +704,9 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 			double dispx=parms->evl.thetax[ievl]*ht;
 			double dispy=parms->evl.thetay[ievl]*ht;
 			if(parms->tomo.square){/*square xloc */
-			    recon->xmap[ips]->p=opdr->p[ips]->p;
-			    prop_grid_stat(recon->xmap[ips], locs->stat, xx->p, 1, 
+			    memcpy(&xmap, recon->xmap[ips], sizeof(map_t));
+			    xmap.p=opdr->p[ips]->p;
+			    prop_grid_stat(&xmap, locs->stat, xx->p, 1, 
 					   dispx, dispy, scale, 0, 0, 0);
 			}else{
 			    prop_nongrid(recon->xloc[ips], opdr->p[ips]->p, locs, NULL,

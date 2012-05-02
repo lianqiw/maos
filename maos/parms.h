@@ -373,7 +373,7 @@ typedef struct FIT_CFG_T{
     double *thetax;  /**<x Coordinate of DM fitting directions. */
     double *thetay;  /**<y Coordinate of DM fitting directions. */
     double *wt;      /**<weight of each direction*/
-    double *ht;      /**<height of each direction*/
+    double *hs;      /**<height of target in each direction*/
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
@@ -534,6 +534,7 @@ typedef struct DBG_CFG_T{
     int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
+    int nocgwarm;    /**<Disable warm restart in CG*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -577,6 +578,7 @@ typedef struct LOAD_CFG_T{
     char *HA;        /**<load HA from.*/
     char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
+    char *MVM;       /**<load MVM from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
     int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin*/
     int tomo;        /**<if 1, load tomo matrix*/

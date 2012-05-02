@@ -125,7 +125,7 @@ int gpu_pcg(curcell **px,
     curcell *p0=NULL;
     curcell *Ap=NULL;
     for(int k=0; k<maxiter; k++){
-	if(k%100==0){/*restart every 100 steps exclude beginning*/
+	if(k%50==0){/*restart every 100 steps exclude beginning*/
 	    /*computes r0=b-A*x0 */
 	    curcellcp(&r0, b, stream);/*r0=b; */
 	    CUDA_SYNC_STREAM;

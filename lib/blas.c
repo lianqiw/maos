@@ -345,6 +345,8 @@ void X(evd)(X(mat) **U, XR(mat) **Sdiag,const X(mat) *A){
 
 /**
    computes pow(A,power) in place using svd or evd. if issym==1, use evd, otherwise use svd
+   positive thres: Drop eigenvalues that are smaller than thres * max eigen value
+   negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
 */
 void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
     int use_evd=0;
@@ -367,17 +369,19 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
 	/*eigen values below the threshold will not be used. the first is the biggest. */
 	maxeig=fabs(Sdiag->p[0]);
     }
-    thres*=maxeig;
-    long skipped=0;
-    double mineig=INFINITY;
+    double thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
-	if(fabs(Sdiag->p[i])>thres){/*only do with  */
+	if(fabs(Sdiag->p[i])>thres0){/*only do with  */
+	    if(thres<0){/*compare adjacent eigenvalues*/
+		thres0=Sdiag->p[i]*(-thres);
+	    }
 	    Sdiag->p[i]=pow(Sdiag->p[i],power);
 	}else{
-	    if(fabs(Sdiag->p[i])<mineig) 
-		mineig=fabs(Sdiag->p[i]);
-	    Sdiag->p[i]=0;
-	    skipped++;
+	    for(int j=i; j<Sdiag->nx; j++){
+		Sdiag->p[j]=0;
+	    }
+	    //long skipped=Sdiag->nx-i;
+	    break;
 	}
     }
     for(long iy=0; iy <VT->ny; iy++){

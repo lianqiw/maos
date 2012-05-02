@@ -194,13 +194,14 @@ static void muv_direct_prep_lowrank(dmat **Up, dmat **Vp, spchol *C, dmat *MI, d
 
 */
 void muv_direct_prep(MUV_T *A, double svd){ 
+    int use_svd=fabs(svd)>0;
     if(!A->M) error("M has to be none NULL\n");
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
     TIC;tic;
     muv_direct_free(A);
     dsp *muvM=spcell2sp(A->M);
-    info2("muv_direct_prep: (%s) on %ldx%ld array ", svd?"svd":"chol", muvM->m, muvM->n);
-    if(svd>0){/*Do SVD */
+    info2("muv_direct_prep: (%s) on %ldx%ld array ", use_svd?"svd":"chol", muvM->m, muvM->n);
+    if(use_svd){/*Do SVD */
 	spfull(&A->MI, muvM, 1);
 	if(svd<1){/*use svd as threashold */
 	    dsvd_pow(A->MI, -1, 1, svd);
@@ -217,7 +218,7 @@ void muv_direct_prep(MUV_T *A, double svd){
 	muv_direct_prep_lowrank(&A->Up, &A->Vp, A->C, A->MI, U, V);
 	dfree(V);
 	dfree(U);
-	if(svd>0){
+	if(use_svd){
 	    dmm(&A->MI, A->Up, A->Vp, "nt", -1);
 	    dfree(A->Up);
 	    dfree(A->Vp);
@@ -236,23 +237,24 @@ void muv_direct_prep(MUV_T *A, double svd){
   For each diagonal block.
 */
 void muv_direct_diag_prep(MUV_T *A, double svd){ 
+    int use_svd=fabs(svd)>0;
     if(!A->M) error("M has to be none NULL\n");
     if(A->extra) error("Direct solutions does not support extra/exfun\n");
     assert(A->M->nx == A->M->ny);
-    info2("muv_direct_prep_diag: (%s) ", svd?"svd":"chol");
+    info2("muv_direct_prep_diag: (%s) ", use_svd?"svd":"chol");
     TIC;tic;
     muv_direct_diag_free(A);
     
     int nb=A->M->nx;
     A->nb=nb;
-    if(svd>0){
+    if(use_svd){
 	A->MIB=dcellnew(nb,1);
     }else{
 	A->CB=calloc(nb, sizeof(spchol*));
     }
     for(int ib=0; ib<nb; ib++){/*Invert each diagonal block. */
 	dsp *muvM=A->M->p[ib+ib*nb];
-	if(svd>0){
+	if(use_svd){
 	    spfull(&A->MIB->p[ib], muvM, 1);
 	    if(svd<1){
 		dsvd_pow(A->MIB->p[ib], -1, 1, svd);

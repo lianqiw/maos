@@ -175,7 +175,7 @@ void curcellmm(curcell **C0, double alpha, const curcell *A, const curcell *B,
 	for(int ix=0; ix<nx; ix++){
 	    for(int iz=0; iz<nz; iz++){
 		if(A->p[ix*ax+iz*az]&&B->p[iz*bz+iy*by]){
-		    curmm(&C->p[ix+iy*nx],alpha,A->p[ix*ax+iz*az], 
+		    curmm(&C->p[ix+iy*nx],1.,A->p[ix*ax+iz*az], 
 			  B->p[iz*bz+iy*by],trans,beta,handle);
 		}
 	    }

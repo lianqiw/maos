@@ -210,7 +210,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
     if(cupowfs[ipowfs].GP){						\
 	curzero(grad->p[iwfs], curecon->wfsstream[iwfs]);		\
 	cuspmul(grad->p[iwfs]->p, cupowfs[ipowfs].GP, opdwfs->p[iwfs]->p, 1.f, curecon->wfssphandle[iwfs]); \
-    }else{								\
+    }else{/*this way if tomo.pos==2*/					\
 	gpu_gp_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>>	\
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, cupowfs[ipowfs].saptr, dsa, \
 	     cupowfs[ipowfs].GPpx->p, cupowfs[ipowfs].GPpy->p, nsa);	\
@@ -229,7 +229,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	gpu_tt_nea_do<<<DIM(nsa,256),0,curecon->wfsstream[iwfs]>>>	\
 	    (grad->p[iwfs]->p, (float(*)[3])curecon->neai->p[iwfs]->p, &ttf->p[iwfs*2], nsa); \
 	cusptmul(opdwfs->p[iwfs]->p, cupowfs[ipowfs].GP, grad->p[iwfs]->p, 1.f, curecon->wfssphandle[iwfs]); \
-    }else{								\
+    }else{/*this way if tomo.pos==2*/					\
 	gpu_gpt_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>> \
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, \
 	     (float(*)[3])curecon->neai->p[iwfs]->p, &ttf->p[iwfs*2], cupowfs[ipowfs].saptr, dsa, \
@@ -343,6 +343,7 @@ void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, f
 */
 void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
+    //static int count=-1; count++; //temp.
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nwfs=parms->nwfsr;
@@ -385,6 +386,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 #define RECORD_WFS(i)
 #define RECORD_PS(i)
 #endif
+    //curcellwrite(xin, "tomo_xin_%d", count);//temp
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
@@ -392,28 +394,39 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 	const float dsa=cupowfs[ipowfs].dsa;
 	RECORD_WFS(0);
 	DO_HX; RECORD_WFS(1);
+	//curwrite(opdwfs->p[iwfs], "tomo_opdwfs1_%d_%d", count, iwfs);//temp
 	DO_GP; RECORD_WFS(2);
+	//curwrite(grad->p[iwfs], "tomo_grad1_%d_%d", count, iwfs);
 	DO_PTT; RECORD_WFS(3);
 	DO_NEA_GPT; RECORD_WFS(4);
+	//curwrite(grad->p[iwfs], "tomo_grad2_%d_%d", count, iwfs);
     }
     SYNC_WFS;
     /*#endif */
-   
+    //curcellwrite(grad, "tomo_grad_%d", count);//temp
+    //curwrite(ttf, "tomo_ttf_%d", count);//temp
+    //curcellwrite(opdwfs, "tomo_opdwfs_%d", count);//temp
+    //curcellwrite(opdx, "tomo_xout0_%d", count);//temp
     for(int ips=0; ips<nps; ips++){
 	const int nxo=recon->xmap[ips]->nx;
 	const int nyo=recon->xmap[ips]->ny;
 	RECORD_PS(0);
+	//info("beta=%g, alpha=%g\n", beta, alpha);//temp
 	DO_HXT;//zeros out opdx.
 	RECORD_PS(1);
+	//curwrite(opdx->p[ips], "tomo_xout1_%d_%d", count, ips);//temp
 	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
 	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
+	//curwrite(opdx->p[ips], "tomo_xout2_%d_%d", count, ips);//temp
 	if(parms->tomo.piston_cr){
 	    zzt_do<<<1,1,0,curecon->psstream[ips]>>>
 		(opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
 	}
+	//curwrite(opdx->p[ips], "tomo_xout3_%d_%d", count, ips);//temp
 	RECORD_PS(2);
     }
     SYNC_PS;
+    //curcellwrite(opdx, "tomo_xout_%d", count);//temp
     curfree(ttf);
 #if TIMING==2
     static char *wfstimc[]={"TomoL:HX", "TomoL:GP", "TomoL:PTT", "TomoL:NEA_GPT"};
@@ -542,6 +555,10 @@ __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
 
 */
 void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream){
+    //static int count=-1; count++; //temp
+    //curcellwrite(xin, "fdpcg_xin_%d", count);
+    //curcellwrite(*xout, "fdpcg_xout1_%d", count);
+
     TIC;tic;
     const RECON_T *recon=(const RECON_T *)A;
     if(!xin->m){
@@ -556,7 +573,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     embed_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat1->m->p, xin->m->p, curecon->fd_nxtot);
     ctoc("fdpcg: Copy");
-    //cuccellwrite(curecon->fd_xhat1, "fd_embed");
+    //cuccellwrite(curecon->fd_xhat1, "fd_embed_%d", count);
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
 	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat1->p[ips]->p, CUFFT_FORWARD);
@@ -567,14 +584,14 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
 	    (curecon->fd_xhat1->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
-    //cuccellwrite(curecon->fd_xhat1, "fd_fft");
+    //cuccellwrite(curecon->fd_xhat1, "fd_fft_%d", count);
     ctoc("fdpcg: FFT+scale");
     perm_f_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->m->p, curecon->fd_xhat1->m->p, curecon->fd_perm, curecon->fd_nxtot);
     ctoc("fdpcg: Permutation");
     int nb=curecon->fd_Mb->nx;
     int bs=curecon->fd_Mb->p[0]->nx;
-    //cuccellwrite(curecon->fd_xhat2, "fd_perm");
+    //cuccellwrite(curecon->fd_xhat2, "fd_perm_%d", count);
     cuczero(curecon->fd_xhat1->m, stream);
 #define MUL(N)								\
     fdpcg_mul_block<N><<<nb, N, 0, stream>>>				\
@@ -616,11 +633,11 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 	fdpcg_mul_block_sync<<<nb, bs, sizeof(fcomplex)*bs*2, stream>>>
 	    (curecon->fd_xhat1->m->p,curecon->fd_xhat2->m->p, curecon->fd_Mb->m->p, curecon->fd_nxtot);
     }
-    //cuccellwrite(curecon->fd_xhat1, "fd_mul");
+    //cuccellwrite(curecon->fd_xhat1, "fd_mul_%d", count);
     ctoc("fdpcg: mul block");
     perm_i_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->m->p, curecon->fd_xhat1->m->p, curecon->fd_perm, curecon->fd_nxtot);
-    //cuccellwrite(curecon->fd_xhat2, "fd_iperm");
+    //cuccellwrite(curecon->fd_xhat2, "fd_iperm_%d", count);
     ctoc("fdpcg: Inverse Permutation");
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
@@ -631,10 +648,10 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
 	    (curecon->fd_xhat2->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
-    //cuccellwrite(curecon->fd_xhat2, "fd_ifft");
+    //cuccellwrite(curecon->fd_xhat2, "fd_ifft_%d", count);
     ctoc("fdpcg: Inverse FFT + scale");
     extract_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	((*xout)->m->p, curecon->fd_xhat2->m->p, curecon->fd_nxtot);
-    //cuccellwrite(curecon->fd_xhat2, "fd_iextract");
     ctoc("fdpcg: Copy back");
+    //curcellwrite(*xout, "fdpcg_xout2_%d", count);
 }

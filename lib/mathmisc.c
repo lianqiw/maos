@@ -391,6 +391,38 @@ long nextpow2(long n){
     }
     return n+1;
 }
+/**
+   Find the next number suitable for FFT. Use radix of 2, 3, 5, 7
+*/
+long nextfftsize(long n){
+    const int nradix=4;
+    const int radixs[]={2,3,5,7};
+    int divisible=0;
+    long n2, n3;
+ 
+    do{
+	n2=n;
+	n3=1;
+	do{
+	    divisible=0;
+	    for(int irad=0; irad<nradix; irad++){
+		int radix=radixs[irad];
+		int div=n2/radix;
+		if(div*radix==n2){/*no remainder*/
+		    n2=div;
+		    n3*=radix;
+		    divisible=1;
+		}
+	    }
+	}while(divisible && n2>1);
+	/*If there is remainder not divisble by 2, 3, 5, or 7. Increase n2 by 1 and
+	  test again.*/
+	if(!divisible && n2>1){
+	    n++; 
+	}
+    }while(n2>1);
+    return n3;
+}
 unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
     assert((n & (n-1))==0);
     unsigned long m=-1;

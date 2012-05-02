@@ -98,7 +98,7 @@ void free_parms(PARMS_T *parms){
     free(parms->fit.thetax);
     free(parms->fit.thetay);
     free(parms->fit.wt);
-    free(parms->fit.ht);
+    free(parms->fit.hs);
 
     dfree(parms->sim.apdm);
     dfree(parms->sim.epdm);
@@ -671,7 +671,7 @@ static void readcfg_fit(PARMS_T *parms){
     readcfg_dblarr_n(&(parms->fit.thetax), parms->fit.nfit, "fit.thetax");
     readcfg_dblarr_n(&(parms->fit.thetay), parms->fit.nfit, "fit.thetay");
     readcfg_dblarr_n(&(parms->fit.wt), parms->fit.nfit, "fit.wt");
-    readcfg_dblarr_nmax(&(parms->fit.ht), parms->fit.nfit, "fit.ht");
+    readcfg_dblarr_nmax(&(parms->fit.hs), parms->fit.nfit, "fit.hs");
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	parms->fit.thetax[ifit]/=206265.;
 	parms->fit.thetay[ifit]/=206265.;
@@ -823,6 +823,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.cmpgpu);
     READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
+    READ_INT(dbg.nocgwarm);
 }
 /**
    Read in GPU options
@@ -903,6 +904,7 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.HA);
     READ_STR(load.GP);
     READ_STR(load.GA);
+    READ_STR(load.MVM);
     READ_INT(load.mvst);
     READ_INT(load.GS0);
     READ_INT(load.tomo);
@@ -1369,7 +1371,7 @@ static void setup_parms_postproc_atm(PARMS_T *parms){
 	parms->fit.thetax=realloc(parms->fit.thetax, sizeof(double));
 	parms->fit.thetay=realloc(parms->fit.thetay, sizeof(double));
 	parms->fit.wt=realloc(parms->fit.wt, sizeof(double));
-	parms->fit.ht=realloc(parms->fit.ht, sizeof(double));
+	parms->fit.hs=realloc(parms->fit.hs, sizeof(double));
 	parms->fit.thetax[0]=0;
 	parms->fit.thetay[0]=0;
 	parms->fit.wt[0]=1;
@@ -1564,7 +1566,7 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
    altitude is allowed.
 */
 static void setup_parms_postproc_recon(PARMS_T *parms){    
-    parms->recon.warm_restart = parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
+    parms->recon.warm_restart = !parms->dbg.nocgwarm && parms->atm.frozenflow && !parms->dbg.ntomo_maxit;
     {
 	double hs=INFINITY;
 	/*find out the height to setup cone coordinate. */

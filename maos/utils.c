@@ -117,35 +117,33 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	   ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
 	    continue;
 	}
-	sx=fabs(parms->wfs[i].thetax*ht)
-	    +(1.-ht/parms->powfs[ipowfs].hs)*R+guard;
-	sy=fabs(parms->wfs[i].thetay*ht)
-	    +(1.-ht/parms->powfs[ipowfs].hs)*R+guard;
+	double hs=parms->powfs[ipowfs].hs;
+	sx=fabs(parms->wfs[i].thetax*ht)+(1.-ht/hs)*R;
+	sy=fabs(parms->wfs[i].thetay*ht)+(1.-ht/hs)*R;
 	if(sx>maxx) maxx=sx;
 	if(sy>maxy) maxy=sy;
     }
     if(use_evl){
 	for(i=0; i<parms->evl.nevl; i++){
-	    sx=fabs(parms->evl.thetax[i]*ht)+R+guard;
-	    sy=fabs(parms->evl.thetay[i]*ht)+R+guard;
+	    double hs=parms->evl.hs[i];
+	    sx=fabs(parms->evl.thetax[i]*ht)+(1.-ht/hs)*R;
+	    sy=fabs(parms->evl.thetay[i]*ht)+(1.-ht/hs)*R;
 	    if(sx>maxx) maxx=sx;
 	    if(sy>maxy) maxy=sy;
 	}
     }
     if(use_fit){
 	for(i=0; i<parms->fit.nfit; i++){
-	    sx=fabs(parms->fit.thetax[i]*ht)+R+guard;
-	    sy=fabs(parms->fit.thetay[i]*ht)+R+guard;
+	    double hs=parms->fit.hs[i];
+	    sx=fabs(parms->fit.thetax[i]*ht)+(1.-ht/hs)*R;
+	    sy=fabs(parms->fit.thetay[i]*ht)+(1.-ht/hs)*R;
 	    if(sx>maxx) maxx=sx;
 	    if(sy>maxy) maxy=sy;
 	}
     }
-    /*normalized grid size +3 is extra guard band */
-    maxx=ceil(maxx/dx)+2;
-    maxy=ceil(maxy/dx)+2;
     long nx,ny;
-    nx=iceil(maxx+offset+1)*2;
-    ny=iceil(maxy+offset+1)*2;
+    nx=iceil((guard+maxx)/dx+offset+1)<<1;
+    ny=iceil((guard+maxy)/dx+offset+1)<<1;
     if(pad){/*pad to power of 2 */
 	nx=1<<iceil(log2((double)nx));
 	ny=1<<iceil(log2((double)ny));
@@ -154,11 +152,11 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     nx=(nx<ny)?ny:nx;
     ny=nx;
     if(ninx>1){
-	if(ninx<nx) warning("ninx=%ld is too small\n",ninx);
+	if(ninx<nx) warning("ninx=%ld is too small. need %ld\n",ninx, nx);
 	nx=ninx;
     }
     if(niny>1){
-	if(niny<ny)  warning("niny=%ld is too small\n",niny);
+	if(niny<ny)  warning("niny=%ld is too small. need %ld\n",niny, ny);
 	ny=niny;
     }
     double ox,oy;

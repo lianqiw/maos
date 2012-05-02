@@ -312,7 +312,9 @@ void prop_index(PROPDATA_T *propdata){
     const double c4=(0.5-cubic_iac)*cubicn; 
 
 #define WARN_MISSING\
- if(missing>0) warning("%d points not covered by input screen\n", missing)
+    ({if(missing>0) {warning("%d points not covered by input screen\n", missing); \
+    print_backtrace(0);\
+	 }})
 
 #if ONLY_FULL == 1 
 #define LINEAR_ADD_NONGRID						\

@@ -56,7 +56,8 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	  create_metapupil with height of 0. We don't add any guard points. PLOC
 	  does not need to be follow XLOC in FDPCG.*/
 	double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
-	map_t *pmap=create_metapupil_wrap(parms,0,dxr,0,0,0,0,0,parms->tomo.square);
+	double guard=parms->tomo.guard*dxr;
+	map_t *pmap=create_metapupil_wrap(parms,0,dxr,0,guard,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
 	recon->pmap = pmap;
@@ -79,8 +80,9 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	recon->fmap=loc2map(recon->floc);
     }else{
 	double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
+	double guard=parms->tomo.guard*dxr;
 	map_t *fmap=create_metapupil_wrap 
-	    (parms,0,dxr,0,0,0,0,0,parms->fit.square);
+	    (parms,0,dxr,0,guard,0,0,0,parms->fit.square);
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
 	recon->fmap=fmap;
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
@@ -250,18 +252,26 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
     }else{
 	recon->xloc=calloc(npsr, sizeof(loc_t *));
 	info2("Tomography grid is %ssquare:\n", parms->tomo.square?"":"not ");
-	int nin0=0;
+	long nin0=0;
 	/*FFT in FDPCG prefers power of 2 dimensions. for embeding and fast FFT*/
 	if(parms->tomo.nxbase){
 	    nin0=parms->tomo.nxbase;
 	}else if(!parms->sim.idealfit && (parms->tomo.precond==1 || parms->tomo.square==2)){
-	    /*save square grid on all layers.*/
-	    long nx, ny;
-	    double dxr=recon->dx->p[0];
-	    create_metapupil(parms, parms->atmr.hmax, dxr, 0,
-			     &nx, &ny, NULL, NULL, NULL, dxr*parms->tomo.guard,
-			     0, 0, 0, 1);
-	    nin0=nextpow2(MAX(nx, ny))/recon->os->p[0];
+	    /*same square grid dimension in meter on all layers.*/
+	    long nx=0, ny=0;
+	    for(int ips=0; ips<npsr; ips++){
+		long nxi, nyi;
+		double dxr=recon->dx->p[ips];
+		create_metapupil(parms, recon->ht->p[ips], dxr, 0,
+				 &nxi, &nyi, NULL, NULL, NULL, dxr*parms->tomo.guard,
+				 0, 0, 0, 1);
+		nxi/=recon->os->p[ips];
+		nyi/=recon->os->p[ips];
+		if(nx<nxi) nx=nxi;
+		if(ny<nyi) ny=nyi;
+	    }
+	    nin0=nextfftsize(MAX(nx, ny));
+	    info("nin0=%ld. nx=%ld, ny=%ld\n",nin0,nx,ny);
 	}
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
@@ -989,7 +999,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->fractal->ninit=parms->tomo.ninit;
 	dcell *xopd=recon->fractal->xopd=dcellnew(npsr, 1);
 	for(int ips=0; ips<npsr; ips++){
-	    int nn=nextpow2(MAX(recon->xmap[ips]->nx, recon->xmap[ips]->ny))+1;
+	    int nn=nextfftsize(MAX(recon->xmap[ips]->nx, recon->xmap[ips]->ny))+1;
 	    xopd->p[ips]=dnew(nn,nn);
 	}
     }
@@ -1443,7 +1453,7 @@ setup_recon_HXF(RECON_T *recon, const PARMS_T *parms){
 	recon->HXF=spcellnew(nfit, npsr);
 	PDSPCELL(recon->HXF,HXF);
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.ht[ifit];
+	    double hs=parms->fit.hs[ifit];
 	    for(int ips=0; ips<npsr; ips++){
 		const double ht = recon->ht->p[ips];
 		const double scale=1.-ht/hs;
@@ -1476,7 +1486,7 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
 	PDSPCELL(recon->HA,HA);
 	info2("Generating HA ");TIC;tic;
 	for(int ifit=0; ifit<nfit; ifit++){
-	    double hs=parms->fit.ht[ifit];
+	    double hs=parms->fit.hs[ifit];
 	    for(int idm=0; idm<ndm; idm++){
 		const double ht=parms->dm[idm].ht;
 		const double scale=1.-ht/hs;
@@ -1714,10 +1724,11 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	      actuators. First try to remove W1. Or lower the weight. Revert
 	      back.
 	     */
-	    recon->actslave=slaving(recon->aloc, recon->HA, recon->W1,
+	    recon->actslave=slaving(&recon->actcpl, recon->aloc, recon->HA, recon->W1,
 				    recon->fitNW, recon->actstuck,
 				    recon->actfloat, 0.1, 1./recon->floc->nloc);
 	    if(parms->save.setup){
+		dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
 		spcellwrite(recon->actslave,"%s/actslave",dirsetup);
 		dcellwrite(recon->fitNW,"%s/fitNW2",dirsetup);
 	    }
@@ -2325,7 +2336,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     }
     if(parms->lsr.actslave){
 	/*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
-	spcell *actslave=slaving(recon->aloc, recon->GAhi, NULL, NW,
+	spcell *actslave=slaving(&recon->actcpl, recon->aloc, recon->GAhi, NULL, NW,
 				 recon->actstuck, recon->actfloat, 0.1, sqrt(maxeig));
 	if(parms->save.setup){
 	    if(NW){
@@ -2489,6 +2500,78 @@ void setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	dcellfree(LR);
     }
 }
+typedef struct {
+    const PARMS_T *parms;
+    RECON_T *recon;
+    dcell *MVMt;
+    long (*curp)[2];
+    long ntotact;
+}MVR_MVM_T;
+void setup_recon_mvr_mvm_iact(thread_t *info){
+    MVR_MVM_T *data=info->data;
+    const PARMS_T *parms=data->parms;
+    RECON_T *recon=data->recon;
+    const int ndm=parms->ndm;
+    const int nwfs=parms->nwfs;
+    const long ntotact=data->ntotact;
+    dcell *FLI=NULL;
+    dcell *FRT=NULL;
+    dcell *RLT=NULL;
+    dcell *RRT=NULL;
+    dmat *eye=dnew(ntotact, 1);
+    dcell *eyec=d2cellref(eye, recon->anloc, ndm);
+    long (*curp)[2]=data->curp;
+    dcell *MVMt=data->MVMt;
+    int nthread=recon->nthread;
+    for(long iact=info->start; iact<info->end; iact++){
+	int curdm=curp[iact][0];
+	int curact=curp[iact][1];
+	if(recon->actcpl && recon->actcpl->p[curdm]->p[curact]<EPS){
+	    continue;
+	}
+	if(!detached && info->ithread==0){
+	    info2("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
+	}
+	//TIC;tic;
+	dcellzero(FRT);
+	dcellzero(RRT);
+	/*Apply F_L*/
+	eye->p[iact]=1;
+	muv_solve(&FLI, &recon->FL, NULL, eyec);
+	eye->p[iact]=0;
+	/*Apply F_R'*/
+	muv_trans(&FRT, &recon->FR, FLI, 1);
+	//toc2("fit");
+	/*Apply R_L*/
+	int desplitlrt=recon->desplitlrt;
+	recon->desplitlrt=1;
+	dcellzero(RLT);
+	muv_solve(&RLT, &recon->RL, NULL, FRT);
+	recon->desplitlrt=desplitlrt;
+	/*Apply R_R'*/
+	muv_trans(&RRT, &recon->RR, RLT, 1);
+	//toc2("tomo");
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    dmat *to=MVMt->p[iwfs+curdm*nwfs];
+	    if(to){
+		int ng=to->nx;
+		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(double));
+	    }
+	}
+	if(1){
+	    dcellwrite(FLI, "cpu_dmfit_%ld", iact);
+	    dcellwrite(FRT, "cpu_opdx_%ld", iact);
+	    dcellwrite(RLT, "cpu_opdr_%ld", iact);
+	    dcellwrite(RRT, "cpu_grad_%ld", iact);
+	}
+    }
+    dcellfree(FLI);
+    dcellfree(FRT);
+    dcellfree(RLT);
+    dcellfree(RRT);
+    dfree(eye);
+    dcellfree(eyec);
+}
 /**
    Use the various algorithms recon.alg to assemble a final matrix to multiply
    to gradients to get DM commands.
@@ -2497,71 +2580,36 @@ void setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     info2("Assembling MVR MVM\n");
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfs;
-    int ntotact=0;
+    long ntotact=0;
     for(int idm=0; idm<ndm; idm++){
 	ntotact+=recon->anloc[idm];
     }
-    dcell *FLI=NULL;
-    dcell *FRT=NULL;
-    dcell *RLT=NULL;
-    dcell *RRT=NULL;
-    dcell *MVM=dcellnew(nwfs, ndm);
+    long (*curp)[2]=malloc(ntotact*2*sizeof(long));
+    int nact=0;
+    for(int idm=0; idm<ndm; idm++){
+	for(int iact=0; iact<recon->anloc[idm]; iact++){
+	    curp[nact+iact][0]=idm;
+	    curp[nact+iact][1]=iact;
+	}
+	nact+=recon->anloc[idm];
+    }
+    dcell *MVMt=dcellnew(nwfs, ndm);
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
-		MVM->p[iwfs+idm*nwfs]=dnew(powfs[ipowfs].saloc->nloc*2, recon->anloc[idm]);
+		MVMt->p[iwfs+idm*nwfs]=dnew(powfs[ipowfs].saloc->nloc*2, recon->anloc[idm]);
 	    }
 	}
     }
-    int curdm=0, curact=0;
-    dmat *eye=dnew(ntotact, 1);
-    dcell *eyec=d2cellref(eye, recon->anloc, ndm);
-    for(int iact=0; iact<ntotact; iact++){
-	if(!detached){
-	    info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact, ntotact);
-	}
-	if(iact) eye->p[iact-1]=0; eye->p[iact]=1;
-	dcellzero(FRT);
-	dcellzero(RRT);
-	/*Apply F_L*/
-	muv_solve(&FLI, &recon->FL, NULL, eyec);
-	/*Apply F_R'*/
-	muv_trans(&FRT, &recon->FR, FLI, 1);
-	/*Apply R_L*/
-	int desplitlrt=recon->desplitlrt;
-	recon->desplitlrt=1;
-	muv_solve(&RLT, &recon->RL, NULL, FRT);
-	recon->desplitlrt=desplitlrt;
-	/*Apply R_R'*/
-	muv_trans(&RRT, &recon->RR, RLT, 1);
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    dmat *to=MVM->p[iwfs+curdm*nwfs];
-	    if(to){
-		int ng=to->nx;
-		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(double));
-	    }
-	}
-	/*{
-	    dcellwrite(FLI, "dmfit_%d", iact);
-	    dcellwrite(FRT, "opdx_%d", iact);
-	    dcellwrite(RLT, "opdr_%d", iact);
-	    dcellwrite(RRT, "grad_%d", iact);
-	    }*/
-	curact++;
-	if(curact>=recon->anloc[curdm]){
-	    curdm++;
-	    curact=0;
-	}
-    }
-    recon->MVM=dcelltrans(MVM);
-    dcellfree(MVM);
-    dcellfree(FLI);
-    dcellfree(FRT);
-    dcellfree(RLT);
-    dcellfree(RRT);
-    dfree(eye);
-    dcellfree(eyec);
+    MVR_MVM_T data={parms, recon, MVMt, curp, ntotact};
+    int nthread=recon->nthread;
+    thread_t info[nthread];
+    thread_prep(info, 0, ntotact, nthread, setup_recon_mvr_mvm_iact, &data);
+    CALL_THREAD(info, nthread, 1);
+    recon->MVM=dcelltrans(MVMt);
+    free(curp);
+    dcellfree(MVMt);
 }
 /**
    Setup either the minimum variance reconstructor by calling setup_recon_mvr()
@@ -2682,12 +2730,14 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     /*assemble matrix to do matrix vector multiply*/
     if(parms->recon.mvm){
 #if USE_CUDA
-	if(parms->gpu.tomo || parms->gpu.fit){
+	if(parms->gpu.tomo && parms->gpu.fit){
 	    gpu_setup_recon_mvm(parms, recon, powfs);
 	}else
 #endif
 	    {
-		if(parms->recon.alg==0){
+		if(parms->load.MVM){
+		    recon->MVM=dcellread("%s", parms->load.MVM);
+		}else if(parms->recon.alg==0){
 		    setup_recon_mvr_mvm(recon, parms, powfs);
 		}else{
 		    setup_recon_lsr_mvm(recon, parms, powfs);   

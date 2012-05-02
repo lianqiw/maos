@@ -156,7 +156,7 @@ long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
     long nxy=(nx>ny?nx:ny)*oversize;/*minimum size */
     long mapn;
     if(*nembed<=0){
-	mapn=nextpow2(nxy);
+	mapn=nextfftsize(nxy);
 	*nembed=mapn;
     }else{
 	if(*nembed<(long)(nxy*0.6)){

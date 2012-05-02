@@ -156,7 +156,7 @@ void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
 	    curscale((*xout)->p[idm], beta, curecon->dmstream[idm]);	\
 	const float ht = (float)parms->dm[idm].ht;			\
 	for(int ifit=0; ifit<nfit; ifit++){				\
-	    const float hs = (float)parms->fit.ht[ifit];		\
+	    const float hs = (float)parms->fit.hs[ifit];		\
 	    const float scale=1.f-ht/hs;				\
 	    const float dispx=(float)parms->fit.thetax[ifit]*ht;	\
 	    const float dispy=(float)parms->fit.thetay[ifit]*ht;	\
@@ -203,7 +203,7 @@ void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
 	    curscale((*xout)->p[ips], beta, curecon->psstream[ips]);	\
 	const float ht = (float)recon->ht->p[ips];			\
 	for(int ifit=0; ifit<nfit; ifit++){				\
-	    const float hs = (float)parms->fit.ht[ifit];		\
+	    const float hs = (float)parms->fit.hs[ifit];		\
 	    const float scale=1.f-ht/hs;				\
 	    float thetax=(float)parms->fit.thetax[ifit];		\
 	    float thetay=(float)parms->fit.thetay[ifit];		\
@@ -249,7 +249,7 @@ void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, flo
 	*xout=curcellnew(recon->ndm, 1, recon->anx, recon->any);
     }
     for(int ifit=0; ifit<nfit; ifit++){
-	double hs=parms->fit.ht[ifit];
+	double hs=parms->fit.hs[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
 	float thetay=(float)parms->fit.thetay[ifit];
    	DO_HX(opdfit, xin);    /*opdfit = HX * xin */
@@ -285,7 +285,7 @@ void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, fl
 	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     }
     for(int ifit=0; ifit<nfit; ifit++){
-	float hs    =(float)parms->fit.ht[ifit];
+	float hs    =(float)parms->fit.hs[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
 	float thetay=(float)parms->fit.thetay[ifit];
 	DO_HA(opdfit,xin); /*do HA operation, opdfit = HA *xin*/
@@ -312,7 +312,7 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
 	*xout=curcellnew(recon->ndm, 1, recon->anx, recon->any);
     }
     for(int ifit=0; ifit<nfit; ifit++){
-	float hs    =(float)parms->fit.ht[ifit];
+	float hs    =(float)parms->fit.hs[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
 	float thetay=(float)parms->fit.thetay[ifit];
 	DO_HA(opdfit,xin); /*do HA operation, opdfit = HA *xin*/

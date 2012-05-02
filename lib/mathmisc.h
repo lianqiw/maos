@@ -62,6 +62,7 @@ void maxminfcmp(const fcomplex *restrict p, long N,
 		float *restrict max, float *restrict min, float *restrict sum);
 void remove_piston(double *p, long n);
 long nextpow2(long n);
+long nextfftsize(long n);
 unsigned long mylog2(unsigned long n);
 typedef double(*golden_section_fun)(void *param, double x);
 double golden_section_search(golden_section_fun f, void *param, 
