@@ -61,6 +61,8 @@ typedef struct{
     int ny0;
     int offx;
     int offy;
+    int isim;
+    int isim_next;
     map_t *atm;
 }atm_prep_t;
 static void atm_prep(atm_prep_t *data){
@@ -107,7 +109,7 @@ static void atm_prep(atm_prep_t *data){
 	    pout[iy][ix]=(float)pin[iy+offy-nyi][ix+offx-nxi];
 	}
     }
-    toc2("Layer %d: Preparing atm", ips);
+    toc2("Step %d: Layer %d: Preparing atm for step %d", data->isim, ips, data->isim_next);
     UNLOCK(lock);
     free(data);/*allocated in parent thread. we free it here. */
 }
@@ -152,17 +154,17 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		    need+=needpsf;
 		}
 	    }
-	    long nxa=(avail-need)/nps/sizeof(float);/*we are able to host this amount. */
-	    if(nxa<nxm*nym){
+	    long nxa=(long)roundf(sqrt((avail-need)/nps/sizeof(float)));/*we are able to host this amount. */
+	    if(nxa*nxa<nxm*nym){
 		error("GPU does not have enough memory\n");
 	    }
-	    info2("GPU can host %d %dx%d atmosphere\n", nps, (int)round(sqrt(nxa)), (int)round(sqrt(nxa)));
-	    if(nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
+	    info2("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
+	    if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
 		nx0=parms->atm.nx;
 		ny0=parms->atm.ny;
 	    }else{
-		nx0=nxm;
-		ny0=nym;
+		nx0=nxa;
+		ny0=nxa;
 	    }
 	    info2("We will host %dx%d in GPU\n", nx0, ny0);
 	}else{
@@ -227,12 +229,12 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    next_isim[ips]=isim;/*right now. */
 	    /*copy from below. */
 	    if(atm[ips]->vx>0){/*align right */
-		next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-atm[ips]->vx*dt*next_isim[ips];
+		next_ox[ips]=(parms->atm.nxn/2+1-nx0)*dx-atm[ips]->vx*dt*next_isim[ips];
 	    }else{/*align left */
 		next_ox[ips]=(-parms->atm.nxn/2)*dx-atm[ips]->vx*dt*next_isim[ips];
 	    }
 	    if(atm[ips]->vy>0){/*align right */
-		next_oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx-atm[ips]->vy*dt*next_isim[ips];
+		next_oy[ips]=(parms->atm.nyn/2+1-ny0)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }else{/*align left */
 		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
@@ -259,6 +261,8 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    data->ny0=ny0;
 	    data->offx=offx;
 	    data->offy=offy;
+	    data->isim=isim;
+	    data->isim_next=next_isim[ips];
 	    data->atm=atm[ips];
 	    /*launch an independent thread to pull data in. thread will exit when it is done. */
 	    pthread_create(&next_threads[ips], NULL, (void *(*)(void *))atm_prep, data);
@@ -267,7 +271,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    /*need to copy atm to gpu. and update next_isim */
 	    TIC;tic;
 	    pthread_join(next_threads[ips], NULL);
-	    toc2("Layer %d: Wait for transfering",ips);
+	    toc2("Step %d: Layer %d wait for transfering",isim, ips);
 	    for(int im=0; im<NGPU; im++){
 		tic;
 		gpu_set(im);
@@ -285,12 +289,16 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    next_atm[ips]=NULL;
 	    /*Update next_isim. */
 	    long isim1, isim2;
-	    if(atm[ips]->vx>0){/*align right. */
+	    if(fabs(atm[ips]->vx)<EPS){
+		isim1=INT_MAX;
+	    }else if(atm[ips]->vx>0){/*align right. */
 		isim1=(long)floor(-(next_ox[ips]+(parms->atm.nxn/2)*dx)/(atm[ips]->vx*dt));
 	    }else{/*align left */
 		isim1=(long)floor(-(next_ox[ips]+(nx0-(parms->atm.nxn/2+1))*dx)/(atm[ips]->vx*dt));
 	    }
-	    if(atm[ips]->vy>0){/*align right. */
+	    if(fabs(atm[ips]->vy)<EPS){
+		isim2=INT_MAX;
+	    }else if(atm[ips]->vy>0){/*align right. */
 		isim2=(long)floor(-(next_oy[ips]+(parms->atm.nyn/2)*dx)/(atm[ips]->vy*dt));
 	    }else{/*align left */
 		isim2=(long)floor(-(next_oy[ips]+(ny0-(parms->atm.nyn/2+1))*dx)/(atm[ips]->vy*dt));
@@ -300,15 +308,16 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		next_isim[ips]=INT_MAX;
 	    }
 	    if(atm[ips]->vx>0){/*align right */
-		next_ox[ips]=(parms->atm.nxn/2+1-parms->atm.nxm)*dx-atm[ips]->vx*dt*next_isim[ips];
+		next_ox[ips]=(parms->atm.nxn/2+1-nx0)*dx-atm[ips]->vx*dt*next_isim[ips];
 	    }else{/*align left */
 		next_ox[ips]=(-parms->atm.nxn/2)*dx-atm[ips]->vx*dt*next_isim[ips];
 	    }
 	    if(atm[ips]->vy>0){/*align right */
-		next_oy[ips]=(parms->atm.nyn/2+1-parms->atm.nym)*dx-atm[ips]->vy*dt*next_isim[ips];
+		next_oy[ips]=(parms->atm.nyn/2+1-ny0)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }else{/*align left */
 		next_oy[ips]=(-parms->atm.nyn/2)*dx-atm[ips]->vy*dt*next_isim[ips];
 	    }
+	    info2("Step %d: next update layer %d in step %d\n", isim, ips, next_isim[ips]);
 	}
     }
 }

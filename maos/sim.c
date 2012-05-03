@@ -64,7 +64,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	if(!simu) continue;/*skip. */
-	recon->simu=simu;
+	if(recon) recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 	    if(parms->tomo.predict && recon->HXWtomo){
@@ -78,7 +78,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    if(parms->gpu.evl){
 		gpu_perfevl_init_sim(parms, aper);
 	    }
-	    if(parms->gpu.wfs){
+	    if(parms->gpu.wfs && !parms->sim.evlol){
 		gpu_wfs_init_sim(parms, powfs);
 	    }
 	}

@@ -1047,6 +1047,15 @@ static void setup_parms_postproc_za(PARMS_T *parms){
    -# necessary adjustments if outputing WFS PSF.
 */
 static void setup_parms_postproc_wfs(PARMS_T *parms){
+    if(parms->sim.evlol){
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    free_powfs_cfg(&parms->powfs[ipowfs]);
+	}
+	free(parms->powfs); parms->powfs=NULL;
+	parms->npowfs=0;
+	free(parms->wfs); parms->wfs=NULL;
+	parms->nwfs=0;
+    }
     /*link wfs with powfs*/
     int jpowfs=0;/*records last powfs.*/
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1089,7 +1098,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->npowfs=jpowfs;
     if(jpowfs==0){
 	warning("No wfs is found\n");
-	if(!parms->sim.idealfit){
+	if(!parms->sim.idealfit && !parms->sim.evlol){
 	    error("Cannot proceed\n");
 	}
     }
@@ -1854,6 +1863,9 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	use_cuda=0;
     }
     if(use_cuda){
+	if(parms->sim.evlol){
+	    parms->gpu.lsr=parms->gpu.tomo=parms->gpu.fit=parms->gpu.moao=parms->gpu.wfs=0;
+	}
 	if(parms->sim.idealfit){
 	    parms->gpu.tomo=0;/*no need tomo.*/
 	}

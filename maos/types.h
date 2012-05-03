@@ -393,8 +393,8 @@ typedef struct SIM_SAVE_T{
     cellarr **gradol;
     cellarr **intsny;
     cellarr **intsnf;
-    cellarr **moao_evl;
-    cellarr **moao_wfs;
+    cellarr **dm_evl;
+    cellarr **dm_wfs;
     /*covariances */
 }SIM_SAVE_T;
 /*
@@ -536,8 +536,8 @@ typedef struct SIM_T{
     dmat *cle;         /**<field averaged CL error*/
 
     /*MOAO*/
-    dcell *moao_wfs;   /**<moao DM command computed for wfs*/
-    dcell *moao_evl;   /**<moao DM command computed for science field*/
+    dcell *dm_wfs;   /**<moao DM command computed for wfs*/
+    dcell *dm_evl;   /**<moao DM command computed for science field*/
 
     double tk_eval;    /**<time spent in perfevl in this step*/
     double tk_recon;   /**<time spent in reconstruct in this step*/

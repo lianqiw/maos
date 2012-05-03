@@ -536,183 +536,86 @@ void seeding(SIM_T *simu){
     }
     seed_rand(simu->telws_rand, lrand(simu->init)*parms->sim.wsseq);
 #if USE_CUDA
-    if(parms->gpu.wfs){
+    if(parms->gpu.wfs && !parms->sim.evlol){
 	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
     }
 #endif
 }
-/**
-   Initialize simu (of type SIM_T) and various simulation data structs. Called
-   for every seed.
-*/
-SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, 
-		 APER_T *aper,RECON_T *recon, int iseed){
-    if(parms->fdlock[iseed]<0){
-	warning("Another MAOS is already running. Skip seed %d\n", parms->sim.seeds[iseed]);
-	return NULL;
-    }
+
+static void init_simu_evl(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const APER_T *aper=simu->aper;
+    RECON_T *recon=simu->recon;
     const int nsim=parms->sim.end;
     const int nevl=parms->evl.nevl;
     const int nwvl=parms->evl.nwvl;
     const int nmod=parms->evl.nmod;
-    const int nwfs=parms->nwfs;
-    SIM_T *simu=calloc(1, sizeof(SIM_T));
-    SIM_SAVE_T *save=simu->save=calloc(1, sizeof(SIM_SAVE_T));
-  
-    simu->parms=parms;
-    simu->powfs=powfs;
-    simu->recon=recon;
-    simu->aper=aper;    
-    simu->iseed=iseed;
-    simu->seed=parms->sim.seeds[iseed];
-    if(simu->seed==0){
-	simu->seed=myclocki();
-	warning("Seed is 0, using time as seed: %d\n",simu->seed);
-    }
-    int seed=simu->seed;
-    seeding(simu);
-    simu->ints=calloc(nwfs,sizeof(dcell*));
-  
-    simu->wfspsfout=calloc(nwfs,sizeof(dcell*));
-    save->wfspsfout=calloc(nwfs,sizeof(cellarr*));
-    save->ztiltout =calloc(nwfs,sizeof(cellarr*));
-    simu->pistatout=calloc(nwfs,sizeof(dcell*));
-    simu->sanea_sim=dcellnew(nwfs, 1);
-    simu->gradcl=dcellnew(nwfs,1);
-    simu->gradnf=dcellnew(nwfs,1);
-    /*Do not initialize gradlastcl. Do not initialize gradlastol in open
-      loop. They are used for testing*/
-    if(parms->sim.closeloop){
-	simu->gradlastol=dcellnew(parms->nwfsr, 1);
-    }
-    simu->gradacc=dcellnew(nwfs,1);/*wfsgrad internal */
-    simu->nthread=parms->sim.nthread;
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	int nsa=powfs[ipowfs].pts->nsa;
-	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
-	if(parms->powfs[ipowfs].phytypesim==3 || parms->save.grad[iwfs]){
-	    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
-	}
-	if(parms->powfs[ipowfs].noisy){
-	    simu->sanea_sim->p[iwfs]=dnew(4, nsa);
-	}
-	if(parms->powfs[ipowfs].usephy){
-	    simu->ints[iwfs]=dcellnew(nsa,1);
-	    for(int isa=0; isa<nsa; isa++){
-		simu->ints[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
-	    }
-	}
-	if(parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom[iwfs] || parms->powfs[ipowfs].pistatout){
-	    simu->gradacc->p[iwfs]=dnew(nsa*2,1);
-	}
-	if(parms->powfs[ipowfs].pistatout){
-	    simu->pistatout[iwfs]=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
-	}
-    }
-    {/*Setup hysterisis */
-	int anyhyst=0;
-	simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(parms->dm[idm].hyst){
-		simu->hyst[idm]=calloc(1, sizeof(HYST_T));
-		simu->hyst[idm]->coeff=dread("%s",parms->dm[idm].hyst);
-		int nhmod=simu->hyst[idm]->coeff->ny;
-		if(simu->hyst[idm]->coeff->nx!=3 || nhmod<1){
-		    error("DM hystereis file %s has wrong format. Expect 3 rows\n",parms->dm[idm].hyst);
-		}
-		int naloc=recon->aloc[idm]->nloc;
-		simu->hyst[idm]->xlast=dnew(naloc,1);
-		simu->hyst[idm]->ylast=dnew(nhmod,naloc);
-		simu->hyst[idm]->dxlast=dnew(naloc,1);
-		simu->hyst[idm]->x0=dnew(naloc,1);
-		simu->hyst[idm]->y0=dnew(nhmod,naloc);
-		anyhyst=1;
-	    }
-	}
-	if(!anyhyst){
-	    free(simu->hyst); simu->hyst=NULL;
-	}
-    }
-    /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
-    simu->dmcmd=dcellnew(parms->ndm,1);
-    simu->dmreal=dcellnew(parms->ndm,1);
-    simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
-    if(parms->sim.dmproj){
-	simu->dmproj=dcellnew(parms->ndm,1);
-	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
-    }
-    for(int idm=0; idm<parms->ndm; idm++){
-	simu->dmcmd->p[idm]=dnew(recon->aloc[idm]->nloc,1);
-	if(simu->hyst){
-	    simu->dmreal->p[idm]=dnew(recon->aloc[idm]->nloc,1);
-	}else{
-	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
-	}
-	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
-	if(simu->dmprojsq){
-	    simu->dmproj->p[idm]=dnew(recon->aloc[idm]->nloc,1);
-	    simu->dmprojsq[idm]=mapnew2(recon->amap[idm]);
-	}
-	if(parms->fit.square){/*dmreal is already square.*/
-	    free(simu->dmrealsq[idm]->p);
-	    simu->dmrealsq[idm]->p=simu->dmreal->p[idm]->p;
-	    simu->dmrealsq[idm]->nref=simu->dmreal->p[idm]->nref;
-	    simu->dmrealsq[idm]->nref[0]++;
-	    if(simu->dmprojsq){
-		free(simu->dmprojsq[idm]->p);
-		simu->dmprojsq[idm]->p=simu->dmproj->p[idm]->p;
-		simu->dmprojsq[idm]->nref=simu->dmproj->p[idm]->nref;
-		simu->dmprojsq[idm]->nref[0]++;
-	    }
-	}
-    }
-#if USE_CUDA
-    if(parms->gpu.evl || parms->gpu.wfs){
-	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm, parms->dm);
-	if(simu->dmprojsq){
-	    gpu_dmproj2gpu(simu->dmprojsq, parms->ndm, parms->dm);
-	}
-    }
-#endif
-    simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
-    simu->dmint=servo_new(simu->dmreal, parms->sim.epdm);
-    simu->Mint_lo=servo_new(NULL, parms->sim.eplo);
-    simu->uptint=servo_new(NULL, parms->sim.epupt);
-    {
-	int dm_hist=0;
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(parms->dm[idm].hist){
-		dm_hist=1; 
-		break;
-	    }
-	}
-	if(dm_hist){
-	    long nnx[parms->ndm];
-	    long nny[parms->ndm];
-	    for(int idm=0; idm<parms->ndm; idm++){
-		if(parms->dm[idm].hist){
-		    nnx[idm]=parms->dm[idm].histn;
-		    nny[idm]=recon->aloc[idm]->nloc;
-		}else{
-		    nnx[idm]=0;
-		    nny[idm]=0;
-		}
-	    }
-	    simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, 
-				       NULL, NULL,"dmhist_%d.bin",simu->seed);
-	}
-    }
-    if(parms->sim.wspsd){
-	/* Telescope wind shake added to TT input. */
-	dmat *psdin=dread("%s", parms->sim.wspsd);
-	info2("Loading windshake PSD from file %s\n", parms->sim.wspsd);
-	simu->telws = psd2time(psdin, simu->telws_rand, parms->sim.dt, parms->sim.end);
-	dfree(psdin);
-	dwrite(simu->telws, "telws_%d", seed);
-    }
+    const int seed=simu->seed;
+    SIM_SAVE_T *save=simu->save;
     simu->evlopd=dcellnew(nevl, 1);
-    /* Evaluation */
+    simu->perfevl_iground=parms->atm.iground;
+    
+    {/*MMAP the main result file */
+	long nnx[4]={nmod,nmod,nmod,nmod};
+	long nny[4]={nsim,nsim,nsim,nsim};
+	nnx[1]=0;
+	nny[1]=0;
+	if(!parms->recon.split || parms->ndm>2){
+	    nnx[3]=0; 
+	    nny[3]=0;
+	}
+	simu->res     = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
+	simu->ole     = dref(simu->res->p[0]);
+	simu->cle     = dref(simu->res->p[2]);
+	simu->clem    = dref(simu->res->p[3]);
+    }
+
+    {/*USE MMAP for data that need to save at every time step */
+	long nnx[nevl];
+	long nny[nevl];
+	for(int ievl=0; ievl<nevl; ievl++){
+	    nnx[ievl]=nmod;
+	    nny[ievl]=nsim;
+	}
+	simu->olep=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolep_%d.bin",seed);
+	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolmp_%d.bin",seed);
+	simu->clep=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclep_%d.bin",seed);
+	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclmp_%d.bin",seed);
+	if(!parms->sim.evlol){
+	    if(parms->recon.split && parms->ndm<=2){
+		long nnx_split[nevl];
+		long nnx_3[nevl];
+		for(int ievl=0; ievl<nevl; ievl++){
+		    nnx_3[ievl]=3;
+		    nnx_split[ievl]=recon->ngsmod->nmod;
+		}
+		simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, NULL,NULL,"Resclemp_%d.bin",seed);
+		simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescleNGSm_%d.bin",seed);
+		simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,NULL,"RescleNGSmp_%d.bin",seed);
+		if(parms->recon.split==1 && !parms->sim.fuseint){
+		    simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescorrNGSm_%d.bin",seed);
+		}
+		if(parms->sim.skysim){
+		    char fnold[PATH_MAX];
+		    char fnnew[PATH_MAX];
+		    snprintf(fnnew, PATH_MAX, "%s/RescleNGSm_%d.bin",dirskysim,seed);
+		    snprintf(fnold, PATH_MAX, "RescleNGSm_%d.bin", seed);
+		    if(exist(fnnew)) remove(fnnew);
+		    if(link(fnold, fnnew)){
+			warning("Error link\n");
+		    }
+		    snprintf(fnnew, PATH_MAX, "%s/RescleNGSmp_%d.bin",dirskysim,seed);
+		    snprintf(fnold, PATH_MAX, "RescleNGSmp_%d.bin", seed);
+		    if(exist(fnnew)) remove(fnnew);
+		    if(link(fnold, fnnew)){
+			warning("Error link\n");
+		    }
+		}
+	    }
+	}
+    }
+        
+
     if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
 	char header[800];
 	header[0]='\0';
@@ -846,7 +749,155 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	dcellwrite(evlpsfdl, "evlpsfdl_%d.fits",seed);
 	dcellfree(evlpsfdl);
     }
-    simu->has_upt=0;/*flag for uplink tip/tilt control */
+
+    if(parms->sim.psfr){
+	if(!parms->dbg.useopdr || parms->sim.idealfit){
+	    simu->ecov=dcellnew(parms->ndm,parms->ndm);/*not really need. */
+	}else{/*deprecated */
+	    simu->ecov=dcellnew(nevl, 1);
+	    if(parms->dbg.ecovxx){/*temporary. */
+		warning("Saving history of ecov_xx\n");
+		save->ecovxx=calloc(nevl, sizeof(cellarr *));
+		char strht[24];
+		for(int ievl=0; ievl<nevl; ievl++){
+		    if(!parms->evl.psf[ievl]) continue;
+		    if(isfinite(parms->evl.hs[ievl])){
+			snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
+		    }else{
+			strht[0]='\0';
+		    }
+	    
+		    save->ecovxx[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim-(parms->sim.closeloop?1:0), 1,
+						    "ecovxx_%d_x%g_y%g%s.bin", seed,
+						    parms->evl.thetax[ievl]*206265,
+						    parms->evl.thetay[ievl]*206265,strht);
+		}
+	    }
+	}
+    }
+
+    if(parms->save.evlopd){
+	int nstep=parms->sim.end-parms->sim.start;
+	save->evlopdol=calloc(nevl, sizeof(cellarr*));
+	save->evlopdcl=calloc(nevl, sizeof(cellarr*));
+
+	for(int ievl=0; ievl<nevl; ievl++){
+	    save->evlopdol[ievl]=cellarr_init(nstep/parms->save.evlopd,1, 
+					      "evl%d_opdol_%d.bin",ievl,seed);
+	    save->evlopdcl[ievl]=cellarr_init(nstep/parms->save.evlopd,1,
+					      "evl%d_opdcl_%d.bin",ievl,seed);
+	}
+    }
+
+    /* For threading */
+    simu->evl_prop_atm=calloc(nevl*parms->atm.nps, sizeof(thread_t*));
+    simu->evl_propdata_atm=calloc(nevl*parms->atm.nps, sizeof(PROPDATA_T));
+    simu->evl_prop_dm=calloc(nevl*parms->ndm, sizeof(thread_t*));
+    simu->evl_propdata_dm=calloc(nevl*parms->ndm, sizeof(PROPDATA_T));
+    for(int ievl=0; ievl<nevl; ievl++){
+	const int nthread=parms->evl.nthread;
+	int tot;
+	for(int ips=0; ips<parms->atm.nps; ips++){
+	    const int ind=ievl+nevl*ips;
+	    PROPDATA_T *data=&simu->evl_propdata_atm[ind];
+	    const double ht=parms->atm.ht[ips];
+	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
+	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
+	    data->scale=1-ht/parms->evl.hs[ievl];
+	    data->alpha=1;
+	    data->wrap=1;
+	    data->mapin=(void*)1;/*need to update this in genscreen. */
+	    data->phiout=(void*)1;/*replace later in simulation. */
+	    data->ostat=aper->locs->stat;
+	    prop_index(data);
+	    tot=aper->locs->stat->ncol;
+	    simu->evl_prop_atm[ind]=calloc(nthread, sizeof(thread_t));
+	    thread_prep(simu->evl_prop_atm[ind], 0, tot, nthread, prop, data);
+	}
+	for(int idm=0; idm<parms->ndm && !parms->sim.evlol; idm++){
+	    const int ind=ievl+nevl*idm;
+	    PROPDATA_T *data=&simu->evl_propdata_dm[ind];
+	    const double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
+	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
+	    data->scale=1-ht/parms->evl.hs[ievl];
+	    data->alpha=-1;
+	    data->wrap=0;
+	    if(simu->cachedm && parms->evl.scalegroup){
+		int isc=parms->evl.scalegroup[idm+ievl*parms->ndm];
+		data->mapin=simu->cachedm[idm][isc];
+		data->cubic=0;/*already accounted for in cachedm. */
+		data->cubic_iac=0;/*not needed */
+		data->ostat=aper->locs->stat;
+		tot=aper->locs->stat->ncol;
+	    }else{
+		if(simu->dmrealsq){
+		    data->mapin=simu->dmrealsq[idm];
+		}else{
+		    data->locin=recon->alocm[idm];
+		    data->phiin=simu->dmreal->p[idm]->p;
+		}
+		data->cubic=parms->dm[idm].cubic;
+		data->cubic_iac=parms->dm[idm].iac;
+		data->locout=aper->locs;/*propagate to locs if no cachedm. */
+		tot=aper->locs->nloc;
+	    }
+	    data->phiout=(void*)1;/*replace later in simulation. */
+	    prop_index(data);
+	    simu->evl_prop_dm[ind]=calloc(nthread, sizeof(thread_t));
+	    thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
+	}
+    }
+}
+
+static void init_simu_wfs(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const APER_T *aper=simu->aper;
+    POWFS_T *powfs=simu->powfs;
+    RECON_T *recon=simu->recon;
+    SIM_SAVE_T *save=simu->save;
+    const int nwfs=parms->nwfs;
+    const int nsim=parms->sim.end;
+    const int seed=simu->seed;
+    simu->ints=calloc(nwfs,sizeof(dcell*));
+    simu->wfspsfout=calloc(nwfs,sizeof(dcell*));
+    save->wfspsfout=calloc(nwfs,sizeof(cellarr*));
+    save->ztiltout =calloc(nwfs,sizeof(cellarr*));
+    simu->pistatout=calloc(nwfs,sizeof(dcell*));
+    simu->sanea_sim=dcellnew(nwfs, 1);
+    simu->gradcl=dcellnew(nwfs,1);
+    simu->gradnf=dcellnew(nwfs,1);
+    /*Do not initialize gradlastcl. Do not initialize gradlastol in open
+      loop. They are used for testing*/
+    if(parms->sim.closeloop){
+	simu->gradlastol=dcellnew(parms->nwfsr, 1);
+    }
+    simu->gradacc=dcellnew(nwfs,1);/*wfsgrad internal */
+
+    for(int iwfs=0; iwfs<nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	int nsa=powfs[ipowfs].pts->nsa;
+	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
+	if(parms->powfs[ipowfs].phytypesim==3 || parms->save.grad[iwfs]){
+	    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
+	}
+	if(parms->powfs[ipowfs].noisy){
+	    simu->sanea_sim->p[iwfs]=dnew(4, nsa);
+	}
+	if(parms->powfs[ipowfs].usephy){
+	    simu->ints[iwfs]=dcellnew(nsa,1);
+	    for(int isa=0; isa<nsa; isa++){
+		simu->ints[iwfs]->p[isa]=dnew(powfs[ipowfs].pixpsax, powfs[ipowfs].pixpsay);
+	    }
+	}
+	if(parms->powfs[ipowfs].phystep!=0 || parms->save.gradgeom[iwfs] || parms->powfs[ipowfs].pistatout){
+	    simu->gradacc->p[iwfs]=dnew(nsa*2,1);
+	}
+	if(parms->powfs[ipowfs].pistatout){
+	    simu->pistatout[iwfs]=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
+	}
+    }
+
     if(parms->sim.epfocus>1.e-15){
 	if(parms->sim.lpfocus<1.e-15){
 	    error("When epfocus is nonzero, lpfocus need to be zero\n");
@@ -855,6 +906,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->focusint=dcellnew(nwfs,1);
 	simu->focuslpf=dcellnew(nwfs,1);
     }
+
+    simu->has_upt=0;/*flag for uplink tip/tilt control */
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].llt){
@@ -870,66 +923,125 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}
     }
-    {
-	int ny=parms->sim.closeloop && !parms->gpu.moao ? 2 : 1;
-	if(!parms->gpu.wfs || ! parms->gpu.moao){
-	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		int imoao=parms->powfs[ipowfs].moao;
-		if(imoao>-1){
-		    if(!simu->moao_wfs){
-			simu->moao_wfs=dcellnew(nwfs, ny);
-		    }
-		    for(int iy=0; iy<ny; iy++){
-			simu->moao_wfs->p[iwfs+iy*nwfs]=dnew(recon->moao[imoao].aloc->nloc, 1);
-		    }
-		}
+
+    {/*MMAP the LGS uptlink error/command output */
+	long nnx[nwfs];
+	long nny[nwfs];
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(parms->powfs[ipowfs].llt){
+		nnx[iwfs]=2;
+		nny[iwfs]=nsim;
+	    }else{
+		nnx[iwfs]=0;
+		nny[iwfs]=0;
 	    }
 	}
-	if(!parms->gpu.evl|| ! parms->gpu.moao){
-	    int imoao=parms->evl.moao;
-	    if(imoao!=-1){
-		simu->moao_evl=dcellnew(nevl, ny);
-		for(int ievl=0; ievl<nevl; ievl++){
-		    for(int iy=0; iy<ny; iy++){
-			simu->moao_evl->p[ievl+iy*nevl]=dnew(recon->moao[imoao].aloc->nloc, 1);
-		    }
-		}
-	    }
-	}
-#if USE_CUDA
-	if(!parms->gpu.moao){
-	    gpu_moao_2gpu(simu);//initilization.
-	}
-#endif
+	simu->upterrs = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resupterr_%d.bin", seed);
+	simu->uptcmds = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resuptcmd_%d.bin", seed);
     }
-    simu->perfevl_iground=parms->atm.iground;
-    if(parms->sim.cachedm){
-	prep_cachedm(simu);
+   
+    /* For sky coverage telemetry output */
+    for(int iwfs=0; iwfs<nwfs; iwfs++){
+	int ipowfs=parms->wfs[iwfs].powfs;
+	long ncompx=powfs[ipowfs].ncompx;
+	long ncompy=powfs[ipowfs].ncompy;
+	long notf=MAX(ncompx, ncompy);
+	if(parms->powfs[ipowfs].psfout){
+	    const int nsa=powfs[ipowfs].pts->nsa;
+	    /*The PSFs here are PSFs of each subaperture. */
+	    simu->wfspsfout[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
+	    for(long ipsf=0; ipsf<simu->wfspsfout[iwfs]->nx*simu->wfspsfout[iwfs]->ny; ipsf++){
+		simu->wfspsfout[iwfs]->p[ipsf]=cnew(notf/2,notf/2);
+	    }
+	    mymkdir("%s/wvfout/", dirskysim);
+	    mymkdir("%s/ztiltout/", dirskysim);
+	    save->wfspsfout[iwfs]=cellarr_init
+		(parms->sim.end-parms->sim.start,1,
+		 "%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g.bin",
+		 dirskysim, seed,
+		 parms->powfs[ipowfs].order,
+		 parms->wfs[iwfs].thetax*206265,
+		 parms->wfs[iwfs].thetay*206265);
+	
+	    save->ztiltout[iwfs]=cellarr_init
+		(parms->sim.end-parms->sim.start,1,
+		 "%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g.bin",
+		 dirskysim, seed,
+		 parms->powfs[ipowfs].order,
+		 parms->wfs[iwfs].thetax*206265,
+		 parms->wfs[iwfs].thetay*206265);
+
+	}
+	if(parms->sim.skysim && parms->powfs[ipowfs].pistatout){
+	    mymkdir("%s/pistat/",dirskysim);
+	}
     }
  
-    simu->dtrat_hi=1;
-    simu->dtrat_lo=1;
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].dtrat>1){
-	    if(parms->powfs[ipowfs].lo){
-		if(simu->dtrat_lo==1){
-		    simu->dtrat_lo=parms->powfs[ipowfs].dtrat;
-		}else if(simu->dtrat_lo!=parms->powfs[ipowfs].dtrat){
-		    error("We don't handle multiple framerate of the LO WFS yet\n");
-		}
-	    }else{
-		if(simu->dtrat_hi==1){
-		    simu->dtrat_hi=parms->powfs[ipowfs].dtrat;
-		}else if(simu->dtrat_hi!=parms->powfs[ipowfs].dtrat){
-		    error("We don't handle multiple framerate of the LO WFS yet\n");
+    if(parms->save.ngcov>0){
+	simu->gcov=dcellnew(parms->save.ngcov,1);
+    }
+    int nstep=parms->sim.end-parms->sim.start;
+    if(parms->save.wfsopd){
+	save->wfsopd=calloc(nwfs, sizeof(cellarr*));
+	save->wfsopdol=calloc(nwfs, sizeof(cellarr*));
+	save->wfslltopd=calloc(nwfs, sizeof(cellarr*));
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(!parms->save.wfsopd[iwfs]){
+		continue;
+	    }
+	    save->wfsopd[iwfs]=cellarr_init(nstep, 1,"wfs%d_opd_%d.bin", iwfs, seed);
+	    save->wfsopdol[iwfs]=cellarr_init(nstep, 1,"wfs%d_opdol_%d.bin", iwfs, seed);
+	    if(powfs[ipowfs].llt){
+		save->wfslltopd[iwfs]=cellarr_init(nstep,1, "wfs%d_lltopd_%d.bin", iwfs, seed);
+	    }
+	}
+    }
+    if(parms->save.ints){
+	save->intsny=calloc(nwfs, sizeof(cellarr*));
+	save->intsnf=calloc(nwfs, sizeof(cellarr*));
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int dtrat=parms->powfs[ipowfs].dtrat;
+	    int phystep=parms->powfs[ipowfs].phystep;
+	    int nstep2=(parms->sim.end-phystep)/dtrat;
+	    if(parms->save.ints[iwfs] && parms->powfs[ipowfs].usephy){
+		save->intsny[iwfs]=cellarr_init(nstep2,1, "wfs%d_intsny_%d.bin", iwfs, seed);
+		save->intsnf[iwfs]=cellarr_init(nstep2,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
+	    }
+	}
+    }
+    if(parms->save.grad && !parms->sim.idealfit){
+	save->gradcl=calloc(nwfs, sizeof(cellarr*));
+	save->gradnf=calloc(nwfs, sizeof(cellarr*));
+	save->gradol=calloc(nwfs, sizeof(cellarr*));
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int dtrat=parms->powfs[ipowfs].dtrat;
+	    if(parms->save.grad[iwfs]){
+		save->gradcl[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
+		if(parms->powfs[ipowfs].noisy)
+		    save->gradnf[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradnf_%d.bin", iwfs, seed);
+		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
+		    save->gradol[iwfs]=cellarr_init((nstep-(parms->sim.closeloop?1:0))/dtrat,1, 
+						    "wfs%d_gradol_%d.bin", iwfs, seed);
 		}
 	    }
 	}
     }
-    /*
-      prepare data for ray tracing in wfsgrad.c
-    */
+    if(parms->save.gradgeom && !parms->sim.idealfit){
+	save->gradgeom=calloc(nwfs, sizeof(cellarr*));
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int dtrat=parms->powfs[ipowfs].dtrat;
+	    if(parms->save.gradgeom[iwfs]){
+		save->gradgeom[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
+	    }
+	}
+    }
+   
+    /* threading */
     simu->wfs_prop_atm=calloc(nwfs*parms->atm.nps, sizeof(thread_t*));
     simu->wfs_propdata_atm=calloc(nwfs*parms->atm.nps, sizeof(PROPDATA_T));
     simu->wfs_prop_dm=calloc(nwfs*parms->ndm, sizeof(thread_t*));
@@ -1017,231 +1129,105 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	simu->wfs_ints[iwfs]=calloc(parms->sim.nthread, sizeof(thread_t));
 	thread_prep(simu->wfs_ints[iwfs], 0, tot, nthread, wfsints,data);
     }
+}
 
-    simu->evl_prop_atm=calloc(nevl*parms->atm.nps, sizeof(thread_t*));
-    simu->evl_propdata_atm=calloc(nevl*parms->atm.nps, sizeof(PROPDATA_T));
-    simu->evl_prop_dm=calloc(nevl*parms->ndm, sizeof(thread_t*));
-    simu->evl_propdata_dm=calloc(nevl*parms->ndm, sizeof(PROPDATA_T));
-    for(int ievl=0; ievl<nevl; ievl++){
-	const int nthread=parms->evl.nthread;
-	int tot;
-	for(int ips=0; ips<parms->atm.nps; ips++){
-	    const int ind=ievl+nevl*ips;
-	    PROPDATA_T *data=&simu->evl_propdata_atm[ind];
-	    const double ht=parms->atm.ht[ips];
-	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
-	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
-	    data->scale=1-ht/parms->evl.hs[ievl];
-	    data->alpha=1;
-	    data->wrap=1;
-	    data->mapin=(void*)1;/*need to update this in genscreen. */
-	    data->phiout=(void*)1;/*replace later in simulation. */
-	    data->ostat=aper->locs->stat;
-	    prop_index(data);
-	    tot=aper->locs->stat->ncol;
-	    simu->evl_prop_atm[ind]=calloc(nthread, sizeof(thread_t));
-	    thread_prep(simu->evl_prop_atm[ind], 0, tot, nthread, prop, data);
+static void init_simu_dm(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
+    SIM_SAVE_T *save=simu->save;
+    const int seed=simu->seed;
+    /*we initialize dmreal, so that wfs_prop_dm can reference dmreal. */
+    simu->dmcmd=dcellnew(parms->ndm,1);
+    simu->dmreal=dcellnew(parms->ndm,1);
+    simu->dmrealsq=calloc(parms->ndm,sizeof(map_t*));
+    if(parms->sim.dmproj){
+	simu->dmproj=dcellnew(parms->ndm,1);
+	simu->dmprojsq=calloc(parms->ndm,sizeof(map_t*));
+    }
+    for(int idm=0; idm<parms->ndm; idm++){
+	simu->dmcmd->p[idm]=dnew(recon->aloc[idm]->nloc,1);
+	if(simu->hyst){
+	    simu->dmreal->p[idm]=dnew(recon->aloc[idm]->nloc,1);
+	}else{
+	    simu->dmreal->p[idm]=dref(simu->dmcmd->p[idm]);
 	}
+	simu->dmrealsq[idm]=mapnew2(recon->amap[idm]);
+	if(simu->dmprojsq){
+	    simu->dmproj->p[idm]=dnew(recon->aloc[idm]->nloc,1);
+	    simu->dmprojsq[idm]=mapnew2(recon->amap[idm]);
+	}
+	if(parms->fit.square){/*dmreal is already square.*/
+	    free(simu->dmrealsq[idm]->p);
+	    simu->dmrealsq[idm]->p=simu->dmreal->p[idm]->p;
+	    simu->dmrealsq[idm]->nref=simu->dmreal->p[idm]->nref;
+	    simu->dmrealsq[idm]->nref[0]++;
+	    if(simu->dmprojsq){
+		free(simu->dmprojsq[idm]->p);
+		simu->dmprojsq[idm]->p=simu->dmproj->p[idm]->p;
+		simu->dmprojsq[idm]->nref=simu->dmproj->p[idm]->nref;
+		simu->dmprojsq[idm]->nref[0]++;
+	    }
+	}
+    }
+#if USE_CUDA
+    if(parms->gpu.evl || parms->gpu.wfs){
+	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm, parms->dm);
+	if(simu->dmprojsq){
+	    gpu_dmproj2gpu(simu->dmprojsq, parms->ndm, parms->dm);
+	}
+    }
+#endif
+    simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
+    simu->dmint=servo_new(simu->dmreal, parms->sim.epdm);
+    simu->Mint_lo=servo_new(NULL, parms->sim.eplo);
+    simu->uptint=servo_new(NULL, parms->sim.epupt);
+
+    /*Setup hysterisis */
+    int anyhyst=0;
+    simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(parms->dm[idm].hyst){
+	    simu->hyst[idm]=calloc(1, sizeof(HYST_T));
+	    simu->hyst[idm]->coeff=dread("%s",parms->dm[idm].hyst);
+	    int nhmod=simu->hyst[idm]->coeff->ny;
+	    if(simu->hyst[idm]->coeff->nx!=3 || nhmod<1){
+		error("DM hystereis file %s has wrong format. Expect 3 rows\n",parms->dm[idm].hyst);
+	    }
+	    int naloc=recon->aloc[idm]->nloc;
+	    simu->hyst[idm]->xlast=dnew(naloc,1);
+	    simu->hyst[idm]->ylast=dnew(nhmod,naloc);
+	    simu->hyst[idm]->dxlast=dnew(naloc,1);
+	    simu->hyst[idm]->x0=dnew(naloc,1);
+	    simu->hyst[idm]->y0=dnew(nhmod,naloc);
+	    anyhyst=1;
+	}
+    }
+    if(!anyhyst){
+	free(simu->hyst); simu->hyst=NULL;
+    }
+
+    {/* History */
+	int dm_hist=0;
 	for(int idm=0; idm<parms->ndm; idm++){
-	    const int ind=ievl+nevl*idm;
-	    PROPDATA_T *data=&simu->evl_propdata_dm[ind];
-	    const double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-	    data->displacex0=ht*parms->evl.thetax[ievl]+parms->evl.misreg[0];
-	    data->displacey0=ht*parms->evl.thetay[ievl]+parms->evl.misreg[1];
-	    data->scale=1-ht/parms->evl.hs[ievl];
-	    data->alpha=-1;
-	    data->wrap=0;
-	    if(simu->cachedm && parms->evl.scalegroup){
-		int isc=parms->evl.scalegroup[idm+ievl*parms->ndm];
-		data->mapin=simu->cachedm[idm][isc];
-		data->cubic=0;/*already accounted for in cachedm. */
-		data->cubic_iac=0;/*not needed */
-		data->ostat=aper->locs->stat;
-		tot=aper->locs->stat->ncol;
-	    }else{
-		if(simu->dmrealsq){
-		    data->mapin=simu->dmrealsq[idm];
+	    if(parms->dm[idm].hist){
+		dm_hist=1; 
+		break;
+	    }
+	}
+	if(dm_hist){
+	    long nnx[parms->ndm];
+	    long nny[parms->ndm];
+	    for(int idm=0; idm<parms->ndm; idm++){
+		if(parms->dm[idm].hist){
+		    nnx[idm]=parms->dm[idm].histn;
+		    nny[idm]=recon->aloc[idm]->nloc;
 		}else{
-		    data->locin=recon->alocm[idm];
-		    data->phiin=simu->dmreal->p[idm]->p;
-		}
-		data->cubic=parms->dm[idm].cubic;
-		data->cubic_iac=parms->dm[idm].iac;
-		data->locout=aper->locs;/*propagate to locs if no cachedm. */
-		tot=aper->locs->nloc;
-	    }
-	    data->phiout=(void*)1;/*replace later in simulation. */
-	    prop_index(data);
-	    simu->evl_prop_dm[ind]=calloc(nthread, sizeof(thread_t));
-	    thread_prep(simu->evl_prop_dm[ind], 0, tot, nthread, prop, data);
-	}
-    }
-    simu->wfs_grad=calloc(nwfs, sizeof(thread_t));
-    simu->perf_evl=calloc(nevl, sizeof(thread_t));
-#if USE_CUDA
-    if(parms->gpu.wfs){
-	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, gpu_wfsgrad, simu);
-    }else{
-#endif
-	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
-#if USE_CUDA
-    }
-#endif
-#if USE_CUDA
-    if(parms->gpu.evl){
-	thread_prep(simu->perf_evl, 0, nevl, nevl, gpu_perfevl, simu);
-    }else{
-#endif
-	thread_prep(simu->perf_evl, 0, nevl, nevl, perfevl_ievl, simu);
-#if USE_CUDA
-    }
-#endif
-    if(parms->atm.frozenflow){
-	simu->dt=parms->sim.dt;
-    }else{
-	simu->dt=0;
-    }
-    simu->dtlo=simu->dtrat_lo*simu->dt;
-    simu->dthi=simu->dtrat_hi*simu->dt;
-    
-    /*evaluation. */
-   
-    {/*USE MMAP for data that need to save at every time step */
-	long nnx[nevl];
-	long nny[nevl];
-	for(int ievl=0; ievl<nevl; ievl++){
-	    nnx[ievl]=nmod;
-	    nny[ievl]=nsim;
-	}
-	simu->olep=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolep_%d.bin",seed);
-	simu->clep=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclep_%d.bin",seed);
-	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolmp_%d.bin",seed);
-	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclmp_%d.bin",seed);
-
-	if(parms->recon.split && parms->ndm<=2){
-	    long nnx_split[nevl];
-	    long nnx_3[nevl];
-	    for(int ievl=0; ievl<nevl; ievl++){
-		nnx_3[ievl]=3;
-		nnx_split[ievl]=recon->ngsmod->nmod;
-	    }
-	    simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, NULL,NULL,"Resclemp_%d.bin",seed);
-	    simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescleNGSm_%d.bin",seed);
-	    simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,NULL,"RescleNGSmp_%d.bin",seed);
-	    if(parms->recon.split==1 && !parms->sim.fuseint){
-		simu->corrNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescorrNGSm_%d.bin",seed);
-	    }
-	    if(parms->sim.skysim){
-		char fnold[PATH_MAX];
-		char fnnew[PATH_MAX];
-		snprintf(fnnew, PATH_MAX, "%s/RescleNGSm_%d.bin",dirskysim,seed);
-		snprintf(fnold, PATH_MAX, "RescleNGSm_%d.bin", seed);
-		if(exist(fnnew)) remove(fnnew);
-		if(link(fnold, fnnew)){
-		    warning("Error link\n");
-		}
-		snprintf(fnnew, PATH_MAX, "%s/RescleNGSmp_%d.bin",dirskysim,seed);
-		snprintf(fnold, PATH_MAX, "RescleNGSmp_%d.bin", seed);
-		if(exist(fnnew)) remove(fnnew);
-		if(link(fnold, fnnew)){
-		    warning("Error link\n");
+		    nnx[idm]=0;
+		    nny[idm]=0;
 		}
 	    }
-	}
-    }
-    {/*MMAP the main result file */
-	long nnx[4]={nmod,nmod,nmod,nmod};
-	long nny[4]={nsim,nsim,nsim,nsim};
-	nnx[1]=0;
-	nny[1]=0;
-	if(!parms->recon.split || parms->ndm>2){
-	    nnx[3]=0; 
-	    nny[3]=0;
-	}
-	simu->res     = dcellnew_mmap(4,1,nnx,nny,NULL,NULL,"Res_%d.bin",seed);
-	simu->ole     = dref(simu->res->p[0]);
-	simu->cle     = dref(simu->res->p[2]);
-	simu->clem    = dref(simu->res->p[3]);
-    }
-    {/*MMAP the LGS uptlink error/command output */
-	long nnx[nwfs];
-	long nny[nwfs];
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(parms->powfs[ipowfs].llt){
-		nnx[iwfs]=2;
-		nny[iwfs]=nsim;
-	    }else{
-		nnx[iwfs]=0;
-		nny[iwfs]=0;
-	    }
-	}
-	simu->upterrs = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resupterr_%d.bin", seed);
-	simu->uptcmds = dcellnew_mmap(nwfs, 1, nnx, nny, NULL,NULL,"Resuptcmd_%d.bin", seed);
-
-    }
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	long ncompx=powfs[ipowfs].ncompx;
-	long ncompy=powfs[ipowfs].ncompy;
-	long notf=MAX(ncompx, ncompy);
-	if(parms->powfs[ipowfs].psfout){
-	    const int nsa=powfs[ipowfs].pts->nsa;
-	    /*The PSFs here are PSFs of each subaperture. */
-	    simu->wfspsfout[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
-	    for(long ipsf=0; ipsf<simu->wfspsfout[iwfs]->nx*simu->wfspsfout[iwfs]->ny; ipsf++){
-		simu->wfspsfout[iwfs]->p[ipsf]=cnew(notf/2,notf/2);
-	    }
-	    mymkdir("%s/wvfout/", dirskysim);
-	    mymkdir("%s/ztiltout/", dirskysim);
-	    save->wfspsfout[iwfs]=cellarr_init
-		(parms->sim.end-parms->sim.start,1,
-		 "%s/wvfout/wvfout_seed%d_sa%d_x%g_y%g.bin",
-		 dirskysim, seed,
-		 parms->powfs[ipowfs].order,
-		 parms->wfs[iwfs].thetax*206265,
-		 parms->wfs[iwfs].thetay*206265);
-	
-	    save->ztiltout[iwfs]=cellarr_init
-		(parms->sim.end-parms->sim.start,1,
-		 "%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g.bin",
-		 dirskysim, seed,
-		 parms->powfs[ipowfs].order,
-		 parms->wfs[iwfs].thetax*206265,
-		 parms->wfs[iwfs].thetay*206265);
-
-	}
-	if(parms->sim.skysim && parms->powfs[ipowfs].pistatout){
-	    mymkdir("%s/pistat/",dirskysim);
-	}
-    }
- 
-    if(parms->save.ngcov>0){
-	simu->gcov=dcellnew(parms->save.ngcov,1);
-    }
-    if(parms->sim.psfr){
-	if(!parms->dbg.useopdr || parms->sim.idealfit){
-	    simu->ecov=dcellnew(parms->ndm,parms->ndm);/*not really need. */
-	}else{/*deprecated */
-	    simu->ecov=dcellnew(nevl, 1);
-	    if(parms->dbg.ecovxx){/*temporary. */
-		warning("Saving history of ecov_xx\n");
-		save->ecovxx=calloc(nevl, sizeof(cellarr *));
-		char strht[24];
-		for(int ievl=0; ievl<nevl; ievl++){
-		    if(!parms->evl.psf[ievl]) continue;
-		    if(isfinite(parms->evl.hs[ievl])){
-			snprintf(strht, 24, "_%g", parms->evl.hs[ievl]);
-		    }else{
-			strht[0]='\0';
-		    }
-	    
-		    save->ecovxx[ievl]=cellarr_init(parms->sim.end-parms->evl.psfisim-(parms->sim.closeloop?1:0), 1,
-						    "ecovxx_%d_x%g_y%g%s.bin", seed,
-						    parms->evl.thetax[ievl]*206265,
-						    parms->evl.thetay[ievl]*206265,strht);
-		}
-	    }
+	    simu->dmhist=dcellnew_mmap(parms->ndm, 1, nnx, nny, 
+				       NULL, NULL,"dmhist_%d.bin",simu->seed);
 	}
     }
     int nstep=parms->sim.end-parms->sim.start;
@@ -1259,103 +1245,103 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	if(parms->sim.dmproj){
 	    save->dmproj = cellarr_init(nstep, 1, "dmproj_%d.bin", seed);
 	}
-	if(simu->moao_wfs){
-	    save->moao_wfs=calloc(nwfs, sizeof(cellarr*));
+
+    }
+  
+    if(parms->save.dmpttr){
+	save->dmpttr=cellarr_init(nstep, 1,"dmpttr_%d.bin", seed);
+    }
+}
+
+/** MOAO **/
+static void init_simu_moao(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
+    SIM_SAVE_T *save=simu->save;
+    const int nwfs=parms->nwfs;
+    const int nevl=parms->evl.nevl;
+    const int seed=simu->seed;
+    int nstep=parms->sim.end-parms->sim.start;
+    int ny=parms->sim.closeloop && !parms->gpu.moao ? 2 : 1;
+    if(!parms->gpu.wfs || ! parms->gpu.moao){
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int imoao=parms->powfs[ipowfs].moao;
+	    if(imoao>-1){
+		if(!simu->dm_wfs){
+		    simu->dm_wfs=dcellnew(nwfs, ny);
+		}
+		for(int iy=0; iy<ny; iy++){
+		    simu->dm_wfs->p[iwfs+iy*nwfs]=dnew(recon->moao[imoao].aloc->nloc, 1);
+		}
+	    }
+	}
+    }
+    if(!parms->gpu.evl || ! parms->gpu.moao){ 
+	int imoao=parms->evl.moao;
+	if(imoao!=-1){
+	    simu->dm_evl=dcellnew(nevl, ny);
+	    for(int ievl=0; ievl<nevl; ievl++){
+		for(int iy=0; iy<ny; iy++){
+		    simu->dm_evl->p[ievl+iy*nevl]=dnew(recon->moao[imoao].aloc->nloc, 1);
+		}
+	    }
+	}
+    }
+#if USE_CUDA
+    if(!parms->gpu.moao){
+	gpu_moao_2gpu(simu);//initilization.
+    }
+#endif
+    if(parms->save.dm){
+	if(simu->dm_wfs){
+	    save->dm_wfs=calloc(nwfs, sizeof(cellarr*));
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		int imoao=parms->powfs[ipowfs].moao;
 		if(imoao>-1){
-		    save->moao_wfs[iwfs]=cellarr_init(nstep,1,"wfs%d_moaofit_%d.bin",iwfs,seed);
+		    save->dm_wfs[iwfs]=cellarr_init(nstep,1,"wfs%d_moaofit_%d.bin",iwfs,seed);
 		}
 	    }
 	}
-	if(simu->moao_evl){
-	    save->moao_evl=calloc(nwfs, sizeof(cellarr*));
+	if(simu->dm_evl){
+	    save->dm_evl=calloc(nwfs, sizeof(cellarr*));
 	    for(int ievl=0; ievl<nevl; ievl++){
-		save->moao_evl[ievl]=cellarr_init(nstep,1, "evl%d_moaofit_%d.bin",ievl,seed);
+		save->dm_evl[ievl]=cellarr_init(nstep,1, "evl%d_moaofit_%d.bin",ievl,seed);
 	    }
 	}
     }
-    if(parms->save.dmpttr){
-	save->dmpttr=cellarr_init(nstep, 1,"dmpttr_%d.bin", seed);
+}
+
+/**
+   Initialize simu (of type SIM_T) and various simulation data structs. Called
+   for every seed.
+*/
+SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs, 
+		 APER_T *aper, RECON_T *recon, int iseed){
+    if(parms->fdlock[iseed]<0){
+	warning("Another MAOS is already running. Skip seed %d\n", parms->sim.seeds[iseed]);
+	return NULL;
     }
-    if(parms->recon.alg==0){
-	if(parms->save.opdr){
-	    save->opdr=cellarr_init(nstep,1, "opdr_%d.bin", seed);
-	}
-	if(parms->save.opdx){
-	    save->opdx=cellarr_init(nstep, 1,"opdx_%d.bin", seed);
-	}
+    const int nsim=parms->sim.end;
+    const int nevl=parms->evl.nevl;
+    const int nwfs=parms->nwfs;
+    SIM_T *simu=calloc(1, sizeof(SIM_T));
+    SIM_SAVE_T *save=simu->save=calloc(1, sizeof(SIM_SAVE_T));
+  
+    simu->parms=parms;
+    simu->powfs=powfs;
+    simu->recon=recon;
+    simu->aper=aper;    
+    simu->iseed=iseed;
+    simu->seed=parms->sim.seeds[iseed];
+    if(simu->seed==0){
+	simu->seed=myclocki();
+	warning("Seed is 0, using time as seed: %d\n",simu->seed);
     }
-    if(parms->save.wfsopd){
-	save->wfsopd=calloc(nwfs, sizeof(cellarr*));
-	save->wfsopdol=calloc(nwfs, sizeof(cellarr*));
-	save->wfslltopd=calloc(nwfs, sizeof(cellarr*));
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(!parms->save.wfsopd[iwfs]){
-		continue;
-	    }
-	    save->wfsopd[iwfs]=cellarr_init(nstep, 1,"wfs%d_opd_%d.bin", iwfs, seed);
-	    save->wfsopdol[iwfs]=cellarr_init(nstep, 1,"wfs%d_opdol_%d.bin", iwfs, seed);
-	    if(powfs[ipowfs].llt){
-		save->wfslltopd[iwfs]=cellarr_init(nstep,1, "wfs%d_lltopd_%d.bin", iwfs, seed);
-	    }
-	}
-    }
-    if(parms->save.ints){
-	save->intsny=calloc(nwfs, sizeof(cellarr*));
-	save->intsnf=calloc(nwfs, sizeof(cellarr*));
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int dtrat=parms->powfs[ipowfs].dtrat;
-	    int phystep=parms->powfs[ipowfs].phystep;
-	    int nstep2=(parms->sim.end-phystep)/dtrat;
-	    if(parms->save.ints[iwfs] && parms->powfs[ipowfs].usephy){
-		save->intsny[iwfs]=cellarr_init(nstep2,1, "wfs%d_intsny_%d.bin", iwfs, seed);
-		save->intsnf[iwfs]=cellarr_init(nstep2,1, "wfs%d_intsnf_%d.bin", iwfs, seed);
-	    }
-	}
-    }
-    if(parms->save.grad && !parms->sim.idealfit){
-	save->gradcl=calloc(nwfs, sizeof(cellarr*));
-	save->gradnf=calloc(nwfs, sizeof(cellarr*));
-	save->gradol=calloc(nwfs, sizeof(cellarr*));
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int dtrat=parms->powfs[ipowfs].dtrat;
-	    if(parms->save.grad[iwfs]){
-		save->gradcl[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
-		if(parms->powfs[ipowfs].noisy)
-		    save->gradnf[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradnf_%d.bin", iwfs, seed);
-		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
-		    save->gradol[iwfs]=cellarr_init((nstep-(parms->sim.closeloop?1:0))/dtrat,1, 
-						    "wfs%d_gradol_%d.bin", iwfs, seed);
-		}
-	    }
-	}
-    }
-    if(parms->save.gradgeom && !parms->sim.idealfit){
-	save->gradgeom=calloc(nwfs, sizeof(cellarr*));
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    int dtrat=parms->powfs[ipowfs].dtrat;
-	    if(parms->save.gradgeom[iwfs]){
-		save->gradgeom[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradgeom_%d.bin", iwfs, seed);
-	    }
-	}
-    }
-   
-    if(parms->save.evlopd){
-	save->evlopdol=calloc(nevl, sizeof(cellarr*));
-	save->evlopdcl=calloc(nevl, sizeof(cellarr*));
-	for(int ievl=0; ievl<nevl; ievl++){
-	    save->evlopdol[ievl]=cellarr_init(nstep/parms->save.evlopd,1, 
-					      "evl%d_opdol_%d.bin",ievl,seed);
-	    save->evlopdcl[ievl]=cellarr_init(nstep/parms->save.evlopd,1,
-					      "evl%d_opdcl_%d.bin",ievl,seed);
-	}
-    }
+    int seed=simu->seed;
+    seeding(simu);
+
     simu->status=calloc(1, sizeof(STATUS_T));
     simu->status->iseed=iseed;
     simu->status->nseed=parms->sim.nseed;
@@ -1364,6 +1350,88 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->status->nthread=parms->sim.nthread;
     simu->status->timstart=myclocki();
     simu->status->info=S_RUNNING;
+
+    {   /* dtrat */
+	if(parms->atm.frozenflow){
+	    simu->dt=parms->sim.dt;
+	}else{
+	    simu->dt=0;
+	}
+	simu->dtrat_hi=1;
+	simu->dtrat_lo=1;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(parms->powfs[ipowfs].dtrat>1){
+		if(parms->powfs[ipowfs].lo){
+		    if(simu->dtrat_lo==1){
+			simu->dtrat_lo=parms->powfs[ipowfs].dtrat;
+		    }else if(simu->dtrat_lo!=parms->powfs[ipowfs].dtrat){
+			error("We don't handle multiple framerate of the LO WFS yet\n");
+		    }
+		}else{
+		    if(simu->dtrat_hi==1){
+			simu->dtrat_hi=parms->powfs[ipowfs].dtrat;
+		    }else if(simu->dtrat_hi!=parms->powfs[ipowfs].dtrat){
+			error("We don't handle multiple framerate of the LO WFS yet\n");
+		    }
+		}
+	    }
+	}
+	simu->dtlo=simu->dtrat_lo*simu->dt;
+	simu->dthi=simu->dtrat_hi*simu->dt;
+    }
+
+    if(parms->sim.wspsd){
+	/* Telescope wind shake added to TT input. */
+	dmat *psdin=dread("%s", parms->sim.wspsd);
+	info2("Loading windshake PSD from file %s\n", parms->sim.wspsd);
+	simu->telws = psd2time(psdin, simu->telws_rand, parms->sim.dt, parms->sim.end);
+	dfree(psdin);
+	dwrite(simu->telws, "telws_%d", seed);
+    }
+
+    /* Select GPU or CPU for the tasks.*/
+    simu->wfs_grad=calloc(nwfs, sizeof(thread_t));
+#if USE_CUDA
+    if(parms->gpu.wfs){
+	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, gpu_wfsgrad, simu);
+    }else{
+#endif
+	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
+#if USE_CUDA
+    }
+#endif
+
+    simu->perf_evl=calloc(nevl, sizeof(thread_t));
+#if USE_CUDA
+    if(parms->gpu.evl){
+	thread_prep(simu->perf_evl, 0, nevl, nevl, gpu_perfevl, simu);
+    }else{
+#endif
+	thread_prep(simu->perf_evl, 0, nevl, nevl, perfevl_ievl, simu);
+#if USE_CUDA
+    }
+#endif
+    simu->nthread=parms->sim.nthread;
+
+    /*First setup evaluation*/
+    init_simu_evl(simu);
+    if(!parms->sim.evlol){
+	init_simu_wfs(simu);
+	init_simu_dm(simu);
+	init_simu_moao(simu);
+	if(parms->sim.cachedm){
+	    prep_cachedm(simu);
+	}
+	if(parms->recon.alg==0){
+	    int nstep=parms->sim.end-parms->sim.start;
+	    if(parms->save.opdr){
+		save->opdr=cellarr_init(nstep,1, "opdr_%d.bin", seed);
+	    }
+	    if(parms->save.opdx){
+		save->opdx=cellarr_init(nstep, 1,"opdx_%d.bin", seed);
+	    }
+	}
+    }
     return simu;
 }
 /**
@@ -1386,7 +1454,7 @@ void free_simu(SIM_T *simu){
     maparrfree(simu->atm, parms->atm.nps);
     maparrfree(simu->atm2, parms->atm.nps);
 
-    if(parms->sim.cachedm){
+    if(parms->sim.cachedm && !parms->sim.evlol){
 	for(int idm=0; idm<parms->ndm; idm++){
 	    for(int iscale=0; 
 		iscale<parms->dm[idm].ncache; 
@@ -1476,8 +1544,8 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->uptreal);
     servo_free(simu->uptint);
 
-    dcellfree(simu->moao_wfs);
-    dcellfree(simu->moao_evl);
+    dcellfree(simu->dm_wfs);
+    dcellfree(simu->dm_evl);
 
     dcellfree(simu->res);
     dfree(simu->ole);
@@ -1554,8 +1622,8 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->gradol, nwfs);
     cellarr_close_n(save->intsny, nwfs);
     cellarr_close_n(save->intsnf, nwfs);
-    cellarr_close_n(save->moao_evl, nevl);
-    cellarr_close_n(save->moao_wfs, nwfs);
+    cellarr_close_n(save->dm_evl, nevl);
+    cellarr_close_n(save->dm_wfs, nwfs);
  
     dfree(simu->winddir);
     {

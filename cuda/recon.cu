@@ -647,20 +647,20 @@ void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
     gpu_set(gpu_recon);
     curcellzero(curecon->opdr, 0);
     curcellzero(curecon->dmfit, 0);
-    if(curecon->moao_wfs){
+    if(curecon->dm_wfs){
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    curcellzero(curecon->moao_wfs[iwfs], 0);
+	    curcellzero(curecon->dm_wfs[iwfs], 0);
 	}
     }
-    if(curecon->moao_evl){
+    if(curecon->dm_evl){
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    curcellzero(curecon->moao_evl[ievl], 0);
+	    curcellzero(curecon->dm_evl[ievl], 0);
 	}
     }
     for(int igpu=0; igpu<NGPU; igpu++){
 	gpu_set(igpu);
-	curcellzero(cudata->moao_wfs,0);
-	curcellzero(cudata->moao_evl,0);
+	curcellzero(cudata->dm_wfs,0);
+	curcellzero(cudata->dm_evl,0);
     }
     cudaStreamSynchronize(0);
 }

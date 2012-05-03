@@ -2797,6 +2797,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 */
 void free_recon(const PARMS_T *parms, RECON_T *recon){
     CALL_ONCE;
+    if(!recon) return;
     free_recon_moao(recon, parms);
     dfree(recon->ht);
     dfree(recon->os);

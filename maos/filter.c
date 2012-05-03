@@ -222,22 +222,22 @@ void filter_cl(SIM_T *simu){
     }
     if(recon->moao){
 	if(!parms->gpu.moao){ /*close loop filtering.*/
-	    if(simu->moao_wfs){
+	    if(simu->dm_wfs){
 		const int nwfs=parms->nwfs;
 		for(int iwfs=0; iwfs<nwfs; iwfs++){
 		    int ipowfs=parms->wfs[iwfs].powfs;
 		    int imoao=parms->powfs[ipowfs].moao;
 		    if(imoao<0) continue;
 		    double g=parms->moao[imoao].gdm;
-		    dadd(&simu->moao_wfs->p[iwfs], 1.-g, simu->moao_wfs->p[iwfs+nwfs], g);
+		    dadd(&simu->dm_wfs->p[iwfs], 1.-g, simu->dm_wfs->p[iwfs+nwfs], g);
 		}
 	    }
-	    if(simu->moao_evl){
+	    if(simu->dm_evl){
 		const int nevl=parms->evl.nevl;
 		int imoao=parms->evl.moao;
 		double g=parms->moao[imoao].gdm;
 		for(int ievl=0; ievl<nevl; ievl++){
-		    dadd(&simu->moao_evl->p[ievl], 1.-g, simu->moao_evl->p[ievl+nevl], g);
+		    dadd(&simu->dm_evl->p[ievl], 1.-g, simu->dm_evl->p[ievl+nevl], g);
 		}
 	    }
 

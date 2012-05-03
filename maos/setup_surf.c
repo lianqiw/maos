@@ -87,7 +87,7 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
 	    dwrite(aper->opdadd->p[ievl], "surfevl_%d.bin", ievl);
 	}
 
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
 	    const int ipowfs=parms->wfs[iwfs].powfs;
 	    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	    const double hs=parms->powfs[ipowfs].hs;
@@ -154,7 +154,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     if(!aper->opdadd){
 	aper->opdadd=dcellnew(parms->evl.nevl,1);
     }
-    if(!recon->opdxadd && parms->sim.idealfit){
+    if(recon && !recon->opdxadd && parms->sim.idealfit){
 	recon->opdxadd=dcellnew(parms->atmr.nps, 1);
     }
     map_t **surf=calloc(parms->nsurf, sizeof(map_t*));
@@ -198,7 +198,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }
 	    dwrite(aper->opdadd->p[ievl], "surfevl_%d.bin", ievl);
 	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	    double hs=parms->powfs[ipowfs].hs;
@@ -231,7 +231,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }
 	    dwrite(powfs[ipowfs].opdadd->p[wfsind],"surfwfs_%d.bin", iwfs);
 	}
-	if(parms->sim.idealfit){
+	if(parms->sim.idealfit && recon){
 	    double distmin=INFINITY;
 	    int jpsr=-1;
 	    /*Select the layer that is closed to the surface. */

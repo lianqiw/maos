@@ -102,8 +102,8 @@ typedef struct{
     curcell *fitNW;/**< DM fitting low rank terms*/
     cuspcell *actslave;/**<DM fitting actuator slaving*/
     cumoao_t *moao;/**<moao configurations for GPU*/
-    curcell **moao_wfs;/**<moao results for wfs for warm restart*/
-    curcell **moao_evl;/**<moao results for evl for warm restart*/
+    curcell **dm_wfs;/**<moao results for wfs for warm restart*/
+    curcell **dm_evl;/**<moao results for evl for warm restart*/
     cudaStream_t     moao_stream;
     cublasHandle_t   moao_handle;
     cusparseHandle_t moao_sphandle;

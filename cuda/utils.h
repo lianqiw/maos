@@ -55,8 +55,8 @@ typedef struct{
     /*for recon */
     curecon_t *recon;
     /*for moao*/
-    curcell *moao_wfs;
-    curcell *moao_evl;
+    curcell *dm_wfs;
+    curcell *dm_evl;
 }cudata_t;
 #ifdef __APPLE__
 extern pthread_key_t cudata_key;

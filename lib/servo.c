@@ -532,6 +532,7 @@ dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
    Free SERVO_T struct
 */
 void servo_free(SERVO_T *st){
+    if(!st) return;
     dcellfree(st->mlead);
     dcellfree(st->merrlast);
     dcellfree(st->mpreint);
