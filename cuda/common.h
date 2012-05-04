@@ -109,7 +109,8 @@ extern int nstream;
 #else
 #define MEMCPY_D2D cudaMemcpyDefault
 #endif
-
+#define MEMCPY_D2H cudaMemcpyDeviceToHost
+#define MEMCPY_H2D cudaMemcpyHostToDevice
 /*
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
   the problem by using mutex locking to makesure only 1 thread is calling FFT. */

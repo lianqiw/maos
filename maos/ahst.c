@@ -549,7 +549,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	}
     }
     ngsmod->nmod=ngsmod_nmod(ndm, hs);
-    info("ngsmod nmod=%d\n", ngsmod->nmod);
+    info2("ngsmod nmod=%d\n", ngsmod->nmod);
     ngsmod->hs=hs;
     if(ndm>1){
 	ngsmod->ht=parms->dm[1].ht;

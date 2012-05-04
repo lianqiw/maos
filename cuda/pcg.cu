@@ -46,17 +46,7 @@ __global__ static void div_assign_do(float *restrict dest, const float *restrict
     dest[0]=a[0]/b[0];
     b[0]=a[0];
 }
-#if PRINT_RES
-__global__ static void div_sqrt_do(float *restrict dest, const float *restrict a,  const float *restrict b){
-    dest[0]=sqrt(a[0]/b[0]);
-}
-__global__ static void printf_do(float *a){
-    printf("%g\n", a[0]);
-}
-static void printf_wrap(float *a, cudaStream_t stream){
-    printf_do<<<1,1,0,stream>>>(a);
-}
-#endif
+
 
 /**
    res points to a scalar in device memory. **The caller has to zero it**
@@ -75,6 +65,25 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
 	}
     }
 }
+#if PRINT_RES
+/* dest = sqrt(a/b); */
+__global__ static void div_sqrt_do(float *restrict dest, const float *restrict a, 
+				   const float *restrict b){
+    dest[0]=sqrt(a[0]/b[0]);
+}
+static void pcg_residual(float *r0r0, float *r0z1, float *r0z0, curcell *r0, 
+			 int precond, cudaStream_t stream){
+    if(precond){
+	/*r0r0=r0'*r0; */
+	curcellinn2(r0r0, r0, r0, stream);
+	/*r0r0=sqrt(r0r0/r0z0); */
+	div_sqrt_do<<<1,1,0,stream>>>(r0r0, r0r0, r0z0);
+    }else{
+	/*r0r0=sqrt(r0z1/r0z0); */
+	div_sqrt_do<<<1,1,0,stream>>>(r0r0, r0z1, r0z0);
+    }
+}
+#endif
 /**
    The PCG algorithm. Copy of lib/pcg.c, but replacing dcell with curcell.
    Timing: 
@@ -84,7 +93,7 @@ void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaSt
    return non-zero during unconvergence.
  */
 
-int gpu_pcg(curcell **px, 
+float gpu_pcg(curcell **px, 
 	    G_CGFUN Amul, const void *A, 
 	    G_PREFUN Mmul, const void *M, 
 	    const curcell *b, int warm, int maxiter,
@@ -95,6 +104,7 @@ int gpu_pcg(curcell **px,
     curcell *z0=NULL;/*Is reference or preconditioned value. */
     float *store;
     float *current;
+    float residual=-1;/*Only useful if PRINT_RES is set*/
     int ntot=maxiter*2+2;
 #if PRINT_RES 
     ntot+=maxiter+1;
@@ -112,7 +122,7 @@ int gpu_pcg(curcell **px,
  
 #if PRINT_RES 
     curcellinn2(r0z0, b, b, stream);
-    float diff[maxiter+1];
+    float diff[maxiter];
     info2("CG %d:", maxiter);
 #endif
     /*computes r0=b-A*x0 */
@@ -139,16 +149,8 @@ int gpu_pcg(curcell **px,
 	    curcellinn2(r0z1, r0, z0, stream);
 	}
 #if PRINT_RES 
-	if(Mmul){
-	    /*res->r0r0=r0'*r0; */
-	    curcellinn2(r0r0+k, r0, r0, stream);
-	    /*r0r0=sqrt(r0r0/r0z0); */
-	    div_sqrt_do<<<1,1,0,stream>>>(r0r0+k, r0r0+k, r0z0);
-	}else{
-	    /*r0r0=sqrt(r0z1/r0z0); */
-	    div_sqrt_do<<<1,1,0,stream>>>(r0r0+k, r0z1, r0z0);
-	}
-	cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), MEMCPY_D2D, stream);
+	pcg_residual(r0r0+k, r0z1, r0z0, r0, Mmul?1:0, stream);
+	cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), MEMCPY_D2H, stream);
 #if PRINT_RES == 2
 	info2("%.5f ", diff[k]);
 #endif	
@@ -158,11 +160,18 @@ int gpu_pcg(curcell **px,
 	/*ak=r0z1/(p0'*Ap); */
 	curcellinn2(ak+k, p0, Ap, stream);
 	div_do<<<1,1,0,stream>>>(ak+k, r0z1, ak+k);
-	/*put here helps to remove the spikes in performance/wfs. why necessary? */
-	//CUDA_SYNC_STREAM;
 	/*x0=x0+ak*p0 */
 	curcelladd(&x0, p0, ak+k, 1, stream);
-	if(k+1==maxiter) break;
+	if(k+1==maxiter) {
+	    /* Compute residual. Use bk as a temporary*/
+	    /*pcg_residual(bk, r0z1, r0z0, r0, Mmul?1:0, stream);
+	    CUDA_SYNC_STREAM;
+	    cudaMemcpy(&residual, bk, sizeof(float), MEMCPY_D2H);*/
+#if PRINT_RES 
+	    residual=diff[k];
+#endif
+	    break;
+	}
 	/*r0=r0-ak*Ap */
 	curcelladd(&r0, Ap, ak+k, -1, stream);
 	/*preconditioner */
@@ -175,6 +184,7 @@ int gpu_pcg(curcell **px,
 	div_assign_do<<<1,1,0,stream>>>(bk, r0z2+k, r0z1);
 	/*p0=bk*p0+z0 */
 	curcelladd(&p0, bk, z0, stream);
+
 	toc("cg");
 	/*{
 	    curcellwrite(Ap, "Ap");
@@ -198,5 +208,5 @@ int gpu_pcg(curcell **px,
     curcellfree(Ap);
     curcellfree(p0);
     cudaFree(store);
-    return 0;
+    return residual;
 }

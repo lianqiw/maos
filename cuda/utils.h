@@ -67,7 +67,7 @@ inline cudata_t* _cudata(){
 #else
 extern __thread cudata_t *cudata;
 #endif
-extern cudata_t **cudata_all;/*use pointer array to avoid misuse. */
+extern cudata_t *cudata_all;/*use pointer array to avoid misuse. */
 
 void gpu_print_mem(const char *msg);
 size_t gpu_get_mem(void);
@@ -78,9 +78,9 @@ inline void gpu_set(int igpu){
     igpu=igpu%NGPU;
     cudaSetDevice(GPUS[igpu]);
 #ifdef __APPLE__
-    pthread_setspecific(cudata_key, cudata_all[igpu]);
+    pthread_setspecific(cudata_key, &cudata_all[igpu]);
 #else
-    cudata=cudata_all[igpu];
+    cudata=&cudata_all[igpu];
 #endif
 }
 /**

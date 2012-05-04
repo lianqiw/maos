@@ -1413,12 +1413,10 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 #endif
     simu->nthread=parms->sim.nthread;
 
-    /*First setup evaluation*/
-    init_simu_evl(simu);
     if(!parms->sim.evlol){
-	init_simu_wfs(simu);
 	init_simu_dm(simu);
 	init_simu_moao(simu);
+	init_simu_wfs(simu);
 	if(parms->sim.cachedm){
 	    prep_cachedm(simu);
 	}
@@ -1432,6 +1430,8 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	    }
 	}
     }
+    init_simu_evl(simu);
+    
     return simu;
 }
 /**

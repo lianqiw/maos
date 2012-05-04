@@ -63,24 +63,42 @@ struct cucell{
     int nx;
     int ny;
     cumat<T> *m; /*contains the continuous data*/
+    ~cucell(){
+	for(int i=0; i<nx*ny; i++){
+	    delete p[i];
+	}
+	delete m;
+	free(p);
+    }
 };
 typedef struct cumat<float>    curmat;
 typedef struct cumat<fcomplex> cucmat;
 typedef struct cucell<float>  curcell;
 typedef struct cucell<fcomplex>  cuccell;
 
-typedef struct{
+typedef struct cusp{
     int *p;
     int *i;
     float *x;
     int nx;
     int ny;
     int nzmax;
+    ~cusp(){
+	cudaFree(p);
+	cudaFree(i);
+	cudaFree(x);
+    }
 }cusp;
-typedef struct{
+typedef struct cuspcell{
     cusp **p;
     int nx;
     int ny;
+    ~cuspcell(){
+	for(int i=0; i<nx*ny; i++){
+	    delete p[i];
+	}
+	free(p);
+    }
 }cuspcell;
 typedef struct{
     cuspcell *Mt;

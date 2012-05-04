@@ -63,7 +63,7 @@ inline cucell<T>* cucellnew(const int nx, const int ny, int mx, int my){
     cucell<T> *out=cucellnew<T>(nx, ny);
     out->m=new cumat<T>(mx*my*nx*ny, 1);
     for(int i=0; i<nx*ny; i++){
-	out->p[i]=new cumat<T>(mx, my, out->m->p+i*(mx*my), 0);
+	out->p[i]=mx&&my?new cumat<T>(mx, my, out->m->p+i*(mx*my), 0):NULL;
     }
     return out;
 }
@@ -81,7 +81,7 @@ inline cucell<T>* cucellnew(const int nx, const int ny, L *mx, L *my){
     out->m=new cumat<T> (tot,1);
     tot=0;
     for(int i=0; i<nx*ny; i++){
-	out->p[i]=new cumat<T>(mx[i],(my?my[i]:1),out->m->p+tot, 0);
+	out->p[i]=mx[i]?new cumat<T>(mx[i],(my?my[i]:1),out->m->p+tot, 0):NULL;
 	tot+=mx[i]*(my?my[i]:1);
     }
     return out;
@@ -107,19 +107,18 @@ inline cucell<T>* cucellnew(const cucell<T> *in){
     return out;
 }
 
-
-
 template <typename T>
 inline void cucellfree(cucell<T> *A){
-    if(!A) return;
-    if(A->p){
+    delete A;
+    /*if(!A) return;
+      if(A->p){
 	for(int i=0; i<A->nx*A->ny; i++){
 	    delete A->p[i];
 	}
 	free(A->p);
     }
     delete A->m;
-    free(A);
+    free(A);*/
 }
 template <typename T>
 inline void cucellzero(cucell<T> *A, cudaStream_t stream){

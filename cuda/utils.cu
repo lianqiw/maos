@@ -54,7 +54,7 @@ int gpu_recon;/**<GPU for reconstruction*/
 int NGPU=0;
 int* GPUS=NULL;
 int nstream=0;
-cudata_t **cudata_all=NULL;/*for all GPU. */
+cudata_t *cudata_all=NULL;/*for all GPU. */
 static cusparseMatDescr_t spdesc=NULL;
 #ifdef __APPLE__
 pthread_key_t cudata_key;
@@ -94,7 +94,7 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU mem used %'lu B (%s)\n",(tot-fr), msg);
+    info2("GPU (%d) mem used %'lu MB (%s)\n",(int)(cudata-cudata_all),(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -174,10 +174,7 @@ int gpu_init(int *gpus, int ngpu){
     if(free_gpus) free(gpus); gpus=NULL;
     free(gpu_info);
     if(NGPU) {
-	cudata_all=(cudata_t**)calloc(NGPU, sizeof(cudata_t*));
-	for(int im=0; im<NGPU; im++){
-	    cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
-	}
+	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
     }
     gpu_recon=0;/*first gpu in GPUS*/
     if(!NGPU){
@@ -335,6 +332,17 @@ __global__ void cuspmul_do(float *y, cusp *A, float *x, float alpha){
 	}
     }
 }
+static const char *scsrmv_err[]={
+    "Success",
+    "Not initialized",
+    "Allocation failed",
+    "Invalid value",
+    "Archtecture mismatch",
+    "Mapping error",
+    "Execution failed",
+    "Internal error",
+    "Matrix type not supported"
+};
 /*
   y=A*x where A is sparse. x, y are vectors. Slow for GS0.
 */
@@ -352,7 +360,7 @@ void cuspmul(float *y, cusp *A, float *x, float alpha,
 			      A->ny, A->nx, alpha, spdesc,
 			      A->x, A->p, A->i, x, 1.f, y);
     if(status!=0){
-	error("cusparseScsrmv failed with status %d\n", status);
+	error("cusparseScsrmv failed with status '%s'\n", scsrmv_err[status]);
     }
 #endif
 }

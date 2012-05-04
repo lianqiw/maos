@@ -269,7 +269,7 @@ void gpu_moao_recon(SIM_T *simu){
 			  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
 			  parms->powfs[ipowfs].hs, 1);
 	    if(gpu_pcg(&curecon->dm_wfs[iwfs], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs,
-		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)){
+		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)>1){
 		error("PCG failed\n");
 	    }
 	}
@@ -283,7 +283,7 @@ void gpu_moao_recon(SIM_T *simu){
 			  parms->evl.thetax[ievl], parms->evl.thetay[ievl], 
 			  parms->evl.hs[ievl], 1);
 	    if(gpu_pcg(&curecon->dm_evl[ievl], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs,
-		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)){
+		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)>1){
 		error("PCG failed\n");
 	    }
 	}

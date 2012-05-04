@@ -426,11 +426,16 @@ void TomoRt(dcell **gout, const void *A,
    cxx:  3.2  2.5  3.5  2.7
 */
 
+#define test_TomoL 0
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha){
-    //static int count=-1; count++;//temp
-    //dcellwrite(xin, "tomo_xin_%d", count);//temp
-    //dcellwrite(*xout, "tomo_xout0_%d", count);//temp
+
+#if test_TomoL
+    static int count=-1; count++;//temp
+    dcellwrite(xin, "cpu_tomo_xin_%d", count);//temp
+    dcellwrite(*xout, "cpu_tomo_xout0_%d", count);//temp
+#endif
+
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     assert(xin->ny==1);/*modify the code for ny>1 case. */
@@ -441,13 +446,22 @@ void TomoL(dcell **xout, const void *A,
     Tomo_T data={recon, alpha, xin, gg, *xout};
   
     Tomo_prop(&data, recon->nthread);  
-    //dcellwrite(gg, "tomo_grad_%d", count);
+#if test_TomoL
+    dcellwrite(gg, "cpu_tomo_grad_%d", count);
+#endif
     if(!parms->recon.split || (parms->dbg.splitlrt && !recon->desplitlrt)){
 	/*Remove global Tip/Tilt, differential focus only in integrated
-	  tomography to limit noise propagation.*/
+	  tomography to limit noise propagation (?).*/
 	TTFR(gg, recon->TTF, recon->PTTF);
     }
+#if test_TomoL
+    dcellwrite(gg, "cpu_tomo_grad2_%d", count);
+#endif
     Tomo_nea(&data, recon->nthread, 1);
+#if test_TomoL
+    dcellwrite(gg, "cpu_tomo_grad3_%d", count);
+    data.xin=NULL;//test
+#endif
     Tomo_iprop(&data, recon->nthread);
     /* 
        square=1  square=0 (1 thread on T410s)
@@ -457,7 +471,9 @@ void TomoL(dcell **xout, const void *A,
     */
     dcellfree(gg);
     /*Tikhonov regularization is not added because it is not necessary in CG mode.*/
-    //dcellwrite(*xout, "tomo_xout_%d", count);//temp
+#if test_TomoL
+    dcellwrite(*xout, "cpu_tomo_xout_%d", count);//temp
+#endif
 }
 
 /**

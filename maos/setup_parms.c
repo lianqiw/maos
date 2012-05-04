@@ -1473,10 +1473,13 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     parms->atm.nyn=Nmax;
     parms->atm.nxm=nextpow2(Nmax);
     parms->atm.nym=parms->atm.nxm;
+    if(parms->atm.l0 > parms->atm.nxm * parms->atm.dx){
+	warning("Atmospheric size is smaller than outer scale!\n");
+    }
     if(fabs(parms->atm.size[0])<EPS ||fabs(parms->atm.size[1])<EPS){
 	parms->atm.nx=parms->atm.nxm;
 	parms->atm.ny=parms->atm.nym;
-    }else{
+    }else{/*user specified.*/
 	parms->atm.nx=2*(int)round(0.5*parms->atm.size[0]/parms->atm.dx);
 	parms->atm.ny=2*(int)round(0.5*parms->atm.size[1]/parms->atm.dx);
 	if(parms->atm.nx<parms->atm.nxm) parms->atm.nx=parms->atm.nxm;

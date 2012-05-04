@@ -337,13 +337,23 @@ void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, f
     }
     SYNC_WFS;
 }
+#define test_TomoL 0
+#if test_TomoL
+#define curwrite_TomoL(A...) curwrite(A)
+#define curcellwrite_TomoL(A...) curcellwrite(A)
+#else
+#define curwrite_TomoL(A...)
+#define curcellwrite_TomoL(A...)
+#endif
 /*
   Tomography left hand size matrix. Computes xout = beta*xout + alpha * Hx' G' C Gp Hx * xin.
   xout is zeroed out before accumulation.
 */
 void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
-    //static int count=-1; count++; //temp.
+#if test_TomoL
+    static int count=-1; count++; //temp.
+#endif
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nwfs=parms->nwfsr;
@@ -386,7 +396,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 #define RECORD_WFS(i)
 #define RECORD_PS(i)
 #endif
-    //curcellwrite(xin, "tomo_xin_%d", count);//temp
+    curcellwrite_TomoL(xin, "tomo_xin_%d", count);//temp
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs = parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].skip) continue;
@@ -394,39 +404,65 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 	const float dsa=cupowfs[ipowfs].dsa;
 	RECORD_WFS(0);
 	DO_HX; RECORD_WFS(1);
-	//curwrite(opdwfs->p[iwfs], "tomo_opdwfs1_%d_%d", count, iwfs);//temp
+	curwrite_TomoL(opdwfs->p[iwfs], "tomo_opdwfs1_%d_%d", count, iwfs);//temp
 	DO_GP; RECORD_WFS(2);
-	//curwrite(grad->p[iwfs], "tomo_grad1_%d_%d", count, iwfs);
+	curwrite_TomoL(grad->p[iwfs], "tomo_grad1_%d_%d", count, iwfs);
 	DO_PTT; RECORD_WFS(3);
 	DO_NEA_GPT; RECORD_WFS(4);
-	//curwrite(grad->p[iwfs], "tomo_grad2_%d_%d", count, iwfs);
+	curwrite_TomoL(grad->p[iwfs], "tomo_grad2_%d_%d", count, iwfs);
     }
     SYNC_WFS;
     /*#endif */
-    //curcellwrite(grad, "tomo_grad_%d", count);//temp
-    //curwrite(ttf, "tomo_ttf_%d", count);//temp
-    //curcellwrite(opdwfs, "tomo_opdwfs_%d", count);//temp
-    //curcellwrite(opdx, "tomo_xout0_%d", count);//temp
+    curcellwrite_TomoL(grad, "tomo_grad_%d", count);//temp
+    curwrite_TomoL(ttf, "tomo_ttf_%d", count);//temp
+    curcellwrite_TomoL(opdwfs, "tomo_opdwfs_%d", count);//temp
+    curcellwrite_TomoL(opdx, "tomo_xout0_%d", count);//temp
     for(int ips=0; ips<nps; ips++){
 	const int nxo=recon->xmap[ips]->nx;
 	const int nyo=recon->xmap[ips]->ny;
 	RECORD_PS(0);
 	//info("beta=%g, alpha=%g\n", beta, alpha);//temp
-	DO_HXT;//zeros out opdx.
+	{
+	    const float ht=recon->ht->p[ips];					
+	    const float oxx=recon->xmap[ips]->ox;				
+	    const float oyx=recon->xmap[ips]->oy;				
+	    if(fabsf(beta)<EPS) curzero(opdx->p[ips], curecon->psstream[ips]);	
+	    else if(fabsf(beta-1.)>EPS) 
+		curscale(opdx->p[ips], beta, curecon->psstream[ips]);		
+	    for(int iwfs=0; iwfs<nwfs; iwfs++){					
+		const int ipowfs = parms->wfsr[iwfs].powfs;			
+		if(parms->powfs[ipowfs].skip) continue;				
+		const float hs = parms->powfs[ipowfs].hs;			
+		const float scale = 1.f - ht/hs;				
+		float dispx=parms->wfsr[iwfs].thetax*ht;			
+		float dispy=parms->wfsr[iwfs].thetay*ht;			
+		if(parms->tomo.predict){					
+		    int ips0=parms->atmr.indps[ips];				
+		    dispx+=cudata->atm[ips0]->vx*parms->sim.dt*2;		
+		    dispy+=cudata->atm[ips0]->vy*parms->sim.dt*2;		
+		}		
+		gpu_prop_grid(opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
+			      opdx->p[ips], oxx, oyx,recon->xmap[ips]->dx,	
+			      dispx, dispy,					
+			      alpha, 't', curecon->psstream[ips]);		
+		curwrite_TomoL(opdx->p[ips], "tomo_hxt_%d_%d_%d", count, ips, iwfs);//temp
+	    }
+	}
+	//	DO_HXT;//zeros out opdx.
 	RECORD_PS(1);
-	//curwrite(opdx->p[ips], "tomo_xout1_%d_%d", count, ips);//temp
+	curwrite_TomoL(opdx->p[ips], "tomo_xout1_%d_%d", count, ips);//temp
 	laplacian_do<<<DIM2(nxo, nyo, 16), 0, curecon->psstream[ips]>>>
 	    (opdx->p[ips]->p, xin->p[ips]->p, nxo, nyo, curecon->l2c[ips]*alpha);
-	//curwrite(opdx->p[ips], "tomo_xout2_%d_%d", count, ips);//temp
+	curwrite_TomoL(opdx->p[ips], "tomo_xout2_%d_%d", count, ips);//temp
 	if(parms->tomo.piston_cr){
 	    zzt_do<<<1,1,0,curecon->psstream[ips]>>>
 		(opdx->p[ips]->p, xin->p[ips]->p, curecon->zzi[ips], curecon->zzv[ips]*alpha);
 	}
-	//curwrite(opdx->p[ips], "tomo_xout3_%d_%d", count, ips);//temp
+	curwrite_TomoL(opdx->p[ips], "tomo_xout3_%d_%d", count, ips);//temp
 	RECORD_PS(2);
     }
     SYNC_PS;
-    //curcellwrite(opdx, "tomo_xout_%d", count);//temp
+    curcellwrite_TomoL(opdx, "tomo_xout_%d", count);//temp
     curfree(ttf);
 #if TIMING==2
     static char *wfstimc[]={"TomoL:HX", "TomoL:GP", "TomoL:PTT", "TomoL:NEA_GPT"};

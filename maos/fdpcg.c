@@ -447,7 +447,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	bs+=os[ips]*os[ips];
     }
     long nb=Mhat->m/bs;
-    info("Block size is %ld, there are %ld blocks\n",bs,nb);
+    info2("fdpcg: Block size is %ld, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
     long *perm=fdpcg_perm(nx,ny, os, nps,0,0);

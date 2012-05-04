@@ -20,7 +20,7 @@
 typedef void (*G_CGFUN)(curcell**, float, const void*, const curcell*, float);
 typedef void (*G_PREFUN)(curcell**, const void*, const curcell*, cudaStream_t stream);
 
-int gpu_pcg(curcell **px, 
+float gpu_pcg(curcell **px, 
 	    G_CGFUN Amul, const void *A, 
 	    G_PREFUN Mmul, const void *M, 
 	    const curcell *b, int warm, int maxiter,
