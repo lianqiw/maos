@@ -80,6 +80,7 @@ void free_parms(PARMS_T *parms){
     free(parms->atmr.ht);
     free(parms->atmr.os);
     free(parms->atmr.wt);
+    free(parms->atmr.indps);
     free(parms->atm.size);
 
     free(parms->evl.thetax);

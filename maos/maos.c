@@ -218,6 +218,7 @@ int main(int argc, char **argv){
 #endif
     free(scmd);
     free(arg->dirout);
+    free(arg->gpus);
     free(arg);
     THREAD_POOL_INIT(parms->sim.nthread);
     dirsetup=stradd("setup",NULL);

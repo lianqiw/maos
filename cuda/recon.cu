@@ -431,20 +431,22 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 }
 static void gpu_recon_free(){
     gpu_set(gpu_recon);
+    
     curcellfree(curecon->neai);
     curcellfree(curecon->opdwfs);
-    curcellfree(curecon->grad);
-    curcellfree(curecon->opdr);
+    curcellfree(curecon->grad); curecon->grad=NULL;
+    curcellfree(curecon->opdr); curecon->opdr=NULL;
     cudaFree(curecon->fd_perm);
     cuccellfree(curecon->fd_Mb);
-    cudaFree(curecon->fd_fftips);
+    free(curecon->fd_fftips);
     cuccellfree(curecon->fd_xhat1);
     cuccellfree(curecon->fd_xhat2);
-    curcellfree(curecon->PTT);
-    curcellfree(curecon->PDF);
-    cudaFree(curecon->l2c);
-    cudaFree(curecon->zzi);
-    cudaFree(curecon->zzv);
+    /*curcellfree(curecon->PTT);
+      curcellfree(curecon->PDF);*/
+    
+    free(curecon->l2c);
+    free(curecon->zzi);
+    free(curecon->zzv);
     if(curecon->W01){
 	W01_T *W01=curecon->W01;
 	curfree(W01->W1);

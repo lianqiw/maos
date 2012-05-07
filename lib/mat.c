@@ -112,16 +112,16 @@ void X(free_keepdata)(X(mat) *A){
 */
 void X(free_do)(X(mat) *A, int keepdata){
     if(!A) return;
+#ifdef USE_COMPLEX
+    cfree_plan(A);
+#endif
     if(A->nref){
 	A->nref[0]--;
 	if(!A->nref[0]){
-#ifdef USE_COMPLEX
-	    cfree_plan(A);
-#endif
 	    if(A->header){
 		double count=search_header_num(A->header, "count");
 		if(!isnan(count) && count>0){
-		    info("count=%g, scaling the data\n", count);
+		    error("deprecated: count=%g, scaling the data\n", count);
 		    X(scale)(A, 1./count);
 		}
 	    }

@@ -407,9 +407,9 @@ long nextfftsize(long n){
 	    divisible=0;
 	    for(int irad=0; irad<nradix; irad++){
 		int radix=radixs[irad];
-		int div=n2/radix;
-		if(div*radix==n2){/*no remainder*/
-		    n2=div;
+		int ratio=n2/radix;
+		if(ratio*radix==n2){/*no remainder*/
+		    n2=ratio;
 		    n3*=radix;
 		    divisible=1;
 		}

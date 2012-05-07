@@ -2467,6 +2467,8 @@ void setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	for(int ig=0; ig<ntotgrad; ig++){
 	    if(!detached){
 		info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", ig, ntotgrad);
+	    }else if(ig%100==0){
+		info2("%6d of %6d\n", ig, ntotgrad);
 	    }
 	    if(ig) eye->p[ig-1]=0; eye->p[ig]=1;
 	    if(!parms->powfs[parms->wfs[curwfs].powfs].skip){
@@ -2528,8 +2530,12 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 	if(recon->actcpl && recon->actcpl->p[curdm]->p[curact]<EPS){
 	    continue;
 	}
-	if(!detached && info->ithread==0){
-	    info2("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
+	if(info->ithread==0){
+	    if(!detached){
+		info2("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", iact*nthread, ntotact);
+	    }else if(iact % 100==0){
+		info2("%6ld of %6ld\n", iact*nthread, ntotact);
+	    }
 	}
 	//TIC;tic;
 	dcellzero(FRT);
@@ -2557,7 +2563,7 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(double));
 	    }
 	}
-	if(1){
+	if(0){
 	    dcellwrite(FLI, "cpu_dmfit_%ld", iact);
 	    dcellwrite(FRT, "cpu_opdx_%ld", iact);
 	    dcellwrite(RLT, "cpu_opdr_%ld", iact);
@@ -2874,6 +2880,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     free(recon->aloc);
     icellfree(recon->actstuck);
     icellfree(recon->actfloat);
+    spcellfree(recon->actslave);
+    dcellfree(recon->actcpl);
     dcellfree(recon->aimcc);/*used in filter.c */
     muv_free(&recon->RR);
     muv_free(&recon->RL);
@@ -2881,6 +2889,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     muv_free(&recon->FL);
     muv_free(&recon->LR);
     muv_free(&recon->LL);
+    dcellfree(recon->MVM);
     spcellfree(recon->saneai);
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
     cn2est_free(recon->cn2est);

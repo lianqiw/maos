@@ -1923,8 +1923,8 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     if(parms->powfs[ipowfs].phytype==2 || parms->powfs[ipowfs].phytypesim==2){
 	setup_powfs_cog(parms, powfs, ipowfs);
     }
-    intstat->saneaxyl=dcellnew2(intstat->saneaxy);//cholesky decomposition
-    intstat->saneaixy=dcellnew2(intstat->saneaxy);//inverse
+    intstat->saneaxyl=dcellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//cholesky decomposition
+    intstat->saneaixy=dcellnew(intstat->saneaxy->nx, intstat->saneaxy->ny);//inverse
     for(int i=0; i<intstat->saneaxy->nx*intstat->saneaxy->ny; i++){
 	intstat->saneaxyl->p[i]=dchol(intstat->saneaxy->p[i]);
 	intstat->saneaixy->p[i]=dinvspd(intstat->saneaxy->p[i]);

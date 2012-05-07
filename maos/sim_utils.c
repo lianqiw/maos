@@ -852,7 +852,6 @@ static void init_simu_evl(SIM_T *simu){
 
 static void init_simu_wfs(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    const APER_T *aper=simu->aper;
     POWFS_T *powfs=simu->powfs;
     RECON_T *recon=simu->recon;
     SIM_SAVE_T *save=simu->save;
@@ -1323,7 +1322,6 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	warning("Another MAOS is already running. Skip seed %d\n", parms->sim.seeds[iseed]);
 	return NULL;
     }
-    const int nsim=parms->sim.end;
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
     SIM_T *simu=calloc(1, sizeof(SIM_T));
