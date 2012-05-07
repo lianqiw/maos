@@ -112,12 +112,11 @@ void X(free_keepdata)(X(mat) *A){
 */
 void X(free_do)(X(mat) *A, int keepdata){
     if(!A) return;
-#ifdef USE_COMPLEX
-    cfree_plan(A);
-#endif
+    int free_add=0;
     if(A->nref){
 	A->nref[0]--;
 	if(!A->nref[0]){
+	    free_add=1;
 	    if(A->header){
 		double count=search_header_num(A->header, "count");
 		if(!isnan(count) && count>0){
@@ -130,13 +129,20 @@ void X(free_do)(X(mat) *A, int keepdata){
 		    mmap_unref(A->mmap);
 		}else{
 		    free(A->p);
-		    free(A->header);
 		}
 	    }
 	    free(A->nref);
 	}else if(A->nref[0]<0){
 	    error("The ref is less than 0. something wrong!!!:%ld\n",A->nref[0]);
 	}
+    }else{
+	free_add=1;
+    }
+    if(free_add){
+#ifdef USE_COMPLEX
+	cfree_plan(A);
+#endif
+	free(A->header);
     }
     free(A);
 }

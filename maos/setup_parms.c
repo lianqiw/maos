@@ -1069,6 +1069,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->powfs[ipowfs].wfs[count]=iwfs;
 		parms->powfs[ipowfs].wfsind[iwfs]=count;
 		count++;
+		parms->wfs[iwfs].powfs=jpowfs; /*update the pointer*/
 	    }else{
 		parms->powfs[ipowfs].wfsind[iwfs]=-1;/*not belong */
 	    }
