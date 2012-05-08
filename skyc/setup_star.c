@@ -577,13 +577,11 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
     setup_star_read_pistat(simu, star, nstar, seed);
     int jstar=0;
     for(int istar=0; istar<nstar; istar++){
-	dmat *pistat=star[istar].pistat[parms->skyc.npowfs-1].psf->p[0];
-	double pmax=dmax(pistat);
-	int size=0;
-	for(long i=0; i<pistat->nx*pistat->ny; i++){
-	    if(pistat->p[i]>pmax*0.5){
-		size++;
-	    }
+	dcell *pistat=star[istar].pistat[parms->skyc.npowfs-1].psf;
+	int size=INT_MAX;
+	for(int ic=0; ic<pistat->nx*pistat->ny; ic++){
+	    int size0=dfwhm(pistat->p[ic]);
+	    if(size0<size) size=size0;
 	}
 	if(size>6){
 	    free_pistat(star[istar].pistat, parms->skyc.npowfs, parms);

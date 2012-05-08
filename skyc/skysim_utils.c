@@ -266,7 +266,9 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		}
 		itsa+=nsa*2;
 	    }
-	    dcp(&mreal, st2t->mint[0]->p[0]);
+	    if(st2t->mint[0]){
+		dcp(&mreal, st2t->mint[0]->p[0]);
+	    }
 	    if((istep+1) % dtrat == 0){/*has output */
 		dscale(zgrad, 1./dtrat);/*averaging gradients. */
 		dzero(merrm->p[0]);

@@ -255,6 +255,7 @@ static void skysim_isky(SIM_S *simu){
 		psel[iwfs][iwvl+2]=aster[selaster].wfs[iwfs].mags->p[iwvl];
 	    }
 	}
+	dcp(&simu->gain->p[isky], aster[selaster].gain->p[seldtrat]);
 	if(parms->skyc.save){
 	    skysim_save(simu, aster, pres[isky], selaster, seldtrat, isky);
 	}
@@ -366,9 +367,9 @@ void skysim(const PARMS_S *parms){
 						  dtrat, parms->skyc.pmargin, sigma2, 2);
 		simu->gain_ngs[idtrat]=servo_optim(simu->psd_ngs_ws, parms->maos.dt,
 						   dtrat, parms->skyc.pmargin, sigma2, 2);
-		dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
+		/*dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
 		dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
-		dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);
+		dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);*/
 	    }
 	    toc("servo_optim");
 	    simu->gain_x=dref(sigma2);
@@ -428,6 +429,7 @@ void skysim(const PARMS_S *parms){
 	    simu->res_ol=dnew_mmap(3,nsky,NULL, "Res%d_%d_ol", seed_maos, seed_skyc);
 	    simu->fss   =dnew_mmap(nsky,1,NULL, "Res%d_%d_fss", seed_maos, seed_skyc);
 	    simu->demote=dnew_mmap(nsky,1,NULL, "Res%d_%d_demote", seed_maos, seed_skyc);
+	    simu->gain  =dcellnewsame_mmap(nsky, 1, 3, 5,NULL, "Res%d_%d_gain", seed_maos, seed_skyc);
 	    simu->sel   =dcellnewsame_mmap(nsky, 1, 2+parms->maos.nwvl, parms->skyc.nwfstot,
 					   NULL,"Res%d_%d_sel", seed_maos, seed_skyc);
 	    simu->mres  =dcellnewsame_mmap(nsky, 1, parms->maos.nmod, parms->maos.nstep,

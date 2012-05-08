@@ -111,7 +111,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
-
+#define SEC2RAD 4.848136811095360e-06 //arcsec in unit of radian
+#define RAD2SEC 206264.8062470964 //radian in unit of arcsec
 #ifndef EPS
 #define EPS 1.e-14
 #endif

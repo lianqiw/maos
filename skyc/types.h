@@ -157,6 +157,7 @@ typedef struct SIM_S{
     dcell *mres;       /**<residual NGS modes. 5*nsky*/
     dcell *sel;        /**<selected stars for each star field.*/
     dmat *fss;         /**<optimal sampling freq for each star field*/
+    dcell *gain;       /**<optimal gains for each star field.*/
     dmat *demote;      /**<demote TTF or not. deprecated. we don't demote anymore*/
     dmat *psd_ngs_ws;  /**<PSD of NGS modes + wind shake*/
     dmat *psd_tt_ws;   /**<PSD of TT modes + wind shake*/
