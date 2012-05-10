@@ -23,12 +23,12 @@
 #include "kernel.h"
 #include "cumat.h"
 #define curnew  new cumat<float> 
-#define curfree delete
+#define curfree(A) ({delete A; A=NULL;})
 //#define curref  curef<float>
 #define curref(A) (A)->ref()
 #define curzero cuzero<float>
 #define curcellnew  cucellnew<float>
-#define curcellfree cucellfree<float>
+#define curcellfree(A) ({delete A; A=NULL;})
 #define curcellzero cucellzero<float>
 #define curwrite     cuwrite<float, (uint32_t)M_FLT>
 #define curcellwrite cucellwrite<float, (uint32_t)M_FLT>

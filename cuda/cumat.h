@@ -110,15 +110,6 @@ inline cucell<T>* cucellnew(const cucell<T> *in){
 template <typename T>
 inline void cucellfree(cucell<T> *A){
     delete A;
-    /*if(!A) return;
-      if(A->p){
-	for(int i=0; i<A->nx*A->ny; i++){
-	    delete A->p[i];
-	}
-	free(A->p);
-    }
-    delete A->m;
-    free(A);*/
 }
 template <typename T>
 inline void cucellzero(cucell<T> *A, cudaStream_t stream){
