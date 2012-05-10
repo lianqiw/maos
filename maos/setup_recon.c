@@ -270,7 +270,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 		if(nx<nxi) nx=nxi;
 		if(ny<nyi) ny=nyi;
 	    }
-	    nin0=nextfftsize(MAX(nx, ny));
+	    nin0=nextpow2(MAX(nx, ny));
 	}
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
