@@ -129,4 +129,19 @@ typedef struct cumap_t:curmat{
 
 }cumap_t;
 
+typedef struct mulock{
+    int lock;
+    pthread_mutex_t mutex;
+    mulock(int dolock=1):lock(dolock){
+	if(lock){
+	    pthread_mutex_init(&mutex, NULL);
+	    LOCK(mutex);
+	}
+    }
+    ~mulock(){
+	if(lock){
+	    UNLOCK(mutex);
+	}
+    }
+}mulock;
 #endif

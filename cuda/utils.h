@@ -38,6 +38,8 @@ typedef struct{
     float  (*plocs)[2];
     float   *pamp;
     int    **embed;
+    curmat *iopdevl;
+    cuccell *evlwvf;
     curcell *surfevl;
     curcell *evlopd;
     curcell *evlpsfol;

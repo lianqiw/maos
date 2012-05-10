@@ -1429,7 +1429,19 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	}
     }
     init_simu_evl(simu);
-    
+#if USE_CUDA
+    if(parms->gpu.evl || parms->gpu.wfs){
+	if(parms->gpu.evl){
+	    gpu_perfevl_init_sim(parms, aper);
+	}
+	if(parms->gpu.wfs && !parms->sim.evlol){
+	    gpu_wfs_init_sim(parms, powfs);
+	}
+    }
+    if(parms->gpu.tomo || parms->gpu.fit){
+	gpu_recon_reset(parms);
+    }
+#endif
     return simu;
 }
 /**

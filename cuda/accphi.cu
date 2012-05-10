@@ -155,7 +155,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	}
 	info2("Available memory (minimum) is %ld\n", avail);
 	long need=600*1024*1024;
-	if((parms->evl.psfmean || parms->evl.psfhist) && parms->gpu.psf){
+	/*if((parms->evl.psfmean || parms->evl.psfhist) && parms->gpu.psf){
 	    long needpsf=parms->evl.npsf*parms->evl.nwvl
 		*parms->evl.psfsize[0]*parms->evl.psfsize[0]*sizeof(float);
 	    if(avail<need+needpsf+nxn*nyn*4*parms->atm.nps){
@@ -163,7 +163,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		warning("Recommand disabling gpu.psf.\n");
 	    }
 	    need+=needpsf;
-	}
+	    }*/
 	/*we are able to host this amount. */
 	long nxa=avail>need?(long)roundf(sqrt((avail-need)/nps/sizeof(float))):0;
 	if(nxa*nxa<nxn*nyn){
