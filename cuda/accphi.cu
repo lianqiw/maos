@@ -143,33 +143,43 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	long nxn=parms->atm.nxn;
 	long nyn=parms->atm.nyn;
 	
-	long avail;
+	long avail_min, avail_max;
 	for(int igpu=0; igpu<NGPU; igpu++){
 	    gpu_set(igpu);
 	    long availi=gpu_get_mem();
 	    if(igpu==0){
-		avail=availi;
-	    }else if(avail>availi){
-		avail=availi;
+		avail_min=availi;
+		avail_max=availi;
+	    }else{
+		if(avail_min>availi){
+		    avail_min=availi;
+		}
+		if(avail_max<availi){
+		    avail_max=availi;
+		}
 	    }
 	}
-	info2("Available memory (minimum) is %ld\n", avail);
-	long need=600*1024*1024;
-	if((parms->evl.psfmean || parms->evl.psfhist) && parms->gpu.psf){
-	    long needpsf=parms->evl.npsf*parms->evl.nwvl
-		*parms->evl.psfsize[0]*parms->evl.psfsize[0]*sizeof(float);
-	    if(avail<need+needpsf+nxn*nyn*4*parms->atm.nps){
-		info("needpsf=%ld M\n", needpsf/1024/1024);
-		warning("Recommand disabling gpu.psf.\n");
+	info2("Available memory is %ld (min) %ld (max)\n", avail_min, avail_max);
+	long need=300*1024*1024+nps*sizeof(float)*nxn*nyn;
+	if(avail_min<need){
+	    if(avail_max<need){
+		error("ALL GPUs does not have enough memory\n");
+	    }else{
+		char *gcmd=NULL;
+		for(int igpu=0; igpu<NGPU; igpu++){	
+		    gpu_set(igpu);
+		    if(gpu_get_mem()>need){
+			char tmp[8];
+			snprintf(tmp,8," -g%d", GPUS[igpu]);
+			char *tmp2=gcmd;
+			gcmd=stradd(tmp, tmp2, (void*)NULL);
+			free(tmp2);
+		    }
+		}
 	    }
-	    need+=needpsf;
 	}
 	/*we are able to host this amount. */
-	long nxa=avail>need?(long)roundf(sqrt((avail-need)/nps/sizeof(float))):0;
-	if(nxa*nxa<nxn*nyn){
-	    error("GPU does not have enough memory. can host %ldx%ld, need %ldx%ld\n", 
-		  nxa, nxa, nxn, nyn);
-	}
+	long nxa=(long)roundf(sqrt((avail_min-need)/nps/sizeof(float)));
 	info2("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
 	if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
 	    nx0=parms->atm.nx;

@@ -529,9 +529,9 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    double neamax=dmax(nea);
 	    if(neamax>0){
 		if(neamax<parms->powfs[ipowfs].pixtheta*1e-5){
-		    warning("wfs %d: NEA=%g mas, read from file is too small. Unit error?\n",iwfs, neamax*206265000);
+		    warning("wfs %d: NEA=%g mas, too small. Unit error?\n",iwfs, neamax*206265000);
 		}else if(neamax>parms->powfs[ipowfs].pixtheta){
-		    warning("wfs %d: NEA=%g mas, read from file is too big. Unit error?\n",iwfs, neamax*206265000);
+		    warning("wfs %d: NEA=%g mas, too big. Unit error?\n",iwfs, neamax*206265000);
 		}
 	    }
 	    /*Scale by dtrat */

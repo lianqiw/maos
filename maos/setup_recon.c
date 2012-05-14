@@ -270,7 +270,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 		if(nx<nxi) nx=nxi;
 		if(ny<nyi) ny=nyi;
 	    }
-	    nin0=nextfftsize(MAX(nx, ny));
+	    nin0=nextpow2(MAX(nx, ny));
 	}
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
@@ -2563,12 +2563,12 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(double));
 	    }
 	}
-	if(0){
+	/*{
 	    dcellwrite(FLI, "cpu_dmfit_%ld", iact);
 	    dcellwrite(FRT, "cpu_opdx_%ld", iact);
 	    dcellwrite(RLT, "cpu_opdr_%ld", iact);
 	    dcellwrite(RRT, "cpu_grad_%ld", iact);
-	}
+	    }*/
     }
     dcellfree(FLI);
     dcellfree(FRT);

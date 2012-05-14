@@ -20,117 +20,6 @@
 */
 #ifndef AOS_CUDA_CUMAT_H
 #define AOS_CUDA_CUMAT_H
-/*
-template <typename T>
-inline cumat<T> *curef(cumat<T> *A){
-    if(!A) return NULL;
-    cumat<T> *out=(cumat<T>*)calloc(1, sizeof(cumat<T>));
-    memcpy(out, A, sizeof(cumat<T>));
-    A->nref[0]++;
-    return out;
-}
-*/
-template <typename T>
-inline void cuzero(cumat<T> *A, cudaStream_t stream){
-    if(A && A->p){
-	DO(cudaMemsetAsync(A->p, 0, A->nx*A->ny*sizeof(T), stream));
-    }
-}
-
-template <typename T>
-inline void cuzero(cumat<T> *A){
-    if(A && A->p){
-	DO(cudaMemset(A->p, 0, A->nx*A->ny*sizeof(T)));
-    }
-}
-
-/*
-  The following are for cell.
-*/
-
-template <typename T>
-inline cucell<T>* cucellnew(const int nx, const int ny){
-    cucell<T> *out=(cucell<T>*)calloc(1, sizeof(cucell<T>));
-    out->p=(cumat<T>**)calloc(nx*ny, sizeof(cumat<T>*));
-    out->nx=nx;
-    out->ny=ny;
-    return out;
-}
-
-/** Allocate continuous memory for blocks of the same size*/
-template <typename T>
-inline cucell<T>* cucellnew(const int nx, const int ny, int mx, int my){
-    cucell<T> *out=cucellnew<T>(nx, ny);
-    out->m=new cumat<T>(mx*my*nx*ny, 1);
-    for(int i=0; i<nx*ny; i++){
-	out->p[i]=mx&&my?new cumat<T>(mx, my, out->m->p+i*(mx*my), 0):NULL;
-    }
-    return out;
-}
-
-/**
-   Create a cellarray, mx and my should be nx*ny long.
-*/
-template <typename T, typename L>
-inline cucell<T>* cucellnew(const int nx, const int ny, L *mx, L *my){
-    long tot=0;
-    for(int i=0; i<nx*ny; i++){
-	tot+=mx[i]*(my?my[i]:1);
-    }
-    cucell<T> *out=cucellnew<T>(nx,ny);
-    out->m=new cumat<T> (tot,1);
-    tot=0;
-    for(int i=0; i<nx*ny; i++){
-	out->p[i]=mx[i]?new cumat<T>(mx[i],(my?my[i]:1),out->m->p+tot, 0):NULL;
-	tot+=mx[i]*(my?my[i]:1);
-    }
-    return out;
-}
-
-template <typename T>
-inline cucell<T>* cucellnew(const cucell<T> *in){
-    cucell<T> *out;
-    if(!in->m){
-	out=cucellnew<T>(in->nx, in->ny);
-	for(int i=0; i<in->nx*in->ny; i++){
-	    out->p[i]=new cumat<T>(in->p[i]->nx, in->p[i]->ny);
-	}
-    }else{
-	int mx[in->nx*in->ny];
-	int my[in->nx*in->ny];
-	for(int i=0; i<in->nx*in->ny; i++){
-	    mx[i]=in->p[i]->nx;
-	    my[i]=in->p[i]->ny;
-	}
-	out=cucellnew<T,int>(in->nx, in->ny, (int*)mx, (int*)my);
-    }
-    return out;
-}
-
-template <typename T>
-inline void cucellfree(cucell<T> *A){
-    delete A;
-    /*if(!A) return;
-      if(A->p){
-	for(int i=0; i<A->nx*A->ny; i++){
-	    delete A->p[i];
-	}
-	free(A->p);
-    }
-    delete A->m;
-    free(A);*/
-}
-template <typename T>
-inline void cucellzero(cucell<T> *A, cudaStream_t stream){
-    if(!A) return;
-    if(A->m){
-	cuzero(A->m, stream);
-    }else{
-	for(int i=0; i<A->nx*A->ny; i++){
-	    cuzero(A->p[i], stream);
-	}
-    }
-}
 
 template <typename T, uint32_t magic>
     inline void cuwritedata(const cumat<T> *A, file_t *fp){
@@ -169,7 +58,7 @@ template <typename T, uint32_t magic>
 template <typename T>
 inline void cucellcp(cucell<T> **out, const cucell<T>*in, cudaStream_t stream){
     if(!*out){
-	*out=cucellnew<T>(in);
+	*out=new cucell<T>(in);
     }
     if(!in->m){
 	for(int i=0; i<in->nx*in->ny; i++){

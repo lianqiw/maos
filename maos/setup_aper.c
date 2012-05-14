@@ -44,8 +44,12 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	    map_d_din(aper->ampground, &amp_d, &amp_din);
 	    if(fabs(parms->aper.d - amp_d) > 1 ||
 	       fabs(parms->aper.din - amp_din) > 0.5){
-		warning2("Amplitude map does not match aperture diameter: aper.d=%g, amp.d=%g, aper.din=%g, amp.din=%g. Disabled\n", parms->aper.d, amp_d, parms->aper.din, amp_din);
-		mapfree(aper->ampground);
+		if(!parms->aper.fnampuser){
+		    warning2("Amplitude map does not match aperture diameter: aper.d=%g, amp.d=%g, aper.din=%g, amp.din=%g. Disabled\n", parms->aper.d, amp_d, parms->aper.din, amp_din);
+		    mapfree(aper->ampground);
+		}else{
+		    error("Amplitude map does not match aperture diameter: aper.d=%g, amp.d=%g, aper.din=%g, amp.din=%g. Disabled\n", parms->aper.d, amp_d, parms->aper.din, amp_din);
+		}
 	    }
 	}
 	if(fabs(parms->aper.rotdeg)>1.e-12){
