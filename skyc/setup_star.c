@@ -378,14 +378,15 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
     const double hs=parms->maos.hs;
     const double scale=pow(1.-hc/hs, -2);
     const double scale1=1.-scale;
-
+    const int nmod=parms->maos.nmod;
+    assert(nmod>=5 && nmod<=6);
     for(int istar=0; istar<nstar; istar++){
 	star[istar].g=dcellnew(npowfs, 1);
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    const long nsa=parms->maos.nsa[ipowfs];
 	    const double thetax=star[istar].thetax;
 	    const double thetay=star[istar].thetay;
-	    star[istar].g->p[ipowfs]=dnew(nsa*2, parms->maos.nmod);
+	    star[istar].g->p[ipowfs]=dnew(nsa*2, nmod);
 	    PDMAT(star[istar].g->p[ipowfs], pg);
 	    for(long isa=0; isa<nsa; isa++){
 		const double xm=powfs[ipowfs].locxamp[isa];/*dot of x with amp. */
@@ -399,6 +400,10 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 		pg[3][isa+nsa] = (-scale1*2*ym+ 2*thetay*hc*scale);
 		pg[4][isa]     = (scale1*ym   - thetay*hc*scale);
 		pg[4][isa+nsa] = (scale1*xm   - thetax*hc*scale);
+		if(nmod==6){/*include a defocus term*/
+		    pg[5][isa]     = xm*2;
+		    pg[5][isa+nsa] = ym*2;
+		}
 	    }
 	}
 	if(parms->skyc.dbg){
@@ -461,7 +466,7 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
 			     dirstart,seed,msa,thx,thy);
 		    if(!zfexist(fnwvf[iy][ix])){
-			warning("%s doesnot exist\n",fnwvf[iy][ix]);
+			//warning("%s doesnot exist\n",fnwvf[iy][ix]);
 			fnwvf[iy][ix]=NULL;
 			fnztilt[iy][ix]=NULL;
 		    }else{

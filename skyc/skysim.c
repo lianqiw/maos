@@ -281,12 +281,12 @@ static void skysim_isky(SIM_S *simu){
 	long laps_m=simu->status->laps/60-laps_h*60;
 	long rest_h=simu->status->rest/3600;
 	long rest_m=simu->status->rest/60-rest_h*60;
-	info2("Field %d, %2d stars, %2d aster, %5.1f Hz: Final %6.2f %6.2f %6.2f nm"
-	      " Est %3.0fs Load %3.0fs Phy %3.0fs "
+	info2("Field %3d,%2d stars,%2d aster,%5.1f Hz: Final %6.2f %6.2f %6.2f nm"
+	      " Load %3.0fs Phy %2.0fs "
 	      "Tot %ld:%2ld Used %ld:%2ld Left %ld:%2ld\n",
 	      isky, nstar, naster, simu->fss->p[isky],
 	      sqrt(pres[isky][0])*1e9, sqrt(pres[isky][1])*1e9, sqrt(pres[isky][2])*1e9,
-	      tk_2-tk_1, tk_3-tk_2, tk_4-tk_3,
+	      tk_3-tk_2, tk_4-tk_3,
 	      totm, tots, laps_h, laps_m, rest_h, rest_m);
     }/*while */
 }
@@ -316,6 +316,12 @@ void skysim(const PARMS_S *parms){
 	simu->seed_maos=parms->maos.seeds[iseed_maos];/*loop over seed */
 	/*Read ideal NGS mode. */
 	simu->mideal=dread("%s_%d.bin",parms->maos.fnmideal,simu->seed_maos);
+	if(parms->maos.nmod>5 && simu->mideal->nx==5){
+	    warning("ngsmod is only 5 modes, but maos.nmod is 6. Adding zero defocus mode\n");
+	    dwrite(simu->mideal, "mideal_1");
+	    dresize(simu->mideal, parms->maos.nmod, simu->mideal->ny);
+	    dwrite(simu->mideal, "mideal_2");
+	}
 	/*Read ideal NGS mode dot product for on axis. */
 	dcell *midealp=dcellread("%s_%d.bin",parms->maos.fnmidealp,simu->seed_maos);
 	simu->mideal_oa=dref(midealp->p[parms->maos.evlindoa]);
@@ -429,7 +435,8 @@ void skysim(const PARMS_S *parms){
 	    simu->res_ol=dnew_mmap(3,nsky,NULL, "Res%d_%d_ol", seed_maos, seed_skyc);
 	    simu->fss   =dnew_mmap(nsky,1,NULL, "Res%d_%d_fss", seed_maos, seed_skyc);
 	    simu->demote=dnew_mmap(nsky,1,NULL, "Res%d_%d_demote", seed_maos, seed_skyc);
-	    simu->gain  =dcellnewsame_mmap(nsky, 1, 3, 5,NULL, "Res%d_%d_gain", seed_maos, seed_skyc);
+	    simu->gain  =dcellnewsame_mmap(nsky, 1, 3, parms->maos.nmod,
+					   NULL, "Res%d_%d_gain", seed_maos, seed_skyc);
 	    simu->sel   =dcellnewsame_mmap(nsky, 1, 2+parms->maos.nwvl, parms->skyc.nwfstot,
 					   NULL,"Res%d_%d_sel", seed_maos, seed_skyc);
 	    simu->mres  =dcellnewsame_mmap(nsky, 1, parms->maos.nmod, parms->maos.nstep,

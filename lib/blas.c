@@ -391,7 +391,7 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
 	}
     }
     X(zero)(A);
-    X(mm)(&A,U,VT,"nn",1);
+    X(mm)(&A,VT,U,"tt",1);
     
     X(free)(U);
     X(free)(VT);

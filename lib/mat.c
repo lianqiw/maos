@@ -165,7 +165,7 @@ void X(resize)(X(mat) *A, long nx, long ny){
 	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
 	}
     }else{
-	warning("column vector length is not preserved. %ldx%ld=>%ldx%ld!!!", 
+	warning("column vector length is not preserved. %ldx%ld=>%ldx%ld!!!\n", 
 		A->nx, A->ny, nx, ny);
 	T *p=calloc(nx*ny,sizeof(T));
 	long minx=A->nx<nx?A->nx:nx;

@@ -132,7 +132,7 @@ static void setup_parms_maos(PARMS_S *parms){
     temp=readcfg_str("maos.fnmcc"); 
     parms->maos.mcc=dread("%s",temp); free(temp);
     parms->maos.mcc_tt=dsub(parms->maos.mcc,0,2,0,2);
-
+    
     temp=readcfg_str("maos.fnmcc_oa"); 
     parms->maos.mcc_oa=dread("%s",temp); free(temp); 
     parms->maos.mcc_oa_tt=dsub(parms->maos.mcc_oa, 0, 2, 0, 2);

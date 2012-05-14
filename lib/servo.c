@@ -171,21 +171,15 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
 	    double f0=fcross*sqrt(a);
 	    double T=1./(2.*M_PI*f0);
 	    /*
-	      According to page 22 of http://wwwhome.math.utwente.nl/~meinsmag/dmcs/docs/DMCSn2.pdf
-	      A lead filter should have the form: C(s)=a*(1+sT)/(1+sTa).  T is
+	      According to page 22 of
+	      http://wwwhome.math.utwente.nl/~meinsmag/dmcs/docs/DMCSn2.pdf A
+	      lead filter should have the form: C(s)=k*(1+sT)/(1+sTa).  T is
 	      determined by the cross-over frequency. T=1/(2*pi*fcross*sqrt(a));
-	      And a is determined by the necessary phase lead. a is fused to g
-	      for backward-compatibility. 
-
-	      Originally, Jean-Pierr had the form: C(s)=sqrt(a)*(1+sT)/(1+sTa);
-	      Modified to above since 2012-03-28. 
-
-	      After modification, the time domain simulations agrees much better
-	      with servo predictions. This can be seen from the curve of
-	      residual error versus the gain. with g2=a, the behavior is more
-	      benign.
+	      And a is determined by the necessary phase lead. k may take the
+	      form of 1, sqrt(a) or a. k is fused to g for
+	      backward-compatibility.
 	     */
-	    g2=a;
+	    g2=sqrt(a);
 	    st->g=g0*g2;
 	    st->a=a;
 	    st->T=T;

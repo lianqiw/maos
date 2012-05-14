@@ -198,7 +198,7 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
     aster->g=dcellnew(aster->nwfs,1);
     dcell *dettf=dcellnew(aster->nwfs,aster->nwfs);
     PDCELL(dettf, pdettf);
-    if(parms->maos.nmod!=5){
+    if(parms->maos.nmod<5 || parms->maos.nmod>6){
 	error("Not compatible with the number of NGS modes\n");
     }
     aster->tsa=0;
@@ -211,10 +211,14 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 	pdettf[iwfs][iwfs]=ddup(powfs[ipowfs].dettf);
     }    
     aster->gm=dcell2m(aster->g);
+    
+    if(aster->nwfs==1 && parms->maos.nmod==6 && aster->gm->nx==8){
+	//there is a single ttf wfs and defocus needs to be estimated
+	memset(aster->gm->p+2*aster->gm->nx, 0, sizeof(double)*aster->gm->nx);
+    }
     aster->dettf=dcell2m(dettf);
     dmm(&aster->gmtt, aster->dettf, aster->gm, "nn", 1);
     dcellfree(dettf);
-    
 }
 /**
    Copy information from star struct STAR_S to stars in asterism ASTER_S.
@@ -360,6 +364,11 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	dcwpow(neattm, -1);
 	/*Reconstructor */
 	aster->pgm->p[idtrat]=dpinv(aster->gm, neam,NULL);
+	/*{
+	    dwrite(aster->gm, "gm");
+	    dwrite(aster->pgm->p[idtrat], "pgm");
+	    exit(0);
+	    }*/
 	if(aster->nwfs>2 && parms->skyc.demote){
 	    /*Demote TTF to tt. */
 	    dmat *pgmtt=dpinv(aster->gmtt, neattm,NULL);
@@ -463,11 +472,8 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	    }
 	    res_ngs  = pg_tt[3] + pg_ps[3];
 	    res_ngsn = pg_tt[4] + pg_ps[4];
-	    for(int imod=0; imod<nmod; imod++){
+	    for(int imod=0; imod<MIN(nmod,5); imod++){
 		memcpy(pgain[imod], imod<2?pg_tt:pg_ps, sizeof(double)*3);
-		/*for(int i=0; i<3; i++){
-		    pgain[imod][i]=round(pgain[imod][i]*1000)/1000;
-		    }*/
 	    }
 	}else{
 	    double pg_ngs[5];
@@ -481,7 +487,7 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	    }
 	    res_ngs=pg_ngs[3];
 	    res_ngsn=pg_ngs[4];
-	    for(int imod=0; imod<nmod; imod++){
+	    for(int imod=0; imod<MIN(nmod,5); imod++){
 		memcpy(pgain[imod], pg_ngs, sizeof(double)*3);
 	    }
 	}

@@ -421,6 +421,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
  */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(zfread2(ptr, size, nmemb, fp)){
+	perror("zfread");
 	error("Error happened while reading %s\n", fp->fn);
     }
 }

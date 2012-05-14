@@ -36,6 +36,7 @@ dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
     dmat *rmsol=dnew(2,1);
     rmsol->p[0]=rms/mideal->ny;
     rmsol->p[1]=rmstt/mideal->ny;
+    info2("OL RMS WFE is TT: %g nm, PS: %g nm\n", sqrt(rmsol->p[1])*1e9, sqrt(rmsol->p[0]-rmsol->p[1])*1e9);
     return rmsol;
 }
 
