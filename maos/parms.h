@@ -85,6 +85,7 @@ typedef struct APER_CFG_T{
     double rotdeg;/**<pupil rotation in degree*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
+    int fnampuser;/**<User provided amplitude map (not default)*/
     double *misreg;/**<misregistration of the pupil along x and y. Shifts the
 		      amplitude map and atmosphere.*/
     int ismisreg; /**<true if misreg contains nonzero numbers*/

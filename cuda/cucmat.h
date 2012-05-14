@@ -22,13 +22,14 @@
 #include "types.h"
 
 #define cucnew  new cumat<fcomplex> 
+#define cuccellnew  new cucell<fcomplex>
+
 #define cucfree(A) ({delete A; A=NULL;})
-#define cucref(A) (A)->ref()
-//#define cucref  curef<fcomplex>
-#define cuczero cuzero<fcomplex>
-#define cuccellnew  cucellnew<fcomplex>
 #define cuccellfree(A) ({delete A; A=NULL;})
-#define cuccellzero cucellzero<fcomplex>
+
+#define cucref(A) (A)->ref()
+#define cuczero(A,B...) (A)->zero(B)
+#define cuccellzero(A,B...) (A)->zero(B)
 #define cucwrite     cuwrite<fcomplex, (uint32_t)M_ZMP>
 #define cuccellwrite cucellwrite<fcomplex, (uint32_t)M_ZMP>
 

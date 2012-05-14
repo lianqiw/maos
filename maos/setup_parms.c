@@ -581,6 +581,7 @@ static void readcfg_aper(PARMS_T *parms){
 	error("Inner dimeter: %g, Outer Diameter: %g. Illegal\n", parms->aper.din, parms->aper.d);
     }
     READ_DBL(aper.rotdeg);
+    parms->aper.fnampuser=readcfg_peek_override("aper.fnamp");
     READ_STR(aper.fnamp);
     READ_STR(aper.pupmask);
     readcfg_dblarr_n(&parms->aper.misreg, 2, "aper.misreg");

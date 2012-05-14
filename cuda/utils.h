@@ -38,7 +38,6 @@ typedef struct{
     float  (*plocs)[2];
     float   *pamp;
     int    **embed;
-    curmat *iopdevl;
     cuccell *evlwvf;
     curcell *surfevl;
     curcell *evlopd;
@@ -72,7 +71,7 @@ extern __thread cudata_t *cudata;
 extern cudata_t *cudata_all;/*use pointer array to avoid misuse. */
 
 void gpu_print_mem(const char *msg);
-size_t gpu_get_mem(void);
+long gpu_get_mem(void);
 /**
    switch to the next GPU and update the pointer.
 */

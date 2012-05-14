@@ -42,6 +42,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
     wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	wfsgpu[iwfs]=gpu_next();
+	if(NGPU>4 && wfsgpu[iwfs]==gpu_recon){
+	    wfsgpu[iwfs]=gpu_next();
+	}
     }
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);

@@ -99,10 +99,10 @@ void gpu_print_mem(const char *msg){
 /**
    Get available memory.
 */
-size_t gpu_get_mem(void){
+long gpu_get_mem(void){
     size_t fr, tot;
     DO(cudaMemGetInfo(&fr, &tot));
-    return fr;
+    return (long)fr;
 }
 static int cmp_gpu_info(const long *a, const long *b){
     return (int)(b[1]-a[1]);

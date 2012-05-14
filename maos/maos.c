@@ -63,7 +63,6 @@ void maos(const PARMS_T *parms){
 	    gpu_wfsgrad_init(parms, powfs);
 	}
 #endif
-	
 	recon = setup_recon(parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }

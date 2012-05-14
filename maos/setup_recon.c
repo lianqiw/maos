@@ -2563,12 +2563,12 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 		memcpy(to->p+curact*ng, RRT->p[iwfs]->p, ng*sizeof(double));
 	    }
 	}
-	if(0){
+	/*{
 	    dcellwrite(FLI, "cpu_dmfit_%ld", iact);
 	    dcellwrite(FRT, "cpu_opdx_%ld", iact);
 	    dcellwrite(RLT, "cpu_opdr_%ld", iact);
 	    dcellwrite(RRT, "cpu_grad_%ld", iact);
-	}
+	    }*/
     }
     dcellfree(FLI);
     dcellfree(FRT);

@@ -222,9 +222,9 @@ static void skysim_isky(SIM_S *simu){
 		selaster=iaster;
 		skymini=mini;
 		/*Field Averaged Performance. */
-		pres[isky][1]=pmini->p[0];/*NGS Mode error */
-		pres[isky][2]=pmini->p[1];/*Tip/tilt Error. */
-		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake error */
+		pres[isky][1]=pmini->p[0];/*ATM NGS Mode error */
+		pres[isky][2]=pmini->p[1];/*ATM Tip/tilt Error. */
+		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
 		pres[isky][4]=parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
 		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];/*Total */
 		/*On axis performance. */
