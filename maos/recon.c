@@ -173,7 +173,7 @@ void recon_split(SIM_T *simu){
 	    error("Invalid parms->recon.split: %d",parms->recon.split);
 	}
 	dcellcp(&simu->Merr_lo, simu->Merr_lo_store);
-	if(simu->Merr_lo->p[0]->nx>5){
+	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){
 	    simu->Merr_lo->p[0]->p[5]=0;//zero out global focus mode here.
 	}
     }else{
