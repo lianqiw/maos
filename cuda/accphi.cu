@@ -117,6 +117,7 @@ static void atm_prep(atm_prep_t *data){
    Transfer atmospheric data to GPU.
 */
 static void gpu_atm2gpu_full(map_t **atm, int nps){
+    if(!atm) return;
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
 	gpu_print_mem("atm in full");
@@ -131,6 +132,7 @@ static void gpu_atm2gpu_full(map_t **atm, int nps){
    Transfer atmosphere or update atmosphere in GPU.
 */
 void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
+    if(!atm) return;
     if(parms->atm.evolve){
 	TO_IMPLEMENT;
 	/*test whether screen changed. transfer if changed. */

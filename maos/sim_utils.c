@@ -896,14 +896,12 @@ static void init_simu_wfs(SIM_T *simu){
 	    simu->pistatout[iwfs]=dcellnew(nsa,parms->powfs[ipowfs].nwvl);
 	}
     }
-
-    if(parms->sim.epfocus>1.e-15){
+    if(parms->sim.mffocus){
 	if(parms->sim.lpfocus<1.e-15){
 	    error("When epfocus is nonzero, lpfocus need to be zero\n");
 	}
-	warning("Creating simu->focus\n");
-	simu->focusint=dcellnew(nwfs,1);
-	simu->focuslpf=dcellnew(nwfs,1);
+	simu->focuslpf=dcellnew(1,1);
+	simu->focuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
     }
 
     simu->has_upt=0;/*flag for uplink tip/tilt control */
@@ -1548,15 +1546,16 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmerr);
     dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
+    dcellfree(simu->Merr_lo_store);
     dcellfree(simu->Merr_lo);
-    dcellfree(simu->Merr_lo_keep);
     dcellfree(simu->upterr);
     dcellfree(simu->uptreal);
     servo_free(simu->uptint);
 
     dcellfree(simu->dm_wfs);
     dcellfree(simu->dm_evl);
-
+    dcellfree(simu->focuslgsx);
+    dcellfree(simu->focusngsx);
     dcellfree(simu->res);
     dfree(simu->ole);
     dfree(simu->cle);
@@ -1604,6 +1603,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->evlopdmean_ngsr,nevl);
     cellarr_close(save->evlpsfolmean);
     dcellfree(simu->evlopd);    
+    dcellfree(simu->focuslpf);
     free(simu->ints);
     free(simu->wfspsfout);
     free(simu->pistatout);

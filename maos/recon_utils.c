@@ -550,90 +550,93 @@ void FitL(dcell **xout, const void *A,
 
 
 /**
-   Update LGS focus or reference vector.
-   \fixme: what if dtrat!=1
-   \verbatim
-   LGS: CL grads works, but not as good.
-   LGS: CL grads + DM grads does not work
-   LGS: CL grads + DM grads - Xhat grad is the choice.
+   Replace the low frequency part of focus correction by NGS measurement. 
+   a_focus = HPF * a_flgs + LPF * a_fngs 
+           = a_flgs + LPF*(a_fngs - a_flgs)
+	   
+   a_focus is the focus correction on the DM to reduce global focus on the science
+   a_flgs is the focus reconstruction from LGS measurements.
+   a_fngs is the focus reconstruction from NGS measurements.
 
-   mffocus is 0: no focus tracking.
-   mffocus is 1: use CL grads + DM grads - Xhat grad for LGS and NGS
-   mffocus is 2: use CL grads + DM grads - Xhat grad for LGS; 
-   CL grads for NGS.
+   a_flgs can be estimated from
+          sim.mffocus=1: closed loop LGS gradients.
+	  sim.mffocus=2: f_opdr-f_dm where f_opdr is focus in tomography output and f_dm is the focus correction in the dm.
+   a_fngs is jointly estimated with the 5 NGS modes.
    \endverbatim
 */
-void focus_tracking(SIM_T*simu){
-
-    if(!simu->recon->RFlgs){
-	warning("There is no LGS. No need to do focus tracking\n");
+void focus_tracking(SIM_T* simu){
+    if(!simu->recon->RFlgsg){
+	warning_once("There is no LGS. No need to do focus tracking\n");
 	return;
     }
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    dcell *graduse=dcellnew(parms->nwfs,1);
-    PDSPCELL(recon->GXfocus,GX);
-    int ngs_psol=0;
-    int ngs_x=0;
-    int lgs_psol=0;
-    int lgs_x=0;
-    lgs_psol=1;
-    lgs_x=1;
-    if(parms->sim.mffocus==1){
-	ngs_psol=1;
-	ngs_x=1;
-    }else if(parms->sim.mffocus!=2){
-	error("Invalid mffocus: %d\n", parms->sim.mffocus);
+    double NGSfocus=0;
+    dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/
+    dcell *dmsub=simu->dmint->mint[parms->dbg.psol?0:1];
+    int isim=simu->reconisim;
+    switch(parms->sim.mffocus){
+    case 0:
+	error("Shouldn't arrive here\n");break;
+    case 1:
+	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
+	break;	
+    case 2:
+	dcelladd(&LGSfocus, 1, simu->focuslgsx, 1);
+	dcellmm(&LGSfocus, recon->RFlgsa, dmsub ,"nn",-1);
+	break;
+    case 3:
+	dcelladd(&LGSfocus, 1, simu->focusngsx, 1);
+	dcellmm(&LGSfocus, recon->RFngsa, dmsub ,"nn",-1);
+	break;
+    default:
+	error("Invalid\n");break;
     }
+    if(simu->Merr_lo_store){
+	NGSfocus=simu->Merr_lo_store->p[0]->p[5];
+    }
+    double LGSfocusm;
+    long count=0;
+    /*differential focus between LGS is removed. So we average the focus
+      here. May need to do noise weighting.*/
+    if(parms->sim.mffocus<3){
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(!parms->powfs[ipowfs].llt){
+		continue;
+	    }
+	    LGSfocusm+=LGSfocus->p[iwfs]->p[0];
+	    count++;
+	}
+	LGSfocusm/=count;
+    }else{
+	LGSfocusm=LGSfocus->p[0]->p[0];
+    }
+    
+    /*Use NGS focus - LGS focus to drive the zoom optics/reference vector */
+    LGSfocusm=NGSfocus-LGSfocusm;
+    simu->focuslpf->p[0]->p[5]=simu->focuslpf->p[0]->p[5]*(1.-parms->sim.lpfocus)+LGSfocusm*parms->sim.lpfocus;
+    dcellfree(LGSfocus);
+    if(!simu->zoomerr){
+	simu->zoomerr=dcellnew(parms->nwfs, 1);
+    }
+    /*Next deal with the trombone*/
+    dcellmm(&simu->zoomavg, recon->RFlgsg, simu->gradlastcl, "nn", 1);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;
-	int gs_psol, gs_x;
-	if(parms->powfs[ipowfs].llt){/*LGS */
-	    gs_psol=lgs_psol;
-	    gs_x=lgs_x;
-	}else{/*NGS */
-	    if(parms->powfs[ipowfs].order==1) continue;/*no bother with TT NGS. */
-	    gs_psol=ngs_psol;
-	    gs_x=ngs_x;
-	}
-	if(gs_psol){/*psol */
-	    if(simu->gradlastol->p[iwfs]){
-		graduse->p[iwfs]=ddup(simu->gradlastol->p[iwfs]);
-	    }else{
-		error("Require PSOL grads for wfs %d\n",iwfs);
-	    }
-	}else{/*cl */
-	    graduse->p[iwfs]=ddup(simu->gradlastcl->p[iwfs]);
-	}
-	if(gs_x){
-	    info("Subtracing tomo grad from wfs %d\n",iwfs);
-	    for(int ips=0; ips<simu->recon->npsr; ips++){
-		if(!GX[ips][iwfs]){
-		    error("GX[%d][%d] is empty\n",ips,iwfs);
-		}
-		spmulmat(&graduse->p[iwfs],GX[ips][iwfs],simu->opdr->p[ips],-1);
-	    }
-	}
-    }
-    dcell *NGSfocus=NULL;
-    dcellmm(&NGSfocus, recon->RFngs, graduse, "nn", 1);
-    info("NGSfocus is %g\n", NGSfocus->p[0]->p[0]);
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
-	if(!parms->powfs[ipowfs].llt) 
+	if(!parms->powfs[ipowfs].llt){
 	    continue;
-	dmat *LGSfocus=NULL;
-	dmm (&LGSfocus,recon->RFlgs->p[iwfs],graduse->p[iwfs],"nn",1);
-	/*Use NGS focus - LGS focus to drive the zoom optics/reference vector */
-	dadd(&LGSfocus,-1, NGSfocus->p[0], 1);
-	dadd(&simu->focuslpf->p[iwfs], 1.-parms->sim.lpfocus, 
-	     LGSfocus, parms->sim.lpfocus);
-	dadd(&simu->focusint->p[iwfs], 1, 
-	     simu->focuslpf->p[iwfs], parms->sim.epfocus);
-	dfree(LGSfocus);
+	}
+	if((isim+1)%parms->powfs[ipowfs].llt->zoomdtrat){
+	    /*trombone averager has output. first dtrat is for averaging. second
+	      dtrat is for reducing gain. Notice that we do not zero zoomerr
+	      even if there is no output. This ensures the trombone moves smoothly.*/
+	    double gain=parms->powfs[ipowfs].llt->zoomgain;
+	    double dtrat=parms->powfs[ipowfs].llt->zoomdtrat;
+	    dadd(&simu->zoomerr->p[iwfs], 0, simu->zoomavg->p[iwfs], gain/(dtrat*dtrat));
+	    dzero(simu->zoomavg->p[iwfs]);
+	}
     }
-    dcellfree(NGSfocus);
-    dcellfree(graduse);
 }
 
 

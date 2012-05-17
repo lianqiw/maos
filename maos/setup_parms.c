@@ -311,6 +311,8 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
 	    parms->powfs[ipowfs].llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
 	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix);
+	    parms->powfs[ipowfs].llt->zoomdtrat=readcfg_int("%sllt.zoomdtrat", prefix);
+	    parms->powfs[ipowfs].llt->zoomgain=readcfg_dbl("%sllt.zoomgain", prefix);	    
 	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix);
 	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
 	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
@@ -1683,6 +1685,15 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
+    }
+    if(parms->sim.mffocus>3){
+	error("sim.mffocus can only take 0, 1 or 2. Input is %d\n", parms->sim.mffocus);
+    }
+    if(parms->sim.mffocus==2 && parms->recon.mvm){
+	error("need implementation\n");
+    }
+    if(parms->sim.mffocus==2 && parms->recon.alg==1){
+	error("need implementation\n");
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->recon.split && parms->powfs[ipowfs].lo){

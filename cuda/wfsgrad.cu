@@ -314,7 +314,9 @@ void gpu_wfsgrad(thread_t *info){
 	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, cudata->ndm,
 		   hs, thetax, thetay, mispx, mispy, 1, stream);
     }else{
-	gpu_atm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
+	if(simu->atm){
+	    gpu_atm2loc(phiout->p, loc, nloc, hs, thetax, thetay, mispx, mispy, dtisim, 1, stream);
+	}
 	if(parms->sim.wfsalias){
 	    gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, cudata->ndm,
 		       hs, thetax, thetay, mispx, mispy, -1, stream);
@@ -338,12 +340,20 @@ void gpu_wfsgrad(thread_t *info){
 	float angle=simu->winddir?simu->winddir->p[0]:0;
 	curaddptt(phiout, loc, 0, tt*cosf(angle), tt*sinf(angle), stream);
     }
-   
-    if(powfs[ipowfs].focus){
-	TO_IMPLEMENT;
-    }
-    if(parms->powfs[ipowfs].llt && simu->focusint && simu->focusint->p[iwfs]){
-	TO_IMPLEMENT;
+    if(parms->powfs[ipowfs].llt){
+	float focus=0;
+	if(powfs[ipowfs].focus){
+	    const long nx=powfs[ipowfs].focus->nx;
+	    focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
+	    //info2("WFS %d: add focus %g ", iwfs, focus);
+	}
+	if(simu->zoomint && simu->zoomint->p[iwfs]){
+	    focus-=simu->zoomint->p[iwfs]->p[0];
+	}
+	if(fabsf(focus)>1e-20){
+	    //info2("effective %g\n", focus);
+	    add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout->p, loc, nloc, focus);
+	}
     }
     if(parms->powfs[ipowfs].fieldstop){
 	gpu_fieldstop(phiout, cuwfs[iwfs].amp, cupowfs[ipowfs].embed, cupowfs[ipowfs].nembed, 

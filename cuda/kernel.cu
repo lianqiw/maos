@@ -42,7 +42,13 @@ __global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2],
 	opd[i]+=pis+loc[i][0]*tx+loc[i][1]*ty;
     }
 }
-
+__global__ void add_focus_do(float *restrict opd, float (*restrict loc)[2], 
+			     int n, float focus){
+    const int step=blockDim.x * gridDim.x;
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
+	opd[i]+=(loc[i][0]*loc[i][0]+loc[i][1]*loc[i][1])*focus;
+    }
+}
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
 			      float m0, float m1, float m2, float m3, float m4,
 			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha

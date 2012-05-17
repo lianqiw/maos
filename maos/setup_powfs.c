@@ -1043,11 +1043,14 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	      parms->powfs[ipowfs].nwfs);
     }
     double *p=powfs[ipowfs].focus->p;
-    /*Convert range to focus. */
-    double range2focus=pow(parms->aper.d/parms->powfs[ipowfs].hs,2)/(16.*sqrt(3));
+    /*(D/h)^2/(16*sqrt(3)) convert it from range to WFE in m but here we want
+      focus mode, so just do 1/(2*h^2).*/
+    /*Convert range to focus. should not use parms->aper.d here since it is used later*/
+    double range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2);
     for(int ii=0; ii<powfs[ipowfs].focus->nx*powfs[ipowfs].focus->ny; ii++){
 	p[ii]*=range2focus;
     }
+    dwrite(powfs[ipowfs].focus, "powfs%d_focus", ipowfs);
 }
 
 /**

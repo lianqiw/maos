@@ -336,9 +336,12 @@ typedef struct RECON_T{
     dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */
-    dcell *RFlgs;      /**<focus reconstruction from each LGS grad*/
-    dcell *RFngs;      /**<focus reconstruction from NGS grad.*/
-    dcell *RFtomo;     /**<focus recon from reconstructed X.*/
+    dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
+    dcell *RFlgsx;     /**<focus reconstruction for each LGS from opdr*/
+    dcell *RFlgsa;     /**<focus reconstruction for each LGS from dm.*/
+    dcell *RFngsg;     /**<focus reconstruction for TTF NGS from grad.*/
+    dcell *RFngsx;     /**<focus reconstruction for TTF NGS from opdr.*/
+    dcell *RFngsa;     /**<focus reconstruction for TTF NGS from dm*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
@@ -498,7 +501,7 @@ typedef struct SIM_T{
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
-    dcell *Merr_lo_keep;/**<Keep Merr_lo for PSF recon.*/
+    dcell *Merr_lo_store;/**<Stores Merr_lo.*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     
     /*llt pointing loop*/
@@ -509,9 +512,12 @@ typedef struct SIM_T{
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
     /*focus tracking loop*/
+    dcell *focuslgsx;  /**<LGS focus estimated from opdr*/
+    dcell *focusngsx;  /**<NGS focus estimated from opdr*/
     dcell *focuslpf;   /**<focus tracking low pass filter*/
-    dcell *focusint;   /**<focus tracking integrator*/
-
+    dcell *zoomavg;    /**<Trombone averager*/
+    dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
+    dcell *zoomint;    /**<Trombone integrator*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

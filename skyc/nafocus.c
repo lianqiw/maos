@@ -45,20 +45,20 @@ static inline dcomplex nafocus_Hol(double nu,  /**<[in] frequency.*/
 }
 /**
    Compute sodium power spectrum density. alpha, beta are the parameters of the
-sodium power spectrum obtained by fitting measurement data at UBC. */
+   sodium power spectrum obtained by fitting measurement data at UBC. */
 static inline double nafocus_NaPSD(double nu, double alpha, double beta){
     return pow(10,beta)*pow(nu,alpha);/*we don't divide 2pi */
 }
-    /**
-       Sodium tracking Openloop transfer function. The cross over frequency
-       (where gain is 1) have a phase margin of 45 (angle(Hol)=-135).
+/**
+   Sodium tracking Openloop transfer function. The cross over frequency
+   (where gain is 1) have a phase margin of 45 (angle(Hol)=-135).
        
-       First find the frequency fc where phase margin is 45. then scale Hol to have
-       gain of 1 at fc.
+   First find the frequency fc where phase margin is 45. then scale Hol to have
+   gain of 1 at fc.
 
-       Written: 2010-06-15
-       Tested ok against RC's skycoverage code: 2010-06-15.
-    */
+   Written: 2010-06-15
+   Tested ok against RC's skycoverage code: 2010-06-15.
+*/
 double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
 			double tau,  /**<[in] zoom corrector time delay*/
 			double zcf,  /**<[in] zoom corrector frequency (Hz)*/
@@ -74,6 +74,7 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     double aw=-(M_PI-margin);
     dcomplex Hol;
     double angle;
+    /*First we find out where NFIRAOS LGS zoom optics Hol have 45 degrees phase margin.*/
     while(1){
 	nu=inu;
 	Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
@@ -86,8 +87,7 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     }
     double nu1=nu-1;
     double nu2=nu;
-    /*true nu lies in between nu1 and nu2. */
-    
+    /*Then determine the true nu that lies in between nu1 and nu2. */
     dcomplex Hol1=nafocus_Hol(nu1, fs, tau, zeta, zcf);/*>aw */
     dcomplex Hol2=nafocus_Hol(nu2, fs, tau, zeta, zcf);/*<aw */
     double a1=atan2(cimag(Hol1), creal(Hol1));/*bigger than aw */
@@ -105,6 +105,8 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     nu=nu1+(nu2-nu1)*(a1-aw)/(a1-a2);
     Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
     angle=atan2(cimag(Hol), creal(Hol));
+    /*The gain is adjusted so that the cross over frequency (total gain of Hol
+      is 1) aligns with the location where we have 45 degrees phase margin*/
     double gain=1./cabs(Hol);
     /*We integrate over f, not f*2pi */
     dmat *nus=dlogspace(-3,5,2000);/*agrees good with skycoverage matlab code. */

@@ -69,6 +69,16 @@ void tomofit(SIM_T *simu){
 #endif
 	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     }
+    if(simu->opdr && parms->sim.mffocus>=2){
+	if(recon->RFlgsx){
+	    dcellzero(simu->focuslgsx);
+	    dcellmm(&simu->focuslgsx, recon->RFlgsx, simu->opdr, "nn", 1);
+	}
+	if(recon->RFngsx){
+	    dcellzero(simu->focusngsx);
+	    dcellmm(&simu->focusngsx, recon->RFngsx, simu->opdr, "nn", 1);
+	}
+    }
     if(parms->ndm>0){
 #if USE_CUDA
 	if(parms->gpu.fit){
@@ -136,12 +146,12 @@ void recon_split(SIM_T *simu){
     }
     /*Low order has output */
     if(lo_output){
-	dcellzero(simu->Merr_lo);
+	dcellzero(simu->Merr_lo_store);
 	switch(parms->recon.split){
 	case 1:{
 	    NGSMOD_T *ngsmod=recon->ngsmod;
 	    if(!parms->tomo.ahst_idealngs){/*Low order NGS recon. */
-		dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
+		dcellmm(&simu->Merr_lo_store,ngsmod->Rngs,simu->gradlastcl,"nn",1);
 	    }/*else: there is ideal NGS correction done in perfevl. */
 	}
 	    break;
@@ -154,16 +164,17 @@ void recon_split(SIM_T *simu){
 		dmpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
 	    }
 	    dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
-	    dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
-	    if(parms->tomo.psol) dcelladd(&simu->Merr_lo, 1., dmpsol_lo, -1);
+	    dcellmm(&simu->Merr_lo_store, recon->MVRngs, simu->gradlastol, "nn",1);
+	    if(parms->tomo.psol) dcelladd(&simu->Merr_lo_store, 1., dmpsol_lo, -1);
 	    dcellzero(simu->opdrmvst);/*reset accumulation. */
 	}
 	    break;
 	default:
 	    error("Invalid parms->recon.split: %d",parms->recon.split);
 	}
-	if(parms->sim.psfr){
-	    dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
+	dcellcp(&simu->Merr_lo, simu->Merr_lo_store);
+	if(simu->Merr_lo->p[0]->nx>5){
+	    simu->Merr_lo->p[0]->p[5]=0;//zero out global focus mode here.
 	}
     }else{
 	dcellfree(simu->Merr_lo);/*don't have output. */
@@ -235,7 +246,7 @@ void reconstruct(SIM_T *simu){
 	/*For PSF reconstruction.*/
 	if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
 	    psfr_calc(simu, simu->opdr, simu->dmint->mint[parms->dbg.psol?0:1], 
-		      simu->dmerr,  simu->Merr_lo_keep);
+		      simu->dmerr,  simu->Merr_lo_store);
 	}
 
 	if(recon->moao){

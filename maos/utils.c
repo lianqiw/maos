@@ -377,6 +377,7 @@ void maos_signal_handler(int sig){
 	case SIGTERM:
 	case SIGQUIT: /*Ctrl-'\' */
 	    info="Killed";
+	    break;
 	case SIGUSR1:/*user defined */
 	    info="Quit";
 	    break;
@@ -384,7 +385,7 @@ void maos_signal_handler(int sig){
 	warning2("Signal %d: %s\n", sig, info);
 	fflush(stderr);
 	fflush(stdout);
-	if(sig !=0){
+	if(sig !=0 && sig != SIGINT){
 	    PRINT_BACKTRACE;
 	}
 	scheduler_finish(1);

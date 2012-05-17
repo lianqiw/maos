@@ -40,11 +40,13 @@ extern "C"
 /* dest = a/b */
 __global__ static void div_do(float *restrict dest, const float *restrict a, const float *restrict b){
     dest[0]=a[0]/b[0];
+    if( !isfinite(dest[0])) dest[0]=0;
 }
 /* dest = a/b;then b=a*/
 __global__ static void div_assign_do(float *restrict dest, const float *restrict a, float *restrict b){
     dest[0]=a[0]/b[0];
     b[0]=a[0];
+    if (!isfinite(dest[0])) dest[0]=0;
 }
 
 
@@ -155,7 +157,7 @@ float gpu_pcg(curcell **px,
 	info2("%.5f ", diff[k]);
 #endif	
 #endif
-	CUDA_SYNC_STREAM;//is this needed?
+	CUDA_SYNC_STREAM;//needed before entering Amul
 	Amul(&Ap, 0, A, p0, 1);
 	/*ak=r0z1/(p0'*Ap); */
 	curcellinn2(ak+k, p0, Ap, stream);

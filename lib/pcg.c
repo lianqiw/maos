@@ -77,6 +77,10 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	if(Ap) dcellzero(Ap);
 	(*Amul)(&Ap, A, p0, 1);
 	ak=r0z1/dcellinn(p0,Ap);
+	if(!isfinite(ak)){
+	    ak=0;
+	    goto end;
+	}
 	dcelladd(&x0, 1, p0, ak);/*x0=x0+ak*p0 */
 	dcelladd(&r0, 1, Ap, -ak);/*r0=r0-ak*Ap */
 	if(Mmul){
@@ -94,6 +98,7 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 #elif PRINT_RES==2
     info2("\n");
 #endif
+ end:
     dcellfree(r0); 
     if(Mmul){
 	dcellfree(z0);

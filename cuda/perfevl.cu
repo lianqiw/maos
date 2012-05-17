@@ -160,7 +160,7 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     cudaCalloc(cc, 7*sizeof(float), stream);
     if(nmod==2){/*single DM. */
 	calc_ptt_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
-    }else if(nmod==5){/*AHST mode */
+    }else if(nmod>=5){/*AHST mode */
 	calc_ngsmod_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
     }else{
 	TO_IMPLEMENT;
@@ -176,7 +176,7 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     coeff[2]=ccb[2]; coeff[3]=ccb[3];
     coeff[4]=ccb[4]; coeff[5]=ccb[5];
     
-    if(pttrcoeff_out){
+    if(pttrcoeff_out){/*p/t/t*/
 	memset(pttrcoeff_out, 0, sizeof(double)*3);
 	dmulvec(pttrcoeff_out, imcc, coeff, 1);
     }
@@ -192,13 +192,16 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     ngsmod_out[0]=coeff[1];
     ngsmod_out[1]=coeff[2];
     const double scale1=1.-scale;
-    if(nmod==5){
+    if(nmod>=5){
 	ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
 		       -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
 	ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
 		       -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
 	ngsmod_out[4]=(scale1*(coeff[5])
 		       -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
+	if(nmod>5){
+	    ngsmod_out[5]=(coeff[3]+coeff[4]-coeff[0]*MCC_fcp);
+	}
     }
 }
 /**

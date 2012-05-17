@@ -52,11 +52,10 @@ typedef struct{
     curcell *neai;
     curcell *opdwfs;/**<Temporary*/
     curcell *grad;  /**<Temporary*/
-    curcell *opdr;  /**<Reconstructed atm on xloc. Don't free to have warm
-		       restart. Free with new seed*/
-    curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm
-		       restart. Free with new seed.*/
-    curcell *dmfit_vec;/*referencing dmfit, using vector instead of matrix.*/
+    curcell *opdr;  /**<Reconstructed atm on xloc. Don't free to have warm restart. Free with new seed*/
+    curcell *opdr_vec; /**<Referencing opdr in vector form*/
+    curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm restart. Free with new seed.*/
+    curcell *dmfit_vec;/**<Referencing dmfit in vector form.*/
     int *fd_perm;   /**<permutation vector for fdpcg*/
     long fd_nxtot;  /**<total number of points*/
     cuccell *fd_Mb;  /**<The main fdpcg block matrix*/
@@ -121,6 +120,9 @@ typedef struct{
     curmat *FVp;
     curmat *FMI;//SVD
     int disablelrt; /*1: disable t/t removal lrt in split tomo*/
+
+    curcell *RFlgsx;
+    curcell *RFngsx;
 }curecon_t;
 
 
@@ -143,4 +145,7 @@ void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float
 
 void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict in, 
 		  cudaStream_t stream);
+
+void gpu_tomo_test(SIM_T *simu);
+void gpu_fit_test(SIM_T *simu);
 #endif

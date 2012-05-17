@@ -156,6 +156,10 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
 	    fprintf(stderr,"\033[01;31m%-20s", fline);		\
 	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
+#define warning_once(A...) ({static int done=0; if(!done){ char fline[80]; \
+		snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+		fprintf(stderr,"\033[01;31m%-20s", fline);		\
+		fprintf(stderr,A);fprintf(stderr,"\033[00;00m");} done=1;})
 
 #define error2(A...) ({							\
 	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\

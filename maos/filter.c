@@ -188,6 +188,9 @@ void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint && parms->recon.split){
 	servo_shift(simu->Mint_lo, simcfg->aplo);
     }
+    if(parms->sim.mffocus){/*global focus is the 6th mode in ngsmod->Modes*/
+	dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->focuslpf, "nn", 1);
+    }
     if(simu->dmerr){ /*High order. */
 	servo_filter(simu->dmint, simu->dmerr, simu->dthi, simcfg->epdm);
     }
@@ -220,6 +223,9 @@ void filter_cl(SIM_T *simu){
 	dcellcp(&simu->dmreal, tmp);
 	dcellfree(tmp);
     }
+    if(parms->sim.mffocus){/*gain was already applied on zoomerr*/
+	dcelladd(&simu->zoomint, 1, simu->zoomerr, 1);
+    }
     if(recon->moao){
 	if(!parms->gpu.moao){ /*close loop filtering.*/
 	    if(simu->dm_wfs){
@@ -240,7 +246,6 @@ void filter_cl(SIM_T *simu){
 		    dadd(&simu->dm_evl->p[ievl], 1.-g, simu->dm_evl->p[ievl+nevl], g);
 		}
 	    }
-
 	}
     }
 }
@@ -306,8 +311,7 @@ void update_dm(SIM_T *simu){
     if(parms->plot.run){ /*Moved from recon.c to here. */
 	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
 	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
-		    "Actual DM Actuator Commands","x (m)", "y (m)",
-		    "Real %d",idm);
+		    "Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
 	}
     }
 }

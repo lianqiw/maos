@@ -352,3 +352,53 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
     SYNC_DM;
     toc("fitNW");//0ms.
 }
+#include "pcg.h"
+void gpu_fit_test(SIM_T *simu){	/*Debugging. */
+    gpu_set(gpu_recon);
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    dcell *rhsc=NULL;
+    dcell *lc=NULL;	
+    if(!simu->opdr){
+	cp2cpu(&simu->opdr, 0, curecon->opdr, 1, 0);
+	for(int i=0; i<simu->opdr->nx; i++){
+	    simu->opdr->p[i]->nx=simu->opdr->p[i]->nx*simu->opdr->p[i]->ny;
+	    simu->opdr->p[i]->ny=1;
+	}
+    }
+    dcellwrite(simu->opdr, "opdr");
+    muv(&rhsc, &recon->FR, simu->opdr, 1);
+    dcellwrite(rhsc, "CPU_FitR");
+    muv(&lc, &recon->FL, rhsc, 1);
+    dcellwrite(lc, "CPU_FitL");
+    muv(&lc, &recon->FL, rhsc, -1);
+    dcellwrite(lc, "CPU_FitL2");
+    dcellzero(lc);
+    muv(&lc, &recon->FL, rhsc, 1);
+    dcellwrite(lc, "CPU_FitL3");
+    dcellzero(lc);
+    muv_solve(&lc, &recon->FL, NULL, rhsc);
+    dcellwrite(lc, "CPU_FitCG");
+    /*dcell *lhs=NULL;
+      muv_trans(&lhs, &recon->FR, rhsc, 1);
+      dcellwrite(lhs, "CPU_FitRt");*/
+    curcell *rhsg=NULL;
+    curcell *lg=NULL;
+    gpu_FitR(&rhsg, 0, recon, curecon->opdr, 1);
+    curcellwrite(rhsg, "GPU_FitR");
+    gpu_FitL(&lg, 0, recon, rhsg, 1);
+    curcellwrite(lg, "GPU_FitL");
+    gpu_FitL(&lg, 1, recon, rhsg, -1);
+    curcellwrite(lg, "GPU_FitL2");
+    gpu_FitL(&lg, 0, recon, rhsg, 1);
+    curcellwrite(lg, "GPU_FitL3");
+    /*curcell *lhsg=NULL;
+      gpu_FitRt(&lhsg, 0, recon, rhsg, 1);
+      curcellwrite(lhsg, "GPU_FitRt");*/
+    curcellzero(lg, curecon->cgstream);
+    gpu_pcg(&lg, (G_CGFUN)gpu_FitL, (void*)recon, NULL, NULL, rhsg,
+	    simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream);
+    curcellwrite(lg, "GPU_FitCG");
+    CUDA_SYNC_DEVICE;
+    exit(0);
+}

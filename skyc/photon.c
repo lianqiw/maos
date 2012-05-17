@@ -106,8 +106,8 @@ void photon_flux(double *Np,      /**<[out] number of total signal at each wvl.*
     }
     double wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
     double deltheta=wvlm/dxsa;
-    double thetaB=3*M_PI*deltheta/16;
-    double snr=Npsum/sqrt(Npsum+4*Nbsum+4*pow(rne,2));
+    double thetaB=3.*M_PI*deltheta/16.;
+    double snr=Npsum/sqrt(Npsum+4*Nbsum+4.*pow(rne,2));
     if(Nptot) *Nptot=Npsum;
     if(Nbtot) *Nbtot=Nbsum;
     if(QCSNR) *QCSNR=snr;

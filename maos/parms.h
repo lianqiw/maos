@@ -112,6 +112,8 @@ typedef struct LLT_CFG_T{
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
     int colsimdtrat;/**<change to next sodium profile during simulation every
 		       colsimdtrat time step*/
+    int zoomdtrat; /**<dtrat of the trombone averager*/
+    double zoomgain; /**<gain of the trombone controller*/
 } LLT_CFG_T;
 /**
    contains input parameters for each type of wfs (powfs).

@@ -422,32 +422,15 @@ void wfsgrad_iwfs(thread_t *info){
     /* Add defocus to OPD if needed. */
     double focus=0;
     if(powfs[ipowfs].focus){
-	int iy=0;
-	int nx=powfs[ipowfs].focus->nx;
-	int ny=powfs[ipowfs].focus->ny;
-	if(ny==1){
-	    iy=0;
-	}else if(ny==parms->powfs[ipowfs].nwfs){
-	    iy=wfsind;
-	}else{
-	    error("powfs[%d].focus wrong format\n",ipowfs);
+	const long nx=powfs[ipowfs].focus->nx;
+	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
+	if(simu->zoomint && simu->zoomint->p[iwfs]){
+	    focus-=simu->zoomint->p[iwfs]->p[0];
 	}
-	int ix=isim%nx;
-	double focusadd=powfs[ipowfs].focus->p[ix+nx*iy];
-	if(fabs(focusadd)>1.e-200){
-	    info("WFS %d: adding %g focus from input.\n", iwfs, focusadd);
-	    focus+=focusadd;
+	if(fabs(focus)>1e-20){
+	    loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
 	}
     }
-    if(parms->powfs[ipowfs].llt && simu->focusint && simu->focusint->p[iwfs]){
-	info("WFS %d: Adding focus adjust to %g\n", 
-	     iwfs, simu->focusint->p[iwfs]->p[0]);
-	focus+=simu->focusint->p[iwfs]->p[0];
-    }
-    if(fabs(focus)>1.e-200){
-	loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
-    }
-
     if(parms->powfs[ipowfs].fieldstop>0){
 	apply_fieldstop(opd, powfs[ipowfs].amp, powfs[ipowfs].embed, powfs[ipowfs].nembed, 
 			powfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl[0]);

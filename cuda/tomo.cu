@@ -691,3 +691,65 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     ctoc("fdpcg: Copy back");
     //curcellwrite(*xout, "fdpcg_xout2_%d", count);
 }
+#include "pcg.h"
+void gpu_tomo_test(SIM_T *simu){
+    gpu_set(gpu_recon);
+    const PARMS_T *parms=simu->parms;
+    RECON_T *recon=simu->recon;
+    /*Debugging. */
+    dcell *rhsc=NULL;
+    dcell *lc=NULL;
+    curcell *rhsg=NULL;
+    curcell *lg=NULL;
+    //muv(&rhsc, &recon->RR, simu->gradlastol, 1);
+    {
+	rhsc=dcellread("../d15g6/gpu_opdx_2349.bin");
+	cp2gpu(&rhsg, rhsc);
+	dcellscale(rhsc, 1.e12);
+	for(int i=0; i<rhsc->nx; i++){
+	    rhsc->p[i]->nx=rhsc->p[i]->nx*rhsc->p[i]->ny;
+	    rhsc->p[i]->ny=1;
+	}
+    }
+    dcellwrite(rhsc, "CPU_TomoR");
+    muv(&lc, &recon->RL, rhsc, 1);
+    dcellwrite(lc, "CPU_TomoL");
+    muv(&lc, &recon->RL, rhsc, -1);
+    dcellwrite(lc, "CPU_TomoL2");
+    dcellzero(lc);
+    muv(&lc, &recon->RL, rhsc, 1);
+    dcellwrite(lc, "CPU_TomoL3");
+    if(parms->tomo.alg==1 && parms->tomo.precond==1){
+	dcell *lp=NULL;
+	fdpcg_precond(&lp, recon, lc);
+	dcellwrite(lp, "CPU_TomoP");
+	fdpcg_precond(&lp, recon, lc);
+	dcellwrite(lp, "CPU_TomoP2");
+    }
+    dcellzero(lc);
+    muv_solve(&lc, &recon->RL, NULL, rhsc);
+    dcellwrite(lc, "CPU_Tomo");
+	
+    //cp2gpu(&curecon->gradin, simu->gradlastol);
+    //gpu_TomoR(&rhsg, 0, recon, curecon->gradin, 1);
+    curcellwrite(rhsg, "GPU_TomoR");
+    gpu_TomoL(&lg, 0, recon, rhsg, 1);
+    curcellwrite(lg, "GPU_TomoL");
+    gpu_TomoL(&lg, 1, recon, rhsg, -1);
+    curcellwrite(lg, "GPU_TomoL2");
+    gpu_TomoL(&lg, 0, recon, rhsg, 1);
+    curcellwrite(lg, "GPU_TomoL3");
+    if(parms->tomo.alg==1 && parms->tomo.precond==1){
+	curcell *lp=NULL;
+	gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream);
+	curcellwrite(lp, "GPU_TomoP");
+	gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream);
+	curcellwrite(lp, "GPU_TomoP2");
+    }
+    curcellzero(lg, 0);
+    gpu_pcg(&lg, (G_CGFUN)gpu_TomoL, (void*)recon, NULL, NULL, rhsg,
+	    simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream);
+    curcellwrite(lg, "GPU_Tomo");
+    CUDA_SYNC_DEVICE;
+    exit(0);
+}
