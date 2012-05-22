@@ -19,7 +19,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	mexErrMsgTxt("Usage: cov2d=mk2dcov(loc, amp, cov, normalization)");
     }
     loc_t *loc=mx2loc(prhs[P_LOC]);
-    dmat *amp=ddup(mx2d(prhs[P_AMP]));
+    dmat *amp0=mx2d(prhs[P_AMP]);
+    dmat *amp=ddup(amp0);
+    dfree(amp0);
     dmat *cov=mx2d(prhs[P_COV]);
     int norm=(int)mxGetScalar(prhs[P_NORM]);
     dmat *cov2d=NULL;
@@ -30,5 +32,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
     mk2dcov(&cov2d, loc, pamp, 0.5, cov, norm);
     plhs[PL_COV2D]=d2mx(cov2d);
+    dfree(cov);
+    dfree(cov2d);
     dfree(amp);
+    free(loc);
 }

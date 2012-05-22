@@ -19,31 +19,6 @@
 #define USE_COMPLEX /**<for complex data*/
 #include <sys/file.h>
 #include "common.h"
-/*#if defined (__INTEL_COMPILER) && __INTEL_COMPILER>=1200
-//fftw3.h is incompatible with icc 12 if gcc4.6 is present.
-struct fftw_iodim_do_not_use_me {
-     int n;
-     int is;
-     int os;
-};
-typedef struct fftw_plan_s* fftw_plan;
-typedef struct fftw_iodim_do_not_use_me fftw_iodim;
-int fftw_import_wisdom_from_file(FILE *fp);
-void fftw_export_wisdom_to_file(FILE *fp);
-void fftw_plan_with_nthreads(int);
-void fftw_init_threads(void);
-void fftw_cleanup_threads(void);
-fftw_plan fftw_plan_dft_1d(int, dcomplex *, dcomplex *, int, unsigned);
-fftw_plan fftw_plan_dft_2d(int, int, dcomplex *, dcomplex*, int, unsigned);
-fftw_plan fftw_plan_many_dft(int, const int *, int, dcomplex *, const int* , int, int, 
-			      dcomplex *, const int *, int, int, int, unsigned);
-fftw_plan fftw_plan_guru_split_dft(int, const fftw_iodim *, int, const fftw_iodim *, 
-				    double *, double *, double *, double *, unsigned);
-void fftw_destroy_plan(fftw_plan);
-void fftw_execute(fftw_plan);
-#define FFTW_MEASURE (0U)
-#define FFTW_ESTIMATE (1U << 6)
-*/
 #include <fftw3.h>
 #include "thread.h"
 #include "process.h"

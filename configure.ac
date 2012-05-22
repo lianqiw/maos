@@ -446,8 +446,13 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 else
    LDFFT=""
 fi
-AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
-AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
+AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="yes")
+if test $use_fftw_threads = "yes" ;then
+     AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
+     AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
+else
+     has_fftw_threads="no"
+fi
 if test "x$has_fftw_threads" = "xyes" ;then
     if test "x$has_fftw_omp" = "xyes" ;then
         AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp, conflict.")

@@ -478,7 +478,9 @@ typedef struct SIM_T{
     dcell *clemp;      /**<lgs/ngs mod error per direction. only on-axis is computed.*/
     dmat *corrNGSm;    /**<Correction of NGS mode. (integrator output)*/
     dmat *cleNGSm;     /**<Close loop ngs mods in split tomogrpahy. */
+    dmat *oleNGSm;     /**<Open loop ngs mods in split tomogrpahy. */
     dcell *cleNGSmp;   /**<(M'*w*phi);*/
+    dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     /*DM commands.*/
     dcell *dmcmd;      /**<This is the final command send to DM.*/

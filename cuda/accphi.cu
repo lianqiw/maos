@@ -161,8 +161,9 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		}
 	    }
 	}
-	info2("Available memory is %ld (min) %ld (max)\n", avail_min, avail_max);
-	long need=300*1024*1024+nps*sizeof(float)*nxn*nyn;
+	info2("Available memory is %ld (min) %ld (max). Min atm is %ldx%ld\n", avail_min, avail_max, nxn, nyn);
+	long spare=300*1024*1024;
+	long need=spare+nps*sizeof(float)*nxn*nyn;
 	if(avail_min<need){
 	    if(avail_max<need){
 		error("ALL GPUs does not have enough memory\n");
@@ -178,10 +179,11 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 			free(tmp2);
 		    }
 		}
+		error("Please rerun maos with %s\n", gcmd);
 	    }
 	}
 	/*we are able to host this amount. */
-	long nxa=(long)roundf(sqrt((avail_min-need)/nps/sizeof(float)));
+	long nxa=(long)roundf(sqrt((avail_min-spare)/nps/sizeof(float)));
 	info2("GPU can host %d %ldx%ld atmosphere\n", nps, nxa, nxa);
 	if(nxa*nxa>parms->atm.nx*parms->atm.ny){/*we can host all atmosphere. */
 	    nx0=parms->atm.nx;

@@ -25,7 +25,6 @@ ___bin_drawdaemon_LDADD=$(LDADD) $(DRAW_LIBS) -lgthread-2.0
 ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
 ___bin_calcenc_SOURCES=calcenc.c
-___bin_drawdaemon_LDFLAGS= #disable AM_LDFLAGS
 endif
 if MON
 if MONN  #FULL with notify
@@ -35,20 +34,16 @@ else     #Monitor wihtout libnotify.
 MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
 MONITOR_LIBS=$(LDADD) $(MON_LIBS)
 endif
-MONLD=
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table
 ___bin_monitor_SOURCES=monitor.c monitor_gui.c
 ___bin_monitor_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_LDADD=$(MONITOR_LIBS)
-___bin_monitor_LDFLAGS=$(MONLD)
-___bin_monitor_list_SOURCES=monitor_gui_list.c monitor.c #gtkcellrendererprogressnew.c gtkcellrendererprogressnew.h
+___bin_monitor_list_SOURCES=monitor_gui_list.c monitor.c 
 ___bin_monitor_list_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_list_LDADD=$(MONITOR_LIBS)
-___bin_monitor_list_LDFLAGS=$(MONLD)
 ___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
-___bin_monitor_table_LDFLAGS=$(MONLD)
 endif
 PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov
 bin_PROGRAMS=$(PROGS)

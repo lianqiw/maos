@@ -60,4 +60,5 @@
 #include "imat.h"
 #include "nr.h"
 #include "mkdtf.h"
+#include "psd.h"
 #endif

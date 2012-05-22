@@ -452,7 +452,33 @@ static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nlo
     }
     UNLOCK(evlmutex[evlgpu[ievl]]);
 }
-
+#define PERFEVL_WFE(pclep, pclmp, cleNGSmp)				\
+    if(parms->recon.split){						\
+	if(parms->ndm<=2){						\
+	    PDMAT(cleNGSmp->p[ievl], pcleNGSmp);			\
+	    if(nmod==3){						\
+		calc_ngsmod(pclep[isim], pclmp[isim], pcleNGSmp[isim],recon->ngsmod->nmod, \
+			    recon->ngsmod->aper_fcp, recon->ngsmod->ht, \
+			    recon->ngsmod->scale, thetax, thetay,	\
+			    aper->ipcc, aper->imcc,			\
+			    cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream); \
+	    }else{							\
+		calc_ngsmod(NULL, NULL, pcleNGSmp[isim],recon->ngsmod->nmod, \
+			    recon->ngsmod->aper_fcp, recon->ngsmod->ht, \
+			    recon->ngsmod->scale, thetax, thetay,	\
+			    aper->ipcc, aper->imcc,			\
+			    cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream); \
+		TO_IMPLEMENT;/*mode decomposition. */			\
+	    }								\
+	}								\
+    }else{								\
+	if(nmod==3){							\
+	    calc_ptt(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc,	\
+		     cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream); \
+	}else{								\
+	    TO_IMPLEMENT;						\
+	}								\
+    }
 
 /**
    Performance evaluation. Designed to replace perfevl_ievl in maos/perfevl.c
@@ -513,12 +539,7 @@ void gpu_perfevl(thread_t *info){
     if(parms->plot.run){
 	/*TO_IMPLEMENT; */
     }
-    if(nmod==3){
-	calc_ptt(polep[isim], polmp[isim], aper->ipcc, aper->imcc,
-		     cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
-    }else{
-	TO_IMPLEMENT;
-    }
+    PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
     if((parms->evl.psfmean  || parms->evl.opdcov)
        && isim>=parms->evl.psfisim 
        &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
@@ -580,32 +601,7 @@ void gpu_perfevl(thread_t *info){
     if(parms->plot.run){
 	/*TO_IMPLEMENT; */
     }
-    if(parms->recon.split){
-	if(parms->ndm<=2){
-	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
-	    if(nmod==3){
-		calc_ngsmod(pclep[isim], pclmp[isim], pcleNGSmp[isim],recon->ngsmod->nmod,
-				recon->ngsmod->aper_fcp, recon->ngsmod->ht,
-				recon->ngsmod->scale, thetax, thetay,
-				aper->ipcc, aper->imcc,
-				cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
-	    }else{
-		calc_ngsmod(NULL, NULL, pcleNGSmp[isim],recon->ngsmod->nmod,
-				recon->ngsmod->aper_fcp, recon->ngsmod->ht,
-				recon->ngsmod->scale, thetax, thetay,
-				aper->ipcc, aper->imcc,
-				cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);	
-		TO_IMPLEMENT;/*mode decomposition. */
-	    }
-	}
-    }else{
-	if(nmod==3){
-	    calc_ptt(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc,
-			 cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
-	}else{
-	    TO_IMPLEMENT;
-	}
-    }
+    PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
     if(do_psf_cov){
 	if(parms->evl.psfngsr[ievl]!=2){/*also do normal one.*/
 	    if(parms->evl.psfpttr[ievl]){

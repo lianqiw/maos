@@ -963,6 +963,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    parms->recon.mvm=0;
 	}
     }
+    if(parms->sim.evlol){
+	parms->recon.split=0;
+    }
     if(parms->recon.glao && parms->ndm!=1){
 	error("GLAO only works with 1 dm\n");
     }
@@ -2003,7 +2006,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    }
 	}
     }
-    if(!parms->sim.closeloop){
+    if(!parms->atm.frozenflow){
 	warning2("psfisim is set from %d to %d in openloop mode\n", parms->evl.psfisim, parms->sim.start);
 	parms->evl.psfisim=parms->sim.start;
     }

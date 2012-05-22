@@ -102,6 +102,32 @@ static void perfevl_psfcl(const PARMS_T *parms, const APER_T *aper,
     }
     ccellfree(psf2s);
 }
+/*computes the wavefront mode/error, and ngsmod. Same operation for OL/CL
+  evaluations.*/
+#define PERFEVL_WFE(pclep, pclmp, cleNGSmp)				\
+    if(parms->recon.split){/*for split tomography */			\
+	if(parms->ndm<=2){						\
+	    PDMAT(cleNGSmp->p[ievl], pcleNGSmp);			\
+	    /*compute the dot product of wavefront with NGS mode for that direction */ \
+	    if(nmod==3){						\
+		calc_ngsmod_dot(pclep[isim],pclmp[isim], pcleNGSmp[isim],\
+				parms,recon,aper, iopdevl->p,ievl);	\
+	    }else{/*more modes are wanted. */				\
+		calc_ngsmod_dot(NULL,NULL, pcleNGSmp[isim],\
+				parms,recon,aper, iopdevl->p,ievl);	\
+		loc_calc_mod(pclep[isim],pclmp[isim], aper->mod,aper->amp->p,iopdevl->p); \
+	    }								\
+	}else{								\
+	    error("Not implemented\n");					\
+	}								\
+    }else{/*for integrated tomography. */				\
+	if(nmod==3){							\
+	    loc_calc_ptt(pclep[isim],pclmp[isim], aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p); \
+	}else{								\
+	    loc_calc_mod(pclep[isim],pclmp[isim], aper->mod,aper->amp->p,iopdevl->p);	\
+	}								\
+    }									\
+    
 /**
    Performance evaluation for each direction in parallel mode.  */
 void perfevl_ievl(thread_t *info){
@@ -167,15 +193,7 @@ void perfevl_ievl(thread_t *info){
 	drawopdamp("OL", aper->locs,iopdevl->p , aper->amp1->p, opdzlim,
 		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
     }
-    if(nmod==3){/*evaluation piston/tip/tilt removed wve */
-	loc_calc_ptt(polep[isim],polmp[isim],
-		     aper->locs, aper->ipcc, aper->imcc, 
-		     aper->amp->p, iopdevl->p);
-    }else{/*more general case */
-	loc_calc_mod(polep[isim],polmp[isim],
-		     aper->mod,aper->amp->p,iopdevl->p);
-    }
-
+    PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
     /*evaluate time averaged open loop PSF. */
     if((parms->evl.psfmean || parms->evl.opdcov)
        && isim>=parms->evl.psfisim 
@@ -275,34 +293,7 @@ void perfevl_ievl(thread_t *info){
     }
 
     /*Evaluate closed loop performance. */
-    if(parms->recon.split){/*for split tomography */
-	if(parms->ndm<=2){
-	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
-	    /*compute the dot product of wavefront with NGS mode for that direction */
-	    if(nmod==3){
-		calc_ngsmod_dot(pclep[isim],pclmp[isim],
-				pcleNGSmp[isim],parms,recon,aper,
-				iopdevl->p,ievl);
-	    }else{/*since more modes are wanted. don't use ngsmod split. */
-		calc_ngsmod_dot(NULL,NULL,
-				pcleNGSmp[isim],parms,recon,aper,
-				iopdevl->p,ievl);
-		loc_calc_mod(pclep[isim],pclmp[isim],
-			     aper->mod,aper->amp->p,iopdevl->p);
-	    }
-	}else{
-	    error("Not implemented\n");
-	}
-    }else{/*for integrated tomography. */
-	if(nmod==3){
-	    loc_calc_ptt(pclep[isim],pclmp[isim],
-			 aper->locs, aper->ipcc, aper->imcc, 
-			 aper->amp->p, iopdevl->p);
-	}else{
-	    loc_calc_mod(pclep[isim],pclmp[isim],
-			 aper->mod,aper->amp->p,iopdevl->p);
-	}
-    }
+    PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
     if(do_psf_cov){
 	if(parms->evl.psfngsr[ievl]!=0){
 	    /* even if psfpttr=1, referencing is ok.  Change to copy if
@@ -340,8 +331,8 @@ void perfevl_ievl(thread_t *info){
    Evaluation field averaged performance.
 */
 static void perfevl_mean(SIM_T *simu){
-
     const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
     const int isim=simu->isim;
     const int nmod=parms->evl.nmod;
     const int nevl=parms->evl.nevl;
@@ -367,7 +358,7 @@ static void perfevl_mean(SIM_T *simu){
 	}
     }
   
-    const RECON_T *recon=simu->recon;
+
     if(parms->recon.split){
 	if(parms->ndm<=2){
 	    /* convert cleNGSm into mode and put NGS mode WVE into clem. */
@@ -379,25 +370,28 @@ static void perfevl_mean(SIM_T *simu){
 		    pcorrNGSm[imod]=simu->Mint_lo->mint[0]->p[0]->p[imod];
 		}
 	    }
-	    double *pcleNGSm=simu->cleNGSm->p+isim*nngsmod;
-	    for(int imod=0; imod<nngsmod; imod++){
-		pcleNGSm[imod]=0;
-	    }
+	    double pcleNGSm[nngsmod];
+	    memset(pcleNGSm, 0, sizeof(double)*nngsmod);
+	    double poleNGSm[nngsmod];
+	    memset(poleNGSm, 0, sizeof(double)*nngsmod);
+	    
 	    for(int ievl=0; ievl<nevl; ievl++){
 		double wt=parms->evl.wt[ievl];
 		double *pcleNGSmp=simu->cleNGSmp->p[ievl]->p+isim*nngsmod;
+		double *poleNGSmp=simu->oleNGSmp->p[ievl]->p+isim*nngsmod;
 		for(int imod=0; imod<nngsmod; imod++){
 		    pcleNGSm[imod]+=pcleNGSmp[imod]*wt;
+		    poleNGSm[imod]+=poleNGSmp[imod]*wt;
 		}
 	    }
 	    double tt=dwdot2(pcleNGSm, recon->ngsmod->IMCC_TT, pcleNGSm);
-	    double ngs=dwdot(pcleNGSm, recon->ngsmod->IMCC, pcleNGSm);
+	    double ngs=dwdot(pcleNGSm, recon->ngsmod->IMCC,    pcleNGSm);
 	    double tot=simu->cle->p[isim*nmod];
-	    double modngs[nngsmod];
-	    memset(modngs,0,sizeof(double)*nngsmod);
 	    /*turn cleNGSm to modes */
-	    dmulvec(modngs,recon->ngsmod->IMCC,pcleNGSm,1);
-	    memcpy(pcleNGSm,modngs,sizeof(double)*nngsmod);
+	    double *pcleNGSm2=simu->cleNGSm->p+isim*nngsmod;
+	    dmulvec(pcleNGSm2,recon->ngsmod->IMCC,pcleNGSm,1);
+	    double *poleNGSm2=simu->oleNGSm->p+isim*nngsmod;
+	    dmulvec(poleNGSm2,recon->ngsmod->IMCC,poleNGSm,1);
 	    dcell *Mngs=dcellnew(1,1);
 	    Mngs->p[0]=dnew_ref(nngsmod,1,pcleNGSm);/*ref the data */
 	    if(simu->parms->tomo.ahst_idealngs){

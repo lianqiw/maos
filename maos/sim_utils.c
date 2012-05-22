@@ -581,14 +581,16 @@ static void init_simu_evl(SIM_T *simu){
 	simu->olmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resolmp_%d.bin",seed);
 	simu->clep=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclep_%d.bin",seed);
 	simu->clmp=dcellnew_mmap(nevl,1,nnx,nny,NULL,NULL,"Resclmp_%d.bin",seed);
-	if(!parms->sim.evlol){
-	    if(parms->recon.split && parms->ndm<=2){
-		long nnx_split[nevl];
-		long nnx_3[nevl];
-		for(int ievl=0; ievl<nevl; ievl++){
-		    nnx_3[ievl]=3;
-		    nnx_split[ievl]=recon->ngsmod->nmod;
-		}
+	if(parms->recon.split && parms->ndm<=2){
+	    long nnx_split[nevl];
+	    long nnx_3[nevl];
+	    for(int ievl=0; ievl<nevl; ievl++){
+		nnx_3[ievl]=3;
+		nnx_split[ievl]=recon->ngsmod->nmod;
+	    }
+	    simu->oleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"ResoleNGSm_%d.bin",seed);
+	    simu->oleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,NULL,"ResoleNGSmp_%d.bin",seed);
+	    if(!parms->sim.evlol){
 		simu->clemp=dcellnew_mmap(nevl,1, nnx_3, nny, NULL,NULL,"Resclemp_%d.bin",seed);
 		simu->cleNGSm=dnew_mmap(recon->ngsmod->nmod,nsim,NULL,"RescleNGSm_%d.bin",seed);
 		simu->cleNGSmp=dcellnew_mmap(nevl,1,nnx_split,nny,NULL,NULL,"RescleNGSmp_%d.bin",seed);
@@ -1570,8 +1572,10 @@ void free_simu(SIM_T *simu){
     if(parms->recon.split){
 	dcellfree(simu->clemp);
 	dfree(simu->cleNGSm);
+	dfree(simu->oleNGSm);
 	dfree(simu->corrNGSm);
 	dcellfree(simu->cleNGSmp);
+	dcellfree(simu->oleNGSmp);
     }
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	if(simu->ints[iwfs])

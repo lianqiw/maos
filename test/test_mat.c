@@ -74,7 +74,7 @@ static void test_d2cell(){
     dfree(A2);
 
     A=dcellread("ccell.bin");
-    int *dims=calloc(A->nx,sizeof(int));
+    long *dims=calloc(A->nx,sizeof(long));
     for(int ix=0; ix<A->nx; ix++){
 	dims[ix]=A->p[ix]->nx;
     }
@@ -254,7 +254,18 @@ static void test_svd(void){
     }
     exit(0);
 }
+void test_psd1d(){
+    dmat *tmp=dnew(100,1);
+    for(int i=0; i<100; i++){
+	tmp->p[i]=sin(i/10.);
+    }
+    dmat *psd=psd1d(tmp, 10);
+    dwrite(tmp, "tmp");
+    dwrite(psd, "psd");
+    exit(0);
+}
 int main(int argc, char **argv){
+    test_psd1d();
     test_svd();
     test_spline_2d();
     test_spline();

@@ -813,7 +813,7 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     dcell *Mngs=NULL;
     dcellmm(&Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
     //zero out global focus mode if any.
-    if(recon->ngsmod->nmod>5){
+    if(Mngs && recon->ngsmod->nmod>5){
 	Mngs->p[0]->p[5]=0;
     }
     ngsmod2dm(&dmerr,recon, Mngs,-1);

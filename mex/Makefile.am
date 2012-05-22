@@ -1,5 +1,5 @@
 AM_CFLAGS=-DDLONG $(MEXOPT) -I$(SRC_DIR)/lib
-AM_LDFLAGS=$(LDMEX) -lmwblas -lmwlapack -lm -lfftw3
+AM_LDFLAGS=-lfftw3 $(LDMEX) -lmwblas -lmwlapack -lm -static
 AM_LDFLAGS+=-Xcompiler -shared -no-install
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
 if USE_LONG
@@ -12,7 +12,7 @@ EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c
 
-bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim servo_test
+bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim servo_test psd1d
 
 #.c.o:
 #	$(MEX) $(AM_CFLAGS) -c $< 
