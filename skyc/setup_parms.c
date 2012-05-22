@@ -88,6 +88,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_STR(skyc.stars);
     READ_INT(skyc.addws);
     READ_DBL(skyc.pmargin);
+    READ_INT(skyc.psdcalc);
     if(!parms->skyc.stars){
 	if(parms->skyc.keeporder){
 	    error("When skyc.keeporder is set, skyc.stars need to be set\n");
@@ -218,7 +219,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.ngsalign){
 	warning2("NGS are aligned to grid spaced by %g\"\n", parms->maos.ngsgrid);
     }
-    if(1){
+    if(parms->skyc.psdcalc){
+	info("Calculating PSDs from time series\n");
+    }else if(1){
 	char temp[80]; 
 	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	parms->skyc.psd_ngs=dread("%s",temp); 

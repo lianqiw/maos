@@ -105,13 +105,13 @@ static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, double dt, long
     
     /*compute error in uncorrectable region.*/
     dmat *nu2=dlogspace(log10(fs/2),3,1000);/*Frequencies that no correction can be made. */
-    dmat *psd2=dinterp1log(psdf,psdval,nu2);
-    st->rms2_sig=psd_intelog(nu2->p, psd2->p, nu2->nx);
+    dmat *psd2=dinterp1(psdf,psdval,nu2);
+    st->rms2_sig=psd_inte(nu2->p, psd2->p, nu2->nx);
     dfree(nu2); dfree(psd2);
 
     /*Should not go beyond Nyquist freq. Hrej=1 for nu>fs/2. */
     dmat *nu=st->nu=dlogspace(-3,log10(fs/2),1000);
-    st->psd=dinterp1log(psdf,psdval,nu);
+    st->psd=dinterp1(psdf,psdval,nu);
     dfree(psdf);
     dfree(psdval);
     dcomplex pi2i=2*M_PI*I;
@@ -504,7 +504,7 @@ dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
     dmat *f=dlinspace(df,df,N);
     dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
     dmat *psdval=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);
-    dmat *psd2=dinterp1log(psdf,psdval,f);
+    dmat *psd2=dinterp1(psdf,psdval,f);
     dfree(f);
     double sqdf=sqrt(df);
     dfree(psdf);
@@ -536,29 +536,34 @@ void servo_free(SERVO_T *st){
 /**
    Integrated a PSF that defines on logrithmically spaced grid nu.
 */
-double psd_intelog(double *nu, double *psd, long n){
+double psd_inte(double *nu, double *psd, long n){
+    double dnu=(nu[n-1]-nu[0])/(n-1);
     double dlognu=(log(nu[n-1])-log(nu[0]))/(n-1);
-    if((log(nu[1])-log(nu[0])-dlognu)>1.e-4){
-	error("Nu is not logirthmic spaced\n");
-    }
     double rms_sig=0;
-    for(long i=0; i<n; i++){
-	rms_sig+=psd[i]*nu[i];
-    }	
-    rms_sig*=dlognu;
+    if(fabs(nu[1]-nu[0]-dnu)<dnu*1.e-4){
+	for(long i=0; i<n; i++){
+	    rms_sig+=psd[i];
+	}
+	rms_sig*=dnu;
+    }else if((log(nu[1])-log(nu[0])-dlognu)<dlognu*1.e-4){
+        for(long i=0; i<n; i++){
+	    rms_sig+=psd[i]*nu[i];
+	}	
+	rms_sig*=dlognu;
+    }
     return rms_sig;
 }
 /**
-   wraps psd_intelog
+   wraps psd_inte
 */
-double psd_intelog2(dmat *psdin){
+double psd_inte2(dmat *psdin){
     if(psdin->ny!=2){
 	error("Wrong format\n");
     }
     double *nu=psdin->p;
     long n=psdin->nx;
     double *psd=nu+n;
-    return psd_intelog(nu, psd, n);
+    return psd_inte(nu, psd, n);
 }
 
 
@@ -574,15 +579,9 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     double df=1./(dt*nstep);
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
-    double var=psd_intelog2(psdin);
+    double var=psd_inte2(psdin);
     info2("Input psd has variance of %g m^2\n",var*1e18);
-    if(fabs(psdx->p[0]*psdx->p[2]-pow(psdx->p[1],2))<EPS){/*log spaced */
-	psd=dinterp1log(psdx, psdy, fs);
-    }else if(fabs(psdx->p[0]+psdx->p[2]-psdx->p[1]*2.)<EPS){/*linear spaced */
-	psd=dinterp1(psdx, psdy, fs);
-    }else{
-	error("Frequency in PSD must be log or linearly spaced\n");
-    }
+    psd=dinterp1(psdx, psdy, fs);
     psd->p[0]=0;/*disable pistion. */
     cmat *wshat=cnew(nstep, 1);
     cfft2plan(wshat, -1);

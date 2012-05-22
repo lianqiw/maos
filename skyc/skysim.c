@@ -328,16 +328,40 @@ void skysim(const PARMS_S *parms){
 	dcellfree(midealp);
 	simu->rmsol=calc_rmsol(simu->mideal, parms);
 	simu->psd_ws=ddup(parms->skyc.psd_ws);
-	simu->psd_ngs=ddup(parms->skyc.psd_ngs);
-	simu->psd_ps=ddup(parms->skyc.psd_ps);
-	simu->psd_tt=ddup(parms->skyc.psd_tt);
-	double rms_ws=psd_intelog2(simu->psd_ws);
+	if(parms->skyc.psdcalc){
+	    PDMAT(parms->maos.mcc, MCC);
+	    dmat *x=dtrans(simu->mideal);
+	    for(int im=0; im<x->ny; im++){
+		dmat *xi=dsub(x, 0, 0, im, 1);
+		dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
+		dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
+		dwrite(xi, "xi_%d", im);
+		dwrite(psdi, "psdi_%d", im);
+		if(im<2){
+		    add_psd2(&simu->psd_tt, psdi);
+		}else if(im<5){
+		    add_psd2(&simu->psd_ps, psdi);
+		}
+		dfree(xi);
+		dfree(psdi);
+	    }
+	    dfree(x);
+	    simu->psd_ngs=add_psd(simu->psd_ps, simu->psd_tt);
+	    dwrite(simu->psd_tt, "psd_tt");
+	    dwrite(simu->psd_ps, "psd_ps");
+	    dwrite(simu->psd_ngs, "psd_ngs");
+	}else{
+	    simu->psd_ngs=ddup(parms->skyc.psd_ngs);
+	    simu->psd_ps=ddup(parms->skyc.psd_ps);
+	    simu->psd_tt=ddup(parms->skyc.psd_tt);
+	}
+	double rms_ws=psd_inte2(simu->psd_ws);
 	simu->rmsol->p[1]+=rms_ws;/*add wind shake to open loop error. */
 	prep_bspstrehl(simu);
 	/*renormalize PSD */
+	double rms_ngs=psd_inte2(simu->psd_ngs);
+	info("PSD integrates to %.2f nm\n", sqrt(rms_ngs)*1e9);
 	if(parms->skyc.psd_scale){
-	    double rms_ngs=psd_intelog2(simu->psd_ngs);
-	    info("PSD integrates to %.2f nm\n", sqrt(rms_ngs)*1e9);
 	    double rms_ratio=simu->rmsol->p[0]/rms_ngs;
 	    info("Scaling PSD by %g\n", rms_ratio);
 	    long nx=simu->psd_ngs->nx;
@@ -350,7 +374,7 @@ void skysim(const PARMS_S *parms){
 		p_tt[i]*=rms_ratio;
 		p_ps[i]*=rms_ratio;
 	    }
-	    rms_ngs=psd_intelog2(simu->psd_ngs);
+	    rms_ngs=psd_inte2(simu->psd_ngs);
 	    info("PSD integrates to %.2f nm after scaling\n", sqrt(rms_ngs)*1e9);
 	}
 	simu->psd_ngs_ws=add_psd(simu->psd_ngs, simu->psd_ws);

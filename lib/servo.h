@@ -45,7 +45,7 @@ dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat);
 dmat* servo_test(dmat *mideal, double dtngs, int dtrat, double sigma2n, dmat *gain);
 void servo_free(SERVO_T *st);
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt);
-double psd_intelog(double *nu, double *psd, long n);
-double psd_intelog2(dmat *psdin);
+double psd_inte(double *nu, double *psd, long n);
+double psd_inte2(dmat *psdin);
 dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstep);
 #endif

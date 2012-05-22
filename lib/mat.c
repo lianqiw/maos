@@ -193,7 +193,6 @@ X(mat) *X(ref)(X(mat) *in){
     out->nref[0]++;
     return out;
 }
-
 /**
    create an new X(mat) reference another with different shape.
 */
@@ -1236,7 +1235,7 @@ X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
     double xsep=(xmaxl-xminl)/(double)(nmax1);
     double xsep1=1./xsep;
     if(fabs(xsep+xminl-xin->p[1])>1.e-3){
-	error("Xin is not linearly spaced\n");
+	return X(interp1log)(xin, yin, xnew);
     }
     if(xin->ny!=1 || xnew->ny!=1){
 	error("Either xin or xnew is in wrong format\n");

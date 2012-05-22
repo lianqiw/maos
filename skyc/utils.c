@@ -147,7 +147,7 @@ static dmat *add_psd_nomatch(dmat *psd1,dmat *psd2){
     dmat *nu1=dsub(psd1,0,psd1->nx,0,1);
     dmat *psd2x=dnew_ref(psd2->nx, 1, psd2->p);
     dmat *psd2y=dnew_ref(psd2->nx,1,psd2->p+psd2->nx);
-    dmat *psd2new=dinterp1log(psd2x,psd2y,nu1);
+    dmat *psd2new=dinterp1(psd2x,psd2y,nu1);
     dfree(psd2x); dfree(psd2y);
     dmat *psd=dnew(nu1->nx,2);
     double *ppsd=psd->p+psd->nx;
@@ -182,4 +182,16 @@ dmat *add_psd(dmat *psd1, dmat *psd2){
 	pp[i]=p1[i]+p2[i];
     }
     return psd;
+}
+/*
+  Add a PSD to another.
+*/
+void add_psd2(dmat **out, dmat *in){
+    if(!*out){
+	*out=ddup(in);
+    }else{
+	dmat *tmp=*out;
+	*out=add_psd(tmp, in);
+	dfree(tmp);
+    }
 }
