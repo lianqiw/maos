@@ -76,6 +76,7 @@
 #include "genpistat.h"
 #include "setup_star.h"
 #include "utils.h"
+#include "nafocus.h"
 #define VERBOSE 2
 
 /**
@@ -186,7 +187,7 @@ static void skysim_isky(SIM_S *simu){
 	    for(int idtrat=aster->idtratmin; idtrat<=aster->idtratmax; idtrat++){
 		/*focus and windshake residual; */
 		double resadd=parms->skyc.addws?0:asteri->res_ws->p[idtrat] 
-		    + parms->skyc.resfocus->p[idtrat];
+		    + parms->skyc.addfocus?0:parms->skyc.resfocus->p[idtrat];
 		dmat *ires=NULL;
 		dmat *imres=NULL;
 		for(int do_demote=0; do_demote<do_demote_end; do_demote++){
@@ -225,7 +226,7 @@ static void skysim_isky(SIM_S *simu){
 		pres[isky][1]=pmini->p[0];/*ATM NGS Mode error */
 		pres[isky][2]=pmini->p[1];/*ATM Tip/tilt Error. */
 		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
-		pres[isky][4]=parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
+		pres[isky][4]=parms->skyc.addfocus?0:parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
 		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];/*Total */
 		/*On axis performance. */
 		pres_oa[isky][1]=pmini->p[2];
@@ -318,9 +319,7 @@ void skysim(const PARMS_S *parms){
 	simu->mideal=dread("%s_%d.bin",parms->maos.fnmideal,simu->seed_maos);
 	if(parms->maos.nmod>5 && simu->mideal->nx==5){
 	    warning("ngsmod is only 5 modes, but maos.nmod is 6. Adding zero defocus mode\n");
-	    dwrite(simu->mideal, "mideal_1");
 	    dresize(simu->mideal, parms->maos.nmod, simu->mideal->ny);
-	    dwrite(simu->mideal, "mideal_2");
 	}
 	/*Read ideal NGS mode dot product for on axis. */
 	dcell *midealp=dcellread("%s_%d.bin",parms->maos.fnmidealp,simu->seed_maos);
@@ -335,8 +334,6 @@ void skysim(const PARMS_S *parms){
 		dmat *xi=dsub(x, 0, 0, im, 1);
 		dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
 		dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
-		dwrite(xi, "xi_%d", im);
-		dwrite(psdi, "psdi_%d", im);
 		if(im<2){
 		    add_psd2(&simu->psd_tt, psdi);
 		}else if(im<5){
@@ -356,12 +353,13 @@ void skysim(const PARMS_S *parms){
 	    simu->psd_tt=ddup(parms->skyc.psd_tt);
 	}
 	double rms_ws=psd_inte2(simu->psd_ws);
+	simu->rmsol->p[0]+=rms_ws;
 	simu->rmsol->p[1]+=rms_ws;/*add wind shake to open loop error. */
 	prep_bspstrehl(simu);
 	/*renormalize PSD */
 	double rms_ngs=psd_inte2(simu->psd_ngs);
 	info("PSD integrates to %.2f nm\n", sqrt(rms_ngs)*1e9);
-	if(parms->skyc.psd_scale){
+	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
 	    double rms_ratio=simu->rmsol->p[0]/rms_ngs;
 	    info("Scaling PSD by %g\n", rms_ratio);
 	    long nx=simu->psd_ngs->nx;
@@ -411,6 +409,15 @@ void skysim(const PARMS_S *parms){
 	    seed_rand(&simu->rand, simu->seed_skyc+parms->maos.zadeg);
 	    info2("Open loop error: NGS: %.2f TT: %.2f nm\n", 
 		  sqrt(simu->rmsol->p[0])*1e9, sqrt(simu->rmsol->p[1])*1e9);
+	    if(parms->skyc.addfocus && parms->maos.nmod>5){
+		dmat *time=nafocus_time(parms->maos.D, parms->maos.hs,
+					parms->skyc.na_alpha, parms->skyc.na_beta, 
+					parms->maos.dt, simu->mideal->ny, &simu->rand);
+		for(int istep=0; istep<parms->maos.nstep; istep){
+		    simu->mideal->p[5+istep*6]=time->p[istep];
+		}
+		dwrite(simu->mideal, "mideal_%d_%d", simu->seed_maos, simu->seed_skyc);
+	    }
 	    /*generate star fields. */
 	    if(parms->skyc.stars){
 		info2("Loading stars from %s\n",parms->skyc.stars);

@@ -533,9 +533,8 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
     for(int iaster=0; iaster<naster; iaster++){
 	double mini=INFINITY;
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
-	    double rms= parms->skyc.resfocus->p[idtrat] 
-		+ aster[iaster].res_ws->p[idtrat]
-		+ aster[iaster].res_ngs->p[idtrat];
+	    /*should not add res_ws here since res_ngs already includes that.*/
+	    double rms= parms->skyc.resfocus->p[idtrat]+ aster[iaster].res_ngs->p[idtrat];
 	    pres[iaster][idtrat]=rms;
 	    if(rms<mini){
 		mini=rms;

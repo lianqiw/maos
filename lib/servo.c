@@ -98,6 +98,9 @@ static double servo_phi_margin(double *fcross, /**<[out] Cross over frequency*/
    Make basic arrays for servo analysis.
 */
 static void servo_calc_init(SERVO_CALC_T *st, const dmat *psdin, double dt, long dtrat){
+    if(psdin->ny!=2){
+	error("psdin should have two columns\n");
+    }
     double Ts=dt*dtrat;
     double fs=1./Ts;
     dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
@@ -248,19 +251,7 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     dcell *gm=dcellnew(sigman->nx, sigman->ny);
     double g0_min=0.001;/*the minimum gain allowed. was 0.001. changed on 2012-03-27*/
     double g0_max=0.5;
-    /*{
-	st.sigman=sigman->p[0];
-	dmat *res=dnew(100,3);PDMAT(res,pres);
-	for(int i=0; i<100; i++){
-	    double g0=i*0.01+0.001;
-	    servo_calc_do(&st, g0);
-	    pres[0][i]=g0;
-	    pres[1][i]=st.rms_sig;
-	    pres[2][i]=st.rms_n;
-	}
-	dwrite(res, "res");
-	}*/
-
+    
     for(long ins=0; ins<sigman->nx*sigman->ny; ins++){
 	st.sigman=sigman->p[ins];
 	double g0=golden_section_search((golden_section_fun)servo_calc_do, &st, g0_min, g0_max, 1e-3);
@@ -500,6 +491,7 @@ dmat* servo_test(dmat *input, double dt, int dtrat, double sigma2n, dmat *gain){
    Generate random time series using temporal PSD.
 */
 dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat){
+    if(psdin->ny!=2) error("psdin should have two columns\n");
     double df=1./(N*dt);
     dmat *f=dlinspace(df,df,N);
     dmat *psdf=dnew_ref(psdin->nx,1,psdin->p);
@@ -558,7 +550,7 @@ double psd_inte(double *nu, double *psd, long n){
 */
 double psd_inte2(dmat *psdin){
     if(psdin->ny!=2){
-	error("Wrong format\n");
+	error("psdin  should have two columns\n");
     }
     double *nu=psdin->p;
     long n=psdin->nx;
@@ -571,7 +563,7 @@ double psd_inte2(dmat *psdin){
    Convert PSD into time series.*/
 dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     if(psdin->ny!=2){
-	error("psd should have two columns\n");
+	error("psdin should have two columns\n");
     }
     dmat *psdx=dnew_ref(psdin->nx,1,psdin->p);
     dmat *psdy=dnew_ref(psdin->nx,1,psdin->p+psdin->nx);

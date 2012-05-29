@@ -20,4 +20,5 @@
 #define SKYC_NAFOCUS_H
 double nafocus_residual(double fs, double tau, double f_zc, double zeta, 
 			double D, double hs, double alpha, double beta);
+dmat* nafocus_time(double D, double hs, double alpha, double beta, double dt, long nstep, rand_t *rstat);
 #endif

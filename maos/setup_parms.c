@@ -768,6 +768,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.idealwfs);
     READ_INT(sim.idealevl);
     READ_INT(sim.parallel);
+    READ_INT(sim.ahstfocus);
 }
 /**
    Read in parameters for Cn2 estimation.

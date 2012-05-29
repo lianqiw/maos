@@ -89,14 +89,18 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
 	    if(fabs(wt[ievl])<1.e-12) continue;
 	    double thetax=parms->evl.thetax[ievl];
 	    double thetay=parms->evl.thetay[ievl];
-	
 	    for(int iloc=0; iloc<nloc; iloc++){
 		double xx=x[iloc]*x[iloc];
 		double xy=x[iloc]*y[iloc];
 		double yy=y[iloc]*y[iloc];
 		/*remove piston in focus */
-		mod[2][iloc]=scale1*(xx+yy-MCC_fcp)
-		    -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
+		if(parms->sim.ahstfocus){
+		    mod[2][iloc]=/*removed global focus mode*/
+			-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
+		}else{
+		    mod[2][iloc]=scale1*(xx+yy-MCC_fcp)
+			-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
+		}
 		mod[3][iloc]=scale1*(xx-yy)
 		    -2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]);
 		mod[4][iloc]=scale1*(xy)
@@ -174,6 +178,8 @@ static spcell *ngsmod_Wa(const PARMS_T *parms, RECON_T *recon,
 /**
    compute NGS mode removal Pngs from LGS commands using aperture
    weighting. Pngs=(MCC)^-1 (Hm'*W*Ha).
+
+   2012-05-25: The NGS mode removal should be based on old five modes even if now focus on PS1 is merged with defocus mode
 */
 static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon, 
 		     APER_T *aper, int use_ploc){
@@ -224,9 +230,14 @@ static dcell* ngsmod_Pngs_Wa(const PARMS_T *parms, RECON_T *recon,
 		double xy=x[iloc]*y[iloc];
 		double yy=y[iloc]*y[iloc];
 		/*remove piston in focus */
-		mod[2][iloc]=amp[iloc]
-		    *(scale1*(xx+yy-MCC_fcp)
-		      -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
+		if(parms->sim.ahstfocus){
+		    mod[2][iloc]=amp[iloc]
+			*(-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
+		}else{
+		    mod[2][iloc]=amp[iloc]
+			*(scale1*(xx+yy-MCC_fcp)
+			  -2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]));
+		}
 		mod[3][iloc]=amp[iloc]
 		    *(scale1*(xx-yy)
 		      -2.*ht*scale*(thetax*x[iloc]-thetay*y[iloc]));
@@ -445,8 +456,13 @@ dcell *ngsmod_hm_ana(const PARMS_T *parms, RECON_T *recon, APER_T *aper){
 		double xy=x[iloc]*y[iloc];
 		HM[0][ievl]->p[iloc]=x[iloc];
 		HM[1][ievl]->p[iloc]=y[iloc];
-		HM[2][ievl]->p[iloc]=(xx+yy-MCC_fcp)*scale1
-		    -2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
+		if(parms->sim.ahstfocus){
+		    HM[2][ievl]->p[iloc]=
+			-2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
+		}else{
+		    HM[2][ievl]->p[iloc]=(xx+yy-MCC_fcp)*scale1
+			-2*ht*(sx*x[iloc]+sy*y[iloc])*scale;
+		}
 		HM[3][ievl]->p[iloc]=(xx-yy)*scale1-2*ht*(sx*x[iloc]-sy*y[iloc])*scale;
 		HM[4][ievl]->p[iloc]=(xy)*scale1-(sx*y[iloc]+sy*x[iloc])*ht*scale;
 		if(nmod>5){
@@ -481,7 +497,10 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	}
     }
     ngsmod->nmod=ngsmod_nmod(ndm, hs);
-    if(isfinite(hs) && parms->sim.mffocus){
+    if(isfinite(hs) && (parms->sim.mffocus || parms->tomo.ahst_idealngs || parms->sim.ahstfocus)){
+	if(parms->ndm==1){
+	    error("Nod implemented\n");
+	}
 	ngsmod->nmod++;/*add a global focus mode.*/
     }
     info2("ngsmod nmod=%d\n", ngsmod->nmod);
@@ -682,8 +701,12 @@ void calc_ngsmod_dot(double *pttr_out, double *pttrcoeff_out,
     ngsmod_out[0]=coeff[1];
     ngsmod_out[1]=coeff[2];
     if(recon->ngsmod->nmod>=5){
-	ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
-		       -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+	if(parms->sim.ahstfocus){
+	    ngsmod_out[2]=(-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+	}else{
+	    ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
+			   -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+	}
 	ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
 		       -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
 	ngsmod_out[4]=(scale1*(coeff[5])
@@ -814,7 +837,13 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     dcellmm(&Mngs, recon->ngsmod->Pngs, dmerr, "nn",1);
     //zero out global focus mode if any.
     if(Mngs && recon->ngsmod->nmod>5){
-	Mngs->p[0]->p[5]=0;
+	if(simu->parms->sim.ahstfocus){
+	    const double scale=recon->ngsmod->scale;
+	    const double scale1=1.-scale;
+	    Mngs->p[0]->p[5]=Mngs->p[0]->p[2]*scale1;/*focus need to match TA mode.*/
+	}else{
+	    Mngs->p[0]->p[5]=0;
+	}
     }
     ngsmod2dm(&dmerr,recon, Mngs,-1);
     dcellfree(Mngs);

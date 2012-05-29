@@ -55,8 +55,11 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
     if(nwvl==2 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10){
 	snprintf(fn,80,"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
 	cat_fov=5.0;/*5 arc-degree squared. */
+    }else if(nwvl==3 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10 && fabs(wvls[2]-2.2e-6)<1.e-10){
+	snprintf(fn,80,"besancon/JHK_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
+	cat_fov=5.0;/*5 arc-degree squared. */
     }else{
-	error("We only have stars for J+H band. Please fill this part\n");
+	error("We only have stars for J+H and J+H+K band. Please fill this part\n");
     }
     info("Loading star catalogue from \n%s\n",fn);
     dmat *catalog=dread("%s",fn);

@@ -262,6 +262,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 	parms->skyc.nwfstot+=parms->skyc.nwfsmax[ipowfs];
     }
+    if(parms->maos.nmod>5){
+	parms->skyc.addfocus=0;
+    }
     return parms;
 }
 /**

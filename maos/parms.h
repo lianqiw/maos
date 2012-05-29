@@ -485,6 +485,7 @@ typedef struct SIM_CFG_T{
     int dmclip;      /**<derived: Need to clip actuators*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
+    int ahstfocus;   /**<New new mode split in ahst + focus tracking*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.

@@ -79,7 +79,7 @@ static STAR_S *setup_star_create(const PARMS_S *parms, dmat *coord){
 	    }
 	}
 	if(pow(star[istar].thetax,2)+pow(star[istar].thetay,2)<minrad2){
-	    info("Skip star at (%.0f, %.0f) because minrad=%g\n", 
+	    info2("Skip star at (%.0f, %.0f) because minrad=%g\n", 
 		 star[istar].thetax*206265, star[istar].thetay*206265, parms->skyc.minrad);
 	    continue;
 	}
@@ -590,7 +590,8 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
 	}
 	if(size>6){
 	    free_pistat(star[istar].pistat, parms->skyc.npowfs, parms);
-	    warning("star %d doesn't have sharpen cores. size=%d\n",istar,size);
+	    warning2("star %d at (%.0f, %.0f) doesn't have sharpen cores. size=%d\n",
+		     istar, star[istar].thetax*206265, star[istar].thetay*206265, size);
 	}else{
 	    if(istar!=jstar){
 		memcpy(&star[jstar], &star[istar], sizeof(STAR_S));
