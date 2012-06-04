@@ -592,7 +592,8 @@ void cp2gpu(int * restrict *dest, spint *src, int n){
    Convert device (float) array and add to host double.
    dest = alpha * dest + beta *src;
 */
-void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream){
+void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, 
+	    cudaStream_t stream, pthread_mutex_t *mutex){
     float *tmp=(float*)malloc4async(n*sizeof(float));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
     if(!*dest){
@@ -600,9 +601,11 @@ void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int 
     }
     double *restrict p=*dest;
     CUDA_SYNC_STREAM;
+    if(mutex) LOCK(*mutex);
     for(int i=0; i<n; i++){
 	p[i]=p[i]*alpha+beta*tmp[i];
     }
+    if(mutex) UNLOCK(*mutex);
     free4async(tmp);
 }
 /*
@@ -649,7 +652,7 @@ void cp2gpu(cumuv_t *out, MUV_T *in){
     cp2gpu(&(out)->V, in->V);
     spcellfree(Mt);
 }
-void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream){
+void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t *mutex){
     if(!in){
 	if(*out) dzero(*out);
 	return;
@@ -659,19 +662,18 @@ void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_
     }else{
 	assert((*out)->nx*(*out)->ny==in->nx*in->ny);
     }
-    cp2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream);
+    cp2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream, mutex);
 }
-void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream){
+void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream, pthread_mutex_t *mutex){
     if(!in){
 	if(*out) dcellzero(*out);
 	return;
     }
     if(!*out) *out=dcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
-	cp2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream);
+	cp2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream, mutex);
     }
 }
-
 void cp2cpu(smat **out, const curmat *in, cudaStream_t stream){
     if(!in) {
 	if(*out) szero(*out);

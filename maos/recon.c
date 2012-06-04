@@ -173,8 +173,8 @@ void recon_split(SIM_T *simu){
 	    error("Invalid parms->recon.split: %d",parms->recon.split);
 	}
 	dcellcp(&simu->Merr_lo, simu->Merr_lo_store);
-	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){
-	    simu->Merr_lo->p[0]->p[5]=0;//zero out global focus mode here.
+	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){/*do not correct the global focus.*/
+	    simu->Merr_lo->p[0]->p[5]=0;
 	}
     }else{
 	dcellfree(simu->Merr_lo);/*don't have output. */

@@ -27,7 +27,7 @@
 extern int gpu_recon;
 extern int NGPU;
 extern int *GPUS;
-typedef struct{ 
+typedef struct cudata_t{ 
     /**<for accphi */
     cumap_t **atm;   /**<atmosphere: array of cumap_t */
     cumap_t **dmreal;/**<DM: array of cumap_t */
@@ -58,6 +58,9 @@ typedef struct{
     /*for moao*/
     curcell *dm_wfs;
     curcell *dm_evl;
+    cudata_t(){
+	memset(this, 0, sizeof(cudata_t));
+    }
 }cudata_t;
 #ifdef __APPLE__
 extern pthread_key_t cudata_key;
@@ -127,14 +130,25 @@ void gpu_write(float *p, int nx, int ny, const char *format, ...);
 void gpu_write(fcomplex *p, int nx, int ny, const char *format, ...);
 void gpu_write(int *p, int nx, int ny, const char *format, ...);
 
-void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream);
-void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream);
+void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream, pthread_mutex_t* mutex=0);
+void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(smat **out, const curmat *in, cudaStream_t stream);
 void cp2cpu(zmat **out, const cucmat *in, cudaStream_t stream);
-void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream);
+void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream, pthread_mutex_t* mutex=0);
 void cp2cpu(scell **out, const curcell *in, cudaStream_t stream);
 void cp2cpu(zcell **out, const cuccell *in, cudaStream_t stream);
-
+inline void cp2cpu(dmat **out, const curmat *in, cudaStream_t stream){
+    cp2cpu(out, 0, in, 1, stream);
+}
+inline void cp2cpu(dcell **out, const curcell *in, cudaStream_t stream){
+    cp2cpu(out, 0, in, 1, stream);
+}
+inline void add2cpu(dmat **out, const curmat *in, cudaStream_t stream){
+    cp2cpu(out, 1, in, 1, stream);
+}
+inline void add2cpu(dcell **out, const curcell *in, cudaStream_t stream){
+    cp2cpu(out, 1, in, 1, stream);
+}
 void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream);
 void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream);
 void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream);

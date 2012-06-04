@@ -133,5 +133,37 @@ extern const char *cufft_str[];
 	}							\
     }while(0)
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
-
+typedef struct stream_t{
+    cudaStream_t stream;
+    cublasHandle_t handle;
+    cusparseHandle_t sphandle;
+    stream_t(){
+	STREAM_NEW(stream);
+	HANDLE_NEW(handle, stream);
+	SPHANDLE_NEW(sphandle, stream);
+    }
+    ~stream_t(){
+	if(stream){
+	    SPHANDLE_DONE(sphandle);
+	    HANDLE_DONE(handle);
+	    STREAM_DONE(stream);
+	}
+    }
+    void sync(){
+	assert(this);
+	DO(cudaStreamSynchronize(stream));
+    }
+    operator cudaStream_t(){
+	assert(this);
+	return stream;
+    }
+    operator cublasHandle_t(){
+	assert(this);
+	return handle;
+    }
+    operator cusparseHandle_t(){
+	assert(this);
+	return sphandle;
+    }
+}stream_t;
 #endif

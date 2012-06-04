@@ -552,8 +552,6 @@ AC_SUBST(LDLIB)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
-LIBS="" #somehow LIBS contain -fftw3
-AC_SUBST(LIBS)
 #Doxygen Features
 DX_HTML_FEATURE(ON)
 DX_CHM_FEATURE(OFF)
@@ -729,6 +727,8 @@ else
    AM_CONDITIONAL(USE_CUDA, false)
    AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
+LIBS="" #somehow LIBS contain -fftw3 -lnvidia-sml
+AC_SUBST(LIBS)
 AC_OUTPUT
 echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR

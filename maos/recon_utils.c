@@ -613,14 +613,15 @@ void focus_tracking(SIM_T* simu){
 	LGSfocusm=LGSfocus->p[0]->p[0];
     }
     
-    /*Use NGS focus - LGS focus to drive the zoom optics/reference vector */
+    /*Use NGS focus - LGS focus to drive the LGS reference vector */
     LGSfocusm=NGSfocus-LGSfocusm;
     simu->focuslpf->p[0]->p[5]=simu->focuslpf->p[0]->p[5]*(1.-parms->sim.lpfocus)+LGSfocusm*parms->sim.lpfocus;
     dcellfree(LGSfocus);
+
+    /*Next deal with the trombone*/
     if(!simu->zoomerr){
 	simu->zoomerr=dcellnew(parms->nwfs, 1);
     }
-    /*Next deal with the trombone*/
     dcellmm(&simu->zoomavg, recon->RFlgsg, simu->gradlastcl, "nn", 1);
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	int ipowfs=parms->wfs[iwfs].powfs;

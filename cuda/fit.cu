@@ -23,9 +23,9 @@ extern "C"
 #include "utils.h"
 #include "recon.h"
 #include "accphi.h"
-#define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ cudaStreamSynchronize(curecon->psstream[ips]); }
-#define SYNC_FIT  for(int ifit=0; ifit<parms->fit.nfit; ifit++){ cudaStreamSynchronize(curecon->fitstream[ifit]); }
-#define SYNC_DM  for(int idm=0; idm<parms->ndm; idm++){ cudaStreamSynchronize(curecon->dmstream[idm]); }
+#define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ curecon->psstream[ips].sync(); }
+#define SYNC_FIT  for(int ifit=0; ifit<parms->fit.nfit; ifit++){ curecon->fitstream[ifit].sync(); }
+#define SYNC_DM  for(int idm=0; idm<parms->ndm; idm++){ curecon->dmstream[idm].sync(); }
 
 #define TIMING 0
 #if !TIMING
@@ -221,7 +221,7 @@ void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
     add_do<<<DIM(np, 256), 0, curecon->fitstream[ifit]>>>		\
 	(opdfit2->p[ifit]->p, curecon->W01->W1->p, &curecon->pis->p[ifit], -recon->fitwt->p[ifit], np); \
     cuspmul(opdfit2->p[ifit]->p, curecon->W01->W0p, opdfit->p[ifit]->p,	\
-	    recon->fitwt->p[ifit], curecon->fitsphandle[ifit]);		\
+	    recon->fitwt->p[ifit], curecon->fitstream[ifit]);		\
     if(curecon->W01->nW0f){						\
 	apply_W_do<<<DIM(np, 256), 0, curecon->fitstream[ifit]>>>	\
 	    (opdfit2->p[ifit]->p, opdfit->p[ifit]->p, curecon->W01->W0f, \
@@ -233,6 +233,7 @@ void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
 */
 void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
+    curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nfit=parms->fit.nfit;
@@ -270,6 +271,7 @@ void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, flo
 }
 void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
+    curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nfit=parms->fit.nfit;
@@ -297,6 +299,7 @@ void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, fl
 }
 void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
+    curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nfit=parms->fit.nfit;
@@ -337,16 +340,16 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
 	for(int idm=0; idm<recon->ndm; idm++){
 	    tmp->p[idm]=curnew(curecon->fitNW->p[idm]->nx, 1);
 	    curmv(tmp->p[idm]->p, 0, curecon->fitNW->p[idm], xin->p[idm]->p, 
-		  't', 1, curecon->dmhandle[idm]);
+		  't', 1, curecon->dmstream[idm]);
 	    curmv((*xout)->p[idm]->p, 1, curecon->fitNW->p[idm], tmp->p[idm]->p, 
-		  'n', alpha, curecon->dmhandle[idm]);
+		  'n', alpha, curecon->dmstream[idm]);
 	}
 	curcellfree(tmp);
     }
     if(curecon->actslave){
 	for(int idm=0; idm<recon->ndm; idm++){
 	    cuspmul((*xout)->p[idm]->p, curecon->actslave->p[idm*(1+recon->ndm)],
-		    xin->p[idm]->p, alpha, curecon->dmsphandle[idm]);
+		    xin->p[idm]->p, alpha, curecon->dmstream[idm]);
 	}
     }
     SYNC_DM;
@@ -355,6 +358,7 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
 #include "pcg.h"
 void gpu_fit_test(SIM_T *simu){	/*Debugging. */
     gpu_set(gpu_recon);
+    curecon_t *curecon=cudata->recon;
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     dcell *rhsc=NULL;
@@ -395,9 +399,9 @@ void gpu_fit_test(SIM_T *simu){	/*Debugging. */
     /*curcell *lhsg=NULL;
       gpu_FitRt(&lhsg, 0, recon, rhsg, 1);
       curcellwrite(lhsg, "GPU_FitRt");*/
-    curcellzero(lg, curecon->cgstream);
+    curcellzero(lg, curecon->cgstream[0]);
     gpu_pcg(&lg, (G_CGFUN)gpu_FitL, (void*)recon, NULL, NULL, rhsg,
-	    simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream);
+	    simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream[0]);
     curcellwrite(lg, "GPU_FitCG");
     CUDA_SYNC_DEVICE;
     exit(0);

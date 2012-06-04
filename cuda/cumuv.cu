@@ -26,7 +26,7 @@ extern "C"
 
 void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha){
     if(!A->Mt) error("A->M Can not be empty\n");
-    if(A->U && A->U->ny>1 || A->V && A->V->ny>1) error("Not handled yet\n");
+    if(A->U && A->U->ny>1 || A->V && A->V->ny>1) error("Not streamd yet\n");
     if(!*out){
 	*out=curcellnew(A->Mt->ny, 1);
 	int nx[A->Mt->ny];
@@ -41,18 +41,18 @@ void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha
 	    curscale((*out)->p[idm], beta, A->dmstream[idm]);
 	for(int ifit=0; ifit<A->Mt->nx; ifit++){
 	    cusptmul((*out)->p[idm]->p, A->Mt->p[ifit+idm*A->Mt->nx], in->p[ifit]->p,
-		     alpha, A->dmsphandle[idm]);
+		     alpha, A->dmstream[idm]);
 	}
     }
     curmat *tmp=NULL;
     if(A->U && A->V){
 	tmp=curnew(A->V->p[0]->ny, 1);
 	for(int ifit=0; ifit<A->V->nx; ifit++){
-	    curmv(tmp->p, 1.f, A->V->p[ifit], in->p[ifit]->p, 't', 1, A->fithandle[0]);
+	    curmv(tmp->p, 1.f, A->V->p[ifit], in->p[ifit]->p, 't', 1, A->fitstream[0]);
 	}
 	cudaStreamSynchronize(A->fitstream[0]);
 	for(int idm=0; idm<A->U->nx; idm++){
-	    curmv((*out)->p[idm]->p, 1.f, A->U->p[idm], tmp->p, 'n', -alpha, A->dmhandle[idm]);
+	    curmv((*out)->p[idm]->p, 1.f, A->U->p[idm], tmp->p, 'n', -alpha, A->dmstream[idm]);
 	}
     }
     for(int idm=0; idm<A->Mt->ny; idm++){
@@ -67,18 +67,18 @@ void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float
 	    curscale((*out)->p[ifit], beta, A->fitstream[ifit]);
 	for(int idm=0; idm<A->Mt->ny; idm++){
 	    cuspmul((*out)->p[ifit]->p, A->Mt->p[ifit+idm*A->Mt->nx], in->p[idm]->p, alpha, 
-		    A->fitsphandle[ifit]);
+		    A->fitstream[ifit]);
 	}
     }
     curmat *tmp=NULL;
     if(A->V && A->U){
 	tmp=curnew(A->U->p[0]->ny, 1);
 	for(int idm=0; idm<A->U->nx; idm++){
-	    curmv(tmp->p, 1.f, A->U->p[idm], in->p[idm]->p, 't', 1, A->dmhandle[0]);
+	    curmv(tmp->p, 1.f, A->U->p[idm], in->p[idm]->p, 't', 1, A->dmstream[0]);
 	}
 	cudaStreamSynchronize(A->dmstream[0]);
 	for(int ifit=0; ifit<A->V->nx; ifit++){
-	    curmv((*out)->p[ifit]->p, 1.f, A->V->p[ifit], tmp->p, 'n', -alpha, A->fithandle[ifit]);
+	    curmv((*out)->p[ifit]->p, 1.f, A->V->p[ifit], tmp->p, 'n', -alpha, A->fitstream[ifit]);
 	}
     }
     for(int ifit=0; ifit<A->Mt->nx; ifit++){

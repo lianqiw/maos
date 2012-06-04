@@ -420,12 +420,19 @@ void wfsgrad_iwfs(thread_t *info){
 	}
     }
     /* Add defocus to OPD if needed. */
-    double focus=0;
-    if(powfs[ipowfs].focus){
-	const long nx=powfs[ipowfs].focus->nx;
-	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
+    if(parms->powfs[ipowfs].llt){
+	double focus=0;
+	if(powfs[ipowfs].focus){
+	    const long nx=powfs[ipowfs].focus->nx;
+	    focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
+	}
 	if(simu->zoomint && simu->zoomint->p[iwfs]){
 	    focus-=simu->zoomint->p[iwfs]->p[0];
+	}
+	if(parms->sim.ahstfocus && simu->Mint_lo->mint[0]){
+	    /*new definition of NGS modes has focus error in LGS. offset to remove it.*/
+	    double scale=simu->recon->ngsmod->scale;
+	    focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(1-scale);
 	}
 	if(fabs(focus)>1e-20){
 	    loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
@@ -439,7 +446,10 @@ void wfsgrad_iwfs(thread_t *info){
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
     }
-
+    if(parms->plot.run){
+	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
+		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
+    }
     if(do_geom){
 	/* Now Geometric Optics gradient calculations */
 	dmat **gradcalc=NULL;
@@ -557,10 +567,6 @@ void wfsgrad_iwfs(thread_t *info){
     }
     TIM(2);
  
-    if(parms->plot.run){
-	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
-		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
-    }
     dfree(opd);
 
     if(dtrat_output){

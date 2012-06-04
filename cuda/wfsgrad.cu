@@ -345,13 +345,15 @@ void gpu_wfsgrad(thread_t *info){
 	if(powfs[ipowfs].focus){
 	    const long nx=powfs[ipowfs].focus->nx;
 	    focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
-	    //info2("WFS %d: add focus %g ", iwfs, focus);
 	}
 	if(simu->zoomint && simu->zoomint->p[iwfs]){
 	    focus-=simu->zoomint->p[iwfs]->p[0];
 	}
+	if(parms->sim.ahstfocus && !isfinite(hs)){
+	    double scale=simu->recon->ngsmod->scale;
+	    focus-=simu->dmint->mint[0]->p[0]->p[2]*(1.-scale);
+	}
 	if(fabsf(focus)>1e-20){
-	    //info2("effective %g\n", focus);
 	    add_focus_do<<<DIM(nloc, 256), 0, stream>>>(phiout->p, loc, nloc, focus);
 	}
     }
@@ -361,6 +363,14 @@ void gpu_wfsgrad(thread_t *info){
     }
     if(save_opd){
 	cellarr_cur(simu->save->wfsopd[iwfs], phiout, stream);
+    }
+    if(parms->plot.run){
+	const double *realamp=powfs[ipowfs].realamp[wfsind];
+	dmat *tmp=NULL;
+	cp2cpu(&tmp, phiout, stream);
+	drawopdamp("wfsopd",powfs[ipowfs].loc,tmp->p,realamp,NULL,
+		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
+	dfree(tmp);
     }
     if(do_geom){
 	float *gradcalc;
@@ -392,11 +402,9 @@ void gpu_wfsgrad(thread_t *info){
     if(parms->powfs[ipowfs].psfout){
 	cellarr_cur(simu->save->ztiltout[iwfs], gradacc, stream);
     }
-    /*CUDA_SYNC_STREAM; */
     if(do_phy || parms->powfs[ipowfs].psfout || do_pistatout){/*physical optics */
 	gpu_wfsints(simu, phiout->p, gradref, iwfs, isim, stream);
     }/*do phy */
-    /*CUDA_SYNC_STREAM; */
     ctoc("grad");
     if(dtrat_output){
 	if(do_phy){
@@ -427,7 +435,7 @@ void gpu_wfsgrad(thread_t *info){
 	    case 3:{/*The following need to port to GPU*/
 		dcell *cints=NULL;
 		dmat *gradnfc=simu->gradnf->p[iwfs];
-		cp2cpu(&cints, 0, ints, 1, stream);
+		cp2cpu(&cints, ints, stream);
 		CUDA_SYNC_STREAM;
 		double gnf[3];
 		for(int isa=0; isa<nsa; isa++){
@@ -481,7 +489,7 @@ void gpu_wfsgrad(thread_t *info){
 		    break;
 		case 3:{
 		    dcell *cints=NULL;
-		    cp2cpu(&cints, 0, ints, 1, stream);
+		    cp2cpu(&cints, ints, stream);
 		    CUDA_SYNC_STREAM;
 		    double gny[3];
 		    for(int isa=0; isa<nsa; isa++){
@@ -573,7 +581,7 @@ void gpu_wfsgrad(thread_t *info){
 		    ctoc("noise");
 		}
 	    }
-	    cp2cpu(&gradcl, 0, gradacc, 1, stream);
+	    cp2cpu(&gradcl, gradacc, stream);
 	    ctoc("dev2dbl");
 	    curzero(gradacc, stream);
 	    ctoc("zero");

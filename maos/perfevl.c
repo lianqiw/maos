@@ -285,8 +285,7 @@ void perfevl_ievl(thread_t *info){
     }
     if(parms->plot.run){
 	drawopdamp("CL", aper->locs, iopdevl->p, aper->amp1->p,NULL,
-		   "Science Closed loop OPD", "x (m)", "y (m)",
-		   "CL %d",ievl);
+		   "Science Closed loop OPD", "x (m)", "y (m)", "CL %d",ievl);
     }
     if(save_evlopd){
 	cellarr_dmat(simu->save->evlopdcl[ievl],iopdevl);

@@ -483,6 +483,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     /*if(parms->recon.split!=1) error("Only work in split mode 1."); */
 
     NGSMOD_T *ngsmod=recon->ngsmod=calloc(1, sizeof(NGSMOD_T));
+    ngsmod->ahstfocus=parms->sim.ahstfocus;
     const int ndm=parms->ndm;	
     ngsmod->aper_fcp=aper->fcp;
     if(ndm==2 && fabs(parms->dm[0].ht)>1.e-10){
@@ -638,7 +639,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	dcellwrite(recon->ngsmod->Modes, "%s/ahst_Modes", dirsetup);
 	spcellwrite(recon->ngsmod->Wa, "%s/ahst_Wa", dirsetup);
     }
-  
+    
 }
 /**
    used in performance evaluation on science opds. accumulate to out*/
@@ -761,7 +762,13 @@ void ngsmod2dm(dcell **dmc, const RECON_T *recon, const dcell *M, double gain){
 	    if(idm==0){
 		double pm_focus=pm[2];
 		if(recon->ngsmod->nmod>5){
-		    pm_focus+=pm[5];/*global focus mode*/
+		    if(recon->ngsmod->ahstfocus){
+			/*The net focus put in should have no focus effect on
+			  science. global focus is controlled independently*/
+			pm_focus=pm[2]*scale+pm[5];
+		    }else{
+			pm_focus=pm[2]+pm[5];
+		    }
 		}
 		for(unsigned long iloc=0; iloc<nloc; iloc++){
 		    double xx=xloc[iloc]*xloc[iloc];
@@ -816,9 +823,10 @@ void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 	    double y2=y*y;
 	    double tmp= locx[iloc]*mod[0]
 		+locy[iloc]*mod[1]
-		+mod[2]*((x2+y2-MCC_fcp)*scale1-2*scale*ht*(thetax*x+thetay*y))
+		+mod[2]*((parms->sim.ahstfocus?0:(x2+y2-MCC_fcp)*scale1)-2*scale*ht*(thetax*x+thetay*y))
 		+mod[3]*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
-		+mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y));
+		+mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y))
+		+(parms->sim.ahstfocus?mod[5]*(x2+y2-MCC_fcp):0);
 	    iopdevl->p[iloc]+=tmp*alpha;
 	}
     }
@@ -839,8 +847,7 @@ void remove_dm_ngsmod(SIM_T *simu, dcell *dmerr){
     if(Mngs && recon->ngsmod->nmod>5){
 	if(simu->parms->sim.ahstfocus){
 	    const double scale=recon->ngsmod->scale;
-	    const double scale1=1.-scale;
-	    Mngs->p[0]->p[5]=Mngs->p[0]->p[2]*scale1;/*focus need to match TA mode.*/
+	    Mngs->p[0]->p[5]=Mngs->p[0]->p[2]*(1-scale);
 	}else{
 	    Mngs->p[0]->p[5]=0;
 	}

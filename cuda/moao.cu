@@ -28,10 +28,9 @@ extern int *wfsgpu;
 extern int *evlgpu;
 void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
     gpu_set(gpu_recon);
-    if(!curecon){
-	curecon=(curecon_t*)calloc(1, sizeof(curecon_t));
-    }
-    curecon->moao=(cumoao_t*)calloc(parms->nmoao,sizeof(cumoao_t));
+    curecon_t *curecon=cudata->recon;
+    curecon->moao_stream = new stream_t;
+    curecon->moao=new cumoao_t[parms->nmoao];
     for(int imoao=0; imoao<parms->nmoao; imoao++){
 	cumoao_t* cumoao=&curecon->moao[imoao];
 	cp2gpu(&cumoao->fitNW,recon->moao[imoao].NW);
@@ -121,16 +120,13 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 	}
     }
     gpu_set(gpu_recon);
-    STREAM_NEW(curecon->moao_stream);
-    HANDLE_NEW(curecon->moao_handle, curecon->moao_stream);
-    SPHANDLE_NEW(curecon->moao_sphandle, curecon->moao_stream);
 }
 
 #define DO_W								\
     cudaMemsetAsync(cumoao->pis, 0, sizeof(float), stream);		\
     inn_wrap(cumoao->pis, xp->p, cumoao->W01->W1->p, np, stream);	\
     add_do<<<DIM(np, 256), 0, stream>>>(xp2->p, cumoao->W01->W1->p, cumoao->pis, -1.f, np); \
-    cuspmul(xp2->p, cumoao->W01->W0p, xp->p, 1.f, sphandle);		\
+    cuspmul(xp2->p, cumoao->W01->W0p, xp->p, 1.f, stream);		\
     if(cumoao->W01->nW0f){						\
 	apply_W_do<<<DIM(np, 256),0,stream>>>(xp2->p, xp->p, cumoao->W01->W0f, cumoao->W01->W0v, \
 					      cumoao->nxf, cumoao->W01->nW0f); \
@@ -151,12 +147,12 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 
 /*Right hand size vector.*/
 void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, float thetax, float thetay, float hs, const float alpha){
+    curecon_t *curecon=cudata->recon;
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int npsr=recon->npsr;
     const int np=cumoao->nxf*cumoao->nyf;
-    cudaStream_t stream=curecon->moao_stream;
-    cusparseHandle_t sphandle=curecon->moao_sphandle;
+    stream_t stream=curecon->moao_stream[0];
     curmat *xp=cumoao->xp;
     curmat *xp2=cumoao->xp2;
     curzero(xp, stream);
@@ -201,10 +197,9 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
 }
 
 void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
+    curecon_t *curecon=cudata->recon;
     cumoao_t *cumoao=(cumoao_t*)A;
-    cudaStream_t stream=curecon->moao_stream;
-    cublasHandle_t handle=curecon->moao_handle;
-    cusparseHandle_t sphandle=curecon->moao_sphandle;
+    stream_t stream=curecon->moao_stream[0];
 
     const int np=cumoao->nxf*cumoao->nyf;
     curmat *xp=cumoao->xp;
@@ -230,11 +225,11 @@ void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin
     /*Additional terms*/
     if(cumoao->fitNW){
 	curmat *tmp=cumoao->tmpNW;
-	curmv(tmp->p, 0, cumoao->fitNW->p[0], xin->p[0]->p, 't', 1, handle);
-	curmv((*xout)->p[0]->p, 1, cumoao->fitNW->p[0], tmp->p, 'n', alpha, handle);
+	curmv(tmp->p, 0, cumoao->fitNW->p[0], xin->p[0]->p, 't', 1, stream);
+	curmv((*xout)->p[0]->p, 1, cumoao->fitNW->p[0], tmp->p, 'n', alpha, stream);
     }
     if(cumoao->actslave){
-	cuspmul((*xout)->p[0]->p, cumoao->actslave->p[0], xin->p[0]->p, alpha, sphandle);
+	cuspmul((*xout)->p[0]->p, cumoao->actslave->p[0], xin->p[0]->p, alpha, stream);
     }
     CUDA_SYNC_STREAM;
 }
@@ -247,6 +242,7 @@ based on opdr, dmfit is on gradients from last time step. So two cycle delay is
 maintained.  */
 void gpu_moao_recon(SIM_T *simu){
     gpu_set(gpu_recon);
+    curecon_t *curecon=cudata->recon;
     curcell *dmcommon=NULL;
     const PARMS_T *parms=simu->parms;
     const int nwfs=parms->nwfs;
@@ -256,7 +252,7 @@ void gpu_moao_recon(SIM_T *simu){
     }else{
 	cp2gpu(&dmcommon, simu->dmfit);
     }
-    cudaStream_t stream=curecon->moao_stream;
+    stream_t stream=curecon->moao_stream[0];
     if(curecon->dm_wfs){/*There is MOAO DM for WFS */
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -321,6 +317,7 @@ static void gpu_dm2cpu_extract(dmat *dmcpu, curmat *dmgpu, long *embed, long nxa
 }
 void gpu_moao_filter(SIM_T *simu){
     gpu_set(gpu_recon);
+    curecon_t *curecon=cudata->recon;
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int nwfs=parms->nwfs;

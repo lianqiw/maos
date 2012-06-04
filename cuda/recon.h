@@ -18,14 +18,17 @@
 #ifndef AOS_CUDA_RECON_H
 #define AOS_CUDA_RECON_H
 #include "types.h"
-typedef struct{
+typedef struct W01_T{
     curmat *W1;    /**< The aperture weighting, piston removal*/
     cusp   *W0p;   /**< W0 for partial points*/
     int    *W0f;   /**< index for fully illuminated points.*/
     int     nW0f;  /**< Number of fully illuminated points.*/
     float   W0v;   /**< maximum Value of W0*/
+    W01_T(){
+	memset(this, 0, sizeof(W01_T));
+    }
 }W01_T;
-typedef struct{
+typedef struct cumoao_t{
     curcell *fitNW;
     cuspcell *actslave;
     float *cubic_cc;   
@@ -46,8 +49,11 @@ typedef struct{
     curmat *xp; /*temporary array*/
     curmat *xp2;/*temporary array*/
     curmat *tmpNW;/*temporary array*/
+    cumoao_t(){
+	memset(this, 0, sizeof(cumoao_t));
+    }
 }cumoao_t;
-typedef struct{
+typedef struct curecon_t{
     curcell *gradin; /**< The grad to operator on*/
     curcell *neai;
     curcell *opdwfs;/**<Temporary*/
@@ -64,23 +70,14 @@ typedef struct{
     int     *fd_fftips;/*starting ips for each fft.*/
     cuccell *fd_xhat1;
     cuccell *fd_xhat2;
-    cudaStream_t     *wfsstream;
-    cublasHandle_t   *wfshandle;
-    cusparseHandle_t *wfssphandle;
-    cudaEvent_t      *wfsevent;
+    cudaEvent_t *wfsevent;
+    stream_t    *wfsstream;
     
-    cudaStream_t     *psstream;
+    stream_t    *psstream;
 
-    cudaStream_t     *dmstream;
-    cusparseHandle_t *dmsphandle;
-    cublasHandle_t   *dmhandle;
-
-    cudaStream_t     *fitstream;
-    cusparseHandle_t *fitsphandle;
-    cublasHandle_t   *fithandle;
-    
-    cudaStream_t     cgstream;
-    cublasHandle_t   cghandle;
+    stream_t    *dmstream;
+    stream_t    *fitstream;
+    stream_t    *cgstream;
 
     curcell *PTT;  /**< Global tip/tilt, DF removal */
     curcell *PDF;  /**< Differential focus removal */
@@ -103,10 +100,7 @@ typedef struct{
     cumoao_t *moao;/**<moao configurations for GPU*/
     curcell **dm_wfs;/**<moao results for wfs for warm restart*/
     curcell **dm_evl;/**<moao results for evl for warm restart*/
-    cudaStream_t     moao_stream;
-    cublasHandle_t   moao_handle;
-    cusparseHandle_t moao_sphandle;
-
+    stream_t *moao_stream;
     //CBS Tomo
     cusp *RCl;/**<Tomography Cholesky factor*/
     int  *RCp;/**<Tomography Cholesky permutation vector*/
@@ -123,10 +117,12 @@ typedef struct{
 
     curcell *RFlgsx;
     curcell *RFngsx;
+    curecon_t(){
+	/*This is not good. zeros out already initialized childs.*/
+	memset(this, 0, sizeof(curecon_t));
+    }
 }curecon_t;
 
-
-extern curecon_t *curecon;
 __global__ void apply_W_do(float *restrict out, const float *restrict in, const int *W0f, 
 			   float alpha, int nx, int n);
 W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1);

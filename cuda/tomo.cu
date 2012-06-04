@@ -25,8 +25,8 @@ extern "C"
 #include "recon.h"
 #include "accphi.h"
 #include "cucmat.h"
-#define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ cudaStreamSynchronize(curecon->psstream[ips]); }
-#define SYNC_WFS  for(int iwfs=0; iwfs<nwfs; iwfs++){ cudaStreamSynchronize(curecon->wfsstream[iwfs]); }
+#define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ curecon->psstream[ips].sync(); }
+#define SYNC_WFS  for(int iwfs=0; iwfs<nwfs; iwfs++){ curecon->wfsstream[iwfs].sync(); }
 
 #define DIM_REDUCE 128 /*dimension to use in reduction. */
 
@@ -155,7 +155,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 
 #define DO_HX								\
     const float hs = parms->powfs[ipowfs].hs;				\
-    curzero(opdwfs->p[iwfs], curecon->wfsstream[iwfs]);			\
+    curzero(opdwfs->p[iwfs], curecon->wfsstream[iwfs]);		\
     for(int ips=0; ips<recon->npsr; ips++){				\
 	const float ht=recon->ht->p[ips];				\
 	const float scale = 1.f - ht/hs;				\
@@ -171,7 +171,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 	gpu_prop_grid(opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, \
 		      xin->p[ips], oxx, oyx,recon->xmap[ips]->dx,	\
 		      dispx, dispy,					\
-		      1.f, 'n', curecon->wfsstream[iwfs]);		\
+		      1.f, 'n', curecon->wfsstream[iwfs]);	\
     }/*for ips*/
 
 #define DO_HXT								\
@@ -209,7 +209,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
 #define DO_GP								\
     if(cupowfs[ipowfs].GP){						\
 	curzero(grad->p[iwfs], curecon->wfsstream[iwfs]);		\
-	cuspmul(grad->p[iwfs]->p, cupowfs[ipowfs].GP, opdwfs->p[iwfs]->p, 1.f, curecon->wfssphandle[iwfs]); \
+	cuspmul(grad->p[iwfs]->p, cupowfs[ipowfs].GP, opdwfs->p[iwfs]->p, 1.f, curecon->wfsstream[iwfs]); \
     }else{/*this way if tomo.pos==2*/					\
 	gpu_gp_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>>	\
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, cupowfs[ipowfs].saptr, dsa, \
@@ -228,7 +228,7 @@ __global__ static void gpu_gp_o2_fuse_do(const float *restrict map, int nx, floa
     if(cupowfs[ipowfs].GP){						\
 	gpu_tt_nea_do<<<DIM(nsa,256),0,curecon->wfsstream[iwfs]>>>	\
 	    (grad->p[iwfs]->p, (float(*)[3])curecon->neai->p[iwfs]->p, &ttf->p[iwfs*2], nsa); \
-	cusptmul(opdwfs->p[iwfs]->p, cupowfs[ipowfs].GP, grad->p[iwfs]->p, 1.f, curecon->wfssphandle[iwfs]); \
+	cusptmul(opdwfs->p[iwfs]->p, cupowfs[ipowfs].GP, grad->p[iwfs]->p, 1.f, curecon->wfsstream[iwfs]); \
     }else{/*this way if tomo.pos==2*/					\
 	gpu_gpt_o2_fuse_do<<<DIM(nsa,64),0,curecon->wfsstream[iwfs]>>> \
 	    (opdwfs->p[iwfs]->p, nxp, grad->p[iwfs]->p, \
@@ -275,6 +275,7 @@ __global__ static void zzt_do(float *restrict out, const float *in, int ix, floa
 */
 void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha){
     TIC;tic;
+    curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     if(!*xout){
@@ -309,6 +310,7 @@ void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, f
 
 void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
+    curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nwfs=parms->nwfsr;
@@ -351,6 +353,7 @@ void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, f
 */
 void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
+    curecon_t *curecon=cudata->recon;
 #if test_TomoL
     static int count=-1; count++; //temp.
 #endif
@@ -594,7 +597,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     //static int count=-1; count++; //temp
     //curcellwrite(xin, "fdpcg_xin_%d", count);
     //curcellwrite(*xout, "fdpcg_xout1_%d", count);
-
+    curecon_t *curecon=cudata->recon;
     TIC;tic;
     const RECON_T *recon=(const RECON_T *)A;
     if(!xin->m){
@@ -694,6 +697,7 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 #include "pcg.h"
 void gpu_tomo_test(SIM_T *simu){
     gpu_set(gpu_recon);
+    curecon_t *curecon=cudata->recon;
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     /*Debugging. */
@@ -741,14 +745,14 @@ void gpu_tomo_test(SIM_T *simu){
     curcellwrite(lg, "GPU_TomoL3");
     if(parms->tomo.alg==1 && parms->tomo.precond==1){
 	curcell *lp=NULL;
-	gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream);
+	gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream[0]);
 	curcellwrite(lp, "GPU_TomoP");
-	gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream);
+	gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream[0]);
 	curcellwrite(lp, "GPU_TomoP2");
     }
     curcellzero(lg, 0);
     gpu_pcg(&lg, (G_CGFUN)gpu_TomoL, (void*)recon, NULL, NULL, rhsg,
-	    simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream);
+	    simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream[0]);
     curcellwrite(lg, "GPU_Tomo");
     CUDA_SYNC_DEVICE;
     exit(0);

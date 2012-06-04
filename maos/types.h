@@ -187,6 +187,7 @@ typedef struct NGSMOD_T{
     dcell *Ptt;     /**<Invidual DM tip/tilt removal.*/
     spcell *Wa;     /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
+    int ahstfocus;  /**<records parms->sim.ahstfocus*/
 }NGSMOD_T;
 /**
    contains data for Fourier Domain Preconditioner.

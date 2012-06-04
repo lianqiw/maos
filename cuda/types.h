@@ -176,12 +176,8 @@ typedef struct{
     cuspcell *Mt;
     curcell *U;
     curcell *V;
-    cudaStream_t *fitstream;
-    cublasHandle_t *fithandle;
-    cusparseHandle_t *fitsphandle;
-    cudaStream_t *dmstream;
-    cublasHandle_t *dmhandle;
-    cusparseHandle_t *dmsphandle;
+    stream_t *fitstream;
+    stream_t *dmstream;
 }cumuv_t;
 
 typedef struct{

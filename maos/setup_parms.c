@@ -996,6 +996,15 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
+    if(!parms->recon.split){
+	parms->sim.ahstfocus=0;
+    }
+    if(parms->sim.ahstfocus){
+	if(parms->sim.fuseint){
+	    warning("ahstfocus is implemented with separate integrator. changed\n");
+	    parms->sim.fuseint=0;
+	}
+    }
 }
 /**
    Scaling necessary values for non-zero zenith angle (za).
@@ -1879,7 +1888,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    warning("cachedm disabled for SCAO\n");
 	}
     }
-    if(parms->evl.tomo){
+    if(parms->evl.tomo || parms->sim.end==0){
 	warning("evl.tomo in cuda not implemented yet.\n");
 	use_cuda=0;
     }

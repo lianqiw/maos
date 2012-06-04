@@ -48,6 +48,7 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon);
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
 void gpu_update_recon(const PARMS_T *parms, RECON_T *recon);
 void gpu_recon_reset(const PARMS_T *parms);
+void gpu_recon_free(void);
 void gpu_tomo(SIM_T *simu);
 void gpu_fit(SIM_T *simu);
 void gpu_recon_mvm(SIM_T *simu);
