@@ -137,8 +137,12 @@ static void setup_parms_maos(PARMS_S *parms){
     temp=readcfg_str("maos.fnmcc_oa"); 
     parms->maos.mcc_oa=dread("%s",temp); free(temp); 
     parms->maos.mcc_oa_tt=dsub(parms->maos.mcc_oa, 0, 2, 0, 2);
-    parms->maos.mcc_oa_tt2=dsub(parms->maos.mcc_oa,0, 2, 0, 5);
-    
+    parms->maos.mcc_oa_tt2=dsub(parms->maos.mcc_oa,0, 2, 0, 0);
+    if(parms->maos.nmod>5 && parms->maos.mcc->nx<=5){
+	dresize(parms->maos.mcc, parms->maos.nmod, parms->maos.nmod);
+	dresize(parms->maos.mcc_oa, parms->maos.nmod, parms->maos.nmod);
+    }
+
     READ_STR(maos.fnmideal);
     READ_STR(maos.fnmidealp);
     READ_INT(maos.evlindoa);
