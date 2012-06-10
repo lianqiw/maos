@@ -330,7 +330,7 @@ void skysim(const PARMS_S *parms){
 	if(parms->skyc.psdcalc){
 	    PDMAT(parms->maos.mcc, MCC);
 	    dmat *x=dtrans(simu->mideal);
-	    for(int im=0; im<x->ny; im++){
+	    for(int im=0; im<x->ny && im<5; im++){
 		dmat *xi=dsub(x, 0, 0, im, 1);
 		dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
 		dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);

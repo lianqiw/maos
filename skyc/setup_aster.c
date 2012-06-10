@@ -278,8 +278,8 @@ static dmat *calc_recon_error(const dmat *pgm,  /**<[in] the reconstructor*/
     PDMAT(mcc,pmcc);
 
     double rss=0;
-    for(int ix=0; ix<psp->nx; ix++){
-	for(int iy=0; iy<psp->ny; iy++){
+    for(int ix=0; ix<mcc->ny; ix++){
+	for(int iy=0; iy<mcc->nx; iy++){
 	    rss+=ppsp[iy][ix]*pmcc[ix][iy];
 	}
     }
