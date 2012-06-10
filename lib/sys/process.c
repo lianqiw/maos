@@ -34,7 +34,7 @@
 #include "process.h"
 #include "daemonize.h"
 int NCPU;
-int NCPU2;/*NCPU2=2*NCPU when hyperthreading is enabled. */
+int NTHREAD;/*NTHREAD=2*NCPU when hyperthreading is enabled. */
 int TCK;
 long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
@@ -79,7 +79,7 @@ void init_path(void){
 
 static __attribute__((constructor))void init(){
     NCPU= get_ncpu();
-    NCPU2=sysconf( _SC_NPROCESSORS_ONLN );
+    NTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
     TCK = sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
     FILE *fp=fopen("/proc/meminfo","r");
@@ -118,7 +118,7 @@ double get_usage_cpu(void){
     lasttime=thistime;
     user1=user2;
     tot1=tot2;
-    cent=cent*NCPU2/NCPU;/*discount hyperthreading. */
+    cent=cent*NTHREAD/NCPU;/*discount hyperthreading. */
     return cent;
 }
 int get_cpu_avail(void){

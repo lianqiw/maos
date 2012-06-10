@@ -55,8 +55,10 @@ ARG_S *parse_args(int argc, char **argv){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(arg->nthread>NCPU2 || arg->nthread<=0){
-	arg->nthread=NCPU2;
+    if(arg->nthread>NTHREAD || arg->nthread<=0){
+	arg->nthread=NTHREAD;
+    }else{
+        NTHREAD=arg->nthread;
     }
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/skyc_%ld.conf",TEMP,(long)getpid());
