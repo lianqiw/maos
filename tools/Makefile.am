@@ -5,11 +5,14 @@ LDADD=../lib/libaos_long.la $(LDOPTS)
 else
 LDADD=../lib/libaos_int.la $(LDOPTS)
 endif
+
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
 icon-finished.h icon-optics.h mouse_black.h  mouse_hand.h  mouse_white.h
 
 noinst_HEADERS=monitor.h drawdaemon.h $(ICONS)
+
 PROGS=
+
 if LINUX
 PROGS+=../bin/load ../bin/record_cpu
 ___bin_load_SOURCES=load.c
@@ -17,6 +20,7 @@ ___bin_load_CFLAGS=$(OPTScommon) $(AM_CFLAGS)
 ___bin_record_cpu_SOURCES=record_cpu.c
 ___bin_record_CPU_CFLAGS=$(OPTScommon) $(AM_CFLAGS)
 endif
+
 if DRAW
 PROGS+=../bin/drawdaemon ../bin/drawbin ../bin/drawres ../bin/calcenc
 ___bin_drawdaemon_SOURCES=drawdaemon.c drawdaemon_gui.c drawdaemon_io.c drawdaemon_draw.c
@@ -26,6 +30,7 @@ ___bin_drawbin_SOURCES=drawbin.c
 ___bin_drawres_SOURCES=drawres.c
 ___bin_calcenc_SOURCES=calcenc.c
 endif
+
 if MON
 if MONN  #FULL with notify
 MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) $(OPTScommon) -DWITH_NOTIFY
@@ -45,8 +50,14 @@ ___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif
+
+if USE_CUDA
+PROGS+=../bin/gpu_mvm
+___bin_gpu_mvm_SOURCES=gpu_mvm.c
+___bin_gpu_mvm_LDADD=../cuda/libgpu.a $(LDADD) $(LDCUDA)
+endif
+
 PROGS+=../bin/servo_optim ../bin/slaving ../bin/cov2psf ../bin/bin2fits ../bin/psfiris ../bin/psfgc ../bin/mk2dcov
-bin_PROGRAMS=$(PROGS)
 ___bin_servo_optim_SOURCES=servo_optim.c
 ___bin_slaving_SOURCES=slaving.c
 ___bin_cov2psf_SOURCES=cov2psf.c
@@ -54,3 +65,5 @@ ___bin_bin2fits_SOURCES=bin2fits.c
 ___bin_psfiris_SOURCES=psfiris.c
 ___bin_psfgc_SOURCES=psfgc.c
 ___bin_mk2dcov_SOURCES=mk2dcov.c
+
+bin_PROGRAMS=$(PROGS)

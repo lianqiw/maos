@@ -58,6 +58,12 @@ typedef struct cudata_t{
     /*for moao*/
     curcell *dm_wfs;
     curcell *dm_evl;
+    /*for mvm*/
+    curmat *mvm_m;
+    curmat *mvm_a;
+    curmat *mvm_g;
+    stream_t *mvm_stream;
+    pthread_mutex_t mvm_mutex;
     cudata_t(){
 	memset(this, 0, sizeof(cudata_t));
     }
@@ -109,6 +115,7 @@ void cp2gpu(fcomplex * restrict *dest, dcomplex *src, int n);
 void cp2gpu(fcomplex * restrict *dest, cmat *src);
 
 void cp2gpu(curmat *restrict *dest, dmat *src);
+void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream=0);
 void cp2gpu(curcell *restrict *dest, dcell *src);
 void cp2gpu(cucmat *restrict *dest, cmat *src);
 void cp2gpu(cuccell *restrict *dest, ccell *src);
@@ -143,11 +150,11 @@ inline void cp2cpu(dmat **out, const curmat *in, cudaStream_t stream){
 inline void cp2cpu(dcell **out, const curcell *in, cudaStream_t stream){
     cp2cpu(out, 0, in, 1, stream);
 }
-inline void add2cpu(dmat **out, const curmat *in, cudaStream_t stream){
-    cp2cpu(out, 1, in, 1, stream);
+inline void add2cpu(dmat **out, const curmat *in, cudaStream_t stream, pthread_mutex_t* mutex=0){
+    cp2cpu(out, 1, in, 1, stream, mutex);
 }
-inline void add2cpu(dcell **out, const curcell *in, cudaStream_t stream){
-    cp2cpu(out, 1, in, 1, stream);
+inline void add2cpu(dcell **out, const curcell *in, cudaStream_t stream, pthread_mutex_t* mutex=0){
+    cp2cpu(out, 1, in, 1, stream, mutex);
 }
 void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream);
 void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream);

@@ -87,6 +87,7 @@ int zfeof(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
 file_t *zfopen(const char *fn, char *mod);
+file_t *zfdopen(int fd, char *mod);
 const char *zfname(file_t *fp);
 int zfisfits(file_t *fp);
 void zfclose(file_t *fp);

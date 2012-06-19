@@ -337,48 +337,7 @@ int scheduler_connect(int ihost, int block, int mode){
 	ihost=hid;
     }
     host=hosts[ihost];
-    int sock;
- 
-    struct sockaddr_in servername;
- 
-    /* Create the socket. */
-    sock = socket (PF_INET, SOCK_STREAM, 0);
-    socket_tcp_keepalive(sock);
-    if (sock < 0) {
-	perror ("socket (scheduler)");
-	return sock;
-    }
-
-    int flag=fcntl(sock,F_GETFD,0);
-    if(flag == -1) {
-	warning("flag==-1\n");
-	flag=0;
-    }
-    flag |= FD_CLOEXEC; /*close on exec. */
-    fcntl(sock, F_SETFD, flag);
-    
-    if(init_sockaddr (&servername, host, PORT)){
-	/*	warning3("Unable to init_sockaddr.\n"); */
-	close(sock);
-	return -1;
-    }
-    int count=0;
-    fcntl(sock, F_SETFD, O_NONBLOCK);
-    while(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
-	if(!block){
-	    close(sock);
-	    return -1;
-	}
-	sleep(4);
-	count++;
-	if(count>1000){
-	    close(sock);
-	    sock=-1;
-	    warning("Failed to connect to scheduer after 1000 trials.\n");
-	}
-    }
-    scheduler_shutdown(&sock,mode);
-    return sock;
+    return connect_port(host, PORT, block, mode);
 }
 
 /**

@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "curmat.h"
 #include "cucmat.h"
+#include <errno.h>
 #include <pthread.h>
 #if defined(HAS_NVML) && HAS_NVML==1
 extern "C"{
@@ -118,15 +119,17 @@ int gpu_init(int *gpus, int ngpu){
     int free_gpus=0;
     int ngpu_tot=0;//total number of GPUs.
     long (*gpu_info)[2]=NULL;
-    if(cudaGetDeviceCount(&ngpu_tot) || ngpu_tot==0){//no GPUs available.
+    int ans;
+    if((ans=cudaGetDeviceCount(&ngpu_tot)) || ngpu_tot==0){//no GPUs available.
+	warning("No GPUs available. ans=%d\n", ans);
 	return 0;
     }else{/*record information of all GPUs.*/
 	gpu_info=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
 	for(int ig=0; ig<ngpu_tot; ig++){
 	    gpu_info[ig][0]=ig;
-	    cudaDeviceProp prop={0};
-	    if(cudaGetDeviceProperties(&prop, ig)){
-		warning2("Skip GPU %d: not supporting CUDA.\n", ig);
+	    struct cudaDeviceProp prop={0};
+	    if((ans=cudaGetDeviceProperties(&prop, ig))){
+		warning2("Skip GPU %d: not supporting CUDA or init failed. error=%d. \n", ig, ans);
 	    }else if(prop.major!=9999){
 		if(prop.major>=1.3 || prop.totalGlobalMem>500000000){/*require minimum of 500M */
 		    gpu_info[ig][1]=prop.totalGlobalMem;
@@ -144,6 +147,7 @@ int gpu_init(int *gpus, int ngpu){
 	    gpus[i]=i;
 	}
     }
+    if(GPUS) free(GPUS); GPUS=NULL;
     NGPU=0;
     if(gpus){//user preselected gpus or fully auto choice
 	GPUS=(int*)calloc(ngpu ,sizeof(int));
@@ -164,7 +168,7 @@ int gpu_init(int *gpus, int ngpu){
 		    NGPU++;
 		}
 	    }else{
-		info("GPU %d does not meet minimum requirement\n", jgpu);
+		info("GPU %d does not meet minimum requirement. mem=%ld\n", jgpu, gpu_info[jgpu][1]);
 	    }
 	}
     }else{//automatically select a subset. choose the ones with highest memory.
@@ -253,7 +257,6 @@ void cp2gpu(float * restrict *dest, double *src, int n){
 	DO(cudaMalloc((float**)dest, n*sizeof(float)));
     }
     DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
     free(tmp);
 }
 /**
@@ -270,7 +273,6 @@ void cp2gpu(fcomplex * restrict *dest, dcomplex *restrict src, int n){
 	DO(cudaMalloc((fcomplex**)dest, n*sizeof(fcomplex)));
     }
     DO(cudaMemcpy(*dest, tmp, n*sizeof(fcomplex),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
     free(tmp);
 }
 
@@ -414,7 +416,6 @@ void cp2gpu(float (* restrict *dest)[2], loc_t *src){
 	DO(cudaMalloc((float**)dest, src->nloc*2*sizeof(float)));
     }
     DO(cudaMemcpy(*dest, tmp, src->nloc*2*sizeof(float),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
     free(tmp);
 }
 
@@ -430,7 +431,7 @@ void cp2gpu(float * restrict *dest, dmat *src){
 */
 void cp2gpu(curmat *restrict *dest, dmat *src){
     if(!src){
-	dzero(*dest);
+	curzero(*dest);
 	return;
     }
     if(!*dest){
@@ -439,6 +440,25 @@ void cp2gpu(curmat *restrict *dest, dmat *src){
 	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
     }
     cp2gpu(&(*dest)->p, src->p, src->nx*src->ny);
+}
+/**
+   Convert dmat array to curmat
+*/
+void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream){
+    if(!src){
+	curzero(*dest);
+	return;
+    }
+    if(!*dest){
+	*dest=curnew(src->nx, src->ny);
+    }else{
+	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
+    }
+    if(stream){
+	DO(cudaMemcpyAsync((*dest)->p, src->p, src->nx*src->ny*sizeof(float),cudaMemcpyHostToDevice, stream));
+    }else{
+	DO(cudaMemcpy((*dest)->p, src->p, src->nx*src->ny*sizeof(float),cudaMemcpyHostToDevice));
+    }
 }
 /*
   convert cmat to cucmat

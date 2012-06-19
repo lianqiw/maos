@@ -82,6 +82,7 @@ typedef struct MONITOR_T{
 
 int myhostid(const char *host);
 int make_socket (uint16_t port, int retry);
+void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*timeout_fun)());
 MONITOR_T *monitor_get(int hostid);
 void monitor_remove(int hostid);
 MONITOR_T *monitor_add(int hostid);

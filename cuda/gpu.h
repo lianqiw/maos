@@ -56,5 +56,9 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon);
 void gpu_moao_recon(SIM_T *simu);
 void gpu_moao_filter(SIM_T *simu);
 void gpu_moao_2gpu(SIM_T *simu);
+void gpu_mvm_init(int port);
+void gpu_mvm_daemon(int port);
+void gpu_mvm_send_m(dcell *mvm);
+void gpu_mvm_recon(dcell *dm, dcell *grad);
 #endif
 

@@ -177,9 +177,7 @@ static RUN_T *runned=NULL;
 static RUN_T *runned_end=NULL;
 static int nrun=0;
 static char *fnlog=NULL;
-static int scheduler_sock;
 static double usage_cpu;
-static fd_set active_fd_set;
 
 static RUN_T* running_add(int pid,int sock);
 static RUN_T *running_get(int pid);
@@ -732,110 +730,103 @@ static int respond(int sock){
     return 0;/*don't close the port yet. may be reused by the client. */
 }
 
-static void scheduler_crash_handler(int sig){
-    disable_signal_handler;
-    if(sig!=0){
-	if(sig==15){
-	    warning3("SIGTERM caught. exit\n");
-	}else{
-	    warning3("signal %d caught. exit\n",sig);
+static void scheduler_timeout(void){
+    static int lasttime3=0;
+    if(!all_done){
+	process_queue();
+    }
+    /*Report CPU usage every 3 seconds. */
+    int thistime=myclocki();
+    if(thistime>=(lasttime3+3)){
+	if(nrun>0){
+	    check_jobs();
 	}
-	shutdown(scheduler_sock,SHUT_RDWR);
-	for (int i = 0; i < FD_SETSIZE; ++i){
-	    if (FD_ISSET (i, &active_fd_set) && i!=scheduler_sock){
-		shutdown(i,SHUT_RDWR);
-		usleep(100);
-		close(i);
-		FD_CLR(i, &active_fd_set);
-	    }
-	}
-	close(scheduler_sock);
-	usleep(100);
-	_Exit(sig);/*don't call clean up functions */
+	usage_cpu=get_usage_cpu();
+	monitor_send_load();
+	lasttime3=thistime;
     }
 }
-static void scheduler(void){
-    register_signal_handler(scheduler_crash_handler);
-    if(unsetenv("MAOS_START_SCHEDULER")){/*important. */
-	error("Unable to unsetenv\n");
-    }
-    fd_set read_fd_set;
-    int i;
-    struct sockaddr_in clientname;
-    socklen_t size;
-    /* Create the socket and set it up to accept connections. */
-    scheduler_sock = make_socket (PORT, 1);
-    if (listen (scheduler_sock, 1) < 0){
-	perror ("listen");
-	exit (EXIT_FAILURE);
-    }
 
-    /* Initialize the set of active sockets. */
+/**
+   Open a port and listen to it. Calls respond(sock) to handle data. If
+   timeout_fun is not NULL, it will be called when 1) connection is
+   establed/handled, 2) every timeout_sec if timeout_sec>0. This function only
+   return at error.
+ */
+void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*timeout_fun)()){
+    fd_set read_fd_set;
+    fd_set active_fd_set;
+    struct sockaddr_in clientname;
+    int sock = make_socket (port, 1);
+    if (listen (sock, 1) < 0){
+	perror("listen");
+	exit(EXIT_FAILURE);
+    }
     FD_ZERO (&active_fd_set);
-    FD_SET (scheduler_sock, &active_fd_set);
-    struct timeval timeout;
-    timeout.tv_sec=1;
-    timeout.tv_usec=0;
-    struct timeval *timeout2;
-    timeout2=&timeout;
-    static int lasttime3=0;
-    while (1){
-	/* Block until input arrives on one or more active
-	   sockets. */
+    FD_SET (sock, &active_fd_set);
+
+    while(1){
+	struct timeval timeout;
+	timeout.tv_sec=timeout_sec;
+	timeout.tv_usec=0;
+	struct timeval *timeout2;
+	timeout2=timeout_sec>0?&timeout:NULL;
+
 	read_fd_set = active_fd_set;
-	if (select (FD_SETSIZE, &read_fd_set, 
-		    NULL, NULL, timeout2) < 0){
+	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout2)<0){
 	    perror("select");
+	    if(errno!=EINTR){
+		break;
+	    }else{
+		continue;
+	    }
 	}
-	/* Service all the sockets with input pending. */
-	for (i = 0; i < FD_SETSIZE; ++i){
-	    if (FD_ISSET (i, &read_fd_set)){
-		if (i == scheduler_sock){
+	for(int i=0; i<FD_SETSIZE; i++){
+	    if(FD_ISSET(i, &read_fd_set)){
+		if(i==sock){
 		    /* Connection request on original socket. */
-		    int new;
-		    size = sizeof (clientname);
-		    new = accept(scheduler_sock,(struct sockaddr *) 
-				 &clientname, &size);
-		    if (new < 0){
-			perror ("accept");
-			exit (EXIT_FAILURE);
+		    socklen_t size=sizeof(struct sockaddr_in);;
+    		    int port2=accept(sock, (struct sockaddr*)&clientname, &size);
+		    if(port2<0){
+			perror("accept");
+			break;
 		    }
-		    cloexec(new);/*close on exec. */
-		    /*add fd to watched list. */
-		    FD_SET (new, &active_fd_set);
-		} else {
-		    /* Data arriving on an already-connected
-		       socket. */
-		    if (respond (i) < 0){
-			shutdown(i, SHUT_RD);/*don't read any more. */
-			FD_CLR (i, &active_fd_set);/*don't monitor any more */
-			if(monitor_get(i)){
-			    /*warning("This is a monitor, don't close\n"); */
-			}else{
-			    /*warning("This is not a monitor. close %d\n",i); */
-			    close (i);
-			}
+		    cloexec(port2);
+		    FD_SET(port2, &active_fd_set);
+		}else{
+		    /* Data arriving on an already-connected socket. */
+		    if(respond(i)<0){
+			warning("Close port %d\n", i);
+			shutdown(i, SHUT_RD);
+			FD_CLR(i, &active_fd_set);
+			close(i);
 		    }
 		}
 	    }
 	}
-	timeout.tv_sec=1;
-	timeout.tv_usec=0;
-	timeout2=&timeout;
-	if(!all_done){
-	    process_queue();
-	}
-	/*Report CPU usage every 3 seconds. */
-	int thistime=myclocki();
-	if(thistime>=(lasttime3+3)){
-	    if(nrun>0){
-		check_jobs();
-	    }
-	    usage_cpu=get_usage_cpu();
-	    monitor_send_load();
-	    lasttime3=thistime;
+	if(timeout_fun){
+	    timeout_fun();
 	}
     }
+    /* Error happened. We close all connections and this server socket.*/
+    shutdown(sock, SHUT_RDWR);
+    for(int i=0; i<FD_SETSIZE; i++){
+	if(FD_ISSET(i, &active_fd_set)){
+	    shutdown(i, SHUT_RDWR);
+	    usleep(100);
+	    close(i);
+	    FD_CLR(i, &active_fd_set);
+	}
+    }
+    close(sock);
+    usleep(100);
+    _Exit(1);
+}
+static void scheduler(void){
+    if(unsetenv("MAOS_START_SCHEDULER")){/*important. */
+	warning("Unable to unsetenv\n");
+    }
+    listen_port(PORT, respond, 1, scheduler_timeout);
 }
 /*The following routines maintains the MONITOR_T linked list. */
 MONITOR_T* monitor_add(int sock){
@@ -859,8 +850,6 @@ void monitor_remove(int sock){
 	    }
 	    /*info("removed monitor on sock %d close it.\n",ic->sock); */
 	    close(ic->sock);
-	    /*remove from listening queue. */
-	    FD_CLR (ic->sock, &active_fd_set);
 	    free(ic);
 	    /*freed=1; */
 	    break;

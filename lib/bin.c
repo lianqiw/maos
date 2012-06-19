@@ -154,6 +154,21 @@ void zftouch(const char *format, ...){
     free(fn2);
 }
 PNEW(lock);
+file_t* zfdopen(int sock, char *mod){
+    file_t* fp=calloc(1, sizeof(file_t));
+    fp->isgzip=0;
+    fp->fd=sock;
+    if(fp->isgzip){
+	if(!(fp->p=gzdopen(fp->fd,mod))){
+	    error("Error gzdopen for %d\n",sock);
+	}
+    }else{
+	if(!(fp->p=fdopen(fp->fd,mod))){
+	    error("Error fdopen for %d\n",sock);
+	}
+    }
+    return fp;
+}
 /**
    Open the file and return a file_t struct that either contains a file
    descriptor (for .bin) or a zlib file pointer.

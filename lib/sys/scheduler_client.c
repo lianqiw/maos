@@ -44,7 +44,7 @@
 #include "scheduler_client.h"
 static int scheduler_crashed;
 
-void scheduler_shutdown(int *sock, int mode){
+void sock_shutdown(int *sock, int mode){
    if(mode>0){/*tell the server to shutdown read or write */
 	int cmd[2];
 	if(mode==1){
@@ -76,15 +76,14 @@ int init_sockaddr (struct sockaddr_in *name,
 	}
     }
 }
-/* To open a port and connect to scheduler */
-int scheduler_connect_self(int block, int mode){
-    /*
-      mode=0: read/write
-      mode=1: read only by the client. the server won't read
-      mode=2: write only by the client. the server won't write
-     */
+/*
+  Connect to a host at port.
+  mode=0: read/write
+  mode=1: read only by the client. the server won't read
+  mode=2: write only by the client. the server won't write
+*/
+int connect_port(const char *hostname, int port, int block, int mode){
     int sock;
- 
     if(scheduler_crashed) {
 	return -1;
     }
@@ -101,7 +100,10 @@ int scheduler_connect_self(int block, int mode){
 	cloexec(sock);
 	socket_tcp_keepalive(sock);
 	/* Give the socket a name. */
-	init_sockaddr(&servername, "localhost", PORT);
+	init_sockaddr(&servername, hostname, port);
+	if(!block){
+	    fcntl(sock, F_SETFD, O_NONBLOCK);
+	}
 	if(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
 	    perror("connect");
 	    close(sock);
@@ -111,11 +113,16 @@ int scheduler_connect_self(int block, int mode){
 	    sleep(4);
 	    count++;
 	}else{
-	    scheduler_shutdown(&sock,mode);
+	    sock_shutdown(&sock,mode);
 	    return sock;
 	}
     }while(count<10);
-    return -1;
+    return -1; 
+
+}
+/* To open a port and connect to scheduler */
+int scheduler_connect_self(int block, int mode){
+    return connect_port("localhost", PORT, block, mode);
 }
 
 #ifdef MAOS_DISABLE_SCHEDULER

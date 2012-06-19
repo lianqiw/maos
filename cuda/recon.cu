@@ -646,7 +646,7 @@ void gpu_setup_recon_mvm_igpu(thread_t *info){
     }
     toc2("MVM on GPU %d", igpu);tic;
     /*Add all to CPU*/
-    if(NGPU>1){
+    if(NGPU>1 || parms->gpu.mvm){
 	cp2cpu(&recon->MVM, 1, curecon->MVM, 1, curecon->cgstream[0], data->mutex);
 	curfree(curecon->MVM);
     }
@@ -657,18 +657,18 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     if(parms->recon.alg!=0){
 	error("Please adept to LSR\n");
     } 
-    if(parms->load.MVM){
+    if(parms->load.MVM || !parms->gpu.tomo || !parms->gpu.fit){
 	gpu_set(gpu_recon);
 	curecon_t *curecon=cudata->recon;
-	recon->MVM=dcellread("%s", parms->load.MVM);
-	cp2gpu(&curecon->MVM, recon->MVM);
-	dcellfree(recon->MVM);
-    }else if(!parms->gpu.tomo || !parms->gpu.fit){
-	gpu_set(gpu_recon);
-	curecon_t *curecon=cudata->recon;
-	setup_recon_mvr_mvm(recon, parms, powfs);
-	cp2gpu(&curecon->MVM, recon->MVM);
-	dcellfree(recon->MVM);
+	if(parms->load.MVM){
+	    recon->MVM=dcellread("%s", parms->load.MVM);
+	}else{
+	    setup_recon_mvr_mvm(recon, parms, powfs);
+	}
+	if(!parms->gpu.mvm){
+	    cp2gpu(&curecon->MVM, recon->MVM);
+	    dcellfree(recon->MVM);
+	}
     }else{
 	info2("Assembling MVR MVM in GPU\n");
 	int ntotact=0;
@@ -709,8 +709,6 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	    error("Invalid fit.alg=%d\n", parms->fit.alg);
 	}
 	smat *residual=NULL;
-
-
 	float *FLI=NULL;
 	if(FLId){
 	    dwrite(FLId, "FLI");
@@ -729,10 +727,10 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	thread_t info[NGPU];
 	thread_prep(info, 0, ntotact, nthread, gpu_setup_recon_mvm_igpu, &data);
 	CALL_THREAD(info, nthread, 1);
-	if(NGPU>1){
-	    if(parms->save.setup){
-		dcellwrite(recon->MVM, "%s/MVM.bin", dirsetup);
-	    }
+	if(recon->MVM && parms->save.setup){
+	    dcellwrite(recon->MVM, "%s/MVM.bin", dirsetup);
+	}
+	if(!parms->gpu.mvm && NGPU>1){
 	    gpu_set(gpu_recon);
 	    cp2gpu(&cudata->recon->MVM, recon->MVM);
 	    dcellfree(recon->MVM);
@@ -831,12 +829,12 @@ void gpu_tomo(SIM_T *simu){
 	    curfree(tmp);
 	}
 	/*{
-	    curcellwrite(rhs, "GPU_RHS");
-	    curcellwrite(curecon->opdr, "GPU_OPDR");
-	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
-	    dcellwrite(simu->opdr, "CPU_OPDR");
-	    exit(1);
-	    }*/
+	  curcellwrite(rhs, "GPU_RHS");
+	  curcellwrite(curecon->opdr, "GPU_OPDR");
+	  muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
+	  dcellwrite(simu->opdr, "CPU_OPDR");
+	  exit(1);
+	  }*/
 	break;
     case 1:{
 	G_PREFUN prefun=NULL;
@@ -932,12 +930,25 @@ void gpu_fit(SIM_T *simu){
     toc_test("Fit");
 }
 void gpu_recon_mvm(SIM_T *simu){
-    gpu_set(gpu_recon);
-    curecon_t *curecon=cudata->recon;
     const PARMS_T *parms=simu->parms;
-    cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-    curcellmm(&curecon->dmfit_vec, 0., curecon->MVM, curecon->gradin,"nn", 1., curecon->cgstream[0]);
-    cp2cpu(&simu->dmerr, 0., curecon->dmfit_vec, 1., curecon->cgstream[0]);
+    if(parms->gpu.mvm){
+	if(!simu->dmerr){
+	    simu->dmerr=dcellnew(parms->ndm, 1);
+	}
+	for(int idm=0; idm<parms->ndm; idm++){
+	    if(!simu->dmerr->p[idm]){
+		simu->dmerr->p[idm]=dnew(simu->recon->aloc[idm]->nloc,1);
+	    }
+	}
+
+	gpu_mvm_recon(simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+    }else{
+	gpu_set(gpu_recon);
+	curecon_t *curecon=cudata->recon;
+	cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+	curcellmm(&curecon->dmfit_vec, 0., curecon->MVM, curecon->gradin,"nn", 1., curecon->cgstream[0]);
+	cp2cpu(&simu->dmerr, 0., curecon->dmfit_vec, 1., curecon->cgstream[0]);
+    }
     if(parms->tomo.psol){
 	dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
     }

@@ -551,6 +551,7 @@ typedef struct GPU_CFG_T{
     int lsr;         /**<Use GPU for least square reconstruction*/
     int psf;         /**<Use GPU for accumulating PSF. */
     int moao;        /**<Use GPU for moao.*/
+    int mvm;         /**<Use many GPUs to apply mvm.*/
 }GPU_CFG_T;
 /**
    contains input parameters for each MOAO type.

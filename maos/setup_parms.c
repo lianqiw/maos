@@ -841,6 +841,7 @@ static void readcfg_gpu(PARMS_T *parms){
     READ_INT(gpu.lsr);
     READ_INT(gpu.psf);
     READ_INT(gpu.moao);
+    READ_INT(gpu.mvm);
 }
 /**
    Specify which variables to save
@@ -1975,6 +1976,12 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    parms->dbg.dxonedge=1;
 	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
+#if USE_CUDA
+	if(parms->gpu.mvm){
+	    int port=getpid()|10000;
+	    gpu_mvm_init(port);
+	}
+#endif
     }else{
 	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
     }

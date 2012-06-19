@@ -2787,6 +2787,11 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 		    dcellwrite(recon->MVM, "%s/MVM", dirsetup);
 		}
 	    }
+#if USE_CUDA
+	if(parms->gpu.mvm){
+	    gpu_mvm_send_m(recon->MVM);
+	}
+#endif
 	muv_free(&recon->RR);
 	muv_free(&recon->RL);
 	muv_free(&recon->FR);
