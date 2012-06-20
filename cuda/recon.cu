@@ -931,25 +931,9 @@ void gpu_fit(SIM_T *simu){
 }
 void gpu_recon_mvm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(parms->gpu.mvm){
-	if(!simu->dmerr){
-	    simu->dmerr=dcellnew(parms->ndm, 1);
-	}
-	for(int idm=0; idm<parms->ndm; idm++){
-	    if(!simu->dmerr->p[idm]){
-		simu->dmerr->p[idm]=dnew(simu->recon->aloc[idm]->nloc,1);
-	    }
-	}
-
-	gpu_mvm_recon(simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-    }else{
-	gpu_set(gpu_recon);
-	curecon_t *curecon=cudata->recon;
-	cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-	curcellmm(&curecon->dmfit_vec, 0., curecon->MVM, curecon->gradin,"nn", 1., curecon->cgstream[0]);
-	cp2cpu(&simu->dmerr, 0., curecon->dmfit_vec, 1., curecon->cgstream[0]);
-    }
-    if(parms->tomo.psol){
-	dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
-    }
+    gpu_set(gpu_recon);
+    curecon_t *curecon=cudata->recon;
+    cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+    curcellmm(&curecon->dmfit_vec, 0., curecon->MVM, curecon->gradin,"nn", 1., curecon->cgstream[0]);
+    cp2cpu(&simu->dmerr, 0., curecon->dmfit_vec, 1., curecon->cgstream[0]);
 }

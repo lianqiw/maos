@@ -124,7 +124,7 @@ void cp2gpu(int * restrict *dest, long *src, int n);
 void cp2gpu(int * restrict *dest, spint *src, int n);
 void cp2gpu(int * restrict *dest, int *src, int n);
 void cp2gpu(cumuv_t *out, MUV_T *in);
-
+void cp2gpu(curmat *restrict *dest, float *src, int n, cudaStream_t stream);
 
 #if MYSPARSE
 void cuspmul (float *y, cusp *A, float *x, float alpha, cudaStream_t stream);

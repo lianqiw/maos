@@ -842,6 +842,8 @@ static void readcfg_gpu(PARMS_T *parms){
     READ_INT(gpu.psf);
     READ_INT(gpu.moao);
     READ_INT(gpu.mvm);
+    READ_STR(gpu.mvmhost);
+    READ_INT(gpu.mvmport);
 }
 /**
    Specify which variables to save
@@ -1978,8 +1980,10 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
 #if USE_CUDA
 	if(parms->gpu.mvm){
-	    int port=getpid()|10000;
-	    gpu_mvm_init(port);
+	    if(!parms->gpu.mvmport){
+		error("gpu.mvmport cannot be zero.\n");
+	    }
+	    gpu_mvm_init(parms->gpu.mvmhost, parms->gpu.mvmport);
 	}
 #endif
     }else{

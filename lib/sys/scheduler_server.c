@@ -66,6 +66,9 @@
 #include "daemonize.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
+
+#define USE_TCP 1
+
 uint16_t PORT=0;
 char** hosts;
 int nhost;
@@ -100,7 +103,7 @@ void socket_tcp_keepalive(int sock){
     int keepcnt  =2;/*repeat before declare dead */
 #endif
     if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
-#ifdef __linux__
+#ifdef __linux__ && USE_TCP
        && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int))
@@ -118,7 +121,11 @@ int make_socket (uint16_t port, int retry){
     struct sockaddr_in name;
     
     /* Create the socket. */
-    sock = socket(PF_INET, SOCK_STREAM, 0);
+#if USE_TCP
+    sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
+#else
+    sock = socket(PF_INET, SOCK_DGRAM, 0); //udp
+#endif
     if (sock < 0){
 	perror ("socket");
 	exit (EXIT_FAILURE);
@@ -758,6 +765,19 @@ void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*
     fd_set active_fd_set;
     struct sockaddr_in clientname;
     int sock = make_socket (port, 1);
+    {
+	/*Applications that require lower latency on every packet sent should be
+	  run on sockets with TCP_NODELAY enabled. It can be enabled through the
+	  setsockopt command with the sockets API.  
+
+	  For this to be used effectively, applications must avoid doing small,
+	  logically related buffer writes. Because TCP_NODELAY is enabled, these
+	  small writes will make TCP send these multiple buffers as individual
+	  packets, which can result in poor overall performance.  */
+	int one=1;
+	//setsockopt(sock, SOL_TCP, TCP_NODELAY|TCP_QUICKACK|TCP_CORK, &one, sizeof(one));
+	setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
+    }
     if (listen (sock, 1) < 0){
 	perror("listen");
 	exit(EXIT_FAILURE);

@@ -205,19 +205,27 @@ void reconstruct(SIM_T *simu){
 	if(hi_output){
 	    if(parms->recon.mvm){
 #if USE_CUDA
-		if(parms->gpu.tomo && parms->gpu.fit){
+		if(!simu->dmerr){
+		    simu->dmerr=dcellnew(parms->ndm, 1);
+		}
+		for(int idm=0; idm<parms->ndm; idm++){
+		    if(!simu->dmerr->p[idm]){
+			simu->dmerr->p[idm]=dnew(simu->recon->aloc[idm]->nloc,1);
+		    }
+		}
+		if(parms->gpu.mvm){
+		    gpu_mvm_recon(simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+		}else if(parms->gpu.tomo && parms->gpu.fit){
 		    gpu_recon_mvm(simu);
 		}else
 #endif		
 		    {
 			dcellzero(simu->dmerr);
-			if(parms->recon.alg==0 && parms->tomo.psol){/*psol*/
-			    dcellmm(&simu->dmerr,recon->MVM, simu->gradlastol,"nn",1);
-			    dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
-			}else{
-			    dcellmm(&simu->dmerr,recon->MVM, simu->gradlastcl,"nn",1);
-			}
+			dcellmm(&simu->dmerr, recon->MVM, parms->tomo.psol?simu->gradlastol:simu->gradlastcl,"nn",1);
 		    }
+		if(parms->tomo.psol){
+		    dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
+		}
 	    }else{
 		switch(parms->recon.alg){
 		case 0:

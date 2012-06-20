@@ -441,9 +441,22 @@ void cp2gpu(curmat *restrict *dest, dmat *src){
     }
     cp2gpu(&(*dest)->p, src->p, src->nx*src->ny);
 }
-/**
-   Convert dmat array to curmat
-*/
+void cp2gpu(curmat *restrict *dest, float *src, int n, cudaStream_t stream){
+    if(!src){
+	curzero(*dest);
+	return;
+    }
+    if(!*dest){
+	*dest=curnew(n, 1);
+    }else{
+	assert(n==(*dest)->nx*(*dest)->ny);
+    }
+    if(stream){
+	DO(cudaMemcpyAsync((*dest)->p, src, n*sizeof(float),cudaMemcpyHostToDevice, stream));
+    }else{
+	DO(cudaMemcpy((*dest)->p, src, n*sizeof(float),cudaMemcpyHostToDevice));
+    }
+}
 void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream){
     if(!src){
 	curzero(*dest);

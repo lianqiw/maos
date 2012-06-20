@@ -552,6 +552,8 @@ typedef struct GPU_CFG_T{
     int psf;         /**<Use GPU for accumulating PSF. */
     int moao;        /**<Use GPU for moao.*/
     int mvm;         /**<Use many GPUs to apply mvm.*/
+    char *mvmhost;   /**<Where does the MVM server run*/
+    int mvmport;     /**<Which port does the MVM server run on*/
 }GPU_CFG_T;
 /**
    contains input parameters for each MOAO type.
