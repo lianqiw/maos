@@ -23,6 +23,7 @@
 #include "ahst.h"
 #include "cn2est.h"
 #include "recon_utils.h"
+#include "mvm_client.h"
 #include "moao.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
@@ -2787,11 +2788,11 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 		    dcellwrite(recon->MVM, "%s/MVM", dirsetup);
 		}
 	    }
-#if USE_CUDA
-	if(parms->gpu.mvm){
-	    gpu_mvm_send_m(recon->MVM);
+	
+	if(parms->sim.mvmport){
+	    mvm_client_send_m(recon->MVM);
 	}
-#endif
+
 	muv_free(&recon->RR);
 	muv_free(&recon->RL);
 	muv_free(&recon->FR);

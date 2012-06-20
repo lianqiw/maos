@@ -646,7 +646,7 @@ void gpu_setup_recon_mvm_igpu(thread_t *info){
     }
     toc2("MVM on GPU %d", igpu);tic;
     /*Add all to CPU*/
-    if(NGPU>1 || parms->gpu.mvm){
+    if(NGPU>1 || parms->sim.mvmport){
 	cp2cpu(&recon->MVM, 1, curecon->MVM, 1, curecon->cgstream[0], data->mutex);
 	curfree(curecon->MVM);
     }
@@ -665,7 +665,7 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	}else{
 	    setup_recon_mvr_mvm(recon, parms, powfs);
 	}
-	if(!parms->gpu.mvm){
+	if(!parms->sim.mvmport){
 	    cp2gpu(&curecon->MVM, recon->MVM);
 	    dcellfree(recon->MVM);
 	}
@@ -730,7 +730,7 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	if(recon->MVM && parms->save.setup){
 	    dcellwrite(recon->MVM, "%s/MVM.bin", dirsetup);
 	}
-	if(!parms->gpu.mvm && NGPU>1){
+	if(!parms->sim.mvmport && NGPU>1){
 	    gpu_set(gpu_recon);
 	    cp2gpu(&cudata->recon->MVM, recon->MVM);
 	    dcellfree(recon->MVM);

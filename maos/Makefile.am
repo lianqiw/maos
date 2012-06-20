@@ -11,7 +11,7 @@ ___bin_maos_SOURCES=maos.h maos.c parms.h setup_parms.c types.h utils.h utils.c	
 	 perfevl.c wfsints.c genseotf.c genseotf.h mtch.c mtch.h cachedm.c	\
 	 filter.c ahst.c ahst.h sim_utils.c sim_utils.h setup_surf.c		\
 	 setup_surf.h recon_utils.c recon_utils.h moao.c moao.h cn2est.c	\
-	 cn2est.h save.c save.h
+	 cn2est.h save.c save.h mvm_client.c mvm_client.h
 #The following must be specified like this. do not use LDAOS set in configure.ac that causes linking to be not performed when lib is updated.
 if USE_LONG
 ___bin_maos_LDADD=../lib/libaos_long.la $(LDOPTS)

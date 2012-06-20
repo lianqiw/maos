@@ -201,6 +201,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #define tic tk=myclockd();
 #define toc(A...) ({info(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
 #define toc2(A...) ({info2(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
+#define toc22(A) info2("%s takes %.6f seconds.\n",A, myclockd()-tk)
 #define toc3 myclockd()-tk
 
 #define format2fn					\

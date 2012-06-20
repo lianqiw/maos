@@ -25,6 +25,7 @@
 #include <ctype.h>
 #include "../lib/aos.h"
 #include "parms.h"
+#include "mvm_client.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -769,6 +770,9 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.idealevl);
     READ_INT(sim.parallel);
     READ_INT(sim.ahstfocus);
+
+    READ_STR(sim.mvmhost);
+    READ_INT(sim.mvmport);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -841,9 +845,6 @@ static void readcfg_gpu(PARMS_T *parms){
     READ_INT(gpu.lsr);
     READ_INT(gpu.psf);
     READ_INT(gpu.moao);
-    READ_INT(gpu.mvm);
-    READ_STR(gpu.mvmhost);
-    READ_INT(gpu.mvmport);
 }
 /**
    Specify which variables to save
@@ -1978,17 +1979,16 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    parms->dbg.dxonedge=1;
 	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
-#if USE_CUDA
-	if(parms->gpu.mvm){
-	    if(!parms->gpu.mvmport){
-		error("gpu.mvmport cannot be zero.\n");
-	    }
-	    gpu_mvm_init(parms->gpu.mvmhost, parms->gpu.mvmport);
-	}
-#endif
     }else{
 	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
     }
+    if(parms->sim.mvmport){
+	if(!parms->sim.mvmport){
+	    error("sim.mvmport cannot be zero.\n");
+	}
+	mvm_client_init(parms->sim.mvmhost, parms->sim.mvmport);
+    }
+
     if(parms->dbg.cmpgpu){
 	warning("Make cpu code follows gpu implementations.\n");
 	parms->sim.cachedm=0;
