@@ -95,13 +95,18 @@ void mvm_client_send_m(dcell *mvm){
     for(int i=0; i<mvmd->nx*mvmd->ny; i++){
 	fmvm[i]=(float)mvmd->p[i];
     }
+    info2("prep");
     WRITE_ARR(fmvm, mvmd->nx*mvmd->ny, float);
+    writeflt(fmvm, mvmd->nx, mvmd->ny, "fmvm");
+    writedbl(mvmd->p,  mvmd->nx, mvmd->ny, "dmvm");
+    dcellwrite(mvm, "cmvm");
+    dwrite(mvmd, "dmvm2");
     dfree(mvmd);
     free(fmvm);
     info2("done\n");
 }
 
-void mvm_client_recon(dcell *dm, dcell *grad){
+void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
     /* first move gradients to continuous buffer*/
     int nwfs=grad->nx;
     int ngtot=0;
@@ -117,9 +122,8 @@ void mvm_client_recon(dcell *dm, dcell *grad){
 	if(!grad->p[iwfs]) continue;
 	int ng=grad->p[iwfs]->nx;
 	for(int ig=0; ig<ng; ig++){
-	    pgall[ig]=(float)grad->p[iwfs]->p[ig];
+	    *(pgall++)=(float)grad->p[iwfs]->p[ig];
 	}
-	pgall+=grad->p[iwfs]->nx;
     }
     int natot=0;
     for(int idm=0; idm<dm->nx; idm++){
@@ -129,11 +133,21 @@ void mvm_client_recon(dcell *dm, dcell *grad){
     }
     float *dmall=malloc(sizeof(float) *natot);
     float *pdmall=dmall;
-    static int neach=50;
-    neach=ngtot;//temporary
-    while(ngtot%neach){
-	neach++;
+    static int neach=0;
+    if(neach==0){
+	neach=parms->sim.mvmsize;
+	if(neach==0){
+	    neach=ngtot;
+	}else{
+	    while(ngtot % neach){
+		neach++;
+	    }
+	}
+	info("neach = %d\n", neach);
     }
+    //neach=ngtot;//temporary
+    //neach=ngtot/7;//temporary.
+
     TIC;double tk0=tic;
     int cmd[N_CMD]={GPU_MVM_G, 0, 0, 1};
     cmd[2]=neach;
@@ -154,10 +168,9 @@ void mvm_client_recon(dcell *dm, dcell *grad){
 	    int nact=dm->p[idm]->nx;
 	    double *restrict pdm=dm->p[idm]->p;
 	    for(int i=0; i<nact; i++){
-		pdm[i]=(double)pdmall[i];
+		pdm[i]=(double) *(pdmall++);
 	    }
 	    //memcpy(dm->p[idm]->p, pdmall, sizeof(double)*nact);
-	    pdmall+=nact;
 	}
     }
     double tim_acp=toc3; tic;

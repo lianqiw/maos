@@ -2783,13 +2783,13 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 		}else{
 		    setup_recon_lsr_mvm(recon, parms, powfs);   
 		}
-	    
-		if(parms->save.setup){
+		if(parms->save.setup && !parms->load.MVM){
 		    dcellwrite(recon->MVM, "%s/MVM", dirsetup);
 		}
 	    }
 	
 	if(parms->sim.mvmport){
+	    dcellwrite(recon->MVM, "MVM_send");
 	    mvm_client_send_m(recon->MVM);
 	}
 

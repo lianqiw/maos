@@ -434,43 +434,35 @@ void cp2gpu(curmat *restrict *dest, dmat *src){
 	curzero(*dest);
 	return;
     }
-    if(!*dest){
-	*dest=curnew(src->nx, src->ny);
-    }else{
+    float *pdest=NULL;
+    if(*dest){
+	pdest=(*dest)->p;
 	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
     }
-    cp2gpu(&(*dest)->p, src->p, src->nx*src->ny);
+    cp2gpu(&pdest, src->p, src->nx*src->ny);
+    if(!*dest){
+	*dest=curnew(src->nx, src->ny, pdest);
+    }
 }
-void cp2gpu(curmat *restrict *dest, float *src, int n, cudaStream_t stream){
+void cp2gpu(curmat *restrict *dest, float *src, int nx, int ny, cudaStream_t stream){
     if(!src){
 	curzero(*dest);
 	return;
     }
-    if(!*dest){
-	*dest=curnew(n, 1);
+    float *pdest=NULL;
+    if(*dest){
+	pdest=(*dest)->p;
+	assert(nx*ny==(*dest)->nx*(*dest)->ny);
     }else{
-	assert(n==(*dest)->nx*(*dest)->ny);
+	cudaMalloc(&pdest, nx*ny*sizeof(float));
     }
     if(stream){
-	DO(cudaMemcpyAsync((*dest)->p, src, n*sizeof(float),cudaMemcpyHostToDevice, stream));
+	DO(cudaMemcpyAsync(pdest, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice, stream));
     }else{
-	DO(cudaMemcpy((*dest)->p, src, n*sizeof(float),cudaMemcpyHostToDevice));
-    }
-}
-void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream){
-    if(!src){
-	curzero(*dest);
-	return;
+	DO(cudaMemcpy(pdest, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice));
     }
     if(!*dest){
-	*dest=curnew(src->nx, src->ny);
-    }else{
-	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
-    }
-    if(stream){
-	DO(cudaMemcpyAsync((*dest)->p, src->p, src->nx*src->ny*sizeof(float),cudaMemcpyHostToDevice, stream));
-    }else{
-	DO(cudaMemcpy((*dest)->p, src->p, src->nx*src->ny*sizeof(float),cudaMemcpyHostToDevice));
+	*dest=curnew(nx, ny, pdest);
     }
 }
 /*

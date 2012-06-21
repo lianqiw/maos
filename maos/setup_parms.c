@@ -773,6 +773,7 @@ static void readcfg_sim(PARMS_T *parms){
 
     READ_STR(sim.mvmhost);
     READ_INT(sim.mvmport);
+    READ_INT(sim.mvmsize);
 }
 /**
    Read in parameters for Cn2 estimation.

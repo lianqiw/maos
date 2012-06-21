@@ -214,7 +214,7 @@ void reconstruct(SIM_T *simu){
 		    }
 		}
 		if(parms->sim.mvmport){
-		    mvm_client_recon(simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+		    mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
 		}else
 #if USE_CUDA
 		    if(parms->gpu.tomo && parms->gpu.fit){

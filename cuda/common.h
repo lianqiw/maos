@@ -138,7 +138,7 @@ typedef struct stream_t{
     cublasHandle_t handle;
     cusparseHandle_t sphandle;
     stream_t(){
-	STREAM_NEW(stream);
+	STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
 	HANDLE_NEW(handle, stream);
 	SPHANDLE_NEW(sphandle, stream);
     }

@@ -115,7 +115,6 @@ void cp2gpu(fcomplex * restrict *dest, dcomplex *src, int n);
 void cp2gpu(fcomplex * restrict *dest, cmat *src);
 
 void cp2gpu(curmat *restrict *dest, dmat *src);
-void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream=0);
 void cp2gpu(curcell *restrict *dest, dcell *src);
 void cp2gpu(cucmat *restrict *dest, cmat *src);
 void cp2gpu(cuccell *restrict *dest, ccell *src);
@@ -124,7 +123,15 @@ void cp2gpu(int * restrict *dest, long *src, int n);
 void cp2gpu(int * restrict *dest, spint *src, int n);
 void cp2gpu(int * restrict *dest, int *src, int n);
 void cp2gpu(cumuv_t *out, MUV_T *in);
-void cp2gpu(curmat *restrict *dest, float *src, int n, cudaStream_t stream);
+void cp2gpu(curmat *restrict *dest, float *src, int nx, int ny, cudaStream_t stream);
+inline void cp2gpu(curmat *restrict *dest, float *src, int nx, cudaStream_t stream){
+    cp2gpu(dest, src, nx, 1, stream);
+}
+inline void cp2gpu(curmat *restrict *dest, smat *src, cudaStream_t stream=0){
+    if(src){
+	cp2gpu(dest, src->p, src->nx, src->ny, stream);
+    }
+}
 
 #if MYSPARSE
 void cuspmul (float *y, cusp *A, float *x, float alpha, cudaStream_t stream);

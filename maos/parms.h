@@ -489,7 +489,7 @@ typedef struct SIM_CFG_T{
 
     int mvmport;     /**<Non zero: specify which port does the MVM server run on and connect to it for MVM reconstruction.*/
     char *mvmhost;   /**<Which host does the MVM server run*/
-
+    int mvmsize;     /**<number of gradients to send each time. 0 is all.*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
