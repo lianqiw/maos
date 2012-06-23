@@ -22,13 +22,7 @@
 #include <netinet/in.h>
 int sock_mvm;
 int ndone;
-#define N_CMD 4
-enum{
-    GPU_MVM_ZERO,
-    GPU_MVM_M,
-    GPU_MVM_G,
-    GPU_MVM_A,
-};
+
 #define WRITE_INTARR(p,n)						\
     if((ndone=write(sock_mvm, p, sizeof(int)*n))!=sizeof(int)*n){	\
 	perror("write");						\
@@ -85,22 +79,18 @@ void mvm_client_init(const char *host, int port){
    It is called by maos to send mvm matrix to mvm server
 */
 void mvm_client_send_m(dcell *mvm){
-    info2("sending mvm ...");
     dmat *mvmd=dcell2m(mvm);
     int cmd[N_CMD]={GPU_MVM_M, 0, 0, 0};
     cmd[2]=mvmd->nx;
     cmd[3]=mvmd->ny;
+    info2("sending mvm %dx%d", cmd[2], cmd[3]);
     WRITE_INTARR(cmd,N_CMD);
     float *fmvm=malloc(sizeof(float)*(mvmd->nx*mvmd->ny));
     for(int i=0; i<mvmd->nx*mvmd->ny; i++){
-	fmvm[i]=(float)mvmd->p[i];
+	fmvm[i]=(float)(mvmd->p[i]*GSCALE1*ASCALE);
     }
     info2("prep");
     WRITE_ARR(fmvm, mvmd->nx*mvmd->ny, float);
-    writeflt(fmvm, mvmd->nx, mvmd->ny, "fmvm");
-    writedbl(mvmd->p,  mvmd->nx, mvmd->ny, "dmvm");
-    dcellwrite(mvm, "cmvm");
-    dwrite(mvmd, "dmvm2");
     dfree(mvmd);
     free(fmvm);
     info2("done\n");
@@ -116,13 +106,13 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
 	    ngtot+=n;
 	}
     }
-    float *gall=malloc(ngtot*sizeof(float));
-    float *pgall=gall;
+    GTYPE *gall=malloc(ngtot*sizeof(GTYPE));
+    GTYPE *pgall=gall;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	if(!grad->p[iwfs]) continue;
 	int ng=grad->p[iwfs]->nx;
 	for(int ig=0; ig<ng; ig++){
-	    *(pgall++)=(float)grad->p[iwfs]->p[ig];
+	    *(pgall++)=(GTYPE)(grad->p[iwfs]->p[ig]*GSCALE);
 	}
     }
     int natot=0;
@@ -131,46 +121,31 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
 	    natot+=dm->p[idm]->nx;
 	}
     }
-    float *dmall=malloc(sizeof(float) *natot);
-    float *pdmall=dmall;
-    static int neach=0;
-    if(neach==0){
-	neach=parms->sim.mvmsize;
-	if(neach==0){
-	    neach=ngtot;
-	}else{
-	    while(ngtot % neach){
-		neach++;
-	    }
-	}
-	info("neach = %d\n", neach);
-    }
-    //neach=ngtot;//temporary
-    //neach=ngtot/7;//temporary.
-
+    ATYPE *dmall=malloc(sizeof(ATYPE) *natot);
+    ATYPE *pdmall=dmall;
+    int neach=parms->sim.mvmsize;//testing parms->sim.mvmsize;
     TIC;double tk0=tic;
     int cmd[N_CMD]={GPU_MVM_G, 0, 0, 1};
-    cmd[2]=neach;
     for(int i=0; i<ngtot; i+=neach){
 	cmd[1]=i;
+	cmd[2]=MIN(neach, ngtot-i);
 	WRITE_INTARR(cmd,N_CMD);
-	WRITE_ARR(gall+i, neach, float);
+	WRITE_ARR(gall+i, cmd[2], GTYPE);
     }
     double tim_gsend=toc3; tic;
     cmd[0]=GPU_MVM_A;
     if(neach!=ngtot){
 	WRITE_INTARR(cmd,N_CMD);
     }
-    READ_ARR(dmall, natot, float);
+    READ_ARR(dmall, natot, ATYPE);
     double tim_aread=toc3; tic;
     for(int idm=0; idm<dm->nx; idm++){
 	if(dm->p[idm]){
 	    int nact=dm->p[idm]->nx;
 	    double *restrict pdm=dm->p[idm]->p;
 	    for(int i=0; i<nact; i++){
-		pdm[i]=(double) *(pdmall++);
+		pdm[i]=(double)(*(pdmall++)*ASCALE1);
 	    }
-	    //memcpy(dm->p[idm]->p, pdmall, sizeof(double)*nact);
 	}
     }
     double tim_acp=toc3; tic;

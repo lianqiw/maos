@@ -19,6 +19,25 @@
 */
 #include "maos.h"
 
+#define GSCALE 2062650000. //convert grad to int
+#define GSCALE1 4.848132257047973e-10 //convert back
+#define ASCALE 1.e9 //convert DM commands to int
+#define ASCALE1 1.e-9 //convert int to DM commands
+/*
+#define GSCALE 1
+#define GSCALE1 1
+#define ASCALE 1
+#define ASCALE1 1
+*/
+#define N_CMD 4
+enum{
+    GPU_MVM_ZERO,
+    GPU_MVM_M,
+    GPU_MVM_G,
+    GPU_MVM_A,
+};
+typedef short GTYPE; //type used for gradients
+typedef float ATYPE; //type used for actuator commands
 void mvm_client_init(const char *host, int port);
 void mvm_client_send_m(dcell *mvm);
 void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad);

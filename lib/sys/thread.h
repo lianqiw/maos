@@ -120,7 +120,7 @@ struct thread_t{
 #define PNEW(A)
 #endif
 
-void thread_prep(thread_t *info, long start, long tot, long nthread, 
+void thread_prep(thread_t *info, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data);
 
 #define LOCKADD(dest,src,step)\

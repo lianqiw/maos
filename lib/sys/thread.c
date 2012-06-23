@@ -26,13 +26,13 @@
    if interlaced==0: partition the job to consecutive segments.
    if interlaced!=0:  different thread do the job interelaced.
 */
-void thread_prep(thread_t *info, long start, long tot, long nthread, 
+void thread_prep(thread_t *info, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data){
     if(nthread==0)return;
-    if(tot==0 && nthread>1){
-	error("Need to specify tot\n");
+    if(end<=start && nthread>1){
+	error("start=%ld, end=%ld. end need to be larger than start\n",start, end);
     }
-    long nt=(tot-start)/nthread;
+    long nt=(end-start)/nthread;
     long ithread;
     if(nt<=0) nt=1;/*added on 2011-04-28; */
     for(ithread=0; ithread<nthread; ithread++){
@@ -42,8 +42,8 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
 	info[ithread].start=start;
 	start+=nt;
 	info[ithread].end=start;
-	if(start>=tot){
-	    info[ithread].end=tot;
+	if(start>=end){
+	    info[ithread].end=end;
 	    ithread++;
 	    break;
 	}
@@ -57,7 +57,7 @@ void thread_prep(thread_t *info, long start, long tot, long nthread,
     }
     /*Make sure we terminate at the right place. */
     if(info[nthread-1].end){
-	info[nthread-1].end=tot;
+	info[nthread-1].end=end;
     }
 }
 /**

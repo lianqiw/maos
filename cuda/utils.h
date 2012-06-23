@@ -24,6 +24,9 @@
 #include "recon.h"
 #include "kernel.h"
 #include "wfs.h"
+extern "C"{
+#include "../maos/mvm_client.h"
+}
 extern int gpu_recon;
 extern int NGPU;
 extern int *GPUS;
@@ -60,8 +63,8 @@ typedef struct cudata_t{
     curcell *dm_evl;
     /*for mvm*/
     curmat *mvm_m;
-    curmat *mvm_a;
-    curmat *mvm_g;
+    ATYPE *mvm_a;
+    GTYPE *mvm_g;
     stream_t *mvm_stream;
     pthread_mutex_t mvm_mutex;
     cudata_t(){
