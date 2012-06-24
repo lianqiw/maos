@@ -124,6 +124,11 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
     ATYPE *dmall=malloc(sizeof(ATYPE) *natot);
     ATYPE *pdmall=dmall;
     int neach=parms->sim.mvmsize;//testing parms->sim.mvmsize;
+    if(neach<0){
+	static int neach0=10;
+	neach=(neach0+=10);
+    }
+    if(neach>ngtot) neach=ngtot;
     TIC;double tk0=tic;
     int cmd[N_CMD]={GPU_MVM_G, 0, 0, 1};
     for(int i=0; i<ngtot; i+=neach){
@@ -133,10 +138,6 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
 	WRITE_ARR(gall+i, cmd[2], GTYPE);
     }
     double tim_gsend=toc3; tic;
-    cmd[0]=GPU_MVM_A;
-    if(neach!=ngtot){
-	WRITE_INTARR(cmd,N_CMD);
-    }
     READ_ARR(dmall, natot, ATYPE);
     double tim_aread=toc3; tic;
     for(int idm=0; idm<dm->nx; idm++){
@@ -149,7 +150,7 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
 	}
     }
     double tim_acp=toc3; tic;
-    info2("send gradiens %3.0f, get dm %4.0f, copy dm %2.0f, total %4.0f\n",
+    info2("k=%d, gsend %3.0f, dmread %4.0f, dmcopy %2.0f, total %4.0f\n", neach,
 	  tim_gsend*1e6, tim_aread*1e6, tim_acp*1e6, (myclockd()-tk0)*1e6);
     free(dmall);
     free(gall);

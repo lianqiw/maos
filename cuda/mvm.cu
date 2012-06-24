@@ -35,6 +35,8 @@ pthread_t thread_init;
 typedef struct mvm_g_mul_t{
     int nact;
     int ngtot;
+    int icol;
+    int k;
     GTYPE *g;/*full g*/
     ATYPE **ac;/*a for each gpu.*/
     ATYPE *a;/*final a*/
@@ -88,47 +90,51 @@ char *start;
 #define N_CMD 4
 int sock_mvm;
 
-__global__ void mvm_g_mul_do(float *mvm, ATYPE *a, const GTYPE *g, int nact, int ng){
+__global__ void mvm_g_mul_do(float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
 	acc[threadIdx.x]=0;
 	for(int ig=0; ig<ng; ig++){
-	    register float *mvmi=mvm+nact*ig+iact;
-	    acc[threadIdx.x]+=(*mvmi)*(float)(g[ig]);
+	    register float mvmi=mvm[nact*ig+iact];
+	    acc[threadIdx.x]+=mvmi*(float)(g[ig]);
 	}
-	a[iact]=(ATYPE)acc[threadIdx.x];
+	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
 }
-__global__ void mvm_g_mulacc_do(float *mvm, ATYPE *a, const GTYPE *g, int nact, int ng){
-    extern __shared__ float acc2[];
+__global__ void mvm_g_mulacc_do(float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+    extern __shared__ float acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
-	acc2[threadIdx.x]=0;
+	acc[threadIdx.x]=0;
 	for(int ig=0; ig<ng; ig++){
-	    register float *mvmi=mvm+nact*ig+iact;
-	    acc2[threadIdx.x]+=*mvmi*((float)(g[ig]));
+	    register float mvmi=mvm[nact*ig+iact];
+	    acc[threadIdx.x]+=mvmi*((float)(g[ig]));
 	}
-	a[iact]+=(ATYPE)acc2[threadIdx.x];
+	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
 }
 /* multiply mvm against g for each GPU. each gpu get an equal slice of the whole g.*/
 static void mvm_g_mul(thread_t *info){
     //TIC;tic;
+    mvm_g_mul_t *data=(mvm_g_mul_t *)info->data;
     int igpu=info->ithread;
     gpu_set(igpu);
+    /*
     int icol=info->start;
-    int k=info->end-info->start;
+    int k=info->end-info->start;*/
+    int ki=(data->k+NGPU-1)/NGPU;
+    int icol=data->icol+ki*igpu;
+    int ki2=data->k+data->icol-icol;
+    int k=MIN(ki, ki2);
+
     int m=cudata->mvm_m->nx;
-    mvm_g_mul_t *data=(mvm_g_mul_t *)info->data;
+
     cudaMemcpyAsync(cudata->mvm_g+icol, data->g+icol, k*sizeof(GTYPE), 
 		    cudaMemcpyHostToDevice, *cudata->mvm_stream);
     int neach=(m+mp_count-1)/mp_count;
     mvm_g_mul_do<<<mp_count, neach, sizeof(float)*neach, *cudata->mvm_stream>>>
 	(cudata->mvm_m->p+m*icol, cudata->mvm_a, cudata->mvm_g+icol, m, k);
-    cudaMemcpyAsync(data->ac[igpu], cudata->mvm_a, data->nact*sizeof(ATYPE),
-		    cudaMemcpyDeviceToHost, *cudata->mvm_stream);
-    cudaStreamSynchronize(*cudata->mvm_stream);
 }
 /*copy data from each gpu to cpu and clear accumulation*/
 static void mvm_a_cp(thread_t *info){
@@ -171,7 +177,7 @@ static int respond(int sock){
     int cmd[N_CMD];
     READ_INTARR(cmd, N_CMD);
     double tim_cmd=toc3; tic;
-    int ksave=0;
+    static int ksave=0;
     static double tim_gfirst=0;
     switch(cmd[0]){
     case GPU_MVM_M:{/*maos sends M matrix*/
@@ -208,14 +214,19 @@ static int respond(int sock){
 	break;
     case GPU_MVM_G:{/*maos sends gradients*/
 	int icol=cmd[1];/*starting column*/
+	static int count;
 	const int nact=mvm_data->data.nact;
 	const int k=cmd[2];
+	if(icol==0){
+	    tim_gfirst=myclockd();
+	    ksave=k;
+	    count=k;
+	}else{
+	    count+=k;
+	}
+
 	READ_ARR(mvm_data->data.g+icol, k, GTYPE);
-	if(cmd[2]<cudata->mvm_m->ny){//part of grads
-	    if(icol==0){
-		tim_gfirst=myclockd();
-		ksave=k;
-	    }
+	if(cmd[2]<cudata->mvm_m->ny && 0){//part of grads
 	    gpu_set(gpu_next());//use next GPUs
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->data.g+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, cudata->mvm_stream[0]);
@@ -223,31 +234,24 @@ static int respond(int sock){
 	    mvm_g_mulacc_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
 		(cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
 	}else{ //all grads. break to different gpus
+	    mvm_data->data.icol=icol;
+	    mvm_data->data.k=k;
+
 	    double tim_g=toc3;tic;
 	    double tim_gmul=0, tim_dmcp=0, tim_dmsend=0;
 	    CALL_THREAD(mvm_data->mvm_g_mul, NGPU, 0);
-	    tim_gmul=toc3; tic;
-	    CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 0);
-	    tim_dmcp=toc3; tic;
-	    WRITE_ARR(mvm_data->data.a, nact, ATYPE);
-	    memset(mvm_data->data.a, 0., nact*sizeof(ATYPE));
-	    tim_dmsend=toc3; tic;
-	    info2("k=%4d, CMD %1.0f, receive g %4.0f, gmul %4.0f, dmcp %4.0f, dmsend %4.0f, total %5.0f\n", k,
-		  tim_cmd*1e6, tim_g*1e6, tim_gmul*1e6, tim_dmcp*1e6, tim_dmsend*1e6, (myclockd()-tk0)*1e6);
 	}
-    }
-	break;
-    case GPU_MVM_A:{/*maos finish sending gradients. Push dm commands back. only
-		      when partial gradient sending each time.*/
-	double tim_gsend=myclockd()-tim_gfirst; tic;
-	CALL_THREAD(mvm_data->mvm_a_cp, NGPU, 0);
-	double tim_dmcp=toc3;tic;
-	CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 0);
-	double tim_dm=toc3;tic;
-	WRITE_ARR(mvm_data->data.a, mvm_data->data.nact, ATYPE);
-	memset(mvm_data->data.a, 0., mvm_data->data.nact*sizeof(ATYPE));
-	info2("k=%4d CMD %1.0f, receive g %4.0f, dmcp %4.0f, dmsum %4.0f, dmsend %4.0f, total %5.0f\n", ksave,
-	      tim_cmd*1e6, tim_gsend*1e6, tim_dmcp*1e6, tim_dm*1e6, toc3*1e6, (myclockd()-tim_gfirst)*1e6);
+	if(count==mvm_data->data.ngtot){/*gradient send is over*/
+	    double tim_gsend=myclockd()-tim_gfirst; tic;
+	    CALL_THREAD(mvm_data->mvm_a_cp, NGPU, 0);
+	    double tim_dmcp=toc3;tic;
+	    CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 0);
+	    double tim_dm=toc3;tic;
+	    WRITE_ARR(mvm_data->data.a, mvm_data->data.nact, ATYPE);
+	    memset(mvm_data->data.a, 0., mvm_data->data.nact*sizeof(ATYPE));
+	    info2("k=%4d CMD %1.0f, receive g %4.0f, dmcp %4.0f, dmsum %4.0f, dmsend %4.0f, total %5.0f\n", ksave,
+		  tim_cmd*1e6, tim_gsend*1e6, tim_dmcp*1e6, tim_dm*1e6, toc3*1e6, (myclockd()-tim_gfirst)*1e6);
+	}
     }
 	break;
     }

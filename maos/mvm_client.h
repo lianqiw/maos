@@ -37,7 +37,7 @@ enum{
     GPU_MVM_A,
 };
 typedef short GTYPE; //type used for gradients
-typedef float ATYPE; //type used for actuator commands
+typedef short ATYPE; //type used for actuator commands
 void mvm_client_init(const char *host, int port);
 void mvm_client_send_m(dcell *mvm);
 void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad);
