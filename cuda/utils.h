@@ -62,9 +62,10 @@ typedef struct cudata_t{
     curcell *dm_wfs;
     curcell *dm_evl;
     /*for mvm*/
-    curmat *mvm_m;
-    ATYPE *mvm_a;
-    GTYPE *mvm_g;
+    curmat *mvm_m;/*the control matrix*/
+    ATYPE *mvm_a; /*contains act result from mvm_m*mvm_g*/
+    ATYPE **mvm_a2;/*contains act copied from other gpus for sum*/
+    GTYPE *mvm_g;/*the gradients copied from gpu*/
     stream_t *mvm_stream;
     pthread_mutex_t mvm_mutex;
     cudata_t(){

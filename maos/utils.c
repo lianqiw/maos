@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include "maos.h"
+#include "mvm_client.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -363,6 +364,9 @@ void maos_signal_handler(int sig){
     }
     disable_signal_handler;
     rename_file(sig);/*handles signal */
+    if(curparms->sim.mvmport){
+	mvm_client_close();
+    }
     if(sig!=0){
 	char *info="Unknown";
 	switch(sig){

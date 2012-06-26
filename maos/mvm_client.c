@@ -20,41 +20,38 @@
 #include <sys/file.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
+#include <errno.h>
 int sock_mvm;
 int ndone;
-
-#define WRITE_INTARR(p,n)						\
-    if((ndone=write(sock_mvm, p, sizeof(int)*n))!=sizeof(int)*n){	\
-	perror("write");						\
-	error("error writing. want %d write %ld\n", n, ndone/sizeof(int)); \
-    }
-#define READ_INTARR(p,n)						\
-    if((ndone=read(sock_mvm, p, sizeof(int)*n))!=sizeof(int)*n){	\
-	perror("read");							\
-	error("error reading. want %d got %ld\n", n, ndone/sizeof(int)); \
-    }
 int nleft;
 char *start;
 
 /*Read into double array until we get all*/
-#define READ_ARR(p,n,type)			\
-    nleft=(n)*sizeof(type);			\
-    start=(char*)p;				\
-    do{						\
-	int nread=read(sock_mvm, start, nleft);	\
-	if(nread<0) {				\
-	    error("Read failed\n");		\
-	}else{						\
+#define READ_ARR(p,n,type)				\
+    nleft=(n)*sizeof(type);				\
+    start=(char*)(p);					\
+    do{							\
+	int nread=read(sock_mvm, start, nleft);		\
+	if(nread>0){					\
 	    nleft-=nread;				\
 	    start+=nread;				\
-	}					\
+	}else{						\
+	    if(errno==EFAULT){				\
+		error("Socket closed\n");		\
+	    }else{					\
+		error("Read failed\n");			\
+	    }						\
+	}						\
     }while(nleft>0);
 
 #define WRITE_ARR(p,n,type)						\
     if((ndone=write(sock_mvm, p, sizeof(type)*(n)))!=sizeof(type)*(n)){	\
 	perror("write");						\
-	error("error writing. want %ld wrote %d\n",n*sizeof(type), ndone); \
+	error("error writing. want %ld wrote %d\n",(n)*sizeof(type), ndone); \
     }
+
+#define READ_CMD(p) READ_ARR(p,N_CMD,int)
+#define WRITE_CMD(p) WRITE_ARR(p,N_CMD,int)
 
 void mvm_client_init(const char *host, int port){
     if((sock_mvm=connect_port(host, port, 1, 0))<0){
@@ -83,17 +80,16 @@ void mvm_client_send_m(dcell *mvm){
     int cmd[N_CMD]={GPU_MVM_M, 0, 0, 0};
     cmd[2]=mvmd->nx;
     cmd[3]=mvmd->ny;
-    info2("sending mvm %dx%d", cmd[2], cmd[3]);
-    WRITE_INTARR(cmd,N_CMD);
+    info2("sending mvm %dx%d ...", cmd[2], cmd[3]);
+    WRITE_CMD(cmd);
     float *fmvm=malloc(sizeof(float)*(mvmd->nx*mvmd->ny));
     for(int i=0; i<mvmd->nx*mvmd->ny; i++){
 	fmvm[i]=(float)(mvmd->p[i]*GSCALE1*ASCALE);
     }
-    info2("prep");
     WRITE_ARR(fmvm, mvmd->nx*mvmd->ny, float);
     dfree(mvmd);
     free(fmvm);
-    info2("done\n");
+    info2(" done\n");
 }
 
 void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
@@ -124,7 +120,7 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
     ATYPE *dmall=malloc(sizeof(ATYPE) *natot);
     ATYPE *pdmall=dmall;
     int neach=parms->sim.mvmsize;//testing parms->sim.mvmsize;
-    if(neach<0){
+    if(neach<=0){
 	static int neach0=10;
 	neach=(neach0+=10);
     }
@@ -134,7 +130,7 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
     for(int i=0; i<ngtot; i+=neach){
 	cmd[1]=i;
 	cmd[2]=MIN(neach, ngtot-i);
-	WRITE_INTARR(cmd,N_CMD);
+	WRITE_CMD(cmd);
 	WRITE_ARR(gall+i, cmd[2], GTYPE);
     }
     double tim_gsend=toc3; tic;
@@ -154,4 +150,10 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
 	  tim_gsend*1e6, tim_aread*1e6, tim_acp*1e6, (myclockd()-tk0)*1e6);
     free(dmall);
     free(gall);
+}
+
+void mvm_client_close(void){
+    shutdown(sock_mvm, SHUT_RDWR);
+    sleep(1);
+    close(sock_mvm);
 }

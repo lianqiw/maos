@@ -25,7 +25,35 @@ extern "C"{
 #include <sys/file.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
+#include <errno.h>
 }
+
+/*Read into double array until we get all*/
+#define READ_ARR(p,n,type)					\
+    nleft=(n)*sizeof(type);					\
+    start=(char*)(p);						\
+    do{								\
+	int nread=read(sock_mvm, start, nleft);			\
+	nleft-=nread;						\
+	start+=nread;						\
+	if(nread<=0){						\
+	    warning2("nread=%d, nleft=%d\n", nread, nleft);	\
+	    return -1;						\
+	}							\
+    }while(nleft>0);
+
+#define WRITE_ARR(p,n,type)						\
+    if((ndone=write(sock_mvm, p, sizeof(type)*(n)))!=sizeof(type)*(n)){	\
+	perror("write");						\
+	warning("error writing. want %ld wrote %d\n",(n)*sizeof(type), ndone); \
+	return -1;							\
+    }
+
+#define READ_CMD(p) READ_ARR(p,N_CMD,int)
+#define WRITE_CMD(p) WRITE_ARR(p,N_CMD,int)
+
+
+
 /**
  * 2012-06-22: Serious bug found:
  * Initially was using curnew. But later replaced by new while should be using cudaMalloc
@@ -36,6 +64,7 @@ typedef struct mvm_g_mul_t{
     int nact;
     int ngtot;
     int icol;
+    int ngpu;
     int k;
     GTYPE *g;/*full g*/
     ATYPE **ac;/*a for each gpu.*/
@@ -47,6 +76,7 @@ typedef struct mvm_t{
     thread_t *mvm_g_mul;
     thread_t *mvm_a_cp;
     thread_t *mvm_a_sum;
+    thread_t *mvm_a_cp_sum;
 }mvm_t;
 mvm_t *mvm_data=NULL;
 
@@ -54,43 +84,12 @@ int mp_count;/*number multi-processors on each GPU*/
 int mp_core;/*number of cuda cores per multi-processor*/
 
 int ndone;
-#define WRITE_INTARR(p,n)						\
-    if((ndone=write(sock_mvm, p, sizeof(int)*n))!=sizeof(int)*n){	\
-	perror("write");						\
-	error("error writing. want %d write %ld\n", n, ndone/sizeof(int)); \
-    }
-#define READ_INTARR(p,n)						\
-    if((ndone=read(sock_mvm, p, sizeof(int)*n))!=sizeof(int)*n){	\
-	perror("read");							\
-	error("error reading. want %d got %ld\n", n, ndone/sizeof(int)); \
-    }
 int nleft;
 char *start;
 
-/*Read into double array until we get all*/
-#define READ_ARR(p,n,type)			\
-    nleft=(n)*sizeof(type);			\
-    start=(char*)(p);				\
-    do{						\
-	int nread=read(sock_mvm, start, nleft);	\
-	if(nread<0) {				\
-	    error("Read failed\n");		\
-	}else{						\
-	    nleft-=nread;				\
-	    start+=nread;				\
-	}					\
-    }while(nleft>0);
-
-#define WRITE_ARR(p,n,type)						\
-    if((ndone=write(sock_mvm, p, sizeof(type)*(n)))!=sizeof(type)*(n)){	\
-	perror("write");						\
-	error("error writing. want %ld wrote %d\n",(n)*sizeof(type), ndone); \
-    }
-
-#define N_CMD 4
 int sock_mvm;
 
-__global__ void mvm_g_mul_do(float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+__global__ static void mvm_g_mul_do(float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
@@ -102,32 +101,15 @@ __global__ void mvm_g_mul_do(float *restrict mvm, ATYPE *restrict a, const GTYPE
 	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
 }
-__global__ void mvm_g_mulacc_do(float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    if(iact<nact){
-	acc[threadIdx.x]=0;
-	for(int ig=0; ig<ng; ig++){
-	    register float mvmi=mvm[nact*ig+iact];
-	    acc[threadIdx.x]+=mvmi*((float)(g[ig]));
-	}
-	a[iact]+=(ATYPE)acc[threadIdx.x];
-    }
-}
-/* multiply mvm against g for each GPU. each gpu get an equal slice of the whole g.*/
+/* multiply mvm against g for each GPU. each gpu get an equal slice of the g.*/
 static void mvm_g_mul(thread_t *info){
-    //TIC;tic;
-    mvm_g_mul_t *data=(mvm_g_mul_t *)info->data;
     int igpu=info->ithread;
     gpu_set(igpu);
-    /*
-    int icol=info->start;
-    int k=info->end-info->start;*/
+    mvm_g_mul_t *data=(mvm_g_mul_t *)info->data;
     int ki=(data->k+NGPU-1)/NGPU;
     int icol=data->icol+ki*igpu;
     int ki2=data->k+data->icol-icol;
     int k=MIN(ki, ki2);
-
     int m=cudata->mvm_m->nx;
 
     cudaMemcpyAsync(cudata->mvm_g+icol, data->g+icol, k*sizeof(GTYPE), 
@@ -135,6 +117,56 @@ static void mvm_g_mul(thread_t *info){
     int neach=(m+mp_count-1)/mp_count;
     mvm_g_mul_do<<<mp_count, neach, sizeof(float)*neach, *cudata->mvm_stream>>>
 	(cudata->mvm_m->p+m*icol, cudata->mvm_a, cudata->mvm_g+icol, m, k);
+}
+__global__ static void mvm_a_sum_do(ATYPE *restrict a, ATYPE *restrict a2, int nact){
+    int iact=threadIdx.x+blockIdx.x*blockDim.x;
+    if(iact<nact){
+	a[iact]+=a2[iact];
+    }
+}
+/*
+  To reduce the data (a) across all GPUs, use GPU reduction method we used in kernels:
+  Do then in GPUs.
+*/
+static void mvm_a_cp_sum(thread_t *info){
+    int igpu=info->ithread;
+    mvm_g_mul_t *data=(mvm_g_mul_t *)info->data;
+    int nact=data->nact;
+    int neach=(nact+mp_count-1)/mp_count;
+
+    for(int step=(NGPU+1)>>1; step>0; step>>=1){
+	if(igpu<step && igpu+step<NGPU){
+	    gpu_set(igpu);
+	    DO(cudaStreamSynchronize(cudata_all[igpu+step].mvm_stream[0]));
+#define COPY_A2 1
+#if COPY_A2
+	    if(!cudata->mvm_a2[igpu+step]){
+		DO(cudaMalloc(&(cudata->mvm_a2[igpu+step]), sizeof(ATYPE)*nact));
+	    }
+	    DO(cudaMemcpyAsync(cudata_all[igpu].mvm_a2[igpu+step], 
+			       cudata_all[igpu+step].mvm_a, 
+			       sizeof(ATYPE)*nact, cudaMemcpyDefault, *cudata->mvm_stream));
+	    mvm_a_sum_do<<<mp_count, neach, 0, *cudata->mvm_stream>>>
+		(cudata->mvm_a, cudata->mvm_a2[igpu+step], data->nact);
+#else
+	    mvm_a_sum_do<<<mp_count, neach, 0, *cudata->mvm_stream>>>
+		(cudata->mvm_a, cudata_all[igpu+step].mvm_a, data->nact);  
+#endif
+	}
+    }
+    if(igpu==0){
+	gpu_set(igpu);/*gpu to add the data*/
+	cudaMemcpyAsync(data->a, cudata->mvm_a, data->nact*sizeof(ATYPE),
+			cudaMemcpyDeviceToHost, *cudata->mvm_stream);
+	cudaStreamSynchronize(*cudata->mvm_stream);
+    }
+}
+static void mvm_a_zero(thread_t *info){
+    int igpu=info->ithread;
+    gpu_set(igpu);
+    mvm_g_mul_t *data=(mvm_g_mul_t *)info->data;
+    int nact=data->nact;
+    cudaMemsetAsync(cudata->mvm_a, 0, nact*sizeof(ATYPE), *cudata->mvm_stream);
 }
 /*copy data from each gpu to cpu and clear accumulation*/
 static void mvm_a_cp(thread_t *info){
@@ -165,17 +197,38 @@ static void mvm_copy_m(thread_t *info){
     pthread_mutex_init(&cudata->mvm_mutex, NULL);
     cudata->mvm_stream=new stream_t;
     cp2gpu(&cudata->mvm_m, mvm, *cudata->mvm_stream);
+    if(cudata->mvm_a){
+	cudaFree(cudata->mvm_a); cudata->mvm_a=NULL;
+	cudaFree(cudata->mvm_g); cudata->mvm_g=NULL;
+    }
     cudaMalloc(&cudata->mvm_a, mvm->nx*sizeof(ATYPE));
     cudaMalloc(&cudata->mvm_g, mvm->ny*sizeof(GTYPE));
     cudaMemsetAsync(cudata->mvm_a, 0, mvm->nx*sizeof(ATYPE), *cudata->mvm_stream);
     cudaStreamSynchronize(*cudata->mvm_stream);
+    if(cudata->mvm_a2){
+	free(cudata->mvm_a2);
+    }
+    cudata->mvm_a2=(ATYPE**)calloc(NGPU, sizeof(ATYPE*));
+}
+static void mvm_data_free(void){
+    cudaFreeHost(mvm_data->data.g);
+    cudaFreeHost(mvm_data->data.a);
+    for(int i=0; i<mvm_data->data.ngpu; i++){
+	cudaFreeHost(mvm_data->data.ac[i]);
+    }
+    free(mvm_data->data.ac);
+    free(mvm_data->mvm_g_mul);
+    free(mvm_data->mvm_a_cp);
+    free(mvm_data->mvm_a_sum);
+    free(mvm_data->mvm_a_cp_sum);
+    free(mvm_data);
 }
 static int respond(int sock){
     TIC;
     double tk0=tic;
     sock_mvm=sock;
     int cmd[N_CMD];
-    READ_INTARR(cmd, N_CMD);
+    READ_CMD(cmd);
     double tim_cmd=toc3; tic;
     static int ksave=0;
     static double tim_gfirst=0;
@@ -192,22 +245,32 @@ static int respond(int sock){
 	thread_prep(info, 0, NGPU, NGPU, mvm_copy_m, mvm);
 	CALL_THREAD(info, NGPU, 0);
 	toc22("copy mvm to gpu");
-	mvm_data=new mvm_t;
+	if(mvm_data){
+	    mvm_data_free();
+	}
+	mvm_data=(mvm_t*)calloc(1, sizeof(mvm_t));
 	mvm_data->data.nact=mvm->nx;
 	mvm_data->data.ngtot=mvm->ny;
-	mvm_data->data.g=new GTYPE[ngtot];
+	mvm_data->data.ngpu=NGPU;
 	mvm_data->data.ac=new ATYPE*[NGPU];
-	mvm_data->data.a=new ATYPE[nact];
+	cudaMallocHost(&mvm_data->data.g, sizeof(GTYPE)*ngtot);
+	cudaMallocHost(&mvm_data->data.a, sizeof(ATYPE)*nact);
 	memset(mvm_data->data.a, 0., nact*sizeof(ATYPE));
 	for(int ig=0; ig<NGPU; ig++){
-	    mvm_data->data.ac[ig]=new ATYPE[nact];
+	    cudaMallocHost(&mvm_data->data.ac[ig], sizeof(ATYPE)*nact);
 	}
 	mvm_data->mvm_g_mul=new thread_t[NGPU];
 	thread_prep(mvm_data->mvm_g_mul, 0, ngtot, NGPU, mvm_g_mul, &mvm_data->data);
 	mvm_data->mvm_a_cp=new thread_t[NGPU];
-	thread_prep(mvm_data->mvm_a_cp, 0, NGPU, NGPU, mvm_a_cp, &mvm_data->data);
 	mvm_data->mvm_a_sum=new thread_t[NCPU];
+#define USE_CP_SUM 0
+#if USE_CP_SUM
+	thread_prep(mvm_data->mvm_a_cp, 0, NGPU, NGPU, mvm_a_cp_sum, &mvm_data->data);
+	thread_prep(mvm_data->mvm_a_sum, 0, nact, NCPU, mvm_a_zero, &mvm_data->data);
+#else
+	thread_prep(mvm_data->mvm_a_cp, 0, NGPU, NGPU, mvm_a_cp, &mvm_data->data);
 	thread_prep(mvm_data->mvm_a_sum, 0, nact, NCPU, mvm_a_sum, &mvm_data->data);
+#endif
 	info2("done");
 	sfree(mvm);
     }
@@ -226,31 +289,38 @@ static int respond(int sock){
 	}
 
 	READ_ARR(mvm_data->data.g+icol, k, GTYPE);
-	if(cmd[2]<cudata->mvm_m->ny && 0){//part of grads
+	if(cmd[2]<1800){//part of grads
 	    gpu_set(gpu_next());//use next GPUs
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->data.g+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, cudata->mvm_stream[0]);
 	    int naeach=(nact+mp_count-1)/mp_count;
-	    mvm_g_mulacc_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
+	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
 		(cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
-	}else{ //all grads. break to different gpus
+	}else{ //Send to different gpus
 	    mvm_data->data.icol=icol;
 	    mvm_data->data.k=k;
-
-	    double tim_g=toc3;tic;
-	    double tim_gmul=0, tim_dmcp=0, tim_dmsend=0;
 	    CALL_THREAD(mvm_data->mvm_g_mul, NGPU, 0);
 	}
 	if(count==mvm_data->data.ngtot){/*gradient send is over*/
+#if USE_CP_SUM
 	    double tim_gsend=myclockd()-tim_gfirst; tic;
 	    CALL_THREAD(mvm_data->mvm_a_cp, NGPU, 0);
 	    double tim_dmcp=toc3;tic;
-	    CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 0);
-	    double tim_dm=toc3;tic;
+	    double tim_dmsum=toc3;tic;
+	    WRITE_ARR(mvm_data->data.a, mvm_data->data.nact, ATYPE);
+	    CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 1);
+#else
+
+	    double tim_gsend=myclockd()-tim_gfirst; tic;
+	    CALL_THREAD(mvm_data->mvm_a_cp, NGPU, 0);
+	    double tim_dmcp=toc3;tic;
+	    CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 1);
+	    double tim_dmsum=toc3;tic;
 	    WRITE_ARR(mvm_data->data.a, mvm_data->data.nact, ATYPE);
 	    memset(mvm_data->data.a, 0., mvm_data->data.nact*sizeof(ATYPE));
+#endif
 	    info2("k=%4d CMD %1.0f, receive g %4.0f, dmcp %4.0f, dmsum %4.0f, dmsend %4.0f, total %5.0f\n", ksave,
-		  tim_cmd*1e6, tim_gsend*1e6, tim_dmcp*1e6, tim_dm*1e6, toc3*1e6, (myclockd()-tim_gfirst)*1e6);
+		  tim_cmd*1e6, tim_gsend*1e6, tim_dmcp*1e6, tim_dmsum*1e6, toc3*1e6, (myclockd()-tim_gfirst)*1e6);
 	}
     }
 	break;
