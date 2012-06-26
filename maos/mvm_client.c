@@ -127,11 +127,12 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
     if(neach>ngtot) neach=ngtot;
     TIC;double tk0=tic;
     int cmd[N_CMD]={GPU_MVM_G, 0, 0, 1};
+    cmd[1]=0;
+    cmd[2]=neach;
+    WRITE_CMD(cmd);
     for(int i=0; i<ngtot; i+=neach){
-	cmd[1]=i;
-	cmd[2]=MIN(neach, ngtot-i);
-	WRITE_CMD(cmd);
-	WRITE_ARR(gall+i, cmd[2], GTYPE);
+	MIN(neach, ngtot-i);
+	WRITE_ARR(gall+i, MIN(neach, ngtot-i), GTYPE);
     }
     double tim_gsend=toc3; tic;
     READ_ARR(dmall, natot, ATYPE);

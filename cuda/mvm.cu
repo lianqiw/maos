@@ -177,13 +177,12 @@ static void mvm_data_free(void){
     free(mvm_data->mvm_a_cp_sum);
     free(mvm_data);
 }
+double tim_cmd=0, tim_gsend=0, tim_gcp=0, tim_dmcp=0, tim_queue=0, tim_dmsum=0, tim_dmsend=0;
 static int respond(int sock){
-    TIC;
-    double tk0=tic;
+    TIC;tic;
     sock_mvm=sock;
     int cmd[N_CMD];
     READ_CMD(cmd);
-    double tim_cmd=toc3; tic;
     static int ksave=0;
     static double tim_gfirst=0;
     switch(cmd[0]){
@@ -226,41 +225,45 @@ static int respond(int sock){
 	break;
     case GPU_MVM_G:{/*maos sends gradients*/
 	int icol=cmd[1];/*starting column*/
-	static int count;
-	const int nact=mvm_data->data.nact;
-	const int k=cmd[2];
-	if(icol==0){
-	    tim_gfirst=myclockd();
-	    ksave=k;
-	    count=k;
-	}else{
-	    count+=k;
+	assert(icol==0);
+	int ngeach=cmd[2];
+	tim_cmd+=toc3; tic;
+	int ngtot=mvm_data->data.ngtot;
+	int nact=mvm_data->data.nact;
+	tim_gfirst=myclockd();
+	for(int icol=cmd[1]; icol<ngtot; icol+=ngeach){
+	    int k=MIN(ngeach, ngtot-icol);
+	    READ_ARR(mvm_data->data.g+icol, k, GTYPE);
+	    tim_gsend+=toc3;tic;
+	    if(cmd[2]<1800){//part of grads
+		gpu_set(gpu_next());//use next GPUs
+		cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->data.g+icol, k*sizeof(GTYPE), 
+				cudaMemcpyHostToDevice, cudata->mvm_stream[0]);
+		tim_gcp+=toc3; tic;
+		int naeach=(nact+mp_count-1)/mp_count;
+		mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
+		    (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+		tim_queue+=toc3;tic;
+	    }else{ //Send to different gpus
+		mvm_data->data.icol=icol;
+		mvm_data->data.k=k;
+		CALL_THREAD(mvm_data->mvm_g_mul, NGPU, 1);
+		tim_queue+=toc3;tic;
+	    }
 	}
 
-	READ_ARR(mvm_data->data.g+icol, k, GTYPE);
-	if(cmd[2]<1800){//part of grads
-	    gpu_set(gpu_next());//use next GPUs
-	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->data.g+icol, k*sizeof(GTYPE), 
-			    cudaMemcpyHostToDevice, cudata->mvm_stream[0]);
-	    int naeach=(nact+mp_count-1)/mp_count;
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
-	      (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
-	}else{ //Send to different gpus
-	    mvm_data->data.icol=icol;
-	    mvm_data->data.k=k;
-	    CALL_THREAD(mvm_data->mvm_g_mul, NGPU, 1);
-	}
-	if(count==mvm_data->data.ngtot){/*gradient send is over*/
-	    double tim_gsend=myclockd()-tim_gfirst; tic;
-	    CALL_THREAD(mvm_data->mvm_a_cp, NGPU, 0);
-	    double tim_dmcp=toc3;tic;
-	    CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 0);
-	    double tim_dmsum=toc3;tic;
-	    WRITE_ARR(mvm_data->data.a, mvm_data->data.nact, ATYPE);
-	    memset(mvm_data->data.a, 0., mvm_data->data.nact*sizeof(ATYPE));
-	    info2("k=%4d CMD %1.0f, receive g %4.0f, dmcp %4.0f, dmsum %4.0f, dmsend %4.0f, total %5.0f\n", ksave,
-		  tim_cmd*1e6, tim_gsend*1e6, tim_dmcp*1e6, tim_dmsum*1e6, toc3*1e6, (myclockd()-tim_gfirst)*1e6);
-	}
+	CALL_THREAD(mvm_data->mvm_a_cp, NGPU, 0);
+	tim_dmcp+=toc3;tic;
+	CALL_THREAD(mvm_data->mvm_a_sum, NCPU, 0);
+	tim_dmsum+=toc3;tic;
+	WRITE_ARR(mvm_data->data.a, mvm_data->data.nact, ATYPE);
+	tim_dmsend+=toc3;tic;
+	memset(mvm_data->data.a, 0., mvm_data->data.nact*sizeof(ATYPE));
+	info2("k=%4d CMD %1.0f, gsend %2.0f, gcp %3.0f, queue %3.0f, sync %3.0f sum %3.0f, send %2.0f, total %4.0f\n", ngeach,
+	      tim_cmd*1e6, tim_gsend*1e6, tim_gcp*1e6, tim_queue*1e6, tim_dmcp*1e6, 
+	      tim_dmsum*1e6, tim_dmsend*1e6, (myclockd()-tim_gfirst)*1e6);
+	tim_cmd=tim_gsend=tim_gcp=tim_dmcp=tim_queue=tim_dmsum=tim_dmsend=0;
+	
     }
 	break;
     }
