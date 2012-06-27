@@ -173,7 +173,12 @@ int gpu_init(int *gpus, int ngpu){
 	}
     }else{//automatically select a subset. choose the ones with highest memory.
 	if(ngpu>ngpu_tot) ngpu=ngpu_tot;
-	NGPU=ngpu;/*assign GPU later*/
+	NGPU=ngpu;
+#if defined(HAS_NVML) && HAS_NVML==1
+	gpu_assign();
+#else
+	/*assign GPU later to avoid initializing CUDA before simulation stars.*/
+#endif
     }
     if(free_gpus) free(gpus); gpus=NULL;
     free(gpu_info);
@@ -191,6 +196,7 @@ int gpu_init(int *gpus, int ngpu){
 	return 1;
     }
 }
+
 /*Assign the right GPU if NGPU is empty (not yet assigned). This need to happen
   when maos is already running so GPUs gets populated.*/
 void gpu_assign(){

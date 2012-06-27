@@ -2790,7 +2790,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	
 	if(parms->sim.mvmport){
 	    dcellwrite(recon->MVM, "MVM_send");
-	    mvm_client_send_m(recon->MVM);
+	    mvm_client_send_m(parms, recon->MVM);
 	}
 
 	muv_free(&recon->RR);

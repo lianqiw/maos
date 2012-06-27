@@ -30,7 +30,7 @@ extern "C"{
 double tic_save;
 pthread_t *threads=NULL;
 int *cmds=NULL;
-
+int NGPU_MAX=0;
 /*Read into double array until we get all*/
 #define READ_ARR(p,n,type)					\
     nleft=(n)*sizeof(type);					\
@@ -69,6 +69,7 @@ enum{
  * This caused misterious bugs, such as no answer or even kernel panic.
  */
 pthread_t thread_init;
+int thread_init_joined=0;
 typedef struct mvm_g_mul_t{
     int nact;
     int ngtot;
@@ -126,6 +127,9 @@ static void *mvm_thread(void* ithread0){
 	    info2("thread %d wake up at %.1f\n", ithread, (myclockd()-tic_start)*1e6);*/
 	    break;
 	case CMD_MCOPY:{
+	    if(ithread<NGPU){
+		gpu_set(ithread);
+	    }
 	    smat *mvm=mvm_data->mvm;
 	    cudata->mvm_stream=new stream_t;
 	    cp2gpu(&cudata->mvm_m, mvm, *cudata->mvm_stream);
@@ -212,6 +216,8 @@ static int respond(int sock){
     static double tim_gfirst=0;
     switch(cmd[0]){
     case GPU_MVM_M:{/*maos sends M matrix*/
+	int ngpu=cmd[1];
+
 	int nact=cmd[2];
 	int ngtot=cmd[3];
 	info("Receiving mvm %dx%d\n", nact, ngtot);
@@ -219,9 +225,18 @@ static int respond(int sock){
 	    mvm_data_free();
 	}
 	mvm_data=(mvm_t*)calloc(1, sizeof(mvm_t));
-	mvm_data->mvm=snew(nact, ngtot);
 	mvm_data->nact=nact;
 	mvm_data->ngtot=ngtot;
+	mvm_data->mvm=snew(nact, ngtot);
+	READ_ARR(mvm_data->mvm->p, (nact*ngtot), float);
+	if(!thread_init_joined){
+	    pthread_join(thread_init, NULL);
+	    thread_init_joined=1;
+	}
+	if(ngpu>0 && ngpu<=NGPU_MAX){
+	    NGPU=ngpu;
+	    warning("Using %d GPUs\n", ngpu);
+	}
 	mvm_data->ngpu=NGPU;
 	mvm_data->ac=new ATYPE*[NGPU];
 	cudaMallocHost(&mvm_data->g, sizeof(GTYPE)*ngtot);
@@ -232,8 +247,7 @@ static int respond(int sock){
 	}
 	mvm_data->icols=(int*)calloc(NGPU, sizeof(int));
 	mvm_data->kcols=(int*)calloc(NGPU, sizeof(int));
-	READ_ARR(mvm_data->mvm->p, (nact*ngtot), float);
-	pthread_join(thread_init, NULL);
+
 	toc22("Read mvm");tic;
 	if(!threads){
 	    threads=(pthread_t*)calloc(NCPU, sizeof(pthread_t));
@@ -360,10 +374,12 @@ void* gpu_mvm_gpu_init(void* A){
 	toc22("init gpu");
     }
     NCPU=NGPU;
+    NGPU_MAX=NGPU;
     return NULL;
 }
 void gpu_mvm_daemon(int port){
     info2("Starting MVM daemon at port %d\n", port);
     pthread_create(&thread_init, NULL, gpu_mvm_gpu_init, NULL);
+    redirect();
     listen_port(port, respond, 0, NULL);
 }
