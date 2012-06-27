@@ -32,15 +32,10 @@ char *start;
     start=(char*)(p);					\
     do{							\
 	int nread=read(sock_mvm, start, nleft);		\
-	if(nread>0){					\
-	    nleft-=nread;				\
-	    start+=nread;				\
-	}else{						\
-	    if(errno==EFAULT){				\
-		error("Socket closed\n");		\
-	    }else{					\
-		error("Read failed\n");			\
-	    }						\
+	nleft-=nread;					\
+	start+=nread;					\
+	if(nread<=0){					\
+	    error("Read failed\n");			\
 	}						\
     }while(nleft>0);
 
@@ -130,13 +125,13 @@ void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad){
     cmd[1]=0;
     cmd[2]=neach;
     WRITE_CMD(cmd);
-    for(int i=0; i<ngtot; i+=neach){
-	MIN(neach, ngtot-i);
+    /*for(int i=0; i<ngtot; i+=neach){
 	WRITE_ARR(gall+i, MIN(neach, ngtot-i), GTYPE);
-    }
-    double tim_gsend=toc3; tic;
+	}*/
+    WRITE_ARR(gall, ngtot, GTYPE);
+    double tim_gsend=toc3;
     READ_ARR(dmall, natot, ATYPE);
-    double tim_aread=toc3; tic;
+    double tim_aread=toc3;
     for(int idm=0; idm<dm->nx; idm++){
 	if(dm->p[idm]){
 	    int nact=dm->p[idm]->nx;

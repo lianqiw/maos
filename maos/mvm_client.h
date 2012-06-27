@@ -18,17 +18,22 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "maos.h"
-
+#define USE_SHORT 1
+#if USE_SHORT
 #define GSCALE 2062650000. //convert grad to int
 #define GSCALE1 4.848132257047973e-10 //convert back
 #define ASCALE 1.e9 //convert DM commands to int
 #define ASCALE1 1.e-9 //convert int to DM commands
-/*
+typedef short GTYPE; //type used for gradients
+typedef short ATYPE; //type used for actuator commands
+#else
+typedef float GTYPE;
+typedef float ATYPE;
 #define GSCALE 1
 #define GSCALE1 1
 #define ASCALE 1
 #define ASCALE1 1
-*/
+#endif
 #define N_CMD 4
 enum{
     GPU_MVM_ZERO,
@@ -36,8 +41,7 @@ enum{
     GPU_MVM_G,
     GPU_MVM_A,
 };
-typedef short GTYPE; //type used for gradients
-typedef short ATYPE; //type used for actuator commands
+
 void mvm_client_init(const char *host, int port);
 void mvm_client_send_m(dcell *mvm);
 void mvm_client_recon(const PARMS_T *parms, dcell *dm, dcell *grad);
