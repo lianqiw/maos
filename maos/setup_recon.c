@@ -2778,6 +2778,18 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    {
 		if(parms->load.MVM){
 		    recon->MVM=dcellread("%s", parms->load.MVM);
+		    for(int idm=0; idm<parms->ndm; idm++){
+			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+			    int ipowfs=parms->wfs[iwfs].powfs;
+			    if(!parms->powfs[ipowfs].skip){
+				dmat *temp=recon->MVM->p[idm+iwfs*parms->ndm];
+				if(temp->nx!=recon->aloc[idm]->nloc 
+				   || temp->ny !=powfs[ipowfs].pts->nsa*2){
+				    error("MVM[%d, %d] should have dimension (%ld, %ld), but have (%ld, %ld)\n", idm, iwfs, recon->aloc[idm]->nloc , powfs[ipowfs].pts->nsa*2, temp->nx, temp->ny);
+				}
+			    }
+			}
+		    }
 		}else if(parms->recon.alg==0){
 		    setup_recon_mvr_mvm(recon, parms, powfs);
 		}else{

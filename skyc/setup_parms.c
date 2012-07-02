@@ -257,10 +257,11 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }
     info2("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);
     
-    if(arg->detach || parms->skyc.nthread>1){
-	parms->skyc.verbose=0;
-    }else if(parms->skyc.verbose==0 && (parms->skyc.dbg || parms->skyc.dbgsky)){
+    if(parms->skyc.verbose==0 && (parms->skyc.dbg || parms->skyc.dbgsky)){
 	parms->skyc.verbose=1;
+	parms->skyc.nthread=1;
+    }else if(arg->detach || parms->skyc.nthread>1){
+	parms->skyc.verbose=0;
     }
     parms->skyc.nwfstot=0;
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){

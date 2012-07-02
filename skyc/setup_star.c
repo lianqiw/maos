@@ -400,7 +400,7 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 		pg[3][isa+nsa] = (-scale1*2*ym+ 2*thetay*hc*scale);
 		pg[4][isa]     = (scale1*ym   - thetay*hc*scale);
 		pg[4][isa+nsa] = (scale1*xm   - thetax*hc*scale);
-		if(nmod==6){/*include a defocus term*/
+		if(nmod>5){/*include a defocus term*/
 		    pg[5][isa]     = xm*2;
 		    pg[5][isa+nsa] = ym*2;
 		}

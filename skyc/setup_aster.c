@@ -503,7 +503,6 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	double gain_n;
 	aster->res_ws->p[idtrat]=servo_residual(&gain_n, parms->skyc.psd_ws, 
 						parms->maos.dt, dtrat, g_tt, 2);
-	/*1./(parms->maos.dt*dtrat), parms->maos.dt, 2);*/
 	dfree(g_tt);
     }
     if(parms->skyc.dbg){

@@ -55,8 +55,9 @@ ARG_S *parse_args(int argc, char **argv){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(arg->nthread>NTHREAD || arg->nthread<=0){
-	arg->nthread=NTHREAD;
+    /*do not use NTHREAD here. causes too much cpu load*/
+    if(arg->nthread>NCPU || arg->nthread<=0){
+	arg->nthread=NCPU;
     }else{
         NTHREAD=arg->nthread;
     }
