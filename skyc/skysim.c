@@ -186,8 +186,8 @@ static void skysim_isky(SIM_S *simu){
 	    int demote=-1;
 	    for(int idtrat=aster->idtratmin; idtrat<=aster->idtratmax; idtrat++){
 		/*focus and windshake residual; */
-		double resadd=parms->skyc.addws?0:asteri->res_ws->p[idtrat] 
-		    + parms->skyc.addfocus?0:parms->skyc.resfocus->p[idtrat];
+		double resadd=(parms->skyc.addws?0:asteri->res_ws->p[idtrat])
+		    + (parms->skyc.addfocus?0:parms->skyc.resfocus->p[idtrat]);
 		dmat *ires=NULL;
 		dmat *imres=NULL;
 		for(int do_demote=0; do_demote<do_demote_end; do_demote++){
@@ -353,12 +353,13 @@ void skysim(const PARMS_S *parms){
 	    simu->psd_tt=ddup(parms->skyc.psd_tt);
 	}
 	double rms_ws=psd_inte2(simu->psd_ws);
-	simu->rmsol->p[0]+=rms_ws;
+	info2("Windshake PSD integrates to %g nm\n", sqrt(rms_ws)*1e9);
+	simu->rmsol->p[0]+=rms_ws;//testing
 	simu->rmsol->p[1]+=rms_ws;/*add wind shake to open loop error. */
 	prep_bspstrehl(simu);
 	/*renormalize PSD */
 	double rms_ngs=psd_inte2(simu->psd_ngs);
-	info("PSD integrates to %.2f nm\n", sqrt(rms_ngs)*1e9);
+	info2("NGS PSD integrates to %.2f nm\n", sqrt(rms_ngs)*1e9);
 	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
 	    double rms_ratio=simu->rmsol->p[0]/rms_ngs;
 	    info("Scaling PSD by %g\n", rms_ratio);
