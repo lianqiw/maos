@@ -225,7 +225,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }
     if(parms->skyc.psdcalc){
 	info("Calculating PSDs from time series\n");
-    }else if(1){
+    }else if(0){
 	char temp[80]; 
 	snprintf(temp,80, "PSD/PSD_NGS_r0z_%.4f_za%g.bin",parms->maos.r0z, parms->maos.zadeg);
 	parms->skyc.psd_ngs=dread("%s",temp); 
@@ -237,6 +237,10 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	parms->skyc.psd_ps=dread("%s",temp); 
 	info2("Loading PSD of PS modes from %s\n", temp);
     }else{
+	if(!parms->skyc.psd_scale){
+	    warning("Setting psd_scale to 1\n");
+	    parms->skyc.psd_scale=1;
+	}
 	char temp[80]; 
 	snprintf(temp,80, "PSD/PSD_NGS.bin");
 	parms->skyc.psd_ngs=dread("%s",temp); 
