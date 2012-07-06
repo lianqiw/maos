@@ -144,6 +144,8 @@ static int read_fifo(FILE *fp){
 	    drawdata->legendoffx=1;
 	    drawdata->legendoffy=0;
 	    drawdata->fig=NULL;
+	    drawdata->xylog[0]='n';
+	    drawdata->xylog[1]='n';
 	    drawdata->cumulast=-1;/*mark as unknown. */
 	    break;
 	case FIFO_DATA:/*image data. */
@@ -214,6 +216,9 @@ static int read_fifo(FILE *fp){
 	    for(int i=0; i<drawdata->npts; i++){
 		FILE_READ_STR(drawdata->legend[i]);
 	    }
+	    break;
+	case FIFO_XYLOG:
+	    FILE_READ(drawdata->xylog, sizeof(char)*2);
 	    break;
 	case FIFO_END:
 	    {

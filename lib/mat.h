@@ -138,5 +138,6 @@ X(cell)* X(bspline_prep)(X(mat)*x, X(mat)*y, X(mat) *z);\
 X(mat) *X(bspline_eval)(X(cell)*coeff, X(mat) *x, X(mat) *y, X(mat) *xnew, X(mat) *ynew);\
 void X(cwlog10)(X(mat) *A);\
 void X(embed_locstat)(X(mat) **out, double alpha, loc_t *loc, R *oin, double beta, int reverse);\
-long X(fwhm)(X(mat) *A);
+long X(fwhm)(X(mat) *A);\
+void X(sort)(X(mat) *A, int ascend);
 #endif

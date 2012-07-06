@@ -1815,7 +1815,30 @@ long X(fwhm)(X(mat) *A){
     }
     return fwhm;
 }
-
+#ifndef USE_COMPLEX
+static int sort_ascend(const T*A, const T*B){
+    if ((*A)>(*B)) return 1; 
+    else return -1;
+}
+static int sort_descend(const T*A, const T*B){
+    if ((*A)>(*B)) return -1; 
+    else return 1;
+}
+/*
+  Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
+ */
+void X(sort)(X(mat) *A, int ascend){
+    for(int i=0; i<A->ny; i++){
+	if(ascend){
+	    qsort(A->p+i*A->nx, A->nx, sizeof(double), 
+		  (int(*)(const void*,const void*))sort_ascend);
+	}else{
+	    qsort(A->p+i*A->nx, A->nx, sizeof(double), 
+		  (int(*)(const void*,const void*))sort_descend);
+	}
+    }
+}
+#endif
 #ifndef USE_SINGLE
 #include "blas.c"
 #endif
