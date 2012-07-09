@@ -595,7 +595,7 @@ void focus_tracking(SIM_T* simu){
     if(simu->Merr_lo_store){
 	NGSfocus=simu->Merr_lo_store->p[0]->p[5];
     }
-    double LGSfocusm;
+    double LGSfocusm=0;
     long count=0;
     /*differential focus between LGS is removed. So we average the focus
       here. May need to do noise weighting.*/

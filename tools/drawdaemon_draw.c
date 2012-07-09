@@ -829,7 +829,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double frac=(val-xmin0)/sep;
 	double xpos=xoff+widthim*frac;
 	/*draw the tic */
-	if(fabs(frac)>0.01 && fabs(frac)<0.99){
+	if(fabs(frac)>0.0 && fabs(frac)<1){
 	    cairo_move_to(cr,xpos,yoff+heightim);
 	    cairo_line_to(cr,xpos,yoff+heightim+ticlength);
 	    cairo_stroke(cr);
@@ -855,7 +855,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		double valm=ticvm*pow(10,order);
 		double fracm=(valm-xmin0)/sep;
 		double xposm=xoff+widthim*fracm;
-		if((fracm)>0.01 && (fracm)<0.99){
+		if((fracm)>0. && (fracm)<1){
 		    cairo_move_to(cr,xposm,yoff+heightim);
 		    cairo_line_to(cr,xposm,yoff+heightim+ticlength/2);
 		}
@@ -873,7 +873,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	double frac=(val-ymin0)/sep;
 	double ypos=yoff+heightim*(1-frac);
 	/*draw the tic */
-	if(fabs(frac)>0.01 && fabs(frac)<0.99){
+	if(fabs(frac)>0. && fabs(frac)<1){
 	    cairo_move_to(cr,xoff,ypos);
 	    cairo_line_to(cr,xoff-ticlength,ypos);
 	    cairo_stroke(cr);
@@ -899,7 +899,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		double valm=ticvm*pow(10,order);
 		double fracm=(valm-ymin0)/sep;
 		double yposm=yoff+heightim*(1-fracm);
-		if((fracm)>0.01 && (fracm)<0.99){
+		if((fracm)>0. && (fracm)<1){
 		    cairo_move_to(cr,xoff,yposm);
 		    cairo_line_to(cr,xoff-ticlength/2,yposm);
 		}

@@ -591,7 +591,9 @@ void gpu_setup_recon_mvm_igpu(thread_t *info){
 		}
 		break;
 	    case 1:{
-		curcellzero(opdr, curecon->cgstream[0]);
+		if(parms->recon.mvm==2){//disable warm restart in CG using neighboring act.
+		    curcellzero(opdr, curecon->cgstream[0]); 
+		}
 		int disablelrt=curecon->disablelrt;
 		curecon->disablelrt=1;
 		/*disable the t/t removal lrt in split tomo that creats problem in fdpcg mode*/
@@ -657,14 +659,9 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     if(parms->recon.alg!=0){
 	error("Please adept to LSR\n");
     } 
-    if(parms->load.MVM || !parms->gpu.tomo || !parms->gpu.fit){
+    if(parms->load.MVM){
 	gpu_set(gpu_recon);
 	curecon_t *curecon=cudata->recon;
-	if(parms->load.MVM){
-	    recon->MVM=dcellread("%s", parms->load.MVM);
-	}else{
-	    setup_recon_mvr_mvm(recon, parms, powfs);
-	}
 	if(!parms->sim.mvmport){
 	    cp2gpu(&curecon->MVM, recon->MVM);
 	    dcellfree(recon->MVM);

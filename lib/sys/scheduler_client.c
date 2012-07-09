@@ -32,6 +32,7 @@
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h> /*SOL_TCP */
 #include <limits.h>
 #include <string.h>
 #include "sockio.h"
@@ -96,6 +97,19 @@ int connect_port(const char *hostname, int port, int block, int mode){
 	    perror ("socket (scheduler)");
 	    scheduler_crashed=1; 
 	    return sock;
+	}
+	{
+	    /*Applications that require lower latency on every packet sent should be
+	      run on sockets with TCP_NODELAY enabled. It can be enabled through the
+	      setsockopt command with the sockets API.  
+
+	      For this to be used effectively, applications must avoid doing small,
+	      logically related buffer writes. Because TCP_NODELAY is enabled, these
+	      small writes will make TCP send these multiple buffers as individual
+	      packets, which can result in poor overall performance.  */
+	    int one=1;
+	    //setsockopt(sock_mvm, SOL_TCP, TCP_NODELAY|TCP_QUICKACK|TCP_CORK, &one, sizeof(one));
+	    setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
 	}
 	cloexec(sock);
 	socket_tcp_keepalive(sock);

@@ -473,6 +473,13 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->save.setup){
 	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
     }
+	double svd_thres;
+	if(parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit){
+		svd_thres=-0.01;
+	}else{
+		svd_thres=1e-7;
+	}
+
     for(long ib=0; ib<nb; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
 	  one of the cells the conditional is more than 1e8. This creates
@@ -482,7 +489,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	  2012-04-26: Even with 1e-7 threshold, some blocks has bad conditions
 	  that blows the error if we are assemble MVM in GPU.
 	*/
-	csvd_pow(fdpcg->Mbinv->p[ib], -1, 0, -0.01);
+	csvd_pow(fdpcg->Mbinv->p[ib], -1, 0, svd_thres);
     }
     if(parms->save.setup){
 	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Minvb",dirsetup);

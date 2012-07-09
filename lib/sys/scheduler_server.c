@@ -103,7 +103,7 @@ void socket_tcp_keepalive(int sock){
     int keepcnt  =2;/*repeat before declare dead */
 #endif
     if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
-#ifdef __linux__ && USE_TCP
+#if defined(__linux__) && USE_TCP
        && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int))
@@ -116,16 +116,32 @@ void socket_tcp_keepalive(int sock){
 /**
    make a server port and bind to localhost on all addresses
 */
-int make_socket (uint16_t port, int retry){
-    int sock;
+int bind_socket (uint16_t port, int type){
+    int sock=-1;
     struct sockaddr_in name;
     
     /* Create the socket. */
-#if USE_TCP
-    sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
-#else
-    sock = socket(PF_INET, SOCK_DGRAM, 0); //udp
-#endif
+    switch(type){
+    case 1:{
+	sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
+	/*Applications that require lower latency on every packet sent should be
+	  run on sockets with TCP_NODELAY enabled. It can be enabled through the
+	  setsockopt command with the sockets API.  
+
+	  For this to be used effectively, applications must avoid doing small,
+	  logically related buffer writes. Because TCP_NODELAY is enabled, these
+	  small writes will make TCP send these multiple buffers as individual
+	  packets, which can result in poor overall performance.  */
+	int one=1;
+	setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
+    }
+	break;
+    case 2:
+	sock = socket(PF_INET, SOCK_DGRAM, 0); //udp
+	break;
+    default:
+	error("Invalid type");
+    }
     if (sock < 0){
 	perror ("socket");
 	exit (EXIT_FAILURE);
@@ -142,7 +158,6 @@ int make_socket (uint16_t port, int retry){
     while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
 	info3("errno=%d. port=%d,sock=%d: ",errno,port,sock);
 	perror ("bind");
-	if(!retry) return -1;
 	sleep(10);
 	count++;
 	if(count>100){
@@ -760,24 +775,11 @@ static void scheduler_timeout(void){
    establed/handled, 2) every timeout_sec if timeout_sec>0. This function only
    return at error.
  */
-void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*timeout_fun)()){
+void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void (*timeout_fun)()){
     fd_set read_fd_set;
     fd_set active_fd_set;
     struct sockaddr_in clientname;
-    int sock = make_socket (port, 1);
-    {
-	/*Applications that require lower latency on every packet sent should be
-	  run on sockets with TCP_NODELAY enabled. It can be enabled through the
-	  setsockopt command with the sockets API.  
-
-	  For this to be used effectively, applications must avoid doing small,
-	  logically related buffer writes. Because TCP_NODELAY is enabled, these
-	  small writes will make TCP send these multiple buffers as individual
-	  packets, which can result in poor overall performance.  */
-	int one=1;
-	//setsockopt(sock, SOL_TCP, TCP_NODELAY|TCP_QUICKACK|TCP_CORK, &one, sizeof(one));
-	setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
-    }
+    int sock = bind_socket (port, 1);
     if (listen (sock, 1) < 0){
 	perror("listen");
 	exit(EXIT_FAILURE);
@@ -815,7 +817,7 @@ void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*
 		    FD_SET(port2, &active_fd_set);
 		}else{
 		    /* Data arriving on an already-connected socket. */
-		    if(respond(i)<0){
+		    if(responder(i)<0){
 			warning("Close port %d\n", i);
 			shutdown(i, SHUT_RD);
 			FD_CLR(i, &active_fd_set);

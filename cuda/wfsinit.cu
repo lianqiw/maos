@@ -48,7 +48,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
     }
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
-	TIC;tic;
 	cudata->powfs=(cuwloc_t*)calloc(parms->npowfs, sizeof(cuwloc_t));
 	cudata->wfs=(cuwfs_t*)calloc(parms->nwfs, sizeof(cuwfs_t));
 	cuwloc_t *cupowfs=cudata->powfs;
@@ -74,13 +73,11 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		cp2gpu(&cupowfs[ipowfs].fieldstop, powfs[ipowfs].fieldstop);
 	    }
 	}
-	toc("wfs init 1");
     }
 
     /* setup information that maybe different for wfs in same powfs due to
        misregistration or NCPA.*/
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	TIC;tic;
 	gpu_set(wfsgpu[iwfs]);/*Only initialize WFS in assigned GPU. */
 	cuwloc_t *cupowfs=cudata->powfs;
 	cuwfs_t *cuwfs=cudata->wfs;
@@ -136,8 +133,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}else{
 	    cuwfs[iwfs].amp=cuwfs[iwfs0].amp;
 	}
-	toc("wfs init 2");
-
 	dmat *nea=powfs[ipowfs].neasim->p[wfsind];
 	if(nea){
 	    cp2gpu(&cuwfs[iwfs].neasim, nea);
@@ -256,7 +251,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			    cudaMalloc(&cuwfs[iwfs].dtf[iwvl].nominal, nsa*sizeof(void*));
 			    cudaMemcpy(cuwfs[iwfs].dtf[iwvl].nominal, nominal, nsa*sizeof(void*), cudaMemcpyHostToDevice);
 			}
-			toc("wfs init 3");
 			if(parms->powfs[ipowfs].llt){
 			    fcomplex *etf[nsa];
 			    cmat *(*petf)[nsa]=NULL;
@@ -267,14 +261,29 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				petf=(cmat *(*)[nsa])powfs[ipowfs].etfsim[iwvl].p2->p;
 				cuwfs[iwfs].dtf[iwvl].etfis1d=0;
 			    }
+			    cmat **petfi=petf[parms->powfs[ipowfs].llt->n>1?wfsind:0];
+			    int ncx=petfi[0]->nx;
+			    int ncy=petfi[0]->ny;
+			    /* Coping many small arrays is slow due to
+			       overhead. We first copy the array to a single
+			       array then assign pointers. 2012-07-06*/
+			    fcomplex *temp=(fcomplex*)malloc(sizeof(fcomplex)*nsa*ncx*ncy);
+			    fcomplex *tempi;
+			    fcomplex *temp2;
+			    DO(cudaMalloc(&temp2, sizeof(fcomplex)*nsa*ncx*ncy));
 			    for(int isa=0; isa<nsa; isa++){
-				etf[isa]=NULL;
-				cp2gpu(&etf[isa], petf[parms->powfs[ipowfs].llt->n>1?wfsind:0][isa]);
+				tempi=temp+isa*ncx*ncy;
+				etf[isa]=temp2+isa*ncx*ncy;
+				for(int i=0; i<ncx*ncy; i++){
+				    tempi[i]=make_cuFloatComplex(creal(petfi[isa]->p[i]),
+								 cimag(petfi[isa]->p[i]));
+				}
 			    }
+			    DO(cudaMemcpy(temp2, temp, sizeof(fcomplex)*nsa*ncx*ncy, cudaMemcpyHostToDevice));
+			    free(temp);
 			    cudaMalloc(&cuwfs[iwfs].dtf[iwvl].etf, nsa*sizeof(void*));
 			    cudaMemcpy(cuwfs[iwfs].dtf[iwvl].etf, etf, nsa*sizeof(void*), cudaMemcpyHostToDevice);
 			}
-			toc("wfs init 4");
 		    }/*for iwvl. */
 		    if(parms->powfs[ipowfs].llt){
 			cp2gpu(&cuwfs[iwfs].srot, powfs[ipowfs].srot->p[parms->powfs[ipowfs].llt->n>1?wfsind:0]);
@@ -283,16 +292,29 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    cuwfs[iwfs].dtf  = cuwfs[iwfs0].dtf;
 		    cuwfs[iwfs].srot = cuwfs[iwfs0].srot;
 		}
-		toc("wfs init 5");
 		/*Matched filter */
 		if(parms->powfs[ipowfs].phytypesim==1){
 		    if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			dmat **mtche=powfs[ipowfs].intstat->mtche->p+nsa*(powfs[ipowfs].intstat->mtche->ny>1?wfsind:0);
 			float *mtche2[nsa];
+			int ncx=mtche[0]->nx;
+			int ncy=mtche[0]->ny;
+			/* Coping many small arrays is slow due to
+			   overhead. We first copy the array to a single
+			   array then assign pointers. 2012-07-06*/
+			float *temp=(float*)malloc(sizeof(float)*nsa*ncx*ncy);
+			float *tempi;
+			float *temp2;
+			cudaMalloc(&temp2, sizeof(float)*nsa*ncx*ncy);
 			for(int isa=0; isa<nsa; isa++){
-			    mtche2[isa]=NULL;
-			    cp2gpu((float**)&mtche2[isa], mtche[isa]);
+			    mtche2[isa]=temp2+isa*ncx*ncy;
+			    tempi=temp+isa*ncx*ncy;
+			    for(int i=0; i<ncx*ncy; i++){
+				tempi[i]=(float)(mtche[isa]->p[i]);
+			    }
 			}
+			cudaMemcpy(temp2, temp, nsa*ncx*ncy*sizeof(float), cudaMemcpyHostToDevice);
+			free(temp);
 			cudaMalloc(&cuwfs[iwfs].mtche, nsa*sizeof(void*));
 			cudaMemcpy(cuwfs[iwfs].mtche, mtche2, nsa*sizeof(void*),cudaMemcpyHostToDevice);
 			cp2gpu(&cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0), nsa);
@@ -308,7 +330,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			cuwfs[iwfs].cogcoeff=cuwfs[iwfs0].cogcoeff;
 		    }
 		}
-		toc("wfs init 6");
 		if(powfs[ipowfs].bkgrnd){
 		    if(powfs[ipowfs].bkgrnd->ny==1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			cudaCallocHostBlock(cuwfs[iwfs].bkgrnd2, nsa*sizeof(void*));
@@ -331,7 +352,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 			cuwfs[iwfs].bkgrnd2c=cuwfs[iwfs0].bkgrnd2c;
 		    }	
 		}
-		toc("wfs init 7");
 	    }
 	}/*if phy */
 	CUDA_SYNC_DEVICE;

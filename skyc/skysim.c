@@ -130,7 +130,6 @@ static void skysim_isky(SIM_S *simu){
 	    /*Optimize servo gains. */
 	    setup_aster_servo(simu, &aster[iaster], parms);
 	}
-	double tk_2=myclockd();
 	/*Select asters that have good performance. */
 	setup_aster_select(pres_ol[isky],aster, naster, star, 
 			   simu->rmsol->p[0]*0.5,parms); 
@@ -409,11 +408,11 @@ void skysim(const PARMS_S *parms){
 	    info2("Open loop error: NGS: %.2f TT: %.2f nm\n", 
 		  sqrt(simu->rmsol->p[0])*1e9, sqrt(simu->rmsol->p[1])*1e9);
 	    if(parms->skyc.addfocus && parms->maos.nmod>5){
-		dmat *time=nafocus_time(parms->maos.D, parms->maos.hs,
+		dmat *timing=nafocus_time(parms->maos.D, parms->maos.hs,
 					parms->skyc.na_alpha, parms->skyc.na_beta, 
 					parms->maos.dt, simu->mideal->ny, &simu->rand);
-		for(int istep=0; istep<parms->maos.nstep; istep){
-		    simu->mideal->p[5+istep*6]=time->p[istep];
+		for(int istep=0; istep<parms->maos.nstep; istep++){
+		    simu->mideal->p[5+istep*6]=timing->p[istep];
 		}
 		dwrite(simu->mideal, "mideal_%d_%d", simu->seed_maos, simu->seed_skyc);
 	    }

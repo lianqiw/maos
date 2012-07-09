@@ -187,10 +187,13 @@ int main(int argc, char *argv[]){
     dcell *resollom=dcellnew(npath,1);
     const char *xlabel, *ylabel;
     dmat *ysky=NULL;
+    const char* xylog;
     if(restype==1){
+	xylog="nn";
 	xlabel="Steps";
 	ylabel="Wavefront Error (nm)";
     }else{
+	xylog="yn";
 	ylabel="Sky Coverage";
 	xlabel="Wavefront Error (nm)";
     }
@@ -309,7 +312,6 @@ int main(int argc, char *argv[]){
 	dcellcwpow(resollom, 0.5); dcellscale(resollom, 1e9);
     }
  
-    const char* xylog="yn";
     if(npath==1){
 	char *legs[nseed];
 	for(int iseed=0; iseed<nseed; iseed++){

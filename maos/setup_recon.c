@@ -2582,7 +2582,9 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 	/*Apply R_L*/
 	int desplitlrt=recon->desplitlrt;
 	recon->desplitlrt=1;
-	dcellzero(RLT);
+	if(parms->recon.mvm==2){
+	    dcellzero(RLT);
+	}
 	muv_solve(&RLT, &recon->RL, NULL, FRT);
 	recon->desplitlrt=desplitlrt;
 	/*Apply R_R'*/
@@ -2770,36 +2772,35 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     mapfree(aper->ampground);
     /*assemble matrix to do matrix vector multiply*/
     if(parms->recon.mvm){
-#if USE_CUDA
-	if(parms->gpu.tomo && parms->gpu.fit){
-	    gpu_setup_recon_mvm(parms, recon, powfs);
-	}else
-#endif
-	    {
-		if(parms->load.MVM){
-		    recon->MVM=dcellread("%s", parms->load.MVM);
-		    for(int idm=0; idm<parms->ndm; idm++){
-			for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-			    int ipowfs=parms->wfs[iwfs].powfs;
-			    if(!parms->powfs[ipowfs].skip){
-				dmat *temp=recon->MVM->p[idm+iwfs*parms->ndm];
-				if(temp->nx!=recon->aloc[idm]->nloc 
-				   || temp->ny !=powfs[ipowfs].pts->nsa*2){
-				    error("MVM[%d, %d] should have dimension (%ld, %ld), but have (%ld, %ld)\n", idm, iwfs, recon->aloc[idm]->nloc , powfs[ipowfs].pts->nsa*2, temp->nx, temp->ny);
-				}
-			    }
+	if(parms->load.MVM){
+	    recon->MVM=dcellread("%s", parms->load.MVM);
+	    for(int idm=0; idm<parms->ndm; idm++){
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		    int ipowfs=parms->wfs[iwfs].powfs;
+		    if(!parms->powfs[ipowfs].skip){
+			dmat *temp=recon->MVM->p[idm+iwfs*parms->ndm];
+			if(temp->nx!=recon->aloc[idm]->nloc 
+			   || temp->ny !=powfs[ipowfs].pts->nsa*2){
+			    error("MVM[%d, %d] should have dimension (%ld, %ld), but have (%ld, %ld)\n", idm, iwfs, recon->aloc[idm]->nloc , powfs[ipowfs].pts->nsa*2, temp->nx, temp->ny);
 			}
 		    }
-		}else if(parms->recon.alg==0){
-		    setup_recon_mvr_mvm(recon, parms, powfs);
-		}else{
-		    setup_recon_lsr_mvm(recon, parms, powfs);   
-		}
-		if(parms->save.setup && !parms->load.MVM){
-		    dcellwrite(recon->MVM, "%s/MVM", dirsetup);
 		}
 	    }
-	
+	}
+	if(parms->gpu.tomo && parms->gpu.fit){
+#if USE_CUDA
+	    gpu_setup_recon_mvm(parms, recon, powfs);
+#endif
+	}else if(!parms->load.MVM){
+	    if(parms->recon.alg==0){
+		setup_recon_mvr_mvm(recon, parms, powfs);
+	    }else{
+		setup_recon_lsr_mvm(recon, parms, powfs);   
+	    }
+	    if(parms->save.setup && !parms->load.MVM){
+		dcellwrite(recon->MVM, "%s/MVM", dirsetup);
+	    }
+	}
 	if(parms->sim.mvmport){
 	    dcellwrite(recon->MVM, "MVM_send");
 	    mvm_client_send_m(parms, recon->MVM);
