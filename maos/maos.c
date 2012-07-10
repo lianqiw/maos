@@ -40,6 +40,7 @@ int use_cuda=0;
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
 void maos(const PARMS_T *parms){    
+    TIC;tic;
     APER_T  * aper=NULL;
     POWFS_T * powfs=NULL;
     RECON_T * recon=NULL;
@@ -88,6 +89,7 @@ void maos(const PARMS_T *parms){
     int one=1;
     omp_set_num_threads(&one);/*only allow 1 thread after svd/chol is done. */
 #endif
+    toc2("Presimulation");
     sim(parms, powfs, aper, recon);
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/

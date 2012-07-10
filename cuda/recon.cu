@@ -600,7 +600,7 @@ void gpu_setup_recon_mvm_igpu(thread_t *info){
 		if((residual->p[iact]=gpu_pcg(&opdr, gpu_TomoL, recon, prefun, predata, opdx, 
 					      parms->recon.warm_restart, parms->tomo.maxit,
 					      curecon->cgstream[0]))>1){
-		    error("Tomo CG failed\n");
+		    warning("Tomo CG failed\n");
 		}
 		curecon->disablelrt=disablelrt;
 	    }
@@ -639,19 +639,10 @@ void gpu_setup_recon_mvm_igpu(thread_t *info){
     curcellfree(opdr);
     curcellfree(grad);
     curcellfree(eyec);
-    if(parms->save.setup){
-	swrite(residual, "%s/MVM_RLpcgr_%d", dirsetup, igpu);
-    }
-    
-    if(parms->save.setup){
-	curcellwrite(curecon->MVM, "%s/MVM_%d.bin", dirsetup, igpu);
-    }
     toc2("MVM on GPU %d", igpu);tic;
     /*Add all to CPU*/
-    if(NGPU>1 || parms->sim.mvmport){
-	cp2cpu(&recon->MVM, 1, curecon->MVM, 1, curecon->cgstream[0], data->mutex);
-	curfree(curecon->MVM);
-    }
+    cp2cpu(&recon->MVM, 1, curecon->MVM, 1, curecon->cgstream[0], data->mutex);
+    curfree(curecon->MVM);
     toc2("cp2cpu on GPU %d", igpu);
 }
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
@@ -708,7 +699,6 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	smat *residual=NULL;
 	float *FLI=NULL;
 	if(FLId){
-	    dwrite(FLId, "FLI");
 	    FLI=(float*)malloc4async(sizeof(float)*ntotact*ntotact);
 	    for(long i=0; i<ntotact*ntotact; i++){
 		FLI[i]=(float)FLId->p[i];
@@ -724,10 +714,12 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	thread_t info[NGPU];
 	thread_prep(info, 0, ntotact, nthread, gpu_setup_recon_mvm_igpu, &data);
 	CALL_THREAD(info, nthread, 1);
-	if(recon->MVM && parms->save.setup){
+	if(parms->save.setup){
 	    dcellwrite(recon->MVM, "%s/MVM.bin", dirsetup);
+	    swrite(residual, "%s/MVM_RL_residual", dirsetup);
 	}
-	if(!parms->sim.mvmport && NGPU>1){
+	sfree(residual);
+	if(!parms->sim.mvmport){
 	    gpu_set(gpu_recon);
 	    cp2gpu(&cudata->recon->MVM, recon->MVM);
 	    dcellfree(recon->MVM);

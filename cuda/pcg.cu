@@ -53,7 +53,7 @@ __global__ static void div_assign_do(float *restrict dest, const float *restrict
 /**
    res points to a scalar in device memory. **The caller has to zero it**
 */
-void curcellinn2(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
+void curcellinn_add(float *restrict res, const curcell *A, const curcell *B, cudaStream_t stream){
     //cudaMemsetAsync(res, 0,sizeof(float), stream);
     if(A->m && B->m){
 	const int n=A->m->nx*A->m->ny;
@@ -77,7 +77,7 @@ static void pcg_residual(float *r0r0, float *r0z1, float *r0z0, curcell *r0,
 			 int precond, cudaStream_t stream){
     if(precond){
 	/*r0r0=r0'*r0; */
-	curcellinn2(r0r0, r0, r0, stream);
+	curcellinn_add(r0r0, r0, r0, stream);
 	/*r0r0=sqrt(r0r0/r0z0); */
 	div_sqrt_do<<<1,1,0,stream>>>(r0r0, r0r0, r0z0);
     }else{
@@ -110,6 +110,7 @@ float gpu_pcg(curcell **px,
     int ntot=maxiter*2+2;
 #if PRINT_RES 
     ntot+=maxiter+1;
+    float diff[maxiter];
 #endif
     DO(cudaMalloc(&store, ntot*sizeof(float)));current=store;
     DO(cudaMemsetAsync(store, 0, ntot*sizeof(float),stream));
@@ -122,10 +123,11 @@ float gpu_pcg(curcell **px,
     float *r0z2=current; current+=maxiter;
     float *ak=current;   current+=maxiter;
  
-#if PRINT_RES 
-    curcellinn2(r0z0, b, b, stream);
-    float diff[maxiter];
-    info2("CG %d:", maxiter);
+#if PRINT_RES
+    curcellinn_add(r0z0, b, b, stream);
+#if PRINT_RES == 2
+    fprintf(stderr, "CG %d:", maxiter);
+#endif
 #endif
     /*computes r0=b-A*x0 */
     if(!*px){
@@ -137,18 +139,21 @@ float gpu_pcg(curcell **px,
     curcell *p0=NULL;
     curcell *Ap=NULL;
     for(int k=0; k<maxiter; k++){
-	if(k%50==0){/*restart every 100 steps exclude beginning*/
+	if(k%50==0){/*initial or re-start every 50 steps*/
 	    /*computes r0=b-A*x0 */
 	    curcellcp(&r0, b, stream);/*r0=b; */
 	    CUDA_SYNC_STREAM;
 	    Amul(&r0, 1, A, x0, -1);/*r0=r0+(-1)*A*x0 */
-	    if(Mmul){
+	    if(Mmul){/*z0=M*r0*/
 		Mmul(&z0,M,r0,stream);
 	    }else{
 		z0=r0;
 	    }
 	    curcellcp(&p0, z0, stream);
-	    curcellinn2(r0z1, r0, z0, stream);
+	    if(k!=0){
+		cudaMemsetAsync(r0z1, 0, sizeof(float), stream);
+	    }
+	    curcellinn_add(r0z1, r0, z0, stream);
 	}
 #if PRINT_RES 
 	pcg_residual(r0r0+k, r0z1, r0z0, r0, Mmul?1:0, stream);
@@ -160,7 +165,7 @@ float gpu_pcg(curcell **px,
 	CUDA_SYNC_STREAM;//needed before entering Amul
 	Amul(&Ap, 0, A, p0, 1);
 	/*ak=r0z1/(p0'*Ap); */
-	curcellinn2(ak+k, p0, Ap, stream);
+	curcellinn_add(ak+k, p0, Ap, stream);
 	div_do<<<1,1,0,stream>>>(ak+k, r0z1, ak+k);
 	/*x0=x0+ak*p0 */
 	curcelladd(&x0, p0, ak+k, 1, stream);
@@ -177,11 +182,11 @@ float gpu_pcg(curcell **px,
 	/*r0=r0-ak*Ap */
 	curcelladd(&r0, Ap, ak+k, -1, stream);
 	/*preconditioner */
-	if(Mmul) {
+	if(Mmul) {/*z0=M*r0*/
 	    Mmul(&z0,M,r0, stream);
 	}
 	/*r0z2=r0'*z0 */
-	curcellinn2(r0z2+k, r0, z0, stream);
+	curcellinn_add(r0z2+k, r0, z0, stream);
 	/*bk=r0z2/r0z1; r0z1=r0z2*/
 	div_assign_do<<<1,1,0,stream>>>(bk, r0z2+k, r0z1);
 	/*p0=bk*p0+z0 */
@@ -199,9 +204,9 @@ float gpu_pcg(curcell **px,
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     CUDA_SYNC_STREAM;
 #if PRINT_RES == 1
-    info2("CG %2d: %.5f ==> %.5f\n", maxiter, diff[0], diff[maxiter-1]);
+    fprintf(stderr, "CG %2d: %.5f ==> %.5f\n", maxiter, diff[0], diff[maxiter-1]);
 #elif PRINT_RES==2
-    info2("\n");
+    fprintf(stderr, "\n");
 #endif
     curcellfree(r0); 
     if(Mmul){
