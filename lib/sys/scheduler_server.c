@@ -587,7 +587,6 @@ static int respond(int sock){
        Don't modify sock in this routine. otherwise select
        will complain Bad file descriptor
     */
-    
     int cmd[2];
     int ret=read(sock, cmd, sizeof(int)*2);
    
@@ -600,7 +599,11 @@ static int respond(int sock){
 		running_update(pid,S_CRASH);
 	    }
 	}
-	return -1;/*socket closed. */
+	if(irun){//maos
+	    return -1;/*socket closed. */
+	}else{//monitor
+	    return -2;
+	}
     }
     int pid=cmd[1];
     switch(cmd[0]){
@@ -816,12 +819,20 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 		    cloexec(port2);
 		    FD_SET(port2, &active_fd_set);
 		}else{
-		    /* Data arriving on an already-connected socket. */
-		    if(responder(i)<0){
-			warning("Close port %d\n", i);
+		    /* Data arriving on an already-connected socket. Call responder to handle.
+		       On return:
+		       negative value: Close read of socket. 
+		       -1: also close the socket.
+		     */
+		    int ans=responder(i);
+		    if(ans<0){
+			warning("shutdown port %d for reading\n", i);
 			shutdown(i, SHUT_RD);
 			FD_CLR(i, &active_fd_set);
-			close(i);
+			if(ans==-1){
+			    warning("close port %d\n", i);
+			    close(i);
+			}
 		    }
 		}
 	    }
