@@ -206,7 +206,7 @@ void cfft2(cmat *A, int dir){
 /**
    Do 2d inverse FFT (scaling factor of 1/(nx*ny) is applied)
 */
-void cifft2(cmat *A, int dir){
+void cfft2i(cmat *A, int dir){
     /*Apply scaling factor*/
     cfft2(A,dir);
     cscale(A,1./(double)(A->nx*A->ny));

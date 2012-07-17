@@ -34,7 +34,7 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     cfft2plan(otf, -1);
     cfft2plan(otfsave,1);
     ccpd(&otf, psf);/*loaded psf has peak in corner */
-    cifft2(otf, 1);/*turn to OTF, peak in corner */
+    cfft2i(otf, 1);/*turn to OTF, peak in corner */
     ccwm(otf, dtf->nominal);
     ccp(&otfsave, otf);
     cfft2(otf, -1);/*turn back. */

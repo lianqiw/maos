@@ -155,6 +155,9 @@ void free_parms(PARMS_T *parms){
     free(parms->save.wfsopd);
     free(parms->save.grad);
     free(parms->save.gradgeom);
+    free(parms->load.MVM);
+    free(parms->load.mvmi);
+    free(parms->load.mvmf);
     free(parms->fdlock);
     free(parms);
 }
@@ -896,6 +899,8 @@ static void readcfg_save(PARMS_T *parms){
     }
     parms->save.ngcov=readcfg_intarr(&parms->save.gcov,"save.gcov")/2;
     READ_INT(save.gcovp);
+    READ_INT(save.mvmi);
+    READ_INT(save.mvmf);
 }
 
 /**
@@ -916,6 +921,8 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.GP);
     READ_STR(load.GA);
     READ_STR(load.MVM);
+    READ_STR(load.mvmi);
+    READ_STR(load.mvmf);
     READ_INT(load.mvst);
     READ_INT(load.GS0);
     READ_INT(load.tomo);
@@ -1711,6 +1718,20 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->sim.mffocus==2 && parms->recon.mvm){
 	error("need implementation\n");
     }
+    if(!parms->recon.mvm){
+	if(parms->tomo.alg!=1 && parms->load.mvmi){
+	    free(parms->load.mvmi);
+	    parms->load.mvmi=NULL;
+	}
+	if(parms->load.mvmf){
+	    free(parms->load.mvmf);
+	    parms->load.mvmf=NULL;
+	}
+    }
+    if(parms->load.mvmi && parms->recon.mvm==2){
+	warning2("when loading mvmi, warm restart in mvm assembly is required. Changed recon.mvm to 1\n");
+	parms->recon.mvm=1;
+    }
     if(parms->sim.mffocus==2 && parms->recon.alg==1){
 	error("need implementation\n");
     }
@@ -1894,96 +1915,7 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	    warning("cachedm disabled for SCAO\n");
 	}
     }
-    if(parms->evl.tomo || parms->sim.end==0){
-	warning("evl.tomo in cuda not implemented yet.\n");
-	use_cuda=0;
-    }
-    if(use_cuda){
-	if(parms->sim.evlol){
-	    parms->gpu.lsr=parms->gpu.tomo=parms->gpu.fit=parms->gpu.moao=parms->gpu.wfs=0;
-	}
-	if(parms->sim.idealfit){
-	    parms->gpu.tomo=0;/*no need tomo.*/
-	}
-	if(parms->recon.alg==0){/*MV*/
-	    if(parms->gpu.tomo && parms->tomo.pos !=2){
-		parms->gpu.tomo=0;
-		warning("\n\nGPU reconstruction is only available for CG with tomo.pos=2 for the moment.\n");
-	    }
-	    if(parms->gpu.tomo && parms->tomo.alg >2){
-		parms->gpu.tomo=0;
-		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Tomography.\n");
-	    }
-	    if(parms->gpu.fit && parms->fit.alg > 2){
-		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
-		parms->gpu.fit=0;
-	    }
-	    if(parms->sim.idealfit && parms->gpu.fit){
-		parms->gpu.fit=2;//In idealfit, FR is not assembled.
-	    }
-	    if(parms->gpu.fit==1 && !parms->fit.assemble){
-		warning("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
-		parms->fit.assemble=1;
-	    }
-	    if(parms->gpu.fit==2 && !parms->fit.square){
-		warning("GPU fitting=2 requires fit.square=1. Changed\n");
-		parms->fit.square=1;
-	    }
-	    int moao_used=0;
-	    if(parms->evl.moao>=0) moao_used++;
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].moao>=0) moao_used++;
-	    }
-	    if(moao_used>0){
-		if(parms->gpu.moao){
-		    if(!parms->fit.square){
-			warning("GPU moao=1 requires fit.square=1. Changed\n");
-			parms->fit.square=1;
-		    }
-		    if(!parms->tomo.square){
-			warning("GPU moao=1 requires tomo.square=1. Changed\n");
-			parms->tomo.square=1;
-		    }
-		}
-	    }
-	}else if(parms->recon.alg==1){
-	    parms->gpu.tomo=0;
-	    parms->gpu.fit=0;
-	    if(parms->gpu.lsr){
-		warning("\n\nGPU reconstruction for LSR is not available yet\n");
-		parms->gpu.lsr=0;
-	    }
-	}
-	if(!parms->recon.glao){
-	    int has_dfr=0;
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs<=1) continue;
-		if(parms->powfs[ipowfs].dfrs){
-		    has_dfr=1;
-		}
-	    }
-	    if(has_dfr){
-		warning("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
-		parms->gpu.tomo=0;
-	    }
-	}
 
-	if(!parms->atm.frozenflow){
-	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
-	    parms->gpu.evl=0;
-	    parms->gpu.wfs=0;
-	}
-	if(parms->gpu.evl && parms->gpu.wfs){
-	    parms->sim.cachedm=0; /*Done in CUDA. */
-	}
-	if(parms->gpu.tomo){
-	    parms->tomo.square=1;
-	    parms->dbg.dxonedge=1;
-	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
-	}
-    }else{
-	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
-    }
     if(parms->sim.mvmport){
 	if(!parms->sim.mvmport){
 	    error("sim.mvmport cannot be zero.\n");
@@ -2398,12 +2330,7 @@ PARMS_T * setup_parms(ARG_T *arg){
     snprintf(fnconf, PATH_MAX, "maos_%ld.conf", (long)getpid());
     close_config("%s",fnconf);
     mysymlink(fnconf, "maos_recent.conf");
-#if USE_CUDA 
-    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu is there is only 1 wfs.*/
-    use_cuda=gpu_init(arg->gpus, arg->ngpu);
-#else
-    use_cuda=0;
-#endif
+
     /*
       Postprocess the parameters for integrity. The ordering of the following
       routines are critical.
@@ -2420,4 +2347,106 @@ PARMS_T * setup_parms(ARG_T *arg){
     check_parms(parms);
     print_parms(parms);
     return parms;
+}
+/**
+   Additional setup_parms code to run when maos is running. It only contains GPU
+   initialization code for the moment.
+ */
+void setup_parms_running(PARMS_T *parms, ARG_T *arg){
+#if USE_CUDA 
+    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu is there is only 1 wfs.*/
+    use_cuda=gpu_init(arg->gpus, arg->ngpu);
+#else
+    use_cuda=0;
+#endif
+    if(parms->evl.tomo || parms->sim.end==0){
+	warning("evl.tomo in cuda not implemented yet.\n");
+	use_cuda=0;
+    }
+    if(use_cuda){
+	if(parms->sim.evlol){
+	    parms->gpu.lsr=parms->gpu.tomo=parms->gpu.fit=parms->gpu.moao=parms->gpu.wfs=0;
+	}
+	if(parms->sim.idealfit){
+	    parms->gpu.tomo=0;/*no need tomo.*/
+	}
+	if(parms->recon.alg==0){/*MV*/
+	    if(parms->gpu.tomo && parms->tomo.pos !=2){
+		parms->gpu.tomo=0;
+		warning("\n\nGPU reconstruction is only available for CG with tomo.pos=2 for the moment.\n");
+	    }
+	    if(parms->gpu.tomo && parms->tomo.alg >2){
+		parms->gpu.tomo=0;
+		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Tomography.\n");
+	    }
+	    if(parms->gpu.fit && parms->fit.alg > 2){
+		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Fitting.\n");
+		parms->gpu.fit=0;
+	    }
+	    if(parms->sim.idealfit && parms->gpu.fit){
+		parms->gpu.fit=2;//In idealfit, FR is not assembled.
+	    }
+	    if(parms->gpu.fit==1 && !parms->fit.assemble){
+		warning("\n\nGPU fitting=1 requries fit.assemble. Changed\n");
+		parms->fit.assemble=1;
+	    }
+	    if(parms->gpu.fit==2 && !parms->fit.square){
+		warning("GPU fitting=2 requires fit.square=1. Changed\n");
+		parms->fit.square=1;
+	    }
+	    int moao_used=0;
+	    if(parms->evl.moao>=0) moao_used++;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].moao>=0) moao_used++;
+	    }
+	    if(moao_used>0){
+		if(parms->gpu.moao || parms->gpu.fit){
+		    if(!parms->fit.square){
+			warning("GPU moao=1 requires fit.square=1. Changed\n");
+			parms->fit.square=1;
+		    }
+		    if(!parms->tomo.square){
+			warning("GPU moao=1 requires tomo.square=1. Changed\n");
+			parms->tomo.square=1;
+		    }
+		}
+	    }
+	}else if(parms->recon.alg==1){
+	    parms->gpu.tomo=0;
+	    parms->gpu.fit=0;
+	    if(parms->gpu.lsr){
+		warning("\n\nGPU reconstruction for LSR is not available yet\n");
+		parms->gpu.lsr=0;
+	    }
+	}
+	if(!parms->recon.glao){
+	    int has_dfr=0;
+	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+		if(parms->powfs[ipowfs].nwfs<=1) continue;
+		if(parms->powfs[ipowfs].dfrs){
+		    has_dfr=1;
+		}
+	    }
+	    if(has_dfr){
+		warning("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
+		parms->gpu.tomo=0;
+	    }
+	}
+
+	if(!parms->atm.frozenflow){
+	    warning("Atm is not frozen flow. Disable gpu.evl and gpu.wfs\n");
+	    parms->gpu.evl=0;
+	    parms->gpu.wfs=0;
+	}
+	if(parms->gpu.evl && parms->gpu.wfs){
+	    parms->sim.cachedm=0; /*Done in CUDA. */
+	}
+	if(parms->gpu.tomo || parms->gpu.fit){
+	    parms->tomo.square=1;
+	    parms->dbg.dxonedge=1;
+	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
+	}
+    }else{
+	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));
+    }
 }

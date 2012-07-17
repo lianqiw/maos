@@ -119,7 +119,7 @@ int connect_port(const char *hostname, int port, int block, int mode){
 	    fcntl(sock, F_SETFD, O_NONBLOCK);
 	}
 	if(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
-	    perror("connect");
+	    info2("connect to %-15s failed: %s\n", hostname, strerror(errno));
 	    close(sock);
 	    if(!block){
 		return -1;
@@ -127,6 +127,7 @@ int connect_port(const char *hostname, int port, int block, int mode){
 	    sleep(4);
 	    count++;
 	}else{
+	    info2("connect to %-15s success\n", hostname);
 	    sock_shutdown(&sock,mode);
 	    return sock;
 	}

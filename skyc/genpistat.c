@@ -169,7 +169,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		ccpd(&otf, psf);
 		cfft2(otf,-1);
 		ctilt(otf,-pgrad[0],-pgrad[1],0);
-		cifft2(otf,1);
+		cfft2i(otf,1);
 		creal2d(&psf,0,otf,1);
 	    }
 	    /*

@@ -126,7 +126,7 @@ float gpu_pcg(curcell **px,
 #if PRINT_RES
     curcellinn_add(r0z0, b, b, stream);
 #if PRINT_RES == 2
-    fprintf(stderr, "CG %d:", maxiter);
+    fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
 #endif
     /*computes r0=b-A*x0 */
@@ -170,13 +170,6 @@ float gpu_pcg(curcell **px,
 	/*x0=x0+ak*p0 */
 	curcelladd(&x0, p0, ak+k, 1, stream);
 	if(k+1==maxiter) {
-	    /* Compute residual. Use bk as a temporary*/
-	    /*pcg_residual(bk, r0z1, r0z0, r0, Mmul?1:0, stream);
-	    CUDA_SYNC_STREAM;
-	    cudaMemcpy(&residual, bk, sizeof(float), MEMCPY_D2H);*/
-#if PRINT_RES 
-	    residual=diff[k];
-#endif
 	    break;
 	}
 	/*r0=r0-ak*Ap */
@@ -203,10 +196,13 @@ float gpu_pcg(curcell **px,
     }
     /* Instead of check in the middle, we only copy the last result. Improves performance by 20 nm !!!*/
     CUDA_SYNC_STREAM;
+#if PRINT_RES
+    residual=diff[maxiter-1];
 #if PRINT_RES == 1
-    fprintf(stderr, "CG %2d: %.5f ==> %.5f\n", maxiter, diff[0], diff[maxiter-1]);
+    fprintf(stderr, "GPU %sCG %2d: %.5f ==> %.5f\n", Mmul?"P":"",maxiter, diff[0], diff[maxiter-1]);
 #elif PRINT_RES==2
     fprintf(stderr, "\n");
+#endif
 #endif
     curcellfree(r0); 
     if(Mmul){

@@ -32,7 +32,7 @@ struct cumat{
 	    DO(cudaMalloc(&p, nxi*nyi*sizeof(T)));
 	    DO(cudaMemset(p, 0, nxi*nyi*sizeof(T)));
 	}
-	if(own){
+	if(!pi || own){
 	    nref=new int[1];
 	    nref[0]=1;
 	}
@@ -81,24 +81,24 @@ struct cucell{
     cucell(const int nx, const int ny){
 	init(nx, ny);
     }
-    void init(const int nx, const int ny, int mx, int my){
+    void init(const int nx, const int ny, int mx, int my, T *pin=NULL){
 	init(nx,ny);
-	m=new cumat<T>(mx*my*nx*ny,1);
+	m=new cumat<T>(mx*my*nx*ny,1,pin,pin?0:1);
 	for(int i=0; i<nx*ny; i++){
 	    p[i]=mx&&my?new cumat<T>(mx, my, m->p+i*(mx*my), 0):NULL;
 	}
     }
-    cucell(const int nx, const int ny, int mx, int my){
-	init(nx, ny, mx, my);
+    cucell(const int nx, const int ny, int mx, int my, T *pin=NULL){
+	init(nx, ny, mx, my, pin);
     }
     template <typename L>
-    void init(const int nx, const int ny, L *mx, L *my){
+    void init(const int nx, const int ny, L *mx, L *my, T *pin=NULL){
 	init(nx,ny);
 	long tot=0;
 	for(int i=0; i<nx*ny; i++){
 	    tot+=mx[i]*(my?my[i]:1);
 	}
-	m=new cumat<T> (tot,1);
+	m=new cumat<T> (tot,1,pin,pin?0:1);
 	tot=0;
 	for(int i=0; i<nx*ny; i++){
 	    p[i]=mx[i]?new cumat<T>(mx[i],(my?my[i]:1),m->p+tot, 0):NULL;
@@ -106,8 +106,8 @@ struct cucell{
 	}
     }
     template <typename L>
-    cucell(const int nx, const int ny, L *mx, L *my){
-	init(nx, ny, mx, my);
+    cucell(const int nx, const int ny, L *mx, L *my, T *pin=NULL){
+	init(nx, ny, mx, my, pin);
     }
     cucell(const cucell<T>*in){
 	if(!in->m){
@@ -123,6 +123,32 @@ struct cucell{
 		my[i]=in->p[i]->ny;
 	    }
 	    init<int>(in->nx, in->ny, (int*)mx, (int*)my);
+	}
+    }
+    void replace(T *pnew, int free_original){
+	/*replace the data with a new set. free original data if free_original
+	  is set. we don't own the pnew.*/
+	if(free_original){
+	    if(m){
+		cumat<T> *m2=new cumat<T>(m->nx, m->ny, pnew, 0);
+		delete m;
+		m=m2;
+	    }else{
+		for(int i=0; i<nx*ny; i++){
+		    if(p[i]){
+			cumat<T> *p2=new cumat<T>(p[i]->nx, p[i]->ny, (T*)-1, 0);
+			delete p[i];
+			p[i]=p2;
+		    }
+		}
+	    }
+	}
+	m->p=pnew;
+	for(int i=0; i<nx*ny; i++){
+	    if(p[i]){
+		p[i]->p=pnew;
+		pnew+=p[i]->nx*p[i]->ny;
+	    }
 	}
     }
     ~cucell(){

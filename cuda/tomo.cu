@@ -29,6 +29,8 @@ extern "C"
 #define SYNC_WFS  for(int iwfs=0; iwfs<nwfs; iwfs++){ curecon->wfsstream[iwfs].sync(); }
 
 #define DIM_REDUCE 128 /*dimension to use in reduction. */
+#define NEED_SCALE 1
+#define DBG_PRECOND 0
 
 #define TIMING 0
 #if !TIMING
@@ -496,32 +498,6 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 #endif
 }
 
-/* Each thread block is bsxbs*/
-/*
-__global__ static void fdpcg_mul_block_slow(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
-    extern __shared__ fcomplex v[];
-    int ib=blockIdx.x;
-    int bs=blockDim.x;
-    int ix=threadIdx.x;
-    int iy=threadIdx.y;
-    fcomplex *vin=v;
-    fcomplex *vout=v+bs;
-    xin+=ib*bs;
-    xout+=ib*bs;
-    M+=ib*bs*bs;
-    if(iy==0){
-	vin[ix]=xin[ix];
-	vout[ix]=make_cuComplex(0,0);
-    }
-    __syncthreads();
-    fcomplex tmp=cuCmulf(M[ix+iy*bs],vin[iy]);
-    atomicAdd((float*)(&vout[ix]), cuCrealf(tmp));
-    atomicAdd(((float*)(&vout[ix]))+1, cuCimagf(tmp));
-    __syncthreads();
-    if(iy==0){
-	xout[ix]=vout[ix];
-    }
-    }*/
 /* Each thread block is bs x 1. no need to lock.*/
 __global__ static void fdpcg_mul_block_sync(fcomplex *xout, fcomplex *xin, fcomplex *M, int nx){
     extern __shared__ fcomplex v[];
@@ -561,10 +537,30 @@ __global__ static void fdpcg_mul_block(fcomplex *xout, fcomplex *xin, fcomplex *
     }
     xout[ix]=vout[ix];
 }
+
+#if FDPCG_FFT_R2C == 0 || NEED_SCALE==1
 __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
     int step=blockDim.x * gridDim.x; 
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nx; i+=step){
 	x[i]=make_cuComplex(cuCrealf(x[i])*alpha, cuCimagf(x[i])*alpha);
+    }
+}
+#endif
+__global__ static void fdpcg_scale(float *x, float alpha, int nx){
+    int step=blockDim.x * gridDim.x; 
+    for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nx; i+=step){
+	x[i]*=alpha;
+    }
+}
+/*
+  We used FFT R2C for transforming from real to half part of complex array. Need
+  to fill the other half of array. Scale the array in the mean time.*/
+__global__ static void fdpcg_r2c(fcomplex *out, int nx, int ny){
+    int nx2=(nx>>1)+1;
+    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
+	for(int ix=1+threadIdx.x+blockDim.x*blockIdx.x; ix<nx2; ix+=blockDim.x*gridDim.x){
+	    out[(nx-ix)+(ny-(iy==0?ny:iy))*nx]=make_cuComplex(cuCrealf(out[ix+iy*nx]), -cuCimagf(out[ix+iy*nx]));
+	}
     }
 }
 /**
@@ -584,7 +580,7 @@ __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
    Inverse FFT:  148  140   83   158   107
    Copy back:     44   38   27    43    38
    Total:       1619 1199  558  1431   725
-   Total FDPCG3:     6982 5760  7434  5759 (excluding right hand size)
+   Total FDPCG3:     6982 5760  7434  5759 (excluding right hand side)
    Try to use the hermitian property when trying to optimize for the speed. 
    Be careful about oversampling:
 
@@ -594,9 +590,6 @@ __global__ static void fdpcg_scale(fcomplex *x, float alpha, int nx){
 
 */
 void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream){
-    //static int count=-1; count++; //temp
-    //curcellwrite(xin, "fdpcg_xin_%d", count);
-    //curcellwrite(*xout, "fdpcg_xout1_%d", count);
     curecon_t *curecon=cudata->recon;
     TIC;tic;
     const RECON_T *recon=(const RECON_T *)A;
@@ -608,33 +601,52 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     }else if(!(*xout)->m){
 	error("xout is not continuous");
     }
-    cuczero(curecon->fd_xhat1->m, stream);
+#if FDPCG_FFT_R2C == 1
+    /*2012-07-11: Use real to complex fft*/
+    for(int ic=0; ic<curecon->fd_fftnc; ic++){
+	int ips=curecon->fd_fftips[ic];
+	CUFFTR2C(curecon->fd_fft[ic], xin->p[ips]->p, curecon->fd_xhat1->p[ips]->p);
+    }
+    for(int ips=0; ips<recon->npsr; ips++){
+	int nx=curecon->fd_xhat1->p[ips]->nx;
+	int ny=curecon->fd_xhat1->p[ips]->ny;
+	
+	fdpcg_r2c<<<DIM2(nx, ny, 16), 0, stream>>>
+	    (curecon->fd_xhat1->p[ips]->p, nx, ny);
+    }
+#else
     embed_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat1->m->p, xin->m->p, curecon->fd_nxtot);
     ctoc("fdpcg: Copy");
-    //cuccellwrite(curecon->fd_xhat1, "fd_embed_%d", count);
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
 	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat1->p[ips]->p, CUFFT_FORWARD);
-	int nps=curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic];
+    }
+    ctoc("fdpcg: FFT+scale");
+#endif
+#if NEED_SCALE==1
+    for(int ips=0; ips<recon->npsr; ips++){
 	int nx=curecon->fd_xhat1->p[ips]->nx;
 	int ny=curecon->fd_xhat1->p[ips]->ny;
-	/*todo: try to remove the need for this normalization step.*/
-	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
-	    (curecon->fd_xhat1->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
+	float scale=1.f/sqrtf((float)(nx*ny));
+	fdpcg_scale<<<DIM(nx*ny,256),0,stream>>>(curecon->fd_xhat1->p[ips]->p, scale, nx*ny);
     }
-    //cuccellwrite(curecon->fd_xhat1, "fd_fft_%d", count);
-    ctoc("fdpcg: FFT+scale");
+#endif
+#if DBG_PRECOND == 1
+    cuccellwrite(curecon->fd_xhat1, "fdpcg_fft");
+#endif
     perm_f_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->m->p, curecon->fd_xhat1->m->p, curecon->fd_perm, curecon->fd_nxtot);
+#if DBG_PRECOND == 1
+    cuccellwrite(curecon->fd_xhat2, "fdpcg_perm");
+#endif
     ctoc("fdpcg: Permutation");
     int nb=curecon->fd_Mb->nx;
     int bs=curecon->fd_Mb->p[0]->nx;
-    //cuccellwrite(curecon->fd_xhat2, "fd_perm_%d", count);
     cuczero(curecon->fd_xhat1->m, stream);
-#define MUL(N)								\
-    fdpcg_mul_block<N><<<nb, N, 0, stream>>>				\
-	(curecon->fd_xhat1->m->p,curecon->fd_xhat2->m->p,		\
+#define MUL(N)							\
+    fdpcg_mul_block<N><<<nb, N, 0, stream>>>			\
+	(curecon->fd_xhat1->m->p,curecon->fd_xhat2->m->p,	\
 	 curecon->fd_Mb->m->p, curecon->fd_nxtot)
     switch(bs){
     case 1: MUL(1); break;
@@ -672,28 +684,44 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
 	fdpcg_mul_block_sync<<<nb, bs, sizeof(fcomplex)*bs*2, stream>>>
 	    (curecon->fd_xhat1->m->p,curecon->fd_xhat2->m->p, curecon->fd_Mb->m->p, curecon->fd_nxtot);
     }
-    //cuccellwrite(curecon->fd_xhat1, "fd_mul_%d", count);
+#if DBG_PRECOND == 1
+    cuccellwrite(curecon->fd_xhat1, "fdpcg_mul");
+#endif
     ctoc("fdpcg: mul block");
     perm_i_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	(curecon->fd_xhat2->m->p, curecon->fd_xhat1->m->p, curecon->fd_perm, curecon->fd_nxtot);
-    //cuccellwrite(curecon->fd_xhat2, "fd_iperm_%d", count);
     ctoc("fdpcg: Inverse Permutation");
+#if DBG_PRECOND == 1
+    cuccellwrite(curecon->fd_xhat2, "fdpcg_iperm");
+#endif
+#if FDPCG_FFT_R2C == 1
+    for(int ic=0; ic<curecon->fd_fftnc; ic++){
+	int ips=curecon->fd_fftips[ic];
+	CUFFTC2R(curecon->fd_ffti[ic], curecon->fd_xhat2->p[ips]->p, (*xout)->p[ips]->p);
+    }
+#else
     for(int ic=0; ic<curecon->fd_fftnc; ic++){
 	int ips=curecon->fd_fftips[ic];
 	CUFFT(curecon->fd_fft[ic], curecon->fd_xhat2->p[ips]->p, CUFFT_INVERSE);
-	int nps=curecon->fd_fftips[ic+1]-curecon->fd_fftips[ic];
-	int nx=curecon->fd_xhat1->p[ips]->nx;
-	int ny=curecon->fd_xhat1->p[ips]->ny;
-	fdpcg_scale<<<DIM(nps*nx*ny, 256), 0, stream>>>
-	    (curecon->fd_xhat2->p[ips]->p, 1.f/sqrtf((float)(nx*ny)), nps*nx*ny);
     }
-    //cuccellwrite(curecon->fd_xhat2, "fd_ifft_%d", count);
     ctoc("fdpcg: Inverse FFT + scale");
     extract_do<<<DIM(curecon->fd_nxtot, 256),0,stream>>>
 	((*xout)->m->p, curecon->fd_xhat2->m->p, curecon->fd_nxtot);
     ctoc("fdpcg: Copy back");
-    //curcellwrite(*xout, "fdpcg_xout2_%d", count);
+#endif
+#if NEED_SCALE==1
+    for(int ips=0; ips<recon->npsr; ips++){
+	int nx=curecon->fd_xhat1->p[ips]->nx;
+	int ny=curecon->fd_xhat1->p[ips]->ny;
+	float scale=1.f/sqrtf((float)(nx*ny));
+	fdpcg_scale<<<DIM(nx*ny,256),0,stream>>>((*xout)->p[ips]->p, scale, nx*ny);
+    }
+#endif
+#if DBG_PRECOND == 1
+    curcellwrite((*xout), "fdpcg_xout"); exit(0);
+#endif
 }
+
 #include "pcg.h"
 void gpu_tomo_test(SIM_T *simu){
     gpu_set(gpu_recon);
@@ -705,14 +733,20 @@ void gpu_tomo_test(SIM_T *simu){
     dcell *lc=NULL;
     curcell *rhsg=NULL;
     curcell *lg=NULL;
-    //muv(&rhsc, &recon->RR, simu->gradlastol, 1);
-    {
-	rhsc=dcellread("../d15g6/gpu_opdx_2349.bin");
+    if(0){
+	muv(&rhsc, &recon->RR, simu->gradlastol, 1);
+    }else{
+	rhsc=dcellread("../load_rhs");
 	cp2gpu(&rhsg, rhsc);
 	dcellscale(rhsc, 1.e12);
 	for(int i=0; i<rhsc->nx; i++){
+	    if(rhsc->p[i]->nx != recon->xnx[i]*recon->xny[i]){
+		error("Loaded RHS has wrong dimension\n");
+	    }
 	    rhsc->p[i]->nx=rhsc->p[i]->nx*rhsc->p[i]->ny;
 	    rhsc->p[i]->ny=1;
+	    rhsg->p[i]->nx=recon->xnx[i];
+	    rhsg->p[i]->ny=recon->xny[i];
 	}
     }
     dcellwrite(rhsc, "CPU_TomoR");
@@ -731,11 +765,16 @@ void gpu_tomo_test(SIM_T *simu){
 	dcellwrite(lp, "CPU_TomoP2");
     }
     dcellzero(lc);
-    muv_solve(&lc, &recon->RL, NULL, rhsc);
-    dcellwrite(lc, "CPU_Tomo");
+    recon->desplitlrt=1;//temporary.
+    for(int i=0; i<10; i++){
+	muv_solve(&lc, &recon->RL, NULL, rhsc);
+	dcellwrite(lc, "CPU_Tomo_%d", i);
+    }
 	
-    //cp2gpu(&curecon->gradin, simu->gradlastol);
-    //gpu_TomoR(&rhsg, 0, recon, curecon->gradin, 1);
+    if(!rhsg){
+	cp2gpu(&curecon->gradin, simu->gradlastol);
+	gpu_TomoR(&rhsg, 0, recon, curecon->gradin, 1);
+    }
     curcellwrite(rhsg, "GPU_TomoR");
     gpu_TomoL(&lg, 0, recon, rhsg, 1);
     curcellwrite(lg, "GPU_TomoL");
@@ -749,11 +788,21 @@ void gpu_tomo_test(SIM_T *simu){
 	curcellwrite(lp, "GPU_TomoP");
 	gpu_Tomo_fdprecond(&lp, recon, lg, curecon->cgstream[0]);
 	curcellwrite(lp, "GPU_TomoP2");
+	//exit(0);
+    }
+    G_PREFUN prefun=NULL;
+    void *predata=NULL;
+    if(parms->tomo.precond==1){
+	prefun=gpu_Tomo_fdprecond;
+	predata=(void*)recon;
     }
     curcellzero(lg, 0);
-    gpu_pcg(&lg, (G_CGFUN)gpu_TomoL, (void*)recon, NULL, NULL, rhsg,
-	    simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream[0]);
-    curcellwrite(lg, "GPU_Tomo");
+    curecon->disablelrt=1;//temporary
+    for(int i=0; i<10; i++){
+	gpu_pcg(&lg, (G_CGFUN)gpu_TomoL, (void*)recon, prefun, predata, rhsg,
+		simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream[0]);
+	curcellwrite(lg, "GPU_Tomo_%d", i);
+    }
     CUDA_SYNC_DEVICE;
     exit(0);
 }

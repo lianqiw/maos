@@ -132,6 +132,22 @@ extern const char *cufft_str[];
 	    error("cufft failed: %s\n", cufft_str[ans]);	\
 	}							\
     }while(0)
+#define CUFFTR2C(plan,in,out) do{				\
+	LOCK_CUFFT;						\
+	int ans=cufftExecR2C(plan, in, out);			\
+	UNLOCK_CUFFT;						\
+	if(ans){						\
+	    error("cufft failed: %s\n", cufft_str[ans]);	\
+	}							\
+    }while(0)
+#define CUFFTC2R(plan,in,out) do{				\
+	LOCK_CUFFT;						\
+	int ans=cufftExecC2R(plan, in, out);			\
+	UNLOCK_CUFFT;						\
+	if(ans){						\
+	    error("cufft failed: %s\n", cufft_str[ans]);	\
+	}							\
+    }while(0)
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
 typedef struct stream_t{
     cudaStream_t stream;

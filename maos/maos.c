@@ -212,11 +212,7 @@ int main(int argc, char **argv){
     }
 
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
-#if USE_CUDA
-    if (use_cuda){
-	gpu_assign();
-    }
-#endif
+    setup_parms_running(parms, arg);
     free(scmd);
     free(arg->dirout);
     free(arg->gpus);

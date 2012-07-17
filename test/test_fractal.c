@@ -70,7 +70,7 @@ static void test_cov(){/*not good */
     cfft2(atmhat, -1);
     cabs22d(&atmhattot, 1, atmhat, 1);
     ccpd(&atmhat, atmhattot);
-    cifft2(atmhat, 1);
+    cfft2i(atmhat, 1);
     cfftshift(atmhat);
     dmat *denom=dnew((N+1)*3,(N+1)*3);
     dmat *cov=dnew((N+1)*3,(N+1)*3);
@@ -94,7 +94,7 @@ static void test_cov(){/*not good */
 	    dscale(atmhattot, 1./(i+1));
 	    ccpd(&atmhat, atmhattot);
 	    dwrite(atmhattot, "atm_psf_%ld.bin",i+1);
-	    cifft2(atmhat, 1);
+	    cfft2i(atmhat, 1);
 	    cfftshift(atmhat);
 	    creal2d(&cov, 0, atmhat, 1);
 	    for(long k=0; k<cov->nx*cov->ny; k++){
@@ -261,7 +261,7 @@ static void test_psd(){
 		}
 	    }
 	    cfftshift(hat);
-	    cifft2(hat, -1);
+	    cfft2i(hat, -1);
 	    cabs22d(&hattot, 1, hat, 1);
 	}
 	dscale(hattot, 1./nframe);
@@ -298,7 +298,7 @@ static void test_psd(){
 		}
 	    }
 	    cfftshift(hat);
-	    cifft2(hat, -1);
+	    cfft2i(hat, -1);
 	    cabs22d(&hattot, 1, hat, 1);
 	    czero(hat);
 	    for(long iy=0; iy<ny; iy++){
@@ -307,7 +307,7 @@ static void test_psd(){
 		}
 	    }
 	    cfftshift(hat);
-	    cifft2(hat, -1);
+	    cfft2i(hat, -1);
 	    cabs22d(&hattot, 1, hat, 1);
 	}
 	dscale(hattot, 1./nframe);

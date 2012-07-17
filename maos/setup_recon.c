@@ -271,7 +271,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 		if(nx<nxi) nx=nxi;
 		if(ny<nyi) ny=nyi;
 	    }
-	    nin0=nextpow2(MAX(nx, ny));
+	    nin0=nextfftsize(MAX(nx, ny));
 	}
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];
@@ -2692,7 +2692,9 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     recon->ngrad=calloc(parms->nwfs, sizeof(long));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
-	recon->ngrad[iwfs]=powfs[ipowfs].saloc->nloc*2;
+	if(!parms->powfs[ipowfs].skip){
+	    recon->ngrad[iwfs]=powfs[ipowfs].saloc->nloc*2;
+	}
     }
     /*setup DM actuator grid */
     setup_recon_aloc(recon,parms);
@@ -2792,6 +2794,9 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    gpu_setup_recon_mvm(parms, recon, powfs);
 #endif
 	}else if(!parms->load.MVM){
+	    if(parms->load.mvmi){
+		error("Not handled yet.\n");
+	    }
 	    if(parms->recon.alg==0){
 		setup_recon_mvr_mvm(recon, parms, powfs);
 	    }else{
@@ -2802,7 +2807,6 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    }
 	}
 	if(parms->sim.mvmport){
-	    dcellwrite(recon->MVM, "MVM_send");
 	    mvm_client_send_m(parms, recon->MVM);
 	}
 

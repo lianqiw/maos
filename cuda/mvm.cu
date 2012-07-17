@@ -109,7 +109,6 @@ __global__ static void mvm_g_mul_do(float *restrict mvm, ATYPE *restrict a, cons
 static void *mvm_thread(void* ithread0){
     long ithread=(long) ithread0;
     int nact=mvm_data->nact;
-    int ngtot=mvm_data->ngtot;
     int nact1=(nact+NCPU-1)/NCPU;
     int iact1=nact1*ithread;
     int iact2=MIN(iact1+nact1, nact);
@@ -119,7 +118,6 @@ static void *mvm_thread(void* ithread0){
 	gpu_set(ithread);
     }
     while(1){
-	TIC;tic;
 	switch(cmds[ithread]){
 	case 0:
 	    /*info2("thread %d sleeped at %.1f\n", ithread, (myclockd()-tic_start)*1e6);
@@ -212,7 +210,6 @@ static int respond(int sock){
     sock_mvm=sock;
     int cmd[N_CMD];
     READ_CMD(cmd);
-    static int ksave=0;
     static double tim_gfirst=0;
     switch(cmd[0]){
     case GPU_MVM_M:{/*maos sends M matrix*/
@@ -276,7 +273,6 @@ static int respond(int sock){
 	int ngeach=cmd[2];
 	tim_cmd+=toc3; tic;
 	int ngtot=mvm_data->ngtot;
-	int nact=mvm_data->nact;
 	tim_gfirst=myclockd();
 	for(int icol=cmd[1]; icol<ngtot; icol+=ngeach){
 	    int k=MIN(ngeach, ngtot-icol);

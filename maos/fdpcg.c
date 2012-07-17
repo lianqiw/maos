@@ -19,7 +19,8 @@
 /**
    \file fdpcg.c
    Fourier Domain Preconditioner for Tomography step.
-   cfft2s(A,-1) and cfft2s(A,1) are hermitian ffts because they have the same scale.
+   2012-07-11: 
+   Do not need cfft2s any more. Minv is properly scaled to account for FFT scaling.
 */
 /*
    Changelog
@@ -43,7 +44,7 @@
 #define PRE_PERMUT 0 /*1: apply permutation to the inverse of the sparse matrix.
 		       0: apply permutation to the vectors: faster*/
 #endif
-
+#define NEED_SCALE 1
 /**
    Create aperture selection function that selects the gradients for valid
    subapertures from ground layer xloc (or ploc).  
@@ -84,7 +85,7 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	}
     }
     /*scale xsel to have the same sum, to preserve its value in spatial domain. (2012-04-06)*/
-    cscale(xsel, 1./(double)csum(xsel));
+    //cscale(xsel, 1./(double)csum(xsel)); //degrades performance.
     csp *sel=cspconvolvop(xsel);
     cfree(xsel);
     return sel;
@@ -406,6 +407,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cspfree(sel);
     double dispx[nps];
     double dispy[nps];
+    /* Mhat = Mhat + propx' * Mmid * propx */
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
 	int iwfs=parms->powfs[hipowfs].wfs[jwfs];
 	double neai=recon->neam->p[iwfs];
@@ -437,6 +439,20 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cspfree(Mmid);
     cspdroptol(Mhat,EPS);
     cspsym(Mhat);
+#if NEED_SCALE == 0
+    {  /*scale Mhat to avoid scaling FFT. */
+	cmat *sc=cnew(nxtot, 1);
+	dcomplex *psc=sc->p;
+	for(int ips=0; ips<nps; ips++){
+	    double scale=(double)(nx[ips]*ny[ips]);
+	    for(long ix=0; ix<nx[ips]*ny[ips]; ix++){
+		*(psc++)=scale;
+	    }
+	}
+	cspmuldiag(Mhat, sc->p, 1);
+	cfree(sc);
+    }
+#endif
     if(parms->save.setup){
 	cspwrite(Mhat,"%s/fdpcg_Mhat",dirsetup);
     }
@@ -473,13 +489,13 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->save.setup){
 	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
     }
-	double svd_thres;
-	if(parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit){
-		svd_thres=-0.01;
-	}else{
-		svd_thres=1e-7;
-	}
-
+    double svd_thres;
+    if(parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit){
+	svd_thres=1e-7;//-0.01;
+    }else{
+	svd_thres=1e-7;
+    }
+    info2("FDPCG SVD Threshold is %g\n", svd_thres);
     for(long ib=0; ib<nb; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
 	  one of the cells the conditional is more than 1e8. This creates
@@ -515,15 +531,6 @@ typedef struct{
     const dcell *xin;
     dcell *xout;
 }fdpcg_info_t;
-/*typedef struct thread_info{
-    int ips;
-    int ib;
-    pthread_mutex_t lock;
-    FDPCG_T *fdpcg;
-    const dcell *xin;
-    dcell *xout;
-}thread_info;
-*/
 /**
    Copy x vector and do FFT on each layer
 */
@@ -545,7 +552,11 @@ static void fdpcg_fft(thread_t *info){
 	    czero(xhati->p[ips]);
 	    cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc[ips],  xin->p[ips]->p, 1, 0);
 	}
+#if NEED_SCALE == 1
 	cfft2s(xhati->p[ips],-1);
+#else
+	cfft2(xhati->p[ips],-1);	
+#endif
     }
 }
 
@@ -570,7 +581,11 @@ static void fdpcg_ifft(thread_t *info){
     ccell *xhat2i=data->xhat2i;
     dcell *xout=data->xout;
     for(int ips=info->start; ips<info->end; ips++){
+#if NEED_SCALE == 1
 	cfft2s(xhat2i->p[ips],1);
+#else
+	cfft2(xhat2i->p[ips],1);
+#endif
 	if(fdpcg->square){
 	    for(long i=0; i<xhat2i->p[ips]->nx*xhat2i->p[ips]->ny; i++){
 		xout->p[ips]->p[i]=creal(xhat2i->p[ips]->p[i]);
@@ -612,14 +627,6 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
 	cfft2plan(xhat2i->p[ips],1);
 	offset+=nx[ips]*ny[ips];
     }
-    /*
-    thread_info info;
-    info.ips=0;
-    info.ib=0;
-    PINIT(info.lock);
-    info.fdpcg=recon->fdpcg;
-    info.xin=xin;
-    */
     if(!*xout){
 	*xout=dcellnew2(xin);
     }
@@ -633,29 +640,25 @@ void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
     long nb=recon->fdpcg->nxtot/bs;
     thread_prep(info_mulblock, 0, nb, NTH, fdpcg_mulblock, &data);
     /*apply forward FFT */
-    //CALL(fdpcg_fft,&info,NTH,1);
     CALL_THREAD(info_fft, NTH, 1);
-    //ccellwrite(fdpcg->xhati, "fdc_fft_%d", count);
+    //ccellwrite(xhati, "fdpcg_fft");
 #if PRE_PERMUT
     czero(xhat2);
     cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
 #else/*permute vectors and apply block diagonal matrix */
     /*permute xhat and put into xhat2 */
     cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
-    //ccellwrite(fdpcg->xhat2i, "fdc_perm_%d", count);
+    //ccellwrite(xhat2i, "fdpcg_perm");
     czero(xhat);
-    //CALL(fdpcg_mulblock,&info,NTH,1);
     CALL_THREAD(info_mulblock, NTH, 1);
-    //ccellwrite(fdpcg->xhati, "fdc_mul_%d", count);
+    //ccellwrite(xhati, "fdc_mul");
     cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
-    //ccellwrite(fdpcg->xhat2i, "fdc_iperm_%d", count);
+    //ccellwrite(xhat2i, "fdc_iperm");
 #endif
-    //info.ips=0;
     /*Apply inverse FFT */
-    //CALL(fdpcg_ifft,&info,NTH,1);
     CALL_THREAD(info_ifft, NTH, 1);
     //ccellwrite(fdpcg->xhat2i, "fdc_ifft_%d", count);
-    //dcellwrite(*xout, "fdpcg_xout2_%d", count);
+    //dcellwrite(*xout, "fdpcg_xout"); exit(0);
     ccellfree(xhati);
     ccellfree(xhat2i);
     cfree(xhat);

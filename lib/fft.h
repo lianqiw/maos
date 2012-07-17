@@ -22,7 +22,7 @@ typedef struct fft_t fft_t;
 void fft2(fft_t *fft, int dir);
 void cfft2plan(cmat *A, int dir);
 void cfft2(cmat *A, int dir);
-void cifft2(cmat *A, int dir);
+void cfft2i(cmat *A, int dir);
 void cfft2s(cmat *A, int dir);
 void cfft2partialplan(cmat *A, int ncomp, int dir);
 void cfft2partial(cmat *A, int ncomp, int dir);

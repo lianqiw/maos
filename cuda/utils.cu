@@ -110,136 +110,94 @@ static int cmp_gpu_info(const long *a, const long *b){
 }
 /**
    Initialize GPU. Return 1 if success.
+   if gpus is not null, it is of length ngpu. gpus specifies gpu index to use.
+   if gpus is null, ngpu specifies number of gpus to use. all if 0.
 */
 int gpu_init(int *gpus, int ngpu){
-    if(gpus && gpus[0]<0){
-	info2("CUDA is disabled by user.\n");
-	return 0;
-    }
-    int free_gpus=0;
-    int ngpu_tot=0;//total number of GPUs.
-    long (*gpu_info)[2]=NULL;
-    int ans;
+    int ans, ngpu_tot=0;//total number of GPUs.
     if((ans=cudaGetDeviceCount(&ngpu_tot)) || ngpu_tot==0){//no GPUs available.
-	warning("No GPUs available. ans=%d\n", ans);
+	info2("No GPUs available. ans=%d\n", ans);
 	return 0;
-    }else{/*record information of all GPUs.*/
-	gpu_info=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
-	for(int ig=0; ig<ngpu_tot; ig++){
-	    gpu_info[ig][0]=ig;
-	    struct cudaDeviceProp prop={0};
-	    if((ans=cudaGetDeviceProperties(&prop, ig))){
-		warning2("Skip GPU %d: not supporting CUDA or init failed. error=%d. \n", ig, ans);
-	    }else if(prop.major!=9999){
-		if(prop.major>=1.3 || prop.totalGlobalMem>500000000){/*require minimum of 500M */
-		    gpu_info[ig][1]=prop.totalGlobalMem;
-		}else{
-		    warning2("Skip GPU %d: insufficient memory\n", ig);
-		}
-	    }
-	}
     }
-    if(!gpus) free_gpus=1;
-    if(ngpu==0){//fully auto
-	ngpu=ngpu_tot;
-	gpus=(int*)malloc(ngpu_tot*sizeof(int));
-	for(int i=0; i<ngpu; i++){
-	    gpus[i]=i;
-	}
-    }
-    if(GPUS) free(GPUS); GPUS=NULL;
     NGPU=0;
-    if(gpus){//user preselected gpus or fully auto choice
-	GPUS=(int*)calloc(ngpu ,sizeof(int));
-	for(int i=0; i<ngpu; i++){
-	    int jgpu=gpus[i];
-	    if(jgpu >= ngpu_tot){
-		info("out of range\n");
-	    }else if(gpu_info[jgpu][1]>0){
-		int found=0;
-		for(int j=0; j<NGPU; j++){
-		    if(GPUS[j]==jgpu){
-			info("Removing duplicate GPU: %d\n", jgpu);
-			found=1;
+    /*
+      User specified exact GPUs to use. We check every entry. 
+      If <0 is found, do not use any GPU.
+      If >=ngpu_tot is found, skip the GPU.
+      If duplicates are found, use only once.
+     */
+    if(gpus && ngpu>0){
+	if(!GPUS) GPUS=(int*)malloc(ngpu_tot*sizeof(int));
+	for(int ig=0; ig<ngpu; ig++){
+	    if(gpus[ig]<0){
+		info2("CUDA is disabled by user.\n");
+		return 0;
+	    }else{
+		if(gpus[ig]>=ngpu_tot){
+		    warning2("Skip GPU %d: not exist\n", gpus[ig]);
+		}else{
+		    int j;
+		    for(j=0; j<NGPU; j++){
+			if(GPUS[j]==gpus[ig]){
+			    warning2("Skip GPU %d: duplicated\n", gpus[ig]);
+			    break;
+			}
+		    }
+		    if(j==NGPU){
+			GPUS[NGPU]=gpus[ig];
+			NGPU++;
 		    }
 		}
-		if(!found){
-		    GPUS[NGPU]=jgpu; 
-		    NGPU++;
-		}
-	    }else{
-		info("GPU %d does not meet minimum requirement. mem=%ld\n", jgpu, gpu_info[jgpu][1]);
 	    }
 	}
-    }else{//automatically select a subset. choose the ones with highest memory.
-	if(ngpu>ngpu_tot) ngpu=ngpu_tot;
-	NGPU=ngpu;
-#if defined(HAS_NVML) && HAS_NVML==1
-	gpu_assign();
-#else
-	/*assign GPU later to avoid initializing CUDA before simulation stars.*/
-#endif
-    }
-    if(free_gpus) free(gpus); gpus=NULL;
-    free(gpu_info);
-    if(NGPU) {
-	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
-    }
-    gpu_recon=0;/*first gpu in GPUS*/
-    if(!NGPU){
-	warning("no gpu is available\n");
-	return 0;
     }else{
+	if(ngpu<=0 || ngpu>ngpu_tot){
+	    ngpu=ngpu_tot;
+	}
+	GPUS=(int*)calloc(ngpu, sizeof(int));
+	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
+	for(int ig=0; ig<ngpu_tot; ig++){
+	    gpu_info[ig][0]=ig;
+#if defined(HAS_NVML) && HAS_NVML==1
+	    nvmlDevice_t dev;
+	    nvmlMemory_t mem;
+	    nvmlInit();
+	    if(nvmlDeviceGetHandleByIndex(ig, &dev) == 0 
+	       && nvmlDeviceGetMemoryInfo(dev, &mem) == 0){
+		gpu_info[ig][1]=mem.free;
+	    }else
+#endif
+		{
+		    cudaSetDevice(ig);//this allocates context. try to avoid it.
+		    gpu_info[ig][0]=ig;
+		    gpu_info[ig][1]=gpu_get_mem();/*replace the total mem with available mem*/
+		    cudaDeviceReset();
+		}
+	}
+#if defined(HAS_NVML) && HAS_NVML==1
+	nvmlShutdown();
+#endif
+	/*sort so that gpus with higest memory is in the front.*/
+	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
+	for(int i=0; i<ngpu; i++){
+	    if(gpu_info[i][1]>500000000){/*require a minimum of 500 M*/
+		GPUS[NGPU]=(int)gpu_info[i][0];
+		NGPU++;
+	    }else{
+		warning2("Skip GPU %d: insufficient memory\n", i);
+	    }
+	}
+    }
+    if(NGPU) {
+	gpu_recon=0;/*last gpu in GPUS*/
+	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
 	for(int i=0; GPUS && i<NGPU; i++){
 	    info2("Using GPU %d\n", GPUS[i]);
 	}
-	return 1;
     }
+    return NGPU;
 }
 
-/*Assign the right GPU if NGPU is empty (not yet assigned). This need to happen
-  when maos is already running so GPUs gets populated.*/
-void gpu_assign(){
-    if(!NGPU || GPUS) return;
-    int ngpu=NGPU; NGPU=0;
-    GPUS=(int*)calloc(ngpu ,sizeof(int));
-    int ngpu_tot=0;//total number of GPUs.
-    if(cudaGetDeviceCount(&ngpu_tot) || ngpu_tot==0){//no GPUs available.
-	return;
-    }
-    long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
-    for(int ig=0; ig<ngpu_tot; ig++){
-#if defined(HAS_NVML) && HAS_NVML==1
-	nvmlDevice_t dev;
-	nvmlMemory_t mem;
-	nvmlInit();
-	if(nvmlDeviceGetHandleByIndex(ig, &dev) == 0 
-	   && nvmlDeviceGetMemoryInfo(dev, &mem) == 0){
-	    gpu_info[ig][1]=mem.free;
-	    info2("%d: gpu %ld, mem %ld (nvml)\n", ig, gpu_info[ig][0], gpu_info[ig][1]);
-	}else
-#endif
-	    {
-		cudaSetDevice(ig);//this allocates context. try to avoid it.
-		gpu_info[ig][0]=ig;
-		gpu_info[ig][1]=gpu_get_mem();/*replace the total mem with available mem*/
-		cudaDeviceReset();
-		info2("%d: gpu %ld, mem %ld (cuda)\n", ig, gpu_info[ig][0], gpu_info[ig][1]);
-	    }
-    }
-#if defined(HAS_NVML) && HAS_NVML==1
-    nvmlShutdown();
-#endif
-    /*sort so that gpus with higest memory is in the front.*/
-    qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
-    for(int i=0; i<ngpu; i++){
-	if(gpu_info[i][1]>0){
-	    GPUS[NGPU]=(int)gpu_info[i][0];
-	    info2("Using GPU %d with %ld available memory\n", GPUS[NGPU], gpu_info[i][1]);
-	    NGPU++;
-	}
-    }
-}
 /**
    Clean up device.
 */

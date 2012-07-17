@@ -362,16 +362,16 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
     if(use_evd){
 	X(evd)(&U, &Sdiag, A);
 	/*eigen values below the threshold will not be used. the last is the biggest. */
-	maxeig=fabs(Sdiag->p[Sdiag->nx-1]);
+	maxeig=FABS(Sdiag->p[Sdiag->nx-1]);
 	VT=X(trans)(U);
     }else{
 	X(svd)(&U, &Sdiag, &VT, A);
 	/*eigen values below the threshold will not be used. the first is the biggest. */
-	maxeig=fabs(Sdiag->p[0]);
+	maxeig=FABS(Sdiag->p[0]);
     }
     double thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
-	if(fabs(Sdiag->p[i])>thres0){/*only do with  */
+	if(FABS(Sdiag->p[i])>thres0){/*only do with  */
 	    if(thres<0){/*compare adjacent eigenvalues*/
 		thres0=Sdiag->p[i]*(-thres);
 	    }
@@ -391,8 +391,11 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
 	}
     }
     X(zero)(A);
+#ifdef USE_COMPLEX
+    X(mm)(&A,VT,U,"cc",1);
+#else
     X(mm)(&A,VT,U,"tt",1);
-    
+#endif
     X(free)(U);
     X(free)(VT);
     XR(free)(Sdiag);

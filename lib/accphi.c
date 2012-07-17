@@ -654,7 +654,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
     for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1||nplocy>=nymax){
+	if(nplocy<1||nplocy>nymax){
 	    continue;
 	}
 	dplocy0=1.-dplocy;
@@ -755,7 +755,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
     for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1||nplocy>=nymax){
+	if(nplocy<1||nplocy>nymax){
 	    continue;
 	}
 	dplocy0=1.-dplocy;

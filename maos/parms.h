@@ -422,7 +422,7 @@ typedef struct RECON_CFG_T{
 		       - 1: adhoc split tomography
 		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
     int warm_restart; /**<Warm restart in CG*/
-    int mvm;        /**<Use the various algorithms recon.alg to assemble a final
+    int mvm;        /**<Use the various algorithms recon.alg to assemble a control
 		       matrix to multiply to gradients to get DM commands. If
 		       the algorithm needs PSOL gradient, we will have an
 		       auxillary matrix to multiply to the DM actuators and
@@ -588,6 +588,8 @@ typedef struct LOAD_CFG_T{
     char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
     char *MVM;       /**<load MVM from.*/
+    char *mvmi;      /**<load mvmi from.*/
+    char *mvmf;      /**<load mvmf from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
     int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin*/
     int tomo;        /**<if 1, load tomo matrix*/
@@ -636,6 +638,9 @@ typedef struct SAVE_CFG_T{
     int gcovp;       /**<output cumulative gradient covariance average every gcovp step*/
     int ngcov;       /**<number of pairs of gradient covariance to compute*/
     int *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
+
+    int mvmi;        /**<save TomoL output of mvm control matrix assembly for warm restart.*/
+    int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
 }SAVE_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.
@@ -696,6 +701,7 @@ typedef struct ARG_T{
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
 }ARG_T;
 PARMS_T* setup_parms(ARG_T *arg);
+void setup_parms_running(PARMS_T *parms, ARG_T *arg);
 void free_parms(PARMS_T *parms);
 /*The following are here so that we don't have to include type.h or utils.h */
 /*convenient constants. used in utils.c */

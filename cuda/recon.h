@@ -66,6 +66,7 @@ typedef struct curecon_t{
     long fd_nxtot;  /**<total number of points*/
     cuccell *fd_Mb;  /**<The main fdpcg block matrix*/
     cufftHandle *fd_fft;
+    cufftHandle *fd_ffti;
     int      fd_fftnc;/*total number of ffts*/
     int     *fd_fftips;/*starting ips for each fft.*/
     cuccell *fd_xhat1;
@@ -144,4 +145,5 @@ void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict 
 
 void gpu_tomo_test(SIM_T *simu);
 void gpu_fit_test(SIM_T *simu);
+#define FDPCG_FFT_R2C 1
 #endif

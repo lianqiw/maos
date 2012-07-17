@@ -326,7 +326,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 			    double siglev=aster->wfs[iwfs].siglev[iwvl];
 			    ccpd(&otf->p[iwfs],psf[iwfs]->p[isa+nsa*iwvl]);
-			    cifft2(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
+			    cfft2i(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
 			    ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
 			    cfft2(otf->p[iwfs], -1);
 			    spmulcreal(ints[iwfs]->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 

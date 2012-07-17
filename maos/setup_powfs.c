@@ -1881,7 +1881,7 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			const double dpsf=wvl/(nlpsf*dx)*206265.;
 			ccp(&psfhat, lotf[illt][iwvl]);
 			cfftshift(psfhat);
-			cifft2(psfhat, 1);
+			cfft2i(psfhat, 1);
 			cfftshift(psfhat);
 			creal2d(&psf, 0, psfhat, 1);
 			info2("illt %d, iwvl %d has FWHM of %g\"\n",

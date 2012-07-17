@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
 	genotf(&otf, loc, amp->p, NULL, NULL, 0, wvl, dtheta, cov, 0, 0, ncomp, ncomp, 1, pttr);
 	cwrite(otf, "%s_otf_%g.bin", argv[P_COV], wvl);
 	cfftshift(otf);
-	cifft2(otf, 1);
+	cfft2i(otf, 1);
 	cfftshift(otf);
 	creal2d(&psf, 0, otf, 1);
 	dwrite(psf, "%s_psf_%g.bin", argv[P_COV], wvl);

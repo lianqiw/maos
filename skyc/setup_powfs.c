@@ -71,7 +71,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    cfftshift(nominal);
 	    cfft2(nominal,-1);
 	    cfftshift(nominal);
-	    cifft2(nominal,1);
+	    cfft2i(nominal,1);
 	    ccp(&powfs[ipowfs].dtf[iwvl].nominal, nominal);
 	    cfree(nominal);
 
