@@ -47,7 +47,10 @@ inline int CUDAFREE(float *p){
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
-
+__host__ __device__ static __inline__ void cuCscalef(cuFloatComplex x, float a){
+    x.x*=a;
+    x.y*=a;
+}
 inline void* malloc4async(int N){
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
     void *tmp;
@@ -103,6 +106,7 @@ extern int nstream;
 #define NTH2 32
 #endif
 #define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D)),dim3(MIN(nx,nb),MIN(ny,nb))
+#define DIM3(nx,ny,nb,nbz) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D),nbz),dim3(MIN(nx,nb),MIN(ny,nb))
 
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 200
 #define MEMCPY_D2D cudaMemcpyDeviceToDevice
@@ -159,11 +163,9 @@ typedef struct stream_t{
 	SPHANDLE_NEW(sphandle, stream);
     }
     ~stream_t(){
-	if(stream){
-	    SPHANDLE_DONE(sphandle);
-	    HANDLE_DONE(handle);
-	    STREAM_DONE(stream);
-	}
+	SPHANDLE_DONE(sphandle);
+	HANDLE_DONE(handle);
+	STREAM_DONE(stream);
     }
     void sync(){
 	assert(this);
@@ -181,5 +183,8 @@ typedef struct stream_t{
 	assert(this);
 	return sphandle;
     }
+private:
+    stream_t(const stream_t &);
+    stream_t & operator=(const stream_t &);
 }stream_t;
 #endif

@@ -25,8 +25,8 @@ extern "C"
 /*
   Ray tracing with matched spacing. Reverse, from out to in. out is xloc, in is ploc.
 */
-__global__ static void prop_grid_match_do(float *restrict out, int nxout,
-					  const float *restrict in, int nxin, 
+__global__ static void prop_grid_match_do(float *restrict out, int nxo,
+					  const float *restrict in, int nxi, 
 					  float fracx, float fracy,
 					  float alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
@@ -35,9 +35,9 @@ __global__ static void prop_grid_match_do(float *restrict out, int nxout,
     float fracy1=1.f-fracy;
     for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
 	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
-	    out[ix+iy*nxout]+=
-		alpha*(+(in[ix+    iy*nxin]*fracx1+in[ix+1+    iy*nxin]*fracx)*fracy1
-		       +(in[ix+(iy+1)*nxin]*fracx1+in[ix+1+(iy+1)*nxin]*fracx)*fracy);
+	    out[ix+iy*nxo]+=
+		alpha*(+(in[ix+    iy*nxi]*fracx1+in[ix+1+    iy*nxi]*fracx)*fracy1
+		       +(in[ix+(iy+1)*nxi]*fracx1+in[ix+1+(iy+1)*nxi]*fracx)*fracy);
 	}
     }
 }
@@ -309,7 +309,7 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
       info("dispx=%g, dispy=%g\n", dispx, dispy);
       info("nx=%d, ny=%d\n", nx, ny);
     */
-    if(trans=='n'){
+    if(trans!='t'){
 	if(match){
 	    prop_grid_match_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
@@ -321,7 +321,7 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		 in->p+offy2*nxi+offx2, nxi, 
 		 dispx, dispy, ratio, alpha, nx, ny);
 	}
-    }else if(trans=='t'){
+    }else{
 	if(match){
 	    error("Please revert the input/output and call with trans='n'\n");
 	}else if(match2){
@@ -371,8 +371,6 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 		 in->p+offy2*nxi+offx2, nxi, 
 		 dispx, dispy, ratio, alpha, nx, ny);
 	}
-    }else{
-	error("Invalid trans=%c\n", trans);
     }
 }
 __global__ static void prop_grid_cubic_nomatch_do(float *restrict out, int nxo, 
@@ -516,17 +514,72 @@ void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
     if(ny>nyo-offy1) ny=nyo-offy1;
     int offx2=(int)floorf(dispx); dispx-=offx2;/*for input. coarse sampling. */
     int offy2=(int)floorf(dispy); dispy-=offy2;
-    if(trans=='n'){
+    if(trans!='t'){
 	prop_grid_cubic_nomatch_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 	    (out->p+offy1*nxo+offx1, nxo,
 	     in->p+offy2*nxi+offx2, nxi, 
 	     dispx, dispy, ratio, cc, alpha, nx, ny);
-    }else if(trans=='t'){
+    }else{
 	prop_grid_cubic_nomatch_trans_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 	    (out->p+offy1*nxo+offx1, nxo,
 	     in->p+offy2*nxi+offx2, nxi, 
 	     dispx, dispy, ratio, cc, alpha, nx, ny);
-    }else{
-	error("Invalid trans=%c\n", trans);
     }
+}
+void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, curmat *out, float oxo, float oyo, float dxo,
+			curmat *in, float oxi, float oyi, float dxi,
+			float dispx, float dispy, char trans){
+    assert(in->ny!=1);
+    const float dxi1=1.f/dxi;
+    float ratio=dxo*dxi1;
+    /*remove round off errors that causes trouble in nx, ny.*/
+    if(fabs(ratio-1.f)<EPS){
+	ratio=1.f;
+	if(trans=='t'){
+	    gpu_prop_grid_prep(res, in, oxi, oyi, dxi, out, oxo, oyo, dxo, -dispx, -dispy, 'r');
+	    return;
+	}
+    }else if(fabs(ratio-0.5f)<EPS){
+	ratio=0.5f;
+    }
+    const int nxo=out->nx;
+    const int nyo=out->ny;
+    const int nxi=in->nx;
+    const int nyi=in->ny;
+    const float ratio1=1.f/ratio;
+    /*offset of origin in input grid spacing. */
+    dispx=(dispx-oxi+oxo)*dxi1;
+    dispy=(dispy-oyi+oyo)*dxi1;
+    int offx1=0, offy1=0;/*for output. fine sampling. */
+    /*if output is bigger than input. */
+    if(dispx<0){
+	offx1=(int)ceilf(-dispx*ratio1);
+	dispx+=offx1*ratio;
+    }
+    if(dispy<0){
+	offy1=(int)ceilf(-dispy*ratio1);
+	dispy+=offy1*ratio;
+    }
+    /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
+    int nx=(int)floorf((nxi-dispx-EPS)*ratio1);
+    int ny=(int)floorf((nyi-dispy-EPS)*ratio1);
+    
+    if(nx>nxo-offx1) nx=nxo-offx1;
+    if(ny>nyo-offy1) ny=nyo-offy1;
+    int offx2=(int)floorf(dispx); dispx-=offx2;/*for input. coarse sampling. */
+    int offy2=(int)floorf(dispy); dispy-=offy2;
+    res->offo=offy1*nxo+offx1;
+    res->po=out->p+res->offo;
+    res->offi=offy2*nxi+offx2;
+    res->pi=in->p+res->offi;
+    res->nxo=nxo;
+    res->nyo=nyo;
+    res->nxi=nxi;
+    res->nyi=nyi;
+    res->dispx=dispx;
+    res->dispy=dispy;
+    res->ratio=ratio;
+    res->nx=nx;
+    res->ny=ny;
+    res->trans=trans;
 }

@@ -106,14 +106,13 @@ __global__ static void mvm_g_mul_do(float *restrict mvm, ATYPE *restrict a, cons
     }
 }
 /*A couple of threads that does jobs upon available.*/
-static void *mvm_thread(void* ithread0){
+static void mvm_thread(void* ithread0){
     long ithread=(long) ithread0;
     int nact=mvm_data->nact;
     int nact1=(nact+NCPU-1)/NCPU;
     int iact1=nact1*ithread;
     int iact2=MIN(iact1+nact1, nact);
     int naeach=(nact+mp_count-1)/mp_count;
-    double tic_start=myclockd();
     if(ithread<NGPU){
 	gpu_set(ithread);
     }
@@ -250,7 +249,7 @@ static int respond(int sock){
 	    threads=(pthread_t*)calloc(NCPU, sizeof(pthread_t));
 	    cmds=(int*)calloc(NCPU, sizeof(int));
 	    for(int i=0; i<NCPU; i++){
-		pthread_create(threads+i, NULL, mvm_thread, (void*)i);
+		pthread_create(threads+i, NULL, (void*(*)(void*))mvm_thread, (void*)i);
 		cmds[i]=0;
 	    }
 	}

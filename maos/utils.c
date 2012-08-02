@@ -422,7 +422,8 @@ static void print_usage(void){
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
 "-p, --path=dir    Add dir to the internal PATH\n"
 "-P, --pause       paulse simulation in the end of every time step\n"
-"-g, --gpu=N       Use the N'th gpu. 0 for the first. -1 to disable. default: automatic"
+"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic"
+"-G, --ngpu=N'     Use a total of N gpus."
 	  );
     exit(0);
 }
@@ -449,6 +450,7 @@ ARG_T * parse_args(int argc, char **argv){
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
 	{"gpu",    'g',T_INTARR, 1, &arg->gpus, &arg->ngpu},
+	{"ngpu",   'G',T_INT, 1, &arg->ngpu2, NULL},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
 	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},
@@ -463,6 +465,9 @@ ARG_T * parse_args(int argc, char **argv){
         arg->nthread=NTHREAD;
     }else{
         NTHREAD=arg->nthread;
+    }
+    if(!arg->gpus || arg->ngpu==0){
+	arg->ngpu=arg->ngpu2;
     }
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());

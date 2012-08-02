@@ -18,6 +18,8 @@
 #ifndef AOS_CUDA_RECON_H
 #define AOS_CUDA_RECON_H
 #include "types.h"
+#include "pcg.h"
+
 typedef struct W01_T{
     curmat *W1;    /**< The aperture weighting, piston removal*/
     cusp   *W0p;   /**< W0 for partial points*/
@@ -50,9 +52,31 @@ typedef struct cumoao_t{
     curmat *xp2;/*temporary array*/
     curmat *tmpNW;/*temporary array*/
     cumoao_t(){
-	memset(this, 0, sizeof(cumoao_t));
+	memset(this, 0, sizeof(*this));
     }
 }cumoao_t;
+typedef struct cufdpcg_t{
+    int *perm;   /**<permutation vector for fdpcg*/
+    long nxtot;  /**<total number of points*/
+    cuccell *Mb;  /**<The main fdpcg block matrix*/
+    cufftHandle *fft;
+    cufftHandle *ffti;
+    int      fftnc;/*total number of ffts*/
+    int     *fftips;/*starting ips for each fft.*/
+    cuccell *xhat1;
+    int nby, nbz; 
+    int scale;
+    int half;
+    ~cufdpcg_t(){
+	cudaFree(perm);
+	free(fftips);
+	delete Mb;
+	delete xhat1;
+    }
+    cufdpcg_t(){
+	memset(this, 0, sizeof(*this));
+    }
+}cufdpcg_t;
 typedef struct curecon_t{
     curcell *gradin; /**< The grad to operator on*/
     curcell *neai;
@@ -62,26 +86,16 @@ typedef struct curecon_t{
     curcell *opdr_vec; /**<Referencing opdr in vector form*/
     curcell *dmfit; /**<Reconstructed DM command. Don't free to have warm restart. Free with new seed.*/
     curcell *dmfit_vec;/**<Referencing dmfit in vector form.*/
-    int *fd_perm;   /**<permutation vector for fdpcg*/
-    long fd_nxtot;  /**<total number of points*/
-    cuccell *fd_Mb;  /**<The main fdpcg block matrix*/
-    cufftHandle *fd_fft;
-    cufftHandle *fd_ffti;
-    int      fd_fftnc;/*total number of ffts*/
-    int     *fd_fftips;/*starting ips for each fft.*/
-    cuccell *fd_xhat1;
-    cuccell *fd_xhat2;
-    cudaEvent_t *wfsevent;
-    stream_t    *wfsstream;
-    
+    cufdpcg_t *fdpcg;
     stream_t    *psstream;
-
     stream_t    *dmstream;
     stream_t    *fitstream;
     stream_t    *cgstream;
 
-    curcell *PTT;  /**< Global tip/tilt, DF removal */
-    curcell *PDF;  /**< Differential focus removal */
+    curcell *PTT;  /**< Global tip/tilt */
+    curcell **PDF;  /**< Differential focus removal */
+    curmat *ttf;
+
     float *l2c;    /**< Laplacian */
     int   *zzi;    /**< Piston constraint coordinate*/
     float *zzv;    /**< Piston constraint value*/
@@ -118,9 +132,17 @@ typedef struct curecon_t{
 
     curcell *RFlgsx;
     curcell *RFngsx;
-    curecon_t(){
-	/*This is not good. zeros out already initialized childs.*/
-	memset(this, 0, sizeof(curecon_t));
+    CGTMP_T cgtmp_tomo;
+    CGTMP_T cgtmp_fit;
+    CGTMP_T cgtmp_moaowfs;
+    CGTMP_T cgtmp_moaoevl;
+    /*the following data reside in the gpu memory*/
+    GPU_PROP_GRID_T *hxdata;
+    GPU_PROP_GRID_T *hxtdata;
+    GPU_GP_T *gpdata;
+    GPU_FDPCG_T *fddata;
+    curecon_t(){ /*This is not good. zeros out already initialized childs.*/
+	memset(this, 0, sizeof(*this));
     }
 }curecon_t;
 
@@ -129,12 +151,12 @@ __global__ void apply_W_do(float *restrict out, const float *restrict in, const 
 W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1);
 
 
-void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha);
-void gpu_TomoRt(curcell **gout,float beta, const void *A, const curcell *xin, float alpha);
-void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
+void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha, stream_t &stream);
+void gpu_TomoRt(curcell **gout,float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
+void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
 void gpu_FitR (curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
 void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
-void gpu_FitL (curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
+void gpu_FitL (curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
 void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream);
 
 void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha);
@@ -145,5 +167,4 @@ void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict 
 
 void gpu_tomo_test(SIM_T *simu);
 void gpu_fit_test(SIM_T *simu);
-#define FDPCG_FFT_R2C 1
 #endif

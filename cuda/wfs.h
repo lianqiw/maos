@@ -40,8 +40,7 @@ typedef struct cuwloc_t{
     int nsa;
     int nxsa;         /**<number of points in each subaperture in each dimension.*/
     cusp *GP;         /**<GP in col major*/
-    curmat *GPpx;     /**<GP for x grad in dense matrix format.*/
-    curmat *GPpy;     /**<GP for y grad in dense matrix format.*/
+    curmat *GPp ;     /**<GP for x/y grad in dense matrix format.*/
     int *embed;       /**<embed for field stop computation*/
     int nembed;       /**<embed for field stop computation*/
     curmat *fieldstop;/**<*mask for field stop computation*/

@@ -340,6 +340,7 @@ typedef struct TOMO_CFG_T{
     double iac;      /**<#inter-actuator-coupling in cubic influence function (testing)*/
     double cxxscale; /**<scale the Cxx^-1 term.*/
     double svdthres; /**<Threshold in SVD inversion*/
+    double cgthres;  /**<Repeat cg if residual is not reached*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
@@ -587,7 +588,7 @@ typedef struct LOAD_CFG_T{
     char *HA;        /**<load HA from.*/
     char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
-    char *MVM;       /**<load MVM from.*/
+    char *mvm;       /**<load mvm from.*/
     char *mvmi;      /**<load mvmi from.*/
     char *mvmf;      /**<load mvmf from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
@@ -641,6 +642,7 @@ typedef struct SAVE_CFG_T{
 
     int mvmi;        /**<save TomoL output of mvm control matrix assembly for warm restart.*/
     int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
+    int mvm;         /**<save computed mvm control matrix*/
 }SAVE_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.
@@ -696,6 +698,7 @@ typedef struct ARG_T{
     int pause;       /**<pause at the end of every time step*/
     int *gpus;       /**<Index of GPU to use. -1 to disable*/
     int ngpu;        /**<Number of entries in gpus*/
+    int ngpu2;       /**<Number of GPUs to use. Ignore of gpus is set.*/
     char *dirout;    /**<Result output directory*/
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/

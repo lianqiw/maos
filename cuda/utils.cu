@@ -136,7 +136,9 @@ int gpu_init(int *gpus, int ngpu){
 		if(gpus[ig]>=ngpu_tot){
 		    warning2("Skip GPU %d: not exist\n", gpus[ig]);
 		}else{
-		    int j;
+		    GPUS[NGPU++]=gpus[ig];
+		    /* Enable the following to disallow use GPUs in multiple threads
+		      int j;
 		    for(j=0; j<NGPU; j++){
 			if(GPUS[j]==gpus[ig]){
 			    warning2("Skip GPU %d: duplicated\n", gpus[ig]);
@@ -144,17 +146,19 @@ int gpu_init(int *gpus, int ngpu){
 			}
 		    }
 		    if(j==NGPU){
-			GPUS[NGPU]=gpus[ig];
-			NGPU++;
-		    }
+			GPUS[NGPU++]=gpus[ig];
+			}*/
 		}
 	    }
 	}
     }else{
-	if(ngpu<=0 || ngpu>ngpu_tot){
+	int repeat=1;
+	if(ngpu<=0){
+	    repeat=0;
 	    ngpu=ngpu_tot;
 	}
 	GPUS=(int*)calloc(ngpu, sizeof(int));
+	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
 	for(int ig=0; ig<ngpu_tot; ig++){
 	    gpu_info[ig][0]=ig;
@@ -168,10 +172,10 @@ int gpu_init(int *gpus, int ngpu){
 	    }else
 #endif
 		{
-		    cudaSetDevice(ig);//this allocates context. try to avoid it.
+		    cudaSetDevice(ig);//this allocates context.
 		    gpu_info[ig][0]=ig;
-		    gpu_info[ig][1]=gpu_get_mem();/*replace the total mem with available mem*/
-		    cudaDeviceReset();
+		    gpu_info[ig][1]=gpu_get_mem();
+		    //cudaDeviceReset(); We already started simulation. Do not reset.
 		}
 	}
 #if defined(HAS_NVML) && HAS_NVML==1
@@ -179,13 +183,16 @@ int gpu_init(int *gpus, int ngpu){
 #endif
 	/*sort so that gpus with higest memory is in the front.*/
 	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
-	for(int i=0; i<ngpu; i++){
-	    if(gpu_info[i][1]>500000000){/*require a minimum of 500 M*/
-		GPUS[NGPU]=(int)gpu_info[i][0];
-		NGPU++;
-	    }else{
-		warning2("Skip GPU %d: insufficient memory\n", i);
+	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
+	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){
+		if(repeat){
+		    igpu=0; //reset to beginning.
+		}else{
+		    break; //stop
+		}
 	    }
+	    GPUS[NGPU]=(int)gpu_info[igpu][0];
+	    NGPU++;
 	}
     }
     if(NGPU) {

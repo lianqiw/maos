@@ -155,7 +155,7 @@ void free_parms(PARMS_T *parms){
     free(parms->save.wfsopd);
     free(parms->save.grad);
     free(parms->save.gradgeom);
-    free(parms->load.MVM);
+    free(parms->load.mvm);
     free(parms->load.mvmi);
     free(parms->load.mvmf);
     free(parms->fdlock);
@@ -670,6 +670,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.ninit);
     READ_INT(tomo.psol);
     READ_INT(tomo.nxbase);
+    READ_DBL(tomo.cgthres);
 }
 
 /**
@@ -901,6 +902,7 @@ static void readcfg_save(PARMS_T *parms){
     READ_INT(save.gcovp);
     READ_INT(save.mvmi);
     READ_INT(save.mvmf);
+    READ_INT(save.mvm);
 }
 
 /**
@@ -920,7 +922,7 @@ static void readcfg_load(PARMS_T *parms){
     READ_STR(load.HA);
     READ_STR(load.GP);
     READ_STR(load.GA);
-    READ_STR(load.MVM);
+    READ_STR(load.mvm);
     READ_STR(load.mvmi);
     READ_STR(load.mvmf);
     READ_INT(load.mvst);
@@ -1673,41 +1675,41 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
     if(parms->recon.split && parms->evl.tomo){
 	warning("Evaluating tomography performance is best done with integrated tomography.\n");
     }
-    if(parms->tomo.alg==1 && parms->recon.alg==0){
+    if(parms->tomo.alg==1 && parms->recon.alg==0){/*MVR with CG*/
 	if(parms->tomo.precond>1){
 	    error("Invalid preconditoner\n");
 	}
-	/*if(parms->tomo.precond==1 && parms->tomo.piston_cr){
-	    warning("FDPCG does not perform well with piston_cr=1. Disabled piston_cr\n");
-	    parms->tomo.piston_cr=0;
-	    }*/
 	if(parms->tomo.precond==1 && parms->tomo.square!=1){
 	    warning("FDPCG prefers square XLOC.\n");
 	}
     }else{
-	parms->tomo.precond=0;
+	parms->tomo.precond=0;/*No Preconditioner is available*/
     }
-    /*check cg iterations*/
-    if(parms->recon.mvm || !parms->recon.warm_restart){
-	if(parms->recon.alg==0){
-	    if(parms->tomo.alg==1 && parms->tomo.maxit<10){
-		warning("In MVM or non warm restart mode, CG in TOMO need more iterations than %d. Make 10x bigger\n",
-			parms->tomo.maxit);
-		//parms->tomo.maxit*=10;
-	    }
-	    if(parms->fit.alg==1 && parms->fit.maxit<10){
-		warning("In MVM or non warm restart mode, CG in FIT need more iterations than %d. Make 10x bigger\n",
-			parms->fit.maxit);
-		//parms->fit.maxit*=10;
-	    }
+    /*Assign CG interations*/
+    if(parms->tomo.alg==1 && parms->tomo.maxit==0){
+	int factor;
+	if(parms->recon.mvm){
+	    factor=parms->load.mvmi?1:10;
 	}else{
-	    if(parms->lsr.alg==1 && parms->lsr.maxit<10){
-		warning("In MVM or non warm restart mode, CG in LSR need more iterations than %d. Make 10x bigger\n",
-			parms->lsr.maxit);
-		//parms->lsr.maxit*=10;
-	    }
-	}	
+	    factor=parms->recon.warm_restart?1:10;
+	}
+	if(parms->tomo.precond==1){
+	    parms->tomo.maxit=3*factor;
+	}else{
+	    parms->tomo.maxit=30*factor;
+	}
     }
+    if(parms->fit.alg==1 && parms->fit.maxit==0){
+	int factor;
+	factor=parms->recon.warm_restart?1:10;
+	parms->fit.maxit=4*factor;
+    }
+    if(parms->lsr.alg==1 && parms->lsr.maxit==0){
+	int factor;
+	factor=parms->recon.warm_restart?1:10;
+	parms->lsr.maxit=30*factor;
+    }
+ 
     if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
@@ -2371,10 +2373,10 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	    parms->gpu.tomo=0;/*no need tomo.*/
 	}
 	if(parms->recon.alg==0){/*MV*/
-	    if(parms->gpu.tomo && parms->tomo.pos !=2){
+	    /*if(parms->gpu.tomo && parms->tomo.pos !=2){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for CG with tomo.pos=2 for the moment.\n");
-	    }
+		}*/
 	    if(parms->gpu.tomo && parms->tomo.alg >2){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Tomography.\n");
@@ -2445,6 +2447,9 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	    parms->tomo.square=1;
 	    parms->dbg.dxonedge=1;
 	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
+	}
+	if(parms->gpu.tomo && parms->tomo.bgs){
+	    error("BGS in GPU is not implemented yet\n");
 	}
     }else{
 	memset(&(parms->gpu), 0, sizeof(GPU_CFG_T));

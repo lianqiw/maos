@@ -2774,8 +2774,8 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     mapfree(aper->ampground);
     /*assemble matrix to do matrix vector multiply*/
     if(parms->recon.mvm){
-	if(parms->load.MVM){
-	    recon->MVM=dcellread("%s", parms->load.MVM);
+	if(parms->load.mvm){
+	    recon->MVM=dcellread("%s", parms->load.mvm);
 	    for(int idm=0; idm<parms->ndm; idm++){
 		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		    int ipowfs=parms->wfs[iwfs].powfs;
@@ -2793,7 +2793,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 #if USE_CUDA
 	    gpu_setup_recon_mvm(parms, recon, powfs);
 #endif
-	}else if(!parms->load.MVM){
+	}else if(!parms->load.mvm){
 	    if(parms->load.mvmi){
 		error("Not handled yet.\n");
 	    }
@@ -2802,8 +2802,10 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    }else{
 		setup_recon_lsr_mvm(recon, parms, powfs);   
 	    }
-	    if(parms->save.setup && !parms->load.MVM){
-		dcellwrite(recon->MVM, "%s/MVM", dirsetup);
+	    if(!parms->load.mvm){
+		if(parms->save.setup || parms->save.mvm){
+		    dcellwrite(recon->MVM, "MVM.bin");
+		}
 	    }
 	}
 	if(parms->sim.mvmport){

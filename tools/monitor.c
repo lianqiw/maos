@@ -396,12 +396,12 @@ static void add_host_thread(void *value){
 		cmd[0]=CMD_MONITOR;
 		cmd[1]=scheduler_version;
 		if(write(sock,cmd,sizeof(int)*2)!=sizeof(int)*2){
-		    warning2("Write failed");
 		    hsock[ihost]=0;
 		}else{
-		    /*2010-07-03:we don't write. to detect remote close. */
+		    /*
+		      host is connected. 
+		      2010-07-03:we don't write. to detect remote close. */
 		    shutdown(sock,SHUT_WR);
-		    info2("Connected to %s\n", hosts[ihost]);
 		    gdk_threads_enter();
 		    GIOChannel *channel=g_io_channel_unix_new(sock);
 		    g_io_channel_set_encoding(channel,NULL,NULL);
@@ -419,11 +419,6 @@ static void add_host_thread(void *value){
 		    gdk_threads_leave();
 		}
 	    }
-	    /*if(hsock[ihost]){
-		gdk_threads_enter();
-		host_up(ihost);
-		gdk_threads_leave();
-		}*/
 	}
 	
 	pthread_mutex_lock(&pmutex);
@@ -431,10 +426,10 @@ static void add_host_thread(void *value){
 	if(hsock[ihost]){/*host is up. sleep */
 	    pthread_cond_wait(&pcond, &pmutex);
 	}else{/*sleep 5 seconds before retry. */
-	struct timespec abstime;
-	abstime.tv_sec=myclockd()+5;
-	abstime.tv_nsec=0;
-	pthread_cond_timedwait(&pcond, &pmutex, &abstime);
+	    struct timespec abstime;
+	    abstime.tv_sec=myclockd()+5;
+	    abstime.tv_nsec=0;
+	    pthread_cond_timedwait(&pcond, &pmutex, &abstime);
 	}
     	pthread_mutex_unlock(&pmutex);
 	sleep(1);

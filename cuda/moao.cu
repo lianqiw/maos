@@ -152,7 +152,7 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
     const RECON_T *recon=simu->recon;
     const int npsr=recon->npsr;
     const int np=cumoao->nxf*cumoao->nyf;
-    stream_t stream=curecon->moao_stream[0];
+    stream_t &stream=curecon->moao_stream[0];
     curmat *xp=cumoao->xp;
     curmat *xp2=cumoao->xp2;
     curzero(xp, stream);
@@ -196,11 +196,8 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
     CUDA_SYNC_STREAM;
 }
 
-void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
-    curecon_t *curecon=cudata->recon;
+void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
     cumoao_t *cumoao=(cumoao_t*)A;
-    stream_t stream=curecon->moao_stream[0];
-
     const int np=cumoao->nxf*cumoao->nyf;
     curmat *xp=cumoao->xp;
     curmat *xp2=cumoao->xp2;
@@ -231,7 +228,6 @@ void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin
     if(cumoao->actslave){
 	cuspmul((*xout)->p[0]->p, cumoao->actslave->p[0], xin->p[0]->p, alpha, stream);
     }
-    CUDA_SYNC_STREAM;
 }
 /**
    MOAO reconstruction.
@@ -252,7 +248,7 @@ void gpu_moao_recon(SIM_T *simu){
     }else{
 	cp2gpu(&dmcommon, simu->dmfit);
     }
-    stream_t stream=curecon->moao_stream[0];
+    stream_t &stream=curecon->moao_stream[0];
     if(curecon->dm_wfs){/*There is MOAO DM for WFS */
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -264,7 +260,7 @@ void gpu_moao_recon(SIM_T *simu){
 	    gpu_moao_FitR(&cumoao->rhs, 0, simu, cumoao,
 			  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
 			  parms->powfs[ipowfs].hs, 1);
-	    if(gpu_pcg(&curecon->dm_wfs[iwfs], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs,
+	    if(gpu_pcg(&curecon->dm_wfs[iwfs], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs, &curecon->cgtmp_moaowfs,
 		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)>1){
 		error("PCG failed\n");
 	    }
@@ -278,7 +274,7 @@ void gpu_moao_recon(SIM_T *simu){
 	    gpu_moao_FitR(&cumoao->rhs, 0, simu, cumoao,
 			  parms->evl.thetax[ievl], parms->evl.thetay[ievl], 
 			  parms->evl.hs[ievl], 1);
-	    if(gpu_pcg(&curecon->dm_evl[ievl], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs,
+	    if(gpu_pcg(&curecon->dm_evl[ievl], gpu_moao_FitL, cumoao, NULL, NULL, cumoao->rhs, &curecon->cgtmp_moaoevl,
 		       simu->parms->recon.warm_restart, parms->fit.maxit, stream)>1){
 		error("PCG failed\n");
 	    }

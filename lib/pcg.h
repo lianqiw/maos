@@ -24,6 +24,6 @@
 #include "dsp.h"
 typedef void (*CGFUN) (dcell **xout, const void *A, const dcell *xin, const double alpha);
 typedef void (*PREFUN) (dcell **xout, const void *A, const dcell *xin);
-void pcg(dcell **px, CGFUN Amul, const void *A, PREFUN Mmul, const void *M, const dcell *b, 
-	 int warm, int maxiter);
+double pcg(dcell **px, CGFUN Amul, const void *A, PREFUN Mmul, const void *M, const dcell *b, 
+	   int warm, int maxiter);
 #endif

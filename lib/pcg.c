@@ -25,15 +25,15 @@
    ; input x is first guess if not NULL and warm==1; A is symmetric
    positive definite (SPD) matrix plus low rand terms.  x0 contains the initial
    guess. Amul is the operator that applies A to x.  */
-void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
-	 CGFUN Amul,    /**<[in] The function that applies y=y+A*x*alpha: (*Amul)(&y,A,x,alpha)*/
-	 const void *A, /**<[in] Contain info about the The left hand side matrix A*/
-	 PREFUN Mmul,   /**<[in] The precond func that applies y=M^-1*x;*/
-	 const void *M, /**<[in] Contains info about preconditioner matrix M.*/
-	 const dcell *b,/**<[in] The right hand side vector to solve*/ 
-	 int warm,      /**<[in] Use warm restart (use the value contained in px)*/
-	 int maxiter    /**<[in] Max number of iterations*/
-	 ){
+double pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
+	   CGFUN Amul,    /**<[in] The function that applies y=y+A*x*alpha: (*Amul)(&y,A,x,alpha)*/
+	   const void *A, /**<[in] Contain info about the The left hand side matrix A*/
+	   PREFUN Mmul,   /**<[in] The precond func that applies y=M^-1*x;*/
+	   const void *M, /**<[in] Contains info about preconditioner matrix M.*/
+	   const dcell *b,/**<[in] The right hand side vector to solve*/ 
+	   int warm,      /**<[in] Use warm restart (use the value contained in px)*/
+	   int maxiter    /**<[in] Max number of iterations*/
+	   ){
     
     dcell *r0=NULL, *x0=NULL, *z0=NULL;
     if(!*px){
@@ -46,12 +46,10 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
     dcell *p0=NULL;
     dcell *Ap=NULL;
     double ak,bk;
-#if PRINT_RES 
     double r0z0=dcellinn(b,b);/*|b| */
     double res[maxiter+1];
 #if PRINT_RES == 2
     info2("CPU %sCG %d:", M?"P":"",maxiter);
-#endif
 #endif
     for(int k=0; k<maxiter; k++){
 	if(k%100==0){ /*restart every 100 steps exclude beginning */
@@ -66,15 +64,15 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	    dcellcp(&p0, z0);
 	    r0z1=dcellinn(r0,z0);
 	}
-#if PRINT_RES
-	if(Mmul){
-	    res[k]=sqrt(dcellinn(r0,r0)/r0z0);
-	}else{
-	    res[k]=sqrt(r0z1/r0z0);
+	if(PRINT_RES || k+1==maxiter){
+	    if(Mmul){
+		res[k]=sqrt(dcellinn(r0,r0)/r0z0);
+	    }else{
+		res[k]=sqrt(r0z1/r0z0);
+	    }
 	}
 #if PRINT_RES == 2
 	info2("%.5f ", res[k]);
-#endif	
 #endif
 	if(Ap) dcellzero(Ap);
 	(*Amul)(&Ap, A, p0, 1);
@@ -84,7 +82,9 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
 	    goto end;
 	}
 	dcelladd(&x0, 1, p0, ak);/*x0=x0+ak*p0 */
-	if(k+1==maxiter) break;
+	if(k+1==maxiter){
+	    break;
+	}
 	dcelladd(&r0, 1, Ap, -ak);/*r0=r0-ak*Ap */
 	if(Mmul){
 	    (*Mmul)(&z0,M,r0);
@@ -108,4 +108,5 @@ void pcg(dcell **px,    /**<[in,out] The output vector. input for warm restart.*
     }
     dcellfree(Ap);
     dcellfree(p0);
+    return res[maxiter-1];
 }

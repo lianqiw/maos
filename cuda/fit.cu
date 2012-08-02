@@ -261,13 +261,6 @@ void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, flo
     DO_HAT(xout, opdfit2);/*xout = beta*xout + alpha * HA' *opdfit2 */
     SYNC_DM;   
     toc("HAT");//2.4ms
-    /*{
-	curcellwrite(xin, "gpur_xin");
-	curcellwrite(opdfit, "gpur_opdfit");
-	curwrite(curecon->pis, "gpur_pis");
-	curcellwrite(opdfit2, "gpur_opdfit2");
-	curcellwrite(*xout, "gpur_xout");
-	}*/
 }
 void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
     TIC;tic;
@@ -297,7 +290,7 @@ void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, fl
     DO_HXT(xout, opdfit2); /*do HXT operation, *xout=*xout*beta + alpha*HX' * opdfit2*/
     SYNC_PS; toc("HXT");
 }
-void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
+void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
     TIC;tic;
     curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
@@ -314,6 +307,7 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
     if(!*xout){
 	*xout=curcellnew(recon->ndm, 1, recon->anx, recon->any);
     }
+    CUDA_SYNC_STREAM;
     for(int ifit=0; ifit<nfit; ifit++){
 	float hs    =(float)parms->fit.hs[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
@@ -358,6 +352,7 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
 #include "pcg.h"
 void gpu_fit_test(SIM_T *simu){	/*Debugging. */
     gpu_set(gpu_recon);
+    stream_t stream;
     curecon_t *curecon=cudata->recon;
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
@@ -390,17 +385,17 @@ void gpu_fit_test(SIM_T *simu){	/*Debugging. */
     curcell *lg=NULL;
     gpu_FitR(&rhsg, 0, recon, curecon->opdr, 1);
     curcellwrite(rhsg, "GPU_FitR");
-    gpu_FitL(&lg, 0, recon, rhsg, 1);
+    gpu_FitL(&lg, 0, recon, rhsg, 1, stream);
     curcellwrite(lg, "GPU_FitL");
-    gpu_FitL(&lg, 1, recon, rhsg, -1);
+    gpu_FitL(&lg, 1, recon, rhsg, -1, stream);
     curcellwrite(lg, "GPU_FitL2");
-    gpu_FitL(&lg, 0, recon, rhsg, 1);
+    gpu_FitL(&lg, 0, recon, rhsg, 1, stream);
     curcellwrite(lg, "GPU_FitL3");
     /*curcell *lhsg=NULL;
       gpu_FitRt(&lhsg, 0, recon, rhsg, 1);
       curcellwrite(lhsg, "GPU_FitRt");*/
     curcellzero(lg, curecon->cgstream[0]);
-    gpu_pcg(&lg, (G_CGFUN)gpu_FitL, (void*)recon, NULL, NULL, rhsg,
+    gpu_pcg(&lg, (G_CGFUN)gpu_FitL, (void*)recon, NULL, NULL, rhsg, &curecon->cgtmp_fit,
 	    simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream[0]);
     curcellwrite(lg, "GPU_FitCG");
     CUDA_SYNC_DEVICE;

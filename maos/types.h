@@ -200,8 +200,9 @@ typedef struct FDPCG_T{
     long nxtot;    /**<Total number of reconstructed phase points*/
     /*xhat, xhat2 has been removed for thread safety issues.*/
     long **xembed; /**<index to embed nonsquare opd on xloc to square map.*/
-    double *scale; /**<Scaling factor for each layer*/
     int square;    /**<Whether xloc is square*/
+    int scale;     /**<Do we need to scale after fft.*/
+    int half;      /**<Do we use only half of the FFT result (hermitian property)*/
 }FDPCG_T;
 
 /**
