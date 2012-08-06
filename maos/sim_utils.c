@@ -1749,7 +1749,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 		    if(fabs(sepmean)<1e-20){
 			sepmean=sep;
 		    }else if(fabs(sep-sepmean)>1.e-10){
-			error("NGS WFS are not evenly spaced. Unable to determine ngs spacing.\n");
+			warning("NGS WFS are not evenly spaced. Unable to determine ngs spacing.\n");
 		    }
 		}
 		if(fabs(parms->wfs[iwfs].thetay-parms->wfs[iwfs2].thetay)<1.e-10){
@@ -1757,7 +1757,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 		    if(fabs(sepmean)<1e-20){
 			sepmean=sep;
 		    }else if(fabs(sep-sepmean)>1.e-10){
-			error("NGS WFS are not evenly spaced. Unable to determine ngs spacing.\n");
+			warning("NGS WFS are not evenly spaced. Unable to determine ngs spacing.\n");
 		    }
 		}
 	    }

@@ -114,9 +114,6 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
     }
     cuwloc_t *cupowfs=cudata->powfs;
     
-    curecon->fitstream=new stream_t[parms->fit.nfit];
-    curecon->psstream =new stream_t[recon->npsr];
-    curecon->dmstream =new stream_t[recon->ndm];
     curecon->cgstream =new stream_t;
     if(parms->gpu.tomo || parms->gpu.fit){
 	curecon->opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
@@ -437,6 +434,9 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	delete [] gpdata;
     }
     if(parms->gpu.fit){
+	curecon->fitstream=new stream_t[parms->fit.nfit];
+	curecon->psstream =new stream_t[recon->npsr];
+	curecon->dmstream =new stream_t[recon->ndm];
 	if(parms->gpu.fit==1){ /*For fitting using sparse matrix*/
 	    cp2gpu(&curecon->FR, &recon->FR);
 	    cp2gpu(&curecon->FL, &recon->FL);
