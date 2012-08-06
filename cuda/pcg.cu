@@ -140,7 +140,7 @@ float gpu_pcg(curcell **px,
 	    k=0;//reset 
 	    DO(cudaMemsetAsync(r0r0, 0, (ntot-1)*sizeof(float),stream));
 	}
-	if(k%50==0){/*initial or re-start every 50 steps*/
+	if(k%500==0){/*initial or re-start every 50 steps*/
 	    RECORD(1);
 	    /*computes r0=b-A*x0 */
 	    curcellcp(&r0, b, stream);/*r0=b; */
@@ -191,13 +191,13 @@ float gpu_pcg(curcell **px,
 	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres)){
 	    residual=diff[k];
 #if TIMING 
-	CUDA_SYNC_STREAM;
-	for(int i=7; i<11; i++){
-	    DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
-	    times[i]*=1e3;
-	}
-	info2("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f\n",
-	      maxiter, k, times[8], times[9], times[10], times[11]);
+	    CUDA_SYNC_STREAM;
+	    for(int i=7; i<11; i++){
+		DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
+		times[i]*=1e3;
+	    }
+	    info2("CG %d k=%d Amul %3.0f inn %3.0f add %3.0f add %3.0f\n",
+		  maxiter, k, times[8], times[9], times[10], times[11]);
 #endif
 	    break;
 	}

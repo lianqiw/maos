@@ -72,18 +72,22 @@ struct cucell{
     int nx;
     int ny;
     cumat<T> *m; /*contains the continuous data*/
-    T **pm; /*contains the data pointer in each p.*/
-    void p2pm(){
+    T **pm; /*contains the data pointer in each cell.*/
+    void p2pm(cudaStream_t stream=(cudaStream_t)-1){
 	if(!p) error("p must not be null\n");
-	T **tmp=(T**)malloc(sizeof(T*)*nx*ny);
+	T **tmp=(T**)malloc4async(nx*ny*sizeof(T*));
 	for(int i=0; i<nx*ny; i++){
 	    tmp[i]=p[i]?p[i]->p:NULL;
 	}
 	if(!pm){
 	    cudaMalloc(&pm, sizeof(T*)*nx*ny);
 	}
-	cudaMemcpy(pm, tmp, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
-	free(tmp);
+	if(stream==(cudaStream_t)-1){
+	    cudaMemcpy(pm, tmp, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice);
+	}else{
+	    cudaMemcpyAsync(pm, tmp, sizeof(T*)*nx*ny,cudaMemcpyHostToDevice, stream);
+	}
+	free4async(tmp);
     }
     void init(const int nxi, const int nyi){
 	nx=nxi;
@@ -141,7 +145,7 @@ struct cucell{
 	    init<int>(in->nx, in->ny, (int*)mx, (int*)my);
 	}
     }
-    void replace(T *pnew, int free_original){
+    void replace(T *pnew, int free_original, cudaStream_t stream){
 	/*replace the data with a new set. free original data if free_original
 	  is set. we don't own the pnew.*/
 	if(free_original){
@@ -166,6 +170,7 @@ struct cucell{
 		pnew+=p[i]->nx*p[i]->ny;
 	    }
 	}
+	p2pm(stream);
     }
     ~cucell(){
 	for(int i=0; i<nx*ny; i++){
@@ -265,53 +270,4 @@ void initzero(cumat<T> **A, int nx, int ny){
 	*A=new cumat<T>(nx,ny);
     }
 }
-
-/*data to be used by kernel */
-typedef struct GPU_PROP_GRID_T{
-    int offo;
-    int offi;
-    float *po;
-    const float *pi;
-    int nxo,nyo;
-    int nxi,nyi;
-    float dispx;
-    float dispy;
-    float ratio;
-    int nx;
-    int ny;
-    char trans;
-    float l2c; /*coefficient for laplacian*/
-    int zzi;   /*for piston constraint*/
-    float zzv; /*for piston constraint*/
-    GPU_PROP_GRID_T(){ /*This is not good. zeros out already initialized childs.*/
-	memset(this, 0, sizeof(*this));
-    }
-}GPU_PROP_GRID_T;
-
-typedef struct GPU_GP_T{
-    int (*saptr)[2];
-    float *PTT;
-    float **PDF;
-    float dsa;
-    int nsa;
-    float *GPp;
-    int pos;
-    int nxp;
-    float dxp;/*pmap dx*/
-    float oxp;/*pmap origin*/
-    float oyp;
-    const float(*neai)[3];
-    GPU_GP_T(){
-	memset(this, 0, sizeof(*this));	
-    }
-}GPU_GP_T;
-
-typedef struct GPU_FDPCG_T{
-    int nx;
-    int ny;
-    float scale;
-    GPU_FDPCG_T(){
-	memset(this, 0, sizeof(*this));	
-    }
-}GPU_FDPCG_T;
 #endif

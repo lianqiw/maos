@@ -55,9 +55,57 @@ typedef struct cumoao_t{
 	memset(this, 0, sizeof(*this));
     }
 }cumoao_t;
+
+/*data to be used by kernel */
+typedef struct GPU_PROP_GRID_T{
+    int offo;
+    int offi;
+    float *po;
+    const float *pi;
+    int nxo,nyo;
+    int nxi,nyi;
+    float dispx;
+    float dispy;
+    float ratio;
+    int nx;
+    int ny;
+    char trans;
+    float l2c; /*coefficient for laplacian*/
+    int zzi;   /*for piston constraint*/
+    float zzv; /*for piston constraint*/
+    GPU_PROP_GRID_T(){ /*This is not good. zeros out already initialized childs.*/
+	memset(this, 0, sizeof(*this));
+    }
+}GPU_PROP_GRID_T;
+
+typedef struct GPU_GP_T{
+    int (*saptr)[2];
+    float *PTT;
+    float **PDF;
+    float dsa;
+    int nsa;
+    float *GPp;
+    int pos;
+    int nxp;
+    float dxp;/*pmap dx*/
+    float oxp;/*pmap origin*/
+    float oyp;
+    const float(*neai)[3];
+    GPU_GP_T(){
+	memset(this, 0, sizeof(*this));	
+    }
+}GPU_GP_T;
+
+typedef struct GPU_FDPCG_T{
+    int nx;
+    int ny;
+    float scale;
+    GPU_FDPCG_T(){
+	memset(this, 0, sizeof(*this));	
+    }
+}GPU_FDPCG_T;
 typedef struct cufdpcg_t{
     int *perm;   /**<permutation vector for fdpcg*/
-    long nxtot;  /**<total number of points*/
     cuccell *Mb;  /**<The main fdpcg block matrix*/
     cufftHandle *fft;
     cufftHandle *ffti;

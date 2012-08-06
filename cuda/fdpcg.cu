@@ -32,25 +32,6 @@ extern "C"
   Ech 32 threads to handle each bs for bs<32.
 */
 
-/* Each thread block is bs x 1. no need to lock.*/
-/*
-__global__ static void fdpcg_mul_block_sync(fcomplex *xin, fcomplex *M, int *restrict perm){
-    int bs=blockDim.x;
-    extern __shared__ fcomplex v[];
-    fcomplex *vin=v+threadIdx.y*2*bs;
-    fcomplex *vout=v+bs+threadIdx.y*2*bs;
-    int ib=blockIdx.x*blockDim.y+threadIdx.y;
-    perm+=ib*bs;
-    M+=ib*bs*bs;
-    int ix=threadIdx.x;
-    vin[ix]=xin[perm[ix]];
-    vout[ix]=make_cuComplex(0,0);
-    __syncthreads();//wait for loading of vin
-    for(int iy=0; iy<bs; iy++){
-	vout[ix]=cuCfmaf(M[ix+iy*bs], vin[iy], vout[ix]);
-    }
-    xin[perm[ix]]=vout[ix];
-    }*/
 __global__ static void fdpcg_mul_block_sync_half(fcomplex *xin, fcomplex *M, int *restrict perm){
     int bs=blockDim.x;
     extern __shared__ fcomplex v[];
@@ -96,32 +77,6 @@ __global__ static void fdpcg_scale(GPU_FDPCG_T *fddata, fcomplex **xall){
 	cuCscalef(x[i], scale);
     }
 }
-
-/*
-  We used FFT R2C for transforming from real to half part of complex array. Need
-  to fill the other half of array. Scale the array in the mean time.*/
-/*__global__ static void fdpcg_r2c(GPU_FDPCG_T *fddata, fcomplex **outall){
-    const int ips=blockIdx.z;
-    const int nx=fddata[ips].nx;
-    const int ny=fddata[ips].ny;
-    const int nx2=(nx>>1);
-    const float scale=fddata[ips].scale;
-    fcomplex *restrict out=outall[ips];
-    const int ix0=threadIdx.x+blockDim.x*blockIdx.x;
-    const int iy0=threadIdx.y+blockDim.y*blockIdx.y;
-    for(int iy=iy0; iy<ny; iy+=blockDim.y*gridDim.y){
-	if(ix0<2){
-	    int ix=nx2*ix0;//0 and nx2 are real.
-	    out[ix+iy*nx]=make_cuComplex(cuCrealf(out[ix+iy*nx])*scale, cuCimagf(out[ix+iy*nx])*scale);
-	}
-	for(int ix=1+ix0; ix<nx2; ix+=blockDim.x*gridDim.x){
-	    float xr=cuCrealf(out[ix+iy*nx])*scale;
-	    float xi=cuCimagf(out[ix+iy*nx])*scale;
-	    out[ix+iy*nx]=make_cuComplex(xr, xi);
-	    out[(nx-ix)+(iy==0?0:ny-iy)*nx]=make_cuComplex(xr, -xi);
-	}
-    }
-    }*/
 
 /**
    The positive (right half) base frequency (os=1) couples to both positive and
@@ -174,10 +129,6 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     int bs=cufd->Mb->p[0]->nx;
     fdpcg_mul_block_sync_half<<<cufd->nbz, dim3(bs,cufd->nby), sizeof(fcomplex)*bs*2*cufd->nby, stream>>>
 	(cufd->xhat1->m->p, cufd->Mb->m->p, cufd->perm);
-    /*
-      fdpcg_mul_block_sync<<<cufd->nbz, dim3(bs,cufd->nby), sizeof(fcomplex)*bs*2*cufd->nby, stream>>>
-      (cufd->xhat1->m->p, cufd->Mb->m->p, cufd->perm);
-    */
     RECORD(3);
     for(int ic=0; ic<cufd->fftnc; ic++){
 	int ips=cufd->fftips[ic];

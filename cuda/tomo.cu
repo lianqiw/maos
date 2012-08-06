@@ -223,7 +223,7 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 		    +map[(iy+1)*nx+ix ] *pxy2[6]
 		    +map[(iy+1)*nx+ix+1]*pxy2[7];
 	    }/*for isa */
-	}else if(pos==2){
+	}else{
 	    for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 		int ix=saptr[isa][0];
 		int iy=saptr[isa][1];
@@ -254,7 +254,7 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
     /* Global TT, Diff-Focus projection. Modifed from previous kernel so that
        each thread handle the same subaperture as previous gradient operation to
        avoid synchronization */
-    if(datai->PTT && ptt){
+    if(datai->PTT && ptt){ //temp
 	float (*restrict PTT)[2]=(float(*)[2])datai->PTT;
 	gx[threadIdx.x]=0;
 	gy[threadIdx.x]=0;
@@ -467,21 +467,14 @@ void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, f
     curmat *ttf=curecon->ttf;
     curzero(opdwfs->m, stream);
     gpu_prop_grid_adaptive_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
-	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, alpha, 'n');
+      (curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, alpha, 'n');
     curzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, 1);
     gpu_nea_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, ttf->p, ttf->p+nwfs*2, grad->pm);
 }
-#define test_TomoL 0
-#if test_TomoL
-#define curwrite_TomoL(A...) curwrite(A)
-#define curcellwrite_TomoL(A...) curcellwrite(A)
-#else
-#define curwrite_TomoL(A...)
-#define curcellwrite_TomoL(A...)
-#endif
+
 /*
   Tomography left hand size matrix. Computes xout = beta*xout + alpha * Hx' G' C Gp Hx * xin.
   xout is zeroed out before accumulation.
