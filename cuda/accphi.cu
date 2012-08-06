@@ -169,7 +169,8 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		error("ALL GPUs does not have enough memory\n");
 	    }else{
 		char *gcmd=NULL;
-		for(int igpu=0; igpu<NGPU; igpu++){	
+		for(int igpu=0; igpu<NGPU; igpu++){
+		    extern int *GPUS;
 		    gpu_set(igpu);
 		    if(gpu_get_mem()>need){
 			char tmp[8];
@@ -306,7 +307,7 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
 		toc2("Step %d: Copying layer %d size %dx%d to GPU %d: offx=%d, offy=%d", 
-		     isim, ips, nx0, ny0, GPUS[im], offx, offy);tic;
+		     isim, ips, nx0, ny0, im, offx, offy);tic;
 	    }/*for im */
 	    cudaFreeHost(next_atm[ips]);
 	    next_atm[ips]=NULL;

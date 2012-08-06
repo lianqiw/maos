@@ -127,10 +127,11 @@ int gpu_init(int *gpus, int ngpu){
       If duplicates are found, use only once.
      */
     if(gpus && ngpu>0){
-	if(!GPUS) GPUS=(int*)malloc(ngpu_tot*sizeof(int));
+	if(!GPUS) GPUS=(int*)malloc(ngpu*sizeof(int));
 	for(int ig=0; ig<ngpu; ig++){
 	    if(gpus[ig]<0){
 		info2("CUDA is disabled by user.\n");
+		free(GPUS); GPUS=NULL; 
 		return 0;
 	    }else{
 		if(gpus[ig]>=ngpu_tot){
@@ -160,12 +161,16 @@ int gpu_init(int *gpus, int ngpu){
 	GPUS=(int*)calloc(ngpu, sizeof(int));
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
+#if defined(HAS_NVML) && HAS_NVML==1
+	nvmlDevice_t dev;
+	nvmlMemory_t mem;
+	if(nvmlInit()){
+	    warning("nvml init failed\n");
+	}
+#endif
 	for(int ig=0; ig<ngpu_tot; ig++){
 	    gpu_info[ig][0]=ig;
 #if defined(HAS_NVML) && HAS_NVML==1
-	    nvmlDevice_t dev;
-	    nvmlMemory_t mem;
-	    nvmlInit();
 	    if(nvmlDeviceGetHandleByIndex(ig, &dev) == 0 
 	       && nvmlDeviceGetMemoryInfo(dev, &mem) == 0){
 		gpu_info[ig][1]=mem.free;
@@ -173,7 +178,6 @@ int gpu_init(int *gpus, int ngpu){
 #endif
 		{
 		    cudaSetDevice(ig);//this allocates context.
-		    gpu_info[ig][0]=ig;
 		    gpu_info[ig][1]=gpu_get_mem();
 		    //cudaDeviceReset(); We already started simulation. Do not reset.
 		}
@@ -191,9 +195,9 @@ int gpu_init(int *gpus, int ngpu){
 		    break; //stop
 		}
 	    }
-	    GPUS[NGPU]=(int)gpu_info[igpu][0];
-	    NGPU++;
+	    GPUS[NGPU++]=(int)gpu_info[igpu][0];
 	}
+	free(gpu_info);
     }
     if(NGPU) {
 	gpu_recon=0;/*last gpu in GPUS*/

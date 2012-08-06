@@ -29,7 +29,6 @@ extern "C"{
 }
 extern int gpu_recon;
 extern int NGPU;
-extern int *GPUS;
 typedef struct cudata_t{ 
     /**<for accphi */
     cumap_t **atm;   /**<atmosphere: array of cumap_t */
@@ -89,7 +88,11 @@ long gpu_get_mem(void);
    switch to the next GPU and update the pointer.
 */
 inline void gpu_set(int igpu){
-    igpu=igpu%NGPU;
+    extern int *GPUS;
+    if(igpu>=NGPU){
+	error("Invalid igpu=%d", igpu);
+    }
+    info2("Switch to GPU[%d]=%d\n", igpu, GPUS[igpu]);
     cudaSetDevice(GPUS[igpu]);
 #ifdef __APPLE__
     pthread_setspecific(cudata_key, &cudata_all[igpu]);

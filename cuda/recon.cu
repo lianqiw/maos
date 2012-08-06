@@ -28,7 +28,7 @@ extern "C"
 #include "cucmat.h"
 #include "accphi.h"
 #undef TIMING
-#define TIMING 1
+#define TIMING 0
 #if !TIMING
 #define TIC_test
 #define tic_test

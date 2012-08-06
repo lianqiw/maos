@@ -394,7 +394,7 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 }
 void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	gpu_set(GPUS[wfsgpu[iwfs]]);
+	gpu_set(wfsgpu[iwfs]);
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
@@ -421,7 +421,7 @@ __global__ static void setup_rand(curandState *rstat, int seed){
 */
 void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rstat){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	gpu_set(GPUS[wfsgpu[iwfs]]);
+	gpu_set(wfsgpu[iwfs]);
 	cuwfs_t *cuwfs=cudata->wfs;
 	int seed=lrand(rstat);/*don't put this after continue. */
 	int ipowfs=parms->wfs[iwfs].powfs;
