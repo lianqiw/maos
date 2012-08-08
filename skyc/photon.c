@@ -22,19 +22,24 @@
 #include <math.h>
 #include "skyc.h"
 #include "photon.h"
-const double Z_J=1.97e7*(20*9.56);
+/*
+  Zero magnitude and sky background relocated to parameter file skyc.conf
+*/
+//const double Z_J=1.97e7*(20*9.56);
 /*
   The following were obtain by R Clare on Table IV in Bessel 1988. But the print was garbelled. Fixed.
   const double Z_H=9.6e6*(20*16.5);
   const double Z_K=4.5e6*(20*14.41);
 */
+/*
 const double Z_H=9.6e6*(20*14.17);
 const double Z_K=4.5e6*(20*16.74);
 
 
 const double MB_J=(16.7+15.8)/2;
 const double MB_H=(15.0+13.8)/2;
-const double MB_K=(13.0+12.7)/2;
+const double MB_K=(13.0+12.7)/2;//kshort
+*/
 /**
    \file skyc/photon.c
    Routines that calculates star flux from magnitude.
@@ -43,7 +48,8 @@ const double MB_K=(13.0+12.7)/2;
    Compute subaperture star flux from magnitude, subaperture size, sample
    period, etc.
  */
-void photon_flux(double *Np,      /**<[out] number of total signal at each wvl.*/
+void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitude flux*/
+		 double *Np,      /**<[out] number of total signal at each wvl.*/
 		 double *Nptot,   /**<[out] total signal (sum of Np).*/
 		 double *Nbtot,   /**<[out] number of background photon per pixel*/
 		 double *QCSNR,   /**<[out] signal to noise ratio for a Quadcell*/
@@ -85,11 +91,11 @@ void photon_flux(double *Np,      /**<[out] number of total signal at each wvl.*
 	double imperr_rad2=pow(imperrnm*1e-9*(2*M_PI/wvl),2);
 	double imperr_strehl=exp(-imperr_rad2);
 	if(fabs(wvl-1.25e-6)<1.e-7){ /*J band */
-	    Z=Z_J; ZB=pow(10,-MB_J/2.5)*Z_J;
+	    Z=zb->ZJ; ZB=pow(10,-zb->BJ/2.5)*Z;
 	}else if(fabs(wvl-1.65e-6)<1.e-7){/*H band */
-	    Z=Z_H; ZB=pow(10,-MB_H/2.5)*Z_H;
+	    Z=zb->ZH; ZB=pow(10,-zb->BH/2.5)*Z;
 	}else if(fabs(wvl-2.2e-6)<1.e-7){/*K band */
-	    Z=Z_K; ZB=pow(10,-MB_K/2.5)*Z_K;
+	    Z=zb->ZK; ZB=pow(10,-zb->BK/2.5)*Z;
 	}else{
 	    error("Invalid");
 	}

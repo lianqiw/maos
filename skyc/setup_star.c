@@ -214,7 +214,7 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 	double imperrnm=sqrt(pow(parms->skyc.imperrnm,2)+th2*pow(parms->skyc.imperrnmb,2));
 	for(long ipowfs=0; ipowfs<npowfs; ipowfs++){
 	    int iscircle=parms->maos.nsa[ipowfs]<=4?1:0;
-	    photon_flux(&star[istar].siglev->p[nwvl*ipowfs], 
+	    photon_flux(&parms->skyc.zb, &star[istar].siglev->p[nwvl*ipowfs], 
 			&star[istar].siglevtot->p[ipowfs],
 			&star[istar].bkgrnd->p[ipowfs],
 			NULL, NULL,

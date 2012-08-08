@@ -31,6 +31,8 @@
 /**
    The sort function for stars. Sort stars according total flux.
  */
+static double Z_J=3.7666e9;
+static double Z_H=2.7206e9;
 static int sortfun(const double *p1, const double *p2){
     double tot1=Z_J*pow(10,-0.4*p1[2])+Z_H*pow(10,-0.4*p1[3]);/*tot flux */
     double tot2=Z_J*pow(10,-0.4*p2[2])+Z_H*pow(10,-0.4*p2[3]);

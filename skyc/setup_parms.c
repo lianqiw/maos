@@ -79,7 +79,14 @@ static void setup_parms_skyc(PARMS_S *parms){
     char *temp;
     temp=readcfg_str("skyc.psd_ws"); 
     parms->skyc.psd_ws=dread("%s",temp); free(temp);
- 
+
+    READ_DBL(skyc.zb.ZJ);
+    READ_DBL(skyc.zb.ZH);
+    READ_DBL(skyc.zb.ZK);
+    READ_DBL(skyc.zb.BJ);
+    READ_DBL(skyc.zb.BH);
+    READ_DBL(skyc.zb.BK);
+    
     READ_DBL(skyc.zc_f);
     READ_DBL(skyc.zc_zeta);
     READ_DBL(skyc.na_alpha);

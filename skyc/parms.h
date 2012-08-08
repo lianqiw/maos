@@ -18,6 +18,7 @@
 
 #ifndef SKYC_PARMS_H
 #define SKYC_PARMS_H
+#include <photon.h>
 /**
    \file skyc/parms.h
    Parameters for simulation.
@@ -69,6 +70,7 @@ typedef struct MAOS_S{
    Contains parameters for skycoverage.
 */
 typedef struct SKYC_S{
+    ZB_S zb;         /**<Sky background and zero magnitude flux*/
     int verbose;     /**<be verbose at output.*/
     int dbg;         /**<save intermediate information for debugging.*/
     int dbgsky;      /**<only run this sky frame if not -1*/
