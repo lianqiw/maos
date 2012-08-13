@@ -105,10 +105,6 @@ static void setup_parms_skyc(PARMS_S *parms){
 	    info2("disable interpg when skyc.stars is set\n");
 	    parms->skyc.interpg=0;
 	}
-	if(parms->skyc.nseed>1){
-	    warning2("skyc.stars is set, set skyc.nseed=1");
-	    parms->skyc.nseed=1;
-	}
     }
 }
 /**
@@ -268,10 +264,12 @@ PARMS_S *setup_parms(const ARG_S *arg){
     }
     info2("Maximum number of asterisms in each star field is %d\n", parms->skyc.maxaster);
     
-    if(parms->skyc.verbose==0 && (parms->skyc.dbg || parms->skyc.dbgsky)){
+    if(parms->skyc.dbg || parms->skyc.dbgsky>-1){
+	warning("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);
 	parms->skyc.verbose=1;
 	parms->skyc.nthread=1;
-    }else if(arg->detach || parms->skyc.nthread>1){
+    }
+    if(arg->detach || parms->skyc.nthread>1){
 	parms->skyc.verbose=0;
     }
     parms->skyc.nwfstot=0;

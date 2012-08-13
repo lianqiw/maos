@@ -166,13 +166,13 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     }else{
 	TO_IMPLEMENT;
     }
-    CUDA_SYNC_STREAM;
     float ccb[7];
-    cudaMemcpy(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
     cudaFree(cc); 
     tot=ccb[nmod==2?3:6];
     
-    double coeff[6];
+    double coeff[6];/*convert to double*/
     coeff[0]=ccb[0]; coeff[1]=ccb[1]; 
     coeff[2]=ccb[2]; coeff[3]=ccb[3];
     coeff[4]=ccb[4]; coeff[5]=ccb[5];

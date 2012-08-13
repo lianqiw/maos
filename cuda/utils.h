@@ -92,7 +92,6 @@ inline void gpu_set(int igpu){
     if(igpu>=NGPU){
 	error("Invalid igpu=%d", igpu);
     }
-    info2("Switch to GPU[%d]=%d\n", igpu, GPUS[igpu]);
     cudaSetDevice(GPUS[igpu]);
 #ifdef __APPLE__
     pthread_setspecific(cudata_key, &cudata_all[igpu]);

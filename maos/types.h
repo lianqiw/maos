@@ -522,6 +522,8 @@ typedef struct SIM_T{
     dcell *zoomavg;    /**<Trombone averager*/
     dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
     dcell *zoomint;    /**<Trombone integrator*/
+    dcell *zoompos;    /**<Trombone position history. for saving*/
+    dcell *lgsfocus;   /**<LGS focus error*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

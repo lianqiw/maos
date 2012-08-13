@@ -616,7 +616,22 @@ static void init_simu_evl(SIM_T *simu){
 	    }
 	}
     }
-        
+    if(parms->sim.mffocus){
+	long nnx[parms->nwfs];
+	long nny[parms->nwfs];
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(!parms->powfs[ipowfs].llt){
+		nnx[iwfs]=0;
+		nny[iwfs]=0;
+	    }else{
+		nnx[iwfs]=parms->sim.end;
+		nny[iwfs]=1;
+	    }
+	}
+	simu->zoompos=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszoompos_%d.bin", seed);
+	simu->lgsfocus=dcellnew_mmap(parms->nwfs, 1, nnx, nny, NULL, NULL, "Reszlgsfocus_%d.bin", seed);
+    }    
 
     if(parms->evl.psfmean || parms->evl.psfhist || parms->evl.opdcov){
 	char header[800];
@@ -1749,6 +1764,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 		    if(fabs(sepmean)<1e-20){
 			sepmean=sep;
 		    }else if(fabs(sep-sepmean)>1.e-10){
+			sepmean=0;
 			warning("NGS WFS are not evenly spaced. Unable to determine ngs spacing.\n");
 		    }
 		}
@@ -1757,6 +1773,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 		    if(fabs(sepmean)<1e-20){
 			sepmean=sep;
 		    }else if(fabs(sep-sepmean)>1.e-10){
+			sepmean=0;
 			warning("NGS WFS are not evenly spaced. Unable to determine ngs spacing.\n");
 		    }
 		}
@@ -1776,7 +1793,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
 	fprintf(fp,"%g ",parms->powfs[powfs_ngs[0]].wvl[iwvl]);
     }
     fprintf(fp,"]\n");  
-    fprintf(fp,"maos.ngsgrid=%g\n",ngsgrid*206265);
+    fprintf(fp,"maos.ngsgrid=%g\n",ngsgrid>0?ngsgrid*206265:1);
     fprintf(fp,"maos.npowfs=%d\n",npowfs_ngs);
     fprintf(fp,"maos.msa=[");
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){

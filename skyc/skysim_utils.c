@@ -221,8 +221,8 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 
 	if(istep>=parms->skyc.evlstart){
 	    double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
-	    if(res_ngs>ngsol*5){
-		/*warning2("%5.1f Hz: loop diverged. \n", parms->skyc.fss[idtrat]); */
+	    if(res_ngs>ngsol*100){
+		warning2("%5.1f Hz: %g nm loop diverged. \n", parms->skyc.fss[idtrat], sqrt(res_ngs)*1e9); 
 		dfree(res); res=NULL;
 		break;
 	    }
@@ -357,8 +357,9 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			if(parms->skyc.mtch){
 			    dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
 			}else{
-			    double imax=dmax(ints[iwfs]->p[isa]);
-			    dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0.1*imax, 0.1*imax); 
+			    /*double imax=dmax(ints[iwfs]->p[isa]);
+			      dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0.1*imax, 0.1*imax); */
+			    dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*rnefs[ipowfs][idtrat]); 
 			    igrad[0]*=parms->skyc.pixtheta[ipowfs];
 			    igrad[1]*=parms->skyc.pixtheta[ipowfs];
 			}
@@ -486,7 +487,27 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     double rne=rnefs[0][seldtrat];
     double bkgrnd=aster[selaster].wfs[0].bkgrnd;
 
-    if(parms->maos.npowfs==2){
+    if(parms->maos.npowfs==1){
+	fprintf(fp, "powfs.piinfile=[\"\" \"pistat\" ]\n");
+	fprintf(fp, "powfs.neareconfile=[\"\" \"nea_tot\"]\n");
+	fprintf(fp, "powfs.phyusenea=[0 1]\n");
+	fprintf(fp, "powfs.dtrat=[1 %d]\n", parms->skyc.dtrats[seldtrat]);
+	fprintf(fp, "powfs.bkgrnd=[0 %.2f]\n", bkgrnd);
+	fprintf(fp, "powfs.rne=[3 %.2f]\n", rne);
+	fprintf(fp, "powfs.phystep=[0 %ld]\n", (long)50+parms->skyc.dtrats[seldtrat]*20);
+	fprintf(fp, "powfs.noisy=[1 1 ]\n");
+	fprintf(fp, "powfs.pixtheta=[0.5/206265 %g/206265000]\n", parms->skyc.pixtheta[1]*206265000);
+	fprintf(fp, "powfs.pixpsa=[6 %d]\n", parms->skyc.pixpsa[0]);
+	fprintf(fp, "powfs.ncomp=[64 %d]\n", parms->maos.ncomp[0]);
+	fprintf(fp, "powfs.nwvl=[1 %d]\n",nwvl);
+	fprintf(fp, "powfs.wvl=[0.589e-6");
+	for(int ip=0; ip<1; ip++){
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		fprintf(fp, " %.4g", parms->maos.wvl[iwvl]);
+	    }
+	}
+	fprintf(fp,"]\n");
+    }else if(parms->maos.npowfs==2){
 	fprintf(fp, "powfs.piinfile=[\"\" \"pistat\" \"pistat\"]\n");
 	fprintf(fp, "powfs.neareconfile=[\"\" \"nea_tot\" \"nea_tot\"]\n");
 	fprintf(fp, "powfs.phyusenea=[0 1 1]\n");

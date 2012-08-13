@@ -296,7 +296,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,i0scale);
     READ_POWFS(dbl,sigscale);
     READ_POWFS(int,moao);
-
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
 	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
@@ -314,10 +313,8 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
 	    parms->powfs[ipowfs].llt->fnamp=readcfg_str("%sllt.fnamp",prefix);
 	    parms->powfs[ipowfs].llt->fnsurf=readcfg_str("%sllt.fnsurf",prefix);
-	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix);
-	    parms->powfs[ipowfs].llt->zoomdtrat=readcfg_int("%sllt.zoomdtrat", prefix);
-	    parms->powfs[ipowfs].llt->zoomgain=readcfg_dbl("%sllt.zoomgain", prefix);	    
-	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix);
+	    parms->powfs[ipowfs].llt->smooth=readcfg_int("%sllt.smooth",prefix); 
+	    parms->powfs[ipowfs].llt->colprep=readcfg_int("%sllt.colprep",prefix); 
 	    parms->powfs[ipowfs].llt->colsim=readcfg_int("%sllt.colsim",prefix);
 	    parms->powfs[ipowfs].llt->colsimdtrat=readcfg_int("%sllt.colsimdtrat",prefix);
 	    readcfg_dblarr_n(&parms->powfs[ipowfs].llt->misreg,2,"%sllt.misreg",prefix);
@@ -779,6 +776,10 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.mvmport);
     READ_INT(sim.mvmsize);
     READ_INT(sim.mvmngpu);
+
+    READ_INT(sim.zoomdtrat);
+    READ_INT(sim.zoomshare);
+    READ_DBL(sim.zoomgain);
 }
 /**
    Read in parameters for Cn2 estimation.

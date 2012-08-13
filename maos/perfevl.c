@@ -392,7 +392,7 @@ static void perfevl_mean(SIM_T *simu){
 	    double *poleNGSm2=simu->oleNGSm->p+isim*nngsmod;
 	    dmulvec(poleNGSm2,recon->ngsmod->IMCC,poleNGSm,1);
 	    dcell *Mngs=dcellnew(1,1);
-	    Mngs->p[0]=dnew_ref(nngsmod,1,pcleNGSm);/*ref the data */
+	    Mngs->p[0]=dnew_ref(nngsmod,1,pcleNGSm2);/*ref the data */
 	    if(simu->parms->tomo.ahst_idealngs){
 		/* apply ideal ngs modes immediately to dmreal.  Don't forget to
 		   updated DM Cache. */

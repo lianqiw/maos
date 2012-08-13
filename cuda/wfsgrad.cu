@@ -348,6 +348,7 @@ void gpu_wfsgrad(thread_t *info){
 	}
 	if(simu->zoomint && simu->zoomint->p[iwfs]){
 	    focus-=simu->zoomint->p[iwfs]->p[0];
+	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
 	}
 	if(parms->sim.ahstfocus && !isfinite(hs)){
 	    double scale=simu->recon->ngsmod->scale;

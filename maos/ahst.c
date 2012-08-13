@@ -95,7 +95,7 @@ static dcell* ngsmod_mcc(const PARMS_T *parms, RECON_T *recon, APER_T *aper, con
 		double yy=y[iloc]*y[iloc];
 		/*remove piston in focus */
 		if(parms->sim.ahstfocus){
-		    mod[2][iloc]=/*removed global focus mode*/
+		    mod[2][iloc]=/*all focus is handled in mod 5*/
 			-2.*ht*scale*(thetax*x[iloc]+thetay*y[iloc]);
 		}else{
 		    mod[2][iloc]=scale1*(xx+yy-MCC_fcp)
@@ -504,7 +504,7 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	}
 	ngsmod->nmod++;/*add a global focus mode.*/
     }
-    info2("ngsmod nmod=%d\n", ngsmod->nmod);
+    info2("ngsmod nmod=%d, ahstfocus=%d\n", ngsmod->nmod, parms->sim.ahstfocus);
     ngsmod->hs=hs;
     if(ndm>1){
 	ngsmod->ht=parms->dm[1].ht;
@@ -823,10 +823,10 @@ void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 	    double y2=y*y;
 	    double tmp= locx[iloc]*mod[0]
 		+locy[iloc]*mod[1]
-		+mod[2]*((parms->sim.ahstfocus?0:(x2+y2-MCC_fcp)*scale1)-2*scale*ht*(thetax*x+thetay*y))
+		+(parms->sim.ahstfocus?mod[5]:mod[2]*scale1)*(x2+y2-MCC_fcp)
+		+mod[2]*(-2*scale*ht*(thetax*x+thetay*y))
 		+mod[3]*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
-		+mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y))
-		+(parms->sim.ahstfocus?mod[5]*(x2+y2-MCC_fcp):0);
+		+mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y));
 	    iopdevl->p[iloc]+=tmp*alpha;
 	}
     }

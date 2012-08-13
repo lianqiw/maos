@@ -132,7 +132,7 @@ static void skysim_isky(SIM_S *simu){
 	}
 	/*Select asters that have good performance. */
 	setup_aster_select(pres_ol[isky],aster, naster, star, 
-			   simu->rmsol->p[0]*0.5,parms); 
+			   parms->skyc.mtch?0.5*simu->rmsol->p[0]:INFINITY,parms); 
 	/*Read in physical optics data (wvf) */
 	nstep=setup_star_read_wvf(star,nstar,parms,seed_maos);
 	double tk_3=myclockd();

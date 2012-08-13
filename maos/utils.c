@@ -458,14 +458,10 @@ ARG_T * parse_args(int argc, char **argv){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-#if USE_PTHREAD == 0
-    arg->nthread=1;
-#endif
     if(arg->nthread>NTHREAD || arg->nthread<=0){
         arg->nthread=NTHREAD;
-    }else{
-        NTHREAD=arg->nthread;
     }
+    NTHREAD=arg->nthread;
     if(!arg->gpus || arg->ngpu==0){
 	arg->ngpu=arg->ngpu2;
     }

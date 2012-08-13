@@ -428,6 +428,7 @@ void wfsgrad_iwfs(thread_t *info){
 	}
 	if(simu->zoomint && simu->zoomint->p[iwfs]){
 	    focus-=simu->zoomint->p[iwfs]->p[0];
+	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
 	}
 	if(parms->sim.ahstfocus && simu->Mint_lo->mint[0]){
 	    /*new definition of NGS modes has focus error in LGS. offset to remove it.*/

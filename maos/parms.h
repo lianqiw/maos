@@ -112,8 +112,6 @@ typedef struct LLT_CFG_T{
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
     int colsimdtrat;/**<change to next sodium profile during simulation every
 		       colsimdtrat time step*/
-    int zoomdtrat; /**<dtrat of the trombone averager*/
-    double zoomgain; /**<gain of the trombone controller*/
 } LLT_CFG_T;
 /**
    contains input parameters for each type of wfs (powfs).
@@ -230,7 +228,6 @@ typedef struct POWFS_CFG_T{
     int moao;       /**<index into MOAO struct. -1: no moao*/
     int dl;         /**<is diffraction limited. derived from comparing pixtheta
 		       with diffraction limited image size.*/
-
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -492,6 +489,9 @@ typedef struct SIM_CFG_T{
     char *mvmhost;   /**<Which host does the MVM server run*/
     int mvmsize;     /**<number of gradients to send each time. 0 is all.*/
     int mvmngpu;     /**<number of GPUs to use in server*/
+    int zoomdtrat;   /**<dtrat of the trombone averager*/
+    int zoomshare;   /**<1: All LGS share the same trombone*/
+    double zoomgain; /**<gain of the trombone controller*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
