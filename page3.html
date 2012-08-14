@@ -98,10 +98,25 @@
 </ol>
 <p>The MCAO baseline “nfiraos.conf” includes “atm_mk13n50p.conf” to specify MK13N median seeing turbulence profile, while the two SCAO baselines include “atm_scao.conf” that specifies the turbulence information with only a single reconstruction layer.</p>
 <p>We can optionally setup one or more surfaces that can cover science fields or wavefront sensors. Put the list of surface files in key <code>surf</code>. Each surface file must contain a 2-d array with a header specifying the following keys:</p>
-<p>dx the sampling ox the origin in x direction. oy the origin in y direction. h the height conjugation of this surface vx the frozen flow wind speed along x of this surface (0 for static) vy the frozen flow wind speed along y of this surface (0 for static)</p>
-<p>We can also setup one or more tilted M3 surfaces that are common to science fields and wavefront sensors. Put the list of surface files in key <code>tsurf</code>. Each surface file must contain a 2-d array with a header specifying the following keys:</p>
-<p>dx the sampling in x direction (first dimension). dy the sampling in y direction (second dimension) ox the origin in x direction. oy the origin in y direction. txdeg the x tilt angle in degrees wrt beam (90 is perp) tydeg the y tilt angle in degrees wrt beam (90 is perp) ftel the telescope effective focal length fexit the distance between the exit pupil and the focus fsurf the distance between the center of the M3 surface and the focus.</p>
-<p><a class="el" href="nfiraos.html">Example: NFIRAOS</a> Shows the example configuration file for NFIRAOS.</p>
+<div class="fragment"><pre class="fragment">
+    dx  the sampling
+    ox  the origin in x direction.
+    oy  the origin in y direction.
+    h   the height conjugation of this surface
+    vx  the frozen flow wind speed along x of this surface (0 for static)
+    vy  the frozen flow wind speed along y of this surface (0 for static)
+    </pre></div><p>We can also setup one or more tilted M3 surfaces that are common to science fields and wavefront sensors. Put the list of surface files in key <code>tsurf</code>. Each surface file must contain a 2-d array with a header specifying the following keys:</p>
+<div class="fragment"><pre class="fragment">
+    dx    the sampling in x direction (first dimension).
+    dy    the sampling in y direction (second dimension)
+    ox    the origin in x direction.
+    oy    the origin in y direction.
+    txdeg the x tilt angle in degrees wrt beam (90 is perp)
+    tydeg the y tilt angle in degrees wrt beam (90 is perp)
+    ftel  the telescope effective focal length
+    fexit the distance between the exit pupil and the focus
+    fsurf the distance between the center of the M3 surface and the focus.
+    </pre></div><p><a class="el" href="nfiraos.html">Example: NFIRAOS</a> Shows the example configuration file for NFIRAOS.</p>
 <p><a class="el" href="SCAO_NGS.html">Example: SCAO NGS</a> shows the example configuration file of a single conjugate NGS system.</p>
 <p><a class="el" href="SCAO_LGS.html">Example: SCAO LGS</a> shows the example configuration file of a single conjugate LGS system. </p>
 </div></div><!-- contents -->
@@ -109,7 +124,7 @@
   <div id="nav-path" class="navpath">
     <ul>
 
-    <li class="footer">Generated on Tue Aug 14 2012 09:47:57 for maos-1.2.0 by
+    <li class="footer">Generated on Tue Aug 14 2012 09:57:34 for maos-1.2.0 by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.6.1 </li>
    </ul>
