@@ -34,13 +34,10 @@
 
 
    2011-09-07: 
-   Relocate aper->opdadd to aper.opdadd, 
-   Relocate simu->surfwfs to powfs.opdadd
-   Relocate recon->opdxadd to recon.opdxadd
-
+   Relocate simu->surfwfs to powfs.opdadd In order to perserve surface for different seeds
  */
-void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
-    if(parms->ntsurf<=0) return;
+static void 
+setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
     info("Setting up tilt surface (M3)\n");
     rectmap_t **tsurf=calloc(parms->ntsurf, sizeof(rectmap_t*));
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
@@ -58,9 +55,6 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
     }else{
 	locevl=aper->locs;
     }
-    if(!aper->opdadd){
-	aper->opdadd=dcellnew(parms->evl.nevl,1);
-    }
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	const double alx=tsurf[itsurf]->txdeg/180*M_PI;
 	const double aly=tsurf[itsurf]->tydeg/180*M_PI;
@@ -75,16 +69,12 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
 	rectmap_t *mapsurf=tsurf[itsurf];
 
 	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	    if(!aper->opdadd->p[ievl]){
-		aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
-	    }
 	    double bx=parms->evl.thetax[ievl]/mag;/*2010-04-02: do not put - sign */
 	    double by=parms->evl.thetay[ievl]/mag;
 	    double d_img_exit=fexit;
 	    proj_rect_grid(mapsurf,alx,aly,locevl,scalex,scaley,
 			   NULL,aper->opdadd->p[ievl]->p,scaleopd,
 			   d_img_exit, het, bx,by);
-	    dwrite(aper->opdadd->p[ievl], "surfevl_%d.bin", ievl);
 	}
 
 	for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
@@ -92,12 +82,7 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
 	    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	    const double hs=parms->powfs[ipowfs].hs;
 	    loc_t *locwfs, *locwfsin;
-	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-	    }
-	    if(!powfs[ipowfs].opdadd->p[wfsind]){
-		powfs[ipowfs].opdadd->p[wfsind]=dnew(powfs[ipowfs].npts,1);
-	    }
+
 	    if(powfs[ipowfs].nlocm){
 		error("We don't handle this case yet. Think carefully when to apply shift.\n");
 		int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
@@ -126,10 +111,7 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
 	    if(do_rot){
 		locfree(locwfs);
 	    }
-	    dwrite(powfs[ipowfs].opdadd->p[wfsind],"surfwfs_%d.bin", iwfs);
 	}
-	/*exit(0); */
-	
     }
     if(do_rot){
 	locfree(locevl);
@@ -143,30 +125,9 @@ void setup_tsurf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
    Setup surface perpendicular to the beam by ray tracing from the surface to
    WFS and Science grid
  */
-void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
-    if(parms->nsurf<=0){
-	info2("There are no surface map\n");
-	return;
-    }else{
-	info2("Setting up surface OPD (M1/M2/M3)\n");
-    }
-
-    if(!aper->opdadd){
-	aper->opdadd=dcellnew(parms->evl.nevl,1);
-    }
-    if(recon && !recon->opdxadd && parms->sim.idealfit){
-	recon->opdxadd=dcellnew(parms->atmr.nps, 1);
-    }
-    map_t **surf=calloc(parms->nsurf, sizeof(map_t*));
-    for(int isurf=0; isurf<parms->nsurf; isurf++){
-	if(!parms->surf[isurf]) continue;
-	char *fn=parms->surf[isurf];
-	info("Loading surface OPD from %s\n", fn);
-	surf[isurf]=mapread("%s",fn);
-	surf[isurf]->ox+=parms->aper.misreg[0];
-	surf[isurf]->oy+=parms->aper.misreg[1];
-    }
-
+static void 
+setup_surf_flat(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
+    info2("Setting up surface OPD (M1/M2/M3)\n");
     loc_t *locevl;
     const double rot=-parms->aper.rotdeg/180.*M_PI;
     int do_rot=(fabs(rot)>1.e-10);
@@ -176,41 +137,76 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     }else{
 	locevl=aper->locs;
     }
-    
-  
+    const int nevl=parms->evl.nevl;
+    const int nwfs=parms->nwfs;
+    int *evlcover=malloc(nevl*sizeof(int));
+    int *wfscover=malloc(nwfs*sizeof(int));
+    int opdxcover;
     for(int isurf=0; isurf<parms->nsurf; isurf++){
-	if(!surf[isurf]) continue;
-	double hl=surf[isurf]->h;
-	for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	char *fn=parms->surf[isurf];
+	if(!fn) continue;
+	info("Loading surface OPD from %s\n", fn);
+	map_t *surf=mapread("%s",fn);
+	surf->ox+=parms->aper.misreg[0];
+	surf->oy+=parms->aper.misreg[1];
+
+	const char *strevl=search_header(surf->header, "SURFEVL");
+	const char *strwfs=search_header(surf->header, "SURFWFS");
+	const char *stropdx=search_header(surf->header, "SURFOPDX");
+	if(!strevl){
+	    warning2("surf[%d] does not contain SURFEVL\n", isurf);
+	    for(int ievl=0; ievl<nevl; ievl++){
+		evlcover[ievl]=1;
+	    }
+	}else{
+	    readstr_intarr_nmax(&evlcover, nevl, strevl);
+	}
+	if(!strwfs){
+	    warning2("surf[%d] does not contain SURFWFS\n", isurf);
+	    for(int iwfs=0;iwfs<nwfs; iwfs++){
+		wfscover[iwfs]=1;
+	    }
+	}else{
+	    readstr_intarr_nmax(&wfscover, nwfs, strwfs);
+	}
+	if(!stropdx){
+	    opdxcover=1;
+	}else{
+	    opdxcover=(int)readstr_num(stropdx, NULL);
+	}
+	double hl=surf->h;
+	for(int ievl=0; ievl<nevl; ievl++){
+	    if(!evlcover[ievl]){
+		warning2("Skip evl %d for surface %s\n", ievl, parms->surf[isurf]);
+		continue;
+	    }
 	    if(!aper->opdadd->p[ievl]){
 		aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
 	    }
-	    double displacex=parms->evl.thetax[ievl]*hl;
-	    double displacey=parms->evl.thetay[ievl]*hl;
+	    const double displacex=parms->evl.thetax[ievl]*hl;
+	    const double displacey=parms->evl.thetay[ievl]*hl;
 	    
 	    if(do_rot){
-		prop_grid(surf[isurf], locevl, NULL, aper->opdadd->p[ievl]->p, 
+		prop_grid(surf, locevl, NULL, aper->opdadd->p[ievl]->p, 
 			  1, displacex, displacey, 1, 0, 0, 0);
 	    }else{
-		prop_grid_stat(surf[isurf], aper->locs->stat, 
+		prop_grid_stat(surf, aper->locs->stat, 
 			       aper->opdadd->p[ievl]->p, 
 			       1, displacex, displacey, 1, 0, 0, 0);
 	    }
-	    dwrite(aper->opdadd->p[ievl], "surfevl_%d.bin", ievl);
 	}
 	for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(!wfscover[iwfs]){
+		warning2("Skip wfs %d for surface %s\n", iwfs, parms->surf[isurf]);
+		continue;
+	    }
+	    const int ipowfs=parms->wfs[iwfs].powfs;
 	    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	    double hs=parms->powfs[ipowfs].hs;
+	    const double hs=parms->powfs[ipowfs].hs;
 	    const double scale=1.-hl/hs;
 	    const double displacex=parms->wfs[iwfs].thetax*hl+powfs[ipowfs].misreg[wfsind][0];
 	    const double displacey=parms->wfs[iwfs].thetay*hl+powfs[ipowfs].misreg[wfsind][1];
-	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-	    }
-	    if(!powfs[ipowfs].opdadd->p[wfsind]){
-		powfs[ipowfs].opdadd->p[wfsind]=dnew(powfs[ipowfs].npts,1);
-	    }
+
 	    loc_t *locwfs, *locwfsin;
 	    if(powfs[ipowfs].locm){
 		int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
@@ -224,14 +220,16 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }else{
 		locwfs=locwfsin;
 	    }
-	    prop_grid(surf[isurf], locwfs, NULL, powfs[ipowfs].opdadd->p[wfsind]->p, 
+	    prop_grid(surf, locwfs, NULL, powfs[ipowfs].opdadd->p[wfsind]->p, 
 		      1, displacex, displacey, scale, 1., 0, 0); 
 	    if(do_rot){
 		locfree(locwfs);
 	    }
-	    dwrite(powfs[ipowfs].opdadd->p[wfsind],"surfwfs_%d.bin", iwfs);
 	}
-	if(parms->sim.idealfit && recon){
+	if(parms->sim.idealfit && recon && opdxcover){
+	    if(!recon->opdxadd){
+		recon->opdxadd=dcellnew(parms->atmr.nps, 1);
+	    }
 	    double distmin=INFINITY;
 	    int jpsr=-1;
 	    /*Select the layer that is closed to the surface. */
@@ -249,20 +247,55 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }else{
 		xloc = recon->xloc[jpsr];
 	    }
-	    loc_t *surfloc=mksqloc_map(surf[isurf]);
+	    loc_t *surfloc=mksqloc_map(surf);
 	    dsp *H=mkhb(xloc, surfloc, NULL, 0, 0, 1, 0, 0);
-	    double scale=pow(surf[isurf]->dx/xloc->dx,2);
+	    double scale=pow(surf->dx/xloc->dx,2);
 	    if(!recon->opdxadd->p[jpsr]){
 		recon->opdxadd->p[jpsr]=dnew(xloc->nloc, 1);
 	    }
-	    spmulvec(recon->opdxadd->p[jpsr]->p, H, surf[isurf]->p, scale);
+	    spmulvec(recon->opdxadd->p[jpsr]->p, H, surf->p, scale);
 	    if(do_rot) locfree(xloc);
 	    locfree(surfloc);
-	    dwrite(recon->opdxadd->p[jpsr], "surfopdx_%d", jpsr);
 	}
+	mapfree(surf);
     }
     if(do_rot){
 	locfree(locevl);
     }
-    maparrfree(surf, parms->nsurf);
+    free(evlcover);
+    free(wfscover);
+}
+
+void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
+    if(parms->nsurf<=0 && parms->ntsurf<=0){
+	info2("No surfaces to setup\n");
+	return;
+    }
+    if(aper->opdadd){
+	error("Who sets aper->opdadd?\n");
+    }
+    aper->opdadd=dcellnew(parms->evl.nevl,1);
+    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
+    }
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+	}
+    }
+
+    if(parms->ntsurf>0){
+	setup_surf_tilt(parms, aper, powfs);
+    }
+    if(parms->surf>0){
+	setup_surf_flat(parms, aper, powfs, recon);
+    }
+    if(parms->save.setup){
+	dcellwrite(aper->opdadd, "%s/surfevl.bin", dirsetup);
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup, ipowfs);
+	}
+	if(recon->opdxadd) dcellwrite(recon->opdxadd, "%s/surfopdx", dirsetup);
+    }
 }

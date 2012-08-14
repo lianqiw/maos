@@ -257,8 +257,7 @@ void prop_index(PROPDATA_T *propdata){
     const int nxmax=locin->map->nx-nskip;		\
     const int nymax=locin->map->ny-nskip;		\
     /*-1 because we count from 1 in the map.*/		\
-    const double *phiin0=phiin-1;			\
-    assert(scale>0);
+    const double *phiin0=phiin-1;			
 
 #define PREPIN_GRID(nskip)				\
     const double dx_in1 = 1./mapin->dx;			\
@@ -267,8 +266,7 @@ void prop_index(PROPDATA_T *propdata){
     displacey = (displacey-mapin->oy)*dx_in1;		\
     const int nxmax  = mapin->nx-nskip;			\
     const int nymax  = mapin->ny-nskip;			\
-    double (*phiin)[mapin->nx]=(void*)(mapin->p);	\
-    assert(scale>0);
+    double (*phiin)[mapin->nx]=(void*)(mapin->p);	
 
 #define PREPOUT_LOC				\
     if(!locout) error("locout is NULL!");	\

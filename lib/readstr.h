@@ -16,7 +16,25 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_SETUP_TSURF
-#define AOS_SETUP_TSURF
-void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon);
-#endif
+#include "common.h"
+#include "mathmisc.h"
+/*Check whether the char is space. We only treat real space, \t and \v as space. */
+INLINE int is_space(char c){
+    if(c==' ' || c=='\t' || c=='\v'){
+	return 1;
+    }else{
+	return 0;
+    }
+}
+/*Check whether the current express ends. String end or newline is treated as end.*/
+INLINE int is_end(char c){
+    if(c=='\0' || c=='\n' || c=='\r' || c==';'){
+	return 1;
+    }else{
+	return 0;
+    }
+}
+int readstr_strarr(char ***res, int len, const char *sdata);
+double readstr_num(const char *data, char **endptr0);
+int readstr_numarr(void **ret, int len, int *nrow0, int *ncol0, int type, const char *data);
+void readstr_intarr_nmax(int **ret, int len, const char *data);

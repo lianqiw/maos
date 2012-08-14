@@ -67,7 +67,6 @@ void maos(const PARMS_T *parms){
 	recon = setup_recon(parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
-    setup_tsurf(parms, aper, powfs);/*setting up M3 tilted surf. */
     setup_surf(parms, aper, powfs, recon);/*setting up M1/M2/M3 surface OPD. */
     
 #if USE_CUDA

@@ -32,6 +32,7 @@
 #include "path.h"
 #include "common.h"
 #include "mathmisc.h"
+#include "readstr.h"
 /**
    file readcfg.c
 
@@ -77,29 +78,30 @@ static int print_override=1;
 /*
    We only use one hash table in the beginning of code. so the non-reentrant hsearch is fine.
 */
+
 /**
    trim the spaces or coma before and after string.*/
 static void strtrim(char **str){
     if(!*str) return;
     int iend;
     /*turn non-printable characters, coma, and semicolumn, to space */
-    for(char *tmp=*str; *tmp!='\0'; tmp++){
-      if(!isgraph((int)*tmp) || *tmp==',' || isspace((int)*tmp)){
-	  *tmp=' ';
-      }
+    for(char *tmp=*str; !is_end(*tmp); tmp++){
+	if(!isgraph((int)*tmp) || *tmp==',' || is_space(*tmp)){
+	    *tmp=' ';
+	}
     }
     /*remove leading spaces. */
-    while((*str)[0]!='\0' && isspace((int)(*str)[0])) (*str)++;
+    while(!is_end(**str) && is_space((*str)[0])) (*str)++;
     iend=strlen(*str)-1;
     /*remove tailing spaces. */
-    while(isspace((int)(*str)[iend]) && iend>=0){
+    while(is_space((*str)[iend]) && iend>=0){
 	(*str)[iend]='\0';
 	iend--;
     }
     /*remove duplicated spaces */
     char *tmp2=*str;
     int issp=0;
-    for(char *tmp=*str; *tmp!='\0'; tmp++){
+    for(char *tmp=*str; !is_end(*tmp); tmp++){
 	if(*tmp==' '){
 	    if(issp){/*there is already a space, skip. */
 		continue;
@@ -114,7 +116,7 @@ static void strtrim(char **str){
 	tmp2++;
     }
     *tmp2='\0';/*properly end the string */
-    if((*str)[0]=='\0') *str=NULL;
+    if(is_end(**str)) *str=NULL;
 }
 /**
    remove "" or '' around a string from config file. Accept whole string if
@@ -128,7 +130,7 @@ static char* strextract(const char *data){
 	}else{
 	    char *res=strdup(data+1);
 	    res[strlen(res)-1]='\0';
-	    if(res[0]=='\0'){
+	    if(is_end(res[0])){
 		free(res);
 		res=NULL;
 	    }
@@ -149,18 +151,19 @@ static char *squeeze(char *line){
     }else{
 	/*Remove comment*/
 	comment=strchr(line,'#');
-	if(comment)
+	if(comment){
 	    comment[0]='\0';
+	}
 	/*Remove trailing linebreak, semi-colon, and spaces*/
 	int nread=strlen(line)-1;
-	while(nread>=0 && (isspace((int)line[nread]) || line[nread]==';')){
+	while(nread>=0 && (is_space(line[nread]) || is_end(line[nread]))){
 	    line[nread]='\0';
 	    nread--;
 	}
 	/*Remove leading spaces*/
 	sline=line;
-	while(isspace((int)sline[0])) sline++;
-	if(sline[0]=='\0')  sline=NULL;
+	while(is_space(sline[0])) sline++;
+	if(is_end(sline[0]))  sline=NULL;
     }
     return sline;
 }
@@ -242,7 +245,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     char line[MAXLN];
     while (fgets(line, MAXLN, fd)){
 	sline=squeeze(line);
-	if(!sline || sline[0]=='\0')/*skip empty lines. */
+	if(!sline || is_end(sline[0]))/*skip empty lines. */
 	    continue;
 	if(sline){
 	    if((strlen(sline)+strlen(ssline))>=MAXLN){
@@ -385,7 +388,6 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     free(fn);
 #undef MAXLN
 }
-static const char *curkey;
 /**
    Get the record number of a key.
  */
@@ -394,7 +396,6 @@ static long getrecord(char *key, int mark){
     ENTRY entry, *entryfind;
     strtrim(&key);
     entry.key=key;
-    curkey=key;
     if((entryfind=hsearch(entry,FIND))){
 	irecord=(long)entryfind->data;
 	if(mark){
@@ -499,62 +500,6 @@ int readcfg_strarr(char ***res, const char *format,...){
 	}
 	return readstr_strarr(res, 0, sdata);
     }
-}
-/**
-   Obtain a string array value from the key. revised on 2010-10-16 to be more
-   strict on the entry to avoid mistakes.
- */
-int readstr_strarr(char ***res, int len, const char *sdata){
-    int count=0;
-    int maxcount=5;
-    if(len && *res){
-	memset(*res, 0, sizeof(char*)*len);
-    }else{
-	if(len) maxcount=len;
-	*res=calloc(maxcount,sizeof(char*));
-    }
-    const char *sdataend=sdata+strlen(sdata)-1;
-    const char *sdata2;
-    if(sdata[0]!='[' || sdataend[0]!=']'){/*spaces are already trimmed out.*/
-	warning2("%s: Entry {%s} should start with [ and end with ]\n", curkey, sdata);
-	sdata2=sdata;
-    }else{
-	sdata2=sdata+1;
-    }
-    /*skip spaces*/
-    while(sdata2<sdataend && sdata2[0]==' '){
-	sdata2++;
-    }
-    while(sdata2<sdataend){
-	if(sdata2[0]!='"' && sdata2[0]!='\''){
-	    error("%s: Unable to parse {%s} for str array\n", curkey, sdata);
-	}
-	const char *sdata3=sdata2+1;
-	const char *sdata4=strchr(sdata3,sdata2[0]);
-	if(!sdata4) error("%s: Unmatched quote\n", curkey);
-	if(sdata4>sdata3){/*found non-empty str*/
-	    if(!len && count>=maxcount){
-		maxcount*=2;
-		*res=realloc(*res,sizeof(char*)*maxcount);
-	    }
-	    (*res)[count]=mystrndup(sdata3, sdata4-sdata3);
-	}else{/*found empty str*/
-	    (*res)[count]=NULL;
-	}
-	count++;
-	sdata2=sdata4+1;
-	while(sdata2<sdataend && sdata2[0]==' '){
-	    sdata2++;
-	}
-    }
-    if(!len){
-	if(count>0){
-	    *res=realloc(*res,sizeof(char*)*count);
-	}else{
-	    free(*res); *res=NULL;
-	}
-    }
-    return count;
 }
 
 /**
@@ -676,279 +621,4 @@ int readcfg_int( const char *format,...){
 double readcfg_dbl(const char *format,...){
     format2key;
     return readstr_num(store[getrecord(key, 1)].data, NULL);
-}
-/**
-   Read in a number from the value string. Will interpret * and / operators. *endptr0 will
-   be updated to point to the next valid entry, or at separator like coma
-   (spaced are skipped).  */
-double readstr_num(const char *data, char **endptr0){
-    if(!data || strlen(data)==0){
-	error("%s: Unable to parse {%s} for a number\n", curkey, data);
-	return 0;
-    }
-    char *endptr;
-    double res=strtod(data, &endptr);
-    if(data==endptr){
-	error("%s: Unable to parse {%s} for a number\n", curkey, data);
-	return 0;
-    }
-    while(isspace((int)endptr[0])) endptr++;
-    while(endptr[0]=='/' || endptr[0]=='*'){
-	int power=1;
-	if(endptr[0]=='/'){
-	    power=-1;
-	}
-	endptr++;
-	while(isspace((int)endptr[0])) endptr++;
-	data=endptr;
-	double tmp=strtod(data, &endptr);
-	if(data==endptr){
-	    error("%s: Failed to parse {%s} for a number\n", curkey, data);
-	}
-	if(power==1){
-	    res*=tmp;
-	}else{
-	    res/=tmp;
-	}
-	while(isspace((int)endptr[0])) endptr++;
-    }
-    if(endptr0){
-	*endptr0=endptr;
-    }
-    return res;
-}
-/**
-   Read numerical array from a string. if len is nonzero, *ret should be already allocated. 
-   Can read in the following formats:
-   [1 2 3]   as 3 col, 1 row [1 2 3] in memory
-   [1 2 3]+2 as [3 4 5] in memory
-   2*[1 2 3] or [1 2 3]*2 as [2 4 6] in memory
-   [1 2 3]/2 as [0.5 1 1.5] in memory
-   2/[1 2 3] as [2 1 2/3] in memory
-   2/[1 2 3]*2+1 as [5 3 7/3] in memory
-
-   2-d arrays are groups as columns (in contrast to matlab that uses rows); semi-colon is used to separate columns.
-   [1 2 3; 4 5 6] is 2 d array, 3 columns, 2 rows. In memory is stored as [1 2 3 4 5 6]
-   transpose is supported:
-   [1 2 3; 4 5 6]' is 2 d array, 2 columns, 3 rows. In memory is stored as [1 4 2 5 3 6]
-*/
-int readstr_numarr(void **ret, int len, int *nrow0, int *ncol0, int type, const char *data){
-    if(!data || strlen(data)==0){
-	return 0;
-    }
-    size_t nmax=10;
-    size_t size=0;/*size of each number */
-    switch(type){
-    case T_INT:
-	size=sizeof(int);
-	break;
-    case T_DBL:
-	size=sizeof(double);
-	break;
-    default:
-	error("Invalid type");
-    }
-    if(len==0){
-	if(!(*ret=malloc(size*nmax))){
-	    error("Failed to allocate memory for ret\n");
-	}
-    }else{
-	nmax=len;
-	if(*ret){
-	    memset(*ret, 0, size*len);
-	}else{
-	    *ret=calloc(size, len);
-	}
-    }
-    const char *startptr=data;
-    char *endptr, *startptr2;
-    double fact=1;
-    int power=1;
-    int addition=0; double addval=0; 
-    int trans=0;
-    /*process possible numbers before the array. */
-    if(strchr(startptr,'[')){/*there is indeed '[' */
-	while(startptr[0]!='['){/*parse number before [*/
-	    double fact1=strtod(startptr, &endptr);/*get the number */
-	    if(startptr==endptr){
-		error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
-	    }else{/*valid number */
-		if(power==1){
-		    fact*=fact1;
-		}else{
-		    fact/=fact1;
-		}
-		while(isspace((int)endptr[0])) endptr++;
-		if(endptr[0]=='/'){
-		    power=-1;
-		}else if(endptr[0]=='*'){
-		    power=1;
-		}else{
-		    error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
-		}
-		startptr=endptr+1;
-	    }
-	}
-	if(startptr[0]!='['){
-	    error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
-	}
-	startptr++;/*points to the beginning of the array in [] */
-	/*process possible numbers after the array. do not use startptr here.*/
-    }else{
-	/*warning2("Expecting array: {%s} should start with [\n", data); */
-    }
-    if(strchr(startptr,']')){/*there is indeed ']' */
-	endptr=strchr(startptr,']')+1;
-	while(isspace((int)endptr[0]) || endptr[0]=='\''){
-	    if(endptr[0]=='\'') trans=1-trans;
-	    endptr++;
-	}
-	while(endptr[0]=='/' || endptr[0]=='*' || endptr[0]=='+' || endptr[0]=='-'){
-	    int power2=1;
-	    if(endptr[0]=='/'){
-		power2=-1;
-	    }else if(endptr[0]=='*'){
-		power2=1;
-	    }else if(endptr[0]=='+' || endptr[0]=='-'){
-		power2=0;
-		if(endptr[0]=='+'){
-		    addition=1;
-		}else{
-		    addition=-1;
-		}
-	    }
-	    if(addition && power2){
-		error("We do not yet support * or / after + or - \n");
-	    }
-	    endptr++;
-	    while(isspace((int)endptr[0])) endptr++;
-	    startptr2=endptr;
-	    double fact2=strtod(startptr2, &endptr);
-	    if(startptr2==endptr){
-		error("%s: Invalid entry to parse for numerical array: {%s}\n", curkey, data);
-	    }
-	    while(isspace((int)endptr[0])) endptr++;
-	    if(addition){/*addition*/
-		if(addition==1){
-		    addval+=fact2;
-		}else{
-		    addval-=fact2;
-		}
-	    }else{
-		if(power2==1){
-		    fact*=fact2;
-		}else{
-		    fact/=fact2;
-		}
-	    }
-	}
-	if(endptr[0]!='\0'){
-	    error("%s: There is garbage in the end of the string: {%s}\n", curkey, data);
-	}
-    }
-    int count=0;
-    int nrow=0;/*number of rows*/ 
-    int ncol=0;/*number of columns*/
-    int rowbegin=0;/*beginning of this row*/
-    /*Read in the array */
-    while(startptr[0]!=']' && startptr[0]!='\0'){
-	if(count>=nmax){
-	    if(len){
-		error("%s: Needs %d numbers, but more are supplied: {%s}\n", curkey, len, data);
-	    }else{
-		nmax*=2;
-		*ret=realloc(*ret, size*nmax);
-	    }
-	}
-	/*parse the string for a floating point number.  */
-	double res=readstr_num(startptr, &endptr);
-	startptr=endptr;
-	/*apply the factors appear before or after [] */
-	if(power==1){
-	    res=fact*res;
-	}else{
-	    res=fact/res;
-	}
-	if(addition){
-	    res+=addval;
-	}
-	/*assign the value to appropriate array. convert to int if necessary. */
-	switch(type){
-	case T_INT:
-	    ((int*)(*ret))[count]=(int)res;
-	    break;
-	case T_DBL:
-	    ((double*)(*ret))[count]=res;
-	    break;
-	default:
-	    error("Invalid type");
-	}
-	count++;
-	/*Skip the number separators. */
-	while(startptr[0]==' '||startptr[0]==';'){
-	    if(startptr[0]==';'){
-		ncol++;
-		if(nrow==0){
-		    nrow=count-rowbegin;
-		}else if(nrow!=count-rowbegin){
-		    error("last row has %d numbers while new row has %d numbers\n", nrow, count-rowbegin);
-		}
-		rowbegin=count;
-	    }
-	    startptr++;
-	}
-    }
-    if(rowbegin<count){/*if last row is not ended with ;*/
-	ncol++;
-	if(nrow==0){
-	    nrow=count-rowbegin;
-	}else if(nrow!=count-rowbegin){
-	    error("last row has %d numbers while new row has %d numbers\n", nrow, count-rowbegin);
-	}
-    }
-    if(nrow*ncol!=count){
-	error("nrow=%d, ncol=%d, count=%d\n", nrow, ncol, count);
-    }
-
-    if(trans && count>0){
-	info("Transposing %dx%d array\n", ncol, nrow);
-	void *newer=malloc(size*count);
-	switch(type){
-	case T_INT:{
-	    int *from=(*ret);
-	    int *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
-		    to[icol+ncol*irow]=from[irow+nrow*icol];
-		}
-	    }
-	}
-	    break;
-	case T_DBL:{
-	    double *from=(*ret);
-	    double *to=newer;
-	    for(int icol=0; icol<ncol; icol++){
-		for(int irow=0; irow<ncol; irow++){
-		    to[icol+ncol*irow]=from[irow+nrow*icol];
-		}
-	    }
-	}
-	    break;
-	default:
-	    error("Invalid type");
-	}
-	int tmp=ncol; ncol=nrow; nrow=tmp;
-	free(*ret);
-	*ret=newer;
-    }else if(!len){
-	if(count>0){
-	    *ret=realloc(*ret, size*count);
-	}else{
-	    free(*ret);
-	    *ret=NULL;
-	}
-    }
-    if(nrow0) *nrow0=nrow;
-    if(ncol0) *ncol0=ncol;
-    return count;
 }

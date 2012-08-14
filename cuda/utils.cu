@@ -202,9 +202,11 @@ int gpu_init(int *gpus, int ngpu){
     if(NGPU) {
 	gpu_recon=0;/*last gpu in GPUS*/
 	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
+	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
-	    info2("Using GPU %d\n", GPUS[i]);
+	    info2(" %d", GPUS[i]);
 	}
+	info2("\n");
     }
     return NGPU;
 }

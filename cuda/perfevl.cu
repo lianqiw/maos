@@ -402,7 +402,6 @@ void gpu_evlsurf2gpu(APER_T *aper){
 	gpu_set(im);
 	if(aper->opdadd){
 	    cp2gpu(&cudata->surfevl, aper->opdadd);
-	    dcellfree(aper->opdadd);
 	}
     }
 }

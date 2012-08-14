@@ -33,7 +33,7 @@
 #include "bin.h"
 #include "path.h"
 #include "misc.h"
-#include "readcfg.h"
+#include "readstr.h"
 /**
    \file bin.c Defines our custom file format .bin or zipped .bin.gz and the
    basic IO functions. All file read/write operators are through functions in

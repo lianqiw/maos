@@ -59,35 +59,33 @@
     “atm_scao.conf” that specifies the turbulence information with only a single
     reconstruction layer.
 
-    We can optionally setup one or more surfaces that are common to science
-    fields and wavefront sensors. Put the list of surface files in key \c
-    surf. Each surface file must contain a two-element cell array. The first
-    cell contains 5 numbers, which are
+    We can optionally setup one or more surfaces that can cover science fields
+    or wavefront sensors. Put the list of surface files in key \c surf. Each
+    surface file must contain a 2-d array with a header specifying the following
+    keys:
 
-    -# the sampling in x direction (first dimension).
-    -# the sampling in y direction (second dimension).
-    -# the origin in x direction.
-    -# the origin in y direction.
-    -# the height conjugation of this surface.
-    
-    The second cell contains the 2 dimensional OPD array.
+    dx  the sampling
+    ox  the origin in x direction.
+    oy  the origin in y direction.
+    h   the height conjugation of this surface
+    vx  the frozen flow wind speed along x of this surface (0 for static)
+    vy  the frozen flow wind speed along y of this surface (0 for static)
+
     
     We can also setup one or more tilted M3 surfaces that are common to science
     fields and wavefront sensors. Put the list of surface files in key \c
-    tsurf. Each tilted surface file must contain a two-element cell array. The first
-    cell contains 9 numbers, which are
+    tsurf. Each surface file must contain a 2-d array with a header specifying
+    the following keys:
     
-    -# the sampling in x direction (first dimension).
-    -# the sampling in y direction (second dimension)
-    -# the origin in x direction.
-    -# the origin in y direction.
-    -# the x tilt angle in degrees wrt beam (90 is perp)
-    -# the y tilt angle in degrees wrt beam (90 is perp)
-    -# the telescope effective focal length
-    -# the distance between the exit pupil and the focus
-    -# the distance between the center of the M3 surface and the focus.
-
-    The second cell contains the 2 dimensional OPD array.
+    dx    the sampling in x direction (first dimension).
+    dy    the sampling in y direction (second dimension)
+    ox    the origin in x direction.
+    oy    the origin in y direction.
+    txdeg the x tilt angle in degrees wrt beam (90 is perp)
+    tydeg the y tilt angle in degrees wrt beam (90 is perp)
+    ftel  the telescope effective focal length
+    fexit the distance between the exit pupil and the focus
+    fsurf the distance between the center of the M3 surface and the focus.
 
     \ref nfiraos Shows the example configuration file for NFIRAOS.
     
