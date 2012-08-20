@@ -572,7 +572,7 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dmat *fs=dlinspace(0, df, nstep);
     dmat *psd=NULL;
     double var=psd_inte2(psdin);
-    info2("Input psd has variance of %g m^2\n",var*1e18);
+    info2("Input psd has variance of %g\n",var);
     psd=dinterp1(psdx, psdy, fs);
     psd->p[0]=0;/*disable pistion. */
     cmat *wshat=cnew(nstep, 1);
@@ -590,7 +590,7 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dfree(fs);
     dresize(out, nstepin, 1);
     double var2=dinn(out,out)/out->nx;
-    info2("Time series has variance of %g m^2\n",var2*1e18);
+    info2("Time series has variance of %g\n",var2);
     dscale(out, sqrt(var/var2));
     return out;
 }

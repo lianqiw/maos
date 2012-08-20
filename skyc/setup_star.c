@@ -234,11 +234,11 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 		      star[istar].thetax*206265,star[istar].thetay*206265);
 		info2(" bkgrnd=%5.2f, pixtheta=%4.1fmas mag=[",
 		      star[istar].bkgrnd->p[ipowfs],parms->skyc.pixtheta[ipowfs]*206265000);
-		for(int iwvl=0; iwvl<parms->skyc.nwvl; iwvl++){
+		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 		    info2("%5.2f ", star[istar].mags->p[iwvl]);
 		}
 		info2("] siglev=[");
-		for(int iwvl=0; iwvl<parms->skyc.nwvl; iwvl++){
+		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 		    info2("%6.1f ", star[istar].siglev->p[iwvl+nwvl*ipowfs]);
 		}
 		info2("]\n");
@@ -394,8 +394,13 @@ static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int
 
 		pg[0][isa]     = 1.;
 		pg[1][isa+nsa] = 1.;
-		pg[2][isa]     = (scale1*2*xm - 2*thetax*hc*scale);
-		pg[2][isa+nsa] = (scale1*2*ym - 2*thetay*hc*scale);
+		if(parms->maos.ahstfocus){/*This mode has no global focus*/
+		    pg[2][isa]     = ( - 2*thetax*hc*scale);
+		    pg[2][isa+nsa] = ( - 2*thetay*hc*scale);
+		}else{
+		    pg[2][isa]     = (scale1*2*xm - 2*thetax*hc*scale);
+		    pg[2][isa+nsa] = (scale1*2*ym - 2*thetay*hc*scale);
+		}
 		pg[3][isa]     = (scale1*2*xm - 2*thetax*hc*scale);
 		pg[3][isa+nsa] = (-scale1*2*ym+ 2*thetay*hc*scale);
 		pg[4][isa]     = (scale1*ym   - thetay*hc*scale);

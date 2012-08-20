@@ -64,6 +64,7 @@ typedef struct MAOS_S{
     dmat *mcc_oa_tt2;/**<modal cross coupling matrix between NGS and tip/tilt for on axis only, 2x5*/
     double ngsgrid;  /**<spacing of NGS grid in as*/
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
+    int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
 }MAOS_S;
 
 /**
@@ -93,7 +94,6 @@ typedef struct SKYC_S{
     int ttfbrightest;/**<make ttf the brightest always.*/
     int bspstrehl;   /**<Do bicubic spline interpolation on strehl*/
     int npowfs;      /**<number of powfs, has to match MAOS_S.npowfs*/
-    int nwvl;        /**<number of wavelength, has to match MAOS_S.nwvl*/
     double lat;      /**<Galactic latitude*/
     double lon;      /**<Galactic longitude.*/
     double catscl;   /**<Scale the catlog star count*/
@@ -138,8 +138,8 @@ typedef struct SKYC_S{
 
     double zc_f;     /**<focus zoom corrector frequency*/
     double zc_zeta;  /**<focus zoom corrector dampling */
-    double na_alpha; /**<sodium PSD parameter. PSD is 10^beta*nu^alpha*/
-    double  na_beta; /**<sodium PSD parameter. PSD is 10^beta*nu^alpha*/
+    double na_alpha; /**<sodium PSD parameter. PSD is beta*f^alpha*/
+    double na_beta;  /**<sodium PSD parameter. PSD is beta*f^alpha*/
     dmat *resfocus;  /**<residual focus error at each sampling frequency.*/
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/

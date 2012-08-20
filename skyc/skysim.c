@@ -81,7 +81,7 @@
 
 /**
    The actual work horse that does the physical optics time domain simulation.
-   */
+*/
 static void skysim_isky(SIM_S *simu){
     int isky;
     POWFS_S *powfs=simu->powfs;
@@ -112,11 +112,11 @@ static void skysim_isky(SIM_S *simu){
 	    continue;
 	}
 	/*
-	   We first estimate do the matched filter, reconstructor, and servo
-	   loop optimization to determine the approximate wavefront error. Only
-	   a few combinations are kept for each star field for further time
-	   domain simulations.
-	 */
+	  We first estimate do the matched filter, reconstructor, and servo
+	  loop optimization to determine the approximate wavefront error. Only
+	  a few combinations are kept for each star field for further time
+	  domain simulations.
+	*/
 
 	for(int iaster=0; iaster<naster; iaster++){
 	    /*Parallelizing over aster gives same random stream. */
@@ -138,7 +138,7 @@ static void skysim_isky(SIM_S *simu){
 	double tk_3=myclockd();
 	/*
 	  Now begin time domain Physical Optics Simulations.
-	 */
+	*/
 	double skymini=INFINITY;
 	int selaster=0;
 	int seldtrat=0;
@@ -170,7 +170,7 @@ static void skysim_isky(SIM_S *simu){
 	    /*Copy wvf from star to aster */
 	    setup_aster_wvf(asteri, star, parms);
 	    /*Regenerate PSD for this combination only. */
-	    setup_aster_regenpsf(simu->midealws, asteri,powfs,parms);
+	    setup_aster_regenpsf(simu->mideal, asteri,powfs,parms);
 	    /*Redo matched filter. */
 	    setup_aster_redomtch(asteri, powfs, parms);
 	    /*Compute the reconstructor, nea, sigman */
@@ -190,7 +190,7 @@ static void skysim_isky(SIM_S *simu){
 		dmat *ires=NULL;
 		dmat *imres=NULL;
 		for(int do_demote=0; do_demote<do_demote_end; do_demote++){
-		    ires=skysim_phy(&imres, simu->midealws, simu->midealws_oa, simu->rmsol->p[0], 
+		    ires=skysim_phy(&imres, simu->mideal, simu->mideal_oa, simu->rmsol->p[0], 
 				    asteri, powfs, parms, idtrat, noisy, do_demote);
 		    if(ires){
 			if(parms->skyc.verbose){
@@ -288,6 +288,181 @@ static void skysim_isky(SIM_S *simu){
 	      tk_4-tk_3, totm, tots, laps_h, laps_m, rest_h, rest_m);
     }/*while */
 }
+
+/**
+   Read in ideal NGS modes
+*/
+static void skysim_read_mideal(SIM_S *simu){
+    const PARMS_S *parms=simu->parms;
+    dfree(simu->mideal);
+    dfree(simu->mideal_oa);
+    simu->mideal=dread("%s_%d.bin",parms->maos.fnmideal,simu->seed_maos);
+    if(parms->maos.nmod>5 && simu->mideal->nx==5){
+	warning("Resize mideal (compatible mode)\n");
+	dresize(simu->mideal, parms->maos.nmod, simu->mideal->ny);
+    }	
+    dcell *midealp=dcellread("%s_%d.bin",parms->maos.fnmidealp,simu->seed_maos);
+    simu->mideal_oa=dref(midealp->p[parms->maos.evlindoa]);
+    dcellfree(midealp);
+}
+/**
+   Update ideal NGS modes with focus or wind shake
+*/
+static void skysim_update_mideal(SIM_S *simu){
+    dwrite(simu->mideal, "mideal0_%d_%d", simu->seed_maos, simu->seed_skyc);
+    const PARMS_S *parms=simu->parms;
+    if(parms->skyc.addfocus && parms->maos.nmod>5){
+	dmat *timing=nafocus_time(parms->maos.D, parms->maos.hs,
+				  parms->skyc.na_alpha, parms->skyc.na_beta, 
+				  parms->maos.dt, simu->mideal->ny, &simu->rand);
+	double scale=1./sqrt(parms->maos.mcc->p[35]);//convert from m to modes
+	for(int istep=0; istep<parms->maos.nstep; istep++){
+	    simu->mideal->p[5+istep*6]+=timing->p[istep]*scale;
+	}
+	dwrite(simu->mideal, "mideal1_%d_%d", simu->seed_maos, simu->seed_skyc);
+    }
+    if(parms->skyc.addws){
+	int nx=simu->mideal->nx;
+	int ny=simu->mideal->ny;
+	/*Add ws to mideal. After genstars so we don't purturb it. */
+	dmat *telws=psd2time(simu->psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
+	/*telws is in m. need to convert to rad since mideal is in this unit. */
+	dscale(telws, 4./parms->maos.D);
+	PDMAT(simu->mideal, pm1); 
+	PDMAT(simu->mideal_oa, pm2);
+	for(long i=0; i<simu->mideal->ny; i++){
+	    pm1[i][0]+=telws->p[i];
+	    pm2[i][0]+=telws->p[i];
+	}
+	dwrite(telws, "telws");
+	dfree(telws);
+    }
+    dwrite(simu->mideal, "mideal2_%d_%d", simu->seed_maos, simu->seed_skyc);
+}
+
+/**
+   Generate turbulence PSDs from time seris of mideal or from precomputed
+   ones. Combine them with windshake.  */
+static void skysim_calc_psd(SIM_S *simu){
+    const PARMS_S *parms=simu->parms;
+    simu->rmsol=calc_rmsol(simu->mideal, parms);
+    simu->psd_ws=ddup(parms->skyc.psd_ws);
+    if(parms->skyc.psdcalc){
+	PDMAT(parms->maos.mcc, MCC);
+	dmat *x=dtrans(simu->mideal);
+	for(int im=0; im<x->ny && im<5; im++){
+	    dmat *xi=dsub(x, 0, 0, im, 1);
+	    dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
+	    dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
+	    if(im<2){
+		add_psd2(&simu->psd_tt, psdi);
+	    }else if(im<5){
+		add_psd2(&simu->psd_ps, psdi);
+	    }
+	    dfree(xi);
+	    dfree(psdi);
+	}
+	dfree(x);
+	simu->psd_ngs=add_psd(simu->psd_ps, simu->psd_tt);
+	dwrite(simu->psd_tt, "psd_tt");
+	dwrite(simu->psd_ps, "psd_ps");
+	dwrite(simu->psd_ngs, "psd_ngs");
+    }else{
+	simu->psd_ngs=ddup(parms->skyc.psd_ngs);
+	simu->psd_ps=ddup(parms->skyc.psd_ps);
+	simu->psd_tt=ddup(parms->skyc.psd_tt);
+	/*renormalize PSD */
+	double rms_ngs=psd_inte2(simu->psd_ngs);
+	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
+	    info2("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
+	    double rms_ratio=simu->rmsol->p[0]/rms_ngs;
+	    info("Scaling PSD by %g\n", rms_ratio);
+	    long nx=simu->psd_ngs->nx;
+	    /*scale PSF in place. */
+	    double *p_ngs=simu->psd_ngs->p+nx;
+	    double *p_tt=simu->psd_tt->p+nx;
+	    double *p_ps=simu->psd_ps->p+nx;
+	    for(long i=0; i<nx; i++){
+		p_ngs[i]*=rms_ratio;
+		p_tt[i]*=rms_ratio;
+		p_ps[i]*=rms_ratio;
+	    }
+	}
+    }
+    double rms_ngs=psd_inte2(simu->psd_ngs);
+    info("PSD integrates to %.2f nm.\n", sqrt(rms_ngs)*1e9);
+
+    if(parms->maos.nmod>5){
+	PDMAT(parms->maos.mcc, MCC);
+	dmat *x=dtrans(simu->mideal);
+	dmat *xi=dsub(x, 0, 0, 5, 1);
+	dscale(xi, sqrt(MCC[5][5]));/*convert to unit of m.*/
+	dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
+	double rms_focus_atm=psd_inte2(psdi);
+	PDMAT(psdi, pp);
+	//add sodium focus PSD
+	double alpha=parms->skyc.na_alpha;
+	double scale=1./(16*sqrt(3))*pow((parms->maos.D/parms->maos.hs),2);/*convert height error to wfe*/
+	double beta2=parms->skyc.na_beta*scale*scale;
+	for(int i=1; i<psdi->nx; i++){//skip DC.
+	    pp[1][i]+=pow(pp[0][i], alpha)*beta2;
+	}
+	double rms_focus_na=psd_inte2(psdi)-rms_focus_atm;
+	
+	info2("Atmosphere focus PSD integrates to %g nm\n", sqrt(rms_focus_atm)*1e9);
+	info2("Sodium focus PSD integrates to %g nm\n", sqrt(rms_focus_na)*1e9);
+	
+	add_psd2(&simu->psd_focus, psdi);
+	dfree(xi);
+	dfree(psdi);
+	dfree(x);
+    }
+    double rms_ws=psd_inte2(simu->psd_ws);
+    info2("Windshake PSD integrates to %g nm\n", sqrt(rms_ws)*1e9);
+    simu->rmsol->p[0]+=rms_ws;//testing
+    simu->rmsol->p[1]+=rms_ws;/*add wind shake to open loop error. */
+    //add windshake PSD to ngs/tt
+    add_psd2(&simu->psd_ngs, simu->psd_ws);
+    add_psd2(&simu->psd_tt, simu->psd_ws);
+    if(parms->skyc.gsplit!=1){
+	add_psd2(&simu->psd_ngs, simu->psd_focus);
+	add_psd2(&simu->psd_ps, simu->psd_focus);
+    }
+}
+
+static void skysim_prep_gain(SIM_S *simu){
+    const PARMS_S *parms=simu->parms;
+    info2("Precompute gains for different levels of noise.\n");
+    /*dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2. */
+    dmat *sigma2=dlogspace(-18,-10,400);/*in m2, logspace. */
+    simu->gain_tt =calloc(parms->skyc.ndtrat, sizeof(dcell*));
+    simu->gain_ps =calloc(parms->skyc.ndtrat, sizeof(dcell*));
+    simu->gain_ngs=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+    if(parms->maos.nmod>5){
+	simu->gain_focus=calloc(parms->skyc.ndtrat, sizeof(dcell*));
+    }
+    dwrite(sigma2, "gain_x");
+    TIC;tic;
+    for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+	long dtrat=parms->skyc.dtrats[idtrat];
+	simu->gain_tt[idtrat]=servo_optim(simu->psd_tt, parms->maos.dt,
+					  dtrat, parms->skyc.pmargin, sigma2, 2);
+	simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 
+					  dtrat, parms->skyc.pmargin, sigma2, 2);
+	simu->gain_ngs[idtrat]=servo_optim(simu->psd_ngs, parms->maos.dt,
+					   dtrat, parms->skyc.pmargin, sigma2, 2);
+	if(parms->maos.nmod>5){
+	    simu->gain_focus[idtrat]=servo_optim(simu->psd_focus, parms->maos.dt,
+						 dtrat, parms->skyc.pmargin, sigma2, 2);
+	}
+	/*dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
+	  dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
+	  dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);*/
+    }
+    toc("servo_optim");
+    simu->gain_x=dref(sigma2);
+    dfree(sigma2);
+}
 /**
    Setup the stars fields and then calls skysim_isky() to handle each star field.
 */
@@ -312,110 +487,19 @@ void skysim(const PARMS_S *parms){
     simu->tk_0=myclockd();
     for(int iseed_maos=0; iseed_maos<parms->maos.nseed; iseed_maos++){
 	simu->seed_maos=parms->maos.seeds[iseed_maos];/*loop over seed */
-	/*Read ideal NGS mode. */
-	simu->mideal=dread("%s_%d.bin",parms->maos.fnmideal,simu->seed_maos);
-	if(parms->maos.nmod>5 && simu->mideal->nx==5){
-	    warning("ngsmod is only 5 modes, but maos.nmod is 6. Adding zero defocus mode\n");
-	    dresize(simu->mideal, parms->maos.nmod, simu->mideal->ny);
-	}
-	/*Read ideal NGS mode dot product for on axis. */
-	dcell *midealp=dcellread("%s_%d.bin",parms->maos.fnmidealp,simu->seed_maos);
-	simu->mideal_oa=dref(midealp->p[parms->maos.evlindoa]);
-	dcellfree(midealp);
-	simu->rmsol=calc_rmsol(simu->mideal, parms);
-	simu->psd_ws=ddup(parms->skyc.psd_ws);
-	if(parms->skyc.psdcalc){
-	    PDMAT(parms->maos.mcc, MCC);
-	    dmat *x=dtrans(simu->mideal);
-	    for(int im=0; im<x->ny && im<5; im++){
-		dmat *xi=dsub(x, 0, 0, im, 1);
-		dscale(xi, sqrt(MCC[im][im]));/*convert to unit of m.*/
-		dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
-		if(im<2){
-		    add_psd2(&simu->psd_tt, psdi);
-		}else if(im<5){
-		    add_psd2(&simu->psd_ps, psdi);
-		}
-		dfree(xi);
-		dfree(psdi);
-	    }
-	    dfree(x);
-	    simu->psd_ngs=add_psd(simu->psd_ps, simu->psd_tt);
-	    dwrite(simu->psd_tt, "psd_tt");
-	    dwrite(simu->psd_ps, "psd_ps");
-	    dwrite(simu->psd_ngs, "psd_ngs");
-	}else{
-	    simu->psd_ngs=ddup(parms->skyc.psd_ngs);
-	    simu->psd_ps=ddup(parms->skyc.psd_ps);
-	    simu->psd_tt=ddup(parms->skyc.psd_tt);
-	}
-	double rms_ws=psd_inte2(simu->psd_ws);
-	info2("Windshake PSD integrates to %g nm\n", sqrt(rms_ws)*1e9);
-	simu->rmsol->p[0]+=rms_ws;//testing
-	simu->rmsol->p[1]+=rms_ws;/*add wind shake to open loop error. */
 	prep_bspstrehl(simu);
-	/*renormalize PSD */
-	double rms_ngs=psd_inte2(simu->psd_ngs);
-	info2("NGS PSD integrates to %.2f nm\n", sqrt(rms_ngs)*1e9);
-	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
-	    double rms_ratio=simu->rmsol->p[0]/rms_ngs;
-	    info("Scaling PSD by %g\n", rms_ratio);
-	    long nx=simu->psd_ngs->nx;
-	    /*scale PSF in place. */
-	    double *p_ngs=simu->psd_ngs->p+nx;
-	    double *p_tt=simu->psd_tt->p+nx;
-	    double *p_ps=simu->psd_ps->p+nx;
-	    for(long i=0; i<nx; i++){
-		p_ngs[i]*=rms_ratio;
-		p_tt[i]*=rms_ratio;
-		p_ps[i]*=rms_ratio;
-	    }
-	    rms_ngs=psd_inte2(simu->psd_ngs);
-	    info("PSD integrates to %.2f nm after scaling\n", sqrt(rms_ngs)*1e9);
-	}
-	simu->psd_ngs_ws=add_psd(simu->psd_ngs, simu->psd_ws);
-	simu->psd_tt_ws=add_psd(simu->psd_tt, simu->psd_ws);
-
+	skysim_read_mideal(simu);
+	skysim_calc_psd(simu);
+	info2("Open loop error: NGS: %.2f TT: %.2f nm\n", 
+	      sqrt(simu->rmsol->p[0])*1e9, sqrt(simu->rmsol->p[1])*1e9);
+	
 	if(parms->skyc.interpg){
-	    info2("Precompute gains for different levels of noise.\n");
-	    /*dmat *sigma2=dlinspace(0.5e-16,1e-16, 400);// in m2. */
-	    dmat *sigma2=dlogspace(-18,-10,400);/*in m2, logspace. */
-	    simu->gain_tt =calloc(parms->skyc.ndtrat, sizeof(dcell*));
-	    simu->gain_ps =calloc(parms->skyc.ndtrat, sizeof(dcell*));
-	    simu->gain_ngs=calloc(parms->skyc.ndtrat, sizeof(dcell*));
-	    dwrite(sigma2, "gain_x");
-	    TIC;tic;
-	    for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		long dtrat=parms->skyc.dtrats[idtrat];
-		simu->gain_tt[idtrat]=servo_optim(simu->psd_tt_ws, parms->maos.dt,
-						  dtrat, parms->skyc.pmargin, sigma2, 2);
-		simu->gain_ps[idtrat]=servo_optim(simu->psd_ps, parms->maos.dt, 
-						  dtrat, parms->skyc.pmargin, sigma2, 2);
-		simu->gain_ngs[idtrat]=servo_optim(simu->psd_ngs_ws, parms->maos.dt,
-						   dtrat, parms->skyc.pmargin, sigma2, 2);
-		/*dcellwrite(simu->gain_tt[idtrat],  "gain_tt_%ld.bin", dtrat);
-		dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
-		dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);*/
-	    }
-	    toc("servo_optim");
-	    simu->gain_x=dref(sigma2);
-	    dfree(sigma2);
+	    skysim_prep_gain(simu);
 	}
 	for(int iseed_skyc=0; iseed_skyc<parms->skyc.nseed; iseed_skyc++){
 	    simu->status->iseed=iseed_skyc+iseed_maos*parms->skyc.nseed;
 	    simu->seed_skyc=parms->skyc.seeds[iseed_skyc];
 	    seed_rand(&simu->rand, simu->seed_skyc+parms->maos.zadeg);
-	    info2("Open loop error: NGS: %.2f TT: %.2f nm\n", 
-		  sqrt(simu->rmsol->p[0])*1e9, sqrt(simu->rmsol->p[1])*1e9);
-	    if(parms->skyc.addfocus && parms->maos.nmod>5){
-		dmat *timing=nafocus_time(parms->maos.D, parms->maos.hs,
-					parms->skyc.na_alpha, parms->skyc.na_beta, 
-					parms->maos.dt, simu->mideal->ny, &simu->rand);
-		for(int istep=0; istep<parms->maos.nstep; istep++){
-		    simu->mideal->p[5+istep*6]=timing->p[istep];
-		}
-		dwrite(simu->mideal, "mideal_%d_%d", simu->seed_maos, simu->seed_skyc);
-	    }
 	    /*generate star fields. */
 	    if(parms->skyc.stars){
 		info2("Loading stars from %s\n",parms->skyc.stars);
@@ -427,36 +511,18 @@ void skysim(const PARMS_S *parms){
 				     parms->skyc.patfov,parms->maos.nwvl, 
 				     parms->maos.wvl, &simu->rand);
 	    }
-	    dcellwrite(simu->stars, "Res%d_%d_stars",simu->seed_maos,simu->seed_skyc);
-	    if(parms->skyc.addws){
-		dwrite(simu->mideal, "mideal");
-		int nx=simu->mideal->nx;
-		int ny=simu->mideal->ny;
-		simu->midealws=dnew(nx, ny);
-		simu->midealws_oa=dnew(nx, ny);
-		/*Add ws to mideal. After genstars so we don't purturb it. */
-		/*telws is in m. need to convert to rad since mdieal is in this unit. */
-		dmat *telws=psd2time(simu->psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
-		dscale(telws, 4./parms->maos.D);
-		PDMAT(simu->mideal, pm1); PDMAT(simu->mideal_oa, pm2);
-		PDMAT(simu->midealws, pw1); PDMAT(simu->midealws_oa, pw2);
-		for(long i=0; i<simu->mideal->ny; i++){
-		    pw1[i][0]=pm1[i][0]+telws->p[i];
-		    pw2[i][0]=pm2[i][0]+telws->p[i];
-		}
-		dwrite(telws, "telws");
-		dwrite(simu->midealws, "midealws");
-		dfree(telws);
-	    }else{
-		simu->midealws=dref(simu->mideal);
-		simu->midealws_oa=dref(simu->mideal_oa);
-	    }
 	    int nsky=simu->stars->nx*simu->stars->ny;
 	    if(nsky > parms->skyc.nsky){
-		warning("nsky is reduced from %d to %d\n", 
-			nsky, parms->skyc.nsky);
+		warning("nsky is reduced from %d to %d\n", nsky, parms->skyc.nsky);
 		nsky=parms->skyc.nsky;
 	    }
+	    dcellwrite(simu->stars, "Res%d_%d_stars",simu->seed_maos,simu->seed_skyc);
+
+	    skysim_read_mideal(simu);/*Reread mideal since it may be modified by skyc.addfocus/skyc.addws*/
+	    if(parms->skyc.addfocus || parms->skyc.addws){
+		skysim_update_mideal(simu);
+	    }
+
 	    int seed_maos=simu->seed_maos;
 	    int seed_skyc=simu->seed_skyc;
 	    simu->res   =dnew_mmap(5,nsky,NULL, "Res%d_%d", seed_maos, seed_skyc);
@@ -492,8 +558,6 @@ void skysim(const PARMS_S *parms){
 	    dcellfree(simu->mres);
 	    dcellfree(simu->sel);
 	    dfree(simu->fss);
-	    dfree(simu->midealws);
-	    dfree(simu->midealws_oa);
 	    simu->iseed++;
 	}/*iseed_skyc */
 	dfree(simu->mideal);
@@ -503,26 +567,18 @@ void skysim(const PARMS_S *parms){
 	dfree(simu->psd_ngs);
 	dfree(simu->psd_ps);
 	dfree(simu->psd_ws);
-	dfree(simu->psd_tt_ws);
-	dfree(simu->psd_ngs_ws);
 	/*Free the data used to do bicubic spline. */
 	for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
-	    for(int ic=0; ic<parms->maos.nsa[ipowfs]*parms->maos.nwvl; ic++){
-		dcellfree(simu->bspstrehl[ipowfs][ic]);
-	    }
-	    free(simu->bspstrehl[ipowfs]);
+	    dcellfreearr(simu->bspstrehl[ipowfs], parms->maos.nsa[ipowfs]*parms->maos.nwvl);
 	}
 	free(simu->bspstrehl);
 	dfree(simu->bspstrehlxy);
 	if(parms->skyc.interpg){
-	    for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		dcellfree(simu->gain_ps[idtrat]);
-		dcellfree(simu->gain_tt[idtrat]);
-		dcellfree(simu->gain_ngs[idtrat]);
-	    }
-	    free(simu->gain_ps);
-	    free(simu->gain_tt);
-	    free(simu->gain_ngs);
+	    dcellfreearr(simu->gain_ps, parms->skyc.ndtrat);
+	    dcellfreearr(simu->gain_ps, parms->skyc.ndtrat);
+	    dcellfreearr(simu->gain_tt, parms->skyc.ndtrat);
+	    dcellfreearr(simu->gain_ngs, parms->skyc.ndtrat);
+	    dcellfreearr(simu->gain_focus, parms->skyc.ndtrat);
 	}
     }/*iseed_maos */
     free(simu->status);

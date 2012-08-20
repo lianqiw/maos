@@ -67,8 +67,8 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.imperrnmb);
     READ_INT(skyc.mtchcr);
     READ_INT(skyc.mtch);
-    parms->skyc.nwvl=readcfg_dblarr(&parms->skyc.qe,"skyc.qe");
-    readcfg_dblarr_n(&parms->skyc.telthruput, parms->skyc.nwvl, "skyc.telthruput");
+    readcfg_dblarr_nmax(&parms->skyc.qe, parms->maos.nwvl,"skyc.qe");
+    readcfg_dblarr_nmax(&parms->skyc.telthruput, parms->maos.nwvl, "skyc.telthruput");
     parms->skyc.ndtrat=readcfg_intarr(&parms->skyc.dtrats,"skyc.dtrats");
     parms->skyc.nseed=readcfg_intarr(&parms->skyc.seeds, "skyc.seeds");
     READ_INT(skyc.servo);
@@ -94,18 +94,9 @@ static void setup_parms_skyc(PARMS_S *parms){
 
     READ_STR(skyc.stars);
     READ_INT(skyc.addws);
+    READ_INT(skyc.addfocus);
     READ_DBL(skyc.pmargin);
     READ_INT(skyc.psdcalc);
-    if(!parms->skyc.stars){
-	if(parms->skyc.keeporder){
-	    error("When skyc.keeporder is set, skyc.stars need to be set\n");
-	}
-    }else{
-	if(parms->skyc.interpg==1){
-	    info2("disable interpg when skyc.stars is set\n");
-	    parms->skyc.interpg=0;
-	}
-    }
 }
 /**
    Setup infromation output from maos run.
@@ -142,6 +133,7 @@ static void setup_parms_maos(PARMS_S *parms){
     parms->maos.mcc_oa_tt=dsub(parms->maos.mcc_oa, 0, 2, 0, 2);
     parms->maos.mcc_oa_tt2=dsub(parms->maos.mcc_oa,0, 2, 0, 0);
     if(parms->maos.nmod>5 && parms->maos.mcc->nx<=5){
+	warning("Resizing mcc (compatible mode)\n");
 	dresize(parms->maos.mcc, parms->maos.nmod, parms->maos.nmod);
 	dresize(parms->maos.mcc_oa, parms->maos.nmod, parms->maos.nmod);
     }
@@ -151,6 +143,9 @@ static void setup_parms_maos(PARMS_S *parms){
     READ_INT(maos.evlindoa);
     READ_DBL(maos.ngsgrid);
     READ_INT(maos.nstep);
+    READ_INT(maos.ahstfocus);
+    warning("maos.ahstofocus=%d\n", parms->maos.ahstfocus);
+
     if(readcfg_peek("maos.wddeg")){
 	parms->maos.nwddeg=readcfg_dblarr(&parms->maos.wddeg,"maos.wddeg");
     }else{
@@ -158,6 +153,7 @@ static void setup_parms_maos(PARMS_S *parms){
 	parms->maos.wddeg=NULL;
     }
 }
+
 PARMS_S *setup_parms(const ARG_S *arg){
     open_config(arg->conf,NULL,0);
     open_config(arg->confcmd,NULL,1);
@@ -166,9 +162,43 @@ PARMS_S *setup_parms(const ARG_S *arg){
     free(arg->confcmd);
     PARMS_S *parms=calloc(1, sizeof(PARMS_S));
     parms->skyc.nthread=arg->nthread;
-    setup_parms_skyc(parms);
     setup_parms_maos(parms);
-    
+    setup_parms_skyc(parms);
+    if(parms->maos.ahstfocus){
+	if(parms->skyc.addfocus==-1){
+	    parms->skyc.addfocus=1;
+	}
+	if(parms->skyc.addws==-1){
+	    parms->skyc.addws=1;
+	}
+	warning("skyc.addfocus is set to 1\n");
+	if(parms->maos.nmod<=5){
+	    error("Conflicted parameters: maos.nmod should be >5 when maos.ahstfocus=1\n");
+	}
+    }
+    if(parms->skyc.addfocus==-1){
+	parms->skyc.addfocus=0;
+    }
+    if(parms->skyc.addws==-1){
+	parms->skyc.addws=0;
+    }
+    if(parms->maos.nmod<=5){
+	if(parms->skyc.addfocus>0){
+	    error("Cannot addfocus if nmod<=5\n");
+	}
+    }
+
+    if(!parms->skyc.stars){
+	if(parms->skyc.keeporder){
+	    error("When skyc.keeporder is set, skyc.stars need to be set\n");
+	}
+    }else{
+	if(parms->skyc.interpg==1){
+	    info2("disable interpg when skyc.stars is set\n");
+	    parms->skyc.interpg=0;
+	}
+    }
+
     info2("There are %d MAOS PSF seeds: ",parms->maos.nseed);
     for(int i=0; i<parms->maos.nseed; i++){
 	info2(" %d", parms->maos.seeds[i]);
@@ -268,6 +298,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	warning("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);
 	parms->skyc.verbose=1;
 	parms->skyc.nthread=1;
+	parms->skyc.interpg=0;
     }
     if(arg->detach || parms->skyc.nthread>1){
 	parms->skyc.verbose=0;
@@ -276,14 +307,11 @@ PARMS_S *setup_parms(const ARG_S *arg){
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 	parms->skyc.nwfstot+=parms->skyc.nwfsmax[ipowfs];
     }
-    if(parms->maos.nmod>5){
-	parms->skyc.addfocus=0;
-    }
     return parms;
 }
 /**
    Free the data in parms.
- */
+*/
 void free_parms(PARMS_S *parms){
     dfree(parms->skyc.psd_ngs);
     dfree(parms->skyc.psd_tt);

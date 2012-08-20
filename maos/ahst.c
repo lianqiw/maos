@@ -802,8 +802,8 @@ void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 		    const double *mod, int ievl, double alpha){
     const double *locx=aper->locs->locx;
     const double *locy=aper->locs->locy;
-    /*const double *mod=M->p[0]->p; */
-    if(recon->ngsmod->nmod==2){
+    const int nmod=recon->ngsmod->nmod;
+    if(nmod==2){
 	for(int iloc=0; iloc<aper->locs->nloc; iloc++){
 	    double tmp=locx[iloc]*mod[0]+locy[iloc]*mod[1];
 	    iopdevl->p[iloc]+=tmp*alpha;
@@ -815,6 +815,15 @@ void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 	const double scale1=1.-scale;
 	const double thetax=parms->evl.thetax[ievl]; 
 	const double thetay=parms->evl.thetay[ievl];
+	double focus;
+	if(nmod>5){
+	    focus=mod[5];
+	    if(!parms->sim.ahstfocus){
+		focus+=mod[2]*scale1;
+	    }
+	}else{
+	    focus=mod[2]*scale1;
+	}
 	for(int iloc=0; iloc<aper->locs->nloc; iloc++){
 	    double x=locx[iloc];
 	    double y=locy[iloc];
@@ -823,7 +832,7 @@ void ngsmod2science(dmat *iopdevl, const PARMS_T *parms,
 	    double y2=y*y;
 	    double tmp= locx[iloc]*mod[0]
 		+locy[iloc]*mod[1]
-		+(parms->sim.ahstfocus?mod[5]:mod[2]*scale1)*(x2+y2-MCC_fcp)
+		+focus*(x2+y2-MCC_fcp)
 		+mod[2]*(-2*scale*ht*(thetax*x+thetay*y))
 		+mod[3]*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
 		+mod[4]*(xy*scale1-scale*ht*(thetay*x+thetax*y));

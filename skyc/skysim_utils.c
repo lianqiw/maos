@@ -89,6 +89,15 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 	const double hs=parms->maos.hs;
 	const double scale=pow(1.-hc/hs, -2);
 	const double scale1=1.-scale;
+	double focus;
+	if(modm->nx>5){
+	    focus=mod[5];
+	    if(!parms->maos.ahstfocus){
+		focus+=mod[2]*scale1;
+	    }
+	}else{
+	    focus=mod[2]*scale1;
+	}
 	for(int iloc=0; iloc<nloc; iloc++){
 	    double x=locx[iloc];
 	    double y=locy[iloc];
@@ -97,7 +106,8 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 	    double y2=y*y;
 	    double tmp= locx[iloc]*mod[0]
 		+locy[iloc]*mod[1]
-		+mod[2]*((x2+y2-fpc)*scale1-2*scale*hc*(thetax*x+thetay*y))
+		+focus*(x2+y2-fpc)
+		+mod[2]*(-2*scale*hc*(thetax*x+thetay*y))
 		+mod[3]*((x2-y2)*scale1 - 2*scale*hc*(thetax*x-thetay*y))
 		+mod[4]*(xy*scale1-scale*hc*(thetay*x+thetax*y));
 	    wvf->p[iloc]*=cexp(ik*tmp);
@@ -219,10 +229,10 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
 	dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
 
-	if(istep>=parms->skyc.evlstart){
+	if(istep>=parms->skyc.evlstart){/*performance evaluation*/
 	    double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
 	    if(res_ngs>ngsol*100){
-		warning2("%5.1f Hz: %g nm loop diverged. \n", parms->skyc.fss[idtrat], sqrt(res_ngs)*1e9); 
+		//warning2("%5.1f Hz: %g nm loop diverged. \n", parms->skyc.fss[idtrat], sqrt(res_ngs)*1e9); 
 		dfree(res); res=NULL;
 		break;
 	    }
@@ -254,9 +264,6 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	
 	if(istep<parms->skyc.phystart){
 	    /*Ztilt, noise free simulation for acquisition. */
-	    if(istep % dtrat == 0){
-		dzero(zgrad);
-	    }
 	    dmm(&zgrad, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
 	    int itsa=0;
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -275,7 +282,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		dzero(merrm->p[0]);
 		dmm(&merrm->p[0], pgm, zgrad, "nn", 1);
 		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
-		
+		dzero(zgrad);
 		switch(parms->skyc.servo){
 		case 1:
 		    dcelladd(st2t->mint, 1, merrm, 0.3);
@@ -288,11 +295,6 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		}
 	    }
 	}else{
-	    if(istep % dtrat == 0){
-		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		    dcellzero(psf[iwfs]);
-		}
-	    }
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const double thetax=aster->wfs[iwfs].thetax;
 		const double thetay=aster->wfs[iwfs].thetay;
@@ -382,6 +384,9 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		default:
 		    error("Invalid\n");
 		}
+		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    dcellzero(psf[iwfs]);/*reset accumulation.*/
+		}
 	    }/*if dtrat */
 	}/*if phystart */
     }/*istep; */
@@ -421,7 +426,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
    Save NGS WFS and other information for later use in MAOS simulations.*/
 void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int seldtrat, int isky){
     const PARMS_S* parms=simu->parms;
-    const int nwvl=parms->skyc.nwvl;
+    const int nwvl=parms->maos.nwvl;
     char path[PATH_MAX];
     snprintf(path,PATH_MAX,"Res%d_%d_maos/sky%d",simu->seed_maos,simu->seed_skyc,isky);
     mymkdir("%s",path);
@@ -441,7 +446,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     }
     dwrite(aster[selaster].gain->p[seldtrat], "%s/gain",path);
     dwrite(simu->mres->p[isky], "%s/mres",path);
-    dwrite(simu->psd_tt_ws,"%s/psd_tt_ws",path);
+    dwrite(simu->psd_tt,"%s/psd_tt",path);
     dwrite(simu->psd_ps,"%s/psd_ps",path);
     char fnconf[PATH_MAX];
     snprintf(fnconf,PATH_MAX,"%s/base.conf",path);

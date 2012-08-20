@@ -64,19 +64,21 @@
     surface file must contain a 2-d array with a header specifying the following
     keys:
 
+    \verbatim
     dx  the sampling
     ox  the origin in x direction.
     oy  the origin in y direction.
     h   the height conjugation of this surface
     vx  the frozen flow wind speed along x of this surface (0 for static)
     vy  the frozen flow wind speed along y of this surface (0 for static)
-
+    \endverbatim
     
     We can also setup one or more tilted M3 surfaces that are common to science
     fields and wavefront sensors. Put the list of surface files in key \c
     tsurf. Each surface file must contain a 2-d array with a header specifying
     the following keys:
-    
+
+    \verbatim
     dx    the sampling in x direction (first dimension).
     dy    the sampling in y direction (second dimension)
     ox    the origin in x direction.
@@ -86,6 +88,7 @@
     ftel  the telescope effective focal length
     fexit the distance between the exit pupil and the focus
     fsurf the distance between the center of the M3 surface and the focus.
+    \endverbatim
 
     \ref nfiraos Shows the example configuration file for NFIRAOS.
     

@@ -43,12 +43,7 @@ static inline dcomplex nafocus_Hol(double nu,  /**<[in] frequency.*/
     const dcomplex Hol=Hwfs*Hlag*Hint*Hdac*Hzoom;
     return Hol;
 }
-/**
-   Compute sodium power spectrum density. alpha, beta are the parameters of the
-   sodium power spectrum obtained by fitting measurement data at UBC. */
-static inline double nafocus_NaPSD(double nu, double alpha, double beta2){
-    return beta2*pow(nu,alpha);/*we don't divide 2pi */
-}
+
 /**
    Sodium tracking Openloop transfer function. The cross over frequency
    (where gain is 1) have a phase margin of 45 (angle(Hol)=-135).
@@ -111,12 +106,11 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     /*We integrate over f, not f*2pi */
     dmat *nus=dlogspace(-3,5,2000);/*agrees good with skycoverage matlab code. */
     double rms=0;
-    double beta2=pow(10.,beta);
     for(long i=0; i<nus->nx; i++){
 	nu=nus->p[i];
 	Hol=nafocus_Hol(nu, fs, tau, zeta, zcf);
 	const dcomplex Hrej=1./(1.+gain*Hol);
-	const double NaPSD=nafocus_NaPSD(nu, alpha, beta2);
+	const double NaPSD=nafocus_NaPSD(nu, alpha, beta);
 	rms+=NaPSD*pow(cabs(Hrej),2)*nu;/*we integratr f(nu)nu d(log(nu)) */
     }
     rms*=(log(nus->p[nus->nx-1])-log(nus->p[0]))/(nus->nx-1);
@@ -127,14 +121,13 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
 dmat *nafocus_time(double D,    /**<[in] telescope diameter */
 		   double hs,   /**<[in] guide star altitude*/
 		   double alpha,/**<[in] parameter of sodium layer height PSD.*/
-		   double beta,  /**<[in] parameter of sodium layer height PSD.*/
+		   double beta, /**<[in] parameter of sodium layer height PSD.*/
 		   double dt, long nstep, rand_t *rstat){
     double df=1./(nstep*dt);
     cmat *psd=cnew(nstep, 1);
     cfft2plan(psd, -1);
-    double beta2=pow(10, beta);
-    for(int i=0; i<nstep; i++){
-	psd->p[i]=sqrt(nafocus_NaPSD(df*i, alpha, beta2)*df)*(randn(rstat)+I*randn(rstat));
+    for(int i=1; i<nstep; i++){
+	psd->p[i]=sqrt(nafocus_NaPSD(df*i, alpha, beta)*df)*(randn(rstat)+I*randn(rstat));
     }
     cfft2(psd, -1);
     dmat *out=NULL;

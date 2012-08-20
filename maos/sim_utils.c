@@ -1863,6 +1863,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     }
     fprintf(fp,"]\n");
     fprintf(fp,"maos.nstep=%d\n",parms->sim.end);
+    fprintf(fp,"maos.ahstfocus=%d\n", parms->sim.ahstfocus);
     fclose(fp);
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
 	int jpowfs=powfs_ngs[ipowfs];

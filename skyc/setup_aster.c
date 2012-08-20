@@ -93,7 +93,7 @@ ASTER_S *setup_aster_comb(int *naster, int nstar, const PARMS_S *parms){
 	/*Use the same order as input stars.*/
 	ASTER_S *aster=calloc(1, sizeof(ASTER_S));
 	*naster=1;
-	int npowfs=parms->skyc.npowfs;
+	int npowfs=parms->maos.npowfs;
 	int nleft=nstar;
 	int stars[npowfs];
 	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
@@ -213,7 +213,7 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
     aster->gm=dcell2m(aster->g);
     
     if(aster->nwfs==1 && parms->maos.nmod==6 && aster->gm->nx==8){
-	//there is a single ttf wfs and defocus needs to be estimated
+	//there is a single ttf wfs and defocus needs to be estimated. remove degeneracy
 	memset(aster->gm->p+2*aster->gm->nx, 0, sizeof(double)*aster->gm->nx);
     }
     aster->dettf=dcell2m(dettf);
@@ -225,7 +225,7 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 */
 void setup_aster_copystar(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     int nwfs=aster->nwfs;
-    const int nwvl=parms->skyc.nwvl;
+    const int nwvl=parms->maos.nwvl;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
 	const int istar=aster->wfs[iwfs].istar;
@@ -277,22 +277,22 @@ static dmat *calc_recon_error(const dmat *pgm,  /**<[in] the reconstructor*/
     PDMAT(psp,ppsp); 
     PDMAT(mcc,pmcc);
 
-    double rss=0;
-    for(int ix=0; ix<mcc->ny; ix++){
-	for(int iy=0; iy<mcc->nx; iy++){
-	    rss+=ppsp[iy][ix]*pmcc[ix][iy];
+    double all[mcc->nx];
+    for(int ib=0; ib<mcc->ny; ib++){
+	all[ib]=0;
+	for(int iy=0; iy<=ib; iy++){
+	    for(int ix=0; ix<=ib; ix++){
+		all[ib]+=ppsp[iy][ix]*pmcc[ix][iy];
+	    }
 	}
     }
-    double rsstt=0;
-    for(int ix=0; ix<2; ix++){
-	for(int iy=0; iy<2; iy++){
-	    rsstt+=ppsp[iy][ix]*pmcc[ix][iy];
-	}
+    dmat *res=dnew(3,1);
+    res->p[0]=all[4];
+    res->p[1]=all[1];
+    if(mcc->nx>5){
+	res->p[2]=all[5]-all[4];//focus
     }
     dfree(psp);
-    dmat *res=dnew(2,1);
-    res->p[0]=rss;
-    res->p[1]=rsstt;
     return res;
 }
 /**
@@ -448,32 +448,57 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	double sigma_ngs= aster->sigman->p[idtrat]->p[0];
 	double sigma_tt = aster->sigman->p[idtrat]->p[1];
 	double sigma_ps = sigma_ngs-sigma_tt;
+	double sigma_focus = aster->sigman->p[idtrat]->p[2];
+	long nmod=parms->maos.nmod;
+	if(parms->skyc.gsplit!=1 && nmod>5){
+	    /*PSD of focus is added to PSD of ps/ngs, so the sigma is added also.*/
+	    sigma_ps+=sigma_focus;
+	    sigma_ngs+=sigma_focus;
+	    sigma_focus=0;
+	}
 	double res_ngs;/*residual error due to signal after servo rejection. */
 	double res_ngsn;/*residual error due to noise. */
-	long nmod=parms->maos.nmod;
 	aster->gain->p[idtrat]=dnew(3,nmod);
 	PDMAT(aster->gain->p[idtrat], pgain);
 	if(parms->skyc.gsplit){
 	    double pg_tt[5];
 	    double pg_ps[5];
+	    double pg_focus[5]={0};
 	    if(parms->skyc.interpg){
 		interp_gain(pg_tt, simu->gain_tt[idtrat], simu->gain_x, sigma_tt);
 		interp_gain(pg_ps, simu->gain_ps[idtrat], simu->gain_x, sigma_ps);
+		if(nmod>5 && parms->skyc.gsplit==1){
+		    interp_gain(pg_focus, simu->gain_focus[idtrat], simu->gain_x, sigma_focus);
+		}
 	    }else{
-		dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma_tt;
-		dcell *pg_tt2=servo_optim(simu->psd_tt_ws, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
+		dmat *sigma2=dnew(1,1); 
+		dcell *tmp;
+		sigma2->p[0]=sigma_tt;
+		tmp=servo_optim(simu->psd_tt, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
+		memcpy(pg_tt, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
+
 		sigma2->p[0]=sigma_ps;
-		dcell *pg_ps2=servo_optim(simu->psd_ps,    parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
+		tmp=servo_optim(simu->psd_ps,    parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
+		memcpy(pg_ps, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
+
+		if(nmod>5 && parms->skyc.gsplit==1){
+		    sigma2->p[0]=sigma_focus;
+		    tmp=servo_optim(simu->psd_focus, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
+		    memcpy(pg_focus, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
+		}
 		dfree(sigma2);
-		memcpy(pg_tt, pg_tt2->p[0]->p, 5*sizeof(double));
-		memcpy(pg_ps, pg_ps2->p[0]->p, 5*sizeof(double));
-		dcellfree(pg_tt2);
-		dcellfree(pg_ps2);
 	    }
-	    res_ngs  = pg_tt[3] + pg_ps[3];
-	    res_ngsn = pg_tt[4] + pg_ps[4];
+	    res_ngs  = pg_tt[3] + pg_ps[3] + pg_focus[3];
+	    res_ngsn = pg_tt[4] + pg_ps[4] + pg_focus[4];
 	    for(int imod=0; imod<MIN(nmod,5); imod++){
 		memcpy(pgain[imod], imod<2?pg_tt:pg_ps, sizeof(double)*3);
+	    }
+	    if(nmod>5){
+		if(parms->skyc.gsplit>1){
+		    memcpy(pgain[5], pg_ps, sizeof(double)*3);
+		}else{
+		    memcpy(pgain[5], pg_focus, sizeof(double)*3);
+		}
 	    }
 	}else{
 	    double pg_ngs[5];
@@ -481,18 +506,18 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 		interp_gain(pg_ngs, simu->gain_ngs[idtrat], simu->gain_x, sigma_ngs);
 	    }else{
 		dmat *sigma2=dnew(1,1); sigma2->p[0]=sigma_ngs;
-		dcell *pg_ngs2=servo_optim(simu->psd_ngs_ws, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
-		memcpy(pg_ngs, pg_ngs2->p[0]->p, 5*sizeof(double));
-		dcellfree(pg_ngs2);
+		dcell *tmp;
+		tmp=servo_optim(simu->psd_ngs, parms->maos.dt, dtrat, parms->skyc.pmargin, sigma2, 2);
+		memcpy(pg_ngs, tmp->p[0]->p, 5*sizeof(double)); dcellfree(tmp);
 	    }
 	    res_ngs=pg_ngs[3];
 	    res_ngsn=pg_ngs[4];
-	    for(int imod=0; imod<MIN(nmod,5); imod++){
+	    for(int imod=0; imod<nmod; imod++){
 		memcpy(pgain[imod], pg_ngs, sizeof(double)*3);
 	    }
 	}
 	if(parms->skyc.noisefull){/*use full noise */
-	    pres_ngs[0][idtrat]=res_ngs+sigma_ngs;
+	    pres_ngs[0][idtrat]=res_ngs+sigma_ngs+(nmod>5?sigma_focus:0);
 	}else{/* use filtered noise. */
 	    pres_ngs[0][idtrat]=res_ngs+res_ngsn;/*error due to signal and noise */
 	}

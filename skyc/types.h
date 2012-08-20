@@ -135,8 +135,6 @@ typedef struct SIM_S{
     dcell *stars;      /**<randomly generated star fields.*/
     dmat *mideal;      /**<ideal NGS modes*/
     dmat *mideal_oa;   /**<ideal NGS modes on axis (dot product only)*/
-    dmat *midealws;    /**<ideal NGS modes + wind shake time series*/
-    dmat *midealws_oa; /**<ideal NGS modes on axis + wind shake time series*/
     dmat *rmsol;       /**<open loop error*/
     STATUS_T *status;  /**<to report status to the scheduler*/
     STAR_S *star;      /**<STAR_S*/
@@ -159,16 +157,16 @@ typedef struct SIM_S{
     dmat *fss;         /**<optimal sampling freq for each star field*/
     dcell *gain;       /**<optimal gains for each star field.*/
     dmat *demote;      /**<demote TTF or not. deprecated. we don't demote anymore*/
-    dmat *psd_ngs_ws;  /**<PSD of NGS modes + wind shake*/
-    dmat *psd_tt_ws;   /**<PSD of TT modes + wind shake*/
     dmat *psd_ngs;     /**<PSD of NGS(tip/tilt + plate scale) modes*/
     dmat *psd_tt;      /**<PSD of Tip/tilt modes*/
     dmat *psd_ps;      /**<PSD of plate scale modes*/
     dmat *psd_ws;      /**<PSD of windshake*/
+    dmat *psd_focus;   /**<PSD of focus error due to atmosphere and sodium layer*/
     dmat *gain_x;      /**<The sampled sigma in m2*/
     dcell **gain_ngs;  /**<TypeII gain and result of different sigman and different dtrat*/
     dcell **gain_ps;   /**<TypeII gain and result of different sigman and different dtrat*/
     dcell **gain_tt;   /**<TypeII gain and result of different sigman and different dtrat*/
+    dcell **gain_focus;/**<TypeII gain and result of different sigman and different dtrat*/
     dcell ***bspstrehl;/**<Coeffiecients of bicubic spline fit of Strehl on the grid.*/
     dmat *bspstrehlxy; /**<Coordinate of the grid.*/
     int isky;          /**<current star field being evaluated*/
