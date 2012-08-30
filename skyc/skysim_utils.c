@@ -356,14 +356,19 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			}
 			igrad[0]=0;
 			igrad[1]=0;
+			double pixtheta=parms->skyc.pixtheta[ipowfs];
 			if(parms->skyc.mtch){
 			    dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
-			}else{
+			}
+			if(!parms->skyc.mtch || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
 			    /*double imax=dmax(ints[iwfs]->p[isa]);
 			      dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0.1*imax, 0.1*imax); */
+			    if(!parms->skyc.mtch){
+				warning2("fall back to cog\n");
+			    }
 			    dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*rnefs[ipowfs][idtrat]); 
-			    igrad[0]*=parms->skyc.pixtheta[ipowfs];
-			    igrad[1]*=parms->skyc.pixtheta[ipowfs];
+			    igrad[0]*=pixtheta;
+			    igrad[1]*=pixtheta;
 			}
 			grad->p[isa+itsa]=igrad[0];
 			grad->p[isa+nsa+itsa]=igrad[1];

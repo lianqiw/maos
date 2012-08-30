@@ -140,12 +140,16 @@ typedef struct SKYC_S{
     double zc_zeta;  /**<focus zoom corrector dampling */
     double na_alpha; /**<sodium PSD parameter. PSD is beta*f^alpha*/
     double na_beta;  /**<sodium PSD parameter. PSD is beta*f^alpha*/
+    char *fnrange;   /**<Change of sodium height for LGS. in meter. Replaes na_alpha, na_beta*/
     dmat *resfocus;  /**<residual focus error at each sampling frequency.*/
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/
     int addfocus;    /**<add focus time series to simulation*/
     double pmargin;  /**<phase margin of type II*/
     int psdcalc;     /**<Calculate PSD from time series*/
+    char **fnpsf1;   /**<file name for additional otf to be interpolated and
+			multiplied to dtfq. 2 columns. first column is coordinate
+			of otf, and second column of value.*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

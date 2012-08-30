@@ -59,6 +59,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     readcfg_intarr_n(&parms->skyc.pixpsa,  parms->skyc.npowfs,"skyc.pixpsa");
     readcfg_dblarr_n(&parms->skyc.pixoffx, parms->skyc.npowfs,"skyc.pixoffx");
     readcfg_dblarr_n(&parms->skyc.pixoffy, parms->skyc.npowfs,"skyc.pixoffy");
+    readcfg_strarr_nmax(&parms->skyc.fnpsf1, parms->skyc.npowfs, "skyc.fnpsf1");
     READ_INT(skyc.limitnstep);
     READ_DBL(skyc.intgain);
     READ_DBL(skyc.rne);
@@ -91,6 +92,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_DBL(skyc.zc_zeta);
     READ_DBL(skyc.na_alpha);
     READ_DBL(skyc.na_beta);
+    READ_STR(skyc.fnrange);
 
     READ_STR(skyc.stars);
     READ_INT(skyc.addws);
@@ -298,6 +300,9 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	warning("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);
 	parms->skyc.verbose=1;
 	parms->skyc.nthread=1;
+	parms->skyc.interpg=0;
+    }
+    if(parms->skyc.nsky<20){
 	parms->skyc.interpg=0;
     }
     if(arg->detach || parms->skyc.nthread>1){

@@ -309,17 +309,28 @@ static void skysim_read_mideal(SIM_S *simu){
    Update ideal NGS modes with focus or wind shake
 */
 static void skysim_update_mideal(SIM_S *simu){
-    dwrite(simu->mideal, "mideal0_%d_%d", simu->seed_maos, simu->seed_skyc);
     const PARMS_S *parms=simu->parms;
     if(parms->skyc.addfocus && parms->maos.nmod>5){
-	dmat *timing=nafocus_time(parms->maos.D, parms->maos.hs,
-				  parms->skyc.na_alpha, parms->skyc.na_beta, 
-				  parms->maos.dt, simu->mideal->ny, &simu->rand);
-	double scale=1./sqrt(parms->maos.mcc->p[35]);//convert from m to modes
-	for(int istep=0; istep<parms->maos.nstep; istep++){
-	    simu->mideal->p[5+istep*6]+=timing->p[istep]*scale;
+	dmat *range=NULL;
+	if(parms->skyc.fnrange){
+	    range=dread(parms->skyc.fnrange);
+	    info("Loading sodium range variation from %s\n", parms->skyc.fnrange);
+	    if(range->nx<simu->mideal->ny){
+		error("Time serials is not long enough. Need %ld, got %ld\n",
+		      simu->mideal->ny, range->nx);
+	    }
+	}else{
+	    range=nafocus_time(parms->skyc.na_alpha, parms->skyc.na_beta, 
+			       parms->maos.dt, simu->mideal->ny, &simu->rand);
+	    dwrite(range, "range_%d_%d", simu->seed_maos, simu->seed_skyc);
 	}
-	dwrite(simu->mideal, "mideal1_%d_%d", simu->seed_maos, simu->seed_skyc);
+	double scale1=1./(16*sqrt(3))*pow((parms->maos.D/parms->maos.hs),2);//convert from range to wfe
+	double scale2=1./sqrt(parms->maos.mcc->p[35]);//convert from wve to modes
+	double scale=scale1*scale2;
+	for(int istep=0; istep<parms->maos.nstep; istep++){
+	    simu->mideal->p[5+istep*6]+=range->p[istep]*scale;
+	}
+	dfree(range);
     }
     if(parms->skyc.addws){
 	int nx=simu->mideal->nx;
@@ -327,17 +338,16 @@ static void skysim_update_mideal(SIM_S *simu){
 	/*Add ws to mideal. After genstars so we don't purturb it. */
 	dmat *telws=psd2time(simu->psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 	/*telws is in m. need to convert to rad since mideal is in this unit. */
-	dscale(telws, 4./parms->maos.D);
+	dwrite(telws, "telws_%d_%d", simu->seed_maos, simu->seed_skyc);
+	dscale(telws, 4./parms->maos.D);//convert from wfe to radian.
 	PDMAT(simu->mideal, pm1); 
 	PDMAT(simu->mideal_oa, pm2);
 	for(long i=0; i<simu->mideal->ny; i++){
 	    pm1[i][0]+=telws->p[i];
 	    pm2[i][0]+=telws->p[i];
 	}
-	dwrite(telws, "telws");
 	dfree(telws);
     }
-    dwrite(simu->mideal, "mideal2_%d_%d", simu->seed_maos, simu->seed_skyc);
 }
 
 /**
@@ -376,7 +386,7 @@ static void skysim_calc_psd(SIM_S *simu){
 	if(parms->skyc.psd_scale && !parms->skyc.psdcalc){
 	    info2("NGS PSD integrates to %.2f nm before scaling\n", sqrt(rms_ngs)*1e9);
 	    double rms_ratio=simu->rmsol->p[0]/rms_ngs;
-	    info("Scaling PSD by %g\n", rms_ratio);
+	    info2("Scaling PSD by %g\n", rms_ratio);
 	    long nx=simu->psd_ngs->nx;
 	    /*scale PSF in place. */
 	    double *p_ngs=simu->psd_ngs->p+nx;
@@ -390,7 +400,7 @@ static void skysim_calc_psd(SIM_S *simu){
 	}
     }
     double rms_ngs=psd_inte2(simu->psd_ngs);
-    info("PSD integrates to %.2f nm.\n", sqrt(rms_ngs)*1e9);
+    info2("PSD integrates to %.2f nm.\n", sqrt(rms_ngs)*1e9);
 
     if(parms->maos.nmod>5){
 	PDMAT(parms->maos.mcc, MCC);
@@ -459,7 +469,7 @@ static void skysim_prep_gain(SIM_S *simu){
 	  dcellwrite(simu->gain_ps[idtrat],  "gain_ps_%ld.bin", dtrat);
 	  dcellwrite(simu->gain_ngs[idtrat], "gain_ngs_%ld.bin", dtrat);*/
     }
-    toc("servo_optim");
+    toc2("servo_optim");
     simu->gain_x=dref(sigma2);
     dfree(sigma2);
 }
@@ -574,7 +584,6 @@ void skysim(const PARMS_S *parms){
 	free(simu->bspstrehl);
 	dfree(simu->bspstrehlxy);
 	if(parms->skyc.interpg){
-	    dcellfreearr(simu->gain_ps, parms->skyc.ndtrat);
 	    dcellfreearr(simu->gain_ps, parms->skyc.ndtrat);
 	    dcellfreearr(simu->gain_tt, parms->skyc.ndtrat);
 	    dcellfreearr(simu->gain_ngs, parms->skyc.ndtrat);

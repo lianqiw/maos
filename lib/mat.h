@@ -26,7 +26,7 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define dfree(A)     ({dfree_do((A),0);(A)=NULL;})
 #define dcp2(A,B)    memcpy(A->p,B->p,sizeof(double)*A->nx*A->ny)
 #define dcellfree(A) ({dcellfree_do(A);A=NULL;})
-#define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);})
+#define dcellfreearr(A,n) ({for(int in=0; A&&in<n; in++){dcellfree(A[in]);};free(A);A=NULL;})
 #define dzero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(double))
 #define dhash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(double), key)
 
@@ -35,7 +35,7 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define sfree(A)     ({sfree_do((A),0);(A)=NULL;})
 #define scp2(A,B)    memcpy(A->p,B->p,sizeof(float)*A->nx*A->ny)
 #define scellfree(A) ({scellfree_do(A);A=NULL;})
-#define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);})
+#define scellfreearr(A,n) ({for(int in=0; A&&in<n; in++){scellfree(A[in]);};free(A);A=NULL;})
 #define szero(A) if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(float))
 #define shash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(float), key)
 
@@ -43,7 +43,7 @@ void dembed(dmat *restrict A, dmat *restrict B, const double theta);
 #define PCCELL(M,P)  cmat* (*restrict P)[(M)->nx]=(cmat*(*)[(M)->nx])(M)->p
 #define cfree(A)     ({cfree_do(A,0);A=NULL;})
 #define ccellfree(A) ({ccellfree_do(A);A=NULL;})
-#define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);})
+#define ccellfreearr(A,n) ({for(int in=0; A&&in<n; in++){ccellfree(A[in]);};free(A);A=NULL;})
 #define cabs2(A)     (pow(creal(A),2)+pow(cimag(A),2))
 #define czero(A)     if(A) memset((A)->p, 0, (A)->nx*(A)->ny*sizeof(dcomplex))
 #define chash(A,key) hashlittle(A->p, A->nx*A->ny*sizeof(dcomplex), key)

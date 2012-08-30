@@ -167,7 +167,7 @@ static dmat *add_psd_nomatch(dmat *psd1,dmat *psd2){
    second column is PSD*/
 dmat *add_psd(dmat *psd1, dmat *psd2){
     if(psd1->nx!=psd2->nx){
-	warning("The two PSDs have different length\n");
+	//warning("The two PSDs have different length\n");
 	return add_psd_nomatch(psd1, psd2);
     }
     dmat *psd=dnew(psd1->nx,2);

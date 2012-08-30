@@ -118,9 +118,7 @@ double nafocus_residual(double fs,   /**<[in] sampling frequency of NGS*/
     dfree(nus);
     return focus;
 }
-dmat *nafocus_time(double D,    /**<[in] telescope diameter */
-		   double hs,   /**<[in] guide star altitude*/
-		   double alpha,/**<[in] parameter of sodium layer height PSD.*/
+dmat *nafocus_time(double alpha,/**<[in] parameter of sodium layer height PSD.*/
 		   double beta, /**<[in] parameter of sodium layer height PSD.*/
 		   double dt, long nstep, rand_t *rstat){
     double df=1./(nstep*dt);
@@ -131,8 +129,7 @@ dmat *nafocus_time(double D,    /**<[in] telescope diameter */
     }
     cfft2(psd, -1);
     dmat *out=NULL;
-    double scale=1./(16*sqrt(3))*pow((D/hs),2);/*convert height error to wfe*/
-    creal2d(&out, 0, psd, scale);
+    creal2d(&out, 0, psd, 1);
     cfree(psd);
     return out;
 }
