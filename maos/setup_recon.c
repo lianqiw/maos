@@ -272,6 +272,10 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 		if(ny<nyi) ny=nyi;
 	    }
 	    nin0=nextfftsize(MAX(nx, ny));
+	
+	    while (parms->tomo.precond==1 && (nin0 & 1)){
+		nin0=nextfftsize(nin0+1);
+	    }
 	}
 	for(int ips=0; ips<npsr; ips++){
 	    const double ht=recon->ht->p[ips];

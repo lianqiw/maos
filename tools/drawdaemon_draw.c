@@ -121,7 +121,8 @@ static void calc_tic(double *tic1, double *dtic, int *ntic, int *order,
 	*dtic=0;
 	*tic1=xmin;
     }else if(fabs(diff)<fabs(1.e-4*rmax)){/*very small separation */
-	xmax=xmax/pow(10,order1);
+	xmax/=pow(10,order1);
+	xmin/=pow(10,order1);
 	*order=order1;
 	*ntic=2;
 	*dtic=xmax-xmin;
