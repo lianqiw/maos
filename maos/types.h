@@ -120,8 +120,8 @@ typedef struct POWFS_T{
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     double (*misreg)[2];/**<pure misregistration taken from parms->powfs[ipowfs].misreg*/
     /*NCPA */
-    dcell *ncpa;        /**<NCPA OPDs to add to WFS OPD during simulation.*/
-    dcell *ncpa_grad;   /**<NCPA grads to subtract from measurement. */
+    dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
+    dcell *gradoff;     /**<Offset to grads to subtract from measurement. */
     /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
     /*LGS Physical Optics */
@@ -310,6 +310,7 @@ typedef struct RECON_T{
     spcell *GAhi;      /**<GA of high order WFS.*/
     spcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
     spcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
+    spcell *HAevl;     /**<ray tracing from aloc to floc for evl directions*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
     dcell *DF;         /**<Differential focus modes for LGS wfs*/

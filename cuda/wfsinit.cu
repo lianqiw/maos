@@ -398,11 +398,7 @@ void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	if(powfs[ipowfs].ncpa){
-	    cp2gpu(&cuwfs[iwfs].opdadd, powfs[ipowfs].ncpa->p[wfsind]);
-	}else{
-	    curzero(cuwfs[iwfs].opdadd, cuwfs[iwfs].stream);
-	}
+	curzero(cuwfs[iwfs].opdadd, cuwfs[iwfs].stream);
 	if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
 	    curmat *temp=NULL;
 	    cp2gpu(&temp, powfs[ipowfs].opdadd->p[wfsind]);

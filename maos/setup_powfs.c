@@ -739,102 +739,6 @@ setup_powfs_prep_phy(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
     }
 }
 /**
-   Set up NCPA maps for each WFS. Load NCPA maps and ray trace to grid of loc */
-static void
-setup_powfs_ncpa(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
-    const double rot=-parms->aper.rotdeg/180.*M_PI;
-    int do_rot=(fabs(rot)>1.e-10);
-    const char *fn_ncpa = parms->powfs[ipowfs].ncpa;
-    if(fn_ncpa){/*Always make nwfs NCPA's */
-	int nncpa_in;
-	map_t **ncpa=maparrread(&nncpa_in, "%s",fn_ncpa);
-	const int nwfs=parms->powfs[ipowfs].nwfs;
-	if(nncpa_in != 1 && nncpa_in != nwfs){
-	    error("powfs[%d].ncpa is in wrong format. nncpa_in=%d, nwfs=%d\n",
-		  ipowfs,nncpa_in, nwfs);
-	}
-
-	int incpa_mul=0;
-	if(nncpa_in==nwfs){
-	    incpa_mul=1;
-	}
-	info2("Creating NCPA\n");
-	dcellfree(powfs[ipowfs].ncpa);
-	powfs[ipowfs].ncpa=dcellnew(nwfs,1);
-	
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ilocm=0;
-	    if(powfs[ipowfs].locm && powfs[ipowfs].nlocm>1){/*misregistration. */
-		ilocm=parms->powfs[ipowfs].wfsind[iwfs];
-	    }
-	    int incpa_in=incpa_mul*iwfs;
-	    info2("iwfs=%d, incpa_in=%d\n", iwfs, incpa_in);
-
-	    if(!powfs[ipowfs].ncpa->p[iwfs]){
-		powfs[ipowfs].ncpa->p[iwfs]=dnew(powfs[ipowfs].npts,1);
-	    }
-	    loc_t *locwfsin, *locwfs;
-	    if(powfs[ipowfs].locm){
-		locwfsin=powfs[ipowfs].locm[ilocm];
-	    }else{
-		locwfsin=powfs[ipowfs].loc;
-	    }
-	    if(do_rot){
-		info2("Rotating telescope pupil\n");
-		locwfs=locdup(locwfsin);
-		locrot(locwfs,rot);
-	    }else{
-		locwfs=locwfsin;
-	    }
-	    double hl=ncpa[incpa_in]->h;
-	    double hs=parms->powfs[ipowfs].hs;
-	    const double scale=1.-hl/hs;
-	    const double displacex=parms->wfs[iwfs].thetax*hl;
-	    const double displacey=parms->wfs[iwfs].thetay*hl;
-	    if(ncpa[incpa_in]->nx==1 || ncpa[incpa_in]->ny==1){
-		error("ncpa is a vector: Invalid format\n");
-	    }
-	    prop_grid(ncpa[incpa_in], locwfs, NULL, powfs[ipowfs].ncpa->p[iwfs]->p,
-		      1, displacex, displacey, scale, 1, 0, 0);
-	    if(do_rot){
-		locfree(locwfs);
-	    }
-	}/*iwfs; */
-	maparrfree(ncpa,nncpa_in);
-	if(parms->powfs[ipowfs].ncpa_method<0 || parms->powfs[ipowfs].ncpa_method>2){
-	    error("Invalid ncpa_method=%d\n", parms->powfs[ipowfs].ncpa_method);
-	}
-	/*
-	  ncpa_method:
-	  0: do not calibrate
-	  1: use gradient offset
-	  2: use offset in matched filter.
-	 */
-	if(parms->powfs[ipowfs].ncpa_method==1){
-	    info2("Calculating gradient offset due to NCPA\n");
-	    powfs[ipowfs].ncpa_grad=dcellnew(nwfs,1);
-	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		double *realamp=powfs[ipowfs].realamp[iwfs];
-		if(parms->powfs[ipowfs].gtype_sim==1){
-		    pts_ztilt(&powfs[ipowfs].ncpa_grad->p[iwfs], powfs[ipowfs].pts,
-			      powfs[ipowfs].nsaimcc>1?powfs[ipowfs].saimcc[iwfs]:powfs[ipowfs].saimcc[0], 
-			      realamp, powfs[ipowfs].ncpa->p[iwfs]->p);
-		}else{
-		    spmulmat(&powfs[ipowfs].ncpa_grad->p[iwfs],adpind(powfs[ipowfs].GS0, iwfs),
-			     powfs[ipowfs].ncpa->p[iwfs],1);
-		}
-	    }
-	    if(parms->save.setup){
-		dcellwrite(powfs[ipowfs].ncpa_grad, "%s/powfs%d_ncpa_grad",dirsetup,ipowfs);
-	    }
-	}
-	if(parms->save.setup){
-	    dcellwrite(powfs[ipowfs].ncpa, "%s/powfs%d_ncpa",dirsetup,ipowfs);
-
-	}
-    }/*if(fn_ncpa) */
-}
-/**
    Free the detector transfer function.
 */
 static void 
@@ -1762,9 +1666,9 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		}else{
 		    key=dhash(powfs[ipowfs].amp, key);
 		}
-		if(parms->powfs[ipowfs].ncpa && parms->powfs[ipowfs].ncpa_method==2){
+		if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
 		    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-			key=dhash(powfs[ipowfs].ncpa->p[iwfs],key);
+			key=dhash(powfs[ipowfs].opdbias->p[iwfs],key);
 		    }
 		}
 		if(key!=0){
@@ -1899,11 +1803,10 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 		dcellwrite(intstat->sepsf[0], "%s/powfs%d_sepsf",dirsetup,ipowfs);
 	    }
 	    /*Free short exposure otf. */
-	    ccellfree(intstat->lotf);
-	    for(int iotf=0; iotf<intstat->notf; iotf++){
-		ccellfree(intstat->otf[iotf]);
+	    if(!parms->sim.ncpa_calib){
+		ccellfree(intstat->lotf);
 	    }
-	    free(intstat->otf);
+	    ccellfreearr(intstat->otf, intstat->notf);
 	}
 	/*generate short exposure i0,gx,gy from psf. */
 	gensei(parms,powfs,ipowfs);
@@ -1975,7 +1878,6 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 	info2("\n\033[0;32mSetting up powfs %d\033[0;0m\n\n", ipowfs);
 	setup_powfs_geom(powfs,parms,aper,ipowfs);
         setup_powfs_grad(powfs,parms,ipowfs);
-	setup_powfs_ncpa(powfs,parms,ipowfs);
 	if(TEST_POWFS||parms->powfs[ipowfs].usephy
 	   ||parms->powfs[ipowfs].psfout
 	   ||parms->powfs[ipowfs].pistatout

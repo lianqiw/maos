@@ -2841,7 +2841,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	spcellfree(recon->actslave);
     }
     /* when sim.dmproj=1, we need these matrices to use in FR.Mfun*/
-    if(recon->FR.M && !parms->sim.dmproj && parms->fit.assemble && !parms->gpu.moao){
+    if(recon->FR.M && !parms->sim.dmproj && parms->fit.assemble && !parms->gpu.moao && !parms->sim.ncpa_calib){
 	spfree(recon->W0); 
 	dfree(recon->W1); 
 	spcellfree(recon->HA); 

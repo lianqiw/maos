@@ -500,7 +500,7 @@ void FitR(dcell **xout, const void *A,
 		displace[0]=parms->fit.thetax[ifit]*ht-simu->atm[ips]->vx*isim*simu->dt;
 		displace[1]=parms->fit.thetay[ifit]*ht-simu->atm[ips]->vy*isim*simu->dt;
 		prop_grid(simu->atm[ips], recon->floc, NULL, xp->p[ifit]->p, 
-			  alpha, displace[0], displace[1], scale, 1, 0, 0);
+			  1, displace[0], displace[1], scale, 1, 0, 0);
 	    }
 	}
     }else if(recon->HXF){
@@ -520,7 +520,7 @@ void FitR(dcell **xout, const void *A,
 		displace[0]=parms->fit.thetax[ifit]*ht;
 		displace[1]=parms->fit.thetay[ifit]*ht;
 		prop_nongrid(recon->xloc[ips], xin->p[ips]->p, recon->floc, NULL, 
-			     xp->p[ifit]->p, alpha, displace[0], displace[1], scale, 0, 0);
+			     xp->p[ifit]->p, 1, displace[0], displace[1], scale, 0, 0);
 	    }
 	}
     }

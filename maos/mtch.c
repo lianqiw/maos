@@ -62,9 +62,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	error("Please create intstat before calling mtch");
     }
     INTSTAT_T *intstat=powfs[ipowfs].intstat;
-    if(intstat->mtche){
-	error("Matched filter already exists. \n");
-    }
     const double pixthetax=parms->powfs[ipowfs].radpixtheta;
     const double pixthetay=parms->powfs[ipowfs].pixtheta;
     const double kpx=1./pixthetax;
@@ -78,6 +75,10 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	error("ni0 should be either 1 or %d\n", parms->powfs[ipowfs].nwfs);
     }
     const int nsa=powfs[ipowfs].pts->nsa;
+    dcellfree(intstat->mtche);
+    dcellfree(intstat->saneaxy);
+    dfree(intstat->i0sum);
+
     intstat->mtche=dcellnew(nsa,ni0);
     dcell *sanea=dcellnew(ni0,1);
     intstat->i0sum=dnew(nsa,ni0);

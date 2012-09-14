@@ -588,9 +588,9 @@ void gpu_wfsgrad(thread_t *info){
 	    ctoc("zero");
 	}
 	CUDA_SYNC_STREAM;
-	if(powfs[ipowfs].ncpa_grad){
-	    warning("Applying ncpa_grad to gradcl\n");
-	    dadd(&gradcl, 1., powfs[ipowfs].ncpa_grad->p[wfsind], -1.);
+	if(powfs[ipowfs].gradoff){
+	    warning("Subtracting gradoff from gradcl\n");
+	    dadd(&gradcl, 1., powfs[ipowfs].gradoff->p[wfsind], -1.);
 	}
 	if(save_grad){
 	    cellarr_dmat(simu->save->gradcl[iwfs], gradcl);

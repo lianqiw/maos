@@ -364,12 +364,6 @@ void wfsgrad_iwfs(thread_t *info){
 	dadd(&opd,1, powfs[ipowfs].opdadd->p[wfsind],1);
     }
 
-    /* Add NCPA to WFS as needed. Todo: merge surfwfs with ncpa. be careful
-       about ncpa calibration. */
-    if(powfs[ipowfs].ncpa){
-	dadd(&opd, 1, powfs[ipowfs].ncpa->p[wfsind], 1);
-    }
-
     /* Now begin ray tracing. */
     if(parms->sim.idealwfs){
 	wfs_ideal_atm(simu, opd, iwfs, 1);
@@ -788,9 +782,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
   
-	if(powfs[ipowfs].ncpa_grad){
-	    warning("Applying ncpa_grad to gradout\n");
-	    dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[wfsind], -1);
+	if(powfs[ipowfs].gradoff){
+	    dadd(gradout, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
 	}
 	if(save_grad){
 	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);

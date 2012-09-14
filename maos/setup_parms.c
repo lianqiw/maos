@@ -65,7 +65,6 @@ void free_powfs_cfg(POWFS_CFG_T *powfscfg){
     free(powfscfg->neasimfile);
     free(powfscfg->bkgrndfn);
     free(powfscfg->misreg);
-    free(powfscfg->ncpa);
 }
 /**
    Free the parms struct.
@@ -290,7 +289,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(int,phystep);
     READ_POWFS(int,noisy);
     READ_POWFS(str,misreg);
-    READ_POWFS(str,ncpa);
     READ_POWFS(int,ncpa_method);
     READ_POWFS(int,dtrat);
     READ_POWFS(int,i0scale);
@@ -780,6 +778,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.zoomdtrat);
     READ_INT(sim.zoomshare);
     READ_DBL(sim.zoomgain);
+    READ_INT(sim.ncpa_calib);
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -1212,12 +1211,11 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].bkgrndfn){
 	    warning("powfs %d: there is sky background, but is using geometric wfs. background won't be effective.\n", ipowfs);
 	} 
-	if(parms->powfs[ipowfs].ncpa && parms->powfs[ipowfs].mtchstc){
+	if(parms->sim.ncpa_calib && parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
 	    warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
 	    parms->powfs[ipowfs].mtchstc=0;
 	}
-	if(parms->powfs[ipowfs].ncpa && !parms->powfs[ipowfs].usephy 
-	   && parms->powfs[ipowfs].ncpa_method==2){
+	if(parms->sim.ncpa_calib && !parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].ncpa_method==2){
 	    warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs mdoe\n", ipowfs);
 	    parms->powfs[ipowfs].ncpa_method=1;
 	}
@@ -2325,6 +2323,9 @@ PARMS_T * setup_parms(ARG_T *arg){
     readcfg_load(parms);
     parms->nsurf=readcfg_strarr(&parms->surf, "surf");
     parms->ntsurf=readcfg_strarr(&parms->tsurf,"tsurf");
+    if(!parms->nsurf && parms->ntsurf){
+	parms->sim.ncpa_calib=0;
+    }
     /*
       Output all the readed parms to a single file that can be used to reproduce
       the same simulation.

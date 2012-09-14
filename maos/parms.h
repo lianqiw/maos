@@ -208,11 +208,6 @@ typedef struct POWFS_CFG_T{
 		       ym(ip)=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
 		       where ip is ipowfs. ic is index of column in entries of
 		       A.*/
-    char *ncpa;     /**<none common path aberrations for powfs. Used in
-		       perparation of matched filter *and* in simulation. Each
-		       file contains 2xn cell array, where n can be 1 or number
-		       of wfs belonging to this powfs. The format of each 2x1
-		       cell is the same as for surf.*/
     int ncpa_method;/**<Method to correct ncpa.
 		       - 0: do nothing.
 		       - 1: apply gradient electronic offset. 
@@ -492,6 +487,7 @@ typedef struct SIM_CFG_T{
     int zoomdtrat;   /**<dtrat of the trombone averager*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
     double zoomgain; /**<gain of the trombone controller*/
+    int ncpa_calib;  /**<calibrate NCPA*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
