@@ -387,6 +387,7 @@ typedef struct FIT_CFG_T{
     int square;      /**<using square grid on DM and ploc.*/
     int assemble;    /**<force assemble fit matrix in CG*/
     int pos;         /**<over sampling of floc over aloc. for fitting. normally equal to tomo.pos*/
+    int indoa;       /**<Index of on axis point.*/
 }FIT_CFG_T;
 /**
    contains input parameters for the least square reconstructor.
@@ -488,6 +489,11 @@ typedef struct SIM_CFG_T{
     int zoomshare;   /**<1: All LGS share the same trombone*/
     double zoomgain; /**<gain of the trombone controller*/
     int ncpa_calib;  /**<calibrate NCPA*/
+    double *ncpa_thetax; /**<Coordinate for NCPA calibration (arcsec)*/
+    double *ncpa_thetay; /**<Coordinate for NCPA calibration (arcsec)*/
+    double *ncpa_wt;     /**<Weight for each point.*/
+    double *ncpa_hs;     /**<Height of star.*/
+    int ncpa_ndir;       /**<Number of points for NCPA calibration*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.

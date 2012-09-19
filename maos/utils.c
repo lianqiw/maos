@@ -105,14 +105,13 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     double R=parms->aper.d/2;
     double maxx=0,maxy=0;
     double sx,sy;/*temporary variables */
-    int i;
     int use_wfs_hi=1;
     int use_wfs_lo=1;
     int use_evl=1;
     int use_fit=1;
    
     /*find minimum map size to cover all the beams */
-    for(i=0; i<parms->nwfs; i++){
+    for(int i=0; i<parms->nwfs; i++){
 	int ipowfs=parms->wfs[i].powfs;
 	if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
 	   ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
@@ -125,7 +124,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	if(sy>maxy) maxy=sy;
     }
     if(use_evl){
-	for(i=0; i<parms->evl.nevl; i++){
+	for(int i=0; i<parms->evl.nevl; i++){
 	    double hs=parms->evl.hs[i];
 	    sx=fabs(parms->evl.thetax[i]*ht)+(1.-ht/hs)*R;
 	    sy=fabs(parms->evl.thetay[i]*ht)+(1.-ht/hs)*R;
@@ -134,10 +133,19 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	}
     }
     if(use_fit){
-	for(i=0; i<parms->fit.nfit; i++){
+	for(int i=0; i<parms->fit.nfit; i++){
 	    double hs=parms->fit.hs[i];
 	    sx=fabs(parms->fit.thetax[i]*ht)+(1.-ht/hs)*R;
 	    sy=fabs(parms->fit.thetay[i]*ht)+(1.-ht/hs)*R;
+	    if(sx>maxx) maxx=sx;
+	    if(sy>maxy) maxy=sy;
+	}
+    }
+    if(parms->sim.ncpa_calib){
+	for(int i=0; i<parms->sim.ncpa_ndir; i++){
+	    double hs=parms->sim.ncpa_hs[i];
+	    sx=fabs(parms->sim.ncpa_thetax[i]*ht)+(1.-ht/hs)*R;
+	    sy=fabs(parms->sim.ncpa_thetay[i]*ht)+(1.-ht/hs)*R;
 	    if(sx>maxx) maxx=sx;
 	    if(sy>maxy) maxy=sy;
 	}
@@ -184,7 +192,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	*map=dmap->p;
 	double Rn=R/dx;
 	double Rg=guard/dx;
-	for(i=0; i<parms->nwfs; i++){
+	for(int i=0; i<parms->nwfs; i++){
 	    int ipowfs=parms->wfs[i].powfs;
 	    if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
 	       ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
@@ -197,7 +205,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	}
 
 	if(use_evl){
-	    for(i=0; i<parms->evl.nevl; i++){
+	    for(int i=0; i<parms->evl.nevl; i++){
 		sx=ox+(parms->evl.thetax[i]*ht)/dx;
 		sy=oy+(parms->evl.thetay[i]*ht)/dx;
 		double RR=Rn+Rg;
@@ -205,15 +213,22 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	    }
 	}
 	if(use_fit){
-	    for(i=0; i<parms->fit.nfit; i++){
+	    for(int i=0; i<parms->fit.nfit; i++){
 		sx=ox+(parms->fit.thetax[i]*ht)/dx;
 		sy=oy+(parms->fit.thetay[i]*ht)/dx;
 		double RR=Rn+Rg;
 		dcircle_symbolic(dmap,sx,sy,RR);
 	    }
 	}
-
-	for(i=0; i<nx*ny; i++){
+	if(parms->sim.ncpa_calib){
+	    for(int i=0; i<parms->sim.ncpa_ndir; i++){
+		sx=ox+(parms->sim.ncpa_thetax[i]*ht)/dx;
+		sy=oy+(parms->sim.ncpa_thetay[i]*ht)/dx;
+		double RR=Rn+Rg;
+		dcircle_symbolic(dmap,sx,sy,RR);
+	    }
+	}
+	for(int i=0; i<nx*ny; i++){
 	    dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
 	}
 	dfree_keepdata(dmap);
@@ -225,26 +240,52 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 void plotloc(char *fig, const PARMS_T *parms, 
 	     loc_t *loc, double ht, char *format,...){
     format2fn;
-    int ncir=parms->evl.nevl + parms->nwfs;
+    int ncir=parms->evl.nevl + parms->fit.nfit + parms->nwfs;
+    if(parms->sim.ncpa_calib){
+	ncir+=parms->sim.ncpa_ndir;
+    }
     double (*cir)[4];
     cir=(double(*)[4])calloc(ncir*4,sizeof(double));
     int count=0;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	double hs=parms->evl.hs[ievl];
 	cir[count][0]=ht*parms->evl.thetax[ievl];
 	cir[count][1]=ht*parms->evl.thetay[ievl];
-	cir[count][2]=parms->aper.d*0.5;
+	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
 	cir[count][3]=0xFF0000;/*rgb color */
 	count++;
     }
+    for(int ifit=0; ifit<parms->fit.nfit; ifit++){
+	double hs=parms->fit.hs[ifit];
+	cir[count][0]=ht*parms->fit.thetax[ifit];
+	cir[count][1]=ht*parms->fit.thetay[ifit];
+	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
+	cir[count][3]=0xFF22DD;/*rgb color */
+	count++;
+    }
+    for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
+	double hs=parms->sim.ncpa_hs[idir];
+	cir[count][0]=ht*parms->sim.ncpa_thetax[idir];
+	cir[count][1]=ht*parms->sim.ncpa_thetay[idir];
+	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
+	cir[count][3]=0x22FF00;/*rgb color */
+	count++;
+    }
+
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	double hs=parms->powfs[parms->wfs[iwfs].powfs].hs;
+	int ipowfs=parms->wfs[iwfs].powfs;
 	cir[count][0]=parms->wfs[iwfs].thetax*ht;
 	cir[count][1]=parms->wfs[iwfs].thetay*ht;
 	cir[count][2]=parms->aper.d*0.5*(1.-ht/hs);
-	if(!isfinite(hs)){
-	    cir[count][3]=0x44FF00;/*rgb color */
+	if(isfinite(hs)){//LGS
+	    cir[count][3]=0xFF8800;
+	}else if(!parms->powfs[ipowfs].lo){//Hi NGS
+	    cir[count][3]=0xFFFF00;
+	}else if(parms->powfs[ipowfs].order>1){//TTF
+	    cir[count][3]=0x0000FF;//TTF
 	}else{
-	    cir[count][3]=0xFFFF33;/*rgb color */
+	    cir[count][3]=0x0000FF;//TT
 	}
 	count++;
     }
@@ -264,38 +305,55 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][2]=totfov/2;
     cir[0][3]=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
+    if(parms->sim.ncpa_calib){
+	ngroup+=1;
+    }
     loc_t **locs=calloc(ngroup, sizeof(loc_t*));
     int32_t *style=calloc(ngroup, sizeof(int32_t));
-
-    style[0]=(0xFF0000<<8)+(4<<4)+3;
-    locs[0]=locnew(parms->evl.nevl, 0);
+    int count=0;
+    style[count]=(0xFF0000<<8)+(4<<4)+3;
+    locs[count]=locnew(parms->evl.nevl, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	locs[0]->locx[ievl]=parms->evl.thetax[ievl]*206265;
-	locs[0]->locy[ievl]=parms->evl.thetay[ievl]*206265;
+	locs[count]->locx[ievl]=parms->evl.thetax[ievl]*206265;
+	locs[count]->locy[ievl]=parms->evl.thetay[ievl]*206265;
     }
+    count++;
 
-    style[1]=(0xFF22DD<<8)+(4<<4)+3;
-    locs[1]=locnew(parms->fit.nfit, 0);
+    style[count]=(0xFF22DD<<8)+(4<<4)+3;
+    locs[count]=locnew(parms->fit.nfit, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	locs[1]->locx[ifit]=parms->fit.thetax[ifit]*206265;
-	locs[1]->locy[ifit]=parms->fit.thetay[ifit]*206265;
+	locs[count]->locx[ifit]=parms->fit.thetax[ifit]*206265;
+	locs[count]->locy[ifit]=parms->fit.thetay[ifit]*206265;
     }
+    count++;
+    
+    style[count]=(0x22FF00<<8)+(4<<4)+3;
+    locs[count]=locnew(parms->sim.ncpa_ndir, 0);
+    for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
+	locs[count]->locx[ifit]=parms->sim.ncpa_thetax[ifit]*206265;
+	locs[count]->locy[ifit]=parms->sim.ncpa_thetay[ifit]*206265;
+    }
+    count++;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	locs[ipowfs+2]=locnew(parms->powfs[ipowfs].nwfs, 0);
+	locs[count]=locnew(parms->powfs[ipowfs].nwfs, 0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-	    locs[ipowfs+2]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
-	    locs[ipowfs+2]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
+	    locs[count]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
+	    locs[count]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
 	if(isfinite(parms->powfs[ipowfs].hs)){
-	    style[ipowfs+2]=(0xFF8800<<8)+(4<<4)+2;
+	    style[count]=(0xFF8800<<8)+(4<<4)+2;
 	}else if(!parms->powfs[ipowfs].lo){
-	    style[ipowfs+2]=(0xFFFF00<<8)+(4<<4)+1;
+	    style[count]=(0xFFFF00<<8)+(4<<4)+1;
 	}else if(parms->powfs[ipowfs].order>1){
-	    style[ipowfs+2]=(0x0000FF<<8)+(4<<4)+4;
+	    style[count]=(0x0000FF<<8)+(4<<4)+4;
 	}else{
-	    style[ipowfs+2]=(0x0000FF<<8)+(4<<4)+1;
+	    style[count]=(0x0000FF<<8)+(4<<4)+1;
 	}
+	count++;
+    }
+    if(count!=ngroup){
+	error("count=%d, ngroup=%d. they should equal.\n", count, ngroup);
     }
     double limit[4];
     limit[0]=limit[2]=-totfov/2;

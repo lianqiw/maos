@@ -119,7 +119,8 @@ void tomofit(SIM_T *simu){
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
+    //dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
+    dcell *dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];;//Do not use dmcmd as it contains recon->dm_ncpa
     PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].psol) continue;

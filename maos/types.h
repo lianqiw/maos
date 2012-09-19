@@ -46,6 +46,7 @@ typedef struct APER_T{
     long *nembed;        /**<dimension of embed.*/
     double fcp;          /**<piston correction in focus term.*/
     dcell *opdadd;       /**<OPD surface for each evaluation direction.*/
+    dcell *opdfloc;      /**<OPD surface for each evalution direction defined on floc*/
 }APER_T;
 /**
    contains the data associated with a detector transfer function for a
@@ -310,7 +311,7 @@ typedef struct RECON_T{
     spcell *GAhi;      /**<GA of high order WFS.*/
     spcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
     spcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
-    spcell *HAevl;     /**<ray tracing from aloc to floc for evl directions*/
+    spcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
     dcell *DF;         /**<Differential focus modes for LGS wfs*/
@@ -347,6 +348,7 @@ typedef struct RECON_T{
     dcell *RFngsa;     /**<focus reconstruction for TTF NGS from dm*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
+    dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/
     int ndm;           /**<number of DMs;*/

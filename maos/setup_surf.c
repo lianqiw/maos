@@ -76,7 +76,7 @@ static void tsurf2loc(rectmap_t **tsurf, int ntsurf, dmat *opd, loc_t *locin, do
 }
 
 static void 
-setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
+setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     info("Setting up tilt surface (M3)\n");
     rectmap_t **tsurf=calloc(parms->ntsurf, sizeof(rectmap_t*));
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
@@ -89,6 +89,12 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs){
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	tsurf2loc(tsurf, parms->ntsurf, aper->opdadd->p[ievl], aper->locs, 
 		  parms->evl.thetax[ievl], parms->evl.thetay[ievl], parms->evl.hs[ievl], rot);
+    }
+    if(parms->sim.ncpa_calib){
+	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
+	    tsurf2loc(tsurf, parms->ntsurf, aper->opdfloc->p[ifit], recon->floc, 
+		      parms->sim.ncpa_thetax[ifit], parms->sim.ncpa_thetay[ifit], parms->sim.ncpa_hs[ifit], rot);
+	}
     }
 
     for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
@@ -135,7 +141,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(!fn) continue;
 	info("Loading surface OPD from %s\n", fn);
 	map_t *surf=mapread("%s",fn);
-	dwrite((dmat*)surf, "surf_%d", isurf);
+	//dwrite((dmat*)surf, "surf_%d", isurf);
 	const char *strname=search_header(surf->header, "SURFNAME");
 	const char *strevl=search_header(surf->header, "SURFEVL");
 	const char *strwfs=search_header(surf->header, "SURFWFS");
@@ -180,14 +186,24 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }
 	    const double displacex=parms->evl.thetax[ievl]*hl;
 	    const double displacey=parms->evl.thetay[ievl]*hl;
-	    
+	    const double scale=1-hl/parms->evl.hs[ievl];
 	    if(do_rot){
 		prop_grid(surf, locevl, NULL, aper->opdadd->p[ievl]->p, 
-			  1, displacex, displacey, 1, 0, 0, 0);
+			  1, displacex, displacey, scale, 0, 0, 0);
 	    }else{
 		prop_grid_stat(surf, aper->locs->stat, 
 			       aper->opdadd->p[ievl]->p, 
-			       1, displacex, displacey, 1, 0, 0, 0);
+			       1, displacex, displacey, scale, 0, 0, 0);
+	    }
+	}
+	if(parms->sim.ncpa_calib){
+	    for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
+		const double displacex=parms->sim.ncpa_thetax[ifit]*hl;
+		const double displacey=parms->sim.ncpa_thetay[ifit]*hl;
+		const double scale=1.-hl/parms->sim.ncpa_hs[ifit];
+		prop_grid(surf, recon->floc, NULL,
+			  aper->opdfloc->p[ifit]->p, 
+			  1, displacex, displacey, scale, 0, 0, 0);	
 	    }
 	}
 	for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
@@ -265,14 +281,19 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     directions (type=1) or on axis only (type=2).*/
 static void FitR_NCPA(dcell **xout, RECON_T *recon, APER_T *aper){
     const PARMS_T *parms=recon->parms;
-    dcell *xp=dcellnew(parms->evl.nevl, 1);
-    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	xp->p[ievl]=dnew(recon->floc->nloc,1);
-	prop_nongrid(aper->locs, aper->opdadd->p[ievl]->p,
-		     recon->floc, NULL, xp->p[ievl]->p, 1, 0, 0, 1, 0, 0);
+    dcell *xp=NULL;
+    if(aper->opdfloc){
+	xp=dcelldup(aper->opdfloc);
+    }else{
+	xp=dcellnew(parms->sim.ncpa_ndir, 1);
+	for(int ievl=0; ievl<parms->sim.ncpa_ndir; ievl++){
+	    xp->p[ievl]=dnew(recon->floc->nloc,1);
+	    prop_nongrid(aper->locs, aper->opdadd->p[ievl]->p,
+			 recon->floc, NULL, xp->p[ievl]->p, 1, 0, 0, 1, 0, 0);
+	}
     }
-    applyW(xp, recon->W0, recon->W1, parms->evl.wt);
-    sptcellmulmat_thread(xout, recon->HAevl, xp, 1);
+    applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt);
+    sptcellmulmat_thread(xout, recon->HA_ncpa, xp, 1);
     dcellfree(xp);
 }
 void FitL_NCPA(dcell **xout, const void *A, 
@@ -280,9 +301,9 @@ void FitL_NCPA(dcell **xout, const void *A,
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     dcell *xp=NULL;
-    spcellmulmat_thread(&xp, recon->HAevl, xin, 1.);
-    applyW(xp, recon->W0, recon->W1, parms->evl.wt);
-    sptcellmulmat_thread(xout, recon->HAevl, xp, alpha);
+    spcellmulmat_thread(&xp, recon->HA_ncpa, xin, 1.);
+    applyW(xp, recon->W0, recon->W1, parms->sim.ncpa_wt);
+    sptcellmulmat_thread(xout, recon->HA_ncpa, xp, alpha);
     dcellfree(xp);xp=NULL;
     dcellmm(&xp,recon->fitNW, xin, "tn", 1);
     dcellmm(xout,recon->fitNW, xp, "nn", alpha);
@@ -291,20 +312,23 @@ void FitL_NCPA(dcell **xout, const void *A,
 	spcellmulmat(xout, recon->actslave, xin, 1);
     }
 }
-static void setup_recon_HAevl(RECON_T *recon, const PARMS_T *parms){
-    const int nevl=parms->evl.nevl;
+static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
+    const int nevl=parms->sim.ncpa_ndir;
     const int ndm=parms->ndm;
-    recon->HAevl=spcellnew(nevl, ndm);
-    PDSPCELL(recon->HAevl,HA);
+    recon->HA_ncpa=spcellnew(nevl, ndm);
+    PDSPCELL(recon->HA_ncpa,HA);
     info2("Generating HA ");TIC;tic;
     for(int ievl=0; ievl<nevl; ievl++){
-	double hs=parms->evl.hs[ievl];
+	double hs=parms->sim.ncpa_hs[ievl];
 	for(int idm=0; idm<ndm; idm++){
+	    if(parms->sim.ncpa_calib==2 && idm>0){
+		continue;
+	    }
 	    const double ht=parms->dm[idm].ht;
 	    const double scale=1.-ht/hs;
 	    double displace[2];
-	    displace[0]=parms->evl.thetax[ievl]*ht;
-	    displace[1]=parms->evl.thetay[ievl]*ht;
+	    displace[0]=parms->sim.ncpa_thetax[ievl]*ht;
+	    displace[1]=parms->sim.ncpa_thetay[ievl]*ht;
 	    HA[idm][ievl]=mkh(recon->aloc[idm], recon->floc, NULL,
 			      displace[0], displace[1], 
 			      scale,parms->dm[idm].cubic,parms->dm[idm].iac);
@@ -312,7 +336,7 @@ static void setup_recon_HAevl(RECON_T *recon, const PARMS_T *parms){
     }
     toc2(" ");
     if(parms->save.setup){
-	spcellwrite(recon->HA,"%s/HA",dirsetup);
+	spcellwrite(recon->HA,"%s/HA_ncpa",dirsetup);
     }
 }
 #include "mtch.h"
@@ -326,8 +350,16 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	error("Who sets aper->opdadd?\n");
     }
     aper->opdadd=dcellnew(parms->evl.nevl,1);
+    if(parms->sim.ncpa_calib){
+	aper->opdfloc=dcellnew(parms->sim.ncpa_ndir,1);
+    }
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
+    }
+    if(parms->sim.ncpa_calib){
+	for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
+	    aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
+	}
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
@@ -337,21 +369,51 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     }
 
     if(parms->ntsurf>0){
-	setup_surf_tilt(parms, aper, powfs);
+	setup_surf_tilt(parms, aper, powfs, recon);
     }
     if(parms->nsurf>0){
 	setup_surf_perp(parms, aper, powfs, recon);
     }
     if(parms->sim.ncpa_calib){//calibrate NCPA
+	if(fabs(parms->aper.rotdeg)>0){
+	    error("Not handling aper.rotdeg\n");
+	}
 	info("calibrating NCPA\n");
-	setup_recon_HAevl(recon, parms);
+	setup_recon_HAncpa(recon, parms);
 	dcell *rhs=NULL;
-	dcell *dmn=NULL;
 	FitR_NCPA(&rhs, recon, aper);
 	int maxit=40;
-	pcg(&dmn, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
-
-	dcellwrite(dmn, "dm_ncpa");
+	pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
+	dcell *dm_ncpa=dcellref(recon->dm_ncpa);
+	if(parms->save.setup){
+	    dcellwrite(dm_ncpa, "%s/dm_ncpa", dirsetup);
+	}
+	/*{
+	    dcell *opdbias=NULL;
+	    dcellcp(&opdbias, aper->opdadd);
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		double hs=parms->evl.hs[ievl];
+		double thetax=parms->evl.thetax[ievl];
+		double thetay=parms->evl.thetay[ievl];
+		for(int idm=0; idm<parms->ndm; idm++){
+		    if(!dm_ncpa->p[idm]) continue;
+		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
+		    double scale=1.-ht/hs;
+		    double dispx=ht*thetax;
+		    double dispy=ht*thetay;
+		    if(parms->dm[idm].cubic){
+			prop_nongrid_cubic(recon->aloc[idm], dm_ncpa->p[idm]->p, 
+					   aper->locs, NULL, opdbias->p[ievl]->p, 
+					   -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
+		    }else{
+			prop_nongrid(recon->aloc[idm], dm_ncpa->p[idm]->p, 
+				     aper->locs, NULL, opdbias->p[ievl]->p, 
+				     -1, dispx, dispy, scale, 0, 0);
+		    } 
+		}
+	    }
+	    dcellwrite(opdbias, "aper_opdbias");
+	    }*/
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
 	    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
@@ -360,18 +422,19 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		double thetax=parms->wfs[iwfs0].thetax;
 		double thetay=parms->wfs[iwfs0].thetay;
 		for(int idm=0; idm<parms->ndm; idm++){
+		    if(!dm_ncpa->p[idm]) continue;
 		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-		    double scale=1-ht/hs;
+		    double scale=1.-ht/hs;
 		    double dispx=ht*thetax;
 		    double dispy=ht*thetay;
 		    if(parms->dm[idm].cubic){
-			prop_nongrid_pts_cubic(recon->aloc[idm], dmn->p[idm]->p, 
+			prop_nongrid_pts_cubic(recon->aloc[idm], dm_ncpa->p[idm]->p, 
 					       powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
-					       -1, dispx, dispy, 1, parms->dm[idm].iac, 0, 0);
+					       -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
 		    }else{
-			prop_nongrid_pts(recon->aloc[idm], dmn->p[idm]->p, 
+			prop_nongrid_pts(recon->aloc[idm], dm_ncpa->p[idm]->p, 
 					 powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
-					 -1, dispx, dispy, 1, 0, 0);
+					 -1, dispx, dispy, scale, 0, 0);
 		    }
 		}
 	    }
@@ -391,7 +454,9 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 				 powfs[ipowfs].opdbias->p[iwfs],1);
 		    }
 		}
-	    
+		if(parms->save.setup){
+		    dcellwrite(powfs[ipowfs].gradoff, "%s/powfs%d_gradoff", dirsetup, ipowfs);
+		}
 	    }else if(parms->powfs[ipowfs].ncpa_method==2){
 		genseotf(parms,powfs,ipowfs);
 		gensepsf(parms,powfs,ipowfs);
@@ -413,6 +478,9 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	   gensei() reentrant. ok.
 	   genmtch() reentrant. ok
 	*/
+	dcellfree(dm_ncpa);
+	dcellfree(rhs);
+	dcellfree(aper->opdfloc);
     }
     if(parms->save.setup){
 	dcellwrite(aper->opdadd, "%s/surfevl.bin", dirsetup);

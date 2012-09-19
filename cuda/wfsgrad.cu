@@ -589,7 +589,6 @@ void gpu_wfsgrad(thread_t *info){
 	}
 	CUDA_SYNC_STREAM;
 	if(powfs[ipowfs].gradoff){
-	    warning("Subtracting gradoff from gradcl\n");
 	    dadd(&gradcl, 1., powfs[ipowfs].gradoff->p[wfsind], -1.);
 	}
 	if(save_grad){

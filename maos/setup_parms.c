@@ -676,9 +676,15 @@ static void readcfg_fit(PARMS_T *parms){
     readcfg_dblarr_n(&(parms->fit.thetay), parms->fit.nfit, "fit.thetay");
     readcfg_dblarr_n(&(parms->fit.wt), parms->fit.nfit, "fit.wt");
     readcfg_dblarr_nmax(&(parms->fit.hs), parms->fit.nfit, "fit.hs");
+    double ramin=INFINITY;
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	parms->fit.thetax[ifit]/=206265.;
 	parms->fit.thetay[ifit]/=206265.;
+	double ra2=pow(parms->fit.thetax[ifit], 2)+pow(parms->fit.thetay[ifit], 2);
+	if(ra2<ramin){
+	    parms->fit.indoa=ifit;
+	    ramin=ra2;
+	}
     }
 
     READ_DBL(fit.tikcr);
@@ -779,6 +785,18 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.zoomshare);
     READ_DBL(sim.zoomgain);
     READ_INT(sim.ncpa_calib);
+
+    
+    parms->sim.ncpa_ndir=readcfg_dblarr(&(parms->sim.ncpa_thetax), "sim.ncpa_thetax");
+    readcfg_dblarr_n(&(parms->sim.ncpa_thetay),parms->sim.ncpa_ndir, "sim.ncpa_thetay");
+    readcfg_dblarr_n(&(parms->sim.ncpa_wt),parms->sim.ncpa_ndir, "sim.ncpa_wt");
+    readcfg_dblarr_nmax(&(parms->sim.ncpa_hs),parms->sim.ncpa_ndir, "sim.ncpa_hs");
+
+    for(int i=0; i<parms->sim.ncpa_ndir; i++){
+	parms->sim.ncpa_thetax[i]/=206265.;
+	parms->sim.ncpa_thetay[i]/=206265.;
+    }
+    normalize_sum(parms->sim.ncpa_wt, parms->sim.ncpa_ndir, 1);
 }
 /**
    Read in parameters for Cn2 estimation.

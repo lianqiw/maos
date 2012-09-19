@@ -210,6 +210,9 @@ void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
     }   
+    if(recon->dm_ncpa){
+	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
+    }
     /*hysteresis. */
     if(simu->hyst){
 	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);

@@ -70,7 +70,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    }
 	    if(parms->skyc.fnpsf1[ipowfs]){
 		warning("powfs %d has additional otf to be multiplied\n", ipowfs);
-		dcell *psf1c=dcellread(parms->skyc.fnpsf1[ipowfs]);
+		dcell *psf1c=dcellread("%s", parms->skyc.fnpsf1[ipowfs]);
 		dmat *psf1=NULL;
 		if(psf1c->nx == 1){
 		    psf1=dref(psf1c->p[0]);

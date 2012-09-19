@@ -313,7 +313,7 @@ static void skysim_update_mideal(SIM_S *simu){
     if(parms->skyc.addfocus && parms->maos.nmod>5){
 	dmat *range=NULL;
 	if(parms->skyc.fnrange){
-	    range=dread(parms->skyc.fnrange);
+	    range=dread("%s", parms->skyc.fnrange);
 	    info("Loading sodium range variation from %s\n", parms->skyc.fnrange);
 	    if(range->nx<simu->mideal->ny){
 		error("Time serials is not long enough. Need %ld, got %ld\n",
@@ -333,8 +333,6 @@ static void skysim_update_mideal(SIM_S *simu){
 	dfree(range);
     }
     if(parms->skyc.addws){
-	int nx=simu->mideal->nx;
-	int ny=simu->mideal->ny;
 	/*Add ws to mideal. After genstars so we don't purturb it. */
 	dmat *telws=psd2time(simu->psd_ws, &simu->rand, parms->maos.dt, simu->mideal->ny);
 	/*telws is in m. need to convert to rad since mideal is in this unit. */
