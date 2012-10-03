@@ -20,6 +20,7 @@
 #define AOS_POWFS_H
 #include "maos.h"
 POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper);
+void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell *dm_ncpa);
 void free_powfs(const PARMS_T *parms, POWFS_T *powfs);
 void test_powfs(const PARMS_T *parms, POWFS_T *powfs);
 void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, 

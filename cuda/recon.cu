@@ -663,7 +663,7 @@ void gpu_setup_recon_mvm_igpu(thread_t *info){
 		    curcellzero(dmfit, stream);//temp
 		    if(gpu_pcg(&dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, eyec, &curecon->cgtmp_fit,
 			       parms->recon.warm_restart, parms->fit.maxit, stream)>1.){
-			warning("Fit CG failed\n");
+			warning("Fit CG not converge.\n");
 		    }
 		}else{
 		    cudaMemcpyAsync(dmfit->m->p, FLI+iact*ntotact, sizeof(float)*ntotact, 
@@ -1059,7 +1059,7 @@ void gpu_tomo(SIM_T *simu){
 	}
 	if(gpu_pcg(&curecon->opdr, gpu_TomoL, recon, prefun, predata, rhs, &curecon->cgtmp_tomo, 
 		   simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream[0])>1){
-	    warning("Tomo CG failed\n");
+	    warning("Tomo CG not converge.\n");
 	}
 	toc_test("TomoL CG");
     }break;
@@ -1124,11 +1124,13 @@ void gpu_fit(SIM_T *simu){
 	    curfree(tmp);
 	}
 	break;
-    case 1:
-	if(gpu_pcg(&curecon->dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, rhs, &curecon->cgtmp_fit,
-		   simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream[0])>1){
-	    warning("DM Fitting PCG failed\n");
+    case 1:{
+	double res;
+	if((res=gpu_pcg(&curecon->dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, rhs, &curecon->cgtmp_fit,
+			simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream[0]))>1){
+	    warning("DM Fitting PCG not converge. res=%g\n", res);
 	}
+    }
 	break;
     case 2:
 	curmv(curecon->dmfit->m->p, 0, curecon->FMI, rhs->m->p, 'n', 1, curecon->cgstream[0]);

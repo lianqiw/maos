@@ -27,6 +27,7 @@
 /**
    normalize vector to sum to norm;*/
 void normalize_sum(double *p, long nloc, double norm){
+    if(!nloc) return;
     double ss=norm/dotdbl(p,NULL,NULL,nloc);
     for(int i=0; i<nloc; i++){
 	p[i]*=ss;
@@ -35,6 +36,7 @@ void normalize_sum(double *p, long nloc, double norm){
 /**
    normalize vector to max to max;*/
 void normalize_max(double *p, long nloc, double max){
+    if(!nloc) return;
     double ss=max/maxabs(p,nloc);
     for(int i=0; i<nloc; i++){
 	p[i]*=ss;

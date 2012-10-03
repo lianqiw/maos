@@ -33,14 +33,14 @@
 #include "misc.h"
 #include "process.h"
 #include "daemonize.h"
-int NCPU;
-int NTHREAD;/*NTHREAD=2*NCPU when hyperthreading is enabled. */
-int TCK;
+int NCPU=0;
+int NTHREAD=0;/*NTHREAD=2*NCPU when hyperthreading is enabled. */
+int TCK=0;
 long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
 const char *TEMP=NULL;
 const char *USER=NULL;
-void init_path(void){
+void init_process(void){
 #if defined(__CYGWIN__)
     cygwin_internal(CW_SYNC_WINENV);
 #endif
@@ -75,9 +75,7 @@ void init_path(void){
 	mymkdir("%s/.aos/",HOME);
 	register_deinit(NULL,(void*)TEMP);
     }
-}
 
-static __attribute__((constructor))void init(){
     NCPU= get_ncpu();
     NTHREAD=sysconf( _SC_NPROCESSORS_ONLN );
     TCK = sysconf(_SC_CLK_TCK);
@@ -92,7 +90,9 @@ static __attribute__((constructor))void init(){
 #else
     NMEM=0;/*do not know. */
 #endif
-    init_path();
+}
+static __attribute__((constructor))void init(){
+    init_process();
 }
 
 double get_usage_cpu(void){

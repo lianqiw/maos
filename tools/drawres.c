@@ -359,13 +359,13 @@ int main(int argc, char *argv[]){
 	    dcell *resollo_i=dcellsub(resollo, 0,0,iseed, 1);
 	    if(restype==1){
 	    plot_points("Reshi", npath, NULL, reshi_i, NULL, NULL, xylog, 0, NULL, path,
-			"High order wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
+			"High order Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
 	    plot_points("Reslo", npath, NULL, reslo_i, NULL, NULL, xylog, 0, NULL, path,
-			"Low order wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
+			"Low order Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
 	    plot_points("ResOLhi", npath, NULL, resolhi_i, NULL, NULL, xylog, 0, NULL, path,
-			"High order open loop wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
+			"High order Openloop Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
 	    plot_points("ResOLlo", npath, NULL, resollo_i, NULL, NULL, xylog, 0, NULL, path,
-			"Low order open loop wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
+			"Low order Openloop Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
 	    }else{
 		plot_points("Tot", npath, NULL, reshi_i, NULL, NULL, xylog, 0, NULL, path,
 			    "Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All_%ld",seed[iseed]);

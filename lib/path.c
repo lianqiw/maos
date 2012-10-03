@@ -46,6 +46,9 @@ static PATH_T *PATH=NULL;/*privately maintained path to locate config files. */
 */
 void addpath(const char*path){
     char *abspath=myabspath(path);
+    if(!path || !abspath){
+	error("not found: path=%s; abspath=%s\n", path, abspath);
+    }
     PATH_T *node=calloc(1,sizeof(PATH_T));
     node->path=abspath;
     node->next=PATH;

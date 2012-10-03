@@ -23,6 +23,7 @@
 #include "maos.h"
 #include "setup_surf.h"
 #include "recon_utils.h"
+#include "setup_powfs.h"
 /**
    Setup tilted surface (M3) by ray tracing from the tilted surface to WFS and
    Science grid.
@@ -133,8 +134,10 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     const double rot=-parms->aper.rotdeg/180.*M_PI;
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
+    const int nncpa=parms->sim.ncpa_ndir;
     int *evlcover=malloc(nevl*sizeof(int));
     int *wfscover=malloc(nwfs*sizeof(int));
+    int *ncpacover=malloc(nncpa*sizeof(int));
     int opdxcover;
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	char *fn=parms->surf[isurf];
@@ -164,6 +167,21 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }
 	}else{
 	    readstr_intarr_nmax(&evlcover, nevl, strevl);
+	}
+	int evlct=0;
+	for(int ievl=0; ievl<nevl; ievl++){
+	    evlct+=evlcover[ievl]?1:0;
+	}
+	if(evlct==0){
+	    for(int idir=0; idir<nncpa; idir++){
+		ncpacover[idir]=0;
+	    }
+	}else if(evlct==nevl){
+	    for(int idir=0; idir<nncpa; idir++){
+		ncpacover[idir]=1;
+	    }
+	}else{
+	    error("Not handled\n");
 	}
 	if(!strwfs){
 	    warning2("surf[%d] does not contain SURFWFS\n", isurf);
@@ -197,12 +215,13 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    }
 	}
 	if(parms->sim.ncpa_calib){
-	    for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
-		const double displacex=parms->sim.ncpa_thetax[ifit]*hl;
-		const double displacey=parms->sim.ncpa_thetay[ifit]*hl;
-		const double scale=1.-hl/parms->sim.ncpa_hs[ifit];
+	    for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
+		if(!ncpacover[idir]) continue;
+		const double displacex=parms->sim.ncpa_thetax[idir]*hl;
+		const double displacey=parms->sim.ncpa_thetay[idir]*hl;
+		const double scale=1.-hl/parms->sim.ncpa_hs[idir];
 		prop_grid(surf, recon->floc, NULL,
-			  aper->opdfloc->p[ifit]->p, 
+			  aper->opdfloc->p[idir]->p, 
 			  1, displacex, displacey, scale, 0, 0, 0);	
 	    }
 	}
@@ -342,133 +361,68 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 #include "mtch.h"
 #include "genseotf.h"
 void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
-    if(parms->nsurf<=0 && parms->ntsurf<=0){
-	info2("No surfaces to setup\n");
-	return;
-    }
-    if(aper->opdadd){
-	error("Who sets aper->opdadd?\n");
-    }
-    aper->opdadd=dcellnew(parms->evl.nevl,1);
-    if(parms->sim.ncpa_calib){
-	aper->opdfloc=dcellnew(parms->sim.ncpa_ndir,1);
-    }
-    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
-    }
-    if(parms->sim.ncpa_calib){
-	for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
-	    aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
+    if(parms->nsurf || parms->ntsurf){
+	if(!aper->opdadd){
+	    aper->opdadd=dcellnew(parms->evl.nevl,1);
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		aper->opdadd->p[ievl]=dnew(aper->locs->nloc, 1);
+	    }
 	}
-    }
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-	    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+	if(!aper->opdfloc && parms->sim.ncpa_calib){
+	    aper->opdfloc=dcellnew(parms->sim.ncpa_ndir,1);
+	    for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
+		aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
+	    }
 	}
-    }
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(!powfs[ipowfs].opdadd){
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+		}
+	    }
+	}
 
-    if(parms->ntsurf>0){
-	setup_surf_tilt(parms, aper, powfs, recon);
-    }
-    if(parms->nsurf>0){
-	setup_surf_perp(parms, aper, powfs, recon);
+	if(parms->ntsurf>0){
+	    setup_surf_tilt(parms, aper, powfs, recon);
+	}
+	if(parms->nsurf>0){
+	    setup_surf_perp(parms, aper, powfs, recon);
+	}
     }
     if(parms->sim.ncpa_calib){//calibrate NCPA
-	if(fabs(parms->aper.rotdeg)>0){
-	    error("Not handling aper.rotdeg\n");
-	}
-	info("calibrating NCPA\n");
-	setup_recon_HAncpa(recon, parms);
-	dcell *rhs=NULL;
-	FitR_NCPA(&rhs, recon, aper);
-	int maxit=40;
-	pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
-	dcell *dm_ncpa=dcellref(recon->dm_ncpa);
-	if(parms->save.setup){
-	    dcellwrite(dm_ncpa, "%s/dm_ncpa", dirsetup);
-	}
-	/*{
-	    dcell *opdbias=NULL;
-	    dcellcp(&opdbias, aper->opdadd);
-	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-		double hs=parms->evl.hs[ievl];
-		double thetax=parms->evl.thetax[ievl];
-		double thetay=parms->evl.thetay[ievl];
-		for(int idm=0; idm<parms->ndm; idm++){
-		    if(!dm_ncpa->p[idm]) continue;
-		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-		    double scale=1.-ht/hs;
-		    double dispx=ht*thetax;
-		    double dispy=ht*thetay;
-		    if(parms->dm[idm].cubic){
-			prop_nongrid_cubic(recon->aloc[idm], dm_ncpa->p[idm]->p, 
-					   aper->locs, NULL, opdbias->p[ievl]->p, 
-					   -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
-		    }else{
-			prop_nongrid(recon->aloc[idm], dm_ncpa->p[idm]->p, 
-				     aper->locs, NULL, opdbias->p[ievl]->p, 
-				     -1, dispx, dispy, scale, 0, 0);
-		    } 
+	int any_evl=0;
+	if(aper->opdadd){
+	    for(int i=0; i<parms->evl.nevl; i++){
+		if(aper->opdadd->p[i]){
+		    any_evl=1;
 		}
 	    }
-	    dcellwrite(opdbias, "aper_opdbias");
-	    }*/
+	}
+	int any_wfs=0;
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);
-	    for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-		int iwfs0=parms->powfs[ipowfs].wfs[iwfs];
-		double hs=parms->powfs[ipowfs].hs;
-		double thetax=parms->wfs[iwfs0].thetax;
-		double thetay=parms->wfs[iwfs0].thetay;
-		for(int idm=0; idm<parms->ndm; idm++){
-		    if(!dm_ncpa->p[idm]) continue;
-		    double ht=parms->dm[idm].ht+parms->dm[idm].vmisreg;
-		    double scale=1.-ht/hs;
-		    double dispx=ht*thetax;
-		    double dispy=ht*thetay;
-		    if(parms->dm[idm].cubic){
-			prop_nongrid_pts_cubic(recon->aloc[idm], dm_ncpa->p[idm]->p, 
-					       powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
-					       -1, dispx, dispy, scale, parms->dm[idm].iac, 0, 0);
-		    }else{
-			prop_nongrid_pts(recon->aloc[idm], dm_ncpa->p[idm]->p, 
-					 powfs[ipowfs].pts, NULL, powfs[ipowfs].opdbias->p[iwfs]->p, 
-					 -1, dispx, dispy, scale, 0, 0);
-		    }
-		}
-	    }
-
-	    if(parms->powfs[ipowfs].ncpa_method==1){
-		if(!powfs[ipowfs].gradoff){
-		    powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs,1);
-		}
-		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
-		    double *realamp=powfs[ipowfs].realamp[iwfs];
-		    if(parms->powfs[ipowfs].gtype_sim==1){
-			pts_ztilt(&powfs[ipowfs].gradoff->p[iwfs], powfs[ipowfs].pts,
-				  powfs[ipowfs].nsaimcc>1?powfs[ipowfs].saimcc[iwfs]:powfs[ipowfs].saimcc[0], 
-				  realamp, powfs[ipowfs].opdbias->p[iwfs]->p);
-		    }else{
-			spmulmat(&powfs[ipowfs].gradoff->p[iwfs],adpind(powfs[ipowfs].GS0, iwfs),
-				 powfs[ipowfs].opdbias->p[iwfs],1);
-		    }
-		}
-		if(parms->save.setup){
-		    dcellwrite(powfs[ipowfs].gradoff, "%s/powfs%d_gradoff", dirsetup, ipowfs);
-		}
-	    }else if(parms->powfs[ipowfs].ncpa_method==2){
-		genseotf(parms,powfs,ipowfs);
-		gensepsf(parms,powfs,ipowfs);
-		gensei(parms,powfs,ipowfs);
-		genmtch(parms,powfs,ipowfs);
-		if(parms->save.setup){
-		    dcellwrite(powfs[ipowfs].intstat->i0,"%s/powfs%d_i0_2",dirsetup,ipowfs);
-		    dcellwrite(powfs[ipowfs].intstat->gx,"%s/powfs%d_gx_2",dirsetup,ipowfs);
-		    dcellwrite(powfs[ipowfs].intstat->gy,"%s/powfs%d_gy_2",dirsetup,ipowfs);
-		}
+	    if(powfs[ipowfs].opdadd){
+		any_wfs=1;
 	    }
 	}
+	if(any_evl){
+	    if(fabs(parms->aper.rotdeg)>0){
+		error("Not handling aper.rotdeg\n");
+	    }
+	    info("calibrating NCPA\n");
+	    setup_recon_HAncpa(recon, parms);
+	    dcell *rhs=NULL;
+	    FitR_NCPA(&rhs, recon, aper);
+	    int maxit=40;
+	    pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
+	    dcellfree(rhs);
+	    if(parms->save.setup){
+		dcellwrite(recon->dm_ncpa, "%s/dm_ncpa", dirsetup);
+	    }
+	}
+	dcell *dm_ncpa=dcellref(recon->dm_ncpa);
+	setup_powfs_calib(parms, powfs, recon->aloc, dm_ncpa);
+
 	/* to do 
 	   dm flat
 	   matched filter
@@ -479,14 +433,13 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	   genmtch() reentrant. ok
 	*/
 	dcellfree(dm_ncpa);
-	dcellfree(rhs);
 	dcellfree(aper->opdfloc);
     }
     if(parms->save.setup){
-	dcellwrite(aper->opdadd, "%s/surfevl.bin", dirsetup);
+	dcellwrite(aper->opdadd, "%s/surfevl.bin",  dirsetup);
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup, ipowfs);
+	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
 	}
-	if(recon->opdxadd) dcellwrite(recon->opdxadd, "%s/surfopdx", dirsetup);
+	if(recon->opdxadd) dcellwrite(recon->opdxadd, "%s/surfopdx",  dirsetup);
     }
 }

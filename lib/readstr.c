@@ -53,18 +53,22 @@ int readstr_strarr(char ***res, int len, const char *sdata){
 	sdata2++;
     }
     while(sdata2<sdataend){
-	if(sdata2[0]!='"' && sdata2[0]!='\''){
+	char mark=' ';
+	/*if(sdata2[0]!='"' && sdata2[0]!='\''){
 	    error("{%s}: Unable to parse for str array\n", sdata);
+	    }*/
+	if(sdata2[0]=='"' || sdata2[0]=='\''){
+	    mark=sdata2[0];
+	    sdata2++;
 	}
-	const char *sdata3=sdata2+1;
-	const char *sdata4=strchr(sdata3,sdata2[0]);
-	if(!sdata4) error("{%s}: Unmatched quote\n", sdata);
-	if(sdata4>sdata3){/*found non-empty str*/
+	const char *sdata4=strchr(sdata2, mark);
+	if(!sdata4) error("{%s}: Unmatched string\n", sdata);
+	if(sdata4>sdata2 && sdata4<sdataend){/*found non-empty str*/
 	    if(!len && count>=maxcount){
 		maxcount*=2;
 		*res=realloc(*res,sizeof(char*)*maxcount);
 	    }
-	    (*res)[count]=mystrndup(sdata3, sdata4-sdata3);
+	    (*res)[count]=mystrndup(sdata2, sdata4-sdata2);
 	}else{/*found empty str*/
 	    (*res)[count]=NULL;
 	}

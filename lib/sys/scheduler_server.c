@@ -246,7 +246,7 @@ static void scheduler_launch(void){
 
 /*Initialize hosts and associate an id number */
 static __attribute__((constructor))void init(){
-    init_path();/*the constructor in process.c may not have been called. */
+    init_process();/*the constructor in process.c may not have been called. */
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
     fnlog=strdup0(fn);
@@ -552,14 +552,16 @@ static void check_jobs(void){
 */
 static void process_queue(void){
     static double timestamp=0;
-    if(nrun>0 && myclockd()-timestamp<10) return;
+    if(nrun>0 && myclockd()-timestamp<10) {
+	return;
+    }
     timestamp=myclockd();
     if(nrun>=NCPU) return;
     if(nrun<0){
 	nrun=0;
     }
     int avail=get_cpu_avail();
-
+    info("nrun=%d avail=%d\n", nrun, avail);
     if(avail<1) return;
     RUN_T *irun=running_get_wait();
     if(!irun) {
@@ -801,6 +803,7 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout2)<0){
 	    perror("select");
 	    if(errno!=EINTR){
+		warning("break here\n");
 		break;
 	    }else{
 		continue;
@@ -814,6 +817,7 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
     		    int port2=accept(sock, (struct sockaddr*)&clientname, &size);
 		    if(port2<0){
 			perror("accept");
+			warning("accept failed\n");
 			break;
 		    }
 		    cloexec(port2);
@@ -842,6 +846,7 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 	}
     }
     /* Error happened. We close all connections and this server socket.*/
+    warning("listen_port exited\n");
     shutdown(sock, SHUT_RDWR);
     for(int i=0; i<FD_SETSIZE; i++){
 	if(FD_ISSET(i, &active_fd_set)){

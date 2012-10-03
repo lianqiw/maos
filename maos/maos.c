@@ -59,17 +59,15 @@ void maos(const PARMS_T *parms){
 	    exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
 	    exit(0);
 	}
-#if USE_CUDA
-	if(parms->gpu.wfs || parms->gpu.tomo){
-	    gpu_wfsgrad_init(parms, powfs);
-	}
-#endif
 	recon = setup_recon(parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
     setup_surf(parms, aper, powfs, recon);/*setting up M1/M2/M3 surface OPD. */
     
 #if USE_CUDA
+    if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
+	gpu_wfsgrad_init(parms, powfs);
+    }
     if(parms->gpu.evl){
 	gpu_perfevl_init(parms, aper);
     }
@@ -79,7 +77,14 @@ void maos(const PARMS_T *parms){
     if(parms->gpu.evl){
 	gpu_evlsurf2gpu(aper);
     }
+    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
+	gpu_setup_recon(parms, powfs, recon);
+    }
 #endif
+
+    if(!parms->sim.evlol && parms->recon.mvm){
+	setup_recon_mvm(parms, recon, powfs);
+    }
     /*
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.
@@ -88,6 +93,7 @@ void maos(const PARMS_T *parms){
     int one=1;
     omp_set_num_threads(&one);/*only allow 1 thread after svd/chol is done. */
 #endif
+    free_recon_unused(parms, recon);
     toc2("Presimulation");
     sim(parms, powfs, aper, recon);
     /*Free all allocated memory in setup_* functions. So that we

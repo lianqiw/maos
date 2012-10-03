@@ -735,7 +735,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	dmat *sanea_iwfs=spdiag(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
 	double area_thres;
 	if(nsa>4){
-	    area_thres=0.9;
+	    area_thres=0.9*parms->powfs[ipowfs].sathruput;
 	}else{
 	    area_thres=0;
 	}
@@ -2728,55 +2728,28 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     if(parms->sim.mffocus){
 	setup_recon_focus(recon, powfs, parms);
     }
-
-#if USE_CUDA
-    if(parms->gpu.tomo || parms->gpu.fit){
-	gpu_setup_recon(parms, powfs, recon);
-    }
-#endif
-    spcellfree(recon->GWR);
-    if(parms->recon.alg!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
-	/*We already assembled tomo matrix. don't need these matric any more. */
-	dcellfree(recon->TTF);
-	dcellfree(recon->PTTF);
-    }
-    /* Free arrays that will no longer be used after reconstruction setup is done. */
-    spcellfree(recon->sanea); 
-    spcellfree(recon->saneal);
-    dfree(recon->neam); 
-    if(!(parms->tomo.assemble && parms->tomo.alg==1) && !parms->cn2.tomo && !parms->tomo.bgs){
-	/*We no longer need RL.M,U,V */
-	spcellfree(recon->RL.M);
-	dcellfree(recon->RL.U);
-	dcellfree(recon->RL.V);
-    }
-    if(parms->fit.alg!=1 && !parms->fit.bgs){
-	spcellfree(recon->FL.M);
-	dcellfree(recon->FL.U);
-	dcellfree(recon->FL.V);
-    }
-    if(parms->tomo.alg==1){
-	muv_direct_free(&recon->RL);
-    }
-    if(parms->fit.alg==1){
-	muv_direct_free(&recon->FL);
-    }
-
-    if(parms->tomo.assemble){
-	spcellfree(recon->GP);
-	spcellfree(recon->GP2);
-    }
     if(parms->dbg.dxonedge){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    locfree(powfs[ipowfs].gloc);
 	    dfree(powfs[ipowfs].gamp);
 	}
     }
-    /*
-      The following arrys are not used after preparation is done.
-    */
+
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].nwfs==0) continue;
+	if(!parms->powfs[ipowfs].hasGS0 && powfs[ipowfs].GS0){
+	    spcellfree(powfs[ipowfs].GS0);
+	    powfs[ipowfs].GS0=NULL;
+	}
+    }
     mapfree(aper->ampground);
-    /*assemble matrix to do matrix vector multiply*/
+    toc2("setup_recon");
+    return recon;
+}
+
+/*assemble matrix to do matrix vector multiply. Split from setup_recon because GPU may be used.*/
+void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
+    TIC;tic;
     if(parms->recon.mvm){
 	if(parms->load.mvm){
 	    recon->MVM=dcellread("%s", parms->load.mvm);
@@ -2815,26 +2788,46 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	if(parms->sim.mvmport){
 	    mvm_client_send_m(parms, recon->MVM);
 	}
-
-	muv_free(&recon->RR);
-	muv_free(&recon->RL);
-	muv_free(&recon->FR);
-	muv_free(&recon->FL);
-	muv_free(&recon->LR);
-	muv_free(&recon->LL);
-	fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
     }
-    /**
-       Free matrices that are already used.
-     */
-
-    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	if(parms->powfs[ipowfs].nwfs==0) continue;
-	if(!parms->powfs[ipowfs].hasGS0 && powfs[ipowfs].GS0){
-	    spcellfree(powfs[ipowfs].GS0);
-	    powfs[ipowfs].GS0=NULL;
-	}
+    toc2("setup_recon_mvm");
+}
+/**
+   Free unused object in recon struct after preparation is done.
+ */
+void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
+    spcellfree(recon->GWR);
+    if(parms->recon.alg!=0 || (parms->tomo.assemble && !parms->cn2.tomo)){
+	/*We already assembled tomo matrix. don't need these matric any more. */
+	dcellfree(recon->TTF);
+	dcellfree(recon->PTTF);
     }
+    /* Free arrays that will no longer be used after reconstruction setup is done. */
+    spcellfree(recon->sanea); 
+    spcellfree(recon->saneal);
+    dfree(recon->neam); 
+    if(!(parms->tomo.assemble && parms->tomo.alg==1) && !parms->cn2.tomo && !parms->tomo.bgs){
+	/*We no longer need RL.M,U,V */
+	spcellfree(recon->RL.M);
+	dcellfree(recon->RL.U);
+	dcellfree(recon->RL.V);
+    }
+    if(parms->fit.alg!=1 && !parms->fit.bgs){
+	spcellfree(recon->FL.M);
+	dcellfree(recon->FL.U);
+	dcellfree(recon->FL.V);
+    }
+    if(parms->tomo.alg==1){
+	muv_direct_free(&recon->RL);
+    }
+    if(parms->fit.alg==1){
+	muv_direct_free(&recon->FL);
+    }
+
+    if(parms->tomo.assemble){
+	spcellfree(recon->GP);
+	spcellfree(recon->GP2);
+    }
+
     /*The following have been used in fit matrix. */
     if(parms->fit.assemble || parms->gpu.fit){
 	dcellfree(recon->fitNW);
@@ -2858,8 +2851,15 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     if(parms->tomo.alg!=1 || (parms->tomo.assemble || (parms->tomo.square && !parms->dbg.tomo_hxw))){
 	spcellfree(recon->HXWtomo);
     }
-    toc2("setup_recon");
-    return recon;
+    if(parms->recon.mvm){
+	muv_free(&recon->RR);
+	muv_free(&recon->RL);
+	muv_free(&recon->FR);
+	muv_free(&recon->FL);
+	muv_free(&recon->LR);
+	muv_free(&recon->LL);
+	fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
+    }
 }
 /**
    Free the recon struct.

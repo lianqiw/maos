@@ -522,9 +522,9 @@ else
    chol_fun=cholmod_factorize
    AM_CONDITIONAL(USE_LONG, false)
 fi
-if test ! -d ${LIBDIR}/cholmod${libsuffix} -a -n "$libsuffix" ;then
-   download CHOLMOD cholmod${libsuffix}.tar.bz2
-fi
+#if test ! -d ${LIBDIR}/cholmod${libsuffix} -a -n "$libsuffix" ;then
+#   download CHOLMOD cholmod${libsuffix}.tar.bz2
+#fi
 AC_CHECK_LIB([cholmod_${CHOLSUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod${libsuffix}])
 if test "x$have_chol" = "xyes" ;then
     LDCHOL="-L${LIBDIR}/cholmod${libsuffix} -lcholmod_${CHOLSUFFIX}"

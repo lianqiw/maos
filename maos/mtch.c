@@ -326,11 +326,8 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
 	    }/*isa  */
 	}/*ii0 */
     }
-    if(parms->save.setup){
-	dcellwrite(intstat->mtche, "%s/powfs%d_mtche",dirsetup,ipowfs);
-	if(parms->powfs[ipowfs].phytype==1){
-	    dcellwrite(sanea, "%s/powfs%d_sanea",dirsetup,ipowfs);
-	}
+    if(parms->powfs[ipowfs].phytype==1 && parms->save.setup){
+	dcellwrite(sanea, "%s/powfs%d_sanea",dirsetup,ipowfs);
     }
     dcellfree(sanea);
     dfree(i0m);

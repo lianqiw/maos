@@ -275,7 +275,9 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	value=strtok(NULL, "=");
 	strtrim(&var);
 	strtrim(&value);
-	if(strtok(NULL,"=") || !var || strlen(var)==0){
+	if(!strcmp(var,"path")){
+	    addpath(value);
+	}else if(strtok(NULL,"=") || !var || strlen(var)==0){
 	    error("Line '%s' is invalid\n",line);
 	}else if(var && !strcmp(var,"include")){
 	    /*info("Opening embeded config file %s\n",value); */

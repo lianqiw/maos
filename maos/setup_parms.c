@@ -179,6 +179,11 @@ static inline int sum_intarr(int n, int *a){
     for(i=0; i<npowfs; i++){					\
 	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
     }								
+#define READ_POWFS_RELAX(A,B)						\
+    readcfg_##A##arr_nmax((void*)(&A##tmp), npowfs, "powfs."#B);	\
+    for(i=0; i<npowfs; i++){					\
+	parms->powfs[i].B = A##tmp[i];/*doesn't need ## in B*/	\
+    }								
 
 /**
    Read wfs geometry. powfs stands for physical optics wfs,
@@ -242,6 +247,8 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(str,sninfile);
     READ_POWFS(dbl,hs);
     READ_POWFS(dbl,saat);
+    READ_POWFS_RELAX(dbl,sathruput);
+    READ_POWFS_RELAX(dbl,saspherical);
     READ_POWFS(int,neaphy);
     READ_POWFS(str,neareconfile);
     READ_POWFS(str,neasimfile);
@@ -1037,6 +1044,22 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    warning("ahstfocus is implemented with separate integrator. changed\n");
 	    parms->sim.fuseint=0;
 	}
+    }
+    if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
+	info("Using evaluation directions and ncpa calibration directions\n");
+	int ndir=parms->sim.ncpa_ndir=parms->evl.nevl;
+	free(parms->sim.ncpa_thetax);
+	free(parms->sim.ncpa_thetay);
+	free(parms->sim.ncpa_wt);
+	free(parms->sim.ncpa_hs);
+	parms->sim.ncpa_thetax=malloc(ndir*sizeof(double));
+ 	parms->sim.ncpa_thetay=malloc(ndir*sizeof(double));
+ 	parms->sim.ncpa_wt=malloc(ndir*sizeof(double));
+ 	parms->sim.ncpa_hs=malloc(ndir*sizeof(double));
+	memcpy(parms->sim.ncpa_thetax, parms->evl.thetax, ndir*sizeof(double));
+	memcpy(parms->sim.ncpa_thetay, parms->evl.thetay, ndir*sizeof(double));
+	memcpy(parms->sim.ncpa_wt, parms->evl.wt, ndir*sizeof(double));
+	memcpy(parms->sim.ncpa_hs, parms->evl.hs, ndir*sizeof(double));
     }
 }
 /**
@@ -2341,9 +2364,6 @@ PARMS_T * setup_parms(ARG_T *arg){
     readcfg_load(parms);
     parms->nsurf=readcfg_strarr(&parms->surf, "surf");
     parms->ntsurf=readcfg_strarr(&parms->tsurf,"tsurf");
-    if(!parms->nsurf && parms->ntsurf){
-	parms->sim.ncpa_calib=0;
-    }
     /*
       Output all the readed parms to a single file that can be used to reproduce
       the same simulation.

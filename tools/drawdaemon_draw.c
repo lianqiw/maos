@@ -574,8 +574,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
 	cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
 #if DRAW_NEW == 1
-	int new_width0=(int)round(widthim*zoomx);
-	int new_height0=(int)round(heightim*zoomy);
+	int new_width0=(int)ceil(widthim*zoomx)+1;//+1 to avoid clip.
+	int new_height0=(int)ceil(heightim*zoomy)+1;
 	int new_height=new_height0;
 	int new_width=new_width0;
 	/*Don't use too much buffer. Over flow memory. */

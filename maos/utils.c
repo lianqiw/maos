@@ -326,7 +326,6 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
 	locs[count]->locy[ifit]=parms->fit.thetay[ifit]*206265;
     }
     count++;
-    
     style[count]=(0x22FF00<<8)+(4<<4)+3;
     locs[count]=locnew(parms->sim.ncpa_ndir, 0);
     for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
