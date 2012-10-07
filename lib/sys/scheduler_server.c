@@ -860,10 +860,14 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
     usleep(100);
     _Exit(1);
 }
+void sigpipe_handler(int sig){
+    warning("SIGPIPE caught\n");
+}
 static void scheduler(void){
     if(unsetenv("MAOS_START_SCHEDULER")){/*important. */
 	warning("Unable to unsetenv\n");
     }
+    signal(SIGPIPE, sigpipe_handler);
     listen_port(PORT, respond, 1, scheduler_timeout);
 }
 /*The following routines maintains the MONITOR_T linked list. */
