@@ -75,6 +75,9 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    /*put here to avoid messing up timing due to transfering. */
 	    gpu_atm2gpu(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
+	    if(parms->tomo.predict){
+		gpu_setup_recon_predict(parms, recon);
+	    }
 	}
 #endif
 	double tk_atm=myclockd();

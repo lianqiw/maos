@@ -115,7 +115,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
     cuwloc_t *cupowfs=cudata->powfs;
     
     curecon->cgstream =new stream_t;
-    if(parms->gpu.tomo || parms->gpu.fit){
+    if((parms->gpu.tomo || parms->gpu.fit) && !parms->sim.idealfit){
 	curecon->opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
 	curecon->opdr_vec=curcellnew(recon->npsr, 1);
 	for(int ips=0; ips<recon->npsr; ips++){
@@ -370,11 +370,6 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 		const float scale = 1.f - ht/hs; 
 		float dispx=parms->wfsr[iwfs].thetax*ht; 
 		float dispy=parms->wfsr[iwfs].thetay*ht; 
-		if(parms->tomo.predict){ 
-		    int ips0=parms->atmr.indps[ips]; 
-		    dispx+=cudata->atm[ips0]->vx*parms->sim.dt*2; 
-		    dispy+=cudata->atm[ips0]->vy*parms->sim.dt*2; 
-		} 
 		gpu_prop_grid_prep(hxdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
 				   curecon->opdr->p[ips], oxx, oyx, recon->xmap[ips]->dx, 
 				   dispx, dispy, 'n'); 
@@ -958,6 +953,63 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     }
     toc("MVM Final");
     gpu_print_mem("MVM");
+}
+void gpu_setup_recon_predict(const PARMS_T *parms, RECON_T *recon){
+    if(!parms->gpu.tomo || !parms->tomo.predict){
+	return;
+    }
+    gpu_set(gpu_recon);
+    curecon_t *curecon=cudata->recon;
+    const int nwfs=parms->nwfs;
+    const float oxp=recon->pmap->ox;
+    const float oyp=recon->pmap->oy;
+    const float dxp=recon->pmap->dx;
+    GPU_PROP_GRID_T *hxdata=new GPU_PROP_GRID_T[nwfs*recon->npsr];
+    GPU_PROP_GRID_T *hxtdata=new GPU_PROP_GRID_T[nwfs*recon->npsr];
+    for(int ips=0; ips<recon->npsr; ips++){ 
+	const float ht=recon->ht->p[ips]; 
+	const float oxx=recon->xmap[ips]->ox; 
+	const float oyx=recon->xmap[ips]->oy; 
+	for(int iwfs=0; iwfs<nwfs; iwfs++){
+	    const int ipowfs = parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].skip) continue;
+	    const float hs = parms->powfs[ipowfs].hs; 
+	    const float scale = 1.f - ht/hs; 
+	    float dispx=parms->wfsr[iwfs].thetax*ht; 
+	    float dispy=parms->wfsr[iwfs].thetay*ht; 
+	    if(parms->tomo.predict){ 
+		int ips0=parms->atmr.indps[ips]; 
+		dispx+=cudata->atm[ips0]->vx*parms->sim.dt*2; 
+		dispy+=cudata->atm[ips0]->vy*parms->sim.dt*2; 
+	    } 
+	    gpu_prop_grid_prep(hxdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
+			       curecon->opdr->p[ips], oxx, oyx, recon->xmap[ips]->dx, 
+			       dispx, dispy, 'n'); 
+	    gpu_prop_grid_prep(hxtdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
+			       curecon->opdr->p[ips], oxx, oyx, recon->xmap[ips]->dx, 
+			       dispx, dispy, 't'); 
+	    {
+		float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
+		hxdata[iwfs+ips*nwfs].l2c=tmp*tmp*TOMOSCALE;
+		if(parms->tomo.piston_cr){
+		    hxdata[iwfs+ips*nwfs].zzi=loccenter(recon->xloc[ips]);
+		    hxdata[iwfs+ips*nwfs].zzv=tmp*tmp*TOMOSCALE*1e-6;
+		}else{
+		    hxdata[iwfs+ips*nwfs].zzi=-1;
+		}
+	    }
+	}
+    }
+    if(!curecon->hxdata){
+	DO(cudaMalloc(&curecon->hxdata, sizeof(GPU_PROP_GRID_T)*nwfs*recon->npsr));
+    }
+    if(!curecon->hxtdata){
+	DO(cudaMalloc(&curecon->hxtdata, sizeof(GPU_PROP_GRID_T)*nwfs*recon->npsr));
+    }
+    DO(cudaMemcpy(curecon->hxdata, hxdata, sizeof(GPU_PROP_GRID_T)*nwfs*recon->npsr, cudaMemcpyHostToDevice));
+    DO(cudaMemcpy(curecon->hxtdata, hxtdata, sizeof(GPU_PROP_GRID_T)*nwfs*recon->npsr, cudaMemcpyHostToDevice));
+    delete [] hxdata;
+    delete [] hxtdata;
 }
 /*update reconstruction parameters after slodar.*/
 void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){

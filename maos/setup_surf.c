@@ -416,9 +416,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    int maxit=40;
 	    pcg(&recon->dm_ncpa, FitL_NCPA, recon, NULL, NULL, rhs, 1, maxit);
 	    dcellfree(rhs);
-	    if(parms->save.setup){
-		dcellwrite(recon->dm_ncpa, "%s/dm_ncpa", dirsetup);
-	    }
+	    dcellwrite(recon->dm_ncpa, "dm_ncpa");
 	}
 	dcell *dm_ncpa=dcellref(recon->dm_ncpa);
 	setup_powfs_calib(parms, powfs, recon->aloc, dm_ncpa);

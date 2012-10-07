@@ -522,7 +522,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    }
 	}
 	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);//used for i0
-	dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d", dirsetup, ipowfs);
+	if(parms->save.setup){
+	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d", dirsetup, ipowfs);
+	}
     }
     dfree(ampi);
 
@@ -2028,8 +2030,8 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 			}
 		    }
 		}
-		if(parms->save.setup){
-		    dcellwrite(powfs[ipowfs].gradoff, "%s/powfs%d_gradoff", dirsetup, ipowfs);
+		if(powfs[ipowfs].gradoff){
+		    dcellwrite(powfs[ipowfs].gradoff, "powfs%d_gradoff", ipowfs);
 		}
 	    }else if(parms->powfs[ipowfs].ncpa_method==2){
 		if(powfs[ipowfs].intstat->mtche){//need to redo i0
