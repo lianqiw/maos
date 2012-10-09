@@ -7,7 +7,7 @@ LDADD=$(BUILD_DIR)/lib/libaos_long.la interface.o
 else
 LDADD=$(BUILD_DIR)/lib/libaos_int.la interface.o
 endif
-EXTRA_DIST=null.c io.c io.h interface.h Makefile.mex
+EXTRA_DIST=null.c io.c io.h interface.c interface.h  Makefile.mex
 EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c

@@ -68,7 +68,6 @@ enum{
     COL_COLOR,
     COL_TOT,
 };
-/*#include "gtkcellrendererprogressnew.h" //modify appearance of progress */
 static GtkListStore **lists=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
     GtkListStore *list=lists[p->hid];
