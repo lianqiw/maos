@@ -2401,8 +2401,11 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 #else
     use_cuda=0;
 #endif
-    if(parms->evl.tomo || parms->sim.end==0){
+    if(parms->evl.tomo){
 	warning("evl.tomo in cuda not implemented yet.\n");
+	use_cuda=0;
+    }
+    if(parms->sim.end==0){
 	use_cuda=0;
     }
     if(use_cuda){

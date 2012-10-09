@@ -12,7 +12,7 @@ EXEEXT=.$(MEXEXT) #Automatic add suffix
 
 .NOTPARALLEL:io.c
 
-bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim servo_test psd1d
+bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj genotfmex svdmex mk2dcov servo_optim servo_test psd1d mkcirmap
 
 #.c.o:
 #	$(MEX) $(AM_CFLAGS) -c $< 

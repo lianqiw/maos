@@ -365,7 +365,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
 
     /* Now begin ray tracing. */
-    if(parms->sim.idealwfs){
+    if(parms->sim.idealwfs && !parms->powfs[ipowfs].lo){
 	wfs_ideal_atm(simu, opd, iwfs, 1);
     }else if(atm){
 	for(int ips=0; ips<nps; ips++){

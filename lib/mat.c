@@ -765,35 +765,36 @@ void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val){
 }
 
 /**
-   similar to X(circle). but don't actually compute the
-   weights. just test the corners;
+   Unlike X(circle), we don't use bilinear influence function, but use pure gray
+   pixel instead. Also the values are black/white, no gray.
 */
 void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r){
     double r2=r*r;
+    double r2l=(r-1.5)*(r-1.5);
     double r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
 	double r2y=(iy-cy)*(iy-cy);
 	for(int ix=0; ix<A->nx; ix++){
 	    double r2r=(ix-cx)*(ix-cx)+r2y;
-	    if(r2r<r2) 
+	    if(r2r<r2l){
 	    	As[iy][ix]=1;
-	    else if(r2r<r2u){
-		for(int jy=-1; jy<2; jy++){
+	    }else if(r2r>r2u){
+		continue;//do not set to 0.
+	    }else{
+		for(double jy=-0.5; jy<1; jy++){
 		    double iiy=iy+jy;
 		    double rr2y=(iiy-cy)*(iiy-cy);
-		    for(int jx=-1; jx<2; jx++){
+		    for(double jx=-0.5; jx<1; jx++){
 			double iix=ix+jx;
 			double rr2r=pow(iix-cx,2)+rr2y;
 			if(rr2r<r2){
 			    As[iy][ix]=1;
-			    goto next;
+			    continue;
 			}
 		    }
 		}
 	    }
-	next:
-	    continue;
 	}
     }
 }

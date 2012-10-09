@@ -742,14 +742,15 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		    }
 		    iy=(((ylog?log10(y):y)-centery)*scaley*zoomy+ncy);
 		    draw_point(cr, ix, iy, style, size);
-		    if(drawdata->nstyle>0){
-			cairo_stroke(cr);/*stroke each point because color may change. */
-		    }
+		    cairo_stroke(cr);/*stroke each point because color may change. */
 		}/*ipts */
 	    }/*if */
-	    if(!drawdata->style){
-		cairo_stroke(cr);/*stroke all together. */
-	    }
+	    /*if(!drawdata->style){
+		tic;
+		info2("stroke");
+		cairo_stroke(cr);//stroke all together. 
+		toc2("stroke");
+	    }*/
 	    if(drawdata->cumu && pts->nx>0){
 		cairo_save(cr);
 		char val[80];

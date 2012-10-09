@@ -75,6 +75,13 @@ void save_recon(SIM_T *simu){
 			"Err Hi %d",idm);
 	    }
 	}
+	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
+	    if(simu->dmproj->p[idm]){
+		drawopd("DM",recon->aloc[idm], simu->dmproj->p[idm]->p,NULL,
+			"ATM to DM Projection (Hi)","x (m)","y (m)",
+			"Proj Hi %d",idm);
+	    }
+	}
     }
     if(parms->plot.run && simu->Merr_lo){
 	dcell *dmlo=NULL;

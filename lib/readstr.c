@@ -62,8 +62,14 @@ int readstr_strarr(char ***res, int len, const char *sdata){
 	    sdata2++;
 	}
 	const char *sdata4=strchr(sdata2, mark);
-	if(!sdata4) error("{%s}: Unmatched string\n", sdata);
-	if(sdata4>sdata2 && sdata4<sdataend){/*found non-empty str*/
+	if(!sdata4){
+	    if(mark!=' '){
+		error("{%s}: Unmatched string\n", sdata);
+	    }else{
+		sdata4=sdataend;
+	    }
+	}
+	if(sdata4>sdata2 && sdata4<=sdataend){/*found non-empty str*/
 	    if(!len && count>=maxcount){
 		maxcount*=2;
 		*res=realloc(*res,sizeof(char*)*maxcount);

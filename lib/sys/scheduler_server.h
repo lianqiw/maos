@@ -126,6 +126,6 @@ extern uint16_t PORT;
 extern int nhost;
 extern char** hosts;
 extern int hid;
-#define scheduler_version 0x22
+#define scheduler_version 0x23
 #define BACKTRACE_CMD_LEN 200
 #endif
