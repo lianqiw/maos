@@ -33,7 +33,7 @@
 #include "bin.h"
 #include "path.h"
 #include "misc.h"
-#include "readcfg.h"
+#include "readstr.h"
 /**
    \file bin.c Defines our custom file format .bin or zipped .bin.gz and the
    basic IO functions. All file read/write operators are through functions in
@@ -154,6 +154,21 @@ void zftouch(const char *format, ...){
     free(fn2);
 }
 PNEW(lock);
+file_t* zfdopen(int sock, char *mod){
+    file_t* fp=calloc(1, sizeof(file_t));
+    fp->isgzip=0;
+    fp->fd=sock;
+    if(fp->isgzip){
+	if(!(fp->p=gzdopen(fp->fd,mod))){
+	    error("Error gzdopen for %d\n",sock);
+	}
+    }else{
+	if(!(fp->p=fdopen(fp->fd,mod))){
+	    error("Error fdopen for %d\n",sock);
+	}
+    }
+    return fp;
+}
 /**
    Open the file and return a file_t struct that either contains a file
    descriptor (for .bin) or a zlib file pointer.
@@ -173,16 +188,21 @@ file_t* zfopen(const char *fn, char *mod){
       file.*/
     switch(mod[0]){
     case 'r':/*read only */
-	fp->fd=open(fn2, O_RDONLY);
+	if((fp->fd=open(fn2, O_RDONLY))==-1){
+	    perror("open");
+	}
 	break;
     case 'w':/*write */
     case 'a':
-	fp->fd=open(fn2, O_RDWR | O_CREAT, 0600);
-	if(fp->fd!=-1 && flock(fp->fd, LOCK_EX|LOCK_NB)){
-	    error("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0600))==-1){
+	    perror("open");
 	}else{
+	    if(flock(fp->fd, LOCK_EX|LOCK_NB)){
+		error("Trying to write to a file that is already opened for writing: %s\n", fn2);
+	    }
 	    if(mod[0]=='w' && ftruncate(fp->fd, 0)){/*Need to manually truncate the file. */
-		warning2("Truncating %s failed\n", fn2);
+		perror("ftruncate");
+		warning2("Truncating %s failed. fd=%d\n", fn2, fp->fd);
 	    }
 	}
 	break;
@@ -416,6 +436,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
  */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(zfread2(ptr, size, nmemb, fp)){
+	perror("zfread");
 	error("Error happened while reading %s\n", fp->fn);
     }
 }

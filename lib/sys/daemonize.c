@@ -260,7 +260,7 @@ void redirect_fd(const char *fn, int fd){
     setbuf(stderr, NULL);
 }
 /*
-  Redirect output. If we are in detached mode, will not output to screen.
+  Redirect output. If we are in detached mode, will not output to screen. Otherwise output to both file and screen.
 */
 void redirect(void){
     if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");

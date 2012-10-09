@@ -45,7 +45,7 @@ X(cell)* X(cellinvspd)(X(cell) *A);\
 X(cell)* X(cellinv)(X(cell) *A);\
 X(cell)* X(cellinvspd_each)(X(cell) *A);\
 X(mat) *X(cell2m)(const X(cell) *A);\
-X(cell)* X(2cellref)(const X(mat) *A, int*dims, int ndim);\
+X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim);\
 void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);\
 void X(celldropzero)(X(cell) *B, double thres);\
 double X(celldiff)(const X(cell) *A, const X(cell) *B);\

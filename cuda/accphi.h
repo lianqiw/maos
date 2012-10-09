@@ -39,5 +39,10 @@ void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
 			 curmat *in, float oxi, float oyi, float dxi,
 			 float dispx, float dispy, float *cc,
 			 float alpha, char trans, cudaStream_t stream);
+
+void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, curmat *out, float oxo, float oyo, float dxo,
+			curmat *in, float oxi, float oyi, float dxi,
+			float dispx, float dispy, char trans);
+
 #endif
 

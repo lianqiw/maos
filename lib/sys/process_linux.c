@@ -325,7 +325,12 @@ int get_ncpu(void){
     }
     int ncpu1=iphy*(ncore>icore?icore:ncore);
     fclose(fp);
-    return ncpu0<ncpu1?ncpu0:ncpu1;
+    int ncpu=ncpu0<ncpu1?ncpu0:ncpu1;
+    if(ncpu==0){
+	warning("Unable to obtain CPU count\n");
+	ncpu=4;
+    }
+    return ncpu;
 #undef nmax
 }
 

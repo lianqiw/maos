@@ -27,7 +27,7 @@ extern "C"
 static int *cunembed=NULL;
 static int *cupsfsize=NULL;
 static float *cuwvls=NULL;    
-static int evlfft_lock=0;
+pthread_mutex_t *evlmutex=NULL;
 int *evlgpu=NULL;
 static cudaStream_t *evlstream=NULL;
 static cublasHandle_t *evlhandle=NULL;
@@ -146,37 +146,38 @@ void calc_ptt(double *rmsout, double *coeffout,
 #endif
 }
 void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
-		     double *ngsmod_out, int nmod,
-		     double MCC_fcp, double ht, double scale,
-		     double thetax, double thetay,
-		     const double ipcc, const dmat *imcc,
-		     const float (*restrict loc)[2], 
-		     const int nloc,
-		     const float *restrict phi,
-		     const float *restrict amp,
-		     cudaStream_t stream){
+		 double *ngsmod_out, int nmod,
+		 double MCC_fcp, double ht, double scale,
+		 double thetax, double thetay,
+		 const double ipcc, const dmat *imcc,
+		 const float (*restrict loc)[2], 
+		 const int nloc,
+		 const float *restrict phi,
+		 const float *restrict amp,
+		 const PARMS_T *parms,
+		 cudaStream_t stream){
     float *cc;
     double tot=0;
     cudaCalloc(cc, 7*sizeof(float), stream);
     if(nmod==2){/*single DM. */
 	calc_ptt_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
-    }else if(nmod==5){/*AHST mode */
+    }else if(nmod>=5){/*AHST mode */
 	calc_ngsmod_do<<<DIM(nloc,256),0,stream>>>(cc, loc, nloc, phi, amp);
     }else{
 	TO_IMPLEMENT;
     }
-    CUDA_SYNC_STREAM;
     float ccb[7];
-    cudaMemcpy(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost, stream);
+    CUDA_SYNC_STREAM;
     cudaFree(cc); 
     tot=ccb[nmod==2?3:6];
     
-    double coeff[6];
+    double coeff[6];/*convert to double*/
     coeff[0]=ccb[0]; coeff[1]=ccb[1]; 
     coeff[2]=ccb[2]; coeff[3]=ccb[3];
     coeff[4]=ccb[4]; coeff[5]=ccb[5];
     
-    if(pttrcoeff_out){
+    if(pttrcoeff_out){/*p/t/t*/
 	memset(pttrcoeff_out, 0, sizeof(double)*3);
 	dmulvec(pttrcoeff_out, imcc, coeff, 1);
     }
@@ -192,13 +193,20 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     ngsmod_out[0]=coeff[1];
     ngsmod_out[1]=coeff[2];
     const double scale1=1.-scale;
-    if(nmod==5){
-	ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
-		       -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+    if(nmod>=5){
+	if(parms->sim.ahstfocus){
+	    ngsmod_out[2]=(-2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+	}else{
+	    ngsmod_out[2]=(scale1*(coeff[3]+coeff[4]-coeff[0]*MCC_fcp)
+			   -2*scale*ht*(thetax*coeff[1]+thetay*coeff[2]));
+	}
 	ngsmod_out[3]=(scale1*(coeff[3]-coeff[4])
 		       -2*scale*ht*(thetax*coeff[1]-thetay*coeff[2]));
 	ngsmod_out[4]=(scale1*(coeff[5])
 		       -scale*ht*(thetay*coeff[1]+thetax*coeff[2]));
+	if(nmod>5){
+	    ngsmod_out[5]=(coeff[3]+coeff[4]-coeff[0]*MCC_fcp);
+	}
     }
 }
 /**
@@ -229,6 +237,9 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     evlgpu=(int*)calloc(nevl, sizeof(int));
     for(int ievl=0; ievl<nevl; ievl++){
 	evlgpu[ievl]=gpu_next();
+	if(NGPU>2 && evlgpu[ievl]==gpu_recon){
+	    evlgpu[ievl]=gpu_next();
+	}
     }
     /*The following lives in CPU. */
     if(parms->evl.psfmean || parms->evl.psfhist){
@@ -238,15 +249,14 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
     
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    cunembed[iwvl]=(int)aper->nembed[iwvl];
-	    if(cunembed[iwvl]>1024 && nevl>2){
-		evlfft_lock=1;/**FFT will take a lot of memory, so do one direction at a time */
-	    }
 	    cupsfsize[iwvl]=parms->evl.psfsize[iwvl];
 	    cuwvls[iwvl]=parms->evl.wvl[iwvl];
 	}
     }
+    evlmutex=(pthread_mutex_t*)calloc(NGPU, sizeof(pthread_mutex_t));
     /*The following lives in GPU. */
     for(int im=0; im<NGPU; im++){
+	pthread_mutex_init(&evlmutex[im], 0);
 	gpu_set(im);
 	gpu_plocs2gpu(aper->locs, aper->amp);
 	if(parms->evl.psfmean || parms->evl.psfhist){
@@ -285,32 +295,104 @@ void gpu_perfevl_init(const PARMS_T *parms, APER_T *aper){
 void gpu_perfevl_init_sim(const PARMS_T *parms, APER_T *aper){
     const int nevl=parms->evl.nevl;
     const int nwvl=parms->evl.nwvl;
-    for(int im=0; im<NGPU; im++){
-	gpu_set(im);
-	if(parms->evl.opdcov){
-	    curcellfree(cudata->evlopdcov);
-	    curcellfree(cudata->evlopdcov_ngsr);
-	    curcellfree(cudata->evlopdmean);
-	    curcellfree(cudata->evlopdmean_ngsr);
-	    cudata->evlopdcov     =curcellnew(nevl, 1);
-	    cudata->evlopdcov_ngsr=curcellnew(nevl, 1);
-	    cudata->evlopdmean     =curcellnew(nevl, 1);
-	    cudata->evlopdmean_ngsr=curcellnew(nevl, 1);
-	}
-	curcellfree(cudata->evlopd);
-	cudata->evlopd=curcellnew(nevl,1);
-	if(parms->evl.psfmean || parms->evl.psfhist){
-	    curcellfree(cudata->evlpsfcl);
-	    curcellfree(cudata->evlpsfcl_ngsr);
-	    curcellfree(cudata->evlpsfol);
-	    cudata->evlpsfcl = curcellnew(nwvl, parms->evl.nevl);
-	    cudata->evlpsfcl_ngsr = curcellnew(nwvl, parms->evl.nevl);
-	    if(parms->evl.psfmean && parms->evl.psfol){
-		cudata->evlpsfol = curcellnew(nwvl, 1);
+    int nloc=aper->locs->nloc;
+    if(!parms->gpu.evl){
+	return;
+    }
+    /*first open loop ones are on every GPU.*/
+    if(parms->evl.psfol){
+	for(int im=0; im<NGPU; im++){
+	    gpu_set(im);
+	    if(parms->evl.opdcov && parms->gpu.psf){ /*do OL opd cov*/
+		initzero(&cudata->evlopdcovol, nloc, nloc);
+		initzero(&cudata->evlopdmeanol, nloc, 1);
+	    }
+	    if(parms->evl.psfmean || parms->evl.psfhist){
+		if(cudata->evlpsfol){
+		    curcellzero(cudata->evlpsfol);
+		}else{
+		    cudata->evlpsfol=curcellnew(nwvl,1);
+		    for(int iwvl=0; iwvl<nwvl; iwvl++){
+			cudata->evlpsfol->p[iwvl]=curnew(cupsfsize[iwvl], cupsfsize[iwvl]);
+		    }
+		}
 	    }
 	}
-	CUDA_SYNC_DEVICE;
     }
+
+    for(int im=0; im<NGPU; im++){
+	gpu_set(im);
+	cudata->evlopd=curcellnew(nevl,1);
+    }
+    for(int ievl=0; ievl<nevl; ievl++){
+	gpu_set(evlgpu[ievl]);
+	if(!cudata->evlopd->p[ievl]){
+	    cudata->evlopd->p[ievl]=curnew(nloc, 1);
+	}
+    }
+    
+    if(parms->evl.opdcov && parms->gpu.psf && !parms->sim.evlol){
+	for(int im=0; im<NGPU; im++){
+	    gpu_set(im);
+	    if(!cudata->evlopdcov_ngsr){
+		cudata->evlopdcov_ngsr=curcellnew(nevl, 1);
+		cudata->evlopdmean_ngsr=curcellnew(nevl, 1);
+		cudata->evlopdcov=curcellnew(nevl, 1);
+		cudata->evlopdmean=curcellnew(nevl, 1);
+	    }
+	}
+	for(int ievl=0; ievl<nevl; ievl++){
+	    if(parms->evl.psf[ievl]==0){
+		continue;
+	    }
+	    gpu_set(evlgpu[ievl]);
+	    if(parms->evl.psfngsr[ievl]){
+		initzero(&cudata->evlopdcov_ngsr->p[ievl], nloc,nloc);
+		initzero(&cudata->evlopdmean_ngsr->p[ievl], nloc,1);
+	    }
+	    if(parms->evl.psfngsr[ievl]!=2){
+		initzero(&cudata->evlopdcov->p[ievl],nloc,nloc);
+		initzero(&cudata->evlopdmean->p[ievl],nloc,1);
+	    }
+	}
+    }
+	
+    if((parms->evl.psfmean || parms->evl.psfhist) && !parms->sim.evlol){
+	for(int im=0; im<NGPU; im++){
+	    gpu_set(im);
+	    if(!cudata->evlwvf){/*temporary*/
+		cudata->evlwvf=cuccellnew(nwvl, 1);
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    if(!parms->evl.psfhist && iwvl>0 && cunembed[iwvl] == cunembed[iwvl-1]){
+			cudata->evlwvf->p[iwvl]=cucref(cudata->evlwvf->p[iwvl-1]);
+		    }else{
+			cudata->evlwvf->p[iwvl]=cucnew(cunembed[iwvl], cunembed[iwvl]);
+		    }
+		}
+	    }
+	    if(!cudata->evlpsfcl){
+		cudata->evlpsfcl = curcellnew(nwvl, parms->evl.nevl);
+		cudata->evlpsfcl_ngsr = curcellnew(nwvl, parms->evl.nevl);
+	    }
+	}
+	for(int ievl=0; ievl<nevl; ievl++){
+	    if(parms->evl.psf[ievl]==0){
+		continue;
+	    }
+	    gpu_set(evlgpu[ievl]);
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		if(parms->evl.psfngsr[ievl]){
+		    initzero(&cudata->evlpsfcl_ngsr->p[iwvl+nwvl*ievl], 
+			     cupsfsize[iwvl], cupsfsize[iwvl]);
+		}
+		if(parms->evl.psfngsr[ievl]!=2){
+		    initzero(&cudata->evlpsfcl->p[iwvl+nwvl*ievl],
+			     cupsfsize[iwvl], cupsfsize[iwvl]);
+		}
+	    }	
+	}
+    }
+    CUDA_SYNC_DEVICE;
 }
 /**
    Add surface to surfevl;
@@ -320,168 +402,94 @@ void gpu_evlsurf2gpu(APER_T *aper){
 	gpu_set(im);
 	if(aper->opdadd){
 	    cp2gpu(&cudata->surfevl, aper->opdadd);
-	    dcellfree(aper->opdadd);
 	}
     }
 }
 
-__global__ static void evl_embed_wvf_do(fcomplex *restrict wvf, 
-					const float *restrict opd, const float *restrict amp, 
-					const int *embed, const int nloc, const float wvl){
-    const float pi2l=2.f*M_PI/wvl;
-    for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nloc; ix+=blockDim.x*gridDim.x){
-	float s,c;
-	sincosf(pi2l*opd[ix], &s, &c);
-	wvf[embed[ix]]=make_cuComplex(amp[ix]*c, amp[ix]*s);
-    }
-}
 
-/**
-   Embed or crop an array to another array. Preserve corner.
-*/
-__global__ static void evl_corner2center_do(fcomplex *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
-    int nx,ny;
-    ny=MIN(niny, nouty)>>1;
-    nx=MIN(ninx, noutx)>>1;
-    int noutx2=noutx>>1;
-    int nouty2=nouty>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    out[(iy+nouty2 )*noutx+(ix+noutx2)  ] = in[iy*ninx+ix];
-	    out[(iy+nouty2 )*noutx+(noutx2-1-ix)] = in[iy*ninx+(ninx-1-ix)];
-	    out[(nouty2-1-iy)*noutx+(noutx2-1-ix)] = in[(niny-1-iy)*ninx+(ninx-1-ix)];
-	    out[(nouty2-1-iy)*noutx+(ix+noutx2)  ] = in[(niny-1-iy)*ninx+(ix)];
-	}
-    }
-}
-
-/**
-   Embed or crop an array to another array. Preserve corner.
-*/
-__global__ static void evl_corner2center_abs2_do(float *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
-    int nx,ny;
-    ny=MIN(niny, nouty)>>1;
-    nx=MIN(ninx, noutx)>>1;
-    int noutx2=noutx>>1;
-    int nouty2=nouty>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    out[(iy+nouty2)*noutx+(ix+noutx2)]+=     CABS2(in[iy*ninx+ix]);
-	    out[(iy+nouty2)*noutx+(noutx2-1-ix)]+=   CABS2(in[iy*ninx+(ninx-1-ix)]);
-	    out[(nouty2-1-iy)*noutx+(noutx2-1-ix)]+= CABS2(in[(niny-1-iy)*ninx+(ninx-1-ix)]);
-	    out[(nouty2-1-iy)*noutx+(ix+noutx2)]+=   CABS2(in[(niny-1-iy)*ninx+(ix)]);
-	}
-    }
-}
-/**
-   Embed or crop an array to another array. Preserve corner.
-*/
-__global__ static void evl_corner2center_abs2_atomic_do(float *restrict out, int noutx,  int nouty,
-					    const fcomplex *restrict in, int ninx, int niny){
-    int nx,ny;
-    ny=MIN(niny, nouty)>>1;
-    nx=MIN(ninx, noutx)>>1;
-    int noutx2=noutx>>1;
-    int nouty2=nouty>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx; ix+=blockDim.x*gridDim.x){
-	    atomicAdd(&out[(iy+nouty2)*noutx+(ix+noutx2)],     CABS2(in[iy*ninx+ix]));
-	    atomicAdd(&out[(iy+nouty2)*noutx+(noutx2-1-ix)],   CABS2(in[iy*ninx+(ninx-1-ix)]));
-	    atomicAdd(&out[(nouty2-1-iy)*noutx+(noutx2-1-ix)], CABS2(in[(niny-1-iy)*ninx+(ninx-1-ix)]));
-	    atomicAdd(&out[(nouty2-1-iy)*noutx+(ix+noutx2)],   CABS2(in[(niny-1-iy)*ninx+(ix)]));
-	}
-    }
-}
-/**
-   FFT Shift.
-*/
-__global__ static void evl_fftshift_do(fcomplex *wvf, const int nx, const int ny){
-    int nx2=nx>>1;
-    int ny2=ny>>1;
-    for(int iy=threadIdx.y+blockDim.y*blockIdx.y; iy<ny2; iy+=blockDim.y*gridDim.y){
-	for(int ix=threadIdx.x+blockDim.x*blockIdx.x; ix<nx2; ix+=blockDim.x*gridDim.x){
-	    fcomplex tmp;
-	    tmp=wvf[ix+iy*nx];
-	    wvf[ix+iy*nx]=wvf[(ix+nx2)+(iy+ny2)*nx];
-	    wvf[(ix+nx2)+(iy+ny2)*nx]=tmp;
-	    tmp=wvf[ix+(iy+ny2)*nx];
-	    wvf[ix+(iy+ny2)*nx]=wvf[(ix+nx2)+iy*nx];
-	    wvf[(ix+nx2)+iy*nx]=tmp;
-	}
-    }
-}
 /**
    Compute complex PSF and return.
 */
 static cuccell *psfcomp(curmat *iopdevl, int nwvl, int ievl, int nloc, cudaStream_t stream){
-    static pthread_mutex_t evl_mutex=PTHREAD_MUTEX_INITIALIZER;
-    if(evlfft_lock) LOCK(evl_mutex);
+    LOCK(evlmutex[evlgpu[ievl]]);/*wvf is allocated per GPU.*/
     cuccell *psfs=cuccellnew(nwvl, 1);
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	cucmat *wvf=cucnew(cunembed[iwvl], cunembed[iwvl]);
-	evl_embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
+	cucmat *wvf=cudata->evlwvf->p[iwvl];
+	cuczero(wvf, stream);
+	embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
 	    (wvf->p, iopdevl->p, cudata->pamp, cudata->embed[iwvl], nloc, cuwvls[iwvl]);
 	CUFFT(evlplan[iwvl+nwvl*ievl], wvf->p, CUFFT_FORWARD);
 	cucmat *psf=NULL;
 	if(cupsfsize[iwvl]<cunembed[iwvl]){
 	    psf=cucnew(cupsfsize[iwvl], cupsfsize[iwvl]);
-	    evl_corner2center_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
+	    corner2center_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
 		(psf->p, psf->nx, psf->ny, wvf->p, wvf->nx, wvf->ny);
 	}else{
-	    psf=wvf;
-	    evl_fftshift_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
-	    (psf->p, psf->nx, psf->ny);
+	    psf=cucref(wvf);
+	    fftshift_do<<<DIM2(psf->nx,psf->ny,16),0,stream>>>
+		(psf->p, psf->nx, psf->ny);
 	}
-	if(psf!=wvf) cucfree(wvf);
 	psfs->p[iwvl]=psf;
     }
-    if(evlfft_lock) UNLOCK(evl_mutex);
+    UNLOCK(evlmutex[evlgpu[ievl]]);
     return psfs;
 }
 /**
    Compute only PSF and add to result.
 */
 static void psfcomp_r(curmat **psf, curmat *iopdevl, int nwvl, int ievl, int nloc, int atomic, cudaStream_t stream){
-    static pthread_mutex_t evl_mutex=PTHREAD_MUTEX_INITIALIZER;
-    if(evlfft_lock) LOCK(evl_mutex);
-    cucmat *wvf=NULL;
+    LOCK(evlmutex[evlgpu[ievl]]);/*wvf is allocated per GPU.*/
     for(int iwvl=0; iwvl<nwvl; iwvl++){
-	if(cunembed[iwvl]!=cunembed[0]){
-	    CUDA_SYNC_STREAM;
-	    cucfree(wvf); wvf=NULL;
-	}
-	if(!wvf){
-	    wvf=cucnew(cunembed[iwvl], cunembed[iwvl]);
-	}else{
-	    cuczero(wvf, stream);
-	}
-	CUDA_SYNC_DEVICE;//temp
-	evl_embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
+	cucmat *wvf=cudata->evlwvf->p[iwvl];
+	cuczero(wvf, stream);
+	embed_wvf_do<<<DIM(iopdevl->nx,256),0,stream>>>
 	    (wvf->p, iopdevl->p, cudata->pamp, cudata->embed[iwvl], nloc, cuwvls[iwvl]);
-	CUDA_SYNC_DEVICE;//temp
 	CUFFT(evlplan[iwvl+nwvl*ievl], wvf->p, CUFFT_FORWARD);
 	if(!psf[iwvl]) psf[iwvl]=curnew(cupsfsize[iwvl], cupsfsize[iwvl]);
 	if(atomic){
-	    evl_corner2center_abs2_atomic_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
+	    corner2center_abs2_atomic_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
 		((psf[iwvl])->p, (psf[iwvl])->nx, (psf[iwvl])->ny, wvf->p, wvf->nx, wvf->ny);
 	}else{
-	    evl_corner2center_abs2_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
+	    corner2center_abs2_do<<<DIM2((psf[iwvl])->nx,(psf[iwvl])->ny,16),0,stream>>>
 		((psf[iwvl])->p, (psf[iwvl])->nx, (psf[iwvl])->ny, wvf->p, wvf->nx, wvf->ny);
 	}
     }
-    CUDA_SYNC_STREAM;
-    cucfree(wvf);
-    if(evlfft_lock) UNLOCK(evl_mutex);
+    UNLOCK(evlmutex[evlgpu[ievl]]);
 }
-
+#define PERFEVL_WFE(pclep, pclmp, cleNGSmp)				\
+    if(parms->recon.split){						\
+	if(parms->ndm<=2){						\
+	    PDMAT(cleNGSmp->p[ievl], pcleNGSmp);			\
+	    if(nmod==3){						\
+		calc_ngsmod(pclep[isim], pclmp[isim], pcleNGSmp[isim],recon->ngsmod->nmod, \
+			    recon->ngsmod->aper_fcp, recon->ngsmod->ht, \
+			    recon->ngsmod->scale, thetax, thetay,	\
+			    aper->ipcc, aper->imcc,			\
+			    cudata->plocs, nloc, iopdevl->p, cudata->pamp, parms, stream); \
+	    }else{							\
+		calc_ngsmod(NULL, NULL, pcleNGSmp[isim],recon->ngsmod->nmod, \
+			    recon->ngsmod->aper_fcp, recon->ngsmod->ht, \
+			    recon->ngsmod->scale, thetax, thetay,	\
+			    aper->ipcc, aper->imcc,			\
+			    cudata->plocs, nloc, iopdevl->p, cudata->pamp, parms, stream); \
+		TO_IMPLEMENT;/*mode decomposition. */			\
+	    }								\
+	}								\
+    }else{								\
+	if(nmod==3){							\
+	    calc_ptt(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc,	\
+		     cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream); \
+	}else{								\
+	    TO_IMPLEMENT;						\
+	}								\
+    }
 
 /**
    Performance evaluation. Designed to replace perfevl_ievl in maos/perfevl.c
 */
 void gpu_perfevl(thread_t *info){
     const int ievl=info->start;
+    /*lock the mutex because iopdevl, evlwvf is allocated per GPU.*/
     gpu_set(evlgpu[ievl]);
     SIM_T *simu=(SIM_T*)info->data;
     assert(info->end==info->start+1);/*only one evl. */
@@ -504,10 +512,10 @@ void gpu_perfevl(thread_t *info){
     PDMAT(simu->olep->p[ievl],polep);/*OL error for each dir */
     PDMAT(simu->clmp->p[ievl],pclmp);
     PDMAT(simu->clep->p[ievl],pclep);
-
-    curmat *iopdevl=curnew(aper->locs->nloc, 1);
     cudaStream_t stream=evlstream[ievl];
     cublasHandle_t handle=evlhandle[ievl];
+    curmat *iopdevl=cudata->evlopd->p[ievl];
+    curzero(iopdevl, stream);
     /* iopdevl must be in device memory. 6 times slower if in host memory.*/
     if(cudata->surfevl && cudata->surfevl->p[ievl]){
 	curcp(&iopdevl, cudata->surfevl->p[ievl], stream);
@@ -533,15 +541,14 @@ void gpu_perfevl(thread_t *info){
 	cellarr_cur(simu->save->evlopdol[ievl], iopdevl, stream);
     }
     if(parms->plot.run){
-	/*TO_IMPLEMENT; */
+	dmat *tmp=NULL;
+	cp2cpu(&tmp, iopdevl, stream);
+	drawopdamp("OL", aper->locs,tmp->p , aper->amp1->p, NULL,
+		   "Science Open Loop OPD", "x (m)", "y (m)", "OL %d", ievl);
+	dfree(tmp);
     }
-    if(nmod==3){
-	calc_ptt(polep[isim], polmp[isim], aper->ipcc, aper->imcc,
-		     cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
-    }else{
-	TO_IMPLEMENT;
-    }
-    if(parms->evl.psfmean 
+    PERFEVL_WFE(polep, polmp, simu->oleNGSmp);
+    if((parms->evl.psfmean  || parms->evl.opdcov)
        && isim>=parms->evl.psfisim 
        &&((parms->evl.psfol==1 && ievl==parms->evl.indoa)
 	  ||(parms->evl.psfol==2 && parms->evl.psf[ievl]))){
@@ -550,19 +557,36 @@ void gpu_perfevl(thread_t *info){
 	if(parms->evl.psfpttr[ievl]){
 	    curcp(&opdcopy, iopdevl, stream);
 	    curaddptt(opdcopy, cudata->plocs, -polmp[isim][0], -polmp[isim][1], -polmp[isim][2], stream);
+	}else if(parms->evl.opdcov){/* remove piston*/
+	    curcp(&opdcopy, iopdevl, stream);
+	    curadd(opdcopy, -polmp[isim][0], stream);
 	}else{
 	    opdcopy=iopdevl;
 	}
-	psfcomp_r(cudata->evlpsfol->p, opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
-	if(opdcopy!=iopdevl){
-	    CUDA_SYNC_STREAM;
-	    curfree(opdcopy);
+	if(parms->evl.opdcov){
+	    if(parms->gpu.psf){
+		curmm(&cudata->evlopdcovol, 1, opdcopy, opdcopy, "nt", 1, handle);
+		curadd(&cudata->evlopdmeanol, 1, opdcopy, 1, stream);
+	    }else{
+		dmat *tmp=NULL;
+		cp2cpu(&tmp, opdcopy, stream);
+		dmm(&simu->evlopdcovol, tmp, tmp, "nt", 1);
+		dadd(&simu->evlopdmeanol, 1, tmp, 1);
+		dfree(tmp);
+	    }
 	}
-	if(!parms->gpu.psf){ /*need to move psf from GPU to CPU for accumulation.*/
-	    for(int iwvl=0; iwvl<nwvl; iwvl++){
-		cp2cpu(&simu->evlpsfolmean->p[iwvl], 1, cudata->evlpsfol->p[iwvl], 1, stream);
+	if(parms->evl.psfmean){
+	    psfcomp_r(cudata->evlpsfol->p, opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
+	    if(opdcopy!=iopdevl){
 		CUDA_SYNC_STREAM;
-		curfree(cudata->evlpsfol->p[iwvl]); cudata->evlpsfol->p[iwvl]=NULL;
+		curfree(opdcopy);
+	    }
+	    if(!parms->gpu.psf){ /*need to move psf from GPU to CPU for accumulation.*/
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    add2cpu(&simu->evlpsfolmean->p[iwvl], cudata->evlpsfol->p[iwvl], stream);
+		    CUDA_SYNC_STREAM;
+		    curfree(cudata->evlpsfol->p[iwvl]); cudata->evlpsfol->p[iwvl]=NULL;
+		}
 	    }
 	}
     }
@@ -575,7 +599,7 @@ void gpu_perfevl(thread_t *info){
 		   parms->evl.hs[ievl], thetax, thetay,
 		   parms->evl.misreg[0], parms->evl.misreg[1], -1, stream);
 	if(imoao!=-1){
-	    gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, (cumap_t**)(&cudata->moao_evl->p[ievl]), 1,
+	    gpu_dm2loc(iopdevl->p, cudata->plocs, nloc, (cumap_t**)(&cudata->dm_evl->p[ievl]), 1,
 		       INFINITY, 0, 0, 0, 0, -1, stream);
 	}
     }
@@ -583,40 +607,15 @@ void gpu_perfevl(thread_t *info){
 	cellarr_cur(simu->save->evlopdcl[ievl], iopdevl, stream);
     }
     if(parms->plot.run){
-	/*TO_IMPLEMENT; */
+	dmat *tmp=NULL;
+	cp2cpu(&tmp, iopdevl, stream);
+	drawopdamp("CL", aper->locs,tmp->p , aper->amp1->p, NULL,
+		   "Science Closed loop OPD", "x (m)", "y (m)", "CL %d", ievl);
+	dfree(tmp);
     }
-    if(parms->recon.split){
-	if(parms->ndm<=2){
-	    PDMAT(simu->cleNGSmp->p[ievl], pcleNGSmp);
-	    if(nmod==3){
-		calc_ngsmod(pclep[isim], pclmp[isim], pcleNGSmp[isim],recon->ngsmod->nmod,
-				recon->ngsmod->aper_fcp, recon->ngsmod->ht,
-				recon->ngsmod->scale, thetax, thetay,
-				aper->ipcc, aper->imcc,
-				cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
-	    }else{
-		calc_ngsmod(NULL, NULL, pcleNGSmp[isim],recon->ngsmod->nmod,
-				recon->ngsmod->aper_fcp, recon->ngsmod->ht,
-				recon->ngsmod->scale, thetax, thetay,
-				aper->ipcc, aper->imcc,
-				cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);	
-		TO_IMPLEMENT;/*mode decomposition. */
-	    }
-	}
-    }else{
-	if(nmod==3){
-	    calc_ptt(pclep[isim], pclmp[isim], aper->ipcc, aper->imcc,
-			 cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
-	}else{
-	    TO_IMPLEMENT;
-	}
-    }
+    PERFEVL_WFE(pclep, pclmp, simu->cleNGSmp);
     if(do_psf_cov){
-	if(parms->evl.psfngsr[ievl]!=0){/*do after ngs mode removal */
-	    if(cudata->evlopd->p[ievl]) error("cudata->evlopd->p[%d] should be NULL\n", ievl);
-	    cudata->evlopd->p[ievl]=iopdevl;/*record. */
-	}
-	if(parms->evl.psfngsr[ievl]!=2){
+	if(parms->evl.psfngsr[ievl]!=2){/*also do normal one.*/
 	    if(parms->evl.psfpttr[ievl]){
 		curaddptt(iopdevl, cudata->plocs, -pclmp[isim][0], -pclmp[isim][1], -pclmp[isim][2], stream);
 	    }else{
@@ -628,7 +627,7 @@ void gpu_perfevl(thread_t *info){
 		    curadd(&cudata->evlopdmean->p[ievl], 1, iopdevl, 1, stream);
 		}else{
 		    dmat *tmp=NULL;
-		    cp2cpu(&tmp, 0, iopdevl, 1, stream);
+		    cp2cpu(&tmp, iopdevl, stream);
 		    dmm(&simu->evlopdcov->p[ievl], tmp, tmp, "nt", 1);
 		    dadd(&simu->evlopdmean->p[ievl], 1, tmp, 1);
 		    dfree(tmp);
@@ -644,12 +643,13 @@ void gpu_perfevl(thread_t *info){
 			    curaddcabs2(cudata->evlpsfcl->p+iwvl+nwvl*ievl, 1, psfs->p[iwvl], 1, stream);
 			}
 		    }
+		    curcellfree(psfs);
 		}else if(parms->evl.psfmean){
 		    psfcomp_r(cudata->evlpsfcl->p+nwvl*ievl, iopdevl, nwvl, ievl, nloc, 0, stream);
 		}
 		if(!parms->gpu.psf){
 		    for(int iwvl=0; iwvl<nwvl; iwvl++){
-			cp2cpu(&simu->evlpsfmean->p[iwvl+ievl*nwvl], 1, cudata->evlpsfcl->p[iwvl+ievl*nwvl], 1, stream);
+			add2cpu(&simu->evlpsfmean->p[iwvl+ievl*nwvl], cudata->evlpsfcl->p[iwvl+ievl*nwvl], stream);
 			curfree(cudata->evlpsfcl->p[iwvl+ievl*nwvl]); cudata->evlpsfcl->p[iwvl+ievl*nwvl]=NULL;
 		    }
 		}
@@ -658,9 +658,6 @@ void gpu_perfevl(thread_t *info){
     }
  end:
     CUDA_SYNC_STREAM;
-    if(cudata->evlopd->p[ievl]!=iopdevl) {
-	curfree(iopdevl);
-    }
 }
 /**
    Compute the PSF or OPDCOV for NGS mode removed opd.
@@ -671,9 +668,11 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
     const int nloc=aper->locs->nloc;
     const int nwvl=parms->evl.nwvl;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	if(parms->evl.psfngsr[ievl]==0){
+	    continue;
+	}
 	gpu_set(evlgpu[ievl]);
 	curmat *iopdevl=cudata->evlopd->p[ievl];
-	if(!iopdevl) continue;
 	cudaStream_t stream=evlstream[ievl];
 	cublasHandle_t handle=evlhandle[ievl];
 	gpu_ngsmod2science(iopdevl, parms, simu->recon, aper, cleNGSm, ievl, -1, stream);
@@ -689,7 +688,7 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 		curadd(&cudata->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1, stream);
 	    }else{
 		dmat *tmp=NULL;
-		cp2cpu(&tmp, 0, iopdevl, 1, stream);
+		cp2cpu(&tmp, iopdevl, stream);
 		dmm(&simu->evlopdcov_ngsr->p[ievl], tmp, tmp, "nt", 1);
 		dadd(&simu->evlopdmean_ngsr->p[ievl], 1, tmp, 1);
 		dfree(tmp);
@@ -710,16 +709,14 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    }
 	    if(!parms->gpu.psf){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
-		    cp2cpu(&simu->evlpsfmean_ngsr->p[iwvl+ievl*nwvl], 1, cudata->evlpsfcl_ngsr->p[iwvl+ievl*nwvl], 1, stream);
+		    add2cpu(&simu->evlpsfmean_ngsr->p[iwvl+ievl*nwvl], cudata->evlpsfcl_ngsr->p[iwvl+ievl*nwvl], stream);
 		    CUDA_SYNC_STREAM;
 		    curfree(cudata->evlpsfcl_ngsr->p[iwvl+ievl*nwvl]); cudata->evlpsfcl_ngsr->p[iwvl+ievl*nwvl]=NULL;
 		}
 	    }
 	}
 	CUDA_SYNC_STREAM;
-	curfree(cudata->evlopd->p[ievl]);
-	cudata->evlopd->p[ievl]=NULL;
-    }
+   }
 }
 void gpu_perfevl_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
@@ -823,6 +820,37 @@ void gpu_perfevl_save(SIM_T *simu){
 		curscale(pp, scale, stream);
 		cellarr_cur(simu->save->evlopdmean_ngsr[ievl], pp, stream);
 		curscale(pp, 1./scale, stream);
+	    }
+	}
+	if(parms->evl.psfol){
+	    if(parms->evl.psfol==2){
+		scale=scale/parms->evl.npsf;
+	    }
+	    {
+		smat *temp=NULL;
+		smat *temp2=NULL;
+		for(int im=0; im<NGPU; im++){
+		    gpu_set(im);
+		    cp2cpu(&temp2, cudata->evlopdcovol, 0);
+		    cudaStreamSynchronize(0);
+		    sadd(&temp, 1, temp2, scale);
+		}
+		cellarr_smat(simu->save->evlopdcovol, temp);
+		sfree(temp);
+		sfree(temp2);
+	    }
+	    {
+		smat *temp=NULL;
+		smat *temp2=NULL;
+		for(int im=0; im<NGPU; im++){
+		    gpu_set(im);
+		    cp2cpu(&temp2, cudata->evlopdmeanol, 0);
+		    cudaStreamSynchronize(0);
+		    sadd(&temp, 1, temp2, scale);
+		}
+		cellarr_smat(simu->save->evlopdmeanol, temp);
+		sfree(temp);
+		sfree(temp2);
 	    }
 	}
     }

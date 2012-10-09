@@ -20,6 +20,8 @@
 #define __READ_CONFIG_H
 
 #include "misc.h"
+#include "dmat.h"
+
 #define format2key				\
     char key[512];				\
     va_list ap;					\
@@ -39,11 +41,10 @@ void   close_config(const char*format,...) CHECK_ARG(1);
 
 int    readcfg_peek(const char*format,...) CHECK_ARG(1);
 int    readcfg_peek_n(const char *format, ...) CHECK_ARG(1);
-int    readcfg_override(const char *format,...) CHECK_ARG(1);
+int    readcfg_peek_override(const char *format,...) CHECK_ARG(1);
 
 char*  readcfg_str (const char*format,...) CHECK_ARG(1);
 int    readcfg_strarr(char ***res, const char *format,...) CHECK_ARG(2);
-int    readstr_strarr(char ***res, int len, const char *sdata);
 void   readcfg_strarr_n(char ***ret, int len, const char *format,...) CHECK_ARG(3);
 void   readcfg_strarr_nmax(char ***ret, int len, const char *format,...) CHECK_ARG(3);
 int    readcfg_int (const char*format,...) CHECK_ARG(1);
@@ -51,12 +52,11 @@ double readcfg_dbl (const char*format,...) CHECK_ARG(1);
 
 int    readcfg_intarr(int **ret,   const char *format,...) CHECK_ARG(2);
 int    readcfg_dblarr(double **ret,const char *format,...) CHECK_ARG(2);
+dmat*  readcfg_dmat(const char *format,...) CHECK_ARG(1);
 
 void   readcfg_dblarr_n(double **ret, int len, const char *format,...) CHECK_ARG(3);
 void   readcfg_intarr_n(   int **ret, int len, const char *format,...) CHECK_ARG(3);
 
 void   readcfg_dblarr_nmax(double **ret, int len, const char *format,...) CHECK_ARG(3);
 void   readcfg_intarr_nmax(   int **ret, int len, const char *format,...) CHECK_ARG(3);
-int    readstr_numarr(void **ret, int len, int type, const char *data);
-double readstr_num(const char *startptr, char **endptr);
 #endif

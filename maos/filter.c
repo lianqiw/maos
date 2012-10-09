@@ -90,63 +90,6 @@ void addlow2dm(dcell **dmval, const SIM_T *simu,
 	error("Not implemented\n");
     }
 }
-
-/**
-   Do type II servo filtering, except the last integrator.
-*/
-static void typeII_filter(TYPEII_T *MtypeII, dmat *gain, double dtngs, dcell *Merr){
-    /*lead filter */
-    double gg,ga,gs;
-    if(!MtypeII->lead){
-	MtypeII->lead=dcellnew(Merr->nx, Merr->ny);
-	for(long imlo=0; imlo<Merr->nx*Merr->ny; imlo++){
-	    long nmod=Merr->p[imlo]->nx;
-	    MtypeII->lead->p[imlo]=dnew(nmod,1);
-	}
-    }
-    if(!MtypeII->errlast){
-	MtypeII->errlast=dcellnew(Merr->nx, Merr->ny);
-	for(long imlo=0; imlo<Merr->nx*Merr->ny; imlo++){
-	    long nmod=Merr->p[imlo]->nx;
-	    MtypeII->errlast->p[imlo]=dnew(nmod,1);
-	}
-    }
-    PDMAT(gain, pgain);
-    for(long imlo=0; imlo<Merr->nx*Merr->ny; imlo++){
-	const long nmod=Merr->p[imlo]->nx;
-	long indmul=0;
-	/*if(nmod!=5){ */
-	/*   warning("nmod != 5\n"); */
-	/*} */
-	if(gain->ny==nmod){
-	    indmul=1;
-	}else if(gain->ny==1){
-	    indmul=0;
-	}else if(gain->ny>1 && gain->ny < nmod){
-	    indmul=0;/*temporary; use only first column to filter all modes */
-	}else{
-	    error("Wrong format\n");
-	}
-	double *mlead=MtypeII->lead->p[imlo]->p;
-	double *merr=Merr->p[imlo]->p;
-	double *merrlast=MtypeII->errlast->p[imlo]->p;
-		
-	for(long imod=0; imod<nmod; imod++){
-	    long indm=imod * indmul;
-	    gg=pgain[indm][0];
-	    ga=pgain[indm][1];
-	    gs=pgain[indm][2]/dtngs;
-		    
-	    mlead[imod] = (gg/(2*ga*gs+1))*(mlead[imod]*(2*ga*gs-1)
-					    +merr[imod]*(2*gs+1)
-					    -merrlast[imod]*(2*gs-1));
-	}
-    }
-    /*record Merrlast for use next time */
-    dcellcp(&MtypeII->errlast, Merr);
-    /*first integrator */
-    dcelladd(&MtypeII->firstint, 1, MtypeII->lead, 1);
-}
 static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.dmttcast && dmint){
@@ -240,71 +183,36 @@ void filter_cl(SIM_T *simu){
 	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
     }
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
-    const SIM_CFG_T *simt=&(parms->sim);
-    if(!simu->dmerr_hi && !(parms->recon.split && simu->Merr_lo)){
-	return;
+    const SIM_CFG_T *simcfg=&(parms->sim);
+    servo_shift(simu->dmint, simcfg->apdm);
+    if(!parms->sim.fuseint && parms->recon.split){
+	servo_shift(simu->Mint_lo, simcfg->aplo);
     }
-    if(parms->sim.fuseint){
-	shift_inte(simt->napdm,simt->apdm,simu->dmint);
-    }else{
-	shift_inte(simt->napdm,simt->apdm,simu->dmint_hi);
-	if(parms->recon.split){
-		shift_inte(simt->napngs,simt->apngs,simu->Mint_lo);
-	}
+    if(parms->sim.mffocus){/*global focus is the 6th mode in ngsmod->Modes*/
+	dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->focuslpf, "nn", 1);
     }
-    /*High order. */
-    if(simu->dmerr_hi){
-	switch(simt->servotype_hi){
-	case 1:/*simple servo */
-	    if(parms->sim.fuseint){
-		dcelladd(&simu->dmint[0], 1, simu->dmerr_hi, simt->epdm);
-	    }else{
-		dcelladd(&simu->dmint_hi[0], 1, simu->dmerr_hi, simt->epdm);
-	    }
-	    break;
-	default:
-	    error("Not implemented yet\n");
-	}
+    if(simu->dmerr){ /*High order. */
+	servo_filter(simu->dmint, simu->dmerr, simu->dthi, simcfg->epdm);
     }
-    /*Low order, modal in split tomography only.  */
-    /*Merr_lo is non-empty only if in split mode and (isim+1)%dtrat==0 as governed by tomofit */
-    if(parms->recon.split && simu->Merr_lo){
-	switch(simt->servotype_lo){
-	case 1:{
-	    if(parms->sim.fuseint){
-		addlow2dm(&simu->dmint[0],simu,simu->Merr_lo, simt->epngs);
-	    }else{
-		dcelladd(&simu->Mint_lo[0], 1, simu->Merr_lo, simt->epngs);
-	    }
-	}
-	    break;
-	case 2:{ /*type II with lead filter */
-	    /*info("LoWFS DM output\n"); */
-	    typeII_filter(simu->MtypeII_lo, simu->gtypeII_lo, simu->dtlo, simu->Merr_lo);
-	    /*second integrator, merged to LGS integrator. */
-	    if(parms->sim.fuseint){
-		addlow2dm(&simu->dmint[0], simu, simu->MtypeII_lo->firstint, 1);
-	    }else{
-		dcelladd(&simu->Mint_lo[0], 1, simu->MtypeII_lo->firstint, 1);
-	    }
-	}
-	    break;
-	default:
-	    error("Not implemented yet");
+    if(parms->recon.split && simu->Merr_lo){ /*low order*/
+	/*Low order, modal in split tomography only.  */
+	servo_filter(simu->Mint_lo, simu->Merr_lo, simu->dtlo, simcfg->eplo);
+	if(parms->sim.fuseint){/*accumulate to the main integrator.*/
+	    addlow2dm(&simu->dmint->mint[0], simu, simu->Mint_lo->mpreint, 1);
 	}
     }
     if(parms->sim.dmttcast){
-	cast_tt_do(simu, simu->dmint[0]);
+	cast_tt_do(simu, simu->dmint->mint[0]);
     }
- 
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
-    if(parms->sim.fuseint){
-	dcellcp(&simu->dmcmd,simu->dmint[0]);
-    }else{
-	dcellcp(&simu->dmcmd,simu->dmint_hi[0]);
-	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo[0], 1);
+    dcellcp(&simu->dmcmd,simu->dmint->mint[0]);
+    if(!parms->sim.fuseint){
+	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
     }   
+    if(recon->dm_ncpa){
+	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
+    }
     /*hysteresis. */
     if(simu->hyst){
 	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
@@ -318,35 +226,29 @@ void filter_cl(SIM_T *simu){
 	dcellcp(&simu->dmreal, tmp);
 	dcellfree(tmp);
     }
+    if(parms->sim.mffocus){/*gain was already applied on zoomerr*/
+	dcelladd(&simu->zoomint, 1, simu->zoomerr, 1);
+    }
     if(recon->moao){
-	if(parms->gpu.moao){
-#if USE_CUDA
-	    gpu_moao_filter(simu);
-#endif
-	}else{
-	    if(parms->sim.closeloop){
-		if(simu->moao_wfs){
-		    const int nwfs=parms->nwfs;
-		    for(int iwfs=0; iwfs<nwfs; iwfs++){
-			int ipowfs=parms->wfs[iwfs].powfs;
-			int imoao=parms->powfs[ipowfs].moao;
-			if(imoao<0) continue;
-			double g=parms->moao[imoao].gdm;
-			dadd(&simu->moao_wfs->p[iwfs], 1.-g, simu->moao_wfs->p[iwfs+nwfs], g);
-		    }
-		}
-		if(simu->moao_evl){
-		    const int nevl=parms->evl.nevl;
-		    int imoao=parms->evl.moao;
+	if(!parms->gpu.moao){ /*close loop filtering.*/
+	    if(simu->dm_wfs){
+		const int nwfs=parms->nwfs;
+		for(int iwfs=0; iwfs<nwfs; iwfs++){
+		    int ipowfs=parms->wfs[iwfs].powfs;
+		    int imoao=parms->powfs[ipowfs].moao;
+		    if(imoao<0) continue;
 		    double g=parms->moao[imoao].gdm;
-		    for(int ievl=0; ievl<nevl; ievl++){
-			dadd(&simu->moao_evl->p[ievl], 1.-g, simu->moao_evl->p[ievl+nevl], g);
-		    }
+		    dadd(&simu->dm_wfs->p[iwfs], 1.-g, simu->dm_wfs->p[iwfs+nwfs], g);
 		}
 	    }
-#if USE_CUDA
-	    gpu_moao_2gpu(simu);
-#endif
+	    if(simu->dm_evl){
+		const int nevl=parms->evl.nevl;
+		int imoao=parms->evl.moao;
+		double g=parms->moao[imoao].gdm;
+		for(int ievl=0; ievl<nevl; ievl++){
+		    dadd(&simu->dm_evl->p[ievl], 1.-g, simu->dm_evl->p[ievl+nevl], g);
+		}
+	    }
 	}
     }
 }
@@ -356,8 +258,8 @@ void filter_cl(SIM_T *simu){
 void filter_ol(SIM_T *simu){
     RECON_T *recon=simu->recon;
     assert(!simu->parms->sim.closeloop);
-    if(simu->dmerr_hi){
-	dcellcp(&simu->dmcmd, simu->dmerr_hi);
+    if(simu->dmerr){
+	dcellcp(&simu->dmcmd, simu->dmerr);
     }else{
 	dcellzero(simu->dmcmd);
     }
@@ -384,18 +286,14 @@ void filter_ol(SIM_T *simu){
 	cellarr_dcell(simu->save->dmreal, simu->dmreal);
 	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
     }
+    /*moao DM is already taken care of automatically.*/
 }
+
 /**
-   Does the servo filtering by calling filter_cl() or filter_ol()
- */
-void filter(SIM_T *simu){
+   Update various quantities upon updating dmreal.
+*/
+void update_dm(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
-    if(parms->sim.evlol) return;
-    if(parms->sim.closeloop){
-	filter_cl(simu);
-    }else{
-	filter_ol(simu);
-    }
     if(!parms->fit.square){
 	/* Embed DM commands to a square array for fast ray tracing */
 	for(int idm=0; idm<parms->ndm; idm++){
@@ -413,12 +311,34 @@ void filter(SIM_T *simu){
     }
 #endif
     calc_cachedm(simu);
-  
     if(parms->plot.run){ /*Moved from recon.c to here. */
 	for(int idm=0; simu->dmreal && idm<parms->ndm; idm++){
 	    drawopd("DM", simu->recon->aloc[idm], simu->dmreal->p[idm]->p,NULL,
-		    "Actual DM Actuator Commands","x (m)", "y (m)",
-		    "Real %d",idm);
+		    "Actual DM Actuator Commands","x (m)", "y (m)", "Real %d",idm);
 	}
     }
+}
+
+/**
+   Does the servo filtering by calling filter_cl() or filter_ol()
+ */
+void filter(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    if(parms->sim.evlol) return;
+    if(parms->sim.closeloop){
+	filter_cl(simu);
+    }else{
+	filter_ol(simu);
+    }
+#if USE_CUDA
+    if(simu->recon->moao){
+	if(parms->gpu.moao){
+	    gpu_moao_filter(simu);
+	}else{
+	    gpu_moao_2gpu(simu);
+	}
+    }
+#endif
+    update_dm(simu);
+
 }

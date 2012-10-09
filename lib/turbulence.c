@@ -365,6 +365,7 @@ dmat *turbpsd_full(long nx,      /**<The size*/
 	    psd1[j] = pow(r2x+r2y+L02,slope)*scrnstr;
 	}
     }
+    if(!isfinite(L0)) psd->p[0]=0;  //remove infinite piston mode if l0 is infinity.
     return psd;
 }
 

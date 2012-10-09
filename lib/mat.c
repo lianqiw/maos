@@ -112,16 +112,14 @@ void X(free_keepdata)(X(mat) *A){
 */
 void X(free_do)(X(mat) *A, int keepdata){
     if(!A) return;
+    int free_extra=0;
     if(A->nref){
 	A->nref[0]--;
 	if(!A->nref[0]){
-#ifdef USE_COMPLEX
-	    cfree_plan(A);
-#endif
 	    if(A->header){
 		double count=search_header_num(A->header, "count");
 		if(!isnan(count) && count>0){
-		    info("count=%g, scaling the data\n", count);
+		    error("deprecated: count=%g, scaling the data\n", count);
 		    X(scale)(A, 1./count);
 		}
 	    }
@@ -129,14 +127,22 @@ void X(free_do)(X(mat) *A, int keepdata){
 		if(A->mmap){/*data is mmap'ed. */
 		    mmap_unref(A->mmap);
 		}else{
+		    free_extra=1;
 		    free(A->p);
-		    free(A->header);
 		}
 	    }
 	    free(A->nref);
 	}else if(A->nref[0]<0){
 	    error("The ref is less than 0. something wrong!!!:%ld\n",A->nref[0]);
 	}
+    }else{
+	free_extra=1;
+    }
+    if(free_extra){
+#ifdef USE_COMPLEX
+	cfree_plan(A);
+#endif
+	free(A->header);
     }
     free(A);
 }
@@ -159,7 +165,6 @@ void X(resize)(X(mat) *A, long nx, long ny){
 	    memset(A->p+A->nx*A->ny, 0, (nx*ny-A->nx*A->ny)*sizeof(T));
 	}
     }else{
-	warning("column vector length is not preserved!!!");
 	T *p=calloc(nx*ny,sizeof(T));
 	long minx=A->nx<nx?A->nx:nx;
 	long miny=A->ny<ny?A->ny:ny;
@@ -186,7 +191,6 @@ X(mat) *X(ref)(X(mat) *in){
     out->nref[0]++;
     return out;
 }
-
 /**
    create an new X(mat) reference another with different shape.
 */
@@ -390,7 +394,6 @@ X(mat) *X(trans)(const X(mat) *A){
     }
     return B;
 }
-
 /**
    set values of each element in a X(mat) to val.
 */
@@ -697,9 +700,10 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
 	double r2y=(iy-cy)*(iy-cy);
 	for(int ix=0; ix<A->nx; ix++){
 	    double r2r=(ix-cx)*(ix-cx)+r2y;
-	    if(r2r<r2l) 
-	    	As[iy][ix]+=val;
-	    else if(r2r<r2u){
+	    double val2=0;
+	    if(r2r<r2l) {
+		val2=val;
+	    }else if(r2r<r2u){
 		double tot=0.;
 		for(int jy=0; jy<nres; jy++){
 		    double iiy=iy+(jy-resm)*2*res;
@@ -713,45 +717,88 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
 			    tot+=res2*wty*wtx;
 		    }
 		}
-		As[iy][ix]+=tot*val;
+		val2=tot*val;
 	    }
+	    As[iy][ix]+=val2;
 	}
     }
 }
-
 /**
-   similar to X(circle). but don't actually compute the
-   weights. just test the corners;
+   Similar to X(circle), by multiply instead of add.
 */
-void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r){
+void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val){
+    int nres=100;
+    const double res=1./(double)(nres);
+    const double res1=1./(double)(nres);
+    const double res2=res1*res1*4.;
+    double resm=(double)(nres-1)/2.;
     double r2=r*r;
+    double r2l=(r-1.5)*(r-1.5);
     double r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
 	double r2y=(iy-cy)*(iy-cy);
 	for(int ix=0; ix<A->nx; ix++){
 	    double r2r=(ix-cx)*(ix-cx)+r2y;
-	    if(r2r<r2) 
+	    double val2=0;
+	    if(r2r<r2l) {
+		val2=val;
+	    }else if(r2r<r2u){
+		double tot=0.;
+		for(int jy=0; jy<nres; jy++){
+		    double iiy=iy+(jy-resm)*2*res;
+		    double rr2y=(iiy-cy)*(iiy-cy);
+		    double wty=1.-fabs(iy-iiy);
+		    for(int jx=0; jx<nres; jx++){
+			double iix=ix+(jx-resm)*2*res;
+			double rr2r=(iix-cx)*(iix-cx)+rr2y;
+			double wtx=1.-fabs(ix-iix);
+			if(rr2r<r2)
+			    tot+=res2*wty*wtx;
+		    }
+		}
+		val2=tot*val;
+	    }
+	    As[iy][ix]*=val2;
+	}
+    }
+}
+
+/**
+   Unlike X(circle), we don't use bilinear influence function, but use pure gray
+   pixel instead. Also the values are black/white, no gray.
+*/
+void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r){
+    double r2=r*r;
+    double r2l=(r-1.5)*(r-1.5);
+    double r2u=(r+2.5)*(r+2.5);
+    PMAT(A,As);
+    for(int iy=0; iy<A->ny; iy++){
+	double r2y=(iy-cy)*(iy-cy);
+	for(int ix=0; ix<A->nx; ix++){
+	    double r2r=(ix-cx)*(ix-cx)+r2y;
+	    if(r2r<r2l){
 	    	As[iy][ix]=1;
-	    else if(r2r<r2u){
-		for(int jy=-1; jy<2; jy++){
+	    }else if(r2r>r2u){
+		continue;//do not set to 0.
+	    }else{
+		for(double jy=-0.5; jy<1; jy++){
 		    double iiy=iy+jy;
 		    double rr2y=(iiy-cy)*(iiy-cy);
-		    for(int jx=-1; jx<2; jx++){
+		    for(double jx=-0.5; jx<1; jx++){
 			double iix=ix+jx;
 			double rr2r=pow(iix-cx,2)+rr2y;
 			if(rr2r<r2){
 			    As[iy][ix]=1;
-			    goto next;
+			    continue;
 			}
 		    }
 		}
 	    }
-	next:
-	    continue;
 	}
     }
 }
+
 
 /**
    shift frequency components by n/2
@@ -1187,7 +1234,7 @@ X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
     double xsep=(xmaxl-xminl)/(double)(nmax1);
     double xsep1=1./xsep;
     if(fabs(xsep+xminl-xin->p[1])>1.e-3){
-	error("Xin is not linearly spaced\n");
+	return X(interp1log)(xin, yin, xnew);
     }
     if(xin->ny!=1 || xnew->ny!=1){
 	error("Either xin or xnew is in wrong format\n");
@@ -1769,7 +1816,30 @@ long X(fwhm)(X(mat) *A){
     }
     return fwhm;
 }
-
+#ifndef USE_COMPLEX
+static int sort_ascend(const T*A, const T*B){
+    if ((*A)>(*B)) return 1; 
+    else return -1;
+}
+static int sort_descend(const T*A, const T*B){
+    if ((*A)>(*B)) return -1; 
+    else return 1;
+}
+/*
+  Sort all columns of A, in ascending order if ascend is non zero, otherwise in descending order.
+ */
+void X(sort)(X(mat) *A, int ascend){
+    for(int i=0; i<A->ny; i++){
+	if(ascend){
+	    qsort(A->p+i*A->nx, A->nx, sizeof(double), 
+		  (int(*)(const void*,const void*))sort_ascend);
+	}else{
+	    qsort(A->p+i*A->nx, A->nx, sizeof(double), 
+		  (int(*)(const void*,const void*))sort_descend);
+	}
+    }
+}
+#endif
 #ifndef USE_SINGLE
 #include "blas.c"
 #endif

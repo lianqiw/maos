@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <getopt.h>
 #include "maos.h"
+#include "mvm_client.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -104,48 +105,54 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     double R=parms->aper.d/2;
     double maxx=0,maxy=0;
     double sx,sy;/*temporary variables */
-    int i;
     int use_wfs_hi=1;
     int use_wfs_lo=1;
     int use_evl=1;
     int use_fit=1;
    
     /*find minimum map size to cover all the beams */
-    for(i=0; i<parms->nwfs; i++){
+    for(int i=0; i<parms->nwfs; i++){
 	int ipowfs=parms->wfs[i].powfs;
 	if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
 	   ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
 	    continue;
 	}
-	sx=fabs(parms->wfs[i].thetax*ht)
-	    +(1.-ht/parms->powfs[ipowfs].hs)*R+guard;
-	sy=fabs(parms->wfs[i].thetay*ht)
-	    +(1.-ht/parms->powfs[ipowfs].hs)*R+guard;
+	double hs=parms->powfs[ipowfs].hs;
+	sx=fabs(parms->wfs[i].thetax*ht)+(1.-ht/hs)*R;
+	sy=fabs(parms->wfs[i].thetay*ht)+(1.-ht/hs)*R;
 	if(sx>maxx) maxx=sx;
 	if(sy>maxy) maxy=sy;
     }
     if(use_evl){
-	for(i=0; i<parms->evl.nevl; i++){
-	    sx=fabs(parms->evl.thetax[i]*ht)+R+guard;
-	    sy=fabs(parms->evl.thetay[i]*ht)+R+guard;
+	for(int i=0; i<parms->evl.nevl; i++){
+	    double hs=parms->evl.hs[i];
+	    sx=fabs(parms->evl.thetax[i]*ht)+(1.-ht/hs)*R;
+	    sy=fabs(parms->evl.thetay[i]*ht)+(1.-ht/hs)*R;
 	    if(sx>maxx) maxx=sx;
 	    if(sy>maxy) maxy=sy;
 	}
     }
     if(use_fit){
-	for(i=0; i<parms->fit.nfit; i++){
-	    sx=fabs(parms->fit.thetax[i]*ht)+R+guard;
-	    sy=fabs(parms->fit.thetay[i]*ht)+R+guard;
+	for(int i=0; i<parms->fit.nfit; i++){
+	    double hs=parms->fit.hs[i];
+	    sx=fabs(parms->fit.thetax[i]*ht)+(1.-ht/hs)*R;
+	    sy=fabs(parms->fit.thetay[i]*ht)+(1.-ht/hs)*R;
 	    if(sx>maxx) maxx=sx;
 	    if(sy>maxy) maxy=sy;
 	}
     }
-    /*normalized grid size +3 is extra guard band */
-    maxx=ceil(maxx/dx)+2;
-    maxy=ceil(maxy/dx)+2;
+    if(parms->sim.ncpa_calib){
+	for(int i=0; i<parms->sim.ncpa_ndir; i++){
+	    double hs=parms->sim.ncpa_hs[i];
+	    sx=fabs(parms->sim.ncpa_thetax[i]*ht)+(1.-ht/hs)*R;
+	    sy=fabs(parms->sim.ncpa_thetay[i]*ht)+(1.-ht/hs)*R;
+	    if(sx>maxx) maxx=sx;
+	    if(sy>maxy) maxy=sy;
+	}
+    }
     long nx,ny;
-    nx=iceil(maxx+offset+1)*2;
-    ny=iceil(maxy+offset+1)*2;
+    nx=iceil((guard+maxx)/dx+offset+1)<<1;
+    ny=iceil((guard+maxy)/dx+offset+1)<<1;
     if(pad){/*pad to power of 2 */
 	nx=1<<iceil(log2((double)nx));
 	ny=1<<iceil(log2((double)ny));
@@ -154,11 +161,11 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     nx=(nx<ny)?ny:nx;
     ny=nx;
     if(ninx>1){
-	if(ninx<nx) warning("ninx=%ld is too small\n",ninx);
+	if(ninx<nx) warning("ninx=%ld is too small. need %ld\n",ninx, nx);
 	nx=ninx;
     }
     if(niny>1){
-	if(niny<ny)  warning("niny=%ld is too small\n",niny);
+	if(niny<ny)  warning("niny=%ld is too small. need %ld\n",niny, ny);
 	ny=niny;
     }
     double ox,oy;
@@ -185,7 +192,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	*map=dmap->p;
 	double Rn=R/dx;
 	double Rg=guard/dx;
-	for(i=0; i<parms->nwfs; i++){
+	for(int i=0; i<parms->nwfs; i++){
 	    int ipowfs=parms->wfs[i].powfs;
 	    if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
 	       ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
@@ -198,7 +205,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	}
 
 	if(use_evl){
-	    for(i=0; i<parms->evl.nevl; i++){
+	    for(int i=0; i<parms->evl.nevl; i++){
 		sx=ox+(parms->evl.thetax[i]*ht)/dx;
 		sy=oy+(parms->evl.thetay[i]*ht)/dx;
 		double RR=Rn+Rg;
@@ -206,15 +213,22 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	    }
 	}
 	if(use_fit){
-	    for(i=0; i<parms->fit.nfit; i++){
+	    for(int i=0; i<parms->fit.nfit; i++){
 		sx=ox+(parms->fit.thetax[i]*ht)/dx;
 		sy=oy+(parms->fit.thetay[i]*ht)/dx;
 		double RR=Rn+Rg;
 		dcircle_symbolic(dmap,sx,sy,RR);
 	    }
 	}
-
-	for(i=0; i<nx*ny; i++){
+	if(parms->sim.ncpa_calib){
+	    for(int i=0; i<parms->sim.ncpa_ndir; i++){
+		sx=ox+(parms->sim.ncpa_thetax[i]*ht)/dx;
+		sy=oy+(parms->sim.ncpa_thetay[i]*ht)/dx;
+		double RR=Rn+Rg;
+		dcircle_symbolic(dmap,sx,sy,RR);
+	    }
+	}
+	for(int i=0; i<nx*ny; i++){
 	    dmap->p[i]=(dmap->p[i])>1.e-15?1:0;
 	}
 	dfree_keepdata(dmap);
@@ -226,30 +240,56 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 void plotloc(char *fig, const PARMS_T *parms, 
 	     loc_t *loc, double ht, char *format,...){
     format2fn;
-    int ncir=parms->evl.nevl + parms->nwfs;
+    int ncir=parms->evl.nevl + parms->fit.nfit + parms->nwfs;
+    if(parms->sim.ncpa_calib){
+	ncir+=parms->sim.ncpa_ndir;
+    }
     double (*cir)[4];
     cir=(double(*)[4])calloc(ncir*4,sizeof(double));
     int count=0;
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+	double hs=parms->evl.hs[ievl];
 	cir[count][0]=ht*parms->evl.thetax[ievl];
 	cir[count][1]=ht*parms->evl.thetay[ievl];
-	cir[count][2]=parms->aper.d*0.5;
+	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
 	cir[count][3]=0xFF0000;/*rgb color */
 	count++;
     }
+    for(int ifit=0; ifit<parms->fit.nfit; ifit++){
+	double hs=parms->fit.hs[ifit];
+	cir[count][0]=ht*parms->fit.thetax[ifit];
+	cir[count][1]=ht*parms->fit.thetay[ifit];
+	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
+	cir[count][3]=0xFF22DD;/*rgb color */
+	count++;
+    }
+    for(int idir=0; idir<parms->sim.ncpa_ndir; idir++){
+	double hs=parms->sim.ncpa_hs[idir];
+	cir[count][0]=ht*parms->sim.ncpa_thetax[idir];
+	cir[count][1]=ht*parms->sim.ncpa_thetay[idir];
+	cir[count][2]=parms->aper.d*0.5*(1-ht/hs);
+	cir[count][3]=0x22FF00;/*rgb color */
+	count++;
+    }
+
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	double hs=parms->powfs[parms->wfs[iwfs].powfs].hs;
+	int ipowfs=parms->wfs[iwfs].powfs;
 	cir[count][0]=parms->wfs[iwfs].thetax*ht;
 	cir[count][1]=parms->wfs[iwfs].thetay*ht;
 	cir[count][2]=parms->aper.d*0.5*(1.-ht/hs);
-	if(!isfinite(hs)){
-	    cir[count][3]=0x44FF00;/*rgb color */
+	if(isfinite(hs)){//LGS
+	    cir[count][3]=0xFF8800;
+	}else if(!parms->powfs[ipowfs].lo){//Hi NGS
+	    cir[count][3]=0xFFFF00;
+	}else if(parms->powfs[ipowfs].order>1){//TTF
+	    cir[count][3]=0x0000FF;//TTF
 	}else{
-	    cir[count][3]=0xFFFF33;/*rgb color */
+	    cir[count][3]=0x0000FF;//TT
 	}
 	count++;
     }
-    plot_points(fig, 1, &loc, NULL ,NULL, NULL,ncir, cir, NULL,
+    plot_points(fig, 1, &loc, NULL ,NULL, NULL,NULL,ncir, cir, NULL,
 	       "Coordinate","x (m)","y (m)", "%s",fn);
     free(cir);
 }
@@ -265,43 +305,59 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][2]=totfov/2;
     cir[0][3]=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
+    if(parms->sim.ncpa_calib){
+	ngroup+=1;
+    }
     loc_t **locs=calloc(ngroup, sizeof(loc_t*));
     int32_t *style=calloc(ngroup, sizeof(int32_t));
-
-    style[0]=(0xFF0000<<8)+(4<<4)+3;
-    locs[0]=locnew(parms->evl.nevl, 0);
+    int count=0;
+    style[count]=(0xFF0000<<8)+(4<<4)+3;
+    locs[count]=locnew(parms->evl.nevl, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-	locs[0]->locx[ievl]=parms->evl.thetax[ievl]*206265;
-	locs[0]->locy[ievl]=parms->evl.thetay[ievl]*206265;
+	locs[count]->locx[ievl]=parms->evl.thetax[ievl]*206265;
+	locs[count]->locy[ievl]=parms->evl.thetay[ievl]*206265;
     }
+    count++;
 
-    style[1]=(0xFF22DD<<8)+(4<<4)+3;
-    locs[1]=locnew(parms->fit.nfit, 0);
+    style[count]=(0xFF22DD<<8)+(4<<4)+3;
+    locs[count]=locnew(parms->fit.nfit, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
-	locs[1]->locx[ifit]=parms->fit.thetax[ifit]*206265;
-	locs[1]->locy[ifit]=parms->fit.thetay[ifit]*206265;
+	locs[count]->locx[ifit]=parms->fit.thetax[ifit]*206265;
+	locs[count]->locy[ifit]=parms->fit.thetay[ifit]*206265;
     }
+    count++;
+    style[count]=(0x22FF00<<8)+(4<<4)+3;
+    locs[count]=locnew(parms->sim.ncpa_ndir, 0);
+    for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
+	locs[count]->locx[ifit]=parms->sim.ncpa_thetax[ifit]*206265;
+	locs[count]->locy[ifit]=parms->sim.ncpa_thetay[ifit]*206265;
+    }
+    count++;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	locs[ipowfs+2]=locnew(parms->powfs[ipowfs].nwfs, 0);
+	locs[count]=locnew(parms->powfs[ipowfs].nwfs, 0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
-	    locs[ipowfs+2]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
-	    locs[ipowfs+2]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
+	    locs[count]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
+	    locs[count]->locy[jwfs]=parms->wfs[iwfs].thetay*206265;
 	}
 	if(isfinite(parms->powfs[ipowfs].hs)){
-	    style[ipowfs+2]=(0xFF8800<<8)+(4<<4)+2;
+	    style[count]=(0xFF8800<<8)+(4<<4)+2;
 	}else if(!parms->powfs[ipowfs].lo){
-	    style[ipowfs+2]=(0xFFFF00<<8)+(4<<4)+1;
+	    style[count]=(0xFFFF00<<8)+(4<<4)+1;
 	}else if(parms->powfs[ipowfs].order>1){
-	    style[ipowfs+2]=(0x0000FF<<8)+(4<<4)+4;
+	    style[count]=(0x0000FF<<8)+(4<<4)+4;
 	}else{
-	    style[ipowfs+2]=(0x0000FF<<8)+(4<<4)+1;
+	    style[count]=(0x0000FF<<8)+(4<<4)+1;
 	}
+	count++;
+    }
+    if(count!=ngroup){
+	error("count=%d, ngroup=%d. they should equal.\n", count, ngroup);
     }
     double limit[4];
     limit[0]=limit[2]=-totfov/2;
     limit[1]=limit[3]=totfov/2;
-    plot_points(fig, ngroup, locs, NULL, style,limit,ncir,cir, NULL,
+    plot_points(fig, ngroup, locs, NULL, style,limit,NULL,ncir,cir, NULL,
 		"Asterism","x (arcsec)", "y (arcsec)", "%s",fn);
     free(cir);
     locarrfree(locs, ngroup);
@@ -341,7 +397,6 @@ void rename_file(int sig){
     snprintf(fnnew,256,"run_%d.%s", pid,suffix);
     rename(fnold,fnnew);
     mysymlink(fnnew, "run_recent.log");
-
     if(curparms && sig!=0){
 	char fn[80];
 	const PARMS_T *parms=curparms;
@@ -366,6 +421,9 @@ void maos_signal_handler(int sig){
     }
     disable_signal_handler;
     rename_file(sig);/*handles signal */
+    if(curparms->sim.mvmport){
+	mvm_client_close();
+    }
     if(sig!=0){
 	char *info="Unknown";
 	switch(sig){
@@ -380,6 +438,7 @@ void maos_signal_handler(int sig){
 	case SIGTERM:
 	case SIGQUIT: /*Ctrl-'\' */
 	    info="Killed";
+	    break;
 	case SIGUSR1:/*user defined */
 	    info="Quit";
 	    break;
@@ -387,10 +446,11 @@ void maos_signal_handler(int sig){
 	warning2("Signal %d: %s\n", sig, info);
 	fflush(stderr);
 	fflush(stdout);
-	if(sig !=0){
-	    print_backtrace(0);
+	if(sig !=0 && sig != SIGINT){
+	    PRINT_BACKTRACE;
 	}
 	scheduler_finish(1);
+
 	_Exit(sig);/*don't call clean up functions, but does flush files. */
     }
 }
@@ -419,7 +479,8 @@ static void print_usage(void){
 "                  Use FILE.conf as the baseline config instead of nfiraos.conf\n"
 "-p, --path=dir    Add dir to the internal PATH\n"
 "-P, --pause       paulse simulation in the end of every time step\n"
-"-g, --gpu=N       Use the N'th gpu. 0 for the first. -1 to disable. default: automatic"
+"-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic"
+"-G, --ngpu=N'     Use a total of N gpus."
 	  );
     exit(0);
 }
@@ -446,6 +507,7 @@ ARG_T * parse_args(int argc, char **argv){
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
 	{"gpu",    'g',T_INTARR, 1, &arg->gpus, &arg->ngpu},
+	{"ngpu",   'G',T_INT, 1, &arg->ngpu2, NULL},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
 	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},
@@ -453,12 +515,13 @@ ARG_T * parse_args(int argc, char **argv){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(arg->nthread>NCPU2 || arg->nthread<=0){
-	arg->nthread=NCPU2;
+    if(arg->nthread>NTHREAD || arg->nthread<=0){
+        arg->nthread=NTHREAD;
     }
-#if USE_PTHREAD == 0
-    arg->nthread=1;
-#endif
+    NTHREAD=arg->nthread;
+    if(!arg->gpus || arg->ngpu==0){
+	arg->ngpu=arg->ngpu2;
+    }
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
     FILE *fptmp=fopen(fntmp,"w");
@@ -701,23 +764,6 @@ double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, doubl
     return 0.3144*r0*pow(wh,-3./5.);
 }
 
-/**
-   prepare the integrator by shifting commands. similar to laos.
-   inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
-*/
-void shift_inte(int nap, double *ap, dcell **inte){
-    dcell *tmp=NULL;
-    dcell *keepjunk=inte[nap-1];
-    for(int iap=nap-1; iap>=0; iap--){
-	dcelladd(&tmp,1,inte[iap],ap[iap]);
-	if(iap>0){
-	    inte[iap]=inte[iap-1];/*shifting */
-	}else{
-	    inte[iap]=tmp;/*new command. */
-	}
-    }
-    dcellfree(keepjunk);
-}
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
     char header[320];
     int nembed=aper->nembed[iwvl];
@@ -741,4 +787,25 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl){
 	     wvl, parms->evl.dx, nembed, nembed, wvl/(nembed*parms->evl.dx)*206265,
 	     sumamp2*nembed*nembed, parms->sim.dt*npos);
     return strdup(header);
+}
+void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat *fieldstop, double wvl){
+    cmat *wvf=cnew(nembed, nembed);
+    cfft2plan(wvf, -1); cfft2plan(wvf, 1);
+    double kk=2*M_PI/wvl;
+    double kki=1./kk;
+    double wvlh=wvl*0.5;
+    dcomplex i2pi=I*kk;
+    for(int iloc=0; iloc<opd->nx; iloc++){
+	wvf->p[embed[iloc]]=amp->p[iloc]*cexp(i2pi*opd->p[iloc]);
+    }
+    cfft2(wvf, -1);
+    ccwmd(wvf, fieldstop, 1);
+    cfft2(wvf, 1);
+    for(int iloc=0; iloc<opd->nx; iloc++){
+	double val=carg(wvf->p[embed[iloc]])*kki;
+	double diff=fmod(val-opd->p[iloc]+wvlh, wvl);
+	if(diff<0) diff+=wvl;
+	opd->p[iloc]+=diff-wvlh;
+    }
+    cfree(wvf);
 }

@@ -68,6 +68,7 @@ typedef struct ATMR_CFG_T{
     double r0;    /**<derived from r0z for zenith angle za*/
     double l0;    /**<outer scale*/
     double hs;    /**<height of the high order guide star. derived*/
+    double hmax;  /**<maximum of ht*/
     double *ht;   /**<height of each layer*/
     double *wt;   /**<weight of each layer (relative strength of \f$C_n^2\f$)*/
     double dx;    /**<baseline sampling (when os=1). matches to high order wfs.*/
@@ -84,6 +85,7 @@ typedef struct APER_CFG_T{
     double rotdeg;/**<pupil rotation in degree*/
     char *fnamp;  /**amplitude maps. expected to be square or rectangular mxn, with 0 at
 		     [m/2,n/2] (count from 0)*/
+    int fnampuser;/**<User provided amplitude map (not default)*/
     double *misreg;/**<misregistration of the pupil along x and y. Shifts the
 		      amplitude map and atmosphere.*/
     int ismisreg; /**<true if misreg contains nonzero numbers*/
@@ -121,6 +123,8 @@ typedef struct POWFS_CFG_T{
     char *sninfile;/**<Speckle noisy input file. NULL to disable. not used*/
     double hs;     /**<height of guide star*/
     double saat;   /**<subaperture area (normalized) threshold to drop subaperture.*/
+    double sathruput;/**<subaperture lenslet throughgput. value is used  to alter amplitude map*/
+    double saspherical;/**<Subaperture spherical aberration in nm at best focus.*/
     char  *neareconfile;/**<prefix of file contains noise equivalent angle in
 			   radian. _wfs# is added when reading file.*/
     double nearecon;/**<NEA used in reconstruction*/
@@ -144,6 +148,7 @@ typedef struct POWFS_CFG_T{
     double pixtheta;/**<size of pixel pitch along x/y or azimuthal if radial
 		       ccd. Converted to radian from user input*/
     double radpixtheta; /**<size of pixel pitch along radial direction. -1 for square pixel*/
+    double fieldstop;/**<size of field stop in arcsec.*/
     double pixoffx; /**<offset of image center from center of detector*/
     double pixoffy; /**<see pixoffx*/
     double sigscale;/**<scale the signal level for simulation.*/
@@ -205,11 +210,6 @@ typedef struct POWFS_CFG_T{
 		       ym(ip)=\sum_{ic}(A{2,ip}(1,ic)*pow(x,A{1,ip}(2,ic))*pow(y,A{1,ip}(3,ic)))
 		       where ip is ipowfs. ic is index of column in entries of
 		       A.*/
-    char *ncpa;     /**<none common path aberrations for powfs. Used in
-		       perparation of matched filter *and* in simulation. Each
-		       file contains 2xn cell array, where n can be 1 or number
-		       of wfs belonging to this powfs. The format of each 2x1
-		       cell is the same as for surf.*/
     int ncpa_method;/**<Method to correct ncpa.
 		       - 0: do nothing.
 		       - 1: apply gradient electronic offset. 
@@ -225,7 +225,6 @@ typedef struct POWFS_CFG_T{
     int moao;       /**<index into MOAO struct. -1: no moao*/
     int dl;         /**<is diffraction limited. derived from comparing pixtheta
 		       with diffraction limited image size.*/
-
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -335,6 +334,7 @@ typedef struct TOMO_CFG_T{
     double iac;      /**<#inter-actuator-coupling in cubic influence function (testing)*/
     double cxxscale; /**<scale the Cxx^-1 term.*/
     double svdthres; /**<Threshold in SVD inversion*/
+    double cgthres;  /**<Repeat cg if residual is not reached*/
     int square;      /**<use square/rectangular grid instead of tighter irregular grid*/
     int cone;        /**<use cone coordinate in xloc: keep true*/
     int cxx;         /**<method to compute Cxx^-1. 0: bihormonic approx. 1: inverse psd. 2: fractal*/
@@ -371,7 +371,7 @@ typedef struct FIT_CFG_T{
     double *thetax;  /**<x Coordinate of DM fitting directions. */
     double *thetay;  /**<y Coordinate of DM fitting directions. */
     double *wt;      /**<weight of each direction*/
-    double *ht;      /**<height of each direction*/
+    double *hs;      /**<height of target in each direction*/
     double tikcr;    /**<tikhonov regularization*/
     double svdthres; /**<Threshold in SVD inversion*/
     int actslave;    /**<slaving constraint for non-active actuators. Useful in CBS method*/
@@ -389,6 +389,7 @@ typedef struct FIT_CFG_T{
     int square;      /**<using square grid on DM and ploc.*/
     int assemble;    /**<force assemble fit matrix in CG*/
     int pos;         /**<over sampling of floc over aloc. for fitting. normally equal to tomo.pos*/
+    int indoa;       /**<Index of on axis point.*/
 }FIT_CFG_T;
 /**
    contains input parameters for the least square reconstructor.
@@ -417,6 +418,11 @@ typedef struct RECON_CFG_T{
 		       - 1: adhoc split tomography
 		       - 2: minimum variance split tomography (only valid if recon.alg=0)*/
     int warm_restart; /**<Warm restart in CG*/
+    int mvm;        /**<Use the various algorithms recon.alg to assemble a control
+		       matrix to multiply to gradients to get DM commands. If
+		       the algorithm needs PSOL gradient, we will have an
+		       auxillary matrix to multiply to the DM actuators and
+		       subtract from the result.*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -435,22 +441,18 @@ typedef struct SIM_CFG_T{
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/
     /*control */
-    double *apdm;    /**<servo coefficient for high order dm.  A is command. e is
+    dmat *apdm;    /**<servo coefficient for high order dm.  A is command. e is
 			error signal. at time step n, the command is updated by
 			A(n)=A(n-1)*apdm(0)+A(n-2)*ap(1)+...+e(n-2)*ep
 		     */
-    double *apngs;   /**<servo coefficient for ngs modes.*/
-    double *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
-    double epdm;     /**<error gain for DM commands (high order)*/
-    double epngs;    /**<error gain for NGS modes (low order)*/
-    double epupt;    /**<error gain for uplink pointing*/
-    double dpupt;    /**<derivative tracking for uplink pointer. keep 0 to disable*/
+    dmat *epdm;     /**<error gain for DM commands (high order)*/
+    dmat *aplo;   /**<servo coefficient for ngs modes.*/
+    dmat *eplo;     /**<error gain for NGS modes (low order)*/
+    dmat *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
+    dmat *epupt;    /**<error gain for uplink pointing*/
     double epfocus;  /**<error gain for LGS focus tracking with zoom optics*/
     double lpfocus;  /**<parameter for low pass filter of LGS focus tracking with offset*/
     double fov;      /**<The diameter of total fov in arcsec*/
-    int napdm;       /**<number of entries in apdm*/
-    int napngs;      /**<number of entries in apngs*/
-    int napupt;      /**<number of entries in apupt*/
     int mffocus;     /**<method for focus tracing.
 			- 0: no focus tracking.
 			- use CL grads + DM grads - Xhat grad for LGS and NGS.
@@ -479,6 +481,21 @@ typedef struct SIM_CFG_T{
     int dmclip;      /**<derived: Need to clip actuators*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
+    int ahstfocus;   /**<New new mode split in ahst + focus tracking*/
+
+    int mvmport;     /**<Non zero: specify which port does the MVM server run on and connect to it for MVM reconstruction.*/
+    char *mvmhost;   /**<Which host does the MVM server run*/
+    int mvmsize;     /**<number of gradients to send each time. 0 is all.*/
+    int mvmngpu;     /**<number of GPUs to use in server*/
+    int zoomdtrat;   /**<dtrat of the trombone averager*/
+    int zoomshare;   /**<1: All LGS share the same trombone*/
+    double zoomgain; /**<gain of the trombone controller*/
+    int ncpa_calib;  /**<calibrate NCPA*/
+    double *ncpa_thetax; /**<Coordinate for NCPA calibration (arcsec)*/
+    double *ncpa_thetay; /**<Coordinate for NCPA calibration (arcsec)*/
+    double *ncpa_wt;     /**<Weight for each point.*/
+    double *ncpa_hs;     /**<Height of star.*/
+    int ncpa_ndir;       /**<Number of points for NCPA calibration*/
 }SIM_CFG_T;
 /**
    Parameters for Cn square estimation.
@@ -517,7 +534,6 @@ typedef struct DBG_CFG_T{
     int psol;        /**<test add dm command offseted by 1 frame in the future to psol grad*/
     int wamethod;    /**<method to compute wa for ngsmod removal.*/
     int atm;         /**<test special atmosphere*/
-    int keepshm;     /**<keep the atmospehre in the shared memory.*/
     int mvstlimit;   /**<Limit number of modes controled on MVST*/
     int annular_W;   /**<Define the W0/W1 on annular aperture instead of circular*/
     int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
@@ -532,6 +548,7 @@ typedef struct DBG_CFG_T{
     int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
+    int nocgwarm;    /**<Disable warm restart in CG*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -575,6 +592,9 @@ typedef struct LOAD_CFG_T{
     char *HA;        /**<load HA from.*/
     char *GP;        /**<load GP from.*/
     char *GA;        /**<load GA from.*/
+    char *mvm;       /**<load mvm from.*/
+    char *mvmi;      /**<load mvmi from.*/
+    char *mvmf;      /**<load mvmf from.*/
     int mvst;        /**<load MVST mvst_U and mvst_FU. see recon.c*/
     int GS0;         /**<if 1, load GS0 from powfs%d_GS0.bin*/
     int tomo;        /**<if 1, load tomo matrix*/
@@ -623,6 +643,10 @@ typedef struct SAVE_CFG_T{
     int gcovp;       /**<output cumulative gradient covariance average every gcovp step*/
     int ngcov;       /**<number of pairs of gradient covariance to compute*/
     int *gcov;       /**<size of 2*ngcov, specifying wfs for each pair*/
+
+    int mvmi;        /**<save TomoL output of mvm control matrix assembly for warm restart.*/
+    int mvmf;        /**<save FitR output  of mvm control matrix assembly*/
+    int mvm;         /**<save computed mvm control matrix*/
 }SAVE_CFG_T;
 /**
    is a wrapper of all _CFG_T data types.
@@ -663,6 +687,9 @@ typedef struct PARMS_T{
     int ntsurf;      /**<Number of tilted surfaces*/
     int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int pause;       /**<Pause at the end of every time step*/
+    int nlopowfs;    /**<Number of low order wfs types*/
+    int nhipowfs;    /**<Number of high order wfs types*/
+    int ntrspowfs;   /**<Number of tile removed wfs types*/
 }PARMS_T;
 /**
    ARG_T is used for command line parsing.
@@ -675,11 +702,13 @@ typedef struct ARG_T{
     int pause;       /**<pause at the end of every time step*/
     int *gpus;       /**<Index of GPU to use. -1 to disable*/
     int ngpu;        /**<Number of entries in gpus*/
+    int ngpu2;       /**<Number of GPUs to use. Ignore of gpus is set.*/
     char *dirout;    /**<Result output directory*/
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
 }ARG_T;
 PARMS_T* setup_parms(ARG_T *arg);
+void setup_parms_running(PARMS_T *parms, ARG_T *arg);
 void free_parms(PARMS_T *parms);
 /*The following are here so that we don't have to include type.h or utils.h */
 /*convenient constants. used in utils.c */

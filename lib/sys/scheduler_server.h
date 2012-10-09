@@ -81,7 +81,8 @@ typedef struct MONITOR_T{
 }MONITOR_T;
 
 int myhostid(const char *host);
-int make_socket (uint16_t port, int retry);
+int bind_socket (uint16_t port, int type);
+void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*timeout_fun)());
 MONITOR_T *monitor_get(int hostid);
 void monitor_remove(int hostid);
 MONITOR_T *monitor_add(int hostid);
@@ -125,6 +126,6 @@ extern uint16_t PORT;
 extern int nhost;
 extern char** hosts;
 extern int hid;
-#define scheduler_version 0x22
+#define scheduler_version 0x23
 #define BACKTRACE_CMD_LEN 200
 #endif

@@ -20,7 +20,7 @@
 #if defined(__CYGWIN__)
 void GetTempPath(long, char*);
 #endif
-void init_path(void);
+void init_process(void);
 int    get_usage_running(void);
 double get_usage_load(void);
 double get_usage_mem(void);
@@ -35,7 +35,7 @@ int read_usage_cpu(long *user, long *tot);
 void wait_cpu(int nthread);
 double read_self_cpu(void);
 extern int NCPU;  /**<True number of cores*/
-extern int NCPU2; /**<Number of hyper threads. may be larger than NCPU*/
+extern int NTHREAD; /**<Number of hyper threads. may be larger than NCPU*/
 extern int TCK;
 extern long NMEM;
 extern const char *HOME;/*the user home */

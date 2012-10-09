@@ -27,21 +27,25 @@
    Struct for servo filtering
 */
 typedef struct SERVO_T{
-    dmat *mlead;       /**<lead filter temporary storage*/
-    dmat *merrlast;    /**<recorded errro signal from last step*/
-    dmat *mintfirst;   /**<first integrator*/
-    dmat *mint;        /**<second integrator*/
+    dcell *mlead;       /**<lead filter temporary storage*/
+    dcell *merrlast;    /**<recorded errro signal from last step*/
+    dcell *mpreint;     /**<first integrator or other value.*/
+    dcell **mint;       /**<second integrator. It is array to accomodate multiple ap's*/
+    int nmint;          /**<number of cells in mint*/
     int initialized;   /**<is this data initialized*/
 }SERVO_T;
-dcell* servo_typeII_optim(const dmat *psdin, long dtrat, double lgsdt, double pmargin, const dmat* sigman);
-double servo_typeII_residual(const dmat *gain, const dmat *psdin, double fs, double lgsdt);
-void servo_typeII_filter(SERVO_T *st, dmat *merr, double dtngs, const dmat *gain);
-void servo_typeI_filter(SERVO_T *st, dmat *merr, double gain);
+dcell* servo_optim(const dmat *psdin, double dt, long dtrat,  double pmargin, 
+		   const dmat* sigman, int servo_type);
+cmat *servo_Hol(const dmat *nu, double dt, double dtrat, const dmat *gain);
+double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type);
+SERVO_T *servo_new(dcell *merr, const dmat *gain);
+void servo_filter(SERVO_T *st, dcell *merr, double dtngs, const dmat *gain);
+void servo_shift(SERVO_T *st, dmat *ap);
 dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat);
-dmat* servo_typeII_test(dmat *mideal, dmat *gain, double dtngs, int dtrat);
+dmat* servo_test(dmat *mideal, double dtngs, int dtrat, double sigma2n, dmat *gain);
 void servo_free(SERVO_T *st);
 cmat *servo_typeII_Hol(const dmat *gain, double fs, double lgsdt);
-double psd_intelog(double *nu, double *psd, long n);
-double psd_intelog2(dmat *psdin);
+double psd_inte(double *nu, double *psd, long n);
+double psd_inte2(dmat *psdin);
 dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstep);
 #endif

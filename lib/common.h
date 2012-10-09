@@ -111,7 +111,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
-
+#define SEC2RAD 4.848136811095360e-06 //arcsec in unit of radian
+#define RAD2SEC 206264.8062470964 //radian in unit of arcsec
 #ifndef EPS
 #define EPS 1.e-14
 #endif
@@ -144,43 +145,44 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #ifndef error
 #define error(A...) ({char fline[80];					\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stdout, "\033[01;31m%-20s Fatal error: ",fline);	\
-	    fprintf(stdout, A); fprintf(stdout,"\033[00;00m");		\
-	    PRINT_BACKTRACE;						\
+	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
 	    raise(SIGTERM);})
 #define info(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout, "%-20s",fline);			\
-	    fprintf(stdout, A);})
+	    fprintf(stderr, "%-20s",fline);			\
+	    fprintf(stderr, A);})
 #define warning(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout,"\033[01;31m%-20s", fline);		\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
+	    fprintf(stderr,"\033[01;31m%-20s", fline);		\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
+#define warning_once(A...) ({static int done=0; if(!done){ char fline[80]; \
+		snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
+		fprintf(stderr,"\033[01;31m%-20s", fline);		\
+		fprintf(stderr,A);fprintf(stderr,"\033[00;00m");} done=1;})
 
 #define error2(A...) ({							\
-	    fprintf(stdout, "\033[01;31mFatal error\033[00;00m\t");	\
-	    fprintf(stdout, A);						\
-	    PRINT_BACKTRACE;						\
+	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
+	    fprintf(stderr, A);						\
 	    raise(SIGTERM);})
-#define info2(A...) fprintf(stdout, A)
+#define info2(A...) fprintf(stderr, A)
 #define warning2(A...) ({					\
-	    fprintf(stdout,"\033[00;31m");			\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m"); }) 
+	    fprintf(stderr,"\033[00;31m");			\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m"); }) 
 
 #define error3(A...) ({char fline[80];					\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stdout, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
-	    fprintf(stdout, A); fprintf(stdout,"\033[00;00m");		\
-	    PRINT_BACKTRACE;						\
+	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
+	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
 	    raise(SIGTERM);})
 #define warning3(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stdout,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
-	    fprintf(stdout,A);fprintf(stdout,"\033[00;00m");})
+	    fprintf(stderr,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
+	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
 #define info3(A...) ({char fline[80];				\
 	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stdout, "[%s]%-20s",myasctime(),fline);	\
-	    fprintf(stdout, A);})
+	    fprintf(stderr, "[%s]%-20s",myasctime(),fline);	\
+	    fprintf(stderr, A);})
 #endif
 
 #define error_write error("Write failed\n")
@@ -199,7 +201,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #define tic tk=myclockd();
 #define toc(A...) ({info(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
 #define toc2(A...) ({info2(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
-#define toc3 myclockd()-tk
+#define toc22(A) info2("%s takes %.6f seconds.\n",A, myclockd()-tk)
+#define toc3 (myclockd()-tk)
 
 #define format2fn					\
     char fnstore[PATH_MAX]; char *fn=fnstore;		\
@@ -267,15 +270,15 @@ void print_backtrace(int sig);
     signal(SIGQUIT,func)
 
 #define disable_signal_handler	\
-    signal(SIGBUS, SIG_IGN);	\
-    signal(SIGILL, SIG_IGN);	\
-    signal(SIGSEGV,SIG_IGN);	\
-    signal(SIGINT, SIG_IGN);	\
-    signal(SIGPIPE,SIG_IGN);	\
-    signal(SIGTERM,SIG_IGN);	\
-    signal(SIGABRT,SIG_IGN);	\
-    signal(SIGUSR1,SIG_IGN);	\
-    signal(SIGQUIT,SIG_IGN)
+    signal(SIGBUS, SIG_DFL);	\
+    signal(SIGILL, SIG_DFL);	\
+    signal(SIGSEGV,SIG_DFL);	\
+    signal(SIGINT, SIG_DFL);	\
+    signal(SIGPIPE,SIG_DFL);	\
+    signal(SIGTERM,SIG_DFL);	\
+    signal(SIGABRT,SIG_DFL);	\
+    signal(SIGUSR1,SIG_DFL);	\
+    signal(SIGQUIT,SIG_DFL)
 
 
 #endif

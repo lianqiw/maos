@@ -37,5 +37,6 @@ int scheduler_kill_job(int ihost,int pid);
 int scheduler_remove_job(int ihost, int pid);
 int scheduler_launch_drawdaemon(char *fifo);
 char* scheduler_get_drawdaemon(int pid, int direct);
-void  scheduler_shutdown(int *sock, int mode);
+int connect_port(const char *hostname, int port, int block, int mode);
+void  sock_shutdown(int *sock, int mode);
 #endif

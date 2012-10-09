@@ -18,6 +18,7 @@
 
 #ifndef SKYC_PARMS_H
 #define SKYC_PARMS_H
+#include <photon.h>
 /**
    \file skyc/parms.h
    Parameters for simulation.
@@ -63,12 +64,14 @@ typedef struct MAOS_S{
     dmat *mcc_oa_tt2;/**<modal cross coupling matrix between NGS and tip/tilt for on axis only, 2x5*/
     double ngsgrid;  /**<spacing of NGS grid in as*/
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
+    int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
 }MAOS_S;
 
 /**
    Contains parameters for skycoverage.
 */
 typedef struct SKYC_S{
+    ZB_S zb;         /**<Sky background and zero magnitude flux*/
     int verbose;     /**<be verbose at output.*/
     int dbg;         /**<save intermediate information for debugging.*/
     int dbgsky;      /**<only run this sky frame if not -1*/
@@ -91,11 +94,11 @@ typedef struct SKYC_S{
     int ttfbrightest;/**<make ttf the brightest always.*/
     int bspstrehl;   /**<Do bicubic spline interpolation on strehl*/
     int npowfs;      /**<number of powfs, has to match MAOS_S.npowfs*/
-    int nwvl;        /**<number of wavelength, has to match MAOS_S.nwvl*/
     double lat;      /**<Galactic latitude*/
     double lon;      /**<Galactic longitude.*/
     double catscl;   /**<Scale the catlog star count*/
     double patfov;   /**<Patrol FoV in arcsec (diameter)*/
+    double minrad;   /**<minimum radius of the stars (keep out of center science region)*/
     double imperrnm; /**<Implementation error in nm in the center.*/
     double imperrnmb;/**<Implementation error slopt in nm:
 			imperrnm(theta)=sqrt(imperrnm^2+imperrnmb^2*theta^2). The
@@ -135,12 +138,18 @@ typedef struct SKYC_S{
 
     double zc_f;     /**<focus zoom corrector frequency*/
     double zc_zeta;  /**<focus zoom corrector dampling */
-    double na_alpha; /**<sodium PSD parameter. PSD is 10^beta*nu^alpha*/
-    double  na_beta; /**<sodium PSD parameter. PSD is 10^beta*nu^alpha*/
+    double na_alpha; /**<sodium PSD parameter. PSD is beta*f^alpha*/
+    double na_beta;  /**<sodium PSD parameter. PSD is beta*f^alpha*/
+    char *fnrange;   /**<Change of sodium height for LGS. in meter. Replaes na_alpha, na_beta*/
     dmat *resfocus;  /**<residual focus error at each sampling frequency.*/
     char *stars;     /**<file name of not NULL to load stars from*/
     int addws;       /**<add wind shake time series to simulation*/
+    int addfocus;    /**<add focus time series to simulation*/
     double pmargin;  /**<phase margin of type II*/
+    int psdcalc;     /**<Calculate PSD from time series*/
+    char **fnpsf1;   /**<file name for additional otf to be interpolated and
+			multiplied to dtfq. 2 columns. first column is coordinate
+			of otf, and second column of value.*/
 }SKYC_S;
 /**
    Parameters for skycoverage.

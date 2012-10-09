@@ -107,9 +107,9 @@ dmat *denc(dmat *psf, /**<The input array*/
     double rmax=dvec->p[dvec->nx-1];
     double ncomp;
     if(type==-1){
-	ncomp=nextpow2(rmax*2);
+	ncomp=nextfftsize(rmax*2);
     }else{
-	ncomp=nextpow2(rmax);
+	ncomp=nextfftsize(rmax);
     }
     double ncomp_max=psf->nx>psf->ny?psf->nx:psf->ny;
     dmat *psfc;

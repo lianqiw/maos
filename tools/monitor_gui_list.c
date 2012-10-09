@@ -68,7 +68,6 @@ enum{
     COL_COLOR,
     COL_TOT,
 };
-/*#include "gtkcellrendererprogressnew.h" //modify appearance of progress */
 static GtkListStore **lists=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
     GtkListStore *list=lists[p->hid];
@@ -141,21 +140,16 @@ static void list_update_progress(PROC_T *p){
 	snprintf(tmp,64,"%ldh%02ld", resth, restm);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
 	snprintf(tmp,64,"%ldh%02ld", toth, totm);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
     }else{
-	snprintf(tmp,64, "%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.simend,
-		 step, restm,rests,totm,tots);	
  	snprintf(tmp,64,"%02ld:%02ld", restm, rests);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
 	snprintf(tmp,64,"%02ld:%02ld", totm, tots);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
      }
     
     if(toth>99){
-	snprintf(tmp,64, "%d %5.2fs %ldh/%ldh",p->status.simend,
-		 step, resth,toth);
+	snprintf(tmp,64, "%d/%d %5.2fs %ldh/%ldh",p->status.isim+1,p->status.simend, step, resth,toth);
     }else if(toth>0){
-	snprintf(tmp,64, "%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.simend,
-		 step, resth,restm,toth,totm);
+	snprintf(tmp,64, "%d/%d %5.2fs %ldh%02ld/%ldh%02ld",p->status.isim+1,p->status.simend, step, resth,restm,toth,totm);
     }else{
-	snprintf(tmp,64, "%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.simend,
-		 step, restm,rests,totm,tots);	
+	snprintf(tmp,64, "%d/%d %5.2fs %2ld:%02ld/%ld:%02ld",p->status.isim+1,p->status.simend, step, restm,rests,totm,tots);	
     }
     //snprintf(tmp,64,"%d/%d",p->status.isim+1,p->status.simend);
     gtk_list_store_set(list, &iter, COL_STEP,tmp, COL_STEPP,p->frac*100, -1);
@@ -269,8 +263,8 @@ static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ..
 	error("Invalid\n");
     }
     gtk_tree_view_column_set_title(col, title);
-    gtk_tree_view_column_set_spacing(col, 1);
-    gtk_tree_view_column_set_alignment(col, 0.5);
+    gtk_tree_view_column_set_spacing(col, 2);
+    gtk_tree_view_column_set_alignment(col, 1);
     if(width>0){/*minimum width*/
 	gtk_tree_view_column_set_min_width(col, width);
 	gtk_tree_view_column_set_expand(col,TRUE);

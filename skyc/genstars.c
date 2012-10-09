@@ -31,6 +31,8 @@
 /**
    The sort function for stars. Sort stars according total flux.
  */
+static double Z_J=3.7666e9;
+static double Z_H=2.7206e9;
 static int sortfun(const double *p1, const double *p2){
     double tot1=Z_J*pow(10,-0.4*p1[2])+Z_H*pow(10,-0.4*p1[3]);/*tot flux */
     double tot2=Z_J*pow(10,-0.4*p2[2])+Z_H*pow(10,-0.4*p2[3]);
@@ -52,26 +54,39 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 ){
     char fn[80];
     double cat_fov;/*catalogue fov */
+    int Jind=-1;
     if(nwvl==2 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10){
 	snprintf(fn,80,"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
 	cat_fov=5.0;/*5 arc-degree squared. */
+	Jind=0;
+    }else if(nwvl==3 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10 && fabs(wvls[2]-2.2e-6)<1.e-10){
+	snprintf(fn,80,"besancon/JHK_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);
+	cat_fov=5.0;/*5 arc-degree squared. */
+	Jind=0;
     }else{
-	error("We only have stars for J+H band. Please fill this part\n");
+	Jind=-1;
+	error("We only have stars for J+H and J+H+K band. Please fill this part\n");
     }
-    info("Loading star catalogue from \n%s\n",fn);
+    info2("Loading star catalogue from %s\n",fn);
     dmat *catalog=dread("%s",fn);
     if(catalog->ny!=nwvl){
 	error("Catalogue and wanted doesn't match\n");
     }
     long ntot=catalog->nx;
-    double navg=M_PI*pow(fov/2./3600.,2)/cat_fov * ntot * catscl;
-    info("Average number of stars: %g, after scaled by %g\n", navg, catscl);
+    double nsky0=0;
     dcell *res=dcellnew(nsky,1);
     PDMAT(catalog, pcatalog);
     double fov22=pow(fov/2/206265,2);
-    for(long isky=0; isky<nsky; isky++){
-	long nstar=randp(rstat, navg);
-	if(nstar>0){
+
+
+    double navg0=M_PI*pow(fov/2./3600.,2)/cat_fov * ntot;
+    if(catscl>0){//regular sky coverage sim
+	double navg=navg0*catscl;
+	info2("Average number of stars: %g, after scaled by %g\n", navg, catscl);
+	/*generate nstart && magnitude according to distribution.*/
+	for(long isky=0; isky<nsky; isky++){
+	    long nstar=randp(rstat, navg);
+	    if(nstar==0) continue;
 	    res->p[isky]=dnew(nwvl+2, nstar);
 	    PDMAT(res->p[isky],pres);
 	    for(long istar=0; istar<nstar; istar++){
@@ -79,18 +94,59 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    pres[istar][2+iwvl]=pcatalog[iwvl][ind];
 		}
-		/*randomly draw the star location. */
-		double r=sqrt(fov22*randu(rstat));
-		double th=2*M_PI*randu(rstat);
-		pres[istar][0]=r*cos(th);
-		pres[istar][1]=r*sin(th);
 	    }
-	    /*sort the stars from brigtest to dimmest */
-	    qsort(res->p[isky]->p, res->p[isky]->ny, res->p[isky]->nx*sizeof(double), 
-		  (int(*)(const void*, const void*))sortfun);
-	}else{
-	    res->p[isky]=NULL;
 	}
+    }else{
+	/*instead of doing draws on nb of stars, we scan all possibilities and
+	  assemble the curve in postprocessing.  catscl is negative, with
+	  absolute value indicating the max number of J<=19 stars to consider*/
+	long nmax=round(-catscl);
+	nsky0=nsky/nmax;
+	if(nsky0*nmax!=nsky){
+	    error("nsky=%ld, has to be dividable by max # of stars=%ld", nsky, nmax);
+	}
+	int counti[nmax];//record count in each bin
+	memset(counti, 0, sizeof(int)*nmax);
+	int count=0;
+	while(count<nsky){
+	    long nstar=randp(rstat, navg0);
+	    if(nstar==0) continue;
+	    dmat *tmp=dnew(nwvl+2, nstar);
+	    PDMAT(tmp, pres);
+	    int J19c=0;
+	    for(long istar=0; istar<nstar; istar++){
+		long ind=round(ntot*randu(rstat));
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    pres[istar][2+iwvl]=pcatalog[iwvl][ind];
+		}
+		if(pres[istar][2+Jind]<=19){
+		    J19c++;
+		}
+	    }
+	    if(J19c<=nmax && counti[J19c-1]<nsky0){
+		int isky=counti[J19c-1]+(J19c-1)*nsky0;
+		res->p[isky]=dref(tmp);
+		count++;
+		counti[J19c+1]++;
+	    }
+	    dfree(tmp);
+	}
+    }
+    /*Fill in the coordinate*/
+    for(long isky=0; isky<nsky; isky++){
+	if(!res->p[isky]) continue;
+	long nstar=res->p[isky]->ny;
+	PDMAT(res->p[isky],pres);
+	for(long istar=0; istar<nstar; istar++){
+	    /*randomly draw the star location. */
+	    double r=sqrt(fov22*randu(rstat));
+	    double th=2*M_PI*randu(rstat);
+	    pres[istar][0]=r*cos(th);
+	    pres[istar][1]=r*sin(th);
+	}
+	/*sort the stars from brigtest to dimmest */
+	qsort(res->p[isky]->p, res->p[isky]->ny, res->p[isky]->nx*sizeof(double), 
+	      (int(*)(const void*, const void*))sortfun);
     }
     dfree(catalog);
     return res;

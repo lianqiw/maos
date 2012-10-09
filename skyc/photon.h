@@ -18,13 +18,13 @@
 
 #ifndef SKYC_PHOTON_H
 #define SKYC_PHOTON_H
-
-void photon_flux(double *Np, double *Nptot, double *Nbtot, double *QCSNR, double *QCNEA,
+typedef struct ZB_S{
+    double ZJ, ZH, ZK;   /**<zero magnitude flux*/
+    double BJ, BH, BK;   /**<sky background*/
+}ZB_S;
+void photon_flux(const ZB_S *zb, double *Np, double *Nptot, double *Nbtot, double *QCSNR, double *QCNEA,
 		 int nwvl, double* wvls, double *mags, 
 		 double dxsa, int iscircle, double pixtheta, 
 		 double dt, double za, double *strehl, double imperrnm,
 		 double *thruput, double *qe, double rne);
-extern const double Z_J;
-extern const double Z_H;
-
 #endif

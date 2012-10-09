@@ -68,10 +68,60 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 			*pdtheta;
 		}
 	    }
+	    if(parms->skyc.fnpsf1[ipowfs]){
+		warning("powfs %d has additional otf to be multiplied\n", ipowfs);
+		dcell *psf1c=dcellread("%s", parms->skyc.fnpsf1[ipowfs]);
+		dmat *psf1=NULL;
+		if(psf1c->nx == 1){
+		    psf1=dref(psf1c->p[0]);
+		}else if(psf1c->nx==parms->maos.nwvl){
+		    psf1=dref(psf1c->p[iwvl]);
+		}else{
+		    error("skyc.fnpsf1 has wrong dimension\n");
+		}
+		dcellfree(psf1c);
+		if(psf1->ny!=2){
+		    error("skyc.fnpsf1 has wrong dimension\n");
+		}
+		dmat *psf1x=dnew_ref(psf1->nx, 1, psf1->p);
+		dmat *psf1y=dnew_ref(psf1->nx, 1, psf1->p+psf1->nx);
+		dmat *psf2x=dnew(ncomp*ncomp, 1);
+		for(int iy=0; iy<ncomp; iy++){
+		    int jy=iy-ncomp2;
+		    for(int ix=0; ix<ncomp; ix++){
+			int jx=ix-ncomp2;
+			psf2x->p[ix+iy*ncomp]=sqrt(jx*jx+jy*jy)*dtheta;
+		    }
+		}
+		info("powfs %d, iwvl=%d, dtheta=%g\n", ipowfs, iwvl, dtheta*206265000);
+		dwrite(psf2x, "powfs%d_psf2x_%d", ipowfs,iwvl);
+		dmat *psf2=dinterp1(psf1x, psf1y, psf2x);
+		normalize_sum(psf2->p, psf2->nx*psf2->ny, 1);
+		psf2->nx=ncomp; psf2->ny=ncomp;
+		dwrite(psf2, "powfs%d_psf2_%d", ipowfs,iwvl);
+		cmat *otf2=cnew(ncomp, ncomp);
+		cfft2plan(otf2, -1);
+		ccpd(&otf2, psf2);
+		cfftshift(otf2);
+		cfft2(otf2, -1);
+		cfftshift(otf2);
+		cwrite(otf2, "powfs%d_otf2_%d", ipowfs, iwvl);
+		cwrite(nominal, "powfs%d_dtf%d_nominal_0",ipowfs,iwvl);
+		for(int i=0; i<ncomp*ncomp; i++){
+		    nominal->p[i]*=otf2->p[i];
+		}
+		cwrite(nominal, "powfs%d_dtf%d_nominal_1",ipowfs,iwvl);
+		dfree(psf1x);
+		dfree(psf1y);
+		dfree(psf2x);
+		dfree(psf1);
+		cfree(otf2);
+		dfree(psf2);
+	    }
 	    cfftshift(nominal);
 	    cfft2(nominal,-1);
 	    cfftshift(nominal);
-	    cifft2(nominal,1);
+	    cfft2i(nominal,1);
 	    ccp(&powfs[ipowfs].dtf[iwvl].nominal, nominal);
 	    cfree(nominal);
 

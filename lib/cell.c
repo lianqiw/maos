@@ -510,7 +510,7 @@ X(mat) *X(cell2m)(const X(cell) *A){
 /**
    convert a vector to cell using dimensions specified in dims. Reference the vector
 */
-X(cell)* X(2cellref)(const X(mat) *A, int*dims, int ndim){
+X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim){
     long nx=0;
     for(int ix=0; ix<ndim; ix++){
 	nx+=dims[ix];

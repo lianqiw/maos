@@ -34,13 +34,7 @@
 #define ITYPE CHOLMOD_INT
 #endif
 #define CHOL_SIMPLE 0
-struct spchol{
-    cholmod_factor *L;
-    cholmod_common *c;
-    dsp   *Cl;/*The sparse matrix (lower). A=Cl*CL' with reordering.*/
-    dsp   *Cu;/*The sparse matrix (upper). A=Cu'*Cu with reordering. Cu==CL'*/
-    spint *Cp;/*The Permutation vector.*/
-};
+
 /**
    \file chol.c
    Wraps the CHOLESKY Library to provide a simple interface.*/
@@ -104,11 +98,11 @@ static spchol* chol_factorize_do(dsp *A_in){
     MOD(start)(out->c);
     cholmod_sparse *A=sp2chol(A_in);
     out->c->status=CHOLMOD_OK;
-#if CHOL_SIMPLE == 1
-    out->c->final_super=0;/*we want a simplicity result. */
-    out->c->final_ll=1;   /*Leave in LL instead of LDL format. */
-    out->c->final_asis=0; /*do the conversion as shown above. */
-#endif
+#if CHOL_SIMPLE
+	out->c->final_super=0;/*we want a simplicity result. */
+	out->c->final_ll=1;   /*Leave in LL instead of LDL format. */
+	out->c->final_asis=0; /*do the conversion as shown above. */
+#endif    
     /*Try AMD ordering only: SLOW */
     /*
       out->c.nmethods=1;
@@ -142,7 +136,7 @@ static spchol* chol_factorize_do(dsp *A_in){
 	error("Analyze failed\n");
     }
     MOD(factorize)(A,out->L, out->c);
-#if CHOL_SIMPLE == 1 && 0
+#if CHOLMOD_SIMPLE
     if(!out->c->final_asis){
 	/*Our solver is much slower than the simplicity solver, or the supernodal solver. */
 	warning2("Converted to our format.");
@@ -159,7 +153,7 @@ static spchol* chol_factorize_do(dsp *A_in){
 	out->c=NULL;
 	out->L=NULL;
     }
-#endif	
+#endif
     free(A);/*just free our reference.*/
     return out;
 }
@@ -227,7 +221,7 @@ spchol* chol_factorize(dsp *A_in){
    final result is always in simplicity factor.
 */
 void chol_convert(spchol *A, int keep){
-    if(!A || !A->L) return;
+    if(!A || !A->L || A->Cp || A->Cl) return;
     cholmod_factor *L=A->L;
     A->Cp=malloc(sizeof(spint)*A->L->n);
     memcpy(A->Cp, A->L->Perm, sizeof(spint)*A->L->n);
@@ -448,9 +442,9 @@ void chol_solve(dmat **x, spchol *A, dmat *y){
 	}else{
 	    if(!*x) *x=dnew(y->nx, y->ny);
 	    CHOLSOLVE_T data={*x,A,y};
-	    thread_t info[NCPU];
-	    thread_prep(info, 0, y->ny, NCPU, chol_solve_each, &data);
-	    CALL_THREAD(info, NCPU, 1);
+	    thread_t info[NTHREAD];
+	    thread_prep(info, 0, y->ny, NTHREAD, chol_solve_each, &data);
+	    CALL_THREAD(info, NTHREAD, 1);
 	}
     } 
 }
@@ -671,9 +665,9 @@ void chol_solve_lower(dmat **x, spchol *C, dmat *y){
 	}
     }else{/*When there are multiple columns. */
 	CHOL_LOWER_T data={C,y2};
-	thread_t info[NCPU];
-	thread_prep(info, 0, y2->ny, NCPU, chol_solve_lower_each, &data);
-	CALL_THREAD(info, NCPU, 1);
+	thread_t info[NTHREAD];
+	thread_prep(info, 0, y2->ny, NTHREAD, chol_solve_lower_each, &data);
+	CALL_THREAD(info, NTHREAD, 1);
     }
     chol_perm_b(x, perm, y2);
     if(*x!=y2) dfree(y2);

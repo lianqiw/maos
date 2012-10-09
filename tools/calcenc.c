@@ -113,7 +113,7 @@ int main(int argc, char *argv[]){
     }
     double rmax=0;
     double dstep=1;
-    int nthread=sysconf( _SC_NPROCESSORS_ONLN );
+    int nthread=NCPU;
     int ipos=0;
     int type=0;/*default is square */
     /*

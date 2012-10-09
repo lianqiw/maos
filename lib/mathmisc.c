@@ -26,7 +26,8 @@
 */
 /**
    normalize vector to sum to norm;*/
-void normalize(double *p, long nloc, double norm){
+void normalize_sum(double *p, long nloc, double norm){
+    if(!nloc) return;
     double ss=norm/dotdbl(p,NULL,NULL,nloc);
     for(int i=0; i<nloc; i++){
 	p[i]*=ss;
@@ -35,6 +36,7 @@ void normalize(double *p, long nloc, double norm){
 /**
    normalize vector to max to max;*/
 void normalize_max(double *p, long nloc, double max){
+    if(!nloc) return;
     double ss=max/maxabs(p,nloc);
     for(int i=0; i<nloc; i++){
 	p[i]*=ss;
@@ -391,6 +393,47 @@ long nextpow2(long n){
     }
     return n+1;
 }
+/**
+   Find the next number suitable for FFT. Use radix of 2, 3, 5, 7
+*/
+long nextfftsize(long n){
+    const int nradix=4;
+    const int radixs[]={2,3,5,7};
+    int selected[4];
+    int divisible=0;
+    long n2, n3;
+ 
+    do{
+	n2=n;
+	n3=1;
+	memset(selected, 0, nradix*sizeof(int));
+	/*We only allow mix of two radices. More will slow down fft*/
+	do{
+	    divisible=0;
+	    for(int irad=0; irad<nradix; irad++){
+		int radix=radixs[irad];
+		int ratio=n2/radix;
+		if(ratio*radix==n2){/*no remainder*/
+		    selected[irad]=1;
+		    n2=ratio;
+		    n3*=radix;
+		    divisible=1;
+		}
+	    }
+	}while(divisible && n2>1);
+	/*If there is remainder not divisble by 2, 3, 5, or 7. Increase n2 by 1 and
+	  test again.*/
+	int count=0;
+	for(int i=0; i<nradix; i++){
+	    count+=selected[i];
+	}
+	if(count>2){
+	    n2=n;
+	}
+	n++; 
+    }while(n2>1);
+    return n3;
+}
 unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
     assert((n & (n-1))==0);
     unsigned long m=-1;
@@ -398,4 +441,25 @@ unsigned long mylog2(unsigned long n){/*find m so that pow(2,m)==n. */
 	m++;
     }
     return m;
+}
+double golden_section_search(golden_section_fun f, void *param, 
+			     double x1, double x4, double tau){
+    static double resphi= 0.381966011250105;/*2-0.5*(1+sqrt(5)); */
+    double x2=(x4-x1)*resphi+x1;
+    double f2=f(param, x2);
+    double x3, f3;
+    /*stop searching. */
+    while(fabs(x4-x1) > tau * (fabs(x1)+fabs(x4))){
+	x3=(x4-x2)*resphi+x2;
+	f3=f(param, x3);
+	if(f3<f2){
+	    x1=x2;
+	    x2=x3;
+	    f2=f3;
+	}else{
+	    x4=x1;
+	    x1=x3;
+	}	    
+    }
+    return 0.5*(x4+x1);
 }

@@ -199,6 +199,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
 		 dcell *dc,          /**<If loc ismpety, use cell to plot curves*/
 		 const int32_t *style,  /**<Style of each point*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
+		 const char *xylog,  /**<Whether use logscale for x, y*/
 		 int ncir,           /**<Number of circles*/
 		 double (*pcir)[4],  /**<Data for the circles: x, y origin, radius, and color*/
 		 char **legend,/**<ngroup number of char**/
@@ -253,6 +254,10 @@ void plot_points(char *fig,          /**<Category of the figure*/
     if(limit){/*xmin,xmax,ymin,ymax */
 	FWRITEINT(pfifo, FIFO_LIMIT);
 	FWRITE(limit, sizeof(double), 4, pfifo);
+    }
+    if(xylog){
+	FWRITEINT(pfifo, FIFO_XYLOG);
+	FWRITE(xylog, sizeof(char), 2, pfifo);
     }
     if(format){
 	FWRITECMDSTR(pfifo,FIFO_NAME,fn);

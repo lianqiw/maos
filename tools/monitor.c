@@ -230,7 +230,8 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
     gsize nread;
     int cmd[3];
     if(cond&G_IO_HUP || cond&G_IO_ERR || cond&G_IO_NVAL){
-	/*warning2("Lost connection to %s\n", hosts[host_from_sock(sock)]); */
+	int ih=host_from_sock(sock);
+	warning2("Lost connection to %s\n", ih>-1?hosts[ih]:"Unknown");
 	return FALSE;
     }
     GIOStatus status;
@@ -337,48 +338,7 @@ int scheduler_connect(int ihost, int block, int mode){
 	ihost=hid;
     }
     host=hosts[ihost];
-    int sock;
- 
-    struct sockaddr_in servername;
- 
-    /* Create the socket. */
-    sock = socket (PF_INET, SOCK_STREAM, 0);
-    socket_tcp_keepalive(sock);
-    if (sock < 0) {
-	perror ("socket (scheduler)");
-	return sock;
-    }
-
-    int flag=fcntl(sock,F_GETFD,0);
-    if(flag == -1) {
-	warning("flag==-1\n");
-	flag=0;
-    }
-    flag |= FD_CLOEXEC; /*close on exec. */
-    fcntl(sock, F_SETFD, flag);
-    
-    if(init_sockaddr (&servername, host, PORT)){
-	/*	warning3("Unable to init_sockaddr.\n"); */
-	close(sock);
-	return -1;
-    }
-    int count=0;
-    fcntl(sock, F_SETFD, O_NONBLOCK);
-    while(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
-	if(!block){
-	    close(sock);
-	    return -1;
-	}
-	sleep(4);
-	count++;
-	if(count>1000){
-	    close(sock);
-	    sock=-1;
-	    warning("Failed to connect to scheduer after 1000 trials.\n");
-	}
-    }
-    scheduler_shutdown(&sock,mode);
-    return sock;
+    return connect_port(host, PORT, block, mode);
 }
 
 /**
@@ -438,7 +398,9 @@ static void add_host_thread(void *value){
 		if(write(sock,cmd,sizeof(int)*2)!=sizeof(int)*2){
 		    hsock[ihost]=0;
 		}else{
-		    /*2010-07-03:we don't write. to detect remote close. */
+		    /*
+		      host is connected. 
+		      2010-07-03:we don't write. to detect remote close. */
 		    shutdown(sock,SHUT_WR);
 		    gdk_threads_enter();
 		    GIOChannel *channel=g_io_channel_unix_new(sock);
@@ -452,18 +414,15 @@ static void add_host_thread(void *value){
 			 respond,GINT_TO_POINTER(sock),channel_removed);
 		    
 		    g_io_channel_unref(channel);
-		    gdk_threads_leave();
 		    hsock[ihost]=sock;
+		    host_up(ihost);
+		    gdk_threads_leave();
 		}
-	    }
-	    if(hsock[ihost]){
-		gdk_threads_enter();
-		host_up(ihost);
-		gdk_threads_leave();
 	    }
 	}
 	
 	pthread_mutex_lock(&pmutex);
+	/*sleep 5 seconds before retry. */
 	if(hsock[ihost]){/*host is up. sleep */
 	    pthread_cond_wait(&pcond, &pmutex);
 	}else{/*sleep 5 seconds before retry. */
@@ -472,7 +431,8 @@ static void add_host_thread(void *value){
 	    abstime.tv_nsec=0;
 	    pthread_cond_timedwait(&pcond, &pmutex, &abstime);
 	}
-	pthread_mutex_unlock(&pmutex);
+    	pthread_mutex_unlock(&pmutex);
+	sleep(1);
     }
 }
 static void add_host_wakeup(void){

@@ -46,6 +46,7 @@ typedef struct APER_T{
     long *nembed;        /**<dimension of embed.*/
     double fcp;          /**<piston correction in focus term.*/
     dcell *opdadd;       /**<OPD surface for each evaluation direction.*/
+    dcell *opdfloc;      /**<OPD surface for each evalution direction defined on floc*/
 }APER_T;
 /**
    contains the data associated with a detector transfer function for a
@@ -120,8 +121,8 @@ typedef struct POWFS_T{
     double areascale;   /**<1./max(area noramlized by dsa*dsa)*/
     double (*misreg)[2];/**<pure misregistration taken from parms->powfs[ipowfs].misreg*/
     /*NCPA */
-    dcell *ncpa;        /**<NCPA OPDs to add to WFS OPD during simulation.*/
-    dcell *ncpa_grad;   /**<NCPA grads to subtract from measurement. */
+    dcell *opdbias;     /**<OPD bias to be used for matched filter generation*/
+    dcell *gradoff;     /**<Offset to grads to subtract from measurement. */
     /*Physical optics */
     DTF_T *dtf;         /**<array of dtf for each wvl*/
     /*LGS Physical Optics */
@@ -162,6 +163,9 @@ typedef struct POWFS_T{
     
     dcell *opdadd;      /**<Additional OPD surfaces for each WFS*/
     dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
+    long *embed;        /**<Embedding index for field stop computing*/
+    long nembed;        /**<dimension of embed.*/
+    dmat *fieldstop;    /**<The field stop mask*/
 }
 POWFS_T;
 
@@ -184,6 +188,7 @@ typedef struct NGSMOD_T{
     dcell *Ptt;     /**<Invidual DM tip/tilt removal.*/
     spcell *Wa;     /**<Aperture weighting. Ha'*W*Ha. It has zeros in diagonal. Add tikholnov*/
     int nmod;       /**<nmod: 5 for 2 dm, 2 for 1 dm.*/
+    int ahstfocus;  /**<records parms->sim.ahstfocus*/
 }NGSMOD_T;
 /**
    contains data for Fourier Domain Preconditioner.
@@ -194,13 +199,11 @@ typedef struct FDPCG_T{
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
     long *perm;    /**<Permutation vector to get block diagonal matrix*/
     long nxtot;    /**<Total number of reconstructed phase points*/
-    cmat *xhat;    /**<Intermediate matrices*/
-    cmat *xhat2;   /**<Intermediate matrices*/
-    ccell *xhati;  /**<Intermediate matrices*/
-    ccell *xhat2i; /**<Intermediate matrices*/
+    /*xhat, xhat2 has been removed for thread safety issues.*/
     long **xembed; /**<index to embed nonsquare opd on xloc to square map.*/
-    double *scale; /**<Scaling factor for each layer*/
     int square;    /**<Whether xloc is square*/
+    int scale;     /**<Do we need to scale after fft.*/
+    int half;      /**<Do we use only half of the FFT result (hermitian property)*/
 }FDPCG_T;
 
 /**
@@ -210,10 +213,13 @@ typedef struct MOAO_T{
     int used;         /**<Whether this MOAO is used or not*/
     map_t *amap;      /**<Actuator map.*/
     loc_t *aloc;      /**<Actuator grid*/
+    long *aembed;     /**<index to embed phi on aloc to square geometry of amap_nx*amap_ny.*/
     spcell *HA;       /**<Propagator from this aloc to PLOC*/
     dcell *NW;        /**<null modes and constraints*/
     dmat *W1;         /**<Weighting matrix on PLOC. same as recon->W1*/
     dsp *W0;          /**<Weighting matrix on PLOC. same as recon->W0*/
+    dcell *actcpl;    /**<actuator coupling factor. 0 means actuator is outside
+			 of FoV and need to be slaved.*/
     spcell *actslave; /**<Slaving operator for actuators not illuminated*/
     dmat *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     icell *actstuck;  /**<stuck actuators*/
@@ -268,7 +274,11 @@ typedef struct RECON_T{
 
     loc_t **aloc;      /**<actuator grid*/
     map_t **amap;      /**<square grid of actuators*/
-    long **aembed;      /**<index to embed phi on aloc to square geometry of aloc_nx*aloc_ny.*/
+    long  *anx;        /**<Size of each amap*/
+    long  *any;        /**<Size of each amap*/
+    long  *anloc;      /**<Size of each aloc*/
+    long  *ngrad;      /**<Size of each grad for each wfs*/
+    long **aembed;     /**<index to embed phi on aloc to square geometry of aloc_nx*aloc_ny.*/
     loc_t **alocm;     /**<misregistered actuator grid for ray tracing*/
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
@@ -290,7 +300,6 @@ typedef struct RECON_T{
     spcell *HXWtomo;   /**<Like GXtomo*/
     spcell *GX;        /**<Gradient operator for all WFS from each layer of xloc*/
     spcell *GXtomo;    /**<GX for tomography. excluding NGS in split tomography*/
-    spcell *GXhi;      /**<GX for high order WFS.*/
     spcell *GXlo;      /**<GX for low order WFs*/
     spcell *GXfocus;   /**<GX used for focus tracking.*/
     dcell *GXL;        /**<dense GX for low order WFS in MV split tomography.*/
@@ -302,6 +311,7 @@ typedef struct RECON_T{
     spcell *GAhi;      /**<GA of high order WFS.*/
     spcell *HXF;       /**<ray tracing propagator from xloc to floc for fitting directions.*/
     spcell *HA;        /**<ray tracing from aloc to floc for fitting directions.*/
+    spcell *HA_ncpa;   /**<ray tracing from aloc to floc for NCPA directions*/
     dcell *TT;         /**<TT modes for LGS WFS*/
     dcell *PTT;        /**<pinv of TT for tt removal from LGS gradients*/
     dcell *DF;         /**<Differential focus modes for LGS wfs*/
@@ -310,6 +320,7 @@ typedef struct RECON_T{
     dcell *PTTF;       /**<pinv of TTF*/
     spcell *ZZT;       /**<single point piston constraint in tomography.*/
     dcell *fitNW;      /**<null modes for DM fit.*/
+    dcell *actcpl;     /**<actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved.*/
     spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     spcell *actinterp; /**<Interpolation operator for floating actuators. Slaving does not work well in CG. */
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
@@ -325,13 +336,19 @@ typedef struct RECON_T{
     MUV_T FL;          /**<DM fit left hand size matrix*/
     MUV_T LR;          /**<least square reconstructor rhs*/
     MUV_T LL;          /**<least square reconstructor lhs. solve LL*x=LR*y*/
+    dcell *MVM;        /**<Matrix vector multiply*/
+    dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */
-    dcell *RFlgs;      /**<focus reconstruction from each LGS grad*/
-    dcell *RFngs;      /**<focus reconstruction from NGS grad.*/
-    dcell *RFtomo;     /**<focus recon from reconstructed X.*/
+    dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
+    dcell *RFlgsx;     /**<focus reconstruction for each LGS from opdr*/
+    dcell *RFlgsa;     /**<focus reconstruction for each LGS from dm.*/
+    dcell *RFngsg;     /**<focus reconstruction for TTF NGS from grad.*/
+    dcell *RFngsx;     /**<focus reconstruction for TTF NGS from opdr.*/
+    dcell *RFngsa;     /**<focus reconstruction for TTF NGS from dm*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
+    dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
     int lowfs_gtilt;   /**<=1 if any low order wfs use gtilt in recon/simu*/
     int npsr;          /**<number of reconstructor phase screens.*/
     int ndm;           /**<number of DMs;*/
@@ -339,16 +356,9 @@ typedef struct RECON_T{
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
     int cxx;           /**<records parms->tomo.cxx*/
+    int desplitlrt;    /**<disable dbg.splitlrt.*/
 }RECON_T;
 
-/**
-   contains internal data for a type II integrator
-*/
-typedef struct TYPEII_T{
-    dcell *lead;       /**<Output of lead filter*/
-    dcell *errlast;    /**<Record error in last time*/
-    dcell *firstint;   /**<First integrator output*/
-}TYPEII_T;
 typedef struct SIM_SAVE_T{
     /*cellarrs to save telemetry data.*/
     cellarr** wfspsfout; /**<special file to save wfs psf history*/
@@ -359,14 +369,16 @@ typedef struct SIM_SAVE_T{
     cellarr** evlpsfhist;    /**<to save time history of science field psf*/
     cellarr** evlopdcov;     /**<science field OPD covariance*/
     cellarr** evlopdmean;    /**<science field OPD mean*/
+    cellarr* evlopdcovol;    /**<science field OPD covariance (open loop)*/
+    cellarr* evlopdmeanol;   /**<science field OPD mean (open loop)*/
     cellarr** evlpsfmean_ngsr;    /**<science field psf CL time average with NGS mode removed*/
     cellarr** evlpsfhist_ngsr;    /**<to save time history of science field psf with NGS mode removed*/
     cellarr** evlopdcov_ngsr;     /**<science field OPD covariance with NGS mode removed*/
     cellarr** evlopdmean_ngsr;    /**<science field OPD mean with NGS mode removed.*/
     cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
     /*Deformable mirror. */
-    cellarr *dmerr_hi;
-    cellarr *dmfit_hi;
+    cellarr *dmerr;
+    cellarr *dmfit;
     cellarr *dmpttr;
     cellarr *dmreal;
     cellarr *dmcmd;
@@ -389,8 +401,8 @@ typedef struct SIM_SAVE_T{
     cellarr **gradol;
     cellarr **intsny;
     cellarr **intsnf;
-    cellarr **moao_evl;
-    cellarr **moao_wfs;
+    cellarr **dm_evl;
+    cellarr **dm_wfs;
     /*covariances */
 }SIM_SAVE_T;
 /*
@@ -471,10 +483,10 @@ typedef struct SIM_T{
     dcell *clemp;      /**<lgs/ngs mod error per direction. only on-axis is computed.*/
     dmat *corrNGSm;    /**<Correction of NGS mode. (integrator output)*/
     dmat *cleNGSm;     /**<Close loop ngs mods in split tomogrpahy. */
+    dmat *oleNGSm;     /**<Open loop ngs mods in split tomogrpahy. */
     dcell *cleNGSmp;   /**<(M'*w*phi);*/
+    dcell *oleNGSmp;   /**<(M'*w*phi); for OL*/
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
-    dmat *gtypeII_lo;  /**<gain for type II array.*/
-
     /*DM commands.*/
     dcell *dmcmd;      /**<This is the final command send to DM.*/
     dcell *dmcmdlast;  /**<The final command for last time step.*/
@@ -487,32 +499,34 @@ typedef struct SIM_T{
     map_t **dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
-    dcell **dmint;     /**<dm integrator. (used of fuseint==1)*/
+    SERVO_T *dmint;     /**<dm integrator. (used of fuseint==1)*/
     HYST_T**hyst;      /**<Hysterisis computation stat*/
 
     /*High order*/
-    dcell *dmfit_hi;   /**<direct high order fit output*/
-    dcell *dmerr_hi;   /**<high order dm error signal.*/
-    dcell **dmint_hi;  /**< integrator for high order (only if fuseint==0)*/
+    dcell *dmfit;   /**<direct high order fit output*/
+    dcell *dmerr;   /**<high order dm error signal.*/
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
-    dcell *Merr_lo_keep;/**<Keep Merr_lo for PSF recon.*/
-    dcell **Mint_lo;   /**<NGS integrator (only used if fuseint==0)*/
-    TYPEII_T *MtypeII_lo;  /**<intermediate results for type II/lead filter*/  
+    dcell *Merr_lo_store;/**<Stores Merr_lo.*/
+    SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     
     /*llt pointing loop*/
     dcell *upterr;     /**<uplink error*/
-    dcell *upterrlast; /**<uplink error from last step*/
     dcell *uptreal;    /**<uplink real*/
-    dcell **uptint;    /**<uplink integrator output.*/
+    SERVO_T *uptint;    /**<uplink integrator output.*/
     dcell *upterrs;    /**<mmaped file to store upterr history*/
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
     /*focus tracking loop*/
+    dcell *focuslgsx;  /**<LGS focus estimated from opdr*/
+    dcell *focusngsx;  /**<NGS focus estimated from opdr*/
     dcell *focuslpf;   /**<focus tracking low pass filter*/
-    dcell *focusint;   /**<focus tracking integrator*/
-
+    dcell *zoomavg;    /**<Trombone averager*/
+    dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
+    dcell *zoomint;    /**<Trombone integrator*/
+    dcell *zoompos;    /**<Trombone position history. for saving*/
+    dcell *lgsfocus;   /**<LGS focus error*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/
@@ -520,6 +534,8 @@ typedef struct SIM_T{
     dcell *evlpsfolmean;  /**<science field OL PSF time averging*/
     dcell *evlopdcov;     /**<science field opd covariance*/
     dcell *evlopdmean;    /**<science field opd mean*/
+    dmat *evlopdcovol;   /**<science field opd covariance (open loop)*/
+    dmat *evlopdmeanol;  /**<science field opd mean (open loop)*/
     dcell *evlpsfmean_ngsr;    /**<science field psf time average with NGS mode removed.*/
     dcell *evlopdcov_ngsr;     /**<science field opd covariance with NGS mode removed.*/
     dcell *evlopdmean_ngsr;    /**<science field opd mean with NGS mode removed.*/
@@ -535,8 +551,8 @@ typedef struct SIM_T{
     dmat *cle;         /**<field averaged CL error*/
 
     /*MOAO*/
-    dcell *moao_wfs;   /**<moao DM command computed for wfs*/
-    dcell *moao_evl;   /**<moao DM command computed for science field*/
+    dcell *dm_wfs;   /**<moao DM command computed for wfs*/
+    dcell *dm_evl;   /**<moao DM command computed for science field*/
 
     double tk_eval;    /**<time spent in perfevl in this step*/
     double tk_recon;   /**<time spent in reconstruct in this step*/

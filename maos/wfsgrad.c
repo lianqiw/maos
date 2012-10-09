@@ -364,14 +364,8 @@ void wfsgrad_iwfs(thread_t *info){
 	dadd(&opd,1, powfs[ipowfs].opdadd->p[wfsind],1);
     }
 
-    /* Add NCPA to WFS as needed. Todo: merge surfwfs with ncpa. be careful
-       about ncpa calibration. */
-    if(powfs[ipowfs].ncpa){
-	dadd(&opd, 1, powfs[ipowfs].ncpa->p[wfsind], 1);
-    }
-
     /* Now begin ray tracing. */
-    if(parms->sim.idealwfs){
+    if(parms->sim.idealwfs && !parms->powfs[ipowfs].lo){
 	wfs_ideal_atm(simu, opd, iwfs, 1);
     }else if(atm){
 	for(int ips=0; ips<nps; ips++){
@@ -403,7 +397,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
  
     if(imoao>-1){
-	dmat **dmwfs=simu->moao_wfs->p;
+	dmat **dmwfs=simu->dm_wfs->p;
 	if(dmwfs[iwfs]){
 	    //info("iwfs %d: Adding MOAO correction\n", iwfs);
 	    /* No need to do mis registration here since the MOAO DM is attached
@@ -420,37 +414,37 @@ void wfsgrad_iwfs(thread_t *info){
 	}
     }
     /* Add defocus to OPD if needed. */
-    double focus=0;
-    if(powfs[ipowfs].focus){
-	int iy=0;
-	int nx=powfs[ipowfs].focus->nx;
-	int ny=powfs[ipowfs].focus->ny;
-	if(ny==1){
-	    iy=0;
-	}else if(ny==parms->powfs[ipowfs].nwfs){
-	    iy=wfsind;
-	}else{
-	    error("powfs[%d].focus wrong format\n",ipowfs);
+    if(parms->powfs[ipowfs].llt){
+	double focus=0;
+	if(powfs[ipowfs].focus){
+	    const long nx=powfs[ipowfs].focus->nx;
+	    focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
 	}
-	int ix=isim%nx;
-	double focusadd=powfs[ipowfs].focus->p[ix+nx*iy];
-	if(fabs(focusadd)>1.e-200){
-	    info("WFS %d: adding %g focus from input.\n", iwfs, focusadd);
-	    focus+=focusadd;
+	if(simu->zoomint && simu->zoomint->p[iwfs]){
+	    focus-=simu->zoomint->p[iwfs]->p[0];
+	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
+	}
+	if(parms->sim.ahstfocus && simu->Mint_lo->mint[0]){
+	    /*new definition of NGS modes has focus error in LGS. offset to remove it.*/
+	    double scale=simu->recon->ngsmod->scale;
+	    focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(1-scale);
+	}
+	if(fabs(focus)>1e-20){
+	    loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
 	}
     }
-    if(parms->powfs[ipowfs].llt && simu->focusint && simu->focusint->p[iwfs]){
-	info("WFS %d: Adding focus adjust to %g\n", 
-	     iwfs, simu->focusint->p[iwfs]->p[0]);
-	focus+=simu->focusint->p[iwfs]->p[0];
+    if(parms->powfs[ipowfs].fieldstop>0){
+	apply_fieldstop(opd, powfs[ipowfs].amp, powfs[ipowfs].embed, powfs[ipowfs].nembed, 
+			powfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl[0]);
     }
-    if(fabs(focus)>1.e-200){
-	loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
-    }
+
     if(save_opd){
 	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
     }
-
+    if(parms->plot.run){
+	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
+		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
+    }
     if(do_geom){
 	/* Now Geometric Optics gradient calculations */
 	dmat **gradcalc=NULL;
@@ -568,10 +562,6 @@ void wfsgrad_iwfs(thread_t *info){
     }
     TIM(2);
  
-    if(parms->plot.run){
-	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
-		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
-    }
     dfree(opd);
 
     if(dtrat_output){
@@ -792,9 +782,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
   
-	if(powfs[ipowfs].ncpa_grad){
-	    warning("Applying ncpa_grad to gradout\n");
-	    dadd(gradout, 1, powfs[ipowfs].ncpa_grad->p[wfsind], -1);
+	if(powfs[ipowfs].gradoff){
+	    dadd(gradout, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
 	}
 	if(save_grad){
 	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
@@ -890,19 +879,19 @@ void wfsgrad(SIM_T *simu){
     /* Uplink pointing servo. Moved to here from filter.c because of
        synchronization issue. dcellcp before integrator changes because wfsgrad
        updates upterr with current gradient. */
-    dcellcp(&simu->uptreal, simu->uptint[0]);
+    dcellcp(&simu->uptreal, simu->uptint->mint[0]);
     if(simu->upterr){
 	/* uplink tip/tilt mirror. use Integrator/Derivative control
 	   update command for next step.*/
-	shift_inte(parms->sim.napupt, parms->sim.apupt, simu->uptint);
-	double gain1=parms->sim.epupt+parms->sim.dpupt;
+	servo_shift(simu->uptint, parms->sim.apupt);
+	servo_filter(simu->uptint, simu->upterr, simu->dthi, parms->sim.epupt);
+	/*double gain1=parms->sim.epupt+parms->sim.dpupt;
 	double gain2=-parms->sim.dpupt;
 	dcelladd(&simu->uptint[0], 1., simu->upterr,gain1);
 	if(fabs(gain2)>EPS){
 	    dcelladd(&simu->uptint[0], 1., simu->upterrlast,gain2);
-	    /*save to use in next servo time step. */
 	    dcellcp(&simu->upterrlast,simu->upterr);
-	}
+	    }*/
     }
 #if USE_CUDA
     if(parms->gpu.wfs){

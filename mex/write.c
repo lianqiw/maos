@@ -98,14 +98,14 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 		zfwrite(mxGetIr(arr), sizeof(mwIndex), nzmax, fp);
 		zfwrite_complex(mxGetPr(arr),mxGetPi(arr),nzmax,fp);
 	    }
-	}else if(type == M_DBL || ((arr)&& mxIsDouble(arr))){
+	}else if(type == M_DBL || ((arr) && mxIsDouble(arr) && !mxIsComplex(arr))){
 	    magic=M_DBL;
 	    header_t header2={magic, m, n, str};
 	    write_header(&header2, fp);
 	    if(m!=0 && n!=0){
 		zfwrite(mxGetPr(arr), sizeof(double), m*n, fp);
 	    }  
-	}else if(type == M_CMP || ((arr)&& mxIsDouble(arr))){
+	}else if(type == M_CMP || ((arr)&& mxIsDouble(arr) && mxIsComplex(arr))){
 	    magic=M_CMP;
 	    header_t header2={magic, m, n, str};
 	    write_header(&header2, fp);

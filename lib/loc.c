@@ -144,19 +144,19 @@ pts_t *ptsnew(long nsa, double dsa, long nx, double dx){
     return pts;
 }
 /**
-   Create an vector to embed OPD into square array for FFT purpose.
-*/
-long *loc_create_embed(long *nembed, const loc_t *loc){
+   Create an vector to embed OPD into square array for FFT purpose. oversize is
+2 for fft.  */
+long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
     double xmin,xmax,ymin,ymax;
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     const double dx_in1=1./loc->dx;
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
     long ny=(long)round((ymax-ymin)*dx_in1)+1;
-    long nxy=(nx>ny?nx:ny)*2;/*minimum size */
+    long nxy=(nx>ny?nx:ny)*oversize;/*minimum size */
     long mapn;
     if(*nembed<=0){
-	mapn=nextpow2(nxy);
+	mapn=nextfftsize(nxy);
 	*nembed=mapn;
     }else{
 	if(*nembed<(long)(nxy*0.6)){

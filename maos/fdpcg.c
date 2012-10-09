@@ -19,7 +19,8 @@
 /**
    \file fdpcg.c
    Fourier Domain Preconditioner for Tomography step.
-   cfft2s(A,-1) and cfft2s(A,1) are hermitian ffts because they have the same scale.
+   2012-07-11: 
+   Do not need cfft2s any more. Minv is properly scaled to account for FFT scaling.
 */
 /*
    Changelog
@@ -46,8 +47,18 @@
 
 /**
    Create aperture selection function that selects the gradients for valid
-   subapertures from ground layer xloc (or ploc).  */
-csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
+   subapertures from ground layer xloc (or ploc).  
+   
+   2012-04-06: Found that by clipping xsel in FD, the strength of xsel in the
+   spatial domain (SD) is reduced because of reduced strength of xsel in FD. Need
+   to renormalize xsel in FD to have the same total, which corresponds to the center
+   value in SD. 
+
+   clipping xsel in FD essentially removed the boundary conditiona, making
+   infinite subapertures. The sum of xsel in FD has to be 1.
+*/
+static csp* 
+fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
     const long threas=1;
     cmat *xsel=cnew(nx,ny);
     cfft2plan(xsel,-1);
@@ -59,13 +70,12 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	if(saa[isa]>0.9){
 	    long ix=(saloc->locx[isa])*dx1+offx;/*subaperture lower left corner. */
 	    long iy=(saloc->locy[isa])*dx1+offy;
-	    pxsel[iy][ix]=1;
+	    pxsel[iy][ix]=1./(double)(nx*ny);/*cancel FFT scaling.*/
 	}
     }
     cfftshift(xsel);
     cfft2(xsel,-1);
     cfftshift(xsel);
-    cscale(xsel,1./(double)(nx*ny));/*cancel FFT effect. */
     double xselc=creal(pxsel[ny/2][nx/2])*threas;/*Fourier center */
    
     for(long ix=0; ix<nx; ix++){
@@ -75,6 +85,8 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
 	    }
 	}
     }
+    /*scale xsel to have the same sum, to preserve its value in spatial domain. (2012-04-06)*/
+    //cscale(xsel, 1./(double)csum(xsel)); //degrades performance.
     csp *sel=cspconvolvop(xsel);
     cfree(xsel);
     return sel;
@@ -93,7 +105,8 @@ csp* fdpcg_saselect(long nx, long ny, double dx,loc_t *saloc, double *saa){
    shift=1: apply a fftshift with permutation vector.
    half=1: only using (half+1) of the inner most dimension (FFT is hermitian for real matrix)
 */
-long *fdpcg_perm(const long *nx, const long *ny, const int *os, int nps, int shift, int half){
+static long *
+fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int shift, int half){
     long nx2[nps],ny2[nps];
     long noff[nps];
     long xloctot=0;
@@ -101,40 +114,65 @@ long *fdpcg_perm(const long *nx, const long *ny, const int *os, int nps, int shi
 	nx2[ips]=nx[ips]/2;
 	ny2[ips]=ny[ips]/2;
 	noff[ips]=xloctot;
-	if(half){
-	    xloctot+=(nx[ips]/2+1)*ny[ips];
-	}else{
-	    xloctot+=nx[ips]*ny[ips];
-	}
+	xloctot+=nx[ips]*ny[ips];
+    }
+    long adimx=nx[0]/os[0];//subaperture dimension.
+    long adimy=ny[0]/os[0];
+    if(half){
+	xloctot=(adimx/2+1)*adimy*bs;
     }
     long *perm=calloc(xloctot, sizeof(long));
-    // long use_os=pos;
-    long adim=nx[0]/os[0];//subaperture dimension.
-    //long osx=nx[0]/2;
     long count=0;
-
-    for(long iy=-adim/2; iy<adim/2; iy++){
-	for(long ix=-adim/2; ix<adim/2; ix++){
-	    /*(ix,iy) is the frequency in SALOC grid. We are going to group all
-	      points couple to this subaperture together. First loop over all
-	      points on PLOC and find all coupled points in XLOC*/
-	    for(long ips=0; ips<nps; ips++){
-		for(long jos=0; jos<os[ips]; jos++){
-		    long jy=(iy+adim*jos); 
-		    if(jy>=ny2[ips]) jy-=ny[ips];
-		    for(long ios=0; ios<os[ips]; ios++){
-			long jx=(ix+adim*ios); 
-			if(jx>=nx2[ips]) jx-=nx[ips];
-			if(shift){ /*we embeded a fftshift here.*/
-			    perm[count]=noff[ips]+(jx<0?jx+nx[ips]:jx)+(jy<0?jy+ny[ips]:jy)*nx[ips];
+    /*We select the positive x frequencies first and negative x frequencies
+      later so that in GPU, when at os0 or os6, we only need to do postive
+      frequenci operations */
+    int nxh=half?1:2;
+    int ix0, ix1;
+    for(int ixh=0; ixh<nxh; ixh++){
+	if(ixh==0){
+	    ix0=-adimx/2;
+	    ix1=1;
+	}else{
+	    ix0=1;
+	    ix1=adimx/2;
+	}
+	for(long iy=-adimy/2; iy<adimy/2; iy++){
+	    for(long ix=ix0; ix<ix1; ix++){
+		//for(long ix=-adim/2; ix<adim/2; ix++){
+		/*(ix,iy) is the frequency in SALOC grid. We are going to group all
+		  points couple to this subaperture together. First loop over all
+		  points on PLOC and find all coupled points in XLOC*/
+		for(long ips=0; ips<nps; ips++){
+		    for(long jos=0; jos<os[ips]; jos++){
+			long jy=(iy+adimy*jos); 
+			if(jy>=ny2[ips]) jy-=ny[ips];
+			if(shift){
+			    if(jy<0) jy+=ny[ips];
 			}else{
-			    perm[count]=noff[ips]+(jx+nx2[ips])+(jy+ny2[ips])*nx[ips];
+			    jy=(jy+ny2[ips]); 
 			}
-			count++;
+			for(long ios=0; ios<os[ips]; ios++){
+			    long jx=(ix+adimx*ios); 
+			    int ratio=1;/*no scale by default*/
+			    if(jx>=nx2[ips]) jx-=nx[ips];
+			    if(shift){
+				if(jx<0) jx+=nx[ips];/*we embeded a fftshift here.*/
+				if(half && jx>nx2[ips]){
+				    ratio=-1; /*reverse the perm value to indicate a conjugate is needed*/
+				    jx=nx[ips]-jx;/*FFT of jx>n/2 equals to conj(n-jx)*/
+				}
+			    }else{
+				jx=(jx+nx2[ips]);
+			    }
+			    perm[count++]=ratio*(noff[ips]+jx+(ratio<0?(jy==0?0:ny[ips]-jy):jy)*nx[ips]);
+			}
 		    }
 		}
 	    }
 	}
+    }
+    if(count!=xloctot){
+	error("count=%ld, xloctot=%ld\n", count, xloctot);
     }
     return perm;
 }
@@ -142,7 +180,8 @@ long *fdpcg_perm(const long *nx, const long *ny, const int *os, int nps, int shi
 /**
    Compute gradient operator in Fourier domain. Subapertures are denoted with lower left corner, so no shift is required.
 */
-void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
+static void 
+fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa, int ttr){
     long os=(long)(dsa/dx);
     if(fabs(dsa-dx*os)>1.e-10){
 	error("dsa must be multiple of dx");
@@ -181,13 +220,22 @@ void fdpcg_g(cmat **gx, cmat **gy, long nx, long ny, double dx, double dsa){
 	    pgy[ix+iy*nx]=ty;
 	}
     }
+    /*Remove global tt is same as remove zero frequency value in fourier space.*/
+    /*if(ttr){
+	warning("fdpcg: Remove global t/t (%g %g) (%g, %g)", 
+		creal(pgx[nx/2+ny/2*nx]), cimag(pgx[nx/2+ny/2*nx]),
+		creal(pgy[nx/2+ny/2*nx]), cimag(pgy[nx/2+ny/2*nx]));
+	pgx[nx/2+ny/2*nx]=0;
+	pgy[nx/2+ny/2*nx]=0;
+	}*/
 }
 
 /**
    Propagate operator for nlayer screens to ground of size
    nxp*nxp, sampling dx, with displacement of dispx, dispy.
 */
-csp *fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
+static csp *
+fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx, double *dispx, double *dispy){
     long nx2[nps],nx3[nps];
     long ny2[nps],ny3[nps];
     long noff[nps];
@@ -290,7 +338,12 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     const double dxp=recon->ploc->dx;
     const double *ht=parms->atmr.ht;
     long nxtot=0;
+    int os0=os[0];
+    int needscale=0;
     for(long ips=0; ips<nps; ips++){
+	if(os[ips]!=os0){
+	    needscale=1;
+	}
 	nxtot+=nx[ips]*ny[ips];
 	if(os[ips]>pos){
 	    warning("Layer %ld os is greater than ground\n", ips);
@@ -300,7 +353,8 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     csp *sel=fdpcg_saselect(nxp,nyp,dxp, saloc, powfs[hipowfs].saa->p);
     /*Gradient operator. */
     cmat *gx, *gy;
-    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx);/*tested ok. */
+    int ttr=parms->recon.split?1:0;
+    fdpcg_g(&gx,&gy,nxp,nyp,dxp,saloc->dx,ttr);/*tested ok. */
     /*Concatenate invpsd; */
     dcomplex *invpsd=calloc(nxtot, sizeof(dcomplex));
     long offset=0;
@@ -355,7 +409,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     }
 
     /*make it sparse diagonal operator */
-    csp *Mhat=cspnewdiag(nxtot,invpsd,parms->gpu.tomo?(TOMOSCALE):(1.));
+    csp *Mhat=cspnewdiag(nxtot,invpsd,TOMOSCALE);/*parms->gpu.tomo?(TOMOSCALE):(1.));*/
     free(invpsd);
 
     csp *Mmid=NULL;
@@ -387,6 +441,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cspfree(sel);
     double dispx[nps];
     double dispy[nps];
+    /* Mhat = Mhat + propx' * Mmid * propx */
     for(int jwfs=0; jwfs<parms->powfs[hipowfs].nwfs; jwfs++){
 	int iwfs=parms->powfs[hipowfs].wfs[jwfs];
 	double neai=recon->neam->p[iwfs];
@@ -405,7 +460,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    cspwrite(propx,"%s/fdpcg_prop_wfs%d",dirsetup,iwfs);
 	}
 	/*need to test this in spatial domain. */
-	cspscale(propx,(parms->gpu.tomo?sqrt(TOMOSCALE):(1.))/neai);/*prop is not real for off axis wfs. */
+	cspscale(propx,sqrt(TOMOSCALE)/neai);/*prop is not real for off axis wfs. */
 	/*Compute propx'*Mmid*propx and add to Mhat; */
 	csp *tmp=cspmulsp(Mmid,propx);
 	csp *tmp2=csptmulsp(propx,tmp);
@@ -418,27 +473,47 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     cspfree(Mmid);
     cspdroptol(Mhat,EPS);
     cspsym(Mhat);
+    
+    if(!needscale){  /*scale Mhat to avoid scaling FFT. */
+	cmat *sc=cnew(nxtot, 1);
+	dcomplex *psc=sc->p;
+	for(int ips=0; ips<nps; ips++){
+	    double scale=(double)(nx[ips]*ny[ips]);
+	    for(long ix=0; ix<nx[ips]*ny[ips]; ix++){
+		*(psc++)=scale;
+	    }
+	}
+	cspmuldiag(Mhat, sc->p, 1);
+	cfree(sc);
+    }
+
     if(parms->save.setup){
 	cspwrite(Mhat,"%s/fdpcg_Mhat",dirsetup);
     }
     /*Now invert each block. */
     /*bs: blocksize. */
-    long bs=0;
+    int bs=0;
     for(long ips=0; ips<nps; ips++){
 	bs+=os[ips]*os[ips];
     }
     long nb=Mhat->m/bs;
-    info("Block size is %ld, there are %ld blocks\n",bs,nb);
+    info2("fdpcg: Block size is %d, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
     FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
-    long *perm=fdpcg_perm(nx,ny, os, nps,0,0);
-    if(parms->save.setup){
-	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
-    }
+    fdpcg->scale=needscale;
+    long *perm=fdpcg_perm(nx,ny, os, bs, nps,0,0);
     csp *Mhatp=cspperm(Mhat,0,perm,perm);/*forward permutation. */
     cspfree(Mhat);
     free(perm);
-    perm=fdpcg_perm(nx,ny, os, nps, 1,0); /*contains fft shift information*/
+#if PRE_PERMUT == 1
+    fdpcg->half=0;
+#else
+    fdpcg->half=parms->gpu.tomo?1:0;
+#endif
+    perm=fdpcg_perm(nx,ny, os, bs, nps, 1, fdpcg->half); /*contains fft shift information*/
+    if(parms->save.setup){
+	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
+    }
 #if PRE_PERMUT == 1
     csp *Minvp=cspinvbdiag(Mhatp,bs);
     csp *Minv=cspperm(Minvp,1,perm, perm);/*revert permutation */
@@ -451,51 +526,66 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 #else
     fdpcg->perm=perm;
     fdpcg->Mbinv=cspblockextract(Mhatp,bs);
-    for(long ib=0; ib<nb; ib++){
-	cinv_inplace(fdpcg->Mbinv->p[ib]);
+    if(parms->save.setup){
+	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
+    }
+    double svd_thres;
+    if(parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit){
+	svd_thres=1e-7;//-0.01;
+    }else{
+	svd_thres=1e-7;
+    }
+    info2("FDPCG SVD Threshold is %g\n", svd_thres);
+    if(nx[0]*ny[0]/(os[0]*os[0])!=nb){
+	error("Something wrong\n");
+    }
+    int nb2=nb;
+    if(fdpcg->half){/*Reduce the number of blocks.*/
+	nb2=(nx[0]/os[0]/2+1)*(ny[0]/os[0]);
+	for(long ib=nb2; ib<nb; ib++){
+	    cfree(fdpcg->Mbinv->p[ib]);
+	}
+	fdpcg->Mbinv->nx=nb2;
+    }
+    for(long ib=0; ib<nb2; ib++){
+	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
+	  one of the cells the conditional is more than 1e8. This creates
+	  problem in GPU code causing a lot of pistion to accumulate and
+	  diverges the pcg.
+
+	  2012-04-26: Even with 1e-7 threshold, some blocks has bad conditions
+	  that blows the error if we are assemble MVM in GPU.
+	*/
+	csvd_pow(fdpcg->Mbinv->p[ib], -1, 0, svd_thres);
+    }
+    if(parms->save.setup){
+	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Minvb",dirsetup);
     }
 #endif
     cspfree(Mhatp);
-    fdpcg->xhat=cnew(nxtot,1);
-    fdpcg->xhat2=cnew(nxtot,1);
-    fdpcg->xhati=ccellnew(nps,1);/*references the data in xhat. */
-    fdpcg->xhat2i=ccellnew(nps,1);
     fdpcg->xloc=recon->xloc;
     fdpcg->square=parms->tomo.square;
-    fdpcg->scale=calloc(nps,sizeof(double));
-    offset=0;
-    for(int ips=0; ips<nps; ips++){
-	fdpcg->xhati->p[ips]=cnew_ref(nx[ips],ny[ips],fdpcg->xhat->p+offset);
-	fdpcg->xhat2i->p[ips]=cnew_ref(nx[ips],ny[ips],fdpcg->xhat2->p+offset);
-	cfft2plan(fdpcg->xhati->p[ips],-1);
-	cfft2plan(fdpcg->xhat2i->p[ips],1);
-	fdpcg->scale[ips]=1./(double)(nx[ips]*ny[ips]);
-	offset+=nx[ips]*ny[ips];
-    }
-
     fdpcg->nxtot=nxtot;
     return fdpcg;
 }
-typedef struct thread_info{
-    int ips;
-    int ib;
-    pthread_mutex_t lock;
+typedef struct{
+    cmat *xhat;
+    cmat *xhat2;
+    ccell *xhati;
+    ccell *xhat2i;
     FDPCG_T *fdpcg;
     const dcell *xin;
     dcell *xout;
-}thread_info;
-
+}fdpcg_info_t;
 /**
    Copy x vector and do FFT on each layer
 */
-static void fdpcg_fft(void *data){
-    thread_info *info=data;
-    int ips;
-    FDPCG_T *fdpcg=info->fdpcg;
-    int nps=fdpcg->xhati->nx;
-    ccell *xhati=fdpcg->xhati;
-    const dcell *xin=info->xin;
-    while(LOCKADD(ips, info->ips, 1)<nps){
+static void fdpcg_fft(thread_t *info){
+    fdpcg_info_t *data=info->data;
+    FDPCG_T *fdpcg=data->fdpcg;
+    ccell *xhati=data->xhati;
+    const dcell *xin=data->xin;
+    for(int ips=info->start; ips<info->end; ips++){
 	if(fdpcg->square){
 	    for(long i=0; i<xhati->p[ips]->nx*xhati->p[ips]->ny; i++){
 		xhati->p[ips]->p[i]=xin->p[ips]->p[i];
@@ -508,38 +598,40 @@ static void fdpcg_fft(void *data){
 	    czero(xhati->p[ips]);
 	    cembed_locstat(&xhati->p[ips], 0, fdpcg->xloc[ips],  xin->p[ips]->p, 1, 0);
 	}
-	cfft2s(xhati->p[ips],-1);
+	if(fdpcg->scale){
+	    cfft2s(xhati->p[ips],-1);
+	}else{
+	    cfft2(xhati->p[ips],-1);	
+	}
     }
 }
 
 /**
    Multiply each block in pthreads
  */
-static void fdpcg_mulblock(void *p){
-    thread_info *info=p;
-    int ib;
-    FDPCG_T *fdpcg=info->fdpcg;
+static void fdpcg_mulblock(thread_t *info){
+    fdpcg_info_t *data=info->data;
+    FDPCG_T *fdpcg=data->fdpcg;
     long bs=fdpcg->Mbinv->p[0]->nx;
-    long nb=fdpcg->nxtot/bs;
-    cmat *xhat=fdpcg->xhat;
-    cmat *xhat2=fdpcg->xhat2;
-    while(LOCKADD(ib, info->ib, 1) < nb){
-	cmulvec(xhat->p+ib*bs, fdpcg->Mbinv->p[ib], xhat2->p+ib*bs,1);
+    for(int ib=info->start; ib<info->end; ib++){
+	cmulvec(data->xhat->p+ib*bs, fdpcg->Mbinv->p[ib], data->xhat2->p+ib*bs,1);
     }
 }
 
 /**
    Inverse FFT for each block. Put result in xout, replace content, do not accumulate.
  */
-static void fdpcg_ifft(void *p){
-    thread_info *info=p;
-    int ips;
-    FDPCG_T *fdpcg=info->fdpcg;
-    int nps=fdpcg->xhati->nx;
-    ccell *xhat2i=fdpcg->xhat2i;
-    dcell *xout=info->xout;
-    while(LOCKADD(ips, info->ips, 1)<nps){
-	cfft2s(xhat2i->p[ips],1);
+static void fdpcg_ifft(thread_t *info){
+    fdpcg_info_t *data=info->data;
+    FDPCG_T *fdpcg=data->fdpcg;
+    ccell *xhat2i=data->xhat2i;
+    dcell *xout=data->xout;
+    for(int ips=info->start; ips<info->end; ips++){
+	if(fdpcg->scale){
+	    cfft2s(xhat2i->p[ips],1);
+	}else{
+	    cfft2(xhat2i->p[ips],1);
+	}
 	if(fdpcg->square){
 	    for(long i=0; i<xhat2i->p[ips]->nx*xhat2i->p[ips]->ny; i++){
 		xout->p[ips]->p[i]=creal(xhat2i->p[ips]->p[i]);
@@ -557,39 +649,66 @@ static void fdpcg_ifft(void *p){
    via xout=IFFT(M*FFT(xin));
  */
 void fdpcg_precond(dcell **xout, const void *A, const dcell *xin){
+    //static int count=-1; count++; //temp
+    //dcellwrite(xin, "fdpcg_xin_%d", count);
+    //dcellwrite(*xout, "fdpcg_xout1_%d", count);
     const RECON_T *recon=(RECON_T*)A;
     if(xin->ny!=1){
 	error("Invalid\n");
     }
+    const long nps=recon->npsr;
     FDPCG_T *fdpcg=recon->fdpcg;
     long nxtot=fdpcg->nxtot;
-    cmat *xhat=fdpcg->xhat;
-    cmat *xhat2=fdpcg->xhat2;
-    thread_info info;
-    info.ips=0;
-    info.ib=0;
-    PINIT(info.lock);
-    info.fdpcg=recon->fdpcg;
-    info.xin=xin;
+    cmat *xhat=cnew(nxtot,1);
+    cmat *xhat2=cnew(nxtot,1);
+    ccell *xhati=ccellnew(nps,1);/*references the data in xhat. */
+    ccell *xhat2i=ccellnew(nps,1);
+    long* nx=recon->xnx;
+    long* ny=recon->xny;
+    long offset=0;
+    for(int ips=0; ips<nps; ips++){
+	xhati->p[ips]=cnew_ref(nx[ips],ny[ips],xhat->p+offset);
+	xhat2i->p[ips]=cnew_ref(nx[ips],ny[ips],xhat2->p+offset);
+	cfft2plan(xhati->p[ips],-1);
+	cfft2plan(xhat2i->p[ips],1);
+	offset+=nx[ips]*ny[ips];
+    }
     if(!*xout){
 	*xout=dcellnew2(xin);
     }
-    info.xout=*xout;
+    //info.xout=*xout;
+    fdpcg_info_t data={xhat, xhat2, xhati, xhat2i, recon->fdpcg, xin, *xout};
+    int NTH=recon->nthread;
+    thread_t info_fft[NTH],info_ifft[NTH],info_mulblock[NTH];
+    thread_prep(info_fft, 0, nps, NTH, fdpcg_fft, &data);
+    thread_prep(info_ifft, 0, nps, NTH, fdpcg_ifft, &data);
+    long bs=recon->fdpcg->Mbinv->p[0]->nx;
+    long nb=recon->fdpcg->nxtot/bs;
+    thread_prep(info_mulblock, 0, nb, NTH, fdpcg_mulblock, &data);
     /*apply forward FFT */
-    CALL(fdpcg_fft,&info,recon->nthread,1);
+    CALL_THREAD(info_fft, NTH, 1);
+    //ccellwrite(xhati, "fdpcg_fft");
 #if PRE_PERMUT
     czero(xhat2);
     cspmulvec(xhat2->p, recon->fdpcg->Minv, xhat->p, 1);
 #else/*permute vectors and apply block diagonal matrix */
     /*permute xhat and put into xhat2 */
     cvecperm(xhat2->p,xhat->p,recon->fdpcg->perm,nxtot);
+    //ccellwrite(xhat2i, "fdpcg_perm");
     czero(xhat);
-    CALL(fdpcg_mulblock,&info,recon->nthread,1);
+    CALL_THREAD(info_mulblock, NTH, 1);
+    //ccellwrite(xhati, "fdc_mul");
     cvecpermi(xhat2->p,xhat->p,fdpcg->perm,nxtot);
+    //ccellwrite(xhat2i, "fdc_iperm");
 #endif
-    info.ips=0;
     /*Apply inverse FFT */
-    CALL(fdpcg_ifft,&info,recon->nthread,1);
+    CALL_THREAD(info_ifft, NTH, 1);
+    //ccellwrite(fdpcg->xhat2i, "fdc_ifft_%d", count);
+    //dcellwrite(*xout, "fdpcg_xout"); exit(0);
+    ccellfree(xhati);
+    ccellfree(xhat2i);
+    cfree(xhat);
+    cfree(xhat2);
 }
 
 /**
@@ -602,10 +721,5 @@ void fdpcg_free(FDPCG_T *fdpcg){
 	free(fdpcg->perm);
 	ccellfree(fdpcg->Mbinv);
     }
-    ccellfree(fdpcg->xhati);
-    ccellfree(fdpcg->xhat2i);
-    cfree(fdpcg->xhat);
-    cfree(fdpcg->xhat2);
-    free(fdpcg->scale);
     free(fdpcg);
 }

@@ -53,13 +53,16 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
  
     int notf=1;
     int has_ncpa=0;
-    if(parms->powfs[ipowfs].ncpa && parms->powfs[ipowfs].ncpa_method==2){
+    if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
 	notf=parms->powfs[ipowfs].nwfs;
 	has_ncpa=1;
     }else if(powfs[ipowfs].nlocm){
 	notf=MAX(notf,powfs[ipowfs].nlocm);
     }else{
 	notf=1;
+    }
+    if(powfs[ipowfs].intstat->otf){
+	ccellfreearr(powfs[ipowfs].intstat->otf, powfs[ipowfs].intstat->notf);
     }
     powfs[ipowfs].intstat->notf=notf;
     powfs[ipowfs].intstat->otf=calloc(notf, sizeof(ccell*));
@@ -71,7 +74,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	double wvl=parms->powfs[ipowfs].wvl[iwvl];
 	double dtheta=wvl/(dxsa*embfac);
 	for(int iotf=0; iotf<notf; iotf++){
-	    double *opdbias=has_ncpa?powfs[ipowfs].ncpa->p[iotf]->p:NULL;
+	    double *opdbias=has_ncpa?powfs[ipowfs].opdbias->p[iotf]->p:NULL;
 	    double thres=opdbias?1:1-1e-10;
 	    info2("There is %s bias\n", opdbias?"NCPA":"no");
 	    genotf(powfs[ipowfs].intstat->otf[iotf]->p+iwvl*nsa,
@@ -96,6 +99,9 @@ void genselotf(const PARMS_T *parms,POWFS_T *powfs,int ipowfs){
     dcell *ncpa=powfs[ipowfs].llt->ncpa;
     if(ncpa){
 	nlotf=ncpa->nx*ncpa->ny;
+    }
+    if(powfs[ipowfs].intstat->lotf){
+	ccellfree(powfs[ipowfs].intstat->lotf);
     }
     powfs[ipowfs].intstat->lotf=ccellnew(nwvl,nlotf);
     PCCELL(powfs[ipowfs].intstat->lotf, lotf);
@@ -133,6 +139,9 @@ void gensepsf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     powfs[ipowfs].intstat->nsepsf=notf>nlotf?notf:nlotf;
     assert(powfs[ipowfs].intstat->nsepsf==1 
 	   || powfs[ipowfs].intstat->nsepsf==parms->powfs[ipowfs].nwfs);
+    if(powfs[ipowfs].intstat->sepsf){
+	dcellfreearr(powfs[ipowfs].intstat->sepsf, powfs[ipowfs].intstat->nsepsf);
+    }
     powfs[ipowfs].intstat->sepsf=calloc(powfs[ipowfs].intstat->nsepsf, sizeof(dcell*));
     for(int isepsf=0; isepsf<powfs[ipowfs].intstat->nsepsf; isepsf++){
 	int iotf=notf>1?isepsf:0;
@@ -238,6 +247,11 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	error("Number of i0 must be either 1 or %d, but is %d\n",
 	      parms->powfs[ipowfs].nwfs,ni0);
     }
+    dcellfree(intstat->i0);
+    dcellfree(intstat->gx);
+    dcellfree(intstat->gy);
+    ccellfreearr(intstat->fotf, nsepsf);
+
     intstat->i0=dcellnew(nsa,ni0);
     intstat->gx=dcellnew(nsa,ni0);
     intstat->gy=dcellnew(nsa,ni0);
@@ -248,9 +262,13 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	}
     }
     /* subaperture rotation angle. */
+    PDCELL(intstat->i0, i0);
+    PDCELL(intstat->gx, gx);
+    PDCELL(intstat->gy, gy);
+    /*
     dmat* (*i0)[nsa]=(dmat*(*)[nsa])intstat->i0->p;
     dmat* (*gx)[nsa]=(dmat*(*)[nsa])intstat->gx->p;
-    dmat* (*gy)[nsa]=(dmat*(*)[nsa])intstat->gy->p;
+    dmat* (*gy)[nsa]=(dmat*(*)[nsa])intstat->gy->p;*/
     /*
       Notice, the generation of shifted i0s are not accurate
       because the PSF is not enough to cover the size.
@@ -411,9 +429,4 @@ void gensei(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
 	cfree(seotfj);
 	cfree(seotfk);
     }/*iwvl */
-#if SAVE_OTF==1
-    ccellwrite(saveotf,"powfs%d_saveotf",ipowfs);
-    ccellwrite(savepsf,"powfs%d_savepsf",ipowfs);
-    ccellwrite(saveotfetf,"powfs%d_saveotfetf",ipowfs);
-#endif
 }

@@ -257,8 +257,7 @@ void prop_index(PROPDATA_T *propdata){
     const int nxmax=locin->map->nx-nskip;		\
     const int nymax=locin->map->ny-nskip;		\
     /*-1 because we count from 1 in the map.*/		\
-    const double *phiin0=phiin-1;			\
-    assert(scale>0);
+    const double *phiin0=phiin-1;			
 
 #define PREPIN_GRID(nskip)				\
     const double dx_in1 = 1./mapin->dx;			\
@@ -267,8 +266,7 @@ void prop_index(PROPDATA_T *propdata){
     displacey = (displacey-mapin->oy)*dx_in1;		\
     const int nxmax  = mapin->nx-nskip;			\
     const int nymax  = mapin->ny-nskip;			\
-    double (*phiin)[mapin->nx]=(void*)(mapin->p);	\
-    assert(scale>0);
+    double (*phiin)[mapin->nx]=(void*)(mapin->p);	
 
 #define PREPOUT_LOC				\
     if(!locout) error("locout is NULL!");	\
@@ -312,7 +310,9 @@ void prop_index(PROPDATA_T *propdata){
     const double c4=(0.5-cubic_iac)*cubicn; 
 
 #define WARN_MISSING\
- if(missing>0) warning("%d points not covered by input screen\n", missing)
+    ({if(missing>0) {warning("%d points not covered by input screen\n", missing); \
+    print_backtrace(0);\
+	 }})
 
 #if ONLY_FULL == 1 
 #define LINEAR_ADD_NONGRID						\
@@ -652,7 +652,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
     for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1||nplocy>=nymax){
+	if(nplocy<1||nplocy>nymax){
 	    continue;
 	}
 	dplocy0=1.-dplocy;
@@ -753,7 +753,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
     for(int iy=start; iy<end; iy++){
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1||nplocy>=nymax){
+	if(nplocy<1||nplocy>nymax){
 	    continue;
 	}
 	dplocy0=1.-dplocy;

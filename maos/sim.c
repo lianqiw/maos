@@ -64,7 +64,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
 	if(!simu) continue;/*skip. */
-	recon->simu=simu;
+	if(recon) recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
 	    if(parms->tomo.predict && recon->HXWtomo){
@@ -74,16 +74,10 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #if USE_CUDA
 	if(parms->gpu.evl || parms->gpu.wfs){
 	    /*put here to avoid messing up timing due to transfering. */
-	    gpu_atm2gpu_new(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
-	    if(parms->gpu.evl){
-		gpu_perfevl_init_sim(parms, aper);
+	    gpu_atm2gpu(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
+	    if(parms->tomo.predict){
+		gpu_setup_recon_predict(parms, recon);
 	    }
-	    if(parms->gpu.wfs){
-		gpu_wfs_init_sim(parms, powfs);
-	    }
-	}
-	if(parms->gpu.tomo || parms->gpu.fit){
-	    gpu_recon_reset(parms);
 	}
 #endif
 	double tk_atm=myclockd();
@@ -105,7 +99,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		}
 #if USE_CUDA
 		if(parms->gpu.evl || parms->gpu.wfs){/*may need to copy another part */
-		    gpu_atm2gpu_new(simu->atm, parms, iseed, isim);/*takes 0.4s for NFIRAOS 64 meter screen. */
+		    gpu_atm2gpu(simu->atm, parms, iseed, isim);/*takes 0.4s for NFIRAOS 64 meter screen. */
 		}
 #endif
 	    }else{

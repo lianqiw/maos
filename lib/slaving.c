@@ -29,7 +29,8 @@
    contraint their values to be close to the ones that are active. We put an
    additional term in the fitting matrix to force this. Be careful with it when
    using tip/tilt constraint and cholesky back solve.  */
-spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
+spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
+		loc_t **aloc,  /**<[in]The actuator grid*/
 		spcell *HA,    /**<[in]The influence function from actuator to destination*/
 		dmat *W1,      /**<[in]The weighting function on the destination grid. (optional)*/
 		dcell *NW,     /**<[in]The low rank terms that need to be orthogonal to the output (optional)*/
@@ -263,6 +264,9 @@ spcell *slaving(loc_t **aloc,  /**<[in]The actuator grid*/
 	spfree(slave);
 	spfree(slavet);
     }/*idm */
+    if(pactcpl){
+	*pactcpl=dcellref(actcplc);
+    }
     dcellfree(actcplc);
     if(nslavetot==0){
 	spcellfree(actslavec);

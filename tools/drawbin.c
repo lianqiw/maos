@@ -24,7 +24,8 @@ static void draw_map(file_t *fp, int id){
     read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
-    suf[0]='\0';
+    if(!suf) suf=strstr(name, ".fits");
+    if(suf) suf[0]='\0';
     if(iscell(header.magic)){
 	for(int ii=0; ii<header.nx*header.ny; ii++){
 	    draw_map(fp, ii);
@@ -45,7 +46,8 @@ static void draw_map(file_t *fp, int id){
 static void draw_opd(file_t *fp1, file_t *fp2, int id){
     char *name=mybasename(zfname(fp2));
     char *suf=strstr(name, ".bin");
-    suf[0]='\0';
+    if(!suf) suf=strstr(name, ".fits");
+    if(suf) suf[0]='\0';
     header_t header1, header2;
     read_header(&header1, fp1);
     read_header(&header2, fp2);
@@ -78,7 +80,8 @@ static void draw_loc(file_t *fp, int id){
     read_header(&header, fp);
     char *name=mybasename(zfname(fp));
     char *suf=strstr(name, ".bin");
-    suf[0]='\0';
+    if(!suf) suf=strstr(name, ".fits");
+    if(suf) suf[0]='\0';
     if(iscell(header.magic)){
    	for(int ii=0; ii<header.nx*header.ny; ii++){
 	    draw_loc(fp, ii);
@@ -89,7 +92,7 @@ static void draw_loc(file_t *fp, int id){
 	if(loc->nloc>100000){/*if too many points, we draw it. */
 	    drawloc("loc",loc,NULL,zfname(fp),"x","y","%s",zfname(fp));
 	}else{/*we plot individual points. */
-	    plot_points("loc",1, &loc, NULL, NULL,NULL,0,NULL,NULL,name,"x","y","%s:%d",name,id);
+	    plot_points("loc",1, &loc, NULL, NULL,NULL,NULL,0,NULL,NULL,name,"x","y","%s:%d",name,id);
 	}
 	locfree(loc);
     }

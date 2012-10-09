@@ -74,7 +74,7 @@ static void test_d2cell(){
     dfree(A2);
 
     A=dcellread("ccell.bin");
-    int *dims=calloc(A->nx,sizeof(int));
+    long *dims=calloc(A->nx,sizeof(long));
     for(int ix=0; ix<A->nx; ix++){
 	dims[ix]=A->p[ix]->nx;
     }
@@ -225,22 +225,22 @@ static void test_spline_2d(void){
     exit(0);
 }
 static void test_svd(void){
-    spcell *a=spcellread("LLM");
+    spcell *a=spcellread("SVD");
     dmat *A=NULL;
     spfull(&A, a->p[0], 1);
     if(0){
-    dmat *U, *S, *VT, *U2, *S2;
-    tic;
-    dsvd(&U, &S, &VT, A);
-    toc("dsvd");
-    tic;
-    devd(&U2, &S2, A);
-    toc("devd");
-    dwrite(U,"U.bin");
-    dwrite(S, "S.bin");
-    dwrite(VT,"VT.bin");
-    dwrite(U2,"U2.bin");
-    dwrite(S2,"S2.bin");
+	dmat *U, *S, *VT, *U2, *S2;
+	tic;
+	dsvd(&U, &S, &VT, A);
+	toc("dsvd");
+	tic;
+	devd(&U2, &S2, A);
+	toc("devd");
+	dwrite(U,"U.bin");
+	dwrite(S, "S.bin");
+	dwrite(VT,"VT.bin");
+	dwrite(U2,"U2.bin");
+	dwrite(S2,"S2.bin");
     }else{
 	dwrite(A,"A.bin");
 	tic;
@@ -254,8 +254,24 @@ static void test_svd(void){
     }
     exit(0);
 }
+void test_psd1d(){
+    dmat *tmp=dnew(100,1);
+    for(int i=0; i<100; i++){
+	tmp->p[i]=sin(i/10.);
+    }
+    dmat *psd=psd1d(tmp, 10);
+    dwrite(tmp, "tmp");
+    dwrite(psd, "psd");
+    exit(0);
+}
+static void test_svd2(void){
+    cmat *A=cread("SVD.bin");
+    csvd_pow(A, -1, 0, 1.e-7);
+    cwrite(A, "SVDI");
+}
 int main(int argc, char **argv){
-    test_svd();
+    test_svd2();
+    test_psd1d();
     test_spline_2d();
     test_spline();
     test_dpinv();

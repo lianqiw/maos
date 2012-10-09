@@ -42,10 +42,14 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	}else{
 	    double amp_d, amp_din;
 	    map_d_din(aper->ampground, &amp_d, &amp_din);
-	    if(fabs(parms->aper.d - amp_d) > (parms->aper.d + amp_d) * 0.005 ||
-	       fabs(parms->aper.din - amp_din) > (parms->aper.din+parms->aper.din) * 0.005){
-		warning2("Amplitude map does not match aperture diameter. Disabled\n");
-		mapfree(aper->ampground);
+	    if(fabs(parms->aper.d - amp_d) > 1 ||
+	       fabs(parms->aper.din - amp_din) > 0.5){
+		if(!parms->aper.fnampuser){
+		    warning2("Amplitude map does not match aperture diameter: aper.d=%g, amp.d=%g, aper.din=%g, amp.din=%g. Disabled\n", parms->aper.d, amp_d, parms->aper.din, amp_din);
+		    mapfree(aper->ampground);
+		}else{
+		    error("Amplitude map does not match aperture diameter: aper.d=%g, amp.d=%g, aper.din=%g, amp.din=%g. Disabled\n", parms->aper.d, amp_d, parms->aper.din, amp_din);
+		}
 	    }
 	}
 	if(fabs(parms->aper.rotdeg)>1.e-12){
@@ -105,7 +109,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
     /*Set the amp for plotting. */
     aper->amp1=ddup(aper->amp);
     /*normalize amp to sum to 1. */
-    normalize(aper->amp->p, aper->locs->nloc, 1);
+    normalize_sum(aper->amp->p, aper->locs->nloc, 1);
     if(parms->plot.setup){
 	drawopd("amp",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
 		"x (m)","y (m)","aper");
@@ -142,7 +146,7 @@ APER_T * setup_aper(const PARMS_T *const parms){
 	aper->embed=calloc(nwvl, sizeof(long*));
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    aper->nembed[iwvl]=parms->evl.psfgridsize[iwvl];
-	    aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs);
+	    aper->embed[iwvl]=loc_create_embed(&(aper->nembed[iwvl]), aper->locs, 2);
 	    if(parms->evl.psfsize[iwvl]<1 || parms->evl.psfsize[iwvl] > aper->nembed[iwvl]){
 		parms->evl.psfsize[iwvl] = aper->nembed[iwvl];
 	    }

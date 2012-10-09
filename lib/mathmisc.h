@@ -25,7 +25,7 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #undef	MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
-void normalize(double *p, long nloc, double norm);
+void normalize_sum(double *p, long nloc, double norm);
 void normalize_max(double *p, long nloc, double max);
 double dotdbl(const double *restrict p1, const double *restrict p2, 
 	      const double *restrict p3, long n);
@@ -62,5 +62,9 @@ void maxminfcmp(const fcomplex *restrict p, long N,
 		float *restrict max, float *restrict min, float *restrict sum);
 void remove_piston(double *p, long n);
 long nextpow2(long n);
+long nextfftsize(long n);
 unsigned long mylog2(unsigned long n);
+typedef double(*golden_section_fun)(void *param, double x);
+double golden_section_search(golden_section_fun f, void *param, 
+			     double x1, double x4, double tau);
 #endif

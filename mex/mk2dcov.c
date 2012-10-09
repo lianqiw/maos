@@ -8,6 +8,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	P_LOC,
 	P_AMP,
 	P_COV,
+	P_NORM,
 	P_TOT,
     };
     enum{
@@ -15,17 +16,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	PL_TOT,
     }; 
     if(nlhs!=PL_TOT || nrhs !=P_TOT){
-	mexErrMsgTxt("Usage: cov2d=mk2dcov(loc, amp, cov)");
+	mexErrMsgTxt("Usage: cov2d=mk2dcov(loc, amp, cov, normalization)");
     }
     loc_t *loc=mx2loc(prhs[P_LOC]);
-    dmat *amp=mx2d(prhs[P_AMP]);
+    dmat *amp0=mx2d(prhs[P_AMP]);
+    dmat *amp=ddup(amp0);
+    dfree(amp0);
     dmat *cov=mx2d(prhs[P_COV]);
+    int norm=(int)mxGetScalar(prhs[P_NORM]);
     dmat *cov2d=NULL;
     double *pamp=NULL;
     if(amp && amp->nx==loc->nloc){
 	pamp=amp->p;
 	normalize_max(pamp, loc->nloc, 1);
     }
-    mk2dcov(&cov2d, loc, pamp, 0.5, cov);
+    mk2dcov(&cov2d, loc, pamp, 0.5, cov, norm);
     plhs[PL_COV2D]=d2mx(cov2d);
+    dfree(cov);
+    dfree(cov2d);
+    dfree(amp);
+    free(loc);
 }

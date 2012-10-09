@@ -53,7 +53,7 @@ extern "C"
 /**
    Embed amp*exp(2*pi*i*opd). input is nxin*nxin, output is nxout*nxout;
 */
-__global__ static void embed_wvf_do(fcomplex *restrict wvf, 
+__global__ static void sa_embed_wvf_do(fcomplex *restrict wvf, 
 				    const float *restrict opd, const float *restrict amp, 
 				    const float wvl, const int nxin, const int nxout){
     const int isa=blockIdx.x;
@@ -76,7 +76,7 @@ __global__ static void embed_wvf_do(fcomplex *restrict wvf,
 /**
    Embed or crop an array to another array. Preserve corner.
 */
-__global__ static void cpcorner_do(fcomplex *restrict out, int noutx,  int nouty,
+__global__ static void sa_cpcorner_do(fcomplex *restrict out, int noutx,  int nouty,
 				   const fcomplex *restrict in, int ninx, int niny){
     int nx,ny;
     ny=MIN(niny, nouty)>>1;
@@ -97,7 +97,7 @@ __global__ static void cpcorner_do(fcomplex *restrict out, int noutx,  int nouty
 /**
    Embed or crop an array to another array. Preserve center. 
 */
-__global__ void cpcenter_do(fcomplex *restrict out, int noutx, int nouty,
+__global__ void sa_cpcenter_do(fcomplex *restrict out, int noutx, int nouty,
 			    const fcomplex *restrict in, int ninx, int niny, float scale){
     int nx, ny, nskipoutx, nskipouty, nskipinx, nskipiny;
     if(noutx<ninx){
@@ -130,7 +130,7 @@ __global__ void cpcenter_do(fcomplex *restrict out, int noutx, int nouty,
 /**
    abs2 to real.
 */
-__global__ static void abs2real_do(fcomplex *wvf, const int nx, float alpha){
+__global__ static void sa_abs2real_do(fcomplex *wvf, const int nx, float alpha){
     const int isa=blockIdx.x;
     wvf+=nx*nx*isa;
     for(int iy=threadIdx.y; iy<nx; iy+=blockDim.y){
@@ -144,7 +144,7 @@ __global__ static void abs2real_do(fcomplex *wvf, const int nx, float alpha){
 /**
    FFT Shift.
 */
-__global__ static void fftshift_do(fcomplex *wvf, const int nx, const int ny){
+__global__ static void sa_fftshift_do(fcomplex *wvf, const int nx, const int ny){
     const int isa=blockIdx.x;
     wvf+=nx*ny*isa;
     int nx2=nx>>1;
@@ -164,7 +164,7 @@ __global__ static void fftshift_do(fcomplex *wvf, const int nx, const int ny){
 /**
    FFT Shift from complex to real.
 */
-__global__ static void acc_real_fftshift_do(float *restrict out, const fcomplex *restrict wvf, 
+__global__ static void sa_acc_real_fftshift_do(float *restrict out, const fcomplex *restrict wvf, 
 					    int nx, int ny, float alpha){
     const int isa=blockIdx.x;
     wvf+=nx*ny*isa;
@@ -183,7 +183,7 @@ __global__ static void acc_real_fftshift_do(float *restrict out, const fcomplex 
 /**
    Rotate and embed.
  */
-__global__ static void embed_rot_do(fcomplex *restrict out, const int noutx, const int nouty,
+__global__ static void sa_embed_rot_do(fcomplex *restrict out, const int noutx, const int nouty,
 				    const fcomplex *restrict in, const int ninx, const int niny, const float* srot){
     const int isa=blockIdx.x;
     out+=isa*noutx*nouty;
@@ -217,7 +217,7 @@ __global__ static void embed_rot_do(fcomplex *restrict out, const int noutx, con
 /**
    Multiple each OTF with another. 
 */
-__global__ static void ccwm_do(fcomplex *otf, const int notfx, const int notfy, 
+__global__ static void sa_ccwm_do(fcomplex *otf, const int notfx, const int notfy, 
 			       fcomplex **lotfcs, int each){
     const int isa=blockIdx.x;
     otf+=notfx*notfy*isa;
@@ -234,7 +234,7 @@ __global__ static void ccwm_do(fcomplex *otf, const int notfx, const int notfy,
 /**
    Multiple an otf with another 1-d otf along each column
 */
-__global__ static void ccwmcol_do(fcomplex *otf, const int notfx, const int notfy,
+__global__ static void sa_ccwmcol_do(fcomplex *otf, const int notfx, const int notfy,
 				  fcomplex *const *etfs, int each){
     const int isa=blockIdx.x;
     otf+=notfy*notfx*isa;
@@ -249,7 +249,7 @@ __global__ static void ccwmcol_do(fcomplex *otf, const int notfx, const int notf
 /**
    Take the real part. Notice we are using = instead of +=
 */
-__global__ static void realpart_do(float *out, const fcomplex*restrict in, int ninx, int niny){
+__global__ static void sa_realpart_do(float *out, const fcomplex*restrict in, int ninx, int niny){
     const int isa=blockIdx.x;
     in+=isa*ninx*niny;
     out+=isa*ninx*niny;
@@ -262,7 +262,7 @@ __global__ static void realpart_do(float *out, const fcomplex*restrict in, int n
 /**
    Take the real part and accumulate to output
 */
-__global__ static void acc_real_do(float *out, const fcomplex*restrict in, int ninx, int niny, float alpha){
+__global__ static void sa_acc_real_do(float *out, const fcomplex*restrict in, int ninx, int niny, float alpha){
     const int isa=blockIdx.x;
     in+=isa*ninx*niny;
     out+=isa*ninx*niny;
@@ -276,7 +276,7 @@ __global__ static void acc_real_do(float *out, const fcomplex*restrict in, int n
    Do the role of si. input psfr is sampled with notfx*notfy, with sampling dtheta.
    Output ints is sampled with pixpsax*pixpsay, at pixtheta.
 */
-__global__ static void si_rot_do(float *restrict ints, int pixpsax, int pixpsay, 
+__global__ static void sa_si_rot_do(float *restrict ints, int pixpsax, int pixpsay, 
 				 int pixoffx, int pixoffy, float pixthetax, float pixthetay,
 				 const float *restrict psfr, float dtheta, int notfx, int notfy,
 				 const float *restrict srot, float alpha){
@@ -307,22 +307,12 @@ __global__ static void si_rot_do(float *restrict ints, int pixpsax, int pixpsay,
 	}
     }
 }
-/**
-   Add tip/tilt to the array. OPD=OPD+x*ttx+y*tty, where x=ix*dx+ox, y=iy*dy+oy; 
-*/
-__global__ static void add_tilt_do(float *opd, int nx, int ny, float ox, float oy, float dx, float ttx, float tty){
-    for(int iy=threadIdx.y; iy<ny; iy+=blockDim.y){
-	float vty=(oy+iy*dx)*tty;
-	for(int ix=threadIdx.x; ix<nx; ix+=blockDim.x){
-	    opd[ix+iy*nx]+=vty+(ox+ix*dx)*ttx;
-	}
-    }
-}
+
 /**
    Add tip/tilt to the OTF for each subaps. exp(-2*pi*sx/nx)*exp(-2*pi*sy/ny).
    peak of otf is in corner.
  */
-__global__ static void add_otf_tilt_corner_do(fcomplex *restrict otf, int nx, int ny, 
+__global__ static void sa_add_otf_tilt_corner_do(fcomplex *restrict otf, int nx, int ny, 
 					      float *restrict gx, float *restrict gy, float gscale){
     int isa=blockIdx.x;
     float sx=gx[isa]*gscale;
@@ -370,7 +360,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
     const float *restrict const srot2=multi_dtf?cuwfs[iwfs].srot:NULL;
     const int nwvl=parms->powfs[ipowfs].nwvl;
     curcell *restrict const ints=cuwfs[iwfs].ints;
-    float *lltopd=NULL;
+    curmat *lltopd=NULL;
     curcell *pistatout=NULL;
     if(parms->powfs[ipowfs].pistatout && isim>=parms->powfs[ipowfs].pistatstart){
 	pistatout=cuwfs[iwfs].pistatout;
@@ -390,17 +380,17 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 
     if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 	int nlx=powfs[ipowfs].llt->pts->nx;
-	cudaMalloc(&lltopd, sizeof(float)*nlx*nlx);
+	lltopd=curnew(nlx, nlx);
 	if(cuwfs[iwfs].lltncpa){
-	    cudaMemcpyAsync(lltopd, cuwfs[iwfs].lltncpa, 
+	    cudaMemcpyAsync(lltopd->p, cuwfs[iwfs].lltncpa, 
 			    sizeof(float)*nlx*nlx, MEMCPY_D2D, stream);
 	}else{
-	    cudaMemsetAsync(lltopd, 0, sizeof(float)*nlx*nlx, stream);
+	    cudaMemsetAsync(lltopd->p, 0, sizeof(float)*nlx*nlx, stream);
 	}
 	const int illt=parms->powfs[ipowfs].llt->i[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
 	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
-	gpu_atm2loc(lltopd, cupowfs[ipowfs].llt->loc, cupowfs[ipowfs].llt->nloc, 
+	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt->loc, cupowfs[ipowfs].llt->nloc, 
 		    hs, thetaxl, thetayl, 
 		    parms->powfs[ipowfs].llt->misreg[0], 
 		    parms->powfs[ipowfs].llt->misreg[1], 
@@ -411,7 +401,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		//warning("Remove tip/tilt in uplink ideally\n");
 		float *lltg;
 		cudaCallocHost(lltg, 2*sizeof(float), stream);
-		cuztilt<<<1,dim3(16,16),0,stream>>>(lltg, lltopd, 1, cupowfs[ipowfs].llt->dx, 
+		cuztilt<<<1,dim3(16,16),0,stream>>>(lltg, lltopd->p, 1, cupowfs[ipowfs].llt->dx, 
 						    cupowfs[ipowfs].llt->nxsa, cuwfs[iwfs].lltimcc,
 						    cupowfs[ipowfs].llt->pts, cuwfs[iwfs].lltamp, 1.f);
 		CUDA_SYNC_STREAM;
@@ -430,7 +420,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    const double dx=powfs[ipowfs].llt->pts->dx;
 	    const double ox=powfs[ipowfs].llt->pts->origx[0];
 	    const double oy=powfs[ipowfs].llt->pts->origy[0];
-	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd, nlx, nlx, ox, oy, dx, ttx, tty);
+	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd->p, nlx, nlx, ox, oy, dx, ttx, tty);
 	}/*if upt */
 	ctoc("llt opd");
 	int nlwvf=nlx*parms->powfs[ipowfs].embfac;
@@ -439,6 +429,9 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    cudaMalloc(&lotfc, notf*notf*sizeof(fcomplex));
 	}else{
 	    lotfc=lwvf;
+	}
+	if(parms->save.wfsopd[iwfs]){
+	    cellarr_cur(simu->save->wfslltopd[iwfs],lltopd, stream);
 	}
     }/*if has llt */
 
@@ -476,16 +469,16 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    if(nlwvf<notf){
 		cudaMemsetAsync(lotfc, 0, sizeof(fcomplex)*notf*notf, stream);
 	    }
-	    embed_wvf_do<<<1,dim3(16,16),0,stream>>>
-		(lwvf, lltopd, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
+	    sa_embed_wvf_do<<<1,dim3(16,16),0,stream>>>
+		(lwvf, lltopd->p, cuwfs[iwfs].lltamp, wvl, nlx, nlwvf);
 	    /*Turn to PSF. peak in corner */
 	    CUFFT(cuwfs[iwfs].lltplan_wvf, lwvf, CUFFT_FORWARD);
-	    abs2real_do<<<1,dim3(16,16),0,stream>>>(lwvf, nlwvf, 1./(float)(nlwvf*nlwvf));
+	    sa_abs2real_do<<<1,dim3(16,16),0,stream>>>(lwvf, nlwvf, 1./(float)(nlwvf*nlwvf));
 	    /*Turn to OTF. peak in corner*/
 	    /*Use backward to make lotfc the conjugate of otf. peak is in corner. */
 	    CUFFT(cuwfs[iwfs].lltplan_wvf, lwvf, CUFFT_INVERSE);
 	    if(lwvf!=lotfc){
-		cpcorner_do<<<1, dim3(16,16),0,stream>>>(lotfc, notf, notf, lwvf, nlwvf, nlwvf);
+		sa_cpcorner_do<<<1, dim3(16,16),0,stream>>>(lotfc, notf, notf, lwvf, nlwvf, nlwvf);
 	    }
 	}
 	ctoc("llt otf");
@@ -497,14 +490,14 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    if(notf>nwvf){
 		cudaMemsetAsync(psf, 0, sizeof(fcomplex)*ksa*notf*notf, stream);
 	    }
-	    embed_wvf_do<<<ksa, dim3(16,16),0,stream>>>
+	    sa_embed_wvf_do<<<ksa, dim3(16,16),0,stream>>>
 		(wvf, phiout+isa*nx*nx, cuwfs[iwfs].amp+isa*nx*nx, wvl, nx, nwvf);
 	    ctoc("embed");
 	    /* turn to complex psf, peak in corner */
 	    CUFFT(cuwfs[iwfs].plan1, wvf, CUFFT_FORWARD);
 	    /* copy big psf to smaller psf covering detector focal plane. */
 	    if(psf!=wvf){
-		cpcorner_do<<<ksa, dim3(16,16),0,stream>>>
+		sa_cpcorner_do<<<ksa, dim3(16,16),0,stream>>>
 		    (psf, notf, notf, wvf, nwvf, nwvf);
 	    }
 	    //gpu_write(psf, notf, notf*ksa, "psf_out_1");
@@ -512,12 +505,12 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    if(wvfout){
 		cudaMemsetAsync(psfout, 0, sizeof(fcomplex)*ksa*notf*notf, stream);
 		CUFFT2(cuwfs[iwfs].plan2, psf, psfout, CUFFT_INVERSE);
-		cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
+		sa_cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
 		    (wvfout->p[isa+nsa*iwvl]->p, notf/2, notf/2, 
 		     psfout, notf, notf, norm_psf/(notf*notf));
 	    }
 	    /* abs2 part to real, peak in corner */
-	    abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, 1);
+	    sa_abs2real_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, 1);
 	    ctoc("abs2real");
 	    //gpu_write(psf, notf, notf*ksa, "psf_out_2");
 	    if(isotf){
@@ -527,19 +520,19 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		if(pistatout){
 		    cudaMemcpyAsync(psfstat, psf, sizeof(fcomplex)*notf*notf*ksa, 
 				    MEMCPY_D2D, stream);
-		    add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
+		    sa_add_otf_tilt_corner_do<<<ksa,dim3(16,16),0,stream>>>
 			(psfstat, notf,notf, gradref->p+isa, gradref->p+nsa+isa, -1.f/dtheta);
 		    CUFFT(cuwfs[iwfs].plan2, psfstat, CUFFT_INVERSE);/*back to PSF. peak in corner*/
 		    if(parms->sim.skysim){/*want peak in corner*/
-			acc_real_do<<<ksa,dim3(16,16),0,stream>>>
+			sa_acc_real_do<<<ksa,dim3(16,16),0,stream>>>
 			    (pistatout->p[isa+nsa*iwvl]->p, psfstat, notf, notf, norm_pistat);
 		    }else{/*want peak in center*/
-			acc_real_fftshift_do<<<ksa,dim3(16,16),0,stream>>>
+			sa_acc_real_fftshift_do<<<ksa,dim3(16,16),0,stream>>>
 			    (pistatout->p[isa+nsa*iwvl]->p, psfstat, notf, notf, norm_pistat);
 		    }
 		}
 		if(lltopd){/*multiply with uplink otf. */
-		    ccwm_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, notf, (fcomplex**)lotfc, 1);
+		    sa_ccwm_do<<<ksa,dim3(16,16),0,stream>>>(psf, notf, notf, (fcomplex**)lotfc, 1);
 		    ctoc("ccwm with lotfc");
 		}
 		/* is OTF now. */
@@ -556,14 +549,14 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 			cudaMemsetAsync(otf, 0, sizeof(fcomplex)*ksa*ncompx*ncompy, stream);
 		    }
 		    if(srot1){/*rotate and embed psf*/
-			fftshift_do<<<ksa, dim3(16,16),0,stream>>>
+			sa_fftshift_do<<<ksa, dim3(16,16),0,stream>>>
 			    (psf, notf, notf);/*shift to center */
-			embed_rot_do<<<ksa, dim3(16,16), 0, stream>>>
+			sa_embed_rot_do<<<ksa, dim3(16,16), 0, stream>>>
 			    (otf, ncompx, ncompy, psf, notf, notf, srot1?srot1+isa:NULL);
-			fftshift_do<<<ksa, dim3(16,16),0,stream>>>
+			sa_fftshift_do<<<ksa, dim3(16,16),0,stream>>>
 			    (otf, ncompx, ncompy);/*shift back to corner */
 		    }else if(otf!=psf){/*copy the psf corner*/
-			cpcorner_do<<<ksa, dim3(16,16),0,stream>>>
+			sa_cpcorner_do<<<ksa, dim3(16,16),0,stream>>>
 			    (otf, ncompx, ncompy, psf, notf, notf);
 			ctoc("cpcorner");
 		    }
@@ -575,18 +568,18 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		/*now we have otf. multiple with etf, dtf. */
 		if(cuwfs[iwfs].dtf[iwvl].etf){
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){
-			ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
+			sa_ccwmcol_do<<<ksa,dim3(16,16),0,stream>>>
 			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf+isa, 0);
 		    }else{
 			ctoc("before ccwm");
-			ccwm_do<<<ksa,dim3(16,16),0,stream>>>
+			sa_ccwm_do<<<ksa,dim3(16,16),0,stream>>>
 			    (otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].etf+isa, 0);
 			ctoc("ccwm");
 		    }
 		}
 		/*multiple with nominal */
 		if(cuwfs[iwfs].dtf[iwvl].nominal){
-		    ccwm_do<<<ksa,dim3(16,16),0,stream>>>
+		    sa_ccwm_do<<<ksa,dim3(16,16),0,stream>>>
 			(otf, ncompx, ncompy, cuwfs[iwfs].dtf[iwvl].nominal+isa, 0);
 		    ctoc("nominal");
 		}
@@ -595,9 +588,9 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		ctoc("fft");
 		float *psfr;
 		DO(cudaMalloc(&psfr, sizeof(float)*ncompx*ncompy*ksa));
-		realpart_do<<<ksa, dim3(16,16),0,stream>>>(psfr, otf, ncompx, ncompy);
+		sa_realpart_do<<<ksa, dim3(16,16),0,stream>>>(psfr, otf, ncompx, ncompy);
 		ctoc("realpart");
-		si_rot_do<<<ksa, dim3(16,16),0,stream>>>
+		sa_si_rot_do<<<ksa, dim3(16,16),0,stream>>>
 		    (ints->p[isa]->p, pixpsax, pixpsay, 
 		     parms->powfs[ipowfs].pixoffx, parms->powfs[ipowfs].pixoffy,
 		     pixthetax, pixthetay, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
@@ -605,10 +598,10 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		ctoc("final");
 		cudaFree(psfr);
 	    }/*if ints. */
-	}/*for isa */
+	}/*for isa block loop */
     }/*for iwvl */
     if(lltopd){
-	cudaFree(lltopd);
+	curfree(lltopd);
 	if(lwvf!=lotfc) cudaFree(lotfc);
 	cudaFree(lwvf);
     }

@@ -23,6 +23,7 @@
 #include "common.h" 
 #include "random.h"
 #include "readcfg.h"
+#include "readstr.h"
 #include "dmat.h"
 #include "smat.h"
 #include "cmat.h"
@@ -60,4 +61,5 @@
 #include "imat.h"
 #include "nr.h"
 #include "mkdtf.h"
+#include "psd.h"
 #endif

@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 1.1.0, lianqiw@gmail.com)
+AC_INIT(maos, 1.3.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 #silent building #disable this if automake is too old.
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
@@ -35,13 +35,13 @@ fi
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
-AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA to avoid overflow in single precision"])
+AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA and MAOS to avoid overflow in single precision"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 OPTScommon=" -Wshadow -Wall " #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror"
 fi
-LDEXE="-lm"
+LDEXE="-lm -no-install"
 OPTSextra=""
 
 #Compile mex routines if MATLAB is detected
@@ -446,8 +446,13 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 else
    LDFFT=""
 fi
-AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
-AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
+AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="yes")
+if test $use_fftw_threads = "yes" ;then
+     AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
+     AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
+else
+     has_fftw_threads="no"
+fi
 if test "x$has_fftw_threads" = "xyes" ;then
     if test "x$has_fftw_omp" = "xyes" ;then
         AC_DEFINE(USE_FFTW_THREADS, [2], "We have FFTW3 threads support with openmp, conflict.")
@@ -517,9 +522,9 @@ else
    chol_fun=cholmod_factorize
    AM_CONDITIONAL(USE_LONG, false)
 fi
-if test ! -d ${LIBDIR}/cholmod${libsuffix} -a -n "$libsuffix" ;then
-   download CHOLMOD cholmod${libsuffix}.tar.bz2
-fi
+#if test ! -d ${LIBDIR}/cholmod${libsuffix} -a -n "$libsuffix" ;then
+#   download CHOLMOD cholmod${libsuffix}.tar.bz2
+#fi
 AC_CHECK_LIB([cholmod_${CHOLSUFFIX}],[${chol_fun}], [have_chol="yes"], [have_chol="no"],[$LAPACK -pthread -L${LIBDIR}/cholmod${libsuffix}])
 if test "x$have_chol" = "xyes" ;then
     LDCHOL="-L${LIBDIR}/cholmod${libsuffix} -lcholmod_${CHOLSUFFIX}"
@@ -547,8 +552,6 @@ AC_SUBST(LDLIB)
 AC_SUBST(OPTScommon)
 AC_SUBST(SRC_DIR)
 AC_SUBST(BUILD_DIR)
-LIBS="" #somehow LIBS contain -fftw3
-AC_SUBST(LIBS)
 #Doxygen Features
 DX_HTML_FEATURE(ON)
 DX_CHM_FEATURE(OFF)
@@ -709,6 +712,13 @@ if test "$use_cuda" = "yes" ;then
        AM_CONDITIONAL(USE_CUDA, true)
        AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    fi
+   nvml_lib="yes"
+   AC_CHECK_HEADERS(nvml.h, [], [], [nvml_lib="no"])
+   AC_CHECK_LIB([nvidia-ml], [nvmlDeviceGetMemoryInfo], [],[nvml_lib="no"])
+   if test $nvml_lib = "yes" ;then
+       AC_DEFINE(HAS_NVML, [1], "Has nvidia ML library")
+       LDCUDA="$LDCUDA -lnvidia-ml"
+   fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
    AC_SUBST(CUDAOPT)
    AC_SUBST(LDCUDA)
@@ -717,6 +727,8 @@ else
    AM_CONDITIONAL(USE_CUDA, false)
    AC_DEFINE(USE_CUDA, [0], "Don't have Cuda")
 fi
+LIBS="" #somehow LIBS contain -fftw3 -lnvidia-sml
+AC_SUBST(LIBS)
 AC_OUTPUT
 echo SRC_DIR=$SRC_DIR
 echo BUILD_DIR=$BUILD_DIR

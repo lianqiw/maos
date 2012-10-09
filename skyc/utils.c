@@ -55,8 +55,11 @@ ARG_S *parse_args(int argc, char **argv){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(arg->nthread>NCPU2 || arg->nthread<=0){
-	arg->nthread=NCPU2;
+    /*do not use NTHREAD here. causes too much cpu load*/
+    if(arg->nthread>NCPU || arg->nthread<=0){
+	arg->nthread=NCPU;
+    }else{
+        NTHREAD=arg->nthread;
     }
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/skyc_%ld.conf",TEMP,(long)getpid());
@@ -147,7 +150,7 @@ static dmat *add_psd_nomatch(dmat *psd1,dmat *psd2){
     dmat *nu1=dsub(psd1,0,psd1->nx,0,1);
     dmat *psd2x=dnew_ref(psd2->nx, 1, psd2->p);
     dmat *psd2y=dnew_ref(psd2->nx,1,psd2->p+psd2->nx);
-    dmat *psd2new=dinterp1log(psd2x,psd2y,nu1);
+    dmat *psd2new=dinterp1(psd2x,psd2y,nu1);
     dfree(psd2x); dfree(psd2y);
     dmat *psd=dnew(nu1->nx,2);
     double *ppsd=psd->p+psd->nx;
@@ -164,7 +167,7 @@ static dmat *add_psd_nomatch(dmat *psd1,dmat *psd2){
    second column is PSD*/
 dmat *add_psd(dmat *psd1, dmat *psd2){
     if(psd1->nx!=psd2->nx){
-	warning("The two PSDs have different length\n");
+	//warning("The two PSDs have different length\n");
 	return add_psd_nomatch(psd1, psd2);
     }
     dmat *psd=dnew(psd1->nx,2);
@@ -182,4 +185,16 @@ dmat *add_psd(dmat *psd1, dmat *psd2){
 	pp[i]=p1[i]+p2[i];
     }
     return psd;
+}
+/*
+  Add a PSD to another.
+*/
+void add_psd2(dmat **out, dmat *in){
+    if(!*out){
+	*out=ddup(in);
+    }else{
+	dmat *tmp=*out;
+	*out=add_psd(tmp, in);
+	dfree(tmp);
+    }
 }

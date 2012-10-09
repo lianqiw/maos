@@ -26,7 +26,8 @@ extern "C"
 #include <cublas_v2.h>
 #include <cusparse.h>
 #include <cufft.h>
-
+#undef EPS
+#define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 #define DEBUG_MEM 0
 #if DEBUG_MEM
 /*static int tot_mem=0; */
@@ -46,7 +47,10 @@ inline int CUDAFREE(float *p){
 #define cudaCallocHost(P,N,stream) ({DO(cudaMallocHost(&(P),N)); DO(cudaMemsetAsync(P,0,N,stream));})
 #define cudaCalloc(P,N,stream) ({DO(cudaMalloc(&(P),N));DO(cudaMemsetAsync(P,0,N,stream));})
 #define TO_IMPLEMENT error("Please implement")
-
+__host__ __device__ static __inline__ void cuCscalef(cuFloatComplex x, float a){
+    x.x*=a;
+    x.y*=a;
+}
 inline void* malloc4async(int N){
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
     void *tmp;
@@ -102,13 +106,15 @@ extern int nstream;
 #define NTH2 32
 #endif
 #define DIM2(nx,ny,nb) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D)),dim3(MIN(nx,nb),MIN(ny,nb))
+#define DIM3(nx,ny,nb,nbz) dim3(MIN((nx+nb-1)/(nb),NG2D),MIN((ny+nb-1)/(nb),NG2D),nbz),dim3(MIN(nx,nb),MIN(ny,nb))
 
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 200
 #define MEMCPY_D2D cudaMemcpyDeviceToDevice
 #else
 #define MEMCPY_D2D cudaMemcpyDefault
 #endif
-
+#define MEMCPY_D2H cudaMemcpyDeviceToHost
+#define MEMCPY_H2D cudaMemcpyHostToDevice
 /*
   Notice that the CUDA FFT 4.0 is not thread safe!. Our FFT is a walk around of
   the problem by using mutex locking to makesure only 1 thread is calling FFT. */
@@ -130,6 +136,55 @@ extern const char *cufft_str[];
 	    error("cufft failed: %s\n", cufft_str[ans]);	\
 	}							\
     }while(0)
+#define CUFFTR2C(plan,in,out) do{				\
+	LOCK_CUFFT;						\
+	int ans=cufftExecR2C(plan, in, out);			\
+	UNLOCK_CUFFT;						\
+	if(ans){						\
+	    error("cufft failed: %s\n", cufft_str[ans]);	\
+	}							\
+    }while(0)
+#define CUFFTC2R(plan,in,out) do{				\
+	LOCK_CUFFT;						\
+	int ans=cufftExecC2R(plan, in, out);			\
+	UNLOCK_CUFFT;						\
+	if(ans){						\
+	    error("cufft failed: %s\n", cufft_str[ans]);	\
+	}							\
+    }while(0)
 #define CUFFT(plan,in,dir) CUFFT2(plan,in,in,dir)
-
+typedef struct stream_t{
+    cudaStream_t stream;
+    cublasHandle_t handle;
+    cusparseHandle_t sphandle;
+    stream_t(){
+	STREAM_NEW(stream);//this takes a few seconds for each gpu for the first time.
+	HANDLE_NEW(handle, stream);
+	SPHANDLE_NEW(sphandle, stream);
+    }
+    ~stream_t(){
+	SPHANDLE_DONE(sphandle);
+	HANDLE_DONE(handle);
+	STREAM_DONE(stream);
+    }
+    void sync(){
+	assert(this);
+	DO(cudaStreamSynchronize(stream));
+    }
+    operator cudaStream_t(){
+	assert(this);
+	return stream;
+    }
+    operator cublasHandle_t(){
+	assert(this);
+	return handle;
+    }
+    operator cusparseHandle_t(){
+	assert(this);
+	return sphandle;
+    }
+private:
+    stream_t(const stream_t &);
+    stream_t & operator=(const stream_t &);
+}stream_t;
 #endif

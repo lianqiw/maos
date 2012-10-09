@@ -39,6 +39,6 @@ int main(int argc, char **argv){
     dsp *ha=spread("%s",argv[2]);
     double thres=argc>3?strtod(argv[3],NULL):0.5;
     spcell*has=spcellnew(1,1); has->p[0]=ha;
-    spcell *slave=slaving(&aloc, has, NULL, NULL, NULL, NULL, thres, 1);
+    spcell *slave=slaving(NULL,&aloc, has, NULL, NULL, NULL, NULL, thres, 1);
     spwrite(slave->p[0],"slaving");
 }

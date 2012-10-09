@@ -42,6 +42,9 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
     wfsgpu=(int*)calloc(parms->nwfs, sizeof(int));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	wfsgpu[iwfs]=gpu_next();
+	if(NGPU>4 && wfsgpu[iwfs]==gpu_recon){
+	    wfsgpu[iwfs]=gpu_next();
+	}
     }
     for(int im=0; im<NGPU; im++){
 	gpu_set(im);
@@ -64,6 +67,11 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		gpu_pts2cuwloc(cupowfs[ipowfs].llt, pts, loc);
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
+	    if(parms->powfs[ipowfs].fieldstop){
+		cp2gpu(&cupowfs[ipowfs].embed, powfs[ipowfs].embed, powfs[ipowfs].loc->nloc);
+		cupowfs[ipowfs].nembed=powfs[ipowfs].nembed;
+		cp2gpu(&cupowfs[ipowfs].fieldstop, powfs[ipowfs].fieldstop);
+	    }
 	}
     }
 
@@ -89,6 +97,10 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	DO(cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream));
 	DO(cublasCreate(&cuwfs[iwfs].handle));
 	DO(cublasSetStream(cuwfs[iwfs].handle, cuwfs[iwfs].stream));
+	if(parms->powfs[ipowfs].fieldstop){
+	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed, cupowfs[ipowfs].nembed, CUFFT_C2C));
+	    cufftSetStream(cuwfs[iwfs].plan_fs, cuwfs[iwfs].stream);
+	}
 	if(powfs[ipowfs].saimcc){
 	    if(powfs[ipowfs].nsaimcc>1 || wfsind==0 || wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 		void *imcc[nsa];
@@ -121,8 +133,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	}else{
 	    cuwfs[iwfs].amp=cuwfs[iwfs0].amp;
 	}
-	
-
 	dmat *nea=powfs[ipowfs].neasim->p[wfsind];
 	if(nea){
 	    cp2gpu(&cuwfs[iwfs].neasim, nea);
@@ -187,7 +197,6 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		}
 		cufftSetStream(cuwfs[iwfs].plan2, cuwfs[iwfs].stream);
 	    }
-
 	    if(notf==ncompx && notf==ncompy){
 		cuwfs[iwfs].plan3=cuwfs[iwfs].plan2;
 	    }else{
@@ -252,13 +261,28 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 				petf=(cmat *(*)[nsa])powfs[ipowfs].etfsim[iwvl].p2->p;
 				cuwfs[iwfs].dtf[iwvl].etfis1d=0;
 			    }
+			    cmat **petfi=petf[parms->powfs[ipowfs].llt->n>1?wfsind:0];
+			    int ncx=petfi[0]->nx;
+			    int ncy=petfi[0]->ny;
+			    /* Coping many small arrays is slow due to
+			       overhead. We first copy the array to a single
+			       array then assign pointers. 2012-07-06*/
+			    fcomplex *temp=(fcomplex*)malloc(sizeof(fcomplex)*nsa*ncx*ncy);
+			    fcomplex *tempi;
+			    fcomplex *temp2;
+			    DO(cudaMalloc(&temp2, sizeof(fcomplex)*nsa*ncx*ncy));
 			    for(int isa=0; isa<nsa; isa++){
-				etf[isa]=NULL;
-				cp2gpu(&etf[isa], petf[parms->powfs[ipowfs].llt->n>1?wfsind:0][isa]);
+				tempi=temp+isa*ncx*ncy;
+				etf[isa]=temp2+isa*ncx*ncy;
+				for(int i=0; i<ncx*ncy; i++){
+				    tempi[i]=make_cuFloatComplex(creal(petfi[isa]->p[i]),
+								 cimag(petfi[isa]->p[i]));
+				}
 			    }
+			    DO(cudaMemcpy(temp2, temp, sizeof(fcomplex)*nsa*ncx*ncy, cudaMemcpyHostToDevice));
+			    free(temp);
 			    cudaMalloc(&cuwfs[iwfs].dtf[iwvl].etf, nsa*sizeof(void*));
 			    cudaMemcpy(cuwfs[iwfs].dtf[iwvl].etf, etf, nsa*sizeof(void*), cudaMemcpyHostToDevice);
-
 			}
 		    }/*for iwvl. */
 		    if(parms->powfs[ipowfs].llt){
@@ -273,10 +297,24 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 		    if(powfs[ipowfs].intstat->mtche->ny>1 || wfsind==0|| wfsgpu[iwfs]!=wfsgpu[iwfs0]){
 			dmat **mtche=powfs[ipowfs].intstat->mtche->p+nsa*(powfs[ipowfs].intstat->mtche->ny>1?wfsind:0);
 			float *mtche2[nsa];
+			int ncx=mtche[0]->nx;
+			int ncy=mtche[0]->ny;
+			/* Coping many small arrays is slow due to
+			   overhead. We first copy the array to a single
+			   array then assign pointers. 2012-07-06*/
+			float *temp=(float*)malloc(sizeof(float)*nsa*ncx*ncy);
+			float *tempi;
+			float *temp2;
+			cudaMalloc(&temp2, sizeof(float)*nsa*ncx*ncy);
 			for(int isa=0; isa<nsa; isa++){
-			    mtche2[isa]=NULL;
-			    cp2gpu((float**)&mtche2[isa], mtche[isa]);
+			    mtche2[isa]=temp2+isa*ncx*ncy;
+			    tempi=temp+isa*ncx*ncy;
+			    for(int i=0; i<ncx*ncy; i++){
+				tempi[i]=(float)(mtche[isa]->p[i]);
+			    }
 			}
+			cudaMemcpy(temp2, temp, nsa*ncx*ncy*sizeof(float), cudaMemcpyHostToDevice);
+			free(temp);
 			cudaMalloc(&cuwfs[iwfs].mtche, nsa*sizeof(void*));
 			cudaMemcpy(cuwfs[iwfs].mtche, mtche2, nsa*sizeof(void*),cudaMemcpyHostToDevice);
 			cp2gpu(&cuwfs[iwfs].i0sum, powfs[ipowfs].intstat->i0sum->p+nsa*(powfs[ipowfs].intstat->i0sum->ny>1?wfsind:0), nsa);
@@ -356,15 +394,11 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 }
 void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	gpu_set(GPUS[wfsgpu[iwfs]]);
+	gpu_set(wfsgpu[iwfs]);
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	if(powfs[ipowfs].ncpa){
-	    cp2gpu(&cuwfs[iwfs].opdadd, powfs[ipowfs].ncpa->p[wfsind]);
-	}else{
-	    curzero(cuwfs[iwfs].opdadd, cuwfs[iwfs].stream);
-	}
+	curzero(cuwfs[iwfs].opdadd, cuwfs[iwfs].stream);
 	if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
 	    curmat *temp=NULL;
 	    cp2gpu(&temp, powfs[ipowfs].opdadd->p[wfsind]);
@@ -383,7 +417,7 @@ __global__ static void setup_rand(curandState *rstat, int seed){
 */
 void gpu_wfsgrad_seeding(const PARMS_T *parms, const POWFS_T *powfs, rand_t *rstat){
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	gpu_set(GPUS[wfsgpu[iwfs]]);
+	gpu_set(wfsgpu[iwfs]);
 	cuwfs_t *cuwfs=cudata->wfs;
 	int seed=lrand(rstat);/*don't put this after continue. */
 	int ipowfs=parms->wfs[iwfs].powfs;

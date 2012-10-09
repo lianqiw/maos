@@ -28,10 +28,11 @@ int main(int argc, char *argv[]){
 	P_LOC,
 	P_AMP,
 	P_COV,
+	P_NORM,
 	P_TOT,
     };
     if(argc<P_TOT){
-	info("Usage: %s res.bin loc.bin, amp.bin, cov.bin\n", argv[0]);
+	info("Usage: %s res.bin loc.bin, amp.bin, cov.bin, normalize\n", argv[0]);
 	exit(0);
     }
     
@@ -43,8 +44,9 @@ int main(int argc, char *argv[]){
     }
     dcell *cov=dcellread("%s",argv[P_COV]);
     dcell *cov2d=dcellnew(cov->nx, cov->ny);
+    int norm=(int)strtol(argv[P_NORM], NULL, 10);
     for(int i=0; i<cov->nx*cov->ny; i++){
-	mk2dcov(&cov2d->p[i], loc, amp?amp->p:NULL, 0.5, cov->p[i]);
+	mk2dcov(&cov2d->p[i], loc, amp?amp->p:NULL, 0.5, cov->p[i], norm);
     }
     dcellwrite(cov2d, "%s", argv[P_RES]); 
 }

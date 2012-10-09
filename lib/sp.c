@@ -534,10 +534,11 @@ void Y(spmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x,
 	long icol, ix;
 	if(!*yout){
 	    *yout=X(new)(A->m, x->ny); 
+	}else{
+	    assert((*yout)->nx==A->m);
 	}
 	X(mat) *y=*yout;
-	assert(x->ny==y->ny);
-	assert(A->n==x->nx);
+	assert(x->ny==y->ny && A->n==x->nx);
 	if(x->ny==1){
 	    Y(spmulvec)(y->p, A, x->p,  alpha);
 	}else{
@@ -572,10 +573,11 @@ void Y(sptmulmat)(X(mat) **yout, const X(sp) *A, const X(mat) *x, const T alpha)
 	long icol, ix;
 	if(!*yout){
 	    *yout=X(new)(A->n, x->ny);
+	}else{
+	    assert((*yout)->nx==A->n);
 	}
 	X(mat) *y=*yout;
-	assert(x->ny==y->ny);
-	assert(A->n==y->nx);
+	assert(x->ny==y->ny && A->m==x->nx);
 	if(x->ny==1){
 	    Y(sptmulvec)(y->p, A, x->p, alpha);
 	}else{

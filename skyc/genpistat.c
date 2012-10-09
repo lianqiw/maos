@@ -124,8 +124,7 @@ static void calc_pistat(GENPISTAT_S *data){
 			    mapply->p[1]=-ztilti->p[isa+nsa];
 			    ccp(&wvfc, wvfout[iwvl][isa]);
 			    ngsmod2wvf(wvfc, wvl, mapply,powfs->cloc[isa],
-				       powfs->fpc[isa], 
-				       thetax, thetay, parms);
+				       powfs->fpc[isa], thetax, thetay, parms);
 			    cembed(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
 			    cabs22d(&ppistat[iwvl][isa],1, wvf, 1);
@@ -170,7 +169,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		ccpd(&otf, psf);
 		cfft2(otf,-1);
 		ctilt(otf,-pgrad[0],-pgrad[1],0);
-		cifft2(otf,1);
+		cfft2i(otf,1);
 		creal2d(&psf,0,otf,1);
 	    }
 	    /*
@@ -246,7 +245,7 @@ void prep_bspstrehl(SIM_S *simu){
     for(long gx=-ng; gx<=ng; gx++){
 	gg->p[gx+ng]=(double)gx;
     }
-    simu->bspstrehlxy=gg;
+    simu->bspstrehlxy=dref(gg);
 
     simu->bspstrehl=calloc(parms->maos.npowfs, sizeof(dcell**));
 
@@ -298,4 +297,5 @@ void prep_bspstrehl(SIM_S *simu){
     }
     dfree(xnew);
     dfree(ynew);
+    dfree(gg);
 }

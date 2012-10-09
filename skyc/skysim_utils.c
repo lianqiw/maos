@@ -36,6 +36,7 @@ dmat* calc_rmsol(dmat *mideal, const PARMS_S *parms){
     dmat *rmsol=dnew(2,1);
     rmsol->p[0]=rms/mideal->ny;
     rmsol->p[1]=rmstt/mideal->ny;
+    info2("Input time series: RMS WFE is NGS: %g nm, TT: %g nm, PS: %g nm\n", sqrt(rmsol->p[0])*1e9, sqrt(rmsol->p[1])*1e9, sqrt(rmsol->p[0]-rmsol->p[1])*1e9);
     return rmsol;
 }
 
@@ -88,6 +89,15 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 	const double hs=parms->maos.hs;
 	const double scale=pow(1.-hc/hs, -2);
 	const double scale1=1.-scale;
+	double focus;
+	if(modm->nx>5){
+	    focus=mod[5];
+	    if(!parms->maos.ahstfocus){
+		focus+=mod[2]*scale1;
+	    }
+	}else{
+	    focus=mod[2]*scale1;
+	}
 	for(int iloc=0; iloc<nloc; iloc++){
 	    double x=locx[iloc];
 	    double y=locy[iloc];
@@ -96,7 +106,8 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 	    double y2=y*y;
 	    double tmp= locx[iloc]*mod[0]
 		+locy[iloc]*mod[1]
-		+mod[2]*((x2+y2-fpc)*scale1-2*scale*hc*(thetax*x+thetay*y))
+		+focus*(x2+y2-fpc)
+		+mod[2]*(-2*scale*hc*(thetax*x+thetay*y))
 		+mod[3]*((x2-y2)*scale1 - 2*scale*hc*(thetax*x-thetay*y))
 		+mod[4]*(xy*scale1-scale*hc*(thetay*x+thetax*y));
 	    wvf->p[iloc]*=cexp(ik*tmp);
@@ -167,8 +178,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			  4-6: On axis NGS and TT wihtout considering un-orthogonality.*/
     dmat *mreal=NULL;/*modal correction at this step. */
     dmat *merr=dnew(nmod,1);/*modal error */
-    dmat *merrm=NULL;/*measured model error */
-    
+    dcell *merrm=dcellnew(1,1);
     dmat *mres=dnew(nmod,aster->nstep);
     PDMAT(mres,pmres);
     PDMAT(parms->skyc.rnefs,rnefs);
@@ -182,7 +192,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     dcell **mtche=calloc(aster->nwfs, sizeof(dcell*));
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
-    SERVO_T *st2t=calloc(1, sizeof(SERVO_T));
+    SERVO_T *st2t=servo_new(merrm, aster->gain->p[idtrat]);
     const double dtngs=parms->maos.dt*dtrat;
     const long nwvl=parms->maos.nwvl;
     dmat *pgm;
@@ -219,10 +229,10 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	memcpy(merr->p, pmideal[istep], nmod*sizeof(double));
 	dadd(&merr, 1, mreal, -1);/*form NGS mode error; */
 
-	if(istep>=parms->skyc.evlstart){
+	if(istep>=parms->skyc.evlstart){/*performance evaluation*/
 	    double res_ngs=dwdot(merr->p,parms->maos.mcc,merr->p);
-	    if(res_ngs>ngsol*5){
-		/*warning2("%5.1f Hz: loop diverged. \n", parms->skyc.fss[idtrat]); */
+	    if(res_ngs>ngsol*100){
+		//warning2("%5.1f Hz: %g nm loop diverged. \n", parms->skyc.fss[idtrat], sqrt(res_ngs)*1e9); 
 		dfree(res); res=NULL;
 		break;
 	    }
@@ -254,9 +264,6 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	
 	if(istep<parms->skyc.phystart){
 	    /*Ztilt, noise free simulation for acquisition. */
-	    if(istep % dtrat == 0){
-		dzero(zgrad);
-	    }
 	    dmm(&zgrad, aster->gm, merr, "nn", 1);/*grad due to residual NGS mode. */
 	    int itsa=0;
 	    for(int iwfs=0; iwfs<aster->nwfs; iwfs++){
@@ -267,29 +274,27 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		}
 		itsa+=nsa*2;
 	    }
-	    dcp(&mreal, st2t->mint);
+	    if(st2t->mint[0]){
+		dcp(&mreal, st2t->mint[0]->p[0]);
+	    }
 	    if((istep+1) % dtrat == 0){/*has output */
 		dscale(zgrad, 1./dtrat);/*averaging gradients. */
-		dzero(merrm);
-		dmm(&merrm, pgm, zgrad, "nn", 1);
+		dzero(merrm->p[0]);
+		dmm(&merrm->p[0], pgm, zgrad, "nn", 1);
 		memcpy(zgrads->p+istep*aster->tsa*2, zgrad->p, sizeof(double)*aster->tsa*2);
+		dzero(zgrad);
 		switch(parms->skyc.servo){
 		case 1:
-		    dadd(&st2t->mint, 1, merrm, 0.3);
+		    dcelladd(st2t->mint, 1, merrm, 0.3);
 		    break;
 		case 2:
-		    servo_typeII_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
+		    servo_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
 		    break;
 		default:
 		    error("Invalid\n");
 		}
 	    }
 	}else{
-	    if(istep % dtrat == 0){
-		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-		    dcellzero(psf[iwfs]);
-		}
-	    }
 	    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
 		const double thetax=aster->wfs[iwfs].thetax;
 		const double thetay=aster->wfs[iwfs].thetay;
@@ -309,7 +314,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    }/*isa */
 		}/*iwvl */
 	    }/*iwfs */
-	    dcp(&mreal, st2t->mint);
+	    dcp(&mreal, st2t->mint[0]->p[0]);
 	    if((istep+1) % dtrat == 0){/*has output */
 		phycount++;
 		/*Form detector image */
@@ -323,7 +328,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
 			    double siglev=aster->wfs[iwfs].siglev[iwvl];
 			    ccpd(&otf->p[iwfs],psf[iwfs]->p[isa+nsa*iwvl]);
-			    cifft2(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
+			    cfft2i(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
 			    ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
 			    cfft2(otf->p[iwfs], -1);
 			    spmulcreal(ints[iwfs]->p[isa]->p, powfs[ipowfs].dtf[iwvl].si, 
@@ -351,13 +356,19 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			}
 			igrad[0]=0;
 			igrad[1]=0;
+			double pixtheta=parms->skyc.pixtheta[ipowfs];
 			if(parms->skyc.mtch){
 			    dmulvec(igrad, mtche[iwfs]->p[isa], ints[iwfs]->p[isa]->p, 1);
-			}else{
-			    double imax=dmax(ints[iwfs]->p[isa]);
-			    dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0.1*imax, 0.1*imax); 
-			    igrad[0]*=parms->skyc.pixtheta[ipowfs];
-			    igrad[1]*=parms->skyc.pixtheta[ipowfs];
+			}
+			if(!parms->skyc.mtch || fabs(igrad[0])>pixtheta || fabs(igrad[1])>pixtheta){
+			    /*double imax=dmax(ints[iwfs]->p[isa]);
+			      dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0.1*imax, 0.1*imax); */
+			    if(!parms->skyc.mtch){
+				warning2("fall back to cog\n");
+			    }
+			    dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*rnefs[ipowfs][idtrat]); 
+			    igrad[0]*=pixtheta;
+			    igrad[1]*=pixtheta;
 			}
 			grad->p[isa+itsa]=igrad[0];
 			grad->p[isa+nsa+itsa]=igrad[1];
@@ -365,18 +376,21 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    }/*isa */
 		    itsa+=nsa*2;
 		}/*iwfs */
-		dzero(merrm);
-		dmm(&merrm, pgm, grad, "nn", 1);
+		dzero(merrm->p[0]);
+		dmm(&merrm->p[0], pgm, grad, "nn", 1);
 		memcpy(grads->p+istep*aster->tsa*2, grad->p, sizeof(double)*aster->tsa*2);
 		switch(parms->skyc.servo){
 		case 1:
-		    dadd(&st2t->mint, 1, merrm, 0.5);
+		    dcelladd(st2t->mint, 1, merrm, 0.5);
 		    break;
 		case 2:
-		    servo_typeII_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
+		    servo_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
 		    break;
 		default:
 		    error("Invalid\n");
+		}
+		for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
+		    dcellzero(psf[iwfs]);/*reset accumulation.*/
 		}
 	    }/*if dtrat */
 	}/*if phystart */
@@ -388,7 +402,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
   
     dfree(mreal);
     dfree(merr);
-    dfree(merrm);
+    dcellfree(merrm);
     dfree(grad);
     dfree(zgrad);
     dfree(grads);/*////////////remove this dmat after debugging */
@@ -400,11 +414,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     ccellfree(wvf);
     ccellfree(wvfc);
     ccellfree(otf);
-    dfree(st2t->mint);
-    dfree(st2t->mintfirst);
-    dfree(st2t->merrlast);
-    dfree(st2t->mlead);
-    free(st2t);
+    servo_free(st2t);
     free(psf);
     free(mtche);
     free(ints);
@@ -421,7 +431,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
    Save NGS WFS and other information for later use in MAOS simulations.*/
 void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int seldtrat, int isky){
     const PARMS_S* parms=simu->parms;
-    const int nwvl=parms->skyc.nwvl;
+    const int nwvl=parms->maos.nwvl;
     char path[PATH_MAX];
     snprintf(path,PATH_MAX,"Res%d_%d_maos/sky%d",simu->seed_maos,simu->seed_skyc,isky);
     mymkdir("%s",path);
@@ -441,7 +451,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     }
     dwrite(aster[selaster].gain->p[seldtrat], "%s/gain",path);
     dwrite(simu->mres->p[isky], "%s/mres",path);
-    dwrite(simu->psd_tt_ws,"%s/psd_tt_ws",path);
+    dwrite(simu->psd_tt,"%s/psd_tt",path);
     dwrite(simu->psd_ps,"%s/psd_ps",path);
     char fnconf[PATH_MAX];
     snprintf(fnconf,PATH_MAX,"%s/base.conf",path);
@@ -487,7 +497,27 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     double rne=rnefs[0][seldtrat];
     double bkgrnd=aster[selaster].wfs[0].bkgrnd;
 
-    if(parms->maos.npowfs==2){
+    if(parms->maos.npowfs==1){
+	fprintf(fp, "powfs.piinfile=[\"\" \"pistat\" ]\n");
+	fprintf(fp, "powfs.neareconfile=[\"\" \"nea_tot\"]\n");
+	fprintf(fp, "powfs.phyusenea=[0 1]\n");
+	fprintf(fp, "powfs.dtrat=[1 %d]\n", parms->skyc.dtrats[seldtrat]);
+	fprintf(fp, "powfs.bkgrnd=[0 %.2f]\n", bkgrnd);
+	fprintf(fp, "powfs.rne=[3 %.2f]\n", rne);
+	fprintf(fp, "powfs.phystep=[0 %ld]\n", (long)50+parms->skyc.dtrats[seldtrat]*20);
+	fprintf(fp, "powfs.noisy=[1 1 ]\n");
+	fprintf(fp, "powfs.pixtheta=[0.5/206265 %g/206265000]\n", parms->skyc.pixtheta[1]*206265000);
+	fprintf(fp, "powfs.pixpsa=[6 %d]\n", parms->skyc.pixpsa[0]);
+	fprintf(fp, "powfs.ncomp=[64 %d]\n", parms->maos.ncomp[0]);
+	fprintf(fp, "powfs.nwvl=[1 %d]\n",nwvl);
+	fprintf(fp, "powfs.wvl=[0.589e-6");
+	for(int ip=0; ip<1; ip++){
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		fprintf(fp, " %.4g", parms->maos.wvl[iwvl]);
+	    }
+	}
+	fprintf(fp,"]\n");
+    }else if(parms->maos.npowfs==2){
 	fprintf(fp, "powfs.piinfile=[\"\" \"pistat\" \"pistat\"]\n");
 	fprintf(fp, "powfs.neareconfile=[\"\" \"nea_tot\" \"nea_tot\"]\n");
 	fprintf(fp, "powfs.phyusenea=[0 1 1]\n");

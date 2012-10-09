@@ -50,11 +50,9 @@ typedef struct MUV_T{
     dcell *UpB;    /**<Up for each diagonal component*/
     dcell *VpB;    /**<Vp for each diagonal component*/
     int nb;        /**<Number of blocks in CB;*/
-    /*The following are not normaly used. */
-    dsp   *Cs;     /**<Converted cholesky factor.*/
-    long  *Cp;     /**<permutation vector for Cs.*/
     /*The operation of M can be done with the folloing function and data */
     CGFUN Mfun;    /**<Do M*x with a function*/
+    CGFUN Mtfun;   /**<Do M'*x with a function*/
     void *Mdata;   /**<Parameter to Mfun*/
     /*For CG purpose, the preconditioner function and data */
     PREFUN pfun;   /**<The preconditioner function*/
@@ -67,7 +65,7 @@ typedef struct MUV_T{
 }MUV_T;
 
 void muv(dcell **xout, const void *A, const dcell *xin, const double alpha);
-void muv_t(dcell **xout, const void *A, const dcell *xin, const double alpha);
+void muv_trans(dcell **xout, const void *A, const dcell *xin, const double alpha);
 void muv_sp(dcell **xout, const void *B, const spcell *xin, const double alpha);
 void muv_ib(dcell **xout, const void *A, const dcell *xin, const double alpha);
 void muv_direct_solve_cell(dcell **xout, const MUV_T *A, dcell *xin);

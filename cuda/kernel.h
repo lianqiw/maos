@@ -45,6 +45,18 @@ __device__ inline float atomicAdd(float* address, float val)
     return old;
 }
 #endif
+__device__ inline float atomicMax(float* address, float val)
+{
+    float old = *address;
+    float assumed;
+    do {
+	assumed = old;
+	old = __int_as_float( atomicCAS((unsigned int*)address,
+					__float_as_int(assumed),
+					__float_as_int(val>assumed?val:assumed)));
+    } while (assumed != old);
+    return old;
+}
 
 __device__ inline float CABS2(fcomplex r){
     const float a=cuCrealf(r);
@@ -55,6 +67,7 @@ __device__ inline float CABS2(fcomplex r){
 __global__ void set_do(float *a, float alpha, int n);
 __global__ void scale_do(float *restrict in, int n, float alpha);
 __global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2], int n, float pis, float tx, float ty);
+__global__ void add_focus_do(float *restrict opd, float (*restrict loc)[2], int n, float focus);
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
 			      float m0, float m1, float m2, float m3, float m4,
 			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha );
@@ -68,13 +81,34 @@ __global__ void add_do(float *restrict a, float *alpha1, float alpha2,
 
 __global__ void max_do(float *restrict res, const float *a, const int n);
 __global__ void sum_do(float *restrict res, const float *a, const int n);
-__global__ void inn_do(float *res_rep, float *res_add, const float *a, const float *b, const int n);
+__global__ void inn_do(float *res_add, const float *a, const float *b, const int n);
 
-inline void inn_wrap(float *res_rep, float *res_add,
-		    const float *a, const float *b, const int n, cudaStream_t stream){
-    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res_rep, res_add, a, b, n);
+inline void inn_wrap(float *res_add, const float *a, const float *b, const int n, cudaStream_t stream){
+    inn_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res_add, a, b, n);
 }
 inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
 }
+inline static void max_wrap(float *res, const float * a, const int n, cudaStream_t stream){
+    max_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+}
+__global__ void embed_do(fcomplex *out, float *in, int nx);
+__global__ void extract_do(float *out, fcomplex *in, int nx);
+__global__ void perm_f_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx);
+__global__ void perm_i_do(fcomplex *restrict out, const fcomplex *restrict in, int *restrict perm, int nx);
+__global__ void perm_f_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
+__global__ void perm_i_do(float *restrict out, const float *restrict in, int *restrict perm, int nx);
+__global__ void embed_wvf_do(fcomplex *restrict wvf, 
+			     const float *restrict opd, const float *restrict amp, 
+			     const int *embed, const int nloc, const float wvl);
+__global__ void corner2center_do(fcomplex *restrict out, int noutx, int nouty,
+				 const fcomplex *restrict in, int ninx, int niny);
+__global__ void corner2center_abs2_do(float *restrict out, int noutx, int nouty,
+				      const fcomplex *restrict in, int ninx, int niny);
+__global__ void corner2center_abs2_atomic_do(float *restrict out, int noutx, int nouty,
+					     const fcomplex *restrict in, int ninx, int niny);
+__global__ void fftshift_do(fcomplex *wvf, const int nx, const int ny);
+__global__ void add_tilt_do(float *opd, int nx, int ny, float ox, float oy, float dx, float ttx, float tty);
+__global__ void cwm_do(fcomplex *dest, float *from, int n);
+__global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, float wvl);
 #endif

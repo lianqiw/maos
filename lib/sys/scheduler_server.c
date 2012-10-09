@@ -66,6 +66,9 @@
 #include "daemonize.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
+
+#define USE_TCP 1
+
 uint16_t PORT=0;
 char** hosts;
 int nhost;
@@ -100,7 +103,7 @@ void socket_tcp_keepalive(int sock){
     int keepcnt  =2;/*repeat before declare dead */
 #endif
     if(!setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keeplive, sizeof(int))
-#ifdef __linux__
+#if defined(__linux__) && USE_TCP
        && !setsockopt(sock, SOL_TCP, TCP_KEEPCNT, &keepcnt, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPIDLE, &keepidle, sizeof(int))
        && !setsockopt(sock, SOL_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(int))
@@ -113,12 +116,32 @@ void socket_tcp_keepalive(int sock){
 /**
    make a server port and bind to localhost on all addresses
 */
-int make_socket (uint16_t port, int retry){
-    int sock;
+int bind_socket (uint16_t port, int type){
+    int sock=-1;
     struct sockaddr_in name;
     
     /* Create the socket. */
-    sock = socket(PF_INET, SOCK_STREAM, 0);
+    switch(type){
+    case 1:{
+	sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
+	/*Applications that require lower latency on every packet sent should be
+	  run on sockets with TCP_NODELAY enabled. It can be enabled through the
+	  setsockopt command with the sockets API.  
+
+	  For this to be used effectively, applications must avoid doing small,
+	  logically related buffer writes. Because TCP_NODELAY is enabled, these
+	  small writes will make TCP send these multiple buffers as individual
+	  packets, which can result in poor overall performance.  */
+	int one=1;
+	setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
+    }
+	break;
+    case 2:
+	sock = socket(PF_INET, SOCK_DGRAM, 0); //udp
+	break;
+    default:
+	error("Invalid type");
+    }
     if (sock < 0){
 	perror ("socket");
 	exit (EXIT_FAILURE);
@@ -135,7 +158,6 @@ int make_socket (uint16_t port, int retry){
     while(bind(sock,(struct sockaddr *)&name, sizeof (name))<0){
 	info3("errno=%d. port=%d,sock=%d: ",errno,port,sock);
 	perror ("bind");
-	if(!retry) return -1;
 	sleep(10);
 	count++;
 	if(count>100){
@@ -177,9 +199,7 @@ static RUN_T *runned=NULL;
 static RUN_T *runned_end=NULL;
 static int nrun=0;
 static char *fnlog=NULL;
-static int scheduler_sock;
 static double usage_cpu;
-static fd_set active_fd_set;
 
 static RUN_T* running_add(int pid,int sock);
 static RUN_T *running_get(int pid);
@@ -226,7 +246,7 @@ static void scheduler_launch(void){
 
 /*Initialize hosts and associate an id number */
 static __attribute__((constructor))void init(){
-    init_path();/*the constructor in process.c may not have been called. */
+    init_process();/*the constructor in process.c may not have been called. */
     char fn[PATH_MAX];
     snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
     fnlog=strdup0(fn);
@@ -532,14 +552,16 @@ static void check_jobs(void){
 */
 static void process_queue(void){
     static double timestamp=0;
-    if(nrun>0 && myclockd()-timestamp<10) return;
+    if(nrun>0 && myclockd()-timestamp<10) {
+	return;
+    }
     timestamp=myclockd();
     if(nrun>=NCPU) return;
     if(nrun<0){
 	nrun=0;
     }
     int avail=get_cpu_avail();
-
+    info("nrun=%d avail=%d\n", nrun, avail);
     if(avail<1) return;
     RUN_T *irun=running_get_wait();
     if(!irun) {
@@ -567,7 +589,6 @@ static int respond(int sock){
        Don't modify sock in this routine. otherwise select
        will complain Bad file descriptor
     */
-    
     int cmd[2];
     int ret=read(sock, cmd, sizeof(int)*2);
    
@@ -580,7 +601,11 @@ static int respond(int sock){
 		running_update(pid,S_CRASH);
 	    }
 	}
-	return -1;/*socket closed. */
+	if(irun){//maos
+	    return -1;/*socket closed. */
+	}else{//monitor
+	    return -2;
+	}
     }
     int pid=cmd[1];
     switch(cmd[0]){
@@ -732,110 +757,118 @@ static int respond(int sock){
     return 0;/*don't close the port yet. may be reused by the client. */
 }
 
-static void scheduler_crash_handler(int sig){
-    disable_signal_handler;
-    if(sig!=0){
-	if(sig==15){
-	    warning3("SIGTERM caught. exit\n");
-	}else{
-	    warning3("signal %d caught. exit\n",sig);
+static void scheduler_timeout(void){
+    static int lasttime3=0;
+    if(!all_done){
+	process_queue();
+    }
+    /*Report CPU usage every 3 seconds. */
+    int thistime=myclocki();
+    if(thistime>=(lasttime3+3)){
+	if(nrun>0){
+	    check_jobs();
 	}
-	shutdown(scheduler_sock,SHUT_RDWR);
-	for (int i = 0; i < FD_SETSIZE; ++i){
-	    if (FD_ISSET (i, &active_fd_set) && i!=scheduler_sock){
-		shutdown(i,SHUT_RDWR);
-		usleep(100);
-		close(i);
-		FD_CLR(i, &active_fd_set);
-	    }
-	}
-	close(scheduler_sock);
-	usleep(100);
-	_Exit(sig);/*don't call clean up functions */
+	usage_cpu=get_usage_cpu();
+	monitor_send_load();
+	lasttime3=thistime;
     }
 }
-static void scheduler(void){
-    register_signal_handler(scheduler_crash_handler);
-    if(unsetenv("MAOS_START_SCHEDULER")){/*important. */
-	error("Unable to unsetenv\n");
-    }
-    fd_set read_fd_set;
-    int i;
-    struct sockaddr_in clientname;
-    socklen_t size;
-    /* Create the socket and set it up to accept connections. */
-    scheduler_sock = make_socket (PORT, 1);
-    if (listen (scheduler_sock, 1) < 0){
-	perror ("listen");
-	exit (EXIT_FAILURE);
-    }
 
-    /* Initialize the set of active sockets. */
+/**
+   Open a port and listen to it. Calls respond(sock) to handle data. If
+   timeout_fun is not NULL, it will be called when 1) connection is
+   establed/handled, 2) every timeout_sec if timeout_sec>0. This function only
+   return at error.
+ */
+void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void (*timeout_fun)()){
+    fd_set read_fd_set;
+    fd_set active_fd_set;
+    struct sockaddr_in clientname;
+    int sock = bind_socket (port, 1);
+    if (listen (sock, 1) < 0){
+	perror("listen");
+	exit(EXIT_FAILURE);
+    }
     FD_ZERO (&active_fd_set);
-    FD_SET (scheduler_sock, &active_fd_set);
-    struct timeval timeout;
-    timeout.tv_sec=1;
-    timeout.tv_usec=0;
-    struct timeval *timeout2;
-    timeout2=&timeout;
-    static int lasttime3=0;
-    while (1){
-	/* Block until input arrives on one or more active
-	   sockets. */
+    FD_SET (sock, &active_fd_set);
+
+    while(1){
+	struct timeval timeout;
+	timeout.tv_sec=timeout_sec;
+	timeout.tv_usec=0;
+	struct timeval *timeout2;
+	timeout2=timeout_sec>0?&timeout:NULL;
+
 	read_fd_set = active_fd_set;
-	if (select (FD_SETSIZE, &read_fd_set, 
-		    NULL, NULL, timeout2) < 0){
+	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout2)<0){
 	    perror("select");
+	    if(errno!=EINTR){
+		warning("break here\n");
+		break;
+	    }else{
+		continue;
+	    }
 	}
-	/* Service all the sockets with input pending. */
-	for (i = 0; i < FD_SETSIZE; ++i){
-	    if (FD_ISSET (i, &read_fd_set)){
-		if (i == scheduler_sock){
+	for(int i=0; i<FD_SETSIZE; i++){
+	    if(FD_ISSET(i, &read_fd_set)){
+		if(i==sock){
 		    /* Connection request on original socket. */
-		    int new;
-		    size = sizeof (clientname);
-		    new = accept(scheduler_sock,(struct sockaddr *) 
-				 &clientname, &size);
-		    if (new < 0){
-			perror ("accept");
-			exit (EXIT_FAILURE);
+		    socklen_t size=sizeof(struct sockaddr_in);;
+    		    int port2=accept(sock, (struct sockaddr*)&clientname, &size);
+		    if(port2<0){
+			perror("accept");
+			warning("accept failed\n");
+			break;
 		    }
-		    cloexec(new);/*close on exec. */
-		    /*add fd to watched list. */
-		    FD_SET (new, &active_fd_set);
-		} else {
-		    /* Data arriving on an already-connected
-		       socket. */
-		    if (respond (i) < 0){
-			shutdown(i, SHUT_RD);/*don't read any more. */
-			FD_CLR (i, &active_fd_set);/*don't monitor any more */
-			if(monitor_get(i)){
-			    /*warning("This is a monitor, don't close\n"); */
-			}else{
-			    /*warning("This is not a monitor. close %d\n",i); */
-			    close (i);
+		    cloexec(port2);
+		    FD_SET(port2, &active_fd_set);
+		}else{
+		    /* Data arriving on an already-connected socket. Call responder to handle.
+		       On return:
+		       negative value: Close read of socket. 
+		       -1: also close the socket.
+		     */
+		    int ans=responder(i);
+		    if(ans<0){
+			warning("shutdown port %d for reading\n", i);
+			shutdown(i, SHUT_RD);
+			FD_CLR(i, &active_fd_set);
+			if(ans==-1){
+			    warning("close port %d\n", i);
+			    close(i);
 			}
 		    }
 		}
 	    }
 	}
-	timeout.tv_sec=1;
-	timeout.tv_usec=0;
-	timeout2=&timeout;
-	if(!all_done){
-	    process_queue();
-	}
-	/*Report CPU usage every 3 seconds. */
-	int thistime=myclocki();
-	if(thistime>=(lasttime3+3)){
-	    if(nrun>0){
-		check_jobs();
-	    }
-	    usage_cpu=get_usage_cpu();
-	    monitor_send_load();
-	    lasttime3=thistime;
+	if(timeout_fun){
+	    timeout_fun();
 	}
     }
+    /* Error happened. We close all connections and this server socket.*/
+    warning("listen_port exited\n");
+    shutdown(sock, SHUT_RDWR);
+    for(int i=0; i<FD_SETSIZE; i++){
+	if(FD_ISSET(i, &active_fd_set)){
+	    shutdown(i, SHUT_RDWR);
+	    usleep(100);
+	    close(i);
+	    FD_CLR(i, &active_fd_set);
+	}
+    }
+    close(sock);
+    usleep(100);
+    _Exit(1);
+}
+void sigpipe_handler(int sig){
+    warning("SIGPIPE caught\n");
+}
+static void scheduler(void){
+    if(unsetenv("MAOS_START_SCHEDULER")){/*important. */
+	warning("Unable to unsetenv\n");
+    }
+    signal(SIGPIPE, sigpipe_handler);
+    listen_port(PORT, respond, 1, scheduler_timeout);
 }
 /*The following routines maintains the MONITOR_T linked list. */
 MONITOR_T* monitor_add(int sock){
@@ -859,8 +892,6 @@ void monitor_remove(int sock){
 	    }
 	    /*info("removed monitor on sock %d close it.\n",ic->sock); */
 	    close(ic->sock);
-	    /*remove from listening queue. */
-	    FD_CLR (ic->sock, &active_fd_set);
 	    free(ic);
 	    /*freed=1; */
 	    break;

@@ -32,7 +32,7 @@
    Free MOAO_T
 */
 void free_recon_moao(RECON_T *recon, const PARMS_T *parms){
-    if(!recon->moao) return;
+    if(!recon || !recon->moao) return;
     for(int imoao=0; imoao<parms->nmoao; imoao++){
 	if(!recon->moao[imoao].used) continue;
 	locfree(recon->moao[imoao].aloc);
@@ -102,6 +102,7 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	double dxr=parms->aper.d/order;
 	map_t *map=create_metapupil_wrap(parms,0,dxr,0,0,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=map2loc(map);
+	recon->moao[imoao].aembed=map2embed(map);
 	recon->moao[imoao].amap=map;
 	free(map->p); map->p=NULL;
 	recon->moao[imoao].aimcc=loc_mcc_ptt(recon->moao[imoao].aloc, NULL);
@@ -139,7 +140,8 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	recon->moao[imoao].W0=spref(recon->W0);
 	recon->moao[imoao].W1=dref(recon->W1);
 	if(parms->moao[imoao].actslave){
-	    recon->moao[imoao].actslave=slaving(&recon->moao[imoao].aloc, 
+	    recon->moao[imoao].actslave=slaving(&recon->moao[imoao].actcpl,
+						&recon->moao[imoao].aloc, 
 						recon->moao[imoao].HA, 
 						recon->moao[imoao].W1,
 						recon->moao[imoao].NW,
@@ -246,24 +248,24 @@ void moao_recon(SIM_T *simu){
     const int nevl=parms->evl.nevl;
     dcell *dmcommon=NULL;
     if(1){/*Take High order fitting result */
-	dcellcp(&dmcommon, simu->dmfit_hi);
+	dcellcp(&dmcommon, simu->dmfit);
     }else{/*Take integrator output, remove NGS modes if any. */
 	if(parms->sim.closeloop){
 	    if(parms->sim.fuseint){
-		dcellcp(&dmcommon, simu->dmint[0]);
+		dcellcp(&dmcommon, simu->dmint->mint[0]);
 		if(parms->recon.split==1){
 		    remove_dm_ngsmod(simu, dmcommon);
 		}
 	    }else{
-		dcellcp(&dmcommon, simu->dmint_hi[0]);
+		dcellcp(&dmcommon, simu->dmint->mint[0]);
 	    }
 	}else{
-	    dcellcp(&dmcommon, simu->dmerr_hi);
+	    dcellcp(&dmcommon, simu->dmerr);
 	}
     }
     dcell *rhs=NULL;
     int iy=parms->sim.closeloop?1:0;
-    if(simu->moao_wfs){/*There is MOAO DM for WFS */
+    if(simu->dm_wfs){/*There is MOAO DM for WFS */
 	dcell *dmmoao=dcellnew(1,1);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
@@ -271,7 +273,7 @@ void moao_recon(SIM_T *simu){
 	    dcell *rhsout=NULL;
 	    if(imoao<0) continue;
 	    double hs=parms->powfs[ipowfs].hs;
-	    dmmoao->p[0]=(simu->moao_wfs->p[iwfs+iy*nwfs]);
+	    dmmoao->p[0]=(simu->dm_wfs->p[iwfs+iy*nwfs]);
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms,  imoao, 
 		      parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, 
@@ -300,18 +302,18 @@ void moao_recon(SIM_T *simu){
 			"MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 	    }
 	    if(parms->save.dm){
-		cellarr_dmat(simu->save->moao_wfs[iwfs], dmmoao->p[0]);
+		cellarr_dmat(simu->save->dm_wfs[iwfs], dmmoao->p[0]);
 	    }
 	    dcellfree(rhsout);
 		dmmoao->p[0]=NULL;
 	}/*if wfs */
 	dcellfree(dmmoao);
     }
-    if(simu->moao_evl){/*There is MOAO DM for Science */
+    if(simu->dm_evl){/*There is MOAO DM for Science */
 	int imoao=parms->evl.moao;
 	dcell *dmmoao=dcellnew(1,1);
 	for(int ievl=0; ievl<nevl; ievl++){
-	    dmmoao->p[0]=(simu->moao_evl->p[ievl+iy*nevl]);
+	    dmmoao->p[0]=(simu->dm_evl->p[ievl+iy*nevl]);
 	    dcell *rhsout=NULL;
 	    dcellzero(rhs);
 	    moao_FitR(&rhs, recon, parms, imoao, 
@@ -344,7 +346,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){
-		cellarr_dmat(simu->save->moao_evl[ievl], dmmoao->p[0]);
+		cellarr_dmat(simu->save->dm_evl[ievl], dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
 	dmmoao->p[0]=NULL;

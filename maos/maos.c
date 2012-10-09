@@ -40,43 +40,51 @@ int use_cuda=0;
    structs and then hands control to sim(), which then stars the simulation.
    \callgraph */
 void maos(const PARMS_T *parms){    
-    APER_T  * aper;
-    POWFS_T * powfs;
-    RECON_T * recon;
+    TIC;tic;
+    APER_T  * aper=NULL;
+    POWFS_T * powfs=NULL;
+    RECON_T * recon=NULL;
     aper  = setup_aper(parms);
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
-    powfs = setup_powfs(parms, aper);
-    info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
-    if(parms->dbg.wfslinearity!=-1){
-	int iwfs=parms->dbg.wfslinearity;
-	assert(iwfs>-1 || iwfs<parms->nwfs);
-	info2("Studying wfslineariy for WFS %d\n", iwfs);
-	wfslinearity(parms, powfs, iwfs);
-	rename_file(0);
-	scheduler_finish(0);
-	exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
-	exit(0);
+    if(!parms->sim.evlol){
+	powfs = setup_powfs(parms, aper);
+	info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
+	if(parms->dbg.wfslinearity!=-1){
+	    int iwfs=parms->dbg.wfslinearity;
+	    assert(iwfs>-1 || iwfs<parms->nwfs);
+	    info2("Studying wfslineariy for WFS %d\n", iwfs);
+	    wfslinearity(parms, powfs, iwfs);
+	    rename_file(0);
+	    scheduler_finish(0);
+	    exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
+	    exit(0);
+	}
+	recon = setup_recon(parms, powfs, aper);
+	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
+    setup_surf(parms, aper, powfs, recon);/*setting up M1/M2/M3 surface OPD. */
+    
 #if USE_CUDA
-    if(parms->gpu.wfs || parms->gpu.tomo){
+    if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
 	gpu_wfsgrad_init(parms, powfs);
     }
     if(parms->gpu.evl){
 	gpu_perfevl_init(parms, aper);
     }
-#endif    
-    recon = setup_recon(parms, powfs, aper);
-    info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
-    setup_tsurf(parms, aper, powfs);/*setting up M3 tilted surf. */
-    setup_surf(parms, aper, powfs, recon);/*setting up M1/M2/M3 surface OPD. */
-#if USE_CUDA
-    if(parms->gpu.wfs){
+    if(parms->gpu.wfs && powfs){
 	gpu_wfssurf2gpu(parms, powfs);
     }
     if(parms->gpu.evl){
 	gpu_evlsurf2gpu(aper);
     }
+    if(!parms->sim.evlol && (parms->gpu.tomo || parms->gpu.fit)){
+	gpu_setup_recon(parms, powfs, recon);
+    }
 #endif
+
+    if(!parms->sim.evlol && parms->recon.mvm){
+	setup_recon_mvm(parms, recon, powfs);
+    }
     /*
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.
@@ -85,6 +93,8 @@ void maos(const PARMS_T *parms){
     int one=1;
     omp_set_num_threads(&one);/*only allow 1 thread after svd/chol is done. */
 #endif
+    free_recon_unused(parms, recon);
+    toc2("Presimulation");
     sim(parms, powfs, aper, recon);
     /*Free all allocated memory in setup_* functions. So that we
       keep track of all the memory allocation.*/
@@ -168,13 +178,6 @@ int main(int argc, char **argv){
     info2("Source: %s\n", SRCDIR);
     info2("Launched at %s in %s with %d threads\n",myasctime(),myhostname(),arg->nthread);
     info2("Output folder is '%s'.\n",arg->dirout);
-
-#if USE_CUDA 
-    use_cuda=gpu_init(arg->gpus, arg->ngpu);
-#else
-    use_cuda=0;
-#endif
-
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg);
     
@@ -214,8 +217,10 @@ int main(int argc, char **argv){
     }
 
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
+    setup_parms_running(parms, arg);
     free(scmd);
     free(arg->dirout);
+    free(arg->gpus);
     free(arg);
     THREAD_POOL_INIT(parms->sim.nthread);
     dirsetup=stradd("setup",NULL);

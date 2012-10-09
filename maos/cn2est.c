@@ -53,7 +53,7 @@ CN2EST_T *cn2est_prepare(const PARMS_T *parms, const POWFS_T *powfs){
     /*embed has dimension nembed*nembed. It is used to embed 1-d gradient vector
       to a 2-d map for each curvature and covariance compuation later.*/
     cn2est->nembed=parms->powfs[ipowfs].order*2;
-    cn2est->embed=loc_create_embed(&cn2est->nembed, powfs[ipowfs].saloc);
+    cn2est->embed=loc_create_embed(&cn2est->nembed, powfs[ipowfs].saloc, 2);
     const int nx=cn2est->nembed;
     /*mask is a mask for valid subapertures that have enough area */
     int *mask=calloc(nx*nx,sizeof(int));
@@ -516,7 +516,7 @@ void cn2est_est(CN2EST_T *cn2est, const PARMS_T *parms){
     dcellzero(cn2est->wtrecon);
     spcellmulmat(&cn2est->wtrecon, cn2est->wtconvert, cn2est->wt, 1);
     /*only 1 cell. norm to sum to 1. */
-    normalize(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
+    normalize_sum(cn2est->wtrecon->p[0]->p, cn2est->wtrecon->p[0]->nx, 1);
     if(parms->cn2.verbose){
 	info2("r0m=%.4f theta0=%.4f\" ",cn2est->r0m, 
 	      calc_aniso(cn2est->r0m,cn2est->wtrecon->p[0]->nx,

@@ -31,6 +31,8 @@ void focus_tracking(SIM_T*simu);
 
 void TomoR(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha);
+void TomoRt(dcell **gout, const void *A, 
+	    const dcell *xin, const double alpha);
 void TomoL(dcell **xout, const void *A, 
 	   const dcell *xin, const double alpha);
 
@@ -40,7 +42,7 @@ void FitR(dcell **xout, const void *A,
 	  const dcell *xin, const double alpha);
 
 dsp *nea2sp(dmat **nea, long nsa);
-void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr_hi, dcell *dmerr_lo);
+void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dmerr_lo);
 void shift_grad(SIM_T *simu);
 imat* act_coord2ind(loc_t *aloc, const char *fndead);
 #endif

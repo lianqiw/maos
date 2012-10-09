@@ -18,7 +18,24 @@
 #include "utils.h"
 #include "curmat.h"
 #include "cucmat.h"
+#include <errno.h>
 #include <pthread.h>
+#if defined(HAS_NVML) && HAS_NVML==1
+extern "C"{
+    /*taken from nvml.h*/
+    typedef struct nvmlDevice_st* nvmlDevice_t;
+    typedef struct nvmlMemory_st 
+    {
+	unsigned long long total; //!< Total installed FB memory (in bytes)
+	unsigned long long free; //!< Unallocated FB memory (in bytes)
+	unsigned long long used; //!< Allocated FB memory (in bytes). Note that the driver/GPU always sets aside a small amount of memory for bookkeeping
+    } nvmlMemory_t;
+    int nvmlDeviceGetHandleByIndex(unsigned int index, nvmlDevice_t *device);
+    int nvmlDeviceGetMemoryInfo(nvmlDevice_t device, nvmlMemory_t *memory);
+    int nvmlInit();
+    int nvmlShutdown();
+}
+#endif
 const char *cufft_str[]={
     "success", 
     "invalid plan",
@@ -38,7 +55,7 @@ int gpu_recon;/**<GPU for reconstruction*/
 int NGPU=0;
 int* GPUS=NULL;
 int nstream=0;
-cudata_t **cudata_all=NULL;/*for all GPU. */
+cudata_t *cudata_all=NULL;/*for all GPU. */
 static cusparseMatDescr_t spdesc=NULL;
 #ifdef __APPLE__
 pthread_key_t cudata_key;
@@ -78,68 +95,120 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU mem used %'lu B (%s)\n",(tot-fr), msg);
+    info2("GPU (%d) mem used %'lu MB (%s)\n",(int)(cudata-cudata_all),(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
 */
-size_t gpu_get_mem(void){
+long gpu_get_mem(void){
     size_t fr, tot;
     DO(cudaMemGetInfo(&fr, &tot));
-    return fr;
+    return (long)fr;
+}
+static int cmp_gpu_info(const long *a, const long *b){
+    return (int)(b[1]-a[1]);
 }
 /**
    Initialize GPU. Return 1 if success.
- */
+   if gpus is not null, it is of length ngpu. gpus specifies gpu index to use.
+   if gpus is null, ngpu specifies number of gpus to use. all if 0.
+*/
 int gpu_init(int *gpus, int ngpu){
-    if(gpus && gpus[0]<0){
-	info2("CUDA is disabled by user.\n");
+    int ans, ngpu_tot=0;//total number of GPUs.
+    if((ans=cudaGetDeviceCount(&ngpu_tot)) || ngpu_tot==0){//no GPUs available.
+	info2("No GPUs available. ans=%d\n", ans);
 	return 0;
     }
-    int free_gpus=0;
-    if(!gpus || ngpu==0){/*automatic. Use all GPUs. */
-	free_gpus=1;
-	if(cudaGetDeviceCount(&ngpu) || ngpu==0){
-	    return 0;
-	}
-	gpus=(int*)calloc(ngpu, sizeof(int));
-	for(int i=0; i<ngpu; i++){
-	    gpus[i]=i;
-	}
-    }
-    /* check usability of GPUs.*/
-    GPUS=(int*)calloc(ngpu ,sizeof(int));
-    for(int im=0; im<ngpu; im++){
-	int ig=gpus[im];
-	cudaDeviceProp prop={0};
-	if(cudaGetDeviceProperties(&prop, ig)){
-	    warning2("Skip GPU %d: not supporting CUDA.\n", ig);
-	}else if(prop.major!=9999){
-	    if(prop.major>=1.3 || prop.totalGlobalMem>500000000){/*require minimum of 500M */
-		GPUS[NGPU]=ig;
-		NGPU++;
+    NGPU=0;
+    /*
+      User specified exact GPUs to use. We check every entry. 
+      If <0 is found, do not use any GPU.
+      If >=ngpu_tot is found, skip the GPU.
+      If duplicates are found, use only once.
+     */
+    if(gpus && ngpu>0){
+	if(!GPUS) GPUS=(int*)malloc(ngpu*sizeof(int));
+	for(int ig=0; ig<ngpu; ig++){
+	    if(gpus[ig]<0){
+		info2("CUDA is disabled by user.\n");
+		free(GPUS); GPUS=NULL; 
+		return 0;
 	    }else{
-		warning2("Skip GPU %d: insufficient memory\n", ig);
+		if(gpus[ig]>=ngpu_tot){
+		    warning2("Skip GPU %d: not exist\n", gpus[ig]);
+		}else{
+		    GPUS[NGPU++]=gpus[ig];
+		    /* Enable the following to disallow use GPUs in multiple threads
+		      int j;
+		    for(j=0; j<NGPU; j++){
+			if(GPUS[j]==gpus[ig]){
+			    warning2("Skip GPU %d: duplicated\n", gpus[ig]);
+			    break;
+			}
+		    }
+		    if(j==NGPU){
+			GPUS[NGPU++]=gpus[ig];
+			}*/
+		}
 	    }
 	}
-    }
-    if(free_gpus) {
-	free(gpus); 
-	gpus=NULL;
-    }
-     if(NGPU) {
-	cudata_all=(cudata_t**)calloc(NGPU, sizeof(cudata_t*));
-	for(int im=0; im<NGPU; im++){
-	    cudata_all[im]=(cudata_t*)calloc(1, sizeof(cudata_t));
-	}
-    }
-    gpu_recon=0;
-    if(!NGPU){
-	warning("no gpu is available\n");
-	return 0;
     }else{
-	return 1;
+	int repeat=1;
+	if(ngpu<=0){
+	    repeat=0;
+	    ngpu=ngpu_tot;
+	}
+	GPUS=(int*)calloc(ngpu, sizeof(int));
+	/*For each GPU, query the available memory.*/
+	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
+#if defined(HAS_NVML) && HAS_NVML==1
+	nvmlDevice_t dev;
+	nvmlMemory_t mem;
+	if(nvmlInit()){
+	    warning("nvml init failed\n");
+	}
+#endif
+	for(int ig=0; ig<ngpu_tot; ig++){
+	    gpu_info[ig][0]=ig;
+#if defined(HAS_NVML) && HAS_NVML==1
+	    if(nvmlDeviceGetHandleByIndex(ig, &dev) == 0 
+	       && nvmlDeviceGetMemoryInfo(dev, &mem) == 0){
+		gpu_info[ig][1]=mem.free;
+	    }else
+#endif
+		{
+		    cudaSetDevice(ig);//this allocates context.
+		    gpu_info[ig][1]=gpu_get_mem();
+		    //cudaDeviceReset(); We already started simulation. Do not reset.
+		}
+	}
+#if defined(HAS_NVML) && HAS_NVML==1
+	nvmlShutdown();
+#endif
+	/*sort so that gpus with higest memory is in the front.*/
+	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
+	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
+	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){
+		if(repeat){
+		    igpu=0; //reset to beginning.
+		}else{
+		    break; //stop
+		}
+	    }
+	    GPUS[NGPU++]=(int)gpu_info[igpu][0];
+	}
+	free(gpu_info);
     }
+    if(NGPU) {
+	gpu_recon=0;/*last gpu in GPUS*/
+	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
+	info2("Using GPU");
+	for(int i=0; GPUS && i<NGPU; i++){
+	    info2(" %d", GPUS[i]);
+	}
+	info2("\n");
+    }
+    return NGPU;
 }
 
 /**
@@ -165,9 +234,8 @@ void cp2gpu(float * restrict *dest, double *src, int n){
 	DO(cudaMalloc((float**)dest, n*sizeof(float)));
     }
     DO(cudaMemcpy(*dest, tmp, n*sizeof(float),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
     free(tmp);
-    }
+}
 /**
    Convert double array to device memory (float)
 */
@@ -182,13 +250,12 @@ void cp2gpu(fcomplex * restrict *dest, dcomplex *restrict src, int n){
 	DO(cudaMalloc((fcomplex**)dest, n*sizeof(fcomplex)));
     }
     DO(cudaMemcpy(*dest, tmp, n*sizeof(fcomplex),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
     free(tmp);
 }
 
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
-array. Allow multiple calling to override the data.  */
+   array. Allow multiple calling to override the data.  */
 void cp2gpu(cumap_t ***dest0, map_t **source, int nps){
     if(nps==0) return;
     if(!*dest0){
@@ -216,6 +283,7 @@ void cp2gpu(cumap_t ***dest0, map_t **source, int nps){
   Convert a host dsp array to GPU sprase array. Both are in CSC format. 
 */
 void cp2gpu(cusp **dest0, dsp *src){
+    if(!src) return;
     if(!*dest0) *dest0=(cusp*)calloc(1, sizeof(cusp));
     cusp *dest=*dest0;
     dest->nx=src->m;
@@ -243,6 +311,17 @@ __global__ void cuspmul_do(float *y, cusp *A, float *x, float alpha){
 	}
     }
 }
+static const char *scsrmv_err[]={
+    "Success",
+    "Not initialized",
+    "Allocation failed",
+    "Invalid value",
+    "Archtecture mismatch",
+    "Mapping error",
+    "Execution failed",
+    "Internal error",
+    "Matrix type not supported"
+};
 /*
   y=A*x where A is sparse. x, y are vectors. Slow for GS0.
 */
@@ -260,7 +339,7 @@ void cuspmul(float *y, cusp *A, float *x, float alpha,
 			      A->ny, A->nx, alpha, spdesc,
 			      A->x, A->p, A->i, x, 1.f, y);
     if(status!=0){
-	error("cusparseScsrmv failed with status %d\n", status);
+	error("cusparseScsrmv failed with status '%s'\n", scsrmv_err[status]);
     }
 #endif
 }
@@ -281,9 +360,9 @@ __global__ void cusptmul_do(float *y, int icol, cusp *A, float *x, float alpha){
 */
 void cusptmul(float *y, cusp *A, float *x, float alpha, 
 #if MYSPARSE ==1
-	     cudaStream_t stream
+	      cudaStream_t stream
 #else
-	     cusparseHandle_t handle
+	      cusparseHandle_t handle
 #endif
 	      ){
 #if MYSPARSE == 1
@@ -314,7 +393,6 @@ void cp2gpu(float (* restrict *dest)[2], loc_t *src){
 	DO(cudaMalloc((float**)dest, src->nloc*2*sizeof(float)));
     }
     DO(cudaMemcpy(*dest, tmp, src->nloc*2*sizeof(float),cudaMemcpyHostToDevice));
-    cudaDeviceSynchronize();
     free(tmp);
 }
 
@@ -330,15 +408,39 @@ void cp2gpu(float * restrict *dest, dmat *src){
 */
 void cp2gpu(curmat *restrict *dest, dmat *src){
     if(!src){
-	dzero(*dest);
+	curzero(*dest);
 	return;
     }
-    if(!*dest){
-	*dest=curnew(src->nx, src->ny);
-    }else{
+    float *pdest=NULL;
+    if(*dest){
+	pdest=(*dest)->p;
 	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
     }
-    cp2gpu(&(*dest)->p, src->p, src->nx*src->ny);
+    cp2gpu(&pdest, src->p, src->nx*src->ny);
+    if(!*dest){
+	*dest=curnew(src->nx, src->ny, pdest);
+    }
+}
+void cp2gpu(curmat *restrict *dest, float *src, int nx, int ny, cudaStream_t stream){
+    if(!src){
+	curzero(*dest);
+	return;
+    }
+    float *pdest=NULL;
+    if(*dest){
+	pdest=(*dest)->p;
+	assert(nx*ny==(*dest)->nx*(*dest)->ny);
+    }else{
+	cudaMalloc(&pdest, nx*ny*sizeof(float));
+    }
+    if(stream){
+	DO(cudaMemcpyAsync(pdest, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice, stream));
+    }else{
+	DO(cudaMemcpy(pdest, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice));
+    }
+    if(!*dest){
+	*dest=curnew(nx, ny, pdest);
+    }
 }
 /*
   convert cmat to cucmat
@@ -364,7 +466,49 @@ void cp2gpu(curcell *restrict *dest, dcell *src){
 	return;
     }
     if(!*dest) {
-	*dest=curcellnew(src->nx, src->ny);
+	long nc=src->nx*src->ny;
+	long nx[nc];
+	long ny[nc];
+	for(long i=0; i<nc; i++){
+	    if(src->p[i]){
+		nx[i]=src->p[i]->nx;
+		ny[i]=src->p[i]->ny;
+	    }else{
+		nx[i]=0;
+		ny[i]=0;
+	    }
+	}
+	*dest=curcellnew(src->nx, src->ny, nx, ny);
+    }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
+	error("Mismatch: %dx%d vs %ldx%ld\n", 
+	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
+    }
+    for(int i=0; i<src->nx*src->ny; i++){
+	cp2gpu(&(*dest)->p[i], src->p[i]);
+    }
+}
+/**
+   Convert dcell to curcell
+*/
+void cp2gpu(cuccell *restrict *dest, ccell *src){
+    if(!src) {
+	dzero(*dest);
+	return;
+    }
+    if(!*dest) {
+	long nc=src->nx*src->ny;
+	long nx[nc];
+	long ny[nc];
+	for(long i=0; i<nc; i++){
+	    if(src->p[i]){
+		nx[i]=src->p[i]->nx;
+		ny[i]=src->p[i]->ny;
+	    }else{
+		nx[i]=0;
+		ny[i]=0;
+	    }
+	}
+	*dest=cuccellnew(src->nx, src->ny, nx, ny);
     }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
 	error("Mismatch: %dx%d vs %ldx%ld\n", 
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
@@ -450,7 +594,8 @@ void cp2gpu(int * restrict *dest, spint *src, int n){
    Convert device (float) array and add to host double.
    dest = alpha * dest + beta *src;
 */
-void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, cudaStream_t stream){
+void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int n, 
+	    cudaStream_t stream, pthread_mutex_t *mutex){
     float *tmp=(float*)malloc4async(n*sizeof(float));
     DO(cudaMemcpyAsync(tmp, src, n*sizeof(float), cudaMemcpyDeviceToHost, stream));
     if(!*dest){
@@ -458,9 +603,11 @@ void cp2cpu(double * restrict *dest, double alpha, float *src, double beta, int 
     }
     double *restrict p=*dest;
     CUDA_SYNC_STREAM;
+    if(mutex) LOCK(*mutex);
     for(int i=0; i<n; i++){
 	p[i]=p[i]*alpha+beta*tmp[i];
     }
+    if(mutex) UNLOCK(*mutex);
     free4async(tmp);
 }
 /*
@@ -507,7 +654,7 @@ void cp2gpu(cumuv_t *out, MUV_T *in){
     cp2gpu(&(out)->V, in->V);
     spcellfree(Mt);
 }
-void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream){
+void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_t stream, pthread_mutex_t *mutex){
     if(!in){
 	if(*out) dzero(*out);
 	return;
@@ -517,19 +664,18 @@ void cp2cpu(dmat **out, double alpha, const curmat *in, double beta, cudaStream_
     }else{
 	assert((*out)->nx*(*out)->ny==in->nx*in->ny);
     }
-    cp2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream);
+    cp2cpu(&(*out)->p, alpha, in->p, beta, in->nx*in->ny, stream, mutex);
 }
-void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream){
+void cp2cpu(dcell **out, double alpha, const curcell *in, double beta, cudaStream_t stream, pthread_mutex_t *mutex){
     if(!in){
 	if(*out) dcellzero(*out);
 	return;
     }
     if(!*out) *out=dcellnew(in->nx, in->ny);
     for(int i=0; i<in->nx*in->ny; i++){
-	cp2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream);
+	cp2cpu(&(*out)->p[i], alpha, in->p[i], beta, stream, mutex);
     }
 }
-
 void cp2cpu(smat **out, const curmat *in, cudaStream_t stream){
     if(!in) {
 	if(*out) szero(*out);

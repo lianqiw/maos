@@ -61,6 +61,7 @@ struct drawdata_t{
     double *limit_cumu;/*x,y,limit of cumulatively averaged data. */
     double *limit;/*points to either limit_data or limit_cumu */
     double *zlim;
+    char xylog[2];
     /*The following are for surfaces */
     int nx, ny;   /*array size */
     cairo_format_t format;
@@ -144,7 +145,7 @@ extern double SP_YB;/*space on y, buttom */
 extern PangoFontDescription *desc;
 
 /*from drawdaemon_draw */
-void round_limit(double *xmin, double *xmax);
+void round_limit(double *xmin, double *xmax, int logscale);
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height);
 void apply_limit(drawdata_t *drawdata);
 /*from drawdaemon_gui */

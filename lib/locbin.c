@@ -168,19 +168,17 @@ map_t* d2map(dmat *in){
 	map->vx=search_header_num(header,"vx");
 	map->vy=search_header_num(header,"vy");
     }
-    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
-	warning("Valid header is needed to convert dmat to map_t\n");
-	map->dx=1;
-	map->ox=map->nx/2*map->dx;
-	map->oy=map->ny/2*map->dx;
-	map->h=map->vx=map->vy=0;
+    if(isnan(map->dx)){
+	map->dx=1./64.;
     }
-    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)){
-	warning("The map has no valid ox, oy and dx\n");
+    if(isnan(map->ox) || isnan(map->oy)){
+	map->ox=-map->nx/2*map->dx;
+	map->oy=-map->ny/2*map->dx;
     }
     if(isnan(map->h)) map->h=0;
     if(isnan(map->vx)) map->vx=0;
     if(isnan(map->vy)) map->vy=0;
+    map->header=strdup(header);
     return map;
 }
 

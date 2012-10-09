@@ -123,8 +123,9 @@ void X(inv_inplace)(X(mat)*A){
     if(A->nx!=A->ny) error("Must be a square matrix");
     int info=0, N=A->nx;
     T *B=calloc(N*N,sizeof(T));
-    for(int i=0;i<N;i++)
+    for(int i=0;i<N;i++){
 	B[i+i*N]=1;
+    }
     int *ipiv=calloc(N, sizeof(int));
     Z(gesv)(&N, &N, A->p, &N, ipiv, B, &N, &info);
     if(info!=0){
@@ -274,7 +275,6 @@ void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A){
     T work0[1];
     int info=0;
 #ifdef USE_COMPLEX
-    warning("Not tested\n");
     R *rwork=malloc(nsvd*5*sizeof(R));
     Z(gesvd)(&jobuv,&jobuv,&M,&N,tmp->p,&M,s->p,u->p,&M,vt->p,&nsvd,work0,&lwork,rwork,&info);
 #else
@@ -345,6 +345,8 @@ void X(evd)(X(mat) **U, XR(mat) **Sdiag,const X(mat) *A){
 
 /**
    computes pow(A,power) in place using svd or evd. if issym==1, use evd, otherwise use svd
+   positive thres: Drop eigenvalues that are smaller than thres * max eigen value
+   negative thres: Drop eigenvalues that are smaller than thres * previous eigen value (sorted descendantly).
 */
 void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
     int use_evd=0;
@@ -360,24 +362,26 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
     if(use_evd){
 	X(evd)(&U, &Sdiag, A);
 	/*eigen values below the threshold will not be used. the last is the biggest. */
-	maxeig=fabs(Sdiag->p[Sdiag->nx-1]);
+	maxeig=FABS(Sdiag->p[Sdiag->nx-1]);
 	VT=X(trans)(U);
     }else{
 	X(svd)(&U, &Sdiag, &VT, A);
 	/*eigen values below the threshold will not be used. the first is the biggest. */
-	maxeig=fabs(Sdiag->p[0]);
+	maxeig=FABS(Sdiag->p[0]);
     }
-    thres*=maxeig;
-    long skipped=0;
-    double mineig=INFINITY;
+    double thres0=fabs(thres)*maxeig;
     for(long i=0; i<Sdiag->nx; i++){
-	if(fabs(Sdiag->p[i])>thres){/*only do with  */
+	if(FABS(Sdiag->p[i])>thres0){/*only do with  */
+	    if(thres<0){/*compare adjacent eigenvalues*/
+		thres0=Sdiag->p[i]*(-thres);
+	    }
 	    Sdiag->p[i]=pow(Sdiag->p[i],power);
 	}else{
-	    if(fabs(Sdiag->p[i])<mineig) 
-		mineig=fabs(Sdiag->p[i]);
-	    Sdiag->p[i]=0;
-	    skipped++;
+	    for(int j=i; j<Sdiag->nx; j++){
+		Sdiag->p[j]=0;
+	    }
+	    //long skipped=Sdiag->nx-i;
+	    break;
 	}
     }
     for(long iy=0; iy <VT->ny; iy++){
@@ -387,8 +391,11 @@ void X(svd_pow)(X(mat) *A, double power, int issym, double thres){
 	}
     }
     X(zero)(A);
-    X(mm)(&A,U,VT,"nn",1);
-    
+#ifdef USE_COMPLEX
+    X(mm)(&A,VT,U,"cc",1);
+#else
+    X(mm)(&A,VT,U,"tt",1);
+#endif
     X(free)(U);
     X(free)(VT);
     XR(free)(Sdiag);
@@ -452,6 +459,7 @@ void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B,
 */
 X(cell)* X(cellinvspd)(X(cell) *A){
     X(mat) *Ab=X(cell2m)(A);
+    if(!Ab) return NULL;
     X(invspd_inplace)(Ab);
     X(cell) *B=NULL;
     X(2cell)(&B, Ab, A);

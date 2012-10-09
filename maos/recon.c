@@ -22,6 +22,7 @@
 #include "fdpcg.h"
 #include "sim.h"
 #include "recon_utils.h"
+#include "mvm_client.h"
 #include "ahst.h"
 #include "moao.h"
 #include "cn2est.h"
@@ -45,151 +46,68 @@ void tomofit(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
-    int hi_output=(!parms->sim.closeloop || parms->sim.idealfit || (isim+1)%simu->dtrat_hi==0);
-    int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
-    dcell *dmpsol[2];/*Hi and Lo */
-    /*
-      todo: The following need to be revised to use dmpsol, which is averaged over dtrat. 
-    */
-    if(parms->sim.fuseint){
-	dmpsol[0]=dmpsol[1]=simu->dmint[parms->dbg.psol?0:1];
+   
+    if(parms->sim.idealfit){
+	dcellfree(simu->opdr);
+    }else if(parms->sim.idealtomo){
+	atm2xloc(&simu->opdr, simu);
     }else{
-	dmpsol[0]=simu->dmint_hi[parms->dbg.psol?0:1];
-	dmpsol[1]=simu->Mint_lo[parms->dbg.psol?0:1];/*This can not be simu->dmpsol[lopowfs]. */
-    }
-    if(hi_output){
-	if(parms->sim.idealfit){
-	    dcellfree(simu->opdr);
-	}else if(parms->sim.idealtomo){
-	    atm2xloc(&simu->opdr, simu);
-	}else{
-	    /*do tomography. */
-	    int maxit=parms->tomo.maxit;
-	    if(parms->dbg.ntomo_maxit){
-		if(isim<parms->dbg.ntomo_maxit){
-		    maxit=parms->dbg.tomo_maxit[isim];
-		    recon->RL.maxit=maxit;/*update maxit information */
-		    info2("Running tomo.maxit=%d\n",maxit);
-		}else{
-		    error("Out of range\n");
-		}
+	/*do tomography. */
+	int maxit=parms->tomo.maxit;
+	if(parms->dbg.ntomo_maxit){
+	    if(isim<parms->dbg.ntomo_maxit){
+		maxit=parms->dbg.tomo_maxit[isim];
+		recon->RL.maxit=maxit;/*update maxit information */
+		info2("Running tomo.maxit=%d\n",maxit);
+	    }else{
+		error("Out of range\n");
 	    }
-#if USE_CUDA
-	    if(parms->gpu.tomo && parms->ndm!=0){
-		gpu_tomo(simu);
-	    }else
-#endif
-		muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
-	    /* wind shift does not work because tomography does not give exact
-	       layers. wind estimation from tomography results does not work
-	       either due to same argument. Now I implemented predictive control
-	       within tomography directly by altering ray tracing.*/
 	}
-	if(parms->ndm>0){
 #if USE_CUDA
-	    if(parms->gpu.fit){
-		gpu_fit(simu);
-	    }else
+	if(parms->gpu.tomo && parms->ndm!=0){
+	    gpu_tomo(simu);
+	}else
 #endif
-		muv_solve(&simu->dmfit_hi, &recon->FL, &recon->FR, simu->opdr);
+	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+    }
+    if(simu->opdr && parms->sim.mffocus>=2){
+	if(recon->RFlgsx){
+	    dcellzero(simu->focuslgsx);
+	    dcellmm(&simu->focuslgsx, recon->RFlgsx, simu->opdr, "nn", 1);
 	}
-	dcellcp(&simu->dmerr_hi, simu->dmfit_hi);/*keep dmfit_hi for warm restart */
+	if(recon->RFngsx){
+	    dcellzero(simu->focusngsx);
+	    dcellmm(&simu->focusngsx, recon->RFngsx, simu->opdr, "nn", 1);
+	}
+    }
+    if(parms->ndm>0){
+#if USE_CUDA
+	if(parms->gpu.fit){
+	    gpu_fit(simu);
+	}else
+#endif
+	    muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
+    }
+    dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
     
+    /*
+      Form error signal. Make sure what is subtracted here is what is added
+      to gradcl to form gramol.
+    */
+    if(parms->tomo.psol){
 	/*
-	  Form error signal. Make sure what is subtracted here is what is added
-	  to gradcl to form gramol.
+	  \todo: The following need to be revised to use dmpsol, which is averaged over dtrat. 
 	*/
-	if(parms->tomo.psol){
-	    dcelladd(&simu->dmerr_hi, 1, dmpsol[0], -1);
-	}
-	if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
-	    remove_dm_ngsmod(simu, simu->dmerr_hi);
-	}
-	if(parms->tomo.ahst_rtt && parms->recon.split){
-	    remove_dm_tt(simu, simu->dmerr_hi);
-	}
-
-    }else{/*if high order WFS has output */
-	dcellfree(simu->dmerr_hi);
+	/*This dmpsol can not be simu->dmpsol[lopowfs]. ??? */
+	dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
+    }
+    if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
+	remove_dm_ngsmod(simu, simu->dmerr);
+    }
+    if(parms->tomo.ahst_rtt && parms->recon.split){
+	remove_dm_tt(simu, simu->dmerr);
     }
 
-    if(!parms->sim.idealfit && parms->recon.split){
-	if(parms->recon.split==2){
-	    dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
-	}
-	/*Low order has output */
-	if(lo_output){
-	    dcellzero(simu->Merr_lo);
-	    switch(parms->recon.split){
-	    case 1:{
-		NGSMOD_T *ngsmod=recon->ngsmod;
-		if(!parms->tomo.ahst_idealngs){/*Low order NGS recon. */
-		    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
-		}/*else: there is ideal NGS correction done in perfevl. */
-	    }
-		break;
-	    case 2:{
-		dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
-		dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
-		if(parms->tomo.psol) dcelladd(&simu->Merr_lo, 1., dmpsol[1], -1);
-		dcellzero(simu->opdrmvst);/*reset accumulation. */
-	    }
-		break;
-	    default:
-		error("Invalid parms->recon.split: %d",parms->recon.split);
-	    }
-	    if(parms->sim.psfr)
-		dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
-	}else{
-	    dcellfree(simu->Merr_lo);/*don't have output. */
-	}
-    }
-    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	/*
-	  Since the DM fitting error is in the othorgonal of DM vector
-	  space. The residuals estimated here have to be in DM space only. Do
-	  not use opdr which covers more than DM space.
-	*/
-	if(!simu->opdr || !parms->dbg.useopdr || !parms->tomo.psol){/*opdr is not available. in sim.idealfit=1 mode. */
-	    psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);
-	}else{
-	    psfr_calc(simu, simu->opdr, dmpsol[0], NULL, simu->Merr_lo_keep);
-	}
-    }
-}
-/**
-   least square reconstructor
-*/
-void lsr(SIM_T *simu){
-    const PARMS_T *parms=simu->parms;
-    const RECON_T *recon=simu->recon;
-    const int isim=simu->reconisim;
-    const int hi_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_hi==0);
-    const int lo_output=parms->recon.split && (!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
-   
-    if(hi_output){
-	muv_solve(&simu->dmerr_hi,&(recon->LL), &(recon->LR), simu->gradlastcl);
-	if(parms->recon.split==1){/*ahst */
-	    remove_dm_ngsmod(simu, simu->dmerr_hi);
-	}
-    }else{/*if high order does not has output */
-	dcellfree(simu->dmerr_hi);
-    }
-    if(parms->recon.split){ /*Split reconstruction. */
-	if(lo_output){/*Low order has output */
-	    dcellzero(simu->Merr_lo);
-	    NGSMOD_T *ngsmod=recon->ngsmod;
-	    dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
-	    if(parms->sim.psfr)
-		dcellcp(&simu->Merr_lo_keep, simu->Merr_lo);
-	}else{
-	    dcellfree(simu->Merr_lo);/*don't have output. */
-	}
-    } 
-    if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	psfr_calc(simu, NULL, NULL, simu->dmerr_hi, simu->Merr_lo_keep);	
-    }
-   
 }
 /**
    Compute pseudo open loop gradients for WFS that need. Only in close loop. In
@@ -201,7 +119,8 @@ void lsr(SIM_T *simu){
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
+    //dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
+    dcell *dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];;//Do not use dmcmd as it contains recon->dm_ncpa
     PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].psol) continue;
@@ -219,6 +138,50 @@ static void calc_gradol(SIM_T *simu){
 	}
     }
 }
+void recon_split(SIM_T *simu){
+    const PARMS_T *parms=simu->parms;
+    const RECON_T *recon=simu->recon;
+    const int isim=simu->reconisim;
+    int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
+    if(parms->recon.split==2){
+	dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
+    }
+    /*Low order has output */
+    if(lo_output){
+	dcellzero(simu->Merr_lo_store);
+	switch(parms->recon.split){
+	case 1:{
+	    NGSMOD_T *ngsmod=recon->ngsmod;
+	    if(!parms->tomo.ahst_idealngs){/*Low order NGS recon. */
+		dcellmm(&simu->Merr_lo_store,ngsmod->Rngs,simu->gradlastcl,"nn",1);
+	    }/*else: there is ideal NGS correction done in perfevl. */
+	}
+	    break;
+	case 2:{
+	    /*This can not be simu->dmpsol[lopowfs]. */
+	    dcell *dmpsol_lo;
+	    if(parms->sim.fuseint){
+		dmpsol_lo=simu->dmint->mint[parms->dbg.psol?0:1];
+	    }else{
+		dmpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
+	    }
+	    dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
+	    dcellmm(&simu->Merr_lo_store, recon->MVRngs, simu->gradlastol, "nn",1);
+	    if(parms->tomo.psol) dcelladd(&simu->Merr_lo_store, 1., dmpsol_lo, -1);
+	    dcellzero(simu->opdrmvst);/*reset accumulation. */
+	}
+	    break;
+	default:
+	    error("Invalid parms->recon.split: %d",parms->recon.split);
+	}
+	dcellcp(&simu->Merr_lo, simu->Merr_lo_store);
+	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){/*do not correct the global focus.*/
+	    simu->Merr_lo->p[0]->p[5]=0;
+	}
+    }else{
+	dcellfree(simu->Merr_lo);/*don't have output. */
+    }
+}
 /**
    Deformable mirror control. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
@@ -226,6 +189,8 @@ void reconstruct(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     if(parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
+    int isim=simu->reconisim;
+    const int hi_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_hi==0);
     if(simu->gradlastcl){
 	if(!parms->sim.idealfit && !parms->sim.evlol){
 	    if(parms->sim.closeloop){
@@ -239,15 +204,62 @@ void reconstruct(SIM_T *simu){
 	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
 	}/*if cn2est */
 	double tk_start=myclockd();
-	switch(parms->recon.alg){
-	case 0:
-	    tomofit(simu);/*tomography and fitting. */
-	    break;
-	case 1:
-	case 2:
-	    lsr(simu);
-	    break;
+	if(hi_output){
+	    if(parms->recon.mvm){
+		if(!simu->dmerr){
+		    simu->dmerr=dcellnew(parms->ndm, 1);
+		}
+		for(int idm=0; idm<parms->ndm; idm++){
+		    if(!simu->dmerr->p[idm]){
+			simu->dmerr->p[idm]=dnew(simu->recon->aloc[idm]->nloc,1);
+		    }
+		}
+		if(parms->sim.mvmport){
+		    mvm_client_recon(parms, simu->dmerr, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+		}else
+#if USE_CUDA
+		    if(parms->gpu.tomo && parms->gpu.fit){
+			gpu_recon_mvm(simu);
+		    }else
+#endif		
+			{
+			    dcellzero(simu->dmerr);
+			    dcellmm(&simu->dmerr, recon->MVM, parms->tomo.psol?simu->gradlastol:simu->gradlastcl,"nn",1);
+			}
+		if(parms->tomo.psol){
+		    dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
+		}
+	    }else{
+		switch(parms->recon.alg){
+		case 0:
+		    tomofit(simu);/*tomography and fitting. */
+		    break;
+		case 1:
+		case 2:
+		    muv_solve(&simu->dmerr,&(recon->LL), &(recon->LR), simu->gradlastcl);
+		    break;
+		}
+	    }
+		
+	    if(parms->recon.split==1){/*ahst */
+		remove_dm_ngsmod(simu, simu->dmerr);
+	    }
+	    if(parms->tomo.ahst_rtt && parms->recon.split){
+		remove_dm_tt(simu, simu->dmerr);
+	    }
+	}else{
+	    dcellfree(simu->dmerr);
 	}
+	/*low order reconstruction*/
+	if(parms->recon.split){
+	    recon_split(simu);
+	}
+	/*For PSF reconstruction.*/
+	if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
+	    psfr_calc(simu, simu->opdr, simu->dmint->mint[parms->dbg.psol?0:1], 
+		      simu->dmerr,  simu->Merr_lo_store);
+	}
+
 	if(recon->moao){
 #if USE_CUDA
 	    if(parms->gpu.moao)

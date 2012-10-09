@@ -19,7 +19,7 @@
   To be included in mat.c, cell.c and matbin.c
 */
 #if MAT_VERBOSE == 1
-#define matinfo(A...) {fprintf(stdout, A);}
+#define matinfo(A...) {fprintf(stderr, A);}
 #else
 #define matinfo(A...)
 #endif
@@ -40,6 +40,7 @@
 #define M_SPT32 M_SP32
 #define REAL(A) (A)
 #define ABS(A) fabs(A)
+#define FABS(A) fabs(A)
 #define SQRT(A) sqrt(A)
 #define RANDU(A) randu(A)
 #define RANDN(A) randn(A)
@@ -61,6 +62,7 @@
 #define M_SPT32 M_CSP32
 #define REAL(A) creal(A)
 #define ABS(A) cabs(A)
+#define FABS(A) fabs(A)
 #define SQRT(A) csqrt(A)
 #define RANDU(A) (randu(A)+I*randu(A))
 #define RANDN(A) (randn(A)+I*randn(A))
@@ -85,6 +87,7 @@
 #define M_SPT32 M_SSP32
 #define REAL(A) (A)
 #define ABS(A) fabsf(A)
+#define FABS(A) fabsf(A)
 #define SQRT(A) sqrtf(A)
 #define RANDU(A) (float)randu(A)
 #define RANDN(A) (float)randn(A)
@@ -106,6 +109,7 @@
 #define M_SPT32 M_ZSP32
 #define REAL(A) crealf(A)
 #define ABS(A) cabsf(A)
+#define FABS(A) fabsf(A)
 #define SQRT(A) csqrtf(A)
 #define RANDU(A) ((float)randu(A)+I*(float)randu(A))
 #define RANDN(A) ((float)randn(A)+I*(float)randn(A))
