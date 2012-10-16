@@ -36,10 +36,14 @@
 #define M_SP32   0x6407  /*sparse 32 bit */
 #define M_FLT    0x6408  /*single precision float. */
 #define M_ZMP    0x6409  /*single precision complex */
+#define M_INT8   0x640A  /*int 8  array */
+#define M_INT16  0x640B  /*int 16 array */
+
 #define M_SSP64  0x6430  /*single precision float + int64 */
 #define M_SSP32  0x6431  /*single precision float + int 32 */
 #define M_ZSP64  0x6432  /*single precision complex + int64 */
 #define M_ZSP32  0x6433  /*single precision complex + int32 */
+
 /*The individual MC_* and MCC_* have been deprecated. Use MCC_ANY for cell arrays of any type */
 #define MCC_ANY  0x6421  /*cell of any thing */
 #define M_HEADER 0x6500  /*header. */

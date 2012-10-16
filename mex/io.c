@@ -604,8 +604,17 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
     case -64:
 	*magic=M_DBL;
 	break;
+    case 32:
+	*magic=M_INT32;
+	break;
+    case 16:
+	*magic=M_INT16;
+	break;
+    case 8:
+	*magic=M_INT8;
+	break;
     default:
-	error("Invalid\n");
+	error("bitpix=%d is not yet handled.\n", bitpix);
     }
     return 0;
 }

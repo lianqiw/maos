@@ -42,13 +42,18 @@ typedef struct file_t{
 #define M_CSP32 0x6406
 #define M_SP32  0x6407
 #define M_FLT   0x6408
-#define M_ZMP  0x6409
+#define M_ZMP   0x6409
+#define M_INT8  0x640A
+#define M_INT16 0x640B
+
 #define MC_CSP  0x6410
 #define MC_SP   0x6411
 #define MC_DBL  0x6412
 #define MC_INT64 0x6413
 #define MC_CMP 0x6414
 #define MC_INT32 0x6415
+
+
 #define MCC_ANY  0x6421
 #define MCC_DBL 0x6422
 #define MCC_CMP 0x6424
