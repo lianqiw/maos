@@ -305,9 +305,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][2]=totfov/2;
     cir[0][3]=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
-    if(parms->sim.ncpa_calib){
-	ngroup+=1;
-    }
+    ngroup+=1;
     loc_t **locs=calloc(ngroup, sizeof(loc_t*));
     int32_t *style=calloc(ngroup, sizeof(int32_t));
     int count=0;

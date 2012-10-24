@@ -239,7 +239,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     if(!(fd=fopen(fn,"r"))){
 	error("File %s doesn't exist\n",fn);
     }
-#define MAXLN 4096
+#define MAXLN 40960
     char ssline[MAXLN];
     ssline[0]='\0';/*stores the available line. */
     char line[MAXLN];

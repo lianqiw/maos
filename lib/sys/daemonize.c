@@ -83,12 +83,18 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		    /*warning("Process %ld already locks file %s\n",pid,fnlock); */
 		    long version_old=0;
 		    if(version>0 && (fscanf(fp,"%ld",&version_old)==EOF || version_old < version)){
-			info("Killing old executive\n");
-			if(kill(pid,SIGTERM) && (sleep(2) && kill(pid,0))){
-			    warning3("Failled to kill the old executive, send KILL signal\n");
-			    if(kill(pid,SIGKILL) && (sleep(2) && kill(pid,0))){
-				warning3("Stilled failled to kill the old executive\n");
-				return -pid;
+			info2("%ld is sending TERM signal to old executive\n", (long)getpid());
+			if(!kill(pid,SIGTERM)){//signal sent
+			    sleep(5);
+			    if(!kill(pid,0)){//still running
+				warning3("%ld is sending KILL signal to the old executive.\n", (long)getpid());
+				if(!kill(pid,SIGKILL)){//signal sent
+				    sleep(5);
+				    if(!kill(pid,0)){
+					warning3("Failed to kill the old executive\n");
+					return -pid;
+				    }
+				}
 			    }
 			}
 			fclose(fp);/*closed fd also. */
