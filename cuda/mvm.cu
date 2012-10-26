@@ -20,7 +20,6 @@
 #include "curmat.h"
 #include "cucmat.h"
 extern "C"{
-#include "../lib/sys/scheduler_server.h"
 #include "../maos/mvm_client.h"
 #include <sys/file.h>
 #include <netinet/tcp.h> /*SOL_TCP */
@@ -376,5 +375,5 @@ void gpu_mvm_daemon(int port){
     info2("Starting MVM daemon at port %d\n", port);
     pthread_create(&thread_init, NULL, gpu_mvm_gpu_init, NULL);
     redirect();
-    listen_port(port, respond, 0, NULL);
+    listen_port(port, respond, 0, NULL, 1);
 }

@@ -28,17 +28,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h> 
 #include <errno.h>
-#include <arpa/inet.h>
 #include <math.h>
 #include <time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -51,11 +43,7 @@
 #include <libnotify/notify.h>
 static int notify_daemon=1;
 #endif
-#include "common.h"
-#include "misc.h"
-#include "daemonize.h"
-#include "scheduler_client.h"
-#include "io.h"
+#include "../sys/sys.h"
 #include "monitor.h"
 #include "icon-monitor.h"
 #include "icon-finished.h"
@@ -78,6 +66,7 @@ static double *usage_cpu;
 static double *usage_mem;
 static GtkWidget **prog_cpu;
 static GtkWidget **prog_mem;
+PangoAttrList *pango_active, *pango_down;
 GdkColor blue;
 GdkColor green;
 GdkColor red;
@@ -152,15 +141,18 @@ static int host_from_sock(int sock){
     }
     return -1;
 }
-static void host_up(int host){
+static void host_up(int ihost){
     pthread_mutex_lock(&pmutex);
     nhostup++;
     pthread_mutex_unlock(&pmutex);
-    gtk_widget_set_sensitive(cmdconnect[host],0);
-    gtk_widget_hide(cmdconnect[host]);
-    proc_remove_all(host);/*remove all entries. */
+    gtk_widget_set_sensitive(cmdconnect[ihost],0);
+    gtk_widget_hide(cmdconnect[ihost]);
+    proc_remove_all(ihost);/*remove all entries. */
+    gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_active);
+    info2("connected to %s\n", hosts[ihost]);
 }
-static void host_down(int host, int info){
+
+static void host_down(int ihost, int info){
     pthread_mutex_lock(&pmutex);
     nhostup--;
     pthread_mutex_unlock(&pmutex);
@@ -169,11 +161,13 @@ static void host_down(int host, int info){
 				   "Scheduler version is too old",
 				   "Scheduler verison is too new, plase update monitor"};
 
-    gtk_button_set_label(GTK_BUTTON(cmdconnect[host]),infotext[info]);
-    gtk_widget_show_all(cmdconnect[host]);
-    gtk_widget_set_sensitive(cmdconnect[host],1);
-    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[host]), 0);
-    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[host]), 0);
+    gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]),infotext[info]);
+    gtk_widget_show_all(cmdconnect[ihost]);
+    gtk_widget_set_sensitive(cmdconnect[ihost],1);
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
+    gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
+    info2("disconnected from %s\n", hosts[ihost]);
 }
 
 static void channel_removed(gpointer data){
@@ -289,7 +283,7 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
 	    if(!p){
 		p=proc_add(host,pid);
 	    }
-	    p->path=readstr(sock); if(!p->path) warning("readstr failed\n");
+	    streadstr(sock, &p->path); if(!p->path) warning("readstr failed\n");
 	}
 	break;
     case CMD_LOAD:
@@ -324,53 +318,15 @@ static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
 }
 
 /**
-   To open a port and connect to scheduler. This requires host name lookup and
-   can not be compiled statically, so do not put it in scheduler_client.c
- */
-int scheduler_connect(int ihost, int block, int mode){
-    /*
-      mode=0: read/write
-      mode=1: read only by the client. the server won't read
-      mode=2: write only by the client. the server won't write
-     */
-    const char *host;
-    if(ihost==-1){
-	ihost=hid;
-    }
-    host=hosts[ihost];
-    return connect_port(host, PORT, block, mode);
-}
-
-/**
    called by monitor to kill a process
 */
-int scheduler_kill_job(int host,int pid){
-    int sock=scheduler_connect(host,0,2);
+int scheduler_cmd(int host,int pid, int command){
+    int sock=hsock[host];
     if(sock==-1) return 1;
     int cmd[2];
-    cmd[0]=CMD_KILL;
+    cmd[0]=command;
     cmd[1]=pid;/*pid */
-    if(write(sock,cmd,2*sizeof(int))!=sizeof(int)*2){
-	warning("write to socket %d failed\n",sock);
-    }
-    close(sock);
-    return 0;/*success */
-}
-
-/**
-   Ask scheduler to remove run by monitor
-*/
-int scheduler_remove_job(int host, int pid){
-    int sock=scheduler_connect(host,0,2);
-    if(sock==-1) return 1;
-    int cmd[2];
-    cmd[0]=CMD_REMOVE;
-    cmd[1]=pid;/*pid */
-    if(write(sock,cmd,2*sizeof(int))!=sizeof(int)*2){
-	warning("write to socket %d failed\n",sock);
-    }
-    close(sock);
-    return 0;/*success */
+    return stwriteintarr(sock,cmd,2);
 }
 
 /**
@@ -388,20 +344,17 @@ static void add_host_thread(void *value){
       g_io_channel_get_flags() to update the internal values of these flags.*/
     while(!quitall){
 	if(!hsock[ihost]){
-	    int sock=scheduler_connect(ihost,0,0);
+	    int sock=connect_port(hosts[ihost], PORT, 0, 0);
 	    if(sock==-1){
 		hsock[ihost]=0;
 	    }else{
 		int cmd[2];
 		cmd[0]=CMD_MONITOR;
 		cmd[1]=scheduler_version;
-		if(write(sock,cmd,sizeof(int)*2)!=sizeof(int)*2){
+		if(stwriteintarr(sock, cmd, 2)){//write failed.
 		    hsock[ihost]=0;
 		}else{
-		    /*
-		      host is connected. 
-		      2010-07-03:we don't write. to detect remote close. */
-		    shutdown(sock,SHUT_WR);
+		    /* host is connected. 2010-07-03:we don't write. to detect remote close. */
 		    gdk_threads_enter();
 		    GIOChannel *channel=g_io_channel_unix_new(sock);
 		    g_io_channel_set_encoding(channel,NULL,NULL);
@@ -584,7 +537,7 @@ void kill_job(PROC_T *p){
 	int result=gtk_dialog_run(GTK_DIALOG(dia));
 	gtk_widget_destroy (dia);
 	if(result==GTK_RESPONSE_YES){
-	    if(scheduler_kill_job(p->hid,p->pid)){
+	    if(scheduler_cmd(p->hid,p->pid,CMD_KILL)){
 		warning("Failed to kill the job\n");
 	    }
 	    p->status.info=S_TOKILL;
@@ -667,57 +620,43 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	}
     return TRUE;
 }
-static void clear_jobs_finished(GtkAction *btn){
+static int test_finished(int status){
+    return status==S_FINISH;
+}
+static int test_crashed(int status){
+    return status==S_CRASH || status==S_KILLED || status==S_TOKILL;
+}
+static void clear_jobs(GtkAction *btn, int (*testfun)(int)){
     (void)btn;
     int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
     PROC_T *iproc,*jproc;
     if(!pproc[ihost]) return;
-
-    int sock=scheduler_connect(pproc[ihost]->hid,0,0);
+    int sock=hsock[ihost];
     if(sock==-1) return;
     int cmd[2];
     cmd[0]=CMD_REMOVE;
     
     for(iproc=pproc[ihost]; iproc; iproc=jproc){
 	jproc=iproc->next;
-	if(iproc->status.info==S_FINISH){
+	if(testfun(iproc->status.info)){
 	    cmd[1]=iproc->pid;
-	    if(write(sock,cmd,2*sizeof(int))!=sizeof(int)*2){
+	    if(stwriteintarr(sock,cmd,2)){
 		warning("write to socket %d failed\n",sock);
+		break;
 	    }
 	    while (gtk_events_pending ())
 		gtk_main_iteration ();
 	    
 	}
     }
-    close(sock);
+}
+static void clear_jobs_finished(GtkAction *btn){
+    clear_jobs(btn, test_finished);
 }
 static void clear_jobs_crashed(GtkAction *btn){
-    (void)btn;
-    int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
-    PROC_T *iproc,*jproc;
-
-    if(!pproc[ihost]) return;
-    int sock=scheduler_connect(pproc[ihost]->hid,0,0);
-    if(sock==-1) return;
-    int cmd[2];
-    cmd[0]=CMD_REMOVE;
-    
-    for(iproc=pproc[ihost]; iproc; iproc=jproc){
-	jproc=iproc->next;
-	if(iproc->status.info==S_CRASH || iproc->status.info==S_KILLED 
-	   ||iproc->status.info==S_TOKILL){
-	    cmd[1]=iproc->pid;
-	    if(write(sock,cmd,2*sizeof(int))!=sizeof(int)*2){
-		warning("write to socket %d failed\n",sock);
-	    }
-	    while (gtk_events_pending ())
-		gtk_main_iteration ();
-	    
-	}
-    }
-    close(sock);
+    clear_jobs(btn, test_crashed);
 }
+
 GtkWidget *monitor_new_entry_progress(void){
     GtkWidget *prog=gtk_entry_new();
     gtk_editable_set_editable(GTK_EDITABLE(prog),FALSE);
@@ -948,12 +887,17 @@ int main(int argc, char *argv[])
 
     pthread_mutex_init(&pmutex, NULL);
     pthread_cond_init(&pcond, NULL);
+
+    pango_active=pango_attr_list_new();
+    pango_down=pango_attr_list_new();
+    pango_attr_list_insert(pango_down, pango_attr_foreground_new(0xEEFF, 0xEEFF, 0xEEFF));
+    pango_attr_list_insert(pango_active, pango_attr_foreground_new(0x0000, 0x0000, 0x0000));
+
     for(int ihost=0; ihost<nhost; ihost++){
 	char tit[40];
 	snprintf(tit,40,"%s(0)",hosts[ihost]);
     	titles[ihost]=gtk_label_new(tit);
-
-	
+	gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
 	GtkWidget *hbox0=gtk_hbox_new(FALSE,0);
 	prog_cpu[ihost]=monitor_new_progress(1,16);
 	prog_mem[ihost]=monitor_new_progress(1,16);

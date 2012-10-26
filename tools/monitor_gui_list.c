@@ -48,9 +48,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <glib/gprintf.h>
-#include "common.h"
 #include "monitor.h"
-#include "misc.h"
 enum{
     COL_DATE,
     COL_PID,

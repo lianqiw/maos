@@ -15,86 +15,83 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/**
+   \file sockio.c
+
+   Routines handle socket i/o.
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 #include "misc.h"
 #include "common.h"
 #include "sockio.h"
 
-/**
-   Socket IO
-*/
-int stwrite(int *fd, const void *p, size_t len){
-    if(*fd==-1){
+int stwrite(int sfd, const void *p, size_t len){
+    if(sfd==-1){
 	warning3("Trying to write to a closed socket\n");
 	return -1;
     }
-    if(write(*fd, p, len)!=len){
+    if(write(sfd, p, len)!=len){
 	perror("stwrite");
-	warning3("Write failed. close socket %d\n", *fd);
-	close(*fd);
-	*fd=-1;
+	warning3("Write socket %d failed.\n", sfd);
 	return -1;
     }else{
 	return 0;
     }
 }
-int stread(int *fd, void *p, size_t len){
-    if(*fd==-1){
+int stread(int sfd, void *p, size_t len){
+    if(sfd==-1){
 	warning3("Trying to read a closed socket\n");
 	return -1;
     }
-    if(read(*fd, p, len)!=len){
+    if(read(sfd, p, len)!=len){
 	perror("stread");
-	warning3("Read failed. close socket %d\n",*fd);
-	close(*fd);
-	*fd=-1;
+	warning3("Read socket %d failed. \n",sfd);
 	return -1;
     }else{
 	return 0;
     }
 }
-/*Provent calling read/write in this file from now on. use stread/stwrite instead */
+/*Prevent calling read/write in this file from now on. use stread/stwrite instead */
 #define read READ_IS_PROHIBITED
 #define write WRITE_IS_PROHIBITED
-void stwriteint(int *fd, int cmd){
-    stwrite(fd, &cmd, sizeof(int));
+int stwriteint(int sfd, int cmd){
+    return stwrite(sfd, &cmd, sizeof(int));
 }
-void stwriteintarr(int *fd, int* cmd, unsigned int len){
-    stwrite(fd,cmd,len*sizeof(int));
+int stwriteintarr(int sfd, int* cmd, unsigned int len){
+    return stwrite(sfd,cmd,len*sizeof(int));
 }
-int streadint(int *fd){
-    int cmd=-1;
-    stread(fd, &cmd, sizeof(int));
-    return cmd;
+int streadint(int sfd, int *cmd){
+    return stread(sfd, cmd, sizeof(int));
 }
-void streadintarr(int *fd, int* cmd, unsigned int len){
-    stread(fd,cmd,len*sizeof(int));
+int streadintarr(int sfd, int* cmd, unsigned int len){
+    return stread(sfd,cmd,len*sizeof(int));
 }
-void stwritestr(int *fd, const char *str){
+int stwritestr(int sfd, const char *str){
     if(str){
 	int len=strlen(str)+1;
-	stwriteint(fd, len);
-	stwrite(fd, str, len);
+	return stwriteint(sfd, len) || stwrite(sfd, str, len);
     }else{
-	stwriteint(fd, 0);
+	return stwriteint(sfd, 0);
     }
 }
 
-char *streadstr(int *fd){
+int streadstr(int sfd, char **str){
     int len;
-    char *str;
-    len=streadint(fd);
-    if(len>0){
-	str=calloc(1, sizeof(char)*len);
-	if(stread(fd, str, len)){
-	    free(str);
-	    str=NULL;
+    int err=streadint(sfd, &len);
+    if(!err && len>0){
+	*str=calloc(1, sizeof(char)*len);
+	err=stread(sfd, *str, len);
+	if(err){
+	    free(*str);
+	    *str=NULL;
 	}
     }else{
-	str=NULL;
+	*str=NULL;
     }
-    return str;
+    return err;
 }

@@ -18,7 +18,7 @@
 #include <dirent.h>
 #include <getopt.h>
 #include <unistd.h>
-#include "aos.h"
+#include "../lib/aos.h"
 static void usage(){
     fprintf(stderr,"Usage:\n"
 	    "drawres [-s 1] folder1 folder2 ...\n");

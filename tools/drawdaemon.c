@@ -16,10 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../lib/draw.h"
-#include "process.h"
-#include "misc.h"
-#include "mathmisc.h"
+#include "../lib/aos.h"
 #include "drawdaemon.h"
 
 char *fifo=NULL;

@@ -1,9 +1,9 @@
-AM_CFLAGS=$(OPTS) -I $(top_srcdir) -I $(top_srcdir)/lib/ -I $(top_srcdir)/lib/sys
+AM_CFLAGS=$(OPTS) -I $(top_srcdir)
 AM_LDFLAGS=$(LDEXE)
 if USE_LONG
-LDADD=../lib/libaos_long.la $(LDOPTS)
+LDADD=../lib/libaos_long.la ../sys/libaosys.la $(LDOPTS)
 else
-LDADD=../lib/libaos_int.la $(LDOPTS)
+LDADD=../lib/libaos_int.la ../sys/libaosys.la $(LDOPTS)
 endif
 
 ICONS=icon-cancel.h icon-failed.h icon-monitor.h icon-running.h icon-draw.h	\
@@ -31,13 +31,14 @@ ___bin_drawres_SOURCES=drawres.c
 ___bin_calcenc_SOURCES=calcenc.c
 endif
 
+if USE_SCHEDULER
 if MON
 if MONN  #FULL with notify
 MONITOR_FLAGS=$(MONN_CFLAGS) $(AM_CFLAGS) $(OPTScommon) -DWITH_NOTIFY
-MONITOR_LIBS=$(LDADD) $(MONN_LIBS)
+MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MONN_LIBS)
 else     #Monitor wihtout libnotify.
 MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
-MONITOR_LIBS=$(LDADD) $(MON_LIBS)
+MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MON_LIBS)
 endif
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table
 ___bin_monitor_SOURCES=monitor.c monitor_gui.c
@@ -49,6 +50,7 @@ ___bin_monitor_list_LDADD=$(MONITOR_LIBS)
 ___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
+endif
 endif
 
 if USE_CUDA

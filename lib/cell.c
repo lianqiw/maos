@@ -24,9 +24,9 @@
 #include <math.h>
 #include <sys/mman.h>
 
-#include "common.h"
+#include "../sys/sys.h"
 #include "random.h"
-#include "misc.h"
+
 #include "dmat.h"
 #include "cmat.h"
 #include "matbin.h"

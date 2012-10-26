@@ -25,9 +25,9 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#include "common.h"
+#include "../sys/sys.h"
 #include "random.h"
-#include "misc.h"
+
 #include "mathmisc.h"
 #include "dsp.h"
 #include "ssp.h"

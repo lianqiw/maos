@@ -3,7 +3,7 @@ SUBDIRS=
 if COMP_CHOL
 SUBDIRS+=external/cholmod
 endif
-SUBDIRS+=lib
+SUBDIRS+=sys lib
 if USE_CUDA
 SUBDIRS+=cuda
 endif

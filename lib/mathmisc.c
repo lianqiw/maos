@@ -25,6 +25,18 @@
    A few math routines
 */
 /**
+   Compute the factorial. Overflow LONG if n>20, so we use double as output.*/
+double factorial(long n){
+    double fact=1;
+    while(n>1){
+	fact*=n--;
+    }
+    if(!isfinite(fact)){
+	error("Factorial overflows\n");
+    }
+    return fact;
+}
+/**
    normalize vector to sum to norm;*/
 void normalize_sum(double *p, long nloc, double norm){
     if(!nloc) return;

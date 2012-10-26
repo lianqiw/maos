@@ -29,7 +29,7 @@ precision, change the float declarations above to double and decrease EPS to 10â
 convert the function beschb.
 */
 #include <math.h>
-#include "common.h"
+#include "../sys/sys.h"
 #undef EPS
 #define EPS 1.0e-16
 #define FPMIN 1.0e-30

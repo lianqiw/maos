@@ -17,9 +17,14 @@
 */
 #ifndef AOS_SYS_SYS_H
 #define AOS_SYS_SYS_H
+#include "common.h"
+#include "misc.h"
+#include "path.h"
+#include "hashlittle.h"
+#include "sock.h"
+#include "sockio.h"
 #include "thread.h"
 #include "process.h"
 #include "scheduler_client.h"
 #include "daemonize.h"
-#include "mem.h"
 #endif

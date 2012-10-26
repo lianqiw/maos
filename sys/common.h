@@ -23,7 +23,7 @@
    Every source file in this folder should include this file
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h" /*not a good idea to include HAVE_CONFIG_H here */
+#include "config.h" 
 #endif
 #include <signal.h>
 #include <stdarg.h>
@@ -101,7 +101,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #endif
 #endif
 
-#include "sys/mem.h"
+#include "mem.h"
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
 #endif/*__linux__ */

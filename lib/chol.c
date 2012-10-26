@@ -16,16 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <unistd.h>
+#include "../sys/sys.h"
 #include "cholmod.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
 #include "matbin.h"
 #include "chol.h"
-#include "sys/thread.h"
-#include "sys/process.h"
-#include "sys/daemonize.h"
-#include "hashlittle.h"
 #if defined(DLONG)
 #define MOD(A) cholmod_l_##A
 #define ITYPE CHOLMOD_LONG

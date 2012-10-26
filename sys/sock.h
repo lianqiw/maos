@@ -15,14 +15,11 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_IO_H
-#define AOS_IO_H
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef AOS_SOCKET_H
+#define AOS_SOCKET_H
 
-void writeintsock(int fd, int cmd);
-void writestr(int fd, const char *str);
-int  readint(int fd);
-char*readstr(int fd);
+#include <netinet/in.h>
+int connect_port(const char *hostname, int port, int block, int nodelay);
+void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*timeout_fun)(), int nodelay);
+
 #endif

@@ -27,12 +27,12 @@
 #include <stdint.h>
 #include <limits.h>
 #include <ctype.h> /*isspace */
-#include "common.h"
-#include "thread.h"
-#include "process.h"
+#include "../sys/sys.h"
+
+
 #include "bin.h"
-#include "path.h"
-#include "misc.h"
+
+
 #include "readstr.h"
 /**
    \file bin.c Defines our custom file format .bin or zipped .bin.gz and the

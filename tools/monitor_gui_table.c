@@ -36,9 +36,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-#include "common.h"
 #include "monitor.h"
-#include "scheduler_client.h"
 
 GtkWidget **tables;
 gint *nrows;
@@ -46,7 +44,7 @@ static int ncol=7;
 static void delete_hbox_event(GtkWidget *btn, GdkEventButton *event,PROC_T *p){
     (void)btn;
     if(event->button==1){
-	scheduler_remove_job(p->hid,p->pid);
+	scheduler_cmd(p->hid,p->pid,CMD_REMOVE);
     }
 }
 static GtkWidget *new_button(void){

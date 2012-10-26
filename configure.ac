@@ -229,8 +229,10 @@ fi
 AC_SUBST(CUDAVER)
 AC_DEFINE_UNQUOTED(CUDAVER, [$CUDAVER], ["CUDA Version Enabled."])
 
+AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
+   AM_CONDITIONAL(USE_SCHEDULER, false)
 fi
 
 if test "x$use_static" = "xyes" ;then
@@ -575,6 +577,7 @@ AC_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
+		 sys/Makefile
 		 lib/Makefile
 		 tools/Makefile
 		 maos/Makefile 

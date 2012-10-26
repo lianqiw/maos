@@ -20,7 +20,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-#include "scheduler_server.h"
+#include "../sys/sys.h"
 /**
    Information for each process.
 */
@@ -55,7 +55,7 @@ void refresh(PROC_T *p);
 void kill_job(PROC_T *p);
 void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p);
 void notify_user(PROC_T *p);
-
+int scheduler_cmd(int host,int pid, int command);
 extern GdkColor blue;
 extern GdkColor green;
 extern GdkColor red;

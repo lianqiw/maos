@@ -19,8 +19,8 @@
 #ifndef __SUPPORT_H
 #define __SUPPORT_H
 #include <unistd.h>
+#include "../sys/sys.h" 
 #include "blas.h"
-#include "common.h" 
 #include "random.h"
 #include "readcfg.h"
 #include "readstr.h"
@@ -30,12 +30,10 @@
 #include "zmat.h"
 #include "dsp.h"
 #include "csp.h"
-#include "path.h"
 #include "bin.h"
 #include "matbin.h"
 #include "cellarr.h"
 #include "locbin.h"
-#include "misc.h"
 #include "mathmisc.h"
 #include "loc.h"
 #include "draw.h"
@@ -47,7 +45,6 @@
 #include "turbulence.h"
 #include "proj.h"
 #include "chol.h"
-#include "hashlittle.h"
 #include "laplacian.h"
 #include "pcg.h"
 #include "muv.h"
@@ -55,7 +52,6 @@
 #include "genotf.h"
 #include "fractal.h"
 #include "stfun.h"
-#include "sys/sys.h"
 #include "servo.h"
 #include "slaving.h"
 #include "imat.h"

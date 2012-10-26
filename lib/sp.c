@@ -31,8 +31,8 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
-#include "common.h" 
-#include "thread.h"
+#include "../sys/sys.h" 
+
 #include "mathmisc.h"
 #include "type.h"
 #include "dsp.h" 
@@ -44,8 +44,8 @@
 #include "cell.h"
 #include "suitesparse.h"
 #include "bin.h"
-#include "misc.h"
-#include "common.h"
+
+#include "../sys/sys.h"
 #include "defs.h"
 #include "suitesparse.c"
 

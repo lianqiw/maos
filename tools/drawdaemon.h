@@ -34,7 +34,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
-#include "aos.h"
+#include "../lib/aos.h"
 #ifndef CAIRO_FORMAT_A8
 #define CAIRO_FORMAT_RGB24 0x01
 #define CAIRO_FORMAT_A8 0x02

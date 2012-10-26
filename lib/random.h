@@ -18,7 +18,7 @@
 
 #ifndef __AOS_RANDOM_H
 #define __AOS_RANDOM_H
-#include "misc.h"
+#include "../sys/sys.h"
 /* 
    extracted from mtwist.h/c
    The Web page on the Mersenne Twist algorithm is at:

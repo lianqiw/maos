@@ -24,7 +24,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <signal.h>
-#include "common.h"
+#include "../sys/sys.h"
 
 int main(int argc, char**argv){
     if(argc<2){
@@ -45,7 +45,7 @@ int main(int argc, char**argv){
 	return 1;
     }
     long stime,utime;
-    double TCK=sysconf(_SC_CLK_TCK)*sec;
+    double tck=sysconf(_SC_CLK_TCK)*sec;
     snprintf(fn,PATH_MAX,"%ld.cpu",pid);
     info("Recording PID %ld every %g second, and save to %s\n", pid, sec, fn);
     FILE *fpout=fopen(fn,"w");
@@ -62,7 +62,7 @@ int main(int argc, char**argv){
 		  &stime, &utime)!=2){
 	    error("Unable to read\n");
 	}
-	fprintf(fpout,"%g\n",(double)(stime+utime-last)/TCK);
+	fprintf(fpout,"%g\n",(double)(stime+utime-last)/tck);
 	fflush(fpout);
 	rewind(fp);
 	last=stime+utime;

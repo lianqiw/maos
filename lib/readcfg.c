@@ -29,8 +29,8 @@
 #include <signal.h>
 #include <limits.h>
 #include "readcfg.h"
-#include "path.h"
-#include "common.h"
+
+#include "../sys/sys.h"
 #include "mathmisc.h"
 #include "readstr.h"
 /**

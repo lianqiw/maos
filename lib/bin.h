@@ -23,7 +23,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <pthread.h>
-#include "common.h"
+#include "../sys/sys.h"
 #define IO_TIMMING 0
 /*The definitions here should not be changed once set for backward/foreward compatibility. */
 #define M_CSP64  0x6400  /*sparse complex */

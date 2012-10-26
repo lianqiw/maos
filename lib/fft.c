@@ -18,11 +18,11 @@
 
 #define USE_COMPLEX /**<for complex data*/
 #include <sys/file.h>
-#include "common.h"
+#include "../sys/sys.h"
 #include <fftw3.h>
-#include "thread.h"
-#include "process.h"
-#include "misc.h"
+
+
+
 #include "fft.h"
 #include "cmat.h"
 PNEW(mutex_fftw);

@@ -21,23 +21,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-#include "common.h"
-#include "thread.h"
-#include "process.h"
+#include "../sys/sys.h"
 #include "turbulence.h"
-#include "path.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "loc.h"
 #include "fft.h"
-#include "hashlittle.h"
 #include "fractal.h"
 #include "mathmisc.h"
 #include "nr.h"
 #include "locbin.h"
-#include "misc.h"
 #include "cellarr.h"
-#include "sys/daemonize.h"
 
 /**
  *  \file turbulence.c

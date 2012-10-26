@@ -27,10 +27,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
-#include "scheduler_client.h"
-#include "common.h"
-#include "process.h"
-#include "misc.h"
+#include "../sys/sys.h"
 long matlab_pid;
 static void kill_matlab(int sig){
     if(sig!=0){

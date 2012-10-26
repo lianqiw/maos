@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "common.h"
-#include "misc.h"
+#include "../sys/sys.h"
+
 #include "loc.h"
 #include "dmat.h"
 #include "cmat.h"

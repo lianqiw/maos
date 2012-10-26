@@ -17,7 +17,6 @@
 */
 
 #include "muv.h"
-#include "sys/thread.h"
 /**
    \file lib/muv.c 
 

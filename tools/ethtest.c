@@ -60,7 +60,7 @@ int client(const char *hostname, int port, int type){
     int sock;
     int nretry=100;
     if(type==1){
-	sock=connect_port(hostname, port, 0, 0);
+	sock=connect_port(hostname, port, 0, 1);
 	if(sock<0) exit(1);
 	dmat *timing=dnew(nretry, N);
 	for(long iN=1; iN<=N; iN++){
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
 	if(argc>3){
 	    type=strtol(argv[3], NULL, 10);
 	}
-	listen_port(port, server, 0, NULL);
+	listen_port(port, server, 0, NULL, 1);
     }else{
 	if(argc<4){
 	    error("Usage: ./ethtest client hostname port");

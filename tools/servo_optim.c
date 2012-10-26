@@ -18,7 +18,7 @@
 /**
    standalone routine that does servo filtering.
 */
-#include "aos.h"
+#include "../lib/aos.h"
 int main(int argc, char **argv){
     enum{
 	P_EXE,

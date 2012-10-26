@@ -19,7 +19,7 @@
 #ifndef __READ_CONFIG_H
 #define __READ_CONFIG_H
 
-#include "misc.h"
+
 #include "dmat.h"
 
 #define format2key				\

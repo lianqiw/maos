@@ -49,7 +49,7 @@ char *start;
 #define WRITE_CMD(p) WRITE_ARR(p,N_CMD,int)
 
 void mvm_client_init(const char *host, int port){
-    if((sock_mvm=connect_port(host, port, 1, 0))<0){
+    if((sock_mvm=connect_port(host, port, 1, 1))<0){
 	error("Unable to connect to mvm server\n");
     }
     {

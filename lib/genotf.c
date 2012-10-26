@@ -20,15 +20,12 @@
    Routines to generate short exposure OTFs of an aperture in present of
    atmosphere turbulence.
 */
-#include "common.h"
-#include "thread.h"
-#include "daemonize.h"
+#include "../sys/sys.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "mathmisc.h"
 #include "loc.h"
 #include "genotf.h"
-#include "sys/process.h"
 /**
 private data struct to mark valid pairs of points.  */
 typedef struct T_VALID{

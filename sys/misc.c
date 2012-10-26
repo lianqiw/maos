@@ -451,19 +451,6 @@ int mystrcmp(const char *a, const char *b){
     }
 }
 
-
-/**
-   Compute the factorial. Overflow LONG if n>20, so we use double as output.*/
-double factorial(long n){
-    double fact=1;
-    while(n>1){
-	fact*=n--;
-    }
-    if(!isfinite(fact)){
-	error("Factorial overflows\n");
-    }
-    return fact;
-}
 /**
    Make the fd close on exec.
 */

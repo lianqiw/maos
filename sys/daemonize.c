@@ -38,8 +38,11 @@
 #include "daemonize.h"
 
 /**
-   Open and maintain lock of file fn.
-   return negative number if failed.
+   Ensure singleton process by opening and maintaining lock of file fn. Will
+   proceed if the lock if succeed, in which case non-negative number of the fd
+   is returned. If other process already locked, will return negative number. If
+   version is specified and is bigger than the value contained in existing
+   fnlock, will kill the old process that created fnlock.
 */
 int lock_file(const char *fnlock, /**<The filename to lock on*/
 	      long block,         /**<block on weighting. set to 0 for no waiting.*/
@@ -54,7 +57,6 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
     }
     count++;
     fd=open(fnlock,O_RDWR|O_CREAT,0644);
-    /*cloexec(fd);//do not do this. need to carry over to forked routines */
     if(fd>=0){
 	int op=LOCK_EX;
 	if(!block) op |= LOCK_NB;
@@ -73,7 +75,6 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		goto retry;
 	    }else{
 		if(kill(pid,0)){
-		    count++;
 		    warning("Process %ld already locks file, but we don't find it, this may happen in NFS mounted system\n"
 			    " wait for 10 seconds before retry.\n",pid);
 		    sleep(10);
@@ -83,11 +84,11 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		    /*warning("Process %ld already locks file %s\n",pid,fnlock); */
 		    long version_old=0;
 		    if(version>0 && (fscanf(fp,"%ld",&version_old)==EOF || version_old < version)){
-			info2("%ld is sending TERM signal to old executive\n", (long)getpid());
+			info2("%d is sending TERM signal to old executive\n", getpid());
 			if(!kill(pid,SIGTERM)){//signal sent
 			    sleep(5);
 			    if(!kill(pid,0)){//still running
-				warning3("%ld is sending KILL signal to the old executive.\n", (long)getpid());
+				warning3("%d is sending KILL signal to the old executive.\n", getpid());
 				if(!kill(pid,SIGKILL)){//signal sent
 				    sleep(5);
 				    if(!kill(pid,0)){
@@ -106,15 +107,14 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		}
 	    }
 	}else{/*lock succeed. write pid. */
+	    warning2("locking files %s succeed\n", fnlock);
 	    char strpid[60];
-	    snprintf(strpid,60,"%ld %ld\n",(long)getpid(),version);
+	    snprintf(strpid,60,"%d %ld\n",getpid(),version);
 	    lseek(fd,0,SEEK_SET);
 	    if(ftruncate(fd,0)<0)
 		warning("Unable to truncate the file\n");
 	    if(write(fd,strpid,strlen(strpid)+1)!=strlen(strpid)+1){
-		warning("Write pid %d to %s failed\n",(int)getpid(),fnlock);
-	    }else{
-		/*info("Write pid %d to %s success\n",(int)getpid(),fnlock); */
+		warning("Write pid %d to %s failed\n",getpid(),fnlock);
 	    }
 	    fsync(fd);/*don't close file. maintain lock. */
 	}
@@ -125,16 +125,22 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
     }
     return fd;
 }
+/**
+   Launch a single instance daemon. First try to create a lock file progname.pid
+   in folder lockfolder_in. If lock failes, it means other daemon already
+   exists, will not proceed. If lock succeed, will write pid and version in the
+   file.
 
+   the stdin and stderr stream will then be directed to progname.log in folder
+   lockfolder_in. buffering is disabled to ensure real time display by tail.
+
+   if daemon_func is true, will fork and run it with argument
+   daemon_arg. otherwise the routine returns.
+*/
 void single_instance_daemonize(const char *lockfolder_in, 
 			       const char *progname, long version,
 			       void(*daemon_func)(void*), 
 			       void* daemon_arg){
-    /*
-      if daemon_func is true, will run the daemon_func in forked daemon 
-      and never return. otherwise, the function will return.
-      daemon_arg is the arguments to daemon_func
-    */
     int fd=-1;
     char *lockfolder=NULL;
     expand_filename(&lockfolder,lockfolder_in);
@@ -150,12 +156,12 @@ void single_instance_daemonize(const char *lockfolder_in,
     free(fnlock0);
 
     fd=lock_file(fnlock,0,version);
-    if(fd<0){/*lock failed. daemon already running. no need to start the daemon. */
+    if(fd<0){
+	/*lock failed. daemon already running. no need to start the daemon. */
 	if(daemon_func){
 	    return;
 	}else{
 	    _exit(EXIT_SUCCESS);
-	    return;/*just in case */
 	}
     }
     /*lock success, forking and put to background. */
@@ -183,11 +189,10 @@ void single_instance_daemonize(const char *lockfolder_in,
     umask(0077);
     /*redirect stdin/stdout. */
     if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
-    if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
-    if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
+    if(!freopen(fnlog, "a", stdout)) warning("Error redirect stdout\n");
+    if(!freopen(fnlog, "a", stderr)) warning("Error redirect stderr\n");
     setbuf(stdout,NULL);/*disable buffering. */
     setbuf(stderr,NULL);
-
     /*We fork again. after this fork, the process is not the
       session leader (the leader has exited) and no
       controlling tty can every happen.*/
@@ -200,19 +205,15 @@ void single_instance_daemonize(const char *lockfolder_in,
     }
   
     char strpid[60];
-    snprintf(strpid,60,"%ld %ld\n",(long)getpid(),version);
+    snprintf(strpid,60,"%d %ld\n",getpid(),version);
     lseek(fd,0,SEEK_SET);
     if(ftruncate(fd,0)<0)
 	warning("Unable to truncate file\n");
     if(write(fd,strpid,strlen(strpid)+1)!=strlen(strpid)+1){
-	warning("Write pid %d to %s failed\n",(int)getpid(),fnlock);
+	warning("Write pid %d to %s failed\n",getpid(),fnlock);
     }else{
-	info("Write pid %d to %s success\n",(int)getpid(),fnlock);
+	info("Write pid %d to %s success\n",getpid(),fnlock);
     }
-    
-    /*fsync(fd); */
-    /*maintain lock. don't close fd */
-    /*return to main program and continue in the newly process. */
     if(daemon_func){
 	daemon_func(daemon_arg);
 	exit(EXIT_SUCCESS);/*make sure we don't return. */
@@ -249,15 +250,15 @@ static void fputs_stderr(int fd, int stdoutfd, const char *fn){
     }
     _Exit(0);
 }
-void redirect_fd(const char *fn, int fd){
+static void redirect_fd(const char *fn, int fd){
     if(fn){
 	if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
 	if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
 	mysymlink(fn, "run_recent.log");
     }else if(fd>-1){
 	/*do not close stdout here.*/
-	stdout=fdopen(fd, "w");
-	stderr=fdopen(fd, "w");
+	dup2(fd, 1);
+	dup2(fd, 2);
     }else{
 	warning("Invalid argument");
     }
@@ -265,8 +266,10 @@ void redirect_fd(const char *fn, int fd){
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 }
-/*
-  Redirect output. If we are in detached mode, will not output to screen. Otherwise output to both file and screen.
+/**
+  Redirect output. 
+  If we are in detached mode, will not output to screen. 
+  Otherwise output to both file and screen.
 */
 void redirect(void){
     if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
@@ -301,8 +304,7 @@ void redirect(void){
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.
 */
-void daemonize(void){
-    /* Fork off the parent process */       
+void daemonize(void){ /* Fork off the parent process */       
     pid_t pid = fork();
     if (pid < 0) {
 	exit(EXIT_FAILURE);
@@ -310,7 +312,7 @@ void daemonize(void){
     if (pid > 0) {/*exit first parent. */
 	/*give enough time for the job to communicate with the scheduler so that
 	  our jobs are in order.*/
-	usleep(10000);
+	//usleep(10000);
 	_exit(EXIT_SUCCESS);
     }
     /* Create a new SID for the child process */
@@ -318,13 +320,6 @@ void daemonize(void){
     pid=getpid();
     umask(0077);
     detached=1;/*we are in detached mode, disable certain print outs.*/
-    /*
-      Closing stdin makes a file opened after freopen for stdout and stderr
-      to have an fd of 2, which is the stderr fd. then after another
-      freopen, the file ended put being the stderr stream out put. messes up
-      everything.
-    */
-    /*It may be the following producing garbage characters.*/
     redirect();
     char fn[256];
     snprintf(fn,256,"kill_%d",pid);
