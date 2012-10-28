@@ -23,10 +23,12 @@ char *fifo=NULL;
 int fifopid=0;
 int main(int argc, char *argv[])
 {
+#if GTK_MAJOR_VERSION<3 && GTK_MINOR_VERSION<32
     if(!g_thread_supported()){
 	g_thread_init(NULL);
 	gdk_threads_init();
     }
+#endif
     gtk_init(&argc, &argv);
     if(argc>1){
 	fifo=argv[1];
@@ -68,10 +70,8 @@ int main(int argc, char *argv[])
 	setbuf(stderr,NULL);
     }
     create_window();
-    g_thread_create((GThreadFunc)open_fifo, NULL, 0, NULL);
-    gdk_threads_enter();
+    g_thread_new("open_fifo", (GThreadFunc)open_fifo, NULL);
     gtk_main();
-    gdk_threads_leave();
     {
 	char fn[PATH_MAX];
 	snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);

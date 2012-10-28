@@ -82,6 +82,8 @@ GtkWidget *toptoolbar;
 GtkCssProvider *provider_red;
 GtkCssProvider *provider_blue;
 #endif
+
+
 /**
    The number line pattern determines how dash is drawn for gtktreeview. the
    first number is the length of the line, and second number of the length
@@ -354,8 +356,11 @@ static void add_host_thread(void *value){
 		if(stwriteintarr(sock, cmd, 2)){//write failed.
 		    hsock[ihost]=0;
 		}else{
-		    /* host is connected. 2010-07-03:we don't write. to detect remote close. */
+		    /*host is connected. 
+		      2010-07-03:we don't write. to detect remote close. */
+#if GTK_MAJOR_VERSION<3 || GTK_MINOR_VERSION<6
 		    gdk_threads_enter();
+#endif
 		    GIOChannel *channel=g_io_channel_unix_new(sock);
 		    g_io_channel_set_encoding(channel,NULL,NULL);
 		    /*must not be buffered */
@@ -369,7 +374,9 @@ static void add_host_thread(void *value){
 		    g_io_channel_unref(channel);
 		    hsock[ihost]=sock;
 		    host_up(ihost);
+#if GTK_MAJOR_VERSION<3 || GTK_MINOR_VERSION<6
 		    gdk_threads_leave();
+#endif
 		}
 	    }
 	}
@@ -670,7 +677,7 @@ GtkWidget *monitor_new_entry_progress(void){
     /*gtk_widget_modify_base(prog,GTK_STATE_NORMAL, &white);
     gtk_widget_modify_bg(prog,GTK_STATE_SELECTED, &blue);
     */
-#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 10
+#if GTK_MAJOR_VERSION==2 && GTK_MINOR_VERSION >= 10 || GTK_MAJOR_VERSION==3 && GTK_MINOR_VERSION < 4
     gtk_entry_set_inner_border(GTK_ENTRY(prog), 0);
 #endif
     gtk_entry_set_has_frame (GTK_ENTRY(prog), 0);
@@ -699,10 +706,12 @@ GtkWidget *monitor_new_progress(int vertical, int length){
 
 int main(int argc, char *argv[])
 {
+#if GTK_MAJOR_VERSION<3 && GTK_MINOR_VERSION<32
     if(!g_thread_supported()){
 	g_thread_init(NULL);
 	gdk_threads_init();
     }
+#endif
     gtk_init(&argc, &argv);
 #if WITH_NOTIFY
     if(!notify_init("AOS Notification")){
@@ -938,14 +947,11 @@ int main(int argc, char *argv[])
 	update_title(ihost);
 	gtk_widget_show_all(tabs[ihost]);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
-
-	if(NULL==g_thread_create((GThreadFunc)add_host_thread, GINT_TO_POINTER(ihost), FALSE, NULL)){
-	    error("Thread creation failed.\n");
-	}
+#if GTK_MAJOR_VERSION<3 && GTK_MINOR_VERSION<32
+	g_thread_create((GThreadFunc)add_host_thread, GINT_TO_POINTER(ihost), FALSE, NULL);
+#else
+	g_thread_new("add_host_thread", (GThreadFunc)add_host_thread, GINT_TO_POINTER(ihost));
+#endif
     }
-
-   
-    gdk_threads_enter();
     gtk_main();
-    gdk_threads_leave();
 }

@@ -28,9 +28,6 @@ char *dirstart;
  */
 int main(int argc, char **argv){
     dirstart=mygetcwd();
-    char*fn=mybasename(argv[0]);
-    strcpy(argv[0],fn);
-    free(fn);
     char *scmd=argv2str(argc, argv);
     ARG_S* arg=parse_args(argc,argv);
     /*In detach mode send to background and disable drawing*/

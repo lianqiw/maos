@@ -21,6 +21,8 @@
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
 #include "../sys/sys.h"
+#include "mygtk.h"
+
 /**
    Information for each process.
 */

@@ -33,8 +33,8 @@
 
 #include <glib.h>
 #include <gtk/gtk.h>
-
 #include "../lib/aos.h"
+#include "mygtk.h"
 #ifndef CAIRO_FORMAT_A8
 #define CAIRO_FORMAT_RGB24 0x01
 #define CAIRO_FORMAT_A8 0x02
@@ -143,14 +143,14 @@ extern double SP_XR;/*space on x, right */
 extern double SP_YT;/*space on y, top */
 extern double SP_YB;/*space on y, buttom */
 extern PangoFontDescription *desc;
-
+extern pthread_mutex_t drawdata_mutex;
 /*from drawdaemon_draw */
 void round_limit(double *xmin, double *xmax, int logscale);
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height);
 void apply_limit(drawdata_t *drawdata);
 /*from drawdaemon_gui */
 GtkWidget* create_window(void);
-void addpage(drawdata_t **drawdatawrap);
+gboolean addpage(gpointer junk);
 /*from drawdaemon_io */
 void open_fifo(void *);
 void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info);

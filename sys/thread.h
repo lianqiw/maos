@@ -112,12 +112,14 @@ struct thread_t{
 #define PINIT(A) pthread_mutex_init(&A,NULL)
 #define PDEINIT(A) pthread_mutex_destroy(&A)
 #define PNEW(A) static pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
+#define PNEW2(A) pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
 #else
 #define LOCK(A)
 #define UNLOCK(A)
 #define PINIT(A)
 #define PDEINIT(A)
 #define PNEW(A)
+#define PNEW2(A)
 #endif
 
 void thread_prep(thread_t *info, long start, long end, long nthread, 

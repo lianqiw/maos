@@ -56,8 +56,6 @@ static int cursor_type=0;/*cursor type of the drawing area. */
 /*
   Routines in this file are about the GUI.
 */
-GtkAttachOptions attach_fill=(GtkAttachOptions)(GTK_EXPAND|GTK_SHRINK|GTK_FILL);
-GtkAttachOptions attach_fixed=(GtkAttachOptions)0;
   
 GdkCursor *cursors[2];
 GdkPixbuf *pix_hand=NULL;
@@ -330,9 +328,9 @@ static void drawdata_free(drawdata_t *drawdata){
     }
     drawdata_free_input(drawdata);
     free(drawdata);
-    pthread_mutex_lock(&mutex_drawdata);
+    LOCK(drawdata_mutex);
     ndrawdata--;
-    pthread_mutex_unlock(&mutex_drawdata);
+    UNLOCK(drawdata_mutex);
 }
 
 /**
@@ -647,9 +645,13 @@ static gboolean key_press(GtkWidget *widget, GdkEventKey *event,
     return TRUE;
 }
 
-
-void addpage(drawdata_t **drawdatawrap)
-{
+/**
+   2012-10-27: GTK 3.6 deprecated gdk_threads_enter(). So it is hard to call
+   addpage from child threads. Modify the routine so that addpage is called by
+   the main thread when gtk is idle.
+*/
+gboolean addpage(gpointer indata){
+    drawdata_t **drawdatawrap=(drawdata_t**)indata;
     drawdata_t *drawdata=*drawdatawrap;
     GtkWidget *drawarea;
     if(!drawdata->fig) error("Must set fig before calling addpage");
@@ -754,9 +756,9 @@ void addpage(drawdata_t **drawdatawrap)
 	}
 	{
 	    free(drawdata);
-	    pthread_mutex_lock(&mutex_drawdata);
+	    LOCK(drawdata_mutex);
 	    ndrawdata--;
-	    pthread_mutex_unlock(&mutex_drawdata);
+	    UNLOCK(drawdata_mutex);
 	}
 	if(get_current_page()==drawdata_old){/*we are the current page. need to update pixmap */
 	    update_pixmap(drawdata_old);
@@ -804,19 +806,19 @@ void addpage(drawdata_t **drawdatawrap)
 	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(root), page, TRUE);
 #if GTK_MAJOR_VERSION>=3
 	g_signal_connect (drawarea, "draw", 
-	     G_CALLBACK (on_draw_event), drawdatawrap);
+			  G_CALLBACK (on_draw_event), drawdatawrap);
 #else
 	g_signal_connect (drawarea, "expose-event", 
-	     G_CALLBACK (on_expose_event), drawdatawrap);
+			  G_CALLBACK (on_expose_event), drawdatawrap);
 #endif
 	/*handles zooming. */
 	g_signal_connect (drawarea, "configure-event", 
-	     G_CALLBACK (on_configure_event), drawdatawrap);
+			  G_CALLBACK (on_configure_event), drawdatawrap);
 	gtk_widget_set_size_request(drawarea, DRAWAREA_MIN_WIDTH, 
 				    DRAWAREA_MIN_HEIGHT);
 	gtk_widget_show_all(root);
     }
-    /*gdk_threads_leave(); */
+    return 0;//return 0 cause the function to be removed frm gdb_threads_idle()
 }
 
 
@@ -1072,44 +1074,44 @@ static void tool_property(GtkToolButton *button, gpointer data){
     table=gtk_table_new(3,2,0);
     irow=0;
     entry=gtk_entry_new();
-    gtk_table_attach(GTK_TABLE(table), gtk_label_new("Title"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+    grid_attach(table, gtk_label_new("Title"), 0, 1, irow, irow+1);
+    grid_attach(table, entry, 1, 2, irow, irow+1);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->title);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->title);
 
     irow++;
     entry=gtk_entry_new();
-    gtk_table_attach(GTK_TABLE(table), gtk_label_new("X label"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+    grid_attach(table, gtk_label_new("X label"), 0, 1, irow, irow+1);
+    grid_attach(table, entry, 1, 2, irow, irow+1);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->xlabel);
 
     irow++;
     entry=gtk_entry_new();
-    gtk_table_attach(GTK_TABLE(table), gtk_label_new("Y label"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), entry, 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
+    grid_attach(table, gtk_label_new("Y label"), 0, 1, irow, irow+1);
+    grid_attach(table, entry, 1, 2, irow, irow+1);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->ylabel);
     gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
     table=gtk_table_new(4,4,0);
     irow=0;
-    gtk_table_attach(GTK_TABLE(table), gtk_label_new("xmin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), spins[0], 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), gtk_label_new("xmax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), spins[1], 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
+    grid_attach(table, gtk_label_new("xmin"), 0, 1, irow, irow+1);
+    grid_attach(table, spins[0], 1, 2, irow, irow+1);
+    grid_attach(table, gtk_label_new("xmax"), 2, 3, irow, irow+1);
+    grid_attach(table, spins[1], 3, 4, irow, irow+1);
 
     irow++;
-    gtk_table_attach(GTK_TABLE(table), gtk_label_new("ymin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), spins[2], 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), gtk_label_new("ymax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
-    gtk_table_attach(GTK_TABLE(table), spins[3], 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
+    grid_attach(table, gtk_label_new("ymin"), 0, 1, irow, irow+1);
+    grid_attach(table, spins[2], 1, 2, irow, irow+1);
+    grid_attach(table, gtk_label_new("ymax"), 2, 3, irow, irow+1);
+    grid_attach(table, spins[3], 3, 4, irow, irow+1);
     gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
     if(n>4){
 	irow++;
-	gtk_table_attach(GTK_TABLE(table), gtk_label_new("zmin"), 0, 1, irow, irow+1,attach_fixed,attach_fixed,0,0);
-	gtk_table_attach(GTK_TABLE(table), spins[4], 1, 2, irow, irow+1,attach_fill,attach_fixed,0,0);
-	gtk_table_attach(GTK_TABLE(table), gtk_label_new("zmax"), 2, 3, irow, irow+1,attach_fixed,attach_fixed,0,0);
-	gtk_table_attach(GTK_TABLE(table), spins[5], 3, 4, irow, irow+1,attach_fill,attach_fixed,0,0);
+	grid_attach(table, gtk_label_new("zmin"), 0, 1, irow, irow+1);
+	grid_attach(table, spins[4], 1, 2, irow, irow+1);
+	grid_attach(table, gtk_label_new("zmax"), 2, 3, irow, irow+1);
+	grid_attach(table, spins[5], 3, 4, irow, irow+1);
 	gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
     }
     gtk_container_add(GTK_CONTAINER(content_area), vbox);
@@ -1204,7 +1206,9 @@ GtkWidget *create_window(void){
 	pix_arrow=gdk_pixbuf_new_from_inline(-1, mouse_white, FALSE, NULL);
 	cursors[0]=gdk_cursor_new_from_pixbuf(display, pix_hand, 8, 5);
 	cursors[1]=gdk_cursor_new_from_pixbuf(display, pix_arrow, 3, 0);
+#if GTK_MAJOR_VERSION < 3
 	gtk_rc_parse_string(rc_string_notebook);
+#endif
     }
     if(!topmenu){
 	topmenu = gtk_menu_new();

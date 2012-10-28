@@ -28,7 +28,7 @@ char *deffig="Figure";
 static int no_longer_listen=0;
 int ndrawdata=0;
 int count=0;
-pthread_mutex_t mutex_drawdata=PTHREAD_MUTEX_INITIALIZER;
+PNEW2(drawdata_mutex);
 #define FILE_READ(data,size)			\
     nleft=size;start=(gchar*)data;		\
     do{						\
@@ -129,10 +129,10 @@ static int read_fifo(FILE *fp){
 		warning("FIFO_START: drawdata is not empty\n");
 	    }
 	    drawdata=calloc(1, sizeof(drawdata_t));
-	    pthread_mutex_lock(&mutex_drawdata);
+	    LOCK(drawdata_mutex);
 	    ndrawdata++;
 	    warning("drawdata created, ndrawdata=%d\n", ndrawdata);
-	    pthread_mutex_unlock(&mutex_drawdata);
+	    UNLOCK(drawdata_mutex);
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
 	    drawdata->square=1;/*default to square. */
@@ -248,10 +248,8 @@ static int read_fifo(FILE *fp){
 		    }
 		    drawdata->p=calloc(nx*ny, size);
 		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
-		    gdk_threads_enter();/*do I need this? */
 		    drawdata->image= cairo_image_surface_create_for_data 
-			(drawdata->p, drawdata->format, nx, ny, stride);
-		    gdk_threads_leave();
+			(drawdata->p, drawdata->format, nx, ny, stride);		    //gdk_threads_leave();
 		}
 		if(drawdata->npts>0){
 		    drawdata->icumu=50;
@@ -267,9 +265,7 @@ static int read_fifo(FILE *fp){
 		if(!drawdata->fig) drawdata->fig=deffig;
 		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
 		drawdatawrap[0]=drawdata;
-		gdk_threads_enter();
-		addpage(drawdatawrap);
-		gdk_threads_leave();
+		gdk_threads_add_idle(addpage, drawdatawrap);
 		drawdata=NULL;
 	    }
 	    break;
