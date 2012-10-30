@@ -43,6 +43,7 @@
 #include "hashlittle.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
+#include "thread.h"
 #ifdef MAOS_DISABLE_SCHEDULER
 int scheduler_start(char *path, int nthread, int waiting){
   (void)path;
@@ -154,7 +155,6 @@ static __attribute__((constructor))void init(){
 	    warning3("Unable to determine proper hostname. Monitor may not work\n");
 	}
     }
-    register_deinit(scheduler_deinit, NULL);
 }
 
 /**
@@ -207,11 +207,17 @@ static int psock;
 static char *path_save=NULL;
 static void scheduler_report_path(char *path){
     if(path){
-	if(path_save) free(path_save);
-	path_save=strdup(path);
+	if(path_save){
+	    path_save=realloc(path_save, strlen(path)+1);
+	    strcpy(path_save, path);
+	}else{
+	    path_save=strdup(path);
+	    register_deinit(NULL, path_save);
+	}
     }else{
 	if(!path_save){
 	    path_save=strdup("unknown");
+	    register_deinit(NULL, path_save);
 	}
     }
     int cmd[2];
@@ -219,9 +225,6 @@ static void scheduler_report_path(char *path){
     cmd[1]=getpid();
     stwriteintarr(psock, cmd, 2);
     stwritestr(psock,path_save);
-}
-void scheduler_deinit(void){
-    free(path_save);
 }
 /* called by mcao to wait for available cpu. */
 int scheduler_start(char *path, int nthread, int waiting){
@@ -313,16 +316,22 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	strncat(cmdstr,add,BACKTRACE_CMD_LEN-strlen(cmdstr)-1);
     }
 #if PRINTBACKTRACE == 1 
+    PNEW(mutex);//Only one thread can do this.
+    LOCK(mutex);
     if(psock==-1)
 	psock=scheduler_connect_self(0);
-    if(psock==-1) return;
+    if(psock==-1) goto end;
     int cmd[2];
     cmd[0]=CMD_TRACE;
     cmd[1]=getpid();
     char *ans;
-    if(stwrite(psock,cmd,sizeof(int)*2) || stwritestr(psock,cmdstr) || streadstr(psock, &ans)) return;
+    if(stwrite(psock,cmd,sizeof(int)*2) || stwritestr(psock,cmdstr) || streadstr(psock, &ans)){
+	goto end;
+    }
     info2(" %s\n",ans);
     free(ans);
+ end:
+    UNLOCK(mutex);
 #else
     info2(" %s\n",cmdstr);
 #endif

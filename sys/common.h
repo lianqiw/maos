@@ -143,46 +143,51 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
   use () to make the statements a single statement.
 */
 #ifndef error
-#define error(A...) ({char fline[80];					\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
-	    raise(SIGTERM);})
-#define info(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr, "%-20s",fline);			\
-	    fprintf(stderr, A);})
-#define warning(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr,"\033[01;31m%-20s", fline);		\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
-#define warning_once(A...) ({static int done=0; if(!done){ char fline[80]; \
-		snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-		fprintf(stderr,"\033[01;31m%-20s", fline);		\
-		fprintf(stderr,A);fprintf(stderr,"\033[00;00m");} done=1;})
+#define info(A...) ({char fline[4096];char sect[4096];			\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__); snprintf(fline,4096, "%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,strlen(fline)-strlen(sect)-1); \
+	    fprintf(stderr,"%s", fline);})
 
-#define error2(A...) ({							\
-	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
-	    fprintf(stderr, A);						\
+#define error(A...) ({char fline[4096];char sect[4096];			\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "\033[01;31m%-20s Fatal error: ",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,strlen(fline)-strlen(sect)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);			\
 	    raise(SIGTERM);})
+
+#define warning(A...) ({char fline[4096];char sect[4096];		\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "\033[01;31m%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,strlen(fline)-strlen(sect)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline); })
+
+#define warning_once(A...) ({static int done=0; if(!done){done=1; char fline[4096];char sect[4096]; \
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);	\
+	    snprintf(fline,4096, "\033[01;31m%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,strlen(fline)-strlen(sect)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);}})
+
 #define info2(A...) fprintf(stderr, A)
-#define warning2(A...) ({					\
-	    fprintf(stderr,"\033[00;31m");			\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m"); }) 
+#define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); raise(SIGTERM);})
+#define warning2(A...) ({fprintf(stderr,"\033[00;31mWarning:\033[00;00m" A);})
 
-#define error3(A...) ({char fline[80];					\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
+#define info3(A...) ({char fline[4096];char sect[4096];			\
+		      snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);	\
+		      snprintf(fline,4096, "[%s]%-20s",sect, myasctime()); \
+		      snprintf(sect, 4096, A);strncat(fline,sect,strlen(fline)-strlen(sect)-1); \
+		      fprintf(stderr,"%s", fline);})
+#define error3(A...) ({char fline[4096];char sect[4096];		\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error: ",myasctime(),sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,strlen(fline)-strlen(sect)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);			\
 	    raise(SIGTERM);})
-#define warning3(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
-#define info3(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr, "[%s]%-20s",myasctime(),fline);	\
-	    fprintf(stderr, A);})
+
+#define warning3(A...) ({char fline[4096];char sect[4096];		\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "[%s]\033[01;31m%-20s ",myasctime(),sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,strlen(fline)-strlen(sect)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);})
 #endif
 
 #define error_write error("Write failed\n")
@@ -263,7 +268,6 @@ void print_backtrace(int sig);
     signal(SIGILL, func);		\
     signal(SIGSEGV,func);		\
     signal(SIGINT, func);		\
-    signal(SIGPIPE,SIG_IGN);		\
     signal(SIGTERM,func);		\
     signal(SIGABRT,func);		\
     signal(SIGUSR1,func);		\
@@ -274,7 +278,6 @@ void print_backtrace(int sig);
     signal(SIGILL, SIG_DFL);	\
     signal(SIGSEGV,SIG_DFL);	\
     signal(SIGINT, SIG_DFL);	\
-    signal(SIGPIPE,SIG_DFL);	\
     signal(SIGTERM,SIG_DFL);	\
     signal(SIGABRT,SIG_DFL);	\
     signal(SIGUSR1,SIG_DFL);	\

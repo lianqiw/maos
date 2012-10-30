@@ -41,13 +41,13 @@ MONITOR_FLAGS=$(MON_CFLAGS) $(AM_CFLAGS) $(OPTScommon)
 MONITOR_LIBS=../sys/libaosys.la $(LDOPTS) $(MON_LIBS)
 endif
 PROGS+=../bin/monitor ../bin/monitor_list ../bin/monitor_table
-___bin_monitor_SOURCES=monitor.c monitor_gui.c
+___bin_monitor_SOURCES=monitor.c monitor_gui.c monitor_thread.c
 ___bin_monitor_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_LDADD=$(MONITOR_LIBS)
-___bin_monitor_list_SOURCES=monitor_gui_list.c monitor.c 
+___bin_monitor_list_SOURCES=monitor_gui_list.c monitor.c monitor_thread.c
 ___bin_monitor_list_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_list_LDADD=$(MONITOR_LIBS)
-___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c
+___bin_monitor_table_SOURCES=monitor_gui_table.c monitor.c monitor_thread.c
 ___bin_monitor_table_CFLAGS=$(MONITOR_FLAGS)
 ___bin_monitor_table_LDADD=$(MONITOR_LIBS)
 endif

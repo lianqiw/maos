@@ -35,7 +35,7 @@
 const double Z_H=9.6e6*(20*14.17);
 const double Z_K=4.5e6*(20*16.74);
 
-
+%these are for LA Silla from ESO slide
 const double MB_J=(16.7+15.8)/2;
 const double MB_H=(15.0+13.8)/2;
 const double MB_K=(13.0+12.7)/2;//kshort

@@ -29,32 +29,30 @@
 #include "misc.h"
 #include "common.h"
 #include "sockio.h"
-
+static __attribute__((constructor))void init(){
+    signal(SIGPIPE, SIG_IGN);
+}
 int stwrite(int sfd, const void *p, size_t len){
-    if(sfd==-1){
-	warning3("Trying to write to a closed socket\n");
-	return -1;
-    }
     if(write(sfd, p, len)!=len){
-	perror("stwrite");
-	warning3("Write socket %d failed.\n", sfd);
+	warning3("Write socket %d failed with error %d\n", sfd, errno);
 	return -1;
     }else{
 	return 0;
     }
 }
 int stread(int sfd, void *p, size_t len){
-    if(sfd==-1){
-	warning3("Trying to read a closed socket\n");
-	return -1;
-    }
-    if(read(sfd, p, len)!=len){
-	perror("stread");
-	warning3("Read socket %d failed. \n",sfd);
-	return -1;
-    }else{
-	return 0;
-    }
+    int nread;
+    void *start=p;
+    do{
+	nread=read(sfd, start, len);
+	if(nread<0){
+	    warning3("Read socket %d failed with error %d\n",sfd, errno);
+	    return -1;
+	}
+	len-=nread;
+	p+=nread;
+    }while (len>0);
+    return 0;
 }
 /*Prevent calling read/write in this file from now on. use stread/stwrite instead */
 #define read READ_IS_PROHIBITED

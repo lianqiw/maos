@@ -111,6 +111,11 @@ void free_parms(PARMS_T *parms){
     free(parms->sim.gtypeII_lo);
     free(parms->sim.wspsd);
 
+    free(parms->sim.ncpa_thetax);
+    free(parms->sim.ncpa_thetay);
+    free(parms->sim.ncpa_wt);
+    free(parms->sim.ncpa_hs);
+    free(parms->sim.mvmhost);
     free(parms->cn2.pair);
     free(parms->save.gcov);
     for(int isurf=0; isurf<parms->nsurf; isurf++){
@@ -792,7 +797,6 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.zoomshare);
     READ_DBL(sim.zoomgain);
     READ_INT(sim.ncpa_calib);
-
     
     parms->sim.ncpa_ndir=readcfg_dblarr(&(parms->sim.ncpa_thetax), "sim.ncpa_thetax");
     readcfg_dblarr_n(&(parms->sim.ncpa_thetay),parms->sim.ncpa_ndir, "sim.ncpa_thetay");

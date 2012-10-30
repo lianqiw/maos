@@ -123,14 +123,9 @@ void rename_file(int sig){
     mysymlink(fnnew, "run_recent.log");
 }
 /**
-   Handles signals. We don't want to exit the simulation when SIGPIPE happens
-   (when we are writing to closed sockets)
+   Handles signals. 
  */
 void skyc_signal_handler(int sig){
-    if(sig==SIGPIPE){
-	warning3("Program received signal SIGPIPE, broken pipe.\n");
-	return;
-    }
     disable_signal_handler;
     rename_file(sig);/*handles signal */
     if(sig!=0){

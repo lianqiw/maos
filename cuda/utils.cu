@@ -159,6 +159,7 @@ int gpu_init(int *gpus, int ngpu){
 	    ngpu=ngpu_tot;
 	}
 	GPUS=(int*)calloc(ngpu, sizeof(int));
+	register_deinit(NULL, GPUS);
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
 #if defined(HAS_NVML) && HAS_NVML==1
@@ -202,6 +203,7 @@ int gpu_init(int *gpus, int ngpu){
     if(NGPU) {
 	gpu_recon=0;/*last gpu in GPUS*/
 	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
+	register_deinit(NULL, cudata_all);
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    info2(" %d", GPUS[i]);

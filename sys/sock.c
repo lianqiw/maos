@@ -159,8 +159,6 @@ int bind_socket (uint16_t port, int type){
    return at error.
  */
 void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void (*timeout_fun)(), int nodelay){
-    //THREAD_POOL_INIT(2);
-    //long thgroup;
     fd_set read_fd_set;
     fd_set active_fd_set;
     struct sockaddr_in clientname;

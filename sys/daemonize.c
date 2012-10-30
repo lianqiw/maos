@@ -142,8 +142,7 @@ void single_instance_daemonize(const char *lockfolder_in,
 			       void(*daemon_func)(void*), 
 			       void* daemon_arg){
     int fd=-1;
-    char *lockfolder=NULL;
-    expand_filename(&lockfolder,lockfolder_in);
+    char *lockfolder=expand_filename(lockfolder_in);
     char *fnlock0=stradd(lockfolder,"/",progname,".pid",NULL);
     char *fnlog0=stradd(lockfolder,"/",progname,".log",NULL);
     /*Make those stack variable so that we don't have to free them. */

@@ -491,13 +491,16 @@ static int respond(int sock){
 	break;
     case CMD_TRACE://called by maos to print backtrace
 	{
+	    info("cmd trace\n");
 	    char out[BACKTRACE_CMD_LEN];
 	    char *buf;
 	    if(streadstr(sock, &buf)){
 		ret=-1; break;
 	    }
+	    info("received command %s\n", buf);
 	    FILE *fpcmd=popen(buf,"r");
 	    if(!fpcmd){ 
+		warning("Unable to run %s", buf);
 		if(stwritestr(sock,"Command invalid\n")){
 		    ret=-1;
 		}
@@ -521,9 +524,12 @@ static int respond(int sock){
 		}
 	    }
 	    pclose(fpcmd);
+	    info("pclose");
 	    if(stwritestr(sock,out)){
+		info("write result failed\n");
 		ret=-1; break;
 	    }
+	    info("done");
 	}
 	break;
     case CMD_DRAW://called by maos to launch drawdaemon (backup)
@@ -547,7 +553,7 @@ static int respond(int sock){
 	shutdown(sock,SHUT_RD);
 	break;
     default:
-	warning3("Invalid cmd: %d\n",cmd[0]);
+	warning3("Invalid cmd: %x\n",cmd[0]);
     }
     cmd[0]=-1;
     cmd[1]=-1;
@@ -589,7 +595,6 @@ static void scheduler_timeout(void){
 
 void scheduler(void){ 
     //write will return error "Broken Pipe" instead of emit signal.
-    signal(SIGPIPE, SIG_IGN);
     listen_port(PORT, respond, 1, scheduler_timeout, 0);
     exit(0);
 }

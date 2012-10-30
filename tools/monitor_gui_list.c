@@ -158,7 +158,7 @@ static void list_update_progress(PROC_T *p){
     gtk_list_store_set(list, &iter, COL_ERRHI,tmp, -1);
     
 }
-void remove_entry(PROC_T *p){
+gboolean remove_entry(PROC_T *p){
     GtkTreePath *path=gtk_tree_row_reference_get_path(p->row);
     GtkTreeIter iter;
     if(!gtk_tree_model_get_iter(GTK_TREE_MODEL(lists[p->hid]),&iter,path)){
@@ -166,13 +166,10 @@ void remove_entry(PROC_T *p){
     }else{
 	gtk_list_store_remove (lists[p->hid],&iter);
     }
+    return 0;
 }
-void refresh(PROC_T *p){
-    if(p->status.info==S_REMOVE){
-	proc_remove(p->hid,p->pid);
-	return;
-    }
-    if(p->done) return;/*we are done with it (finished or crashed) */
+gboolean refresh(PROC_T *p){
+    if(p->done) return 0;/*we are done with it (finished or crashed) */
     if(!p->row){
 	char sdate[80];
 	char spid[12];
@@ -237,6 +234,7 @@ void refresh(PROC_T *p){
     default:
 	warning("Unknown info: %d\n",p->status.info);
     }
+    return 0;
 }
 
 static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ...){

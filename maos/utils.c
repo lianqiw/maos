@@ -409,14 +409,9 @@ void rename_file(int sig){
     }
 }
 /**
-   Handles signals. We don't want to exit the simulation when SIGPIPE happens
-   (when we are writing to closed sockets)
+   Handles signals.
  */
 void maos_signal_handler(int sig){
-    if(sig==SIGPIPE){
-	warning3("Program received signal SIGPIPE, broken pipe.\n");
-	return;
-    }
     disable_signal_handler;
     rename_file(sig);/*handles signal */
     if(curparms->sim.mvmport){

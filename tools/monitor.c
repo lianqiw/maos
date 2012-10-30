@@ -36,6 +36,7 @@
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
 #include <pthread.h>
+#include <fcntl.h>
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
@@ -61,9 +62,8 @@ static GtkWidget *window=NULL;
 static GtkWidget **tabs;
 static GtkWidget **titles;
 static GtkWidget **cmdconnect;
-static int *hsock;
-static double *usage_cpu;
-static double *usage_mem;
+double *usage_cpu, *usage_cpu2;
+double *usage_mem, *usage_mem2;
 static GtkWidget **prog_cpu;
 static GtkWidget **prog_mem;
 PangoAttrList *pango_active, *pango_down;
@@ -82,7 +82,7 @@ GtkWidget *toptoolbar;
 GtkCssProvider *provider_red;
 GtkCssProvider *provider_blue;
 #endif
-
+int *hsock;
 
 /**
    The number line pattern determines how dash is drawn for gtktreeview. the
@@ -126,63 +126,28 @@ static const gchar *rc_string_entry =
 	"}\n"
 	"class \"GtkEntry\" style \"entry\" \n"
     };
-PROC_T **pproc;
-int *nproc;
-static int nhostup=0;
-static int quitall=0;
-pthread_cond_t pcond;
-pthread_mutex_t pmutex;
-static PROC_T *proc_get(int id,int pid);
-static PROC_T *proc_add(int id,int pid);
-static void add_host_wakeup(void);
-static int host_from_sock(int sock){
-    for(int ihost=0; ihost<nhost; ihost++){
-	if(hsock[ihost]==sock){
-	    return ihost;
-	}
-    }
-    return -1;
-}
-static void host_up(int ihost){
-    pthread_mutex_lock(&pmutex);
-    nhostup++;
-    pthread_mutex_unlock(&pmutex);
+
+gboolean host_up(gpointer data){
+    int ihost=GPOINTER_TO_INT(data);
     gtk_widget_set_sensitive(cmdconnect[ihost],0);
     gtk_widget_hide(cmdconnect[ihost]);
-    proc_remove_all(ihost);/*remove all entries. */
     gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_active);
     info2("connected to %s\n", hosts[ihost]);
+    return 0;
 }
 
-static void host_down(int ihost, int info){
-    pthread_mutex_lock(&pmutex);
-    nhostup--;
-    pthread_mutex_unlock(&pmutex);
-    add_host_wakeup();
-    static const char *infotext[]={"Connection is lost. Click to reconnect.",
-				   "Scheduler version is too old",
-				   "Scheduler verison is too new, plase update monitor"};
-
-    gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]),infotext[info]);
+gboolean host_down(gpointer data){
+    int ihost=GPOINTER_TO_INT(data);
+    gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]),"Click to connect");
     gtk_widget_show_all(cmdconnect[ihost]);
     gtk_widget_set_sensitive(cmdconnect[ihost],1);
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
     gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
     info2("disconnected from %s\n", hosts[ihost]);
+    return 0;
 }
 
-static void channel_removed(gpointer data){
-    /*
-      The socket seems to be already shutdown and closed, so don't do it again.
-    */
-    int sock=GPOINTER_TO_INT(data);
-    int ihost=host_from_sock(sock);
-    if(ihost!=-1){
-	host_down(ihost,0);
-	hsock[ihost]=0;
-    }
-}
 
 static void modify_bg(GtkWidget *widget, int type){
 #if GTK_MAJOR_VERSION>=3 
@@ -217,188 +182,29 @@ static void modify_bg(GtkWidget *widget, int type){
 #endif
 }
 
-
-static gboolean respond(GIOChannel *source, GIOCondition cond, gpointer data){
-    /*
-      Return false causes GIOChannel to be removed from watch list.
-    */
-    int sock=GPOINTER_TO_INT(data);
-    gsize nread;
-    int cmd[3];
-    if(cond&G_IO_HUP || cond&G_IO_ERR || cond&G_IO_NVAL){
-	int ih=host_from_sock(sock);
-	warning2("Lost connection to %s\n", ih>-1?hosts[ih]:"Unknown");
-	return FALSE;
-    }
-    GIOStatus status;
-    
-    /*
-      g_io_channel_read_to_end only returns at EOF. which
-      couldn't happen unless socket closes g_io_channel_read_line
-      returns at newline \n.
-    */
-
-    status=g_io_channel_read_chars(source,(gchar*)cmd,
-				   3*sizeof(int),&nread,NULL);
-	
-    if(status==G_IO_STATUS_EOF){
-	return FALSE;
-    }
-    if(status==G_IO_STATUS_EOF|| status==G_IO_STATUS_ERROR
-       || status==G_IO_STATUS_AGAIN||nread!=3*sizeof(int)){
-	warning("Error encountered. Disconnect\n");
-	return FALSE;/*disconnect. */
-    }
-    int host=-1;
-    for(int ihost=0; ihost<nhost; ihost++){
-	if(hsock[ihost]==sock){
-	    host=ihost;
-	    break;
+gboolean update_progress(gpointer input){
+    int ihost=GPOINTER_TO_INT(input);
+    double last_cpu=usage_cpu2[ihost];
+    double last_mem=usage_mem2[ihost];
+    usage_cpu2[ihost]=usage_cpu[ihost];
+    usage_mem2[ihost]=usage_mem[ihost];
+    if(GTK_WIDGET_VISIBLE(window)){
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), usage_cpu[ihost]);
+	gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), usage_mem[ihost]);
+	if(usage_cpu[ihost]>=0.8 && last_cpu<0.8){
+	    modify_bg(prog_cpu[ihost],2);
+	}else if(usage_cpu[ihost]<0.8 && last_cpu>=0.8){
+	    modify_bg(prog_cpu[ihost],1);
+	}
+	if(usage_mem[ihost]>=0.8 && last_mem<0.8){
+	    modify_bg(prog_mem[ihost],2);
+	}else if(usage_mem[ihost]<0.8 && last_mem>=0.8){
+	    modify_bg(prog_mem[ihost],1);
 	}
     }
-    if(host<0){
-	warning("sock not found\n");
-	return FALSE;
-    }
-
-    int pid=cmd[2];
-    switch(cmd[0]){
-    case CMD_VERSION:
-	break;
-    case CMD_STATUS:
-	{
-	    PROC_T *p=proc_get(host,pid);
-	    if(!p){
-		p=proc_add(host,pid);
-	    }
-	    if(g_io_channel_read_chars(source,(gchar*)&p->status,sizeof(STATUS_T),&nread,NULL)
-	       !=G_IO_STATUS_NORMAL){
-		warning("Error reading status\n");
-		return FALSE;
-	    }
-	    refresh(p);
-	}
-	break;
-    case CMD_PATH:
-	{
-	    PROC_T *p=proc_get(host,pid);
-	    if(!p){
-		p=proc_add(host,pid);
-	    }
-	    streadstr(sock, &p->path); if(!p->path) warning("readstr failed\n");
-	}
-	break;
-    case CMD_LOAD:
-	{
-	    double last_cpu=usage_cpu[host];
-	    double last_mem=usage_mem[host];
-	    usage_cpu[host]=(double)((pid>>16) & 0xFFFF)/100.;
-	    usage_mem[host]=(double)(pid & 0xFFFF)/100.;
-	    usage_cpu[host]=MAX(MIN(1,usage_cpu[host]),0);
-	    usage_mem[host]=MAX(MIN(1,usage_mem[host]),0);
-	    if(GTK_WIDGET_VISIBLE(window)){
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[host]), usage_cpu[host]);
-		gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[host]), usage_mem[host]);
-		if(usage_cpu[host]>=0.8 && last_cpu<0.8){
-		    modify_bg(prog_cpu[host],2);
-		}else if(usage_cpu[host]<0.8 && last_cpu>=0.8){
-		    modify_bg(prog_cpu[host],1);
-		}
-		if(usage_mem[host]>=0.8 && last_mem<0.8){
-		    modify_bg(prog_mem[host],2);
-		}else if(usage_mem[host]<0.8 && last_mem>=0.8){
-		    modify_bg(prog_mem[host],1);
-		}
-	    }
-	}
-	break;
-    default:
-	warning3("Invalid cmd %d\n",cmd[0]);
-	return FALSE;
-    }
-    return TRUE;
+    return 0;
 }
 
-/**
-   called by monitor to kill a process
-*/
-int scheduler_cmd(int host,int pid, int command){
-    int sock=hsock[host];
-    if(sock==-1) return 1;
-    int cmd[2];
-    cmd[0]=command;
-    cmd[1]=pid;/*pid */
-    return stwriteintarr(sock,cmd,2);
-}
-
-/**
-   This thread lives in a separate thread, so need to use gdk_thread_enter
-   before calls gtk functions. Spawned for each host.
-*/
-static void add_host_thread(void *value){
-    int ihost = GPOINTER_TO_INT(value);
-    /*From GTK Manual: g_io_channel_get_flags (): Gets the current flags for a
-      GIOChannel, including read-only flags such as G_IO_FLAG_IS_READABLE.  The
-      values of the flags G_IO_FLAG_IS_READABLE and G_IO_FLAG_IS_WRITEABLE are
-      cached for internal use by the channel when it is created. If they should
-      change at some later point (e.g. partial shutdown of a socket with the
-      UNIX shutdown() function), the user should immediately call
-      g_io_channel_get_flags() to update the internal values of these flags.*/
-    while(!quitall){
-	if(!hsock[ihost]){
-	    int sock=connect_port(hosts[ihost], PORT, 0, 0);
-	    if(sock==-1){
-		hsock[ihost]=0;
-	    }else{
-		int cmd[2];
-		cmd[0]=CMD_MONITOR;
-		cmd[1]=scheduler_version;
-		if(stwriteintarr(sock, cmd, 2)){//write failed.
-		    hsock[ihost]=0;
-		}else{
-		    /*host is connected. 
-		      2010-07-03:we don't write. to detect remote close. */
-#if GTK_MAJOR_VERSION<3 || GTK_MINOR_VERSION<6
-		    gdk_threads_enter();
-#endif
-		    GIOChannel *channel=g_io_channel_unix_new(sock);
-		    g_io_channel_set_encoding(channel,NULL,NULL);
-		    /*must not be buffered */
-		    g_io_channel_set_buffered(channel,FALSE);
-		    g_io_channel_set_close_on_unref (channel,1);
-		    g_io_add_watch_full
-			(channel,0, (GIOCondition)
-			 (G_IO_IN|G_IO_HUP|G_IO_ERR|G_IO_PRI|G_IO_NVAL), 
-			 respond,GINT_TO_POINTER(sock),channel_removed);
-		    
-		    g_io_channel_unref(channel);
-		    hsock[ihost]=sock;
-		    host_up(ihost);
-#if GTK_MAJOR_VERSION<3 || GTK_MINOR_VERSION<6
-		    gdk_threads_leave();
-#endif
-		}
-	    }
-	}
-	
-	pthread_mutex_lock(&pmutex);
-	/*sleep 5 seconds before retry. */
-	if(hsock[ihost]){/*host is up. sleep */
-	    pthread_cond_wait(&pcond, &pmutex);
-	}else{/*sleep 5 seconds before retry. */
-	    struct timespec abstime;
-	    abstime.tv_sec=myclockd()+5;
-	    abstime.tv_nsec=0;
-	    pthread_cond_timedwait(&pcond, &pmutex, &abstime);
-	}
-    	pthread_mutex_unlock(&pmutex);
-	sleep(1);
-    }
-}
-static void add_host_wakeup(void){
-    /*Wakeup add_host_thread */
-    pthread_cond_broadcast(&pcond);
-}
 void notify_user(PROC_T *p){
     if(p->status.done || p->status.info==S_START) return;
 #if WITH_NOTIFY
@@ -468,70 +274,31 @@ static void quitmonitor(GtkWidget *widget, gpointer data){
     if(notify_daemon)
 	notify_uninit();
 #endif
-    quitall=1;
-    add_host_wakeup();
+    add_host_wrap(GINT_TO_POINTER(-2));
     if(gtk_main_level ()>0){
 	gtk_main_quit();
     }
     exit(0);
 }
-PROC_T *proc_get(int id,int pid){
-    PROC_T *iproc;
-    for(iproc=pproc[id]; iproc; iproc=iproc->next){
-	if(iproc->pid==pid){
-	    break;
-	}
-    }
-    return iproc;
-}
-static void update_title(int id){
+gboolean update_title(gpointer data){
+    int id=GPOINTER_TO_INT(data);
     char tit[40];
     snprintf(tit,40,"%s (%d)",hosts[id], nproc[id]);
     gtk_label_set_text(GTK_LABEL(titles[id]),tit);
+    return 0;
 }
 
-PROC_T *proc_add(int id,int pid){
-    PROC_T *iproc;
-    if((iproc=proc_get(id,pid))) return iproc;
-    iproc=calloc(1, sizeof(PROC_T));
-    iproc->iseed_old=-1;
-    iproc->pid=pid;
-    iproc->hid=id;
-    iproc->next=pproc[id];
-    pproc[id]=iproc;
-    nproc[id]++;
-    update_title(id);
-    return iproc;
-}
-void proc_remove_all(int id){
-    PROC_T *iproc,*jproc=NULL;
-    for(iproc=pproc[id]; iproc; iproc=jproc){
-	jproc=iproc->next;
-	remove_entry(iproc);
-	if(iproc->path) free(iproc->path);
-	free(iproc);
-    }
-    nproc[id]=0;
-    pproc[id]=NULL;
-    update_title(id);
-}
-void proc_remove(int id,int pid){
-    PROC_T *iproc,*jproc=NULL;
-    for(iproc=pproc[id]; iproc; jproc=iproc,iproc=iproc->next){
-	if(iproc->pid==pid){
-	    if(jproc){
-		jproc->next=iproc->next;
-	    }else{
-		pproc[id]=iproc->next;
-	    }
-	    remove_entry(iproc);
-	    if(iproc->path) free(iproc->path);
-	    free(iproc);
-	    nproc[id]--;
-	    update_title(id);
-	    break;
-	}
-    }
+
+/**
+   called by monitor to kill a process
+*/
+int scheduler_cmd(int host,int pid, int command){
+    int sock=hsock[host];
+    if(sock==-1) return 1;
+    int cmd[2];
+    cmd[0]=command;
+    cmd[1]=pid;/*pid */
+    return stwriteintarr(sock,cmd,2);
 }
 
 void kill_job(PROC_T *p){
@@ -891,15 +658,14 @@ int main(int argc, char *argv[])
     hsock=calloc(nhost, sizeof(int));
     usage_cpu=calloc(nhost,sizeof(double));
     usage_mem=calloc(nhost,sizeof(double));
+    usage_cpu2=calloc(nhost,sizeof(double));
+    usage_mem2=calloc(nhost,sizeof(double));
     prog_cpu=calloc(nhost, sizeof(GtkWidget *));
     prog_mem=calloc(nhost, sizeof(GtkWidget *));
 
-    pthread_mutex_init(&pmutex, NULL);
-    pthread_cond_init(&pcond, NULL);
-
     pango_active=pango_attr_list_new();
     pango_down=pango_attr_list_new();
-    pango_attr_list_insert(pango_down, pango_attr_foreground_new(0xEEFF, 0xEEFF, 0xEEFF));
+    pango_attr_list_insert(pango_down, pango_attr_foreground_new(0x88FF, 0x88FF, 0x88FF));
     pango_attr_list_insert(pango_active, pango_attr_foreground_new(0x0000, 0x0000, 0x0000));
 
     for(int ihost=0; ihost<nhost; ihost++){
@@ -924,9 +690,8 @@ int main(int argc, char *argv[])
 	gtk_event_box_set_above_child(GTK_EVENT_BOX(eventbox),TRUE);
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox),FALSE);
 
-	cmdconnect[ihost]
-	    =gtk_button_new_with_label("Click to make connection.");
-	g_signal_connect(cmdconnect[ihost],"clicked", G_CALLBACK(add_host_wakeup), NULL);
+	cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
+	g_signal_connect(cmdconnect[ihost],"clicked", G_CALLBACK(add_host_wrap), GINT_TO_POINTER(ihost));
 	GtkWidget *hbox=gtk_hbox_new(FALSE,0);
 	gtk_box_pack_start(GTK_BOX(hbox),cmdconnect[ihost],TRUE,FALSE,0);
 
@@ -944,14 +709,15 @@ int main(int argc, char *argv[])
 	    (GTK_SCROLLED_WINDOW(tabs[ihost]),pages[ihost]);
 	gtk_notebook_append_page
 	    (GTK_NOTEBOOK(notebook),tabs[ihost],eventbox);
-	update_title(ihost);
+	update_title(GINT_TO_POINTER(ihost));
 	gtk_widget_show_all(tabs[ihost]);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
-#if GTK_MAJOR_VERSION<3 && GTK_MINOR_VERSION<32
-	g_thread_create((GThreadFunc)add_host_thread, GINT_TO_POINTER(ihost), FALSE, NULL);
-#else
-	g_thread_new("add_host_thread", (GThreadFunc)add_host_thread, GINT_TO_POINTER(ihost));
-#endif
+    }
+    extern int pipe_main[2];
+    pipe(pipe_main);
+    g_thread_new("listen_host", (GThreadFunc)listen_host, NULL);
+    for(int ihost=0; ihost<nhost; ihost++){
+	add_host_wrap(GINT_TO_POINTER(ihost));
     }
     gtk_main();
 }

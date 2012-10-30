@@ -66,6 +66,7 @@ enum{
     CMD_LOAD,/*14 */
     CMD_SHUTRD,/*15 */
     CMD_SHUTWR,/*16 */
+    CMD_ADDHOST,/*17*/
 };
 enum{
     S_RUNNING=1,

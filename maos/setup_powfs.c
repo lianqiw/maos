@@ -521,6 +521,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		}
 	    }
 	}
+	dfree(opdi);
 	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);//used for i0
 	if(parms->save.setup){
 	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d", dirsetup, ipowfs);
@@ -2143,6 +2144,8 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    free(powfs[ipowfs].etfprep);
 	}
 	dcellfree(powfs[ipowfs].opdadd);
+	dcellfree(powfs[ipowfs].opdbias);
+	dcellfree(powfs[ipowfs].gradoff);
     }
     free(powfs);
 }

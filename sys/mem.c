@@ -27,8 +27,7 @@ void (*call_freepath)(void)=NULL;
 #include "thread.h"
 #if USE_MEM == 1
 #include "scheduler_client.h"
-#include "../path.h"
-#include "../fractal.h"
+#include "path.h"
 #include <math.h>
 #include <search.h>
 #include <string.h>

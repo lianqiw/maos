@@ -46,7 +46,7 @@
 char *mybasename(const char *fn){
     if(!fn || strlen(fn)==0) return NULL;
     char fn2[PATH_MAX];
-    strcpy(fn2,fn);
+    strncpy(fn2,fn, PATH_MAX);
     /*If this is a folder, remove the last / */
     if(fn2[strlen(fn2)-1]=='/')
 	fn2[strlen(fn2)-1]='\0';
@@ -116,7 +116,7 @@ char *argv2str(int argc, char **argv){
 	strcpy(scmd,"~");
 	strcat(scmd,cwd+strlen(HOME));
     }else{
-	strcpy(scmd,cwd);
+	strncpy(scmd,cwd, slen);
     }
     strcat(scmd,"/");
     for(int iarg=0; iarg<argc; iarg++){
@@ -343,26 +343,16 @@ char *strnadd(int argc, char **argv, const char* delim){
 /**
    translate a filename into absolute file name that starts with /
 */
-void expand_filename(char **fnout, const char *fn){
-    /*if fn contains leading ~, expand it. */
-    if(!(*fnout)){
-	char *out;
-	if(fn[0]=='~'){
-	    out=stradd(HOME,fn+1,NULL);
-	}else{
-	    out=strdup(fn);
-	}
-	*fnout=out;
+char *expand_filename(const char *fn){
+    char *out;
+    if(fn[0]=='~'){
+	out=stradd(HOME,fn+1,NULL);
     }else{
-	char *out=*fnout;
-	if(fn[0]=='~'){
-	    strcpy(out,HOME);
-	    strcat(out,fn+1);
-	}else{
-	    strcpy(out,fn);
-	}
+	out=strdup(fn);
     }
+    return out;
 }
+
 char *mystrndup(const char *A, int len){
     int len2=strlen(A);
     if(len2<len) len=len2;
