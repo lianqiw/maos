@@ -52,19 +52,6 @@ void mvm_client_init(const char *host, int port){
     if((sock_mvm=connect_port(host, port, 1, 1))<0){
 	error("Unable to connect to mvm server\n");
     }
-    {
-	/*Applications that require lower latency on every packet sent should be
-	  run on sockets with TCP_NODELAY enabled. It can be enabled through the
-	  setsockopt command with the sockets API.  
-
-	  For this to be used effectively, applications must avoid doing small,
-	  logically related buffer writes. Because TCP_NODELAY is enabled, these
-	  small writes will make TCP send these multiple buffers as individual
-	  packets, which can result in poor overall performance.  */
-	int one=1;
-	//setsockopt(sock_mvm, SOL_TCP, TCP_NODELAY|TCP_QUICKACK|TCP_CORK, &one, sizeof(one));
-	setsockopt(sock_mvm, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
-    }
 }
 
 /**
