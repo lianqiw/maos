@@ -436,7 +436,6 @@ typedef struct SIM_CFG_T{
     int nseed;       /**<How many simulation seed*/
     int nthread;     /**<Number of threads to run the simulation*/
     int closeloop;   /**<closed loop or open loop*/
-    char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/

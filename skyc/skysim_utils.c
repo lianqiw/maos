@@ -549,7 +549,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
 	error("Fill this out please\n");
     }
     fprintf(fp,"sim.servotype_lo=2\n");/*type II */
-    fprintf(fp, "sim.gtypeII_lo=\"gain.bin\"\n");
+    fprintf(fp, "sim.eplo=\"gain.bin\"\n");
     if(parms->maos.wddeg){
 	fprintf(fp, "atm.wddeg=[");
 	for(int ips=0; ips<parms->maos.nwddeg; ips++){

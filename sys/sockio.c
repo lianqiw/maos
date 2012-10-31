@@ -34,6 +34,7 @@ static __attribute__((constructor))void init(){
 }
 int stwrite(int sfd, const void *p, size_t len){
     if(write(sfd, p, len)!=len){
+	perror("stwrite");
 	warning3("Write socket %d failed with error %d\n", sfd, errno);
 	return -1;
     }else{
@@ -42,15 +43,16 @@ int stwrite(int sfd, const void *p, size_t len){
 }
 int stread(int sfd, void *p, size_t len){
     int nread;
-    void *start=p;
+    char *start=p;
     do{
 	nread=read(sfd, start, len);
-	if(nread<0){
+	if(nread<=0){
+	    perror("stread");
 	    warning3("Read socket %d failed with error %d\n",sfd, errno);
 	    return -1;
 	}
 	len-=nread;
-	p+=nread;
+	start+=nread;
     }while (len>0);
     return 0;
 }

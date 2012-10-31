@@ -81,7 +81,7 @@ gboolean remove_entry(PROC_T *p);
 GtkWidget *monitor_new_entry_progress(void);
 GtkWidget *monitor_new_progress(int vertical, int length);
 void listen_host();
-void add_host_wrap(gpointer data);
+void add_host_wrap(int ihost);
 gboolean host_down(gpointer data);
 gboolean host_up(gpointer data);
 gboolean update_progress(gpointer input);

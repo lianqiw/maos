@@ -29,6 +29,7 @@
 PROC_T **pproc;
 int *nproc;
 extern int* hsock;
+static double *htime;//last time having signal from host.
 int nhostup=0;
 PNEW(mhost);
 int pipe_main[2]={0,0}; /*Use to talk to the thread that blocks in select()*/
@@ -113,15 +114,43 @@ static int host_from_sock(int sock){
 }
 
 
-void add_host_wrap(gpointer data){
+void add_host_wrap(int ihost){
     int cmd[3]={CMD_ADDHOST, 0, 0};
-    cmd[1]=GPOINTER_TO_INT(data);
+    cmd[1]=ihost;
     stwriteintarr(pipe_main[1], cmd, 3);
 }
 
+/* Record the host upon connection */
+static void host_added(int ihost, int sock){
+    proc_remove_all(ihost);/*remove all entries. */
+    LOCK(mhost);
+    nhostup++;
+    hsock[ihost]=sock;
+    FD_SET(sock, &active_fd_set);
+    UNLOCK(mhost);
+    add_host_wrap(-1);
+    info2("connected to %s\n", hosts[ihost]);
+    gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
+}
+
+/*remove the host upon disconnection*/
+static void host_removed(int sock){
+    int ihost=host_from_sock(sock);
+    if(ihost==-1) return;
+    close(sock);
+    LOCK(mhost);
+    nhostup--;
+    hsock[ihost]=0;
+    FD_CLR(sock, &active_fd_set);
+    UNLOCK(mhost);
+    add_host_wrap(-1);
+    gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
+    info2("disconnected from %s\n", hosts[ihost]);
+}
 
 static void add_host(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
+    if(hsock[ihost]==-1) return; //in progress
     if(!hsock[ihost]){
 	hsock[ihost]--;
 	if(hsock[ihost]!=-1) return;//race condition
@@ -134,22 +163,17 @@ static void add_host(gpointer data){
 		warning("Rare event: Failed to write to scheduler at %s\n", hosts[ihost]);
 		hsock[ihost]=0;
 	    }else{
-		proc_remove_all(ihost);/*remove all entries. */
-		LOCK(mhost);
-		nhostup++;
-		hsock[ihost]=sock;
-		FD_SET(sock, &active_fd_set);
-		UNLOCK(mhost);
-		add_host_wrap(GINT_TO_POINTER(-1));
-		gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
+		host_added(ihost, sock);
 	    }
+	}else{
+	    hsock[ihost]=0;
 	}
     }
 }
 
-
 static int respond(int sock){
     int ihost=host_from_sock(sock);
+    htime[ihost]=myclockd();
     int cmd[3];
     if(streadintarr(sock, cmd, 3)){
 	return -1;//failed
@@ -209,10 +233,17 @@ static int respond(int sock){
 }
 
 void listen_host(){
+    htime=calloc(nhost, sizeof(double));
+    for(int ihost=0; ihost<nhost; ihost++){
+	htime[ihost]=myclockd();
+    }
     FD_ZERO(&active_fd_set);
     //write to pipe_main[1] will be caught by select in listen_host(). This wakes it up.
     FD_SET(pipe_main[0], &active_fd_set);
+    struct timeval timeout;
     while(1){
+	timeout.tv_sec=5;
+	timeout.tv_usec=0;
 	fd_set read_fd_set = active_fd_set;
 	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL)<0){
 	    perror("select");
@@ -225,16 +256,43 @@ void listen_host(){
 		if(res==-2){//quit
 		    break;
 		}else if(res==-1){//remove host
-		    int ihost=host_from_sock(i);
-		    close(i);
-		    LOCK(mhost);
-		    nhostup--;
-		    hsock[ihost]=0;
-		    FD_CLR(i, &active_fd_set);
-		    UNLOCK(mhost);
-		    gdk_threads_add_idle(host_down, GINT_TO_POINTER(ihost));
+		    host_removed(i);
+		}
+	    }
+	}
+	double ntime=myclockd();
+	for(int ihost=0; ihost<nhost; ihost++){
+	    if(hsock[ihost]>0){
+		if(htime[ihost]+10<ntime){
+		    //10 seconds grace period
+		    host_removed(hsock[ihost]);
 		}
 	    }
 	}
     }
+    for(int i=0; i<FD_SETSIZE; i++){
+	if(FD_ISSET(i, &active_fd_set)){
+	    shutdown(i, SHUT_RDWR);
+	    usleep(100);
+	    close(i);
+	    FD_CLR(i, &active_fd_set);
+	}
+    }
+}
+
+
+/**
+   called by monitor to talk to scheduler.
+*/
+int scheduler_cmd(int host,int pid, int command){
+    int sock=hsock[host];
+    if(sock==-1) return 1;
+    int cmd[2];
+    cmd[0]=command;
+    cmd[1]=pid;/*pid */
+    int ans=stwriteintarr(sock,cmd,2);
+    if(ans){/*communicated failed.*/
+	close(sock);
+    }
+    return ans;
 }

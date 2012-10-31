@@ -132,7 +132,6 @@ gboolean host_up(gpointer data){
     gtk_widget_set_sensitive(cmdconnect[ihost],0);
     gtk_widget_hide(cmdconnect[ihost]);
     gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_active);
-    info2("connected to %s\n", hosts[ihost]);
     return 0;
 }
 
@@ -144,7 +143,6 @@ gboolean host_down(gpointer data){
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_cpu[ihost]), 0);
     gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(prog_mem[ihost]), 0);
     gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_down);
-    info2("disconnected from %s\n", hosts[ihost]);
     return 0;
 }
 
@@ -274,7 +272,7 @@ static void quitmonitor(GtkWidget *widget, gpointer data){
     if(notify_daemon)
 	notify_uninit();
 #endif
-    add_host_wrap(GINT_TO_POINTER(-2));
+    add_host_wrap(-2);
     if(gtk_main_level ()>0){
 	gtk_main_quit();
     }
@@ -286,19 +284,6 @@ gboolean update_title(gpointer data){
     snprintf(tit,40,"%s (%d)",hosts[id], nproc[id]);
     gtk_label_set_text(GTK_LABEL(titles[id]),tit);
     return 0;
-}
-
-
-/**
-   called by monitor to kill a process
-*/
-int scheduler_cmd(int host,int pid, int command){
-    int sock=hsock[host];
-    if(sock==-1) return 1;
-    int cmd[2];
-    cmd[0]=command;
-    cmd[1]=pid;/*pid */
-    return stwriteintarr(sock,cmd,2);
 }
 
 void kill_job(PROC_T *p){
@@ -471,6 +456,18 @@ GtkWidget *monitor_new_progress(int vertical, int length){
     return prog;
 }
 
+static void add_host_event(GtkButton *button, gpointer data){
+    (void*)button;
+    int ihost=GPOINTER_TO_INT(data);
+    if(ihost>-1 && ihost<nhost){
+	add_host_wrap(ihost);
+    }else{
+	for(ihost=0; ihost<nhost; ihost++){
+	    add_host_wrap(ihost);
+	}
+    }
+}
+
 int main(int argc, char *argv[])
 {
 #if GTK_MAJOR_VERSION<3 && GTK_MINOR_VERSION<32
@@ -623,11 +620,16 @@ int main(int argc, char *argv[])
 	GtkAction *action_clear_finish=gtk_action_new("act-clear-finish", "Clear finished", "Clear finished jobs", GTK_STOCK_APPLY);
 	g_signal_connect(action_clear_finish, "activate", G_CALLBACK(clear_jobs_finished),NULL);
 	gtk_action_group_add_action(topgroup, action_clear_finish);
+
+	GtkAction *action_connect_all=gtk_action_new("act-connect-all", "Connect all", "Connect to all hosts", GTK_STOCK_CONNECT);
+	g_signal_connect(action_connect_all, "activate", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
+	gtk_action_group_add_action(topgroup, action_connect_all);
 	
 	/*set toolbar*/
 	toptoolbar=gtk_toolbar_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_finish)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_crash)), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);
 	//gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_widget_show_all(toptoolbar);
 	gtk_box_pack_start(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);
@@ -691,7 +693,7 @@ int main(int argc, char *argv[])
 	gtk_event_box_set_visible_window(GTK_EVENT_BOX(eventbox),FALSE);
 
 	cmdconnect[ihost]=gtk_button_new_with_label("Click to connect");
-	g_signal_connect(cmdconnect[ihost],"clicked", G_CALLBACK(add_host_wrap), GINT_TO_POINTER(ihost));
+	g_signal_connect(cmdconnect[ihost],"clicked", G_CALLBACK(add_host_event), GINT_TO_POINTER(ihost));
 	GtkWidget *hbox=gtk_hbox_new(FALSE,0);
 	gtk_box_pack_start(GTK_BOX(hbox),cmdconnect[ihost],TRUE,FALSE,0);
 
@@ -717,7 +719,7 @@ int main(int argc, char *argv[])
     pipe(pipe_main);
     g_thread_new("listen_host", (GThreadFunc)listen_host, NULL);
     for(int ihost=0; ihost<nhost; ihost++){
-	add_host_wrap(GINT_TO_POINTER(ihost));
+	add_host_wrap(ihost);
     }
     gtk_main();
 }

@@ -387,11 +387,11 @@ static int respond(int sock){
        Don't modify sock in this routine. otherwise select
        will complain Bad file descriptor
     */
-    int ret=0;
-    int cmd[2];
-    ret=streadintarr(sock, cmd, 2);
-    int pid=cmd[1];
-    if(ret) goto end;
+    int ret=0, pid, cmd[2];
+    if((ret=streadintarr(sock, cmd, 2))){
+	goto end;
+    }
+    pid=cmd[1];
     switch(cmd[0]){
     case CMD_START://Called by maos when job starts.
 	{
@@ -491,13 +491,11 @@ static int respond(int sock){
 	break;
     case CMD_TRACE://called by maos to print backtrace
 	{
-	    info("cmd trace\n");
 	    char out[BACKTRACE_CMD_LEN];
 	    char *buf;
 	    if(streadstr(sock, &buf)){
 		ret=-1; break;
 	    }
-	    info("received command %s\n", buf);
 	    FILE *fpcmd=popen(buf,"r");
 	    if(!fpcmd){ 
 		warning("Unable to run %s", buf);
@@ -524,12 +522,10 @@ static int respond(int sock){
 		}
 	    }
 	    pclose(fpcmd);
-	    info("pclose");
 	    if(stwritestr(sock,out)){
 		info("write result failed\n");
 		ret=-1; break;
 	    }
-	    info("done");
 	}
 	break;
     case CMD_DRAW://called by maos to launch drawdaemon (backup)
@@ -594,7 +590,6 @@ static void scheduler_timeout(void){
 }
 
 void scheduler(void){ 
-    //write will return error "Broken Pipe" instead of emit signal.
     listen_port(PORT, respond, 1, scheduler_timeout, 0);
     exit(0);
 }
@@ -672,7 +667,7 @@ static void monitor_send_load(void){
 	if(!ic->load)
 	    continue;
 
-	if(write(sock,cmd,sizeof(int)*3)!=sizeof(int)*3){
+	if(stwrite(sock,cmd,sizeof(int)*3)){
 	    monitor_remove(sock);
 	    goto redo;//restart
 	}
@@ -688,7 +683,7 @@ static void monitor_send_initial(MONITOR_T *ic){
 	cmd[0]=CMD_VERSION;
 	cmd[1]=scheduler_version;
 	cmd[2]=hid;/*Fixme: sending hid to monitor is not good is hosts does not match. */
-	if(write(sock,cmd,sizeof(int)*3)!=sizeof(int)*3){
+	if(stwrite(sock,cmd,sizeof(int)*3)){
 	    return;
 	}
     }

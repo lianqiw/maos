@@ -152,6 +152,10 @@ int bind_socket (uint16_t port, int type){
     return sock;
 }
 
+static int quit_listen=0;
+static void signal_handler(int sig){
+    quit_listen=1;
+}
 /**
    Open a port and listen to it. Calls respond(sock) to handle data. If
    timeout_fun is not NULL, it will be called when 1) connection is
@@ -159,6 +163,8 @@ int bind_socket (uint16_t port, int type){
    return at error.
  */
 void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void (*timeout_fun)(), int nodelay){
+    register_signal_handler(signal_handler);
+
     fd_set read_fd_set;
     fd_set active_fd_set;
     struct sockaddr_in clientname;
@@ -173,7 +179,7 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
     FD_ZERO (&active_fd_set);
     FD_SET (sock, &active_fd_set);
 
-    while(1){
+    while(!quit_listen){
 	struct timeval timeout;
 	timeout.tv_sec=timeout_sec;
 	timeout.tv_usec=0;
@@ -186,6 +192,8 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 	    if(errno!=EINTR){
 		warning("select failed\n");
 		continue;
+	    }else if(errno==EBADF){
+		break;//bad file descriptor
 	    }else{
 		continue;
 	    }
@@ -201,6 +209,7 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 			warning("accept failed\n");
 			break;
 		    }
+		    info("port %d is connected\n", port2);
 		    cloexec(port2);
 		    FD_SET(port2, &active_fd_set);
 		}else{
@@ -211,12 +220,13 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 		     */
 		    int ans=responder(i);
 		    if(ans<0){
-			warning2("shutdown port %d for reading\n", i);
 			shutdown(i, SHUT_RD);
 			FD_CLR(i, &active_fd_set);
 			if(ans==-1){
 			    warning2("close port %d\n", i);
 			    close(i);
+			}else{
+			    warning2("shutdown port %d for reading\n", i);
 			}
 		    }
 		}

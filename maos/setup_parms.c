@@ -108,7 +108,6 @@ void free_parms(PARMS_T *parms){
     dfree(parms->sim.apupt);
     dfree(parms->sim.epupt);
     free(parms->sim.seeds);
-    free(parms->sim.gtypeII_lo);
     free(parms->sim.wspsd);
 
     free(parms->sim.ncpa_thetax);
