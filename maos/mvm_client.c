@@ -42,7 +42,7 @@ char *start;
 #define WRITE_ARR(p,n,type)						\
     if((ndone=write(sock_mvm, p, sizeof(type)*(n)))!=sizeof(type)*(n)){	\
 	perror("write");						\
-	error("error writing. want %ld wrote %d\n",(n)*sizeof(type), ndone); \
+	error("error writing. want %ld wrote %d\n",(long)(n)*sizeof(type), ndone); \
     }
 
 #define READ_CMD(p) READ_ARR(p,N_CMD,int)

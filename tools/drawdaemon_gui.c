@@ -60,14 +60,14 @@ static int cursor_type=0;/*cursor type of the drawing area. */
 GdkCursor *cursors[2];
 GdkPixbuf *pix_hand=NULL;
 GdkPixbuf *pix_arrow=NULL;
-
+#if GTK_MAJOR_VERSION < 3
 static const char *rc_string_notebook={
     "style \"noborder\"{                      \n"
     "GtkNoteBook::draw-border={0 0 0 0}       \n"
     "}                                        \n"
     "class \"GtkNoteBook\" style \"noborder\" \n"
 };
-
+#endif
 
 #define error_msg(A...) {				\
 	GtkWidget *dialog0=gtk_message_dialog_new	\

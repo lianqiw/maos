@@ -215,7 +215,7 @@ char *myabspath(const char *path){
 #else
     char *cpath=mygetcwd();
     if(chdir(path)){
-	error("path %s doesn't exist\n",path);
+       error("path %s doesn't exist\n",path);
     }
     char *abspath=mygetcwd();
     if(chdir(cpath)){

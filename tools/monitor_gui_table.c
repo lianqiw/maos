@@ -40,7 +40,7 @@
 
 GtkWidget **tables;
 gint *nrows;
-static int ncol=7;
+#define ncol 7
 static void delete_hbox_event(GtkWidget *btn, GdkEventButton *event,PROC_T *p){
     (void)btn;
     if(event->button==1){

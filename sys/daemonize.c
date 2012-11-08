@@ -235,10 +235,10 @@ static void fputs_stderr(int fd, int stdoutfd, const char *fn){
     char buf[400];
     while(fpout[0] || fpout[1]){
 	int len=read(fd, buf, sizeof buf);
-	if(len<0 && errno == EINTR){
+	if(len<=0 && errno == EINTR){
 	    continue;
 	}
-	if(len<0){/*pipe closed. parent exited. we exit also.*/
+	if(len<=0){/*pipe closed. parent exited. we exit also.*/
 	    break;
 	}
 	for(int i=0; i<2; i++){

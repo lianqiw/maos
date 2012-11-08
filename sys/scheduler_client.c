@@ -64,10 +64,11 @@ void print_backtrace_symbol(void *const *buffer, int size){
   (void) buffer;
   (void)size;
 }
+#if !(defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__))
 void print_backtrace(int sig){
   (void) sig;
 }
-
+#endif
 #else
 void scheduler(void);
 char *scheduler_fnlog=NULL;
@@ -380,13 +381,20 @@ int scheduler_launch_drawdaemon(char *fifo){
     }
 #endif
     char *fn=stradd(BUILDDIR, "/bin/drawdaemon",NULL);
+    if(!exist(fn)){
+	free(fn);
+	char *cwd=mygetcwd();
+	fn=stradd(cwd, "/drawdaemon", NULL);
+    }
+    if(!exist(fn)){
+	free(fn); fn=NULL;
+    }
     if(method==0){
-	info2("Looking for drawdaemon in %s\n",fn);
-	if(exist(fn)){
+        if(fn){
 	    info2("Found drawdaemon in %s, run it.\n",fn);
 	    method=1;
 	}else{
-	    warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
+	    warning3("Not found drawdaemon, use bash to find and run drawdaemon.\n");
 	    int found=!system("which drawdaemon");
 	    if(found){
 		method=2;

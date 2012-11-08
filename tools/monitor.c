@@ -91,6 +91,7 @@ int *hsock;
 
    properties belonging to certain widget that are descendent of GtkWidget, need
 to specify the classname before the key like GtkTreeView::allow-rules */
+#if GTK_MAJOR_VERSION<3
 static const gchar *rc_string_widget =
     {
 	
@@ -126,7 +127,7 @@ static const gchar *rc_string_entry =
 	"}\n"
 	"class \"GtkEntry\" style \"entry\" \n"
     };
-
+#endif
 gboolean host_up(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
     gtk_widget_set_sensitive(cmdconnect[ihost],0);
@@ -457,7 +458,7 @@ GtkWidget *monitor_new_progress(int vertical, int length){
 }
 
 static void add_host_event(GtkButton *button, gpointer data){
-    (void*)button;
+    (void)button;
     int ihost=GPOINTER_TO_INT(data);
     if(ihost>-1 && ihost<nhost){
 	add_host_wrap(ihost);

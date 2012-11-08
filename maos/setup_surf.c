@@ -240,7 +240,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
 		"in maos because some surfaces may belong to instrument.\n");
     }
-    loc_t *locevl;
+    loc_t *locevl=NULL;
     const double rot=-parms->aper.rotdeg/180.*M_PI;
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;

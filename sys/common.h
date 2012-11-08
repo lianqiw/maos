@@ -68,6 +68,7 @@ dcomplex conj(dcomplex __z);
 dcomplex cpow(dcomplex x, dcomplex z);
 dcomplex csqrt(dcomplex);
 dcomplex clog(dcomplex);
+double carg(dcomplex);
 float cabsf(fcomplex __z);
 float cimagf(fcomplex __z);
 float crealf(fcomplex __z);
@@ -76,6 +77,7 @@ fcomplex conjf(fcomplex __z);
 fcomplex cpowf(fcomplex x, fcomplex z);
 fcomplex csqrtf(fcomplex);
 fcomplex clogf(fcomplex);
+float cargf(fcomplex);
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
 #include <complex.h>
 /*BSD lacks cpow in C99 implementation*/
