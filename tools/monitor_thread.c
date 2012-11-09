@@ -22,7 +22,7 @@
   gdk_threads_add_idle
 */
 
-
+#include <unistd.h>
 #include "../sys/sys.h"
 #include "monitor.h"
 

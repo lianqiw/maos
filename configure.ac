@@ -221,6 +221,7 @@ AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(cuda-version, --with-cuda-version=20, [CUDAVER=${withval}], [CUDAVER=20])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
+AC_ARG_WITH(gtk,  --with-gtk-DIR, [GTKDIR=${withval}], [GTKDIR=""])
 
 CUDAVER=${CUDAVER/./}
 if test $CUDAVER -lt 13 -o $CUDAVER -gt 99 ;then
@@ -473,6 +474,11 @@ AM_CONDITIONAL(MON,true)  #for parital monitor without notify
 AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #cairo 1.2 comes with gtk+-2.10
 #make sure there are spaces before and after >=
+if test -n "$GTKDIR" ;then #User specified GTK directory
+   if test -d $GTKDIR/lib/pkgconfig ;then
+      export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig
+   fi
+fi
 PKG_CHECK_MODULES(GTK3, gtk+-3.0,           [gtk_3="yes"], [gtk_3="no"])
 PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2,    [gtk_2="yes"], [gtk_2="no"])
 if test "$gtk_2" = "yes" -a  "$gtk_3" = "yes" ;then 
@@ -485,10 +491,23 @@ if test "$gtk_3" = "yes" ;then
    PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
    PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])
    PKG_CHECK_MODULES(MONN, gtk+-3.0 >= 0.0 libnotify >= 0.0, [comp_monn="yes"],[comp_monn="no"])
+   gtk_ver=3
 else
    PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,     [comp_draw="yes"],[comp_draw="no"])
    PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2,                  [comp_mon="yes"], [comp_mon="no"])
    PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1, [comp_monn="yes"],[comp_monn="no"])
+   gtk_ver=2
+fi
+if test -n "$GTKDIR" ;then
+   TT=-I$GTKDIR/include
+   GTK_CFLAGS="$TT $TT/cairo $TT/atk-1.0 $TT/gtk-${gtk_ver}.0 $TT/glib-2.0 $TT/pango-1.0 $TT/gdk-pixbuf-2.0 -I$GTKDIR/lib/glib-2.0/include -I${GTKDIR}/lib/gtk-2.0/include"
+   GTK_LIBS="-L$GTKDIR/lib/ -Wl,-rpath,$GTKDIR/lib/"
+   if test -d "$GTKDIR/bin" ;then
+      GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
+   fi
+else
+   GTK_CFLAGS=""
+   GTK_LIBS=""
 fi
 
 AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
@@ -512,7 +531,8 @@ AC_SUBST(MON_CFLAGS)
 AC_SUBST(MON_LIBS)
 AC_SUBST(MONN_LIBS)
 AC_SUBST(MONN_CFLAGS)
-
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
 if test "x$use_long" = "xyes" -a "x$cpu" = "x64" ;then
    OPTScommon="$OPTScommon -DDLONG"

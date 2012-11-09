@@ -37,6 +37,7 @@
 #include <glib/gprintf.h>
 #include <pthread.h>
 #include <fcntl.h>
+#include <unistd.h>
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
