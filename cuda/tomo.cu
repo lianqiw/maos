@@ -296,7 +296,7 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 	}
     }
 }
-__global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, float *dfin, float **gin){
+__global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, float *dfin, float **gin, int ptt){
     const int iwfs=blockIdx.z;
     const int nwfs=gridDim.z;
     GPU_GP_T *datai=data+iwfs;
@@ -310,7 +310,7 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
     float oxp=datai->oxp;
     float oyp=datai->oyp;
     float focus=0;
-    if(datai->PDF){
+    if(datai->PDF && ptt){
 	if(iwfs==0){
 	    for(int id=1; id<nwfs; id++){
 		focus-=dfin[id];
@@ -319,12 +319,15 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	    focus=dfin[iwfs];
 	}
     }
+    int addfocus=fabsf(focus)>1e-7?1:0;
     const float *restrict g=gin[iwfs];
     float *restrict map=wfsopd[iwfs];
     const float *pxy=datai->GPp;
-    float ttx=ttin[iwfs*2+0];
-    float tty=ttin[iwfs*2+1];
-    int addfocus=fabsf(focus)>1e-7?1:0;
+    float ttx=0, tty=0;
+    if(datai->PTT && ptt){
+	ttx=ttin[iwfs*2+0];
+	tty=ttin[iwfs*2+1];
+    }
     const int nx=datai->nxp;
     if(pos==1){
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
@@ -443,7 +446,7 @@ void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, f
 	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, NULL, 1);
     curzero(opdwfs->m, stream);
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm);
+	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, 1);
     if(fabsf(beta)<EPS){
 	curzero(opdx->m, stream);
     }else if(fabsf(beta-1)>EPS){
@@ -492,7 +495,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     curcell *opdwfs=curecon->opdwfs;
     int ptt=(!parms->recon.split || (parms->dbg.splitlrt && !curecon->disablelrt)); 
     curmat *ttf=curecon->ttf;
-
+    info("ptt=%d\n", ptt);
     curzero(opdwfs->m, stream);
     gpu_prop_grid_adaptive_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
 	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, 1, 'n');
@@ -503,7 +506,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 
     curzero(opdwfs->m, stream);
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm);
+	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
 
     if(fabsf(beta)<EPS){
 	curzero(opdx->m, stream);

@@ -151,8 +151,8 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	}
     }
     long nx,ny;
-    nx=iceil((guard+maxx)/dx+offset+1)<<1;
-    ny=iceil((guard+maxy)/dx+offset+1)<<1;
+    nx=(iceil((guard+maxx)/dx+offset))*2+1;
+    ny=(iceil((guard+maxy)/dx+offset))*2+1;
     if(pad){/*pad to power of 2 */
 	nx=1<<iceil(log2((double)nx));
 	ny=1<<iceil(log2((double)ny));

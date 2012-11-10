@@ -719,7 +719,8 @@ int main(int argc, char *argv[])
     }
     extern int pipe_main[2];
     pipe(pipe_main);
-    g_thread_new("listen_host", (GThreadFunc)listen_host, NULL);
+    pthread_t tmp;
+    pthread_create(&tmp, NULL, (void*(*)(void*))listen_host, NULL);
     for(int ihost=0; ihost<nhost; ihost++){
 	add_host_wrap(ihost);
     }

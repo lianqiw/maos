@@ -122,6 +122,7 @@ void add_host_wrap(int ihost){
 
 /* Record the host upon connection */
 static void host_added(int ihost, int sock){
+    htime[ihost]=myclockd();
     proc_remove_all(ihost);/*remove all entries. */
     LOCK(mhost);
     nhostup++;
@@ -150,10 +151,14 @@ static void host_removed(int sock){
 
 static void add_host(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
-    if(hsock[ihost]==-1) return; //in progress
+    int todo=0;
+    LOCK(mhost);
     if(!hsock[ihost]){
 	hsock[ihost]--;
-	if(hsock[ihost]!=-1) return;//race condition
+	todo=1;
+    }
+    UNLOCK(mhost);
+    if(todo){
 	int sock=connect_port(hosts[ihost], PORT, 0, 0);
 	if(sock>-1){
 	    int cmd[2];
@@ -161,12 +166,17 @@ static void add_host(gpointer data){
 	    cmd[1]=scheduler_version;
 	    if(stwriteintarr(sock, cmd, 2)){//write failed.
 		warning("Rare event: Failed to write to scheduler at %s\n", hosts[ihost]);
+		close(sock);
+		LOCK(mhost);
 		hsock[ihost]=0;
+		UNLOCK(mhost);
 	    }else{
 		host_added(ihost, sock);
 	    }
 	}else{
+	    LOCK(mhost);
 	    hsock[ihost]=0;
+	    UNLOCK(mhost);
 	}
     }
 }
@@ -220,7 +230,8 @@ static int respond(int sock){
 	break;
     case CMD_ADDHOST:
 	if(cmd[1]>-1 && cmd[1]<nhost){
-	    g_thread_new("add_host", (GThreadFunc)add_host, GINT_TO_POINTER(cmd[1]));
+	    pthread_t tmp;
+	    pthread_create(&tmp, NULL, (void*(*)(void*))add_host, GINT_TO_POINTER(cmd[1]));
 	}else if(cmd[2]==-2){
 	    return -2;
 	}
@@ -234,9 +245,6 @@ static int respond(int sock){
 
 void listen_host(){
     htime=calloc(nhost, sizeof(double));
-    for(int ihost=0; ihost<nhost; ihost++){
-	htime[ihost]=myclockd();
-    }
     FD_ZERO(&active_fd_set);
     //write to pipe_main[1] will be caught by select in listen_host(). This wakes it up.
     FD_SET(pipe_main[0], &active_fd_set);
@@ -279,7 +287,6 @@ void listen_host(){
 	}
     }
 }
-
 
 /**
    called by monitor to talk to scheduler.

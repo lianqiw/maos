@@ -862,7 +862,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
     READ_INT(dbg.usegwr);
-    READ_INT(dbg.dxonedge);
     READ_INT(dbg.cmpgpu);
     READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
@@ -1972,7 +1971,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	warning("Make cpu code follows gpu implementations.\n");
 	parms->sim.cachedm=0;
 	parms->tomo.square=1;
-	parms->dbg.dxonedge=1;
 	/*parms->dbg.splitlrt=0;*//*need extensity comparison. */
     }
     /*Assign each turbulence layer to a corresponding reconstructon layer. Used
@@ -2269,7 +2267,7 @@ static void print_parms(const PARMS_T *parms){
 	  closeloop[parms->sim.closeloop]);
     info2("\033[0;32mThere are %d fit directions\033[0;0m\n", parms->fit.nfit);
     for(i=0; i<parms->fit.nfit; i++){
-	info2("Fit %d: Fit  wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info2("Fit %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->fit.wt[i],parms->fit.thetax[i]*206265, 
 	      parms->fit.thetay[i]*206265);
 	if(fabs(parms->fit.thetax[i])>1 || fabs(parms->fit.thetay[i])>1){
@@ -2278,7 +2276,7 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\033[0;32mThere are %d evaluation directions\033[0;0m\n", parms->evl.nevl);
     for(i=0; i<parms->evl.nevl; i++){
-	info2("Evl %d: Eval wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info2("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->evl.wt[i],parms->evl.thetax[i]*206265, 
 	      parms->evl.thetay[i]*206265);
 	if(fabs(parms->evl.thetax[i])>1 || fabs(parms->evl.thetay[i])>1){
@@ -2475,10 +2473,10 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 		    has_dfr=1;
 		}
 	    }
-	    if(has_dfr){
-		warning("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
+	    /*if(has_dfr && parms->gpu.tomo){
+		warning2("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
 		parms->gpu.tomo=0;
-	    }
+		}*/
 	}
 
 	if(!parms->atm.frozenflow){
@@ -2491,7 +2489,6 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	}
 	if(parms->gpu.tomo || parms->gpu.fit){
 	    parms->tomo.square=1;
-	    parms->dbg.dxonedge=1;
 	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
 	if(parms->gpu.tomo && parms->tomo.bgs){

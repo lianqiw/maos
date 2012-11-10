@@ -57,5 +57,6 @@ void gpu_moao_recon(SIM_T *simu);
 void gpu_moao_filter(SIM_T *simu);
 void gpu_moao_2gpu(SIM_T *simu);
 void gpu_mvm_daemon(int port);
+void test_gpu(void);
 #endif
 

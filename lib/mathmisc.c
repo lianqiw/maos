@@ -268,9 +268,12 @@ long *invperm(long *p, long np){
    out(:)=in(p);
 */
 void cvecperm(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx){
-  
     for(long i=0; i<nx; i++){
-	out[i]=in[perm[i]];
+	if(perm[i]>0){
+	    out[i]=in[perm[i]];
+	}else{
+	    out[i]=conj(in[-perm[i]]);
+	}
     }
 }
 /**
@@ -278,9 +281,12 @@ void cvecperm(dcomplex *restrict out, const dcomplex *restrict in, const long *p
    out(p)=in(:);
 */
 void cvecpermi(dcomplex *restrict out, const dcomplex *restrict in, const long *perm, long nx){
- 
     for(long i=0; i<nx; i++){
-	out[perm[i]]=in[i];
+	if(perm[i]>0){
+	    out[perm[i]]=in[i];
+	}else{
+	    out[-perm[i]]=conj(in[i]);
+	}
     }
 }
 /**

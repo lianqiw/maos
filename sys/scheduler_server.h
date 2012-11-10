@@ -79,7 +79,7 @@ enum{
     S_KILLED,
 };
 
-#define scheduler_version 0x24
+#define scheduler_version 0x23
 #define BACKTRACE_CMD_LEN 200
 
 

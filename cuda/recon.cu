@@ -395,8 +395,8 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	delete [] hxdata;
 	delete [] hxtdata;
 	GPU_GP_T *gpdata=new GPU_GP_T[nwfs];
-	if(recon->PDF){
-	    curecon->PDF=new curcell*[nwfs];
+	if(recon->PDF{
+	    curecon->PDF=(curcell**)calloc(sizeof(curcell*), nwfs);
 	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs = parms->wfsr[iwfs].powfs;
@@ -1063,9 +1063,9 @@ void gpu_tomo(SIM_T *simu){
     /*if(parms->tomo.pos!=2){
       TO_IMPLEMENT;
       }*/
-    if(curecon->PDF){
+    /*if(curecon->PDF){
 	TO_IMPLEMENT;
-    }
+	}*/
     /*first send gradients to GPU. can be skipped if keep grad in gpu. fast though. */
     /*Create temporary memory */
     curecon->reconisim=simu->reconisim;

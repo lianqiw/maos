@@ -192,12 +192,8 @@ static void scheduler_launch(void){
    To open a port and connect to scheduler in the local host*/
 static int scheduler_connect_self(int block){
     /*start the scheduler if it is not running*/
-    int sock=connect_port("localhost", PORT, 0, 0);
-    if(sock<0){
-	scheduler_launch();
-	sleep(1);
-        sock=connect_port("localhost", PORT, block, 0);
-    }
+    scheduler_launch();
+    int sock=connect_port("localhost", PORT, block, 0);
     if(sock<0){
 	warning2("Unable to connect to port %d\n", PORT);
     }
@@ -319,19 +315,19 @@ void print_backtrace_symbol(void *const *buffer, int size){
 #if PRINTBACKTRACE == 1 
     PNEW(mutex);//Only one thread can do this.
     LOCK(mutex);
-    if(psock==-1)
+    if(psock==-1){
 	psock=scheduler_connect_self(0);
-    if(psock==-1) goto end;
-    int cmd[2];
-    cmd[0]=CMD_TRACE;
-    cmd[1]=getpid();
-    char *ans;
-    if(stwrite(psock,cmd,sizeof(int)*2) || stwritestr(psock,cmdstr) || streadstr(psock, &ans)){
-	goto end;
     }
-    info2(" %s\n",ans);
-    free(ans);
- end:
+    if(psock!=-1){
+	int cmd[2];
+	cmd[0]=CMD_TRACE;
+	cmd[1]=getpid();
+	char *ans=NULL;
+	if(!(stwrite(psock,cmd,sizeof(int)*2) || stwritestr(psock,cmdstr) || streadstr(psock, &ans))){
+	    info2(" %s\n",ans);
+	    free(ans);
+	}
+    }
     UNLOCK(mutex);
 #else
     info2(" %s\n",cmdstr);

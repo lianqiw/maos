@@ -262,6 +262,9 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(!fn) continue;
 	info("Loading surface OPD from %s\n", fn);
 	map_t *surf=mapread("%s",fn);
+	if(surf->ny<2 || surf->nx<2){
+	    error("%s: size is %ldx%ld, we expect a 2d map\n", fn, surf->nx, surf->ny);
+	}
 	//dwrite((dmat*)surf, "surf_%d", isurf);
 	const char *strname=search_header(surf->header, "SURFNAME");
 	const char *strevl=search_header(surf->header, "SURFEVL");

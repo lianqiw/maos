@@ -107,7 +107,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		}
 	    }
 	}else{/*lock succeed. write pid. */
-	    warning2("locking files %s succeed\n", fnlock);
+	    info2("locking files %s succeed\n", fnlock);
 	    char strpid[60];
 	    snprintf(strpid,60,"%d %ld\n",getpid(),version);
 	    lseek(fd,0,SEEK_SET);
@@ -188,8 +188,8 @@ void single_instance_daemonize(const char *lockfolder_in,
     umask(0077);
     /*redirect stdin/stdout. */
     if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
-    if(!freopen(fnlog, "a", stdout)) warning("Error redirect stdout\n");
-    if(!freopen(fnlog, "a", stderr)) warning("Error redirect stderr\n");
+    if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
+    if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
     setbuf(stdout,NULL);/*disable buffering. */
     setbuf(stderr,NULL);
     /*We fork again. after this fork, the process is not the

@@ -398,7 +398,7 @@ void update_limit(drawdata_t *drawdata){
 */
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     /*fill white background */
-    info2("start cairo_draw ...");TIC;tic;
+    TIC;tic;
     drawdata->font_name_version=font_name_version;
     PangoLayout *layout=pango_cairo_create_layout(cr);
     pango_layout_set_font_description(layout, desc);
@@ -564,6 +564,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymin0=ymin-(ofy/drawdata->ny)*ydiff;
 	ymax0=ymin0+ydiff/zoomy;
 	cairo_restore(cr);
+	toc2("cairo_draw image");
     }
     if(drawdata->npts>0){
 	cairo_save(cr);
@@ -574,8 +575,8 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
 	cairo_pattern_set_filter(cairo_get_source(cr),CAIRO_FILTER_NEAREST);
 #if DRAW_NEW == 1
-	int new_width0=(int)ceil(widthim*zoomx)+1;//+1 to avoid clip.
-	int new_height0=(int)ceil(heightim*zoomy)+1;
+	int new_width0=(int)ceil(widthim*zoomx)+font_size*20;//+1 to avoid clip. 
+	int new_height0=(int)ceil(heightim*zoomy)+font_size*20;
 	int new_height=new_height0;
 	int new_width=new_width0;
 	/*Don't use too much buffer. Over flow memory. */
@@ -758,6 +759,10 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 		cairo_translate(cr, round((ix-15)/1)*1, round((iy-font_size-5)/1)*1);
 		cairo_scale(cr,1,-1);
 		pango_text(cr, layout, 0, 0, val, 1, 0);
+		if(drawdata->legend){
+		    cairo_translate(cr, 10, -font_size);
+		    pango_text(cr, layout, 0, 0, drawdata->legend[ipts], 0, 0);
+		}
 		cairo_restore(cr);
 	    }
 	}/*iptsy */
@@ -777,6 +782,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	ymin0=((-heightim*0.5)/zoomy - drawdata->offy)/scaley+centery;
 
 	cairo_restore(cr);
+	toc2("cairo_draw pts");
     }
 
     if(drawdata->ncir>0){
@@ -1036,5 +1042,5 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     drawdata->zoomxlast=drawdata->zoomx;
     drawdata->zoomylast=drawdata->zoomy;
     drawdata->drawn=1;
-    toc2("done");
+    toc2("cairo_draw");
 }

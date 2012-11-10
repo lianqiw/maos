@@ -206,9 +206,12 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 */
 #define TIC double tk
 #define tic tk=myclockd();
-#define toc(A...) ({info(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
-#define toc2(A...) ({info2(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
-#define toc22(A) info2("%s takes %.6f seconds.\n",A, myclockd()-tk)
+#define toc(A...) ({char fline[4096];char sect[4096];			\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__); snprintf(fline,4096, "%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+	    fprintf(stderr,"%s takes %.6f seconds.\n", fline, myclockd()-tk);})
+#define toc2(A...) ({char fline[4096]; snprintf(fline, 4096, A); fprintf(stderr, "%s takes %.6f seconds.\n",fline, myclockd()-tk);})
+#define toc22(A) info2("%s takes %.6f seconds.\n", A, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\

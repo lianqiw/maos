@@ -115,6 +115,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 }
 
 static int read_fifo(FILE *fp){
+    TIC;
     static drawdata_t *drawdata=NULL;
     int cmd=0;
     gchar *start;
@@ -125,13 +126,13 @@ static int read_fifo(FILE *fp){
 	FILE_READ_INT(cmd);
 	switch (cmd){
 	case FIFO_START:
+	    tic;
 	    if(drawdata){
 		warning("FIFO_START: drawdata is not empty\n");
 	    }
 	    drawdata=calloc(1, sizeof(drawdata_t));
 	    LOCK(drawdata_mutex);
 	    ndrawdata++;
-	    warning("drawdata created, ndrawdata=%d\n", ndrawdata);
 	    UNLOCK(drawdata_mutex);
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
@@ -249,7 +250,7 @@ static int read_fifo(FILE *fp){
 		    drawdata->p=calloc(nx*ny, size);
 		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
 		    drawdata->image= cairo_image_surface_create_for_data 
-			(drawdata->p, drawdata->format, nx, ny, stride);		    //gdk_threads_leave();
+			(drawdata->p, drawdata->format, nx, ny, stride);
 		}
 		if(drawdata->npts>0){
 		    drawdata->icumu=50;
@@ -266,6 +267,11 @@ static int read_fifo(FILE *fp){
 		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
 		drawdatawrap[0]=drawdata;
 		gdk_threads_add_idle(addpage, drawdatawrap);
+		if(drawdata->p0){
+		    toc2("fifo_read image %dx%d", drawdata->nx, drawdata->ny);
+		}else{
+		    toc2("fifo_read points");
+		}
 		drawdata=NULL;
 	    }
 	    break;

@@ -134,14 +134,15 @@ void muv_ib(dcell **xout, const void *B, const dcell *xin, const double alpha){
 	*xout=dcellnew(A->M->nx, xin->ny);
     }
     spmulmat(&(*xout)->p[xb], AM[yb][xb], xin->p[yb], alpha);
-
-    PDCELL(A->V, AV);
-    PDCELL(A->U, AU);
-    for(int jb=0; jb<A->U->ny; jb++){
-	dmat *tmp=NULL;
-	dmm(&tmp, AV[jb][yb], xin->p[yb], "tn", -1);
-	dmm(&(*xout)->p[xb], AU[jb][xb], tmp, "nn", alpha);
-	dfree(tmp);
+    if(A->V && A->U){
+	PDCELL(A->V, AV);
+	PDCELL(A->U, AU);
+	for(int jb=0; jb<A->U->ny; jb++){
+	    dmat *tmp=NULL;
+	    dmm(&tmp, AV[jb][yb], xin->p[yb], "tn", -1);
+	    dmm(&(*xout)->p[xb], AU[jb][xb], tmp, "nn", alpha);
+	    dfree(tmp);
+	}
     }
     if(A->extra){
 	A->exfun(xout, A->extra, xin, alpha, xb, yb);

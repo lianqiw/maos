@@ -256,16 +256,14 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
  
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
-    if(parms->dbg.dxonedge){
-	//Create another set of loc/amp that can be used to build GP.
-	map_t *map=create_metapupil_wrap(parms, 0, dx, 0, 0, 0, 0, 0, 0);
-	powfs[ipowfs].gloc=map2loc(map); mapfree(map);
-	powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
-				    0,0, parms->aper.d, parms->aper.din);
-    }else{
-	powfs[ipowfs].gloc=powfs[ipowfs].loc;
-	powfs[ipowfs].gamp=powfs[ipowfs].amp;
-    }
+    
+    //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
+    map_t *map=create_metapupil_wrap(parms, 0, dx, 0, 0, 0, 0, 0, 0);
+    powfs[ipowfs].gloc=map2loc(map); mapfree(map);
+    powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
+				0,0, parms->aper.d, parms->aper.din);
+    loc_reduce(powfs[ipowfs].gloc, powfs[ipowfs].gamp, 1, NULL);
+
     if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
 	double misreg[2]={0,0};
 	if(parms->powfs[ipowfs].nwfs>1){
@@ -273,9 +271,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 	int iwfs=parms->powfs[ipowfs].wfs[0];
 	wfspupmask(parms, powfs[ipowfs].loc, powfs[ipowfs].amp, misreg, iwfs);
-	if(parms->dbg.dxonedge){
-	    wfspupmask(parms, powfs[ipowfs].gloc, powfs[ipowfs].gamp, misreg, iwfs);
-	}
+	wfspupmask(parms, powfs[ipowfs].gloc, powfs[ipowfs].gamp, misreg, iwfs);
     }
     powfs[ipowfs].misreg=calloc(2*parms->powfs[ipowfs].nwfs, sizeof(double));
     if(parms->powfs[ipowfs].misreg){
@@ -541,6 +537,10 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(parms->save.setup){
 	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc",dirsetup,ipowfs); 
+	if(powfs[ipowfs].gloc!=aper->locs){
+	    locwrite(powfs[ipowfs].gloc,"%s/powfs%d_gloc", dirsetup, ipowfs);
+	    dwrite(powfs[ipowfs].gamp,"%s/powfs%d_gamp", dirsetup, ipowfs);
+	}
 	dwrite(powfs[ipowfs].saa,"%s/powfs%d_saa", dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirsetup,ipowfs);
 	dwrite(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);

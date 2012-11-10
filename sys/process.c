@@ -99,7 +99,7 @@ double get_usage_cpu(void){
     static double lasttime=0;
     double thistime=myclockd();
     static long user1, tot1;
-    static double cent=100;
+    static double cent=1;
     long user2, tot2;
     if(thistime >=lasttime+2){/*information was too old. */
 	read_usage_cpu(&user1, &tot1);

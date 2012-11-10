@@ -496,6 +496,7 @@ static int respond(int sock){
 	    if(streadstr(sock, &buf)){
 		ret=-1; break;
 	    }
+	    info("command is %s\n", buf);
 	    FILE *fpcmd=popen(buf,"r");
 	    if(!fpcmd){ 
 		warning("Unable to run %s", buf);

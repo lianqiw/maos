@@ -78,8 +78,7 @@ static void socket_tcp_keepalive(int sock){
 #endif
        ){
     }else{
-	perror("setsockopt");
-	warning("Keepalive failed. sock=%d\n", sock);
+	warning("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
     }
 }
 
@@ -180,6 +179,9 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
     FD_SET (sock, &active_fd_set);
 
     while(!quit_listen){
+	if(timeout_fun){
+	    timeout_fun();
+	}
 	struct timeval timeout;
 	timeout.tv_sec=timeout_sec;
 	timeout.tv_usec=0;
@@ -188,14 +190,15 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 
 	read_fd_set = active_fd_set;
 	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, timeout2)<0){
-	    perror("select");
-	    if(errno!=EINTR){
-		warning("select failed\n");
+	    if(errno==EINTR){
+		warning("select failed: %s\n", strerror(errno));
 		continue;
 	    }else if(errno==EBADF){
+		warning("bad file descriptor: %s\n", strerror(errno));
 		break;//bad file descriptor
 	    }else{
-		continue;
+		warning("unknown error: %s\n", strerror(errno));
+		break;
 	    }
 	}
 	for(int i=0; i<FD_SETSIZE; i++){
@@ -205,8 +208,7 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 		    socklen_t size=sizeof(struct sockaddr_in);;
     		    int port2=accept(sock, (struct sockaddr*)&clientname, &size);
 		    if(port2<0){
-			perror("accept");
-			warning("accept failed\n");
+			warning("accept failed: %s\n", strerror(errno));
 			break;
 		    }
 		    info("port %d is connected\n", port2);
@@ -231,9 +233,6 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 		    }
 		}
 	    }
-	}
-	if(timeout_fun){
-	    timeout_fun();
 	}
     }
     /* Error happened. We close all connections and this server socket.*/
@@ -301,10 +300,10 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	    if(!block){
 		return -1;
 	    }
-	    sleep(4);
+	    sleep(10);
 	}else{
 	    return sock;
 	}
-    }while(count<10);
+    }while(count<25);
     return -1; 
 }

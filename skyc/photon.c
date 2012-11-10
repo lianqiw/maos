@@ -107,9 +107,10 @@ void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitu
 	Np[iwvl]=dt*saa*pow(10,-(absorp+mags[iwvl])/2.5)*Z
 	    *thruput[iwvl]*qe[iwvl]*strehl_iwvl*imperr_strehl;
 	Npsum+=Np[iwvl];
-	Nbsum+=dt*saa*pow(pixas,2)*ZB*thruput[iwvl]*qe[iwvl];
+	Nbsum+=dt*saa*pow(pixas,2)*ZB*thruput[iwvl]*qe[iwvl]/cos(za);//background scale with sec(za). 2012-10-31.
 	Npwvl+=Np[iwvl]/wvl;
     }
+    error("scale background with zenith angle\n");
     double wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
     double deltheta=wvlm/dxsa;
     double thetaB=3.*M_PI*deltheta/16.;

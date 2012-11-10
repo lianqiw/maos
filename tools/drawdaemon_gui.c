@@ -982,8 +982,8 @@ static void tool_property(GtkToolButton *button, gpointer data){
 						  NULL);
     GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     GtkWidget *vbox=gtk_vbox_new(FALSE,0);
-    GtkWidget *table, *hbox;
-    GtkWidget *checkbtn, *entry,*spin;
+    GtkWidget *hbox;
+    GtkWidget *checkbtn, *label,*entry,*spin;
     gint irow;
     int n;
     GtkWidget *spins[6];
@@ -1070,49 +1070,63 @@ static void tool_property(GtkToolButton *button, gpointer data){
     gtk_box_pack_start(GTK_BOX(hbox), spin,TRUE,TRUE,0);
     gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
     
-    table=gtk_table_new(3,2,0);
-    irow=0;
+    hbox=gtk_hbox_new(FALSE, 0);
     entry=gtk_entry_new();
-    grid_attach(table, gtk_label_new("Title"), 0, 1, irow, irow+1);
-    grid_attach(table, entry, 1, 2, irow, irow+1);
+    label=gtk_label_new("Title"); gtk_label_set_width_chars(GTK_LABEL(label),6);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->title);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->title);
-
-    irow++;
+    gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
+    
+    hbox=gtk_hbox_new(FALSE, 0);
     entry=gtk_entry_new();
-    grid_attach(table, gtk_label_new("X label"), 0, 1, irow, irow+1);
-    grid_attach(table, entry, 1, 2, irow, irow+1);
+    label=gtk_label_new("X label");gtk_label_set_width_chars(GTK_LABEL(label),6);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->xlabel);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->xlabel);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
 
-    irow++;
+    hbox=gtk_hbox_new(FALSE, 0);
     entry=gtk_entry_new();
-    grid_attach(table, gtk_label_new("Y label"), 0, 1, irow, irow+1);
-    grid_attach(table, entry, 1, 2, irow, irow+1);
+    label=gtk_label_new("Y label");gtk_label_set_width_chars(GTK_LABEL(label),6);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
     gtk_entry_set_text(GTK_ENTRY(entry), drawdata->ylabel);
     g_signal_connect(GTK_EDITABLE(entry), "changed", G_CALLBACK(entry_changed), &drawdata->ylabel);
-    gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
-    table=gtk_table_new(4,4,0);
-    irow=0;
-    grid_attach(table, gtk_label_new("xmin"), 0, 1, irow, irow+1);
-    grid_attach(table, spins[0], 1, 2, irow, irow+1);
-    grid_attach(table, gtk_label_new("xmax"), 2, 3, irow, irow+1);
-    grid_attach(table, spins[1], 3, 4, irow, irow+1);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
 
-    irow++;
-    grid_attach(table, gtk_label_new("ymin"), 0, 1, irow, irow+1);
-    grid_attach(table, spins[2], 1, 2, irow, irow+1);
-    grid_attach(table, gtk_label_new("ymax"), 2, 3, irow, irow+1);
-    grid_attach(table, spins[3], 3, 4, irow, irow+1);
-    gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
+
+    hbox=gtk_hbox_new(FALSE, 0);
+    label=gtk_label_new("xmin");gtk_label_set_width_chars(GTK_LABEL(label),5);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), spins[0], TRUE, TRUE, 0);
+    label=gtk_label_new("xmax");gtk_label_set_width_chars(GTK_LABEL(label),5);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), spins[1], TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
+
+    hbox=gtk_hbox_new(FALSE, 0);
+    label=gtk_label_new("ymin");gtk_label_set_width_chars(GTK_LABEL(label),5);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), spins[2], TRUE, TRUE, 0);
+    label=gtk_label_new("ymax");gtk_label_set_width_chars(GTK_LABEL(label),5);
+    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), spins[3], TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
+
     if(n>4){
-	irow++;
-	grid_attach(table, gtk_label_new("zmin"), 0, 1, irow, irow+1);
-	grid_attach(table, spins[4], 1, 2, irow, irow+1);
-	grid_attach(table, gtk_label_new("zmax"), 2, 3, irow, irow+1);
-	grid_attach(table, spins[5], 3, 4, irow, irow+1);
-	gtk_box_pack_start(GTK_BOX(vbox), table,FALSE,FALSE,0);
+	hbox=gtk_hbox_new(FALSE, 0);
+	label=gtk_label_new("zmin");gtk_label_set_width_chars(GTK_LABEL(label),5);
+	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), spins[4], TRUE, TRUE, 0);
+	label=gtk_label_new("zmax");gtk_label_set_width_chars(GTK_LABEL(label),5);
+	gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox), spins[5], TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), hbox,FALSE,FALSE,0);
     }
+
     gtk_container_add(GTK_CONTAINER(content_area), vbox);
     gtk_widget_show_all(vbox);
     gtk_dialog_run(GTK_DIALOG(dialog));

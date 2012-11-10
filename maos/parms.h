@@ -543,7 +543,6 @@ typedef struct DBG_CFG_T{
     int useopdr;     /**<use opdr in psf reconstruction*/
     int force;       /**<Force run even if Res_${seed}.done exists*/
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
-    int dxonedge;    /**<have points on the edge of subapertures.*/
     int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/

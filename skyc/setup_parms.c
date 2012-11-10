@@ -223,19 +223,62 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.rne<0){
 	PDMAT(parms->skyc.rnefs,rnefs);
 	info2("Using frame rate dependent read out noise:\n");
-	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-	    int dtrat=parms->skyc.dtrats[idtrat];
-	    double fs=1./(parms->maos.dt*dtrat);
-	    parms->skyc.fss[idtrat]=fs;
-	    info2("%5.1f Hz: ", fs);
+	if(fabs(parms->skyc.rne+1)<EPS){
+	    /*Newer model by roger on 2012-11-08. variables are named for the column in the Excel*/
+	    double colM[11]={2.3,2.3,2.3,2.3,2.4,2.7,3.3,4.1,5.2,7.0,9.5};//rne
+	    double colD[11]={48,34,24,18,12,8,6,4,4,2,2};//recapture window size
+	    double colE[11]={1000,500,250,128,64,32,16,8,4,2,1};//coadds
+	    dmat *colx=dnew(11,1);
+	    dmat *coly=dnew(11,1);
+	    const int nwin=3;//B4, number of windows
+	    const double pixeltime=6.04;//B6
+	    const double linetime=2;//B7
+	    const double frametime=3;//B8
+	    dmat *xfs=dnew(parms->skyc.ndtrat,1);
+	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		int dtrat=parms->skyc.dtrats[idtrat];
+		xfs->p[idtrat]=1./(parms->maos.dt*dtrat);
+	    }
+	    for(int i=0; i<11; i++){
+		coly->p[i]=colM[i];
+	    }
+	    dwrite(coly, "coly");
 	    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		int N=parms->skyc.pixpsa[ipowfs];
-		double raw_frame_time=((0.00604*N+0.01033)*N+0.00528)*1e-3;
-		double K=1./(raw_frame_time*fs);
-		rnefs[ipowfs][idtrat]=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
-		info2("%5.1f ",rnefs[ipowfs][idtrat]);
+		for(int i=0; i<colx->nx; i++){
+		    double t1=nwin*(pixeltime*N*N+linetime*N+frametime)*colE[i];
+		    if(colD[i]>5){
+			t1+=pixeltime*colD[i]*colD[i]+linetime*colD[i]+frametime;
+		    }
+		    colx->p[i]=1e6/t1/nwin;
+		}
+		dwrite(colx, "colx_%d", N);
+		dmat *yfs=dinterp1(colx, coly, xfs);
+		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		    rnefs[ipowfs][idtrat]=yfs->p[idtrat];
+		}
+		dfree(yfs);
 	    }
-	    info2("\n");
+	    dfree(colx);
+	    dfree(coly);
+	    dfree(xfs);
+	}else if(fabs(parms->skyc.rne+2)<EPS){
+	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		int dtrat=parms->skyc.dtrats[idtrat];
+		double fs=1./(parms->maos.dt*dtrat);
+		parms->skyc.fss[idtrat]=fs;
+		info2("%5.1f Hz: ", fs);
+		for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
+		    int N=parms->skyc.pixpsa[ipowfs];
+		    double raw_frame_time=((0.00604*N+0.01033)*N+0.00528)*1e-3;
+		    double K=1./(raw_frame_time*fs);
+		    rnefs[ipowfs][idtrat]=sqrt(pow(10.6*pow(K,-0.45),2) + 2.7*2.7 + 0.0034*K);
+		    info2("%5.1f ",rnefs[ipowfs][idtrat]);
+		}
+		info2("\n");
+	    }
+	}else{
+	    error("Invalid skyc.rne\n");
 	}
     }else{
 	info2("Using constant read out noise of %g\n", parms->skyc.rne);

@@ -284,10 +284,10 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    long nin=nin0*recon->os->p[ips];
 	    map_t *map=create_metapupil_wrap
 		(parms,ht,dxr,0,guard,nin,nin,0,parms->tomo.square);
-	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m\n",
-		  ips, map->nx,map->ny,dxr);
 	    recon->xloc[ips]=map2loc(map);
 	    recon->xmap[ips]=map;
+	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",
+		  ips, map->nx,map->ny,dxr, recon->xloc[ips]->nloc);
 	    /*Free the data and nref so we are assign pointers to it. */
 	    free(recon->xmap[ips]->p);recon->xmap[ips]->p=NULL;
 	    free(recon->xmap[ips]->nref);recon->xmap[ips]->nref=NULL;
@@ -391,14 +391,10 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     recon->GWR=spcellnew(parms->npowfs, 1);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].gtype_recon==0){
-	    if(!powfs[ipowfs].locm && powfs[ipowfs].GS0 && powfs[ipowfs].loc==powfs[ipowfs].gloc){
-		recon->GWR->p[ipowfs] = spref(powfs[ipowfs].GS0->p[0]);
-	    }else{
-		double displace[2]={0,0};
-		recon->GWR->p[ipowfs] = mkg(powfs[ipowfs].gloc, powfs[ipowfs].gloc,
-					    powfs[ipowfs].gamp->p, powfs[ipowfs].saloc,
-					    1, 1, displace, 1);
-	    }
+	    double displace[2]={0,0};
+	    recon->GWR->p[ipowfs] = mkg(powfs[ipowfs].gloc, powfs[ipowfs].gloc,
+					powfs[ipowfs].gamp->p, powfs[ipowfs].saloc,
+					1, 1, displace, 1);
 	}else{
 	    double displace[2]={0,0};
 	    recon->GWR->p[ipowfs] = mkz(powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
@@ -410,7 +406,7 @@ setup_recon_GWR(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
    Setup gradient operator from ploc to wavefront sensors.
 */
 static void
-setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
+setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     CALL_ONCE;
     loc_t *ploc=recon->ploc;
     const int nwfs=parms->nwfsr;
@@ -440,9 +436,6 @@ setup_recon_GP(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *ape
 		info2(" Gploc");
 		GP->p[ipowfs]=mkg(ploc,powfs[ipowfs].gloc,powfs[ipowfs].gamp->p,
 				  powfs[ipowfs].saloc,1,1,displace,1);
-		if(parms->save.setup){
-		    spwrite(GP->p[ipowfs], "%s/powfs%d_GP", dirsetup, ipowfs);
-		}
 	    }
 		break;
 	    case 1:{ /*Create ztilt operator from PLOC, using fine sampled
@@ -1194,10 +1187,10 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	    recon->RL.V=dcellcat(GPTTDF, VLo, 2);
 	    dcellfree(GPTTDF);
 	}else{
-	    warning("Skipping RL Low rank terms in split tomography to suppress noise propagation\n");
-	    warning("Skipping RL Low rank terms in split tomography to suppress noise propagation\n");
-	    warning("Skipping RL Low rank terms in split tomography to suppress noise propagation\n");
-	    warning("Skipping RL Low rank terms in split tomography to suppress noise propagation\n");
+	    warning2("Skipping RL Low rank terms in split tomography\n");
+	    warning2("Skipping RL Low rank terms in split tomography\n");
+	    warning2("Skipping RL Low rank terms in split tomography\n");
+	    warning2("Skipping RL Low rank terms in split tomography\n");
 	}
 	dcellfree(ULo);
 	dcellfree(VLo);
@@ -2473,7 +2466,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
    to gradients to get DM commands.
  */
 void setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    info2("Assembling LSR MVM\n");
+    info2("Assembling LSR MVM in CPU\n");
     if(recon->LR.Mfun || parms->lsr.alg==1){
 	/*
 	  First create an identity matrix. then solve each column one by one. 
@@ -2620,7 +2613,7 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
    to gradients to get DM commands.
  */
 void setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
-    info2("Assembling MVR MVM\n");
+    info2("Assembling MVR MVM in CPU\n");
     const int ndm=parms->ndm;
     const int nwfs=parms->nwfs;
     long ntotact=0;
@@ -2706,7 +2699,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     setup_recon_ploc(recon,parms);
     setup_recon_floc(recon,parms);
     setup_recon_GWR(recon, parms, powfs);
-    setup_recon_GP(recon,parms,powfs,aper);
+    setup_recon_GP(recon,parms,powfs);
     setup_recon_GA(recon,parms,powfs);
     /*assemble noise equiva angle inverse from powfs information */
     setup_recon_saneai(recon,parms,powfs);
@@ -2728,11 +2721,10 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     if(parms->sim.mffocus){
 	setup_recon_focus(recon, powfs, parms);
     }
-    if(parms->dbg.dxonedge){
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    locfree(powfs[ipowfs].gloc);
-	    dfree(powfs[ipowfs].gamp);
-	}
+
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	locfree(powfs[ipowfs].gloc);
+	dfree(powfs[ipowfs].gamp);
     }
 
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
