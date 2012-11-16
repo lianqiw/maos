@@ -395,7 +395,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	delete [] hxdata;
 	delete [] hxtdata;
 	GPU_GP_T *gpdata=new GPU_GP_T[nwfs];
-	if(recon->PDF{
+	if(recon->PDF){
 	    curecon->PDF=(curcell**)calloc(sizeof(curcell*), nwfs);
 	}
 	for(int iwfs=0; iwfs<nwfs; iwfs++){

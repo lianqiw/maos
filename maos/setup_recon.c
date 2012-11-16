@@ -840,7 +840,6 @@ setup_recon_DFR(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
 	if(parms->powfs[ipowfs].dfrs){
-	    warning("powfs %d has differential focus removed in tomography\n", ipowfs);
 	    if(parms->powfs[ipowfs].nwfs<2){
 		error("This powfs group has only 1 wfs. Could not remove diff focus\n");
 	    }
