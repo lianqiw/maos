@@ -342,6 +342,26 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       subaperture illumination area and remove all that are below
       the are threshold*/
     const int nlocm=powfs[ipowfs].nlocm;
+
+    /*
+      About physical optics imaging: The subaperture area (saa) has been
+      normalized against a square subaperture to scale the physical optics
+      i0. After FFT, the PSF sum to 1 for full square subapertures, but sum to
+      PI/4 for full circular TT or full quadrant circular TTF subapertures. The
+      areascale variable (1 for square subaperture and 4/M_PI for (quad)circular
+      sa) is therefore used to normalize the PSF so that it sums to 1 for either
+      full square or full (quadrant) circular subaperture. Used in wfsints.
+
+      The subaperture area (saa) is subsequently scaled so that the max is 1 for
+      full square or (quadrant) circular subaperture. saa is then used in
+      setup_recon to scale geometric sanea.
+    */
+
+    powfs[ipowfs].areascale=areafulli;
+    if(fabs(areafulli-1)>EPS){
+	dscale(powfs[ipowfs].saa, areafulli);
+	dcellscale(powfs[ipowfs].saam, areafulli);
+    }
     dmat *saa=NULL;
     switch(nlocm){
     case 0:
@@ -356,6 +376,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		dadd(&saa, 1, powfs[ipowfs].saam->p[ilocm], scale);
 	    }
 	}
+    }
+    if(dmax(saa)>1+EPS){
+	error("The area maxes to %g, which should be leq 1\n", dmax(saa));
     }
     for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
 	if(saa->p[isa]>thresarea){
@@ -377,34 +400,11 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    count++;
 	}
     }
-    /*area was already normalized against square subaperture.  to scale the
-      physical optics i0. After FFT, the PSF sum to 1 for square subapertures,
-      but sum to PI/4 for circular TT or TTF subapertures. maxarea is 1 for
-      square subapertures, and PI/4 for TT and TTF WFS due to cut off by
-      pupil. for square subapertures, areascale=1, no effect. for TT or TTF WFS,
-      areascale is 4/PI, which scales the PSF from sum to PI/4 to sum to 1
-      again. Used in wfsints.
-
-      We normalize area against 1 for square or PI/4 for arc subapertures. The
-      area is not used in physical optics. It is used to scale geometric
-      sanea.*/
-    double maxarea=dmax(saa);
-    if(maxarea>1+EPS){
-	error("The area maxes to %g, which should be leq 1\n", maxarea);
-    }
-    dfree(saa);
-    /*Here we treat a full square or full circle, quarter circle as full
-      subaperture and unity throughput. Others will have less throughput
-      according to their amplitude map. Was maxarea, but not correct if all the
-      subapertures has less than unity throughput. Fixed with areafulli*/
-    powfs[ipowfs].areascale=areafulli;
-    if(fabs(areafulli-1)>EPS){
-	dscale(powfs[ipowfs].saa, areafulli);
-	dcellscale(powfs[ipowfs].saam, areafulli);
-    }
     if(count==0){
 	error("there are no subapertures above threshold.\n");
     }
+    dfree(saa);
+
     powfs[ipowfs].npts = count*nxsa;
     powfs[ipowfs].nthread=count<parms->sim.nthread?count:parms->sim.nthread;
     ptsresize(powfs[ipowfs].pts, count);

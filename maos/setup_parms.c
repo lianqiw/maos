@@ -218,11 +218,16 @@ static void readcfg_powfs(PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	int nwvl=parms->powfs[ipowfs].nwvl;
 	parms->powfs[ipowfs].wvl=calloc(nwvl, sizeof(double));
+	double wvlm=0;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    double wvl=wvllist[count+iwvl];
 	    if(wvl>1e-3){
 		wvl=wvl*1e-6;
 	    }
+	    if(wvl<=wvlm){
+		error("Wavelength must in ascend order\n");
+	    }
+	    wvlm=wvl;
 	    parms->powfs[ipowfs].wvl[iwvl]=wvl;
 	}
 	if(nwvlwts){
@@ -247,64 +252,68 @@ static void readcfg_powfs(PARMS_T *parms){
     if(nsiglev){
 	free(siglev);
     }
-    READ_POWFS(str,piinfile);
-    READ_POWFS(str,sninfile);
-    READ_POWFS(dbl,hs);
-    READ_POWFS(dbl,saat);
+    READ_POWFS_RELAX(str,piinfile);
+    READ_POWFS_RELAX(str,sninfile);
+    READ_POWFS_RELAX(dbl,saat);
     READ_POWFS_RELAX(dbl,sathruput);
     READ_POWFS_RELAX(dbl,saspherical);
-    READ_POWFS(int,neaphy);
-    READ_POWFS(str,neareconfile);
-    READ_POWFS(str,neasimfile);
+    READ_POWFS_RELAX(int,neaphy);
+    READ_POWFS_RELAX(str,neareconfile);
+    READ_POWFS_RELAX(str,neasimfile);
+    READ_POWFS_RELAX(dbl,neasim);
+    READ_POWFS_RELAX(dbl,neaspeckle);
+    READ_POWFS_RELAX(dbl,bkgrnd);
+    READ_POWFS_RELAX(dbl,bkgrndc);
+    READ_POWFS_RELAX(str,bkgrndfn);
+    READ_POWFS_RELAX(str,bkgrndfnc);
+    READ_POWFS_RELAX(dbl,pixblur);
+    READ_POWFS_RELAX(dbl,radpixtheta);
+    READ_POWFS_RELAX(dbl,fieldstop);
+    READ_POWFS_RELAX(dbl,pixoffx);
+    READ_POWFS_RELAX(dbl,pixoffy);
+    READ_POWFS_RELAX(int,phyusenea);
+    READ_POWFS_RELAX(int,radpix);
+    READ_POWFS_RELAX(int,radrot);
+    READ_POWFS_RELAX(int,embfac);
+    READ_POWFS_RELAX(int,ncomp);
+    READ_POWFS_RELAX(int,psfout);
+    READ_POWFS_RELAX(int,pistatout);
+    READ_POWFS_RELAX(int,pistatstart);
+    READ_POWFS_RELAX(int,pistatstc);
+    READ_POWFS_RELAX(int,gtype_sim);
+    READ_POWFS_RELAX(int,gtype_recon);
+    READ_POWFS_RELAX(int,phytype);
+    READ_POWFS_RELAX(int,phytypesim);
+
+    READ_POWFS_RELAX(dbl,mtchcra);
+    READ_POWFS_RELAX(int,mtchcpl);
+    READ_POWFS_RELAX(int,mtchscl);
+    READ_POWFS_RELAX(int,mtchadp);
+    READ_POWFS_RELAX(dbl,cogthres);
+    READ_POWFS_RELAX(dbl,cogoff);
+    READ_POWFS_RELAX(str,misreg);
+    READ_POWFS_RELAX(int,ncpa_method);
+    READ_POWFS_RELAX(int,i0scale);
+    READ_POWFS_RELAX(dbl,sigscale);
+    READ_POWFS_RELAX(int,moao);
+
+    READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
-    READ_POWFS(dbl,neasim);
-    READ_POWFS(dbl,neaspeckle);
-    READ_POWFS(dbl,bkgrnd);
-    READ_POWFS(dbl,bkgrndc);
-    READ_POWFS(str,bkgrndfn);
-    READ_POWFS(str,bkgrndfnc);
-    READ_POWFS(dbl,pixblur);
     READ_POWFS(dbl,rne);
     READ_POWFS(dbl,dx);
+    READ_POWFS(int,dl);
     READ_POWFS(dbl,pixtheta);
-    READ_POWFS(dbl,radpixtheta);
-    READ_POWFS(dbl,fieldstop);
-    READ_POWFS(dbl,pixoffx);
-    READ_POWFS(dbl,pixoffy);
-    READ_POWFS(int,phyusenea);
     READ_POWFS(str,fnllt);
     READ_POWFS(int,trs);
     READ_POWFS(int,dfrs);
     READ_POWFS(int,lo);
     READ_POWFS(int,pixpsa);
-    READ_POWFS(int,radpix);
-    READ_POWFS(int,radrot);
-    READ_POWFS(int,ncomp);
-    READ_POWFS(int,embfac);
-    READ_POWFS(int,psfout);
-    READ_POWFS(int,pistatout);
-    READ_POWFS(int,pistatstart);
-    READ_POWFS(int,pistatstc);
-    READ_POWFS(int,gtype_sim);
-    READ_POWFS(int,gtype_recon);
-    READ_POWFS(int,phytype);
-    READ_POWFS(int,phytypesim);
     READ_POWFS(dbl,mtchcr);
-    READ_POWFS(dbl,mtchcra);
-    READ_POWFS(int,mtchcpl);
     READ_POWFS(int,mtchstc);
-    READ_POWFS(int,mtchscl);
-    READ_POWFS(int,mtchadp);
-    READ_POWFS(dbl,cogthres);
-    READ_POWFS(dbl,cogoff);
     READ_POWFS(int,phystep);
     READ_POWFS(int,noisy);
-    READ_POWFS(str,misreg);
-    READ_POWFS(int,ncpa_method);
     READ_POWFS(int,dtrat);
-    READ_POWFS(int,i0scale);
-    READ_POWFS(dbl,sigscale);
-    READ_POWFS(int,moao);
+
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
 	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
@@ -1203,32 +1212,14 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->ntrspowfs++;
 	    }
 	}
-	/* 
-	   Figure out pixtheta if specified to be auto (<0).
-	   -pixtheta is the ratio to nominal value.
-	*/
-	const double dxsa 
-	    = parms->aper.d/(double)parms->powfs[ipowfs].order;
-	double wvl=0;
-	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-	    if(parms->powfs[ipowfs].wvl[iwvl]>wvl)
-		wvl=parms->powfs[ipowfs].wvl[iwvl];
-	}
 	/*should supply in arcsec. Was supplied in radian pre 2011-02-17. So we
 	  test magnitude and then apply conversion*/
-	if(parms->powfs[ipowfs].pixtheta>1e-4){
-	    parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
-	}else if(parms->powfs[ipowfs].pixtheta>0){
-	    warning2("ipowfs %d:pixtheta should be supplied in unit of arcsec.\n", ipowfs);
-	}
 	if(parms->powfs[ipowfs].pixtheta<0){
-	    parms->powfs[ipowfs].dl=1;/*mark as diffraction limited. */
-	    double ratio=(-parms->powfs[ipowfs].pixtheta);
-	    parms->powfs[ipowfs].pixtheta=ratio*wvl/dxsa;
-	    info2("powfs %d pixtheta set to %.1fx %g/%g: %g mas\n",
-		  ipowfs, ratio, wvl,dxsa,parms->powfs[ipowfs].pixtheta*206265000);
-	}else if(parms->powfs[ipowfs].pixtheta<wvl/dxsa*1.22){
-	    parms->powfs[ipowfs].dl=1;/*mark as diffraction limited. */
+	    error("pixtheta < 0 option is deprecated (confusion if nwvl>1)\n");
+	}else if(parms->powfs[ipowfs].pixtheta>1e-4){
+	    parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
+	}else{
+	    warning2("ipowfs %d:pixtheta should be supplied in unit of arcsec.\n", ipowfs);
 	}
 	if(fabs(parms->powfs[ipowfs].radpixtheta)<EPS){
 	    parms->powfs[ipowfs].radpixtheta=parms->powfs[ipowfs].pixtheta;
@@ -1264,6 +1255,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	{
 	    /*Adjust dx if the subaperture does not contain integer, even number of points.*/
+	    const double dxsa= parms->aper.d/(double)parms->powfs[ipowfs].order;
 	    int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
 	    double dx=dxsa/nx;/*adjust dx. */
 	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){

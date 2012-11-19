@@ -54,7 +54,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.maxaster);
     READ_INT(skyc.maxstar);
     readcfg_intarr_n(&parms->skyc.nwfsmax, parms->skyc.npowfs,"skyc.nwfsmax");
-    readcfg_dblarr_n(&parms->skyc.pixratio,parms->skyc.npowfs,"skyc.pixratio");
+    readcfg_dblarr_n(&parms->skyc.pixtheta,parms->skyc.npowfs,"skyc.pixtheta");
     readcfg_dblarr_n(&parms->skyc.pixblur, parms->skyc.npowfs,"skyc.pixblur");
     readcfg_intarr_n(&parms->skyc.pixpsa,  parms->skyc.npowfs,"skyc.pixpsa");
     readcfg_dblarr_n(&parms->skyc.pixoffx, parms->skyc.npowfs,"skyc.pixoffx");
@@ -211,11 +211,8 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	info2(" %d", parms->skyc.seeds[i]);
     }
     info2("\n");
-    const double wvlmin=parms->maos.wvl[0];
-    parms->skyc.pixtheta=calloc(parms->skyc.npowfs, sizeof(double));
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
-	const double dxsa=parms->maos.dxsa[ipowfs];
-	parms->skyc.pixtheta[ipowfs]=parms->skyc.pixratio[ipowfs]*wvlmin/dxsa;
+	parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec
 	info2("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
     }
     parms->skyc.fss=calloc(parms->skyc.ndtrat, sizeof(double));

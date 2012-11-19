@@ -106,8 +106,7 @@ typedef struct SKYC_S{
     /** The following are vectors for each powfs; */
     int *nwfsmax;    /**<maximum # of wfs for each powfs*/
     int  nwfstot;    /**<Sum of nwfsmax*/
-    double *pixratio;/**<pixtheta in terms of wvl[0]/d_sa*/
-    double *pixtheta;/**<pixtheta derived from pixratio.*/
+    double *pixtheta;/**<size of WFS ccd pixel.*/
     double *pixblur; /**<blurring of pixels.*/
     int *pixpsa;     /**<number of detector pixels in each direction per sa*/
     double *pixoffx; /**<pixel offset along x in units of pixel*/
