@@ -397,7 +397,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       subaperture and unity throughput. Others will have less throughput
       according to their amplitude map. Was maxarea, but not correct if all the
       subapertures has less than unity throughput. Fixed with areafulli*/
-    powfs[ipowfs].areascale=1./areafulli;
+    powfs[ipowfs].areascale=areafulli;
     if(fabs(areafulli-1)>EPS){
 	dscale(powfs[ipowfs].saa, areafulli);
 	dcellscale(powfs[ipowfs].saam, areafulli);
