@@ -277,8 +277,8 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 	}
     }
     if(datai->PDF && ptt){
-	for(int id=0; id<nwfs; id++){
-	    float *restrict PDF=datai->PDF[id];
+	for(int irow=0; irow<nwfs; irow++){
+	    float *restrict PDF=datai->PDF[irow];
 	    if(!PDF) continue;
 	    gdf[threadIdx.x]=0;
 	    for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){/*ng is nsa*2. */
@@ -291,7 +291,7 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 		}
 	    }
 	    if(threadIdx.x==0){
-		atomicAdd(&dfout[id], gdf[0]);
+		atomicAdd(&dfout[irow], -gdf[0]);
 	    }
 	}
     }
@@ -313,13 +313,12 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
     if(datai->PDF && ptt){
 	if(iwfs==0){
 	    for(int id=1; id<nwfs; id++){
-		focus-=dfin[id];
+		focus+=dfin[id];
 	    }
 	}else{
-	    focus=dfin[iwfs];
+	    focus=-dfin[iwfs];
 	}
     }
-    int addfocus=fabsf(focus)>1e-7?1:0;
     const float *restrict g=gin[iwfs];
     float *restrict map=wfsopd[iwfs];
     const float *pxy=datai->GPp;
@@ -336,12 +335,8 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	    float cx=neai[isa][0];
 	    float cy=neai[isa][1];
 	    float cxy=neai[isa][2];
-	    float gx=g[isa]+ttx;
-	    float gy=g[isa+nsa]+tty;
-	    if(addfocus){
-		gx+=focus*(ix*dxp+oxp);
-		gy+=focus*(iy*dxp+oyp);
-	    }
+	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
+	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
 	    float tmp=cxy*gx;
 	    gx=cx*gx+cxy*gy;
 	    gy=tmp+cy*gy;
@@ -358,12 +353,8 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	    float cx=neai[isa][0];
 	    float cy=neai[isa][1];
 	    float cxy=neai[isa][2];
-	    float gx=g[isa]+ttx;
-	    float gy=g[isa+nsa]+tty;
-	    if(addfocus){
-		gx+=focus*(ix*dxp+oxp);
-		gy+=focus*(iy*dxp+oyp);
-	    }
+	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
+	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
 	    float tmp=cxy*gx;
 	    gx=cx*gx+cxy*gy;
 	    gy=tmp+cy*gy;
@@ -398,10 +389,10 @@ __global__ static void gpu_nea_do(GPU_GP_T *data, float *ttin, float *dfin, floa
     if(datai->PDF){
 	if(iwfs==0){
 	    for(int id=1; id<nwfs; id++){
-		focus-=dfin[id];
+		focus+=dfin[id];
 	    }
 	}else{
-	    focus=dfin[iwfs];
+	    focus=-dfin[iwfs];
 	}
     }
     float *restrict g=gin[iwfs];
@@ -493,9 +484,8 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     }
     curcell *opdx=*xout;
     curcell *opdwfs=curecon->opdwfs;
-    int ptt=(!parms->recon.split || (parms->dbg.splitlrt && !curecon->disablelrt)); 
+    int ptt=!parms->recon.split || parms->dbg.splitlrt; 
     curmat *ttf=curecon->ttf;
-    info("ptt=%d\n", ptt);
     curzero(opdwfs->m, stream);
     gpu_prop_grid_adaptive_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
 	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, 1, 'n');
@@ -606,7 +596,6 @@ void gpu_tomo_test(SIM_T *simu){
 	predata=(void*)recon;
     }
     curcellzero(lg, 0);
-    curecon->disablelrt=1;//temporary
     for(int i=0; i<10; i++){
 	gpu_pcg(&lg, (G_CGFUN)gpu_TomoL, (void*)recon, prefun, predata, rhsg, &curecon->cgtmp_tomo,
 		simu->parms->recon.warm_restart, parms->tomo.maxit, stream);

@@ -114,7 +114,9 @@ static GtkWidget *get_toolbar(GtkWidget *window){
     g_list_free(list);
     return toolbar;
 }
-
+static void topnb_page_changed2(GtkNotebook *topnb, gint arg1,  GtkWidget *toolbar){
+    gtk_widget_set_sensitive(toolbar, TRUE);
+}
 static void topnb_page_changed(GtkNotebook *topnb, GtkWidget *child, guint n, GtkWidget *toolbar){
     (void)child;
     (void)n;
@@ -1339,7 +1341,7 @@ GtkWidget *create_window(void){
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(topnb), TRUE);
     g_signal_connect(GTK_NOTEBOOK(topnb), "page-added", G_CALLBACK(topnb_page_changed), toolbar);
     g_signal_connect(GTK_NOTEBOOK(topnb), "page-removed", G_CALLBACK(topnb_page_changed), toolbar);
-    g_signal_connect(GTK_NOTEBOOK(topnb), "change-current-page", G_CALLBACK(topnb_page_changed), toolbar);
+    g_signal_connect(GTK_NOTEBOOK(topnb), "change-current-page", G_CALLBACK(topnb_page_changed2), toolbar);
     GtkWidget *vbox=gtk_vbox_new(FALSE,0);
     gtk_box_pack_start(GTK_BOX(vbox),toolbar,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(vbox),topnb,TRUE,TRUE,0);

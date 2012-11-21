@@ -198,12 +198,15 @@ typedef struct FDPCG_T{
     csp *Minv;     /**<inverse of fourier domain preconditioner matrix M.*/
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
     long *perm;    /**<Permutation vector to get block diagonal matrix*/
+    long *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
     long nxtot;    /**<Total number of reconstructed phase points*/
     /*xhat, xhat2 has been removed for thread safety issues.*/
     long **xembed; /**<index to embed nonsquare opd on xloc to square map.*/
     int square;    /**<Whether xloc is square*/
     int scale;     /**<Do we need to scale after fft.*/
-    int half;      /**<Do we use only half of the FFT result (hermitian property)*/
+    long nbx;      /**<Basic frequency range in x*/
+    long nby;      /**<Basic frequency range in y nb=nbx*nby.*/
+    long bs;       /**<Size of each diagonal block.*/
 }FDPCG_T;
 
 /**

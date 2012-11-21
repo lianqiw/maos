@@ -254,8 +254,9 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     thread_t  tdata_wfs[nthread], tdata_evl[nthread], tdata_ncpa[nthread];
     thread_prep(tdata_evl, 0, nevl, nthread, prop_surf_evl, &sdata);
     thread_prep(tdata_wfs, 0, nwfs, nthread, prop_surf_wfs, &sdata);
-    thread_prep(tdata_ncpa, 0, nncpa, nthread, prop_surf_ncpa, &sdata);
-    
+    if(nncpa){
+	thread_prep(tdata_ncpa, 0, nncpa, nthread, prop_surf_ncpa, &sdata);
+    }
 
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	char *fn=parms->surf[isurf];
@@ -272,7 +273,6 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	const char *stropdx=search_header(surf->header, "SURFOPDX");
 	int do_rot=0;
 	if(strname && !strcmp(strname, "M1")){
-	    warning("Rotate loc for M1\n");
 	    do_rot=(fabs(rot)>1.e-10);
 	}
 	if(do_rot){
@@ -283,6 +283,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}
 	if(!strevl){
 	    warning2("surf[%d] does not contain SURFEVL\n", isurf);
+	    info("%s\n", surf->header);
 	    for(int ievl=0; ievl<nevl; ievl++){
 		evlcover[ievl]=1;
 	    }

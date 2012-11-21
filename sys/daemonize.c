@@ -225,7 +225,6 @@ static void fputs_stderr(int fd, int stdoutfd, const char *fn){
     FILE *fpout[2];
     fpout[0]=fdopen(stdoutfd, "w");
     fpout[1]=fopen(fn, "w");
-    mysymlink(fn, "run_recent.log");
     setbuf(fpout[0], NULL);
     setbuf(fpout[1], NULL);
     if(!fpout[0] || !fpout[1]) {
@@ -253,7 +252,6 @@ static void redirect_fd(const char *fn, int fd){
     if(fn){
 	if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
 	if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
-	mysymlink(fn, "run_recent.log");
     }else if(fd>-1){
 	/*do not close stdout here.*/
 	dup2(fd, 1);

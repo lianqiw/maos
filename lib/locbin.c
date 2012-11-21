@@ -205,7 +205,6 @@ map_t *mapread(const char *format, ...){
     file_t *fp=zfopen(fn,"rb");
     header_t header;
     read_header(&header, fp);
-    free(header.str);
     map_t *map=NULL;
     if(header.magic==M_DBL){
 	dmat *in=dreaddata(fp, &header);

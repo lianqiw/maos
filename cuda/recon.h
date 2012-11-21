@@ -114,7 +114,6 @@ typedef struct cufdpcg_t{
     cuccell *xhat1;
     int nby, nbz; 
     int scale;
-    int half;
     ~cufdpcg_t(){
 	cudaFree(perm);
 	free(fftips);
@@ -176,7 +175,6 @@ typedef struct curecon_t{
     curmat *FUp;
     curmat *FVp;
     curmat *FMI;//SVD
-    int disablelrt; /*1: disable t/t removal lrt in split tomo*/
 
     curcell *RFlgsx;
     curcell *RFngsx;
@@ -215,4 +213,8 @@ void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict 
 
 void gpu_tomo_test(SIM_T *simu);
 void gpu_fit_test(SIM_T *simu);
+
+void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
+void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
+void gpu_recon_free_do();
 #endif

@@ -1898,6 +1898,14 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	parms->sim.nseed=jseed;
 	if(parms->sim.nseed<1){
 	    warning("There are no seed to run. Use -O to override. Exit\n");
+	    //remove log and conf files
+	    {
+		char fnpid[PATH_MAX];
+		snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
+		remove(fnpid);
+		snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
+		remove(fnpid);
+	    }
 	    scheduler_finish(0);
 	    raise(SIGUSR1);
 	    exit(1);

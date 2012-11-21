@@ -330,7 +330,7 @@ PARMS_S *setup_parms(const ARG_S *arg){
     char fnconf[PATH_MAX];
     snprintf(fnconf, PATH_MAX, "skyc_%ld.conf", (long)getpid());
     close_config("%s",fnconf);
-    mysymlink(fnconf, "skyc_recent.conf");
+
     if(parms->skyc.gradnea){
 	info2("Variance of the gradients in stored PSF is added to NEA\n");
     }

@@ -136,8 +136,9 @@ float gpu_pcg(curcell **px,
     curcell *x0=*px;
     int kover=0; //k overflows maxit
     for(int k=0; ; k++){
-	if(k>=maxiter){
+	if(k==maxiter){
 	    k=0;//reset 
+	    kover++;
 	    DO(cudaMemsetAsync(r0r0, 0, (ntot-1)*sizeof(float),stream));
 	}
 	if(k%500==0){/*initial or re-start every 50 steps*/
@@ -188,7 +189,7 @@ float gpu_pcg(curcell **px,
 	curcelladd(&x0, p0, ak+k, 1, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
-	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres)){
+	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres) ||kover>=3){
 	    residual=diff[k];
 #if TIMING 
 	    CUDA_SYNC_STREAM;
