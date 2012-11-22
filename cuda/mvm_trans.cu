@@ -43,7 +43,7 @@ typedef struct MVM_IGPU_T{
     int ntotgrad;
     int load_mvmf; /*intermediate FitR result is for 1) loading, 0) saving.*/
 }MVM_IGPU_T;
-static void gpu_setup_recon_mvmt_igpu(thread_t *info){
+static void mvm_trans_igpu(thread_t *info){
     TIC;tic;
     double tk_prep=0, tk_fitL=0, tk_fitR=0, tk_TomoL=0, tk_TomoR=0, tk_cp=0;
     MVM_IGPU_T *data=(MVM_IGPU_T*)info->data;
@@ -66,13 +66,17 @@ static void gpu_setup_recon_mvmt_igpu(thread_t *info){
 	prefun=gpu_Tomo_fdprecond;
 	predata=(void*)recon;
     }
-    G_CGFUN cg_fun;
-    void *cg_data;
+  
     curcell *eyec=NULL;/* Only use eyec for CG.*/
-    float eye2[2]={0,1.};
-    float eye1[1]={1.};
+    float eye2c[2]={0,1.};
+    float *eye2;
+    cudaMalloc(&eye2, sizeof(float)*2);
+    cudaMemcpy(eye2, eye2c, sizeof(float)*2, cudaMemcpyHostToDevice);
     //const int nwfs=parms->nwfs;
     const int ndm=parms->ndm;
+    /*fit*/
+    G_CGFUN cg_fun;
+    void *cg_data;
     if(parms->gpu.fit==1){//sparse matrix
 	cg_fun=(G_CGFUN) cumuv;
 	cg_data=&curecon->FL;
@@ -112,10 +116,10 @@ static void gpu_setup_recon_mvmt_igpu(thread_t *info){
 	if(eyec){
 	    if(iact){
 		cudaMemcpyAsync(eyec->m->p+iact-1, eye2, 2*sizeof(float),
-				cudaMemcpyHostToDevice, stream);
+				cudaMemcpyDeviceToDevice, stream);
 	    }else{
-		cudaMemcpyAsync(eyec->m->p+iact, eye1, sizeof(float), 
-				cudaMemcpyHostToDevice, stream);
+		cudaMemcpyAsync(eyec->m->p+iact, eye2+1, sizeof(float), 
+				cudaMemcpyDeviceToDevice, stream);
 	    }
 	}
 	if(!recon->actcpl || recon->actcpl->p[curdm]->p[curact]>EPS){
@@ -193,6 +197,7 @@ static void gpu_setup_recon_mvmt_igpu(thread_t *info){
     curcellfree(grad);
     curcellfree(eyec);
     curfree(mvmt);
+    cudaFree(eye2);
     tk_cp+=toc3;tic;
     info2("GPU %d: Prep %.2f FitL %.2f FitR %.2f TomoL %.1f TomoR %.1f cp %.2f\n", 
 	  igpu, tk_prep, tk_fitL, tk_fitR, tk_TomoL, tk_TomoR, tk_cp);
@@ -201,10 +206,10 @@ static void gpu_setup_recon_mvmt_igpu(thread_t *info){
 void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     TIC;tic;
     if(parms->recon.alg!=0){
-	error("Please adept to LSR\n");
+	error("Please adapt to LSR\n");
     } 
     if(!parms->load.mvm){
-	info2("Assembling MVR MVM in GPU\n");
+	info2("Assembling MVR MVM (transpose) in GPU\n");
 	int ntotact=0;
 	int ntotgrad=0;
 	int ntotxloc=0;
@@ -215,6 +220,11 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	for(int ips=0; ips<recon->npsr; ips++){
 	    ntotxloc+=recon->xloc[ips]->nloc;
 	}
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    ntotgrad+=recon->ngrad[iwfs];
+	}
+	
+
 	long (*curp)[2]=(long(*)[2])malloc(ntotact*2*sizeof(long));
 	int nact=0;
 	for(int idm=0; idm<ndm; idm++){
@@ -224,10 +234,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	    }
 	    nact+=recon->anloc[idm];
 	}   
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    ntotgrad+=recon->ngrad[iwfs];
-	}
-	
+
 	smat *residual=NULL;
 	if(parms->tomo.alg==1){
 	    residual=snew(ntotact, 1);
@@ -301,8 +308,8 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
     	smat *mvmt=snew(ntotgrad, ntotact);
 	MVM_IGPU_T data={parms, recon, powfs, mvmig, mvmfg, mvmt, FLI, residual, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
-	thread_t info[NGPU];
-	thread_prep(info, 0, ntotact, nthread, gpu_setup_recon_mvmt_igpu, &data);
+	thread_t info[nthread];
+	thread_prep(info, 0, ntotact, nthread, mvm_trans_igpu, &data);
 
 	/*Initialyze intermediate TomoL result array in GPU. Send intermediate
 	  TomoL results to GPU if load.mvmi is set.*/
@@ -364,9 +371,6 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	    dfree(mvmtt);
 	    toc2("MVM Reshape in CPU 2");
 	}
-	if(parms->save.setup || parms->save.mvm){
-	    dcellwrite(recon->MVM, "MVM.bin");
-	}
 	swrite(residual, "MVM_RL_residual");
 	
 	if(parms->save.mvmi){
@@ -406,17 +410,4 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	free(curp);
 	if(FLI) free4async(FLI);
     }//if assemble in gpu
-    for(int igpu=0; igpu<NGPU; igpu++){
-	gpu_set(igpu);
-	gpu_recon_free_do();
-	CUDA_SYNC_DEVICE;
-    }///for GPU
-    if(!parms->sim.mvmport){
-	gpu_set(gpu_recon);
-	curecon_t *curecon=cudata->recon;
-	cp2gpu(&curecon->MVM, recon->MVM);
-	dcellfree(recon->MVM);
-    }
-    toc("MVM Final");
-    gpu_print_mem("MVM");
 }

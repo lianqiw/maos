@@ -567,11 +567,23 @@ void gpu_recon_free(){
     gpu_recon_free_do();
 }
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
-    if(1){
-	gpu_setup_recon_mvm_trans(parms, recon, powfs);
-    }else{
+    /*The following routine assemble MVM and put in recon->MVM*/
+    if(parms->recon.mvm==1){
 	gpu_setup_recon_mvm_direct(parms, recon, powfs);
+    }else{
+	gpu_setup_recon_mvm_trans(parms, recon, powfs);
     }
+    for(int igpu=0; igpu<NGPU; igpu++){
+	gpu_set(igpu);
+	gpu_recon_free_do();
+	CUDA_SYNC_DEVICE;
+    }///for GPU
+    if(!parms->sim.mvmport){
+	gpu_set(gpu_recon);
+	curecon_t *curecon=cudata->recon;
+	cp2gpu(&curecon->MVM, recon->MVM);
+    }
+    gpu_print_mem("MVM");
 }
 void gpu_setup_recon_predict(const PARMS_T *parms, RECON_T *recon){
     if(!parms->gpu.tomo || !parms->tomo.predict){
@@ -694,53 +706,8 @@ void gpu_tomo(SIM_T *simu){
     toc_test("Before gradin");
     cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     toc_test("Gradin");
-    curcell *rhs=NULL;
-    gpu_TomoR(&rhs, 0, recon, curecon->gradin, 1, curecon->cgstream[0]);
-    toc_test("TomoR");
-    switch(parms->tomo.alg){
-    case 0:
-	if(!curecon->opdr->m){
-	    error("opdr must be continuous\n");
-	}
-	if(!rhs->m){
-	    error("rhs must be continuous\n");
-	}
-	cuchol_solve(curecon->opdr->m->p, curecon->RCl, curecon->RCp, rhs->m->p, curecon->cgstream[0]);
-	if(curecon->RUp){
-	    curmat *tmp=curnew(curecon->RVp->ny, 1);
-	    curmv(tmp->p, 0, curecon->RVp, rhs->m->p, 't', -1, curecon->cgstream[0]);
-	    curmv(curecon->opdr->m->p, 1, curecon->RUp, tmp->p, 'n', 1, curecon->cgstream[0]);
-	    cudaStreamSynchronize(curecon->cgstream[0]);
-	    curfree(tmp);
-	}
-	/*{
-	  curcellwrite(rhs, "GPU_RHS");
-	  curcellwrite(curecon->opdr, "GPU_OPDR");
-	  muv_solve(&simu->opdr, &recon->RL, &recon->RR, simu->gradlastol);
-	  dcellwrite(simu->opdr, "CPU_OPDR");
-	  exit(1);
-	  }*/
-	break;
-    case 1:{
-	G_PREFUN prefun=NULL;
-	void *predata=NULL;
-	if(parms->tomo.precond==1){
-	    prefun=gpu_Tomo_fdprecond;
-	    predata=(void*)recon;
-	}
-	if(gpu_pcg(&curecon->opdr, gpu_TomoL, recon, prefun, predata, rhs, &curecon->cgtmp_tomo, 
-		   simu->parms->recon.warm_restart, parms->tomo.maxit, curecon->cgstream[0])>1){
-	    warning("Tomo CG not converge.\n");
-	}
-	toc_test("TomoL CG");
-    }break;
-    case 2:
-	curmv(curecon->opdr->m->p, 0, curecon->RMI, rhs->m->p, 'n', 1, curecon->cgstream[0]);
-	break;
-    default:
-	error("Invalid");
-    }
-    curcellfree(rhs); rhs=NULL;
+    gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream[0]);
+    curecon->cgstream->sync();
     if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2 || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr_vec, 1, curecon->cgstream[0]);
     }
@@ -771,49 +738,10 @@ void gpu_fit(SIM_T *simu){
     gpu_fit_test(simu);
 #endif
     toc_test("Before FitR");
-    curcell *rhs=NULL;
-    G_CGFUN cg_fun;
-    void *cg_data;
-    if(parms->gpu.fit==1){//sparse matrix
-	cumuv(&rhs, 0, &curecon->FR, curecon->opdr, 1);
-	cg_fun=(G_CGFUN) cumuv;
-	cg_data=&curecon->FL;
-    }else{
-	gpu_FitR(&rhs, 0, recon, curecon->opdr, 1);
-	cg_fun=(G_CGFUN) gpu_FitL;
-	cg_data=(void*)recon;
-    }
-    toc_test("FitR");
-    switch(parms->fit.alg){
-    case 0:
-	cuchol_solve(curecon->dmfit->m->p, curecon->FCl, curecon->FCp, rhs->m->p, curecon->cgstream[0]);
-	if(curecon->FUp){
-	    curmat *tmp=curnew(curecon->FVp->ny, 1);
-	    curmv(tmp->p, 0, curecon->FVp, rhs->m->p, 't', -1, curecon->cgstream[0]);
-	    curmv(curecon->dmfit->m->p, 1, curecon->FUp, tmp->p, 'n', 1, curecon->cgstream[0]);
-	    cudaStreamSynchronize(curecon->cgstream[0]);
-	    curfree(tmp);
-	}
-	break;
-    case 1:{
-	double res;
-	if((res=gpu_pcg(&curecon->dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, rhs, &curecon->cgtmp_fit,
-			simu->parms->recon.warm_restart, parms->fit.maxit, curecon->cgstream[0]))>1){
-	    warning("DM Fitting PCG not converge. res=%g\n", res);
-	}
-    }
-	break;
-    case 2:
-	curmv(curecon->dmfit->m->p, 0, curecon->FMI, rhs->m->p, 'n', 1, curecon->cgstream[0]);
-	break;
-    default:
-	error("Invalid");
-    }
+    gpu_fit_do(parms, recon, curecon->dmfit, NULL, curecon->opdr, curecon->cgstream[0]);
     cp2cpu(&simu->dmfit, 0, curecon->dmfit_vec, 1, curecon->cgstream[0]);
-    toc_test("FitL CG");
-    cudaStreamSynchronize(curecon->cgstream[0]);
-    /*Don't free opdr. */
-    curcellfree(rhs); rhs=NULL;
+    curecon->cgstream->sync();
+    /*Don't free opdr. Needed for warm restart in tomo.*/
     toc_test("Fit");
 }
 void gpu_recon_mvm(SIM_T *simu){

@@ -217,4 +217,6 @@ void gpu_fit_test(SIM_T *simu);
 void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
 void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
 void gpu_recon_free_do();
+double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *fitx, curcell *opdr, stream_t &stream);
+double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, curcell *opdx, curcell *grad, stream_t &stream);
 #endif

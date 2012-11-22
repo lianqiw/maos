@@ -23,6 +23,7 @@ extern "C"
 #include "utils.h"
 #include "recon.h"
 #include "accphi.h"
+#include "pcg.h"
 #define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ curecon->psstream[ips].sync(); }
 #define SYNC_FIT  for(int ifit=0; ifit<parms->fit.nfit; ifit++){ curecon->fitstream[ifit].sync(); }
 #define SYNC_DM  for(int idm=0; idm<parms->ndm; idm++){ curecon->dmstream[idm].sync(); }
@@ -349,7 +350,61 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
     SYNC_DM;
     toc("fitNW");//0ms.
 }
-#include "pcg.h"
+/**
+   Wrap of the DM fitting operation
+
+   opdr is the OPD input.
+   fitx is the right hand side vector computed from opdr. Allow NULL.
+   fitr is the DM fitting result.
+*/
+double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *fitx, curcell *opdr, stream_t &stream){
+    G_CGFUN cg_fun;
+    void *cg_data;
+    curcell *rhs=NULL;
+    double res=0;
+    curecon_t *curecon=cudata->recon;
+    if(fitx){
+	rhs=fitx;
+    }
+    curmat *tmp=NULL;
+    if(parms->gpu.fit==1){//sparse matrix
+	cumuv(&rhs, 0, &curecon->FR, opdr, 1);
+	cg_fun=(G_CGFUN) cumuv;
+	cg_data=&curecon->FL;
+    }else{
+	gpu_FitR(&rhs, 0, recon, opdr, 1);
+	cg_fun=(G_CGFUN) gpu_FitL;
+	cg_data=(void*)recon;
+    }
+    switch(parms->fit.alg){
+    case 0:
+	cuchol_solve(fitr->m->p, curecon->FCl, curecon->FCp, rhs->m->p, stream);
+	if(curecon->FUp){
+	    tmp=curnew(curecon->FVp->ny, 1);
+	    curmv(tmp->p, 0, curecon->FVp, rhs->m->p, 't', -1, stream);
+	    curmv(fitr->m->p, 1, curecon->FUp, tmp->p, 'n', 1, stream);
+	}
+	break;
+    case 1:{
+	if((res=gpu_pcg(&fitr, (G_CGFUN)cg_fun, cg_data, NULL, NULL, rhs, &curecon->cgtmp_fit,
+			parms->recon.warm_restart, parms->fit.maxit, stream))>1){
+	    warning("DM Fitting PCG not converge. res=%g\n", res);
+	}
+    }
+	break;
+    case 2:
+	curmv(fitr->m->p, 0, curecon->FMI, rhs->m->p, 'n', 1, stream);
+	break;
+    default:
+	error("Invalid");
+    }
+    if(!fitx){
+	curcellfree(rhs);
+    }
+    if(tmp) curfree(tmp);
+    return res;
+}
+
 void gpu_fit_test(SIM_T *simu){	/*Debugging. */
     gpu_set(gpu_recon);
     stream_t stream;

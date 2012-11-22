@@ -2770,14 +2770,15 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	    }else{
 		setup_recon_lsr_mvm(recon, parms, powfs);   
 	    }
-	    if(!parms->load.mvm){
-		if(parms->save.setup || parms->save.mvm){
-		    dcellwrite(recon->MVM, "MVM.bin");
-		}
-	    }
+	}
+	if(!parms->load.mvm && (parms->save.setup || parms->save.mvm)){
+	    dcellwrite(recon->MVM, "MVM.bin");
 	}
 	if(parms->sim.mvmport){
 	    mvm_client_send_m(parms, recon->MVM);
+	}
+	if(parms->gpu.tomo && parms->gpu.fit){
+	    dcellfree(recon->MVM);
 	}
     }
     toc2("setup_recon_mvm");

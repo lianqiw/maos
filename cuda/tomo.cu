@@ -25,6 +25,7 @@ extern "C"
 #include "recon.h"
 #include "accphi.h"
 #include "cucmat.h"
+#include "pcg.h"
 
 #define TIMING 0
 #if TIMING==1
@@ -509,8 +510,61 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 	(curecon->hxdata, opdx->pm, xin->pm, nwfs, alpha);
     //overhead of TomoL 27 micro-seconds (timing without synchornization).
 }
+/**
+   Wrap of the tomography operation
 
-#include "pcg.h"
+   grad is the gradient input.
+   opdx is the right hand side vector computed from grad. Allow NULL.
+   opdr is the tomography result.
+*/
+double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, curcell *opdx, curcell *grad, stream_t &stream){
+    curcell *rhs=NULL;
+    if(opdx){
+	rhs=opdx;
+    }
+    double res=0;
+    curecon_t *curecon=cudata->recon;
+    curmat *tmp=NULL;
+    gpu_TomoR(&rhs, 0, recon, grad, 1, stream);
+    switch(parms->tomo.alg){
+    case 0:
+	if(!opdr->m){
+	    error("opdr must be continuous\n");
+	}
+	if(!rhs->m){
+	    error("rhs must be continuous\n");
+	}
+	cuchol_solve(opdr->m->p, curecon->RCl, curecon->RCp, rhs->m->p, stream);
+	if(curecon->RUp){
+	    tmp=curnew(curecon->RVp->ny, 1);
+	    curmv(tmp->p, 0, curecon->RVp, rhs->m->p, 't', -1, stream);
+	    curmv(opdr->m->p, 1, curecon->RUp, tmp->p, 'n', 1, stream);
+	}
+	break;
+    case 1:{
+	G_PREFUN prefun=NULL;
+	void *predata=NULL;
+	if(parms->tomo.precond==1){
+	    prefun=gpu_Tomo_fdprecond;
+	    predata=(void*)recon;
+	}
+	if((res=gpu_pcg(&opdr, gpu_TomoL, recon, prefun, predata, rhs, &curecon->cgtmp_tomo, 
+			parms->recon.warm_restart, parms->tomo.maxit, stream))>1){
+	    warning("Tomo CG not converge.\n");
+	}
+    }break;
+    case 2:
+	curmv(opdr->m->p, 0, curecon->RMI, rhs->m->p, 'n', 1, stream);
+	break;
+    default:
+	error("Invalid");
+    }
+    if(!opdx){
+	curcellfree(rhs);
+    }
+    if(tmp) curfree(tmp);
+    return res;
+}
 void gpu_tomo_test(SIM_T *simu){
     gpu_set(gpu_recon);
     curecon_t *curecon=cudata->recon;
