@@ -27,17 +27,8 @@ extern "C"
 #include "cucmat.h"
 #include "pcg.h"
 
-#define TIMING 0
-#if TIMING==1
-#define CTIC TIC
-#define ctic tic
-#define ctoc(A) toc2(A);tic
-#define ctocs(A) CUDA_SYNC_STREAM; toc2(A);tic
-#else
-#define CTIC
-#define ctic
-#define ctoc(A)
-#endif
+#define TIMING 1
+
 /*
   If merge the operation in to gpu_prop_grid_adaptive_do, need to do atomic
 operation because previous retracing starts at offo, not 0.  */
@@ -201,9 +192,10 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
     const int step=blockDim.x * gridDim.x;
     int (*restrict saptr)[2]=datai->saptr;
     float *restrict g=gout[iwfs];
+    float GPscale=datai->GPscale;
     if(wfsopd){
 	const float *restrict map=wfsopd[iwfs];
-	const float *pxy=datai->GPp;
+	const short2 *restrict pxy=datai->GPp;
 	int nx=datai->nxp;
 	/*GP operation.*/
 	if(pos==1){
@@ -211,44 +203,44 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 		int ix=saptr[isa][0];
 		int iy=saptr[isa][1];
 	
-		const float *restrict pxy2=pxy+isa*8;
-		g[isa]=
-		    +map[iy*nx+ix  ]*pxy2[0]
-		    +map[iy*nx+ix+1]*pxy2[1]
-		    +map[(iy+1)*nx+ix ] *pxy2[2]
-		    +map[(iy+1)*nx+ix+1]*pxy2[3];
+		const short2 *restrict pxy2=pxy+isa*4;
+		g[isa]=GPscale*(
+		    +map[iy*nx+ix  ]*pxy2[0].x
+		    +map[iy*nx+ix+1]*pxy2[1].x
+		    +map[(iy+1)*nx+ix ] *pxy2[2].x
+		    +map[(iy+1)*nx+ix+1]*pxy2[3].x);
 
-		g[isa+nsa]=
-		    +map[iy*nx+ix  ]*pxy2[4]
-		    +map[iy*nx+ix+1]*pxy2[5]
-		    +map[(iy+1)*nx+ix ] *pxy2[6]
-		    +map[(iy+1)*nx+ix+1]*pxy2[7];
+		g[isa+nsa]=GPscale*(
+		    +map[iy*nx+ix  ]*pxy2[0].y
+		    +map[iy*nx+ix+1]*pxy2[1].y
+		    +map[(iy+1)*nx+ix ] *pxy2[2].y
+		    +map[(iy+1)*nx+ix+1]*pxy2[3].y);
 	    }/*for isa */
 	}else{
 	    for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 		int ix=saptr[isa][0];
 		int iy=saptr[isa][1];
-		const float *restrict pxy2=pxy+isa*18;
-		g[isa]=
-		    +map[iy*nx+ix  ]*pxy2[0]
-		    +map[iy*nx+ix+1]*pxy2[1]
-		    +map[iy*nx+ix+2]*pxy2[2]
-		    +map[(iy+1)*nx+ix ] *pxy2[3]
-		    +map[(iy+1)*nx+ix+1]*pxy2[4]
-		    +map[(iy+1)*nx+ix+2]*pxy2[5]
-		    +map[(iy+2)*nx+ix ] *pxy2[6]
-		    +map[(iy+2)*nx+ix+1]*pxy2[7]
-		    +map[(iy+2)*nx+ix+2]*pxy2[8];
-		g[isa+nsa]=
-		    +map[iy*nx+ix  ]*pxy2[9]
-		    +map[iy*nx+ix+1]*pxy2[10]
-		    +map[iy*nx+ix+2]*pxy2[11]
-		    +map[(iy+1)*nx+ix ] *pxy2[12]
-		    +map[(iy+1)*nx+ix+1]*pxy2[13]
-		    +map[(iy+1)*nx+ix+2]*pxy2[14]
-		    +map[(iy+2)*nx+ix ] *pxy2[15]
-		    +map[(iy+2)*nx+ix+1]*pxy2[16]
-		    +map[(iy+2)*nx+ix+2]*pxy2[17];
+		const short2 *restrict pxy2=pxy+isa*9;
+		g[isa]=GPscale*(
+		    +map[iy*nx+ix  ]*pxy2[0].x
+		    +map[iy*nx+ix+1]*pxy2[1].x
+		    +map[iy*nx+ix+2]*pxy2[2].x
+		    +map[(iy+1)*nx+ix ] *pxy2[3].x
+		    +map[(iy+1)*nx+ix+1]*pxy2[4].x
+		    +map[(iy+1)*nx+ix+2]*pxy2[5].x
+		    +map[(iy+2)*nx+ix ] *pxy2[6].x
+		    +map[(iy+2)*nx+ix+1]*pxy2[7].x
+		    +map[(iy+2)*nx+ix+2]*pxy2[8].x);
+		g[isa+nsa]=GPscale*(
+		    +map[iy*nx+ix  ]*pxy2[0].y
+		    +map[iy*nx+ix+1]*pxy2[1].y
+		    +map[iy*nx+ix+2]*pxy2[2].y
+		    +map[(iy+1)*nx+ix ] *pxy2[3].y
+		    +map[(iy+1)*nx+ix+1]*pxy2[4].y
+		    +map[(iy+1)*nx+ix+2]*pxy2[5].y
+		    +map[(iy+2)*nx+ix ] *pxy2[6].y
+		    +map[(iy+2)*nx+ix+1]*pxy2[7].y
+		    +map[(iy+2)*nx+ix+2]*pxy2[8].y);
 	    }/*for isa */
 	}
     }
@@ -260,10 +252,10 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 	gx[threadIdx.x]=0;
 	gy[threadIdx.x]=0;
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){/*ng is nsa*2. */
-	    gx[threadIdx.x]+=PTT[isa][0]*g[isa];
-	    gy[threadIdx.x]+=PTT[isa][1]*g[isa];
-	    gx[threadIdx.x]+=PTT[isa+nsa][0]*g[isa+nsa];
-	    gy[threadIdx.x]+=PTT[isa+nsa][1]*g[isa+nsa];
+	    float tmpx=PTT[isa][0]*g[isa];
+	    float tmpy=PTT[isa][1]*g[isa];
+	    gx[threadIdx.x]+=tmpx+PTT[isa+nsa][0]*g[isa+nsa];
+	    gy[threadIdx.x]+=tmpy+PTT[isa+nsa][1]*g[isa+nsa];
 	}
 	for(int step=(DIM_GP>>1); step>0; step>>=1){
 	    __syncthreads();
@@ -278,9 +270,11 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 	}
     }
     if(datai->PDF && ptt){
-	for(int irow=0; irow<nwfs; irow++){
-	    float *restrict PDF=datai->PDF[irow];
-	    if(!PDF) continue;
+	float *restrict PDF=datai->PDF;//the diagonal block
+	const int ipowfs=datai->ipowfs;
+	float scale=-1./(datai->nwfs-1);//PDF*scale gives the off diagonal block
+	for(int irow=0; irow<nwfs; irow++){//skip first row
+	    if(data[irow].ipowfs!=ipowfs || data[irow].jwfs==0) continue;//different group or first wfs.
 	    gdf[threadIdx.x]=0;
 	    for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){/*ng is nsa*2. */
 		gdf[threadIdx.x]+=PDF[isa]*g[isa]+PDF[isa+nsa]*g[isa+nsa];
@@ -292,6 +286,12 @@ __global__ static void gpu_gp_do(GPU_GP_T *data, float **gout, float *ttout, flo
 		}
 	    }
 	    if(threadIdx.x==0){
+		if(datai->PTT){//adjust by TT coupling
+		    gdf[0]-=datai->PDFTT[0]*gx[0]+datai->PDFTT[1]*gy[0];
+		}
+		if(irow!=iwfs){
+		    gdf[0]*=scale;
+		}
 		atomicAdd(&dfout[irow], -gdf[0]);
 	    }
 	}
@@ -322,7 +322,8 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
     }
     const float *restrict g=gin[iwfs];
     float *restrict map=wfsopd[iwfs];
-    const float *pxy=datai->GPp;
+    float GPscale=datai->GPscale;
+    const short2 *restrict pxy=datai->GPp;
     float ttx=0, tty=0;
     if(datai->PTT && ptt){
 	ttx=ttin[iwfs*2+0];
@@ -338,14 +339,14 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	    float cxy=neai[isa][2];
 	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
 	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
-	    float tmp=cxy*gx;
-	    gx=cx*gx+cxy*gy;
-	    gy=tmp+cy*gy;
-	    const float *restrict pxy2=pxy+isa*8;
-	    atomicAdd(&map[iy    *nx+ix],   gx*pxy2[0] + gy*pxy2[4]);
-	    atomicAdd(&map[iy    *nx+ix+1], gx*pxy2[1] + gy*pxy2[5]);
-	    atomicAdd(&map[(iy+1)*nx+ix],   gx*pxy2[2] + gy*pxy2[6]);
-	    atomicAdd(&map[(iy+1)*nx+ix+1], gx*pxy2[3] + gy*pxy2[7]);
+	    float tmp=cxy*gx;//save data
+	    gx=GPscale*(cx*gx+cxy*gy);
+	    gy=GPscale*(tmp+cy*gy);
+	    const short2 *restrict pxy2=pxy+isa*4;
+	    atomicAdd(&map[iy    *nx+ix],   gx*pxy2[0].x + gy*pxy2[0].y);
+	    atomicAdd(&map[iy    *nx+ix+1], gx*pxy2[1].x + gy*pxy2[1].y);
+	    atomicAdd(&map[(iy+1)*nx+ix],   gx*pxy2[2].x + gy*pxy2[2].y);
+	    atomicAdd(&map[(iy+1)*nx+ix+1], gx*pxy2[3].x + gy*pxy2[3].y);
 	}
     }else if(pos==2){
 	for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
@@ -357,18 +358,18 @@ __global__ static void gpu_gpt_do(GPU_GP_T *data, float **wfsopd, float *ttin, f
 	    float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
 	    float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
 	    float tmp=cxy*gx;
-	    gx=cx*gx+cxy*gy;
-	    gy=tmp+cy*gy;
-	    const float *restrict pxy2=pxy+isa*18;
-	    atomicAdd(&map[iy    *nx+ix],   gx*pxy2[0] + gy*pxy2[9]);
-	    atomicAdd(&map[iy    *nx+ix+1], gx*pxy2[1] + gy*pxy2[10]);
-	    atomicAdd(&map[iy    *nx+ix+2], gx*pxy2[2] + gy*pxy2[11]);
-	    atomicAdd(&map[(iy+1)*nx+ix],   gx*pxy2[3] + gy*pxy2[12]);
-	    atomicAdd(&map[(iy+1)*nx+ix+1], gx*pxy2[4] + gy*pxy2[13]);
-	    atomicAdd(&map[(iy+1)*nx+ix+2], gx*pxy2[5] + gy*pxy2[14]);
-	    atomicAdd(&map[(iy+2)*nx+ix],   gx*pxy2[6] + gy*pxy2[15]);
-	    atomicAdd(&map[(iy+2)*nx+ix+1], gx*pxy2[7] + gy*pxy2[16]);
-	    atomicAdd(&map[(iy+2)*nx+ix+2], gx*pxy2[8] + gy*pxy2[17]);
+	    gx=GPscale*(cx*gx+cxy*gy);
+	    gy=GPscale*(tmp+cy*gy);
+	    const short2 *restrict pxy2=pxy+isa*9;
+	    atomicAdd(&map[iy    *nx+ix],   gx*pxy2[0].x + gy*pxy2[0].y);
+	    atomicAdd(&map[iy    *nx+ix+1], gx*pxy2[1].x + gy*pxy2[1].y);
+	    atomicAdd(&map[iy    *nx+ix+2], gx*pxy2[2].x + gy*pxy2[2].y);
+	    atomicAdd(&map[(iy+1)*nx+ix],   gx*pxy2[3].x + gy*pxy2[3].y);
+	    atomicAdd(&map[(iy+1)*nx+ix+1], gx*pxy2[4].x + gy*pxy2[4].y);
+	    atomicAdd(&map[(iy+1)*nx+ix+2], gx*pxy2[5].x + gy*pxy2[5].y);
+	    atomicAdd(&map[(iy+2)*nx+ix],   gx*pxy2[6].x + gy*pxy2[6].y);
+	    atomicAdd(&map[(iy+2)*nx+ix+1], gx*pxy2[7].x + gy*pxy2[7].y);
+	    atomicAdd(&map[(iy+2)*nx+ix+2], gx*pxy2[8].x + gy*pxy2[8].y);
 	}
     }
 }
@@ -399,22 +400,16 @@ __global__ static void gpu_nea_do(GPU_GP_T *data, float *ttin, float *dfin, floa
     float *restrict g=gin[iwfs];
     float ttx=ttin[iwfs*2+0];
     float tty=ttin[iwfs*2+1];
-    int addfocus=fabsf(focus)>1e-7?1:0;
     for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 	int ix=saptr[isa][0];
 	int iy=saptr[isa][1];
 	float cx=neai[isa][0];
 	float cy=neai[isa][1];
 	float cxy=neai[isa][2];
-	float gx=g[isa]+ttx;
-	float gy=g[isa+nsa]+tty;
-	if(addfocus){
-	    gx+=focus*(ix*dxp+oxp);
-	    gy+=focus*(iy*dxp+oyp);
-	}
-	float tmp=cxy*gx;
+	float gx=g[isa    ]+ttx+focus*(ix*dxp+oxp);
+	float gy=g[isa+nsa]+tty+focus*(iy*dxp+oyp);
 	g[isa]=cx*gx+cxy*gy;
-	g[isa+nsa]=tmp+cy*gy;
+	g[isa+nsa]=cxy*gx+cy*gy;
     }
 }
 
@@ -423,7 +418,6 @@ __global__ static void gpu_nea_do(GPU_GP_T *data, float *ttin, float *dfin, floa
   xout is zeroed out before accumulation.
 */
 void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, float alpha, stream_t &stream){
-    CTIC;ctic;
     curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
     if(!*xout){
@@ -446,7 +440,6 @@ void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, f
     }
     gpu_prop_grid_adaptive_do<<<dim3(3,3,recon->npsr), dim3(16,16), 0, stream>>>
 	(curecon->hxtdata, opdwfs->pm, opdx->pm, nwfs, recon->npsr, alpha, 't');
-    ctoc("TomoR");
 }
 
 void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
@@ -483,6 +476,10 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     if(!*xout){
 	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     }
+#if TIMING
+    EVENT_INIT(6);
+    EVENT_TIC(0);
+#endif
     curcell *opdx=*xout;
     curcell *opdwfs=curecon->opdwfs;
     int ptt=!parms->recon.split || parms->dbg.splitlrt; 
@@ -490,15 +487,21 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     curzero(opdwfs->m, stream);
     gpu_prop_grid_adaptive_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
 	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, 1, 'n');
-
+#if TIMING
+    EVENT_TIC(1);
+#endif
     curzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, ptt);
-
+#if TIMING
+    EVENT_TIC(2);
+#endif
     curzero(opdwfs->m, stream);
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
-
+#if TIMING
+    EVENT_TIC(3);
+#endif
     if(fabsf(beta)<EPS){
 	curzero(opdx->m, stream);
     }else if(fabsf(beta-1.f)>EPS){
@@ -506,8 +509,17 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     }
     gpu_prop_grid_adaptive_do<<<dim3(3,3,recon->npsr), dim3(16,16), 0, stream>>>
 	(curecon->hxtdata, opdwfs->pm, opdx->pm, nwfs, recon->npsr, alpha, 't');
+#if TIMING
+    EVENT_TIC(4);
+#endif
     gpu_laplacian_do<<<dim3(3,3,recon->npsr),dim3(16,16), 0, stream>>>
 	(curecon->hxdata, opdx->pm, xin->pm, nwfs, alpha);
+#if TIMING
+    EVENT_TIC(5);
+    EVENT_TOC;
+    info2("TomoL: Hx %.0f, Gp %.0f, Gpt %.0f, Hxt %.0f, L2 %.0f\n", 
+	  times[1], times[2], times[3], times[4], times[5]);
+#endif
     //overhead of TomoL 27 micro-seconds (timing without synchornization).
 }
 /**
@@ -525,7 +537,14 @@ double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, cur
     double res=0;
     curecon_t *curecon=cudata->recon;
     curmat *tmp=NULL;
+#if TIMING 
+    EVENT_INIT(3);
+    EVENT_TIC(0);
+#endif
     gpu_TomoR(&rhs, 0, recon, grad, 1, stream);
+#if TIMING 
+    EVENT_TIC(1);
+#endif
     switch(parms->tomo.alg){
     case 0:
 	if(!opdr->m){
@@ -559,6 +578,11 @@ double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, cur
     default:
 	error("Invalid");
     }
+#if TIMING 
+    EVENT_TIC(2);
+    EVENT_TOC;
+    info2("Tomo RHS: %6.0f, LHS: %6.0f\n", times[1], times[2]);
+#endif
     if(!opdx){
 	curcellfree(rhs);
     }

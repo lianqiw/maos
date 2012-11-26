@@ -127,6 +127,28 @@ extern pthread_mutex_t cufft_mutex;
 #define LOCK_CUFFT
 #define UNLOCK_CUFFT
 #endif
+
+/*For timing asynchronous kernels*/
+#define EVENT_INIT(n)				\
+    const int NEVENT=n;				\
+    float times[NEVENT];			\
+    cudaEvent_t event[NEVENT]={0};		\
+    for(int i=0; i<NEVENT; i++){		\
+	DO(cudaEventCreate(&event[i]));		\
+    }
+#define EVENT_TIC(i) DO(cudaEventRecord(event[i], stream))
+#define EVENT_TOC			       \
+    stream.sync();			       \
+    for(int i=1; i<NEVENT; i++){	       \
+	DO(cudaEventElapsedTime		       \
+	   (&times[i], event[i-1], event[i])); \
+	times[i]*=1e3;			       \
+    }
+#define EVENT_DEINIT				\
+    for(int i=0; i<NEVENT; i++){		\
+	 DO(cudaEventDestroy(&event[i]));	\
+    }
+
 extern const char *cufft_str[];
 #define CUFFT2(plan,in,out,dir) do{				\
 	LOCK_CUFFT;						\

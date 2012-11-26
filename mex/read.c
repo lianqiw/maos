@@ -244,16 +244,10 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }
 	    out=INVALID;
 	}else{
-	    out=mxCreateDoubleMatrix(nx,ny,mxREAL);
+	    mwSize nxy[2]={nx,ny};
+	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxREAL);
 	    if(nx!=0 && ny!=0){
-		float *tmp=malloc(nx*ny*sizeof(float));
-		zfread(tmp, sizeof(float),nx*ny, fp);
-		double *p=mxGetPr(out);
-		long i;
-		for(i=0; i<nx*ny; i++){
-		    p[i]=tmp[i];
-		}
-		free(tmp);
+		zfread((float*)mxGetPr(out), sizeof(float),nx*ny, fp);
 	    }
 	}break;
     case M_INT64:/*long array*/
@@ -313,16 +307,17 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }
 	    out=INVALID;
 	}else{
-	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
+	    mwSize nxy[2]={nx, ny};
+	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
 		fcomplex*tmp=malloc(sizeof(fcomplex)*nx*ny);
 		zfread(tmp,sizeof(fcomplex),nx*ny,fp);
-		double *Pr=mxGetPr(out);
-		double *Pi=mxGetPi(out);
+		float *Pr=(float*)mxGetPr(out);
+		float *Pi=(float*)mxGetPi(out);
 		long i;
 		for(i=0; i<nx*ny; i++){
-		    Pr[i]=(double)crealf(tmp[i]);
-		    Pi[i]=(double)cimagf(tmp[i]);
+		    Pr[i]=(float)crealf(tmp[i]);
+		    Pi[i]=(float)cimagf(tmp[i]);
 		}
 		free(tmp);
 	    }

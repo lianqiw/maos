@@ -77,7 +77,7 @@ static inline void pcg_residual(float *r0r0, float *r0z1, float *r0z0, curcell *
     }
 }
 
-#define TIMING 0
+#define TIMING 1
 /**
    The PCG algorithm. Copy of lib/pcg.c, but replacing dcell with curcell.
    Timing: 

@@ -73,7 +73,8 @@ typedef struct {
 file_t* zfopen(const char *fn, char *mod);
 void zfclose(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
-void zfwrite_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);
+void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);
+void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_t *fp);
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
 int zfeof(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);

@@ -77,14 +77,24 @@ typedef struct GPU_PROP_GRID_T{
 	memset(this, 0, sizeof(*this));
     }
 }GPU_PROP_GRID_T;
-
+/*Packs two shorts into a int for 32bit access. This is better than (long*)[2]
+  which caused kernel to hang. This is already define by cuda/vector_types.h*/
+/*typedef struct {
+    short x;
+    short y;
+    }short2;*/
 typedef struct GPU_GP_T{
+    int ipowfs;
+    int nwfs; //number of wfs in this group
+    int jwfs; //wfs index in this group.
     int (*saptr)[2];
     float *PTT;
-    float **PDF;
+    float *PDF;
+    float *PDFTT;
     float dsa;
     int nsa;
-    float *GPp;
+    short2 *GPp;
+    float GPscale;
     int pos;
     int nxp;
     float dxp;/*pmap dx*/
@@ -140,7 +150,8 @@ typedef struct curecon_t{
     stream_t    *cgstream;
 
     curcell *PTT;  /**< Global tip/tilt */
-    curcell **PDF;  /**< Differential focus removal */
+    curcell *PDF;  /**< Differential focus removal */
+    curcell *PDFTT;/**<Coupling between DF and TT*/
     curmat *ttf;
 
     float *l2c;    /**< Laplacian */

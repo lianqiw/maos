@@ -22,11 +22,11 @@
 template <typename T>
 struct cumat{
     T *p;
-    int nx;
-    int ny;
+    long nx;
+    long ny;
     int *nref;
     char *header;
-    cumat(int nxi, int nyi, T *pi=NULL, int own=1)
+    cumat(long nxi, long nyi, T *pi=NULL, int own=1)
 	: p(pi), nx(nxi), ny(nyi), nref(NULL), header(NULL){
 	if(!p && nxi!=0 && nyi!=0){
 	    DO(cudaMalloc(&p, nxi*nyi*sizeof(T)));
@@ -69,14 +69,14 @@ struct cumat{
 template <typename T>
 struct cucell{
     cumat<T> **p;
-    int nx;
-    int ny;
+    long nx;
+    long ny;
     cumat<T> *m; /*contains the continuous data*/
     T **pm; /*contains the data pointer in each cell.*/
     void p2pm(cudaStream_t stream=(cudaStream_t)-1){
 	if(!p) error("p must not be null\n");
 	T **tmp=(T**)malloc4async(nx*ny*sizeof(T*));
-	for(int i=0; i<nx*ny; i++){
+	for(long i=0; i<nx*ny; i++){
 	    tmp[i]=p[i]?p[i]->p:NULL;
 	}
 	if(!pm){
@@ -89,17 +89,17 @@ struct cucell{
 	}
 	free4async(tmp);
     }
-    void init(const int nxi, const int nyi){
+    void init(const long nxi, const long nyi){
 	nx=nxi;
 	ny=nyi;
 	p=(cumat<T>**)calloc(nx*ny, sizeof(void*));
 	m=NULL;
 	pm=NULL;
     }
-    cucell(const int nx, const int ny){
+    cucell(const long nx, const long ny){
 	init(nx, ny);
     }
-    void init(const int nx, const int ny, int mx, int my, T *pin=NULL){
+    void init(const long nx, const long ny, long mx, long my, T *pin=NULL){
 	init(nx,ny);
 	m=new cumat<T>(mx*my*nx*ny,1,pin,pin?0:1);
 	for(int i=0; i<nx*ny; i++){
@@ -107,42 +107,42 @@ struct cucell{
 	}
 	p2pm();
     }
-    cucell(const int nx, const int ny, int mx, int my, T *pin=NULL){
+    cucell(const long nx, const long ny, long mx, long my, T *pin=NULL){
 	init(nx, ny, mx, my, pin);
     }
     template <typename L>
-    void init(const int nx, const int ny, L *mx, L *my, T *pin=NULL){
+    void init(const long nx, const long ny, L *mx, L *my, T *pin=NULL){
 	init(nx,ny);
 	long tot=0;
-	for(int i=0; i<nx*ny; i++){
+	for(long i=0; i<nx*ny; i++){
 	    tot+=mx[i]*(my?my[i]:1);
 	}
 	m=new cumat<T> (tot,1,pin,pin?0:1);
 	tot=0;
-	for(int i=0; i<nx*ny; i++){
+	for(long i=0; i<nx*ny; i++){
 	    p[i]=mx[i]?new cumat<T>(mx[i],(my?my[i]:1),m->p+tot, 0):NULL;
 	    tot+=mx[i]*(my?my[i]:1);
 	}
 	p2pm();
     }
     template <typename L>
-    cucell(const int nx, const int ny, L *mx, L *my, T *pin=NULL){
+    cucell(const long nx, const long ny, L *mx, L *my, T *pin=NULL){
 	init(nx, ny, mx, my, pin);
     }
     cucell(const cucell<T>*in){
 	if(!in->m){
 	    init(in->nx, in->ny);
-	    for(int i=0; i<in->nx*in->ny; i++){
+	    for(long i=0; i<in->nx*in->ny; i++){
 		p[i]=new cumat<T>(in->p[i]->nx, in->p[i]->ny);
 	    }
 	}else{
-	    int mx[in->nx*in->ny];
-	    int my[in->nx*in->ny];
-	    for(int i=0; i<in->nx*in->ny; i++){
+	    long mx[in->nx*in->ny];
+	    long my[in->nx*in->ny];
+	    for(long i=0; i<in->nx*in->ny; i++){
 		mx[i]=in->p[i]->nx;
 		my[i]=in->p[i]->ny;
 	    }
-	    init<int>(in->nx, in->ny, (int*)mx, (int*)my);
+	    init<long>(in->nx, in->ny, mx, my);
 	}
     }
     void replace(T *pnew, int free_original, cudaStream_t stream){
@@ -154,7 +154,7 @@ struct cucell{
 		delete m;
 		m=m2;
 	    }else{
-		for(int i=0; i<nx*ny; i++){
+		for(long i=0; i<nx*ny; i++){
 		    if(p[i]){
 			cumat<T> *p2=new cumat<T>(p[i]->nx, p[i]->ny, (T*)-1, 0);
 			delete p[i];
@@ -164,7 +164,7 @@ struct cucell{
 	    }
 	}
 	m->p=pnew;
-	for(int i=0; i<nx*ny; i++){
+	for(long i=0; i<nx*ny; i++){
 	    if(p[i]){
 		p[i]->p=pnew;
 		pnew+=p[i]->nx*p[i]->ny;
@@ -173,7 +173,7 @@ struct cucell{
 	p2pm(stream);
     }
     ~cucell(){
-	for(int i=0; i<nx*ny; i++){
+	for(long i=0; i<nx*ny; i++){
 	    delete p[i];
 	}
 	delete m;
@@ -185,7 +185,7 @@ struct cucell{
 	if(m){
 	    m->zero();
 	}else{
-	    for(int i=0; i<nx*ny; i++){
+	    for(long i=0; i<nx*ny; i++){
 		p[i]->zero(stream);
 	    }
 	}
@@ -214,7 +214,7 @@ typedef struct cuspcell{
     int nx;
     int ny;
     ~cuspcell(){
-	for(int i=0; i<nx*ny; i++){
+	for(long i=0; i<nx*ny; i++){
 	    delete p[i];
 	}
 	free(p);
@@ -231,7 +231,7 @@ typedef struct{
 typedef struct{
     float (*loc)[2];/*in device. */
     float dx;
-    int nloc;
+    long nloc;
 }culoc_t;
 
 typedef struct cumap_t:curmat{
@@ -240,7 +240,7 @@ typedef struct cumap_t:curmat{
     float ht;
     float vx, vy;
     float *cubic_cc; /*coefficients for cubic influence function. */
-    cumap_t(int nxi, int nyi, float *p=NULL, int own=1, float oxi=0, float oyi=0, float dxi=0, float hti=0, float vxi=0, float vyi=0):
+    cumap_t(long nxi, long nyi, float *p=NULL, int own=1, float oxi=0, float oyi=0, float dxi=0, float hti=0, float vxi=0, float vyi=0):
 	curmat(nxi, nyi,p,own),ox(oxi),oy(oyi),dx(dxi),ht(hti),vx(vxi),vy(vyi),cubic_cc(NULL){};
 
 }cumap_t;
@@ -262,7 +262,7 @@ typedef struct mulock{
 }mulock;
 
 template <typename T>
-void initzero(cumat<T> **A, int nx, int ny){
+void initzero(cumat<T> **A, long nx, long ny){
     /*zero array if exist, otherwise allocate and zero*/
     if(*A){
 	(*A)->zero();

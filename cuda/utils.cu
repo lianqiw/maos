@@ -201,7 +201,7 @@ int gpu_init(int *gpus, int ngpu){
 	free(gpu_info);
     }
     if(NGPU) {
-	gpu_recon=0;/*last gpu in GPUS*/
+	gpu_recon=0;/*first gpu in GPUS*/
 	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
 	register_deinit(NULL, cudata_all);
 	info2("Using GPU");
@@ -482,7 +482,7 @@ void cp2gpu(curcell *restrict *dest, dcell *src){
 	}
 	*dest=curcellnew(src->nx, src->ny, nx, ny);
     }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
-	error("Mismatch: %dx%d vs %ldx%ld\n", 
+	error("Mismatch: %ldx%ld vs %ldx%ld\n", 
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
     }
     for(int i=0; i<src->nx*src->ny; i++){
@@ -512,7 +512,7 @@ void cp2gpu(cuccell *restrict *dest, ccell *src){
 	}
 	*dest=cuccellnew(src->nx, src->ny, nx, ny);
     }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
-	error("Mismatch: %dx%d vs %ldx%ld\n", 
+	error("Mismatch: %ldx%ld vs %ldx%ld\n", 
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
     }
     for(int i=0; i<src->nx*src->ny; i++){

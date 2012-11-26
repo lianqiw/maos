@@ -301,8 +301,8 @@ __global__ static void sa_si_rot_do(float *restrict ints, int pixpsax, int pixps
 	    int jx=floorf(x); x=x-jx;
 	    int jy=floorf(y); y=y-jy;
 	    if(jx>=0 && jx<notfx-1 && jy>=0 && jy<notfy-1){
-		ints[iy*pixpsax+ix]+=alpha*((psfr[jy*notfx+jx]*(1-x)+psfr[jy*notfx+jx+1]*x)*(1-y)
-					    +(psfr[(jy+1)*notfx+jx]*(1-x)+psfr[(jy+1)*notfx+jx+1]*x)*y);
+		ints[iy*pixpsax+ix]+=alpha*((psfr[jy*notfx+jx]*(1.-x)+psfr[jy*notfx+jx+1]*x)*(1.-y)
+					    +(psfr[(jy+1)*notfx+jx]*(1.-x)+psfr[(jy+1)*notfx+jx+1]*x)*y);
 	    }
 	}
     }
@@ -596,7 +596,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		     pixthetax, pixthetay, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts[iwvl]);
 		ctoc("final");
-		cudaFree(psfr);
+		DO(cudaFree(psfr));
 	    }/*if ints. */
 	}/*for isa block loop */
     }/*for iwvl */

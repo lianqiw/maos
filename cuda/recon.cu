@@ -138,11 +138,12 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 		    spint *pp=GP->p;
 		    spint *pi=GP->i;
 		    double *px=GP->x;
-		    dmat *partxy=NULL;
+		    //convert the max float to max 2 byte integer
+		    double pxscale=floor(32767./maxabs(px, GP->nzmax));
 		    int np1=parms->tomo.pos+1;
 		    int np=np1*np1;
 		    int zmax=parms->tomo.pos;
-		    partxy=dnew(np*2, nsa);
+		    short2 *partxy=(short2*)calloc(sizeof(short2),np*nsa);//need to zero memory
 		    int nsa=powfs[ipowfs].pts->nsa;
 		    double dx1=1./recon->ploc->dx;
 		
@@ -157,8 +158,9 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 			    int zx=(int)round((lx-sx)*dx1);
 			    int zy=(int)round((ly-sy)*dx1);
 			    /**
-			       Squeeze the weights to closed points in 3x3 in the subaperture.
-			       Does not work well. simply drop these points doesn't work either.
+			       When the points used to generate GP align well
+			       with the subaperture edge, the coupled points are
+			       confined within the subaperture.
 			    */
 			    if(zx<0 || zx>zmax || zy<0 || zy>zmax){
 				warning("isa=%d, zxy=%d %d\n", isa, zx, zy);
@@ -167,11 +169,17 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 			    if(zx>zmax) zx=zmax;
 			    if(zy<0) zy=0;
 			    if(zy>zmax) zy=zmax;
-			    partxy->p[np*2*isa+zx+zy*np1+(ic<nsa?0:np)]+=px[ir];
+			    if(ic<nsa){
+				partxy[np*isa+zx+zy*np1].x+=(short)round(px[ir]*pxscale);
+			    }else{
+				partxy[np*isa+zx+zy*np1].y+=(short)round(px[ir]*pxscale);
+			    }
 			}
 		    }
-		    cp2gpu(&cupowfs[ipowfs].GPp, partxy);
-		    dfree(partxy);
+		    cupowfs[ipowfs].GPp=new cumat<int>(np, nsa);
+		    cudaMemcpy(cupowfs[ipowfs].GPp->p, partxy, sizeof(int)*np*nsa, cudaMemcpyHostToDevice);
+		    cupowfs[ipowfs].GPscale=1./pxscale;
+		    free(partxy);
 		    spfree(GP);
 		}else{/*use sparse */
 		    cp2gpu(&cupowfs[ipowfs].GP, recon->GP->p[ipowfs]);
@@ -239,7 +247,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	    }
 	}/*for iwfs */
 	CUDA_SYNC_DEVICE;
-	if(recon->PTT && !curecon->PTT){
+	if(recon->PTT && !curecon->PTT){//for t/t proj in 1)uplink t/t 2) recon
 	    cp2gpu(&curecon->PTT, recon->PTT);
 	}
 	if(parms->tomo.precond==1){/*fdpcg*/
@@ -397,31 +405,54 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	delete [] hxdata;
 	delete [] hxtdata;
 	GPU_GP_T *gpdata=new GPU_GP_T[nwfs];
-	if(recon->PDF){
-	    curecon->PDF=(curcell**)calloc(sizeof(curcell*), nwfs);
-	}
+
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs = parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip) continue;
+	    if(parms->powfs[ipowfs].wfs[0]!=0){
+		error("Check this case. We had assumption that this powfs is the first group.\n");
+	    }
+	    gpdata[iwfs].ipowfs=ipowfs;
+	    gpdata[iwfs].nwfs=parms->powfs[ipowfs].nwfs;
+	    gpdata[iwfs].jwfs=parms->powfs[ipowfs].wfsind[iwfs];//wfs index in this group
 	    gpdata[iwfs].saptr=cupowfs[ipowfs].saptr;
 	    gpdata[iwfs].dsa=powfs[ipowfs].pts->dsa;
-	    gpdata[iwfs].GPp=cupowfs[ipowfs].GPp->p;
+	    gpdata[iwfs].GPp=(short2*)cupowfs[ipowfs].GPp->p;
+	    gpdata[iwfs].GPscale=cupowfs[ipowfs].GPscale;
 	    gpdata[iwfs].pos=parms->tomo.pos;
 	    if(curecon->PTT){
 		gpdata[iwfs].PTT=curecon->PTT->p[iwfs+iwfs*nwfs]->p;
 	    }
-	    if(recon->PDF){
-		dcell *tmp=dcellnew(recon->PDF->nx, 1);
-		for(int i=0; i<tmp->nx; i++){
-		    if(recon->PTTF && recon->PTT){//orthogonalized.
-			tmp->p[i]=dref(recon->PTTF->p[iwfs*nwfs*2+i+nwfs]);
-		    }else{
-			tmp->p[i]=dref(recon->PDF->p[iwfs*nwfs+i]);
-		    }
+	    if(parms->powfs[ipowfs].dfrs){
+		/*We only use the first diagonal block for each powfs. The
+		  off diagonal is simply -0.2 times the diagonal block*/
+		int iwfs0=parms->powfs[ipowfs].wfs[0];//first wfs
+		int iwfs1=parms->powfs[ipowfs].wfs[1];//second wfs
+		if(!curecon->PDF){
+		    curecon->PDF=curcellnew(nwfs, 1);
 		}
-		cp2gpu(&curecon->PDF[iwfs], tmp);
-		dcellfree(tmp);
-		gpdata[iwfs].PDF=curecon->PDF[iwfs]->pm;
+		if(iwfs==iwfs0){//not the first one.
+		    cp2gpu(&curecon->PDF->p[iwfs], recon->PDF->p[iwfs1*nwfs+iwfs1]);
+		}
+		gpdata[iwfs].PDF=curecon->PDF->p[iwfs0]->p;//every one in this group.
+		if(curecon->PTT){
+		    /*coupling between TT and DF modes. 
+		      We desire (I-DF*PDF)(I-TT*PTT)g=(I-TT*PTT-DF*PDF+DF*PDF*TT*PTT)g
+		      So we first compute tt=PTT*g; df=PDF*g; then
+		      g2=(I-TT*tt-DF*(df-(PDF*TT)*tt))
+		      Here we record the values of PDF*TT
+		    */
+		    dcell *pdftt=NULL;
+		    dcellmm(&pdftt, recon->PDF, recon->TT, "nn", 1);
+		    if(!curecon->PDFTT){
+			curecon->PDFTT=curcellnew(nwfs, 1);
+		    }
+		    if(iwfs==iwfs0){
+			cp2gpu(&curecon->PDFTT->p[iwfs], pdftt->p[iwfs1*nwfs+iwfs1]);
+		    }
+		    gpdata[iwfs].PDFTT=curecon->PDFTT->p[iwfs0]->p;
+		    dcellfree(pdftt);
+		}
 	    }
 	    gpdata[iwfs].neai=(const float(*)[3])curecon->neai->p[iwfs]->p;
 	    gpdata[iwfs].nsa=powfs[ipowfs].pts->nsa;
@@ -691,14 +722,6 @@ void gpu_tomo(SIM_T *simu){
     TIC_test;tic_test;
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    /*if(parms->tomo.pos!=2){
-      TO_IMPLEMENT;
-      }*/
-    /*if(curecon->PDF){
-	TO_IMPLEMENT;
-	}*/
-    /*first send gradients to GPU. can be skipped if keep grad in gpu. fast though. */
-    /*Create temporary memory */
     curecon->reconisim=simu->reconisim;
 #if 0
     gpu_tomo_test(simu);
