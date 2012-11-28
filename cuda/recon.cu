@@ -715,7 +715,10 @@ void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
 	CUDA_SYNC_DEVICE;
     }
 }
-
+extern "C"{
+    void cudaProfilerStart(void);
+    void cudaProfilerStop(void);
+}
 void gpu_tomo(SIM_T *simu){
     gpu_set(gpu_recon);
     curecon_t *curecon=cudata->recon;
@@ -729,7 +732,9 @@ void gpu_tomo(SIM_T *simu){
     toc_test("Before gradin");
     cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     toc_test("Gradin");
+    cudaProfilerStart();
     gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream[0]);
+    cudaStreamSynchronize(curecon->cgstream[0]);
     curecon->cgstream->sync();
     if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2 || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr_vec, 1, curecon->cgstream[0]);
@@ -744,7 +749,7 @@ void gpu_tomo(SIM_T *simu){
 	curcellmm(&focus, 0, curecon->RFngsx, curecon->opdr_vec, "nn", 1, curecon->cgstream[0]);
 	cp2cpu(&simu->focusngsx, 0, focus, 1, curecon->cgstream[0]);
     }
-    cudaStreamSynchronize(curecon->cgstream[0]);
+    cudaProfilerStop();
     toc_test("Tomo");
 }
 

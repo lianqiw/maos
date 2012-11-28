@@ -915,7 +915,7 @@ static void init_simu_wfs(SIM_T *simu){
     }
     if(parms->sim.mffocus){
 	if(parms->sim.lpfocus<1.e-15){
-	    error("When epfocus is nonzero, lpfocus need to be zero\n");
+	    error("When mffocus is nonzero, lpfocus need to be zero\n");
 	}
 	simu->focuslpf=dcellnew(1,1);
 	simu->focuslpf->p[0]=dnew(recon->ngsmod->nmod,1);

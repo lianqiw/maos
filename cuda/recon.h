@@ -214,7 +214,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 void gpu_FitR (curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
 void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
 void gpu_FitL (curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream);
+void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, stream_t &stream);
 
 void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha);
 void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha);

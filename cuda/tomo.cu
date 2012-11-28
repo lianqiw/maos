@@ -27,23 +27,27 @@ extern "C"
 #include "cucmat.h"
 #include "pcg.h"
 
-#define TIMING 1
+#define TIMING 0
 
 /*
   If merge the operation in to gpu_prop_grid_adaptive_do, need to do atomic
 operation because previous retracing starts at offo, not 0.  */
-__global__ void gpu_laplacian_do(GPU_PROP_GRID_T *data, float **inall, float **in2all, int nwfs, float alpha){
-    int ips=blockIdx.z;
-    float *restrict in=in2all[ips];
-    float *restrict out=inall[ips];
-    GPU_PROP_GRID_T *datai=data+nwfs*ips;
-    int nx=datai->nxi;
-    int ny=datai->nyi;
-    float alpha2=datai->l2c*alpha;
-    int stepx=blockDim.x*gridDim.x;
-    int stepy=blockDim.y*gridDim.y;
-    int nx1=nx-1;
-    int ny1=ny-1;
+__global__ void gpu_laplacian_do(GPU_PROP_GRID_T *datai, float **inall, float **in2all, int nwfs, float alpha){
+    float *restrict in, *restrict out;
+    {
+	const int ips=blockIdx.z;
+	in=in2all[ips];
+	out=inall[ips];
+	datai+=nwfs*ips;
+	//GPU_PROP_GRID_T *datai=data+nwfs*ips;
+    }
+    const int nx=datai->nxi;
+    const int ny=datai->nyi;
+    const float alpha2=datai->l2c*alpha;
+    const int stepx=blockDim.x*gridDim.x;
+    const int stepy=blockDim.y*gridDim.y;
+    const int nx1=nx-1;
+    const int ny1=ny-1;
     const int ix0=blockIdx.x*blockDim.x+threadIdx.x;
     const int iy0=blockIdx.y*blockDim.y+threadIdx.y;
     for(int iy=iy0; iy<ny; iy+=stepy){
@@ -73,12 +77,10 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
     /*
       Each block handles a specific part of some wfs
     */
-    int iwfs, ips, nn;
+    int nn;
     if(trans=='t'){
-	ips=blockIdx.z;
 	nn=nwfs;
     }else{
-	iwfs=blockIdx.z;
 	nn=nps;
     }
     const int ix0=blockIdx.x*blockDim.x+threadIdx.x;
@@ -87,33 +89,39 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
     const int stepy=blockDim.y*gridDim.y;
 
     for(int ii=0; ii<nn; ii++){
-	if(trans=='t'){
-	    iwfs=ii;
-	}else{
-	    ips=ii;
+	float *restrict out;
+	float *restrict in;
+
+	GPU_PROP_GRID_T *datai;
+	{
+	    int iwfs, ips;
+	    if(trans=='t'){
+		ips=blockIdx.z;
+		iwfs=ii;
+	    }else{
+		iwfs=blockIdx.z;
+		ips=ii;
+	    }
+	    datai=data+iwfs+nwfs*ips;
+	    if(datai->trans=='r'){/*reverse input/output*/
+		out=inall[ips]+datai->offo;
+		in=outall[iwfs]+datai->offi;
+	    }else{
+		out=outall[iwfs]+datai->offo;
+		in=inall[ips]+datai->offi;
+	    }
 	}
-	GPU_PROP_GRID_T *datai=data+iwfs+nwfs*ips;
 	const int nx=datai->nx;
 	const int ny=datai->ny;
 	if(nx==0) continue;//skip empty wfs
 	const int nxo=datai->nxo;
 	const int nxi=datai->nxi;
 	
-	float *restrict out;
-	float *restrict in;
-	if(datai->trans=='r'){/*reverse input/output*/
-	    out=inall[ips]+datai->offo;
-	    in=outall[iwfs]+datai->offi;
-	}else{
-	    out=outall[iwfs]+datai->offo;
-	    in=inall[ips]+datai->offi;
-	}
-	const float ratio=datai->ratio;
-
-	if(fabsf(ratio-1.f)<EPS){//Matched. always forward prop.
+	
+	if(fabsf(datai->ratio-1.f)<EPS){//Matched. always forward prop.
 	    const float fracx=datai->dispx;
 	    const float fracy=datai->dispy;
-	    const float fracx1=1.f-fracx;
+	    const float fracx1=1.f-fracx;//this reduces register usage.
 	    const float fracy1=1.f-fracy;
 	    /*During reverse operation, for different iwfs, the offo is
 	      different causing same thread to handle different memory in out
@@ -136,13 +144,18 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 		}
 	    }
 	}else{//Generic
+	    const float ratio=datai->ratio;
 	    const float dispx=datai->dispx;
 	    const float dispy=datai->dispy;
 	    if(datai->trans=='t'){
 		for(int iy=iy0; iy<ny; iy+=stepy){
-		    float jy;
-		    float fracy=modff(dispy+iy*ratio, &jy);
-		    int ky=(int)jy;
+		    float fracy;
+		    int ky;
+		    {
+			float temp;
+			fracy=modff(dispy+iy*ratio, &temp);
+			ky=(int)temp;
+		    }
 		    for(int ix=ix0; ix<nx; ix+=stepx){
 			float jx;
 			float fracx=modff(dispx+ix*ratio, &jx);
@@ -156,18 +169,24 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 		}
 	    }else{
 		for(int iy=iy0; iy<ny; iy+=stepy){
-		    float jy;
-		    float fracy=modff(dispy+iy*ratio, &jy);
-		    int ky=(int)jy;
+		    float fracy; int ky;
+		    {
+			float jy;
+			fracy=modff(dispy+iy*ratio, &jy);
+			ky=(int)jy;
+		    }
 		    for(int ix=ix0; ix<nx; ix+=stepx){
-			float jx;
-			float fracx=modff(dispx+ix*ratio, &jx);
-			int kx=(int)jx;
+			float fracx; int kx;
+			{
+			    float jx;
+			    fracx=modff(dispx+ix*ratio, &jx);
+			    kx=(int)jx;
+			}
 			out[ix+iy*nxo]+=
 			    alpha*(+(in[kx+      ky*nxi]*(1.f-fracx)+
 				     in[kx+1+    ky*nxi]*fracx)*(1.f-fracy)
-			       +(in[kx  +(ky+1)*nxi]*(1.f-fracx)+
-				 in[kx+1+(ky+1)*nxi]*fracx)*fracy);
+				   +(in[kx  +(ky+1)*nxi]*(1.f-fracx)+
+				     in[kx+1+(ky+1)*nxi]*fracx)*fracy);
 		    }
 		}
 	    }
@@ -476,10 +495,13 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     if(!*xout){
 	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     }
-#if TIMING
+#if TIMING==2
     EVENT_INIT(6);
-    EVENT_TIC(0);
+#define RECORD(i) EVENT_TIC(i)
+#else
+#define RECORD(i)
 #endif
+    RECORD(0);
     curcell *opdx=*xout;
     curcell *opdwfs=curecon->opdwfs;
     int ptt=!parms->recon.split || parms->dbg.splitlrt; 
@@ -487,21 +509,15 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     curzero(opdwfs->m, stream);
     gpu_prop_grid_adaptive_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
 	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, 1, 'n');
-#if TIMING
-    EVENT_TIC(1);
-#endif
+    RECORD(1);
     curzero(ttf, stream);
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, ptt);
-#if TIMING
-    EVENT_TIC(2);
-#endif
+    RECORD(2);
     curzero(opdwfs->m, stream);
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
-#if TIMING
-    EVENT_TIC(3);
-#endif
+    RECORD(3);
     if(fabsf(beta)<EPS){
 	curzero(opdx->m, stream);
     }else if(fabsf(beta-1.f)>EPS){
@@ -509,13 +525,12 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     }
     gpu_prop_grid_adaptive_do<<<dim3(3,3,recon->npsr), dim3(16,16), 0, stream>>>
 	(curecon->hxtdata, opdwfs->pm, opdx->pm, nwfs, recon->npsr, alpha, 't');
-#if TIMING
-    EVENT_TIC(4);
-#endif
+    RECORD(4);
+    /*This could be in parallel to above ones. */
     gpu_laplacian_do<<<dim3(3,3,recon->npsr),dim3(16,16), 0, stream>>>
 	(curecon->hxdata, opdx->pm, xin->pm, nwfs, alpha);
-#if TIMING
-    EVENT_TIC(5);
+    RECORD(5);
+#if TIMING==2
     EVENT_TOC;
     info2("TomoL: Hx %.0f, Gp %.0f, Gpt %.0f, Hxt %.0f, L2 %.0f\n", 
 	  times[1], times[2], times[3], times[4], times[5]);
@@ -537,14 +552,15 @@ double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, cur
     double res=0;
     curecon_t *curecon=cudata->recon;
     curmat *tmp=NULL;
-#if TIMING 
+#if TIMING>=2
     EVENT_INIT(3);
-    EVENT_TIC(0);
+#define RECORD(i) EVENT_TIC(i)
+#else
+#define RECORD(i)
 #endif
+    RECORD(0);
     gpu_TomoR(&rhs, 0, recon, grad, 1, stream);
-#if TIMING 
-    EVENT_TIC(1);
-#endif
+    RECORD(1);
     switch(parms->tomo.alg){
     case 0:
 	if(!opdr->m){
@@ -578,8 +594,8 @@ double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, cur
     default:
 	error("Invalid");
     }
-#if TIMING 
-    EVENT_TIC(2);
+#if TIMING>=2
+    RECORD(2);
     EVENT_TOC;
     info2("Tomo RHS: %6.0f, LHS: %6.0f\n", times[1], times[2]);
 #endif

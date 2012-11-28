@@ -425,7 +425,9 @@ void wfsgrad_iwfs(thread_t *info){
 	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
 	}
 	if(parms->sim.ahstfocus && simu->Mint_lo->mint[0]){
-	    /*new definition of NGS modes has focus error in LGS. offset to remove it.*/
+	    /*new definition of NGS modes has focus error in LGS. offset to remove it.
+	      todo: migrate to gradients.
+	     */
 	    double scale=simu->recon->ngsmod->scale;
 	    focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(1-scale);
 	}

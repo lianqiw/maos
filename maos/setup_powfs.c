@@ -1052,14 +1052,12 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	error("fnrange has wrong format. Must be column vectors of 1 or %d columns\n",
 	      parms->powfs[ipowfs].nwfs);
     }
-    double *p=powfs[ipowfs].focus->p;
     /*(D/h)^2/(16*sqrt(3)) convert it from range to WFE in m but here we want
       focus mode, so just do 1/(2*h^2).*/
     /*Convert range to focus. should not use parms->aper.d here since it is used later*/
-    double range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2);
-    for(int ii=0; ii<powfs[ipowfs].focus->nx*powfs[ipowfs].focus->ny; ii++){
-	p[ii]*=range2focus;
-    }
+    /*1./cos() is for zenith angle adjustment of the range.*/
+    double range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2)*(1./cos(parms->sim.za));
+    dscale(powfs[ipowfs].focus, range2focus);
     dwrite(powfs[ipowfs].focus, "powfs%d_focus", ipowfs);
 }
 
@@ -1271,6 +1269,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
        	int nhp=sodium->nx; 
 
 	const double hs=parms->powfs[ipowfs].hs;
+	//adjusting for the zenith angle;
 	double hpmin=sodium->p[0]/cos(parms->sim.za);
 	double dhp1=1./(sodium->p[1]-sodium->p[0]);
 	/*assume linear spacing. check the assumption valid */
@@ -1278,6 +1277,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    error("llt profile is not evenly spaced:%g\n",
 		  fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)/dhp1));
 	}
+	//adjusting for the zenith angle;
 	dhp1=dhp1*cos(parms->sim.za);
 	if(sodium->ny-1<colskip){
 	    error("Invalid configuration. colprep or colsim is too big\n");

@@ -38,6 +38,7 @@ typedef struct MVM_IGPU_T{
     smat *mvmt;     /*result: tranpose of MVM calculated by this GPU.*/
     float *FLI;
     smat *residual;
+    smat *residualfit;
     long (*curp)[2];
     int ntotact;
     int ntotgrad;
@@ -50,6 +51,7 @@ static void mvm_trans_igpu(thread_t *info){
     const PARMS_T *parms=data->parms;
     RECON_T *recon=data->recon;
     smat *residual=data->residual;
+    smat *residualfit=data->residualfit;
     long (*curp)[2]=data->curp;
     const int ntotact=data->ntotact;
     const int ntotgrad=data->ntotgrad;
@@ -128,9 +130,10 @@ static void mvm_trans_igpu(thread_t *info){
 		if(eyec){
 		    /*Fitting operator*/
 		    curcellzero(dmfit, stream);//temp
-		    if(gpu_pcg(&dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, eyec, &curecon->cgtmp_fit,
-			       parms->recon.warm_restart, parms->fit.maxit, stream)>1.){
-			warning("Fit CG not converge.\n");
+		    if((residualfit->p[iact]=gpu_pcg(&dmfit, (G_CGFUN)cg_fun, cg_data, NULL, NULL, eyec, &curecon->cgtmp_fit,
+						    parms->recon.warm_restart, parms->fit.maxit, stream))>1.){
+		    warning("Fit CG residual is %.2f for %d.\n",
+			    residualfit->p[iact], iact);
 		    }
 		}else{
 		    cudaMemcpyAsync(dmfit->m->p, FLI+iact*ntotact, sizeof(float)*ntotact, 
@@ -236,8 +239,12 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	}   
 
 	smat *residual=NULL;
+	smat *residualfit=NULL;
 	if(parms->tomo.alg==1){
 	    residual=snew(ntotact, 1);
+	}
+	if(parms->fit.alg==1){
+	    residualfit=snew(ntotact, 1);
 	}
 	dmat *FLId=NULL; /* MI is inv(FL) for direct methods*/
 	float *FLI=NULL;
@@ -279,7 +286,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	if(!parms->load.mvmf){
 	    /*Prepare FitR, FitL is don't load fitting results using mvmf*/
 	    switch(parms->fit.alg){
-	    case 0:{
+	    case 0:{//Use CPU to handle CBS.
 		dmat *eye=dnew(ntotact, ntotact);
 		daddI(eye, 1);
 		FLId=dnew(ntotact, ntotact);
@@ -288,7 +295,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 		toc("Fit CBS");tic;
 	    }
 		break;
-	    case 1:
+	    case 1://Use GPU.
 		break;
 	    case 2:
 		FLId=dref(recon->FL.MI);
@@ -306,7 +313,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	    }
 	}
     	smat *mvmt=snew(ntotgrad, ntotact);
-	MVM_IGPU_T data={parms, recon, powfs, mvmig, mvmfg, mvmt, FLI, residual, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
+	MVM_IGPU_T data={parms, recon, powfs, mvmig, mvmfg, mvmt, FLI, residual, residualfit, curp, ntotact, ntotgrad, parms->load.mvmf?1:0};
 	int nthread=NGPU;
 	thread_t info[nthread];
 	thread_prep(info, 0, ntotact, nthread, mvm_trans_igpu, &data);
@@ -372,6 +379,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	    toc2("MVM Reshape in CPU 2");
 	}
 	swrite(residual, "MVM_RL_residual");
+	swrite(residualfit, "MVM_FL_residual");
 	
 	if(parms->save.mvmi){
 	    for(int i=0; i<NGPU; i++){
@@ -406,7 +414,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	sfree(mvmi);
 	sfree(mvmf);
 	sfree(residual);
-
+	sfree(residualfit);
 	free(curp);
 	if(FLI) free4async(FLI);
     }//if assemble in gpu

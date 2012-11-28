@@ -26,6 +26,8 @@ extern "C"
 #include "accphi.h"
 #include "cucmat.h"
 
+#define TIMING 0
+
 /*
   2012-08-01: Have tried the following with no improvement:
   Unroll with template.
@@ -88,18 +90,10 @@ __global__ static void fdpcg_scale(GPU_FDPCG_T *fddata, fcomplex **xall){
    frequencies. We can actually skip the multiplication of negative frequencies.
 
 */
-#define TIMING 0
-void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream){
-#if TIMING==2
-#define NEVENT 10
-    static cudaEvent_t event[NEVENT]={0};
-    static float times[NEVENT];
-    if(!event[0]){
-	for(int i=0; i<NEVENT; i++){
-	    DO(cudaEventCreate(&event[i]));
-	}
-    }
-#define RECORD(i) DO(cudaEventRecord(event[i], stream))
+void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, stream_t &stream){
+#if TIMING
+    EVENT_INIT(6)
+#define RECORD(i) EVENT_TIC(i)
 #else
 #define RECORD(i)
 #endif
@@ -141,12 +135,8 @@ void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaS
     }
     RECORD(5);
 
-#if TIMING==2
-    CUDA_SYNC_STREAM;
-    for(int i=1; i<6; i++){
-	DO(cudaEventElapsedTime(&times[i], event[i-1], event[i]));
-	times[i]*=1e3;
-    }
+#if TIMING
+    EVENT_TOC;
     info2("FDPCG: FFT %3.0f SC %3.0f MUL %3.0f FFTI %3.0f SC %3.0f \n", 
 	  times[1], times[2], times[3], times[4], times[5]);
 #endif

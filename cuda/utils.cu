@@ -188,6 +188,9 @@ int gpu_init(int *gpus, int ngpu){
 #endif
 	/*sort so that gpus with higest memory is in the front.*/
 	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
+	for(int igpu=0; igpu<ngpu_tot; igpu++){
+	    info2("GPU %d has mem %.1f GB\n", igpu, gpu_info[igpu][1]/1024/1024/1024.);
+	}
 	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
 	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){
 		if(repeat){
@@ -207,6 +210,9 @@ int gpu_init(int *gpus, int ngpu){
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    info2(" %d", GPUS[i]);
+	    gpu_set(i);
+	    //Reserve memory in GPU so the next maos will not pick this GPU.
+	    DO(cudaMalloc(&cudata->reserve, 500000000));
 	}
 	info2("\n");
     }

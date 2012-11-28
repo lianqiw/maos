@@ -562,6 +562,8 @@ void FitL(dcell **xout, const void *A,
           sim.mffocus=1: closed loop LGS gradients.
 	  sim.mffocus=2: f_opdr-f_dm where f_opdr is focus in tomography output and f_dm is the focus correction in the dm.
    a_fngs is jointly estimated with the 5 NGS modes.
+
+   Notice that the focus component of the tomography/dm fitting output is removed by projecting out NGS modes (focus as 6th mode).
    \endverbatim
 */
 void focus_tracking(SIM_T* simu){
@@ -578,14 +580,15 @@ void focus_tracking(SIM_T* simu){
     switch(parms->sim.mffocus){
     case 0:
 	error("Shouldn't arrive here\n");break;
-    case 1:
+    case 1://The default.
 	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
 	break;	
     case 2:
 	dcelladd(&LGSfocus, 1, simu->focuslgsx, 1);
 	dcellmm(&LGSfocus, recon->RFlgsa, dmsub ,"nn",-1);
 	break;
-    case 3:
+    case 3://do not use.
+	error("Do not use\n");
 	dcelladd(&LGSfocus, 1, simu->focusngsx, 1);
 	dcellmm(&LGSfocus, recon->RFngsa, dmsub ,"nn",-1);
 	break;
@@ -616,11 +619,30 @@ void focus_tracking(SIM_T* simu){
 	    simu->lgsfocus->p[0]->p[isim]=LGSfocus->p[0]->p[0];
 	}
     }
-    /*Use NGS focus - LGS focus to drive the LGS reference vector */
-    LGSfocusm=NGSfocus-LGSfocusm;
-    simu->focuslpf->p[0]->p[5]=simu->focuslpf->p[0]->p[5]*(1.-parms->sim.lpfocus)+LGSfocusm*parms->sim.lpfocus;
+    simu->focuslpf->p[0]->p[5]=simu->focuslpf->p[0]->p[5]*(1.-parms->sim.lpfocus)+(NGSfocus-LGSfocusm)*parms->sim.lpfocus;
+    if(parms->dbg.ftrack && parms->sim.mffocus==1){
+	/*New implementation: Keep track the focus difference between each LGS
+	  and the averaged one as a way to mitigate differential focus. The LPF
+	  version is removed from the LGS WFS gradients before tomography*/
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    if(!parms->powfs[ipowfs].llt){
+		continue;
+	    }
+	    double dfg=LGSfocus->p[iwfs]->p[0]-LGSfocusm;
+	    if(!simu->focuslpf2){
+		simu->focuslpf2=dcellnew(parms->nwfs, 1);
+	    }
+	    if(!simu->focuslpf2->p[iwfs]){
+		simu->focuslpf2->p[iwfs]=dnew(1,1);
+	    }
+	    //low pass filter.
+	    simu->focuslpf2->p[iwfs]->p[0]=simu->focuslpf2->p[iwfs]->p[0]*(1-parms->sim.lpfocus) + dfg*parms->sim.lpfocus;
+	    //Do a gradient offset.
+	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -simu->focuslpf2->p[iwfs]->p[0]);
+	}
+    }
     dcellfree(LGSfocus);
-
     /*Next deal with the trombone*/
     if(!simu->zoomerr){
 	simu->zoomerr=dcellnew(parms->nwfs, 1);
@@ -659,7 +681,9 @@ void focus_tracking(SIM_T* simu){
 	    }
 	    /*trombone averager has output. first dtrat is for averaging. second
 	      dtrat is for reducing gain. Notice that we do not zero zoomerr
-	      even if there is no output. This ensures the trombone moves smoothly.*/
+	      even if there is no output and divided the gain by dtrat. The
+	      second dtrat is for averaging the measurement over dtrat steps (we
+	      summed). This ensures the trombone moves smoothly.*/
 	    double gain=parms->sim.zoomgain;
 	    int dtrat=parms->sim.zoomdtrat;
 	    dadd(&simu->zoomerr->p[iwfs], 0, simu->zoomavg->p[iwfs], gain/(dtrat*dtrat));

@@ -11,6 +11,7 @@ SUBDIRS+=maos skyc tools
 if USE_MEX
 SUBDIRS+=mex
 endif
+SUBDIRS+=test
 include $(top_srcdir)/aminclude.am
 
 #dist-hook:

@@ -343,6 +343,7 @@ typedef struct RECON_T{
     dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */
+    dcell *Gfocus;     /**<gradients due to focus.*/
     dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
     dcell *RFlgsx;     /**<focus reconstruction for each LGS from opdr*/
     dcell *RFlgsa;     /**<focus reconstruction for each LGS from dm.*/
@@ -525,6 +526,7 @@ typedef struct SIM_T{
     dcell *focuslgsx;  /**<LGS focus estimated from opdr*/
     dcell *focusngsx;  /**<NGS focus estimated from opdr*/
     dcell *focuslpf;   /**<focus tracking low pass filter*/
+    dcell *focuslpf2;  /**<focus tracking low pass filter for another impl.*/
     dcell *zoomavg;    /**<Trombone averager*/
     dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
     dcell *zoomint;    /**<Trombone integrator*/

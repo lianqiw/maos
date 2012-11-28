@@ -130,7 +130,7 @@ int main(int argc, char *argv[]){
 			}
 		    }
 		    if(!found){
-			info("Found unique seed %ld\n", seedi);
+			info2("Found unique seed %ld\n", seedi);
 			nseed++;
 			seed=realloc(seed, sizeof(long)*nseed);
 			seed[nseed-1]=seedi;

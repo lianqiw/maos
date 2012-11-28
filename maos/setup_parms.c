@@ -747,7 +747,6 @@ static void readcfg_recon(PARMS_T *parms){
 static void readcfg_sim(PARMS_T *parms){
     parms->sim.apupt=readcfg_dmat("sim.apupt");
     parms->sim.epupt=readcfg_dmat("sim.epupt");
-    READ_DBL(sim.epfocus);
     READ_DBL(sim.lpfocus);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
@@ -875,6 +874,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
     READ_INT(dbg.nocgwarm);
+    READ_INT(dbg.ftrack);
 }
 /**
    Read in GPU options
@@ -2100,7 +2100,7 @@ static void print_parms(const PARMS_T *parms){
 	      ips,parms->atm.ht[ips],parms->atm.wt[ips],parms->atm.ws[ips]);
     }
     if(parms->recon.alg==0){
-	info2("\033[0;32mTomography\033[0;0m: r0=%gm l0=%gm "
+	info2("\033[0;32mReconstruction\033[0;0m: r0=%gm l0=%gm "
 	      "ZA is %g deg. %d layers.%s\n", 
 	      parms->atmr.r0, parms->atmr.l0,  
 	      parms->sim.za*180/M_PI, 
@@ -2381,7 +2381,6 @@ PARMS_T * setup_parms(ARG_T *arg){
     char fnconf[PATH_MAX];
     snprintf(fnconf, PATH_MAX, "maos_%ld.conf", (long)getpid());
     close_config("%s",fnconf);
-    mysymlink(fnconf, "maos_recent.conf");
 
     /*
       Postprocess the parameters for integrity. The ordering of the following
@@ -2406,7 +2405,7 @@ PARMS_T * setup_parms(ARG_T *arg){
  */
 void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 #if USE_CUDA 
-    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu is there is only 1 wfs.*/
+    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu if there is only 1 wfs.*/
     use_cuda=gpu_init(arg->gpus, arg->ngpu);
 #else
     use_cuda=0;

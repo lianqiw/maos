@@ -1932,7 +1932,11 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dcellwrite(recon->RFngsa,"%s/RFngsa",dirsetup);
 	dcellwrite(recon->RFlgsa,"%s/RFlgsa",dirsetup);
     }
-    dcellfree(Gfocus);
+    if(parms->sim.mffocus==1 && parms->dbg.ftrack){
+	recon->Gfocus=Gfocus;
+    }else{
+	dcellfree(Gfocus);
+    }
     spcellfree(recon->GXfocus);
     //dcellfree(recon->RFngsg);
 }
@@ -2885,6 +2889,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->PDF);
     dcellfree(recon->TTF);
     dcellfree(recon->PTTF);
+    dcellfree(recon->Gfocus);
     dcellfree(recon->RFlgsg);
     dcellfree(recon->RFlgsa);
     dcellfree(recon->RFlgsx);

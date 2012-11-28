@@ -449,7 +449,6 @@ typedef struct SIM_CFG_T{
     dmat *eplo;     /**<error gain for NGS modes (low order)*/
     dmat *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
     dmat *epupt;    /**<error gain for uplink pointing*/
-    double epfocus;  /**<error gain for LGS focus tracking with zoom optics*/
     double lpfocus;  /**<parameter for low pass filter of LGS focus tracking with offset*/
     double fov;      /**<The diameter of total fov in arcsec*/
     int mffocus;     /**<method for focus tracing.
@@ -547,6 +546,7 @@ typedef struct DBG_CFG_T{
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
     int nocgwarm;    /**<Disable warm restart in CG*/
+    int ftrack;      /**<0: Track average LGS focus. 1: Track individual LGS focus.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

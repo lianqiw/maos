@@ -192,6 +192,9 @@ void reconstruct(SIM_T *simu){
     int isim=simu->reconisim;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_hi==0);
     if(simu->gradlastcl){
+	if(parms->sim.mffocus){
+	    focus_tracking(simu);//It modifies gradcl if dbg.ftrack!=0
+	}
 	if(!parms->sim.idealfit && !parms->sim.evlol){
 	    if(parms->sim.closeloop){
 		calc_gradol(simu);
@@ -269,9 +272,6 @@ void reconstruct(SIM_T *simu){
 		moao_recon(simu);
 	}
 	simu->tk_recon=myclockd()-tk_start;
-	if(parms->sim.mffocus){
-	    focus_tracking(simu);
-	}
 	save_recon(simu);/*Moved to inside. */
     }
 }
