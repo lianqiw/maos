@@ -59,6 +59,7 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
     smat *grad2=sread("%s", fngrad2);
     smat *grad=grad1;
     scell *dmres=scellnew(ngpu, 1);
+    spagelock(mvm1, mvm2, grad1, grad2, dmres, NULL);
     const int nact=mvm1->nx;
     const int ng=grad->nx;
     /*reduce the matrices to only a single wfs.*/
@@ -186,4 +187,5 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
     }
     swrite(timing, "timing");
     swrite(result, "result");
+    spagelock(mvm1, mvm2, grad1, grad2, dmres, NULL);
 }

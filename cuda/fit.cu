@@ -28,7 +28,7 @@ extern "C"
 #define SYNC_FIT  for(int ifit=0; ifit<parms->fit.nfit; ifit++){ curecon->fitstream[ifit].sync(); }
 #define SYNC_DM  for(int idm=0; idm<parms->ndm; idm++){ curecon->dmstream[idm].sync(); }
 
-#define TIMING 0
+#define TIMING 1
 
 /*
   Todo: share the ground layer which is both matched and same.
@@ -318,7 +318,7 @@ double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curc
 #if TIMING 
     EVENT_TIC(2);
     EVENT_TOC;
-    info2("Fit RHS: %6.0f, LHS: %6.0f\n", times[1], times[2]);
+    info2("Fit RHS: %6.0f, LHS: %6.0f, Tot: %5.0f\n", times[1], times[2], times[0]);
 #endif
     if(!fitx){
 	curcellfree(rhs);

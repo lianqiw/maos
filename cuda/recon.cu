@@ -715,10 +715,7 @@ void gpu_recon_reset(const PARMS_T *parms){/*reset warm restart.*/
 	CUDA_SYNC_DEVICE;
     }
 }
-extern "C"{
-    void cudaProfilerStart(void);
-    void cudaProfilerStop(void);
-}
+
 void gpu_tomo(SIM_T *simu){
     gpu_set(gpu_recon);
     curecon_t *curecon=cudata->recon;

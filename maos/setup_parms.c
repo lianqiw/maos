@@ -1732,6 +1732,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    parms->tomo.maxit=30*factor;
 	}
+	if(parms->recon.mvm==2 && parms->dbg.splitlrt){
+	    warning("When recon.mvm==2, dbg.splitlrt has to be 0 due to stability issue. Changed\n");
+	    parms->dbg.splitlrt=0;
+	}
     }
     if(parms->fit.alg==1 && parms->fit.maxit==0){
 	int factor;
@@ -2497,7 +2501,6 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	}
 	if(parms->gpu.tomo || parms->gpu.fit){
 	    parms->tomo.square=1;
-	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
 	if(parms->gpu.tomo && parms->tomo.bgs){
 	    error("BGS in GPU is not implemented yet\n");

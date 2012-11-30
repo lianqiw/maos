@@ -151,7 +151,10 @@ static void mvm_thread(void* ithread0){
 			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
 	    
 	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
-		(cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	      (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    /*float one=1;
+	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
+	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
 	    cmds[ithread]=0;
 	}
 	    break;
@@ -162,9 +165,11 @@ static void mvm_thread(void* ithread0){
 	    int k=MIN(ki, ki2);
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
-	    
 	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
-		(cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    /*float one=1;
+	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
+	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
 	    cmds[ithread]=0;
 	}
 	    break;

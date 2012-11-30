@@ -27,7 +27,7 @@ extern "C"
 #include "cucmat.h"
 #include "pcg.h"
 
-#define TIMING 0
+#define TIMING 3
 
 /*
   If merge the operation in to gpu_prop_grid_adaptive_do, need to do atomic
@@ -445,18 +445,19 @@ void gpu_TomoR(curcell **xout, float beta, const void *A, const curcell *grad, f
     curcell *opdx=*xout;
     const int nwfs=grad->nx;
     curcell *opdwfs=curecon->opdwfs;
-    curmat *ttf=curecon->ttf;
-    curzero(ttf, stream);
-    gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, NULL, 1);
     curzero(opdwfs->m, stream);
-    gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
-	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, 1);
     if(fabsf(beta)<EPS){
 	curzero(opdx->m, stream);
     }else if(fabsf(beta-1)>EPS){
 	curscale(opdx->m, beta, stream);
     }
+    curmat *ttf=curecon->ttf;
+    curzero(ttf, stream);
+    //just does low rank terms
+    gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
+	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, NULL, 1);
+    gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
+	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, 1);
     gpu_prop_grid_adaptive_do<<<dim3(3,3,recon->npsr), dim3(16,16), 0, stream>>>
 	(curecon->hxtdata, opdwfs->pm, opdx->pm, nwfs, recon->npsr, alpha, 't');
 }
@@ -597,7 +598,7 @@ double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, cur
 #if TIMING>=2
     RECORD(2);
     EVENT_TOC;
-    info2("Tomo RHS: %6.0f, LHS: %6.0f\n", times[1], times[2]);
+    info2("Tomo RHS: %6.0f, LHS: %6.0f, Tot: %6.0f\n", times[1], times[2], times[0]);
 #endif
     if(!opdx){
 	curcellfree(rhs);

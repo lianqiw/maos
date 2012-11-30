@@ -26,6 +26,10 @@ extern "C"
 #include <cublas_v2.h>
 #include <cusparse.h>
 #include <cufft.h>
+extern "C"{
+    void cudaProfilerStart(void);
+    void cudaProfilerStop(void);
+}
 #undef EPS
 #define EPS 1.e-5 //Float has limited, 6 digit, resolution.
 #define DEBUG_MEM 0
@@ -138,12 +142,14 @@ extern pthread_mutex_t cufft_mutex;
     }
 #define EVENT_TIC(i) DO(cudaEventRecord(event[i], stream))
 #define EVENT_TOC			       \
-    stream.sync();			       \
+    stream.sync();times[0]=0;		       \
     for(int i=1; i<NEVENT; i++){	       \
 	DO(cudaEventElapsedTime		       \
 	   (&times[i], event[i-1], event[i])); \
 	times[i]*=1e3;			       \
-    }
+	times[0]+=times[i];		       \
+    }						
+    
 #define EVENT_DEINIT				\
     for(int i=0; i<NEVENT; i++){		\
 	 DO(cudaEventDestroy(&event[i]));	\
@@ -209,4 +215,22 @@ private:
     stream_t(const stream_t &);
     stream_t & operator=(const stream_t &);
 }stream_t;
+inline void spagelock(smat *A, ...){
+    va_list ap;
+    va_start(ap, A);
+    do{
+	cudaHostRegister(A->p, A->nx*A->ny*sizeof(float), cudaHostRegisterPortable);
+	A=va_arg(ap, smat *);
+    }while(A);
+    va_end(ap);
+}
+inline void spageunlock(smat *A, ...){
+    va_list ap;
+    va_start(ap, A);
+    do{
+	cudaHostUnregister(A->p);
+	A=va_arg(ap, smat *);
+    }while(A);
+    va_end(ap);
+}
 #endif
