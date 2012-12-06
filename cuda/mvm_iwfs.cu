@@ -45,7 +45,7 @@ typedef struct{
     int copy_mvm;//1: need to copy mvm.
     int ic;//the column that we are copying.
     cudaEvent_t *event_g;
-    cudaEvent_t event_a;
+    cudaEvent_t event_gall;
     cudaEvent_t event_mvm;
 }GPU_DATA_T;
 /**
@@ -87,7 +87,7 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
 	    cudaEventCreateWithFlags(&data[igpu].event_g[i],cudaEventDisableTiming);
 	}
 	cudaEventCreateWithFlags(&data[igpu].event_mvm,cudaEventDisableTiming);
-	cudaEventCreateWithFlags(&data[igpu].event_a,cudaEventDisableTiming);
+	cudaEventCreateWithFlags(&data[igpu].event_gall,cudaEventDisableTiming);
 
 	dmres->p[igpu]=snew(nact, 1);
 	//pthread_create(&threads[igpu], NULL, (thread_fun)mvm_cp, &data[igpu]);
@@ -143,8 +143,9 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
 	for(int igpu=0; igpu<ngpu; igpu++){
 	    GPU_DATA_T *datai=&data[igpu];
 	    cudaSetDevice(gpus[igpu]); 
+	    //record event when all grads are copied so mvm can start.
+	    DO(cudaEventRecord(datai->event_gall, datai->stream_a[0]));
 	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(float), cudaMemcpyDeviceToHost, datai->stream_a[0]);
-	    DO(cudaEventRecord(datai->event_a, datai->stream_a[0]));//record event when all act are copied so mvm can start.
 	    if(datai->copy_mvm){
 		int done=0, nleft;
 		if(mvm->ny-datai->ic < nc){
@@ -154,7 +155,7 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
 		    nleft=nc;
 		}
 		//wait for mvm application to finish before copying.
-		DO(cudaStreamWaitEvent(datai->stream_mvm[0], datai->event_a, 0));
+		DO(cudaStreamWaitEvent(datai->stream_mvm[0], datai->event_gall, 0));
 		DO(cudaMemcpyAsync(datai->cumvm_next->p+datai->ic*mvm->nx, mvm->p+datai->ic*mvm->nx, sizeof(float)*mvm->nx*nleft, 
 				   cudaMemcpyHostToDevice, datai->stream_mvm[0]));
 		DO(cudaEventRecord(datai->event_mvm, datai->stream_mvm[0]));
@@ -178,6 +179,10 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
 	    for(int iact=0; iact<nact; iact++){
 		dmres->p[0]->p[iact]+=dmres->p[igpu]->p[iact];
 	    }
+	}
+	//wait for mvm transfer to finish
+	for(int igpu=0; igpu<ngpu; igpu++){
+	    data[igpu].stream_mvm->sync();
 	}
 	result->p[istep]=dmres->p[0]->p[nact/2];
 	timing->p[istep]=toc3;tic;

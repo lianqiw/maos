@@ -27,7 +27,7 @@ extern "C"
 #include "cucmat.h"
 #include "pcg.h"
 
-#define TIMING 3
+#define TIMING 0
 
 /*
   If merge the operation in to gpu_prop_grid_adaptive_do, need to do atomic

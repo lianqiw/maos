@@ -38,7 +38,7 @@ int main(int argc, char *argv[]){
     if(argc>2){
 	nstep=strtol(argv[2], NULL, 10);
     }
-    for(int jgpu=2; jgpu<=ngpu; jgpu++){
+    for(int jgpu=1; jgpu<=ngpu; jgpu++){
 	if(testcase==0){
 	    mvmfull_iwfs("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", gpus, jgpu, nstep);
 	}else{

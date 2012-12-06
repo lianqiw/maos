@@ -28,7 +28,7 @@ extern "C"
 #define SYNC_FIT  for(int ifit=0; ifit<parms->fit.nfit; ifit++){ curecon->fitstream[ifit].sync(); }
 #define SYNC_DM  for(int idm=0; idm<parms->ndm; idm++){ curecon->dmstream[idm].sync(); }
 
-#define TIMING 1
+#define TIMING 0
 
 /*
   Todo: share the ground layer which is both matched and same.
