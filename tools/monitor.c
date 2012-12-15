@@ -719,7 +719,9 @@ int main(int argc, char *argv[])
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
     }
     extern int pipe_main[2];
-    pipe(pipe_main);
+    if(pipe(pipe_main)<0){
+	error("failed to create pipe\n");
+    }
     pthread_t tmp;
     pthread_create(&tmp, NULL, (void*(*)(void*))listen_host, NULL);
     for(int ihost=0; ihost<nhost; ihost++){

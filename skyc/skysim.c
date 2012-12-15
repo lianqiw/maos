@@ -62,7 +62,15 @@
    The gains are not sensitive to which PSD is loaded, or whether PSD is scaled or not.
 
    2011-01-17: Do not parallelize across different star fields, that takes too
-   much memory/bandwidth to load PSF.  We parallelize across asterism and dtrats instead. */
+   much memory/bandwidth to load PSF.  We parallelize across asterism and dtrats instead. 
+
+   2012-12-14 note about focus mode.
+   When maos.nmod=5, global focus residual is estimated using PSD.
+   When maos.nmod>5, global focus residual is not estimated using PSD.
+         when skyc.addfocus==1, add focus to time series.
+	 when skyc.ahstfocus==1, use new 5+1 mode.
+	 if maos.mffocus==0, set skyc.addfocus to 0 because focus error is included in maos simulations.
+*/
 
 #include "skyc.h"
 #include "parms.h"
@@ -185,8 +193,13 @@ static void skysim_isky(SIM_S *simu){
 	    int demote=-1;
 	    for(int idtrat=aster->idtratmin; idtrat<=aster->idtratmax; idtrat++){
 		/*focus and windshake residual; */
-		double resadd=(parms->skyc.addws?0:asteri->res_ws->p[idtrat])
-		    + (parms->skyc.addfocus?0:parms->skyc.resfocus->p[idtrat]);
+		double resadd=0;
+		if(!parms->skyc.addws){
+		    resadd+=asteri->res_ws->p[idtrat];
+		}
+		if(parms->maos.nmod<6){//no focus mode in time domain
+		    resadd+=parms->skyc.resfocus->p[idtrat];
+		}
 		dmat *ires=NULL;
 		dmat *imres=NULL;
 		for(int do_demote=0; do_demote<do_demote_end; do_demote++){
@@ -225,7 +238,7 @@ static void skysim_isky(SIM_S *simu){
 		pres[isky][1]=pmini->p[0];/*ATM NGS Mode error */
 		pres[isky][2]=pmini->p[1];/*ATM Tip/tilt Error. */
 		pres[isky][3]=parms->skyc.addws?0:asteri->res_ws->p[mdtrat];/*Residual wind shake TT*/
-		pres[isky][4]=parms->skyc.addfocus?0:parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
+		pres[isky][4]=parms->maos.nmod>5?0:parms->skyc.resfocus->p[mdtrat];/*Residual focus tracking error. */
 		pres[isky][0]=pres[isky][1]+pres[isky][3]+pres[isky][4];/*Total */
 		/*On axis performance. */
 		pres_oa[isky][1]=pmini->p[2];

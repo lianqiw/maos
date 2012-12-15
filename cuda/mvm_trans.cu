@@ -166,9 +166,6 @@ static void mvm_trans_igpu(thread_t *info){
 		if(mvmi){
 		    opdr->replace(mvmi->p+(iact-info->start)*mvmi->nx, 0, stream);
 		}
-		if(parms->recon.mvm==2){//disable warm restart in CG using neighboring act.
-		    curcellzero(opdr, stream); 
-		}
 		/*disable the t/t removal lrt in split tomo that creats problem in fdpcg mode*/
 		if((residual->p[iact]=gpu_pcg(&opdr, gpu_TomoL, recon, prefun, predata, opdx, &curecon->cgtmp_tomo,
 					      parms->recon.warm_restart, parms->tomo.maxit,

@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
 	gpus[0]=0;
     }
     
-    cpu_set_t cpuset={0};
+    cpu_set_t cpuset={{0}};
     CPU_SET(0, &cpuset);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
     

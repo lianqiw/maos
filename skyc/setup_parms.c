@@ -146,7 +146,8 @@ static void setup_parms_maos(PARMS_S *parms){
     READ_DBL(maos.ngsgrid);
     READ_INT(maos.nstep);
     READ_INT(maos.ahstfocus);
-    warning("maos.ahstofocus=%d\n", parms->maos.ahstfocus);
+    READ_INT(maos.mffocus);
+    warning("maos.ahstofocus=%d, maos.mffocus=%d\n", parms->maos.ahstfocus, parms->maos.mffocus);
 
     if(readcfg_peek("maos.wddeg")){
 	parms->maos.nwddeg=readcfg_dblarr(&parms->maos.wddeg,"maos.wddeg");
@@ -166,11 +167,14 @@ PARMS_S *setup_parms(const ARG_S *arg){
     parms->skyc.nthread=arg->nthread;
     setup_parms_maos(parms);
     setup_parms_skyc(parms);
+    if(parms->maos.mffocus){//maos already does focus tracking
+	parms->skyc.addfocus=0;
+    }
     if(parms->maos.ahstfocus){
-	if(parms->skyc.addfocus==-1){
+	if(parms->skyc.addfocus==-1){//auto
 	    parms->skyc.addfocus=1;
 	}
-	if(parms->skyc.addws==-1){
+	if(parms->skyc.addws==-1){//auto
 	    parms->skyc.addws=1;
 	}
 	warning("skyc.addfocus is set to 1\n");
@@ -282,16 +286,19 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	dset(parms->skyc.rnefs, parms->skyc.rne);
     }
     parms->skyc.resfocus=dnew(parms->skyc.ndtrat, 1);
-    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-	int dtrat=parms->skyc.dtrats[idtrat];
-	double fs=1./(parms->maos.dt*dtrat);
-
-	parms->skyc.resfocus->p[idtrat]=
-	    pow(nafocus_residual(fs, parms->maos.dt, parms->skyc.zc_f, parms->skyc.zc_zeta,
-				 parms->maos.D, parms->maos.hs, 
-				 parms->skyc.na_alpha, parms->skyc.na_beta),2);
+    if(parms->maos.nmod<6){//Do not model focus in time series.
+	for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+	    int dtrat=parms->skyc.dtrats[idtrat];
+	    double fs=1./(parms->maos.dt*dtrat);
+	    
+	    parms->skyc.resfocus->p[idtrat]=
+		pow(nafocus_residual(fs, parms->maos.dt, parms->skyc.zc_f,
+				     parms->skyc.zc_zeta,
+				     parms->maos.D, parms->maos.hs, 
+				     parms->skyc.na_alpha, 
+				     parms->skyc.na_beta),2);
+	}
     }
- 
     if(parms->skyc.npowfs != parms->maos.npowfs){
 	error("skyc.npowfs should match maos.npowfs\n");
     }

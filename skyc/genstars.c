@@ -123,11 +123,13 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 		    J19c++;
 		}
 	    }
-	    if(J19c<=nmax && counti[J19c-1]<nsky0){
-		int isky=counti[J19c-1]+(J19c-1)*nsky0;
+	    J19c--;//0 means 1 star.
+	    if(J19c>=0 && J19c<nmax && counti[J19c]<nsky0){
+		int isky=counti[J19c]+(J19c)*nsky0;
 		res->p[isky]=dref(tmp);
 		count++;
-		counti[J19c+1]++;
+		counti[J19c]++;
+		info("counti[%d]=%d, count=%d\n", J19c, counti[J19c], count);
 	    }
 	    dfree(tmp);
 	}

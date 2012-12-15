@@ -257,6 +257,9 @@ void setup_aster_wvf(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	const int istar=aster->wfs[iwfs].istar;
 	aster->wfs[iwfs].wvfout=star[istar].wvfout[ipowfs];
 	aster->wfs[iwfs].ztiltout=star[istar].ztiltout[ipowfs];
+	if(star[istar].goff){
+	    aster->wfs[iwfs].goff=star[istar].goff->p[ipowfs];
+	}
     }
 }
 /**
@@ -683,18 +686,29 @@ void setup_aster_regenpsf(dmat *mideal, ASTER_S *aster, POWFS_S*powfs, const PAR
 	cmat *otf=cnew(ncomp,ncomp);
 	cfft2plan(otf,1);
 	cfft2plan(otf,-1);
-	/*Shift PSF so that the images are centered on FFT center. */
-	for(int i=0; i<nwvl*nsa; i++){
-	    dmat *psf=aster->wfs[iwfs].pistat->psf->p[i];
-	    dfftshift(psf);/*shift peak to center. */
-	    double pmax=dmax(psf);
-	    dcog(pgrad,psf,0.5,0.5,0.1*pmax,0.1*pmax);
-	    dfftshift(psf);
-	    ccpd(&otf, psf);
-	    cfft2(otf,-1);
-	    ctilt(otf,-pgrad[0],-pgrad[1],0);
-	    cfft2i(otf,1);
-	    creal2d(&psf,0,otf,1);
+	/*Shift PSF so that the images are centered on FFT center plus an offset if goff is set. */
+	double *goff=aster->wfs[iwfs].goff?aster->wfs[iwfs].goff->p:NULL;
+	const int embfac=parms->maos.embfac[ipowfs];
+	const double dxsa=parms->maos.dxsa[ipowfs];
+	for(int iwvl=0; iwvl<nwvl; iwvl++){
+	    const double wvl=parms->maos.wvl[iwvl];
+	    const double dtheta=wvl/(dxsa*embfac);
+	    for(int isa=0; isa<nsa; isa++){
+		dmat *psf=aster->wfs[iwfs].pistat->psf->p[isa+iwvl*nsa];
+		dfftshift(psf);/*shift peak to center. */
+		double pmax=dmax(psf);
+		dcog(pgrad,psf,0.5,0.5,0.1*pmax,0.1*pmax);
+		if(goff){//gradient offset
+		    pgrad[0]-=goff[isa]/dtheta;
+		    pgrad[1]-=goff[isa+nsa]/dtheta;
+		}
+		dfftshift(psf);
+		ccpd(&otf, psf);
+		cfft2(otf,-1);
+		ctilt(otf,-pgrad[0],-pgrad[1],0);
+		cfft2i(otf,1);
+		creal2d(&psf,0,otf,1);
+	    }
 	}
 	cfree(otf);
 	dcellscale(aster->wfs[iwfs].pistat->psf, 1./(aster->nstep-phystart));

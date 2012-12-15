@@ -494,7 +494,8 @@ static int respond(int sock){
 	    char out[BACKTRACE_CMD_LEN];
 	    char *buf;
 	    if(streadstr(sock, &buf)){
-		ret=-1; break;
+		ret=-1; 
+		break;
 	    }
 	    info("command is %s\n", buf);
 	    FILE *fpcmd=popen(buf,"r");
@@ -525,7 +526,8 @@ static int respond(int sock){
 	    pclose(fpcmd);
 	    if(stwritestr(sock,out)){
 		info("write result failed\n");
-		ret=-1; break;
+		ret=-1; 
+		break;
 	    }
 	}
 	break;
@@ -533,24 +535,21 @@ static int respond(int sock){
 	{
 	    char *display, *xauth, *fifo;
 	    if(streadstr(sock, &display) || streadstr(sock, &xauth) || streadstr(sock, &fifo)){
-		ret=-1; break;
+		ret=-1; 
+		break;
 	    }
 	    setenv("DISPLAY",display,1);
 	    setenv("XAUTHORITY",xauth,1);
 	    int ans=scheduler_launch_drawdaemon(fifo);
 	    if(stwriteint(sock, ans)){
+		ret=-1;
 		break;
 	    }
 	}
 	break;
-    case CMD_SHUTWR:
-	shutdown(sock,SHUT_WR);
-	break;
-    case CMD_SHUTRD:
-	shutdown(sock,SHUT_RD);
-	break;
     default:
 	warning3("Invalid cmd: %x\n",cmd[0]);
+	ret=-1;
     }
     cmd[0]=-1;
     cmd[1]=-1;
@@ -567,7 +566,7 @@ static int respond(int sock){
 	if(irun){//maos
 	    ret=-1;/*socket closed. */
 	}else{//monitor
-	    ret=-2;
+	    ret=-1;//2
 	}
     }
     return ret;/*don't close the port yet. may be reused by the client. */

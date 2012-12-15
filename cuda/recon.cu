@@ -736,16 +736,6 @@ void gpu_tomo(SIM_T *simu){
     if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2 || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr_vec, 1, curecon->cgstream[0]);
     }
-    if(curecon->RFlgsx){
-	curcell *focus=NULL;
-	curcellmm(&focus, 0, curecon->RFlgsx, curecon->opdr_vec, "nn", 1, curecon->cgstream[0]);
-	cp2cpu(&simu->focuslgsx, 0, focus, 1, curecon->cgstream[0]);
-    }
-    if(curecon->RFngsx){
-	curcell *focus=NULL;
-	curcellmm(&focus, 0, curecon->RFngsx, curecon->opdr_vec, "nn", 1, curecon->cgstream[0]);
-	cp2cpu(&simu->focusngsx, 0, focus, 1, curecon->cgstream[0]);
-    }
     cudaProfilerStop();
     toc_test("Tomo");
 }

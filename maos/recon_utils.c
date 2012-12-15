@@ -573,83 +573,39 @@ void focus_tracking(SIM_T* simu){
     }
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    double NGSfocus=0;
+    double lpfocus=parms->sim.lpfocus;
     dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/
-    dcell *dmsub=simu->dmint->mint[parms->dbg.psol?0:1];
-    int isim=simu->reconisim;
-    switch(parms->sim.mffocus){
-    case 0:
-	error("Shouldn't arrive here\n");break;
-    case 1://The default.
-	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
-	break;	
-    case 2:
-	dcelladd(&LGSfocus, 1, simu->focuslgsx, 1);
-	dcellmm(&LGSfocus, recon->RFlgsa, dmsub ,"nn",-1);
-	break;
-    case 3://do not use.
-	error("Do not use\n");
-	dcelladd(&LGSfocus, 1, simu->focusngsx, 1);
-	dcellmm(&LGSfocus, recon->RFngsa, dmsub ,"nn",-1);
-	break;
-    default:
-	error("Invalid\n");break;
+    dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
+    long nwfsllt=0; 
+    double focusm=0;
+    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	if(!LGSfocus->p[iwfs]) continue;
+	if(parms->dbg.ftrack){//remove HPF focus from each lgs
+	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
+	}
+	focusm+=simu->lgsfocuslpf->p[iwfs]; nwfsllt++;
+	//put LPF after using the value to put it off critical path.
+	simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
+    }
+    if(!parms->dbg.ftrack){//remove HPF global focus from each lgs
+	focusm/=nwfsllt;
+	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	    if(!LGSfocus->p[iwfs]) continue;
+	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -focusm);
+	}
     }
     if(simu->Merr_lo_store){
-	NGSfocus=simu->Merr_lo_store->p[0]->p[5];
+	double NGSfocus=simu->Merr_lo_store->p[0]->p[5];
+	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*NGSfocus;
     }
-    double LGSfocusm=0;
-    {
-	/*differential focus between LGS is removed. So we average the focus
-	  here. May need to do noise weighting.*/
-	long count=0;
-	if(parms->sim.mffocus<3){
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		if(!parms->powfs[ipowfs].llt){
-		    continue;
-		}
-		LGSfocusm+=LGSfocus->p[iwfs]->p[0];
-		simu->lgsfocus->p[iwfs]->p[isim]=LGSfocus->p[iwfs]->p[0];
-		count++;
-	    }
-	    LGSfocusm/=count;
-	}else{
-	    LGSfocusm=LGSfocus->p[0]->p[0];
-	    simu->lgsfocus->p[0]->p[isim]=LGSfocus->p[0]->p[0];
-	}
-    }
-    simu->focuslpf->p[0]->p[5]=simu->focuslpf->p[0]->p[5]*(1.-parms->sim.lpfocus)+(NGSfocus-LGSfocusm)*parms->sim.lpfocus;
-    if(parms->dbg.ftrack && parms->sim.mffocus==1){
-	/*New implementation: Keep track the focus difference between each LGS
-	  and the averaged one as a way to mitigate differential focus. The LPF
-	  version is removed from the LGS WFS gradients before tomography*/
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(!parms->powfs[ipowfs].llt){
-		continue;
-	    }
-	    double dfg=LGSfocus->p[iwfs]->p[0]-LGSfocusm;
-	    if(!simu->focuslpf2){
-		simu->focuslpf2=dcellnew(parms->nwfs, 1);
-	    }
-	    if(!simu->focuslpf2->p[iwfs]){
-		simu->focuslpf2->p[iwfs]=dnew(1,1);
-	    }
-	    //low pass filter.
-	    simu->focuslpf2->p[iwfs]->p[0]=simu->focuslpf2->p[iwfs]->p[0]*(1-parms->sim.lpfocus) + dfg*parms->sim.lpfocus;
-	    //Do a gradient offset.
-	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -simu->focuslpf2->p[iwfs]->p[0]);
-	}
-    }
-    dcellfree(LGSfocus);
+
     /*Next deal with the trombone*/
     if(!simu->zoomerr){
 	simu->zoomerr=dcellnew(parms->nwfs, 1);
     }
-
-    dcellmm(&simu->zoomavg, recon->RFlgsg, simu->gradlastcl, "nn", 1);
-
+    dcelladd(&simu->zoomavg, 1, LGSfocus, 1);
+    dcellfree(LGSfocus);
+    int isim=simu->reconisim;
     if((isim+1)%parms->sim.zoomdtrat==0){
 	//all lgs share the same trombone so take the average value.
 	if(parms->sim.zoomshare){
@@ -691,7 +647,6 @@ void focus_tracking(SIM_T* simu){
 	}
     }
 }
-
 
 /**
    Convert block of 2x2 neas to sparse matrix.

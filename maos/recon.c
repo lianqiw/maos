@@ -70,16 +70,7 @@ void tomofit(SIM_T *simu){
 #endif
 	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     }
-    if(simu->opdr && parms->sim.mffocus>=2){
-	if(recon->RFlgsx){
-	    dcellzero(simu->focuslgsx);
-	    dcellmm(&simu->focuslgsx, recon->RFlgsx, simu->opdr, "nn", 1);
-	}
-	if(recon->RFngsx){
-	    dcellzero(simu->focusngsx);
-	    dcellmm(&simu->focusngsx, recon->RFngsx, simu->opdr, "nn", 1);
-	}
-    }
+ 
     if(parms->ndm>0){
 #if USE_CUDA
 	if(parms->gpu.fit){
@@ -175,7 +166,7 @@ void recon_split(SIM_T *simu){
 	    error("Invalid parms->recon.split: %d",parms->recon.split);
 	}
 	dcellcp(&simu->Merr_lo, simu->Merr_lo_store);
-	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){/*do not correct the global focus.*/
+	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){/*the global focus is handled separately.*/
 	    simu->Merr_lo->p[0]->p[5]=0;
 	}
     }else{

@@ -20,9 +20,17 @@
 #include "drawdaemon.h"
 
 char *fifo=NULL;
+int ppid=0;
 int fifopid=0;
-int main(int argc, char *argv[])
-{
+static __attribute__((constructor)) void deinit(){
+    char fn[PATH_MAX];
+    snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
+    remove(fn);
+    snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
+    remove(fn);
+}
+
+int main(int argc, char *argv[]){
 #if GTK_MAJOR_VERSION<3 && GTK_MINOR_VERSION<32
     if(!g_thread_supported()){
 	g_thread_init(NULL);
@@ -41,7 +49,7 @@ int main(int argc, char *argv[])
 	fifopid=(int)getppid();
 	snprintf(fifo,80,"%s/drawdaemon_%d.fifo",TEMP,fifopid);
     }
-    int ppid;
+
     const char *fifo2=strstr(fifo,"drawdaemon");
     if(!fifo2){
 	warning("drawdaemon not found in string\n");
@@ -69,15 +77,8 @@ int main(int argc, char *argv[])
 	setbuf(stdout,NULL);/*disable buffering. */
 	setbuf(stderr,NULL);
     }
-    create_window();
     g_thread_new("open_fifo", (GThreadFunc)open_fifo, NULL);
+    create_window();
     gtk_main();
-    {
-	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
-	remove(fn);
-	snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
-	remove(fn);
-    }
     remove(fifo);
 }/*main */

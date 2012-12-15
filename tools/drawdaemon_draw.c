@@ -341,6 +341,7 @@ void update_limit(drawdata_t *drawdata){
     double xmin0=INFINITY, xmax0=-INFINITY, ymin0=INFINITY, ymax0=-INFINITY;
     for(int ipts=0; ipts<drawdata->npts; ipts++){
 	dmat *pts=drawdata->pts[ipts];
+	if(!pts) continue;
 	double xmin, xmax, ymin=INFINITY, ymax=-INFINITY;
 	double *ptsy=NULL;
 	if(pts->ny>1){/*x is supplied */

@@ -423,10 +423,10 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
     const int nwvl=parms->maos.nwvl;
     long nstep=0;
     TIC;tic;
-    char fnlock[PATH_MAX];
-    snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
+    //char fnlock[PATH_MAX];
+    //snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
     /*Obtain exclusive lock before proceeding so that no two process will read concurrently. */
-    int fd=lock_file(fnlock, 1, 0);
+    //int fd=lock_file(fnlock, 1, 0);
     for(int istar=0; istar<nstar; istar++){
 	STAR_S *stari=&star[istar];
 	int npowfs=parms->maos.npowfs;
@@ -447,9 +447,9 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 	    if(stari->use[ipowfs]==0){
 		continue;
 	    }
-	    char   *fnwvf[2][2]={{NULL,NULL},{NULL,NULL}};
-	    char   *fnztilt[2][2]={{NULL,NULL},{NULL,NULL}};
-
+	    char *fnwvf[2][2]={{NULL,NULL},{NULL,NULL}};
+	    char *fnztilt[2][2]={{NULL,NULL},{NULL,NULL}};
+	    char *fngoff[2][2]={{NULL, NULL}, {NULL, NULL}};
 	    PISTAT_S *pistati=&stari->pistat[ipowfs];
 	    
 	    /*info2("Reading PSF for (%5.1f, %5.1f), ipowfs=%d\n",thetax,thetay,ipowfs); */
@@ -470,10 +470,12 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    fnztilt[iy][ix]=alloca(PATH_MAX*sizeof(char));
 		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
 			     dirstart,seed,msa,thx,thy);
+		    fngoff[iy][ix]=alloca(PATH_MAX*sizeof(char));
+		    snprintf(fngoff[iy][ix],PATH_MAX,"%s/gradoff/gradoff_seed%d_sa%d_x%g_y%g",
+			     dirstart,seed,msa,thx,thy);
 		    if(!zfexist(fnwvf[iy][ix])){
 			//warning("%s doesnot exist\n",fnwvf[iy][ix]);
-			fnwvf[iy][ix]=NULL;
-			fnztilt[iy][ix]=NULL;
+			fnwvf[iy][ix]=fnztilt[iy][ix]=fngoff[iy][ix]=NULL;
 		    }else{
 			if(!zfexist(fnztilt[iy][ix])){
 			    error("%s exist, but %s does not\n", fnwvf[iy][ix],fnztilt[iy][ix]);
@@ -532,8 +534,8 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			}
 			nstep=header.nx;
 			free(header.str);
-			if(parms->skyc.limitnstep >0 && nstep>parms->skyc.limitnstep){
-			    nstep=parms->skyc.limitnstep;
+			if(nstep > stari->nstep){
+			    nstep=stari->nstep;
 			    warning("Only read %ld steps\n",nstep);
 			}
 			if(!stari->ztiltout[ipowfs]){
@@ -547,6 +549,14 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 			}
 			zfclose(fp_ztilt);
 		    }/* if(fnwvf) */
+		    if(fngoff[iy][ix] && zfexist(fngoff[iy][ix])){
+			if(!stari->goff){
+			    stari->goff=dcellnew(npowfs, 1);
+			}
+			dmat *tmp=dread("%s", fngoff[iy][ix]);
+			dadd(&stari->goff->p[ipowfs], 1, tmp, wtxi);
+			dfree(tmp);
+		    }
 		}/*iy */
 	    }/*ix */
 	    /*Don't bother to scale ztiltout since it does not participate in physical optics simulations. */
@@ -562,12 +572,17 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    }/*isa */
 		}/*iwvl */
 	    }/* */
+	    if(stari->goff && stari->ztiltout[ipowfs]){
+		for(int istep=0; istep<stari->nstep; istep++){//subtract gradient offset from ztilt.
+		    dadd(&stari->ztiltout[ipowfs]->p[istep], 1, stari->goff->p[ipowfs], -1);
+		}
+	    }
 	}/*ipowfs */
     }/*istar */
     if(parms->skyc.verbose){
 	toc2("Reading PSF");
     }
-    close(fd);
+    //close(fd);
     return nstep;
 }
 /**
@@ -641,6 +656,7 @@ void free_star(STAR_S *star, int nstar, const PARMS_S *parms){
 	    free(star[istar].wvfout[ipowfs]);
 	    dcellfree(star[istar].ztiltout[ipowfs]);
 	}
+	dcellfree(star[istar].goff);
 	free(star[istar].wvfout);
 	free(star[istar].ztiltout);
 	dcellfree(star[istar].g);

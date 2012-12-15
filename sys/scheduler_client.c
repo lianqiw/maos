@@ -414,6 +414,7 @@ int scheduler_launch_drawdaemon(char *fifo){
 	warning3("Error forking\n");
     }else if(pid2>0){
 	/*wait the child so that it won't be a zoombie */
+	sleep(1);//wait 1 seconds for drawdaemon to start.
 	waitpid(pid2,NULL,0);
 	return ans;
     }
@@ -483,8 +484,8 @@ char* scheduler_get_drawdaemon(int pid, int direct){
     }
     if(launch){
 #ifdef MAOS_DISABLE_SCHEDULER
-	scheduler_launch_drawdaemon(fifo);
-#else
+	direct=1;
+#endif
 	if(direct){
 	    /*launch directly, used by drawres, drawbin where overhead is small. */
 	    scheduler_launch_drawdaemon(fifo);
@@ -524,7 +525,6 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	    if(sock!=-1) close(sock);
 	    if(cmd[0]==-1) return NULL;/*failed */
 	}
-#endif
 	sleep(1);/*wait for drawdaemon to start. */
     }
     return fifo;

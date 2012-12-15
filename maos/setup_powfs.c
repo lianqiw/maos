@@ -644,10 +644,10 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    dscale(nea, 1./sqrt(parms->powfs[ipowfs].dtrat));
 	    /*Scale by normalized subaperture area. */
 	    double *saa=powfs[ipowfs].realsaa[jwfs];
-	    const int dl=parms->powfs[ipowfs].dl; /*diffraction limited. */
 	    for(long isa=0; isa<nsa; isa++){
 		/*scale nea by sqrt(1/area). (seeing limited) */
 		/*scale nea by 1/area if diffraction limited (NGS) */
+		const int dl=0; /*Assume not diffraction limited. minor point*/
 		double scale=dl?(1./saa[isa]):(1./sqrt(saa[isa]));
 		nea->p[isa]*=scale;
 		nea->p[isa+nsa]*=scale;

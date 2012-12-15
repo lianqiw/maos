@@ -148,11 +148,12 @@ static void prop_surf_evl(thread_t *info){
     const int do_rot=data->do_rot;
     const int isurf=data->isurf;
     loc_t *locevl=data->locevl;
+    info2("%s covers evl ", parms->surf[isurf]);
     for(int ievl=info->start; ievl<info->end; ievl++){
 	if(!evlcover[ievl]){
-	    warning2("Skip evl %d for surface %s\n", ievl, parms->surf[isurf]);
 	    continue;
 	}
+	info("%d ", ievl);
 	const double displacex=parms->evl.thetax[ievl]*hl;
 	const double displacey=parms->evl.thetay[ievl]*hl;
 	const double scale=1-hl/parms->evl.hs[ievl];
@@ -160,11 +161,11 @@ static void prop_surf_evl(thread_t *info){
 	    prop_grid(surf, locevl, NULL, aper->opdadd->p[ievl]->p, 
 		      1, displacex, displacey, scale, 0, 0, 0);
 	}else{
-	    prop_grid_stat(surf, aper->locs->stat, 
-			   aper->opdadd->p[ievl]->p, 
+	    prop_grid_stat(surf, aper->locs->stat, aper->opdadd->p[ievl]->p, 
 			   1, displacex, displacey, scale, 0, 0, 0);
 	}
     }
+    info2("\n");
 }
 
 static void prop_surf_ncpa(thread_t *info){
@@ -180,8 +181,7 @@ static void prop_surf_ncpa(thread_t *info){
 	const double displacex=parms->sim.ncpa_thetax[idir]*hl;
 	const double displacey=parms->sim.ncpa_thetay[idir]*hl;
 	const double scale=1.-hl/parms->sim.ncpa_hs[idir];
-	prop_grid(surf, recon->floc, NULL,
-		  aper->opdfloc->p[idir]->p, 
+	prop_grid(surf, recon->floc, NULL, aper->opdfloc->p[idir]->p, 
 		  1, displacex, displacey, scale, 0, 0, 0);	
     }
 }
@@ -196,11 +196,12 @@ static void prop_surf_wfs(thread_t *info){
     const int isurf=data->isurf;
     const int do_rot=data->do_rot;
     const double rot=data->rot;
+    info2("%s covers WFS ", parms->surf[isurf]);
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	if(!wfscover[iwfs]){
-	    warning2("Skip wfs %d for surface %s\n", iwfs, parms->surf[isurf]);
 	    continue;
 	}
+	info2("%d ", iwfs);
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
@@ -227,6 +228,7 @@ static void prop_surf_wfs(thread_t *info){
 	    locfree(locwfs);
 	}
     }
+    info2("\n");
 }
 
 /**
@@ -448,6 +450,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 #include "genseotf.h"
 void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     if(parms->nsurf || parms->ntsurf){
+	TIC;tic;
 	if(!aper->opdadd){
 	    aper->opdadd=dcellnew(parms->evl.nevl,1);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -475,6 +478,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->nsurf>0){
 	    setup_surf_perp(parms, aper, powfs, recon);
 	}
+	toc("surf prop");
     }
     if(parms->sim.ncpa_calib){//calibrate NCPA
 	int any_evl=0;

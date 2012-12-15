@@ -60,6 +60,7 @@ config/maos/scao_ngs.conf\
 config/maos/sim.conf\
 config/maos/skyc_10.conf\
 config/maos/skyc_20.conf\
+config/maos/wfs_common.conf\
 config/maos/wfs_lgs_tt.conf\
 config/maos/wfs_lgs_ttf_tt.conf\
 config/maos/wfs_ngs.conf\

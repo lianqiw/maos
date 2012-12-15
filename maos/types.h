@@ -512,7 +512,7 @@ typedef struct SIM_T{
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
-    dcell *Merr_lo_store;/**<Stores Merr_lo.*/
+    dcell *Merr_lo_store; /**<Stores Merr_lo even is there is no output*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     
     /*llt pointing loop*/
@@ -523,15 +523,13 @@ typedef struct SIM_T{
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
     /*focus tracking loop*/
-    dcell *focuslgsx;  /**<LGS focus estimated from opdr*/
-    dcell *focusngsx;  /**<NGS focus estimated from opdr*/
-    dcell *focuslpf;   /**<focus tracking low pass filter*/
-    dcell *focuslpf2;  /**<focus tracking low pass filter for another impl.*/
+    dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
+    dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
     dcell *zoomavg;    /**<Trombone averager*/
     dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
     dcell *zoomint;    /**<Trombone integrator*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
-    dcell *lgsfocus;   /**<LGS focus error*/
+    dcell *lgsfocus;   /**<LGS focus error time history*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

@@ -76,7 +76,6 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     }
     const int nsa=powfs[ipowfs].pts->nsa;
     dcellfree(intstat->mtche);
-    dcellfree(intstat->saneaxy);
     dfree(intstat->i0sum);
 
     intstat->mtche=dcellnew(nsa,ni0);
@@ -89,6 +88,7 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     PDCELL(intstat->mtche,mtche);
     dmat *(*saneaxy)[nsa]=NULL;
     if(parms->powfs[ipowfs].phytype==1){//use MF nea for recon
+	dcellfree(intstat->saneaxy);
 	intstat->saneaxy=dcellnew(nsa,ni0);
 	saneaxy=(void*)intstat->saneaxy->p;
     }

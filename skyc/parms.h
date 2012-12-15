@@ -65,6 +65,7 @@ typedef struct MAOS_S{
     double ngsgrid;  /**<spacing of NGS grid in as*/
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
     int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
+    int mffocus;     /**<1: maos already does sodium tracking*/
 }MAOS_S;
 
 /**

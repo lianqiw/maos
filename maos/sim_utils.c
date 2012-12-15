@@ -917,8 +917,9 @@ static void init_simu_wfs(SIM_T *simu){
 	if(parms->sim.lpfocus<1.e-15){
 	    error("When mffocus is nonzero, lpfocus need to be zero\n");
 	}
-	simu->focuslpf=dcellnew(1,1);
-	simu->focuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
+	simu->lgsfocuslpf=dnew(parms->nwfs, 1);
+	simu->ngsfocuslpf=dcellnew(1,1);
+	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
     }
 
     simu->has_upt=0;/*flag for uplink tip/tilt control */
@@ -1563,16 +1564,14 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmerr);
     dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
-    dcellfree(simu->Merr_lo_store);
     dcellfree(simu->Merr_lo);
+    dcellfree(simu->Merr_lo_store);
     dcellfree(simu->upterr);
     dcellfree(simu->uptreal);
     servo_free(simu->uptint);
 
     dcellfree(simu->dm_wfs);
     dcellfree(simu->dm_evl);
-    dcellfree(simu->focuslgsx);
-    dcellfree(simu->focusngsx);
     dcellfree(simu->res);
     dfree(simu->ole);
     dfree(simu->cle);
@@ -1622,7 +1621,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->evlopdmean_ngsr,nevl);
     cellarr_close(save->evlpsfolmean);
     dcellfree(simu->evlopd);    
-    dcellfree(simu->focuslpf);
+    dfree(simu->lgsfocuslpf);
     free(simu->ints);
     free(simu->wfspsfout);
     free(simu->pistatout);
@@ -1864,6 +1863,7 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"]\n");
     fprintf(fp,"maos.nstep=%d\n",parms->sim.end);
     fprintf(fp,"maos.ahstfocus=%d\n", parms->sim.ahstfocus);
+    fprintf(fp,"maos.mffocus=%d\n", parms->sim.mffocus);
     fclose(fp);
     for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
 	int jpowfs=powfs_ngs[ipowfs];

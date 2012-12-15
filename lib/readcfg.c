@@ -318,6 +318,8 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(aper.dx, evl.dx);
 	    IGNORE(sim.servotype_hi);
 	    IGNORE(sim.servotype_lo);
+	    IGNORE(sim.epfocus);
+	    IGNORE(dbg.dxonedge);
 	    RENAME(sim.gtypeII_lo, sim.eplo);
 	    RENAME(sim.epngs, sim.eplo);
 	    RENAME(sim.apngs, sim.aplo);

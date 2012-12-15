@@ -8,7 +8,7 @@ nobase_include_HEADERS=accphi.h type.h locbin.h mathmisc.h random.h sp.h dsp.h	\
  ssp.h csp.h bin.h cell.h mkg.h readcfg.h readstr.h suitesparse.h blas.h	\
  matbin.h spbin.h cellarr.h mkh.h aos.h chol.h mkw.h turbulence.h mat.h dmat.h	\
  smat.h cmat.h zmat.h loc.h mkz.h proj.h laplacian.h pcg.h muv.h draw.h fft.h	\
- genotf.h fractal.h stfun.h servo.h slaving.h imat.h mkdtf.h psd.h
+ genotf.h fractal.h stfun.h servo.h slaving.h imat.h mkdtf.h psd.h nr.h
 
 EXTRA_DIST=cell.c sp.c matbin.c matmmap.c spbin.c mat.c suitesparse.c		\
 fractal_do.c prop_grid_stat.c prop_grid_pts.c prop_grid_map.c defs.h blas.c

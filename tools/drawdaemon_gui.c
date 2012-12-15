@@ -986,7 +986,6 @@ static void tool_property(GtkToolButton *button, gpointer data){
     GtkWidget *vbox=gtk_vbox_new(FALSE,0);
     GtkWidget *hbox;
     GtkWidget *checkbtn, *label,*entry,*spin;
-    gint irow;
     int n;
     GtkWidget *spins[6];
     double diff[3];

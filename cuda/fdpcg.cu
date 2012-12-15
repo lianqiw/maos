@@ -26,7 +26,7 @@ extern "C"
 #include "accphi.h"
 #include "cucmat.h"
 
-#define TIMING 1
+#define TIMING 0
 
 /*
   2012-08-01: Have tried the following with no improvement:

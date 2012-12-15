@@ -74,6 +74,7 @@ typedef struct WFS_S{
     double bkgrnd;     /**<background level per pixel at maos.dt*/
     ccell **wvfout;    /**<complex wavefront output from maos run*/
     dcell *ztiltout;   /**<ztilt out from maos run*/
+    dmat *goff;        /**<gradient offset for ncpa calibration*/
     PISTAT_S *pistat;  /**<information about pixel intensities. first got from
 			  star_t, then updated.*/
     int pistatref;     /**<pixel intensities reference flag*/
@@ -96,6 +97,7 @@ typedef struct STAR_S{
     dcell *g;          /**<gradient operator of size npowfs*1*/
     ccell ***wvfout;   /**<complex wavefront output from maos run, of size npowfs*1*/
     dcell **ztiltout;  /**<ztilt output from maos run, of size npowfs*1*/
+    dcell *goff;       /**<gradient offset for NCPA calibration.*/
     int   nstep;       /**<number of time steps available.*/
 }STAR_S;
 /**

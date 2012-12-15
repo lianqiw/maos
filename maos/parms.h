@@ -223,8 +223,6 @@ typedef struct POWFS_CFG_T{
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
-    int dl;         /**<is diffraction limited. derived from comparing pixtheta
-		       with diffraction limited image size.*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs

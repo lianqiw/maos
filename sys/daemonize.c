@@ -107,7 +107,6 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		}
 	    }
 	}else{/*lock succeed. write pid. */
-	    info2("locking files %s succeed\n", fnlock);
 	    char strpid[60];
 	    snprintf(strpid,60,"%d %ld\n",getpid(),version);
 	    lseek(fd,0,SEEK_SET);

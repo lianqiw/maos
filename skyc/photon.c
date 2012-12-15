@@ -110,7 +110,7 @@ void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitu
 	Nbsum+=dt*saa*pow(pixas,2)*ZB*thruput[iwvl]*qe[iwvl]/cos(za);//background scale with sec(za). 2012-10-31.
 	Npwvl+=Np[iwvl]/wvl;
     }
-    error("scale background with zenith angle\n");
+    warning_once("How does background scale with zenith angle? Surface brightness is independent of distance\n");
     double wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
     double deltheta=wvlm/dxsa;
     double thetaB=3.*M_PI*deltheta/16.;

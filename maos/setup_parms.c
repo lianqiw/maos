@@ -301,7 +301,6 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS(dbl,nearecon);
     READ_POWFS(dbl,rne);
     READ_POWFS(dbl,dx);
-    READ_POWFS(int,dl);
     READ_POWFS(dbl,pixtheta);
     READ_POWFS(str,fnllt);
     READ_POWFS(int,trs);
@@ -1752,12 +1751,6 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
 	parms->sim.mffocus=0;
     }
-    if(parms->sim.mffocus>3){
-	error("sim.mffocus can only take 0, 1 or 2. Input is %d\n", parms->sim.mffocus);
-    }
-    if(parms->sim.mffocus==2 && parms->recon.mvm){
-	error("need implementation\n");
-    }
     if(!parms->recon.mvm){
 	if(parms->tomo.alg!=1 && parms->load.mvmi){
 	    free(parms->load.mvmi);
@@ -1768,11 +1761,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->load.mvmf=NULL;
 	}
     }
-    if(parms->load.mvmi && parms->recon.mvm==2){
-	warning2("when loading mvmi, warm restart in mvm assembly is required. Changed recon.mvm to 1\n");
-	parms->recon.mvm=1;
-    }
-    if(parms->sim.mffocus==2 && parms->recon.alg==1){
+    if(parms->sim.mffocus && !parms->recon.split){
 	error("need implementation\n");
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
@@ -1781,7 +1770,7 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    parms->powfs[ipowfs].skip=0;
 	}
-	if(parms->sim.mffocus || parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
+	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
 	    /*focus tracking or cn2 estimation, or save gradient covariance.  */
 	    parms->powfs[ipowfs].psol=1;
 	}else{/*no focus tracking */

@@ -33,7 +33,7 @@ two ways:
 Use schedtool -a 0x1 PID to let the exe only run one CPU 0. This prevents jitter.
 */
 
-#define TIMING 1
+#define TIMING 0
 
 #if TIMING 
 unsigned int event_flag=cudaEventDefault;
@@ -127,7 +127,7 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
     scell *dmres=scellnew(ngpu, 1);
     spagelock(pix1, pix2, mvm1, mvm2, mtch, NULL);
     const int pixpsa=90;//Change this need to change kernel mtch_do
-    const int mtch_ngrid=30;//can change to utilize GPU fully. 16 is good for cassiopeia
+    const int mtch_ngrid=30;//30;//can change to utilize GPU fully. 16 is good for cassiopeia
     const int mtch_dimx=32;//must launch 32 threads so that they belong to single wrap. use only 30 threads.
     const int mtch_dimy=12;//4 subapertures, 8 gradients
     const int sastep=mtch_dimy*mtch_ngrid/2;
@@ -190,7 +190,8 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 #if TIMING
 	if(istep%8000==0)
 #else
-	if(istep%8000==7484)
+	    //if(istep%8000==7484)
+	    if(0)
 #endif
 	    {//need to update MVM
 		if(mvm==mvm1){//switch mvm on host.
@@ -320,7 +321,7 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	}
 	result->p[istep]=dmres->p[0]->p[nact/2];
 	timing->p[istep]=toc3;//do not tic.
-	if(istep%1000==0 || timing->p[istep]>1.5e-3){
+	if(istep%1000==0 || timing->p[istep]>2.e-3){
 	    info2("Step %d takes %.0f us\n", istep, timing->p[istep]*1e6);
 	}
 

@@ -231,11 +231,20 @@ void plot_points(char *fig,          /**<Category of the figure*/
 	    ngroup=dc->nx*dc->ny;
 	}
 	for(int ig=0; ig<ngroup; ig++){
+	    int nx=0, ny=0;
+	    double *p=NULL;
 	    FWRITEINT(pfifo, FIFO_POINTS);
-	    FWRITEINT(pfifo, dc->p[ig]->nx);
-	    FWRITEINT(pfifo, dc->p[ig]->ny);
-	    FWRITEINT(pfifo, 0);
-	    FWRITE(dc->p[ig]->p, sizeof(double),dc->p[ig]->nx*dc->p[ig]->ny, pfifo);
+	    if(dc->p[ig]){
+		nx=dc->p[ig]->nx;
+		ny=dc->p[ig]->ny;
+		p=dc->p[ig]->p;
+	    }
+	    FWRITEINT(pfifo, nx);
+	    FWRITEINT(pfifo, ny);
+	    FWRITEINT(pfifo, 0); 
+	    if(p){
+		FWRITE(p, sizeof(double),dc->p[ig]->nx*dc->p[ig]->ny, pfifo);
+	    }
 	}
     }
     if(style){
@@ -271,6 +280,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
     FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
     FWRITEINT(pfifo,FIFO_END);
     if(fflush(pfifo)){
+	perror("fflush");
 	/*it is important to flush it so that drawdaemon does not stuck waiting. */
 	warning("Failed to fflush the fifo");
     }

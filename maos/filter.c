@@ -189,7 +189,7 @@ void filter_cl(SIM_T *simu){
 	servo_shift(simu->Mint_lo, simcfg->aplo);
     }
     if(parms->sim.mffocus){/*global focus is the 6th mode in ngsmod->Modes*/
-	dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->focuslpf, "nn", 1);
+	dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
     }
     if(simu->dmerr){ /*High order. */
 	servo_filter(simu->dmint, simu->dmerr, simu->dthi, simcfg->epdm);

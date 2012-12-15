@@ -47,7 +47,7 @@ static void calc_pistat(GENPISTAT_S *data){
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
     /*Obtain exclusive lock before proceeding. */
-    int fd=lock_file(fnlock, 1, 0);
+    //int fd=lock_file(fnlock, 1, 0);
     while(LOCKADD(icase, data->icase, 1)<data->ncase){
 	double thetax=data->ngsgrid*data->cases[icase][0];
 	double thetay=data->ngsgrid*data->cases[icase][1];
@@ -185,7 +185,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    toc2("Processing %s:", fnwvf);
 	}/*if exist */
     }
-    close(fd);
+    //close(fd);
 }
 
 void genpistat(const PARMS_S *parms, POWFS_S *powfs){
