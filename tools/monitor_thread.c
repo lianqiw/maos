@@ -73,9 +73,7 @@ void proc_remove_all(int id){
     LOCK(mhost);
     for(iproc=pproc[id]; iproc; iproc=jproc){
 	jproc=iproc->next;
-	gdk_threads_add_idle((GSourceFunc)remove_entry, iproc);
-	if(iproc->path) free(iproc->path);
-	free(iproc);
+	gdk_threads_add_idle((GSourceFunc)remove_entry, iproc);//frees iproc
     }
     nproc[id]=0;
     UNLOCK(mhost);
@@ -95,8 +93,6 @@ void proc_remove(int id,int pid){
 	    nproc[id]--;
 	    UNLOCK(mhost);
 	    gdk_threads_add_idle((GSourceFunc)remove_entry, iproc);
-	    if(iproc->path) free(iproc->path);
-	    free(iproc);
 	    gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id));
 	    break;
 	}

@@ -173,11 +173,11 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->maos.ahstfocus){
 	if(parms->skyc.addfocus==-1){//auto
 	    parms->skyc.addfocus=1;
+	    warning("skyc.addfocus is set to 1\n");
 	}
 	if(parms->skyc.addws==-1){//auto
 	    parms->skyc.addws=1;
 	}
-	warning("skyc.addfocus is set to 1\n");
 	if(parms->maos.nmod<=5){
 	    error("Conflicted parameters: maos.nmod should be >5 when maos.ahstfocus=1\n");
 	}

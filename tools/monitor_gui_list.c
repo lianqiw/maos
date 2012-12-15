@@ -166,6 +166,8 @@ gboolean remove_entry(PROC_T *p){
     }else{
 	gtk_list_store_remove (lists[p->hid],&iter);
     }
+    free(p->path);
+    free(p);
     return 0;
 }
 gboolean refresh(PROC_T *p){

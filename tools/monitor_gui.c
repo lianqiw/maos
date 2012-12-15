@@ -195,6 +195,8 @@ gboolean remove_entry(PROC_T *iproc){
     }else{
 	/*warning("hbox is empty\n"); */
     }
+    free(iproc->path);
+    free(iproc);
     return 0;
 }
 gboolean refresh(PROC_T *p){
