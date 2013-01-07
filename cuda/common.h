@@ -215,6 +215,22 @@ private:
     stream_t(const stream_t &);
     stream_t & operator=(const stream_t &);
 }stream_t;
+typedef struct event_t{
+    cudaEvent_t event;
+    event_t(unsigned int flag=cudaEventDefault){
+	DO(cudaEventCreateWithFlags(&event, flag));
+    }
+    ~event_t(){
+	cudaEventDestroy(event);
+    }
+    void record(cudaStream_t stream){
+	DO(cudaEventRecord(event, stream));
+    }
+    operator cudaEvent_t(){
+	assert(this);
+	return event;
+    }
+}event_t;
 inline void spagelock(smat *A, ...){
     va_list ap;
     va_start(ap, A);

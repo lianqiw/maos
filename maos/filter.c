@@ -192,6 +192,19 @@ void filter_cl(SIM_T *simu){
 	dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
     }
     if(simu->dmerr){ /*High order. */
+	static int epdm_is_auto=0;
+	if(simcfg->epdm->p[0]<0){
+	    epdm_is_auto=1;
+	    simcfg->epdm->p[0]=0.5;
+	}
+	if(epdm_is_auto){
+	    if((simu->isim*10)<parms->sim.end){//initial steps
+		simcfg->epdm->p[0]=0.5;
+	    }else if((simu->isim*10)%parms->sim.end==0){
+		simcfg->epdm->p[0]=(double)simu->isim/(double)parms->sim.end;
+		info("epdm is set to %.1f at step %d\n", simcfg->epdm->p[0], simu->isim);
+	    }
+	}
 	servo_filter(simu->dmint, simu->dmerr, simu->dthi, simcfg->epdm);
     }
     if(parms->recon.split && simu->Merr_lo){ /*low order*/

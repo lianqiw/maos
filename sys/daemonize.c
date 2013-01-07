@@ -75,8 +75,8 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		goto retry;
 	    }else{
 		if(kill(pid,0)){
-		    warning("Process %ld already locks file, but we don't find it, this may happen in NFS mounted system\n"
-			    " wait for 10 seconds before retry.\n",pid);
+		    warning("Process %ld already locks file %s, but we don't find it, this may happen in NFS mounted system\n"
+			    " wait for 10 seconds before retry.\n",pid, fnlock);
 		    sleep(10);
 		    fclose(fp);
 		    goto retry;
@@ -169,7 +169,8 @@ void single_instance_daemonize(const char *lockfolder_in,
 	exit(EXIT_FAILURE);
     }else if (pid > 0) {/*exit first parent. */
 	close(fd);/*release lock in this process that is not daemon. */
-	waitpid(pid,NULL,0);/*prevent child from defunct. */
+	sleep(1);
+	waitpid(pid,NULL,WNOHANG);/*prevent child from defunct. but don't hang ourselves*/
 	if(daemon_func){/*The process that launched this routine will return. */
 	    return;
 	}else{
@@ -185,12 +186,6 @@ void single_instance_daemonize(const char *lockfolder_in,
     if(setsid()==-1) warning("Error setsid\n");
     if(chdir("/")) warning("Error chdir\n");
     umask(0077);
-    /*redirect stdin/stdout. */
-    if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
-    if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
-    if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
-    setbuf(stdout,NULL);/*disable buffering. */
-    setbuf(stderr,NULL);
     /*We fork again. after this fork, the process is not the
       session leader (the leader has exited) and no
       controlling tty can every happen.*/
@@ -202,6 +197,13 @@ void single_instance_daemonize(const char *lockfolder_in,
 	exit(EXIT_SUCCESS);
     }
   
+    /*redirect stdin/stdout. */
+    if(!freopen("/dev/null","r",stdin)) warning("Error closing stdin\n");
+    if(!freopen(fnlog, "w", stdout)) warning("Error redirect stdout\n");
+    if(!freopen(fnlog, "w", stderr)) warning("Error redirect stderr\n");
+    setbuf(stdout,NULL);/*disable buffering. */
+    setbuf(stderr,NULL);
+ 
     char strpid[60];
     snprintf(strpid,60,"%d %ld\n",getpid(),version);
     lseek(fd,0,SEEK_SET);
@@ -220,7 +222,16 @@ void single_instance_daemonize(const char *lockfolder_in,
     }
 }
 int detached=0;
-static void fputs_stderr(int fd, int stdoutfd, const char *fn){
+typedef struct{
+    int pfd;
+    int stdoutfd;
+    const char *fn;
+}redirect_t;
+static void* fputs_stderr(redirect_t *data){
+    int fd=data->pfd;
+    int stdoutfd=data->stdoutfd;
+    const char *fn=data->fn;
+    free(data);
     FILE *fpout[2];
     fpout[0]=fdopen(stdoutfd, "w");
     fpout[1]=fopen(fn, "w");
@@ -228,7 +239,7 @@ static void fputs_stderr(int fd, int stdoutfd, const char *fn){
     setbuf(fpout[1], NULL);
     if(!fpout[0] || !fpout[1]) {
 	printf("open stderr failed\n");
-	return;
+	return 0;
     }
     char buf[400];
     while(fpout[0] || fpout[1]){
@@ -245,7 +256,7 @@ static void fputs_stderr(int fd, int stdoutfd, const char *fn){
 	    }
 	}
     }
-    _Exit(0);
+    return 0;
 }
 static void redirect_fd(const char *fn, int fd){
     if(fn){
@@ -268,32 +279,44 @@ static void redirect_fd(const char *fn, int fd){
   Otherwise output to both file and screen.
 */
 void redirect(void){
-    if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
     char fn[256];
     pid_t pid=getpid();
     snprintf(fn,sizeof fn,"run_%d.log",pid);
-    if(detached){
+    if(detached){//only output to file
 	redirect_fd(fn, -1);
-    }else{/*output files content to screen*/
+	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
+    }else{//output to both file and screen
 	int stdoutfd=dup(fileno(stdout));
 	int pfd[2];
-	if(pipe(pfd)){
+	if(pipe(pfd)){//fail to create pipe.
 	    warning("pipe failed\n");
-	    redirect_fd(fn, -1);
 	}else{
+	    redirect_t *data=calloc(1, sizeof(redirect_t));
+	    data->pfd=pfd[0];//read
+	    data->stdoutfd=stdoutfd;
+	    data->fn=fn;
+#if 0 
+	    //fork a process to handle output
 	    int pid2=fork();
 	    if(pid2==-1){
 		perror("fork");
-		redirect_fd(fn, -1);
+		redirect_fd(fn, -1);//fall back
 	    }else if(pid2>0){//parent. output to pipe
 		close(pfd[0]);
 		redirect_fd(NULL, pfd[1]);
 	    }else{//child. read pipe
 		close(pfd[1]);
-		if(setsid()==-1) error("Error setsid\n");
-		fputs_stderr(pfd[0], stdoutfd, fn);
+		fputs_stderr(data);
 		_Exit(0);
 	    }
+#else
+	    //spawn a thread to handle output.
+	    pthread_t thread;
+	    //child thread read from pfd[0] and write to stdout.
+	    pthread_create(&thread, NULL, (void *(*)(void *))fputs_stderr, data);
+	    //master threads write to pfd[1]
+	    redirect_fd(NULL, pfd[1]);
+#endif
 	}
     }
 }

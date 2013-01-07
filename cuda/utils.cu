@@ -106,7 +106,7 @@ long gpu_get_mem(void){
     return (long)fr;
 }
 static int cmp_gpu_info(const long *a, const long *b){
-    return (int)(b[1]-a[1]);
+    return b[1]>a[1]?1:0;
 }
 /**
    Initialize GPU. Return 1 if success.

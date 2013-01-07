@@ -10,10 +10,10 @@ int main(int argc, char *argv[]){
     info2("host is %s\n", host);
     int ngpu;
     int gpus[8];
-    if(!strcmp(host, "cassiopeia")){
+    if(!strcmp(host, "cassiopeia") || !strcmp(host, "kepler")){
 	ngpu=2;
-	gpus[0]=2;
-	gpus[1]=3;
+	gpus[0]=0;
+	gpus[1]=1;
     }else if(!strcmp(host, "orion")){
 	ngpu=1;
 	gpus[0]=0;
@@ -38,11 +38,21 @@ int main(int argc, char *argv[]){
     if(argc>2){
 	nstep=strtol(argv[2], NULL, 10);
     }
-    for(int jgpu=1; jgpu<=ngpu; jgpu++){
-	if(testcase==0){
-	    mvmfull_iwfs("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", gpus, jgpu, nstep);
-	}else{
+    switch(testcase){
+    case 0:
+	for(int jgpu=1; jgpu<=ngpu; jgpu++){
+	    mvmfull_iwfs("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", 
+			 gpus, jgpu, nstep);
+	}
+	break;
+    case 1:
+	for(int jgpu=1; jgpu<=ngpu; jgpu++){
 	    mvm_iwfs("mvm1.bin", "mvm2.bin", "grad1.bin", "grad2.bin", gpus, jgpu, nstep);
 	}
+	break;
+    case 2:
+	mvm_test();
+	break;
+	
     }
 }

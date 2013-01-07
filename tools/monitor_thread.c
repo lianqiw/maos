@@ -269,6 +269,7 @@ void listen_host(){
 	    if(hsock[ihost]>0){
 		if(htime[ihost]+10<ntime){
 		    //10 seconds grace period
+		    info2("10 seconds no respond. disconnect\n");
 		    host_removed(hsock[ihost]);
 		}
 	    }

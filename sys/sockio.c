@@ -61,18 +61,7 @@ int stread(int sfd, void *p, size_t len){
 /*Prevent calling read/write in this file from now on. use stread/stwrite instead */
 #define read READ_IS_PROHIBITED
 #define write WRITE_IS_PROHIBITED
-int stwriteint(int sfd, int cmd){
-    return stwrite(sfd, &cmd, sizeof(int));
-}
-int stwriteintarr(int sfd, int* cmd, unsigned int len){
-    return stwrite(sfd,cmd,len*sizeof(int));
-}
-int streadint(int sfd, int *cmd){
-    return stread(sfd, cmd, sizeof(int));
-}
-int streadintarr(int sfd, int* cmd, unsigned int len){
-    return stread(sfd,cmd,len*sizeof(int));
-}
+
 int stwritestr(int sfd, const char *str){
     if(str){
 	int len=strlen(str)+1;

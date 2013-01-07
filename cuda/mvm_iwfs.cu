@@ -67,7 +67,8 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
     sresize(mvm2, mvm2->nx, ng);
     int nc=10;//each time copy nc column of mvm.
     GPU_DATA_T *data=(GPU_DATA_T*)calloc(ngpu, sizeof(GPU_DATA_T));
-    const int gstep=500;
+    //    const int gstep=500;
+    const int gstep=ng;
     const int sect_gpu=(ng+gstep*ngpu-1)/(gstep*ngpu);
     for(int igpu=0; igpu<ngpu; igpu++){
 	cudaSetDevice(gpus[igpu]);
@@ -120,7 +121,7 @@ void mvm_iwfs(char *fnmvm1, char *fnmvm2, char *fngrad1, char *fngrad2, int *gpu
 	    grad=grad1;
 	}
 	for(int ig=0, igpu=0; ig<ng; ig+=gstep, igpu=((igpu+1)%ngpu)){
-	    int nleft=ng-ig<gstep?ng-ig:gstep;
+	    int nleft=(ng-ig)<gstep?(ng-ig):gstep;
 	    cudaSetDevice(gpus[igpu]); 
 	    GPU_DATA_T *datai=&data[igpu];
 	    //One stream handling the memcpy

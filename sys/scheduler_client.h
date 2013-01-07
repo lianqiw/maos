@@ -33,8 +33,8 @@ int scheduler_connect(int ihost, int block,int mode);
 /*called by maos */
 int scheduler_start(char *path, int nthread, int waiting);
 int scheduler_wait(void);
-void scheduler_finish(int status);
-void scheduler_report(STATUS_T *status);
+int scheduler_finish(int status);
+int scheduler_report(STATUS_T *status);
 /*called by monitor */
 int scheduler_launch_drawdaemon(char *fifo);
 char* scheduler_get_drawdaemon(int pid, int direct);

@@ -388,10 +388,13 @@ static int respond(int sock){
        will complain Bad file descriptor
     */
     int ret=0, pid, cmd[2];
+    info2("respond %d start ...", sock);
     if((ret=streadintarr(sock, cmd, 2))){
+	info2("read failed");
 	goto end;
     }
     pid=cmd[1];
+    info2("read %d %d\n", cmd[0], cmd[1]);
     switch(cmd[0]){
     case CMD_START://Called by maos when job starts.
 	{
@@ -555,7 +558,7 @@ static int respond(int sock){
     cmd[1]=-1;
  end:
     if(ret){
-	RUN_T *irun=running_get_by_sock(sock);
+	RUN_T *irun=running_get_by_sock(sock);//is maos
 	if(irun && irun->status.info<10){
 	    sleep(1);
 	    int pid2=irun->pid;
@@ -563,11 +566,7 @@ static int respond(int sock){
 		running_update(pid2,S_CRASH);
 	    }
 	}
-	if(irun){//maos
-	    ret=-1;/*socket closed. */
-	}else{//monitor
-	    ret=-1;//2
-	}
+	ret=-1;
     }
     return ret;/*don't close the port yet. may be reused by the client. */
 }
@@ -613,7 +612,9 @@ static void monitor_remove(int sock){
 	    }else{
 		pmonitor=ic->next;
 	    }
-	    close(ic->sock);
+	    //close(ic->sock); close panics accept
+	    warning3("Remove monitor at %d\n", ic->sock);
+	    shutdown(ic->sock, SHUT_WR);
 	    free(ic);
 	    break;
 	}

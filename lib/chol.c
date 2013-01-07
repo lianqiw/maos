@@ -88,7 +88,7 @@ static cholmod_dense* d2chol(const dmat *A, int start, int end){
 /**
    Factorize a sparse array into LL' with reordering.
 */
-static spchol* chol_factorize_do(dsp *A_in){
+spchol* chol_factorize(dsp *A_in){
     if(!A_in) return NULL;
     spchol *out=calloc(1, sizeof(spchol));
     out->c=calloc(1, sizeof(cholmod_common));
@@ -158,7 +158,7 @@ static spchol* chol_factorize_do(dsp *A_in){
 /**
    Factorize a sparse array into LL' with reordering.
 */
-spchol* chol_factorize(dsp *A_in){
+spchol* chol_factorize_cache(dsp *A_in){
     if(!A_in) return NULL;
     spchol *out=NULL;
     char dirchol[PATH_MAX];
@@ -185,7 +185,9 @@ spchol* chol_factorize(dsp *A_in){
 		/*non blocking exclusive lock. */
 		int fd=lock_file(fnlock, 0, 0);
 		if(fd>=0){/*succeed to lock file. */
-		    out=chol_factorize_do(A_in);
+		    TIC;tic;
+		    out=chol_factorize(A_in);
+		    toc2("chol_factorize");
 		    char fntmp[PATH_MAX];
 		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnchol);
 		    info2("\nsaving chol to %s\n", fnchol);
@@ -203,7 +205,7 @@ spchol* chol_factorize(dsp *A_in){
 	    }
 	}
     }else{
-	out=chol_factorize_do(A_in);
+	out=chol_factorize(A_in);
     }
     
     return out;

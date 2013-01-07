@@ -61,7 +61,7 @@ void scheduler_report(STATUS_T *status){
   (void)status;
 }
 void print_backtrace_symbol(void *const *buffer, int size){
-  (void) buffer;
+  (void)buffer;
   (void)size;
 }
 #if !(defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__))
@@ -192,7 +192,9 @@ static void scheduler_launch(void){
    To open a port and connect to scheduler in the local host*/
 static int scheduler_connect_self(int block){
     /*start the scheduler if it is not running*/
-    scheduler_launch();
+    if(block){
+	scheduler_launch();
+    }
     int sock=connect_port("localhost", PORT, block, 0);
     if(sock<0){
 	warning2("Unable to connect to port %d\n", PORT);
@@ -200,9 +202,12 @@ static int scheduler_connect_self(int block){
     return sock;
 }
 
-static int psock;
+static int psock=-1;
 static char *path_save=NULL;
 static void scheduler_report_path(char *path){
+    if(psock==-1){
+	return;
+    }
     if(path){
 	if(path_save){
 	    path_save=realloc(path_save, strlen(path)+1);
@@ -223,21 +228,23 @@ static void scheduler_report_path(char *path){
     stwriteintarr(psock, cmd, 2);
     stwritestr(psock,path_save);
 }
+#define CATCH_ERR(A) if(A){psock=-1; return -1;}
 /* called by mcao to wait for available cpu. */
 int scheduler_start(char *path, int nthread, int waiting){
     psock=scheduler_connect_self(1);
     if(psock==-1){
-	warning3("Failed to connect to scheduler\n");exit(0);
+	warning3("Failed to connect to scheduler\n");
+	exit(0);
 	return -1;
     }
     scheduler_report_path(path);
     int cmd[2];
     cmd[0]=CMD_START;
     cmd[1]=getpid();
-    stwriteintarr(psock,cmd,2);
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
     cmd[0]=nthread;
     cmd[1]=waiting;
-    stwriteintarr(psock,cmd,2);
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
     return 0;
 }
 
@@ -258,34 +265,35 @@ int scheduler_wait(void){
     /*don't close socket. */
 }
 /* called by mcao to notify scheduler the completion of a job */
-void scheduler_finish(int status){
+int scheduler_finish(int status){
     if(psock==-1){
 	psock=scheduler_connect_self(0);
 	scheduler_report_path(NULL);
+	if(psock==-1) return -1;
     }
-    if(psock==-1) return;
     int cmd[2];
     if(status==0)
 	cmd[0]=CMD_FINISH;
     else 
 	cmd[0]=CMD_CRASH;
     cmd[1]=getpid();
-    stwriteintarr(psock,cmd,2);
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
     close(psock);psock=-1;
+    return 0;
 }
 /* called by sim.c to report job status */
-void scheduler_report(STATUS_T *status){
+int scheduler_report(STATUS_T *status){
     if(psock==-1){
 	psock=scheduler_connect_self(0);
 	scheduler_report_path(NULL);
+	if(psock==-1) return -1;
     }
-    if(psock==-1) return;
     int cmd[2];
     cmd[0]=CMD_STATUS;
     cmd[1]=getpid();
-    stwriteintarr(psock,cmd,2);
-    stwrite(psock,status,sizeof(STATUS_T));
-    /*don't close socket. */
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
+    CATCH_ERR(stwrite(psock,status,sizeof(STATUS_T)));
+    return 0;
 }
 
 /*!defined(__INTEL_COMPILER)||1)  */

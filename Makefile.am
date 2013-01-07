@@ -78,4 +78,5 @@ config/skyc/PSD/PSD_NGS.bin\
 config/skyc/PSD/PSD_PS.bin\
 config/skyc/PSD/PSD_TMT_WindShake20mas_m2.bin\
 config/skyc/PSD/PSD_TT.bin\
-config/skyc/besancon/JH_5sqdeg_lat90_lon0_besancon.bin
+config/skyc/besancon/JH_5sqdeg_lat90_lon0_besancon.bin\
+config/skyc/besancon/JHK_5sqdeg_lat90_lon0_besancon.bin
