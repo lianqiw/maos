@@ -794,7 +794,7 @@ void read_header(header_t *header, file_t *fp){
     }
 }
 /**
- * Get the length of string in header, rounded to multiple of 8.
+ * Get the length of mem to storge the header and its dimension, rounded to multiple of 8.
  */
 uint64_t bytes_header(const char *header){
     if(header){

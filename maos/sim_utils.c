@@ -558,7 +558,7 @@ static void init_simu_evl(SIM_T *simu){
     {/*MMAP the main result file */
 	long nnx[4]={nmod,nmod,nmod,nmod};
 	long nny[4]={nsim,nsim,nsim,nsim};
-	nnx[1]=0;
+	nnx[1]=0;//deprecated
 	nny[1]=0;
 	if(!parms->recon.split || parms->ndm>2){
 	    nnx[3]=0; 
