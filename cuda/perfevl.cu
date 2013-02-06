@@ -211,21 +211,28 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
 }
 /**
    Convert NGS mode vector to aperture grid for science directions.  */
-void gpu_ngsmod2science(curmat *opd, const PARMS_T *parms,
-			const RECON_T *recon, const APER_T *aper,
-			const double *mod, int ievl, double alpha, cudaStream_t stream){
-    if(recon->ngsmod->nmod==2){
-	curaddptt(opd, cudata->plocs, 0, mod[0]*alpha, mod[1]*alpha, stream);
+void gpu_ngsmod2science(curmat *opd, float (*restrict loc)[2],
+			const NGSMOD_T *ngsmod, const double *mod, 
+			double thetax, double thetay, 
+			double alpha, cudaStream_t stream){
+    if(ngsmod->nmod==2){
+	curaddptt(opd, loc, 0, mod[0]*alpha, mod[1]*alpha, stream);
     }else{
-	const float MCC_fcp=recon->ngsmod->aper_fcp;
-	const float ht=recon->ngsmod->ht;
-	const float scale=recon->ngsmod->scale;
-	const float thetax=parms->evl.thetax[ievl]; 
-	const float thetay=parms->evl.thetay[ievl];
+	const float ht=ngsmod->ht;
+	const float scale=ngsmod->scale;
+	float focus;
+	if(ngsmod->nmod>5){
+	    focus=mod[5];
+	    if(!ngsmod->ahstfocus){
+		focus+=mod[2]*(1.-scale);
+	    }
+	}else{
+	    focus=mod[2]*(1.-scale);
+	}
 	add_ngsmod_do<<<DIM(opd->nx*opd->ny, 256), 0, stream>>>
-	    (opd->p, cudata->plocs, opd->nx*opd->ny, 
-	     mod[0], mod[1], mod[2], mod[3], mod[4],
-	     thetax, thetay, scale, ht, MCC_fcp, alpha);
+	    (opd->p, loc, opd->nx*opd->ny, 
+	     mod[0], mod[1], mod[2], mod[3], mod[4], focus,
+	     thetax, thetay, scale, ht, alpha);
     }
 }
 /**
@@ -671,15 +678,18 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	if(parms->evl.psfngsr[ievl]==0){
 	    continue;
 	}
+	warning("Compare with CPU code to verify accuracy. Need to verify focus mode\n");
 	gpu_set(evlgpu[ievl]);
 	curmat *iopdevl=cudata->evlopd->p[ievl];
 	cudaStream_t stream=evlstream[ievl];
 	cublasHandle_t handle=evlhandle[ievl];
-	gpu_ngsmod2science(iopdevl, parms, simu->recon, aper, cleNGSm, ievl, -1, stream);
+	gpu_ngsmod2science(iopdevl, cudata->plocs, simu->recon->ngsmod, cleNGSm, 
+			   parms->evl.thetax[ievl], parms->evl.thetay[ievl],
+			   -1, stream);
 	if(parms->evl.psfpttr[ievl]){
 	    double ptt[3];
 	    calc_ptt(NULL, ptt,  aper->ipcc, aper->imcc,
-			 cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
+		     cudata->plocs, nloc, iopdevl->p, cudata->pamp, stream);
 	    curaddptt(iopdevl, cudata->plocs, -ptt[0], -ptt[1], -ptt[2], stream);
 	}
 	if(parms->evl.opdcov){

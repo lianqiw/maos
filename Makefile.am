@@ -32,7 +32,8 @@ EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs
 EXTRA_DIST += scripts/readbin.pro scripts/readdata.pro scripts/readbin.m scripts/writebin.m\
 scripts/save_surf.m scripts/save_tsurf.m
 nobase_dist_pkgdata_DATA=\
-config/maos/bin/TMT_CurDesign.bin\
+config/maos/bin/TMT_30cm3.bin\
+config/maos/bin/TMT_23cm6.bin\
 config/maos/bin/KECK.bin\
 config/maos/bin/NapMean.bin\
 config/maos/bin/PSD_TMT_WindShake20mas_rad2.bin\

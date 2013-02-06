@@ -28,7 +28,7 @@ extern "C"
 #include "cucmat.h"
 #include "accphi.h"
 #undef TIMING
-#define TIMING 1
+#define TIMING 0
 #if !TIMING
 #define TIC_test
 #define tic_test
@@ -600,9 +600,9 @@ void gpu_recon_free(){
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     /*The following routine assemble MVM and put in recon->MVM*/
     if(parms->recon.mvm==1){
-	gpu_setup_recon_mvm_direct(parms, recon, powfs);
-    }else{
 	gpu_setup_recon_mvm_trans(parms, recon, powfs);
+    }else{
+	gpu_setup_recon_mvm_direct(parms, recon, powfs);
     }
     for(int igpu=0; igpu<NGPU; igpu++){
 	gpu_set(igpu);

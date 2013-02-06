@@ -235,7 +235,7 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
    Limit maximum gain to 0.5. 
    
    sigman is a dmat array of all wanted sigman.
-   Returns a cellarray of a dmat of [g0, a, T, res_n, res_sig]
+   Returns a cellarray of a dmat of [g0, a, T, res_sig, res_n]
 */
 dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
 		   const dmat* sigman, int servo_type){

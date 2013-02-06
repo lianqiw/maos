@@ -1,10 +1,10 @@
 #use -g -G for debugging.
 WARN=--compiler-options -Wall --compiler-options -Wno-unused-value --compiler-options -Wno-unused-function
-VER=-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30 -gencode arch=compute_35,code=sm_35
-#VER=-gencode arch=compute_35,code=sm_35
-VER2=-arch=sm_$(CUDAVER)
+VER=-gencode arch=compute_$(CUDAVER),code=sm_$(CUDAVER)
+#VER+=-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30
+#VER+=-gencode arch=compute_35,code=sm_35.
 AM_CFLAGS=$(VER) $(WARN) -g -O $(CUDAOPT)
-AM_CFLAGS+=-Xptxas="-v" #for verbose 
+#AM_CFLAGS+=-Xptxas="-v" #for verbose 
 #AM_CFLAGS+=-Xptxas -dlcm=cg
 AM_CFLAGS+=-lineinfo
 if USE_LONG
@@ -14,7 +14,7 @@ AM_CFLAGS+=-DHAVE_CONFIG_H -I..
 #AM_LDFLAGS=$(LDCUDA) -static
 
 EXTRA_DIST=accphi.h  common.h  cucmat.h  cumat.h  curmat.h  gpu.h  kernel.h  pcg.h  recon.h  types.h  utils.h  wfs.h
-SRCS=accphi.cu utils.cu curmat.cu cucmat.cu  wfsgrad.cu wfsints.cu wfsinit.cu perfevl.cu recon.cu pcg.cu tomo.cu fdpcg.cu fit.cu moao.cu kernel.cu cuchol.cu cumuv.cu prop_grid.cu mvm.cu test.cu mvm_trans.cu mvm_direct.cu mvm_iwfs.cu mvmfull_iwfs.cu mvm_test.cu
+SRCS=accphi.cu utils.cu curmat.cu cucmat.cu  wfsgrad.cu wfsints.cu wfsinit.cu perfevl.cu recon.cu pcg.cu tomo.cu fdpcg.cu fit.cu moao.cu kernel.cu cuchol.cu cumuv.cu prop_grid.cu mvm.cu test.cu mvm_trans.cu mvm_direct.cu mvm_iwfs.cu mvmfull_iwfs.cu mvm_test.cu mvmfull_pipe.cu
 
 #LTLIBRARIES does not work.
 lib_LIBRARIES=libgpu.a

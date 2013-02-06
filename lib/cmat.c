@@ -394,8 +394,8 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 	}
 	dcomplex *restrict out2=out+skipy*noutx+skipx;
 	for(int iy=iystart; iy<iyend; iy++){
-	    dcomplex *restrict outi=out2+iy*noutx;
-	    const dcomplex *restrict ini=in+iy*ninx;
+	    dcomplex * outi=out2+iy*noutx;
+	    const dcomplex * ini=in+iy*ninx;
 	    switch(flag){/*this switch does not affect speed. */
 	    case C_FULL:
 		cmpcpy(outi+ixstart,ini+ixstart,(ixend-ixstart));
@@ -773,9 +773,13 @@ void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
     int ny=otf->ny;
     double dux=1./(double)nx;
     double duy=1./(double)ny;
-    dcomplex ux[nx], uy[ny];
+    dcomplex ux[nx];
+    dcomplex uy[ny];
     dcomplex cx=cexp(-2*M_PI*I*dux*sx);
     dcomplex cy=cexp(-2*M_PI*I*duy*sy);
+    PCMAT(otf, potf);
+    PCMAT(otfin, potfin);
+    warning_once("Consider caching ux, ny\n");
     if(pinct==1){/*peak in center */
 	ux[0]=cexp(-2*M_PI*I*dux*sx*(-nx/2));
 	for(int i=1; i<nx; i++){
@@ -803,11 +807,17 @@ void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
 	    uy[i]=uy[i-1]*cy;
 	}
     }
-    for(int iy=0; iy<ny; iy++){
-	dcomplex *restrict p=otf->p+iy*nx;
-	dcomplex *restrict pin=otfin->p+iy*nx;
-	for(int ix=0; ix<nx; ix++){
-	    p[ix]=pin[ix]*ux[ix]*uy[iy];
+    if(otf->p==otfin->p){
+	for(int iy=0; iy<ny; iy++){
+	    for(int ix=0; ix<nx; ix++){
+		potf[iy][ix]*=ux[ix]*uy[iy];
+	    }
+	}
+    }else{
+	for(int iy=0; iy<ny; iy++){
+	    for(int ix=0; ix<nx; ix++){
+		potf[iy][ix]=potfin[iy][ix]*ux[ix]*uy[iy];
+	    }
 	}
     }
 }

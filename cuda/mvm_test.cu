@@ -32,7 +32,7 @@ typedef float GTYPE;
 __global__ static void 
 mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
+    register int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
 	acc[threadIdx.x]=0;
 	for(int ig=0; ig<ng; ig++){
@@ -41,6 +41,27 @@ mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict
 	}
 	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
+}
+__global__ static void 
+multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+    extern __shared__ float acc[];
+    int iact=threadIdx.x+blockIdx.x*blockDim.x;
+    int nset=(blockDim.x*gridDim.x+nact-1)/nact;
+    if(blockDim.x*gridDim.x<nset*nact){
+	//drop partial set
+	nset--;
+    }
+    const int iset=iact/nact;
+    if(iset>=nset) return;
+    iact=iact-nact*iset;
+    acc[threadIdx.x]=0;
+    const int igi=(iset*ng)/nset;
+    const int ngi=((iset+1)*ng)/nset;
+    for(int ig=igi; ig<ngi; ig++){
+	register float mvmi=mvm[nact*ig+iact];
+	acc[threadIdx.x]+=mvmi*(float)(g[ig]);
+    }
+    atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
 }
 #define tix threadIdx.x
 #define tiy threadIdx.y
@@ -126,27 +147,41 @@ multimv(float *restrict y, const float *restrict A, const float *restrict x, con
 __global__ static void
 test_read(float *A, int nx, int ny){
     //extern __shared__ float sh[];
-    register const int id=tnx*bix+tix;
+    register const int irow=tnx*bix+tix;
     float __shared__ sum;
     sum=0;
     for(int i=0; i<ny; i++){
-	sum+=A[id+i*nx];
+	sum+=A[irow+i*nx];
+    }
+}
+__global__ static void
+test_read_multi(float *A, int nx, int ny){
+    //extern __shared__ float sh[];
+    register int irow=tnx*bix+tix;
+    const int nset=(tnx*bnx+nx-1)/nx;
+    const int iset=irow/nx;
+    irow=irow-iset*nx;
+    float __shared__ sum;
+    sum=0;
+    for(int i=iset*ny/nset; i<(iset+1)*ny/nset; i++){
+	sum+=A[irow+i*nx];
     }
 }
 
-void mvm_test(){
- 
+void mvm_test(int igpu){
+    cudaSetDevice(igpu);
     int M,N;
     M=7256;
     N=5164;
-    //M=4096;
     //N=2048*2;
+    //N=4000;
+    int nstream=5;
     //M=32*32*32;
     //N=600;
     //M=32;
     //N=32*32;
-    //int iN=600;
-    int iN=N;
+    int iN=1200;
+    //int iN=N;
     smat *mvm=snew(M,N);
     smat *x=snew(N,1);
     rand_t stat;
@@ -163,7 +198,6 @@ void mvm_test(){
     cp2gpu(&cumvmt, mvm);
     cp2gpu(&cux, x);
     cuy=curnew(M, 1);
-    int nstream=4;
     stream_t stream[nstream];
     int nevent=nstream*2;
     event_t event[nevent];
@@ -171,63 +205,92 @@ void mvm_test(){
     //curwrite(cuy, "y0");
     float tm;
     cudaProfilerStart();
-    /*
+    
     {
-	event[0].record(stream);
+	event[0].record(stream[0]);
 	for(int i=0; i<N; i+=iN){
 	    int nleft=N-i;
 	    if(nleft>iN) nleft=iN;
-	    DO(cublasSgemv(stream, CUBLAS_OP_N, M,nleft, &one, cumvm->p+i*M, M, cux->p+i, 1, &one, cuy->p, 1));
+	    DO(cublasSgemv(stream[0], CUBLAS_OP_N, M,nleft, &one, cumvm->p+i*M, M, cux->p+i, 1, &one, cuy->p, 1));
 	}
-	event[1].record(stream);
-	stream.sync();
+	event[1].record(stream[0]);
+	stream[0].sync();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 	info("cublasSgemv takes %.6f ms\n", tm);
 	curwrite(cuy, "y_cugemv");
+    }
+    {
+	for(int nover=2; nover<256; nover+=2)
+	    {
+		//custom method. 10 is optimal
+		int naeach=128;
+		const int nblock=(M*nover+naeach-1)/naeach;
+		cuy->zero();
+		int is;
+		for(is=0; is<nstream; is++){
+		    stream[is].sync();
+		}
+		TIC;tic;
+		//event[0].record(stream[0]);
+		is=0;
+		for(int i=0; i<N; i+=iN){
+		    int nleft=N-i;
+		    if(nleft>iN) nleft=iN;
+		    multimv_do<<<nblock, naeach, sizeof(float)*naeach, stream[is]>>>
+			(cumvm->p+i*M, cuy->p, cux->p+i, M, nleft);
+		    is=(is+1)%nstream;
+		}
+		//event[1].record(stream[0]);
+		for(is=0; is<nstream; is++){
+		    stream[is].sync();
+		}
+		info("nover=%d,  %.6f ms\n", nover, toc3*1000);
+	    }
+	curwrite(cuy, "y_multimv");
     }
     {
 	//custom method
 	int naeach, mp_count;
 	naeach=128;
 	mp_count=(M+naeach-1)/naeach;
-	cuy->zero(stream);stream.sync();
-    	event[0].record(stream);
+	cuy->zero(stream[0]);stream[0].sync();
+    	event[0].record(stream[0]);
 	for(int i=0; i<N; i+=iN){
 	    int nleft=N-i;
 	    if(nleft>iN) nleft=iN;
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, stream>>>
+	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, stream[0]>>>
 		(cumvm->p+i*M, cuy->p, cux->p+i, M, nleft);
 	}
-	event[1].record(stream);
-	stream.sync();
+	event[1].record(stream[0]);
+	stream[0].sync();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 	info("mvm_g_mul takes %.6f ms\n", tm);
 	curwrite(cuy, "y_gmul");
-	}*/
-    /*{
+	}
+    /*  {
 	
 	const int nblock=(M+BLOCKMV_TNX-1)/BLOCKMV_TNX;
 	//const int nblock=1;
 	//new method with blocking
-	cuy->zero(stream);stream.sync();
+	cuy->zero(stream[0]);stream[0].sync();
 	cudaProfilerStart();
-	event[0].record(stream);
+	event[0].record(stream[0]);
 	for(int i=0; i<N; i+=iN){
 	    int nleft=N-i;
 	    if(nleft>iN) nleft=iN;
-	    blockmv<<<nblock, dim3(BLOCKMV_TNX, BLOCKMV_TNY), 0, stream>>>
+	    blockmv<<<nblock, dim3(BLOCKMV_TNX, BLOCKMV_TNY), 0, stream[0]>>>
 		(cuy->p, cumvm->p+i*M, cux->p+i, M, nleft);
 	}
-	event[1].record(stream);
-	stream.sync();
+	event[1].record(stream[0]);
+	stream[0].sync();
 	cudaProfilerStop();
 	DO(cudaEventElapsedTime(&tm, event[0], event[1]));
 	info("blockmv takes %.6f ms\n", tm);
 	curwrite(cuy, "y_blockmv");
 	}*/
-    {
+    /*{
 	cudaProfilerStart();
-	int nthread=512;
+	int nthread=192;
 	int nblock=M/nthread;
 	//TIC;tic;
 	for(int is=0; is<nstream; is++){
@@ -241,8 +304,47 @@ void mvm_test(){
 	}
 	//toc("sync");
 	cudaProfilerStop();
+	for(int is=0; is<nstream; is++){
+	    float tm1, tm2;
+	    DO(cudaEventElapsedTime(&tm1, event[0], event[2*is]));
+	    DO(cudaEventElapsedTime(&tm2, event[0], event[2*is+1]));
+	    info2("%.6f %.6f %.6f\n", tm1, tm2, tm2-tm1);
+	}
 	DO(cudaEventElapsedTime(&tm, event[0], event[nevent-1]));
-	info("test_read takes %.6f ms\n", tm);
+	info("test_read takes %.6f ms, BW=%.1f GB/s\n", tm, M*N*4/tm*1e-6);
 
-    }
+	}*/
+
+    /*{
+	
+	cudaProfilerStart();
+	const int ncase=100;
+	int nthread=128;//192 or 256 are good values
+	for(N=4000; N>10; N=N/2){
+	    int i0;
+	    float t0=INFINITY;
+	    for(nstream=2; nstream<=512; nstream+=2){
+		int nblock=M/nthread*nstream;
+		float tm0=0;
+		for(int icase=0; icase<ncase; icase++){
+		    //A single stream, but different kernels does different columns.
+		    //nstream=256;
+		    event[0].record(stream[0]);
+		    test_read_multi<<<nblock, nthread, 0, stream[0]>>>
+			(cumvm->p, M, N);
+		    event[1].record(stream[0]);
+		    stream[0].sync();
+		    DO(cudaEventElapsedTime(&tm, event[0], event[1]));
+		    tm0+=tm;
+		}
+		if(tm0<t0){
+		    t0=tm0;
+		    i0=nstream;
+		}
+	
+	    }
+info2("N=%d nstream=%d, BW=%g\n", N, i0, M*N*4/t0*1e-6*ncase);
+	}
+	cudaProfilerStop();
+    }*/
 }

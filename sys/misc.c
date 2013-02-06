@@ -138,6 +138,7 @@ void print_file(const char *fnin){
 	error("Open %s failed\n",fn);
     }
     copyfile_fp(stderr, fp);
+    fflush(stderr);
     fclose(fp);
     free(fn);
 }

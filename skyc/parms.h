@@ -66,6 +66,7 @@ typedef struct MAOS_S{
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
     int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
     int mffocus;     /**<1: maos already does sodium tracking*/
+    char *fnrange;   /**<sodium range time series. forward to maos.*/
 }MAOS_S;
 
 /**
@@ -110,6 +111,7 @@ typedef struct SKYC_S{
     double *pixtheta;/**<size of WFS ccd pixel.*/
     double *pixblur; /**<blurring of pixels.*/
     int *pixpsa;     /**<number of detector pixels in each direction per sa*/
+    int *pixguard;   /**<guard window size in each direction.*/
     double *pixoffx; /**<pixel offset along x in units of pixel*/
     double *pixoffy; /**<pixel offset along y in units of pixel*/
     double keepout;  /**<NGS probe keep out range in arcsec.*/
@@ -157,12 +159,14 @@ typedef struct SKYC_S{
 typedef struct PARMS_S{
     MAOS_S maos;     /**<parameters exported by maos*/
     SKYC_S skyc;     /**<parameters supplied by user*/
+    int *fdlock;    /**<Records the fd of the seed lock file. if -1 will skip the seed*/
 }PARMS_S;
 /**
    ARG_S is used for command line parsing.
 */
 typedef struct ARG_S{
     int detach;      /**<Detach from the command line and run in background*/
+    int override;    /**<Override result even if Res?_?.done exist*/
     int force;       /**<For start, bypassing scheduler*/
     int nthread;     /**<Number of threads*/
     char *dirout;    /**<Result output directory*/

@@ -463,8 +463,21 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	double err=parms->powfs[ipowfs].saspherical*1e-9;
 	/*
 	  The OPD is 
-	  Phi=(x^2+y^2)^2-a(x^2+y^2)-b;
+	  Phi=f(r)-ar^2-b;
+	  which r^2=x^2+y^2.
+	  f(r) was r^4 for spherical aberration. 
+	  It is changed to new form on 2013-05-16 based on measurements.
+
 	  We first minimize \Int phi^2, then use phi.
+	  let 
+	  R2=\Int r^2
+	  R4=\Int r^4
+	  Rf=\Int f(r)
+	  Rf2=\Int f(r)*r^2. 
+
+	  We have
+	  b=(R4Rf-R2R6)/(R4-R2R2);
+	  
 	*/
 	dmat *ampw=NULL;
 	if(ampi){
@@ -478,32 +491,42 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	normalize_sum(ampw->p, ampw->nx*ampw->ny, 1);
 	PDMAT(ampw, pampw);
 	int nx2=nx/2;
-	double Rx2=pow(nx*dx/2, -2);
-	double A1=0, A2=0, A3=0;
-	for(int iy=0; iy<nx; iy++){
-	    for(int ix=0; ix<nx; ix++){
-		double tmp=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		double amp=pampw[iy][ix];
-		A1+=tmp*amp;
-		A2+=tmp*tmp*amp;
-		A3+=tmp*tmp*tmp*amp;
-	    }
-	}
-
-	double b=(A1*A3-A2*A2)/(A1*A1-A2);
-	double a=(A2-b)/A1;
+	double fill1d=sqrt(parms->powfs[ipowfs].sathruput);
+	//normalize x,y from -1 to 1 in clear aperture
+	double Rx2=pow(fill1d*nx/2, -2);
 	dmat *opdi=dnew(nx, nx); PDMAT(opdi, popdi);
-	double A4=0;
+	double R2=0, R4=0, Rf2=0, Rf=0;
 	for(int iy=0; iy<nx; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		double tmp=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		tmp=tmp*tmp-a*tmp-b;
-		popdi[iy][ix]=tmp;
-		A4+=tmp*tmp*pampw[iy][ix];
+#define MEASURED_LENSLET 1
+		double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+#if MEASURED_LENSLET
+		double xx=(iy-nx2)*(iy-nx2)*Rx2;
+		double yy=(ix-nx2)*(ix-nx2)*Rx2;
+		popdi[iy][ix]=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
+#else
+		popdi[iy][ix]=rr*rr;
+#endif
+		double amp=pampw[iy][ix];
+		R2+=rr*amp;
+		R4+=rr*rr*amp;
+		Rf+=popdi[iy][ix]*amp;
+		Rf2+=popdi[iy][ix]*rr*rr*amp;
+	    }
+	}		
+	double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
+	double a=(R4-b)/R2;
+	info("a=%g, b=%g\n", a,b);
+	double var=0;
+	for(int iy=0; iy<nx; iy++){
+	    for(int ix=0; ix<nx; ix++){
+		double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+		popdi[iy][ix]-=a*rr+b;
+		var+=popdi[iy][ix]*popdi[iy][ix]*pampw[iy][ix];
 	    }
 	}
 	dfree(ampw);
-	dscale(opdi, err/sqrt(A4));
+	dscale(opdi, err/sqrt(var));
 	if(!powfs[ipowfs].opdadd){
 	    powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -2013,7 +2036,23 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 		}
 	    }
 	}
+	//if opdadd is null, but dm_ncpa is not, there will be opdbias.
 	if(powfs[ipowfs].opdbias){
+	    if(parms->sim.ncpa_ttr){
+		/*remove average tilt from opdbias and same amount from
+		  opdadd. Does not need to be very accurate.*/
+		dmat *mcc=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].amp->p);
+		double ipcc=1./mcc->p[0];
+		dinvspd_inplace(mcc);
+		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
+		    double ptt[3]={0,0,0};
+		    loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./mcc->p[0], mcc, 
+				 powfs[ipowfs].amp->p, powfs[ipowfs].opdbias->p[iwfs]->p);
+		    loc_remove_ptt(powfs[ipowfs].opdbias->p[iwfs]->p, ptt, powfs[ipowfs].loc);
+		    loc_remove_ptt(powfs[ipowfs].opdadd->p[iwfs]->p, ptt, powfs[ipowfs].loc);
+		}
+		dfree(mcc);
+	    }
 	    if(parms->powfs[ipowfs].ncpa_method==1){
 		if(!powfs[ipowfs].gradoff){
 		    powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs,1);

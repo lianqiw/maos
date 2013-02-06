@@ -31,9 +31,15 @@ two ways:
 2) partition gradients to GPUs with GPU handle all actuators. (selected)
 
 Use schedtool -a 0x1 PID to let the exe only run one CPU 0. This prevents jitter.
+
+Optimal timing (low jitter) achieved with multimv_do:
+cassiopeia with GTX 580:nsm=1, mtch_ngrid=90, nover=9 1.1ms
+orion with GTX 590, single GPU: nsm=1, mtch_ngrid=90, nover=9, 1.3ms
+kepler with K20: nsm=2, mtch_ngrid=20, nover=3 1.13ms
+
 */
 
-#define TIMING 1
+#define TIMING 0
 
 #if TIMING 
 unsigned int event_flag=cudaEventDefault;
@@ -62,6 +68,7 @@ typedef struct{
     cudaEvent_t *event_p;
     cudaEvent_t *event_g;
     cudaEvent_t event_pall;
+    event_t *event_w;
 #if TIMING
     cudaEvent_t event0;
     cudaEvent_t *event0_p;
@@ -99,6 +106,27 @@ static void __global__ mtch_do(const float *mtch, const float *pix, float *grad,
 	grad[ig]=cumi[0];
     }
 }
+__global__ static void 
+multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+    extern __shared__ float acc[];
+    int iact=threadIdx.x+blockIdx.x*blockDim.x;
+    int nset=(blockDim.x*gridDim.x+nact-1)/nact;
+    if(blockDim.x*gridDim.x<nset*nact){
+	//drop partial set
+	nset--;
+    }
+    const int iset=iact/nact;
+    if(iset>=nset) return;
+    iact=iact-nact*iset;
+    acc[threadIdx.x]=0;
+    const int igi=(iset*ng)/nset;
+    const int ngi=((iset+1)*ng)/nset;
+    for(int ig=igi; ig<ngi; ig++){
+	register float mvmi=mvm[nact*ig+iact];
+	acc[threadIdx.x]+=mvmi*(float)(g[ig]);
+    }
+    atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
+}
 __global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
@@ -122,8 +150,7 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	DO(cudaGetDeviceProperties(&prop, 0));
 	mp_count=prop.multiProcessorCount;
     }
-    const int nsm=5;
-
+    int nsm=2;
     info("Using %d gpus\n", ngpu);
     //warning2("Notice that here we group x/y gradients together like xyxyxy instead of like"
     //	    "xxxyyy in matched filter and MVM here.\n");
@@ -149,9 +176,22 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
     scell *dmres=scellnew(ngpu, 1);
     spagelock(pix1, pix2, mvm1, mvm2, mtch, NULL);
     const int pixpsa=90;//Change this need to change kernel mtch_do
-    const int mtch_ngrid=50;//30;//can change to utilize GPU fully. 16 is good for cassiopeia
+    int mtch_ngrid=50;//30;//can change to utilize GPU fully. 16 is good for cassiopeia
     const int mtch_dimx=32;//must launch 32 threads so that they belong to single wrap. use only 30 threads.
     const int mtch_dimy=12;//4 subapertures, 8 gradients
+    {
+	char *MVM_NSM=getenv("MVM_NSM");
+	if(MVM_NSM){
+	    nsm=strtol(MVM_NSM, NULL, 10);
+	    info2("nsm is set to %d\n", nsm);
+	}
+	char *MVM_NGRID=getenv("MVM_NGRID");
+	if(MVM_NGRID){
+	    mtch_ngrid=strtol(MVM_NGRID, NULL, 10);
+	    info2("mtch_ngrid is set to %d\n", mtch_ngrid);
+	}
+    }
+
     const int sastep=mtch_dimy*mtch_ngrid/2;
     const int nact=mvm1->nx;
     int nc=10;//each time copy nc column of mvm.
@@ -172,6 +212,7 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	data[igpu].stream_p=new stream_t;
 	data[igpu].stream_g=new stream_t;
 	data[igpu].stream_a=new stream_t[nsm];
+	data[igpu].event_w=new event_t[nsm];
 	data[igpu].stream_mvm=new stream_t;
 	data[igpu].gpu=gpus[igpu];
 #if TIMING
@@ -205,10 +246,11 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
     smat *timing=snew(nstep, 1);
     smat *timing2=snew(nstep, 1);
     smat *result=snew(nstep, 1);
-    float one=1; float zero=0; float *pbeta;
+    float one=1; 
     cudaProfilerStart();
-    TIC;tic;
+    TIC;
     for(int istep=0; istep<nstep; istep++){
+	tic;
 #if TIMING
 	if(istep%8000==0)
 #else
@@ -266,11 +308,7 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 		datai->grad->p+isa*2, pixpsa, nleft);
 	    //Record the event when matched filter is done
 	    DO(cudaEventRecord(datai->event_g[datai->count], datai->stream_g[0]));
-	    if(!datai->count){
-		pbeta=&zero;//initialize act.
-	    }else{
-		pbeta=&one;
-	    }
+
 	    //Another stream does the matrix vector multiplication. Wait for the event before executing.
 	    //The stream stream will wait only for the completion of the most recent host call to cudaEventRecord() on event
 	    datai->ism=(datai->ism+1)%nsm;
@@ -279,13 +317,23 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 #if TIMING
 	    DO(cudaEventRecord(datai->event0_a2[datai->count], datai->stream_a[datai->ism]));    
 #endif
-#if 1
-	    DO(cublasSgemv(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, pbeta, datai->act->p, 1));
+#if 0
+	    DO(cublasSgemv(datai->stream_a[datai->ism], CUBLAS_OP_N, nact, nleft*2, &one, datai->cumvm->p+nact*isa*2, nact, datai->grad->p+isa*2, 1, &one, datai->act->p, 1));
 #else
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
-		(cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    {
+		const int naeach=128;
+		int nover=1+istep/50;//14;
+		char *MVM_NOVER=getenv("MVM_NOVER");
+		if(MVM_NOVER){
+		    nover=strtol(MVM_NOVER, NULL, 10);
+		}
+		const int nblock=(nact*nover+naeach-1)/naeach;
+		multimv_do<<<nblock, naeach, sizeof(float)*naeach, datai->stream_a[datai->ism]>>>
+		    (datai->cumvm->p+nact*isa*2, datai->act->p, datai->grad->p+isa*2, 
+		     nact, nleft*2);
+	    }
 #endif
-
+	    DO(cudaEventRecord(datai->event_w[datai->ism], datai->stream_a[datai->ism]));
 #if TIMING
 	    DO(cudaEventRecord(datai->event_a2[datai->count], datai->stream_a[datai->ism])); 
 #endif
@@ -333,35 +381,45 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	for(int igpu=0; igpu<ngpu; igpu++){
 	    GPU_DATA_T *datai=&data[igpu];
 	    cudaSetDevice(gpus[igpu]); 
+	    for(int ism=1; ism<nsm; ism++){
+		DO(cudaStreamWaitEvent(datai->stream_a[0], datai->event_w[ism], 0));
+	    }
 #if TIMING
-	    DO(cudaEventRecord(datai->event0_a, datai->stream_a[datai->ism]));
+	    DO(cudaEventRecord(datai->event0_a, datai->stream_a[0]));
 #endif
-	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(float), cudaMemcpyDeviceToHost, datai->stream_a[data->ism]);
+	    cudaMemcpyAsync(dmres->p[igpu]->p, datai->act->p, nact*sizeof(float), cudaMemcpyDeviceToHost, datai->stream_a[0]);
 #if TIMING
-	    DO(cudaEventRecord(datai->event_a, datai->stream_a[datai->ism]));//record event when all act are copied so mvm can start.
+	    DO(cudaEventRecord(datai->event_a, datai->stream_a[0]));//record event when all act are copied so mvm can start.
 #endif
 	}
-	data[0].stream_a->sync();
-	//CPU sums them together
+	//CPU sums them together. sync first gpu
+	data[0].stream_a[0].sync();
+	//sum other GPUs
 	for(int igpu=1; igpu<ngpu; igpu++){
 	    cudaSetDevice(gpus[igpu]); 
-	    data[igpu].stream_a->sync();
+	    data[igpu].stream_a[0].sync();
 	    for(int iact=0; iact<nact; iact++){
 		dmres->p[0]->p[iact]+=dmres->p[igpu]->p[iact];
 	    }
 	}
 	result->p[istep]=dmres->p[0]->p[nact/2];
 	timing->p[istep]=toc3;//do not tic.
+	if(istep<2){
+	    swrite(dmres->p[0], "dmres_%d", istep);
+	}
 	if(istep%1000==0 || timing->p[istep]>2.e-3){
 	    info2("Step %d takes %.0f us\n", istep, timing->p[istep]*1e6);
 	}
 
 	//Wait for MVM matrix copy to finish and time.
 	for(int igpu=0; igpu<ngpu; igpu++){
-	    cudaSetDevice(data[igpu].gpu);
-	    data[igpu].stream_mvm->sync();
+	    GPU_DATA_T *datai=&data[igpu];
+	    cudaSetDevice(datai->gpu);
+	    cudaMemsetAsync(datai->act->p, 0, nact*sizeof(float), datai->stream_a[datai->ism]);
+	    datai->stream_a[datai->ism].sync();
+	    datai->stream_mvm->sync();
 	}
-	timing2->p[istep]=toc3;tic;
+	timing2->p[istep]=toc3;
 #if TIMING 
 	if(istep<100){
 	    for(int igpu=0; igpu<ngpu; igpu++){
@@ -397,12 +455,15 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 		sfree(tim);
 	    }
 	}
-	tic;
 #endif
     }
     cudaProfilerStop();
-    swrite(timing, "timing_%dgpu", ngpu);
-    swrite(timing2, "timing2_%dgpu", ngpu);
-    swrite(result, "result_%dgpu", ngpu);
+    if(getenv("MVM_NOVER")){
+	swrite(timing, "tim2_%s_%dgpu_%d_%d", myhostname(), ngpu, mtch_ngrid, nsm);
+    }else{
+	swrite(timing, "tim_%s_%dgpu_%d_%d", myhostname(), ngpu, mtch_ngrid, nsm);
+    }
+    //swrite(timing2, "timing2_%dgpu", ngpu);
+    //swrite(result, "res_%s_%dgpu", ngpu);
     spageunlock(pix1, pix2, mvm1, mvm2, NULL);
 }

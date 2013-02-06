@@ -207,7 +207,7 @@ void filter_cl(SIM_T *simu){
 	}
 	servo_filter(simu->dmint, simu->dmerr, simu->dthi, simcfg->epdm);
     }
-    if(parms->recon.split && simu->Merr_lo){ /*low order*/
+    if(parms->recon.split && simu->Merr_lo){ /*low order. global focus mode is removed.*/
 	/*Low order, modal in split tomography only.  */
 	servo_filter(simu->Mint_lo, simu->Merr_lo, simu->dtlo, simcfg->eplo);
 	if(parms->sim.fuseint){/*accumulate to the main integrator.*/

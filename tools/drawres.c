@@ -273,23 +273,23 @@ int main(int argc, char *argv[]){
 
 	    dadd(&reshim->p[ipath], 1, reshi->p[ii], 1);
 	    dadd(&reslom->p[ipath], 1, reslo->p[ii], 1);
-	    if(restype==1){
+	    if(restype==1){//maos
 		dadd(&resolhim->p[ipath], 1, resolhi->p[ii], 1);
 		dadd(&resollom->p[ipath], 1, resollo->p[ii], 1);
 	    }
 	    /*
 	      snprintf(fn, PATH_MAX, "%s/Resuptcmd_%ld.bin", path[ipath], seed[iseed]);
 	      dcell *upt=dcellread("%s",fn);
-	    tmp=dcell2m(upt);
-	    uptcmd->p[ii]=dtrans(tmp);
-	    dfree(tmp);
-	    dcellfree(upt);
-	    snprintf(fn, PATH_MAX, "%s/Resupterr_%ld.bin", path[ipath], seed[iseed]);
-	    upt=dcellread("%s",fn);
-	    tmp=dcell2m(upt);
-	    upterr->p[ii]=dtrans(tmp);
-	    dfree(tmp);
-	    dcellfree(upt);*/
+	      tmp=dcell2m(upt);
+	      uptcmd->p[ii]=dtrans(tmp);
+	      dfree(tmp);
+	      dcellfree(upt);
+	      snprintf(fn, PATH_MAX, "%s/Resupterr_%ld.bin", path[ipath], seed[iseed]);
+	      upt=dcellread("%s",fn);
+	      tmp=dcell2m(upt);
+	      upterr->p[ii]=dtrans(tmp);
+	      dfree(tmp);
+	      dcellfree(upt);*/
 	}
 	if(seedcount>0){
 	    dscale(reshim->p[ipath], 1./seedcount);
@@ -300,16 +300,30 @@ int main(int argc, char *argv[]){
 	    }
 	}
     }
+    dcell *restot=dcelldup(reshi);
+    dcelladd(&restot, 1, reslo, 1);
+    dcell *restotm=dcelldup(reshim);
+    dcelladd(&restotm, 1, reslom, 1);
+
     dcellcwpow(reshi, 0.5); dcellscale(reshi, 1e9);
     dcellcwpow(reshim, 0.5); dcellscale(reshim, 1e9);
     dcellcwpow(reslo, 0.5); dcellscale(reslo, 1e9);
     dcellcwpow(reslom, 0.5); dcellscale(reslom, 1e9);
+    dcellcwpow(restot, 0.5); dcellscale(restot, 1e9);
+    dcellcwpow(restotm, 0.5); dcellscale(restotm, 1e9);
+    dcell *resol=NULL, *resolm=NULL;
     if(restype==1){
+	resol=dcelldup(resolhi);
+	dcelladd(&resol, 1, resollo, 1);
+	resolm=dcelldup(resolhim);
+	dcelladd(&resolm, 1, resollom, 1);
+
 	dcellcwpow(resolhi, 0.5); dcellscale(resolhi, 1e9);
 	dcellcwpow(resollo, 0.5); dcellscale(resollo, 1e9);
-
+	dcellcwpow(resol, 0.5); dcellscale(resol, 1e9);
 	dcellcwpow(resolhim, 0.5); dcellscale(resolhim, 1e9);
 	dcellcwpow(resollom, 0.5); dcellscale(resollom, 1e9);
+	dcellcwpow(resolm, 0.5); dcellscale(resolm, 1e9);
     }
  
     if(npath==1){
@@ -319,14 +333,18 @@ int main(int argc, char *argv[]){
 	    snprintf(legs[iseed], 50, "Seed %ld", seed[iseed]);
 	}
 	if(restype==1){
-	plot_points("Reshi", nseed, NULL, reshi, NULL, NULL, xylog, 0, NULL, legs,
-		    "High order Wavefront Error", xlabel,ylabel, "High");
-	plot_points("Reslo", nseed, NULL, reslo, NULL, NULL, xylog, 0, NULL,legs,
-		    "Low order Wavefront Error", xlabel,ylabel, "Low");
-	plot_points("ResOLhi", nseed, NULL, resolhi, NULL, NULL, xylog, 0, NULL, legs,
-		    "High order Openloop Wavefront Error", xlabel,ylabel, "High");
-	plot_points("ResOLlo", nseed, NULL, resollo, NULL, NULL, xylog, 0, NULL, legs,
-		    "Low order Openloop Wavefront Error", xlabel,ylabel, "Low");
+	    plot_points("Res", nseed, NULL, restot, NULL, NULL, xylog, 0, NULL, legs,
+			"Total Wavefront Error", xlabel,ylabel, "Total");
+	    plot_points("Reshi", nseed, NULL, reshi, NULL, NULL, xylog, 0, NULL, legs,
+			"High order Wavefront Error", xlabel,ylabel, "High");
+	    plot_points("Reslo", nseed, NULL, reslo, NULL, NULL, xylog, 0, NULL,legs,
+			"Low order Wavefront Error", xlabel,ylabel, "Low");
+	    plot_points("ResOL", nseed, NULL, resol, NULL, NULL, xylog, 0, NULL, legs,
+			"Total Openloop Wavefront Error", xlabel,ylabel, "Total");
+	    plot_points("ResOLhi", nseed, NULL, resolhi, NULL, NULL, xylog, 0, NULL, legs,
+			"High order Openloop Wavefront Error", xlabel,ylabel, "High");
+	    plot_points("ResOLlo", nseed, NULL, resollo, NULL, NULL, xylog, 0, NULL, legs,
+			"Low order Openloop Wavefront Error", xlabel,ylabel, "Low");
 	}else{
 	    plot_points("Tot", nseed, NULL, reshi, NULL, NULL, xylog, 0, NULL, legs,
 			"Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All");
@@ -338,10 +356,14 @@ int main(int argc, char *argv[]){
 	}
     }else{
 	if(restype==1){
+	    plot_points("Res", npath, NULL, restotm, NULL, NULL, xylog, 0, NULL, path,
+			"Total Wavefront Error", xlabel,ylabel, "Total");
 	    plot_points("Reshi", npath, NULL, reshim, NULL, NULL, xylog, 0, NULL, path,
 			"High order Wavefront Error", xlabel,ylabel, "High");
 	    plot_points("Reslo", npath, NULL, reslom, NULL, NULL, xylog, 0, NULL, path,
 			"Low order Wavefront Error", xlabel,ylabel, "Low");
+	    plot_points("ResOL", npath, NULL, resolm, NULL, NULL, xylog, 0, NULL, path,
+			"Total Openloop Wavefront Error", xlabel,ylabel, "Total");
 	    plot_points("ResOLhi", npath, NULL, resolhim, NULL, NULL, xylog, 0, NULL, path,
 			"High order Openloop Wavefront Error", xlabel,ylabel, "High");
 	    plot_points("ResOLlo", npath, NULL, resollom, NULL, NULL, xylog, 0, NULL, path,
@@ -355,34 +377,41 @@ int main(int argc, char *argv[]){
 	for(int iseed=0; iseed<nseed; iseed++){
 	    dcell *reshi_i=dcellsub(reshi, 0,0,iseed, 1);
 	    dcell *reslo_i=dcellsub(reslo, 0,0,iseed, 1);
-	    dcell *resolhi_i=dcellsub(resolhi, 0,0,iseed, 1);
-	    dcell *resollo_i=dcellsub(resollo, 0,0,iseed, 1);
 	    if(restype==1){
-	    plot_points("Reshi", npath, NULL, reshi_i, NULL, NULL, xylog, 0, NULL, path,
-			"High order Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
-	    plot_points("Reslo", npath, NULL, reslo_i, NULL, NULL, xylog, 0, NULL, path,
-			"Low order Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
-	    plot_points("ResOLhi", npath, NULL, resolhi_i, NULL, NULL, xylog, 0, NULL, path,
-			"High order Openloop Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
-	    plot_points("ResOLlo", npath, NULL, resollo_i, NULL, NULL, xylog, 0, NULL, path,
-			"Low order Openloop Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
+		dcell *restot_i=dcellsub(restot, 0,0,iseed, 1);
+		dcell *resolhi_i=dcellsub(resolhi, 0,0,iseed, 1);
+		dcell *resollo_i=dcellsub(resollo, 0,0,iseed, 1); 
+		dcell *resol_i=dcellsub(resol, 0,0,iseed, 1); 
+		plot_points("Res", npath, NULL, restot_i, NULL, NULL, xylog, 0, NULL, path,
+			    "High order Wavefront Error", xlabel,ylabel, "Total_%ld",seed[iseed]);
+		plot_points("Reshi", npath, NULL, reshi_i, NULL, NULL, xylog, 0, NULL, path,
+			    "High order Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
+		plot_points("Reslo", npath, NULL, reslo_i, NULL, NULL, xylog, 0, NULL, path,
+			    "Low order Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
+		plot_points("ResOL", npath, NULL, resol_i, NULL, NULL, xylog, 0, NULL, path,
+			    "Total Openloop Wavefront Error", xlabel,ylabel, "Total_%ld",seed[iseed]);
+		plot_points("ResOLhi", npath, NULL, resolhi_i, NULL, NULL, xylog, 0, NULL, path,
+			    "High order Openloop Wavefront Error", xlabel,ylabel, "High_%ld",seed[iseed]);
+		plot_points("ResOLlo", npath, NULL, resollo_i, NULL, NULL, xylog, 0, NULL, path,
+			    "Low order Openloop Wavefront Error", xlabel,ylabel, "Low_%ld",seed[iseed]);
+		dcellfree(resolhi_i);dcellfree(resollo_i);
+		dcellfree(resol_i);dcellfree(restot_i);
 	    }else{
 		plot_points("Tot", npath, NULL, reshi_i, NULL, NULL, xylog, 0, NULL, path,
 			    "Total OIWFS Mode Wavefront Error", xlabel,ylabel, "All_%ld",seed[iseed]);
 		plot_points("Atm TT", npath, NULL, reslo_i, NULL, NULL, xylog, 0, NULL,path,
 			    "ATM T/T Wavefront Error", xlabel,ylabel, "TT_%ld",seed[iseed]);
-
 	    }
-	    dcellfree(reshi_i);dcellfree(reslo_i);dcellfree(resolhi_i);dcellfree(resollo_i);
+	    dcellfree(reshi_i);dcellfree(reslo_i);
 	}
     }
     /*
-    dcellwrite(upterr, "upterr");
-    if(upterr && upterr->p[0]){
-	for(int iseed=0; iseed<nseed; iseed++){
+      dcellwrite(upterr, "upterr");
+      if(upterr && upterr->p[0]){
+      for(int iseed=0; iseed<nseed; iseed++){
 
-	    plot_points("upterr", nseed, NULL, upterr, NULL, NULL, xylog, 0, NULL, NULL, 
-			"Uplink error", xlabel, "Error (rad)", "%d", iseed);
-	}
-	}*/
+      plot_points("upterr", nseed, NULL, upterr, NULL, NULL, xylog, 0, NULL, NULL, 
+      "Uplink error", xlabel, "Error (rad)", "%d", iseed);
+      }
+      }*/
 }

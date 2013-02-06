@@ -50,8 +50,8 @@ __global__ void add_focus_do(float *restrict opd, float (*restrict loc)[2],
     }
 }
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
-			      float m0, float m1, float m2, float m3, float m4,
-			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha
+			      float m0, float m1, float m2, float m3, float m4, float focus,
+			      float thetax, float thetay, float scale, float ht, float alpha
 			      ){
     float scale1=1.f-scale;
     const int step=blockDim.x * gridDim.x;
@@ -63,7 +63,8 @@ __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int
 	float y2=y*y;
 	opd[i]+= alpha*(+x*m0
 			+y*m1
-			+m2*((x2+y2-MCC_fcp)*scale1-2*scale*ht*(thetax*x+thetay*y))
+			+focus*(x2+y2)
+			+m2*(-2*scale*ht*(thetax*x+thetay*y))
 			+m3*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
 			+m4*(xy*scale1-scale*ht*(thetay*x+thetax*y)));
     }

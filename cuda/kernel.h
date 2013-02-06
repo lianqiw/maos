@@ -71,8 +71,8 @@ __global__ void scale_do(float *restrict in, int n, float alpha);
 __global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2], int n, float pis, float tx, float ty);
 __global__ void add_focus_do(float *restrict opd, float (*restrict loc)[2], int n, float focus);
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
-			      float m0, float m1, float m2, float m3, float m4,
-			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha );
+			      float m0, float m1, float m2, float m3, float m4, float focus,
+			      float thetax, float thetay, float scale, float ht, float alpha);
 
 __global__ void add_do(float *vec, float beta, int n);
 __global__ void addcabs2_do(float *restrict a, float alpha, const fcomplex *restrict b, float beta, int n);

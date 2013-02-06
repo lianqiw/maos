@@ -101,10 +101,10 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		dwrite(psf2, "powfs%d_psf2_%d", ipowfs,iwvl);
 		cmat *otf2=cnew(ncomp, ncomp);
 		cfft2plan(otf2, -1);
-		ccpd(&otf2, psf2);
-		cfftshift(otf2);
+		ccpd(&otf2, psf2);//peak in center
+		cfftshift(otf2);//peak in corner
 		cfft2(otf2, -1);
-		cfftshift(otf2);
+		cfftshift(otf2);//peak in center
 		cwrite(otf2, "powfs%d_otf2_%d", ipowfs, iwvl);
 		cwrite(nominal, "powfs%d_dtf%d_nominal_0",ipowfs,iwvl);
 		for(int i=0; i<ncomp*ncomp; i++){
@@ -118,10 +118,13 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 		cfree(otf2);
 		dfree(psf2);
 	    }
-	    cfftshift(nominal);
+	    cfftshift(nominal);//peak in corner
 	    cfft2(nominal,-1);
-	    cfftshift(nominal);
+	    cfftshift(nominal);//peak in center
 	    cfft2i(nominal,1);
+	    warning_once("double check nominal for off centered skyc.fnpsf1\n");
+	    /*This nominal will multiply to OTF with peak in corner. But after
+	      inverse fft, peak will be in center*/
 	    ccp(&powfs[ipowfs].dtf[iwvl].nominal, nominal);
 	    cfree(nominal);
 
@@ -181,7 +184,8 @@ static void read_powfs_locamp(POWFS_S *powfs, const PARMS_S *parms){
 }
 /**
    Setup the corase loc grid corresponding to coarse sampled complex pupil
-function.  */
+   function. Deprecated on 1/29/2013. */
+/*
 static void setup_powfs_coarseloc(POWFS_S *powfs, const PARMS_S *parms){
     for(long ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	const long nsa=parms->maos.nsa[ipowfs];
@@ -207,10 +211,9 @@ static void setup_powfs_coarseloc(POWFS_S *powfs, const PARMS_S *parms){
 		fpc+=locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc];
 	    }
 	    powfs[ipowfs].fpc[isa]=fpc/nloc;
-	    /*info("powfs[%ld].fpc[%ld]=%g\n",ipowfs,isa,powfs[ipowfs].fpc[isa]); */
 	}
     }
-}
+}*/
 /**
    Method to demote TTF. deprecated. 
  */
@@ -237,10 +240,11 @@ static void setup_powfs_dettf(POWFS_S *powfs, const PARMS_S *parms){
 void setup_powfs(POWFS_S *powfs, const PARMS_S *parms){
     for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 	powfs[ipowfs].ipowfs=ipowfs;
+	powfs[ipowfs].nxwvf=parms->maos.ncomp[ipowfs]/parms->maos.embfac[ipowfs];
+	powfs[ipowfs].dxwvf=parms->maos.dxsa[ipowfs]/powfs[ipowfs].nxwvf;
     }
     setup_powfs_dtf(powfs, parms);
     read_powfs_locamp(powfs, parms);
-    setup_powfs_coarseloc(powfs,parms);
     setup_powfs_dettf(powfs,parms);
 }
 /**
@@ -257,8 +261,6 @@ void free_powfs(POWFS_S *powfs, const PARMS_S *parms){
 	free(powfs[ipowfs].dtf);
 	locfree(powfs[ipowfs].loc);
 	locfree(powfs[ipowfs].saloc);
-	locarrfree(powfs[ipowfs].cloc, parms->maos.nsa[ipowfs]);
-	free(powfs[ipowfs].fpc);
 	dfree(powfs[ipowfs].amp);
 	free(powfs[ipowfs].locxamp);
 	free(powfs[ipowfs].locyamp);

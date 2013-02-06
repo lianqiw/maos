@@ -343,7 +343,7 @@ typedef struct TOMO_CFG_T{
  
     int ahst_wt;     /**<0: use Wg, 1: using Wa*/
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
-    int ahst_rtt;    /**<remote tip/tilt in high order DM fit output in split mode*/
+    int ahst_ttr;    /**<remote tip/tilt in high order DM fit output in split mode*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -447,12 +447,14 @@ typedef struct SIM_CFG_T{
     dmat *eplo;     /**<error gain for NGS modes (low order)*/
     dmat *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
     dmat *epupt;    /**<error gain for uplink pointing*/
-    double lpfocus;  /**<parameter for low pass filter of LGS focus tracking with offset*/
+    double fcfocus;  /**<cross-over frequency of the focus LPF.*/
+    double lpfocus;  /**<derived: lpfocus=2*pi*fc/fs. fs=1./sim.dt*/
     double fov;      /**<The diameter of total fov in arcsec*/
     int mffocus;     /**<method for focus tracing.
 			- 0: no focus tracking.
-			- use CL grads + DM grads - Xhat grad for LGS and NGS.
-			- use CL grads + DM grads - Xhat grad for LGS; */
+			- 1: Focus tracking using CL gradients, for each LGS independently.
+			- 2: Focus tracking using CL gradinets, for common LGS focus only.
+		     */
     int uptideal;    /**<ideal compensation for uplink pointing*/
     int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
     int servotype_lo;/**<servo type for low order loop. 1: simple integrator. 2: type II*/
@@ -486,7 +488,8 @@ typedef struct SIM_CFG_T{
     int zoomdtrat;   /**<dtrat of the trombone averager*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
     double zoomgain; /**<gain of the trombone controller*/
-    int ncpa_calib;  /**<calibrate NCPA*/
+    int ncpa_calib;  /**<calibrate NCPA. 1: with all DMs. 2: with only ground DM.*/
+    int ncpa_ttr;    /**<Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1.*/
     double *ncpa_thetax; /**<Coordinate for NCPA calibration (arcsec)*/
     double *ncpa_thetay; /**<Coordinate for NCPA calibration (arcsec)*/
     double *ncpa_wt;     /**<Weight for each point.*/
@@ -544,7 +547,6 @@ typedef struct DBG_CFG_T{
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
     int nocgwarm;    /**<Disable warm restart in CG*/
-    int ftrack;      /**<0: Track average LGS focus. 1: Track individual LGS focus.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.
@@ -684,7 +686,9 @@ typedef struct PARMS_T{
     int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int pause;       /**<Pause at the end of every time step*/
     int nlopowfs;    /**<Number of low order wfs types*/
+    int *lopowfs;    /**<List of low order powfs*/
     int nhipowfs;    /**<Number of high order wfs types*/
+    int *hipowfs;    /**<List of high order powfs*/
     int ntrspowfs;   /**<Number of tile removed wfs types*/
 }PARMS_T;
 /**

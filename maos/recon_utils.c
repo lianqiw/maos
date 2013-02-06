@@ -550,21 +550,23 @@ void FitL(dcell **xout, const void *A,
 
 
 /**
-   Replace the low frequency part of focus correction by NGS measurement. 
-   a_focus = HPF * a_flgs + LPF * a_fngs 
-           = a_flgs + LPF*(a_fngs - a_flgs)
-	   
-   a_focus is the focus correction on the DM to reduce global focus on the science
-   a_flgs is the focus reconstruction from LGS measurements.
-   a_fngs is the focus reconstruction from NGS measurements.
+   Blend the focus measurement of LGS and NGS. We trust the focus measurement of
+   the LGS WFS at high temporal frequency where NGS cannot provide due to low
+   frame rate. The sodium average height PSD is little energy beyond the cut off
+   frequency of the LPF.
 
-   a_flgs can be estimated from
-          sim.mffocus=1: closed loop LGS gradients.
-	  sim.mffocus=2: f_opdr-f_dm where f_opdr is focus in tomography output and f_dm is the focus correction in the dm.
-   a_fngs is jointly estimated with the 5 NGS modes.
+   We do a low pass filter (LPF) on reconstructed focus from OIWFS measurement
 
-   Notice that the focus component of the tomography/dm fitting output is removed by projecting out NGS modes (focus as 6th mode).
-   \endverbatim
+   We do a complimentary high pass filter (HPF) on LGS gradients and then use it
+   normally.
+
+   if sim.mffocus==1: The HPF is applied to each LGS WFS indepently. This largely
+   removes the effect of differential focus. powfs.dfrs is no longer needed. (preferred).
+
+   if sim.mffocus==2: We apply a LPF on the average focus from six LGS WFS, and
+   then remove this value from all LGS WFS. The differential focus is still
+   present and powfs.dfrs need to be set to 1 to handle it in tomography. This
+   is the original focus tracking method.
 */
 void focus_tracking(SIM_T* simu){
     if(!simu->recon->RFlgsg){
@@ -580,14 +582,15 @@ void focus_tracking(SIM_T* simu){
     double focusm=0;
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	if(!LGSfocus->p[iwfs]) continue;
-	if(parms->dbg.ftrack){//remove HPF focus from each lgs
+	if(parms->sim.mffocus==1){//remove HPF focus from each lgs
 	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
 	}
+	//Average LPF focus
 	focusm+=simu->lgsfocuslpf->p[iwfs]; nwfsllt++;
 	//put LPF after using the value to put it off critical path.
 	simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
     }
-    if(!parms->dbg.ftrack){//remove HPF global focus from each lgs
+    if(parms->sim.mffocus==2){//remove HPF global focus from each lgs
 	focusm/=nwfsllt;
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    if(!LGSfocus->p[iwfs]) continue;
@@ -799,7 +802,7 @@ void shift_grad(SIM_T *simu){
     }else{
 	dcellcp(&simu->gradlastcl, simu->gradcl); 
     }
-    dcellcp(&simu->dmcmdlast, simu->dmcmd); 
+    dcellcp(&simu->dmreallast, simu->dmreal);
     simu->reconisim = simu->isim;
 }
 

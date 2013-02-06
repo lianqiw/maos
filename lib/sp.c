@@ -1232,7 +1232,7 @@ void Y(spcellmulvec)(T *restrict yc, const Y(spcell) *Ac,
     if(Ac && xc){
 	const T *restrict x=xc;
 	for(long icy=0; icy<Ac->ny; icy++){
-	    T *restrict y=yc;
+	    T *y=yc;
 	    for(long icx=0; icx<Ac->nx; icx++){
 		const X(sp) *A=Ac->p[icx+icy*Ac->nx];
 		Y(spmulvec)(y,A,x,alpha);

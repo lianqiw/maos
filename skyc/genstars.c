@@ -129,7 +129,6 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 		res->p[isky]=dref(tmp);
 		count++;
 		counti[J19c]++;
-		info("counti[%d]=%d, count=%d\n", J19c, counti[J19c], count);
 	    }
 	    dfree(tmp);
 	}

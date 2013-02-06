@@ -188,7 +188,7 @@ void close_config(const char *format, ...){
 	}
 	for(int i=0; i<nstore; i++){
 	    if(store[i].count==0){
-		print_file("change.log");
+		//print_file("change.log");
 		error("key \"%s\" is not recognized, value is %s\n", store[i].key,store[i].data);
 	    }else if(store[i].count!=1){
 		/*this should not happen. */

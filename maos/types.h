@@ -161,7 +161,7 @@ typedef struct POWFS_T{
     dmat *sumamp;       /**<sum of realamp*/
     dmat *sumamp2;      /**<sum of realamp.^2*/
     
-    dcell *opdadd;      /**<Additional OPD surfaces for each WFS*/
+    dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
     dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
     long *embed;        /**<Embedding index for field stop computing*/
     long nembed;        /**<dimension of embed.*/
@@ -179,6 +179,7 @@ typedef struct NGSMOD_T{
     double aper_fcp;/**<piston term in focus in plocs.*/
     dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
+    dmat *MCC_TT;   /**<cross coupling of the tip/tilt modes*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
     dmat *IMCC;     /**<inv of MCC.*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/
@@ -493,10 +494,10 @@ typedef struct SIM_T{
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     /*DM commands.*/
     dcell *dmcmd;      /**<This is the final command send to DM.*/
-    dcell *dmcmdlast;  /**<The final command for last time step.*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
+    dcell *dmreallast; /**<The actual command for last time step.*/
     map_t **dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/

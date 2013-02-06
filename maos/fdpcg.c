@@ -393,7 +393,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	break;
     case 1:
     case 2:
-	/*forward matrix uses inverse PSD or fractal. we use PSF here. */
+	/*forward matrix uses inverse PSD or fractal. we use PSD here. */
 	for(long ips=0; ips<nps; ips++){
 	    dmat *tmp=ddup(recon->invpsd->invpsd->p[ips]);
 	    dfftshift(tmp);

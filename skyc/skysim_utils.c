@@ -54,35 +54,33 @@ static void addnoise(dmat *A, rand_t* rstat,
 
 /**
    convert mod vector to ngs WFS cloc and add to it's opd or complex pupil function.
-   Input/Output: wvf (complex pupil function).
-   Input:
-   wvl: wavelength. 
-   modm: the mode vector
-   cloc: the subaperture coarse sampled loc.
-   fpc: focus piston coupling. (mean(x^2+y^2) to eliminate piston term in focus)
-   thetax, thetay: direction of WFS.
-   parms: parms
+   Notice the the coordinate for each subaperture is different for TTF.
 */
 void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 		double wvl,           /**<[in] the wavelength*/
 		const dmat *modm,     /**<[in] the NGS mode vector*/
-		const loc_t *cloc,    /**<[in] the subaperture coarse sampled loc*/
-		double fpc,           /**<[in] focus piston coupling.
-					 (mean(x^2+y^2) to eliminate piston term
-					 in focus)*/
+		POWFS_S *powfs,       /**<[in] the powfs configuration*/
+		int isa,              /**<[in] index of subaperture*/
 		double thetax,        /**<[in] direction of WFS*/
 		double thetay,        /**<[in] direction of WFS*/
 		const PARMS_S *parms  /**<[in] the parms*/
 		){
-    const double *locx=cloc->locx;
-    const double *locy=cloc->locy;
-    const long nloc=cloc->nloc;
     const double *mod=modm->p;
     const dcomplex ik=2*M_PI/wvl*I;
+    double dx=powfs->dxwvf;
+    double ox=powfs->saloc->locx[isa]+dx*0.5;
+    double oy=powfs->saloc->locy[isa]+dx*0.5;
+    int nx=powfs->nxwvf;
+    assert(wvf->nx==wvf->ny);
+    dcomplex *p=wvf->p+(wvf->nx-nx)/2*(1+wvf->nx);
     if(modm->nx==2){
-	for(int iloc=0; iloc<nloc; iloc++){
-	    double tmp=locx[iloc]*mod[0]+locy[iloc]*mod[1];
-	    wvf->p[iloc]*=cexp(ik*tmp);
+	for(int iy=0; iy<nx; iy++){
+	    double ym=(oy+iy*dx)*mod[1];
+	    for(int ix=0; ix<nx; ix++){
+		double x=ox+ix*dx;
+		double tmp=x*mod[0]+ym;
+		p[ix+wvf->nx*iy]*=cexp(ik*tmp);
+	    }
 	}
     }else{
 	const double hc=parms->maos.hc;
@@ -98,19 +96,22 @@ void ngsmod2wvf(cmat *wvf,            /**<[in/out] complex pupil function*/
 	}else{
 	    focus=mod[2]*scale1;
 	}
-	for(int iloc=0; iloc<nloc; iloc++){
-	    double x=locx[iloc];
-	    double y=locy[iloc];
-	    double xy=x*y;
-	    double x2=x*x;
-	    double y2=y*y;
-	    double tmp= locx[iloc]*mod[0]
-		+locy[iloc]*mod[1]
-		+focus*(x2+y2-fpc)
-		+mod[2]*(-2*scale*hc*(thetax*x+thetay*y))
-		+mod[3]*((x2-y2)*scale1 - 2*scale*hc*(thetax*x-thetay*y))
-		+mod[4]*(xy*scale1-scale*hc*(thetay*x+thetax*y));
-	    wvf->p[iloc]*=cexp(ik*tmp);
+	for(int iy=0; iy<nx; iy++){
+	    double y=oy+iy*dx;
+	    for(int ix=0; ix<nx; ix++){
+		double x=ox+ix*dx;
+		double xy=x*y;
+		double x2=x*x;
+		double y2=y*y;
+		double tmp= 
+		    +x*mod[0]
+		    +y*mod[1]
+		    +focus*(x2+y2)
+		    +mod[2]*(-2*scale*hc*(thetax*x+thetay*y))
+		    +mod[3]*((x2-y2)*scale1 - 2*scale*hc*(thetax*x-thetay*y))
+		    +mod[4]*(xy*scale1-scale*hc*(thetay*x+thetax*y));
+		p[ix+wvf->nx*iy]*=cexp(ik*tmp);
+	    }
 	}
     }
 }
@@ -210,7 +211,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 	const long ncomp=parms->maos.ncomp[ipowfs];
 	const long nsa=parms->maos.nsa[ipowfs];
 	wvf->p[iwfs]=cnew(ncomp,ncomp);
-	wvfc->p[iwfs]=cnew(ncomp/2,ncomp/2);
+	wvfc->p[iwfs]=NULL;
 	psf[iwfs]=dcellnew(nsa,nwvl);
 	cfft2plan(wvf->p[iwfs], -1);
 	mtche[iwfs]=aster->wfs[iwfs].pistat->mtche[idtrat];
@@ -306,8 +307,8 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    for(long isa=0; isa<nsa; isa++){
 			ccp(&wvfc->p[iwfs], wvfout[iwvl][isa]);
 			/*Apply NGS mode error to PSF. */
-			ngsmod2wvf(wvfc->p[iwfs], wvl, merr, powfs[ipowfs].cloc[isa],
-				   powfs[ipowfs].fpc[isa], thetax, thetay, parms);
+			ngsmod2wvf(wvfc->p[iwfs], wvl, merr, powfs+ipowfs, isa,
+			  thetax, thetay, parms);
 			cembed(wvf->p[iwfs],wvfc->p[iwfs],0,C_FULL);
 			cfft2(wvf->p[iwfs],-1);
 			cabs22d(&psf[iwfs]->p[isa+nsa*iwvl], 1., wvf->p[iwfs], 1.);/*peak in corner. */
@@ -326,7 +327,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    const long nsa=parms->maos.nsa[ipowfs];
 		    for(long isa=0; isa<nsa; isa++){
 			for(long iwvl=0; iwvl<nwvl; iwvl++){
-			    double siglev=aster->wfs[iwfs].siglev[iwvl];
+			    double siglev=aster->wfs[iwfs].siglev->p[iwvl];
 			    ccpd(&otf->p[iwfs],psf[iwfs]->p[isa+nsa*iwvl]);
 			    cfft2i(otf->p[iwfs], 1); /*turn to OTF, peak in corner */
 			    ccwm(otf->p[iwfs], powfs[ipowfs].dtf[iwvl].nominal);
@@ -365,6 +366,8 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 			      dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0.1*imax, 0.1*imax); */
 			    if(!parms->skyc.mtch){
 				warning2("fall back to cog\n");
+			    }else{
+				warning_once("mtch is out of range\n");
 			    }
 			    dcog(igrad, ints[iwfs]->p[isa], 0, 0, 0, 3*rnefs[ipowfs][idtrat]); 
 			    igrad[0]*=pixtheta;
@@ -419,7 +422,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     free(mtche);
     free(ints);
     if(parms->skyc.dbg){
-	dwrite(mres,"%s/skysim_phy_mres_aster%d_%d",dirsetup,aster->iaster,dtrat);
+	dwrite(mres,"%s/skysim_phy_mres_aster%d_dtrat%d",dirsetup,aster->iaster,dtrat);
     }
     /*dfree(mres); */
     *mresout=mres;
@@ -457,6 +460,25 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     snprintf(fnconf,PATH_MAX,"%s/base.conf",path);
     FILE *fp=fopen(fnconf,"w");
 
+    fprintf(fp,"sim.seeds=[%d]\n",simu->seed_maos);
+    fprintf(fp,"sim.end=%d\n", parms->maos.nstep);
+    fprintf(fp,"sim.dt=%g\n", parms->maos.dt);
+    fprintf(fp,"sim.zadeg=%g\n", parms->maos.zadeg);
+    fprintf(fp,"sim.mffocus=%d\n", parms->maos.mffocus);
+    fprintf(fp,"sim.ahstfocus=%d\n", parms->maos.ahstfocus);
+    fprintf(fp,"tomo.split_wt=3\n");
+    fprintf(fp,"sim.servotype_lo=2\n");/*type II */
+    fprintf(fp,"sim.eplo='gain.bin'\n");
+    fprintf(fp,"powfs0_llt.fnrange='%s'\n", parms->maos.fnrange);
+    fprintf(fp,"atm.r0z=%.4f\n", parms->maos.r0z);
+    fprintf(fp,"atm.size=[128 128]\n");
+    if(parms->maos.wddeg){
+	fprintf(fp, "atm.wddeg=[");
+	for(int ips=0; ips<parms->maos.nwddeg; ips++){
+	    fprintf(fp, "%.2f ", parms->maos.wddeg[ips]);
+	}
+	fprintf(fp, "]\n");
+    }
     fprintf(fp,"wfs.thetax=[0 0  -33.287 -20.5725  20.5725 33.287");
     for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	fprintf(fp," %.4f", aster[selaster].wfs[iwfs].thetax*206265);
@@ -476,7 +498,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     fprintf(fp,"wfs.wvlwts=[1 1 1 1 1 1");
     for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    fprintf(fp," %.2f ", aster[selaster].wfs[iwfs].siglev[iwvl]
+	    fprintf(fp," %.2f ", aster[selaster].wfs[iwfs].siglev->p[iwvl]
 		    /aster[selaster].wfs[iwfs].siglevtot);
 	}
     }
@@ -486,13 +508,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
 	fprintf(fp, " %d", aster[selaster].wfs[iwfs].ipowfs+1);
     }
     fprintf(fp,"]\n");
-    fprintf(fp,"sim.seeds=[%d]\n",simu->seed_maos);
-    fprintf(fp,"sim.end=5000\n");
-    fprintf(fp,"sim.dt=%g\n", parms->maos.dt);
-    fprintf(fp,"atm.r0z=%.4f\n", parms->maos.r0z);
-    fprintf(fp,"sim.zadeg=%g\n", parms->maos.zadeg);
-    fprintf(fp,"atm.size=[128 128]\n");
-    fprintf(fp,"tomo.split_wt=3\n");
+
     PDMAT(parms->skyc.rnefs,rnefs);
     double rne=rnefs[0][seldtrat];
     double bkgrnd=aster[selaster].wfs[0].bkgrnd;
@@ -545,18 +561,11 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
 	    }
 	}
 	fprintf(fp,"]\n");
+	fprintf(fp, "powfs.wvlwts=[]\n");
     }else{
 	error("Fill this out please\n");
     }
-    fprintf(fp,"sim.servotype_lo=2\n");/*type II */
-    fprintf(fp, "sim.eplo=\"gain.bin\"\n");
-    if(parms->maos.wddeg){
-	fprintf(fp, "atm.wddeg=[");
-	for(int ips=0; ips<parms->maos.nwddeg; ips++){
-	    fprintf(fp, "%.2f ", parms->maos.wddeg[ips]);
-	}
-	fprintf(fp, "]\n");
-    }
+ 
     fclose(fp);
     snprintf(fnconf,PATH_MAX,"%s/skyres.txt",path);
     fp=fopen(fnconf,"w");

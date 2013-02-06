@@ -57,6 +57,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     readcfg_dblarr_n(&parms->skyc.pixtheta,parms->skyc.npowfs,"skyc.pixtheta");
     readcfg_dblarr_n(&parms->skyc.pixblur, parms->skyc.npowfs,"skyc.pixblur");
     readcfg_intarr_n(&parms->skyc.pixpsa,  parms->skyc.npowfs,"skyc.pixpsa");
+    readcfg_intarr_n(&parms->skyc.pixguard,  parms->skyc.npowfs,"skyc.pixguard");
     readcfg_dblarr_n(&parms->skyc.pixoffx, parms->skyc.npowfs,"skyc.pixoffx");
     readcfg_dblarr_n(&parms->skyc.pixoffy, parms->skyc.npowfs,"skyc.pixoffy");
     readcfg_strarr_nmax(&parms->skyc.fnpsf1, parms->skyc.npowfs, "skyc.fnpsf1");
@@ -147,6 +148,7 @@ static void setup_parms_maos(PARMS_S *parms){
     READ_INT(maos.nstep);
     READ_INT(maos.ahstfocus);
     READ_INT(maos.mffocus);
+    READ_STR(maos.fnrange);
     warning("maos.ahstofocus=%d, maos.mffocus=%d\n", parms->maos.ahstfocus, parms->maos.mffocus);
 
     if(readcfg_peek("maos.wddeg")){
@@ -188,10 +190,11 @@ PARMS_S *setup_parms(const ARG_S *arg){
     if(parms->skyc.addws==-1){
 	parms->skyc.addws=0;
     }
-    if(parms->maos.nmod<=5){
-	if(parms->skyc.addfocus>0){
-	    error("Cannot addfocus if nmod<=5\n");
-	}
+    info("maos.mffocus=%d\n",  parms->maos.mffocus);
+    info("skyc.addfocus=%d\n", parms->skyc.addfocus);
+    info("skyc.addws=%d\n",    parms->skyc.addws);
+    if(parms->maos.nmod<=5 && parms->skyc.addfocus>0){
+	error("Cannot addfocus if nmod<=5\n");
     }
 
     if(!parms->skyc.stars){
@@ -215,6 +218,30 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	info2(" %d", parms->skyc.seeds[i]);
     }
     info2("\n");
+    parms->fdlock=calloc(parms->maos.nseed*parms->skyc.nseed, sizeof(int));
+    for(int i=0; i<parms->maos.nseed; i++){
+	long iseed=parms->maos.seeds[i];
+	for(int j=0; j<parms->skyc.nseed; j++){
+	    long jseed=parms->skyc.seeds[j];
+	    char fn[81];
+	    snprintf(fn, 80, "Res%ld_%ld.done", iseed, jseed);
+	    if(exist(fn) && !arg->override){
+		parms->fdlock[i*parms->skyc.nseed+j]=-1;
+		warning2("Will skip seed pair [%ld, %ld] because %s exist.\n",
+			 iseed, jseed, fn);
+	    }else{
+		snprintf(fn, 80, "Res%ld_%ld.lock", iseed, jseed);
+		parms->fdlock[i*parms->skyc.nseed+j]=lock_file(fn, 0, 0);
+		if(parms->fdlock[i*parms->skyc.nseed+j]<0){
+		    warning2("Will skip seed pair [%ld, %ld] because it is already running.\n",
+			     iseed, jseed);
+		}else{
+		    cloexec(parms->fdlock[i*parms->skyc.nseed+j]);
+		}
+	    }
+	}
+    }
+
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 	parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec
 	info2("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);
@@ -222,48 +249,90 @@ PARMS_S *setup_parms(const ARG_S *arg){
     parms->skyc.fss=calloc(parms->skyc.ndtrat, sizeof(double));
     parms->skyc.rnefs=dnew(parms->skyc.ndtrat, parms->maos.npowfs);
     if(parms->skyc.rne<0){
+	/* Uses the new noise model based on Roger's spread sheet and document
+	   TMT.AOS.TEC.13.009.DRF01 H2RG Noise Model */
 	PDMAT(parms->skyc.rnefs,rnefs);
 	info2("Using frame rate dependent read out noise:\n");
 	if(fabs(parms->skyc.rne+1)<EPS){
-	    /*Newer model by roger on 2012-11-08. variables are named for the column in the Excel*/
-	    double colM[11]={2.3,2.3,2.3,2.3,2.4,2.7,3.3,4.1,5.2,7.0,9.5};//rne
-	    double colD[11]={48,34,24,18,12,8,6,4,4,2,2};//recapture window size
-	    double colE[11]={1000,500,250,128,64,32,16,8,4,2,1};//coadds
-	    dmat *colx=dnew(11,1);
-	    dmat *coly=dnew(11,1);
-	    const int nwin=3;//B4, number of windows
-	    const double pixeltime=6.04;//B6
-	    const double linetime=2;//B7
-	    const double frametime=3;//B8
+	    const double pixeltime=6.04;//time to read a pixel in us
+	    const double linetime=2;//time to read a line in us
+	    const double frametime=3;//time to read a frame in us
+	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		int dtrat=parms->skyc.dtrats[idtrat];
+		parms->skyc.fss[idtrat]=1./(parms->maos.dt*dtrat);
+	    }
+	    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
+		int N=parms->skyc.pixpsa[ipowfs];
+		int Nb=parms->skyc.pixguard[ipowfs];
+		int nsa=parms->maos.nsa[ipowfs];
+		double t1=nsa*(pixeltime*N*N+linetime*N+frametime);
+		double t2=(pixeltime*Nb*Nb+linetime*Nb+frametime);
+		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		    int dtrat=parms->skyc.dtrats[idtrat];
+		    double dt=parms->maos.dt*dtrat*1e6;
+		    int coadd=floor((dt-t2*nsa)/t1);//number of coadds possible.
+		    if(coadd<=32 && dtrat<=10){//at high frame rate, read out only 1 subaperture's guard window each time.
+			coadd=floor((dt-t2)/t1);
+		    }
+		    if(coadd>177){
+			coadd=177;//more coadds increases dark noise.
+		    }
+		    if(coadd<1) coadd=1;
+		    double rne_white=10.9*pow(coadd, -0.47);
+		    double rne_floor=2.4;
+		    double rne_dark=0.0037*coadd;
+		    //0.85 is a factor expected for newer detectors
+		    rnefs[ipowfs][idtrat]=0.85*sqrt(rne_white*rne_white+rne_floor*rne_floor+rne_dark*rne_dark);
+		    info2("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
+			  parms->skyc.fss[idtrat], rnefs[ipowfs][idtrat]);
+		}
+	    }
+	    dwrite(parms->skyc.rnefs, "rnefs");
+	    /*
+	    double colE[11]={1000,500,250,128,64,32,16,8,4,2,1};//number of coadds
+	    double colM[11]={2.3,2.3,2.3,2.3,2.4,2.7,3.3,4.1,5.2,7.0,9.5};//rne for each coadd
+	    dmat *colx=dnew(11,1);//achieved frame rate for each coadd
+	    dmat *coly=dnew(11,1);//rne for each coadd.
+	   
 	    dmat *xfs=dnew(parms->skyc.ndtrat,1);
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		int dtrat=parms->skyc.dtrats[idtrat];
-		xfs->p[idtrat]=1./(parms->maos.dt*dtrat);
+		parms->skyc.fss[idtrat]=xfs->p[idtrat]=1./(parms->maos.dt*dtrat);
 	    }
 	    for(int i=0; i<11; i++){
 		coly->p[i]=colM[i];
 	    }
-	    dwrite(coly, "coly");
 	    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
 		int N=parms->skyc.pixpsa[ipowfs];
+		int Nb=parms->skyc.pixguard[ipowfs];
+		int nsa=parms->maos.nsa[ipowfs];
 		for(int i=0; i<colx->nx; i++){
-		    double t1=nwin*(pixeltime*N*N+linetime*N+frametime)*colE[i];
-		    if(colD[i]>5){
-			t1+=pixeltime*colD[i]*colD[i]+linetime*colD[i]+frametime;
+		    //time to read window and coadd
+		    double t1=nsa*(pixeltime*N*N+linetime*N+frametime)*colE[i];
+		    //time to read guard window
+		    double t2=nsa*(pixeltime*Nb*Nb+linetime*Nb+frametime);
+		    if(nsa>=4 && t1+t2<1.e6/80){//above 80 Hz, read only guard window for one subaps
+			t2=(pixeltime*Nb*Nb+linetime*Nb+frametime);
 		    }
-		    colx->p[i]=1e6/t1/nwin;
+		    colx->p[i]=1.e6/(t1+t2);
 		}
-		dwrite(colx, "colx_%d", N);
 		dmat *yfs=dinterp1(colx, coly, xfs);
 		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
+		    if(xfs->p[idtrat] > colx->p[10]){
+			yfs->p[idtrat] = coly->p[10]; //overflow
+		    }else if(xfs->p[idtrat] < colx->p[0]){
+			yfs->p[idtrat] = coly->p[0];
+		    }
 		    rnefs[ipowfs][idtrat]=yfs->p[idtrat];
+		    info2("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
+			  xfs->p[idtrat], rnefs[ipowfs][idtrat]);
 		}
 		dfree(yfs);
 	    }
 	    dfree(colx);
 	    dfree(coly);
-	    dfree(xfs);
-	}else if(fabs(parms->skyc.rne+2)<EPS){
+	    dfree(xfs);*/
+	}else if(fabs(parms->skyc.rne+2)<EPS){//older model.
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		int dtrat=parms->skyc.dtrats[idtrat];
 		double fs=1./(parms->maos.dt*dtrat);
@@ -345,14 +414,16 @@ PARMS_S *setup_parms(const ARG_S *arg){
     
     if(parms->skyc.dbg || parms->skyc.dbgsky>-1){
 	warning("skyc.dbg=%d, skyc.dbgsky=%d, disable multithreading\n", parms->skyc.dbg, parms->skyc.dbgsky);
-	parms->skyc.verbose=1;
+	if(parms->skyc.verbose<1){
+	    parms->skyc.verbose=1;
+	}
 	parms->skyc.nthread=1;
 	parms->skyc.interpg=0;
     }
     if(parms->skyc.nsky<20){
 	parms->skyc.interpg=0;
     }
-    if(arg->detach || parms->skyc.nthread>1){
+    if(arg->detach){
 	parms->skyc.verbose=0;
     }
     parms->skyc.nwfstot=0;

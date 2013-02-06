@@ -930,8 +930,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
     const int npsr=recon->npsr;
     recon->cxx=parms->tomo.cxx;
     /*test_cxx(recon, parms); */
-    switch(parms->tomo.cxx){
-    case 0:
+    if(parms->tomo.cxx==0){
 	if(parms->load.cxx){
 	    recon->L2=spcellread("%s",parms->load.cxx);
 	    if(recon->L2->nx!=npsr || recon->L2->ny!=npsr){
@@ -958,8 +957,8 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 		spcellwrite(recon->L2, "%s/L2",dirsetup);
 	    }
 	}
-	break;
-    case 1:{
+    }
+    if(parms->tomo.cxx==1 || (parms->tomo.cxx==2 && parms->tomo.precond==1)){
 	recon->invpsd=calloc(1, sizeof(INVPSD_T));
 	if(parms->load.cxx){
 	    recon->invpsd->invpsd=dcellread("%s",parms->load.cxx);
@@ -989,8 +988,7 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	recon->invpsd->xloc = recon->xloc;
 	recon->invpsd->square = parms->tomo.square;
     }
-	break;
-    case 2:{
+    if(parms->tomo.cxx==2){
 	recon->fractal=calloc(1, sizeof(FRACTAL_T));
 	recon->fractal->xloc=recon->xloc;
 	recon->fractal->r0=parms->atmr.r0;
@@ -1003,10 +1001,6 @@ setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms){
 	    int nn=nextfftsize(MAX(recon->xmap[ips]->nx, recon->xmap[ips]->ny))+1;
 	    xopd->p[ips]=dnew(nn,nn);
 	}
-    }
-	break;
-    default:
-	error("tomo.cxx=%d is invalid\n", parms->tomo.cxx);
     }
    
     if(parms->tomo.piston_cr){
@@ -1934,7 +1928,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dcellwrite(recon->RFngsa,"%s/RFngsa",dirsetup);
 	dcellwrite(recon->RFlgsa,"%s/RFlgsa",dirsetup);*/
     }
-    if(parms->sim.mffocus && parms->dbg.ftrack){
+    if(parms->sim.mffocus){
 	recon->Gfocus=Gfocus;
     }else{
 	dcellfree(Gfocus);
@@ -2584,9 +2578,7 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 	/*Apply R_L*/
 	int desplitlrt=recon->desplitlrt;
 	recon->desplitlrt=1;
-	if(parms->recon.mvm==2){
-	    dcellzero(RLT);
-	}
+	dcellzero(RLT);//warm restart.
 	muv_solve(&RLT, &recon->RL, NULL, FRT);
 	recon->desplitlrt=desplitlrt;
 	/*Apply R_R'*/

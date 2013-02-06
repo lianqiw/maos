@@ -279,9 +279,9 @@ static void redirect_fd(const char *fn, int fd){
   Otherwise output to both file and screen.
 */
 void redirect(void){
-    char fn[256];
+    char *fn=malloc(PATH_MAX);
     pid_t pid=getpid();
-    snprintf(fn,sizeof fn,"run_%d.log",pid);
+    snprintf(fn,PATH_MAX,"run_%d.log",pid);
     if(detached){//only output to file
 	redirect_fd(fn, -1);
 	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
@@ -319,6 +319,7 @@ void redirect(void){
 #endif
 	}
     }
+    register_deinit(NULL,fn);
 }
 /**
    Daemonize a process by fork it and exit the parent. no need to fork twice since the parent exits.

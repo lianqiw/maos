@@ -120,7 +120,7 @@ static void skysim_isky(SIM_S *simu){
 	    continue;
 	}
 	/*
-	  We first estimate do the matched filter, reconstructor, and servo
+	  We first estimate the matched filter, reconstructor, and servo
 	  loop optimization to determine the approximate wavefront error. Only
 	  a few combinations are kept for each star field for further time
 	  domain simulations.
@@ -177,10 +177,6 @@ static void skysim_isky(SIM_S *simu){
 	    }
 	    /*Copy wvf from star to aster */
 	    setup_aster_wvf(asteri, star, parms);
-	    /*Regenerate PSD for this combination only. */
-	    setup_aster_regenpsf(simu->mideal, asteri,powfs,parms);
-	    /*Redo matched filter. */
-	    setup_aster_redomtch(asteri, powfs, parms);
 	    /*Compute the reconstructor, nea, sigman */
 	    setup_aster_recon(asteri, star, parms);
 	    /*Optimize servo gains. */
@@ -337,13 +333,12 @@ static void skysim_update_mideal(SIM_S *simu){
 			       parms->maos.dt, simu->mideal->ny, &simu->rand);
 	    dwrite(range, "range_%d_%d", simu->seed_maos, simu->seed_skyc);
 	}
-	double scale1=1./(16*sqrt(3))*pow((parms->maos.D/parms->maos.hs),2);//convert from range to wfe
-	double scale2=1./sqrt(parms->maos.mcc->p[35]);//convert from wve to modes
-	double scale=scale1*scale2;
+	double scale=0.5*pow(1./parms->maos.hs, 2)*(1./cosd(parms->maos.zadeg));
 	for(int istep=0; istep<parms->maos.nstep; istep++){
 	    simu->mideal->p[5+istep*6]+=range->p[istep]*scale;
 	}
 	dfree(range);
+	dwrite(simu->mideal, "mideal_sodium");
     }
     if(parms->skyc.addws){
 	/*Add ws to mideal. After genstars so we don't purturb it. */
@@ -412,27 +407,28 @@ static void skysim_calc_psd(SIM_S *simu){
     }
     double rms_ngs=psd_inte2(simu->psd_ngs);
     info2("PSD integrates to %.2f nm.\n", sqrt(rms_ngs)*1e9);
-
+    
     if(parms->maos.nmod>5){
 	PDMAT(parms->maos.mcc, MCC);
 	dmat *x=dtrans(simu->mideal);
-	dmat *xi=dsub(x, 0, 0, 5, 1);
+	dmat *xi=dsub(x, 0, 0, 5, 1);/*focus PSD from mod5.*/
 	dscale(xi, sqrt(MCC[5][5]));/*convert to unit of m.*/
 	dmat *psdi=psd1dt(xi, xi->nx, parms->maos.dt);
 	double rms_focus_atm=psd_inte2(psdi);
-	PDMAT(psdi, pp);
-	//add sodium focus PSD
-	double alpha=parms->skyc.na_alpha;
-	double scale=1./(16*sqrt(3))*pow((parms->maos.D/parms->maos.hs),2);/*convert height error to wfe*/
-	double beta2=parms->skyc.na_beta*scale*scale;
-	for(int i=1; i<psdi->nx; i++){//skip DC.
-	    pp[1][i]+=pow(pp[0][i], alpha)*beta2;
-	}
-	double rms_focus_na=psd_inte2(psdi)-rms_focus_atm;
-	
 	info2("Atmosphere focus PSD integrates to %g nm\n", sqrt(rms_focus_atm)*1e9);
-	info2("Sodium focus PSD integrates to %g nm\n", sqrt(rms_focus_na)*1e9);
-	
+	if(!parms->maos.mffocus){
+	    //add sodium focus PSD if we don't do focus tracking in maos
+	    double alpha=parms->skyc.na_alpha;
+	    /*convert height error to wfe*/
+	    double scale=1./(16*sqrt(3))*pow((parms->maos.D/parms->maos.hs),2);
+	    double beta2=parms->skyc.na_beta*scale*scale;
+	    PDMAT(psdi, pp);
+	    for(int i=1; i<psdi->nx; i++){//skip DC.
+		pp[1][i]+=pow(pp[0][i], alpha)*beta2;
+	    }
+	    double rms_focus_na=psd_inte2(psdi)-rms_focus_atm;
+	    info2("Sodium focus PSD integrates to %g nm\n", sqrt(rms_focus_na)*1e9);
+	}
 	add_psd2(&simu->psd_focus, psdi);
 	dfree(xi);
 	dfree(psdi);
@@ -462,7 +458,6 @@ static void skysim_prep_gain(SIM_S *simu){
     if(parms->maos.nmod>5){
 	simu->gain_focus=calloc(parms->skyc.ndtrat, sizeof(dcell*));
     }
-    dwrite(sigma2, "gain_x");
     TIC;tic;
     for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 	long dtrat=parms->skyc.dtrats[idtrat];
@@ -521,6 +516,10 @@ void skysim(const PARMS_S *parms){
 	    simu->status->iseed=iseed_skyc+iseed_maos*parms->skyc.nseed;
 	    simu->seed_skyc=parms->skyc.seeds[iseed_skyc];
 	    seed_rand(&simu->rand, simu->seed_skyc+parms->maos.zadeg);
+	    if(parms->fdlock[simu->status->iseed]<0){
+		warning("Skip seed pair [%d, %d]\n", simu->seed_maos, simu->seed_skyc);
+		continue;
+	    }
 	    /*generate star fields. */
 	    if(parms->skyc.stars){
 		info2("Loading stars from %s\n",parms->skyc.stars);
@@ -567,11 +566,18 @@ void skysim(const PARMS_S *parms){
 	    }
 	    simu->status->simstart=simu->isky_start;
 	    simu->status->simend=simu->isky_end;
-	    if(simu->isky_start >= simu->isky_end){
-		continue;/*nothing to do. */
+	    if(simu->isky_start < simu->isky_end){
+		simu->isky=simu->isky_start;
+		CALL(skysim_isky, simu, parms->skyc.nthread,0);/*isky iteration. */
 	    }
-	    simu->isky=simu->isky_start;
-	    CALL(skysim_isky, simu, parms->skyc.nthread,0);/*isky iteration. */
+	    if(parms->skyc.dbgsky<0){
+		char fn[80];
+		char fnnew[80];
+		snprintf(fn, 80, "Res%d_%d.lock",seed_maos, seed_skyc);
+		snprintf(fnnew, 80, "Res%d_%d.done",seed_maos, seed_skyc);
+		(void)rename(fn, fnnew);
+		close(parms->fdlock[simu->status->iseed]);
+	    }
 	    dcellfree(simu->stars);
 	    dfree(simu->res);
 	    dfree(simu->res_oa);

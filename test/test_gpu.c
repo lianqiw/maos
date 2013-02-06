@@ -15,8 +15,9 @@ int main(int argc, char *argv[]){
 	gpus[0]=0;
 	gpus[1]=1;
     }else if(!strcmp(host, "orion")){
-	ngpu=1;
+	ngpu=2;
 	gpus[0]=0;
+	gpus[1]=1;
     }else if(!strcmp(host, "geforce")){
 	ngpu=2;
 	gpus[0]=4;
@@ -40,19 +41,24 @@ int main(int argc, char *argv[]){
     }
     switch(testcase){
     case 0:
-	for(int jgpu=1; jgpu<=ngpu; jgpu++){
-	    mvmfull_iwfs("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", 
-			 gpus, jgpu, nstep);
-	}
-	break;
     case 1:
+    case 3:
 	for(int jgpu=1; jgpu<=ngpu; jgpu++){
-	    mvm_iwfs("mvm1.bin", "mvm2.bin", "grad1.bin", "grad2.bin", gpus, jgpu, nstep);
+	    switch(testcase){
+	    case 0:
+		mvmfull_iwfs("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", gpus, jgpu, nstep);
+		break;
+	    case 1:
+		mvm_iwfs("mvm1.bin", "mvm2.bin", "grad1.bin", "grad2.bin", gpus, jgpu, nstep);
+		break;
+	    case 3:
+		mvmfull_pipe("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", gpus, jgpu, nstep);
+		break;
+	    }
 	}
 	break;
     case 2:
-	mvm_test();
+	mvm_test(gpus[0]);
 	break;
-	
     }
 }

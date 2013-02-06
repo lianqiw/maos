@@ -18,6 +18,7 @@
 #include "maos.h"
 #include "sim.h"
 #include "sim_utils.h"
+#include "ahst.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
@@ -395,7 +396,12 @@ void wfsgrad_iwfs(thread_t *info){
 	    CALL_THREAD(wfs_prop, nthread, 0);
 	}/*idm */
     }
- 
+    if(parms->powfs[ipowfs].skip && parms->tomo.ahst_idealngs){
+	//apply ideal NGS modes to NGS WFS
+	ngsmod2science(opd, powfs[ipowfs].loc, recon->ngsmod, 
+		       parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay,
+		       simu->cleNGSm->p+isim*recon->ngsmod->nmod, -1);
+    }
     if(imoao>-1){
 	dmat **dmwfs=simu->dm_wfs->p;
 	if(dmwfs[iwfs]){
@@ -429,7 +435,8 @@ void wfsgrad_iwfs(thread_t *info){
 	      todo: migrate to gradients.
 	     */
 	    double scale=simu->recon->ngsmod->scale;
-	    focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(1-scale);
+	    //changed from 1-scale to scale-1 on 2/1/2013
+	    focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(scale-1);
 	}
 	if(fabs(focus)>1e-20){
 	    loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
@@ -466,6 +473,9 @@ void wfsgrad_iwfs(thread_t *info){
 		      realamp, opd->p);
 	}else{/*G tilt */
 	    spmulmat(gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
+	}
+	if(powfs[ipowfs].gradoff){
+	    dadd(gradcalc, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
 	}
 	if(gradcalc!=gradacc){
 	    dadd(gradacc, 1, gradref, 1);
@@ -720,10 +730,19 @@ void wfsgrad_iwfs(thread_t *info){
 	    if(powfs[ipowfs].gradphyoff){
 		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
 	    }
+	    if(powfs[ipowfs].gradoff){
+		dadd(gradout, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
+	    }
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsny[iwfs], ints);
 	    }
 	    if(save_grad && noisy){
+		if(powfs[ipowfs].gradphyoff){
+		    dadd(&gradnf, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+		}
+		if(powfs[ipowfs].gradoff){
+		    dadd(&gradnf, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
+		}
 		cellarr_dmat(simu->save->gradnf[iwfs], gradnf);
 	    }
 	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
@@ -784,9 +803,6 @@ void wfsgrad_iwfs(thread_t *info){
 	    }
 	}
   
-	if(powfs[ipowfs].gradoff){
-	    dadd(gradout, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
-	}
 	if(save_grad){
 	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
 	}

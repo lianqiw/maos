@@ -143,7 +143,7 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 			dcellfree(avgpsfi);
 			wtsum+=wtxi;
 			
-			snprintf(fn,PATH_MAX,"%s/pistat/gstat_seed%d_sa%d_x%g_y%g",
+			snprintf(fn,PATH_MAX,"%s/gstat/gstat_seed%d_sa%d_x%g_y%g",
 				 dirstart, seed, msa, thx, thy);
 			dmat *gradi=dread("%s",fn);
 			dadd(&grad, 1, gradi, wtxi);
@@ -205,7 +205,7 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
     const double r2=pow(parms->skyc.patfov/206265./2.,2);
     PDMAT(parms->skyc.rnefs,rnefs);
     for(int istar=0; istar<nstar; istar++){
-	star[istar].siglev=dnew(nwvl,npowfs);
+	star[istar].siglev=dcellnew(npowfs, 1);
 	star[istar].bkgrnd=dnew(npowfs,1);
 	star[istar].siglevtot=dnew(npowfs,1);
 	/*Normalized angular distance */
@@ -213,8 +213,9 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 	/*Field dependent error: nm^2=nma^2+nmb^2*theta_norm^2; */
 	double imperrnm=sqrt(pow(parms->skyc.imperrnm,2)+th2*pow(parms->skyc.imperrnmb,2));
 	for(long ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    star[istar].siglev->p[ipowfs]=dnew(nwvl,1);
 	    int iscircle=parms->maos.nsa[ipowfs]<=4?1:0;
-	    photon_flux(&parms->skyc.zb, &star[istar].siglev->p[nwvl*ipowfs], 
+	    photon_flux(&parms->skyc.zb, star[istar].siglev->p[ipowfs]->p,
 			&star[istar].siglevtot->p[ipowfs],
 			&star[istar].bkgrnd->p[ipowfs],
 			NULL, NULL,
@@ -239,7 +240,7 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 		}
 		info2("] siglev=[");
 		for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
-		    info2("%6.1f ", star[istar].siglev->p[iwvl+nwvl*ipowfs]);
+		    info2("%6.1f ", star[istar].siglev->p[ipowfs]->p[iwvl]);
 		}
 		info2("]\n");
 	    }
@@ -325,7 +326,7 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
 
 	    for(long iwvl=0; iwvl<nwvl; iwvl++){
 		for(long isa=0; isa<nsa; isa++){
-		    double siglev=star[istar].siglev->p[iwvl+nwvl*ipowfs];
+		    double siglev=star[istar].siglev->p[ipowfs]->p[iwvl];
 		    i0[iwvl][isa]=dnew(pixpsa,pixpsa);
 		    gx[iwvl][isa]=dnew(pixpsa,pixpsa);
 		    gy[iwvl][isa]=dnew(pixpsa,pixpsa);
@@ -471,8 +472,8 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    snprintf(fnztilt[iy][ix],PATH_MAX,"%s/ztiltout/ztiltout_seed%d_sa%d_x%g_y%g",
 			     dirstart,seed,msa,thx,thy);
 		    fngoff[iy][ix]=alloca(PATH_MAX*sizeof(char));
-		    snprintf(fngoff[iy][ix],PATH_MAX,"%s/gradoff/gradoff_seed%d_sa%d_x%g_y%g",
-			     dirstart,seed,msa,thx,thy);
+		    snprintf(fngoff[iy][ix],PATH_MAX,"%s/gradoff/gradoff_sa%d_x%g_y%g",
+			     dirstart,msa,thx,thy);
 		    if(!zfexist(fnwvf[iy][ix])){
 			//warning("%s doesnot exist\n",fnwvf[iy][ix]);
 			fnwvf[iy][ix]=fnztilt[iy][ix]=fngoff[iy][ix]=NULL;
@@ -572,11 +573,6 @@ long setup_star_read_wvf(STAR_S *star, int nstar, const PARMS_S *parms, int seed
 		    }/*isa */
 		}/*iwvl */
 	    }/* */
-	    if(stari->goff && stari->ztiltout[ipowfs]){
-		for(int istep=0; istep<stari->nstep; istep++){//subtract gradient offset from ztilt.
-		    dadd(&stari->ztiltout[ipowfs]->p[istep], 1, stari->goff->p[ipowfs], -1);
-		}
-	    }
 	}/*ipowfs */
     }/*istar */
     if(parms->skyc.verbose){
@@ -662,7 +658,7 @@ void free_star(STAR_S *star, int nstar, const PARMS_S *parms){
 	dcellfree(star[istar].g);
 	dfree(star[istar].mags);
 	free(star[istar].use);
-	dfree(star[istar].siglev);
+	dcellfree(star[istar].siglev);
 	dfree(star[istar].siglevtot);
 	dfree(star[istar].bkgrnd);
     }

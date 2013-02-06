@@ -472,7 +472,7 @@ static void add_host_event(GtkButton *button, gpointer data){
 
 int main(int argc, char *argv[])
 {
-#if GTK_MAJOR_VERSION<3 && GTK_MINOR_VERSION<32
+#if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
     if(!g_thread_supported()){
 	g_thread_init(NULL);
 	gdk_threads_init();

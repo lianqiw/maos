@@ -366,8 +366,9 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	pistatout=cuwfs[iwfs].pistatout;
     }
     cuccell *wvfout=NULL;
+    const int wvf_n=notf/2+2;//was notf/2
     if(parms->powfs[ipowfs].psfout){
-	wvfout=cuccellnew(nsa, nwvl, notf/2, notf/2);
+	wvfout=cuccellnew(nsa, nwvl, wvf_n, wvf_n);
     }
     float norm_psf=sqrt(powfs[ipowfs].areascale)/((float)powfs[ipowfs].pts->nx*nwvf);
     float norm_pistat=norm_psf*norm_psf/((float)notf*notf);
@@ -506,7 +507,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		cudaMemsetAsync(psfout, 0, sizeof(fcomplex)*ksa*notf*notf, stream);
 		CUFFT2(cuwfs[iwfs].plan2, psf, psfout, CUFFT_INVERSE);
 		sa_cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
-		    (wvfout->p[isa+nsa*iwvl]->p, notf/2, notf/2, 
+		    (wvfout->p[isa+nsa*iwvl]->p, wvf_n, wvf_n, 
 		     psfout, notf, notf, norm_psf/(notf*notf));
 	    }
 	    /* abs2 part to real, peak in corner */

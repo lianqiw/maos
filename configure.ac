@@ -268,7 +268,7 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
-COMMON_ICC="-wd981 -wd1292 -vec-report=0 -diag-disable remark"
+COMMON_ICC="-wd981 -wd1292 -wd10237 -vec-report=0 -diag-disable remark"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc"
 OPTIM_OPENCC="-O3"
@@ -704,6 +704,9 @@ if test "$use_cuda" = "yes" ;then
    else
        AC_MSG_ERROR([CUDADIR is empty. Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])
    fi
+   if test ! -x $NVCC ;then
+        AC_MSG_ERROR([nvcc not found])
+   fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
    if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
        CUDA_L=${CUDADIR}/lib${cpu}
@@ -721,11 +724,23 @@ if test "$use_cuda" = "yes" ;then
        AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
        CUDAOPT=
    fi
+   cudaver=$(nvcc -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)
+   cudaver=${cudaver/.}
+   echo CUDA toolkit is $cudaver
+   if test $cudaver -lt 40 ;then
+       AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
+   fi
+   if test $cudaver -ge 40 ;then
+       CUDAOPT="$CUDAOPT -gencode arch=compute_20,code=sm_20"
+   fi
+   if test $cudaver -ge 42 ;then
+       CUDAOPT="$CUDAOPT -gencode arch=compute_30,code=sm_30"
+   fi
+   if test $cudaver -ge 50 ;then
+       CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
+   fi
    echo LDCUDA=$LDCUDA
    echo CUDAOPT=$CUDAOPT
-   if test ! -x $NVCC ;then
-        AC_MSG_ERROR([nvcc not found])
-   fi
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
    if test x$cuda_lib = xno ;then
        AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])

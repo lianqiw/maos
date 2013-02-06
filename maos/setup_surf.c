@@ -148,12 +148,20 @@ static void prop_surf_evl(thread_t *info){
     const int do_rot=data->do_rot;
     const int isurf=data->isurf;
     loc_t *locevl=data->locevl;
-    info2("%s covers evl ", parms->surf[isurf]);
+    const char *prt=" covers evl ";
+    char* buf=malloc(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char buf2[6];
+    buf[0]='\0';
+    strcat(buf, parms->surf[isurf]);
+    strcat(buf, prt);
+    int any=0;
     for(int ievl=info->start; ievl<info->end; ievl++){
 	if(!evlcover[ievl]){
 	    continue;
 	}
-	info("%d ", ievl);
+	any=1;
+	snprintf(buf2, 6, "%d ", ievl);
+	strcat(buf, buf2);
 	const double displacex=parms->evl.thetax[ievl]*hl;
 	const double displacey=parms->evl.thetay[ievl]*hl;
 	const double scale=1-hl/parms->evl.hs[ievl];
@@ -165,7 +173,10 @@ static void prop_surf_evl(thread_t *info){
 			   1, displacex, displacey, scale, 0, 0, 0);
 	}
     }
-    info2("\n");
+    if(any){
+	strcat(buf, "\n");
+	info2("%s", buf);
+    }
 }
 
 static void prop_surf_ncpa(thread_t *info){
@@ -196,12 +207,20 @@ static void prop_surf_wfs(thread_t *info){
     const int isurf=data->isurf;
     const int do_rot=data->do_rot;
     const double rot=data->rot;
-    info2("%s covers WFS ", parms->surf[isurf]);
+    const char *prt=" covers WFS ";
+    char* buf=malloc(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
+    char buf2[6];
+    buf[0]='\0';
+    strcat(buf, parms->surf[isurf]);
+    strcat(buf, prt);
+    int any=0;
     for(int iwfs=info->start; iwfs<info->end; iwfs++){
 	if(!wfscover[iwfs]){
 	    continue;
 	}
-	info2("%d ", iwfs);
+	any=1;
+	snprintf(buf2, 6, "%d ", iwfs);
+	strcat(buf, buf2);
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	const double hs=parms->powfs[ipowfs].hs;
@@ -228,7 +247,9 @@ static void prop_surf_wfs(thread_t *info){
 	    locfree(locwfs);
 	}
     }
-    info2("\n");
+    if(any){
+	info2("%s\n", buf);
+    }
 }
 
 /**
@@ -343,7 +364,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    CALL_THREAD(tdata_ncpa, nthread, 0);
 	}
 	/*The following cannot be parallelized as done for evl, wfs because the
-	  destination opdx is not in sequence.*/
+	  destination opdxadd is not unique.*/
 	if(parms->sim.idealfit && recon && opdxcover){
 	    if(!recon->opdxadd){
 		recon->opdxadd=dcellnew(parms->atmr.nps, 1);
@@ -509,9 +530,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	    dcellwrite(recon->dm_ncpa, "dm_ncpa");
 	    spcellfree(recon->HA_ncpa);
 	}
-	dcell *dm_ncpa=dcellref(recon->dm_ncpa);
-	setup_powfs_calib(parms, powfs, recon->aloc, dm_ncpa);
-
+	setup_powfs_calib(parms, powfs, recon->aloc, recon->dm_ncpa);
 	/* to do 
 	   dm flat
 	   matched filter
@@ -521,7 +540,6 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	   gensei() reentrant. ok.
 	   genmtch() reentrant. ok
 	*/
-	dcellfree(dm_ncpa);
 	dcellfree(aper->opdfloc);
     }
     if(parms->save.setup){

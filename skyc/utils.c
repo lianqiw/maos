@@ -47,6 +47,7 @@ ARG_S *parse_args(int argc, char **argv){
     ARGOPT_T options[]={
 	{"help", 'h', T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
+	{"override",'O',T_INT,0, &arg->override, NULL},
 	{"force",  'f',T_INT, 0, &arg->force, NULL},
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
