@@ -275,7 +275,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	value=strtok(NULL, "=");
 	strtrim(&var);
 	strtrim(&value);
-	if(!strcmp(var,"path")){
+	if(!strcmp(var,"path") || !strcmp(var, "PATH")){
 	    addpath(value);
 	}else if(strtok(NULL,"=") || !var || strlen(var)==0){
 	    error("Line '%s' is invalid\n",line);

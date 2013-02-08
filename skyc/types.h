@@ -152,7 +152,7 @@ typedef struct SIM_S{
 			  - Residual focus error
 		       */
     dmat *res_oa;      /**<residual error on axis 5*nsky. in the same format as res*/
-    dmat *res_ol;      /**<residual error estimated from servo analysis. in the same foramt as res*/
+    dmat *res_geom;      /**<residual error estimated from servo analysis. in the same foramt as res*/
     dcell *mres;       /**<residual NGS modes. 5*nsky*/
     dcell *sel;        /**<selected stars for each star field.*/
     dmat *fss;         /**<optimal sampling freq for each star field*/

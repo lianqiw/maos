@@ -466,7 +466,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     fprintf(fp,"sim.zadeg=%g\n", parms->maos.zadeg);
     fprintf(fp,"sim.mffocus=%d\n", parms->maos.mffocus);
     fprintf(fp,"sim.ahstfocus=%d\n", parms->maos.ahstfocus);
-    fprintf(fp,"tomo.split_wt=3\n");
+    fprintf(fp,"tomo.ahst_wt=3\n");
     fprintf(fp,"sim.servotype_lo=2\n");/*type II */
     fprintf(fp,"sim.eplo='gain.bin'\n");
     fprintf(fp,"powfs0_llt.fnrange='%s'\n", parms->maos.fnrange);

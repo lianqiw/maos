@@ -903,13 +903,6 @@ void wfsgrad(SIM_T *simu){
 	   update command for next step.*/
 	servo_shift(simu->uptint, parms->sim.apupt);
 	servo_filter(simu->uptint, simu->upterr, simu->dthi, parms->sim.epupt);
-	/*double gain1=parms->sim.epupt+parms->sim.dpupt;
-	double gain2=-parms->sim.dpupt;
-	dcelladd(&simu->uptint[0], 1., simu->upterr,gain1);
-	if(fabs(gain2)>EPS){
-	    dcelladd(&simu->uptint[0], 1., simu->upterrlast,gain2);
-	    dcellcp(&simu->upterrlast,simu->upterr);
-	    }*/
     }
 #if USE_CUDA
     if(parms->gpu.wfs){

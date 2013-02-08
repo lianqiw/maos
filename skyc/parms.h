@@ -82,7 +82,8 @@ typedef struct SKYC_S{
     int interpg;     /**<Interpolate gain based in dtrat and signan*/
     int save;        /**<save information for latter running in MAOS.*/
     int maxstar;     /**<maximum number of (brightest) stars for each star field.*/
-    int maxaster;    /**<Maximum number of best asterism for final processing.*/
+    int maxaster;    /**<maximum number of best asterism for final processing.*/
+    int maxdtrat;    /**<maximum number of dtrats to try for each asterism.*/
     int nthread;     /**<number of threads*/
     int start;       /**<start number of sky field*/
     int nsky;        /**<number of sky field. 500.*/

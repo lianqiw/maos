@@ -52,6 +52,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     READ_INT(skyc.ttfbrightest);
     READ_INT(skyc.bspstrehl);
     READ_INT(skyc.maxaster);
+    READ_INT(skyc.maxdtrat);
     READ_INT(skyc.maxstar);
     readcfg_intarr_n(&parms->skyc.nwfsmax, parms->skyc.npowfs,"skyc.nwfsmax");
     readcfg_dblarr_n(&parms->skyc.pixtheta,parms->skyc.npowfs,"skyc.pixtheta");
@@ -287,51 +288,6 @@ PARMS_S *setup_parms(const ARG_S *arg){
 			  parms->skyc.fss[idtrat], rnefs[ipowfs][idtrat]);
 		}
 	    }
-	    dwrite(parms->skyc.rnefs, "rnefs");
-	    /*
-	    double colE[11]={1000,500,250,128,64,32,16,8,4,2,1};//number of coadds
-	    double colM[11]={2.3,2.3,2.3,2.3,2.4,2.7,3.3,4.1,5.2,7.0,9.5};//rne for each coadd
-	    dmat *colx=dnew(11,1);//achieved frame rate for each coadd
-	    dmat *coly=dnew(11,1);//rne for each coadd.
-	   
-	    dmat *xfs=dnew(parms->skyc.ndtrat,1);
-	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		int dtrat=parms->skyc.dtrats[idtrat];
-		parms->skyc.fss[idtrat]=xfs->p[idtrat]=1./(parms->maos.dt*dtrat);
-	    }
-	    for(int i=0; i<11; i++){
-		coly->p[i]=colM[i];
-	    }
-	    for(int ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
-		int N=parms->skyc.pixpsa[ipowfs];
-		int Nb=parms->skyc.pixguard[ipowfs];
-		int nsa=parms->maos.nsa[ipowfs];
-		for(int i=0; i<colx->nx; i++){
-		    //time to read window and coadd
-		    double t1=nsa*(pixeltime*N*N+linetime*N+frametime)*colE[i];
-		    //time to read guard window
-		    double t2=nsa*(pixeltime*Nb*Nb+linetime*Nb+frametime);
-		    if(nsa>=4 && t1+t2<1.e6/80){//above 80 Hz, read only guard window for one subaps
-			t2=(pixeltime*Nb*Nb+linetime*Nb+frametime);
-		    }
-		    colx->p[i]=1.e6/(t1+t2);
-		}
-		dmat *yfs=dinterp1(colx, coly, xfs);
-		for(int idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
-		    if(xfs->p[idtrat] > colx->p[10]){
-			yfs->p[idtrat] = coly->p[10]; //overflow
-		    }else if(xfs->p[idtrat] < colx->p[0]){
-			yfs->p[idtrat] = coly->p[0];
-		    }
-		    rnefs[ipowfs][idtrat]=yfs->p[idtrat];
-		    info2("powfs[%d] %5.1f Hz: %5.1f \n", ipowfs,
-			  xfs->p[idtrat], rnefs[ipowfs][idtrat]);
-		}
-		dfree(yfs);
-	    }
-	    dfree(colx);
-	    dfree(coly);
-	    dfree(xfs);*/
 	}else if(fabs(parms->skyc.rne+2)<EPS){//older model.
 	    for(long idtrat=0; idtrat<parms->skyc.ndtrat; idtrat++){
 		int dtrat=parms->skyc.dtrats[idtrat];

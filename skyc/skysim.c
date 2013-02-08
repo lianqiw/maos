@@ -104,7 +104,7 @@ static void skysim_isky(SIM_S *simu){
 
     PDMAT(simu->res, pres);
     PDMAT(simu->res_oa, pres_oa);
-    PDMAT(simu->res_ol, pres_ol);
+    PDMAT(simu->res_geom, pres_geom);
     while(LOCKADD(isky, simu->isky, 1)<simu->isky_end){
 	double tk_1=myclockd();
 	/*Setup star parameters. */
@@ -139,8 +139,8 @@ static void skysim_isky(SIM_S *simu){
 	    setup_aster_servo(simu, &aster[iaster], parms);
 	}
 	/*Select asters that have good performance. */
-	setup_aster_select(pres_ol[isky],aster, naster, star, 
-			   parms->skyc.mtch?0.5*simu->rmsol->p[0]:INFINITY,parms); 
+	int neval=setup_aster_select(pres_geom[isky],aster, naster, star, 
+				     parms->skyc.mtch?0.5*simu->rmsol->p[0]:INFINITY,parms); 
 	/*Read in physical optics data (wvf) */
 	nstep=setup_star_read_wvf(star,nstar,parms,seed_maos);
 	double tk_3=myclockd();
@@ -150,6 +150,7 @@ static void skysim_isky(SIM_S *simu){
 	double skymini=INFINITY;
 	int selaster=0;
 	int seldtrat=0;
+	
 	for(int iaster=0; iaster<naster; iaster++){
 	    ASTER_S *asteri=&aster[iaster];
 	    asteri->nstep=nstep;
@@ -524,20 +525,19 @@ void skysim(const PARMS_S *parms){
 	    if(parms->skyc.stars){
 		info2("Loading stars from %s\n",parms->skyc.stars);
 		simu->stars=dcellread("%s",parms->skyc.stars);
-		sortstars(simu->stars);
 	    }else{
 		simu->stars=genstars(parms->skyc.nsky, 
 				     parms->skyc.lat, parms->skyc.lon,parms->skyc.catscl,
 				     parms->skyc.patfov,parms->maos.nwvl, 
 				     parms->maos.wvl, &simu->rand);
 	    }
+	    sortstars(simu->stars);//sort the stars with J from brightest to dimmest.
 	    int nsky=simu->stars->nx*simu->stars->ny;
 	    if(nsky > parms->skyc.nsky){
 		warning("nsky is reduced from %d to %d\n", nsky, parms->skyc.nsky);
 		nsky=parms->skyc.nsky;
 	    }
 	    dcellwrite(simu->stars, "Res%d_%d_stars",simu->seed_maos,simu->seed_skyc);
-
 	    skysim_read_mideal(simu);/*Reread mideal since it may be modified by skyc.addfocus/skyc.addws*/
 	    if(parms->skyc.addfocus || parms->skyc.addws){
 		skysim_update_mideal(simu);
@@ -547,7 +547,7 @@ void skysim(const PARMS_S *parms){
 	    int seed_skyc=simu->seed_skyc;
 	    simu->res   =dnew_mmap(5,nsky,NULL, "Res%d_%d", seed_maos, seed_skyc);
 	    simu->res_oa=dnew_mmap(5,nsky,NULL, "Res%d_%d_oa", seed_maos, seed_skyc);
-	    simu->res_ol=dnew_mmap(3,nsky,NULL, "Res%d_%d_ol", seed_maos, seed_skyc);
+	    simu->res_geom=dnew_mmap(3,nsky,NULL, "Res%d_%d_geom", seed_maos, seed_skyc);
 	    simu->fss   =dnew_mmap(nsky,1,NULL, "Res%d_%d_fss", seed_maos, seed_skyc);
 	    simu->demote=dnew_mmap(nsky,1,NULL, "Res%d_%d_demote", seed_maos, seed_skyc);
 	    simu->gain  =dcellnewsame_mmap(nsky, 1, 3, parms->maos.nmod,
@@ -581,7 +581,7 @@ void skysim(const PARMS_S *parms){
 	    dcellfree(simu->stars);
 	    dfree(simu->res);
 	    dfree(simu->res_oa);
-	    dfree(simu->res_ol);
+	    dfree(simu->res_geom);
 	    dcellfree(simu->mres);
 	    dcellfree(simu->sel);
 	    dfree(simu->fss);

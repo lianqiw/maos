@@ -545,8 +545,8 @@ static int sortfun(const double *a, const double *b){
 }
 /**
    Select a few asterisms that have decent performance (less than maxerror) */
-void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, 
-			double maxerror, const PARMS_S *parms){
+int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, 
+		       double maxerror, const PARMS_S *parms){
  
     int ndtrat=parms->skyc.ndtrat;
     dmat *res=dnew(ndtrat, naster);
@@ -572,8 +572,9 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
 	}
 	pimin[iaster][0]=mini;
 	pimin[iaster][1]=iaster;
-	double thres=mini*4;/*This is variance. */
-	double thres2=mini*4;
+	/*This is variance. allow a threshold */
+	double thres=mini*3;
+	double thres2=mini*3;
 	if(thres>maxerror) thres=maxerror;
 	if(thres2>maxerror) thres2=maxerror;
 	/*Find upper and minimum good dtrats. */
@@ -591,6 +592,15 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
 		break;
 	    }
 	}
+	if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat){
+	    int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
+	    int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
+	    int max2=floor(mid+parms->skyc.maxdtrat*0.5);
+	    info2("dtrat range changed from [%d %d] to [%d %d]\n", 
+		 aster[iaster].idtratmin,  aster[iaster].idtratmax, min2, max2);
+	    aster[iaster].idtratmin=min2;
+	    aster[iaster].idtratmax=max2;
+	}
 	if(mini<minimum){
 	    master=iaster;
 	    minimum=mini;
@@ -601,12 +611,13 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
     result[1]=parms->skyc.fss[aster[master].mdtrat];
     int count=0;
     if(minimum<maxerror){
+	double thres=minimum*3;
 	int taster=naster;
 	if(parms->skyc.maxaster>0 && naster>parms->skyc.maxaster){
 	    taster=parms->skyc.maxaster;
 	}
 	for(int jaster=0; jaster<taster; jaster++){
-	    if(pimin[jaster][0]<minimum*2){
+	    if(pimin[jaster][0]<thres){
 		count++;
 		int iaster=(int)pimin[jaster][1];
 		aster[iaster].use=1;/*mark as valid. */
@@ -627,7 +638,7 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
     }
     dfree(res);
     dfree(imin);
-  
+    return count;
 }
 /**
    Free the ASTER_S array.
