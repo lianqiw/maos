@@ -139,8 +139,8 @@ static void skysim_isky(SIM_S *simu){
 	    setup_aster_servo(simu, &aster[iaster], parms);
 	}
 	/*Select asters that have good performance. */
-	int neval=setup_aster_select(pres_geom[isky],aster, naster, star, 
-				     parms->skyc.mtch?0.5*simu->rmsol->p[0]:INFINITY,parms); 
+	setup_aster_select(pres_geom[isky],aster, naster, star, 
+			   parms->skyc.mtch?0.5*simu->rmsol->p[0]:INFINITY,parms); 
 	/*Read in physical optics data (wvf) */
 	nstep=setup_star_read_wvf(star,nstar,parms,seed_maos);
 	double tk_3=myclockd();
@@ -334,7 +334,7 @@ static void skysim_update_mideal(SIM_S *simu){
 			       parms->maos.dt, simu->mideal->ny, &simu->rand);
 	    dwrite(range, "range_%d_%d", simu->seed_maos, simu->seed_skyc);
 	}
-	double scale=0.5*pow(1./parms->maos.hs, 2)*(1./cosd(parms->maos.zadeg));
+	double scale=0.5*pow(1./parms->maos.hs, 2)*(1./(parms->maos.za));
 	for(int istep=0; istep<parms->maos.nstep; istep++){
 	    simu->mideal->p[5+istep*6]+=range->p[istep]*scale;
 	}

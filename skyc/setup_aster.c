@@ -225,7 +225,6 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 */
 void setup_aster_copystar(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     int nwfs=aster->nwfs;
-    const int nwvl=parms->maos.nwvl;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
 	const int istar=aster->wfs[iwfs].istar;
@@ -646,7 +645,6 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms){
     (void) parms;
     for(int iaster=0; iaster<naster; iaster++){
-	int nwfs=aster[iaster].nwfs;
 	dcellfree(aster[iaster].gain);
 	dcellfree(aster[iaster].pgm);
 	dcellfree(aster[iaster].nea_tot);

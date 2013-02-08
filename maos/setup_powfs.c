@@ -2042,7 +2042,6 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 		/*remove average tilt from opdbias and same amount from
 		  opdadd. Does not need to be very accurate.*/
 		dmat *mcc=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].amp->p);
-		double ipcc=1./mcc->p[0];
 		dinvspd_inplace(mcc);
 		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
 		    double ptt[3]={0,0,0};

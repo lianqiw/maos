@@ -164,7 +164,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    dfree(psf);
 	    dscale(gmean, 1./(nwvl*(nstep-phystart)));
 	    dcellscale(pistat, 1./(nstep-phystart));	
-	    double pgrad[2];
+
 	    //Put back the average gradient to PSF.
 	    for(int isa=0; isa<nsa; isa++){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){

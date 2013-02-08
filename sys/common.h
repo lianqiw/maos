@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 #if !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <alloca.h>
 #endif
@@ -106,6 +107,8 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #include "mem.h"
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
+#else
+#include <limits.h>
 #endif/*__linux__ */
 #ifndef restrict
 #define restrict __restrict

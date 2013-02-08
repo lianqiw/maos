@@ -26,11 +26,11 @@ int main(int argc, char *argv[]){
 	ngpu=1;
 	gpus[0]=0;
     }
-    
+#ifdef __linux__    
     cpu_set_t cpuset={{0}};
     CPU_SET(0, &cpuset);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-    
+#endif
     int testcase=0;
     if(argc>1){
 	testcase=strtol(argv[1], NULL, 10);

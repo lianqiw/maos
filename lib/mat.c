@@ -1244,7 +1244,6 @@ static int X(islog)(X(mat)*xin){
     double xminl=log10(xin->p[0]);
     double xmaxl=log10(xin->p[nmax-1]);
     double xsep=(xmaxl-xminl)/(double)(nmax1);
-    double xsep1=1./xsep;
     if(fabs(xsep+xminl-log10(xin->p[1]))>1.e-3){
 	return 0;
     }else{
