@@ -125,7 +125,7 @@ static void host_added(int ihost, int sock){
     hsock[ihost]=sock;
     FD_SET(sock, &active_fd_set);
     UNLOCK(mhost);
-    add_host_wrap(-1);
+    add_host_wrap(-1);//wakes up listen_host().
     info2("connected to %s\n", hosts[ihost]);
     gdk_threads_add_idle(host_up, GINT_TO_POINTER(ihost));
 }
@@ -238,16 +238,18 @@ static int respond(int sock){
     }
     return 0;
 }
+/**
+   listen_host() live in a separate thread, it has the following resposibilities:
+   1) listening commands from the main thread to initiate connection to servers
+   2) listening to connected servers for maos status event and update the display
+   3) monitor connected servers for activity. Disable pages when server is disconnected.
 
+   write to pipe_main[1] will be caught by select in listen_host(). This wakes it up.*/
 void listen_host(){
     htime=calloc(nhost, sizeof(double));
     FD_ZERO(&active_fd_set);
-    //write to pipe_main[1] will be caught by select in listen_host(). This wakes it up.
     FD_SET(pipe_main[0], &active_fd_set);
-    struct timeval timeout;
     while(1){
-	timeout.tv_sec=5;
-	timeout.tv_usec=0;
 	fd_set read_fd_set = active_fd_set;
 	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL)<0){
 	    perror("select");

@@ -75,11 +75,9 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 		goto retry;
 	    }else{
 		if(kill(pid,0)){
-		    warning("Process %ld already locks file %s, but we don't find it, this may happen in NFS mounted system\n"
-			    " wait for 10 seconds before retry.\n",pid, fnlock);
-		    sleep(10);
-		    fclose(fp);
-		    goto retry;
+		    warning("Unknown process %ld already locks file %s. (NFS mounted system?)\n" ,
+			    pid, fnlock);
+		    return -1;
 		}else{/*already running. check version */
 		    /*warning("Process %ld already locks file %s\n",pid,fnlock); */
 		    long version_old=0;
@@ -170,7 +168,7 @@ void single_instance_daemonize(const char *lockfolder_in,
     }else if (pid > 0) {/*exit first parent. */
 	close(fd);/*release lock in this process that is not daemon. */
 	sleep(1);
-	waitpid(pid,NULL,WNOHANG);/*prevent child from defunct. but don't hang ourselves*/
+	waitpid(pid,NULL,0);/*prevent child from defunct*/
 	if(daemon_func){/*The process that launched this routine will return. */
 	    return;
 	}else{

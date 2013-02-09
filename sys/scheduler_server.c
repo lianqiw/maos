@@ -550,6 +550,22 @@ static int respond(int sock){
 	    }
 	}
 	break;
+    case CMD_LAUNCH:{
+	/*called by maos/skyc from another machine to start a job in this
+	  machine*/
+	char *execmd=NULL;
+	if(streadstr(sock, &execmd)){
+	    warning("Unable to read execmd\n");
+	    ret=-1;
+	}else{
+	    ret=launch_exe(execmd);
+	}
+	free(execmd);
+	if(stwriteint(sock, ret)){
+	    ret=-1;
+	}
+    }
+	break;	  
     default:
 	warning3("Invalid cmd: %x\n",cmd[0]);
 	ret=-1;

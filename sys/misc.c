@@ -105,11 +105,12 @@ int check_suffix(const char *fn, const char *suffix){
     }
 }
 
-char *argv2str(int argc, char **argv){
+char *argv2str(int argc, char **argv, const char* delim){
     char *cwd=mygetcwd();
-    int slen=strlen(cwd)+2;
+    int slen=strlen(cwd)+2+strlen(HOME);
+    if(!delim) delim=" ";
     for(int iarg=0; iarg<argc; iarg++){
-	slen+=1+strlen(argv[iarg]);
+	slen+=strlen(delim)+strlen(argv[iarg]);
     }
     char *scmd=calloc(slen, sizeof(char));
     if(!mystrcmp(cwd,HOME)){
@@ -121,10 +122,16 @@ char *argv2str(int argc, char **argv){
     strcat(scmd,"/");
     for(int iarg=0; iarg<argc; iarg++){
 	strcat(scmd,argv[iarg]);
-	strcat(scmd," ");
+	strcat(scmd, delim);
     }
     if(strlen(scmd)>slen-1) error("Overflow\n");
     free(cwd);
+    const char *scmdend=scmd+strlen(scmd);
+    if(delim[0]!='\n'){
+	for(char *p=scmd; p<scmdend; p++){
+	    if(p[0]=='\n') p[0]=' ';
+	}
+    }
     return scmd;
 }
 void print_file(const char *fnin){
@@ -486,7 +493,7 @@ long available(const char *path){
    Extract a string constant from the command line, and output the position where the string terminates.*/
 static char *cmd_string(char *input, char **end2){
     char *end;
-    while(isspace((int)input[0]) || input[0]==';') input++;
+    while(isspace((int)input[0]) || input[0]=='\n') input++;
     if(input[0]=='\'' || input[0]== '"'){
 	end=index(input+1, input[0]);/*find matching quote. */
 	input[0]=' ';
@@ -495,7 +502,7 @@ static char *cmd_string(char *input, char **end2){
 	    error("String does not end\n");
 	}
     }else{
-	end=index(input, ';');
+	end=index(input, '\n');
     }
     end[0]='\0';
     char *out=strdup(input);
@@ -504,17 +511,15 @@ static char *cmd_string(char *input, char **end2){
     return out;
 }
 /**
-   Parse command line arguments. Returns whatever is not yet parsed. Need to free the returned string.
+   Parse command line arguments. Returns whatever is not yet parsed. Need to
+   free the returned string. This is more relaxed than the built in getopd
 */
 char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
-    
-    /*Roll out my own argument parsing mechanism that are more relaxed wrt how
-      arguments are supplied.*/
-    char *cmds=strnadd(argc-1, argv+1, ";");
+    char *cmds=strnadd(argc-1, argv+1, "\n");
     char *cmds_end=cmds+strlen(cmds);
     char *start=cmds;
     while(start<cmds_end){
-        if(isspace((int)start[0]) || start[0]==';'){
+        if(isspace((int)start[0]) || start[0]=='\n'){
 	    start[0]=' ';
 	    start++;
 	    continue;
@@ -531,7 +536,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 		    if(!mystrcmp(start, options[i].name)){
 			key=options[i].key;
 			start+=strlen(options[i].name);
-			while(isspace((int)start[0]) || start[0]==';'){
+			while(isspace((int)start[0]) || start[0]=='\n'){
 			    start[0]=' ';
 			    start++;
 			}
@@ -558,7 +563,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    }
 	    if((options[iopt].opt & 1) == 1){
 		value=start;
-		while(value[0]==';' || isspace((int)value[0])){
+		while(value[0]=='\n' || isspace((int)value[0])){
 		    value[0]=' ';
 		    value++;
 		}
@@ -592,7 +597,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    }
 		break;
 	    case T_STR:{
-		char *val=value?cmd_string(value, &start):"Unkown";
+		char *val=value?cmd_string(value, &start):"Unknown";
 		if(isfun){
 		    void (*tmp)(char*)=(void (*)(char*))options[iopt].val;
 		    tmp(val); free(val);
@@ -635,7 +640,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    /*create a \n before the key. */
 	    int skipspace=1;
 	    for(char *start2=start-1; start2>=cmds; start2--){
-  	        if(isspace((int)*start2) || *start2==';'){
+  	        if(isspace((int)*start2) || *start2=='\n'){
 		    if(!skipspace){
 			*start2='\n';
 			break;
@@ -648,7 +653,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	}else if(!mystrcmp(start, ".conf")){ /*.conf found. */
 	    /*create a \n before the key. */
 	    for(char *start2=start-1; start2>=cmds; start2--){
-	        if(isspace((int)*start2) || *start2==';'){
+	        if(isspace((int)*start2) || *start2=='\n'){
 		    *start2='\n'; 
 		    break;
 		}
@@ -661,7 +666,7 @@ char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
 	    char *bnextstart=index(start+1, '[');
 	    if(bend && (!bnextstart || bend<bnextstart)){/*There is a closing bracket */
 		for(; start<bend+1; start++){
-		    if(start[0]==';') start[0]=' ';
+		    if(start[0]=='\n') start[0]=' ';
 		}
 	    }else{
 		error("Bracked is not closed\n");

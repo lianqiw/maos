@@ -67,6 +67,7 @@ enum{
     CMD_SHUTRD,/*15 */
     CMD_SHUTWR,/*16 */
     CMD_ADDHOST,/*17*/
+    CMD_LAUNCH,
 };
 enum{
     S_RUNNING=1,
@@ -79,7 +80,7 @@ enum{
     S_KILLED,
 };
 
-#define scheduler_version 0x23
+#define scheduler_version 0x24
 #define BACKTRACE_CMD_LEN 200
 
 

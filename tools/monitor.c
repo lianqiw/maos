@@ -129,6 +129,8 @@ static const gchar *rc_string_entry =
 	"class \"GtkEntry\" style \"entry\" \n"
     };
 #endif
+/**
+   Enables the notebook page for a host*/
 gboolean host_up(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
     gtk_widget_set_sensitive(cmdconnect[ihost],0);
@@ -136,7 +138,8 @@ gboolean host_up(gpointer data){
     gtk_label_set_attributes(GTK_LABEL(titles[ihost]), pango_active);
     return 0;
 }
-
+/**
+   Disables the notebook page for a host*/
 gboolean host_down(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
     gtk_button_set_label(GTK_BUTTON(cmdconnect[ihost]),"Click to connect");
@@ -148,7 +151,8 @@ gboolean host_down(gpointer data){
     return 0;
 }
 
-
+/**
+   modifies the color of progress bar*/
 static void modify_bg(GtkWidget *widget, int type){
 #if GTK_MAJOR_VERSION>=3 
     GtkCssProvider *provider;
@@ -181,7 +185,8 @@ static void modify_bg(GtkWidget *widget, int type){
     gtk_widget_modify_bg(widget, GTK_STATE_PRELIGHT, color);
 #endif
 }
-
+/**
+   updates the progress bar for a job*/
 gboolean update_progress(gpointer input){
     int ihost=GPOINTER_TO_INT(input);
     double last_cpu=usage_cpu2[ihost];
@@ -267,6 +272,9 @@ void notify_user(PROC_T *p){
     p->oldinfo=p->status.info;
 #endif
 }
+/**
+   quite the program
+*/
 static void quitmonitor(GtkWidget *widget, gpointer data){
     (void)widget;
     (void)data;
@@ -280,6 +288,9 @@ static void quitmonitor(GtkWidget *widget, gpointer data){
     }
     exit(0);
 }
+/**
+   update the job count
+*/
 gboolean update_title(gpointer data){
     int id=GPOINTER_TO_INT(data);
     char tit[40];
@@ -287,23 +298,25 @@ gboolean update_title(gpointer data){
     gtk_label_set_text(GTK_LABEL(titles[id]),tit);
     return 0;
 }
-
+/**
+   respond to the kill job event
+*/
 void kill_job(PROC_T *p){
-	GtkWidget *dia=gtk_message_dialog_new
-	    (NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
-	     GTK_MESSAGE_QUESTION,
-	     GTK_BUTTONS_YES_NO,
-	     "Kill job %d on server %s?",
-	     p->pid,hosts[p->hid]);
-	int result=gtk_dialog_run(GTK_DIALOG(dia));
-	gtk_widget_destroy (dia);
-	if(result==GTK_RESPONSE_YES){
-	    if(scheduler_cmd(p->hid,p->pid,CMD_KILL)){
-		warning("Failed to kill the job\n");
-	    }
-	    p->status.info=S_TOKILL;
-	    refresh(p);
+    GtkWidget *dia=gtk_message_dialog_new
+	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+	 GTK_MESSAGE_QUESTION,
+	 GTK_BUTTONS_YES_NO,
+	 "Kill job %d on server %s?",
+	 p->pid,hosts[p->hid]);
+    int result=gtk_dialog_run(GTK_DIALOG(dia));
+    gtk_widget_destroy (dia);
+    if(result==GTK_RESPONSE_YES){
+	if(scheduler_cmd(p->hid,p->pid,CMD_KILL)){
+	    warning("Failed to kill the job\n");
 	}
+	p->status.info=S_TOKILL;
+	refresh(p);
+    }
 }
 void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p){
     (void)btn;
@@ -311,7 +324,31 @@ void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p){
 	kill_job(p);
     }
 }
-
+static void kill_all_jobs(GtkAction *btn){
+    (void)btn;
+    int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
+    GtkWidget *dia=gtk_message_dialog_new
+	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+	 GTK_MESSAGE_QUESTION,
+	 GTK_BUTTONS_YES_NO,
+	 "Kill all jobs on server %s?", hosts[ihost]);
+    int result=gtk_dialog_run(GTK_DIALOG(dia));
+    gtk_widget_destroy (dia);
+    if(result==GTK_RESPONSE_YES){
+	for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
+	    if(iproc->hid == ihost 
+	       && (iproc->status.info==S_WAIT 
+		   || iproc->status.info==S_RUNNING
+		   || iproc->status.info==S_START)){
+		if(scheduler_cmd(iproc->hid,iproc->pid,CMD_KILL)){
+		    warning("Failed to kill the job\n");
+		}
+		iproc->status.info=S_TOKILL;
+		refresh(iproc);
+	    }
+	}
+    }
+}
 static void status_icon_on_click(GtkStatusIcon *status_icon0, 
 			       gpointer data){
     (void)status_icon0;
@@ -381,13 +418,18 @@ window_state_event(GtkWidget *widget,GdkEventWindowState *event,gpointer data){
 	}
     return TRUE;
 }
-static int test_finished(int status){
+static int test_skipped(int status, double frac){
+    return status==S_FINISH && frac<1;
+}
+static int test_finished(int status, double frac){
+    (void)frac;
     return status==S_FINISH;
 }
-static int test_crashed(int status){
+static int test_crashed(int status, double frac){
+    (void)frac;
     return status==S_CRASH || status==S_KILLED || status==S_TOKILL;
 }
-static void clear_jobs(GtkAction *btn, int (*testfun)(int)){
+static void clear_jobs(GtkAction *btn, int (*testfun)(int, double)){
     (void)btn;
     int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
     PROC_T *iproc,*jproc;
@@ -396,18 +438,13 @@ static void clear_jobs(GtkAction *btn, int (*testfun)(int)){
     if(sock==-1) return;
     int cmd[2];
     cmd[0]=CMD_REMOVE;
-    
-    for(iproc=pproc[ihost]; iproc; iproc=jproc){
-	jproc=iproc->next;
-	if(testfun(iproc->status.info)){
+    for(iproc=pproc[ihost]; iproc; iproc=iproc->next){
+	if(testfun(iproc->status.info, iproc->frac)){
 	    cmd[1]=iproc->pid;
 	    if(stwriteintarr(sock,cmd,2)){
 		warning("write to socket %d failed\n",sock);
 		break;
 	    }
-	    while (gtk_events_pending ())
-		gtk_main_iteration ();
-	    
 	}
     }
 }
@@ -417,7 +454,9 @@ static void clear_jobs_finished(GtkAction *btn){
 static void clear_jobs_crashed(GtkAction *btn){
     clear_jobs(btn, test_crashed);
 }
-
+static void clear_jobs_skipped(GtkAction *btn){
+    clear_jobs(btn, test_skipped);
+}
 GtkWidget *monitor_new_entry_progress(void){
     GtkWidget *prog=gtk_entry_new();
     gtk_editable_set_editable(GTK_EDITABLE(prog),FALSE);
@@ -616,23 +655,33 @@ int main(int argc, char *argv[])
     {
 	/*first create actions*/
 	topgroup=gtk_action_group_new("topgroup");
-	GtkAction *action_clear_crash=gtk_action_new("act-clear-crash", "Clear crashed", "Clear crashed jobs", GTK_STOCK_CANCEL);
-	g_signal_connect(action_clear_crash, "activate", G_CALLBACK(clear_jobs_crashed),NULL);
-	gtk_action_group_add_action(topgroup, action_clear_crash);
-
 	GtkAction *action_clear_finish=gtk_action_new("act-clear-finish", "Clear finished", "Clear finished jobs", GTK_STOCK_APPLY);
 	g_signal_connect(action_clear_finish, "activate", G_CALLBACK(clear_jobs_finished),NULL);
 	gtk_action_group_add_action(topgroup, action_clear_finish);
 
+	GtkAction *action_clear_skip=gtk_action_new("act-clear-skip", "Clear skipped", "Clear skipped jobs", GTK_STOCK_MEDIA_NEXT);
+	g_signal_connect(action_clear_skip, "activate", G_CALLBACK(clear_jobs_skipped),NULL);
+	gtk_action_group_add_action(topgroup, action_clear_skip);
+
+	GtkAction *action_clear_crash=gtk_action_new("act-clear-crash", "Clear crashed", "Clear crashed jobs", GTK_STOCK_DELETE);
+	g_signal_connect(action_clear_crash, "activate", G_CALLBACK(clear_jobs_crashed),NULL);
+	gtk_action_group_add_action(topgroup, action_clear_crash);
+
 	GtkAction *action_connect_all=gtk_action_new("act-connect-all", "Connect all", "Connect to all hosts", GTK_STOCK_CONNECT);
 	g_signal_connect(action_connect_all, "activate", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
 	gtk_action_group_add_action(topgroup, action_connect_all);
+
+	GtkAction *action_kill_all=gtk_action_new("act-kill-all", "Kill all jobs", "Kill al jobs", GTK_STOCK_CANCEL);
+	g_signal_connect(action_kill_all, "activate", G_CALLBACK(kill_all_jobs),NULL);
+	gtk_action_group_add_action(topgroup, action_kill_all);
 	
 	/*set toolbar*/
 	toptoolbar=gtk_toolbar_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_finish)), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_skip)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_crash)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_kill_all)), -1);
 	//gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_widget_show_all(toptoolbar);
 	gtk_box_pack_start(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);

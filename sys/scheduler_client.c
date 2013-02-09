@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <math.h>
 #include <time.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
@@ -127,7 +128,7 @@ static __attribute__((constructor))void init(){
 	if(fp){
 	    char line[64];
 	    while(fscanf(fp,"%s\n",line)==1){
-		if(strlen(line)>0){
+		if(strlen(line)>0 && line[0]!='#'){
 		    hosts[ihost]=strdup0(line);
 		    ihost++;
 		    if(ihost>=nhost){
@@ -537,4 +538,73 @@ char* scheduler_get_drawdaemon(int pid, int direct){
     }
     return fifo;
 }
-
+/**
+   fork and launch exe as specified in cmd. cmd should composed of the path to
+   start the exe, exe name, and parameters. used by maos/skyc.
+ */
+int launch_exe(const char *cmd){
+    const int nexe=2;
+    const char *exes[]={"maos", "skyc"};
+    char *stexe=NULL;
+    char *cmd2;
+    if(cmd[0]=='~'){
+	cmd2=stradd(HOME, cmd+1, NULL);
+    }else{
+	cmd2=(char*)cmd;
+    }
+    const char *cmd2end=cmd2+strlen(cmd2);
+    for(int iexe=0; iexe<nexe; iexe++){
+	const char *exe=exes[iexe];
+	stexe=strstr(cmd2, exe);
+	while(stexe && stexe<cmd2end&&(stexe[-1]!='/'||!isspace(stexe[strlen(exe)]))){
+	    stexe=strstr(stexe+strlen(stexe), exe);
+	}	
+	if(stexe){
+	    stexe[-1]='\0';
+	    long pid=fork();
+	    if(pid<0){
+		return -1;//unable to fork
+	    }else if(pid>0){//parant
+		stexe[-1]='/';
+		waitpid(pid, NULL, 0);/*wait child*/
+	    }else{//child
+		long pid2=fork();
+		if(pid2<0){
+		    _exit(EXIT_FAILURE);//unable to fork
+		}else if(pid2>0){//parent
+		    _exit(EXIT_SUCCESS);
+		}else{//child
+		    if(setsid()==-1) warning("Error setsid\n");
+		    if(chdir(cmd2)) error("Error chdir to %s\n", cmd2);
+		    stexe+=strlen(exe);
+		    if(execlp(exe, exe, "--local", "-d", stexe, NULL)){
+			error("Unable to execlp\n");
+		    }
+		    _exit(EXIT_FAILURE);
+		}
+	    }
+	    break;
+	}
+    }
+    if(cmd2!=cmd) free(cmd2);
+    if(!stexe){
+	warning("don't understand %s\n", cmd);
+	return -1;
+    }
+    return 0;
+}
+/**
+   ask scheduler in another machine to launch exe
+*/
+int scheduler_launch_exe(const char *host, const char *scmd){
+    int ret=0;
+    int sock=connect_port(host, PORT, 0, 0);
+    if(sock<=-1) return -1;
+    int cmd[2]={CMD_LAUNCH, 0};
+    if(stwriteintarr(sock, cmd, 2) || stwritestr(sock, scmd) || streadint(sock, &ret)){
+	warning2("Failed to write to scheduler at %s\n", host);
+	ret=-1;
+    }
+    close(sock);
+    return ret;
+}

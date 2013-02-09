@@ -148,7 +148,7 @@ void maos(const PARMS_T *parms){
    \callgraph
 */
 int main(int argc, char **argv){
-    char *scmd=argv2str(argc,argv);
+    char *scmd=argv2str(argc,argv," ");
     ARG_T* arg=parse_args(argc,argv);/*does chdir */
 
     if(arg->detach){

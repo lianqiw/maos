@@ -474,6 +474,7 @@ static void print_usage(void){
 "-P, --pause       paulse simulation in the end of every time step\n"
 "-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic"
 "-G, --ngpu=N'     Use a total of N gpus."
+"-r, --run=host    Run the job in another host."   
 	  );
     exit(0);
 }
@@ -492,6 +493,7 @@ static __attribute__((destructor)) void deinit(){
 ARG_T * parse_args(int argc, char **argv){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
     int *seeds=NULL; int nseed=0;
+    char *host=NULL; int local=0;
     ARGOPT_T options[]={
 	{"help",   'h',T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
@@ -505,9 +507,19 @@ ARG_T * parse_args(int argc, char **argv){
 	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},
 	{"pause",  'P',T_INT, 0, &arg->pause, NULL},
+	{"run",    'r',T_STR, 1, &host, NULL},
+	{"local",  'l',T_INT, 0, &local, NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
+    if(!local && host && strcmp(host, myhostname())){
+	//run in another server
+	char *scmd=argv2str(argc,argv,"\n");
+	if(scheduler_launch_exe(host, scmd)){
+	    error2("Unable to launch maos at server %s\n", host);
+	}
+	exit(EXIT_SUCCESS);
+    }
     if(arg->nthread>NTHREAD || arg->nthread<=0){
         arg->nthread=NTHREAD;
     }

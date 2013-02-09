@@ -44,6 +44,7 @@ static void print_usage(void){
  */
 ARG_S *parse_args(int argc, char **argv){
     ARG_S *arg=calloc(1, sizeof(ARG_S));
+    char *host=NULL; int local=0;
     ARGOPT_T options[]={
 	{"help", 'h', T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
@@ -53,9 +54,19 @@ ARG_S *parse_args(int argc, char **argv){
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
 	{"path",   'P',T_STR, 3, addpath, NULL},
+	{"run",    'r',T_STR, 1, &host, NULL},
+	{"local",  'l',T_INT, 0, &local, NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
+    if(!local && host && strcmp(host, myhostname())){
+	//run in another server
+	char *scmd=argv2str(argc,argv,"\n");
+	if(scheduler_launch_exe(host, scmd)){
+	    error2("Unable to launch skyc at server %s\n", host);
+	}
+	exit(EXIT_SUCCESS);
+    }
     /*do not use NTHREAD here. causes too much cpu load*/
     if(arg->nthread>NCPU || arg->nthread<=0){
 	arg->nthread=NCPU;

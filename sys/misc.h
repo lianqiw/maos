@@ -22,7 +22,7 @@
 char *mybasename(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
 void copyfile(const char *dest, const char *src);
-char *argv2str(int argc, char **argv);
+char *argv2str(int argc, char **argv, const char *delim);
 void print_file(const char *fnin);
 int myclocki(void);
 double myclockd(void);

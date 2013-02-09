@@ -26,7 +26,6 @@ extern int nhost;
 extern char** hosts;
 extern int hid;
 void start_scheduler(int argc, char **argv);
-int scheduler_connect(int ihost, int block,int mode);
 #if defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__)
 #define print_backtrace(A)
 #endif
@@ -38,4 +37,6 @@ int scheduler_report(STATUS_T *status);
 /*called by monitor */
 int scheduler_launch_drawdaemon(char *fifo);
 char* scheduler_get_drawdaemon(int pid, int direct);
+int launch_exe(const char *cmd);
+int scheduler_launch_exe(const char *host, const char *cmd);
 #endif
