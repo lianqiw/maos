@@ -87,8 +87,7 @@ typedef struct SKYC_S{
     int nthread;     /**<number of threads*/
     int start;       /**<start number of sky field*/
     int nsky;        /**<number of sky field. 500.*/
-    int *seeds;      /**<seed for generating asterism and random numbers.*/
-    int nseed;       /**<number of seeds*/
+    int seed;        /**<seed for generating asterism and random numbers.*/
 
     int noisefull;   /**<use full noise insteaded servo filtered noise to regularize. =0*/
     int psd_scale;   /**<scale the PSD to equal to open loop error*/
@@ -160,7 +159,7 @@ typedef struct SKYC_S{
 typedef struct PARMS_S{
     MAOS_S maos;     /**<parameters exported by maos*/
     SKYC_S skyc;     /**<parameters supplied by user*/
-    int *fdlock;    /**<Records the fd of the seed lock file. if -1 will skip the seed*/
+    int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
 }PARMS_S;
 /**
    ARG_S is used for command line parsing.

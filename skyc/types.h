@@ -141,7 +141,6 @@ typedef struct SIM_S{
     STAR_S *star;      /**<STAR_S*/
     int iseed;         /**<Current seed index*/
     int seed_maos;     /**<Current MAOS seed to read in PSF*/
-    int seed_skyc;     /**<Current skyc seed to generate stars and pixel noise*/
     int nstep;         /**<Number of steps*/
     rand_t rand;       /**<Random stream*/
     dmat *res;         /**<residual error. 5*nsky. 
@@ -175,7 +174,7 @@ typedef struct SIM_S{
     int isky_end;      /**<last star field to evalaute (exclusive)*/
     double tk_0;       /**<initial star time*/
 #if USE_PTHREAD > 0
-    pthread_mutex_t mutex_save;/**<mutex for save*/
+    pthread_mutex_t mutex_status;/**<mutex for status reporting*/
 #endif
 }SIM_S;
 #endif

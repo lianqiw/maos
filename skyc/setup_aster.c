@@ -595,8 +595,6 @@ int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star,
 	    int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
 	    int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
 	    int max2=floor(mid+parms->skyc.maxdtrat*0.5);
-	    info2("dtrat range changed from [%d %d] to [%d %d]\n", 
-		 aster[iaster].idtratmin,  aster[iaster].idtratmax, min2, max2);
 	    aster[iaster].idtratmin=min2;
 	    aster[iaster].idtratmax=max2;
 	}

@@ -73,7 +73,7 @@ static void setup_parms_skyc(PARMS_S *parms){
     readcfg_dblarr_nmax(&parms->skyc.qe, parms->maos.nwvl,"skyc.qe");
     readcfg_dblarr_nmax(&parms->skyc.telthruput, parms->maos.nwvl, "skyc.telthruput");
     parms->skyc.ndtrat=readcfg_intarr(&parms->skyc.dtrats,"skyc.dtrats");
-    parms->skyc.nseed=readcfg_intarr(&parms->skyc.seeds, "skyc.seeds");
+    READ_INT(skyc.seed);
     READ_INT(skyc.servo);
     READ_INT(skyc.gsplit);
     READ_INT(skyc.evlstart);
@@ -214,35 +214,50 @@ PARMS_S *setup_parms(const ARG_S *arg){
 	info2(" %d", parms->maos.seeds[i]);
     }
     info2("\n");
-    info2("There are %d asterism seeds:", parms->skyc.nseed);
-    for(int i=0; i<parms->skyc.nseed; i++){
-	info2(" %d", parms->skyc.seeds[i]);
-    }
-    info2("\n");
-    parms->fdlock=calloc(parms->maos.nseed*parms->skyc.nseed, sizeof(int));
-    for(int i=0; i<parms->maos.nseed; i++){
-	long iseed=parms->maos.seeds[i];
-	for(int j=0; j<parms->skyc.nseed; j++){
-	    long jseed=parms->skyc.seeds[j];
-	    char fn[81];
-	    snprintf(fn, 80, "Res%ld_%ld.done", iseed, jseed);
+    {
+	//skip unwanted seeds
+	parms->fdlock=calloc(parms->maos.nseed, sizeof(int));
+	char fn[81];
+	int nseed=0;
+	for(int i=0; i<parms->maos.nseed; i++){
+	    long maos_seed=parms->maos.seeds[i];
+	    snprintf(fn, 80, "Res%ld_%d.done", maos_seed, parms->skyc.seed);
 	    if(exist(fn) && !arg->override){
-		parms->fdlock[i*parms->skyc.nseed+j]=-1;
-		warning2("Will skip seed pair [%ld, %ld] because %s exist.\n",
-			 iseed, jseed, fn);
+		parms->fdlock[i]=-1;
+		warning2("Will skip seed %ld because %s exist.\n", maos_seed, fn);
 	    }else{
-		snprintf(fn, 80, "Res%ld_%ld.lock", iseed, jseed);
-		parms->fdlock[i*parms->skyc.nseed+j]=lock_file(fn, 0, 0);
-		if(parms->fdlock[i*parms->skyc.nseed+j]<0){
-		    warning2("Will skip seed pair [%ld, %ld] because it is already running.\n",
-			     iseed, jseed);
+		snprintf(fn, 80, "Res%ld_%d.lock", maos_seed, parms->skyc.seed);
+		parms->fdlock[i]=lock_file(fn, 0, 0);
+		if(parms->fdlock[i]<0){
+		    warning2("Will skip seed %ld because it is already running.\n", maos_seed);
 		}else{
-		    cloexec(parms->fdlock[i*parms->skyc.nseed+j]);
+		    cloexec(parms->fdlock[i]);
+		    if(nseed!=i){
+			parms->maos.seeds[nseed]=parms->maos.seeds[i];
+			parms->fdlock[nseed]=parms->fdlock[i];
+		    }
+		    nseed++;
 		}
 	    }
 	}
+	if(nseed != parms->maos.nseed){
+	    info2("Skip %d seeds.\n", parms->maos.nseed - nseed);
+	    parms->maos.nseed=nseed;
+	}
+	if(!parms->maos.nseed){
+	    warning("There are no seed to run. Use -O to override. Exit\n");
+	    {//remove log and conf files
+		char fnpid[PATH_MAX];
+		snprintf(fnpid, PATH_MAX, "skyc_%d.conf", (int)getpid());
+		remove(fnpid);
+		snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
+		remove(fnpid);
+	    }
+	    scheduler_finish(0);
+	    raise(SIGUSR1);
+	    exit(1);
+	}
     }
-
     for(int ipowfs=0; ipowfs<parms->skyc.npowfs; ipowfs++){
 	parms->skyc.pixtheta[ipowfs]/=206265.;//input is in arcsec
 	info2("powfs %d, pixtheta=%g mas\n", ipowfs, parms->skyc.pixtheta[ipowfs]*206265000);

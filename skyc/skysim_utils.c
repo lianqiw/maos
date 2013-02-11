@@ -436,7 +436,7 @@ void skysim_save(SIM_S *simu, ASTER_S *aster, double *ipres, int selaster, int s
     const PARMS_S* parms=simu->parms;
     const int nwvl=parms->maos.nwvl;
     char path[PATH_MAX];
-    snprintf(path,PATH_MAX,"Res%d_%d_maos/sky%d",simu->seed_maos,simu->seed_skyc,isky);
+    snprintf(path,PATH_MAX,"Res%d_%d_maos/sky%d",simu->seed_maos,parms->skyc.seed,isky);
     mymkdir("%s",path);
     PDCELL(aster[selaster].nea_tot,nea_tot);
     for(int iwfs=0; iwfs<aster[selaster].nwfs; iwfs++){
