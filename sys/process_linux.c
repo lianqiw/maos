@@ -39,6 +39,10 @@ const char *get_job_progname(void){
 	int nprog=readlink("/proc/self/exe",path,PATH_MAX);
 	if(nprog>0){
 	    path[nprog]='\0';
+	    char *delt=strstr(path, "(deleted)");
+	    if(delt){
+		delt[0]='\0';
+	    }
 	    progname=strdup0(path);
 	}	
     }

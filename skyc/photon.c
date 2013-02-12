@@ -35,7 +35,7 @@
 const double Z_H=9.6e6*(20*14.17);
 const double Z_K=4.5e6*(20*16.74);
 
-
+%these are for LA Silla from ESO slide
 const double MB_J=(16.7+15.8)/2;
 const double MB_H=(15.0+13.8)/2;
 const double MB_K=(13.0+12.7)/2;//kshort
@@ -107,9 +107,10 @@ void photon_flux(const ZB_S *zb,        /**<[in] Sky background and zero magnitu
 	Np[iwvl]=dt*saa*pow(10,-(absorp+mags[iwvl])/2.5)*Z
 	    *thruput[iwvl]*qe[iwvl]*strehl_iwvl*imperr_strehl;
 	Npsum+=Np[iwvl];
-	Nbsum+=dt*saa*pow(pixas,2)*ZB*thruput[iwvl]*qe[iwvl];
+	Nbsum+=dt*saa*pow(pixas,2)*ZB*thruput[iwvl]*qe[iwvl]/cos(za);//background scale with sec(za). 2012-10-31.
 	Npwvl+=Np[iwvl]/wvl;
     }
+    //warning_once("How does background scale with zenith angle? Surface brightness is independent of distance\n");
     double wvlm=Npsum/Npwvl; /*Average wavelength 1/mean(1/wvl) with signal weighting */
     double deltheta=wvlm/dxsa;
     double thetaB=3.*M_PI*deltheta/16.;

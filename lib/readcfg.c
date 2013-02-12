@@ -29,8 +29,8 @@
 #include <signal.h>
 #include <limits.h>
 #include "readcfg.h"
-#include "path.h"
-#include "common.h"
+
+#include "../sys/sys.h"
 #include "mathmisc.h"
 #include "readstr.h"
 /**
@@ -188,7 +188,7 @@ void close_config(const char *format, ...){
 	}
 	for(int i=0; i<nstore; i++){
 	    if(store[i].count==0){
-		print_file("change.log");
+		//print_file("change.log");
 		error("key \"%s\" is not recognized, value is %s\n", store[i].key,store[i].data);
 	    }else if(store[i].count!=1){
 		/*this should not happen. */
@@ -239,7 +239,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     if(!(fd=fopen(fn,"r"))){
 	error("File %s doesn't exist\n",fn);
     }
-#define MAXLN 4096
+#define MAXLN 40960
     char ssline[MAXLN];
     ssline[0]='\0';/*stores the available line. */
     char line[MAXLN];
@@ -275,7 +275,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	value=strtok(NULL, "=");
 	strtrim(&var);
 	strtrim(&value);
-	if(!strcmp(var,"path")){
+	if(!strcmp(var,"path") || !strcmp(var, "PATH")){
 	    addpath(value);
 	}else if(strtok(NULL,"=") || !var || strlen(var)==0){
 	    error("Line '%s' is invalid\n",line);
@@ -318,6 +318,8 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(aper.dx, evl.dx);
 	    IGNORE(sim.servotype_hi);
 	    IGNORE(sim.servotype_lo);
+	    IGNORE(sim.epfocus);
+	    IGNORE(dbg.dxonedge);
 	    RENAME(sim.gtypeII_lo, sim.eplo);
 	    RENAME(sim.epngs, sim.eplo);
 	    RENAME(sim.apngs, sim.aplo);
@@ -534,7 +536,8 @@ dmat *readcfg_dmat(const char *format,...){
 	return dread("%s", fn);
 	free(fn);
     }else{
-	readstr_numarr((void**)&val, 0, &nx, &ny,T_DBL, str);
+        double **pval=&val;
+	readstr_numarr((void**)pval, 0, &nx, &ny,T_DBL, str);
 	return dnew_data(nx, ny, val);
     }
 }

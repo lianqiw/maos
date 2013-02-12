@@ -25,9 +25,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#include "common.h"
+#include "../sys/sys.h"
 #include "random.h"
-#include "misc.h"
 #include "mathmisc.h"
 #include "dsp.h"
 #include "ssp.h"
@@ -1221,25 +1220,53 @@ X(mat)* X(linspace)(double min, double dx, long n){
     }
     return out;
 }
-
+/**
+   Check whether xin is linearly spaced
+*/
+static int X(islinear)(X(mat)*xin){
+    long nmax=xin->nx;
+    long nmax1=nmax-1;
+    double xminl=(xin->p[0]);
+    double xmaxl=(xin->p[nmax-1]);
+    double xsep=(xmaxl-xminl)/(double)(nmax1);
+    if(fabs(xsep+xminl-xin->p[1])>xsep*1.e-3){
+	return 0;
+    }else{
+	return 1;
+    }
+}
+/**
+   Check whether xin is logrithmically spaced
+ */
+static int X(islog)(X(mat)*xin){
+    long nmax=xin->nx;
+    long nmax1=nmax-1;
+    double xminl=log10(xin->p[0]);
+    double xmaxl=log10(xin->p[nmax-1]);
+    double xsep=(xmaxl-xminl)/(double)(nmax1);
+    if(fabs(xsep+xminl-log10(xin->p[1]))>1.e-3){
+	return 0;
+    }else{
+	return 1;
+    }
+}
 /**
    Interpolate using linear interp. xin is the coordinate of yin. xnew is the
    coordinate of the output.
 */
-X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
+X(mat)* X(interp1linear)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
+    if(!X(islinear)(xin)){
+	error("xin is not linearly spaced\n");
+    }
+    if(xin->ny!=1 || xnew->ny!=1){
+	error("Either xin or xnew is in wrong format\n");
+    }
     long nmax=xin->nx;
     long nmax1=nmax-1;
     double xminl=(xin->p[0]);
     double xmaxl=(xin->p[nmax-1]);
     double xsep=(xmaxl-xminl)/(double)(nmax1);
     double xsep1=1./xsep;
-    if(fabs(xsep+xminl-xin->p[1])>1.e-3){
-	return X(interp1log)(xin, yin, xnew);
-    }
-    if(xin->ny!=1 || xnew->ny!=1){
-	error("Either xin or xnew is in wrong format\n");
-    }
-
     X(mat) *ynew=X(new)(xnew->nx, xnew->ny);
     PMAT(yin, pyin);
     PMAT(ynew, pynew);
@@ -1263,20 +1290,18 @@ X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
    xin is the coordinate of yin. xnew is the coordinate of the output.
 */
 X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
+    if(!X(islog)(xin)){
+	error("xin is not logrithmically spaced\n");
+    }
+    if(xin->ny!=1 || xnew->ny!=1){
+	error("Either xin or xnew is in wrong format\n");
+    }
     long nmax=xin->nx;
     long nmax1=nmax-1;
     double xminl=log10(xin->p[0]);
     double xmaxl=log10(xin->p[nmax-1]);
     double xsep=(xmaxl-xminl)/(double)(nmax1);
     double xsep1=1./xsep;
-    if(fabs(xsep+xminl-log10(xin->p[1]))>1.e-3){
-	info("xsep=%g, nmax1=%ld, xminl=%g, xmaxl=%g\n",xsep, nmax1, xminl, xmaxl);
-	error("Xin is not logrithmicly spaced\n");
-    }
-    if(xin->ny!=1 || xnew->ny!=1){
-	error("Either xin or xnew is in wrong format\n");
-    }
-
     X(mat) *ynew=X(new)(xnew->nx, xnew->ny);
     PMAT(yin, pyin);
     PMAT(ynew, pynew);
@@ -1294,7 +1319,35 @@ X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
     }
     return ynew;
 }
-
+#ifndef USE_COMPLEX
+X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
+    if(X(islinear)(xin)){
+	return X(interp1linear)(xin, yin, xnew);
+    }else if(X(islog)(xin)){
+	return X(interp1log)(xin, yin, xnew);
+    }else{//arbitrary spacing
+	if(xin->ny!=1 || xnew->ny!=1){
+	    error("Either xin or xnew is in wrong format\n");
+	}
+	X(mat) *ynew=X(new)(xnew->nx, xnew->ny); 
+	PMAT(yin, pyin);
+	PMAT(ynew, pynew);
+	int curpos=0;
+	for(long ix=0; ix<ynew->nx; ix++){
+	    for(; curpos<xin->nx-1; curpos++){
+		if(xnew->p[ix]>xin->p[curpos] && xnew->p[ix]<xin->p[curpos+1]){
+		    break;
+		}
+	    }
+	    double xx=((xnew->p[ix])-xin->p[curpos])/(xin->p[curpos+1]-xin->p[curpos]);
+	    for(long iy=0; iy<ynew->ny; iy++){
+		pynew[iy][ix]=xx*pyin[iy][curpos+1]+(1.-xx)*pyin[iy][curpos];
+	    }
+	}
+	return ynew;
+    }
+}
+#endif
 #ifndef USE_COMPLEX
 /**
    embed a ninx*niny matrix in into A with optional rotation by -theta CCW

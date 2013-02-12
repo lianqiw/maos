@@ -19,11 +19,10 @@
 #ifndef AOS_LIB_MISC_H
 #define AOS_LIB_MISC_H
 #include "common.h"
-double factorial(long n);
 char *mybasename(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
 void copyfile(const char *dest, const char *src);
-char *argv2str(int argc, char **argv);
+char *argv2str(int argc, char **argv, const char *delim);
 void print_file(const char *fnin);
 int myclocki(void);
 double myclockd(void);
@@ -41,7 +40,7 @@ size_t flen(const char *fn);
 time_t fmtime(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
 char *strnadd(int argc, char **argv, const char *delim);
-void expand_filename(char **fnout, const char *fn);
+char *expand_filename(const char *fn);
 
 void remove_file_older(const char *fndir, long sec);
 void mymkdir(const char *format,...) CHECK_ARG(1);

@@ -17,8 +17,8 @@
 */
 
 #include <math.h>
-#include "common.h"
-#include "thread.h"
+#include "../sys/sys.h"
+
 #include "accphi.h"
 /*
    2010-01-02: use a=(int)b instead of a=(int)floor(b).  call to floor is slow
@@ -311,8 +311,7 @@ void prop_index(PROPDATA_T *propdata){
 
 #define WARN_MISSING\
     ({if(missing>0) {warning("%d points not covered by input screen\n", missing); \
-    print_backtrace(0);\
-	 }})
+    print_backtrace(0); }})
 
 #if ONLY_FULL == 1 
 #define LINEAR_ADD_NONGRID						\

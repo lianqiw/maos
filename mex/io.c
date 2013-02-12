@@ -275,7 +275,7 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
 	zfwrite_do(ptr, size, nmemb, fp);
     }
 }
-void zfwrite_complex(const double* pr, const double *pi,const size_t nmemb, file_t *fp){
+void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, file_t *fp){
     dcomplex *tmp=malloc(sizeof(dcomplex)*nmemb);
     long i;
     for(i=0; i<nmemb; i++){
@@ -284,7 +284,15 @@ void zfwrite_complex(const double* pr, const double *pi,const size_t nmemb, file
     zfwrite(tmp, sizeof(dcomplex), nmemb, fp);
     free(tmp);
 }
-
+void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_t *fp){
+    fcomplex *tmp=malloc(sizeof(fcomplex)*nmemb);
+    long i;
+    for(i=0; i<nmemb; i++){
+	tmp[i]=pr[i]+I*pi[i];
+    }
+    zfwrite(tmp, sizeof(fcomplex), nmemb, fp);
+    free(tmp);
+}
 static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
@@ -604,8 +612,17 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
     case -64:
 	*magic=M_DBL;
 	break;
+    case 32:
+	*magic=M_INT32;
+	break;
+    case 16:
+	*magic=M_INT16;
+	break;
+    case 8:
+	*magic=M_INT8;
+	break;
     default:
-	error("Invalid\n");
+	error("bitpix=%d is not yet handled.\n", bitpix);
     }
     return 0;
 }

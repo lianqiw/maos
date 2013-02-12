@@ -29,9 +29,7 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms);
 void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms);
 void setup_aster_read(ASTER_S *aster, const PARMS_S *parms, int seed);
-void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, double maxerror,
+int  setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, double maxerror,
 			const PARMS_S *parms);
 void setup_aster_wvf(ASTER_S *aster, STAR_S *star, const PARMS_S *parms);
-void setup_aster_regenpsf(dmat *mideal, ASTER_S *aster, POWFS_S*powfs, const PARMS_S *parms);
-void setup_aster_redomtch(ASTER_S *aster, POWFS_S *powfs, const PARMS_S *parms);
 #endif

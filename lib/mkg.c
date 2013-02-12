@@ -35,10 +35,10 @@
 #ifdef MATLAB_MEX_FILE
 #include "../mex/mkgmex.h"
 #else
-#include "misc.h"
+
 #include "mkg.h"
 #include "bin.h"
-#include "common.h"
+#include "../sys/sys.h"
 #include "dsp.h"
 #include "loc.h"
 #include "dmat.h"

@@ -19,7 +19,7 @@
 #ifndef AOS_BLAS_H
 #define AOS_BLAS_H
 
-#include "common.h"
+#include "../sys/sys.h"
 /*
 The following are blas and lapack fortran function definitions. Notice that when
 generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack

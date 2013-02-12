@@ -34,6 +34,7 @@ typedef struct spchol{
 }spchol;
 /* assume large file support.  If problems occur, compile with -DNLARGEFILE */
 spchol* chol_factorize(dsp *A_in);
+spchol* chol_factorize_cache(dsp *A_in);
 void chol_solve(dmat **x, spchol *A, dmat *y);
 dsp *chol_spsolve(spchol *A, const dsp *y);
 void chol_free_do(spchol *A);

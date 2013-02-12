@@ -44,17 +44,29 @@ static void print_usage(void){
  */
 ARG_S *parse_args(int argc, char **argv){
     ARG_S *arg=calloc(1, sizeof(ARG_S));
+    char *host=NULL; int local=0;
     ARGOPT_T options[]={
 	{"help", 'h', T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
+	{"override",'O',T_INT,0, &arg->override, NULL},
 	{"force",  'f',T_INT, 0, &arg->force, NULL},
 	{"output", 'o',T_STR, 1, &arg->dirout, NULL},
 	{"nthread",'n',T_INT, 1, &arg->nthread,NULL},
 	{"conf",   'c',T_STR, 1, &arg->conf, NULL},
 	{"path",   'P',T_STR, 3, addpath, NULL},
+	{"run",    'r',T_STR, 1, &host, NULL},
+	{"local",  'l',T_INT, 0, &local, NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
+    if(!local && host && strcmp(host, myhostname())){
+	//run in another server
+	char *scmd=argv2str(argc,argv,"\n");
+	if(scheduler_launch_exe(host, scmd)){
+	    error2("Unable to launch skyc at server %s\n", host);
+	}
+	exit(EXIT_SUCCESS);
+    }
     /*do not use NTHREAD here. causes too much cpu load*/
     if(arg->nthread>NCPU || arg->nthread<=0){
 	arg->nthread=NCPU;
@@ -123,14 +135,9 @@ void rename_file(int sig){
     mysymlink(fnnew, "run_recent.log");
 }
 /**
-   Handles signals. We don't want to exit the simulation when SIGPIPE happens
-   (when we are writing to closed sockets)
+   Handles signals. 
  */
 void skyc_signal_handler(int sig){
-    if(sig==SIGPIPE){
-	warning3("Program received signal SIGPIPE, broken pipe.\n");
-	return;
-    }
     disable_signal_handler;
     rename_file(sig);/*handles signal */
     if(sig!=0){

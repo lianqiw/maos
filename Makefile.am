@@ -3,7 +3,7 @@ SUBDIRS=
 if COMP_CHOL
 SUBDIRS+=external/cholmod
 endif
-SUBDIRS+=lib
+SUBDIRS+=sys lib
 if USE_CUDA
 SUBDIRS+=cuda
 endif
@@ -11,6 +11,7 @@ SUBDIRS+=maos skyc tools
 if USE_MEX
 SUBDIRS+=mex
 endif
+SUBDIRS+=test
 include $(top_srcdir)/aminclude.am
 
 #dist-hook:
@@ -31,7 +32,8 @@ EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs
 EXTRA_DIST += scripts/readbin.pro scripts/readdata.pro scripts/readbin.m scripts/writebin.m\
 scripts/save_surf.m scripts/save_tsurf.m
 nobase_dist_pkgdata_DATA=\
-config/maos/bin/TMT_CurDesign.bin\
+config/maos/bin/TMT_30cm3.bin\
+config/maos/bin/TMT_23cm6.bin\
 config/maos/bin/KECK.bin\
 config/maos/bin/NapMean.bin\
 config/maos/bin/PSD_TMT_WindShake20mas_rad2.bin\
@@ -59,6 +61,7 @@ config/maos/scao_ngs.conf\
 config/maos/sim.conf\
 config/maos/skyc_10.conf\
 config/maos/skyc_20.conf\
+config/maos/wfs_common.conf\
 config/maos/wfs_lgs_tt.conf\
 config/maos/wfs_lgs_ttf_tt.conf\
 config/maos/wfs_ngs.conf\
@@ -76,4 +79,5 @@ config/skyc/PSD/PSD_NGS.bin\
 config/skyc/PSD/PSD_PS.bin\
 config/skyc/PSD/PSD_TMT_WindShake20mas_m2.bin\
 config/skyc/PSD/PSD_TT.bin\
-config/skyc/besancon/JH_5sqdeg_lat90_lon0_besancon.bin
+config/skyc/besancon/JH_5sqdeg_lat90_lon0_besancon.bin\
+config/skyc/besancon/JHK_5sqdeg_lat90_lon0_besancon.bin

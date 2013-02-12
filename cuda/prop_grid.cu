@@ -373,6 +373,66 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 	}
     }
 }
+/*
+  Raytracing from in to out (dir=1) or in from out (dir=-1)
+  in  has origin at (nxi, nyi), sampling dxi, normally DM
+  out has origin at (nxo, nyo), sampling dxo, normally other OPD
+*/
+/*
+void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
+			 curmat *out, float oxo, float oyo, float dxo,
+			 float dispx, float dispy,  float *cubic_cc,
+			 float alpha, int dir, cudaStream_t stream){
+    //offset of origin. 
+    dispx=(dispx-oxi+oxo);
+    dispy=(dispy-oyi+oyo);
+    int offx1=0, offy1=0;
+    const double dxo1=1./dxo;
+    //if output is outside of input from left/bottom, starting at an offset. 
+    if(dispx<0){
+	offx1=(int)ceilf(-dispx*dxo1);
+	dispx+=offx1*dxo;
+    }
+    if(dispy<0){
+	offy1=(int)ceilf(-dispy*dxo1);
+	dispy+=offy1*dxo;
+    }
+    int nxi=in->nx;
+    int nyi=in->ny;
+    int nxo=out->nx;
+    int nyo=out->ny;
+    int nx=(int)floorf(((nxi-1)*dxi-dispx)*dxo1)+1;
+    int ny=(int)floorf(((nyi-1)*dxi-dispy)*dxo1)+1;
+    //if output is outside of input from right/top, limit number of points to do.
+    if(nx>nxo-offx1) nx=nxo-offx1;
+    if(ny>nyo-offy1) ny=nyo-offy1;
+  
+    if(fabsf(2*dxo1-dxi)<EPS){
+	dispx=dispx/dxi;
+	dispy=dispy/dxi;
+	int offx2=floor(dispx); dispx-=offx2;
+	int offy2=floor(dispy); dispy-=offy2;
+	float dispx2=dispx+(dispx>0.5)?-0.5:0.5;
+	float dispy2=dispy+(dispy>0.5)?-0.5:0.5;
+	TO_IMPLEMENT;
+	if(cubic_cc){
+	    if(dir==1){
+		prop_grid_cubic_do_os2<<<DIM2(nx,ny,8),0,stream>>>
+		    (out->p+offy1*nxo+offx1, nxo,
+		     in->p+offy2*nxi+offx2, nxi,
+		     dispx, dispy, dispx2, dispy2,
+		     nx, ny, cubic_cc, alpha);
+	    }else if(dir==-1){
+		TO_IMPLEMENT;
+	    }
+	}else{
+	    TO_IMPLEMENT;
+	}
+    }else{
+	TO_IMPLEMENT;
+    }
+    }*/
+
 __global__ static void prop_grid_cubic_nomatch_do(float *restrict out, int nxo, 
 						  const float *restrict in, int nxi, 
 						  float dispx, float dispy, float ratio, 

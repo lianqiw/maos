@@ -119,13 +119,13 @@ fdpcg_perm(const long *nx, const long *ny, const int *os, int bs, int nps, int s
     long adimx=nx[0]/os[0];//subaperture dimension.
     long adimy=ny[0]/os[0];
     if(half){
-	xloctot=(adimx/2+1)*adimy*bs;
+	xloctot=(adimx/2+1)*adimy*bs;//about half of xloctot.
     }
     long *perm=calloc(xloctot, sizeof(long));
     long count=0;
     /*We select the positive x frequencies first and negative x frequencies
       later so that in GPU, when at os0 or os6, we only need to do postive
-      frequenci operations */
+      frequency operations */
     int nxh=half?1:2;
     int ix0, ix1;
     for(int ixh=0; ixh<nxh; ixh++){
@@ -393,7 +393,7 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	break;
     case 1:
     case 2:
-	/*forward matrix uses inverse PSD or fractal. we use PSF here. */
+	/*forward matrix uses inverse PSD or fractal. we use PSD here. */
 	for(long ips=0; ips<nps; ips++){
 	    dmat *tmp=ddup(recon->invpsd->invpsd->p[ips]);
 	    dfftshift(tmp);
@@ -490,71 +490,59 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
     if(parms->save.setup){
 	cspwrite(Mhat,"%s/fdpcg_Mhat",dirsetup);
     }
+    FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
     /*Now invert each block. */
     /*bs: blocksize. */
     int bs=0;
     for(long ips=0; ips<nps; ips++){
 	bs+=os[ips]*os[ips];
     }
-    long nb=Mhat->m/bs;
+    fdpcg->nbx=nx[0]/os[0];
+    fdpcg->nby=ny[0]/os[0];
+    fdpcg->bs=bs;
+    long nb=fdpcg->nbx*fdpcg->nby;
     info2("fdpcg: Block size is %d, there are %ld blocks\n",bs,nb);
     /*Permutation vector */
-    FDPCG_T *fdpcg=calloc(1, sizeof(FDPCG_T));
     fdpcg->scale=needscale;
     long *perm=fdpcg_perm(nx,ny, os, bs, nps,0,0);
     csp *Mhatp=cspperm(Mhat,0,perm,perm);/*forward permutation. */
     cspfree(Mhat);
     free(perm);
-#if PRE_PERMUT == 1
-    fdpcg->half=0;
-#else
-    fdpcg->half=parms->gpu.tomo?1:0;
-#endif
-    perm=fdpcg_perm(nx,ny, os, bs, nps, 1, fdpcg->half); /*contains fft shift information*/
-    if(parms->save.setup){
+
+    perm=fdpcg_perm(nx,ny, os, bs, nps, 1, 0); /*contains fft shift information*/
+    if(parms->save.setup>1){
 	writelong(perm, nxtot, 1, "%s/fdpcg_perm", dirsetup);
     }
-#if PRE_PERMUT == 1
+#if PRE_PERMUT == 1//Permutat the sparse matrix.
     csp *Minvp=cspinvbdiag(Mhatp,bs);
     csp *Minv=cspperm(Minvp,1,perm, perm);/*revert permutation */
-    free(perm);
+    free(perm); perm=NULL;
     cspfree(Minvp);
     fdpcg->Minv=Minv;
     if(parms->save.setup){
 	cspwrite(Minv,"%s/fdpcg_Minv",dirsetup);
     }
-#else
-    fdpcg->perm=perm;
+#else//use block diagonal matrix
+    fdpcg->perm=perm; perm=NULL;
+    if(parms->gpu.tomo){
+	fdpcg->permhf=fdpcg_perm(nx,ny, os, bs, nps, 1, 1); 
+	if(parms->save.setup>1){
+	    writelong(fdpcg->permhf, nxtot, 1, "%s/fdpcg_permhf", dirsetup);
+	}
+    }
+    
     fdpcg->Mbinv=cspblockextract(Mhatp,bs);
     if(parms->save.setup){
 	ccellwrite(fdpcg->Mbinv,"%s/fdpcg_Mhatb",dirsetup);
     }
-    double svd_thres;
-    if(parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit){
-	svd_thres=1e-7;//-0.01;
-    }else{
-	svd_thres=1e-7;
-    }
+    double svd_thres=1e-7;
     info2("FDPCG SVD Threshold is %g\n", svd_thres);
-    if(nx[0]*ny[0]/(os[0]*os[0])!=nb){
-	error("Something wrong\n");
-    }
-    int nb2=nb;
-    if(fdpcg->half){/*Reduce the number of blocks.*/
-	nb2=(nx[0]/os[0]/2+1)*(ny[0]/os[0]);
-	for(long ib=nb2; ib<nb; ib++){
-	    cfree(fdpcg->Mbinv->p[ib]);
-	}
-	fdpcg->Mbinv->nx=nb2;
-    }
-    for(long ib=0; ib<nb2; ib++){
+
+    for(long ib=0; ib<fdpcg->Mbinv->nx; ib++){
 	/*2012-04-07: was using inv_inplace that calls gesv that does not truncate svd. In
 	  one of the cells the conditional is more than 1e8. This creates
 	  problem in GPU code causing a lot of pistion to accumulate and
-	  diverges the pcg.
-
-	  2012-04-26: Even with 1e-7 threshold, some blocks has bad conditions
-	  that blows the error if we are assemble MVM in GPU.
+	  diverges the pcg. Use svd to truncate smaller eigen values.
 	*/
 	csvd_pow(fdpcg->Mbinv->p[ib], -1, 0, svd_thres);
     }

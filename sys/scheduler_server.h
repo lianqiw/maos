@@ -48,50 +48,7 @@ typedef struct STATUS_T{
     time_t timstart;
     time_t timend;
 }STATUS_T;
-/**
-   Struct to hold information of queued jobs waited to start.
-*/
-typedef struct QUEUE_T{
-    int pid;
-    int sock;
-    int nthread;
-}QUEUE_T;
-/**
-   Struct to hold information of running jobs.
-*/
-typedef struct RUN_T{
-    struct RUN_T *next;
-    STATUS_T status;
-    double started;/*started execution. */
-    double launchtime;
-    int pid;
-    int sock;
-    int nthread;
-    int time;
-    char *path;
-}RUN_T;
 
-/**
-  Struct to hold available monitors waiting for information.
-*/
-typedef struct MONITOR_T{
-    int sock;
-    int load;/*handle machine load information. */
-    struct MONITOR_T *next;
-}MONITOR_T;
-
-int myhostid(const char *host);
-int bind_socket (uint16_t port, int type);
-void listen_port(uint16_t port, int (*respond)(int), double timeout_sec, void (*timeout_fun)());
-MONITOR_T *monitor_get(int hostid);
-void monitor_remove(int hostid);
-MONITOR_T *monitor_add(int hostid);
-void monitor_send(RUN_T *run,char*path);
-void monitor_send_initial(MONITOR_T *ic);
-void monitor_send_load(void);
-void print_backtrace(int sig);
-void print_backtrace_symbol(void *const *buffer, int size);
-void socket_tcp_keepalive(int sock);
 enum{
     CMD_START=1,
     CMD_FINISH,
@@ -109,6 +66,8 @@ enum{
     CMD_LOAD,/*14 */
     CMD_SHUTRD,/*15 */
     CMD_SHUTWR,/*16 */
+    CMD_ADDHOST,/*17*/
+    CMD_LAUNCH,
 };
 enum{
     S_RUNNING=1,
@@ -120,12 +79,15 @@ enum{
     S_REMOVE,
     S_KILLED,
 };
-extern uint16_t PORTMON;
-extern uint16_t PORT;
-/*#define MAXNHOST 10 */
-extern int nhost;
-extern char** hosts;
-extern int hid;
-#define scheduler_version 0x23
+
+#define scheduler_version 0x24
 #define BACKTRACE_CMD_LEN 200
+
+
+void print_backtrace(int sig);
+void print_backtrace_symbol(void *const *buffer, int size);
+void socket_tcp_keepalive(int sock);
+void scheduler(void);
+
+
 #endif

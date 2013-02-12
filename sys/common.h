@@ -23,7 +23,7 @@
    Every source file in this folder should include this file
 */
 #ifdef HAVE_CONFIG_H
-#include "config.h" /*not a good idea to include HAVE_CONFIG_H here */
+#include "config.h" 
 #endif
 #include <signal.h>
 #include <stdarg.h>
@@ -32,6 +32,7 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <unistd.h>
 #if !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <alloca.h>
 #endif
@@ -68,6 +69,7 @@ dcomplex conj(dcomplex __z);
 dcomplex cpow(dcomplex x, dcomplex z);
 dcomplex csqrt(dcomplex);
 dcomplex clog(dcomplex);
+double carg(dcomplex);
 float cabsf(fcomplex __z);
 float cimagf(fcomplex __z);
 float crealf(fcomplex __z);
@@ -76,6 +78,7 @@ fcomplex conjf(fcomplex __z);
 fcomplex cpowf(fcomplex x, fcomplex z);
 fcomplex csqrtf(fcomplex);
 fcomplex clogf(fcomplex);
+float cargf(fcomplex);
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
 #include <complex.h>
 /*BSD lacks cpow in C99 implementation*/
@@ -101,9 +104,11 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #endif
 #endif
 
-#include "sys/mem.h"
+#include "mem.h"
 #ifdef __linux__
 #include <linux/limits.h> /*includes definition of PATH_MAX */
+#else
+#include <limits.h>
 #endif/*__linux__ */
 #ifndef restrict
 #define restrict __restrict
@@ -143,46 +148,51 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
   use () to make the statements a single statement.
 */
 #ifndef error
-#define error(A...) ({char fline[80];					\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "\033[01;31m%-20s Fatal error: ",fline);	\
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
-	    raise(SIGTERM);})
-#define info(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr, "%-20s",fline);			\
-	    fprintf(stderr, A);})
-#define warning(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr,"\033[01;31m%-20s", fline);		\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
-#define warning_once(A...) ({static int done=0; if(!done){ char fline[80]; \
-		snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-		fprintf(stderr,"\033[01;31m%-20s", fline);		\
-		fprintf(stderr,A);fprintf(stderr,"\033[00;00m");} done=1;})
+#define info(A...) ({char fline[4096];char sect[4096];			\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__); snprintf(fline,4096, "%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+	    fprintf(stderr,"%s", fline);})
 
-#define error2(A...) ({							\
-	    fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t");	\
-	    fprintf(stderr, A);						\
+#define error(A...) ({char fline[4096];char sect[4096];			\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "\033[01;31m%-20s Fatal error: ",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);sync();		\
 	    raise(SIGTERM);})
+
+#define warning(A...) ({char fline[4096];char sect[4096];		\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "\033[01;31m%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline); })
+
+#define warning_once(A...) ({static int done=0; if(!done){done=1; char fline[4096];char sect[4096]; \
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);	\
+	    snprintf(fline,4096, "\033[01;31m%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);}})
+
 #define info2(A...) fprintf(stderr, A)
-#define warning2(A...) ({					\
-	    fprintf(stderr,"\033[00;31m");			\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m"); }) 
+#define error2(A...) ({ fprintf(stderr, "\033[01;31mFatal error\033[00;00m\t" A); sync();raise(SIGTERM);})
+#define warning2(A...) ({fprintf(stderr,"\033[00;31mWarning:\033[00;00m" A);})
 
-#define error3(A...) ({char fline[80];					\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr, "[%s]\033[01;31m%-20s Fatal error:",myasctime(),fline); \
-	    fprintf(stderr, A); fprintf(stderr,"\033[00;00m");		\
-	    raise(SIGTERM);})
-#define warning3(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);		\
-	    fprintf(stderr,"[%s]\033[01;31m%-20s", myasctime(),fline);	\
-	    fprintf(stderr,A);fprintf(stderr,"\033[00;00m");})
-#define info3(A...) ({char fline[80];				\
-	    snprintf(fline, 80,"%s:%d",BASEFILE,__LINE__);	\
-	    fprintf(stderr, "[%s]%-20s",myasctime(),fline);	\
-	    fprintf(stderr, A);})
+#define info3(A...) ({char fline[4096];char sect[4096];			\
+		      snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);	\
+		      snprintf(fline,4096, "[%s]%-20s",sect, myasctime()); \
+		      snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+		      fprintf(stderr,"%s", fline);})
+#define error3(A...) ({char fline[4096];char sect[4096];		\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error: ",myasctime(),sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);			\
+	    sync();raise(SIGTERM);})
+
+#define warning3(A...) ({char fline[4096];char sect[4096];		\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
+	    snprintf(fline,4096, "[%s]\033[01;31m%-20s ",myasctime(),sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(sect)-1); \
+	    fprintf(stderr,"%s\033[00;00m", fline);})
 #endif
 
 #define error_write error("Write failed\n")
@@ -199,9 +209,12 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 */
 #define TIC double tk
 #define tic tk=myclockd();
-#define toc(A...) ({info(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
-#define toc2(A...) ({info2(A);info2(" takes %.6f seconds.\n",myclockd()-tk);})
-#define toc22(A) info2("%s takes %.6f seconds.\n",A, myclockd()-tk)
+#define toc(A...) ({char fline[4096];char sect[4096];			\
+	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__); snprintf(fline,4096, "%-20s",sect); \
+	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
+	    fprintf(stderr,"%s takes %.6f seconds.\n", fline, myclockd()-tk);})
+#define toc2(A...) ({char fline[4096]; snprintf(fline, 4096, A); fprintf(stderr, "%s takes %.6f seconds.\n",fline, myclockd()-tk);})
+#define toc22(A) info2("%s takes %.6f seconds.\n", A, myclockd()-tk)
 #define toc3 (myclockd()-tk)
 
 #define format2fn					\
@@ -263,7 +276,6 @@ void print_backtrace(int sig);
     signal(SIGILL, func);		\
     signal(SIGSEGV,func);		\
     signal(SIGINT, func);		\
-    signal(SIGPIPE,SIG_IGN);		\
     signal(SIGTERM,func);		\
     signal(SIGABRT,func);		\
     signal(SIGUSR1,func);		\
@@ -274,7 +286,6 @@ void print_backtrace(int sig);
     signal(SIGILL, SIG_DFL);	\
     signal(SIGSEGV,SIG_DFL);	\
     signal(SIGINT, SIG_DFL);	\
-    signal(SIGPIPE,SIG_DFL);	\
     signal(SIGTERM,SIG_DFL);	\
     signal(SIGABRT,SIG_DFL);	\
     signal(SIGUSR1,SIG_DFL);	\

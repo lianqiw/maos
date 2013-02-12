@@ -24,11 +24,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-#include "common.h"
-#include "thread.h"
-#include "misc.h"
+#include "../sys/sys.h"
 #include "mathmisc.h"
-#include "io.h"
+
 int DRAW_ID=0;
 int DRAW_DIRECT=0; /*set to 1 to launch drawdaemon directly without going through scheduler. */
 int disable_draw=0; /*if 1, draw will be disabled  */
@@ -42,7 +40,6 @@ int read_helper=0;
 */
 #include "draw.h"
 #include "bin.h"
-#include "sys/scheduler_client.h"
 static FILE *pfifo=NULL;
 #define DOPPRINT 1
 #if DOPPRINT == 0
@@ -98,7 +95,7 @@ void draw_helper(void){
 	int cmd;
 	while(read(read_parent, &cmd, sizeof(int))==sizeof(int)){
 	    char *fifo_fn=scheduler_get_drawdaemon(cmd, 1);
-	    writestr(write_parent, fifo_fn);
+	    stwritestr(write_parent, fifo_fn);
 	}
 	_exit(0);
     }
@@ -141,11 +138,11 @@ retry:
     if(write_helper && read_helper){
 	info2("Helper is running, launch drawdaemon through it\n");
 	if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
-	    fifo_fn=readstr(read_helper);
+	    streadstr(read_helper, &fifo_fn);
 	}else{/*helper has exited, launch it again */
 	    draw_helper();
 	    if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
-		fifo_fn=readstr(read_helper);
+		streadstr(read_helper, &fifo_fn);
 	    }else{/*still failed. */
 		write_helper=0;
 		read_helper=0;
@@ -234,11 +231,20 @@ void plot_points(char *fig,          /**<Category of the figure*/
 	    ngroup=dc->nx*dc->ny;
 	}
 	for(int ig=0; ig<ngroup; ig++){
+	    int nx=0, ny=0;
+	    double *p=NULL;
 	    FWRITEINT(pfifo, FIFO_POINTS);
-	    FWRITEINT(pfifo, dc->p[ig]->nx);
-	    FWRITEINT(pfifo, dc->p[ig]->ny);
-	    FWRITEINT(pfifo, 0);
-	    FWRITE(dc->p[ig]->p, sizeof(double),dc->p[ig]->nx*dc->p[ig]->ny, pfifo);
+	    if(dc->p[ig]){
+		nx=dc->p[ig]->nx;
+		ny=dc->p[ig]->ny;
+		p=dc->p[ig]->p;
+	    }
+	    FWRITEINT(pfifo, nx);
+	    FWRITEINT(pfifo, ny);
+	    FWRITEINT(pfifo, 0); 
+	    if(p){
+		FWRITE(p, sizeof(double),dc->p[ig]->nx*dc->p[ig]->ny, pfifo);
+	    }
 	}
     }
     if(style){
@@ -274,6 +280,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
     FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
     FWRITEINT(pfifo,FIFO_END);
     if(fflush(pfifo)){
+	perror("fflush");
 	/*it is important to flush it so that drawdaemon does not stuck waiting. */
 	warning("Failed to fflush the fifo");
     }

@@ -398,14 +398,13 @@ void gpu_wfssurf2gpu(const PARMS_T *parms, POWFS_T *powfs){
 	cuwfs_t *cuwfs=cudata->wfs;
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	curzero(cuwfs[iwfs].opdadd, cuwfs[iwfs].stream);
 	if(powfs[ipowfs].opdadd && powfs[ipowfs].opdadd->p[wfsind]){
-	    curmat *temp=NULL;
-	    cp2gpu(&temp, powfs[ipowfs].opdadd->p[wfsind]);
-	    curadd(&cuwfs[iwfs].opdadd, 1, temp, 1, cuwfs[iwfs].stream);
-	    curfree(temp);
+	    cp2gpu(&cuwfs[iwfs].opdadd, powfs[ipowfs].opdadd->p[wfsind]);
 	    dfree(powfs[ipowfs].opdadd->p[wfsind]);/*no longer need it in CPU memory. */
 	}
+	if(powfs[ipowfs].gradoff && powfs[ipowfs].gradoff->p[wfsind]){
+	    cp2gpu(&cuwfs[iwfs].gradoff, powfs[ipowfs].gradoff->p[wfsind]);
+	}	
     }
 }
 __global__ static void setup_rand(curandState *rstat, int seed){

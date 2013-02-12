@@ -34,10 +34,10 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
     cfft2plan(otf, -1);
     cfft2plan(otfsave,1);
     ccpd(&otf, psf);/*loaded psf has peak in corner */
-    cfft2i(otf, 1);/*turn to OTF, peak in corner */
+    cfft2i(otf, -1);/*turn to OTF, peak in corner. was 1, turn to -1 on 1/30/2013 */
     ccwm(otf, dtf->nominal);
     ccp(&otfsave, otf);
-    cfft2(otf, -1);/*turn back. */
+    cfft2(otf, 1);/*turn back. */
     spmulcreal(i0->p, dtf->si, otf->p, 1);
     ccp(&otf, otfsave);
     PCMAT(otf, potf);
@@ -49,8 +49,8 @@ void psf2i0gxgy(dmat *i0, dmat *gx, dmat *gy, dmat *psf, DTF_S *dtf){
 	    potfsave[iy][ix]*=dtf->U->p[iy];
 	}
     }
-    cfft2(otf, 1);
-    cfft2(otfsave, 1);
+    cfft2(otf, 1);//was 1, changed to -1 on 1/29/2013
+    cfft2(otfsave, 1);//was 1, changed to -1 on 1/29/2013
     spmulcreal(gx->p,dtf->si,otf->p,1);
     spmulcreal(gy->p,dtf->si,otfsave->p,1);
     cfree(otf); cfree(otfsave);
@@ -121,7 +121,6 @@ void mtch(dcell **mtche, dmat **sanea,
 	pi0m[6][1]=-1;
     }
     for(long isa=0; isa<nsa; isa++){    
-
 	dzero(i0g);
 	/*kp is here to ensure good conditioning */
 	adddbl(pi0g[0], 1, gx->p[isa]->p, npixtot, 1, 0);

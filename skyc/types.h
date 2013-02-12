@@ -40,10 +40,10 @@ typedef struct POWFS_S{
     dmat   *amp;       /**<amplitude map defined on loc*/
     double *locxamp;   /**<dot(loc->locx,amp);*/
     double *locyamp;   /**<dot(loc->locy,amp);*/
-    loc_t **cloc;      /**<coarse loc;*/
     loc_t  *saloc;     /**<subaperture location*/
-    double *fpc;       /**<focus-piston-coupling.*/
     dmat   *dettf;     /**<matrix to demote TTF to TT*/
+    double dxwvf;      /**<sampling for the wvf.*/
+    int    nxwvf;      /**<number of points each subaps*/
 }POWFS_S;
 /**
    Struct for pixel intensity statistics*/
@@ -69,14 +69,14 @@ typedef struct WFS_S{
     double thetax;     /**<location of wfs*/
     double thetay;     /**<location of wfs*/
     dmat *mags;        /**<magnitude in each band*/
-    double *siglev;    /**<signal level at maos.dt sampling for each wvl*/
+    dmat *siglev;    /**<signal level at maos.dt sampling for each wvl*/
     double siglevtot;  /**<sum of siglev*/
     double bkgrnd;     /**<background level per pixel at maos.dt*/
     ccell **wvfout;    /**<complex wavefront output from maos run*/
     dcell *ztiltout;   /**<ztilt out from maos run*/
+    dmat *goff;        /**<gradient offset for ncpa calibration*/
     PISTAT_S *pistat;  /**<information about pixel intensities. first got from
 			  star_t, then updated.*/
-    int pistatref;     /**<pixel intensities reference flag*/
 }WFS_S;
 
 /**
@@ -88,7 +88,7 @@ typedef struct STAR_S{
     double scbcs;      /**<scale factor to match strehl for bi-cubic spline*/
     dmat  *mags;       /**<star magnitude at each wavelength*/
     /*The following is for each ipowfs */
-    dmat  *siglev;     /**<signal level of size nwvl*npowfs*/
+    dcell  *siglev;    /**<signal level of size npowfs, nwvl*/
     dmat  *siglevtot;  /**<total signal level of size npowfs*1*/
     dmat  *bkgrnd;     /**<pixel background of size npowfs*1*/
     int   *use;        /**<whether this star is used in phy simulations, of size npowfs*1*/
@@ -96,6 +96,7 @@ typedef struct STAR_S{
     dcell *g;          /**<gradient operator of size npowfs*1*/
     ccell ***wvfout;   /**<complex wavefront output from maos run, of size npowfs*1*/
     dcell **ztiltout;  /**<ztilt output from maos run, of size npowfs*1*/
+    dcell *goff;       /**<gradient offset for NCPA calibration.*/
     int   nstep;       /**<number of time steps available.*/
 }STAR_S;
 /**
@@ -140,7 +141,6 @@ typedef struct SIM_S{
     STAR_S *star;      /**<STAR_S*/
     int iseed;         /**<Current seed index*/
     int seed_maos;     /**<Current MAOS seed to read in PSF*/
-    int seed_skyc;     /**<Current skyc seed to generate stars and pixel noise*/
     int nstep;         /**<Number of steps*/
     rand_t rand;       /**<Random stream*/
     dmat *res;         /**<residual error. 5*nsky. 
@@ -151,7 +151,7 @@ typedef struct SIM_S{
 			  - Residual focus error
 		       */
     dmat *res_oa;      /**<residual error on axis 5*nsky. in the same format as res*/
-    dmat *res_ol;      /**<residual error estimated from servo analysis. in the same foramt as res*/
+    dmat *res_geom;      /**<residual error estimated from servo analysis. in the same foramt as res*/
     dcell *mres;       /**<residual NGS modes. 5*nsky*/
     dcell *sel;        /**<selected stars for each star field.*/
     dmat *fss;         /**<optimal sampling freq for each star field*/
@@ -174,7 +174,7 @@ typedef struct SIM_S{
     int isky_end;      /**<last star field to evalaute (exclusive)*/
     double tk_0;       /**<initial star time*/
 #if USE_PTHREAD > 0
-    pthread_mutex_t mutex_save;/**<mutex for save*/
+    pthread_mutex_t mutex_status;/**<mutex for status reporting*/
 #endif
 }SIM_S;
 #endif

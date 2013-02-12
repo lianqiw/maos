@@ -106,7 +106,7 @@ long gpu_get_mem(void){
     return (long)fr;
 }
 static int cmp_gpu_info(const long *a, const long *b){
-    return (int)(b[1]-a[1]);
+    return b[1]>a[1]?1:0;
 }
 /**
    Initialize GPU. Return 1 if success.
@@ -159,6 +159,7 @@ int gpu_init(int *gpus, int ngpu){
 	    ngpu=ngpu_tot;
 	}
 	GPUS=(int*)calloc(ngpu, sizeof(int));
+	register_deinit(NULL, GPUS);
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
 #if defined(HAS_NVML) && HAS_NVML==1
@@ -187,6 +188,9 @@ int gpu_init(int *gpus, int ngpu){
 #endif
 	/*sort so that gpus with higest memory is in the front.*/
 	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
+	for(int igpu=0; igpu<ngpu_tot; igpu++){
+	    info2("GPU %d has mem %.1f GB\n", igpu, gpu_info[igpu][1]/1024/1024/1024.);
+	}
 	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
 	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){
 		if(repeat){
@@ -200,11 +204,15 @@ int gpu_init(int *gpus, int ngpu){
 	free(gpu_info);
     }
     if(NGPU) {
-	gpu_recon=0;/*last gpu in GPUS*/
+	gpu_recon=0;/*first gpu in GPUS*/
 	cudata_all=(cudata_t*)calloc(NGPU, sizeof(cudata_t));
+	register_deinit(NULL, cudata_all);
 	info2("Using GPU");
 	for(int i=0; GPUS && i<NGPU; i++){
 	    info2(" %d", GPUS[i]);
+	    gpu_set(i);
+	    //Reserve memory in GPU so the next maos will not pick this GPU.
+	    DO(cudaMalloc(&cudata->reserve, 500000000));
 	}
 	info2("\n");
     }
@@ -480,7 +488,7 @@ void cp2gpu(curcell *restrict *dest, dcell *src){
 	}
 	*dest=curcellnew(src->nx, src->ny, nx, ny);
     }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
-	error("Mismatch: %dx%d vs %ldx%ld\n", 
+	error("Mismatch: %ldx%ld vs %ldx%ld\n", 
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
     }
     for(int i=0; i<src->nx*src->ny; i++){
@@ -510,7 +518,7 @@ void cp2gpu(cuccell *restrict *dest, ccell *src){
 	}
 	*dest=cuccellnew(src->nx, src->ny, nx, ny);
     }else if((*dest)->nx!=src->nx || (*dest)->ny!=src->ny){
-	error("Mismatch: %dx%d vs %ldx%ld\n", 
+	error("Mismatch: %ldx%ld vs %ldx%ld\n", 
 	      (*dest)->nx, (*dest)->ny, src->nx, src->ny);
     }
     for(int i=0; i<src->nx*src->ny; i++){

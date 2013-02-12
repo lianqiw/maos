@@ -27,12 +27,12 @@
 #include <stdint.h>
 #include <limits.h>
 #include <ctype.h> /*isspace */
-#include "common.h"
-#include "thread.h"
-#include "process.h"
+#include "../sys/sys.h"
+
+
 #include "bin.h"
-#include "path.h"
-#include "misc.h"
+
+
 #include "readstr.h"
 /**
    \file bin.c Defines our custom file format .bin or zipped .bin.gz and the
@@ -794,7 +794,7 @@ void read_header(header_t *header, file_t *fp){
     }
 }
 /**
- * Get the length of string in header, rounded to multiple of 8.
+ * Get the length of mem to storge the header and its dimension, rounded to multiple of 8.
  */
 uint64_t bytes_header(const char *header){
     if(header){

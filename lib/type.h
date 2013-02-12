@@ -18,8 +18,8 @@
 
 #ifndef AOS_TYPE_H
 #define AOS_TYPE_H
-#include "common.h"
-#include "misc.h"
+#include "../sys/sys.h"
+
 #include "bin.h"
 
 /**

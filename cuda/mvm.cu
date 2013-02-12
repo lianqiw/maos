@@ -20,7 +20,6 @@
 #include "curmat.h"
 #include "cucmat.h"
 extern "C"{
-#include "../lib/sys/scheduler_server.h"
 #include "../maos/mvm_client.h"
 #include <sys/file.h>
 #include <netinet/tcp.h> /*SOL_TCP */
@@ -93,7 +92,7 @@ int nleft;
 char *start;
 
 int sock_mvm;
-__global__ static void mvm_g_mul_do(float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+__global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
@@ -152,7 +151,10 @@ static void mvm_thread(void* ithread0){
 			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
 	    
 	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
-		(cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	      (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    /*float one=1;
+	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
+	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
 	    cmds[ithread]=0;
 	}
 	    break;
@@ -163,9 +165,11 @@ static void mvm_thread(void* ithread0){
 	    int k=MIN(ki, ki2);
 	    cudaMemcpyAsync(cudata->mvm_g+icol, mvm_data->g+icol, k*sizeof(GTYPE), 
 			    cudaMemcpyHostToDevice, *cudata->mvm_stream);
-	    
 	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, *cudata->mvm_stream>>>
-		(cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    (cudata->mvm_m->p+nact*icol, cudata->mvm_a, cudata->mvm_g+icol, nact, k);
+	    /*float one=1;
+	    DO(cublasSgemv(cudata->mvm_stream[0], CUBLAS_OP_N, nact, k, &one, cudata->mvm_m->p+nact*icol,
+	    nact, cudata->mvm_g+icol, 1, &one, cudata->mvm_a, 1));*/
 	    cmds[ithread]=0;
 	}
 	    break;
@@ -376,5 +380,5 @@ void gpu_mvm_daemon(int port){
     info2("Starting MVM daemon at port %d\n", port);
     pthread_create(&thread_init, NULL, gpu_mvm_gpu_init, NULL);
     redirect();
-    listen_port(port, respond, 0, NULL);
+    listen_port(port, respond, 0, NULL, 1);
 }

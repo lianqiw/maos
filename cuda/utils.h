@@ -31,6 +31,7 @@ extern int gpu_recon;
 extern int NGPU;
 typedef struct cudata_t{ 
     /**<for accphi */
+    void *reserve;   /**<Reserve some memory in GPU*/
     cumap_t **atm;   /**<atmosphere: array of cumap_t */
     cumap_t **dmreal;/**<DM: array of cumap_t */
     cumap_t **dmproj;/**<DM: array of cumap_t */
@@ -98,6 +99,10 @@ inline void gpu_set(int igpu){
 #else
     cudata=&cudata_all[igpu];
 #endif
+    if(cudata->reserve){
+	cudaFree(cudata->reserve);
+	cudata->reserve=NULL;
+    }
 }
 /**
    returns next available GPU. Useful for assigning GPUs to particular wfs, evl, etc.

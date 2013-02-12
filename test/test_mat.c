@@ -271,6 +271,7 @@ static void test_svd2(void){
 }
 int main(int argc, char **argv){
     test_svd2();
+    test_svd();
     test_psd1d();
     test_spline_2d();
     test_spline();

@@ -19,24 +19,24 @@
 #define AOS_SCHEDULER_CLIENT_H
 #define MAXMSG  512
 #include "scheduler_server.h"
+extern uint16_t PORTMON;
+extern uint16_t PORT;
+/*#define MAXNHOST 10 */
+extern int nhost;
+extern char** hosts;
+extern int hid;
 void start_scheduler(int argc, char **argv);
-int init_sockaddr (struct sockaddr_in *name,
-		   const char *hostname, uint16_t port);
-int scheduler_connect(int ihost, int block,int mode);
-int scheduler_connect_self(int block,int mode);
 #if defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__)
 #define print_backtrace(A)
 #endif
 /*called by maos */
 int scheduler_start(char *path, int nthread, int waiting);
 int scheduler_wait(void);
-void scheduler_finish(int status);
-void scheduler_report(STATUS_T *status);
+int scheduler_finish(int status);
+int scheduler_report(STATUS_T *status);
 /*called by monitor */
-int scheduler_kill_job(int ihost,int pid);
-int scheduler_remove_job(int ihost, int pid);
 int scheduler_launch_drawdaemon(char *fifo);
 char* scheduler_get_drawdaemon(int pid, int direct);
-int connect_port(const char *hostname, int port, int block, int mode);
-void  sock_shutdown(int *sock, int mode);
+int launch_exe(const char *cmd);
+int scheduler_launch_exe(const char *host, const char *cmd);
 #endif

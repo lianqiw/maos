@@ -29,8 +29,10 @@ extern "C"
 const int NG1D=64;
 const int NG2D=8;
 const int WRAP_SIZE=32; /*The wrap size is currently always 32 */
-const int DIM_REDUCE=128; /*dimension to use in reduction. */
-
+const int REDUCE_WRAP=8;
+const int REDUCE_WRAP_LOG2=3;
+const int DIM_REDUCE=WRAP_SIZE*REDUCE_WRAP; /*dimension to use in reduction. */
+const int REDUCE_STRIDE=WRAP_SIZE+WRAP_SIZE/2+1;
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ <200
 __device__ inline float atomicAdd(float* address, float val)
 {
@@ -69,8 +71,8 @@ __global__ void scale_do(float *restrict in, int n, float alpha);
 __global__ void add_ptt_do(float *restrict opd, float (*restrict loc)[2], int n, float pis, float tx, float ty);
 __global__ void add_focus_do(float *restrict opd, float (*restrict loc)[2], int n, float focus);
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
-			      float m0, float m1, float m2, float m3, float m4,
-			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha );
+			      float m0, float m1, float m2, float m3, float m4, float focus,
+			      float thetax, float thetay, float scale, float ht, float alpha);
 
 __global__ void add_do(float *vec, float beta, int n);
 __global__ void addcabs2_do(float *restrict a, float alpha, const fcomplex *restrict b, float beta, int n);
@@ -81,6 +83,7 @@ __global__ void add_do(float *restrict a, float *alpha1, float alpha2,
 
 __global__ void max_do(float *restrict res, const float *a, const int n);
 __global__ void sum_do(float *restrict res, const float *a, const int n);
+__global__ void sum2_do(float *restrict res, const float *a, const int n);
 __global__ void inn_do(float *res_add, const float *a, const float *b, const int n);
 
 inline void inn_wrap(float *res_add, const float *a, const float *b, const int n, cudaStream_t stream){
@@ -88,6 +91,9 @@ inline void inn_wrap(float *res_add, const float *a, const float *b, const int n
 }
 inline static void sum_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     sum_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);
+}
+inline static void sum2_wrap(float *res, const float * a, const int n, cudaStream_t stream){
+    sum2_do<<<DIM(n, DIM_REDUCE), 0, stream>>>(res,a,n);
 }
 inline static void max_wrap(float *res, const float * a, const int n, cudaStream_t stream){
     max_do<<<DIM(n, DIM_REDUCE), DIM_REDUCE*sizeof(float), stream>>>(res,a,n);

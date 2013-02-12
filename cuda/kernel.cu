@@ -50,8 +50,8 @@ __global__ void add_focus_do(float *restrict opd, float (*restrict loc)[2],
     }
 }
 __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int n, 
-			      float m0, float m1, float m2, float m3, float m4,
-			      float thetax, float thetay, float scale, float ht, float MCC_fcp, float alpha
+			      float m0, float m1, float m2, float m3, float m4, float focus,
+			      float thetax, float thetay, float scale, float ht, float alpha
 			      ){
     float scale1=1.f-scale;
     const int step=blockDim.x * gridDim.x;
@@ -63,7 +63,8 @@ __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int
 	float y2=y*y;
 	opd[i]+= alpha*(+x*m0
 			+y*m1
-			+m2*((x2+y2-MCC_fcp)*scale1-2*scale*ht*(thetax*x+thetay*y))
+			+focus*(x2+y2)
+			+m2*(-2*scale*ht*(thetax*x+thetay*y))
 			+m3*((x2-y2)*scale1 - 2*scale*ht*(thetax*x-thetay*y))
 			+m4*(xy*scale1-scale*ht*(thetay*x+thetax*y)));
     }
@@ -135,6 +136,49 @@ __global__ void sum_do(float *restrict res, const float *a, const int n){
 	atomicAdd(res, sb[0]);
     }
 }
+/*
+  In each block, we first do the reduction in each warp. This avoid syncthreads and if test. Then we copy results from each wrap to the first wrap and do the reduction again.
+*/
+__global__ void sum2_do(float *restrict res, const float *a, const int n){
+    __shared__ float sb[REDUCE_WRAP*REDUCE_STRIDE];
+    const int idx=threadIdx.x;
+    const int wrap=idx/WRAP_SIZE; //which wrap
+    const int jdx=(WRAP_SIZE-1) & idx;//index within this wrap
+    volatile float *s=sb+REDUCE_STRIDE*wrap+jdx+WRAP_SIZE/2;
+    s[-16]=0;
+    //Read in vector from global mem
+    register float sum=0;
+    int step=blockDim.x * gridDim.x ;
+    for(int i=blockIdx.x * blockDim.x + idx; i<n; i+=step){
+	sum+=a[i];
+    }
+    s[0]=sum;
+    //Handle each wrap without sync
+#pragma unroll
+    for(int i=0; i<5; i++){
+	int offset=1<<i;
+	sum += s[-offset];//every thread retrives current value
+	s[0] = sum;//every thread write new value.
+	}
+    __syncthreads();//synchronize different wraps
+    if(idx<REDUCE_WRAP){//use a few threads for reduce
+	float sum2=sb[REDUCE_STRIDE * idx + WRAP_SIZE/2 + WRAP_SIZE - 1];
+	//reuse sb for size of REDUCE_WRAP+REDUCE_WRAP/2;
+	sb[idx]=0;
+	volatile float *s2 = sb + REDUCE_WRAP/2 + idx;
+	s2[0]=sum2;
+#pragma unroll	
+	for(int i=0; i<REDUCE_WRAP_LOG2; i++){
+	    int offset=1<<i;
+	    sum2+=s2[-offset];
+	    s2[0]=sum2;
+	}
+	if(idx+1==REDUCE_WRAP){
+	    atomicAdd(res, sum2);
+	}
+    }
+}
+
 __global__ void max_do(float *restrict res, const float *a, const int n){
     extern __shared__ float sb[];
     sb[threadIdx.x]=0;

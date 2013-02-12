@@ -108,9 +108,13 @@ void free_parms(PARMS_T *parms){
     dfree(parms->sim.apupt);
     dfree(parms->sim.epupt);
     free(parms->sim.seeds);
-    free(parms->sim.gtypeII_lo);
     free(parms->sim.wspsd);
 
+    free(parms->sim.ncpa_thetax);
+    free(parms->sim.ncpa_thetay);
+    free(parms->sim.ncpa_wt);
+    free(parms->sim.ncpa_hs);
+    free(parms->sim.mvmhost);
     free(parms->cn2.pair);
     free(parms->save.gcov);
     for(int isurf=0; isurf<parms->nsurf; isurf++){
@@ -158,6 +162,8 @@ void free_parms(PARMS_T *parms){
     free(parms->load.mvmi);
     free(parms->load.mvmf);
     free(parms->fdlock);
+    free(parms->hipowfs);
+    free(parms->lopowfs);
     free(parms);
 }
 static inline int sum_intarr(int n, int *a){
@@ -205,7 +211,7 @@ static void readcfg_powfs(PARMS_T *parms){
     double *siglev=NULL;
     int nsiglev=readcfg_dblarr(&siglev, "powfs.siglev");
     if(nwvllist != nwvlwts && nwvlwts != 0){
-	error("powfs.wvlwts is not empty and does not match powfs.wvlwts\n");
+	error("powfs.wvl is not empty and does not match powfs.wvlwts\n");
     }
     if(nsiglev!=0 && nsiglev!=parms->npowfs){
 	error("powfs.siglev is not empty and does not match npowfs");
@@ -214,11 +220,16 @@ static void readcfg_powfs(PARMS_T *parms){
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	int nwvl=parms->powfs[ipowfs].nwvl;
 	parms->powfs[ipowfs].wvl=calloc(nwvl, sizeof(double));
+	double wvlm=0;
 	for(int iwvl=0; iwvl<nwvl; iwvl++){
 	    double wvl=wvllist[count+iwvl];
 	    if(wvl>1e-3){
 		wvl=wvl*1e-6;
 	    }
+	    if(wvl<=wvlm){
+		error("Wavelength must in ascend order\n");
+	    }
+	    wvlm=wvl;
 	    parms->powfs[ipowfs].wvl[iwvl]=wvl;
 	}
 	if(nwvlwts){
@@ -243,64 +254,67 @@ static void readcfg_powfs(PARMS_T *parms){
     if(nsiglev){
 	free(siglev);
     }
-    READ_POWFS(str,piinfile);
-    READ_POWFS(str,sninfile);
-    READ_POWFS(dbl,hs);
-    READ_POWFS(dbl,saat);
+    READ_POWFS_RELAX(str,piinfile);
+    READ_POWFS_RELAX(str,sninfile);
+    READ_POWFS_RELAX(dbl,saat);
     READ_POWFS_RELAX(dbl,sathruput);
     READ_POWFS_RELAX(dbl,saspherical);
-    READ_POWFS(int,neaphy);
-    READ_POWFS(str,neareconfile);
-    READ_POWFS(str,neasimfile);
+    READ_POWFS_RELAX(int,neaphy);
+    READ_POWFS_RELAX(str,neareconfile);
+    READ_POWFS_RELAX(str,neasimfile);
+    READ_POWFS_RELAX(dbl,neasim);
+    READ_POWFS_RELAX(dbl,neaspeckle);
+    READ_POWFS_RELAX(dbl,bkgrnd);
+    READ_POWFS_RELAX(dbl,bkgrndc);
+    READ_POWFS_RELAX(str,bkgrndfn);
+    READ_POWFS_RELAX(str,bkgrndfnc);
+    READ_POWFS_RELAX(dbl,pixblur);
+    READ_POWFS_RELAX(dbl,radpixtheta);
+    READ_POWFS_RELAX(dbl,fieldstop);
+    READ_POWFS_RELAX(dbl,pixoffx);
+    READ_POWFS_RELAX(dbl,pixoffy);
+    READ_POWFS_RELAX(int,phyusenea);
+    READ_POWFS_RELAX(int,radpix);
+    READ_POWFS_RELAX(int,radrot);
+    READ_POWFS_RELAX(int,embfac);
+    READ_POWFS_RELAX(int,ncomp);
+    READ_POWFS_RELAX(int,psfout);
+    READ_POWFS_RELAX(int,pistatout);
+    READ_POWFS_RELAX(int,pistatstart);
+    READ_POWFS_RELAX(int,pistatstc);
+    READ_POWFS_RELAX(int,gtype_sim);
+    READ_POWFS_RELAX(int,gtype_recon);
+    READ_POWFS_RELAX(int,phytype);
+    READ_POWFS_RELAX(int,phytypesim);
+
+    READ_POWFS_RELAX(dbl,mtchcra);
+    READ_POWFS_RELAX(int,mtchcpl);
+    READ_POWFS_RELAX(int,mtchscl);
+    READ_POWFS_RELAX(int,mtchadp);
+    READ_POWFS_RELAX(dbl,cogthres);
+    READ_POWFS_RELAX(dbl,cogoff);
+    READ_POWFS_RELAX(str,misreg);
+    READ_POWFS_RELAX(int,ncpa_method);
+    READ_POWFS_RELAX(int,i0scale);
+    READ_POWFS_RELAX(dbl,sigscale);
+    READ_POWFS_RELAX(int,moao);
+
+    READ_POWFS(dbl,hs);
     READ_POWFS(dbl,nearecon);
-    READ_POWFS(dbl,neasim);
-    READ_POWFS(dbl,neaspeckle);
-    READ_POWFS(dbl,bkgrnd);
-    READ_POWFS(dbl,bkgrndc);
-    READ_POWFS(str,bkgrndfn);
-    READ_POWFS(str,bkgrndfnc);
-    READ_POWFS(dbl,pixblur);
     READ_POWFS(dbl,rne);
     READ_POWFS(dbl,dx);
     READ_POWFS(dbl,pixtheta);
-    READ_POWFS(dbl,radpixtheta);
-    READ_POWFS(dbl,fieldstop);
-    READ_POWFS(dbl,pixoffx);
-    READ_POWFS(dbl,pixoffy);
-    READ_POWFS(int,phyusenea);
     READ_POWFS(str,fnllt);
     READ_POWFS(int,trs);
     READ_POWFS(int,dfrs);
     READ_POWFS(int,lo);
     READ_POWFS(int,pixpsa);
-    READ_POWFS(int,radpix);
-    READ_POWFS(int,radrot);
-    READ_POWFS(int,ncomp);
-    READ_POWFS(int,embfac);
-    READ_POWFS(int,psfout);
-    READ_POWFS(int,pistatout);
-    READ_POWFS(int,pistatstart);
-    READ_POWFS(int,pistatstc);
-    READ_POWFS(int,gtype_sim);
-    READ_POWFS(int,gtype_recon);
-    READ_POWFS(int,phytype);
-    READ_POWFS(int,phytypesim);
     READ_POWFS(dbl,mtchcr);
-    READ_POWFS(dbl,mtchcra);
-    READ_POWFS(int,mtchcpl);
     READ_POWFS(int,mtchstc);
-    READ_POWFS(int,mtchscl);
-    READ_POWFS(int,mtchadp);
-    READ_POWFS(dbl,cogthres);
-    READ_POWFS(dbl,cogoff);
     READ_POWFS(int,phystep);
     READ_POWFS(int,noisy);
-    READ_POWFS(str,misreg);
-    READ_POWFS(int,ncpa_method);
     READ_POWFS(int,dtrat);
-    READ_POWFS(int,i0scale);
-    READ_POWFS(dbl,sigscale);
-    READ_POWFS(int,moao);
+
     for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
 	if(!isfinite(parms->powfs[ipowfs].hs) && parms->powfs[ipowfs].fnllt){
 	    warning2("powfs %d is at infinity, disable LLT\n", ipowfs);
@@ -659,7 +673,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.piston_cr);
     READ_INT(tomo.ahst_wt);
     READ_INT(tomo.ahst_idealngs);
-    READ_INT(tomo.ahst_rtt);
+    READ_INT(tomo.ahst_ttr);
     READ_INT(tomo.alg);
     READ_INT(tomo.bgs);
     READ_INT(tomo.precond);
@@ -734,8 +748,7 @@ static void readcfg_recon(PARMS_T *parms){
 static void readcfg_sim(PARMS_T *parms){
     parms->sim.apupt=readcfg_dmat("sim.apupt");
     parms->sim.epupt=readcfg_dmat("sim.epupt");
-    READ_DBL(sim.epfocus);
-    READ_DBL(sim.lpfocus);
+    READ_DBL(sim.fcfocus);
     READ_INT(sim.mffocus);
     READ_INT(sim.uptideal);
 
@@ -792,8 +805,7 @@ static void readcfg_sim(PARMS_T *parms){
     READ_INT(sim.zoomshare);
     READ_DBL(sim.zoomgain);
     READ_INT(sim.ncpa_calib);
-
-    
+    READ_INT(sim.ncpa_ttr);
     parms->sim.ncpa_ndir=readcfg_dblarr(&(parms->sim.ncpa_thetax), "sim.ncpa_thetax");
     readcfg_dblarr_n(&(parms->sim.ncpa_thetay),parms->sim.ncpa_ndir, "sim.ncpa_thetay");
     readcfg_dblarr_n(&(parms->sim.ncpa_wt),parms->sim.ncpa_ndir, "sim.ncpa_wt");
@@ -804,6 +816,7 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.ncpa_thetay[i]/=206265.;
     }
     normalize_sum(parms->sim.ncpa_wt, parms->sim.ncpa_ndir, 1);
+    parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dt;
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -859,7 +872,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
     READ_INT(dbg.usegwr);
-    READ_INT(dbg.dxonedge);
     READ_INT(dbg.cmpgpu);
     READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
@@ -966,7 +978,8 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    error("skysim need MVR");
 	}
 	parms->tomo.ahst_idealngs=1;
-	if(parms->tomo.ahst_wt!=3){
+	if(parms->tomo.ahst_wt==1){//gradient weighting not available.
+	    /*2013-1-30: ahst_wt=2 is not good. It resulted in higher NGS mode than ahst_wt=3*/
 	    warning("in skycoverage presimulation, ahst_wt need to be 3. Changed\n");
 	    parms->tomo.ahst_wt=3;
 	}
@@ -977,7 +990,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		parms->powfs[ipowfs].psfout=1;
-		parms->powfs[ipowfs].pistatout=1;
+		//parms->powfs[ipowfs].pistatout=1;
 	    }
 	}
     }
@@ -1036,7 +1049,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
-    if(!parms->recon.split){
+    if(!parms->recon.split || parms->ndm!=2){
 	parms->sim.ahstfocus=0;
     }
     if(parms->sim.ahstfocus){
@@ -1176,6 +1189,8 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    error("Cannot proceed\n");
 	}
     }
+    parms->hipowfs=calloc(parms->npowfs, sizeof(int));
+    parms->lopowfs=calloc(parms->npowfs, sizeof(int));
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	/*Figure out order of High order WFS if not specified.*/
 	if(parms->powfs[ipowfs].order==0){
@@ -1187,11 +1202,13 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	}
 	if(parms->powfs[ipowfs].nwfs>0){
 	    if(parms->powfs[ipowfs].lo){
+		parms->lopowfs[parms->nlopowfs]=ipowfs;
 		parms->nlopowfs++;
 		if(parms->powfs[ipowfs].trs==1){
 		    error("Low order wfs should not be tilt removed\n");
 		}
 	    }else{
+		parms->hipowfs[parms->nhipowfs]=ipowfs;
 		parms->nhipowfs++;
 	    }
 	    if(parms->powfs[ipowfs].trs){
@@ -1201,32 +1218,14 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		parms->ntrspowfs++;
 	    }
 	}
-	/* 
-	   Figure out pixtheta if specified to be auto (<0).
-	   -pixtheta is the ratio to nominal value.
-	*/
-	const double dxsa 
-	    = parms->aper.d/(double)parms->powfs[ipowfs].order;
-	double wvl=0;
-	for(int iwvl=0; iwvl<parms->powfs[ipowfs].nwvl; iwvl++){
-	    if(parms->powfs[ipowfs].wvl[iwvl]>wvl)
-		wvl=parms->powfs[ipowfs].wvl[iwvl];
-	}
 	/*should supply in arcsec. Was supplied in radian pre 2011-02-17. So we
 	  test magnitude and then apply conversion*/
-	if(parms->powfs[ipowfs].pixtheta>1e-4){
-	    parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
-	}else if(parms->powfs[ipowfs].pixtheta>0){
-	    warning2("ipowfs %d:pixtheta should be supplied in unit of arcsec.\n", ipowfs);
-	}
 	if(parms->powfs[ipowfs].pixtheta<0){
-	    parms->powfs[ipowfs].dl=1;/*mark as diffraction limited. */
-	    double ratio=(-parms->powfs[ipowfs].pixtheta);
-	    parms->powfs[ipowfs].pixtheta=ratio*wvl/dxsa;
-	    info2("powfs %d pixtheta set to %.1fx %g/%g: %g mas\n",
-		  ipowfs, ratio, wvl,dxsa,parms->powfs[ipowfs].pixtheta*206265000);
-	}else if(parms->powfs[ipowfs].pixtheta<wvl/dxsa*1.22){
-	    parms->powfs[ipowfs].dl=1;/*mark as diffraction limited. */
+	    error("pixtheta < 0 option is deprecated (confusion if nwvl>1)\n");
+	}else if(parms->powfs[ipowfs].pixtheta>1e-4){
+	    parms->powfs[ipowfs].pixtheta/=206265.;/*convert form arcsec to radian. */
+	}else{
+	    warning2("ipowfs %d:pixtheta should be supplied in unit of arcsec.\n", ipowfs);
 	}
 	if(fabs(parms->powfs[ipowfs].radpixtheta)<EPS){
 	    parms->powfs[ipowfs].radpixtheta=parms->powfs[ipowfs].pixtheta;
@@ -1252,16 +1251,23 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].bkgrndfn){
 	    warning("powfs %d: there is sky background, but is using geometric wfs. background won't be effective.\n", ipowfs);
 	} 
-	if(parms->sim.ncpa_calib && parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
-	    warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
-	    parms->powfs[ipowfs].mtchstc=0;
-	}
-	if(parms->sim.ncpa_calib && !parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].ncpa_method==2){
-	    warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs mdoe\n", ipowfs);
-	    parms->powfs[ipowfs].ncpa_method=1;
+	if(parms->sim.ncpa_calib){
+	    if(parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
+		warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
+		parms->powfs[ipowfs].mtchstc=0;
+	    }
+	    if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].ncpa_method==2){
+		warning("powfs %d: ncpa_method changed from 2 to 1 in geometric wfs mdoe\n", ipowfs);
+		parms->powfs[ipowfs].ncpa_method=1;
+	    }
+	    if(parms->tomo.ahst_idealngs && parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].skip){
+		warning("powfs %d: ncpa_method changed from 2 to 1 in idealngs mode\n", ipowfs);
+		parms->powfs[ipowfs].ncpa_method=1;
+	    }
 	}
 	{
 	    /*Adjust dx if the subaperture does not contain integer, even number of points.*/
+	    const double dxsa= parms->aper.d/(double)parms->powfs[ipowfs].order;
 	    int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
 	    double dx=dxsa/nx;/*adjust dx. */
 	    if(fabs(parms->powfs[ipowfs].dx-dx)>EPS){
@@ -1738,6 +1744,10 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    parms->tomo.maxit=30*factor;
 	}
+	if(parms->recon.mvm==2 && parms->dbg.splitlrt){
+	    warning("When recon.mvm==2, dbg.splitlrt has to be 0 due to stability issue. Changed\n");
+	    parms->dbg.splitlrt=0;
+	}
     }
     if(parms->fit.alg==1 && parms->fit.maxit==0){
 	int factor;
@@ -1750,15 +1760,14 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	parms->lsr.maxit=30*factor;
     }
  
-    if(parms->sim.mffocus && (!parms->sim.closeloop || parms->sim.idealfit)){
-	warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
-	parms->sim.mffocus=0;
-    }
-    if(parms->sim.mffocus>3){
-	error("sim.mffocus can only take 0, 1 or 2. Input is %d\n", parms->sim.mffocus);
-    }
-    if(parms->sim.mffocus==2 && parms->recon.mvm){
-	error("need implementation\n");
+    if(parms->sim.mffocus){
+	if(!parms->sim.closeloop || parms->sim.idealfit){
+	    warning("mffocus is set, but we are in open loop mode or doing fitting only. disable\n");
+	    parms->sim.mffocus=0;
+	}
+	if(parms->sim.mffocus<0 || parms->sim.mffocus>2){
+	    error("parms->sim.mffocus=%d is invalid\n", parms->sim.mffocus);
+	}
     }
     if(!parms->recon.mvm){
 	if(parms->tomo.alg!=1 && parms->load.mvmi){
@@ -1770,20 +1779,13 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	    parms->load.mvmf=NULL;
 	}
     }
-    if(parms->load.mvmi && parms->recon.mvm==2){
-	warning2("when loading mvmi, warm restart in mvm assembly is required. Changed recon.mvm to 1\n");
-	parms->recon.mvm=1;
-    }
-    if(parms->sim.mffocus==2 && parms->recon.alg==1){
-	error("need implementation\n");
-    }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->recon.split && parms->powfs[ipowfs].lo){
 	    parms->powfs[ipowfs].skip=1;
 	}else{
 	    parms->powfs[ipowfs].skip=0;
 	}
-	if(parms->sim.mffocus || parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
+	if(parms->save.ngcov>0 || (parms->cn2.pair && !parms->powfs[ipowfs].lo)){
 	    /*focus tracking or cn2 estimation, or save gradient covariance.  */
 	    parms->powfs[ipowfs].psol=1;
 	}else{/*no focus tracking */
@@ -1900,10 +1902,17 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	}
 	if(jseed!=parms->sim.nseed){
 	    info2("Skip %d seeds.\n", parms->sim.nseed - jseed);
+	    parms->sim.nseed=jseed;
 	}
-	parms->sim.nseed=jseed;
 	if(parms->sim.nseed<1){
 	    warning("There are no seed to run. Use -O to override. Exit\n");
+	    {//remove log and conf files
+		char fnpid[PATH_MAX];
+		snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
+		remove(fnpid);
+		snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
+		remove(fnpid);
+	    }
 	    scheduler_finish(0);
 	    raise(SIGUSR1);
 	    exit(1);
@@ -1969,7 +1978,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	warning("Make cpu code follows gpu implementations.\n");
 	parms->sim.cachedm=0;
 	parms->tomo.square=1;
-	parms->dbg.dxonedge=1;
 	/*parms->dbg.splitlrt=0;*//*need extensity comparison. */
     }
     /*Assign each turbulence layer to a corresponding reconstructon layer. Used
@@ -2099,7 +2107,7 @@ static void print_parms(const PARMS_T *parms){
 	      ips,parms->atm.ht[ips],parms->atm.wt[ips],parms->atm.ws[ips]);
     }
     if(parms->recon.alg==0){
-	info2("\033[0;32mTomography\033[0;0m: r0=%gm l0=%gm "
+	info2("\033[0;32mReconstruction\033[0;0m: r0=%gm l0=%gm "
 	      "ZA is %g deg. %d layers.%s\n", 
 	      parms->atmr.r0, parms->atmr.l0,  
 	      parms->sim.za*180/M_PI, 
@@ -2115,11 +2123,20 @@ static void print_parms(const PARMS_T *parms){
 	info2("powfs %d: Order %2d, %sGS at %3.3g km. Thres %g%%",
 	      i,parms->powfs[i].order, (parms->powfs[i].llt?"L":"N"),
 	      parms->powfs[i].hs/1000,parms->powfs[i].saat*100);
+	int lrt=(parms->recon.split || parms->dbg.splitlrt);
 	if(parms->powfs[i].trs){
-	    info2("\033[0;32m Tip/tilt is removed.\033[0;0m");
+	    info2("\033[0;32m Tip/tilt is removed in %s side in tomography.\033[0;0m", lrt?"both":"right hand");
+	    if(!parms->powfs[i].llt){
+		warning("\n\ntrs=1, but this powfs doesn't have LLT!\n\n");
+	    }
 	}
 	if(parms->powfs[i].dfrs){
-	    info2("\033[0;32m Diff focus is removed.\033[0;0m");
+	    if(parms->powfs[i].nwfs<2){
+		parms->powfs[i].dfrs=0;
+	    }else{
+		info2("\033[0;32m Diff focus is removed in %s side in tomography.\033[0;0m",
+		      lrt?"both":"right hand");
+	    }
 	    if(!parms->powfs[i].llt){
 		warning("\n\ndfrs=1, but this powfs doesn't have LLT!\n\n");
 	    }
@@ -2266,7 +2283,7 @@ static void print_parms(const PARMS_T *parms){
 	  closeloop[parms->sim.closeloop]);
     info2("\033[0;32mThere are %d fit directions\033[0;0m\n", parms->fit.nfit);
     for(i=0; i<parms->fit.nfit; i++){
-	info2("Fit %d: Fit  wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info2("Fit %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->fit.wt[i],parms->fit.thetax[i]*206265, 
 	      parms->fit.thetay[i]*206265);
 	if(fabs(parms->fit.thetax[i])>1 || fabs(parms->fit.thetay[i])>1){
@@ -2275,7 +2292,7 @@ static void print_parms(const PARMS_T *parms){
     }
     info2("\033[0;32mThere are %d evaluation directions\033[0;0m\n", parms->evl.nevl);
     for(i=0; i<parms->evl.nevl; i++){
-	info2("Evl %d: Eval wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
+	info2("Eval %d: wt is %5.3f, at (%7.2f, %7.2f) arcsec\n",
 	      i,parms->evl.wt[i],parms->evl.thetax[i]*206265, 
 	      parms->evl.thetay[i]*206265);
 	if(fabs(parms->evl.thetax[i])>1 || fabs(parms->evl.thetay[i])>1){
@@ -2323,10 +2340,10 @@ static void check_parms(const PARMS_T *parms){
 	error("parms->tomo.alg=%d is invalid\n", parms->tomo.alg);
     }
     if(parms->fit.alg<0 || parms->fit.alg>2){
-	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
+	error("parms->fit.alg=%d is invalid\n", parms->fit.alg);
     }
     if(parms->lsr.alg<0 || parms->lsr.alg>2){
-	error("parms->fit.alg=%d is invalid\n", parms->tomo.alg);
+	error("parms->lsr.alg=%d is invalid\n", parms->lsr.alg);
     }
 }
 
@@ -2371,7 +2388,6 @@ PARMS_T * setup_parms(ARG_T *arg){
     char fnconf[PATH_MAX];
     snprintf(fnconf, PATH_MAX, "maos_%ld.conf", (long)getpid());
     close_config("%s",fnconf);
-    mysymlink(fnconf, "maos_recent.conf");
 
     /*
       Postprocess the parameters for integrity. The ordering of the following
@@ -2396,7 +2412,7 @@ PARMS_T * setup_parms(ARG_T *arg){
  */
 void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 #if USE_CUDA 
-    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu is there is only 1 wfs.*/
+    if(parms->nwfs==1 && arg->ngpu==0) arg->ngpu=1;/*use a single gpu if there is only 1 wfs.*/
     use_cuda=gpu_init(arg->gpus, arg->ngpu);
 #else
     use_cuda=0;
@@ -2416,10 +2432,10 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	    parms->gpu.tomo=0;/*no need tomo.*/
 	}
 	if(parms->recon.alg==0){/*MV*/
-	    /*if(parms->gpu.tomo && parms->tomo.pos !=2){
+	    if(parms->gpu.tomo && parms->tomo.cxx!=0){
 		parms->gpu.tomo=0;
-		warning("\n\nGPU reconstruction is only available for CG with tomo.pos=2 for the moment.\n");
-		}*/
+		warning("\n\nGPU reconstruction is only available for tomo.cxx==0. Disable GPU Tomography.\n");
+	    }
 	    if(parms->gpu.tomo && parms->tomo.alg >2){
 		parms->gpu.tomo=0;
 		warning("\n\nGPU reconstruction is only available for CBS/CG. Disable GPU Tomography.\n");
@@ -2472,10 +2488,10 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 		    has_dfr=1;
 		}
 	    }
-	    if(has_dfr){
-		warning("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
+	    /*if(has_dfr && parms->gpu.tomo){
+		warning2("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
 		parms->gpu.tomo=0;
-	    }
+		}*/
 	}
 
 	if(!parms->atm.frozenflow){
@@ -2488,8 +2504,6 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 	}
 	if(parms->gpu.tomo || parms->gpu.fit){
 	    parms->tomo.square=1;
-	    parms->dbg.dxonedge=1;
-	    /*parms->dbg.splitlrt=0;*//*need extensity comparison. */
 	}
 	if(parms->gpu.tomo && parms->tomo.bgs){
 	    error("BGS in GPU is not implemented yet\n");

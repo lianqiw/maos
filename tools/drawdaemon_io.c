@@ -28,7 +28,7 @@ char *deffig="Figure";
 static int no_longer_listen=0;
 int ndrawdata=0;
 int count=0;
-pthread_mutex_t mutex_drawdata=PTHREAD_MUTEX_INITIALIZER;
+PNEW2(drawdata_mutex);
 #define FILE_READ(data,size)			\
     nleft=size;start=(gchar*)data;		\
     do{						\
@@ -115,6 +115,7 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 }
 
 static int read_fifo(FILE *fp){
+    TIC;tic;
     static drawdata_t *drawdata=NULL;
     int cmd=0;
     gchar *start;
@@ -125,14 +126,15 @@ static int read_fifo(FILE *fp){
 	FILE_READ_INT(cmd);
 	switch (cmd){
 	case FIFO_START:
+	    tic;
+	    info("FIFO_START\n");
 	    if(drawdata){
 		warning("FIFO_START: drawdata is not empty\n");
 	    }
 	    drawdata=calloc(1, sizeof(drawdata_t));
-	    pthread_mutex_lock(&mutex_drawdata);
+	    LOCK(drawdata_mutex);
 	    ndrawdata++;
-	    warning("drawdata created, ndrawdata=%d\n", ndrawdata);
-	    pthread_mutex_unlock(&mutex_drawdata);
+	    UNLOCK(drawdata_mutex);
 	    drawdata->zoomx=1;
 	    drawdata->zoomy=1;
 	    drawdata->square=1;/*default to square. */
@@ -150,6 +152,7 @@ static int read_fifo(FILE *fp){
 	    break;
 	case FIFO_DATA:/*image data. */
 	    {
+		info("FIFO_DATA\n");
 		int32_t header[2];
 		FILE_READ(header, 2*sizeof(int32_t));
 		drawdata->nx=header[0];
@@ -164,6 +167,7 @@ static int read_fifo(FILE *fp){
 	    break;
 	case FIFO_POINTS:
 	    {
+		info("FIFO_POINTS\n");
 		int nptsx, nptsy;
 		int ipts=drawdata->npts;
 		drawdata->npts++;
@@ -222,6 +226,7 @@ static int read_fifo(FILE *fp){
 	    break;
 	case FIFO_END:
 	    {
+		info("FIFO_END\n");
 		if(drawdata->p0){/*draw image */
 		    int nx=drawdata->nx;
 		    int ny=drawdata->ny;
@@ -248,10 +253,8 @@ static int read_fifo(FILE *fp){
 		    }
 		    drawdata->p=calloc(nx*ny, size);
 		    dbl2pix(nx, ny, !drawdata->gray, drawdata->p0, drawdata->p, drawdata->zlim);
-		    gdk_threads_enter();/*do I need this? */
 		    drawdata->image= cairo_image_surface_create_for_data 
 			(drawdata->p, drawdata->format, nx, ny, stride);
-		    gdk_threads_leave();
 		}
 		if(drawdata->npts>0){
 		    drawdata->icumu=50;
@@ -267,9 +270,12 @@ static int read_fifo(FILE *fp){
 		if(!drawdata->fig) drawdata->fig=deffig;
 		drawdata_t **drawdatawrap=calloc(1, sizeof(drawdata_t*));
 		drawdatawrap[0]=drawdata;
-		gdk_threads_enter();
-		addpage(drawdatawrap);
-		gdk_threads_leave();
+		gdk_threads_add_idle(addpage, drawdatawrap);
+		if(drawdata->p0){
+		    toc2("fifo_read image %dx%d", drawdata->nx, drawdata->ny);
+		}else{
+		    toc2("fifo_read points");
+		}
 		drawdata=NULL;
 	    }
 	    break;

@@ -301,8 +301,8 @@ __global__ static void sa_si_rot_do(float *restrict ints, int pixpsax, int pixps
 	    int jx=floorf(x); x=x-jx;
 	    int jy=floorf(y); y=y-jy;
 	    if(jx>=0 && jx<notfx-1 && jy>=0 && jy<notfy-1){
-		ints[iy*pixpsax+ix]+=alpha*((psfr[jy*notfx+jx]*(1-x)+psfr[jy*notfx+jx+1]*x)*(1-y)
-					    +(psfr[(jy+1)*notfx+jx]*(1-x)+psfr[(jy+1)*notfx+jx+1]*x)*y);
+		ints[iy*pixpsax+ix]+=alpha*((psfr[jy*notfx+jx]*(1.-x)+psfr[jy*notfx+jx+1]*x)*(1.-y)
+					    +(psfr[(jy+1)*notfx+jx]*(1.-x)+psfr[(jy+1)*notfx+jx+1]*x)*y);
 	    }
 	}
     }
@@ -366,8 +366,9 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	pistatout=cuwfs[iwfs].pistatout;
     }
     cuccell *wvfout=NULL;
+    const int wvf_n=notf/2+2;//was notf/2
     if(parms->powfs[ipowfs].psfout){
-	wvfout=cuccellnew(nsa, nwvl, notf/2, notf/2);
+	wvfout=cuccellnew(nsa, nwvl, wvf_n, wvf_n);
     }
     float norm_psf=sqrt(powfs[ipowfs].areascale)/((float)powfs[ipowfs].pts->nx*nwvf);
     float norm_pistat=norm_psf*norm_psf/((float)notf*notf);
@@ -506,7 +507,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		cudaMemsetAsync(psfout, 0, sizeof(fcomplex)*ksa*notf*notf, stream);
 		CUFFT2(cuwfs[iwfs].plan2, psf, psfout, CUFFT_INVERSE);
 		sa_cpcenter_do<<<ksa,dim3(16,16),0,stream>>>
-		    (wvfout->p[isa+nsa*iwvl]->p, notf/2, notf/2, 
+		    (wvfout->p[isa+nsa*iwvl]->p, wvf_n, wvf_n, 
 		     psfout, notf, notf, norm_psf/(notf*notf));
 	    }
 	    /* abs2 part to real, peak in corner */
@@ -596,7 +597,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		     pixthetax, pixthetay, psfr, dtheta, ncompx, ncompy, srot2?srot2+isa:NULL, 
 		     norm_ints*parms->wfs[iwfs].wvlwts[iwvl]);
 		ctoc("final");
-		cudaFree(psfr);
+		DO(cudaFree(psfr));
 	    }/*if ints. */
 	}/*for isa block loop */
     }/*for iwvl */

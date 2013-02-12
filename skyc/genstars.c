@@ -123,11 +123,12 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 		    J19c++;
 		}
 	    }
-	    if(J19c<=nmax && counti[J19c-1]<nsky0){
-		int isky=counti[J19c-1]+(J19c-1)*nsky0;
+	    //J19c=0 is ok. Do not skip.
+	    if(J19c<nmax && counti[J19c]<nsky0){
+		int isky=counti[J19c]+(J19c)*nsky0;
 		res->p[isky]=dref(tmp);
 		count++;
-		counti[J19c+1]++;
+		counti[J19c]++;
 	    }
 	    dfree(tmp);
 	}
@@ -144,9 +145,6 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 	    pres[istar][0]=r*cos(th);
 	    pres[istar][1]=r*sin(th);
 	}
-	/*sort the stars from brigtest to dimmest */
-	qsort(res->p[isky]->p, res->p[isky]->ny, res->p[isky]->nx*sizeof(double), 
-	      (int(*)(const void*, const void*))sortfun);
     }
     dfree(catalog);
     return res;

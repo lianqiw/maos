@@ -25,6 +25,9 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	m=mxGetM(arr);
 	n=mxGetN(arr);
     }
+    if(!m || !n){
+	arr=NULL;
+    }
     if(arr && mxIsCell(arr)){
 	magic=MCC_ANY;
 	int issparse=0;
@@ -36,22 +39,39 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    issparse=0;
 	    type2=M_DBL;
 	}else{
-	    in=mxGetCell(arr,0);
-	    if(mxIsSparse(in)){
-		issparse=1;
-		if(mxIsComplex(in)){
-		    type2=MAT_CSP;
-		}else{
-		    type2=MAT_SP;
-		}
-	    }else{
-		issparse=0;
-		if(mxIsComplex(in)){
-		    type2=M_CMP;
-		}else{
-		    type2=M_DBL;
+	    for(ix=0; ix<mxGetNumberOfElements(arr); ix++){
+		in=mxGetCell(arr,ix);
+		if(in){
+		    if(mxIsSparse(in)){
+			issparse=1;
+			if(mxIsComplex(in)){
+			    type2=MAT_CSP;
+			}else{
+			    type2=MAT_SP;
+			}
+		    }else{
+			issparse=0;
+			if(mxIsComplex(in)){
+			    if(mxIsSingle(in)){
+				type2=M_ZMP;
+			    }else{
+				type2=M_CMP;
+			    }
+			}else{
+			    if(mxIsSingle(in)){
+				type2=M_FLT;
+			    }else{
+				type2=M_DBL;
+			    }
+			}
+		    }
+		    break;
 		}
 	    }
+	}
+	if(!in){//all cell empty
+	    issparse=0;
+	    type2=M_DBL;
 	}
 	header_t header2={magic, m, n, str};
 	write_header(&header2, fp);
@@ -96,7 +116,7 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 		zfwrite(&nzmax, sizeof(double), 1, fp);
 		zfwrite(mxGetJc(arr), sizeof(mwIndex), n+1, fp);
 		zfwrite(mxGetIr(arr), sizeof(mwIndex), nzmax, fp);
-		zfwrite_complex(mxGetPr(arr),mxGetPi(arr),nzmax,fp);
+		zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr),nzmax,fp);
 	    }
 	}else if(type == M_DBL || ((arr) && mxIsDouble(arr) && !mxIsComplex(arr))){
 	    magic=M_DBL;
@@ -105,12 +125,26 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	    if(m!=0 && n!=0){
 		zfwrite(mxGetPr(arr), sizeof(double), m*n, fp);
 	    }  
+	}else if(type == M_FLT || ((arr) && mxIsSingle(arr) && !mxIsComplex(arr))){
+	    magic=M_FLT;
+	    header_t header2={magic, m, n, str};
+	    write_header(&header2, fp);
+	    if(m!=0 && n!=0){
+		zfwrite(mxGetPr(arr), sizeof(float), m*n, fp);
+	    }
 	}else if(type == M_CMP || ((arr)&& mxIsDouble(arr) && mxIsComplex(arr))){
 	    magic=M_CMP;
 	    header_t header2={magic, m, n, str};
 	    write_header(&header2, fp);
 	    if(m!=0 && n!=0){
-		zfwrite_complex(mxGetPr(arr),mxGetPi(arr), m*n, fp);
+		zfwrite_dcomplex(mxGetPr(arr),mxGetPi(arr), m*n, fp);
+	    }
+	}else if(type == M_ZMP || ((arr)&& mxIsSingle(arr) && mxIsComplex(arr))){
+	    magic=M_ZMP;
+	    header_t header2={magic, m, n, str};
+	    write_header(&header2, fp);
+	    if(m!=0 && n!=0){
+		zfwrite_fcomplex((float*)mxGetPr(arr),(float*)mxGetPi(arr), m*n, fp);
 	    }
 	}else{
 	    error("Unrecognized data type");

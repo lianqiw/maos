@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "common.h"
+#include "../sys/sys.h"
 #include "mathmisc.h"
 /*Check whether the char is space. We only treat real space, \t and \v as space. */
 INLINE int is_space(char c){

@@ -369,76 +369,40 @@ static void perfevl_mean(SIM_T *simu){
 		    pcorrNGSm[imod]=simu->Mint_lo->mint[0]->p[0]->p[imod];
 		}
 	    }
-	    double pcleNGSm[nngsmod];
-	    memset(pcleNGSm, 0, sizeof(double)*nngsmod);
-	    double poleNGSm[nngsmod];
-	    memset(poleNGSm, 0, sizeof(double)*nngsmod);
+	    double pcleNGSdot[nngsmod];
+	    memset(pcleNGSdot, 0, sizeof(double)*nngsmod);
+	    double poleNGSdot[nngsmod];
+	    memset(poleNGSdot, 0, sizeof(double)*nngsmod);
 	    
 	    for(int ievl=0; ievl<nevl; ievl++){
 		double wt=parms->evl.wt[ievl];
-		double *pcleNGSmp=simu->cleNGSmp->p[ievl]->p+isim*nngsmod;
-		double *poleNGSmp=simu->oleNGSmp->p[ievl]->p+isim*nngsmod;
+		double *pcleNGSdotp=simu->cleNGSmp->p[ievl]->p+isim*nngsmod;
+		double *poleNGSdotp=simu->oleNGSmp->p[ievl]->p+isim*nngsmod;
 		for(int imod=0; imod<nngsmod; imod++){
-		    pcleNGSm[imod]+=pcleNGSmp[imod]*wt;
-		    poleNGSm[imod]+=poleNGSmp[imod]*wt;
+		    pcleNGSdot[imod]+=pcleNGSdotp[imod]*wt;
+		    poleNGSdot[imod]+=poleNGSdotp[imod]*wt;
 		}
 	    }
-	    double tt=dwdot2(pcleNGSm, recon->ngsmod->IMCC_TT, pcleNGSm);
-	    double ngs=dwdot(pcleNGSm, recon->ngsmod->IMCC,    pcleNGSm);
+	    double tt=dwdot2(pcleNGSdot, recon->ngsmod->IMCC_TT, pcleNGSdot);
+	    double ngs=dwdot(pcleNGSdot, recon->ngsmod->IMCC,    pcleNGSdot);
 	    double tot=simu->cle->p[isim*nmod];
-	    /*turn cleNGSm to modes */
-	    double *pcleNGSm2=simu->cleNGSm->p+isim*nngsmod;
-	    dmulvec(pcleNGSm2,recon->ngsmod->IMCC,pcleNGSm,1);
-	    double *poleNGSm2=simu->oleNGSm->p+isim*nngsmod;
-	    dmulvec(poleNGSm2,recon->ngsmod->IMCC,poleNGSm,1);
-	    dcell *Mngs=dcellnew(1,1);
-	    Mngs->p[0]=dnew_ref(nngsmod,1,pcleNGSm2);/*ref the data */
+	    double lgs=tot-ngs;
+	    /*turn dot product to modes */
+	    double *pcleNGSm=simu->cleNGSm->p+isim*nngsmod;
+	    dmulvec(pcleNGSm,recon->ngsmod->IMCC,pcleNGSdot,1);
+	    double *poleNGSm=simu->oleNGSm->p+isim*nngsmod;
+	    dmulvec(poleNGSm,recon->ngsmod->IMCC,poleNGSdot,1);
 	    if(simu->parms->tomo.ahst_idealngs){
-		/* apply ideal ngs modes immediately to dmreal.  Don't forget to
-		   updated DM Cache. */
-		ngsmod2dm(&simu->dmreal,simu->recon, Mngs, 1.);
-		update_dm(simu);
-		tot-=ngs; ngs=0; tt=0;
+		/*we no longer add ideal ngs modes to DM. Instead, we add them
+		  to NGS wavefront only. This prevents it to capture all the
+		  focus mode in the atmosphere.*/
+		ngs=0; tt=0;
 	    }
-	    int do_psf=(parms->evl.psfmean || parms->evl.psfhist);
-	    if(isim>=parms->evl.psfisim && (do_psf || parms->evl.opdcov)){
-#if USE_CUDA
-		if(parms->gpu.evl){
-		    gpu_perfevl_ngsr(simu, pcleNGSm);
-		}else{
-#endif
-		    const APER_T *aper=simu->aper;
-		    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
-			if(!parms->evl.psf[ievl] || !parms->evl.psfngsr[ievl]) continue;
-			dmat *iopdevl=simu->evlopd->p[ievl];
-			if(!iopdevl) continue;
-			ngsmod2science(iopdevl, parms, recon, aper, pcleNGSm, ievl, -1);
-			if(parms->evl.psfpttr[ievl]){
-			    /*we cannot use clmp because the removed ngsmod
-			      has tip/tilt component*/
-			    double ptt[3];
-			    loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
-			    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
-			}
-			if(parms->evl.opdcov){
-			    dmm(&simu->evlopdcov_ngsr->p[ievl], iopdevl, iopdevl, "nt", 1);
-			    dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
-			}
-			if(do_psf){
-			    perfevl_psfcl(parms, aper, simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
-			}
-			dfree(simu->evlopd->p[ievl]);
-		    }
-#if USE_CUDA
-		}
-#endif
-	    }/*ideal ngs */
-	    simu->clem->p[isim*3]=tot-ngs; /*lgs mode */
+	    simu->clem->p[isim*3]=lgs; /*lgs mode */
 	    simu->clem->p[isim*3+1]=tt;    /*tt mode */
 	    simu->clem->p[isim*3+2]=ngs;   /*ngs mod */
 	    simu->status->clerrlo=sqrt(ngs)*1e9;
-	    simu->status->clerrhi=sqrt(tot-ngs)*1e9;
-
+	    simu->status->clerrhi=sqrt(lgs)*1e9;
 	    /*compute error spliting to tip/tilt and high order for any
 	      direction.*/
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -462,7 +426,43 @@ static void perfevl_mean(SIM_T *simu){
 		simu->clemp->p[ievl]->p[isim*3+1]=tt;/*TT mode */
 		simu->clemp->p[ievl]->p[isim*3+2]=simu->clep->p[ievl]->p[nmod*isim]-tot2;/*PR-LGS */
 	    }
-	    dcellfree(Mngs);/*data is kept */
+	    int do_psf=(parms->evl.psfmean || parms->evl.psfhist);
+	    if(isim>=parms->evl.psfisim && (do_psf || parms->evl.opdcov)){
+		/*Only here if NGS mode removal flag is set (evl.psfngsr[ievl])*/
+		/*2013-01-23: Was using dot product before converting to modes. Fixed.*/
+#if USE_CUDA
+		if(parms->gpu.evl){
+		    gpu_perfevl_ngsr(simu, pcleNGSm);
+		}else{
+#endif
+		    const APER_T *aper=simu->aper;
+		    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+			if(!parms->evl.psf[ievl] || !parms->evl.psfngsr[ievl]) continue;
+			dmat *iopdevl=simu->evlopd->p[ievl];
+			if(!iopdevl) continue;
+			ngsmod2science(iopdevl, aper->locs, recon->ngsmod, 
+				       parms->evl.thetax[ievl], parms->evl.thetay[ievl],
+				       pcleNGSm, -1);
+			if(parms->evl.psfpttr[ievl]){
+			    /*we cannot use clmp because the removed ngsmod
+			      has tip/tilt component*/
+			    double ptt[3];
+			    loc_calc_ptt(NULL, ptt, aper->locs, aper->ipcc, aper->imcc, aper->amp->p, iopdevl->p);
+			    loc_remove_ptt(iopdevl->p, ptt, aper->locs);
+			}
+			if(parms->evl.opdcov){
+			    dmm(&simu->evlopdcov_ngsr->p[ievl], iopdevl, iopdevl, "nt", 1);
+			    dadd(&simu->evlopdmean_ngsr->p[ievl], 1, iopdevl, 1);
+			}
+			if(do_psf){
+			    perfevl_psfcl(parms, aper, simu->evlpsfmean_ngsr, simu->save->evlpsfhist_ngsr, iopdevl, ievl);
+			}
+			dfree(simu->evlopd->p[ievl]);
+		    }
+#if USE_CUDA
+		}
+#endif
+	    }/*ideal ngs */
 	}else{
 	    error("Not implemented\n");
 	}

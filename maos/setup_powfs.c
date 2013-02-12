@@ -256,16 +256,14 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     }
  
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
-    if(parms->dbg.dxonedge){
-	//Create another set of loc/amp that can be used to build GP.
-	map_t *map=create_metapupil_wrap(parms, 0, dx, 0, 0, 0, 0, 0, 0);
-	powfs[ipowfs].gloc=map2loc(map); mapfree(map);
-	powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
-				    0,0, parms->aper.d, parms->aper.din);
-    }else{
-	powfs[ipowfs].gloc=powfs[ipowfs].loc;
-	powfs[ipowfs].gamp=powfs[ipowfs].amp;
-    }
+    
+    //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
+    map_t *map=create_metapupil_wrap(parms, 0, dx, 0, 0, 0, 0, 0, 0);
+    powfs[ipowfs].gloc=map2loc(map); mapfree(map);
+    powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
+				0,0, parms->aper.d, parms->aper.din);
+    loc_reduce(powfs[ipowfs].gloc, powfs[ipowfs].gamp, 1, NULL);
+
     if(parms->dbg.pupmask && parms->powfs[ipowfs].lo){
 	double misreg[2]={0,0};
 	if(parms->powfs[ipowfs].nwfs>1){
@@ -273,9 +271,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 	int iwfs=parms->powfs[ipowfs].wfs[0];
 	wfspupmask(parms, powfs[ipowfs].loc, powfs[ipowfs].amp, misreg, iwfs);
-	if(parms->dbg.dxonedge){
-	    wfspupmask(parms, powfs[ipowfs].gloc, powfs[ipowfs].gamp, misreg, iwfs);
-	}
+	wfspupmask(parms, powfs[ipowfs].gloc, powfs[ipowfs].gamp, misreg, iwfs);
     }
     powfs[ipowfs].misreg=calloc(2*parms->powfs[ipowfs].nwfs, sizeof(double));
     if(parms->powfs[ipowfs].misreg){
@@ -346,6 +342,26 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
       subaperture illumination area and remove all that are below
       the are threshold*/
     const int nlocm=powfs[ipowfs].nlocm;
+
+    /*
+      About physical optics imaging: The subaperture area (saa) has been
+      normalized against a square subaperture to scale the physical optics
+      i0. After FFT, the PSF sum to 1 for full square subapertures, but sum to
+      PI/4 for full circular TT or full quadrant circular TTF subapertures. The
+      areascale variable (1 for square subaperture and 4/M_PI for (quad)circular
+      sa) is therefore used to normalize the PSF so that it sums to 1 for either
+      full square or full (quadrant) circular subaperture. Used in wfsints.
+
+      The subaperture area (saa) is subsequently scaled so that the max is 1 for
+      full square or (quadrant) circular subaperture. saa is then used in
+      setup_recon to scale geometric sanea.
+    */
+
+    powfs[ipowfs].areascale=areafulli;
+    if(fabs(areafulli-1)>EPS){
+	dscale(powfs[ipowfs].saa, areafulli);
+	dcellscale(powfs[ipowfs].saam, areafulli);
+    }
     dmat *saa=NULL;
     switch(nlocm){
     case 0:
@@ -360,6 +376,9 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		dadd(&saa, 1, powfs[ipowfs].saam->p[ilocm], scale);
 	    }
 	}
+    }
+    if(dmax(saa)>1+EPS){
+	error("The area maxes to %g, which should be leq 1\n", dmax(saa));
     }
     for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
 	if(saa->p[isa]>thresarea){
@@ -381,34 +400,11 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    count++;
 	}
     }
-    /*area was already normalized against square subaperture.  to scale the
-      physical optics i0. After FFT, the PSF sum to 1 for square subapertures,
-      but sum to PI/4 for circular TT or TTF subapertures. maxarea is 1 for
-      square subapertures, and PI/4 for TT and TTF WFS due to cut off by
-      pupil. for square subapertures, areascale=1, no effect. for TT or TTF WFS,
-      areascale is 4/PI, which scales the PSF from sum to PI/4 to sum to 1
-      again. Used in wfsints.
-
-      We normalize area against 1 for square or PI/4 for arc subapertures. The
-      area is not used in physical optics. It is used to scale geometric
-      sanea.*/
-    double maxarea=dmax(saa);
-    if(maxarea>1+EPS){
-	error("The area maxes to %g, which should be leq 1\n", maxarea);
-    }
-    dfree(saa);
-    /*Here we treat a full square or full circle, quarter circle as full
-      subaperture and unity throughput. Others will have less throughput
-      according to their amplitude map. Was maxarea, but not correct if all the
-      subapertures has less than unity throughput. Fixed with areafulli*/
-    powfs[ipowfs].areascale=1./areafulli;
-    if(fabs(areafulli-1)>EPS){
-	dscale(powfs[ipowfs].saa, areafulli);
-	dcellscale(powfs[ipowfs].saam, areafulli);
-    }
     if(count==0){
 	error("there are no subapertures above threshold.\n");
     }
+    dfree(saa);
+
     powfs[ipowfs].npts = count*nxsa;
     powfs[ipowfs].nthread=count<parms->sim.nthread?count:parms->sim.nthread;
     ptsresize(powfs[ipowfs].pts, count);
@@ -467,8 +463,21 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	double err=parms->powfs[ipowfs].saspherical*1e-9;
 	/*
 	  The OPD is 
-	  Phi=(x^2+y^2)^2-a(x^2+y^2)-b;
+	  Phi=f(r)-ar^2-b;
+	  which r^2=x^2+y^2.
+	  f(r) was r^4 for spherical aberration. 
+	  It is changed to new form on 2013-05-16 based on measurements.
+
 	  We first minimize \Int phi^2, then use phi.
+	  let 
+	  R2=\Int r^2
+	  R4=\Int r^4
+	  Rf=\Int f(r)
+	  Rf2=\Int f(r)*r^2. 
+
+	  We have
+	  b=(R4Rf-R2R6)/(R4-R2R2);
+	  
 	*/
 	dmat *ampw=NULL;
 	if(ampi){
@@ -482,32 +491,42 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	normalize_sum(ampw->p, ampw->nx*ampw->ny, 1);
 	PDMAT(ampw, pampw);
 	int nx2=nx/2;
-	double Rx2=pow(nx*dx/2, -2);
-	double A1=0, A2=0, A3=0;
-	for(int iy=0; iy<nx; iy++){
-	    for(int ix=0; ix<nx; ix++){
-		double tmp=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		double amp=pampw[iy][ix];
-		A1+=tmp*amp;
-		A2+=tmp*tmp*amp;
-		A3+=tmp*tmp*tmp*amp;
-	    }
-	}
-
-	double b=(A1*A3-A2*A2)/(A1*A1-A2);
-	double a=(A2-b)/A1;
+	double fill1d=sqrt(parms->powfs[ipowfs].sathruput);
+	//normalize x,y from -1 to 1 in clear aperture
+	double Rx2=pow(fill1d*nx/2, -2);
 	dmat *opdi=dnew(nx, nx); PDMAT(opdi, popdi);
-	double A4=0;
+	double R2=0, R4=0, Rf2=0, Rf=0;
 	for(int iy=0; iy<nx; iy++){
 	    for(int ix=0; ix<nx; ix++){
-		double tmp=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
-		tmp=tmp*tmp-a*tmp-b;
-		popdi[iy][ix]=tmp;
-		A4+=tmp*tmp*pampw[iy][ix];
+#define MEASURED_LENSLET 1
+		double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+#if MEASURED_LENSLET
+		double xx=(iy-nx2)*(iy-nx2)*Rx2;
+		double yy=(ix-nx2)*(ix-nx2)*Rx2;
+		popdi[iy][ix]=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
+#else
+		popdi[iy][ix]=rr*rr;
+#endif
+		double amp=pampw[iy][ix];
+		R2+=rr*amp;
+		R4+=rr*rr*amp;
+		Rf+=popdi[iy][ix]*amp;
+		Rf2+=popdi[iy][ix]*rr*rr*amp;
+	    }
+	}		
+	double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
+	double a=(R4-b)/R2;
+	info("a=%g, b=%g\n", a,b);
+	double var=0;
+	for(int iy=0; iy<nx; iy++){
+	    for(int ix=0; ix<nx; ix++){
+		double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+		popdi[iy][ix]-=a*rr+b;
+		var+=popdi[iy][ix]*popdi[iy][ix]*pampw[iy][ix];
 	    }
 	}
 	dfree(ampw);
-	dscale(opdi, err/sqrt(A4));
+	dscale(opdi, err/sqrt(var));
 	if(!powfs[ipowfs].opdadd){
 	    powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
 	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
@@ -521,6 +540,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 		}
 	    }
 	}
+	dfree(opdi);
 	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);//used for i0
 	if(parms->save.setup){
 	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d", dirsetup, ipowfs);
@@ -540,6 +560,10 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(parms->save.setup){
 	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc",dirsetup,ipowfs); 
+	if(powfs[ipowfs].gloc!=aper->locs){
+	    locwrite(powfs[ipowfs].gloc,"%s/powfs%d_gloc", dirsetup, ipowfs);
+	    dwrite(powfs[ipowfs].gamp,"%s/powfs%d_gamp", dirsetup, ipowfs);
+	}
 	dwrite(powfs[ipowfs].saa,"%s/powfs%d_saa", dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirsetup,ipowfs);
 	dwrite(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);
@@ -643,10 +667,10 @@ setup_powfs_grad(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    dscale(nea, 1./sqrt(parms->powfs[ipowfs].dtrat));
 	    /*Scale by normalized subaperture area. */
 	    double *saa=powfs[ipowfs].realsaa[jwfs];
-	    const int dl=parms->powfs[ipowfs].dl; /*diffraction limited. */
 	    for(long isa=0; isa<nsa; isa++){
 		/*scale nea by sqrt(1/area). (seeing limited) */
 		/*scale nea by 1/area if diffraction limited (NGS) */
+		const int dl=0; /*Assume not diffraction limited. minor point*/
 		double scale=dl?(1./saa[isa]):(1./sqrt(saa[isa]));
 		nea->p[isa]*=scale;
 		nea->p[isa+nsa]*=scale;
@@ -1051,14 +1075,12 @@ static void setup_powfs_focus(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	error("fnrange has wrong format. Must be column vectors of 1 or %d columns\n",
 	      parms->powfs[ipowfs].nwfs);
     }
-    double *p=powfs[ipowfs].focus->p;
     /*(D/h)^2/(16*sqrt(3)) convert it from range to WFE in m but here we want
       focus mode, so just do 1/(2*h^2).*/
     /*Convert range to focus. should not use parms->aper.d here since it is used later*/
-    double range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2);
-    for(int ii=0; ii<powfs[ipowfs].focus->nx*powfs[ipowfs].focus->ny; ii++){
-	p[ii]*=range2focus;
-    }
+    /*1./cos() is for zenith angle adjustment of the range.*/
+    double range2focus=0.5*pow(1./parms->powfs[ipowfs].hs,2)*(1./cos(parms->sim.za));
+    dscale(powfs[ipowfs].focus, range2focus);
     dwrite(powfs[ipowfs].focus, "powfs%d_focus", ipowfs);
 }
 
@@ -1270,6 +1292,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
        	int nhp=sodium->nx; 
 
 	const double hs=parms->powfs[ipowfs].hs;
+	//adjusting for the zenith angle;
 	double hpmin=sodium->p[0]/cos(parms->sim.za);
 	double dhp1=1./(sodium->p[1]-sodium->p[0]);
 	/*assume linear spacing. check the assumption valid */
@@ -1277,6 +1300,7 @@ void setup_powfs_etf(POWFS_T *powfs, const PARMS_T *parms, int ipowfs, int mode,
 	    error("llt profile is not evenly spaced:%g\n",
 		  fabs(sodium->p[nhp-1]-sodium->p[0]-(nhp-1)/dhp1));
 	}
+	//adjusting for the zenith angle;
 	dhp1=dhp1*cos(parms->sim.za);
 	if(sodium->ny-1<colskip){
 	    error("Invalid configuration. colprep or colsim is too big\n");
@@ -2012,7 +2036,22 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 		}
 	    }
 	}
+	//if opdadd is null, but dm_ncpa is not, there will be opdbias.
 	if(powfs[ipowfs].opdbias){
+	    if(parms->sim.ncpa_ttr){
+		/*remove average tilt from opdbias and same amount from
+		  opdadd. Does not need to be very accurate.*/
+		dmat *mcc=loc_mcc_ptt(powfs[ipowfs].loc, powfs[ipowfs].amp->p);
+		dinvspd_inplace(mcc);
+		for(int iwfs=0; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
+		    double ptt[3]={0,0,0};
+		    loc_calc_ptt(NULL, ptt, powfs[ipowfs].loc, 1./mcc->p[0], mcc, 
+				 powfs[ipowfs].amp->p, powfs[ipowfs].opdbias->p[iwfs]->p);
+		    loc_remove_ptt(powfs[ipowfs].opdbias->p[iwfs]->p, ptt, powfs[ipowfs].loc);
+		    loc_remove_ptt(powfs[ipowfs].opdadd->p[iwfs]->p, ptt, powfs[ipowfs].loc);
+		}
+		dfree(mcc);
+	    }
 	    if(parms->powfs[ipowfs].ncpa_method==1){
 		if(!powfs[ipowfs].gradoff){
 		    powfs[ipowfs].gradoff=dcellnew(parms->powfs[ipowfs].nwfs,1);
@@ -2143,6 +2182,8 @@ void free_powfs(const PARMS_T *parms, POWFS_T *powfs){
 	    free(powfs[ipowfs].etfprep);
 	}
 	dcellfree(powfs[ipowfs].opdadd);
+	dcellfree(powfs[ipowfs].opdbias);
+	dcellfree(powfs[ipowfs].gradoff);
     }
     free(powfs);
 }

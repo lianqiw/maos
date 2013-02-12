@@ -70,16 +70,7 @@ void tomofit(SIM_T *simu){
 #endif
 	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     }
-    if(simu->opdr && parms->sim.mffocus>=2){
-	if(recon->RFlgsx){
-	    dcellzero(simu->focuslgsx);
-	    dcellmm(&simu->focuslgsx, recon->RFlgsx, simu->opdr, "nn", 1);
-	}
-	if(recon->RFngsx){
-	    dcellzero(simu->focusngsx);
-	    dcellmm(&simu->focusngsx, recon->RFngsx, simu->opdr, "nn", 1);
-	}
-    }
+ 
     if(parms->ndm>0){
 #if USE_CUDA
 	if(parms->gpu.fit){
@@ -89,25 +80,6 @@ void tomofit(SIM_T *simu){
 	    muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
     }
     dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
-    
-    /*
-      Form error signal. Make sure what is subtracted here is what is added
-      to gradcl to form gramol.
-    */
-    if(parms->tomo.psol){
-	/*
-	  \todo: The following need to be revised to use dmpsol, which is averaged over dtrat. 
-	*/
-	/*This dmpsol can not be simu->dmpsol[lopowfs]. ??? */
-	dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
-    }
-    if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
-	remove_dm_ngsmod(simu, simu->dmerr);
-    }
-    if(parms->tomo.ahst_rtt && parms->recon.split){
-	remove_dm_tt(simu, simu->dmerr);
-    }
-
 }
 /**
    Compute pseudo open loop gradients for WFS that need. Only in close loop. In
@@ -119,12 +91,16 @@ void tomofit(SIM_T *simu){
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    //dcell *dmpsol=parms->dbg.psol?simu->dmcmd:simu->dmcmdlast;
-    dcell *dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];;//Do not use dmcmd as it contains recon->dm_ncpa
+    //dcell *dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];;//deprecated 2013-01-22
+    dcell *dmpsol=parms->dbg.psol?simu->dmreal:simu->dmreallast;//2013-03-22
     PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].psol) continue;
-	dcelladd(&simu->dmpsol[ipowfs], 1, dmpsol, 1./parms->powfs[ipowfs].dtrat);
+	double alpha=1.;
+	if(simu->reconisim % parms->powfs[ipowfs].dtrat == 0){
+	    alpha=0; /*reset accumulation. */
+	}
+	dcelladd(&simu->dmpsol[ipowfs], alpha, dmpsol, 1./parms->powfs[ipowfs].dtrat);
 	if((simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){/*Has output. */
 	    int nindwfs=parms->recon.glao?1:parms->powfs[ipowfs].nwfs;
 	    for(int indwfs=0; indwfs<nindwfs; indwfs++){
@@ -134,7 +110,6 @@ static void calc_gradol(SIM_T *simu){
 		    spmulmat(&simu->gradlastol->p[iwfs], GA[idm][iwfs], simu->dmpsol[ipowfs]->p[idm], 1);
 		}
 	    }
-	    dcellzero(simu->dmpsol[ipowfs]);/*reset accumulation. */
 	}
     }
 }
@@ -175,11 +150,11 @@ void recon_split(SIM_T *simu){
 	    error("Invalid parms->recon.split: %d",parms->recon.split);
 	}
 	dcellcp(&simu->Merr_lo, simu->Merr_lo_store);
-	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){/*do not correct the global focus.*/
+	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){/*the global focus is handled separately.*/
 	    simu->Merr_lo->p[0]->p[5]=0;
 	}
     }else{
-	dcellfree(simu->Merr_lo);/*don't have output. */
+	dcellfree(simu->Merr_lo);/*don't have output. Merr_lo_store is never freed. */
     }
 }
 /**
@@ -192,6 +167,9 @@ void reconstruct(SIM_T *simu){
     int isim=simu->reconisim;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_hi==0);
     if(simu->gradlastcl){
+	if(parms->sim.mffocus){
+	    focus_tracking(simu);//It modifies gradlastcl
+	}
 	if(!parms->sim.idealfit && !parms->sim.evlol){
 	    if(parms->sim.closeloop){
 		calc_gradol(simu);
@@ -226,9 +204,6 @@ void reconstruct(SIM_T *simu){
 			    dcellzero(simu->dmerr);
 			    dcellmm(&simu->dmerr, recon->MVM, parms->tomo.psol?simu->gradlastol:simu->gradlastcl,"nn",1);
 			}
-		if(parms->tomo.psol){
-		    dcelladd(&simu->dmerr, 1, simu->dmint->mint[parms->dbg.psol?0:1], -1);
-		}
 	    }else{
 		switch(parms->recon.alg){
 		case 0:
@@ -240,11 +215,14 @@ void reconstruct(SIM_T *simu){
 		    break;
 		}
 	    }
-		
-	    if(parms->recon.split==1){/*ahst */
+	    if(parms->tomo.psol){//form error signal in PSOL mode
+		dcell *dmpsol=simu->dmpsol[parms->hipowfs[0]];//2013-01-22.
+		dcelladd(&simu->dmerr, 1, dmpsol, -1);
+	    }
+	    if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
 		remove_dm_ngsmod(simu, simu->dmerr);
 	    }
-	    if(parms->tomo.ahst_rtt && parms->recon.split){
+	    if(parms->tomo.ahst_ttr && parms->recon.split){
 		remove_dm_tt(simu, simu->dmerr);
 	    }
 	}else{
@@ -269,9 +247,6 @@ void reconstruct(SIM_T *simu){
 		moao_recon(simu);
 	}
 	simu->tk_recon=myclockd()-tk_start;
-	if(parms->sim.mffocus){
-	    focus_tracking(simu);
-	}
 	save_recon(simu);/*Moved to inside. */
     }
 }

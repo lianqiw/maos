@@ -65,6 +65,8 @@ typedef struct MAOS_S{
     double ngsgrid;  /**<spacing of NGS grid in as*/
     int nstep;       /**<Number of time steps (sim.nsim) in MAOS simulation*/
     int ahstfocus;   /**<1: The focal plate scale mode does not include global focus*/
+    int mffocus;     /**<1: maos already does sodium tracking*/
+    char *fnrange;   /**<sodium range time series. forward to maos.*/
 }MAOS_S;
 
 /**
@@ -80,12 +82,12 @@ typedef struct SKYC_S{
     int interpg;     /**<Interpolate gain based in dtrat and signan*/
     int save;        /**<save information for latter running in MAOS.*/
     int maxstar;     /**<maximum number of (brightest) stars for each star field.*/
-    int maxaster;    /**<Maximum number of best asterism for final processing.*/
+    int maxaster;    /**<maximum number of best asterism for final processing.*/
+    int maxdtrat;    /**<maximum number of dtrats to try for each asterism.*/
     int nthread;     /**<number of threads*/
     int start;       /**<start number of sky field*/
     int nsky;        /**<number of sky field. 500.*/
-    int *seeds;      /**<seed for generating asterism and random numbers.*/
-    int nseed;       /**<number of seeds*/
+    int seed;        /**<seed for generating asterism and random numbers.*/
 
     int noisefull;   /**<use full noise insteaded servo filtered noise to regularize. =0*/
     int psd_scale;   /**<scale the PSD to equal to open loop error*/
@@ -106,15 +108,15 @@ typedef struct SKYC_S{
     /** The following are vectors for each powfs; */
     int *nwfsmax;    /**<maximum # of wfs for each powfs*/
     int  nwfstot;    /**<Sum of nwfsmax*/
-    double *pixratio;/**<pixtheta in terms of wvl[0]/d_sa*/
-    double *pixtheta;/**<pixtheta derived from pixratio.*/
+    double *pixtheta;/**<size of WFS ccd pixel.*/
     double *pixblur; /**<blurring of pixels.*/
     int *pixpsa;     /**<number of detector pixels in each direction per sa*/
+    int *pixguard;   /**<guard window size in each direction.*/
     double *pixoffx; /**<pixel offset along x in units of pixel*/
     double *pixoffy; /**<pixel offset along y in units of pixel*/
     double keepout;  /**<NGS probe keep out range in arcsec.*/
     double intgain;  /**<gain of simple integrator.*/
-    double rne;      /**<detector read out noise in electron.*/
+    double rne;      /**<detector read out noise in electron. -1 to use the formula.*/
     dmat *rnefs;     /**<derived, actual read out noise, may be frame rate dependent.*/
     double *telthruput;/**<Telescope throughput at each wvl*/
     double *qe;      /**<quantum efficiency at each wvl.*/
@@ -157,12 +159,14 @@ typedef struct SKYC_S{
 typedef struct PARMS_S{
     MAOS_S maos;     /**<parameters exported by maos*/
     SKYC_S skyc;     /**<parameters supplied by user*/
+    int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
 }PARMS_S;
 /**
    ARG_S is used for command line parsing.
 */
 typedef struct ARG_S{
     int detach;      /**<Detach from the command line and run in background*/
+    int override;    /**<Override result even if Res?_?.done exist*/
     int force;       /**<For start, bypassing scheduler*/
     int nthread;     /**<Number of threads*/
     char *dirout;    /**<Result output directory*/

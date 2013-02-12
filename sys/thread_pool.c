@@ -53,8 +53,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
-#include "../common.h"
-#include "../misc.h"
+#include "common.h"
+#include "misc.h"
 #include "thread.h"
 #include "thread_pool.h"
 #include "process.h"
@@ -228,16 +228,16 @@ void thread_pool_init(int nthread){
     if(nthread<=0) nthread=nthread_max;
     if(nthread>nthread_max) nthread=nthread_max;
     pthread_mutex_lock(&pool.mutex);
-    int nmax=pool.nmax;
+    int ncur=pool.nmax;
     pool.nmax=nthread;
-    if(nmax<nthread){/*need to launch more threads. */
+    if(ncur<nthread){/*need to launch more threads. */
 	pthread_t thread;/*we don't need the thread information. */
-	for(int ith=0; ith<nthread-nmax; ith++){
+	for(int ith=0; ith<nthread-ncur; ith++){
 	    if(pthread_create(&thread, &pool.attr, (thread_fun)run_thread, NULL)){
 		error("Can not create thread\n");
 	    }
 	}
-    }else if(nmax>nthread){
+    }else if(ncur>nthread){
 	/*need to quit some threads. */
 	pthread_cond_broadcast(&pool.jobwait);/*wake up all threads. */
     }

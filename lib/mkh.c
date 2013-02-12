@@ -17,9 +17,9 @@
 */
 
 #include <math.h>
-#include "common.h"
+#include "../sys/sys.h"
 #include "mkh.h"
-#include "misc.h"
+
 #include "loc.h"
 
 #define ONLY_FULL 0 /*1: comply with other propagators. */

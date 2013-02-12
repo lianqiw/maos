@@ -194,11 +194,11 @@ X(cell) **X(cellreadarr)(long *nxout, long *nyout, const char *format,...){
     read_header(&header, fp);
     long nx, ny;
     header_t *headerc=check_cell(&header, &nx, &ny);
-    if(!headerc){
+    if(!headerc){/*Is cell arr*/
 	free(header.str); header.str=NULL;
     }
     X(cell) **out=calloc(nx*ny, sizeof(X(cell)*));
-    if(!headerc || !zfisfits(fp)){
+    if(!headerc || !zfisfits(fp)){/*read cellarr or read cell as single cell arr.*/
 	for(long ic=0; ic<nx*ny; ic++){
 	    out[ic]=X(cellreaddata)(fp, headerc);
 	}

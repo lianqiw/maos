@@ -18,128 +18,34 @@
 /* make a client address */
 #include <stdio.h>
 #include <stdlib.h>
-#include <netdb.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h> 
 #include <errno.h>
-#include <arpa/inet.h>
 #include <math.h>
 #include <time.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <limits.h>
 #include <string.h>
+#include "sock.h"
 #include "sockio.h"
-#include "io.h"
 #include "process.h"
 #include "daemonize.h"
 #include "common.h"
 #include "misc.h"
+#include "hashlittle.h"
 #include "scheduler_server.h"
 #include "scheduler_client.h"
-static int scheduler_crashed;
-
-void sock_shutdown(int *sock, int mode){
-   if(mode>0){/*tell the server to shutdown read or write */
-	int cmd[2];
-	if(mode==1){
-	    cmd[0]=CMD_SHUTRD;
-	}else if(mode==2){
-	    cmd[0]=CMD_SHUTWR;
-	}
-	cmd[1]=getpid();
-	stwriteintarr(sock, cmd, 2);
-    }
-}
-int init_sockaddr (struct sockaddr_in *name,
-		   const char *hostname, uint16_t port){
-    struct hostent *hostinfo;
-    
-    name->sin_family = AF_INET;
-    name->sin_port = htons(port);
-    hostinfo = gethostbyname (hostname);
-    if (hostinfo == NULL){
-	return -1;
-    }else{
-	struct in_addr *addr = (struct in_addr *) hostinfo->h_addr_list[0];
-	if(addr){
-	    name->sin_addr = *addr;
-	    return 0;
-	}else{
-	    /*warning("h_addr_list is NULL for host %s\n", hostname); */
-	    return -1;
-	}
-    }
-}
-/*
-  Connect to a host at port.
-  mode=0: read/write
-  mode=1: read only by the client. the server won't read
-  mode=2: write only by the client. the server won't write
-*/
-int connect_port(const char *hostname, int port, int block, int mode){
-    int sock;
-    if(scheduler_crashed) {
-	return -1;
-    }
-    int count=0;
-    struct sockaddr_in servername;
-    do{
-	/* Create the socket. */
-	sock = socket (PF_INET, SOCK_STREAM, 0);
-	if (sock < 0) {
-	    perror ("socket (scheduler)");
-	    scheduler_crashed=1; 
-	    return sock;
-	}
-	{
-	    /*Applications that require lower latency on every packet sent should be
-	      run on sockets with TCP_NODELAY enabled. It can be enabled through the
-	      setsockopt command with the sockets API.  
-
-	      For this to be used effectively, applications must avoid doing small,
-	      logically related buffer writes. Because TCP_NODELAY is enabled, these
-	      small writes will make TCP send these multiple buffers as individual
-	      packets, which can result in poor overall performance.  */
-	    int one=1;
-	    //setsockopt(sock_mvm, SOL_TCP, TCP_NODELAY|TCP_QUICKACK|TCP_CORK, &one, sizeof(one));
-	    setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
-	}
-	cloexec(sock);
-	socket_tcp_keepalive(sock);
-	/* Give the socket a name. */
-	init_sockaddr(&servername, hostname, port);
-	if(!block){
-	    fcntl(sock, F_SETFD, O_NONBLOCK);
-	}
-	if(connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
-	    close(sock);
-	    if(!block){
-		return -1;
-	    }
-	    sleep(4);
-	    count++;
-	}else{
-	    sock_shutdown(&sock,mode);
-	    return sock;
-	}
-    }while(count<10);
-    return -1; 
-
-}
-/* To open a port and connect to scheduler */
-int scheduler_connect_self(int block, int mode){
-    return connect_port("localhost", PORT, block, mode);
-}
-
+#include "thread.h"
 #ifdef MAOS_DISABLE_SCHEDULER
-
 int scheduler_start(char *path, int nthread, int waiting){
   (void)path;
   (void)nthread;
@@ -156,60 +62,190 @@ void scheduler_report(STATUS_T *status){
   (void)status;
 }
 void print_backtrace_symbol(void *const *buffer, int size){
-  (void) buffer;
+  (void)buffer;
   (void)size;
 }
+#if !(defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__))
 void print_backtrace(int sig){
   (void) sig;
 }
-int scheduelr_launch_drawdaemon(char *fifo){
-  (void)fifo;
-  return 1;
-}
-char* scheduler_get_drawdaemon(int pid, int direct){
-  (void)pid;
-  (void)direct;
-  return NULL;
-}
+#endif
 #else
-static int psock;
+void scheduler(void);
+char *scheduler_fnlog=NULL;
+
+uint16_t PORT=0;
+uint16_t PORTMON=0;
+char** hosts;
+int nhost;
+int hid;
+static int myhostid(const char *host){
+    int i;
+    for(i=0; i<nhost; i++){
+	if(!strncasecmp(hosts[i],host,strlen(hosts[i])))
+	    break;
+    }
+    if(i==nhost){
+	i=-1;
+    }
+    return i;
+}
+
+
+/*Initialize hosts and associate an id number */
+static __attribute__((constructor))void init(){
+    init_process();/*the constructor in process.c may not have been called. */
+    char fn[PATH_MAX];
+    snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
+    scheduler_fnlog=strdup0(fn);
+    snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
+    PORT=0;
+    {
+	FILE *fp=fopen(fn,"r");
+	if(fp){
+	    if(fscanf(fp,"%hu", &PORT)!=1){
+		/*warning3("Failed to read port from %s\n",fn); */
+	    }
+	    fclose(fp);
+	}
+    }
+    if(PORT==0){
+	/*user dependent PORT to avoid conflict */
+	PORT= (uint16_t)((uint16_t)(hashlittle(USER,strlen(USER),0)&0x2FFF)|10000);
+    }
+    snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
+    if(!exist(fn)){
+	nhost=1;
+	hosts=malloc(nhost*sizeof(char*));
+	hosts[0]=calloc(60,sizeof(char));
+	gethostname(hosts[0],60);
+	register_deinit(NULL,hosts[0]);
+    }else{
+	nhost=64;
+	hosts=malloc(nhost*sizeof(char*));
+	FILE *fp=fopen(fn,"r");
+	int ihost=0;
+	if(fp){
+	    char line[64];
+	    while(fscanf(fp,"%s\n",line)==1){
+		if(strlen(line)>0 && line[0]!='#'){
+		    hosts[ihost]=strdup0(line);
+		    ihost++;
+		    if(ihost>=nhost){
+			nhost*=2;
+			hosts=realloc(hosts,nhost*sizeof(char*));
+		    }
+		}
+	    }
+	    fclose(fp);
+	    hosts=realloc(hosts,ihost*sizeof(char*));
+	    nhost=ihost;
+	}else{
+	    error("failed to open file %s\n",fn);
+	}
+    }
+    register_deinit(NULL,hosts);
+
+    char host[60];
+    if(gethostname(host,60)) warning3("Unable to get hostname\n");
+    hid=myhostid(host);
+    if(hid==-1){
+	hosts[nhost]=strdup0(host);/*use local machine */
+	hid=nhost;
+	nhost++;
+	if(hid==-1){
+	    warning3("Unable to determine proper hostname. Monitor may not work\n");
+	}
+    }
+}
+
+/**
+   Launch the scheduler. We already obtained singleton lock and is in a forked process.
+ */
+static void scheduler_launch_do(void *junk){
+    (void)junk;
+#if defined(__CYGWIN__)
+    char *fn_scheduler=stradd(BUILDDIR, "/bin/scheduler.exe", NULL);
+#else
+    char *fn_scheduler=stradd(BUILDDIR, "/bin/scheduler", NULL);
+#endif
+    if(exist(fn_scheduler)){
+	info2("Run %s\n", fn_scheduler);
+	execl(fn_scheduler, "scheduler", NULL);
+    }else{/*fall back. this won't have the right argv set. */
+	info2("Launch scheduler using shell\n");
+	if(execlp("scheduler", "scheduler", NULL)){
+	    warning("scheduler not found\n");
+	    scheduler();
+	}
+    }
+}
+
+static void scheduler_launch(void){
+    char lockpath[PATH_MAX];
+    snprintf(lockpath,PATH_MAX,"%s",TEMP);
+    /*launch scheduler if it is not already running. */
+    single_instance_daemonize(lockpath,"scheduler", scheduler_version,
+			      (void(*)(void*))scheduler_launch_do,NULL);
+}
+
+/**
+   To open a port and connect to scheduler in the local host*/
+static int scheduler_connect_self(int block){
+    /*start the scheduler if it is not running*/
+    if(block){
+	scheduler_launch();
+    }
+    int sock=connect_port("localhost", PORT, block, 0);
+    if(sock<0){
+	warning2("Unable to connect to port %d\n", PORT);
+    }
+    return sock;
+}
+
+static int psock=-1;
 static char *path_save=NULL;
 static void scheduler_report_path(char *path){
+    if(psock==-1){
+	return;
+    }
     if(path){
-	if(path_save) free(path_save);
-	path_save=strdup(path);
+	if(path_save){
+	    path_save=realloc(path_save, strlen(path)+1);
+	    strcpy(path_save, path);
+	}else{
+	    path_save=strdup(path);
+	    register_deinit(NULL, path_save);
+	}
     }else{
 	if(!path_save){
 	    path_save=strdup("unknown");
+	    register_deinit(NULL, path_save);
 	}
     }
     int cmd[2];
     cmd[0]=CMD_PATH;
     cmd[1]=getpid();
-    stwriteintarr(&psock, cmd, 2);
-    stwritestr(&psock,path_save);
+    stwriteintarr(psock, cmd, 2);
+    stwritestr(psock,path_save);
 }
-void scheduler_deinit(void){
-    free(path_save);
-}
-static __attribute__((constructor)) void init(){
-    register_deinit(scheduler_deinit, NULL);
-}
+#define CATCH_ERR(A) if(A){psock=-1; return -1;}
 /* called by mcao to wait for available cpu. */
 int scheduler_start(char *path, int nthread, int waiting){
-    psock=scheduler_connect_self(1,0);
+    psock=scheduler_connect_self(1);
     if(psock==-1){
 	warning3("Failed to connect to scheduler\n");
+	exit(0);
 	return -1;
     }
     scheduler_report_path(path);
     int cmd[2];
     cmd[0]=CMD_START;
     cmd[1]=getpid();
-    stwriteintarr(&psock,cmd,2);
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
     cmd[0]=nthread;
     cmd[1]=waiting;
-    stwriteintarr(&psock,cmd,2);
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
     return 0;
 }
 
@@ -230,34 +266,35 @@ int scheduler_wait(void){
     /*don't close socket. */
 }
 /* called by mcao to notify scheduler the completion of a job */
-void scheduler_finish(int status){
+int scheduler_finish(int status){
     if(psock==-1){
-	psock=scheduler_connect_self(0,2);
+	psock=scheduler_connect_self(0);
 	scheduler_report_path(NULL);
+	if(psock==-1) return -1;
     }
-    if(psock==-1) return;
     int cmd[2];
     if(status==0)
 	cmd[0]=CMD_FINISH;
     else 
 	cmd[0]=CMD_CRASH;
     cmd[1]=getpid();
-    stwriteintarr(&psock,cmd,2);
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
     close(psock);psock=-1;
+    return 0;
 }
 /* called by sim.c to report job status */
-void scheduler_report(STATUS_T *status){
+int scheduler_report(STATUS_T *status){
     if(psock==-1){
-	psock=scheduler_connect_self(0, 2);
+	psock=scheduler_connect_self(0);
 	scheduler_report_path(NULL);
+	if(psock==-1) return -1;
     }
-    if(psock==-1) return;
     int cmd[2];
     cmd[0]=CMD_STATUS;
     cmd[1]=getpid();
-    stwriteintarr(&psock,cmd,2);
-    stwrite(&psock,status,sizeof(STATUS_T));
-    /*don't close socket. */
+    CATCH_ERR(stwriteintarr(psock,cmd,2));
+    CATCH_ERR(stwrite(psock,status,sizeof(STATUS_T)));
+    return 0;
 }
 
 /*!defined(__INTEL_COMPILER)||1)  */
@@ -285,17 +322,22 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	strncat(cmdstr,add,BACKTRACE_CMD_LEN-strlen(cmdstr)-1);
     }
 #if PRINTBACKTRACE == 1 
-    if(psock==-1)
-	psock=scheduler_connect_self(0,0);
-    if(psock==-1) return;
-    int cmd[2];
-    cmd[0]=CMD_TRACE;
-    cmd[1]=getpid();
-    stwrite(&psock,cmd,sizeof(int)*2);
-    stwritestr(&psock,cmdstr);
-    char *ans=streadstr(&psock);
-    info2(" %s\n",ans);
-    free(ans);
+    PNEW(mutex);//Only one thread can do this.
+    LOCK(mutex);
+    if(psock==-1){
+	psock=scheduler_connect_self(0);
+    }
+    if(psock!=-1){
+	int cmd[2];
+	cmd[0]=CMD_TRACE;
+	cmd[1]=getpid();
+	char *ans=NULL;
+	if(!(stwrite(psock,cmd,sizeof(int)*2) || stwritestr(psock,cmdstr) || streadstr(psock, &ans))){
+	    info2(" %s\n",ans);
+	    free(ans);
+	}
+    }
+    UNLOCK(mutex);
 #else
     info2(" %s\n",cmdstr);
 #endif
@@ -314,6 +356,8 @@ void print_backtrace(int sig){
 	raise(SIGABRT);
 }
 #endif
+#endif
+
 /**
    Fork and launch drawdaemon.
 */
@@ -342,13 +386,20 @@ int scheduler_launch_drawdaemon(char *fifo){
     }
 #endif
     char *fn=stradd(BUILDDIR, "/bin/drawdaemon",NULL);
+    if(!exist(fn)){
+	free(fn);
+	char *cwd=mygetcwd();
+	fn=stradd(cwd, "/drawdaemon", NULL);
+    }
+    if(!exist(fn)){
+	free(fn); fn=NULL;
+    }
     if(method==0){
-	info2("Looking for drawdaemon in %s\n",fn);
-	if(exist(fn)){
+        if(fn){
 	    info2("Found drawdaemon in %s, run it.\n",fn);
 	    method=1;
 	}else{
-	    warning3("Not found drawdaemon in %s, use bash to find and run drawdaemon.\n",fn);
+	    warning3("Not found drawdaemon, use bash to find and run drawdaemon.\n");
 	    int found=!system("which drawdaemon");
 	    if(found){
 		method=2;
@@ -372,6 +423,7 @@ int scheduler_launch_drawdaemon(char *fifo){
 	warning3("Error forking\n");
     }else if(pid2>0){
 	/*wait the child so that it won't be a zoombie */
+	sleep(1);//wait 1 seconds for drawdaemon to start.
 	waitpid(pid2,NULL,0);
 	return ans;
     }
@@ -387,6 +439,7 @@ int scheduler_launch_drawdaemon(char *fifo){
     fclose(stdin);
     if(method==1){
 	if(execl(fn, "drawdaemon",fifo,NULL)){
+	    perror("execl");
 	    warning("execl failed\n");
 	}
     }else if(method==2){
@@ -438,8 +491,10 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	}
 	launch=1;
     }
-
     if(launch){
+#ifdef MAOS_DISABLE_SCHEDULER
+	direct=1;
+#endif
 	if(direct){
 	    /*launch directly, used by drawres, drawbin where overhead is small. */
 	    scheduler_launch_drawdaemon(fifo);
@@ -449,7 +504,7 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	      takes time*/
 	    int sock;
 	    for(int retry=0; retry<10; retry++){
-		sock=scheduler_connect_self(0,0);
+		sock=scheduler_connect_self(0);
 		if(sock==-1){
 		    warning2("failed to connect to scheduler\n");
 		    sleep(1);
@@ -464,7 +519,7 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	    int cmd[2];
 	    cmd[0]=CMD_DRAW;
 	    cmd[1]=pid;
-	    stwrite(&sock,cmd,sizeof(int)*2);
+	    stwrite(sock,cmd,sizeof(int)*2);
 	    /*make sure the drawdaemon appears in our DISPLAY. */
 	    const char *display=getenv("DISPLAY");
 	    if(strlen(display)==0){
@@ -472,10 +527,10 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 		return NULL;
 	    }
 	    const char *xauth=getenv("XAUTHORITY");
-	    stwritestr(&sock,display);
-	    stwritestr(&sock,xauth);
-	    stwritestr(&sock,fifo);
-	    if(stread(&sock,cmd,sizeof(int))) return NULL;
+	    stwritestr(sock,display);
+	    stwritestr(sock,xauth);
+	    stwritestr(sock,fifo);
+	    if(stread(sock,cmd,sizeof(int))) return NULL;
 	    if(sock!=-1) close(sock);
 	    if(cmd[0]==-1) return NULL;/*failed */
 	}
@@ -483,4 +538,73 @@ char* scheduler_get_drawdaemon(int pid, int direct){
     }
     return fifo;
 }
-#endif
+/**
+   fork and launch exe as specified in cmd. cmd should composed of the path to
+   start the exe, exe name, and parameters. used by maos/skyc.
+ */
+int launch_exe(const char *cmd){
+    const int nexe=2;
+    const char *exes[]={"maos", "skyc"};
+    char *stexe=NULL;
+    char *cmd2;
+    if(cmd[0]=='~'){
+	cmd2=stradd(HOME, cmd+1, NULL);
+    }else{
+	cmd2=(char*)cmd;
+    }
+    const char *cmd2end=cmd2+strlen(cmd2);
+    for(int iexe=0; iexe<nexe; iexe++){
+	const char *exe=exes[iexe];
+	stexe=strstr(cmd2, exe);
+	while(stexe && stexe<cmd2end&&(stexe[-1]!='/'||!isspace(stexe[strlen(exe)]))){
+	    stexe=strstr(stexe+strlen(stexe), exe);
+	}	
+	if(stexe){
+	    stexe[-1]='\0';
+	    long pid=fork();
+	    if(pid<0){
+		return -1;//unable to fork
+	    }else if(pid>0){//parant
+		stexe[-1]='/';
+		waitpid(pid, NULL, 0);/*wait child*/
+	    }else{//child
+		long pid2=fork();
+		if(pid2<0){
+		    _exit(EXIT_FAILURE);//unable to fork
+		}else if(pid2>0){//parent
+		    _exit(EXIT_SUCCESS);
+		}else{//child
+		    if(setsid()==-1) warning("Error setsid\n");
+		    if(chdir(cmd2)) error("Error chdir to %s\n", cmd2);
+		    stexe+=strlen(exe);
+		    if(execlp(exe, exe, "--local", "-d", stexe, NULL)){
+			error("Unable to execlp\n");
+		    }
+		    _exit(EXIT_FAILURE);
+		}
+	    }
+	    break;
+	}
+    }
+    if(cmd2!=cmd) free(cmd2);
+    if(!stexe){
+	warning("don't understand %s\n", cmd);
+	return -1;
+    }
+    return 0;
+}
+/**
+   ask scheduler in another machine to launch exe
+*/
+int scheduler_launch_exe(const char *host, const char *scmd){
+    int ret=0;
+    int sock=connect_port(host, PORT, 0, 0);
+    if(sock<=-1) return -1;
+    int cmd[2]={CMD_LAUNCH, 0};
+    if(stwriteintarr(sock, cmd, 2) || stwritestr(sock, scmd) || streadint(sock, &ret)){
+	warning2("Failed to write to scheduler at %s\n", host);
+	ret=-1;
+    }
+    close(sock);
+    return ret;
+}

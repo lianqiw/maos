@@ -36,17 +36,15 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-#include "common.h"
 #include "monitor.h"
-#include "scheduler_client.h"
 
 GtkWidget **tables;
 gint *nrows;
-static int ncol=7;
+#define ncol 7
 static void delete_hbox_event(GtkWidget *btn, GdkEventButton *event,PROC_T *p){
     (void)btn;
     if(event->button==1){
-	scheduler_remove_job(p->hid,p->pid);
+	scheduler_cmd(p->hid,p->pid,CMD_REMOVE);
     }
 }
 static GtkWidget *new_button(void){
@@ -114,14 +112,13 @@ static void create_entry(PROC_T *p){
     int irow=nrows[p->hid];
     nrows[p->hid]++;
     gtk_table_resize(GTK_TABLE(tables[p->hid]), nrows[p->hid],ncol);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_pid, 0,1,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_path, 1,2,irow,irow+1,
-		     (GtkAttachOptions)(GTK_EXPAND|GTK_FILL),(GtkAttachOptions)(GTK_EXPAND|GTK_FILL),0,0);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_errlo, 2,3,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_errhi, 3,4,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_iseed, 4,5,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->entry_timing, 5,6,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
-    gtk_table_attach(GTK_TABLE(tables[p->hid]), p->btn, 6,7,irow,irow+1,GTK_SHRINK,GTK_SHRINK,0,0);
+    grid_attach(tables[p->hid], p->entry_pid, 0,1,irow,irow+1);
+    grid_attach(tables[p->hid], p->entry_path, 1,2,irow,irow+1);
+    grid_attach(tables[p->hid], p->entry_errlo, 2,3,irow,irow+1);
+    grid_attach(tables[p->hid], p->entry_errhi, 3,4,irow,irow+1);
+    grid_attach(tables[p->hid], p->entry_iseed, 4,5,irow,irow+1);
+    grid_attach(tables[p->hid], p->entry_timing, 5,6,irow,irow+1);
+    grid_attach(tables[p->hid], p->btn, 6,7,irow,irow+1);
     gtk_widget_show_all(tables[p->hid]);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),p->hid);
 }
@@ -165,7 +162,7 @@ static void update_prog(PROC_T *p){
 #endif	
     }
 }
-void remove_entry(PROC_T *iproc){
+gboolean remove_entry(PROC_T *iproc){
     /*Delete widget; */
     gtk_widget_destroy(iproc->entry_pid);
     gtk_widget_destroy(iproc->entry_path);
@@ -175,14 +172,13 @@ void remove_entry(PROC_T *iproc){
     gtk_widget_destroy(iproc->entry_timing);
     gtk_widget_destroy(iproc->btn);
     nrows[iproc->hid]--;
+    free(iproc->path);
+    free(iproc);
+    return 0;
 }
-void refresh(PROC_T *p){
-    if(p->status.info==S_REMOVE){
-	proc_remove(p->hid,p->pid);
-	return;
-    }
+gboolean refresh(PROC_T *p){
     if(!p->entry_iseed) create_entry(p);
-    if(p->done) return;
+    if(p->done) return 0;
     switch(p->status.info){
     case S_RUNNING:
 	break;
@@ -225,6 +221,7 @@ void refresh(PROC_T *p){
 	warning("Unknown info\n");
     }
     update_prog(p);
+    return 0;
 }
 GtkWidget *new_page(int ihost){
     if(!tables){
@@ -233,8 +230,9 @@ GtkWidget *new_page(int ihost){
     }
     nrows[ihost]=0;
     tables[ihost]=gtk_table_new(nrows[ihost],ncol,0);
+#if GTK_MAJOR_VERSION <3 || GTK_MINOR_VERSION < 4
     gtk_table_set_row_spacings(GTK_TABLE(tables[ihost]), 2);
     gtk_table_set_col_spacings(GTK_TABLE(tables[ihost]), 2);
-
+#endif
     return tables[ihost];
 }

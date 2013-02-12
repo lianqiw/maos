@@ -17,7 +17,6 @@
 */
 
 #undef USE_COMPLEX
-#include "thread.h"
 #include "mat.c"
 #include "cell.c"
 #include "matbin.c"

@@ -23,22 +23,13 @@ extern "C"
 #include "utils.h"
 #include "recon.h"
 #include "accphi.h"
+#include "pcg.h"
 #define SYNC_PS  for(int ips=0; ips<recon->npsr; ips++){ curecon->psstream[ips].sync(); }
 #define SYNC_FIT  for(int ifit=0; ifit<parms->fit.nfit; ifit++){ curecon->fitstream[ifit].sync(); }
 #define SYNC_DM  for(int idm=0; idm<parms->ndm; idm++){ curecon->dmstream[idm].sync(); }
 
 #define TIMING 0
-#if !TIMING
-#undef TIC
-#undef tic
-#undef toc
-#define TIC
-#define tic
-#define toc(A)
-#define ctoc(A)
-#else
-#define ctoc(A) CUDA_SYNC_STREAM; toc2(A);tic
-#endif
+
 /*
   Todo: share the ground layer which is both matched and same.
 */
@@ -55,81 +46,7 @@ __global__ void apply_W_do(float *restrict out, const float *restrict in, const 
 		       +0.0625*(in[i-nx-1]+in[i-nx+1]+in[i+nx-1]+in[i+nx+1]));
     }
 }
-/*
-__global__ static void prop_grid_cubic_os2_do(float *restrict out, int nxo,
-				  const float *in, int nxi,
-				  float dispx, float dispy, float dispx2, float dispy2,
-				  int nx, int ny,
-				  const float *cc, float alpha){
-    (void) dispx2;
-    (void) dispy2;
-    int stepx=blockDim.x*gridDim.x;
-    int stepy=blockDim.y*gridDim.y;
-    for(int iy=(blockIdx.y*blockDim.y+threadIdx.y); iy<ny; iy+=stepy){
-	for(int ix=(blockIdx.x*blockDim.x+threadIdx.x); ix<nx; ix+=stepx){
 
-	}
-    }
-    }*/
-/*
-  Raytracing from in to out (dir=1) or in from out (dir=-1)
-  in  has origin at (nxi, nyi), sampling dxi, normally DM
-  out has origin at (nxo, nyo), sampling dxo, normally other OPD
-*/
-/*
-void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
-			 curmat *out, float oxo, float oyo, float dxo,
-			 float dispx, float dispy,  float *cubic_cc,
-			 float alpha, int dir, cudaStream_t stream){
-    //offset of origin. 
-    dispx=(dispx-oxi+oxo);
-    dispy=(dispy-oyi+oyo);
-    int offx1=0, offy1=0;
-    const double dxo1=1./dxo;
-    //if output is outside of input from left/bottom, starting at an offset. 
-    if(dispx<0){
-	offx1=(int)ceilf(-dispx*dxo1);
-	dispx+=offx1*dxo;
-    }
-    if(dispy<0){
-	offy1=(int)ceilf(-dispy*dxo1);
-	dispy+=offy1*dxo;
-    }
-    int nxi=in->nx;
-    int nyi=in->ny;
-    int nxo=out->nx;
-    int nyo=out->ny;
-    int nx=(int)floorf(((nxi-1)*dxi-dispx)*dxo1)+1;
-    int ny=(int)floorf(((nyi-1)*dxi-dispy)*dxo1)+1;
-    //if output is outside of input from right/top, limit number of points to do.
-    if(nx>nxo-offx1) nx=nxo-offx1;
-    if(ny>nyo-offy1) ny=nyo-offy1;
-  
-    if(fabsf(2*dxo1-dxi)<EPS){
-	dispx=dispx/dxi;
-	dispy=dispy/dxi;
-	int offx2=floor(dispx); dispx-=offx2;
-	int offy2=floor(dispy); dispy-=offy2;
-	float dispx2=dispx+(dispx>0.5)?-0.5:0.5;
-	float dispy2=dispy+(dispy>0.5)?-0.5:0.5;
-	TO_IMPLEMENT;
-	if(cubic_cc){
-	    if(dir==1){
-		prop_grid_cubic_do_os2<<<DIM2(nx,ny,8),0,stream>>>
-		    (out->p+offy1*nxo+offx1, nxo,
-		     in->p+offy2*nxi+offx2, nxi,
-		     dispx, dispy, dispx2, dispy2,
-		     nx, ny, cubic_cc, alpha);
-	    }else if(dir==-1){
-		TO_IMPLEMENT;
-	    }
-	}else{
-	    TO_IMPLEMENT;
-	}
-    }else{
-	TO_IMPLEMENT;
-    }
-    }*/
 
 #define DO_HA(opdfit, xin)	/*opdfit = HA *xin*/			\
     curzero(opdfit->p[ifit], curecon->fitstream[ifit]);			\
@@ -322,13 +239,7 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
 #if TIMING
     SYNC_DM; toc("HAT");tic;//2.5ms for cubic, 0.2 ms for linear
 #endif
-    /*{
-	curcellwrite(xin, "gpu_xin");
-	curcellwrite(opdfit, "gpu_opdfit");
-	curwrite(curecon->pis, "gpu_pis");
-	curcellwrite(opdfit2, "gpu_opdfit2");
-	curcellwrite(*xout, "gpu_xout");
-	}*/
+  
     if(curecon->fitNW){
 	curcell *tmp=curcellnew(recon->ndm, 1);
 	for(int idm=0; idm<recon->ndm; idm++){
@@ -349,7 +260,73 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
     SYNC_DM;
     toc("fitNW");//0ms.
 }
-#include "pcg.h"
+/**
+   Wrap of the DM fitting operation
+
+   opdr is the OPD input.
+   fitx is the right hand side vector computed from opdr. Allow NULL.
+   fitr is the DM fitting result.
+*/
+double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *fitx, curcell *opdr, stream_t &stream){
+    G_CGFUN cg_fun;
+    void *cg_data;
+    curcell *rhs=NULL;
+    double res=0;
+    curecon_t *curecon=cudata->recon;
+    if(fitx){
+	rhs=fitx;
+    }
+#if TIMING 
+    EVENT_INIT(3);
+    EVENT_TIC(0);
+#endif
+    curmat *tmp=NULL;
+    if(parms->gpu.fit==1){//sparse matrix
+	cumuv(&rhs, 0, &curecon->FR, opdr, 1);
+	cg_fun=(G_CGFUN) cumuv;
+	cg_data=&curecon->FL;
+    }else{
+	gpu_FitR(&rhs, 0, recon, opdr, 1);
+	cg_fun=(G_CGFUN) gpu_FitL;
+	cg_data=(void*)recon;
+    }
+#if TIMING 
+    EVENT_TIC(1);
+#endif
+    switch(parms->fit.alg){
+    case 0:
+	cuchol_solve(fitr->m->p, curecon->FCl, curecon->FCp, rhs->m->p, stream);
+	if(curecon->FUp){
+	    tmp=curnew(curecon->FVp->ny, 1);
+	    curmv(tmp->p, 0, curecon->FVp, rhs->m->p, 't', -1, stream);
+	    curmv(fitr->m->p, 1, curecon->FUp, tmp->p, 'n', 1, stream);
+	}
+	break;
+    case 1:{
+	if((res=gpu_pcg(&fitr, (G_CGFUN)cg_fun, cg_data, NULL, NULL, rhs, &curecon->cgtmp_fit,
+			parms->recon.warm_restart, parms->fit.maxit, stream))>1){
+	    warning("DM Fitting PCG not converge. res=%g\n", res);
+	}
+    }
+	break;
+    case 2:
+	curmv(fitr->m->p, 0, curecon->FMI, rhs->m->p, 'n', 1, stream);
+	break;
+    default:
+	error("Invalid");
+    }
+#if TIMING 
+    EVENT_TIC(2);
+    EVENT_TOC;
+    info2("Fit RHS: %6.0f, LHS: %6.0f, Tot: %5.0f\n", times[1], times[2], times[0]);
+#endif
+    if(!fitx){
+	curcellfree(rhs);
+    }
+    if(tmp) curfree(tmp);
+    return res;
+}
+
 void gpu_fit_test(SIM_T *simu){	/*Debugging. */
     gpu_set(gpu_recon);
     stream_t stream;

@@ -1,0 +1,30 @@
+#ifndef AOS_TOOLS_MYGTK_H
+#define AOS_TOOLS_MYGTK_H
+#if GTK_MAJOR_VERSION >2
+#define gtk_hbox_new(A,B) gtk_box_new(GTK_ORIENTATION_HORIZONTAL, B)
+#define gtk_vbox_new(A,B) gtk_box_new(GTK_ORIENTATION_VERTICAL, B)
+#define gtk_vseparator_new() gtk_separator_new(GTK_ORIENTATION_VERTICAL)
+#define gtk_hseparator_new() gtk_separator_new(GTK_ORIENTATION_HORIZONTAL)
+#endif
+
+#if GTK_MAJOR_VERSION > 2 && GTK_MINOR_VERSION >= 2
+#define gtk_hscale_new(A,B...) gtk_scale_new(GTK_ORIENTATION_HORIZONTAL, B)
+#define gtk_hscale_new_with_range(A...) gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, A)
+#endif
+#if GTK_MAJOR_VERSION >=3 && GTK_MINOR_VERSION >= 4
+#define grid_attach(A,B,C,D,E,F) gtk_grid_attach(GTK_GRID(A),B,C,D,E,F)
+#define gtk_table_new(A,B,C) gtk_grid_new()
+#define gtk_table_resize(A...)
+#else
+#define grid_attach(A,B,C,D,E,F) gtk_table_attach(GTK_TABLE(A),B,C,D,E,F, (GtkAttachOptions)0, (GtkAttachOptions)0, 0, 0)
+#endif
+
+
+#if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
+#define g_thread_new(A,B,C) g_thread_create(B, C, 0, NULL);
+#endif
+
+
+
+#endif
+

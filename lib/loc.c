@@ -19,9 +19,9 @@
 #include <sys/mman.h>
 #include <sys/file.h>
 #include <unistd.h>
-#include "common.h"
-#include "thread.h"
-#include "misc.h"
+#include "../sys/sys.h"
+
+
 #include "loc.h"
 #include "cell.h"
 #include "dmat.h"

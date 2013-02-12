@@ -57,7 +57,7 @@ static int mmap_open(char *fn, int rw){
     return fd;
 }
 /**
-   Initialize the header in the mmaped file.
+   Initialize the header in the mmaped file. If header is not null, header0 points to its location in mmaped file. Upon exit, p0 points to the location of data p.
 */
 static inline void mmap_header_rw(char **p0, char **header0, uint32_t magic, long nx, long ny, const char *header){
     char *p=*p0;
@@ -80,14 +80,13 @@ static inline void mmap_header_rw(char **p0, char **header0, uint32_t magic, lon
     *p0=p;
 }
 /**
-   Create a new X(mat) matrix object, mmapped from file. be aware that the data
-   is not 8-byte aligned. The file is truncated if already exists in rw mode.*/
+   Create a new X(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode.*/
 X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
     if(!nx || !ny) return NULL;
     format2fn;
     int fd=mmap_open(fn, 1);
-    size_t metasize=3*8+bytes_header(header);
-    size_t msize=nx*ny*sizeof(T)+metasize;
+    size_t metasize=3*8+bytes_header(header);//size of meta data. 
+    size_t msize=nx*ny*sizeof(T)+metasize;//total size of file/memory
     if(ftruncate(fd, msize)){
 	error("Error truncating file\n");
     }
@@ -95,7 +94,7 @@ X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
     if(!map){
 	error("mmap failed\n");
     }
-    char *map0=map;
+    char *map0=map;//save value of map
     /*memset(map, 0, msize); */
     char *header0;
     mmap_header_rw(&map, &header0, M_T, nx, ny, header);
@@ -105,9 +104,9 @@ X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
     return out;
 }
 /**
-   Create a new X(cell) matrix cell object, mmapped from file. be aware that the
-   data is not 8-byte aligned. The file is truncated if already exists. We only
-   add headers to individual dmat/cmat in the file, not in the cell.
+   Create a new X(cell) matrix cell object, mmapped from file. The file is
+   truncated if already exists. We only add headers to individual dmat/cmat in
+   the file, not in the cell.
 */
 X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *header1, char **header2,
 			 const char *format, ...){

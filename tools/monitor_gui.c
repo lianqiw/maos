@@ -32,8 +32,6 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-#include "scheduler_client.h"
-#include "common.h"
 #include "monitor.h"
 
 #define WIDTH_START 13
@@ -47,7 +45,7 @@
 static void delete_hbox_event(GtkWidget *btn, GdkEventButton *event,PROC_T *p){
     (void)btn;
     if(event->button==1){
-	scheduler_remove_job(p->hid,p->pid);
+	scheduler_cmd(p->hid,p->pid,CMD_REMOVE);
     }
 }
 static GtkWidget *new_button(void){
@@ -188,7 +186,7 @@ static void update_prog(PROC_T *p){
 #endif	
     }
 }
-void remove_entry(PROC_T *iproc){
+gboolean remove_entry(PROC_T *iproc){
     /*Delete widget; */
     if(iproc->vbox){
 	/*warning3("destroy hbox\n"); */
@@ -197,14 +195,13 @@ void remove_entry(PROC_T *iproc){
     }else{
 	/*warning("hbox is empty\n"); */
     }
+    free(iproc->path);
+    free(iproc);
+    return 0;
 }
-void refresh(PROC_T *p){
-    if(p->status.info==S_REMOVE){
-	proc_remove(p->hid,p->pid);
-	return;
-    }
+gboolean refresh(PROC_T *p){
     if(!p->entry_iseed) create_entry(p);
-    if(p->done) return;
+    if(p->done) return 0;
     switch(p->status.info){
     case S_RUNNING:
 	break;
@@ -246,6 +243,7 @@ void refresh(PROC_T *p){
 	warning("Unknown info\n");
     }
     update_prog(p);
+    return 0;
 }
 GtkWidget *new_page(int ihost){
     (void)ihost;

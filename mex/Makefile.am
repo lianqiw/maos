@@ -25,8 +25,8 @@ bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj geno
 
 read_SOURCES=read.c io.c
 read_CFLAGS=$(MEXOPT)
-read_LDFLAGS=$(LDMEX) -Xcompiler -shared
+read_LDFLAGS=$(LDMEX) -static -Xcompiler -shared -no-install
 
 write_SOURCES=write.c io.c
 write_CFLAGS=$(MEXOPT)
-write_LDFLAGS=$(LDMEX) -Xcompiler -shared
+write_LDFLAGS=$(LDMEX) -static -Xcompiler -shared -no-install

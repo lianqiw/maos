@@ -16,20 +16,27 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "../lib/draw.h"
-#include "process.h"
-#include "misc.h"
-#include "mathmisc.h"
+#include "../lib/aos.h"
 #include "drawdaemon.h"
 
 char *fifo=NULL;
+int ppid=0;
 int fifopid=0;
-int main(int argc, char *argv[])
-{
+static __attribute__((constructor)) void deinit(){
+    char fn[PATH_MAX];
+    snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
+    remove(fn);
+    snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
+    remove(fn);
+}
+
+int main(int argc, char *argv[]){
+#if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
     if(!g_thread_supported()){
 	g_thread_init(NULL);
 	gdk_threads_init();
     }
+#endif
     gtk_init(&argc, &argv);
     if(argc>1){
 	fifo=argv[1];
@@ -42,7 +49,7 @@ int main(int argc, char *argv[])
 	fifopid=(int)getppid();
 	snprintf(fifo,80,"%s/drawdaemon_%d.fifo",TEMP,fifopid);
     }
-    int ppid;
+
     const char *fifo2=strstr(fifo,"drawdaemon");
     if(!fifo2){
 	warning("drawdaemon not found in string\n");
@@ -70,17 +77,8 @@ int main(int argc, char *argv[])
 	setbuf(stdout,NULL);/*disable buffering. */
 	setbuf(stderr,NULL);
     }
+    g_thread_new("open_fifo", (GThreadFunc)open_fifo, NULL);
     create_window();
-    g_thread_create((GThreadFunc)open_fifo, NULL, 0, NULL);
-    gdk_threads_enter();
     gtk_main();
-    gdk_threads_leave();
-    {
-	char fn[PATH_MAX];
-	snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
-	remove(fn);
-	snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
-	remove(fn);
-    }
     remove(fifo);
 }/*main */

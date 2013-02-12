@@ -161,7 +161,7 @@ typedef struct POWFS_T{
     dmat *sumamp;       /**<sum of realamp*/
     dmat *sumamp2;      /**<sum of realamp.^2*/
     
-    dcell *opdadd;      /**<Additional OPD surfaces for each WFS*/
+    dcell *opdadd;      /**<Additional OPD surfaces for each WFS for ray tracing*/
     dcell *gradphyoff;  /**<Gradient offset for physical optics algorithm, specifically for tCoG. */
     long *embed;        /**<Embedding index for field stop computing*/
     long nembed;        /**<dimension of embed.*/
@@ -179,6 +179,7 @@ typedef struct NGSMOD_T{
     double aper_fcp;/**<piston term in focus in plocs.*/
     dcell *MCCP;    /**<cross coupling of the NGS modes for each direction. Hm'*W*Hm*/
     dmat *MCC;      /**<cross coupling of the NGS modes. 2x2 for 1 dm. 5x5 for 2 dms*/
+    dmat *MCC_TT;   /**<cross coupling of the tip/tilt modes*/
     dmat *IMCC_TT;  /**<inv of cross coupling of tip/tilt modes only.*/
     dmat *IMCC;     /**<inv of MCC.*/
     dcell *GM;      /**<ngsmod vector to gradient operator*/
@@ -198,12 +199,15 @@ typedef struct FDPCG_T{
     csp *Minv;     /**<inverse of fourier domain preconditioner matrix M.*/
     ccell *Mbinv;  /**<block version of Minv. (in permuted order)*/
     long *perm;    /**<Permutation vector to get block diagonal matrix*/
+    long *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
     long nxtot;    /**<Total number of reconstructed phase points*/
     /*xhat, xhat2 has been removed for thread safety issues.*/
     long **xembed; /**<index to embed nonsquare opd on xloc to square map.*/
     int square;    /**<Whether xloc is square*/
     int scale;     /**<Do we need to scale after fft.*/
-    int half;      /**<Do we use only half of the FFT result (hermitian property)*/
+    long nbx;      /**<Basic frequency range in x*/
+    long nby;      /**<Basic frequency range in y nb=nbx*nby.*/
+    long bs;       /**<Size of each diagonal block.*/
 }FDPCG_T;
 
 /**
@@ -340,6 +344,7 @@ typedef struct RECON_T{
     dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */
+    dcell *Gfocus;     /**<gradients due to focus.*/
     dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
     dcell *RFlgsx;     /**<focus reconstruction for each LGS from opdr*/
     dcell *RFlgsa;     /**<focus reconstruction for each LGS from dm.*/
@@ -489,10 +494,10 @@ typedef struct SIM_T{
     dcell *res;        /**<warping of ole,cletomo,cle,clem for easy saving.*/
     /*DM commands.*/
     dcell *dmcmd;      /**<This is the final command send to DM.*/
-    dcell *dmcmdlast;  /**<The final command for last time step.*/
     dcell *dmreal;     /**<This is the actual position of DM actuators after
 			  receiving command dmcmd. Should only be used in
 			  system, not in reconstruction since it is unknown.*/
+    dcell *dmreallast; /**<The actual command for last time step.*/
     map_t **dmrealsq;  /**<dmreal embeded into an square map, zero padded.*/
     dcell *dmproj;     /**<only used when sim.wfsalias=1. The projection of atm
 			  onto DM space directly.*/
@@ -508,7 +513,7 @@ typedef struct SIM_T{
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
-    dcell *Merr_lo_store;/**<Stores Merr_lo.*/
+    dcell *Merr_lo_store; /**<Stores Merr_lo even is there is no output*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     
     /*llt pointing loop*/
@@ -519,14 +524,13 @@ typedef struct SIM_T{
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
     /*focus tracking loop*/
-    dcell *focuslgsx;  /**<LGS focus estimated from opdr*/
-    dcell *focusngsx;  /**<NGS focus estimated from opdr*/
-    dcell *focuslpf;   /**<focus tracking low pass filter*/
+    dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
+    dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
     dcell *zoomavg;    /**<Trombone averager*/
     dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
     dcell *zoomint;    /**<Trombone integrator*/
     dcell *zoompos;    /**<Trombone position history. for saving*/
-    dcell *lgsfocus;   /**<LGS focus error*/
+    dcell *lgsfocus;   /**<LGS focus error time history*/
     /*science evaluation*/
     dcell *evlopd;     /**<Save science ifeld opd for use in perfevl_mean().*/
     dmat  *opdevlground;  /**<evaluation opd for ground layer turbulence to save ray tracing.*/

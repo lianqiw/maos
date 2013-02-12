@@ -99,7 +99,7 @@ double get_usage_cpu(void){
     static double lasttime=0;
     double thistime=myclockd();
     static long user1, tot1;
-    static double cent=100;
+    static double cent=1;
     long user2, tot2;
     if(thistime >=lasttime+2){/*information was too old. */
 	read_usage_cpu(&user1, &tot1);
@@ -129,7 +129,7 @@ int get_cpu_avail(void){
     double load=get_usage_load();
     double cent=get_usage_cpu();
     int nrunning=get_usage_running();
-    info2("load=%g, cent=%g, nrun=%d, ncpu=%d\n", load, cent, nrunning, NCPU);
+    info2("load=%g, %d%%, nrun=%d, ncpu=%d\n", load, (int)(cent*100), nrunning, NCPU);
     if(load>NCPU+1){/*don't want to put too much load on the machine. */
 	return 0;
     }

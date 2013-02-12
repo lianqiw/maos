@@ -44,5 +44,9 @@ void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, curmat *out, float oxo, float oyo, 
 			curmat *in, float oxi, float oyi, float dxi,
 			float dispx, float dispy, char trans);
 
+void gpu_ngsmod2science(curmat *opd, float (*restrict loc)[2],
+			const NGSMOD_T *ngsmod, const double *mod, 
+			double thetax, double thetay, 
+			double alpha, cudaStream_t stream);
 #endif
 

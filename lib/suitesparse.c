@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "common.h"
+#include "../sys/sys.h"
 #include "type.h"
 /*Obtain from SuiteSparse cs_multiply. Gather together */
 typedef spint CS_INT;

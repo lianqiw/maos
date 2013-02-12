@@ -151,8 +151,8 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	}
     }
     long nx,ny;
-    nx=iceil((guard+maxx)/dx+offset+1)<<1;
-    ny=iceil((guard+maxy)/dx+offset+1)<<1;
+    nx=(iceil((guard+maxx)/dx+offset))*2+1;
+    ny=(iceil((guard+maxy)/dx+offset))*2+1;
     if(pad){/*pad to power of 2 */
 	nx=1<<iceil(log2((double)nx));
 	ny=1<<iceil(log2((double)ny));
@@ -305,9 +305,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     cir[0][2]=totfov/2;
     cir[0][3]=0x000000;/*rgb color */
     int ngroup=2+parms->npowfs;
-    if(parms->sim.ncpa_calib){
-	ngroup+=1;
-    }
+    ngroup+=1;
     loc_t **locs=calloc(ngroup, sizeof(loc_t*));
     int32_t *style=calloc(ngroup, sizeof(int32_t));
     int count=0;
@@ -411,14 +409,9 @@ void rename_file(int sig){
     }
 }
 /**
-   Handles signals. We don't want to exit the simulation when SIGPIPE happens
-   (when we are writing to closed sockets)
+   Handles signals.
  */
 void maos_signal_handler(int sig){
-    if(sig==SIGPIPE){
-	warning3("Program received signal SIGPIPE, broken pipe.\n");
-	return;
-    }
     disable_signal_handler;
     rename_file(sig);/*handles signal */
     if(curparms->sim.mvmport){
@@ -481,6 +474,7 @@ static void print_usage(void){
 "-P, --pause       paulse simulation in the end of every time step\n"
 "-g, --gpu=i       Use the i'th gpu. 0 for the first. -1 to disable. default: automatic"
 "-G, --ngpu=N'     Use a total of N gpus."
+"-r, --run=host    Run the job in another host."   
 	  );
     exit(0);
 }
@@ -499,6 +493,7 @@ static __attribute__((destructor)) void deinit(){
 ARG_T * parse_args(int argc, char **argv){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
     int *seeds=NULL; int nseed=0;
+    char *host=NULL; int local=0;
     ARGOPT_T options[]={
 	{"help",   'h',T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
@@ -512,9 +507,19 @@ ARG_T * parse_args(int argc, char **argv){
 	{"seed",   's',T_INTARR, 1, &seeds, &nseed},
 	{"path",   'p',T_STR, 3, addpath, NULL},
 	{"pause",  'P',T_INT, 0, &arg->pause, NULL},
+	{"run",    'r',T_STR, 1, &host, NULL},
+	{"local",  'l',T_INT, 0, &local, NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
+    if(!local && host && strcmp(host, myhostname())){
+	//run in another server
+	char *scmd=argv2str(argc,argv,"\n");
+	if(scheduler_launch_exe(host, scmd)){
+	    error2("Unable to launch maos at server %s\n", host);
+	}
+	exit(EXIT_SUCCESS);
+    }
     if(arg->nthread>NTHREAD || arg->nthread<=0){
         arg->nthread=NTHREAD;
     }

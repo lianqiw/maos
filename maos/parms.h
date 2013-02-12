@@ -223,8 +223,6 @@ typedef struct POWFS_CFG_T{
     int i0scale;    /**<scale i0 to matched subaperture area.*/
     int *scalegroup;/**<scale group for dm propergation cache.(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no moao*/
-    int dl;         /**<is diffraction limited. derived from comparing pixtheta
-		       with diffraction limited image size.*/
 }POWFS_CFG_T;
 /**
    contains input parmaeters for each wfs
@@ -345,7 +343,7 @@ typedef struct TOMO_CFG_T{
  
     int ahst_wt;     /**<0: use Wg, 1: using Wa*/
     int ahst_idealngs;/**<ideal correction on NGS modes. For skycoverage preprocessing.*/
-    int ahst_rtt;    /**<remote tip/tilt in high order DM fit output in split mode*/
+    int ahst_ttr;    /**<remote tip/tilt in high order DM fit output in split mode*/
     int alg;         /**<Tomography algorithm to solve the linear equation.\todo implement BGS, MG
 			0: Cholesky direct solve for the large matrix.  (CBS)
 			1: CG or PCG.
@@ -436,7 +434,6 @@ typedef struct SIM_CFG_T{
     int nseed;       /**<How many simulation seed*/
     int nthread;     /**<Number of threads to run the simulation*/
     int closeloop;   /**<closed loop or open loop*/
-    char *gtypeII_lo;/**<contains 3x1 or 3xnmod type II gains.*/
     char *wspsd;     /**<Telescope wind shake PSD input. Nx2. First column is
 			freq in Hz, Second column is PSD in rad^2/Hz.*/
     int wsseq;       /**<sequence of wind shake time series.*/
@@ -450,13 +447,14 @@ typedef struct SIM_CFG_T{
     dmat *eplo;     /**<error gain for NGS modes (low order)*/
     dmat *apupt;   /**<servo coefficient for for LGS uplink pointing loop.*/
     dmat *epupt;    /**<error gain for uplink pointing*/
-    double epfocus;  /**<error gain for LGS focus tracking with zoom optics*/
-    double lpfocus;  /**<parameter for low pass filter of LGS focus tracking with offset*/
+    double fcfocus;  /**<cross-over frequency of the focus LPF.*/
+    double lpfocus;  /**<derived: lpfocus=2*pi*fc/fs. fs=1./sim.dt*/
     double fov;      /**<The diameter of total fov in arcsec*/
     int mffocus;     /**<method for focus tracing.
 			- 0: no focus tracking.
-			- use CL grads + DM grads - Xhat grad for LGS and NGS.
-			- use CL grads + DM grads - Xhat grad for LGS; */
+			- 1: Focus tracking using CL gradients, for each LGS independently.
+			- 2: Focus tracking using CL gradinets, for common LGS focus only.
+		     */
     int uptideal;    /**<ideal compensation for uplink pointing*/
     int servotype_hi;/**<servo type for high order loop. 1: simple integrator*/
     int servotype_lo;/**<servo type for low order loop. 1: simple integrator. 2: type II*/
@@ -490,7 +488,8 @@ typedef struct SIM_CFG_T{
     int zoomdtrat;   /**<dtrat of the trombone averager*/
     int zoomshare;   /**<1: All LGS share the same trombone*/
     double zoomgain; /**<gain of the trombone controller*/
-    int ncpa_calib;  /**<calibrate NCPA*/
+    int ncpa_calib;  /**<calibrate NCPA. 1: with all DMs. 2: with only ground DM.*/
+    int ncpa_ttr;    /**<Remove average t/t from NCPA for WFS. Equivalent as repositioning WFS. default 1.*/
     double *ncpa_thetax; /**<Coordinate for NCPA calibration (arcsec)*/
     double *ncpa_thetay; /**<Coordinate for NCPA calibration (arcsec)*/
     double *ncpa_wt;     /**<Weight for each point.*/
@@ -544,7 +543,6 @@ typedef struct DBG_CFG_T{
     int useopdr;     /**<use opdr in psf reconstruction*/
     int force;       /**<Force run even if Res_${seed}.done exists*/
     int usegwr;      /**<GA/GX method: 0: GP, 1: GS0*/
-    int dxonedge;    /**<have points on the edge of subapertures.*/
     int cmpgpu;      /**<1: cpu code follows GPU implementation.*/
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
@@ -688,7 +686,9 @@ typedef struct PARMS_T{
     int *fdlock;     /**<Records the fd of the seed lock file. if -1 will skip the seed*/
     int pause;       /**<Pause at the end of every time step*/
     int nlopowfs;    /**<Number of low order wfs types*/
+    int *lopowfs;    /**<List of low order powfs*/
     int nhipowfs;    /**<Number of high order wfs types*/
+    int *hipowfs;    /**<List of high order powfs*/
     int ntrspowfs;   /**<Number of tile removed wfs types*/
 }PARMS_T;
 /**

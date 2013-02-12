@@ -77,14 +77,24 @@ typedef struct GPU_PROP_GRID_T{
 	memset(this, 0, sizeof(*this));
     }
 }GPU_PROP_GRID_T;
-
+/*Packs two shorts into a int for 32bit access. This is better than (long*)[2]
+  which caused kernel to hang. This is already define by cuda/vector_types.h*/
+/*typedef struct {
+    short x;
+    short y;
+    }short2;*/
 typedef struct GPU_GP_T{
+    int ipowfs;
+    int nwfs; //number of wfs in this group
+    int jwfs; //wfs index in this group.
     int (*saptr)[2];
     float *PTT;
-    float **PDF;
+    float *PDF;
+    float *PDFTT;
     float dsa;
     int nsa;
-    float *GPp;
+    short2 *GPp;
+    float GPscale;
     int pos;
     int nxp;
     float dxp;/*pmap dx*/
@@ -114,7 +124,6 @@ typedef struct cufdpcg_t{
     cuccell *xhat1;
     int nby, nbz; 
     int scale;
-    int half;
     ~cufdpcg_t(){
 	cudaFree(perm);
 	free(fftips);
@@ -141,7 +150,8 @@ typedef struct curecon_t{
     stream_t    *cgstream;
 
     curcell *PTT;  /**< Global tip/tilt */
-    curcell **PDF;  /**< Differential focus removal */
+    curcell *PDF;  /**< Differential focus removal */
+    curcell *PDFTT;/**<Coupling between DF and TT*/
     curmat *ttf;
 
     float *l2c;    /**< Laplacian */
@@ -176,7 +186,6 @@ typedef struct curecon_t{
     curmat *FUp;
     curmat *FVp;
     curmat *FMI;//SVD
-    int disablelrt; /*1: disable t/t removal lrt in split tomo*/
 
     curcell *RFlgsx;
     curcell *RFngsx;
@@ -205,7 +214,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
 void gpu_FitR (curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
 void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha);
 void gpu_FitL (curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream);
-void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, cudaStream_t stream);
+void gpu_Tomo_fdprecond(curcell **xout, const void *A, const curcell *xin, stream_t &stream);
 
 void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha);
 void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha);
@@ -215,4 +224,10 @@ void cuchol_solve(float *restrict out, cusp *Cl, int *Cp, const float *restrict 
 
 void gpu_tomo_test(SIM_T *simu);
 void gpu_fit_test(SIM_T *simu);
+
+void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
+void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
+void gpu_recon_free_do();
+double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *fitx, curcell *opdr, stream_t &stream);
+double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, curcell *opdx, curcell *grad, stream_t &stream);
 #endif

@@ -40,7 +40,8 @@ typedef struct cuwloc_t{
     int nsa;
     int nxsa;         /**<number of points in each subaperture in each dimension.*/
     cusp *GP;         /**<GP in col major*/
-    curmat *GPp ;     /**<GP for x/y grad in dense matrix format.*/
+    float GPscale;    /**<Scale GP to fit in 2 byte int*/
+    cumat<int> *GPp ; /**<GP for x/y grad in dense matrix format.*/
     int *embed;       /**<embed for field stop computation*/
     int nembed;       /**<embed for field stop computation*/
     curmat *fieldstop;/**<*mask for field stop computation*/
@@ -71,8 +72,9 @@ typedef struct{
     float  *lltamp;
     int msa;            /**<Number of subapertures in each batch of FFT. <nsa to save memory in psf.*/
     cufftHandle lltplan_wvf, lltplan_otf;/**<FFTW plan for LLT*/
-    curmat *opdadd;    /**<The ncpa and surface aberration.*/
-
+    curmat *opdadd;     /**<The ncpa and surface aberration.*/
+    //curmat *gradphyoff; /**<The gradient offset for CoG*/
+    curmat *gradoff;    /**<The gradient offset for ncpa_method=1.*/
     /*For random number of this wfs. */
     struct curandStateXORWOW *custat;
     int     custatb;/*allocated block */

@@ -20,7 +20,9 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
-#include "scheduler_server.h"
+#include "../sys/sys.h"
+#include "mygtk.h"
+
 /**
    Information for each process.
 */
@@ -51,11 +53,11 @@ typedef struct PROC_T{
 }PROC_T;
 
 /*void proc_remove(int id,int pid, int flag); */
-void refresh(PROC_T *p);
+gboolean refresh(PROC_T *p);
 void kill_job(PROC_T *p);
 void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p);
 void notify_user(PROC_T *p);
-
+int scheduler_cmd(int host,int pid, int command);
 extern GdkColor blue;
 extern GdkColor green;
 extern GdkColor red;
@@ -73,10 +75,14 @@ extern GdkPixbuf *icon_main;
 extern GdkPixbuf *icon_finished;
 extern GdkPixbuf *icon_failed;
 extern GdkPixbuf *icon_running;
-void proc_remove(int id,int pid);
-void proc_remove_all(int id);
+gboolean update_title(gpointer data);
 GtkWidget *new_page(int ihost);
-void remove_entry(PROC_T *p);
+gboolean remove_entry(PROC_T *p);
 GtkWidget *monitor_new_entry_progress(void);
 GtkWidget *monitor_new_progress(int vertical, int length);
+void listen_host();
+void add_host_wrap(int ihost);
+gboolean host_down(gpointer data);
+gboolean host_up(gpointer data);
+gboolean update_progress(gpointer input);
 #endif

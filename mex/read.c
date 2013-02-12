@@ -244,42 +244,37 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }
 	    out=INVALID;
 	}else{
-	    out=mxCreateDoubleMatrix(nx,ny,mxREAL);
+	    mwSize nxy[2]={nx,ny};
+	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxREAL);
 	    if(nx!=0 && ny!=0){
-		float *tmp=malloc(nx*ny*sizeof(float));
-		zfread(tmp, sizeof(float),nx*ny, fp);
-		double *p=mxGetPr(out);
-		long i;
-		for(i=0; i<nx*ny; i++){
-		    p[i]=tmp[i];
-		}
-		free(tmp);
+		zfread((float*)mxGetPr(out), sizeof(float),nx*ny, fp);
 	    }
 	}break;
     case M_INT64:/*long array*/
-	if(start==-1){
-	    if(zfseek(fp, 8*nx*ny, SEEK_CUR)){
-		error("Seek failed\n");
-	    }
-	    out=INVALID;
-	}else{
-	    out=mxCreateNumericMatrix(nx,ny,mxINT64_CLASS,mxREAL);
-	    if(nx!=0 && ny!=0){
-		/*Don't use sizeof(mxINT64_CLASS), it is just an integer, not a valid C type.*/
-		zfread(mxGetPr(out), 8,nx*ny,fp);
-	    }
-	}
-	break;
     case M_INT32:
-	if(start==-1){
-	    if(zfseek(fp, 4*nx*ny, SEEK_CUR)){
-		error("Seek failed\n");
+    case M_INT16:
+    case M_INT8:
+	{
+	    int byte=0;
+	    mxClassID id;
+	    switch(magic){
+	    case M_INT64: byte=8; id=mxINT64_CLASS; break;
+	    case M_INT32: byte=4; id=mxINT32_CLASS; break;
+	    case M_INT16: byte=2; id=mxINT16_CLASS; break;
+	    case M_INT8:  byte=1; id=mxINT8_CLASS; break;
 	    }
-	    out=INVALID;
-	}else{
-	    out=mxCreateNumericMatrix(nx,ny,mxINT32_CLASS,mxREAL);
-	    if(nx!=0 && ny!=0){
-		zfread(mxGetPr(out), 4,nx*ny,fp);
+	    if(start==-1){
+		if(zfseek(fp, byte*nx*ny, SEEK_CUR)){
+		    error("Seek failed\n");
+		}
+		out=INVALID;
+	    }else{
+		out=mxCreateNumericMatrix(nx,ny,id,mxREAL);
+		if(nx!=0 && ny!=0){
+		    /*Don't use sizeof(mxINT64_CLASS), it is just an integer, 
+		      not a valid C type.*/
+		    zfread(mxGetPr(out), byte,nx*ny,fp);
+		}
 	    }
 	}
 	break;
@@ -312,16 +307,17 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	    }
 	    out=INVALID;
 	}else{
-	    out=mxCreateDoubleMatrix(nx,ny,mxCOMPLEX);
+	    mwSize nxy[2]={nx, ny};
+	    out=mxCreateNumericArray(2, nxy,mxSINGLE_CLASS, mxCOMPLEX);
 	    if(nx!=0 && ny!=0){
 		fcomplex*tmp=malloc(sizeof(fcomplex)*nx*ny);
 		zfread(tmp,sizeof(fcomplex),nx*ny,fp);
-		double *Pr=mxGetPr(out);
-		double *Pi=mxGetPi(out);
+		float *Pr=(float*)mxGetPr(out);
+		float *Pi=(float*)mxGetPi(out);
 		long i;
 		for(i=0; i<nx*ny; i++){
-		    Pr[i]=(double)crealf(tmp[i]);
-		    Pi[i]=(double)cimagf(tmp[i]);
+		    Pr[i]=(float)crealf(tmp[i]);
+		    Pi[i]=(float)cimagf(tmp[i]);
 		}
 		free(tmp);
 	    }

@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT(maos, 1.3.0, lianqiw@gmail.com)
+AC_INIT(maos, 1.4.0, lianqiw@gmail.com)
 AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 #silent building #disable this if automake is too old.
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
@@ -221,6 +221,7 @@ AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_WITH(cuda-version, --with-cuda-version=20, [CUDAVER=${withval}], [CUDAVER=20])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
+AC_ARG_WITH(gtk,  --with-gtk-DIR, [GTKDIR=${withval}], [GTKDIR=""])
 
 CUDAVER=${CUDAVER/./}
 if test $CUDAVER -lt 13 -o $CUDAVER -gt 99 ;then
@@ -229,8 +230,10 @@ fi
 AC_SUBST(CUDAVER)
 AC_DEFINE_UNQUOTED(CUDAVER, [$CUDAVER], ["CUDA Version Enabled."])
 
+AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
    AC_DEFINE(MAOS_DISABLE_SCHEDULER, [1], "Disable built in scheduler")
+   AM_CONDITIONAL(USE_SCHEDULER, false)
 fi
 
 if test "x$use_static" = "xyes" ;then
@@ -265,7 +268,7 @@ fi
 #Set optimize flags for different compilers
 #-xO Enables SSE3, SSE2 and SSE instruction sets optimizations for non-Intel CPUs 
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
-COMMON_ICC="-wd981 -wd1292 -vec-report=0 -diag-disable remark"
+COMMON_ICC="-wd981 -wd1292 -wd10237 -vec-report=0 -diag-disable remark"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
 OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc"
 OPTIM_OPENCC="-O3"
@@ -471,6 +474,11 @@ AM_CONDITIONAL(MON,true)  #for parital monitor without notify
 AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #cairo 1.2 comes with gtk+-2.10
 #make sure there are spaces before and after >=
+if test -n "$GTKDIR" ;then #User specified GTK directory
+   if test -d $GTKDIR/lib/pkgconfig ;then
+      export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig
+   fi
+fi
 PKG_CHECK_MODULES(GTK3, gtk+-3.0,           [gtk_3="yes"], [gtk_3="no"])
 PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2,    [gtk_2="yes"], [gtk_2="no"])
 if test "$gtk_2" = "yes" -a  "$gtk_3" = "yes" ;then 
@@ -483,10 +491,23 @@ if test "$gtk_3" = "yes" ;then
    PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
    PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])
    PKG_CHECK_MODULES(MONN, gtk+-3.0 >= 0.0 libnotify >= 0.0, [comp_monn="yes"],[comp_monn="no"])
+   gtk_ver=3
 else
    PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,     [comp_draw="yes"],[comp_draw="no"])
    PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2,                  [comp_mon="yes"], [comp_mon="no"])
    PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1, [comp_monn="yes"],[comp_monn="no"])
+   gtk_ver=2
+fi
+if test -n "$GTKDIR" ;then
+   TT=-I$GTKDIR/include
+   GTK_CFLAGS="$TT $TT/cairo $TT/atk-1.0 $TT/gtk-${gtk_ver}.0 $TT/glib-2.0 $TT/pango-1.0 $TT/gdk-pixbuf-2.0 -I$GTKDIR/lib/glib-2.0/include -I${GTKDIR}/lib/gtk-2.0/include"
+   GTK_LIBS="-L$GTKDIR/lib/ -Wl,-rpath,$GTKDIR/lib/"
+   if test -d "$GTKDIR/bin" ;then
+      GTK_LIBS="$GTK_LIBS -L$GTKDIR/bin -Wl,-rpath,GTKDIR/bin"
+   fi
+else
+   GTK_CFLAGS=""
+   GTK_LIBS=""
 fi
 
 AM_CONDITIONAL(DRAW, test x$comp_draw = xyes)
@@ -510,7 +531,8 @@ AC_SUBST(MON_CFLAGS)
 AC_SUBST(MON_LIBS)
 AC_SUBST(MONN_LIBS)
 AC_SUBST(MONN_CFLAGS)
-
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
 #Simply renaming the compiled cholmod to cholmod_long and cholmod_int does not help after linking
 if test "x$use_long" = "xyes" -a "x$cpu" = "x64" ;then
    OPTScommon="$OPTScommon -DDLONG"
@@ -575,6 +597,7 @@ AC_ENABLE_STATIC
 AC_PROG_LIBTOOL
 
 AC_CONFIG_FILES( [Makefile
+		 sys/Makefile
 		 lib/Makefile
 		 tools/Makefile
 		 maos/Makefile 
@@ -681,6 +704,9 @@ if test "$use_cuda" = "yes" ;then
    else
        AC_MSG_ERROR([CUDADIR is empty. Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])
    fi
+   if test ! -x $NVCC ;then
+        AC_MSG_ERROR([nvcc not found])
+   fi
    AC_MSG_NOTICE([Trying cuda in directory $CUDADIR])
    if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
        CUDA_L=${CUDADIR}/lib${cpu}
@@ -698,11 +724,23 @@ if test "$use_cuda" = "yes" ;then
        AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
        CUDAOPT=
    fi
+   cudaver=$(nvcc -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)
+   cudaver=${cudaver/.}
+   echo CUDA toolkit is $cudaver
+   if test $cudaver -lt 40 ;then
+       AC_MSG_ERROR([Require at least CUDA toolkit 4.0 ])
+   fi
+   if test $cudaver -ge 40 ;then
+       CUDAOPT="$CUDAOPT -gencode arch=compute_20,code=sm_20"
+   fi
+   if test $cudaver -ge 42 ;then
+       CUDAOPT="$CUDAOPT -gencode arch=compute_30,code=sm_30"
+   fi
+   if test $cudaver -ge 50 ;then
+       CUDAOPT="$CUDAOPT -gencode arch=compute_35,code=sm_35"
+   fi
    echo LDCUDA=$LDCUDA
    echo CUDAOPT=$CUDAOPT
-   if test ! -x $NVCC ;then
-        AC_MSG_ERROR([nvcc not found])
-   fi
    AC_CHECK_LIB([cudart], [cudaSetDevice], [cuda_lib="yes"], [cuda_lib="no"], [$LDCUDA])
    if test x$cuda_lib = xno ;then
        AC_MSG_NOTICE([libcudart not found or currect architecture. Please use --with-cuda=DIR to specify CUDA location])

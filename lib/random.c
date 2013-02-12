@@ -21,9 +21,9 @@
 */
 #include <signal.h>
 #include <math.h>
-#include "common.h"
+#include "../sys/sys.h"
 #include "random.h"
-#include "misc.h"
+
 /**
    Create a new random stream, seeded with seed.
 */

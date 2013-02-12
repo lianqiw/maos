@@ -64,6 +64,11 @@
     \verbatim
     CC=gcc4.1 $src_dir/configure
     \endverbatim
+
+    For clusters that use job management tools, disable the built-in scheduler by using
+    \verbatim
+    $src_dir/configure --disable-scheduler
+    \endverbatim
     
     The compiled executable is maos in the sub-folder “bin” of the compiling
     folder. You do not have to do "make install" to run the simulations.

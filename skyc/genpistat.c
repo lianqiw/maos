@@ -46,8 +46,6 @@ static void calc_pistat(GENPISTAT_S *data){
     int icase=0;
     char fnlock[PATH_MAX];
     snprintf(fnlock, PATH_MAX, "%s/wvfout/wvfout.lock", dirstart);
-    /*Obtain exclusive lock before proceeding. */
-    int fd=lock_file(fnlock, 1, 0);
     while(LOCKADD(icase, data->icase, 1)<data->ncase){
 	double thetax=data->ngsgrid*data->cases[icase][0];
 	double thetay=data->ngsgrid*data->cases[icase][1];
@@ -63,7 +61,7 @@ static void calc_pistat(GENPISTAT_S *data){
 		 dirstart,seed, msa, thetax, thetay);
 	snprintf(fnpistat,PATH_MAX,"%s/pistat/pistat_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
-	snprintf(fngstat,PATH_MAX,"%s/pistat/gstat_seed%ld_sa%ld_x%g_y%g",
+	snprintf(fngstat,PATH_MAX,"%s/gstat/gstat_seed%ld_sa%ld_x%g_y%g",
 		 dirstart,seed, msa, thetax, thetay);
 	if(!zfexist(fnwvf)){
 	    continue;
@@ -72,9 +70,8 @@ static void calc_pistat(GENPISTAT_S *data){
 	    /*warning("%s already exist, skip\n", fnpistat); */
 	}else{
 	    dmat *mapply=dnew(2,1);
-	    char dirstat[PATH_MAX];
-	    snprintf(dirstat, PATH_MAX, "%s/pistat", dirstart);
-	    mymkdir(dirstat,0700);
+	    mymkdir("%s/pistat", dirstart);
+	    mymkdir("%s/gstat", dirstart);
 	    TIC;tic;
 	    if(!zfexist(fnztilt)){
 		error("%s exist, but %s doesn't exist\n", fnwvf, fnztilt);
@@ -101,7 +98,7 @@ static void calc_pistat(GENPISTAT_S *data){
 	    dcell *pistat=dcellnew(nsa, nwvl);/*pixel intensity mean(I) */
 	    dmat *gstat=dnew(nsa*2, nstep);/*original gradient at each time step. */
 	    cmat *wvf=cnew(ncomp,ncomp);
-	    cmat *wvfc=cnew(ncomp/2,ncomp/2);
+	    cmat *wvfc=NULL;
 	    cfft2plan(wvf,-1);
 	    PDCELL(pistat, ppistat);
 	    PDMAT(gstat, pgstat);
@@ -110,6 +107,15 @@ static void calc_pistat(GENPISTAT_S *data){
 	    cfft2plan(otf,-1);
 	    dmat *psf=NULL;
 	    double nwvli=1./(nwvl);
+	    double dtheta[nwvl];
+	    const int embfac=parms->maos.embfac[ipowfs];
+	    const double dxsa=parms->maos.dxsa[ipowfs];
+	    for(int iwvl=0; iwvl<nwvl; iwvl++){
+		const double wvl=parms->maos.wvl[iwvl];
+		dtheta[iwvl]=wvl/(dxsa*embfac);
+	    }
+	    dmat *gmean=dnew(2,nsa);
+	    PDMAT(gmean, pgmean);
 	    for(long istep=0; istep<nstep; istep++){
 		LOCK(data->mutex_read);
 		ccell *wvfi=ccellreaddata(fp_wvf, 0);
@@ -120,31 +126,28 @@ static void calc_pistat(GENPISTAT_S *data){
 		    for(long iwvl=0; iwvl<nwvl; iwvl++){
 			double wvl=parms->maos.wvl[iwvl];
 			for(long isa=0; isa<nsa; isa++){
-			    mapply->p[0]=-ztilti->p[isa];
-			    mapply->p[1]=-ztilti->p[isa+nsa];
-			    ccp(&wvfc, wvfout[iwvl][isa]);
-			    ngsmod2wvf(wvfc, wvl, mapply,powfs->cloc[isa],
-				       powfs->fpc[isa], thetax, thetay, parms);
-			    cembed(wvf,wvfc,0,C_FULL);
-			    cfft2(wvf,-1);
-			    cabs22d(&ppistat[iwvl][isa],1, wvf, 1);
-			}
-		    }
-		    for(long iwvl=0; iwvl<nwvl; iwvl++){/*don't apply ztilt. */
-			for(long isa=0; isa<nsa; isa++){
-			    double grad[2]={0,0};
+			    //first compute PSF from WVF and compute CoG
 			    ccp(&wvfc, wvfout[iwvl][isa]);
 			    cembed(wvf,wvfc,0,C_FULL);
 			    cfft2(wvf,-1);
-			    dzero(psf);
-			    cabs22d(&psf, 1, wvf, 1);
-			    /*Compute gradients. */
-			    dfftshift(psf);/*shift peak to center. */
+			    cabs22d(&psf, 0, wvf, 1);//peak in corner.
+			    dfftshift(psf);//peak in center
 			    double pmax=dmax(psf);
+			    double grad[2]={0,0};
 			    dcog(grad,psf,0.5, 0.5, 0.1*pmax, 0.1*pmax);
-			    pgstat[istep][isa]+=grad[0]*parms->skyc.pixtheta[ipowfs]*nwvli;
-			    pgstat[istep][isa+nsa]+=grad[1]*parms->skyc.pixtheta[ipowfs]*nwvli;
-			    dfree(psf);
+			    grad[0]*=dtheta[iwvl];//convert to Radian
+			    grad[1]*=dtheta[iwvl];
+			    pgstat[istep][isa]+=grad[0]*nwvli;//record the value
+			    pgstat[istep][isa+nsa]+=grad[1]*nwvli;
+			    pgmean[isa][0]+=grad[0];//record the average
+			    pgmean[isa][1]+=grad[1];
+			    //Then remove the CoG from the WVF and accumulate PSF.
+			    mapply->p[0]=-grad[0];
+			    mapply->p[1]=-grad[1];
+			    ngsmod2wvf(wvfc, wvl, mapply, powfs+ipowfs, isa, thetax, thetay, parms);
+			    cembed(wvf,wvfc,0,C_FULL);
+			    cfft2(wvf,-1);
+			    cabs22d(&ppistat[iwvl][isa], 1, wvf, 1);
 			}
 		    }
 		}
@@ -157,35 +160,33 @@ static void calc_pistat(GENPISTAT_S *data){
 	    zfclose(fp_wvf);
 	    cfree(wvf);
 	    cfree(wvfc);
-	    double pgrad[2];
+	    dfree(mapply);
+	    dfree(psf);
+	    dscale(gmean, 1./(nwvl*(nstep-phystart)));
+	    dcellscale(pistat, 1./(nstep-phystart));	
 
-	    /*Shift PSF so that the images are centered on FFT center. */
-	    for(int i=0; i<nwvl*nsa; i++){
-		psf=pistat->p[i];
-		dfftshift(psf);/*shift peak to center. */
-		double pmax=dmax(psf);
-		dcog(pgrad,psf,0.5,0.5,0.1*pmax,0.1*pmax);
-		dfftshift(psf); /*Shift peak to corner. */
-		ccpd(&otf, psf);
-		cfft2(otf,-1);
-		ctilt(otf,-pgrad[0],-pgrad[1],0);
-		cfft2i(otf,1);
-		creal2d(&psf,0,otf,1);
+	    //Put back the average gradient to PSF.
+	    for(int isa=0; isa<nsa; isa++){
+		for(int iwvl=0; iwvl<nwvl; iwvl++){
+		    int i=isa+nsa*iwvl;
+		    psf=pistat->p[i];//peak in corner
+		    ccpd(&otf, psf);
+		    cfft2(otf,-1);//turn to otf. peak in corner
+		    ctilt(otf,pgmean[isa][0]/dtheta[iwvl],pgmean[isa][1]/dtheta[iwvl],0);
+		    cfft2i(otf,1);//turn to psf, peak in corner
+		    creal2d(&psf,0,otf,1);
+		}
 	    }
-	    /*
-	      Saved pistat should have peak on the corner
-	    */
+	    psf=NULL;
+	    /* Saved pistat should have peak on the corner */
 	    cfree(otf);
-	    dcellscale(pistat, 1./(nstep-phystart));
 	    dcellwrite(pistat, "%s",fnpistat);
 	    dwrite(gstat, "%s",fngstat);
 	    dcellfree(pistat);
 	    dfree(gstat);
-	    dfree(mapply);
 	    toc2("Processing %s:", fnwvf);
 	}/*if exist */
     }
-    close(fd);
 }
 
 void genpistat(const PARMS_S *parms, POWFS_S *powfs){

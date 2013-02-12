@@ -19,12 +19,13 @@
 #ifndef AOS_LIB_MATHMISC_H
 #define AOS_LIB_MATHMISC_H
 
-#include "common.h"
+#include "../sys/sys.h"
 #include "blas.h"
 #undef	MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #undef	MIN
 #define MIN(a,b) (((a)<(b))?(a):(b))
+double factorial(long n);
 void normalize_sum(double *p, long nloc, double norm);
 void normalize_max(double *p, long nloc, double max);
 double dotdbl(const double *restrict p1, const double *restrict p2, 

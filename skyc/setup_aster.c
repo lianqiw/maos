@@ -225,7 +225,6 @@ void setup_aster_g(ASTER_S *aster, STAR_S *star, POWFS_S *powfs, const PARMS_S *
 */
 void setup_aster_copystar(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
     int nwfs=aster->nwfs;
-    const int nwvl=parms->maos.nwvl;
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	const int ipowfs=aster->wfs[iwfs].ipowfs;
 	const int istar=aster->wfs[iwfs].istar;
@@ -233,18 +232,14 @@ void setup_aster_copystar(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	aster->wfs[iwfs].thetax=star[istar].thetax;
 	aster->wfs[iwfs].thetay=star[istar].thetay;
 	/*Magnitude */
-	aster->wfs[iwfs].mags=ddup(star[istar].mags);
+	aster->wfs[iwfs].mags=star[istar].mags;//do not free
 	/*Signal Level */
-	aster->wfs[iwfs].siglev=calloc(nwvl, sizeof(double));
-	for(int iwvl=0; iwvl<nwvl; iwvl++){
-	    aster->wfs[iwfs].siglev[iwvl]=star[istar].siglev->p[iwvl+nwvl*ipowfs];
-	}
+	aster->wfs[iwfs].siglev=star[istar].siglev->p[ipowfs];//do not free
 	aster->wfs[iwfs].siglevtot=star[istar].siglevtot->p[ipowfs];
 	aster->wfs[iwfs].bkgrnd=star[istar].bkgrnd->p[ipowfs];
 	
 	/*Pixel intensity statistics. */
 	aster->wfs[iwfs].pistat=&star[istar].pistat[ipowfs];
-	aster->wfs[iwfs].pistatref=1;
     }
 }
 /**
@@ -257,6 +252,9 @@ void setup_aster_wvf(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	const int istar=aster->wfs[iwfs].istar;
 	aster->wfs[iwfs].wvfout=star[istar].wvfout[ipowfs];
 	aster->wfs[iwfs].ztiltout=star[istar].ztiltout[ipowfs];
+	if(star[istar].goff){
+	    aster->wfs[iwfs].goff=star[istar].goff->p[ipowfs];
+	}
     }
 }
 /**
@@ -276,23 +274,26 @@ static dmat *calc_recon_error(const dmat *pgm,  /**<[in] the reconstructor*/
     dfree(tmp); 
     PDMAT(psp,ppsp); 
     PDMAT(mcc,pmcc);
-
+    /*It is right for both ix, iy to stop at ib.*/
     double all[mcc->nx];
     for(int ib=0; ib<mcc->ny; ib++){
 	all[ib]=0;
 	for(int iy=0; iy<=ib; iy++){
 	    for(int ix=0; ix<=ib; ix++){
-		all[ib]+=ppsp[iy][ix]*pmcc[ix][iy];
+		all[ib]+=ppsp[iy][ix]*pmcc[iy][ix];
 	    }
 	}
     }
+    dfree(psp);
     dmat *res=dnew(3,1);
-    res->p[0]=all[4];
-    res->p[1]=all[1];
+    res->p[0]=all[4];//total TT+PS mode error
+    res->p[1]=all[1];//total TT error
     if(mcc->nx>5){
 	res->p[2]=all[5]-all[4];//focus
+	if(res->p[2]<0){
+	    res->p[2]=0;//due to coupling, this may be negative.
+	}
     }
-    dfree(psp);
     return res;
 }
 /**
@@ -356,19 +357,14 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	    dcwpow(nea_tot[idtrat][iwfs],0.5);/*in rad */
 	}
 	
-	dmat *neam=dcell2m(nea); 
+	dmat *neam=dcell2m(nea);//measurement error covariance
 	dcellfree(nea); 
-	dcwpow(neam, -1);
+	dcwpow(neam, -1);//inverse
 	dmat *neattm=dcell2m(neatt); 
 	dcellfree(neatt);
-	dcwpow(neattm, -1);
+	dcwpow(neattm, -1);//inverse
 	/*Reconstructor */
 	aster->pgm->p[idtrat]=dpinv(aster->gm, neam,NULL);
-	/*{
-	    dwrite(aster->gm, "gm");
-	    dwrite(aster->pgm->p[idtrat], "pgm");
-	    exit(0);
-	    }*/
 	if(aster->nwfs>2 && parms->skyc.demote){
 	    /*Demote TTF to tt. */
 	    dmat *pgmtt=dpinv(aster->gmtt, neattm,NULL);
@@ -385,7 +381,7 @@ void setup_aster_recon(ASTER_S *aster, STAR_S *star, const PARMS_S *parms){
 	    dwrite(neam,  "%s/aster%d_neam_dtrat%d",dirsetup,aster->iaster,dtrat);
 	    dwrite(neattm,"%s/aster%d_neattm_dtrat%d",dirsetup,aster->iaster,dtrat);
 	}
-	dcwpow(neam, -1); /*inverse of Measurement error. */
+	dcwpow(neam, -1); /* Measurement error. */
 	/*sigman is error due to noise. */
 	aster->sigman->p[idtrat]=calc_recon_error(aster->pgm->p[idtrat],neam,parms->maos.mcc);
 	if(aster->nwfs>2 && parms->skyc.demote){
@@ -415,7 +411,7 @@ static void interp_gain(double out[5], const dcell *gain, const dmat *gainx,
     const double xx=(log(sigma2)-log(gainx->p[0]))/xsep;
     if(xx<0){/*too small. */
 	memcpy(out, gain->p[0]->p, sizeof(double)*5);
-    }else if(xx>nx-1){/*too big */
+    }else if(xx>=nx-1){/*too big */
 	memcpy(out, gain->p[nx-1]->p, sizeof(double)*5);
     }else{/*within the range */
 	const long xxm=ifloor(xx);
@@ -432,7 +428,6 @@ static void interp_gain(double out[5], const dcell *gain, const dmat *gainx,
    \f]
 */
 void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
-    /*Focus tracking error? */
     int ndtrat=parms->skyc.ndtrat;
     if(aster->gain){
 	dcellfree(aster->gain);
@@ -450,6 +445,11 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 	double sigma_ps = sigma_ngs-sigma_tt;
 	double sigma_focus = aster->sigman->p[idtrat]->p[2];
 	long nmod=parms->maos.nmod;
+	/*gsplit:
+	  0: All modes use the same gain.
+	  1: PS, TT, focus (if nmod>5) use different gains. 
+	  2: PS, TT use different gains. focus mode (if nmod>5) use PS gains.
+	 */
 	if(parms->skyc.gsplit!=1 && nmod>5){
 	    /*PSD of focus is added to PSD of ps/ngs, so the sigma is added also.*/
 	    sigma_ps+=sigma_focus;
@@ -488,16 +488,16 @@ void setup_aster_servo(SIM_S *simu, ASTER_S *aster, const PARMS_S *parms){
 		}
 		dfree(sigma2);
 	    }
-	    res_ngs  = pg_tt[3] + pg_ps[3] + pg_focus[3];
-	    res_ngsn = pg_tt[4] + pg_ps[4] + pg_focus[4];
+	    res_ngs  = pg_tt[3] + pg_ps[3] + pg_focus[3];//residual mode
+	    res_ngsn = pg_tt[4] + pg_ps[4] + pg_focus[4];//error due to noise
 	    for(int imod=0; imod<MIN(nmod,5); imod++){
 		memcpy(pgain[imod], imod<2?pg_tt:pg_ps, sizeof(double)*3);
 	    }
 	    if(nmod>5){
-		if(parms->skyc.gsplit>1){
-		    memcpy(pgain[5], pg_ps, sizeof(double)*3);
-		}else{
+		if(parms->skyc.gsplit==1){
 		    memcpy(pgain[5], pg_focus, sizeof(double)*3);
+		}else{
+		    memcpy(pgain[5], pg_ps, sizeof(double)*3);
 		}
 	    }
 	}else{
@@ -544,8 +544,8 @@ static int sortfun(const double *a, const double *b){
 }
 /**
    Select a few asterisms that have decent performance (less than maxerror) */
-void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, 
-			double maxerror, const PARMS_S *parms){
+int setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star, 
+		       double maxerror, const PARMS_S *parms){
  
     int ndtrat=parms->skyc.ndtrat;
     dmat *res=dnew(ndtrat, naster);
@@ -558,7 +558,10 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
 	double mini=INFINITY;
 	for(int idtrat=0; idtrat<ndtrat; idtrat++){
 	    /*should not add res_ws here since res_ngs already includes that.*/
-	    double rms= parms->skyc.resfocus->p[idtrat]+ aster[iaster].res_ngs->p[idtrat];
+	    double rms=aster[iaster].res_ngs->p[idtrat];
+	    if(parms->maos.nmod<6){
+		rms+=parms->skyc.resfocus->p[idtrat];
+	    }
 	    pres[iaster][idtrat]=rms;
 	    if(rms<mini){
 		mini=rms;
@@ -568,8 +571,9 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
 	}
 	pimin[iaster][0]=mini;
 	pimin[iaster][1]=iaster;
-	double thres=mini*4;/*This is variance. */
-	double thres2=mini*4;
+	/*This is variance. allow a threshold */
+	double thres=mini*3;
+	double thres2=mini*3;
 	if(thres>maxerror) thres=maxerror;
 	if(thres2>maxerror) thres2=maxerror;
 	/*Find upper and minimum good dtrats. */
@@ -587,6 +591,13 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
 		break;
 	    }
 	}
+	if(aster[iaster].idtratmax>aster[iaster].idtratmin+parms->skyc.maxdtrat){
+	    int mid=0.5*(aster[iaster].idtratmax+aster[iaster].idtratmin);
+	    int min2=ceil(mid-parms->skyc.maxdtrat*0.5);
+	    int max2=floor(mid+parms->skyc.maxdtrat*0.5);
+	    aster[iaster].idtratmin=min2;
+	    aster[iaster].idtratmax=max2;
+	}
 	if(mini<minimum){
 	    master=iaster;
 	    minimum=mini;
@@ -597,12 +608,13 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
     result[1]=parms->skyc.fss[aster[master].mdtrat];
     int count=0;
     if(minimum<maxerror){
+	double thres=minimum*3;
 	int taster=naster;
 	if(parms->skyc.maxaster>0 && naster>parms->skyc.maxaster){
 	    taster=parms->skyc.maxaster;
 	}
 	for(int jaster=0; jaster<taster; jaster++){
-	    if(pimin[jaster][0]<minimum*2){
+	    if(pimin[jaster][0]<thres){
 		count++;
 		int iaster=(int)pimin[jaster][1];
 		aster[iaster].use=1;/*mark as valid. */
@@ -623,168 +635,7 @@ void setup_aster_select(double *result, ASTER_S *aster, int naster, STAR_S *star
     }
     dfree(res);
     dfree(imin);
-  
-}
-
-/**
-   Regenerate PSF By doing ztilt simulations and compute the average PSF with
-   this ztilt resigual NGS modes.  \todo record pistat during physical optics
-   simulation and rerun them might help further!*/
-void setup_aster_regenpsf(dmat *mideal, ASTER_S *aster, POWFS_S*powfs, const PARMS_S *parms){
-    dcell *mres=skysim_ztilt(mideal, aster, parms);
-    if(parms->skyc.dbg){
-	dcellwrite(mres,"%s/mres_ztilt_aster%d",dirsetup,aster->iaster);
-    }
-    const long nwvl=parms->maos.nwvl;
-    const long phystart=parms->skyc.phystart;
-    dmat *mapply=NULL;
-    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-	const double thetax=aster->wfs[iwfs].thetax;
-	const double thetay=aster->wfs[iwfs].thetay;
-	const int ipowfs=aster->wfs[iwfs].ipowfs;
-	const long ncomp=parms->maos.ncomp[ipowfs];
-	cmat *wvf=cnew(ncomp,ncomp);
-	cmat *wvfc=cnew(ncomp/2,ncomp/2);
-	cfft2plan(wvf, -1);
-	const long nsa=parms->maos.nsa[ipowfs];
-	if(!aster->wfs[iwfs].pistatref){
-	    free_pistat(aster->wfs[iwfs].pistat, 1, parms);
-	}
-	aster->wfs[iwfs].pistat=calloc(1, sizeof(PISTAT_S));
-	aster->wfs[iwfs].pistatref=0;
-	aster->wfs[iwfs].pistat->psf=dcellnew(nsa,nwvl);
-	PDCELL(aster->wfs[iwfs].pistat->psf, pistat);
-	dmat *zgrad=dnew(2*nsa,1);
-	for(long istep=phystart; istep<aster->nstep; istep++){
-	    PCCELL(aster->wfs[iwfs].wvfout[istep],wvfout);
-	    dmat *imres=mres->p[istep];
-	    dzero(zgrad);
-	    dmm(&zgrad, aster->g->p[iwfs], imres, "nn",1);
-	    dadd(&zgrad, 1, aster->wfs[iwfs].ztiltout->p[istep], 1);
-	    for(long isa=0; isa<nsa; isa++){
-		dcp(&mapply, imres);
-		mapply->p[0]-=zgrad->p[isa];
-		mapply->p[1]-=zgrad->p[isa+nsa];
-		for(long iwvl=0; iwvl<nwvl; iwvl++){
-		    double wvl=parms->maos.wvl[iwvl];
-		    ccp(&wvfc, wvfout[iwvl][isa]);
-		    ngsmod2wvf(wvfc, wvl, mapply,powfs[ipowfs].cloc[isa],
-			       powfs[ipowfs].fpc[isa], 
-			       thetax, thetay, parms);
-		    cembed(wvf,wvfc,0,C_FULL);
-		    cfft2(wvf,-1);
-		    cabs22d(&pistat[iwvl][isa], 1., wvf, 1.);
-		}
-	    }
-	}
-	dfree(zgrad);
-	/*PSF peak in corner */
-	double pgrad[2];
-	cmat *otf=cnew(ncomp,ncomp);
-	cfft2plan(otf,1);
-	cfft2plan(otf,-1);
-	/*Shift PSF so that the images are centered on FFT center. */
-	for(int i=0; i<nwvl*nsa; i++){
-	    dmat *psf=aster->wfs[iwfs].pistat->psf->p[i];
-	    dfftshift(psf);/*shift peak to center. */
-	    double pmax=dmax(psf);
-	    dcog(pgrad,psf,0.5,0.5,0.1*pmax,0.1*pmax);
-	    dfftshift(psf);
-	    ccpd(&otf, psf);
-	    cfft2(otf,-1);
-	    ctilt(otf,-pgrad[0],-pgrad[1],0);
-	    cfft2i(otf,1);
-	    creal2d(&psf,0,otf,1);
-	}
-	cfree(otf);
-	dcellscale(aster->wfs[iwfs].pistat->psf, 1./(aster->nstep-phystart));
-
-	if(parms->skyc.dbg){
-	    dcellwrite(aster->wfs[iwfs].pistat->psf, "%s/pistat_aster%d_wfs%ld",
-		       dirsetup,aster->iaster,iwfs);
-	}
-
-	cfree(wvf); cfree(wvfc);
-    }
-    dfree(mapply);
-    dcellfree(mres);
-}
-
-/**
-   Compute matched filter from PSFs.
-*/
-void setup_aster_redomtch(ASTER_S *aster, POWFS_S *powfs, const PARMS_S *parms){  
-    const long nwvl=parms->maos.nwvl;
-    PDMAT(parms->skyc.rnefs,rnefs);
-
-    for(long iwfs=0; iwfs<aster->nwfs; iwfs++){
-	const int ipowfs=aster->wfs[iwfs].ipowfs;
-	const long nsa=parms->maos.nsa[ipowfs];
-	const long pixpsa=parms->skyc.pixpsa[ipowfs];
-	PISTAT_S *pistat=aster->wfs[iwfs].pistat;
-	pistat->i0=dcellnew(nsa,nwvl);
-	pistat->gx=dcellnew(nsa,nwvl);
-	pistat->gy=dcellnew(nsa,nwvl);
-	
-	pistat->i0s=dcellnew(nsa,1);
-	pistat->gxs=dcellnew(nsa,1);
-	pistat->gys=dcellnew(nsa,1);
-	PDCELL(pistat->psf,psf);
-	PDCELL(pistat->i0,i0);
-	PDCELL(pistat->gx,gx);
-	PDCELL(pistat->gy,gy);
-
-	for(long iwvl=0; iwvl<nwvl; iwvl++){
-	    for(long isa=0; isa<nsa; isa++){
-		i0[iwvl][isa]=dnew(pixpsa,pixpsa);
-		gx[iwvl][isa]=dnew(pixpsa,pixpsa);
-		gy[iwvl][isa]=dnew(pixpsa,pixpsa);
-		/*Next convert pistat psf to I0, gx, gy, and matched filter. */
-		psf2i0gxgy(i0[iwvl][isa],gx[iwvl][isa],gy[iwvl][isa],
-			   psf[iwvl][isa],powfs[ipowfs].dtf+iwvl);
-		dadd(&pistat->i0s->p[isa], 1, i0[iwvl][isa],
-		     aster->wfs[iwfs].siglev[iwvl]);
-		dadd(&pistat->gxs->p[isa], 1, gx[iwvl][isa],
-		     aster->wfs[iwfs].siglev[iwvl]);
-		dadd(&pistat->gys->p[isa], 1, gy[iwvl][isa],
-		     aster->wfs[iwfs].siglev[iwvl]);
-	    }
-		 
-	}
-	const double pixtheta=parms->skyc.pixtheta[ipowfs];
-	int ndtrat=parms->skyc.ndtrat;
-	pistat->mtche=calloc(ndtrat, sizeof(dcell*));
-	pistat->sanea=dcellnew(ndtrat,1);
-	dcell *i0s=NULL; dcell *gxs=NULL; dcell *gys=NULL;
-	for(int idtrat=0; idtrat<ndtrat; idtrat++){
-	    int dtrat=parms->skyc.dtrats[idtrat];
-	    dcelladd(&i0s, 0, pistat->i0s, dtrat);
-	    dcelladd(&gxs, 0, pistat->gxs, dtrat);
-	    dcelladd(&gys, 0, pistat->gys, dtrat);
-	    mtch(&pistat->mtche[idtrat], &pistat->sanea->p[idtrat],
-		 i0s, gxs, gys, pixtheta, rnefs[ipowfs][idtrat], 
-		 aster->wfs[iwfs].bkgrnd*dtrat, parms->skyc.mtchcr);
-	    if(parms->skyc.dbg){
-		dcellwrite(pistat->mtche[idtrat], "%s/aster%d_wfs%ld_mtche_dtrat%d",
-			   dirsetup,aster->iaster,iwfs, dtrat);
-	    }
-	}
-	if(parms->skyc.dbg){
-	    dcellwrite(pistat->sanea, "%s/aster%d_wfs%ld_sanea", dirsetup,aster->iaster,iwfs);
-	}
-	dcellfree(i0s);
-	dcellfree(gxs);
-	dcellfree(gys);
-	if(parms->skyc.dbg){
-	    dcellwrite(pistat->i0,  "%s/aster%d_wfs%ld_i0",  dirsetup,aster->iaster,iwfs);
-	    dcellwrite(pistat->gx,  "%s/aster%d_wfs%ld_gx",  dirsetup,aster->iaster,iwfs);
-	    dcellwrite(pistat->gy,  "%s/aster%d_wfs%ld_gy",  dirsetup,aster->iaster,iwfs);
-	    dcellwrite(pistat->i0s, "%s/aster%d_wfs%ld_i0s", dirsetup,aster->iaster,iwfs);
-	    dcellwrite(pistat->gxs, "%s/aster%d_wfs%ld_gxs", dirsetup,aster->iaster,iwfs);
-	    dcellwrite(pistat->gys, "%s/aster%d_wfs%ld_gys", dirsetup,aster->iaster,iwfs);
-	 
-	}
-    }
+    return count;
 }
 /**
    Free the ASTER_S array.
@@ -792,14 +643,6 @@ void setup_aster_redomtch(ASTER_S *aster, POWFS_S *powfs, const PARMS_S *parms){
 void free_aster(ASTER_S *aster, int naster, const PARMS_S *parms){
     (void) parms;
     for(int iaster=0; iaster<naster; iaster++){
-	int nwfs=aster[iaster].nwfs;
-	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    dfree(aster[iaster].wfs[iwfs].mags);
-	    free(aster[iaster].wfs[iwfs].siglev);
-	    if(!aster[iaster].wfs[iwfs].pistatref){
-		free_pistat(aster[iaster].wfs[iwfs].pistat, 1, parms);
-	    }
-	}
 	dcellfree(aster[iaster].gain);
 	dcellfree(aster[iaster].pgm);
 	dcellfree(aster[iaster].nea_tot);

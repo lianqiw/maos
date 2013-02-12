@@ -1,34 +1,24 @@
-AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/lib/sys -I$(top_srcdir)/external/cholmod/Include
+AM_CFLAGS=$(OPTS) -I$(top_srcdir) -I$(top_srcdir)/external/cholmod/Include
 if !WIN
 AM_CFLAGS+=-fPIC
 endif
 #if set LDCHOL here instead of in configure.ac compiles "No rule to make target ..."
 
-nobase_include_HEADERS=accphi.h common.h type.h locbin.h misc.h mathmisc.h	\
-random.h sp.h dsp.h ssp.h csp.h bin.h cell.h mkg.h path.h readcfg.h readstr.h	\
-suitesparse.h blas.h matbin.h spbin.h cellarr.h mkh.h aos.h chol.h mkw.h	\
-turbulence.h mat.h dmat.h smat.h cmat.h zmat.h loc.h mkz.h proj.h hashlittle.h	\
-laplacian.h pcg.h muv.h draw.h fft.h genotf.h fractal.h stfun.h servo.h		\
-slaving.h imat.h mkdtf.h psd.h
-
-nobase_include_HEADERS+=sys/mem.h sys/process.h sys/scheduler_server.h		\
-sys/sockio.h sys/thread.h sys/io.h sys/daemonize.h sys/scheduler_client.h	\
-sys/sys.h sys/thread_pool.h nr.h 
+nobase_include_HEADERS=accphi.h type.h locbin.h mathmisc.h random.h sp.h dsp.h	\
+ ssp.h csp.h bin.h cell.h mkg.h readcfg.h readstr.h suitesparse.h blas.h	\
+ matbin.h spbin.h cellarr.h mkh.h aos.h chol.h mkw.h turbulence.h mat.h dmat.h	\
+ smat.h cmat.h zmat.h loc.h mkz.h proj.h laplacian.h pcg.h muv.h draw.h fft.h	\
+ genotf.h fractal.h stfun.h servo.h slaving.h imat.h mkdtf.h psd.h nr.h
 
 EXTRA_DIST=cell.c sp.c matbin.c matmmap.c spbin.c mat.c suitesparse.c		\
 fractal_do.c prop_grid_stat.c prop_grid_pts.c prop_grid_map.c defs.h blas.c
 
-AOS_SRC=readcfg.c readstr.c dmat.c smat.c zmat.c cmat.c hashlittle.c dsp.c	\
-ssp.c csp.c bin.c misc.c mathmisc.c random.c loc.c locbin.c cellarr.c		\
-turbulence.c path.c mkg.c mkh.c mkz.c mkw.c accphi.c proj.c chol.c laplacian.c	\
+AOS_SRC=readcfg.c readstr.c dmat.c smat.c zmat.c cmat.c dsp.c	\
+ssp.c csp.c bin.c mathmisc.c random.c loc.c locbin.c cellarr.c		\
+turbulence.c mkg.c mkh.c mkz.c mkw.c accphi.c proj.c chol.c laplacian.c	\
 pcg.c muv.c draw.c fft.c genotf.c fractal.c stfun.c servo.c slaving.c imat.c	\
 bessik.c amoeba.c mkdtf.c psd.c
 
-SYS_SRC=sys/io.c sys/daemonize.c sys/process_bsd.c sys/process_cygwin.c		\
-sys/scheduler_server.c sys/sockio.c sys/mem.c sys/process_apple.c sys/process.c	\
-sys/process_linux.c sys/scheduler_client.c sys/thread.c sys/thread_pool.c
-
-AOS_SRC+=$(SYS_SRC) 
 
 if USE_LONG
 lib_LTLIBRARIES=libaos_long.la
@@ -41,9 +31,3 @@ libaos_int_la_SOURCES=$(AOS_SRC)
 libaos_int_la_LIBADD=$(LDLIB)
 libaos_int_la_LDFLAGS = -avoid-version -static
 endif
-
-#we compile a scheduler, which takes less memory than maos.
-bin_PROGRAMS=../bin/scheduler 
-___bin_scheduler_SOURCES=$(SYS_SRC) misc.c hashlittle.c path.c
-___bin_scheduler_CFLAGS=$(AM_CFLAGS) -DSCHEDULER
-___bin_scheduler_LDFLAGS=$(LDSYS) $(LDEXE)

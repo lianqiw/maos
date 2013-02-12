@@ -128,6 +128,7 @@ void X(mulsp)(X(mat) **yout, const X(mat) *x, const X(sp) *A, const T alpha);\
 X(mat)* X(logspace)(double emin, double emax, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(linspace)(double min, double dx, long n) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew) CHECK_UNUSED_RESULT;\
+X(mat)* X(interp1linear)(X(mat) *xin, X(mat) *yin, X(mat) *xnew) CHECK_UNUSED_RESULT;\
 X(mat)* X(interp1log)(X(mat) *xin, X(mat) *yin, X(mat) *xnew) CHECK_UNUSED_RESULT;\
 void X(blend)(X(mat) *restrict A, X(mat) *restrict B, int overlap);\
 void X(histfill)(X(mat) **out, const X(mat)* A, double center, double spacing, int n);\

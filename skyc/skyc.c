@@ -28,10 +28,7 @@ char *dirstart;
  */
 int main(int argc, char **argv){
     dirstart=mygetcwd();
-    char*fn=mybasename(argv[0]);
-    strcpy(argv[0],fn);
-    free(fn);
-    char *scmd=argv2str(argc, argv);
+    char *scmd=argv2str(argc, argv, " ");
     ARG_S* arg=parse_args(argc,argv);
     /*In detach mode send to background and disable drawing*/
     if(arg->detach){
@@ -87,6 +84,14 @@ int main(int argc, char **argv){
 	    warning3("fall back to own checker\n");
 	    wait_cpu(arg->nthread);
 	}
+    }
+    {
+	//Make the symlinks for running job only.
+	char fnpid[PATH_MAX];
+	snprintf(fnpid, PATH_MAX, "maos_%d.conf", (int)getpid());
+	mysymlink(fnpid, "maos_recent.conf");
+	snprintf(fnpid, PATH_MAX, "run_%d.log", (int)getpid());
+	mysymlink(fnpid, "run_recent.log");
     }
     info2("Simulation started at %s in %s.\n",myasctime(),myhostname());
     free(scmd);

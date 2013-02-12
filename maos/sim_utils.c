@@ -558,7 +558,7 @@ static void init_simu_evl(SIM_T *simu){
     {/*MMAP the main result file */
 	long nnx[4]={nmod,nmod,nmod,nmod};
 	long nny[4]={nsim,nsim,nsim,nsim};
-	nnx[1]=0;
+	nnx[1]=0;//deprecated
 	nny[1]=0;
 	if(!parms->recon.split || parms->ndm>2){
 	    nnx[3]=0; 
@@ -915,10 +915,11 @@ static void init_simu_wfs(SIM_T *simu){
     }
     if(parms->sim.mffocus){
 	if(parms->sim.lpfocus<1.e-15){
-	    error("When epfocus is nonzero, lpfocus need to be zero\n");
+	    error("When mffocus is nonzero, lpfocus need to be zero\n");
 	}
-	simu->focuslpf=dcellnew(1,1);
-	simu->focuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
+	simu->lgsfocuslpf=dnew(parms->nwfs, 1);
+	simu->ngsfocuslpf=dcellnew(1,1);
+	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
     }
 
     simu->has_upt=0;/*flag for uplink tip/tilt control */
@@ -966,7 +967,7 @@ static void init_simu_wfs(SIM_T *simu){
 	    /*The PSFs here are PSFs of each subaperture. */
 	    simu->wfspsfout[iwfs]=ccellnew(nsa,parms->powfs[ipowfs].nwvl);
 	    for(long ipsf=0; ipsf<simu->wfspsfout[iwfs]->nx*simu->wfspsfout[iwfs]->ny; ipsf++){
-		simu->wfspsfout[iwfs]->p[ipsf]=cnew(notf/2,notf/2);
+		simu->wfspsfout[iwfs]->p[ipsf]=cnew(notf/2+2,notf/2+2);//changed from ntof/2.
 	    }
 	    mymkdir("%s/wvfout/", dirskysim);
 	    mymkdir("%s/ztiltout/", dirskysim);
@@ -1457,6 +1458,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	gpu_recon_reset(parms);
     }
 #endif
+    filter(simu);//so that dm_ncpa is effective at first cycle.
     return simu;
 }
 /**
@@ -1555,7 +1557,6 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmproj);
     dcellfreearr(simu->dmpsol, parms->npowfs);
     dcellfree(simu->dmcmd);
-    dcellfree(simu->dmcmdlast);
     servo_free(simu->dmint);
     servo_free(simu->Mint_lo);
     dcellfree(simu->gcov);
@@ -1563,16 +1564,14 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmerr);
     dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
-    dcellfree(simu->Merr_lo_store);
     dcellfree(simu->Merr_lo);
+    dcellfree(simu->Merr_lo_store);
     dcellfree(simu->upterr);
     dcellfree(simu->uptreal);
     servo_free(simu->uptint);
 
     dcellfree(simu->dm_wfs);
     dcellfree(simu->dm_evl);
-    dcellfree(simu->focuslgsx);
-    dcellfree(simu->focusngsx);
     dcellfree(simu->res);
     dfree(simu->ole);
     dfree(simu->cle);
@@ -1622,7 +1621,7 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->evlopdmean_ngsr,nevl);
     cellarr_close(save->evlpsfolmean);
     dcellfree(simu->evlopd);    
-    dcellfree(simu->focuslpf);
+    dfree(simu->lgsfocuslpf);
     free(simu->ints);
     free(simu->wfspsfout);
     free(simu->pistatout);
@@ -1657,12 +1656,12 @@ void free_simu(SIM_T *simu){
     dfree(simu->winddir);
     {
 	/*release the lock and close the file. */
-	close(parms->fdlock[simu->iseed]);
 	char fn[80];
 	char fnnew[80];
 	snprintf(fn, 80, "Res_%d.lock",simu->seed);
 	snprintf(fnnew, 80, "Res_%d.done",simu->seed);
 	(void)rename(fn, fnnew);
+	close(parms->fdlock[simu->iseed]);
     }
     free(simu->save);
     free(simu);
@@ -1864,12 +1863,26 @@ void save_skyc(POWFS_T *powfs, RECON_T *recon, const PARMS_T *parms){
     fprintf(fp,"]\n");
     fprintf(fp,"maos.nstep=%d\n",parms->sim.end);
     fprintf(fp,"maos.ahstfocus=%d\n", parms->sim.ahstfocus);
+    fprintf(fp,"maos.mffocus=%d\n", parms->sim.mffocus);
+    fprintf(fp,"maos.fnrange=%s\n", parms->powfs[parms->hipowfs[0]].llt->fnrange);
     fclose(fp);
-    for(int ipowfs=0; ipowfs<npowfs_ngs; ipowfs++){
-	int jpowfs=powfs_ngs[ipowfs];
-	locwrite(powfs[jpowfs].loc,"%s/powfs%d_loc",dirskysim,jpowfs);
-	dwrite(powfs[jpowfs].amp, "%s/powfs%d_amp",dirskysim,jpowfs);
-	locwrite(powfs[jpowfs].saloc,"%s/powfs%d_saloc",dirskysim,jpowfs);
+    for(int jpowfs=0; jpowfs<npowfs_ngs; jpowfs++){
+	int ipowfs=powfs_ngs[jpowfs];
+	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirskysim,ipowfs);
+	dwrite(powfs[ipowfs].amp, "%s/powfs%d_amp",dirskysim,ipowfs);
+	locwrite(powfs[ipowfs].saloc,"%s/powfs%d_saloc",dirskysim,ipowfs);
+	if(powfs[ipowfs].gradoff){
+	    int nsa=parms->powfs[ipowfs].order;
+	    mymkdir("%s/gradoff/", dirskysim);
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		int iwfs=parms->powfs[ipowfs].wfs[jwfs];
+		dwrite(powfs[ipowfs].gradoff->p[jwfs], 
+		       "%s/gradoff/gradoff_sa%d_x%.0f_y%.0f.bin", 
+		       dirskysim, nsa, 
+		       parms->wfs[iwfs].thetax*206265, 
+		       parms->wfs[iwfs].thetay*206265);
+	    }
+	}
     }
     dwrite(recon->ngsmod->MCC,"%s/MCC_za%g", dirskysim,zadeg);
     dwrite(recon->ngsmod->MCCP->p[parms->evl.indoa],"%s/MCC_OA_za%g", dirskysim,zadeg);

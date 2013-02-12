@@ -18,7 +18,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "maos.h"
-#define USE_SHORT 1
+#define USE_SHORT 0
 #if USE_SHORT
 #define GSCALE 2062650000. //convert grad to int
 #define GSCALE1 4.848132257047973e-10 //convert back

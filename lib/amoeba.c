@@ -16,7 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <stdlib.h>
-#include "common.h"
+#include "../sys/sys.h"
 #include "nr.h"
 #define NRANSI
 #define NR_END 1
