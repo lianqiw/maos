@@ -178,11 +178,20 @@ void close_config(const char *format, ...){
 	info2("Used %ld of %ld supplied keys\n",nused,nstore);
 	if(fnout && strlen(fnout)>0){
 	    FILE *fp=fopen(fnout,"w");
+	    const char *pre;
 	    for(int i=0; i<nstore; i++){
-		if(store[i].data)
-		    fprintf(fp,"%s=%s\n",store[i].key,store[i].data);
-		else
-		    fprintf(fp,"%s=\n",store[i].key);
+		if(store[i].protect){
+		    pre="";
+		}else{
+		    pre="#";//comment out default parameters
+		}
+		if(store[i].data){
+		    if(strcmp(store[i].data, "ignore")){
+			fprintf(fp,"%s%s=%s\n",pre,store[i].key,store[i].data);
+		    }
+		}else{
+		    fprintf(fp,"%s%s=\n",pre,store[i].key);
+		}
 	    }
 	    fclose(fp);
 	}
@@ -301,7 +310,8 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(tomo.tik_cstr, tomo.tikcr);
 	    RENAME(tomo.split_wt, tomo.ahst_wt);
 	    RENAME(tomo.split_idealngs, tomo.ahst_idealngs);
-	    RENAME(tomo.split_rtt, tomo.ahst_rtt);
+	    RENAME(tomo.split_rtt, tomo.ahst_ttr);
+	    RENAME(tomo.ahst_rtt, tomo.ahst_ttr);
 	    RENAME(evl.psfwvl, evl.wvl);
 	    RENAME(cn2.nhtrecon, cn2.nhtomo);
 	    /*Added on 2011-04-28 */
@@ -323,6 +333,7 @@ void open_config(const char* config_file, /**<The .conf file to read*/
 	    RENAME(sim.gtypeII_lo, sim.eplo);
 	    RENAME(sim.epngs, sim.eplo);
 	    RENAME(sim.apngs, sim.aplo);
+	    RENAME(dbg.splitlrt, tomo.splitlrt);
 #endif
 	    if(prefix){
 		entry.key=stradd(prefix,var,NULL);

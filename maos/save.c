@@ -25,8 +25,8 @@
 void save_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const POWFS_T *powfs=simu->powfs;
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	int ipowfs=parms->wfs[iwfs].powfs;
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	int ipowfs=parms->wfsr[iwfs].powfs;
 	const int nsa=powfs[ipowfs].pts->nsa;
 	if(!simu->gradlastol->p[iwfs]) continue;
 	if(parms->plot.run){
