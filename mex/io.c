@@ -604,6 +604,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 		end=1;
 	    }
 	}
+	page++;
     }
     switch(bitpix){
     case -32:

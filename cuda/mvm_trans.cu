@@ -74,7 +74,7 @@ static void mvm_trans_igpu(thread_t *info){
     float *eye2;
     cudaMalloc(&eye2, sizeof(float)*2);
     cudaMemcpy(eye2, eye2c, sizeof(float)*2, cudaMemcpyHostToDevice);
-    //const int nwfs=parms->nwfs;
+    //const int nwfs=parms->nwfsr;
     const int ndm=parms->ndm;
     /*fit*/
     G_CGFUN cg_fun;
@@ -98,7 +98,7 @@ static void mvm_trans_igpu(thread_t *info){
     curcell *dmfit=load_mvmf?NULL:curcellnew(curecon->dmfit);
     curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmf?1:0));
     curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmi?1:0));
-    curcell *grad=curcellnew(parms->nwfs, 1, recon->ngrad, (long*)0, (float*)1);
+    curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)0, (float*)1);
     if(ntotact==0){
 	error("ntotact=0;\n");
     }
@@ -220,7 +220,7 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	for(int ips=0; ips<recon->npsr; ips++){
 	    ntotxloc+=recon->xloc[ips]->nloc;
 	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    ntotgrad+=recon->ngrad[iwfs];
 	}
 	
@@ -353,10 +353,10 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 	{
 	    TIC;tic;
 	    int ndm=parms->ndm;
-	    int nwfs=parms->nwfs;
+	    int nwfs=parms->nwfsr;
 	    recon->MVM=dcellnew(ndm, nwfs);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
+		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(!parms->powfs[ipowfs].skip){
 		    for(int idm=0; idm<ndm; idm++){
 			recon->MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);

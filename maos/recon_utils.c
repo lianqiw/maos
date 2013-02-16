@@ -449,7 +449,7 @@ void TomoL(dcell **xout, const void *A,
 #if test_TomoL
     dcellwrite(gg, "cpu_tomo_grad_%d", count);
 #endif
-    if(!parms->recon.split || (parms->dbg.splitlrt && !recon->desplitlrt)){
+    if(!parms->recon.split || parms->tomo.splitlrt){
 	/*Remove global Tip/Tilt, differential focus only in integrated
 	  tomography to limit noise propagation (?).*/
 	TTFR(gg, recon->TTF, recon->PTTF);

@@ -167,20 +167,23 @@ void reconstruct(SIM_T *simu){
     int isim=simu->reconisim;
     const int hi_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_hi==0);
     if(simu->gradlastcl){
-	if(parms->sim.mffocus){
-	    focus_tracking(simu);//It modifies gradlastcl
-	}
-	if(!parms->sim.idealfit && !parms->sim.evlol){
-	    if(parms->sim.closeloop){
-		calc_gradol(simu);
-	    }else if(!simu->gradlastol){
-		simu->gradlastol=dcellref(simu->gradlastcl);
+	if(!parms->sim.idealfit){
+	    if(parms->sim.mffocus){
+		focus_tracking(simu);//It modifies gradlastcl
 	    }
-	    save_gradol(simu);/*must be here since gradol is only calculated in this file. */
+	    if(!parms->sim.evlol){
+		if(parms->sim.closeloop){
+		    calc_gradol(simu);
+		}else if(!simu->gradlastol){
+		    simu->gradlastol=dcellref(simu->gradlastcl);
+		}
+		save_gradol(simu);/*must be here since gradol is only calculated in this file. */
+	    }
+	
+	    if(parms->cn2.pair){
+		cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
+	    }/*if cn2est */
 	}
-	if(parms->cn2.pair){
-	    cn2est_isim(recon, parms, simu->gradlastol, simu->reconisim);
-	}/*if cn2est */
 	double tk_start=myclockd();
 	if(hi_output){
 	    if(parms->recon.mvm){
@@ -216,7 +219,12 @@ void reconstruct(SIM_T *simu){
 		}
 	    }
 	    if(parms->tomo.psol){//form error signal in PSOL mode
-		dcell *dmpsol=simu->dmpsol[parms->hipowfs[0]];//2013-01-22.
+		dcell *dmpsol;
+		if(parms->sim.idealfit){
+		    dmpsol=simu->dmreallast;
+		}else{
+		    dmpsol=simu->dmpsol[parms->hipowfs[0]];//2013-01-22.
+		}
 		dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	    }
 	    if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */

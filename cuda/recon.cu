@@ -211,7 +211,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    int nsa=powfs[ipowfs].pts->nsa;
-	    int iwfs0=parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
+	    int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs[0];/*first wfs in this group. */
 	    if(iwfs!=iwfs0 && recon->saneai->p[iwfs+iwfs*parms->nwfsr]->p
 	       ==recon->saneai->p[iwfs0+iwfs0*parms->nwfsr]->p){
 		curecon->neai->p[iwfs]=curref(curecon->neai->p[iwfs0]);
@@ -413,7 +413,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 		error("Check this case. We had assumption that this powfs is the first group.\n");
 	    }
 	    gpdata[iwfs].ipowfs=ipowfs;
-	    gpdata[iwfs].nwfs=parms->powfs[ipowfs].nwfs;
+	    gpdata[iwfs].nwfs=parms->powfs[ipowfs].nwfsr;
 	    gpdata[iwfs].jwfs=parms->powfs[ipowfs].wfsind[iwfs];//wfs index in this group
 	    gpdata[iwfs].saptr=cupowfs[ipowfs].saptr;
 	    gpdata[iwfs].dsa=powfs[ipowfs].pts->dsa;
@@ -622,7 +622,7 @@ void gpu_setup_recon_predict(const PARMS_T *parms, RECON_T *recon){
     }
     gpu_set(gpu_recon);
     curecon_t *curecon=cudata->recon;
-    const int nwfs=parms->nwfs;
+    const int nwfs=parms->nwfsr;
     const float oxp=recon->pmap->ox;
     const float oyp=recon->pmap->oy;
     const float dxp=recon->pmap->dx;

@@ -29,7 +29,14 @@ extern "C"
 #define SYNC_DM  for(int idm=0; idm<parms->ndm; idm++){ curecon->dmstream[idm].sync(); }
 
 #define TIMING 0
-
+#if TIMING == 0
+#undef TIC
+#undef tic
+#undef toc
+#define TIC
+#define tic
+#define toc(A)
+#endif
 /*
   Todo: share the ground layer which is both matched and same.
 */

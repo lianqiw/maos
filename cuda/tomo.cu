@@ -505,7 +505,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     RECORD(0);
     curcell *opdx=*xout;
     curcell *opdwfs=curecon->opdwfs;
-    int ptt=!parms->recon.split || parms->dbg.splitlrt; 
+    int ptt=!parms->recon.split || parms->tomo.splitlrt; 
     curmat *ttf=curecon->ttf;
     curzero(opdwfs->m, stream);
     gpu_prop_grid_adaptive_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
@@ -653,7 +653,6 @@ void gpu_tomo_test(SIM_T *simu){
 	dcellwrite(lp, "CPU_TomoP2");
     }
     dcellzero(lc);
-    recon->desplitlrt=1;//temporary.
     for(int i=0; i<10; i++){
 	muv_solve(&lc, &recon->RL, NULL, rhsc);
 	dcellwrite(lc, "CPU_Tomo_%d", i);

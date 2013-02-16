@@ -164,6 +164,7 @@ typedef struct POWFS_CFG_T{
     int *wfs;       /**<array of wfs belongs to this powfs*/
     int *wfsind;    /**<wfsind[iwfs] gives the index of the wfs in this powfs group*/
     int nwfs;       /**<number of wfs belonging to this powfs*/
+    int nwfsr;      /**<number of wfs for reconstruction belonging to this powfs*/
     int neaphy;     /**<use nea from physical optical precomputation in geometric simulations.*/
     int phyusenea;  /**<force using supplied noise equivalent angle in physical
 		       optics simulations*/
@@ -361,6 +362,7 @@ typedef struct TOMO_CFG_T{
     int cubic;       /**<cubic influence function in tomography (testing)*/
     int ninit;       /**<like atm.ninit, the initial screen to generate from covariance directly*/
     int psol;        /**<Use pseudo open loop gradients*/
+    int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
 }TOMO_CFG_T;
 /**
    contains input parameters for deformable mirror fitting.
@@ -538,7 +540,6 @@ typedef struct DBG_CFG_T{
     int *tomo_maxit; /**<if not empty, will study these maxits in open loop*/
     int ntomo_maxit; /**<Number of elements in tomo_maxit*/
     int tomo_hxw;    /**<1: Force use hxw always instead of ray tracing from xloc to ploc.*/
-    int splitlrt;    /**<1: use LGS low rank terms in split tomography.*/
     int ecovxx;      /**<save the xx used to calculate ecov in psfr.*/
     int useopdr;     /**<use opdr in psf reconstruction*/
     int force;       /**<Force run even if Res_${seed}.done exists*/

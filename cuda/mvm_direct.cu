@@ -70,7 +70,7 @@ static void mvm_direct_igpu(thread_t *info){
     const long ntotact=data->ntotact;
     const long ntotgrad=data->ntotgrad;
     const long ntotxloc=data->ntotxloc;
-    curcell *grad=curcellnew(parms->nwfs, 1, recon->ngrad, (long*)NULL);//the I
+    curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)NULL);//the I
     curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);//right hand size
     curcell *opdr=NULL;//initialized later
     curcell *fitx=curcellnew(parms->ndm, 1, recon->anloc, (long*)NULL);
@@ -180,7 +180,7 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 	for(int ips=0; ips<recon->npsr; ips++){
 	    ntotxloc+=recon->xloc[ips]->nloc;
 	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	    ntotgrad+=recon->ngrad[iwfs];
 	}
 	smat *mvmc=NULL;//control matrix output to CPU
@@ -245,10 +245,10 @@ void gpu_setup_recon_mvm_direct(const PARMS_T *parms, RECON_T *recon, POWFS_T *p
 		dmvmc->p[i]=(double)mvmc->p[i];
 	    }
 	    int ndm=parms->ndm;
-	    int nwfs=parms->nwfs;
+	    int nwfs=parms->nwfsr;
 	    recon->MVM=dcellnew(ndm, nwfs);
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
+		int ipowfs=parms->wfsr[iwfs].powfs;
 		if(!parms->powfs[ipowfs].skip){
 		    for(int idm=0; idm<ndm; idm++){
 			recon->MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);

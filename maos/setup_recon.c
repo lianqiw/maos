@@ -641,7 +641,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
     info2("Recon NEA:\n");
     for(int iwfs=0; iwfs<nwfs; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
-	int iwfs0=parms->powfs[ipowfs].wfs[0];
+	int iwfs0=parms->recon.glao?iwfs:parms->powfs[ipowfs].wfs[0];
 	int nsa=powfs[ipowfs].pts->nsa;
 	int do_ref=0;
 	if(parms->powfs[ipowfs].neareconfile){/*taks precedance */
@@ -1174,7 +1174,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 		}
 	    }
 	}
-	if(!parms->recon.split || parms->dbg.splitlrt){
+	if(!parms->recon.split || parms->tomo.splitlrt){
 	    recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 	    dcell *GPTTDF=NULL;
 	    sptcellmulmat(&GPTTDF, recon->GX, recon->RR.V, 1);
@@ -2471,16 +2471,16 @@ void setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 	  First create an identity matrix. then solve each column one by one. 
 	*/
 	const int ndm=parms->ndm;
-	const int nwfs=parms->nwfs;
+	const int nwfs=parms->nwfsr;
 	int ntotgrad=0;
 	long *ngrad=recon->ngrad;
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    ntotgrad+=powfs[ipowfs].saloc->nloc*2;
 	}
 	recon->MVM=dcellnew(ndm, nwfs);
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
 		for(int idm=0; idm<ndm; idm++){
 		    recon->MVM->p[idm+ndm*iwfs]=dnew(recon->anloc[idm], powfs[ipowfs].saloc->nloc*2);
@@ -2499,7 +2499,7 @@ void setup_recon_lsr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
 		info2("%6d of %6d\n", ig, ntotgrad);
 	    }
 	    if(ig) eye->p[ig-1]=0; eye->p[ig]=1;
-	    if(!parms->powfs[parms->wfs[curwfs].powfs].skip){
+	    if(!parms->powfs[parms->wfsr[curwfs].powfs].skip){
 		dcellzero(res);
 		muv_solve(&res, &recon->LL, &recon->LR, eyec);
 	    }
@@ -2541,7 +2541,7 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
     const PARMS_T *parms=data->parms;
     RECON_T *recon=data->recon;
     const int ndm=parms->ndm;
-    const int nwfs=parms->nwfs;
+    const int nwfs=parms->nwfsr;
     const long ntotact=data->ntotact;
     dcell *FLI=NULL;
     dcell *FRT=NULL;
@@ -2576,11 +2576,8 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 	muv_trans(&FRT, &recon->FR, FLI, 1);
 	//toc2("fit");
 	/*Apply R_L*/
-	int desplitlrt=recon->desplitlrt;
-	recon->desplitlrt=1;
 	dcellzero(RLT);//warm restart.
 	muv_solve(&RLT, &recon->RL, NULL, FRT);
-	recon->desplitlrt=desplitlrt;
 	/*Apply R_R'*/
 	muv_trans(&RRT, &recon->RR, RLT, 1);
 	//toc2("tomo");
@@ -2612,7 +2609,7 @@ void setup_recon_mvr_mvm_iact(thread_t *info){
 void setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     info2("Assembling MVR MVM in CPU\n");
     const int ndm=parms->ndm;
-    const int nwfs=parms->nwfs;
+    const int nwfs=parms->nwfsr;
     long ntotact=0;
     for(int idm=0; idm<ndm; idm++){
 	ntotact+=recon->anloc[idm];
@@ -2629,7 +2626,7 @@ void setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs){
     dcell *MVMt=dcellnew(nwfs, ndm);
     for(int idm=0; idm<ndm; idm++){
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
+	    int ipowfs=parms->wfsr[iwfs].powfs;
 	    if(!parms->powfs[ipowfs].skip){
 		MVMt->p[iwfs+idm*nwfs]=dnew(powfs[ipowfs].saloc->nloc*2, recon->anloc[idm]);
 	    }
@@ -2683,9 +2680,9 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
 	    }
 	}   
     }
-    recon->ngrad=calloc(parms->nwfs, sizeof(long));
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	const int ipowfs=parms->wfs[iwfs].powfs;
+    recon->ngrad=calloc(parms->nwfsr, sizeof(long));
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	const int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].skip){
 	    recon->ngrad[iwfs]=powfs[ipowfs].saloc->nloc*2;
 	}
@@ -2743,8 +2740,8 @@ void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
 	if(parms->load.mvm){
 	    recon->MVM=dcellread("%s", parms->load.mvm);
 	    for(int idm=0; idm<parms->ndm; idm++){
-		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		    int ipowfs=parms->wfs[iwfs].powfs;
+		for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+		    int ipowfs=parms->wfsr[iwfs].powfs;
 		    if(!parms->powfs[ipowfs].skip){
 			dmat *temp=recon->MVM->p[idm+iwfs*parms->ndm];
 			if(temp->nx!=recon->aloc[idm]->nloc 

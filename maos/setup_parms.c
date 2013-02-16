@@ -687,6 +687,7 @@ static void readcfg_tomo(PARMS_T *parms){
     READ_INT(tomo.psol);
     READ_INT(tomo.nxbase);
     READ_DBL(tomo.cgthres);
+    READ_INT(tomo.splitlrt);
 }
 
 /**
@@ -868,7 +869,6 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.annular_W);
     parms->dbg.ntomo_maxit=readcfg_intarr(&parms->dbg.tomo_maxit, "dbg.tomo_maxit");
     READ_INT(dbg.tomo_hxw);
-    READ_INT(dbg.splitlrt);
     READ_INT(dbg.ecovxx);
     READ_INT(dbg.useopdr);
     READ_INT(dbg.usegwr);
@@ -928,11 +928,13 @@ static void readcfg_save(PARMS_T *parms){
 
     if(parms->save.run){
 	parms->save.dm=1;
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    parms->save.ints[iwfs]=1;
-	    parms->save.wfsopd[iwfs]=1;
-	    parms->save.grad[iwfs]=1;
-	    parms->save.gradgeom[iwfs]=1;
+	if(!parms->sim.idealfit){
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		parms->save.ints[iwfs]=1;
+		parms->save.wfsopd[iwfs]=1;
+		parms->save.grad[iwfs]=1;
+		parms->save.gradgeom[iwfs]=1;
+	    }
 	}
     }
     parms->save.ngcov=readcfg_intarr(&parms->save.gcov,"save.gcov")/2;
@@ -1251,7 +1253,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(!parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].bkgrndfn){
 	    warning("powfs %d: there is sky background, but is using geometric wfs. background won't be effective.\n", ipowfs);
 	} 
-	if(parms->sim.ncpa_calib){
+	if(parms->sim.ncpa_calib && (parms->nsurf || parms->ntsurf)){
 	    if(parms->powfs[ipowfs].ncpa_method==2 && parms->powfs[ipowfs].mtchstc){
 		warning("powfs %d: Disabling shifting i0 to center in the presence of NCPA.\n", ipowfs);
 		parms->powfs[ipowfs].mtchstc=0;
@@ -1346,10 +1348,14 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    parms->wfsr[ipowfs].thetax=0;
 	    parms->wfsr[ipowfs].thetay=0;
 	    parms->wfsr[ipowfs].powfs=ipowfs;
+	    parms->powfs[ipowfs].nwfsr=1;
 	}
     }else{/*Use same information as wfs. */
 	parms->wfsr = parms->wfs;
 	parms->nwfsr= parms->nwfs;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    parms->powfs[ipowfs].nwfsr=parms->powfs[ipowfs].nwfs;
+	}
     }
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
@@ -1744,9 +1750,9 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	}else{
 	    parms->tomo.maxit=30*factor;
 	}
-	if(parms->recon.mvm==2 && parms->dbg.splitlrt){
-	    warning("When recon.mvm==2, dbg.splitlrt has to be 0 due to stability issue. Changed\n");
-	    parms->dbg.splitlrt=0;
+	if(parms->recon.mvm==1 && parms->tomo.splitlrt){
+	    warning("recon.mvm==1 require tomo.splitlrt=0 due to stability issue. Changed\n");
+	    parms->tomo.splitlrt=0;
 	}
     }
     if(parms->fit.alg==1 && parms->fit.maxit==0){
@@ -1978,7 +1984,6 @@ static void setup_parms_postproc_misc(PARMS_T *parms, ARG_T *arg){
 	warning("Make cpu code follows gpu implementations.\n");
 	parms->sim.cachedm=0;
 	parms->tomo.square=1;
-	/*parms->dbg.splitlrt=0;*//*need extensity comparison. */
     }
     /*Assign each turbulence layer to a corresponding reconstructon layer. Used
       to compute opdx in a simple minded way.*/
@@ -2123,7 +2128,7 @@ static void print_parms(const PARMS_T *parms){
 	info2("powfs %d: Order %2d, %sGS at %3.3g km. Thres %g%%",
 	      i,parms->powfs[i].order, (parms->powfs[i].llt?"L":"N"),
 	      parms->powfs[i].hs/1000,parms->powfs[i].saat*100);
-	int lrt=(parms->recon.split || parms->dbg.splitlrt);
+	int lrt=(parms->recon.split || parms->tomo.splitlrt);
 	if(parms->powfs[i].trs){
 	    info2("\033[0;32m Tip/tilt is removed in %s side in tomography.\033[0;0m", lrt?"both":"right hand");
 	    if(!parms->powfs[i].llt){

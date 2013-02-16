@@ -361,7 +361,6 @@ typedef struct RECON_T{
     int has_dfr;       /**<whether there is any differential focus removed WFS*/
     int nthread;       /**<number of threads in reconstruction.*/
     int cxx;           /**<records parms->tomo.cxx*/
-    int desplitlrt;    /**<disable dbg.splitlrt.*/
 }RECON_T;
 
 typedef struct SIM_SAVE_T{
