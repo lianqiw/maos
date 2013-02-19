@@ -3,9 +3,9 @@ AM_LDFLAGS=-lfftw3 $(LDMEX) -lmwblas -lmwlapack -lm -static
 AM_LDFLAGS+=-Xcompiler -shared -no-install
 #The following should be in LDADD instead of AM_LDFLAGS to recompile exes when they are updated
 if USE_LONG
-LDADD=$(BUILD_DIR)/lib/libaos_long.la interface.o
+LDADD=$(BUILD_DIR)/lib/libaos_long.la $(BUILD_DIR)/sys/libaosys.la interface.o
 else
-LDADD=$(BUILD_DIR)/lib/libaos_int.la interface.o
+LDADD=$(BUILD_DIR)/lib/libaos_int.la $(BUILD_DIR)/sys/libaosys.la interface.o
 endif
 EXTRA_DIST=null.c io.c io.h interface.c interface.h  Makefile.mex
 EXEEXT=.$(MEXEXT) #Automatic add suffix
@@ -26,7 +26,8 @@ bin_PROGRAMS=read write mkgmex crandcreate crandn crandp clrand mkwmex proj geno
 read_SOURCES=read.c io.c
 read_CFLAGS=$(MEXOPT)
 read_LDFLAGS=$(LDMEX) -static -Xcompiler -shared -no-install
-
+read_LDADD=
 write_SOURCES=write.c io.c
 write_CFLAGS=$(MEXOPT)
 write_LDFLAGS=$(LDMEX) -static -Xcompiler -shared -no-install
+write_LDADD=
