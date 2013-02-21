@@ -18,7 +18,6 @@
 
 #ifndef AOS_LOCBIN_H
 #define AOS_LOCBIN_H
-#include "bin.h"
 #include "loc.h"
 loc_t *locreaddata(file_t *fp, header_t* header);
 void locwritedata(file_t *fp, const loc_t *loc);

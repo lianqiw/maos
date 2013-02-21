@@ -21,7 +21,6 @@
 #include "smat.h"
 #include "cmat.h"
 #include "zmat.h"
-#include "bin.h"
 /**
    \file cellarr.c
    

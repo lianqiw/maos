@@ -22,9 +22,7 @@
 */
 
 #include "readstr.h"
-#include "mathmisc.h"
-
-
+#include "misc.h"
 /**
    Obtain a string array value from the key. revised on 2010-10-16 to be more
    strict on the entry to avoid mistakes.

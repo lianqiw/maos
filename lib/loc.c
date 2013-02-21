@@ -20,14 +20,11 @@
 #include <sys/file.h>
 #include <unistd.h>
 #include "../sys/sys.h"
-
-
 #include "loc.h"
 #include "cell.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
-#include "bin.h"
 #include "draw.h"
 #include "matbin.h"
 #include "mathmisc.h"

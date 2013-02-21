@@ -388,13 +388,13 @@ static int respond(int sock){
        will complain Bad file descriptor
     */
     int ret=0, pid, cmd[2];
-    info2("respond %d start ...", sock);
+    info2("\rrespond %d start ... ", sock);
     if((ret=streadintarr(sock, cmd, 2))){
 	info2("read failed");
 	goto end;
     }
     pid=cmd[1];
-    info2("read %d %d\n", cmd[0], cmd[1]);
+    info2("\rrespond %d got %d %d.", sock, cmd[0], cmd[1]);
     switch(cmd[0]){
     case CMD_START://Called by maos when job starts.
 	{
@@ -425,26 +425,8 @@ static int respond(int sock){
 	    monitor_send(irun,NULL);
 	}
 	break;
-    case CMD_PATH:{
-	RUN_T *irun=running_get(pid);
-	if(!irun){
-	    irun=running_add(pid,sock);
-	}
-	if(irun->path) free(irun->path);
-	if(streadstr(sock, &irun->path)){
-	    ret=-1;
-	    break;
-	}
-	info2("Received path: %s\n",irun->path);
-	monitor_send(irun,irun->path);
-    }
-	break;
     case CMD_FINISH:
 	running_update(pid,S_FINISH);
-	return -1;
-	break;
-    case CMD_CRASH:/*called by maos */
-	running_update(pid,S_CRASH);
 	return -1;
 	break;
     case CMD_STATUS:/*called by maos */
@@ -467,6 +449,10 @@ static int respond(int sock){
 	    monitor_send(irun,NULL);
 	}
 	break;
+    case CMD_CRASH:/*called by maos */
+	running_update(pid,S_CRASH);
+	return -1;
+	break;
     case CMD_MONITOR:/*called by monitor */
 	{
 	    MONITOR_T *tmp=monitor_add(sock);
@@ -476,20 +462,28 @@ static int respond(int sock){
 	    info2("Monitor is connected at sock %d.\n", sock);
 	}
 	break;
+    case CMD_PATH:{
+	RUN_T *irun=running_get(pid);
+	if(!irun){
+	    irun=running_add(pid,sock);
+	}
+	if(irun->path) free(irun->path);
+	if(streadstr(sock, &irun->path)){
+	    ret=-1;
+	    break;
+	}
+	info2("Received path: %s\n",irun->path);
+	monitor_send(irun,irun->path);
+    }
+	break;
     case CMD_KILL:/*called by mnitor. */
 	{
 	    kill(pid,SIGTERM);
-	    running_update(pid,S_KILLED);
-	}
-	break;
-    case CMD_REMOVE:/*called by monitor to remove a runned object. */
-	{
-	    RUN_T*irun=runned_get(pid);
-	    if(irun){
-		runned_remove(pid);
-	    }else{
-		warning3("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
+	    sleep(1);
+	    if(!kill(pid,0)){
+		kill(pid,SIGKILL);
 	    }
+	    running_update(pid,S_KILLED);
 	}
 	break;
     case CMD_TRACE://called by maos to print backtrace
@@ -550,6 +544,39 @@ static int respond(int sock){
 	    }
 	}
 	break;
+    case CMD_SOCK:
+	break;
+    case CMD_REMOVE:/*called by monitor to remove a runned object. */
+	{
+	    RUN_T*irun=runned_get(pid);
+	    if(irun){
+		runned_remove(pid);
+	    }else{
+		warning3("CMD_REMOVE: %s:%d not found\n",hosts[hid],pid);
+	    }
+	}
+	break;	  
+    case CMD_DISPLAY:/*called by remote display to talk to maos*/
+	{
+	    RUN_T *irun=running_get(pid);
+	    int cmd2[2]={CMD_SOCK, 0};
+	    if(stwriteintarr(irun->sock, cmd2, 2) || stwritefd(irun->sock, sock)){
+		warning("Unable to pass socket %d to maos at %d\n", sock, irun->sock);
+		stwriteint(sock, -1);//respond failure message.
+	    }
+	    ret=-1;
+	}
+	break;
+    case CMD_VERSION://not used
+	break;
+    case CMD_LOAD://not used
+	break;
+    case CMD_UNUSED2:
+	break;
+    case CMD_UNUSED3:
+	break;
+    case CMD_ADDHOST://only used in monitor
+	break;
     case CMD_LAUNCH:{
 	/*called by maos/skyc from another machine to start a job in this
 	  machine*/
@@ -565,7 +592,8 @@ static int respond(int sock){
 	    ret=-1;
 	}
     }
-	break;	  
+	break;
+  
     default:
 	warning3("Invalid cmd: %x\n",cmd[0]);
 	ret=-1;
@@ -605,7 +633,11 @@ static void scheduler_timeout(void){
 }
 
 void scheduler(void){ 
-    listen_port(PORT, respond, 1, scheduler_timeout, 0);
+    char fn[PATH_MAX];
+    snprintf(fn, PATH_MAX, "/tmp/maos-%s/scheduler", USER);
+    remove(fn);
+    listen_port(PORT, fn,respond, 1, scheduler_timeout, 0);
+    remove(fn);
     exit(0);
 }
 /*The following routines maintains the MONITOR_T linked list. */

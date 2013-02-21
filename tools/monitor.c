@@ -301,21 +301,48 @@ gboolean update_title(gpointer data){
 /**
    respond to the kill job event
 */
-void kill_job(PROC_T *p){
+static void kill_job(PROC_T *p){
     GtkWidget *dia=gtk_message_dialog_new
 	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
 	 GTK_MESSAGE_QUESTION,
-	 GTK_BUTTONS_YES_NO,
+	 GTK_BUTTONS_NONE,
 	 "Kill job %d on server %s?",
 	 p->pid,hosts[p->hid]);
+    gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill Job", 0, "Remote Display", 1, "Cancel", 2, NULL);
     int result=gtk_dialog_run(GTK_DIALOG(dia));
     gtk_widget_destroy (dia);
-    if(result==GTK_RESPONSE_YES){
+    switch(result){
+    case 0:
 	if(scheduler_cmd(p->hid,p->pid,CMD_KILL)){
 	    warning("Failed to kill the job\n");
 	}
 	p->status.info=S_TOKILL;
 	refresh(p);
+    	break;
+    case 1:
+	{
+	    //temporary: connect to scheduler with a new port
+	    //todo: call remote display routine directly.
+	    int sock=connect_port(hosts[p->hid], PORT, 0, 0);
+	    int cmd[2]={CMD_DISPLAY, p->pid};
+	    if(stwriteintarr(sock, cmd, 2)){
+		warning("Failed to communicate to scheduler\n");
+		close(sock);
+	    }
+	    if(streadintarr(sock, cmd, 1)){
+		warning("Read response failed\n");
+	    }else if(cmd[0]){
+		warning("The scheduler failed to talk to maos\n");
+	    }else{
+		char *msg=NULL;
+		if(!streadstr(sock, &msg)){
+		    info("maos says %s\n", msg);
+		}else{
+		    warning("failed to get message from maos\n");
+		}
+	    }
+	}
+	break;
     }
 }
 void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p){
@@ -432,13 +459,12 @@ static int test_crashed(int status, double frac){
 static void clear_jobs(GtkAction *btn, int (*testfun)(int, double)){
     (void)btn;
     int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
-    PROC_T *iproc,*jproc;
     if(!pproc[ihost]) return;
     int sock=hsock[ihost];
     if(sock==-1) return;
     int cmd[2];
     cmd[0]=CMD_REMOVE;
-    for(iproc=pproc[ihost]; iproc; iproc=iproc->next){
+    for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
 	if(testfun(iproc->status.info, iproc->frac)){
 	    cmd[1]=iproc->pid;
 	    if(stwriteintarr(sock,cmd,2)){

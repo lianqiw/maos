@@ -134,4 +134,8 @@ int lockadd(int *src, int step);
 
 #define SPIN_LOCK(i) while(__sync_lock_test_and_set(&i, 1)) while(i)
 #define SPIN_UNLOCK(i) __sync_lock_release(&i)
+INLINE void thread_new(thread_fun fun, void* arg){
+    pthread_t temp;
+    pthread_create(&temp, NULL, fun, arg);
+}
 #endif

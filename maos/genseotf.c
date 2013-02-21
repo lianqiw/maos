@@ -31,7 +31,7 @@
 
 #include "maos.h"
 #include "genseotf.h"
-#define DEBUG_POWFSINTS 0
+
 /**
    Master routine that generates short exposure OTF by calling genotf() in the
    library with p/t/t removal set.

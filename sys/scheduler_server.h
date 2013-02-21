@@ -59,13 +59,13 @@ enum{
     CMD_KILL,
     CMD_TRACE,/*8 */
     CMD_DRAW,
-    CMD_BROADCAST,
-    CMD_REMOVE,
-    CMD_HOSTUP,
+    CMD_SOCK,  /**<We are pass a socket*/
+    CMD_REMOVE,/**<Remove a job*/
+    CMD_DISPLAY,/**<Remote display for telemetry*/
     CMD_VERSION,/*13 */
     CMD_LOAD,/*14 */
-    CMD_SHUTRD,/*15 */
-    CMD_SHUTWR,/*16 */
+    CMD_UNUSED2,/*15 */
+    CMD_UNUSED3,/*16 */
     CMD_ADDHOST,/*17*/
     CMD_LAUNCH,
 };

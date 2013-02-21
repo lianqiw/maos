@@ -53,7 +53,7 @@ dcell *genstars(long nsky,         /**<number of star fields wanted*/
 		rand_t *rstat /**<random stream*/
 ){
     char fn[80];
-    double cat_fov;/*catalogue fov */
+    double cat_fov=0;/*catalogue fov */
     int Jind=-1;
     if(nwvl==2 && fabs(wvls[0]-1.25e-6)<1.e-10 && fabs(wvls[1]-1.65e-6)<1.e-10){
 	snprintf(fn,80,"besancon/JH_5sqdeg_lat%g_lon%g_besancon.bin", lat, lon);

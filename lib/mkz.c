@@ -22,7 +22,6 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
-#include "bin.h"
 #include "mkz.h"
 /**
    \file mkg.c

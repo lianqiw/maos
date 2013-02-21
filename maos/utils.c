@@ -437,14 +437,12 @@ void maos_signal_handler(int sig){
 	    break;
 	}
 	warning2("Signal %d: %s\n", sig, info);
-	fflush(stderr);
-	fflush(stdout);
+	fflush(NULL);
 	if(sig !=0 && sig != SIGINT){
 	    PRINT_BACKTRACE;
 	}
 	scheduler_finish(1);
-
-	_Exit(sig);/*don't call clean up functions, but does flush files. */
+	exit(sig);/*don't call clean up functions, but does flush files. */
     }
 }
 /**
@@ -813,4 +811,30 @@ void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat *field
 	opd->p[iloc]+=diff-wvlh;
     }
     cfree(wvf);
+}
+
+void maos_daemon(int sock){
+    info2("maos_daemon is listening at %d\n", sock);
+    int cmd[2];
+    while(!streadintarr(sock, cmd, 2)){
+	info2("maos_daemon got %d\n", cmd[0]);
+	switch(cmd[0]){
+	case CMD_SOCK:
+	    {
+		int fd;
+		if(streadfd(sock, &fd)){
+		    warning("unable to read fd from %d\n", sock);
+		    continue;
+		}
+		stwriteint(fd, 0);//send success message.
+		thread_new((thread_fun)display_server, (void*)(long)fd);
+	    }break;
+	default:
+	    warning("unknown cmd %d\n", cmd[0]);
+	    goto end;
+	    break;
+	}
+    }
+ end:
+    info2("maos_daemon quit\n");
 }

@@ -18,7 +18,6 @@
 
 #ifndef AOS_MATBIN_H
 #define AOS_MATBIN_H
-#include "bin.h"
 #include "type.h"
 
 #define AOS_MATBIN_DEF(X,Y,T)\

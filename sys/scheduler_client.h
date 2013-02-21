@@ -30,6 +30,7 @@ void start_scheduler(int argc, char **argv);
 #define print_backtrace(A)
 #endif
 /*called by maos */
+int scheduler_listen(void(*fun)(int));
 int scheduler_start(char *path, int nthread, int waiting);
 int scheduler_wait(void);
 int scheduler_finish(int status);

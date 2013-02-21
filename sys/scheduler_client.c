@@ -55,15 +55,18 @@ int scheduler_start(char *path, int nthread, int waiting){
 int scheduler_wait(void){
    return 0;
 }
-void scheduler_finish(int status){
-  (void)status;
+int scheduler_finish(int status){
+    (void)status; return 0;
 }
-void scheduler_report(STATUS_T *status){
-  (void)status;
+int scheduler_report(STATUS_T *status){
+    (void)status; return 0;
 }
 void print_backtrace_symbol(void *const *buffer, int size){
   (void)buffer;
   (void)size;
+}
+int scheduler_listen(void(*fun)(int)){
+    return 0;
 }
 #if !(defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__))
 void print_backtrace(int sig){
@@ -196,7 +199,9 @@ static int scheduler_connect_self(int block){
     if(block){
 	scheduler_launch();
     }
-    int sock=connect_port("localhost", PORT, block, 0);
+    char fn[PATH_MAX];
+    snprintf(fn, PATH_MAX, "/tmp/maos-%s/scheduler", USER);
+    int sock=connect_port(fn, PORT, block, 0);
     if(sock<0){
 	warning2("Unable to connect to port %d\n", PORT);
     }
@@ -204,6 +209,7 @@ static int scheduler_connect_self(int block){
 }
 
 static int psock=-1;
+static void (*pfun)(int)=NULL;//function that listens to psock.
 static char *path_save=NULL;
 static void scheduler_report_path(char *path){
     if(psock==-1){
@@ -231,6 +237,20 @@ static void scheduler_report_path(char *path){
 }
 #define CATCH_ERR(A) if(A){psock=-1; return -1;}
 /* called by mcao to wait for available cpu. */
+
+/**
+   Started by maos to listen to the sock which connects to the
+   scheduler for commands
+*/
+int scheduler_listen(void(*fun)(int)){
+    pfun=fun;
+    if(psock!=-1 && pfun){
+	pfun(psock);
+	return 0;
+    }else{
+	return -1;
+    }
+}
 int scheduler_start(char *path, int nthread, int waiting){
     psock=scheduler_connect_self(1);
     if(psock==-1){
@@ -504,7 +524,9 @@ char* scheduler_get_drawdaemon(int pid, int direct){
 	      takes time*/
 	    int sock;
 	    for(int retry=0; retry<10; retry++){
+#ifndef MAOS_DISABLE_SCHEDULER
 		sock=scheduler_connect_self(0);
+#endif
 		if(sock==-1){
 		    warning2("failed to connect to scheduler\n");
 		    sleep(1);
@@ -593,6 +615,11 @@ int launch_exe(const char *cmd){
     }
     return 0;
 }
+#ifdef MAOS_DISABLE_SCHEDULER
+ int scheduler_launch_exe(const char *host, const char *scmd){
+     return -1;
+ }
+#else
 /**
    ask scheduler in another machine to launch exe
 */
@@ -608,3 +635,4 @@ int scheduler_launch_exe(const char *host, const char *scmd){
     close(sock);
     return ret;
 }
+#endif

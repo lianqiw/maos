@@ -27,12 +27,12 @@
 #include <stdint.h>
 #include <limits.h>
 #include <ctype.h> /*isspace */
-#include "../sys/sys.h"
-
-
+#include "process.h"
+#include "misc.h"
+#include "path.h"
+#include "thread.h"
+//#include "../sys/sys.h"
 #include "bin.h"
-
-
 #include "readstr.h"
 /**
    \file bin.c Defines our custom file format .bin or zipped .bin.gz and the
@@ -738,6 +738,7 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
 		end=1;
 	    }
 	}
+	page++;
     }
     switch(bitpix){
     case -32:

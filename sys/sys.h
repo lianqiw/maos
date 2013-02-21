@@ -27,4 +27,6 @@
 #include "process.h"
 #include "scheduler_client.h"
 #include "daemonize.h"
+#include "bin.h"
+#include "readstr.h"
 #endif

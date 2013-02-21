@@ -19,9 +19,6 @@
 #ifndef AOS_TYPE_H
 #define AOS_TYPE_H
 #include "../sys/sys.h"
-
-#include "bin.h"
-
 /**
    \file lib/type.h Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.

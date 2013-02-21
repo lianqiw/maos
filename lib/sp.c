@@ -43,9 +43,6 @@
 #include "cmat.h"
 #include "cell.h"
 #include "suitesparse.h"
-#include "bin.h"
-
-#include "../sys/sys.h"
 #include "defs.h"
 #include "suitesparse.c"
 

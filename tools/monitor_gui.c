@@ -60,10 +60,10 @@ static void change_button(PROC_T *p, const gchar *STOCKID, void (*func)){
     }else{
 	p->btn=new_button();
     }
-    if(p->btnimage){
+    if(p->btnimage){//update image
 	gtk_image_clear(GTK_IMAGE(p->btnimage));
 	gtk_image_set_from_stock(GTK_IMAGE(p->btnimage),STOCKID,GTK_ICON_SIZE_MENU);
-    }else{
+    }else{//create image and add to display
 	p->btnimage=gtk_image_new_from_stock(STOCKID,GTK_ICON_SIZE_MENU);
 	gtk_container_add(GTK_CONTAINER(p->btn), p->btnimage);
     }

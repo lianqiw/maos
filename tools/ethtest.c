@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
 	if(argc>3){
 	    type=strtol(argv[3], NULL, 10);
 	}
-	listen_port(port, server, 0, NULL, 1);
+	listen_port(port, NULL, server, 0, NULL, 1);
     }else{
 	if(argc<4){
 	    error("Usage: ./ethtest client hostname port");

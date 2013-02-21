@@ -41,6 +41,7 @@
 #include "../cuda/gpu.h"
 #endif
 #define TIMING_MEAN 0
+const SIM_T *cursimu=NULL;
 /**
    Closed loop simulation main loop. It calls init_simu() to initialize the
    simulation struct. Then calls genscreen() to generate atmospheric turbulence
@@ -63,6 +64,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	curiseed=iseed;
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
+	cursimu=simu;
 	if(!simu) continue;/*skip. */
 	if(recon) recon->simu=simu;
 	if(parms->atm.frozenflow){

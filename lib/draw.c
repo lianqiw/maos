@@ -26,7 +26,7 @@
 #include <errno.h>
 #include "../sys/sys.h"
 #include "mathmisc.h"
-
+#include "draw.h"
 int DRAW_ID=0;
 int DRAW_DIRECT=0; /*set to 1 to launch drawdaemon directly without going through scheduler. */
 int disable_draw=0; /*if 1, draw will be disabled  */
@@ -38,8 +38,7 @@ int read_helper=0;
    \file draw.c
    Contains functions for data visualization.   draw by calling gtkdraw via daemon
 */
-#include "draw.h"
-#include "bin.h"
+
 static FILE *pfifo=NULL;
 #define DOPPRINT 1
 #if DOPPRINT == 0
@@ -67,7 +66,10 @@ static FILE *pfifo=NULL;
 	FWRITEINT(pfifo, cmd); FWRITESTR(pfifo,arg);	\
     }							
 /**
-   A helper routine that forks in the early stage to launch drawdaemon.
+   A helper routine that forks in the early stage to launch drawdaemon. We don't
+   use drawdaemon to launch it because drawdaemon may not have the right DISPLAY
+   related environment and also hard to work during ssh session even if
+   environment is passed.
 */
 void draw_helper(void){
     int fd[2];

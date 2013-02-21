@@ -18,7 +18,6 @@
 
 #ifndef AOS_SPBIN_H
 #define AOS_SPBIN_H
-#include "bin.h"
 #include "type.h"
 
 #define AOS_SPBIN_DEF(X,Y,T)\
@@ -29,4 +28,3 @@ void Y(spcellwrite)(const Y(spcell) *spc, const char *format,...) CHECK_ARG(2);\
 X(sp)* Y(spread)(const char *format,...) CHECK_ARG(1);\
 Y(spcell) *Y(spcellread)(const char *format,...) CHECK_ARG(1);
 #endif
-

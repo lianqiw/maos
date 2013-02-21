@@ -51,6 +51,7 @@
 #include <netdb.h>
 #include <netinet/tcp.h> /*SOL_TCP */
 #include <netinet/in.h>
+#include <sys/un.h>
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
 #endif
@@ -107,7 +108,27 @@ static void socket_tcp_nodelay(int sock){
     setsockopt(sock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
 }
 /**
-   make a server port and bind to localhost on all addresses
+   make a server port and bind to sockpath. AF_UNIX.
+ */
+int bind_socket_local(char *sockpath){
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    struct sockaddr_un addr={0};
+    //memset(&addr, 0, sizeof(struct sockaddr_un));
+    addr.sun_family=AF_UNIX;
+    strncpy(addr.sun_path, sockpath, sizeof(addr.sun_path)-1);
+    if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))==-1){
+	perror("bind");
+	warning("bind to %s failed\n", sockpath);
+	close(sock);
+	sock=-1;
+    }
+    if(sock!=-1){
+	info2("binded to %s at sock %d\n", sockpath, sock);
+    }
+    return sock;
+}
+/**
+   make a server port and bind to localhost on all addresses. AF_INET
 */
 int bind_socket (uint16_t port, int type){
     int sock=-1;
@@ -145,9 +166,13 @@ int bind_socket (uint16_t port, int type){
 	count++;
 	if(count>100){
 	    error("Failed to bind to port %d\n",port);
+	    close(sock);
+	    sock=-1;
 	}
     }
-    info2("binded to port %hd at sock %d\n",port,sock);
+    if(sock!=-1){
+	info2("binded to port %hd at sock %d\n",port,sock);
+    }
     return sock;
 }
 
@@ -161,23 +186,41 @@ static void signal_handler(int sig){
    establed/handled, 2) every timeout_sec if timeout_sec>0. This function only
    return at error.
  */
-void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void (*timeout_fun)(), int nodelay){
+void listen_port(uint16_t port, char *localpath, int (*responder)(int),
+		 double timeout_sec, void (*timeout_fun)(), int nodelay){
     register_signal_handler(signal_handler);
 
     fd_set read_fd_set;
     fd_set active_fd_set;
-    struct sockaddr_in clientname;
+    FD_ZERO (&active_fd_set);
+
+    int sock_local=-1;
+    if(localpath){//also bind to AF_UNIX
+	sock_local = bind_socket_local(localpath);
+	if(sock_local==-1){
+	    info("bind to %s failed\n", localpath);
+	}else{
+	    if(!listen(sock_local, 1)){
+		FD_SET(sock_local, &active_fd_set);
+	    }else{
+		perror("listen");
+		close(sock_local);
+		sock_local=-1;
+	    }
+	}
+    }
+
     int sock = bind_socket (port, 1);//has to be tcp.
-    if(nodelay){
+    if(nodelay){//turn off tcp caching.
 	socket_tcp_nodelay(sock);
     }
     if (listen (sock, 1) < 0){
 	perror("listen");
 	exit(EXIT_FAILURE);
     }
-    FD_ZERO (&active_fd_set);
-    FD_SET (sock, &active_fd_set);
 
+    FD_SET (sock, &active_fd_set);
+ 
     while(!quit_listen){
 	if(timeout_fun){
 	    timeout_fun();
@@ -205,13 +248,27 @@ void listen_port(uint16_t port, int (*responder)(int), double timeout_sec, void 
 	    if(FD_ISSET(i, &read_fd_set)){
 		if(i==sock){
 		    /* Connection request on original socket. */
-		    socklen_t size=sizeof(struct sockaddr_in);;
-    		    int port2=accept(sock, (struct sockaddr*)&clientname, &size);
+		    socklen_t size=sizeof(struct sockaddr_in);
+		    struct sockaddr_in clientname;
+    		    int port2=accept(i, (struct sockaddr*)&clientname, &size);
 		    if(port2<0){
 			warning("accept failed: %s\n", strerror(errno));
+			FD_CLR(i, &active_fd_set);
 			break;
 		    }
 		    info("port %d is connected\n", port2);
+		    cloexec(port2);
+		    FD_SET(port2, &active_fd_set);
+		}else if(i==sock_local){
+		    socklen_t size=sizeof(struct sockaddr_un);
+		    struct sockaddr_un clientname;
+		    int port2=accept(i, (struct sockaddr*)&clientname, &size);
+		    if(port2<0){
+			warning("accept failed: %s. @%d\n", strerror(errno), i);
+			FD_CLR(i, &active_fd_set);
+			break;
+		    }
+		    info("port %d is connected locally\n", port2);
 		    cloexec(port2);
 		    FD_SET(port2, &active_fd_set);
 		}else{
@@ -273,12 +330,27 @@ int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port
 
 /**
   Connect to a host at port.
-  mode=0: read/write
-  mode=1: read only by the client. the server won't read
-  mode=2: write only by the client. the server won't write
+  hostname may start with / to indicate a local UNIX port
 */
 int connect_port(const char *hostname, int port, int block, int nodelay){
-    int sock;
+    int sock=-1;
+    if(hostname[0]=='/'){
+	warning("try to connect locally through AF_UNIX\n");
+	sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	cloexec(sock);
+	struct sockaddr_un addr={0};
+	//memset(&addr, 0, sizeof(struct sockaddr_un));
+	addr.sun_family=AF_UNIX;
+	strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
+	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
+	    perror("connect");
+	    warning("connect failed\n");
+	    close(sock);
+	    sock=-1;
+	}	
+	hostname="localhost";
+    }
+    if(sock!=-1) return sock;
     int count=0;
     struct sockaddr_in servername;
     do{

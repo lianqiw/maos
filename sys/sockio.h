@@ -36,4 +36,8 @@ INLINE int streadintarr(int sfd, int* cmd, unsigned int len){
 }
 int stwritestr(int sfd, const char *str);
 int streadstr(int sfd, char **str);
+int stwritestrarr(int sfd, const char *const *str, int nstr);
+int streadstrarr(int sfd, char ***str, int *nstr);
+int stwritefd(int sfd, int fd);
+int streadfd(int sfd, int *fd);
 #endif

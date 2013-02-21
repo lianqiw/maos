@@ -15,26 +15,15 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "maos.h"
+/**
+   \file display.c
 
-#include "../sys/sys.h"
-#include "mathmisc.h"
-/*Check whether the char is space. We only treat real space, \t and \v as space. */
-INLINE int is_space(char c){
-    if(c==' ' || c=='\t' || c=='\v'){
-	return 1;
-    }else{
-	return 0;
-    }
+   Contains a display server to pass data to a remote display.
+*/
+
+void display_server(int fd){
+    stwritestr(fd, "Here is the display server running\n");
+    
+    close(fd);
 }
-/*Check whether the current express ends. String end or newline is treated as end.*/
-INLINE int is_end(char c){
-    if(c=='\0' || c=='\n' || c=='\r' || c==';'){
-	return 1;
-    }else{
-	return 0;
-    }
-}
-int readstr_strarr(char ***res, int len, const char *sdata);
-double readstr_num(const char *data, char **endptr0);
-int readstr_numarr(void **ret, int len, int *nrow0, int *ncol0, int type, const char *data);
-void readstr_intarr_nmax(int **ret, int len, const char *data);

@@ -20,7 +20,6 @@
 /**
    Functions regarding to threading
 */
-
 /**
    Break out the job to be executed by multiple threads. 
    if interlaced==0: partition the job to consecutive segments.

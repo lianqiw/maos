@@ -18,7 +18,6 @@
 
 #ifndef AOS_CELLARR_H
 #define AOS_CELLARR_H
-#include "bin.h"
 #include "type.h"
 /**
    used to save array of dmat, cmat, ccell or dcell. mainly used to save

@@ -37,7 +37,6 @@
 #else
 
 #include "mkg.h"
-#include "bin.h"
 #include "../sys/sys.h"
 #include "dsp.h"
 #include "loc.h"

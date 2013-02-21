@@ -16,6 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "maos.h"
+#ifndef MVM_CLIENT_H
+#define MVM_CLIENT_H
 #define USE_SHORT 0
 #if USE_SHORT
 #define GSCALE 2062650000. //convert grad to int

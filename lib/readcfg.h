@@ -19,9 +19,7 @@
 #ifndef __READ_CONFIG_H
 #define __READ_CONFIG_H
 
-
 #include "dmat.h"
-
 #define format2key				\
     char key[512];				\
     va_list ap;					\

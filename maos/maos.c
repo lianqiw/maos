@@ -160,8 +160,10 @@ int main(int argc, char **argv){
     }
     /*Launch the scheduler and report about our process */
     scheduler_start(scmd,arg->nthread,!arg->force);
+    thread_new((thread_fun)scheduler_listen, maos_daemon);
     info2("%s\n", scmd);
-    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
+    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", 
+	  PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
 #if USE_CUDA
     info2(", w/t CUDA");
 #else

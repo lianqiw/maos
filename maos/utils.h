@@ -24,7 +24,6 @@
 extern char _binary____config_tar_gz_start;
 extern char _binary____config_tar_gz_end;
 #endif
-extern SIM_T *cursimu;/*Used for the signal handler only. */
 void addnoise(dmat *A, rand_t* rstat, 
 	      const double bkgrnd, const double pcalib, 
 	      const double *bkgrnd2, const double *bkgrnd2c,
@@ -50,4 +49,6 @@ double calc_aniso2(double r0, int nht, double *ht, double *wt, double hc1, doubl
 void shift_inte(dmat *ap, dcell **inte);
 char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl);
 void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat* fieldstop, double wvl);
+void maos_daemon(int sock);
+void display_server(int sock);
 #endif

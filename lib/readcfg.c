@@ -30,14 +30,11 @@
 #include <limits.h>
 #include "readcfg.h"
 
-#include "../sys/sys.h"
-#include "mathmisc.h"
-#include "readstr.h"
 /**
    file readcfg.c
 
    Routines to read .conf type config files. Each entry is composed of a key and
-   a value. The entries are maintain ed a hash table. Each entry can be
+   a value. The entries are maintained in a hash table. Each entry can be
    retrieved from the key.
 */
 /**
