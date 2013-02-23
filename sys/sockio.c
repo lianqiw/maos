@@ -35,12 +35,22 @@ static __attribute__((constructor))void init(){
     signal(SIGPIPE, SIG_IGN);
 }
 int stwrite(int sfd, const void *p, size_t len){
-    if(write(sfd, p, len)!=len){
-	warning3("Write socket %d failed with error %d: %s\n", sfd, errno, strerror(errno));
-	return -1;
-    }else{
-	return 0;
-    }
+    int nwrite;
+    const char *start=p;
+    do{
+	errno=0;
+	nwrite=write(sfd, start, len);
+	if(nwrite<=0){
+	    warning("Write socket %d failed with error %d: %s\n",
+		    sfd, errno, strerror(errno));
+	    return -1;
+	}else if(errno){
+	    warning("stwrite: %s\n", strerror(errno));
+	}
+	len-=nwrite;
+	start+=nwrite;
+    }while(len>0);
+    return 0;
 }
 int stread(int sfd, void *p, size_t len){
     int nread;
@@ -142,7 +152,6 @@ int stwritefd(int sfd, int fd){
 	warning("sendmsg failed to send fd %d over %d\n", fd, sfd);
 	ans=-1;
     }else{
-	warning("sendmsg success\n");
 	ans=0;
     }
     return ans;

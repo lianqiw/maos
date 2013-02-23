@@ -24,170 +24,281 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <search.h>
 #include "../sys/sys.h"
 #include "mathmisc.h"
 #include "draw.h"
 int DRAW_ID=0;
-int DRAW_DIRECT=0; /*set to 1 to launch drawdaemon directly without going through scheduler. */
+int DRAW_DIRECT=0;
 int disable_draw=0; /*if 1, draw will be disabled  */
 PNEW(lock);
-int write_helper=0;
-int read_helper=0;
-
+#define MAXDRAW 20
+int sock_ndraw=0;//number of displays
+enum{
+    S_FD,
+    S_LIST,
+    S_FIG,
+    S_FN,
+    S_PAUSE,
+    S_TOT,
+};
+void* sock_draws[MAXDRAW][S_TOT];//fd, list, fig, fn, pause
+static int sock_helper=-1;
+int listening=0;
+/*If not null, only draw those that match draw_fig and draw_fn*/
 /**
    \file draw.c
-   Contains functions for data visualization.   draw by calling gtkdraw via daemon
+   Contains functions for data visualization. 
+
+   2013-02-20 
+
+   A new scheme:
+ 
+   The draw() routines pass sock to drawdaemon if need to launch it. 
+   
+   There are two scenarios where drawdaemon is used to display graphics.
+
+   1) monitor (remote machine) opens a socket to connect to scheduler to request
+   showing progress of a maos run. The scheduler passes the socket to maos. The
+   monitor passes the other end of the socket to drawdaemon by fork()+exec(). In
+   the end maos has direct connect to drawdaemon using sockets. draw() will
+   write to the sockets the information to display.
+
+   2) maos wants to launch drawdaemon. draw() will now talk to draw_helper()
+   (running in a separate lightweight process) with pid through a socket pair
+   (AF_UNIX type). The draw_helper() will then create another socket_pair, pass
+   one end of it to draw(), and the other end to drawdaemon() by fork()+exec().
+
+
+   todo: 
+   1) code drawopdmap to call routines to copy data from gpu to cpu when needed to avoid unnecessary copy.
 */
 
-static FILE *pfifo=NULL;
 #define DOPPRINT 1
 #if DOPPRINT == 0
 #undef info
 #define info(A...)
 #endif
-#undef FWRITE
-#define FWRITE(ptr,size,nmemb,pfifo)		\
-    if(fifo_write(ptr,size,nmemb,pfifo)){	\
-	goto done;				\
-    }
-#define FWRITEINT(pfifo,cmd) {int tmp=cmd; if(fifo_write(&tmp,sizeof(int),1,pfifo)){goto done;}}
-#define FWRITESTR(pfifo,arg)				\
-    if(arg && strlen(arg)>0){				\
-	int slen=strlen(arg)+1;				\
-	FWRITEINT(pfifo,slen);				\
-	if(fifo_write(arg,sizeof(char),slen,pfifo)){	\
-	    goto done;					\
-	}						\
-    }else{						\
-	FWRITEINT(pfifo,0);				\
-    }
-#define FWRITECMDSTR(pfifo,cmd,arg)			\
-    if(arg&&strlen(arg)>0){				\
-	FWRITEINT(pfifo, cmd); FWRITESTR(pfifo,arg);	\
-    }							
+
+#define CATCH(A) if(A){perror("stwrite");if(sock_helper==-1&&!DRAW_DIRECT){disable_draw=1;warning("disable draw\n");} warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);draw_remove(sock_draw); continue;}
+#define STWRITESTR(A) CATCH(stwritestr(sock_draw,A))
+#define STWRITEINT(A) CATCH(stwriteint(sock_draw,A))
+#define STWRITECMDSTR(cmd,str) CATCH(stwriteint(sock_draw,cmd) || stwritestr(sock_draw,str))
+#define STWRITE(p,len) CATCH(stwrite(sock_draw,p,len));
+
 /**
-   A helper routine that forks in the early stage to launch drawdaemon. We don't
-   use drawdaemon to launch it because drawdaemon may not have the right DISPLAY
-   related environment and also hard to work during ssh session even if
-   environment is passed.
+   Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
+*/
+static void listen_drawdaemon(void **sock_data){
+    listening=1;
+    int sock_draw=(int)(long)sock_data[0];
+    char **figfn=(char**)&sock_data[2];
+    info2("draw is listening to drawdaemon at %d\n", sock_draw);
+    int cmd;
+    while(!streadint(sock_draw, &cmd)){
+	switch(cmd){
+	case DRAW_FIGFN:
+	    {
+		char *fig, *fn;
+		streadstr(sock_draw, &fig);
+		streadstr(sock_draw, &fn);
+		info2("received %s, %s. was %s %s\n", fig, fn, figfn[0], figfn[1]);
+		if(figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
+		    info2("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
+		}
+		free(figfn[0]);
+		free(figfn[1]);
+		figfn[0]=fig;
+		figfn[1]=fn;
+	    }
+	    break;
+	case DRAW_PAUSE:
+	    sock_data[S_PAUSE]=(void*)1;
+	    break;
+	case DRAW_RESUME:
+	    sock_data[S_PAUSE]=(void*)0;
+	    break;
+	default:
+	    warning("cmd=%d is not understood\n", cmd);
+	}
+    }
+    info2("draw stop lisening to drawdaemon at %d\n", sock_draw);
+    listening=0;
+}
+/* List of list*/
+typedef struct list_t{
+    char *key;
+    struct list_t *next;
+    struct list_t *child;//child list
+}list_t;
+
+static int list_search(list_t **head, list_t **node, const char *key){
+    list_t *p;
+    for(p=*head; p; p=p->next){
+	if(!strcmp(p->key, key)){
+	    break;
+	}
+    }
+    int ans=p?1:0;
+    if(!p){
+	p=calloc(1, sizeof(list_t));
+	p->key=strdup(key);
+	p->next=*head;
+	*head=p;
+    }
+    if(node) *node=p;
+    return ans;
+}
+static void list_destroy(list_t **head){
+    list_t *p;
+    for(p=*head; p; p=*head){
+	*head=p->next;
+	if(p->child){
+	    list_destroy(&p->child);
+	}
+	free(p);
+    }
+}
+/*Add fd to list of drawing socks*/
+int draw_add(int fd){
+    if(fd==-1) return -1;
+    info("received sock %d\n", fd);
+    if(sock_helper==-1){//externally added
+	sock_helper=-2;
+    }
+    for(int ifd=0; ifd<sock_ndraw; ifd++){
+	if((int)(long)sock_draws[ifd][S_FD]==fd){//already found
+	    return 0;
+	}
+    }
+    if(sock_ndraw<MAXDRAW){
+	memset(sock_draws[sock_ndraw], 0, sizeof(sock_draws[sock_ndraw]));
+	sock_draws[sock_ndraw][S_FD]=(void*)(long)fd;
+	thread_new((thread_fun)listen_drawdaemon, &sock_draws[sock_ndraw]);
+	sock_ndraw++;
+	return 0;
+    }else{
+	return -1;
+    }
+}
+static void draw_remove(int fd){
+    if(sock_ndraw<=0 || fd<0) return;
+    int found=0;
+    for(int ifd=0; ifd<sock_ndraw; ifd++){
+	if((int)(long)sock_draws[ifd][S_FD]==fd){
+	    found=1;
+	    list_destroy((list_t**)&sock_draws[ifd][S_LIST]);
+	    free(sock_draws[ifd][S_FIG]);
+	    free(sock_draws[ifd][S_FN]);
+	}else if(found){//shift left
+	    memcpy(sock_draws[ifd-1], sock_draws[ifd], sizeof(sock_draws[sock_ndraw]));
+	}
+    }
+    if(found){
+	sock_ndraw--;
+    }else{
+	warning("draw_remove: fd=%d is not found\n", fd);
+    }
+}
+static int launch_drawdaemon(){
+    int sv2[2];
+    /*one end of sv2 will be passed back to draw_helper, the other end of sv2
+      will be passed to drawdaemon.*/
+    if(!socketpair(AF_UNIX, SOCK_STREAM, 0, sv2)){
+	if(spawn_drawdaemon(sv2[1])){
+	    warning("spawn drawdaemon failed\n");
+	    close(sv2[0]);
+	    sv2[0]=-1;
+	}
+	close(sv2[1]);
+    }else{
+	perror("socketpair");
+	warning("socket pair failed, cannot launch drawdaemon\n");
+	disable_draw=1;
+	sv2[0]=-1;
+    }
+    return sv2[0];
+}
+
+/**
+   A helper routine that forks in the early stage to launch drawdaemon.  We
+   don't use the main routine to launch drawdaemon because it takes very long to
+   fork a process that consumes Gig's of memory.
+
+   We don't use drawdaemon to launch it because drawdaemon may not have the
+   right DISPLAY related environment and also hard to work during ssh session
+   even if environment is passed.
 */
 void draw_helper(void){
-    int fd[2];
-    int fd2[2];
-    if(pipe(fd) || pipe(fd2)){
-	warning("Create pipe failed. Return.\n");
-	return;
+    int sv[2];
+    if(socketpair(AF_UNIX, SOCK_STREAM, 0, sv)){
+	perror("socketpair");
+	warning("socketpair failed, disable drawing.\n"); 
+	disable_draw=1;
+	sock_helper=-1;
     }
     pid_t pid=fork();
     if(pid<0){
+	close(sv[0]); 
+	close(sv[1]);
 	warning("Fork failed. Return.\n");
-	return;
+	sock_helper=-1;
     }
     if(pid){/*Parent */
-	close(fd[0]);
-	write_helper=fd[1];
-	close(fd2[1]);
-	read_helper=fd2[0];
-	return;
+	sock_helper=sv[0];
+	close(sv[1]);
     }else{/*Child */
-	close(fd[1]);
-	int read_parent=fd[0];
-	close(fd2[0]);
-	int write_parent=fd2[1];
+	close(sv[0]);
 	int cmd;
-	while(read(read_parent, &cmd, sizeof(int))==sizeof(int)){
-	    char *fifo_fn=scheduler_get_drawdaemon(cmd, 1);
-	    stwritestr(write_parent, fifo_fn);
+	while(!streadint(sv[1], &cmd)){
+	    int sd=launch_drawdaemon();
+	    if(stwritefd(sv[1], sd)){
+		warning("write %d to sv[1] failed\n", sd);
+	    }
 	}
-	_exit(0);
+	close(sv[1]);
+	_exit(0);//shall never return.
     }
 }
 /**
-   Open a fifo (created by the drawdaemon) and start writing to it.
+   Open a connection to drawdaemon. sock_draw may be set externally, in which case helper=-1.
 */
-static int fifo_open(){
-    int fd=-1;
-    int retry=0;
-    static char *fifo_fn=NULL;
+static int open_drawdaemon(){
+    signal(SIGPIPE, SIG_IGN);
     if(disable_draw){
 	return -1;
     }
-    if(pfifo){ 
-	fclose(pfifo); pfifo=NULL;
-    }
-retry:
-    if(fifo_fn){/*fifo_fn is already set. drawdaemon has already started. */
-	fd=open(fifo_fn,O_NONBLOCK|O_WRONLY);
-	if(fd!=-1){/*open succeed. */
-	    pfifo=fopen(fifo_fn,"wb");
-	    close(fd);
-	    if(pfifo){
-		return 0;
+    if(!sock_ndraw){
+	if(DRAW_DIRECT){
+	    draw_add(launch_drawdaemon());
+	}else if(sock_helper!=-2){
+	    if(sock_helper==-1){
+		draw_helper();
 	    }
-	}else{
-	    sleep(1);
-	    free(fifo_fn); fifo_fn=NULL;
-	    if(retry++>20){
+	    if(!DRAW_ID){
+		DRAW_ID=getpid();
+	    }
+	    int sock;
+	    if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
 		disable_draw=1;
-		return -1;
+		close(sock_helper);
+		sock_helper=-1;
+		warning("Unable to talk to the helper to launch drawdaemon\n");
+	    }else{
+		draw_add(sock);
 	    }
 	}
     }
-    if(!DRAW_ID){
-	DRAW_ID=getpid();
-    }
-    /*Open failed. drawdaemon has closed. */
-    if(write_helper && read_helper){
-	info2("Helper is running, launch drawdaemon through it\n");
-	if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
-	    streadstr(read_helper, &fifo_fn);
-	}else{/*helper has exited, launch it again */
-	    draw_helper();
-	    if(write(write_helper, &DRAW_ID, sizeof(int))==sizeof(int)){
-		streadstr(read_helper, &fifo_fn);
-	    }else{/*still failed. */
-		write_helper=0;
-		read_helper=0;
-	    }
-	}
-    }
-
-    if(!fifo_fn){/*above method failed. */
-	fifo_fn=strdup(scheduler_get_drawdaemon(DRAW_ID, DRAW_DIRECT));
-    }
-    if(!fifo_fn){
-	warning("Unable to find and launch drawdaemon\n"); 
-	disable_draw=1;
-	return -1;
-    }
-    goto retry;
+    return sock_ndraw==0?-1:0;
 }
-/**
-   Write data to the fifo. Handle exceptions.
-*/
-inline static int fifo_write(const void *ptr, /**<Pointer to the data*/
-			     size_t size,     /**<Size of each element*/
-			     size_t nmemb,    /**<Number of elements*/
-			     FILE *fp         /**<Pointer to the File*/
-			     ){
- retry:
-    if(nmemb && fwrite(ptr,size,nmemb,fp)!=nmemb){
-	perror("fifo_write");
-	if(errno==EAGAIN || errno==EWOULDBLOCK){
-	    sleep(1);
-	    warning("\nfifowrite: Retrying\n");
-	    goto retry;
-	}else if(errno==EPIPE){
-	    warning("\nBroken pipe.\n");
-	    fclose(pfifo); pfifo=NULL;
-	    return -1;
-	}else{
-	    warning("\nUnknown error\n");
-	    fclose(pfifo); pfifo=NULL;
-	    return -1;
-	}
-    }
-    return 0;
+
+/* Search whether fig is already in list. Return 1 if found. Insert if not found
+   and return 0.*/
+static int check_figfn(list_t **head, char *fig, char *fn){
+    list_t *child;
+    int found1=list_search(head, &child, fig);
+    int found2=list_search(&child->child, NULL, fn);
+    return found1 && found2;
 }
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.
@@ -196,97 +307,104 @@ void plot_points(char *fig,          /**<Category of the figure*/
 		 long ngroup,        /**<Number of groups to plot*/
 		 loc_t **loc,        /**<Plot arrays of loc as grid*/
 		 dcell *dc,          /**<If loc ismpety, use cell to plot curves*/
-		 const int32_t *style,  /**<Style of each point*/
+		 const int32_t *style,/**<Style of each point*/
 		 const double *limit,/**<x min, xmax, ymin and ymax*/
 		 const char *xylog,  /**<Whether use logscale for x, y*/
 		 int ncir,           /**<Number of circles*/
 		 double (*pcir)[4],  /**<Data for the circles: x, y origin, radius, and color*/
-		 char **legend,/**<ngroup number of char**/
+		 char **legend,      /**<ngroup number of char**/
 		 const char *title,  /**<title of the plot*/
 		 const char *xlabel, /**<x axis label*/
 		 const char *ylabel, /**<y axis label*/
 		 const char *format, /**<subcategory of the plot.*/
 		 ...){
+    if(disable_draw) return;
     format2fn;
     LOCK(lock);
-    if(fifo_open()){/*failed to open. */
+    if(open_drawdaemon()){/*failed to open. */
 	warning("Failed to open\n");
-	goto done;
+	goto end;
     }
-    /*info2("pts");getchar(); */
-    FWRITEINT(pfifo, FIFO_START);
-    if(loc){/*there are points to plot. */
-	for(int ig=0; ig<ngroup; ig++){
-	    FWRITEINT(pfifo, FIFO_POINTS);
-	    FWRITEINT(pfifo, loc[ig]->nloc);
-	    FWRITEINT(pfifo, 2);
-	    FWRITEINT(pfifo, 1);
-	    FWRITE(loc[ig]->locx, sizeof(double), loc[ig]->nloc, pfifo);
-	    FWRITE(loc[ig]->locy, sizeof(double), loc[ig]->nloc, pfifo);
+    for(int ifd=0; ifd<sock_ndraw; ifd++){
+	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+	int sock_draw=(int)(long)sock_draws[ifd][S_FD];
+	char **figfn=(char**)&sock_draws[ifd][S_FIG];
+	if(sock_draws[ifd][S_PAUSE]) continue;
+	if(figfn[0] && figfn[1] &&
+	   check_figfn((list_t**)&sock_draws[ifd][S_LIST], fig, fn) && 
+	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
+	    continue;
 	}
-	if(dc){
-	    warning("both loc and dc are specified\n");
-	}
-    }else if(dc){
-	if(ngroup!=dc->nx*dc->ny){
-	    warning("ngroup and dimension of dc mismatch\n");
-	    ngroup=dc->nx*dc->ny;
-	}
-	for(int ig=0; ig<ngroup; ig++){
-	    int nx=0, ny=0;
-	    double *p=NULL;
-	    FWRITEINT(pfifo, FIFO_POINTS);
-	    if(dc->p[ig]){
-		nx=dc->p[ig]->nx;
-		ny=dc->p[ig]->ny;
-		p=dc->p[ig]->p;
+	STWRITEINT(DRAW_START);
+	if(loc){/*there are points to plot. */
+	    for(int ig=0; ig<ngroup; ig++){
+		STWRITEINT(DRAW_POINTS);
+		STWRITEINT(loc[ig]->nloc);
+		STWRITEINT(2);
+		STWRITEINT(1);
+		STWRITE(loc[ig]->locx, sizeof(double)*loc[ig]->nloc);
+		STWRITE(loc[ig]->locy, sizeof(double)*loc[ig]->nloc);
 	    }
-	    FWRITEINT(pfifo, nx);
-	    FWRITEINT(pfifo, ny);
-	    FWRITEINT(pfifo, 0); 
-	    if(p){
-		FWRITE(p, sizeof(double),dc->p[ig]->nx*dc->p[ig]->ny, pfifo);
+	    if(dc){
+		warning("both loc and dc are specified\n");
+	    }
+	}else if(dc){
+	    if(ngroup!=dc->nx*dc->ny){
+		warning("ngroup and dimension of dc mismatch\n");
+		ngroup=dc->nx*dc->ny;
+	    }
+	    for(int ig=0; ig<ngroup; ig++){
+		int nx=0, ny=0;
+		double *p=NULL;
+		if(dc->p[ig]){
+		    nx=dc->p[ig]->nx;
+		    ny=dc->p[ig]->ny;
+		    p=dc->p[ig]->p;
+		}
+		STWRITEINT(DRAW_POINTS);
+		STWRITEINT(nx);
+		STWRITEINT(ny);
+		STWRITEINT(0);
+		if(p){
+		    STWRITE(p, sizeof(double)*dc->p[ig]->nx*dc->p[ig]->ny);
+		}
 	    }
 	}
-    }
-    if(style){
-	FWRITEINT(pfifo,FIFO_STYLE);
-	FWRITEINT(pfifo,ngroup);
-	FWRITE(style,sizeof(uint32_t),ngroup,pfifo);
-    }
-    if(ncir>0){
-	FWRITEINT(pfifo, FIFO_CIRCLE);
-	FWRITEINT(pfifo, ncir);
-	FWRITE(pcir, sizeof(double), ncir*4, pfifo);
-    }
-    if(limit){/*xmin,xmax,ymin,ymax */
-	FWRITEINT(pfifo, FIFO_LIMIT);
-	FWRITE(limit, sizeof(double), 4, pfifo);
-    }
-    if(xylog){
-	FWRITEINT(pfifo, FIFO_XYLOG);
-	FWRITE(xylog, sizeof(char), 2, pfifo);
-    }
-    if(format){
-	FWRITECMDSTR(pfifo,FIFO_NAME,fn);
-    }
-    if(legend){
-	FWRITEINT(pfifo, FIFO_LEGEND);
-	for(int ig=0; ig<ngroup; ig++){
-	    FWRITESTR(pfifo, legend[ig]);
+	if(style){
+	    STWRITEINT(DRAW_STYLE);
+	    STWRITEINT(ngroup);
+	    STWRITE(style,sizeof(uint32_t)*ngroup);
 	}
+	if(ncir>0){
+	    STWRITEINT(DRAW_CIRCLE);
+	    STWRITEINT(ncir);
+	    STWRITE(pcir, sizeof(double)*ncir*4);
+	}
+	if(limit){/*xmin,xmax,ymin,ymax */
+	    STWRITEINT(DRAW_LIMIT);
+	    STWRITE(limit, sizeof(double)*4);
+	}
+	if(xylog){
+	    STWRITEINT(DRAW_XYLOG);
+	    STWRITE(xylog, sizeof(char)*2);
+	}
+	if(format){
+	    STWRITEINT(DRAW_NAME);
+	    STWRITESTR(fn);
+	}
+	if(legend){
+	    STWRITEINT(DRAW_LEGEND);
+	    for(int ig=0; ig<ngroup; ig++){
+		STWRITESTR(legend[ig]);
+	    }
+	}
+	STWRITECMDSTR(DRAW_FIG,fig);
+	STWRITECMDSTR(DRAW_TITLE,title);
+	STWRITECMDSTR(DRAW_XLABEL,xlabel);
+	STWRITECMDSTR(DRAW_YLABEL,ylabel);
+	STWRITEINT(DRAW_END);
     }
-    FWRITECMDSTR(pfifo,FIFO_FIG,fig);
-    FWRITECMDSTR(pfifo,FIFO_TITLE,title);
-    FWRITECMDSTR(pfifo,FIFO_XLABEL,xlabel);
-    FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
-    FWRITEINT(pfifo,FIFO_END);
-    if(fflush(pfifo)){
-	perror("fflush");
-	/*it is important to flush it so that drawdaemon does not stuck waiting. */
-	warning("Failed to fflush the fifo");
-    }
- done:
+ end:
     UNLOCK(lock); 
 }
 /**
@@ -303,40 +421,47 @@ void imagesc(char *fig, /**<Category of the figure*/
 	     const char *ylabel, /**<y axis label*/
 	     const char *format, /**<subcategory of the plot.*/
 	     ...){
+    if(disable_draw) return;
     format2fn;
     LOCK(lock);
-    if(fifo_open()){
-	goto done;
+    if(open_drawdaemon()){
+	goto end;
     }
-    int32_t header[2];
-    header[0]=nx;
-    header[1]=ny;
-    FWRITEINT(pfifo, FIFO_START);
-    FWRITEINT(pfifo, FIFO_DATA);
-    FWRITE(header, sizeof(int32_t), 2, pfifo);
-    FWRITE(p, sizeof(double), nx*ny, pfifo);
-    if(zlim){
-	FWRITEINT(pfifo,FIFO_ZLIM);
-	FWRITE(zlim,sizeof(double),2,pfifo);
+    for(int ifd=0; ifd<sock_ndraw; ifd++){
+	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
+	int sock_draw=(int)(long)sock_draws[ifd][S_FD];
+	char **figfn=(char**)&sock_draws[ifd][S_FIG];
+	if(sock_draws[ifd][S_PAUSE]) continue;
+	if(figfn[0] && figfn[1] && 
+	   check_figfn((list_t**)&sock_draws[ifd][S_LIST], fig, fn) && 
+	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
+	    continue;
+	}
+	int32_t header[2];
+	header[0]=nx;
+	header[1]=ny;
+	STWRITEINT(DRAW_START);
+	STWRITEINT(DRAW_DATA);
+	STWRITE(header, sizeof(int32_t)*2);
+	STWRITE(p, sizeof(double)*nx*ny);
+	if(zlim){
+	    STWRITEINT(DRAW_ZLIM);
+	    STWRITE(zlim,sizeof(double)*2);
+	}
+	if(limit){/*xmin,xmax,ymin,ymax */
+	    STWRITEINT(DRAW_LIMIT);
+	    STWRITE(limit, sizeof(double)*4);
+	}
+	if(format){
+	    STWRITECMDSTR(DRAW_NAME,fn);
+	}
+	STWRITECMDSTR(DRAW_FIG,fig);
+	STWRITECMDSTR(DRAW_TITLE,title);
+	STWRITECMDSTR(DRAW_XLABEL,xlabel);
+	STWRITECMDSTR(DRAW_YLABEL,ylabel);
+	STWRITEINT(DRAW_END);
     }
-    if(limit){/*xmin,xmax,ymin,ymax */
-	FWRITEINT(pfifo, FIFO_LIMIT);
-	FWRITE(limit, sizeof(double), 4, pfifo);
-    }
-    
-    if(format){
-	FWRITECMDSTR(pfifo,FIFO_NAME,fn);
-    }
-    FWRITECMDSTR(pfifo,FIFO_FIG,fig);
-    FWRITECMDSTR(pfifo,FIFO_TITLE,title);
-    FWRITECMDSTR(pfifo,FIFO_XLABEL,xlabel);
-    FWRITECMDSTR(pfifo,FIFO_YLABEL,ylabel);
-    FWRITEINT(pfifo,FIFO_END);
-    if(fflush(pfifo)){
-	/*it is important to flush it so that drawdaemon does not stuck waiting */
-	warning("Failed to fflush the fifo");
-    }
- done:
+ end:
     UNLOCK(lock);
 }
 

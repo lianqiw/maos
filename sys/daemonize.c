@@ -33,7 +33,9 @@
 #include <netinet/in.h>
 #include <sys/wait.h>
 #include <pthread.h>
+#include <ctype.h>
 #include "common.h"
+#include "process.h"
 #include "misc.h"
 #include "daemonize.h"
 
@@ -345,4 +347,105 @@ void daemonize(void){ /* Fork off the parent process */
     fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);
     fclose(fp);
     chmod(fn,00700);
+}
+/**
+   fork and launch exe as specified in cmd. cmd should composed of the path to
+   start the exe, exe name, and parameters. used by maos/skyc.
+ */
+int launch_exe(const char *cmd){
+    const int nexe=2;
+    const char *exes[]={"maos", "skyc"};
+    char *stexe=NULL;
+    char *cmd2;
+    if(cmd[0]=='~'){
+	cmd2=stradd(HOME, cmd+1, NULL);
+    }else{
+	cmd2=(char*)cmd;
+    }
+    const char *cmd2end=cmd2+strlen(cmd2);
+    for(int iexe=0; iexe<nexe; iexe++){
+	const char *exe=exes[iexe];
+	stexe=strstr(cmd2, exe);
+	while(stexe && stexe<cmd2end&&(stexe[-1]!='/'||!isspace(stexe[strlen(exe)]))){
+	    stexe=strstr(stexe+strlen(stexe), exe);
+	}	
+	if(stexe){
+	    stexe[-1]='\0';
+	    long pid=fork();
+	    if(pid<0){
+		return -1;//unable to fork
+	    }else if(pid>0){//parant
+		stexe[-1]='/';
+		waitpid(pid, NULL, 0);/*wait child*/
+	    }else{//child
+		long pid2=fork();
+		if(pid2<0){
+		    _exit(EXIT_FAILURE);//unable to fork
+		}else if(pid2>0){//parent
+		    _exit(EXIT_SUCCESS);
+		}else{//child
+		    if(setsid()==-1) warning("Error setsid\n");
+		    if(chdir(cmd2)) error("Error chdir to %s\n", cmd2);
+		    stexe+=strlen(exe);
+		    if(execlp(exe, exe, "--local", "-d", stexe, NULL)){
+			error("Unable to execlp\n");
+		    }
+		    _exit(EXIT_FAILURE);
+		}
+	    }
+	    break;
+	}
+    }
+    if(cmd2!=cmd) free(cmd2);
+    if(!stexe){
+	warning("don't understand %s\n", cmd);
+	return -1;
+    }
+    return 0;
+}
+/**
+   Find an exe from maos and return the absolute path.
+ */
+char *find_exe(const char *name){
+    char *fn=stradd(BUILDDIR, "/bin/", name,NULL);
+    if(!exist(fn)){
+	free(fn);
+	char *cwd=mygetcwd();
+	fn=stradd(cwd, "/", name, NULL);
+    }
+    if(!exist(fn)){
+	free(fn); fn=NULL;
+    }
+    return fn;
+}
+int spawn_drawdaemon(int sock){
+    //fork and launch drawdaemon
+    pid_t pid;
+    if((pid=fork())<0){
+	warning("forked failed\n");
+	close(sock);
+	return -1;
+    }else if(pid>0){
+	close(sock);
+	waitpid(pid, NULL, 0);
+	return 0;
+    }else{
+	setsid();
+	pid=fork();
+	if(pid<0){
+	    exit(1);
+	}else if(pid>0){
+	    close(sock);
+	    exit(0);
+	}
+	char arg1[20];
+	snprintf(arg1, 20, "%d", sock);
+	char *fn=find_exe("drawdaemon");
+	if(fn){
+	    execl(fn, "drawdaemon", arg1,  NULL);
+	}else{
+	    execlp("drawdaemon", "drawdaemon", arg1, NULL);
+	}
+	exit(0);//in case child comes here. quit.
+    }
 }

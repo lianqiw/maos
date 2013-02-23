@@ -257,7 +257,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			break;
 		    }
 		    info("port %d is connected\n", port2);
-		    cloexec(port2);
+		    //cloexec(port2);
 		    FD_SET(port2, &active_fd_set);
 		}else if(i==sock_local){
 		    socklen_t size=sizeof(struct sockaddr_un);
@@ -269,7 +269,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			break;
 		    }
 		    info("port %d is connected locally\n", port2);
-		    cloexec(port2);
+		    //cloexec(port2);
 		    FD_SET(port2, &active_fd_set);
 		}else{
 		    /* Data arriving on an already-connected socket. Call responder to handle.
@@ -279,13 +279,13 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 		     */
 		    int ans=responder(i);
 		    if(ans<0){
-			shutdown(i, SHUT_RD);
 			FD_CLR(i, &active_fd_set);
 			if(ans==-1){
 			    warning2("close port %d\n", i);
 			    close(i);
 			}else{
-			    warning2("shutdown port %d for reading\n", i);
+ 			    warning2("shutdown port %d for reading\n", i);
+			    shutdown(i, SHUT_RD);
 			}
 		    }
 		}
@@ -337,7 +337,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
     if(hostname[0]=='/'){
 	warning("try to connect locally through AF_UNIX\n");
 	sock = socket(PF_UNIX, SOCK_STREAM, 0);
-	cloexec(sock);
+	//cloexec(sock);
 	struct sockaddr_un addr={0};
 	//memset(&addr, 0, sizeof(struct sockaddr_un));
 	addr.sun_family=AF_UNIX;
@@ -357,7 +357,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	count++;
 	/* Create the socket. */
 	sock = socket (PF_INET, SOCK_STREAM, 0);
-	cloexec(sock);
+	//cloexec(sock);
 	socket_tcp_keepalive(sock);
 	if(nodelay){
 	    socket_tcp_nodelay(sock);

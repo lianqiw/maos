@@ -375,7 +375,7 @@ void gpu_wfsgrad(thread_t *info){
     if(save_opd){
 	cellarr_cur(simu->save->wfsopd[iwfs], phiout, stream);
     }
-    if(parms->plot.run){
+    if(parms->plot.run>1){
 	const double *realamp=powfs[ipowfs].realamp[wfsind];
 	dmat *tmp=NULL;
 	cp2cpu(&tmp, phiout, stream);

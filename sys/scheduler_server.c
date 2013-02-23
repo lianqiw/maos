@@ -184,7 +184,7 @@ static RUN_T *runned_get(int pid){
 }
 /**
    The following running_* routiens operates on running linked list
-   which contains active jobs.  
+   which contains queued jobs.
 */
 static RUN_T* running_add(int pid,int sock){
     RUN_T *irun;
@@ -363,6 +363,7 @@ static void process_queue(void){
     if(avail<1) return;
     RUN_T *irun=running_get_wait();
     if(!irun) {
+	info2("all jobs done\n");
 	all_done=1;
 	return;
     }
@@ -528,21 +529,7 @@ static int respond(int sock){
 	    }
 	}
 	break;
-    case CMD_DRAW://called by maos to launch drawdaemon (backup)
-	{
-	    char *display, *xauth, *fifo;
-	    if(streadstr(sock, &display) || streadstr(sock, &xauth) || streadstr(sock, &fifo)){
-		ret=-1; 
-		break;
-	    }
-	    setenv("DISPLAY",display,1);
-	    setenv("XAUTHORITY",xauth,1);
-	    int ans=scheduler_launch_drawdaemon(fifo);
-	    if(stwriteint(sock, ans)){
-		ret=-1;
-		break;
-	    }
-	}
+    case CMD_DRAW://not used
 	break;
     case CMD_SOCK:
 	break;
@@ -563,15 +550,17 @@ static int respond(int sock){
 	    if(stwriteintarr(irun->sock, cmd2, 2) || stwritefd(irun->sock, sock)){
 		warning("Unable to pass socket %d to maos at %d\n", sock, irun->sock);
 		stwriteint(sock, -1);//respond failure message.
+	    }else{
+		stwriteint(sock, 0);
 	    }
 	    ret=-1;
 	}
 	break;
     case CMD_VERSION://not used
 	break;
-    case CMD_LOAD://not used
+    case CMD_LOAD://intended for monitor
 	break;
-    case CMD_UNUSED2:
+    case CMD_UNUSED2://intended for maos
 	break;
     case CMD_UNUSED3:
 	break;
@@ -593,7 +582,6 @@ static int respond(int sock){
 	}
     }
 	break;
-  
     default:
 	warning3("Invalid cmd: %x\n",cmd[0]);
 	ret=-1;

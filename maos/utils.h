@@ -51,4 +51,5 @@ char *evl_header(const PARMS_T *parms, const APER_T *aper, int ievl, int iwvl);
 void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat* fieldstop, double wvl);
 void maos_daemon(int sock);
 void display_server(int sock);
+void plot_setup(const PARMS_T *parms, const POWFS_T *powfs, const APER_T *aper, const RECON_T *recon);
 #endif

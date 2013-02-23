@@ -547,7 +547,7 @@ void gpu_perfevl(thread_t *info){
     if(save_evlopd){
 	cellarr_cur(simu->save->evlopdol[ievl], iopdevl, stream);
     }
-    if(parms->plot.run){
+    if(parms->plot.run>1){
 	dmat *tmp=NULL;
 	cp2cpu(&tmp, iopdevl, stream);
 	drawopdamp("OL", aper->locs,tmp->p , aper->amp1->p, NULL,
@@ -613,7 +613,7 @@ void gpu_perfevl(thread_t *info){
     if(save_evlopd){
 	cellarr_cur(simu->save->evlopdcl[ievl], iopdevl, stream);
     }
-    if(parms->plot.run){
+    if(parms->plot.run>1){
 	dmat *tmp=NULL;
 	cp2cpu(&tmp, iopdevl, stream);
 	drawopdamp("CL", aper->locs,tmp->p , aper->amp1->p, NULL,

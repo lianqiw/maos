@@ -30,8 +30,7 @@
    \file maos.c
    Contains main() and the entry into simulation maos()
 */
-const PARMS_T *curparms=NULL;
-int curiseed=0;
+GLOBAL_T *global=NULL;//record for convenient access.
 int use_cuda=0;
 /**
    This is the routine that calls various functions to do the simulation. maos()
@@ -63,7 +62,13 @@ void maos(const PARMS_T *parms){
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
     setup_surf(parms, aper, powfs, recon);/*setting up M1/M2/M3 surface OPD. */
-    
+    global->powfs=powfs;
+    global->aper=aper;
+    global->recon=recon;
+    global->setupdone=1;
+    if(parms->plot.setup){
+	plot_setup(parms, powfs, aper, recon);
+    }
 #if USE_CUDA
     if(!parms->sim.evlol && (parms->gpu.wfs || parms->gpu.tomo)){
 	gpu_wfsgrad_init(parms, powfs);
@@ -160,7 +165,6 @@ int main(int argc, char **argv){
     }
     /*Launch the scheduler and report about our process */
     scheduler_start(scmd,arg->nthread,!arg->force);
-    thread_new((thread_fun)scheduler_listen, maos_daemon);
     info2("%s\n", scmd);
     info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", 
 	  PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
@@ -179,7 +183,8 @@ int main(int argc, char **argv){
     info2("Output folder is '%s'.\n",arg->dirout);
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg);
-    
+    global=calloc(1, sizeof(GLOBAL_T));
+    global->parms=parms;
 #if USE_MKL==1
     if(arg->nthread==1){
 	int one=1;
@@ -187,8 +192,6 @@ int main(int argc, char **argv){
 	omp_set_num_threads(&one);
     }
 #endif
-
-    curparms = parms;
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
     
     /*register signal handler */
@@ -223,6 +226,7 @@ int main(int argc, char **argv){
 	mysymlink(fnpid, "run_recent.log");
     }
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
+    thread_new((thread_fun)scheduler_listen, maos_daemon);
     setup_parms_running(parms, arg);
     free(scmd);
     free(arg->dirout);

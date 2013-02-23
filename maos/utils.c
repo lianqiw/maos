@@ -395,10 +395,10 @@ void rename_file(int sig){
     snprintf(fnnew,256,"run_%d.%s", pid,suffix);
     rename(fnold,fnnew);
     mysymlink(fnnew, "run_recent.log");
-    if(curparms && sig!=0){
+    if(global->parms && sig!=0){
 	char fn[80];
-	const PARMS_T *parms=curparms;
-	for(int iseed=curiseed; iseed<parms->sim.nseed; iseed++){
+	const PARMS_T *parms=global->parms;
+	for(int iseed=global->iseed; iseed<parms->sim.nseed; iseed++){
 	    if(parms->fdlock[iseed]>=0){
 		close(parms->fdlock[iseed]);
 		int seed=parms->sim.seeds[iseed];
@@ -414,9 +414,10 @@ void rename_file(int sig){
 void maos_signal_handler(int sig){
     disable_signal_handler;
     rename_file(sig);/*handles signal */
-    if(curparms->sim.mvmport){
+    if(global->parms->sim.mvmport){
 	mvm_client_close();
     }
+    int segfault=0;
     if(sig!=0){
 	char *info="Unknown";
 	switch(sig){
@@ -425,6 +426,7 @@ void maos_signal_handler(int sig){
 	case SIGSEGV:
 	case SIGABRT:
 	    info="Segmentation falt";
+	    segfault=1;
 	    break;
 	case SIGKILL:
 	case SIGINT: /*Ctrl-C */
@@ -436,13 +438,13 @@ void maos_signal_handler(int sig){
 	    info="Quit";
 	    break;
 	}
-	warning2("Signal %d: %s\n", sig, info);
 	fflush(NULL);
-	if(sig !=0 && sig != SIGINT){
+	if(segfault){
 	    PRINT_BACKTRACE;
 	}
 	scheduler_finish(1);
-	exit(sig);/*don't call clean up functions, but does flush files. */
+	kill(getpid(), sig);//kill again. signal handler is off
+	_Exit(sig);
     }
 }
 /**
@@ -812,12 +814,41 @@ void apply_fieldstop(dmat *opd, dmat *amp, long *embed, long nembed, dmat *field
     }
     cfree(wvf);
 }
-
+void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
+		const APER_T *aper, const RECON_T *recon){
+    if(!parms->plot.setup) return;
+    plotdir("FoV",parms,parms->sim.fov,"fov");/*plot wfs/evaluation direction */
+    plotloc("FoV",parms,recon->ploc,0, "ploc");
+    plotloc("FoV",parms,recon->floc,0, "floc");
+    for(int idm=0; idm<parms->ndm; idm++){
+	double ht=parms->dm[idm].ht;
+	plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
+	if(parms->dm[idm].misreg){
+	    plotloc("FoV", parms, recon->alocm[idm], parms->dm[idm].ht, "alocm%d", idm);
+	}
+    }
+    for(int ips=0; ips<recon->npsr; ips++){
+	const double ht=recon->ht->p[ips];
+	plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);
+    }
+    drawopd("amp",aper->locs,aper->amp1->p,NULL,"Aperture Amplitude Map",
+	    "x (m)","y (m)","aper");
+    
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
+		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
+	for(int ilocm=0; ilocm<powfs[ipowfs].nlocm; ilocm++){
+	    drawopd("ampm", powfs[ipowfs].loc, powfs[ipowfs].ampm->p[ilocm]->p,NULL,
+		    "WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
+	}
+    }
+}
 void maos_daemon(int sock){
     info2("maos_daemon is listening at %d\n", sock);
+    thread_block_signal();
     int cmd[2];
     while(!streadintarr(sock, cmd, 2)){
-	info2("maos_daemon got %d\n", cmd[0]);
+	info2("maos_daemon got %d at %d\n", cmd[0], sock);
 	switch(cmd[0]){
 	case CMD_SOCK:
 	    {
@@ -825,9 +856,16 @@ void maos_daemon(int sock){
 		if(streadfd(sock, &fd)){
 		    warning("unable to read fd from %d\n", sock);
 		    continue;
+		}else{
+		    warning("got fd=%d\n", fd);
 		}
-		stwriteint(fd, 0);//send success message.
-		thread_new((thread_fun)display_server, (void*)(long)fd);
+		draw_add(fd);
+		PARMS_T *parms=(PARMS_T*)global->parms;//cast away constness
+		parms->plot.setup=1;
+		parms->plot.run=1;
+		if(global->setupdone){//already plotted.
+		    plot_setup(global->parms, global->powfs, global->aper, global->recon);
+		}
 	    }break;
 	default:
 	    warning("unknown cmd %d\n", cmd[0]);
@@ -836,5 +874,5 @@ void maos_daemon(int sock){
 	}
     }
  end:
-    info2("maos_daemon quit\n");
+    info2("maos_daemon quit %ld\n", (long)pthread_self());
 }

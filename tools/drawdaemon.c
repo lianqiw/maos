@@ -18,18 +18,7 @@
 
 #include "../lib/aos.h"
 #include "drawdaemon.h"
-
-char *fifo=NULL;
-int ppid=0;
-int fifopid=0;
-static __attribute__((constructor)) void deinit(){
-    char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
-    remove(fn);
-    snprintf(fn, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
-    remove(fn);
-}
-
+int sock;
 int main(int argc, char *argv[]){
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
     if(!g_thread_supported()){
@@ -38,34 +27,17 @@ int main(int argc, char *argv[]){
     }
 #endif
     gtk_init(&argc, &argv);
-    if(argc>1){
-	fifo=argv[1];
-	char *tmp=strstr(fifo,"drawdaemon_");
-	if(tmp){
-	    fifopid=strtol(tmp+11,NULL,10);
-	}
-    }else{
-	fifo=calloc(80,sizeof(char));
-	fifopid=(int)getppid();
-	snprintf(fifo,80,"%s/drawdaemon_%d.fifo",TEMP,fifopid);
+    if(argc<2){
+	error("Must call drawdaemon with at least one argument\n");
     }
-
-    const char *fifo2=strstr(fifo,"drawdaemon");
-    if(!fifo2){
-	warning("drawdaemon not found in string\n");
-	ppid=getpid();
-    }else{
-	sscanf(fifo2, "drawdaemon_%d.fifo", &ppid);
+    sock=strtol(argv[1], NULL, 10);
+    if(sock<0){
+	error("sock=%d\n", sock);
     }
-    {/*record the drawdaemon pid. and redirect output */
-	char fnpid[PATH_MAX];
-	snprintf(fnpid, PATH_MAX,"%s/drawdaemon_%d.pid", TEMP, ppid);
-	FILE *fp=fopen(fnpid, "w");
-	fprintf(fp, "%d", (int)getpid());
-	fclose(fp);
-    
+    info("sock=%d\n", sock);
+    {
 	char fnlog[PATH_MAX];
-	snprintf(fnlog, PATH_MAX,"%s/drawdaemon_%d.log", TEMP, ppid);
+	snprintf(fnlog, PATH_MAX,"%s/drawdaemon.log", TEMP);
 	if(!freopen(fnlog, "w", stdout)) {
 	    perror("freopen");
 	    warning("Error redirect stdout\n");
@@ -74,11 +46,10 @@ int main(int argc, char *argv[]){
 	    perror("freopen");
 	    warning("Error redirect stderr\n");
 	}
-	setbuf(stdout,NULL);/*disable buffering. */
+	setbuf(stdout,NULL);
 	setbuf(stderr,NULL);
     }
-    g_thread_new("open_fifo", (GThreadFunc)open_fifo, NULL);
+    g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
     create_window();
     gtk_main();
-    remove(fifo);
 }/*main */

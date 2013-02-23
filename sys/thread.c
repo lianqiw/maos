@@ -71,3 +71,11 @@ int lockadd(int *src, int step){
     pthread_mutex_unlock(&atomic_lock);
     return result;
 }
+/**
+   After calling this routine, this thread will nolonger receive signals
+ */
+void thread_block_signal(){
+    sigset_t set;
+    sigfillset(&set);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+}

@@ -611,4 +611,13 @@ typedef struct SIM_T{
 }SIM_T;
 #define CHECK_SAVE(start,end,now,every) ((now)+1>(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
 
+typedef struct GLOBAL_T{
+    const PARMS_T *parms;
+    const POWFS_T *powfs;
+    const APER_T *aper;
+    const RECON_T *recon;
+    const SIM_T *simu;
+    int iseed;
+    int setupdone;
+}GLOBAL_T;
 #endif

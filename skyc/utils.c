@@ -146,7 +146,8 @@ void skyc_signal_handler(int sig){
 	    print_backtrace(0);
 	}
 	scheduler_finish(1);
-	_Exit(sig);
+	raise(sig);
+	exit(sig);
     }
 }
 

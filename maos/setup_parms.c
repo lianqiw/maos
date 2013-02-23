@@ -2304,9 +2304,6 @@ static void print_parms(const PARMS_T *parms){
 	    error("evl thetax or thetay is too large\n");
 	}
     }
-    if(parms->plot.setup){
-	plotdir("FoV",parms,parms->sim.fov,"fov");/*plot wfs/evaluation direction */
-    }
 }
 /**
    Limited sanity check of the parameters to prevent obvious mistakes.

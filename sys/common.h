@@ -44,7 +44,9 @@ enum{
     T_INTARR=11,
     T_DBLARR=12,
 };
-
+#ifndef INLINE
+#define INLINE inline __attribute__((always_inline))
+#endif
 typedef double __complex__ dcomplex;
 typedef float  __complex__ fcomplex;
 typedef double ddouble;/*just for saving.*/

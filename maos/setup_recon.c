@@ -68,9 +68,6 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	}
     }
     loc_create_stat(recon->ploc);
-    if(parms->plot.setup){/*plot the ploc grid. */
-	plotloc("FoV",parms,recon->ploc,0, "ploc");
-    }
 }
 static void
 setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
@@ -119,9 +116,6 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	    locwrite(recon->floc, "%s/floc",dirsetup);
 	}
     }
-    if(parms->plot.setup){/*plot the ploc grid. */
-	plotloc("FoV",parms,recon->floc,0, "floc");
-    }
     loc_create_stat(recon->floc);
 }
 /**
@@ -167,12 +161,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
 	}
     }
-    if(parms->plot.setup){
-	for(int idm=0; idm<ndm; idm++){
-	    double ht=parms->dm[idm].ht;
-	    plotloc("FoV", parms, recon->aloc[idm], ht, "aloc%d", idm);
-	}
-    }
     recon->alocm=calloc(ndm, sizeof(loc_t*));
     for(int idm=0; idm<ndm; idm++){
 	if(parms->dm[idm].misreg){
@@ -182,9 +170,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    if(misreg->nx!=2 || misreg->ny!=1)
 		error("%s is in wrong format\n",parms->dm[idm].misreg);
 	    recon->alocm[idm]=loctransform(recon->aloc[idm],NULL,pmisreg[0]);
-	    if(parms->plot.setup){
-		plotloc("FoV", parms, recon->alocm[idm], parms->dm[idm].ht, "alocm%d", idm);
-	    }
 	}else{
 	    recon->alocm[idm]=recon->aloc[idm];
 	}
@@ -296,12 +281,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    locarrwrite(recon->xloc, recon->npsr, "%s/xloc",dirsetup);
 	}
     }
-    if(parms->plot.setup){
-	for(int ips=0; ips<npsr; ips++){
-	    const double ht=recon->ht->p[ips];
-	    plotloc("FoV",parms,recon->xloc[ips],ht, "xloc%d",ips);
-	}
-    }
+  
     recon->xnx=calloc(recon->npsr, sizeof(long));
     recon->xny=calloc(recon->npsr, sizeof(long));
     for(long i=0; i<recon->npsr; i++){

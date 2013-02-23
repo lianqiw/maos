@@ -37,8 +37,7 @@ extern char* dirsetup;
 extern char *dirskysim;
 #define EXIT raise(SIGUSR1)
 void maos(const PARMS_T *parms);
-extern const PARMS_T *curparms;
-extern int curiseed;
+extern GLOBAL_T *global;
 #define adpind(A,i) ((A)->nx>1?(A)->p[i]:(A)->p[0])
 #define CALL_ONCE\
     {static int count=0; count++; if(count>1) warning("This function should only be called once\n");}

@@ -29,43 +29,6 @@ static int no_longer_listen=0;
 int ndrawdata=0;
 int count=0;
 PNEW2(drawdata_mutex);
-#define FILE_READ(data,size)			\
-    nleft=size;start=(gchar*)data;		\
-    do{						\
-	int nread=fread(start, 1, nleft, fp);	\
-	nleft-=nread;				\
-	start+=nread;				\
-	if(nread < nleft){/*read failed*/	\
-	    if(feof(fp)){			\
-		info("EOF\n");			\
-		clearerr(fp);			\
-		count++;			\
-		if(count>10){			\
-		    return 1;			\
-		}				\
-		sleep(1);			\
-	    }else if(ferror(fp)){		\
-		info("File error\n");		\
-		return 1;			\
-	    }else{				\
-		info("Unknown error\n");	\
-	    }					\
-	}else{					\
-	    count=0;				\
-	}					\
-    }while(nleft>0)				
-
-#define FILE_READ_INT(cmd)			\
-    FILE_READ(&cmd, sizeof(int));
-
-#define FILE_READ_STR(str)			\
-    {						\
-	int len;				\
-	FILE_READ_INT(len);			\
-	str=calloc(len, sizeof(char));		\
-	FILE_READ(str,len);			\
-    }
-
 
 /**
    convert double to int
@@ -113,23 +76,21 @@ void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout,
 	}
     }
 }
-
-static int read_fifo(FILE *fp){
+#define STREADINT(p) if(streadint(sock, &p)) goto end;
+#define STREAD(p,len) if(stread(sock,p,len)) goto end;
+#define STREADSTR(p) if(streadstr(sock, &p)) goto end;
+void listen_draw(){
+    info("listen_draw is listening at %d\n", sock);
     TIC;tic;
     static drawdata_t *drawdata=NULL;
     int cmd=0;
-    gchar *start;
-    int nleft;
     static int errcount=0;
-    while(1){
-	cmd=-1;
-	FILE_READ_INT(cmd);
+    while(!streadint(sock, &cmd)){
 	switch (cmd){
-	case FIFO_START:
+	case DRAW_START:
 	    tic;
-	    info("FIFO_START\n");
 	    if(drawdata){
-		warning("FIFO_START: drawdata is not empty\n");
+		warning("listen_draw: drawdata is not empty\n");
 	    }
 	    drawdata=calloc(1, sizeof(drawdata_t));
 	    LOCK(drawdata_mutex);
@@ -149,84 +110,83 @@ static int read_fifo(FILE *fp){
 	    drawdata->xylog[0]='n';
 	    drawdata->xylog[1]='n';
 	    drawdata->cumulast=-1;/*mark as unknown. */
+	    drawdata->time=myclockd();
 	    break;
-	case FIFO_DATA:/*image data. */
+	case DRAW_DATA:/*image data. */
 	    {
-		info("FIFO_DATA\n");
 		int32_t header[2];
-		FILE_READ(header, 2*sizeof(int32_t));
+		STREAD(header, 2*sizeof(int32_t));
 		drawdata->nx=header[0];
 		drawdata->ny=header[1];
 		int nx=drawdata->nx;
 		int ny=drawdata->ny;
 		drawdata->p0=malloc(sizeof(double)*nx*ny);
 		if(nx*ny>0){
-		    FILE_READ(drawdata->p0, nx*ny*sizeof(double));
+		    STREAD(drawdata->p0, nx*ny*sizeof(double));
 		}
 	    }
 	    break;
-	case FIFO_POINTS:
+	case DRAW_POINTS:
 	    {
-		info("FIFO_POINTS\n");
+		info("DRAW_POINTS\n");
 		int nptsx, nptsy;
 		int ipts=drawdata->npts;
 		drawdata->npts++;
-		FILE_READ_INT(nptsx);
-		FILE_READ_INT(nptsy);
-		FILE_READ_INT(drawdata->square);
+		STREADINT(nptsx);
+		STREADINT(nptsy);
+		STREADINT(drawdata->square);
 		drawdata->grid=1;
 		drawdata->pts=realloc(drawdata->pts, drawdata->npts*sizeof(dmat*));
 		drawdata->pts[ipts]=dnew(nptsx, nptsy);
 		if(nptsx*nptsy>0){
-		    FILE_READ(drawdata->pts[ipts]->p, sizeof(double)*nptsx*nptsy);
+		    STREAD(drawdata->pts[ipts]->p, sizeof(double)*nptsx*nptsy);
 		}
 	    }
 	    break;
-	case FIFO_STYLE:
-	    FILE_READ_INT(drawdata->nstyle);
+	case DRAW_STYLE:
+	    STREADINT(drawdata->nstyle);
 	    drawdata->style=calloc(drawdata->nstyle, sizeof(int32_t));
-	    FILE_READ(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
+	    STREAD(drawdata->style, sizeof(int32_t)*drawdata->nstyle);
 	    break;
-	case FIFO_CIRCLE:
-	    FILE_READ_INT(drawdata->ncir);
+	case DRAW_CIRCLE:
+	    STREADINT(drawdata->ncir);
 	    drawdata->cir=calloc(4*drawdata->ncir, sizeof(double));
-	    FILE_READ(drawdata->cir,sizeof(double)*4*drawdata->ncir);
+	    STREAD(drawdata->cir,sizeof(double)*4*drawdata->ncir);
 	    break;
-	case FIFO_LIMIT:
+	case DRAW_LIMIT:
 	    drawdata->limit_data=calloc(4, sizeof(double));
-	    FILE_READ(drawdata->limit_data, 4*sizeof(double));
+	    STREAD(drawdata->limit_data, 4*sizeof(double));
 	    break;
-	case FIFO_FIG:
-	    FILE_READ_STR(drawdata->fig);
+	case DRAW_FIG:
+	    STREADSTR(drawdata->fig);
 	    break;
-	case FIFO_NAME:
-	    FILE_READ_STR(drawdata->name);
+	case DRAW_NAME:
+	    STREADSTR(drawdata->name);
 	    break;
-	case FIFO_TITLE:
-	    FILE_READ_STR(drawdata->title);
+	case DRAW_TITLE:
+	    STREADSTR(drawdata->title);
 	    break;
-	case FIFO_XLABEL:
-	    FILE_READ_STR(drawdata->xlabel);
+	case DRAW_XLABEL:
+	    STREADSTR(drawdata->xlabel);
 	    break;
-	case FIFO_YLABEL:
-	    FILE_READ_STR(drawdata->ylabel);
+	case DRAW_YLABEL:
+	    STREADSTR(drawdata->ylabel);
 	    break;
-	case FIFO_ZLIM:
+	case DRAW_ZLIM:
 	    drawdata->zlim=calloc(2, sizeof(double));
-	    FILE_READ(drawdata->zlim, sizeof(double)*2);
+	    STREAD(drawdata->zlim, sizeof(double)*2);
 	    break;
-	case FIFO_LEGEND:
+	case DRAW_LEGEND:
 	    drawdata->legend=calloc(drawdata->npts, sizeof(char*));
 	    for(int i=0; i<drawdata->npts; i++){
-		FILE_READ_STR(drawdata->legend[i]);
+		STREADSTR(drawdata->legend[i]);
 	    }
 	    break;
-	case FIFO_XYLOG:
-	    FILE_READ(drawdata->xylog, sizeof(char)*2);
+	case DRAW_XYLOG:
+	    STREAD(drawdata->xylog, sizeof(char)*2);
 	    break;
-	case FIFO_END:
+	case DRAW_END:
 	    {
-		info("FIFO_END\n");
 		if(drawdata->p0){/*draw image */
 		    int nx=drawdata->nx;
 		    int ny=drawdata->ny;
@@ -280,46 +240,18 @@ static int read_fifo(FILE *fp){
 	    }
 	    break;
 	case -1:
-	    return 1;/*read failed. */
+	    goto end;/*read failed. */
 	    break;
 	default:
 	    warning("Unknown cmd: %x\n", cmd);
 	    if(errcount++>10){
 		no_longer_listen=1;
-		return 1;
+		goto end;
 	    }
 	    break;
 	}/*switch */
     }/*while */
+ end:
+    sock=-1;
+    warning("Read failed, stop listening.\n");
 }
-
-void open_fifo(void* nothing){
-    (void) nothing;
-    FILE *fp=NULL;
-    if(no_longer_listen){
-	return;
-    }
-    int retrycount=0;
- retry:
-    info("Try to open fifo\n\n\n\n");
-    fp=fopen(fifo,"rb");
-    if(!fp){
-	perror("open");
-	if(!exist(fifo)){
-	    warning("fifo %s is removed\n",fifo);
-	    if(mkfifo(fifo,0700)){
-		error("Error making fifo\n");
-	    }
-	}
-	if(retrycount++<10){
-	    sleep(1);
-	    goto retry;
-	}
-    }
-    info("Opened\n");
-    read_fifo(fp);
-    fclose(fp);
-    fp=NULL;
-    retrycount=0;
-    goto retry;
-}    

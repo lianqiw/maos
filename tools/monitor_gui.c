@@ -121,7 +121,7 @@ static void create_entry(PROC_T *p){
     gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(p->hbox),p->entry_timing,FALSE,FALSE,0);
     gtk_box_pack_start(GTK_BOX(p->hbox),gtk_vseparator_new(),FALSE,FALSE,0);
-    change_button(p, GTK_STOCK_STOP, kill_job_event);
+    change_button(p, GTK_STOCK_PREFERENCES, kill_job_event);
     gtk_box_pack_start(GTK_BOX(p->hbox),p->btn,FALSE,FALSE,0);
     p->vbox=gtk_vbox_new(FALSE,0);
     if(nproc[p->hid]==1){

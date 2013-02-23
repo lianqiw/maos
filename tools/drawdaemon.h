@@ -40,7 +40,7 @@
 #define CAIRO_FORMAT_A8 0x02
 #endif
 typedef struct drawdata_t drawdata_t;
-
+extern int sock;
 struct drawdata_t{
     /*First, input data from draw.c */
     /*Draw images. */
@@ -52,10 +52,10 @@ struct drawdata_t{
     int npts;        /*number of pts mat, not points. */
     int32_t *style;
     int *style_pts;    /*save pts style for legend */
-    unsigned int nstyle;
+    int nstyle;
     /*draw circles */
     double (*cir)[4];
-    unsigned int ncir;
+    int ncir;
     /*limit */
     double *limit_data;/*x,y,limit of data. might be suplied by user. */
     double *limit_cumu;/*x,y,limit of cumulatively averaged data. */
@@ -122,6 +122,8 @@ struct drawdata_t{
     double icumu;/*plot cumulative mean from this time step if cumu!=0 */
     double icumulast;/*plot cumulative mean from this time step if cumu!=0 */
     int cumulast;/*=0: we are drawing cumu the first time. */
+    double time;/*The time this data is received*/
+    double dtime;/*The time difference between this data and last data.*/
 };
 extern char *font_name;
 extern double font_size;
@@ -149,9 +151,9 @@ void round_limit(double *xmin, double *xmax, int logscale);
 void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height);
 void apply_limit(drawdata_t *drawdata);
 /*from drawdaemon_gui */
-GtkWidget* create_window(void);
+GtkWidget* create_window();
 gboolean addpage(gpointer junk);
 /*from drawdaemon_io */
-void open_fifo(void *);
+void listen_draw();
 void dbl2pix(long nx, long ny, int color, const double *restrict p,  void *pout, double *info);
 #endif

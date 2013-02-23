@@ -25,6 +25,7 @@
 extern int DRAW_ID;/*number to use for drawdaemon, usually PID. */
 extern int DRAW_DIRECT;
 void draw_helper(void);
+int draw_add(int fd);
 void imagesc(char *fig, long nx, long ny, const double *limit, const double *zlimit,
 	     const void *p, const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(10);
@@ -66,28 +67,26 @@ void drawopd(char *fig, loc_t *loc, const double *opd,  double *zlim,
 void drawopdamp(char *fig, loc_t *loc, const double *opd, const double *amp, double *zlim,
 		const char *title, const char *xlabel, const char *ylabel,
 		const char* format,...) CHECK_ARG(9);
-
-/*set to one to disable drawing. */
-extern int disable_draw;
-#define DRAW_GRAY   0x0
-#define DRAW_COLOR  0x1
 enum{
-    FIFO_START=0, /*Mark the starting of data stream. */
-    FIFO_DATA,
-    FIFO_SHM,
-    FIFO_POINTS,
-    FIFO_STYLE,
-    FIFO_CIRCLE,
-    FIFO_LIMIT,
-    FIFO_FIG,
-    FIFO_NAME,
-    FIFO_TITLE,
-    FIFO_XLABEL,
-    FIFO_YLABEL,
-    FIFO_ZLIM,
-    FIFO_LEGEND,/*legend */
-    FIFO_XYLOG,/*logscale long x, y*/
-    FIFO_END=100
+    DRAW_START=0, /*Mark the starting of data stream. */
+    DRAW_DATA,
+    DRAW_SHM,
+    DRAW_POINTS,
+    DRAW_STYLE,
+    DRAW_CIRCLE,
+    DRAW_LIMIT,
+    DRAW_FIG,
+    DRAW_NAME,
+    DRAW_TITLE,
+    DRAW_XLABEL,
+    DRAW_YLABEL,
+    DRAW_ZLIM,
+    DRAW_LEGEND,/*legend */
+    DRAW_XYLOG,/*logscale long x, y*/
+    DRAW_FIGFN,
+    DRAW_PAUSE,
+    DRAW_RESUME,
+    DRAW_END=100
 };
 
 #endif

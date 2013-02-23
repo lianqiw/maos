@@ -64,10 +64,12 @@ enum{
     CMD_DISPLAY,/**<Remote display for telemetry*/
     CMD_VERSION,/*13 */
     CMD_LOAD,/*14 */
-    CMD_UNUSED2,/*15 */
-    CMD_UNUSED3,/*16 */
+    CMD_UNUSED2,/*15*/
+    CMD_UNUSED3,/*16*/
     CMD_ADDHOST,/*17*/
     CMD_LAUNCH,
+    CMD_PAUSE,
+    CMD_RESUME,
 };
 enum{
     S_RUNNING=1,
@@ -80,7 +82,7 @@ enum{
     S_KILLED,
 };
 
-#define scheduler_version 0x24
+#define scheduler_version 0x25
 #define BACKTRACE_CMD_LEN 200
 
 

@@ -974,7 +974,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     }
     if(drawdata->legend && drawdata->npts){
 	int style, color, connectpts;
-	double size;
+	double size=0;//???
 	cairo_save(cr);
 	cairo_identity_matrix(cr);
 	/*draw legend */
@@ -1033,6 +1033,14 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	    pango_text(cr, layout, leglen+linehead, -tall*0.2, legend[ig], 0, 0);
 	    cairo_translate(cr, 0, tall);
 	}
+	cairo_restore(cr);
+    }
+    if(!isinf(drawdata->dtime)){
+	cairo_save(cr);
+	cairo_identity_matrix(cr);
+	char fps[10];
+	snprintf(fps, 10, "FPS:%5.1f", 1./drawdata->dtime);
+	pango_text(cr, layout, xoff+widthim-font_size*0.3, yoff+font_size*1.2, fps, 1, 0);
 	cairo_restore(cr);
     }
     g_object_unref(layout);

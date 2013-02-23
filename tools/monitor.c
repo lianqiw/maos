@@ -308,7 +308,11 @@ static void kill_job(PROC_T *p){
 	 GTK_BUTTONS_NONE,
 	 "Kill job %d on server %s?",
 	 p->pid,hosts[p->hid]);
-    gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill Job", 0, "Remote Display", 1, "Cancel", 2, NULL);
+    if(p->status.info==S_WAIT){
+	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill Job", 0, "Cancel", 2, NULL);
+    }else{
+	gtk_dialog_add_buttons(GTK_DIALOG(dia), "Kill Job", 0, "Remote Display", 1, "Cancel", 2, NULL);
+    }
     int result=gtk_dialog_run(GTK_DIALOG(dia));
     gtk_widget_destroy (dia);
     switch(result){
@@ -321,8 +325,8 @@ static void kill_job(PROC_T *p){
     	break;
     case 1:
 	{
-	    //temporary: connect to scheduler with a new port
-	    //todo: call remote display routine directly.
+	    /*connect to scheduler with a new port. Pass the port to
+	      drawdaemon.*/
 	    int sock=connect_port(hosts[p->hid], PORT, 0, 0);
 	    int cmd[2]={CMD_DISPLAY, p->pid};
 	    if(stwriteintarr(sock, cmd, 2)){
@@ -334,12 +338,10 @@ static void kill_job(PROC_T *p){
 	    }else if(cmd[0]){
 		warning("The scheduler failed to talk to maos\n");
 	    }else{
-		char *msg=NULL;
-		if(!streadstr(sock, &msg)){
-		    info("maos says %s\n", msg);
-		}else{
-		    warning("failed to get message from maos\n");
+		if(spawn_drawdaemon(sock)){
+		    warning("spwn drawdaemon failed\n");
 		}
+		close(sock);
 	    }
 	}
 	break;

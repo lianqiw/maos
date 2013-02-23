@@ -27,6 +27,9 @@ void single_instance_daemonize(const char *lockfolder_in,
 int lock_file(const char *fn, long block, long version);
 void daemonize(void);
 void redirect(void);
+int launch_exe(const char *cmd);
+char* find_exe(const char *name);
+int spawn_drawdaemon(int sock);
 extern int detached;
 #endif
 

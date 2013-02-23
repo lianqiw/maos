@@ -547,15 +547,6 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
     }
     dfree(ampi);
-
-    if(parms->plot.setup){
-	drawopd("amp", powfs[ipowfs].loc, powfs[ipowfs].amp->p,NULL,
-		"WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
-	for(int ilocm=0; ilocm<nlocm; ilocm++){
-	    drawopd("ampm", powfs[ipowfs].loc, powfs[ipowfs].ampm->p[ilocm]->p,NULL,
-		    "WFS Amplitude Map","x (m)","y (m)","powfs %d", ipowfs);
-	}
-    }
   
     if(parms->save.setup){
 	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);

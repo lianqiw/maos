@@ -38,6 +38,5 @@ int scheduler_report(STATUS_T *status);
 /*called by monitor */
 int scheduler_launch_drawdaemon(char *fifo);
 char* scheduler_get_drawdaemon(int pid, int direct);
-int launch_exe(const char *cmd);
 int scheduler_launch_exe(const char *host, const char *cmd);
 #endif
