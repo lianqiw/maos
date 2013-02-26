@@ -329,6 +329,19 @@ void genmtch(const PARMS_T *parms, POWFS_T *powfs, const int ipowfs){
     if(parms->powfs[ipowfs].phytype==1 && parms->save.setup){
 	dcellwrite(sanea, "%s/powfs%d_sanea",dirsetup,ipowfs);
     }
+    if(parms->recon.glao && ni0>0){
+	info2("Averaging saneaxy of different WFS for GLAO mode\n");
+	PDCELL(intstat->saneaxy ,neaxy);
+	dcell *saneaxy2=dcellnew(nsa, 1);
+	double scale=1./ni0;
+	for(int isa=0; isa<nsa; isa++){
+	    for(int ii0=0; ii0<ni0; ii0++){
+		dadd(&saneaxy2->p[isa], 1, neaxy[ii0][isa], scale);
+	    }
+	}
+	dcellfree(intstat->saneaxy);
+	intstat->saneaxy=saneaxy2;
+    }
     dcellfree(sanea);
     dfree(i0m);
     dfree(i0g);
