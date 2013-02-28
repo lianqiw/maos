@@ -22,6 +22,10 @@
 #include "dmat.h"
 #include "cmat.h"
 #include "loc.h"
+/**
+   \file draw.h
+   Contains functions for data visualization. 
+*/
 extern int DRAW_ID;/*number to use for drawdaemon, usually PID. */
 extern int DRAW_DIRECT;
 void draw_helper(void);

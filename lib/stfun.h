@@ -15,8 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef AOS_LIB_STFUN
-#define AOS_LIB_STFUN
+#ifndef AOS_LIB_STFUN_
+#define AOS_LIB_STFUN_
+/**
+   \file stfun.h
+   Routine to compute structure function.
+*/
 typedef struct stfun_t stfun_t;
 stfun_t* stfun_init(long nx, long ny, double *amp);
 void stfun_push(stfun_t *A, dmat *opd);

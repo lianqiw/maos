@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_SP_H
-#define AOS_SP_H
+#ifndef AOS_LIB_SP_H
+#define AOS_LIB_SP_H
 #include "random.h"
 #include "type.h"
 

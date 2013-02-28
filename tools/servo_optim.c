@@ -16,7 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   standalone routine that does servo filtering.
+   \file servo_optim.c
+
+   Standalone routine that does servo filtering.
 */
 #include "../lib/aos.h"
 int main(int argc, char **argv){

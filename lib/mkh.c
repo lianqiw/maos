@@ -27,10 +27,7 @@
   ONLY_FULL==0: calc weights if not all points exist. preferred
   ONLY_FULL==1: calc weights only if all points exist
  */
-/**
-   \file mkh.c
-   Contains functions that create ray tracing operator
-*/
+
 static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 		       double displacex, double displacey, double scale,double cubic_iac);
 /**

@@ -17,6 +17,10 @@
 */
 #ifndef AOS_LIB_THREAD_POOL_H
 #define AOS_LIB_THREAD_POOL_H
+/**
+   \file thread_pool.h
+   Contains implementation of a thread pool. 
+*/
 typedef struct thread_pool_t thread_pool_t;
 void thread_pool_init(int nthread);
 void thread_pool_queue(long *count, void *(*fun)(void*), void *arg, int urgent);

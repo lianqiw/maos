@@ -16,14 +16,17 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_LOC_H
-#define AOS_LOC_H
+#ifndef AOS_LIB_LOC_H
+#define AOS_LIB_LOC_H
 #include "type.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
 
-
+/**
+   \file loc.h
+   This file defines functions relates to pts_t, loc_t, map_t, etc.
+ */
 long *loc_create_embed(long *nembed, const loc_t *loc, int oversize);
 void loc_create_map_npad(loc_t *loc, int npad);
 void loc_create_map(loc_t *loc);

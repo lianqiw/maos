@@ -26,7 +26,7 @@ char *dirstart;
    The main(). It parses the command line, setup the parms, ask the scheduler
    for signal to proceed, and then starts skysim to do sky coverage.
  */
-int main(int argc, char **argv){
+int main(int argc, const char *argv[]){
     dirstart=mygetcwd();
     char *scmd=argv2str(argc, argv, " ");
     ARG_S* arg=parse_args(argc,argv);

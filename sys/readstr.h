@@ -16,8 +16,12 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "common.h"
-//#include "../sys/sys.h"
-//#include "mathmisc.h"
+/**
+   \file readstr.h
+
+   Group all routines that are used to parse values from string that contain
+   key=value pairs.
+*/
 /*Check whether the char is space. We only treat real space, \t and \v as space. */
 INLINE int is_space(char c){
     if(c==' ' || c=='\t' || c=='\v'){

@@ -16,12 +16,16 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_MKW_H
-#define AOS_MKW_H
+#ifndef AOS_LIB_MKW_H
+#define AOS_LIB_MKW_H
 #include "loc.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
+/**
+   \file mkw.h
+   Contains functions that computes the bilinear weighting function W0, W1
+*/
 void mkw_amp(loc_t *loc,double *amp,dsp **W0,dmat **W1);
 void mkw_circular(loc_t *loc,double cx, double cy,
 		   double r,dsp **W0,dmat **W1);

@@ -19,6 +19,11 @@
 #define AOS_LIB_GENOTF_H
 #include "type.h"
 #include "loc.h"
+/**
+   \file genotf.h
+   Routines to generate short/long exposure OTFs of an aperture in present of
+   atmosphere turbulence.
+*/
 void genotf(cmat **otf,    /**<The otf array for output*/
 	    loc_t *loc,    /**<the common aperture grid*/
 	    const double *amp,     /**<The amplitude map of all the (sub)apertures*/

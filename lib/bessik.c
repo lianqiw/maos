@@ -19,8 +19,9 @@
   Obtained from Numerical Recipes in C, Second Edition. Converted float to double.
 */
 /**
-\file bessik.c
-
+   Compute modified Bessel functions
+*/
+/*
 Returns the modified Bessel functions ri = Iν , rk = Kν and their derivatives rip = Iν ,
 rkp = Kν , for positive x and for xnu = ν ≥ 0. The relative accuracy is within one or two
 significant digits of EPS. FPMIN is a number close to the machine’s smallest floating-point
@@ -79,7 +80,10 @@ static void beschb(double x, double *gam1, double *gam2, double *gampl, double *
 }
 #undef NUSE1
 #undef NUSE2
-
+/**
+   Returns the modified Bessel functions ri = Iν , rk = Kν and their derivatives
+   rip = Iν , rkp = Kν, for positive x and for xnu = ν ≥ 0. 
+*/
 void bessik(double x, double xnu, double *ri, double *rk, double *rip, double *rkp)
 {
 	int i,l,nl;

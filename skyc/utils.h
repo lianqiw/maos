@@ -18,7 +18,7 @@
 #ifndef SKYC_UTILS_H
 #define SKYC_UTILS_H
 #include "skyc.h"
-ARG_S *parse_args(int argc, char **argv);
+ARG_S *parse_args(int argc, const char *argv[]);
 void prep_result_folder(ARG_S *arg);
 void rename_file(int sig);
 void skyc_signal_handler(int sig);

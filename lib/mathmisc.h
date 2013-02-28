@@ -18,9 +18,12 @@
 
 #ifndef AOS_LIB_MATHMISC_H
 #define AOS_LIB_MATHMISC_H
-
 #include "../sys/sys.h"
 #include "blas.h"
+/**
+   \file mathmisc.h
+   A few math routines
+*/
 #undef	MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #undef	MIN

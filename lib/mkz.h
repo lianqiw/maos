@@ -16,9 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_MKZ_H
-#define AOS_MKZ_H
+#ifndef AOS_LIB_MKZ_H
+#define AOS_LIB_MKZ_H
 #include "loc.h"
+/**
+   \file mkz.h
+   Contains function that creates ztilt gradient operator
+*/
 dsp * mkzt(loc_t* xloc, double *amp,loc_t *saloc, 
 	      int saorc, double scale, double *displace);
 dsp *mkz(loc_t* xloc, double *amp,loc_t *saloc, 

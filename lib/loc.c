@@ -28,10 +28,7 @@
 #include "draw.h"
 #include "matbin.h"
 #include "mathmisc.h"
-/**
-   \file loc.c
-   This file defines functions relates to pts_t, loc_t, map_t, etc.
- */
+
 /**
    Free pts_t data
 */

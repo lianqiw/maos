@@ -440,7 +440,7 @@ void maos_signal_handler(int sig){
 	}
 	fflush(NULL);
 	if(segfault){
-	    PRINT_BACKTRACE;
+	    print_backtrace();
 	}
 	scheduler_finish(1);
 	kill(getpid(), sig);//kill again. signal handler is off
@@ -490,7 +490,7 @@ static __attribute__((destructor)) void deinit(){
 /**
    Parse command line arguments argc, argv
  */
-ARG_T * parse_args(int argc, char **argv){
+ARG_T * parse_args(int argc, const char *argv[]){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
     int *seeds=NULL; int nseed=0;
     char *host=NULL; int local=0;
@@ -512,10 +512,8 @@ ARG_T * parse_args(int argc, char **argv){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(!local && host && strcmp(host, myhostname())){
-	//run in another server
-	char *scmd=argv2str(argc,argv,"\n");
-	if(scheduler_launch_exe(host, scmd)){
+    if(!local && host){ //run through scheduler.
+	if(scheduler_launch_exe(host, argc, argv)){
 	    error2("Unable to launch maos at server %s\n", host);
 	}
 	exit(EXIT_SUCCESS);
@@ -874,5 +872,5 @@ void maos_daemon(int sock){
 	}
     }
  end:
-    info2("maos_daemon quit %ld\n", (long)pthread_self());
+    info2("maos_daemon quit\n");
 }

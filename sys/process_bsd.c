@@ -25,9 +25,7 @@
 #include <sys/sysctl.h>
 #include <dirent.h>
 #include <sys/resource.h>
-
 #include "common.h"
-
 #include "process.h"
 
 const char *get_job_progname(void){
@@ -65,7 +63,7 @@ double get_usage_mem(void){
 #warning "Please implement"
   return 0;
 }
-int read_usage_cpu(long *user, long *tot){
+int read_cpu_counter(long *user, long *tot){
 #warning "Please implement"
   return 0;
 }

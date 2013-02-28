@@ -16,10 +16,15 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_CELLARR_H
-#define AOS_CELLARR_H
+#ifndef AOS_LIB_CELLARR_H
+#define AOS_LIB_CELLARR_H
 #include "type.h"
 /**
+   \file cellarr.h
+   cellarr is an object used to write arrays of dcell or ccell into file.
+   Mainly used to output PSF into files.
+*/
+/*
    used to save array of dmat, cmat, ccell or dcell. mainly used to save
 psfout. No user modifiable entries.  */
 typedef struct cellarr{

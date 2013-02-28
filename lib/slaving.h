@@ -19,6 +19,10 @@
 #define AOS_LIB_SLAVING_H
 #include "type.h"
 #include "imat.h"
+/**
+   \file slaving.h
+   Routines to compute interpolation matrices for stuck and floating actuators.
+ */
 spcell *slaving(dcell **pactcpl, loc_t **aloc, spcell *HA, dmat *W1, dcell *NW, icell *actstuck, icell *actfloat, double thres, double scl);
 void act_stuck(loc_t **aloc, spcell *HA, dcell *HB, icell *stuck);
 void act_zero(loc_t **aloc, dcell *HB, icell *dead);

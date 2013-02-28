@@ -17,9 +17,6 @@
 */
 #ifndef AOS_SCHEDULER_SERVER_H
 #define AOS_SCHEDULER_SERVER_H
-#define MAXMSG  512
-#include <netinet/in.h>
-
 /**
    Status about each process. Timing, wavefront error, etc.
  */
@@ -59,37 +56,29 @@ enum{
     CMD_KILL,
     CMD_TRACE,/*8 */
     CMD_DRAW,
-    CMD_SOCK,  /**<We are pass a socket*/
-    CMD_REMOVE,/**<Remove a job*/
-    CMD_DISPLAY,/**<Remote display for telemetry*/
+    CMD_SOCK,  /**<10 We are pass a socket*/
+    CMD_REMOVE,/**<11 Remove a job*/
+    CMD_DISPLAY,/**<12 Remote display for telemetry*/
     CMD_VERSION,/*13 */
     CMD_LOAD,/*14 */
     CMD_UNUSED2,/*15*/
     CMD_UNUSED3,/*16*/
     CMD_ADDHOST,/*17*/
-    CMD_LAUNCH,
+    CMD_LAUNCH,/*18*/
     CMD_PAUSE,
     CMD_RESUME,
 };
 enum{
-    S_RUNNING=1,
-    S_WAIT,
-    S_START,
-    S_FINISH=11,
-    S_CRASH,
-    S_TOKILL,
-    S_REMOVE,
-    S_KILLED,
+    S_RUNNING=1,/*1*/
+    S_WAIT,  /*2*/
+    S_START,/*3*/
+    S_QUEUED,/*4*/
+    S_FINISH=11,/*11*/
+    S_CRASH,/*12*/
+    S_TOKILL,/*13*/
+    S_REMOVE,/*14*/
+    S_KILLED,/*15*/
 };
 
-#define scheduler_version 0x25
-#define BACKTRACE_CMD_LEN 200
-
-
-void print_backtrace(int sig);
-void print_backtrace_symbol(void *const *buffer, int size);
-void socket_tcp_keepalive(int sock);
-void scheduler(void);
-
-
+#define scheduler_version 0x26
 #endif

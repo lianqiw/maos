@@ -206,11 +206,20 @@ gboolean refresh(PROC_T *p){
     case S_RUNNING:
 	break;
     case S_WAIT: /*waiting to start */
-	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting to start");
+	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting");
 	break;
     case S_START: /*just started. */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Started");
+	{
+	    struct tm *tim=localtime(&(p->status.timstart));
+	    char stime[80];
+	    strftime(stime,80,"[%a %k:%M:%S]",tim);
+	    gtk_label_set_text(GTK_LABEL(p->entry_start), stime);
+	}
 	notify_user(p);
+	break;
+    case S_QUEUED:/*queued in scheduler*/
+	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Queued");
 	break;
     case S_FINISH:/*Finished */
 	p->done=1;
@@ -240,7 +249,7 @@ gboolean refresh(PROC_T *p){
 	notify_user(p);
 	break;
     default:
-	warning("Unknown info\n");
+	warning("Unknown info: %d\n", p->status.info);
     }
     update_prog(p);
     return 0;
@@ -248,4 +257,7 @@ gboolean refresh(PROC_T *p){
 GtkWidget *new_page(int ihost){
     (void)ihost;
     return NULL;
+}
+void kill_selected_jobs(GtkAction *btn){
+    (void)btn;
 }

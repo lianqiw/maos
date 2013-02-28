@@ -33,10 +33,6 @@
 #define CHOL_SIMPLE 0
 
 /**
-   \file chol.c
-   Wraps the CHOLESKY Library to provide a simple interface.*/
-
-/**
    Convert our dsp spase type to cholmod_sparse type. Data is shared. 
 */
 static cholmod_sparse *sp2chol(const dsp *A){
@@ -152,62 +148,6 @@ spchol* chol_factorize(dsp *A_in){
     }
 #endif
     free(A);/*just free our reference.*/
-    return out;
-}
-
-/**
-   Factorize a sparse array into LL' with reordering.
-*/
-spchol* chol_factorize_cache(dsp *A_in){
-    if(!A_in) return NULL;
-    spchol *out=NULL;
-    char dirchol[PATH_MAX];
-    snprintf(dirchol, PATH_MAX, "%s/.aos/chol",HOME);
-    if(!exist(dirchol)) mymkdir("%s", dirchol);
-    long avail=available(dirchol);
-    if(avail>A_in->nzmax*3*sizeof(double) && A_in->m>10000){
-	uint32_t key;
-	key=hashlittle(A_in->p, sizeof(spint)*(A_in->n+1), 0);
-	key=hashlittle(A_in->i, sizeof(spint)*(A_in->nzmax), key);
-	key=hashlittle(A_in->x, sizeof(double)*(A_in->nzmax), key);
-	char fnchol[PATH_MAX];
-	snprintf(fnchol, PATH_MAX, "%s/chol_%ld_%ld_%ud.bin",dirchol, A_in->m, A_in->nzmax, key);
-	if(zfexist(fnchol)) zftouch(fnchol);
-	remove_file_older(dirchol, 365*24*3600);
-
-	while(!out){
-	    if(exist(fnchol)){
-		info2("\nreading chol from %s\n", fnchol);
-		out=chol_read("%s", fnchol);
-	    }else{
-		char fnlock[PATH_MAX];
-		snprintf(fnlock, PATH_MAX, "%s.lock", fnchol);
-		/*non blocking exclusive lock. */
-		int fd=lock_file(fnlock, 0, 0);
-		if(fd>=0){/*succeed to lock file. */
-		    TIC;tic;
-		    out=chol_factorize(A_in);
-		    toc2("chol_factorize");
-		    char fntmp[PATH_MAX];
-		    snprintf(fntmp, PATH_MAX, "%s.partial.bin", fnchol);
-		    info2("\nsaving chol to %s\n", fnchol);
-		    chol_save(out, "%s", fntmp);
-		    if(rename(fntmp, fnchol)){
-			error("Unable to rename %s\n", fnlock);
-		    }
-		    close(fd); remove(fnlock);
-		}else{
-		    warning("Waiting for previous lock to release ...");
-		    fd=lock_file(fnlock, 1, 0);
-		    warning2("OK\n");
-		    close(fd); remove(fnlock);
-		}
-	    }
-	}
-    }else{
-	out=chol_factorize(A_in);
-    }
-    
     return out;
 }
 

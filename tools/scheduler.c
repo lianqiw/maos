@@ -17,7 +17,7 @@
 */
 /**
    Contains routines to do job scheduling and monitoring.
-
+   
    Change log: 
 
    2010-01-17: Removed communicate between schedulers on different
@@ -33,8 +33,6 @@
    2) Do not pass host id around, as it might be defined differently for the same machine.
 
    2012-10-25: This file only contains the routines to be used by the server.
-
-   \todo Detect hyperthreading.
  */
 
 #include <stdio.h>
@@ -44,27 +42,9 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#include "config.h"
-#include "misc.h"
-#include "sock.h"
-#include "sockio.h"
-#include "process.h"
-#include "daemonize.h"
-#include "scheduler_server.h"
-#include "scheduler_client.h"
+#include "../sys/sys.h"
+
 extern char *scheduler_fnlog;
-
-#ifndef MAOS_DISABLE_SCHEDULER
-#ifndef SCHEDULER
-
-/**
-   Struct to hold information of queued jobs waited to start.
-*/
-typedef struct QUEUE_T{
-    int pid;
-    int sock;
-    int nthread;
-}QUEUE_T;
 /**
    Struct to hold information of running jobs.
 */
@@ -77,7 +57,9 @@ typedef struct RUN_T{
     int sock;
     int nthread;
     int time;
-    char *path;
+    char *cwd; /*Current job path*/
+    char *exe; /*Path to the executable.*/
+    char *path;/*Job arguments.*/
 }RUN_T;
 
 /**
@@ -100,10 +82,9 @@ static RUN_T *runned=NULL;
 static RUN_T *runned_end=NULL;
 static int nrun=0;
 static double usage_cpu;
-
 static RUN_T* running_add(int pid,int sock);
 static RUN_T *running_get(int pid);
-static RUN_T *running_get_wait(void);
+static RUN_T *running_get_wait(int status);
 
 static RUN_T *runned_get(int pid);
 static void runned_remove(int pid);
@@ -163,7 +144,9 @@ static void runned_remove(int pid){
 		if(irun->next==NULL)
 		    runned_end=runned;
 	    }
-	    if(irun->path) free(irun->path);
+	    free(irun->path);
+	    free(irun->exe);
+	    free(irun->cwd);
 	    free(irun);
 	    removed=1;
 	    break;
@@ -182,13 +165,36 @@ static RUN_T *runned_get(int pid){
     }
     return irun;
 }
+/*
+static RUN_T *waiting_add(int pid){
+    RUN_T *irun=calloc(1, sizeof(RUN_T));
+    irun->pid=pid;
+    if(waiting_end){
+	waiting_end->next=irun;
+	waiting_end=irun;
+    }else{
+	waiting=irun;
+	waiting_end=irun;
+    }
+    return irun;
+}
+static RUN_T *waiting_get_wait(){
+    RUN_T *irun=waiting;
+    if(waiting){
+	waiting=waiting->next;
+        if(!waiting){
+	    waiting_end=NULL;
+	}
+    }
+    return irun;
+    }*/
 /**
    The following running_* routiens operates on running linked list
    which contains queued jobs.
 */
 static RUN_T* running_add(int pid,int sock){
     RUN_T *irun;
-    if((irun=running_get(pid))){
+    if(pid && (irun=running_get(pid))){
 	return irun;
     }else{
 	/*create the node */
@@ -196,14 +202,17 @@ static RUN_T* running_add(int pid,int sock){
 	irun->pid=pid;
 	irun->sock=sock;
 	/*record the launch time */
-	irun->launchtime=get_job_launchtime(pid);
+	if(pid>0){
+	    irun->launchtime=get_job_launchtime(pid);
+	}else{
+	    irun->launchtime=INFINITY;
+	}
 	irun->next=NULL;
-	if(running_end){
-	    if(running_end->launchtime <= irun->launchtime){
+	if(running_end){/*list is not empty*/
+	    if(pid<=0 || running_end->launchtime <= irun->launchtime){
 		/*append the node to the end. */
 		running_end->next=irun;
 		running_end=irun;
-		irun->next=NULL;
 	    }else{
 		/*insert the node in the middle. */
 		RUN_T *jrun,*jrun2=NULL;
@@ -226,16 +235,11 @@ static RUN_T* running_add(int pid,int sock){
 	    running_end=running=irun;
 	}
 	irun->status.timstart=myclocki();
-	FILE *fp=fopen(scheduler_fnlog,"a");
-	fprintf(fp,"[%s] %s %5d  started '%s' nrun=%d\n",
-		myasctime(),hosts[hid],pid,irun->path,nrun);
-	fclose(fp);
 	return irun;
     }
 }
 static void running_update(int pid, int status){
     RUN_T *irun=running_get(pid);
-    /*info3("running_update %s:%d with status %d\n",hosts[host],pid,status); */
     if(irun){
 	if(irun->status.info!=S_WAIT && status>10){
 	    nrun-=irun->nthread;/*negative decrease */
@@ -246,10 +250,7 @@ static void running_update(int pid, int status){
 	    irun->time=(int)myclockd();
 	    if(nrun<0) nrun=0;
 	    running_remove(pid);/*moved to runned. */
-	    /*info3("running_update %s:%d is moved to runned\n",hosts[host],pid); */
 	}
-    }else{
-	/*warning3("running_update %s:%d not found\n",hosts[host],pid); */
     }
 }
 static void running_remove(int pid){
@@ -266,25 +267,41 @@ static void running_remove(int pid){
 		if(irun->next==NULL)
 		    running_end=running;
 	    }
-	    irun->status.timend=myclocki();
-	    /*move irun to runned */
-	    runned_add(irun);
-	    {
-		FILE *fp=fopen(scheduler_fnlog,"a");
-		const char *statusstr=NULL;
-		switch (irun->status.info){
-		case S_CRASH:
-		    statusstr="Crashed"; break;
-		case S_FINISH:
-		    statusstr="Finished";break;
-		case S_KILLED:
-		    statusstr="Killed";
-		default:
-		    statusstr="Unknown";break;
+	    if(irun->pid>0){
+		irun->status.timend=myclocki();
+		/*move irun to runned */
+		runned_add(irun);
+		{
+		    const char *statusstr=NULL;
+		    switch (irun->status.info){
+		    case S_CRASH:
+			statusstr="Crashed"; break;
+		    case S_FINISH:
+			statusstr="Finished";break;
+		    case S_KILLED:
+			statusstr="Killed";break;
+		    default:
+			statusstr="Unknown";break;
+		    }
+		    FILE *fp=fopen(scheduler_fnlog,"a");
+		    if(fp){
+			fprintf(fp,"[%s] %s %5d %8s '%s' nrun=%d\n",
+				myasctime(),hosts[hid],pid,statusstr,irun->path,nrun);
+			fclose(fp);
+		    }
 		}
-		fprintf(fp,"[%s] %s %5d %8s '%s' nrun=%d\n",
-			myasctime(),hosts[hid],pid,statusstr,irun->path,nrun);
-		fclose(fp);
+	    }else{//The process is not running. run it and remove from monitor.
+		if(irun->status.info==S_QUEUED){
+		    irun->status.info=S_REMOVE;
+		    warning("monitor_send S_REMOVE\n");
+		    monitor_send(irun, NULL);
+		    free(irun->path);
+		    free(irun->exe);
+		    free(irun->cwd);
+		    free(irun);
+		}else{//Killed. Add to runned queue
+		    runned_add(irun);
+		}
 	    }
 	    removed=1;
 	    break;
@@ -305,17 +322,14 @@ static RUN_T *running_get(int pid){
     return irun;
 }
 
-static RUN_T *running_get_wait(void){
+static RUN_T *running_get_wait(int status){
     RUN_T *irun;
     int jrun=0;
     for(irun=running; irun; irun=irun->next){
 	jrun++;
-	if(irun->status.info==S_WAIT){
+	if(irun->status.info==status){
 	    break;
 	}
-    }
-    if(!irun && jrun>0){
-	warning("No waiting jobs found. there are %d running jobs\b", jrun);
     }
     return irun;
 }
@@ -337,7 +351,7 @@ static void check_jobs(void){
  restart:
     if(running){
 	for(irun=running; irun; irun=irun->next){
-	    if(kill(irun->pid,0)){
+	    if(irun->pid>0 && kill(irun->pid,0)){
 		running_update(irun->pid,S_CRASH);
 		/*list is changed. need to restart the loop. */
 		goto restart;
@@ -356,28 +370,51 @@ static void process_queue(void){
     timestamp=myclockd();
     if(nrun>=NCPU) return;
     if(nrun<0){
+	warning("process_queue: nrun=%d. set to 0.\n", nrun);
 	nrun=0;
     }
     int avail=get_cpu_avail();
-    info2("nrun=%d avail=%d\n", nrun, avail);
+    info2("process_queue: nrun=%d avail=%d\n", nrun, avail);
     if(avail<1) return;
-    RUN_T *irun=running_get_wait();
-    if(!irun) {
-	info2("all jobs done\n");
-	all_done=1;
-	return;
-    }
-    
-    int nthread=irun->nthread;
-    if(nrun+nthread<=NCPU && (nthread<=avail || avail >=3)){
-	nrun+=nthread;
-	/*don't close the socket. will close it in select loop. */
-	/*warning3("process %d launched. write to sock %d cmd %d\n", */
-	/*irun->pid, irun->sock, S_START); */
-	stwriteint(irun->sock,S_START);
-	irun->status.timstart=myclocki();
-	irun->status.info=S_START;
-	monitor_send(irun,NULL);
+    RUN_T *irun=running_get_wait(S_WAIT);
+    if(irun){
+	int nthread=irun->nthread;
+	if(nrun+nthread<=NCPU && (nthread<=avail || avail >=3)){
+	    nrun+=nthread;
+	    /*don't close the socket. will close it in select loop. */
+	    /*warning3("process %d launched. write to sock %d cmd %d\n", */
+	    /*irun->pid, irun->sock, S_START); */
+	    info2("process_queue: Notify %d at %d\n", irun->pid, irun->sock);
+	    if(stwriteint(irun->sock,S_START)){
+		perror("stwriteint");
+		warning("failed to notify maos\n");
+	    }
+	    irun->status.timstart=myclocki();
+	    irun->status.info=S_START;
+	    monitor_send(irun,NULL);
+	    FILE *fp=fopen(scheduler_fnlog,"a");
+	    if(fp){
+		fprintf(fp,"[%s] %s %5d  started '%s' nrun=%d\n",
+			myasctime(),hosts[hid],irun->pid,irun->path,nrun);
+	    }
+	    fclose(fp);
+	}
+    }else{
+	if(avail>1){
+	    irun=running_get_wait(S_QUEUED);
+	    if(!irun){
+		all_done=1;
+	    }else{
+		info2("process_queue: no more jobs pending, process waiting list\n");
+		if(launch_exe(irun->exe, irun->cwd, irun->path)){
+		    warning("launch_exe %s failed\n", irun->path);
+		}else{
+		    warning("launch_exe %s succeed\n", irun->path);
+		}
+		running_remove(irun->pid);
+		sleep(1);//wait for the job to actually start.
+	    }
+	}
     }
 }
 /**
@@ -415,12 +452,13 @@ static int respond(int sock){
 	    if(waiting){
 		irun->status.info=S_WAIT;
 		all_done=0;
-		info2("%d queued. nrun=%d\n",pid,nrun);
+		info2("respond: %d queued. nrun=%d\n",pid,nrun);
 	    }else{/*no waiting, no need reply. */
+		info2("scheduler: nrun is increased by %d\n", nthread);
 		nrun+=nthread;
 		irun->status.info=S_START;
 		irun->status.timstart=myclocki();
-		info2("%d started. nrun=%d\n",pid,nrun);
+		info2("respond: %d started. nrun=%d\n",pid,nrun);
 	    }
 	    if(irun->path) monitor_send(irun,irun->path);
 	    monitor_send(irun,NULL);
@@ -445,6 +483,7 @@ static int respond(int sock){
 	    }
 	    if(added){
 		irun->nthread=irun->status.nthread;
+		info2("respond, STATUS: nrun is increased by %d\n", irun->nthread);
 		nrun+=irun->nthread;
 	    }
 	    monitor_send(irun,NULL);
@@ -460,73 +499,44 @@ static int respond(int sock){
 	    if(pid>=0x8){/*check monitor version. */
 		tmp->load=1;
 	    }
-	    info2("Monitor is connected at sock %d.\n", sock);
+	    info2("respond: Monitor is connected at sock %d.\n", sock);
 	}
 	break;
     case CMD_PATH:{
-	RUN_T *irun=running_get(pid);
-	if(!irun){
-	    irun=running_add(pid,sock);
-	}
+	RUN_T *irun=running_add(pid, sock);
 	if(irun->path) free(irun->path);
 	if(streadstr(sock, &irun->path)){
 	    ret=-1;
 	    break;
 	}
-	info2("Received path: %s\n",irun->path);
+	info2("respond: Received path: %s\n",irun->path);
 	monitor_send(irun,irun->path);
     }
 	break;
     case CMD_KILL:/*called by mnitor. */
 	{
-	    kill(pid,SIGTERM);
-	    sleep(1);
-	    if(!kill(pid,0)){
-		kill(pid,SIGKILL);
+	    RUN_T *irun=running_get(pid);
+	    if(irun){
+		if(irun->status.info!=S_QUEUED){
+		    kill(pid,SIGTERM);
+		    sleep(1);
+		    if(!kill(pid,0)){
+			kill(pid,SIGKILL);
+		    }
+		}
+		running_update(pid,S_KILLED);
 	    }
-	    running_update(pid,S_KILLED);
 	}
 	break;
     case CMD_TRACE://called by maos to print backtrace
 	{
-	    char out[BACKTRACE_CMD_LEN];
-	    char *buf;
-	    if(streadstr(sock, &buf)){
+	    char *buf=NULL, *out=NULL;
+	    if(streadstr(sock, &buf)||!(out=call_addr2line(buf))||stwritestr(sock,out)){
+		info2("respond: CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
 		ret=-1; 
-		break;
-	    }
-	    info("command is %s\n", buf);
-	    FILE *fpcmd=popen(buf,"r");
-	    if(!fpcmd){ 
-		warning("Unable to run %s", buf);
-		if(stwritestr(sock,"Command invalid\n")){
-		    ret=-1;
-		}
-		break;
 	    }
 	    free(buf);
-	    out[0]='\0';
-	    char ans[200];
-	    while(fgets(ans, sizeof(ans), fpcmd)){
-		char *tmp=strrchr(ans,'/');
-		if(tmp){
-		    tmp++;
-		    char *tmp2=strchr(tmp,'\n'); tmp2[0]='\0';
-		    if(strlen(out)+3+strlen(tmp)<sizeof(out)){
-			strcat(out, "->");
-			strcat(out, tmp);
-		    }else{
-			warning("over flow. gave up\n");
-		    }
-		    
-		}
-	    }
-	    pclose(fpcmd);
-	    if(stwritestr(sock,out)){
-		info("write result failed\n");
-		ret=-1; 
-		break;
-	    }
+	    free(out);
 	}
 	break;
     case CMD_DRAW://not used
@@ -570,13 +580,31 @@ static int respond(int sock){
 	/*called by maos/skyc from another machine to start a job in this
 	  machine*/
 	char *execmd=NULL;
-	if(streadstr(sock, &execmd)){
+	char *execwd=NULL;
+	char *exename=NULL;
+	if(pid==3){
+	    if(streadstr(sock, &exename) || streadstr(sock, &execwd)){
+		warning("Unable to read exename.\n");
+	    }
+	}
+	if(!streadstr(sock, &execmd)){
+	    static long counter=0;//an negative index to retrieve this irun.
+	    counter--;
+	    RUN_T *irun=running_add(counter, -1);
+	    irun->status.info=S_QUEUED;
+	    irun->exe=exename;
+	    irun->cwd=execwd;
+	    irun->path=execmd;
+	    char *tmp=stradd(irun->cwd, "/", irun->path, NULL);//add path.
+	    monitor_send(irun, tmp); free(tmp);
+	    monitor_send(irun, NULL);
+	    all_done=0;
+	    info2("respond: exe=%s\ncwd=%s\npath=%s\n added to waitinglist. nrun=%d\n", irun->exe, irun->cwd, irun->path, nrun);
+	    ret=0;
+	}else{
 	    warning("Unable to read execmd\n");
 	    ret=-1;
-	}else{
-	    ret=launch_exe(execmd);
 	}
-	free(execmd);
 	if(stwriteint(sock, ret)){
 	    ret=-1;
 	}
@@ -620,17 +648,9 @@ static void scheduler_timeout(void){
     }
 }
 
-void scheduler(void){ 
-    char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX, "/tmp/maos-%s/scheduler", USER);
-    remove(fn);
-    listen_port(PORT, fn,respond, 1, scheduler_timeout, 0);
-    remove(fn);
-    exit(0);
-}
 /*The following routines maintains the MONITOR_T linked list. */
 static MONITOR_T* monitor_add(int sock){
-    /*info("added monitor on sock %d\n",sock); */
+    /*info2("added monitor on sock %d\n",sock); */
     MONITOR_T *node=calloc(1, sizeof(MONITOR_T));
     node->sock=sock;
     node->next=pmonitor;
@@ -737,9 +757,14 @@ static void monitor_send_initial(MONITOR_T *ic){
 	}
     }
 }
-#else
+
 int main(){
-    scheduler();
+    char fn[PATH_MAX];
+    snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
+    remove(fn);
+    extern int is_scheduler;
+    is_scheduler=1;
+    listen_port(PORT, fn,respond, 1, scheduler_timeout, 0);
+    remove(fn);
+    exit(0);
 }
-#endif
-#endif

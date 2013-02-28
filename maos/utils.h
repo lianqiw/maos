@@ -33,7 +33,7 @@ void plotloc(char *fig, const PARMS_T *parms,
 	     loc_t *loc, double ht, char *format,...);
 void rename_file(int sig);
 void maos_signal_handler(int sig);
-ARG_T* parse_args(int argc, char **argv);
+ARG_T* parse_args(int argc, const char *argv[]);
 cmat *strehlcomp(const dmat *iopdevl, const double *amp, const double wvl);
 ccell *psfcomp(const dmat *iopdevl, const double *restrict amp,
 	       long **embeds, const long *nembeds, const int *psfsize,

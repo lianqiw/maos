@@ -20,10 +20,7 @@
 #include <stdint.h>
 #include "mathmisc.h"
 #include "blas.h"
-/**
-   \file mathmisc.c
-   A few math routines
-*/
+
 /**
    Compute the factorial. Overflow LONG if n>20, so we use double as output.*/
 double factorial(long n){

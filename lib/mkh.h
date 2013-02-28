@@ -16,24 +16,21 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_MKH_H
-#define AOS_MKH_H
+#ifndef AOS_LIB_MKH_H
+#define AOS_LIB_MKH_H
 #include "loc.h"
 #include "dmat.h"
 #include "cmat.h"
 #include "dsp.h"
+/**
+   \file mkh.h
+   Contains functions that create ray tracing operator
+*/
 dsp * mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	   double displacex, double displacey,double scale,
 	   int cubic, double cubic_iac);
 dsp * mkh(loc_t *locin, loc_t *locout, const double *ampout,
 	  double displacex, double displacey,double scale,
 	  int cubic, double cubic_iac);
-/*
-dsp * mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
-		 double displacex, double displacey,
-		 double scale,double cubic);
-dsp * mkh_cubic(loc_t *locin, loc_t *locout, const double *ampout,
-		double displacex, double displacey,
-		double scale,double cubic);*/
 dsp *mkhbin1d(dmat *xin, dmat *xout);		   
 #endif

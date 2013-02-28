@@ -16,6 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
+   \file load.c
+
    This routine is a matlab script helper. It launches matlab scripts and
    supervise it. The job is controlled by scheduler.
  */

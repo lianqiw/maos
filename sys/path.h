@@ -18,6 +18,12 @@
 
 #ifndef AOS_LIB_PATH_H
 #define AOS_LIB_PATH_H
+/**
+   \file path.h
+   
+   This file contains function managing the searching path for files, behaves
+   like PATH in POSIX systems.
+*/
 void addpath(const char*path);
 void rmpath(const char *path);
 void printpath(void);

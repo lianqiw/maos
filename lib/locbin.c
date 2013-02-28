@@ -19,10 +19,7 @@
 #include "locbin.h"
 #include "matbin.h"
 #include "cell.h"
-/**
-   \file locbin.c
-   i/o functions for loc_t, map_t.
-*/
+
 /**
    Verify the magic, dimension and read in the loc_t by calling locreaddata2().
  */

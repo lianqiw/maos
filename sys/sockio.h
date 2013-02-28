@@ -20,8 +20,21 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h" 
 #endif
-int stwrite(int sfd, const void *p, size_t len);
-int stread(int sfd, void *p, size_t len);
+#include "common.h"
+/**
+   \file sockio.h
+   Routines handle socket i/o.
+*/
+INLINE int stwrite(int sfd, const void *p, size_t len){
+#ifdef __linux__
+    return (send(sfd, p, len, MSG_NOSIGNAL)!=len)?-1:0;
+#else
+    return (send(sfd, p, len, 0)!=len)?-1:0;
+#endif
+}
+INLINE int stread(int sfd, void *p, size_t len){
+    return (recv(sfd, p, len, MSG_WAITALL)!=len)?-1:0;
+}
 INLINE int stwriteint(int sfd, int cmd){
     return stwrite(sfd, &cmd, sizeof(int));
 }

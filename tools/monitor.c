@@ -84,7 +84,6 @@ GtkCssProvider *provider_red;
 GtkCssProvider *provider_blue;
 #endif
 int *hsock;
-
 /**
    The number line pattern determines how dash is drawn for gtktreeview. the
    first number is the length of the line, and second number of the length
@@ -264,7 +263,7 @@ void notify_user(PROC_T *p){
 	snprintf(summary,80,"Job is Killed on %s!",hosts[p->hid]);
 	break;
     default:
-	warning("Invalid status\n");
+	warning("Invalid status: %d\n", p->status.info);
 	return;
     }
     notify_notification_update(notify,summary,p->path,NULL);
@@ -356,11 +355,21 @@ void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p){
 static void kill_all_jobs(GtkAction *btn){
     (void)btn;
     int ihost=gtk_notebook_get_current_page (GTK_NOTEBOOK(notebook));
+    int count=0;
+    for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
+	if(iproc->hid == ihost 
+	   && (iproc->status.info==S_WAIT 
+	       || iproc->status.info==S_RUNNING
+	       || iproc->status.info==S_START)){
+	    count++;
+	}
+    }
+    if(count==0) return;
     GtkWidget *dia=gtk_message_dialog_new
 	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
 	 GTK_MESSAGE_QUESTION,
 	 GTK_BUTTONS_YES_NO,
-	 "Kill all jobs on server %s?", hosts[ihost]);
+	 "Kill all %d jobs on server %s?", count, hosts[ihost]);
     int result=gtk_dialog_run(GTK_DIALOG(dia));
     gtk_widget_destroy (dia);
     if(result==GTK_RESPONSE_YES){
@@ -699,18 +708,19 @@ int main(int argc, char *argv[])
 	g_signal_connect(action_connect_all, "activate", G_CALLBACK(add_host_event),GINT_TO_POINTER(-1));
 	gtk_action_group_add_action(topgroup, action_connect_all);
 
-	GtkAction *action_kill_all=gtk_action_new("act-kill-all", "Kill all jobs", "Kill al jobs", GTK_STOCK_CANCEL);
+	GtkAction *action_kill_all=gtk_action_new("act-kill-all", "Kill all jobs", "Kill all jobs", GTK_STOCK_CANCEL);
 	g_signal_connect(action_kill_all, "activate", G_CALLBACK(kill_all_jobs),NULL);
 	gtk_action_group_add_action(topgroup, action_kill_all);
-	
+	GtkAction *action_kill_selected=NULL;
 	/*set toolbar*/
 	toptoolbar=gtk_toolbar_new();
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);	
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_finish)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_skip)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_crash)), -1);
-	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_kill_all)), -1);
-	//gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_widget_show_all(toptoolbar);
 	gtk_box_pack_start(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar), GTK_ICON_SIZE_MENU);
@@ -795,9 +805,9 @@ int main(int argc, char *argv[])
 	gtk_widget_show_all(tabs[ihost]);
 	gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), ihost);
     }
-    extern int pipe_main[2];
-    if(pipe(pipe_main)<0){
-	error("failed to create pipe\n");
+    extern int sock_main[2];
+    if(socketpair(AF_UNIX, SOCK_STREAM, 0, sock_main)){
+	error("failed to create socketpair\n");
     }
     pthread_t tmp;
     pthread_create(&tmp, NULL, (void*(*)(void*))listen_host, NULL);

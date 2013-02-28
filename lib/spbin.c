@@ -27,12 +27,11 @@
 #include "csp.h"
 #include "ssp.h"
 #include "defs.h"
-/**
+/*
    Function to write sparse matrix data into file pointed using a file
    pointer. Generally used by library developer.  We do not convert data during
    saving, but rather do the conversion during reading.
-
- */
+*/
 void Y(spwritedata)(file_t *fp, const X(sp) *sp){
     header_t header={M_SPT, 0, 0, NULL};
     if(sp && sp->nzmax){

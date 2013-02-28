@@ -17,6 +17,10 @@
 */
 #ifndef AOS_LIB_IMAT_H
 #define AOS_LIB_IMAT_H
+/**
+   \file imat.h
+   Routines for imat.
+*/
 typedef struct imat{
     long nx;
     long ny;

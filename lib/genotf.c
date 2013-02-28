@@ -15,11 +15,6 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-\file genotf.c
-   Routines to generate short exposure OTFs of an aperture in present of
-   atmosphere turbulence.
-*/
 #include "../sys/sys.h"
 #include "dmat.h"
 #include "cmat.h"

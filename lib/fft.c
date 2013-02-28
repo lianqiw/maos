@@ -21,17 +21,11 @@
 #include "../sys/sys.h"
 #include <fftw3.h>
 
-
-
 #include "fft.h"
 #include "cmat.h"
 PNEW(mutex_fftw);
 #define LOCK_FFT LOCK(mutex_fftw)
 #define UNLOCK_FFT UNLOCK(mutex_fftw)
-/**
-   \file fft.c
-   Routines to do FFT on cmat.
-*/
 /**
    An arrays of 1-d plans that are used to do 2-d FFTs only over specified region.
  */

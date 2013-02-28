@@ -16,7 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file thread_pool.c
    Contains implementation of a thread pool. It has the following capabilities:
 
    1) Maintains pending taskes in a linked list. Wake up idle threads to handle
@@ -429,7 +428,4 @@ static __attribute__((destructor)) void deinit(){
 static __attribute__((constructor)) void init(){
     register_deinit(thread_pool_destroy,NULL);/*register to mem.c */
 }
-/**
-   It does not work to initialize the thread pool in the beginning because it is before main and ?
-*/
 

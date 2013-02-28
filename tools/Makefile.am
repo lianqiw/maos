@@ -69,4 +69,9 @@ ___bin_psfgc_SOURCES=psfgc.c
 ___bin_mk2dcov_SOURCES=mk2dcov.c
 ___bin_ethtest_SOURCES=ethtest.c
 
+if USE_SCHEDULER
+PROGS+=../bin/scheduler
+___bin_scheduler_SOURCES=scheduler.c
+___bin_scheduler_LDADD=../sys/libaosys.la $(LDOPTS)
+endif
 bin_PROGRAMS=$(PROGS)

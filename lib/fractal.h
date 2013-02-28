@@ -19,6 +19,12 @@
 #define AOS_LIB_FRACTAL_H
 #include "random.h"
 #include "loc.h"
+/**
+   \file fractal.h
+
+   Implementation of the fractal operation for atmospheric turbulence screen
+   generation and reconstruction.
+*/
 #define ARGS double *p0, long nx, long ny, double dx, double r0, double L0, long ninit
 void fractal(ARGS);
 void fractal_inv(ARGS);

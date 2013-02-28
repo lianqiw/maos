@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_SPBIN_H
-#define AOS_SPBIN_H
+#ifndef AOS_LIB_SPBIN_H
+#define AOS_LIB_SPBIN_H
 #include "type.h"
 
 #define AOS_SPBIN_DEF(X,Y,T)\

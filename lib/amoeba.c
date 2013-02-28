@@ -21,6 +21,11 @@
 #define NRANSI
 #define NR_END 1
 #define FREE_ARG char*
+/**
+   2-D mininum search using downhill simplex method.
+ */
+
+/* (C) Copr. 1986-92 Numerical Recipes Software ?421.1-9. */
 
 /**
    Extrapolates by a factor fac through the face of the simplex across from the
@@ -135,9 +140,9 @@ void amoeba(double **p, double y[], int ndim, double ftol,
 #undef GET_PSUM
 #undef NMAX
 #undef NRANSI
-/* (C) Copr. 1986-92 Numerical Recipes Software ?421.1-9. */
-/*
-  Search minimum along multiple dimenstions. scale is the size of the problem. x contains initial warm restart values.
+/**
+  Search minimum along multiple dimenstions. scale is the size of the problem. x
+  contains initial warm restart values.
 */
 int dminsearch(double *x, double *scale, int nmod, double ftol, minsearch_fun fun, void *info){
     double pinit[nmod+1][nmod];

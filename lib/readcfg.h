@@ -18,7 +18,13 @@
 
 #ifndef __READ_CONFIG_H
 #define __READ_CONFIG_H
+/**
+   \file readcfg.h
 
+   Routines to read .conf type config files. Each entry is composed of a key and
+   a value. The entries are maintained in a hash table. Each entry can be
+   retrieved from the key.
+*/
 #include "dmat.h"
 #define format2key				\
     char key[512];				\
@@ -27,13 +33,6 @@
     vsnprintf(key,sizeof(key), format, ap);	\
     va_end(ap)
 
-/**
-   \file readcfg.h
-
-   Routines to read .conf type config files. Each entry is composed of a key and
-   a value. The entries are maintained a hash table. Each entry can be
-   retrieved from the key.
-*/
 void   open_config (const char*fn, const char *prefix, long protect);
 void   close_config(const char*format,...) CHECK_ARG(1);
 

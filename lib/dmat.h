@@ -19,7 +19,8 @@
 #ifndef AOS_LIB_DMAT_H
 #define AOS_LIB_DMAT_H
 /**
-   \file dmat.h Contains the mathematically functions regarding to dmat and dcell object
+   \file dmat.h 
+   Contains the mathematically functions regarding to dmat and dcell object
 */
 #include "mat.h"
 #include "cell.h"

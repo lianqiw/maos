@@ -42,43 +42,51 @@
 #include "common.h"
 #include "misc.h"
 #include "hashlittle.h"
-#include "scheduler_server.h"
+#include "scheduler.h"
 #include "scheduler_client.h"
 #include "thread.h"
-#ifdef MAOS_DISABLE_SCHEDULER
+
+/**
+   Contains routines that will be used to talk to the scheduler. The following usage are supported:
+
+   1) by maos or skyc to ask permission to go or report status.
+   2) by monitor to show process information or request plotting.
+   3) by maos or skyc to print backtrace.
+
+*/
+
+int is_scheduler=0;
+#ifndef MAOS_DISABLE_SCHEDULER
+#define MAOS_DISABLE_SCHEDULER 0
+#endif
+#if MAOS_DISABLE_SCHEDULER
 int scheduler_start(char *path, int nthread, int waiting){
-  (void)path;
-  (void)nthread;
-  (void)waiting;
-   return 0;
+    (void)path;
+    (void)nthread;
+    (void)waiting;
+    return -1;
 }
 int scheduler_wait(void){
-   return 0;
+    return -1;
 }
 int scheduler_finish(int status){
-    (void)status; return 0;
+    (void)status; 
+    return -1;
 }
 int scheduler_report(STATUS_T *status){
-    (void)status; return 0;
-}
-void print_backtrace_symbol(void *const *buffer, int size){
-  (void)buffer;
-  (void)size;
+    (void)status; return -1;
 }
 int scheduler_listen(void(*fun)(int)){
-    return 0;
+    return -1;
 }
-#if !(defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__))
-void print_backtrace(int sig){
-  (void) sig;
+int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
+    (void)host;
+    (void)scmd;
+    return -1;
 }
-#endif
 #else
-void scheduler(void);
 char *scheduler_fnlog=NULL;
-
 uint16_t PORT=0;
-uint16_t PORTMON=0;
 char** hosts;
 int nhost;
 int hid;
@@ -164,8 +172,8 @@ static __attribute__((constructor))void init(){
 
 /**
    Launch the scheduler. We already obtained singleton lock and is in a forked process.
- */
-static void scheduler_launch_do(void *junk){
+*/
+static void launch_scheduler_do(void *junk){
     (void)junk;
 #if defined(__CYGWIN__)
     char *fn_scheduler=stradd(BUILDDIR, "/bin/scheduler.exe", NULL);
@@ -179,29 +187,29 @@ static void scheduler_launch_do(void *junk){
 	info2("Launch scheduler using shell\n");
 	if(execlp("scheduler", "scheduler", NULL)){
 	    warning("scheduler not found\n");
-	    scheduler();
 	}
     }
 }
 
-static void scheduler_launch(void){
+static void launch_scheduler(void){
     char lockpath[PATH_MAX];
     snprintf(lockpath,PATH_MAX,"%s",TEMP);
     /*launch scheduler if it is not already running. */
     single_instance_daemonize(lockpath,"scheduler", scheduler_version,
-			      (void(*)(void*))scheduler_launch_do,NULL);
+			      (void(*)(void*))launch_scheduler_do,NULL);
 }
 
 /**
    To open a port and connect to scheduler in the local host*/
 static int scheduler_connect_self(int block){
-    /*start the scheduler if it is not running*/
-    if(block){
-	scheduler_launch();
-    }
     char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX, "/tmp/maos-%s/scheduler", USER);
-    int sock=connect_port(fn, PORT, block, 0);
+    snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
+    int sock=connect_port(fn, PORT, 0, 0);
+    if(sock<0 && block){
+	/*start the scheduler if it is not running*/
+	launch_scheduler();
+	sock=connect_port(fn, PORT, block, 0);
+    }
     if(sock<0){
 	warning2("Unable to connect to port %d\n", PORT);
     }
@@ -209,9 +217,9 @@ static int scheduler_connect_self(int block){
 }
 
 static int psock=-1;
-static void (*pfun)(int)=NULL;//function that listens to psock.
-static char *path_save=NULL;
+
 static void scheduler_report_path(char *path){
+    static char *path_save=NULL;
     if(psock==-1){
 	return;
     }
@@ -236,21 +244,23 @@ static void scheduler_report_path(char *path){
     stwritestr(psock,path_save);
 }
 #define CATCH_ERR(A) if(A){psock=-1; return -1;}
-/* called by mcao to wait for available cpu. */
 
 /**
    Started by maos to listen to the sock which connects to the
    scheduler for commands
 */
 int scheduler_listen(void(*fun)(int)){
-    pfun=fun;
-    if(psock!=-1 && pfun){
-	pfun(psock);
+    if(psock!=-1 && fun){
+	fun(psock);
 	return 0;
     }else{
 	return -1;
     }
 }
+
+/**
+   Called by maos to report a job start to scheduler.
+ */
 int scheduler_start(char *path, int nthread, int waiting){
     psock=scheduler_connect_self(1);
     if(psock==-1){
@@ -259,33 +269,35 @@ int scheduler_start(char *path, int nthread, int waiting){
 	return -1;
     }
     scheduler_report_path(path);
-    int cmd[2];
+    int cmd[4];
     cmd[0]=CMD_START;
     cmd[1]=getpid();
-    CATCH_ERR(stwriteintarr(psock,cmd,2));
-    cmd[0]=nthread;
-    cmd[1]=waiting;
-    CATCH_ERR(stwriteintarr(psock,cmd,2));
+    cmd[2]=nthread;
+    cmd[3]=waiting;
+    CATCH_ERR(stwriteintarr(psock,cmd,4));
     return 0;
 }
 
+/**
+   Called by maos to wait for go signal from scheduler.
+*/
 int scheduler_wait(void){
     if(psock==-1){
 	warning3("Failed to connect to scheduler\n");
 	return -1;
     }
     /*read will block until clearance is received. */
-    int cmd[2];
-    if(read(psock, cmd, sizeof(int))==sizeof(int)){
-	/*info2("Scheduler replied %d.\n",cmd[0]); */
-	return 0;
-    }else{
+    int cmd;
+    if(streadint(psock, &cmd)){
 	warning("Failed to get answer from scheduler.\n");
 	return -1;
+    }else{
+	return 0;
     }
-    /*don't close socket. */
 }
-/* called by mcao to notify scheduler the completion of a job */
+
+/**
+   Called by maos to notify scheduler the completion of a job */
 int scheduler_finish(int status){
     if(psock==-1){
 	psock=scheduler_connect_self(0);
@@ -302,7 +314,9 @@ int scheduler_finish(int status){
     close(psock);psock=-1;
     return 0;
 }
-/* called by sim.c to report job status */
+
+/**
+   called by sim.c to report job status */
 int scheduler_report(STATUS_T *status){
     if(psock==-1){
 	psock=scheduler_connect_self(0);
@@ -317,179 +331,111 @@ int scheduler_report(STATUS_T *status){
     return 0;
 }
 
-/*!defined(__INTEL_COMPILER)||1)  */
-#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
-#define PRINTBACKTRACE 1
-#else
-#define PRINTBACKTRACE 0
-#endif
+/**
+   Ask scheduler in another machine to launch exe.
+*/
+int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
+    int ret=0;
+    int sock=connect_port(host, PORT, 0, 0);
+    if(sock<=-1) return -1;
+    int cmd[2]={CMD_LAUNCH, 3};
+    const char *exe=get_job_progname();
+    char *cwd=mygetcwd();
+    char *scmd=strnadd(argc, argv, "\n");
+    if(stwriteintarr(sock, cmd, 2)
+       || stwritestr(sock, exe) 
+       || stwritestr(sock, cwd)
+       || stwritestr(sock, scmd) 
+       || streadint(sock, &ret)){
+	warning2("Failed to write to scheduler at %s\n", host);
+	ret=-1;
+    }
+    info("scmd=%s. BUILDDIR=%s\n", scmd, BUILDDIR);
+    free(scmd);
+    close(sock);
+    return ret;
+}
+#endif /*MAOS_DISABLE_SCHEDULER*/
 
+/**
+   Execute addr2line as specified in buf, combine the answer, and return the
+   string.*/
+char* call_addr2line(const char *buf){
+    FILE *fpcmd=popen(buf,"r");
+    char *out=NULL;
+    if(!fpcmd){ 
+	out=strdup("Command failed\n");
+    }else{
+	char ans[4096];
+	while(fgets(ans, sizeof(ans), fpcmd)){
+	    char *tmp=strrchr(ans,'/');
+	    if(tmp){
+		tmp++;
+		char *tmp2=strchr(tmp,'\n'); tmp2[0]='\0';
+		out=stradd(out, "->", tmp, NULL);
+	    }
+	}   
+	pclose(fpcmd);
+    }
+    return out;
+}
+
+/**
+   Convert backtrace address to source line.
+ */
 void print_backtrace_symbol(void *const *buffer, int size){
-    char cmdstr[BACKTRACE_CMD_LEN];
+    char *cmdstr=NULL;
     char add[24];
     const char *progname=get_job_progname();/*don't free pointer. */
     if(!progname){
-	error("Unable to get progname\n");
+	warning("Unable to get progname\n");
+	return;
     }
-#if PRINTBACKTRACE == 1 
-    snprintf(cmdstr,BACKTRACE_CMD_LEN,"addr2line -f -e %s",progname);
-#else
-    snprintf(cmdstr,BACKTRACE_CMD_LEN,"%s: ",progname);
-#endif
-    int it;
-    for(it=size-1; it>-1; it--){
+    cmdstr=stradd("addr2line -f -e", progname, NULL);
+    for(int it=size-1; it>-1; it--){
 	snprintf(add,24," %p",buffer[it]);
-	strncat(cmdstr,add,BACKTRACE_CMD_LEN-strlen(cmdstr)-1);
+	cmdstr=stradd(cmdstr, add, NULL);
     }
-#if PRINTBACKTRACE == 1 
+#if (_POSIX_C_SOURCE >= 2||_XOPEN_SOURCE||_POSIX_SOURCE|| _BSD_SOURCE || _SVID_SOURCE) && !defined(__CYGWIN__)
     PNEW(mutex);//Only one thread can do this.
     LOCK(mutex);
-    if(psock==-1){
-	psock=scheduler_connect_self(0);
-    }
-    if(psock!=-1){
-	int cmd[2];
-	cmd[0]=CMD_TRACE;
-	cmd[1]=getpid();
-	char *ans=NULL;
-	if(!(stwrite(psock,cmd,sizeof(int)*2) || stwritestr(psock,cmdstr) || streadstr(psock, &ans))){
-	    info2(" %s\n",ans);
-	    free(ans);
+    if(MAOS_DISABLE_SCHEDULER || is_scheduler){
+	char *ans=call_addr2line(cmdstr);
+	info2("%s\n", ans);
+	free(ans);
+    }else{//Create a new socket and ask scheduler to do popen and return answer.
+#if MAOS_DISABLE_SCHEDULER == 0
+	int sock=scheduler_connect_self(0);
+	if(sock!=-1){
+	    int cmd[2];
+	    cmd[0]=CMD_TRACE;
+	    cmd[1]=getpid();
+	    char *ans=NULL;
+	    if(!(stwrite(sock,cmd,sizeof(int)*2) || stwritestr(sock,cmdstr) || streadstr(sock, &ans))){
+		info2(" %s\n",ans);
+		free(ans);
+	    }
+	}else{
+	    warning("Failed to connect to scheduler\n");
 	}
+#endif
     }
     UNLOCK(mutex);
 #else
-    info2(" %s\n",cmdstr);
+    info2("Please call manually: %s\n",cmdstr);
 #endif
+    free(cmdstr);
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>
-void print_backtrace(int sig){
+void print_backtrace(){
     int size0,size1;
-    if(sig !=0)
-	info2("Segmentation %d fault caught. print backtrace\n",sig);
     size0=1024;
     void *buffer[size0];
     size1=backtrace(buffer,size0);
     print_backtrace_symbol(buffer,size1);
-    if(sig !=0)
-	raise(SIGABRT);
 }
-#endif
-#endif
-
-/**
-   Fork and launch drawdaemon.
-*/
-int scheduler_launch_drawdaemon(char *fifo){
-    int method=0;
-#if defined(__APPLE__) && 0
-    char cmdopen[1024];
-    /*Run the exe directly can pass the argumnents. --args is a new feature in 10.6 to do the samething with open */
-    snprintf(cmdopen, 1024, "%s/scripts/drawdaemon.app/Contents/MacOS/drawdaemon %s &", SRCDIR, fifo);
-    if(system(cmdopen)){
-	method=0;/*failed */
-	warning("%s failed\n", cmdopen);
-    }else{/*succeed */
-	info("%s succeeded\n", cmdopen);
-	method=3;
-    }
-    if(method==0){
-	snprintf(cmdopen, 1024, "open -n -a drawdaemon.app --args %s", fifo);
-	if(system(cmdopen)){
-	    warning("%s failed\n", cmdopen);
-	    method=0;/*failed */
-	}else{
-	    info("%s succeeded\n", cmdopen);
-	    method=3;
-	}
-    }
-#endif
-    char *fn=stradd(BUILDDIR, "/bin/drawdaemon",NULL);
-    if(!exist(fn)){
-	free(fn);
-	char *cwd=mygetcwd();
-	fn=stradd(cwd, "/drawdaemon", NULL);
-    }
-    if(!exist(fn)){
-	free(fn); fn=NULL;
-    }
-    if(method==0){
-        if(fn){
-	    info2("Found drawdaemon in %s, run it.\n",fn);
-	    method=1;
-	}else{
-	    warning3("Not found drawdaemon, use bash to find and run drawdaemon.\n");
-	    int found=!system("which drawdaemon");
-	    if(found){
-		method=2;
-	    }else{
-		warning3("Unable to find drawdaemon\n");
-	    }
-	}
-    }
-    int ans;
-    if(method==0){
-	ans=1;/*failed */
-    }else{
-	ans=0;/*succeed */
-    }
-    if(method==3){
-	return ans;
-    }
-    /*Now start to fork. */
-    int pid2=fork();
-    if(pid2<0){
-	warning3("Error forking\n");
-    }else if(pid2>0){
-	/*wait the child so that it won't be a zoombie */
-	sleep(1);//wait 1 seconds for drawdaemon to start.
-	waitpid(pid2,NULL,0);
-	return ans;
-    }
-    pid2=fork();
-    if(pid2<0){
-	warning3("Error forking\n");
-	_exit(EXIT_FAILURE);
-    }else if(pid2>0){
-	_exit(EXIT_SUCCESS);/*waited by parent. */
-    }
-    /*safe child. */
-    setsid();
-    fclose(stdin);
-    if(method==1){
-	if(execl(fn, "drawdaemon",fifo,NULL)){
-	    perror("execl");
-	    warning("execl failed\n");
-	}
-    }else if(method==2){
-	if(execlp("drawdaemon","drawdaemon",fifo,NULL)){
-	    warning("execlp failed\n");
-	}
-    }else{
-	error("Invalid method.\n");
-    }
-    return ans;
-}
-
-#ifdef MAOS_DISABLE_SCHEDULER
- int scheduler_launch_exe(const char *host, const char *scmd){
-     return -1;
- }
 #else
-/**
-   ask scheduler in another machine to launch exe
-*/
-int scheduler_launch_exe(const char *host, const char *scmd){
-    int ret=0;
-    int sock=connect_port(host, PORT, 0, 0);
-    if(sock<=-1) return -1;
-    int cmd[2]={CMD_LAUNCH, 0};
-    if(stwriteintarr(sock, cmd, 2) || stwritestr(sock, scmd) || streadint(sock, &ret)){
-	warning2("Failed to write to scheduler at %s\n", host);
-	ret=-1;
-    }
-    close(sock);
-    return ret;
+void print_backtrace(){
 }
 #endif

@@ -20,7 +20,6 @@
 #include "cmat.h"
 #include "fft.h"
 /**
-   \file psd.c
    Compute the PSD from a sequence.
 */
 //#define W_J(i,N2) (1-pow((double)(i-N2)/(double)N2, 2))

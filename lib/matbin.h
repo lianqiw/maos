@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_MATBIN_H
-#define AOS_MATBIN_H
+#ifndef AOS_LIB_MATBIN_H
+#define AOS_LIB_MATBIN_H
 #include "type.h"
 
 #define AOS_MATBIN_DEF(X,Y,T)\

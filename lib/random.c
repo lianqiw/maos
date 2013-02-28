@@ -15,15 +15,14 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
-   \file random.c
-   Routine to generate random numbers.
-*/
+
 #include <signal.h>
 #include <math.h>
 #include "../sys/sys.h"
 #include "random.h"
-
+/**
+   Routine to generate random numbers.
+*/
 /**
    Create a new random stream, seeded with seed.
 */

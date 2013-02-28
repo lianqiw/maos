@@ -16,9 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_LAPLACIAN_C
-#define AOS_LAPLACIAN_C
+#ifndef AOS_LIB_LAPLACIAN_C
+#define AOS_LIB_LAPLACIAN_C
 #include "loc.h"
+/**
+   \file laplacian.h
+   Compute laplacian operator for turbulence covariance approximation.
+*/
 void apply_laplacian_map(int nx, int ny, double dx, double r0, double weight, 
 			 double *opd, double *opdout);
 dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight);

@@ -33,6 +33,9 @@
 #include "misc.h"
 #include "process.h"
 #include "daemonize.h"
+/**
+   A few routines handles process resource.
+*/
 int NCPU=0;
 int NTHREAD=0;/*NTHREAD=2*NCPU when hyperthreading is enabled. */
 int TCK=0;
@@ -40,6 +43,9 @@ long NMEM=0;/*Total memory in byte. */
 const char *HOME=NULL;
 const char *TEMP=NULL;
 const char *USER=NULL;
+/**
+   Set the HOME, TEMP, USER names.
+ */
 void init_process(void){
 #if defined(__CYGWIN__)
     cygwin_internal(CW_SYNC_WINENV);
@@ -81,7 +87,7 @@ void init_process(void){
     TCK = sysconf(_SC_CLK_TCK);
 #if defined(__linux__)
     FILE *fp=fopen("/proc/meminfo","r");
-    if(fscanf(fp, "%*s %ld %*s", &NMEM)==1){
+    if(fp && fscanf(fp, "%*s %ld %*s", &NMEM)==1){
 	NMEM=NMEM*1024; 
     }else{
 	NMEM=0;
@@ -94,7 +100,9 @@ void init_process(void){
 static __attribute__((constructor))void init(){
     init_process();
 }
-
+/**
+   Obtain the current usage level of CPU, between 0 and 1.
+ */
 double get_usage_cpu(void){
     static double lasttime=0;
     double thistime=myclockd();
@@ -102,13 +110,13 @@ double get_usage_cpu(void){
     static double cent=1;
     long user2, tot2;
     if(thistime >=lasttime+2){/*information was too old. */
-	read_usage_cpu(&user1, &tot1);
+	read_cpu_counter(&user1, &tot1);
 	usleep(50000);
     }
     if(thistime <=lasttime+0.1){
 	return cent;
     }
-    read_usage_cpu(&user2, &tot2);
+    read_cpu_counter(&user2, &tot2);
     long user=user2-user1;
     long tot=tot2-tot1;
     if(tot==0) 
@@ -121,10 +129,10 @@ double get_usage_cpu(void){
     cent=cent*NTHREAD/NCPU;/*discount hyperthreading. */
     return cent;
 }
+/**
+   Return number of idle CPUs that are available to run jobs. Do not count hyperthread cores.
+*/
 int get_cpu_avail(void){
-    /*
-      Return number of idle CPUs that are available to run jobs.
-     */
     int avail=0;
     double load=get_usage_load();
     double cent=get_usage_cpu();
@@ -141,7 +149,9 @@ int get_cpu_avail(void){
     /*info("CPU is %.1f%% Busy. %d running jobs. %d available.\n",cent*100, nrunning, avail); */
     return avail;
 }
-
+/**
+   Wait for available CPUs in case scheduler is not available.
+ */
 void wait_cpu(int nthread){
     char fnlock[64];
     snprintf(fnlock,64,"%s/aos.lock", getenv("HOME"));

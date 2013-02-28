@@ -63,10 +63,6 @@
 static const double TOL=1.e-14;
 #define OFF 1 /*0: Only use points inside subaperture. introduced on 2011-08-28. 1: original approach. */
 
-/**
-   \file mkg.c
-   Contains function that creates average gradient operator
-*/
 /*
   even if we do do_partial, we still not accounting for boundary pixels (some amp2 are missing)
   in this way, we assume the wavefront is flat in the boundary.

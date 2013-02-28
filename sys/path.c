@@ -25,6 +25,11 @@
 #include "process.h"
 #include "path.h"
 #include "misc.h"
+
+/**
+   This file contains function managing the searching path for files, behaves
+   like PATH in POSIX systems.*/
+
 /**
    The linked list to store path where we look for files.
 */
@@ -32,12 +37,6 @@ typedef struct PATH_T{
     char *path;
     struct PATH_T *next;
 }PATH_T;
-
-/**
-   \file path.c
-
-   This file contains function managing the searching path for files, behaves as
-   PATH in POSIX systemsx */
 static PATH_T *PATH=NULL;/*privately maintained path to locate config files. */
 
 /**
@@ -78,7 +77,7 @@ void rmpath(const char *path){
     free(abspath);
 }
 /**
-   Print current path
+   Print current path.
 */
 void printpath(void){
     info2("PATH is :\n");
@@ -87,7 +86,7 @@ void printpath(void){
     }
 }
 /**
-   Empty the path
+   Empty the path.
 */
 void freepath(void){
     for(PATH_T *ia=PATH;ia;ia=PATH){

@@ -18,6 +18,10 @@
 #ifndef AOS_LIB_FFT_H
 #define AOS_LIB_FFT_H
 #include "type.h"
+/**
+   \file fft.h
+   Routines to do FFT on cmat or dcell.
+*/
 typedef struct fft_t fft_t;
 void fft2(fft_t *fft, int dir);
 void cfft2plan(cmat *A, int dir);

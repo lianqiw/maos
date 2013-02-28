@@ -16,11 +16,15 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_CHOL_H
-#define AOS_CHOL_H
+#ifndef AOS_LIB_CHOL_H
+#define AOS_LIB_CHOL_H
 #include "dsp.h"
 #include "dmat.h"
 #include "cmat.h"
+/**
+   \file chol.h
+   Wraps the CHOLESKY Library to provide a simple interface.*/
+
 #ifndef CHOLMOD_CORE_H
 typedef struct cholmod_factor_struct cholmod_factor;
 typedef struct cholmod_common_struct cholmod_common;
@@ -34,7 +38,6 @@ typedef struct spchol{
 }spchol;
 /* assume large file support.  If problems occur, compile with -DNLARGEFILE */
 spchol* chol_factorize(dsp *A_in);
-spchol* chol_factorize_cache(dsp *A_in);
 void chol_solve(dmat **x, spchol *A, dmat *y);
 dsp *chol_spsolve(spchol *A, const dsp *y);
 void chol_free_do(spchol *A);

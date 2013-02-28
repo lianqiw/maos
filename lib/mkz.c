@@ -23,10 +23,7 @@
 #include "cmat.h"
 #include "dsp.h"
 #include "mkz.h"
-/**
-   \file mkg.c
-   Contains function that creates ztilt gradient operator
-*/
+
 /**
    Returns the transpose of a ztilt gradient operator that converts the OPDs defined
    on xloc to subapertures defines on saloc.

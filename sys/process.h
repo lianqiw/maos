@@ -17,6 +17,10 @@
 */
 #ifndef AOS_PROC_H
 #define AOS_PROC_H
+/**
+   \file process.h
+   A few routines handles process resource.
+*/
 #if defined(__CYGWIN__)
 void GetTempPath(long, char*);
 #endif
@@ -31,7 +35,7 @@ int get_job_mem(void);
 double get_job_launchtime(int pid);
 
 int get_cpu_avail(void);
-int read_usage_cpu(long *user, long *tot);
+int read_cpu_counter(long *user, long *tot);
 void wait_cpu(int nthread);
 double read_self_cpu(void);
 extern int NCPU;  /**<True number of cores*/

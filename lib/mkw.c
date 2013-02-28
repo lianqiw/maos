@@ -19,10 +19,6 @@
 #include "mkw.h"
 #include "mathmisc.h"
 
-/**
-   \file mkw.c
-   Contains functions that computes the bilinear weighting function W0, W1
-*/
 #define nres 50
 /**
    compute the W0, W1 for bilinear influence function.

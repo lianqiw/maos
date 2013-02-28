@@ -37,7 +37,6 @@
 #include <gtk/gtk.h>
 #include <glib/gprintf.h>
 #include "monitor.h"
-
 GtkWidget **tables;
 gint *nrows;
 #define ncol 7
@@ -184,18 +183,32 @@ gboolean refresh(PROC_T *p){
 	break;
     case S_WAIT:
 	/*waiting to start */
-	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting to start");
+	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Waiting");
 	break;
     case S_START:
 	/*just started. */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Started");
+	{
+	    char lb[12];
+	    char stime[80];
+	    snprintf(lb,12," %5d",p->pid);
+	    struct tm *tim=localtime(&(p->status.timstart));
+	    strftime(stime,80,"[%F %k:%M:%S]",tim);
+	    strcat(stime,lb);
+	    gtk_label_set_text(GTK_LABEL(p->entry_pid), stime);
+	}
 	notify_user(p);
+	break;
+    case S_QUEUED:
+	/*queued in scheduler */
+	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Queued");
 	break;
     case S_FINISH:/*Finished */
 	p->frac=1;
 	p->done=1;
 	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
-	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);/*progress bar color. */
+	/*progress bar color. */
+	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);
 	notify_user(p);
 	break;
     case S_CRASH:/*Error */
@@ -235,4 +248,7 @@ GtkWidget *new_page(int ihost){
     gtk_table_set_col_spacings(GTK_TABLE(tables[ihost]), 2);
 #endif
     return tables[ihost];
+}
+void kill_selected_jobs(GtkAction *btn){
+    (void)btn;
 }

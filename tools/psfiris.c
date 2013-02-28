@@ -16,7 +16,9 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Standalone code to sample IRIS PSFs onto detector.
+   \file psfiris.c
+   
+   Standalone code to sample IRIS PSFs onto detector.
  */
 #include <unistd.h>
 #include <getopt.h>

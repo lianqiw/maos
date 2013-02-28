@@ -20,6 +20,7 @@
 #define AOS_COMMON_H
 
 /**
+   \file common.h
    Every source file in this folder should include this file
 */
 #ifdef HAVE_CONFIG_H
@@ -254,19 +255,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 #define CHECK_NULL_TERMINATED
 #endif
 
-
-/*#if USE_MEM == 1 */
-#if defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetPSD__)
-#define PRINT_BACKTRACE
-#else
-#define PRINT_BACKTRACE print_backtrace(0);
-void print_backtrace(int sig);
-#endif
-/*#else//if USE_MEM */
-/*#define PRINT_BACKTRACE print_backtrace(0); */
-/*#endif//if USE_MEM */
 #include <string.h>
-
 
 #define PAUSE					\
     info2("Press Enter to continue:");		\
@@ -292,7 +281,6 @@ void print_backtrace(int sig);
     signal(SIGABRT,SIG_DFL);	\
     signal(SIGUSR1,SIG_DFL);	\
     signal(SIGQUIT,SIG_DFL)
-
-
+void print_backtrace();
 #endif
 

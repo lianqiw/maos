@@ -84,7 +84,9 @@ typedef struct T_DEINIT{/*contains either fun or data that need to be freed. */
     struct T_DEINIT *next;
 }T_DEINIT;
 T_DEINIT *DEINIT=NULL;
-
+/**
+   Register a function or data to call or free upon exit
+*/
 void register_deinit(void (*fun)(void), void *data){
     T_DEINIT *node=calloc(1, sizeof(T_DEINIT));
     node->fun=fun;

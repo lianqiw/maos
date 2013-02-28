@@ -16,9 +16,12 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_TURBULENCE_H
-#define AOS_TURBULENCE_H
-
+#ifndef AOS_LIB_TURBULENCE_H
+#define AOS_LIB_TURBULENCE_H
+/**
+   \file turbulence.h
+   Contains routines to generate atmospheric turbulence screens
+ */
 #include "loc.h"
 #include "random.h"
 #include "type.h"

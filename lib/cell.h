@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_CELL_H
-#define AOS_CELL_H
+#ifndef AOS_LIB_CELL_H
+#define AOS_LIB_CELL_H
 #include "type.h"
 
 #define AOS_CELL_DEF(X,Y,T)\

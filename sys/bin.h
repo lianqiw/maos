@@ -24,6 +24,13 @@
 #include <stdint.h>
 #include <pthread.h>
 #include "common.h"
+/**
+   \file bin.h
+
+   Defines our custom file format .bin that may be gzipped and the basic IO
+   functions. All file read/write operators are through functions in this
+   file. The routines can also operate on .fits files.
+ */
 #define IO_TIMMING 0
 /*The definitions here should not be changed once set for backward/foreward compatibility. */
 #define M_CSP64  0x6400  /*sparse complex */
@@ -90,6 +97,7 @@ void zftouch(const char *format, ...);
 int zfeof(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfrewind(file_t *fp);
+file_t* zfdopen(int sock, char *mod);
 file_t *zfopen(const char *fn, char *mod);
 file_t *zfdopen(int fd, char *mod);
 const char *zfname(file_t *fp);

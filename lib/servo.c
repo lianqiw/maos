@@ -18,12 +18,8 @@
 
 #include "servo.h"
 #include "mathmisc.h"
-#define CONTINUOUS 1 /*1: use real continuous/discrete AO servo model. 0: Assume 2 cycle delay + discrete integrator*/
-/**
-   \file servo.c
-   Routines for servo optimization, filtering, etc.
-*/
-
+/*1: use real continuous/discrete AO servo model. 0: Assume 2 cycle delay + discrete integrator*/
+#define CONTINUOUS 1
 
 typedef struct SERVO_CALC_T{
     cmat *s;

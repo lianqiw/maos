@@ -16,11 +16,11 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_TYPE_H
-#define AOS_TYPE_H
+#ifndef AOS_LIB_TYPE_H
+#define AOS_LIB_TYPE_H
 #include "../sys/sys.h"
 /**
-   \file lib/type.h Defines the math data types like dmat, cmat, dcell, ccell,
+   \file type.h Defines the math data types like dmat, cmat, dcell, ccell,
    dsp, csp data types.
 
    Don't use ulong for dimensions because subtracting a bigger ulong from a

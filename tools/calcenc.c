@@ -16,7 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * Standalone to postprocess MAOS PSF output and compute enclosed energe
+   \file calcenc.c
+   Standalone to postprocess MAOS PSF output and compute enclosed energe
  */
 #include <unistd.h>
 #include <getopt.h>

@@ -24,6 +24,7 @@ static void usage(){
 	    "drawres [-s 1] folder1 folder2 ...\n");
 }
 /**
+   \file drawres.c
    Plot MAOS Results
 */
 typedef struct ARG_T{

@@ -19,6 +19,10 @@
 #define AOS_LIB_DTF_H
 #include "type.h"
 #include "loc.h"
+/**
+   \file mkdtf.h
+   Routine to generate detector transfer function.
+*/
 void mkdtf(ccell **pnominal, /**<[out] to be multiplied to the OTF*/
 	   spcell **psi,     /**<[out] to be applied after IFFT of the final OTF*/
 	   int ncompx,       /**<[in] size of OTF FFT*/

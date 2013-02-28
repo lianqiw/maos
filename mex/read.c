@@ -23,6 +23,10 @@ static mxArray *readdata(file_t *fp, mxArray **header, int start, int howmany){
 	return NULL;
     }
     magic=header2.magic;
+    if(magic==0){//end of file or empty file
+	fp->eof=1;
+	return NULL;
+    }
     if(header){
 	if(header2.str)
 	    *header=mxCreateString(header2.str);

@@ -18,8 +18,6 @@
 
 #include "muv.h"
 /**
-   \file lib/muv.c 
-
    Decomposes a matrix into sparse and low rank terms and do math
    operations. 
    

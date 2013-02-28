@@ -19,7 +19,7 @@
 #ifndef AOS_LIB_SSP_H
 #define AOS_LIB_SSP_H
 /**
-   \file dsp.h
+   \file ssp.h
    Contains functions for double sparse dsp
 */
 #include "sp.h"

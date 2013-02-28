@@ -17,6 +17,7 @@
 */
 
 /**
+   \file ethtest.c
    Testing network throughput.
 */
 #include "../lib/aos.h"

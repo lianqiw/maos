@@ -21,7 +21,7 @@
 #include "cell.c"
 #include "matbin.c"
 /*
-  This file contains routines that are only useful for dmat (not cmat).
+   This file contains routines for dmat (matrix of double numbers).
 */
 
 typedef struct{
@@ -30,7 +30,8 @@ typedef struct{
     dmat *phat; /**<processed image.*/
     int type;  
 }ENC_T;
-void denc_thread(thread_t *pdata){
+
+static void denc_thread(thread_t *pdata){
     ENC_T *data=pdata->data;
     const dmat *dvec=data->dvec;
     dmat *enc=data->enc;

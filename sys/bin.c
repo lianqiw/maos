@@ -31,13 +31,12 @@
 #include "misc.h"
 #include "path.h"
 #include "thread.h"
-//#include "../sys/sys.h"
 #include "bin.h"
 #include "readstr.h"
 /**
-   \file bin.c Defines our custom file format .bin or zipped .bin.gz and the
-   basic IO functions. All file read/write operators are through functions in
-   this file.
+   Defines our custom file format .bin that may be gzipped and the basic IO
+   functions. All file read/write operators are through functions in this
+   file. The routines can also operate on .fits files.
  */
 /*
   2009-10-01: switch from popen of gz to zlib to read/write compressed files.
@@ -135,6 +134,9 @@ char* procfn(const char *fn, const char *mod, const int defaultgzip){
     }
     return fn2;
 }
+/**
+   Test whether a bin file exist.
+*/
 int zfexist(const char *format, ...){
     format2fn;
     char *fn2=procfn(fn, "rb", 0);
@@ -145,6 +147,9 @@ int zfexist(const char *format, ...){
     }
     return ans;
 }
+/**
+   Update the modification time of a bin file.
+*/
 void zftouch(const char *format, ...){
     format2fn;
     char *fn2=procfn(fn, "rb", 0);
@@ -154,6 +159,9 @@ void zftouch(const char *format, ...){
     free(fn2);
 }
 PNEW(lock);
+/**
+   Open a bin file from a fd that may be a socket.
+*/
 file_t* zfdopen(int sock, char *mod){
     file_t* fp=calloc(1, sizeof(file_t));
     fp->isgzip=0;
@@ -170,8 +178,10 @@ file_t* zfdopen(int sock, char *mod){
     return fp;
 }
 /**
-   Open the file and return a file_t struct that either contains a file
-   descriptor (for .bin) or a zlib file pointer.
+   Open a bin file for read/write access. Whether the file is gzipped or not is
+   automatically determined when open for reading. When open for writing, if the
+   file name ends with .bin or .fits, will not be gzipped. If the file has no
+   suffix, the file will be gzipped and .bin is appened to file name.
  */
 file_t* zfopen(const char *fn, char *mod){
     LOCK(lock);
@@ -295,6 +305,10 @@ void zfclose(file_t *fp){
     free(fp);
     UNLOCK(lock);
 }
+/**
+   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
+   fwrite. Follows the interface of fwrite.
+ */
 static inline void zfwrite_do(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     if(fp->isgzip){
 	if(gzwrite((voidp)fp->p, ptr, size*nmemb)!=size*nmemb){
@@ -309,8 +323,7 @@ static inline void zfwrite_do(const void* ptr, const size_t size, const size_t n
     }
 }
 /**
-   Write to the file. If in gzip mode, calls gzwrite, otherwise, calls
-   fwrite. Follows the interface of fwrite.
+   Handles byteswapping in fits file format then call zfwrite_do to do the actual writing.
  */
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
@@ -369,6 +382,10 @@ void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp)
 	zfwrite_do(ptr, size, nmemb, fp);
     }
 }
+/**
+   Read from the file. If in gzip mode, calls gzread, otherwise, calls
+   fread. Follows the interface of fread.
+ */
 static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(fp->isgzip){
 	return gzread((voidp)fp->p, ptr, size*nmemb)>0?0:-1;
@@ -377,9 +394,8 @@ static inline int zfread_do(void* ptr, const size_t size, const size_t nmemb, fi
     }
 }
 /**
-   Read from the file. if in gzip mode, calls gzread, otherwise calls
-   fread. follows the interface of fread. It does byte ordering from big endian
-   to small endian in case we are reading fits file.  */
+   Handles byteswapping in fits file format then call zfread_do to do the actual writing.
+*/
 int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
     if(fp->isfits && size>1){/*need to do byte swapping.*/
@@ -431,8 +447,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     }
 }
 /**
-   Read from the file. if in gzip mode, calls gzread, otherwise calls
-   fread. follows the interface of fread.
+   Wraps zfread2 and do error checking.
  */
 void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
     if(zfread2(ptr, size, nmemb, fp)){
@@ -574,17 +589,19 @@ write_bin_magic(uint32_t magic, file_t *fp){
     zfwrite(&magic,  sizeof(uint32_t), 1, fp);
 }
 /**
-   Append the header to current position in the file.  First write magic number, then the
-   length of the header, then the header, then the length of the header again,
-   then the magic number again. The two set of strlen and header are used to
-   identify the header from the end of the file and also to verify that what we
-   are reading are indeed header. The header may be written multiple
-   times. They will be concatenated when read. The header should contain
-   key=value entries just like the configuration files. The entries should be
-   separated by new line charactor. 
- */
+   Append the header to current position in the file.  
+*/
 /*
- * Don't need to write M_SKIP here because we have a pair of magic
+  First write magic number, then the length of the header, then the header,
+  then the length of the header again, then the magic number again. The two set
+  of strlen and header are used to identify the header from the end of the file
+  and also to verify that what we are reading are indeed header. The header may
+  be written multiple times. They will be concatenated when read. The header
+  should contain key=value entries just like the configuration files. The
+  entries should be separated by new line charactor.
+  
+  Don't need to write M_SKIP here because we have a pair of magic. The length
+  of header is rounded to multiple of 8 bytes.
  */
 static void 
 write_bin_header(const char *header, file_t *fp){
@@ -607,7 +624,7 @@ write_bin_header(const char *header, file_t *fp){
 }
 
 /**
-   Write fits header. extra is extra header that will be put in fits comment
+   Write fits header. str is extra header that will be put in fits comment
 */
 static void
 write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
@@ -655,7 +672,8 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 	}
     for (int i = 0; i < count; i++){
 	FLUSH_OUT;
-	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
+	snprintf(header[hc], 80, "%-5s%-3d= %20lu", "NAXIS", i+1, 
+		 (unsigned long)(naxis[i])); header[hc][30]=' '; hc++;
     }
     if(str){
 	const char *str2=str+strlen(str);
@@ -682,7 +700,7 @@ write_fits_header(file_t *fp, const char *str, uint32_t magic, int count, ...){
 #undef FLUSH_OUT
 }
 /**
-   Read fits header
+   Read fits header.
  */
 int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint64_t *ny){
     char line[81];
@@ -753,8 +771,8 @@ int read_fits_header(file_t *fp, char **str, uint32_t *magic, uint64_t *nx, uint
     return 0;
 }
 /**
-  A unified header writing routine for .bin and .fits files. It write the array
-information and string header if any.  */
+  A unified header writing routine for .bin and .fits files by delegation. It
+write the array information and string header if any.  */
 void write_header(const header_t *header, file_t *fp){
     if(fp->isfits){
 	if(!iscell(header->magic)){
@@ -791,7 +809,7 @@ int read_header2(header_t *header, file_t *fp){
    calls read_header2 and abort if error happens.*/
 void read_header(header_t *header, file_t *fp){
     if(read_header2(header, fp)){
-	error("read_header failed for %s\n", fp->fn);
+	error("read_header failed for %s. Empty file?\n", fp->fn);
     }
 }
 /**
@@ -1009,14 +1027,12 @@ spint *readspint(file_t *fp, long* nx, long* ny){
     return out;
 }
 /**
- * Unreference the mmaped memory. When the reference drops to zero, unmap it.
+   Unreference the mmaped memory. When the reference drops to zero, unmap it.
  */
 void mmap_unref(struct mmap_t *in){
     if(in->nref>1){
 	in->nref--;
-	/*info("%p: nref decreased to %ld\n", in->p, in->nref); */
     }else{
-	/*info("%p: nref is 1, unmap\n", in->p); */
 	munmap(in->p, in->n);
 	if(in->fd!=-1){
 	    close(in->fd);

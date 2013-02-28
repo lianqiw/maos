@@ -104,8 +104,10 @@ int check_suffix(const char *fn, const char *suffix){
 	return 1;
     }
 }
-
-char *argv2str(int argc, char **argv, const char* delim){
+/**
+   Convert argc, argv to a single string, prefixed by the current directory.
+*/
+char *argv2str(int argc, const char *argv[], const char* delim){
     char *cwd=mygetcwd();
     int slen=strlen(cwd)+2+strlen(HOME);
     if(!delim) delim=" ";
@@ -134,6 +136,9 @@ char *argv2str(int argc, char **argv, const char* delim){
     }
     return scmd;
 }
+/**
+   Print the content of a file.
+*/
 void print_file(const char *fnin){
     char *fn=search_file(fnin);
     if(!fn){
@@ -151,7 +156,7 @@ void print_file(const char *fnin){
 }
 
 /**
-   Get current time in seconds.
+   Get current time in seconds as an integer.
 */
 int myclocki(){
     time_t a;
@@ -179,9 +184,14 @@ char *strtime(void){
     struct tm tmp;
     localtime_r(&t,&tmp);/*don't free tmp */
     strftime(str,64,"%F-%H%M%S",&tmp);
-    char *dir=strdup(str);
+    char pid[20];
+    snprintf(pid, 20, "-%d", (int)getpid());
+    char *dir=stradd(str, pid, NULL);
     return dir;
 }
+/**
+   Obtain the hostname of the current machine.
+ */
 const char *myhostname(void){
     static int inited=0;
     static char host[60];
@@ -205,7 +215,8 @@ double myclockd(void){
     struct timeval tk;
     gettimeofday(&tk,NULL);
     return (double)tk.tv_sec+(double)tk.tv_usec*1e-6;
-}/**
+}
+/**
    Get current directory. The returnned string must be freed.
 */
 char *mygetcwd(void){
@@ -292,17 +303,6 @@ time_t fmtime(const char *fn){
     if(!fn || stat(fn, &buf)) return 0;
     return buf.st_ctime;
 }
-/**
-   Update a file's modtime to current.
-*/
-/*void touch(const char *fn){
-    if(utimes(fn, NULL)){
-	if(errno==ENOENT){
-	    FILE *fp=fopen(fn, "w");
-	    fclose(fp);
-	}
-    }
-    }*/
 
 /**
    Concatenate many strings. Argument list must end with NULL.
@@ -335,7 +335,7 @@ char *stradd(const char* a, ...){
 /**
    Concatenate many strings, like stradd, but arguments are an array of char*
 */
-char *strnadd(int argc, char **argv, const char* delim){
+char *strnadd(int argc, const char *argv[], const char* delim){
     int slen=1;
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
@@ -360,7 +360,9 @@ char *expand_filename(const char *fn){
     }
     return out;
 }
-
+/**
+   Duplicate a string. Check for NULL.
+ */
 char *mystrndup(const char *A, int len){
     int len2=strlen(A);
     if(len2<len) len=len2;
@@ -386,12 +388,17 @@ char *mystrdup(const char *A){
     }
 }
 #endif
+/**
+   Record the address of system strdup.
+ */
 char* (*strdup0)(const char *)=strdup;
 
+
+/**
+   Remove files that are older than sec seconds in folder fndir. If sec==0,
+   remove everything.
+*/
 void remove_file_older(const char *fndir, long sec){
-    /**
-       Remove files that are older than sec seconds in folder fndir. If sec==0, remove everything.
-     */
     DIR *dir=opendir(fndir);
     if(!dir){
 	error("Unable to open directory %s\n",fndir);
@@ -409,10 +416,10 @@ void remove_file_older(const char *fndir, long sec){
     }
     closedir(dir);
 }
+/**
+   Make dirs recursively. like mkdir -p in bash
+*/
 void mymkdir(const char *format, ...){
-    /**
-       Make dirs recursively. like mkdir -p in bash
-    */
     format2fn;
     if(!fn) return;
     if(fn[strlen(fn)-1]=='/')
@@ -478,9 +485,9 @@ void mypause(void){
     while((ans=getchar())!='\n');
 }
 /**
-   Return available  space of mounted file system in bytes.
+   Return available space of mounted file system in bytes.
 */
-long available(const char *path){
+long available_space(const char *path){
     struct statvfs buf;
     if(statvfs(path, &buf)){
 	perror("statvfs");
@@ -490,7 +497,8 @@ long available(const char *path){
     }
 }
 /**
-   Extract a string constant from the command line, and output the position where the string terminates.*/
+   Extract a string constant from the command line, and output the position
+   where the string terminates.*/
 static char *cmd_string(char *input, char **end2){
     char *end;
     while(isspace((int)input[0]) || input[0]=='\n') input++;
@@ -514,7 +522,7 @@ static char *cmd_string(char *input, char **end2){
    Parse command line arguments. Returns whatever is not yet parsed. Need to
    free the returned string. This is more relaxed than the built in getopd
 */
-char *parse_argopt(int argc, char **argv, ARGOPT_T *options){
+char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
     char *cmds=strnadd(argc-1, argv+1, "\n");
     char *cmds_end=cmds+strlen(cmds);
     char *start=cmds;

@@ -19,5 +19,9 @@
 #ifndef AOS_HASHLITTLE_H
 #define AOS_HASHLITTLE_H
 #include <stdint.h>
+/**
+   \file hashlittle.h
+   Hash a memory region to get uint32. Do not use on floating precision data.
+*/
 uint32_t hashlittle(const void *key, size_t length, uint32_t initval);
 #endif

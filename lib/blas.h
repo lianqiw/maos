@@ -16,14 +16,15 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_BLAS_H
-#define AOS_BLAS_H
+#ifndef AOS_LIB_BLAS_H
+#define AOS_LIB_BLAS_H
 
 #include "../sys/sys.h"
-/*
-The following are blas and lapack fortran function definitions. Notice that when
-generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack
-routines to be compatible when usual blas/lapack definitions. */
+/**
+   \file blas.h
+   The following are blas and lapack fortran function definitions. Notice that when
+   generating MKL custom libraries, use lp64 instead of ilp64 for blas/lapack
+   routines to be compatible when usual blas/lapack definitions. */
 void dgemm_(const char*, const char*,   
 	    const int*, const int*, const int*, const double*, 
 	    const double*, const int*, 

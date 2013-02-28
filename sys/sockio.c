@@ -16,11 +16,6 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
-   \file sockio.c
-
-   Routines handle socket i/o.
-*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -31,51 +26,6 @@
 #include "misc.h"
 #include "common.h"
 #include "sockio.h"
-static __attribute__((constructor))void init(){
-    signal(SIGPIPE, SIG_IGN);
-}
-int stwrite(int sfd, const void *p, size_t len){
-    int nwrite;
-    const char *start=p;
-    do{
-	errno=0;
-	nwrite=write(sfd, start, len);
-	if(nwrite<=0){
-	    warning("Write socket %d failed with error %d: %s\n",
-		    sfd, errno, strerror(errno));
-	    return -1;
-	}else if(errno){
-	    warning("stwrite: %s\n", strerror(errno));
-	}
-	len-=nwrite;
-	start+=nwrite;
-    }while(len>0);
-    return 0;
-}
-int stread(int sfd, void *p, size_t len){
-    int nread;
-    char *start=p;
-    do{
-	errno=0;
-	nread=read(sfd, start, len);
-	if(nread<=0){
-	    if(nread<0){
-		warning3("Read socket %d failed with error %d: %s\n",sfd, errno, strerror(errno));
-	    }else{
-		warning3("stread: socket %d closed\n", sfd);
-	    }
-	    return -1;
-	}else if(errno){
-	    warning("stread: %s\n", strerror(errno));
-	}
-	len-=nread;
-	start+=nread;
-    }while (len>0);
-    return 0;
-}
-/*Prevent calling read/write in this file from now on. use stread/stwrite instead */
-#define read READ_IS_PROHIBITED
-#define write WRITE_IS_PROHIBITED
 /**
    Write a string to socket
 */

@@ -16,9 +16,13 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_LOCBIN_H
-#define AOS_LOCBIN_H
+#ifndef AOS_LIB_LOCBIN_H
+#define AOS_LIB_LOCBIN_H
 #include "loc.h"
+/**
+   \file locbin.h
+   i/o functions for loc_t, map_t.
+*/
 loc_t *locreaddata(file_t *fp, header_t* header);
 void locwritedata(file_t *fp, const loc_t *loc);
 void locwrite(const loc_t *loc, const char *format,...) CHECK_ARG(2);

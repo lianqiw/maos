@@ -37,6 +37,9 @@
 #include "common.h"
 #include "process.h"
 #include "misc.h"
+/**
+   Get the executable name of current process.
+*/
 const char *get_job_progname(void){
     static char *progname=NULL;
     if(!progname){
@@ -50,7 +53,9 @@ const char *get_job_progname(void){
     }
     return progname;
 }
-
+/**
+   Get the memory usage of current process.
+ */
 int get_job_mem(void){/*return in KiB */
     int mem;
 
@@ -72,7 +77,9 @@ int get_job_mem(void){/*return in KiB */
     /*info("mem2=%d KiB\n",(int)usage.ru_maxrss); */
     return mem;
 }
-
+/**
+   Get the launch time of current process.
+*/
 double get_job_launchtime(int pid){
     double starttime;
     struct timeval tp;
@@ -82,11 +89,16 @@ double get_job_launchtime(int pid){
     /*warning("Please finish it\n"); */
     return starttime;
 }
-
+/**
+   Get the number of running jobs.
+*/
 int get_usage_running(void){
     /*warning("Please implement it\n"); */
     return 0;
 }
+/**
+   Get the system memory usage.
+*/
 double get_usage_load(void){
     double load=0;
     return load;
@@ -101,7 +113,7 @@ double read_self_cpu(void){
     /*warning("Please implement"); */
     return 0;
 }
-int read_usage_cpu(long *user, long *tot){
+int read_cpu_counter(long *user, long *tot){
     processor_cpu_load_info_data_t *pinfo;
     mach_msg_type_number_t info_count;
     /*long tot1=0; */

@@ -25,7 +25,13 @@
 #include <dirent.h>
 #include <signal.h>
 #include "../sys/sys.h"
+/**
+   \file record_cpu.c
+   
+   Records the cpu consumption of a process.
 
+   Usage: record_cpu pid
+*/
 int main(int argc, char**argv){
     if(argc<2){
 	error("Usage: record_cpu PID second\n");

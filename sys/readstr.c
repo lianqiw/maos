@@ -16,18 +16,21 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
-   \file readstr.c
-   Group all string parsing opertions. Forked from readcfg.c
-*/
-
 #include "readstr.h"
 #include "misc.h"
+
 /**
-   Obtain a string array value from the key. revised on 2010-10-16 to be more
-   strict on the entry to avoid mistakes.
+   Group all routines that are used to parse values from string that contain
+   key=value pairs.
+*/
+
+/**
+   Obtain a string array value from the key.
  */
-int readstr_strarr(char ***res, int len, const char *sdata){
+int readstr_strarr(char ***res, /**<[out] Result*/
+		   int len,     /**<[out] Length of array*/
+		   const char *sdata /**<[in] Input string*/
+		   ){
     int count=0;
     int maxcount=5;
     if(len && *res){
@@ -38,7 +41,8 @@ int readstr_strarr(char ***res, int len, const char *sdata){
     }
     const char *sdataend=sdata+strlen(sdata)-1;
     const char *sdata2;
-    if(sdata[0]!='[' || sdataend[0]!=']'){/*spaces are already trimmed out.*/
+    if(sdata[0]!='[' || sdataend[0]!=']'){
+	/*spaces are already trimmed out.*/
 	warning2("{%s}: Should start with [ and end with ]\n", sdata);
 	sdata2=sdata;
     }else{
@@ -50,9 +54,6 @@ int readstr_strarr(char ***res, int len, const char *sdata){
     }
     while(sdata2<sdataend){
 	char mark=' ';
-	/*if(sdata2[0]!='"' && sdata2[0]!='\''){
-	    error("{%s}: Unable to parse for str array\n", sdata);
-	    }*/
 	if(sdata2[0]=='"' || sdata2[0]=='\''){
 	    mark=sdata2[0];
 	    sdata2++;
@@ -94,7 +95,9 @@ int readstr_strarr(char ***res, int len, const char *sdata){
    Read in a number from the value string. Will interpret * and / operators. *endptr0 will
    be updated to point to the next valid entry, or at separator like coma
    (spaced are skipped).  */
-double readstr_num(const char *data, char **endptr0){
+double readstr_num(const char *data, /**<[in] Input string*/
+		   char **endptr0    /**<[out] Location in Input string after readed number.*/
+		   ){
     if(!data || strlen(data)==0){
 	error("{%s}: Unable to parse for a number\n", data);
 	return NAN;
@@ -146,8 +149,16 @@ double readstr_num(const char *data, char **endptr0){
    [1 2 3; 4 5 6] is 2 d array, 3 columns, 2 rows. In memory is stored as [1 2 3 4 5 6]
    transpose is supported:
    [1 2 3; 4 5 6]' is 2 d array, 2 columns, 3 rows. In memory is stored as [1 4 2 5 3 6]
+
+   \return Number of values actually read.
 */
-int readstr_numarr(void **ret, int len, int *nrow0, int *ncol0, int type, const char *data){
+int readstr_numarr(void **ret, /**<[out] Result*/
+		   int len,    /**<[in]  Max number of values to read.*/
+		   int *nrow0, /**<[out] Number of rows (nx)*/
+		   int *ncol0, /**<[out] Number of columns (ny)*/
+		   int type,   /**<[in]  Data type*/
+		   const char *data /**<[in] Input string*/
+		   ){
     if(!data || strlen(data)==0){
 	return 0;
     }
@@ -367,8 +378,13 @@ int readstr_numarr(void **ret, int len, int *nrow0, int *ncol0, int type, const 
     if(ncol0) *ncol0=ncol;
     return count;
 }
-
-void readstr_intarr_nmax(int **ret, int len, const char *data){
+/**
+   Read an integer array. Duplicate if only one number is present.
+ */
+void readstr_intarr_nmax(int **ret, /**<[out] Result*/
+			 int len,   /**<[in]  Max number of values to read.*/
+			 const char *data /**<[in] Input string*/
+			 ){
     int len2=readstr_numarr((void**)ret, len,NULL,NULL, T_INT, data);
     if(len2==1){
 	for(int i=1; i<len; i++){

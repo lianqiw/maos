@@ -62,6 +62,5 @@
 
     \author Lianqi Wang <lianqiw@gmail.com> at TMT Corporation www.tmt.org 
     
-    The source code can be obtained in \link http://github.com/lianqiw/maos 
-
+    The source code can be obtained in <a href="http://github.com/lianqiw/maos">http://github.com/lianqiw/maos </a>
  */

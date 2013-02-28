@@ -16,12 +16,18 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   Defines arrays of integers. We don't use the template mat.c because we only
-   need very few functions for this data type and no numerical functions are
+   This file contains routines for imat (matrix of integer numbers).
+*/
+/*
+  Defines arrays of integers. We don't use the template mat.c because we only
+  need very few functions for this data type and no numerical functions are
    required.
 */
 #include <stdlib.h>
 #include "imat.h"
+/**
+   Allocate a new imat.
+ */
 imat* inew(long nx, long ny){
     imat *A=calloc(1, sizeof(imat));
     A->nx=nx;
@@ -29,7 +35,9 @@ imat* inew(long nx, long ny){
     A->p=calloc(nx*ny, sizeof(long));
     return A;
 }
-
+/**
+   Allocate a new icell.
+ */
 icell* icellnew(long nx, long ny){
     icell *A=calloc(1, sizeof(icell));
     A->nx=nx;
@@ -37,14 +45,18 @@ icell* icellnew(long nx, long ny){
     A->p=calloc(nx*ny, sizeof(imat*));
     return A;
 }
-
+/**
+   Free a imat.
+ */
 void ifree(imat *A){
     if(A) {
 	free(A->p);
 	free(A);
     }
 }
-
+/**
+   Free a icell
+*/
 void icellfree(icell *A){
     if(A){
 	for(long i=0; i<A->nx*A->ny; i++){

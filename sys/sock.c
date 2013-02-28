@@ -16,9 +16,7 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-   \file sock.c
-   
-   Routines handle socket connection
+   Routines to establish socket connection
 
    use ioctl with SIOCETHTOOL detect whether line is connected.
 
@@ -82,7 +80,15 @@ static void socket_tcp_keepalive(int sock){
 	warning("Keepalive failed. sock=%d: %s\n", sock, strerror(errno));
     }
 }
-
+static void socket_nopipe(int sock){
+#ifdef SO_NOSIGPIPE
+    const int one=1;
+    setsockopt(sock, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(int));
+#elif ! defined(__linux__)
+    signal(SIGPIPE, SIG_IGN);
+#endif
+    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
+}
 #if defined(__INTEL_COMPILER)
 /*with htons defined in glibc 2.4, intel compiler complains
   about conversion from in to uint16. THis is an ugly workaround*/
@@ -110,10 +116,10 @@ static void socket_tcp_nodelay(int sock){
 /**
    make a server port and bind to sockpath. AF_UNIX.
  */
-int bind_socket_local(char *sockpath){
+static int bind_socket_local(char *sockpath){
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    socket_nopipe(sock);
     struct sockaddr_un addr={0};
-    //memset(&addr, 0, sizeof(struct sockaddr_un));
     addr.sun_family=AF_UNIX;
     strncpy(addr.sun_path, sockpath, sizeof(addr.sun_path)-1);
     if(bind(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))==-1){
@@ -130,30 +136,18 @@ int bind_socket_local(char *sockpath){
 /**
    make a server port and bind to localhost on all addresses. AF_INET
 */
-int bind_socket (uint16_t port, int type){
-    int sock=-1;
+static int bind_socket (uint16_t port){
     struct sockaddr_in name;
-    
     /* Create the socket. */
-    switch(type){
-    case 1:{//TCP
-	sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
-	socket_tcp_keepalive(sock);
-    }
-	break;
-    case 2:
-	sock = socket(PF_INET, SOCK_DGRAM, 0); //udp
-	break;
-    default:
-	error("Invalid type");
-    }
+    int sock = socket(PF_INET, SOCK_STREAM, 0);//tcp
+    socket_tcp_keepalive(sock);
+    socket_nopipe(sock);
     if (sock < 0){
 	perror ("socket");
 	exit (EXIT_FAILURE);
     }
-    
     cloexec(sock);
-    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
+    
     /* Give the socket a name. */
     name.sin_family = AF_INET;
     name.sin_port = htons(port);
@@ -178,7 +172,11 @@ int bind_socket (uint16_t port, int type){
 
 static int quit_listen=0;
 static void signal_handler(int sig){
-    quit_listen=1;
+    /*quit listening upon signal and do clean up.*/
+    if(sig){
+	disable_signal_handler;
+	quit_listen=1;
+    }
 }
 /**
    Open a port and listen to it. Calls respond(sock) to handle data. If
@@ -210,7 +208,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 	}
     }
 
-    int sock = bind_socket (port, 1);//has to be tcp.
+    int sock = bind_socket (port);
     if(nodelay){//turn off tcp caching.
 	socket_tcp_nodelay(sock);
     }
@@ -307,7 +305,9 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
     usleep(100);
     _Exit(1);
 }
-
+/**
+   Initialize sockaddr_in with hostname.
+ */
 int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port){
     struct hostent *hostinfo;
     
@@ -335,11 +335,8 @@ int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port
 int connect_port(const char *hostname, int port, int block, int nodelay){
     int sock=-1;
     if(hostname[0]=='/'){
-	warning("try to connect locally through AF_UNIX\n");
 	sock = socket(PF_UNIX, SOCK_STREAM, 0);
-	//cloexec(sock);
 	struct sockaddr_un addr={0};
-	//memset(&addr, 0, sizeof(struct sockaddr_un));
 	addr.sun_family=AF_UNIX;
 	strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
@@ -355,9 +352,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
     struct sockaddr_in servername;
     do{
 	count++;
-	/* Create the socket. */
 	sock = socket (PF_INET, SOCK_STREAM, 0);
-	//cloexec(sock);
 	socket_tcp_keepalive(sock);
 	if(nodelay){
 	    socket_tcp_nodelay(sock);
@@ -365,7 +360,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	if(!block){
 	    fcntl(sock, F_SETFD, O_NONBLOCK);
 	}
-	/* Give the socket a name. */
+	/* Give the socket the target hostname. */
 	if(init_sockaddr(&servername, hostname, port) || 
 	   connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
 	    close(sock);

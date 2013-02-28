@@ -152,7 +152,7 @@ void maos(const PARMS_T *parms){
    In detached mode, drawing is automatically disabled.
    \callgraph
 */
-int main(int argc, char **argv){
+int main(int argc, const char *argv[]){
     char *scmd=argv2str(argc,argv," ");
     ARG_T* arg=parse_args(argc,argv);/*does chdir */
 

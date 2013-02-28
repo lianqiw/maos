@@ -17,6 +17,10 @@
 */
 #ifndef AOS_LIB_PSD_H
 #define AOS_LIB_PSD_H
+/**
+   \file psd.h
+   Compute the PSD from a sequence.
+*/
 dmat *psd1d(dmat *v, long lseg );
 dmat *psd1dt(dmat *v, long lseg, double dt);
 #endif

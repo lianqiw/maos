@@ -17,6 +17,8 @@
 */
 
 /**
+   \file mk2dcov.c
+   
    Convert covariance matrices to OTF. Deprecated. Use the mex routine
    genotfmex.c in mex/ folder instead for easy access in MATLAB.
   */

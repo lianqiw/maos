@@ -18,25 +18,16 @@
 
 #include <math.h>
 #include "../sys/sys.h"
-
 #include "accphi.h"
-/*
-   2010-01-02: use a=(int)b instead of a=(int)floor(b).  call to floor is slow
-   and unnecessary.  This only works if b is positive.  */
-/**
-   \file accphi.c Contains ray tracing routines optimized for different
-   input/output formats. Notice that the OPDs are accumulated.
- */
 #undef  EPS
 #define EPS 1.e-12 /**<A threashold*/
-/*
-  The myfma() function computes x * y + z. without rounding, may be slower than x*y+z*/
-/*
-  Carefull: when design any algorithm, make sure you consider all possible cases
-  and handle them properly. */
-
 #define ONLY_FULL 0 /**<set to 1 to be compatible with other props.*/
 #define USE_OPTIM 1 /**<Use the optimized version.*/
+
+/*
+  The myfma() function computes x * y + z. without rounding, may be slower than x*y+z
+*/
+
 /**
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
@@ -311,7 +302,7 @@ void prop_index(PROPDATA_T *propdata){
 
 #define WARN_MISSING\
     ({if(missing>0) {warning("%d points not covered by input screen\n", missing); \
-    print_backtrace(0); }})
+    print_backtrace(); }})
 
 #if ONLY_FULL == 1 
 #define LINEAR_ADD_NONGRID						\

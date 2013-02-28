@@ -31,8 +31,6 @@
 #include "readcfg.h"
 
 /**
-   file readcfg.c
-
    Routines to read .conf type config files. Each entry is composed of a key and
    a value. The entries are maintained in a hash table. Each entry can be
    retrieved from the key.
@@ -220,9 +218,9 @@ void close_config(const char *format, ...){
    a hash table. A key can be protected. If a key is not protected, newer
    entries with the same key will override a previous entry.
  */
-void open_config(const char* config_file, /**<The .conf file to read*/
-		 const char* prefix,      /**<if not NULL, prefix the key with this.*/
-		 long protect             /**<whether we protect the value*/
+void open_config(const char* config_file, /**<[in]The .conf file to read*/
+		 const char* prefix,      /**<[in]if not NULL, prefix the key with this.*/
+		 long protect             /**<[in]whether we protect the value*/
 		 ){
     if(!config_file) return;
     if(!check_suffix(config_file, ".conf")){
@@ -243,7 +241,11 @@ void open_config(const char* config_file, /**<The .conf file to read*/
     }
     char *fn=find_file(config_file);
     if(!(fd=fopen(fn,"r"))){
-	error("File %s doesn't exist\n",fn);
+	perror("fopen");
+	usleep(10000);
+	if(!(fd=fopen(fn,"r"))){//just try again.
+	    error("Cannot open file %s for reading.\n",fn);
+	}
     }
 #define MAXLN 40960
     char ssline[MAXLN];

@@ -20,8 +20,10 @@
 #include <search.h>
 #include <stdlib.h>
 #include "laplacian.h"
+
+/**
+   compute the factor for the laplacian*/
 double laplacian_coef(double r0, double weight, double dx){
-    /*compute the factor for the laplacian*/
     double cf;
     cf=(2.*M_PI/0.5e-6)*sqrt(pow(r0/dx,5./3.)/3.44/weight)
 	*pow(2.-pow(2,-1./3.)-pow(2,-1./6.),-1./2.);
@@ -44,9 +46,10 @@ static double laplacian_coef3(double r0, double weight, double dx){
     /*Fixme: need to study why is this.*/
     return cf;
 }
+/**
+   Apply L2 directly to map with periodic condition.*/
 void apply_laplacian_map(int nx, int ny, double dx, double r0, double weight, 
 			 double *opd, double *opdout){
-    /*Apply L2 directly to map with periodic condition.*/
     int ix,iy;
     double (*OPD)[nx]=(double(*)[nx])opd;
     double (*OPDout)[nx]=(double(*)[nx])opdout;
@@ -64,8 +67,9 @@ void apply_laplacian_map(int nx, int ny, double dx, double r0, double weight,
 	}
     }
 }
+/**
+   build laplacian on square map using periodic conditions*/
 dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
-    /*build laplacian on square map using periodic conditions*/
     dsp *L2=spnew(nx*ny,nx*ny,nx*ny*5);
     int iy,ix;
     spint *pp=L2->p;
@@ -93,7 +97,9 @@ dsp* mklaplacian_map(int nx, int ny, double dx, double r0, double weight){
     spfree(L2);
     return L2r;
 }
- 
+/**
+   Generate laplacian on loc_t
+ */
 dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
     /*
       The laplacian here is l=delta^2(u)/4;
@@ -218,11 +224,7 @@ dsp* mklaplacian_loc(loc_t *loc, double r0, double weight){
 	error("Over flow happened\n");
     }
     spsetnzmax(L2,px-px0);
-    /*spcheck(L2); */
-    /*L2->px may be reallocated. so scale before setnzmax. */
     dsp *L2r=sptrans(L2);
     spfree(L2);
-    /*loc_free_map(loc);*/
-    /*spclean(L2r); */
     return L2r;
 }

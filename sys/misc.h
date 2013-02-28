@@ -19,10 +19,14 @@
 #ifndef AOS_LIB_MISC_H
 #define AOS_LIB_MISC_H
 #include "common.h"
+/**
+   \file misc.h
+   misc routines.
+*/
 char *mybasename(const char *fn);
 int check_suffix(const char *fn, const char *suffix);
 void copyfile(const char *dest, const char *src);
-char *argv2str(int argc, char **argv, const char *delim);
+char *argv2str(int argc, const char *argv[], const char *delim);
 void print_file(const char *fnin);
 int myclocki(void);
 double myclockd(void);
@@ -39,7 +43,7 @@ int islink(const char*fn);
 size_t flen(const char *fn);
 time_t fmtime(const char *fn);
 char *stradd(const char* a, ...) CHECK_NULL_TERMINATED;
-char *strnadd(int argc, char **argv, const char *delim);
+char *strnadd(int argc, const char *argv[], const char *delim);
 char *expand_filename(const char *fn);
 
 void remove_file_older(const char *fndir, long sec);
@@ -49,7 +53,7 @@ char *mystrndup(const char *A, int len);
 void cloexec(int fd);
 void mysleep(double sec);
 void mypause(void);
-long available(const char *path);
+long available_space(const char *path);
 /*strdup for static pointers or in constructor should be using this strdup0 to
   avoid reporting of unfreed mem.*/
 extern char* (*strdup0)(const char *);
@@ -71,5 +75,5 @@ typedef struct ARGOPT_T{
     void *val;  /**<The the address to put the return result.*/
     int *nval;  /**<If val is array, this is the counter.*/
 }ARGOPT_T;
-char *parse_argopt(int argc, char **argv, ARGOPT_T *options);
+char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options);
 #endif

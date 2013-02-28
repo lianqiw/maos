@@ -25,6 +25,12 @@
 #include "chol.h"
 #include "pcg.h"
 /**
+   \file muv.h
+
+   Decomposes a matrix into sparse and low rank terms and do math
+   operations. 
+*/
+/**
    Avoid function casting. It will hide data safety check and hide bugs.
 */
 typedef void (*EXFUN) (dcell **xout, const void *A, const dcell *xin, const double alpha, int xb, int yb);

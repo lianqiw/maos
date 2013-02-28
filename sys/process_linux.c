@@ -31,6 +31,10 @@
 #include "common.h"
 #include "process.h"
 #include "misc.h"
+
+/**
+   Get the executable name of current process with full path.
+*/
 const char *get_job_progname(void){
     static char *progname=NULL;
     if(!progname){
@@ -48,7 +52,9 @@ const char *get_job_progname(void){
     }
     return progname;
 }
-
+/**
+   Get the memory usage of current process.
+ */
 int get_job_mem(void){
     int mem;
     pid_t pid=getpid();
@@ -73,7 +79,9 @@ int get_job_mem(void){
     }
     return mem;
 }
-
+/**
+   Get the launch time of current process.
+*/
 double get_job_launchtime(int pid){
     double starttime;
     char fnjob[64];
@@ -186,27 +194,27 @@ int get_usage_running(void){
 	    }
 	}
 	nrunning+=nthread;
-	/*if(nthread>0){ */
-	/*    info("%s: %s is running with %ld threads\n",dp->d_name,exename,nthread); */
-	/*	} */
     }
     closedir(dir);
-    /*info("Nrunning=%d\n",nrunning); */
     return nrunning;
 }
-
+/**
+   Get the system load.
+ */
 double get_usage_load(void){
     double load=0;
     FILE *fp;
     fp=fopen("/proc/loadavg","r");
-    if(fscanf(fp,"%lf",&load)!=1){
+    if(!fp || fscanf(fp,"%lf",&load)!=1){
 	warning("failed to read loadavg\n");
 	load=0;
     }
     fclose(fp);
     return load;
 }
-
+/**
+   Get the system memory usage.
+*/
 double get_usage_mem(void){
     double mem=0;
     FILE *fp;
@@ -215,7 +223,7 @@ double get_usage_mem(void){
     long membuf;
     long memcache;
     fp=fopen("/proc/meminfo","r");
-    if(fscanf(fp, "%*s %ld %*s", &memtot)!=1 ||
+    if(!fp || fscanf(fp, "%*s %ld %*s", &memtot)!=1 ||
        fscanf(fp, "%*s %ld %*s", &memfree)!=1 ||
        fscanf(fp, "%*s %ld %*s", &membuf)!=1 ||
        fscanf(fp, "%*s %ld %*s", &memcache)!=1){
@@ -228,11 +236,13 @@ double get_usage_mem(void){
     return mem;
 }
 
-int read_usage_cpu(long *user, long *tot){/*total cpu usage */
+/**
+   Read the cpu counter.*/
+int read_cpu_counter(long *user, long *tot){
     FILE *fp;
-    fp=fopen("/proc/stat","r");
     long t_usr,t_nice, t_sys, t_idle;
-    if(fscanf(fp, "%*s %ld %ld %ld %ld %*d %*d %*d %*d",
+    fp=fopen("/proc/stat","r");
+    if(!fp || fscanf(fp, "%*s %ld %ld %ld %ld %*d %*d %*d %*d",
 	      &t_usr,&t_nice,&t_sys,&t_idle)<0){
 	fclose(fp);
 	return -1;
@@ -242,20 +252,22 @@ int read_usage_cpu(long *user, long *tot){/*total cpu usage */
     *tot=*user+t_idle;
     return 0;
 }
-double read_self_cpu(void){/*return CPU usage of current process */
+/**
+   return CPU usage of current process */
+double read_self_cpu(void){
  
     static double t_last=0,s_last=0;
     long stime,utime;
     long t_usr,t_nice, t_sys, t_idle;
     FILE *fp=fopen("/proc/self/stat","r");
-    if(fscanf(fp,"%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
+    if(!fp || fscanf(fp,"%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %ld %ld",
 	      &stime, &utime)!=2){
 	fclose(fp);
 	return 0;
     }
     fclose(fp);
     fp=fopen("/proc/stat","r");
-    if(fscanf(fp, "%*s %ld %ld %ld %ld %*d %*d %*d %*d",
+    if(!fp || fscanf(fp, "%*s %ld %ld %ld %ld %*d %*d %*d %*d",
 	      &t_usr,&t_nice,&t_sys,&t_idle)<0){
 	fclose(fp); return 0;
     }
@@ -283,7 +295,7 @@ int get_ncpu(void){
     const char *s_core="core id";    /*should record number of cores per cpu */
     const char *s_cores="cpu cores"; /*should record number of cores per cpu. */
     int ncore=0;
-    while(fgets(line,1024,fp)){
+    while(fp && fgets(line,1024,fp)){
 	if(!mystrcmp(line,s_phy)){/*contains physical id */
 	    int kphy;
 	    char *ss=index(line,':');

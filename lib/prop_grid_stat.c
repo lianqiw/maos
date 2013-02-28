@@ -368,6 +368,6 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 #endif
     if(missing>0){
 	warning(" %d points not covered by input screen\n", missing);
-	print_backtrace(0);
+	print_backtrace();
     }
 }/*function*/

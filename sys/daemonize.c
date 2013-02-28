@@ -48,7 +48,7 @@
 */
 int lock_file(const char *fnlock, /**<The filename to lock on*/
 	      long block,         /**<block on weighting. set to 0 for no waiting.*/
-	      long version        /**<The version of the software that locks the file, primarily for managing scheduler*/
+	      long version        /**<The version of the software that locks the file, primarily for managing scheduler. May be zero.*/
 	      ){
     int fd;
     int count=0;
@@ -69,7 +69,7 @@ int lock_file(const char *fnlock, /**<The filename to lock on*/
 	    }
 	    long pid=0;
 	    FILE *fp=fdopen(fd,"r");
-	    if(fscanf(fp,"%ld",&pid)==EOF){
+	    if(!fp || fscanf(fp,"%ld",&pid)==EOF){
 		warning("Error reading pid\n");
 		fclose(fp);
 		fd=-1;
@@ -211,8 +211,6 @@ void single_instance_daemonize(const char *lockfolder_in,
 	warning("Unable to truncate file\n");
     if(write(fd,strpid,strlen(strpid)+1)!=strlen(strpid)+1){
 	warning("Write pid %d to %s failed\n",getpid(),fnlock);
-    }else{
-	info("Write pid %d to %s success\n",getpid(),fnlock);
     }
     if(daemon_func){
 	daemon_func(daemon_arg);
@@ -227,6 +225,7 @@ typedef struct{
     int stdoutfd;
     const char *fn;
 }redirect_t;
+
 static void* fputs_stderr(redirect_t *data){
     int fd=data->pfd;
     int stdoutfd=data->stdoutfd;
@@ -258,34 +257,43 @@ static void* fputs_stderr(redirect_t *data){
     }
     return 0;
 }
-static void redirect_fd(const char *fn, int fd){
-    if(fn){
-	if(!freopen(fn, "w", stdout)) warning("Error redirecting stdout\n");
-	if(!freopen(fn, "w", stderr)) warning("Error redirecting stderr\n");
-    }else if(fd>-1){
-	/*do not close stdout here.*/
-	dup2(fd, 1);
-	dup2(fd, 2);
-    }else{
-	warning("Invalid argument");
+/**
+   Redirect stdout and stderr to fd
+ */
+static void redirect2fd(int fd){
+    if(dup2(fd, 1)<0 || dup2(fd, 2)<0){
+	warning("Error redirecting stdout/stderr\n");
     }
-    /*turns off file buffering */
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
+}
+/**
+   Redirect stdout and stderr to fn
+ */
+static void redirect2fn(const char *fn){
+    if(!freopen(fn, "w", stdout) || !freopen(fn, "w", stderr)){
+	warning("Error redirecting stdout/stderr\n");
+    }
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 }
 /**
   Redirect output. 
-  If we are in detached mode, will not output to screen. 
-  Otherwise output to both file and screen.
+  If we are in detached mode, will output to file
+  If we are in attached mode, will output to both file and screen.
 */
 void redirect(void){
     char *fn=malloc(PATH_MAX);
     pid_t pid=getpid();
     snprintf(fn,PATH_MAX,"run_%d.log",pid);
     if(detached){//only output to file
-	redirect_fd(fn, -1);
+	redirect2fn(fn);
 	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
-    }else{//output to both file and screen
+    }else{
+	/* output to both file and screen. we first keep a reference to our
+	   console output fd. The stdout and stderr is redirected to one of of
+	   the pipe and the other end of the pipe is output to the screen and file.
+	 */
 	int stdoutfd=dup(fileno(stdout));
 	int pfd[2];
 	if(pipe(pfd)){//fail to create pipe.
@@ -293,30 +301,14 @@ void redirect(void){
 	}else{
 	    redirect_t *data=calloc(1, sizeof(redirect_t));
 	    data->pfd=pfd[0];//read
-	    data->stdoutfd=stdoutfd;
+	    data->stdoutfd=stdoutfd;//write
 	    data->fn=fn;
-#if 0 
-	    //fork a process to handle output
-	    int pid2=fork();
-	    if(pid2==-1){
-		perror("fork");
-		redirect_fd(fn, -1);//fall back
-	    }else if(pid2>0){//parent. output to pipe
-		close(pfd[0]);
-		redirect_fd(NULL, pfd[1]);
-	    }else{//child. read pipe
-		close(pfd[1]);
-		fputs_stderr(data);
-		_Exit(0);
-	    }
-#else
 	    //spawn a thread to handle output.
 	    pthread_t thread;
 	    //child thread read from pfd[0] and write to stdout.
 	    pthread_create(&thread, NULL, (void *(*)(void *))fputs_stderr, data);
 	    //master threads write to pfd[1]
-	    redirect_fd(NULL, pfd[1]);
-#endif
+	    redirect2fd(pfd[1]);
 	}
     }
     register_deinit(NULL,fn);
@@ -330,9 +322,6 @@ void daemonize(void){ /* Fork off the parent process */
 	exit(EXIT_FAILURE);
     }
     if (pid > 0) {/*exit first parent. */
-	/*give enough time for the job to communicate with the scheduler so that
-	  our jobs are in order.*/
-	//usleep(10000);
 	_exit(EXIT_SUCCESS);
     }
     /* Create a new SID for the child process */
@@ -344,64 +333,88 @@ void daemonize(void){ /* Fork off the parent process */
     char fn[256];
     snprintf(fn,256,"kill_%d",pid);
     FILE *fp=fopen(fn,"w");
-    fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);
-    fclose(fp);
+    if(fp){
+	fprintf(fp,"#!/bin/sh\nkill %d && rm $0 -rf \n", pid);
+	fclose(fp);
+    }
     chmod(fn,00700);
 }
 /**
    fork and launch exe as specified in cmd. cmd should composed of the path to
    start the exe, exe name, and parameters. used by maos/skyc.
  */
-int launch_exe(const char *cmd){
-    const int nexe=2;
+int launch_exe(const char *exepath, const char *cwd, const char *cmd){
+    int use_shell=0;
     const char *exes[]={"maos", "skyc"};
-    char *stexe=NULL;
-    char *cmd2;
-    if(cmd[0]=='~'){
-	cmd2=stradd(HOME, cmd+1, NULL);
+    const char *args=NULL;
+    const char *exename=NULL;
+    char *cwd2=NULL;
+    if(!exepath || !cwd){ //old method. 
+	const int nexe=2;
+	char *stexe=NULL;
+	char *cmd2;
+	if(cmd[0]=='~'){
+	    cmd2=stradd(HOME, cmd+1, NULL);
+	}else{
+	    cmd2=strdup(cmd);
+	}
+	const char *cmd2end=cmd2+strlen(cmd2);
+	for(int iexe=0; iexe<nexe; iexe++){
+	    const char *exe=exes[iexe];
+	    const char *cmd3=cmd2;
+	    do{
+		stexe=strstr(cmd3, exe);
+		cmd3=cmd3+strlen(exe);
+	    }while(stexe && cmd3<cmd2end && (stexe[-1]!='/'||!isspace(stexe[strlen(exe)])));
+	    if(stexe){
+		exename=exe;
+		stexe[-1]='\0';
+		cwd=cwd2=strdup(cmd2);
+		exepath=exe;//has to use shell.
+		args=stexe;
+		use_shell=1;
+		break;
+	    }
+	}
+	free(cmd2);
     }else{
-	cmd2=(char*)cmd;
+	args=cmd;
+	exename=strrchr(exepath, '/')+1;
     }
-    const char *cmd2end=cmd2+strlen(cmd2);
-    for(int iexe=0; iexe<nexe; iexe++){
-	const char *exe=exes[iexe];
-	stexe=strstr(cmd2, exe);
-	while(stexe && stexe<cmd2end&&(stexe[-1]!='/'||!isspace(stexe[strlen(exe)]))){
-	    stexe=strstr(stexe+strlen(stexe), exe);
-	}	
-	if(stexe){
-	    stexe[-1]='\0';
-	    long pid=fork();
-	    if(pid<0){
-		return -1;//unable to fork
-	    }else if(pid>0){//parant
-		stexe[-1]='/';
-		waitpid(pid, NULL, 0);/*wait child*/
+    if(args){
+	args=strstr(args, exename)+strlen(exename)+1;
+	long pid=fork();
+	if(pid<0){
+	    return -1;//unable to fork
+	}else if(pid>0){//parant
+	    waitpid(pid, NULL, 0);/*wait child*/
+	}else{//child
+	    long pid2=fork();
+	    if(pid2<0){
+		_exit(EXIT_FAILURE);//unable to fork
+	    }else if(pid2>0){//parent
+		_exit(EXIT_SUCCESS);
 	    }else{//child
-		long pid2=fork();
-		if(pid2<0){
-		    _exit(EXIT_FAILURE);//unable to fork
-		}else if(pid2>0){//parent
-		    _exit(EXIT_SUCCESS);
-		}else{//child
-		    if(setsid()==-1) warning("Error setsid\n");
-		    if(chdir(cmd2)) error("Error chdir to %s\n", cmd2);
-		    stexe+=strlen(exe);
-		    if(execlp(exe, exe, "--local", "-d", stexe, NULL)){
+		if(setsid()==-1) warning("Error setsid\n");
+		if(chdir(cwd)) error("Error chdir to %s\n", cwd);
+		if(use_shell){
+		    if(execlp(exename, exename, "-l", "-d", args, NULL)){
 			error("Unable to execlp\n");
 		    }
-		    _exit(EXIT_FAILURE);
+		}else{
+		    if(execl(exepath, exename, "-l", "-d", args, NULL)){
+			error("Unable to execl\n");
+		    }
 		}
+		_exit(EXIT_FAILURE);
 	    }
-	    break;
 	}
-    }
-    if(cmd2!=cmd) free(cmd2);
-    if(!stexe){
-	warning("don't understand %s\n", cmd);
+	free(cwd2);
+	return 0;
+    }else{
+	warning("Unabel to interpret %s\n", cmd);
 	return -1;
     }
-    return 0;
 }
 /**
    Find an exe from maos and return the absolute path.
@@ -418,8 +431,10 @@ char *find_exe(const char *name){
     }
     return fn;
 }
+/**
+   fork and launch drawdaemon
+*/
 int spawn_drawdaemon(int sock){
-    //fork and launch drawdaemon
     pid_t pid;
     if((pid=fork())<0){
 	warning("forked failed\n");

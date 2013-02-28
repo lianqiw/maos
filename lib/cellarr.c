@@ -21,12 +21,6 @@
 #include "smat.h"
 #include "cmat.h"
 #include "zmat.h"
-/**
-   \file cellarr.c
-   
-   cellarr is an object used to write arrays of dcell or ccell into file.
-   Mainly used to output PSF into files.
- */
 
 /**
    Initializing an cellarray object that contains arrays of dmat, cmat, dcell or ccell

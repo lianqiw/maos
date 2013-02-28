@@ -17,11 +17,11 @@
 */
 #include "../lib/aos.h"
 /**
-   Warps of slaving for use standalone.
+   \file slaving.c
+   
+   Warps of slaving() for use standalone.
 
    Usage: slaving loc.bin HA.bin amp.bin
-
-   
 */
 int main(int argc, char **argv){
     if(argc<3){

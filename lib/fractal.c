@@ -20,8 +20,6 @@
 #include "nr.h"
 #include "turbulence.h"
 /**
-   \file fractal.c
-
    Implementation of the fractal operation for atmospheric turbulence screen
    generation and reconstruction.
 

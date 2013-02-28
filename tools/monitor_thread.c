@@ -25,20 +25,19 @@
 #include <unistd.h>
 #include "../sys/sys.h"
 #include "monitor.h"
-
 PROC_T **pproc;
 int *nproc;
 extern int* hsock;
 static double *htime;//last time having signal from host.
 int nhostup=0;
 PNEW(mhost);
-int pipe_main[2]={0,0}; /*Use to talk to the thread that blocks in select()*/
+int sock_main[2]={0,0}; /*Use to talk to the thread that blocks in select()*/
 static fd_set active_fd_set;
 
 extern double *usage_cpu, *usage_cpu2;
 extern double *usage_mem, *usage_mem2;
 
-PROC_T *proc_get(int id,int pid){
+static PROC_T *proc_get(int id,int pid){
     PROC_T *iproc;
     if(id<0 || id>=nhost){
 	error("id=%d is invalid\n", id);
@@ -53,7 +52,7 @@ PROC_T *proc_get(int id,int pid){
     return iproc;
 }
 
-PROC_T *proc_add(int id,int pid){
+static PROC_T *proc_add(int id,int pid){
     PROC_T *iproc;
     if((iproc=proc_get(id,pid))) return iproc;
     iproc=calloc(1, sizeof(PROC_T));
@@ -68,7 +67,8 @@ PROC_T *proc_add(int id,int pid){
     UNLOCK(mhost);
     return iproc;
 }
-void proc_remove_all(int id){
+
+static void proc_remove_all(int id){
     PROC_T *iproc,*jproc=NULL;
     LOCK(mhost);
     for(iproc=pproc[id]; iproc; iproc=jproc){
@@ -80,7 +80,8 @@ void proc_remove_all(int id){
     pproc[id]=NULL;
     gdk_threads_add_idle((GSourceFunc)update_title, GINT_TO_POINTER(id));
 }
-void proc_remove(int id,int pid){
+
+static void proc_remove(int id,int pid){
     PROC_T *iproc,*jproc=NULL;
     for(iproc=pproc[id]; iproc; jproc=iproc,iproc=iproc->next){
 	if(iproc->pid==pid){
@@ -113,7 +114,7 @@ static int host_from_sock(int sock){
 void add_host_wrap(int ihost){
     int cmd[3]={CMD_ADDHOST, 0, 0};
     cmd[1]=ihost;
-    stwriteintarr(pipe_main[1], cmd, 3);
+    stwriteintarr(sock_main[1], cmd, 3);
 }
 
 /* Record the host upon connection */
@@ -213,6 +214,10 @@ static int respond(int sock){
 	    if(streadstr(sock, &p->path)){
 		return -1;
 	    }
+	    char *tmp=NULL;
+	    while((tmp=strchr(p->path, '\n'))){
+		tmp[0]=' ';
+	    }
 	}
 	break;
     case CMD_LOAD:
@@ -244,11 +249,11 @@ static int respond(int sock){
    2) listening to connected servers for maos status event and update the display
    3) monitor connected servers for activity. Disable pages when server is disconnected.
 
-   write to pipe_main[1] will be caught by select in listen_host(). This wakes it up.*/
+   write to sock_main[1] will be caught by select in listen_host(). This wakes it up.*/
 void listen_host(){
     htime=calloc(nhost, sizeof(double));
     FD_ZERO(&active_fd_set);
-    FD_SET(pipe_main[0], &active_fd_set);
+    FD_SET(sock_main[0], &active_fd_set);
     while(1){
 	fd_set read_fd_set = active_fd_set;
 	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL)<0){

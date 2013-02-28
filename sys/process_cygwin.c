@@ -40,7 +40,7 @@ double get_usage_mem(void){
 double read_self_cpu(void){
     return 0;
 }
-int read_usage_cpu(long *user, long *tot){
+int read_cpu_counter(long *user, long *tot){
     *user=0;
     *tot=0;
     return 0;

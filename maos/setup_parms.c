@@ -721,6 +721,29 @@ static void readcfg_fit(PARMS_T *parms){
     READ_INT(fit.square);
     READ_INT(fit.assemble);
     READ_INT(fit.pos);
+    int *fitwfs=NULL;
+    double *wfswt=NULL;
+    int nfitwfs=readcfg_intarr(&fitwfs, "fit.wfs");
+    readcfg_dblarr_nmax(&wfswt, nfitwfs, "fit.wfswt");
+    if(nfitwfs>0){
+	int nfit2=parms->fit.nfit+nfitwfs;
+	parms->fit.thetax=realloc(parms->fit.thetax, sizeof(double)*nfit2);
+	parms->fit.thetay=realloc(parms->fit.thetay, sizeof(double)*nfit2);
+	parms->fit.wt=realloc(parms->fit.wt, sizeof(double)*nfit2);
+	parms->fit.hs=realloc(parms->fit.hs, sizeof(double)*nfit2);
+	for(int ifitwfs=0; ifitwfs<nfitwfs; ifitwfs++){
+	    if(parms->nwfs<=fitwfs[ifitwfs]) continue;
+	    int iwfs=fitwfs[ifitwfs];
+	    int ipowfs=parms->wfs[iwfs].powfs;
+	    warning2("Including wfs %d with wt %g in fitting\n",
+		    iwfs, wfswt[ifitwfs]);
+	    parms->fit.thetax[parms->fit.nfit]=parms->wfs[iwfs].thetax;
+	    parms->fit.thetay[parms->fit.nfit]=parms->wfs[iwfs].thetay;
+	    parms->fit.hs[parms->fit.nfit]=parms->powfs[ipowfs].hs;
+	    parms->fit.wt[parms->fit.nfit]=wfswt[ifitwfs];
+	    parms->fit.nfit++;
+	}
+    }
 }
 /**
    Read LSR parameters.
@@ -1061,7 +1084,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	}
     }
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
-	info("Using evaluation directions and ncpa calibration directions\n");
+	info2("Using evaluation directions as ncpa calibration directions if needed.\n");
 	int ndir=parms->sim.ncpa_ndir=parms->evl.nevl;
 	free(parms->sim.ncpa_thetax);
 	free(parms->sim.ncpa_thetay);

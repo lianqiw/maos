@@ -24,6 +24,11 @@
 #include "fft.h"
 #include "loc.h"
 /**
+   \file servo.h
+   Routines for servo optimization, filtering, etc.
+*/
+
+/**
    Struct for servo filtering
 */
 typedef struct SERVO_T{

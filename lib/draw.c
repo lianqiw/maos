@@ -32,22 +32,11 @@ int DRAW_ID=0;
 int DRAW_DIRECT=0;
 int disable_draw=0; /*if 1, draw will be disabled  */
 PNEW(lock);
-#define MAXDRAW 20
-int sock_ndraw=0;//number of displays
-enum{
-    S_FD,
-    S_LIST,
-    S_FIG,
-    S_FN,
-    S_PAUSE,
-    S_TOT,
-};
-void* sock_draws[MAXDRAW][S_TOT];//fd, list, fig, fn, pause
+#define MAXDRAW 1024
 static int sock_helper=-1;
 int listening=0;
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
-   \file draw.c
    Contains functions for data visualization. 
 
    2013-02-20 
@@ -73,12 +62,20 @@ int listening=0;
    todo: 
    1) code drawopdmap to call routines to copy data from gpu to cpu when needed to avoid unnecessary copy.
 */
-
-#define DOPPRINT 1
-#if DOPPRINT == 0
-#undef info
-#define info(A...)
-#endif
+/* List of list*/
+typedef struct list_t{
+    char *key;
+    struct list_t *next;
+    struct list_t *child;//child list
+}list_t;
+int sock_ndraw=0;//number of displays
+typedef struct{
+    int fd;
+    int pause;
+    list_t *list;
+    char *figfn[2];
+}sockinfo_t;
+sockinfo_t sock_draws[MAXDRAW];
 
 #define CATCH(A) if(A){perror("stwrite");if(sock_helper==-1&&!DRAW_DIRECT){disable_draw=1;warning("disable draw\n");} warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);draw_remove(sock_draw); continue;}
 #define STWRITESTR(A) CATCH(stwritestr(sock_draw,A))
@@ -89,10 +86,10 @@ int listening=0;
 /**
    Listen to drawdaemon for update of fig, fn. The hold values are stored in figfn.
 */
-static void listen_drawdaemon(void **sock_data){
+static void listen_drawdaemon(sockinfo_t *sock_data){
     listening=1;
-    int sock_draw=(int)(long)sock_data[0];
-    char **figfn=(char**)&sock_data[2];
+    int sock_draw=sock_data->fd;
+    char **figfn=sock_data->figfn;
     info2("draw is listening to drawdaemon at %d\n", sock_draw);
     int cmd;
     while(!streadint(sock_draw, &cmd)){
@@ -113,10 +110,10 @@ static void listen_drawdaemon(void **sock_data){
 	    }
 	    break;
 	case DRAW_PAUSE:
-	    sock_data[S_PAUSE]=(void*)1;
+	    sock_data->pause=1;
 	    break;
 	case DRAW_RESUME:
-	    sock_data[S_PAUSE]=(void*)0;
+	    sock_data->pause=0;
 	    break;
 	default:
 	    warning("cmd=%d is not understood\n", cmd);
@@ -125,12 +122,6 @@ static void listen_drawdaemon(void **sock_data){
     info2("draw stop lisening to drawdaemon at %d\n", sock_draw);
     listening=0;
 }
-/* List of list*/
-typedef struct list_t{
-    char *key;
-    struct list_t *next;
-    struct list_t *child;//child list
-}list_t;
 
 static int list_search(list_t **head, list_t **node, const char *key){
     list_t *p;
@@ -167,13 +158,13 @@ int draw_add(int fd){
 	sock_helper=-2;
     }
     for(int ifd=0; ifd<sock_ndraw; ifd++){
-	if((int)(long)sock_draws[ifd][S_FD]==fd){//already found
+	if(sock_draws[ifd].fd==fd){//already found
 	    return 0;
 	}
     }
     if(sock_ndraw<MAXDRAW){
-	memset(sock_draws[sock_ndraw], 0, sizeof(sock_draws[sock_ndraw]));
-	sock_draws[sock_ndraw][S_FD]=(void*)(long)fd;
+	memset(&sock_draws[sock_ndraw], 0, sizeof(sockinfo_t));
+	sock_draws[sock_ndraw].fd=fd;
 	thread_new((thread_fun)listen_drawdaemon, &sock_draws[sock_ndraw]);
 	sock_ndraw++;
 	return 0;
@@ -185,13 +176,13 @@ static void draw_remove(int fd){
     if(sock_ndraw<=0 || fd<0) return;
     int found=0;
     for(int ifd=0; ifd<sock_ndraw; ifd++){
-	if((int)(long)sock_draws[ifd][S_FD]==fd){
+	if(sock_draws[ifd].fd==fd){
 	    found=1;
-	    list_destroy((list_t**)&sock_draws[ifd][S_LIST]);
-	    free(sock_draws[ifd][S_FIG]);
-	    free(sock_draws[ifd][S_FN]);
+	    list_destroy(&sock_draws[ifd].list);
+	    free(sock_draws[ifd].figfn[0]);
+	    free(sock_draws[ifd].figfn[1]);
 	}else if(found){//shift left
-	    memcpy(sock_draws[ifd-1], sock_draws[ifd], sizeof(sock_draws[sock_ndraw]));
+	    memcpy(&sock_draws[ifd-1], &sock_draws[ifd], sizeof(sockinfo_t));
 	}
     }
     if(found){
@@ -327,11 +318,11 @@ void plot_points(char *fig,          /**<Category of the figure*/
     }
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-	int sock_draw=(int)(long)sock_draws[ifd][S_FD];
-	char **figfn=(char**)&sock_draws[ifd][S_FIG];
-	if(sock_draws[ifd][S_PAUSE]) continue;
+	int sock_draw=sock_draws[ifd].fd;
+	char **figfn=sock_draws[ifd].figfn;
+	if(sock_draws[ifd].pause) continue;
 	if(figfn[0] && figfn[1] &&
-	   check_figfn((list_t**)&sock_draws[ifd][S_LIST], fig, fn) && 
+	   check_figfn(&sock_draws[ifd].list, fig, fn) && 
 	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
 	    continue;
 	}
@@ -429,11 +420,11 @@ void imagesc(char *fig, /**<Category of the figure*/
     }
     for(int ifd=0; ifd<sock_ndraw; ifd++){
 	/*Draw only if 1) first time (check with check_figfn), 2) is current active*/
-	int sock_draw=(int)(long)sock_draws[ifd][S_FD];
-	char **figfn=(char**)&sock_draws[ifd][S_FIG];
-	if(sock_draws[ifd][S_PAUSE]) continue;
+	int sock_draw=sock_draws[ifd].fd;
+	char **figfn=sock_draws[ifd].figfn;
+	if(sock_draws[ifd].pause) continue;
 	if(figfn[0] && figfn[1] && 
-	   check_figfn((list_t**)&sock_draws[ifd][S_LIST], fig, fn) && 
+	   check_figfn(&sock_draws[ifd].list, fig, fn) && 
 	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
 	    continue;
 	}

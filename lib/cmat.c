@@ -21,8 +21,7 @@
 #include "cell.c"
 #include "matbin.c"
 
-/**
-   \file cmat.c
+/*
    The following are functions that are only useful for
    cmat. notice that fma and modf are slower than native
    functions.
@@ -488,6 +487,9 @@ void cembed(cmat *restrict A, const cmat *restrict B, const double theta, CEMBED
 #undef DO_LOOP
     }
 }
+/**
+   Embed or crop a cmat into center of dmat. 
+ */
 void cembedd(cmat *restrict A, dmat *restrict B, const double theta){
     double *restrict in=B->p;
     long ninx=B->nx;
@@ -762,6 +764,7 @@ void cabs22d(dmat**restrict A0, double alpha,
 
 /**
    Tilt the otf to make the image shift. 
+
    apply exp(-2*pi*sx/nx)*exp(-2*pi*sy/ny) to otf to move the image
    sx, sy are shifts in terms of pixel.
    sx/nx is equivalent to sx*dtheta*du.
@@ -821,6 +824,9 @@ void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
 	}
     }
 }
+/**
+   Inplace tilt the otf to make the image shift. 
+*/
 void ctilt(cmat *otf, double sx, double sy, int pinct){
     ctilt2(otf, otf, sx, sy, pinct);
 }

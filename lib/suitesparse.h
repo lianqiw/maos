@@ -17,8 +17,8 @@
 */
 
 /*Taken from suitesparse package from UFL. */
-#ifndef AOS_SUITE_SPARSE_H
-#define AOS_SUITE_SPARSE_H
+#ifndef AOS_LIB_SUITE_SPARSE_H
+#define AOS_LIB_SUITE_SPARSE_H
 #include "type.h"
 dsp *cs_multiply (const dsp *A, const dsp *B);
 dsp *cs_add (const dsp *A, const dsp *B, double alpha, double beta);

@@ -42,7 +42,7 @@ static void print_usage(void){
 /**
    Parse command line arguments argc, argv
  */
-ARG_S *parse_args(int argc, char **argv){
+ARG_S *parse_args(int argc, const char *argv[]){
     ARG_S *arg=calloc(1, sizeof(ARG_S));
     char *host=NULL; int local=0;
     ARGOPT_T options[]={
@@ -59,10 +59,8 @@ ARG_S *parse_args(int argc, char **argv){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(!local && host && strcmp(host, myhostname())){
-	//run in another server
-	char *scmd=argv2str(argc,argv,"\n");
-	if(scheduler_launch_exe(host, scmd)){
+    if(!local && host){ //run through scheduler
+	if(scheduler_launch_exe(host, argc, argv)){
 	    error2("Unable to launch skyc at server %s\n", host);
 	}
 	exit(EXIT_SUCCESS);
@@ -143,7 +141,7 @@ void skyc_signal_handler(int sig){
     if(sig!=0){
 	info2("Caught signal %d\n",sig);
 	if(sig == SIGSEGV){
-	    print_backtrace(0);
+	    print_backtrace();
 	}
 	scheduler_finish(1);
 	raise(sig);

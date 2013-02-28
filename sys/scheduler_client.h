@@ -17,18 +17,15 @@
 */
 #ifndef AOS_SCHEDULER_CLIENT_H
 #define AOS_SCHEDULER_CLIENT_H
-#define MAXMSG  512
-#include "scheduler_server.h"
-extern uint16_t PORTMON;
-extern uint16_t PORT;
-/*#define MAXNHOST 10 */
+#include "scheduler.h"
+/**
+   \file scheduler_client.h
+   Contains routines that will be used to talk to the scheduler.
+*/
 extern int nhost;
 extern char** hosts;
 extern int hid;
-void start_scheduler(int argc, char **argv);
-#if defined(__CYGWIN__) || defined(__FreeBSD__) || defined(__NetBSD__)
-#define print_backtrace(A)
-#endif
+extern uint16_t PORT;
 /*called by maos */
 int scheduler_listen(void(*fun)(int));
 int scheduler_start(char *path, int nthread, int waiting);
@@ -38,5 +35,8 @@ int scheduler_report(STATUS_T *status);
 /*called by monitor */
 int scheduler_launch_drawdaemon(char *fifo);
 char* scheduler_get_drawdaemon(int pid, int direct);
-int scheduler_launch_exe(const char *host, const char *cmd);
+int scheduler_launch_exe(const char *host, int argc, const char *argv[]);
+/*Handling backtrace*/
+char* call_addr2line(const char *buf);
+void print_backtrace_symbol(void *const *buffer, int size);
 #endif

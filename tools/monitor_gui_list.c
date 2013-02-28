@@ -67,6 +67,7 @@ enum{
     COL_TOT,
 };
 static GtkListStore **lists=NULL;
+static GtkWidget **views=NULL;
 static void list_get_iter(PROC_T *p, GtkTreeIter *iter){
     GtkListStore *list=lists[p->hid];
     GtkTreePath* tpath=gtk_tree_row_reference_get_path (p->row);
@@ -79,12 +80,12 @@ static void list_modify_icon(PROC_T *p, GdkPixbuf *newicon){
     list_get_iter(p, &iter);
     gtk_list_store_set(list, &iter, COL_ACTION, newicon,-1);
 }
-static void list_modify_color(PROC_T *p, const char *color){
+/*static void list_modify_color(PROC_T *p, const char *color){
     GtkTreeIter iter;
     GtkListStore *list=lists[p->hid];
     list_get_iter(p, &iter);
     gtk_list_store_set(list, &iter, COL_COLOR, color,-1);
-}
+    }*/
 static void list_modify_status(PROC_T *p, const char *status){
     GtkTreeIter iter;
     GtkListStore *list=lists[p->hid];
@@ -159,12 +160,14 @@ static void list_update_progress(PROC_T *p){
     
 }
 gboolean remove_entry(PROC_T *p){
-    GtkTreePath *path=gtk_tree_row_reference_get_path(p->row);
-    GtkTreeIter iter;
-    if(!gtk_tree_model_get_iter(GTK_TREE_MODEL(lists[p->hid]),&iter,path)){
-	warning("Unable to find entry");
-    }else{
-	gtk_list_store_remove (lists[p->hid],&iter);
+    if(p->row){
+	GtkTreePath *path=gtk_tree_row_reference_get_path(p->row);
+	GtkTreeIter iter;
+	if(!gtk_tree_model_get_iter(GTK_TREE_MODEL(lists[p->hid]),&iter,path)){
+	    warning("Unable to find entry");
+	}else{
+	    gtk_list_store_remove (lists[p->hid],&iter);
+	}
     }
     free(p->path);
     free(p);
@@ -178,7 +181,7 @@ gboolean refresh(PROC_T *p){
 	snprintf(spid,12," %d ",p->pid);
 	time_t t;
 	t=myclocki();
-	struct tm *tim=localtime(&t);
+	struct tm *tim=localtime(&p->status.timstart);
 	strftime(sdate,80,"%m-%d %k:%M:%S",tim);
 	char *spath=p->path;
 	if(!spath) spath="Unknown";
@@ -208,29 +211,31 @@ gboolean refresh(PROC_T *p){
 	list_modify_status(p, "Started");
 	notify_user(p);
 	break;
+    case S_QUEUED:
+	break;
     case S_FINISH:/*Finished */
 	list_update_progress(p);
 	list_modify_icon(p, icon_finished);
-	list_modify_color(p,"#00DD00");
+	//list_modify_color(p,"#00DD00");
 	notify_user(p);
 	break;
     case S_CRASH:/*Error */
 	p->done=1;
 	list_modify_status(p, "Error");
 	list_modify_icon(p,icon_failed);
-	list_modify_color(p,"#CC0000");
+	//list_modify_color(p,"#CC0000");
 	notify_user(p);
 	break;
     case S_TOKILL:/*kill command sent */
 	list_modify_status(p, "Kill command sent");
 	list_modify_icon(p,icon_failed);
-	list_modify_color(p,"#CCCC00");
+	//list_modify_color(p,"#CCCC00");
 	break;
     case S_KILLED:
 	p->done=1;
 	list_modify_status(p, "Killed");
 	list_modify_icon(p,icon_failed);
-	list_modify_color(p,"#CC0000");
+	//list_modify_color(p,"#CC0000");
 	notify_user(p);
 	break;
     default:
@@ -239,7 +244,7 @@ gboolean refresh(PROC_T *p){
     return 0;
 }
 
-static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ...){
+static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...){
     GtkTreeViewColumn *col;
     GtkCellRenderer *render=NULL;
     col=gtk_tree_view_column_new();
@@ -283,9 +288,71 @@ static  GtkTreeViewColumn *new_column(int type, int width, const char *title, ..
     va_end(ap);
     return col;
 }
+static void kill_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+    gint ihost=GPOINTER_TO_INT(user_data);
+    GValue value;
+    gtk_tree_model_get_value(model, iter, COL_PID, &value);
+    int pid=strtol(g_value_get_string(&value), NULL, 10);
+    g_value_unset(&value);
+    if(scheduler_cmd(ihost,pid,CMD_KILL)){
+	warning("Failed to kill the job\n");
+    }
+}
+static void kill_selected_event(GtkMenuItem *menuitem, gpointer user_data){
+    gint ihost=GPOINTER_TO_INT(user_data);
+    GtkWidget *view=views[ihost];
+    GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+    int nsel=gtk_tree_selection_count_selected_rows(selection);
+    if(nsel<1) {
+	warning("nsel=%d\n", nsel);
+	return;
+    }
+    GtkWidget *dia=gtk_message_dialog_new
+	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+	 GTK_MESSAGE_QUESTION,
+	 GTK_BUTTONS_YES_NO,
+	 "Kill %d jobs?", nsel);
+    int result=gtk_dialog_run(GTK_DIALOG(dia));
+    gtk_widget_destroy (dia);
+    if(result==GTK_RESPONSE_YES){
+	GtkTreeModel *model=gtk_tree_view_get_model(GTK_TREE_VIEW(view));
+	gtk_tree_selection_selected_foreach(selection, kill_selected, GINT_TO_POINTER(ihost));
+    }
+}
+static gboolean view_popup_menu(GtkWidget *view, gpointer data){
+    GtkWidget *menu=gtk_menu_new();
+    GtkWidget *menuitem=gtk_menu_item_new_with_label("Kill selected jobs");
+    g_signal_connect(menuitem, "activate", G_CALLBACK(kill_selected_event), data);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    gtk_widget_show_all(menu);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, gtk_get_current_event_time());
+    return TRUE;
+}
+static gboolean view_click_event(GtkWidget *view, GdkEventButton *event, gpointer user_data){
+    if(event->button==3){//right menu
+	gint ihost=GPOINTER_TO_INT(user_data);
+	GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+	int nsel=gtk_tree_selection_count_selected_rows(selection);
+	if (nsel < 1){
+	    GtkTreePath *path;
+	    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
+					     (gint)event->x,
+					     (gint)event->y,
+					     &path, NULL, NULL, NULL)){
+		gtk_tree_selection_select_path(selection, path);
+		gtk_tree_path_free(path);
+	    }
+	}
+	view_popup_menu(view, user_data);
+	return TRUE;
+    }else{
+	return FALSE;
+    }
+}
 GtkWidget *new_page(int ihost){
     if(!lists){
 	lists=calloc(nhost,sizeof(GtkListStore*));
+	views=calloc(nhost, sizeof(GtkWidget*));
     }
 
     lists[ihost]=gtk_list_store_new(COL_TOT,
@@ -305,8 +372,12 @@ GtkWidget *new_page(int ihost){
 				    G_TYPE_STRING /*COLOR */
 				    );
     GtkWidget *view;
-    view=gtk_tree_view_new_with_model(GTK_TREE_MODEL(lists[ihost]));
+    views[ihost]=view=gtk_tree_view_new_with_model(GTK_TREE_MODEL(lists[ihost]));
     g_object_unref(lists[ihost]);
+    g_signal_connect(view, "button-press-event", 
+		     G_CALLBACK(view_click_event), GINT_TO_POINTER(ihost));
+    g_signal_connect(view, "popup-menu", 
+		     G_CALLBACK(view_popup_menu), GINT_TO_POINTER(ihost));
     GtkTreeSelection *viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
     /*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
     gtk_tree_selection_set_mode(viewsel,GTK_SELECTION_MULTIPLE);
@@ -317,7 +388,7 @@ GtkWidget *new_page(int ihost){
       pixels of on and 1 pixel of off. I can not have \0 for the second part
       because it terminates the string.
     */
-    /*gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(view), GTK_TREE_VIEW_GRID_LINES_VERTICAL); */
+    gtk_tree_view_set_grid_lines(GTK_TREE_VIEW(view), GTK_TREE_VIEW_GRID_LINES_VERTICAL);
     gtk_tree_view_set_enable_search(GTK_TREE_VIEW(view), TRUE);
     /*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
@@ -336,3 +407,4 @@ GtkWidget *new_page(int ihost){
     
     return view;
 }
+

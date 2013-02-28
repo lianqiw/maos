@@ -23,7 +23,7 @@ $(srcdir)/lib/tmp.c:$(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbi
 	@echo "#define USE_COMPLEX" > $(srcdir)/lib/tmp.c
 	@cat $(srcdir)/lib/mat.c $(srcdir)/lib/cell.c $(srcdir)/lib/matbin.c $(srcdir)/lib/spbin.c $(srcdir)/lib/sp.c >> $(srcdir)/lib/tmp.c
 
-EXTRA_DIST = doxygen.cfg doxygen.xml doxygen.css docs 
+EXTRA_DIST = doxygen.cfg docs 
 
 #Note: in EXTRA_DIST, don't specify a folder. If you do, everything in that
 #folder, including compiled files (in the compiled folder), svn directory, will

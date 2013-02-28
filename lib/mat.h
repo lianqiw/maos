@@ -16,8 +16,8 @@
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef AOS_MAT_H
-#define AOS_MAT_H
+#ifndef AOS_LIB_MAT_H
+#define AOS_LIB_MAT_H
 #include "random.h"
 #include "type.h"
 void dembed(dmat *restrict A, dmat *restrict B, const double theta);

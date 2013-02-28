@@ -682,7 +682,7 @@ int read_header2(header_t *header, file_t *fp){
     }else{
 	header->magic=read_bin_magic(fp, &header->str);
 	if(header->magic==0){
-	    ans=-1;
+	    ans=0;
 	}else{
 	    ans=0;
 	    zfreadlarr(fp, 2, &header->nx, &header->ny);

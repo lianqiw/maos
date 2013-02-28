@@ -17,9 +17,11 @@
 */
 #ifndef AOS_SOCKET_H
 #define AOS_SOCKET_H
-
+/**
+   \file sock.h
+   Routines to establish socket connection
+*/
 #include <netinet/in.h>
 int connect_port(const char *hostname, int port, int block, int nodelay);
 void listen_port(uint16_t port, char *localpath, int (*respond)(int), double timeout_sec, void (*timeout_fun)(), int nodelay);
-
 #endif
