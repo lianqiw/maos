@@ -27,6 +27,6 @@ CC=$(NVCC)
 .cu.o:
 	$(AM_V_CC)$(COMPILE) -c -o $@ $<
 	@mkdir -p $(DEPDIR)
-	@$(NVCC) $(AM_CFLAGS) $(CFLAGS) -M $< > $(DEPDIR)/$*.Po
+	@$(NVCC) $(AM_CFLAGS) $(CFLAGS) --compiler-options "-MP -M -MF $(DEPDIR)/$*.Po" -E $<
 
 -include $(SRCS:%.cu=$(DEPDIR)/%.Po)
