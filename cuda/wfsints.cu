@@ -565,7 +565,6 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		    CUFFT(cuwfs[iwfs].plan3, otf,CUFFT_FORWARD);
 		    ctoc("fft to otf");
 		}
-		//gpu_write(otf, ncompx, ncompy*ksa, "otf_out_1");CUDA_SYNC_DEVICE;_exit(1);
 		/*now we have otf. multiple with etf, dtf. */
 		if(cuwfs[iwfs].dtf[iwvl].etf){
 		    if(cuwfs[iwfs].dtf[iwvl].etfis1d){

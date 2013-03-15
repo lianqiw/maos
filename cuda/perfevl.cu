@@ -127,8 +127,7 @@ void calc_ptt(double *rmsout, double *coeffout,
     cudaCalloc(cc, 4*sizeof(float), stream);
     calc_ptt_do<<<DIM(nloc, 256), 0, stream>>>(cc, loc, nloc, phi, amp);
     cudaMemcpyAsync(ccb, cc, 4*sizeof(float), cudaMemcpyDeviceToHost, stream);
-    CUDA_SYNC_STREAM;
-    cudaFree(cc); cc=NULL;
+    cudaFree(cc); cc=NULL;//this synchronizes
     double coeff[3], tot;
     coeff[0]=ccb[0]; coeff[1]=ccb[1]; coeff[2]=ccb[2]; tot=ccb[3];
     if(coeffout){
@@ -168,7 +167,6 @@ void calc_ngsmod(double *pttr_out, double *pttrcoeff_out,
     }
     float ccb[7];
     cudaMemcpyAsync(ccb, cc, 7*sizeof(float), cudaMemcpyDeviceToHost, stream);
-    CUDA_SYNC_STREAM;
     cudaFree(cc); 
     tot=ccb[nmod==2?3:6];
     
@@ -585,13 +583,11 @@ void gpu_perfevl(thread_t *info){
 	if(parms->evl.psfmean){
 	    psfcomp_r(cudata->evlpsfol->p, opdcopy, nwvl, ievl, nloc, parms->evl.psfol==2?1:0, stream);
 	    if(opdcopy!=iopdevl){
-		CUDA_SYNC_STREAM;
 		curfree(opdcopy);
 	    }
 	    if(!parms->gpu.psf){ /*need to move psf from GPU to CPU for accumulation.*/
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    add2cpu(&simu->evlpsfolmean->p[iwvl], cudata->evlpsfol->p[iwvl], stream);
-		    CUDA_SYNC_STREAM;
 		    curfree(cudata->evlpsfol->p[iwvl]); cudata->evlpsfol->p[iwvl]=NULL;
 		}
 	    }
@@ -720,7 +716,6 @@ void gpu_perfevl_ngsr(SIM_T *simu, double *cleNGSm){
 	    if(!parms->gpu.psf){
 		for(int iwvl=0; iwvl<nwvl; iwvl++){
 		    add2cpu(&simu->evlpsfmean_ngsr->p[iwvl+ievl*nwvl], cudata->evlpsfcl_ngsr->p[iwvl+ievl*nwvl], stream);
-		    CUDA_SYNC_STREAM;
 		    curfree(cudata->evlpsfcl_ngsr->p[iwvl+ievl*nwvl]); cudata->evlpsfcl_ngsr->p[iwvl+ievl*nwvl]=NULL;
 		}
 	    }

@@ -254,7 +254,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			FD_CLR(i, &active_fd_set);
 			break;
 		    }
-		    info("port %d is connected\n", port2);
+		    info2("port %d is connected\n", port2);
 		    //cloexec(port2);
 		    FD_SET(port2, &active_fd_set);
 		}else if(i==sock_local){
@@ -266,7 +266,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 			FD_CLR(i, &active_fd_set);
 			break;
 		    }
-		    info("port %d is connected locally\n", port2);
+		    info2("port %d is connected locally\n", port2);
 		    //cloexec(port2);
 		    FD_SET(port2, &active_fd_set);
 		}else{

@@ -59,12 +59,23 @@ ARG_S *parse_args(int argc, const char *argv[]){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(!local && host){ //run through scheduler
-	if(scheduler_launch_exe(host, argc, argv)){
-	    error2("Unable to launch skyc at server %s\n", host);
+    if(local){//lanched through scheduler.
+	arg->detach=0;
+	arg->force=0;
+	detached=1;
+    }else{
+	if(host){ //run through scheduler.
+	    if(scheduler_launch_exe(host, argc, argv)){
+		error2("Unable to launch skyc at server %s\n", host);
+	    }
+	    exit(EXIT_SUCCESS);
+	}else{//normal run
+	    if(!arg->detach){
+		arg->force=1;
+	    }
 	}
-	exit(EXIT_SUCCESS);
     }
+ 
     /*do not use NTHREAD here. causes too much cpu load*/
     if(arg->nthread>NCPU || arg->nthread<=0){
 	arg->nthread=NCPU;
@@ -74,13 +85,12 @@ ARG_S *parse_args(int argc, const char *argv[]){
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/skyc_%ld.conf",TEMP,(long)getpid());
     FILE *fptmp=fopen(fntmp,"w");
-    fputs(cmds, fptmp);
-    fclose(fptmp);
-    free(cmds); cmds=NULL;
-    arg->confcmd=strdup(fntmp);
-    if(!arg->detach){/*foreground task will start immediately. */
-	arg->force=1;
+    if(cmds){
+	fputs(cmds, fptmp);
+	fclose(fptmp);
+	free(cmds); cmds=NULL;
     }
+    arg->confcmd=strdup(fntmp);
     if(!arg->dirout){
 	arg->dirout=strtime();
     }
@@ -140,12 +150,11 @@ void skyc_signal_handler(int sig){
     rename_file(sig);/*handles signal */
     if(sig!=0){
 	info2("Caught signal %d\n",sig);
-	if(sig == SIGSEGV){
-	    print_backtrace();
-	}
+	print_backtrace();
+	fflush(NULL);
 	scheduler_finish(1);
-	raise(sig);
-	exit(sig);
+	kill(getpid(), sig);
+	_Exit(sig);
     }
 }
 

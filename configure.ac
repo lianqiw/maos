@@ -219,16 +219,8 @@ AC_ARG_ENABLE(mex,   [  --enable-mex    Enable compiling of matlab mex routines,
 AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXDIR=${MEXDIR_AUTO}])
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
-AC_ARG_WITH(cuda-version, --with-cuda-version=20, [CUDAVER=${withval}], [CUDAVER=20])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
 AC_ARG_WITH(gtk,  --with-gtk-DIR, [GTKDIR=${withval}], [GTKDIR=""])
-
-CUDAVER=${CUDAVER/./}
-if test $CUDAVER -lt 13 -o $CUDAVER -gt 99 ;then
-AC_MSG_ERROR([--with-cuda-version receives wrong version. Need to be between 13 and 99. use 13 for 1.3, 20 for 2.0])
-fi
-AC_SUBST(CUDAVER)
-AC_DEFINE_UNQUOTED(CUDAVER, [$CUDAVER], ["CUDA Version Enabled."])
 
 AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
@@ -750,13 +742,6 @@ if test "$use_cuda" = "yes" ;then
        AM_CONDITIONAL(USE_CUDA, true)
        AC_DEFINE(USE_CUDA, [1], "Has Cuda")
    fi
-   nvml_lib="yes"
-   AC_CHECK_HEADERS(nvml.h, [], [], [nvml_lib="no"])
-   AC_CHECK_LIB([nvidia-ml], [nvmlDeviceGetMemoryInfo], [],[nvml_lib="no"])
-   if test $nvml_lib = "yes" ;then
-       AC_DEFINE(HAS_NVML, [1], "Has nvidia ML library")
-       LDCUDA="$LDCUDA -lnvidia-ml"
-   fi
    LDCUDA="$LDCUDA -lcudart -lcurand -lcusparse -lcufft -lcublas -lstdc++"
    AC_SUBST(CUDAOPT)
    AC_SUBST(LDCUDA)
@@ -774,7 +759,6 @@ echo host_os=$host_os
 echo use_mex=$use_mex
 echo use_icc=$use_icc
 echo use_cuda=$use_cuda
-echo CUDAVER=$CUDAVER
 echo use_static=$use_static
 echo Cross compile=$cross_compile
 echo Compile Drawdaemon=$comp_draw
@@ -785,6 +769,8 @@ echo CC=$CC
 echo CFLAGS=$CFLAGS
 echo LDFLAGS=$LDFLAGS
 echo OPTS=$OPTS
+echo CUDAOPT=$CUDAOPT
+echo LDCUDA=$LDCUDA
 echo LDLIB=$LDLIB
 echo LDEXE=$LDEXE
 echo LDOPTS=$LDOPTS

@@ -538,6 +538,9 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
     if(recon->RFngsx){
 	cp2gpu(&curecon->RFngsx, recon->RFngsx);
     }
+    if(recon->RFdfx){
+	cp2gpu(&curecon->RFdfx, recon->RFdfx);
+    }
     gpu_print_mem("recon init");
 }
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
@@ -735,6 +738,18 @@ void gpu_tomo(SIM_T *simu){
     curecon->cgstream->sync();
     if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2 || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr_vec, 1, curecon->cgstream[0]);
+    }
+    if(parms->dbg.deltafocus){
+	curcell *tmp1=NULL;
+	curcellmm(&tmp1, 1, curecon->RFdfx, curecon->opdr_vec, "nn", 1, curecon->cgstream[0]);
+	scell *tmp=NULL;
+	cp2cpu(&tmp, tmp1, curecon->cgstream[0]);
+	curcellfree(tmp1);
+	if(tmp->nx!=1 || tmp->ny!=1 || tmp->p[0]->nx!=1 || tmp->p[0]->ny!=1){
+	    error("Wrong format");
+	}
+	simu->deltafocus=tmp->p[0]->p[0];
+	scellfree(tmp); 
     }
     cudaProfilerStop();
     toc_test("Tomo");

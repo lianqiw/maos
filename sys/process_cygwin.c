@@ -18,8 +18,8 @@
 #if defined (__CYGWIN__)
 #include "process.h"
 /*Largely not implemented. */
-const char *get_job_progname(void){
-    return "maos";
+char *get_job_progname(int pid){
+    return strdup0("maos");
 }
 int get_job_mem(void){
     return 0;

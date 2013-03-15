@@ -305,10 +305,11 @@ int scheduler_finish(int status){
 	if(psock==-1) return -1;
     }
     int cmd[2];
-    if(status==0)
+    if(status==0){
 	cmd[0]=CMD_FINISH;
-    else 
+    }else{
 	cmd[0]=CMD_CRASH;
+    }
     cmd[1]=getpid();
     CATCH_ERR(stwriteintarr(psock,cmd,2));
     close(psock);psock=-1;
@@ -338,19 +339,15 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     int ret=0;
     int sock=connect_port(host, PORT, 0, 0);
     if(sock<=-1) return -1;
-    int cmd[2]={CMD_LAUNCH, 3};
-    const char *exe=get_job_progname();
-    char *cwd=mygetcwd();
-    char *scmd=strnadd(argc, argv, "\n");
+    int cmd[2]={CMD_LAUNCH, 2};
+    char *scmd=argv2str(argc, argv, "\n");
     if(stwriteintarr(sock, cmd, 2)
-       || stwritestr(sock, exe) 
-       || stwritestr(sock, cwd)
+       || stwritestr(sock, argv[0]) 
        || stwritestr(sock, scmd) 
        || streadint(sock, &ret)){
 	warning2("Failed to write to scheduler at %s\n", host);
 	ret=-1;
     }
-    info("scmd=%s. BUILDDIR=%s\n", scmd, BUILDDIR);
     free(scmd);
     close(sock);
     return ret;
@@ -372,7 +369,11 @@ char* call_addr2line(const char *buf){
 	    if(tmp){
 		tmp++;
 		char *tmp2=strchr(tmp,'\n'); tmp2[0]='\0';
-		out=stradd(out, "->", tmp, NULL);
+		if(out){
+		    out=stradd(out, "->", tmp, NULL);
+		}else{
+		    out=strdup(tmp);
+		}
 	    }
 	}   
 	pclose(fpcmd);
@@ -386,13 +387,14 @@ char* call_addr2line(const char *buf){
 void print_backtrace_symbol(void *const *buffer, int size){
     char *cmdstr=NULL;
     char add[24];
-    const char *progname=get_job_progname();/*don't free pointer. */
+    char *progname=get_job_progname(0);/*don't free pointer. */
     if(!progname){
 	warning("Unable to get progname\n");
 	return;
     }
     cmdstr=stradd("addr2line -f -e", progname, NULL);
-    for(int it=size-1; it>-1; it--){
+    free(progname);
+    for(int it=size-1; it>1; it--){
 	snprintf(add,24," %p",buffer[it]);
 	cmdstr=stradd(cmdstr, add, NULL);
     }
@@ -400,6 +402,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
     PNEW(mutex);//Only one thread can do this.
     LOCK(mutex);
     if(MAOS_DISABLE_SCHEDULER || is_scheduler){
+	info("backtrace directly\n");
 	char *ans=call_addr2line(cmdstr);
 	info2("%s\n", ans);
 	free(ans);
@@ -411,19 +414,27 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	    cmd[0]=CMD_TRACE;
 	    cmd[1]=getpid();
 	    char *ans=NULL;
-	    if(!(stwrite(sock,cmd,sizeof(int)*2) || stwritestr(sock,cmdstr) || streadstr(sock, &ans))){
-		info2(" %s\n",ans);
-		free(ans);
+	    if(stwrite(sock, cmd, sizeof(int)*2)){
+		warning2("write cmd %d failed\n", cmd[0]);
+	    }else if(stwritestr(sock,cmdstr)){
+		warning2("write cmd %s failed\n", cmdstr);
+	    }else if(streadstr(sock, &ans)){
+		warning2("read cmd failed\n");
+	    }else{
+		info2(" %s\n",ans); free(ans);
 	    }
 	}else{
 	    warning("Failed to connect to scheduler\n");
 	}
+#else
+	info2("MAOS_DISABLE_SCHEDULER is no 0\n");
 #endif
     }
     UNLOCK(mutex);
 #else
     info2("Please call manually: %s\n",cmdstr);
 #endif
+    sync();
     free(cmdstr);
 }
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)

@@ -57,9 +57,8 @@ typedef struct RUN_T{
     int sock;
     int nthread;
     int time;
-    char *cwd; /*Current job path*/
     char *exe; /*Path to the executable.*/
-    char *path;/*Job arguments.*/
+    char *path;/*Job path and Job arguments.*/
 }RUN_T;
 
 /**
@@ -146,7 +145,6 @@ static void runned_remove(int pid){
 	    }
 	    free(irun->path);
 	    free(irun->exe);
-	    free(irun->cwd);
 	    free(irun);
 	    removed=1;
 	    break;
@@ -195,12 +193,16 @@ static RUN_T *waiting_get_wait(){
 static RUN_T* running_add(int pid,int sock){
     RUN_T *irun;
     if(pid && (irun=running_get(pid))){
+	if(irun->sock<0) irun->sock=sock;
 	return irun;
     }else{
 	/*create the node */
 	irun=calloc(1, sizeof(RUN_T));
 	irun->pid=pid;
 	irun->sock=sock;
+	if(pid>0 && !irun->exe){
+	    irun->exe=get_job_progname(pid);
+	}
 	/*record the launch time */
 	if(pid>0){
 	    irun->launchtime=get_job_launchtime(pid);
@@ -290,16 +292,15 @@ static void running_remove(int pid){
 			fclose(fp);
 		    }
 		}
-	    }else{//The process is not running. run it and remove from monitor.
+	    }else{//Remove queued job (either launched or failed to launch);
 		if(irun->status.info==S_QUEUED){
 		    irun->status.info=S_REMOVE;
-		    warning("monitor_send S_REMOVE\n");
 		    monitor_send(irun, NULL);
 		    free(irun->path);
 		    free(irun->exe);
-		    free(irun->cwd);
 		    free(irun);
 		}else{//Killed. Add to runned queue
+		    monitor_send(irun, NULL);
 		    runned_add(irun);
 		}
 	    }
@@ -364,7 +365,7 @@ static void check_jobs(void){
 */
 static void process_queue(void){
     static double timestamp=0;
-    if(nrun>0 && myclockd()-timestamp<10) {
+    if(nrun>0 && myclockd()-timestamp<1) {
 	return;
     }
     timestamp=myclockd();
@@ -377,9 +378,15 @@ static void process_queue(void){
     info2("process_queue: nrun=%d avail=%d\n", nrun, avail);
     if(avail<1) return;
     RUN_T *irun=running_get_wait(S_WAIT);
+    if(irun && irun->pid>0 && kill(irun->pid,0)){//job exited
+	irun->status.info=S_CRASH;
+	running_remove(irun->pid);
+	irun=running_get_wait(S_WAIT);
+    }
+    info("irun=%p\n", irun);
     if(irun){
-	int nthread=irun->nthread;
-	if(nrun+nthread<=NCPU && (nthread<=avail || avail >=3)){
+       	int nthread=irun->nthread;
+	if(nrun+nthread<=NCPU && (nthread<=avail || avail >=3) && irun->sock>0){
 	    nrun+=nthread;
 	    /*don't close the socket. will close it in select loop. */
 	    /*warning3("process %d launched. write to sock %d cmd %d\n", */
@@ -398,24 +405,53 @@ static void process_queue(void){
 			myasctime(),hosts[hid],irun->pid,irun->path,nrun);
 	    }
 	    fclose(fp);
+	}else{
+	    warning2("Wait for %d to connect.\n", irun->pid);
 	}
     }else{
 	if(avail>1){
-	    irun=running_get_wait(S_QUEUED);
-	    if(!irun){
-		all_done=1;
-	    }else{
-		info2("process_queue: no more jobs pending, process waiting list\n");
-		if(launch_exe(irun->exe, irun->cwd, irun->path)){
-		    warning("launch_exe %s failed\n", irun->path);
+	    static double lasttime=0;
+	    double thistime=myclockd();
+	    if(thistime>lasttime+0.001){
+		lasttime=thistime;
+		irun=running_get_wait(S_QUEUED);
+		info2("process_queue: process waiting list ... ");
+		if(!irun){
+		    info2("all done\n");
+		    all_done=1;
 		}else{
-		    warning("launch_exe %s succeed\n", irun->path);
+		    info2("start new job\n");
+		    int pid;
+		    if((pid=launch_exe(irun->exe, irun->path))<0||kill(pid,0)){
+			warning2("launch_exe %s failed\n", irun->path);
+			irun->status.info=S_CRASH;
+			running_remove(irun->pid);
+		    }else{
+			info2("job launched as %d\n", pid);
+			//inplace update the information in monitor
+			irun->status.info=S_WAIT;
+			irun->status.timstart=myclocki();
+			irun->status.iseed=-pid;
+			monitor_send(irun, NULL);
+			//update our record.
+			irun->pid=pid;
+		    }
 		}
-		running_remove(irun->pid);
-		sleep(1);//wait for the job to actually start.
 	    }
 	}
     }
+}
+static void new_job(char *exename, char *execmd){
+    static long counter=0;//an negative index to retrieve this irun.
+    counter--;
+    RUN_T *irun=running_add(counter, -1);
+    irun->status.info=S_QUEUED;
+    irun->exe=exename;
+    irun->path=execmd;
+    info2("new_job: (%s) (%s)\n", exename, execmd);
+    monitor_send(irun, irun->path);
+    monitor_send(irun, NULL);
+    all_done=0;
 }
 /**
    respond to client requests
@@ -426,13 +462,13 @@ static int respond(int sock){
        will complain Bad file descriptor
     */
     int ret=0, pid, cmd[2];
-    info2("\rrespond %d start ... ", sock);
+    info2("\rrespond %2d start ... ", sock);
     if((ret=streadintarr(sock, cmd, 2))){
 	info2("read failed");
 	goto end;
     }
     pid=cmd[1];
-    info2("\rrespond %d got %d %d.", sock, cmd[0], cmd[1]);
+    info2("\rrespond %d got %d %d. ", sock, cmd[0], cmd[1]);
     switch(cmd[0]){
     case CMD_START://Called by maos when job starts.
 	{
@@ -452,13 +488,12 @@ static int respond(int sock){
 	    if(waiting){
 		irun->status.info=S_WAIT;
 		all_done=0;
-		info2("respond: %d queued. nrun=%d\n",pid,nrun);
+		info2("%5d queued. nrun=%d\n",pid,nrun);
 	    }else{/*no waiting, no need reply. */
-		info2("scheduler: nrun is increased by %d\n", nthread);
 		nrun+=nthread;
 		irun->status.info=S_START;
 		irun->status.timstart=myclocki();
-		info2("respond: %d started. nrun=%d\n",pid,nrun);
+		info2("%5d started. nrun=%d\n",pid,nrun);
 	    }
 	    if(irun->path) monitor_send(irun,irun->path);
 	    monitor_send(irun,NULL);
@@ -483,7 +518,7 @@ static int respond(int sock){
 	    }
 	    if(added){
 		irun->nthread=irun->status.nthread;
-		info2("respond, STATUS: nrun is increased by %d\n", irun->nthread);
+		info2("STATUS: nrun is increased by %d\n", irun->nthread);
 		nrun+=irun->nthread;
 	    }
 	    monitor_send(irun,NULL);
@@ -499,7 +534,7 @@ static int respond(int sock){
 	    if(pid>=0x8){/*check monitor version. */
 		tmp->load=1;
 	    }
-	    info2("respond: Monitor is connected at sock %d.\n", sock);
+	    info2("Monitor is connected at sock %d.\n", sock);
 	}
 	break;
     case CMD_PATH:{
@@ -509,7 +544,7 @@ static int respond(int sock){
 	    ret=-1;
 	    break;
 	}
-	info2("respond: Received path: %s\n",irun->path);
+	info2("Received path: %s\n",irun->path);
 	monitor_send(irun,irun->path);
     }
 	break;
@@ -519,12 +554,10 @@ static int respond(int sock){
 	    if(irun){
 		if(irun->status.info!=S_QUEUED){
 		    kill(pid,SIGTERM);
-		    sleep(1);
-		    if(!kill(pid,0)){
-			kill(pid,SIGKILL);
-		    }
+		}else{
+		    running_update(pid,S_KILLED);
 		}
-		running_update(pid,S_KILLED);
+		info2("%5d term signal sent\n", pid);
 	    }
 	}
 	break;
@@ -532,7 +565,7 @@ static int respond(int sock){
 	{
 	    char *buf=NULL, *out=NULL;
 	    if(streadstr(sock, &buf)||!(out=call_addr2line(buf))||stwritestr(sock,out)){
-		info2("respond: CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
+		info2("CMD_TRACE failed. buf=%s, out=%s\n", buf, out);
 		ret=-1; 
 	    }
 	    free(buf);
@@ -570,7 +603,14 @@ static int respond(int sock){
 	break;
     case CMD_LOAD://intended for monitor
 	break;
-    case CMD_UNUSED2://intended for maos
+    case CMD_RESTART://intended for maos
+	{
+	    //restart the job
+	    RUN_T *irun=runned_get(pid);
+	    if(irun && irun->status.info>10){
+		new_job(strdup(irun->exe), strdup(irun->path));
+	    }
+	}
 	break;
     case CMD_UNUSED3:
 	break;
@@ -579,27 +619,26 @@ static int respond(int sock){
     case CMD_LAUNCH:{
 	/*called by maos/skyc from another machine to start a job in this
 	  machine*/
-	char *execmd=NULL;
-	char *execwd=NULL;
 	char *exename=NULL;
-	if(pid==3){
-	    if(streadstr(sock, &exename) || streadstr(sock, &execwd)){
+	char *execwd=NULL;
+	char *execmd=NULL;
+	if(pid>=2){
+	    if(streadstr(sock, &exename)){
 		warning("Unable to read exename.\n");
 	    }
 	}
+	if(pid>=3){//old method. should not be used.
+	    if(streadstr(sock, &execwd)){
+		warning("Unable to read execwd.\n");
+	    }
+	}
 	if(!streadstr(sock, &execmd)){
-	    static long counter=0;//an negative index to retrieve this irun.
-	    counter--;
-	    RUN_T *irun=running_add(counter, -1);
-	    irun->status.info=S_QUEUED;
-	    irun->exe=exename;
-	    irun->cwd=execwd;
-	    irun->path=execmd;
-	    char *tmp=stradd(irun->cwd, "/", irun->path, NULL);//add path.
-	    monitor_send(irun, tmp); free(tmp);
-	    monitor_send(irun, NULL);
-	    all_done=0;
-	    info2("respond: exe=%s\ncwd=%s\npath=%s\n added to waitinglist. nrun=%d\n", irun->exe, irun->cwd, irun->path, nrun);
+	    if(execwd){//merge cwd to new
+		char *tmp=execmd;
+		execmd=stradd(execwd, "/", execmd, NULL);
+		free(tmp);
+	    }
+	    new_job(exename, execmd);
 	    ret=0;
 	}else{
 	    warning("Unable to read execmd\n");

@@ -548,6 +548,7 @@ typedef struct DBG_CFG_T{
     int pupmask;     /**<Testing pupil mask for NGS WFS to be within LGS volume.*/
     int wfslinearity;/**<Study the linearity of this wfs*/
     int nocgwarm;    /**<Disable warm restart in CG*/
+    int deltafocus;  /**<use delta focus between science and NGS estimated from opdr.*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

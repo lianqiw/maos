@@ -179,8 +179,8 @@ gboolean refresh(PROC_T *p){
 	char sdate[80];
 	char spid[12];
 	snprintf(spid,12," %d ",p->pid);
-	time_t t;
-	t=myclocki();
+	//time_t t;
+	//t=myclocki();
 	struct tm *tim=localtime(&p->status.timstart);
 	strftime(sdate,80,"%m-%d %k:%M:%S",tim);
 	char *spath=p->path;
@@ -201,6 +201,8 @@ gboolean refresh(PROC_T *p){
 	gtk_tree_path_free(tpath);
     }
     switch(p->status.info){
+    case 0:
+	break;
     case S_RUNNING:
 	list_update_progress(p);
 	list_modify_icon(p,icon_running);
@@ -209,6 +211,21 @@ gboolean refresh(PROC_T *p){
 	break;
     case S_START: /*just started. */
 	list_modify_status(p, "Started");
+	{
+	    GtkTreeIter iter;
+	    GtkListStore *list=lists[p->hid];
+	    list_get_iter(p, &iter);
+	    char spid[12];
+	    snprintf(spid,12," %d ",p->pid);
+	
+	    char sdate[80];
+	    struct tm *tim=localtime(&p->status.timstart);
+	    strftime(sdate,80,"%m-%d %k:%M:%S",tim);
+	    gtk_list_store_set(list, &iter, 
+			       COL_PID,spid, 
+			       COL_DATE, sdate,
+			       -1);
+	}
 	notify_user(p);
 	break;
     case S_QUEUED:
@@ -237,6 +254,8 @@ gboolean refresh(PROC_T *p){
 	list_modify_icon(p,icon_failed);
 	//list_modify_color(p,"#CC0000");
 	notify_user(p);
+	break;
+    case S_REMOVE:
 	break;
     default:
 	warning("Unknown info: %d\n",p->status.info);
@@ -288,17 +307,43 @@ static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...
     va_end(ap);
     return col;
 }
-static void kill_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data, int cmd, char *action){
     gint ihost=GPOINTER_TO_INT(user_data);
-    GValue value;
+    GValue value=G_VALUE_INIT;
     gtk_tree_model_get_value(model, iter, COL_PID, &value);
     int pid=strtol(g_value_get_string(&value), NULL, 10);
     g_value_unset(&value);
-    if(scheduler_cmd(ihost,pid,CMD_KILL)){
-	warning("Failed to kill the job\n");
+    if(cmd<0){
+	if(cmd==-1){
+	    GtkClipboard *clip=gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+	    gchar *old=gtk_clipboard_wait_for_text(clip);
+	    gtk_tree_model_get_value(model, iter, COL_PATH, &value);
+	    gchar *newer=stradd(old, g_value_get_string(&value), "\n", NULL);
+	    g_value_unset(&value);
+	    gtk_clipboard_set_text(clip, newer, -1);
+	    g_free(newer);
+	    g_free(old);
+	}
+    }else{
+	if(scheduler_cmd(ihost,pid,cmd)){
+	    warning("Failed to %s the job\n", action);
+	}
     }
 }
-static void kill_selected_event(GtkMenuItem *menuitem, gpointer user_data){
+static void kill_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+    handle_selected(model, path, iter, user_data, CMD_KILL, "Kill");
+}
+static void restart_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+    handle_selected(model, path, iter, user_data, CMD_RESTART, "Restart");
+}
+static void clear_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+    handle_selected(model, path, iter, user_data, CMD_REMOVE, "Remove");
+}
+static void copy_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+    handle_selected(model, path, iter, user_data, -1, "Copy");
+}
+
+static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, GtkTreeSelectionForeachFunc func, char *action){
     gint ihost=GPOINTER_TO_INT(user_data);
     GtkWidget *view=views[ihost];
     GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
@@ -307,30 +352,75 @@ static void kill_selected_event(GtkMenuItem *menuitem, gpointer user_data){
 	warning("nsel=%d\n", nsel);
 	return;
     }
-    GtkWidget *dia=gtk_message_dialog_new
-	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
-	 GTK_MESSAGE_QUESTION,
-	 GTK_BUTTONS_YES_NO,
-	 "Kill %d jobs?", nsel);
-    int result=gtk_dialog_run(GTK_DIALOG(dia));
-    gtk_widget_destroy (dia);
+    int result=GTK_RESPONSE_YES;
+    if(!strcmp(action, "Kill") || !strcmp(action, "Restart")){
+	GtkWidget *dia=gtk_message_dialog_new
+	    (NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
+	     GTK_MESSAGE_QUESTION,
+	     GTK_BUTTONS_YES_NO,
+	     "%s %d jobs?", action, nsel);
+	result=gtk_dialog_run(GTK_DIALOG(dia));
+	gtk_widget_destroy (dia);
+    }
     if(result==GTK_RESPONSE_YES){
-	GtkTreeModel *model=gtk_tree_view_get_model(GTK_TREE_VIEW(view));
-	gtk_tree_selection_selected_foreach(selection, kill_selected, GINT_TO_POINTER(ihost));
+	gtk_tree_selection_selected_foreach(selection, func, GINT_TO_POINTER(ihost));
     }
 }
-static gboolean view_popup_menu(GtkWidget *view, gpointer data){
+
+static void kill_selected_event(GtkMenuItem *menuitem, gpointer user_data){
+    handle_selected_event(menuitem, user_data, kill_selected, "Kill");
+}
+static void restart_selected_event(GtkMenuItem *menuitem, gpointer user_data){
+    handle_selected_event(menuitem, user_data, restart_selected, "Restart");
+}
+static void clear_selected_event(GtkMenuItem *menuitem, gpointer user_data){
+    handle_selected_event(menuitem, user_data, clear_selected, "Clear");
+}
+static void copy_selected_event(GtkMenuItem *menuitem, gpointer user_data){
+    GtkClipboard *clip=gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_text(clip,"",-1);
+    handle_selected_event(menuitem, user_data, copy_selected, "Copy");
+}
+
+static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
+    GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+    int nsel=gtk_tree_selection_count_selected_rows(selection);
+
     GtkWidget *menu=gtk_menu_new();
-    GtkWidget *menuitem=gtk_menu_item_new_with_label("Kill selected jobs");
-    g_signal_connect(menuitem, "activate", G_CALLBACK(kill_selected_event), data);
+    GtkWidget *menuitem;
+    char text[40];
+    snprintf(text, 40, "%d selected", nsel);
+    menuitem=gtk_menu_item_new_with_label(text);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    menuitem=gtk_separator_menu_item_new();
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    if(nsel>0){
+	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_CANCEL, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Kill selected jobs");
+	g_signal_connect(menuitem, "activate", G_CALLBACK(kill_selected_event), user_data);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+
+	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PLAY, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Restart selected jobs");
+	g_signal_connect(menuitem, "activate", G_CALLBACK(restart_selected_event), user_data);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+
+	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_CLEAR, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Clear selected jobs");
+	g_signal_connect(menuitem, "activate", G_CALLBACK(clear_selected_event), user_data);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+
+	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_COPY, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Copy selected jobs");
+	g_signal_connect(menuitem, "activate", G_CALLBACK(copy_selected_event), user_data);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+    }
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, gtk_get_current_event_time());
     return TRUE;
 }
 static gboolean view_click_event(GtkWidget *view, GdkEventButton *event, gpointer user_data){
     if(event->button==3){//right menu
-	gint ihost=GPOINTER_TO_INT(user_data);
 	GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 	int nsel=gtk_tree_selection_count_selected_rows(selection);
 	if (nsel < 1){
@@ -381,6 +471,7 @@ GtkWidget *new_page(int ihost){
     GtkTreeSelection *viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
     /*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
     gtk_tree_selection_set_mode(viewsel,GTK_SELECTION_MULTIPLE);
+    gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(view), COL_PATH);
     /*
       The implementation of GtkTreeView hardcoded GDK_LINE_ON_OFF_DASH in
       gtk_tree_view_set_grid_lines, which makes it impossible to make solid

@@ -35,12 +35,15 @@
 /**
    Get the executable name of current process with full path.
 */
-const char *get_job_progname(void){
-    static char *progname=NULL;
-    if(!progname){
+char *get_job_progname(int pid){
+    static char *progname_save=NULL;
+    char *progname=NULL;
+    if(!progname_save || pid>0){
 	char path[PATH_MAX];
 	/*readlink doesn't append \0 */
-	int nprog=readlink("/proc/self/exe",path,PATH_MAX);
+	char procpath[PATH_MAX];
+	snprintf(procpath, PATH_MAX, "/proc/%d/exe", pid>0?pid:(int)getpid());
+	int nprog=readlink(procpath,path,PATH_MAX);
 	if(nprog>0){
 	    path[nprog]='\0';
 	    char *delt=strstr(path, "(deleted)");
@@ -49,6 +52,11 @@ const char *get_job_progname(void){
 	    }
 	    progname=strdup0(path);
 	}	
+    }else{
+	progname=strdup0(progname_save);
+    }
+    if(pid<=0){
+	progname_save=strdup0(progname);
     }
     return progname;
 }

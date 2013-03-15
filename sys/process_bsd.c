@@ -28,20 +28,16 @@
 #include "common.h"
 #include "process.h"
 
-const char *get_job_progname(void){
-    static char *progname=NULL;
-    if(!progname){ /*Not tested yet. */
-	int mib[4];
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC;
-	mib[2] = KERN_PROC_PATHNAME;
-	mib[3] = -1;
-	char buf[PATH_MAX];
-	size_t cb = sizeof(buf);
-	sysctl(mib, 4, buf, &cb, NULL, 0);
-	progname=strdup(buf);
-    }
-    return progname;
+char *get_job_progname(int pid){
+    int mib[4];
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROC;
+    mib[2] = KERN_PROC_PATHNAME;
+    mib[3] = pid>0?pid:getpid();
+    char buf[PATH_MAX];
+    size_t cb = sizeof(buf);
+    sysctl(mib, 4, buf, &cb, NULL, 0);
+    return strdup0(buf);
 }
 int get_job_mem(void){/*return in KiB */
     int mem;

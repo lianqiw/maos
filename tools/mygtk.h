@@ -29,11 +29,11 @@
 #define gtk_hscale_new_with_range(A...) gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, A)
 #endif
 #if GTK_MAJOR_VERSION >=3 && GTK_MINOR_VERSION >= 4
-#define grid_attach(A,B,C,D,E,F) gtk_grid_attach(GTK_GRID(A),B,C,D,E,F)
+#define grid_attach(A,B,C,D,E,F,G) ({gtk_grid_attach(GTK_GRID(A),B,C,D,E,F); if(G) g_object_set(B, "expand", TRUE);})
 #define gtk_table_new(A,B,C) gtk_grid_new()
 #define gtk_table_resize(A...)
 #else
-#define grid_attach(A,B,C,D,E,F) gtk_table_attach(GTK_TABLE(A),B,C,D,E,F, (GtkAttachOptions)0, (GtkAttachOptions)0, 0, 0)
+#define grid_attach(A,B,C,D,E,F,G) gtk_table_attach(GTK_TABLE(A),B,C,D,E,F, (GtkAttachOptions)G, (GtkAttachOptions)0, 0, 0)
 #endif
 
 

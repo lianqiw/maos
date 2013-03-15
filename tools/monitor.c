@@ -358,9 +358,7 @@ static void kill_all_jobs(GtkAction *btn){
     int count=0;
     for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
 	if(iproc->hid == ihost 
-	   && (iproc->status.info==S_WAIT 
-	       || iproc->status.info==S_RUNNING
-	       || iproc->status.info==S_START)){
+	   && (iproc->status.info<11)){
 	    count++;
 	}
     }
@@ -375,9 +373,7 @@ static void kill_all_jobs(GtkAction *btn){
     if(result==GTK_RESPONSE_YES){
 	for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
 	    if(iproc->hid == ihost 
-	       && (iproc->status.info==S_WAIT 
-		   || iproc->status.info==S_RUNNING
-		   || iproc->status.info==S_START)){
+	       && (iproc->status.info<11)){
 		if(scheduler_cmd(iproc->hid,iproc->pid,CMD_KILL)){
 		    warning("Failed to kill the job\n");
 		}
@@ -711,7 +707,7 @@ int main(int argc, char *argv[])
 	GtkAction *action_kill_all=gtk_action_new("act-kill-all", "Kill all jobs", "Kill all jobs", GTK_STOCK_CANCEL);
 	g_signal_connect(action_kill_all, "activate", G_CALLBACK(kill_all_jobs),NULL);
 	gtk_action_group_add_action(topgroup, action_kill_all);
-	GtkAction *action_kill_selected=NULL;
+
 	/*set toolbar*/
 	toptoolbar=gtk_toolbar_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);	
@@ -748,6 +744,9 @@ int main(int argc, char *argv[])
     nproc=calloc(nhost,sizeof(int));
     cmdconnect=calloc(nhost,sizeof(GtkWidget*));
     hsock=calloc(nhost, sizeof(int));
+    for(int i=0; i<nhost; i++){
+	hsock[i]=-1;
+    }
     usage_cpu=calloc(nhost,sizeof(double));
     usage_mem=calloc(nhost,sizeof(double));
     usage_cpu2=calloc(nhost,sizeof(double));

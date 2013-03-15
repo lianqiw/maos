@@ -61,7 +61,7 @@ enum{
     CMD_DISPLAY,/**<12 Remote display for telemetry*/
     CMD_VERSION,/*13 */
     CMD_LOAD,/*14 */
-    CMD_UNUSED2,/*15*/
+    CMD_RESTART,/*15*/
     CMD_UNUSED3,/*16*/
     CMD_ADDHOST,/*17*/
     CMD_LAUNCH,/*18*/

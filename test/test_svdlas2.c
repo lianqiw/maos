@@ -560,12 +560,12 @@ static void ritvec(long n, double kappa, double *ritz, double *bnd, double *alf,
 	    double *bet, double *w1, double *w2)
 
 {
-    long js, jsq, i, k, size, id, id2, tmp;
+    long js, jsq, i, k, id, id2, tmp;
     double *s;
 
     js = j + 1;
     jsq = js * js;
-    size = sizeof(double) * n;
+    //size = sizeof(double) * n;
 
     if(!(s = (double *) malloc (jsq * sizeof(double)))) {
 	perror("MALLOC FAILED in RITVEC()");
@@ -679,10 +679,10 @@ static void lanso(long n, long lanmax, long maxprs, double endl,
 	   double endr, double *ritz, double *bnd, double *wptr[])
 
 {
-    double *r, *alf, *eta, *oldeta, *bet, *wrk;
+    double *alf, *eta, *oldeta, *bet, *wrk;
     long ll, first, last, ENOUGH, id1, id2, id3, i, l;
 
-    r = wptr[0];
+    //double *r = wptr[0];
     alf = wptr[6];
     eta = wptr[7];
     oldeta = wptr[8];

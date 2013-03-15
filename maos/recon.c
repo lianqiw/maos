@@ -69,8 +69,34 @@ void tomofit(SIM_T *simu){
 	}else
 #endif
 	    muv_solve(&simu->opdr, &recon->RL, &recon->RR, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
+	
+	if(parms->dbg.deltafocus){
+	    if(simu->opdr && recon->RFdfx){
+		dcell *tmp=NULL;
+		//Compute the delta focus in open loop.
+		dcellmm(&tmp, recon->RFdfx, simu->opdr, "nn", 1);
+		if(tmp->nx!=1 || tmp->ny!=1 || tmp->p[0]->nx!=1 || tmp->p[0]->ny!=1){
+		    error("Wrong format");
+		}
+		simu->deltafocus=tmp->p[0]->p[0];
+		dcellfree(tmp);
+	    }
+	    if(parms->dbg.deltafocus==2){
+		info("dfx=%g\n", simu->deltafocus);
+		dcell *dmpsol=simu->dmpsol[parms->hipowfs[0]];
+		//Compute the delta focus in closed loop.
+		dcell *tmp=NULL;
+		dcellmm(&tmp, recon->RFdfa, dmpsol, "nn", 1);
+		if(tmp->nx!=1 || tmp->ny!=1 || tmp->p[0]->nx!=1 || tmp->p[0]->ny!=1){
+		    error("Wrong format");
+		}
+		info("dfa=%g\n", tmp->p[0]->p[0]);
+		simu->deltafocus-=tmp->p[0]->p[0];
+		dcellfree(tmp);
+	    }
+	}
     }
- 
+    
     if(parms->ndm>0){
 #if USE_CUDA
 	if(parms->gpu.fit){

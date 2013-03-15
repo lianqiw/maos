@@ -99,9 +99,12 @@ static void create_entry(PROC_T *p){
     strftime(stime,80,"[%F %k:%M:%S]",tim);
     strcat(stime,lb);
     p->entry_pid=new_label(stime,WIDTH_PID,0);
-    p->entry_path=new_label(p->path,WIDTH_PATH,0);
+    p->entry_path=new_label(p->path,WIDTH_PATH,1);
     gtk_label_set_selectable(GTK_LABEL(p->entry_path), TRUE);
     gtk_label_set_ellipsize(GTK_LABEL(p->entry_path),PANGO_ELLIPSIZE_START);
+#if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 12
+    gtk_widget_set_tooltip_text(p->entry_path, p->path);
+#endif
     p->entry_errlo=new_label("Lo (nm)",WIDTH_ERRLO,1);
     p->entry_errhi=new_label("Hi (nm)",WIDTH_ERRHI,1);
     p->entry_iseed=new_entry("iSEED",WIDTH_ISEED,0.5);
@@ -111,13 +114,13 @@ static void create_entry(PROC_T *p){
     int irow=nrows[p->hid];
     nrows[p->hid]++;
     gtk_table_resize(GTK_TABLE(tables[p->hid]), nrows[p->hid],ncol);
-    grid_attach(tables[p->hid], p->entry_pid, 0,1,irow,irow+1);
-    grid_attach(tables[p->hid], p->entry_path, 1,2,irow,irow+1);
-    grid_attach(tables[p->hid], p->entry_errlo, 2,3,irow,irow+1);
-    grid_attach(tables[p->hid], p->entry_errhi, 3,4,irow,irow+1);
-    grid_attach(tables[p->hid], p->entry_iseed, 4,5,irow,irow+1);
-    grid_attach(tables[p->hid], p->entry_timing, 5,6,irow,irow+1);
-    grid_attach(tables[p->hid], p->btn, 6,7,irow,irow+1);
+    grid_attach(tables[p->hid], p->entry_pid, 0,1,irow,irow+1,0);
+    grid_attach(tables[p->hid], p->entry_path, 1,2,irow,irow+1,7);
+    grid_attach(tables[p->hid], p->entry_errlo, 2,3,irow,irow+1,0);
+    grid_attach(tables[p->hid], p->entry_errhi, 3,4,irow,irow+1,0);
+    grid_attach(tables[p->hid], p->entry_iseed, 4,5,irow,irow+1,0);
+    grid_attach(tables[p->hid], p->entry_timing, 5,6,irow,irow+1,0);
+    grid_attach(tables[p->hid], p->btn, 6,7,irow,irow+1,0);
     gtk_widget_show_all(tables[p->hid]);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),p->hid);
 }
@@ -179,6 +182,8 @@ gboolean refresh(PROC_T *p){
     if(!p->entry_iseed) create_entry(p);
     if(p->done) return 0;
     switch(p->status.info){
+    case 0:
+	break;
     case S_RUNNING:
 	break;
     case S_WAIT:

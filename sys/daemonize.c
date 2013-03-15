@@ -342,79 +342,123 @@ void daemonize(void){ /* Fork off the parent process */
 /**
    fork and launch exe as specified in cmd. cmd should composed of the path to
    start the exe, exe name, and parameters. used by maos/skyc.
+
+   if cwd is NULL, cmd must preceed with the path information.
+   if cwd is not NULL cmd must only contain arguments, without path information.
  */
-int launch_exe(const char *exepath, const char *cwd, const char *cmd){
-    int use_shell=0;
-    const char *exes[]={"maos", "skyc"};
+pid_t launch_exe(const char *exepath, const char *cmd){
+    const char *exes[]={"maos", "skyc"}; int nexe=2;
     const char *args=NULL;
     const char *exename=NULL;
-    char *cwd2=NULL;
-    if(!exepath || !cwd){ //old method. 
-	const int nexe=2;
-	char *stexe=NULL;
-	char *cmd2;
-	if(cmd[0]=='~'){
-	    cmd2=stradd(HOME, cmd+1, NULL);
+    char *cwd=NULL;
+    if(exepath){
+	exename=strrchr(exepath, '/');
+	if(exename){
+	    exename++;
 	}else{
-	    cmd2=strdup(cmd);
+	    exename=exepath;
 	}
-	const char *cmd2end=cmd2+strlen(cmd2);
-	for(int iexe=0; iexe<nexe; iexe++){
-	    const char *exe=exes[iexe];
-	    const char *cmd3=cmd2;
-	    do{
-		stexe=strstr(cmd3, exe);
-		cmd3=cmd3+strlen(exe);
-	    }while(stexe && cmd3<cmd2end && (stexe[-1]!='/'||!isspace(stexe[strlen(exe)])));
-	    if(stexe){
-		exename=exe;
-		stexe[-1]='\0';
-		cwd=cwd2=strdup(cmd2);
-		exepath=exe;//has to use shell.
-		args=stexe;
-		use_shell=1;
-		break;
-	    }
-	}
-	free(cmd2);
-    }else{
-	args=cmd;
-	exename=strrchr(exepath, '/')+1;
+	nexe=1;
+	exes[0]=exename;
     }
+    /*
+      extract cwd from cmd;
+    */
+    char *stexe=NULL;
+    char *cmd2;
+    if(cmd[0]=='~'){
+	cmd2=stradd(HOME, cmd+1, NULL);
+    }else{
+	cmd2=strdup(cmd);
+    }
+    const char *cmd2end=cmd2+strlen(cmd2);
+    for(int iexe=0; iexe<nexe; iexe++){
+	const char *exe=exes[iexe];
+	const char *cmd3=cmd2;
+	do{
+	    stexe=strstr(cmd3, exe);
+	    cmd3=cmd3+strlen(exe);
+	}while(stexe && cmd3<cmd2end && (stexe[-1]!='/'||!isspace(stexe[strlen(exe)])));
+	if(stexe){
+	    exename=exe;
+	    stexe[-1]='\0';
+	    cwd=strdup(cmd2);
+	    if(!exepath) {
+		exepath=exe;//has to use shell.
+	    }
+	    args=stexe;
+	    break;
+	}
+    }
+    pid_t ans=-1;
     if(args){
-	args=strstr(args, exename)+strlen(exename)+1;
-	long pid=fork();
+	args=strstr(args, exename);
+	if(!args){
+	    warning("args=(%s) has wrong format\n", args);
+	    goto end;
+	}
+	args+=strlen(exename)+1;
+	int pipfd[2];
+	if(pipe(pipfd)){
+	    warning("unable to create pipe\n");
+	    goto end;
+	}
+	pid_t pid=fork();
 	if(pid<0){
-	    return -1;//unable to fork
+	    goto end;//unable to fork
 	}else if(pid>0){//parant
+	    close(pipfd[1]);
 	    waitpid(pid, NULL, 0);/*wait child*/
+	    if(read(pipfd[0], &ans, sizeof(pid_t))!=sizeof(pid_t)){
+		ans=-1;
+	    }
+	    close(pipfd[0]);
 	}else{//child
-	    long pid2=fork();
+	    close(pipfd[0]);
+	    pid_t pid2=fork();
 	    if(pid2<0){
+		if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
+		    warning("Report pid(%d) failed\n", (int)pid2);
+		}
 		_exit(EXIT_FAILURE);//unable to fork
 	    }else if(pid2>0){//parent
+		usleep(100000);
+		waitpid(pid2, NULL, WNOHANG);
+		usleep(100000);
+		//Must waitpid before running kill because child is zoombie.
+		if(kill(pid2, 0)){//exec failed.
+		    info("exec failed\n");
+		    pid2=-1;
+		}
+		if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
+		    warning("Report pid(%d) failed\n", (int)pid2);
+		}
 		_exit(EXIT_SUCCESS);
 	    }else{//child
+		close(pipfd[1]);
 		if(setsid()==-1) warning("Error setsid\n");
 		if(chdir(cwd)) error("Error chdir to %s\n", cwd);
-		if(use_shell){
-		    if(execlp(exename, exename, "-l", "-d", args, NULL)){
-			error("Unable to execlp\n");
-		    }
+		const char *arg1, *arg2;
+		if(strncmp(args, "-l\n", 3)){
+		    arg1="-l";
+		    arg2=args;
 		}else{
-		    if(execl(exepath, exename, "-l", "-d", args, NULL)){
-			error("Unable to execl\n");
-		    }
+		    arg1=args;
+		    arg2=NULL;
+		}
+		if(execlp(exepath, exepath, arg1, arg2, NULL)){
+		    error("Unable to exec: %s\n", strerror(errno));
 		}
 		_exit(EXIT_FAILURE);
 	    }
 	}
-	free(cwd2);
-	return 0;
     }else{
 	warning("Unabel to interpret %s\n", cmd);
-	return -1;
     }
+ end:
+    free(cwd);
+    free(cmd2);
+    return ans;
 }
 /**
    Find an exe from maos and return the absolute path.

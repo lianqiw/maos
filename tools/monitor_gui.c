@@ -94,7 +94,7 @@ static void create_entry(PROC_T *p){
     strftime(stime,80,"[%a %k:%M:%S]",tim);
     p->entry_start=new_label(stime,WIDTH_START,0.5);
     p->entry_pid=new_label(lb,WIDTH_PID,1);
-    p->entry_path=new_label(p->path,WIDTH_PATH,0);
+    p->entry_path=new_label(p->path,WIDTH_PATH,1);
     gtk_label_set_selectable(GTK_LABEL(p->entry_path), TRUE);
     gtk_label_set_ellipsize(GTK_LABEL(p->entry_path),PANGO_ELLIPSIZE_START);
 #if GTK_MAJOR_VERSION>=3 || GTK_MINOR_VERSION >= 12
@@ -200,9 +200,13 @@ gboolean remove_entry(PROC_T *iproc){
     return 0;
 }
 gboolean refresh(PROC_T *p){
-    if(!p->entry_iseed) create_entry(p);
+    if(!p->entry_iseed) {
+	create_entry(p);
+    }
     if(p->done) return 0;
     switch(p->status.info){
+    case 0:
+	break;
     case S_RUNNING:
 	break;
     case S_WAIT: /*waiting to start */
@@ -211,10 +215,13 @@ gboolean refresh(PROC_T *p){
     case S_START: /*just started. */
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Started");
 	{
+	    char spid[12];
+	    snprintf(spid,12," %5d",p->pid);
+	    gtk_label_set(GTK_LABEL(p->entry_pid), spid);
 	    struct tm *tim=localtime(&(p->status.timstart));
 	    char stime[80];
 	    strftime(stime,80,"[%a %k:%M:%S]",tim);
-	    gtk_label_set_text(GTK_LABEL(p->entry_start), stime);
+	    gtk_label_set(GTK_LABEL(p->entry_start), stime);
 	}
 	notify_user(p);
 	break;

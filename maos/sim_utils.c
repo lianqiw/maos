@@ -1715,8 +1715,8 @@ void print_progress(const SIM_T *simu){
 	      status->cache*tkmean, status->eval*tkmean, 
 	      status->tot*tkmean, status->mean*tkmean,
 	      lapsh,lapsm,resth,restm);
-	if(isnan(mysqrt(simu->cle->p[isim*nmod])*1e9)){
-	    error("NaN found\n");
+	if(!isfinite(simu->cle->p[isim*nmod])){
+	    error("NaN/inf found\n");
 	}
     }
 }

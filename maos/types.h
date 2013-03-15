@@ -348,9 +348,11 @@ typedef struct RECON_T{
     dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
     dcell *RFlgsx;     /**<focus reconstruction for each LGS from opdr*/
     dcell *RFlgsa;     /**<focus reconstruction for each LGS from dm.*/
-    dcell *RFngsg;     /**<focus reconstruction for TTF NGS from grad.*/
-    dcell *RFngsx;     /**<focus reconstruction for TTF NGS from opdr.*/
-    dcell *RFngsa;     /**<focus reconstruction for TTF NGS from dm*/
+    dcell *RFngsg;     /**<focus reconstruction for all TTF NGS from grad.*/
+    dcell *RFngsx;     /**<focus reconstruction for all TTF NGS from opdr.*/
+    dcell *RFngsa;     /**<focus reconstruction for all TTF NGS from dm*/
+    dcell *RFdfx;      /**<delta focus reconstruction for science-ngs from opdr.*/
+    dcell *RFdfa;      /**<delta focus reconstruction for science-ngs from dm.*/
     NGSMOD_T *ngsmod;  /**<ngs mod in ad hoc split tomography.*/
     CN2EST_T *cn2est;  /**<For Cn2 Estimation*/
     dcell *dm_ncpa;    /**<NCPA calibration for DM. add to dmreal.*/
@@ -523,6 +525,7 @@ typedef struct SIM_T{
     dcell *uptcmds;    /**<mmaped file to store uptcmd history*/
 
     /*focus tracking loop*/
+    double deltafocus; /**<focus difference between science and ngs estimated from opdr*/
     dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
     dcell *zoomavg;    /**<Trombone averager*/

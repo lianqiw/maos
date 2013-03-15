@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
     if(sock<0){
 	error("sock=%d\n", sock);
     }
-    info("sock=%d\n", sock);
+    //info("sock=%d\n", sock);
     {
 	char fnlog[PATH_MAX];
 	snprintf(fnlog, PATH_MAX,"%s/drawdaemon.log", TEMP);

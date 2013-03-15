@@ -97,7 +97,7 @@ int stwritefd(int sfd, int fd){
     cmsg->cmsg_level = SOL_SOCKET;
     cmsg->cmsg_type = SCM_RIGHTS;
     cmsg->cmsg_len = CMSG_LEN(sizeof(int));
-    *(int*)CMSG_DATA(cmsg)=fd;
+    memcpy(CMSG_DATA(cmsg), &fd, sizeof(int));
     if(sendmsg(sfd, &msg, 0)<0){
 	warning("sendmsg failed to send fd %d over %d\n", fd, sfd);
 	ans=-1;

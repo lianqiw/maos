@@ -327,7 +327,7 @@ setup_recon_HXW(RECON_T *recon, const PARMS_T *parms){
     	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs = parms->wfsr[iwfs].powfs;
 	    
-	    if(parms->recon.split!=2 && parms->powfs[ipowfs].skip){
+	    if(parms->recon.split!=2 && parms->powfs[ipowfs].skip && !parms->dbg.deltafocus){
 		//don't need HXW for low order wfs that does not participate in tomography. 
 		continue;
 	    }
@@ -590,14 +590,15 @@ setup_recon_GX(RECON_T *recon, const PARMS_T *parms){
 		GXtomo[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
 	    if(parms->powfs[ipowfs].lo 
-	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){/*for low order wfs */
+	       || (parms->recon.split && nlo==0 && !parms->powfs[ipowfs].trs)){
+		/*for low order wfs or extracted t/t for high order ngs wfs.*/
 		GXlo[ips][iwfs]=spref(GX[ips][iwfs]);
 	    }
-	    if(0){
-		/*for focus tracking. */
+	    /*for focus tracking. */
+	    if(parms->dbg.deltafocus){
 		GXfocus[ips][iwfs]=spref(GX[ips][iwfs]);
 		if(!GX[ips][iwfs]){
-		    error("GX[%d][%d] should not be empty\n", ips, iwfs);
+		    warning("GX[%d][%d] should not be empty\n", ips, iwfs);
 		}
 	    }
 	}
@@ -1834,7 +1835,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     }
     dmat *GMGngs=NULL;
     dcell *GMngs=dcellnew(1, parms->nwfsr);
-    /*Compute focus constructor from NGS Grads. fuse grads
+    /*Compute focus reconstructor from NGS Grads. fuse grads
       together to construct a single focus measurement*/
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
@@ -1850,24 +1851,99 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     dinvspd_inplace(GMGngs);
     /*A focus reconstructor from all NGS measurements.*/
     dcell *RFngsg=recon->RFngsg=dcellnew(1, parms->nwfsr);
-    /*recon->RFngsx=dcellnew(1, recon->npsr);
+    //if(parms->dbg.deltafocus){
+    //	recon->RFngsx=dcellnew(1, recon->npsr);
+    //}
+    //PDSPCELL(recon->GXfocus,GX);
+    /*
       const int ndm=parms->ndm;
       recon->RFngsa=dcellnew(1, ndm);
-    PDSPCELL(recon->GXfocus,GX);
-    PDSPCELL(recon->GA, GA);*/
+      PDSPCELL(recon->GA, GA);
+    */
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	if(!Gfocus->p[iwfs]) continue;
+	//NGS gradient to Focus mode reconstructor.
 	dmm(&RFngsg->p[iwfs],GMGngs, GMngs->p[iwfs],"nt",1);
+	//if(parms->dbg.deltafocus){//compute using gradient effect.
+	//  for(int ips=0; ips<recon->npsr; ips++){
+	//	dmulsp(&recon->RFngsx->p[ips], RFngsg->p[iwfs], GX[ips][iwfs], 1);
+	//  }
+	//}
 	/*
-	for(int ips=0; ips<recon->npsr; ips++){
-	    dmulsp(&recon->RFngsx->p[ips], RFngsg->p[iwfs], GX[ips][iwfs], 1);
-	}
-	for(int idm=0; idm<ndm; idm++){
-	    dmulsp(&recon->RFngsa->p[idm], RFngsg->p[iwfs], GA[idm][iwfs], 1);
-	    }*/
+	  for(int idm=0; idm<ndm; idm++){
+	  dmulsp(&recon->RFngsa->p[idm], RFngsg->p[iwfs], GA[idm][iwfs], 1);
+	  }
+	*/
     }
     dfree(GMGngs);
     dcellfree(GMngs);
+    if(parms->dbg.deltafocus){
+	/*focus reconstruction for science from opdr using opd best fit.*/
+	dmat *Fsci=dnew(recon->floc->nloc, 1);
+	loc_add_focus(Fsci->p, recon->floc, 1);
+	dmat *WF=NULL;/*WF=(W0-W1*W1')*Fsci*/
+	spmulmat(&WF, recon->W0, Fsci, 1);
+	dmat *W1F=NULL;
+	dmm(&W1F, recon->W1, Fsci, "tn", 1);
+	dmm(&WF,  recon->W1, W1F, "nn", -1);
+	dmat *FtWF=NULL;
+	dmm(&FtWF, Fsci, WF, "tn", 1);
+	dinvspd_inplace(FtWF);
+	dmat *RFsci=NULL;
+	dmm(&RFsci, FtWF, WF, "nt", 1);
+	dfree(FtWF); dfree(W1F); dfree(WF); dfree(Fsci); 
+	int ifit=parms->fit.indoa;//center fit direction
+	//Find the TTF OIWFS
+	int iwfs_ttf=-1;
+	int ipowfs_ttf=-1;
+	for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	    int ipowfs=parms->wfsr[iwfs].powfs;
+	    if(parms->powfs[ipowfs].trs==0 && parms->powfs[ipowfs].order>1){
+		if(iwfs_ttf==-1){
+		    iwfs_ttf=iwfs;
+		    ipowfs_ttf=ipowfs;
+		}else{
+		    error("There are multiple TTF. Revise\n");
+		}
+	    }
+	}
+	if(iwfs_ttf==-1){
+	    error("There is no TTF.\n");
+	}
+	//Compute ray tracing operator for TTF WFS.
+	double hs=parms->powfs[ipowfs_ttf].hs;
+	recon->RFdfx=dcellnew(1, recon->npsr);
+	recon->RFdfa=dcellnew(1, parms->ndm);
+	PDSPCELL(recon->HXF,HXF);
+	PDSPCELL(recon->HA, HA);
+	for(int ips=0; ips<recon->npsr; ips++){
+	    const double ht = recon->ht->p[ips];
+	    const double scale=1.-ht/hs;
+	    double displace[2];
+	    displace[0]=parms->wfsr[iwfs_ttf].thetax*ht;
+	    displace[1]=parms->wfsr[iwfs_ttf].thetay*ht;
+	    dsp *HX_TTF=mkh(recon->xloc[ips], recon->floc, NULL,
+			    displace[0], displace[1], scale,
+			    parms->tomo.cubic, parms->tomo.iac);
+	    dmulsp(&recon->RFdfx->p[ips], RFsci, HXF[ips][ifit], 1);
+	    dmulsp(&recon->RFdfx->p[ips], RFsci, HX_TTF, -1);
+	    spfree(HX_TTF);
+	}
+	for(int idm=0; idm<parms->ndm; idm++){
+	    const double ht=parms->dm[idm].ht;
+	    const double scale=1.-ht/hs;
+	    double displace[2];
+	    displace[0]=parms->wfsr[iwfs_ttf].thetax*ht;
+	    displace[1]=parms->wfsr[iwfs_ttf].thetay*ht;
+	    dsp *HA_TTF=mkh(recon->aloc[idm], recon->floc, NULL,
+			    displace[0], displace[1], scale,
+			    parms->dm[idm].cubic,parms->dm[idm].iac);
+	    dmulsp(&recon->RFdfa->p[idm], RFsci, HA[idm][ifit], 1);
+	    dmulsp(&recon->RFdfa->p[idm], RFsci, HA_TTF, -1);
+	    spfree(HA_TTF);
+	}
+	dfree(RFsci);
+    }
     /*
       Compute focus constructor from LGS grads. A constructor for each LGS
       because each LGS may have different range error.
@@ -1903,8 +1979,10 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dcellwrite(Gfocus,"%s/Gfocus",dirsetup);
 	dcellwrite(recon->RFngsg,"%s/RFngsg",dirsetup);
 	dcellwrite(recon->RFlgsg,"%s/RFlgsg",dirsetup);
-	/*dcellwrite(recon->RFngsx,"%s/RFngsx",dirsetup);
-	dcellwrite(recon->RFlgsx,"%s/RFlgsx",dirsetup);
+	if(parms->dbg.deltafocus){
+	    dcellwrite(recon->RFdfx,"%s/RFdfx",dirsetup);
+	}
+	/*dcellwrite(recon->RFlgsx,"%s/RFlgsx",dirsetup);
 	dcellwrite(recon->RFngsa,"%s/RFngsa",dirsetup);
 	dcellwrite(recon->RFlgsa,"%s/RFlgsa",dirsetup);*/
     }
@@ -2867,6 +2945,8 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->RFngsg);
     dcellfree(recon->RFngsa);
     dcellfree(recon->RFngsx);
+    dcellfree(recon->RFdfx);
+    dcellfree(recon->RFdfa);
     spcellfree(recon->ZZT);
     spcellfree(recon->HXF); 
     spcellfree(recon->HXW);

@@ -139,16 +139,13 @@ __global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a
 	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
 }
-int mp_count;
+
 /**
    A standalone routine that testes applying MVM for a single WFS and update mvm.*/
 void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *fnmtch, 
 	      int *gpus, int ngpu, int nstep){
     {
-	DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));
-	struct cudaDeviceProp prop;
-	DO(cudaGetDeviceProperties(&prop, 0));
-	mp_count=prop.multiProcessorCount;
+	//DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));
     }
     int nsm=2;
     info("Using %d gpus\n", ngpu);
@@ -246,7 +243,7 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
     smat *timing=snew(nstep, 1);
     smat *timing2=snew(nstep, 1);
     smat *result=snew(nstep, 1);
-    float one=1; 
+    //float one=1; 
     cudaProfilerStart();
     TIC;
     for(int istep=0; istep<nstep; istep++){

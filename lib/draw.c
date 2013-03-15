@@ -90,7 +90,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
     listening=1;
     int sock_draw=sock_data->fd;
     char **figfn=sock_data->figfn;
-    info2("draw is listening to drawdaemon at %d\n", sock_draw);
+    //info2("draw is listening to drawdaemon at %d\n", sock_draw);
     int cmd;
     while(!streadint(sock_draw, &cmd)){
 	switch(cmd){
@@ -119,7 +119,7 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 	    warning("cmd=%d is not understood\n", cmd);
 	}
     }
-    info2("draw stop lisening to drawdaemon at %d\n", sock_draw);
+    //info2("draw stop lisening to drawdaemon at %d\n", sock_draw);
     listening=0;
 }
 
@@ -153,7 +153,7 @@ static void list_destroy(list_t **head){
 /*Add fd to list of drawing socks*/
 int draw_add(int fd){
     if(fd==-1) return -1;
-    info("received sock %d\n", fd);
+    //info("received sock %d\n", fd);
     if(sock_helper==-1){//externally added
 	sock_helper=-2;
     }

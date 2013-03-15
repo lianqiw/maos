@@ -412,37 +412,35 @@ void rename_file(int sig){
    Handles signals.
  */
 void maos_signal_handler(int sig){
+    info("caught signal %d\n", sig);
     disable_signal_handler;
     rename_file(sig);/*handles signal */
     if(global->parms->sim.mvmport){
 	mvm_client_close();
     }
-    int segfault=0;
     if(sig!=0){
-	char *info="Unknown";
+	const char *msg="Unknown";
 	switch(sig){
 	case SIGBUS:
 	case SIGILL:
 	case SIGSEGV:
 	case SIGABRT:
-	    info="Segmentation falt";
-	    segfault=1;
+	    msg="Segmentation falt";
 	    break;
 	case SIGKILL:
 	case SIGINT: /*Ctrl-C */
 	case SIGTERM:
 	case SIGQUIT: /*Ctrl-'\' */
-	    info="Killed";
+	    msg="Killed";
 	    break;
 	case SIGUSR1:/*user defined */
-	    info="Quit";
+	    msg="Quit";
 	    break;
 	}
-	fflush(NULL);
-	if(segfault){
-	    print_backtrace();
-	}
-	scheduler_finish(1);
+	info("%s", msg);
+	print_backtrace();
+	sync();
+	scheduler_finish(sig);
 	kill(getpid(), sig);//kill again. signal handler is off
 	_Exit(sig);
     }
@@ -512,11 +510,21 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(!local && host){ //run through scheduler.
-	if(scheduler_launch_exe(host, argc, argv)){
-	    error2("Unable to launch maos at server %s\n", host);
+    if(local){//lanched through scheduler.
+	arg->detach=0;
+	arg->force=0;
+	detached=1;
+    }else{
+	if(host){ //run through scheduler.
+	    if(scheduler_launch_exe(host, argc, argv)){
+		error2("Unable to launch maos at server %s\n", host);
+	    }
+	    exit(EXIT_SUCCESS);
+	}else{//normal run
+	    if(!arg->detach){
+		arg->force=1;
+	    }
 	}
-	exit(EXIT_SUCCESS);
     }
     if(arg->nthread>NTHREAD || arg->nthread<=0){
         arg->nthread=NTHREAD;
@@ -528,8 +536,10 @@ ARG_T * parse_args(int argc, const char *argv[]){
     char fntmp[PATH_MAX];
     snprintf(fntmp,PATH_MAX,"%s/maos_%ld.conf",TEMP,(long)getpid());
     FILE *fptmp=fopen(fntmp,"w");
-    fputs(cmds, fptmp);
-    free(cmds); cmds=NULL;
+    if(cmds){
+	fputs(cmds, fptmp);
+	free(cmds); cmds=NULL;
+    }
     if(nseed){
 	fprintf(fptmp, "\nsim.seeds=[");
 	for(int iseed=0; iseed<nseed; iseed++){
@@ -842,11 +852,11 @@ void plot_setup(const PARMS_T *parms, const POWFS_T *powfs,
     }
 }
 void maos_daemon(int sock){
-    info2("maos_daemon is listening at %d\n", sock);
+    //info2("maos_daemon is listening at %d\n", sock);
     thread_block_signal();
     int cmd[2];
     while(!streadintarr(sock, cmd, 2)){
-	info2("maos_daemon got %d at %d\n", cmd[0], sock);
+	//info2("maos_daemon got %d at %d\n", cmd[0], sock);
 	switch(cmd[0]){
 	case CMD_SOCK:
 	    {
@@ -867,10 +877,8 @@ void maos_daemon(int sock){
 	    }break;
 	default:
 	    warning("unknown cmd %d\n", cmd[0]);
-	    goto end;
 	    break;
 	}
     }
- end:
-    info2("maos_daemon quit\n");
+    //info2("maos_daemon quit\n");
 }

@@ -20,22 +20,7 @@
 #include "cucmat.h"
 #include <errno.h>
 #include <pthread.h>
-#if defined(HAS_NVML) && HAS_NVML==1
-extern "C"{
-    /*taken from nvml.h*/
-    typedef struct nvmlDevice_st* nvmlDevice_t;
-    typedef struct nvmlMemory_st 
-    {
-	unsigned long long total; //!< Total installed FB memory (in bytes)
-	unsigned long long free; //!< Unallocated FB memory (in bytes)
-	unsigned long long used; //!< Allocated FB memory (in bytes). Note that the driver/GPU always sets aside a small amount of memory for bookkeeping
-    } nvmlMemory_t;
-    int nvmlDeviceGetHandleByIndex(unsigned int index, nvmlDevice_t *device);
-    int nvmlDeviceGetMemoryInfo(nvmlDevice_t device, nvmlMemory_t *memory);
-    int nvmlInit();
-    int nvmlShutdown();
-}
-#endif
+
 const char *cufft_str[]={
     "success", 
     "invalid plan",
@@ -112,6 +97,9 @@ static int cmp_gpu_info(const long *a, const long *b){
    Initialize GPU. Return 1 if success.
    if gpus is not null, it is of length ngpu. gpus specifies gpu index to use.
    if gpus is null, ngpu specifies number of gpus to use. all if 0.
+
+   when mix Tesla and GTX cards, the ordering the GPUs may be different in CUDA
+   and NVML, causing the selection of GPUs to fail. Do not use NVML 
 */
 int gpu_init(int *gpus, int ngpu){
     int ans, ngpu_tot=0;//total number of GPUs.
@@ -119,6 +107,11 @@ int gpu_init(int *gpus, int ngpu){
 	info2("No GPUs available. ans=%d\n", ans);
 	return 0;
     }
+    //sem_lock("/maos.gpu");
+    /*do not use sem_lock. if program terminators before unlock. subsequent programs cannot proceed.*/
+    char fnlock[PATH_MAX];
+    snprintf(fnlock, PATH_MAX, "%s/gpu.lock", TEMP);
+    int fdlock=lock_file(fnlock, 1, 0);
     NGPU=0;
     /*
       User specified exact GPUs to use. We check every entry. 
@@ -132,7 +125,8 @@ int gpu_init(int *gpus, int ngpu){
 	    if(gpus[ig]<0){
 		info2("CUDA is disabled by user.\n");
 		free(GPUS); GPUS=NULL; 
-		return 0;
+		NGPU=0;
+		goto end;
 	    }else{
 		if(gpus[ig]>=ngpu_tot){
 		    warning2("Skip GPU %d: not exist\n", gpus[ig]);
@@ -162,34 +156,16 @@ int gpu_init(int *gpus, int ngpu){
 	register_deinit(NULL, GPUS);
 	/*For each GPU, query the available memory.*/
 	long (*gpu_info)[2]=(long(*)[2])calloc(2*ngpu_tot, sizeof(long));
-#if defined(HAS_NVML) && HAS_NVML==1
-	nvmlDevice_t dev;
-	nvmlMemory_t mem;
-	if(nvmlInit()){
-	    warning("nvml init failed\n");
-	}
-#endif
 	for(int ig=0; ig<ngpu_tot; ig++){
 	    gpu_info[ig][0]=ig;
-#if defined(HAS_NVML) && HAS_NVML==1
-	    if(nvmlDeviceGetHandleByIndex(ig, &dev) == 0 
-	       && nvmlDeviceGetMemoryInfo(dev, &mem) == 0){
-		gpu_info[ig][1]=mem.free;
-	    }else
-#endif
-		{
-		    cudaSetDevice(ig);//this allocates context.
-		    gpu_info[ig][1]=gpu_get_mem();
-		    //cudaDeviceReset(); We already started simulation. Do not reset.
-		}
+	    cudaSetDevice(ig);//this allocates context.
+	    gpu_info[ig][1]=gpu_get_mem();
+	    //cudaDeviceReset(); We already started simulation. Do not reset.
 	}
-#if defined(HAS_NVML) && HAS_NVML==1
-	nvmlShutdown();
-#endif
 	/*sort so that gpus with higest memory is in the front.*/
 	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
 	for(int igpu=0; igpu<ngpu_tot; igpu++){
-	    info2("GPU %d has mem %.1f GB\n", igpu, gpu_info[igpu][1]/1024/1024/1024.);
+	    info2("GPU %d has mem %.1f GB\n", gpu_info[igpu][0], gpu_info[igpu][1]/1024/1024/1024.);
 	}
 	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
 	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){
@@ -216,6 +192,9 @@ int gpu_init(int *gpus, int ngpu){
 	}
 	info2("\n");
     }
+ end:
+    //sem_unlock("maos.gpu");
+    close(fdlock);
     return NGPU;
 }
 

@@ -510,12 +510,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		}
 	    }
 	}
-	int any_wfs=0;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(powfs[ipowfs].opdadd){
-		any_wfs=1;
-	    }
-	}
+
 	if(any_evl){
 	    if(fabs(parms->aper.rotdeg)>0){
 		error("Not handling aper.rotdeg\n");

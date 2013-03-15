@@ -108,6 +108,7 @@ int check_suffix(const char *fn, const char *suffix){
    Convert argc, argv to a single string, prefixed by the current directory.
 */
 char *argv2str(int argc, const char *argv[], const char* delim){
+    if(!argc) return NULL;
     char *cwd=mygetcwd();
     int slen=strlen(cwd)+2+strlen(HOME);
     if(!delim) delim=" ";
@@ -122,17 +123,27 @@ char *argv2str(int argc, const char *argv[], const char* delim){
 	strncpy(scmd,cwd, slen);
     }
     strcat(scmd,"/");
-    for(int iarg=0; iarg<argc; iarg++){
-	strcat(scmd,argv[iarg]);
-	strcat(scmd, delim);
+    char *exename=mybasename(argv[0]);
+    strcat(scmd, exename);
+    strcat(scmd, delim);
+    free(exename);
+    for(int iarg=1; iarg<argc; iarg++){
+	if(argv[iarg] && strlen(argv[iarg])>0){
+	    strcat(scmd, argv[iarg]);
+	    strcat(scmd, delim);
+	}
     }
     if(strlen(scmd)>slen-1) error("Overflow\n");
     free(cwd);
-    const char *scmdend=scmd+strlen(scmd);
+    char *scmdend=scmd+strlen(scmd);
     if(delim[0]!='\n'){
 	for(char *p=scmd; p<scmdend; p++){
 	    if(p[0]=='\n') p[0]=' ';
 	}
+    }
+    while(scmdend>scmd+1 && scmdend[0]==delim[0] && scmdend[-1]==delim[0]){
+	scmdend[0]='\0';
+	scmdend--;
     }
     return scmd;
 }
@@ -185,7 +196,7 @@ char *strtime(void){
     localtime_r(&t,&tmp);/*don't free tmp */
     strftime(str,64,"%F-%H%M%S",&tmp);
     char pid[20];
-    snprintf(pid, 20, "-%d", (int)getpid());
+    snprintf(pid, 20, "-%05d", (int)getpid());
     char *dir=stradd(str, pid, NULL);
     return dir;
 }
@@ -309,24 +320,22 @@ time_t fmtime(const char *fn){
 */
 char *stradd(const char* a, ...){
     char *out;
-    int n;
+    int n=0;
     va_list ap;
     va_start(ap,a);
-    n=strlen(a)+1;
-    while(1){
-	const char *arg=va_arg(ap,const char*);
-	if(!arg)
-	    break;
+    if(a){
+	n=strlen(a)+1;
+    }
+    for(const char *arg=va_arg(ap,const char*); arg; arg=va_arg(ap,const char*)){
 	n+=strlen(arg);
     }
     va_end(ap);
-    out=malloc(n*sizeof(char));
-    strcpy(out,a);
+    out=calloc(n, sizeof(char));
+    if(a){
+	strcpy(out,a);
+    }
     va_start(ap,a);
-    while(1){
-	const char *arg=va_arg(ap,const char*);
-	if(!arg)
-	    break;
+    for(const char *arg=va_arg(ap,const char*); arg; arg=va_arg(ap,const char*)){
 	strcat(out,arg);
     }
     va_end(ap);
@@ -336,16 +345,24 @@ char *stradd(const char* a, ...){
    Concatenate many strings, like stradd, but arguments are an array of char*
 */
 char *strnadd(int argc, const char *argv[], const char* delim){
+    if(!argc) return NULL;
     int slen=1;
     for(int iarg=0; iarg<argc; iarg++){
 	slen+=strlen(delim)+strlen(argv[iarg]);
     }
     char *scmd=calloc(slen, sizeof(char));
     for(int iarg=0; iarg<argc; iarg++){
-	strcat(scmd,argv[iarg]);
-	strcat(scmd,delim);
+	if(argv[iarg] && strlen(argv[iarg])>0){
+	    strcat(scmd,argv[iarg]);
+	    strcat(scmd,delim);
+	}
     }
     if(strlen(scmd)>slen-1) error("Overflow\n");
+    char *scmdend=scmd+strlen(scmd)-1;
+    while(scmdend>scmd+1 && scmdend[0]==delim[0] && scmdend[-1]==delim[0]){
+	scmdend[0]='\0';
+	scmdend--;
+    }
     return scmd;
 }
 /**
@@ -524,7 +541,7 @@ static char *cmd_string(char *input, char **end2){
 */
 char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
     char *cmds=strnadd(argc-1, argv+1, "\n");
-    char *cmds_end=cmds+strlen(cmds);
+    char *cmds_end=cmds+(cmds?strlen(cmds):0);
     char *start=cmds;
     while(start<cmds_end){
         if(isspace((int)start[0]) || start[0]=='\n'){
@@ -693,4 +710,53 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 	}
     }
     return cmds;
+}
+#include <semaphore.h>
+/**
+   Block signals in critical region.
+*/
+int sig_block(int block){
+    sigset_t set;
+    sigfillset(&set);
+    if(block){
+	return sigprocmask(SIG_BLOCK, &set, NULL);
+    }else{
+	return sigprocmask(SIG_UNBLOCK, &set, NULL);
+    }
+}
+
+int sem_lock(const char *key){
+    sem_t *sem=sem_open(key, O_CREAT, 00700, 1);
+    if(sem==SEM_FAILED){
+	warning("sem_open failed\n");
+	return -1;
+    }else{
+	int value;
+	sem_getvalue(sem, &value);
+	info2("Trying to lock %p (value=%d) ... ", sem, value);
+	sem_wait(sem);
+	if(sig_block(1)){
+	    //block signal delivery in critical region.
+	    warning("block signal failed\n");
+	}
+	info2("done\n");
+	return 0;
+    }
+}
+int sem_unlock(const char *key){
+    sem_t *sem=sem_open(key, 0);
+    if(sem==SEM_FAILED){
+	warning("sem_open failed\n");
+	return -1;
+    }else{
+	int value;
+	sem_getvalue(sem, &value);
+	info2("Trying to unlock %p (value=%d) ... ", sem, value);
+	sem_post(sem);
+	if(sig_block(0)){
+	    warning("unblock signal failed\n");
+	}
+	info2("done\n");
+	return 0;
+    }
 }

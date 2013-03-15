@@ -1,9 +1,9 @@
 #use -g -G for debugging.
 WARN=--compiler-options -Wall --compiler-options -Wno-unused-value --compiler-options -Wno-unused-function
-VER=-gencode arch=compute_$(CUDAVER),code=sm_$(CUDAVER)
+#VER=-gencode arch=compute_$(CUDAVER),code=sm_$(CUDAVER)
 #VER+=-gencode arch=compute_20,code=sm_20 -gencode arch=compute_30,code=sm_30
 #VER+=-gencode arch=compute_35,code=sm_35.
-AM_CFLAGS=$(VER) $(WARN) -g -O $(CUDAOPT)
+AM_CFLAGS=$(WARN) -g -O $(CUDAOPT)
 #AM_CFLAGS+=-Xptxas="-v" #for verbose 
 #AM_CFLAGS+=-Xptxas -dlcm=cg
 AM_CFLAGS+=-lineinfo

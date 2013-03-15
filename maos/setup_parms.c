@@ -899,6 +899,7 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.pupmask);
     READ_INT(dbg.wfslinearity);
     READ_INT(dbg.nocgwarm);
+    READ_INT(dbg.deltafocus);
 }
 /**
    Read in GPU options
@@ -1331,24 +1332,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 		warning("There is no WFS controlling tip/tilt.\n");
 	    }else{
 		warning("Split reconstruction is enabled when there is no low order WFS. Will split the tip/tilt modes from high order wfs\n");
-	    }
-	}
-	int hi_found=0;
-	int hi_hastt=0;
-	int lo_found=0;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(parms->powfs[ipowfs].nwfs>0){
-		if(parms->powfs[ipowfs].lo){
-		    lo_found=1;
-		    if(parms->powfs[ipowfs].trs==1){
-			error("Low order wfs should not be tilt removed\n");
-		    }
-		}else{
-		    hi_found=1;
-		    if(parms->powfs[ipowfs].trs!=1){
-			hi_hastt=1;
-		    }
-		}
 	    }
 	}
 	if(parms->sim.skysim && (parms->nhipowfs==0 || parms->nlopowfs==0)){
@@ -2504,19 +2487,6 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
 		warning("\n\nGPU reconstruction for LSR is not available yet\n");
 		parms->gpu.lsr=0;
 	    }
-	}
-	if(!parms->recon.glao){
-	    int has_dfr=0;
-	    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-		if(parms->powfs[ipowfs].nwfs<=1) continue;
-		if(parms->powfs[ipowfs].dfrs){
-		    has_dfr=1;
-		}
-	    }
-	    /*if(has_dfr && parms->gpu.tomo){
-		warning2("\n\nGPU reocnstruction is not yet available for differential focus removal\n\n");
-		parms->gpu.tomo=0;
-		}*/
 	}
 
 	if(!parms->atm.frozenflow){

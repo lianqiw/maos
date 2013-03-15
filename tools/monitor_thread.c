@@ -102,6 +102,7 @@ static void proc_remove(int id,int pid){
 
 
 static int host_from_sock(int sock){
+    if(sock<0) return -1;
     for(int ihost=0; ihost<nhost; ihost++){
 	if(hsock[ihost]==sock){
 	    return ihost;
@@ -138,7 +139,7 @@ static void host_removed(int sock){
     close(sock);
     LOCK(mhost);
     nhostup--;
-    hsock[ihost]=0;
+    hsock[ihost]=-1;
     FD_CLR(sock, &active_fd_set);
     UNLOCK(mhost);
     add_host_wrap(-1);
@@ -150,8 +151,8 @@ static void add_host(gpointer data){
     int ihost=GPOINTER_TO_INT(data);
     int todo=0;
     LOCK(mhost);
-    if(!hsock[ihost]){
-	hsock[ihost]--;
+    if(hsock[ihost]==-1){
+	hsock[ihost]--;//make it -2 so no concurrent access.
 	todo=1;
     }
     UNLOCK(mhost);
@@ -165,14 +166,14 @@ static void add_host(gpointer data){
 		warning("Rare event: Failed to write to scheduler at %s\n", hosts[ihost]);
 		close(sock);
 		LOCK(mhost);
-		hsock[ihost]=0;
+		hsock[ihost]=-1;
 		UNLOCK(mhost);
 	    }else{
 		host_added(ihost, sock);
 	    }
 	}else{
 	    LOCK(mhost);
-	    hsock[ihost]=0;
+	    hsock[ihost]=-1;
 	    UNLOCK(mhost);
 	}
     }
@@ -201,6 +202,9 @@ static int respond(int sock){
 	    if(p->status.info==S_REMOVE){
 		proc_remove(ihost, pid);
 	    }else{
+		if(p->status.info==S_WAIT && p->status.iseed<0){
+		    p->pid=-p->status.iseed;
+		}
 		gdk_threads_add_idle((GSourceFunc)refresh, p);
 	    }
 	}
@@ -273,7 +277,7 @@ void listen_host(){
 	}
 	double ntime=myclockd();
 	for(int ihost=0; ihost<nhost; ihost++){
-	    if(hsock[ihost]>0){
+	    if(hsock[ihost]>-1){
 		if(htime[ihost]+10<ntime){
 		    //10 seconds grace period
 		    info2("10 seconds no respond. disconnect\n");
@@ -297,6 +301,10 @@ void listen_host(){
 */
 int scheduler_cmd(int host,int pid, int command){
     int sock=hsock[host];
+    if(sock==-1){
+	add_host_wrap(host);
+	sleep(1);
+    }
     if(sock==-1) return 1;
     int cmd[2];
     cmd[0]=command;

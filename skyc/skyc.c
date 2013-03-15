@@ -32,8 +32,6 @@ int main(int argc, const char *argv[]){
     ARG_S* arg=parse_args(argc,argv);
     /*In detach mode send to background and disable drawing*/
     if(arg->detach){
-	extern int disable_draw;
-	disable_draw=1;/*disable drawing. */
 	daemonize();
     }else{
 	redirect();

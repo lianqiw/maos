@@ -597,8 +597,11 @@ void focus_tracking(SIM_T* simu){
 	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -focusm);
 	}
     }
-    if(simu->Merr_lo_store){
+    if(simu->Merr_lo_store){//available at LGS rate.
 	double NGSfocus=simu->Merr_lo_store->p[0]->p[5];
+	if(parms->dbg.deltafocus){
+	    NGSfocus+=simu->deltafocus;
+	}
 	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*NGSfocus;
     }
 
