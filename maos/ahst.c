@@ -523,6 +523,9 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
 	    dadd(&ngsmod->MCC, 1, ngsmod->MCCP->p[ievl], parms->evl.wt[ievl]);
 	}
     }
+    if(parms->save.setup){
+	dwrite(recon->ngsmod->MCC, "%s/ahst_MCC", dirsetup);
+    }
     ngsmod->IMCC=dinvspd(ngsmod->MCC);
     PDMAT(ngsmod->MCC,MCC);
     ngsmod->MCC_TT=dnew(2,2);
@@ -531,9 +534,6 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     ngsmod->MCC_TT->p[2]=MCC[1][0];
     ngsmod->MCC_TT->p[3]=MCC[1][1];
     ngsmod->IMCC_TT=dinvspd(ngsmod->MCC_TT);
-    if(parms->save.setup){
-	dwrite(recon->ngsmod->MCC, "%s/ahst_MCC", dirsetup);
-    }
     /*the ngsmodes defined on the DM.*/
     ngsmod->Modes=ngsmod_m(parms,recon);
     /*
@@ -545,6 +545,16 @@ void setup_ngsmod(const PARMS_T *parms, RECON_T *recon,
     if(parms->recon.split==1 && !parms->sim.skysim){
 	/*we disabled GA for low order wfs in skysim mode. */
 	spcellmulmat(&ngsmod->GM, recon->GAlo, ngsmod->Modes, 1);
+	if(parms->nlowfs==1 && ngsmod->nmod>5){
+	    /*There is only one wfs, remove first plate scale mode*/
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		int ipowfs=parms->wfs[iwfs].powfs;
+		if(parms->powfs[ipowfs].lo){
+		    int nx=ngsmod->GM->p[iwfs]->nx;
+		    memset(ngsmod->GM->p[iwfs]->p+nx*2, 0, nx*sizeof(double));
+		}
+	    }
+	}
 	ngsmod->Rngs=dcellpinv(ngsmod->GM,NULL,saneai);
     }
     if(parms->tomo.ahst_wt==1){

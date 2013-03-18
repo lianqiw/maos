@@ -418,6 +418,7 @@ void maos_signal_handler(int sig){
     if(global->parms->sim.mvmport){
 	mvm_client_close();
     }
+    int backtrace=0;
     if(sig!=0){
 	const char *msg="Unknown";
 	switch(sig){
@@ -426,6 +427,7 @@ void maos_signal_handler(int sig){
 	case SIGSEGV:
 	case SIGABRT:
 	    msg="Segmentation falt";
+	    backtrace=1;
 	    break;
 	case SIGKILL:
 	case SIGINT: /*Ctrl-C */
@@ -438,8 +440,9 @@ void maos_signal_handler(int sig){
 	    break;
 	}
 	info("%s", msg);
-	print_backtrace();
-	sync();
+	if(backtrace){
+	    print_backtrace();
+	}
 	scheduler_finish(sig);
 	kill(getpid(), sig);//kill again. signal handler is off
 	_Exit(sig);

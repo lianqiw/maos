@@ -518,9 +518,8 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
     }
 
     X(cell) *ata=NULL;
-    X(cell) *iata;
     X(cellmm)(&ata,wA,A,"tn",1);
-    iata=X(cellinvspd)(ata);
+    X(cell) *iata=X(cellsvd_pow)(ata, -1, 0, 1e-14);
     X(cellfree)(ata);
     X(cell) *out=NULL;
     X(cellmm)(&out, iata, wA, "nt",1);
@@ -534,11 +533,14 @@ X(cell)* X(cellpinv)(const X(cell) *A,    /**<[in] The matrix to pseudo invert*/
    compute the power of a block matrix using svd method. First convert it do
    X(mat), do the power, and convert back to block matrix.
 */
-void X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres){
+X(cell) *X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres){
     X(mat) *Ac=X(cell2m)(A);
     X(svd_pow)(Ac, power, issym, thres);
-    X(2cell)(&A, Ac, NULL);
+    X(cell)*B=NULL;
+    X(2cell)(&B, Ac, A);
+    X(celldropzero)(B,0);
     X(free)(Ac);
+    return B;
 }
 
 

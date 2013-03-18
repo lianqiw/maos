@@ -472,6 +472,11 @@ static void perfevl_mean(SIM_T *simu){
     }/*if split */
     
     if(parms->sim.noatm==0 && simu->cle->p[nmod*isim] > MAX(simu->ole->p[nmod*isim]*100, 1e-13)){
+	static int ct=0; 
+	ct++;
+	if(ct>10){
+	    error("Divergent simulation.");
+	}
 	warning("The loop is diverging: OL: %g CL: %g\n",  
 		simu->ole->p[nmod*isim],  simu->cle->p[nmod*isim]);
     }

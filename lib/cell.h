@@ -44,6 +44,9 @@ void X(cellmm)(X(cell) **C0, const X(cell) *A, const X(cell) *B, const char tran
 X(cell)* X(cellinvspd)(X(cell) *A);\
 X(cell)* X(cellinv)(X(cell) *A);\
 X(cell)* X(cellinvspd_each)(X(cell) *A);\
+X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const Y(spcell) *Wsp);\
+X(cell)* X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres); \
+void X(cellcwpow)(X(cell)*A, double power);\
 X(mat) *X(cell2m)(const X(cell) *A);\
 X(cell)* X(2cellref)(const X(mat) *A, long*dims, long ndim);\
 void X(2cell)(X(cell) **B, const X(mat) *A, const X(cell) *ref);\
@@ -51,10 +54,7 @@ void X(celldropzero)(X(cell) *B, double thres);\
 double X(celldiff)(const X(cell) *A, const X(cell) *B);\
 int X(cellclip)(X(cell) *Ac, double min, double max);\
 void X(celltikcr)(X(cell) *A, double thres);\
-X(cell)* X(cellpinv)(const X(cell) *A, const X(cell) *wt, const Y(spcell) *Wsp);\
 void X(cellmulsp)(X(cell) **C0, const X(cell) *A, const Y(spcell) *B, double alpha);\
 void X(celladdI)(X(cell) *A, double a);\
-void X(cellsvd_pow)(X(cell) *A, double power, int issym, double thres); \
-void X(cellcwpow)(X(cell)*A, double power);\
 X(cell) *X(cellsub)(const X(cell) *in, long sx, long nx, long sy, long ny);
 #endif

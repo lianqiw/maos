@@ -1230,6 +1230,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    if(parms->powfs[ipowfs].lo){
 		parms->lopowfs[parms->nlopowfs]=ipowfs;
 		parms->nlopowfs++;
+		parms->nlowfs+=parms->powfs[ipowfs].nwfs;
 		if(parms->powfs[ipowfs].trs==1){
 		    error("Low order wfs should not be tilt removed\n");
 		}

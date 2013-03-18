@@ -408,6 +408,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	free(ans);
     }else{//Create a new socket and ask scheduler to do popen and return answer.
 #if MAOS_DISABLE_SCHEDULER == 0
+	//Create a new connection.
 	int sock=scheduler_connect_self(0);
 	if(sock!=-1){
 	    int cmd[2];
@@ -423,6 +424,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
 	    }else{
 		info2(" %s\n",ans); free(ans);
 	    }
+	    close(sock);
 	}else{
 	    warning("Failed to connect to scheduler\n");
 	}
@@ -440,11 +442,14 @@ void print_backtrace_symbol(void *const *buffer, int size){
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>
 void print_backtrace(){
+    info2("print_backtrace...");sync();
     int size0,size1;
     size0=1024;
     void *buffer[size0];
     size1=backtrace(buffer,size0);
+    info2("symbol");sync();
     print_backtrace_symbol(buffer,size1);
+    info2("ok\n"); sync();
 }
 #else
 void print_backtrace(){

@@ -782,7 +782,7 @@ void ctilt2(cmat *otf, cmat *otfin, double sx, double sy, int pinct){
     dcomplex cy=cexp(-2*M_PI*I*duy*sy);
     PCMAT(otf, potf);
     PCMAT(otfin, potfin);
-    warning_once("Consider caching ux, ny\n");
+    warning_once("Consider caching ux, uy\n");
     if(pinct==1){/*peak in center */
 	ux[0]=cexp(-2*M_PI*I*dux*sx*(-nx/2));
 	for(int i=1; i<nx; i++){

@@ -175,6 +175,8 @@ static void signal_handler(int sig){
     /*quit listening upon signal and do clean up.*/
     if(sig){
 	disable_signal_handler;
+	info("signal %d called\n", sig);
+	print_backtrace();
 	quit_listen=1;
     }
 }
@@ -303,6 +305,7 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
     }
     close(sock);
     usleep(100);
+    sync();
     _Exit(1);
 }
 /**
