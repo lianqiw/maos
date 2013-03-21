@@ -220,7 +220,7 @@ file_t* zfopen(const char *fn, char *mod){
 	error("Unknown mod=%s\n", mod);
     }
     if(fp->fd==-1){
-	error("Unable to open file %s\n", fn2);
+	error("Unable to open file %s for %s\n", fn2, mod[0]=='r'?"Reading":"Writing");
 	_exit(1);
     }
     /*check fn instead of fn2. if end of .bin or .fits, disable compressing.*/

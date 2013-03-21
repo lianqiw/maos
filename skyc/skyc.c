@@ -37,24 +37,8 @@ int main(int argc, const char *argv[]){
 	redirect();
     }
     info2("%s\n", scmd);
-    info2("Output folder is '%s' %d threads\n",arg->dirout, arg->nthread);
-    warning2("\n\nPlease notice that the J/H band zero mag flux has been updated.\n\n\n");
-#ifdef SVN_REV
-    if(strlen(SVN_REV)>1 && strcmp(SVN_REV,"exported")){
-	info2("MAOS Version %s, Revision %s,",PACKAGE_VERSION,SVN_REV);
-    }
-#else
-    info2("MAOS Version %s,",PACKAGE_VERSION);
-#endif
-    info2("Launched at %s in %s.\n",myasctime(),myhostname());
-
-    info2("Compiled on %s %s by %s ",
-	    __DATE__, __TIME__, __VERSION__);
-#ifdef __OPTIMIZE__
-    info2("with optimization.\n");
-#else
-    info2("without optimization!!!\n");
-#endif
+    info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
+    maos_version();
     /*register signal handler */
     register_signal_handler(skyc_signal_handler);
     /*

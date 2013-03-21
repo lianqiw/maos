@@ -40,7 +40,7 @@ extern "C"
 #else
 #define ctoc(A) CUDA_SYNC_STREAM; toc2(A)
 #endif
-extern char *dirskysim;
+extern const char *dirskysim;
 /*
   Notice that both blocks and threads are partitioning isa
  */

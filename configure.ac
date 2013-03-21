@@ -4,7 +4,7 @@ AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 #silent building #disable this if automake is too old.
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])]) 
 #The URL where misc supportive libaries are located.
-BASEURL=https://github.com/downloads/lianqiw/files
+BASEURLS="http://dl.dropbox.com/u/22875570"
 #If user does not supply any CFLAGS, set something so that AC_PROG_CC won't put a -g -O2 to CFLAGS
 if test -z "$CFLAGS" ;then
    CFLAGS=" "
@@ -34,7 +34,6 @@ fi
 #AC_DEFINE_UNQUOTED means expand the $ variable
 AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
-AC_DEFINE_UNQUOTED(BASEURL, ["$BASEURL"], ["The location to download files"])
 AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA and MAOS to avoid overflow in single precision"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
 OPTScommon=" -Wshadow -Wall " #-all-static will produce a static exe.
@@ -370,12 +369,17 @@ download(){
    echo Will download one from the website.
    echo This library is only for non-commercial use.
    fn=$2
-   if ! $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} ;then
-      AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
-      AC_MSG_NOTICE([Please download it manually and put in /tmp/${fn}])
-      while test ! -s /tmp/${fn};do
-         sleep 2s
-      done
+   success=0;
+   for BASEURL in $BASEURLS ; do
+      if $wget ${BASEURL}/${fn} $wgetoutput /tmp/${fn} ;then
+      	 success=1; 
+	 break;
+      else
+         AC_MSG_NOTICE([Failed to download the file from ${BASEURL}/${fn}])
+      fi
+   done
+   if test success -eq 0 ;then
+      AC_MSG_ERROR([Please download it manually and put in /tmp/${fn}])
    fi
    if test -n "$3" ;then
       OUTDIR=$3

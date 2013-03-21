@@ -760,3 +760,19 @@ int sem_unlock(const char *key){
 	return 0;
     }
 }
+void maos_version(void){
+    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
+#if USE_CUDA
+    info2(", w/t CUDA");
+#else
+    info2(", w/o CUDA");
+#endif
+#ifdef __OPTIMIZE__
+    info2(", w/t optimization.\n");
+#else
+    info2(", w/o optimization\n");
+#endif
+    info2("Source: %s\n", SRCDIR);
+    info2("BUILD: %s\n", BUILDDIR);
+    info2("Launched at %s in %s.\n",myasctime(),myhostname());
+}

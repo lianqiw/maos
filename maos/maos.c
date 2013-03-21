@@ -32,6 +32,9 @@
 */
 GLOBAL_T *global=NULL;//record for convenient access.
 int use_cuda=0;
+const char *dirsetup=NULL;
+const char *dirskysim=NULL;
+
 /**
    This is the routine that calls various functions to do the simulation. maos()
    calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
@@ -165,21 +168,8 @@ int main(int argc, const char *argv[]){
     /*Launch the scheduler and report about our process */
     scheduler_start(scmd2,arg->nthread,!arg->force);
     info2("%s\n", scmd);
-    info2("MAOS Version %s. Compiled on %s %s by %s, %d bit", 
-	  PACKAGE_VERSION, __DATE__, __TIME__, __VERSION__, (int)sizeof(long)*8);
-#if USE_CUDA
-    info2(", w/t CUDA");
-#else
-    info2(", w/o CUDA");
-#endif
-#ifdef __OPTIMIZE__
-    info2(", w/t optimization.\n");
-#else
-    info2(", w/o optimization\n");
-#endif
-    info2("Source: %s\n", SRCDIR);
-    info2("Launched at %s in %s with %d threads\n",myasctime(),myhostname(),arg->nthread);
-    info2("Output folder is '%s'.\n",arg->dirout);
+    info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
+    maos_version();
     /*setting up parameters before asking scheduler to check for any errors. */
     PARMS_T *parms=setup_parms(arg);
     global=calloc(1, sizeof(GLOBAL_T));
@@ -233,22 +223,23 @@ int main(int argc, const char *argv[]){
     free(arg->gpus);
     free(arg);
     THREAD_POOL_INIT(parms->sim.nthread);
-    dirsetup=stradd("setup",NULL);
-    if(parms->save.setup || parms->save.recon){
+    if(parms->save.setup){
+	dirsetup="setup";
 	mymkdir("%s",dirsetup);
+    }else{
+	dirsetup=".";
     }
+    dirsetup=stradd("setup",NULL);
     if(parms->sim.skysim){
-	dirskysim=stradd("skysim",NULL);
+	dirskysim="skysim";
 	mymkdir("%s",dirskysim);
     }else{
-	dirskysim=strdup(".");
+	dirskysim=".";
     }
 
     /*Loads the main software*/
     maos(parms);
     free_parms(parms);
-    free(dirsetup);
-    free(dirskysim);
     info2("Job finished at %s\n",myasctime());
     rename_file(0);
     scheduler_finish(0);

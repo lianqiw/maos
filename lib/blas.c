@@ -63,11 +63,13 @@ void X(mm)(X(mat)**C0, const X(mat) *A, const X(mat) *B,
 	n=B->ny;
 	k2=B->nx;
     }
-    if(k!=k2) error("dmm: Matrix doesn't match\n");
+    if(k!=k2) error("dmm: Matrix doesn't match: A: %dx%d, B: %dx%d\n",
+		    m, k, k2, n);
     if(!*C0){
 	*C0=X(new)(m,n); 
     }else if(m!=(*C0)->nx || n!=(*C0)->ny){
-	error("dmm: Matrix doesn't match\n");
+	error("dmm: Matrix doesn't match: C: %dx%d, C0: %ldx%ld\n", 
+	      m, n, (*C0)->nx, (*C0)->ny);
     }
     X(mat) *C=*C0;
     lda=A->nx;

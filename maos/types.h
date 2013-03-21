@@ -257,7 +257,9 @@ typedef struct CN2EST_T CN2EST_T;
    contains data related to wavefront reconstruction and DM fitting.  */
 typedef struct RECON_T{
     const PARMS_T *parms;/**<Save a const pointer of parms*/
-    struct SIM_T *simu;       /**<Temporarily save a pointer to simu*/
+    const APER_T *aper;  /**<Save a const pointer to aper*/
+    const POWFS_T *powfs;/**<Save a const pointer to powfs*/
+    struct SIM_T *simu;  /**<Temporarily save a pointer to simu*/
     double r0;         /**<r0 used in reconstruction. may get updated in cn2 estimation*/
     double l0;         /**<l0 used in reconstruction. may get updated in cn2 estimation*/
     dmat *ht;          /**<height of the layers to do tomography.*/
@@ -344,7 +346,9 @@ typedef struct RECON_T{
     dcell *MVA;        /**<Correction to MVM*g by (MVA-I)*a for PSOL.*/
     MOAO_T *moao;      /**<for MOAO DM fitting*/
     /*For focus tracking. */
-    dcell *Gfocus;     /**<gradients due to focus.*/
+    dcell *GFlgs;      /**<Focus to LGS gradients*/
+    dcell *GFngs;      /**<Focus to NGS gradients*/
+    dcell *GFall;      /**<Focus to WFS Gradients.*/
     dcell *RFlgsg;     /**<focus reconstruction for each LGS from grad*/
     dcell *RFlgsx;     /**<focus reconstruction for each LGS from opdr*/
     dcell *RFlgsa;     /**<focus reconstruction for each LGS from dm.*/

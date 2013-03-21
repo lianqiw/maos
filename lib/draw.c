@@ -99,7 +99,6 @@ static void listen_drawdaemon(sockinfo_t *sock_data){
 		char *fig, *fn;
 		streadstr(sock_draw, &fig);
 		streadstr(sock_draw, &fn);
-		info2("received %s, %s. was %s %s\n", fig, fn, figfn[0], figfn[1]);
 		if(figfn[0] && figfn[1] && (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
 		    info2("draw %d switch to fig=%s, fn=%s\n", sock_draw, fig, fn);
 		}

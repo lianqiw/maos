@@ -127,7 +127,7 @@ int streadfd(int sfd, int *fd){
 	ans=-1;
     }else{
 	memmove(fd, CMSG_DATA(cmsg), sizeof(int));
-	warning("recvmsg received %d. ans=%d\n", *fd, ans);
+	warning("recvmsg received fd %d from %d.\n", *fd, sfd);
 	ans=0;
     }
     return ans;

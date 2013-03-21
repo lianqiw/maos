@@ -34,9 +34,9 @@
    and DM fitting.  Use parms->wfsr instead of parms->wfs for wfs information,
    which hands GLAO mode correctly.x 
 
-   TOMOSCALE is only used when assembling RLM, RRM. The unassembled opeation of
-   RLM, RRM act without this factor. The original variables, saneai, L2 are not
-   changed.  */
+   TOMOSCALE is used for RLM, RRM, in MVST for M, and in CUDA due to
+   limited dynamic range of single precision floating point numbers.*/
+
 /**
    Setting up PLOC grid, which is a coarse sampled (usually halves the
    subaperture spacing) grid that defines the circular aperture for wavefront
@@ -1155,7 +1155,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 		}
 	    }
 	}
-	if(!parms->recon.split || parms->tomo.splitlrt){
+	if(!parms->recon.split || parms->tomo.splitlrt || parms->recon.split==2){
 	    recon->RL.U=dcellcat(recon->RR.U, ULo, 2);
 	    dcell *GPTTDF=NULL;
 	    sptcellmulmat(&GPTTDF, recon->GX, recon->RR.V, 1);
@@ -1210,9 +1210,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	/* We need cholesky decomposition in CBS or MVST method. */
 	muv_direct_diag_prep(&(recon->RL), (parms->tomo.alg==2)*parms->tomo.svdthres);
     }
-    if(((parms->tomo.alg==0 || parms->tomo.alg==2) && !parms->tomo.bgs)
-       ||((parms->sim.ecnn || (parms->recon.split==2 && !parms->load.mvst))
-	  && !recon->RL.C && !recon->RL.MI)){
+    if(((parms->tomo.alg==0 || parms->tomo.alg==2) && !parms->tomo.bgs) || parms->sim.ecnn){
 	if(parms->load.tomo){
 	    if(parms->tomo.alg==0 && zfexist("RLC")){
 		recon->RL.C=chol_read("RLC");
@@ -1226,6 +1224,7 @@ void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper)
 	}
 	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
     }
+
     if(parms->save.recon){
        	if(recon->RL.C){
 	    if(parms->save.recon>1) chol_convert(recon->RL.C, 1);
@@ -1760,8 +1759,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
     if((parms->fit.alg==0 || parms->fit.alg==2) && parms->fit.bgs){
 	muv_direct_diag_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
     }
-    if(((parms->fit.alg==0 || parms->fit.alg==2) && !parms->fit.bgs)
-       ||((parms->recon.split==2 && !parms->load.mvst) && !recon->FL.C && !recon->RL.MI)){
+    if((parms->fit.alg==0 || parms->fit.alg==2) && !parms->fit.bgs){
 	if(fabs(parms->fit.tikcr)<1.e-14){
 	    warning("tickcr=%g is too small, chol may fail.\n", parms->fit.tikcr);
 	}
@@ -1810,8 +1808,10 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	warning("There are no LGS with llt. \n");
 	return;
     }
-    /*Create Gfocus: Focus mode -> WFS grad */
-    dcell *Gfocus=dcellnew(parms->nwfsr, 1);
+    /*Create GFall: Focus mode -> WFS grad */
+    recon->GFall=dcellnew(parms->nwfsr, 1);
+    recon->GFlgs=dcellnew(parms->nwfsr, 1);
+    recon->GFngs=dcellnew(parms->nwfsr, 1);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	dmat *opd=dnew(powfs[ipowfs].loc->nloc,1);
@@ -1826,10 +1826,15 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	    }else{
 		saimcc=dcellref(powfs[ipowfs].saimcc[0]);
 	    }
-	    pts_ztilt(&Gfocus->p[iwfs], powfs[ipowfs].pts, saimcc,
+	    pts_ztilt(&recon->GFall->p[iwfs], powfs[ipowfs].pts, saimcc,
 		      powfs[ipowfs].realamp[wfsind], opd->p);
 	}else{
-	    spmulmat(&Gfocus->p[iwfs], adpind(powfs[ipowfs].GS0,wfsind), opd, 1);
+	    spmulmat(&recon->GFall->p[iwfs], adpind(powfs[ipowfs].GS0,wfsind), opd, 1);
+	}
+	if(parms->powfs[ipowfs].llt){
+	    recon->GFlgs->p[iwfs]=dref(recon->GFall->p[iwfs]);
+	}else{
+	    recon->GFngs->p[iwfs]=dref(recon->GFall->p[iwfs]);
 	}
 	dfree(opd);
     }
@@ -1845,35 +1850,17 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	    continue;
 	}
 	spmulmat(&GMngs->p[iwfs], recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		 Gfocus->p[iwfs],1);
-	dmm(&GMGngs,Gfocus->p[iwfs], GMngs->p[iwfs], "tn",1);
+		 recon->GFall->p[iwfs],1);
+	dmm(&GMGngs,recon->GFall->p[iwfs], GMngs->p[iwfs], "tn",1);
     }
     dinvspd_inplace(GMGngs);
     /*A focus reconstructor from all NGS measurements.*/
     dcell *RFngsg=recon->RFngsg=dcellnew(1, parms->nwfsr);
-    //if(parms->dbg.deltafocus){
-    //	recon->RFngsx=dcellnew(1, recon->npsr);
-    //}
-    //PDSPCELL(recon->GXfocus,GX);
-    /*
-      const int ndm=parms->ndm;
-      recon->RFngsa=dcellnew(1, ndm);
-      PDSPCELL(recon->GA, GA);
-    */
+  
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
-	if(!Gfocus->p[iwfs]) continue;
+	if(!recon->GFall->p[iwfs]) continue;
 	//NGS gradient to Focus mode reconstructor.
 	dmm(&RFngsg->p[iwfs],GMGngs, GMngs->p[iwfs],"nt",1);
-	//if(parms->dbg.deltafocus){//compute using gradient effect.
-	//  for(int ips=0; ips<recon->npsr; ips++){
-	//	dmulsp(&recon->RFngsx->p[ips], RFngsg->p[iwfs], GX[ips][iwfs], 1);
-	//  }
-	//}
-	/*
-	  for(int idm=0; idm<ndm; idm++){
-	  dmulsp(&recon->RFngsa->p[idm], RFngsg->p[iwfs], GA[idm][iwfs], 1);
-	  }
-	*/
     }
     dfree(GMGngs);
     dcellfree(GMngs);
@@ -1950,10 +1937,7 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     */
     recon->RFlgsg=dcellnew(parms->nwfsr, parms->nwfsr);
     PDCELL(recon->RFlgsg, RFlgsg);
-    /*recon->RFlgsx=dcellnew(parms->nwfsr, recon->npsr);
-    PDCELL(recon->RFlgsx, RFlgsx);
-    recon->RFlgsa=dcellnew(parms->nwfsr, parms->ndm);
-    PDCELL(recon->RFlgsa, RFlgsa);*/
+  
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(!parms->powfs[ipowfs].llt)
@@ -1961,38 +1945,24 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	dmat *GMtmp=NULL;
 	dmat *GMGtmp=NULL;
 	spmulmat(&GMtmp, recon->saneai->p[iwfs+parms->nwfsr*iwfs], 
-		 Gfocus->p[iwfs], 1);
-	dmm(&GMGtmp, Gfocus->p[iwfs], GMtmp, "tn",1);
+		 recon->GFall->p[iwfs], 1);
+	dmm(&GMGtmp, recon->GFall->p[iwfs], GMtmp, "tn",1);
 	dinvspd_inplace(GMGtmp);
 	dmm(&RFlgsg[iwfs][iwfs], GMGtmp, GMtmp, "nt", 1);
-	/*for(int ips=0; ips<recon->npsr; ips++){
-	    dmulsp(&RFlgsx[ips][iwfs], RFlgsg[iwfs][iwfs], GX[ips][iwfs], 1);
-	}
-	for(int idm=0; idm<ndm; idm++){
-	    dmulsp(&RFlgsa[idm][iwfs], RFlgsg[iwfs][iwfs], GA[idm][iwfs], 1);
-	    }*/
+
 	dfree(GMtmp);
 	dfree(GMGtmp);
     }
   
     if(parms->save.setup){
-	dcellwrite(Gfocus,"%s/Gfocus",dirsetup);
+	dcellwrite(recon->GFall,"%s/GFall",dirsetup);
 	dcellwrite(recon->RFngsg,"%s/RFngsg",dirsetup);
 	dcellwrite(recon->RFlgsg,"%s/RFlgsg",dirsetup);
 	if(parms->dbg.deltafocus){
 	    dcellwrite(recon->RFdfx,"%s/RFdfx",dirsetup);
 	}
-	/*dcellwrite(recon->RFlgsx,"%s/RFlgsx",dirsetup);
-	dcellwrite(recon->RFngsa,"%s/RFngsa",dirsetup);
-	dcellwrite(recon->RFlgsa,"%s/RFlgsa",dirsetup);*/
-    }
-    if(parms->sim.mffocus){
-	recon->Gfocus=Gfocus;
-    }else{
-	dcellfree(Gfocus);
     }
     spcellfree(recon->GXfocus);
-    //dcellfree(recon->RFngsg);
 }
 
 
@@ -2064,15 +2034,36 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
  
     dcellfree(recon->GXL);
     spcellfull(&recon->GXL, recon->GXlo, 1);
+    //NEA of low order WFS.
+    dcell *neailo=dcellnew(parms->nwfsr, parms->nwfsr);
+    for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
+	int ipowfs=parms->wfsr[iwfs].powfs;
+	if(parms->powfs[ipowfs].lo){
+	    spfull(&neailo->p[iwfs*(1+parms->nwfsr)],
+		   recon->saneai->p[iwfs*(1+parms->nwfsr)], TOMOSCALE);
+	}
+    }
+    /* 2012-03-21: Remove focus mode from GL and NEA so no focus is
+       measured/estimated by mvst. It is then estimate separately*/
+    if(parms->sim.mffocus){
+	dcell *focus=NULL;
+	dcellmm(&focus, recon->RFngsg, recon->GXL, "nn", 1);
+	dcellmm(&recon->GXL, recon->GFngs, focus, "nn", -1);
+	dcelldropzero(recon->GXL, 1e-12);
+	dcellfree(focus);
+	dcellmm(&focus, recon->RFngsg, neailo, "nn", 1);
+	dcellmm(&neailo, recon->GFngs, focus, "nn", -1);
+	dcelldropzero(neailo, 1e-8);
+	dcellfree(focus);
+    }
 
     dcell *U=NULL; 
     dcell *FU=NULL;
-    if(parms->load.mvst && zfexist("mvst_U") && zfexist("mvst_FU")){
+    if(parms->load.mvst){
 	U=dcellread("mvst_U");
 	FU=dcellread("mvst_FU");
     }else{
 	/*Prepare CBS if not already done */
-	
 	if(!recon->RL.C && !recon->RL.MI){
 	    muv_direct_prep(&(recon->RL), 0);
 	}
@@ -2096,15 +2087,20 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     
     dcell *Uw=NULL;
     dcell *FUw=NULL;
-    
-    dcellmulsp(&Uw, U, recon->saneai, 1);
-    dcellmulsp(&FUw, FU, recon->saneai, 1);
+
+    dcellmm(&Uw, U, neailo, "nn", 1);
+    dcellmm(&FUw, FU, neailo, "nn", 1);
+    dcellfree(neailo);
     dcell *M=NULL;
     dcellmm(&M, recon->GXL, Uw, "nn", 1);
     dcelladdI(M, 1);
     dcell *Minv=dcellinv(M);
     dcellfree(M);
-    if(0){/*Orthnormalize the Modes. */
+    if(parms->save.setup){
+	dcellwrite(Minv, "%s/mvst_Rngs_0",dirsetup);
+	dcellwrite(FUw,  "%s/mvst_Modes_0",dirsetup);
+    }
+    if(1){/*Orthnormalize the Modes. */
 	/*
 	  Change FUw*Minv -> FUw*(U*sigma^-1/2) * (U*sigma^1/2)'*Minv
 	  columes of FUw*(U*sigma^-1/2) are the eigen vectors.
@@ -2117,7 +2113,9 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dmat *QwQ=dcell2m(QwQc);
 	dmat *QSdiag=NULL, *QU=NULL, *QVt=NULL;
 	dsvd(&QU, &QSdiag, &QVt, QwQ);
-	if(parms->save.setup) dwrite(QSdiag,"%s/mvst_QSdiag",dirsetup);
+	if(parms->save.setup) {
+	    dwrite(QSdiag,"%s/mvst_QSdiag",dirsetup);
+	}
 	dcwpow(QSdiag, -1./2.);
 	dmuldiag(QU,QSdiag);/*U*sigma^-1/2 */
 	d2cell(&QwQc,QU,NULL);
@@ -2187,6 +2185,28 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    dcellwrite(recon->MVModes,"%s/mvst_Modes_limit",dirsetup);
 	}
     }
+    if(parms->sim.mffocus){
+	spcell *HA0=spcellnew(1, parms->ndm);
+	const APER_T *aper=recon->aper;
+	for(int idm=0; idm<parms->ndm; idm++){
+	    HA0->p[idm]=mkh(recon->aloc[idm], aper->locs, aper->amp->p, 0, 0, 1, 
+			    parms->dm[idm].cubic,parms->dm[idm].iac);
+	}
+	dcell *MFocus=dcellnew(1,1); MFocus->p[0]=dnew(aper->locs->nloc, 1);
+	loc_add_focus(MFocus->p[0]->p, aper->locs, 1);
+	dcell *RFocus0=dcellnew(1,1);
+	RFocus0->p[0]=dpinv(MFocus->p[0], aper->amp, NULL);
+	dcell *RFocus=NULL;//From NGS modes to focus mode.
+	dcellmulsp(&RFocus, RFocus0, HA0, 1);
+	dcell *vFocus=NULL;
+	dcellmm(&vFocus, RFocus, recon->MVModes, "nn", 1);
+	dcellwrite(vFocus, "vFocus");
+
+	spcellfree(HA0);
+	dcellfree(MFocus);
+	dcellfree(RFocus0);
+	dcellfree(RFocus);
+	}
     /*
     if(parms->save.setup){
 	dcell *QQ=NULL;
@@ -2336,7 +2356,7 @@ void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
 	    }
 	}
 	if(!parms->sim.idealfit && parms->recon.split==2){/*Need to be after fit */
-	    setup_recon_mvst(recon,parms);
+	    setup_recon_mvst(recon, parms);
 	}
     }
     /*todo: can we move to near setting up tomography? */
@@ -2707,6 +2727,8 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     TIC;tic;
     RECON_T * recon = calloc(1, sizeof(RECON_T));
     recon->parms=parms;/*save a pointer. */
+    recon->aper=aper;
+    recon->powfs=powfs;
     if(parms->cn2.npair){
 	/*setup CN2 Estimator. It determines the reconstructed layer heigh can
 	  be fed to the tomography */
@@ -2757,6 +2779,10 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     setup_recon_saneai(recon,parms,powfs);
     /*setup LGS tip/tilt/diff focus removal */
     setup_recon_TTFR(recon,parms,powfs);
+    if(parms->sim.mffocus){
+	/*mvst uses information here*/
+	setup_recon_focus(recon, powfs, parms);
+    }
     switch(parms->recon.alg){
     case 0:
 	setup_recon_mvr(recon, parms, powfs, aper);
@@ -2770,10 +2796,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     default:
 	error("recon.alg=%d is not recognized\n", parms->recon.alg);
     }
-    if(parms->sim.mffocus){
-	setup_recon_focus(recon, powfs, parms);
-    }
-
+ 
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	locfree(powfs[ipowfs].gloc);
 	dfree(powfs[ipowfs].gamp);
@@ -2855,6 +2878,9 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
 	spcellfree(recon->RL.M);
 	dcellfree(recon->RL.U);
 	dcellfree(recon->RL.V);
+	spcellfree(recon->RR.M);
+	dcellfree(recon->RR.U);
+	dcellfree(recon->RR.V);
     }
     if(parms->fit.alg!=1 && !parms->fit.bgs){
 	spcellfree(recon->FL.M);
@@ -2938,7 +2964,9 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dcellfree(recon->PDF);
     dcellfree(recon->TTF);
     dcellfree(recon->PTTF);
-    dcellfree(recon->Gfocus);
+    dcellfree(recon->GFngs);
+    dcellfree(recon->GFlgs);
+    dcellfree(recon->GFall);
     dcellfree(recon->RFlgsg);
     dcellfree(recon->RFlgsa);
     dcellfree(recon->RFlgsx);

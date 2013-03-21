@@ -33,8 +33,8 @@
 #include "types.h"
 #include "utils.h"
 extern int exit_success;
-extern char* dirsetup;
-extern char *dirskysim;
+extern const char* dirsetup;
+extern const char *dirskysim;
 #define EXIT raise(SIGUSR1)
 void maos(const PARMS_T *parms);
 extern GLOBAL_T *global;

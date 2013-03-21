@@ -550,15 +550,14 @@ void FitL(dcell **xout, const void *A,
 
 
 /**
-   Blend the focus measurement of LGS and NGS. We trust the focus measurement of
-   the LGS WFS at high temporal frequency where NGS cannot provide due to low
-   frame rate. The sodium average height PSD is little energy beyond the cut off
-   frequency of the LPF.
-
-   We do a low pass filter (LPF) on reconstructed focus from OIWFS measurement
-
-   We do a complimentary high pass filter (HPF) on LGS gradients and then use it
-   normally.
+   Accomplish Two tasks:
+   
+   1) High pass filter lgs focus to remove sodium range variation effact.
+   2) Average LGS focus measurement to drive the trombone.
+   
+   We trust the focus measurement of the LGS WFS at high temporal frequency
+   where NGS cannot provide due to low frame rate. After the HPF on lgs
+   gradients, our system is NO LONGER affected by sodium layer variation.
 
    if sim.mffocus==1: The HPF is applied to each LGS WFS indepently. This largely
    removes the effect of differential focus. powfs.dfrs is no longer needed. (preferred).
@@ -568,88 +567,95 @@ void FitL(dcell **xout, const void *A,
    present and powfs.dfrs need to be set to 1 to handle it in tomography. This
    is the original focus tracking method.
 */
-void focus_tracking(SIM_T* simu){
-    if(!simu->recon->RFlgsg){
-	warning_once("There is no LGS. No need to do focus tracking\n");
-	return;
-    }
+void focus_tracking_grads(SIM_T* simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
+    int lo_output=(!parms->sim.closeloop || (simu->isim+1)%simu->dtrat_lo==0);
+    int hi_output=(!parms->sim.closeloop || (simu->isim+1)%simu->dtrat_hi==0);
     double lpfocus=parms->sim.lpfocus;
-    dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/
-    dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
-    long nwfsllt=0; 
-    double focusm=0;
-    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	if(!LGSfocus->p[iwfs]) continue;
-	if(parms->sim.mffocus==1){//remove HPF focus from each lgs
-	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
-	}
-	//Average LPF focus
-	focusm+=simu->lgsfocuslpf->p[iwfs]; nwfsllt++;
-	//put LPF after using the value to put it off critical path.
-	simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
-    }
-    if(parms->sim.mffocus==2){//remove HPF global focus from each lgs
-	focusm/=nwfsllt;
+    if(hi_output){
+	dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/
+	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
+	long nwfsllt=0; 
+	double focusm=0;
+
 	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 	    if(!LGSfocus->p[iwfs]) continue;
-	    dadd(&simu->gradlastcl->p[iwfs], 1, recon->Gfocus->p[iwfs], -focusm);
+	    if(parms->sim.mffocus==1){//remove LPF focus from each lgs
+		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[iwfs], -simu->lgsfocuslpf->p[iwfs]);
+	    }
+	    //Average LPF focus
+	    focusm+=simu->lgsfocuslpf->p[iwfs]; nwfsllt++;
+	    //put LPF after using the value to put it off critical path.
+	    simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
 	}
-    }
-    if(simu->Merr_lo_store){//available at LGS rate.
-	double NGSfocus=simu->Merr_lo_store->p[0]->p[5];
-	if(parms->dbg.deltafocus){
-	    NGSfocus+=simu->deltafocus;
+	if(parms->sim.mffocus==2){//remove LPF GLOBAL focus from each lgs
+	    focusm/=nwfsllt;
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		if(!LGSfocus->p[iwfs]) continue;
+		dadd(&simu->gradlastcl->p[iwfs], 1, recon->GFall->p[iwfs], -focusm);
+	    }
 	}
-	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*NGSfocus;
-    }
-
-    /*Next deal with the trombone*/
-    if(!simu->zoomerr){
-	simu->zoomerr=dcellnew(parms->nwfs, 1);
-    }
-    dcelladd(&simu->zoomavg, 1, LGSfocus, 1);
-    dcellfree(LGSfocus);
-    int isim=simu->reconisim;
-    if((isim+1)%parms->sim.zoomdtrat==0){
-	//all lgs share the same trombone so take the average value.
-	if(parms->sim.zoomshare){
-	    int count=0;
-	    dmat *zoomavg=NULL;
+    
+	/* Next move with the trombone */
+	if(!simu->zoomerr){
+	    simu->zoomerr=dcellnew(parms->nwfs, 1);
+	}
+	dcelladd(&simu->zoomavg, 1, LGSfocus, 1);
+	dcellfree(LGSfocus);
+	int isim=simu->reconisim;
+	if((isim+1)%parms->sim.zoomdtrat==0){
+	    //all lgs share the same trombone so take the average value.
+	    if(parms->sim.zoomshare){
+		int count=0;
+		dmat *zoomavg=NULL;
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		    int ipowfs=parms->wfs[iwfs].powfs;
+		    if(!parms->powfs[ipowfs].llt){
+			continue;
+		    }
+		    dadd(&zoomavg, 1, simu->zoomavg->p[iwfs], 1);
+		    count++;
+		}
+		dscale(zoomavg, 1./count);
+		for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		    int ipowfs=parms->wfs[iwfs].powfs;
+		    if(!parms->powfs[ipowfs].llt){
+			continue;
+		    }
+		    dcp(&simu->zoomavg->p[iwfs], zoomavg);
+		}
+		info2("step %d LGS focus mean=%g\n", simu->isim, zoomavg->p[0]);
+		dfree(zoomavg);
+	    }
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
 		int ipowfs=parms->wfs[iwfs].powfs;
 		if(!parms->powfs[ipowfs].llt){
 		    continue;
 		}
-		dadd(&zoomavg, 1, simu->zoomavg->p[iwfs], 1);
-		count++;
+		/*trombone averager has output. first dtrat is for averaging. second
+		  dtrat is for reducing gain. Notice that we do not zero zoomerr
+		  even if there is no output and divided the gain by dtrat. The
+		  second dtrat is for averaging the measurement over dtrat steps (we
+		  summed). This ensures the trombone moves smoothly.*/
+		double gain=parms->sim.zoomgain;
+		int dtrat=parms->sim.zoomdtrat;
+		dadd(&simu->zoomerr->p[iwfs], 0, simu->zoomavg->p[iwfs], gain/(dtrat*dtrat));
+		dzero(simu->zoomavg->p[iwfs]);
 	    }
-	    dscale(zoomavg, 1./count);
-	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-		int ipowfs=parms->wfs[iwfs].powfs;
-		if(!parms->powfs[ipowfs].llt){
-		    continue;
-		}
-		dcp(&simu->zoomavg->p[iwfs], zoomavg);
-	    }
-	    info2("step %d LGS focus mean=%g\n", simu->isim, zoomavg->p[0]);
-	    dfree(zoomavg);
 	}
-	for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	    int ipowfs=parms->wfs[iwfs].powfs;
-	    if(!parms->powfs[ipowfs].llt){
-		continue;
-	    }
-	    /*trombone averager has output. first dtrat is for averaging. second
-	      dtrat is for reducing gain. Notice that we do not zero zoomerr
-	      even if there is no output and divided the gain by dtrat. The
-	      second dtrat is for averaging the measurement over dtrat steps (we
-	      summed). This ensures the trombone moves smoothly.*/
-	    double gain=parms->sim.zoomgain;
-	    int dtrat=parms->sim.zoomdtrat;
-	    dadd(&simu->zoomerr->p[iwfs], 0, simu->zoomavg->p[iwfs], gain/(dtrat*dtrat));
-	    dzero(simu->zoomavg->p[iwfs]);
+    }
+    if(lo_output && 0){
+	if(parms->recon.split==2){
+	    warning_once("Temporary solution\n");
+	    /*Do a low pass filter on TTF OIWFS focus mode*/
+	    static double focuslpf=0;
+	    dcell *focus=NULL;
+	    dcellmm(&focus, recon->RFngsg, simu->gradlastcl, "nn", 1);
+	    double focus2=focus->p[0]->p[0];
+	    focus->p[0]->p[0]=focuslpf-focus2;
+	    dcellmm(&simu->gradlastcl, recon->GFngs, focus, "nn", 1);
+	    focuslpf=focuslpf*(1-lpfocus)+focus2*lpfocus;
 	}
     }
 }

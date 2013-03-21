@@ -394,7 +394,7 @@ void print_backtrace_symbol(void *const *buffer, int size){
     }
     cmdstr=stradd("addr2line -f -e", progname, NULL);
     free(progname);
-    for(int it=size-1; it>1; it--){
+    for(int it=size-1; it>0; it--){
 	snprintf(add,24," %p",buffer[it]);
 	cmdstr=stradd(cmdstr, add, NULL);
     }
@@ -442,14 +442,12 @@ void print_backtrace_symbol(void *const *buffer, int size){
 #if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
 #include <execinfo.h>
 void print_backtrace(){
-    info2("print_backtrace...");sync();
     int size0,size1;
     size0=1024;
     void *buffer[size0];
     size1=backtrace(buffer,size0);
-    info2("symbol");sync();
     print_backtrace_symbol(buffer,size1);
-    info2("ok\n"); sync();
+    sync();
 }
 #else
 void print_backtrace(){

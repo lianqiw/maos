@@ -1083,6 +1083,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	    warning("ahstfocus is implemented with separate integrator. changed\n");
 	    parms->sim.fuseint=0;
 	}
+	if(parms->recon.split!=1){
+	    error("ahstfocus can only be used with recon.split=1\n");
+	}
     }
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
 	info2("Using evaluation directions as ncpa calibration directions if needed.\n");

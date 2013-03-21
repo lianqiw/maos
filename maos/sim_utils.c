@@ -1304,7 +1304,7 @@ static void init_simu_moao(SIM_T *simu){
 	}
     }
 #if USE_CUDA
-    if(!parms->gpu.moao){
+    if(parms->gpu.moao){
 	gpu_moao_2gpu(simu);//initilization.
     }
 #endif

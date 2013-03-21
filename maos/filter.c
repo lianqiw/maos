@@ -207,8 +207,8 @@ void filter_cl(SIM_T *simu){
 	}
 	servo_filter(simu->dmint, simu->dmerr, simu->dthi, simcfg->epdm);
     }
-    if(parms->recon.split && simu->Merr_lo){ /*low order. global focus mode is removed.*/
-	/*Low order, modal in split tomography only.  */
+    if(parms->recon.split && simu->Merr_lo){ 
+	/*Low order in split tomography only. global focus mode is removed.*/
 	servo_filter(simu->Mint_lo, simu->Merr_lo, simu->dtlo, simcfg->eplo);
 	if(parms->sim.fuseint){/*accumulate to the main integrator.*/
 	    addlow2dm(&simu->dmint->mint[0], simu, simu->Mint_lo->mpreint, 1);
@@ -222,7 +222,7 @@ void filter_cl(SIM_T *simu){
     dcellcp(&simu->dmcmd,simu->dmint->mint[0]);
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
-    }   
+    }
     if(recon->dm_ncpa){
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);
     }

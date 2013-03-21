@@ -36,8 +36,6 @@
 #include "../cuda/gpu.h"
 #endif
 
-char *dirsetup=NULL;
-char *dirskysim=NULL;
 /**
    \file maos/utils.c
    A few utility routines

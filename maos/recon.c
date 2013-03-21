@@ -117,8 +117,12 @@ void tomofit(SIM_T *simu){
 static void calc_gradol(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     RECON_T *recon=simu->recon;
-    //dcell *dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];;//deprecated 2013-01-22
-    dcell *dmpsol=parms->dbg.psol?simu->dmreal:simu->dmreallast;//2013-03-22
+    dcell *dmpsol;
+    if(parms->dbg.psol && !parms->sim.idealfit){
+	dmpsol=simu->dmreal;
+    }else{
+	dmpsol=simu->dmreallast;//2013-03-22
+    }
     PDSPCELL(recon->GA, GA);
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].psol) continue;
@@ -159,16 +163,11 @@ void recon_split(SIM_T *simu){
 	}
 	    break;
 	case 2:{
-	    /*This can not be simu->dmpsol[lopowfs]. */
-	    dcell *dmpsol_lo;
-	    if(parms->sim.fuseint){
-		dmpsol_lo=simu->dmint->mint[parms->dbg.psol?0:1];
-	    }else{
-		dmpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
-	    }
+	    /*A separate integrator for low order is required. Use it to form error signal*/
+	    dcell *Mpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
 	    dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
 	    dcellmm(&simu->Merr_lo_store, recon->MVRngs, simu->gradlastol, "nn",1);
-	    if(parms->tomo.psol) dcelladd(&simu->Merr_lo_store, 1., dmpsol_lo, -1);
+	    if(parms->tomo.psol) dcelladd(&simu->Merr_lo_store, 1., Mpsol_lo, -1);
 	    dcellzero(simu->opdrmvst);/*reset accumulation. */
 	}
 	    break;
@@ -182,9 +181,27 @@ void recon_split(SIM_T *simu){
     }else{
 	dcellfree(simu->Merr_lo);/*don't have output. Merr_lo_store is never freed. */
     }
+    if(parms->sim.mffocus){
+	//Do low pass filtering on NGS focus measurement to drive global focus mode directly.
+	double NGSfocus=0;
+	if(parms->recon.split==1){
+	    NGSfocus=simu->Merr_lo_store->p[0]->p[5];
+	}else{
+	    dcell *tmp=NULL;
+	    dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
+	    NGSfocus=tmp->p[0]->p[0]; 
+	    dcellfree(tmp);
+	}
+	if(parms->dbg.deltafocus){
+	    NGSfocus+=simu->deltafocus;
+	}
+	double lpfocus=parms->sim.lpfocus;
+	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*NGSfocus;
+    }
 }
+
 /**
-   Deformable mirror control. call tomofit() to do tomo()/fit() or lsr() to do
+   Wavefront reconstruction. call tomofit() to do tomo()/fit() or lsr() to do
    least square reconstruction. */
 void reconstruct(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
@@ -195,7 +212,8 @@ void reconstruct(SIM_T *simu){
     if(simu->gradlastcl){
 	if(!parms->sim.idealfit){
 	    if(parms->sim.mffocus){
-		focus_tracking(simu);//It modifies gradlastcl
+		//high pass filter lgs focus to remove sodium range variation effect.
+		focus_tracking_grads(simu);
 	    }
 	    if(!parms->sim.evlol){
 		if(parms->sim.closeloop){
@@ -246,10 +264,11 @@ void reconstruct(SIM_T *simu){
 	    }
 	    if(parms->tomo.psol){//form error signal in PSOL mode
 		dcell *dmpsol;
-		if(parms->sim.idealfit){
-		    dmpsol=simu->dmreallast;
+		if(parms->sim.fuseint || parms->recon.split==1){
+		    dmpsol=simu->dmpsol[parms->hipowfs[0]];
 		}else{
-		    dmpsol=simu->dmpsol[parms->hipowfs[0]];//2013-01-22.
+		    warning_once("Temporary solution\n");
+		    dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
 		}
 		dcelladd(&simu->dmerr, 1, dmpsol, -1);
 	    }
@@ -268,7 +287,7 @@ void reconstruct(SIM_T *simu){
 	}
 	/*For PSF reconstruction.*/
 	if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
-	    psfr_calc(simu, simu->opdr, simu->dmint->mint[parms->dbg.psol?0:1], 
+	    psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs[0]],
 		      simu->dmerr,  simu->Merr_lo_store);
 	}
 
