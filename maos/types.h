@@ -407,7 +407,6 @@ typedef struct SIM_SAVE_T{
     /*gradients */
     cellarr **gradcl;
     cellarr **gradgeom;
-    cellarr **gradnf;
     cellarr **gradol;
     cellarr **intsny;
     cellarr **intsnf;
@@ -477,15 +476,13 @@ typedef struct SIM_T{
     ccell **wfspsfout; /**<output WFS PSF history.*/
     dcell **pistatout; /**<WFS time averaged tip/tilt removed PSF*/
     dcell *gradcl;     /**<cl grad output at step isim.*/
-    dcell *gradnf;     /**<cl nf grad output*/
-    dcell *sanea_sim;  /**<accumulate effective sanea during simulation.*/
     dcell *gradacc;    /**<accumulate gradident for dtrat>1*/
     dcell *gradlastcl; /**<cl grad from last time step, for reconstructor*/
     dcell *gradlastol; /**<psol grad from last time step, for reconstructor*/
 
     /*Tomography*/
     dcell *opdr;       /**<reconstructed OPD defined on xloc in tomography output.*/
-    dcell *opdrmvst;   /**<average of opdr for MVST*/
+    dcell *gngsmvst;   /**<opdr to NGS gradient.*/
     dcell *opdx;       /**<Ray tracing from atmosphere to xloc directly. Fixme:
 			  do layer by layer fitting instead?*/
     /*Only on split tomography*/
@@ -531,6 +528,7 @@ typedef struct SIM_T{
     /*focus tracking loop*/
     double deltafocus; /**<focus difference between science and ngs estimated from opdr*/
     dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
+    double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
     dcell *zoomavg;    /**<Trombone averager*/
     dcell *zoomerr;    /**<Trombone error signal from zoomavg*/

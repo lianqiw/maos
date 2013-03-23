@@ -80,7 +80,6 @@ typedef struct{
     int     custatb;/*allocated block */
     int     custatt;/*allocated thread */
     /*Run time data that changes */
-    curmat *neareal;
     curmat *gradacc;    /**<For accumulating grads*/
     curcell *ints;       /**<For accumulating subaperture image.*/
     curcell *pistatout;  /**<For output pistatout*/

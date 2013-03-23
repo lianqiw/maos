@@ -900,6 +900,9 @@ static void readcfg_dbg(PARMS_T *parms){
     READ_INT(dbg.wfslinearity);
     READ_INT(dbg.nocgwarm);
     READ_INT(dbg.deltafocus);
+    if(readcfg_peek("dbg.test")){
+	READ_INT(dbg.test);
+    }
 }
 /**
    Read in GPU options
@@ -1075,7 +1078,7 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
-    if(!parms->recon.split || parms->ndm!=2){
+    if(parms->recon.split!=1 || parms->ndm!=2){
 	parms->sim.ahstfocus=0;
     }
     if(parms->sim.ahstfocus){
@@ -2438,7 +2441,7 @@ void setup_parms_running(PARMS_T *parms, ARG_T *arg){
     }
     if(use_cuda){
 	if(parms->sim.evlol){
-	    parms->gpu.lsr=parms->gpu.tomo=parms->gpu.fit=parms->gpu.moao=parms->gpu.wfs=0;
+	    memset(&parms->gpu, 0, sizeof(GPU_CFG_T));
 	}
 	if(parms->sim.idealfit){
 	    parms->gpu.tomo=0;/*no need tomo.*/

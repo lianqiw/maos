@@ -880,9 +880,7 @@ static void init_simu_wfs(SIM_T *simu){
     save->wfspsfout=calloc(nwfs,sizeof(cellarr*));
     save->ztiltout =calloc(nwfs,sizeof(cellarr*));
     simu->pistatout=calloc(nwfs,sizeof(dcell*));
-    simu->sanea_sim=dcellnew(nwfs, 1);
     simu->gradcl=dcellnew(nwfs,1);
-    simu->gradnf=dcellnew(nwfs,1);
     /*Do not initialize gradlastcl. Do not initialize gradlastol in open
       loop. They are used for testing*/
     if(parms->sim.closeloop){
@@ -894,12 +892,6 @@ static void init_simu_wfs(SIM_T *simu){
 	int ipowfs=parms->wfs[iwfs].powfs;
 	int nsa=powfs[ipowfs].pts->nsa;
 	simu->gradcl->p[iwfs]=dnew(nsa*2,1);
-	if(parms->powfs[ipowfs].phytypesim==3 || parms->save.grad[iwfs]){
-	    simu->gradnf->p[iwfs]=dnew(nsa*2,1);
-	}
-	if(parms->powfs[ipowfs].noisy){
-	    simu->sanea_sim->p[iwfs]=dnew(4, nsa);
-	}
 	if(parms->powfs[ipowfs].usephy){
 	    simu->ints[iwfs]=dcellnew(nsa,1);
 	    for(int isa=0; isa<nsa; isa++){
@@ -1029,15 +1021,12 @@ static void init_simu_wfs(SIM_T *simu){
     }
     if(parms->save.grad && !parms->sim.idealfit){
 	save->gradcl=calloc(nwfs, sizeof(cellarr*));
-	save->gradnf=calloc(nwfs, sizeof(cellarr*));
 	save->gradol=calloc(nwfs, sizeof(cellarr*));
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    int ipowfs=parms->wfs[iwfs].powfs;
 	    int dtrat=parms->powfs[ipowfs].dtrat;
 	    if(parms->save.grad[iwfs]){
 		save->gradcl[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradcl_%d.bin", iwfs, seed);
-		if(parms->powfs[ipowfs].noisy)
-		    save->gradnf[iwfs]=cellarr_init(nstep/dtrat,1, "wfs%d_gradnf_%d.bin", iwfs, seed);
 		if(parms->recon.alg==0 &&(parms->recon.split==2 || !parms->powfs[ipowfs].skip)){
 		    save->gradol[iwfs]=cellarr_init((nstep-(parms->sim.closeloop?1:0))/dtrat,1, 
 						    "wfs%d_gradol_%d.bin", iwfs, seed);
@@ -1304,7 +1293,7 @@ static void init_simu_moao(SIM_T *simu){
 	}
     }
 #if USE_CUDA
-    if(parms->gpu.moao){
+    if(parms->gpu.moao && recon->moao){
 	gpu_moao_2gpu(simu);//initilization.
     }
 #endif
@@ -1405,16 +1394,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 
     /* Select GPU or CPU for the tasks.*/
     simu->wfs_grad=calloc(nwfs, sizeof(thread_t));
-#if USE_CUDA
-    if(parms->gpu.wfs){
-	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, gpu_wfsgrad, simu);
-    }else{
-#endif
-	thread_prep(simu->wfs_grad, 0, nwfs, nwfs, wfsgrad_iwfs, simu);
-#if USE_CUDA
-    }
-#endif
-
+    thread_prep(simu->wfs_grad, 0, nwfs, nwfs, wfsgrad_wrap, simu);
     simu->perf_evl=calloc(nevl, sizeof(thread_t));
 #if USE_CUDA
     if(parms->gpu.evl){
@@ -1546,12 +1526,11 @@ void free_simu(SIM_T *simu){
     free(simu->perf_evl);
     free(simu->status);
     dcellfree(simu->gradcl);
-    dcellfree(simu->gradnf);
     dcellfree(simu->gradacc);
     dcellfree(simu->gradlastcl);
     dcellfree(simu->gradlastol);
     dcellfree(simu->opdr);
-    dcellfree(simu->opdrmvst);
+    dcellfree(simu->gngsmvst);
     dcellfree(simu->dmreal);
     maparrfree(simu->dmrealsq, parms->ndm);
     dcellfree(simu->dmproj);
@@ -1580,7 +1559,6 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->olmp);
     dcellfree(simu->clep);
     dcellfree(simu->clmp);
-    dcellfree(simu->sanea_sim);
     dcellfree(simu->upterrs);
     dcellfree(simu->uptcmds);
     if(parms->recon.split){
@@ -1646,7 +1624,6 @@ void free_simu(SIM_T *simu){
     cellarr_close_n(save->wfslltopd, nwfs);
     cellarr_close_n(save->gradcl, nwfs);
     cellarr_close_n(save->gradgeom, nwfs);
-    cellarr_close_n(save->gradnf, nwfs);
     cellarr_close_n(save->gradol, nwfs);
     cellarr_close_n(save->intsny, nwfs);
     cellarr_close_n(save->intsnf, nwfs);

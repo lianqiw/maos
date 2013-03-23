@@ -58,7 +58,34 @@ static void wfs_ideal_atm(SIM_T *simu, dmat *opd, int iwfs, double alpha){
 	}
     }
 }
-
+/**
+   Compute the focus adjustment need to apply to OPD of wfs. Used in both CPU and GPU code.
+*/
+double wfsfocusadj(SIM_T *simu, int iwfs){
+    const PARMS_T *parms=simu->parms;
+    const POWFS_T *powfs=simu->powfs;
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int isim=simu->isim;
+    double focus=0;
+    if(powfs[ipowfs].focus){
+	const long nx=powfs[ipowfs].focus->nx;
+	focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
+    }
+    if(simu->zoomint && simu->zoomint->p[iwfs]){
+	focus-=simu->zoomint->p[iwfs]->p[0];
+	simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
+    }
+    if(parms->sim.ahstfocus==3 && simu->Mint_lo->mint[0]){
+	/*In new ahst mode, the first plate scale mode contains focus for
+	  lgs. But it turns out to be not necessary to remove it because the
+	  HPF in the LGS path removed the influence of this focus mode. set
+	  sim.ahstfocus=3 to enable adjust opd directly (fake).*/
+	double scale=simu->recon->ngsmod->scale;
+	focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(scale-1);
+    }
+    return focus;
+}
 
 void wfslinearity(const PARMS_T *parms, POWFS_T *powfs, const int iwfs){
     const int ipowfs=parms->wfs[iwfs].powfs;
@@ -299,15 +326,11 @@ void maxapriori(double *g, dmat *ints, const PARMS_T *parms,
    physical optics WFS. Calls wfsints() to accumulate WFS subapertures images in
    physical optics mode.  */
 
-void wfsgrad_iwfs(thread_t *info){
-    SIM_T *simu=info->data;
+void wfsgrad_iwfs(SIM_T *simu, int iwfs){
     const PARMS_T *parms=simu->parms;
-    const int iwfs=info->start;
-    assert(info->end==info->start+1);/*only 1 WFS. */
     assert(iwfs<parms->nwfs);
     /*
       simu->gradcl is CL grad output (also for warm-restart of maxapriori
-      simu->gradnf is CL grad noise free output for warm-restart of maxapriori
       simu->gradacc is internal, to accumulate geometric grads.
       do not accumulate opd. accumate ints for phy, g for GS
     */
@@ -319,7 +342,6 @@ void wfsgrad_iwfs(thread_t *info){
     /*output */
     const int CL=parms->sim.closeloop;
     const int isim=simu->isim;
-    const int nwfs=parms->nwfs;
     const int nps=parms->atm.nps;
     const double dt=simu->dt;
     TIM(0);
@@ -333,7 +355,6 @@ void wfsgrad_iwfs(thread_t *info){
     const int npix=pixpsa*nsa;
     const int dtrat=parms->powfs[ipowfs].dtrat;
     const int save_gradgeom=parms->save.gradgeom[iwfs];
-    const int save_grad=parms->save.grad[iwfs];
     const int save_opd =parms->save.wfsopd[iwfs];
     const int save_ints=parms->save.ints[iwfs];
     const int noisy=parms->powfs[ipowfs].noisy;
@@ -347,7 +368,7 @@ void wfsgrad_iwfs(thread_t *info){
     const double *realamp=powfs[ipowfs].realamp[wfsind];
     double *srot=(do_phy && parms->powfs[ipowfs].radpix)?
 	powfs[ipowfs].srot->p[powfs[ipowfs].srot->ny>1?wfsind:0]->p:NULL;
-    dmat *gradref=NULL;
+    dmat *gradcalc=NULL;
     dmat **gradacc=&simu->gradacc->p[iwfs];
     dmat **gradout=&simu->gradcl->p[iwfs];
     dcell *ints=simu->ints[iwfs];
@@ -377,7 +398,7 @@ void wfsgrad_iwfs(thread_t *info){
 	    wfs_propdata->displacey1=-atm[ips]->vy*dt*isim;
 	    /* have to wait to finish before another phase screen. */
 	    CALL_THREAD(wfs_prop, nthread, 0);
-	}/*ips */
+	}
 	/* most expensive 0.10 per LGS for*/
 	if(parms->sim.wfsalias){
 	    /* Remove subspace of atm projected onto range of DM.*/
@@ -421,23 +442,7 @@ void wfsgrad_iwfs(thread_t *info){
     }
     /* Add defocus to OPD if needed. */
     if(parms->powfs[ipowfs].llt){
-	double focus=0;
-	if(powfs[ipowfs].focus){
-	    const long nx=powfs[ipowfs].focus->nx;
-	    focus+=powfs[ipowfs].focus->p[(isim%nx)+nx*(powfs[ipowfs].focus->ny==parms->powfs[ipowfs].nwfs?wfsind:0)];
-	}
-	if(simu->zoomint && simu->zoomint->p[iwfs]){
-	    focus-=simu->zoomint->p[iwfs]->p[0];
-	    simu->zoompos->p[iwfs]->p[isim]=simu->zoomint->p[iwfs]->p[0];
-	}
-	if(parms->sim.ahstfocus && simu->Mint_lo->mint[0]){
-	    /*new definition of NGS modes has focus error in LGS. offset to remove it.
-	      todo: migrate to gradients.
-	     */
-	    double scale=simu->recon->ngsmod->scale;
-	    //changed from 1-scale to scale-1 on 2/1/2013
-	    focus-=simu->Mint_lo->mint[0]->p[0]->p[2]*(scale-1);
-	}
+	double focus=wfsfocusadj(simu, iwfs);
 	if(fabs(focus)>1e-20){
 	    loc_add_focus(opd->p, powfs[ipowfs].loc, focus);
 	}
@@ -455,30 +460,28 @@ void wfsgrad_iwfs(thread_t *info){
 		   "WFS OPD","x (m)", "y (m)", "WFS %d", iwfs);
     }
     if(do_geom){
-	/* Now Geometric Optics gradient calculations */
-	dmat **gradcalc=NULL;
-	if(do_pistatout && !parms->powfs[ipowfs].pistatstc){
-	    if(dtrat>1){
-		gradcalc=&gradref;
-	    }else{
-		gradref=dref(*gradacc);
-		gradcalc=gradacc;
-	    }
-	}else{
-	    gradcalc=gradacc;
-	}
+	/* Now Geometric Optics gradient calculations. if dtrat==1, we compute
+	   gradients directly to gradacc, which is the same as gradcalc. If
+	   dtrat>1, we compute gradients to gradcalc, and accumulate to
+	   gradacc. gradcalc is used to shift pistat. We DONOT include gradoff
+	   adjustment to gradref, but only do it on gradcl. This will make the
+	   pistat always peak in center no matter what NCPA is present.
+	*/
+	if(!do_pistatout || parms->powfs[ipowfs].pistatstc || dtrat==1){
+	    gradcalc=dref(*gradacc);
+	}//else: calculate first to gradcalc then add to gradacc
 	if(parms->powfs[ipowfs].gtype_sim==1){ /*compute ztilt. */
-	    pts_ztilt(gradcalc,powfs[ipowfs].pts,
+	    pts_ztilt(&gradcalc,powfs[ipowfs].pts,
 		      powfs[ipowfs].saimcc[powfs[ipowfs].nsaimcc>1?wfsind:0], 
 		      realamp, opd->p);
 	}else{/*G tilt */
-	    spmulmat(gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
+	    spmulmat(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
 	}
 	if(powfs[ipowfs].gradoff){
-	    dadd(gradcalc, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
+	    dadd(&gradcalc, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
 	}
-	if(gradcalc!=gradacc){
-	    dadd(gradacc, 1, gradref, 1);
+	if(gradcalc->p!=(*gradacc)->p){
+	    dadd(gradacc, 1, gradcalc, 1);
 	}
     }
 
@@ -507,10 +510,6 @@ void wfsgrad_iwfs(thread_t *info){
 		for(int ips=0; ips<nps; ips++){
 		    const double hl=atm[ips]->h;
 		    const double scale=1.-hl/hs;
-		    /*
-		      Bug fixed: 2009-01-05: multiply ox,oy to hl/hs.
-		      Bug fixed: 2011-02-14: -ox/hs instead of ox/hs.
-		    */
 		    const double thetax=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
 		    const double thetay=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
 		    const double displacex=-atm[ips]->vx*isim*dt+thetax*hl+parms->powfs[ipowfs].llt->misreg[0];
@@ -527,7 +526,6 @@ void wfsgrad_iwfs(thread_t *info){
 		double ttx;
 		double tty;
 		if(do_pistatout||parms->sim.uptideal){
-		    //warning("Remove tip/tilt in uplink ideally\n");
 		    /* remove tip/tilt completely */
 		    dmat *lltg=dnew(2,1);
 		    pts_ztilt(&lltg,powfs[ipowfs].llt->pts,
@@ -562,7 +560,7 @@ void wfsgrad_iwfs(thread_t *info){
 	intsdata->ints=ints;
 	intsdata->psfout=psfout;
 	intsdata->pistatout=simu->pistatout[iwfs];
-	intsdata->gradref=gradref;
+	intsdata->gradref=gradcalc;
 	intsdata->opd=opd;
 	intsdata->lltopd=lltopd;
 	CALL_THREAD(simu->wfs_ints[iwfs], nthread, 0);
@@ -573,13 +571,13 @@ void wfsgrad_iwfs(thread_t *info){
 	}
     }
     TIM(2);
- 
+
     dfree(opd);
 
     if(dtrat_output){
 	if(do_phy){
 	    /* In Physical optics mode, do integration and compute
-	       gradients. The matched filter are for x/y directions even if
+	       gradients. The matched filter are in x/y coordinate even if
 	       radpix=1. */
 	    dmat **mtche=NULL;
 	    double *i0sum=NULL;
@@ -598,31 +596,27 @@ void wfsgrad_iwfs(thread_t *info){
 	    /*Rayleigh scattering (bkgrnd) */
 	    dmat **bkgrnd2=NULL;
 	    dmat **bkgrnd2c=NULL;
-	    if(powfs[ipowfs].bkgrnd){
-		if(powfs[ipowfs].bkgrnd->ny==1){
-		    bkgrnd2=powfs[ipowfs].bkgrnd->p;
-		}else{
-		    bkgrnd2=powfs[ipowfs].bkgrnd->p+nsa*wfsind;
+	    if(noisy){/*add noise */
+		if(powfs[ipowfs].bkgrnd){
+		    if(powfs[ipowfs].bkgrnd->ny==1){
+			bkgrnd2=powfs[ipowfs].bkgrnd->p;
+		    }else{
+			bkgrnd2=powfs[ipowfs].bkgrnd->p+nsa*wfsind;
+		    }
+		}
+		if(powfs[ipowfs].bkgrndc){
+		    if(powfs[ipowfs].bkgrndc->ny==1){
+			bkgrnd2c=powfs[ipowfs].bkgrndc->p;
+		    }else{
+			bkgrnd2c=powfs[ipowfs].bkgrndc->p+nsa*wfsind;
+		    }
 		}
 	    }
-	    if(powfs[ipowfs].bkgrndc){
-		if(powfs[ipowfs].bkgrndc->ny==1){
-		    bkgrnd2c=powfs[ipowfs].bkgrndc->p;
-		}else{
-		    bkgrnd2c=powfs[ipowfs].bkgrndc->p+nsa*wfsind;
-		}
-	    }
-	    
 	    /*output directly to simu->gradcl. replace */
 	    const double rne=parms->powfs[ipowfs].rne;
 	    const double bkgrnd=parms->powfs[ipowfs].bkgrnd*dtrat;
 	    double *pgradx=(*gradout)->p;
 	    double *pgrady=pgradx+nsa;
-	    dmat *gradnf=NULL;
-	    if(save_grad || parms->powfs[ipowfs].phytypesim==3){
-		/*keep noise free gradients. */
-		gradnf=simu->gradnf->p[iwfs];
-	    }
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsnf[iwfs], ints);
 	    }
@@ -630,181 +624,83 @@ void wfsgrad_iwfs(thread_t *info){
 		/* TODO: Do something to remove negative pixels. shift image or
 		   mask out. This is important when bkgrndfnc is greater than
 		   1. */
-		double gnf[3]={0,0,1};/*the third element is strength, for maxapriori.*/
-		double gny[3]={0,0,1};
-		switch(parms->powfs[ipowfs].phytypesim){
-		case 1:{/*(constraint) Matched filter*/
-		    dmulvec(gnf, mtche[isa], ints->p[isa]->p,1.);
-		    if(parms->powfs[ipowfs].mtchscl){
-			double scale=i0sum[isa]/dsum(ints->p[isa]);
-			gnf[0]*=scale;
-			gnf[1]*=scale;
-		    }
-		}
-		    break;
-		case 2:{/*tCoG*/
-		    double pmax=1;
-		    dcog(gnf,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
-		    gnf[0]*=pixthetax;
-		    gnf[1]*=pixthetay;
-		    if(srot){
-			double theta=srot[isa];
-			double cx=cos(theta);
-			double sx=sin(theta);
-			double tmp=gnf[0]*cx-gnf[1]*sx;
-			gnf[1]=gnf[0]*sx+gnf[1]*cx;
-			gnf[0]=tmp;
-		    }
-		}
-		    break;
-		case 3:{/*MAP*/
-		    gnf[0]=gradnf->p[isa];//warm restart
-		    gnf[1]=gradnf->p[isa+nsa];
-		    maxapriori(gnf, ints->p[isa], parms, powfs, iwfs, isa, 1, 0, 1);
-		}
-		    break;
-		default:
-		    error("Invalid");
-		}
-		if(gradnf){
-		    gradnf->p[isa]=gnf[0];
-		    gradnf->p[isa+nsa]=gnf[1];
-		}
+		/*the third element is strength, for maxapriori.*/
+		double geach[3]={0,0,1};
 		if(noisy){/*add noise */
 		    double *bkgrnd2i=(bkgrnd2 && bkgrnd2[isa])?bkgrnd2[isa]->p:NULL;
 		    double *bkgrnd2ic=(bkgrnd2c && bkgrnd2c[isa])?bkgrnd2c[isa]->p:NULL;
 		    addnoise(ints->p[isa], &simu->wfs_rand[iwfs],
 			     bkgrnd,parms->powfs[ipowfs].bkgrndc,
 			     bkgrnd2i, bkgrnd2ic, rne);
-		    switch(parms->powfs[ipowfs].phytypesim){
-		    case 1:{
-			dmulvec(gny, mtche[isa],ints->p[isa]->p,1.);
-			if(parms->powfs[ipowfs].mtchscl){
-			    double scale=i0sum[isa]/dsum(ints->p[isa]);
-			    gny[0]*=scale;
-			    gny[1]*=scale;
-			}
-		    }
-			break;
-		    case 2:{
-			double pmax=sqrt(rne*rne+bkgrnd);
-			dcog(gny,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,parms->powfs[ipowfs].cogoff*pmax);
-			gny[0]*=pixthetax;
-			gny[1]*=pixthetay;
-			if(srot){
-			    double theta=srot[isa];
-			    double cx=cos(theta);
-			    double sx=sin(theta);
-			    double tmp=gny[0]*cx-gny[1]*sx;
-			    gny[1]=gny[0]*sx+gny[1]*cx;
-			    gny[0]=tmp;
-			}
-		    }
-			break;
-		    case 3:{
-			gny[0]=pgradx[isa];//warm restart
-			gny[1]=pgrady[isa];
-			maxapriori(gny, ints->p[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
-			if(bkgrnd2i){
-			    error("Please implement\n");
-			}
-		    }
-			break;
-		    default:
-			error("Invalid");
-		    }
-		    double errx=gny[0]-gnf[0];
-		    double erry=gny[1]-gnf[1];
-		    double *pp=simu->sanea_sim->p[iwfs]->p+isa*4;
-		    pp[0]+=errx*errx;
-		    pp[1]+=errx*erry;
-		    pp[2]+=erry*errx;
-		    pp[3]+=erry*erry;
-		}else{
-		    gny[0]=gnf[0];
-		    gny[1]=gnf[1];
 		}
-		pgradx[isa]=gny[0];
-		pgrady[isa]=gny[1];
+		switch(parms->powfs[ipowfs].phytypesim){
+		case 1:{
+		    dmulvec(geach, mtche[isa],ints->p[isa]->p,1.);
+		    if(parms->powfs[ipowfs].mtchscl){
+			double scale=i0sum[isa]/dsum(ints->p[isa]);
+			geach[0]*=scale;
+			geach[1]*=scale;
+		    }
+		}
+		    break;
+		case 2:{
+		    double pmax=sqrt(rne*rne+bkgrnd);
+		    dcog(geach,ints->p[isa],0.,0.,parms->powfs[ipowfs].cogthres*pmax,
+			 parms->powfs[ipowfs].cogoff*pmax);
+		    geach[0]*=pixthetax;
+		    geach[1]*=pixthetay;
+		    if(srot){
+			double theta=srot[isa];
+			double cx=cos(theta);
+			double sx=sin(theta);
+			double tmp=geach[0]*cx-geach[1]*sx;
+			geach[1]=geach[0]*sx+geach[1]*cx;
+			geach[0]=tmp;
+		    }
+		}
+		    break;
+		case 3:{
+		    geach[0]=pgradx[isa];//warm restart
+		    geach[1]=pgrady[isa];
+		    maxapriori(geach, ints->p[isa], parms, powfs, iwfs, isa, 1, bkgrnd, rne);
+		}
+		    break;
+		default:
+		    error("Invalid");
+		}
+	
+		pgradx[isa]=geach[0];
+		pgrady[isa]=geach[1];
 	    };/*isa */
-	    if(powfs[ipowfs].gradphyoff){
-		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
-	    }
-	    if(powfs[ipowfs].gradoff){
-		dadd(gradout, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
-	    }
+	
 	    if(save_ints){
 		cellarr_dcell(simu->save->intsny[iwfs], ints);
 	    }
-	    if(save_grad && noisy){
-		if(powfs[ipowfs].gradphyoff){
-		    dadd(&gradnf, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
-		}
-		if(powfs[ipowfs].gradoff){
-		    dadd(&gradnf, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
-		}
-		cellarr_dmat(simu->save->gradnf[iwfs], gradnf);
-	    }
-	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
-		if(!recon->PTT){
-		    error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
-		}
-		dmat *PTT=NULL;
-		if(parms->recon.glao){
-		    PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
-		}else{
-		    PTT=recon->PTT->p[iwfs+iwfs*nwfs];
-		}
-		if(!PTT){
-		    error("powfs %d has llt, but TT removal is empty\n", ipowfs);
-		}
-		/* Compute LGS Uplink error. */
-		dzero(simu->upterr->p[iwfs]);
-		dmm(&simu->upterr->p[iwfs], PTT, *gradout, "nn", 1);
-		/* copy upterr to output. */
-		PDMAT(simu->upterrs->p[iwfs], pupterrs);
-		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
-		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
-	    }
+	    dcellzero(simu->ints[iwfs]);
 	}else{
-	    /* geomtric optics accumulation mode. scale and copy results to
-	       output. */
+	    /* geomtric optics accumulation mode. scale and copy results to output. */
 	    dcp(gradout,*gradacc);
-	    if(dtrat!=1)
+	    if(dtrat!=1){
 		dscale(*gradout,1./dtrat);/*average */
-	    if(noisy){
-		if(save_grad){/*save noise free gradient. */
-		    cellarr_dmat(simu->save->gradnf[iwfs], *gradout);
-		}
-		if(!parms->powfs[ipowfs].usephy){
-		    const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
-		    const double *neax=nea->p;
-		    const double *neay=nea->p+nsa;
-		    const double *neaxy=nea->p+nsa*2;
-		    double *restrict ggx=(*gradout)->p;
-		    double *restrict ggy=(*gradout)->p+nsa;
-		    for(int isa=0; isa<nsa; isa++){
-			/*Preserve the random sequence. */
-			double n1=randn(&simu->wfs_rand[iwfs]);
-			double n2=randn(&simu->wfs_rand[iwfs]);
-			double errx=neax[isa]*n1;
-			double erry=neay[isa]*n2+neaxy[isa]*n1;/*cross term. */
-			ggx[isa]+=errx;
-			ggy[isa]+=erry;
-			double *restrict pp=simu->sanea_sim->p[iwfs]->p+isa*4;
-			pp[0]+=errx*errx;
-			pp[1]+=errx*erry;
-			pp[2]+=erry*errx;
-			pp[3]+=erry*erry;
-		    }
-		}else if(isim==0){
-		    info2("Will not add noise at acquisition proccess for physical optics\n");
+	    }
+	    if(noisy && !parms->powfs[ipowfs].usephy){
+		const dmat *nea=powfs[ipowfs].neasim->p[wfsind];
+		const double *neax=nea->p;
+		const double *neay=nea->p+nsa;
+		const double *neaxy=nea->p+nsa*2;
+		double *restrict ggx=(*gradout)->p;
+		double *restrict ggy=(*gradout)->p+nsa;
+		for(int isa=0; isa<nsa; isa++){
+		    /*Preserve the random sequence. */
+		    double n1=randn(&simu->wfs_rand[iwfs]);
+		    double n2=randn(&simu->wfs_rand[iwfs]);
+		    double errx=neax[isa]*n1;
+		    double erry=neay[isa]*n2+neaxy[isa]*n1;/*cross term. */
+		    ggx[isa]+=errx;
+		    ggy[isa]+=erry;
 		}
 	    }
-	}
-  
-	if(save_grad){
-	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
+	    dzero(*gradacc);
 	}
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
@@ -812,22 +708,8 @@ void wfsgrad_iwfs(thread_t *info){
 	    cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);/*noise free. */
 	    dfree(gradtmp);
 	}
-	if(parms->plot.run){
-	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
-		    "WFS Closeloop Gradients (x)","x (m)", "y (m)",
-		    "x %d",  iwfs);
-	    drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+nsa, NULL,
-		    "WFS Closeloop Gradients (y)","x (m)", "y (m)",
-		    "y %d",  iwfs);
-	}
-	if(do_geom){
-	    dzero(*gradacc);
-	}
-	if(do_phy){
-	    dcellzero(simu->ints[iwfs]);
-	}
     }//dtrat_out
-    dfree(gradref);
+    dfree(gradcalc);
     TIM(3);
 #if TIMING==1
     info("wfs %d grad timing: ray %.2f ints %.2f grad %.2f\n",iwfs,tk1-tk0,tk2-tk1,tk3-tk2);
@@ -839,10 +721,8 @@ void wfsgrad_iwfs(thread_t *info){
 static void wfsgrad_save(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int isim=simu->isim;
-    const int seed=simu->seed;
     if(isim+1==parms->sim.end){
 	for(int iwfs=0; iwfs<simu->parms->nwfs; iwfs++){
-	    if(!simu->sanea_sim->p[iwfs]) continue;
 	    const int ipowfs=simu->parms->wfs[iwfs].powfs;
 	    const int dtrat=parms->powfs[ipowfs].dtrat;
 	    double scale;
@@ -851,14 +731,7 @@ static void wfsgrad_save(SIM_T *simu){
 	    }else{
 		scale=(simu->isim+1)/dtrat;
 	    }
-	    if(scale<=0) continue;
-	    {
-		scale=1./floor(scale);/*only multiple of dtrat is recorded. */
-		dmat *sanea=simu->sanea_sim->p[iwfs];
-		dscale(sanea, scale);
-		dwrite(sanea, "sanea_sim_wfs%d_%d.bin",iwfs,seed);
-		dscale(sanea, 1./scale);
-	    }
+	    if(scale<=0) continue;	    
 	    if(simu->pistatout && simu->pistatout[iwfs]){
 		int nstep=isim+1-parms->powfs[ipowfs].pistatstart;
 		scale=1./(double)nstep;
@@ -881,6 +754,86 @@ static void wfsgrad_save(SIM_T *simu){
 		}
 		dcellscale(pp,1./scale);
 	    }
+	}
+    }
+}
+void wfsgrad_wrap(thread_t *info){
+    SIM_T *simu=(SIM_T*)info->data;
+    const PARMS_T *parms=simu->parms;
+    int iwfs=info->start;
+    assert(info->end==info->start+1);/*only 1 WFS. */
+#if USE_CUDA
+    if(parms->gpu.wfs){
+	gpu_wfsgrad_iwfs(simu, iwfs);
+    }else
+#endif
+	{
+	    wfsgrad_iwfs(simu, iwfs);
+	}
+
+    //Postprocessing gradients
+    const RECON_T *recon=simu->recon;
+    const POWFS_T *powfs=simu->powfs;
+    const int nwfs=parms->nwfs;
+    const int isim=simu->isim;
+    const int ipowfs=parms->wfs[iwfs].powfs;
+    const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
+    const int dtrat=parms->powfs[ipowfs].dtrat;
+    const int dtrat_output=((isim+1)%dtrat==0);
+    const int do_phy=(parms->powfs[ipowfs].usephy && isim>=parms->powfs[ipowfs].phystep);
+    dmat **gradout=&simu->gradcl->p[iwfs];
+    if(dtrat_output){
+	if(do_phy){
+	    if(parms->powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
+		if(!recon->PTT){
+		    error("powfs %d has llt, but recon->PTT is NULL",ipowfs);
+		}
+		dmat *PTT=NULL;
+		if(parms->recon.glao){
+		    PTT=recon->PTT->p[ipowfs+ipowfs*parms->npowfs];
+		}else{
+		    PTT=recon->PTT->p[iwfs+iwfs*nwfs];
+		}
+		if(!PTT){
+		    error("powfs %d has llt, but TT removal is empty\n", ipowfs);
+		}
+		/* Compute LGS Uplink error. */
+		dzero(simu->upterr->p[iwfs]);
+		dmm(&simu->upterr->p[iwfs], PTT, *gradout, "nn", 1);
+		/* copy upterr to output. */
+		PDMAT(simu->upterrs->p[iwfs], pupterrs);
+		pupterrs[isim][0]=simu->upterr->p[iwfs]->p[0];
+		pupterrs[isim][1]=simu->upterr->p[iwfs]->p[1];
+	    }
+	    if(powfs[ipowfs].gradphyoff){
+		dadd(gradout, 1, powfs[ipowfs].gradphyoff->p[wfsind], -1);
+	    }
+	
+	}
+	if(powfs[ipowfs].gradoff){
+	    dadd(gradout, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
+	}
+	if(parms->powfs[ipowfs].llt && parms->sim.ahstfocus==2 && simu->Mint_lo->mint[0]){
+	    /*In new ahst mode, the first plate scale mode contains focus for
+	      lgs. But it turns out to be not necessary to remove it because the
+	      HPF in the LGS path removed the influence of this focus mode. set
+	      sim.ahstfocus=2 to enable adjust gradients.*/
+	    double scale=simu->recon->ngsmod->scale;
+	    dmat *focus=dnew(1,1);
+	    focus->p[0]=-simu->Mint_lo->mint[0]->p[0]->p[2]*(scale-1);
+	    dmm(gradout, recon->GFall->p[iwfs], focus, "nn", 1);
+	    dfree(focus);
+	}
+	if(parms->save.grad[iwfs]){
+	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
+	}
+	if(parms->plot.run){
+	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,
+		    "WFS Closeloop Gradients (x)","x (m)", "y (m)",
+		    "x %d",  iwfs);
+	    drawopd("Gcly",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p+powfs[ipowfs].pts->nsa, NULL,
+		    "WFS Closeloop Gradients (y)","x (m)", "y (m)",
+		    "y %d",  iwfs);
 	}
     }
 }

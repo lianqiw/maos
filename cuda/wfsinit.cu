@@ -374,10 +374,6 @@ void gpu_wfs_init_sim(const PARMS_T *parms, POWFS_T *powfs){
 	if(parms->powfs[ipowfs].usephy){
 	    curcellfree(cuwfs[iwfs].ints);
 	    cuwfs[iwfs].ints=curcellnew(nsa,1,powfs[ipowfs].pixpsax,powfs[ipowfs].pixpsay);
-	    if(parms->powfs[ipowfs].noisy){
-		curfree(cuwfs[iwfs].neareal);
-		cuwfs[iwfs].neareal=curnew(4,nsa);
-	    }
 	}
 	if(parms->powfs[ipowfs].pistatout){
 	    if(parms->powfs[ipowfs].pistatstc){

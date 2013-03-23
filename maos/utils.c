@@ -410,7 +410,7 @@ void rename_file(int sig){
    Handles signals.
  */
 void maos_signal_handler(int sig){
-    info("caught signal %d\n", sig);
+    psignal(sig, "maos signal handler");
     disable_signal_handler;
     rename_file(sig);/*handles signal */
     if(global->parms->sim.mvmport){

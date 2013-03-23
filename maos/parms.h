@@ -549,6 +549,7 @@ typedef struct DBG_CFG_T{
     int wfslinearity;/**<Study the linearity of this wfs*/
     int nocgwarm;    /**<Disable warm restart in CG*/
     int deltafocus;  /**<use delta focus between science and NGS estimated from opdr.*/
+    int test;        /**<Temporary any testing purpose*/
 }DBG_CFG_T;
 /**
    Configure GPU usage for different parts.

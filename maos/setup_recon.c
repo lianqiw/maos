@@ -1838,6 +1838,11 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
 	}
 	dfree(opd);
     }
+    if(parms->save.setup){
+	dcellwrite(recon->GFall,"%s/GFall",dirsetup);
+    }
+    if(!parms->sim.mffocus) return;
+
     dmat *GMGngs=NULL;
     dcell *GMngs=dcellnew(1, parms->nwfsr);
     /*Compute focus reconstructor from NGS Grads. fuse grads
@@ -1955,14 +1960,12 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
     }
   
     if(parms->save.setup){
-	dcellwrite(recon->GFall,"%s/GFall",dirsetup);
 	dcellwrite(recon->RFngsg,"%s/RFngsg",dirsetup);
 	dcellwrite(recon->RFlgsg,"%s/RFlgsg",dirsetup);
 	if(parms->dbg.deltafocus){
 	    dcellwrite(recon->RFdfx,"%s/RFdfx",dirsetup);
 	}
     }
-    spcellfree(recon->GXfocus);
 }
 
 
@@ -2079,12 +2082,12 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	muv_direct_solve_cell(&FU, &recon->FL, rhs);
 	dcellfree(rhs);
 	toc2("MVST: U, FU");
-    }
-    if(parms->save.mvst || parms->save.setup){
-	dcellwrite(U, "%s/mvst_U", dirsetup);
-	dcellwrite(FU, "%s/mvst_FU", dirsetup);
-    }
     
+	if(parms->save.mvst || parms->save.setup){
+	    dcellwrite(U, "%s/mvst_U", dirsetup);
+	    dcellwrite(FU, "%s/mvst_FU", dirsetup);
+	}
+    }
     dcell *Uw=NULL;
     dcell *FUw=NULL;
 
@@ -2185,28 +2188,6 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    dcellwrite(recon->MVModes,"%s/mvst_Modes_limit",dirsetup);
 	}
     }
-    if(parms->sim.mffocus){
-	spcell *HA0=spcellnew(1, parms->ndm);
-	const APER_T *aper=recon->aper;
-	for(int idm=0; idm<parms->ndm; idm++){
-	    HA0->p[idm]=mkh(recon->aloc[idm], aper->locs, aper->amp->p, 0, 0, 1, 
-			    parms->dm[idm].cubic,parms->dm[idm].iac);
-	}
-	dcell *MFocus=dcellnew(1,1); MFocus->p[0]=dnew(aper->locs->nloc, 1);
-	loc_add_focus(MFocus->p[0]->p, aper->locs, 1);
-	dcell *RFocus0=dcellnew(1,1);
-	RFocus0->p[0]=dpinv(MFocus->p[0], aper->amp, NULL);
-	dcell *RFocus=NULL;//From NGS modes to focus mode.
-	dcellmulsp(&RFocus, RFocus0, HA0, 1);
-	dcell *vFocus=NULL;
-	dcellmm(&vFocus, RFocus, recon->MVModes, "nn", 1);
-	dcellwrite(vFocus, "vFocus");
-
-	spcellfree(HA0);
-	dcellfree(MFocus);
-	dcellfree(RFocus0);
-	dcellfree(RFocus);
-	}
     /*
     if(parms->save.setup){
 	dcell *QQ=NULL;
@@ -2779,7 +2760,7 @@ RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper){
     setup_recon_saneai(recon,parms,powfs);
     /*setup LGS tip/tilt/diff focus removal */
     setup_recon_TTFR(recon,parms,powfs);
-    if(parms->sim.mffocus){
+    if(parms->sim.mffocus || parms->sim.ahstfocus){
 	/*mvst uses information here*/
 	setup_recon_focus(recon, powfs, parms);
     }
@@ -2916,6 +2897,7 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     */
     spcellfree(recon->GX);
     spcellfree(recon->GXtomo);/*we use HXWtomo instead. faster */
+    spcellfree(recon->GXfocus);
     if(!(parms->cn2.tomo && parms->recon.split==2)){/*mvst needs GXlo when updating. */
 	spcellfree(recon->GXlo);
     }

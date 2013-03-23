@@ -505,7 +505,7 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	int any_evl=0;
 	if(aper->opdadd){
 	    for(int i=0; i<parms->evl.nevl; i++){
-		if(aper->opdadd->p[i]){
+		if(maxabs(aper->opdadd->p[i]->p, aper->opdadd->p[i]->nx)>1e-15){
 		    any_evl=1;
 		}
 	    }

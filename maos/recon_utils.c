@@ -570,7 +570,6 @@ void FitL(dcell **xout, const void *A,
 void focus_tracking_grads(SIM_T* simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    int lo_output=(!parms->sim.closeloop || (simu->isim+1)%simu->dtrat_lo==0);
     int hi_output=(!parms->sim.closeloop || (simu->isim+1)%simu->dtrat_hi==0);
     double lpfocus=parms->sim.lpfocus;
     if(hi_output){
@@ -625,7 +624,6 @@ void focus_tracking_grads(SIM_T* simu){
 		    }
 		    dcp(&simu->zoomavg->p[iwfs], zoomavg);
 		}
-		info2("step %d LGS focus mean=%g\n", simu->isim, zoomavg->p[0]);
 		dfree(zoomavg);
 	    }
 	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
@@ -643,19 +641,6 @@ void focus_tracking_grads(SIM_T* simu){
 		dadd(&simu->zoomerr->p[iwfs], 0, simu->zoomavg->p[iwfs], gain/(dtrat*dtrat));
 		dzero(simu->zoomavg->p[iwfs]);
 	    }
-	}
-    }
-    if(lo_output && 0){
-	if(parms->recon.split==2){
-	    warning_once("Temporary solution\n");
-	    /*Do a low pass filter on TTF OIWFS focus mode*/
-	    static double focuslpf=0;
-	    dcell *focus=NULL;
-	    dcellmm(&focus, recon->RFngsg, simu->gradlastcl, "nn", 1);
-	    double focus2=focus->p[0]->p[0];
-	    focus->p[0]->p[0]=focuslpf-focus2;
-	    dcellmm(&simu->gradlastcl, recon->GFngs, focus, "nn", 1);
-	    focuslpf=focuslpf*(1-lpfocus)+focus2*lpfocus;
 	}
     }
 }

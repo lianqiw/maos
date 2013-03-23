@@ -229,7 +229,6 @@ int main(int argc, const char *argv[]){
     }else{
 	dirsetup=".";
     }
-    dirsetup=stradd("setup",NULL);
     if(parms->sim.skysim){
 	dirskysim="skysim";
 	mymkdir("%s",dirskysim);

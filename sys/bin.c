@@ -199,13 +199,13 @@ file_t* zfopen(const char *fn, char *mod){
     switch(mod[0]){
     case 'r':/*read only */
 	if((fp->fd=open(fn2, O_RDONLY))==-1){
-	    perror("open");
+	    perror("open for read");
 	}
 	break;
     case 'w':/*write */
     case 'a':
 	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0600))==-1){
-	    perror("open");
+	    perror("open for write");
 	}else{
 	    if(flock(fp->fd, LOCK_EX|LOCK_NB)){
 		error("Trying to write to a file that is already opened for writing: %s\n", fn2);

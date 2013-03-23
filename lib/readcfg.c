@@ -432,11 +432,12 @@ static long getrecord(char *key, int mark){
 int readcfg_peek(const char *format,...){
     /*Check whether key exists */
     format2key;
-    long irecord=getrecord(key, 0);
-    if(irecord==-1){
-	return 0;
-    }else{
+    ENTRY entry, *entryfind;
+    entry.key=key;
+    if((entryfind=hsearch(entry,FIND))){
 	return 1;
+    }else{
+	return 0;
     }
 }
 /**

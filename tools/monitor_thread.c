@@ -258,7 +258,8 @@ void listen_host(){
     htime=calloc(nhost, sizeof(double));
     FD_ZERO(&active_fd_set);
     FD_SET(sock_main[0], &active_fd_set);
-    while(1){
+    int keep_listen=1;
+    while(keep_listen){
 	fd_set read_fd_set = active_fd_set;
 	if(select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL)<0){
 	    perror("select");
@@ -269,6 +270,7 @@ void listen_host(){
 		int res;
 		res=respond(i);
 		if(res==-2){//quit
+		    keep_listen=0;
 		    break;
 		}else if(res==-1){//remove host
 		    host_removed(i);

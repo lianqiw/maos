@@ -16,6 +16,14 @@ static void writedata(file_t *fp, int type, const mxArray *arr, const mxArray *h
 	int nheader=mxGetM(header)*mxGetN(header)+1;
 	str=malloc(nheader);
 	mxGetString(header, str, nheader);
+	//convert matlab \n (2 chars) to C \n (1 char with a space)
+	const char *str2=str+strlen(str)-1;
+	for(char *h=str; h<str2; h++){
+	    if(h[0]=='\\' && h[1]=='n'){
+		h[0]=' ';
+		h[1]='\n';
+	    }
+	}
     }
     uint32_t magic;
     uint64_t m,n;

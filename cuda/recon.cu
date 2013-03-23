@@ -541,6 +541,9 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
     if(recon->RFdfx){
 	cp2gpu(&curecon->RFdfx, recon->RFdfx);
     }
+    if(recon->GXL){
+	cp2gpu(&curecon->GXL, recon->GXL);
+    }
     gpu_print_mem("recon init");
 }
 void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
@@ -594,6 +597,7 @@ void gpu_recon_free_do(){
     curfree(curecon->FUp);
     curfree(curecon->FVp);
     curfree(curecon->FMI);
+    curcellfree(curecon->GXL);
     //    delete curecon;
 }
 void gpu_recon_free(){
@@ -736,8 +740,14 @@ void gpu_tomo(SIM_T *simu){
     gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream[0]);
     cudaStreamSynchronize(curecon->cgstream[0]);
     curecon->cgstream->sync();
-    if(!parms->gpu.fit || parms->save.opdr || parms->recon.split==2 || (recon->moao && !parms->gpu.moao)){
+    if(!parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr_vec, 1, curecon->cgstream[0]);
+    }
+    if(parms->recon.split==2){
+	curcell *gngsmvst=NULL;
+	curcellmm(&gngsmvst, 1, curecon->GXL, curecon->opdr_vec, "nn", 1, curecon->cgstream[0]);
+	add2cpu(&simu->gngsmvst, gngsmvst, curecon->cgstream[0]);
+	curfree(gngsmvst);
     }
     if(parms->dbg.deltafocus){
 	curcell *tmp1=NULL;

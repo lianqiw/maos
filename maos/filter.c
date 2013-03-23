@@ -24,7 +24,7 @@
 #endif
 /**
    \file filter.c
-   Collection of functions for servo filtering of DM commands and uplink pointing loop.
+   Collection of functions for servo filtering of DM commands.
 */
 /**
    Apply hysterisis. Input dmcmd is command to the DM and output dmreal is the

@@ -149,7 +149,9 @@ void recon_split(SIM_T *simu){
     const int isim=simu->reconisim;
     int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
     if(parms->recon.split==2){
-	dcelladd(&simu->opdrmvst, 1, simu->opdr, 1./simu->dtrat_lo);
+	if(!parms->gpu.tomo){
+	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./simu->dtrat_lo);
+	}
     }
     /*Low order has output */
     if(lo_output){
@@ -165,10 +167,10 @@ void recon_split(SIM_T *simu){
 	case 2:{
 	    /*A separate integrator for low order is required. Use it to form error signal*/
 	    dcell *Mpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
-	    dcellmm(&simu->gradlastol, recon->GXL, simu->opdrmvst, "nn",-1);
+	    dcelladd(&simu->gradlastol, 1, simu->gngsmvst, -1);
 	    dcellmm(&simu->Merr_lo_store, recon->MVRngs, simu->gradlastol, "nn",1);
 	    if(parms->tomo.psol) dcelladd(&simu->Merr_lo_store, 1., Mpsol_lo, -1);
-	    dcellzero(simu->opdrmvst);/*reset accumulation. */
+	    dcellzero(simu->gngsmvst);/*reset accumulation. */
 	}
 	    break;
 	default:
@@ -183,20 +185,21 @@ void recon_split(SIM_T *simu){
     }
     if(parms->sim.mffocus){
 	//Do low pass filtering on NGS focus measurement to drive global focus mode directly.
-	double NGSfocus=0;
-	if(parms->recon.split==1){
-	    NGSfocus=simu->Merr_lo_store->p[0]->p[5];
-	}else{
-	    dcell *tmp=NULL;
-	    dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
-	    NGSfocus=tmp->p[0]->p[0]; 
-	    dcellfree(tmp);
+	if(lo_output){
+	    if(parms->recon.split==1 && simu->Merr_lo_store){
+		simu->ngsfocus=simu->Merr_lo_store->p[0]->p[5];
+	    }else{
+		dcell *tmp=NULL;
+		dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
+		simu->ngsfocus=tmp->p[0]->p[0]; 
+		dcellfree(tmp);
+	    }
 	}
 	if(parms->dbg.deltafocus){
-	    NGSfocus+=simu->deltafocus;
+	    simu->ngsfocus+=simu->deltafocus;
 	}
 	double lpfocus=parms->sim.lpfocus;
-	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*NGSfocus;
+	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
     }
 }
 

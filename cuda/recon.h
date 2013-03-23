@@ -190,6 +190,7 @@ typedef struct curecon_t{
     curcell *RFlgsx;
     curcell *RFngsx;
     curcell *RFdfx;
+    curcell *GXL;
     CGTMP_T cgtmp_tomo;
     CGTMP_T cgtmp_fit;
     CGTMP_T cgtmp_moaowfs;
