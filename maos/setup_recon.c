@@ -1992,14 +1992,14 @@ setup_recon_focus(RECON_T *recon, POWFS_T *powfs, const PARMS_T *parms){
  
    \f{eqnarray*}{
    \hat{x}_{lgs}&=&A^{-1}G^{T}_{lgs}C_{lgs}^{-1}s_{lgs}\\
-   Uw&=&A^{-1}G_{ngs}^TC_{ngs}\\
+   Uw&=&A^{-1}G_{ngs}^TC_{ngs}^{-1}\\
    \hat{x}_{ngs}&=&Uw(1+G_{ngs}Uw)^{-1}(s_{ngs}-G_{ngs}\hat{x}_{lgs});\\
    a_{NGS}&=&F\hat{x}_{ngs}\\
    MVModes&=&F\cdot Uw\\
    MVRngs&=&(1+G_{ngs}Uw)^{-1}
    \f}
 
-   We need to orthnormalize the NGS modes. Propagate the NGS modes \f$F\cdot Uw\f$ to
+   If we want to orthnormalize the NGS modes. Propagate the NGS modes \f$F\cdot Uw\f$ to
    fitting directions and compute the cross-coupling matrix with weighting on \f$W_0, W_1\f$, we have
 
    \f{eqnarray*}{
@@ -2039,11 +2039,14 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     spcellfull(&recon->GXL, recon->GXlo, 1);
     //NEA of low order WFS.
     dcell *neailo=dcellnew(parms->nwfsr, parms->nwfsr);
+    dcell *nealo=dcellnew(parms->nwfsr, parms->nwfsr);
     for(int iwfs=0; iwfs<parms->nwfsr; iwfs++){
 	int ipowfs=parms->wfsr[iwfs].powfs;
 	if(parms->powfs[ipowfs].lo){
 	    spfull(&neailo->p[iwfs*(1+parms->nwfsr)],
 		   recon->saneai->p[iwfs*(1+parms->nwfsr)], TOMOSCALE);
+	    spfull(&nealo->p[iwfs*(1+parms->nwfsr)],
+		   recon->sanea->p[iwfs*(1+parms->nwfsr)], 1);
 	}
     }
     /* 2012-03-21: Remove focus mode from GL and NEA so no focus is
@@ -2093,29 +2096,93 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 
     dcellmm(&Uw, U, neailo, "nn", 1);
     dcellmm(&FUw, FU, neailo, "nn", 1);
-    dcellfree(neailo);
+
     dcell *M=NULL;
     dcellmm(&M, recon->GXL, Uw, "nn", 1);
     dcelladdI(M, 1);
     dcell *Minv=dcellinv(M);
     dcellfree(M);
+    if(parms->sim.mffocus){
+	//Embed a focus removal. Necessary!
+	dcell *focus=NULL;
+	dcellmm(&focus, Minv, recon->GFngs, "nn", 1);
+	dcellmm(&Minv, focus, recon->RFngsg, "nn", -1);
+    }
     if(parms->save.setup){
 	dcellwrite(Minv, "%s/mvst_Rngs_0",dirsetup);
 	dcellwrite(FUw,  "%s/mvst_Modes_0",dirsetup);
+    }
+    /*Compute the cross coupling matrix of the Modes:
+      FUw'*Ha'*W*Fuw*Ha. Re-verified on 2013-03-24.*/
+    dcell *QwQc=NULL;
+    {
+	dcell *Q=NULL;/*the NGS modes in ploc. */
+	spcellmulmat(&Q, recon->HA, FUw, 1);
+	QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,recon->fitwt);
+	dcellfree(Q);
+    }
+    /*Compute the wavefront error due to measurement noise. Verified on
+      2013-03-24. The gain optimization is yet a temporary hack because the way
+      PSDs are input.*/
+    if(1){
+	dcell *RC=NULL;
+	dcellmm(&RC, Minv, nealo, "nn", 1);
+	dcell *RCRt=NULL;
+	dcellmm(&RCRt, RC, Minv, "nt", 1);
+	dcell *RCRtQwQ=NULL;
+	dcellmm(&RCRtQwQ, RCRt, QwQc, "nn", 1);
+	dmat *tmp=dcell2m(RCRtQwQ);
+	PDMAT(tmp, ptmp);
+	double rss=0;
+	for(int i=0; i<tmp->nx; i++){
+	    rss+=ptmp[i][i];
+	}
+	dfree(tmp);
+	dcellfree(RCRtQwQ);
+	dcellfree(RCRt);
+	dcellfree(RC);
+	recon->sigmanlo=rss;
+	info("rms=%g nm\n", sqrt(rss)*1e9);
+
+	warning("Temporary solution for testing\n");
+	dmat *psd_ngs=dread("../../psd_ngs.bin");
+	if(1){
+	    //need to convert from rad to m2.
+	    dmat *psd_ws=dread("%s", parms->sim.wspsd);
+	    dmat *psd_ws_m=ddup(psd_ws); 
+	    dfree(psd_ws);
+	    dmat *psd_ws_y=dnew_ref(psd_ws_m->nx,1,psd_ws_m->p+psd_ws_m->nx);
+	    dscale(psd_ws_y, 4./parms->aper.d); dfree(psd_ws_y);
+	    add_psd2(&psd_ngs, psd_ws_m); dfree(psd_ws_m);
+	}
+	dwrite(psd_ngs, "psd_ngs_servo");
+	dmat *rss2=dnew(1,1); rss2->p[0]=rss;
+	int dtrat=parms->powfs[parms->lopowfs[0]].dtrat;
+	dcell *res=servo_optim(psd_ngs, parms->sim.dt, 
+			       dtrat, M_PI/4, rss2, 2); 
+	dfree(rss2);
+	info("dtrat=%d\n", dtrat);
+	info("g,a,T was %g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
+	memcpy(parms->sim.eplo->p, res->p[0]->p, 3*sizeof(double));
+	info("g,a,T=%g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
+	info("res=%g, resn=%g nm\n", sqrt(res->p[0]->p[3])*1e9, sqrt(res->p[0]->p[4])*1e9);
+	dcellfree(res); 
+	dfree(psd_ngs);
     }
     if(1){/*Orthnormalize the Modes. */
 	/*
 	  Change FUw*Minv -> FUw*(U*sigma^-1/2) * (U*sigma^1/2)'*Minv
 	  columes of FUw*(U*sigma^-1/2) are the eigen vectors.
 
-	  U, sigma is the eigen value decomposition of <HA FUw W FUw' HA'>
+	  U, sigma is the eigen value decomposition of <FUw' HA' W HA FUw>
 	*/
-	dcell *Q=NULL;/*the NGS modes in ploc. */
-	spcellmulmat(&Q, recon->HA, FUw, 1);
-	dcell *QwQc=calcWmcc(Q,Q,recon->W0,recon->W1,recon->fitwt);
-	dmat *QwQ=dcell2m(QwQc);
+
 	dmat *QSdiag=NULL, *QU=NULL, *QVt=NULL;
-	dsvd(&QU, &QSdiag, &QVt, QwQ);
+	{
+	    dmat *QwQ=dcell2m(QwQc);
+	    dsvd(&QU, &QSdiag, &QVt, QwQ);
+	    dfree(QwQ);
+	}
 	if(parms->save.setup) {
 	    dwrite(QSdiag,"%s/mvst_QSdiag",dirsetup);
 	}
@@ -2131,18 +2198,18 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcell *Minv_keep=Minv; Minv=NULL;
 	dcellmm(&Minv,QwQc,Minv_keep,"tn", 1);
 	dcellfree(Minv_keep);
-	dcellfree(Q);
-	dcellfree(QwQc);
-	dfree(QwQ);
 	dfree(QSdiag);
 	dfree(QVt);
 	dfree(QU);
     }
+    dcellfree(QwQc);
+    
     recon->MVRngs=dcellreduce(Minv,1);/*1xnwfs cell */
     recon->MVModes=dcellreduce(FUw,2);/*ndmx1 cell */
     recon->MVGM=NULL;
     spcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
-
+    dcellfree(neailo);
+    dcellfree(nealo);
     dcellfree(Minv);
     dcellfree(U);
     dcellfree(FU);

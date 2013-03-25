@@ -590,3 +590,61 @@ dmat* psd2time(dmat *psdin, rand_t *rstat, double dt, int nstepin){
     dscale(out, sqrt(var/var2));
     return out;
 }
+
+/**
+   Add two PSDs that doesn't have the same frequency. the first column of each
+   dmat is the frequency nu, and the second column is PSD. Bug discovered on
+   2013-03-24:only psd2 was added to to psd.*/
+static dmat *add_psd_nomatch(const dmat *psd1,const dmat *psd2){
+    dmat *nu1=dsub(psd1,0,psd1->nx,0,1);
+    dmat *psd2x=dnew_ref(psd2->nx, 1, psd2->p);
+    dmat *psd2y=dnew_ref(psd2->nx,1,psd2->p+psd2->nx);
+    dmat *p2ynew=dinterp1(psd2x,psd2y,nu1);
+    dfree(psd2x); dfree(psd2y);
+    dmat *psd=dnew(nu1->nx,2);
+    double *py=psd->p+psd->nx;
+    const double *p1y=psd1->p+psd1->nx;
+    for(long i=0; i<psd->nx; i++){
+	psd->p[i]=nu1->p[i];
+	py[i]=p1y[i]+p2ynew->p[i];
+    }
+    dfree(nu1);
+    dfree(p2ynew);
+    return psd;
+}
+/**
+   Add two PSDs. the first column of each dmat is the frequency nu, and the
+   second column is PSD*/
+dmat *add_psd(const dmat *psd1, const dmat *psd2){
+    if(psd1->nx!=psd2->nx){
+	//warning("The two PSDs have different length\n");
+	return add_psd_nomatch(psd1, psd2);
+    }
+    dmat *psd=dnew(psd1->nx,2);
+    double *restrict pp=psd->p+psd->nx;
+    const double *p1=psd1->p+psd1->nx;
+    const double *p2=psd2->p+psd2->nx;
+    for(long i=0; i<psd->nx; i++){
+	if(fabs(psd1->p[i]-psd2->p[i])>1.e-2){
+	    warning("The two PSDs doesn't have the same freq.");
+	    dfree(psd);
+	    return add_psd_nomatch(psd1,psd2);
+	    /*todo: apply interp1 to interpolate the second PSD. */
+	}
+	psd->p[i]=psd1->p[i];
+	pp[i]=p1[i]+p2[i];
+    }
+    return psd;
+}
+/*
+  Add a PSD to another.
+*/
+void add_psd2(dmat **out, const dmat *in){
+    if(!*out){
+	*out=ddup(in);
+    }else{
+	dmat *tmp=ddup(*out);
+	*out=add_psd(tmp, in);
+	dfree(tmp);
+    }
+}

@@ -168,7 +168,7 @@ void applyW(dcell *xin, const dsp *W0, const dmat *W1, const double *wt){
 }
 
 /**
-   Compute W0/W1 weighting dot product: \f$A^T(W0 B-W1 (W1^T B))\f$
+   Compute W0/W1 weighted dot product: \f$A^T(W0 B-W1 (W1^T B))\f$
 */
 dcell* calcWmcc(const dcell *A, const dcell *B, const dsp *W0, 
 		const dmat *W1, const dmat *wt){

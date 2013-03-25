@@ -336,6 +336,7 @@ typedef struct RECON_T{
     dcell *ecnn;       /**<covairance of Hx*(E*Cnn*E^t)*Hx^t: noise propagation to science.*/
     dmat *neam;        /**<subaperture averaged nea for each wfs*/
     double neamhi;     /**<average of neam for high order wfs.*/
+    double sigmanlo;   /**<Wavefront error due to noise for lo order.*/
     MUV_T RR;          /**<tomography right hand side matrix, solve RL*x=RR*y*/
     MUV_T RL;          /**<tomography left hand side matrix*/
     MUV_T FR;          /**<DM fit right hand size matrix, solve FL*x=FR*y*/

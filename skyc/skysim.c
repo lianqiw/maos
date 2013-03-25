@@ -417,6 +417,7 @@ static void skysim_calc_psd(SIM_S *simu){
 	double rms_focus_atm=psd_inte2(psdi);
 	info2("Atmosphere focus PSD integrates to %g nm\n", sqrt(rms_focus_atm)*1e9);
 	if(!parms->maos.mffocus){
+	    warning("Deprecated use\n");
 	    //add sodium focus PSD if we don't do focus tracking in maos
 	    double alpha=parms->skyc.na_alpha;
 	    /*convert height error to wfe*/

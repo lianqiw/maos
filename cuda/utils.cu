@@ -147,7 +147,7 @@ int gpu_init(int *gpus, int ngpu){
 	    }
 	}
     }else{
-	int repeat=1;
+	int repeat=0;
 	if(ngpu<=0){
 	    repeat=0;
 	    ngpu=ngpu_tot;

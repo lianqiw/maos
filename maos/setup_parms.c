@@ -780,6 +780,7 @@ static void readcfg_sim(PARMS_T *parms){
     parms->sim.epdm=readcfg_dmat("sim.epdm");
     parms->sim.aplo=readcfg_dmat("sim.aplo");
     parms->sim.eplo=readcfg_dmat("sim.eplo");
+    info("eplo is %ldx%ld\n", parms->sim.eplo->nx, parms->sim.eplo->ny);
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.apdm->nx==1){
 	dresize(parms->sim.apdm, 2, 1);

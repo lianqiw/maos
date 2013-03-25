@@ -22,6 +22,4 @@ ARG_S *parse_args(int argc, const char *argv[]);
 void prep_result_folder(ARG_S *arg);
 void rename_file(int sig);
 void skyc_signal_handler(int sig);
-dmat *add_psd(dmat *psd1, dmat *psd2);
-void add_psd2(dmat **out, dmat *in);
 #endif
