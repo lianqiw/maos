@@ -841,7 +841,6 @@ static void readcfg_sim(PARMS_T *parms){
 	parms->sim.ncpa_thetay[i]/=206265.;
     }
     normalize_sum(parms->sim.ncpa_wt, parms->sim.ncpa_ndir, 1);
-    parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dt;
 }
 /**
    Read in parameters for Cn2 estimation.
@@ -1377,44 +1376,29 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	    warning("Low order POWFS %d is using gtilt in simulation. "
 		    "This is not recommended\n",ipowfs);
     }
-    /*
-    parms->sim.ndtrat=0;
-    parms->sim.dtrats=calloc(parms->npowfs, sizeof(int));
-    parms->sim.idtrat_hi=-1;
-    parms->sim.idtrat_lo=-1;
+
+    parms->sim.dtrat_hi=1;
+    parms->sim.dtrat_lo=1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	int idtrat;
-	for(idtrat=0; idtrat<parms->sim.ndtrat; idtrat++){
-	    if(parms->powfs[ipowfs].dtrat==parms->sim.dtrats[idtrat]){
-		parms->powfs[ipowfs].idtrat=idtrat;
-		break;
-	    }
-	}
-	if(idtrat==parms->sim.ndtrat){
-	    parms->powfs[ipowfs].idtrat=idtrat;
-	    parms->sim.dtrats[idtrat]=parms->powfs[ipowfs].dtrat;
-	    parms->sim.ndtrat++;
-	}
-	if(!parms->powfs[ipowfs].lo){
-	    if(parms->sim.idtrat_hi==-1){
-		parms->sim.idtrat_hi=parms->powfs[ipowfs].idtrat;
-	    }else if(parms->sim.idtrat_hi>-1){
-		if(parms->sim.idtrat_hi!=parms->powfs[ipowfs].idtrat){
-		    warning("High order WFS has multiple dtrats\n");
-		    parms->sim.idtrat_hi=-2;
+	if(parms->powfs[ipowfs].dtrat>1){
+	    if(parms->powfs[ipowfs].lo){
+		if(parms->sim.dtrat_lo==1){
+		    parms->sim.dtrat_lo=parms->powfs[ipowfs].dtrat;
+		}else if(parms->sim.dtrat_lo!=parms->powfs[ipowfs].dtrat){
+		    error("We don't handle multiple framerate of the LO WFS yet\n");
 		}
-	    }
-	}else{
-	    if(parms->sim.idtrat_lo==-1){
-		parms->sim.idtrat_lo=parms->powfs[ipowfs].idtrat;
-	    }else if(parms->sim.idtrat_lo>-1){
-		if(parms->sim.idtrat_lo!=parms->powfs[ipowfs].idtrat){
-		    warning("High order WFS has multiple dtrats\n");
-		    parms->sim.idtrat_lo=-2;
+	    }else{
+		if(parms->sim.dtrat_hi==1){
+		    parms->sim.dtrat_hi=parms->powfs[ipowfs].dtrat;
+		}else if(parms->sim.dtrat_hi!=parms->powfs[ipowfs].dtrat){
+		    error("We don't handle multiple framerate of the LO WFS yet\n");
 		}
 	    }
 	}
-	}*/
+    }
+    parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
+    parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
+    parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dt;
 }
 /**
    postproc atmosphere parameters.

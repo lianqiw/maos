@@ -75,6 +75,13 @@ void save_recon(SIM_T *simu){
 			"Err Hi %d",idm);
 	    }
 	}
+	for(int idm=0; simu->dmerr && idm<parms->ndm; idm++){
+	    if(simu->dmint->mint[0]->p[idm]){
+		drawopd("DM",recon->aloc[idm], simu->dmint->mint[0]->p[idm]->p,NULL,
+			"DM Integrator (Hi)","x (m)","y (m)",
+			"Int Hi %d",idm);
+	    }
+	}
 	for(int idm=0; simu->dmproj && idm<parms->ndm; idm++){
 	    if(simu->dmproj->p[idm]){
 		drawopd("DM",recon->aloc[idm], simu->dmproj->p[idm]->p,NULL,
@@ -97,6 +104,23 @@ void save_recon(SIM_T *simu){
 	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,NULL,
 		    "DM Error Signal (Lo)","x (m)","y (m)",
 		    "Err Lo %d",idm);
+	}
+	dcellfree(dmlo);
+    }
+    if(parms->plot.run && simu->Mint_lo->mint[0]){
+	dcell *dmlo=NULL;
+	switch(simu->parms->recon.split){
+	case 1:
+	    ngsmod2dm(&dmlo, recon, simu->Mint_lo->mint[0], 1);
+	    break;
+	case 2:
+	    dcellmm(&dmlo, simu->recon->MVModes, simu->Mint_lo->mint[0], "nn", 1);
+	    break;
+	}
+	for(int idm=0; dmlo && idm<parms->ndm; idm++){
+	    drawopd("DM",recon->aloc[idm], dmlo->p[idm]->p,NULL,
+		    "DM Integrator (Lo)","x (m)","y (m)",
+		    "Int Lo %d",idm);
 	}
 	dcellfree(dmlo);
     }
@@ -130,8 +154,14 @@ void save_recon(SIM_T *simu){
     }
     if(parms->save.dm){
 	cellarr_dcell(simu->save->dmerr, simu->dmerr);
-	if(simu->save->Merr_lo){
+	if(simu->dmint->mint[0]){
+	    cellarr_dcell(simu->save->dmint, simu->dmint->mint[0]);
+	}
+	if(simu->Merr_lo){
 	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
+	    if(!parms->sim.fuseint && simu->Mint_lo->mint[0]){
+		cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo->mint[0]);
+	    }
 	}
     }
     const int seed=simu->seed;

@@ -389,6 +389,7 @@ typedef struct SIM_SAVE_T{
     cellarr** ecovxx;     /**<the time history of xx used to calculate ecov.*/
     /*Deformable mirror. */
     cellarr *dmerr;
+    cellarr *dmint;
     cellarr *dmfit;
     cellarr *dmpttr;
     cellarr *dmreal;
@@ -396,6 +397,7 @@ typedef struct SIM_SAVE_T{
     cellarr *dmproj;
     /*Low order modes */
     cellarr *Merr_lo;
+    cellarr *Mint_lo;
     cellarr *opdr;
     cellarr *opdx;
     /*science */
@@ -507,12 +509,12 @@ typedef struct SIM_T{
     map_t **dmprojsq;  /**<dmproj embeded into square map, zero padded.*/
     dcell **dmpsol;    /**<time averaged dm command (dtrat>1) for psol grad*/
     dcell *dmhist;     /**<histogram of dm commands. if dbg.dmhist is 1.*/
-    SERVO_T *dmint;     /**<dm integrator. (used of fuseint==1)*/
     HYST_T**hyst;      /**<Hysterisis computation stat*/
 
     /*High order*/
-    dcell *dmfit;   /**<direct high order fit output*/
-    dcell *dmerr;   /**<high order dm error signal.*/
+    SERVO_T *dmint;    /**<dm integrator. (used of fuseint==1)*/
+    dcell *dmfit;      /**<direct high order fit output*/
+    dcell *dmerr;      /**<high order dm error signal.*/
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
@@ -531,6 +533,7 @@ typedef struct SIM_T{
     dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
+    SERVO_T *ngsfocusint; /**<Focus mode integrator*/
     dcell *zoomavg;    /**<Trombone averager*/
     dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
     dcell *zoomint;    /**<Trombone integrator*/
@@ -598,8 +601,6 @@ typedef struct SIM_T{
     int wfsints_isa;   /**<sa counter for wfsints*/
     int perfevl_iground;/**<index of the layer at ground*/
     int cachedm_n;     /**<length of pcachedm array*/
-    int dtrat_hi;      /**<ratio of sampling period over clock of high order wfs*/
-    int dtrat_lo;      /**<dtrat of the lower order loop.*/
     int seed;          /**<current running seed.*/
     int iseed;         /**<index of current running seed.*/
     int isim;          /**<record current simulations step.*/
@@ -610,8 +611,6 @@ typedef struct SIM_T{
     RECON_T *recon;    /**<pointer to recon*/
     POWFS_T *powfs;    /**<pointer to powfs*/
     double dt;         /**<System baseline clock period. 1/800 s*/
-    double dtlo;       /**<low order wfs sampling period*/
-    double dthi;       /**<high order wfs sampling period*/
     int has_upt;       /**<whether we have uplink pointer loop.*/
     int last_report_time;/**<The time we lasted reported status to the scheduler.*/
 }SIM_T;

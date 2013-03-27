@@ -850,12 +850,12 @@ void wfsgrad(SIM_T *simu){
     /* Uplink pointing servo. Moved to here from filter.c because of
        synchronization issue. dcellcp before integrator changes because wfsgrad
        updates upterr with current gradient. */
-    dcellcp(&simu->uptreal, simu->uptint->mint[0]);
+    dcellcp(&simu->uptreal, simu->uptint->mint[0]);//must be before servo filtering.
     if(simu->upterr){
 	/* uplink tip/tilt mirror. use Integrator/Derivative control
 	   update command for next step.*/
 	servo_shift(simu->uptint, parms->sim.apupt);
-	servo_filter(simu->uptint, simu->upterr, simu->dthi, parms->sim.epupt);
+	servo_filter(simu->uptint, simu->upterr, parms->sim.dthi, parms->sim.epupt);
     }
 #if USE_CUDA
     if(parms->gpu.wfs){

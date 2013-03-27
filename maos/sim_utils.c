@@ -912,6 +912,9 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->lgsfocuslpf=dnew(parms->nwfs, 1);
 	simu->ngsfocuslpf=dcellnew(1,1);
 	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
+	if(parms->recon.split==2){
+	    simu->ngsfocusint=servo_new(NULL, parms->sim.epdm);
+	}
     }
 
     simu->has_upt=0;/*flag for uplink tip/tilt control */
@@ -1185,7 +1188,6 @@ static void init_simu_dm(SIM_T *simu){
     simu->dmint=servo_new(simu->dmreal, parms->sim.epdm);
     simu->Mint_lo=servo_new(NULL, parms->sim.eplo);
     simu->uptint=servo_new(NULL, parms->sim.epupt);
-
     /*Setup hysterisis */
     int anyhyst=0;
     simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
@@ -1237,14 +1239,19 @@ static void init_simu_dm(SIM_T *simu){
     int nstep=parms->sim.end-parms->sim.start;
     if(parms->save.dm){
 	int nrstep=nstep-(parms->sim.closeloop?1:0);
+	int nrsteplo=nstep/parms->sim.dtrat_lo-(parms->sim.closeloop?1:0);
 	save->dmerr=cellarr_init(nrstep, 1,"dmerr_%d.bin", seed);
+	save->dmint=cellarr_init(nrstep, 1,"dmint_%d.bin", seed);
 	if(parms->recon.alg==0){
 	    save->dmfit=cellarr_init(nrstep, 1, "dmfit_%d.bin", seed);
 	}
 	if(parms->recon.split){
-	    save->Merr_lo=cellarr_init(nrstep, 1, "Merr_lo_%d.bin", seed);
+	    save->Merr_lo=cellarr_init(nrsteplo, 1, "Merr_lo_%d.bin", seed);
+	    if(!parms->sim.fuseint){
+		save->Mint_lo=cellarr_init(nrsteplo-1, 1, "Mint_lo_%d.bin", seed);
+	    }
 	}	
-	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
+	save->dmreal = cellarr_init(nstep+1, 1, "dmreal_%d.bin", seed);
 	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
 	if(parms->sim.dmproj){
 	    save->dmproj = cellarr_init(nstep, 1, "dmproj_%d.bin", seed);
@@ -1354,33 +1361,11 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
     simu->status->timstart=myclocki();
     simu->status->info=S_RUNNING;
 
-    {   /* dtrat */
-	if(parms->atm.frozenflow){
-	    simu->dt=parms->sim.dt;
-	}else{
-	    simu->dt=0;
-	}
-	simu->dtrat_hi=1;
-	simu->dtrat_lo=1;
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(parms->powfs[ipowfs].dtrat>1){
-		if(parms->powfs[ipowfs].lo){
-		    if(simu->dtrat_lo==1){
-			simu->dtrat_lo=parms->powfs[ipowfs].dtrat;
-		    }else if(simu->dtrat_lo!=parms->powfs[ipowfs].dtrat){
-			error("We don't handle multiple framerate of the LO WFS yet\n");
-		    }
-		}else{
-		    if(simu->dtrat_hi==1){
-			simu->dtrat_hi=parms->powfs[ipowfs].dtrat;
-		    }else if(simu->dtrat_hi!=parms->powfs[ipowfs].dtrat){
-			error("We don't handle multiple framerate of the LO WFS yet\n");
-		    }
-		}
-	    }
-	}
-	simu->dtlo=simu->dtrat_lo*simu->dt;
-	simu->dthi=simu->dtrat_hi*simu->dt;
+    /* dtrat */
+    if(parms->atm.frozenflow){
+	simu->dt=parms->sim.dt;
+    }else{
+	simu->dt=0;
     }
 
     if(parms->sim.wspsd){
@@ -1607,13 +1592,14 @@ void free_simu(SIM_T *simu){
     
     cellarr_close_n(save->wfspsfout, nwfs);
     cellarr_close_n(save->ztiltout, nwfs);
-
     cellarr_close(save->dmerr);
+    cellarr_close(save->dmint);
     cellarr_close(save->dmfit);
     cellarr_close(save->dmpttr);
     cellarr_close(save->dmreal);
     cellarr_close(save->dmproj);
     cellarr_close(save->Merr_lo);
+    cellarr_close(save->Mint_lo);
     cellarr_close(save->opdr);
     cellarr_close(save->opdx);
     cellarr_close_n(save->evlopdcl, nevl);

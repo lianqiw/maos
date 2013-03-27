@@ -570,7 +570,7 @@ void FitL(dcell **xout, const void *A,
 void focus_tracking_grads(SIM_T* simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
-    int hi_output=(!parms->sim.closeloop || (simu->isim+1)%simu->dtrat_hi==0);
+    int hi_output=(!parms->sim.closeloop || (simu->isim+1)%parms->sim.dtrat_hi==0);
     double lpfocus=parms->sim.lpfocus;
     if(hi_output){
 	dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/

@@ -307,6 +307,30 @@ static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...
     va_end(ap);
     return col;
 }
+/**
+   Clear the clipboard so we can append to it multiple times.
+ */
+static void clipboard_clear(){
+    GdkAtom atoms[2]={GDK_SELECTION_CLIPBOARD, GDK_SELECTION_PRIMARY};
+    for(int iatom=0; iatom<2; iatom++){
+	GtkClipboard *clip=gtk_clipboard_get(atoms[iatom]);
+	gtk_clipboard_set_text(clip,"",-1);
+    }
+}
+/**
+   Append text to clipboard (primary and default).
+*/
+static void clipboard_append(const char *jobinfo){
+    GdkAtom atoms[2]={GDK_SELECTION_CLIPBOARD, GDK_SELECTION_PRIMARY};
+    for(int iatom=0; iatom<2; iatom++){
+	GtkClipboard *clip=gtk_clipboard_get(atoms[iatom]);
+	gchar *old=gtk_clipboard_wait_for_text(clip);
+	gchar *newer=stradd(old, jobinfo, "\n", NULL);
+	gtk_clipboard_set_text(clip, newer, -1);
+	g_free(newer);
+	g_free(old);
+    }
+}
 static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data, int cmd, char *action){
     gint ihost=GPOINTER_TO_INT(user_data);
     GValue value=G_VALUE_INIT;
@@ -316,8 +340,7 @@ static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter 
     if(cmd<0){
 	switch(cmd){
 	case -1:{
-	    GtkClipboard *clip=gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-	    gchar *old=gtk_clipboard_wait_for_text(clip);
+	   
 	    gtk_tree_model_get_value(model, iter, COL_PATH, &value);
 	    gchar *jobinfo=g_strdup(g_value_get_string(&value));
 	    g_value_unset(&value);
@@ -329,13 +352,13 @@ static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter 
 		}
 		if(pos){
 		    pos[1]='\0';
+		    gchar *tmp=jobinfo;
+		    jobinfo=stradd("cd ", tmp, NULL);
+		    g_free(tmp);
 		}
 	    }
-	    gchar *newer=stradd(old, jobinfo, "\n", NULL);
-	    gtk_clipboard_set_text(clip, newer, -1);
+	    clipboard_append(jobinfo);
 	    g_free(jobinfo);
-	    g_free(newer);
-	    g_free(old);
 	}
 	    break;
 	}
@@ -395,13 +418,11 @@ static void clear_selected_event(GtkMenuItem *menuitem, gpointer user_data){
     handle_selected_event(menuitem, user_data, clear_selected, "Clear");
 }
 static void copy_selected_event(GtkMenuItem *menuitem, gpointer user_data){
-    GtkClipboard *clip=gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    gtk_clipboard_set_text(clip,"",-1);
+    clipboard_clear();
     handle_selected_event(menuitem, user_data, copy_selected, "Copy");
 }
 static void copy_selectedpath_event(GtkMenuItem *menuitem, gpointer user_data){
-    GtkClipboard *clip=gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    gtk_clipboard_set_text(clip,"",-1);
+    clipboard_clear();
     handle_selected_event(menuitem, user_data, copy_selectedpath, "Copy Path of ");
 }
 

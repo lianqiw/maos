@@ -147,10 +147,10 @@ void recon_split(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int isim=simu->reconisim;
-    int lo_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_lo==0);
+    int lo_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_lo==0);
     if(parms->recon.split==2){
 	if(!parms->gpu.tomo){
-	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./simu->dtrat_lo);
+	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
 	}
     }
     /*Low order has output */
@@ -183,21 +183,24 @@ void recon_split(SIM_T *simu){
     }else{
 	dcellfree(simu->Merr_lo);/*don't have output. Merr_lo_store is never freed. */
     }
-    if(parms->sim.mffocus){
-	//Do low pass filtering on NGS focus measurement to drive global focus mode directly.
-	if(lo_output){
-	    if(parms->recon.split==1 && simu->Merr_lo_store){
+    if(lo_output){
+	if(parms->recon.split==1){
+	    if(simu->Merr_lo_store){
 		simu->ngsfocus=simu->Merr_lo_store->p[0]->p[5];
-	    }else{
-		dcell *tmp=NULL;
-		dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
-		simu->ngsfocus=tmp->p[0]->p[0]; 
-		dcellfree(tmp);
 	    }
+	}else{
+	    dcell *tmp=NULL;
+	    dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
+	    simu->ngsfocus=tmp->p[0]->p[0]; 
+	    dcellfree(tmp);
 	}
+	
 	if(parms->dbg.deltafocus){
 	    simu->ngsfocus+=simu->deltafocus;
 	}
+    }
+    if(parms->sim.mffocus){
+	//Do low pass filtering on NGS focus measurement to drive global focus mode directly.
 	double lpfocus=parms->sim.lpfocus;
 	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
     }
@@ -211,7 +214,7 @@ void reconstruct(SIM_T *simu){
     if(parms->sim.evlol) return;
     RECON_T *recon=simu->recon;
     int isim=simu->reconisim;
-    const int hi_output=(!parms->sim.closeloop || (isim+1)%simu->dtrat_hi==0);
+    const int hi_output=(!parms->sim.closeloop || (isim+1)%parms->sim.dtrat_hi==0);
     if(simu->gradlastcl){
 	if(!parms->sim.idealfit){
 	    if(parms->sim.mffocus){
@@ -274,6 +277,10 @@ void reconstruct(SIM_T *simu){
 		    dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
 		}
 		dcelladd(&simu->dmerr, 1, dmpsol, -1);
+		if(!parms->sim.fuseint && parms->recon.split!=1 && parms->sim.mffocus){
+		    warning_once("Temporary solution\n");
+		    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocusint->mint[1], "nn", -1);
+		}
 	    }
 	    if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
 		remove_dm_ngsmod(simu, simu->dmerr);

@@ -723,6 +723,18 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	dfree(sanea_iwfs);
 	recon->neam->p[iwfs]=sqrt(nea2_sum/count/2);/*average sanea in radian */
+	/*double pixtheta=parms->powfs[ipowfs].pixtheta;
+	if(recon->neam->p[iwfs]>pixtheta*2 && parms->powfs[ipowfs].usephy){
+	//Neglecting WFS whos NEA is greater than twice pixel size in
+	//physical optics mode.
+	    spfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
+	    recon->saneai->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,0);
+	    spfree(recon->saneal->p[iwfs+iwfs*parms->nwfsr]);
+	    recon->saneal->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,0);
+	    spfree(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
+	    recon->sanea->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,INFINITY);
+	    recon->neam->p[iwfs]=INFINITY;
+	}*/
 	char *neatype;
 	if(parms->powfs[ipowfs].neareconfile){
 	    neatype="FILE";

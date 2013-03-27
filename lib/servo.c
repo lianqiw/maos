@@ -322,7 +322,7 @@ servo_typeII_filter(SERVO_T *st, dcell *merrc, double dt, const dmat *gain){
 	}else if(gain->ny==nmod){
 	    indmul=1;
 	}else{
-	    error("Wrong format\n");
+	    error("Wrong format in gain\n");
 	}
 	if(indmul>0){
 	    for(int imod=0; imod<nmod; imod++){

@@ -471,9 +471,6 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    curzero(gradacc, stream);
 	}
 	CUDA_SYNC_STREAM;
-	if(save_grad){
-	    cellarr_dmat(simu->save->gradcl[iwfs], gradcl);
-	}
     }/*dtrat_output */
     ctoc("done");
     CUDA_SYNC_STREAM;

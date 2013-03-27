@@ -429,7 +429,11 @@ typedef struct RECON_CFG_T{
 */
 typedef struct SIM_CFG_T{
     double dt;       /**<sampling period. 1/800*/
+    double dtlo;       /**<low order wfs sampling period*/
+    double dthi;       /**<high order wfs sampling period*/
     double za;       /**<zenith angle in radian*/
+    int dtrat_hi;      /**<ratio of sampling period over clock of high order wfs*/
+    int dtrat_lo;      /**<dtrat of the lower order loop.*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
     int *seeds;      /**<simulation seeds*/

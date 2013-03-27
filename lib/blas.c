@@ -122,7 +122,7 @@ X(mat)* X(invspd)(const X(mat) *A){
 */
 void X(inv_inplace)(X(mat)*A){
     if(!A) return;
-    if(A->nx!=A->ny) error("Must be a square matrix");
+    if(A->nx!=A->ny) error("Must be a square matrix, but is %ldx%ld\n", A->nx, A->ny);
     int info=0, N=A->nx;
     T *B=calloc(N*N,sizeof(T));
     for(int i=0;i<N;i++){

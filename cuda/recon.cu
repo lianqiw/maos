@@ -745,7 +745,7 @@ void gpu_tomo(SIM_T *simu){
     }
     if(parms->recon.split==2){
 	curcell *gngsmvst=NULL;
-	curcellmm(&gngsmvst, 1, curecon->GXL, curecon->opdr_vec, "nn", 1./simu->dtrat_lo, curecon->cgstream[0]);
+	curcellmm(&gngsmvst, 1, curecon->GXL, curecon->opdr_vec, "nn", 1./parms->sim.dtrat_lo, curecon->cgstream[0]);
 	add2cpu(&simu->gngsmvst, gngsmvst, curecon->cgstream[0]);
 	curfree(gngsmvst);
     }
