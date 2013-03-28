@@ -39,4 +39,7 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]);
 /*Handling backtrace*/
 char* call_addr2line(const char *buf);
 void print_backtrace_symbol(void *const *buffer, int size);
+/*save a socket for draw()*/
+int scheduler_send_socket(int sfd);
+int scheduler_recv_socket(int *sfd);
 #endif

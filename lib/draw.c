@@ -77,7 +77,7 @@ typedef struct{
 }sockinfo_t;
 sockinfo_t sock_draws[MAXDRAW];
 
-#define CATCH(A) if(A){perror("stwrite");if(sock_helper==-1&&!DRAW_DIRECT){disable_draw=1;warning("disable draw\n");} warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);draw_remove(sock_draw); continue;}
+#define CATCH(A) if(A){info("stwrite to %d failed with %s\n", sock_draw, strerror(errno));print_backtrace();if(sock_helper==-1&&!DRAW_DIRECT){disable_draw=1;warning("disable draw\n");} warning("\n\n\nwrite to sock_draw=%d failed\n\n\n",sock_draw);draw_remove(sock_draw); continue;}
 #define STWRITESTR(A) CATCH(stwritestr(sock_draw,A))
 #define STWRITEINT(A) CATCH(stwriteint(sock_draw,A))
 #define STWRITECMDSTR(cmd,str) CATCH(stwriteint(sock_draw,cmd) || stwritestr(sock_draw,str))
@@ -152,7 +152,7 @@ static void list_destroy(list_t **head){
 /*Add fd to list of drawing socks*/
 int draw_add(int fd){
     if(fd==-1) return -1;
-    //info("received sock %d\n", fd);
+    info("received sock %d\n", fd);
     if(sock_helper==-1){//externally added
 	sock_helper=-2;
     }
@@ -259,24 +259,36 @@ static int open_drawdaemon(){
 	return -1;
     }
     if(!sock_ndraw){
-	if(DRAW_DIRECT){
-	    draw_add(launch_drawdaemon());
-	}else if(sock_helper!=-2){
-	    if(sock_helper==-1){
-		draw_helper();
+	int sock=-1;
+	if(scheduler_recv_socket(&sock)){
+	    sock=-1;
+	}
+	if(sock==-1){
+	    if(DRAW_DIRECT){
+		sock=launch_drawdaemon();
+	    }else if(sock_helper!=-2){
+		if(sock_helper==-1){
+		    draw_helper();
+		}
+		if(!DRAW_ID){
+		    DRAW_ID=getpid();
+		}
+		if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
+		    sock=-1;
+		    disable_draw=1;
+		    close(sock_helper);
+		    sock_helper=-1;
+		    warning("Unable to talk to the helper to launch drawdaemon\n");
+		}
 	    }
-	    if(!DRAW_ID){
-		DRAW_ID=getpid();
+	    if(sock!=-1){
+		if(scheduler_send_socket(sock)){
+		    warning("send sock %d to scheduler failed\n", sock);
+		}
 	    }
-	    int sock;
-	    if(stwriteint(sock_helper, DRAW_ID) || streadfd(sock_helper, &sock)){
-		disable_draw=1;
-		close(sock_helper);
-		sock_helper=-1;
-		warning("Unable to talk to the helper to launch drawdaemon\n");
-	    }else{
-		draw_add(sock);
-	    }
+	}
+	if(sock!=-1){
+	    draw_add(sock);
 	}
     }
     return sock_ndraw==0?-1:0;

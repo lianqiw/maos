@@ -782,9 +782,13 @@ gboolean addpage(gpointer indata){
 	drawdata_old->ylabel=drawdata->ylabel;
 	drawdata_old->legend=drawdata->legend;
 	if(drawdata->limit_data){
-	    if(!drawdata_old->limit_data)
+	    if(!drawdata_old->limit_data){
 		drawdata_old->limit_data=calloc(4, sizeof(double));
+	    }
 	    memcpy(drawdata_old->limit_data, drawdata->limit_data, sizeof(double)*4);
+	}else{
+	    free(drawdata_old->limit_data);
+	    drawdata_old->limit_data=NULL;
 	}
 	free(drawdata_old->limit_cumu); drawdata_old->limit_cumu=NULL;
 	drawdata_old->zlim=drawdata->zlim;
@@ -1235,6 +1239,9 @@ static void close_window(GtkObject *object)
 #endif
 {
     windows = g_slist_remove(windows, object);
+    if(!windows){
+	close(sock);
+    }
     GtkWidget *topnb=get_topnb(GTK_WIDGET(object));
     GtkWidget *toolbar=get_toolbar(GTK_WIDGET(object));
     g_signal_handlers_disconnect_by_func(topnb, topnb_page_changed, toolbar);
@@ -1250,7 +1257,6 @@ static void close_window(GtkObject *object)
 	}
     }
     if(!windows){
-	close(sock);
 	gtk_main_quit();
     }
     /*don't call exit here. */

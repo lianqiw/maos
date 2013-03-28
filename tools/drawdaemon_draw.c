@@ -1040,7 +1040,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	cairo_identity_matrix(cr);
 	char fps[10];
 	snprintf(fps, 10, "FPS:%5.1f", 1./drawdata->dtime);
-	pango_text(cr, layout, xoff+widthim-font_size*0.3, yoff+font_size*1.2, fps, 1, 0);
+	pango_text(cr, layout, font_size*0.3, font_size*0.2, fps, 0, 0);
 	cairo_restore(cr);
     }
     g_object_unref(layout);

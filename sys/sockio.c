@@ -23,9 +23,38 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+#include <poll.h>
 #include "misc.h"
 #include "common.h"
 #include "sockio.h"
+int stwrite(int sfd, const void *p, size_t len){
+    if(issock(sfd)){
+#ifdef __linux__
+	return (send(sfd, p, len, MSG_NOSIGNAL)!=len)?-1:0;
+#else
+	return (send(sfd, p, len, 0)!=len)?-1:0;
+#endif
+    }else{//act on non-socket using write.
+	int nwrite;
+	do{
+	    nwrite=write(sfd, p, len);
+	    p+=nwrite; len-=nwrite;
+	}while(nwrite>0 && nwrite<len);
+	return len?-1:0;
+    }
+}
+int stread(int sfd, void *p, size_t len){
+    if(issock(sfd)){
+	return (recv(sfd, p, len, MSG_WAITALL)!=len)?-1:0;
+    }else{//act on non-socket using read.
+	int nread;
+	do{
+	    nread=read(sfd, p, len);
+	    p+=nread; len-=nread;
+	}while(nread>0 && nread<len);
+	return len?-1:0;
+    }
+}
 /**
    Write a string to socket
 */
@@ -129,6 +158,21 @@ int streadfd(int sfd, int *fd){
 	memmove(fd, CMSG_DATA(cmsg), sizeof(int));
 	warning("recvmsg received fd %d from %d.\n", *fd, sfd);
 	ans=0;
+    }
+    return ans;
+}
+/**
+   Check whether a socket has been disconnected
+*/
+int stcheck(int sfd){
+    int ans=0;
+    struct pollfd data={sfd, POLLIN|POLLPRI|POLLOUT, 0 };
+    if(poll(&data, 1, 1)){
+	info("data.revents=%d\n", data.revents);
+	if(data.revents&POLLERR || data.revents & POLLHUP || data.revents & POLLNVAL){
+	    warning("socket %d is no longer valid\n", sfd);
+	    ans=1;
+	}
     }
     return ans;
 }

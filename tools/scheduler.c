@@ -574,7 +574,29 @@ static int respond(int sock){
 	break;
     case CMD_DRAW://not used
 	break;
-    case CMD_SOCK:
+    case CMD_SOCK:{
+	//Called by draw() to cache a sock.
+	static int sock_save=-1;
+	if(pid==1){//receive sock from draw()
+	    if(streadfd(sock, &sock_save)){
+		warning("receive socket from %d failed\n", sock);
+		sock_save=-1;
+	    }
+	}else if(pid==-1){//send sock to draw()
+	    if(sock_save!=-1 && stcheck(sock_save)){
+		close(sock_save);
+		sock_save=-1;
+	    }
+	    if(stwriteint(sock, sock_save==-1?-1:0)){
+		warning("Unable to talk to draw\n");
+	    }
+	    if(sock_save!=-1){
+		if(stwritefd(sock, sock_save)){
+		    warning("send socket to %d failed\n", sock);
+		}
+	    }
+	}
+    }
 	break;
     case CMD_REMOVE:/*called by monitor to remove a runned object. */
 	{

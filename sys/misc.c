@@ -299,6 +299,14 @@ int islink(const char *fn){
     return !stat(fn, &buf) && S_ISLNK(buf.st_mode);
 }
 /**
+   Test whether fd is a socket
+*/
+int issock(int fd){
+    if(fd==-1) return 0;
+    struct stat buf;
+    return !fstat(fd, &buf) && S_ISSOCK(buf.st_mode);
+}
+/**
  * Compute length of file in Bytes
  */
 size_t flen(const char *fn){

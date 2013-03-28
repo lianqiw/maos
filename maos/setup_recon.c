@@ -723,8 +723,8 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	}
 	dfree(sanea_iwfs);
 	recon->neam->p[iwfs]=sqrt(nea2_sum/count/2);/*average sanea in radian */
-	/*double pixtheta=parms->powfs[ipowfs].pixtheta;
-	if(recon->neam->p[iwfs]>pixtheta*2 && parms->powfs[ipowfs].usephy){
+	double pixtheta=parms->powfs[ipowfs].pixtheta;
+	if(recon->neam->p[iwfs]>pixtheta*4 && parms->powfs[ipowfs].usephy){
 	//Neglecting WFS whos NEA is greater than twice pixel size in
 	//physical optics mode.
 	    spfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);
@@ -734,7 +734,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    spfree(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
 	    recon->sanea->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,INFINITY);
 	    recon->neam->p[iwfs]=INFINITY;
-	}*/
+	}
 	char *neatype;
 	if(parms->powfs[ipowfs].neareconfile){
 	    neatype="FILE";
@@ -2067,11 +2067,11 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	dcell *focus=NULL;
 	dcellmm(&focus, recon->RFngsg, recon->GXL, "nn", 1);
 	dcellmm(&recon->GXL, recon->GFngs, focus, "nn", -1);
-	dcelldropzero(recon->GXL, 1e-12);
+	//dcelldropzero(recon->GXL, 1e-12);
 	dcellfree(focus);
 	dcellmm(&focus, recon->RFngsg, neailo, "nn", 1);
 	dcellmm(&neailo, recon->GFngs, focus, "nn", -1);
-	dcelldropzero(neailo, 1e-8);
+	//dcelldropzero(neailo, 1e-8);
 	dcellfree(focus);
     }
 

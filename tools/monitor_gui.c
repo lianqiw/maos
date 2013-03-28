@@ -217,11 +217,11 @@ gboolean refresh(PROC_T *p){
 	{
 	    char spid[12];
 	    snprintf(spid,12," %5d",p->pid);
-	    gtk_label_set(GTK_LABEL(p->entry_pid), spid);
+	    gtk_label_set_text(GTK_LABEL(p->entry_pid), spid);
 	    struct tm *tim=localtime(&(p->status.timstart));
 	    char stime[80];
 	    strftime(stime,80,"[%a %k:%M:%S]",tim);
-	    gtk_label_set(GTK_LABEL(p->entry_start), stime);
+	    gtk_label_set_text(GTK_LABEL(p->entry_start), stime);
 	}
 	notify_user(p);
 	break;

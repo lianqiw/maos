@@ -219,7 +219,7 @@ AC_ARG_WITH(matlab, --with-matlab=DIR, [MEXDIR=${withval} use_mex="yes" ], [MEXD
 AC_ARG_ENABLE(cuda,  [  --enable-cuda   Enable Cuda], [use_cuda="$enableval"], [use_cuda="$use_cuda_default"])
 AC_ARG_WITH(cuda, --with-cuda=DIR, [CUDADIR=${withval} use_cuda="yes"], [CUDADIR="$CUDADIR_AUTO"])
 AC_ARG_ENABLE(scheduler,[  --disable-scheduler  Disable built in scheduler (default: enabled)], [use_scheduler="$enableval"], [use_scheduler="yes"])
-AC_ARG_WITH(gtk,  --with-gtk-DIR, [GTKDIR=${withval}], [GTKDIR=""])
+AC_ARG_WITH(gtk,  --with-gtk=DIR, [GTKDIR=${withval}], [GTKDIR=""])
 
 AM_CONDITIONAL(USE_SCHEDULER, true)
 if test "$use_scheduler" = "no" ;then
