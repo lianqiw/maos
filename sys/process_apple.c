@@ -34,6 +34,7 @@
 #include <mach/task.h>
 #include <mach/vm_statistics.h>
 #include <mach/vm_map.h>
+#include <libproc.h>
 #include "common.h"
 #include "process.h"
 #include "misc.h"
@@ -43,15 +44,10 @@
 char *get_job_progname(int pid){
     char *progname=NULL;
     if(pid>0){
-	int mib[4];
-	mib[0] = CTL_KERN;
-	mib[1] = KERN_PROC;
-	mib[2] = KERN_PROC_PATHNAME;
-	mib[3] = pid>0?pid:getpid();
 	char buf[PATH_MAX];
-	size_t cb = sizeof(buf);
-	sysctl(mib, 4, buf, &cb, NULL, 0);
-	progname=strdup0(buf);
+	if(proc_pidpath(pid, buf, sizeof(buf))>0){
+	    progname=strdup0(buf);
+	}
     }else{
 	char path[PATH_MAX],path2[PATH_MAX];
 	uint32_t size=sizeof(path);

@@ -1,21 +1,18 @@
 #ifndef AOS_MEX_INTERFACE_H
 #define AOS_MEX_INTERFACE_H
-#include "../lib/aos.h"
-#ifdef MATLAB_MEX_FILE
 #include <mex.h>
+#include "../lib/aos.h"
+#ifndef INLINE
+#define INLINE inline __attribute__((always_inline))
 #endif
-#if __STDC_VERSION__ < 199901L /*C99*/
-#define inline __inline
-#endif
-
-inline mxArray *dsp2mx(const dsp*A){
+INLINE mxArray *dsp2mx(const dsp*A){
     mxArray *out=mxCreateSparse(A->m,A->n,A->nzmax,mxREAL);
     memcpy(mxGetIr(out),A->i,A->nzmax*sizeof(long));
     memcpy(mxGetJc(out),A->p,(A->n+1)*sizeof(long));
     memcpy(mxGetPr(out),A->x,A->nzmax*sizeof(double));
     return out;
 }
-inline dsp *mx2dsp(const mxArray *A){
+INLINE dsp *mx2dsp(const mxArray *A){
     dsp *out=calloc(1, sizeof(dsp));
     out->p=mxGetJc(A);
     out->i=mxGetIr(A);
@@ -25,12 +22,12 @@ inline dsp *mx2dsp(const mxArray *A){
     }
     return out;
 }
-inline mxArray *d2mx(const dmat *A){
+INLINE mxArray *d2mx(const dmat *A){
     mxArray *out=mxCreateDoubleMatrix(A->nx,A->ny,mxREAL);
     memcpy(mxGetPr(out),A->p,A->nx*A->ny*sizeof(double));
     return out;
 }
-inline mxArray *c2mx(const cmat *A){
+INLINE mxArray *c2mx(const cmat *A){
     mxArray *out=mxCreateDoubleMatrix(A->nx, A->ny, mxCOMPLEX);
     double *pr=mxGetPr(out);
     double *pi=mxGetPi(out);
@@ -42,7 +39,7 @@ inline mxArray *c2mx(const cmat *A){
     return out;
 }
 
-inline loc_t *mx2loc(const mxArray *A){
+INLINE loc_t *mx2loc(const mxArray *A){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=mxGetPr(A);
     loc->nloc=mxGetM(A);
@@ -64,7 +61,7 @@ inline loc_t *mx2loc(const mxArray *A){
     return loc;
 }
 
-inline dmat *mx2d(const mxArray *A){
+INLINE dmat *mx2d(const mxArray *A){
     if(mxGetPi(A)){
 	mexErrMsgTxt("A is complex");
     }
@@ -74,11 +71,31 @@ inline dmat *mx2d(const mxArray *A){
     dmat *out=dnew_ref( mxGetM(A), mxGetN(A), mxGetPr(A));
     return out;
 }
-inline char *mx2str(const mxArray *A){
+INLINE char *mx2str(const mxArray *A){
     int nlen=mxGetNumberOfElements(A)+1;
     char *fn=malloc(nlen);
     mxGetString(A, fn, nlen);
     return fn;
+}
+static void mex_signal_handler(int sig){
+    if(sig){
+	mexErrMsgTxt("Signal caught.\n");
+    }else{
+	info("signal 0 caught\n");
+    }
+}
+static void(*default_handler)(int)=NULL;
+static __attribute__((constructor)) void init(){
+    if(!default_handler){
+	default_handler=signal(SIGTERM, mex_signal_handler);
+    }
+}
+static __attribute__((destructor)) void deinit(){
+    if(default_handler){
+	signal(SIGTERM, default_handler);
+    }else{
+	signal(SIGTERM, SIG_DFL);
+    }
 }
 
 #endif
