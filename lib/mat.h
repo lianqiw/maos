@@ -75,7 +75,9 @@ X(mat) *X(dup)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(cp)(X(mat) **out0, const X(mat) *in);\
 X(mat) *X(trans)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 void X(set)(X(mat) *A, const T val);\
+void X(maxmin)(const X(mat) *A, R*max, R*min);	\
 R X(max)(const X(mat) *A) CHECK_UNUSED_RESULT;\
+R X(maxabs)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 R X(min)(const X(mat) *A) CHECK_UNUSED_RESULT;\
 R X(norm2)(const X(mat) *in) CHECK_UNUSED_RESULT;\
 void X(randu)(X(mat) *A, const T mean, rand_t *rstat);\
@@ -119,6 +121,7 @@ int X(clip)(X(mat) *A, double min, double max);\
 void X(gramschmidt)(X(mat) *Mod, R *amp);	\
 void X(muldiag)(X(mat) *A, X(mat) *s);\
 void X(cwpow)(X(mat) *A, double power);\
+void X(cwpow_thres)(X(mat) *A, double power, double thres);		\
 void X(svd)(X(mat) **U, XR(mat) **Sdiag, X(mat) **VT, const X(mat) *A); \
 void X(evd)(X(mat) **U, XR(mat) **Sdiag, const X(mat) *A); \
 void X(svd_pow)(X(mat) *A, double power, int issym, double thres);\

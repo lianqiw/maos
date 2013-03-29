@@ -732,7 +732,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	    spfree(recon->saneal->p[iwfs+iwfs*parms->nwfsr]);
 	    recon->saneal->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,0);
 	    spfree(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
-	    recon->sanea->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL,INFINITY);
+	    recon->sanea->p[iwfs+iwfs*parms->nwfsr]=spnewdiag(nsa*2,NULL, pixtheta*1e4);
 	    recon->neam->p[iwfs]=INFINITY;
 	}
 	char *neatype;
@@ -2198,13 +2198,13 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	if(parms->save.setup) {
 	    dwrite(QSdiag,"%s/mvst_QSdiag",dirsetup);
 	}
-	dcwpow(QSdiag, -1./2.);
+	dcwpow_thres(QSdiag, -1./2., 1e-14);
 	dmuldiag(QU,QSdiag);/*U*sigma^-1/2 */
 	d2cell(&QwQc,QU,NULL);
 	dcell *FUw_keep=FUw;FUw=NULL; 
 	dcellmm(&FUw, FUw_keep, QwQc, "nn", 1);
 	dcellfree(FUw_keep);
-	dcwpow(QSdiag,-2);
+	dcwpow_thres(QSdiag,-2, 1e-14);
 	dmuldiag(QU,QSdiag);/*U*sigma^1/2 (From U*sigma^(-1/2)*sigma) */
 	d2cell(&QwQc,QU,NULL);
 	dcell *Minv_keep=Minv; Minv=NULL;

@@ -305,25 +305,27 @@ void X(arrfree)(X(mat) **As, int n){
     }
     free(As);
 }
-
+void X(maxmin)(const X(mat) *A, R*max, R*min){
+#ifdef USE_COMPLEX
+#ifdef USE_SINGLE
+    maxminfcmp(A->p,A->nx*A->ny,max,min,NULL);
+#else
+    maxmincmp(A->p,A->nx*A->ny,max,min,NULL);
+#endif
+#else
+#ifdef USE_SINGLE
+    maxminflt(A->p,A->nx*A->ny,max,min);
+#else
+    maxmindbl(A->p,A->nx*A->ny,max,min);
+#endif
+#endif    
+}
 /**
    find the maximum value of a X(mat) object
 */
 R X(max)(const X(mat) *A){
     R max,min;
-#ifdef USE_COMPLEX
-#ifdef USE_SINGLE
-    maxminfcmp(A->p,A->nx*A->ny,&max,&min,NULL);
-#else
-    maxmincmp(A->p,A->nx*A->ny,&max,&min,NULL);
-#endif
-#else
-#ifdef USE_SINGLE
-    maxminflt(A->p,A->nx*A->ny,&max,&min);
-#else
-    maxmindbl(A->p,A->nx*A->ny,&max,&min);
-#endif
-#endif
+    X(maxmin)(A, &max, &min);
     return max;
 }
 
@@ -332,22 +334,19 @@ R X(max)(const X(mat) *A){
 */
 R X(min)(const X(mat) *A){
     R max,min;
-#ifdef USE_COMPLEX
-#ifdef USE_SINGLE
-    maxminfcmp(A->p,A->nx*A->ny,&max,&min,NULL);
-#else
-    maxmincmp(A->p,A->nx*A->ny,&max,&min,NULL);
-#endif
-#else
-#ifdef USE_SINGLE
-    maxminflt(A->p,A->nx*A->ny,&max,&min);
-#else
-    maxmindbl(A->p,A->nx*A->ny,&max,&min);
-#endif
-#endif
+    X(maxmin)(A, &max, &min);
     return min;
 }
-
+/**
+   find the maximum of abs of a X(mat) object
+*/
+R X(maxabs)(const X(mat) *A){
+    R max,min;
+    X(maxmin)(A, &max, &min);
+    max=FABS(max);
+    min=FABS(min);
+    return max>min?max:min;
+}
 /**
    duplicate a X(mat) array
 */
@@ -1143,7 +1142,19 @@ void X(cwpow)(X(mat)*A, double power){
 	A->p[i]=POW(A->p[i],power);
     }
 }
-
+/**
+   Raise all elements above thres*maxabs(A) to pow power. Set others to zero.
+*/
+void X(cwpow_thres)(X(mat) *A, double power, double thres){
+    thres*=X(maxabs)(A);
+    for(long i=0; i<A->nx*A->ny; i++){
+	if(ABS(A->p[i])>thres){
+	    A->p[i]=POW(A->p[i], power);
+	}else{
+	    A->p[i]=0;
+	}
+    }
+}
 
 /**
    add val to diagonal values of A.

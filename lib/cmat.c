@@ -28,14 +28,6 @@
  */
 
 /**
-   compute maximum of abs of the numbers
-*/
-double cmaxabs(const cmat *A){
-    double max,min,sum;
-    maxmincmp(A->p,A->nx*A->ny,&max,&min,&sum);
-    return max;
-}
-/**
    compute minimum of abs of the numbers
 */
 double cminabs(const cmat *A){
