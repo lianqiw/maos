@@ -40,7 +40,7 @@ OPTScommon="-Mcache_align -Wshadow -Wall " #-all-static will produce a static ex
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror"
 fi
-LDEXE="-lm -no-install"
+LDEXE="-lm -no-fast-install"
 OPTSextra=""
 
 #Compile mex routines if MATLAB is detected
@@ -712,7 +712,7 @@ if test "$use_cuda" = "yes" ;then
    if test -f ${CUDADIR}/lib${cpu}/libcudart.$ldsuffix ;then
        CUDA_L=${CUDADIR}/lib${cpu}
    elif test -f ${CUDADIR}/lib/libcudart.$ldsuffix ;then
-       CUDA_L=${CUDADIR}/lib$
+       CUDA_L=${CUDADIR}/lib
    fi
    if test -d "$CUDA_L" ;then
        LDCUDA="-L$CUDA_L -Wl,-rpath,$CUDA_L"
@@ -725,7 +725,7 @@ if test "$use_cuda" = "yes" ;then
        AC_CHECK_HEADERS(cuda.h, [] ,[AC_MSG_ERROR([Please use --with-cuda=DIR to specify CUDA location or --disable-cuda to disable cuda])])
        CUDAOPT=
    fi
-   cudaver=$(nvcc -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)
+   cudaver=$($NVCC -V |grep release |cut -d ',' -f 2 |cut -d ' ' -f 3)
    cudaver=${cudaver/.}
    echo CUDA toolkit is $cudaver
    if test $cudaver -lt 40 ;then
