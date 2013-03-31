@@ -184,18 +184,16 @@ void filter_cl(SIM_T *simu){
     }
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
-    servo_shift(simu->dmint, simcfg->apdm);
-    if(!parms->sim.fuseint && parms->recon.split){
-	servo_shift(simu->Mint_lo, simcfg->aplo);
-    }
     /*global focus is the 6th mode in ngsmod->Modes*/
     if(parms->sim.mffocus){
+	/*Do LPF on NGS focus measurement to drive global focus*/
+	double lpfocus=parms->sim.lpfocus;
+	simu->ngsfocuslpf->p[0]->p[5]=
+	    simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
 	if(parms->recon.split==1){
 	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
-	    info("focus correction is %g\n", simu->ngsfocuslpf->p[0]->p[5]);
 	}else{
-	    servo_shift(simu->ngsfocusint, parms->sim.apdm);
-	    servo_filter(simu->ngsfocusint, simu->ngsfocuslpf, parms->sim.dthi, parms->sim.epdm);
+	    servo_filter(simu->ngsfocusint, simu->ngsfocuslpf);
 	}
     }
     if(simu->dmerr){ /*High order. */
@@ -212,11 +210,11 @@ void filter_cl(SIM_T *simu){
 		info("epdm is set to %.1f at step %d\n", simcfg->epdm->p[0], simu->isim);
 	    }
 	}
-	servo_filter(simu->dmint, simu->dmerr, parms->sim.dthi, simcfg->epdm);
+	servo_filter(simu->dmint, simu->dmerr);
     }
     if(parms->recon.split && simu->Merr_lo){ 
 	/*Low order in split tomography only. global focus mode is removed.*/
-	servo_filter(simu->Mint_lo, simu->Merr_lo, parms->sim.dtlo, simcfg->eplo);
+	servo_filter(simu->Mint_lo, simu->Merr_lo);
 	if(parms->sim.fuseint){/*accumulate to the main integrator.*/
 	    addlow2dm(&simu->dmint->mint[0], simu, simu->Mint_lo->mpreint, 1);
 	}
@@ -230,7 +228,7 @@ void filter_cl(SIM_T *simu){
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
     }
-    if(simu->ngsfocusint && parms->recon.split==2){
+    if(parms->sim.mffocus && parms->recon.split==2){
 	dcellmm(&simu->dmcmd, simu->recon->ngsmod->Modes, simu->ngsfocusint->mint[0], "nn", 1);
     }
     if(recon->dm_ncpa){
@@ -272,6 +270,21 @@ void filter_cl(SIM_T *simu){
 		    dadd(&simu->dm_evl->p[ievl], 1.-g, simu->dm_evl->p[ievl+nevl], g);
 		}
 	    }
+	}
+    }
+    if(simu->upterr){
+	/*Copy to uptreal before servo_fitler because upterr is from gradients
+	  from the current step. The dmerr above is using gradlast so dmreal is
+	  done at last*/
+	dcellcp(&simu->uptreal, simu->uptint->mint[0]);
+	for(int i=0; i<simu->upterr->nx; i++){
+	    if(simu->upterr->p[i]){
+		servo_filter(simu->uptint, simu->upterr);
+		break;
+	    }
+	}
+	for(int i=0; i<simu->upterr->nx; i++){
+	    dfree(simu->upterr->p[i]);
 	}
     }
 }

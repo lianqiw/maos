@@ -370,7 +370,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	}
 	
 	if(gradcalc->p!=gradacc->p){
-	    curadd(&gradacc, 1, gradcalc, 1, stream);
+	    curadd(&gradacc, 1, gradcalc, 1.f/(float)dtrat, stream);
 	}
     }   
     if(parms->powfs[ipowfs].psfout){
@@ -455,7 +455,6 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    ctoc("sync");
 
 	    if(save_gradgeom){//also do geom grad during phy grad sims
-		if(dtrat!=1) curscale(gradacc, 1./dtrat, stream);
 		cellarr_cur(simu->save->gradgeom[iwfs], gradacc, stream);
 	    }
 	}else{
@@ -465,6 +464,9 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		ctoc("noise");
 	    }
 	    cp2cpu(&gradcl, gradacc, stream);//gradacc is already adjusted for gradoff
+	    if(save_gradgeom){
+		cellarr_cur(simu->save->gradgeom[iwfs], NULL, stream);
+	    }
 	    ctoc("dev2dbl");
 	}
 	if(do_geom){

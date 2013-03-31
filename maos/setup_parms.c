@@ -1278,6 +1278,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
 	if(parms->powfs[ipowfs].phystep>=0
 	   &&(parms->powfs[ipowfs].phystep<parms->sim.end||parms->sim.end==0)){
 	    parms->powfs[ipowfs].usephy=1;
+	    parms->nuptpowfs++;
 	}else{
 	    parms->powfs[ipowfs].usephy=0;
 	}
@@ -1398,7 +1399,7 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
-    parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dt;
+    parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dthi;
 }
 /**
    postproc atmosphere parameters.

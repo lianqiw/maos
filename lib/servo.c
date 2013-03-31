@@ -295,14 +295,15 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
    Apply type II servo filter on measurement error and output integrator.  gain
    must be 3x1 or 3x5.  */
 static inline void 
-servo_typeII_filter(SERVO_T *st, dcell *merrc, double dt, const dmat *gain){
+servo_typeII_filter(SERVO_T *st, dcell *merrc){
     if(!merrc) return;
+    const dmat *gain=st->ep;
     PDMAT(gain,pgain);
     int indmul=0;
     if(gain->nx!=3){
 	error("Wrong format in gain\n");
     }
-    double dt1=1./dt;
+    double dt1=1./st->dt;
     double gg,ga,gs;
     for(int ic=0; ic<merrc->nx*merrc->ny; ic++){
 	dmat *merr=merrc->p[ic];
@@ -348,78 +349,44 @@ servo_typeII_filter(SERVO_T *st, dcell *merrc, double dt, const dmat *gain){
     dcellcp(&st->merrlast, merrc);
     dcelladd(&st->mpreint,1, st->mlead,1);
 }
-static void servo_init(SERVO_T *st, dcell *merr, const dmat *gain){
+static void servo_init(SERVO_T *st, dcell *merr){
     if(!merr || st->initialized){
 	error("merr must be valid and SERVO_T must be not yet initialized\n");
     }
-    st->initialized=1;
-    if(gain->nx>1){
+    if(st->ep->nx>1){
 	st->mpreint=dcellnew2(merr);
     }
-    if(gain->nx>2){
+    if(st->ep->nx==3){
 	st->mlead=dcellnew2(merr);
 	st->merrlast=dcellnew2(merr);
     }
-    st->mint[0]=dcellnew2(merr); 
+    for(int i=0; i<st->nmint; i++){
+	st->mint[i]=dcellnew2(merr); 
+    }
+    st->initialized=1;
 }
 /**
    Initialize.
 */
-SERVO_T *servo_new(dcell *merr, const dmat *gain){
+SERVO_T *servo_new(dcell *merr, const dmat *ap, double dt, const dmat *ep){
     SERVO_T *st=calloc(1, sizeof(SERVO_T));
-    st->mint=calloc(2, sizeof(dcell));
-    st->nmint=2;
+    st->nmint=ap?MAX(2,ap->nx):1;
+    st->mint=calloc(st->nmint, sizeof(dcell));
+    st->ap=ap;
+    st->dt=dt;
+    st->ep=ep;
     if(merr && merr->nx!=0 && merr->ny!=0 && merr->p[0]){
-	st->initialized=1;
-	if(gain->nx>1){
-	    st->mpreint=dcellnew2(merr);
-	}
-	if(gain->nx>2){
-	    st->mlead=dcellnew2(merr);
-	    st->merrlast=dcellnew2(merr);
-	}
-	st->mint[0]=dcellnew2(merr);
+	servo_init(st, merr);
     }
     return st;
-}
-/**
-   Applies type I or type II filter based on number of entries in gain.
-*/
-void servo_filter(SERVO_T *st, dcell *merr, double dt, const dmat *gain){
-    if(!merr) return;
-    if(!st->mint){
-	error("SERVO_T must be created using servo_new()\n");
-    }
-    if(!st->initialized){
-	servo_init(st, merr, gain);
-    }
-    switch(gain->nx){
-    case 1://type I
-	if(gain->ny!=1) error("not supported\n");
-	dcelladd(&st->mpreint, 0, merr, gain->p[0]);//just record what is added.
-	break;
-    case 2:{//PID controller
-	if(gain->ny!=1) error("not supported\n");
-	double g1=gain->p[0]+gain->p[1];
-	double g2=-gain->p[1];
-	dcelladd(&st->mpreint, 0, merr, g1);
-	dcelladd(&st->mpreint, 1, st->merrlast, g2);
-	dcellcp(&st->merrlast, merr);
-    }
-	break;
-    case 3://type II
-	servo_typeII_filter(st, merr, dt, gain);
-	break;
-    default:
-	error("Invalid");
-    }
-    dcelladd(st->mint, 1, st->mpreint, 1);
 }
 /**
    prepare the integrator by shifting commands. similar to laos.
    inte->p[0]=inte->p[0]*ap[0]+inte->p[1]*ap[1]+...
 */
-void servo_shift(SERVO_T *st, dmat *ap){
+static void servo_shift(SERVO_T *st){
+    const dmat *ap=st->ap;
+    if(!ap) return; //no need to shift.
     if(st->nmint<ap->nx){
 	st->nmint=ap->nx;
 	st->mint=realloc(st->mint, sizeof(dcell*));
@@ -438,6 +405,41 @@ void servo_shift(SERVO_T *st, dmat *ap){
     }
     dcellfree(keepjunk);
 }
+/**
+   Applies type I or type II filter based on number of entries in gain.
+*/
+void servo_filter(SERVO_T *st, dcell *merr){
+    if(!merr) return;
+    servo_shift(st);
+    if(!st->mint){
+	error("SERVO_T must be created using servo_new()\n");
+    }
+    if(!st->initialized){
+	servo_init(st, merr);
+    }
+    switch(st->ep->nx){
+    case 1://type I
+	if(st->ep->ny!=1) error("not supported\n");
+	dcelladd(&st->mpreint, 0, merr, st->ep->p[0]);//just record what is added.
+	break;
+    case 2:{//PID controller
+	if(st->ep->ny!=1) error("not supported\n");
+	double g1=st->ep->p[0]+st->ep->p[1];
+	double g2=-st->ep->p[1];
+	dcelladd(&st->mpreint, 0, merr, g1);
+	dcelladd(&st->mpreint, 1, st->merrlast, g2);
+	dcellcp(&st->merrlast, merr);
+    }
+	break;
+    case 3://type II
+	servo_typeII_filter(st, merr);
+	break;
+    default:
+	error("Invalid");
+    }
+    dcelladd(st->mint, 1, st->mpreint, 1);
+}
+
 
 /**
    test type I/II filter with ideal measurement to make sure it is implemented correctly.
@@ -455,7 +457,7 @@ dmat* servo_test(dmat *input, double dt, int dtrat, double sigma2n, dmat *gain){
     double sigma=sqrt(sigma2n);
     dcell *meas=dcellnew(1,1);
     dmat *noise=dnew(nmod, 1);
-    SERVO_T *st2t=servo_new(NULL, gain);
+    SERVO_T *st2t=servo_new(NULL, NULL, dt*dtrat, gain);
     rand_t rstat;
     seed_rand(&rstat, 1);
     PDMAT(mres,pmres);
@@ -473,7 +475,7 @@ dmat* servo_test(dmat *input, double dt, int dtrat, double sigma2n, dmat *gain){
 	    if(dtrat!=1) dscale(meas->p[0], 1./dtrat);
 	    drandn(noise, sigma, &rstat);
 	    dadd(&meas->p[0], 1, noise, 1);
-	    servo_filter(st2t, meas, dt*dtrat, gain);
+	    servo_filter(st2t, meas);
 	}
     }
     dfree(merr);

@@ -193,8 +193,8 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
     dcell **mtche=calloc(aster->nwfs, sizeof(dcell*));
     dcell **ints=calloc(aster->nwfs, sizeof(dcell*));
     ccell *otf=ccellnew(aster->nwfs,1);
-    SERVO_T *st2t=servo_new(merrm, aster->gain->p[idtrat]);
     const double dtngs=parms->maos.dt*dtrat;
+    SERVO_T *st2t=servo_new(merrm, NULL, dtngs, aster->gain->p[idtrat]);
     const long nwvl=parms->maos.nwvl;
     dmat *pgm;
     if(demotettf){
@@ -289,7 +289,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    dcelladd(st2t->mint, 1, merrm, 0.3);
 		    break;
 		case 2:
-		    servo_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
+		    servo_filter(st2t, merrm);
 		    break;
 		default:
 		    error("Invalid\n");
@@ -387,7 +387,7 @@ dmat *skysim_phy(dmat **mresout, dmat *mideal, dmat *mideal_oa, double ngsol,
 		    dcelladd(st2t->mint, 1, merrm, 0.5);
 		    break;
 		case 2:
-		    servo_filter(st2t, merrm, dtngs, aster->gain->p[idtrat]);
+		    servo_filter(st2t, merrm);
 		    break;
 		default:
 		    error("Invalid\n");

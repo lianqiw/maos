@@ -2156,32 +2156,34 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	recon->sigmanlo=rss;
 	info("rms=%g nm\n", sqrt(rss)*1e9);
 
-	warning("Temporary solution for testing\n");
-	dmat *psd_ngs=dread("../../psd_ngs.bin");
-	if(1){
-	    //need to convert from rad to m2.
-	    dmat *psd_ws=dread("%s", parms->sim.wspsd);
-	    dmat *psd_ws_m=ddup(psd_ws); 
-	    dfree(psd_ws);
-	    dmat *psd_ws_y=dnew_ref(psd_ws_m->nx,1,psd_ws_m->p+psd_ws_m->nx);
-	    dscale(psd_ws_y, 4./parms->aper.d); dfree(psd_ws_y);
-	    add_psd2(&psd_ngs, psd_ws_m); dfree(psd_ws_m);
+	if(zfexist("../../psd_ngs.bin")){
+	    warning("Temporary solution for testing\n");
+	    dmat *psd_ngs=dread("../../psd_ngs.bin");
+	    if(1){
+		//need to convert from rad to m2.
+		dmat *psd_ws=dread("%s", parms->sim.wspsd);
+		dmat *psd_ws_m=ddup(psd_ws); 
+		dfree(psd_ws);
+		dmat *psd_ws_y=dnew_ref(psd_ws_m->nx,1,psd_ws_m->p+psd_ws_m->nx);
+		dscale(psd_ws_y, 4./parms->aper.d); dfree(psd_ws_y);
+		add_psd2(&psd_ngs, psd_ws_m); dfree(psd_ws_m);
+	    }
+	    dwrite(psd_ngs, "psd_ngs_servo");
+	    dmat *rss2=dnew(1,1); rss2->p[0]=rss;
+	    int dtrat=parms->powfs[parms->lopowfs[0]].dtrat;
+	    dcell *res=servo_optim(psd_ngs, parms->sim.dt, 
+				   dtrat, M_PI/4, rss2, 2); 
+	    dfree(rss2);
+	    info("dtrat=%d\n", dtrat);
+	    info("g,a,T was %g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
+	    memcpy(parms->sim.eplo->p, res->p[0]->p, 3*sizeof(double));
+	    info("g,a,T=%g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
+	    info("res=%g, resn=%g nm\n", sqrt(res->p[0]->p[3])*1e9, sqrt(res->p[0]->p[4])*1e9);
+	    dcellfree(res); 
+	    dfree(psd_ngs);
 	}
-	dwrite(psd_ngs, "psd_ngs_servo");
-	dmat *rss2=dnew(1,1); rss2->p[0]=rss;
-	int dtrat=parms->powfs[parms->lopowfs[0]].dtrat;
-	dcell *res=servo_optim(psd_ngs, parms->sim.dt, 
-			       dtrat, M_PI/4, rss2, 2); 
-	dfree(rss2);
-	info("dtrat=%d\n", dtrat);
-	info("g,a,T was %g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
-	memcpy(parms->sim.eplo->p, res->p[0]->p, 3*sizeof(double));
-	info("g,a,T=%g,%g,%g\n", parms->sim.eplo->p[0], parms->sim.eplo->p[1], parms->sim.eplo->p[2]);
-	info("res=%g, resn=%g nm\n", sqrt(res->p[0]->p[3])*1e9, sqrt(res->p[0]->p[4])*1e9);
-	dcellfree(res); 
-	dfree(psd_ngs);
     }
-    if(1){/*Orthnormalize the Modes. */
+    if(0){/*Orthnormalize the Modes. */
 	/*
 	  Change FUw*Minv -> FUw*(U*sigma^-1/2) * (U*sigma^1/2)'*Minv
 	  columes of FUw*(U*sigma^-1/2) are the eigen vectors.

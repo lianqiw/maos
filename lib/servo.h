@@ -38,14 +38,19 @@ typedef struct SERVO_T{
     dcell **mint;       /**<second integrator. It is array to accomodate multiple ap's*/
     int nmint;          /**<number of cells in mint*/
     int initialized;   /**<is this data initialized*/
+    /*Servo parameters.*/
+    const dmat *ap;
+    double dt;
+    const dmat *ep;
 }SERVO_T;
 dcell* servo_optim(const dmat *psdin, double dt, long dtrat,  double pmargin, 
 		   const dmat* sigman, int servo_type);
 cmat *servo_Hol(const dmat *nu, double dt, double dtrat, const dmat *gain);
 double servo_residual(double *noise_amp, const dmat *psdin, double dt, long dtrat, const dmat *gain, int servo_type);
-SERVO_T *servo_new(dcell *merr, const dmat *gain);
-void servo_filter(SERVO_T *st, dcell *merr, double dtngs, const dmat *gain);
-void servo_shift(SERVO_T *st, dmat *ap);
+SERVO_T *servo_new(dcell *merr, const dmat *ap, double dt, const dmat *ep);
+void servo_update(SERVO_T *st, const dmat *ap, double dt, const dmat *ep);
+void servo_filter(SERVO_T *st, dcell *merr);
+//void servo_shift(SERVO_T *st, dmat *ap);
 dmat *psd2temp(dmat *psdin, double dt, double N, rand_t* rstat);
 dmat* servo_test(dmat *mideal, double dtngs, int dtrat, double sigma2n, dmat *gain);
 void servo_free(SERVO_T *st);

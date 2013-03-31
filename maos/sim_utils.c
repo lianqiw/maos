@@ -913,27 +913,14 @@ static void init_simu_wfs(SIM_T *simu){
 	simu->ngsfocuslpf=dcellnew(1,1);
 	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
 	if(parms->recon.split==2){
-	    simu->ngsfocusint=servo_new(NULL, parms->sim.epdm);
+	    simu->ngsfocusint=servo_new(NULL, parms->sim.apdm, parms->sim.dthi, parms->sim.epdm);
 	}
     }
-
-    simu->has_upt=0;/*flag for uplink tip/tilt control */
-    for(int iwfs=0; iwfs<nwfs; iwfs++){
-	const int ipowfs=parms->wfs[iwfs].powfs;
-	if(parms->powfs[ipowfs].usephy && parms->powfs[ipowfs].llt){
-	    /*has LGS pointing loop. */
-	    simu->has_upt=1;
-	    if(parms->powfs[ipowfs].trs && !recon->PTT) 
-		/*needed to form upterr from LGS gradients. */
-		error("PTT is not specified for an LGS!");
-	    if(!simu->upterr){
-		simu->upterr=dcellnew(nwfs,1);
-		simu->uptreal=dcellnew(nwfs,1);
-		break;
-	    }
-	}
+    if(parms->nuptpowfs){
+	simu->upterr=dcellnew(nwfs,1);
+	simu->uptreal=dcellnew(nwfs,1);
     }
-
+  
     {/*MMAP the LGS uptlink error/command output */
 	long nnx[nwfs];
 	long nny[nwfs];
@@ -1185,9 +1172,11 @@ static void init_simu_dm(SIM_T *simu){
     }
 #endif
     simu->dmpsol=calloc(parms->npowfs, sizeof(dcell*));
-    simu->dmint=servo_new(simu->dmreal, parms->sim.epdm);
-    simu->Mint_lo=servo_new(NULL, parms->sim.eplo);
-    simu->uptint=servo_new(NULL, parms->sim.epupt);
+    simu->dmint=servo_new(simu->dmreal, parms->sim.apdm, parms->sim.dthi, parms->sim.epdm);
+    simu->Mint_lo=servo_new(NULL, parms->sim.aplo, parms->sim.dtlo, parms->sim.eplo);
+    if(parms->nuptpowfs){
+	simu->uptint=servo_new(NULL, parms->sim.apupt, parms->sim.dthi, parms->sim.epupt);
+    }
     /*Setup hysterisis */
     int anyhyst=0;
     simu->hyst = calloc(parms->ndm, sizeof(HYST_T*));
@@ -1529,7 +1518,6 @@ void free_simu(SIM_T *simu){
     dcellfree(simu->dmfit);
     dcellfree(simu->dmhist);
     dcellfree(simu->Merr_lo);
-    dcellfree(simu->Merr_lo_store);
     dcellfree(simu->upterr);
     dcellfree(simu->uptreal);
     servo_free(simu->uptint);

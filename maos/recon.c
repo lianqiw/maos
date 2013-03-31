@@ -153,56 +153,50 @@ void recon_split(SIM_T *simu){
 	    dcellmm(&simu->gngsmvst, recon->GXL, simu->opdr, "nn", 1./parms->sim.dtrat_lo);
 	}
     }
-    /*Low order has output */
+    /*Low order WFS has output */
     if(lo_output){
-	dcellzero(simu->Merr_lo_store);
+	dcellzero(simu->Merr_lo);
 	switch(parms->recon.split){
 	case 1:{
 	    NGSMOD_T *ngsmod=recon->ngsmod;
 	    if(!parms->tomo.ahst_idealngs){/*Low order NGS recon. */
-		dcellmm(&simu->Merr_lo_store,ngsmod->Rngs,simu->gradlastcl,"nn",1);
+		dcellmm(&simu->Merr_lo,ngsmod->Rngs,simu->gradlastcl,"nn",1);
+		if(parms->sim.mffocus && recon->ngsmod->nmod==6){
+		    simu->ngsfocus=simu->Merr_lo->p[0]->p[5];
+		    simu->Merr_lo->p[0]->p[5]=0;
+		}
 	    }/*else: there is ideal NGS correction done in perfevl. */
 	}
 	    break;
 	case 2:{
 	    /*A separate integrator for low order is required. Use it to form error signal*/
-	    dcell *Mpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
 	    dcelladd(&simu->gradlastol, 1, simu->gngsmvst, -1);
-	    dcellmm(&simu->Merr_lo_store, recon->MVRngs, simu->gradlastol, "nn",1);
-	    if(parms->tomo.psol) dcelladd(&simu->Merr_lo_store, 1., Mpsol_lo, -1);
 	    dcellzero(simu->gngsmvst);/*reset accumulation. */
+	    dcellmm(&simu->Merr_lo, recon->MVRngs, simu->gradlastol, "nn",1);
+	    if(parms->tomo.psol){
+		dcell *Mpsol_lo=simu->Mint_lo->mint[parms->dbg.psol?0:1];
+		dcelladd(&simu->Merr_lo, 1., Mpsol_lo, -1);
+	    }
+	    if(parms->sim.mffocus){
+		dcell *tmp=NULL;
+		dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
+		simu->ngsfocus=tmp->p[0]->p[0]; 
+		dcellfree(tmp);	
+	    }
 	}
 	    break;
 	default:
 	    error("Invalid parms->recon.split: %d",parms->recon.split);
 	}
-	dcellcp(&simu->Merr_lo, simu->Merr_lo_store);
-	if(simu->Merr_lo && simu->Merr_lo->p[0]->nx>5){/*the global focus is handled separately.*/
+	if(parms->sim.mffocus && parms->recon.split==1 && recon->ngsmod->nmod==6){
+	    /*the global focus is handled separately.*/
 	    simu->Merr_lo->p[0]->p[5]=0;
 	}
-    }else{
-	dcellfree(simu->Merr_lo);/*don't have output. Merr_lo_store is never freed. */
-    }
-    if(lo_output){
-	if(parms->recon.split==1){
-	    if(simu->Merr_lo_store){
-		simu->ngsfocus=simu->Merr_lo_store->p[0]->p[5];
-	    }
-	}else{
-	    dcell *tmp=NULL;
-	    dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
-	    simu->ngsfocus=tmp->p[0]->p[0]; 
-	    dcellfree(tmp);
-	}
-	
-	if(parms->dbg.deltafocus){
+	if(parms->sim.mffocus && parms->dbg.deltafocus){
 	    simu->ngsfocus+=simu->deltafocus;
 	}
-    }
-    if(parms->sim.mffocus){
-	//Do low pass filtering on NGS focus measurement to drive global focus mode directly.
-	double lpfocus=parms->sim.lpfocus;
-	simu->ngsfocuslpf->p[0]->p[5]=simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
+    }else{
+	dcellfree(simu->Merr_lo);
     }
 }
 
@@ -277,7 +271,7 @@ void reconstruct(SIM_T *simu){
 		    dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
 		}
 		dcelladd(&simu->dmerr, 1, dmpsol, -1);
-		if(!parms->sim.fuseint && parms->recon.split!=1 && parms->sim.mffocus){
+		if(!parms->sim.fuseint && parms->recon.split==2 && parms->sim.mffocus){
 		    warning_once("Temporary solution\n");
 		    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocusint->mint[1], "nn", -1);
 		}
@@ -298,7 +292,7 @@ void reconstruct(SIM_T *simu){
 	/*For PSF reconstruction.*/
 	if(hi_output && parms->sim.psfr && isim>=parms->evl.psfisim){
 	    psfr_calc(simu, simu->opdr, simu->dmpsol[parms->hipowfs[0]],
-		      simu->dmerr,  simu->Merr_lo_store);
+		      simu->dmerr,  simu->Merr_lo);
 	}
 
 	if(recon->moao){

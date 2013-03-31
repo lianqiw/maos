@@ -518,7 +518,6 @@ typedef struct SIM_T{
 
     /*Low order*/
     dcell *Merr_lo;    /**<split tomography NGS mode error signal.*/
-    dcell *Merr_lo_store; /**<Stores Merr_lo even is there is no output*/
     SERVO_T *Mint_lo;  /**<intermediate results for type II/lead filter*/  
     
     /*llt pointing loop*/
@@ -611,7 +610,6 @@ typedef struct SIM_T{
     RECON_T *recon;    /**<pointer to recon*/
     POWFS_T *powfs;    /**<pointer to powfs*/
     double dt;         /**<System baseline clock period. 1/800 s*/
-    int has_upt;       /**<whether we have uplink pointer loop.*/
     int last_report_time;/**<The time we lasted reported status to the scheduler.*/
 }SIM_T;
 #define CHECK_SAVE(start,end,now,every) ((now)+1>(start) && (((every)>1 && ((now)+1-(start))%(every)==0) || (now)+1==(end)))
