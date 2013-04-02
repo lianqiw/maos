@@ -51,7 +51,9 @@ char *get_job_progname(int pid){
 		delt[0]='\0';
 	    }
 	    progname=strdup0(path);
-	}	
+	}else{
+	    warning("Failed to readlink %s\n", procpath);
+	}
     }else{
 	progname=strdup0(progname_save);
     }
@@ -96,6 +98,7 @@ double get_job_launchtime(int pid){
     snprintf(fnjob,64,"/proc/%d/stat",pid);
     FILE *fp=fopen(fnjob,"r");
     if(!fp){
+	perror("fopen");
 	warning("Unable to open file %s\n",fnjob);
 	return 0;
     }

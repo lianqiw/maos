@@ -51,10 +51,12 @@ static int notify_daemon=1;
 #include "icon-finished.h"
 #include "icon-running.h"
 #include "icon-failed.h"
+#include "icon-waiting.h"
 GdkPixbuf *icon_main=NULL;
 GdkPixbuf *icon_finished=NULL;
 GdkPixbuf *icon_failed=NULL;
 GdkPixbuf *icon_running=NULL;
+GdkPixbuf *icon_waiting=NULL;
 
 static GtkStatusIcon *status_icon;
 GtkWidget *notebook=NULL;
@@ -300,7 +302,7 @@ gboolean update_title(gpointer data){
 /**
    respond to the kill job event
 */
-static void kill_job(PROC_T *p){
+void kill_job(PROC_T *p){
     GtkWidget *dia=gtk_message_dialog_new
 	(NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
 	 GTK_MESSAGE_QUESTION,
@@ -578,6 +580,7 @@ int main(int argc, char *argv[])
     icon_finished=gdk_pixbuf_new_from_inline(-1,icon_inline_finished,FALSE,NULL);
     icon_failed=gdk_pixbuf_new_from_inline(-1,icon_inline_failed,FALSE,NULL);
     icon_running=gdk_pixbuf_new_from_inline(-1,icon_inline_running,FALSE,NULL);
+    icon_waiting=gdk_pixbuf_new_from_inline(-1,icon_inline_waiting,FALSE,NULL);
     /*GtkWidget *image_finished=gtk_image_new_from_stock(GTK_STOCK_APPLY, GTK_ICON_SIZE_MENU);
     gtk_widget_show(image_finished);
     icon_finished=gtk_image_get_pixbuf(GTK_IMAGE(image_finished));

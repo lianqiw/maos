@@ -511,7 +511,8 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(local){//lanched through scheduler.
+    if(local){
+	/*lanched through scheduler. We are already detached, so don't daemonize again.*/
 	arg->detach=0;
 	arg->force=0;
 	detached=1;

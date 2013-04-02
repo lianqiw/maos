@@ -159,6 +159,23 @@ static void list_update_progress(PROC_T *p){
     gtk_list_store_set(list, &iter, COL_ERRHI,tmp, -1);
     
 }
+static void list_modify_starttime(PROC_T *p){
+    GtkTreeIter iter;
+    GtkListStore *list=lists[p->hid];
+    list_get_iter(p, &iter);
+    char spid[12];
+    snprintf(spid,12," %d ",p->pid);
+	
+    char sdate[80];
+    struct tm *tim=localtime(&p->status.timstart);
+    strftime(sdate,80,"%m-%d %k:%M:%S",tim);
+    gtk_list_store_set(list, &iter, 
+		       COL_PID,spid, 
+		       COL_DATE, sdate,
+		       COL_SEED,"",
+		       COL_STEP,"",
+		       -1);
+}
 gboolean remove_entry(PROC_T *p){
     if(p->row){
 	GtkTreePath *path=gtk_tree_row_reference_get_path(p->row);
@@ -179,8 +196,6 @@ gboolean refresh(PROC_T *p){
 	char sdate[80];
 	char spid[12];
 	snprintf(spid,12," %d ",p->pid);
-	//time_t t;
-	//t=myclocki();
 	struct tm *tim=localtime(&p->status.timstart);
 	strftime(sdate,80,"%m-%d %k:%M:%S",tim);
 	char *spath=p->path;
@@ -208,27 +223,20 @@ gboolean refresh(PROC_T *p){
 	list_modify_icon(p,icon_running);
 	break;
     case S_WAIT: /*waiting to start */
+	list_modify_status(p, "Waiting");
+	list_modify_starttime(p);
+	list_modify_icon(p,icon_waiting);
 	break;
     case S_START: /*just started. */
 	list_modify_status(p, "Started");
-	{
-	    GtkTreeIter iter;
-	    GtkListStore *list=lists[p->hid];
-	    list_get_iter(p, &iter);
-	    char spid[12];
-	    snprintf(spid,12," %d ",p->pid);
-	
-	    char sdate[80];
-	    struct tm *tim=localtime(&p->status.timstart);
-	    strftime(sdate,80,"%m-%d %k:%M:%S",tim);
-	    gtk_list_store_set(list, &iter, 
-			       COL_PID,spid, 
-			       COL_DATE, sdate,
-			       -1);
-	}
+	list_modify_starttime(p);
+	list_modify_icon(p,icon_running);
 	notify_user(p);
 	break;
     case S_QUEUED:
+	list_modify_status(p, "Queued");
+	list_modify_starttime(p);
+	list_modify_icon(p,icon_waiting);
 	break;
     case S_FINISH:/*Finished */
 	list_update_progress(p);
@@ -331,6 +339,7 @@ static void clipboard_append(const char *jobinfo){
 	g_free(old);
     }
 }
+/*A general routine handle actions to each item.*/
 static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data, int cmd, char *action){
     gint ihost=GPOINTER_TO_INT(user_data);
     GValue value=G_VALUE_INIT;
@@ -340,7 +349,6 @@ static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter 
     if(cmd<0){
 	switch(cmd){
 	case -1:{
-	   
 	    gtk_tree_model_get_value(model, iter, COL_PATH, &value);
 	    gchar *jobinfo=g_strdup(g_value_get_string(&value));
 	    g_value_unset(&value);
@@ -368,6 +376,7 @@ static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter 
 	}
     }
 }
+/*wrapper routines for each item.*/
 static void kill_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
     handle_selected(model, path, iter, user_data, CMD_KILL, "Kill");
 }
@@ -383,7 +392,7 @@ static void copy_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *i
 static void copy_selectedpath(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
     handle_selected(model, path, iter, user_data, -1, "CopyPath");
 }
-
+/*Handles menu item clicks in a general way.*/
 static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, GtkTreeSelectionForeachFunc func, char *action){
     gint ihost=GPOINTER_TO_INT(user_data);
     GtkWidget *view=views[ihost];
@@ -407,7 +416,7 @@ static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, Gtk
 	gtk_tree_selection_selected_foreach(selection, func, GINT_TO_POINTER(ihost));
     }
 }
-
+/* The following routines respond to menu item clicks.*/
 static void kill_selected_event(GtkMenuItem *menuitem, gpointer user_data){
     handle_selected_event(menuitem, user_data, kill_selected, "Kill");
 }
@@ -449,6 +458,9 @@ static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
 	g_signal_connect(menuitem, "activate", G_CALLBACK(restart_selected_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
+	menuitem=gtk_separator_menu_item_new();
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+
 	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_CLEAR, NULL);
 	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Clear selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(clear_selected_event), user_data);
@@ -468,25 +480,60 @@ static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, 3, gtk_get_current_event_time());
     return TRUE;
 }
+/* Handle click on treeview */
 static gboolean view_click_event(GtkWidget *view, GdkEventButton *event, gpointer user_data){
-    if(event->button==3){//right menu
-	GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
-	int nsel=gtk_tree_selection_count_selected_rows(selection);
-	if (nsel < 1){
-	    GtkTreePath *path;
-	    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
-					     (gint)event->x,
-					     (gint)event->y,
-					     &path, NULL, NULL, NULL)){
-		gtk_tree_selection_select_path(selection, path);
-		gtk_tree_path_free(path);
+    if(event->button!=3) return FALSE;//let system handle left click
+    GtkTreePath *path=NULL;
+    GtkTreeViewColumn *column=NULL;
+    GtkTreeSelection *selection=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
+				     (gint)event->x,
+				     (gint)event->y,
+				     &path, &column, NULL, NULL)){
+	/*clicks within treeview.*/
+	if(!gtk_tree_selection_path_is_selected(selection, path)){
+	    /*the path clicked is not selected. move selection to this path*/
+	    gtk_tree_selection_unselect_all(selection);
+	    gtk_tree_selection_select_path(selection, path);
+	}
+	gtk_tree_path_free(path);
+    }else{//clicks outsize of treeview. unselect all.
+	gtk_tree_selection_unselect_all(selection);
+	path=NULL; column=NULL;
+    }
+    //right click popup menu
+    view_popup_menu(view, user_data);
+    return TRUE;
+}
+static gboolean view_release_event(GtkWidget *view, GdkEventButton *event, gpointer user_data){
+    if(event->button!=1) return FALSE;
+    GtkTreePath *path=NULL;
+    GtkTreeViewColumn *column=NULL;
+    if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(view),
+				     (gint)event->x,
+				     (gint)event->y,
+				     &path, &column, NULL, NULL)){
+	const gchar *title=gtk_tree_view_column_get_title(column);
+	if(!strcmp(title," ")){
+	    GtkTreeIter iter;
+	    gint ihost=GPOINTER_TO_INT(user_data);
+	    GtkTreeModel *model=GTK_TREE_MODEL(lists[ihost]);
+	    gtk_tree_model_get_iter(model, &iter, path);
+	    GValue value=G_VALUE_INIT;
+	    gtk_tree_model_get_value(model, &iter, COL_PID, &value);
+	    int pid=strtol(g_value_get_string(&value), NULL, 10);
+	    g_value_unset(&value);
+	    PROC_T *p=proc_get(ihost, pid);
+	    if(p){
+		if(p->status.info<10){
+		    kill_job(p);
+		}else{
+		    scheduler_cmd(ihost, pid, CMD_REMOVE);
+		}
 	    }
 	}
-	view_popup_menu(view, user_data);
-	return TRUE;
-    }else{
-	return FALSE;
     }
+    return TRUE;
 }
 GtkWidget *new_page(int ihost){
     if(!lists){
@@ -515,6 +562,8 @@ GtkWidget *new_page(int ihost){
     g_object_unref(lists[ihost]);
     g_signal_connect(view, "button-press-event", 
 		     G_CALLBACK(view_click_event), GINT_TO_POINTER(ihost));
+    g_signal_connect(view, "button-release-event", 
+		     G_CALLBACK(view_release_event), GINT_TO_POINTER(ihost));
     g_signal_connect(view, "popup-menu", 
 		     G_CALLBACK(view_popup_menu), GINT_TO_POINTER(ihost));
     GtkTreeSelection *viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));

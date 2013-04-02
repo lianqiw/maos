@@ -54,6 +54,7 @@ typedef struct RUN_T{
     double started;/*started execution. */
     double launchtime;
     int pid;
+    int pidnew;//the new pid
     int sock;
     int nthread;
     int time;
@@ -97,6 +98,7 @@ static MONITOR_T *monitor_add(int hostid);
 static void monitor_send(RUN_T *run,char*path);
 static void monitor_send_initial(MONITOR_T *ic);
 static void monitor_send_load(void);
+static long counter=0;//an negative index to retrieve this irun.
 
 /**
    The following runned_* routines maintains the linked list
@@ -163,29 +165,46 @@ static RUN_T *runned_get(int pid){
     }
     return irun;
 }
-/*
-static RUN_T *waiting_add(int pid){
-    RUN_T *irun=calloc(1, sizeof(RUN_T));
-    irun->pid=pid;
-    if(waiting_end){
-	waiting_end->next=irun;
-	waiting_end=irun;
-    }else{
-	waiting=irun;
-	waiting_end=irun;
-    }
-    return irun;
-}
-static RUN_T *waiting_get_wait(){
-    RUN_T *irun=waiting;
-    if(waiting){
-	waiting=waiting->next;
-        if(!waiting){
-	    waiting_end=NULL;
+/**
+   Restart a crashed/finished job
+*/
+static void runned_restart(int pid){
+    RUN_T *irun, *irun2=NULL;
+    for(irun=runned; irun; irun2=irun,irun=irun->next){
+	if(irun->pid==pid){
+	    if(irun->status.info<10){
+		warning("status.info=%d\n", irun->status.info);
+		break;
+	    }
+	    if(irun2){//not start
+		irun2->next=irun->next;
+	    }else{
+		irun2=runned=irun->next;
+	    }
+	    if(irun->next==NULL){
+		runned_end=irun2;
+	    }
+	    //Insert the beginning of running list
+	    irun->next=running;
+	    running=irun;
+	    if(!running_end){
+		running_end=irun;
+	    }
+	    //update status
+	    irun->status.info=S_QUEUED;
+	    irun->status.done=0;
+	    irun->pidnew=--counter;
+	    monitor_send(irun, NULL);
+	    irun->pid=irun->pidnew;//sync after notify monitor.
+	    irun->sock=0;
+	    all_done=0;
+	    break;
 	}
     }
-    return irun;
-    }*/
+    if(!irun){
+	warning("Process with pid=%d is not found\n", pid);
+    }
+}
 /**
    The following running_* routiens operates on running linked list
    which contains queued jobs.
@@ -193,12 +212,12 @@ static RUN_T *waiting_get_wait(){
 static RUN_T* running_add(int pid,int sock){
     RUN_T *irun;
     if(pid && (irun=running_get(pid))){
-	if(irun->sock<0) irun->sock=sock;
+	if(irun->sock!=sock) irun->sock=sock;
 	return irun;
     }else{
 	/*create the node */
 	irun=calloc(1, sizeof(RUN_T));
-	irun->pid=pid;
+	irun->pidnew=irun->pid=pid;
 	irun->sock=sock;
 	if(pid>0 && !irun->exe){
 	    irun->exe=get_job_progname(pid);
@@ -243,9 +262,10 @@ static RUN_T* running_add(int pid,int sock){
 static void running_update(int pid, int status){
     RUN_T *irun=running_get(pid);
     if(irun){
-	if(irun->status.info!=S_WAIT && status>10){
+	if((irun->status.info==S_RUNNING || irun->status.info==S_START) && status>10){
 	    nrun-=irun->nthread;/*negative decrease */
 	}
+	info("Job %d crashed\n", pid);
 	irun->status.info=status;
 	monitor_send(irun,NULL);
 	if(status>10){/*ended */
@@ -388,6 +408,7 @@ static void process_queue(void){
        	int nthread=irun->nthread;
 	if(nrun+nthread<=NCPU && (nthread<=avail || avail >=3) && irun->sock>0){
 	    nrun+=nthread;
+	    info2("process_queue: nrun=%d avail=%d\n", nrun, avail);
 	    /*don't close the socket. will close it in select loop. */
 	    /*warning3("process %d launched. write to sock %d cmd %d\n", */
 	    /*irun->pid, irun->sock, S_START); */
@@ -422,7 +443,7 @@ static void process_queue(void){
 		}else{
 		    info2("start new job\n");
 		    int pid;
-		    if((pid=launch_exe(irun->exe, irun->path))<0||kill(pid,0)){
+		    if((pid=launch_exe(irun->exe, irun->path))<0){
 			warning2("launch_exe %s failed\n", irun->path);
 			irun->status.info=S_CRASH;
 			running_remove(irun->pid);
@@ -431,9 +452,8 @@ static void process_queue(void){
 			//inplace update the information in monitor
 			irun->status.info=S_WAIT;
 			irun->status.timstart=myclocki();
-			irun->status.iseed=-pid;
+			irun->pidnew=pid;
 			monitor_send(irun, NULL);
-			//update our record.
 			irun->pid=pid;
 		    }
 		}
@@ -442,9 +462,7 @@ static void process_queue(void){
     }
 }
 static void new_job(char *exename, char *execmd){
-    static long counter=0;//an negative index to retrieve this irun.
-    counter--;
-    RUN_T *irun=running_add(counter, -1);
+    RUN_T *irun=running_add(--counter, -1);
     irun->status.info=S_QUEUED;
     irun->exe=exename;
     irun->path=execmd;
@@ -626,13 +644,7 @@ static int respond(int sock){
     case CMD_LOAD://intended for monitor
 	break;
     case CMD_RESTART://intended for maos
-	{
-	    //restart the job
-	    RUN_T *irun=runned_get(pid);
-	    if(irun && irun->status.info>10){
-		new_job(strdup(irun->exe), strdup(irun->path));
-	    }
-	}
+	runned_restart(pid);
 	break;
     case CMD_UNUSED3:
 	break;
@@ -747,7 +759,7 @@ static void monitor_remove(int sock){
     }*/
 static int monitor_send_do(RUN_T *irun, char *path, int sock){
     int cmd[3];
-    cmd[1]=hid;
+    cmd[1]=irun->pidnew;//Replaces hid(useless) by new pid as of 2013-04-01.
     cmd[2]=irun->pid;
     if(path){/*don't do both. */
 	cmd[0]=CMD_PATH;

@@ -37,7 +37,7 @@ static fd_set active_fd_set;
 extern double *usage_cpu, *usage_cpu2;
 extern double *usage_mem, *usage_mem2;
 
-static PROC_T *proc_get(int id,int pid){
+PROC_T *proc_get(int id,int pid){
     PROC_T *iproc;
     if(id<0 || id>=nhost){
 	error("id=%d is invalid\n", id);
@@ -202,8 +202,15 @@ static int respond(int sock){
 	    if(p->status.info==S_REMOVE){
 		proc_remove(ihost, pid);
 	    }else{
-		if(p->status.info==S_WAIT && p->status.iseed<0){
+		if(p->status.iseed<0){
+		    /*The old method to replace the ID of a job. Deprecated as of 2013-04-01*/
 		    p->pid=-p->status.iseed;
+		}else if(cmd[1]!=ihost && cmd[1]!=cmd[2]){
+		    /*A new mean to replace the ID of a job.*/
+		    p->pid=cmd[1];
+		}
+		if(p->status.info<10){
+		    p->done=0;
 		}
 		gdk_threads_add_idle((GSourceFunc)refresh, p);
 	    }

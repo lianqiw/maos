@@ -724,7 +724,10 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	dfree(sanea_iwfs);
 	recon->neam->p[iwfs]=sqrt(nea2_sum/count/2);/*average sanea in radian */
 	double pixtheta=parms->powfs[ipowfs].pixtheta;
-	if(recon->neam->p[iwfs]>pixtheta*4 && parms->powfs[ipowfs].usephy){
+	if(recon->neam->p[iwfs]>pixtheta*4 
+	   && parms->powfs[ipowfs].usephy
+	   && parms->powfs[ipowfs].order==1
+	   ){
 	//Neglecting WFS whos NEA is greater than twice pixel size in
 	//physical optics mode.
 	    spfree(recon->saneai->p[iwfs+iwfs*parms->nwfsr]);

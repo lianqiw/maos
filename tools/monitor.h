@@ -75,6 +75,7 @@ extern GdkPixbuf *icon_main;
 extern GdkPixbuf *icon_finished;
 extern GdkPixbuf *icon_failed;
 extern GdkPixbuf *icon_running;
+extern GdkPixbuf *icon_waiting;
 gboolean update_title(gpointer data);
 GtkWidget *new_page(int ihost);
 gboolean remove_entry(PROC_T *p);
@@ -85,4 +86,6 @@ void add_host_wrap(int ihost);
 gboolean host_down(gpointer data);
 gboolean host_up(gpointer data);
 gboolean update_progress(gpointer input);
+PROC_T *proc_get(int id,int pid);
+void kill_job(PROC_T *p);
 #endif

@@ -422,10 +422,9 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 		}
 		_exit(EXIT_FAILURE);//unable to fork
 	    }else if(pid2>0){//parent
-		usleep(100000);
+		usleep(1000000);
 		waitpid(pid2, NULL, WNOHANG);
-		usleep(100000);
-		//Must waitpid before running kill because child is zoombie.
+		//Must waitpid before running kill because otherwise child maybe zoombie.
 		if(kill(pid2, 0)){//exec failed.
 		    info("exec failed\n");
 		    pid2=-1;
