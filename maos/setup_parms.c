@@ -1078,16 +1078,10 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
     if(parms->sim.wfsalias || parms->sim.idealwfs || parms->sim.idealevl){
 	parms->sim.dmproj=1;/*need dmproj */
     }
-    if(parms->recon.split!=1 || parms->ndm!=2){
-	parms->sim.ahstfocus=0;
-    }
     if(parms->sim.ahstfocus){
-	if(parms->sim.fuseint){
-	    warning("ahstfocus is implemented with separate integrator. changed\n");
-	    parms->sim.fuseint=0;
-	}
-	if(parms->recon.split!=1){
-	    error("ahstfocus can only be used with recon.split=1\n");
+	if(parms->recon.split!=1 || parms->ndm!=2 || !parms->sim.mffocus){
+	    parms->sim.ahstfocus=0;
+	    warning("Disable ahstfocus\n");
 	}
     }
     if(parms->sim.ncpa_calib && !parms->sim.ncpa_ndir){
@@ -1399,6 +1393,10 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     }
     parms->sim.dtlo=parms->sim.dtrat_lo*parms->sim.dt;
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
+    if(parms->sim.fcfocus<=0){
+	parms->sim.fcfocus=1./parms->sim.dtlo/10;
+	warning("fcfocus=%g\n", parms->sim.fcfocus);
+    }
     parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dthi;
 }
 /**

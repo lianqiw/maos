@@ -165,7 +165,7 @@ int gpu_init(int *gpus, int ngpu){
 	/*sort so that gpus with higest memory is in the front.*/
 	qsort(gpu_info, ngpu_tot, sizeof(long)*2, (int(*)(const void*, const void *))cmp_gpu_info);
 	for(int igpu=0; igpu<ngpu_tot; igpu++){
-	    info2("GPU %d has mem %.1f GB\n", gpu_info[igpu][0], gpu_info[igpu][1]/1024/1024/1024.);
+	    info2("GPU %d has mem %.1f GB\n", (int)gpu_info[igpu][0], gpu_info[igpu][1]/1024/1024/1024.);
 	}
 	for(int i=0, igpu=0; i<ngpu; i++, igpu++){
 	    if(igpu==ngpu_tot || gpu_info[igpu][1]<500000000){

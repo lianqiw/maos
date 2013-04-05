@@ -29,7 +29,6 @@
 typedef struct PROC_T{
     int hid;/*host id. hosts[hid] gives hostname. */
     int pid;
-    int done;/*done with it. */
     double frac;
     int oldinfo;
     int iseed_old;

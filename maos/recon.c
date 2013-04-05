@@ -271,10 +271,6 @@ void reconstruct(SIM_T *simu){
 		    dmpsol=simu->dmint->mint[parms->dbg.psol?0:1];
 		}
 		dcelladd(&simu->dmerr, 1, dmpsol, -1);
-		if(!parms->sim.fuseint && parms->recon.split==2 && parms->sim.mffocus){
-		    warning_once("Temporary solution\n");
-		    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocusint->mint[1], "nn", -1);
-		}
 	    }
 	    if(!parms->sim.idealfit && parms->recon.split==1){/*ahst */
 		remove_dm_ngsmod(simu, simu->dmerr);

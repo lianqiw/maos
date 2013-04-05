@@ -2162,7 +2162,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	if(zfexist("../../psd_ngs.bin")){
 	    warning("Temporary solution for testing\n");
 	    dmat *psd_ngs=dread("../../psd_ngs.bin");
-	    if(1){
+	    if(parms->sim.wspsd){//windshake
 		//need to convert from rad to m2.
 		dmat *psd_ws=dread("%s", parms->sim.wspsd);
 		dmat *psd_ws_m=ddup(psd_ws); 
@@ -2186,7 +2186,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    dfree(psd_ngs);
 	}
     }
-    if(0){/*Orthnormalize the Modes. */
+    if(parms->save.setup){/*Orthnormalize the Modes. Does not impact performance. */
 	/*
 	  Change FUw*Minv -> FUw*(U*sigma^-1/2) * (U*sigma^1/2)'*Minv
 	  columes of FUw*(U*sigma^-1/2) are the eigen vectors.
@@ -2223,8 +2223,9 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     
     recon->MVRngs=dcellreduce(Minv,1);/*1xnwfs cell */
     recon->MVModes=dcellreduce(FUw,2);/*ndmx1 cell */
-    recon->MVGM=NULL;
-    spcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
+    /*recon->MVGM=NULL;
+      spcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
+      dcellmm(&recon->MVFM, recon->RFngsg, recon->MVGM, "nn", 1);*/
     dcellfree(neailo);
     dcellfree(nealo);
     dcellfree(Minv);
@@ -3011,6 +3012,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     dfree(recon->dx);
     dcellfree(recon->MVRngs);
     dcellfree(recon->MVGM);
+    dcellfree(recon->MVFM);
     dcellfree(recon->MVModes);
     dcellfree(recon->xmcc);
     spcellfree(recon->GX);

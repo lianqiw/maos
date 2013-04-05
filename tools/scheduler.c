@@ -89,7 +89,6 @@ static RUN_T *running_get_wait(int status);
 static RUN_T *runned_get(int pid);
 static void runned_remove(int pid);
 static int runned_add(RUN_T *irun);
-static void running_remove(int pid);
 static void running_update(int pid, int status);
 static RUN_T *running_get_by_sock(int sock);
 //static MONITOR_T *monitor_get(int hostid);
@@ -259,28 +258,13 @@ static RUN_T* running_add(int pid,int sock){
 	return irun;
     }
 }
+
 static void running_update(int pid, int status){
-    RUN_T *irun=running_get(pid);
-    if(irun){
-	if((irun->status.info==S_RUNNING || irun->status.info==S_START) && status>10){
-	    nrun-=irun->nthread;/*negative decrease */
-	}
-	info("Job %d crashed\n", pid);
-	irun->status.info=status;
-	monitor_send(irun,NULL);
-	if(status>10){/*ended */
-	    irun->time=(int)myclockd();
-	    if(nrun<0) nrun=0;
-	    running_remove(pid);/*moved to runned. */
-	}
-    }
-}
-static void running_remove(int pid){
     RUN_T *irun,*irun2=NULL;
-    int removed=0;
     for(irun=running; irun; irun2=irun,irun=irun->next){
 	if(irun->pid==pid){
-	    if (irun2){
+	    //remove from the running list
+	    if(irun2){
 		irun2->next=irun->next;
 		if(irun->next==NULL)
 		    running_end=irun2;
@@ -289,46 +273,43 @@ static void running_remove(int pid){
 		if(irun->next==NULL)
 		    running_end=running;
 	    }
-	    if(irun->pid>0){
-		irun->status.timend=myclocki();
-		/*move irun to runned */
-		runned_add(irun);
-		{
-		    const char *statusstr=NULL;
-		    switch (irun->status.info){
-		    case S_CRASH:
-			statusstr="Crashed"; break;
-		    case S_FINISH:
-			statusstr="Finished";break;
-		    case S_KILLED:
-			statusstr="Killed";break;
-		    default:
-			statusstr="Unknown";break;
-		    }
-		    FILE *fp=fopen(scheduler_fnlog,"a");
-		    if(fp){
-			fprintf(fp,"[%s] %s %5d %8s '%s' nrun=%d\n",
-				myasctime(),hosts[hid],pid,statusstr,irun->path,nrun);
-			fclose(fp);
-		    }
+	    irun->status.timend=myclocki();
+	    if(irun->pid>0 && (irun->status.info==S_RUNNING || irun->status.info==S_START) && status>10){
+		nrun-=irun->nthread;/*negative decrease */
+		if(nrun<0) nrun=0;
+	    }
+	    if(status>10){/*ended */
+		irun->time=(int)myclockd();
+	    }
+	    info("Job %d done with status %d\n", pid, status);
+	    irun->status.info=status;
+	    monitor_send(irun,NULL);
+	    /*move irun to runned */
+	    runned_add(irun);
+	    //log the run.
+	    {
+		const char *statusstr=NULL;
+		switch (irun->status.info){
+		case S_CRASH:
+		    statusstr="Crashed"; break;
+		case S_FINISH:
+		    statusstr="Finished";break;
+		case S_KILLED:
+		    statusstr="Killed";break;
+		default:
+		    statusstr="Unknown";break;
 		}
-	    }else{//Remove queued job (either launched or failed to launch);
-		if(irun->status.info==S_QUEUED){
-		    irun->status.info=S_REMOVE;
-		    monitor_send(irun, NULL);
-		    free(irun->path);
-		    free(irun->exe);
-		    free(irun);
-		}else{//Killed. Add to runned queue
-		    monitor_send(irun, NULL);
-		    runned_add(irun);
+		FILE *fp=fopen(scheduler_fnlog,"a");
+		if(fp){
+		    fprintf(fp,"[%s] %s %5d %8s '%s' nrun=%d\n",
+			    myasctime(),hosts[hid],pid,statusstr,irun->path,nrun);
+		    fclose(fp);
 		}
 	    }
-	    removed=1;
 	    break;
 	}
     }
-    if(!removed){
+    if(!irun){
 	warning3("runned_remove %s:%d not found\n",hosts[hid],pid);
     }
 }
@@ -399,8 +380,7 @@ static void process_queue(void){
     if(avail<1) return;
     RUN_T *irun=running_get_wait(S_WAIT);
     if(irun && irun->pid>0 && kill(irun->pid,0)){//job exited
-	irun->status.info=S_CRASH;
-	running_remove(irun->pid);
+	running_update(irun->pid, S_CRASH);
 	irun=running_get_wait(S_WAIT);
     }
     info("irun=%p\n", irun);
@@ -445,8 +425,7 @@ static void process_queue(void){
 		    int pid;
 		    if((pid=launch_exe(irun->exe, irun->path))<0){
 			warning2("launch_exe %s failed\n", irun->path);
-			irun->status.info=S_CRASH;
-			running_remove(irun->pid);
+			running_update(irun->pid, S_CRASH);
 		    }else{
 			info2("job launched as %d\n", pid);
 			//inplace update the information in monitor

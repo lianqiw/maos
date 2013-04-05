@@ -312,6 +312,7 @@ typedef struct RECON_T{
     dcell *MVRngs;     /**<NGS recon for MV split tomography*/
     dcell *MVModes;    /**<MVST Modes (svd'ed)*/
     dcell *MVGM;       /**<NGS WFS gradient operator from MVST Modes.*/
+    dcell *MVFM;       /**<NGS Focus reconstructed from MVST Modes.*/
     spcell *GA;        /**<actuator to wfs grad.*/
     spcell *GAlo;      /**<GA of low order WFS.*/
     spcell *GAhi;      /**<GA of high order WFS.*/
@@ -532,7 +533,6 @@ typedef struct SIM_T{
     dmat  *lgsfocuslpf;/**<low pass filtered individual LGS focus*/
     double ngsfocus;   /**<keep NGS focus even when lo_output==0.*/
     dcell *ngsfocuslpf;/**<low pass filtered NGS focus*/
-    SERVO_T *ngsfocusint; /**<Focus mode integrator*/
     dcell *zoomavg;    /**<Trombone averager*/
     dcell *zoomerr;    /**<Trombone error signal from zoomavg*/
     dcell *zoomint;    /**<Trombone integrator*/

@@ -108,7 +108,7 @@ static void skysim_isky(SIM_S *simu){
 	double tk_1=myclockd();
 	/*Setup star parameters. */
 	STAR_S *star=setup_star(&nstar, simu,stars->p[isky],seed_maos);
-	if(!star){
+	if(!star || nstar==0){
 	    info2("Field %d, No stars available\n", isky);
 	    continue;
 	}

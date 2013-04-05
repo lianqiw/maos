@@ -400,7 +400,6 @@ static void status_icon_on_click(GtkStatusIcon *status_icon0,
 	gtk_window_move(GTK_WINDOW(window), cx, cy);
 	gtk_widget_show(window);
 	gtk_window_deiconify(GTK_WINDOW(window));
-	gtk_window_stick(GTK_WINDOW(window));
     }
 }
 static void trayIconPopup(GtkStatusIcon *status_icon0, guint button, 

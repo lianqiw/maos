@@ -266,7 +266,6 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
     const float hs=parms->powfs[ipowfs].hs;
     const int dtrat=parms->powfs[ipowfs].dtrat;
-    const int save_grad=parms->save.grad[iwfs];
     const int save_gradgeom=parms->save.gradgeom[iwfs];
     const int save_opd =parms->save.wfsopd[iwfs];
     const int save_ints=parms->save.ints[iwfs];

@@ -906,15 +906,12 @@ static void init_simu_wfs(SIM_T *simu){
 	}
     }
     if(parms->sim.mffocus){
-	if(parms->sim.lpfocus<1.e-15){
-	    error("When mffocus is nonzero, lpfocus need to be zero\n");
+	if(fabs(parms->sim.lpfocus)<1.e-15){
+	    error("When mffocus is nonzero, lpfocus need to be non zero\n");
 	}
 	simu->lgsfocuslpf=dnew(parms->nwfs, 1);
 	simu->ngsfocuslpf=dcellnew(1,1);
 	simu->ngsfocuslpf->p[0]=dnew(recon->ngsmod->nmod,1);
-	if(parms->recon.split==2){
-	    simu->ngsfocusint=servo_new(NULL, parms->sim.apdm, parms->sim.dthi, parms->sim.epdm);
-	}
     }
     if(parms->nuptpowfs){
 	simu->upterr=dcellnew(nwfs,1);

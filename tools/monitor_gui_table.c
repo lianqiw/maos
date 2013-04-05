@@ -180,7 +180,7 @@ gboolean remove_entry(PROC_T *iproc){
 }
 gboolean refresh(PROC_T *p){
     if(!p->entry_iseed) create_entry(p);
-    if(p->done) return 0;
+
     switch(p->status.info){
     case 0:
 	break;
@@ -210,14 +210,12 @@ gboolean refresh(PROC_T *p){
 	break;
     case S_FINISH:/*Finished */
 	p->frac=1;
-	p->done=1;
 	change_button(p,GTK_STOCK_APPLY,delete_hbox_event);
 	/*progress bar color. */
 	gtk_widget_modify_bg(p->entry_timing,GTK_STATE_SELECTED,&green);
 	notify_user(p);
 	break;
     case S_CRASH:/*Error */
-	p->done=1;
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Error");
 	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);
@@ -229,7 +227,6 @@ gboolean refresh(PROC_T *p){
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&yellow);
 	break;
     case S_KILLED:
-	p->done=1;
 	gtk_entry_set_text(GTK_ENTRY(p->entry_timing),"Killed");
 	change_button(p,GTK_STOCK_CLOSE,delete_hbox_event);
 	gtk_widget_modify_base(p->entry_timing,GTK_STATE_NORMAL,&red);

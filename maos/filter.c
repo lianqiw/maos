@@ -184,19 +184,16 @@ void filter_cl(SIM_T *simu){
     }
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
-    /*global focus is the 6th mode in ngsmod->Modes*/
-    if(parms->sim.mffocus){
-	/*Do LPF on NGS focus measurement to drive global focus*/
-	double lpfocus=parms->sim.lpfocus;
-	simu->ngsfocuslpf->p[0]->p[5]=
-	    simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
-	if(parms->recon.split==1){
-	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
-	}else{
-	    servo_filter(simu->ngsfocusint, simu->ngsfocuslpf);
-	}
-    }
     if(simu->dmerr){ /*High order. */
+	/*global focus is the 6th mode in ngsmod->Modes*/
+	if(parms->sim.mffocus){
+	    dcellmm(&simu->dmerr, simu->recon->ngsmod->Modes, simu->ngsfocuslpf, "nn", 1);
+	    /*Do LPF on NGS focus measurement to drive global focus*/
+	    double lpfocus=parms->sim.lpfocus;
+	    simu->ngsfocuslpf->p[0]->p[5]=
+		simu->ngsfocuslpf->p[0]->p[5]*(1.-lpfocus)+lpfocus*simu->ngsfocus;
+	}
+
 	static int epdm_is_auto=0;
 	if(simcfg->epdm->p[0]<0){
 	    epdm_is_auto=1;
@@ -227,9 +224,6 @@ void filter_cl(SIM_T *simu){
     dcellcp(&simu->dmcmd,simu->dmint->mint[0]);
     if(!parms->sim.fuseint){
 	addlow2dm(&simu->dmcmd,simu,simu->Mint_lo->mint[0], 1);
-    }
-    if(parms->sim.mffocus && parms->recon.split==2){
-	dcellmm(&simu->dmcmd, simu->recon->ngsmod->Modes, simu->ngsfocusint->mint[0], "nn", 1);
     }
     if(recon->dm_ncpa){
 	dcelladd(&simu->dmcmd, 1, recon->dm_ncpa, 1);

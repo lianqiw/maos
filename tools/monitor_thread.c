@@ -209,9 +209,6 @@ static int respond(int sock){
 		    /*A new mean to replace the ID of a job.*/
 		    p->pid=cmd[1];
 		}
-		if(p->status.info<10){
-		    p->done=0;
-		}
 		gdk_threads_add_idle((GSourceFunc)refresh, p);
 	    }
 	}

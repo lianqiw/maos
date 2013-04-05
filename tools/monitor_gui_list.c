@@ -191,7 +191,6 @@ gboolean remove_entry(PROC_T *p){
     return 0;
 }
 gboolean refresh(PROC_T *p){
-    if(p->done) return 0;/*we are done with it (finished or crashed) */
     if(!p->row){
 	char sdate[80];
 	char spid[12];
@@ -245,7 +244,6 @@ gboolean refresh(PROC_T *p){
 	notify_user(p);
 	break;
     case S_CRASH:/*Error */
-	p->done=1;
 	list_modify_status(p, "Error");
 	list_modify_icon(p,icon_failed);
 	//list_modify_color(p,"#CC0000");
@@ -257,7 +255,6 @@ gboolean refresh(PROC_T *p){
 	//list_modify_color(p,"#CCCC00");
 	break;
     case S_KILLED:
-	p->done=1;
 	list_modify_status(p, "Killed");
 	list_modify_icon(p,icon_failed);
 	//list_modify_color(p,"#CC0000");

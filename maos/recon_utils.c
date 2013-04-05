@@ -571,7 +571,6 @@ void focus_tracking_grads(SIM_T* simu){
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     int hi_output=(!parms->sim.closeloop || (simu->isim+1)%parms->sim.dtrat_hi==0);
-    double lpfocus=parms->sim.lpfocus;
     if(hi_output){
 	dcell *LGSfocus=NULL;/*residual focus along ngs estimated from LGS measurement.*/
 	dcellmm(&LGSfocus, recon->RFlgsg, simu->gradlastcl,"nn",1);
@@ -586,7 +585,9 @@ void focus_tracking_grads(SIM_T* simu){
 	    //Average LPF focus
 	    focusm+=simu->lgsfocuslpf->p[iwfs]; nwfsllt++;
 	    //put LPF after using the value to put it off critical path.
+	    double lpfocus=parms->sim.lpfocus;
 	    simu->lgsfocuslpf->p[iwfs]=simu->lgsfocuslpf->p[iwfs]*(1-lpfocus)+LGSfocus->p[iwfs]->p[0]*lpfocus;
+	    
 	}
 	if(parms->sim.mffocus==2){//remove LPF GLOBAL focus from each lgs
 	    focusm/=nwfsllt;

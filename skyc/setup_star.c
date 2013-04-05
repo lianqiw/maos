@@ -109,8 +109,6 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 	stari->pistat=calloc(npowfs, sizeof(PISTAT_S));
 	const double thetax=stari->thetax*206265;/*in as */
 	const double thetay=stari->thetay*206265;
-	
-
 	double thxnorm=thetax/ngsgrid;
 	double thynorm=thetay/ngsgrid;
 	long thxl=(long)floor(thxnorm);
@@ -188,6 +186,16 @@ static void setup_star_read_pistat(SIM_S *simu, STAR_S *star, int nstar, int see
 	    stari->pistat[ipowfs].psf=avgpsf;/*PSF is in corner. */
 	    stari->pistat[ipowfs].grad=grad;
 	    stari->pistat[ipowfs].scale=scale;
+	    {/* skip stars with large PSF.*/
+		int size=INT_MAX;
+		for(int ic=0; ic<avgpsf->nx*avgpsf->ny; ic++){
+		    int size0=dfwhm(avgpsf->p[ic]);
+		    if(size0<size) size=size0;
+		}
+		if(size>6){
+		    stari->use[ipowfs]=-1;
+		}
+	    }
 	    if(parms->skyc.dbg){
 		dcellwrite(avgpsf, "%s/avgpsf_star%d_ipowfs%d_psf",dirsetup,istar,ipowfs);
 		dwrite(grad, "%s/pistat_star%d_ipowfs%d_grad",dirsetup,istar,ipowfs);
@@ -254,9 +262,9 @@ static void setup_star_siglev(const PARMS_S *parms, STAR_S *star, int nstar){
 static void setup_star_gnea(const PARMS_S *parms, STAR_S *star, int nstar){
     const long npowfs=parms->maos.npowfs;
     const int phystart=parms->skyc.phystart;
-    for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	const long nsa=parms->maos.nsa[ipowfs];
-	for(int istar=0; istar<nstar; istar++){
+    for(int istar=0; istar<nstar; istar++){
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    const long nsa=parms->maos.nsa[ipowfs];
 	    PISTAT_S *pistat=&star[istar].pistat[ipowfs];
 	    int ndtrat=parms->skyc.ndtrat;
 	    pistat->gnea=dcellnew(ndtrat, 1);
@@ -306,10 +314,10 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
     const long nwvl=parms->maos.nwvl;
     const long npowfs=parms->maos.npowfs;
     PDMAT(parms->skyc.rnefs,rnefs);
-    for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	const long nsa=parms->maos.nsa[ipowfs];
-	const long pixpsa=parms->skyc.pixpsa[ipowfs];
-	for(int istar=0; istar<nstar; istar++){
+    for(int istar=0; istar<nstar; istar++){
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    const long nsa=parms->maos.nsa[ipowfs];
+	    const long pixpsa=parms->skyc.pixpsa[ipowfs];
 	    PISTAT_S *pistat=&star[istar].pistat[ipowfs];
 	    pistat->i0=dcellnew(nsa,nwvl);
 	    pistat->gx=dcellnew(nsa,nwvl);
@@ -374,7 +382,6 @@ static void setup_star_mtch(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, 
  */
 static void setup_star_g(const PARMS_S *parms, POWFS_S *powfs, STAR_S *star, int nstar){
     const long npowfs=parms->maos.npowfs;
-    
     const double hc=parms->maos.hc;
     const double hs=parms->maos.hs;
     const double scale=pow(1.-hc/hs, -2);
@@ -595,74 +602,75 @@ STAR_S *setup_star(int *nstarout, SIM_S *simu, dmat *stars,int seed){
     }
     STAR_S *star=setup_star_create(parms, stars);
     int nstar=stars->ny;
+    const int npowfs=parms->maos.npowfs;
     setup_star_read_pistat(simu, star, nstar, seed);
+    setup_star_siglev(parms, star, nstar);
+    setup_star_gnea(parms, star, nstar);
+    setup_star_mtch(parms, powfs, star, nstar);
+    setup_star_g(parms, powfs, star, nstar);
     int jstar=0;
     for(int istar=0; istar<nstar; istar++){
-	dcell *pistat=star[istar].pistat[parms->skyc.npowfs-1].psf;
-	int size=INT_MAX;
-	for(int ic=0; ic<pistat->nx*pistat->ny; ic++){
-	    int size0=dfwhm(pistat->p[ic]);
-	    if(size0<size) size=size0;
+	int skip=0;
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    if(star[istar].use[ipowfs]==-1){
+		skip++;
+	    }
 	}
-	if(size>6){
-	    free_pistat(star[istar].pistat, parms->skyc.npowfs, parms);
-	    warning2("star %d at (%.0f, %.0f) doesn't have sharpen cores. size=%d\n",
-		     istar, star[istar].thetax*206265, star[istar].thetay*206265, size);
+	if(skip==npowfs || jstar>=parms->skyc.maxstar){//remove the star;
+	    free_istar(star+istar, parms);
 	}else{
-	    if(istar!=jstar){
+	    if(jstar!=istar){
 		memcpy(&star[jstar], &star[istar], sizeof(STAR_S));
 	    }
 	    jstar++;
 	}
     }
-    if(jstar==0){
-	free(star);
-	return NULL;
-    }
-    if(jstar>parms->skyc.maxstar){
-	jstar=parms->skyc.maxstar;/*we only keed maxstar number of brightest stars. */
-    }
     if(jstar!=nstar){
-	star=realloc(star,sizeof(STAR_S)*jstar);
 	nstar=jstar;
+	star=realloc(star,sizeof(STAR_S)*jstar);
     }
+    *nstarout=nstar;
     if(parms->skyc.verbose){
 	info2("There are %d stars usable from %d stars\n",jstar,nstar);
     }
-    *nstarout=nstar;
-    setup_star_siglev(parms, star, nstar);
-    setup_star_gnea(parms, star, nstar);
-    setup_star_mtch(parms, powfs, star, nstar);
-    setup_star_g(parms, powfs, star, nstar);
     return star;
+}
+void free_istar(STAR_S *star, const PARMS_S *parms){
+    const int npowfs=parms->maos.npowfs;
+    free_pistat(star->pistat,npowfs, parms);
+    if(star->wvfout){
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    if(star->wvfout[ipowfs]){
+		for(int istep=0; istep<star->nstep; istep++){
+		    ccellfree(star->wvfout[ipowfs][istep]);
+		}
+	    }
+	    free(star->wvfout[ipowfs]);
+	}
+	free(star->wvfout);
+    }
+    if(star->ztiltout){
+	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
+	    dcellfree(star->ztiltout[ipowfs]);
+	}
+	free(star->ztiltout);
+    }
+    dcellfree(star->goff);
+    dcellfree(star->g);
+    dfree(star->mags);
+    free(star->use);
+    dcellfree(star->siglev);
+    dfree(star->siglevtot);
+    dfree(star->bkgrnd);
 }
 /**
    Free array of STAR_S.
  */
-void free_star(STAR_S *star, int nstar, const PARMS_S *parms){
-    const long npowfs=parms->maos.npowfs;
+void free_star(STAR_S *stars, int nstar, const PARMS_S *parms){
     for(int istar=0; istar<nstar; istar++){
-	free_pistat(star[istar].pistat,npowfs, parms);
-	for(int ipowfs=0; ipowfs<npowfs; ipowfs++){
-	    if(star[istar].wvfout[ipowfs]){
-		for(int istep=0; istep<star[istar].nstep; istep++){
-		    ccellfree(star[istar].wvfout[ipowfs][istep]);
-		}
-	    }
-	    free(star[istar].wvfout[ipowfs]);
-	    dcellfree(star[istar].ztiltout[ipowfs]);
-	}
-	dcellfree(star[istar].goff);
-	free(star[istar].wvfout);
-	free(star[istar].ztiltout);
-	dcellfree(star[istar].g);
-	dfree(star[istar].mags);
-	free(star[istar].use);
-	dcellfree(star[istar].siglev);
-	dfree(star[istar].siglevtot);
-	dfree(star[istar].bkgrnd);
+	free_istar(stars+istar, parms);
     }
-    free(star);
+    free(stars);
 }
 /**
    Free pixel intensities.

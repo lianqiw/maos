@@ -41,7 +41,9 @@
 #define g_thread_new(A,B,C) g_thread_create(B, C, 0, NULL);
 #endif
 
-
+#ifndef G_VALUE_INIT
+#define G_VALUE_INIT {0,{{0}}}
+#endif
 
 #endif
 
