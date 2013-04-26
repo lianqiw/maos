@@ -2139,7 +2139,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     /*Compute the wavefront error due to measurement noise. Verified on
       2013-03-24. The gain optimization is yet a temporary hack because the way
       PSDs are input.*/
-    if(1){
+    if(0){
 	dcell *RC=NULL;
 	dcellmm(&RC, Minv, nealo, "nn", 1);
 	dcell *RCRt=NULL;
@@ -2186,7 +2186,7 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
 	    dfree(psd_ngs);
 	}
     }
-    if(parms->save.setup){/*Orthnormalize the Modes. Does not impact performance. */
+    if(1){/*Orthnormalize the Modes.*/
 	/*
 	  Change FUw*Minv -> FUw*(U*sigma^-1/2) * (U*sigma^1/2)'*Minv
 	  columes of FUw*(U*sigma^-1/2) are the eigen vectors.
@@ -2223,9 +2223,8 @@ setup_recon_mvst(RECON_T *recon, const PARMS_T *parms){
     
     recon->MVRngs=dcellreduce(Minv,1);/*1xnwfs cell */
     recon->MVModes=dcellreduce(FUw,2);/*ndmx1 cell */
-    /*recon->MVGM=NULL;
-      spcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
-      dcellmm(&recon->MVFM, recon->RFngsg, recon->MVGM, "nn", 1);*/
+    spcellmulmat(&recon->MVGM, recon->GAlo, recon->MVModes, 1);
+    dcellmm(&recon->MVFM, recon->RFngsg, recon->MVGM, "nn", 1);
     dcellfree(neailo);
     dcellfree(nealo);
     dcellfree(Minv);

@@ -311,9 +311,9 @@ void listen_port(uint16_t port, char *localpath, int (*responder)(int),
 /**
    Initialize sockaddr_in with hostname.
  */
+/*
 int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port){
     struct hostent *hostinfo;
-    
     name->sin_family = AF_INET;
     name->sin_port = htons(port);
     hostinfo = gethostbyname (hostname);
@@ -325,11 +325,10 @@ int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port
 	    name->sin_addr = *addr;
 	    return 0;
 	}else{
-	    /*warning("h_addr_list is NULL for host %s\n", hostname); */
 	    return -1;
 	}
     }
-}
+    }*/
 
 /**
   Connect to a host at port.
@@ -363,9 +362,22 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	if(!block){
 	    fcntl(sock, F_SETFD, O_NONBLOCK);
 	}
+	int res;
+	struct addrinfo *result;
+	struct addrinfo hints={0};
+	hints.ai_family=AF_INET;
+	hints.ai_socktype=SOCK_STREAM;
+	char portstr[20];
+	snprintf(portstr, 20, "%d", port);
+	if((res=getaddrinfo(hostname, portstr, &hints, &result))){
+	    warning("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
+	    return -1;
+	}
+	res=connect(sock, result->ai_addr, sizeof (servername));
+	freeaddrinfo(result);
 	/* Give the socket the target hostname. */
-	if(init_sockaddr(&servername, hostname, port) || 
-	   connect(sock, (struct sockaddr *)&servername, sizeof (servername))<0){
+	if(res<0){
+	    warning2("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
 	    close(sock);
 	    if(!block){
 		return -1;

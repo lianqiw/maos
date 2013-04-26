@@ -35,6 +35,7 @@ PNEW(lock);
 #define MAXDRAW 1024
 static int sock_helper=-1;
 int listening=0;
+int draw_single=1;//1: Only draw active frame. 0: draw all frames.
 /*If not null, only draw those that match draw_fig and draw_fn*/
 /**
    Contains functions for data visualization. 
@@ -332,7 +333,7 @@ void plot_points(char *fig,          /**<Category of the figure*/
 	int sock_draw=sock_draws[ifd].fd;
 	char **figfn=sock_draws[ifd].figfn;
 	if(sock_draws[ifd].pause) continue;
-	if(figfn[0] && figfn[1] &&
+	if(draw_single && figfn[0] && figfn[1] &&
 	   check_figfn(&sock_draws[ifd].list, fig, fn) && 
 	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
 	    continue;

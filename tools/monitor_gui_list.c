@@ -49,10 +49,14 @@
 #include <gdk/gdk.h>
 #include <glib/gprintf.h>
 #include "monitor.h"
+/*DO not modify enum without modify list store*/
 enum{
     COL_DATE,
     COL_PID,
-    COL_PATH,
+    COL_FULL,/*full path+arguments+output*/
+    COL_START,/*starting path*/
+    COL_ARGS,/*arguments*/
+    COL_OUT, /*output folder*/
     COL_SEED,
     COL_SEEDP,/*float */
     COL_STEP,
@@ -86,12 +90,12 @@ static void list_modify_icon(PROC_T *p, GdkPixbuf *newicon){
     list_get_iter(p, &iter);
     gtk_list_store_set(list, &iter, COL_COLOR, color,-1);
     }*/
-static void list_modify_status(PROC_T *p, const char *status){
+/*static void list_modify_status(PROC_T *p, const char *status){
     GtkTreeIter iter;
     GtkListStore *list=lists[p->hid];
     list_get_iter(p, &iter);
     gtk_list_store_set(list, &iter, COL_TIMING, status,-1);
-}
+    }*/
 /*static void list_modify_progress(PROC_T *p, double prog){
     GtkTreeIter iter;
     GtkListStore *list=lists[p->hid];
@@ -131,7 +135,7 @@ static void list_update_progress(PROC_T *p){
 	p->iseed_old=p->status.iseed;
     }
     char tmp[64];
-    snprintf(tmp,64,"%5.2f", step); gtk_list_store_set(list, &iter, COL_TIMING,tmp, -1);
+    /*snprintf(tmp,64,"%5.2f", step); gtk_list_store_set(list, &iter, COL_TIMING,tmp, -1);
     if(toth>99){
 	snprintf(tmp,64,"%ldh", resth);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
 	snprintf(tmp,64,"%ldh", toth);   gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
@@ -141,7 +145,7 @@ static void list_update_progress(PROC_T *p){
     }else{
  	snprintf(tmp,64,"%02ld:%02ld", restm, rests);  gtk_list_store_set(list, &iter, COL_REST,tmp, -1);
 	snprintf(tmp,64,"%02ld:%02ld", totm, tots);    gtk_list_store_set(list, &iter, COL_ALL,tmp, -1);
-     }
+	}*/
     
     if(toth>99){
 	snprintf(tmp,64, "%d/%d %5.2fs %ldh/%ldh",p->status.isim+1,p->status.simend, step, resth,toth);
@@ -159,7 +163,7 @@ static void list_update_progress(PROC_T *p){
     gtk_list_store_set(list, &iter, COL_ERRHI,tmp, -1);
     
 }
-static void list_modify_starttime(PROC_T *p){
+static void list_modify_reset(PROC_T *p){
     GtkTreeIter iter;
     GtkListStore *list=lists[p->hid];
     list_get_iter(p, &iter);
@@ -173,8 +177,13 @@ static void list_modify_starttime(PROC_T *p){
 		       COL_PID,spid, 
 		       COL_DATE, sdate,
 		       COL_SEED,"",
+		       COL_SEEDP, 0.,
 		       COL_STEP,"",
+		       COL_STEPP, 0.,
+		       COL_ERRHI,"",
+		       COL_ERRLO,"",
 		       -1);
+    p->iseed_old=-1;
 }
 gboolean remove_entry(PROC_T *p){
     if(p->row){
@@ -198,21 +207,51 @@ gboolean refresh(PROC_T *p){
 	struct tm *tim=localtime(&p->status.timstart);
 	strftime(sdate,80,"%m-%d %k:%M:%S",tim);
 	char *spath=p->path;
-	if(!spath) spath="Unknown";
+	char *sstart=NULL, *sout=NULL, *sargs=NULL;
+	if(spath){
+	    const char *pos=NULL;
+	    pos=strstr(spath, "/maos ");
+	    if(!pos){
+		pos=strstr(spath, "skyc ");
+	    }
+	    if(pos){
+		sstart=malloc(pos-spath+1);
+		memcpy(sstart, spath, pos-spath);
+		sstart[pos-spath]='\0';
+		sargs=strdup(pos);
+		char *pos2=strstr(sargs, " -o ");
+		if(pos2){
+		    pos2+=4;
+		    char *pos3=strchr(pos2, ' ');
+		    if(!pos3) pos3=strchr(pos2, '\0');
+		    if(pos3){
+			sout=malloc(pos3-pos2+1);
+			memcpy(sout, pos2, pos3-pos2);
+			sout[pos3-pos2]='\0';
+			memmove(pos2-4, pos3, strlen(pos3)+1);
+		    }
+		}
+	    }
+	}
 	GtkListStore *list=lists[p->hid];
 	GtkTreeIter iter;
 	gtk_list_store_append(list, &iter);
 	gtk_list_store_set(list,&iter,
-			   COL_DATE,sdate,
-			   COL_PID, spid,
-			   COL_PATH,spath,
-			   COL_SEED,"",
-			   COL_STEP,"",
+			   COL_DATE,  sdate,
+			   COL_PID,   spid,
+			   COL_FULL,  spath?spath:"Unknown",
+			   COL_START, sstart?sstart:" ",
+			   COL_ARGS,  sargs?sargs:" ",
+			   COL_OUT,   sout?sout:" ",
+			   COL_SEED,  " ",
+			   COL_STEP,  " ",
 			   -1);
+	free(sstart); free(sout); free(sargs);
 	GtkTreePath *tpath=gtk_tree_model_get_path(GTK_TREE_MODEL(list), &iter);
 	p->row=gtk_tree_row_reference_new(GTK_TREE_MODEL(list),tpath);
 	list_update_progress(p);
 	gtk_tree_path_free(tpath);
+	gtk_tree_view_columns_autosize(GTK_TREE_VIEW(views[p->hid]));
     }
     switch(p->status.info){
     case 0:
@@ -222,19 +261,19 @@ gboolean refresh(PROC_T *p){
 	list_modify_icon(p,icon_running);
 	break;
     case S_WAIT: /*waiting to start */
-	list_modify_status(p, "Waiting");
-	list_modify_starttime(p);
+	//list_modify_status(p, "Waiting");
+	list_modify_reset(p);
 	list_modify_icon(p,icon_waiting);
 	break;
     case S_START: /*just started. */
-	list_modify_status(p, "Started");
-	list_modify_starttime(p);
+	//list_modify_status(p, "Started");
+	list_modify_reset(p);
 	list_modify_icon(p,icon_running);
 	notify_user(p);
 	break;
     case S_QUEUED:
-	list_modify_status(p, "Queued");
-	list_modify_starttime(p);
+	//list_modify_status(p, "Queued");
+	list_modify_reset(p);
 	list_modify_icon(p,icon_waiting);
 	break;
     case S_FINISH:/*Finished */
@@ -244,18 +283,18 @@ gboolean refresh(PROC_T *p){
 	notify_user(p);
 	break;
     case S_CRASH:/*Error */
-	list_modify_status(p, "Error");
+	//list_modify_status(p, "Error");
 	list_modify_icon(p,icon_failed);
 	//list_modify_color(p,"#CC0000");
 	notify_user(p);
 	break;
     case S_TOKILL:/*kill command sent */
-	list_modify_status(p, "Kill command sent");
+	//list_modify_status(p, "Kill command sent");
 	list_modify_icon(p,icon_failed);
 	//list_modify_color(p,"#CCCC00");
 	break;
     case S_KILLED:
-	list_modify_status(p, "Killed");
+	//list_modify_status(p, "Killed");
 	list_modify_icon(p,icon_failed);
 	//list_modify_color(p,"#CC0000");
 	notify_user(p);
@@ -292,9 +331,11 @@ static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...
     gtk_tree_view_column_set_title(col, title);
     gtk_tree_view_column_set_spacing(col, 2);
     gtk_tree_view_column_set_alignment(col, 1);
+    gtk_tree_view_column_set_clickable(col, TRUE);
     if(width>0){/*minimum width*/
 	gtk_tree_view_column_set_min_width(col, width);
 	gtk_tree_view_column_set_expand(col,TRUE);
+	gtk_tree_view_column_set_resizable(col, TRUE);
 	if(type==0){
 	    g_object_set(G_OBJECT(render),"ellipsize",PANGO_ELLIPSIZE_START,NULL);
 	}
@@ -346,22 +387,13 @@ static void handle_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter 
     if(cmd<0){
 	switch(cmd){
 	case -1:{
-	    gtk_tree_model_get_value(model, iter, COL_PATH, &value);
+	    if(!strcmp(action, "CopyPath")){
+		gtk_tree_model_get_value(model, iter, COL_START, &value);
+	    }else{
+		gtk_tree_model_get_value(model, iter, COL_FULL, &value);
+	    }
 	    gchar *jobinfo=g_strdup(g_value_get_string(&value));
 	    g_value_unset(&value);
-	    if(!strcmp(action,"CopyPath")){
-		char *pos=NULL;
-		pos=strstr(jobinfo, "/maos ");
-		if(!pos){
-		    pos=strstr(jobinfo, "/skyc ");
-		}
-		if(pos){
-		    pos[1]='\0';
-		    gchar *tmp=jobinfo;
-		    jobinfo=stradd("cd ", tmp, NULL);
-		    g_free(tmp);
-		}
-	    }
 	    clipboard_append(jobinfo);
 	    g_free(jobinfo);
 	}
@@ -541,13 +573,16 @@ GtkWidget *new_page(int ihost){
     lists[ihost]=gtk_list_store_new(COL_TOT,
 				    G_TYPE_STRING,/*DATE */
 				    G_TYPE_STRING,/*PID */
+				    G_TYPE_STRING,/*FULL */
 				    G_TYPE_STRING,/*PATH */
+				    G_TYPE_STRING,/*ARGS */
+				    G_TYPE_STRING,/*OUT */
 				    G_TYPE_STRING,/*SEED */
 				    G_TYPE_FLOAT, /*SEEDP */
 				    G_TYPE_STRING,/*STEP */
 				    G_TYPE_FLOAT, /*STEPP */
 				    G_TYPE_STRING,/*TIMING */
-				    G_TYPE_STRING,/*TOT */
+				    G_TYPE_STRING,/*ALL */
 				    G_TYPE_STRING,/*REST */
 				    G_TYPE_STRING,/*ERRLO */
 				    G_TYPE_STRING,/*ERRHI */
@@ -566,7 +601,7 @@ GtkWidget *new_page(int ihost){
     GtkTreeSelection *viewsel=gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
     /*gtk_tree_selection_set_select_function(viewsel, treeselfun,NULL,NULL); */
     gtk_tree_selection_set_mode(viewsel,GTK_SELECTION_MULTIPLE);
-    gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(view), COL_PATH);
+    gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(view), COL_FULL);
     /*
       The implementation of GtkTreeView hardcoded GDK_LINE_ON_OFF_DASH in
       gtk_tree_view_set_grid_lines, which makes it impossible to make solid
@@ -578,10 +613,12 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_set_enable_search(GTK_TREE_VIEW(view), TRUE);
     /*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
-    
+    gtk_tree_view_set_headers_clickable(GTK_TREE_VIEW(view), TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID" , "text", COL_PID, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 20,"Path", "text", COL_PATH, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 20,"Path", "text", COL_START, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 20,"Args", "text", COL_ARGS, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0,"Out", "text",  COL_OUT, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -50, "Low" , "text", COL_ERRLO, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -50, "High", "text", COL_ERRHI, NULL));
     /*gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_TIMING, NULL));

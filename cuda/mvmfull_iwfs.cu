@@ -15,12 +15,12 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <errno.h>
 #include "utils.h"
 #include "curmat.h"
 #include "cucmat.h"
-
 /**
-\file mvm_iwfs.cu
+\file mvmfull_iwfs.cu
 
 Test MVM for a single WFS. Using two GPUs, without networking.
 This is not part of maos executable. Called by test/test_gpu executable.
@@ -34,9 +34,9 @@ Use schedtool -a 0x1 PID to let the exe only run one CPU 0. This prevents jitter
 
 Optimal timing (low jitter) achieved with multimv_do:
 cassiopeia with GTX 580:nsm=1, mtch_ngrid=90, nover=9 1.1ms
-orion with GTX 590, single GPU: nsm=1, mtch_ngrid=90, nover=9, 1.3ms
+orion with single GTX 590: nsm=1, mtch_ngrid=90, nover=9, 1.3ms
 kepler with K20: nsm=2, mtch_ngrid=20, nover=3 1.13ms
-
+cassiopeia with single GTX590
 */
 
 #define TIMING 0
@@ -127,7 +127,7 @@ multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g
     }
     atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
 }
-__global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
+/*__global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;
     if(iact<nact){
@@ -138,44 +138,57 @@ __global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a
 	}
 	a[iact]+=(ATYPE)acc[threadIdx.x];
     }
-}
+    }*/
 
 /**
-   A standalone routine that testes applying MVM for a single WFS and update mvm.*/
-void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *fnmtch, 
-	      int *gpus, int ngpu, int nstep){
-    {
-	//DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));
-    }
+   A standalone routine that testes applying MVM for a single WFS and update mvm.
+   The orderig of gradients are like xyxyxy instead of normal xxxyyy.
+
+   Important: 
+   1) Only page locked host memory can do async memcpy that overallps with computation
+   2) Has to be Portable for multiple GPUs to do async memcpy concurrently.
+   
+*/
+void mvmfull_iwfs(int *gpus, int ngpu, int nstep){
     int nsm=2;
-    info("Using %d gpus\n", ngpu);
-    //warning2("Notice that here we group x/y gradients together like xyxyxy instead of like"
-    //	    "xxxyyy in matched filter and MVM here.\n");
-    smat *mvm1=sread("%s", fnmvm1);
-    smat *mvm2=sread("%s", fnmvm2);
-    smat *mvm=mvm1;
-    
-    /*smat *grad1=sread("%s", fngrad1);
-      smat *grad2=sread("%s", fngrad2);*/
-    smat *pix1=sread("%s", fnpix1);
-    smat *pix2=sread("%s", fnpix2);
-    /*Important: 
-      1) Only page locked host memory can do async memcpy that overallps with computation
-      2) Has to be Portable for multiple GPUs to do async memcpy concurrently.
-     */
-    smat *pix=pix2;
-    smat *mtch=sread("%s", fnmtch);
-    const int nsa=pix1->ny;
-    const int ng=nsa*2;
-    /*reduce the matrices to only a single wfs.*/
-    sresize(mvm1, mvm1->nx, ng);
-    sresize(mvm2, mvm2->nx, ng);
-    scell *dmres=scellnew(ngpu, 1);
-    spagelock(pix1, pix2, mvm1, mvm2, mtch, NULL);
+    info("Using %d gpus. nstep=%d\n", ngpu, nstep);
+    int nstep0=20;//for warm up
+#if 1
+    //const int nact=7673;//total
+    const int nact=6981;//active
+    const int nsa=2895;//total. all subaps transported to GPU.
+#else
+    const int nact=6981;//active
+    const int nsa=2700;//active
+#endif
+    int ng=nsa*2;
     const int pixpsa=90;//Change this need to change kernel mtch_do
+    const int pixpsa2=71;//average number of pixels, used for 10GbE
+    smat *mvm1=snew(nact, ng);
+    smat *mvm2=snew(nact, ng);
+    smat *pix1=snew(pixpsa, nsa);
+    smat *pix2=snew(pixpsa, nsa);
+    smat *mtch=snew(pixpsa, ng);
+    rand_t srand;
+    seed_rand(&srand, 1);
+    srandu(mvm1,1, &srand);
+    srandu(mvm2,1,&srand);
+    srandu(pix1,50, &srand);
+    srandu(pix2,50, &srand);
+    smat *mvm=mvm1;
+    smat *pix=pix2;
+    scell *dmres=scellnew(ngpu, 1);
+    spagelock(pix1, pix2, mvm1, mvm2, mtch, dmres, NULL);
+
+    int port=20000;
+    int sock=-1;
+    int ready=1;
+
     int mtch_ngrid=50;//30;//can change to utilize GPU fully. 16 is good for cassiopeia
-    const int mtch_dimx=32;//must launch 32 threads so that they belong to single wrap. use only 30 threads.
+    const int mtch_dimx=32;//must launch 32 threads so that they belong to single wrap.
     const int mtch_dimy=12;//4 subapertures, 8 gradients
+
+
     {
 	char *MVM_NSM=getenv("MVM_NSM");
 	if(MVM_NSM){
@@ -188,9 +201,36 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	    info2("mtch_ngrid is set to %d\n", mtch_ngrid);
 	}
     }
-
     const int sastep=mtch_dimy*mtch_ngrid/2;
-    const int nact=mvm1->nx;
+    {
+	char *MVM_CLIENT=getenv("MVM_CLIENT");
+	if(MVM_CLIENT){
+	    char *MVM_PORT=getenv("MVM_PORT");
+	    if(MVM_PORT){
+		port=strtol(MVM_PORT, NULL, 10);
+	    }
+	    info2("Connecting to server %s\n", MVM_CLIENT);
+	    sock=connect_port(MVM_CLIENT, port, 0 ,1);
+	    if(sock!=-1) {
+		info2("Connected");
+		int cmd[6];
+		cmd[0]=nact;
+		cmd[1]=nsa;
+		cmd[2]=sastep;
+		cmd[3]=pixpsa2;
+		cmd[4]=nstep;
+		cmd[5]=nstep0;
+		if(stwriteintarr(sock, cmd, 6)){
+		    close(sock); sock=-1;
+		    warning("Failed: %s\n", strerror(errno));
+		}
+	    } else {
+		info2("Failed\n");
+	    }
+	}
+    }
+
+
     int nc=10;//each time copy nc column of mvm.
     GPU_DATA_T *data=(GPU_DATA_T*)calloc(ngpu, sizeof(GPU_DATA_T));
     const int sect_gpu=(nsa+sastep*ngpu-1)/(sastep*ngpu);
@@ -239,19 +279,35 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	cudaEventCreateWithFlags(&data[igpu].event_pall,event_flag);
 	dmres->p[igpu]=snew(nact, 1);
 	spagelock(dmres->p[igpu], NULL);
+	/*
+	DO(cudaMemcpyAsync(data[igpu].pix->p, pix->p, 2*nsa*pixpsa,
+			   cudaMemcpyHostToDevice, *data[igpu].stream_p));
+	cudaMemcpyAsync(dmres->p[igpu]->p, data[igpu].act->p, nact*sizeof(float), 
+			cudaMemcpyDeviceToHost, data[igpu].stream_a[0]);
+	CUDA_SYNC_DEVICE;
+	*/
     }
     smat *timing=snew(nstep, 1);
-    smat *timing2=snew(nstep, 1);
+    smat *timing_mvmu=snew(nstep, 1);
+    smat *timing_sock=snew(nstep, 1);
     smat *result=snew(nstep, 1);
-    //float one=1; 
     cudaProfilerStart();
     TIC;
-    for(int istep=0; istep<nstep; istep++){
+    if(sock!=-1 && stwriteint(sock, ready)){
+	warning("error send ready signal: %s\n", strerror(errno));
+	close(sock); sock=-1;
+    }
+    info2("Ready\n");
+    for(int jstep=-nstep0; jstep<nstep; jstep++){
+	//run 20 frames to warm up before timing.
+	int istep=jstep<0?0:jstep;
+	if(sock!=-1){//start signal
+	    timing_sock->p[istep]=0;
+	}
 	tic;
 #if TIMING
 	if(istep%8000==0)
 #else
-	    //if(istep%8000==7484)
 	    if(0)
 #endif
 	    {//need to update MVM
@@ -276,12 +332,13 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	    DO(cudaEventRecord(data[igpu].event0, data[igpu].stream_a[0]));
 #endif
 	}
-	if(pix==pix1){
-	    pix=pix2;
-	}else{
-	    pix=pix1;
+	if(sock==-1){
+	    if(pix==pix1){
+		pix=pix2;
+	    }else{
+		pix=pix1;
+	    }
 	}
-
 	for(int isa=0, igpu=0; isa<nsa; isa+=sastep, igpu=((igpu+1)%ngpu)){
 	    cudaSetDevice(gpus[igpu]); 
 	    GPU_DATA_T *datai=&data[igpu];
@@ -290,7 +347,18 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 #if TIMING
 	    DO(cudaEventRecord(datai->event0_p[datai->count], datai->stream_p[0]));
 #endif
-	    DO(cudaMemcpyAsync(datai->pix->p+isa*pixpsa, pix->p+isa*pixpsa, sizeof(float)*nleft*pixpsa,
+	    void *pcur=pix->p+isa*pixpsa;
+	    if(sock!=-1){
+		//pcur=pix->p;//temporary. always use the same buffer
+		//manually use 2 byte.
+		double tmp0=myclockd();
+		if(stread(sock, pcur, 2*nleft*pixpsa2)){
+		    warning("failed: %s\n", strerror(errno));
+		    close(sock); sock=-1;
+		}
+		timing_sock->p[istep]+=myclockd()-tmp0;
+	    }
+	    DO(cudaMemcpyAsync(datai->pix->p+isa*pixpsa, pcur, 2*nleft*pixpsa,
 			       cudaMemcpyHostToDevice, *datai->stream_p));
 	    //Recored the event when the memcpy is finished
 	    DO(cudaEventRecord(datai->event_p[datai->count], datai->stream_p[0]));
@@ -399,15 +467,28 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 		dmres->p[0]->p[iact]+=dmres->p[igpu]->p[iact];
 	    }
 	}
+	if(sock!=-1){
+	    double tmp0=myclockd();
+	    if(stwrite(sock, dmres->p[0]->p, sizeof(float)*nact)){
+		warning("error write dmres: %s\n", strerror(errno));
+		close(sock); sock=-1;
+	    }
+	    if(streadint(sock, &ready)){//acknowledgement.
+		warning("error read ack failed: %s\n", strerror(errno));
+		close(sock), sock=-1;
+	    }
+	    timing_sock->p[istep]+=myclockd()-tmp0;
+	    timing->p[istep]=ready*1.e-6;
+	}else{
+	    timing->p[istep]=toc3;//do not tic.
+	}
 	result->p[istep]=dmres->p[0]->p[nact/2];
-	timing->p[istep]=toc3;//do not tic.
-	if(istep<2){
-	    swrite(dmres->p[0], "dmres_%d", istep);
-	}
-	if(istep%1000==0 || timing->p[istep]>2.e-3){
-	    info2("Step %d takes %.0f us\n", istep, timing->p[istep]*1e6);
-	}
-
+	usleep(50);//yield
+	/*info2("\rStep %d takes %.0f us", istep, timing->p[istep]*1e6);
+	if(timing->p[istep]>1.25e-3){
+	    info2("\n");
+	}	
+	*/
 	//Wait for MVM matrix copy to finish and time.
 	for(int igpu=0; igpu<ngpu; igpu++){
 	    GPU_DATA_T *datai=&data[igpu];
@@ -416,7 +497,7 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 	    datai->stream_a[datai->ism].sync();
 	    datai->stream_mvm->sync();
 	}
-	timing2->p[istep]=toc3;
+	timing_mvmu->p[istep]=toc3;
 #if TIMING 
 	if(istep<100){
 	    for(int igpu=0; igpu<ngpu; igpu++){
@@ -455,12 +536,40 @@ void mvmfull_iwfs(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *
 #endif
     }
     cudaProfilerStop();
-    if(getenv("MVM_NOVER")){
-	swrite(timing, "tim2_%s_%dgpu_%d_%d", myhostname(), ngpu, mtch_ngrid, nsm);
-    }else{
-	swrite(timing, "tim_%s_%dgpu_%d_%d", myhostname(), ngpu, mtch_ngrid, nsm);
-    }
-    //swrite(timing2, "timing2_%dgpu", ngpu);
-    //swrite(result, "res_%s_%dgpu", ngpu);
+    //swrite(dmres->p[0], "dmres");
+
+    swrite(timing, "timing_%s_%dgpu", myhostname(), ngpu);
+    swrite(timing_mvmu, "timing_mvmu_%s_%dgpu", myhostname(), ngpu);
+    swrite(timing_sock, "timing_sock_%s_%dgpu", myhostname(), ngpu);
     spageunlock(pix1, pix2, mvm1, mvm2, NULL);
+    
+    sfree(mvm1);
+    sfree(mvm2);
+    sfree(pix1);
+    sfree(pix2);
+    sfree(mtch);
+    scellfree(dmres);
+    sfree(timing);
+    sfree(timing_mvmu);
+    sfree(timing_sock);
+    sfree(result);
+    for(int igpu=0; igpu<ngpu; igpu++){
+	cudaSetDevice(gpus[igpu]);
+	delete data[igpu].cumvm1;
+	delete data[igpu].cumvm2;
+	delete data[igpu].pix;
+	delete data[igpu].mtch;
+	delete data[igpu].grad;
+	delete data[igpu].act;
+	delete data[igpu].stream_p;
+	delete data[igpu].stream_g;
+	delete[] data[igpu].stream_a;
+	delete[] data[igpu].event_w;
+	delete data[igpu].stream_mvm;
+	delete[] data[igpu].event_g;
+	delete[] data[igpu].event_p;
+	cudaDeviceReset();
+    }
+    free(data);
+  
 }

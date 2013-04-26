@@ -27,33 +27,73 @@
 #include "misc.h"
 #include "common.h"
 #include "sockio.h"
-int stwrite(int sfd, const void *p, size_t len){
-    if(issock(sfd)){
-#ifdef __linux__
-	return (send(sfd, p, len, MSG_NOSIGNAL)!=len)?-1:0;
-#else
-	return (send(sfd, p, len, 0)!=len)?-1:0;
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
 #endif
-    }else{//act on non-socket using write.
-	int nwrite;
-	do{
-	    nwrite=write(sfd, p, len);
-	    p+=nwrite; len-=nwrite;
-	}while(nwrite>0 && nwrite<len);
-	return len?-1:0;
-    }
+int stwrite(int sfd, const void *p, size_t len){
+    int is_sock=issock(sfd);
+    long nwrite;
+    long left=(long)len;
+    do{
+	if(is_sock){
+	    nwrite=send(sfd, p, len, MSG_NOSIGNAL);
+	}else{
+	    nwrite=write(sfd, p, left);
+	}
+	p+=nwrite; left-=nwrite;
+	if(left){
+	    info("nwrite=%ld, left=%ld\n", nwrite, left);
+	}
+    }while(nwrite>0 && left>0);
+    return left?-1:0;
 }
 int stread(int sfd, void *p, size_t len){
-    if(issock(sfd)){
-	return (recv(sfd, p, len, MSG_WAITALL)!=len)?-1:0;
-    }else{//act on non-socket using read.
-	int nread;
-	do{
-	    nread=read(sfd, p, len);
-	    p+=nread; len-=nread;
-	}while(nread>0 && nread<len);
-	return len?-1:0;
-    }
+    int is_sock=issock(sfd);
+    long nread;
+    long left=len;
+    do{
+	if(is_sock){
+	    nread=read(sfd, p, left);
+	}else{
+	    nread=recv(sfd, p, left, MSG_WAITALL);
+	}
+	p+=nread; left-=nread;
+	if(left){
+	    info("nread=%ld, left=%ld\n", nread, left);
+	}
+    }while(nread>0 && left>0);
+    return left?-1:0;
+}
+/*Write long messages with smaller buffer*/
+int stwrite2(int sfd, const void *p, size_t len, size_t nbuf){
+    if(nbuf>len) nbuf=len;
+    size_t nwrite;
+    long left=len;//do not use size_t which is unsigned
+#ifdef __linux__
+    int is_sock=issock(sfd);
+#endif
+    do{
+#ifdef __linux__
+	if(is_sock){
+	    nwrite=send(sfd, p, len, MSG_NOSIGNAL);
+	}else
+#endif
+	    nwrite=write(sfd, p, nbuf);
+	
+	p+=nwrite; left-=nwrite;
+    }while(nwrite>0 && left>0);
+    return left?-1:0;
+}
+/*Read long messages with smaller buffer*/
+int stread2(int sfd, void *p, size_t len, size_t nbuf){
+    if(nbuf>len) nbuf=len;
+    size_t nread;
+    long left=len;
+    do{
+	nread=read(sfd, p, nbuf);
+	p+=nread; left-=nread;
+    }while(nread>0 && left>0);
+    return left?-1:0;
 }
 /**
    Write a string to socket

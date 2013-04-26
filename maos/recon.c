@@ -180,6 +180,7 @@ void recon_split(SIM_T *simu){
 	    if(parms->sim.mffocus){
 		dcell *tmp=NULL;
 		dcellmm(&tmp, recon->RFngsg, simu->gradlastcl, "nn", 1);
+		dcellmm(&tmp, recon->MVFM, simu->Merr_lo, "nn", -1);
 		simu->ngsfocus=tmp->p[0]->p[0]; 
 		dcellfree(tmp);	
 	    }
@@ -188,7 +189,7 @@ void recon_split(SIM_T *simu){
 	default:
 	    error("Invalid parms->recon.split: %d",parms->recon.split);
 	}
-	if(parms->sim.mffocus && parms->recon.split==1 && recon->ngsmod->nmod==6){
+	if(simu->Merr_lo && parms->sim.mffocus && parms->recon.split==1 && recon->ngsmod->nmod==6){
 	    /*the global focus is handled separately.*/
 	    simu->Merr_lo->p[0]->p[5]=0;
 	}

@@ -106,26 +106,22 @@ static long counter=0;//an negative index to retrieve this irun.
 static int runned_add(RUN_T *irun){
     /*
       Add to the end of the runned list intead of the beggining.
-     */
-    if(runned_get(irun->pid)){
-	warning("runned_add: already exist\n");
+    */
+ 
+    /*move irun to runned list from running list. */
+    irun->next=NULL;
+    if(runned_end){
+	runned_end->next=irun;
+	runned_end=irun;
+    }else{
+	runned_end=runned=irun;
+    }
+    irun->status.done=1;
+    if(irun->status.info<10){
+	warning3("Should be a finished process\n");
 	return 1;
     }else{
-	/*move irun to runned list from running list. */
-	irun->next=NULL;
-	if(runned_end){
-	    runned_end->next=irun;
-	    runned_end=irun;
-	}else{
-	    runned_end=runned=irun;
-	}
-	irun->status.done=1;
-	if(irun->status.info<10){
-	    warning3("Should be a finished process\n");
-	    return 1;
-	}else{
-	    return 0;
-	}
+	return 0;
     }
 }
 static void runned_remove(int pid){
@@ -275,7 +271,7 @@ static void running_update(int pid, int status){
 	    }
 	    irun->status.timend=myclocki();
 	    if(irun->pid>0 && (irun->status.info==S_RUNNING || irun->status.info==S_START) && status>10){
-		nrun-=irun->nthread;/*negative decrease */
+		nrun-=irun->nthread;/*job crashed.*/
 		if(nrun<0) nrun=0;
 	    }
 	    if(status>10){/*ended */
@@ -387,8 +383,6 @@ static void process_queue(void){
     if(irun){
        	int nthread=irun->nthread;
 	if(nrun+nthread<=NCPU && (nthread<=avail || avail >=3) && irun->sock>0){
-	    nrun+=nthread;
-	    info2("process_queue: nrun=%d avail=%d\n", nrun, avail);
 	    /*don't close the socket. will close it in select loop. */
 	    /*warning3("process %d launched. write to sock %d cmd %d\n", */
 	    /*irun->pid, irun->sock, S_START); */
@@ -397,6 +391,8 @@ static void process_queue(void){
 		perror("stwriteint");
 		warning("failed to notify maos\n");
 	    }
+	    nrun+=nthread;
+	    info2("process_queue: nrun=%d avail=%d\n", nrun, avail);
 	    irun->status.timstart=myclocki();
 	    irun->status.info=S_START;
 	    monitor_send(irun,NULL);

@@ -27,6 +27,8 @@
 */
 int stwrite(int sfd, const void *p, size_t len);
 int stread(int sfd, void *p, size_t len);
+int stwrite2(int sfd, const void *p, size_t len, size_t buflen);
+int stread2(int sfd, void *p, size_t len, size_t buflen);
 INLINE int stwriteint(int sfd, int cmd){
     return stwrite(sfd, &cmd, sizeof(int));
 }

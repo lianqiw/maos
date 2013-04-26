@@ -204,7 +204,7 @@ file_t* zfopen(const char *fn, char *mod){
 	break;
     case 'w':/*write */
     case 'a':
-	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0600))==-1){
+	if((fp->fd=open(fn2, O_RDWR | O_CREAT, 0666))==-1){
 	    perror("open for write");
 	}else{
 	    if(flock(fp->fd, LOCK_EX|LOCK_NB)){
@@ -327,7 +327,7 @@ static inline void zfwrite_do(const void* ptr, const size_t size, const size_t n
  */
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp){
     /*a wrapper to call either fwrite or gzwrite based on flag of isgzip*/
-    if(fp->isfits){
+    if(fp->isfits && BIGENDIAN==0){
 	int length=size*nmemb;
 	if(!length) return;
 	/* write a block of 2880 bytes each time, with big-endianness.*/

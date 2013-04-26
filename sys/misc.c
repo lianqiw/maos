@@ -223,9 +223,13 @@ const char *myhostname(void){
    Get current time in milli-second resolution.
 */
 double myclockd(void){
+    /*
     struct timeval tk;
     gettimeofday(&tk,NULL);
-    return (double)tk.tv_sec+(double)tk.tv_usec*1e-6;
+    return (double)tk.tv_sec+(double)tk.tv_usec*1e-6;*/
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (double)t.tv_sec+(double)t.tv_nsec*1e-9;
 }
 /**
    Get current directory. The returnned string must be freed.

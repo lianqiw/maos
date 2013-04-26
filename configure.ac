@@ -22,6 +22,8 @@ AC_CANONICAL_HOST
 if which uname 2>/dev/null;then
    host_cpu=$(uname -m)
 fi
+AC_C_BIGENDIAN([BIGENDIAN=1], [BIGENDIAN=0], AC_MSG_ERROR("Unknown Endianness"))
+AC_DEFINE_UNQUOTED(BIGENDIAN, [$BIGENDIAN], ["Endianness"])
 
 #top_srcdir and abs_top_srcdir is empty. no idea why. but srcdir sometimes is the full path.
 SRC_DIR=$(cd $srcdir && pwd)
@@ -36,7 +38,7 @@ AC_DEFINE_UNQUOTED(SRCDIR,  ["$SRC_DIR"], ["Define SRC folder"])
 AC_DEFINE_UNQUOTED(BUILDDIR,["$BUILD_DIR"],["Define BUILD folder"])
 AC_DEFINE(TOMOSCALE, [1e-12], ["Scaling L2 and Cn-2 in CUDA and MAOS to avoid overflow in single precision"])
 #Specifying both -O3 and -g in mac produces internal error in gcc 4.2
-OPTScommon="-Mcache_align -Wshadow -Wall " #-all-static will produce a static exe.
+OPTScommon="-Wshadow -Wall " #-all-static will produce a static exe.
 if test "${USER}" = "lianqiw" ;then
    OPTScommon="$OPTScommon -Werror"
 fi
@@ -266,7 +268,7 @@ fi
 #-wd1292 : disables warning "error #1292: attribute "__alloc_size__" ignored"
 COMMON_ICC="-wd981 -wd1292 -wd10237 -vec-report=0 -diag-disable remark"
 OPTIM_ICC="-O3 -funroll-loops -DHAVE_SSE2=1 -static-intel"
-OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc"
+OPTIM_GCC="-O3 -funroll-loops -DHAVE_SSE2=1 -msse2 -msse -fprefetch-loop-arrays -fno-math-errno -ffinite-math-only -static-libgcc -Mcache_align"
 OPTIM_OPENCC="-O3"
 OPT_DEBUG="-g -rdynamic -ggdb -O0 -DDEBUG_TRACE"
 AM_CONDITIONAL(USE_ICC,false)
@@ -783,6 +785,7 @@ echo LDCUDA=$LDCUDA
 echo LDLIB=$LDLIB
 echo LDEXE=$LDEXE
 echo LDOPTS=$LDOPTS
+echo BIGENDIAN=$BIGENDIAN
 if test x$use_icc = xno -a x$system = xlinux -a $cross_compile = no ;then
 echo Intel icc is not enabled. Free icc for noncommerical use can be obtain from Intel website
 fi

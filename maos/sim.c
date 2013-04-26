@@ -60,6 +60,8 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
     double tk_0=myclockd();
     double ck_0,ck_end;
     for(int iseed=0; iseed<parms->sim.nseed; iseed++){
+	extern int draw_single;
+	draw_single=1;//Only draw active frame.
 	global->iseed=iseed;
 	double tk_start=myclockd();
 	SIM_T *simu=init_simu(parms,powfs,aper,recon,iseed);
@@ -90,6 +92,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 #define READ_CPU(A)
 #endif
 	for(int isim=simstart; isim<simend; isim++){
+	    if(isim+1==simend) draw_single=0;
 	    ck_0=myclockd();
 	    simu->isim=isim;
 	    simu->status->isim=isim;
