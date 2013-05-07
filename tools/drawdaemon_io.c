@@ -86,6 +86,8 @@ void listen_draw(){
     int cmd=0;
     static int errcount=0;
     while(!streadint(sock, &cmd)){
+	info("cmd=%d\n", cmd);
+	sock_block=0;//Indicate connection is active
 	switch (cmd){
 	case DRAW_START:
 	    tic;
@@ -185,6 +187,10 @@ void listen_draw(){
 	case DRAW_XYLOG:
 	    STREAD(drawdata->xylog, sizeof(char)*2);
 	    break;
+	case DRAW_FINAL:
+	    info("client is done\n");
+	    sock_block=1;
+	    break;
 	case DRAW_END:
 	    {
 		if(drawdata->p0){/*draw image */
@@ -250,8 +256,10 @@ void listen_draw(){
 	    }
 	    break;
 	}/*switch */
+	cmd=-1;
     }/*while */
  end:
     sock=-1;
+    sock_block=1;
     warning("Read failed, stop listening.\n");
 }

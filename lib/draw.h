@@ -30,6 +30,7 @@ extern int DRAW_ID;/*number to use for drawdaemon, usually PID. */
 extern int DRAW_DIRECT;
 void draw_helper(void);
 int draw_add(int fd);
+void draw_final(int reuse);
 void imagesc(char *fig, long nx, long ny, const double *limit, const double *zlimit,
 	     const void *p, const char *title, const char *xlabel, const char *ylabel,
 	     const char *format,...) CHECK_ARG(10);
@@ -90,6 +91,7 @@ enum{
     DRAW_FIGFN,
     DRAW_PAUSE,
     DRAW_RESUME,
+    DRAW_FINAL,/*this client is done.*/
     DRAW_END=100
 };
 

@@ -653,7 +653,7 @@ void gpu_tomo_test(SIM_T *simu){
 	dcellwrite(lp, "CPU_TomoP2");
     }
     dcellzero(lc);
-    for(int i=0; i<10; i++){
+    for(int i=0; i<1; i++){
 	muv_solve(&lc, &recon->RL, NULL, rhsc);
 	dcellwrite(lc, "CPU_Tomo_%d", i);
     }
@@ -689,8 +689,8 @@ void gpu_tomo_test(SIM_T *simu){
 	prefun=gpu_Tomo_fdprecond;
 	predata=(void*)recon;
     }
-    curcellzero(lg, 0);
-    for(int i=0; i<10; i++){
+    for(int i=0; i<1000; i++){
+	curcellzero(lg, stream);
 	gpu_pcg(&lg, (G_CGFUN)gpu_TomoL, (void*)recon, prefun, predata, rhsg, &curecon->cgtmp_tomo,
 		simu->parms->recon.warm_restart, parms->tomo.maxit, stream);
 	CUDA_SYNC_STREAM;

@@ -140,6 +140,7 @@ int main(int argc, char *argv[]){
     }else{
 	error("Invalid arguments\n");
     }
+    draw_final(1);
     exit_success=1;
 }
 

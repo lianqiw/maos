@@ -799,6 +799,7 @@ static void readcfg_sim(PARMS_T *parms){
     }
     parms->sim.nseed=readcfg_intarr(&parms->sim.seeds,"sim.seeds");
     READ_DBL(sim.dt);
+    READ_INT(sim.dtrat_skip);
     READ_INT(sim.start);
     READ_INT(sim.end);
     READ_STR(sim.wspsd);

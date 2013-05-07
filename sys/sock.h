@@ -24,4 +24,5 @@
 #include <netinet/in.h>
 int connect_port(const char *hostname, int port, int block, int nodelay);
 void listen_port(uint16_t port, char *localpath, int (*respond)(int), double timeout_sec, void (*timeout_fun)(), int nodelay);
+void socket_block(int sock, int block);
 #endif

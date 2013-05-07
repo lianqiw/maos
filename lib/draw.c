@@ -282,11 +282,6 @@ static int open_drawdaemon(){
 		    warning("Unable to talk to the helper to launch drawdaemon\n");
 		}
 	    }
-	    if(sock!=-1){
-		if(scheduler_send_socket(sock)){
-		    warning("send sock %d to scheduler failed\n", sock);
-		}
-	    }
 	}
 	if(sock!=-1){
 	    draw_add(sock);
@@ -302,6 +297,20 @@ static int check_figfn(list_t **head, char *fig, char *fn){
     int found1=list_search(head, &child, fig);
     int found2=list_search(&child->child, NULL, fn);
     return found1 && found2;
+}
+/**
+   Tell drawdaemon that this client will no long use the socket. Send the socket to scheduler for future reuse.
+*/
+void draw_final(int reuse){
+    LOCK(lock);
+    for(int ifd=0; ifd<sock_ndraw; ifd++){
+	int sock_draw=sock_draws[ifd].fd;
+	STWRITEINT(DRAW_FINAL);
+	if(reuse && scheduler_send_socket(sock_draw)){
+	    warning("send sock %d to scheduler failed\n", sock_draw);
+	}
+    }
+    UNLOCK(lock);
 }
 /**
    Plot the coordinates ptsx, ptsy using style, and optionally plot ncir circles.

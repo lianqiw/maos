@@ -41,6 +41,7 @@
 #endif
 typedef struct drawdata_t drawdata_t;
 extern int sock;
+extern int sock_block;
 struct drawdata_t{
     /*First, input data from draw.c */
     /*Draw images. */

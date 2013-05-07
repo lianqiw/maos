@@ -326,7 +326,6 @@ time_t fmtime(const char *fn){
     if(!fn || stat(fn, &buf)) return 0;
     return buf.st_ctime;
 }
-
 /**
    Concatenate many strings. Argument list must end with NULL.
 */

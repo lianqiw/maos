@@ -406,6 +406,7 @@ int main(int argc, char *argv[]){
 	    dcellfree(reshi_i);dcellfree(reslo_i);
 	}
     }
+    draw_final(1);
     /*
       dcellwrite(upterr, "upterr");
       if(upterr && upterr->p[0]){

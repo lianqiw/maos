@@ -434,6 +434,7 @@ typedef struct SIM_CFG_T{
     double za;       /**<zenith angle in radian*/
     int dtrat_hi;      /**<ratio of sampling period over clock of high order wfs*/
     int dtrat_lo;      /**<dtrat of the lower order loop.*/
+    int dtrat_skip;   /**<dtrat (over sim.dt) for frame drop. Be careful when powfs.dtrat is not one.*/
     int start;       /**<time step to start simulation. 0*/
     int end;         /**<time step to stop simulation. exclusive*/
     int *seeds;      /**<simulation seeds*/

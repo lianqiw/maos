@@ -24,7 +24,7 @@ extern "C"
 #include "recon.h"
 #include "curmat.h"
 
-void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha){
+void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream){
     if(!A->Mt) error("A->M Can not be empty\n");
     if(A->U && A->U->ny>1 || A->V && A->V->ny>1) error("Not streamd yet\n");
     if(!*out){
@@ -35,6 +35,7 @@ void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha
 	}
 	*out=curcellnew(A->Mt->ny, 1, nx, (int*)NULL);
     }
+    stream.sync();//must sync.
     for(int idm=0; idm<A->Mt->ny; idm++){
 	if(fabs(beta)<EPS) curzero((*out)->p[idm], A->dmstream[idm]);
 	else if(fabs(beta-1)>EPS) 
@@ -60,7 +61,8 @@ void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha
     }
     curfree(tmp);
 }
-void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha){
+void cumuv_trans(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream){
+    stream.sync();//must sync.
     for(int ifit=0; ifit<A->Mt->nx; ifit++){
 	if(fabs(beta)<EPS) curzero((*out)->p[ifit], A->fitstream[ifit]);
 	else if(fabs(beta-1)>EPS) 

@@ -139,13 +139,12 @@ static void mvm_trans_igpu(thread_t *info){
 		    cudaMemcpyAsync(dmfit->m->p, FLI+iact*ntotact, sizeof(float)*ntotact, 
 				    cudaMemcpyHostToDevice, stream);
 		}
-		cudaStreamSynchronize(stream);
     		tk_fitL+=toc3; tic;
 		/*Transpose of fitting operator*/
 		if(parms->gpu.fit==1){//sparse matrix
-		    cumuv_trans(&opdx, 0, &curecon->FR, dmfit, 1);
+		    cumuv_trans(&opdx, 0, &curecon->FR, dmfit, 1, stream);
 		}else{
-		    gpu_FitRt(&opdx, 0, recon, dmfit, 1);
+		    gpu_FitRt(&opdx, 0, recon, dmfit, 1, stream);
 		}
 	    }
 	    tk_fitR+=toc3; tic;

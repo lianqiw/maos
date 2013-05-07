@@ -19,6 +19,7 @@
 #include "../lib/aos.h"
 #include "drawdaemon.h"
 int sock;
+int sock_block=0;
 int main(int argc, char *argv[]){
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
     if(!g_thread_supported()){
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]){
 	error("sock=%d\n", sock);
     }
     //info("sock=%d\n", sock);
+    socket_block(sock, 0);
     {
 	char fnlog[PATH_MAX];
 	snprintf(fnlog, PATH_MAX,"%s/drawdaemon.log", TEMP);

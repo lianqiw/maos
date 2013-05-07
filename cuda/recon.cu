@@ -737,7 +737,8 @@ void gpu_tomo(SIM_T *simu){
     cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     toc_test("Gradin");
     cudaProfilerStart();
-    gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream[0]);
+    simu->cgres->p[0]->p[simu->reconisim]=
+	gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream[0]);
     cudaStreamSynchronize(curecon->cgstream[0]);
     curecon->cgstream->sync();
     if(!parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao)){
@@ -778,6 +779,7 @@ void gpu_fit(SIM_T *simu){
     gpu_fit_test(simu);
 #endif
     toc_test("Before FitR");
+    simu->cgres->p[1]->p[simu->reconisim]=
     gpu_fit_do(parms, recon, curecon->dmfit, NULL, curecon->opdr, curecon->cgstream[0]);
     cp2cpu(&simu->dmfit, 0, curecon->dmfit_vec, 1, curecon->cgstream[0]);
     curecon->cgstream->sync();

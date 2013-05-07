@@ -109,7 +109,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    }else{
 		genscreen(simu);
 		/*re-seed the atmosphere in case atm is loaded from shm/file */
-		seed_rand(simu->atm_rand, lrand(simu->init));
+		seed_rand(simu->atm_rand, lrand(simu->init_rand));
 	    }
 	    if(parms->sim.dmproj){
 		/* teporarily disable FR.M so that Mfun is used.*/

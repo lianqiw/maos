@@ -207,7 +207,24 @@ void filter_cl(SIM_T *simu){
 		info("epdm is set to %.1f at step %d\n", simcfg->epdm->p[0], simu->isim);
 	    }
 	}
-	servo_filter(simu->dmint, simu->dmerr);
+	int drop=0;
+	if(parms->sim.dtrat_skip){
+	    if(parms->sim.dtrat_skip>0){
+		if((simu->isim+1)%parms->sim.dtrat_skip==0){//evenly
+		    drop=1;
+		}
+	    }else if(parms->sim.dtrat_skip<0){//use random draws
+		double tmp=randu(simu->misc_rand);
+		if(tmp*(-parms->sim.dtrat_skip)<1.){
+		    drop=1;
+		}
+	    }
+	}
+	if(drop){
+	    warning("Drop a frame at step %d\n", simu->isim);
+	}else{
+	    servo_filter(simu->dmint, simu->dmerr);
+	}
     }
     if(parms->recon.split && simu->Merr_lo){ 
 	/*Low order in split tomography only. global focus mode is removed.*/

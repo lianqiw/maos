@@ -632,7 +632,7 @@ static gboolean key_press(GtkWidget *widget, GdkEventKey *event,
 }
 static void page_changed(int topn, int subn){
     info("page changed. sock=%d. topn=%d, subn=%d\n", sock, topn, subn);
-    if(sock==-1) return;
+    if(sock==-1 || sock_block) return;
     GtkWidget *topnb=curtopnb;
     GtkWidget *subnb, *subpage;
     if(topn>-1){
@@ -649,12 +649,14 @@ static void page_changed(int topn, int subn){
     }
     if(!subpage) return;
     const char *fn=subnb_label_get(subnb, subpage);
-    info("send fig=%s, fn=%s\n", fig, fn);
+    info("send fig=%s, fn=%s", fig, fn);
     if(stwriteint(sock, DRAW_FIGFN)||
        stwritestr(sock, fig)||
        stwritestr(sock, fn)){
 	warning("Talk to display_server failed\n");
+	sock_block=1;
     }
+    info("done");
 }
 /*These signal handlers are called before the notebook page switch is done.*/
 static void topnb_page_switch(GtkNotebook *topnb, GtkWidget *page, guint n,  GtkWidget *toolbar){
@@ -1014,10 +1016,11 @@ static void toolbutton_cumu_click(GtkToolButton *btn){
     delayed_update_pixmap(page);
 }
 static void togglebutton_pause(GtkToggleToolButton *btn){
+    if(sock_block) return;
     if(gtk_toggle_tool_button_get_active(btn)){
-	stwriteint(sock, DRAW_PAUSE);
+	if(stwriteint(sock, DRAW_PAUSE)) sock_block=1;
     }else{
-	stwriteint(sock, DRAW_RESUME);
+	if(stwriteint(sock, DRAW_RESUME)) sock_block=1;
     }
 }
 /**

@@ -155,7 +155,7 @@ __global__ void apply_W_do(float *restrict out, const float *restrict in, const 
 /*
   Right hand size operator. 
 */
-void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
+void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
     TIC;tic;
     curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
@@ -173,6 +173,7 @@ void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, flo
     if(!*xout){
 	*xout=curcellnew(recon->ndm, 1, recon->anx, recon->any);
     }
+    stream.sync();
     for(int ifit=0; ifit<nfit; ifit++){
 	double hs=parms->fit.hs[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
@@ -186,7 +187,7 @@ void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, flo
     SYNC_DM;   
     toc("HAT");//2.4ms
 }
-void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha){
+void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
     TIC;tic;
     curecon_t *curecon=cudata->recon;
     const RECON_T *recon=(const RECON_T *)A;
@@ -203,6 +204,7 @@ void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, fl
     if(!*xout){
 	*xout=curcellnew(recon->npsr, 1, recon->xnx, recon->xny);
     }
+    stream.sync();
     for(int ifit=0; ifit<nfit; ifit++){
 	float hs    =(float)parms->fit.hs[ifit];
 	float thetax=(float)parms->fit.thetax[ifit];
@@ -289,11 +291,11 @@ double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curc
 #endif
     curmat *tmp=NULL;
     if(parms->gpu.fit==1){//sparse matrix
-	cumuv(&rhs, 0, &curecon->FR, opdr, 1);
+	cumuv(&rhs, 0, &curecon->FR, opdr, 1, stream);
 	cg_fun=(G_CGFUN) cumuv;
 	cg_data=&curecon->FL;
     }else{
-	gpu_FitR(&rhs, 0, recon, opdr, 1);
+	gpu_FitR(&rhs, 0, recon, opdr, 1, stream);
 	cg_fun=(G_CGFUN) gpu_FitL;
 	cg_data=(void*)recon;
     }
@@ -367,7 +369,7 @@ void gpu_fit_test(SIM_T *simu){	/*Debugging. */
       dcellwrite(lhs, "CPU_FitRt");*/
     curcell *rhsg=NULL;
     curcell *lg=NULL;
-    gpu_FitR(&rhsg, 0, recon, curecon->opdr, 1);
+    gpu_FitR(&rhsg, 0, recon, curecon->opdr, 1, stream);
     curcellwrite(rhsg, "GPU_FitR");
     gpu_FitL(&lg, 0, recon, rhsg, 1, stream);
     curcellwrite(lg, "GPU_FitL");

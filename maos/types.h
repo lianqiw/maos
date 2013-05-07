@@ -455,8 +455,8 @@ typedef struct SIM_T{
     rand_t *atm_rand;  /**<random stream for atmosphere turbulence generation*/
     rand_t *atmwd_rand;/**<random stream for wind direction*/
     rand_t *telws_rand;/**<random stream for wind shake*/
-    rand_t *init;      /**<random stream to initialize other streams*/
-
+    rand_t *init_rand; /**<random stream to initialize other streams*/
+    rand_t *misc_rand; /**<For misc purposes*/
     /*Atmosphere*/
     GENSCREEN_T *genscreen;
     map_t **atm;       /**<fine sampled simulation turbulence screens*/
@@ -489,6 +489,7 @@ typedef struct SIM_T{
     dcell *gngsmvst;   /**<opdr to NGS gradient.*/
     dcell *opdx;       /**<Ray tracing from atmosphere to xloc directly. Fixme:
 			  do layer by layer fitting instead?*/
+    dcell *cgres;      /**<CG residuals for tomography and fit*/
     /*Only on split tomography*/
     dmat *clem;        /**<lgs/ngs mod error in split tomography*/
     dcell *clemp;      /**<lgs/ngs mod error per direction. only on-axis is computed.*/

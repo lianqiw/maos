@@ -33,9 +33,9 @@ X(cell)**X(cellreadarr)(long *nxout, long *nyout, const char *format,...) CHECK_
 void X(cellwritearr)(X(cell)**A,long nxin, long nyin, const char *format,...) CHECK_ARG(4); \
 void X(cellswrite)(X(cell) *A, double scale, const char *format, ...) CHECK_ARG(3); \
 void X(swrite)(X(mat) *A, double scale, const char *format, ...) CHECK_ARG(3);\
-X(mat) *X(new_mmap)(long nx, long ny, char *header, const char *format,...) CHECK_ARG(4); \
-X(cell)* X(cellnew_mmap)(long nx,long ny,long *nnx,long *nny, char *header1,char**header2,const char *format,...) CHECK_ARG(7); \
-X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my, char *header, const char *format,...) CHECK_ARG(6); \
+X(mat) *X(new_mmap)(long nx, long ny, const char *header, const char *format,...) CHECK_ARG(4); \
+X(cell)* X(cellnew_mmap)(long nx,long ny,long *nnx,long *nny, const char *header1, const char*header2[],const char *format,...) CHECK_ARG(7); \
+X(cell)* X(cellnewsame_mmap)(long nx,long ny,long mx,long my, const char *header, const char *format,...) CHECK_ARG(6); \
 X(mat*) X(read_mmap)(const char *format, ...);\
 X(cell*) X(cellread_mmap)(const char *format, ...);
 

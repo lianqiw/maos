@@ -521,25 +521,27 @@ void sim_update_etf(SIM_T *simu){
    race condition and have consitent result */
 void seeding(SIM_T *simu){
     info2("Running seed %d\n",simu->seed);
-    simu->init=calloc(1, sizeof(rand_t));
+    simu->init_rand=calloc(1, sizeof(rand_t));
     simu->atm_rand=calloc(1, sizeof(rand_t));
     simu->atmwd_rand=calloc(1, sizeof(rand_t));
     simu->telws_rand=calloc(1, sizeof(rand_t));
-    seed_rand(simu->init,simu->seed);
-    seed_rand(simu->atm_rand,   lrand(simu->init));
+    simu->misc_rand=calloc(1, sizeof(rand_t));
+    seed_rand(simu->init_rand,simu->seed);
+    seed_rand(simu->atm_rand,   lrand(simu->init_rand));
     /*2011-02-02: changed to wdrand-1 so that when wdrand=1, we reproduce old directions. */
-    seed_rand(simu->atmwd_rand, lrand(simu->init)+(simu->parms->atm.wdrand-1));
+    seed_rand(simu->atmwd_rand, lrand(simu->init_rand)+(simu->parms->atm.wdrand-1));
     const PARMS_T *parms=simu->parms;
     simu->wfs_rand=calloc(parms->nwfs, sizeof(rand_t));
     for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
-	seed_rand(&simu->wfs_rand[iwfs],lrand(simu->init));
+	seed_rand(&simu->wfs_rand[iwfs],lrand(simu->init_rand));
     }
-    seed_rand(simu->telws_rand, lrand(simu->init)*parms->sim.wsseq);
+    seed_rand(simu->telws_rand, lrand(simu->init_rand)*parms->sim.wsseq);
 #if USE_CUDA
     if(parms->gpu.wfs && !parms->sim.evlol){
-	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init);
+	gpu_wfsgrad_seeding(parms,simu->powfs, simu->init_rand);
     }
 #endif
+    seed_rand(simu->misc_rand, simu->seed);
 }
 
 static void init_simu_evl(SIM_T *simu){
@@ -1394,6 +1396,14 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 		save->opdx=cellarr_init(nstep, 1,"opdx_%d.bin", seed);
 	    }
 	}
+	{
+	    long nnx[2], nny[2];
+	    nnx[1]=nnx[0]=parms->sim.end;
+	    nny[1]=nny[0]=1;
+	    const char *header[2]={"Tomography", "DM Fit"};
+	    simu->cgres=dcellnew_mmap(2, 1, nnx, nny, "CG Residual", header,
+				      "ResCG_%d.bin", seed);
+	}
     }
     init_simu_evl(simu);
 #if USE_CUDA
@@ -1419,11 +1429,12 @@ void free_simu(SIM_T *simu){
     const PARMS_T *parms=simu->parms;
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
-    free(simu->init);
+    free(simu->init_rand);
     free(simu->atm_rand);
     free(simu->atmwd_rand);
     free(simu->wfs_rand);
     free(simu->telws_rand);
+    free(simu->misc_rand);
     dfree(simu->telws);
     if(simu->genscreen){
 	dfree(simu->genscreen->spect);

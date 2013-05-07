@@ -81,7 +81,7 @@ static inline void mmap_header_rw(char **p0, char **header0, uint32_t magic, lon
 }
 /**
    Create a new X(mat) matrix object, mmapped from file. The file is truncated if already exists in rw mode.*/
-X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
+X(mat)* X(new_mmap)(long nx, long ny, const char *header, const char *format, ...){
     if(!nx || !ny) return NULL;
     format2fn;
     int fd=mmap_open(fn, 1);
@@ -108,7 +108,8 @@ X(mat)* X(new_mmap)(long nx, long ny, char *header, const char *format, ...){
    truncated if already exists. We only add headers to individual dmat/cmat in
    the file, not in the cell.
 */
-X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *header1, char **header2,
+X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, 
+			 const char *header1, const char *header2[],
 			 const char *format, ...){
     if(!nx || !ny) return NULL;
     format2fn;
@@ -148,7 +149,7 @@ X(cell)* X(cellnew_mmap)(long nx, long ny, long *nnx, long *nny, char *header1, 
    Create a new X(cell) matrix cell object, with identical blocks, mmapped from
    file. be aware that the data is not 8-byte aligned. The file is truncated if
    already exists.  */
-X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, char *header,
+X(cell)* X(cellnewsame_mmap)(long nx, long ny, long mx, long my, const char *header,
 			     const char *format, ...){
     if(!nx || !ny) return NULL;
     format2fn;

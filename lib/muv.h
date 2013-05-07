@@ -80,7 +80,7 @@ void muv_direct_prep(MUV_T *muv, double svd);
 void muv_direct_free(MUV_T *muv);
 void muv_direct_diag_solve(dmat **xout, const MUV_T *A, dmat *xin, int ib);
 void muv_bgs_solve(dcell **px, const MUV_T *A, const dcell *b);
-void muv_solve(dcell **px, const MUV_T *L, const MUV_T *R, dcell *b);
+double muv_solve(dcell **px, const MUV_T *L, const MUV_T *R, dcell *b);
 void* muv_direct_spsolve(const MUV_T *A, const dsp *xin);
 void muv_direct_diag_prep(MUV_T *muv, double svd);
 void muv_direct_diag_free(MUV_T *muv);

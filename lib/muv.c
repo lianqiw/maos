@@ -436,12 +436,13 @@ void muv_bgs_solve(dcell **px,    /**<[in,out] The output vector. input for warm
 /**
    solve x=A^-1*B*b using algorithms depend on algorithm, wrapper.
 */
-void muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
+double muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm restart.*/
 	       const MUV_T *L,/**<[in] Contain info about the left hand side matrix A*/
 	       const MUV_T *R,/**<[in] Contain info about the right hand side matrix B*/
 	       dcell *b       /**<[in] The right hand side vector to solve*/ 
 	       ){
     dcell *rhs=NULL;
+    double res=0;
     if(R){
 	muv(&rhs, R, b, 1);
     }else{
@@ -456,13 +457,14 @@ void muv_solve(dcell **px,    /**<[in,out] The output vector. input for warm res
 	    muv_direct_solve_cell(px, L, rhs);
 	    break;
 	case 1:/*CG */
-	    pcg(px, L->M?muv:L->Mfun, L->M?L:L->Mdata, L->pfun, L->pdata, rhs, L->warm, L->maxit);
+	    res=pcg(px, L->M?muv:L->Mfun, L->M?L:L->Mdata, L->pfun, L->pdata, rhs, L->warm, L->maxit);
 	    break;
 	default:
 	    error("Invalid alg=%d\n", L->alg);
 	}
     }
     if(rhs!=b) dcellfree(rhs);
+    return res;
 }
 
 /**

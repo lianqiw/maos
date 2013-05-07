@@ -89,6 +89,19 @@ static void socket_nopipe(int sock){
 #endif
     setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,NULL,sizeof(int));
 }
+/**
+   Set socket to unblocking mode
+*/
+void socket_block(int sock, int block){
+    int arg=fcntl(sock, F_GETFD);
+    if(block){
+	arg&=~O_NONBLOCK;
+    }else{
+	arg|=O_NONBLOCK;
+    }
+    fcntl(sock, F_SETFD, arg);
+}
+
 #if defined(__INTEL_COMPILER)
 /*with htons defined in glibc 2.4, intel compiler complains
   about conversion from in to uint16. THis is an ugly workaround*/
@@ -360,7 +373,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	    socket_tcp_nodelay(sock);
 	}
 	if(!block){
-	    fcntl(sock, F_SETFD, O_NONBLOCK);
+	    socket_block(sock, 0);
 	}
 	int res;
 	struct addrinfo *result;

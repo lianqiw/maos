@@ -202,10 +202,7 @@ static int respond(int sock){
 	    if(p->status.info==S_REMOVE){
 		proc_remove(ihost, pid);
 	    }else{
-		if(p->status.iseed<0){
-		    /*The old method to replace the ID of a job. Deprecated as of 2013-04-01*/
-		    p->pid=-p->status.iseed;
-		}else if(cmd[1]!=ihost && cmd[1]!=cmd[2]){
+		if(cmd[1]!=ihost && cmd[1]!=cmd[2]){
 		    /*A new mean to replace the ID of a job.*/
 		    p->pid=cmd[1];
 		}
