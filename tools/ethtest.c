@@ -156,32 +156,41 @@ int mvm_server(int sock){
     seed_rand(&rseed, 1);
     srandn(pix, 20, &rseed);
     int ready;
+    streadint(sock, &ready); //wait for client to be ready.
+#if __linux__
     struct timespec ct;
+    clock_gettime(CLOCK_MONOTONIC, &ct);
     int readtime_ns=500000;//500 micro-second read out time. 
     int frametime_ns=1250000;//frame time.
-    int nsend=((nsa+sastep-1)/sastep);//segments sent along read out
+    int nsend=((nsa+sastep-1)/sastep);//number of segments sent along read out
     int int1_ns=readtime_ns/nsend;//interval between segment sending
     int int2_ns=frametime_ns-readtime_ns;//interval after last segment.
-    streadint(sock, &ready); //wait for client to be ready.
-    clock_gettime(CLOCK_MONOTONIC, &ct);
-    //double t0=ct.tv_sec+ct.tv_nsec*1e-9;
+#endif
     TIC;
     for(int istep=-nstep0; istep<nstep; istep++){
 	//info2("\rSend trigger ");
-	tk=(double)ct.tv_sec+(double)ct.tv_nsec*1.e-9;//start of the frame.
+#if __linux__
+	//scheduled start time of the frame.
+	tk=(double)ct.tv_sec+(double)ct.tv_nsec*1.e-9;
+#else
+	tic;
+#endif
 	for(int isa=0; isa<nsa; isa+=sastep){
+#if __linux__
 	    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ct, NULL);
+#endif
 	    int nleft=(nsa-isa)<sastep?(nsa-isa):sastep;
 	    if(stwrite(sock, pix->p+isa*pixpsa, 2*nleft*pixpsa)){//2 byte data.
 		warning("failed: %s\n", strerror(errno));
 		return -1;
 	    }
+#if __linux__
 	    ct.tv_nsec+=int1_ns;
 	    while(ct.tv_nsec>=1000000000){
 		ct.tv_nsec-=1000000000;
 		ct.tv_sec++;
 	    }
-	    
+#endif
 	}
 	if(stread(sock, dmres->p, sizeof(float)*nact)){
 	    warning("read dmres failed: %s\n", strerror(errno));
@@ -193,12 +202,14 @@ int mvm_server(int sock){
 	    return -1;
 	}
 	//set next frame start time.
+#if __linux__
 	ct.tv_nsec+=int2_ns;
 	while(ct.tv_nsec>=1000000000){
 	    ct.tv_nsec-=1000000000;
 	    ct.tv_sec++;
 	}
-	if((istep & 0b11111111) == 0b11111111){
+#endif
+	if((istep & 0xFF) == 0xFF){
 	    info2("%d %d us\n", istep, ready);
 	}
 
@@ -212,28 +223,9 @@ int main(int argc, char *argv[]){
 	error2("Usage: \n\t./ethtest client hostname port \n\t./ethtest server port\n\t./ethtest mvm_server port\n");
 	_Exit(1);
     }
-#ifdef __linux__    
-    cpu_set_t cpuset={{0}};
-    CPU_SET(0, &cpuset);
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-#endif
-    mlockall(MCL_FUTURE | MCL_CURRENT);
-    //fault stack
-    struct rlimit rl;
-    if(!getrlimit(RLIMIT_STACK, &rl)){
-	const int NSTACK=rl.rlim_cur/2;
-	char tmp[NSTACK];
-	memset(tmp, 0, NSTACK);
-    }
-    if(getuid()==0){
-	info2("Set priority to -20\n");
-	setpriority(PRIO_PROCESS, getpid(), -20);
-	struct sched_param param;
-	sched_getparam(getpid(), &param);
-	param.sched_priority=sched_get_priority_max(SCHED_FIFO);
+    set_realtime(0, -20);
 
-	sched_setscheduler(getpid(), SCHED_FIFO, &param);
-    }
+   
     char *NBUF=getenv("NBUF");
     if(NBUF){
 	nbuf=strtol(NBUF, NULL, 10);

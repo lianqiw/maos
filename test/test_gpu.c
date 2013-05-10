@@ -31,27 +31,8 @@ int main(int argc, char *argv[]){
 	ngpu=1;
 	gpus[0]=0;
     }
-#ifdef __linux__    
-    cpu_set_t cpuset={{0}};
-    CPU_SET(0, &cpuset);
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-#endif
-    mlockall(MCL_FUTURE | MCL_CURRENT);
-    //fault stack
-    struct rlimit rl;
-    if(!getrlimit(RLIMIT_STACK, &rl)){
-	const int NSTACK=rl.rlim_cur/2;
-	char tmp[NSTACK];
-	memset(tmp, 0, NSTACK);
-    }
-    if(getuid()==0){
-	info2("Set priority to -18\n");
-	setpriority(PRIO_PROCESS, getpid(), -18);
-	struct sched_param param;
-	sched_getparam(getpid(), &param);
-	param.sched_priority=sched_get_priority_max(SCHED_FIFO)-1;
-	sched_setscheduler(getpid(), SCHED_FIFO, &param);
-    }
+    set_realtime(0,-20);
+
     int testcase=0;
     if(argc>1){
 	testcase=strtol(argv[1], NULL, 10);

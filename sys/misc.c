@@ -25,6 +25,8 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/resource.h>
+#include <sys/mman.h>
 #include <utime.h>
 #include <fcntl.h>           /* For O_* constants */
 #include <limits.h>
@@ -223,13 +225,15 @@ const char *myhostname(void){
    Get current time in milli-second resolution.
 */
 double myclockd(void){
-    /*
-    struct timeval tk;
-    gettimeofday(&tk,NULL);
-    return (double)tk.tv_sec+(double)tk.tv_usec*1e-6;*/
+#if defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
     return (double)t.tv_sec+(double)t.tv_nsec*1e-9;
+#else
+    struct timeval tk;
+    gettimeofday(&tk,NULL);
+    return (double)tk.tv_sec+(double)tk.tv_usec*1e-6;
+#endif
 }
 /**
    Get current directory. The returnned string must be freed.
@@ -787,4 +791,37 @@ void maos_version(void){
     info2("Source: %s\n", SRCDIR);
     info2("BUILD: %s\n", BUILDDIR);
     info2("Launched at %s in %s.\n",myasctime(),myhostname());
+}
+/**
+   Set scheduling priorities for the process to enable real time behavior.
+*/
+void set_realtime(int icpu, int niceness){
+    //Set CPU affinity.
+#ifdef __linux__    
+    cpu_set_t cpuset={{0}};
+    CPU_SET(0, &cpuset);
+    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+#endif
+    //lock data in memory, avoid swapping.
+    mlockall(MCL_FUTURE | MCL_CURRENT);
+    //faile stack
+    struct rlimit rl;
+    if(!getrlimit(RLIMIT_STACK, &rl)){
+	const int NSTACK=rl.rlim_cur/2;
+	char tmp[NSTACK];
+	memset(tmp, 0, NSTACK);
+    }
+    //Set only if we are root.
+    if(getuid()==0){
+	info2("Set priority to -20\n");
+	setpriority(PRIO_PROCESS, getpid(), -20);
+#ifdef __linux__
+	struct sched_param param;
+	sched_getparam(getpid(), &param);
+	param.sched_priority=sched_get_priority_max(SCHED_FIFO);
+	sched_setscheduler(getpid(), SCHED_FIFO, &param);
+#endif
+    }else{
+	warning("Please run program as setsid or as root to lift priority\n");
+    }
 }
