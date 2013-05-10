@@ -81,4 +81,5 @@ int sig_block(int block);
 int sem_lock(const char *key);
 int sem_unlock(const char *key);
 void maos_version(void);
+void set_realtime(int icpu, int niceness);
 #endif

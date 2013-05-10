@@ -22,9 +22,9 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <fcntl.h>
-#include <cairo/cairo.h>
-#include <cairo/cairo-ps.h>
-#include <cairo/cairo-svg.h>
+#include <cairo.h>
+#include <cairo-ps.h>
+#include <cairo-svg.h>
 #include <pango/pango.h>
 #include <unistd.h>
 #include <stdio.h>

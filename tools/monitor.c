@@ -41,6 +41,9 @@
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
+#ifdef MAC_INTEGRATION
+#include <gtkosxapplication.h>
+#endif
 #if WITH_NOTIFY
 #include <libnotify/notify.h>
 static int notify_daemon=1;
@@ -552,6 +555,9 @@ int main(int argc, char *argv[])
     }
 #endif
     gtk_init(&argc, &argv);
+#ifdef MAC_INTEGRATION
+    GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+#endif
 #if WITH_NOTIFY
     if(!notify_init("AOS Notification")){
 	notify_daemon=0;
@@ -589,8 +595,10 @@ int main(int argc, char *argv[])
     gtk_window_set_title(GTK_WINDOW(window),"MAOS Monitor");
 
     gtk_window_set_icon(GTK_WINDOW(window),icon_main);
-
-
+#ifdef MAC_INTEGRATION
+    gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
+    gtkosx_application_ready(theApp);
+#endif
 #if GTK_MAJOR_VERSION<3
     gtk_rc_parse_string(rc_string_widget); 
     gtk_rc_parse_string(rc_string_treeview);

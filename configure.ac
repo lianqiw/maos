@@ -478,6 +478,9 @@ AM_CONDITIONAL(MONN,true) #for full monitor with notify
 #cairo 1.2 comes with gtk+-2.10
 #make sure there are spaces before and after >=
 if test -n "$GTKDIR" ;then #User specified GTK directory
+   if test -d $GTKDIR/pkgconfig ;then
+      GTKDIR=$GTKDIR/../
+   fi
    if test -d $GTKDIR/lib/pkgconfig ;then
       export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$GTKDIR/lib/pkgconfig
    fi
@@ -490,15 +493,18 @@ if test "$gtk_2" = "yes" -a  "$gtk_3" = "yes" ;then
 fi
 #The following will define MON_CFLAGS and MON_LIBS with their values in Makefile.in,
 #so that you can use $(DRAW_CFLAGS) in Makefile.am to represent the values of the shell variable here.
+if test x$($PKG_CONFIG --variable=target gdk-2.0) = xquartz ;then
+   macint=gtk-mac-integration
+fi
 if test "$gtk_3" = "yes" ;then
    PKG_CHECK_MODULES(DRAW, gtk+-3.0 >= 0.0 cairo >= 0.0,     [comp_draw="yes"],[comp_draw="no"])
    PKG_CHECK_MODULES(MON,  gtk+-3.0 >= 0.0,                  [comp_mon="yes"], [comp_mon="no"])
    PKG_CHECK_MODULES(MONN, gtk+-3.0 >= 0.0 libnotify >= 0.0, [comp_monn="yes"],[comp_monn="no"])
    gtk_ver=3
 else
-   PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 cairo >= 1.4,     [comp_draw="yes"],[comp_draw="no"])
-   PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2,                  [comp_mon="yes"], [comp_mon="no"])
-   PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 libnotify >= 0.1, [comp_monn="yes"],[comp_monn="no"])
+   PKG_CHECK_MODULES(DRAW, gtk+-2.0 >= 2.2 $macint cairo >= 1.4,     [comp_draw="yes"],[comp_draw="no"])
+   PKG_CHECK_MODULES(MON,  gtk+-2.0 >= 2.2 $macint ,                 [comp_mon="yes"], [comp_mon="no"])
+   PKG_CHECK_MODULES(MONN, gtk+-2.0 >= 2.2 $macint libnotify >= 0.1, [comp_monn="yes"],[comp_monn="no"])
    gtk_ver=2
 fi
 if test -n "$GTKDIR" ;then
@@ -775,6 +781,8 @@ echo Cross compile=$cross_compile
 echo Compile Drawdaemon=$comp_draw
 echo Compile Monitor=$comp_mon
 echo Compile Monitor with Libnotify=$comp_monn
+echo DRAW_LIBS=$DRAW_LIBS
+echo GTK_LIBS=$GTK_LIBS
 echo Using GTK+-3=$gtk_3
 echo CC=$CC
 echo CFLAGS=$CFLAGS
