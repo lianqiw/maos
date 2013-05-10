@@ -382,3 +382,53 @@ __global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, fl
 	opd[i]+=diff-wvlh;
     }
 }
+/*
+  a+=mvm*g;
+  mvm is of size nact*ng
+  g is of size ng*1
+  a is of size nact*1
+  The number of total threads should not be less than, ideally equal to, nact.
+  The caller should setup shared memory to contain blockDim.x*sizeof(float)
+ */
+__global__ void 
+mvm_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng){
+    extern __shared__ float acc[];
+    register int iact=threadIdx.x+blockIdx.x*blockDim.x;
+    if(iact<nact){
+	acc[threadIdx.x]=0;
+	for(int ig=0; ig<ng; ig++){
+	    register float mvmi=mvm[nact*ig+iact];
+	    acc[threadIdx.x]+=mvmi*g[ig];
+	}
+	a[iact]+=acc[threadIdx.x];
+    }
+}
+/*
+  a+=mvm*g;
+  mvm is of size nact*ng
+  g is of size ng*1
+  a is of size nact*1
+  The number of total threads should be multiple times of nact, to maximize occupancy.
+  The caller should setup shared memory to contain blockDim.x*sizeof(float)
+ */
+__global__ void 
+multimv_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng){
+    extern __shared__ float acc[];
+    int iact=threadIdx.x+blockIdx.x*blockDim.x;
+    int nset=(blockDim.x*gridDim.x+nact-1)/nact;
+    if(blockDim.x*gridDim.x<nset*nact){
+	//drop partial set
+	nset--;
+    }
+    const int iset=iact/nact;
+    if(iset>=nset) return;
+    iact=iact-nact*iset;
+    acc[threadIdx.x]=0;
+    const int igi=(iset*ng)/nset;
+    const int ngi=((iset+1)*ng)/nset;
+    for(int ig=igi; ig<ngi; ig++){
+	register float mvmi=mvm[nact*ig+iact];
+	acc[threadIdx.x]+=mvmi*g[ig];
+    }
+    atomicAdd(&a[iact], acc[threadIdx.x]);
+}

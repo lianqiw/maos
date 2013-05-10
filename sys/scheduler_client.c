@@ -91,7 +91,6 @@ int scheduler_recv_socket(int *sfd){
     return -1;
 }
 #else
-char *scheduler_fnlog=NULL;
 uint16_t PORT=0;
 char** hosts;
 int nhost;
@@ -113,8 +112,6 @@ static int myhostid(const char *host){
 static __attribute__((constructor))void init(){
     init_process();/*the constructor in process.c may not have been called. */
     char fn[PATH_MAX];
-    snprintf(fn,PATH_MAX,"%s/.aos/jobs.log", HOME);
-    scheduler_fnlog=strdup0(fn);
     snprintf(fn,PATH_MAX,"%s/.aos/port",HOME);
     PORT=0;
     {

@@ -44,6 +44,7 @@ int main(int argc, char *argv[]){
     switch(testcase){
     case 0:
     case 1:
+    case 2:
     case 3:
 	for(int jgpu=1; jgpu<=1; jgpu++){
 	    switch(testcase){
@@ -51,7 +52,10 @@ int main(int argc, char *argv[]){
 		mvmfull_iwfs(gpus, jgpu, nstep);
 		break;
 	    case 1:
-		mvm_iwfs("mvm1.bin", "mvm2.bin", "grad1.bin", "grad2.bin", gpus, jgpu, nstep);
+		mvm_iwfs(gpus, jgpu, nstep);
+		break;
+	    case 2:
+		mvm_only(gpus, jgpu, nstep);
 		break;
 	    case 3:
 		mvmfull_pipe("mvm1.bin", "mvm2.bin", "pix1.bin", "pix2.bin", "mtch.bin", gpus, jgpu, nstep);
@@ -59,7 +63,7 @@ int main(int argc, char *argv[]){
 	    }
 	}
 	break;
-    case 2:
+    case 10:
 	mvm_test(gpus[0]);
 	break;
     }

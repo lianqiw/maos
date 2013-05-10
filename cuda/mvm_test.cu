@@ -29,40 +29,7 @@ Test using transpose.
 */
 typedef float ATYPE;
 typedef float GTYPE;
-__global__ static void 
-mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
-    register int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    if(iact<nact){
-	acc[threadIdx.x]=0;
-	for(int ig=0; ig<ng; ig++){
-	    register float mvmi=mvm[nact*ig+iact];
-	    acc[threadIdx.x]+=mvmi*(float)(g[ig]);
-	}
-	a[iact]+=(ATYPE)acc[threadIdx.x];
-    }
-}
-__global__ static void 
-multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    int nset=(blockDim.x*gridDim.x+nact-1)/nact;
-    if(blockDim.x*gridDim.x<nset*nact){
-	//drop partial set
-	nset--;
-    }
-    const int iset=iact/nact;
-    if(iset>=nset) return;
-    iact=iact-nact*iset;
-    acc[threadIdx.x]=0;
-    const int igi=(iset*ng)/nset;
-    const int ngi=((iset+1)*ng)/nset;
-    for(int ig=igi; ig<ngi; ig++){
-	register float mvmi=mvm[nact*ig+iact];
-	acc[threadIdx.x]+=mvmi*(float)(g[ig]);
-    }
-    atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
-}
+
 #define tix threadIdx.x
 #define tiy threadIdx.y
 #define bix blockIdx.x
@@ -171,8 +138,8 @@ test_read_multi(float *A, int nx, int ny){
 void mvm_test(int igpu){
     cudaSetDevice(igpu);
     int M,N;
-    M=7256;
-    N=5164;
+    M=6981;
+    N=2895*2;
     //N=2048*2;
     //N=4000;
     int nstream=5;
@@ -181,7 +148,7 @@ void mvm_test(int igpu){
     //M=32;
     //N=32*32;
     int iN=1200;
-    //int iN=N;
+    iN=N;
     smat *mvm=snew(M,N);
     smat *x=snew(N,1);
     rand_t stat;
@@ -258,7 +225,7 @@ void mvm_test(int igpu){
 	for(int i=0; i<N; i+=iN){
 	    int nleft=N-i;
 	    if(nleft>iN) nleft=iN;
-	    mvm_g_mul_do<<<mp_count, naeach, sizeof(float)*naeach, stream[0]>>>
+	    mvm_do<<<mp_count, naeach, sizeof(float)*naeach, stream[0]>>>
 		(cumvm->p+i*M, cuy->p, cux->p+i, M, nleft);
 	}
 	event[1].record(stream[0]);

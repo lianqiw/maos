@@ -15,7 +15,10 @@
   You should have received a copy of the GNU General Public License along with
   MAOS.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+#ifdef __linux__
+#define _GNU_SOURCE 
+#include <sched.h>
+#endif
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +38,6 @@
 #include <dirent.h>
 #include <time.h>
 #include <ctype.h>
-
 #include "common.h"
 #include "thread.h"
 #include "process.h"
@@ -460,7 +462,7 @@ void mymkdir(const char *format, ...){
 	if(errno==EEXIST){
 	    return;
 	}else if(errno==ENOENT){
-	    char *tmp=rindex(fn,'/');
+	    char *tmp=strrchr(fn,'/');
 	    if(!tmp){
 		error("Unable to mkdir '%s'\n",fn);
 	    }
@@ -535,14 +537,14 @@ static char *cmd_string(char *input, char **end2){
     char *end;
     while(isspace((int)input[0]) || input[0]=='\n') input++;
     if(input[0]=='\'' || input[0]== '"'){
-	end=index(input+1, input[0]);/*find matching quote. */
+	end=strchr(input+1, input[0]);/*find matching quote. */
 	input[0]=' ';
 	input++;
 	if(!end){
 	    error("String does not end\n");
 	}
     }else{
-	end=index(input, '\n');
+	end=strchr(input, '\n');
     }
     end[0]='\0';
     char *out=strdup(input);
@@ -702,8 +704,8 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 	    start[0]='\n';
 	    start++;
 	}else if(start[0]=='['){/*make sure we don't split brackets. */
-	    char *bend=index(start+1, ']');
-	    char *bnextstart=index(start+1, '[');
+	    char *bend=strchr(start+1, ']');
+	    char *bnextstart=strchr(start+1, '[');
 	    if(bend && (!bnextstart || bend<bnextstart)){/*There is a closing bracket */
 		for(; start<bend+1; start++){
 		    if(start[0]=='\n') start[0]=' ';
@@ -713,7 +715,7 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 		start++;
 	    }
 	}else if(start[0]=='\'' || start[0]=='"'){/*make sure we don't split strings. */
-	    char *quoteend=index(start, start[0]);
+	    char *quoteend=strchr(start, start[0]);
 	    if(quoteend){
 		start=quoteend+1;
 	    }else{
@@ -791,6 +793,7 @@ void maos_version(void){
     info2("BUILD: %s\n", BUILDDIR);
     info2("Launched at %s in %s.\n",myasctime(),myhostname());
 }
+
 /**
    Set scheduling priorities for the process to enable real time behavior.
 */

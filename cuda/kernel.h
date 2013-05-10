@@ -117,4 +117,7 @@ __global__ void fftshift_do(fcomplex *wvf, const int nx, const int ny);
 __global__ void add_tilt_do(float *opd, int nx, int ny, float ox, float oy, float dx, float ttx, float tty);
 __global__ void cwm_do(fcomplex *dest, float *from, int n);
 __global__ void unwrap_phase_do(fcomplex *wvf, float *opd, int *embed, int n, float wvl);
+__global__ void mvm_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng);
+__global__ void multimv_do(const float *restrict mvm, float *restrict a, const float *restrict g, int nact, int ng);
+
 #endif

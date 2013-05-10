@@ -44,7 +44,7 @@
 #include <string.h>
 #include "../sys/sys.h"
 
-extern char *scheduler_fnlog;
+static char *scheduler_fnlog=NULL;
 /**
    Struct to hold information of running jobs.
 */
@@ -60,6 +60,7 @@ typedef struct RUN_T{
     int time;
     char *exe; /*Path to the executable.*/
     char *path;/*Job path and Job arguments.*/
+    char *path0;/*same as path, with fields separated by \n instead of space*/
 }RUN_T;
 
 /**
@@ -170,6 +171,7 @@ static void runned_remove(int pid){
 		    runned_end=runned;
 	    }
 	    free(irun->path);
+	    free(irun->path0);
 	    free(irun->exe);
 	    free(irun);
 	    removed=1;
@@ -426,8 +428,10 @@ static void process_queue(void){
 	    if(fp){
 		fprintf(fp,"[%s] %s %5d  started '%s'\n",
 			myasctime(),hosts[hid],irun->pid,irun->path);
+		fclose(fp);
+	    }else{
+		warning("fopen %s failed: %s\n", scheduler_fnlog, strerror(errno));
 	    }
-	    fclose(fp);
 	}else{
 	    warning2("Wait for %d to connect.\n", irun->pid);
 	}
@@ -445,7 +449,7 @@ static void process_queue(void){
 		}else{
 		    info2("start new job\n");
 		    int pid;
-		    if((pid=launch_exe(irun->exe, irun->path))<0){
+		    if((pid=launch_exe(irun->exe, irun->path0))<0){
 			warning2("launch_exe %s failed\n", irun->path);
 			running_remove(irun->pid, S_CRASH);
 		    }else{
@@ -462,11 +466,22 @@ static void process_queue(void){
 	}
     }
 }
+/** replace \n by space*/
+static char *convert_path(const char *path0){
+    char *path=strdup(path0);
+    for(char *tmp=path; tmp[0]; tmp++){
+	if(tmp[0]=='\n'){
+	    tmp[0]=' ';
+	}
+    }
+    return path;
+}
 static void new_job(char *exename, char *execmd){
     RUN_T *irun=running_add(--counter, -1);
     irun->status.info=S_QUEUED;
     irun->exe=exename;
-    irun->path=execmd;
+    irun->path0=execmd;
+    irun->path=convert_path(irun->path0);
     info2("new_job: (%s) (%s)\n", exename, execmd);
     monitor_send(irun, irun->path);
     monitor_send(irun, NULL);
@@ -553,11 +568,13 @@ static int respond(int sock){
     case CMD_PATH://6; by MAOS
 	{
 	    RUN_T *irun=running_add(pid, sock);
-	    if(irun->path) free(irun->path);
-	    if(streadstr(sock, &irun->path)){
+	    free(irun->path0);
+	    free(irun->path);
+	    if(streadstr(sock, &irun->path0)){
 		ret=-1;
 		break;
 	    }
+	    irun->path=convert_path(irun->path0);
 	    info2("Received path: %s\n",irun->path);
 	    monitor_send(irun,irun->path);
 	}
@@ -834,12 +851,17 @@ static void monitor_send_initial(MONITOR_T *ic){
 }
 
 int main(){
-    char fn[PATH_MAX];
-    snprintf(fn, PATH_MAX, "%s/scheduler", TEMP);
-    remove(fn);
+    char slocal[PATH_MAX];//local port
+    snprintf(slocal, PATH_MAX, "%s/scheduler", TEMP);
+    remove(slocal);
     extern int is_scheduler;
     is_scheduler=1;
-    listen_port(PORT, fn,respond, 1, scheduler_timeout, 0);
-    remove(fn);
+    {
+	char slocal2[PATH_MAX];
+	snprintf(slocal2, PATH_MAX, "%s/.aos/jobs_%s.log", HOME, myhostname());
+	scheduler_fnlog=strdup(slocal2);
+    }
+    listen_port(PORT, slocal, respond, 1, scheduler_timeout, 0);
+    remove(slocal);
     exit(0);
 }

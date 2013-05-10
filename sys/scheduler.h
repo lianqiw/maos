@@ -80,5 +80,5 @@ enum{
     S_KILLED,/*15*/
 };
 
-#define scheduler_version 0x26
+#define scheduler_version 0x27
 #endif

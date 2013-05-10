@@ -106,6 +106,7 @@ static void __global__ mtch_do(const float *mtch, const float *pix, float *grad,
 	grad[ig]=cumi[0];
     }
 }
+/*
 __global__ static void 
 multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
@@ -126,7 +127,8 @@ multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g
 	acc[threadIdx.x]+=mvmi*(float)(g[ig]);
     }
     atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
-}
+    }*/
+
 /*__global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
     extern __shared__ float acc[];
     int iact=threadIdx.x+blockIdx.x*blockDim.x;

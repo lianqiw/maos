@@ -356,7 +356,7 @@ int connect_port(const char *hostname, int port, int block, int nodelay){
 	strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
 	    perror("connect");
-	    warning("connect failed\n");
+	    warning("connect locally failed\n");
 	    close(sock);
 	    sock=-1;
 	}	

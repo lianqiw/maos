@@ -81,46 +81,14 @@ static void __global__ mtch_do(const float *mtch, const float *pix, float *grad,
 	grad[ig]=cumi[0];
     }
 }
-__global__ static void 
-multimv_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    int nset=(blockDim.x*gridDim.x+nact-1)/nact;
-    if(blockDim.x*gridDim.x<nset*nact){
-	//drop partial set
-	nset--;
-    }
-    const int iset=iact/nact;
-    if(iset>=nset) return;
-    iact=iact-nact*iset;
-    acc[threadIdx.x]=0;
-    const int igi=(iset*ng)/nset;
-    const int ngi=((iset+1)*ng)/nset;
-    for(int ig=igi; ig<ngi; ig++){
-	register float mvmi=mvm[nact*ig+iact];
-	acc[threadIdx.x]+=mvmi*(float)(g[ig]);
-    }
-    atomicAdd(&a[iact], (ATYPE)acc[threadIdx.x]);
-}
-__global__ static void mvm_g_mul_do(const float *restrict mvm, ATYPE *restrict a, const GTYPE *restrict g, int nact, int ng){
-    extern __shared__ float acc[];
-    int iact=threadIdx.x+blockIdx.x*blockDim.x;
-    if(iact<nact){
-	acc[threadIdx.x]=0;
-	for(int ig=0; ig<ng; ig++){
-	    register float mvmi=mvm[nact*ig+iact];
-	    acc[threadIdx.x]+=mvmi*(float)(g[ig]);
-	}
-	a[iact]+=(ATYPE)acc[threadIdx.x];
-    }
-}
+
 static int mp_count;
 /**
    A standalone routine that testes applying MVM for a single WFS and update mvm.*/
 void mvmfull_pipe(char *fnmvm1, char *fnmvm2, char *fnpix1, char *fnpix2, char *fnmtch, 
 	      int *gpus, int ngpu, int nstep){
     {
-	DO(cudaFuncSetCacheConfig(mvm_g_mul_do, cudaFuncCachePreferShared));
+	DO(cudaFuncSetCacheConfig(mvm_do, cudaFuncCachePreferShared));
 	struct cudaDeviceProp prop;
 	DO(cudaGetDeviceProperties(&prop, 0));
 	mp_count=prop.multiProcessorCount;
