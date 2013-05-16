@@ -544,7 +544,7 @@ static char *cmd_string(char *input, char **end2){
 	    error("String does not end\n");
 	}
     }else{
-	end=strchr(input, '\n');
+	end=strchr(input, ' ');//string end at space
     }
     end[0]='\0';
     char *out=strdup(input);
