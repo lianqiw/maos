@@ -157,7 +157,6 @@ void maos(const PARMS_T *parms){
 */
 int main(int argc, const char *argv[]){
     char *scmd=argv2str(argc,argv," ");
-    char *scmd2=argv2str(argc, argv, "\n");
     ARG_T* arg=parse_args(argc,argv);/*does chdir */
 
     if(arg->detach){
@@ -166,7 +165,7 @@ int main(int argc, const char *argv[]){
 	redirect();
     }
     /*Launch the scheduler and report about our process */
-    scheduler_start(scmd2,arg->nthread,!arg->force);
+    scheduler_start(scmd,arg->nthread,!arg->force);
     info2("%s\n", scmd);
     info2("Output folder is '%s'. %d threads\n",arg->dirout, arg->nthread);
     maos_version();
@@ -199,7 +198,7 @@ int main(int argc, const char *argv[]){
 	    warning3("failed to get reply from scheduler. retry\n");
 	    sleep(10);
 	    count++;
-	    scheduler_start(scmd2,arg->nthread,!arg->force);
+	    scheduler_start(scmd,arg->nthread,!arg->force);
 	}
 	if(count>=60){
 	    warning3("fall back to own checker\n");
@@ -217,7 +216,6 @@ int main(int argc, const char *argv[]){
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     thread_new((thread_fun)scheduler_listen, maos_daemon);
     setup_parms_running(parms, arg);
-    free(scmd2);
     free(scmd);
     free(arg->dirout);
     free(arg->gpus);

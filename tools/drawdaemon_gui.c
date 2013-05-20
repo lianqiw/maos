@@ -17,7 +17,6 @@
 */
 #include <gdk/gdkkeysyms.h>
 #include "drawdaemon.h"
-#include "icon-draw.h"
 #include "mouse_hand.h"
 #include "mouse_white.h"
 
@@ -48,7 +47,7 @@ static drawdata_t *drawdata_dialog=NULL;
 PangoFontDescription *desc=NULL;
 int font_name_version=0;
 char *font_name=NULL;
-double font_size=11;
+double font_size;
 cairo_font_slant_t font_style=CAIRO_FONT_SLANT_NORMAL;
 cairo_font_weight_t font_weight=CAIRO_FONT_WEIGHT_NORMAL;
 static int cursor_type=0;/*cursor type of the drawing area. */
@@ -444,7 +443,7 @@ static gboolean motion_notify(GtkWidget *widget, GdkEventMotion *event,
 #else
 	    cairo_t *cr=gdk_cairo_create(widget->window);
 #endif
-	    cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
+	    //cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
 	    cairo_set_source_rgba(cr,0,0,1,0.1);
 	    cairo_set_line_width(cr, 1);
 	    cairo_rectangle(cr, drawdata->mxdown, drawdata->mydown, dx, dy);
@@ -1015,6 +1014,9 @@ static void toolbutton_cumu_click(GtkToolButton *btn){
     }
     delayed_update_pixmap(page);
 }
+static void toolbutton_stop(GtkToolButton *btn){
+    close(sock); sock=-1; sock_block=1;
+}
 static void togglebutton_pause(GtkToggleToolButton *btn){
     if(sock_block) return;
     if(gtk_toggle_tool_button_get_active(btn)){
@@ -1293,10 +1295,11 @@ GtkWidget *create_window(){
 	gtk_widget_show_all(contexmenu);
 	g_object_ref(contexmenu);
     }
-    GdkPixbuf *icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
+
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     curwindow=window;
     windows= g_slist_append(windows, window);
+    extern GdkPixbuf *icon_main;
     gtk_window_set_icon(GTK_WINDOW(window),icon_main);
     g_object_unref(icon_main);
     
@@ -1390,7 +1393,8 @@ GtkWidget *create_window(){
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
     gtk_widget_set_sensitive(toolbar, FALSE);
     item=gtk_tool_item_new();
-    GtkWidget *fontsel=gtk_font_button_new_with_font("sans 11");
+    GtkWidget *fontsel=gtk_font_button_new_with_font("Sans 16");
+    //GtkWidget *fontsel=gtk_font_button_new();
     gtk_container_add(GTK_CONTAINER(item),fontsel);
     g_signal_connect(GTK_FONT_BUTTON(fontsel),"font-set", 
 		     G_CALLBACK(tool_font_set),NULL);
@@ -1398,6 +1402,10 @@ GtkWidget *create_window(){
 
     item=gtk_toggle_tool_button_new_from_stock(GTK_STOCK_MEDIA_PAUSE);
     g_signal_connect(item, "toggled", G_CALLBACK(togglebutton_pause), NULL);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
+
+    item=gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_STOP);
+    g_signal_connect(item, "clicked", G_CALLBACK(toolbutton_stop), NULL);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
 
     GtkWidget *topnb=gtk_notebook_new();

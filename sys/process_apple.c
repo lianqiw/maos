@@ -132,11 +132,13 @@ int read_cpu_counter(long *user, long *tot){
 			     &info_count)) {
 	return -1;
     }
+    *user=0; *tot=0;
     for (int i = 0; i < ncpu0; i++) {
-	*user+=pinfo[i].cpu_ticks[CPU_STATE_USER]
+	long tmp=pinfo[i].cpu_ticks[CPU_STATE_USER]
 	    +pinfo[i].cpu_ticks[CPU_STATE_NICE]
 	    +pinfo[i].cpu_ticks[CPU_STATE_SYSTEM];
-	*tot=*user+pinfo[i].cpu_ticks[CPU_STATE_IDLE];
+	*user+=tmp;
+	*tot+=tmp+pinfo[i].cpu_ticks[CPU_STATE_IDLE];
     }
     return 0;
 }

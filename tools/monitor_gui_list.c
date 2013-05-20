@@ -212,14 +212,17 @@ gboolean refresh(PROC_T *p){
 	    const char *pos=NULL;
 	    pos=strstr(spath, "/maos ");
 	    if(!pos){
-		pos=strstr(spath, "skyc ");
+		pos=strstr(spath, "/skyc ");
 	    }
 	    if(pos){
 		sstart=malloc(pos-spath+1);
 		memcpy(sstart, spath, pos-spath);
 		sstart[pos-spath]='\0';
-		sargs=strdup(pos);
-		char *pos2=strstr(sargs, " -o ");
+		sargs=strdup(pos+1);
+		char *pos2;
+		for(char *tmp=sargs; (tmp=strstr(tmp, " -o ")); tmp+=4){
+		    pos2=tmp;
+		}
 		if(pos2){
 		    pos2+=4;
 		    char *pos3=strchr(pos2, ' ');
@@ -331,11 +334,14 @@ static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...
     gtk_tree_view_column_set_title(col, title);
     gtk_tree_view_column_set_spacing(col, 2);
     gtk_tree_view_column_set_alignment(col, 1);
-    gtk_tree_view_column_set_clickable(col, TRUE);
-    if(width>0){/*minimum width*/
-	gtk_tree_view_column_set_min_width(col, width);
+    //gtk_tree_view_column_set_clickable(col, TRUE);
+    //gtk_tree_view_column_set_expand(col,FALSE);
+    if(width>0){//Adjustable columns
+	//Do not set min_width if set resizable.
+	//gtk_tree_view_column_set_min_width(col, width);
 	gtk_tree_view_column_set_expand(col,TRUE);
-	gtk_tree_view_column_set_resizable(col, TRUE);
+	//resizable is terrible. avoid using it.
+	//gtk_tree_view_column_set_resizable(col, TRUE);
 	if(type==0){
 	    g_object_set(G_OBJECT(render),"ellipsize",PANGO_ELLIPSIZE_START,NULL);
 	}
@@ -613,14 +619,14 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_set_enable_search(GTK_TREE_VIEW(view), TRUE);
     /*g_object_set(G_OBJECT(view),"rules-hint", TRUE, NULL); */
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(view), TRUE);
-    gtk_tree_view_set_headers_clickable(GTK_TREE_VIEW(view), TRUE);
+    //gtk_tree_view_set_headers_clickable(GTK_TREE_VIEW(view), TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID" , "text", COL_PID, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 20,"Path", "text", COL_START, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 20,"Args", "text", COL_ARGS, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0,"Path", "text", COL_START, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 5,"Args", "text", COL_ARGS, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0,"Out", "text",  COL_OUT, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -50, "Low" , "text", COL_ERRLO, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -50, "High", "text", COL_ERRHI, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low" , "text", COL_ERRLO, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, NULL));
     /*gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_TIMING, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Left", "text", COL_REST, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Tot", "text", COL_ALL, NULL));*/

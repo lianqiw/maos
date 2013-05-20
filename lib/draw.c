@@ -153,7 +153,6 @@ static void list_destroy(list_t **head){
 /*Add fd to list of drawing socks*/
 int draw_add(int fd){
     if(fd==-1) return -1;
-    info("received sock %d\n", fd);
     if(sock_helper==-1){//externally added
 	sock_helper=-2;
     }

@@ -291,6 +291,10 @@ static void running_remove(int pid, int status){
     RUN_T *irun,*irun2=NULL;
     for(irun=running; irun; irun2=irun,irun=irun->next){
 	if(irun->pid==pid){
+	    if(status==S_NONEXIST){//don't remove yet.
+		irun->status.info=S_CRASH;
+		break;
+	    }
 	    //remove from the running list
 	    if(irun2){
 		irun2->next=irun->next;
@@ -378,14 +382,13 @@ static void check_jobs(void){
     /**
        check all the jobs. remove if any job quited.
      */
-    RUN_T *irun;
- restart:
+    RUN_T *irun, *irun2;
     if(running){
-	for(irun=running; irun; irun=irun->next){
+	for(irun=running; irun; irun=irun2){
+	    irun2=irun->next;
 	    if(irun->pid>0 && kill(irun->pid,0)){
-		running_remove(irun->pid,S_CRASH);
-		/*list is changed. need to restart the loop. */
-		goto restart;
+		info2("check_jobs: Job %d no longer exists\n", irun->pid);
+		running_remove(irun->pid,S_NONEXIST);
 	    }
 	}
     }
@@ -405,7 +408,7 @@ static void process_queue(void){
     if(avail<1) return;
     RUN_T *irun=running_get_wait(S_WAIT);
     while(irun && irun->pid>0 && kill(irun->pid,0)){//job exited
-	running_remove(irun->pid, S_CRASH);
+	running_remove(irun->pid, S_NONEXIST);
 	irun=running_get_wait(S_WAIT);
     }
     info("irun=%p\n", irun);
@@ -712,6 +715,7 @@ static int respond(int sock){
     if(ret){
 	RUN_T *irun=running_get_by_sock(sock);//is maos
 	if(irun && irun->status.info<10){
+	    //connection failed to a running maos job.
 	    sleep(1);
 	    int pid2=irun->pid;
 	    if(kill(pid2,0)){
@@ -802,7 +806,7 @@ static void monitor_send(RUN_T *irun,char*path){
 }
 /* Notify alreadyed connected monitors machine load. */
 static void monitor_send_load(void){
-    MONITOR_T *ic;
+    MONITOR_T *ic, *ic2;
     double mem=get_usage_mem();
     int cmd[3];
     cmd[0]=CMD_LOAD;
@@ -810,15 +814,15 @@ static void monitor_send_load(void){
     int memi=(int)(mem*100);
     int cpui=(int)(usage_cpu*100);
     cmd[2]=memi | (cpui << 16);
- redo:
-    for(ic=pmonitor; ic; ic=ic->next){
+
+    for(ic=pmonitor; ic; ic=ic2){
+	ic2=ic->next;
 	int sock=ic->sock;
 	if(!ic->load)
 	    continue;
 
 	if(stwrite(sock,cmd,sizeof(int)*3)){
 	    monitor_remove(sock);
-	    goto redo;//restart
 	}
     }
 }

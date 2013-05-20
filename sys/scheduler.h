@@ -78,6 +78,7 @@ enum{
     S_TOKILL,/*13*/
     S_REMOVE,/*14*/
     S_KILLED,/*15*/
+    S_NONEXIST,/*16*/
 };
 
 #define scheduler_version 0x27

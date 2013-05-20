@@ -127,14 +127,9 @@ static __attribute__((constructor))void init(){
 	/*user dependent PORT to avoid conflict */
 	PORT= (uint16_t)((uint16_t)(hashlittle(USER,strlen(USER),0)&0x2FFF)|10000);
     }
+    nhost=0;
     snprintf(fn,PATH_MAX,"%s/.aos/hosts",HOME);
-    if(!exist(fn)){
-	nhost=1;
-	hosts=malloc(nhost*sizeof(char*));
-	hosts[0]=calloc(60,sizeof(char));
-	gethostname(hosts[0],60);
-	register_deinit(NULL,hosts[0]);
-    }else{
+    if(exist(fn)){
 	nhost=64;
 	hosts=malloc(nhost*sizeof(char*));
 	FILE *fp=fopen(fn,"r");
@@ -152,25 +147,20 @@ static __attribute__((constructor))void init(){
 		}
 	    }
 	    fclose(fp);
-	    hosts=realloc(hosts,ihost*sizeof(char*));
+	    hosts=realloc(hosts,(ihost+1)*sizeof(char*));
 	    nhost=ihost;
 	}else{
 	    error("failed to open file %s\n",fn);
 	}
     }
-    register_deinit(NULL,hosts);
-
-    char host[60];
-    if(gethostname(host,60)) warning3("Unable to get hostname\n");
-    hid=myhostid(host);
+    hid=myhostid(myhostname());
     if(hid==-1){
-	hosts[nhost]=strdup0(host);/*use local machine */
+	hosts=realloc(hosts, sizeof(char*)*(nhost+1));
+	hosts[nhost]=strdup0(myhostname());/*use local machine */
 	hid=nhost;
 	nhost++;
-	if(hid==-1){
-	    warning3("Unable to determine proper hostname. Monitor may not work\n");
-	}
     }
+    register_deinit(NULL,hosts);
 }
 
 /**
@@ -212,9 +202,6 @@ static int scheduler_connect_self(int block){
 	/*start the scheduler if it is not running*/
 	launch_scheduler();
 	sock=connect_port(fn, PORT, block, 0);
-    }
-    if(sock<0){
-	warning2("Unable to connect to port %d\n", PORT);
     }
     return sock;
 }
@@ -356,7 +343,7 @@ int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     int sock=connect_port(host, PORT, 0, 0);
     if(sock<=-1) return -1;
     int cmd[2]={CMD_LAUNCH, 2};
-    char *scmd=argv2str(argc, argv, "\n");
+    char *scmd=argv2str(argc, argv, " ");
     if(stwriteintarr(sock, cmd, 2)
        || stwritestr(sock, argv[0]) 
        || stwritestr(sock, scmd) 

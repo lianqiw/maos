@@ -407,14 +407,14 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
     cairo_set_source_rgb(cr,1,1,1);
     cairo_fill(cr);
     cairo_set_antialias(cr,CAIRO_ANTIALIAS_NONE);
-    /*
+    /*{
       cairo_font_options_t *fonto= cairo_font_options_create();
       cairo_font_options_set_hint_metrics(fonto,CAIRO_HINT_METRICS_ON);
       cairo_font_options_set_hint_style (fonto, CAIRO_HINT_STYLE_MEDIUM);
-      cairo_font_options_set_antialias (fonto,CAIRO_ANTIALIAS_NONE);
+      cairo_font_options_set_antialias (fonto,CAIRO_ANTIALIAS_SUBPIXEL);
       cairo_set_font_options(cr, fonto);
       cairo_font_options_destroy(fonto);
-    */
+      }*/
     if(drawdata->cumu){
 	if((int)drawdata->icumulast==(int)drawdata->icumu){
 	    drawdata->limit=drawdata->limit_cumu;
@@ -1035,7 +1035,7 @@ void cairo_draw(cairo_t *cr, drawdata_t *drawdata, int width, int height){
 	}
 	cairo_restore(cr);
     }
-    if(!isinf(drawdata->dtime)){
+    if(drawdata->dtime<10){
 	cairo_save(cr);
 	cairo_identity_matrix(cr);
 	char fps[10];

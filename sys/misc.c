@@ -209,12 +209,12 @@ char *strtime(void){
  */
 const char *myhostname(void){
     static int inited=0;
-    static char host[60];
+    static char host[255];
     PNEW(lock);
     LOCK(lock);
     if(!inited){
-	if(gethostname(host,60)){
-	    warning("Unable to get hostname\n");
+	if(gethostname(host,255)){
+	    warning("Unable to get hostname, set to localhost\n");
 	    sprintf(host,"localhost");
 	}
 	inited=1;
@@ -548,8 +548,9 @@ static char *cmd_string(char *input, char **end2){
     }
     end[0]='\0';
     char *out=strdup(input);
+    memset(input, ' ', strlen(input));
     end[0]=' ';
-    *end2=end;
+    *end2=end+1;
     return out;
 }
 /**
@@ -557,7 +558,7 @@ static char *cmd_string(char *input, char **end2){
    free the returned string. This is more relaxed than the built in getopd
 */
 char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
-    char *cmds=strnadd(argc-1, argv+1, "\n");
+    char *cmds=strnadd(argc-1, argv+1, " ");
     char *cmds_end=cmds+(cmds?strlen(cmds):0);
     char *start=cmds;
     while(start<cmds_end){
@@ -678,7 +679,7 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 	    }/*switch */
 	    /*Empty the string that we already parsed. */
 	    memset(start0, ' ',start-start0);
-	}else if(start[0]=='='){/*equal sign found */
+	}else if(start[0]=='='){/*equal sign found, key=value */
 	    /*create a \n before the key. */
 	    int skipspace=1;
 	    for(char *start2=start-1; start2>=cmds; start2--){
@@ -693,7 +694,7 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 	    }
 	    start++;
 	}else if(!mystrcmp(start, ".conf")){ /*.conf found. */
-	    /*create a \n before the key. */
+	    /*create a \n before the key. and \n after .conf */
 	    for(char *start2=start-1; start2>=cmds; start2--){
 	        if(isspace((int)*start2) || *start2=='\n'){
 		    *start2='\n'; 
@@ -703,7 +704,7 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 	    start+=5;
 	    start[0]='\n';
 	    start++;
-	}else if(start[0]=='['){/*make sure we don't split brackets. */
+	}else if(start[0]=='['){/*make sure we don't split brackets that are part of value. */
 	    char *bend=strchr(start+1, ']');
 	    char *bnextstart=strchr(start+1, '[');
 	    if(bend && (!bnextstart || bend<bnextstart)){/*There is a closing bracket */
@@ -714,7 +715,7 @@ char *parse_argopt(int argc, const char *argv[], ARGOPT_T *options){
 		error("Bracked is not closed\n");
 		start++;
 	    }
-	}else if(start[0]=='\'' || start[0]=='"'){/*make sure we don't split strings. */
+	}else if(start[0]=='\'' || start[0]=='"'){/*make sure we don't split strings that are part of value. */
 	    char *quoteend=strchr(start, start[0]);
 	    if(quoteend){
 		start=quoteend+1;

@@ -18,8 +18,13 @@
 
 #include "../lib/aos.h"
 #include "drawdaemon.h"
+#include "icon-draw.h"
 int sock;
 int sock_block=0;
+#ifdef MAC_INTEGRATION
+#include <gtkosxapplication.h>
+#endif
+GdkPixbuf *icon_main=NULL;
 int main(int argc, char *argv[]){
 #if GLIB_MAJOR_VERSION<3 && GLIB_MINOR_VERSION<32
     if(!g_thread_supported()){
@@ -28,6 +33,10 @@ int main(int argc, char *argv[]){
     }
 #endif
     gtk_init(&argc, &argv);
+#ifdef MAC_INTEGRATION
+    GtkosxApplication *theApp = g_object_new(GTKOSX_TYPE_APPLICATION, NULL);
+#endif
+    icon_main=gdk_pixbuf_new_from_inline(-1,icon_draw,FALSE,NULL);
     if(argc<2){
 	error("Must call drawdaemon with at least one argument\n");
     }
@@ -51,6 +60,10 @@ int main(int argc, char *argv[]){
 	setbuf(stdout,NULL);
 	setbuf(stderr,NULL);
     }
+#ifdef MAC_INTEGRATION
+    gtkosx_application_set_dock_icon_pixbuf(theApp, icon_main);
+    gtkosx_application_ready(theApp);
+#endif
     g_thread_new("listen_draw", (GThreadFunc)listen_draw, NULL);
     create_window();
     gtk_main();

@@ -349,56 +349,55 @@ int init_sockaddr (struct sockaddr_in *name, const char *hostname, uint16_t port
 */
 int connect_port(const char *hostname, int port, int block, int nodelay){
     int sock=-1;
-    if(hostname[0]=='/'){
+    if(hostname[0]=='/'){//connect locally so we can pass fd.
 	sock = socket(PF_UNIX, SOCK_STREAM, 0);
 	struct sockaddr_un addr={0};
 	addr.sun_family=AF_UNIX;
 	strncpy(addr.sun_path, hostname, sizeof(addr.sun_path)-1);
 	if(connect(sock, (struct sockaddr*)&addr, sizeof(struct sockaddr_un))<0){
-	    perror("connect");
-	    warning("connect locally failed\n");
+	    warning("connect locally failed: %s\n", strerror(errno));
 	    close(sock);
 	    sock=-1;
-	}	
-	hostname="localhost";
-    }
-    if(sock!=-1) return sock;
-    int count=0;
-    struct sockaddr_in servername;
-    do{
-	count++;
-	sock = socket (PF_INET, SOCK_STREAM, 0);
-	socket_tcp_keepalive(sock);
-	if(nodelay){
-	    socket_tcp_nodelay(sock);
 	}
-	if(!block){
-	    socket_block(sock, 0);
-	}
-	int res;
-	struct addrinfo *result;
-	struct addrinfo hints={0};
-	hints.ai_family=AF_INET;
-	hints.ai_socktype=SOCK_STREAM;
-	char portstr[20];
-	snprintf(portstr, 20, "%d", port);
-	if((res=getaddrinfo(hostname, portstr, &hints, &result))){
-	    warning("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
-	    return -1;
-	}
-	res=connect(sock, result->ai_addr, sizeof (servername));
-	freeaddrinfo(result);
-	/* Give the socket the target hostname. */
-	if(res<0){
-	    warning2("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
-	    close(sock);
+	return sock;
+	//hostname="localhost";
+    }else{
+	//if(sock!=-1) return sock;
+	struct sockaddr_in servername;
+	for(int count=0; count<25; count++){
+	    sock = socket (PF_INET, SOCK_STREAM, 0);
+	    socket_tcp_keepalive(sock);
+	    if(nodelay){
+		socket_tcp_nodelay(sock);
+	    }
 	    if(!block){
+		socket_block(sock, 0);
+	    }
+	    int res;
+	    struct addrinfo *result;
+	    struct addrinfo hints={0};
+	    hints.ai_family=AF_INET;
+	    hints.ai_socktype=SOCK_STREAM;
+	    char portstr[20];
+	    snprintf(portstr, 20, "%d", port);
+	    if((res=getaddrinfo(hostname, portstr, &hints, &result))){
+		warning("getaddrinfo for %s failed with %d: %s\n", hostname, res, gai_strerror(res));
 		return -1;
 	    }
-	    sleep(10);
-	}else{
-	    return sock;
+	    res=connect(sock, result->ai_addr, sizeof (servername));
+	    freeaddrinfo(result);
+	    /* Give the socket the target hostname. */
+	    if(res<0){
+		warning2("connect to %s at %d failed: %s\n", hostname, port, strerror(errno));
+		close(sock);
+		if(!block){
+		    return -1;
+		}
+		sleep(10);
+	    }else{
+		return sock;
+	    }
 	}
-    }while(count<25);
+    }
     return -1; 
 }

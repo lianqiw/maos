@@ -511,23 +511,28 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(local){
-	/*lanched through scheduler. We are already detached, so don't daemonize again.*/
+    if(!arg->detach){//forground running.
+	arg->force=1;
+    }else if(local){
+	/*lanched through scheduler to run locally. We are already detached, so
+	  don't daemonize again.*/
 	arg->detach=0;
 	arg->force=0;
 	detached=1;
     }else{
-	if(host){ //run through scheduler.
-	    if(scheduler_launch_exe(host, argc, argv)){
-		error2("Unable to launch maos at server %s\n", host);
-	    }
-	    exit(EXIT_SUCCESS);
-	}else{//normal run
-	    if(!arg->detach){
-		arg->force=1;
-	    }
+#ifndef MAOS_DSIABLE_SCHEDULER
+	/*Detached version. Always launch through scheduler if available.*/
+	if(!host){
+	    host=strdup(myhostname());
 	}
+	if(scheduler_launch_exe(host, argc, argv)){
+	    error2("Unable to launch maos at server %s\n", host);
+	}else{
+	    exit(EXIT_SUCCESS);
+	}
+#endif
     }
+    free(host);
     if(arg->nthread>NTHREAD || arg->nthread<=0){
         arg->nthread=NTHREAD;
     }

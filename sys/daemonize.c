@@ -286,6 +286,7 @@ void redirect(void){
     char *fn=malloc(PATH_MAX);
     pid_t pid=getpid();
     snprintf(fn,PATH_MAX,"run_%d.log",pid);
+    info("detached=%d\n", detached);
     if(detached){//only output to file
 	redirect2fn(fn);
 	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");
@@ -415,6 +416,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 	    close(pipfd[0]);
 	}else{//child
 	    close(pipfd[0]);
+	    detached=1;
 	    pid_t pid2=fork();
 	    if(pid2<0){
 		if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
@@ -426,8 +428,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 		waitpid(pid2, NULL, WNOHANG);
 		//Must waitpid before running kill because otherwise child maybe zoombie.
 		if(kill(pid2, 0)){//exec failed.
-		    info("exec failed\n");
-		    pid2=-1;
+		    warning("child pid %d not found. exec failed?\n", pid2);
 		}
 		if(write(pipfd[1], &pid2, sizeof(pid_t))!=sizeof(pid_t)){
 		    warning("Report pid(%d) failed\n", (int)pid2);
@@ -438,7 +439,7 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 		if(setsid()==-1) warning("Error setsid\n");
 		if(chdir(cwd)) error("Error chdir to %s\n", cwd);
 		const char *arg1, *arg2;
-		if(strncmp(args, "-l\n", 3)){
+		if(strncmp(args, "-l ", 3)){
 		    arg1="-l";
 		    arg2=args;
 		}else{
@@ -488,6 +489,7 @@ int spawn_drawdaemon(int sock){
 	waitpid(pid, NULL, 0);
 	return 0;
     }else{
+	detached=1;
 	setsid();
 	pid=fork();
 	if(pid<0){
