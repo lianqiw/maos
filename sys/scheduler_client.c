@@ -341,7 +341,10 @@ int scheduler_report(STATUS_T *status){
 int scheduler_launch_exe(const char *host, int argc, const char *argv[]){
     int ret=0;
     int sock=connect_port(host, PORT, 0, 0);
-    if(sock<=-1) return -1;
+    if(sock<=-1){
+	warning2("Failed to connect to %s:%d: %s\n", host, PORT, strerror(errno));
+	return -1;
+    }
     int cmd[2]={CMD_LAUNCH, 2};
     char *scmd=argv2str(argc, argv, " ");
     if(stwriteintarr(sock, cmd, 2)

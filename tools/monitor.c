@@ -38,6 +38,7 @@
 #include <pthread.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <ctype.h>
 #ifndef GTK_WIDGET_VISIBLE
 #define GTK_WIDGET_VISIBLE gtk_widget_get_visible
 #endif
@@ -89,6 +90,17 @@ GtkCssProvider *provider_red;
 GtkCssProvider *provider_blue;
 #endif
 int *hsock;
+#define dialog_msg(A...) {				\
+	GtkWidget *dialog0=gtk_message_dialog_new	\
+	    (GTK_WINDOW(window),		\
+	     GTK_DIALOG_DESTROY_WITH_PARENT,		\
+	     GTK_MESSAGE_INFO,				\
+	     GTK_BUTTONS_CLOSE,				\
+	     A);					\
+	gtk_dialog_run(GTK_DIALOG(dialog0));		\
+	gtk_widget_destroy(dialog0);			\
+    }
+
 /**
    The number line pattern determines how dash is drawn for gtktreeview. the
    first number is the length of the line, and second number of the length
@@ -494,6 +506,59 @@ static void clear_jobs_crashed(GtkAction *btn){
 static void clear_jobs_skipped(GtkAction *btn){
     clear_jobs(btn, test_skipped);
 }
+static void save_all_jobs(GtkAction *btn){
+    char *fnall=NULL;
+    char *tm=strtime();
+    for(int ihost=0; ihost<nhost; ihost++){
+	if(!pproc[ihost]) continue;
+	char fn[PATH_MAX];
+	const char *host=hosts[ihost];
+	FILE *fp[2];
+	snprintf(fn, PATH_MAX, "%s/maos_%s_%s.done", HOME, host, tm);
+	fp[0]=fopen(fn,"w");
+	snprintf(fn, PATH_MAX, "%s/maos_%s_%s.wait", HOME, host, tm);
+	fp[1]=fopen(fn,"w");
+	
+	if(fnall){
+	    fnall=stradd(fnall, "\n", fn, NULL);
+	}else{
+	    fnall=strdup(fn);
+	}
+	char *lastpath[2]={NULL,NULL};
+	for(PROC_T *iproc=pproc[ihost]; iproc; iproc=iproc->next){
+	    char *spath=iproc->path;
+	    char *pos=NULL;
+	    int id;
+	    pos=strstr(spath, "/maos ");
+	    if(!pos){
+		pos=strstr(spath, "/skyc ");
+	    }
+	    if(iproc->status.info>10){
+		id=0;
+	    }else{
+		id=1;
+	    }
+	    if(pos){
+		pos[0]='\0';
+		if(!lastpath[id] || strcmp(lastpath[id], spath)){//a different folder.
+		    free(lastpath[id]); lastpath[id]=strdup(spath);
+		    fprintf(fp[id], "cd %s\n", spath);
+		}
+		pos[0]='/';
+		fprintf(fp[id], "%s\n", pos+1);
+	    }else{
+		fprintf(fp[id], "%s\n", spath);
+	    }
+	}
+	fclose(fp[0]);
+	fclose(fp[1]);
+	free(lastpath[0]);
+	free(lastpath[1]);
+    }
+    dialog_msg("Jobs saved to \n%s", fnall);
+    free(fnall);
+    free(tm);
+}
 GtkWidget *monitor_new_entry_progress(void){
     GtkWidget *prog=gtk_entry_new();
     gtk_editable_set_editable(GTK_EDITABLE(prog),FALSE);
@@ -566,8 +631,10 @@ int main(int argc, char *argv[])
     if(argc>1){
 	hosts=realloc(hosts, sizeof(char*)*(nhost+(argc-1)));
 	for(int i=1; i<argc; i++){
-	    hosts[nhost]=strdup(argv[i]);
-	    nhost++;
+	    if(isalpha(argv[i][0])){
+		hosts[nhost]=strdup(argv[i]);
+		nhost++;
+	    }
 	}
     }else if(nhost==1){
 	info2("Using '%s host1 host2' to monitor other machines, or put their hostnames in ~/.aos/hosts\n", argv[0]);
@@ -718,6 +785,10 @@ int main(int argc, char *argv[])
 	g_signal_connect(action_kill_all, "activate", G_CALLBACK(kill_all_jobs),NULL);
 	gtk_action_group_add_action(topgroup, action_kill_all);
 
+	GtkAction *action_save_jobs=gtk_action_new("act-save-running", "Save jobs to file", "Save jobs to file", GTK_STOCK_SAVE);
+	g_signal_connect(action_save_jobs, "activate", G_CALLBACK(save_all_jobs),NULL);
+	gtk_action_group_add_action(topgroup, action_save_jobs);
+
 	/*set toolbar*/
 	toptoolbar=gtk_toolbar_new();
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_connect_all)), -1);	
@@ -727,6 +798,7 @@ int main(int argc, char *argv[])
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_clear_crash)), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), gtk_separator_tool_item_new(), -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_kill_all)), -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toptoolbar), GTK_TOOL_ITEM(gtk_action_create_tool_item(action_save_jobs)), -1);
 	gtk_widget_show_all(toptoolbar);
 	gtk_box_pack_start(GTK_BOX(vbox), toptoolbar, FALSE, FALSE, 0);
 	gtk_toolbar_set_icon_size(GTK_TOOLBAR(toptoolbar), GTK_ICON_SIZE_MENU);
@@ -744,7 +816,7 @@ int main(int argc, char *argv[])
     g_signal_connect(window, "destroy", G_CALLBACK (quitmonitor), NULL);
     g_signal_connect(G_OBJECT (window), "window-state-event", G_CALLBACK (window_state_event), NULL);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 840, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), 1200, 600);
     gtk_widget_show_all(window);
 
     tabs=calloc(nhost,sizeof(GtkWidget*));

@@ -511,9 +511,9 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(!arg->detach){//forground running.
+    if(!host && !arg->detach){//forground running.
 	arg->force=1;
-    }else if(local){
+    }else if(local || getenv("MAOS_DIRECT_LAUNCH")){
 	/*lanched through scheduler to run locally. We are already detached, so
 	  don't daemonize again.*/
 	arg->detach=0;

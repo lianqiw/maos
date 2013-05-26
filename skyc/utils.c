@@ -59,23 +59,29 @@ ARG_S *parse_args(int argc, const char *argv[]){
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
-    if(local){//lanched through scheduler.
+    info("MAOS_DIRECT_LAUNCH=%s\n", getenv("MAOS_DIRECT_LAUNCH"));
+    if(!host && !arg->detach){//foreground running
+	arg->force=1;
+    }else if(local || getenv("MAOS_DIRECT_LAUNCH")){
+	/*lanched through scheduler to run locally. We are already detached, so
+	  don't daemonize again.*/
 	arg->detach=0;
 	arg->force=0;
 	detached=1;
     }else{
-	if(host){ //run through scheduler.
-	    if(scheduler_launch_exe(host, argc, argv)){
-		error2("Unable to launch skyc at server %s\n", host);
-	    }
-	    exit(EXIT_SUCCESS);
-	}else{//normal run
-	    if(!arg->detach){
-		arg->force=1;
-	    }
+#ifndef MAOS_DSIABLE_SCHEDULER
+	/*Detached version. Always launch through scheduler if available.*/
+	if(!host){
+	    host=strdup(myhostname());
 	}
+	if(scheduler_launch_exe(host, argc, argv)){
+	    error2("Unable to launch skyc at server %s\n", host);
+	}else{
+	    exit(EXIT_SUCCESS);
+	}
+#endif
     }
- 
+    free(host);
     /*do not use NTHREAD here. causes too much cpu load*/
     if(arg->nthread>NCPU || arg->nthread<=0){
 	arg->nthread=NCPU;

@@ -304,7 +304,6 @@ void gpu_setup_recon_mvm_trans(const PARMS_T *parms, RECON_T *recon, POWFS_T *po
 		for(long i=0; i<ntotact*ntotact; i++){
 		    FLI[i]=(float)FLId->p[i];
 		}
-		dwrite(FLId, "FLId");
 		dfree(FLId);
 	    }
 	}

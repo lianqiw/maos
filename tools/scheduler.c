@@ -57,7 +57,6 @@ typedef struct RUN_T{
     int pidnew;//the new pid
     int sock;
     int nthread;
-    int time;
     char *exe; /*Path to the executable.*/
     char *path;/*Job path and Job arguments.*/
     char *path0;/*same as path, with fields separated by \n instead of space*/
@@ -291,9 +290,17 @@ static void running_remove(int pid, int status){
     RUN_T *irun,*irun2=NULL;
     for(irun=running; irun; irun2=irun,irun=irun->next){
 	if(irun->pid==pid){
-	    if(status==S_NONEXIST){//don't remove yet.
+	    if(irun->pid>0 && (irun->status.info==S_START 
+			       || irun->status.info==S_RUNNING)){
+		nrun_sub(irun->pid, irun->nthread);
+	    }
+	    irun->status.timend=myclocki();
+	    if(status==S_NONEXIST){
 		irun->status.info=S_CRASH;
-		break;
+		if(irun->status.timend+10>myclocki()){
+		    //give 10 seconds period for the process to remove itself.
+		    break;
+		}
 	    }
 	    //remove from the running list
 	    if(irun2){
@@ -305,15 +312,8 @@ static void running_remove(int pid, int status){
 		if(irun->next==NULL)
 		    running_end=running;
 	    }
-	    irun->status.timend=myclocki();
-	    if(status>10){//job quit
-		//job was running
-		if(irun->pid>0 && (irun->status.info==S_START 
-				   || irun->status.info==S_RUNNING)){
-		       nrun_sub(irun->pid, irun->nthread);
-		}
-		irun->time=(int)myclockd();
-	    }
+
+
 	    info("Job %d done with status %d\n", pid, status);
 	    irun->status.info=status;
 	    monitor_send(irun,NULL);

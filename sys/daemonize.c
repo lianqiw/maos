@@ -438,15 +438,9 @@ pid_t launch_exe(const char *exepath, const char *cmd){
 		close(pipfd[1]);
 		if(setsid()==-1) warning("Error setsid\n");
 		if(chdir(cwd)) error("Error chdir to %s\n", cwd);
-		const char *arg1, *arg2;
-		if(strncmp(args, "-l ", 3)){
-		    arg1="-l";
-		    arg2=args;
-		}else{
-		    arg1=args;
-		    arg2=NULL;
-		}
-		if(execlp(exepath, exepath, arg1, arg2, NULL)){
+		//Do not use putenv as it does not copy the string
+		setenv("MAOS_DIRECT_LAUNCH", "1", 1);
+		if(execlp(exepath, exepath, args, NULL)){
 		    error("Unable to exec: %s\n", strerror(errno));
 		}
 		_exit(EXIT_FAILURE);

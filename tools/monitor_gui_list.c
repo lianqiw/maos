@@ -219,7 +219,7 @@ gboolean refresh(PROC_T *p){
 		memcpy(sstart, spath, pos-spath);
 		sstart[pos-spath]='\0';
 		sargs=strdup(pos+1);
-		char *pos2;
+		char *pos2=NULL;
 		for(char *tmp=sargs; (tmp=strstr(tmp, " -o ")); tmp+=4){
 		    pos2=tmp;
 		}
@@ -334,19 +334,20 @@ static GtkTreeViewColumn *new_column(int type, int width, const char *title, ...
     gtk_tree_view_column_set_title(col, title);
     gtk_tree_view_column_set_spacing(col, 2);
     gtk_tree_view_column_set_alignment(col, 1);
+    gtk_tree_view_column_set_resizable(col, TRUE);
     //gtk_tree_view_column_set_clickable(col, TRUE);
     //gtk_tree_view_column_set_expand(col,FALSE);
     if(width>0){//Adjustable columns
 	//Do not set min_width if set resizable.
 	//gtk_tree_view_column_set_min_width(col, width);
 	gtk_tree_view_column_set_expand(col,TRUE);
-	//resizable is terrible. avoid using it.
-	//gtk_tree_view_column_set_resizable(col, TRUE);
+	//resizable is not good if expand
+	gtk_tree_view_column_set_resizable(col, FALSE);
 	if(type==0){
 	    g_object_set(G_OBJECT(render),"ellipsize",PANGO_ELLIPSIZE_START,NULL);
 	}
-    }else if(width<0){/*exact width*/
-	gtk_tree_view_column_set_min_width(col,-width);
+    }else if(width<0){/*max width*/
+	gtk_tree_view_column_set_min_width(col,-width/10);
 	gtk_tree_view_column_set_max_width(col,-width);
     }
     gtk_tree_view_column_pack_start(col,render,TRUE);
@@ -622,7 +623,7 @@ GtkWidget *new_page(int ihost){
     //gtk_tree_view_set_headers_clickable(GTK_TREE_VIEW(view), TRUE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Date", "text", COL_DATE, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "PID" , "text", COL_PID, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0,"Path", "text", COL_START, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -240,"Path", "text", COL_START, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 5,"Args", "text", COL_ARGS, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0,"Out", "text",  COL_OUT, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low" , "text", COL_ERRLO, NULL));
