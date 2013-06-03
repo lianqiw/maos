@@ -8,7 +8,7 @@ int main(){
 	    if(isim%100==0)
 		info("iwfs=%d, isim=%d\n",iwfs,isim);
 	    psf=ccellread("psfout/psfout_wfs%d_isim%d.bin",iwfs,isim);
-	    cellarr_ccell(ca,psf);
+	    cellarr_ccell(ca, isim, psf);
 	    ccellfree(psf);
 	}
 	cellarr_close(ca);

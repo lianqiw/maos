@@ -432,7 +432,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    lotfc=lwvf;
 	}
 	if(parms->save.wfsopd[iwfs]){
-	    cellarr_cur(simu->save->wfslltopd[iwfs],lltopd, stream);
+	    cellarr_cur(simu->save->wfslltopd[iwfs], isim, lltopd, stream);
 	}
     }/*if has llt */
 
@@ -610,7 +610,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
     cudaFree(wvf);
     if(psfstat)  cudaFree(psfstat);
     if(parms->powfs[ipowfs].psfout){
-	cellarr_cuccell(simu->save->wfspsfout[iwfs], wvfout, stream);
+	cellarr_cuccell(simu->save->wfspsfout[iwfs], isim, wvfout, stream);
 	cuccellfree(wvfout);
 	cudaFree(psfout);
     }

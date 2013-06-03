@@ -188,7 +188,7 @@ static void test_stfun(){
 	    }
 	    fractal(atm->p, nx+1, ny+1, dx, r0,L0,ninit);
 	    stfun_push(data, (dmat*)atm);
-	    cellarr_dmat(save,(dmat*)atm);
+	    cellarr_dmat(save, i, (dmat*)atm);
 	    if(i%100==0)
 		info("%ld of %ld\n", i, nframe);
 	}

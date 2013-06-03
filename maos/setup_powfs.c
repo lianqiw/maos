@@ -1913,7 +1913,7 @@ setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
 			creal2d(&psf, 0, psfhat, 1);
 			info2("illt %d, iwvl %d has FWHM of %g\"\n",
 			      illt, iwvl, sqrt(4.*(double)dfwhm(psf)/M_PI)*dpsf);
-			if(lltpsfsave) cellarr_dmat(lltpsfsave, psf);
+			if(lltpsfsave) cellarr_dmat(lltpsfsave, illt*nwvl+iwvl, psf);
 		    }
 		}
 		if(lltpsfsave) cellarr_close(lltpsfsave);

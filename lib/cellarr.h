@@ -32,15 +32,15 @@ typedef struct cellarr{
     long cur;       /**<Current element*/
     long tot;       /**<Total number of elements*/
 }cellarr;
-cellarr* cellarr_init(long nx, long ny,const char*format,...) CHECK_ARG(3);
-void cellarr_dcell(cellarr *ca, const dcell *A);
-void cellarr_scell(cellarr *ca, const scell *A);
-void cellarr_ccell(cellarr *ca, const ccell *A);
-void cellarr_zcell(cellarr *ca, const zcell *A);
-void cellarr_dmat(cellarr *ca, const dmat *A);
-void cellarr_smat(cellarr *ca, const smat *A);
-void cellarr_cmat(cellarr *ca, const cmat *A);
-void cellarr_zmat(cellarr *ca, const zmat *A);
+cellarr* cellarr_init(long nx, long ny, const char*format,...) CHECK_ARG(3);
+void cellarr_dcell(cellarr *ca, int i, const dcell *A);
+void cellarr_scell(cellarr *ca, int i, const scell *A);
+void cellarr_ccell(cellarr *ca, int i, const ccell *A);
+void cellarr_zcell(cellarr *ca, int i, const zcell *A);
+void cellarr_dmat(cellarr *ca, int i, const dmat *A);
+void cellarr_smat(cellarr *ca, int i, const smat *A);
+void cellarr_cmat(cellarr *ca, int i, const cmat *A);
+void cellarr_zmat(cellarr *ca, int i, const zmat *A);
 void cellarr_close(cellarr *ca);
 void cellarr_close_n(cellarr **ca, int nc);
 #endif

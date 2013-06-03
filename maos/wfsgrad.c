@@ -406,7 +406,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	}
     }
     if(save_opd){
-	cellarr_dmat(simu->save->wfsopdol[iwfs], opd);
+	cellarr_dmat(simu->save->wfsopdol[iwfs], isim, opd);
     }
  
     if(CL){
@@ -453,7 +453,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
     }
 
     if(save_opd){
-	cellarr_dmat(simu->save->wfsopd[iwfs], opd);
+	cellarr_dmat(simu->save->wfsopd[iwfs], isim, opd);
     }
     if(parms->plot.run){
 	drawopdamp("wfsopd",powfs[ipowfs].loc,opd->p,realamp,NULL,
@@ -553,7 +553,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		}
 	    }
 	    if(save_opd){
-		cellarr_dmat(simu->save->wfslltopd[iwfs],lltopd);
+		cellarr_dmat(simu->save->wfslltopd[iwfs], isim, lltopd);
 	    }
 	}
 	WFSINTS_T *intsdata=simu->wfs_intsdata+iwfs;
@@ -566,8 +566,8 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	CALL_THREAD(simu->wfs_ints[iwfs], nthread, 0);
 	dfree(lltopd);
 	if(psfout){
-	    cellarr_ccell(psfoutcellarr,psfout);
-	    cellarr_dmat(ztiltoutcellarr, *gradacc);
+	    cellarr_ccell(psfoutcellarr, isim, psfout);
+	    cellarr_dmat(ztiltoutcellarr, isim, *gradacc);
 	}
     }
     TIM(2);
@@ -618,7 +618,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    double *pgradx=(*gradout)->p;
 	    double *pgrady=pgradx+nsa;
 	    if(save_ints){
-		cellarr_dcell(simu->save->intsnf[iwfs], ints);
+		cellarr_dcell(simu->save->intsnf[iwfs], isim, ints);
 	    }
 	    for(int isa=0; isa<nsa; isa++){
 		/* TODO: Do something to remove negative pixels. shift image or
@@ -674,7 +674,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    };/*isa */
 	
 	    if(save_ints){
-		cellarr_dcell(simu->save->intsny[iwfs], ints);
+		cellarr_dcell(simu->save->intsny[iwfs], isim, ints);
 	    }
 	    dcellzero(simu->ints[iwfs]);
 	}else{
@@ -705,7 +705,7 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	if(save_gradgeom){
 	    dmat *gradtmp=NULL;
 	    dadd(&gradtmp, 1, *gradacc, 1./dtrat);
-	    cellarr_dmat(simu->save->gradgeom[iwfs], gradtmp);/*noise free. */
+	    cellarr_dmat(simu->save->gradgeom[iwfs], isim, gradtmp);/*noise free. */
 	    dfree(gradtmp);
 	}
     }//dtrat_out
@@ -825,7 +825,7 @@ void wfsgrad_wrap(thread_t *info){
 	    dfree(focus);
 	}
 	if(parms->save.grad[iwfs]){
-	    cellarr_dmat(simu->save->gradcl[iwfs], simu->gradcl->p[iwfs]);
+	    cellarr_dmat(simu->save->gradcl[iwfs], isim, simu->gradcl->p[iwfs]);
 	}
 	if(parms->plot.run){
 	    drawopd("Gclx",(loc_t*)powfs[ipowfs].pts, simu->gradcl->p[iwfs]->p, NULL,

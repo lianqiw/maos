@@ -138,7 +138,7 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 	    }
 	}
 	if(parms->save.dmpttr){/*2 cycle delay. */
-	    cellarr_dcell(simu->save->dmpttr, dmint);
+	    cellarr_dcell(simu->save->dmpttr, simu->isim, dmint);
 	}
 	double totalptt[3]={0,0,0};
 	for(int idm=0; idm<ndm; idm++){
@@ -149,7 +149,7 @@ static inline void cast_tt_do(SIM_T *simu, dcell *dmint){
 	loc_add_ptt(dmint->p[0]->p, totalptt, recon->aloc[0]);
 	dcellfree(ptt);
     }else if(parms->save.dmpttr){
-	cellarr_dcell(simu->save->dmpttr, NULL);
+	cellarr_dcell(simu->save->dmpttr, simu->isim, NULL);
     }
 }
 /**
@@ -179,8 +179,8 @@ void filter_cl(SIM_T *simu){
     RECON_T *recon=simu->recon;
     assert(parms->sim.closeloop);
     if(parms->save.dm){
-	cellarr_dcell(simu->save->dmreal, simu->dmreal);
-	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
+	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
+	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
     }
     /*copy dm computed in last cycle. This is used in next cycle (already after perfevl) */
     const SIM_CFG_T *simcfg=&(parms->sim);
@@ -330,8 +330,8 @@ void filter_ol(SIM_T *simu){
 	dcellfree(tmp);
     }
     if(simu->parms->save.dm){
-	cellarr_dcell(simu->save->dmreal, simu->dmreal);
-	cellarr_dcell(simu->save->dmcmd, simu->dmcmd);
+	cellarr_dcell(simu->save->dmreal, simu->isim, simu->dmreal);
+	cellarr_dcell(simu->save->dmcmd, simu->isim, simu->dmcmd);
     }
     /*moao DM is already taken care of automatically.*/
 }

@@ -1162,6 +1162,9 @@ static void init_simu_dm(SIM_T *simu){
 	    }
 	}
     }
+    if(recon->dm_ncpa){
+	dcelladd(&simu->dmreal, 1, recon->dm_ncpa, 1);
+    }
 #if USE_CUDA
     if(parms->gpu.evl || parms->gpu.wfs){
 	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm, parms->dm);
@@ -1239,7 +1242,7 @@ static void init_simu_dm(SIM_T *simu){
 		save->Mint_lo=cellarr_init(nrsteplo-1, 1, "Mint_lo_%d.bin", seed);
 	    }
 	}	
-	save->dmreal = cellarr_init(nstep+1, 1, "dmreal_%d.bin", seed);
+	save->dmreal = cellarr_init(nstep, 1, "dmreal_%d.bin", seed);
 	save->dmcmd  = cellarr_init(nstep, 1, "dmcmd_%d.bin", seed);
 	if(parms->sim.dmproj){
 	    save->dmproj = cellarr_init(nstep, 1, "dmproj_%d.bin", seed);
@@ -1390,7 +1393,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	if(parms->recon.alg==0){
 	    int nstep=parms->sim.end-parms->sim.start;
 	    if(parms->save.opdr){
-		save->opdr=cellarr_init(nstep,1, "opdr_%d.bin", seed);
+		save->opdr=cellarr_init(nstep-1,1, "opdr_%d.bin", seed);
 	    }
 	    if(parms->save.opdx){
 		save->opdx=cellarr_init(nstep, 1,"opdx_%d.bin", seed);
@@ -1419,7 +1422,7 @@ SIM_T* init_simu(const PARMS_T *parms,POWFS_T *powfs,
 	gpu_recon_reset(parms);
     }
 #endif
-    filter(simu);//so that dm_ncpa is effective at first cycle.
+    //filter(simu);//so that dm_ncpa is effective at first cycle. replaced by copy dm_ncpa to dmreal.
     return simu;
 }
 /**

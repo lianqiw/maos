@@ -36,7 +36,7 @@ void save_gradol(SIM_T *simu){
 		    "WFS Pseudo Openloop Gradients (y)","x (m)", "y (m)", "y %d",  iwfs);
 	}
 	if(simu->save->gradol[iwfs] && (simu->reconisim+1) % parms->powfs[ipowfs].dtrat == 0){
-	    cellarr_dmat(simu->save->gradol[iwfs], simu->gradlastol->p[iwfs]);
+	    cellarr_dmat(simu->save->gradol[iwfs], simu->reconisim, simu->gradlastol->p[iwfs]);
 	}
     }
     if(parms->save.ngcov>0){
@@ -126,10 +126,10 @@ void save_recon(SIM_T *simu){
     }
     if(parms->recon.alg==0){/*minimum variance tomo/fit reconstructor */
 	if(parms->save.opdr){
-	    cellarr_dcell(simu->save->opdr, simu->opdr);
+	    cellarr_dcell(simu->save->opdr, simu->reconisim, simu->opdr);
 	}
 	if(parms->save.dm){
-	    cellarr_dcell(simu->save->dmfit, simu->dmfit);
+	    cellarr_dcell(simu->save->dmfit, simu->reconisim, simu->dmfit);
 	}
 	if(parms->save.opdx || parms->plot.opdx){
 	    dcell *opdx=simu->opdx;
@@ -137,7 +137,7 @@ void save_recon(SIM_T *simu){
 		atm2xloc(&opdx, simu);
 	    }
 	    if(parms->save.opdx){
-		cellarr_dcell(simu->save->opdx, opdx);
+		cellarr_dcell(simu->save->opdx, simu->isim, opdx);
 	    }
 	    if(parms->plot.opdx){ /*draw opdx */
 		for(int i=0; i<opdx->nx; i++){
@@ -153,14 +153,14 @@ void save_recon(SIM_T *simu){
 	}
     }
     if(parms->save.dm){
-	cellarr_dcell(simu->save->dmerr, simu->dmerr);
+	cellarr_dcell(simu->save->dmerr, simu->reconisim, simu->dmerr);
 	if(simu->dmint->mint[0]){
-	    cellarr_dcell(simu->save->dmint, simu->dmint->mint[0]);
+	    cellarr_dcell(simu->save->dmint, simu->reconisim, simu->dmint->mint[0]);
 	}
 	if(simu->Merr_lo){
-	    cellarr_dcell(simu->save->Merr_lo, simu->Merr_lo);
+	    cellarr_dcell(simu->save->Merr_lo, simu->reconisim, simu->Merr_lo);
 	    if(!parms->sim.fuseint && simu->Mint_lo->mint[0]){
-		cellarr_dcell(simu->save->Mint_lo, simu->Mint_lo->mint[0]);
+		cellarr_dcell(simu->save->Mint_lo, simu->reconisim, simu->Mint_lo->mint[0]);
 	    }
 	}
     }

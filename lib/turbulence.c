@@ -128,9 +128,9 @@ static void spect_screen_save(cellarr *fc, GENSCREEN_T *data){
 	}
 	double tk3=myclockd();
 	if(fc){/*save to file. */
-	    cellarr_dmat(fc, dc->p[0]);
+	    cellarr_dmat(fc, ilayer, dc->p[0]);
 	    if(ilayer+1<nlayer){
-		cellarr_dmat(fc, dc->p[1]);
+		cellarr_dmat(fc, ilayer+1, dc->p[1]);
 	    }
 	}else{
 	    dcp((dmat**)&data->screen[ilayer], dc->p[0]);
@@ -241,7 +241,7 @@ static void fractal_screen_save(cellarr *fc, GENSCREEN_T *data){
 	double r0i=data->r0*pow(data->wt[ilayer], -3./5.);
 	fractal(dm->p, nx, ny, data->dx, r0i, data->l0, data->ninit);
 	remove_piston(dm->p, nx*ny);
-	cellarr_dmat(fc, dm);
+	cellarr_dmat(fc, ilayer, dm);
     }
     dfree(dm);
 }

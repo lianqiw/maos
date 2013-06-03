@@ -37,84 +37,35 @@ cellarr* cellarr_init(long nx, long ny,const char*format,...){
     write_header(&header, out->fp);
     return out;
 }
+/**
+   Append a A of type type into the cellarr ca, at location i.
+*/
+#define cellarr_cell(type)					\
+    void cellarr_##type##cell(cellarr *ca, int i, const type##cell *A){	\
+	if(!ca) error("cellarr is NULL\n");			\
+	if(ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
+	while(ca->cur<i) {type##cell##writedata(ca->fp, NULL);ca->cur++;}	\
+	{type##cell##writedata(ca->fp, A); ca->cur++;};			\
+	/*zflush(ca->fp);*//*is flush needed?*/				\
+    }
+#define cellarr_mat(type)					\
+    void cellarr_##type##mat(cellarr *ca, int i, const type##mat *A){	\
+	if(!ca) error("cellarr is NULL\n");			\
+	if(ca->cur>i) error("Invalid. cur=%ld, i=%d\n", ca->cur, i);	\
+	while(ca->cur<i) {type##writedata(ca->fp, NULL);ca->cur++;}	\
+	{type##writedata(ca->fp, A); ca->cur++;};			\
+	/*zflush(ca->fp);*//*is flush needed?*/				\
+    }
 
-/**
-   Append a dcell A into the cellarr ca.
- */
-void cellarr_dcell(cellarr *ca, const dcell *A){
-    if(!ca) error("callarr is NULL\n");
-    dcellwritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
+cellarr_cell(d);
+cellarr_cell(s);
+cellarr_cell(c);
+cellarr_cell(z);
+cellarr_mat(d);
+cellarr_mat(s);
+cellarr_mat(c);
+cellarr_mat(z);
 
-/**
-   Append a dcell A into the cellarr ca.
- */
-void cellarr_scell(cellarr *ca, const scell *A){
-    if(!ca) error("callarr is NULL\n");
-    scellwritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
-
-/**
-   Append a ccell A into the cellarr ca.
- */
-void cellarr_ccell(cellarr *ca, const ccell *A){
-    if(!ca) error("callarr is NULL\n");
-    ccellwritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
-/**
-   Append a ccell A into the cellarr ca.
- */
-void cellarr_zcell(cellarr *ca, const zcell *A){
-    if(!ca) error("callarr is NULL\n");
-    zcellwritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
-
-/**
-   Append a dmat A into the cellarr ca.
- */
-void cellarr_dmat(cellarr *ca, const dmat *A){
-    if(!ca) error("callarr is NULL\n");
-    dwritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
-
-/**
-   Append a dmat A into the cellarr ca.
- */
-void cellarr_smat(cellarr *ca, const smat *A){
-    if(!ca) error("callarr is NULL\n");
-    swritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
-/**
-   Append a ccell A into the cellarr ca.
- */
-void cellarr_cmat(cellarr *ca, const cmat *A){
-    if(!ca) error("callarr is NULL\n");
-    cwritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
-
-/**
-   Append a ccell A into the cellarr ca.
- */
-void cellarr_zmat(cellarr *ca, const zmat *A){
-    if(!ca) error("callarr is NULL\n");
-    zwritedata(ca->fp,A);
-    ca->cur++;
-    zflush(ca->fp);
-}
 /**
    Close the cellarr.
 */

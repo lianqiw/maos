@@ -756,7 +756,7 @@ void psfr_calc(SIM_T *simu, dcell *opdr, dcell *dmpsol, dcell *dmerr, dcell *dme
 		}
 		dmm(&simu->ecov->p[ievl], xx, xx, "nt", 1);
 		if(parms->dbg.ecovxx){
-		    cellarr_dmat(simu->save->ecovxx[ievl], xx);
+		    cellarr_dmat(simu->save->ecovxx[ievl], simu->isim, xx);
 		}
 	    }/*if psfr[ievl] */
 	}/*ievl */

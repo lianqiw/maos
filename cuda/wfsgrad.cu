@@ -305,7 +305,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	}
     }
     if(save_opd){
-	cellarr_cur(simu->save->wfsopdol[iwfs], phiout, stream);
+	cellarr_cur(simu->save->wfsopdol[iwfs], simu->isim, phiout, stream);
     }
     if(CL){
 	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmreal, cudata->ndm,
@@ -339,7 +339,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		      cupowfs[ipowfs].fieldstop, parms->powfs[ipowfs].wvl[0], cuwfs[iwfs].plan_fs, stream);
     }
     if(save_opd){
-	cellarr_cur(simu->save->wfsopd[iwfs], phiout, stream);
+	cellarr_cur(simu->save->wfsopd[iwfs], simu->isim, phiout, stream);
     }
     if(parms->plot.run>1){
 	const double *realamp=powfs[ipowfs].realamp[wfsind];
@@ -373,7 +373,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	}
     }   
     if(parms->powfs[ipowfs].psfout){
-	cellarr_cur(simu->save->ztiltout[iwfs], gradacc, stream);
+	cellarr_cur(simu->save->ztiltout[iwfs], simu->isim, gradacc, stream);
     }
     if(do_phy || parms->powfs[ipowfs].psfout || do_pistatout){/*physical optics */
 	gpu_wfsints(simu, phiout->p, gradcalc, iwfs, isim, stream);
@@ -386,7 +386,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    curmat *gradgpu=NULL;
 	    const int pixpsa=powfs[ipowfs].pixpsax*powfs[ipowfs].pixpsay;
 	    if(save_ints){
-		cellarr_curcell(simu->save->intsnf[iwfs], ints, stream);
+		cellarr_curcell(simu->save->intsnf[iwfs], simu->isim, ints, stream);
 	    }
 	    /*CUDA_SYNC_STREAM; */
 	    ctoc("mtche");
@@ -439,7 +439,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		TO_IMPLEMENT;
 	    }
 	    if(save_ints){
-		cellarr_curcell(simu->save->intsny[iwfs], ints, stream);
+		cellarr_curcell(simu->save->intsny[iwfs], simu->isim, ints, stream);
 	    }
 	    ctoc("mtche");
 	    
@@ -454,7 +454,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    ctoc("sync");
 
 	    if(save_gradgeom){//also do geom grad during phy grad sims
-		cellarr_cur(simu->save->gradgeom[iwfs], gradacc, stream);
+		cellarr_cur(simu->save->gradgeom[iwfs], simu->isim, gradacc, stream);
 	    }
 	}else{
 	    if(noisy && !parms->powfs[ipowfs].usephy){
@@ -464,7 +464,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	    }
 	    cp2cpu(&gradcl, gradacc, stream);//gradacc is already adjusted for gradoff
 	    if(save_gradgeom){
-		cellarr_cur(simu->save->gradgeom[iwfs], NULL, stream);
+		cellarr_cur(simu->save->gradgeom[iwfs], simu->isim, NULL, stream);
 	    }
 	    ctoc("dev2dbl");
 	}

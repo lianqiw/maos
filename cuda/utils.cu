@@ -80,7 +80,7 @@ void gpu_print_mem(const char *msg){
     size_t fr, tot;
     cudaDeviceSynchronize();
     DO(cudaMemGetInfo(&fr, &tot));
-    info2("GPU (%d) mem used %'lu MB (%s)\n",(int)(cudata-cudata_all),(tot-fr)/1024/1024, msg);
+    info2("GPU (%d) mem used %ld MB (%s)\n",(int)(cudata-cudata_all),(long)(tot-fr)/1024/1024, msg);
 }
 /**
    Get available memory.
@@ -705,34 +705,34 @@ void cp2cpu(zcell **out, const cuccell *in, cudaStream_t stream){
 	cp2cpu(&(*out)->p[i], in->p[i], stream);
     }
 }
-void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream){
+void cellarr_cur(struct cellarr *ca, int i, const curmat *A, cudaStream_t stream){
     smat *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_smat(ca, tmp);
+    cellarr_smat(ca, i, tmp);
     sfree(tmp);
 }
 
-void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream){
+void cellarr_cuc(struct cellarr *ca, int i, const cucmat *A, cudaStream_t stream){
     zmat *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_zmat(ca, tmp);
+    cellarr_zmat(ca, i, tmp);
     zfree(tmp);
 }
 
-void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream){
+void cellarr_curcell(struct cellarr *ca, int i, const curcell *A, cudaStream_t stream){
     scell *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_scell(ca, tmp);
+    cellarr_scell(ca, i, tmp);
     scellfree(tmp);
 }
 
-void cellarr_cuccell(struct cellarr *ca, const cuccell *A, cudaStream_t stream){
+void cellarr_cuccell(struct cellarr *ca, int i, const cuccell *A, cudaStream_t stream){
     zcell *tmp=NULL;
     cp2cpu(&tmp,A,stream);
     CUDA_SYNC_STREAM;
-    cellarr_zcell(ca, tmp);
+    cellarr_zcell(ca, i, tmp);
     zcellfree(tmp);
 }

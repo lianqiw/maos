@@ -174,8 +174,8 @@ inline void add2cpu(dmat **out, const curmat *in, cudaStream_t stream, pthread_m
 inline void add2cpu(dcell **out, const curcell *in, cudaStream_t stream, pthread_mutex_t* mutex=0){
     cp2cpu(out, 1, in, 1, stream, mutex);
 }
-void cellarr_cur(struct cellarr *ca, const curmat *A, cudaStream_t stream);
-void cellarr_cuc(struct cellarr *ca, const cucmat *A, cudaStream_t stream);
-void cellarr_curcell(struct cellarr *ca, const curcell *A, cudaStream_t stream);
-void cellarr_cuccell(struct cellarr *ca, const cuccell *A, cudaStream_t stream);
+void cellarr_cur(struct cellarr *ca, int i, const curmat *A, cudaStream_t stream);
+void cellarr_cuc(struct cellarr *ca, int i, const cucmat *A, cudaStream_t stream);
+void cellarr_curcell(struct cellarr *ca, int i, const curcell *A, cudaStream_t stream);
+void cellarr_cuccell(struct cellarr *ca, int i, const cuccell *A, cudaStream_t stream);
 #endif

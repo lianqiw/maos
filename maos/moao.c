@@ -302,10 +302,10 @@ void moao_recon(SIM_T *simu){
 			"MOAO for WFS","x (m)", "y(m)", "Wfs %d", iwfs);
 	    }
 	    if(parms->save.dm){
-		cellarr_dmat(simu->save->dm_wfs[iwfs], dmmoao->p[0]);
+		cellarr_dmat(simu->save->dm_wfs[iwfs], simu->isim, dmmoao->p[0]);
 	    }
 	    dcellfree(rhsout);
-		dmmoao->p[0]=NULL;
+	    dmmoao->p[0]=NULL;
 	}/*if wfs */
 	dcellfree(dmmoao);
     }
@@ -346,7 +346,7 @@ void moao_recon(SIM_T *simu){
 			"MOAO for EVL","x (m)", "y(m)", "Evl %d", ievl);
 	    }
 	    if(parms->save.dm){
-		cellarr_dmat(simu->save->dm_evl[ievl], dmmoao->p[0]);
+		cellarr_dmat(simu->save->dm_evl[ievl], simu->isim, dmmoao->p[0]);
 	    }	 
 	    dcellfree(rhsout);
 	dmmoao->p[0]=NULL;
