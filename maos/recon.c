@@ -105,6 +105,26 @@ void tomofit(SIM_T *simu){
 #endif
 	    muv_solve(&simu->dmfit, &recon->FL, &recon->FR, simu->opdr);
     }
+
+    /*zero stuck actuators*/
+    if(recon->actstuck){
+	act_stuck_cmd(recon->aloc, simu->dmfit, recon->actstuck);
+    }
+    /*make floating actuators averag of neighbor.*/
+    if(recon->actinterp){
+	dcell *tmp=NULL;
+	spcellmulmat(&tmp, recon->actinterp, simu->dmfit, 1);
+	dcellcp(&simu->dmfit, tmp);
+	dcellfree(tmp);
+    }  
+    /*make inactive actuators averag of neighbor.*/
+    if(recon->actinterp2){
+	dcell *tmp=NULL;
+	spcellmulmat(&tmp, recon->actinterp2, simu->dmfit, 1);
+	dcellcp(&simu->dmfit, tmp);
+	dcellfree(tmp);
+    }
+
     dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 }
 /**

@@ -294,14 +294,19 @@ static void running_remove(int pid, int status){
 			       || irun->status.info==S_RUNNING)){
 		nrun_sub(irun->pid, irun->nthread);
 	    }
-	    irun->status.timend=myclocki();
+	    if(irun->status.info<10){//mark termination time.
+		irun->status.timend=myclocki();
+	    }
 	    if(status==S_NONEXIST){
 		irun->status.info=S_CRASH;
-		if(irun->status.timend+10>myclocki()){
-		    //give 10 seconds period for the process to remove itself.
+		if(irun->status.timend+3>myclocki()){
+		    //give 3 seconds grace period for the process to remove itself.
 		    break;
 		}
+	    }else{
+		irun->status.info=status;
 	    }
+	    info("Job %d done with status %d\n", pid, irun->status.info);
 	    //remove from the running list
 	    if(irun2){
 		irun2->next=irun->next;
@@ -312,10 +317,6 @@ static void running_remove(int pid, int status){
 		if(irun->next==NULL)
 		    running_end=running;
 	    }
-
-
-	    info("Job %d done with status %d\n", pid, status);
-	    irun->status.info=status;
 	    monitor_send(irun,NULL);
 	    /*move irun to runned */
 	    runned_add(irun);

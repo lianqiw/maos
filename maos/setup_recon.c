@@ -134,11 +134,6 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	int naloc;
 	recon->aloc=locarrread(&naloc,"%s",fn);
 	if(naloc!=ndm) error("Invalid saved aloc");
-	for(int idm=0; idm<parms->ndm; idm++){
-	    recon->amap[idm]=loc2map(recon->aloc[idm]);
-	    recon->aembed[idm]=map2embed(recon->amap[idm]);
-	    free(recon->amap[idm]->p); recon->amap[idm]->p=NULL;
-	}
     }else{
 	recon->aloc=calloc(ndm, sizeof(loc_t*));
 	/*int nxmax=0, nymax=0; */
@@ -153,14 +148,18 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
 	    recon->amap[idm]=map;
-	    recon->aembed[idm]=map2embed(map);
-	    free(map->p); map->p=NULL; 
-	    free(recon->amap[idm]->nref);recon->amap[idm]->nref=NULL;
-	}/*idm */
-        if(parms->save.setup){
+	}
+	if(parms->save.setup){
 	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
 	}
     }
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(!recon->amap[idm]){
+	    recon->amap[idm]=loc2map(recon->aloc[idm]);
+	}
+	recon->aembed[idm]=map2embed(recon->amap[idm]);
+    }
+
     recon->alocm=calloc(ndm, sizeof(loc_t*));
     for(int idm=0; idm<ndm; idm++){
 	if(parms->dm[idm].misreg){
@@ -1716,7 +1715,7 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	     */
 	    recon->actslave=slaving(&recon->actcpl, recon->aloc, recon->HA, recon->W1,
 				    recon->fitNW, recon->actstuck,
-				    recon->actfloat, 0.1, 1./recon->floc->nloc);
+				    recon->actfloat, 0.1, 4./recon->floc->nloc*1e-4);
 	    if(parms->save.setup){
 		dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
 		spcellwrite(recon->actslave,"%s/actslave",dirsetup);
@@ -1780,6 +1779,12 @@ setup_recon_fit_matrix(RECON_T *recon, const PARMS_T *parms){
 	}
 	muv_direct_prep(&(recon->FL),(parms->fit.alg==2)*parms->fit.svdthres);
 	info2("After cholesky/svd on matrix:\t%.2f MiB\n",get_job_mem()/1024.);
+    }
+    if(parms->fit.actslave && parms->fit.alg==1){
+	recon->actinterp2=act_inactive_interp(recon->aloc, recon->HA, recon->W1);
+	if(parms->save.setup){
+	    spcellwrite(recon->actinterp2,"%s/actinterp2",dirsetup);
+	}
     }
     if(parms->save.recon){
        	if(recon->FL.C)
@@ -2507,7 +2512,7 @@ void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_
     if(parms->lsr.actslave){
 	/*actuator slaving. important. change from 0.5 to 0.1 on 2011-07-14. */
 	spcell *actslave=slaving(&recon->actcpl, recon->aloc, recon->GAhi, NULL, NW,
-				 recon->actstuck, recon->actfloat, 0.1, sqrt(maxeig));
+				 recon->actstuck, recon->actfloat, 0.1, maxeig);
 	if(parms->save.setup){
 	    if(NW){
 		dcellwrite(NW, "%s/lsrNW2",dirsetup);

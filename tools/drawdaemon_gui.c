@@ -1393,7 +1393,7 @@ GtkWidget *create_window(){
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar),item,-1);
     gtk_widget_set_sensitive(toolbar, FALSE);
     item=gtk_tool_item_new();
-    GtkWidget *fontsel=gtk_font_button_new_with_font("Sans 16");
+    GtkWidget *fontsel=gtk_font_button_new_with_font("Sans 12");
     //GtkWidget *fontsel=gtk_font_button_new();
     gtk_container_add(GTK_CONTAINER(item),fontsel);
     g_signal_connect(GTK_FONT_BUTTON(fontsel),"font-set", 

@@ -354,16 +354,7 @@ int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
 	return zfread_do(ptr, size, nmemb, fp);
     }
 }
-/**
-   Read from the file. if in gzip mode, calls gzread, otherwise calls
-   fread. follows the interface of fread.
- */
-void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp){
-    if(zfread2(ptr, size, nmemb, fp)){
-	perror("zfread");
-	error("Error happened while reading\n");
-    }
-}
+
 /**
    Move the current position pointer, like fseek
 */

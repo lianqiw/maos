@@ -286,7 +286,6 @@ void redirect(void){
     char *fn=malloc(PATH_MAX);
     pid_t pid=getpid();
     snprintf(fn,PATH_MAX,"run_%d.log",pid);
-    info("detached=%d\n", detached);
     if(detached){//only output to file
 	redirect2fn(fn);
 	if(!freopen("/dev/null","r",stdin)) warning("Error redirectiont stdin\n");

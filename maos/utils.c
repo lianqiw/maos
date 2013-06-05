@@ -492,7 +492,7 @@ static __attribute__((destructor)) void deinit(){
 ARG_T * parse_args(int argc, const char *argv[]){
     ARG_T *arg=calloc(1, sizeof(ARG_T));
     int *seeds=NULL; int nseed=0;
-    char *host=NULL; int local=0;
+    char *host=NULL;
     ARGOPT_T options[]={
 	{"help",   'h',T_INT, 2, print_usage, NULL},
 	{"detach", 'd',T_INT, 0, &arg->detach, NULL},
@@ -507,13 +507,12 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{"path",   'p',T_STR, 3, addpath, NULL},
 	{"pause",  'P',T_INT, 0, &arg->pause, NULL},
 	{"run",    'r',T_STR, 1, &host, NULL},
-	{"local",  'l',T_INT, 0, &local, NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
     if(!host && !arg->detach){//forground running.
 	arg->force=1;
-    }else if(local || getenv("MAOS_DIRECT_LAUNCH")){
+    }else if(getenv("MAOS_DIRECT_LAUNCH")){
 	/*lanched through scheduler to run locally. We are already detached, so
 	  don't daemonize again.*/
 	arg->detach=0;
@@ -522,11 +521,15 @@ ARG_T * parse_args(int argc, const char *argv[]){
     }else{
 #ifndef MAOS_DSIABLE_SCHEDULER
 	/*Detached version. Always launch through scheduler if available.*/
+	int locally=0;
 	if(!host){
+	    locally=1;
 	    host=strdup(myhostname());
 	}
 	if(scheduler_launch_exe(host, argc, argv)){
-	    error2("Unable to launch maos at server %s\n", host);
+	    if(!locally){
+		error2("Unable to launch maos at server %s\n", host);
+	    }
 	}else{
 	    exit(EXIT_SUCCESS);
 	}

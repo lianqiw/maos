@@ -488,6 +488,7 @@ static void readcfg_dm(PARMS_T *parms){
     READ_DM(dbl,offset);
     READ_DM_RELAX(dbl,guard);
     READ_DM_RELAX(dbl,stroke);
+    READ_DM_RELAX(dbl,iastroke);
     READ_DM_RELAX(dbl,vmisreg);
     READ_DM_RELAX(dbl,histbin);
     READ_DM_RELAX(int,histn);
@@ -578,7 +579,7 @@ static void readcfg_atmr(PARMS_T *parms){
     }
     parms->atmr.nps=readcfg_dblarr(&(parms->atmr.ht),"atmr.ht");
     readcfg_dblarr_n(&(parms->atmr.wt), parms->atmr.nps, "atmr.wt");
-    readcfg_intarr_n(&(parms->atmr.os), parms->atmr.nps, "atmr.os");
+    readcfg_intarr_nmax(&(parms->atmr.os), parms->atmr.nps, "atmr.os");
 }
 
 /**
@@ -1809,8 +1810,11 @@ static void setup_parms_postproc_recon(PARMS_T *parms){
 	if(parms->dm[idm].hist){
 	    parms->sim.dmttcast=1;
 	}
-	if(isfinite(parms->dm[idm].stroke)){
+	if(isfinite(parms->dm[idm].stroke) && parms->dm[idm].stroke){
 	    parms->sim.dmclip=1;
+	}
+	if(isfinite(parms->dm[idm].iastroke) && parms->dm[idm].iastroke){
+	    parms->sim.dmclipia=1;
 	}
     }
     if(parms->save.dmpttr || parms->sim.dmclip || parms->sim.dmttcast){

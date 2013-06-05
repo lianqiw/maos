@@ -330,6 +330,7 @@ typedef struct RECON_T{
     dcell *actcpl;     /**<actuator coupling factor. 0 means actuator is outside of FoV and need to be slaved.*/
     spcell *actslave;  /**<force slave actuators to have similar value to active neighbor ones.*/
     spcell *actinterp; /**<Interpolation operator for floating actuators. Slaving does not work well in CG. */
+    spcell *actinterp2; /**<Interpolation operator for inactive actuators. Slaving does not work well in CG. */
     double fitscl;     /**<strength of fitting FLM low rank terms (vectors)*/
     spcell *sanea;     /**<Measurement noise covairance, sanea^2 for each wfs in radian^2*/
     spcell *saneal;    /**<cholesky decomposition L of sanea^2 for each wfs to compute noise propagation*/

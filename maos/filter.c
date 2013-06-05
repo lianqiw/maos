@@ -236,6 +236,7 @@ void filter_cl(SIM_T *simu){
     if(parms->sim.dmttcast){
 	cast_tt_do(simu, simu->dmint->mint[0]);
     }
+
     /*The following are moved from the beginning to the end because the
       gradients are now from last step.*/
     dcellcp(&simu->dmcmd,simu->dmint->mint[0]);
@@ -249,15 +250,7 @@ void filter_cl(SIM_T *simu){
     if(simu->hyst){
 	hysterisis(simu->hyst, simu->dmreal, simu->dmcmd);
     }
-    if(recon->actstuck){
-	act_stuck_cmd(recon->aloc, simu->dmreal, recon->actstuck);
-    }
-    if(recon->actinterp){
-	dcell *tmp=NULL;
-	spcellmulmat(&tmp, recon->actinterp, simu->dmreal, 1);
-	dcellcp(&simu->dmreal, tmp);
-	dcellfree(tmp);
-    }
+  
     if(parms->sim.mffocus){/*gain was already applied on zoomerr*/
 	dcelladd(&simu->zoomint, 1, simu->zoomerr, 1);
     }
@@ -352,6 +345,45 @@ void update_dm(SIM_T *simu){
 	    }
 	}
     }
+    if(parms->sim.dmclipia){
+	for(int idm=0; idm<parms->ndm; idm++){
+	    int count=0;
+	    do{
+		count=0;
+		int nx=simu->recon->anx[idm];
+		const double thres=parms->dm[idm].iastroke*2;
+		PDMAT(simu->recon->amap[idm],map);
+		PDMAT(simu->dmrealsq[idm], dmr);
+		for(int iy=0; iy<simu->recon->any[idm]-1; iy++){
+		    for(int ix=0; ix<nx-1; ix++){
+			if(map[iy][ix] && map[iy+1][ix]){
+			    double diff=dmr[iy+1][ix]-dmr[iy][ix];
+			    if(fabs(diff)>thres){
+				double tmp=0.5*(dmr[iy+1][ix]+dmr[iy][ix]);
+				double scale=signbit(diff)?-.5:.5;
+				dmr[iy][ix]=tmp-thres*scale;
+				dmr[iy+1][ix]=tmp+thres*scale;
+				info("%g-->%g ", diff, dmr[iy+1][ix]-dmr[iy][ix]);
+				count++;
+			    }
+			}
+			if(map[iy][ix] && map[iy][ix+1]){
+			    double diff=dmr[iy][ix+1]-dmr[iy][ix];
+			    if(fabs(diff)>thres){
+				double tmp=0.5*(dmr[iy][ix+1]+dmr[iy][ix]);
+				double scale=signbit(diff)?-.5:.5;
+				dmr[iy][ix]=tmp-thres*scale;
+				dmr[iy][ix+1]=tmp+thres*scale;
+				info("%g-->%g ", diff, dmr[iy][ix+1]-dmr[iy][ix]);
+				count++;
+			    }
+			}
+		    }
+		}
+		if(count) info("%d actuators over ia limit\n", count);
+	    }while(count>0);
+	}
+    }
 #if USE_CUDA
     if(parms->gpu.wfs || parms->gpu.evl){
 	gpu_dmreal2gpu(simu->dmrealsq, parms->ndm,NULL);
@@ -387,5 +419,4 @@ void filter(SIM_T *simu){
     }
 #endif
     update_dm(simu);
-
 }

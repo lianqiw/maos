@@ -243,7 +243,8 @@ typedef struct WFS_CFG_T{
 */
 typedef struct DM_CFG_T{
     double guard;   /**<extra DM actuator rings outside of aper.d*/
-    double stroke;  /**<Stroke of DM. OPD goes to \f$\pm\f$ stroke$*/
+    double stroke;  /**<Stroke of DM (surface). OPD goes to \f$\pm\f$ stroke$*/
+    double iastroke;/**<Inter actuator stroke (surface)*/
     double vmisreg; /**<vertical misregistration*/
     double ht;      /**<height conjugation range*/
     double dx;      /**<actuator separation*/
@@ -483,7 +484,8 @@ typedef struct SIM_CFG_T{
     /* A few derived parameters*/
     int dmttcast;    /**<derived: cast tip/tilt from DM commands to study saturation or
 			histogram and then add back*/
-    int dmclip;      /**<derived: Need to clip actuators*/
+    int dmclip;      /**<derived: Need to clip actuator stroke*/
+    int dmclipia;    /**<derived: Need to clip inter-actuator stroke*/
     int dmproj;      /**<derived: Need to projection atmosphere onto DMspace. */
     int parallel;    /**<The parallel scheme. 1: fully parallel. 0: do not parallel the big loop (sim, wfsgra,d perfevl)*/
     int ahstfocus;   /**<New new mode split in ahst + focus tracking*/

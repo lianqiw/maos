@@ -6,6 +6,7 @@
 #include <mex.h>
 #include <matrix.h>
 #include <stdint.h>
+#include <errno.h>
 #if !defined(MX_API_VER) || MX_API_VER < 0x07030000
 typedef unsigned int mwIndex;
 #endif
@@ -75,7 +76,16 @@ void zfclose(file_t *fp);
 void zfwrite(const void* ptr, const size_t size, const size_t nmemb, file_t *fp);
 void zfwrite_dcomplex(const double* pr, const double *pi,const size_t nmemb, file_t *fp);
 void zfwrite_fcomplex(const float* pr, const float *pi,const size_t nmemb, file_t *fp);
-void zfread(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
+int zfread2(void* ptr, const size_t size, const size_t nmemb, file_t* fp);
+/**
+   Read from the file. if in gzip mode, calls gzread, otherwise calls
+   fread. follows the interface of fread.
+ */
+#define zfread(ptr,size,nmemb,fp)					\
+    if(zfread2(ptr,size,nmemb,fp)) {					\
+	fp->eof=1;							\
+	warning("Error happened while reading: %s\n", strerror(errno));	\
+    }
 int zfeof(file_t *fp);
 int zfseek(file_t *fp, long offset, int whence);
 void zfwritelarr(file_t *fp, int count, ...);

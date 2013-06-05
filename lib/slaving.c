@@ -22,6 +22,30 @@
 #include "slaving.h"
 #include "imat.h"
 /**
+   Compute the actuator coupling coefficient to be used to identify non-coupled
+   actuators. W1 is optional weighting function. The max value is 1.
+*/
+static dcell *genactcpl(spcell *HA, dmat *W1){
+    int ndm=HA->ny;
+    dcell *actcplc=dcellnew(ndm, 1);
+    for(int idm=0; idm<ndm; idm++){
+	for(int ifit=0; ifit<HA->nx; ifit++){
+	    dsp *ha=HA->p[ifit+idm*HA->nx];
+	    if(!ha) continue;
+	    if(W1){
+		sptmulmat(&actcplc->p[idm], ha, W1, 1);
+	    }else{
+		dmat *tmp=spsumabs(ha, 1);
+		tmp->nx=tmp->ny; tmp->ny=1;
+		dadd(&actcplc->p[idm], 1, tmp, 1);
+		dfree(tmp);
+	    }
+	}
+	normalize_max(actcplc->p[idm]->p, actcplc->p[idm]->nx, 1);/*bring max to 1; */
+    }
+    return actcplc;
+}
+/**
    Compute slaving actuator regularization. HA (or use GA) is used to compute
    active actuators. If NW is non NULL, orthogonalize it with the slaving
    regularization.  When the actuators are in the NULL space of HA, we want to
@@ -36,11 +60,12 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 		icell *actstuck,/**<[in]List of stuck actuators that will not be slaved, but have value constrained.*/
 		icell *actfloat,/**<[in]List of stuck actuators that will be slaved, but not have value constrained.*/
 		double thres,  /**<[in]The threshold that an actuator is deemed slave*/
-		double scl     /**<[in]The scaling of the overal value*/
+		double scl2    /**<[in]The scaling of the overal value*/
 		){
     if(!HA && !actfloat) {
 	error("Both HA and actfloat are not supplied\n");
     }
+    double scl=sqrt(scl2);
     if(scl<EPS){
 	error("scl=%g is too small\n", scl);
     }
@@ -50,37 +75,23 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
     }else{
 	ndm=actfloat->ny;
     }
-    dcell *actcplc=dcellnew(ndm, 1);
+    dcell *actcplc=NULL;
+    if(HA){
+	actcplc=genactcpl(HA, W1);
+    }else{
+	actcplc=dcellnew(ndm, 1);
+	for(int idm=0; idm<ndm; idm++){
+	    int nact=aloc[idm]->nloc;
+	    actcplc->p[idm]=dnew(nact, 1);
+	    dset(actcplc->p[idm], 1);
+	}
+    }
     spcell *actslavec=spcellnew(ndm, ndm);/*block diagonal. */
     PDSPCELL(actslavec, actslave);
     int nslavetot=0;
+    /*Next process stuck and floating actuators. Adjust actcplc and compute slaving matrix.*/
     for(int idm=0; idm<ndm; idm++){
 	int nact=aloc[idm]->nloc;
-	actcplc->p[idm]=dnew(nact, 1);
-	/*
-	  We first sum the absolute value of the weights for each actuator to figure
-	  out how much it is coupled to destination.
-	*/
-	if(HA){
-	    for(int ifit=0; ifit<HA->nx; ifit++){
-		dsp *ha=HA->p[ifit+idm*HA->nx];
-		if(!ha) continue;
-		if(W1){
-		    sptmulmat(&actcplc->p[idm], ha, W1, 1);
-		}else{
-		    dmat *tmp=spsumabs(ha, 1);
-		    tmp->nx=tmp->ny; tmp->ny=1;
-		    dadd(&actcplc->p[idm], 1, tmp, 1);
-		    dfree(tmp);
-		}
-	    }
-	    if(actcplc->p[idm]->nx*actcplc->p[idm]->ny!=nact){
-		error("Invalid actcplc\n");
-	    }
-	    normalize_max(actcplc->p[idm]->p, nact, 1);/*bring max to 1; */
-	}else{
-	    dset(actcplc->p[idm], 1);
-	}
 	int *stuck=calloc(nact, sizeof(int));
 	int *floated=calloc(nact, sizeof(int));
 	int nstuck=0;
@@ -104,12 +115,13 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 		}else{
 		    actcplc->p[idm]->p[iact]=0;/*Slave this actuator. */
 		}
-		/*warning2("Don't constrain value of actuator %d in slaving\n", iact); */
 	    }
 	}
+	
   	double *actcpl= actcplc->p[idm]->p;
 	double *actcpl0 = actcpl-1;
-	int  nslave   = 0;
+	int nslave = 0;
+
 	for(int iact=0; iact<nact; iact++){
 	    if(actcpl[iact]<thres){
 		nslave++;
@@ -147,18 +159,18 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 		long mapx=(long)round((locx[iact]-ox)*dx1);
 		long mapy=(long)round((locy[iact]-oy)*dx1);
 		assert(map[mapy][mapx]-1==iact);
-		int near_active=0;
+		double near_active=0.;
 		int near_exist=0;
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
-			if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
+			if(abs(idx+idy)!=1){
 			    continue;/*skip center and corner */
 			}
 			int kact1=map[mapy+idy][mapx+idx];
 			if(kact1 && !stuck[kact1-1]){
 			    near_exist++;
 			    if(actcpl0[kact1]>0.1){
-				near_active++;
+				near_active+=actcpl0[kact1];
 			    }
 			}
 		
@@ -167,60 +179,45 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 		if(!near_exist){
 		    error("This is an isolated actuator\n");
 		}
-		/*10x bigger constraint make the slaving work more strictly for floating actuators.*/
-		pi[count]=iact;
-		px[count]=scl;
+	
 		/*
-		  We limits the strength of these slaving actuators.
+		  neighbors are defined as the four pixels to the left, right,
+		  top and bottom.  If some of the neighbors are active, use the
+		  average of them for my value, otherwise, use the average of
+		  all neighbors.
 		*/
+		double value=0;
+		if(!near_active) value=-scl/near_exist;
+		double valsum=0;
+		/*part 1*/
+		for(int idy=-1; idy<2; idy++){
+		    for(int idx=-1; idx<2; idx++){
+			if(abs(idx+idy)!=1){
+			    continue;//skip myself and corner
+			}
+			int kact1=map[mapy+idy][mapx+idx];
+			if(kact1 && !stuck[kact1-1]){
+			    if(!near_active || actcpl0[kact1]>0.1){
+				if(actcpl0[kact1]>0.1){
+				    value=-scl*actcpl0[kact1];
+				}
+				pi[count]=kact1-1;
+				px[count]=value;
+				valsum+=value;
+				count++;
+			    }
+			}
+		    }
+		}
 		
+		/*part 2, matches negative sum of part 1*/
+		pi[count]=iact;
+		px[count]=-valsum;
+		/*limit the strength of slaving actuators*/
 		if(actcpl[iact]<0.1 && !floated[iact]){
-		    px[count]+=scl*1;
-		}else if(actcpl[iact]<0.1 && floated[iact]){
-		    /*warning2("Actuator %d is floating, don't limit its strength\n", iact); */
+		    px[count]+=scl;
 		}
 		count++;
-
-		if(near_active>0){
-		    /*
-		      neighbors are defined as the four pixels to the left, right, top and bottom.
-		      If some of the neighbors are active, use the average of them for my value.
-		     */
-		    double value=-scl/near_active;
-		    for(int idy=-1; idy<2; idy++){
-			for(int idx=-1; idx<2; idx++){
-			    if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
-				continue;/*skip center and corner */
-			    }
-			    int kact1=map[mapy+idy][mapx+idx];
-			    if(kact1 && actcpl0[kact1]>0.1 && !stuck[kact1-1]){
-				pi[count]=kact1-1;
-				px[count]=value;
-				count++;
-			    }
-			}
-		    }
-		}else{
-		    /*
-		      If none of the neighbors are active, use the average of
-		      all neighbors for my value.
-		     */
-		    double value=-scl/near_exist;
-		    for(int idy=-1; idy<2; idy++){
-			for(int idx=-1; idx<2; idx++){
-			    if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
-				continue;/*skip center and corner */
-			    }
-			    int kact1=map[mapy+idy][mapx+idx];
-			    if(kact1 && !stuck[kact1-1]){
-				pi[count]=kact1-1;
-				px[count]=value;
-				count++;
-			    }
-			}
-		    }
-	
-		}
 		icol++;
 	    }/*if */
 	}/*for iact */
@@ -231,10 +228,11 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 	spsetnzmax(slavet, count);
 	dsp *slave=sptrans(slavet);
 	actslave[idm][idm]=spmulsp(slavet, slave);
+	spwrite(slave, "slave_%d", idm);
 	if(NW){
 	    /*Now we need to make sure NW is in the NULL
 	      space of the slaving regularization, especially
-	      the tip/tilt constraints.*/
+	      the tip/tilt constraints. NW=NW-slavet*inv(slavet)*NW */
 	    if(NW->p[idm]){
 		dmat *H=NULL;
 		spfull(&H, slavet, 1);
@@ -474,7 +472,10 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 /**
    Make DM actuator commands zero at stuck actuator locations.
 */
-void act_stuck_cmd(loc_t **aloc, dcell *adm, icell *stuck){
+void act_stuck_cmd(loc_t **aloc, /**<[in] Actuator grid array*/
+		   dcell *adm,   /**<[in,out] Actuator command to process*/
+		   icell *stuck  /**<[in] List of stuck actuators*/
+		   ){
     if(!adm || !stuck) return;
     PDCELL(adm, pa);
     int ndm=adm->nx;
@@ -496,7 +497,9 @@ void act_stuck_cmd(loc_t **aloc, dcell *adm, icell *stuck){
 /**
    Create an interpreter that make floating actuators equal to their neighbors.
  */
-spcell* act_float_interp(loc_t **aloc, icell *actfloat){
+spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
+			 icell *actfloat/**<[in] List of floating actuators*/
+			 ){
     if(!actfloat) return NULL;
     int ndm=actfloat->nx;
     spcell *out=spcellnew(ndm, ndm);
@@ -529,7 +532,7 @@ spcell* act_float_interp(loc_t **aloc, icell *actfloat){
 		int count2=count;
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
-			if((idx!=0 && idy!=0) || (idx==0 && idy==0)){
+			if(abs(idx+idy)!=1){
 			    continue;/*skip center and corner */
 			}
 			if(map[mapy+idy][mapx+idx]){
@@ -557,5 +560,105 @@ spcell* act_float_interp(loc_t **aloc, icell *actfloat){
 	spfree(outit);
 	free(isfloat);
     }
+    return out;
+}
+
+/**
+   Create an interpreter that make inactive actuators equal avearage of active
+   neighbors if exist or all other neighbors.
+*/
+spcell* act_inactive_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
+			    spcell *HA,    /**<[in] Influence function from actuator grid to destination*/
+			    dmat *W1      /**<[in] Weighting function in destination grid*/
+			    ){
+    if(!HA) error("HA cannot be Null");
+    dcell *actcplc=genactcpl(HA, W1);
+    int ndm=HA->ny;
+    spcell *out=spcellnew(ndm, ndm);
+    for(int idm=0; idm<ndm; idm++){
+	const double *cpl=actcplc->p[idm]->p;
+	loc_create_map_npad(aloc[idm],1);
+	long (*map)[aloc[idm]->map->nx]=(void*)aloc[idm]->map->p;
+	double ox=aloc[idm]->map->ox;
+	double oy=aloc[idm]->map->oy;
+	double dx1=1./aloc[idm]->dx;
+	const double *locx=aloc[idm]->locx;
+	const double *locy=aloc[idm]->locy;
+	long nact=aloc[idm]->nloc;
+	dsp *outit=spnew(nact, nact, nact*4);
+	double *px=outit->x;
+	spint *pp=outit->p;
+	spint *pi=outit->i;
+	long count=0;
+	for(long iact=0; iact<nact; iact++){
+	    pp[iact]=count;
+	    if(cpl[iact]<0.5){
+		long mapx=(long)round((locx[iact]-ox)*dx1);
+		long mapy=(long)round((locy[iact]-oy)*dx1);
+		int count2=count;
+		double sum=0;
+		/*first, interpolate from neighbors of higher cpl*/
+		for(int idy=-1; idy<2; idy++){
+		    for(int idx=-1; idx<2; idx++){
+			if(abs(idx)+abs(idy)>1){
+			    continue;/*skip corner */
+			}
+			if(map[mapy+idy][mapx+idx]){
+			    int kact=map[mapy+idy][mapx+idx]-1;
+			    if(cpl[kact]>0){//>=cpl[iact]){
+				pi[count]=kact;
+				sum+=(px[count]=cpl[kact]);
+				count++;
+			    }
+			}
+		    }
+		}
+		if(count>count2){
+		    double scl=1./sum;
+		    for(;count2<count; count2++){
+			px[count2]*=scl;
+		    }
+		}else{
+		    /*then interpolate all neighbors*/
+		    sum=0;
+		    for(int idy=-1; idy<2; idy++){
+			for(int idx=-1; idx<2; idx++){
+			    if(abs(idx+idy)!=1){
+				continue;/*skip center and corner */
+			    }
+			    if(map[mapy+idy][mapx+idx]){
+				int kact=map[mapy+idy][mapx+idx]-1;
+				pi[count]=kact;
+				sum+=(px[count]=1);
+				count++;
+			    }
+			}
+		    }
+		    if(count>count2){
+			double scl=1./sum;
+			for(;count2<count; count2++){
+			    px[count2]*=scl;
+			}
+		    }
+		}
+	    }else{
+		/*just copy over data */
+		pi[count]=iact;
+		px[count]=1;
+		count++;
+	    }
+	}
+	pp[nact]=count;
+	out->p[idm+ndm*idm]=sptrans(outit);
+	spfree(outit);
+    }
+    /*The above interpolation only propagate the value one step. Multiple the
+      interpolator a few times to propagate longer.*/
+    for(int i=0; i<5; i++){
+	spcell*tmp=spcellmulspcell(out,out,1);
+	spcellfree(out);
+	out=tmp;
+    }
+    dcellfree(actcplc);
     return out;
 }

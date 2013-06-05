@@ -29,4 +29,5 @@ void act_zero(loc_t **aloc, dcell *HB, icell *dead);
 void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat);
 void act_stuck_cmd(loc_t **aloc, dcell *adm, icell *stuck);
 spcell* act_float_interp(loc_t **aloc, icell *actfloat);
+spcell* act_inactive_interp(loc_t **aloc, spcell *HA, dmat *W1);
 #endif
