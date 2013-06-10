@@ -257,8 +257,9 @@ static void readcfg_powfs(PARMS_T *parms){
     READ_POWFS_RELAX(str,piinfile);
     READ_POWFS_RELAX(str,sninfile);
     READ_POWFS_RELAX(dbl,saat);
-    READ_POWFS_RELAX(dbl,sathruput);
+    READ_POWFS_RELAX(dbl,safill2d);
     READ_POWFS_RELAX(dbl,saspherical);
+    READ_POWFS_RELAX(dbl,safocuspv);
     READ_POWFS_RELAX(int,neaphy);
     READ_POWFS_RELAX(str,neareconfile);
     READ_POWFS_RELAX(str,neasimfile);

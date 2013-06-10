@@ -708,7 +708,7 @@ setup_recon_saneai(RECON_T *recon, const PARMS_T *parms, const POWFS_T *powfs){
 	dmat *sanea_iwfs=spdiag(recon->sanea->p[iwfs+iwfs*parms->nwfsr]);
 	double area_thres;
 	if(nsa>4){
-	    area_thres=0.9*parms->powfs[ipowfs].sathruput;
+	    area_thres=0.9*parms->powfs[ipowfs].safill2d;
 	}else{
 	    area_thres=0;
 	}

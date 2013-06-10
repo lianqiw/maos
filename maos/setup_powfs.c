@@ -224,14 +224,14 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     powfs[ipowfs].amp=mkwfsamp(powfs[ipowfs].loc, aper->ampground, 
 			       0,0, parms->aper.d, parms->aper.din);
     dmat *ampi=NULL;
-    if(parms->powfs[ipowfs].sathruput<1){
+    if(parms->powfs[ipowfs].safill2d<1){
 	int nedge=1;
-	while ((nx-2*nedge)*(nx-2*nedge)>nx*nx*parms->powfs[ipowfs].sathruput){
+	while ((nx-2*nedge)*(nx-2*nedge)>nx*nx*parms->powfs[ipowfs].safill2d){
 	    nedge++;
 	}
 	ampi=dnew(nx,nx);
 	PDMAT(ampi, pampi);
-	double alpha=(nx*nx*parms->powfs[ipowfs].sathruput-(nx-2*nedge)*(nx-2*nedge))
+	double alpha=(nx*nx*parms->powfs[ipowfs].safill2d-(nx-2*nedge)*(nx-2*nedge))
 	    /((nx-2*(nedge-1))*(nx-2*(nedge-1))-(nx-2*nedge)*(nx-2*nedge));
 	double tot=0;
 	for(int iy=nedge-1; iy<nx-nedge+1; iy++){
@@ -252,7 +252,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	    }
 	}
 	/*do not multiply to siglev. Already handled automatically*/
-	thresarea*=parms->powfs[ipowfs].sathruput;
+	thresarea*=parms->powfs[ipowfs].safill2d;
     }
  
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
@@ -455,7 +455,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	dcircle(powfs[ipowfs].fieldstop, nembed/2+1, nembed/2+1, radius, 1);
 	dfftshift(powfs[ipowfs].fieldstop);
     }
-    if(parms->powfs[ipowfs].saspherical>0){
+    if(fabs(parms->powfs[ipowfs].saspherical)>0){
 	if(parms->powfs[ipowfs].saspherical<1){
 	    error("powfs%d: saspherical=%g should be in nm.\n", 
 		  ipowfs, parms->powfs[ipowfs].saspherical);
@@ -490,8 +490,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	}
 	normalize_sum(ampw->p, ampw->nx*ampw->ny, 1);
 	PDMAT(ampw, pampw);
-	int nx2=nx/2;
-	double fill1d=sqrt(parms->powfs[ipowfs].sathruput);
+	double nx2=(nx-1)*0.5;
+	double fill1d=sqrt(parms->powfs[ipowfs].safill2d);
 	//normalize x,y from -1 to 1 in clear aperture
 	double Rx2=pow(fill1d*nx/2, -2);
 	dmat *opdi=dnew(nx, nx); PDMAT(opdi, popdi);
@@ -529,21 +529,48 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	dscale(opdi, err/sqrt(var));
 	if(!powfs[ipowfs].opdadd){
 	    powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		if(!powfs[ipowfs].opdadd->p[jwfs]){
-		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].amp->nx, 1);
-		}
-		for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
-		    for(int i=0; i<nx*nx; i++){
-			powfs[ipowfs].opdadd->p[jwfs]->p[nx*nx*isa+i]+=opdi->p[i];
-		    }
+	}
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    if(!powfs[ipowfs].opdadd->p[jwfs]){
+		powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].amp->nx, 1);
+	    }
+	    for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+		for(int i=0; i<nx*nx; i++){
+		    powfs[ipowfs].opdadd->p[jwfs]->p[nx*nx*isa+i]+=opdi->p[i];
 		}
 	    }
 	}
-	dfree(opdi);
+    	dfree(opdi);
 	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);//used for i0
 	if(parms->save.setup){
-	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d", dirsetup, ipowfs);
+	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d_spherical", dirsetup, ipowfs);
+	}
+    }
+    if(fabs(parms->powfs[ipowfs].safocuspv)>EPS){
+	double pv=parms->powfs[ipowfs].safocuspv*1e-9;
+	info("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
+	if(!powfs[ipowfs].opdadd){
+	    powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	}
+	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+	    if(!powfs[ipowfs].opdadd->p[jwfs]){
+		powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].amp->nx, 1);
+	    }
+	    double fill1d=sqrt(parms->powfs[ipowfs].safill2d);
+	    double nx2=(nx-1)*0.5;
+	    double Rx2=pow(fill1d*nx2, -2);
+	    double rmax2=2*nx2*nx2*Rx2;
+	    double scale=pv/rmax2;
+	    for(int iy=0; iy<nx; iy++){
+		for(int ix=0; ix<nx; ix++){
+		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+		    powfs[ipowfs].opdadd->p[jwfs]->p[ix+iy*nx]+=rr*scale;
+		}
+	    }
+	}
+	dcellcp(&powfs[ipowfs].opdbias, powfs[ipowfs].opdadd);//used for i0
+	if(parms->save.setup){
+	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d_focus", dirsetup, ipowfs);
 	}
     }
     dfree(ampi);

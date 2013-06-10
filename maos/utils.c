@@ -50,6 +50,7 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
 	      const double *bkgrnd2, /**<background in PDEs of each pixel per frame.*/
 	      const double *bkgrnd2c,/**<calibration bkgrnd2*/
 	      const double rne      /**<Read out noise per pixel per read*/
+
 	      ){
  
     if(bkgrnd2){
