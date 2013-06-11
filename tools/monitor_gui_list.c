@@ -377,11 +377,17 @@ static void clipboard_append(const char *jobinfo){
     GdkAtom atoms[2]={GDK_SELECTION_CLIPBOARD, GDK_SELECTION_PRIMARY};
     for(int iatom=0; iatom<2; iatom++){
 	GtkClipboard *clip=gtk_clipboard_get(atoms[iatom]);
+	if(!clip) continue;
 	gchar *old=gtk_clipboard_wait_for_text(clip);
-	gchar *newer=stradd(old, jobinfo, "\n", NULL);
+	gchar *newer=NULL;
+	if(old){
+	    newer=stradd(old, jobinfo, "\n", NULL);
+	    g_free(old);
+	}else{
+	    newer=stradd(jobinfo, "\n", NULL);
+	}
 	gtk_clipboard_set_text(clip, newer, -1);
-	g_free(newer);
-	g_free(old);
+	free(newer);
     }
 }
 /*A general routine handle actions to each item.*/
