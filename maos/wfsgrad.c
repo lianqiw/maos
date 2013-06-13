@@ -519,12 +519,8 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 				  scale, 1., 0, 0);
 		}
 	    }
+	    double ttx=0, tty=0;//FSM + wind shake induced jitter
 	    if((simu->uptreal && simu->uptreal->p[iwfs]) ||do_pistatout||parms->sim.uptideal){
-		const double dx=powfs[ipowfs].llt->pts->dx;
-		const double ox=powfs[ipowfs].llt->pts->origx[0];
-		const double oy=powfs[ipowfs].llt->pts->origy[0];
-		double ttx;
-		double tty;
 		if(do_pistatout||parms->sim.uptideal){
 		    /* remove tip/tilt completely */
 		    dmat *lltg=dnew(2,1);
@@ -543,14 +539,16 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		PDMAT(simu->uptcmds->p[iwfs], puptcmds);
 		puptcmds[isim][0]=ttx;
 		puptcmds[isim][1]=tty;
-		/* add tip/tilt to opd */
-		PDMAT(lltopd, pp);
-		for(int iy=0; iy<lltopd->ny; iy++){
-		    double vty=(oy+iy*dx)*tty;
-		    for(int ix=0; ix<lltopd->nx; ix++){
-			pp[iy][ix]+=vty+(ox+ix*dx)*ttx;
-		    }
-		}
+	    }
+	    if(simu->telws){
+		double tmp=simu->telws->p[isim];
+		double angle=simu->winddir?simu->winddir->p[0]:0;
+		ttx+=tmp*cos(angle)*parms->powfs[ipowfs].llt->ttrat;
+		tty+=tmp*sin(angle)*parms->powfs[ipowfs].llt->ttrat;
+	    }
+	    if(ttx !=0 || tty != 0){ /* add tip/tilt to llt opd */
+		double ptt[3]={0, ttx, tty};
+		loc_add_ptt(lltopd->p, ptt, powfs[ipowfs].llt->loc);
 	    }
 	    if(save_opd){
 		cellarr_dmat(simu->save->wfslltopd[iwfs], isim, lltopd);

@@ -23,41 +23,45 @@ extern "C"
 #include "utils.h"
 #include "recon.h"
 #include "curmat.h"
-
+/*
+  This routine needs to be improved by merging all these operations in loops to a big kernel and only use stream.
+*/
 void cumuv(curcell **out, float beta, cumuv_t *A, const curcell *in, float alpha, stream_t &stream){
     if(!A->Mt) error("A->M Can not be empty\n");
-    if(A->U && A->U->ny>1 || A->V && A->V->ny>1) error("Not streamd yet\n");
-    if(!*out){
-	*out=curcellnew(A->Mt->ny, 1);
-	int nx[A->Mt->ny];
-	for(int ix=0; ix<A->Mt->ny; ix++){
-	    nx[ix]=A->Mt->p[ix*A->Mt->nx]->ny;
+    if(A->U && A->U->ny>1 || A->V && A->V->ny>1) error("Not implemented yet\n");
+    stream.sync();//must sync because it is no used.
+    const int ndm=A->Mt->ny;
+    curmat *tmp=NULL;
+    if(A->U && A->V){
+	tmp=curnew(A->V->p[0]->ny, 1);
+	//No need to sync dmstream here.
+	for(int ifit=0; ifit<A->V->nx; ifit++){
+	    curmv(tmp->p, 1.f, A->V->p[ifit], in->p[ifit]->p, 't', 1, A->fitstream[0]);
 	}
-	*out=curcellnew(A->Mt->ny, 1, nx, (int*)NULL);
     }
-    stream.sync();//must sync.
-    for(int idm=0; idm<A->Mt->ny; idm++){
-	if(fabs(beta)<EPS) curzero((*out)->p[idm], A->dmstream[idm]);
-	else if(fabs(beta-1)>EPS) 
-	    curscale((*out)->p[idm], beta, A->dmstream[idm]);
+    if(!*out){
+	*out=curcellnew(ndm, 1);
+	int nact[ndm];
+	for(int idm=0; idm<ndm; idm++){
+	    nact[idm]=A->Mt->p[idm*A->Mt->nx]->ny;
+	}
+	*out=curcellnew(A->Mt->ny, 1, nact, (int*)NULL);
+    }
+    for(int idm=0; idm<ndm; idm++){
+	curscale((*out)->p[idm], beta, A->dmstream[idm]);
 	for(int ifit=0; ifit<A->Mt->nx; ifit++){
 	    cusptmul((*out)->p[idm]->p, A->Mt->p[ifit+idm*A->Mt->nx], in->p[ifit]->p,
 		     alpha, A->dmstream[idm]);
 	}
     }
-    curmat *tmp=NULL;
-    if(A->U && A->V){
-	tmp=curnew(A->V->p[0]->ny, 1);
-	for(int ifit=0; ifit<A->V->nx; ifit++){
-	    curmv(tmp->p, 1.f, A->V->p[ifit], in->p[ifit]->p, 't', 1, A->fitstream[0]);
-	}
-	cudaStreamSynchronize(A->fitstream[0]);
-	for(int idm=0; idm<A->U->nx; idm++){
+    if(tmp){
+	A->fitstream[0].sync();
+	for(int idm=0; idm<ndm; idm++){
 	    curmv((*out)->p[idm]->p, 1.f, A->U->p[idm], tmp->p, 'n', -alpha, A->dmstream[idm]);
 	}
     }
-    for(int idm=0; idm<A->Mt->ny; idm++){
-	cudaStreamSynchronize(A->dmstream[idm]);
+    for(int idm=0; idm<ndm; idm++){
+	A->dmstream[idm].sync();
     }
     curfree(tmp);
 }

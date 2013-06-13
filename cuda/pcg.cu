@@ -122,7 +122,7 @@ float gpu_pcg(curcell **px,
     float *bk  =store; store++;
     float *r0z2=store; store+=maxiter;
     float *ak  =store; store+=maxiter;
-    curcellinn_add(r0z0, b, b, stream);
+    curcellinn_add(r0z0, b, b, stream);//r0z0=b*b;
     float diff[maxiter];
 #if PRINT_RES == 2
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);

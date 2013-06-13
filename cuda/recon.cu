@@ -739,8 +739,6 @@ void gpu_tomo(SIM_T *simu){
     cudaProfilerStart();
     simu->cgres->p[0]->p[simu->reconisim]=
 	gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream[0]);
-    cudaStreamSynchronize(curecon->cgstream[0]);
-    curecon->cgstream->sync();
     if(!parms->gpu.fit || parms->save.opdr || (recon->moao && !parms->gpu.moao)){
 	cp2cpu(&simu->opdr, 0, curecon->opdr_vec, 1, curecon->cgstream[0]);
     }
@@ -759,8 +757,11 @@ void gpu_tomo(SIM_T *simu){
 	if(tmp->nx!=1 || tmp->ny!=1 || tmp->p[0]->nx!=1 || tmp->p[0]->ny!=1){
 	    error("Wrong format");
 	}
+	curecon->cgstream->sync();
 	simu->deltafocus=tmp->p[0]->p[0];
 	scellfree(tmp); 
+    }else{
+	curecon->cgstream->sync();
     }
     cudaProfilerStop();
     toc_test("Tomo");
@@ -779,10 +780,25 @@ void gpu_fit(SIM_T *simu){
     gpu_fit_test(simu);
 #endif
     toc_test("Before FitR");
+    curcell *fitsave=NULL;//for debugging purpose.
+    warning_once("remove fitsave after debugging\n");
+    curcellcp(&fitsave, curecon->dmfit, curecon->cgstream[0]);
     simu->cgres->p[1]->p[simu->reconisim]=
     gpu_fit_do(parms, recon, curecon->dmfit, NULL, curecon->opdr, curecon->cgstream[0]);
     cp2cpu(&simu->dmfit, 0, curecon->dmfit_vec, 1, curecon->cgstream[0]);
     curecon->cgstream->sync();
+    if(simu->reconisim>0 && simu->cgres->p[1]->p[simu->reconisim]>simu->cgres->p[1]->p[simu->reconisim-1]*2){
+	warning("simu->reconisim=%d: fit didn't converge. cgres=%g\n", 
+		simu->reconisim, simu->cgres->p[1]->p[simu->reconisim]);
+	curcellwrite(curecon->dmfit, "dbg_dmfit_%d", simu->reconisim);
+	curcellwrite(curecon->opdr, "dbg_opdr_%d", simu->reconisim);
+	curcellwrite(fitsave, "dbg_dmfitlast_%d", simu->reconisim);
+	curcellcp(&curecon->dmfit, fitsave, curecon->cgstream[0]);
+	double newres=gpu_fit_do(parms, recon, curecon->dmfit, NULL, curecon->opdr, curecon->cgstream[0]);
+	curcellwrite(curecon->dmfit, "dbg_dmfitredo_%d", simu->reconisim);
+	info("newres=%g\n", newres);
+    }
+    curfree(fitsave);
     /*Don't free opdr. Needed for warm restart in tomo.*/
     toc_test("Fit");
 }
@@ -793,4 +809,5 @@ void gpu_recon_mvm(SIM_T *simu){
     cp2gpu(&curecon->gradin, parms->tomo.psol?simu->gradlastol:simu->gradlastcl);
     curcellmm(&curecon->dmfit_vec, 0., curecon->MVM, curecon->gradin,"nn", 1., curecon->cgstream[0]);
     cp2cpu(&simu->dmerr, 0., curecon->dmfit_vec, 1., curecon->cgstream[0]);
+    curecon->cgstream->sync();
 }

@@ -329,6 +329,7 @@ static void readcfg_powfs(PARMS_T *parms){
 	    parms->powfs[ipowfs].llt=calloc(1, sizeof(LLT_CFG_T));
 	    parms->powfs[ipowfs].llt->d=readcfg_dbl("%sllt.d",prefix);
 	    parms->powfs[ipowfs].llt->widthp=readcfg_dbl("%sllt.widthp",prefix);
+	    parms->powfs[ipowfs].llt->ttrat=readcfg_dbl("%sllt.ttrat",prefix);
 	    parms->powfs[ipowfs].llt->fnrange=readcfg_str("%sllt.fnrange",prefix);
 	    parms->powfs[ipowfs].llt->fnprof=readcfg_str("%sllt.fnprof",prefix);
 	    parms->powfs[ipowfs].llt->fnamp=readcfg_str("%sllt.fnamp",prefix);

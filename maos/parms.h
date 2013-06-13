@@ -112,6 +112,7 @@ typedef struct LLT_CFG_T{
     int colsim;    /**<starting column to use in fn for ETF in simulation*/
     int colsimdtrat;/**<change to next sodium profile during simulation every
 		       colsimdtrat time step*/
+    double ttrat;  /**<Ratio of uplink jitter to downlink jitter due to M2 windshake.*/
 } LLT_CFG_T;
 /**
    contains input parameters for each type of wfs (powfs).

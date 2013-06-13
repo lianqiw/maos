@@ -396,8 +396,8 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		    parms->powfs[ipowfs].llt->misreg[0], 
 		    parms->powfs[ipowfs].llt->misreg[1], 
 		    dtisim, 1, stream);
+	float ttx=0,tty=0;
 	if((simu->uptreal && simu->uptreal->p[iwfs]) ||pistatout||parms->sim.uptideal){
-	    float ttx,tty;
 	    if(pistatout||parms->sim.uptideal){
 		//warning("Remove tip/tilt in uplink ideally\n");
 		float *lltg;
@@ -417,12 +417,20 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	    PDMAT(simu->uptcmds->p[iwfs], puptcmds);
 	    puptcmds[isim][0]=ttx;
 	    puptcmds[isim][1]=tty;
+	}/*if uptreal */
+	if(simu->telws){
+	    float tt=simu->telws->p[isim];
+	    float angle=simu->winddir?simu->winddir->p[0]:0;
+	    ttx+=tt*cosf(angle)*parms->powfs[ipowfs].llt->ttrat;
+	    tty+=tt*sinf(angle)*parms->powfs[ipowfs].llt->ttrat;
+	}
+	if(ttx!=0 && tty!=0){
 	    /* add tip/tilt to opd  */
 	    const double dx=powfs[ipowfs].llt->pts->dx;
 	    const double ox=powfs[ipowfs].llt->pts->origx[0];
 	    const double oy=powfs[ipowfs].llt->pts->origy[0];
 	    add_tilt_do<<<1, dim3(16,16), 0, stream>>>(lltopd->p, nlx, nlx, ox, oy, dx, ttx, tty);
-	}/*if upt */
+	}
 	ctoc("llt opd");
 	int nlwvf=nlx*parms->powfs[ipowfs].embfac;
 	cudaMalloc(&lwvf, nlwvf*nlwvf*sizeof(fcomplex));
