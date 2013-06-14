@@ -54,13 +54,28 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     int notf=1;
     int has_ncpa=0;
     if(powfs[ipowfs].opdbias && parms->powfs[ipowfs].ncpa_method==2){
-	notf=parms->powfs[ipowfs].nwfs;
+	//check whether opdbias is different between wfs[0] and following.
+	int different=0;
+	for(int iwfs=1; iwfs<parms->powfs[ipowfs].nwfs; iwfs++){
+	    if(ddiff(powfs[ipowfs].opdbias->p[0], powfs[ipowfs].opdbias->p[iwfs])>1e-4){
+		different=1;
+	    }else{
+		info("powfs[%d].opdbias[%d] is same as powfs[%d].opdbias[0]\n", 
+		     ipowfs, iwfs, ipowfs);
+	    }
+	}
+	if(different){
+	    notf=parms->powfs[ipowfs].nwfs;
+	}else{
+	    notf=1;
+	}
 	has_ncpa=1;
     }else if(powfs[ipowfs].nlocm){
 	notf=MAX(notf,powfs[ipowfs].nlocm);
     }else{
 	notf=1;
     }
+    info("notf=%d\n", notf);
     if(powfs[ipowfs].intstat->otf){
 	ccellfreearr(powfs[ipowfs].intstat->otf, powfs[ipowfs].intstat->notf);
     }

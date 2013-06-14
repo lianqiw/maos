@@ -1363,7 +1363,7 @@ X(mat)* X(interp1)(X(mat) *xin, X(mat) *yin, X(mat) *xnew){
 /**
    embed a ninx*niny matrix in into A with optional rotation by -theta CCW
    (coordinate rotate theta CCW) around the fft center. Used to rotate the PSF
-   from x-y to radial-azimuthal coordinate in radial format CCD.  
+   from x-y to radial-azimuthal coordinate in radial format CCD. A may be bigger or smaller than B.
    \todo{
    merge this definition with cembed in cmat.c
    }
@@ -1376,8 +1376,8 @@ void X(embed)(X(mat) *restrict A, X(mat) *restrict B, const double theta){
     const long nouty=A->ny;
     memset(A->p, 0, sizeof(T)*noutx*nouty);
     if(fabs(theta)<1.e-10){/*no rotation. */
-	const long skipx=(noutx-ninx)/2;
-	const long skipy=(nouty-niny)/2;
+	const long skipx=(noutx-ninx-1)/2;//-1 to handle odd case
+	const long skipy=(nouty-niny-1)/2;
 	long ixstart=0, ixend=ninx;
 	long iystart=0, iyend=niny;
 	if(skipx<0){

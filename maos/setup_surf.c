@@ -467,11 +467,143 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
 	spcellwrite(recon->HA,"%s/HA_ncpa",dirsetup);
     }
 }
+void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){    
+	//Spherical aberration
+	if(parms->powfs[ipowfs].saspherical!=0){
+	    if(fabs(parms->powfs[ipowfs].saspherical)<1){
+		error("powfs%d: saspherical=%g should be in nm.\n", 
+		      ipowfs, parms->powfs[ipowfs].saspherical);
+	    }
+	    double err=parms->powfs[ipowfs].saspherical*1e-9;
+
+	    /*
+	      The OPD is 
+	      Phi=f(r)-ar^2-b;
+	      which r^2=x^2+y^2.
+	      f(r) was r^4 for spherical aberration. 
+	      It is changed to new form on 2013-05-16 based on measurements.
+
+	      We first minimize \Int phi^2, then use phi.
+	      let 
+	      R2=\Int r^2
+	      R4=\Int r^4
+	      Rf=\Int f(r)
+	      Rf2=\Int f(r)*r^2. 
+
+	      We have
+	      b=(R4Rf-R2R6)/(R4-R2R2);
+	  
+	    */
+	    const int nx=powfs[ipowfs].pts->nx;
+	    //Can be upgraded to actual amplitude for fill factor.
+	    dmat* ampw=dnew(nx,nx);
+	    for(int ix=0; ix<nx*nx; ix++){
+		ampw->p[ix]=1;
+	    }
+	    normalize_sum(ampw->p, ampw->nx*ampw->ny, 1);
+	    PDMAT(ampw, pampw);
+	    
+	    double nx2=(nx-1)*0.5;
+	    double fill1d=sqrt(parms->powfs[ipowfs].safill2d);
+	    //normalize x,y from -1 to 1 in clear aperture
+	    double Rx2=pow(fill1d*nx/2, -2);
+	    dmat *opdi=dnew(nx, nx); PDMAT(opdi, popdi);
+	    double R2=0, R4=0, Rf2=0, Rf=0;
+	    for(int iy=0; iy<nx; iy++){
+		for(int ix=0; ix<nx; ix++){
+#define MEASURED_LENSLET 0
+		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+#if MEASURED_LENSLET
+		    double xx=(iy-nx2)*(iy-nx2)*Rx2;
+		    double yy=(ix-nx2)*(ix-nx2)*Rx2;
+		    popdi[iy][ix]=-50.8+49.2*yy+316.6*xx+77.0*yy*yy-309*yy*xx-260.4*xx*xx;
+#else
+		    popdi[iy][ix]=rr*rr;
+#endif
+		    double amp=pampw[iy][ix];
+		    R2+=rr*amp;
+		    R4+=rr*rr*amp;
+		    Rf+=popdi[iy][ix]*amp;
+		    Rf2+=popdi[iy][ix]*rr*rr*amp;
+		}
+	    }		
+	    double b=(R2*Rf2-R4*R4)/(R2*R2-R4);
+	    double a=(R4-b)/R2;
+	    info("a=%g, b=%g\n", a,b);
+	    double var=0;
+	    for(int iy=0; iy<nx; iy++){
+		for(int ix=0; ix<nx; ix++){
+		    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+		    popdi[iy][ix]-=a*rr+b;
+		    var+=popdi[iy][ix]*popdi[iy][ix]*pampw[iy][ix];
+		}
+	    }
+	    dfree(ampw);
+	    dscale(opdi, err/sqrt(var));
+	    if(!powfs[ipowfs].opdadd){
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	    }
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		if(!powfs[ipowfs].opdadd->p[jwfs]){
+		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].amp->nx, 1);
+		}
+		for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+		    for(int i=0; i<nx*nx; i++){
+			powfs[ipowfs].opdadd->p[jwfs]->p[nx*nx*isa+i]+=opdi->p[i];
+		    }
+		}
+	    }
+	    dfree(opdi);
+	}
+    }
+}
+void lenslet_safocuspv(const PARMS_T *parms, POWFS_T *powfs){
+    //defocus specified as P/V
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){  
+	if(parms->powfs[ipowfs].safocuspv!=0){
+	    if(fabs(parms->powfs[ipowfs].safocuspv)<1){
+		error("powfs%d: safocuspv should be in nm.\n", ipowfs);
+	    }
+	    double pv=parms->powfs[ipowfs].safocuspv*1e-9;
+	    info("powfs %d: Put in focus p/v value of %g to subaperture\n", ipowfs, pv*1e9);
+	    if(!powfs[ipowfs].opdadd){
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+	    }
+	    const int nx=powfs[ipowfs].pts->nx;
+	    const int nxsa=nx*nx;
+	    for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		if(!powfs[ipowfs].opdadd->p[jwfs]){
+		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].amp->nx, 1);
+		}
+		double nx2=(nx-1)*0.5;
+		double Rx2=pow(nx2, -2);//do not use fill2d here as defocus is caused by misregistration.
+		double rmax2=2*nx2*nx2*Rx2;
+		double scale=pv/rmax2;
+		for(int isa=0; isa<powfs[ipowfs].pts->nsa; isa++){
+		    for(int iy=0; iy<nx; iy++){
+			for(int ix=0; ix<nx; ix++){
+			    double rr=((iy-nx2)*(iy-nx2)+(ix-nx2)*(ix-nx2))*Rx2;
+			    powfs[ipowfs].opdadd->p[jwfs]->p[isa*nxsa+ix+iy*nx]+=rr*scale;
+			}
+		    }
+		}
+	    }
+	}
+    }
+}
 #include "mtch.h"
 #include "genseotf.h"
 void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *recon){
     if(parms->nsurf || parms->ntsurf){
-	TIC;tic;
+	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	    if(!powfs[ipowfs].opdadd){
+		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
+		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
+		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
+		}
+	    }
+	}
 	if(!aper->opdadd){
 	    aper->opdadd=dcellnew(parms->evl.nevl,1);
 	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
@@ -484,23 +616,18 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 		aper->opdfloc->p[idir]=dnew(recon->floc->nloc, 1);
 	    }
 	}
-	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	    if(!powfs[ipowfs].opdadd){
-		powfs[ipowfs].opdadd=dcellnew(parms->powfs[ipowfs].nwfs, 1);
-		for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
-		    powfs[ipowfs].opdadd->p[jwfs]=dnew(powfs[ipowfs].npts, 1);
-		}
-	    }
-	}
-
-	if(parms->ntsurf>0){
-	    setup_surf_tilt(parms, aper, powfs, recon);
-	}
-	if(parms->nsurf>0){
-	    setup_surf_perp(parms, aper, powfs, recon);
-	}
-	toc("surf prop");
     }
+    TIC;tic;
+    if(parms->ntsurf>0){
+	setup_surf_tilt(parms, aper, powfs, recon);
+    }
+    if(parms->nsurf>0){
+	setup_surf_perp(parms, aper, powfs, recon);
+    }
+    toc("surf prop");
+    //Setup lenslet profile
+    lenslet_saspherical(parms, powfs);
+    lenslet_safocuspv(parms, powfs);
     if(parms->sim.ncpa_calib){//calibrate NCPA
 	int any_evl=0;
 	if(aper->opdadd){

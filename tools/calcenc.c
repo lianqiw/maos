@@ -24,7 +24,7 @@
 
 #include "../lib/aos.h"
 
-static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
+static void calcenc(const char *fn, double dstep, double rmax, int type, int nthread){
     char fnout[PATH_MAX];
     char *suffix=strstr(fn, ".bin");
     if(!suffix) suffix=strstr(fn, ".fits");
@@ -47,50 +47,57 @@ static void calcenc(const char *fn, dmat *dvec, int type, int nthread){
     default:
 	error("Not implemented\n");
     }
-    if(exist(fnout)){
+    /*if(exist(fnout)){
 	if(fmtime(fn)<fmtime(fnout)){
 	    info2("%s: skip\n", fn);
 	    return;
 	}
-    }
+	}*/
     file_t *fp=zfopen(fn, "r");
     file_t *fpout=zfopen(fnout, "w");
     info2("%s --> %s\n", fn, fnout);
     header_t header;
     read_header(&header, fp);
-    int free_dvec=0;
-    if(iscell(header.magic)){
+    if(iscell(header.magic)){//cell array.
 	write_header(&header, fpout);
-	for(long i=0; i<header.nx*header.ny; i++){
-	    info2("%ld of %ld\n", i, (long)(header.nx*header.ny));
-	    dmat *psf=dreaddata(fp, &header);
-	    if(!dvec){
-		free_dvec=1;
-		dvec=dlinspace(0, 1, psf->nx);
+	long ncell=header.nx*header.ny;
+	for(long i=0; i<ncell; i++){
+	    info2("%ld of %ld\n", i, ncell);
+	    dmat *psf=dreaddata(fp, NULL);
+	    dmat *enc=NULL;
+	    if(psf){
+		dmat *dvec=dlinspace(0, dstep, rmax>0?rmax:psf->nx);
+		enc=denc(psf, dvec, type, nthread);
+		dfree(dvec);
 	    }
-	    dmat *enc=denc(psf, dvec, type, nthread);
 	    dwritedata(fpout, enc);
 	    dfree(psf); dfree(enc);
 	}
-    }else{
+    }else{//fits file. many dmats without a cell.
 	int nenc=0;
 	dmat **encs=NULL;
 	do{
 	    dmat *psf=dreaddata(fp, &header);
-	    if(!dvec){
-		free_dvec=1;
-		dvec=dlinspace(0, 1, psf->nx);
+	    dmat *enc=NULL;
+	    if(psf){
+		dmat *dvec=dlinspace(0, dstep, rmax>0?rmax:psf->nx);
+		enc=denc(psf, dvec, type, nthread);
+		dfree(dvec);
 	    }
-	    dmat *enc=denc(psf, dvec, type, nthread);
 	    nenc++;
 	    encs=realloc(encs, nenc*sizeof(dmat*));
 	    encs[nenc-1]=enc;
+	    dfree(psf);
 	}while(!read_header2(&header, fp));
 	dcell *encs2=dcellnew(nenc, 1);
 	memcpy(encs2->p, encs, sizeof(dmat*)*nenc);
-	dcellwritedata(fpout, encs2);
+	if(nenc==1){
+	    dwritedata(fpout, encs2->p[0]);
+	}else{
+	    dcellwritedata(fpout, encs2);
+	}
+	dcellfree(encs2);
     }
-    if(free_dvec) dfree(dvec);
     zfclose(fp);
     zfclose(fpout);
 }
@@ -117,16 +124,7 @@ int main(int argc, char *argv[]){
     int nthread=NCPU;
     int ipos=0;
     int type=0;/*default is square */
-    /*
-    ARGOPT_T options[]={
-	{"help",    'h', T_INT, 2, usage, NULL},
-	{"nthread", 'n', T_INT, 1, &nthread, NULL},
-	{"diam",    'd', T_DBL, 1, &rmax, NULL},
-	{"step",    's', T_INT, 1, &dstep, NULL},
-	{"type",    't', T_INT, 1, &type, NULL},
-	{NULL, 0,0,0,NULL,NULL}};
-    char *cmds=parse_argopt(argc, argv, options);
-    */
+  
     static struct option long_options[]={
 	{"nthread", 1, 0, 'n'},
 	{"diam",    1, 0, 'd'},
@@ -161,13 +159,8 @@ int main(int argc, char *argv[]){
 	}
     }
     ipos=optind;
-    dmat *dvec=NULL;
-    if(rmax>0){
-	dvec=dlinspace(0, dstep, (long)ceil(rmax/dstep));
-    }
     THREAD_POOL_INIT(nthread); ;
     for(; ipos<argc; ipos++){
-	calcenc(argv[ipos], dvec, type, nthread);
+	calcenc(argv[ipos], dstep, rmax, type, nthread);
     }
-    dfree(dvec);
 }

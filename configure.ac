@@ -452,7 +452,7 @@ if test "$has_fftw" = "no" ;then #fftw does not exist in system.
 else
    LDFFT=""
 fi
-AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="yes")
+AC_ARG_ENABLE(fftw-threads, [ --disable-fftw-threads Disable FFTW threads], use_fftw_threads="$enableval", use_fftw_threads="no")
 if test $use_fftw_threads = "yes" ;then
      AC_CHECK_LIB([fftw3_threads], [fftw_init_threads], [has_fftw_threads="yes"],[has_fftw_threads="no"],[$LDFFT])
      AC_CHECK_LIB([fftw3_threads], [omp_get_num_threads], [has_fftw_omp="yes"], [has_fftw_omp="no"],[$LDFFT])
