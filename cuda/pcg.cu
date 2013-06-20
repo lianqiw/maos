@@ -31,7 +31,7 @@ extern "C"
 /* dest = a/b */
 __global__ static void div_do(float *restrict dest, const float *restrict a, const float *restrict b){
     dest[0]=a[0]/b[0];
-    if( !isfinite(dest[0])) dest[0]=0;
+    if(!isfinite(dest[0])) dest[0]=0;
 }
 /* dest = a/b;then b=a*/
 __global__ static void div_assign_do(float *restrict dest, const float *restrict a, float *restrict b){
@@ -64,19 +64,20 @@ __global__ static void div_sqrt_do(float *restrict dest, const float *restrict a
 				   const float *restrict b){
     dest[0]=sqrt(a[0]/b[0]);
 }
-static inline void pcg_residual(float *r0r0, float *r0z1, float *r0z0, curcell *r0, 
+/**Only use kernels to avoid synchronization*/
+static inline void pcg_residual(float *r0r0, float *rkzk, float *rr0, curcell *r0, 
 				int precond, cudaStream_t stream){
     if(precond){
 	/*r0r0=r0'*r0; */
 	curcellinn_add(r0r0, r0, r0, stream);
-	/*r0r0=sqrt(r0r0/r0z0); */
-	div_sqrt_do<<<1,1,0,stream>>>(r0r0, r0r0, r0z0);
+	/*r0r0=sqrt(r0r0/rr0); */
+	div_sqrt_do<<<1,1,0,stream>>>(r0r0, r0r0, rr0);
     }else{
-	/*r0r0=sqrt(r0z1/r0z0); */
-	div_sqrt_do<<<1,1,0,stream>>>(r0r0, r0z1, r0z0);
+	/*r0r0=sqrt(rkzk/rr0); */
+	div_sqrt_do<<<1,1,0,stream>>>(r0r0, rkzk, rr0);
     }
 }
-
+#define DEBUG_OPDR 1
 #define TIMING 0
 /**
    The PCG algorithm. Copy of lib/pcg.c, but replacing dcell with curcell.
@@ -85,6 +86,8 @@ static inline void pcg_residual(float *r0r0, float *r0z1, float *r0z0, curcell *
    curcellinn implemented with kernel takes 0.193 ms each call with 256x32 split. 0.158 with 128x16 split. 0.137 with 64x64 split.
    curcelladd takes 0.048 ms per call.
    return non-zero during unconvergence.
+
+   TODO: With Compute Capability of 4.0, all operations can be done in one big kernel, which launches other kernels.
  */
 float gpu_pcg(curcell **px, 
 	      G_CGFUN Amul, const void *A, 
@@ -110,20 +113,21 @@ float gpu_pcg(curcell **px,
     curcell *&p0=cg_data->p0;
     curcell *&Ap=cg_data->Ap;
     float residual=-1;/*Only useful if PRINT_RES is set*/
-    int ntot=maxiter*3+3;
+    int ntot=maxiter*2+3;
     if(!cg_data->store){
 	DO(cudaMalloc(&cg_data->store, ntot*sizeof(float)));
     }
     float *store=cg_data->store;
     DO(cudaMemsetAsync(store, 0, ntot*sizeof(float),stream));
-    float *r0z0=store; store++;
-    float *r0r0=store; store+=maxiter;
-    float *r0z1=store; store++;
+    float *rr0=store; store++;
+    float *rkzk=store; store++;
     float *bk  =store; store++;
-    float *r0z2=store; store+=maxiter;
+    float *rmzm=store; store+=maxiter;
     float *ak  =store; store+=maxiter;
-    curcellinn_add(r0z0, b, b, stream);//r0z0=b*b;
-    float diff[maxiter];
+    curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
+    float *diff;
+    cudaMallocHost(&diff, sizeof(float)*(maxiter+1));//Only this enables async transfer
+    memset(diff, 0, sizeof(float)*(maxiter+1));
 #if PRINT_RES == 2
     fprintf(stderr, "GPU %sCG %d:",  Mmul?"P":"", maxiter);
 #endif
@@ -139,9 +143,10 @@ float gpu_pcg(curcell **px,
 	if(k==maxiter){
 	    k=0;//reset 
 	    kover++;
-	    DO(cudaMemsetAsync(r0r0, 0, (ntot-1)*sizeof(float),stream));
+	    memset(diff, 0, sizeof(float)*(maxiter+1));
+	    DO(cudaMemsetAsync(rr0+1, 0, (ntot-1)*sizeof(float),stream));
 	}
-	if(k%500==0){/*initial or re-start every 50 steps*/
+	if(k%500==0){/*initial or re-start every 500 steps*/
 	    RECORD(1);
 	    /*computes r0=b-A*x0 */
 	    curcellcp(&r0, b, stream);/*r0=b; */
@@ -157,9 +162,9 @@ float gpu_pcg(curcell **px,
 	    curcellcp(&p0, z0, stream);
 	    RECORD(5);
 	    if(k!=0){
-		cudaMemsetAsync(r0z1, 0, sizeof(float), stream);
+		cudaMemsetAsync(rkzk, 0, sizeof(float), stream);
 	    }
-	    curcellinn_add(r0z1, r0, z0, stream);//9
+	    curcellinn_add(rkzk, r0, z0, stream);//9
 	    RECORD(6);
 #if TIMING 
 	    CUDA_SYNC_STREAM;
@@ -171,26 +176,27 @@ float gpu_pcg(curcell **px,
 		  maxiter, times[1], times[2], times[3], times[4], times[5], times[6]);
 #endif
 	}
-	if (PRINT_RES || k+2>maxiter){
-	    pcg_residual(r0r0+k, r0z1, r0z0, r0, Mmul?1:0, stream);
-	    cudaMemcpyAsync(&diff[k], r0r0+k, sizeof(float), MEMCPY_D2H, stream);
+	if (PRINT_RES){
+	    pcg_residual(&diff[k], rkzk, rr0, r0, Mmul?1:0, stream);
 	}
 	RECORD(7);
 #if PRINT_RES == 2
 	info2("%.5f ", diff[k]);
 #endif	
-	Amul(&Ap, 0, A, p0, 1, stream);
-	RECORD(8);
-	/*ak=r0z1/(p0'*Ap); */
-	curcellinn_add(ak+k, p0, Ap, stream);
-	RECORD(9);
-	div_do<<<1,1,0,stream>>>(ak+k, r0z1, ak+k);
-	/*x0=x0+ak*p0 */
+	/*Ap=A*p0*/
+	Amul(&Ap, 0, A, p0, 1, stream); RECORD(8);
+	/*ak[k]=rkzk/(p0'*Ap); */
+	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
+	div_do<<<1,1,0,stream>>>(ak+k, rkzk, ak+k);
+	/*x0=x0+ak[k]*p0 */
 	curcelladd(&x0, p0, ak+k, 1, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
 	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres) ||kover>=3){
-	    residual=diff[k];
+#if DEBUG_OPDR == 1 //for debugging a recent error. compute the residual for the last step
+	    curcelladd(&r0, Ap, ak+k, -1, stream);
+	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
+#endif
 #if TIMING 
 	    CUDA_SYNC_STREAM;
 	    for(int i=7; i<11; i++){
@@ -202,7 +208,7 @@ float gpu_pcg(curcell **px,
 #endif
 	    break;
 	}
-	/*r0=r0-ak*Ap */
+	/*r0=r0-ak[k]*Ap */
 	curcelladd(&r0, Ap, ak+k, -1, stream);
 	RECORD(11);
 	/*preconditioner */
@@ -210,11 +216,11 @@ float gpu_pcg(curcell **px,
 	    Mmul(&z0,M,r0, stream);
 	}
 	RECORD(12);
-	/*r0z2=r0'*z0 */
-	curcellinn_add(r0z2+k, r0, z0, stream);
+	/*rmzm[k]=r0'*z0 for next step*/
+	curcellinn_add(rmzm+k, r0, z0, stream);
 	RECORD(13);
-	/*bk=r0z2/r0z1; r0z1=r0z2*/
-	div_assign_do<<<1,1,0,stream>>>(bk, r0z2+k, r0z1);
+	/*bk=rmzm/rkzk; rkzk=rmzm*/
+	div_assign_do<<<1,1,0,stream>>>(bk, rmzm+k, rkzk);
 	/*p0=bk*p0+z0 */
 	curcelladd(&p0, bk, z0, stream);
 	RECORD(14);
@@ -236,10 +242,16 @@ float gpu_pcg(curcell **px,
 #elif PRINT_RES==2
     fprintf(stderr, "\n");
 #endif
+#if DEBUG_OPDR
+    residual=diff[maxiter];
+#else
+    residual=diff[maxiter-1];
+#endif
 #if TIMING 
     DO(cudaEventElapsedTime(&times[15], event[0], event[15]));
     times[15]*=1e3;
     info2("CG %d total %4.0f\n", maxiter, times[15]);
 #endif
+    cudaFreeHost(diff);
     return residual;
 }

@@ -76,8 +76,8 @@ __global__ void add_ngsmod_do(float *restrict opd, float (*restrict loc)[2], int
 */
 __global__ void add_do(float *restrict a, float *alpha1, float alpha2, 
 		       const float *restrict b, float *beta1, float beta2, int n){
-    float alpha=alpha1?*alpha1*alpha2:alpha2;
-    float beta=beta1?*beta1*beta2:beta2;
+    float alpha=alpha1?(*alpha1*alpha2):alpha2;
+    float beta=beta1?(*beta1*beta2):beta2;
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	a[i]=a[i]*alpha+b[i]*beta;
@@ -85,14 +85,14 @@ __global__ void add_do(float *restrict a, float *alpha1, float alpha2,
 }
 
 __global__ void add_do(float *restrict a, const float *restrict b, float *beta1, float beta2, int n){
-    float beta=beta1?*beta1*beta2:beta2;
+    float beta=beta1?(*beta1*beta2):beta2;
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	a[i]+=b[i]*beta;
     }
 }
 __global__ void add_do(float *restrict a, float *alpha1, float alpha2, const float *restrict b,  int n){
-    float alpha=alpha1?*alpha1*alpha2:alpha2;
+    float alpha=alpha1?(*alpha1*alpha2):alpha2;
     const int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=step){
 	a[i]=a[i]*alpha+b[i];

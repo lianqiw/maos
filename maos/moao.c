@@ -196,7 +196,7 @@ moao_FitR(dcell **xout, const RECON_T *recon, const PARMS_T *parms, int imoao,
 			 thetax*ht, thetay*ht, scale, 0, 0);
 	}
     }
-    for(int idm=0; idm<recon->ndm; idm++){
+    for(int idm=0; idm<parms->ndm; idm++){
 	const double ht = parms->dm[idm].ht;
 	double scale=1.-ht/hs;
 	prop_nongrid_cubic(recon->aloc[idm], dmcommon->p[idm]->p,

@@ -61,10 +61,17 @@ void maos(const PARMS_T *parms){
 	    exit_success=1;/*tell mem.c to print non-freed memory in debug mode. */
 	    exit(0);
 	}
-	recon = setup_recon(parms, powfs, aper);
+	recon = setup_recon_init(parms);
+	/*Setup DM fitting parameters so we can flatten the DM*/
+	setup_recon_dm(recon, parms);
+	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
+	setup_surf(parms, aper, powfs, recon);
+    }
+
+    if(!parms->sim.evlol){
+	setup_recon(recon, parms, powfs, aper);
 	info2("After setup_recon:\t%.2f MiB\n",get_job_mem()/1024.);
     }
-    setup_surf(parms, aper, powfs, recon);/*setting up M1/M2/M3 surface OPD. */
     global->powfs=powfs;
     global->aper=aper;
     global->recon=recon;

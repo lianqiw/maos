@@ -273,7 +273,7 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
    Wrap of the DM fitting operation
 
    opdr is the OPD input.
-   fitx is the right hand side vector computed from opdr. Allow NULL.
+   fitx is the right hand side vector computed from opdr for output. Allow NULL.
    fitr is the DM fitting result.
 */
 double gpu_fit_do(const PARMS_T *parms,const RECON_T *recon, curcell *fitr, curcell *fitx, curcell *opdr, stream_t &stream){

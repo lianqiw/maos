@@ -32,15 +32,14 @@ extern "C"
 /*
   If merge the operation in to gpu_prop_grid_adaptive_do, need to do atomic
 operation because previous retracing starts at offo, not 0.  */
-__global__ void gpu_laplacian_do(GPU_PROP_GRID_T *datai, float **inall, float **in2all, int nwfs, float alpha){
+__global__ void gpu_laplacian_do(GPU_PROP_GRID_T *datai, float **outall, float **inall, int nwfs, float alpha){
     float *restrict in, *restrict out;
-    {
-	const int ips=blockIdx.z;
-	in=in2all[ips];
-	out=inall[ips];
-	datai+=nwfs*ips;
-	//GPU_PROP_GRID_T *datai=data+nwfs*ips;
-    }
+    
+    const int ips=blockIdx.z;
+    in=inall[ips];
+    out=outall[ips];
+    datai+=nwfs*ips;
+    
     const int nx=datai->nxi;
     const int ny=datai->nyi;
     const float alpha2=datai->l2c*alpha;
@@ -151,15 +150,17 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 		for(int iy=iy0; iy<ny; iy+=stepy){
 		    float fracy;
 		    int ky;
-		    {
-			float temp;
-			fracy=modff(dispy+iy*ratio, &temp);
-			ky=(int)temp;
-		    }
+		    
+		    float temp;
+		    fracy=modff(dispy+iy*ratio, &temp);
+		    ky=(int)temp;
+		    
 		    for(int ix=ix0; ix<nx; ix+=stepx){
+
 			float jx;
 			float fracx=modff(dispx+ix*ratio, &jx);
 			int kx=(int)jx;
+
 			float temp=out[ix+iy*nxo]*alpha;
 			atomicAdd(&in[kx+      ky*nxi], temp*(1.f-fracx)*(1.f-fracy));
 			atomicAdd(&in[kx+1    +ky*nxi], temp*fracx*(1.f-fracy));
@@ -170,18 +171,18 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 	    }else{
 		for(int iy=iy0; iy<ny; iy+=stepy){
 		    float fracy; int ky;
-		    {
-			float jy;
-			fracy=modff(dispy+iy*ratio, &jy);
-			ky=(int)jy;
-		    }
+		    
+		    float jy;
+		    fracy=modff(dispy+iy*ratio, &jy);
+		    ky=(int)jy;
+		    
 		    for(int ix=ix0; ix<nx; ix+=stepx){
 			float fracx; int kx;
-			{
-			    float jx;
-			    fracx=modff(dispx+ix*ratio, &jx);
-			    kx=(int)jx;
-			}
+			
+			float jx;
+			fracx=modff(dispx+ix*ratio, &jx);
+			kx=(int)jx;
+			
 			out[ix+iy*nxo]+=
 			    alpha*(+(in[kx+      ky*nxi]*(1.f-fracx)+
 				     in[kx+1+    ky*nxi]*fracx)*(1.f-fracy)
@@ -486,6 +487,10 @@ void gpu_TomoRt(curcell **gout, float beta, const void *A, const curcell *xin, f
 /*
   Tomography left hand size matrix. Computes xout = beta*xout + alpha * Hx' G' C Gp Hx * xin.
   xout is zeroed out before accumulation.
+
+  Be Careful about big kernels 
+  1) When a kernel thread reads locations written by other threads, synchronization may be required unless gauranteed in the same wrap.
+  2) When a kernel thread writes to locations that may be written by others, atomic operations are required unless gauranteed in the same wrap.
 */
 void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
     curecon_t *curecon=cudata->recon;
@@ -508,14 +513,17 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     int ptt=!parms->recon.split || parms->tomo.splitlrt; 
     curmat *ttf=curecon->ttf;
     curzero(opdwfs->m, stream);
+    //xin to opdwfs
     gpu_prop_grid_adaptive_do<<<dim3(3,3, nwfs), dim3(16,16), 0, stream>>>
 	(curecon->hxdata, opdwfs->pm, xin->pm, nwfs, recon->npsr, 1, 'n');
     RECORD(1);
     curzero(ttf, stream);
+    //opdwfs to grad to ttf
     gpu_gp_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, grad->pm, ttf->p, ttf->p+nwfs*2, opdwfs->pm, ptt);
     RECORD(2);
     curzero(opdwfs->m, stream);
+    //grad and ttf to opdwfs
     gpu_gpt_do<<<dim3(24,1,nwfs), dim3(DIM_GP,1), 0, stream>>>
 	(curecon->gpdata, opdwfs->pm, ttf->p, ttf->p+nwfs*2, grad->pm, ptt);
     RECORD(3);
@@ -524,6 +532,7 @@ void gpu_TomoL(curcell **xout, float beta, const void *A, const curcell *xin, fl
     }else if(fabsf(beta-1.f)>EPS){
 	curscale(opdx->m, beta, stream);
     }
+    //opdwfs to opdx
     gpu_prop_grid_adaptive_do<<<dim3(3,3,recon->npsr), dim3(16,16), 0, stream>>>
 	(curecon->hxtdata, opdwfs->pm, opdx->pm, nwfs, recon->npsr, alpha, 't');
     RECORD(4);
@@ -564,11 +573,8 @@ double gpu_tomo_do(const PARMS_T *parms,const RECON_T *recon, curcell *opdr, cur
     RECORD(1);
     switch(parms->tomo.alg){
     case 0:
-	if(!opdr->m){
-	    error("opdr must be continuous\n");
-	}
-	if(!rhs->m){
-	    error("rhs must be continuous\n");
+	if(!opdr->m || !rhs->m){
+	    error("opdr and rhs must be continuous\n");
 	}
 	cuchol_solve(opdr->m->p, curecon->RCl, curecon->RCp, rhs->m->p, stream);
 	if(curecon->RUp){

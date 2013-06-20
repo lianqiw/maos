@@ -1,0 +1,344 @@
+/*
+  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "maos.h"
+#include "setup_recon.h"
+#include "recon_utils.h"
+
+/**
+   \file setup_recon_dm.c 
+
+   Setup grid and ray tracing operators regarding DM. This is independent of
+   1) WFS geometry or noise parameters
+   2) Tomography
+*/
+
+
+/**
+   Like ploc, but for DM fitting
+*/
+static void
+setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
+    if(parms->load.floc){
+	warning("Loading floc from %s\n", parms->load.floc);
+	recon->floc=locread("%s", parms->load.floc);
+	recon->fmap=loc2map(recon->floc);
+    }else{
+	double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
+	double guard=parms->tomo.guard*dxr;
+	map_t *fmap=create_metapupil_wrap 
+	    (parms,0,dxr,0,guard,0,0,0,parms->fit.square);
+	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
+	recon->fmap=fmap;
+	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
+    }
+    free(recon->fmap->p); recon->fmap->p=NULL;
+    /*create the weighting W for bilinear influence function. See [Ellerbroek 2002] */
+    if(parms->load.W){
+	if(!(zfexist("W0")&&zfexist("W1"))){
+	    error("W0 or W1 not exist\n");
+	}
+	warning("Loading W0, W1");
+	recon->W0=spread("W0");
+	recon->W1=dread("W1");
+    }else{
+	/*
+	  Compute W0,W1 weighting matrix that can be used to compute piston
+	  removed wavefront variance of OPD: RMS=OPD'*(W0-W1*W1')*OPD; W0 is
+	  sparse. W1 is a vector. These matrices are used for weighting in DM
+	  fitting.
+	*/
+	double rin=0;
+	if(parms->dbg.annular_W && parms->aper.din>0){
+	    warning("Define the W0/W1 on annular aperture instead of circular.\n");
+	    rin=parms->aper.din/2;
+	}
+	mkw_annular(recon->floc, 0, 0, rin, parms->aper.d/2,
+		    &(recon->W0), &(recon->W1));
+	if(parms->save.setup){
+	    spwrite(recon->W0, "%s/W0",dirsetup);
+	    dwrite(recon->W1, "%s/W1",dirsetup);
+	}
+	if(parms->save.setup){
+	    locwrite(recon->floc, "%s/floc",dirsetup);
+	}
+    }
+    loc_create_stat(recon->floc);
+}
+/**
+   Setup the deformable mirrors grid aloc. This is used for DM fitting.
+*/
+static void
+setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
+    const int ndm=parms->ndm;
+    if(ndm==0) return;
+    CALL_ONCE;
+    recon->amap=calloc(ndm, sizeof(map_t*));
+    recon->aembed=calloc(ndm, sizeof(long*));
+    if(parms->load.aloc){
+	char *fn=parms->load.aloc;
+	warning("Loading aloc from %s\n",fn);
+	int naloc;
+	recon->aloc=locarrread(&naloc,"%s",fn);
+	if(naloc!=ndm) error("Invalid saved aloc");
+    }else{
+	recon->aloc=calloc(ndm, sizeof(loc_t*));
+	/*int nxmax=0, nymax=0; */
+	for(int idm=0; idm<ndm; idm++){
+	    double ht=parms->dm[idm].ht;
+	    double dx=parms->dm[idm].dx;
+	    double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
+	    const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
+	    
+	    map_t *map=create_metapupil_wrap
+		(parms,ht,dx,offset,guard,0,0,0,parms->fit.square);
+	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
+	    recon->aloc[idm]=map2loc(map);
+	    recon->amap[idm]=map;
+	}
+	if(parms->save.setup){
+	    locarrwrite(recon->aloc,parms->ndm,"%s/aloc",dirsetup);
+	}
+    }
+    for(int idm=0; idm<parms->ndm; idm++){
+	if(!recon->amap[idm]){
+	    recon->amap[idm]=loc2map(recon->aloc[idm]);
+	}
+	recon->aembed[idm]=map2embed(recon->amap[idm]);
+    }
+
+    recon->alocm=calloc(ndm, sizeof(loc_t*));
+    for(int idm=0; idm<ndm; idm++){
+	if(parms->dm[idm].misreg){
+	    warning("Creating misregistration for DM.\n");
+	    dcell *misreg=dcellread("%s",parms->dm[idm].misreg); 
+	    PDCELL(misreg, pmisreg);
+	    if(misreg->nx!=2 || misreg->ny!=1)
+		error("%s is in wrong format\n",parms->dm[idm].misreg);
+	    recon->alocm[idm]=loctransform(recon->aloc[idm],NULL,pmisreg[0]);
+	}else{
+	    recon->alocm[idm]=recon->aloc[idm];
+	}
+    }
+    if(parms->save.setup){
+	locarrwrite(recon->alocm,parms->ndm,"%s/alocm",dirsetup);
+    }
+    recon->aimcc=dcellnew(ndm,1);
+    for(int idm=0; idm<ndm; idm++){
+	recon->aimcc->p[idm]=loc_mcc_ptt(recon->aloc[idm], NULL);
+	dinvspd_inplace(recon->aimcc->p[idm]);
+    }
+    recon->anx=calloc(ndm, sizeof(int));
+    recon->any=calloc(ndm, sizeof(int));
+    recon->anloc=calloc(ndm, sizeof(int));
+    for(int idm=0; idm<ndm; idm++){
+	recon->anx[idm]=recon->amap[idm]->nx;
+	recon->any[idm]=recon->amap[idm]->ny;
+	recon->anloc[idm]=recon->aloc[idm]->nloc;
+    }
+    /*Dealing with stuck/floating actuators. */
+    int anyfloat=0, anystuck=0;
+    for(int idm=0; idm<ndm; idm++){
+	if(parms->dm[idm].actstuck) anystuck=1;
+	if(parms->dm[idm].actfloat) anyfloat=1;
+    }
+    if(anystuck){
+	recon->actstuck=icellnew(parms->ndm, 1);
+	for(int idm=0; idm<ndm; idm++){
+	    if(!parms->dm[idm].actstuck) continue;
+	    recon->actstuck->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actstuck);
+	}
+    }
+    if(anyfloat){
+	recon->actfloat=icellnew(parms->ndm, 1);
+	for(int idm=0; idm<ndm; idm++){
+	    if(!parms->dm[idm].actfloat) continue;
+	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actfloat);
+	}
+	recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
+	if(parms->save.setup){
+	    spcellwrite(recon->actinterp, "%s/actinterp", dirsetup);
+	}
+    }
+}
+
+
+
+/**
+   Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
+static void
+setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
+    if(parms->load.HA && zfexist(parms->load.HA)){
+	warning("Loading saved HA\n");
+	recon->HA=spcellread("%s",parms->load.HA);
+    }else{
+	const int nfit=parms->fit.nfit;
+	const int ndm=parms->ndm;
+	recon->HA=spcellnew(nfit, ndm);
+	PDSPCELL(recon->HA,HA);
+	info2("Generating HA ");TIC;tic;
+	for(int ifit=0; ifit<nfit; ifit++){
+	    double hs=parms->fit.hs[ifit];
+	    for(int idm=0; idm<ndm; idm++){
+		const double ht=parms->dm[idm].ht;
+		const double scale=1.-ht/hs;
+		double displace[2];
+		displace[0]=parms->fit.thetax[ifit]*ht;
+		displace[1]=parms->fit.thetay[ifit]*ht;
+		HA[idm][ifit]=mkh(recon->aloc[idm], recon->floc, NULL,
+				  displace[0], displace[1], 
+				  scale,parms->dm[idm].cubic,parms->dm[idm].iac);
+	    }
+	}
+	toc2(" ");
+	if(parms->save.setup){
+	    spcellwrite(recon->HA,"%s/HA",dirsetup);
+	}
+    }
+    if(recon->actstuck){
+	warning2("Apply stuck actuators to HA\n");
+	act_stuck(recon->aloc, recon->HA, NULL, recon->actstuck);
+    	if(parms->save.setup){
+	    spcellwrite(recon->HA,"%s/HA_stuck",dirsetup);
+	}
+    }
+    if(recon->actfloat){
+	warning2("Apply float actuators to HA\n");
+	act_float(recon->aloc, &recon->HA, NULL, recon->actfloat);
+	if(parms->save.setup){
+	    spcellwrite(recon->HA,"%s/HA_float",dirsetup);
+	}
+    }
+}
+
+/**
+   Setup fitting low rank terms that are in the NULL space of DM fitting
+   operator. typically include piston on each DM and tip/tilt on certain
+   DMs. Becareful with tip/tilt contraint when using CBS.  */
+static void 
+fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
+    const int ndm=parms->ndm;
+    if(ndm>=3) warning("Low rank terms for 3 or more dms are not tested\n");
+    recon->fitNW=dcellnew(ndm,1);
+    double scl=recon->fitscl=1./recon->floc->nloc;
+    if(fabs(scl)<1.e-15){
+	error("recon->fitscl is too small\n");
+    }
+    /*computed outside. */
+    int lrt_tt=parms->fit.lrt_tt;
+    int nnw=0;
+    if(parms->fit.lrt_piston){
+	nnw+=ndm;
+    }
+    if(lrt_tt){
+	nnw+=2*(ndm-1);
+    }
+    if(nnw==0) return;
+    for(int idm=0; idm<ndm; idm++){
+	int nloc=recon->aloc[idm]->nloc;
+	recon->fitNW->p[idm]=dnew(nloc, nnw);
+    }
+    int inw=0;/*current column */
+    if(parms->fit.lrt_piston){
+	info2("Adding piston cr to fit matrix\n");
+	for(int idm=0; idm<ndm; idm++){
+	    int nloc=recon->aloc[idm]->nloc;
+	    double *p=recon->fitNW->p[idm]->p+(inw+idm)*nloc;
+	    for(int iloc=0; iloc<nloc; iloc++){
+		p[iloc]=scl;
+	    }
+	}
+	inw+=ndm;
+    }
+    if(lrt_tt){
+	double factor=0;
+	if(lrt_tt==1){
+	    info2("Adding TT cr on upper DMs to fit matrix.\n");
+	    factor=scl*2./parms->aper.d;
+	    for(int idm=1; idm<ndm; idm++){
+		int nloc=recon->aloc[idm]->nloc;
+		double *p=recon->fitNW->p[idm]->p+(inw+(idm-1)*2)*nloc;
+		double *p2x=p;
+		double *p2y=p+nloc;
+		for(int iloc=0; iloc<nloc; iloc++){
+		    p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
+		    p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+		}
+	    }
+	}else if(lrt_tt==2){/*Canceling TT. only valid for 2 DMs */
+	    warning("Adding Canceling TT cr to fit matrix. Deprecated\n");
+	    if(ndm!=2){
+		error("Only ndm=2 case is implemented\n");
+	    }
+	    for(int idm=0; idm<ndm; idm++){
+		int nloc=recon->aloc[idm]->nloc;
+		double *p=recon->fitNW->p[idm]->p+inw*nloc;
+		if(idm==0) factor=scl*2/parms->aper.d;
+		else if(idm==1) factor=-scl*2./parms->aper.d;
+		double *p2x=p;
+		double *p2y=p+nloc;
+		for(int iloc=0; iloc<nloc; iloc++){
+		    p2x[iloc]=recon->aloc[idm]->locx[iloc]*factor;/*x tilt */
+		    p2y[iloc]=recon->aloc[idm]->locy[iloc]*factor;/*y tilt */
+		}
+	    }
+
+	}
+	inw+=2*(ndm-1);
+    }
+    if(parms->fit.actslave){
+	/*
+	  2011-07-19: When doing PSFR study for MVR with SCAO, NGS. Found
+	  that slaving is causing mis-measurement of a few edge
+	  actuators. First try to remove W1. Or lower the weight. Revert
+	  back.
+	*/
+	recon->actslave=slaving(&recon->actcpl, recon->aloc, recon->HA, recon->W1,
+				recon->fitNW, recon->actstuck,
+				recon->actfloat, 0.1, 4./recon->floc->nloc*1e-4);
+	if(parms->save.setup){
+	    dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
+	    spcellwrite(recon->actslave,"%s/actslave",dirsetup);
+	}
+    }
+    if(parms->fit.actslave && parms->fit.alg==1){
+	//Only do in CG mode. Some problem in CBS SCAO mode.
+	recon->actinterp2=act_inactive_interp(recon->aloc, recon->HA, recon->W1);
+	if(parms->save.setup){
+	    spcellwrite(recon->actinterp2,"%s/actinterp2",dirsetup);
+	}
+    }
+    if(parms->save.setup){
+	dcellwrite(recon->fitNW,"%s/fitNW",dirsetup);
+    }
+}
+
+void setup_recon_dm(RECON_T *recon, const PARMS_T *parms){
+    CALL_ONCE;
+    /*setup DM actuator grid */
+    setup_recon_aloc(recon,parms);
+    /*Grid for DM fitting*/
+    setup_recon_floc(recon,parms);
+    if(parms->recon.alg==0 || parms->sim.ncpa_calib){
+	setup_recon_HA(recon,parms);
+	fit_prep_lrt(recon, parms);
+    }
+}

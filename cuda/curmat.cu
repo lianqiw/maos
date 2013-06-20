@@ -289,7 +289,7 @@ float curinn(const curmat *a, const curmat *b, cudaStream_t stream){
     cudaMemsetAsync(res, 0, sizeof(float), stream);
     inn_wrap(res, a->p, b->p, a->nx*a->ny, stream);
     cudaMemcpyAsync(&out, res, sizeof(float), cudaMemcpyDeviceToHost, stream);
-    cudaFree(res);
+    cudaFree(res);//this command is not synchrnous.
     return out;
 }
 
@@ -327,7 +327,6 @@ float curcellmax(const curcell *a, cudaStream_t stream){
     cudaMemsetAsync(res, 0,(n+1)*sizeof(float), stream);
     for(int i=0; i<n; i++){
 	int m=a->p[i]->nx*a->p[i]->ny;
-	info("n=%d, m=%d\n", n, m);
 	max_wrap(&res[i], a->p[i]->p, m, stream);
     }
     if(n>1) {

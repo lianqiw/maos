@@ -1,0 +1,37 @@
+/*
+  Copyright 2009-2013 Lianqi Wang <lianqiw@gmail.com> <lianqiw@tmt.org>
+  
+  This file is part of Multithreaded Adaptive Optics Simulator (MAOS).
+
+  MAOS is free software: you can redistribute it and/or modify it under the
+  terms of the GNU General Public License as published by the Free Software
+  Foundation, either version 3 of the License, or (at your option) any later
+  version.
+
+  MAOS is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+  A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License along with
+  MAOS.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+   \file setup_recon_init.c 
+
+   Initialize reconstruction parameters.
+*/
+
+RECON_T *recon setup_recon_init(const PARMS_T *parms){
+    CALL_ONCE;
+    RECON_T * recon = calloc(1, sizeof(RECON_T)); 
+    recon->parms=parms;
+    if(parms->recon.warm_restart){
+	info2("Using warm restart\n");
+    }else{
+	warning2("Do not use warm restart\n");
+    }
+    /*to be used in tomography. */
+    recon->nthread=parms->sim.nthread;
+    /*for recon->aloc dimension*/
+    recon->ndm=parms->ndm;
+}

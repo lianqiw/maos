@@ -19,17 +19,21 @@
 #ifndef SETUP_RECON_H
 #define SETUP_RECON_H
 #include "maos.h"
-RECON_T *setup_recon(const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
+//Called by maos.c
+RECON_T *setup_recon_init(const PARMS_T *parms);
+void setup_recon_dm(RECON_T *recon, const PARMS_T *parms);
+//Called by setup_recon.c
+void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
+void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms);
+void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms);
+void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
+void setup_recon_fit(RECON_T *recon, const PARMS_T *parms);
+void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs);
 void setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs);
+void setup_recon(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
 void free_recon(const PARMS_T *parms, RECON_T *recon);
 void free_recon_unused(const PARMS_T *parms, RECON_T *recon);
 
-void setup_recon_mvr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
-void setup_recon_mvr_mvm(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs);
-void setup_recon_lsr(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER_T *aper);
-void setup_recon_tomo_prep(RECON_T *recon, const PARMS_T *parms);
-void setup_recon_tomo_matrix(RECON_T *recon, const PARMS_T *parms, APER_T *aper);
-void setup_recon_tomo_update(RECON_T *recon, const PARMS_T *parms);
 void test_recon_GX(RECON_T *recon, const PARMS_T *parms, 
 		   const POWFS_T *powfs);
 void test_recon_GA(RECON_T *recon, const PARMS_T *parms, 

@@ -289,7 +289,6 @@ typedef struct RECON_T{
     icell *actfloat;   /**<floating actuators*/
     icell *actstuck;   /**<stuck actuators*/
 
-    dcell *opdxadd;    /**<additional OPD surface projected onto xloc for fitonly*/
     dcell *aimcc;      /**<used for tip/tilt removal from DM commands.*/
     dsp  *W0;          /**<floc weighting for circle of diam aper.d*/
     dmat *W1;          /**<floc weighting for circle of diam aper.d*/

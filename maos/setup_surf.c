@@ -41,14 +41,7 @@
 /**
    Propagate tilt surface from star at hs, along direction (thetax, thetay), to loc.
 */
-static void tsurf2loc(rectmap_t **tsurf, int ntsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs, double rot){
-    loc_t *locuse=NULL;
-    if(fabs(rot)>1e-10){
-	locuse=locdup(locin);
-	locrot(locuse, rot);
-    }else{
-	locuse=locin;
-    }
+static void tsurf2loc(rectmap_t **tsurf, int ntsurf, dmat *opd, loc_t *locin, double thetax, double thetay, double hs){
     for(int itsurf=0; itsurf<ntsurf; itsurf++){
 	const double alx=tsurf[itsurf]->txdeg/180*M_PI;
 	const double aly=tsurf[itsurf]->tydeg/180*M_PI;
@@ -69,10 +62,7 @@ static void tsurf2loc(rectmap_t **tsurf, int ntsurf, dmat *opd, loc_t *locin, do
 	/*2010-04-02: do not put - sign */
 	double bx=thetax*(d_img_focus+ftel)/d_img_exit;
 	double by=thetay*(d_img_focus+ftel)/d_img_exit;
-	proj_rect_grid(mapsurf,alx,aly,locuse,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
-    }
-    if(locuse!=locin){
-	locfree(locuse);
+	proj_rect_grid(mapsurf,alx,aly,locin,scalex,scaley, NULL,opd->p,scaleopd, d_img_exit, het, bx, by);
     }
 }
 
@@ -85,33 +75,31 @@ setup_surf_tilt(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	info("Loading tilt surface from %s\n", fn);
 	tsurf[itsurf]=rectmapread("%s",fn); 
     }
-    const double rot=-parms->aper.rotdeg/180.*M_PI;
-
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	tsurf2loc(tsurf, parms->ntsurf, aper->opdadd->p[ievl], aper->locs, 
-		  parms->evl.thetax[ievl], parms->evl.thetay[ievl], parms->evl.hs[ievl], rot);
+		  parms->evl.thetax[ievl], parms->evl.thetay[ievl], parms->evl.hs[ievl]);
     }
     if(parms->sim.ncpa_calib){
 	for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
 	    tsurf2loc(tsurf, parms->ntsurf, aper->opdfloc->p[ifit], recon->floc, 
-		      parms->sim.ncpa_thetax[ifit], parms->sim.ncpa_thetay[ifit], parms->sim.ncpa_hs[ifit], rot);
+		      parms->sim.ncpa_thetax[ifit], parms->sim.ncpa_thetay[ifit], parms->sim.ncpa_hs[ifit]);
 	}
     }
 
     for(int iwfs=0; iwfs<parms->nwfs && powfs; iwfs++){
 	const int ipowfs=parms->wfs[iwfs].powfs;
 	const int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
-	loc_t *locwfsin;
+	loc_t *locwfs;
 	    
 	if(powfs[ipowfs].nlocm){
 	    error("We don't handle this case yet. Think carefully when to apply shift.\n");
 	    int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
-	    locwfsin=powfs[ipowfs].locm[ilocm];
+	    locwfs=powfs[ipowfs].locm[ilocm];
 	}else{
-	    locwfsin=powfs[ipowfs].loc;
+	    locwfs=powfs[ipowfs].loc;
 	}
-	tsurf2loc(tsurf, parms->ntsurf, powfs[ipowfs].opdadd->p[wfsind], locwfsin, 
-		  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->powfs[ipowfs].hs, rot);
+	tsurf2loc(tsurf, parms->ntsurf, powfs[ipowfs].opdadd->p[wfsind], locwfs, 
+		  parms->wfs[iwfs].thetax, parms->wfs[iwfs].thetay, parms->powfs[ipowfs].hs);
     }
     for(int itsurf=0; itsurf<parms->ntsurf; itsurf++){
 	rectmapfree(tsurf[itsurf]);
@@ -124,8 +112,6 @@ typedef struct{
     APER_T *aper;
     POWFS_T *powfs;
     RECON_T *recon;
-    loc_t *locevl;
-    double rot;
     map_t *surf;
     int isurf;
     int nevl;
@@ -135,7 +121,6 @@ typedef struct{
     int *wfscover;
     int *ncpacover;
     int opdxcover;
-    int do_rot;
 }SURF_DATA;
 
 static void prop_surf_evl(thread_t *info){
@@ -145,9 +130,7 @@ static void prop_surf_evl(thread_t *info){
     const map_t *surf=data->surf;
     const double hl=surf->h;
     const int *evlcover=data->evlcover;
-    const int do_rot=data->do_rot;
     const int isurf=data->isurf;
-    loc_t *locevl=data->locevl;
     const char *prt=" covers evl ";
     char* buf=malloc(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
     char buf2[6];
@@ -165,13 +148,8 @@ static void prop_surf_evl(thread_t *info){
 	const double displacex=parms->evl.thetax[ievl]*hl;
 	const double displacey=parms->evl.thetay[ievl]*hl;
 	const double scale=1-hl/parms->evl.hs[ievl];
-	if(do_rot){
-	    prop_grid(surf, locevl, NULL, aper->opdadd->p[ievl]->p, 
-		      1, displacex, displacey, scale, 0, 0, 0);
-	}else{
-	    prop_grid_stat(surf, aper->locs->stat, aper->opdadd->p[ievl]->p, 
-			   1, displacex, displacey, scale, 0, 0, 0);
-	}
+	prop_grid_stat(surf, aper->locs->stat, aper->opdadd->p[ievl]->p, 
+		       1, displacex, displacey, scale, 0, 0, 0);
     }
     if(any){
 	strcat(buf, "\n");
@@ -205,8 +183,6 @@ static void prop_surf_wfs(thread_t *info){
     const double hl=surf->h;
     const int *wfscover=data->wfscover;
     const int isurf=data->isurf;
-    const int do_rot=data->do_rot;
-    const double rot=data->rot;
     const char *prt=" covers WFS ";
     char* buf=malloc(strlen(parms->surf[isurf])+strlen(prt)+(info->end-info->start)*sizeof(char)*5);
     char buf2[6];
@@ -228,24 +204,15 @@ static void prop_surf_wfs(thread_t *info){
 	const double displacex=parms->wfs[iwfs].thetax*hl+powfs[ipowfs].misreg[wfsind][0];
 	const double displacey=parms->wfs[iwfs].thetay*hl+powfs[ipowfs].misreg[wfsind][1];
 
-	loc_t *locwfs, *locwfsin;
+	loc_t *locwfs;
 	if(powfs[ipowfs].locm){
 	    int ilocm=powfs[ipowfs].nlocm>1?parms->powfs[ipowfs].wfsind[iwfs]:0;
-	    locwfsin=powfs[ipowfs].locm[ilocm];
+	    locwfs=powfs[ipowfs].locm[ilocm];
 	}else{
-	    locwfsin=powfs[ipowfs].loc;
-	}
-	if(do_rot){
-	    locwfs=locdup(locwfsin);
-	    locrot(locwfs,rot);
-	}else{
-	    locwfs=locwfsin;
+	    locwfs=powfs[ipowfs].loc;
 	}
 	prop_grid(surf, locwfs, NULL, powfs[ipowfs].opdadd->p[wfsind]->p, 
 		  1, displacex, displacey, scale, 1., 0, 0); 
-	if(do_rot){
-	    locfree(locwfs);
-	}
     }
     if(any){
 	info2("%s\n", buf);
@@ -263,8 +230,6 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	warning("Please adjust telescope surface ox, oy to account for misregistration. Not doing "
 		"in maos because some surfaces may belong to instrument.\n");
     }
-    loc_t *locevl=NULL;
-    const double rot=-parms->aper.rotdeg/180.*M_PI;
     const int nevl=parms->evl.nevl;
     const int nwfs=parms->nwfs;
     const int nncpa=parms->sim.ncpa_ndir;
@@ -272,7 +237,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     int *wfscover=malloc(nwfs*sizeof(int));
     int *ncpacover=malloc(nncpa*sizeof(int));
     int opdxcover;
-    SURF_DATA sdata={parms, aper, powfs, recon, NULL, rot, NULL, 0, nevl, nwfs, nncpa, evlcover, wfscover, ncpacover, 0, 0};
+    SURF_DATA sdata={parms, aper, powfs, recon, NULL, 0, nevl, nwfs, nncpa, evlcover, wfscover, ncpacover, 0};
     const int nthread=NTHREAD;
     thread_t  tdata_wfs[nthread], tdata_evl[nthread], tdata_ncpa[nthread];
     thread_prep(tdata_evl, 0, nevl, nthread, prop_surf_evl, &sdata);
@@ -294,15 +259,13 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	const char *strevl=search_header(surf->header, "SURFEVL");
 	const char *strwfs=search_header(surf->header, "SURFWFS");
 	const char *stropdx=search_header(surf->header, "SURFOPDX");
-	int do_rot=0;
-	if(strname && !strcmp(strname, "M1")){
-	    do_rot=(fabs(rot)>1.e-10);
-	}
-	if(do_rot){
-	    locevl=locdup(aper->locs);
-	    locrot(locevl,rot);
-	}else{
-	    locevl=aper->locs;
+	//pupil rotation. rotate the surface directly
+	if(strname && (!strcmp(strname, "M1") || !strcmp(strname, "M2"))){
+	    if(fabs(parms->aper.rotdeg)>1.e-10){
+		dmat *B=ddup((dmat*)surf);
+		dzero(surf);
+		dembed((dmat*)surf, B, parms->aper.rotdeg/180.*M_PI);
+	    }
 	}
 	if(!strevl){
 	    warning2("surf[%d] does not contain SURFEVL\n", isurf);
@@ -350,12 +313,9 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}else{
 	    opdxcover=(int)readstr_num(stropdx, NULL);
 	}
-	sdata.locevl=locevl;
 	sdata.surf=surf;
 	sdata.opdxcover=opdxcover;
-	sdata.do_rot=do_rot;
 	sdata.isurf=isurf;
-	double hl=surf->h;
 	CALL_THREAD(tdata_evl, nthread, 0);
 	if(powfs){
 	    CALL_THREAD(tdata_wfs, nthread, 0);
@@ -363,43 +323,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	if(parms->sim.ncpa_calib){
 	    CALL_THREAD(tdata_ncpa, nthread, 0);
 	}
-	/*The following cannot be parallelized as done for evl, wfs because the
-	  destination opdxadd is not unique.*/
-	if(parms->sim.idealfit && recon && opdxcover){
-	    if(!recon->opdxadd){
-		recon->opdxadd=dcellnew(parms->atmr.nps, 1);
-	    }
-	    double distmin=INFINITY;
-	    int jpsr=-1;
-	    /*Select the layer that is closed to the surface. */
-	    for(int ipsr=0; ipsr<parms->atmr.nps; ipsr++){
-		double dist=fabs(parms->atmr.ht[ipsr]-hl);
-		if(dist < distmin){
-		    jpsr=ipsr;
-		    distmin=dist;
-		}
-	    }
-	    loc_t *xloc;
-	    if(do_rot){
-		xloc = locdup(recon->xloc[jpsr]);
-		locrot(xloc, rot);
-	    }else{
-		xloc = recon->xloc[jpsr];
-	    }
-	    loc_t *surfloc=mksqloc_map(surf);
-	    dsp *H=mkhb(xloc, surfloc, NULL, 0, 0, 1, 0, 0);
-	    double scale=pow(surf->dx/xloc->dx,2);
-	    if(!recon->opdxadd->p[jpsr]){
-		recon->opdxadd->p[jpsr]=dnew(xloc->nloc, 1);
-	    }
-	    spmulvec(recon->opdxadd->p[jpsr]->p, H, surf->p, scale);
-	    if(do_rot) locfree(xloc);
-	    locfree(surfloc);
-	}
 	mapfree(surf);
-    }
-    if(locevl!=aper->locs){
-	locfree(locevl);
     }
     free(evlcover);
     free(wfscover);
@@ -464,7 +388,7 @@ static void setup_recon_HAncpa(RECON_T *recon, const PARMS_T *parms){
     }
     toc2(" ");
     if(parms->save.setup){
-	spcellwrite(recon->HA,"%s/HA_ncpa",dirsetup);
+	spcellwrite(recon->HA_ncpa,"%s/HA_ncpa",dirsetup);
     }
 }
 void lenslet_saspherical(const PARMS_T *parms, POWFS_T *powfs){
@@ -625,6 +549,11 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	setup_surf_perp(parms, aper, powfs, recon);
     }
     toc("surf prop");
+    /**
+       note about idealfit: No need to pass surfaces to DM fitting
+       routine. These are already contained in dm_ncpa which got to add to the
+       DM command. Nothing needs to be done.
+     */
     //Setup lenslet profile
     lenslet_saspherical(parms, powfs);
     lenslet_safocuspv(parms, powfs);
@@ -639,9 +568,6 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}
 
 	if(any_evl){
-	    if(fabs(parms->aper.rotdeg)>0){
-		error("Not handling aper.rotdeg\n");
-	    }
 	    info("calibrating NCPA\n");
 	    setup_recon_HAncpa(recon, parms);
 	    dcell *rhs=NULL;
@@ -669,6 +595,5 @@ void setup_surf(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    dcellwrite(powfs[ipowfs].opdadd, "%s/surfpowfs_%d.bin", dirsetup,  ipowfs);
 	}
-	if(recon->opdxadd) dcellwrite(recon->opdxadd, "%s/surfopdx",  dirsetup);
     }
 }

@@ -486,9 +486,6 @@ void atm2xloc(dcell **opdx, const SIM_T *simu){
 		      1,disx,disy,1,1,0,0);
 	}
     }
-    if(recon->opdxadd){
-	dcelladd(opdx, 1, recon->opdxadd, 1);
-    }
 }
 
 /**
