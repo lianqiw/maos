@@ -443,7 +443,7 @@ void imagesc(char *fig, /**<Category of the figure*/
 	int sock_draw=sock_draws[ifd].fd;
 	char **figfn=sock_draws[ifd].figfn;
 	if(sock_draws[ifd].pause) continue;
-	if(figfn[0] && figfn[1] && 
+	if(draw_single && figfn[0] && figfn[1] && 
 	   check_figfn(&sock_draws[ifd].list, fig, fn) && 
 	   (strcmp(figfn[0], fig) || strcmp(figfn[1], fn))){
 	    continue;

@@ -28,13 +28,13 @@ extern "C"
 
 #define PRINT_RES 0
 
-/* dest = a/b */
-__global__ static void div_do(float *restrict dest, const float *restrict a, const float *restrict b){
+/* dest = a/b Do not use restric because dest and b maybe the same*/
+__global__ static void div_do(float *dest, const float * a, const float *b){
     dest[0]=a[0]/b[0];
     if(!isfinite(dest[0])) dest[0]=0;
 }
 /* dest = a/b;then b=a*/
-__global__ static void div_assign_do(float *restrict dest, const float *restrict a, float *restrict b){
+__global__ static void div_assign_do(float * dest, const float * a, float * b){
     dest[0]=a[0]/b[0];
     b[0]=a[0];
     if (!isfinite(dest[0])) dest[0]=0;
@@ -60,8 +60,7 @@ void curcellinn_add(float *restrict res, const curcell *A, const curcell *B, cud
 }
 
 /* dest = sqrt(a/b); */
-__global__ static void div_sqrt_do(float *restrict dest, const float *restrict a, 
-				   const float *restrict b){
+__global__ static void div_sqrt_do(float * dest, const float * a, const float * b){
     dest[0]=sqrt(a[0]/b[0]);
 }
 /**Only use kernels to avoid synchronization*/
@@ -138,6 +137,9 @@ float gpu_pcg(curcell **px,
 	curcellzero(*px, stream);
     }
     curcell *x0=*px;
+#if DEBUG_OPDR == 1  && 0
+    curcell *x0save=curcellnew(x0);
+#endif
     int kover=0; //k overflows maxit
     for(int k=0; ; k++){
 	if(k==maxiter){
@@ -189,6 +191,9 @@ float gpu_pcg(curcell **px,
 	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
 	div_do<<<1,1,0,stream>>>(ak+k, rkzk, ak+k);
 	/*x0=x0+ak[k]*p0 */
+#if DEBUG_OPDR == 1 && 0
+	curcellcp(&x0save, x0, stream);
+#endif
 	curcelladd(&x0, p0, ak+k, 1, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
@@ -196,6 +201,26 @@ float gpu_pcg(curcell **px,
 #if DEBUG_OPDR == 1 //for debugging a recent error. compute the residual for the last step
 	    curcelladd(&r0, Ap, ak+k, -1, stream);
 	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
+	    if(maxiter==30){
+		static int counter=0;
+		warning_once("Remove after debugging\n");
+		float opdrmax=curcellmax(x0, stream);
+		if(opdrmax>6e-6){
+		    //CUDA_SYNC_STREAM;
+		    curcellwrite(x0, "pcg_x0_%d", counter);
+		    //curcellwrite(x0save, "pcg_x0save_%d", counter);
+		    //curcelladd(&x0save, p0, ak+k, 1, stream);
+		    //curcellwrite(x0save, "pcg_x0saveadd_%d", counter);
+		    gpu_write(ak, maxiter, 1, "pcg_ak_%d", counter);
+		    curcellwrite(Ap, "pcg_Ap_%d", counter);
+		    curcellwrite(p0, "pcg_p0_%d", counter);
+		    curcellwrite(r0, "pcg_r0_%d", counter);
+		    float alpha;
+		    cudaMemcpy(&alpha, ak+k, sizeof(float), cudaMemcpyDeviceToHost);
+		    info("alpha=%g\n", alpha);
+		    counter++;
+		}
+	    }
 #endif
 #if TIMING 
 	    CUDA_SYNC_STREAM;
@@ -253,5 +278,8 @@ float gpu_pcg(curcell **px,
     info2("CG %d total %4.0f\n", maxiter, times[15]);
 #endif
     cudaFreeHost(diff);
+#if DEBUG_OPDR == 1 && 0
+    delete x0save;
+#endif
     return residual;
 }

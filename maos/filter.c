@@ -346,6 +346,7 @@ void update_dm(SIM_T *simu){
 	}
     }
     if(parms->sim.dmclipia){
+	/*Clip interactuator stroke*/
 	for(int idm=0; idm<parms->ndm; idm++){
 	    int count=0;
 	    do{

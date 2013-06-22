@@ -286,11 +286,12 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     cudaStream_t stream=cuwfs[iwfs].stream;
     dmat *gradcl=simu->gradcl->p[iwfs];
     curmat *phiout=curnew(nloc, 1);
-    curzero(phiout, stream);
     curmat *gradacc=cuwfs[iwfs].gradacc;
     curmat *gradcalc=NULL;
     if(cuwfs[iwfs].opdadd){ /*copy to phiout. */
 	curcp(&phiout, cuwfs[iwfs].opdadd, stream);
+    }else{
+	curzero(phiout, stream);
     }
     if(parms->sim.idealwfs){
 	gpu_dm2loc(phiout->p, loc, nloc, cudata->dmproj, cudata->ndm,
@@ -462,7 +463,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 		    (gradacc->p, cuwfs[iwfs].neasim, nsa,cuwfs[iwfs].custat);
 		ctoc("noise");
 	    }
-	    cp2cpu(&gradcl, gradacc, stream);//gradacc is already adjusted for gradoff
+	    cp2cpu(&gradcl, gradacc, stream);
 	    if(save_gradgeom){
 		cellarr_cur(simu->save->gradgeom[iwfs], simu->isim, NULL, stream);
 	    }

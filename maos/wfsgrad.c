@@ -477,9 +477,6 @@ void wfsgrad_iwfs(SIM_T *simu, int iwfs){
 	}else{/*G tilt */
 	    spmulmat(&gradcalc,adpind(powfs[ipowfs].GS0,wfsind),opd,1);
 	}
-	if(powfs[ipowfs].gradoff){
-	    dadd(&gradcalc, 1, powfs[ipowfs].gradoff->p[wfsind], -1);
-	}
 	if(gradcalc->p!=(*gradacc)->p){
 	    dadd(gradacc, 1, gradcalc, 1);
 	}
