@@ -61,7 +61,16 @@ X(cell) *X(cellnew2)(const X(cell) *A){
     }
     return out;
 }
-
+/**
+   Create an new X(cell) with X(mat) specified.
+ */
+X(cell) *X(cellnew3)(long nx, long ny, long *nnx, long *nny){
+    X(cell) *out=X(cellnew)(nx,ny);
+    for(long i=0; i<nx*ny; i++){
+	out->p[i]=X(new)(nnx[i], nny[i]);
+    }
+    return out;
+}
 /**
    Free a X(cell) object.
 */

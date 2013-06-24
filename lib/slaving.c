@@ -228,7 +228,6 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 	spsetnzmax(slavet, count);
 	dsp *slave=sptrans(slavet);
 	actslave[idm][idm]=spmulsp(slavet, slave);
-	spwrite(slave, "slave_%d", idm);
 	if(NW){
 	    /*Now we need to make sure NW is in the NULL
 	      space of the slaving regularization, especially

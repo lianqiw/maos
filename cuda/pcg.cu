@@ -76,6 +76,7 @@ static inline void pcg_residual(float *r0r0, float *rkzk, float *rr0, curcell *r
 	div_sqrt_do<<<1,1,0,stream>>>(r0r0, rkzk, rr0);
     }
 }
+int pcg_save=0;
 #define DEBUG_OPDR 1
 #define TIMING 0
 /**
@@ -194,7 +195,7 @@ float gpu_pcg(curcell **px,
 #if DEBUG_OPDR == 1 && 0
 	curcellcp(&x0save, x0, stream);
 #endif
-	curcelladd(&x0, p0, ak+k, 1, stream);
+	curcelladd(&x0, p0, ak+k, 1.f, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
 	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres) ||kover>=3){
@@ -205,13 +206,14 @@ float gpu_pcg(curcell **px,
 		static int counter=0;
 		warning_once("Remove after debugging\n");
 		float opdrmax=curcellmax(x0, stream);
-		if(opdrmax>6e-6){
+		if(opdrmax>6e-6 || pcg_save){
 		    //CUDA_SYNC_STREAM;
 		    curcellwrite(x0, "pcg_x0_%d", counter);
 		    //curcellwrite(x0save, "pcg_x0save_%d", counter);
 		    //curcelladd(&x0save, p0, ak+k, 1, stream);
 		    //curcellwrite(x0save, "pcg_x0saveadd_%d", counter);
 		    gpu_write(ak, maxiter, 1, "pcg_ak_%d", counter);
+		    gpu_write(rmzm, maxiter, 1, "pcg_rmzm_%d", counter);
 		    curcellwrite(Ap, "pcg_Ap_%d", counter);
 		    curcellwrite(p0, "pcg_p0_%d", counter);
 		    curcellwrite(r0, "pcg_r0_%d", counter);

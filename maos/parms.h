@@ -616,6 +616,8 @@ typedef struct LOAD_CFG_T{
    contains input parameters for saving variables.
 */
 typedef struct SAVE_CFG_T{
+    int extra;       /**<Save extra results, namely clep, olep, cleNGSmp, etc*/
+    
     int all;         /**<save absolutely everything. mainly for debugging*/
     int setup;       /**<save preparation matrices*/
     int recon;       /**<save reconstructor information. large*/

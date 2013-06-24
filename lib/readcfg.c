@@ -266,12 +266,20 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	    ssline[strlen(ssline)-1]='\0';
 	    continue;
 	}
-	if(!index(ssline, '=')){
+	char *eql=index(ssline,'=');
+	if(!eql){//no equal sign
 	    if(check_suffix(ssline, ".conf")){
 		char *embeded=strextract(ssline);
 		if(embeded){
 		    open_config(embeded, prefix, protect);
 		    free(embeded);
+		}
+	    }else if(!strcmp(ssline, "__protect_start")){
+		protect+=10000;
+	    }else if(!strcmp(ssline, "__protect_end")){
+		protect-=10000; 
+		if(protect<0){
+		    error("__protect_end must appear after __protect_start, in the same file");
 		}
 	    }else{
 		error("Input (%s) is not valid\n", ssline);
@@ -279,15 +287,18 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	    ssline[0]='\0';
 	    continue;
 	}
-	var=strtok(ssline, "=");
-	value=strtok(NULL, "=");
+	eql[0]='\0';
+	var=ssline;
+	value=eql+1;
+	/*var=strtok(ssline, "=");
+	  value=strtok(NULL, "=");*/
 	strtrim(&var);
 	strtrim(&value);
-	if(!strcmp(var,"path") || !strcmp(var, "PATH")){
-	    addpath(value);
-	}else if(strtok(NULL,"=") || !var || strlen(var)==0){
+	if(!var || strlen(var)==0){
 	    error("Line '%s' is invalid\n",line);
-	}else if(var && !strcmp(var,"include")){
+	}else if(!strcmp(var,"path") || !strcmp(var, "PATH")){
+	    addpath(value);
+	}else if(!strcmp(var,"include")){
 	    /*info("Opening embeded config file %s\n",value); */
 	    char *embeded=strextract(value);
 	    if(embeded){
@@ -302,29 +313,12 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	      Compatibility mode: rename old key names to new key names. Will
 	      remove in the future.
 	     */
-	    RENAME(atm.wsdeg, atm.wddeg);
 	    RENAME(atm.zadeg, sim.zadeg);
-	    RENAME(powfs.msa, powfs.order);
-	    RENAME(fit.tik_cstr, fit.tikcr);
-	    RENAME(tomo.tik_cstr, tomo.tikcr);
-	    RENAME(tomo.split_wt, tomo.ahst_wt);
-	    RENAME(tomo.split_idealngs, tomo.ahst_idealngs);
-	    RENAME(tomo.split_rtt, tomo.ahst_ttr);
-	    RENAME(tomo.ahst_rtt, tomo.ahst_ttr);
-	    RENAME(evl.psfwvl, evl.wvl);
-	    RENAME(cn2.nhtrecon, cn2.nhtomo);
 	    /*Added on 2011-04-28 */
 	    RENAME(dbg.noatm, sim.noatm);
 	    RENAME(dbg.fitonly, sim.fitonly);
 	    RENAME(dbg.evlol, sim.evlol);
 	    RENAME(sim.fitonly, sim.idealfit);
-	    RENAME(evl.ht, evl.hs);
-	    RENAME(sim.recon, recon.alg);
-	    RENAME(sim.glao, recon.glao);
-	    RENAME(dbg.parallel, sim.parallel);
-	    RENAME(tomo.split, recon.split);
-	    RENAME(llt.fn, llt.fnprof);
-	    RENAME(aper.dx, evl.dx);
 	    IGNORE(sim.servotype_hi);
 	    IGNORE(sim.servotype_lo);
 	    IGNORE(sim.epfocus);
@@ -355,7 +349,7 @@ void open_config(const char* config_file, /**<[in]The .conf file to read*/
 	    if((entryfind=hsearch(entry,FIND))){
 		/*same key found */
 		long istore=(long)(entryfind->data);
-		if(store[istore].protect && !protect){
+		if(store[istore].protect>protect){
 		    info2("%s={%s} is protected. Will not be overriden by {%s}\n",
 			  (char*)entry.key, (char*)store[istore].data,
 			  (char*)store[nstore].data);
@@ -629,12 +623,24 @@ void readcfg_dblarr_nmax(double **ret, int len, const char *format,...){
 */
 int readcfg_int( const char *format,...){
     format2key;
-    return (int)readstr_num(store[getrecord(key, 1)].data, NULL);
+    char *val=store[getrecord(key, 1)].data;
+    char *endstr;
+    int ans=(int)readstr_num(val, &endstr);
+    if(endstr[0]!='\0'){
+	error("Garbage found in %s=%s.\n", key, val);
+    }
+    return ans;
 }
 /**
    Read double
 */
 double readcfg_dbl(const char *format,...){
     format2key;
-    return readstr_num(store[getrecord(key, 1)].data, NULL);
+    char *val=store[getrecord(key, 1)].data;
+    char *endstr;
+    double ans=readstr_num(val, &endstr);
+    if(endstr[0]!='\0'){
+	error("Garbage found in %s=%s.\n", key, val);
+    }
+    return ans;
 }

@@ -254,6 +254,10 @@ gboolean refresh(PROC_T *p){
     default:
 	warning("Unknown info: %d\n", p->status.info);
     }
+    if(p->status.warning){
+	gtk_widget_modify_bg(p->entry_errhi, GTK_STATE_NORMAL, &red);
+	gtk_widget_modify_bg(p->entry_errlo, GTK_STATE_NORMAL, &red);
+    }
     update_prog(p);
     return 0;
 }

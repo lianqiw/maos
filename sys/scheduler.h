@@ -38,7 +38,10 @@ typedef struct STATUS_T{
     int isim;
     int simstart;
     int simend;
-    int done;
+	char done;
+	char warning;
+	char unused1;
+	char unused2;
     double clerrlo;
     double clerrhi;
     int info;

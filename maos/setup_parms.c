@@ -924,6 +924,7 @@ static void readcfg_gpu(PARMS_T *parms){
    Specify which variables to save
 */
 static void readcfg_save(PARMS_T *parms){
+    READ_INT(save.extra);
     READ_INT(save.all);
     READ_INT(save.setup);
     READ_INT(save.recon);
@@ -1023,9 +1024,9 @@ static void setup_parms_postproc_sim(PARMS_T *parms){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].lo){
 		parms->powfs[ipowfs].psfout=1;
-		//parms->powfs[ipowfs].pistatout=1;
 	    }
 	}
+	parms->save.extra=1;
     }
     if(parms->dbg.ntomo_maxit){
 	warning("dbg.tomo_maxit is set. Will run in open loop mode\n to repeat the simulations"

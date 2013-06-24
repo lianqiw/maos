@@ -84,12 +84,12 @@ static void list_modify_icon(PROC_T *p, GdkPixbuf *newicon){
     list_get_iter(p, &iter);
     gtk_list_store_set(list, &iter, COL_ACTION, newicon,-1);
 }
-/*static void list_modify_color(PROC_T *p, const char *color){
+static void list_modify_color(PROC_T *p, const char *color){
     GtkTreeIter iter;
     GtkListStore *list=lists[p->hid];
     list_get_iter(p, &iter);
     gtk_list_store_set(list, &iter, COL_COLOR, color,-1);
-    }*/
+}
 /*static void list_modify_status(PROC_T *p, const char *status){
     GtkTreeIter iter;
     GtkListStore *list=lists[p->hid];
@@ -306,6 +306,9 @@ gboolean refresh(PROC_T *p){
 	break;
     default:
 	warning("Unknown info: %d\n",p->status.info);
+    }
+    if(p->status.warning){
+	list_modify_color(p, "#FF0000");
     }
     return 0;
 }
@@ -632,13 +635,13 @@ GtkWidget *new_page(int ihost){
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, -240,"Path", "text", COL_START, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 5,"Args", "text", COL_ARGS, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0,"Out", "text",  COL_OUT, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low" , "text", COL_ERRLO, NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Low" , "text", COL_ERRLO,"foreground",COL_COLOR, NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "High", "text", COL_ERRHI,"foreground",COL_COLOR, NULL));
     /*gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Step", "text", COL_TIMING, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Left", "text", COL_REST, NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(0, 0, "Tot", "text", COL_ALL, NULL));*/
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Seed", "text", COL_SEED, "value",COL_SEEDP,NULL));
-    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value",COL_STEPP,"cell-background",COL_COLOR,NULL));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(1, 0, "Progress", "text", COL_STEP, "value",COL_STEPP,NULL));
     gtk_tree_view_append_column(GTK_TREE_VIEW(view), new_column(2, 0, " ", "pixbuf", COL_ACTION, NULL));
     
     return view;
