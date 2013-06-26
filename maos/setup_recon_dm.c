@@ -171,14 +171,8 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	    if(!parms->dm[idm].actfloat) continue;
 	    recon->actfloat->p[idm]=act_coord2ind(recon->aloc[idm], parms->dm[idm].actfloat);
 	}
-	recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
-	if(parms->save.setup){
-	    spcellwrite(recon->actinterp, "%s/actinterp", dirsetup);
-	}
     }
 }
-
-
 
 /**
    Setup ray tracing operator HA from aloc to aperture ploc along DM fiting direction*/
@@ -222,9 +216,19 @@ setup_recon_HA(RECON_T *recon, const PARMS_T *parms){
     if(recon->actfloat){
 	warning2("Apply float actuators to HA\n");
 	act_float(recon->aloc, &recon->HA, NULL, recon->actfloat);
+	recon->actinterp=act_float_interp(recon->aloc, recon->actfloat);
 	if(parms->save.setup){
 	    spcellwrite(recon->HA,"%s/HA_float",dirsetup);
 	}
+    }
+    if(parms->fit.actslave && parms->fit.alg==1){
+	//Only do in CG mode. Some problem in CBS SCAO mode.
+	spcell *interp2=act_inactive_interp(recon->aloc, recon->HA, recon->W1);
+	spcelladd(&recon->actinterp, interp2);
+	spcellfree(interp2);
+    }
+    if(parms->save.setup && recon->actinterp){
+	spcellwrite(recon->actinterp, "%s/actinterp", dirsetup);
     }
 }
 
@@ -313,17 +317,10 @@ fit_prep_lrt(RECON_T *recon, const PARMS_T *parms){
 	*/
 	recon->actslave=slaving(&recon->actcpl, recon->aloc, recon->HA, recon->W1,
 				recon->fitNW, recon->actstuck,
-				recon->actfloat, 0.1, 4./recon->floc->nloc*1e-4);
+				recon->actfloat, 0.1, 1./recon->floc->nloc);
 	if(parms->save.setup){
 	    dcellwrite(recon->actcpl, "%s/actcpl", dirsetup);
 	    spcellwrite(recon->actslave,"%s/actslave",dirsetup);
-	}
-    }
-    if(parms->fit.actslave && parms->fit.alg==1){
-	//Only do in CG mode. Some problem in CBS SCAO mode.
-	recon->actinterp2=act_inactive_interp(recon->aloc, recon->HA, recon->W1);
-	if(parms->save.setup){
-	    spcellwrite(recon->actinterp2,"%s/actinterp2",dirsetup);
 	}
     }
     if(parms->save.setup){

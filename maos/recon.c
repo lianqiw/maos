@@ -116,15 +116,7 @@ void tomofit(SIM_T *simu){
 	spcellmulmat(&tmp, recon->actinterp, simu->dmfit, 1);
 	dcellcp(&simu->dmfit, tmp);
 	dcellfree(tmp);
-    }  
-    /*make inactive actuators averag of neighbor.*/
-    if(recon->actinterp2){
-	dcell *tmp=NULL;
-	spcellmulmat(&tmp, recon->actinterp2, simu->dmfit, 1);
-	dcellcp(&simu->dmfit, tmp);
-	dcellfree(tmp);
     }
-
     dcellcp(&simu->dmerr, simu->dmfit);/*keep dmfit for warm restart */
 }
 /**

@@ -60,12 +60,11 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 		icell *actstuck,/**<[in]List of stuck actuators that will not be slaved, but have value constrained.*/
 		icell *actfloat,/**<[in]List of stuck actuators that will be slaved, but not have value constrained.*/
 		double thres,  /**<[in]The threshold that an actuator is deemed slave*/
-		double scl2    /**<[in]The scaling of the overal value*/
+		double scl     /**<[in]The scaling of the overal value squared*/
 		){
     if(!HA && !actfloat) {
 	error("Both HA and actfloat are not supplied\n");
     }
-    double scl=sqrt(scl2);
     if(scl<EPS){
 	error("scl=%g is too small\n", scl);
     }
@@ -591,7 +590,7 @@ spcell* act_inactive_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
 	long count=0;
 	for(long iact=0; iact<nact; iact++){
 	    pp[iact]=count;
-	    if(cpl[iact]<0.5){
+	    if(cpl[iact]<0.1){
 		long mapx=(long)round((locx[iact]-ox)*dx1);
 		long mapy=(long)round((locy[iact]-oy)*dx1);
 		int count2=count;
