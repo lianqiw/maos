@@ -49,7 +49,7 @@ void maos(const PARMS_T *parms){
     aper  = setup_aper(parms);
     info2("After setup_aper:\t%.2f MiB\n",get_job_mem()/1024.);
     if(!parms->sim.evlol){
-	powfs = setup_powfs(parms, aper);
+	powfs = setup_powfs_init(parms, aper);
 	info2("After setup_powfs:\t%.2f MiB\n",get_job_mem()/1024.);
 	if(parms->dbg.wfslinearity!=-1){
 	    int iwfs=parms->dbg.wfslinearity;
@@ -66,6 +66,8 @@ void maos(const PARMS_T *parms){
 	setup_recon_dm(recon, parms);
 	/*setting up M1/M2/M3, Instrument, Lenslet surface OPD. DM Calibration, WFS bias.*/
 	setup_surf(parms, aper, powfs, recon);
+	/*set up physical optics powfs data*/
+	setup_powfs_phy(parms, powfs);
     }
 
     if(!parms->sim.evlol){

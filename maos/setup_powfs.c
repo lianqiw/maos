@@ -1644,7 +1644,7 @@ setup_powfs_cog(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
    Setup the matched filter pixel processing parameters for physical optics wfs.
 */
 static void 
-setup_powfs_phy(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
+setup_powfs_mtch(POWFS_T *powfs,const PARMS_T *parms, int ipowfs){
     long nsa=powfs[ipowfs].pts->nsa;
     if(powfs[ipowfs].intstat){
 	error("Should only be called once\n");
@@ -1972,36 +1972,31 @@ void setup_powfs_calib(const PARMS_T *parms, POWFS_T *powfs, loc_t **aloc, dcell
 		if(powfs[ipowfs].gradoff){
 		    dcellwrite(powfs[ipowfs].gradoff, "powfs%d_gradoff", ipowfs);
 		}
-	    }else if(parms->powfs[ipowfs].ncpa_method==2){
-		if(powfs[ipowfs].intstat->mtche){//need to redo i0
-		    genseotf(parms,powfs,ipowfs);
-		    gensepsf(parms,powfs,ipowfs);
-		    gensei(parms,powfs,ipowfs);
-		    genmtch(parms,powfs,ipowfs);
-		    if(parms->save.setup){
-			dcellwrite(powfs[ipowfs].intstat->i0,"%s/powfs%d_i0_2",dirsetup,ipowfs);
-			dcellwrite(powfs[ipowfs].intstat->gx,"%s/powfs%d_gx_2",dirsetup,ipowfs);
-			dcellwrite(powfs[ipowfs].intstat->gy,"%s/powfs%d_gy_2",dirsetup,ipowfs);
-			dcellwrite(powfs[ipowfs].intstat->mtche,"%s/powfs%d_mtche_2",dirsetup,ipowfs);
-			dcellwrite(powfs[ipowfs].intstat->saneaxy,"%s/powfs%d_saneaxy_2",dirsetup,ipowfs);
-		    }
-		}
 	    }
 	}
     }
 }
+
 /**
    Setup the powfs struct based on parms and aper. Everything about wfs are
    setup here.  \callgraph */
-POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
-    POWFS_T *powfs=calloc(parms->npowfs, sizeof(POWFS_T));
-    int ipowfs;
+POWFS_T * setup_powfs_init(const PARMS_T *parms, APER_T *aper){
     TIC;tic;
-    for(ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+    POWFS_T *powfs=calloc(parms->npowfs, sizeof(POWFS_T));
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(parms->powfs[ipowfs].nwfs==0) continue;
-	info2("\n\033[0;32mSetting up powfs %d\033[0;0m\n\n", ipowfs);
+	info2("\n\033[0;32mSetting up powfs %d geom\033[0;0m\n\n", ipowfs);
 	setup_powfs_geom(powfs,parms,aper,ipowfs);
         setup_powfs_grad(powfs,parms,ipowfs);
+    }
+    toc("setup_powfs_init");
+    return powfs;
+}
+void setup_powfs_phy(const PARMS_T *parms, POWFS_T *powfs){
+    TIC;tic;
+    for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
+	if(parms->powfs[ipowfs].nwfs==0) continue;
+	info2("\n\033[0;32mSetting up powfs %d PO WFS\033[0;0m\n\n", ipowfs);
 	if(TEST_POWFS||parms->powfs[ipowfs].usephy
 	   ||parms->powfs[ipowfs].psfout
 	   ||parms->powfs[ipowfs].pistatout
@@ -2022,11 +2017,10 @@ POWFS_T * setup_powfs(const PARMS_T *parms, APER_T *aper){
 	    setup_powfs_focus(powfs,parms,ipowfs);
 	}
 	if(TEST_POWFS||parms->powfs[ipowfs].usephy || parms->powfs[ipowfs].neaphy){
-	    setup_powfs_phy(powfs,parms,ipowfs);
+	    setup_powfs_mtch(powfs,parms,ipowfs);
 	}
     }/*ipowfs */
-    toc("setup_powfs");
-    return powfs;
+    toc("setup_powfs_phy");
 }
 /**
    Free all parameters of powfs at the end of simulation.

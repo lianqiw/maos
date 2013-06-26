@@ -783,7 +783,6 @@ static void readcfg_sim(PARMS_T *parms){
     parms->sim.epdm=readcfg_dmat("sim.epdm");
     parms->sim.aplo=readcfg_dmat("sim.aplo");
     parms->sim.eplo=readcfg_dmat("sim.eplo");
-    info("eplo is %ldx%ld\n", parms->sim.eplo->nx, parms->sim.eplo->ny);
     /*We append a 0 so that we keep a time history of the integrator. */
     if(parms->sim.apdm->nx==1){
 	dresize(parms->sim.apdm, 2, 1);
@@ -1400,7 +1399,6 @@ static void setup_parms_postproc_wfs(PARMS_T *parms){
     parms->sim.dthi=parms->sim.dtrat_hi*parms->sim.dt;
     if(parms->sim.fcfocus<=0){
 	parms->sim.fcfocus=1./parms->sim.dtlo/10;
-	warning("fcfocus=%g\n", parms->sim.fcfocus);
     }
     parms->sim.lpfocus=2*M_PI*parms->sim.fcfocus*parms->sim.dthi;
 }

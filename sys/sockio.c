@@ -41,9 +41,6 @@ int stwrite(int sfd, const void *p, size_t len){
 	    nwrite=write(sfd, p, left);
 	}
 	p+=nwrite; left-=nwrite;
-	if(left){
-	    info("nwrite=%ld, left=%ld\n", nwrite, left);
-	}
     }while(nwrite>0 && left>0);
     return left?-1:0;
 }
@@ -58,9 +55,6 @@ int stread(int sfd, void *p, size_t len){
 	    nread=recv(sfd, p, left, MSG_WAITALL);
 	}
 	p+=nread; left-=nread;
-	if(left){
-	    info("nread=%ld, left=%ld\n", nread, left);
-	}
     }while(nread>0 && left>0);
     return left?-1:0;
 }

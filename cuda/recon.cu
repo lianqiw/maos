@@ -744,7 +744,7 @@ void gpu_tomo(SIM_T *simu){
 	gpu_tomo_do(parms, recon, curecon->opdr, NULL, curecon->gradin, curecon->cgstream[0]);
     //Sanity check the result
     float opdrmax=curcellmax(curecon->opdr, curecon->cgstream[0]);
-    if(opdrmax>6e-6){
+    if(opdrmax>4e-6){
 	simu->status->warning=2;
 	info("opdrmax=%g\n", opdrmax);
 	curcellwrite(curecon->gradin, "dbg_gradin_%d", simu->reconisim);

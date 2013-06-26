@@ -249,7 +249,7 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
     for(int isurf=0; isurf<parms->nsurf; isurf++){
 	char *fn=parms->surf[isurf];
 	if(!fn) continue;
-	info("Loading surface OPD from %s\n", fn);
+	info2("Loading surface OPD from %s\n", fn);
 	map_t *surf=mapread("%s",fn);
 	if(surf->ny<2 || surf->nx<2){
 	    error("%s: size is %ldx%ld, we expect a 2d map\n", fn, surf->nx, surf->ny);
@@ -269,7 +269,6 @@ setup_surf_perp(const PARMS_T *parms, APER_T *aper, POWFS_T *powfs, RECON_T *rec
 	}
 	if(!strevl){
 	    warning2("surf[%d] does not contain SURFEVL\n", isurf);
-	    info("%s\n", surf->header);
 	    for(int ievl=0; ievl<nevl; ievl++){
 		evlcover[ievl]=1;
 	    }

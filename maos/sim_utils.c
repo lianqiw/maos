@@ -1694,7 +1694,7 @@ void print_progress(const SIM_T *simu){
 	}
 	info2("\033[00;00m\n");
     
-	info2("Timing: WFS:%5.2f Recon:%6.4f CACHE:%5.2f EVAL:%5.2f Tot:%6.3f Mean:%6.3f."
+	info2("Timing: WFS:%5.2f Recon:%6.3f CACHE:%5.2f EVAL:%5.2f Tot:%6.3f Mean:%6.3f."
 	      " Used %ld:%02ld, Left %ld:%02ld\n",
 	      status->wfs*tkmean, status->recon*tkmean, 
 	      status->cache*tkmean, status->eval*tkmean, 

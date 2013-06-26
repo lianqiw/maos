@@ -28,9 +28,9 @@ extern "C"
 
 #define PRINT_RES 0
 
-/* dest = a/b Do not use restric because dest and b maybe the same*/
-__global__ static void div_do(float *dest, const float * a, const float *b){
-    dest[0]=a[0]/b[0];
+/* dest = a/dest Do not use restric because dest and b maybe the same*/
+__global__ static void div_do(float *dest, const float * a){
+    dest[0]=a[0]/dest[0];
     if(!isfinite(dest[0])) dest[0]=0;
 }
 /* dest = a/b;then b=a*/
@@ -109,7 +109,7 @@ float gpu_pcg(curcell **px,
 #endif
     RECORD(0);
     curcell *&r0=cg_data->r0;
-    curcell *&z0=cg_data->z0;/*Is reference or preconditioned value. */
+    curcell *&z0=cg_data->z0;/*Is reference to r0 or preconditioned value. */
     curcell *&p0=cg_data->p0;
     curcell *&Ap=cg_data->Ap;
     float residual=-1;/*Only useful if PRINT_RES is set*/
@@ -120,9 +120,8 @@ float gpu_pcg(curcell **px,
     float *store=cg_data->store;
     DO(cudaMemsetAsync(store, 0, ntot*sizeof(float),stream));
     float *rr0=store; store++;
-    float *rkzk=store; store++;
     float *bk  =store; store++;
-    float *rmzm=store; store+=maxiter;
+    float *rkzk=store; store+=maxiter+1;
     float *ak  =store; store+=maxiter;
     curcellinn_add(rr0, b, b, stream);//rr0=b*b; initial residual norm
     float *diff;
@@ -140,6 +139,10 @@ float gpu_pcg(curcell **px,
     curcell *x0=*px;
 #if DEBUG_OPDR == 1  && 0
     curcell *x0save=curcellnew(x0);
+#endif
+#if DEBUG_OPDR == 1
+    float maxx[maxiter+1];
+    float maxp[maxiter+1];
 #endif
     int kover=0; //k overflows maxit
     for(int k=0; ; k++){
@@ -164,10 +167,7 @@ float gpu_pcg(curcell **px,
 	    RECORD(4);
 	    curcellcp(&p0, z0, stream);
 	    RECORD(5);
-	    if(k!=0){
-		cudaMemsetAsync(rkzk, 0, sizeof(float), stream);
-	    }
-	    curcellinn_add(rkzk, r0, z0, stream);//9
+	    curcellinn_add(rkzk+0, r0, z0, stream);//9
 	    RECORD(6);
 #if TIMING 
 	    CUDA_SYNC_STREAM;
@@ -180,7 +180,7 @@ float gpu_pcg(curcell **px,
 #endif
 	}
 	if (PRINT_RES){
-	    pcg_residual(&diff[k], rkzk, rr0, r0, Mmul?1:0, stream);
+	    pcg_residual(&diff[k], rkzk+k, rr0, r0, Mmul?1:0, stream);
 	}
 	RECORD(7);
 #if PRINT_RES == 2
@@ -188,38 +188,43 @@ float gpu_pcg(curcell **px,
 #endif	
 	/*Ap=A*p0*/
 	Amul(&Ap, 0, A, p0, 1, stream); RECORD(8);
-	/*ak[k]=rkzk/(p0'*Ap); */
+	/*ak[k]=rkzk[k]/(p0'*Ap); */
 	curcellinn_add(ak+k, p0, Ap, stream);	RECORD(9);
-	div_do<<<1,1,0,stream>>>(ak+k, rkzk, ak+k);
+	div_do<<<1,1,0,stream>>>(ak+k, rkzk+k);
 	/*x0=x0+ak[k]*p0 */
 #if DEBUG_OPDR == 1 && 0
 	curcellcp(&x0save, x0, stream);
+#endif
+#if DEBUG_OPDR
+	maxx[k]=curcellmax(x0, stream);
+	maxp[k]=curcellmax(p0, stream);
 #endif
 	curcelladd(&x0, p0, ak+k, 1.f, stream);
 	RECORD(10);
 	/*Stop CG when 1)max iterations reached or 2)residual is below cgthres (>0), which ever is higher.*/
 	if((kover || k+1==maxiter) && (cgthres<=0 || diff[k]<cgthres) ||kover>=3){
 #if DEBUG_OPDR == 1 //for debugging a recent error. compute the residual for the last step
+	    maxx[k+1]=curcellmax(x0, stream);
+	    maxp[k+1]=curcellmax(p0, stream);
 	    curcelladd(&r0, Ap, ak+k, -1, stream);
 	    pcg_residual(&diff[k+1], NULL, rr0, r0, 1, stream);
 	    if(maxiter==30){
 		static int counter=0;
 		warning_once("Remove after debugging\n");
-		float opdrmax=curcellmax(x0, stream);
-		if(opdrmax>6e-6 || pcg_save){
+		float maxxax=curcellmax(x0, stream);
+		if(maxxax>4e-6 || pcg_save){
 		    //CUDA_SYNC_STREAM;
 		    curcellwrite(x0, "pcg_x0_%d", counter);
 		    //curcellwrite(x0save, "pcg_x0save_%d", counter);
 		    //curcelladd(&x0save, p0, ak+k, 1, stream);
 		    //curcellwrite(x0save, "pcg_x0saveadd_%d", counter);
 		    gpu_write(ak, maxiter, 1, "pcg_ak_%d", counter);
-		    gpu_write(rmzm, maxiter, 1, "pcg_rmzm_%d", counter);
+		    gpu_write(rkzk, maxiter+1, 1, "pcg_rz_%d", counter);
 		    curcellwrite(Ap, "pcg_Ap_%d", counter);
 		    curcellwrite(p0, "pcg_p0_%d", counter);
 		    curcellwrite(r0, "pcg_r0_%d", counter);
-		    float alpha;
-		    cudaMemcpy(&alpha, ak+k, sizeof(float), cudaMemcpyDeviceToHost);
-		    info("alpha=%g\n", alpha);
+		    writeflt(maxx, maxiter+1, 1, "pcg_mx_%d", counter);
+		    writeflt(maxp, maxiter+1, 1, "pcg_mp_%d", counter);
 		    counter++;
 		}
 	    }
@@ -243,11 +248,11 @@ float gpu_pcg(curcell **px,
 	    Mmul(&z0,M,r0, stream);
 	}
 	RECORD(12);
-	/*rmzm[k]=r0'*z0 for next step*/
-	curcellinn_add(rmzm+k, r0, z0, stream);
+	/*rkzk[k+1]=r0'*z0 for next step*/
+	curcellinn_add(rkzk+k+1, r0, z0, stream);
 	RECORD(13);
-	/*bk=rmzm/rkzk; rkzk=rmzm*/
-	div_assign_do<<<1,1,0,stream>>>(bk, rmzm+k, rkzk);
+	/*bk=rkzk[k+1]/rkzk[k];*/
+	div_assign_do<<<1,1,0,stream>>>(bk, rkzk+k+1, rkzk+k);
 	/*p0=bk*p0+z0 */
 	curcelladd(&p0, bk, z0, stream);
 	RECORD(14);
