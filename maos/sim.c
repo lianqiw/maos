@@ -70,8 +70,14 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	if(recon) recon->simu=simu;
 	if(parms->atm.frozenflow){
 	    genscreen(simu);/*Generating atmospheric screen(s) that frozen flows.*/
-	    if(parms->tomo.predict && recon->HXWtomo){
-		setup_recon_HXW_predict(simu);
+	    if(parms->tomo.predict){
+		if(recon->HXWtomo){
+		    setup_recon_HXW_predict(simu);
+		}
+		if(parms->tomo.precond==1){
+		    fdpcg_free(recon->fdpcg);
+		    recon->fdpcg=fdpcg_prepare(parms, recon, powfs, parms->tomo.predict?simu->atm:NULL);
+		}
 	    }
 	}
 #if USE_CUDA
@@ -80,6 +86,7 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 	    gpu_atm2gpu(simu->atm, parms, iseed, simstart);/*takes 0.4s for NFIRAOS. */
 	    if(parms->tomo.predict){
 		gpu_setup_recon_predict(parms, recon);
+		gpu_setup_recon_fdpcg(parms, recon);
 	    }
 	}
 #endif

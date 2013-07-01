@@ -20,7 +20,7 @@
 #define AOS_RECON_FDPCG
 #include "maos.h"
 FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, 
-	       const POWFS_T *powfs);
+		       const POWFS_T *powfs, map_t **atm);
 void fdpcg_precond(dcell **xout, const void *A, const dcell *xin);
 void fdpcg_free(FDPCG_T *fdpcg);
 #endif

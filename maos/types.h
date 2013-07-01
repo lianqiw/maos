@@ -202,7 +202,6 @@ typedef struct FDPCG_T{
     long *permhf;  /**<Permutation vector to be used when complex2real fft is used. Size is about half of perm.*/
     long nxtot;    /**<Total number of reconstructed phase points*/
     /*xhat, xhat2 has been removed for thread safety issues.*/
-    long **xembed; /**<index to embed nonsquare opd on xloc to square map.*/
     int square;    /**<Whether xloc is square*/
     int scale;     /**<Do we need to scale after fft.*/
     long nbx;      /**<Basic frequency range in x*/

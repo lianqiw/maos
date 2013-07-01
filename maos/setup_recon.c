@@ -1834,9 +1834,9 @@ void setup_recon_tomo(RECON_T *recon, const PARMS_T *parms, POWFS_T *powfs, APER
 	}
 	
 	if(parms->tomo.precond==1){
-	    recon->fdpcg=fdpcg_prepare(parms, recon, powfs);
+	    recon->fdpcg=fdpcg_prepare(parms, recon, powfs, NULL);
 	}
-
+	
 	if(parms->sim.ecnn){
 	    setup_recon_tomo_ecnn(recon, parms, aper);
 	}
@@ -1998,7 +1998,6 @@ void free_recon_unused(const PARMS_T *parms, RECON_T *recon){
     /* Free arrays that will no longer be used after reconstruction setup is done. */
     spcellfree(recon->sanea); 
     spcellfree(recon->saneal);
-    dfree(recon->neam); 
     if(!(parms->tomo.assemble && parms->tomo.alg==1) && !parms->cn2.tomo && !parms->tomo.bgs){
 	/*We no longer need RL.M,U,V */
 	spcellfree(recon->RL.M);
@@ -2163,6 +2162,7 @@ void free_recon(const PARMS_T *parms, RECON_T *recon){
     muv_free(&recon->LL);
     dcellfree(recon->MVM);
     spcellfree(recon->saneai);
+    dfree(recon->neam); 
     fdpcg_free(recon->fdpcg); recon->fdpcg=NULL;
     cn2est_free(recon->cn2est);
     free(recon);

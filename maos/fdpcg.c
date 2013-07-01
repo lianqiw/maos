@@ -311,9 +311,9 @@ fdpcg_prop(long nps, long pos, long nxp, long nyp, long *nx, long *ny, double dx
 }
 
 /**
-  Prepare data for Tomography Fourier Domain Preconditioner
+  Prepare data for Tomography Fourier Domain Preconditioner. atm is used to provide wind velocity information.
 */
-FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs){
+FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T *powfs, map_t **atm){
     int hipowfs=-1;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	if(!parms->powfs[ipowfs].lo){
@@ -454,6 +454,11 @@ FDPCG_T *fdpcg_prepare(const PARMS_T *parms, const RECON_T *recon, const POWFS_T
 	    */
 	    dispx[ips]=ht[ips]*parms->wfs[iwfs].thetax;
 	    dispy[ips]=ht[ips]*parms->wfs[iwfs].thetay;
+	    if(atm){
+		int ips0=parms->atmr.indps[ips]; 
+		dispx[ips]+=atm[ips0]->vx*parms->sim.dt*2;
+		dispy[ips]+=atm[ips0]->vy*parms->sim.dt*2;
+	    }
 	}
 	csp *propx=fdpcg_prop(nps,pos,nxp,nyp,nx,ny,dxp,dispx,dispy);
 	if(parms->save.setup){

@@ -250,86 +250,8 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	if(recon->PTT && !curecon->PTT){//for t/t proj in 1)uplink t/t 2) recon
 	    cp2gpu(&curecon->PTT, recon->PTT);
 	}
-	if(parms->tomo.precond==1){/*fdpcg*/
-	    FDPCG_T *fdpcg=recon->fdpcg;
-	    cufdpcg_t *cufd=curecon->fdpcg=new cufdpcg_t;
-	    cufd->scale=fdpcg->scale;
-	    int bs=fdpcg->bs;
-	    int nb=(fdpcg->nbx/2+1)*fdpcg->nby;//half frequency range
-	    cp2gpu(&cufd->perm, fdpcg->permhf, nb*bs);
-	    //copy only needed blocks to gpu
-	    int nxsave=fdpcg->Mbinv->nx;
-	    fdpcg->Mbinv->nx=nb;
-	    cp2gpu(&cufd->Mb, fdpcg->Mbinv);
-	    fdpcg->Mbinv->nx=nxsave;
-	    int nps=recon->npsr;
-	    int count=0;
-	    int osi=-1;
-	    int start[nps];
-	    for(int ips=0; ips<nps; ips++){
-		/*group layers with the same os together in a batch fft.*/
-		if(osi != parms->atmr.os[ips]){
-		    start[count]=ips;
-		    osi = parms->atmr.os[ips];
-		    count++;
-		}
-	    }
-	    cufd->fft=(cufftHandle*)calloc(count, sizeof(cufftHandle));
-	    cufd->ffti=(cufftHandle*)calloc(count, sizeof(cufftHandle));
-	    cufd->fftnc=count;
-	    cufd->fftips=(int*)calloc(count+1, sizeof(int));
-	    for(int ic=0; ic<count; ic++){
-		cufd->fftips[ic]=start[ic];
-	    }
-	    cufd->fftips[count]=nps;
-	    for(int ic=0; ic<count; ic++){
-		int ncomp[2];
-		/*Notice the reverse in specifying dimensions. THe first element is outmost rank.*/
-		ncomp[0]=recon->xny[start[ic]];
-		ncomp[1]=recon->xnx[start[ic]];
-
-		int nembed[2];
-		nembed[0]=recon->xnx[start[ic]]*recon->xny[start[ic]];
-		nembed[1]=recon->xnx[start[ic]];
-		DO(cufftPlanMany(&cufd->fft[ic], 2, ncomp, 
-				 nembed, 1, ncomp[0]*ncomp[1], 
-				 nembed, 1, ncomp[0]*ncomp[1], 
-				 CUFFT_R2C, cufd->fftips[ic+1]-cufd->fftips[ic]));
-		DO(cufftPlanMany(&cufd->ffti[ic], 2, ncomp, 
-				 nembed, 1, ncomp[0]*ncomp[1], 
-				 nembed, 1, ncomp[0]*ncomp[1],
-				 CUFFT_C2R, cufd->fftips[ic+1]-cufd->fftips[ic]));
-		DO(cufftSetStream(cufd->ffti[ic], curecon->cgstream[0]));
-
-		DO(cufftSetStream(cufd->fft[ic], curecon->cgstream[0]));
-	    }
-	    cufd->xhat1=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
-	    {
-		int nby=256/bs;//number of blocks in each grid
-		int nbz=nb/nby;//number of grids to launch.
-		while(nb!=nbz*nby){
-		    nby--;
-		    nbz=nb/nby;
-		}
-		cufd->nby=nby;
-		cufd->nbz=nbz;
-	    }
-	    /* notice: performance may be improved by using
-	       R2C FFTs instead of C2C. Need to update perm
-	       and Mbinv to use R2C.*/
-	    GPU_FDPCG_T *fddata=new GPU_FDPCG_T[nps];
-	    for(int ips=0; ips<nps; ips++){
-		fddata[ips].nx=recon->xnx[ips];
-		fddata[ips].ny=recon->xny[ips];
-		if(cufd->scale){
-		    fddata[ips].scale=1.f/sqrtf((float)(recon->xnx[ips]*recon->xny[ips]));
-		}else{
-		    fddata[ips].scale=1.f;
-		}
-	    }
-	    cudaMalloc(&curecon->fddata, sizeof(GPU_FDPCG_T)*nps);
-	    cudaMemcpy(curecon->fddata, fddata, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
-	    delete [] fddata;
+	if(parms->tomo.precond==1){
+	    gpu_setup_recon_fdpcg(parms, recon);
 	}
 	if(parms->tomo.alg==0){//CBS
 	    chol_convert(recon->RL.C, 0);
@@ -557,6 +479,111 @@ void gpu_setup_recon(const PARMS_T *parms, POWFS_T *powfs, RECON_T *recon){
 	gpu_setup_recon_do(parms, powfs, recon);
     }
 }
+/*Copy FDPCG information to GPU. This may be done every time step if prediction is used.*/
+static void gpu_setup_recon_fdpcg_do(const PARMS_T *parms, RECON_T *recon){
+    if(!parms->tomo.precond==1) return;
+    curecon_t *curecon=cudata->recon;
+    FDPCG_T *fdpcg=recon->fdpcg;
+    if(!fdpcg){
+	return;
+    }
+    int bs=fdpcg->bs;
+    int nb=(fdpcg->nbx/2+1)*fdpcg->nby;//half frequency range
+    if(curecon->fdpcg){//already initialized. Just update Mb
+	int nxsave=fdpcg->Mbinv->nx;
+	fdpcg->Mbinv->nx=nb;
+	cp2gpu(&curecon->fdpcg->Mb, fdpcg->Mbinv);
+	fdpcg->Mbinv->nx=nxsave;
+	return;
+    }
+    cufdpcg_t *cufd=curecon->fdpcg=new cufdpcg_t;
+    cufd->scale=fdpcg->scale;
+    cp2gpu(&cufd->perm, fdpcg->permhf, nb*bs);
+    //copy only needed blocks to gpu
+    int nxsave=fdpcg->Mbinv->nx;
+    fdpcg->Mbinv->nx=nb;
+    cp2gpu(&cufd->Mb, fdpcg->Mbinv);
+    fdpcg->Mbinv->nx=nxsave;
+    int nps=recon->npsr;
+    int count=0;
+    int osi=-1;
+    int start[nps];
+    for(int ips=0; ips<nps; ips++){
+	/*group layers with the same os together in a batch fft.*/
+	if(osi != parms->atmr.os[ips]){
+	    start[count]=ips;
+	    osi = parms->atmr.os[ips];
+	    count++;
+	}
+    }
+    cufd->fft=(cufftHandle*)calloc(count, sizeof(cufftHandle));
+    cufd->ffti=(cufftHandle*)calloc(count, sizeof(cufftHandle));
+    cufd->fftnc=count;
+    cufd->fftips=(int*)calloc(count+1, sizeof(int));
+    for(int ic=0; ic<count; ic++){
+	cufd->fftips[ic]=start[ic];
+    }
+    cufd->fftips[count]=nps;
+    for(int ic=0; ic<count; ic++){
+	int ncomp[2];
+	/*Notice the reverse in specifying dimensions. THe first element is outmost rank.*/
+	ncomp[0]=recon->xny[start[ic]];
+	ncomp[1]=recon->xnx[start[ic]];
+
+	int nembed[2];
+	nembed[0]=recon->xnx[start[ic]]*recon->xny[start[ic]];
+	nembed[1]=recon->xnx[start[ic]];
+	DO(cufftPlanMany(&cufd->fft[ic], 2, ncomp, 
+			 nembed, 1, ncomp[0]*ncomp[1], 
+			 nembed, 1, ncomp[0]*ncomp[1], 
+			 CUFFT_R2C, cufd->fftips[ic+1]-cufd->fftips[ic]));
+	DO(cufftPlanMany(&cufd->ffti[ic], 2, ncomp, 
+			 nembed, 1, ncomp[0]*ncomp[1], 
+			 nembed, 1, ncomp[0]*ncomp[1],
+			 CUFFT_C2R, cufd->fftips[ic+1]-cufd->fftips[ic]));
+	DO(cufftSetStream(cufd->ffti[ic], curecon->cgstream[0]));
+
+	DO(cufftSetStream(cufd->fft[ic], curecon->cgstream[0]));
+    }
+    cufd->xhat1=cuccellnew(recon->npsr, 1, recon->xnx, recon->xny);
+    {
+	int nby=256/bs;//number of blocks in each grid
+	int nbz=nb/nby;//number of grids to launch.
+	while(nb!=nbz*nby){
+	    nby--;
+	    nbz=nb/nby;
+	}
+	cufd->nby=nby;
+	cufd->nbz=nbz;
+    }
+    /* notice: performance may be improved by using
+       R2C FFTs instead of C2C. Need to update perm
+       and Mbinv to use R2C.*/
+    GPU_FDPCG_T *fddata=new GPU_FDPCG_T[nps];
+    for(int ips=0; ips<nps; ips++){
+	fddata[ips].nx=recon->xnx[ips];
+	fddata[ips].ny=recon->xny[ips];
+	if(cufd->scale){
+	    fddata[ips].scale=1.f/sqrtf((float)(recon->xnx[ips]*recon->xny[ips]));
+	}else{
+	    fddata[ips].scale=1.f;
+	}
+    }
+    cudaMalloc(&curecon->fddata, sizeof(GPU_FDPCG_T)*nps);
+    cudaMemcpy(curecon->fddata, fddata, sizeof(GPU_FDPCG_T)*nps, cudaMemcpyHostToDevice);
+    delete [] fddata;
+}
+void gpu_setup_recon_fdpcg(const PARMS_T *parms, RECON_T *recon){
+    if(parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm){
+	for(int igpu=0; igpu<NGPU; igpu++){
+	    gpu_set(igpu);
+	    gpu_setup_recon_fdpcg_do(parms, recon);
+	}
+    }else{
+	gpu_set(gpu_recon);
+	gpu_setup_recon_fdpcg_do(parms, recon);
+    }
+}
 void gpu_recon_free_do(){
     curecon_t *curecon=cudata->recon;
     if(!curecon) return;
@@ -601,8 +628,12 @@ void gpu_recon_free_do(){
     //    delete curecon;
 }
 void gpu_recon_free(){
-    gpu_set(gpu_recon);
-    gpu_recon_free_do();
+    for(int igpu=0; igpu<NGPU; igpu++){
+	gpu_set(igpu);
+	if(cudata->recon){
+	    gpu_recon_free_do();
+	}
+    }
 }
 void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     /*The following routine assemble MVM and put in recon->MVM*/
@@ -623,11 +654,10 @@ void gpu_setup_recon_mvm(const PARMS_T *parms, RECON_T *recon, POWFS_T *powfs){
     }
     gpu_print_mem("MVM");
 }
-void gpu_setup_recon_predict(const PARMS_T *parms, RECON_T *recon){
+void gpu_setup_recon_predict_do(const PARMS_T *parms, RECON_T *recon){
     if(!parms->gpu.tomo || !parms->tomo.predict){
 	return;
     }
-    gpu_set(gpu_recon);
     curecon_t *curecon=cudata->recon;
     const int nwfs=parms->nwfsr;
     const float oxp=recon->pmap->ox;
@@ -679,6 +709,17 @@ void gpu_setup_recon_predict(const PARMS_T *parms, RECON_T *recon){
     DO(cudaMemcpy(curecon->hxtdata, hxtdata, sizeof(GPU_PROP_GRID_T)*nwfs*recon->npsr, cudaMemcpyHostToDevice));
     delete [] hxdata;
     delete [] hxtdata;
+}
+void gpu_setup_recon_predict(const PARMS_T *parms, RECON_T *recon){
+    if(parms->recon.mvm && parms->gpu.tomo && parms->gpu.fit && !parms->load.mvm){
+	for(int igpu=0; igpu<NGPU; igpu++){
+	    gpu_set(igpu);
+	    gpu_setup_recon_predict_do(parms, recon);
+	}
+    }else{
+	gpu_set(gpu_recon);
+	gpu_setup_recon_predict_do(parms, recon);
+    }
 }
 /*update reconstruction parameters after slodar.*/
 void gpu_update_recon(const PARMS_T *parms, RECON_T *recon){

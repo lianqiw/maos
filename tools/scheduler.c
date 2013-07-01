@@ -414,30 +414,32 @@ static void process_queue(void){
     }
     info("irun=%p\n", irun);
     if(irun){
-       	int nthread=irun->nthread;
-	if(nrun_get()+nthread<=NCPU && (nthread<=avail || avail >=3) && irun->sock>0){
-	    /*don't close the socket. will close it in select loop. */
-	    /*warning3("process %d launched. write to sock %d cmd %d\n", */
-	    /*irun->pid, irun->sock, S_START); */
-	    info2("process_queue: Notify %d at %d\n", irun->pid, irun->sock);
-	    if(stwriteint(irun->sock,S_START)){
-		perror("stwriteint");
-		warning("failed to notify maos\n");
-	    }
-	    nrun_add(irun->pid, nthread);
-	    irun->status.timstart=myclocki();
-	    irun->status.info=S_START;
-	    monitor_send(irun,NULL);
-	    FILE *fp=fopen(scheduler_fnlog,"a");
-	    if(fp){
-		fprintf(fp,"[%s] %s %5d  started '%s'\n",
-			myasctime(),hosts[hid],irun->pid,irun->path);
-		fclose(fp);
-	    }else{
-		warning("fopen %s failed: %s\n", scheduler_fnlog, strerror(errno));
+	if(irun->sock>0){
+	    int nthread=irun->nthread;
+	    if(nrun_get()+nthread<=NCPU && (nthread<=avail || avail >=3)){
+		/*don't close the socket. will close it in select loop. */
+		/*warning3("process %d launched. write to sock %d cmd %d\n", */
+		/*irun->pid, irun->sock, S_START); */
+		info2("process_queue: Notify %d at %d\n", irun->pid, irun->sock);
+		if(stwriteint(irun->sock,S_START)){
+		    perror("stwriteint");
+		    warning("failed to notify maos\n");
+		}
+		nrun_add(irun->pid, nthread);
+		irun->status.timstart=myclocki();
+		irun->status.info=S_START;
+		monitor_send(irun,NULL);
+		FILE *fp=fopen(scheduler_fnlog,"a");
+		if(fp){
+		    fprintf(fp,"[%s] %s %5d  started '%s'\n",
+			    myasctime(),hosts[hid],irun->pid,irun->path);
+		    fclose(fp);
+		}else{
+		    warning("fopen %s failed: %s\n", scheduler_fnlog, strerror(errno));
+		}
 	    }
 	}else{
-	    warning2("Wait for %d to connect.\n", irun->pid);
+	    warning2("Wait for %d to connect. irun->sock=%d\n", irun->pid, irun->sock);
 	}
     }else{
 	if(avail>1){

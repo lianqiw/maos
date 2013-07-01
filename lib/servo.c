@@ -147,7 +147,7 @@ static void servo_calc_free(SERVO_CALC_T *st){
     dfree(st->psd);
 }
 /**
-   Calculate Hol. If g0 is 0, use st->g, otherwith use g0 to figure out g, a T.
+   Calculate total error. If g0 is 0, use st->g, otherwith use g0 to figure out g, a T.
 */
 static double servo_calc_do(SERVO_CALC_T *st, double g0){
     dmat *nu=st->nu;
@@ -228,8 +228,9 @@ static double servo_calc_do(SERVO_CALC_T *st, double g0){
    
    2012-03-28: Cleaned up this routine. groupped similar calculations together. 
    Change g2=a from g=sqrt(a)
-   Limit maximum gain to 0.5. 
    
+   2013-06-27: The maximum gain should not be limited to 0.5 beause it is later scaled by sqrt(a);
+
    sigman is a dmat array of all wanted sigman.
    Returns a cellarray of a dmat of [g0, a, T, res_sig, res_n]
 */
@@ -245,8 +246,8 @@ dcell* servo_optim(const dmat *psdin,  double dt, long dtrat, double pmargin,
     st.pmargin=pmargin;
 
     dcell *gm=dcellnew(sigman->nx, sigman->ny);
-    double g0_min=0.001;/*the minimum gain allowed. was 0.001. changed on 2012-03-27*/
-    double g0_max=0.5;
+    double g0_min=0.001;/*the minimum gain allowed.*/
+    double g0_max=2;
     
     for(long ins=0; ins<sigman->nx*sigman->ny; ins++){
 	st.sigman=sigman->p[ins];
