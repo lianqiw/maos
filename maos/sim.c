@@ -37,6 +37,7 @@
 #include "setup_powfs.h"
 #include "sim.h"
 #include "sim_utils.h"
+#include "fdpcg.h"
 #if USE_CUDA
 #include "../cuda/gpu.h"
 #endif
