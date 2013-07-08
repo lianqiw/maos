@@ -69,7 +69,7 @@ ARG_S *parse_args(int argc, const char *argv[]){
 	arg->force=0;
 	detached=1;
     }else{
-#ifndef MAOS_DSIABLE_SCHEDULER
+#ifndef MAOS_DISABLE_SCHEDULER
 	/*Detached version. Always launch through scheduler if available.*/
 	if(!host){
 	    host=strdup(myhostname());

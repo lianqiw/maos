@@ -520,7 +520,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	arg->force=0;
 	detached=1;
     }else{
-#ifndef MAOS_DSIABLE_SCHEDULER
+#ifndef MAOS_DISABLE_SCHEDULER
 	/*Detached version. Always launch through scheduler if available.*/
 	int locally=0;
 	if(!host){
@@ -528,6 +528,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	    host=strdup(myhostname());
 	}
 	if(scheduler_launch_exe(host, argc, argv)){
+	    warning("Launch locally\n");
 	    if(!locally){
 		error2("Unable to launch maos at server %s\n", host);
 	    }
