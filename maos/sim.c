@@ -156,12 +156,13 @@ void sim(const PARMS_T *parms,  POWFS_T *powfs,
 		read_self_cpu();/*initialize CPU usage counter */
 		/*when we want to apply idealngs correction, wfsgrad need to wait for perfevl. */
 		long group=0;
-		thread_pool_queue(&group, (thread_fun)reconstruct, simu, 0);
-		thread_pool_queue(&group, (thread_fun)perfevl, simu, 0);
-		if(parms->tomo.ahst_idealngs)/*Need to wait until perfevl is done to start wfsgrad. */
-		    thread_pool_wait(&group);
-		thread_pool_queue(&group, (thread_fun)wfsgrad, simu, 0);
-		thread_pool_wait(&group);
+		QUEUE(group, reconstruct, simu, 1, 0);
+		QUEUE(group, perfevl, simu, 1, 0);
+		if(parms->tomo.ahst_idealngs){
+		    WAIT(group);
+		}
+		QUEUE(group, wfsgrad, simu, 1, 0);
+		WAIT(group);
 		shift_grad(simu);/*before filter() */
 		filter(simu);/*updates dmreal, so has to be after prefevl/wfsgrad is done. */
 		READ_CPU(cpu_all);

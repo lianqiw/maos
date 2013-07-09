@@ -31,9 +31,7 @@ typedef struct GENPISTAT_S{
     int ncase;
     long(*cases)[4];
     int icase;
-#if USE_PTHREAD > 0
     pthread_mutex_t mutex_read;/*don't let them read in the same time. */
-#endif
     const PARMS_S *parms;
     POWFS_S *powfs;
     double ngsgrid;

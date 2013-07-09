@@ -173,8 +173,6 @@ typedef struct SIM_S{
     int isky_start;    /**<first star field to evaluate*/
     int isky_end;      /**<last star field to evalaute (exclusive)*/
     double tk_0;       /**<initial star time*/
-#if USE_PTHREAD > 0
     pthread_mutex_t mutex_status;/**<mutex for status reporting*/
-#endif
 }SIM_S;
 #endif

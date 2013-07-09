@@ -473,6 +473,7 @@ void Y(sptmulvec_thread)(T *restrict y, const X(sp) *A,
     thread_t mul[A->n];
     thread_prep(mul, 0, A->n, A->n, Y(sptmulvec_thread_do), &data);
     CALL_THREAD(mul, A->n, 1);
+
   
 }
 /**

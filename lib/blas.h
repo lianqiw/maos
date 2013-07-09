@@ -80,7 +80,7 @@ void zheev_(char *jobz, char *uplo, int *n, dcomplex *a,
 	    int *lda, double *w, dcomplex *work, int *lwork, double *rwork,
 	    int *info);
 
-#if USE_MKL==1
-void omp_set_num_threads(int *n);
+#if USE_MKL==1 && !defined(_OPENMP)
+void omp_set_num_threads(int n);
 #endif
 #endif

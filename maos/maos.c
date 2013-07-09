@@ -106,10 +106,7 @@ void maos(const PARMS_T *parms){
       Before entering real simulation, make sure to delete all variables that
       won't be used later on to save memory.
     */
-#if USE_MKL==1
-    int one=1;
-    omp_set_num_threads(&one);/*only allow 1 thread after svd/chol is done. */
-#endif
+
     free_recon_unused(parms, recon);
     toc2("Presimulation");sync();
     sim(parms, powfs, aper, recon);
@@ -182,13 +179,6 @@ int main(int argc, const char *argv[]){
     PARMS_T *parms=setup_parms(arg);
     global=calloc(1, sizeof(GLOBAL_T));
     global->parms=parms;
-#if USE_MKL==1
-    if(arg->nthread==1){
-	int one=1;
-	/*only allow 1 thread to make debug easy. */
-	omp_set_num_threads(&one);
-    }
-#endif
     info2("After setup_parms:\t %.2f MiB\n",get_job_mem()/1024.);
     
     /*register signal handler */
@@ -244,6 +234,10 @@ int main(int argc, const char *argv[]){
     }
 
     /*Loads the main software*/
+#if _OPENMP>=200805
+#pragma omp parallel
+#pragma omp single nowait
+#endif
     maos(parms);
     free_parms(parms);
     info2("Job finished at %s\n",myasctime());

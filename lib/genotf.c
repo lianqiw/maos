@@ -31,9 +31,7 @@ typedef struct T_VALID{
  Wrap the data to genotf to have multi-thread capability.*/
 typedef struct GENOTF_T{
     long isa;
-#if USE_PTHREAD > 0
     pthread_mutex_t mutex_isa;
-#endif
     cmat **otf;
     loc_t *loc;     /**<the common aperture grid*/
     const double *amp;    /**<The amplitude map of all the (sub)apertures*/

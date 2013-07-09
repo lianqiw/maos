@@ -27,12 +27,8 @@
 #define USE_MEM 1 
 #endif
 #endif
-#ifndef USE_PTHREAD
-#if MATLAB_MEX_FILE
-#define USE_PTHREAD 1
-#else
-#define USE_PTHREAD 0
-#endif
+#ifdef _OPENMP
+#include <omp.h>
 #endif
 /**
    \file thread.h
@@ -55,15 +51,69 @@ struct thread_t{
   For all the following calls, if urgent is 1, the job is queued in the front, otherwise in the end.
 
   CALL(fun,arg,nthread,urgent) executes "nthread" instances of fun with argument arg. 
-
+  QUEUE is like CALL, but need an explicit WAIT
+  
   The following use thread_t to manage the index
   QUEUE_THREAD(group, A, nthread, urgent) will queue arrays of thread_t (A) 
   CALL_THREAD(A, nthread, urgent) calls QUEUE_THREAD and waits for all to finish.
-  
 */
-#if USE_PTHREAD /*Always use thread_pool */
 #include <pthread.h>
 #include "thread_pool.h"
+#if _OPENMP >= 200805
+#define THREAD_POOL_INIT(A)			\
+    {						\
+	char strA[20];				\
+	snprintf(strA, 20, "%d", A);		\
+	setenv("OMP_NUM_THREADS", strA, 1);	\
+	setenv("OMP_PROC_BIND","true",1);	\
+    }
+
+#define THREAD_RUN_ONCE	1
+
+/*The following QUEUE, CALL, WAIT acts on function (fun) and argument (arg).*/
+#define QUEUE(group,fun,arg,nthread,urgent)	\
+    (void)group;				\
+    for(int it=0; it<nthread; it++){		\
+	_Pragma("omp task")			\
+	fun(arg);				\
+    }
+
+#define CALL(fun,arg,nthread,urgent)	 \
+    for(int it=0; it<nthread; it++){	 \
+	_Pragma("omp task")		 \
+	fun(arg);			 \
+    }					 \
+    _Pragma("omp taskwait")
+
+#define WAIT(group)				\
+    (void)group;				\
+    _Pragma("omp taskwait")
+
+
+/*The following *_THREAD acts on thread_t array A*/
+
+#define QUEUE_THREAD(group,A,nthread,urgent)	\
+    (void)group;				\
+    for(int it=0; it<nthread; it++){		\
+	_Pragma("omp task")			\
+	A[it].fun(A+it);			\
+    }
+
+#define CALL_THREAD(A,nthread,urgent)		\
+    for(int it=0; it<nthread; it++){		\
+	_Pragma("omp task")			\
+	A[it].fun(A+it);			\
+    }						\
+    _Pragma("omp taskwait")
+
+#define WAIT_THREAD(group)			\
+    _Pragma("omp taskwait")
+
+#else //pthread directly.
+
+#define QUEUE(group,fun,arg,nthread,urgent)				\
+    thread_pool_queue_many(&group, (thread_fun)fun, (void*)arg, nthread, urgent); \
+    
 #define CALL(fun,arg,nthread,urgent)					\
     if(nthread>1){							\
 	long thgroup=0;							\
@@ -74,6 +124,8 @@ struct thread_t{
 	fun(arg);							\
     }
 
+#define WAIT(group)\
+    thread_pool_wait(&group);
 /**
    Queue jobs to group. Do not wait
 */
@@ -83,20 +135,9 @@ struct thread_t{
     }else{							\
 	(A)->fun(A);						\
     }
+
 /**
-   Wait for all jobs in group to finish.
-*/
-#define WAIT_THREAD(group) thread_pool_wait(&group)
-#define THREAD_POOL_INIT(A) thread_pool_init(A)
-#define THREAD_RUN_ONCE thread_pool_do_job_once()
-#else/*no threading */
-#define CALL(A,B,nthread,urgent) A(B)
-#define QUEUE_THREAD(group,A,nthread,urgent) A->fun(A)
-#define THREAD_POOL_INIT(A)
-#define THREAD_RUN_ONCE 1
-#endif
-/**
-   Call and wait for them to finish.
+   Queue jobs to a temp group. Wait for complete.
 */
 #define CALL_THREAD(A,nthread,urgent)		\
     if((nthread)>1){				\
@@ -106,23 +147,21 @@ struct thread_t{
     }else{					\
 	(A)->fun(A);				\
     }
+/**
+   Wait for all jobs in group to finish.
+*/
+#define WAIT_THREAD(group) thread_pool_wait(&group)
 
+#define THREAD_POOL_INIT(A) thread_pool_init(A)
+#define THREAD_RUN_ONCE thread_pool_do_job_once()
+#endif
 
-#if USE_PTHREAD > 0
 #define LOCK(A) pthread_mutex_lock(&A)
 #define UNLOCK(A) pthread_mutex_unlock(&A)
 #define PINIT(A) pthread_mutex_init(&A,NULL)
 #define PDEINIT(A) pthread_mutex_destroy(&A)
 #define PNEW(A) static pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
 #define PNEW2(A) pthread_mutex_t A=PTHREAD_MUTEX_INITIALIZER
-#else
-#define LOCK(A)
-#define UNLOCK(A)
-#define PINIT(A)
-#define PDEINIT(A)
-#define PNEW(A)
-#define PNEW2(A)
-#endif
 
 void thread_prep(thread_t *info, long start, long end, long nthread, 
 		 thread_wrapfun fun, void *data);

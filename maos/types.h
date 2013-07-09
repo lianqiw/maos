@@ -18,9 +18,7 @@
 
 #ifndef __AOS_TYPES_H__
 #define __AOS_TYPES_H__
-#if USE_PTHREAD > 0
 #include <pthread.h>
-#endif
 /**
    \file maos/types.h
    A few run time structs

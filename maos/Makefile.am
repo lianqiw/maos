@@ -15,15 +15,15 @@ ___bin_maos_SOURCES=maos.h maos.c parms.h setup_parms.c types.h utils.h utils.c	
 	  cn2est.c cn2est.h save.c save.h mvm_client.c mvm_client.h
 #The following must be specified like this. do not use LDAOS set in configure.ac that causes linking to be not performed when lib is updated.
 ___bin_maos_LDADD=
+if USE_CUDA
+___bin_maos_LDADD+=../cuda/libgpu.a $(LDCUDA)
+endif
 if USE_LONG
 ___bin_maos_LDADD+=../lib/libaos_long.la
 else
 ___bin_maos_LDADD+=../lib/libaos_int.la
 endif
 ___bin_maos_LDADD+=../sys/libaosys.la 
-if USE_CUDA
-___bin_maos_LDADD+=../cuda/libgpu.a $(LDCUDA)
-endif
 ___bin_maos_LDADD+=$(LDOPTS) 
 #if USE_STATIC
 #config.o:../config.tar.gz

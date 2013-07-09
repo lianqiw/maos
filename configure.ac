@@ -245,16 +245,10 @@ else
    AC_DEFINE(USE_STATIC, [0], "We are compling maos dynamically")
 fi
 
-AC_CHECK_LIB([pthread],[pthread_create],[pthread_good="yes"],[pthread_good="no"])
-AC_DEFINE(_THREAD_SAFE,[1], ["Enable thread safe"])
-if test "x$pthread_good" = "xyes" ;then
-    AC_DEFINE(USE_PTHREAD,[1], ["Enable thread"])
-    if test "x$win32" != "xyes" ;then
-         OPTSprof="-pthread"
-    fi
-else
-    AC_DEFINE(USE_PTHREAD,[0], ["Disable thread"])
+if test "x$win32" != "xyes" ;then
+    OPTSprof="-pthread"
 fi
+
 if test "x$use_duma" = "xyes" ;then	
     AC_CHECK_LIB([duma],[malloc],[],[AC_MSG_ERROR([duma not found])])
     LDEXE="$LDEXE -lduma"
@@ -284,6 +278,7 @@ if test "x$use_icc" = "xyes" ;then
 fi
 AC_PROG_CC([$CC])
 AC_PROG_CXX([$CXX])
+AC_OPENMP
 AC_TYPE_SIZE_T #it sets CC if empty
 
 #inline definition:
@@ -574,7 +569,7 @@ fi
 AC_CHECK_HEADERS([unistd.h])
 LDLIB="$LDCHOL $LDFFT $LDZ -lm"
 LDOPTS="$LAPACK"
-OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra "
+OPTS="$OPTScommon $OPTScc $OPTSprof $OPTSextra $OPENMP_CFLAGS"
 AC_SUBST(LDAOS)
 AC_SUBST(OPTS)
 AC_SUBST(LDOPTS)
@@ -694,7 +689,6 @@ if test "x${use_mex}" = "xyes" ; then
    AC_SUBST(MEXEXT)
    AC_SUBST(LDMEX)
    AC_SUBST(MEXOPT)
-   CFLAGS="$CFLAGS"
 else
    AM_CONDITIONAL(USE_MEX, false)
 fi
