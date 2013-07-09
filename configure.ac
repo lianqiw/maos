@@ -414,7 +414,10 @@ if test "x$use_mkl" = "xyes" ;then #Use shipped libmkl64.so. only for linux.
    if test ! -f "$mkl_lib"  ;then
       download MKL ${mklname}.tar.bz2
    fi
-   LAPACK="-L${LIBDIR}/${mklname} -lmkl -lm -pthread ${mkldep}"
+   LAPACK="-L${LIBDIR}/${mklname} -lmkl -lm -pthread"
+   if test -z "$OPENMP_CFLAGS" ;then
+      LAPACK="$LAPACK ${mkldep}"
+   fi
    AC_DEFINE(USE_MKL,[1],["MKL is used"])
 else
    AC_DEFINE(USE_MKL,[0],["MKL is not used"])
