@@ -31,7 +31,7 @@
 /**
    A wrapper prop routine that handles all the different cases by calling the
    different routines. Handles threading.
- */
+*/
 void prop(thread_t *data){
     PROPDATA_T *propdata=data->data;
     const double displacex=propdata->displacex0+propdata->displacex1;
@@ -400,41 +400,47 @@ void prop_grid(ARGIN_GRID,
     (void)iphi;
     const int nx = mapin->nx;
     const int ny = mapin->ny;
-
-    for(long iloc=start; iloc<end; iloc++){
-	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;/*skip points that has zero amplitude */
-	dplocx=myfma(px[iloc],dx_in2,displacex);
-	dplocy=myfma(py[iloc],dx_in2,displacey);
-	SPLIT(dplocx,dplocx,nplocx);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocx<0||nplocx>=nxmax||nplocy<0||nplocy>=nymax){
-	    if(wrap){
-		while(nplocx<0)
-		    nplocx+=nx;
-		while(nplocx>nxmax)
-		    nplocx-=nx;
-		while(nplocy<0)
-		    nplocy+=ny;
-		while(nplocy>nymax)
-		    nplocy-=ny;
+#define STEP 1000
+    for(long jloc=start; jloc<end; jloc+=STEP){
+	long end2=(jloc+STEP)<end?(jloc+STEP):end;
+#pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
+	for(long iloc=jloc; iloc<end2; iloc++){
+	    //for(long iloc=start; iloc<end; iloc++){
+	    if(ampout && fabs(ampout[iloc])<EPS)
+		continue;/*skip points that has zero amplitude */
+	    dplocx=myfma(px[iloc],dx_in2,displacex);
+	    dplocy=myfma(py[iloc],dx_in2,displacey);
+	    SPLIT(dplocx,dplocx,nplocx);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocx<0||nplocx>=nxmax||nplocy<0||nplocy>=nymax){
+		if(wrap){
+		    while(nplocx<0)
+			nplocx+=nx;
+		    while(nplocx>nxmax)
+			nplocx-=nx;
+		    while(nplocy<0)
+			nplocy+=ny;
+		    while(nplocy>nymax)
+			nplocy-=ny;
 		
-		nplocx1=(nplocx==nxmax?0:nplocx+1);
-		nplocy1=(nplocy==nymax?0:nplocy+1);
+		    nplocx1=(nplocx==nxmax?0:nplocx+1);
+		    nplocy1=(nplocy==nymax?0:nplocy+1);
+		}else{
+		    missing++;
+		    continue;
+		}
 	    }else{
-		missing++;
-		continue;
+		nplocx1=nplocx+1;
+		nplocy1=nplocy+1;
 	    }
-	}else{
-	    nplocx1=nplocx+1;
-	    nplocy1=nplocy+1;
+	    phiout[iloc]+=alpha*
+		(+(phiin[nplocy][nplocx]*(1.-dplocx)
+		   +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
+		 +(phiin[nplocy1][nplocx]*(1.-dplocx)
+		   +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
 	}
-	phiout[iloc]+=alpha*
-	    (+(phiin[nplocy][nplocx]*(1.-dplocx)
-	       +phiin[nplocy][nplocx1]*dplocx)*(1.-dplocy)
-	     +(phiin[nplocy1][nplocx]*(1.-dplocx)
-	       +phiin[nplocy1][nplocx1]*dplocx)*dplocy);
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 
@@ -452,23 +458,30 @@ void prop_nongrid(ARGIN_NONGRID,
     PREPIN_NONGRID(1,2);
     PREPOUT_LOC;
     RUNTIME_LINEAR;
-    for(long iloc=start; iloc<end; iloc++){
-	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;/*skip points that has zero amplitude */
-	dplocy=myfma(py[iloc],dx_in2,displacey);
-	dplocx=myfma(px[iloc],dx_in2,displacex);
-
-	SPLIT(dplocx,dplocx,nplocx);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocx<0||nplocx>nxmax||nplocy<0||nplocy>nymax){
-	    missing++;
-	    continue;
-	}else{
-	    nplocx1=nplocx+1;
-	    nplocy1=nplocy+1;
+#define STEP 1000
+    for(long jloc=start; jloc<end; jloc+=STEP){
+	long end2=(jloc+STEP)<end?(jloc+STEP):end;
+#pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
+	for(long iloc=jloc; iloc<end2; iloc++){
+	    //    for(long iloc=start; iloc<end; iloc++){
+	    if(ampout && fabs(ampout[iloc])<EPS)
+		continue;/*skip points that has zero amplitude */
+	    dplocy=myfma(py[iloc],dx_in2,displacey);
+	    dplocx=myfma(px[iloc],dx_in2,displacex);
+	    
+	    SPLIT(dplocx,dplocx,nplocx);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocx<0||nplocx>nxmax||nplocy<0||nplocy>nymax){
+		missing++;
+		continue;
+	    }else{
+		nplocx1=nplocx+1;
+		nplocy1=nplocy+1;
+	    }
+	    LINEAR_ADD_NONGRID;
 	}
-	LINEAR_ADD_NONGRID;
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 /**
@@ -493,6 +506,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	}else{
 	    nplocy1=nplocy+1;
 	}
+#pragma omp task private(nplocx,dplocx,nplocx1)
 	for(int ix=0; ix<nxout; ix++){
 	    int iloc=ix+iy*nxout;
 	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
@@ -505,6 +519,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	    LINEAR_ADD_NONGRID;
 	}
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 /**
@@ -521,7 +536,9 @@ void prop_nongrid_pts(ARGIN_NONGRID,
     PREPOUT_PTS;
     RUNTIME_LINEAR;
  
-    for(int isa=start; isa<end; isa++){
+    for(int isa=start; isa<end; isa++)
+#pragma omp task private(nplocx,nplocy,dplocx,dplocy,nplocx1,nplocy1)
+{
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
@@ -548,6 +565,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	    }    
 	}
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 
@@ -568,20 +586,27 @@ void prop_grid_cubic(ARGIN_GRID,
     PREPIN_GRID(3);
     PREPOUT_LOC;
     RUNTIME_CUBIC;
-
-    for(long iloc=start; iloc<end; iloc++){
-	dplocx=myfma(px[iloc],dx_in2,displacex);
-	dplocy=myfma(py[iloc],dx_in2,displacey);
-	SPLIT(dplocx,dplocx,nplocx);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocx<1||nplocx>nxmax||nplocy<1||nplocy>nymax){
-	    missing++;
-	    continue;
+#define STEP 1000
+    for(long jloc=start; jloc<end; jloc+=STEP)
+#pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)
+{
+	long end2=(jloc+STEP)<end?(jloc+STEP):end;
+	for(long iloc=jloc; iloc<end2; iloc++){
+	    //for(long iloc=start; iloc<end; iloc++){
+	    dplocx=myfma(px[iloc],dx_in2,displacex);
+	    dplocy=myfma(py[iloc],dx_in2,displacey);
+	    SPLIT(dplocx,dplocx,nplocx);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocx<1||nplocx>nxmax||nplocy<1||nplocy>nymax){
+		missing++;
+		continue;
+	    }
+	    dplocy0=1.-dplocy;
+	    dplocx0=1.-dplocx;
+	    CUBIC_ADD_GRID;
 	}
-	dplocy0=1.-dplocy;
-	dplocx0=1.-dplocx;
-	CUBIC_ADD_GRID;
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 /**
@@ -600,10 +625,13 @@ void prop_grid_pts_cubic(ARGIN_GRID,
     PREPIN_GRID(3);
     PREPOUT_PTS;
     RUNTIME_CUBIC;
-    for(int isa=start; isa<end; isa++){
+    for(int isa=start; isa<end; isa++)
+#pragma omp task private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy)
+{
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
+
 	for(int iy=0; iy<pts->nx; iy++){
 	    long iloc=iloc0+iy*pts->nx-1;
 	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
@@ -626,11 +654,12 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 	    }
 	}
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 /**
    like prop_grid_map() but with cubic influence functions. cubic_iac is the
-inter-actuator-coupling. */
+   inter-actuator-coupling. */
 void prop_grid_map_cubic(ARGIN_GRID,
 			 ARGOUT_MAP,
 			 ARG_PROP,
@@ -639,7 +668,9 @@ void prop_grid_map_cubic(ARGIN_GRID,
     PREPIN_GRID(3);
     PREPOUT_MAP;
     RUNTIME_CUBIC;
-    for(int iy=start; iy<end; iy++){
+    for(int iy=start; iy<end; iy++)
+#pragma omp task private(dplocx,nplocx,dplocx0)
+{
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
 	if(nplocy<1||nplocy>nymax){
@@ -657,6 +688,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
 	    CUBIC_ADD_GRID;
 	}
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 /**
@@ -671,28 +703,34 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
     PREPIN_NONGRID(2,3);
     PREPOUT_LOC;
     RUNTIME_CUBIC;
+#define STEP 1000
+    for(long jloc=start; jloc<end; jloc+=STEP){
+	long end2=(jloc+STEP)<end?(jloc+STEP):end;
+#pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)
+	for(long iloc=jloc; iloc<end2; iloc++){
+	    //for(long iloc=start; iloc<end; iloc++){
+	    if(ampout && fabs(ampout[iloc])<EPS)
+		continue;/*skip points that has zero amplitude */
+	    dplocy=myfma(py[iloc],dx_in2,displacey);
+	    dplocx=myfma(px[iloc],dx_in2,displacex);
 
-    for(long iloc=start; iloc<end; iloc++){
-	if(ampout && fabs(ampout[iloc])<EPS)
-	    continue;/*skip points that has zero amplitude */
-	dplocy=myfma(py[iloc],dx_in2,displacey);
-	dplocx=myfma(px[iloc],dx_in2,displacex);
-
-	SPLIT(dplocx,dplocx,nplocx);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1 || nplocy>nymax || nplocx<1 || nplocx>nxmax){
-	    missing++;
-	    continue;
+	    SPLIT(dplocx,dplocx,nplocx);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocy<1 || nplocy>nymax || nplocx<1 || nplocx>nxmax){
+		missing++;
+		continue;
+	    }
+	    dplocy0=1.-dplocy;
+	    dplocx0=1.-dplocx;
+	    CUBIC_ADD_NONGRID;
 	}
-	dplocy0=1.-dplocy;
-	dplocx0=1.-dplocx;
-	CUBIC_ADD_NONGRID;
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 /**
    like prop_nongrid_pts() but with cubic influence functions. cubic_iac is the
-inter-actuator-coupling.  */
+   inter-actuator-coupling.  */
 void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 			    ARGOUT_PTS,
 			    ARG_PROP,
@@ -701,7 +739,9 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
     PREPIN_NONGRID(2,3);
     PREPOUT_PTS;
     RUNTIME_CUBIC;
-    for(int isa=start; isa<end; isa++){
+    for(int isa=start; isa<end; isa++)
+#pragma omp task private(dplocx,dplocy,dplocx0,dplocy0,nplocx,nplocy)
+{
 	const long iloc0=isa*pts->nx*pts->nx;
 	const double ox=pts->origx[isa];
 	const double oy=pts->origy[isa];
@@ -727,11 +767,12 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	    }
 	}
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 /**
    like prop_nongrid_map() but with cubic influence functions. cubic_iac is the
-inter-actuator-coupling. */
+   inter-actuator-coupling. */
 void prop_nongrid_map_cubic(ARGIN_NONGRID,
 			    ARGOUT_MAP,
 			    ARG_PROP,
@@ -740,7 +781,9 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
     PREPIN_NONGRID(2,3);
     PREPOUT_MAP;
     RUNTIME_CUBIC;
-    for(int iy=start; iy<end; iy++){
+    for(int iy=start; iy<end; iy++)
+#pragma omp task private(dplocx,nplocx,dplocx0)
+{
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
 	if(nplocy<1||nplocy>nymax){
@@ -758,22 +801,23 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 	    CUBIC_ADD_NONGRID;
 	}
     }
+#pragma omp taskwait
     WARN_MISSING;
 }
 
 /**
-  the following routine is used to do down sampling by doing binning ray tracing
-  using reverse interplation.  locout is coarse sampling, locin is fine
-  sampling. phiout is the destination OPD. The weightings are obtained by
-  interpolating from locout to locin, but the OPD are reversed computed. Simply
-  replace prop_nongrid by prop_nongrid_reverse without changing arguments,
-  except removing start, end, will do the same ray tracing using reverse
-  interpolation (binning). ampout is not used.
+   the following routine is used to do down sampling by doing binning ray tracing
+   using reverse interplation.  locout is coarse sampling, locin is fine
+   sampling. phiout is the destination OPD. The weightings are obtained by
+   interpolating from locout to locin, but the OPD are reversed computed. Simply
+   replace prop_nongrid by prop_nongrid_reverse without changing arguments,
+   except removing start, end, will do the same ray tracing using reverse
+   interpolation (binning). ampout is not used.
 
-  2011-04-27: Revised usage of alpha, displacex/y so that the result agrees with
-  prop_nongrid when used in the same situation. Report missing does not make
-  sense here since locin is usually bigger than locout.
-  */
+   2011-04-27: Revised usage of alpha, displacex/y so that the result agrees with
+   prop_nongrid when used in the same situation. Report missing does not make
+   sense here since locin is usually bigger than locout.
+*/
 void prop_nongrid_bin(const loc_t *locin,
 		      const double* phiin,
 		      loc_t *locout, 
