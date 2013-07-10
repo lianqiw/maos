@@ -74,8 +74,8 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     if(fabs(ratio-1)<EPS){
 	/*loc_out and loc_in has the same grid sampling.*/
 	for(icol=colstart; icol<colend; icol++)
-#if TRANSPOSE == 0
-#pragma omp task if(USE_ICC)
+#if TRANSPOSE == 0 && USE_ICC==1 && _OPENMP >= 200805
+#pragma omp task
 #endif
 	    {
 		/*grid size of loc_in and loc_out agree*/
@@ -193,8 +193,8 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     }else{
 	/*grid size of loc_in and loc_out doesn't agree*/
 	for(icol=colstart; icol<colend; icol++)
-#if TRANSPOSE == 0
-#pragma omp task if(USE_ICC)
+#if TRANSPOSE == 0 && USE_ICC==1 && _OPENMP >= 200805
+#pragma omp task
 #endif
 	    {
 		CONST_IN double *phicol, *phicol2;
@@ -313,8 +313,8 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 #else
     /*non optimized case. slower, but hopefully accurate*/
     for(icol=colstart; icol<colend; icol++)
-#if TRANSPOSE == 0
-#pragma omp task if(USE_ICC)
+#if TRANSPOSE == 0 && USE_ICC==1 && _OPENMP >= 200805
+#pragma omp task
 #endif
 	{
 	    double dplocx0;
@@ -382,7 +382,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	warning(" %d points not covered by input screen\n", missing);
 	print_backtrace();
     }
-#if TRANSPOSE == 0
+#if TRANSPOSE == 0 && USE_ICC==1 && _OPENMP >= 200805
 #pragma omp taskwait
 #endif
 }/*function*/

@@ -43,7 +43,9 @@ void prop_grid_pts(ARGIN_GRID,
     if(!saend) saend=pts->nsa;
     if(USE_OPTIM && fabs(dx_in2*dxout-1)<EPS){
         for(int isa=sastart; isa<saend; isa++)
-#pragma omp task if(USE_ICC)
+#if USE_ICC==1 && _OPENMP >= 200805
+#pragma omp task
+#endif
 	    {	
 		double dplocx, dplocy;
 		int nplocx, nplocy;
@@ -183,7 +185,9 @@ void prop_grid_pts(ARGIN_GRID,
 	const double ratio = dxout*dx_in2;
 	const double (*phiin)[ninx]=(const double(*)[ninx])(mapin->p);
 	for(int isa=sastart; isa<saend; isa++)
-#pragma omp task if(USE_ICC)
+#if USE_ICC==1 && _OPENMP >= 200805
+#pragma omp task
+#endif
 	    {
 		double dplocx, dplocy;
 		int nplocx, nplocy;
@@ -322,5 +326,7 @@ void prop_grid_pts(ARGIN_GRID,
 		}/*wrap*/
 	    }/*end isa*/
     }
+#if USE_ICC==1 && _OPENMP >= 200805
 #pragma omp taskwait
+#endif
 }
