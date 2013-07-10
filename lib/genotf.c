@@ -30,8 +30,6 @@ typedef struct T_VALID{
 /**
  Wrap the data to genotf to have multi-thread capability.*/
 typedef struct GENOTF_T{
-    long isa;
-    pthread_mutex_t mutex_isa;
     cmat **otf;
     loc_t *loc;     /**<the common aperture grid*/
     const double *amp;    /**<The amplitude map of all the (sub)apertures*/
@@ -41,7 +39,7 @@ typedef struct GENOTF_T{
     double wvl;  /**<The wavelength. only needef if opdbias is not null*/
     long ncompx; /**<Size of OTF*/
     long ncompy; /**<Size of OTF*/
-    long nsa;    /**<Number of (sub)apertures*/
+    int nsa;    /**<Number of (sub)apertures*/
     long pttr;   /**<Remove piston/tip/tilt*/
     const dmat *B;
     const T_VALID *pval;
@@ -199,9 +197,9 @@ static void genotf_do(cmat **otf, long pttr, long notfx, long notfy,
 /**
    A wrapper to execute pttr parallel in pthreads
  */
-static void *genotf_wrap(GENOTF_T *data){
-    long isa=0;
-    const long nsa=data->nsa;
+static void genotf_wrap(thread_t *info){
+    GENOTF_T *data=info->data;
+    const int nsa=data->nsa;
     cmat**otf=(cmat**)data->otf;
     loc_t *loc=data->loc;
     const long nxsa=loc->nloc;
@@ -215,9 +213,9 @@ static void *genotf_wrap(GENOTF_T *data){
     const long pttr=data->pttr;
     const dmat *B=data->B;
     const T_VALID *pval=data->pval;
-    while(LOCK(data->mutex_isa),isa=data->isa++,UNLOCK(data->mutex_isa),isa<nsa){
+    for(int isa=info->start; isa<info->end; isa++){
 	if(!detached && nsa>10){
-	    info2("%6ld of %6ld\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
+	    info2("%6d of %6d\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b", isa,nsa);
 	}
 	const double *opdbiasi=NULL;
 	if(data->opdbias){
@@ -231,7 +229,6 @@ static void *genotf_wrap(GENOTF_T *data){
 	    genotf_do(&otf[isa],pttr,ncompx,ncompy,loc,amp?amp+isa*nxsa:NULL,opdbiasi,wvl,B,pval);
 	}
     }
-    return NULL;
 }
 /**
    Generate pairs of overlapping points for structure function.  
@@ -352,10 +349,7 @@ void genotf(cmat **otf,    /**<The otf array for output*/
 	}
     }
     
-    GENOTF_T data;
-    memset(&data, 0, sizeof(GENOTF_T));
-    data.isa=0;
-    PINIT(data.mutex_isa);
+    GENOTF_T data={0};
     data.otf=otf;
     data.loc=loc;
     data.amp=amp;
@@ -371,8 +365,9 @@ void genotf(cmat **otf,    /**<The otf array for output*/
     data.pval=pval;
     data.isafull=isafull;
     data.otffull=otffull;
-
-    CALL(genotf_wrap, &data, NCPU, 1);
+    thread_t info[NCPU];
+    thread_prep(info, 0, nsa, NCPU, genotf_wrap, &data);
+    CALL_THREAD(info, NCPU, 1);
     cfree(otffull);
     if(!cov) dfree(B);
     free(pval[0].loc);

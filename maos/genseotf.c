@@ -75,7 +75,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     }else{
 	notf=1;
     }
-    info("notf=%d\n", notf);
+    info2("notf=%d\n", notf);
     if(powfs[ipowfs].intstat->otf){
 	ccellfreearr(powfs[ipowfs].intstat->otf, powfs[ipowfs].intstat->notf);
     }
