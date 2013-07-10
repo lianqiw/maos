@@ -609,7 +609,7 @@ static int respond(int sock){
 	    free(out);
 	}
 	break;
-    case CMD_DRAW://9: not used
+    case CMD_UNUSED0://9: not used
 	break;
     case CMD_SOCK://10:Called by draw() to cache a sock.
 	{
@@ -655,7 +655,7 @@ static int respond(int sock){
     case CMD_DISPLAY://12; called by remote display to talk to maos*/
 	{
 	    RUN_T *irun=running_get(pid);
-	    int cmd2[2]={CMD_SOCK, 0};
+	    int cmd2[2]={MAOS_DRAW, 0};
 	    if(stwriteintarr(irun->sock, cmd2, 2) || stwritefd(irun->sock, sock)){
 		warning("Unable to pass socket %d to maos at %d\n", sock, irun->sock);
 		stwriteint(sock, -1);//respond failure message.
@@ -665,16 +665,16 @@ static int respond(int sock){
 	    ret=-1;
 	}
 	break;
-    case CMD_VERSION://13;not used
+    case CMD_UNUSED1://13;not used
 	break;
-    case CMD_LOAD://14;intended for monitor
+    case CMD_UNUSED2://14;intended for monitor
 	break;
     case CMD_RESTART://15;intended for maos
 	runned_restart(pid);
 	break;
     case CMD_UNUSED3://16;
 	break;
-    case CMD_ADDHOST://17;only used in monitor
+    case CMD_UNUSED4://17;only used in monitor
 	break;
     case CMD_LAUNCH://18; called from another machine to start a job in this machine
 	{
@@ -697,8 +697,35 @@ static int respond(int sock){
 		execmd=stradd(execwd, "/", execmd, NULL);
 		free(tmp);
 	    }
-	    new_job(exename, execmd);
-	    ret=0;
+	    if(strstr(execmd, "--server")){
+		/*launch immediately so we can establish a connection from client*/
+		int pidn=-1;
+		if((pidn=launch_exe(exename, execmd))<0){
+		    warning("launch_exe %s failed\n", exename);
+		    ret=-1;
+		}else{
+		    info("job launched as %d\n", pidn);
+		    RUN_T *irun=NULL;
+		    int count=0;
+		    while(!(irun=running_get(pidn)) && !kill(pidn,0) && count<10){
+			sleep(1);
+		    }
+		    if(irun){//job is started
+			int cmd2[2]={MAOS_SERVER, 0};
+			if(stwriteintarr(irun->sock, cmd2, 2) || stwritefd(irun->sock, sock)){
+			    ret=-1;
+			}else{
+			    ret=0;
+			}
+		    }else{//job is not started due to lacking resource(?)
+			kill(pidn, SIGTERM);
+			ret=-1;
+		    }
+		}
+	    }else{
+		new_job(exename, execmd);
+		ret=0;
+	    }
 	}else{
 	    warning("Unable to read execmd\n");
 	    ret=-1;
@@ -788,10 +815,10 @@ static int monitor_send_do(RUN_T *irun, char *path, int sock){
     cmd[1]=irun->pidnew;//Replaces hid(useless) by new pid as of 2013-04-01.
     cmd[2]=irun->pid;
     if(path){/*don't do both. */
-	cmd[0]=CMD_PATH;
+	cmd[0]=MON_PATH;
 	return (stwrite(sock, cmd, 3*sizeof(int)) || stwritestr(sock, path));
     }else{
-	cmd[0]=CMD_STATUS;
+	cmd[0]=MON_STATUS;
 	return (stwrite(sock, cmd, 3*sizeof(int)) || stwrite(sock, &irun->status, sizeof(STATUS_T)));
     }
 }
@@ -812,7 +839,7 @@ static void monitor_send_load(void){
     MONITOR_T *ic, *ic2;
     double mem=get_usage_mem();
     int cmd[3];
-    cmd[0]=CMD_LOAD;
+    cmd[0]=MON_LOAD;
     cmd[1]=hid;
     int memi=(int)(mem*100);
     int cpui=(int)(usage_cpu*100);
@@ -836,7 +863,7 @@ static void monitor_send_initial(MONITOR_T *ic){
     sock=ic->sock;
     {
 	int cmd[3];
-	cmd[0]=CMD_VERSION;
+	cmd[0]=MON_VERSION;
 	cmd[1]=scheduler_version;
 	cmd[2]=hid;/*Fixme: sending hid to monitor is not good is hosts does not match. */
 	if(stwrite(sock,cmd,sizeof(int)*3)){

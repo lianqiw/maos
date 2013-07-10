@@ -460,10 +460,8 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     if(parms->save.setup){
 	locwrite((loc_t*)powfs[ipowfs].pts, "%s/powfs%d_pts",dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].saloc, "%s/powfs%d_saloc",dirsetup,ipowfs); 
-	if(powfs[ipowfs].gloc!=aper->locs){
-	    locwrite(powfs[ipowfs].gloc,"%s/powfs%d_gloc", dirsetup, ipowfs);
-	    dwrite(powfs[ipowfs].gamp,"%s/powfs%d_gamp", dirsetup, ipowfs);
-	}
+	locwrite(powfs[ipowfs].gloc,"%s/powfs%d_gloc", dirsetup, ipowfs);
+	dwrite(powfs[ipowfs].gamp,"%s/powfs%d_gamp", dirsetup, ipowfs);
 	dwrite(powfs[ipowfs].saa,"%s/powfs%d_saa", dirsetup,ipowfs);
 	locwrite(powfs[ipowfs].loc,"%s/powfs%d_loc",dirsetup,ipowfs);
 	dwrite(powfs[ipowfs].amp, "%s/powfs%d_amp", dirsetup,ipowfs);

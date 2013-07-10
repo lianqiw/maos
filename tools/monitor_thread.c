@@ -113,7 +113,7 @@ static int host_from_sock(int sock){
 
 
 void add_host_wrap(int ihost){
-    int cmd[3]={CMD_ADDHOST, 0, 0};
+    int cmd[3]={MON_ADDHOST, 0, 0};
     cmd[1]=ihost;
     stwriteintarr(sock_main[1], cmd, 3);
 }
@@ -188,9 +188,9 @@ static int respond(int sock){
     }
     int pid=cmd[2];
     switch(cmd[0]){
-    case CMD_VERSION:
+    case MON_VERSION:
 	break;
-    case CMD_STATUS:
+    case MON_STATUS:
 	{
 	    PROC_T *p=proc_get(ihost,pid);
 	    if(!p){
@@ -210,7 +210,7 @@ static int respond(int sock){
 	    }
 	}
 	break;
-    case CMD_PATH:
+    case MON_PATH:
 	{
 	    PROC_T *p=proc_get(ihost,pid);
 	    if(!p){
@@ -225,7 +225,7 @@ static int respond(int sock){
 	    }
 	}
 	break;
-    case CMD_LOAD:
+    case MON_LOAD:
 	{
 	    usage_cpu[ihost]=(double)((pid>>16) & 0xFFFF)/100.;
 	    usage_mem[ihost]=(double)(pid & 0xFFFF)/100.;
@@ -234,7 +234,7 @@ static int respond(int sock){
 	    gdk_threads_add_idle((GSourceFunc)update_progress, GINT_TO_POINTER(ihost));
 	}
 	break;
-    case CMD_ADDHOST:
+    case MON_ADDHOST:
 	if(cmd[1]>-1 && cmd[1]<nhost){
 	    pthread_t tmp;
 	    pthread_create(&tmp, NULL, (void*(*)(void*))add_host, GINT_TO_POINTER(cmd[1]));
@@ -298,23 +298,54 @@ void listen_host(){
 	}
     }
 }
-
 /**
-   called by monitor to talk to scheduler.
+   called by monitor to let a MAOS job remotely draw on this computer
 */
-int scheduler_cmd(int host,int pid, int command){
-    int sock=hsock[host];
-    if(sock==-1){
-	add_host_wrap(host);
-	sleep(1);
+int scheduler_display(int ihost, int pid){
+    /*connect to scheduler with a new port. The schedule pass the other
+      end of the port to drawdaemon so we can communicate with it.*/
+    int sock=connect_port(hosts[ihost], PORT, 0, 0);
+    int ans=1;
+    int cmd[2]={CMD_DISPLAY, pid};
+    if(stwriteintarr(sock, cmd, 2)){
+	warning("Failed to communicate to scheduler\n");
+	close(sock);
     }
-    if(sock==-1) return 1;
-    int cmd[2];
-    cmd[0]=command;
-    cmd[1]=pid;/*pid */
-    int ans=stwriteintarr(sock,cmd,2);
-    if(ans){/*communicated failed.*/
+    if(streadintarr(sock, cmd, 1)){
+	warning("Read response failed\n");
+    }else if(cmd[0]){
+	warning("The scheduler failed to talk to maos\n");
+    }else{
+	if(spawn_drawdaemon(sock)){
+	    warning("spwn drawdaemon failed\n");
+	}else{
+	    ans=0;
+	}	
 	close(sock);
     }
     return ans;
 }
+/**
+   called by monitor to talk to scheduler.
+*/
+int scheduler_cmd(int host,int pid, int command){
+    if(command==CMD_DISPLAY){
+	return scheduler_display(host, pid);
+    }else{
+	int sock=hsock[host];
+	if(sock==-1){
+	    add_host_wrap(host);
+	    sleep(1);
+	}
+	if(sock==-1) return 1;
+	int cmd[2];
+	cmd[0]=command;
+	cmd[1]=pid;/*pid */
+	int ans=stwriteintarr(sock,cmd,2);
+	if(ans){/*communicated failed.*/
+	    close(sock);
+	}
+	return ans;
+    }
+}
+

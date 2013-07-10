@@ -54,8 +54,6 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
     CONST_OUT double *phiout=mapout->p;
     /*With OpenMP compiler complained uninitialized value for the following
       because they are treated as firstprivate*/
-    double dplocx, dplocy;
-    int nplocx, nplocy, icol,irow;
     if(colend==0) colend = mapout->ny;
 
     const int wrapx1 = mapin->nx;
@@ -73,7 +71,8 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 #if USE_OPTIM == 1
     if(fabs(ratio-1.)<EPS){
 	int irows;
-	dplocx=mapout->ox*dx_in2+displacex;
+	double dplocx=mapout->ox*dx_in2+displacex;
+	int nplocx;
 	if(wrap){
 	    dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
 	    irows=0;
@@ -85,12 +84,12 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	}
 	SPLIT(dplocx,dplocx,nplocx);
 	/*loc_out and loc_in has the same grid sampling.*/
-	for(icol=colstart; icol<colend; icol++)
+	for(int icol=colstart; icol<colend; icol++)
 #if TRANSPOSE ==0
-#pragma omp task 
+#pragma omp task if(USE_ICC)
 #endif
 	    {
-		int rowdiv,rowdiv2;
+		int rowdiv,rowdiv2, nplocy;
 		/*grid size of loc_in and loc_out agree*/
 		double bl, br, tl, tr;
 		CONST_IN double *phicol, *phicol2;
@@ -98,7 +97,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		int offset=icol*mapout->nx;
 		int collen=mapout->nx;
 		CONST_OUT double *phiout2=phiout+offset;
-		dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
+		double dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
 		if(wrap){
 		    dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 		}
@@ -127,7 +126,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		if(rowdiv>collen) rowdiv=collen;
 		if(rowdiv<0)rowdiv=0;
 		/*reduce to number of needed*/
-		for(irow=irows; irow<rowdiv; irow++){
+		for(int irow=irows; irow<rowdiv; irow++){
 #if TRANSPOSE == 0
 		    phiout2[irow]+=alpha*
 			(bl*phicol2[irow+1]
@@ -145,7 +144,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 
 		if(wrap){
 		    while(rowdiv < collen){/*can wrap several times*/ 
-			irow=rowdiv;
+			int irow=rowdiv;
 #if TRANSPOSE == 0
 			phiout2[irow]+=alpha*
 			    (bl*phicol2[irow-wrapx]
@@ -187,15 +186,15 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 	    end1:;
 	    }/*end for icol*/
     }else{
-	for(icol=colstart; icol<colend; icol++)
+	for(int icol=colstart; icol<colend; icol++)
 #if TRANSPOSE ==0
-#pragma omp task 
+#pragma omp task if(USE_ICC)
 #endif
 	    {
 		/*grid size of loc_in and loc_out doesn't agree*/
 		CONST_IN double *phicol, *phicol2;
 		double dplocx0;
-		int nplocx0;
+		int nplocx0,nplocy;
 		int rowdiv,rowdiv2;
 		int irows;
 
@@ -203,7 +202,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		int offset=icol*mapout->nx;
 		int collen=mapout->nx;
 		CONST_OUT double *phiout2=phiout+offset;
-		dplocx=mapout->ox*dx_in2+displacex;
+		double dplocx=mapout->ox*dx_in2+displacex;
 		if(wrap){
 		    dplocx-=wrapx1*floor(dplocx/(double)wrapx1);
 		    irows=0;
@@ -213,7 +212,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		    else
 			irows=0;
 		}
-		dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
+		double dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
 		if(wrap){
 		    dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 		}
@@ -239,7 +238,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		if(rowdiv<0) rowdiv=0;/*rowdiv may be -1 if dplocx=wrapx+0.* */
 		if(rowdiv>collen) rowdiv=collen;
 		dplocx = dplocx + ratio*irows;
-		for(irow=irows; irow<rowdiv; irow++){/*no wrap*/
+		for(int irow=irows; irow<rowdiv; irow++){/*no wrap*/
 		    SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0
 		    phiout2[irow]+=alpha*
@@ -280,7 +279,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 			dplocx=dplocx-wrapx1;			
 			rowdiv2=iceil((wrapx-dplocx)/ratio);
 			if(rowdiv2>collen) rowdiv2=collen;
-			for(irow=rowdiv; irow<rowdiv2; irow++){
+			for(int irow=rowdiv; irow<rowdiv2; irow++){
 			    SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0
 			    phiout2[irow]+=alpha*
@@ -305,17 +304,17 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
     }/*fabs(dx_in2*dxout-1)<EPS*/
 #else
     /*non optimized case. slower, but hopefully accurate*/
-    for(icol=colstart; icol<colend; icol++)
+    for(int icol=colstart; icol<colend; icol++)
 #if TRANSPOSE ==0
-#pragma omp task 
+#pragma omp task if(USE_ICC)
 #endif
 	{
-	    double dplocx0;
+	    double dplocx0,dplocx;
 	    int nplocy1, nplocx1;
 	    int offset=icol*mapout->nx;
 	    int collen=mapout->nx;
 	    CONST_OUT double *phiout2=phiout+offset;
-	    dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
+	    double dplocy=(mapout->oy+icol*mapout->dx)*dx_in2+displacey;
 	    SPLIT(dplocy,dplocy,nplocy);
 	    const double dplocy1=1.-dplocy;
 	    if(nplocy<0||nplocy>=wrapy){
@@ -332,7 +331,7 @@ void FUN_NAME (CONST_IN map_t *mapin,   /**<[in] OPD defind on a square grid*/
 		nplocy1=nplocy+1;
 	    }
 	    dplocx0=(mapout->ox)*dx_in2+displacex;
-	    for(irow=0; irow<collen; irow++){
+	    for(int irow=0; irow<collen; irow++){
 		SPLIT(dplocx0,dplocx,nplocx);
 		dplocx0+=ratio;
 		if(nplocx>=0 && nplocx<wrapx){

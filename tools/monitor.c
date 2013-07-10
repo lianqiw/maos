@@ -341,24 +341,7 @@ void kill_job(PROC_T *p){
     	break;
     case 1:
 	{
-	    /*connect to scheduler with a new port. Pass the port to
-	      drawdaemon.*/
-	    int sock=connect_port(hosts[p->hid], PORT, 0, 0);
-	    int cmd[2]={CMD_DISPLAY, p->pid};
-	    if(stwriteintarr(sock, cmd, 2)){
-		warning("Failed to communicate to scheduler\n");
-		close(sock);
-	    }
-	    if(streadintarr(sock, cmd, 1)){
-		warning("Read response failed\n");
-	    }else if(cmd[0]){
-		warning("The scheduler failed to talk to maos\n");
-	    }else{
-		if(spawn_drawdaemon(sock)){
-		    warning("spwn drawdaemon failed\n");
-		}
-		close(sock);
-	    }
+	    scheduler_display(p->hid, p->pid);
 	}
 	break;
     }

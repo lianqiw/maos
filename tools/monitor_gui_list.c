@@ -428,6 +428,9 @@ static void kill_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *i
 static void restart_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
     handle_selected(model, path, iter, user_data, CMD_RESTART, "Restart");
 }
+static void plot_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
+    handle_selected(model, path, iter, user_data, CMD_DISPLAY, "Plot");
+}
 static void clear_selected(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer user_data){
     handle_selected(model, path, iter, user_data, CMD_REMOVE, "Remove");
 }
@@ -448,6 +451,7 @@ static void handle_selected_event(GtkMenuItem *menuitem, gpointer user_data, Gtk
 	return;
     }
     int result=GTK_RESPONSE_YES;
+    /*Alert user in Kill or Restart event*/
     if(!strcmp(action, "Kill") || !strcmp(action, "Restart")){
 	GtkWidget *dia=gtk_message_dialog_new
 	    (NULL, GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -467,6 +471,9 @@ static void kill_selected_event(GtkMenuItem *menuitem, gpointer user_data){
 }
 static void restart_selected_event(GtkMenuItem *menuitem, gpointer user_data){
     handle_selected_event(menuitem, user_data, restart_selected, "Restart");
+}
+static void plot_selected_event(GtkMenuItem *menuitem, gpointer user_data){
+    handle_selected_event(menuitem, user_data, plot_selected, "Plot");
 }
 static void clear_selected_event(GtkMenuItem *menuitem, gpointer user_data){
     handle_selected_event(menuitem, user_data, clear_selected, "Clear");
@@ -501,6 +508,11 @@ static gboolean view_popup_menu(GtkWidget *view, gpointer user_data){
 	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PLAY, NULL);
 	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Restart selected jobs");
 	g_signal_connect(menuitem, "activate", G_CALLBACK(restart_selected_event), user_data);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
+
+	menuitem=gtk_image_menu_item_new_from_stock(GTK_STOCK_MEDIA_PLAY, NULL);
+	gtk_menu_item_set_label(GTK_MENU_ITEM(menuitem), "Plot selected jobs");
+	g_signal_connect(menuitem, "activate", G_CALLBACK(plot_selected_event), user_data);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
 	menuitem=gtk_separator_menu_item_new();

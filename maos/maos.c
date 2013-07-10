@@ -34,7 +34,7 @@ GLOBAL_T *global=NULL;//record for convenient access.
 int use_cuda=0;
 const char *dirsetup=NULL;
 const char *dirskysim=NULL;
-
+volatile int maos_server_fd=-1;
 /**
    This is the routine that calls various functions to do the simulation. maos()
    calls setup_aper(), setup_powfs(), and setup_recon() to set up the aperture
@@ -120,6 +120,53 @@ void maos(const PARMS_T *parms){
 	gpu_cleanup();
     }
 #endif
+}
+static void maos_server(PARMS_T *parms){
+    if(maos_server_fd<0){
+	error("Invalid maos_server_fd\n");
+	EXIT;
+    }
+    warning("maos running in server mode\n");
+    int msglen;
+    int sock=maos_server_fd;
+    while(!streadint(sock, &msglen)){
+	int ret=0;/*acknowledgement of the command. 0: accepted. otherwise: not understood*/
+	int *msg=alloca(sizeof(int)*msglen);
+	
+	if(streadintarr(sock, msg, msglen)){
+	    break;
+	}
+	switch(msg[0]){
+	case MAOS_ASSIGN_WFS:{/*Specifies which WFS to be handled*/
+	    for(int iwfs=0; iwfs<parms->nwfs; iwfs++){
+		parms->wfs[iwfs].sock=msg[iwfs+1]?-1:0;
+	    }
+	}break;
+	case MAOS_ASSIGN_EVL:{/*Specifies which EVL to be handled*/
+	    if(!parms->evl.sock){
+		parms->evl.sock=calloc(parms->evl.nevl, sizeof(int));
+	    }
+	    for(int ievl=0; ievl<parms->evl.nevl; ievl++){
+		parms->evl.sock[ievl]=msg[ievl+1]?-1:0;
+	    }
+	}break;
+	case MAOS_ASSIGN_RECON:{/*Specifies whether recon should be handled*/
+	    parms->recon.sock=msg[1]?-1:0;
+	}break;
+	case MAOS_ASSIGN_DONE:{/*Now start configuration*/
+	    error("Not completed\n");
+	}break;
+	default:
+	    ret=1;
+	}/*switch*/
+
+	if(stwriteint(sock, ret)){
+	    break;
+	}
+    }
+    warning("maos_server exited\n");
+    //todo:listening on socket for commands.
+    //maos client mode: start maos server mode via scheduler.
 }
 /**
    This is the standard entrance routine to the program.  It first calls
@@ -214,12 +261,20 @@ int main(int argc, const char *argv[]){
     }
     info2("\n*** Simulation started at %s in %s. ***\n\n",myasctime(),myhostname());
     thread_new((thread_fun)scheduler_listen, maos_daemon);
+    THREAD_POOL_INIT(parms->sim.nthread);
     setup_parms_running(parms, arg);
+    if(arg->server){
+	while(maos_server_fd<0){
+	    warning("Waiting for fd\n");
+	    sleep(1);
+	}
+	maos_server(parms);
+	EXIT;
+    }
     free(scmd);
     free(arg->dirout);
     free(arg->gpus);
     free(arg);
-    THREAD_POOL_INIT(parms->sim.nthread);
     if(parms->save.setup){
 	dirsetup="setup";
 	mymkdir("%s",dirsetup);

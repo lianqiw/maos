@@ -57,6 +57,7 @@ void kill_job_event(GtkWidget *btn, GdkEventButton *event, PROC_T *p);
 void kill_selected_jobs(GtkAction *btn);
 void notify_user(PROC_T *p);
 int scheduler_cmd(int host,int pid, int command);
+int scheduler_display(int ihost, int pid);
 extern GdkColor blue;
 extern GdkColor green;
 extern GdkColor red;

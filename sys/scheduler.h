@@ -48,7 +48,7 @@ typedef struct STATUS_T{
     time_t timstart;
     time_t timend;
 }STATUS_T;
-
+/*For scheduler()*/
 enum{
     CMD_START=1,
     CMD_FINISH,
@@ -58,19 +58,37 @@ enum{
     CMD_PATH,/*6 */
     CMD_KILL,
     CMD_TRACE,/*8 */
-    CMD_DRAW,
+    CMD_UNUSED0,
     CMD_SOCK,  /**<10 We are pass a socket*/
     CMD_REMOVE,/**<11 Remove a job*/
     CMD_DISPLAY,/**<12 Remote display for telemetry*/
-    CMD_VERSION,/*13 */
-    CMD_LOAD,/*14 */
+    CMD_UNUSED1,/*13 */
+    CMD_UNUSED2,/*14 */
     CMD_RESTART,/*15*/
     CMD_UNUSED3,/*16*/
-    CMD_ADDHOST,/*17*/
+    CMD_UNUSED4,/*17*/
     CMD_LAUNCH,/*18*/
     CMD_PAUSE,
     CMD_RESUME,
 };
+/*command from scheduler etc to maos*/
+enum{
+    MAOS_SERVER=1,/*tell maos to act as server*/
+    MAOS_DRAW=10,/*tell maos to start drawing*/
+    MAOS_ASSIGN_WFS=100,
+    MAOS_ASSIGN_EVL,/*101*/
+    MAOS_ASSIGN_RECON,/*102*/
+    MAOS_ASSIGN_DONE=199,/*199*/
+};
+/*command from scheduler etc and monitor*/
+enum{
+    MON_STATUS=3,
+    MON_PATH=6,
+    MON_VERSION=13,
+    MON_LOAD=14,
+    MON_ADDHOST=17,
+};
+/*For job status*/
 enum{
     S_RUNNING=1,/*1*/
     S_WAIT,  /*2*/
@@ -83,6 +101,5 @@ enum{
     S_KILLED,/*15*/
     S_NONEXIST,/*16*/
 };
-
 #define scheduler_version 0x27
 #endif

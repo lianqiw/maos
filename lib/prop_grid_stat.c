@@ -75,7 +75,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	/*loc_out and loc_in has the same grid sampling.*/
 	for(icol=colstart; icol<colend; icol++)
 #if TRANSPOSE == 0
-#pragma omp task
+#pragma omp task if(USE_ICC)
 #endif
 	    {
 		/*grid size of loc_in and loc_out agree*/
@@ -194,7 +194,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	/*grid size of loc_in and loc_out doesn't agree*/
 	for(icol=colstart; icol<colend; icol++)
 #if TRANSPOSE == 0
-#pragma omp task
+#pragma omp task if(USE_ICC)
 #endif
 	    {
 		CONST_IN double *phicol, *phicol2;
@@ -314,7 +314,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     /*non optimized case. slower, but hopefully accurate*/
     for(icol=colstart; icol<colend; icol++)
 #if TRANSPOSE == 0
-#pragma omp task
+#pragma omp task if(USE_ICC)
 #endif
 	{
 	    double dplocx0;

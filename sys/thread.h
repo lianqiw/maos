@@ -74,13 +74,13 @@ struct thread_t{
 #define QUEUE(group,fun,arg,nthread,urgent)	\
     (void)group;				\
     for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task")			\
+	_Pragma("omp task untied")			\
 	fun(arg);				\
     }
 
 #define CALL(fun,arg,nthread,urgent)	 \
     for(int it=0; it<nthread; it++){	 \
-	_Pragma("omp task")		 \
+	_Pragma("omp task untied")		 \
 	fun(arg);			 \
     }					 \
     _Pragma("omp taskwait")
@@ -95,13 +95,13 @@ struct thread_t{
 #define QUEUE_THREAD(group,A,nthread,urgent)	\
     (void)group;				\
     for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task")			\
+	_Pragma("omp task untied")			\
 	A[it].fun(A+it);			\
     }
 
 #define CALL_THREAD(A,nthread,urgent)		\
     for(int it=0; it<nthread; it++){		\
-	_Pragma("omp task")			\
+	_Pragma("omp task untied")			\
 	A[it].fun(A+it);			\
     }						\
     _Pragma("omp taskwait")

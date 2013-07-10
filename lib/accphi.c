@@ -291,18 +291,18 @@ void prop_index(PROPDATA_T *propdata){
     long iphi=0;					
 #endif
 
-#define MAKE_CUBIC_PARAM					\
-    double fx[4],fy[4];						\
-    const double cubicn=1./(1.+2.*cubic_iac);			\
-    const double c0=1.*cubicn;					\
-    const double c1=(4.*cubic_iac-2.5)*cubicn;			\
-    const double c2=(1.5-3.*cubic_iac)*cubicn;			\
-    const double c3=(2.*cubic_iac-0.5)*cubicn;			\
+#define MAKE_CUBIC_PARAM			\
+    double fx[4],fy[4];				\
+    const double cubicn=1./(1.+2.*cubic_iac);	\
+    const double c0=1.*cubicn;			\
+    const double c1=(4.*cubic_iac-2.5)*cubicn;	\
+    const double c2=(1.5-3.*cubic_iac)*cubicn;	\
+    const double c3=(2.*cubic_iac-0.5)*cubicn;	\
     const double c4=(0.5-cubic_iac)*cubicn; 
 
-#define WARN_MISSING\
+#define WARN_MISSING							\
     ({if(missing>0) {warning("%d points not covered by input screen\n", missing); \
-    print_backtrace(); }})
+	    print_backtrace(); }})
 
 #if ONLY_FULL == 1 
 #define LINEAR_ADD_NONGRID						\
@@ -401,9 +401,9 @@ void prop_grid(ARGIN_GRID,
     const int nx = mapin->nx;
     const int ny = mapin->ny;
 #define STEP 1000
-    for(long jloc=start; jloc<end; jloc+=STEP){
+    for(long jloc=start; jloc<end; jloc+=STEP) {
 	long end2=(jloc+STEP)<end?(jloc+STEP):end;
-#pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
+#pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy) if(USE_ICC)
 	for(long iloc=jloc; iloc<end2; iloc++){
 	    //for(long iloc=start; iloc<end; iloc++){
 	    if(ampout && fabs(ampout[iloc])<EPS)
@@ -461,7 +461,7 @@ void prop_nongrid(ARGIN_NONGRID,
 #define STEP 1000
     for(long jloc=start; jloc<end; jloc+=STEP){
 	long end2=(jloc+STEP)<end?(jloc+STEP):end;
-#pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy)
+#pragma omp task private(nplocx,nplocy,nplocx1,nplocy1,dplocx,dplocy) if(USE_ICC)
 	for(long iloc=jloc; iloc<end2; iloc++){
 	    //    for(long iloc=start; iloc<end; iloc++){
 	    if(ampout && fabs(ampout[iloc])<EPS)
@@ -497,7 +497,8 @@ void prop_nongrid_map(ARGIN_NONGRID,
     PREPIN_NONGRID(1,2);/*Do we need 2 in first? */
     PREPOUT_MAP;
     RUNTIME_LINEAR ;
-    for(int iy=start; iy<end; iy++){
+    for(int iy=start; iy<end; iy++)
+	{
 	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
 	if(nplocy<0||nplocy>nymax){
@@ -506,8 +507,8 @@ void prop_nongrid_map(ARGIN_NONGRID,
 	}else{
 	    nplocy1=nplocy+1;
 	}
-#pragma omp task private(nplocx,dplocx,nplocx1)
-	for(int ix=0; ix<nxout; ix++){
+#pragma omp task private(nplocx,dplocx,nplocx1) if(USE_ICC)
+	    for(int ix=0; ix<nxout; ix++){
 	    int iloc=ix+iy*nxout;
 	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
 	    SPLIT(dplocx,dplocx,nplocx);
@@ -537,34 +538,34 @@ void prop_nongrid_pts(ARGIN_NONGRID,
     RUNTIME_LINEAR;
  
     for(int isa=start; isa<end; isa++)
-#pragma omp task private(nplocx,nplocy,dplocx,dplocy,nplocx1,nplocy1)
-{
-	const long iloc0=isa*pts->nx*pts->nx;
-	const double ox=pts->origx[isa];
-	const double oy=pts->origy[isa];
-	for(int iy=0; iy<pts->nx; iy++){
-	    long iloc=iloc0+iy*pts->nx-1;
-	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy<0||nplocy>nymax){
-		continue;
-	    }
-	    nplocy1=nplocy+1;
-	    for(int ix=0; ix<pts->nx; ix++){
-		iloc++;
-		if(ampout && fabs(ampout[iloc])<EPS)
-		    continue;/*skip points that has zero amplitude */
-		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		SPLIT(dplocx,dplocx,nplocx);
-		if(nplocx<0||nplocx>nxmax){
-		    missing++;
+#pragma omp task private(nplocx,nplocy,dplocx,dplocy,nplocx1,nplocy1) if(USE_ICC)
+	{
+	    const long iloc0=isa*pts->nx*pts->nx;
+	    const double ox=pts->origx[isa];
+	    const double oy=pts->origy[isa];
+	    for(int iy=0; iy<pts->nx; iy++){
+		long iloc=iloc0+iy*pts->nx-1;
+		dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+		SPLIT(dplocy,dplocy,nplocy);
+		if(nplocy<0||nplocy>nymax){
 		    continue;
 		}
-		nplocx1=nplocx+1;
-		LINEAR_ADD_NONGRID;
-	    }    
+		nplocy1=nplocy+1;
+		for(int ix=0; ix<pts->nx; ix++){
+		    iloc++;
+		    if(ampout && fabs(ampout[iloc])<EPS)
+			continue;/*skip points that has zero amplitude */
+		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		    SPLIT(dplocx,dplocx,nplocx);
+		    if(nplocx<0||nplocx>nxmax){
+			missing++;
+			continue;
+		    }
+		    nplocx1=nplocx+1;
+		    LINEAR_ADD_NONGRID;
+		}    
+	    }
 	}
-    }
 #pragma omp taskwait
     WARN_MISSING;
 }
@@ -588,24 +589,24 @@ void prop_grid_cubic(ARGIN_GRID,
     RUNTIME_CUBIC;
 #define STEP 1000
     for(long jloc=start; jloc<end; jloc+=STEP)
-#pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)
-{
-	long end2=(jloc+STEP)<end?(jloc+STEP):end;
-	for(long iloc=jloc; iloc<end2; iloc++){
-	    //for(long iloc=start; iloc<end; iloc++){
-	    dplocx=myfma(px[iloc],dx_in2,displacex);
-	    dplocy=myfma(py[iloc],dx_in2,displacey);
-	    SPLIT(dplocx,dplocx,nplocx);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocx<1||nplocx>nxmax||nplocy<1||nplocy>nymax){
-		missing++;
-		continue;
+#pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0) if(USE_ICC)
+	{
+	    long end2=(jloc+STEP)<end?(jloc+STEP):end;
+	    for(long iloc=jloc; iloc<end2; iloc++){
+		//for(long iloc=start; iloc<end; iloc++){
+		dplocx=myfma(px[iloc],dx_in2,displacex);
+		dplocy=myfma(py[iloc],dx_in2,displacey);
+		SPLIT(dplocx,dplocx,nplocx);
+		SPLIT(dplocy,dplocy,nplocy);
+		if(nplocx<1||nplocx>nxmax||nplocy<1||nplocy>nymax){
+		    missing++;
+		    continue;
+		}
+		dplocy0=1.-dplocy;
+		dplocx0=1.-dplocx;
+		CUBIC_ADD_GRID;
 	    }
-	    dplocy0=1.-dplocy;
-	    dplocx0=1.-dplocx;
-	    CUBIC_ADD_GRID;
 	}
-    }
 #pragma omp taskwait
     WARN_MISSING;
 }
@@ -626,34 +627,34 @@ void prop_grid_pts_cubic(ARGIN_GRID,
     PREPOUT_PTS;
     RUNTIME_CUBIC;
     for(int isa=start; isa<end; isa++)
-#pragma omp task private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy)
-{
-	const long iloc0=isa*pts->nx*pts->nx;
-	const double ox=pts->origx[isa];
-	const double oy=pts->origy[isa];
+#pragma omp task private(nplocx,nplocy,dplocx0,dplocy0,dplocx,dplocy) if(USE_ICC)
+	{
+	    const long iloc0=isa*pts->nx*pts->nx;
+	    const double ox=pts->origx[isa];
+	    const double oy=pts->origy[isa];
 
-	for(int iy=0; iy<pts->nx; iy++){
-	    long iloc=iloc0+iy*pts->nx-1;
-	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy<1||nplocy>nymax){
-		continue;
-	    }
-	    dplocy0=1.-dplocy;
-	    for(int ix=0; ix<pts->nx; ix++){
-		iloc++;
-		if(ampout && fabs(ampout[iloc])<EPS)
-		    continue;/*skip points that has zero amplitude */
-		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		SPLIT(dplocx,dplocx,nplocx);
-		if(nplocx<1||nplocx>nxmax){
+	    for(int iy=0; iy<pts->nx; iy++){
+		long iloc=iloc0+iy*pts->nx-1;
+		dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+		SPLIT(dplocy,dplocy,nplocy);
+		if(nplocy<1||nplocy>nymax){
 		    continue;
 		}
-		dplocx0=1.-dplocx;
-		CUBIC_ADD_GRID;
+		dplocy0=1.-dplocy;
+		for(int ix=0; ix<pts->nx; ix++){
+		    iloc++;
+		    if(ampout && fabs(ampout[iloc])<EPS)
+			continue;/*skip points that has zero amplitude */
+		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		    SPLIT(dplocx,dplocx,nplocx);
+		    if(nplocx<1||nplocx>nxmax){
+			continue;
+		    }
+		    dplocx0=1.-dplocx;
+		    CUBIC_ADD_GRID;
+		}
 	    }
 	}
-    }
 #pragma omp taskwait
     WARN_MISSING;
 }
@@ -669,25 +670,23 @@ void prop_grid_map_cubic(ARGIN_GRID,
     PREPOUT_MAP;
     RUNTIME_CUBIC;
     for(int iy=start; iy<end; iy++)
-#pragma omp task private(dplocx,nplocx,dplocx0)
-{
-	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1||nplocy>nymax){
-	    continue;
-	}
-	dplocy0=1.-dplocy;
-	for(int ix=0; ix<nxout; ix++){
-	    int iloc=ix+iy*nxout;
-	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-	    SPLIT(dplocx,dplocx,nplocx);
-	    if(nplocx<1||nplocx>nxmax){
-		continue;
+#pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy) if(USE_ICC)
+	{
+	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocy>=1 && nplocy<=nymax){
+		dplocy0=1.-dplocy;
+		for(int ix=0; ix<nxout; ix++){
+		    int iloc=ix+iy*nxout;
+		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		    SPLIT(dplocx,dplocx,nplocx);
+		    if(nplocx>=1 && nplocx<=nxmax){
+			dplocx0=1.-dplocx;
+			CUBIC_ADD_GRID;
+		    }
+		}
 	    }
-	    dplocx0=1.-dplocx;
-	    CUBIC_ADD_GRID;
 	}
-    }
 #pragma omp taskwait
     WARN_MISSING;
 }
@@ -706,7 +705,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 #define STEP 1000
     for(long jloc=start; jloc<end; jloc+=STEP){
 	long end2=(jloc+STEP)<end?(jloc+STEP):end;
-#pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0)
+#pragma omp task private(dplocx,dplocy,nplocx,nplocy,dplocx0,dplocy0) if(USE_ICC)
 	for(long iloc=jloc; iloc<end2; iloc++){
 	    //for(long iloc=start; iloc<end; iloc++){
 	    if(ampout && fabs(ampout[iloc])<EPS)
@@ -740,33 +739,33 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
     PREPOUT_PTS;
     RUNTIME_CUBIC;
     for(int isa=start; isa<end; isa++)
-#pragma omp task private(dplocx,dplocy,dplocx0,dplocy0,nplocx,nplocy)
-{
-	const long iloc0=isa*pts->nx*pts->nx;
-	const double ox=pts->origx[isa];
-	const double oy=pts->origy[isa];
-	for(int iy=0; iy<pts->nx; iy++){
-	    long iloc=iloc0+iy*pts->nx-1;
-	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
-	    SPLIT(dplocy,dplocy,nplocy);
-	    if(nplocy<1||nplocy>nymax){
-		continue;
-	    }
-	    dplocy0=1.-dplocy;
-	    for(int ix=0; ix<pts->nx; ix++){
-		iloc++;
-		if(ampout && fabs(ampout[iloc])<EPS)
-		    continue;/*skip points that has zero amplitude */
-		dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-		SPLIT(dplocx,dplocx,nplocx);
-		if(nplocx<1||nplocx>nxmax){
+#pragma omp task private(dplocx,dplocy,dplocx0,dplocy0,nplocx,nplocy) if(USE_ICC)
+	{
+	    const long iloc0=isa*pts->nx*pts->nx;
+	    const double ox=pts->origx[isa];
+	    const double oy=pts->origy[isa];
+	    for(int iy=0; iy<pts->nx; iy++){
+		long iloc=iloc0+iy*pts->nx-1;
+		dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+		SPLIT(dplocy,dplocy,nplocy);
+		if(nplocy<1||nplocy>nymax){
 		    continue;
 		}
-		dplocx0=1.-dplocx;
-		CUBIC_ADD_NONGRID;
+		dplocy0=1.-dplocy;
+		for(int ix=0; ix<pts->nx; ix++){
+		    iloc++;
+		    if(ampout && fabs(ampout[iloc])<EPS)
+			continue;/*skip points that has zero amplitude */
+		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		    SPLIT(dplocx,dplocx,nplocx);
+		    if(nplocx<1||nplocx>nxmax){
+			continue;
+		    }
+		    dplocx0=1.-dplocx;
+		    CUBIC_ADD_NONGRID;
+		}
 	    }
 	}
-    }
 #pragma omp taskwait
     WARN_MISSING;
 }
@@ -782,25 +781,23 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
     PREPOUT_MAP;
     RUNTIME_CUBIC;
     for(int iy=start; iy<end; iy++)
-#pragma omp task private(dplocx,nplocx,dplocx0)
-{
-	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
-	SPLIT(dplocy,dplocy,nplocy);
-	if(nplocy<1||nplocy>nymax){
-	    continue;
-	}
-	dplocy0=1.-dplocy;
-	for(int ix=0; ix<nxout; ix++){
-	    int iloc=ix+iy*nxout;
-	    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
-	    SPLIT(dplocx,dplocx,nplocx);
-	    if(nplocx<1||nplocx>nxmax){
-		continue;
+#pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy) if(USE_ICC)
+	{
+	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+	    SPLIT(dplocy,dplocy,nplocy);
+	    if(nplocy>=1 && nplocy<=nymax){
+		dplocy0=1.-dplocy;
+		for(int ix=0; ix<nxout; ix++){
+		    int iloc=ix+iy*nxout;
+		    dplocx=myfma(ox+ix*dxout,dx_in2,displacex); 
+		    SPLIT(dplocx,dplocx,nplocx);
+		    if(nplocx>=1 && nplocx<=nxmax){
+			dplocx0=1.-dplocx;
+			CUBIC_ADD_NONGRID;
+		    }
+		}
 	    }
-	    dplocx0=1.-dplocx;
-	    CUBIC_ADD_NONGRID;
 	}
-    }
 #pragma omp taskwait
     WARN_MISSING;
 }

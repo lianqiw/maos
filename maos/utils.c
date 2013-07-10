@@ -508,6 +508,7 @@ ARG_T * parse_args(int argc, const char *argv[]){
 	{"path",   'p',T_STR, 3, addpath, NULL},
 	{"pause",  'P',T_INT, 0, &arg->pause, NULL},
 	{"run",    'r',T_STR, 1, &host, NULL},
+	{"server", 'S',T_INT, 0, &arg->server,NULL},
 	{NULL, 0,0,0, NULL, NULL}
     };
     char *cmds=parse_argopt(argc, argv, options);
@@ -870,7 +871,18 @@ void maos_daemon(int sock){
     while(!streadintarr(sock, cmd, 2)){
 	//info2("maos_daemon got %d at %d\n", cmd[0], sock);
 	switch(cmd[0]){
-	case CMD_SOCK:
+	case MAOS_SERVER:
+	    {
+		extern int maos_server_fd;
+		if(streadfd(sock, &maos_server_fd)){
+		    warning("unable to read fd from %d\n", sock);
+		    maos_server_fd=-1;
+		    EXIT;
+		}else{
+		    warning("got fd=%d\n", maos_server_fd);
+		}
+	    }break;
+	case MAOS_DRAW:
 	    {
 		int fd;
 		if(streadfd(sock, &fd)){

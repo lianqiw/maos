@@ -239,6 +239,7 @@ typedef struct WFS_CFG_T{
 		       in config, will use powfs.siglev*/
     double siglevsim;/**<Signal value used for simulation. (derived parameter)*/
     int powfs;      /**<powfs type*/
+    int sock;       /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }WFS_CFG_T;
 /**
    contains input parameters for each deformable mirror.
@@ -325,6 +326,7 @@ typedef struct EVL_CFG_T{
 		       elements(derived parameter)*/
     int moao;       /**<index into MOAO struct. -1: no MOAO*/
     int nthread;    /**<number of threads for evaluation parallelization*/
+    int *sock;      /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }EVL_CFG_T;
 
 /**
@@ -426,6 +428,7 @@ typedef struct RECON_CFG_T{
 		       the algorithm needs PSOL gradient, we will have an
 		       auxillary matrix to multiply to the DM actuators and
 		       subtract from the result.*/
+    int sock;       /**<-1: handle locally. otherwise, indicate the socket that handles it.*/
 }RECON_CFG_T;
 /**
    contains input parameters for simulation, like loop gain, seeds, etc.
@@ -719,6 +722,7 @@ typedef struct ARG_T{
     int *gpus;       /**<Index of GPU to use. -1 to disable*/
     int ngpu;        /**<Number of entries in gpus*/
     int ngpu2;       /**<Number of GPUs to use. Ignore of gpus is set.*/
+    int server;      /**<MAOS acting as server*/
     char *dirout;    /**<Result output directory*/
     char *conf;      /**<master .conf file. nfiraos.conf by default. -c to change*/
     char *confcmd;   /**<Additional configuration options supplied in command line.*/
