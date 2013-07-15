@@ -252,7 +252,7 @@ static int respond(int sock){
 	if(!threads){
 	    threads=(pthread_t*)calloc(NCPU, sizeof(pthread_t));
 	    cmds=(int*)calloc(NCPU, sizeof(int));
-	    for(int i=0; i<NCPU; i++){
+	    for(long i=0; i<NCPU; i++){
 		pthread_create(threads+i, NULL, (void*(*)(void*))mvm_thread, (void*)i);
 		cmds[i]=0;
 	    }

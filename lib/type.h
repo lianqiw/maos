@@ -191,10 +191,11 @@ typedef struct zspcell{
 typedef struct map_t{
     /*The OPD, takes the same form of dmat so can be casted. */
     MAT(double)
-    long *nref; /**< reference count */
+    long *nref;     /**< reference count */
     double ox;      /**<Origin in x*/
     double oy;      /**<Origin in y*/
-    double dx;      /**<Sampling along x and y*/
+    double dx;      /**<Sampling along x*/
+    double dy;      /**<Sampling along y*/
     double h;       /**<Heigh conjugation of this surface*/
     double vx;      /**Wind velocity. Useful for atmospheric grid*/
     double vy;      /**Wind velocity. Useful for atmospheric grid*/
@@ -243,7 +244,8 @@ typedef struct locstatcol_t{
 */
 typedef struct locstat_t{
     locstatcol_t *cols; /**<Information about each column*/
-    double dx;          /**<Sampling of the grid*/
+    double dx;          /**<Sampling of the grid along x*/
+    double dy;          /**<Sampling of the grid along y*/
     double xmin;        /**<Minimum x*/
     double ymin;        /**<Minimum y*/
     long   ncol;        /**<Number of consecutive columns found*/
@@ -256,7 +258,8 @@ typedef struct loc_t{
     double *restrict locx;  /**< x coordinates of each point*/
     double *restrict locy;  /**< y coordinates of each point*/
     long   nloc;   /**< number of points*/
-    double dx;     /**< Sampling*/
+    double dx;     /**< Sampling along x*/
+    double dy;     /**< Sampling along y*/ 
     locmap_t *restrict map; /**< point to the map used for identifying neihboring points.*/
     locstat_t *stat;/**<points to column statistics*/
 }loc_t;
@@ -271,10 +274,15 @@ typedef struct pts_t{
     double *restrict origx; /**<The x origin of each subaperture*/
     double *restrict origy; /**<The y origin of each subaperture*/
     long nsa;      /**<number of subapertures.*/
-    double dsa;    /**<side length of subaperture*/
+    union{
+	double dsa;    /**<side length of subaperture*/
+	double dsax;   /**<side length of subaperture*/
+    };
+    double dsay;   /**<side length of subaperture*/
     locmap_t *restrict map; /**<treat pts_t as loc_t and compute the MAP*/
     locstat_t *stat;/**<padding so that we can be casted to loc_t*/
     double dx;     /**<sampling of points in each subaperture*/
+    double dy;     /**<sampling of points in each subaperture. dy=dx normally required.*/
     int nx;        /**<number points in each col or row per subaperture*/
 }pts_t;
 

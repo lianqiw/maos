@@ -100,7 +100,8 @@ void setup_recon_moao(RECON_T *recon, const PARMS_T *parms){
 	    }
 	}
 	double dxr=parms->aper.d/order;
-	map_t *map=create_metapupil_wrap(parms,0,dxr,0,0,0,0,0,parms->fit.square);
+	double dyr=parms->aper.d/order*parms->moao[imoao].ar;
+	map_t *map=create_metapupil_wrap(parms,0,dxr,dyr,0,0,0,0,0,parms->fit.square);
 	recon->moao[imoao].aloc=map2loc(map);
 	recon->moao[imoao].aembed=map2embed(map);
 	recon->moao[imoao].amap=map;

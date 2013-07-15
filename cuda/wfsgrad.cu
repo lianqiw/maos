@@ -281,7 +281,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     const float mispy=powfs[ipowfs].misreg[wfsind][1];
     const float dtisim=parms->sim.dt*isim;
     float (*loc)[2]=cupowfs[ipowfs].loc;
-    const int nloc=cupowfs[ipowfs].nloc;
+    const int nloc=cupowfs[ipowfs].loc.nloc;
     /*Out to host for now. \todo : keep grad in device when do reconstruction on device. */
     cudaStream_t stream=cuwfs[iwfs].stream;
     dmat *gradcl=simu->gradcl->p[iwfs];
@@ -321,7 +321,7 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
     /*CUDA_SYNC_STREAM; */
     
     if(imoao>-1){
-	gpu_dm2loc(phiout->p, loc, nloc, (cumap_t**)(&cudata->dm_wfs->p[iwfs]), 1,
+	gpu_dm2loc(phiout->p, loc, nloc, (cumap_t*)(cudata->dm_wfs->p[iwfs]), 1,
 		   INFINITY, 0, 0, 0, 0, -1, stream);
     }
     if(simu->telws){
@@ -359,14 +359,15 @@ void gpu_wfsgrad_iwfs(SIM_T *simu, int iwfs){
 
 	if(parms->powfs[ipowfs].gtype_sim==1){
 	    cuztilt<<<nsa, dim3(16,16), 0, stream>>>
-		(gradcalc->p, phiout->p, cupowfs[ipowfs].nsa, 
-		 cupowfs[ipowfs].dx, 
-		 cupowfs[ipowfs].nxsa, cuwfs[iwfs].imcc,
-		 cupowfs[ipowfs].pts, cuwfs[iwfs].amp, 
+		(gradcalc->p, phiout->p, 
+		 cupowfs[ipowfs].pts.nloc, 
+		 cupowfs[ipowfs].pts.dxsa, 
+		 cupowfs[ipowfs].pts.nxsa, cuwfs[iwfs].imcc,
+		 cupowfs[ipowfs].pts.p, cuwfs[iwfs].amp, 
 		 1.f/(float)dtrat);
 	}else{
 	    cusp *GS0=cuwfs[iwfs].GS0t;
-	    cusptmul(gradcalc->p, GS0, phiout->p, 1.f/(float)dtrat, cuwfs[iwfs].sphandle);
+	    cusptmul(gradcalc->p, GS0, phiout->p, 1.f/(float)dtrat,cuwfs[iwfs].stream);
 	}
 	
 	if(gradcalc->p!=gradacc->p){

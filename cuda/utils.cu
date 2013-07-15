@@ -243,25 +243,20 @@ void cp2gpu(fcomplex * restrict *dest, dcomplex *restrict src, int n){
 /**
    Copy map_t to cumap_t. if type==1, use cudaArray, otherwise use float
    array. Allow multiple calling to override the data.  */
-void cp2gpu(cumap_t ***dest0, map_t **source, int nps){
+void cp2gpu(cumap_t **dest0, map_t **source, int nps){
     if(nps==0) return;
     if(!*dest0){
-	*dest0=new cumap_t*[nps];
+	*dest0=new cumap_t[nps];
 	for(int ips=0; ips<nps; ips++){
-	    (*dest0)[ips]=new cumap_t(source[ips]->nx, source[ips]->ny);
+	    (*dest0)[ips].init(source[ips]);
 	}	
     }
-    cumap_t **dest=*dest0;
+    cumap_t *dest=*dest0;
     for(int ips=0; ips<nps; ips++){
-	dest[ips]->vx=source[ips]->vx;
-	dest[ips]->vy=source[ips]->vy;
-	dest[ips]->ht=source[ips]->h;
-	dest[ips]->ox=source[ips]->ox;
-	dest[ips]->oy=source[ips]->oy;
-	dest[ips]->dx=source[ips]->dx;
+	dest[ips].cugrid_t::init(source[ips]);
 	int nx=source[ips]->nx;
 	int ny=source[ips]->ny;
-	cp2gpu(&dest[ips]->p, source[ips]->p, nx*ny);
+	cp2gpu(&dest[ips].p, source[ips]->p, nx*ny);
     }
     CUDA_SYNC_DEVICE;
 }
@@ -398,35 +393,27 @@ void cp2gpu(curmat *restrict *dest, dmat *src){
 	curzero(*dest);
 	return;
     }
-    float *pdest=NULL;
-    if(*dest){
-	pdest=(*dest)->p;
+    if(!*dest){
+	*dest=curnew(src->nx, src->ny);
+    }else{
 	assert(src->nx*src->ny==(*dest)->nx*(*dest)->ny);
     }
-    cp2gpu(&pdest, src->p, src->nx*src->ny);
-    if(!*dest){
-	*dest=curnew(src->nx, src->ny, pdest);
-    }
+    cp2gpu(&(*dest)->p, src->p, src->nx*src->ny);
 }
 void cp2gpu(curmat *restrict *dest, float *src, int nx, int ny, cudaStream_t stream){
     if(!src){
 	curzero(*dest);
 	return;
     }
-    float *pdest=NULL;
-    if(*dest){
-	pdest=(*dest)->p;
-	assert(nx*ny==(*dest)->nx*(*dest)->ny);
+    if(!*dest){
+	*dest=curnew(nx, ny);
     }else{
-	cudaMalloc(&pdest, nx*ny*sizeof(float));
+	assert(nx*ny==(*dest)->nx*(*dest)->ny);
     }
     if(stream){
-	DO(cudaMemcpyAsync(pdest, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice, stream));
+	DO(cudaMemcpyAsync((*dest)->p, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice, stream));
     }else{
-	DO(cudaMemcpy(pdest, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice));
-    }
-    if(!*dest){
-	*dest=curnew(nx, ny, pdest);
+	DO(cudaMemcpy((*dest)->p, src, nx*ny*sizeof(float),cudaMemcpyHostToDevice));
     }
 }
 /*

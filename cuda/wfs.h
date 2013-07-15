@@ -28,32 +28,40 @@ typedef struct {
     fcomplex **etf;
     int etfis1d;
 }cudtf_t;
-
+typedef struct cullt_t{
+    cupts_t pts;
+    culoc_t loc;
+    operator bool(){
+	return pts;
+    }
+}cullt_t;
 typedef struct cuwloc_t{
-    float (*pts)[2];  /**<location of lower left OPD point in each sa*/
-    float (*loc)[2];  /**<location of OPD points*/
-    float dx;         /**<Sampling of OPD*/
-    float dsa;        /**<Subaperture spacing*/
-    int nloc;
-    float (*saloc)[2];/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
+    cupts_t pts;   /**<location of lower left OPD point in each sa*/
+    culoc_t loc;  /**<location of OPD points*/
+    culoc_t saloc;/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
+    //float (*pts)[2];  /**<location of lower left OPD point in each sa*/
+    //float (*loc)[2];  /**<location of OPD points*/
+    //float dsa;        /**<Subaperture spacing*/
+    //int nloc;
+    //float (*saloc)[2];/**<Lower left corner of each sa. may be different by dx/2 than pts.*/
     int (*saptr)[2];  /**<pointer of subaperture in ploc*/
-    int nsa;
-    int nxsa;         /**<number of points in each subaperture in each dimension.*/
+    //int nsa;
     cusp *GP;         /**<GP in col major*/
     float GPscale;    /**<Scale GP to fit in 2 byte int*/
     cumat<int> *GPp ; /**<GP for x/y grad in dense matrix format.*/
     int *embed;       /**<embed for field stop computation*/
     int nembed;       /**<embed for field stop computation*/
     curmat *fieldstop;/**<*mask for field stop computation*/
-    struct cuwloc_t *llt;
-}cuwloc_t;
+    struct cullt_t llt;
+}cupowfs_t;
 
 
 typedef struct{
-    cusparseHandle_t sphandle;
+    stream_t stream;
+    /*cusparseHandle_t sphandle;
     cublasHandle_t handle;
-    cudaStream_t stream;
-    cuwloc_t *powfs;
+    cudaStream_t stream;*/
+    cupowfs_t *powfs;
     cusp *GS0t;         /**<For gtilt. is GS0t in col major */
     float (**imcc)[3];  /**<For ztilt.*/
     float  *neasim;     /**<The noise equivalent angles for each grad.*/

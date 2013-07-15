@@ -33,6 +33,7 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	error("magic=%x. Expect %x\n", header->magic, M_DBL);
     }
     double dx=search_header_num(header->str,"dx");
+    double dy=search_header_num(header->str,"dy");
     free(header->str);
     long nx=header->nx;
     long ny=header->ny;
@@ -47,14 +48,27 @@ loc_t *locreaddata(file_t *fp, header_t *header){
 	out->locy=malloc(sizeof(double)*nx);
 	zfread(out->locy, sizeof(double), nx, fp);
 	if(fabs(dx)<EPS || isnan(dx)){/*dx is not available. */
+	    dx=INFINITY;
+	    for(long i=0; i<MIN(10,out->nloc-1); i++){/*we assume the rows are continuous. */
+		if(fabs(out->locy[i+1]-out->locy[i])<EPS){//same row
+		    double dxi=out->locx[i+1]-out->locx[i];
+		    if(dxi<dx){
+			dx=dxi;
+		    }
+		    break;
+		}
+	    }
+	}
+	if(fabs(dy)<EPS || isnan(dy)){/*dy is not available. */
 	    for(long i=0; i<out->nloc-1; i++){/*we assume the rows are continuous. */
 		if(out->locy[i+1]>out->locy[i]){
-		    dx=out->locy[i+1]-out->locy[i];
+		    dy=out->locy[i+1]-out->locy[i];
 		    break;
 		}
 	    }
 	}
 	out->dx=dx;
+	out->dy=dy;
 	out->map=NULL;
     }
     return out;
@@ -92,7 +106,7 @@ loc_t ** locarrread(int *nloc, const char*format,...){
 }
 void locwritedata(file_t *fp, const loc_t *loc){
     char str[80];
-    snprintf(str,80,"dx=%.15g\n",loc->dx);
+    snprintf(str,80,"dx=%.15g;\ndy=%.15g;\n",loc->dx,loc->dy);
     header_t header={M_DBL, 0, 0, str};
     if(loc){
 	header.nx=loc->nloc;
@@ -126,8 +140,8 @@ static void mapwritedata(file_t *fp, map_t *map){
     if(map){
 	if(!map->header){
 	    char header[1024];
-	    snprintf(header,1024,"ox=%.15g\noy=%.15g\ndx=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
-		     map->ox, map->oy, map->dx, map->h, map->vx, map->vy);
+	    snprintf(header,1024,"ox=%.15g\noy=%.15g\ndx=%.15g\ndy=%.15g\nh=%.15g\nvx=%.15g\nvy=%.15g\n",
+		     map->ox, map->oy, map->dx, map->dy, map->h, map->vx, map->vy);
 	    map->header=strdup(header);
 	}
     }
@@ -161,6 +175,7 @@ map_t* d2map(dmat *in){
 	map->ox=search_header_num(header,"ox");
 	map->oy=search_header_num(header,"oy");
 	map->dx=search_header_num(header,"dx");
+	map->dy=search_header_num(header,"dy");
 	map->h =search_header_num(header,"h");
 	map->vx=search_header_num(header,"vx");
 	map->vy=search_header_num(header,"vy");
@@ -168,9 +183,12 @@ map_t* d2map(dmat *in){
     if(isnan(map->dx)){
 	map->dx=1./64.;
     }
+    if(isnan(map->dy)){
+	map->dy=map->dx;
+    }
     if(isnan(map->ox) || isnan(map->oy)){
 	map->ox=-map->nx/2*map->dx;
-	map->oy=-map->ny/2*map->dx;
+	map->oy=-map->ny/2*map->dy;
     }
     if(isnan(map->h)) map->h=0;
     if(isnan(map->vx)) map->vx=0;
@@ -214,6 +232,7 @@ map_t *mapread(const char *format, ...){
 	}
 	map=calloc(1, sizeof(map_t));
 	map->dx=in->p[0]->p[0];
+	map->dy=map->dx;
 	map->ox=in->p[0]->p[2];
 	map->oy=in->p[0]->p[3];
 	map->h=in->p[0]->p[4];
@@ -225,7 +244,7 @@ map_t *mapread(const char *format, ...){
 	dcellfree(in);
 	dfree_keepdata(ampg);
 	if(map->ox/map->dx*2+map->nx > 2
-	   ||map->oy/map->dx*2+map->ny > 2){
+	   ||map->oy/map->dy*2+map->ny > 2){
 	    warning("Ampground %s is not centered.\n",fn);
 	}
     }else{
@@ -266,7 +285,7 @@ rectmap_t* d2rectmap(dmat *in){
     map->ftel=search_header_num(header,"ftel");
     map->fexit=search_header_num(header,"fexit");
     map->fsurf=search_header_num(header,"fsurf");
-    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx) || isnan(map->fsurf)){
+    if(isnan(map->ox) || isnan(map->oy) || isnan(map->dx)|| isnan(map->dy) || isnan(map->fsurf)){
 	error("header is needed to convert dmat to map_t\n");
     }
     return map;

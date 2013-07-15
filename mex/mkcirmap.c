@@ -24,7 +24,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double cy=mxGetScalar(prhs[P_CY])-1;
     double R=mxGetScalar(prhs[P_R]);
     dmat *map=dnew(nx, ny);
-    dcircle(map, cx, cy, R, 1);
+    dcircle(map, cx, cy, 1, 1,  R, 1);
     plhs[PL_MAP]=d2mx(map);
     dfree(map);
 }

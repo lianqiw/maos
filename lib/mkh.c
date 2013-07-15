@@ -82,8 +82,10 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
     const int wrapy = locin->map->ny-1;
     const double dx_in1 = 1./locin->dx;
     const double dx_in2 = scale*dx_in1;
+    const double dy_in1 = 1./locin->dy;
+    const double dy_in2 = scale*dy_in1;
     displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
+    displacey = (displacey-locin->map->oy)*dy_in1;
     const double *px=locout->locx;
     const double *py=locout->locy;
 #if ONLY_FULL==1
@@ -113,8 +115,8 @@ dsp* mkhb(loc_t *locin, loc_t *locout, const double *ampout,
 	    bi=hback->i;
 	    bx=hback->x;
 	}
-	dplocy=myfma(py[iloc],dx_in2,displacey);
 	dplocx=myfma(px[iloc],dx_in2,displacex);
+	dplocy=myfma(py[iloc],dy_in2,displacey);
 
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);
@@ -193,8 +195,10 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
     int missing=0;
     const double dx_in1 = 1./locin->dx;
     const double dx_in2 = scale*dx_in1;
+    const double dy_in1 = 1./locin->dy;
+    const double dy_in2 = scale*dy_in1;
     displacex = (displacex-locin->map->ox)*dx_in1;
-    displacey = (displacey-locin->map->oy)*dx_in1;
+    displacey = (displacey-locin->map->oy)*dy_in1;
     const double *px=locout->locx;
     const double *py=locout->locy;
     long iphi;
@@ -231,8 +235,8 @@ static dsp *mkhb_cubic(loc_t *locin, loc_t *locout, const double *ampout,
 	    bx=hback->x;
 	}
 
-	dplocy=myfma(py[iloc],dx_in2,displacey);
 	dplocx=myfma(px[iloc],dx_in2,displacex);
+	dplocy=myfma(py[iloc],dy_in2,displacey);
 
 	SPLIT(dplocx,dplocx,nplocx);
 	SPLIT(dplocy,dplocy,nplocy);

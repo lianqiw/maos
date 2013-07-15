@@ -684,7 +684,7 @@ T X(diff)(const X(mat) *A, const X(mat) *B){
    functions used in mkw.  creates slightly larger map.  add
    an filled circle.  cx,cy,r are in unit of pixels
 */
-void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
+void X(circle)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val){
     int nres=100;
     const double res=1./(double)(nres);
     const double res1=1./(double)(nres);
@@ -695,9 +695,9 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
     double r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
-	double r2y=(iy-cy)*(iy-cy);
+	double r2y=(iy*dy-cy)*(iy*dy-cy);
 	for(int ix=0; ix<A->nx; ix++){
-	    double r2r=(ix-cx)*(ix-cx)+r2y;
+	    double r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
 	    double val2=0;
 	    if(r2r<r2l) {
 		val2=val;
@@ -705,11 +705,11 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
 		double tot=0.;
 		for(int jy=0; jy<nres; jy++){
 		    double iiy=iy+(jy-resm)*2*res;
-		    double rr2y=(iiy-cy)*(iiy-cy);
+		    double rr2y=(iiy*dy-cy)*(iiy*dy-cy);
 		    double wty=1.-fabs(iy-iiy);
 		    for(int jx=0; jx<nres; jx++){
 			double iix=ix+(jx-resm)*2*res;
-			double rr2r=(iix-cx)*(iix-cx)+rr2y;
+			double rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
 			double wtx=1.-fabs(ix-iix);
 			if(rr2r<r2)
 			    tot+=res2*wty*wtx;
@@ -724,7 +724,7 @@ void X(circle)(X(mat) *A, double cx, double cy, double r, T val){
 /**
    Similar to X(circle), by multiply instead of add.
 */
-void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val){
+void X(circle_mul)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val){
     int nres=100;
     const double res=1./(double)(nres);
     const double res1=1./(double)(nres);
@@ -735,9 +735,9 @@ void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val){
     double r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
-	double r2y=(iy-cy)*(iy-cy);
+	double r2y=(iy*dy-cy)*(iy*dy-cy);
 	for(int ix=0; ix<A->nx; ix++){
-	    double r2r=(ix-cx)*(ix-cx)+r2y;
+	    double r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
 	    double val2=0;
 	    if(r2r<r2l) {
 		val2=val;
@@ -745,11 +745,11 @@ void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val){
 		double tot=0.;
 		for(int jy=0; jy<nres; jy++){
 		    double iiy=iy+(jy-resm)*2*res;
-		    double rr2y=(iiy-cy)*(iiy-cy);
+		    double rr2y=(iiy*dy-cy)*(iiy*dy-cy);
 		    double wty=1.-fabs(iy-iiy);
 		    for(int jx=0; jx<nres; jx++){
 			double iix=ix+(jx-resm)*2*res;
-			double rr2r=(iix-cx)*(iix-cx)+rr2y;
+			double rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
 			double wtx=1.-fabs(ix-iix);
 			if(rr2r<r2)
 			    tot+=res2*wty*wtx;
@@ -766,15 +766,15 @@ void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val){
    Unlike X(circle), we don't use bilinear influence function, but use pure gray
    pixel instead. Also the values are black/white, no gray.
 */
-void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r){
+void X(circle_symbolic)(X(mat) *A, double cx, double cy, double dx, double dy, double r){
     double r2=r*r;
     double r2l=(r-1.5)*(r-1.5);
     double r2u=(r+2.5)*(r+2.5);
     PMAT(A,As);
     for(int iy=0; iy<A->ny; iy++){
-	double r2y=(iy-cy)*(iy-cy);
+	double r2y=(iy*dy-cy)*(iy*dy-cy);
 	for(int ix=0; ix<A->nx; ix++){
-	    double r2r=(ix-cx)*(ix-cx)+r2y;
+	    double r2r=(ix*dx-cx)*(ix*dx-cx)+r2y;
 	    if(r2r<r2l){
 	    	As[iy][ix]=1;
 	    }else if(r2r>r2u){
@@ -782,10 +782,10 @@ void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r){
 	    }else{
 		for(double jy=-0.5; jy<1; jy++){
 		    double iiy=iy+jy;
-		    double rr2y=(iiy-cy)*(iiy-cy);
+		    double rr2y=(iiy*dy-cy)*(iiy*dy-cy);
 		    for(double jx=-0.5; jx<1; jx++){
 			double iix=ix+jx;
-			double rr2r=pow(iix-cx,2)+rr2y;
+			double rr2r=(iix*dx-cx)*(iix*dx-cx)+rr2y;
 			if(rr2r<r2){
 			    As[iy][ix]=1;
 			    continue;

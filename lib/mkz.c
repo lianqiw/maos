@@ -41,14 +41,17 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     loc_create_map_npad(xloc,ifloor(dsa/xloc->dx));
     double dx1=1./xloc->dx;
     double dx2=scale*dx1;
+    double dy1=1./xloc->dy;
+    double dy2=scale*dy1;
     double poffset[2];
     poffset[0]=(displace[0]-xloc->map->ox+saorc*dsa*0.5*scale)*dx1;
-    poffset[1]=(displace[1]-xloc->map->oy+saorc*dsa*0.5*scale)*dx1;
+    poffset[1]=(displace[1]-xloc->map->oy+saorc*dsa*0.5*scale)*dy1;
     double dsa2=dsa*0.5*dx2;
     long nmax=(dsa2*2+2)*(dsa2*2+2);
     long *ind=calloc(nmax, sizeof(long));
     loc_t *sloc=calloc(1, sizeof(loc_t));
     sloc->dx=xloc->dx;
+    sloc->dy=xloc->dy;
     sloc->locx=calloc(nmax,sizeof(double));
     sloc->locy=calloc(nmax,sizeof(double));
     double *amploc=NULL;
@@ -71,13 +74,11 @@ dsp * mkzt(loc_t* xloc, double *amp, loc_t *saloc,
     for(int isa=0; isa<nsa; isa++){
 	/*center of subaperture when mapped onto XLOC*/
 	double scx=saloc->locx[isa]*dx2+poffset[0];
-	double scy=saloc->locy[isa]*dx2+poffset[1];
+	double scy=saloc->locy[isa]*dy2+poffset[1];
 	int count=0;
 	/*find points that belongs to this subaperture. */
-	for(int iy=iceil(scy-dsa2);
-	    iy<ifloor(scy+dsa2);iy++){
-	    for(int ix=iceil(scx-dsa2);
-		ix<ifloor(scx+dsa2);ix++){
+	for(int iy=iceil(scy-dsa2); iy<ifloor(scy+dsa2);iy++){
+	    for(int ix=iceil(scx-dsa2); ix<ifloor(scx+dsa2);ix++){
 		int ii=xmaps[iy][ix];
 		if(ii){
 		    ii--;

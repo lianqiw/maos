@@ -39,12 +39,13 @@ extern "C"
 #define toc_test(A) toc2(A);tic
 #endif
 __global__ static void saloc2ptr_do(int (*restrict saptr)[2], float (*restrict saloc)[2], 
-				    int nsa, float ox, float oy, float dx){
+				    int nsa, float ox, float oy, float dx, float dy){
     const int step=blockDim.x * gridDim.x;
     const float dx1=1./dx;
+    const float dy1=1./dy;
     for(int isa=blockIdx.x * blockDim.x + threadIdx.x; isa<nsa; isa+=step){
 	saptr[isa][0]=(int)roundf((saloc[isa][0]-ox)*dx1);
-	saptr[isa][1]=(int)roundf((saloc[isa][1]-oy)*dx1);
+	saptr[isa][1]=(int)roundf((saloc[isa][1]-oy)*dy1);
     }
 }
 W01_T *gpu_get_W01(dsp *R_W0, dmat *R_W1){
@@ -123,6 +124,18 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	    curecon->opdr_vec->p[ips]->ny=1;
 	}
     }
+    if(parms->gpu.tomo || parms->gpu.fit){
+	curecon->amap=new cugrid_t[parms->ndm];
+	curecon->xmap=new cugrid_t[recon->npsr];
+	curecon->pmap.init(recon->pmap);
+	curecon->fmap.init(recon->fmap);
+	for(int idm=0; idm<parms->ndm; idm++){
+	    curecon->amap[idm].init(recon->amap[idm]);
+	}
+	for(int ipsr=0; ipsr<recon->npsr; ipsr++){
+	    curecon->xmap[ipsr].init(recon->xmap[ipsr]);
+	}
+    }
     if(parms->gpu.tomo){
 	for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
 	    if(parms->powfs[ipowfs].skip) continue;
@@ -130,7 +143,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	    cudaMalloc(&cupowfs[ipowfs].saptr, nsa*2*sizeof(int));
 	    saloc2ptr_do<<<DIM(nsa,256)>>>
 		(cupowfs[ipowfs].saptr, cupowfs[ipowfs].saloc, nsa, 
-		 recon->pmap->ox, recon->pmap->oy, recon->pmap->dx);
+		 recon->pmap->ox, recon->pmap->oy, recon->pmap->dx, recon->pmap->dy);
 	    if(recon->GP->p[ipowfs]){
 		const int use_mat=parms->tomo.pos==2 ||parms->tomo.pos==1 ;
 		if(use_mat){//normally true
@@ -146,7 +159,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 		    short2 *partxy=(short2*)calloc(sizeof(short2),np*nsa);//need to zero memory
 		    int nsa=powfs[ipowfs].pts->nsa;
 		    double dx1=1./recon->ploc->dx;
-		
+		    double dy1=1./recon->ploc->dy;
 		    for(int ic=0; ic<GP->n; ic++){
 			int isa=(ic<nsa)?ic:(ic-nsa);
 			for(spint ir=pp[ic]; ir<pp[ic+1]; ir++){
@@ -156,7 +169,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 			    double sx=powfs[ipowfs].saloc->locx[isa];
 			    double sy=powfs[ipowfs].saloc->locy[isa];
 			    int zx=(int)round((lx-sx)*dx1);
-			    int zy=(int)round((ly-sy)*dx1);
+			    int zy=(int)round((ly-sy)*dy1);
 			    /**
 			       When the points used to generate GP align well
 			       with the subaperture edge, the coupled points are
@@ -286,15 +299,10 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	curecon->grad=curcellnew(nwfs, 1, ngw, (int*)NULL);
 	curecon->ttf=curnew(3*nwfs, 1);
 
-	const float oxp=recon->pmap->ox;
-	const float oyp=recon->pmap->oy;
-	const float dxp=recon->pmap->dx;
 	GPU_PROP_GRID_T *hxdata=new GPU_PROP_GRID_T[nwfs*recon->npsr];
 	GPU_PROP_GRID_T *hxtdata=new GPU_PROP_GRID_T[nwfs*recon->npsr];
 	for(int ips=0; ips<recon->npsr; ips++){ 
 	    const float ht=recon->ht->p[ips]; 
-	    const float oxx=recon->xmap[ips]->ox; 
-	    const float oyx=recon->xmap[ips]->oy; 
 	    for(int iwfs=0; iwfs<nwfs; iwfs++){
 		const int ipowfs = parms->wfsr[iwfs].powfs;
 		if(parms->powfs[ipowfs].skip) continue;
@@ -302,11 +310,11 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 		const float scale = 1.f - ht/hs; 
 		float dispx=parms->wfsr[iwfs].thetax*ht; 
 		float dispy=parms->wfsr[iwfs].thetay*ht; 
-		gpu_prop_grid_prep(hxdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
-				   curecon->opdr->p[ips], oxx, oyx, recon->xmap[ips]->dx, 
+		gpu_prop_grid_prep(hxdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], curecon->pmap*scale,
+				   curecon->opdr->p[ips], curecon->xmap[ips],
 				   dispx, dispy, 'n'); 
-		gpu_prop_grid_prep(hxtdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
-				   curecon->opdr->p[ips], oxx, oyx, recon->xmap[ips]->dx, 
+		gpu_prop_grid_prep(hxtdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], curecon->pmap*scale,
+				   curecon->opdr->p[ips], curecon->xmap[ips],
 				   dispx, dispy, 't'); 
 		{
 		    float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;
@@ -380,6 +388,7 @@ static void gpu_setup_recon_do(const PARMS_T *parms, POWFS_T *powfs, RECON_T *re
 	    gpdata[iwfs].nsa=powfs[ipowfs].pts->nsa;
 	    gpdata[iwfs].nxp=recon->pmap->nx;
 	    gpdata[iwfs].dxp=recon->pmap->dx;
+	    gpdata[iwfs].dyp=recon->pmap->dy;
 	    gpdata[iwfs].oxp=recon->pmap->ox;
 	    gpdata[iwfs].oyp=recon->pmap->oy;
 	}
@@ -660,15 +669,10 @@ void gpu_setup_recon_predict_do(const PARMS_T *parms, RECON_T *recon){
     }
     curecon_t *curecon=cudata->recon;
     const int nwfs=parms->nwfsr;
-    const float oxp=recon->pmap->ox;
-    const float oyp=recon->pmap->oy;
-    const float dxp=recon->pmap->dx;
     GPU_PROP_GRID_T *hxdata=new GPU_PROP_GRID_T[nwfs*recon->npsr];
     GPU_PROP_GRID_T *hxtdata=new GPU_PROP_GRID_T[nwfs*recon->npsr];
     for(int ips=0; ips<recon->npsr; ips++){ 
 	const float ht=recon->ht->p[ips]; 
-	const float oxx=recon->xmap[ips]->ox; 
-	const float oyx=recon->xmap[ips]->oy; 
 	for(int iwfs=0; iwfs<nwfs; iwfs++){
 	    const int ipowfs = parms->wfsr[iwfs].powfs;
 	    if(parms->powfs[ipowfs].skip) continue;
@@ -678,14 +682,14 @@ void gpu_setup_recon_predict_do(const PARMS_T *parms, RECON_T *recon){
 	    float dispy=parms->wfsr[iwfs].thetay*ht; 
 	    if(parms->tomo.predict){ 
 		int ips0=parms->atmr.indps[ips]; 
-		dispx+=cudata->atm[ips0]->vx*parms->sim.dt*2; 
-		dispy+=cudata->atm[ips0]->vy*parms->sim.dt*2; 
+		dispx+=cudata->atm[ips0].vx*parms->sim.dt*2; 
+		dispy+=cudata->atm[ips0].vy*parms->sim.dt*2; 
 	    } 
-	    gpu_prop_grid_prep(hxdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
-			       curecon->opdr->p[ips], oxx, oyx, recon->xmap[ips]->dx, 
+	    gpu_prop_grid_prep(hxdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], curecon->pmap*scale,
+			       curecon->opdr->p[ips], curecon->xmap[ips],
 			       dispx, dispy, 'n'); 
-	    gpu_prop_grid_prep(hxtdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], oxp*scale, oyp*scale, dxp*scale, 
-			       curecon->opdr->p[ips], oxx, oyx, recon->xmap[ips]->dx, 
+	    gpu_prop_grid_prep(hxtdata+iwfs+ips*nwfs, curecon->opdwfs->p[iwfs], curecon->pmap*scale,
+			       curecon->opdr->p[ips], curecon->xmap[ips],
 			       dispx, dispy, 't'); 
 	    {
 		float tmp=laplacian_coef(recon->r0, recon->wt->p[ips], recon->xmap[ips]->dx)*0.25f;

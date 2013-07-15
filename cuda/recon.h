@@ -33,17 +33,9 @@ typedef struct W01_T{
 typedef struct cumoao_t{
     curcell *fitNW;
     cuspcell *actslave;
-    float *cubic_cc;   
-    float dxa; /**<sampling of amap*/
-    float oxa; /**<original of amap*/
-    float oya; /**<original of amap*/
-    int nxa;   /**<size of amap*/
-    int nya;   /**<size of amap*/
-    float dxf; /**<sampling of fmap*/
-    float oxf; /**<original of fmap*/
-    float oyf; /**<original of fmap*/
-    int nxf;   /**<size of fmap*/
-    int nyf;   /**<size of fmap*/
+    float *cubic_cc; 
+    cumap_t amap;/**<Info of amap*/
+    cumap_t fmap;/**<Info of fmap*/
     /*aperture weighting*/
     W01_T *W01;
     curcell *rhs;/*right hand side.*/
@@ -58,17 +50,14 @@ typedef struct cumoao_t{
 
 /*data to be used by kernel */
 typedef struct GPU_PROP_GRID_T{
-    int offo;
-    int offi;
+    int offo, offi;
     float *po;
     const float *pi;
     int nxo,nyo;
     int nxi,nyi;
-    float dispx;
-    float dispy;
-    float ratio;
-    int nx;
-    int ny;
+    float dispx, dispy;
+    float xratio, yratio;
+    int nx, ny;
     char trans;
     float l2c; /*coefficient for laplacian*/
     int zzi;   /*for piston constraint*/
@@ -97,9 +86,8 @@ typedef struct GPU_GP_T{
     float GPscale;
     int pos;
     int nxp;
-    float dxp;/*pmap dx*/
-    float oxp;/*pmap origin*/
-    float oyp;
+    float dxp, dyp;/*pmap dx*/
+    float oxp, oyp;/*pmap origin*/
     const float(*neai)[3];
     GPU_GP_T(){
 	memset(this, 0, sizeof(*this));	
@@ -135,6 +123,10 @@ typedef struct cufdpcg_t{
     }
 }cufdpcg_t;
 typedef struct curecon_t{
+    cugrid_t *amap;/*Grid of amap*/
+    cugrid_t *xmap;/*Grid of xmap*/
+    cugrid_t pmap; /*Pupil map for tomo*/
+    cugrid_t fmap; /*Pupil map for fit*/
     curcell *gradin; /**< The grad to operator on*/
     curcell *neai;
     curcell *opdwfs;/**<Temporary*/

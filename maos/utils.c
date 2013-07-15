@@ -73,14 +73,14 @@ void addnoise(dmat *A,              /**<The pixel intensity array*/
 /**
    Calls create_metapupil is simplified interface by returning a map_t object.
  */
-map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
+map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx, double dy,
 			      double offset,double guard, long ninx,long niny,
 			      int pad,int square){
     long nx, ny;
     double ox, oy, *p;
-    create_metapupil(parms,ht,dx,offset,&(nx),&(ny),
+    create_metapupil(parms,ht,dx,dy,offset,&(nx),&(ny),
 		     &(ox),&(oy),&(p),guard, ninx, niny, pad,square);
-    map_t *amp=mapnew(nx, ny, dx, p);
+    map_t *amp=mapnew(nx, ny, dx, dy,p);
     amp->ox=ox;
     amp->oy=oy;
     amp->h=ht;
@@ -97,7 +97,7 @@ map_t * create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
    
    pad: 1: round nx, ny to power of 2.  */
 
-void create_metapupil(const PARMS_T *parms, double ht,double dx,
+void create_metapupil(const PARMS_T *parms, double ht,double dx,double dy,
 		      double offset, long* nxout, long* nyout,
 		      double *oxout, double *oyout, double**map, 
 		      double guard, long ninx, long niny, int pad,int square){
@@ -151,7 +151,7 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
     }
     long nx,ny;
     nx=(iceil((guard+maxx)/dx+offset))*2+1;
-    ny=(iceil((guard+maxy)/dx+offset))*2+1;
+    ny=(iceil((guard+maxy)/dy+offset))*2+1;
     if(pad){/*pad to power of 2 */
 	nx=1<<iceil(log2((double)nx));
 	ny=1<<iceil(log2((double)ny));
@@ -168,63 +168,60 @@ void create_metapupil(const PARMS_T *parms, double ht,double dx,
 	ny=niny;
     }
     double ox,oy;
-    ox=((nx/2)-offset);
-    oy=((ny/2)-offset);
+    ox=((nx/2)-offset)*dx;
+    oy=((ny/2)-offset)*dy;
 
     if(nxout)
 	*nxout=nx;
     if(nyout)
 	*nyout=ny;
     if(oxout)
-	*oxout=-ox*dx;
+	*oxout=-ox;
     if(oyout)
-	*oyout=-oy*dx;
+	*oyout=-oy;
 
-    if(map && square){
+    if(map && square){/**Only want square grid*/
 	dmat *dmap=dnew(nx,ny);
 	*map=dmap->p;
 	dset(dmap,1);
 	dfree_keepdata(dmap);
-    }else if(map){
-	/*guard+=0.707;//necessary with dcircle_deprecated. not with current dcircle */
+    }else if(map){/*Want non square grid*/
 	dmat *dmap=dnew(nx,ny);
 	*map=dmap->p;
-	double Rn=R/dx;
-	double Rg=guard/dx;
 	for(int i=0; i<parms->nwfs; i++){
 	    int ipowfs=parms->wfs[i].powfs;
 	    if((parms->powfs[ipowfs].lo && !use_wfs_lo) 
 	       ||(!parms->powfs[ipowfs].lo && !use_wfs_hi)){
 		continue;
 	    }
-	    sx=ox+(parms->wfs[i].thetax*ht)/dx;
-	    sy=oy+(parms->wfs[i].thetay*ht)/dx;
-	    double RR=Rn*(1.-ht/parms->powfs[ipowfs].hs)+Rg;
-	    dcircle_symbolic(dmap,sx,sy,RR);
+	    sx=ox+(parms->wfs[i].thetax*ht);
+	    sy=oy+(parms->wfs[i].thetay*ht);
+	    double RR=R*(1.-ht/parms->powfs[ipowfs].hs)+guard;
+	    dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
 	}
 
 	if(use_evl){
 	    for(int i=0; i<parms->evl.nevl; i++){
-		sx=ox+(parms->evl.thetax[i]*ht)/dx;
-		sy=oy+(parms->evl.thetay[i]*ht)/dx;
-		double RR=Rn+Rg;
-		dcircle_symbolic(dmap,sx,sy,RR);
+		sx=ox+(parms->evl.thetax[i]*ht);
+		sy=oy+(parms->evl.thetay[i]*ht);
+		double RR=R+guard;
+		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
 	    }
 	}
 	if(use_fit){
 	    for(int i=0; i<parms->fit.nfit; i++){
-		sx=ox+(parms->fit.thetax[i]*ht)/dx;
-		sy=oy+(parms->fit.thetay[i]*ht)/dx;
-		double RR=Rn+Rg;
-		dcircle_symbolic(dmap,sx,sy,RR);
+		sx=ox+(parms->fit.thetax[i]*ht);
+		sy=oy+(parms->fit.thetay[i]*ht);
+		double RR=R+guard;
+		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
 	    }
 	}
 	if(parms->sim.ncpa_calib){
 	    for(int i=0; i<parms->sim.ncpa_ndir; i++){
-		sx=ox+(parms->sim.ncpa_thetax[i]*ht)/dx;
-		sy=oy+(parms->sim.ncpa_thetay[i]*ht)/dx;
-		double RR=Rn+Rg;
-		dcircle_symbolic(dmap,sx,sy,RR);
+		sx=ox+(parms->sim.ncpa_thetax[i]*ht);
+		sy=oy+(parms->sim.ncpa_thetay[i]*ht);
+		double RR=R+guard;
+		dcircle_symbolic(dmap,sx,sy,dx,dy,RR);
 	    }
 	}
 	for(int i=0; i<nx*ny; i++){
@@ -309,7 +306,7 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     int32_t *style=calloc(ngroup, sizeof(int32_t));
     int count=0;
     style[count]=(0xFF0000<<8)+(4<<4)+3;
-    locs[count]=locnew(parms->evl.nevl, 0);
+    locs[count]=locnew(parms->evl.nevl, 0, 0);
     for(int ievl=0; ievl<parms->evl.nevl; ievl++){
 	locs[count]->locx[ievl]=parms->evl.thetax[ievl]*206265;
 	locs[count]->locy[ievl]=parms->evl.thetay[ievl]*206265;
@@ -317,21 +314,21 @@ void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...){
     count++;
 
     style[count]=(0xFF22DD<<8)+(4<<4)+3;
-    locs[count]=locnew(parms->fit.nfit, 0);
+    locs[count]=locnew(parms->fit.nfit, 0, 0);
     for(int ifit=0; ifit<parms->fit.nfit; ifit++){
 	locs[count]->locx[ifit]=parms->fit.thetax[ifit]*206265;
 	locs[count]->locy[ifit]=parms->fit.thetay[ifit]*206265;
     }
     count++;
     style[count]=(0x22FF00<<8)+(4<<4)+3;
-    locs[count]=locnew(parms->sim.ncpa_ndir, 0);
+    locs[count]=locnew(parms->sim.ncpa_ndir, 0, 0);
     for(int ifit=0; ifit<parms->sim.ncpa_ndir; ifit++){
 	locs[count]->locx[ifit]=parms->sim.ncpa_thetax[ifit]*206265;
 	locs[count]->locy[ifit]=parms->sim.ncpa_thetay[ifit]*206265;
     }
     count++;
     for(int ipowfs=0; ipowfs<parms->npowfs; ipowfs++){
-	locs[count]=locnew(parms->powfs[ipowfs].nwfs, 0);
+	locs[count]=locnew(parms->powfs[ipowfs].nwfs, 0, 0);
 	for(int jwfs=0; jwfs<parms->powfs[ipowfs].nwfs; jwfs++){
 	    int iwfs=parms->powfs[ipowfs].wfs[jwfs];
 	    locs[count]->locx[jwfs]=parms->wfs[iwfs].thetax*206265;
@@ -619,7 +616,9 @@ ARG_T * parse_args(int argc, const char *argv[]){
     if(chdir(arg->dirout)){
 	error("Unable to chdir to %s\n", arg->dirout);
     }
-
+    char *exefile=get_job_progname(0);
+    link(exefile, "maos");
+    free(exefile);
     return arg;
 }
 /**

@@ -56,7 +56,7 @@ static void test_dref(){
 static void test_dcircle(){
     dmat *A=dnew(100,100);
     double r=45;
-    dcircle(A,50,50,r,1);
+    dcircle(A,50,50,1,1,r,1);
     dwrite(A,"dcircle_linear");
     dzero(A);
     dwrite(A,"dcircle");

@@ -36,9 +36,9 @@
    Get the executable name of current process with full path.
 */
 char *get_job_progname(int pid){
-    static char *progname_save=NULL;
+    static char *progname_self=NULL;
     char *progname=NULL;
-    if(!progname_save || pid>0){
+    if(!progname_self || pid>0){
 	char path[PATH_MAX];
 	/*readlink doesn't append \0 */
 	char procpath[PATH_MAX];
@@ -55,10 +55,10 @@ char *get_job_progname(int pid){
 	    warning("Failed to readlink %s\n", procpath);
 	}
     }else{
-	progname=strdup0(progname_save);
+	progname=strdup0(progname_self);
     }
     if(pid<=0){
-	progname_save=strdup0(progname);
+	progname_self=strdup0(progname);
     }
     return progname;
 }

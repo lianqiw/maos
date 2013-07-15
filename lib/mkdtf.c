@@ -66,7 +66,7 @@ void mkdtf(ccell **pnominal, /**<[out] to be multiplied to the OTF*/
     cfft2plan(nominal,-1);	
     cfft2plan(nominal,1);
     PCMAT(nominal,pn);
-    loc_t *loc_psf=mksqloc(ncompx, ncompy, dtheta, -ncompx2*dtheta, -ncompy2*dtheta);
+    loc_t *loc_psf=mksqloc(ncompx, ncompy, dtheta, dtheta, -ncompx2*dtheta, -ncompy2*dtheta);
     const double e0x=-2*M_PI*M_PI*blurx*blurx;/*blurring factors */
     const double e0y=-2*M_PI*M_PI*blury*blury;
     for(int isa=0; isa<nsa; isa++){

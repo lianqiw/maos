@@ -43,7 +43,7 @@ setup_recon_floc(RECON_T *recon, const PARMS_T *parms){
 	double dxr=parms->atmr.dx/parms->fit.pos;/*sampling of floc */
 	double guard=parms->tomo.guard*dxr;
 	map_t *fmap=create_metapupil_wrap 
-	    (parms,0,dxr,0,guard,0,0,0,parms->fit.square);
+	    (parms,0,dxr,dxr,0,guard,0,0,0,parms->fit.square);
 	info2("FLOC is %ldx%ld, with sampling of %.2fm\n",fmap->nx,fmap->ny,dxr);
 	recon->fmap=fmap;
 	recon->floc=map2loc(fmap);/*convert map_t to loc_t */
@@ -103,11 +103,12 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
 	for(int idm=0; idm<ndm; idm++){
 	    double ht=parms->dm[idm].ht;
 	    double dx=parms->dm[idm].dx;
+	    double dy=parms->dm[idm].dy;
 	    double offset=parms->dm[idm].offset+(parms->dm[idm].order%2)*0.5;
-	    const double guard=parms->dm[idm].guard*parms->dm[idm].dx;
+	    const double guard=parms->dm[idm].guard*MAX(dx,dy);
 	    
 	    map_t *map=create_metapupil_wrap
-		(parms,ht,dx,offset,guard,0,0,0,parms->fit.square);
+		(parms,ht,dx,dy,offset,guard,0,0,0,parms->fit.square);
 	    info2("DM %d: grid is %ld x %ld\n", idm, map->nx, map->ny);
 	    recon->aloc[idm]=map2loc(map);
 	    recon->amap[idm]=map;
@@ -138,6 +139,7 @@ setup_recon_aloc(RECON_T *recon, const PARMS_T *parms){
     }
     if(parms->save.setup){
 	locarrwrite(recon->alocm,parms->ndm,"%s/alocm",dirsetup);
+	maparrwrite(recon->amap, parms->ndm,"%s/amap", dirsetup);
     }
     recon->aimcc=dcellnew(ndm,1);
     for(int idm=0; idm<ndm; idm++){

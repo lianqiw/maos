@@ -38,10 +38,13 @@ void prop_grid_pts(ARGIN_GRID,
     const double dx_in1 = 1/mapin->dx;
     const double dxout  = pts->dx;
     const double dx_in2 = scale*dx_in1;
+    const double dy_in1 = 1/mapin->dy;
+    const double dyout  = pts->dy;
+    const double dy_in2 = scale*dy_in1;
     displacex = (displacex-mapin->ox)*dx_in1;
-    displacey = (displacey-mapin->oy)*dx_in1;
+    displacey = (displacey-mapin->oy)*dy_in1;
     if(!saend) saend=pts->nsa;
-    if(USE_OPTIM && fabs(dx_in2*dxout-1)<EPS){
+    if(USE_OPTIM && fabs(dx_in2*dxout-1)<EPS && fabs(dy_in2*dyout-1)<EPS){
         for(int isa=sastart; isa<saend; isa++)
 #if USE_ICC==1 && _OPENMP >= 200805
 #pragma omp task
@@ -56,8 +59,8 @@ void prop_grid_pts(ARGIN_GRID,
 		const double origy=pts->origy[isa];
 		double w11,w10,w01,w00;
 	    
-		dplocy = myfma(origy,dx_in2,displacey);
 		dplocx = myfma(origx,dx_in2,displacex);
+		dplocy = myfma(origy,dy_in2,displacey);
 		SPLIT(dplocx,dplocx,nplocx);
 		SPLIT(dplocy,dplocy,nplocy);
 		if(!wrap){
@@ -182,7 +185,8 @@ void prop_grid_pts(ARGIN_GRID,
 	    end1:;
 	    }/*for isa*/
     }else{ /*different spacing. or non optim*/
-	const double ratio = dxout*dx_in2;
+	const double xratio = dxout*dx_in2;
+	const double yratio = dyout*dy_in2;
 	const double (*phiin)[ninx]=(const double(*)[ninx])(mapin->p);
 	for(int isa=sastart; isa<saend; isa++)
 #if USE_ICC==1 && _OPENMP >= 200805
@@ -196,24 +200,24 @@ void prop_grid_pts(ARGIN_GRID,
 		const double origx=pts->origx[isa];
 		const double origy=pts->origy[isa];
 		double dplocx0, dplocy0;
-		dplocy0 = myfma(origy,dx_in2,displacey);
 		dplocx0 = myfma(origx,dx_in2,displacex);
+		dplocy0 = myfma(origy,dy_in2,displacey);
 		if(!wrap){
 		    int sx, sy;
 		    if(dplocx0<0){
-			sx=iceil(-dplocx0/ratio);
+			sx=iceil(-dplocx0/xratio);
 		    }else
 			sx=0;
 		    if(dplocy0<0){
-			sy=iceil(-dplocy0/ratio);
+			sy=iceil(-dplocy0/yratio);
 		    }else
 			sy=0;
 
-		    my=iceil((niny-1-dplocy0)/ratio);
+		    my=iceil((niny-1-dplocy0)/yratio);
 		    if(my>nx){
 			my=nx;
 		    }
-		    mx=iceil((ninx-1-dplocx0)/ratio);
+		    mx=iceil((ninx-1-dplocx0)/xratio);
 		    if(mx>nx){
 			mx=nx;
 		    }
@@ -221,14 +225,14 @@ void prop_grid_pts(ARGIN_GRID,
 		    int nplocxs[mx];
 		    double dplocxs[mx];
 
-		    dplocy0  = myfma(origy+(double)sy*dxout,dx_in2,displacey);
 		    dplocx0  = myfma(origx+(double)sx*dxout,dx_in2,displacex);
+		    dplocy0  = myfma(origy+(double)sy*dyout,dy_in2,displacey);
 		
 		    for(ipix=sx; ipix<mx; ipix++){
 			SPLIT(dplocx0,dplocx,nplocx);
 			nplocxs[ipix]=nplocx;
 			dplocxs[ipix]=dplocx;
-			dplocx0+=ratio;
+			dplocx0+=xratio;
 		    }
 
 		    for(jpix = sy; jpix < my; jpix++){
@@ -248,19 +252,19 @@ void prop_grid_pts(ARGIN_GRID,
 				   +(phiin3[nplocx+1]-phiin3[nplocx])*dplocx)
 				 *dplocy);
 			}
-			dplocy0+=ratio;
+			dplocy0+=yratio;
 		    }
 		}else{
 		    const double *phiin_1, *phiin_2;
 		    double dplocy1;
 		    int mx0;
-		    if(ninx < nx*ratio || niny < nx*ratio){
-			info("nx=%d, ratio=%g, ninx=%d\n",nx,ratio,ninx);
+		    if(ninx < nx*xratio || niny < nx*yratio){
+			info("nx=%d, xratio=%g, ninx=%d\n",nx,xratio,ninx);
 			error("Input map is too small. wraps more than once\n");
 		    }
 		    dplocy0-=niny*ifloor(dplocy0/niny);
 		    dplocx0-=ninx*ifloor(dplocx0/ninx);
-		    mx0=iceil((ninx-1.-dplocx0)/ratio);
+		    mx0=iceil((ninx-1.-dplocx0)/xratio);
 		    if(mx0>nx) mx0=nx;
 		    if(mx0<0) mx0=0;
 		
@@ -273,7 +277,7 @@ void prop_grid_pts(ARGIN_GRID,
 			nplocxs[ipix]=nplocx;
 			nplocxs2[ipix]=nplocx+1;
 			dplocxs[ipix]=dplocx;
-			dplocx0+=ratio;
+			dplocx0+=xratio;
 		    }
 		    if(mx<nx){
 			while(dplocx0<ninx && mx<nx){/*falls on the edge */
@@ -281,7 +285,7 @@ void prop_grid_pts(ARGIN_GRID,
 			    nplocxs[mx]=nplocx;
 			    nplocxs2[mx]=0;
 			    dplocxs[mx]=dplocx;
-			    dplocx0+=ratio;
+			    dplocx0+=xratio;
 			    mx++;
 			}
 			dplocx0-=ninx;
@@ -290,7 +294,7 @@ void prop_grid_pts(ARGIN_GRID,
 			    nplocxs[ipix]=nplocx;
 			    nplocxs2[ipix]=nplocx+1;
 			    dplocxs[ipix]=dplocx;
-			    dplocx0+=ratio;
+			    dplocx0+=xratio;
 			}
 		    }
 		    for(jpix=0; jpix<nx; jpix++){
@@ -321,7 +325,7 @@ void prop_grid_pts(ARGIN_GRID,
 				 *dplocy);
 			
 			}
-			dplocy0+=ratio;
+			dplocy0+=yratio;
 		    }
 		}/*wrap*/
 	    }/*end isa*/

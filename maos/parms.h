@@ -250,7 +250,9 @@ typedef struct DM_CFG_T{
     double iastroke;/**<Inter actuator stroke (surface)*/
     double vmisreg; /**<vertical misregistration*/
     double ht;      /**<height conjugation range*/
-    double dx;      /**<actuator separation*/
+    double dx;      /**<actuator separation along x (derived from order)*/
+    double ar;      /**<[in] aspect ratio: dy/dx*/
+    double dy;      /**<actuator separation along y (derived from dx and ar*/
     double offset;  /**<Center-most actuator offset from origin
 		       - =0 means there is a act on center. 
 		       - 1/2 means no one in the center.*/
@@ -584,6 +586,7 @@ typedef struct MOAO_CFG_T{
     double iac;      /**<Inter-actuator-coupling for cubic influence function*/
     double stroke;   /**<Stroke of the MOAO DM*/
     double gdm;      /**<The gain of type I controller. a[n]=a[n-1]+e*g where g=o[n]-a[n-1]*/
+    double ar;       /**<Aspect ratio dy/dx*/
     int actslave;    /**<Do we do actuator slaving*/
     int lrt_ptt;     /**<Piston/tip/tilt constraint*/
     char *actfloat;  /**<file containing floating actuators. nx2 coordinate*/
@@ -738,10 +741,10 @@ typedef enum T_TYPE{
     T_XLOC,
     T_ATM,
 }T_TYPE;
-void create_metapupil(const PARMS_T *parms, double ht, double dx,
+void create_metapupil(const PARMS_T *parms, double ht, double dx, double dy,
 		      double offset,long* nx, long* ny, double *ox, double *oy, 
 		      double **map,double guard, long ninx, long niny, int pad,int square);
-map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx,
+map_t *create_metapupil_wrap(const PARMS_T *parms, double ht,double dx, double dy,
 			     double offset,double guard,long ninx, long niny,
 			     int pad,int square);
 void plotdir(char *fig, const PARMS_T *parms, double totfov, char *format,...);

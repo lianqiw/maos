@@ -32,9 +32,9 @@ extern int NGPU;
 typedef struct cudata_t{ 
     /**<for accphi */
     void *reserve;   /**<Reserve some memory in GPU*/
-    cumap_t **atm;   /**<atmosphere: array of cumap_t */
-    cumap_t **dmreal;/**<DM: array of cumap_t */
-    cumap_t **dmproj;/**<DM: array of cumap_t */
+    cumap_t *atm;   /**<atmosphere: array of cumap_t */
+    cumap_t *dmreal;/**<DM: array of cumap_t */
+    cumap_t *dmproj;/**<DM: array of cumap_t */
     int nps; /**<number of phase screens*/
     int ndm; /**<number of DM.*/
     /*for perfevl */
@@ -116,7 +116,7 @@ inline int gpu_next(){
 void dbl2flt(float * restrict *dest, double *src, int n);
 void spint2int(int * restrict *dest, spint *src, int n);
 
-void cp2gpu(cumap_t ***dest, map_t **source, int nps);
+void cp2gpu(cumap_t **dest, map_t **source, int nps);
 void cp2gpu(cusp **dest, dsp *src);
 void cp2gpu(cuspcell **dest, spcell *src);
 void cp2gpu(float (* restrict *dest)[2], loc_t *src);

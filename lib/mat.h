@@ -105,9 +105,9 @@ X(mat) *X(imcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT;\
 X(mat) *X(tmcc)(const X(mat) *A, const X(mat) *wt) CHECK_UNUSED_RESULT;\
 X(mat) *X(pinv)(const X(mat) *A, const X(mat) *wt, const X(sp) *Wsp) CHECK_UNUSED_RESULT;\
 T X(diff)(const X(mat) *A, const X(mat) *B) CHECK_UNUSED_RESULT;\
-void X(circle)(X(mat) *A, double cx, double cy, double r, T val);\
-void X(circle_mul)(X(mat) *A, double cx, double cy, double r, T val);\
-void X(circle_symbolic)(X(mat) *A, double cx, double cy, double r);\
+void X(circle)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val); \
+void X(circle_mul)(X(mat) *A, double cx, double cy, double dx, double dy, double r, T val);\
+void X(circle_symbolic)(X(mat) *A, double cx, double cy, double dx, double dy, double r);\
 void X(fftshift)(X(mat) *A);\
 void X(cpcorner2center)(X(mat) *A, const X(mat)*B);\
 void X(shift)(X(mat) **B0, const X(mat) *A, int sx, int sy);\

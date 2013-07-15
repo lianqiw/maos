@@ -364,13 +364,13 @@ static void test_accuracy(void){
     map_t *screen=screens[0];
     mapwrite(screen,"accphi_screen");
     /*loc for the map */
-    loc_t *locin=mksqloc(m,n,dx,screen->ox,screen->oy);
+    loc_t *locin=mksqloc(m,n,dx,dx,screen->ox,screen->oy);
 
     dmat *A=dnew(60,60);
-    dcircle(A,30,30,30,1);
+    dcircle(A,30,30,1,1,30,1);
     dwrite(A,"accphi_A");
     pts_t *pts=calloc(1,sizeof(pts_t));
-    map_t *maptmp=mapnew(A->nx, A->ny, 0.5, A->p);
+    map_t *maptmp=mapnew(A->nx, A->ny, 0.5, 0.5,A->p);
     loc_t *tmp=map2loc(maptmp);
     memcpy(pts,tmp,sizeof(loc_t));
     free(tmp);
@@ -569,9 +569,9 @@ static void test_speed(int nthread){
     map_t *screen=screens[0];
     double dsa=0.1;
     dmat *A=dnew(30/dsa,30/dsa);
-    dcircle(A,30,30,15/dsa,1);
+    dcircle(A,30,30,1,1,15/dsa,1);
     pts_t *pts=calloc(1,sizeof(pts_t));
-    map_t *maptmp=mapnew(A->nx, A->ny, dsa, A->p);
+    map_t *maptmp=mapnew(A->nx, A->ny, dsa, dsa, A->p);
     loc_t *tmp=map2loc(maptmp);
     memcpy(pts,tmp,sizeof(loc_t));
     free(tmp);

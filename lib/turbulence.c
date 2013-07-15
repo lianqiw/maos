@@ -205,7 +205,7 @@ static map_t** create_screen(GENSCREEN_T *data,
 	long ny = data->ny;
 	double dx = data->dx;
 	for(int ilayer=0; ilayer<nlayer; ilayer++){
-	    screen[ilayer]=mapnew(nx, ny, dx, NULL);
+	    screen[ilayer]=mapnew(nx, ny, dx, dx, NULL);
 	}
 	data->screen=screen;
 	funmem(data);

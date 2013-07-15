@@ -38,27 +38,19 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 	if(parms->moao[imoao].cubic){
 	    cumoao->cubic_cc=gpu_dmcubic_cc(parms->moao[imoao].iac);
 	}
-	cumoao->dxa=recon->moao[imoao].amap->dx;
-	cumoao->oxa=recon->moao[imoao].amap->ox;
-	cumoao->oya=recon->moao[imoao].amap->oy;
-	cumoao->nxa=recon->moao[imoao].amap->nx;
-	cumoao->nya=recon->moao[imoao].amap->ny;
-	
-	cumoao->dxf=recon->fmap->dx;
-	cumoao->oxf=recon->fmap->ox;
-	cumoao->oyf=recon->fmap->oy;
-	cumoao->nxf=recon->fmap->nx;
-	cumoao->nyf=recon->fmap->ny;
+	cumoao->amap.init(cumoao->amap);
+	cumoao->fmap.init(cumoao->fmap);
+
 	if(curecon->W01){
 	    cumoao->W01=curecon->W01;/*same configuration.*/
 	}else{
 	    cumoao->W01=gpu_get_W01(recon->W0, recon->W1);
 	}
 	cumoao->rhs=curcellnew(1,1);
-	cumoao->rhs->p[0]=curnew(cumoao->nxa, cumoao->nya);
+	cumoao->rhs->p[0]=curnew(cumoao->amap.nx, cumoao->amap.ny);
 	cudaMalloc(&cumoao->pis, sizeof(float));
-	cumoao->xp=curnew(cumoao->nxf, cumoao->nyf);
-	cumoao->xp2=curnew(cumoao->nxf, cumoao->nyf);
+	cumoao->xp=curnew(cumoao->fmap.nx, cumoao->fmap.ny);
+	cumoao->xp2=curnew(cumoao->fmap.nx, cumoao->fmap.ny);
 	if(cumoao->fitNW){
 	    cumoao->tmpNW=curnew(cumoao->fitNW->p[0]->nx, 1);
 	}
@@ -74,9 +66,7 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 		curecon->dm_wfs=(curcell**)calloc(nwfs, sizeof(curcell*));
 	    }
 	    curecon->dm_wfs[iwfs]=curcellnew(1,1);
-	    curecon->dm_wfs[iwfs]->p[0]=new cumap_t(cumoao->nxa, cumoao->nya, NULL, 1,
-						      cumoao->oxa, cumoao->oya,
-						      cumoao->dxa, 0, 0, 0);
+	    curecon->dm_wfs[iwfs]->p[0]=new cumap_t(cumoao->amap);
 	    if(parms->gpu.wfs){
 		gpu_set(wfsgpu[iwfs]);
 	    }
@@ -84,9 +74,7 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 		cudata->dm_wfs=curcellnew(nwfs, 1);
 	    }
 	    if(parms->sim.closeloop){
-		cudata->dm_wfs->p[iwfs]=new cumap_t(cumoao->nxa, cumoao->nya, NULL, 1,
-						      cumoao->oxa, cumoao->oya,
-						      cumoao->dxa, 0, 0, 0);
+		cudata->dm_wfs->p[iwfs]=new cumap_t(cumoao->amap);
 	    }else{
 		cudata->dm_wfs->p[iwfs]=curecon->dm_wfs[iwfs]->p[0]->ref(); 
 	    }
@@ -101,9 +89,7 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 	for(int ievl=0; ievl<nevl; ievl++){
 	    gpu_set(gpu_recon);
 	    curecon->dm_evl[ievl]=curcellnew(1,1);
-	    curecon->dm_evl[ievl]->p[0]=new cumap_t(cumoao->nxa, cumoao->nya,NULL, 1,
-						      cumoao->oxa, cumoao->oya,
-						      cumoao->dxa, 0, 0, 0);
+	    curecon->dm_evl[ievl]->p[0]=new cumap_t(cumoao->amap);
 	    if(parms->gpu.evl){
 		gpu_set(evlgpu[ievl]);
 	    }
@@ -111,9 +97,7 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
 		cudata->dm_evl=curcellnew(nevl,1);
 	    }
 	    if(parms->sim.closeloop){
-		cudata->dm_evl->p[ievl]=new cumap_t(cumoao->nxa, cumoao->nya,NULL, 1,
-						      cumoao->oxa, cumoao->oya,
-						      cumoao->dxa, 0, 0, 0);
+		cudata->dm_evl->p[ievl]=new cumap_t(cumoao->amap);
 	    }else{
 		cudata->dm_evl->p[ievl]=curecon->dm_evl[ievl]->p[0]->ref();
 	    }
@@ -129,19 +113,17 @@ void gpu_setup_moao(const PARMS_T *parms, RECON_T *recon){
     cuspmul(xp2->p, cumoao->W01->W0p, xp->p, 1.f, stream);		\
     if(cumoao->W01->nW0f){						\
 	apply_W_do<<<DIM(np, 256),0,stream>>>(xp2->p, xp->p, cumoao->W01->W0f, cumoao->W01->W0v, \
-					      cumoao->nxf, cumoao->W01->nW0f); \
+					      cumoao->fmap.nx, cumoao->W01->nW0f); \
     }
 
 #define DO_HAT /*Apply HAT, from xp2 to xout.*/				\
     if(fabs(beta)<EPS) curzero((*xout)->p[0], stream);			\
     else if(fabs(beta-1)>EPS) curset((*xout)->p[0], beta, stream);	\
     if(cumoao->cubic_cc){						\
-	gpu_prop_grid_cubic(xp2, cumoao->oxf,cumoao->oyf, cumoao->dxf,	\
-			    (*xout)->p[0], cumoao->oxa, cumoao->oya, cumoao->dxa, \
+	gpu_prop_grid_cubic(xp2, cumoao->fmap, (*xout)->p[0], cumoao->amap, \
 			    0,0, cumoao->cubic_cc, alpha, 't', stream);	\
     }else{								\
-	gpu_prop_grid(xp2, cumoao->oxf, cumoao->oyf, cumoao->dxf,	\
-		      (*xout)->p[0], cumoao->oxa, cumoao->oya, cumoao->dxa, \
+	gpu_prop_grid(xp2, cumoao->fmap, (*xout)->p[0], cumoao->amap,	\
 		      0,0, alpha, 't', stream);				\
     }
 
@@ -151,7 +133,7 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
     const PARMS_T *parms=simu->parms;
     const RECON_T *recon=simu->recon;
     const int npsr=recon->npsr;
-    const int np=cumoao->nxf*cumoao->nyf;
+    const int np=cumoao->fmap.nx*cumoao->fmap.ny;
     stream_t &stream=curecon->moao_stream[0];
     curmat *xp=cumoao->xp;
     curmat *xp2=cumoao->xp2;
@@ -159,15 +141,14 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
     curzero(xp2, stream);
 
     /*do HX operation, from curecon->opdr to xp. */
-    if(!*xout) *xout=curcellnew(1,1,cumoao->nxa, cumoao->nya);
+    if(!*xout) *xout=curcellnew(1,1,cumoao->amap.nx, cumoao->amap.ny);
     for(int ips=0; ips<npsr; ips++){
 	const float ht = (float)recon->ht->p[ips];
 	const float scale=1.f-ht/hs;
 	const float dispx=thetax*ht;
 	const float dispy=thetay*ht;
-	gpu_prop_grid(xp, cumoao->oxf*scale, cumoao->oyf*scale, cumoao->dxf*scale, 
-		      curecon->opdr->p[ips], recon->xmap[ips]->ox, recon->xmap[ips]->oy,
-		      recon->xmap[ips]->dx,
+	gpu_prop_grid(xp, cumoao->fmap*scale, 
+		      curecon->opdr->p[ips], curecon->xmap[ips],
 		      dispx, dispy, 1.f,'n', stream);
     }
     /*do HA operation, from curecon->dmfit to xp */
@@ -178,13 +159,13 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
 	const float dispy=thetay*ht;
 	if(curecon->cubic_cc[idm]){
 	    gpu_prop_grid_cubic
-		(xp, cumoao->oxf*scale,cumoao->oyf*scale, cumoao->dxf*scale, 
-		 curecon->dmfit->p[idm], recon->amap[idm]->ox, recon->amap[idm]->oy, recon->amap[idm]->dx,
+		(xp, cumoao->fmap*scale,
+		 curecon->dmfit->p[idm], curecon->amap[idm],
 		 dispx, dispy, curecon->cubic_cc[idm], -1.f, 'n', stream);
 	}else{
 	    gpu_prop_grid
-		(xp, cumoao->oxf*scale, cumoao->oyf*scale, cumoao->dxf*scale, 
-		 curecon->dmfit->p[idm], recon->amap[idm]->ox, recon->amap[idm]->oy, recon->amap[idm]->dx,
+		(xp, cumoao->fmap*scale,
+		 curecon->dmfit->p[idm], curecon->amap[idm],
 		 dispx, dispy, -1.f, 'n', stream);
 	}
     }
@@ -198,21 +179,19 @@ void gpu_moao_FitR(curcell **xout, float beta, SIM_T *simu, cumoao_t *cumoao, fl
 
 void gpu_moao_FitL(curcell **xout, float beta, const void *A, const curcell *xin, float alpha, stream_t &stream){
     cumoao_t *cumoao=(cumoao_t*)A;
-    const int np=cumoao->nxf*cumoao->nyf;
+    const int np=cumoao->fmap.nx*cumoao->fmap.ny;
     curmat *xp=cumoao->xp;
     curmat *xp2=cumoao->xp2;
     curzero(xp, stream);
     curzero(xp2, stream);
-    if(!*xout) *xout=curcellnew(1,1,cumoao->nxa, cumoao->nya);
+    if(!*xout) *xout=curcellnew(1,1,cumoao->amap.nx, cumoao->amap.ny);
 
     /*Apply HA, from xin to xp.*/
     if(cumoao->cubic_cc){
-	gpu_prop_grid_cubic(xp, cumoao->oxf,cumoao->oyf, cumoao->dxf, 
-			    xin->p[0], cumoao->oxa, cumoao->oya, cumoao->dxa,
+	gpu_prop_grid_cubic(xp, cumoao->fmap, xin->p[0], cumoao->amap,
 			    0,0, cumoao->cubic_cc, 1.f, 'n', stream);
     }else{
-	gpu_prop_grid(xp, cumoao->oxf, cumoao->oyf, cumoao->dxf, 
-		      xin->p[0], cumoao->oxa, cumoao->oya, cumoao->dxa,
+	gpu_prop_grid(xp, cumoao->fmap, xin->p[0], cumoao->amap,
 		      0,0, 1.f, 'n', stream);	
     }
     /*Apply W, from xp to xp2*/
@@ -288,24 +267,24 @@ void gpu_moao_recon(SIM_T *simu){
 /*
   Embed and copy DM commands to GPU.
 */
-static void gpu_dm2gpu_embed(curmat *dmgpu, dmat *dmcpu, long *embed, long nxa, long nya){
+static void gpu_dm2gpu_embed(curmat *dmgpu, dmat *dmcpu, long *embed, int nx, int ny){
     assert(dmcpu->ny==1);
     double *pin=dmcpu->p;
-    float *pout=(float*)calloc(nxa*nya, sizeof(float));
+    float *pout=(float*)calloc(nx*ny, sizeof(float));
     for(int i=0; i<dmcpu->nx; i++){
 	pout[embed[i]]=pin[i];
     }
-    DO(cudaMemcpy(dmgpu->p, pout, nxa*nya*sizeof(float), cudaMemcpyHostToDevice));
+    DO(cudaMemcpy(dmgpu->p, pout, nx*ny*sizeof(float), cudaMemcpyHostToDevice));
     free(pout);
 }
 /*
   Extract and copy DM commands to CPU.
 */
-static void gpu_dm2cpu_extract(dmat *dmcpu, curmat *dmgpu, long *embed, long nxa, long nya){
+static void gpu_dm2cpu_extract(dmat *dmcpu, curmat *dmgpu, long *embed, int nx, int ny){
     assert(dmcpu->ny==1);
     double *pin=dmcpu->p;
-    float *pout=(float*)malloc(nxa*nya*sizeof(float));
-    DO(cudaMemcpy(pout, dmgpu->p, nxa*nya*sizeof(float), cudaMemcpyHostToDevice));
+    float *pout=(float*)malloc(nx*ny*sizeof(float));
+    DO(cudaMemcpy(pout, dmgpu->p, nx*ny*sizeof(float), cudaMemcpyHostToDevice));
     for(int i=0; i<dmcpu->nx; i++){
 	pin[i]=pout[embed[i]];
     }
@@ -406,14 +385,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 		cudata->dm_wfs=curcellnew(nwfs, 1);
 	    }
 	    if(!cudata->dm_wfs->p[iwfs]){
-		double dxa=moao->amap->dx;
-		double oxa=moao->amap->ox;
-		double oya=moao->amap->oy;
-		int nxa=moao->amap->nx;
-		int nya=moao->amap->ny;
-		cudata->dm_wfs->p[iwfs]=new cumap_t(nxa, nya,NULL, 1,
-						      oxa, oya,
-						      dxa, 0, 0, 0);
+		cudata->dm_wfs->p[iwfs]=new cumap_t(moao->amap);
 		if(parms->moao[imoao].cubic){
 		    ((cumap_t*)cudata->dm_wfs->p[iwfs])->cubic_cc=
 			gpu_dmcubic_cc(parms->moao[imoao].iac);
@@ -436,14 +408,7 @@ void gpu_moao_2gpu(SIM_T *simu){
 		cudata->dm_evl=curcellnew(nevl, 1);
 	    }
 	    if(!cudata->dm_evl->p[ievl]){
-		double dxa=moao->amap->dx;
-		double oxa=moao->amap->ox;
-		double oya=moao->amap->oy;
-		int nxa=moao->amap->nx;
-		int nya=moao->amap->ny;
-		cudata->dm_evl->p[ievl]=new cumap_t(nxa, nya,NULL, 1,
-						      oxa, oya,
-						      dxa, 0, 0, 0);
+		cudata->dm_evl->p[ievl]=new cumap_t(moao->amap);
 		if(parms->moao[imoao].cubic){
 		    ((cumap_t*)cudata->dm_evl->p[ievl])->cubic_cc=
 			gpu_dmcubic_cc(parms->moao[imoao].iac);

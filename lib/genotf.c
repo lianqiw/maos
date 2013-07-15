@@ -253,6 +253,7 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
     long notfx2=notfx/2;
     long notfy2=notfy/2;
     double dx1=1./loc->dx;
+    double dy1=1./loc->dy;
     long (*mapp)[map->nx]=(long(*)[map->nx])map->p;
     for(long jm=0; jm<notfy; jm++){
 	long jm2=(jm-notfy2);/*peak in the center */
@@ -262,7 +263,7 @@ static T_VALID *gen_pval(long notfx, long notfy, loc_t *loc, double xsep, double
 	    /*long im2=im<notfx2?im:im-notfx; */
 	    count2=count;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
-		long iy=(long)round((locy[iloc]+jm2*ysep-map->oy)*dx1);
+		long iy=(long)round((locy[iloc]+jm2*ysep-map->oy)*dy1);
 		long ix=(long)round((locx[iloc]+im2*xsep-map->ox)*dx1);
 		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
 		    long iloc2=mapp[iy][ix];
@@ -394,8 +395,9 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
     maxmindbl(locx, nloc, &xmax, &xmin);
     maxmindbl(locy, nloc, &ymax, &ymin);  
     double dx1=1./loc->dx;
+    double dy1=1./loc->dy;
     long ncovx=(long) round((xmax-xmin)*dx1)*2;
-    long ncovy=(long) round((ymax-ymin)*dx1)*2;
+    long ncovy=(long) round((ymax-ymin)*dy1)*2;
     dinit(cov2d, ncovx, ncovy);
     PDMAT(*cov2d, pcov2d);
     PDMAT(cov, pcov);
@@ -415,7 +417,7 @@ void mk2dcov(dmat **cov2d, loc_t *loc, const double *amp, double ampthres, const
 	    double acc=0;
 	    for(long iloc=0; iloc<loc->nloc; iloc++){
 		if(amp && amp[iloc]<ampthres) continue;
-		long iy=(long)round((locy[iloc]-map->oy)*dx1+jm2);
+		long iy=(long)round((locy[iloc]-map->oy)*dy1+jm2);
 		long ix=(long)round((locx[iloc]-map->ox)*dx1+im2);
 		if (ix>=0 && ix<map->nx && iy>=0 && iy<map->ny) {
 		    long iloc2=mapp[iy][ix];

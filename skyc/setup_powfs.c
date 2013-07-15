@@ -41,7 +41,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	const double pixoffy=parms->skyc.pixoffy[ipowfs];
 	const double pxo=-(pixpsa/2-0.5+pixoffx)*pixtheta;
 	const double pyo=-(pixpsa/2-0.5+pixoffy)*pixtheta;
-	loc_t *loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pxo, pyo);
+	loc_t *loc_ccd=mksqloc(pixpsa, pixpsa, pixtheta, pixtheta, pxo, pyo);
 	powfs[ipowfs].dtf=calloc(parms->maos.nwvl, sizeof(DTF_S));
 	for(int iwvl=0; iwvl<parms->maos.nwvl; iwvl++){
 	    const double wvl=parms->maos.wvl[iwvl];
@@ -128,7 +128,7 @@ static void setup_powfs_dtf(POWFS_S *powfs, const PARMS_S* parms){
 	    ccp(&powfs[ipowfs].dtf[iwvl].nominal, nominal);
 	    cfree(nominal);
 
-	    loc_t *loc_psf=mksqloc(ncomp, ncomp, dtheta, -ncomp2*dtheta, -ncomp2*dtheta);
+	    loc_t *loc_psf=mksqloc(ncomp, ncomp, dtheta, dtheta, -ncomp2*dtheta, -ncomp2*dtheta);
 	    powfs[ipowfs].dtf[iwvl].si=mkh(loc_psf,loc_ccd,NULL,0,0,1,0,0);
 	    locfree(loc_psf);
 	    if(parms->skyc.dbg){
@@ -158,6 +158,7 @@ static void read_powfs_locamp(POWFS_S *powfs, const PARMS_S *parms){
 	powfs[ipowfs].amp=dread("%s",parms->maos.fnwfsamp[ipowfs]);
 	powfs[ipowfs].saloc=locread("%s",parms->maos.fnsaloc[ipowfs]);
 	powfs[ipowfs].saloc->dx=parms->maos.dxsa[ipowfs];
+	powfs[ipowfs].saloc->dy=parms->maos.dxsa[ipowfs];
 	const loc_t *loc=powfs[ipowfs].loc;
 	const dmat *amp=powfs[ipowfs].amp;
 	const long nsa=parms->maos.nsa[ipowfs];
@@ -182,38 +183,7 @@ static void read_powfs_locamp(POWFS_S *powfs, const PARMS_S *parms){
 	}
     }
 }
-/**
-   Setup the corase loc grid corresponding to coarse sampled complex pupil
-   function. Deprecated on 1/29/2013. */
-/*
-static void setup_powfs_coarseloc(POWFS_S *powfs, const PARMS_S *parms){
-    for(long ipowfs=0; ipowfs<parms->maos.npowfs; ipowfs++){
-	const long nsa=parms->maos.nsa[ipowfs];
-	powfs[ipowfs].cloc=calloc(nsa, sizeof(loc_t*));
-	powfs[ipowfs].fpc=calloc(nsa,sizeof(double));
 
-	const long ptspsa=parms->maos.ncomp[ipowfs]/2;
-	const double dxsa=parms->maos.dxsa[ipowfs];
-	double dx=dxsa/ptspsa;
-	for(long isa=0; isa<nsa; isa++){
-	    double ox=powfs[ipowfs].saloc->locx[isa]+dx*0.5;
-	    double oy=powfs[ipowfs].saloc->locy[isa]+dx*0.5;
-	    powfs[ipowfs].cloc[isa]=mksqloc(ptspsa,ptspsa,dx,ox,oy);
-	    if(parms->skyc.dbg){
-		locwrite(powfs[ipowfs].cloc[isa],"%s/powfs%ld_cloc%ld",
-			 dirsetup, ipowfs, isa);
-	    }
-	    double fpc=0;
-	    const double *locx=powfs[ipowfs].cloc[isa]->locx;
-	    const double *locy=powfs[ipowfs].cloc[isa]->locy;
-	    const long nloc=powfs[ipowfs].cloc[isa]->nloc;
-	    for(long iloc=0; iloc<nloc; iloc++){
-		fpc+=locx[iloc]*locx[iloc]+locy[iloc]*locy[iloc];
-	    }
-	    powfs[ipowfs].fpc[isa]=fpc/nloc;
-	}
-    }
-}*/
 /**
    Method to demote TTF. deprecated. 
  */

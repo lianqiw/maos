@@ -50,8 +50,8 @@ void locarrfree_do(loc_t **loc, int nloc);
 #define locarrfree(A,B) ({locarrfree_do(A,B);A=NULL;})
 
 int loccenter(loc_t *loc);
-loc_t *locnew(long nloc, double dx);
-pts_t *ptsnew(long nsa, double dsa, long nx, double dx);
+loc_t *locnew(long nloc, double dx, double dy);
+pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy);
 void loc_calc_ptt(double *out, double *coeffout, 
 		  const loc_t *loc, const double ipcc, 
 	       const dmat *imcc, const double *amp, const double *opd);
@@ -65,14 +65,11 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 	       const double *amp, const double *opd);
 loc_t *mk1dloc_vec(double *x, long nx);
 loc_t *mk1dloc(double x0, double dx, long nx);
-loc_t *mksqloc_auto(long nx, long ny, double dx);
+loc_t *mksqloc_auto(long nx, long ny, double dx, double dy);
 loc_t *mksqloc_map(map_t*map);
-loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy);
+loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy);
 loc_t *mksqlocrot(long nx, long ny, double dx, double dy,
 		  double ox, double oy, double theta);
-loc_t *mkcirloc(double d, double dx);
-loc_t *mkcirloc_amp(double** restrict ampout, locstat_t *cstat, 
-		    map_t* ampin, double dtel, double dx, int cropamp);
 void loc_create_stat_do(loc_t *loc);
 #define loc_create_stat(loc) if(!loc->stat) loc_create_stat_do(loc);
 void loc_free_stat(loc_t *loc);
@@ -94,7 +91,7 @@ loc_t *locdup(loc_t *loc);
 loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff);
 loc_t *locshift(const loc_t *loc, double sx, double sy);
 void loc_nxny(long *nx, long *ny, const loc_t *loc);
-map_t *mapnew(long nx, long ny, double dx, double *p);
+map_t *mapnew(long nx, long ny, double dx, double dy, double *p);
 map_t *mapnew2(map_t *A);
 map_t *loc2map(loc_t *loc);
 void mapcircle(map_t *map, double r, double val);

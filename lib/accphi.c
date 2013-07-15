@@ -242,8 +242,10 @@ void prop_index(PROPDATA_T *propdata){
     loc_create_map_npad(locin, npad);			\
     const double dx_in1 = 1./locin->dx;			\
     const double dx_in2 = scale*dx_in1;			\
+    const double dy_in1 = 1./locin->dy;			\
+    const double dy_in2 = scale*dy_in1;			\
     displacex = (displacex-locin->map->ox)*dx_in1;	\
-    displacey = (displacey-locin->map->oy)*dx_in1;	\
+    displacey = (displacey-locin->map->oy)*dy_in1;	\
     long (*map)[locin->map->nx]=(void*)(locin->map->p);	\
     const int nxmax=locin->map->nx-nskip;		\
     const int nymax=locin->map->ny-nskip;		\
@@ -253,8 +255,10 @@ void prop_index(PROPDATA_T *propdata){
 #define PREPIN_GRID(nskip)				\
     const double dx_in1 = 1./mapin->dx;			\
     const double dx_in2 = scale*dx_in1;			\
+    const double dy_in1 = 1./mapin->dy;			\
+    const double dy_in2 = scale*dy_in1;			\
     displacex = (displacex-mapin->ox)*dx_in1;		\
-    displacey = (displacey-mapin->oy)*dx_in1;		\
+    displacey = (displacey-mapin->oy)*dy_in1;		\
     const int nxmax  = mapin->nx-nskip;			\
     const int nymax  = mapin->ny-nskip;			\
     double (*phiin)[mapin->nx]=(void*)(mapin->p);	
@@ -267,10 +271,12 @@ void prop_index(PROPDATA_T *propdata){
 
 #define PREPOUT_PTS				\
     const double dxout=pts->dx;			\
+    const double dyout=pts->dy;			\
     if(!end) end=pts->nsa;
 
 #define PREPOUT_MAP				\
     const double dxout=mapout->dx;		\
+    const double dyout=mapout->dy;		\
     const double ox=mapout->ox;			\
     const double oy=mapout->oy;			\
     double *phiout=mapout->p;			\
@@ -411,7 +417,7 @@ void prop_grid(ARGIN_GRID,
 	    if(ampout && fabs(ampout[iloc])<EPS)
 		continue;/*skip points that has zero amplitude */
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
-	    dplocy=myfma(py[iloc],dx_in2,displacey);
+	    dplocy=myfma(py[iloc],dy_in2,displacey);
 	    SPLIT(dplocx,dplocx,nplocx);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    if(nplocx<0||nplocx>=nxmax||nplocy<0||nplocy>=nymax){
@@ -472,8 +478,8 @@ void prop_nongrid(ARGIN_NONGRID,
 	    //    for(long iloc=start; iloc<end; iloc++){
 	    if(ampout && fabs(ampout[iloc])<EPS)
 		continue;/*skip points that has zero amplitude */
-	    dplocy=myfma(py[iloc],dx_in2,displacey);
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
+	    dplocy=myfma(py[iloc],dy_in2,displacey);
 	    
 	    SPLIT(dplocx,dplocx,nplocx);
 	    SPLIT(dplocy,dplocy,nplocy);
@@ -507,7 +513,7 @@ void prop_nongrid_map(ARGIN_NONGRID,
     RUNTIME_LINEAR ;
     for(int iy=start; iy<end; iy++)
 	{
-	dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+	dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 	SPLIT(dplocy,dplocy,nplocy);
 	if(nplocy<0||nplocy>nymax){
 	    missing++;
@@ -559,7 +565,7 @@ void prop_nongrid_pts(ARGIN_NONGRID,
 	    const double oy=pts->origy[isa];
 	    for(int iy=0; iy<pts->nx; iy++){
 		long iloc=iloc0+iy*pts->nx-1;
-		dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+		dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 		SPLIT(dplocy,dplocy,nplocy);
 		if(nplocy<0||nplocy>nymax){
 		    continue;
@@ -613,7 +619,7 @@ void prop_grid_cubic(ARGIN_GRID,
 	    for(long iloc=jloc; iloc<end2; iloc++){
 		//for(long iloc=start; iloc<end; iloc++){
 		dplocx=myfma(px[iloc],dx_in2,displacex);
-		dplocy=myfma(py[iloc],dx_in2,displacey);
+		dplocy=myfma(py[iloc],dy_in2,displacey);
 		SPLIT(dplocx,dplocx,nplocx);
 		SPLIT(dplocy,dplocy,nplocy);
 		if(nplocx<1||nplocx>nxmax||nplocy<1||nplocy>nymax){
@@ -657,7 +663,7 @@ void prop_grid_pts_cubic(ARGIN_GRID,
 
 	    for(int iy=0; iy<pts->nx; iy++){
 		long iloc=iloc0+iy*pts->nx-1;
-		dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+		dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 		SPLIT(dplocy,dplocy,nplocy);
 		if(nplocy<1||nplocy>nymax){
 		    continue;
@@ -698,7 +704,7 @@ void prop_grid_map_cubic(ARGIN_GRID,
 #pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)
 #endif
 	{
-	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    if(nplocy>=1 && nplocy<=nymax){
 		dplocy0=1.-dplocy;
@@ -740,7 +746,7 @@ void prop_nongrid_cubic(ARGIN_NONGRID,
 	    //for(long iloc=start; iloc<end; iloc++){
 	    if(ampout && fabs(ampout[iloc])<EPS)
 		continue;/*skip points that has zero amplitude */
-	    dplocy=myfma(py[iloc],dx_in2,displacey);
+	    dplocy=myfma(py[iloc],dy_in2,displacey);
 	    dplocx=myfma(px[iloc],dx_in2,displacex);
 
 	    SPLIT(dplocx,dplocx,nplocx);
@@ -780,7 +786,7 @@ void prop_nongrid_pts_cubic(ARGIN_NONGRID,
 	    const double oy=pts->origy[isa];
 	    for(int iy=0; iy<pts->nx; iy++){
 		long iloc=iloc0+iy*pts->nx-1;
-		dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+		dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 		SPLIT(dplocy,dplocy,nplocy);
 		if(nplocy<1||nplocy>nymax){
 		    continue;
@@ -821,7 +827,7 @@ void prop_nongrid_map_cubic(ARGIN_NONGRID,
 #pragma omp task private(dplocx,nplocx,dplocx0,nplocy,dplocy0,dplocy)
 #endif
 	{
-	    dplocy=myfma(oy+iy*dxout,dx_in2,displacey);
+	    dplocy=myfma(oy+iy*dyout,dy_in2,displacey);
 	    SPLIT(dplocy,dplocy,nplocy);
 	    if(nplocy>=1 && nplocy<=nymax){
 		dplocy0=1.-dplocy;
@@ -872,16 +878,18 @@ void prop_nongrid_bin(const loc_t *locin,
     const int wrapy1 = locout->map->ny;
     const int nxmax = wrapx1-1;
     const int nymax = wrapy1-1;
-    const double dx_out1 = 1./locout->dx;
     /*notice inverse of scale. */
+    const double dx_out1 = 1./locout->dx;
     const double dx_out2 = (1./scale)*dx_out1;
+    const double dy_out1 = 1./locout->dy;
+    const double dy_out2 = (1./scale)*dy_out1;
     /*notice negative sign in displacex/y. */
     displacex = (-displacex/scale-locout->map->ox)*dx_out1;
-    displacey = (-displacey/scale-locout->map->oy)*dx_out1;
+    displacey = (-displacey/scale-locout->map->oy)*dy_out1;
     const double *px=locin->locx;
     const double *py=locin->locy;
     /*Scale alpha to cancel out scaling */
-    double alpha2 = alpha*pow(locin->dx/locout->dx/scale,2);
+    double alpha2 = alpha*(locin->dx/locout->dx/scale)*(locin->dy/locout->dy/scale);
 #if ONLY_FULL==1
     long iphi1,iphi2,iphi3,iphi4;
 #else
@@ -892,7 +900,7 @@ void prop_nongrid_bin(const loc_t *locin,
     /*-1 because we count from 1 in the map. */
     double *phiout0=phiout-1;
     for(long iloc=0; iloc<locin->nloc; iloc++){
-	dplocy=myfma(py[iloc],dx_out2,displacey);
+	dplocy=myfma(py[iloc],dy_out2,displacey);
 	dplocx=myfma(px[iloc],dx_out2,displacex);
 
 	SPLIT(dplocx,dplocx,nplocx);

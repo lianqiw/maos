@@ -63,12 +63,12 @@ __global__ void apply_W_do(float *restrict out, const float *restrict in, const 
 	const float dispx=thetax*ht;					\
 	const float dispy=thetay*ht;					\
 	if(curecon->cubic_cc[idm]){					\
-	    gpu_prop_grid_cubic(opdfit->p[ifit], oxp*scale, oyp*scale, dxp*scale, \
-				xin->p[idm], recon->amap[idm]->ox, recon->amap[idm]->oy, recon->amap[idm]->dx, \
+	    gpu_prop_grid_cubic(opdfit->p[ifit], curecon->pmap*scale,	\
+				xin->p[idm], curecon->amap[idm],	\
 				dispx, dispy, curecon->cubic_cc[idm], 1.f, 'n', curecon->fitstream[ifit]); \
 	}else{								\
-	    gpu_prop_grid(opdfit->p[ifit], oxp*scale, oyp*scale, dxp*scale, \
-			  xin->p[idm], recon->amap[idm]->ox, recon->amap[idm]->oy, recon->amap[idm]->dx, \
+	    gpu_prop_grid(opdfit->p[ifit], curecon->pmap*scale,		\
+			  xin->p[idm], curecon->amap[idm],		\
 			  dispx, dispy, 1.f, 'n', curecon->fitstream[ifit]); \
 	}								\
     }
@@ -85,15 +85,13 @@ __global__ void apply_W_do(float *restrict out, const float *restrict in, const 
 	    const float dispx=(float)parms->fit.thetax[ifit]*ht;	\
 	    const float dispy=(float)parms->fit.thetay[ifit]*ht;	\
 	    if(curecon->cubic_cc[idm]){					\
-		gpu_prop_grid_cubic(opdfit2->p[ifit], oxp*scale, oyp*scale, dxp*scale, \
-				    (*xout)->p[idm], recon->amap[idm]->ox, \
-				    recon->amap[idm]->oy, recon->amap[idm]->dx, \
+		gpu_prop_grid_cubic(opdfit2->p[ifit], curecon->pmap*scale, \
+				    (*xout)->p[idm], curecon->amap[idm], \
 				    dispx, dispy, curecon->cubic_cc[idm], \
 				    alpha, 't', curecon->dmstream[idm]); \
 	    }else{							\
-		gpu_prop_grid(opdfit2->p[ifit], oxp*scale, oyp*scale, dxp*scale, \
-			      (*xout)->p[idm], recon->amap[idm]->ox,	\
-			      recon->amap[idm]->oy, recon->amap[idm]->dx, \
+		gpu_prop_grid(opdfit2->p[ifit], curecon->pmap*scale, \
+			      (*xout)->p[idm], curecon->amap[idm], \
 			      dispx, dispy,				\
 			      alpha, 't', curecon->dmstream[idm]);	\
 	    }								\
@@ -108,9 +106,9 @@ __global__ void apply_W_do(float *restrict out, const float *restrict in, const 
 	    const float scale=1.f-ht/hs;				\
 	    assert(xin->p[ips]->nx==recon->xmap[ips]->nx		\
 		   &&xin->p[ips]->ny==recon->xmap[ips]->ny);		\
-	    gpu_prop_grid(opdfit->p[ifit], oxp*scale, oyp*scale, dxp*scale, \
-			  xin->p[ips], recon->xmap[ips]->ox, recon->xmap[ips]->oy, \
-			  recon->xmap[ips]->dx, thetax*ht, thetay*ht,	\
+	    gpu_prop_grid(opdfit->p[ifit], curecon->pmap*scale,		\
+			  xin->p[ips], curecon->xmap[ips],		\
+			  thetax*ht, thetay*ht,				\
 			  1.f,'n', curecon->fitstream[ifit]);		\
 	}								\
     }else{ /*propagate from atmosphere*/				\
@@ -131,9 +129,9 @@ __global__ void apply_W_do(float *restrict out, const float *restrict in, const 
 	    const float scale=1.f-ht/hs;				\
 	    float thetax=(float)parms->fit.thetax[ifit];		\
 	    float thetay=(float)parms->fit.thetay[ifit];		\
-	    gpu_prop_grid(opdfit->p[ifit], oxp*scale, oyp*scale, dxp*scale, \
-			  (*xout)->p[ips], recon->xmap[ips]->ox, recon->xmap[ips]->oy, \
-			  recon->xmap[ips]->dx, thetax*ht, thetay*ht,	\
+	    gpu_prop_grid(opdfit->p[ifit], curecon->pmap*scale,		\
+			  (*xout)->p[ips], curecon->xmap[ips],		\
+			  thetax*ht, thetay*ht,				\
 			  alpha,'t', curecon->psstream[ips]);		\
 	}								\
     }
@@ -162,9 +160,6 @@ void gpu_FitR(curcell **xout, float beta, const void *A, const curcell *xin, flo
     const PARMS_T *parms=recon->parms;
     const int nfit=parms->fit.nfit;
     const int npsr=recon->npsr;
-    float oxp=recon->fmap->ox;
-    float oyp=recon->fmap->oy;
-    float dxp=recon->fmap->dx;
     const int nxp=recon->fmap->nx;
     const int nyp=recon->fmap->ny;
     const int np=nxp*nyp;
@@ -193,9 +188,6 @@ void gpu_FitRt(curcell **xout, float beta, const void *A, const curcell *xin, fl
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nfit=parms->fit.nfit;
-    float oxp=recon->fmap->ox;
-    float oyp=recon->fmap->oy;
-    float dxp=recon->fmap->dx;
     const int nxp=recon->fmap->nx;
     const int nyp=recon->fmap->ny;
     const int np=nxp*nyp;
@@ -222,9 +214,6 @@ void gpu_FitL(curcell **xout, float beta, const void *A, const curcell *xin, flo
     const RECON_T *recon=(const RECON_T *)A;
     const PARMS_T *parms=recon->parms;
     const int nfit=parms->fit.nfit;
-    float oxp=recon->fmap->ox;
-    float oyp=recon->fmap->oy;
-    float dxp=recon->fmap->dx;
     const int nxp=recon->fmap->nx;
     const int nyp=recon->fmap->ny;
     const int np=nxp*nyp;

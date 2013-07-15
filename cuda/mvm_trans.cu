@@ -96,8 +96,8 @@ static void mvm_trans_igpu(thread_t *info){
     }
  
     curcell *dmfit=load_mvmf?NULL:curcellnew(curecon->dmfit);
-    curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmf?1:0));
-    curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmi?1:0));
+    curcell *opdx=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmf?1L:0L));
+    curcell *opdr=curcellnew(recon->npsr, 1, recon->xnx, recon->xny, (float*)(mvmi?1L:0L));
     curcell *grad=curcellnew(parms->nwfsr, 1, recon->ngrad, (long*)0, (float*)1);
     if(ntotact==0){
 	error("ntotact=0;\n");

@@ -180,12 +180,12 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     /*the lower left *grid* coordinate of the subaperture */
     
     /*The coordinate of the subaperture (lower left coordinate) */
-    powfs[ipowfs].saloc=locnew(order*order, dxsa);
+    powfs[ipowfs].saloc=locnew(order*order, dxsa, dxsa);
     /*Number of OPD pixels in 1 direction in each
       subaperture. Make it even to do fft.*/
     int nx = 2*(int)round(0.5*dxsa/parms->powfs[ipowfs].dx);
     const double dx=dxsa/nx;/*adjust dx. */
-    powfs[ipowfs].pts=ptsnew(order*order, dxsa, nx, dx);/*calloc(1, sizeof(pts_t)); */
+    powfs[ipowfs].pts=ptsnew(order*order, dxsa, dxsa, nx, dx, dx);/*calloc(1, sizeof(pts_t)); */
 
     if(fabs(parms->powfs[ipowfs].dx-powfs[ipowfs].pts->dx)>EPS)
 	warning("Adjusting dx from %g to %g\n",
@@ -258,7 +258,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
     powfs[ipowfs].saa=wfsamp2saa(powfs[ipowfs].amp, nxsa);
     
     //Create another set of loc/amp that can be used to build GP. It has points on edge of subapertures
-    map_t *map=create_metapupil_wrap(parms, 0, dx, 0, 0, 0, 0, 0, 0);
+    map_t *map=create_metapupil_wrap(parms, 0, dx, dx, 0, 0, 0, 0, 0, 0);
     powfs[ipowfs].gloc=map2loc(map); mapfree(map);
     powfs[ipowfs].gamp=mkwfsamp(powfs[ipowfs].gloc, aper->ampground, 
 				0,0, parms->aper.d, parms->aper.din);
@@ -452,7 +452,7 @@ setup_powfs_geom(POWFS_T *powfs, const PARMS_T *parms,
 	powfs[ipowfs].fieldstop=dnew(nembed, nembed);
 	double dtheta=parms->powfs[ipowfs].wvl[0]/(powfs[ipowfs].loc->dx*nembed); 
 	double radius=parms->powfs[ipowfs].fieldstop/dtheta/2;
-	dcircle(powfs[ipowfs].fieldstop, nembed/2+1, nembed/2+1, radius, 1);
+	dcircle(powfs[ipowfs].fieldstop, nembed/2+1, nembed/2+1, 1, 1, radius, 1);
 	dfftshift(powfs[ipowfs].fieldstop);
     }
     dfree(ampi);
@@ -894,7 +894,7 @@ setup_powfs_dtf(POWFS_T *powfs,const PARMS_T *parms,int ipowfs){
 	cfft2plan(nominal,-1);
 	cfft2plan(nominal,1);
 	PCMAT(nominal,pn);
-	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta, -ncompx2*dtheta, -ncompy2*dtheta);
+	loc_t *loc_psf=mksqloc(ncompx,ncompy,dtheta,dtheta,-ncompx2*dtheta, -ncompy2*dtheta);
 	double theta=0;
 	double ct=cos(theta);
 	double st=sin(theta);
@@ -1342,12 +1342,13 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
     pts_t *lpts=llt->pts=calloc(1, sizeof(pts_t));
     lpts->nsa=1;
     double lltd=lltcfg->d;
-    lpts->dsa=MAX(lltd, powfs[ipowfs].pts->dsa);
+    lpts->dsay=lpts->dsa=MAX(lltd, powfs[ipowfs].pts->dsa);
     int notf=MAX(powfs[ipowfs].ncompx, powfs[ipowfs].ncompy);
     /*The otf would be dx/lambda. Make it equal to pts->dsa/lambda/notf)*/
     const double dx=lpts->dx=parms->powfs[ipowfs].embfac*powfs[ipowfs].pts->dsa/notf;
+    lpts->dy=lpts->dx;
     const int nx=lpts->nx=round(lpts->dsa/lpts->dx);
-    lpts->dsa=lpts->dx*lpts->nx;
+    lpts->dsay=lpts->dsa=lpts->dx*lpts->nx;
     
     lpts->origx=calloc(1, sizeof(double));
     lpts->origy=calloc(1, sizeof(double));
@@ -1409,7 +1410,7 @@ setup_powfs_llt(POWFS_T *powfs, const PARMS_T *parms, int ipowfs){
 	    llt->amp->p[i]=-llt->amp->p[i];
 	}
     }
-    llt->loc=mksqloc(nx,nx,dx, lpts->origx[0], lpts->origy[0]);
+    llt->loc=mksqloc(nx,nx,dx,dx, lpts->origx[0], lpts->origy[0]);
     llt->mcc =pts_mcc_ptt(llt->pts, llt->amp->p);
     llt->imcc =dcellinvspd_each(llt->mcc);
     if(parms->save.setup){

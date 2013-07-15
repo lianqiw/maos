@@ -47,6 +47,7 @@ typedef float GTYPE;
   blockmv<<<ngrid, dim(tnx, tny), (tny+tnx*tny)*sizeof(float), stream>>>()
   with both tnx and tny must be power of two and be less than 32. tny must be 32.
 */
+
 __global__ static void
 blockmv(float *restrict y, const float *restrict A, const float *restrict x, const int nrow, const int ncol){
     __shared__ float shared[BLOCKMV_TNX][BLOCKMV_TNY];

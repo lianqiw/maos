@@ -138,6 +138,7 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 	double ox=aloc[idm]->map->ox;
 	double oy=aloc[idm]->map->oy;
 	double dx1=1./aloc[idm]->dx;
+	double dy1=1./aloc[idm]->dy;
 	dsp *slavet=spnew(nact,nslave,nslave*5);
 	spint *pp=slavet->p;
 	spint *pi=slavet->i;
@@ -156,7 +157,7 @@ spcell *slaving(dcell **pactcpl,/**<[out]The actuator coupling factor.*/
 	    }else if(actcpl[iact]<thres){/*slave actuators */
 		pp[icol]=count;
 		long mapx=(long)round((locx[iact]-ox)*dx1);
-		long mapy=(long)round((locy[iact]-oy)*dx1);
+		long mapy=(long)round((locy[iact]-oy)*dy1);
 		assert(map[mapy][mapx]-1==iact);
 		double near_active=0.;
 		int near_exist=0;
@@ -345,6 +346,7 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 	double ox=aloc[idm]->map->ox;
 	double oy=aloc[idm]->map->oy;
 	double dx1=1./aloc[idm]->dx;
+	double dy1=1./aloc[idm]->dy;
 	const double *locx=aloc[idm]->locx;
 	const double *locy=aloc[idm]->locy;
 	long nact=aloc[idm]->nloc;
@@ -367,7 +369,7 @@ void act_float(loc_t **aloc, spcell **HA, dcell *HB, icell *actfloat){
 	for(long jact=0; jact<ndead; jact++){
 	    int iact=actfloat->p[idm]->p[jact];
 	    long mapx=(long)round((locx[iact]-ox)*dx1);
-	    long mapy=(long)round((locy[iact]-oy)*dx1);
+	    long mapy=(long)round((locy[iact]-oy)*dy1);
 	    /*find all its neighbors. */
 	    for(int idy=-1; idy<2; idy++){
 		for(int idx=-1; idx<2; idx++){
@@ -506,7 +508,8 @@ spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
 	long (*map)[aloc[idm]->map->nx]=(void*)aloc[idm]->map->p;
 	double ox=aloc[idm]->map->ox;
 	double oy=aloc[idm]->map->oy;
-	double dx1=1./aloc[idm]->dx;
+	double dx1=1./aloc[idm]->dx;	
+	double dy1=1./aloc[idm]->dy;
 	const double *locx=aloc[idm]->locx;
 	const double *locy=aloc[idm]->locy;
 	long nact=aloc[idm]->nloc;
@@ -526,7 +529,7 @@ spcell* act_float_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
 	    pp[iact]=count;
 	    if(isfloat[iact]){
 		long mapx=(long)round((locx[iact]-ox)*dx1);
-		long mapy=(long)round((locy[iact]-oy)*dx1);
+		long mapy=(long)round((locy[iact]-oy)*dy1);
 		int count2=count;
 		for(int idy=-1; idy<2; idy++){
 		    for(int idx=-1; idx<2; idx++){
@@ -580,6 +583,7 @@ spcell* act_inactive_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
 	double ox=aloc[idm]->map->ox;
 	double oy=aloc[idm]->map->oy;
 	double dx1=1./aloc[idm]->dx;
+	double dy1=1./aloc[idm]->dy;
 	const double *locx=aloc[idm]->locx;
 	const double *locy=aloc[idm]->locy;
 	long nact=aloc[idm]->nloc;
@@ -592,7 +596,7 @@ spcell* act_inactive_interp(loc_t **aloc,  /**<[in] Actuator grid array*/
 	    pp[iact]=count;
 	    if(cpl[iact]<0.1){
 		long mapx=(long)round((locx[iact]-ox)*dx1);
-		long mapy=(long)round((locy[iact]-oy)*dx1);
+		long mapy=(long)round((locy[iact]-oy)*dy1);
 		int count2=count;
 		double sum=0;
 		/*first, interpolate from neighbors of higher cpl*/

@@ -117,24 +117,27 @@ void rectmapfree_do(rectmap_t *map){
 /**
    Create a loc with nloc elements.
 */
-loc_t *locnew(long nloc,double dx){
+loc_t *locnew(long nloc,double dx, double dy){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->locx=calloc(nloc, sizeof(double));
     loc->locy=calloc(nloc, sizeof(double));
     loc->nloc=nloc;
     loc->dx=dx;
+    loc->dy=dy;
     return loc;
 }
 /**
    Create a pts with nsa, dsa, nx, dx
 */
-pts_t *ptsnew(long nsa, double dsa, long nx, double dx){
+pts_t *ptsnew(long nsa, double dsax, double dsay, long nx, double dx, double dy){
     pts_t *pts=calloc(1, sizeof(pts_t));
     pts->origx=calloc(nsa, sizeof(double));
     pts->origy=calloc(nsa, sizeof(double));
-    pts->dsa=dsa;
+    pts->dsa=dsax;
+    pts->dsay=dsay;
     pts->nx=nx;
     pts->dx=dx;
+    pts->dy=dy;
     return pts;
 }
 /**
@@ -145,8 +148,9 @@ long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     const double dx_in1=1./loc->dx;
+    const double dy_in1=1./loc->dy;
     long nx=(long)round((xmax-xmin)*dx_in1)+1;
-    long ny=(long)round((ymax-ymin)*dx_in1)+1;
+    long ny=(long)round((ymax-ymin)*dy_in1)+1;
     long nxy=(nx>ny?nx:ny)*oversize;/*minimum size */
     long mapn;
     if(*nembed<=0){
@@ -161,12 +165,12 @@ long *loc_create_embed(long *nembed, const loc_t *loc, int oversize){
 	mapn=*nembed;
     }
     xmin-=(mapn-nx)/2*loc->dx;
-    ymin-=(mapn-ny)/2*loc->dx;
+    ymin-=(mapn-ny)/2*loc->dy;
     long *embed=calloc(loc->nloc, sizeof(long));
     
     for(int iloc=0; iloc<loc->nloc; iloc++){
 	long ix=(long)round((loc->locx[iloc]-xmin)*dx_in1);
-	long iy=(long)round((loc->locy[iloc]-ymin)*dx_in1);
+	long iy=(long)round((loc->locy[iloc]-ymin)*dy_in1);
 	embed[iloc]=ix+iy*mapn;
     }
     return embed;
@@ -205,13 +209,14 @@ void loc_create_map_npad(loc_t *loc, int npad){
     /*padding the map. normally don't need. */
     if(npad>0){
 	xmin-=npad*loc->dx;
-	ymin-=npad*loc->dx;
+	ymin-=npad*loc->dy;
 	xmax+=npad*loc->dx;
-	ymax+=npad*loc->dx;
+	ymax+=npad*loc->dy;
     }
     const double dx_in1=1./loc->dx;
+    const double dy_in1=1./loc->dy;
     map_nx=(int) ceil((xmax-xmin)*dx_in1)+1;
-    map_ny=(int) ceil((ymax-ymin)*dx_in1)+1;
+    map_ny=(int) ceil((ymax-ymin)*dy_in1)+1;
     loc->map->p=calloc(map_nx*map_ny,sizeof(long));
     loc->map->nx=map_nx;
     loc->map->ny=map_ny;
@@ -224,7 +229,7 @@ void loc_create_map_npad(loc_t *loc, int npad){
     int ix,iy;
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	ix=(int)round((locx[iloc]-xmin)*dx_in1);
-	iy=(int)round((locy[iloc]-ymin)*dx_in1);
+	iy=(int)round((locy[iloc]-ymin)*dy_in1);
 	pmap[iy][ix]=iloc+1;/*start from 1. */
     }
     UNLOCK(maplock);
@@ -241,6 +246,7 @@ long *map2embed(map_t *amp){
    Convert a map to a loc that collects all positive entries. */
 loc_t* map2loc(map_t *map){
     const double dx=map->dx;
+    const double dy=map->dy;
     const double ox=map->ox;
     const double oy=map->oy;
     const long nx=map->nx;
@@ -256,7 +262,7 @@ loc_t* map2loc(map_t *map){
 	for(ix=0; ix<nx; ix++){
 	    if(map0[iy][ix]>0){
 		loc->locx[count]=ix*dx+ox;
-		loc->locy[count]=iy*dx+oy;
+		loc->locy[count]=iy*dy+oy;
 		count++;
 	    }
 	}
@@ -265,6 +271,7 @@ loc_t* map2loc(map_t *map){
     loc->locy=realloc(loc->locy, sizeof(double)*count);
     loc->nloc=count;
     loc->dx=dx;
+    loc->dy=dy;
     loc->map=NULL;
     return loc;
 }
@@ -276,14 +283,15 @@ map_t *loc2map(loc_t *loc){
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     int nx=ceil((xmax-xmin)/loc->dx)+1;
-    int ny=ceil((ymax-ymin)/loc->dx)+1;
-    map_t *map=mapnew(nx, ny, loc->dx, NULL);
+    int ny=ceil((ymax-ymin)/loc->dy)+1;
+    map_t *map=mapnew(nx, ny, loc->dx, loc->dy, NULL);
     map->ox=xmin;
     map->oy=ymin;
     double dx_in1=1./loc->dx;
+    double dy_in1=1./loc->dy;
     for(int iloc=0; iloc<loc->nloc; iloc++){
 	int ix=(int)round((loc->locx[iloc]-xmin)*dx_in1);
-	int iy=(int)round((loc->locy[iloc]-ymin)*dx_in1);
+	int iy=(int)round((loc->locy[iloc]-ymin)*dy_in1);
 	map->p[ix+iy*nx]=1.;
     }	
     return map;
@@ -314,6 +322,7 @@ loc_t *mk1dloc_vec(double *x, long nx){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx;
     loc->dx=(x[nx-1]-x[0])/(nx-1);
+    loc->dy=loc->dx;
     loc->locx=malloc(sizeof(double)*nx);
     loc->locy=calloc(sizeof(double),nx);
     memcpy(loc->locx, x, sizeof(double)*nx);
@@ -326,6 +335,7 @@ loc_t *mk1dloc(double x0, double dx, long nx){
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx;
     loc->dx=dx;
+    loc->dy=dx;
     loc->locx=malloc(sizeof(double)*nx);
     loc->locy=calloc(sizeof(double),nx);/*initialize to zero. */
     for(long ix=0; ix<nx; ix++){
@@ -338,22 +348,23 @@ loc_t *mk1dloc(double x0, double dx, long nx){
    map2loc which only covers valid (value>0) regions.
  */
 loc_t *mksqloc_map(map_t*map){
-    return mksqloc(map->nx, map->ny, map->dx, map->ox, map->oy);
+    return mksqloc(map->nx, map->ny, map->dx, map->dy, map->ox, map->oy);
 }
 /**
    Create a loc array of size nx*ny at sampling dx with origin at (nx/2, ny/2)
  */
-loc_t *mksqloc_auto(long nx, long ny, double dx){
-    return mksqloc(nx,ny,dx,-nx/2*dx,-ny/2*dx);
+loc_t *mksqloc_auto(long nx, long ny, double dx, double dy){
+    return mksqloc(nx,ny,dx,dy,-nx/2*dx,-ny/2*dy);
 }
 /**
    Create a loc array contains coorindates in a square map of size nx*ny, with
    sampling dx, and at origin ox,oy */
-loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy){
+loc_t *mksqloc(long nx, long ny, double dx, double dy, double ox, double oy){
     
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx*ny;
     loc->dx=dx;
+    loc->dy=dy;
     loc->locx=malloc(sizeof(double)*loc->nloc);
     loc->locy=malloc(sizeof(double)*loc->nloc);
     long ix,iy;
@@ -361,7 +372,7 @@ loc_t *mksqloc(long nx, long ny, double dx, double ox, double oy){
     double (*locy)[nx]=(double(*)[nx])loc->locy;
     double y;
     for(iy=0; iy<ny; iy++){
-	y=iy*dx+oy;
+	y=iy*dy+oy;
 	for(ix=0; ix<nx; ix++){
 	    locx[iy][ix]=ix*dx+ox;
 	    locy[iy][ix]=y;
@@ -377,6 +388,7 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, 
     loc_t *loc=calloc(1, sizeof(loc_t));
     loc->nloc=nx*ny;
     loc->dx=dx;
+    loc->dy=dy;
     loc->locx=malloc(sizeof(double)*loc->nloc);
     loc->locy=malloc(sizeof(double)*loc->nloc);
     long ix,iy;
@@ -395,147 +407,6 @@ loc_t *mksqlocrot(long nx, long ny, double dx, double dy, double ox, double oy, 
     }
     return loc;
 }
-/**
-   Create rough circular grid, within diameter of dcir. Use create_metapupil_wrap instead.
- */
-loc_t *mkcirloc(double dcir, double dx){
-    double rmax2,xmax2;
-    int N,i,j,count;
-    N=iceil(dcir/dx/2+5)*2;
-    loc_t *loc=calloc(1, sizeof(loc_t));
-    loc->locx=malloc(sizeof(double)*N*N);
-    loc->locy=malloc(sizeof(double)*N*N);
-    rmax2=(dcir/dx/2.+0.5);/*Changed from 1*1.414 to 0.5 on 2011-07-13 to make plocs just big enough. */
-    rmax2*=rmax2;
-    count=0;
-   
-    for(j=-N/2;j<N/2;j++){
-	xmax2=rmax2-j*j;
-	/*this method is good. there are no holes*/
-	for(i=-N/2;i<N/2;i++){
-	    if(i*i<xmax2){
-		loc->locx[count]=i*dx;
-		loc->locy[count]=j*dx;
-		count++;
-	    }
-	}
-    }
-    loc->locx = realloc(loc->locx, sizeof(double)*count);
-    loc->locy = realloc(loc->locy, sizeof(double)*count);
-    loc->nloc = count;
-    loc->dx   = dx;
-    return loc;
-}
-
-/**
-   Create LOC map when amplitude map is specified, within a maximum
-   diameter. The amplitude map must be defined in the same sampling of dx.
-
-   - cropmap=0: LOC is purely defined by the amplitude map. dcir is irrelevant in this case.
-   - cropmap=1: LOC is forced to be within dcir. ampin is cropped.
-   
-   cstat records the starting point for each row to speed up accphi.  */
-loc_t* mkcirloc_amp(double** ampout,  /**<[out] amplitude map defined on loc*/
-		    locstat_t *cstat, /**<[out] statistics on loc*/
-		    map_t* ampin,     /**<[in/out] the amplitude that defines
-					 the circular aperture, modified to
-					 widhtin dtel if cropmap=1*/
-		    double dcir,      /**<[in] maximum diameter of the circular loc*/
-		    double dx,        /**<[in] sampling of output loc*/
-		    int cropamp       /**<[in] do we zero ampin points if it outside of dcir*/
-		    ){
-    loc_t *loc=calloc(1, sizeof(loc_t));
-    double *restrict ampp = ampin->p;
-    int count,colcount,count0;
-    double rmax2=pow(dcir/dx/2.+1*1.414, 2);
-
-    if(ampin->nx*dx<dcir || ampin->ny*dx<dcir){
-	error("maximum diameter is %g m, amplitude is %g mx%g m, "
-	      "with sampling of 1/%g m\n",dcir,
-	      ampin->nx*dx,ampin->ny*dx,1/dx);
-    }else if(ampin->nx*dx>2*dcir){
-	warning("maximum diameter is %g m, amplitude map is %gx%g m, "
-		"with sampling of 1/%g m\n"
-		"\t\t\tWill crop the amplitude map to maximum diameter of %g\n",
-		dcir,ampin->nx*dx,ampin->ny*dx,1/dx,dcir);
-    }
-    
-    loc->locx=malloc(sizeof(double)*ampin->nx*ampin->ny);
-    loc->locy=malloc(sizeof(double)*ampin->nx*ampin->ny);
-    *ampout  =malloc(sizeof(double)*ampin->nx*ampin->ny);
-    count=0;   /*count number of points. */
-    colcount=0;/*count number of columns (y) */
-
-    int ncolstat=ampin->ny+1;
-    if(cstat){
-	cstat->cols=calloc(ncolstat, sizeof(locstatcol_t));
-    }
-    int offsetx=ampin->ox/dx;
-    int offsety=ampin->oy/dx;
-    /*scan through the input maps*/
-    for(int iy=0; iy<ampin->ny; iy++){
-	double ry=iy+offsety;
-	int imin, imax, iminnotfound;
-	double xmax2=rmax2-ry*ry;/*max limit of x coord */
-	count0=count;/*starting number of this column */
-
-	imin=INT_MAX;
-	imax=-INT_MAX;
-	iminnotfound=1;
-	int offset2=iy*ampin->nx;
-	/*we find nonzero min and max index for each column.*/
-	for(int ix=0; ix<ampin->nx; ix++){
-	    if(ampp[ix+offset2]>0){
-		if(iminnotfound){
-		    imin=ix;
-		    iminnotfound=0;
-		}
-		imax=ix;
-	    }
-	}
-	for(int ix=imin;ix<imax+1;ix++){
-	    /*use amp only will create locs with holes it. the method
-	      using stat to do accphi will be in trouble*/
-	    double rx=ix+offsetx;
-	    if(rx*rx<xmax2){
-		loc->locx[count]=rx*dx;
-		loc->locy[count]=ry*dx;
-		(*ampout)[count]=ampp[ix+offset2];
-		count++;
-	    }else if(cropamp){
-		ampp[ix+offset2]=0;/*zero out the amplitude map*/
-	    }
-	}
-	if(cstat){
-	    if(count>count0){
-		/*row valid*/
-		if(colcount>=ncolstat){
-		    ncolstat*=2;
-		    cstat->cols=realloc(cstat->cols, sizeof(locstatcol_t)*ncolstat);
-		}
-		(cstat->cols)[colcount].xstart=loc->locx[count0];
-		(cstat->cols)[colcount].ystart=loc->locy[count0];
-		(cstat->cols)[colcount].pos=count0;
-		colcount++;
-	    }
-	}
-    }
-    /*append an addition row which marks the boundary*/
-    if(cstat){
-	cstat->cols[colcount].pos=count;/*record last*/
-	cstat->cols = realloc(cstat->cols, sizeof(locstatcol_t)*(colcount+1));
-	cstat->ncol = colcount;
-	cstat->dx   = dx;
-    }
-    loc->locx = realloc(loc->locx, sizeof(double)*count);
-    loc->locy = realloc(loc->locy, sizeof(double)*count);
-    loc->nloc = count;
-    loc->dx   = dx;
-    *ampout=realloc(*ampout, sizeof(double)*count);
-    return loc;
-}
-
-
 /**
    Find the point that closes to origin (0,0) in loc. Useful in single point
    piston constraint in creating reconstructor.
@@ -585,12 +456,13 @@ dcell *pts_mcc_ptt(const pts_t *pts, const double *amp){
 	const double origy=pts->origy[isa];
 	const double origx=pts->origx[isa];
 	const double dx=pts->dx;
+	const double dy=pts->dy;
 	const double *ampi=amp+pts->nx*pts->nx*isa;
 	mcc->p[isa]=dnew(nmod,nmod);
 	double (*ATA)[nmod]=(double(*)[nmod])(mcc->p[isa]->p);
 	double a00=0,a01=0,a02=0,a11=0,a12=0,a22=0;
 	for(int iy=0; iy<pts->nx; iy++){
-	    double y=iy*dx+origy;
+	    double y=iy*dy+origy;
 	    const double *ampx=ampi+iy*pts->nx;
 	    for(int ix=0; ix<pts->nx; ix++){
 		double x=ix*dx+origx;
@@ -730,13 +602,14 @@ void pts_ztilt(dmat **out, const pts_t *pts, const dcell *imcc,
 	const double origy=pts->origy[isa];
 	const double origx=pts->origx[isa];
 	const double dx=pts->dx;
+	const double dy=pts->dy;
 	const double *ampi=amp+pts->nx*pts->nx*isa;
 	const double *opdi=opd+pts->nx*pts->nx*isa;
 	assert(imcc->p[isa]->nx==3 && imcc->p[isa]->ny==3);
         double coeff[3]={0,0,0};
 	double a0=0,a1=0,a2=0;
 	for(int iy=0; iy<pts->nx; iy++){
-	    double y=iy*dx+origy;
+	    double y=iy*dy+origy;
 	    const double *ampx=ampi+iy*pts->nx;
 	    const double *opdx=opdi+iy*pts->nx;
 	    for(int ix=0; ix<pts->nx; ix++){
@@ -769,7 +642,8 @@ void loc_create_stat_do(loc_t *loc){
     const double *locy=loc->locy;
     int nloc=loc->nloc;
     double dx=locstat->dx=loc->dx;
-    int ncolmax=(int)round((locy[nloc-1]-locy[0])/dx)+2;
+    double dy=locstat->dy=loc->dy;
+    int ncolmax=(int)round((locy[nloc-1]-locy[0])/dy)+2;
     locstat->cols=malloc(ncolmax*sizeof(locstatcol_t));
     int colcount=0;
     /*do first column separately. */
@@ -817,14 +691,16 @@ defined using cx, cy, radius of r, and value of val */
 void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
     /*cx,cy,r are in unit of true unit, as in loc */
     double dx=loc->dx;
+    double dy=loc->dy;
     int nres=10;
     double cres=(nres-1.)/2.;
     double res=1./nres;
     double dxres=res*dx;
+    double dyres=res*dy;
     double res2=res*res;
     double r2=r*r;
-    double r2l=(r-dx*1.5)*(r-dx*1.5);
-    double r2u=(r+dx*1.5)*(r+dx*1.5);
+    double r2l=(r-dx*1.5)*(r-dy*1.5);
+    double r2u=(r+dx*1.5)*(r+dy*1.5);
     double *locx=loc->locx;
     double *locy=loc->locy;
     double iix,iiy;
@@ -837,7 +713,7 @@ void loccircle(double *phi,loc_t *loc,double cx,double cy,double r,double val){
 	else if(r2r<r2u){
 	    long tot=0;
 	    for(int jres=0; jres<nres; jres++){
-		iiy=y+(jres-cres)*dxres;
+		iiy=y+(jres-cres)*dyres;
 		double rr2y=(iiy-cy)*(iiy-cy);
 		for(int ires=0; ires<nres; ires++){
 		    iix=x+(ires-cres)*dxres;
@@ -866,8 +742,8 @@ void locannular(double *phi,loc_t *loc,double cx,double cy,double r,double rin,d
 void locannularmask(double *phi,loc_t *loc,double cx,double cy,double r,double rin){
     /*apply the hard pupil mask of aper.d, using loc. not locm */
     /* 2011-07-13: changed from r^2 to (r+0.5*dx)^2*/
-    double rr2max=pow(r+0.5*loc->dx,2);
-    double rr2min=MIN(rin*rin, pow(rin-0.5*loc->dx,2));
+    double rr2max=pow(r+0.25*(loc->dx+loc->dy),2);
+    double rr2min=MIN(rin*rin, pow(rin-0.25*(loc->dx+loc->dy),2));
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	double r2=pow(loc->locx[iloc],2)+pow(loc->locy[iloc],2);
 	if(r2<rr2min || r2>rr2max){
@@ -882,18 +758,20 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
 		double rx,double ry,double val){
     /*cx,cy,r are in unit of true unit, as in loc */
     double dx=loc->dx;
+    double dy=loc->dy;
     int nres=10;
     double cres=(nres-1.)/2.;
     double res=1./nres;
     double dxres=res*dx;
+    double dyres=res*dy;
     double res2=res*res;
     double rx1=1./rx;
     double ry1=1./ry;
     double rx12=rx1*rx1;
     double ry12=ry1*ry1;
     double r2=2.;
-    double r2l=(rx-dx)*(rx-dx)*rx12+(ry-dx)*(ry-dx)*ry12;
-    double r2u=(rx+dx)*(rx+dx)*rx12+(ry+dx)*(ry+dx)*ry12;
+    double r2l=(rx-dx)*(rx-dx)*rx12+(ry-dy)*(ry-dy)*ry12;
+    double r2u=(rx+dx)*(rx+dx)*rx12+(ry+dy)*(ry+dy)*ry12;
     double *locx=loc->locx;
     double *locy=loc->locy;
     double iix,iiy;
@@ -906,7 +784,7 @@ void locellipse(double *phi,loc_t *loc,double cx,double cy,
 	else if(r2r<r2u){
 	    long tot=0;
 	    for(int jres=0; jres<nres; jres++){
-		iiy=y+(jres-cres)*dxres;
+		iiy=y+(jres-cres)*dyres;
 		double rr2y=(iiy-cy)*(iiy-cy)*ry12;
 		for(int ires=0; ires<nres; ires++){
 		    iix=x+(ires-cres)*dxres;
@@ -1207,14 +1085,15 @@ loc_t *pts2loc(pts_t *pts){
     long nx   = pts->nx;
     long nxsa = nx*nx;
     double dx = pts->dx;
-    loc_t *loc = locnew(nsa*nxsa, dx);
+    double dy = pts->dy;
+    loc_t *loc = locnew(nsa*nxsa, dx, dy);
     for(int isa=0; isa<nsa; isa++){
 	const double origx = pts->origx[isa];
 	const double origy = pts->origy[isa];
 	double *locx = loc->locx+isa*nxsa;
 	double *locy = loc->locy+isa*nxsa;
 	for(int jj=0; jj<nx; jj++){
-	    const double yy=origy+(double)jj*dx;
+	    const double yy=origy+(double)jj*dy;
 	    for(int ii=0; ii<nx; ii++){
 		locx[jj*nx+ii]=origx+(double)ii*dx;
 		locy[jj*nx+ii]=yy;
@@ -1248,6 +1127,7 @@ loc_t *locdup(loc_t *loc){
     new->locy=malloc(loc->nloc*sizeof(double));
     new->nloc=loc->nloc;
     new->dx=loc->dx;
+    new->dy=loc->dy;
     memcpy(new->locx,loc->locx,sizeof(double)*loc->nloc);
     memcpy(new->locy,loc->locy,sizeof(double)*loc->nloc);
     return new;
@@ -1327,7 +1207,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
 	info("The transform is pure shift by %g along x, %g along y\n", shiftx, shifty);
 	return NULL;
     }else{
-	loc_t *locm=locnew(loc->nloc, loc->dx);
+	loc_t *locm=locnew(loc->nloc, loc->dx, loc->dy);
 	double *restrict xm=locm->locx;
 	double *restrict ym=locm->locy;
 
@@ -1374,7 +1254,7 @@ loc_t *loctransform(loc_t *loc, double **shiftxy, dmat **coeff){
    Shift a loc coordinate
 */
 loc_t *locshift(const loc_t *loc, double sx, double sy){
-    loc_t *loc2=locnew(loc->nloc, loc->dx);
+    loc_t *loc2=locnew(loc->nloc, loc->dx, loc->dy);
     for(long iloc=0; iloc<loc->nloc; iloc++){
 	loc2->locx[iloc]=loc->locx[iloc]+sx;
 	loc2->locy[iloc]=loc->locy[iloc]+sy;
@@ -1390,7 +1270,7 @@ void loc_nxny(long *nx, long *ny, const loc_t *loc){
     maxmindbl(loc->locx, loc->nloc, &xmax, &xmin);
     maxmindbl(loc->locy, loc->nloc, &ymax, &ymin);
     *nx=(long)round((xmax-xmin)/loc->dx)+1;
-    *ny=(long)round((ymax-ymin)/loc->dx)+1;
+    *ny=(long)round((ymax-ymin)/loc->dy)+1;
 }
 /**
    Resize a loc_t by shrinking.
@@ -1406,12 +1286,13 @@ void locresize(loc_t *loc, long nloc){
 /**
    create a new map_t object.
 */
-map_t *mapnew(long nx, long ny, double dx, double *p){
+map_t *mapnew(long nx, long ny, double dx, double dy, double *p){
     map_t *map=realloc(dnew_data(nx, ny, p),sizeof(map_t));
     map->h=0;
     map->dx=dx;
+    map->dy=dy;
     map->ox=-map->nx/2*map->dx;
-    map->oy=-map->ny/2*map->dx;
+    map->oy=-map->ny/2*map->dy;
     map->vx=0;
     map->vy=0;
     return map;
@@ -1423,6 +1304,7 @@ map_t *mapnew2(map_t* A){
     map_t *map=realloc(dnew_data(A->nx, A->ny, NULL),sizeof(map_t));
     map->h=A->h;
     map->dx=A->dx;
+    map->dy=A->dy;
     map->ox=A->ox;
     map->oy=A->oy;
     map->vx=A->vx;
@@ -1433,27 +1315,25 @@ map_t *mapnew2(map_t* A){
    Create a circular aperture on map_t.
 */
 void mapcircle(map_t *map, double r, double val){
-    dcircle((dmat*)map, (0-map->ox)/map->dx, (0-map->oy)/map->dx, r/map->dx, val);
+    dcircle((dmat*)map, (-map->ox), (-map->oy), map->dx, map->dy, r, val);
 }
 /**
    Find the inner and outer diameter of an amplitude map contained in map_t.
 */
 void map_d_din(map_t *map, double *d, double *din){
     PDMAT(map, p);
-    double oy=map->oy/map->dx;
-    double ox=map->ox/map->dx;
     double r2min=INFINITY, r2max=0;
     for(long iy=0; iy<map->ny; iy++){
-	double y=iy+oy;
+	double y=iy*map->dy+map->oy;
 	for(long ix=0; ix<map->nx; ix++){
 	    if(p[iy][ix]>EPS){
-		double x=ix+ox;
+		double x=ix*map->dx+map->ox;
 		double r2=x*x+y*y;
 		if(r2>r2max) r2max=r2;
 		if(r2<r2min) r2min=r2;
 	    }
 	}
     }
-    *d=sqrt(r2max)*2*map->dx;
-    *din=sqrt(r2min)*2*map->dx;
+    *d=sqrt(r2max)*2;
+    *din=sqrt(r2min)*2;
 }

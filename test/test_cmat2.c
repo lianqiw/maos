@@ -173,8 +173,8 @@ static void bench_ccwm(void){
     cmat *B=cnew(N,N);
     crandn(A,2,&strand);
     crandn(B,2,&strand);
-    ccircle(B,N/2+N/4,N/2,N*1/4,1);
-    ccircle(A,N/2+N/4,N/2,N*1/4,1);
+    ccircle(B,N/2+N/4,N/2,1,1,N*1/4,1);
+    ccircle(A,N/2+N/4,N/2,1,1,N*1/4,1);
     tic;
     ccwm(A,B);
     toc("ccwm");

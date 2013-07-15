@@ -391,7 +391,7 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 	const int illt=parms->powfs[ipowfs].llt->i[wfsind];
 	const double thetaxl=parms->wfs[iwfs].thetax-parms->powfs[ipowfs].llt->ox[illt]/hs;
 	const double thetayl=parms->wfs[iwfs].thetay-parms->powfs[ipowfs].llt->oy[illt]/hs;
-	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt->loc, cupowfs[ipowfs].llt->nloc, 
+	gpu_atm2loc(lltopd->p, cupowfs[ipowfs].llt.loc, cupowfs[ipowfs].llt.loc.nloc, 
 		    hs, thetaxl, thetayl, 
 		    parms->powfs[ipowfs].llt->misreg[0], 
 		    parms->powfs[ipowfs].llt->misreg[1], 
@@ -402,9 +402,11 @@ void gpu_wfsints(SIM_T *simu, float *phiout, curmat *gradref, int iwfs, int isim
 		//warning("Remove tip/tilt in uplink ideally\n");
 		float *lltg;
 		cudaCallocHost(lltg, 2*sizeof(float), stream);
-		cuztilt<<<1,dim3(16,16),0,stream>>>(lltg, lltopd->p, 1, cupowfs[ipowfs].llt->dx, 
-						    cupowfs[ipowfs].llt->nxsa, cuwfs[iwfs].lltimcc,
-						    cupowfs[ipowfs].llt->pts, cuwfs[iwfs].lltamp, 1.f);
+		cuztilt<<<1,dim3(16,16),0,stream>>>
+		    (lltg, lltopd->p, 1, 
+		     cupowfs[ipowfs].llt.pts.dxsa, 
+		     cupowfs[ipowfs].llt.pts.nxsa, cuwfs[iwfs].lltimcc,
+		     cupowfs[ipowfs].llt.pts, cuwfs[iwfs].lltamp, 1.f);
 		CUDA_SYNC_STREAM;
 		ttx=-lltg[0];
 		tty=-lltg[1];

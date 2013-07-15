@@ -66,12 +66,16 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
     const double dx_in1 = 1./mapin->dx;
     const double dx_in2 = scale*dx_in1;
     const double dxout  = ostat->dx;
+    const double dy_in1 = 1./mapin->dy;
+    const double dy_in2 = scale*dy_in1;
+    const double dyout  = ostat->dy;
     displacex = (displacex-mapin->ox)*dx_in1;
-    displacey = (displacey-mapin->oy)*dx_in1;
+    displacey = (displacey-mapin->oy)*dy_in1;
     CONST_IN double *phiin  = mapin->p;
-    const double ratio  = dxout*dx_in2;
+    const double xratio  = dxout*dx_in2;
+    const double yratio  = dyout*dy_in2;
 #if USE_OPTIM == 1
-    if(fabs(ratio-1)<EPS){
+    if(fabs(xratio-1)<EPS && fabs(yratio-1)<EPS){
 	/*loc_out and loc_in has the same grid sampling.*/
 	for(icol=colstart; icol<colend; icol++)
 #if TRANSPOSE == 0 && USE_ICC==1 && _OPENMP >= 200805
@@ -87,7 +91,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		collen=ostat->cols[icol+1].pos-offset;/*exclusive*/
 
 		phiout2=phiout+offset;
-		dplocy=ostat->cols[icol].ystart*dx_in2+displacey;
+		dplocy=ostat->cols[icol].ystart*dy_in2+displacey;
 		if(wrap){
 		    dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 		}
@@ -207,7 +211,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		collen=ostat->cols[icol+1].pos-offset;/*exclusive*/
 
 		phiout2=phiout+offset;
-		dplocy=ostat->cols[icol].ystart*dx_in2+displacey;
+		dplocy=ostat->cols[icol].ystart*dy_in2+displacey;
 		if(wrap){
 		    dplocy=dplocy-floor(dplocy/(double)wrapy1)*wrapy1;
 		}
@@ -219,7 +223,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    irows=0;
 		}else{
 		    if(dplocx<0){
-			irows=iceil(-dplocx/ratio);
+			irows=iceil(-dplocx/xratio);
 		    }else
 			irows=0;
 		}
@@ -242,10 +246,10 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		/*last row to do if not wrap*/
 		/*figure out which row we can go in this segment. */
 		  
-		rowdiv = iceil((wrapx-dplocx)/ratio);
+		rowdiv = iceil((wrapx-dplocx)/xratio);
 		if(rowdiv<0) rowdiv=0;/*rowdiv may be -1 if dplocx=wrapx+0.* */
 		if(rowdiv>collen) rowdiv=collen;
-		dplocx = dplocx + ratio*irows;
+		dplocx = dplocx + xratio*irows;
 		for(irow=irows; irow<rowdiv; irow++){/*no wrap*/
 		    SPLIT(dplocx,dplocx0,nplocx0);
 #if TRANSPOSE == 0
@@ -261,7 +265,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 		    phicol2[nplocx0]+=tmp*dplocy*(1-dplocx0);
 		    phicol2[nplocx0+1]+=tmp*dplocy*dplocx0;
 #endif
-		    dplocx+=ratio;
+		    dplocx+=xratio;
 		}
 		if(wrap){
 		    while(rowdiv < collen){/*can wrap several times*/ 
@@ -281,11 +285,11 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			    phicol2[nplocx0]+=tmp*dplocy*(1-dplocx0);
 			    phicol2[nplocx0-wrapx]+=tmp*dplocy*dplocx0;
 #endif
-			    dplocx+=ratio;
+			    dplocx+=xratio;
 			    rowdiv++;
 			}
 			dplocx=dplocx-wrapx1;			
-			rowdiv2=iceil((wrapx-dplocx)/ratio);
+			rowdiv2=iceil((wrapx-dplocx)/xratio);
 			if(rowdiv2>collen) rowdiv2=collen;
 			for(irow=rowdiv; irow<rowdiv2; irow++){
 			    SPLIT(dplocx,dplocx0,nplocx0);
@@ -302,7 +306,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 			    phicol2[nplocx0]+=tmp*dplocy*(1-dplocx0);
 			    phicol2[nplocx0+1]+=tmp*dplocy*dplocx0;
 #endif
-			    dplocx+=ratio;
+			    dplocx+=xratio;
 			}
 			rowdiv=rowdiv2;
 		    }
@@ -323,7 +327,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    offset=ostat->cols[icol].pos;
 	    collen=ostat->cols[icol+1].pos-offset;
 	    phiout2=phiout+offset;
-	    dplocy=ostat->cols[icol].ystart*dx_in2+displacey;
+	    dplocy=ostat->cols[icol].ystart*dy_in2+displacey;
 	    SPLIT(dplocy,dplocy,nplocy);
 	    const double dplocy1=1.-dplocy;
 	    if(nplocy<0||nplocy>=wrapy){
@@ -345,7 +349,7 @@ void FUN_NAME (CONST_IN map_t *mapin, /**<[in] OPD defind on a square grid*/
 	    dplocx0=(ostat->cols[icol].xstart)*dx_in2+displacex;
 	    for(irow=0; irow<collen; irow++){
 		SPLIT(dplocx0,dplocx,nplocx);
-		dplocx0+=ratio;
+		dplocx0+=xratio;
 		if(nplocx>=0 && nplocx<wrapx){
 		    nplocx1=nplocx+1;
 		}else{

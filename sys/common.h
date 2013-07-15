@@ -58,7 +58,10 @@ typedef unsigned long spint; /*Only optionally activated in AMD64. */
 typedef unsigned int spint;  /*This is always 32 bit. */
 #define M_SPINT M_INT32
 #endif
-
+#undef	MAX
+#define MAX(a,b) (((a)>(b))?(a):(b))
+#undef	MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
 #if defined(__CYGWIN__)
 /*CYGWIN does not have complex.h. */
 #define complex __complex__
@@ -161,7 +164,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    snprintf(fline,4096, "\033[01;31m%-20s Fatal error: ",sect); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline);print_backtrace();sync(); \
-	    kill(getpid(), SIGKILL);})
+	    kill(getpid(), SIGTERM);})
 
 #define warning(A...) ({char fline[4096];char sect[4096];		\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\
@@ -189,7 +192,7 @@ INLINE fcomplex cpowf(fcomplex x, fcomplex z){
 	    snprintf(fline,4096, "[%s]\033[01;31m%-20s Fatal error: ",myasctime(),sect); \
 	    snprintf(sect, 4096, A);strncat(fline,sect,4096-strlen(fline)-1); \
 	    fprintf(stderr,"%s\033[00;00m", fline);print_backtrace(); \
-	    sync();kill(getpid(), SIGKILL);})
+	    sync();kill(getpid(), SIGTERM);})
 
 #define warning3(A...) ({char fline[4096];char sect[4096];		\
 	    snprintf(sect, 4096,"%s:%d",BASEFILE,__LINE__);		\

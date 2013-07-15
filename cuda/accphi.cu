@@ -224,10 +224,10 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 
 	for(int im=0; im<NGPU; im++){/*Loop over all GPUs. */
 	    gpu_set(im);
-	    cudata->atm=(cumap_t**)calloc(nps, sizeof(cumap_t*));
+	    cudata->atm=new cumap_t[nps];
 	    cudata->nps=nps;
 	    for(int ips=0; ips<nps; ips++){
-		cudata->atm[ips]=new cumap_t(nx0, ny0);
+		cudata->atm[ips].init(nx0, ny0);
 	    }
 	}/*for im */
     }/*if need_init; */
@@ -237,14 +237,15 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	iseed0=iseed;
     	for(int im=0; im<NGPU; im++){
 	    gpu_set(im);
-	    cumap_t **cuatm=cudata->atm;
+	    cumap_t *cuatm=cudata->atm;
 	    for(int ips=0; ips<nps; ips++){
-		cuatm[ips]->vx=atm[ips]->vx;
-		cuatm[ips]->vy=atm[ips]->vy;
-		cuatm[ips]->ht=atm[ips]->h;
-		cuatm[ips]->dx=atm[ips]->dx;
-		cuatm[ips]->ox=INFINITY;/*place holder */
-		cuatm[ips]->oy=INFINITY;
+		/*Do not copy over nx, ny from atm as cuatm is smaller*/
+		cuatm[ips].vx=atm[ips]->vx;
+		cuatm[ips].vy=atm[ips]->vy;
+		cuatm[ips].ht=atm[ips]->h;
+		cuatm[ips].dx=atm[ips]->dx;
+		cuatm[ips].ox=INFINITY;/*place holder */
+		cuatm[ips].oy=INFINITY;
 	    }
 	}
 	for(int ips=0; ips<nps; ips++){
@@ -301,10 +302,11 @@ void gpu_atm2gpu(map_t **atm, const PARMS_T *parms, int iseed, int isim){
 	    for(int im=0; im<NGPU; im++){
 		tic;
 		gpu_set(im);
-		cumap_t **cuatm=cudata->atm;
-		cuatm[ips]->ox=next_ox[ips];
-		cuatm[ips]->oy=next_oy[ips];
-		DO(cudaMemcpy(cuatm[ips]->p, (float*)next_atm[ips], nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
+		cumap_t *cuatm=cudata->atm;
+		cuatm[ips].ox=next_ox[ips];
+		cuatm[ips].oy=next_oy[ips];
+		DO(cudaMemcpy(cuatm[ips].p, (float*)next_atm[ips],
+			      nx0*ny0*sizeof(float), cudaMemcpyHostToDevice));
 		CUDA_SYNC_DEVICE;
 		int offx=(int)round((next_ox[ips]-atm[ips]->ox)/dx);
 		int offy=(int)round((next_oy[ips]-atm[ips]->oy)/dx);
@@ -367,12 +369,12 @@ float* gpu_dmcubic_cc(float iac){
 /**
    Copy DM commands to GPU.
 */
-static void gpu_dm2gpu(cumap_t ***cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
+static void gpu_dm2gpu(cumap_t **cudm, map_t **dmreal, int ndm, DM_CFG_T *dmcfg){
     cp2gpu(cudm, dmreal, ndm);
     if(dmcfg){
 	for(int idm=0; idm<ndm; idm++){
-	    if(dmcfg[idm].cubic && !(*cudm)[idm]->cubic_cc){
-		(*cudm)[idm]->cubic_cc=gpu_dmcubic_cc(dmcfg[idm].iac);
+	    if(dmcfg[idm].cubic && !(*cudm)[idm].cubic_cc){
+		(*cudm)[idm].cubic_cc=gpu_dmcubic_cc(dmcfg[idm].iac);
 	    }
 	}
     }
@@ -393,15 +395,15 @@ void gpu_dmproj2gpu(map_t **dmproj, int ndm, DM_CFG_T *dmcfg){
     }
 }
 
-#define KARG_COMMON const float (*restrict loc)[2], const int nloc, const float dx, const float dy, const float dispx, const float dispy, const float alpha
+#define KARG_COMMON const float (*restrict loc)[2], const int nloc, const float dxi, const float dyi, const float dispx, const float dispy, const float alpha
 
 /*This is memory bound. So increasing # of points processed does not help. */
 __global__ void prop_linear(float *restrict out, const float *restrict in, const int nx, const int ny,
-				   KARG_COMMON){
+			    KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dx+dispx;
-	float y=loc[i][1]*dy+dispy;
+	float x=loc[i][0]*dxi+dispx;
+	float y=loc[i][1]*dyi+dispy;
 	int ix=floorf(x);
 	int iy=floorf(y);
 	x=x-ix; y=y-iy;
@@ -416,8 +418,8 @@ __global__ void prop_linear_nocheck(float *restrict out, const float *restrict i
 				    const int nx, const int ny, KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dx+dispx;
-	float y=loc[i][1]*dy+dispy;
+	float x=loc[i][0]*dxi+dispx;
+	float y=loc[i][1]*dyi+dispy;
 	int ix=floorf(x);
 	int iy=floorf(y);
 	x=x-ix; y=y-iy;
@@ -427,11 +429,11 @@ __global__ void prop_linear_nocheck(float *restrict out, const float *restrict i
 }
 /*This is memory bound. So increasing # of points processed does not help. */
 __global__ void prop_linear_wrap(float *restrict out, const float *restrict in, const int nx, const int ny,
-					KARG_COMMON){
+				 KARG_COMMON){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dx+dispx;
-	float y=loc[i][1]*dy+dispy;
+	float x=loc[i][0]*dxi+dispx;
+	float y=loc[i][1]*dyi+dispy;
 	int ix=floorf(x);
 	int iy=floorf(y);
 	x=x-ix; y=y-iy;
@@ -448,11 +450,11 @@ __global__ void prop_linear_wrap(float *restrict out, const float *restrict in, 
 
 /*This is memory bound. So increasing # of points processed does not help. */
 __global__ void prop_cubic(float *restrict out, const float *restrict in, const int nx, const int ny,
-				  KARG_COMMON, const float *cc){
+			   KARG_COMMON, const float *cc){
     int step=blockDim.x * gridDim.x;
     for(int i=blockIdx.x * blockDim.x + threadIdx.x; i<nloc; i+=step){
-	float x=loc[i][0]*dx+dispx;
-	float y=loc[i][1]*dy+dispy;
+	float x=loc[i][0]*dxi+dispx;
+	float y=loc[i][1]*dyi+dispy;
 	int ix=floorf(x); x=x-ix;
 	int iy=floorf(y); y=y-iy;
 	float fx[4],fy;
@@ -499,24 +501,24 @@ __global__ void prop_cubic(float *restrict out, const float *restrict in, const 
 void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, const float hs, 
 		 const float thetax,const float thetay,
 		 const float mispx, const float mispy, const float dtisim, const float atmalpha, cudaStream_t stream){
-    cumap_t **cuatm=cudata->atm;
+    cumap_t *cuatm=cudata->atm;
     if(fabs(atmalpha)<EPS) return;
     for(int ips=0; ips<cudata->nps; ips++){
-	const float dx=cuatm[ips]->dx;
-	const float du=1.f/dx;
-	const float ht=cuatm[ips]->ht;
-	const float vx=cuatm[ips]->vx;
-	const float vy=cuatm[ips]->vy;
-	const float dispx=(ht*thetax+mispx-vx*dtisim-cuatm[ips]->ox)*du;
-	const float dispy=(ht*thetay+mispy-vy*dtisim-cuatm[ips]->oy)*du;
+	const float dx=cuatm[ips].dx;
+	const float dy=cuatm[ips].dy;
+	const float ht=cuatm[ips].ht;
+	const float vx=cuatm[ips].vx;
+	const float vy=cuatm[ips].vy;
+	const float dispx=(ht*thetax+mispx-vx*dtisim-cuatm[ips].ox)/dx;
+	const float dispy=(ht*thetay+mispy-vy*dtisim-cuatm[ips].oy)/dy;
 	const float scale=1.f-ht/hs;
-#define COMM loc,nloc,scale*du,scale*du, dispx, dispy, atmalpha
+#define COMM loc,nloc,scale/dx,scale/dy, dispx, dispy, atmalpha
 	if(WRAP_ATM){
 	    prop_linear_wrap<<<DIM(nloc,256), 0, stream>>>
-		(phiout, cuatm[ips]->p, cuatm[ips]->nx, cuatm[ips]->ny, COMM);
+		(phiout, cuatm[ips].p, cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}else{/*we are gauranteed. */
 	    prop_linear_nocheck<<<DIM(nloc,256), 0, stream>>>
-		(phiout, cuatm[ips]->p, cuatm[ips]->nx, cuatm[ips]->ny, COMM);
+		(phiout, cuatm[ips].p, cuatm[ips].nx, cuatm[ips].ny, COMM);
 	}
 #undef COMM
     }    
@@ -525,22 +527,22 @@ void gpu_atm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, 
 /**
    Ray tracing of dm
 */
-void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, cumap_t **cudm, int ndm,
+void gpu_dm2loc(float *phiout, const float (*restrict loc)[2], const int nloc, cumap_t *cudm, int ndm,
 		const float hs, const float thetax, const float thetay,
 		const float mispx, const float mispy, const float dmalpha, cudaStream_t stream){
     if(fabs(dmalpha)<EPS) return;
     for(int idm=0; idm<ndm; idm++){
-	assert(cudm[idm]->ny>1);//prevent accidentally pass in a vector
-	const float dx=cudm[idm]->dx;
-	const float du=1.f/dx;
-	const float ht=cudm[idm]->ht;
-	const float dispx=(ht*thetax+mispx-cudm[idm]->ox)*du;
-	const float dispy=(ht*thetay+mispy-cudm[idm]->oy)*du;
+	assert(cudm[idm].ny>1);//prevent accidentally pass in a vector
+	const float dx=cudm[idm].dx;
+	const float dy=cudm[idm].dy;
+	const float ht=cudm[idm].ht;
+	const float dispx=(ht*thetax+mispx-cudm[idm].ox)/dx;
+	const float dispy=(ht*thetay+mispy-cudm[idm].oy)/dy;
 	const float scale=1.f-ht/hs;
-#define COMM loc,nloc,scale*du,scale*du, dispx, dispy, dmalpha
-#define KARG cudm[idm]->p,cudm[idm]->nx,cudm[idm]->ny, COMM
-	if (cudm[idm]->cubic_cc){//128 is a good number for cubic. 
-	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm[idm]->cubic_cc);
+#define COMM loc,nloc,scale/dx,scale/dy, dispx, dispy, dmalpha
+#define KARG cudm[idm].p,cudm[idm].nx,cudm[idm].ny, COMM
+	if (cudm[idm].cubic_cc){//128 is a good number for cubic. 
+	    prop_cubic<<<DIM(nloc,128), 0, stream>>>(phiout, KARG, cudm[idm].cubic_cc);
 	}else{
 	    prop_linear<<<DIM(nloc,256), 0, stream>>>(phiout, KARG);
 	}

@@ -113,6 +113,9 @@ ARG_S *parse_args(int argc, const char *argv[]){
     if(chdir(arg->dirout)){
 	error("Unable to chdir to %s\n", arg->dirout);
     }
+    char *exefile=get_job_progname(0);
+    link(exefile, "skyc");
+    free(exefile);
     return arg;
 }
 /**

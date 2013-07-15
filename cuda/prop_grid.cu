@@ -44,17 +44,17 @@ __global__ static void prop_grid_match_do(float *restrict out, int nxo,
 
 __global__ static void prop_grid_nomatch_do(float *restrict out, int nxo, 
 					    const float *restrict in, int nxi, 
-					    float dispx, float dispy, float ratio, 
+					    float dispx, float dispy, float xratio, float yratio,
 					    float alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
 	float jy;
-	float fracy=modff(dispy+iy*ratio, &jy);
+	float fracy=modff(dispy+iy*yratio, &jy);
 	int ky=(int)jy;
 	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
 	    float jx;
-	    float fracx=modff(dispx+ix*ratio, &jx);
+	    float fracx=modff(dispx+ix*xratio, &jx);
 	    int kx=(int)jx;
 	    out[ix+iy*nxo]+=
 		alpha*(+(in[kx+      ky*nxi]*(1.f-fracx)+
@@ -66,17 +66,17 @@ __global__ static void prop_grid_nomatch_do(float *restrict out, int nxo,
 }
 __global__ static void prop_grid_nomatch_trans_do(const float *restrict out, int nxo, 
 						  float *restrict in, int nxi,
-						  float dispx, float dispy, float ratio, 
+						  float dispx, float dispy, float xratio, float yratio,
 						  float alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int iy=blockIdx.y*blockDim.y+threadIdx.y; iy<ny; iy+=stepy){
 	float jy;
-	float fracy=modff(dispy+iy*ratio, &jy);
+	float fracy=modff(dispy+iy*yratio, &jy);
 	int ky=(int)jy;
 	for(int ix=blockIdx.x*blockDim.x+threadIdx.x; ix<nx; ix+=stepx){
 	    float jx;
-	    float fracx=modff(dispx+ix*ratio, &jx);
+	    float fracx=modff(dispx+ix*xratio, &jx);
 	    int kx=(int)jx;
 	    float temp=out[ix+iy*nxo]*alpha;
 	    atomicAdd(&in[kx+      ky*nxi], temp*(1.f-fracx)*(1.f-fracy));
@@ -257,47 +257,50 @@ __global__ static void prop_grid_os2_trans_share_do(float *restrict out, int nxo
    from in to out if trans=='n'
    from out to in if trans=='t'
 */
-void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
-		   curmat *in, float oxi, float oyi, float dxi,
+void gpu_prop_grid(curmat *out, const cugrid_t &go,
+		   curmat *in, const cugrid_t &gi,
 		   float dispx, float dispy,
 		   float alpha, char trans, cudaStream_t stream){
     assert(in->ny!=1);
-    const float dxi1=1.f/dxi;
-    float ratio=dxo*dxi1;
+    const float uxi=1.f/gi.dx;
+    const float uyi=1.f/gi.dy;
+    float xratio=go.dx*uxi;
+    float yratio=go.dy*uyi;
     int match=0,match2=0;
     /*remove round off errors that causes trouble in nx, ny.*/
-    if(fabs(ratio-1.f)<EPS){
-	ratio=1.f;
+    if(fabs(xratio-1.f)<EPS && fabs(yratio-1.f)){
+	xratio=yratio=1.f;
 	match=1;
-    }else if(fabs(ratio-0.5f)<EPS){
-	ratio=0.5f;
+    }else if(fabs(xratio-0.5f)<EPS && fabs(yratio-0.5f)){
+	xratio=yratio=0.5f;
 	match2=1;
     }
     if(match && trans=='t'){
-	gpu_prop_grid(in, oxi, oyi, dxi, out, oxo, oyo, dxo, -dispx, -dispy, alpha,'n', stream);
+	gpu_prop_grid(in, gi, out, go, -dispx, -dispy, alpha,'n', stream);
 	return;
     }
     const int nxo=out->nx;
     const int nyo=out->ny;
     const int nxi=in->nx;
     const int nyi=in->ny;
-    const float ratio1=1.f/ratio;
+    const float xratio1=1.f/xratio;
+    const float yratio1=1.f/yratio;
     /*offset of origin in input grid spacing. */
-    dispx=(dispx-oxi+oxo)*dxi1;
-    dispy=(dispy-oyi+oyo)*dxi1;
+    dispx=(dispx-gi.ox+go.ox)*uxi;
+    dispy=(dispy-gi.oy+go.oy)*uyi;
     int offx1=0, offy1=0;/*for output. fine sampling. */
     /*if output is bigger than input. */
     if(dispx<0){
-	offx1=(int)ceilf(-dispx*ratio1);
-	dispx+=offx1*ratio;
+	offx1=(int)ceilf(-dispx*xratio1);
+	dispx+=offx1*xratio;
     }
     if(dispy<0){
-	offy1=(int)ceilf(-dispy*ratio1);
-	dispy+=offy1*ratio;
+	offy1=(int)ceilf(-dispy*yratio1);
+	dispy+=offy1*yratio;
     }
     /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
-    int nx=(int)floorf((nxi-dispx-EPS)*ratio1);
-    int ny=(int)floorf((nyi-dispy-EPS)*ratio1);
+    int nx=(int)floorf((nxi-dispx-EPS)*xratio1);
+    int ny=(int)floorf((nyi-dispy-EPS)*yratio1);
     
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;
@@ -319,13 +322,12 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 	    prop_grid_nomatch_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
-		 dispx, dispy, ratio, alpha, nx, ny);
+		 dispx, dispy, xratio, yratio, alpha, nx, ny);
 	}
     }else{
 	if(match){
 	    error("Please revert the input/output and call with trans='n'\n");
 	}else if(match2){
-	    ratio=0.5f;
 	    if(dispy>0.5f){/*do a single col first. */
 		prop_grid_os2_trans_col_do<<<DIM2(nx,1,256),0,stream>>>
 		    (out->p+offy1*nxo+offx1, nxo,
@@ -369,83 +371,23 @@ void gpu_prop_grid(curmat *out, float oxo, float oyo, float dxo,
 	    prop_grid_nomatch_trans_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 		(out->p+offy1*nxo+offx1, nxo,
 		 in->p+offy2*nxi+offx2, nxi, 
-		 dispx, dispy, ratio, alpha, nx, ny);
+		 dispx, dispy, xratio, yratio, alpha, nx, ny);
 	}
     }
 }
-/*
-  Raytracing from in to out (dir=1) or in from out (dir=-1)
-  in  has origin at (nxi, nyi), sampling dxi, normally DM
-  out has origin at (nxo, nyo), sampling dxo, normally other OPD
-*/
-/*
-void gpu_prop_grid_cubic_os2(curmat *in, float oxi, float oyi, float dxi,
-			 curmat *out, float oxo, float oyo, float dxo,
-			 float dispx, float dispy,  float *cubic_cc,
-			 float alpha, int dir, cudaStream_t stream){
-    //offset of origin. 
-    dispx=(dispx-oxi+oxo);
-    dispy=(dispy-oyi+oyo);
-    int offx1=0, offy1=0;
-    const double dxo1=1./dxo;
-    //if output is outside of input from left/bottom, starting at an offset. 
-    if(dispx<0){
-	offx1=(int)ceilf(-dispx*dxo1);
-	dispx+=offx1*dxo;
-    }
-    if(dispy<0){
-	offy1=(int)ceilf(-dispy*dxo1);
-	dispy+=offy1*dxo;
-    }
-    int nxi=in->nx;
-    int nyi=in->ny;
-    int nxo=out->nx;
-    int nyo=out->ny;
-    int nx=(int)floorf(((nxi-1)*dxi-dispx)*dxo1)+1;
-    int ny=(int)floorf(((nyi-1)*dxi-dispy)*dxo1)+1;
-    //if output is outside of input from right/top, limit number of points to do.
-    if(nx>nxo-offx1) nx=nxo-offx1;
-    if(ny>nyo-offy1) ny=nyo-offy1;
-  
-    if(fabsf(2*dxo1-dxi)<EPS){
-	dispx=dispx/dxi;
-	dispy=dispy/dxi;
-	int offx2=floor(dispx); dispx-=offx2;
-	int offy2=floor(dispy); dispy-=offy2;
-	float dispx2=dispx+(dispx>0.5)?-0.5:0.5;
-	float dispy2=dispy+(dispy>0.5)?-0.5:0.5;
-	TO_IMPLEMENT;
-	if(cubic_cc){
-	    if(dir==1){
-		prop_grid_cubic_do_os2<<<DIM2(nx,ny,8),0,stream>>>
-		    (out->p+offy1*nxo+offx1, nxo,
-		     in->p+offy2*nxi+offx2, nxi,
-		     dispx, dispy, dispx2, dispy2,
-		     nx, ny, cubic_cc, alpha);
-	    }else if(dir==-1){
-		TO_IMPLEMENT;
-	    }
-	}else{
-	    TO_IMPLEMENT;
-	}
-    }else{
-	TO_IMPLEMENT;
-    }
-    }*/
-
 __global__ static void prop_grid_cubic_nomatch_do(float *restrict out, int nxo, 
 						  const float *restrict in, int nxi, 
-						  float dispx, float dispy, float ratio, 
+						  float dispx, float dispy, float xratio, float yratio, 
 						  float *cc, float alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int my=blockIdx.y*blockDim.y+threadIdx.y; my<ny; my+=stepy){
 	float jy;
-	float y=modff(dispy+my*ratio, &jy);
+	float y=modff(dispy+my*yratio, &jy);
 	int iy=(int)jy;
 	for(int mx=blockIdx.x*blockDim.x+threadIdx.x; mx<nx; mx+=stepx){
 	    float jx;
-	    float x=modff(dispx+mx*ratio, &jx);
+	    float x=modff(dispx+mx*xratio, &jx);
 	    int ix=(int)jx;
 	    float fx[4],fy;
 	    float sum=0;
@@ -484,17 +426,17 @@ __global__ static void prop_grid_cubic_nomatch_do(float *restrict out, int nxo,
 }
 __global__ static void prop_grid_cubic_nomatch_trans_do(const float *restrict out, int nxo,
 							float *restrict in, int nxi, 
-							float dispx, float dispy, float ratio,
+							float dispx, float dispy, float xratio, float yratio,
 							float *cc, float alpha, int nx, int ny){
     int stepx=blockDim.x*gridDim.x;
     int stepy=blockDim.y*gridDim.y;
     for(int my=blockIdx.y*blockDim.y+threadIdx.y; my<ny; my+=stepy){
 	float jy;
-	float y=modff(dispy+my*ratio, &jy);
+	float y=modff(dispy+my*yratio, &jy);
 	int iy=(int)jy;
 	for(int mx=blockIdx.x*blockDim.x+threadIdx.x; mx<nx; mx+=stepx){
 	    float jx;
-	    float x=modff(dispx+mx*ratio, &jx);
+	    float x=modff(dispx+mx*xratio, &jx);
 	    int ix=(int)jx;
 	    float fx[4],fy;
 	    float value=out[mx+my*nxo]*alpha;
@@ -535,40 +477,43 @@ __global__ static void prop_grid_cubic_nomatch_trans_do(const float *restrict ou
    from in to out if trans=='n' (dm to ploc)
    from out to in if trans=='t' (ploc to dm)
 */
-void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
-			 curmat *in, float oxi, float oyi, float dxi,
+void gpu_prop_grid_cubic(curmat *out, const cugrid_t &go,
+			 curmat *in, const cugrid_t &gi,
 			 float dispx, float dispy, float *cc,
 			 float alpha, char trans, cudaStream_t stream){
     assert(in->ny!=1);
-    const float dxi1=1.f/dxi;
-    float ratio=dxo*dxi1;
+    const float uxi=1.f/gi.dx;
+    const float uyi=1.f/gi.dy;
+    float xratio=go.dx*uxi;
+    float yratio=go.dy*uyi;
     /*remove round off errors.*/
-    if(fabs(ratio-1.f)<EPS){
-	ratio=1.f;
-    }else if(fabs(ratio-0.5f)<EPS){
-	ratio=0.5f;
+    if(fabs(xratio-1.f)<EPS && fabs(yratio-1.f)<EPS){
+	xratio=yratio=1.f;
+    }else if(fabs(xratio-0.5f)<EPS && fabs(yratio-0.5f)<EPS){
+	xratio=yratio=0.5f;
     }
     const int nxo=out->nx;
     const int nyo=out->ny;
     const int nxi=in->nx;
     const int nyi=in->ny;
-    const float ratio1=1.f/ratio;
+    const float xratio1=1.f/xratio;
+    const float yratio1=1.f/yratio;
     /*offset of origin in input grid spacing. */
-    dispx=(dispx-oxi+oxo)*dxi1;
-    dispy=(dispy-oyi+oyo)*dxi1;
+    dispx=(dispx-gi.ox+go.ox)*uxi;
+    dispy=(dispy-gi.oy+go.oy)*uyi;
     int offx1=0, offy1=0;/*for output. fine sampling. */
     /*if output is bigger than input. */
     if(dispx<0){
-	offx1=(int)ceilf(-dispx*ratio1);
-	dispx+=offx1*ratio;
+	offx1=(int)ceilf(-dispx*xratio1);
+	dispx+=offx1*xratio;
     }
     if(dispy<0){
-	offy1=(int)ceilf(-dispy*ratio1);
-	dispy+=offy1*ratio;
+	offy1=(int)ceilf(-dispy*yratio1);
+	dispy+=offy1*yratio;
     }
     /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
-    int nx=(int)floorf((nxi-1-dispx-EPS)*ratio1)+1;
-    int ny=(int)floorf((nyi-1-dispy-EPS)*ratio1)+1;
+    int nx=(int)floorf((nxi-1-dispx-EPS)*xratio1)+1;
+    int ny=(int)floorf((nyi-1-dispy-EPS)*yratio1)+1;
 
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;
@@ -578,51 +523,55 @@ void gpu_prop_grid_cubic(curmat *out, float oxo, float oyo, float dxo,
 	prop_grid_cubic_nomatch_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 	    (out->p+offy1*nxo+offx1, nxo,
 	     in->p+offy2*nxi+offx2, nxi, 
-	     dispx, dispy, ratio, cc, alpha, nx, ny);
+	     dispx, dispy, xratio, yratio, cc, alpha, nx, ny);
     }else{
 	prop_grid_cubic_nomatch_trans_do<<<DIM2(nx, ny, NTH2), 0, stream>>>
 	    (out->p+offy1*nxo+offx1, nxo,
 	     in->p+offy2*nxi+offx2, nxi, 
-	     dispx, dispy, ratio, cc, alpha, nx, ny);
+	     dispx, dispy, xratio, yratio, cc, alpha, nx, ny);
     }
 }
-void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, curmat *out, float oxo, float oyo, float dxo,
-			curmat *in, float oxi, float oyi, float dxi,
+void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, 
+			curmat *out, const cugrid_t &go, 
+			curmat *in, const cugrid_t &gi,
 			float dispx, float dispy, char trans){
     assert(in->ny!=1);
-    const float dxi1=1.f/dxi;
-    float ratio=dxo*dxi1;
+    const float uxi=1.f/gi.dx;
+    const float uyi=1.f/gi.dy;
+    float xratio=go.dx*uxi;
+    float yratio=go.dy*uyi;
     /*remove round off errors that causes trouble in nx, ny.*/
-    if(fabs(ratio-1.f)<EPS){
-	ratio=1.f;
+    if(fabs(xratio-1.f)<EPS && fabs(yratio-1.f)<EPS){
+	xratio=yratio=1.f;
 	if(trans=='t'){
-	    gpu_prop_grid_prep(res, in, oxi, oyi, dxi, out, oxo, oyo, dxo, -dispx, -dispy, 'r');
+	    gpu_prop_grid_prep(res, in, gi, out, go, -dispx, -dispy, 'r');
 	    return;
 	}
-    }else if(fabs(ratio-0.5f)<EPS){
-	ratio=0.5f;
+    }else if(fabs(xratio-0.5f)<EPS && fabs(yratio-0.5f)<EPS){
+	xratio=yratio=0.5f;
     }
     const int nxo=out->nx;
     const int nyo=out->ny;
     const int nxi=in->nx;
     const int nyi=in->ny;
-    const float ratio1=1.f/ratio;
+    const float xratio1=1.f/xratio;
+    const float yratio1=1.f/yratio;
     /*offset of origin in input grid spacing. */
-    dispx=(dispx-oxi+oxo)*dxi1;
-    dispy=(dispy-oyi+oyo)*dxi1;
+    dispx=(dispx-gi.ox+go.ox)*uxi;
+    dispy=(dispy-gi.oy+go.oy)*uyi;
     int offx1=0, offy1=0;/*for output. fine sampling. */
     /*if output is bigger than input. */
     if(dispx<0){
-	offx1=(int)ceilf(-dispx*ratio1);
-	dispx+=offx1*ratio;
+	offx1=(int)ceilf(-dispx*xratio1);
+	dispx+=offx1*xratio;
     }
     if(dispy<0){
-	offy1=(int)ceilf(-dispy*ratio1);
-	dispy+=offy1*ratio;
+	offy1=(int)ceilf(-dispy*yratio1);
+	dispy+=offy1*yratio;
     }
     /*convert offset into input grid coordinate. -EPS to avoid laying on the last point. */
-    int nx=(int)floorf((nxi-dispx-EPS)*ratio1);
-    int ny=(int)floorf((nyi-dispy-EPS)*ratio1);
+    int nx=(int)floorf((nxi-dispx-EPS)*xratio1);
+    int ny=(int)floorf((nyi-dispy-EPS)*yratio1);
     
     if(nx>nxo-offx1) nx=nxo-offx1;
     if(ny>nyo-offy1) ny=nyo-offy1;
@@ -638,7 +587,8 @@ void gpu_prop_grid_prep(GPU_PROP_GRID_T*res, curmat *out, float oxo, float oyo, 
     res->nyi=nyi;
     res->dispx=dispx;
     res->dispy=dispy;
-    res->ratio=ratio;
+    res->xratio=xratio;
+    res->yratio=yratio;
     res->nx=nx;
     res->ny=ny;
     res->trans=trans;

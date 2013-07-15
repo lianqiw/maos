@@ -41,6 +41,7 @@ void genseotf(const PARMS_T *parms, POWFS_T *powfs, int ipowfs){
     loc_t *loc=mksqloc(powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->nx,
 		       powfs[ipowfs].pts->dx,
+		       powfs[ipowfs].pts->dy,
 		       0,0);
     /*size of the OTF grid */
     int ncompx=powfs[ipowfs].pts->nx*parms->powfs[ipowfs].embfac;

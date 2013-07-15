@@ -55,7 +55,7 @@ setup_recon_ploc(RECON_T *recon, const PARMS_T *parms){
 	  does not need to be follow XLOC in FDPCG.*/
 	double dxr=parms->atmr.dx/parms->tomo.pos;/*sampling of ploc */
 	double guard=parms->tomo.guard*dxr;
-	map_t *pmap=create_metapupil_wrap(parms,0,dxr,0,guard,0,0,0,parms->tomo.square);
+	map_t *pmap=create_metapupil_wrap(parms,0,dxr,dxr,0,guard,0,0,0,parms->tomo.square);
 	info2("PLOC is %ldx%ld, with sampling of %.2fm\n",pmap->nx,pmap->ny,dxr);
 	recon->ploc=map2loc(pmap);/*convert map_t to loc_t */
 	recon->pmap = pmap;
@@ -100,7 +100,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    for(int ips=0; ips<npsr; ips++){
 		long nxi, nyi;
 		double dxr=recon->dx->p[ips];
-		create_metapupil(parms, recon->ht->p[ips], dxr, 0,
+		create_metapupil(parms, recon->ht->p[ips], dxr, dxr, 0,
 				 &nxi, &nyi, NULL, NULL, NULL, dxr*parms->tomo.guard,
 				 0, 0, 0, 1);
 		nxi/=recon->os->p[ips];
@@ -120,7 +120,7 @@ setup_recon_xloc(RECON_T *recon, const PARMS_T *parms){
 	    const double guard=parms->tomo.guard*dxr;
 	    long nin=nin0*recon->os->p[ips];
 	    map_t *map=create_metapupil_wrap
-		(parms,ht,dxr,0,guard,nin,nin,0,parms->tomo.square);
+		(parms,ht,dxr,dxr,0,guard,nin,nin,0,parms->tomo.square);
 	    recon->xloc[ips]=map2loc(map);
 	    recon->xmap[ips]=map;
 	    info2("layer %d: xloc grid is %3ld x %3ld, sampling is %.3f m, %5ld points\n",

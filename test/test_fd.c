@@ -236,7 +236,7 @@ static csp *fdpcg_prop(long nps, const long *os, long nxg, double dx,
     return prop0;
 }
 int main(){
-    loc_t *xloc=mksqloc_auto(256,256,0.25);
+    loc_t *xloc=mksqloc_auto(256,256,0.25,0.25);
     loc_t *saloc=locread("saloc.bin");
     saloc->dx=0.5;
     long nps=6;

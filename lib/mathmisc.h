@@ -24,10 +24,6 @@
    \file mathmisc.h
    A few math routines
 */
-#undef	MAX
-#define MAX(a,b) (((a)>(b))?(a):(b))
-#undef	MIN
-#define MIN(a,b) (((a)<(b))?(a):(b))
 double factorial(long n);
 void normalize_sum(double *p, long nloc, double norm);
 void normalize_max(double *p, long nloc, double max);

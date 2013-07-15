@@ -26,14 +26,14 @@ extern "C"
 #include <cusparse.h>
 #include <cufft.h>
 #include "wfs.h"
-static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
+/*static void gpu_pts2cuwloc(cuwloc_t *wloc, pts_t *pts, loc_t *loc){
     wloc->nxsa=pts->nx;
     wloc->nsa=pts->nsa;
     wloc->dx=pts->dx;
     wloc->nloc=loc->nloc;
     cp2gpu(&wloc->pts, (loc_t*)pts);
     cp2gpu(&wloc->loc, loc);
-}
+}*/
 int *wfsgpu=NULL;/*assign GPU to wfs statically. */
 /**
    Initialize other arrays
@@ -57,14 +57,18 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	    if(parms->powfs[ipowfs].nwfs==0) continue;
 	    pts_t *pts=powfs[ipowfs].pts;
 	    loc_t *loc=powfs[ipowfs].loc;
-	    gpu_pts2cuwloc(&cupowfs[ipowfs], pts, loc);
-	    cp2gpu(&cupowfs[ipowfs].saloc, powfs[ipowfs].saloc);
-	    cupowfs[ipowfs].dsa=pts->dsa;
+	    cupowfs[ipowfs].pts.init(pts);
+	    cupowfs[ipowfs].loc.init(loc);
+	    cupowfs[ipowfs].saloc.init(powfs[ipowfs].saloc);
+	    //gpu_pts2cuwloc(&cupowfs[ipowfs], pts, loc);
+	    //cp2gpu(&cupowfs[ipowfs].saloc, powfs[ipowfs].saloc);
+	    //cupowfs[ipowfs].dsa=pts->dsa;
 	    if(powfs[ipowfs].llt && parms->powfs[ipowfs].trs){
 		pts=powfs[ipowfs].llt->pts;
 		loc=powfs[ipowfs].llt->loc;
-		cupowfs[ipowfs].llt=(cuwloc_t*)calloc(1, sizeof(cuwloc_t));
-		gpu_pts2cuwloc(cupowfs[ipowfs].llt, pts, loc);
+		cupowfs[ipowfs].llt.pts.init(pts);
+		cupowfs[ipowfs].llt.loc.init(loc);
+		//gpu_pts2cuwloc(cupowfs[ipowfs].llt, pts, loc);
 	    }
 	    /*cupowfs[ipowfs].skip=parms->powfs[ipowfs].skip; */
 	    if(parms->powfs[ipowfs].fieldstop){
@@ -85,18 +89,12 @@ void gpu_wfsgrad_init(const PARMS_T *parms, const POWFS_T *powfs){
 	int nsa=powfs[ipowfs].pts->nsa;
 	int wfsind=parms->powfs[ipowfs].wfsind[iwfs];
 	int iwfs0=parms->powfs[ipowfs].wfs[0];
-	/*for(int i=0; i<parms->powfs[ipowfs].nwfs; i++){
-	    if(wfsgpu[i]==wfsgpu[iwfs]){
-		iwfs0=parms->powfs[ipowfs].wfs[i];
-		break;
-	    }
-	    }*/
 	/*imcc for ztilt. */
-	STREAM_NEW(cuwfs[iwfs].stream);
+	/*STREAM_NEW(cuwfs[iwfs].stream);
 	DO(cusparseCreate(&cuwfs[iwfs].sphandle));
 	DO(cusparseSetKernelStream(cuwfs[iwfs].sphandle, cuwfs[iwfs].stream));
 	DO(cublasCreate(&cuwfs[iwfs].handle));
-	DO(cublasSetStream(cuwfs[iwfs].handle, cuwfs[iwfs].stream));
+	DO(cublasSetStream(cuwfs[iwfs].handle, cuwfs[iwfs].stream));*/
 	if(parms->powfs[ipowfs].fieldstop){
 	    DO(cufftPlan2d(&cuwfs[iwfs].plan_fs, cupowfs[ipowfs].nembed, cupowfs[ipowfs].nembed, CUFFT_C2C));
 	    cufftSetStream(cuwfs[iwfs].plan_fs, cuwfs[iwfs].stream);

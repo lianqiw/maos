@@ -117,7 +117,7 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 	const int nxi=datai->nxi;
 	
 	
-	if(fabsf(datai->ratio-1.f)<EPS){//Matched. always forward prop.
+	if(fabsf(datai->xratio-1.f)<EPS && fabsf(datai->yratio-1.f)<EPS){//Matched. always forward prop.
 	    const float fracx=datai->dispx;
 	    const float fracy=datai->dispy;
 	    const float fracx1=1.f-fracx;//this reduces register usage.
@@ -143,7 +143,8 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 		}
 	    }
 	}else{//Generic
-	    const float ratio=datai->ratio;
+	    const float xratio=datai->xratio;
+	    const float yratio=datai->yratio;
 	    const float dispx=datai->dispx;
 	    const float dispy=datai->dispy;
 	    if(datai->trans=='t'){
@@ -152,13 +153,13 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 		    int ky;
 		    
 		    float temp;
-		    fracy=modff(dispy+iy*ratio, &temp);
+		    fracy=modff(dispy+iy*yratio, &temp);
 		    ky=(int)temp;
 		    
 		    for(int ix=ix0; ix<nx; ix+=stepx){
 
 			float jx;
-			float fracx=modff(dispx+ix*ratio, &jx);
+			float fracx=modff(dispx+ix*xratio, &jx);
 			int kx=(int)jx;
 
 			float temp=out[ix+iy*nxo]*alpha;
@@ -173,14 +174,14 @@ __global__ void gpu_prop_grid_adaptive_do(GPU_PROP_GRID_T *data, float **outall,
 		    float fracy; int ky;
 		    
 		    float jy;
-		    fracy=modff(dispy+iy*ratio, &jy);
+		    fracy=modff(dispy+iy*yratio, &jy);
 		    ky=(int)jy;
 		    
 		    for(int ix=ix0; ix<nx; ix+=stepx){
 			float fracx; int kx;
 			
 			float jx;
-			fracx=modff(dispx+ix*ratio, &jx);
+			fracx=modff(dispx+ix*xratio, &jx);
 			kx=(int)jx;
 			
 			out[ix+iy*nxo]+=

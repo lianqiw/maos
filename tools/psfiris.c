@@ -88,8 +88,8 @@ static void psfiris_do(thread_t *info){
     dmat *otf3=NULL;
     creal2d(&otf3, 0, otf2, 1);/*otf2 should be real. confirmed.*/
     /*used to up-sample OTF.*/
-    map_t *otf_coarse=mapnew(notf1, notf1, dx1/wvl, otf3->p); otf3->p=NULL;
-    map_t *otf_fine=mapnew(notf2, notf2, dx2/wvl, NULL);
+    map_t *otf_coarse=mapnew(notf1, notf1, dx1/wvl,dx1/wvl, otf3->p); otf3->p=NULL;
+    map_t *otf_fine=mapnew(notf2, notf2, dx2/wvl,dx2/wvl, NULL);
     prop_grid_map(otf_coarse, otf_fine, 1, 0, 0, 1, 0, 0, 0);
     mapfree(otf_coarse);
     cfree(otf0);
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]){
     const int notf1=64;
     const int notf2=1024;/*size of otf/psf saved by maos*/
     
-    loc_t *ploc=mksqloc_auto((int)ceil(D/dx1), (int)ceil(D/dx1), dx1);
+    loc_t *ploc=mksqloc_auto((int)ceil(D/dx1), (int)ceil(D/dx1), dx1, dx1);
     dmat  *pamp=dnew(ploc->nloc, 1);
     locannular(pamp->p, ploc, 0, 0, 15, 1.8, 1);
     dmat *pwt=ddup(pamp); normalize_sum(pwt->p, pwt->nx, 1);

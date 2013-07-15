@@ -486,6 +486,7 @@ static void readcfg_dm(PARMS_T *parms){
     double *dbltmp=NULL;
     char **strtmp=NULL;
     READ_DM(int,order);
+    READ_DM_RELAX(dbl,ar);
     READ_DM(dbl,ht);
     READ_DM(dbl,offset);
     READ_DM_RELAX(dbl,guard);
@@ -531,6 +532,7 @@ static void readcfg_moao(PARMS_T *parms){
     READ_MOAO_RELAX(dbl,iac);
     READ_MOAO_RELAX(dbl,gdm);
     READ_MOAO_RELAX(dbl,stroke);
+    READ_MOAO_RELAX(dbl,ar);
     READ_MOAO_RELAX(int,actslave);
     READ_MOAO_RELAX(int,lrt_ptt);
     READ_MOAO_RELAX(str,actstuck);
@@ -1548,7 +1550,7 @@ static void setup_parms_postproc_atm_size(PARMS_T *parms){
     int Nmax=0;
     long nxout[nps],nyout[nps];
     for(int ips=0; ips<nps; ips++){
-	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,0.5,
+	create_metapupil(parms,parms->atm.ht[ips],parms->atm.dx,parms->atm.dx,0.5,
 			 &nxout[ips],&nyout[ips],NULL,NULL,NULL,parms->atm.dx*3,0,0,0,1);
 	if(nxout[ips]>Nmax) Nmax=nxout[ips];
 	if(nyout[ips]>Nmax) Nmax=nyout[ips];
@@ -1616,6 +1618,10 @@ static void setup_parms_postproc_dm(PARMS_T *parms){
     int ndm=parms->ndm;
     for(int idm=0; idm<ndm; idm++){
 	parms->dm[idm].dx=parms->aper.d/parms->dm[idm].order;
+	parms->dm[idm].dy=parms->aper.d/parms->dm[idm].order*parms->dm[idm].ar;
+	if(parms->dm[idm].ar<=0){
+	    error("ar must be positive\n");
+	}
     }
     /*
       Setup the parameters used to do DM caching on a finer grid.

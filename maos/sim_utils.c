@@ -78,7 +78,7 @@ static map_t **genscreen_do(SIM_T *simu){
 	double hs=90000;
 	double dx=atm->dx;
 	for(int is=0; is<atm->nps; is++){
-	    screens[is]=mapnew(nx, ny, dx, NULL);
+	    screens[is]=mapnew(nx, ny, dx, dx, NULL);
 	    screens[is]->h=atm->ht[is];
 	}
 	double scale=-pow(1.-screens[5]->h/hs,-2);
@@ -197,6 +197,7 @@ static void map_crop(map_t *atm, long overx, long overy){
       keep only the part that actually participates in ray tracing.*/
     
     double dx=atm->dx;
+    double dy=atm->dy;
     long nx=atm->nx;
     long ny=atm->ny;
     long nxnew, nynew;
@@ -207,15 +208,15 @@ static void map_crop(map_t *atm, long overx, long overy){
 	nynew=atm->ny;
 	ox=-overx/2*dx;
 	if(atm->vy<0){
-	    oy=-overy/2*dx;
+	    oy=-overy/2*dy;
 	}else{
-	    oy=(overy/2-ny)*dx;
+	    oy=(overy/2-ny)*dy;
 	}
     }else{
 	atm->vy=0;
 	nxnew=atm->nx;
 	nynew=overy;
-	oy=-overy/2*dx;
+	oy=-overy/2*dy;
 	if(atm->vx<0){
 	    ox=-overx/2*dx;
 	}else{
@@ -354,17 +355,18 @@ void evolve_screen(SIM_T *simu){
     for(int ips=0; ips<nps; ips++){
 	/*center of beam */
 	double dx=simu->atm[ips]->dx;
+	double dy=simu->atm[ips]->dy;
 	int do_evolve=0;
 	if(fabs(simu->atm[ips]->vx)<EPS){/*along y */
 	    long ny=simu->atm[ips]->ny;
 	    long ry=(parms->atm.overy[ips]>>1);
 	    double ay=-simu->atm[ips]->vy*isim*dt;
 	    if(simu->atm[ips]->vy<0){
-		if(ay>simu->atm[ips]->oy+(ny-ry)*dx){
+		if(ay>simu->atm[ips]->oy+(ny-ry)*dy){
 		    do_evolve=1;
 		}
 	    }else{
-		if(ay<simu->atm[ips]->oy+ry*dx){
+		if(ay<simu->atm[ips]->oy+ry*dy){
 		    do_evolve=1;
 		}
 	    }
